@@ -28,10 +28,14 @@
     [3] Pica, A., J. P. Diet, and A. Tarantola. "Nonlinear inversion 
 	of seismic reflection data in a laterally invariant medium." 
 	Geophysics 55.3 (1990): 284-292.
-    [4] Hager, William W., and Hongchao Zhang. "A survey of nonlinear
+    [4] Dussaud, E., Symes, W. W., Williamson, P., Lemaistre, L., 
+	Singer, P., Denel, B., & Cherrett, A. (2008). Computational 
+	strategies for reverse-time migration. In SEG Technical Program 
+	Expanded Abstracts 2008 (pp. 2267-2271).
+    [5] Hager, William W., and Hongchao Zhang. "A survey of nonlinear
 	conjugate gradient methods." Pacific journal of Optimization 
 	2.1 (2006): 35-58.
-    [5] Harris, Mark. "Optimizing parallel reduction in CUDA." NVIDIA 
+    [6] Harris, Mark. "Optimizing parallel reduction in CUDA." NVIDIA 
 	Developer Technology 2.4 (2007).
 */
 __global__ void cuda_set_sg(int *sxz, int sxbeg, int szbeg, int jsx, int jsz, int ns, int nz)
@@ -189,13 +193,15 @@ __global__ void cuda_step_backward(float *illum, float *lap, float *p0, float *p
 
 	if (i1<nz && i2<nx) 
 	{
+		float c1=(s_p1[threadIdx.y+1][threadIdx.x+2]-2.0*s_p1[threadIdx.y+1][threadIdx.x+1]+s_p1[threadIdx.y+1][threadIdx.x]);
+		float c2=(s_p1[threadIdx.y+2][threadIdx.x+1]-2.0*s_p1[threadIdx.y+1][threadIdx.x+1]+s_p1[threadIdx.y][threadIdx.x+1]);
+		lap[id]=c1+c2;
 		float v1=vv[id]*dtz;
 		float v2=vv[id]*dtx; 
-		float c1=v1*v1*(s_p1[threadIdx.y+1][threadIdx.x+2]-2.0*s_p1[threadIdx.y+1][threadIdx.x+1]+s_p1[threadIdx.y+1][threadIdx.x]);
-		float c2=v2*v2*(s_p1[threadIdx.y+2][threadIdx.x+1]-2.0*s_p1[threadIdx.y+1][threadIdx.x+1]+s_p1[threadIdx.y][threadIdx.x+1]);
+		c1*=v1*v1;
+		c2*=v2*v2;
 
 		p0[id]=2.0*s_p1[threadIdx.y+1][threadIdx.x+1]-p0[id]+c1+c2;
-		lap[id]=c1+c2;
 		illum[id]+=s_p1[threadIdx.y+1][threadIdx.x+1]*s_p1[threadIdx.y+1][threadIdx.x+1];
 	}
 }
@@ -254,7 +260,7 @@ __global__ void cuda_cal_gradient(float *g1, float *lap, float *gp, int nz, int 
 	if (i1<nz && i2<nx) g1[id]+=lap[id]*gp[id];
 }
 
-__global__ void cuda_scale_gradient(float *g1, float *vv, float *illum, float dt, int nz, int nx, bool precon)
+__global__ void cuda_scale_gradient(float *g1, float *vv, float *illum, int nz, int nx, bool precon)
 /*< scale gradient >*/
 {
 	int i1=threadIdx.x+blockIdx.x*blockDim.x;
@@ -262,7 +268,7 @@ __global__ void cuda_scale_gradient(float *g1, float *vv, float *illum, float dt
 	int id=i1+nz*i2;
 	if (i1<nz && i2<nx) 
 	{
-		float a=dt*vv[id];
+		float a=vv[id];
 		if (precon) a*=sqrtf(illum[id]+EPS);/*precondition with residual wavefield illumination*/
 		g1[id]*=2.0/a;
 	}

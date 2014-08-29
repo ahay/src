@@ -37,10 +37,14 @@ Note: 	You can try other complex boundary condition but we do not
     [3] Pica, A., J. P. Diet, and A. Tarantola. "Nonlinear inversion 
 	of seismic reflection data in a laterally invariant medium." 
 	Geophysics 55.3 (1990): 284-292.
-    [4] Hager, William W., and Hongchao Zhang. "A survey of nonlinear
+    [4] Dussaud, E., Symes, W. W., Williamson, P., Lemaistre, L., 
+	Singer, P., Denel, B., & Cherrett, A. (2008). Computational 
+	strategies for reverse-time migration. In SEG Technical Program 
+	Expanded Abstracts 2008 (pp. 2267-2271).
+    [5] Hager, William W., and Hongchao Zhang. "A survey of nonlinear
 	conjugate gradient methods." Pacific journal of Optimization 
 	2.1 (2006): 35-58.
-    [5] Harris, Mark. "Optimizing parallel reduction in CUDA." NVIDIA 
+    [6] Harris, Mark. "Optimizing parallel reduction in CUDA." NVIDIA 
 	Developer Technology 2.4 (2007).
 */
 
@@ -353,7 +357,7 @@ int main(int argc, char *argv[])
 		window(v0, vv, nz, nx, nz1, nx1);
 		sf_floatwrite(v0, nz1*nx1, illums);
 
-		cuda_scale_gradient<<<dimg,dimb>>>(d_g1, d_vv, d_illum, dt, nz, nx, precon);
+		cuda_scale_gradient<<<dimg,dimb>>>(d_g1, d_vv, d_illum, nz, nx, precon);
 		cudaMemcpy(vv, d_g1, nz*nx*sizeof(float), cudaMemcpyDeviceToHost);
 		window(v0, vv, nz, nx, nz1, nx1);
 		sf_floatwrite(v0, nz1*nx1, grads);

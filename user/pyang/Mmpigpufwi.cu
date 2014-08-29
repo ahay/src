@@ -37,10 +37,14 @@ Note: 	You can try other complex boundary condition but we do not
     [3] Pica, A., J. P. Diet, and A. Tarantola. "Nonlinear inversion 
 	of seismic reflection data in a laterally invariant medium." 
 	Geophysics 55.3 (1990): 284-292.
-    [4] Hager, William W., and Hongchao Zhang. "A survey of nonlinear
+    [4] Dussaud, E., Symes, W. W., Williamson, P., Lemaistre, L., 
+	Singer, P., Denel, B., & Cherrett, A. (2008). Computational 
+	strategies for reverse-time migration. In SEG Technical Program 
+	Expanded Abstracts 2008 (pp. 2267-2271).
+    [5] Hager, William W., and Hongchao Zhang. "A survey of nonlinear
 	conjugate gradient methods." Pacific journal of Optimization 
 	2.1 (2006): 35-58.
-    [5] Harris, Mark. "Optimizing parallel reduction in CUDA." NVIDIA 
+    [6] Harris, Mark. "Optimizing parallel reduction in CUDA." NVIDIA 
 	Developer Technology 2.4 (2007).
 */
 
@@ -271,7 +275,7 @@ int main(int argc, char *argv[])
 	memset(dobs, 0, ng*nt*sizeof(float));	
 	memset(objval, 0, niter*sizeof(float));
 
-	sf_check_gpu_error("Failed to initialize device!");
+	//sf_check_gpu_error("Failed to initialize device!");
 	/* allocate memory for device variables */
 	cudaMalloc(&d_vv, nz*nx*sizeof(float));	/* velocity */
 	cudaMalloc(&d_sp0, nz*nx*sizeof(float));/* source wavefield p0 */
@@ -429,7 +433,7 @@ int main(int argc, char *argv[])
 			sf_floatwrite(v0, nz1*nx1, illums);
 
 			/* scale gradient */
-			cuda_scale_gradient<<<dimg,dimb>>>(d_g1, d_vv, d_illum, dt, nz, nx, precon);
+			cuda_scale_gradient<<<dimg,dimb>>>(d_g1, d_vv, d_illum, nz, nx, precon);
 			cuda_bell_smoothz<<<dimg,dimb>>>(d_g1, d_illum, rbell, nz, nx);
 			cuda_bell_smoothx<<<dimg,dimb>>>(d_illum, d_g1, rbell, nz, nx);
 
@@ -449,8 +453,10 @@ int main(int argc, char *argv[])
 		
 			/* estimate temporary velocity */
 			cuda_cal_vtmp<<<dimg, dimb>>>(d_vtmp, d_vv, d_cg, epsil, nz, nx);
+			cudaMemcpy(vv, d_vtmp, nz*nx*sizeof(float), cudaMemcpyDeviceToHost);
 		}
-            	MPI_Bcast(vtmp[0], nz*nx, MPI_FLOAT, 0, MPI_COMM_WORLD);
+            	MPI_Bcast(vv, nz*nx, MPI_FLOAT, 0, MPI_COMM_WORLD);
+		cudaMemcpy(d_vtmp, vv, nz*nx*sizeof(float), cudaMemcpyHostToDevice);
 
     		sf_seek(shots, rank*nt*ng*sizeof(float), SEEK_SET);/* Starting position in input files */
 		cudaMemset(d_alpha1, 0, ng*sizeof(float));

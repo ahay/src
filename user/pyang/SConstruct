@@ -114,6 +114,7 @@ for prog in mpi_mains:
 CTP = env.get('CUDA_TOOLKIT_PATH')
 NVCC = env.get('NVCC')
 
+
 cuda_mains = Split(cuda_progs)
 for prog in cuda_mains:
     if CTP and NVCC:
@@ -140,16 +141,19 @@ for prog in cuda_mains:
 #######################################################################
 # compiling CUDA+MPI programs
 
+
 # YOU MAY HAVE TO EDIT THIS SECTION!!!
 # MPI_LIB and MPI_INC must be defined for your specific system
 MPI_LIB = '/opt/openmpi/1.6.0/gcc/4.4.6/lib'		# MPI lib directory (contains libmpi.so)
 MPI_INC = '/opt/openmpi/1.6.0/gcc/4.4.6/include'	# MPI include directory	(contains mpi.h)
+#MPI_LIB = '/usr/lib/openmpi/lib'	# MPI lib directory (contains libmpi.so)
+#MPI_INC = '/usr/lib/openmpi/include'	# MPI include directory	(contains mpi.h)
 
 mpi_err = 0
 if not os.path.exists(MPI_LIB + "/libmpi.so"):
 	mpi_err += 1
 if not os.path.exists(MPI_INC + "/mpi.h"):
-	mpi_err += 1
+	mpi_err += 1 
 
 cuda_mpi_mains = Split(cuda_mpi_progs)
 for prog in cuda_mpi_mains:

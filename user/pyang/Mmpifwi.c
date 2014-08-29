@@ -27,7 +27,11 @@ Note: 	Clayton-Enquist absorbing boundary condition (A2) is applied!
     [3] Pica, A., J. P. Diet, and A. Tarantola. "Nonlinear inversion 
 	of seismic reflection data in a laterally invariant medium." 
 	Geophysics 55.3 (1990): 284-292.
-    [4] Hager, William W., and Hongchao Zhang. "A survey of nonlinear
+    [4] Dussaud, E., Symes, W. W., Williamson, P., Lemaistre, L., 
+	Singer, P., Denel, B., & Cherrett, A. (2008). Computational 
+	strategies for reverse-time migration. In SEG Technical Program 
+	Expanded Abstracts 2008 (pp. 2267-2271).
+    [5] Hager, William W., and Hongchao Zhang. "A survey of nonlinear
 	conjugate gradient methods." Pacific journal of Optimization 
 	2.1 (2006): 35-58.
 */
@@ -308,7 +312,7 @@ void cal_gradient(float **grad, float **lap, float **gp, int nz, int nx)
   }
 }
 
-void scale_gradient(float **grad, float **vv, float **illum, float dt, int nz, int nx, bool precon)
+void scale_gradient(float **grad, float **vv, float **illum, int nz, int nx, bool precon)
 /*< scale gradient >*/
 {
   int ix, iz;
@@ -317,11 +321,11 @@ void scale_gradient(float **grad, float **vv, float **illum, float dt, int nz, i
 #ifdef _OPENMP
 #pragma omp parallel for default(none)	\
 	private(iz, ix, a)		\
-	shared(nz, nx, dt, vv, precon, illum, grad)
+	shared(nz, nx, vv, precon, illum, grad)
 #endif
   for(ix=1; ix<nx-1; ix++){
     for(iz=1; iz<nz-1; iz++){
-	a=dt*vv[ix][iz];
+	a=vv[ix][iz];
 	if (precon) a*=sqrtf(illum[ix][iz]+SF_EPS);/*precondition with residual wavefield illumination*/
 	grad[ix][iz]*=2.0/a;
     }
@@ -794,7 +798,7 @@ int main(int argc, char *argv[])
 		MPI_Reduce(sendbuf, recvbuf, nz*nx, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
 
 		if(rank==0) {
-			scale_gradient(g1, vv, illum, dt, nz, nx, precon);		
+			scale_gradient(g1, vv, illum, nz, nx, precon);		
 			sf_floatwrite(illum[0], nz*nx, illums);
 			bell_smoothz(g1, illum, rbell, nz, nx);
 			bell_smoothx(illum, g1, rbell, nz, nx);

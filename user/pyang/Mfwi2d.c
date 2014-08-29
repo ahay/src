@@ -17,6 +17,23 @@ Note: 	Enquist absorbing boundary condition (A2) is applied!
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+  Important references:
+    [1] Clayton, Robert, and Björn Engquist. "Absorbing boundary 
+	conditions for acoustic and elastic wave equations." Bulletin 
+	of the Seismological Society of America 67.6 (1977): 1529-1540.
+    [2] Tarantola, Albert. "Inversion of seismic reflection data in the 
+	acoustic approximation." Geophysics 49.8 (1984): 1259-1266.
+    [3] Pica, A., J. P. Diet, and A. Tarantola. "Nonlinear inversion 
+	of seismic reflection data in a laterally invariant medium." 
+	Geophysics 55.3 (1990): 284-292.
+    [4] Dussaud, E., Symes, W. W., Williamson, P., Lemaistre, L., 
+	Singer, P., Denel, B., & Cherrett, A. (2008). Computational 
+	strategies for reverse-time migration. In SEG Technical Program 
+	Expanded Abstracts 2008 (pp. 2267-2271).
+    [5] Hager, William W., and Hongchao Zhang. "A survey of nonlinear
+	conjugate gradient methods." Pacific journal of Optimization 
+	2.1 (2006): 35-58.
 */
 
 #include <rsf.h>
@@ -121,11 +138,11 @@ void step_backward(float **illum, float **lap, float **p0, float **p1, float **p
 	    diff1+=(iz+1<nz)?p1[ix][iz+1]:0.0;
 	    diff2+=(ix-1>=0)?p1[ix-1][iz]:0.0;
 	    diff2+=(ix+1<nx)?p1[ix+1][iz]:0.0;
+	    lap[ix][iz]=diff1+diff2;
 	    diff1*=v1;
 	    diff2*=v2;
 	    p2[ix][iz]=2.0*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
 	    illum[ix][iz]+=p1[ix][iz]*p1[ix][iz];
-	    lap[ix][iz]=diff1+diff2;
     }
 }
 
@@ -216,14 +233,14 @@ void cal_gradient(float **grad, float **lap, float **gp, int nz, int nx)
   }
 }
 
-void scale_gradient(float **grad, float **vv, float **illum, float dt, int nz, int nx, bool precon)
+void scale_gradient(float **grad, float **vv, float **illum, int nz, int nx, bool precon)
 /*< scale gradient >*/
 {
   int ix, iz;
   float a;
   for(ix=1; ix<nx-1; ix++){
     for(iz=1; iz<nz-1; iz++){
-	a=dt*vv[ix][iz];
+	a=vv[ix][iz];
 	if (precon) a*=sqrtf(illum[ix][iz]+SF_EPS);/*precondition with residual wavefield illumination*/
 	grad[ix][iz]*=2.0/a;
     }
@@ -604,7 +621,7 @@ int main(int argc, char *argv[])
 		}
 		obj=cal_objective(derr, ng*nt*ns);
 
-		scale_gradient(g1, vv, illum, dt, nz, nx, precon);		
+		scale_gradient(g1, vv, illum, nz, nx, precon);		
 		sf_floatwrite(illum[0], nz*nx, illums);
 		bell_smoothz(g1, illum, rbell, nz, nx);
 		bell_smoothx(illum, g1, rbell, nz, nx);
