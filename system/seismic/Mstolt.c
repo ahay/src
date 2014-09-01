@@ -1,6 +1,9 @@
 /* Post-stack Stolt modeling/migration. 
 
 Requires the input to be cosine-transformed over the lateral axes.
+
+August 2014 program of the month:
+http://ahay.org/rsflog/index.php?/archives/399-Program-of-the-month-sfstolt.html
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
@@ -77,9 +80,9 @@ int main(int argc, char* argv[])
     dy *= SF_PI * fabsf (vel);	
 
     if (!sf_getfloat("stretch", &st) && !sf_histfloat(in,"stretch",&st)) st=1.;
+    /*( stretch=1 Stolt stretch parameter )*/
     if (1. != st) sf_warning("stretch=%g",st);
 
-    /* Stolt stretch parameter */
     if (vel > 0) st = 2.-st;
     a = (1.-1./st);
     b = 1./st;
