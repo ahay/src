@@ -50,33 +50,33 @@ Result('vsnaps',
 	''')
 Plot('vsnap1','vsnaps', 
 	'''
-	window n3=1|grey title="Updated velocity" allpos=y color=j pclip=100 
+	window n3=1|grey title="Updated velocity, iter=1" allpos=y color=j pclip=100 
 	scalebar=y bartype=v barlabel="V" barunit="m/s" 
 	''')
 Plot('vsnap20','vsnaps', 
 	'''
-	window n3=1 f3=19|grey title="Updated velocity" allpos=y color=j pclip=100 
+	window n3=1 f3=19|grey title="Updated velocity, iter=20" allpos=y color=j pclip=100 
 	scalebar=y bartype=v barlabel="V" barunit="m/s" 
 	''')
 Plot('vsnap50','vsnaps', 
 	'''
-	window n3=1 f3=49|grey title="Updated velocity" allpos=y color=j pclip=100 
+	window n3=1 f3=49|grey title="Updated velocity, iter=50" allpos=y color=j pclip=100 
 	scalebar=y bartype=v barlabel="V" barunit="m/s" 
 	''')
 
 Plot('vsnap100','vsnaps', 
 	'''
-	window n3=1 f3=99|grey title="Updated velocity" allpos=y color=j pclip=100 
+	window n3=1 f3=99|grey title="Updated velocity, iter=100" allpos=y color=j pclip=100 
 	scalebar=y bartype=v barlabel="V" barunit="m/s" 
 	''')
 Plot('vsnap180','vsnaps', 
 	'''
-	window n3=1 f3=179|grey title="Updated velocity" allpos=y color=j pclip=100 
+	window n3=1 f3=179|grey title="Updated velocity, iter=180" allpos=y color=j pclip=100 
 	scalebar=y bartype=v barlabel="V" barunit="m/s" 
 	''')
 Plot('vsnap300','vsnaps', 
 	'''
-	window n3=1 f3=299|grey title="Updated velocity" allpos=y color=j pclip=100 
+	window n3=1 f3=299|grey title="Updated velocity, iter=300" allpos=y color=j pclip=100 
 	scalebar=y bartype=v barlabel="V" barunit="m/s" 
 	''')
 
