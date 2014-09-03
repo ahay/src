@@ -567,7 +567,6 @@ int main(int argc, char *argv[])
 	free(trans);
 	free(objval);
 
-
 	MPI_Finalize();
 
 	exit(0);

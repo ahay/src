@@ -721,7 +721,7 @@ int main(int argc, char *argv[])
 
 	for(iter=0; iter<niter; iter++)
 	{
-		if(rank==0 && verb) start=MPI_Wtime();// record starting time
+		if(rank==0 && verb) start=MPI_Wtime();/* record starting time */
     		sf_seek(shots, rank*nt*ng*sizeof(float), SEEK_SET);/* Starting position in input files */
 		if(rank==0) memcpy(g0[0], g1[0], nz*nx*sizeof(float));
 		memset(g1[0], 0, nz*nx*sizeof(float));
@@ -771,7 +771,7 @@ int main(int argc, char *argv[])
 
 		/* MPI reduce objective/misfit: obj */
 		if(rank==0){
-		    sendbuf=MPI_IN_PLACE;
+		    sendbuf=(float*)MPI_IN_PLACE;
 		    recvbuf=&obj;
 		}else{
 		    sendbuf=&obj;
@@ -780,7 +780,7 @@ int main(int argc, char *argv[])
         	MPI_Reduce(sendbuf, recvbuf, 1, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
 		/* MPI reduce gradient: g1 */
 		if(rank==0){
-		    sendbuf=MPI_IN_PLACE;
+		    sendbuf=(float*)MPI_IN_PLACE;
 		    recvbuf=g1[0];
 		}else{
 		    sendbuf=g1[0];
@@ -789,7 +789,7 @@ int main(int argc, char *argv[])
 		MPI_Reduce(sendbuf, recvbuf, nz*nx, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
 		/* MPI reduce illumination: illum */
 		if(rank==0){
-		    sendbuf=MPI_IN_PLACE;
+		    sendbuf=(float*)MPI_IN_PLACE;
 		    recvbuf=illum[0];
 		}else{
 		    sendbuf=illum[0];
@@ -838,7 +838,7 @@ int main(int argc, char *argv[])
 		}
 
 		if(rank==0){
-		    sendbuf=MPI_IN_PLACE;
+		    sendbuf=(float*)MPI_IN_PLACE;
 		    recvbuf=alpha1;
 		}else{
 		    sendbuf=alpha1;
@@ -846,7 +846,7 @@ int main(int argc, char *argv[])
 		}
         	MPI_Reduce(sendbuf, recvbuf, ng, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
 		if(rank==0){
-		    sendbuf=MPI_IN_PLACE;
+		    sendbuf=(float*)MPI_IN_PLACE;
 		    recvbuf=alpha2;
 		}else{
 		    sendbuf=alpha2;
@@ -863,9 +863,9 @@ int main(int argc, char *argv[])
 		}
 	
             	MPI_Bcast(vv[0], nz*nx, MPI_FLOAT, 0, MPI_COMM_WORLD);
-		if(rank==0 && verb) {// output important information at each FWI iteration
+		if(rank==0 && verb) {/* output important information at each FWI iteration*/
 			sf_warning("obj=%f  beta=%f  epsil=%f  alpha=%f", obj, beta, epsil, alpha);
-			stop=MPI_Wtime();// record ending time 
+			stop=MPI_Wtime();/* record ending time  */
 			sf_warning("iteration %d finished: %f (s)",iter+1, stop-start);
 		}
 	}
