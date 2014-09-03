@@ -1,6 +1,6 @@
 /* 2-D prestack LSRTM linear operator using wavefield reconstruction method
-NB: Sponge ABC is applied!
- */
+   NB: Sponge ABC is applied!
+*/
 /*
   Copyright (C) 2014  Xi'an Jiaotong University, UT Austin (Pengliang Yang)
 
@@ -18,9 +18,9 @@ NB: Sponge ABC is applied!
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-Reference: Ji, Jun. "An exact adjoint operation pair in time extrapolation 
-and its application in least-squares reverse-time migration." Geophysics 
-74.5 (2009): H27-H33.
+  Reference: Ji, Jun. "An exact adjoint operation pair in time extrapolation 
+  and its application in least-squares reverse-time migration." Geophysics 
+  74.5 (2009): H27-H33.
 */
 #include <rsf.h>
 
@@ -40,333 +40,333 @@ static float **sp0, **sp1, **gp0, **gp1, **vv, **ptr=NULL;
 
 void boundary_rw(float **p, float *spo, bool read)
 /* read/write using effective boundary saving strategy: 
-if read=true, read the boundary out; else save/write the boundary*/
+   if read=true, read the boundary out; else save/write the boundary*/
 {
-	int ix,iz;
+  int ix,iz;
 
-	if (read){
+  if (read){
 #ifdef _OPENMP
-#pragma omp parallel for	\
-    private(ix,iz)		\
-    shared(p,spo,nx,nz,nb)  
+#pragma omp parallel for			\
+  private(ix,iz)				\
+  shared(p,spo,nx,nz,nb)  
 #endif	
-		for(ix=0; ix<nx; ix++)
-		for(iz=0; iz<2; iz++)
-		{
-			p[ix+nb][iz-2+nb]=spo[iz+4*ix];
-			p[ix+nb][iz+nz+nb]=spo[iz+2+4*ix];
-		}
-#ifdef _OPENMP
-#pragma omp parallel for	\
-    private(ix,iz)		\
-    shared(p,spo,nx,nz,nb)  
-#endif	
-		for(iz=0; iz<nz; iz++)
-		for(ix=0; ix<2; ix++)
-		{
-			p[ix-2+nb][iz+nb]=spo[4*nx+iz+nz*ix];
-			p[ix+nx+nb][iz+nb]=spo[4*nx+iz+nz*(ix+2)];
-		}
-	}else{
-#ifdef _OPENMP
-#pragma omp parallel for	\
-    private(ix,iz)		\
-    shared(p,spo,nx,nz,nb)  
-#endif	
-		for(ix=0; ix<nx; ix++)
-		for(iz=0; iz<2; iz++)
-		{
-			spo[iz+4*ix]=p[ix+nb][iz-2+nb];
-			spo[iz+2+4*ix]=p[ix+nb][iz+nz+nb];
-		}
-#ifdef _OPENMP
-#pragma omp parallel for	\
-    private(ix,iz)		\
-    shared(p,spo,nx,nz,nb)  
-#endif	
-		for(iz=0; iz<nz; iz++)
-		for(ix=0; ix<2; ix++)
-		{
-			spo[4*nx+iz+nz*ix]=p[ix-2+nb][iz+nb];
-			spo[4*nx+iz+nz*(ix+2)]=p[ix+nx+nb][iz+nb];
-		}
+    for(ix=0; ix<nx; ix++)
+      for(iz=0; iz<2; iz++)
+	{
+	  p[ix+nb][iz-2+nb]=spo[iz+4*ix];
+	  p[ix+nb][iz+nz+nb]=spo[iz+2+4*ix];
 	}
+#ifdef _OPENMP
+#pragma omp parallel for			\
+  private(ix,iz)				\
+  shared(p,spo,nx,nz,nb)  
+#endif	
+    for(iz=0; iz<nz; iz++)
+      for(ix=0; ix<2; ix++)
+	{
+	  p[ix-2+nb][iz+nb]=spo[4*nx+iz+nz*ix];
+	  p[ix+nx+nb][iz+nb]=spo[4*nx+iz+nz*(ix+2)];
+	}
+  }else{
+#ifdef _OPENMP
+#pragma omp parallel for			\
+  private(ix,iz)				\
+  shared(p,spo,nx,nz,nb)  
+#endif	
+    for(ix=0; ix<nx; ix++)
+      for(iz=0; iz<2; iz++)
+	{
+	  spo[iz+4*ix]=p[ix+nb][iz-2+nb];
+	  spo[iz+2+4*ix]=p[ix+nb][iz+nz+nb];
+	}
+#ifdef _OPENMP
+#pragma omp parallel for			\
+  private(ix,iz)				\
+  shared(p,spo,nx,nz,nb)  
+#endif	
+    for(iz=0; iz<nz; iz++)
+      for(ix=0; ix<2; ix++)
+	{
+	  spo[4*nx+iz+nz*ix]=p[ix-2+nb][iz+nb];
+	  spo[4*nx+iz+nz*(ix+2)]=p[ix+nx+nb][iz+nb];
+	}
+  }
 }
 
 void step_forward(float **u0, float **u1, float **vv, bool adj)
 /*< forward step for wave propagation >*/
 {
-	int i1, i2;
+  int i1, i2;
 
-	if(adj){
+  if(adj){
 #ifdef _OPENMP
-#pragma omp parallel for default(none)	\
-    private(i2,i1)		    	\
-    shared(nzpad,nxpad,u1,vv,u0,c0,c11,c12,c21,c22)
+#pragma omp parallel for default(none)			\
+  private(i2,i1)					\
+  shared(nzpad,nxpad,u1,vv,u0,c0,c11,c12,c21,c22)
 #endif
-		for (i2=2; i2<nxpad-2; i2++) 
-		for (i1=2; i1<nzpad-2; i1++) 
-		{
-			u0[i2][i1]=2.*u1[i2][i1]-u0[i2][i1]+c0*vv[i2][i1  ]*u1[i2][i1  ]+
-				c11*(vv[i2][i1-1]*u1[i2][i1-1]+vv[i2][i1+1]*u1[i2][i1+1])+
-				c12*(vv[i2][i1-2]*u1[i2][i1-2]+vv[i2][i1+2]*u1[i2][i1+2])+
-				c21*(vv[i2-1][i1]*u1[i2-1][i1]+vv[i2+1][i1]*u1[i2+1][i1])+
-				c22*(vv[i2-2][i1]*u1[i2-2][i1]+vv[i2+2][i1]*u1[i2+2][i1]);
-		}
-	}else{
+    for (i2=2; i2<nxpad-2; i2++) 
+      for (i1=2; i1<nzpad-2; i1++) 
+	{
+	  u0[i2][i1]=2.*u1[i2][i1]-u0[i2][i1]+c0*vv[i2][i1  ]*u1[i2][i1  ]+
+	    c11*(vv[i2][i1-1]*u1[i2][i1-1]+vv[i2][i1+1]*u1[i2][i1+1])+
+	    c12*(vv[i2][i1-2]*u1[i2][i1-2]+vv[i2][i1+2]*u1[i2][i1+2])+
+	    c21*(vv[i2-1][i1]*u1[i2-1][i1]+vv[i2+1][i1]*u1[i2+1][i1])+
+	    c22*(vv[i2-2][i1]*u1[i2-2][i1]+vv[i2+2][i1]*u1[i2+2][i1]);
+	}
+  }else{
 #ifdef _OPENMP
-#pragma omp parallel for default(none)	\
-    private(i2,i1)		    	\
-    shared(nzpad,nxpad,u1,vv,u0,c0,c11,c12,c21,c22)
+#pragma omp parallel for default(none)			\
+  private(i2,i1)					\
+  shared(nzpad,nxpad,u1,vv,u0,c0,c11,c12,c21,c22)
 #endif
-		for (i2=2; i2<nxpad-2; i2++) 
-		for (i1=2; i1<nzpad-2; i1++) 
-		{
-			u0[i2][i1]=2.*u1[i2][i1]-u0[i2][i1]+vv[i2][i1]*(c0*u1[i2][i1]+
+    for (i2=2; i2<nxpad-2; i2++) 
+      for (i1=2; i1<nzpad-2; i1++) 
+	{
+	  u0[i2][i1]=2.*u1[i2][i1]-u0[i2][i1]+ vv[i2][i1]*(c0*u1[i2][i1]+
 			c11*(u1[i2][i1-1]+u1[i2][i1+1])+c12*(u1[i2][i1-2]+u1[i2][i1+2])+
 			c21*(u1[i2-1][i1]+u1[i2+1][i1])+c22*(u1[i2-2][i1]+u1[i2+2][i1]));
-		}
 	}
+  }
 }
 
 
 void apply_sponge(float **p0)
 /*< apply sponge absorbing boundary condition >*/
 {
-	int ix,iz,ib,ibx,ibz;
-	float w;
+  int ix,iz,ib,ibx,ibz;
+  float w;
 
 #ifdef _OPENMP
 #pragma omp parallel for			\
-    private(ib,iz,ix,ibz,ibx,w)			\
-    shared(p0,bndr,nzpad,nxpad,nb)
+  private(ib,iz,ix,ibz,ibx,w)			\
+  shared(p0,bndr,nzpad,nxpad,nb)
 #endif
-    for(ib=0; ib<nb; ib++) {
-	w = bndr[ib];
+  for(ib=0; ib<nb; ib++) {
+    w = bndr[ib];
 
-	ibz = nzpad-ib-1;
-	for(ix=0; ix<nxpad; ix++) {
-	    p0[ix][ib ] *= w; /*    top sponge */
-	    p0[ix][ibz] *= w; /* bottom sponge */
-	}
-
-	ibx = nxpad-ib-1;
-	for(iz=0; iz<nzpad; iz++) {
-	    p0[ib ][iz] *= w; /*   left sponge */
-	    p0[ibx][iz] *= w; /*  right sponge */
-	}
+    ibz = nzpad-ib-1;
+    for(ix=0; ix<nxpad; ix++) {
+      p0[ix][ib ] *= w; /*    top sponge */
+      p0[ix][ibz] *= w; /* bottom sponge */
     }
+
+    ibx = nxpad-ib-1;
+    for(iz=0; iz<nzpad; iz++) {
+      p0[ib ][iz] *= w; /*   left sponge */
+      p0[ibx][iz] *= w; /*  right sponge */
+    }
+  }
 }
 
 void sg_init(int *sxz, int szbeg, int sxbeg, int jsz, int jsx, int ns)
 /*< shot/geophone position initialize
-sxz/gxz; szbeg/gzbeg; sxbeg/gxbeg; jsz/jgz; jsx/jgx; ns/ng; >*/
+  sxz/gxz; szbeg/gzbeg; sxbeg/gxbeg; jsz/jgz; jsx/jgx; ns/ng; >*/
 {
-	int is, sz, sx;
+  int is, sz, sx;
 
-	for(is=0; is<ns; is++)
-	{
-		sz=szbeg+is*jsz;
-		sx=sxbeg+is*jsx;
-		sxz[is]=sz+nz*sx;
-	}
+  for(is=0; is<ns; is++)
+    {
+      sz=szbeg+is*jsz;
+      sx=sxbeg+is*jsx;
+      sxz[is]=sz+nz*sx;
+    }
 }
 
 void add_source(int *sxz, float **p, int ns, float *source, bool add)
 /*< add seismic sources in grid >*/
 {
-	int is, sx, sz;
+  int is, sx, sz;
 
-	if(add){/* add sources*/
+  if(add){/* add sources*/
 #ifdef _OPENMP
-#pragma omp parallel for default(none)	\
-	private(is,sx,sz)		\
-	shared(p,source,sxz,nb,ns,nz)
+#pragma omp parallel for default(none)		\
+  private(is,sx,sz)				\
+  shared(p,source,sxz,nb,ns,nz)
 #endif
-		for(is=0;is<ns; is++){
-			sx=sxz[is]/nz;
-			sz=sxz[is]%nz;
-			p[sx+nb][sz+nb]+=source[is];
-		}
-	}else{ /* subtract sources */
+    for(is=0;is<ns; is++){
+      sx=sxz[is]/nz;
+      sz=sxz[is]%nz;
+      p[sx+nb][sz+nb]+=source[is];
+    }
+  }else{ /* subtract sources */
 #ifdef _OPENMP
-#pragma omp parallel for default(none)	\
-	private(is,sx,sz)		\
-	shared(p,source,sxz,nb,ns,nz)
+#pragma omp parallel for default(none)		\
+  private(is,sx,sz)				\
+  shared(p,source,sxz,nb,ns,nz)
 #endif
-		for(is=0;is<ns; is++){
-			sx=sxz[is]/nz;
-			sz=sxz[is]%nz;
-			p[sx+nb][sz+nb]-=source[is];
-		}
-	}
+    for(is=0;is<ns; is++){
+      sx=sxz[is]/nz;
+      sz=sxz[is]%nz;
+      p[sx+nb][sz+nb]-=source[is];
+    }
+  }
 }
 
 
 void expand2d(float** b, float** a)
 /*< expand domain of 'a' to 'b': source(a)-->destination(b) >*/
 {
-    int iz,ix;
+  int iz,ix;
 
 #ifdef _OPENMP
-#pragma omp parallel for default(none)	\
-	private(ix,iz)			\
-	shared(b,a,nb,nz,nx)
+#pragma omp parallel for default(none)		\
+  private(ix,iz)				\
+  shared(b,a,nb,nz,nx)
 #endif
-    for     (ix=0;ix<nx;ix++) {
-	for (iz=0;iz<nz;iz++) {
-	    b[nb+ix][nb+iz] = a[ix][iz];
-	}
+  for     (ix=0;ix<nx;ix++) {
+    for (iz=0;iz<nz;iz++) {
+      b[nb+ix][nb+iz] = a[ix][iz];
     }
+  }
 
-    for     (ix=0; ix<nxpad; ix++) {
-	for (iz=0; iz<nb;    iz++) {
-	    b[ix][      iz  ] = b[ix][nb  ];
-	    b[ix][nzpad-iz-1] = b[ix][nzpad-nb-1];
-	}
+  for     (ix=0; ix<nxpad; ix++) {
+    for (iz=0; iz<nb;    iz++) {
+      b[ix][      iz  ] = b[ix][nb  ];
+      b[ix][nzpad-iz-1] = b[ix][nzpad-nb-1];
     }
+  }
 
-    for     (ix=0; ix<nb;    ix++) {
-	for (iz=0; iz<nzpad; iz++) {
-	    b[ix 	 ][iz] = b[nb  		][iz];
-	    b[nxpad-ix-1 ][iz] = b[nxpad-nb-1	][iz];
-	}
+  for     (ix=0; ix<nb;    ix++) {
+    for (iz=0; iz<nzpad; iz++) {
+      b[ix 	 ][iz] = b[nb  		][iz];
+      b[nxpad-ix-1 ][iz] = b[nxpad-nb-1	][iz];
     }
+  }
 }
 
 
 void window2d(float **a, float **b)
 /*< window 'b' to 'a': source(b)-->destination(a) >*/
 {
-    int iz,ix;
+  int iz,ix;
 
 #ifdef _OPENMP
-#pragma omp parallel for default(none)	\
-	private(ix,iz)			\
-	shared(b,a,nb,nz,nx)
+#pragma omp parallel for default(none)		\
+  private(ix,iz)				\
+  shared(b,a,nb,nz,nx)
 #endif
-    for     (ix=0;ix<nx;ix++) {
-	for (iz=0;iz<nz;iz++) {
-	    a[ix][iz]=b[nb+ix][nb+iz] ;
-	}
+  for     (ix=0;ix<nx;ix++) {
+    for (iz=0;iz<nz;iz++) {
+      a[ix][iz]=b[nb+ix][nb+iz] ;
     }
+  }
 }
 
 void prtm2d_init(bool verb_, bool csdgather_, float dz_, float dx_, float dt_, 
-	float amp, float fm, 
-	int nz_, int nx_, int nb_, int nt_, int ns_, int ng_, 
-	int sxbeg_, int szbeg_, int jsx_, int jsz_, 
-	int gxbeg_, int gzbeg_, int jgx_, int jgz_,
-	float **v0, float *mod_, float *dat_)
+		 float amp, float fm, 
+		 int nz_, int nx_, int nb_, int nt_, int ns_, int ng_, 
+		 int sxbeg_, int szbeg_, int jsx_, int jsz_, 
+		 int gxbeg_, int gzbeg_, int jgx_, int jgz_,
+		 float **v0, float *mod_, float *dat_)
 /*< allocate variables and initialize parameters >*/
 {  
-   	/* initialize OpenMP support */ 
+  /* initialize OpenMP support */ 
 #ifdef _OPENMP
-   	omp_init();
+  omp_init();
 #endif
-	float t;
-	int i1, i2, it,ib;
-	t = 1.0/(dz_*dz_);
-	c11 = 4.0*t/3.0;
-	c12= -t/12.0;
+  float t;
+  int i1, i2, it,ib;
+  t = 1.0/(dz_*dz_);
+  c11 = 4.0*t/3.0;
+  c12= -t/12.0;
 
-	t = 1.0/(dx_*dx_);
-	c21 = 4.0*t/3.0;
-	c22= -t/12.0;
-	c0=-2.0*(c11+c12+c21+c22);
+  t = 1.0/(dx_*dx_);
+  c21 = 4.0*t/3.0;
+  c22= -t/12.0;
+  c0=-2.0*(c11+c12+c21+c22);
 
-	verb=verb_;
-	csdgather=csdgather_;
-	ns=ns_;
-	ng=ng_;
-	nb=nb_;
-	nz=nz_;
-	nx=nx_;
-	nt=nt_;
-	sxbeg=sxbeg_;
-	szbeg=szbeg_;
-	jsx=jsx_;
-	jsz=jsz_;
-	gxbeg=gxbeg_;
-	gzbeg=gzbeg_;
-	jgx=jgx_;
-	jgz=jgz_;
+  verb=verb_;
+  csdgather=csdgather_;
+  ns=ns_;
+  ng=ng_;
+  nb=nb_;
+  nz=nz_;
+  nx=nx_;
+  nt=nt_;
+  sxbeg=sxbeg_;
+  szbeg=szbeg_;
+  jsx=jsx_;
+  jsz=jsz_;
+  gxbeg=gxbeg_;
+  gzbeg=gzbeg_;
+  jgx=jgx_;
+  jgz=jgz_;
 
-	nzpad=nz+2*nb;
-	nxpad=nx+2*nb;
+  nzpad=nz+2*nb;
+  nxpad=nx+2*nb;
 
-    	/* allocate temporary arrays */
-    	bndr=sf_floatalloc(nb);
-    	sp0=sf_floatalloc2(nzpad,nxpad);
-    	sp1=sf_floatalloc2(nzpad,nxpad);
-    	gp0=sf_floatalloc2(nzpad,nxpad);
-    	gp1=sf_floatalloc2(nzpad,nxpad);
-    	vv=sf_floatalloc2(nzpad,nxpad);
-	wlt=sf_floatalloc(nt);
-	sxz=sf_intalloc(ns);
-	gxz=sf_intalloc(ng);
-	rwbndr=sf_floatalloc(nt*4*(nx+nz));
+  /* allocate temporary arrays */
+  bndr=sf_floatalloc(nb);
+  sp0=sf_floatalloc2(nzpad,nxpad);
+  sp1=sf_floatalloc2(nzpad,nxpad);
+  gp0=sf_floatalloc2(nzpad,nxpad);
+  gp1=sf_floatalloc2(nzpad,nxpad);
+  vv=sf_floatalloc2(nzpad,nxpad);
+  wlt=sf_floatalloc(nt);
+  sxz=sf_intalloc(ns);
+  gxz=sf_intalloc(ng);
+  rwbndr=sf_floatalloc(nt*4*(nx+nz));
 
-	/* initialized sponge ABC coefficients */
-	for(ib=0;ib<nb;ib++){
-		t=0.015*(nb-1-ib);
-		bndr[ib]=expf(-t*t);
-	}
-	mod=mod_;
-	dat=dat_;
-    	for (i2=0; i2<nx; i2++) 
-	for (i1=0; i1<nz; i1++) 
-	{
-	    t=v0[i2][i1]*dt_;
-	    vv[i2+nb][i1+nb] = t*t;
-	}	
-    	for (i2=0; i2<nxpad; i2++)
-	for (i1=0; i1<nb; i1++) 
-	{
-	    vv[i2][   i1  ] =vv[i2][   nb  ];
-	    vv[i2][nzpad-i1-1] =vv[i2][nzpad-nb-1];
-	}
-    	for (i2=0; i2<nb; i2++)
-	for (i1=0; i1<nzpad; i1++) 
-	{
-	    vv[   i2  ][i1] =vv[   nb  ][i1];
-	    vv[nxpad-i2-1][i1] =vv[nxpad-nb-1][i1];
-	}
-	for(it=0; it<nt; it++){
-		t=SF_PI*fm*(it*dt_-1.0/fm);t=t*t;
-		wlt[it]=amp*(1.0-2.0*t)*expf(-t);
-	}
+  /* initialized sponge ABC coefficients */
+  for(ib=0;ib<nb;ib++){
+    t=0.015*(nb-1-ib);
+    bndr[ib]=expf(-t*t);
+  }
+  mod=mod_;
+  dat=dat_;
+  for (i2=0; i2<nx; i2++) 
+    for (i1=0; i1<nz; i1++) 
+      {
+	t=v0[i2][i1]*dt_;
+	vv[i2+nb][i1+nb] = t*t;
+      }	
+  for (i2=0; i2<nxpad; i2++)
+    for (i1=0; i1<nb; i1++) 
+      {
+	vv[i2][   i1  ] =vv[i2][   nb  ];
+	vv[i2][nzpad-i1-1] =vv[i2][nzpad-nb-1];
+      }
+  for (i2=0; i2<nb; i2++)
+    for (i1=0; i1<nzpad; i1++) 
+      {
+	vv[   i2  ][i1] =vv[   nb  ][i1];
+	vv[nxpad-i2-1][i1] =vv[nxpad-nb-1][i1];
+      }
+  for(it=0; it<nt; it++){
+    t=SF_PI*fm*(it*dt_-1.0/fm);t=t*t;
+    wlt[it]=amp*(1.0-2.0*t)*expf(-t);
+  }
 
-	/* configuration of sources and geophones */
-	if (!(sxbeg>=0 && szbeg>=0 && sxbeg+(ns-1)*jsx<nx && szbeg+(ns-1)*jsz<nz))	
-	{ sf_warning("sources exceeds the computing zone!"); exit(1);}
-	sg_init(sxz, szbeg, sxbeg, jsz, jsx, ns);
-	distx=sxbeg-gxbeg;
-	distz=szbeg-gzbeg;
-	if (csdgather)	{
-		if (!(gxbeg>=0 && gzbeg>=0 && gxbeg+(ng-1)*jgx<nx && gzbeg+(ng-1)*jgz<nz &&
-		(sxbeg+(ns-1)*jsx)+(ng-1)*jgx-distx <nx  && (szbeg+(ns-1)*jsz)+(ng-1)*jgz-distz <nz))	
-		{ sf_warning("geophones exceeds the computing zone!"); exit(1);}
-	}
-	else{
-		if (!(gxbeg>=0 && gzbeg>=0 && gxbeg+(ng-1)*jgx<nx && gzbeg+(ng-1)*jgz<nz))	
-		{ sf_warning("geophones exceeds the computing zone!"); exit(1);}
-	}
-	sg_init(gxz, gzbeg, gxbeg, jgz, jgx, ng);
+  /* configuration of sources and geophones */
+  if (!(sxbeg>=0 && szbeg>=0 && sxbeg+(ns-1)*jsx<nx && szbeg+(ns-1)*jsz<nz))	
+    { sf_warning("sources exceeds the computing zone!"); exit(1);}
+  sg_init(sxz, szbeg, sxbeg, jsz, jsx, ns);
+  distx=sxbeg-gxbeg;
+  distz=szbeg-gzbeg;
+  if (csdgather)	{
+    if (!(gxbeg>=0 && gzbeg>=0 && gxbeg+(ng-1)*jgx<nx && gzbeg+(ng-1)*jgz<nz &&
+	  (sxbeg+(ns-1)*jsx)+(ng-1)*jgx-distx <nx  && (szbeg+(ns-1)*jsz)+(ng-1)*jgz-distz <nz))	
+      { sf_warning("geophones exceeds the computing zone!"); exit(1);}
+  }
+  else{
+    if (!(gxbeg>=0 && gzbeg>=0 && gxbeg+(ng-1)*jgx<nx && gzbeg+(ng-1)*jgz<nz))	
+      { sf_warning("geophones exceeds the computing zone!"); exit(1);}
+  }
+  sg_init(gxz, gzbeg, gxbeg, jgz, jgx, ng);
 }
 
 void prtm2d_close()
 /*< free allocated variables >*/
 {
-	free(bndr);
-	free(*sp0); free(sp0);
-	free(*sp1); free(sp1);
-	free(*gp0); free(gp0);
-	free(*gp1); free(gp1);
-	free(*vv); free(vv);
-	free(wlt);
-	free(sxz);
-	free(gxz);
+  free(bndr);
+  free(*sp0); free(sp0);
+  free(*sp1); free(sp1);
+  free(*gp0); free(gp0);
+  free(*gp1); free(gp1);
+  free(*vv); free(vv);
+  free(wlt);
+  free(sxz);
+  free(gxz);
 }
 
 void prtm2d_lop(bool adj, bool add, int nm, int nd, float *mod, float *dat)
@@ -377,28 +377,28 @@ void prtm2d_lop(bool adj, bool add, int nm, int nd, float *mod, float *dat)
   if(nd!=nt*ng*ns) sf_error("data size mismatch: %d!=%d",nd,nt*ng*ns);
   sf_adjnull(adj, add, nm, nd, mod, dat); 
   
-  if(adj){/* migration: mm=Lt dd, Img[]+=Ps[]* Pg[]; */
-    for(is=0; is<ns; is++){
-      memset(sp0[0], 0, nzpad*nxpad*sizeof(float));
-      memset(sp1[0], 0, nzpad*nxpad*sizeof(float));
-      /* generate is-th source wavefield */
-      if (csdgather)	{
-	gxbeg=sxbeg+is*jsx-distx;
-	sg_init(gxz, gzbeg, gxbeg, jgz, jgx, ng);
-      }
-      for(it=0; it<nt; it++){			
-	add_source(&sxz[is], sp1, 1, &wlt[it], true);
-	step_forward(sp0, sp1, vv, false);
-	apply_sponge(sp0);
-	apply_sponge(sp1);
-	ptr=sp0; sp0=sp1; sp1=ptr;
-	boundary_rw(sp0, &rwbndr[it*4*(nx+nz)], false);
-      }
-      
+  for(is=0; is<ns; is++){/* generate source wavefield Ps[] */
+    memset(sp0[0], 0, nzpad*nxpad*sizeof(float));
+    memset(sp1[0], 0, nzpad*nxpad*sizeof(float));
+    /* generate is-th source wavefield */
+    if (csdgather)	{
+      gxbeg=sxbeg+is*jsx-distx;
+      sg_init(gxz, gzbeg, gxbeg, jgz, jgx, ng);
+    }
+    for(it=0; it<nt; it++){			
+      add_source(&sxz[is], sp1, 1, &wlt[it], true);
+      step_forward(sp0, sp1, vv, false);
+      apply_sponge(sp0);
+      apply_sponge(sp1);
       ptr=sp0; sp0=sp1; sp1=ptr;
-      memset(gp0[0], 0, nzpad*nxpad*sizeof(float));
-      memset(gp1[0], 0, nzpad*nxpad*sizeof(float));
-      for (it=nt-1; it >-1; it--) {// dat-->mod
+      boundary_rw(sp0, &rwbndr[it*4*(nx+nz)], false);
+    }
+      
+    ptr=sp0; sp0=sp1; sp1=ptr;
+    memset(gp0[0], 0, nzpad*nxpad*sizeof(float));
+    memset(gp1[0], 0, nzpad*nxpad*sizeof(float));
+    if(adj){/* migration: mm=Lt dd, Img[]+=Ps[]* Pg[]; */
+      for (it=nt-1; it >-1; it--) {
 	if(verb) sf_warning("%d;",it);
 	
 	/* reconstruct source wavefield */
@@ -422,29 +422,8 @@ void prtm2d_lop(bool adj, bool add, int nm, int nd, float *mod, float *dat)
 	  for(i1=0; i1<nz; i1++)
 	    mod[i1+nz*i2]+=sp1[i2+nb][i1+nb]*gp1[i2+nb][i1+nb];
       }
-    }
-  }else{/*Born modeling/demigration: dd=L mm,Pg[]+=Ps[]* Img[];*/
-    for(is=0; is<ns; is++){
-      memset(sp0[0], 0, nzpad*nxpad*sizeof(float));
-      memset(sp1[0], 0, nzpad*nxpad*sizeof(float));
-      /* generate is-th source wavefield */
-      if (csdgather)	{
-	gxbeg=sxbeg+is*jsx-distx;
-	sg_init(gxz, gzbeg, gxbeg, jgz, jgx, ng);
-      }
-      for(it=0; it<nt; it++){			
-	add_source(&sxz[is], sp1, 1, &wlt[it], true);
-	step_forward(sp0, sp1, vv, false);
-	apply_sponge(sp0);
-	apply_sponge(sp1);
-	ptr=sp0; sp0=sp1; sp1=ptr;
-	boundary_rw(sp0, &rwbndr[it*4*(nx+nz)], false);
-      }
-      
-      ptr=sp0; sp0=sp1; sp1=ptr;
-      memset(gp0[0], 0, nzpad*nxpad*sizeof(float));
-      memset(gp1[0], 0, nzpad*nxpad*sizeof(float));
-      for (it=nt-1; it >-1; it--) {// mod-->dat
+    }else{/*Born modeling/demigration: dd=L mm,Pg[]+=Ps[]* Img[];*/
+      for (it=nt-1; it >-1; it--) {
 	if(verb) sf_warning("%d;",it);
 	
 	/* reconstruct source wavefield */
@@ -468,8 +447,6 @@ void prtm2d_lop(bool adj, bool add, int nm, int nd, float *mod, float *dat)
 	  dat[it+ig*nt+is*nt*ng]+=gp1[gx+nb][gz+nb];
 	}
       }
-    }
+    }	 
   }
 }
-
-

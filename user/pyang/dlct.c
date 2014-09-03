@@ -1,6 +1,6 @@
 /* discrete linear chirp transfrom (DLCT)
-Note: In my implementation:, to make the adjoint as same as the inverse,
-I normalized the forward transform of DLCT with a factor sqrt(N*L).
+   Note: In my implementation:, to make the adjoint as same as the inverse,
+   I normalized the forward transform of DLCT with a factor sqrt(N*L).
 */
 /*
   Copyright (C) 2013  Xi'an Jiaotong University, UT Austin (Pengliang Yang)
@@ -20,9 +20,9 @@ I normalized the forward transform of DLCT with a factor sqrt(N*L).
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
   Reference: Alkishriwo, Osama A., and Luis F. Chaparro. "A discrete 
-	linear chirp transform (DLCT) for data compression." Information 
-	Science, Signal Processing and their Applications (ISSPA), 2012 
-	11th International Conference on. IEEE, 2012.
+  linear chirp transform (DLCT) for data compression." Information 
+  Science, Signal Processing and their Applications (ISSPA), 2012 
+  11th International Conference on. IEEE, 2012.
 
   We can think of DLCT as a complex-valued Gabor transform! Complex-valued 
   version does not introduce amplitude scaling!
@@ -40,86 +40,86 @@ I normalized the forward transform of DLCT with a factor sqrt(N*L).
 #include <fftw3.h>
 
 void forward_dlct(int N 	/* length of the signal */,
-		int L		/* length of freq-instaneous freq */, 
-		float C		/* step size for freq-inst freq */,
-		float *d	/* input [N] signal float or complex */,
-		sf_complex *Sc	/* output[N*L] DLCT coefficients */ )
+		  int L		/* length of freq-instaneous freq */, 
+		  float C		/* step size for freq-inst freq */,
+		  float *d	/* input [N] signal float or complex */,
+		  sf_complex *Sc	/* output[N*L] DLCT coefficients */ )
 /*< forward DLCT >*/
 {
-    int n,k,l;
-    fftwf_complex *p,*q;
-    fftwf_plan fft;
+  int n,k,l;
+  fftwf_complex *p,*q;
+  fftwf_plan fft;
 
-    p=(fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex)*N);
-    q=(fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex)*N);
+  p=(fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex)*N);
+  q=(fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex)*N);
 
-    fft=fftwf_plan_dft_1d(N,p, q,FFTW_FORWARD,FFTW_MEASURE);
+  fft=fftwf_plan_dft_1d(N,p, q,FFTW_FORWARD,FFTW_MEASURE);
 
-    for(l=-L/2;l<L/2;l++){
+  for(l=-L/2;l<L/2;l++){
 
 #ifdef _OPENMP
 #pragma omp parallel for default(none) private(n) shared(p,d,C,N,l)
 #endif	
-	for(n=0;n<N;n++){
+    for(n=0;n<N;n++){
 #ifdef SF_HAS_COMPLEX_H
-	  p[n]=d[n]*cexpf(-I*2*SF_PI*C*l*n*n/N);
+      p[n]=d[n]*cexpf(-I*2*SF_PI*C*l*n*n/N);
 #else
-	  p[n]=sf_crmul(d[n],cexpf(sf_cmplx(0, -2*SF_PI*C*l*n*n/N)));
+      p[n]=sf_crmul(d[n],cexpf(sf_cmplx(0, -2*SF_PI*C*l*n*n/N)));
 #endif
-	}	
-	fftwf_execute(fft);
+    }	
+    fftwf_execute(fft);
 
 #ifdef _OPENMP
 #pragma omp parallel for default(none) private(k) shared(Sc,l,L,N,q)
 #endif	
-	for(k=0;k<N;k++)	Sc[k+(l+L/2)*N]=q[k]/sqrtf(N*L);
-    }
-    fftwf_destroy_plan(fft);
-    fftwf_free(p);
-    fftwf_free(q);
+    for(k=0;k<N;k++)	Sc[k+(l+L/2)*N]=q[k]/sqrtf(N*L);
+  }
+  fftwf_destroy_plan(fft);
+  fftwf_free(p);
+  fftwf_free(q);
 }
 
 
 void inverse_dlct(int N 	/* length of the signal */,
-		int L		/* length of freq-instaneous freq */, 
-		float C		/* step size for freq-inst freq */,
-		float *d	/* output [N] signal,float or complex */,
-		sf_complex *Sc	/* input[N*L] DLCT coefficients */ )
+		  int L		/* length of freq-instaneous freq */, 
+		  float C		/* step size for freq-inst freq */,
+		  float *d	/* output [N] signal,float or complex */,
+		  sf_complex *Sc	/* input[N*L] DLCT coefficients */ )
 /*< inverse DLCT >*/
 {  
-    int l,k,n;
-    fftwf_complex *p,*q;
-    fftwf_plan ifft;
-    p=(fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex)*N);
-    q=(fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex)*N);
+  int l,k,n;
+  fftwf_complex *p,*q;
+  fftwf_plan ifft;
+  p=(fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex)*N);
+  q=(fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex)*N);
 
-    ifft=fftwf_plan_dft_1d(N,p, q,FFTW_BACKWARD,FFTW_MEASURE);
+  ifft=fftwf_plan_dft_1d(N,p, q,FFTW_BACKWARD,FFTW_MEASURE);
 
-    memset(d,0,N*sizeof(float));
-    for(l=-L/2;l<L/2;l++){
+  memset(d,0,N*sizeof(float));
+  for(l=-L/2;l<L/2;l++){
 
 #ifdef _OPENMP
 #pragma omp parallel for default(none) private(k) shared(p,Sc,N,L,l)
 #endif	
-	for(k=0;k<N;k++) 	p[k]=Sc[k+(l+L/2)*N];
+    for(k=0;k<N;k++) 	p[k]=Sc[k+(l+L/2)*N];
 
-	fftwf_execute(ifft);
+    fftwf_execute(ifft);
 
 #ifdef _OPENMP
 #pragma omp parallel for default(none) private(n) shared(d,q,C,l,N,L)
 #endif	
-	for(n=0;n<N;n++){	
+    for(n=0;n<N;n++){	
 #ifdef SF_HAS_COMPLEX_H	
-	  d[n]+=crealf(q[n]*cexpf(I*2*SF_PI*C*l*n*n/N)/sqrtf(N*L));
+      d[n]+=crealf(q[n]*cexpf(I*2*SF_PI*C*l*n*n/N)/sqrtf(N*L));
 #else
-	  d[n]=sf_cadd(d[n],crealf(q[n]*cexpf(sf_cmplx(0, 2*SF_PI*C*l*n*n/N))/sqrtf(N*L)));
+      d[n]=sf_cadd(d[n],crealf(q[n]*cexpf(sf_cmplx(0, 2*SF_PI*C*l*n*n/N))/sqrtf(N*L)));
 #endif
-	}
     }
+  }
 
-    fftwf_destroy_plan(ifft);
-    fftwf_free(p);
-    fftwf_free(q);
+  fftwf_destroy_plan(ifft);
+  fftwf_free(p);
+  fftwf_free(q);
 }
 
 #endif

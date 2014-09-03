@@ -1,9 +1,9 @@
 /* Regularized Fast Toeplitz matrix inversion: C*mm=dd, C=circulant(c)
-Note: circulant(c) is a kind of teoplitz(c) while satisfying 
-	circulant property. 
-	C=circulant(c[0],c[1],...,c[n-1])
-Reference: Vogel, Curtis R. Computational methods for inverse problems. 
-	Vol. 23. Siam, 2002.	[Chapter 5.2.]
+   Note: circulant(c) is a kind of teoplitz(c) while satisfying 
+   circulant property. 
+   C=circulant(c[0],c[1],...,c[n-1])
+   Reference: Vogel, Curtis R. Computational methods for inverse problems. 
+   Vol. 23. Siam, 2002.	[Chapter 5.2.]
 */
 
 /*
@@ -38,42 +38,42 @@ fftwf_complex *tmp;
 
 void ctoeplitz_inv(int n, float mu, sf_complex *c, sf_complex *mm, sf_complex *dd)
 /*< linear equation solver with FFT based on Toeplitz structure
-C*mm=dd, C=circulant(c): mm=C^{-1}dd 
-	C=F^* diag(c) F 
-	==> C=F^* diag(1./c ) F 
-	==> mm=F^* diag(conj(c)./(c*conj(c) +mu)) F dd
-Here, mu is a stabalizing factor. Setting mu=0 implies no regularization.
- >*/
+  C*mm=dd, C=circulant(c): mm=C^{-1}dd 
+  C=F^* diag(c) F 
+  ==> C=F^* diag(1./c ) F 
+  ==> mm=F^* diag(conj(c)./(c*conj(c) +mu)) F dd
+  Here, mu is a stabalizing factor. Setting mu=0 implies no regularization.
+  >*/
 {
-    	int i;
-	float a;
+  int i;
+  float a;
 
-    	tmp=(fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex)*n);
-    	fft1=fftwf_plan_dft_1d(n,tmp,tmp,FFTW_FORWARD,FFTW_MEASURE);	
-   	ifft1=fftwf_plan_dft_1d(n,tmp,tmp,FFTW_BACKWARD,FFTW_MEASURE);
+  tmp=(fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex)*n);
+  fft1=fftwf_plan_dft_1d(n,tmp,tmp,FFTW_FORWARD,FFTW_MEASURE);	
+  ifft1=fftwf_plan_dft_1d(n,tmp,tmp,FFTW_BACKWARD,FFTW_MEASURE);
 	
-	/* dd-->F {dd}*/
-	memcpy(tmp, dd, n*sizeof(sf_complex));
-	fftwf_execute(fft1);
-	memcpy(dd, tmp, n*sizeof(sf_complex));
+  /* dd-->F {dd}*/
+  memcpy(tmp, dd, n*sizeof(sf_complex));
+  fftwf_execute(fft1);
+  memcpy(dd, tmp, n*sizeof(sf_complex));
 
-	/* c-->FFT{c}*/
-	memcpy(tmp, c, n*sizeof(sf_complex));
-	fftwf_execute(fft1);
-	memcpy(c, tmp, n*sizeof(sf_complex));
+  /* c-->FFT{c}*/
+  memcpy(tmp, c, n*sizeof(sf_complex));
+  fftwf_execute(fft1);
+  memcpy(c, tmp, n*sizeof(sf_complex));
 
-	/*multiplication in Fourier domain: diag(conj(c)./(c*conj(c)+mu)) F dd*/
-	for(i=0; i<n; i++)
-	{
-		a=c[i]*conjf(c[i]);
-		/*dd[i]=(a==0.)?0.:(dd[i]*conjf(c[i])/a);*/
-		dd[i]*=conjf(c[i])/(a+mu);
-	}
+  /*multiplication in Fourier domain: diag(conj(c)./(c*conj(c)+mu)) F dd*/
+  for(i=0; i<n; i++)
+    {
+      a=c[i]*conjf(c[i]);
+      /*dd[i]=(a==0.)?0.:(dd[i]*conjf(c[i])/a);*/
+      dd[i]*=conjf(c[i])/(a+mu);
+    }
 
-	/* IFFT{FFT{c}.*FFT{dd}/sqrtf(n)}/sqrtf(n)*/
-	memcpy(tmp, dd, n*sizeof(sf_complex));
-	fftwf_execute(ifft1);
-	for(i=0; i<n; i++) mm[i]=tmp[i]/n;
+  /* IFFT{FFT{c}.*FFT{dd}/sqrtf(n)}/sqrtf(n)*/
+  memcpy(tmp, dd, n*sizeof(sf_complex));
+  fftwf_execute(ifft1);
+  for(i=0; i<n; i++) mm[i]=tmp[i]/n;
 	
 }
 
