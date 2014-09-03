@@ -107,10 +107,10 @@ An MPI version of this program is in preparation!
 11) 2D GPU-based full waveform inversion (FWI)
 Main:		Mgenshots.cu, Mfbrec.cu,Mgpufwi.cu, 
 Test file:	/book/xjtu/gpufwi/fbrec/SConstruct
-		/book/xjtu/gpufwi/syntest/SConstruct
+		/book/xjtu/gpufwi/speedup/SConstruct
 		/book/xjtu/gpufwi/marmtest/SConstruct
 For comparison, check the serial versions:
-	 	Mmodeling.c, Mfwi2d.c, Mfbrec2d.c 
+	 Mmodeling.c, Mfwi2d.c, Mfbrec2d.c, Mmpifwi.c, Mmpigpufwi.c 
 Note: Mgenshots.cu is used to generate shots by forward modeling using
 the exact velocity model. We can use a starting model to do FWI by
 invoking Mgpufwi.cu. We are using boundary saving strategy in FWI. To 
@@ -133,10 +133,10 @@ well.
 
 14) 3D FD using GPU
 Main: 		Mgpufd3d.cu, Mgpufbrec3d.cu
+	Mgpurtm3d.cu (random boundary condition, under construction)
 Test file:	/book/xjtu/test/gpufd3d/SConstruct
 NB: Mgpufbrec3d.cu is performing backward reconstruction for the forward 
-modeled wavefield in 3D with GPU. It is implemented 2nd order FD, and 
-prepared for 3D GPU-based RTM.
+modeled wavefield in 3D with GPU. 
 
 ===================================================================
 I try my best to make my code self-contained. I believe it brings 

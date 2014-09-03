@@ -141,7 +141,6 @@ for prog in cuda_mains:
 #######################################################################
 # compiling CUDA+MPI programs
 
-
 # YOU MAY HAVE TO EDIT THIS SECTION!!!
 # MPI_LIB and MPI_INC must be defined for your specific system
 MPI_LIB = '/usr/lib/openmpi/lib'	# MPI lib directory (contains libmpi.so)
