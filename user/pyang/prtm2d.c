@@ -372,104 +372,104 @@ void prtm2d_close()
 void prtm2d_lop(bool adj, bool add, int nm, int nd, float *mod, float *dat)
 /*< prtm2d linear operator: it may be parallized using MPI >*/
 {
-	int i1,i2,it,is,ig, gx, gz;
-	if(nm!=nx*nz) sf_error("model size mismatch: %d!=%d",nm, nx*nz);
-	if(nd!=nt*ng*ns) sf_error("data size mismatch: %d!=%d",nd,nt*ng*ns);
-	sf_adjnull (adj, add, nm, nd, mod, dat); 
-
-    	if(adj){// migration
-		for(is=0; is<ns; is++){
-			memset(sp0[0], 0, nzpad*nxpad*sizeof(float));
-			memset(sp1[0], 0, nzpad*nxpad*sizeof(float));
-			/* generate is-th source wavefield */
-			if (csdgather)	{
-				gxbeg=sxbeg+is*jsx-distx;
-				sg_init(gxz, gzbeg, gxbeg, jgz, jgx, ng);
-			}
-			for(it=0; it<nt; it++){			
-				add_source(&sxz[is], sp1, 1, &wlt[it], true);
-				step_forward(sp0, sp1, vv, false);
-				apply_sponge(sp0);
-				apply_sponge(sp1);
-				ptr=sp0; sp0=sp1; sp1=ptr;
-				boundary_rw(sp0, &rwbndr[it*4*(nx+nz)], false);
-			}
-
-			ptr=sp0; sp0=sp1; sp1=ptr;
-			memset(gp0[0], 0, nzpad*nxpad*sizeof(float));
-			memset(gp1[0], 0, nzpad*nxpad*sizeof(float));
-		    	for (it=nt-1; it >-1; it--) {// dat-->mod
-				if(verb) sf_warning("%d;",it);
-				
-				/* reconstruct source wavefield */
-				boundary_rw(sp1, &rwbndr[it*4*(nx+nz)], true);
-				step_forward(sp0, sp1, vv, false);
-				add_source(&sxz[is], sp1, 1, &wlt[it], false);	
-				ptr=sp0; sp0=sp1; sp1=ptr;
-				
-				/* backpropagate receiver wavefield */
-				for(ig=0;ig<ng; ig++){
-					gx=gxz[ig]/nz+nb;
-					gz=gxz[ig]%nz+nb;
-					gp1[gx][gz]+=dat[it+ig*nt+is*nt*ng];
-				}
-				step_forward(gp0, gp1, vv, false);
-				apply_sponge(gp0); 
-				apply_sponge(gp1); 
-				ptr=gp0; gp0=gp1; gp1=ptr;
-
-				for(i2=0; i2<nx; i2++)
-				for(i1=0; i1<nz; i1++)
-					mod[i1+nz*i2]+=sp1[i2+nb][i1+nb]*gp1[i2+nb][i1+nb];
-		    	}
-		}
-    	}else{ // demigration, think of it as ajoint of migration 
-		for(is=0; is<ns; is++){
-			memset(sp0[0], 0, nzpad*nxpad*sizeof(float));
-			memset(sp1[0], 0, nzpad*nxpad*sizeof(float));
-			/* generate is-th source wavefield */
-			if (csdgather)	{
-				gxbeg=sxbeg+is*jsx-distx;
-				sg_init(gxz, gzbeg, gxbeg, jgz, jgx, ng);
-			}
-			for(it=0; it<nt; it++){			
-				add_source(&sxz[is], sp1, 1, &wlt[it], true);
-				step_forward(sp0, sp1, vv, false);
-				apply_sponge(sp0);
-				apply_sponge(sp1);
-				ptr=sp0; sp0=sp1; sp1=ptr;
-				boundary_rw(sp0, &rwbndr[it*4*(nx+nz)], false);
-			}
-
-			ptr=sp0; sp0=sp1; sp1=ptr;
-			memset(gp0[0], 0, nzpad*nxpad*sizeof(float));
-			memset(gp1[0], 0, nzpad*nxpad*sizeof(float));
-		    	for (it=nt-1; it >-1; it--) {// dat-->mod
-				if(verb) sf_warning("%d;",it);
-				
-				/* reconstruct source wavefield */
-				boundary_rw(sp1, &rwbndr[it*4*(nx+nz)], true);
-				step_forward(sp0, sp1, vv, false);
-				add_source(&sxz[is], sp1, 1, &wlt[it], false);	
-				ptr=sp0; sp0=sp1; sp1=ptr;
-
-				for(i2=0; i2<nx; i2++)
-				for(i1=0; i1<nz; i1++)
-					gp1[i2+nb][i1+nb]+=mod[i1+nz*i2];
-
-				ptr=gp0; gp0=gp1; gp1=ptr;
-				apply_sponge(gp0); 
-				apply_sponge(gp1); 
-				step_forward(gp0, gp1, vv, true);
-
-				for(ig=0;ig<ng; ig++){
-					gx=gxz[ig]/nz;
-					gz=gxz[ig]%nz;
-					dat[it+ig*nt+is*nt*ng]+=sp1[gx+nb][gz+nb]*gp1[gx+nb][gz+nb];
-				}
-		    	}
-		}
-    	}
+  int i1,i2,it,is,ig, gx, gz;
+  if(nm!=nx*nz) sf_error("model size mismatch: %d!=%d",nm, nx*nz);
+  if(nd!=nt*ng*ns) sf_error("data size mismatch: %d!=%d",nd,nt*ng*ns);
+  sf_adjnull(adj, add, nm, nd, mod, dat); 
+  
+  if(adj){/* migration: mm=Lt dd, Img[]+=Ps[]* Pg[]; */
+    for(is=0; is<ns; is++){
+      memset(sp0[0], 0, nzpad*nxpad*sizeof(float));
+      memset(sp1[0], 0, nzpad*nxpad*sizeof(float));
+      /* generate is-th source wavefield */
+      if (csdgather)	{
+	gxbeg=sxbeg+is*jsx-distx;
+	sg_init(gxz, gzbeg, gxbeg, jgz, jgx, ng);
+      }
+      for(it=0; it<nt; it++){			
+	add_source(&sxz[is], sp1, 1, &wlt[it], true);
+	step_forward(sp0, sp1, vv, false);
+	apply_sponge(sp0);
+	apply_sponge(sp1);
+	ptr=sp0; sp0=sp1; sp1=ptr;
+	boundary_rw(sp0, &rwbndr[it*4*(nx+nz)], false);
+      }
+      
+      ptr=sp0; sp0=sp1; sp1=ptr;
+      memset(gp0[0], 0, nzpad*nxpad*sizeof(float));
+      memset(gp1[0], 0, nzpad*nxpad*sizeof(float));
+      for (it=nt-1; it >-1; it--) {// dat-->mod
+	if(verb) sf_warning("%d;",it);
+	
+	/* reconstruct source wavefield */
+	boundary_rw(sp1, &rwbndr[it*4*(nx+nz)], true);
+	step_forward(sp0, sp1, vv, false);
+	add_source(&sxz[is], sp1, 1, &wlt[it], false);	
+	ptr=sp0; sp0=sp1; sp1=ptr;
+	
+	/* backpropagate receiver wavefield */
+	for(ig=0;ig<ng; ig++){
+	  gx=gxz[ig]/nz+nb;
+	  gz=gxz[ig]%nz+nb;
+	  gp1[gx][gz]+=dat[it+ig*nt+is*nt*ng];
+	}
+	step_forward(gp0, gp1, vv, false);
+	apply_sponge(gp0); 
+	apply_sponge(gp1); 
+	ptr=gp0; gp0=gp1; gp1=ptr;
+	
+	for(i2=0; i2<nx; i2++)
+	  for(i1=0; i1<nz; i1++)
+	    mod[i1+nz*i2]+=sp1[i2+nb][i1+nb]*gp1[i2+nb][i1+nb];
+      }
+    }
+  }else{/*Born modeling/demigration: dd=L mm,Pg[]+=Ps[]* Img[];*/
+    for(is=0; is<ns; is++){
+      memset(sp0[0], 0, nzpad*nxpad*sizeof(float));
+      memset(sp1[0], 0, nzpad*nxpad*sizeof(float));
+      /* generate is-th source wavefield */
+      if (csdgather)	{
+	gxbeg=sxbeg+is*jsx-distx;
+	sg_init(gxz, gzbeg, gxbeg, jgz, jgx, ng);
+      }
+      for(it=0; it<nt; it++){			
+	add_source(&sxz[is], sp1, 1, &wlt[it], true);
+	step_forward(sp0, sp1, vv, false);
+	apply_sponge(sp0);
+	apply_sponge(sp1);
+	ptr=sp0; sp0=sp1; sp1=ptr;
+	boundary_rw(sp0, &rwbndr[it*4*(nx+nz)], false);
+      }
+      
+      ptr=sp0; sp0=sp1; sp1=ptr;
+      memset(gp0[0], 0, nzpad*nxpad*sizeof(float));
+      memset(gp1[0], 0, nzpad*nxpad*sizeof(float));
+      for (it=nt-1; it >-1; it--) {// mod-->dat
+	if(verb) sf_warning("%d;",it);
+	
+	/* reconstruct source wavefield */
+	boundary_rw(sp1, &rwbndr[it*4*(nx+nz)], true);
+	step_forward(sp0, sp1, vv, false);
+	add_source(&sxz[is], sp1, 1, &wlt[it], false);	
+	ptr=sp0; sp0=sp1; sp1=ptr;
+	
+	for(i2=0; i2<nx; i2++)
+	  for(i1=0; i1<nz; i1++)
+	    gp1[i2+nb][i1+nb]+=mod[i1+nz*i2]*sp1[i2+nb][i1+nb];
+	
+	ptr=gp0; gp0=gp1; gp1=ptr;
+	apply_sponge(gp0); 
+	apply_sponge(gp1); 
+	step_forward(gp0, gp1, vv, true);
+	
+	for(ig=0;ig<ng; ig++){
+	  gx=gxz[ig]/nz;
+	  gz=gxz[ig]%nz;
+	  dat[it+ig*nt+is*nt*ng]+=gp1[gx+nb][gz+nb];
+	}
+      }
+    }
+  }
 }
 
 

@@ -394,7 +394,7 @@ int main(int argc, char *argv[])
 
 		/* MPI reduce objective/misfit: obj */
 		if(rank==0){
-		    sendbuf=MPI_IN_PLACE;
+		    sendbuf=(float *)MPI_IN_PLACE;
 		    recvbuf=&obj;
 		}else{
 		    sendbuf=&obj;
@@ -405,23 +405,23 @@ int main(int argc, char *argv[])
 		/* MPI reduce gradient: d_g1 */
 		cudaMemcpy(vv, d_g1, nz*nx*sizeof(float), cudaMemcpyDeviceToHost);
 		if(rank==0){
-		    sendbuf=MPI_IN_PLACE;
-		    recvbuf=vv[0];
+		    sendbuf=(float *)MPI_IN_PLACE;
+		    recvbuf=vv;
 		}else{
-		    sendbuf=vv[0];
+		    sendbuf=vv;
 		    recvbuf=NULL;
 		}
 		MPI_Reduce(sendbuf, recvbuf, nz*nx, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
-            	MPI_Bcast(vv[0], nz*nx, MPI_FLOAT, 0, MPI_COMM_WORLD);
+            	MPI_Bcast(vv, nz*nx, MPI_FLOAT, 0, MPI_COMM_WORLD);
 		cudaMemcpy(d_g1, vv, nz*nx*sizeof(float), cudaMemcpyHostToDevice);
 
 		/* MPI reduce illumination: d_illum */
 		cudaMemcpy(vv, d_illum, nz*nx*sizeof(float), cudaMemcpyDeviceToHost);
 		if(rank==0){
-		    sendbuf=MPI_IN_PLACE;
-		    recvbuf=vv[0];
+		    sendbuf=(float *)MPI_IN_PLACE;
+		    recvbuf=vv;
 		}else{
-		    sendbuf=vv[0];
+		    sendbuf=vv;
 		    recvbuf=NULL;
 		}
 		MPI_Reduce(sendbuf, recvbuf, nz*nx, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
@@ -489,7 +489,7 @@ int main(int argc, char *argv[])
 
 		/* MPI reduce alpha1 */
 		if(rank==0){
-		    sendbuf=MPI_IN_PLACE;
+		    sendbuf=(float *)MPI_IN_PLACE;
 		    recvbuf=alpha1;
 		}else{
 		    sendbuf=alpha1;
@@ -498,7 +498,7 @@ int main(int argc, char *argv[])
         	MPI_Reduce(sendbuf, recvbuf, ng, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
 		/* MPI reduce alpha2 */
 		if(rank==0){
-		    sendbuf=MPI_IN_PLACE;
+		    sendbuf=(float *)MPI_IN_PLACE;
 		    recvbuf=alpha2;
 		}else{
 		    sendbuf=alpha2;

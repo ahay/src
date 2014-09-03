@@ -1,4 +1,4 @@
-/* 2-D prestack least-squares RTM using wavefield reconstruction method
+/* 2-D prestack least-squares RTM using wavefield reconstruction
 NB: Sponge ABC is applied!
 */
 /*
@@ -123,10 +123,10 @@ int main(int argc, char* argv[])
 		sxbeg, szbeg, jsx, jsz, gxbeg, gzbeg, jgx, jgz, v0, mod, dat);
 
 	/* original RTM is simply apply adjoint of prtm2d_lop once!*/
-	prtm2d_lop(true, false, nz*nx, nt*ng*ns, mod, dat); 
+	//prtm2d_lop(true, false, nz*nx, nt*ng*ns, mod, dat); 
     	sf_floatwrite(mod, nz*nx, imgrtm);  
 
-	/* least squares inversion */
+	/* least squares migration */
    	sf_solver(prtm2d_lop, sf_cgstep, nz*nx, nt*ng*ns, mod, dat, niter, "verb", verb, "end");
 	/* output inverted image */
     	sf_floatwrite(mod, nz*nx, imag);  
