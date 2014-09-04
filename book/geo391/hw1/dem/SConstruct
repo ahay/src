@@ -1,0 +1,57 @@
+from rsf.proj import *
+
+# Download data
+txt = 'st-helens_after.txt' 
+Fetch(txt,'data',
+      server='https://raw.githubusercontent.com',
+      top='agile-geoscience/notebooks/master')
+Flow('data.asc',txt,'/usr/bin/tail -n +6')
+
+# Convert to RSF format
+Flow('data','data.asc',
+     '''
+     echo in=$SOURCE data_format=ascii_float
+     label=Elevation unit=m
+     n1=979  o1=557.805  d1=0.010030675 label1=X
+     n2=1400 o2=5107.965 d2=0.010035740 label2=Y |
+     dd form=native | 
+     clip2 lower=0 | lapfill grad=y niter=200 
+     ''')
+
+# Convert to byte form
+Flow('byte','data',
+     '''
+     dd form=native |
+     byte pclip=100 mean=y
+     ''')
+
+# Display
+Result('byte',
+       '''
+       grey yreverse=n screenratio=1 
+       title="Digital Elevation Map" 
+       ''')
+
+# Histogram
+Flow('hist','byte',
+     '''
+     dd type=float |
+     histogram n1=256 o1=0 d1=1 |
+     dd type=float
+     ''')
+Plot('hist',
+     'graph label1=Value label2=Occurence title=Histogram')
+
+# Cumulative histogram
+Flow('cumu','hist','causint')
+
+Result('hist','hist cumu',
+       '''
+       cat axis=2 ${SOURCES[1]} | scale axis=1 |
+       graph label1=Value label2="Normalized Occurence"
+       title=Histogram dash=0,1
+       ''')
+
+# ADD HISTOGRAM EQUALIZATION
+
+End()
