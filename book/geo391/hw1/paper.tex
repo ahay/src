@@ -1,3 +1,246 @@
+\author{Johan Jensen}
+%%%%%%%%%%%%%%%%%%%%%
+\title{Homework 1}
+
+\begin{abstract}
+  This homework has three parts. 
+  \begin{enumerate}
+  \item Theoretical questions and computations related to digital representation of numbers.
+  \item Analyzing digital elevation data from the Mount St. Helens area. You will apply 
+  histogram equalization to enhance the image.
+  \item Analyzing seismic reflection data. You will apply an amplitude gain 
+  correction to enhance the image.
+  \end{enumerate}
+\end{abstract}
+
+\section{Prerequisites}
+
+Completing the computational part of this homework assignment requires
+\begin{itemize}
+\item \texttt{Madagascar} software environment available from \\
+\url{http://www.ahay.org/}
+\item \LaTeX\ environment with \texttt{SEGTeX} available from \\ 
+\url{http://www.ahay.org/wiki/SEGTeX}
+\end{itemize}
+To do the assignment on your personal computer, you need to install
+the required environments. Please ask for help if you don't know where
+to start.
+
+The homework code is available from the \texttt{Madagascar} repository
+by running
+\begin{verbatim}
+svn co http://svn.code.sf.net/p/rsf/code/trunk/book/geo391/hw1 
+\end{verbatim}
+
+\newpage
+
+\section{Digital representation of numbers}
+
+You can either write your answers to theoretical questions on paper or
+edit them in the file \texttt{hw1/paper.tex}. Please show all the
+mathematical derivations that you perform.
+
+\begin{enumerate}
+
+\item UT's ``burnt orange'' color is expressed by code
+  \texttt{\#BF5700}, where each pair of symbols (\texttt{BF},
+  \texttt{57}, and \texttt{00}) refers to a hexadecimal (base 16)
+  representation of the red, green, and blue components. Convert these
+  numbers to an octal (base 8) and a decimal (base 10) representations.
+
+\item The C program listed below, when compiled and
+  run from the command line, takes a string from the user and prints
+  out the string characters. Modify the program to output ASCII
+  integer codes for each character in the string. What is the ASCII
+  code for the special new line character ``\verb+\n+''?
+
+\lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,title=string.c]{string.c}
+
+\item Write a program that prints out ``little'' if the computer is
+  little-endian and ``big'' if the computer is big-endian. Test it on
+  your computer.
+
+\item In the IEEE double-precision floating-point standard, 64 bits
+  (binary digits) are used to represent a real number: 1 bit for the
+  sign, 11 bits for the exponent, and 52 bits for the mantissa. A
+  double-precision normalized non-zero number $x$ can be written in
+  this standard as 
+  \[
+  x = \pm (1.d_1d_2{\cdots}d_{52})_2 \times 2^{n-1023}\,
+  \]
+  with $1 \le n \le 2046$, and $0 \le d_k \le 1$ for
+  $k=1,2,\ldots,52$. What is the largest number that can be expressed
+  in this system?
+
+\end{enumerate}
+
+
+\section{Histogram equalization}
+\inputdir{dem}
+
+\sideplot{byte}{width=\textwidth}{Digital elevation map of Mount St. Helens area.}
+
+Figure~\ref{fig:byte} shows a digital elevation map of the Mount St. Helens area in Washington. Start by reproducing this figure on your screen.
+\begin{enumerate}
+\item Change directory to \verb#hw1/dem#
+\item Run
+\begin{verbatim}
+scons byte.view
+\end{verbatim}
+\item Examine the file \texttt{byte.rsf} which refers to the 
+byte (unsigned character) numbers which get displayed on the screen.
+\begin{enumerate}
+\item Open \texttt{byte.rsf} with a text editor to check its contents.
+\item Run
+\begin{verbatim}
+sfin byte.rsf
+\end{verbatim}
+to check the data size and format.
+\item Run
+\begin{verbatim}
+sfattr < byte.rsf
+\end{verbatim}
+to check data attributes. What is the maximum and minimum value? What
+is the mean value? For an explanation of different attributes,
+run \texttt{sfattr} without input.
+\end{enumerate}
+\end{enumerate}
+
+Each image has a certain distribution of values (a histogram). The
+histogram for the elevation map values is shown in
+Figure~\ref{fig:hist}. When different values in a histogram are not
+uniformly distributed, the image can have a low contrast. One way of
+improving the contrast is \emph{histogram equalization}.
+
+\sideplot{hist}{width=\textwidth}{Normalized histogram (solid line)
+  and cumulative histogram (dashed line) of the digital elevation
+  data.}
+
+Let $f(x,y)$ be the original image. The equalized image will be
+$F(x,y)$. Let $h(f)$ be the histogram (probability distribution) of
+the original image values. Let $H(F)$ be the histogram of the modified
+image. The mapping of probabilities suggests
+\begin{equation}
+\label{eq:prob}
+H(F)\,dF = h(f)\,df
+\end{equation}
+or, if we want the modified histogram
+to be uniform, 
+\begin{equation}
+\label{eq:dif}
+\frac{d F}{d f} = C\,h(f)\,
+\end{equation}
+where C is a constant. 
+Solving equation~\ref{eq:dif}, we obtain the mapping
+\begin{equation}
+\label{eq:int}
+F(f) = f_0 + C\,\int\limits_{f_0}^f h(\phi)\,d\phi\;,
+\end{equation}
+where $f_0$ is the minimum value of $f$.
+
+The algorithm for histogram equalization consists of the following
+three steps:
+\begin{enumerate}
+\item Taking an input image $f(x,y)$, compute its histogram $h(f)$.
+\item Compute the cumulative histogram $F(f)$ according to 
+equation~(\ref{eq:int}). Choose an appropriate $C$ so that the range
+of $F$ is the same as the range of $f$.
+\item Map every pixel $f(x,y)$ to the corresponding $F(x,y)$.
+\end{enumerate}
+
+Your task:
+\begin{enumerate}
+\item Among the \texttt{Madagascar} programs, find a program that 
+implements histogram equalization. \textbf{Hint:} you may find
+the \texttt{sfdoc} utility useful.
+\item Edit the \texttt{SConstruct} file to add histogram equalization. 
+Create a new figure and compare it with Figure~\ref{fig:byte}.
+\item Check the effect of equalization by recomputing the histogram 
+in Figure~\ref{fig:hist} with equalized data. Run
+\begin{verbatim}
+scons hist.view
+\end{verbatim}
+to display the figure on your screen.
+\end{enumerate}	
+
+%\newpage
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,title=dem/SConstruct]{dem/SConstruct}
+
+\section{Time-power amplitude-gain correction}
+\inputdir{tpow}
+
+Raw seismic reflection data come in the form of shot gathers $S(x,t)$,
+where $x$ is the offset (horizontal distance from the receiver to the
+source) and $t$ is recording time. Raw data are inconvenient for
+analysis because of rapid amplitude decay of seismic waves. The decay
+can be compensated by multiplying the data by a gain function. A
+commonly used function is a power of time. The gain-compensated gather
+is
+\begin{equation}
+\label{eq:tpow}
+S_\alpha(x,t) = t^{\alpha}\,S(x,t)\;.
+\end{equation}
+The advantage of the time-power gain is its simplicity and the ability
+to reverse it by multiplying the data by $t^{-\alpha}$. What value of
+$\alpha$ should one use? \cite{iei} argues in favor of $\alpha=2$:
+one factor of $t$ comes from geometrical spreading and the other from
+scattering attenuation. Your task is to develop an algorithm for finding
+a better value of $\alpha$ for a given dataset.
+
+\plot{tpow}{width=0.9\textwidth}{Seismic shot record before and after
+  time-power gain correction.}
+
+Figure~\ref{fig:tpow} shows a seismic shot record before and after
+applying the time-power gain~(\ref{eq:tpow}) with $\alpha=2$. Start
+by reproducing this figure on your screen.
+
+\begin{enumerate}
+\item Change directory to \verb#hw1/tpow#
+\item Run
+\begin{verbatim}
+scons tpow.view
+\end{verbatim}
+\item Edit the \texttt{SConstruct} file. Find where the value of
+  $\alpha$ is specified in this file and try changing it to a
+  different value. Run \texttt{scons tpow.view} again to check the result.
+\item How can we detect if the distribution of amplitudes after
+  the gain correction is uniform? Suggest a measure (an objective
+  function) that would take $S_\alpha(x,t)$ and produce one number that
+  measures uniformity.
+\item By modifying the program \texttt{objective.c}, compute your objective 
+  function for different values of $\alpha$ and display it in a figure. 
+  Does the function appear to have a unique minimum or maximum?
+
+\newpage
+
+\lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,title=tpow/objective.c]{tpow/objective.c}
+
+\item Suggest an algorithm for finding an optimal value of $\alpha$ by
+  minimizing or maximizing the objective function. Your algorithm
+  should be able to find the optimal value without scanning all
+  possible values. \textbf{Hint:} if the objective function is
+  $f(\alpha)=F[S_\alpha(x,t)]$ and 
+\begin{equation}
+\label{alpha}                      
+f(\alpha) \approx f(\alpha_0) + 
+  f'(\alpha_0)\,(\alpha-\alpha_0) + \frac{f''(\alpha_0)}{2}\,(\alpha-\alpha_0)^2
+\end{equation}
+then what is the optimal $\alpha$?
+\item \textbf{EXTRA CREDIT} for implementing your algorithm for an automatic 
+estimation of $\alpha$ and testing it on the shot gather from
+Figure~\ref{fig:tpow}.
+
+\end{enumerate}
+
+\newpage
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,title=tpow/SConstruct]{tpow/SConstruct}
+
 \newpage
 
 \section{Completing the assignment}
@@ -27,4 +270,3 @@ e-mail.
 
 \bibliographystyle{seg}
 \bibliography{hw1}
-
