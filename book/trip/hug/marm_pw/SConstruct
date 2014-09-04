@@ -136,16 +136,30 @@ Flow('shot1p.su','wav1p.su csq24 hdr1p.su',
 
 jobs = [
         { 'job': 'born1p',
-          'pre': '/bin/cp ../hdr1p.su ../born1p.su',
+          'pre': '/bin/cp ${SOURCES[0]} ${TARGETS[0]}',
           'src': ['hdr1p.su', 'wav1p.su', 'csq24big.rsf', 'dcsq24.rsf'],
           'tgt': ['born1p.su'],
           'cmd': acd + ' ' + 
 		 'deriv=1 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 ' +
-		 'csq=../csq24big.rsf csq_d1=../dcsq24.rsf source=../wav1p.su ' +
-		 'data=../born1p.su partask=' +
+		 'csq=${SOURCES[2]} csq_d1=${SOURCES[3]} source=${SOURCES[1]} ' +
+		 'data=${TARGETS[0]} partask=' +
 	 	 getThreads(exe_serial),
           'exe': exe_serial
-	},   ]
+	}, 
+	{ 'job': 'mig1p',
+          'pre': 'add scale=0.0 < ${SOURCES[2]} > ${TARGETS[0]}',
+	  'src': ['born1p.su', 'wav1p.su', 'csq24big.rsf'],
+          'tgt': ['mig1p.rsf'],
+          'cmd': acd + ' ' + 
+		 'deriv=1 adjoint=1 order=2 cfl=0.5 ' +
+		 'cmin=1.0 cmax=6.0 sampord=1 nsnaps=20 ' +
+		 'csq=${SOURCES[2]} csq_b1=${TARGETS[0]} ' +
+		 'source=${SOURCES[1]} ' +
+		 'data=${SOURCES[0]} partask=' +
+	 	 getThreads(exe_serial),
+          'exe': exe_serial
+        },
+  ]
 
 # loop for jobs defined in jobs dictionary
 for i in range(len(jobs)):
