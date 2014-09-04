@@ -293,7 +293,7 @@ def ar(context):
         need_pkg('ar')
 
 pkg['libs'] = {'fedora':'glibc-headers',
-               'cygwin':'sunrpc (Setup...Net)'}
+               'cygwin':'libtirpc-devel (Setup...Libs)'}
 
 # Failing this check stops the installation.
 def libs(context):
@@ -308,8 +308,10 @@ def libs(context):
     if plat['OS'] in ('sunos', 'hpux'):
         LIBS.append('nsl')
         LIBS.append('socket')
-#    elif plat['OS'] == 'cygwin':
-#        LIBS.append('tirpc')
+    elif plat['OS'] == 'cygwin':
+        context.env['CPPPATH'] = path_get(context,'CPPPATH',
+                                          '/usr/include/tirpc')
+        LIBS.append('tirpc')
     elif plat['OS'] == 'darwin':
         LIBS.append('mx')
     elif plat['OS'] == 'interix':
