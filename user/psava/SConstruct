@@ -30,7 +30,7 @@ shift fft3d
 randcut
 encode shot2grid
 boxfilter
-lwefd
+lwefd2d
 awefd2d awefd3d ewefd2d ewefd3d
 hdefd
 emfdm2d
