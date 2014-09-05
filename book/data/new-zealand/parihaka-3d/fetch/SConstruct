@@ -59,6 +59,7 @@ Flow(['image.rsf','image_hdr.rsf'],['migrated.rsf','migrated_hdr.rsf'],
      ''',stdout=0, stdin=0)
        
 Result("image","sfwindow j3=50 | sfgrey title='Parihaka 3d'")
+Result("image2415","image","sfwindow min3=2415 max3=2415 | sfgrey title='Parihaka 3d'")
 Result("image3d","image",
        '''
        byte 
