@@ -16,6 +16,7 @@ in Madagascar.  Statements about relative runtime and accuracy would be great.
 Directories in this test are:
 
 fetch - download the 2D extraction of velocity and 3D seismic
-sfmshots - compute 2D synthetic using Pengliang's 8th order space 3rd order time
+sfmshots - compute 2D synthetic using Pengliang's 4th order space 3rd order time
 sfawefd3d - compute 2D synthetic using Sava's 4th order space 3rd order time
-
+sfmshots1 - run 151 shots using pscons parallel on 151 cores, 10 nodes
+sfawefd2d_split - run 151 shots using split and pscons on 151 cores, 10 nodes
