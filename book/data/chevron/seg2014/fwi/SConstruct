@@ -74,6 +74,7 @@ Flow('sxrxsub',
      'sxrxvolume',
      '''
      sfput o2=1000 d2=25 unit2="m" o3=1000 d3=25 unit3="m" \
+           amp=1000 fm=10
            csdgather=n dt=.004 nt=501
            gxbeg=0 gzbeg=0 jgx=1 jgz=0 ng=161  
 	   sxbeg=0 szbeg=0 jsx=8 jsz=0 ns=10 
@@ -90,10 +91,10 @@ Flow('velsub','../ntg/Vpstart.rsf',
      ''')
 Result('velsub','grey title="Vpstart sub" scalebar=y color="j"')
 
-Flow('vsnaps grads objs illums','svelsub sxrxsub',
+Flow('vsnaps grads objs illums','velsub sxrxsub',
 	'''
 	sffwi2d shots=${SOURCES[1]} grads=${TARGETS[1]} objs=${TARGETS[2]}
-	illums=${TARGETS[3]} niter=2 
+	illums=${TARGETS[3]} niter=20 
 	''')
 Result('vsnaps','grey  title="vsnaps" scalebar=y color="j"')
 Result('grads','grey  title="grads" ')
