@@ -5,15 +5,8 @@ Fetch('Parihaka_PSTM_full_angle.sgy',dir='PARIHAKA-3D',
 	  top='open.source.geoscience/open_data/newzealand/Taranaiki_Basin',
 	  usedatapath=1)
 
-#Fetch('Kerry3D.segy',dir='new-zealand-kerry3d',
-#          server='http://s3.amazonaws.com',
-#          top='open.source.geoscience/open_data')
-
-
 #https://s3.amazonaws.com/open.source.geoscience/open_data/newzealand/Taranaiki_Basin/PARIHAKA-3D/Parihaka_PSTM_full_angle.sgy
 
-#        key1=iline1
-#        iline1=220 
 Flow(['migrated.rsf','migrated_hdr.rsf',
       'migrated.thdr','migrated.bhdr'],
      'Parihaka_PSTM_full_angle.sgy',
@@ -44,12 +37,11 @@ Flow('headerattr.txt','migrated_hdr.rsf',
 #xline      74           4200 @ 0	          5325 @ 1130	       4762.49
 #******************************************************************************* 
 
-# near trace gather
+# map traces from sequential segy order to 3d volume using header
 Flow(['image.rsf','image_hdr.rsf'],['migrated.rsf','migrated_hdr.rsf'],
      '''
      sftahread \
           input=${SOURCES[0]} \
-	  sort="iline1 cdp" \
 	  verbose=1 \
      | sftahwrite \
           output=${TARGETS[0]} \
@@ -58,13 +50,9 @@ Flow(['image.rsf','image_hdr.rsf'],['migrated.rsf','migrated_hdr.rsf'],
 	  verbose=1
      ''',stdout=0, stdin=0)
        
-Result("image","sfwindow j3=50 | sfgrey title='Parihaka 3d'")
 Result("image2415","image","sfwindow min3=2415 max3=2415 | sfgrey title='Parihaka 3d'")
-Result("image3d","image",
-       '''
-       byte 
-       | grey3 frame1=600 frame2=550 frame3=450 title='Parihaka 3D'
-       ''')
 
-       
+Result("imagex5031","image","sfwindow min2=5031 max2=5031 | sfgrey title='Parihaka 3d'")
+
+   
 End()
