@@ -8,10 +8,6 @@
 #SBATCH -t 2:00:00    #maximum time
 #SBATCH -A Madagascar-workshop   #account to charge   
 
-echo SLURM_NNODES=$SLURM_NNODES
-echo SLURM_TASKS_PER_NODE=$SLURM_TASKS_PER_NODE
-echo SLURM_NODELIST=$SLURM_NODELIST
-
 unset DISPLAY
 env
 echo start `date`

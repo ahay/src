@@ -14,7 +14,7 @@ Flow('Fden','Fvel', 'math output=1')
 
 #Source wavelet:
 #Flow('Fwav', None, 'spike nsp=1 n1=2000 d1=0.0005 k1=200 | ricker1 frequency=20 | transp')
-Flow('Fwav', None, 'spike nsp=1 n1=16001 d1=0.001 k1=200 | ricker1 frequency=10 | transp')
+Flow('Fwav', None, 'spike nsp=1 n1=16001 d1=0.001 k1=200 | ricker1 frequency=20 | transp')
 #Result('Fwav',''' transp | sfwiggle ''') 
 
 
