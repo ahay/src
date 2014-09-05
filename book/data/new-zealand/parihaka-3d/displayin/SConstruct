@@ -1,0 +1,27 @@
+from rsf.proj import *
+
+# near trace gather
+Flow(['image.rsf','image_hdr.rsf'],	
+     ['../fetch/migrated.rsf','../fetch/migrated_hdr.rsf'],
+     '''
+     sftahread \
+          input=${SOURCES[0]} \
+	  sort="iline1 cdp" \
+	  verbose=1 \
+     | sftahwrite \
+          output=${TARGETS[0]} \
+          label2="xline" o2=4200 n2=1126 d2=1 \
+          label3="iline" o3=1736 n3=922 d3=1
+	  verbose=1
+     ''',stdout=0, stdin=0)
+       
+Result("image","sfwindow j3=50 | sfgrey title='Parihaka 3d'")
+Result("image2415","image","sfwindow min3=2415 max3=2415 | sfgrey title='Parihaka 3d line 2415'")
+Result("image3d","image",
+       '''
+       byte 
+       | grey3 frame1=600 frame2=550 frame3=450 title='Parihaka 3D'
+       ''')
+
+       
+End()
