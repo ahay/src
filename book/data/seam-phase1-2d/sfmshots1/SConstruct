@@ -7,6 +7,8 @@ Flow('vel','../fetch/vp.rsf',
      	sfput unit1="m" unit2="m" d1=10 d2=20 label1=Depth label2=Distance
      	''')
 Result('vel',"sfgrey title='vp' scalebar=y color='j'")
+Flow('zvel','vel',"window min1=1000 max1=2500 min2=3700 max2=11700")
+Result('zvel',"sfgrey title='vp' scalebar=y color='j' allpos=y")
 
 shotfilelist=[]
 for shotindx in range(186,186+151*5,5):
