@@ -146,9 +146,8 @@ Flow('Vp_headerattr.txt','Vp_Elastic_N23900_hdr.rsf',
 Flow(['vp1.rsf','vp1_hdr.rsf'],
      ['Vp_Elastic_N23900.rsf','Vp_Elastic_N23900_hdr.rsf'],
      '''
-     sftahsort \
+     sftahread \
           input=${SOURCES[0]} \
-	  sort="sx" \
 	  verbose=1 \
      | sftahwrite \
           output=${TARGETS[0]} \
@@ -160,6 +159,7 @@ Flow('vp','Vp_Elastic_N23900.rsf',
      sfput d2=20 label2="sx" 
      ''')
       
+Result('vp',"sfgrey title='vp' scalebar=y color=j")
 Result('vp',"sfgrey title='vp' scalebar=y color=j")
 
 
