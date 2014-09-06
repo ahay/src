@@ -122,7 +122,7 @@ int main(int argc, char* argv[])
 	prtm2d_init(verb, csd, dz, dx, dt, amp, fm, nz, nx, nb, nt, ns, ng, 
 		sxbeg, szbeg, jsx, jsz, gxbeg, gzbeg, jgx, jgz, v0, mod, dat);
 
-	/* original RTM is simply apply adjoint of prtm2d_lop once!*/
+	/* original RTM is simply applying adjoint of prtm2d_lop once!*/
 	//prtm2d_lop(true, false, nz*nx, nt*ng*ns, mod, dat); 
     	sf_floatwrite(mod, nz*nx, imgrtm);  
 
