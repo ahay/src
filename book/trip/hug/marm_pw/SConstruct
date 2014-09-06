@@ -51,12 +51,12 @@ helm            = os.path.join(RSFSRC,'trip/iwave/helm/main/helm.x')
 deriv           = os.path.join(RSFSRC,'trip/iwave/grid/main/GridDeriv.x')
 linmute         = os.path.join(RSFSRC,'trip/iwave/trace/main/linmute.x')
 
-#fetches = {
-#    'wavelet_base.su' : ['marmousi', 'http://www.trip.caam.rice.edu'],
-#    'velocity.HH' : ['marmousi', 'http://www.trip.caam.rice.edu']
-#}
-#for file in fetches.keys():
-#    Fetch(file,fetches[file][0],server=fetches[file][1])   
+fetches = {
+    'wavelet_base.su' : ['marmousi', 'http://www.trip.caam.rice.edu'],
+    'velocity.HH' : ['marmousi', 'http://www.trip.caam.rice.edu']
+}
+for file in fetches.keys():
+    Fetch(file,fetches[file][0],server=fetches[file][1])   
 
 # new diml consts
 N1 = 141
