@@ -123,13 +123,12 @@ int main(int argc, char* argv[])
 		sxbeg, szbeg, jsx, jsz, gxbeg, gzbeg, jgx, jgz, v0, mod, dat);
 
 	/* original RTM is simply applying adjoint of prtm2d_lop once!*/
-	//prtm2d_lop(true, false, nz*nx, nt*ng*ns, mod, dat); 
-    	sf_floatwrite(mod, nz*nx, imgrtm);  
+	prtm2d_lop(true, false, nz*nx, nt*ng*ns, mod, dat); 
+    	sf_floatwrite(mod, nz*nx, imgrtm);/* output RTM image */
 
 	/* least squares migration */
    	sf_solver(prtm2d_lop, sf_cgstep, nz*nx, nt*ng*ns, mod, dat, niter, "verb", verb, "end");
-	/* output inverted image */
-    	sf_floatwrite(mod, nz*nx, imag);  
+    	sf_floatwrite(mod, nz*nx, imag);  /* output inverted image */
 
 	sf_cgstep_close();
 	prtm2d_close();

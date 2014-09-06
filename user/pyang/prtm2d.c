@@ -379,7 +379,7 @@ void prtm2d_lop(bool adj, bool add, int nm, int nd, float *mod, float *dat)
       sg_init(gxz, gzbeg, gxbeg, jgz, jgx, ng);
     }
 
-    if(adj){/* migration: mm=Lt dd, Img[]+=Ps[]* Pg[]; */
+    if(adj){/* migration: mm=Lt dd */
       for(it=0; it<nt; it++){			
 	add_source(&sxz[is], sp1, 1, &wlt[it], true);
 	step_forward(sp0, sp1, vv, false);
@@ -392,6 +392,7 @@ void prtm2d_lop(bool adj, bool add, int nm, int nd, float *mod, float *dat)
       memset(gp0[0], 0, nzpad*nxpad*sizeof(float));
       memset(gp1[0], 0, nzpad*nxpad*sizeof(float));
       for (it=nt-1; it >-1; it--) {
+	/* reverse time order, Img[]+=Ps[]* Pg[]; */
 	if(verb) sf_warning("%d;",it);
 	
 	/* reconstruct source wavefield Ps[] */	
@@ -407,31 +408,26 @@ void prtm2d_lop(bool adj, bool add, int nm, int nd, float *mod, float *dat)
 	  gp1[gx+nb][gz+nb]+=dat[it+ig*nt+is*nt*ng];
 	}
 	step_forward(gp0, gp1, vv, false);
-	//apply_sponge(gp0); 
-	//apply_sponge(gp1); 
+	apply_sponge(gp0); 
+	apply_sponge(gp1); 
 	ptr=gp0; gp0=gp1; gp1=ptr;
 	
 	for(i2=0; i2<nx; i2++)
 	  for(i1=0; i1<nz; i1++)
 	    mod[i1+nz*i2]+=sp0[i2+nb][i1+nb]*gp0[i2+nb][i1+nb];
       }
-    }else{/*Born modeling/demigration: dd=L mm,Pg[]+=Ps[]* Img[];*/	
-      for(it=0; it<nt; it++){		
+    }else{/*Born modeling/demigration: dd=L mm */	
+      for(it=0; it<nt; it++){	
+	/* forward time order, Pg[]+=Ps[]* Img[]; */	
 	if(verb) sf_warning("%d;",it);	
-
-	add_source(&sxz[is], sp1, 1, &wlt[it], true);
-	step_forward(sp0, sp1, vv, false);
-	apply_sponge(sp0);
-	apply_sponge(sp1);
-	ptr=sp0; sp0=sp1; sp1=ptr;
 
 	for(i2=0; i2<nx; i2++)
 	  for(i1=0; i1<nz; i1++)
 	    gp0[i2+nb][i1+nb]+=sp0[i2+nb][i1+nb]*mod[i1+nz*i2];
 	
 	ptr=gp0; gp0=gp1; gp1=ptr;
-	//apply_sponge(gp0); 
-	//apply_sponge(gp1); 
+	apply_sponge(gp0); 
+	apply_sponge(gp1); 
 	step_forward(gp0, gp1, vv, true);
 	
 	for(ig=0;ig<ng; ig++){
@@ -439,6 +435,12 @@ void prtm2d_lop(bool adj, bool add, int nm, int nd, float *mod, float *dat)
 	  gz=gxz[ig]%nz;
 	  dat[it+ig*nt+is*nt*ng]+=gp1[gx+nb][gz+nb];
 	}
+
+	add_source(&sxz[is], sp1, 1, &wlt[it], true);
+	step_forward(sp0, sp1, vv, false);
+	apply_sponge(sp0);
+	apply_sponge(sp1);
+	ptr=sp0; sp0=sp1; sp1=ptr;
       }	
     }
   }	 
