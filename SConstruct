@@ -1,4 +1,4 @@
-EnsureSConsVersion(1,0)
+#EnsureSConsVersion(1,0)
 
 import atexit, os, sys
 sys.path.insert(0,'./framework')

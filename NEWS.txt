@@ -19,7 +19,7 @@ To SCons:
 
 * Added SLURM support for running MPI jobs through SCons
 * Added workdir= in Fetch
-* Upgraded to scons-2.3.2
+* Upgraded to scons-2.3.3
 
 To documentation:
 

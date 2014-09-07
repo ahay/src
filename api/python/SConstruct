@@ -33,11 +33,11 @@ if root:
 modules.remove('las')
 
 if env.get('SWIG') and env.get('NUMPY'):
-    try:
-        EnsureSConsVersion(1,0)
-    except:
-        print "\n\n\tPlease upgrade SCons to version >= 1.0\n\n"
-        Exit(1)
+    #    try:
+    #        EnsureSConsVersion(1,0)
+    #    except:
+    #        print "\n\n\tPlease upgrade SCons to version >= 1.0\n\n"
+    #        Exit(1)
 
     # Python includes for SWIG
     pythinc = []
