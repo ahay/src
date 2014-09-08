@@ -164,9 +164,9 @@ Flow('datH','datA',
           par['orH'],
           par['jrH']*par['dx']))
 Result('datH',       'window j2=4 | transp|'
-       + fdmod.dgrey(''%par,par))
+       + fdmod.dgrey('',par))
 Result('wigH','datH','window j2=4 | transp|'
-       + fdmod.dwigl('pclip=98'%par,par))
+       + fdmod.dwigl('pclip=98',par))
 
 # ------------------------------------------------------------
 # window data from the vertical array
@@ -178,9 +178,9 @@ Flow('datV','datA',
           par['orV'],
           par['jrV']*par['dz']))
 Result('datV',       'window j2=4 |'
-       + fdmod.egrey(''%par,par))
+       + fdmod.egrey('',par))
 Result('wigV','datV','window j2=4 |'
-       + fdmod.ewigl('pclip=98'%par,par))
+       + fdmod.ewigl('pclip=98',par))
     
 # ------------------------------------------------------------
 for j in ('H','V','A'):

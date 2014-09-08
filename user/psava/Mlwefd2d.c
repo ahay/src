@@ -165,14 +165,7 @@ int main(int argc, char* argv[])
 	if(! sf_getint("jsnap",&jsnap)) jsnap=nt;
     }
 
-    /*------------------------------------------------------------*/
-    /* expand domain for FD operators and ABC */
-    if( !sf_getint("nb",&nb) || nb<NOP) nb=NOP;
 
-    fdm=fdutil_init(verb,fsrf,a1,a2,nb,ompchunk);
-
-    sf_setn(a1,fdm->nzpad); sf_seto(a1,fdm->ozpad); if(verb) sf_raxa(a1);
-    sf_setn(a2,fdm->nxpad); sf_seto(a2,fdm->oxpad); if(verb) sf_raxa(a2);
     /*------------------------------------------------------------*/
 
     /* setup output data header */
@@ -220,11 +213,18 @@ int main(int argc, char* argv[])
 	sf_oaxa(Fliw,at, 3);
     }
 
-    if(expl) {
-	ww = sf_floatalloc( 1);
-    } else {
-	ww = sf_floatalloc(ns);
-    }
+    /*------------------------------------------------------------*/
+    /* expand domain for FD operators and ABC */
+    if( !sf_getint("nb",&nb) || nb<NOP) nb=NOP;
+
+    fdm=fdutil_init(verb,fsrf,a1,a2,nb,ompchunk);
+
+    sf_setn(a1,fdm->nzpad); sf_seto(a1,fdm->ozpad); if(verb) sf_raxa(a1);
+    sf_setn(a2,fdm->nxpad); sf_seto(a2,fdm->oxpad); if(verb) sf_raxa(a2);
+
+    /*------------------------------------------------------------*/
+    if(expl) ww = sf_floatalloc( 1);
+    else     ww = sf_floatalloc(ns);
     bdd =sf_floatalloc(nr);
     sdd =sf_floatalloc(nr);
 
@@ -429,10 +429,15 @@ int main(int argc, char* argv[])
 	sponge2d_apply(sum,        spo,fdm);
 	sponge2d_apply(suo,        spo,fdm);
 
-	/* extract data */
+	/* extract data at receivers */
 	lint2d_extract(buo,bdd,cr);
 	lint2d_extract(suo,sdd,cr);
+	if(        it%jdata==0) {
+	    sf_floatwrite(bdd,nr,Fdat);
+	    sf_floatwrite(sdd,nr,Flid);
+	}
 
+	/* extract wavefield in the "box" */
 	if(snap && it%jsnap==0) {
 	    cut2d(buo,uc,fdm,ac1,ac2);
 	    sf_floatwrite(uc[0],sf_n(ac1)*sf_n(ac2),Fwfl);
@@ -440,10 +445,7 @@ int main(int argc, char* argv[])
 	    cut2d(suo,uc,fdm,ac1,ac2);
 	    sf_floatwrite(uc[0],sf_n(ac1)*sf_n(ac2),Fliw);
 	}
-	if(        it%jdata==0) {
-	    sf_floatwrite(bdd,nr,Fdat);
-	    sf_floatwrite(sdd,nr,Flid);
-	}
+
     }
     if(verb) fprintf(stderr,"\n");    
 

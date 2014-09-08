@@ -1030,7 +1030,7 @@ def lwefd(bdat,bwfl,sdat,swfl,idat,velo,dens,refl,sou,rec,custom,par):
     
     Flow([bdat,bwfl,sdat,swfl],[idat,velo,dens,refl,sou,rec],
          '''
-         lwefd
+         lwefd2d
          ompchunk=%(ompchunk)d ompnth=%(ompnth)d 
          verb=y free=n snap=%(snap)s jsnap=%(jsnap)d
          nb=%(nb)d
@@ -1381,9 +1381,9 @@ def eframe(frame,movie,index,custom,axis,par,xscale=0.75,yscale=0.75,shift=-8.25
         Plot(frame+'-'+str(i),movie+'-plt',
              'window n3=1 f3=%d n4=1 f4=%d |' % (i,index)
              + cgrey('',par))
-#        Result(frame+'-'+str(i),movie+'-plt',
-#             'window n3=1 f3=%d n4=1 f4=%d |' % (i,index)
-#             + cgrey('',par))
+            #        Result(frame+'-'+str(i),movie+'-plt',
+            #               'window n3=1 f3=%d n4=1 f4=%d |' % (i,index)
+            #             + cgrey('',par))
 
     if(axis==1): pplot.p2x1(frame,frame+'-1',frame+'-0',yscale,xscale,shift)
     else:        pplot.p1x2(frame,frame+'-0',frame+'-1',yscale,xscale,shift)
@@ -1395,8 +1395,9 @@ def emovie(movie,wfld,nframes,custom,axis,par,xscale=0.75,yscale=0.75,shift=-8.2
     for iframe in range(nframes):
         tag = "-%02d" % iframe
         eframe(movie+tag,wfld,iframe,custom,axis,par,xscale,yscale,shift)
-        
-    allframes = map(lambda x: movie+'-%02d'  % x,range(nframes))
+
+    allframes = [movie+'-%02d'%x for x in range(nframes)]
+    #    allframes = map(lambda x: movie+'-%02d'  % x,range(nframes))
     Result(movie,allframes,'Movie')
 
 # ------------------------------------------------------------

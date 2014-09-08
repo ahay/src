@@ -98,7 +98,7 @@ int sf_memsize()
     } else {
 	memsize = def;
     }
-    return memsize;
+    return (int)memsize;
 }
 
 off_t sf_filesize (sf_file file) 

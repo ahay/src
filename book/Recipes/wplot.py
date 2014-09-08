@@ -1,3 +1,6 @@
+#
+# PLOTTING functions
+#    
 try:    from rsf.cluster import *
 except: from rsf.proj    import *
 import pplot

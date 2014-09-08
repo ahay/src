@@ -22,18 +22,18 @@
 
 #include <rsf.h>
 
-static void mirror (size_t n1, 
-		    int dim, 
+static void mirror (size_t       n1, 
+		    int          dim, 
 		    const off_t* n, 
-		    const bool* f, 
+		    const bool*  f, 
 		    /*@out@*/ off_t *k);
 
 int main(int argc, char* argv[])
 {
     sf_file in, out;
     char *buf, *buf2, *opt, copt, key[3];
-/* Want them to be arbitrary, neither float nor complex */
-/* Just pretend they are character pointers so we multiply offsets ourselves.*/
+    /* Want them to be arbitrary, neither float nor complex */
+    /* Just pretend they are character pointers so we multiply offsets ourselves.*/
     int i, dim, dim1, dim2, esize, which;
     int mem; /* for avoiding int to off_t typecast warning */
     off_t n[SF_MAX_DIM], pos=0, pos3=0, memsize, size, *k1 = NULL, *k2 = NULL;
@@ -50,7 +50,7 @@ int main(int argc, char* argv[])
 
     dim   = sf_largefiledims(in,n);
     esize = sf_esize(in);
-    
+
     if (!sf_getint("which",&which)) which=-1;
     /* Which axis to reverse.
        To reverse a given axis, start with 0,
