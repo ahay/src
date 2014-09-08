@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
     int n1, n2, n12, i1, i2;
     int n[SF_MAX_DIM], rect[SF_MAX_DIM], niter, dim, i;
     float **data, **top, **bot, eps;
-    const float b1=6, b2=3, t1=16, t2=2;
+    const float b1=16, b2=2, t1=6, t2=3;
     sf_file inp, rct;
 
     sf_init(argc, argv);

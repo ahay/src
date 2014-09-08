@@ -1,3 +1,3 @@
-uses=['sfmath', 'sfcat', 'sftransp', 'sfspike', 'sfwindow', 'sfdd', 'sfgraph', 'sfpad', 'sfricker1', 'sfscale', 'sfput', 'sfspray', 'sfsmooth', 'sfadd', 'sfgrey', 'sfdepth2time', 'sftime2depth', 'sflwefd', 'sfawefd2d', 'sfreverse', 'sfbyte', 'sfstack', 'sfic', 'sfsic3d']
+uses=['sfcat', 'sfspike', 'sfwindow', 'sfdd', 'sfgraph', 'sftransp', 'sfmath', 'sfspray', 'sfsmooth', 'sfscale', 'sfadd', 'sfgrey', 'sfdepth2time', 'sfricker1', 'sftime2depth', 'sfreverse', 'sfbyte', 'sfstack', 'sfic', 'sfsic3d']
 data=[]
-size= 2111015568
+size= 1271003496

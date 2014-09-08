@@ -484,7 +484,7 @@ def lwefd(bdat,bwfl,sdat,swfl,idat,velo,dens,refl,sou,rec,custom,par):
     
     Flow([bdat,bwfl,sdat,swfl],[idat,velo,dens,refl,sou,rec],
          '''
-         lwefd
+         lwefd2d
          ompchunk=%(ompchunk)d ompnth=%(ompnth)d 
          verb=y free=n snap=%(snap)s jsnap=%(jsnap)d
          nb=%(nb)d
