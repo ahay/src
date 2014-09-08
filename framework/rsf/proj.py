@@ -100,9 +100,6 @@ def retrieve(target=None,source=None,env=None):
     folder = top + os.sep +env['dir']
     private = env.get('private')
     usedatapath = env.get('usedatapath')
-    datapath="."
-    if usedatapath!=0:
-        datapath=rsf.path.getpath(os.getcwd())
     if private:
         login = private['login']
         password = private['password']
@@ -119,10 +116,10 @@ def retrieve(target=None,source=None,env=None):
             return 3
         for file in map(str,target):
             remote = os.path.basename(file)
-            localfile=file
-            if usedatapath!=0:
-                pwd = os.getcwd()
-                localfile=datapath+'/'+file
+            if usedatapath:
+                localfile=os.path.join(env.path,file)
+            else:
+                localfile=file
             try:
                 download = open(localfile,'wb')
                 session.retrbinary('RETR '+remote,
@@ -135,9 +132,9 @@ def retrieve(target=None,source=None,env=None):
                 print 'Could not download file "%s" ' % file
                 os.unlink(localfile)
                 return 4
-            if usedatapath!=0:
+            if usedatapath:
                 if os.path.isfile(file):
-                    os.remove(file)
+                    os.unlink(file)
                 os.symlink(localfile,file)
         session.quit()
     else:
@@ -156,9 +153,10 @@ def retrieve(target=None,source=None,env=None):
             for file in map(str,target):
                 remote = os.path.basename(file)  
                 rdir =  '/'.join([server,folder,remote])
-                localfile=file
-                if usedatapath!=0:
-                    localfile=datapath+'/'+file
+                if usedatapath:
+                    localfile=os.path.join(env.path,file)
+                else:
+                    localfile=file
                 try:
                     urllib.urlretrieve(rdir,localfile)
                     if not os.stat(localfile)[6]:
@@ -168,9 +166,9 @@ def retrieve(target=None,source=None,env=None):
                 except:
                     print 'Could not download "%s" from "%s" ' % (file,rdir)
                     return 5
-                if usedatapath!=0:
+                if usedatapath:
                     if os.path.isfile(file):
-                        os.remove(file)
+                        os.unlink(file)
                     os.symlink(localfile,file)
     return 0
 
@@ -621,7 +619,7 @@ class Project(Environment):
         suffix = env.get('suffix',sfsuffix)
         os.system('%s files=n su=%d *%s >> %s' % (sizes,su,suffix,infofile))
         return 0
-    def Fetch(self,files,dir,private=None,server=dataserver,top='data',usedatapath=0):
+    def Fetch(self,files,dir,private=None,server=dataserver,top='data',usedatapath=True):
         if private:
             self.data.append('PRIVATE')
         elif server=='local':

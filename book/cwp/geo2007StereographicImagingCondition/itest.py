@@ -242,14 +242,14 @@ def run(par):
         'wav','velo','dens','refl','ss','rr','jsnap=100',par)
     Result('do','transp | window min1=0.25 |' + fdmod.dgrey('min1=0.25 pclip=100',par))
     Result('dd','transp | window min1=0.25 |' + fdmod.dgrey('min1=0.25 pclip=100',par))
-    Result('wo',fdmod.wgrey('',par))
-    Result('wd',fdmod.wgrey('',par))
+    Plot('wo',fdmod.wgrey('',par),view=1)
+    Plot('wd',fdmod.wgrey('',par),view=1)
 
     # source data and wavefield
     fdmod.awefd1(
         'ds','ws',
         'wav','velo','dens','sx','rr','',par)
-    Result('ws','window j3=20 |' + fdmod.wgrey('',par))
+    Plot('ws','window j3=20 |' + fdmod.wgrey('',par),view=1)
 
     # receiver wavefield
     Flow('du','dd mask',
@@ -259,7 +259,7 @@ def run(par):
         'du','velo','dens','rr','rr','',par)
     Flow('dr','dx','reverse which=2 opt=i verb=y')
     Flow('wr','wx','reverse which=4 opt=i verb=y')
-    Result('wr','window j3=20 |' + fdmod.wgrey('',par))
+    Plot('wr','window j3=20 |' + fdmod.wgrey('',par),view=1)
 
     for i in range(0,par['nt']/100,1):
         fdmod.wframe('wo'+'-'+str(i),'wo',i,'pclip=99.9',par)

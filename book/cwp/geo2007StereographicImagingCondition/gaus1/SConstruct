@@ -1,5 +1,6 @@
 from rsf.proj import *
-import fdmod,itest
+from rsf.recipes import fdmod
+import itest
 
 par=itest.param()
 #par['labelattr']=' wantaxis=n '

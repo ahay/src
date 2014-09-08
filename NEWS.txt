@@ -18,7 +18,7 @@ To the reproducible documents collection:
 To SCons:
 
 * Added SLURM support for running MPI jobs through SCons
-* Added workdir= in Fetch
+* Added usedatapath= in Fetch for placing downloaded data in DATAPATH by default
 * Upgraded to scons-2.3.3
 
 To documentation:
