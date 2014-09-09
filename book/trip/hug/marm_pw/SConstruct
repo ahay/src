@@ -109,13 +109,11 @@ Flow('wav1p.su', ['wavelet_base.su'], suplane + ' nt=' + str(NTP) + ' ntr=' + st
 # pre-cooked exes
 exe_serial  = {}
 exe_getafix = {'platf':'mpi', 'ppn':'16'}
+exe_davinci_small = {'platf':'davinci', 'nodes':'1', 'ppn': '16', 'wall': '00:10:00'}
 exe_stampede_4hr = {'platf':'stampede','nodes':'2','ppn':'16','wall':'04:00:00'}
 exe_stampede_10min = {'platf':'stampede','nodes':'2','ppn':'16','wall':'00:10:00'}
 exe_stampede_30min = {'platf':'stampede','nodes':'2','ppn':'16','wall':'00:30:00'}
 # choose
-
-Flow('bornbigm.su','bornbig.su', linmute + ' input=${SOURCES[0]} output=${TARGETS[0]} mute_slope=0.7 mute_zotime=0 mute_width=200',stdin=0,stdout=0)
-Flow('bornbigm2.su','bornbigm.su', linmute + ' input=${SOURCES[0]} output=${TARGETS[0]} mute_slope=0.7 mute_zotime=0 mute_width=200',stdin=0,stdout=0)
 
 # movie-src output file
 Flow('movie1p','wav1p.su csq24',
@@ -134,40 +132,23 @@ Flow('shot1p.su','wav1p.su csq24 hdr1p.su',
      csq=${SOURCES[1]} source=${SOURCES[0]} sampord=1 data=$TARGET
      ''',stdin=0,stdout=-1,workdir='shot1p.work')
 
-jobs = [
-        { 'job': 'born1p',
-          'pre': '/bin/cp ${SOURCES[0]} ${TARGETS[0]}',
-          'src': ['hdr1p.su', 'wav1p.su', 'csq24big.rsf', 'dcsq24.rsf'],
-          'tgt': ['born1p.su'],
-          'cmd': acd + ' ' + 
-		 'deriv=1 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 ' +
-		 'csq=${SOURCES[2]} csq_d1=${SOURCES[3]} source=${SOURCES[1]} ' +
-		 'data=${TARGETS[0]} partask=' +
-	 	 getThreads(exe_serial),
-          'exe': exe_serial
-	}, 
-	{ 'job': 'mig1p',
-          'pre': 'add scale=0.0 < ${SOURCES[2]} > ${TARGETS[0]}',
-	  'src': ['born1p.su', 'wav1p.su', 'csq24big.rsf'],
-          'tgt': ['mig1p.rsf'],
-          'cmd': acd + ' ' + 
-		 'deriv=1 adjoint=1 order=2 cfl=0.5 ' +
-		 'cmin=1.0 cmax=6.0 sampord=1 nsnaps=20 ' +
-		 'csq=${SOURCES[2]} csq_b1=${TARGETS[0]} ' +
-		 'source=${SOURCES[1]} ' +
-		 'data=${SOURCES[0]} partask=' +
-	 	 getThreads(exe_serial),
-          'exe': exe_serial
-        },
-  ]
+# born simulation
+Flow('born1p.su', ['hdr1p.su', 'wav1p.su', 'csq24big.rsf', 'dcsq24.rsf'],
+     '''
+     /bin/cp ${SOURCES[0]} ${TARGETS[0]} &&
+     acd deriv=1 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 
+     csq=${SOURCES[2]} csq_d1=${SOURCES[3]} source=${SOURCES[1]}
+     data=${TARGETS[0]}
+     ''',stdin=0,stdout=-1,workdir='born1p.work')
 
-# loop for jobs defined in jobs dictionary
-for i in range(len(jobs)):
-    print len(jobs)
-    sig = getFlowSignature(jobs[i]['job']+'.work',jobs[i], penv)
-    if sig == None:
-       print 'Error return from iwave.getFlowSignature - cannot set up job = ' + i
-    else:
-       Flow(sig['tgt'], sig['src'], sig['cmd'], stdin=0, stdout=0, workdir=sig['dir'])
+Flow('mig1p.rsf', ['born1p.su', 'wav1p.su', 'csq24big.rsf'],
+     '''
+     add scale=0.0 < ${SOURCES[2]} > ${TARGETS[0]} &&
+     acd deriv=1 adjoint=1 order=2 cfl=0.5
+     cmin=1.0 cmax=6.0 sampord=1 nsnaps=20
+     csq=${SOURCES[2]} csq_b1=${TARGETS[0]}
+     source=${SOURCES[1]}
+     data=${SOURCES[0]}
+     ''', stdin=0, stdout=-1, workdir='mig1p.work')
 
 End()
