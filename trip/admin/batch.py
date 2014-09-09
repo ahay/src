@@ -167,13 +167,13 @@ def getFlowSignature(workdir, jobdict, envdict):
         MPIROOT = os.getenv('MPIROOT')
         mpirun = os.path.join(MPIROOT,'bin/mpirun')
         # this should be checked for existence
-        workcmd = jobdict['pre'] + '; cd ' + workdir + \
+        workcmd = jobdict['pre'] + \
             '; ' + mpirun + ' -np ' + jobdict['exe']['ppn'] + \
             ' ' + jobdict['cmd']
         
     else:      
 
-        workcmd = jobdict['pre'] + '; cd ' + workdir + \
+        workcmd = jobdict['pre'] + \
             '; ' + jobdict['cmd']
 
     workdict = { 'tgt' : jobdict['tgt'],
