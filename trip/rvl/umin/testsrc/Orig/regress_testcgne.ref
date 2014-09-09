@@ -1,0 +1,102 @@
+
+/****************************************************
+ *            BEGIN UMin UNIT TEST 2.1
+ * Purpose: test CGNE alg scalar type =float
+ *   noise level = 0
+ *   results reported in cgneflt.rpt
+ ****************************************************/
+
+1. Construct domain, range spaces
+
+2. Build LinearOp (GenMat), do adjoint test
+*** adjoint test passed - result in cgneflt.rpt; proceed
+
+3. Build sol, rhs vectors
+
+4. Build, run CGNE algorithm 
+
+
+/****************************************************
+ *            BEGIN UMin UNIT TEST 2.2
+ * Purpose: test CGNE alg scalar type =double
+ *   noise level = 0.1
+ *   results reported in cgnedbl.rpt
+ ****************************************************/
+
+1. Construct domain, range spaces
+
+2. Build LinearOp (GenMat), do adjoint test
+*** adjoint test passed - result in cgnedbl.rpt; proceed
+
+3. Build sol, rhs vectors
+
+4. Build, run CGNE algorithm 
+
+
+/****************************************************
+ *            BEGIN UMin UNIT TEST 2.3
+ * Purpose: test CGNE alg scalar type =complex<float>
+ *   noise level = 0.1
+ *   results reported in cgnefltcplx.rpt
+ ****************************************************/
+
+1. Construct domain, range spaces
+
+2. Build LinearOp (GenMat), do adjoint test
+*** adjoint test passed - result in cgnefltcplx.rpt; proceed
+
+3. Build sol, rhs vectors
+
+4. Build, run CGNE algorithm 
+
+
+/****************************************************
+ *            BEGIN UMin UNIT TEST 2.4
+ * Purpose: test CGNE alg scalar type =complex<double>
+ *   noise level = 0.2
+ *   results reported in cgnedblcplx.rpt
+ ****************************************************/
+
+1. Construct domain, range spaces
+
+2. Build LinearOp (GenMat), do adjoint test
+*** adjoint test passed - result in cgnedblcplx.rpt; proceed
+
+3. Build sol, rhs vectors
+
+4. Build, run CGNE algorithm 
+
+
+/****************************************************
+ *            BEGIN UMin UNIT TEST 2.5
+ * Purpose: test CGNE alg scalar type =float
+ *   noise level = 0
+ *   results reported in cgneflt1.rpt
+ ****************************************************/
+
+1. Construct domain, range spaces
+
+2. Build LinearOp (GenMat), do adjoint test
+*** adjoint test passed - result in cgneflt1.rpt; proceed
+
+3. Build sol, rhs vectors
+
+4. Build, run CGNE algorithm 
+
+
+/****************************************************
+ *            BEGIN UMin UNIT TEST 2.6
+ * Purpose: test CGNE alg scalar type =complex<double>
+ *   noise level = 0.2
+ *   results reported in cgnedblcplx1.rpt
+ ****************************************************/
+
+1. Construct domain, range spaces
+
+2. Build LinearOp (GenMat), do adjoint test
+*** adjoint test passed - result in cgnedblcplx1.rpt; proceed
+
+3. Build sol, rhs vectors
+
+4. Build, run CGNE algorithm 
+

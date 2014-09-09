@@ -1,0 +1,18 @@
+
+/*************************************************
+ *            BEGIN RVL UNIT TEST 11             *
+ * Purpose: test adjoint test                    *
+ * submitted pair is adjoint, so result should   *
+ * be TRUE                                       *
+ *************************************************/
+
+1. Construct domain, range spaces
+
+2. Build GenMat
+
+3. Adjoint Test - tolerance = 100*macheps -- result = 1
+ -- see report in ut11.rpt
+
+/*************************************************
+ *              END RVL UNIT TEST 11             *
+ *************************************************/
