@@ -22,7 +22,7 @@ Flow('data','data.asc',
 Flow('byte','data',
      '''
      dd form=native |
-     byte pclip=100 mean=y
+     byte pclip=100 allpos=y bias=2231
      ''')
 
 # Display
