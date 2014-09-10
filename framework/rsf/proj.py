@@ -177,8 +177,8 @@ def retrieve(target=None,source=None,env=None):
 printer = os.environ.get('PSPRINTER',os.environ.get('PRINTER','postscript'))
 
 Retrieve = Builder(action = Action(retrieve,
-                                   varlist=['dir','private','top','server','usedatapath']),
-                   emitter=retrieve_emit)
+                                   varlist=['dir','private','top','server','usedatapath']))
+#                   emitter=retrieve_emit)
 Test = Builder(action=Action(test),varlist=['figdir','bindir'])
 Echo = Builder(action=Action(echo),varlist=['out','err'])
 
