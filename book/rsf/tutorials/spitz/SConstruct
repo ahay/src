@@ -42,4 +42,26 @@ for case in Split('signal2 noise2'):
 Result('signoi','data signal2 noise2','SideBySideAniso')
 Result('gsignoi','gdata gsignal2 gnoise2','SideBySideAniso')
 
+# F-X domain
+############
+
+Flow('fdata','data','fft1')
+
+# Take a frequency slice
+
+Flow('fslice','fdata','window n1=1 min1=1')
+
+# apply shifts in space
+
+Flow('fshift','fslice','shift1 ns=5')
+
+# find PEF
+
+Flow('fpef','fshift fslice','clpf match=${SOURCES[1]} rect1=1000 | stack axis=1')
+
+# find polynomial roots
+
+Flow('fpoly','fpef','window n1=1 | math output=-1 | cat axis=1 $SOURCE')
+Flow('froots','fpoly','roots verb=n niter=200 sort=p')
+
 End()

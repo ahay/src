@@ -87,12 +87,14 @@ def echo(target,source,env):
         sys.stderr.write(err+'\n')
     return 0
 
-def symlink(target, source, env):
-    "Create symbolic link"
-    src = str(source[0])
-    tar = str(target[0])
-    os.symlink(src,tar)
-    return 0
+def retrieve_emit(target=None, source=None, env=None):
+    usedatapath = env.get('usedatapath')
+    server = env.get('server')
+    if usedatapath and server != 'local':
+        for file in map(str,target):
+            localfile=os.path.join(env.path,file)
+            target.append(localfile)
+    return target, source
 
 def retrieve(target=None,source=None,env=None):
     "Fetch data from the web"
@@ -175,7 +177,8 @@ def retrieve(target=None,source=None,env=None):
 printer = os.environ.get('PSPRINTER',os.environ.get('PRINTER','postscript'))
 
 Retrieve = Builder(action = Action(retrieve,
-                                   varlist=['dir','private','top','server','usedatapath']))
+                                   varlist=['dir','private','top','server','usedatapath']),
+                   emitter=retrieve_emit)
 Test = Builder(action=Action(test),varlist=['figdir','bindir'])
 Echo = Builder(action=Action(echo),varlist=['out','err'])
 

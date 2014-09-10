@@ -1,0 +1,19 @@
+from rsf.proj import *
+
+Flow('random',None,'math n1=8 n2=8 output=1 | noise rep=y seed=2014 type=n mean=0.5')
+
+Result('spectral','random',
+       '''
+       grey pclip=100 mean=y color=spectral screenratio=0.9 scalebar=y 
+       title=spectral
+       ''')
+
+Flow('bar',None,'math n1=16 output=x1')
+
+Result('bar',
+       '''
+       grey allpos=y pclip=100 color=spectral title=Colors wantaxis=n 
+       screenht=2 screenwd=16 transp=n wheretitle=t
+       ''')
+
+End()

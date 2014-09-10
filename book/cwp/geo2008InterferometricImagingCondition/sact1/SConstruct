@@ -1,7 +1,8 @@
 from rsf.proj import *
+from rsf.recipes import fdmod
 import sys
 sys.path.append('..')
-import sigs,fdmod,iic
+import sigs,iic
 
 par=sigs.param()             # init model parameters
 sigs.fdmpar(par)             # add FDM parameters
