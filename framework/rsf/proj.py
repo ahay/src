@@ -116,7 +116,8 @@ def retrieve(target=None,source=None,env=None):
             print 'Could not establish connection with "%s/%s" ' % (server,
                                                                     folder)
             return 3
-        for file in map(str,target):
+        for file in filter(lambda x: not os.path.dirname(x), 
+                           map(str,target)):
             remote = os.path.basename(file)
             if usedatapath:
                 localfile=os.path.join(env.path,file)
@@ -152,7 +153,8 @@ def retrieve(target=None,source=None,env=None):
                     os.unlink(file)
                     return 6
         else:
-            for file in map(str,target):
+            for file in filter(lambda x: not os.path.dirname(x),
+                               map(str,target)):
                 remote = os.path.basename(file)  
                 rdir =  '/'.join([server,folder,remote])
                 if usedatapath:
@@ -177,8 +179,8 @@ def retrieve(target=None,source=None,env=None):
 printer = os.environ.get('PSPRINTER',os.environ.get('PRINTER','postscript'))
 
 Retrieve = Builder(action = Action(retrieve,
-                                   varlist=['dir','private','top','server','usedatapath']))
-#                   emitter=retrieve_emit)
+                                   varlist=['dir','private','top','server','usedatapath']),
+                   emitter=retrieve_emit)
 Test = Builder(action=Action(test),varlist=['figdir','bindir'])
 Echo = Builder(action=Action(echo),varlist=['out','err'])
 
