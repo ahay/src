@@ -422,6 +422,7 @@ mark: /* Mark point for goto*/
 	}	
 		
 	table->t = tt; /* output the data to table */
+/*	sf_warning("Traveltime=%g s=%g r=%g refl=%d\n",tt,xx[0],xx[n+1],n+1);*/
 	table->tx = tx_r;
 	table->ty = ty;
 	table->tn = sqrt(fabsf(1/(v_r*v_r)-tx_r*tx_r)); /* To make it compatible with the convention of the old kirmod (Actually in z-direction)*/

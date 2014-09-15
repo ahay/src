@@ -150,7 +150,7 @@ int main(int argc, char* argv[])
 	if (!sf_getint("vstatus",&vstatus)) sf_error("Please enter the status of velocity (0 for constant v,1 for gradient v, and 2 for VTI)");
 	/* Velocity status (0 for constant v, 1 for gradient v, and 2 for VTI)*/
 	
-	if (vstatus != 2){ /*Don't need all of these if  consider vti case*/
+	if (vstatus == 1){ /*Don't need all of these if  consider vti case*/
 		if (!sf_getfloats("velocity",v_inp,N-1)) sf_error("Please enter the velocity array [N-1]");
 		/* Assign velocity km/s*/
 		
@@ -166,6 +166,15 @@ int main(int argc, char* argv[])
 		if (!sf_getfloats("zref",zref_inp,N-1)) sf_error("Please enter the z-reference points array [N-1]");
 		/* Assign z-reference point*/
 	}
+	else {
+		if (!sf_getfloats("velocity",v_inp,N-1)) sf_error("Please enter the velocity array [N-1]");
+		/* Assign velocity km/s*/
+		int index;
+		for(index=0;index<N-1;index++) {
+			gx_inp[index] = 0.0;
+			gz_inp[index] = 0.0;
+		}
+	}
 	
 	if (!sf_getfloat("min",&bmin)) bmin=xx[0];
 	/* The minimum boundary if not entered, set to xs*/
@@ -174,7 +183,7 @@ int main(int argc, char* argv[])
 	if (!sf_getfloat("max",&bmax)) bmax=xx[nr2+1];
 	/* The maximum boundary if not entered, set to xr*/
 	
-	if (!sf_getint("niter",&niter)) sf_error("Please enter the number of iterations");
+	if (!sf_getint("niter",&niter)) niter=100;
 	/* The number of iterations*/
 	
 	if (!sf_getbool("debug",&debug)) debug=false;

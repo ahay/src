@@ -3,9 +3,9 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-isaac0 isaac1 isaac2 isaac3 kirmod_newton mpikirmodnewton 
+isaac0 isaac1 isaac2 isaac3 kirmod_newton  mpikirmodnewton autoobjective
 '''
-
+#tti2delrdecomp2pdot
 try:  # distributed version
     Import('env root pkgdir bindir')
     env = env.Clone()

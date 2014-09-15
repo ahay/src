@@ -142,7 +142,13 @@ void kirmodnewton_init(float **temp_rr /* Reflectors data of dimension N2xN1 */,
 			exit(0);
 		}
 	}*/
-	
+	if (vstatus == 0){
+			int index;
+		for(index=0;index<N2-1;index++) {
+			gx_inp[index] = 0.0;
+			gz_inp[index] = 0.0;
+		}
+	}
 	/* Check whether the gradient and vstatus match-------------------------------------------------------*/
 	if (vstatus != 2) {
 		for (p3=0; p3<N2-1; p3++) {

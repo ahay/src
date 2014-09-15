@@ -278,27 +278,27 @@ int main(int argc, char* argv[])
 	if (vstatus != 2) {
 		if (!sf_getfloats("velocity",vn.v,nc)) sf_error("Please enter the velocity array [nc]");
 		/* Assign velocity km/s*/
-			
-		if (!sf_getfloats("xgradient",vn.gx,nc)) {
-		    for (count=0; count<nc; count++) {
-			vn.gx[count] = 0;
-		    }
+		if (vstatus == 1) {
+			if (!sf_getfloats("xgradient",vn.gx,nc)) {
+			    for (count=0; count<nc; count++) {
+				vn.gx[count] = 0;
+			    }
+			}
+			/* Assign x-gradient*/
+				
+			if (!sf_getfloats("zgradient",vn.gz,nc)) { 
+			    for (count=0; count<nc; count++) {
+				vn.gz[count] = 0;
+			    }
+			}
+			/* Assign z-gradient */
+				
+			if (!sf_getfloats("xref",vn.xref,nc))  sf_error("Please enter the x-reference points array [nc]");
+			/* Assign x-reference point*/
+				
+			if (!sf_getfloats("zref",vn.zref,nc)) sf_error("Please enter the z-reference points array [nc]");
+			/* Assign z-reference point*/
 		}
-		/* Assign x-gradient*/
-			
-		if (!sf_getfloats("zgradient",vn.gz,nc)) { 
-		    for (count=0; count<nc; count++) {
-			vn.gz[count] = 0;
-		    }
-		}
-		/* Assign z-gradient */
-			
-		if (!sf_getfloats("xref",vn.xref,nc))  sf_error("Please enter the x-reference points array [nc]");
-		/* Assign x-reference point*/
-			
-		if (!sf_getfloats("zref",vn.zref,nc)) sf_error("Please enter the z-reference points array [nc]");
-		/* Assign z-reference point*/
-			
 	}
 	else {
 		vti = sf_input("aniso"); /* anisotropy*/
