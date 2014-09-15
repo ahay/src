@@ -71,11 +71,17 @@ int main(int argc, char ** argv) {
         SEGYTaperMute tnm(valparse<float>(*pars,"mute_slope",0.0f),
                          valparse<float>(*pars,"mute_zotime",0.0f),
                          valparse<float>(*pars,"mute_width",0.0f),0,
-                         valparse<float>(*pars,"min_gx",0.0f),
-                         valparse<float>(*pars,"max_gx",numeric_limits<float>::max()),
-                         valparse<float>(*pars,"taper_width",0.0f),0,
+                         valparse<float>(*pars,"min",0.0f),
+                         valparse<float>(*pars,"max",numeric_limits<float>::max()),
+                         valparse<float>(*pars,"taper_width",0.0f),
+                         valparse<int>(*pars,"taper_type",0),
                          valparse<float>(*pars,"time_width",0.0f));
-        
+       
+        cerr << "min = " << valparse<float>(*pars,"min",0.0f) << endl;
+        cerr << "max = " << valparse<float>(*pars,"max",numeric_limits<float>::max()) << endl;
+        cerr << "taper_width = " << valparse<float>(*pars,"taper_width",0.0f) << endl;
+        cerr << "taper_type = " << valparse<int>(*pars,"taper_type",0) << endl;
+
         LinearOpFO<float> tnmop(iwop.getRange(),iwop.getRange(),tnm,tnm);
         
         Vector<ireal> ddin(tnmop.getRange());

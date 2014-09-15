@@ -56,6 +56,7 @@ using TSOpt::IOTask;
 using TSOpt::IWaveOp;
 using TSOpt::SEGYTaperMute;
 using TSOpt::GridWindowOp;
+using TSOpt::GridMaskOp;
 #ifdef IWAVE_USE_MPI
 using TSOpt::MPIGridSpace;
 using TSOpt::MPISEGYSpace;
@@ -65,6 +66,9 @@ using TSOpt::SEGYSpace;
 #endif
 using TSOpt::GridExtendOp;
 using TSOpt::GridDerivOp;
+using TSOpt::GridHelmOp;
+
+
 
 int xargc;
 char **xargv;
@@ -117,9 +121,11 @@ int main(int argc, char ** argv) {
             SEGYTaperMute tnm(valparse<float>(*pars,"mute_slope",0.0f),
                               valparse<float>(*pars,"mute_zotime",0.0f),
                               valparse<float>(*pars,"mute_width",0.0f),0,
-                              valparse<float>(*pars,"min_gx",0.0f),
-                              valparse<float>(*pars,"max_gx",numeric_limits<float>::max()),
-                              valparse<float>(*pars,"taper_width",0.0f),0);
+                              valparse<float>(*pars,"min",0.0f),
+                              valparse<float>(*pars,"max",numeric_limits<float>::max()),
+                              valparse<float>(*pars,"taper_width",0.0f),
+                              valparse<int>(*pars,"taper_type",0),
+                              valparse<float>(*pars,"time_width",0.0f));
             
             LinearOpFO<float> tnmop(iwop.getRange(),iwop.getRange(),tnm,tnm);
         
@@ -193,24 +199,32 @@ int main(int argc, char ** argv) {
                 throw e;
             }
 #endif
+           
+
+    // assign window widths - default = 0;
+    RPNT swind,ewind;
+    RASN(swind,RPNT_0);
+    RASN(ewind,RPNT_0);
+    swind[0]=valparse<float>(*pars,"sww1",0.0f);
+    swind[1]=valparse<float>(*pars,"sww2",0.0f);
+    swind[2]=valparse<float>(*pars,"sww3",0.0f);
+    ewind[0]=valparse<float>(*pars,"eww1",0.0f);
+    ewind[1]=valparse<float>(*pars,"eww2",0.0f);
+    ewind[2]=valparse<float>(*pars,"eww3",0.0f);
+ 
             
-            // assign window widths - default = 0;
-            RPNT wind;
-            RASN(wind,RPNT_0);
-            wind[0]=valparse<float>(*pars,"windw1",0.0f);
-            wind[1]=valparse<float>(*pars,"windw2",0.0f);
-            wind[2]=valparse<float>(*pars,"windw3",0.0f);
-            
-            GridDerivOp dsop0(op.getDomain(),dsdir,valparse<float>(*pars,"DSWeight",0.0f));
+            GridDerivOp dsop(op.getDomain(),dsdir,valparse<float>(*pars,"DSWeight",0.0f));
             
             // need to read in model space for bg input to GridWindowOp
             Vector<ireal> m_in(op.getDomain());
             AssignFilename minfn(valparse<std::string>(*pars,"csqext"));
             Components<ireal> cmin(m_in);
             cmin[0].eval(minfn);
-            GridWindowOp wop(op.getDomain(),m_in,wind);
+            GridMaskOp mop(op.getDomain(),m_in,swind,ewind);
+            OperatorEvaluation<float> mopeval(mop,m_in);
+            LinearOp<float> const & lmop=mopeval.getDeriv();
             
-            OpComp<float> dsop(wop,dsop0);
+            //OpComp<float> dsop(wop,dsop0);
             
             TensorOp<float> top(op,dsop);
             // create RHS of block system
@@ -221,40 +235,68 @@ int main(int argc, char ** argv) {
             
             // choice of preop is placeholder
             ScaleOpFwd<float> preop(top.getDomain(),1.0f);
-            
-            MultiFit<float> f(pdom, top, gext, preop, td,res);
-            
+           
+        RPNT w_arr;
+        RASN(w_arr,RPNT_1);
+        w_arr[0]=valparse<float>(*pars,"scale1",1.0f);
+        w_arr[1]=valparse<float>(*pars,"scale2",1.0f);
+        float power=0.0f;
+        float datum=0.0f;
+        power=valparse<float>(*pars,"power",0.0f);
+        datum=valparse<float>(*pars,"datum",0.0f);
+      
+        GridHelmOp hop(dom,w_arr,power,datum);
+ 
+            MultiFit<float> f(pdom, top, gext, lmop, hop, td,res);
+            if (retrieveGlobalRank()==0) {
+               cerr << "\n before Fm\n";
+               cerr << "\n datum = " << datum << endl;
+               cerr << "\n scale1 = " << w_arr[0] << endl;
+               cerr << "\n scale2 = " << w_arr[1] << endl;
+            } 
+            FunctionalEvaluation<float> Fm(f,m); 
+            //float aaa = 0.0f;
+            //aaa = Fm.getValue();
+           
+//        int myrank;
+//        MPI_Comm_rank(retrieveGlobalComm(),&myrank); 
+//        for(int i=0; i<=112; i++){
+//          if (myrank==i) 
+//                cerr << "\n retrieveGlobalRank() = " << retrieveGlobalRank() << endl;
+//          MPI_Barrier(retrieveGlobalComm());
+//        } 
+
             // lower, upper bds for csq
-            Vector<float> lb(f.getDomain());
-            Vector<float> ub(f.getDomain());
-            float lbcsq=valparse<float>(*pars,"cmin");
-            float lbdcsq=valparse<float>(*pars,"dcmin");
-            lbcsq=lbcsq*lbcsq;
-            lbdcsq=lbdcsq*lbdcsq;
-            RVLAssignConst<float> asl(lbcsq);
-            RVLAssignConst<float> asld(lbdcsq);
-            Components<float> clb(lb);
-            clb[0].eval(asl);
-            clb[1].eval(asld);
-            float ubcsq=valparse<float>(*pars,"cmax");
-            float ubdcsq=valparse<float>(*pars,"dcmax");
-            ubcsq=ubcsq*ubcsq;
-            ubdcsq=ubdcsq*ubdcsq;
-            RVLAssignConst<float> asu(ubcsq);
-            RVLAssignConst<float> asud(ubdcsq);
-            Components<float> cub(ub);
-            cub[0].eval(asu);
-            cub[1].eval(asud);
-            RVLMin<float> mn;
-#ifdef IWAVE_USE_MPI
-            MPISerialFunctionObjectRedn<float,float> mpimn(mn);
-            ULBoundsTest<float> ultest(lb,ub,mpimn);
-#else
-            ULBoundsTest<float> ultest(lb,ub,mn);
-#endif
-            FunctionalBd<float> fbd(f,ultest);
-            
-            LBFGSBT<float> alg(fbd,m,
+//            Vector<float> lb(f.getDomain());
+//            Vector<float> ub(f.getDomain());
+//            float lbcsq=valparse<float>(*pars,"cmin");
+//            float lbdcsq=valparse<float>(*pars,"dcmin");
+//            lbcsq=lbcsq*lbcsq;
+//            lbdcsq=lbdcsq*lbdcsq;
+//            RVLAssignConst<float> asl(lbcsq);
+//            RVLAssignConst<float> asld(lbdcsq);
+//            Components<float> clb(lb);
+//            clb[0].eval(asl);
+//            clb[1].eval(asld);
+//            float ubcsq=valparse<float>(*pars,"cmax");
+//            float ubdcsq=valparse<float>(*pars,"dcmax");
+//            ubcsq=ubcsq*ubcsq;
+//            ubdcsq=ubdcsq*ubdcsq;
+//            RVLAssignConst<float> asu(ubcsq);
+//            RVLAssignConst<float> asud(ubdcsq);
+//            Components<float> cub(ub);
+//            cub[0].eval(asu);
+//            cub[1].eval(asud);
+//            RVLMin<float> mn;
+//#ifdef IWAVE_USE_MPI
+//            MPISerialFunctionObjectRedn<float,float> mpimn(mn);
+//            ULBoundsTest<float> ultest(lb,ub,mpimn);
+//#else
+//            ULBoundsTest<float> ultest(lb,ub,mn);
+//#endif
+//            FunctionalBd<float> fbd(f,ultest);
+//            
+            LBFGSBT<float> alg(f,m,
                                valparse<float>(*pars,"InvHessianScale",1.0f),
                                valparse<int>(*pars,"MaxInvHessianUpdates",5),
                                valparse<int>(*pars,"MaxLineSrchSteps",10),
