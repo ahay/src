@@ -92,7 +92,7 @@ def retrieve_emit(target=None, source=None, env=None):
     server = env.get('server')
     if usedatapath and server != 'local':
         for file in map(str,target):
-            localfile=os.path.join(env.path,file)
+            localfile=env.path+file
             target.append(localfile)
     return target, source
 
@@ -120,7 +120,7 @@ def retrieve(target=None,source=None,env=None):
                            map(str,target)):
             remote = os.path.basename(file)
             if usedatapath:
-                localfile=os.path.join(env.path,file)
+                localfile=env.path+file
             else:
                 localfile=file
             try:
@@ -158,7 +158,7 @@ def retrieve(target=None,source=None,env=None):
                 remote = os.path.basename(file)  
                 rdir =  '/'.join([server,folder,remote])
                 if usedatapath:
-                    localfile=os.path.join(env.path,file)
+                    localfile=env.path+file
                 else:
                     localfile=file
                 try:
@@ -351,7 +351,7 @@ class Project(Environment):
         # self.jobs is the number of jobs
         # self.ip is the current CPU
 
-        self.hosts = os.path.join(self.path,'hosts.txt')
+        self.hosts = self.path + 'hosts.txt'
         if (os.path.isfile(self.hosts)):
             os.unlink(self.hosts)
         hosts_fd=open(self.hosts,'w')
