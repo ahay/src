@@ -547,8 +547,8 @@ static char* gettmpdatapath (void)
  
    Datapath rules:
    1. check tmpdatapath= on the command line
-   2. check TMPDATAPATH environmental variable
-   3. check .tmpdatapath file in the current directory
+   2. check .tmpdatapath file in the current directory
+   3. check TMPDATAPATH environmental variable
    4. check .tmpdatapath in the home directory
    5. return NULL
 */
@@ -559,14 +559,14 @@ static char* gettmpdatapath (void)
     if (NULL != path) return path;
 	
     path = sf_charalloc(PATH_MAX+1);
+
+    if (readpathfile (".tmpdatapath",path)) return path;
 	
     penv = getenv("TMPDATAPATH");
     if (NULL != penv) {
 	strncpy(path,penv,PATH_MAX);
 	return path;
     }
-	
-    if (readpathfile (".tmpdatapath",path)) return path;
     
     home = getenv("HOME");
     if (NULL != home) {
@@ -583,16 +583,14 @@ static char* getdatapath (void)
  
    Datapath rules:
    1. check datapath= on the command line
-   2. check DATAPATH environmental variable
-   3. check .datapath file in the current directory
+   2. check .datapath file in the current directory
+   3. check DATAPATH environmental variable
    4. check .datapath in the home directory
    5. use '.' (not a SEPlib behavior) 
 
-   13245 is more reasonable (Zhonghuan Chen)
-   seems like option 5 would result in:
-      if you move the header to another directory then you must also move 
-      the data to the same directory. Confusing consequence. 
-      (Karl Schleicher 5/28/2013) 
+   Note that option 5 results in:
+   if you move the header to another directory then you must also move 
+   the data to the same directory. Confusing consequence. 
 */
 {
     char *path, *penv, *home, file[PATH_MAX];
@@ -616,11 +614,7 @@ static char* getdatapath (void)
 	if (readpathfile (file,path)) return path;
     }
 	
-    /* could next 4 line be simplified to:
-       return "./"; ?  or just return NULL;??     Karl Schleicher 5/28/2013 */
-    path = sf_charalloc(3);
-    strncpy(path,"./",3); 
-	
+    strncpy(path,"./",3); 	
     return path;
 }
 
