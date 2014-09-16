@@ -33,11 +33,13 @@ int main(int argc, char* argv[])
 {
     sf_file in=NULL, yfile=NULL; /* Inputs */
     sf_file out=NULL; /* Output */
+    sf_file fa=NULL; /*optional input file */
     char buf_x[BUFSIZ], buf_y[BUFSIZ], buf_out[BUFSIZ]; /* I/O memory buffers */
     off_t n[SF_MAX_DIM], nsiz; /* Dims of cube, total nr elems */
     size_t i, nbuf, nleft, dim;
     size_t bufsiz;
     double a;
+    float af;
     double x, y, sum; /* For the float case */
     double sum_r, sum_i, x_r, x_i, y_r, y_i; /* For the sf_complex case */
     sf_complex x_c_sp, y_c_sp; /* Single precision */
@@ -51,6 +53,17 @@ int main(int argc, char* argv[])
     out   = sf_output("out");
 
     if (!sf_getdouble("a",&a)) a=1; /* Scaling factor */
+    if(a==1) {
+      fa = sf_input("afile");
+      sf_floatread((float*)&af,1,fa   );
+      a = (double)af; 
+    }  
+
+
+
+
+
+
     if (!sf_getbool("verb",&verb)) verb=false; /* Verbosity flag */
 
     dim = (size_t) sf_largefiledims (in,n); /* Vector with cube dimensions */
