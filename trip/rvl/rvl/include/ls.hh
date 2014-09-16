@@ -766,7 +766,7 @@ namespace RVL {
     }
 
     virtual Functional<Scalar> * clone() const { 
-      return new StdLeastSquaresFcnlGN<Scalar>(*this); 
+      return new RegLeastSquaresFcnlGN<Scalar>(*this); 
     }
 
   public:  
@@ -789,12 +789,14 @@ namespace RVL {
 
     /** Copy constructor */
     RegLeastSquaresFcnlGN(const RegLeastSquaresFcnlGN<Scalar> & rls)
-      : f1(rls.f1), f2(rls.f2), lambda(rls.lam), work(rls.work) { 
+      : f1(rls.f1), f2(rls.f2), lambda(rls.lambda), work(rls.work) { 
       testRealOnly<Scalar>(); 
     }
   
     // Destructor.
     virtual ~RegLeastSquaresFcnlGN() {}
+
+    Space<Scalar> const & getDomain() const { return work.getDomain(); }
 
     ostream & write(ostream & str) const {
       str<<"Regularized Least-Squares Gauss-Newton functional. realized as\n";

@@ -55,6 +55,7 @@ using TSOpt::TASK_RELN;
 using TSOpt::IOTask;
 using TSOpt::IWaveOp;
 using TSOpt::SEGYTaperMute;
+using TSOpt::GridMaskOp;
 #ifdef IWAVE_USE_MPI
 using TSOpt::MPIGridSpace;
 using TSOpt::MPISEGYSpace;
@@ -196,8 +197,30 @@ int main(int argc, char ** argv) {
 	throw e;
       }
 #endif
+    // assign window widths - default = 0;
+    RPNT swind,ewind;
+    RASN(swind,RPNT_0);
+    RASN(ewind,RPNT_0);
+    swind[0]=valparse<float>(*pars,"sww1",0.0f);
+    swind[1]=valparse<float>(*pars,"sww2",0.0f);
+    swind[2]=valparse<float>(*pars,"sww3",0.0f);
+    ewind[0]=valparse<float>(*pars,"eww1",0.0f);
+    ewind[1]=valparse<float>(*pars,"eww2",0.0f);
+    ewind[2]=valparse<float>(*pars,"eww3",0.0f);
+
       GridDerivOp dsop(op.getDomain(),dsdir,valparse<float>(*pars,"DSWeight",0.0f));
-      TensorOp<float> top(op,dsop);
+            // need to read in model space for bg input to GridWindowOp
+            Vector<ireal> m_in(op.getDomain());
+            AssignFilename minfn(valparse<std::string>(*pars,"csqext"));
+            Components<ireal> cmin(m_in);
+            cmin[0].eval(minfn);
+            GridMaskOp mop(op.getDomain(),m_in,swind,ewind);
+     OperatorEvaluation<float> mopeval(mop,m_in);
+     LinearOp<float> const & lmop=mopeval.getDeriv();
+//            OpComp<float> dsop(mop,dsop0);
+//            OpComp<float> fop(mop,op);
+            TensorOp<float> top(op,dsop);
+
       // create RHS of block system
       Vector<float> td(top.getRange());
       Components<float> ctd(td);
@@ -226,7 +249,7 @@ int main(int argc, char ** argv) {
       datum=valparse<float>(*pars,"datum",0.0f);
 
       GridHelmOp hop(op.getDomain(),w_arr,power,datum);
-      LinFitLSSM<float, CGNEPolicy<float>, CGNEPolicyData<float> > f(top,preop,hop,td,dm0,pd,false,res);
+      LinFitLSSM<float, CGNEPolicy<float>, CGNEPolicyData<float> > f(top,lmop,hop,td,dm0,pd,false,res);
       GridExtendOp g(dom,op.getDomain());
       FcnlOpComp<float> gf(f,g);
 
