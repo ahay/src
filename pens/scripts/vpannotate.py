@@ -16,21 +16,70 @@
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 # modified from vp_annotate by Martin Karrenbach
-import sys
+import os, sys, tempfile, signal
+from rsf.prog import RSFROOT
+        
+def handler(signum, frame):
+    'signal handler for abortion [Ctrl-C]'
+    sys.stderr.write('\n[Ctrl-C] Aborting...\n')
+    if child:
+        os.kill (signal.SIGINT,child)
+    sys.exit(-1)
 
-xtpen_message='''
+signal.signal(signal.SIGINT,handler) # handle interrupt
+
+child = None
+def syswait(comm):
+    'Interruptable system command'
+    global child
+    child = os.fork()
+    if child:
+        (pid,exit) = os.waitpid(child,0)
+        child = 0
+        return exit
+    else:
+        os.system(comm)
+        os._exit(0)
+
+def annotate(files,args,interactive,textfile):
+    inp = files[0]
+
+    message = '''
 Move cursor to the place, where the balloon arrow 
 should point to, then click left mouse button.
 Fill out the label and eventually change the defaults,
 then click on CONFIRM.  Repeat for more annotations.
 To create the annotated file, QUIT out of xtpen.
-'''
+    '''
 
-xtpen_result='''
+    xtpen = os.path.join(RSFROOT,'bin','xtpen')
+    box   = os.path.join(RSFROOT,'bin','sfbox')
+    vppen = os.path.join(RSFROOT,'bin','vppen')
+
+    if interactive:
+        run = '%s message="%s" %s interact=%s boxy=y < %s' % (xtpen,message,args,textfile,inp)
+        syswait(run)
+
+    boxvpl = tempfile.mktemp(suffix='.vpl')
+    
+    run = '%s par=%s %s > %s' % (box,textfile,args,boxvpl)
+    syswait(run)
+
+    result = '''
 This is the annotated vplot figure.
 You might play with vpstyle=y, if you only want to 
 see the original portion.
-'''
+    '''
+
+    
+    if interactive:
+        run = '%s %s %s erase=once vpstyle=n %s | %s  message="%s" ' % (vppen,inp,boxvpl,args,xtpen,result)
+    else:
+        run = '%s %s %s erase=once vpstyle=n %s > %s' % (vppen,inp,boxvpl,args,files[1])
+    syswait(run)
+
+    # cleanup
+    os.unlink(boxvpl)
 
 if __name__ == "__main__":
     # own user interface instead of that provided by RSF's Python API
@@ -38,22 +87,23 @@ if __name__ == "__main__":
     argc = len(sys.argv)
     prog = sys.argv.pop(0)
     
-    if argc < 2:
-        print '''
-Usage:
-%s [batch=0] [vpstyle=n] file.vpl annotated.vpl
+    usage = '''
+    Annotates a Vplot file with a box.
 
-Annotates a Vplot file using sfbox
-        ''' % prog
+    Usage:
+    %s [batch=0] [text=box.par] file.vpl [annotated.vpl]
+    ''' % prog
+
+    if argc < 2:
+        print usage
         sys.exit(2)
 
     interactive = 1
-    vpstyle="n"
-    textfile = "text_file" 
+    textfile = "box.par" 
 
     args = []
     files = []
-    for arg in sys.argv[1:]:
+    for arg in sys.argv:
         if '=' in arg:
             if arg[:5] == 'batch':
                 if arg[5]=='y' or arg[5]=='1':
@@ -62,72 +112,19 @@ Annotates a Vplot file using sfbox
                     interactive = 1
             elif arg[:4] == 'text':
                 textfile = arg[4:]
-            elif arg[:7] == 'vpstyle':
-                vpstyle = arg[7:]
             else:
                 args.append(arg)
         else:
             files.append(arg)
     args = ' '.join(args)
-        
-def annotate(files,interactive,vpstyle,textfile)
 
-# copy input file
+    if interactive:
+        needfiles = 1
+    else:
+        needfiles = 2
+    
+    if len(files) < needfiles:
+        print usage
+        sys.exit(3)
 
-$cnt=$cnt+1;
-$tempfile = "temp_vplot"."$cnt";
-open(INFILE,"> $tempfile.v") || die "Could not open tempfile\n";
-while(<STDIN>) {print INFILE $_ ; }
-close(INFILE);
-	
-# run xtpen in the interactive session
-
-if ($interactive == $true) { 
-  system "xtpen message=$xtpen_message $remaining interact=$textfile boxy=y <$tempfile.v";}
-
-# digest the text file containing labels
-
-open(TEXT,"<$textfile") || die "Could not open $textfile\n";
-while(<TEXT>){
-    $cnt = $cnt + 1;
-    $tempfile = "temp_vplot"."$cnt" ;
-    chop($_);
-    system " Box $_ out=$tempfile.v head=/dev/null ";
-}
-close(TEXT);
-
-$filelist="";
-for ( $i=0; $i<=$cnt; $i++){ $filelist = " $filelist"."temp_vplot"."$i".".v " ;}
-
-# run vppen
-
-if ($interactive == $true) { 
-  system "vppen $filelist  erase=once  vpstyle=$vpstyle $remaining | xtpen message=$xtpen_result"; }
-
-open(VPPEN,"vppen $filelist  erase=once  vpstyle=$vpstyle $remaining |")||
-                                                    die "Could not run vppen\n";
-# write the composite vplot file to the output
-
-while(<VPPEN>){print STDOUT $_ ;}; close(VPPEN);
-
-
-system "/bin/rm $filelist" ;
-
-exit(0);
-
-# clean up and emergency
-
-abort:
-&abortit($cnt);
-exit(-1);
-
-sub abortit{
-local($cnt);
-print STDERR "Abnormal exit caught signal\n" ;
-if ( $cnt >-1 ) {
-   for ( $i=0; $i<=$cnt; $i++){ 
-        $file = "temp_vplot"."$i".".v " ;
-	if (-e $file ) { system("/bin/rm  $file") ;}
-   }
-}
-};
+    annotate(files,args,interactive,textfile)
