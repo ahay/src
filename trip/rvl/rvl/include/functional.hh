@@ -982,12 +982,12 @@ namespace RVL {
 	  throw e;
 	}
 	applied = true;
-	export_apply(*(fnvec[0]),x,val);
+	this->export_apply(*(fnvec[0]),x,val);
 	val *= wtvec[0];
 	if (fnvec.size() > 1) {
 	  Scalar tmp;
 	  for (int i=1; i<fnvec.size(); i++) {
-	    export_apply(*(fnvec[i]),x,tmp);
+	    this->export_apply(*(fnvec[i]),x,tmp);
 	    val += wtvec[i]*tmp;
 	  }
 	}
@@ -1008,12 +1008,12 @@ namespace RVL {
 	  throw e;
 	}
 	applied = true;
-	export_applyGradient(*(fnvec[0]),x,g);
+	this->export_applyGradient(*(fnvec[0]),x,g);
 	g.scale(wtvec[0]);
 	if (fnvec.size() > 1) {
 	  Vector<Scalar> tmp(fnvec[0]->getDomain());
 	  for (int i=1; i<fnvec.size(); i++) {
-	    export_applyGradient(*(fnvec[i]),x,tmp);
+	    this->export_applyGradient(*(fnvec[i]),x,tmp);
 	    g.linComb(wtvec[i],tmp);
 	  }
 	}
@@ -1035,12 +1035,12 @@ namespace RVL {
 	  throw e;
 	}
 	applied = true;
-	export_applyHessian(*(fnvec[0]),x,dx,dy);
+	this->export_applyHessian(*(fnvec[0]),x,dx,dy);
 	dy.scale(wtvec[0]);
 	if (fnvec.size() > 1) {
 	  Vector<Scalar> tmp(fnvec[0]->getDomain());
 	  for (int i=1; i<fnvec.size(); i++) {
-	    export_applyHessian(*(fnvec[i]),x,dx,tmp);
+	    this->export_applyHessian(*(fnvec[i]),x,dx,tmp);
 	    dy.linComb(wtvec[i],tmp);
 	  }
 	}
