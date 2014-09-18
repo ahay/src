@@ -1,0 +1,76 @@
+from rsf.proj import *
+import math
+
+# Download data
+txt = 'st-helens_after.txt' 
+Fetch(txt,'data',
+      server='https://raw.githubusercontent.com',
+      top='agile-geoscience/notebooks/master')
+Flow('data.asc',txt,'/usr/bin/tail -n +6')
+
+# Convert to RSF format
+Flow('data','data.asc',
+     '''
+     echo in=$SOURCE data_format=ascii_float
+     label=Elevation unit=m
+     n1=979  o1=557.805  d1=0.010030675 label1=X
+     n2=1400 o2=5107.965 d2=0.010035740 label2=Y |
+     dd form=native | 
+     clip2 lower=0 | lapfill grad=y niter=200 
+     ''')
+
+Result('data','grey title="Digital Elevation Map" allpos=y')
+
+# Vertical and horizontal derivatives
+Flow('der1','data','igrad')
+Flow('der2','data','transp | igrad | transp')
+
+# !!! CHANGE BELOW !!!
+alpha=30
+
+# Directional derivative
+Flow('der','der1 der2',
+     '''
+     add ${SOURCES[1]} scale=%g,%g
+     ''' % (math.cos(alpha*math.pi/180),
+            math.sin(alpha*math.pi/180)))
+
+Result('der',
+       '''
+       grey title="Directional Derivative at %g\^o\_" 
+       ''' % alpha)
+
+# Laplacian filter on a helix
+
+Flow('slag0.asc',None,
+     '''echo 1 1000 n=1000,1000 n1=2 in=$TARGET 
+     data_format=ascii_int
+     ''')
+Flow('slag','slag0.asc','dd form=native')
+
+Flow('ss0.asc','slag',
+     '''echo -1 -1 a0=2 n1=2
+     lag=$SOURCE in=$TARGET data_format=ascii_float''')
+Flow('ss','ss0.asc','dd form=native')
+
+# Wilson-Burg factorization
+
+na=50 # filter length
+
+lags = range(1,na+1) + range(1001-na,1001)
+
+Flow('alag0.asc',None,
+     '''echo %s n=1000,1000 n1=%d in=$TARGET 
+     data_format=ascii_int
+     ''' % (' '.join(map(str,lags)),2*na))
+Flow('alag','alag0.asc','dd form=native')
+
+Flow('hflt hlag','ss alag',
+     'wilson lagin=${SOURCES[1]} lagout=${TARGETS[1]}')
+
+# Helical derivative
+
+Flow('helder','data hflt hlag','helicon filt=${SOURCES[1]}')
+Result('helder','grey title="Helical Derivative" ')
+
+End()
