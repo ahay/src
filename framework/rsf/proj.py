@@ -88,7 +88,10 @@ def echo(target,source,env):
     return 0
 
 def retrieve_emit(target=None, source=None, env=None):
-    usedatapath = env.get('usedatapath')
+    if sys.platform[:6] != 'cygwin':
+        usedatapath = env.get('usedatapath')
+    else:
+        usedatapath = False
     server = env.get('server')
     if usedatapath and server != 'local':
         for file in map(str,target):
@@ -101,7 +104,10 @@ def retrieve(target=None,source=None,env=None):
     top = env.get('top')
     folder = top + os.sep +env['dir']
     private = env.get('private')
-    usedatapath = env.get('usedatapath')
+    if sys.platform[:6] != 'cygwin':
+        usedatapath = env.get('usedatapath')
+    else:
+        usedatapath = False
     if private:
         login = private['login']
         password = private['password']
