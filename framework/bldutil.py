@@ -1,4 +1,4 @@
-import glob, os, re, string, py_compile
+import glob, os, sys, re, string, py_compile
 import configure
 
 # The following adds all SCons SConscript API to the globals of this module.
@@ -389,8 +389,14 @@ def install_py_mains(env, progs_py, bindir):
     'Copy Python programs to bindir, generate list of self-doc files'
 
     mains_py = Split(progs_py)
+
+    if sys.platform[:6] == 'cygwin':
+        exe = '.exe'
+    else:
+        exe = ''
+
     for prog in mains_py:
-        binary = os.path.join(bindir,'sf'+prog)
+        binary = os.path.join(bindir,'sf'+prog+exe)
         # Copy the program to the right location
         env.InstallAs(binary,'M'+prog+'.py')
         # Fix permissions for executable python files
@@ -513,6 +519,7 @@ class UserSconsTargets:
         else:
             docs_f90 = build_install_f90(env, self.f90, srcroot, bindir, api, bldroot,
                                          glob_build)
+
         if glob_build:
             if not self.py:
                 docs_py = None

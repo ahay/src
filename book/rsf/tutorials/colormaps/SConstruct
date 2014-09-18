@@ -1,4 +1,6 @@
 from rsf.proj import *
+from rsf.prog import RSFROOT
+import os
 
 Flow('random',None,'math n1=8 n2=8 output=1 | noise rep=y seed=2014 type=n mean=0.5')
 
@@ -15,5 +17,11 @@ Result('bar',
        grey allpos=y pclip=100 color=spectral title=Colors wantaxis=n 
        screenht=2 screenwd=16 transp=n wheretitle=t
        ''')
+
+# Get color pallette
+
+csv = os.path.join(RSFROOT,'include','spectral.csv')
+
+Flow('spectral',csv,'csv2rsf')
 
 End()

@@ -1,3 +1,3 @@
-uses=['sfspike', 'sfgrey', 'sfsvd', 'sfgraph']
+uses=['sfspike', 'sfgrey', 'sfpysvd', 'sfgraph']
 data=[]
 size=     480800
