@@ -73,4 +73,32 @@ Flow('hflt hlag','ss alag',
 Flow('helder','data hflt hlag','helicon filt=${SOURCES[1]}')
 Result('helder','grey title="Helical Derivative" ')
 
+def plotfilt(title):
+    return '''
+    window n1=11 n2=11 f1=50 f2=50 |
+    grey wantaxis=n title="%s" pclip=100 
+    crowd=0.85 screenratio=1
+    ''' % title
+
+# Laplacian impulse response
+Flow('spike',None,'spike n1=111 n2=111 k1=56 k2=56')
+Flow('imp0','spike ss','helicon filt=${SOURCES[1]} adj=0')
+Flow('imp1','spike ss','helicon filt=${SOURCES[1]} adj=1')
+Flow('imp','imp0 imp1','add ${SOURCES[1]}')
+Plot('imp',plotfilt('(a) Laplacian'))
+
+# Test factorization
+Flow('fac0','imp hflt',
+     'helicon filt=${SOURCES[1]} adj=0 div=1')
+Flow('fac1','imp hflt',
+     'helicon filt=${SOURCES[1]} adj=1 div=1')
+Plot('fac0',plotfilt('(b) Laplacian/Factor'))
+Plot('fac1',plotfilt('(c) Laplacian/Factor\''))
+Flow('fac','fac0 hflt',
+     'helicon filt=${SOURCES[1]} adj=1 div=1')
+Plot('fac',plotfilt('(d) Laplacian/Factor/Factor\''))
+
+Result('laplace','imp fac0 fac1 fac','TwoRows',
+       vppen='gridsize=5,5 xsize=11 ysize=11')
+
 End()
