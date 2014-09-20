@@ -52,8 +52,8 @@ deriv           = os.path.join(RSFSRC,'trip/iwave/grid/main/GridDeriv.x')
 linmute         = os.path.join(RSFSRC,'trip/iwave/trace/main/linmute.x')
 
 fetches = {
-    'wavelet_base.su' : ['marmousi', 'http://www.trip.caam.rice.edu'],
-    'velocity.HH' : ['marmousi', 'http://www.trip.caam.rice.edu']
+#    'wavelet_base.su' : ['marmousi', 'http://www.trip.caam.rice.edu'],
+#    'velocity.HH' : ['marmousi', 'http://www.trip.caam.rice.edu']
 }
 for file in fetches.keys():
     Fetch(file,fetches[file][0],server=fetches[file][1])   
@@ -61,11 +61,13 @@ for file in fetches.keys():
 # new diml consts
 N1 = 141
 D  = 24
-N2 = 444 
+N2 = 444
+NX = 241
+OX = 3000 
 F2 = 383
 NPW= 31
 DP = 0.2
-NT = 751
+NT = 501
 NTP= 101
 DT = 0.004
 SCALCO = 1000
@@ -102,7 +104,7 @@ Flow('csqext.rsf','csq24sm.rsf', 'sfcat csq24sm.rsf csq24sm.rsf d=1.0 o=0.0 | sf
 Flow('dcsqext.rsf','dcsq24.rsf', 'sfcat dcsq24.rsf dcsq24.rsf d=1.0 o=0.0 | sfput id1=0 id2=1 id3=3 dim=2 gdim=3',stdin=0)
 
 # plane wave data
-Flow('hdr1p.su', None, sunull + ' nt=' + str(NT) + ' ntr=' + str(N2) + ' dt=' + str(DT) + '| ' + sushw + ' key=sx a=0| ' + sushw + ' key=selev a=-8 |' + sushw + ' key=gx a=0 b=' + str(D) + ' j=' + str(N2) + '| ' + sushw + ' key=gelev a=-240 > ${TARGETS[0]}', stdin=0, stdout=-1)
+Flow('hdr1p.su', None, sunull + ' nt=' + str(NT) + ' ntr=' + str(NX) + ' dt=' + str(DT) + '| ' + sushw + ' key=sx a=0| ' + sushw + ' key=selev a=-12 |' + sushw + ' key=gx a=' + str(OX) + ' b=' + str(D) + ' j=' + str(NX) + '| ' + sushw + ' key=gelev a=-8 > ${TARGETS[0]}', stdin=0, stdout=-1)
 
 Flow('wav1p.su', ['wavelet_base.su'], suplane + ' nt=' + str(NTP) + ' ntr=' + str(N2) + ' npl=1 dip1=0.0 len1=' + str(N2) + ' dt=' + str(DT) + '| ' + sushw + ' key=sx a=0| ' + sushw + ' key=selev a=-12 |' + sushw +' key=gx a=0 b=' + str(D) + ' j=' + str(N2) + '| ' + sushw + ' key=gelev a=-12| ' + sushw + ' key=offset a=0 |' + suconv + ' sufile=${SOURCES[0]} > ${TARGETS[0]}', stdin=0, stdout=-1)
 
@@ -150,5 +152,19 @@ Flow('mig1p.rsf', ['born1p.su', 'wav1p.su', 'csq24big.rsf'],
      source=${SOURCES[1]}
      data=${SOURCES[0]}
      ''', stdin=0, stdout=-1, workdir='mig1p.work')
+
+# Born/CG inversion - one shot, mute
+Flow(['icsq1p.rsf', 'icsq1p_est.su', 'icsq1p_res.su'], 
+     ['born1p.su', 'wav1p.su', 'csq24big.rsf','csq24.rsf'],
+     '''
+     sfmath < ${SOURCES[3]} > ${TARGETS[0]} output=0 && %s
+     order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 nsnaps=20 
+     csq=${SOURCES[3]} rcsq=${SOURCES[2]}
+     icsq=${TARGETS[0]} source=${SOURCES[1]} 
+     data=${SOURCES[0]} outfile=cgne.out 
+     ResidualTol = 0.01 GradientTol = 0.01
+     MaxIter = 20 dataest=${TARGETS[1]} datares=${TARGETS[2]}
+     ''' % acdcgne,stdin=0,stdout=0, workdir='icsq1p.work')
+
 
 End()
