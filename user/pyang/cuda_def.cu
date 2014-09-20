@@ -1,4 +1,5 @@
-/* RSF operators using CUDA */
+/* RSF operators using CUDA 
+Note: #include "cuda_def.cu" in main function if needed*/
 /*
   Copyright (C) 2014 Xi'an Jiaotong University, Pengliang Yang
   
