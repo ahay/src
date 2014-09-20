@@ -1,6 +1,8 @@
-/* Simple weight operator using CUDA */
+/* Simple weight operator using CUDA 
+Note: #include "cuda_weight_kernels.cu" in main function if needed
+*/
 /*
-  Copyright (C) 2004 University of Texas at Austin
+  Copyright (C) 2014 Xi'an Jiaotong University, Pengliang Yang
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by

@@ -1,4 +1,5 @@
-/* Conjugate-gradient with shaping regularization using CUDA */
+/* Conjugate-gradient with shaping regularization using CUDA
+Note: #include "cuda_conjgrad_kernels.cu" in main function if needed */
 /*
   Copyright (C) 2014 Xi'an Jiaotong University, Pengliang Yang
   

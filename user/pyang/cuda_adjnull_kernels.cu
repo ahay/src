@@ -1,4 +1,5 @@
-/* Claerbout-style adjoint zeroing using CUDA */
+/* Claerbout-style adjoint zeroing using CUDA
+Note: #include "cuda_adjnull_kernels.cu" in main function if needed */
 /*
   Copyright (C) 2014 Xi'an Jiaotong University, Pengliang Yang
   
