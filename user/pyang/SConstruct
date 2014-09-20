@@ -5,7 +5,7 @@ import bldutil
 ######################################################################
 # C main programs
 progs = '''cohn dlct fpocs2d fpocs3d fwi2d fbrec2d 
-istinterp istseislet lsrtm2d lsprtm2d lsinterp2d lsinterp5d 
+istinterp istseislet lsrtm2d lsprtm2d lsinterp2d lsinterp5d lsm
 mwni2d myradon1 myradon2 mythresh mshots mcaseislet matflip modeling2d
 pocs3d pocs pocsseislet rtm2d rtmadcig mysnr
 Testfd2d Testfd3d Testeb Testelastic2d Testaniso Testspml
@@ -114,14 +114,13 @@ for prog in mpi_mains:
 CTP = env.get('CUDA_TOOLKIT_PATH')
 NVCC = env.get('NVCC')
 
-
 cuda_mains = Split(cuda_progs)
 for prog in cuda_mains:
     if CTP and NVCC:
         cfile = env.Command('CUDA'+prog+'.c','M'+prog+'.cu','cp $SOURCE $TARGET')
         cc = env.get('CC')
         cflags = '--x=cu -O'
-        ldflags = ''
+        ldflags = '-lcublas -lcufft -lcusparse'
         if string.rfind(cc,'icc') >= 0:
             cflags = cflags + ' -ccbin=%s' % cc
             ldflags = '-ccbin=%s' % cc
@@ -160,7 +159,7 @@ for prog in cuda_mpi_mains:
         prog = env.Program(prog,cfile,
                            CC=NVCC,
                            LINKFLAGS='-L'+MPI_LIB+' -lmpi',
-                           CFLAGS='-I'+MPI_INC+' -prec-div=true -arch=sm_21 --x=cu')
+                           CFLAGS='-I'+MPI_INC+' --x=cu')
     else:
         prog = env.RSF_Place('sf'+prog,None,
                              message='''
