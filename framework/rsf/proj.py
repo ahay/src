@@ -95,7 +95,7 @@ def retrieve_emit(target=None, source=None, env=None):
     server = env.get('server')
     if usedatapath and server != 'local':
         for file in map(str,target):
-            localfile=env.path+file
+            localfile=env.path+os.path.basename(file)
             target.append(localfile)
     return target, source
 
@@ -122,11 +122,11 @@ def retrieve(target=None,source=None,env=None):
             print 'Could not establish connection with "%s/%s" ' % (server,
                                                                     folder)
             return 3
-        for file in filter(lambda x: not os.path.dirname(x), 
+        for file in filter(lambda x: not x.startswith(env.path), 
                            map(str,target)):
             remote = os.path.basename(file)
             if usedatapath:
-                localfile=env.path+file
+                localfile=env.path+remote
             else:
                 localfile=file
             try:
@@ -159,22 +159,22 @@ def retrieve(target=None,source=None,env=None):
                     os.unlink(file)
                     return 6
         else:
-            for file in filter(lambda x: not os.path.dirname(x),
+            for file in filter(lambda x: not x.startswith(env.path),
                                map(str,target)):
                 remote = os.path.basename(file)  
                 rdir =  '/'.join([server,folder,remote])
                 if usedatapath:
-                    localfile=env.path+file
+                    localfile=env.path+remote
                 else:
                     localfile=file
                 try:
                     urllib.urlretrieve(rdir,localfile)
                     if not os.stat(localfile)[6]:
-                        print 'Could not download file "%s" ' % file
-                        os.unlink(file)
+                        print 'Could not download file "%s" ' % localfile
+                        os.unlink(localfile)
                         return 2
                 except:
-                    print 'Could not download "%s" from "%s" ' % (file,rdir)
+                    print 'Could not download "%s" from "%s" ' % (localfile,rdir)
                     return 5
                 if usedatapath:
                     if os.path.isfile(file):

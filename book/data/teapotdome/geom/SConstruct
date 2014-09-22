@@ -1,6 +1,6 @@
 from rsf.proj import *
 
-# SConscript('../fetch/SConstruct')
+SConscript('../fetch/SConstruct')
 
 Flow('foldplot','../fetch/npr3_field_hdr.rsf',
     '''
