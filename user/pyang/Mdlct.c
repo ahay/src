@@ -1,6 +1,6 @@
 /* Discrete linear chirp transfrom (DLCT)
-Note: In my implementation:, to make the adjoint as same as the inverse,
-I normalized the forward transform of DLCT with a factor sqrt(N*L).
+Note: I normalized the forward transform of DLCT with a factor sqrt(N*L)
+ to ensure the adjoint is the same as the inverse!
 */
 /*
   Copyright (C) 2013  Xi'an Jiaotong University, UT Austin (Pengliang Yang)
