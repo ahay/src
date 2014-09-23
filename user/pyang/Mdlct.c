@@ -55,6 +55,7 @@ int main(int argc, char* argv[])
       	/* then: in is signal itself, out will be DCLT coefficients. */
 	n2 = sf_leftsize(in,1);
       	if (!sf_getint("L",&L)) sf_error("No L");
+	/* number of discretized chirp rate*/
 	sf_shiftdim(in, out, 1);
       	sf_putint(out,"n1",n1);
       	sf_putint(out,"n2",L);
@@ -63,7 +64,9 @@ int main(int argc, char* argv[])
 	/* then: in is DLCT coefficients, out will be signal.*/
 	n2 = sf_leftsize(in,2);
 	if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
+	/* length of signal in freq domain, from -f to +f */
 	if (!sf_histint(in,"n2",&L)) sf_error("No n2= in input");
+	/* number of discretized chirp rate*/
 	sf_unshiftdim(in, out, 2);
 	sf_putint(out,"n1",n1);
 	sf_settype(out,SF_FLOAT);
