@@ -80,17 +80,17 @@ int main(int argc, char* argv[])
 
     for (i2=0; i2 < n2; i2++)  {
 	if (verb) sf_warning("trace %d of %d;",i2+1,n2);
-	    if(inv){
+	if(inv){
 		sf_complexread(mm,L*n1,in);
 		dlct_lop(true, false, n1*L, n1, mm, dd);
 		for(i1=0; i1<n1; i1++) sig[i1]=dd[i1];
 		sf_floatwrite(sig, n1, out);
-	    }else {
+	}else {
 		sf_floatread(sig,n1,in);
 		for(i1=0; i1<n1; i1++) dd[i1]=sig[i1];
 		dlct_lop(false, false, n1*L, n1, mm, dd);
 		sf_complexwrite(mm, L*n1, out);
-	    }
+	}
     }
 
 

@@ -25,8 +25,6 @@
 
 static int nb, nz, nx, nt, nzpad, nxpad;
 static float dz, dx, _dz, _dx, dt, fm;
-static float *bndr;
-static float **vp, **vs, **rho, **uvx, **uvz, **txx, **tzz, **txz;
 
 void expand2d(float** b, float** a)
 /*< expand domain of 'a' to 'b': source(a)-->destination(b) >*/
@@ -78,7 +76,7 @@ void window2d(float **a, float **b)
 }
 
 
-void forward_uvx_uvz(float **uvx, float **uvz, float **txx, float **tzz, float **txz)
+void forward_uvx_uvz(float **uvx, float **uvz, float **txx, float **tzz, float **txz, float **rho)
 /*< forward step: update uvx, uvz >*/
 {
 	int i1, i2;
@@ -114,7 +112,7 @@ void forward_uvx_uvz(float **uvx, float **uvz, float **txx, float **tzz, float *
 }
 
 
-void forward_txx_tzz_txz(float **uvx, float **uvz, float **txx, float **tzz, float **txz)
+void forward_txx_tzz_txz(float **uvx, float **uvz, float **txx, float **tzz, float **txz, float **vp, float **vs)
 /*< forward step: update txx, tzz, txz >*/
 {
 	int i1, i2;
@@ -151,7 +149,7 @@ void forward_txx_tzz_txz(float **uvx, float **uvz, float **txx, float **tzz, flo
 }
 
 
-void apply_sponge(float **u)
+void apply_sponge(float **u, float *bndr)
 /*< apply absorbing boundary condition >*/
 {
 	int ix,iz;
@@ -191,10 +189,11 @@ int main(int argc, char* argv[])
 {
 	bool verb;
 	int jt, ft, kt, it, ib, sx, sz, ix, iz;
-	float a, *wlt;
-	float **vp0, **vs0, **rho0;
-	sf_file Fvp, Fvs, Frho, Fwavx, Fwavz;
+	float a, *wlt, *bndr;
+	float **vp0, **vs0, **rho0, **vp, **vs, **rho, **uvx, **uvz, **txx, **tzz, **txz;
 
+	sf_file Fvp, Fvs, Frho, Fwavx, Fwavz;
+    
     	sf_init(argc,argv);
 #ifdef _OPENMP
     	omp_init();
@@ -242,7 +241,6 @@ int main(int argc, char* argv[])
 	tzz=sf_floatalloc2(nzpad, nxpad);
 	txz=sf_floatalloc2(nzpad, nxpad);
 
-
 	/* initialization */
 	for(it=0;it<nt;it++)
 	{
@@ -279,14 +277,14 @@ int main(int argc, char* argv[])
 		txx[sx][sz]+=wlt[it];
 		tzz[sx][sz]+=wlt[it];
 
-		forward_uvx_uvz(uvx, uvz, txx, tzz, txz);
-		forward_txx_tzz_txz(uvx, uvz, txx, tzz, txz);
+		forward_uvx_uvz(uvx, uvz, txx, tzz, txz, rho);
+		forward_txx_tzz_txz(uvx, uvz, txx, tzz, txz, vp, vs);
 
-		apply_sponge(uvz);
-		apply_sponge(uvx);
-		apply_sponge(tzz);
-		apply_sponge(txx);
-		apply_sponge(txz);
+		apply_sponge(uvz, bndr);
+		apply_sponge(uvx, bndr);
+		apply_sponge(tzz, bndr);
+		apply_sponge(txx, bndr);
+		apply_sponge(txz, bndr);
 
 		if (it==kt)
 		{
