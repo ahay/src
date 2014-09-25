@@ -1,6 +1,9 @@
 /* Picking local maxima on the first axis. 
 
 Outputs complex numbers (time,amplitude) sorted by amplitude.
+
+September 2014 program of the month:
+http://ahay.org/rsflog/index.php?/archives/403-Program-of-the-month-sfmax1.html
 */
 /*
   Copyright (C) 2007 University of Texas at Austin

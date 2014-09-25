@@ -56,7 +56,8 @@ void dlct_init( int N_ 	/* length of the signal */,
   ifft=fftwf_plan_dft_1d(N,p, q,FFTW_BACKWARD,FFTW_MEASURE);
 }
 
-void dlct_close()
+void dlct_close(void)
+/*< free allocated storage >*/
 {
   fftwf_destroy_plan(fft);
   fftwf_destroy_plan(ifft);
