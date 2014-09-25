@@ -50,6 +50,7 @@ int main (int argc, char* argv[])
         sf_putint(snrf,"n1",n3);
 	sf_putfloat(snrf,"d1",1);
         sf_putint(snrf,"n2",1);
+        sf_putint(snrf,"n3",1);
 
 	/*set the data space*/
 	trace1 = sf_floatalloc(n1*n2);
