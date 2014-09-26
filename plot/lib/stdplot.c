@@ -1243,7 +1243,8 @@ void vp_framenum(float num)
 
     sprintf (string, "%g", num);
     vp_tjust (TH_CENTER, TV_TOP);
-    if (title && (title->where == 'b' || label1->where == 'b'))
+    if ((NULL != title  &&  title->where == 'b') || 
+	(NULL != label1 && label1->where == 'b'))
         vp_gtext (x, y-4.*labelsz, labelsz, 0., 0., labelsz, string);
     else
         vp_gtext (x+3.*labelsz, y-2.*labelsz, labelsz, 0., 0., labelsz, string);

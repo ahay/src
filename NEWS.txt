@@ -52,6 +52,7 @@ In documentation:
 In APIs:
 
 * Fixed __array_wrap__ bug in Python API
+* Fixed bug in framenum with no label1 in stdplot
 
 In the Python package:
 
