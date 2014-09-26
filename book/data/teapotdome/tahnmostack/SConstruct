@@ -1,6 +1,6 @@
 from rsf.proj import *
 
-# SConscript('../fetch/SConstruct')
+SConscript('../fetch/SConstruct')
 
 # get the stack created using seismic unix
 Plot('sustack','../fetch/final_stack.rsf','grey title="su stack"',view=1)

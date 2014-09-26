@@ -22,14 +22,14 @@ Our usual task is to find the inverse of these calculations;
 i.e., to find models (or make images) from the data.
 Logically, the adjoint is the first step
 and a part of all subsequent steps in this \bx{inversion} process.
-Surprisingly, in practice the adjoint sometimes does a better job
+Surprisingly, in practice, the adjoint sometimes does a better job
 than the inverse!
-This is because the adjoint operator tolerates imperfections
-in the data and does not demand that the data provide full information.
+Better because the adjoint operator tolerates imperfections
+in the data and does not demand the data provide full information.
 
 \par
 Using the methods of this chapter,
-you will find that
+you find that
 once you grasp the relationship between operators in general
 and their adjoints,
 you can obtain the adjoint just
@@ -57,7 +57,8 @@ of \bx{operator}s and their \bx{adjoint}s:
 &scalar field gradient         &&negative of vector field divergence       \\
 &upward continue               &&downward continue \\
 &diffraction modeling          &&imaging by migration  \\
-&hyperbola modeling            &&CDP stacking  \\
+&hyperbola modeling            && stacking for image or velocity \\
+&chop image into overlapping patches            && merge the patches   \\
 &ray tracing                   &&\bx{tomography}       \\
 \end{tabular}
 
@@ -85,57 +86,58 @@ and in \bx{Fourier analysis}, taking the complex conjugate
 of $\exp(i\omega t)$ reverses the sense of time.
 With more poetic license, I say that adjoint operators
 {\em  undo}
-the time and phase shifts of modeling operators.
-The inverse operator does this too,
+the time and therefore, phase shifts of modeling operators.
+The inverse operator does also,
 but it also divides out the color.
 For example, when linear interpolation is done,
-then high frequencies are smoothed out,
-so inverse interpolation must restore them.
-You can imagine the possibilities for noise amplification.
-That is why adjoints are safer than inverses.
-But nature determines in each application what is the best operator to use,
+then high frequencies are smoothed out; inverse interpolation must restore them.
+You can imagine the possibilities for noise amplification
+which is why adjoints are safer than inverses.
+But, nature determines in each application what is the best operator to use
 and whether to stop after the adjoint,
 to go the whole way to the inverse,
 or to stop partway.
 
 \par 
-The operators and adjoints above transform vectors to other vectors.
+The operators and adjoints previously shown transform vectors to other vectors.
 They also transform data planes to model planes, volumes, etc.
-A mathematical operator transforms an ``abstract vector'' which
+A mathematical operator transforms an ``abstract vector'' that
 might be packed full of volumes of information like television
 signals (time series) can pack together a movie, a sequence of frames.
-We can always think of the operator as being a matrix
+We can always think of the operator as being a matrix,
 but the matrix can be truly huge (and nearly empty).
 When the vectors transformed by the matrices are large like
-geophysical data set sizes
+geophysical data set sizes,
 then the matrix sizes are ``large squared,''
 far too big for computers.
-Thus although we can always think of an operator as a matrix,
+Thus,
+although we can always think of an operator as a matrix;
 in practice, we handle an operator differently.
 Each practical application requires the practitioner to
 prepare two computer programs.
 One performs the matrix multiply
-$\bold y =\bold B \bold x$
-and another multiplys by the transpose
+$\bold y =\bold B \bold x$,
+while the other multiplies by the transpose
 $\tilde{\bold x} =\bold B\T \bold y$
 (without ever having the matrix itself in memory).
 It is always easy to transpose a matrix.
 It is less easy to take a computer program that does
 $\bold y =\bold B \bold x$
 and convert it to another to do
-$\tilde{\bold x} =\bold B\T \bold y$.
+$\tilde{\bold x} =\bold B\T \bold y$,
+which is what we'll be doing here.
 In this chapter are many examples of increasing complexity.
-At the end of the chapter we will see a test for any program pair
+At the end of the chapter, we see a test for any program pair
 to see whether the operators $\bold B$ and $\bold B\T$ are mutually adjoint
 as they should be.
 Doing the job correctly (coding adjoints without making approximations)
-will reward us later when we tackle model and image estimation applications.
+rewards us later when we tackle model and image-estimation applications.
 
 \par
 Mathematicians often denote the transpose of a matrix
 $\bold B$ by $\bold B^{\rm T}$.
-In physics and engineering we often encounter complex numbers.
-There the adjoint is the complex-conjugate transposed matrix
+In physics and engineering, we often encounter complex numbers.
+There, the adjoint is the complex-conjugate transposed matrix
 denoted $\bold B^\ast$.
 %In this book, the adjoint is simply written as $\bold F\T$.
 What this book calls the adjoint is more properly called the Hilbert adjoint.
@@ -180,7 +182,8 @@ $\tilde x_j = \sum_i b_{ij} y_i$.
 The operation adjoint to multiplication by a matrix
 is multiplication by the transposed matrix
 (unless the matrix has complex elements,
-in which case we need the complex-conjugated transpose).
+in which case,
+we need the complex-conjugated transpose).
 The following
 \bx{pseudocode}
 does matrix multiplication
@@ -204,12 +207,12 @@ indent \= atechars \= atechars \=  atechars \= \kill
 \par\noindent
 Notice that the ``bottom line'' in the program is that $x$ and $y$
 are simply interchanged.
-The above example is a prototype of many to follow,
-so observe carefully the similarities and differences between
-the adjoint and the operator itself.
+The preceding example is a prototype of many to follow;
+therefore observe carefully the similarities and differences between
+the operator and its adjoint.
 
 \par
-Next we restate the matrix-multiply pseudo code in real code.
+Next, we restate the matrix-multiply pseudo code in real code.
 \begin{comment}
 in a language called \bx{Loptran}\footnote{
         The programming language, Loptran,
@@ -221,14 +224,14 @@ in model fitting and optimization in physical sciences.
 \end{comment}
 
 The module \texttt{matmult}
-for matrix multiply and its adjoint
-exhibits the style that we will use repeatedly.
+for matrix multiply along with its adjoint
+exhibits the style we use repeatedly.
 At last count there were 53 such routines
 (operator with adjoint)
 in this book alone.
 \opdex{matmult}{matrix multiply}{33}{45}{user/pwd}        
 \begin{comment}
-Notice that the module \texttt{matmult}
+Notice the module \texttt{matmult}
 does not explicitly erase its output before it begins,
 as does the pseudo code.
 That is because Loptran will always erase for you
@@ -250,14 +253,14 @@ What is new in Fortran 90, and will be a big help to us,
 is that instead of a subroutine with a single entry.
 \end{comment}
 
-We have a module with two entries,
-one named {\tt \_init} 
+We now have a module with two entries/
+One is named {\tt \_init} 
 for the physical scientist who defines the physical problem by
-defining the matrix, and
-another named {\tt \_lop} 
-for the least-squares problem solver,
-the computer scientist who will not be interested
-in how we specify $\bold B$, but who will be iteratively computing
+defining the the operator.
+The other is named {\tt \_lop} 
+for the least-squares problem solvers,
+computer not interested
+in how we specify $\bold B$. They will be iteratively computing
 $\bold B\bold x$ and $\bold B\T \bold y$
 to optimize the model fitting.
 \begin{comment}
@@ -274,8 +277,8 @@ the first one
 \begin{verbatim}
            matmult_init( bb);
 \end{verbatim}
-is done by the physical scientist after he or she has prepared the matrix.
-Most later calls will be done by numerical analysts
+is done by physical scientists to set up the operation.
+Most later calls are done by numerical analysts
 in solving code like in Chapter \ref{paper:lsq}.
 These calls look like
 \begin{verbatim}
@@ -297,8 +300,8 @@ To release this memory, you can {\tt call matmult\_close()}
 although in this case nothing really happens.
 \end{comment}
 \par
-We split operators into two independent processes,
-the first is used for geophysical set up
+We split operators into two independent processes;
+the first is used for geophysical set up,
 while the second is invoked by mathematical library code
 (introduced in the next chapter)
 to find the model that best fits the data.
@@ -306,7 +309,7 @@ to find the model that best fits the data.
 %out to make the best approximations to all the other traces.
 Here is why we do so.
 It is important that the math code contain nothing about
-the geophysical particulars.  This enables us to use
+the geophysical particulars.  This independence enables us to use
 the same math code on many different geophysical applications.
 This concept of ``information hiding'' arrived late in
 human understanding of what is desirable in a computer language.
@@ -314,8 +317,8 @@ human understanding of what is desirable in a computer language.
 This feature alone is valuable enough to warrant
 upgrading from Fortran 77 to Fortran 90, and likewise from C to C++.
 \end{comment}
-Subroutines and functions are the way that new programs use old ones.
-Object modules are the way that old programs (math solvers)
+Subroutines and functions are the way new programs use old ones.
+Object modules are the way old programs (math solvers)
 are able to use new ones (geophysical operators).
 
 
@@ -323,20 +326,20 @@ are able to use new ones (geophysical operators).
 The simplest and most fundamental linear operators
 arise when a matrix operator reduces to a simple row or a column.
 \par\noindent
-A {\bf row} \quad\ \ is a summation operation.
+A {\bf row} is a summation operation.
 \par\noindent
 A {\bf column}       is an impulse response.
 \vspace{.2in}
 \par\noindent
 If the inner loop of a matrix multiply ranges within a
 \par\noindent
-{\bf row,} \quad\ \ the operator is called {\em  sum} or {\em  pull}.
+{\bf row,} the operator is called {\em  sum} or {\em  pull}.
 \par\noindent
 {\bf column,}       the operator is called {\em  spray} or {\em  push}.
 \par\noindent
-Generally, inputs and outputs will be high dimensional such as signals or images.
-Push gives ugly outputs.   Some output locations will be empty,
-each having an erratic number of contributions to it.
+Generally, inputs and outputs are high dimensional, such as signals or images.
+Push gives ugly outputs.   Some output locations may be empty,
+each having an erratic number of contributions.
 Consequently, most data processing (adjoint) is done by {\em pull}.
 
 \par
@@ -380,12 +383,13 @@ is a collection of $N$ assignments.
 }
 
 \subsection{Adjoint derivative}
-In numerical analysis we represent the derivative of a time function
+In numerical analysis,
+we represent the derivative of a time function
 by a finite difference.
-We do this by subtracting each two neighboring time points and then
-dividing by the sample interval $\Delta t$.
-This amounts to convolution with the filter $(1,-1)/\Delta t$.
-Omitting the $\Delta t$ we express this concept as:
+This subtracts neighboring time points and
+divides by the sample interval $\Delta t$.
+Finite difference amounts to convolution with the filter $(1,-1)/\Delta t$.
+Omitting the $\Delta t$, we express this concept as:
 \begin{equation}
 \left[ \begin{array}{c}
         y_1 \\
@@ -415,12 +419,13 @@ Omitting the $\Delta t$ we express this concept as:
  \label{eqn:ruff1}
 \end{equation}
 \par
-The \bx{filter impulse response} is seen in any column
-in the middle of the matrix, namely $(1,-1)$. 
+The filter is seen in any
+column \sx{filter ! impulse response}\sx{impulse response} in the middle of the matrix,
+namely $(1,-1)$. 
 In the transposed matrix,
 the filter-impulse response
 is time-reversed to $(-1,1)$.
-So, mathematically,
+Therefore, mathematically,
 we can say that the adjoint of the time derivative operation
 is the negative time derivative.
 This corresponds also to the fact that
