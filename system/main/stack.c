@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
     
 
     if (!sf_getint("axis",&axis)) axis=2;
-    /* which axis to stack */
+    /* which axis to stack. If axis=0, stack over all dimensions */
 
     if(axis==0){
       axis=dim+1;
