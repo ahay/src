@@ -68,7 +68,8 @@ colors = {
     'gist_earth': 'GIST Earth',
     'linearlfb': 'LinearL Face Based',
     'x': 'Cube Helix',
-    'lb': 'Light Bartlein'
+    'lb': 'Light Bartlein',
+    'seismic': 'Seismic-OpendTect'
 }
 
 for col in colors.keys():
