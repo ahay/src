@@ -16,7 +16,7 @@ except:
 targets = bldutil.UserSconsTargets()
 
 targets.py = '''
-pysvd
+svd
 threedcube
 gui
 browser
