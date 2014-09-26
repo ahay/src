@@ -1,6 +1,8 @@
 /* 1-D linear interpolation.
 
-Specify either n1= o1= d1= or pattern=
+The input should have n2=2 (coordinates,values)
+
+For output, specify either n1= o1= d1= or pattern=
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
