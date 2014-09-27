@@ -1,4 +1,4 @@
-/* Half thresholding using exact value.*/
+/* Half thresholding using exact-value or percentile thresholding.*/
 
 /*
   Copyright (C) 2013 University of Texas at Austin
@@ -16,10 +16,6 @@
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-  
-  Reference:
-  Pengliang Yang et al, 2013, An iterative half thresholding method for seismic data interpolation,
-  83rd Annual International Meeting, SEG, Expanded Abstracts, 3579-3582.
   
 */
 #include <rsf.h>
