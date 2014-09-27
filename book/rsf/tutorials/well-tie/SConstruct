@@ -11,16 +11,38 @@ Flow('L-30','L-30.las','las2rsf $SOURCE $TARGET',stdin=0,stdout=-1)
 # Examine with "< L-30.rsf sfheaderattr segy=n"
 
 # Mask bad values
-Flow('mask','L-30','headermath segy=n output=DT | mask min=0')
+Flow('mask1','L-30','headermath segy=n output=RHOB | mask min=0')
+Flow('mask2','L-30','headermath segy=n output=DT   | mask min=0')
+Flow('mask','mask1 mask2','mul ${SOURCES[1]}')
 
-# Extract DT
-Flow('DT','L-30 mask',
+# Extract values
+
+for case in ('DT','RHOB','DEPT'):
+     Flow(case,'L-30 mask',
+          '''
+          headermath segy=n output=%s | 
+          headerwindow mask=${SOURCES[1]} | window | 
+          put o1=3058.5 d1=0.5 label1=Depth unit1=ft
+          ''' % case)
+     Plot(case,'graph title=%s' % case)
+
+# Clipping spikes
+
+Flow('despike','RHOB','despike wide=13')
+
+Flow('spikemask','despike RHOB',
+     'math orig=${SOURCES[1]} output="abs(input-orig)" | mask max=0.1')
+
+Flow('despike2','spikemask despike RHOB',
      '''
-     headermath segy=n output=DT | 
-     headerwindow mask=${SOURCES[1]} | window | 
-     put o1=1150.5 d1=0.5 label1=Depth unit1=ft
+     dd type=float |
+     math orig=${SOURCES[1]} filt=${SOURCES[2]}
+     output="input*orig+(1-input)*filt"
      ''')
+Plot('despike2','graph wanttitle=n wantaxis=n plotcol=5')
 
-Result('DT','graph title=DT') 
+Result('RHOB','RHOB despike2','Overlay')
 
+# same for DT
+     
 End()

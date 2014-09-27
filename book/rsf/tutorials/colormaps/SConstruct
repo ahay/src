@@ -15,7 +15,7 @@ Flow('bar',None,'math n1=16 output=x1')
 Result('bar',
        '''
        grey allpos=y pclip=100 color=spectral title=Colors wantaxis=n 
-       screenht=2 screenwd=16 transp=n wheretitle=t
+       screenht=2 screenwd=14 transp=n wheretitle=t
        ''')
 
 # Get color pallette
@@ -23,5 +23,54 @@ Result('bar',
 csv = os.path.join(RSFROOT,'include','spectral.csv')
 
 Flow('spectral',csv,'csv2rsf')
+
+# Interpolate 16 numbers
+
+Flow('num16','spectral','transp | remap1 o1=0 n1=16 d1=%g | scale dscale=255' % (255.0/15))
+
+# Compute intensity
+
+Flow('intensity','num16','stack scale=0.2989,0.5870,0.1140 norm=n')
+
+Plot('intensity',
+     '''
+     grey allpos=y pclip=100 title=Intensity wantaxis=n 
+     screenht=2 screenwd=14 transp=n wheretitle=t
+     ''')
+
+Result('intensity','Overlay')
+
+Plot('intensity2','intensity',
+     '''
+     graph symbol=o min2=0 max2=255 wanttitle=n label2= unit2= parallel2=n
+     screenht=2 screenwd=14 wantaxis1=n labelsz=5 symbolsz=5 plotcol=2
+     ''')
+
+Result('intensity2','intensity intensity2','Overlay')
+
+# Sort by intensity
+
+Result('isorted','intensity',
+       '''
+       transp | headersort head=$SOURCE | window |
+       grey allpos=y pclip=100
+       title="Sorted color intensity" wantaxis=n 
+       screenht=2 screenwd=14 transp=n wheretitle=t
+       ''')
+
+Flow('sorted','intensity',
+     '''
+     math output=x1 |
+     transp | headersort head=$SOURCE | window
+     ''')
+
+Result('sorted',
+       '''
+       grey allpos=y pclip=100 color=spectral
+       title="Colors sorted by intensity" wantaxis=n 
+       screenht=2 screenwd=14 transp=n wheretitle=t
+       ''')
+
+# Plotted as Euclidean distance
 
 End()

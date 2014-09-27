@@ -214,7 +214,7 @@ keepenv = ('DISPLAY','VPLOTFONTDIR','HOME','USER','WORK', 'SCRATCH',
 class Project(Environment):
     def __init__(self,**kw):
         apply(Environment.__init__,(self,),kw)
-        self.EnsureSConsVersion(0,96)
+        #        self.EnsureSConsVersion(0,96)
         opts = {
             'TIMER':'Whether to time execution',
             'CHECKPAR':'Whether to check parameters',
