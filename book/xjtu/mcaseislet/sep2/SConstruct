@@ -59,7 +59,12 @@ Flow('mdip2','cmp2 mdip mask2 vdip',
 
 Result('srme','cmp mult','SideBySideAniso')
 
-#============== Separate signal/noise [method 1: seisigk, seislet IRLS] ===========
+
+Flow('vcmp','cmp','vscan semblance=y v0=1 nv=100 dv=0.02 half=n')
+Plot('vcmp',grey(' Data','color=j allpos=y scalebar=y maxval=0.75'))
+
+
+#============== Separate signal/noise [method 2: seisigk] ======================
 Flow('cmp2s','cmp2','window n2=64')
 Flow('mdip2s','mdip2','window n2=64')
 Flow('masks','mask','window n2=64')
@@ -94,15 +99,15 @@ Plot('markB',None,'box font=2 x0=7.5 y0=1.9 label="B" xt=0.5 yt=0.5 size=0.5')
 Plot('markC',None,'box font=2 x0=8.2 y0=4.2 label="C" xt=0.5 yt=0.5 size=0.5')
 Plot('markD',None,'box font=2 x0=7.5 y0=5 label="D" xt=0.5 yt=0.5 size=0.5')
 
-Plot('vnoissIRLSA','vnoissIRLS markA markB markC markD','Overlay')
+Plot('vnoissA','vnoiss markA markB markC markD','Overlay')
 Plot('vnoissmcaA','vnoissmca markA markB markC markD','Overlay')
 Plot('vcmpA','vcmp markA markB markC markD','Overlay')
 
-Result('signal','signsIRLS signsmca','SideBySideAniso')
-Result('nois','noissIRLS noissmca','SideBySideAniso')
+Result('signal','signs signsmca','SideBySideAniso')
+Result('nois','noiss noissmca','SideBySideAniso')
 
-Result('vsignal','vsignsIRLS vsignsmca vcmp','SideBySideAniso')
-Result('vnois','vnoissIRLSA vnoissmcaA vcmpA','SideBySideAniso')
+Result('vsignal','vsigns vsignsmca vcmp','SideBySideAniso')
+Result('vnois','vnoissA vnoissmcaA vcmpA','SideBySideAniso')
 
 
 End()
