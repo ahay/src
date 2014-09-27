@@ -65,15 +65,15 @@ Flow('mdip2s','mdip2','window n2=64')
 Flow('masks','mask','window n2=64')
 Flow('comps','cmp2s mdip2s','seisigk dips=${SOURCES[1]} verb=y niter=1000')
 
-Flow('noiss','comps masks','window f3=1 | add mode=p ${SOURCES[1]}')
-Flow('signs','mis2 noiss','window n2=64 | add scale=1,-1 ${SOURCES[1]}')
-Flow('vsigns','signs','vscan semblance=y v0=1 nv=100 dv=0.02 half=n')
-Flow('vnoiss','noiss','vscan semblance=y v0=1 nv=100 dv=0.02 half=n')
+Flow('noissIRLS','comps masks','window f3=1 | add mode=p ${SOURCES[1]}')
+Flow('signsIRLS','mis2 noiss','window n2=64 | add scale=1,-1 ${SOURCES[1]}')
+Flow('vsignsIRLS','signs','vscan semblance=y v0=1 nv=100 dv=0.02 half=n')
+Flow('vnoissIRLS','noiss','vscan semblance=y v0=1 nv=100 dv=0.02 half=n')
 
-Plot('noiss','window f2=6 | ' + grey('Seislet-IRLS (noise)','clip=228'))
-Plot('signs','window f2=6 | ' + grey('Seislet-IRLS (signal)','clip=228'))
-Plot('vsigns',grey('Seislet-IRLS (signal)','color=j allpos=y maxval=0.75'))
-Plot('vnoiss',grey('Seislet-IRLS (noise)','color=j allpos=y maxval=0.75'))
+Plot('noissIRLS','window f2=6 | ' + grey('Seislet-IRLS (noise)','clip=228'))
+Plot('signsIRLS','window f2=6 | ' + grey('Seislet-IRLS (signal)','clip=228'))
+Plot('vsignsIRLS',grey('Seislet-IRLS (signal)','color=j allpos=y maxval=0.75'))
+Plot('vnoissIRLS',grey('Seislet-IRLS (noise)','color=j allpos=y maxval=0.75'))
 
 #============== Separate signal/noise [method 2: mcaseislet] ======================
 # obtain similar separation effect with only 10-20 iterations, more efficient!
@@ -89,17 +89,20 @@ Plot('signsmca','window f2=6 | ' + grey('Seislet-MCA (signal)','clip=228'))
 Plot('vsignsmca',grey('Seislet-MCA (signal)','color=j allpos=y maxval=0.75'))
 Plot('vnoissmca',grey('Seislet-MCA (noise)','color=j allpos=y maxval=0.75'))
 
-Plot('markA',None,'box font=2 x0=6.5 y0=2 label="A" xt=0.0 yt=0.0 size=0.5')
-Plot('vnoisA','vnois markA','Overlay')
-Plot('vnoissA','vnoiss markA','Overlay')
-Plot('vnoissmcaA','vnoissmca markA','Overlay')
-Plot('vcmpA','vcmp markA','Overlay')
+Plot('markA',None,'box font=2 x0=4.5 y0=1.5 label="A" xt=-0.5 yt=0.5 size=0.5')
+Plot('markB',None,'box font=2 x0=7.5 y0=1.9 label="B" xt=0.5 yt=0.5 size=0.5')
+Plot('markC',None,'box font=2 x0=8.2 y0=4.2 label="C" xt=0.5 yt=0.5 size=0.5')
+Plot('markD',None,'box font=2 x0=7.5 y0=5 label="D" xt=0.5 yt=0.5 size=0.5')
 
-Result('signal','signs signsmca','SideBySideAniso')
-Result('nois','noiss noissmca','SideBySideAniso')
+Plot('vnoissIRLSA','vnoissIRLS markA markB markC markD','Overlay')
+Plot('vnoissmcaA','vnoissmca markA markB markC markD','Overlay')
+Plot('vcmpA','vcmp markA markB markC markD','Overlay')
 
-Result('vsignal','vsigns vsignsmca vcmp','SideBySideAniso')
-Result('vnois','vnoissA vnoissmcaA vcmpA','SideBySideAniso')
+Result('signal','signsIRLS signsmca','SideBySideAniso')
+Result('nois','noissIRLS noissmca','SideBySideAniso')
+
+Result('vsignal','vsignsIRLS vsignsmca vcmp','SideBySideAniso')
+Result('vnois','vnoissIRLSA vnoissmcaA vcmpA','SideBySideAniso')
 
 
 End()
