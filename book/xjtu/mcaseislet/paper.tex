@@ -22,7 +22,7 @@ Austin, TX, USA, 78713-8924}
 \maketitle
 
 \begin{abstract}
-Morphological component analysis (MCA) is a powerful tool used in image processing to separate different geometrical components (cartoons and textures, curves and points etc). MCA is based on the fact that many complex signals may not be sparsely represented using only one dictionary/transform, however can have sparse representation by combining several over-complete dictionaries/transforms. In this paper we propose seislet-based MCA for seismic data processing. MCA algorithm is reformulated as a shaping regularization paradigm. Successful seislet-based MCA depends on reliable slope estimation of seismic events, which is done by plane-wave destruction (PWD) filter. An exponential shrinkage operator unifies many existing thresholding operator and is adopted in sparsity shaping. Numerical examples demonstrate the outperformance of the proposed exponential shrinkage operator and the potential of seislet-based MCA in the application to trace interpolation and multiple removel.
+Morphological component analysis (MCA) is a powerful tool used in image processing to separate different geometrical components (cartoons and textures, curves and points etc). MCA is based on the fact that many complex signals may not be sparsely represented using only one dictionary/transform, however can have sparse representation by combining several over-complete dictionaries/transforms. In this paper we propose seislet-based MCA for seismic data processing. MCA algorithm is reformulated as a shaping regularization paradigm. Successful seislet-based MCA depends on reliable slope estimation of seismic events, which is done by plane-wave destruction (PWD) filter. An exponential shrinkage operator unifies many existing thresholding operator and is adopted in scale-dependent shaping regularization to promote sparsity. Numerical examples demonstrate the outperformance of the proposed exponential shrinkage operator and the potential of seislet-based MCA in the application to trace interpolation and multiple removel.
 \end{abstract}
 
 
@@ -34,7 +34,7 @@ Seislet transform and seislet frame are useful tools for seismic data compressio
 In seislet transform, the locally dominant event slopes are found by plane-wave destruction (PWD), which is constructed as finite difference stencils to characterize seismic images by a superposition of local plane waves \citep{claerbout1992earth}. By increasing the accuracy and dip bandwidth of PWD, \cite{fomel2002applications} demonstrated its competitive performance compared with prediction error filter (PEF) in the applications to fault detection, data interpolation, and noise attenuation. PWD keeps the number of adjustable parameters to a minimum, endows the estimated quantity with a clear physical meaning of the local plane-wave slope, and gets rid of the requirement of local windows in PEF. Recently, \cite{chen2013accelerated} accelerated the computation of PWD using an analytical estimator.
 
 
-In this paper, we propose seislet-based MCA for seismic data processing. We reformulate MCA algorithm as a shaping regularization paradigm. Successful seislet-based MCA depends on reliable slope estimation of seismic events, which can be done by plane-wave destruction (PWD) filter. Due to the special importance of an effective shrinkage or thresholding function in sparsity-promoting shaping optimization, we propose an exponential shrinkage operator, which can flexibly  approximate many well-known existing thresholding functions. Numerical examples demonstrate the potential of seislet-based MCA in the application to trace interpolation and multiple removel.
+In this paper, we propose seislet-based MCA for seismic data processing. We reformulate MCA algorithm as a shaping regularization paradigm. Successful seislet-based MCA depends on reliable slope estimation of seismic events, which can be done by plane-wave destruction (PWD) filter. Due to the special importance of an effective shrinkage or thresholding function in sparsity-promoting shaping optimization, we propose an scale-dependent exponential shrinkage operator, which can flexibly  approximate many well-known existing thresholding functions. Numerical examples demonstrate the potential of seislet-based MCA in the application to trace interpolation and multiple removel.
 
 \section{MCA with scale-dependent shaping regularization}
 
@@ -231,11 +231,11 @@ Note that we are using seislet transform which has different scales for signal r
 \begin{equation}
  \mathrm{diag}(W_{ii})x_i= s(x_i)<s_0?1:0,
 \end{equation}
-where $s_0$ is user-defined scale, while $s(x_i)$ is the scale that the coefficient $x_i$ corresponds to. Put all things together, in the MCA shaping regulariation we are using a scale-dependent exponential shrinkage operator which is composite operator cascaded with a scale-muting operator $W_{s}$ and a exponential weighting operator $W_{exp}$:
+where $s_0$ is user-defined scale, while $s(x_i)$ is the scale that the coefficient $x_i$ corresponds to.  Put all things together, in the MCA shaping regulariation we are using a scale-dependent exponential shrinkage operator which is composite operator cascaded with a scale-muting operator $W_{s}$ and a exponential weighting operator $W_{exp}$:
 \begin{equation}
  S(x)=W_{exp} W_s x.
 \end{equation}
-The use of scale-dependent exponential shrinkage offers easy control for the signal components we would like to capture. It has some connections to the $\ell_p$ norm constrain, however, does not exactly match $\ell_p$ minimization. The framework of shaping regularization is more general such that we do not need to specify the regularization term but obtain a well-behaved iterative algorithm. It is interesting to mention that under the Fourier basis, the scale-muting operator $W_s$ becomes a frequency mask which can be employed to remove the groundroll in the application of seismic interpolation \citep{gholami2014non}.
+The use of scale-dependent exponential shrinkage offers easy control for the signal components we would like to capture. It has some connections to the $\ell_p$ norm constrain, however, does not exactly match $\ell_p$ minimization. The framework of shaping regularization is more general such that we do not need to specify the regularization term but obtain a well-behaved iterative algorithm. It is interesting to mention that under the Fourier basis, the scale-muting operator $W_s$ becomes a frequency mask (it behaves like a selective hard thresholding), which can be employed to remove the groundroll in the application of seismic interpolation \citep{gholami2014non}.
 
 
 By incorporating PWD dip estimation and scale-dependent exponential shrinkage shaping, we summarize the proposed seislet-based MCA algorithm in Algorithm \ref{algorithm:lpmca}. In fact, seislet transforms associated with different dips forms a combined seislet frame. Shrinkage operator plays an role of crosstalk removal in MCA algorithm, see more details in Appendex A.
@@ -377,11 +377,11 @@ Before applying the seislet-based MCA method, it is important to point out that 
 
   \plot{vsignal}{width=\linewidth}{Velocity scan for primaries obtained by seislet-IRLS and seislet-based MCA (first two panels, from left to right). The velocity scan of original data is shown in the last panel for comparison.}
 
-  \plot{vnois}{width=\linewidth}{Velocity scan for multiples obtained by seislet-IRLS and seislet-based MCA (first two panels, from left to right). The velocity scan of original data is shown in the last panel for comparison. The deeper part (location A) in the velocity scan panel of separated multiples using seislet-MCA can best match the semblance scan of the original data, compared to the seislet-IRLS method.}
+  \plot{vnois}{width=\linewidth}{Velocity scan for multiples obtained by seislet-IRLS and seislet-based MCA (first two panels, from left to right). The velocity scan of original data is shown in the last panel for comparison. Seislet-based MCA outperforms seislet-based IRLS method in the locations A and B in the velocity scan panel due to the nice match of the corresponding semblance scan of the original data; at locations C and D, the energy of multiples obtained by seislet-MCA has less leakage, compared to seislet-IRLS method. }
   
 \section{Conclusion and discussion}
 
-We have developed a seislet-based MCA method for seismic data processing. PWD filter can be utilized to estimate the slopes of seismic data. An exponential shrinkage function is introduced to diversify the capability of sparsity-promoting shaping operator. The proposed seislet-based MCA using shaping regularization is promosing in the application to seismic trace interpolation, and multiple removal. The numerical results reveal that the exponential shrinkage operator in sparsity-promoting shaping regularization plays an extremely important role in successful seislet-based MCA separation, superior to many existing thresholding operators. The additional parameter $p$ provides us more flexibility to approximate many exisiting shrinkage operators to achieve better separation performance. Meanwhile, it is free of non-differential sigularity and unifies many existing shrinkage operators. 
+We have developed a seislet-based MCA method for seismic data processing. PWD filter can be utilized to estimate the slopes of seismic data. An exponential shrinkage function is introduced to diversify the capability of sparsity-promoting shaping operator. The proposed seislet-based MCA using scaled-dependent shaping regularization is promosing in the application to seismic trace interpolation, and multiple removal. The numerical results reveal that the exponential shrinkage operator in sparsity-promoting shaping regularization plays an extremely important role in successful seislet-based MCA separation, superior to many existing thresholding operators. The additional parameter $p$ provides us more flexibility to approximate many exisiting shrinkage operators to achieve better separation performance. Meanwhile, it is free of non-differential sigularity and unifies many existing shrinkage operators. 
 
 
 
@@ -389,7 +389,7 @@ We have developed a seislet-based MCA method for seismic data processing. PWD fi
 
 The work of the first author is supported by China Scholarship Council during his visit to Bureau of Economic Geology, University of Texas at Austin. We would like to thank Wenchao Chen and Jianwei Ma for valuable suggestions. More reproducible examples are available in  Madagascar software package \citep{m8r}.
 
-\append{Seislet frame in MCA algorithm}
+\append{Connections between seislet frame and seislet-MCA algorithm}
 \label{app:seisletframe}
 
 The complete data $d$ is regarded to be superposition of several different geometrical components, and each component can be sparely represented using a seislet dictionary $\Phi_i$, i.e.,
@@ -418,7 +418,7 @@ in the sense that
 \begin{equation}
  FB=\sum_{i=1}^N\Phi_i\Phi_i^{*}=N \mathrm{Id}.
 \end{equation}
-Recall that we are using BCR technique to sparsify one component while keeping all others fixed. At the $k+1$-th iteration applying the backward operator on the $i$-th component leads to
+The normalization can be made such that $\hat{F}=F/N$, $\hat{B}=B/N$. Using the seislet frame to do the optimization means that the components should be updated simultaneously with one iteration step with a factor of $N$. However, there is no factor $N$ involved in seislet-MCA algorithm. Another difference between seislet-MCA algorithm and seislet frame minimization is the use of BCR technique: we sparsify one component while keeping all others fixed.  At the $k+1$-th iteration applying the backward operator on the $i$-th component leads to
 \begin{equation}
 \tilde{\alpha}_i^{k+1}=\alpha_i^k+\sum_{i=1}^N\Phi_i^{*} r^k=\alpha_i^k+r_i^j+\sum_{j\neq i}\Phi_i^{*} r_j^k
 \end{equation}
