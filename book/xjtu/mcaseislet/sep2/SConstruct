@@ -59,27 +59,7 @@ Flow('mdip2','cmp2 mdip mask2 vdip',
 
 Result('srme','cmp mult','SideBySideAniso')
 
-
-#============== Separate signal/noise [method 1: pwdsigk] ======================
-Flow('comp','cmp2 mdip2','pwdsigk dips=${SOURCES[1]} verb=y niter=10000 eps=0.01')
-
-Flow('nois','comp mask','window f3=1 | add mode=p ${SOURCES[1]}')
-Plot('nois','window f2=6 | ' + grey('PWD-IRLS (noise)','clip=228'))
-
-Flow('sign','mis2 nois','add scale=1,-1 ${SOURCES[1]}')
-Plot('sign','window f2=6 | ' + grey('PWD-IRLS (signal)','clip=228'))
-
-
-Flow('vcmp','cmp','vscan semblance=y v0=1 nv=100 dv=0.02 half=n')
-Flow('vnois','nois','vscan semblance=y v0=1 nv=100 dv=0.02 half=n')
-Flow('vsign','sign','vscan semblance=y v0=1 nv=100 dv=0.02 half=n')
-Plot('vcmp',grey(' Data','color=j allpos=y scalebar=y maxval=0.75'))
-Plot('vnois',grey('PWD-IRLS (noise)','color=j allpos=y maxval=0.75'))
-Plot('vsign',grey('PWD-IRLS (signal)','color=j allpos=y maxval=0.75'))
-#Result('seppwdsigk','sign nois vcmp vsign','SideBySideAniso')
-
-
-#============== Separate signal/noise [method 2: seisigk] ======================
+#============== Separate signal/noise [method 1: seisigk, seislet IRLS] ===========
 Flow('cmp2s','cmp2','window n2=64')
 Flow('mdip2s','mdip2','window n2=64')
 Flow('masks','mask','window n2=64')
@@ -95,7 +75,7 @@ Plot('signs','window f2=6 | ' + grey('Seislet-IRLS (signal)','clip=228'))
 Plot('vsigns',grey('Seislet-IRLS (signal)','color=j allpos=y maxval=0.75'))
 Plot('vnoiss',grey('Seislet-IRLS (noise)','color=j allpos=y maxval=0.75'))
 
-#============== Separate signal/noise [method 3: mcaseislet] ======================
+#============== Separate signal/noise [method 2: mcaseislet] ======================
 # obtain similar separation effect with only 10-20 iterations, more efficient!
 Flow('compsmca','cmp2s mdip2s','mcaseislet dips=${SOURCES[1]} verb=y order=1 type=l eps=0.01 niter=15 pclip=10 pscale=13')
 
@@ -115,13 +95,11 @@ Plot('vnoissA','vnoiss markA','Overlay')
 Plot('vnoissmcaA','vnoissmca markA','Overlay')
 Plot('vcmpA','vcmp markA','Overlay')
 
-Result('signal','sign signs signsmca','SideBySideAniso')
-Result('nois','nois noiss noissmca','SideBySideAniso')
-#Result('mcasn','sign nois signs noiss signsmca noissmca','SideBySideAniso')
+Result('signal','signs signsmca','SideBySideAniso')
+Result('nois','noiss noissmca','SideBySideAniso')
 
-Result('vsignal','vsign vsigns vsignsmca vcmp','SideBySideAniso')
-Result('vnois','vnoisA vnoissA vnoissmcaA vcmpA','SideBySideAniso')
-#Result('vscanmcasn','vsign vnois vsigns vnoiss vsignsmca vnoissmca vcmp','SideBySideAniso')
+Result('vsignal','vsigns vsignsmca vcmp','SideBySideAniso')
+Result('vnois','vnoissA vnoissmcaA vcmpA','SideBySideAniso')
 
 
 End()
