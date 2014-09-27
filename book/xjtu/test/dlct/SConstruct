@@ -48,8 +48,7 @@ Plot('cchirps',
        '''
        window n1=%d |put label2=amplitude|
        graph title="orignal signal" labelfat=3 font=2 titlefat=3
-       crowd2=0.45 parallel2=n
-       wherexlabel=t wheretitle=b plotfat=3
+       crowd2=0.45 parallel2=n   wherexlabel=t wheretitle=b plotfat=3
        '''% nt)
 
 Result('signals',['chirp1','chirp2','cchirps'],'OverUnderAniso')
@@ -57,9 +56,9 @@ Result('signals',['chirp1','chirp2','cchirps'],'OverUnderAniso')
 L=100
 C=0.005
 
-Flow('dlct1','chirp1','dlct L=%d C=%g'%(L,C))
-Flow('dlct2','chirp2','dlct L=%d C=%g'%(L,C))
-Flow('dlct','cchirps','dlct L=%d C=%g'%(L,C))
+Flow('dlct1','chirp1','sfdlct L=%d C=%g'%(L,C))
+Flow('dlct2','chirp2','sfdlct L=%d C=%g'%(L,C))
+Flow('dlct','cchirps','sfdlct L=%d C=%g'%(L,C))
 
 Plot('dlct1',
        ''' 
@@ -111,5 +110,16 @@ Plot('diff',
        '''% nt)
 
 Result('cmp','cchirps rec','OverUnderAniso')
+
+#Flow('ltft1 scbasis','cchirps','ltft rect=7 verb=n basis=${TARGETS[1]}')
+#Result('ltft1',
+#       '''
+#       window n1=%d |
+#       math output="abs(input)" | real |
+#       grey transp=n yreverse=n color=j
+#       title="LTF decomposition spectra (smooth=7)"
+#       crowd1=0.75 crowd2=0.25
+#       labelfat=3 font=2 titlefat=3 parallel2=n
+#       ''' % nt)
 
 End()
