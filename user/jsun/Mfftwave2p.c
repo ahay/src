@@ -17,6 +17,7 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 #include <rsf.h>
+#include <omp.h>
 
 #include "fft2w.h"
 
@@ -25,6 +26,7 @@ int main(int argc, char* argv[])
     bool verb, cmplx;        
     int it,iz,im,ik,ix,i,j, snap;     /* index variables */
     int nt,nz,nx, m2, nk, nzx, nz2, nx2, nzx2, n2, pad1;
+    int nth;
     float c, old, dt;
 
     float  *ww,*rr;      /* I/O arrays*/
@@ -74,6 +76,14 @@ int main(int argc, char* argv[])
 
     if (!sf_getbool("cmplx",&cmplx)) cmplx=false; /* use complex FFT */
     if (!sf_getint("pad1",&pad1)) pad1=1; /* padding factor on the first axis */
+
+#ifdef _OPENMP
+#pragma omp parallel
+    {
+      nth = omp_get_num_threads();
+    }
+    if (verb) sf_warning(">>>> Using %d threads <<<<<", nth);
+#endif
 
     nk = fft2_init(cmplx,pad1,nz,nx,&nz2,&nx2);
 
