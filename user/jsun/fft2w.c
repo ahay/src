@@ -51,6 +51,7 @@ int fft2_init(bool cmplx1        /* if complex transform */,
 #ifdef _OPENMP
     fftw_init_threads();
     sf_warning("Using threaded FFTW3! \n");
+    fftw_plan_with_nthreads(omp_get_max_threads());
 #endif
 #else
    int i2;
@@ -112,9 +113,6 @@ void fft2(float *inp      /* [n1*n2] */,
     int i1, i2;
 
 #ifdef SF_HAS_FFTW
-#ifdef _OPENMP
-    fftw_plan_with_nthreads(omp_get_max_threads());
-#endif
     if (NULL==cfg) {
 	cfg = cmplx? 
 	    fftwf_plan_dft_2d(n2,n1,

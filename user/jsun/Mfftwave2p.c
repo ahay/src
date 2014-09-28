@@ -81,6 +81,7 @@ int main(int argc, char* argv[])
 #pragma omp parallel
     {
       nth = omp_get_num_threads();
+      /* omp_set_num_threads(nth); */
     }
     if (verb) sf_warning(">>>> Using %d threads <<<<<", nth);
 #endif
