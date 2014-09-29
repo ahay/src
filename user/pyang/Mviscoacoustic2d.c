@@ -114,6 +114,7 @@ void apply_sponge(float **u, float *bndr)
 
 
 void step_forward(float **p, float **r, float **vz, float **vx, float **vv, float **rho, float **tau, float **tau0)
+/*< forward modeling step >*/
 {
 	int i1, i2;
 	float tmp, tmp2, diff1, diff2;
