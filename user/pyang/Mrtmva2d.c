@@ -535,6 +535,7 @@ int main(int argc, char* argv[])
 					apply_sponge(svz, bndr);
 					memcpy(cp[itc][0], sp[0], nzpad*nxpad*sizeof(float));
 				}
+				ic++;
 			}
 
 			add_source(gxz, gp, ng, dcal[nt-1-it], true);
@@ -544,7 +545,7 @@ int main(int argc, char* argv[])
 			apply_sponge(gvx, bndr);
 			apply_sponge(gvz, bndr);
 		
-			cross_correlation(image, gp, cp[it%ntc]);
+			cross_correlation(image, gp, cp[it-ic*ntc]);
 		}
 	}
 	sf_floatwrite(image[0], nz*nx,Fw);/* the image needs laplacian filtering to remove low-freq noise */
