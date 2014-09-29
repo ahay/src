@@ -545,7 +545,7 @@ int main(int argc, char* argv[])
 			apply_sponge(gvx, bndr);
 			apply_sponge(gvz, bndr);
 		
-			cross_correlation(image, gp, cp[it-ic*ntc]);
+			cross_correlation(image, gp, cp[it%ntc]);
 		}
 	}
 	sf_floatwrite(image[0], nz*nx,Fw);/* the image needs laplacian filtering to remove low-freq noise */
