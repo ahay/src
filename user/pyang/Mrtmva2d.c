@@ -1,4 +1,4 @@
-/* 2D visco-acoustic modeling with 8th order staggered-grid FD
+/* RTM with checkpointing in 2D visco-acoustic media
 The wavefield reconstruction method can not be utilized in visco-acoustic
  and visco-elastic wave equation due to the dissipation. The solution of
  computation without disk I/O is the use of checkpointing technique.
@@ -351,7 +351,8 @@ int main(int argc, char* argv[])
 	int *sxz, *gxz;
 	float tmp, fm;
 	float *wlt, *bndr;
-	float **dcal,**rho, **tau, **tau0, **v0, **vv, **sp, **sr, **svz, **svx, **gp, **gr, **gvz, **gvx, *cp, **image;
+	float **dcal,**rho, **tau, **tau0, **v0, **vv, **sp, **sr, **svz, **svx, **gp, **gr, **gvz, **gvx, **image;
+	float ***cp;
 	sf_file Fv, Frho, Ftau, Ftau0, Fw;
 	checkpoint *checkpoints;
 
@@ -447,7 +448,7 @@ int main(int argc, char* argv[])
 		checkpoints[ic].vz=(float*)malloc(nzpad*nxpad*sizeof(float));
 		checkpoints[ic].vx=(float*)malloc(nzpad*nxpad*sizeof(float));
 	}
-	cp=(float*)malloc(ntc*nzpad*nxpad*sizeof(float));/* ntc snapshots */
+	cp=sf_floatalloc3(nzpad, nxpad, ntc);/* ntc snapshots */
 
 	/* initialization */
 	for(it=0;it<nt;it++){
@@ -532,7 +533,7 @@ int main(int argc, char* argv[])
 					apply_sponge(sr, bndr);
 					apply_sponge(svx, bndr);
 					apply_sponge(svz, bndr);
-					memcpy(&cp[itc*nzpad*nxpad], sp[0], nzpad*nxpad*sizeof(float));
+					memcpy(cp[itc][0], sp[0], nzpad*nxpad*sizeof(float));
 				}
 			}
 
@@ -543,7 +544,7 @@ int main(int argc, char* argv[])
 			apply_sponge(gvx, bndr);
 			apply_sponge(gvz, bndr);
 		
-			cross_correlation(image, gp, sp);
+			cross_correlation(image, gp, cp[it%ntc]);
 		}
 	}
 	sf_floatwrite(image[0], nz*nx,Fw);/* the image needs laplacian filtering to remove low-freq noise */
@@ -575,8 +576,7 @@ int main(int argc, char* argv[])
 		free(checkpoints[ic].vx);
 	}
 	free(checkpoints);
-	free(cp);
-	free(dcal);
+	free(**cp); free(*cp); free(cp);
 
     	exit(0);
 }
