@@ -538,6 +538,7 @@ int main(int argc, char* argv[])
 				ic++;
 			}
 
+			/* backpropagate receiver wavefield */
 			add_source(gxz, gp, ng, dcal[nt-1-it], true);
 			step_forward(gp, gr, gvz, gvx, vv, rho, tau, tau0);
 			apply_sponge(gp, bndr);
@@ -545,6 +546,7 @@ int main(int argc, char* argv[])
 			apply_sponge(gvx, bndr);
 			apply_sponge(gvz, bndr);
 		
+			/*correlation with source wavefield stored in checkpoints cp[] */
 			cross_correlation(image, gp, cp[it%ntc]);
 		}
 	}
