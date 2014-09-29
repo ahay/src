@@ -31,6 +31,7 @@ int main(int argc, char* argv[])
     float dt;
     double *x,*a;
 
+    float threshold, tolerance;
     extrema_t ex;
     envelope_t env;
     stop_t stop_params;
@@ -60,12 +61,14 @@ int main(int argc, char* argv[])
 	x[i]=i*dt;
 	}
 
-    if(!sf_getfloat("threshold",&stop_params.threshold)) stop_params.threshold=DEFAULT_THRESHOLD;
+    if(!sf_getfloat("threshold",&threshold)) threshold=DEFAULT_THRESHOLD;
     /* Sifting stoping parameter: threshold, the default is 0.05. */
+    stop_params.threshold=threshold;
 
-    if(!sf_getfloat("tolerance",&stop_params.tolerance)) stop_params.tolerance=DEFAULT_TOLERANCE;
+    if(!sf_getfloat("tolerance",&tolerance)) tolerance=DEFAULT_TOLERANCE;
     /* Sifting stoping parameter: tolerance, the default is 0.05. */
-    
+    stop_params.tolerance=tolerance;
+
     /* input checking */
     if (stop_params.threshold <= 0 || stop_params.threshold >=1)
         sf_warning("threshold must be a real number in [O,1]");
@@ -151,7 +154,7 @@ int main(int argc, char* argv[])
     sf_putfloat(outp,"o2",0);  
 
     /* output  */
-    sf_complexwrite(imf,n*(nb_imfs+1),outp);
+    sf_complexwrite((sf_complex*) imf,n*(nb_imfs+1),outp);
   
     /* free allocated memory */
     if (allocated_x)

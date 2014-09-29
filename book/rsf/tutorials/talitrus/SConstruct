@@ -1,0 +1,22 @@
+from rsf.proj import *
+
+# Download image
+
+image = 'IMG_0974.jpg'
+
+Fetch(image,'1546044',server='http://files.figshare.com',top=None)
+
+# Convert to RSF
+
+Flow('byte',image,'jpg2byte')
+
+# Use standard formula for luminance
+Flow('image','byte',
+     '''
+     dd type=float | 
+     stack axis=1 scale=0.2126,0.7152,0.0722
+     ''')
+
+Result('image','grey title="Talitrus Saltrator" allpos=y transp=n screenwd=8.2 screenht=9.6')
+
+End()

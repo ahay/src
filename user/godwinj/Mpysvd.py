@@ -3,6 +3,7 @@
 
 REQUIRES the PYTHON API, NUMPY AND SCIPY
 '''
+import sys
 
 # Import RSF API
 try:
@@ -10,7 +11,6 @@ try:
     import numpy
     import scipy
 except Exception, e:
-    import sys
     print \
 '''ERROR: NEED PYTHON API, NUMPY, SCIPY '''
     sys.exit(1)
@@ -18,14 +18,22 @@ except Exception, e:
 # Initialize RSF command line parser    
 par = rsf.Par()
 # Read command line variables
-vectors = par.bool  ("vectors", False     ) # Output singular vectors?
-left    = par.string("left"   ,"left.rsf") # File to store left singular vectors
-right   = par.string("right"  ,"right.rsf") # File to store right singular vectors
+
 # Declare input and outputs
 fin = rsf.Input()    # no argument means stdin
 fout = rsf.Output()  # no argument means stdout
+
 # Declare optional inputs/outputs
+vectors = par.bool  ("vectors", False     ) # Output singular vectors?
 if vectors:
+    left    = par.string("left") # File to store left singular vectors
+    if not left:
+        sys.stderr.write('Need left=\n')
+        sys.exit(2)
+    right   = par.string("right") # File to store right singular vectors
+    if not right:
+        sys.stderr.write('Need right=\n')
+        sys.exit(2)
     lout = rsf.Output(left)  # left singular vectors
     rout = rsf.Output(right) # right singular vectors
 
@@ -40,22 +48,22 @@ fin.read(data)
 
 # Perform our SVD
 u,l,v = numpy.linalg.svd(data)
-print l.shape
+
 # Setup output headers
-fout.put('n1',n1)
 fout.put('n2',1)
 
 # Write output data
 fout.write(l)
 
 if vectors:
-    lout.put('n1',n1)
+    lout.put('n1',n2)
     lout.put('n2',n2)
-    rout.put('n1',n1)
-    rout.put('n2',n2)
     lout.write(u)
-    rout.write(v)
     lout.close()
+
+    rout.put('n1',n1)
+    rout.put('n2',n1)
+    rout.write(v)
     rout.close()
 
 # Clean up files

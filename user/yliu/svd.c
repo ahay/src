@@ -22,6 +22,30 @@
 #include <rsf.h>
 #include "svd.h"
 
+static int m, n;
+static float *s, *e, *w;
+static double eps;
+
+void svdinit( int n2, int n1, int ka, double epsilon)
+/*< initiate svd and allocate memory >*/
+{
+    m=n2;
+    n=n1;
+    s = sf_floatalloc(ka); 
+    e = sf_floatalloc(ka);
+    w = sf_floatalloc(ka);
+    eps = epsilon;
+
+}
+
+void svdclose( void )
+/*< release memory >*/
+{
+    free(s);
+    free(e);
+    free(w);
+}
+
 void brmul(float *a,float *b,int m,int n,int k,float *c) 
 /*<SVD reconstruction>*/
 {
@@ -35,7 +59,7 @@ void brmul(float *a,float *b,int m,int n,int k,float *c)
     return;
 }
 
-void ppp(float *a,float *e,float *s,float *v,int m, int n)
+static void ppp(float *a,float *e,float *s,float *v,int m, int n)
 {
     int i,j,p,q;
     float d;
@@ -55,42 +79,39 @@ void ppp(float *a,float *e,float *s,float *v,int m, int n)
     return;
 }
 
-void sss(float fg[2], float cs[2] )
+static void sss(float fg[2], float cs[2] )
 { 
      float r,d;
-     if ((fabs(fg[0])+fabs(fg[1]))==0.0)  {
+     if ((fabsf(fg[0])+fabsf(fg[1]))==0.0)  {
 	 cs[0]=1.0; cs[1]=0.0; d=0.0;}
      else  {
-	 d=sqrt(fg[0]*fg[0]+fg[1]*fg[1]);
-	 if (fabs(fg[0])>fabs(fg[1])) {
-	     d=fabs(d);
+	 d=sqrtf(fg[0]*fg[0]+fg[1]*fg[1]);
+	 if (fabsf(fg[0])>fabsf(fg[1])) {
+	     d=fabsf(d);
 	     if (fg[0]<0.0) d=-d;
 	 }
-	 if (fabs(fg[1])>=fabs(fg[0])) {
-	     d=fabs(d);
+	 if (fabsf(fg[1])>=fabsf(fg[0])) {
+	     d=fabsf(d);
 	     if (fg[1]<0.0) d=-d;
 	 }
 	 cs[0]=fg[0]/d; cs[1]=fg[1]/d;
      }
     r=1.0;
-    if (fabs(fg[0])>fabs(fg[1])) r=cs[1];
+    if (fabsf(fg[0])>fabsf(fg[1])) r=cs[1];
     else
 	if (cs[0]!=0.0) r=1.0/cs[0];
     fg[0]=d; fg[1]=r;
     return;
 }
 
-int bmuav(float *a,int m,int n,float *u,float *v,double eps,int ka) 
+
+
+int svduav(float *a,float *u,float *v) 
 /*<SVD decomposition, A->UAV >*/
 {
     int i,j,k,l,it,ll,kk,ix,iy,mm,nn,iz,m1,ks;
     float d,dd,t,sm,sm1,em1,sk,ek,b,c,shh,fg[2],cs[2];
-    float *s,*e,*w;
-   
-    s = sf_floatalloc(ka); 
-    e = sf_floatalloc(ka);
-    w = sf_floatalloc(ka);
- 
+
     it=60; k=n;
     if (m-1<n) k=m-1;
     l=m;
@@ -105,11 +126,11 @@ int bmuav(float *a,int m,int n,float *u,float *v,double eps,int ka)
                 for (i=kk; i<=m; i++) {
 		    ix=(i-1)*n+kk-1; d=d+a[ix]*a[ix];
 		}
-                s[kk-1]=sqrt(d);
+                s[kk-1]=sqrtf(d);
                 if (s[kk-1]!=0.0) {
 		    ix=(kk-1)*n+kk-1;
                     if (a[ix]!=0.0) {
-			s[kk-1]=fabs(s[kk-1]);
+			s[kk-1]=fabsf(s[kk-1]);
                         if (a[ix]<0.0) s[kk-1]=-s[kk-1];
 		    }
                     for (i=kk; i<=m; i++) {
@@ -149,10 +170,10 @@ int bmuav(float *a,int m,int n,float *u,float *v,double eps,int ka)
 		d=0.0;
                 for (i=kk+1; i<=n; i++)
 		    d=d+e[i-1]*e[i-1];
-                e[kk-1]=sqrt(d);
+                e[kk-1]=sqrtf(d);
                 if (e[kk-1]!=0.0) {
 		    if (e[kk]!=0.0) {
-			e[kk-1]=fabs(e[kk-1]);
+			e[kk-1]=fabsf(e[kk-1]);
                         if (e[kk]<0.0) e[kk-1]=-e[kk-1];
 		    }
                     for (i=kk+1; i<=n; i++)
@@ -252,16 +273,16 @@ int bmuav(float *a,int m,int n,float *u,float *v,double eps,int ka)
     while (1==1) {
 	if (mm==0) {
 	    ppp(a,e,s,v,m,n);
-            free(s); free(e); free(w); return(1);
+	    return(1);
 	}
         if (it==0) { 
 	    ppp(a,e,s,v,m,n);
-            free(s); free(e); free(w); return(-1);
+	    return(-1);
 	}
         kk=mm-1;
-	while ((kk!=0)&&(fabs(e[kk-1])!=0.0)) {
-	    d=fabs(s[kk-1])+fabs(s[kk]);
-            dd=fabs(e[kk-1]);
+	while ((kk!=0)&&(fabsf(e[kk-1])!=0.0)) {
+	    d=fabsf(s[kk-1])+fabsf(s[kk]);
+            dd=fabsf(e[kk-1]);
             if (dd>eps*d) kk=kk-1;
             else e[kk-1]=0.0;
 	}
@@ -291,24 +312,24 @@ int bmuav(float *a,int m,int n,float *u,float *v,double eps,int ka)
 	}
         else {
 	    ks=mm;
-            while ((ks>kk)&&(fabs(s[ks-1])!=0.0)) {
+            while ((ks>kk)&&(fabsf(s[ks-1])!=0.0)) {
 		d=0.0;
-                if (ks!=mm) d=d+fabs(e[ks-1]);
-                if (ks!=kk+1) d=d+fabs(e[ks-2]);
-                dd=fabs(s[ks-1]);
+                if (ks!=mm) d=d+fabsf(e[ks-1]);
+                if (ks!=kk+1) d=d+fabsf(e[ks-2]);
+                dd=fabsf(s[ks-1]);
                 if (dd>eps*d) ks=ks-1;
                 else s[ks-1]=0.0;
 	    }
             if (ks==kk) {
 		kk=kk+1;
-                d=fabs(s[mm-1]);
-                t=fabs(s[mm-2]);
+                d=fabsf(s[mm-1]);
+                t=fabsf(s[mm-2]);
                 if (t>d) d=t;
-                t=fabs(e[mm-2]);
+                t=fabsf(e[mm-2]);
                 if (t>d) d=t;
-                t=fabs(s[kk-1]);
+                t=fabsf(s[kk-1]);
                 if (t>d) d=t;
-                t=fabs(e[kk-1]);
+                t=fabsf(e[kk-1]);
                 if (t>d) d=t;
                 sm=s[mm-1]/d; sm1=s[mm-2]/d;
                 em1=e[mm-2]/d;
@@ -316,7 +337,7 @@ int bmuav(float *a,int m,int n,float *u,float *v,double eps,int ka)
                 b=((sm1+sm)*(sm1-sm)+em1*em1)/2.0;
                 c=sm*em1; c=c*c; shh=0.0;
                 if ((b!=0.0)||(c!=0.0)) {
-		    shh=sqrt(b*b+c);
+		    shh=sqrtf(b*b+c);
                     if (b<0.0) shh=-shh;
                     shh=c/(b+shh);
 		}

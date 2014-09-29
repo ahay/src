@@ -20,6 +20,7 @@ To SCons:
 * Added SLURM support for running MPI jobs through SCons
 * Added usedatapath= in Fetch for placing downloaded data in DATAPATH by default
 * Upgraded to scons-2.3.3
+* Allow Fetch to run with top=None
 
 To documentation:
 
@@ -42,6 +43,7 @@ To programs:
 * Added griddash= parameter to stdplot
 * sflas2rsf: Convert LAS-2 well logs to RSF
 * Added segy= parameter to sfheaderattr
+* Renamed sfsvd sfpysvd and fixed sizes for output vectors
 
 ===Bug fixes===
 

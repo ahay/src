@@ -1,3 +1,4 @@
+
 # Copyright (C) 2004 University of Texas at Austin
 #
 # This program is free software; you can redistribute it and/or modify
@@ -102,7 +103,10 @@ def retrieve_emit(target=None, source=None, env=None):
 def retrieve(target=None,source=None,env=None):
     "Fetch data from the web"
     top = env.get('top')
-    folder = top + os.sep +env['dir']
+    if top:
+        folder = top + os.sep +env['dir']
+    else:
+        folder = env['dir']
     private = env.get('private')
     if sys.platform[:6] != 'cygwin':
         usedatapath = env.get('usedatapath')
@@ -639,7 +643,10 @@ class Project(Environment):
             if not type(files) is types.ListType:
                 files = string.split(files)
             for fil in files:
-                self.data.append(os.path.join(top,dir,fil))
+                if top:
+                    self.data.append(os.path.join(top,dir,fil))
+                else:
+                    self.data.append(os.path.join(dir,fil))
         return self.Retrieve(files,None,
                              dir=dir,private=private,
                              top=top,server=server,usedatapath=usedatapath)

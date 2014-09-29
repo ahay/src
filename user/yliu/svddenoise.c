@@ -43,7 +43,9 @@ void svddenoise_lop(int m, int n, float pclip, float *x, float *y)
     for (i=0;i<(m*n);i++) {
 	a[i] = x[i];
     }
-    bmuav(a,m,n,u,v,eps,ka);
+
+    svdinit(m,n,ka,eps);
+    svduav(a,u,v);
     for(i=0;i<m;i++) {
 	for(j=0;j<n;j++)  {
 	    if((i>=nclip)&&(i==j))  {   		 
