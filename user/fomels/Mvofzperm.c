@@ -24,7 +24,7 @@
 int main(int argc, char* argv[])
 {
     bool mig, stat;
-    int it, nt, ix, nx, iz, nz, ih, nh, it1, it2, its, ik, n1, n2, nk, nr, **siz;
+    int it, nt, ix, nx=0, iz, nz=0, ih, nh, it1, it2, its, ik, n1, n2, nk, nr, **siz;
     float dt, dx, dz, dh, c;
     float ***curr, **img, **dat, ***lft, ***mid, ***rht;
     sf_file data, image, size, left, middle, right;

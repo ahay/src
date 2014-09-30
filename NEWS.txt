@@ -43,6 +43,8 @@ To programs:
 * Added griddash= parameter to stdplot
 * sflas2rsf: Convert LAS-2 well logs to RSF
 * Added segy= parameter to sfheaderattr
+* Computing median of an even number of points in sfmedian using
+  Dellinger's algorithm
 * Renamed sfsvd sfpysvd and fixed sizes for output vectors
 
 ===Bug fixes===
