@@ -19,7 +19,8 @@ Result('diagonal',
        title="Diagonal"
        ''')
 
-Flow('singular left right','diagonal','pysvd vectors=y')
+Flow('singular left right','diagonal',
+     'pysvd vectors=y left=${SOURCES[1]} right=${SOURCES[2]}')
 Result('singular',
        '''
        graph label1="" label2="singular value" 
