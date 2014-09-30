@@ -41,6 +41,8 @@ extern "C" {
 #endif
 #define Block_Size 512
 
+#define div_up(a, b) (((a) + (b) - 1) / (b))
+
 void sf_check_gpu_error (const char *msg) 
 /*< check GPU errors >*/
 {
@@ -69,7 +71,7 @@ __global__ void cuda_axpy(float *x, float *y, float alpha, int n)
 __global__  void cuda_dot(float *x, float *y, int n, float *result)
 /*< dot product <x,y>:  <<<1, Block_Size>>> >*/
 {
-  	__shared__ float  sdata[Block_Size];
+  	__shared__ float sdata[Block_Size];
     	int tid=threadIdx.x;
     	sdata[tid]=0.0f;
 	for(int s=0; s<(n+Block_Size-1)/Block_Size; s++)
@@ -82,7 +84,8 @@ __global__  void cuda_dot(float *x, float *y, int n, float *result)
     	/* do reduction in shared mem */
     	for(int s=blockDim.x/2; s>32; s>>=1) 
     	{
-		if (threadIdx.x < s) sdata[tid] += sdata[tid + s]; __syncthreads();
+		if (threadIdx.x < s) sdata[tid] += sdata[tid + s]; 
+		__syncthreads();
     	}
    	if (tid < 32)
    	{
