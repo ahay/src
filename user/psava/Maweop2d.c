@@ -41,9 +41,9 @@ int main(int argc, char* argv[])
     bool adj;            /* adjoint operator flag */
 
     /* I/O files */
-    sf_file Fsou=NULL; /* inp wfl */
+    sf_file Fsou=NULL; /* inp wfl (win) */
     sf_file Fvel=NULL; /* vel     */
-    sf_file Fwfl=NULL; /* out wfl */
+    sf_file Fwfl=NULL; /* out wfl (wou) */
 
     /* cube axes */
     sf_axis at,az,ax;
