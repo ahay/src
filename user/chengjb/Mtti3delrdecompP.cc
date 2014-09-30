@@ -19,6 +19,7 @@
    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 #include <rsf.hh>
+#include <rsf.h>
 #include <assert.h>
 
 /* low rank decomposition  */
@@ -29,7 +30,6 @@ using namespace std;
 
 /* prepared head files by myself */
 #include "_cjb.h"
-#include "_lapack.h"
 
 /* head files aumatically produced from C programs */
 extern "C"{
@@ -37,7 +37,8 @@ extern "C"{
 #include "ricker.h"
 #include "kykxkztaper.h"
 #include "eigen3x3.h"
-//#include "decomplowrank3d.h"
+#include "puthead.h"
+#include "decomplowrank.h"
 }
 
 static std::valarray<float> vp, vs, ep, de, ga, th, ph;
@@ -45,12 +46,12 @@ static std::valarray<float> vp, vs, ep, de, ga, th, ph;
 static std::valarray<double> rkx, rky, rkz, rkk;
 
 /* for low-rank decomp. */
-static int samplexx(vector<int>& rs, vector<int>& cs, DblNumMat& res);
-static int sampleyy(vector<int>& rs, vector<int>& cs, DblNumMat& res);
-static int samplezz(vector<int>& rs, vector<int>& cs, DblNumMat& res);
-static int samplexy(vector<int>& rs, vector<int>& cs, DblNumMat& res);
-static int samplexz(vector<int>& rs, vector<int>& cs, DblNumMat& res);
-static int sampleyz(vector<int>& rs, vector<int>& cs, DblNumMat& res);
+static int samplebpxx(vector<int>& rs, vector<int>& cs, DblNumMat& res);
+static int samplebpyy(vector<int>& rs, vector<int>& cs, DblNumMat& res);
+static int samplebpzz(vector<int>& rs, vector<int>& cs, DblNumMat& res);
+static int samplebpxy(vector<int>& rs, vector<int>& cs, DblNumMat& res);
+static int samplebpxz(vector<int>& rs, vector<int>& cs, DblNumMat& res);
+static int samplebpyz(vector<int>& rs, vector<int>& cs, DblNumMat& res);
 
 static void map2d1d(float *d, DblNumMat mat, int m, int n);
 
@@ -84,24 +85,17 @@ int main(int argc, char* argv[])
    int npk;
    par.get("npk",npk,20); // maximum rank
 
-   int   ns;
-   float dt;
-
-   par.get("ns",ns);
-   par.get("dt",dt);
-
    int ireconstruct;   // flag for reconstruct the W matrix or not
    int iflagvti;       // 1: for VTI 
    par.get("iflagvti",iflagvti);
 
-   sf_warning("ns=%d dt=%f",ns,dt);
    sf_warning("npk=%d ",npk);
    sf_warning("eps=%f",eps);
    sf_warning("iflagvti=%d ",iflagvti);
    sf_warning("read velocity model parameters");
 
    /* setup I files */
-   iRSF vp0, vs0("vs0"), epsi("epsi"), del("del"), gam("gam"), the("the"), phai("phai");
+   iRSF vp0, vs0("vs0"), epsi("epsi"), del("del"), gam("gam"), the("the"), phi("phi");
 
    /* Read/Write axes */
    int nxv, nyv, nzv;
@@ -109,23 +103,23 @@ int main(int argc, char* argv[])
    vp0.get("n2",nxv);
    vp0.get("n3",nyv);
 
-   float az, ax, ay;
-   vp0.get("o1",az);
-   vp0.get("o2",ax);
-   vp0.get("o3",ay);
+   float a1, a2, a3;
+   vp0.get("o1",a1);
+   vp0.get("o2",a2);
+   vp0.get("o3",a3);
 
    float fxv, fyv, fzv;
-   fxv=ax*1000.0;
-   fyv=ay*1000.0;
-   fzv=az*1000.0;
+   fxv=a2*1000.0;
+   fyv=a3*1000.0;
+   fzv=a1*1000.0;
 
    float dxv, dyv, dzv;
-   vp0.get("d1",az);
-   vp0.get("d2",ax);
-   vp0.get("d3",ay);
-   dzv = az*1000.0;
-   dxv = ax*1000.0;
-   dyv = ay*1000.0;
+   vp0.get("d1",a1);
+   vp0.get("d2",a2);
+   vp0.get("d3",a3);
+   dzv = a1*1000.0;
+   dxv = a2*1000.0;
+   dyv = a3*1000.0;
 
    /* Read/Write axes from Wavefields*/
    sf_file Fx, Fy, Fz;
@@ -184,11 +178,11 @@ int main(int argc, char* argv[])
    del>>de;
    gam>>ga;
    the>>th;
-   phai>>ph;
+   phi>>ph;
   
    for(int i=0;i<nxyz;i++){
-      th[i] *= PI/180.0;
-      ph[i] *= PI/180.0;
+      th[i] *= SF_PI/180.0;
+      ph[i] *= SF_PI/180.0;
    } 
 
    /* Fourier spectra demension */
@@ -202,13 +196,13 @@ int main(int argc, char* argv[])
 
    float dkz,dkx,dky,kz0,kx0,ky0;
 
-   dkx=2*PI/dx/nx;
-   dky=2*PI/dy/ny;
-   dkz=2*PI/dz/nz;
+   dkx=2*SF_PI/dx/nx;
+   dky=2*SF_PI/dy/ny;
+   dkz=2*SF_PI/dz/nz;
 
-   kx0=-PI/dx;
-   ky0=-PI/dy;
-   kz0=-PI/dz;
+   kx0=-SF_PI/dx;
+   ky0=-SF_PI/dy;
+   kz0=-SF_PI/dz;
 
    rkx.resize(nk);
    rky.resize(nk);
@@ -265,7 +259,7 @@ int main(int argc, char* argv[])
    int   m2xx, n2xx, m2yy, n2yy, m2zz, n2zz, m2xy, n2xy, m2xz, n2xz, m2yz, n2yz;
 
    /********* Ax2-operator **********/
-   iC( ddlowrank(nxyz,nk,samplexx,eps,npk,lid,rid,mid) );
+   iC( ddlowrank(nxyz,nk,samplebpxx,eps,npk,lid,rid,mid) );
    m2xx=mid.m();
    n2xx=mid.n();
    sf_warning("lowrank: m2xx=%d n2xx=%d",m2xx, n2xx);
@@ -278,14 +272,14 @@ int main(int argc, char* argv[])
 
    map2d1d(fmidxx, mid, m2xx, n2xx);
 
-   iC ( samplexx(md,lid,mat) );
+   iC ( samplebpxx(md,lid,mat) );
    map2d1d(ldataxx, mat, nxyz, m2xx);
 
-   iC ( samplexx(rid,nd,mat) );
+   iC ( samplebpxx(rid,nd,mat) );
    map2d1d(rdataxx, mat, n2xx, nk);
 
    /********* Ay2-operator **********/
-   iC( ddlowrank(nxyz,nk,sampleyy,eps,npk,lid,rid,mid) );
+   iC( ddlowrank(nxyz,nk,samplebpyy,eps,npk,lid,rid,mid) );
    m2yy=mid.m();
    n2yy=mid.n();
    sf_warning("lowrank: m2yy=%d n2yy=%d",m2yy, n2yy);
@@ -298,14 +292,14 @@ int main(int argc, char* argv[])
 
    map2d1d(fmidyy, mid, m2yy, n2yy);
 
-   iC ( sampleyy(md,lid,mat) );
+   iC ( samplebpyy(md,lid,mat) );
    map2d1d(ldatayy, mat, nxyz, m2yy);
 
-   iC ( sampleyy(rid,nd,mat) );
+   iC ( samplebpyy(rid,nd,mat) );
    map2d1d(rdatayy, mat, n2yy, nk);
 
    /********* Az2-operator **********/
-   iC( ddlowrank(nxyz,nk,samplezz,eps,npk,lid,rid,mid) );
+   iC( ddlowrank(nxyz,nk,samplebpzz,eps,npk,lid,rid,mid) );
    m2zz=mid.m();
    n2zz=mid.n();
    sf_warning("lowrank: m2zz=%d n2zz=%d",m2zz, n2zz);
@@ -318,14 +312,14 @@ int main(int argc, char* argv[])
 
    map2d1d(fmidzz, mid, m2zz, n2zz);
 
-   iC ( samplezz(md,lid,mat) );
+   iC ( samplebpzz(md,lid,mat) );
    map2d1d(ldatazz, mat, nxyz, m2zz);
 
-   iC ( samplezz(rid,nd,mat) );
+   iC ( samplebpzz(rid,nd,mat) );
    map2d1d(rdatazz, mat, n2zz, nk);
 
    /********* AxAy-operator **********/
-   iC( ddlowrank(nxyz,nk,samplexy,eps,npk,lid,rid,mid) );
+   iC( ddlowrank(nxyz,nk,samplebpxy,eps,npk,lid,rid,mid) );
    m2xy=mid.m();
    n2xy=mid.n();
    sf_warning("lowrank: m2xy=%d n2xy=%d",m2xy, n2xy);
@@ -338,14 +332,14 @@ int main(int argc, char* argv[])
 
    map2d1d(fmidxy, mid, m2xy, n2xy);
 
-   iC ( samplexy(md,lid,mat) );
+   iC ( samplebpxy(md,lid,mat) );
    map2d1d(ldataxy, mat, nxyz, m2xy);
 
-   iC ( samplexy(rid,nd,mat) );
+   iC ( samplebpxy(rid,nd,mat) );
    map2d1d(rdataxy, mat, n2xy, nk);
 
    /********* AxAz-operator **********/
-   iC( ddlowrank(nxyz,nk,samplexz,eps,npk,lid,rid,mid) );
+   iC( ddlowrank(nxyz,nk,samplebpxz,eps,npk,lid,rid,mid) );
    m2xz=mid.m();
    n2xz=mid.n();
    sf_warning("lowrank: m2xz=%d n2xz=%d",m2xz, n2xz);
@@ -358,14 +352,14 @@ int main(int argc, char* argv[])
 
    map2d1d(fmidxz, mid, m2xz, n2xz);
 
-   iC ( samplexz(md,lid,mat) );
+   iC ( samplebpxz(md,lid,mat) );
    map2d1d(ldataxz, mat, nxyz, m2xz);
 
-   iC ( samplexz(rid,nd,mat) );
+   iC ( samplebpxz(rid,nd,mat) );
    map2d1d(rdataxz, mat, n2xz, nk);
 
    /********* AyAz-operator **********/
-   iC( ddlowrank(nxyz,nk,sampleyz,eps,npk,lid,rid,mid) );
+   iC( ddlowrank(nxyz,nk,samplebpyz,eps,npk,lid,rid,mid) );
    m2yz=mid.m();
    n2yz=mid.n();
    sf_warning("lowrank: m2yz=%d n2yz=%d",m2yz, n2yz);
@@ -378,10 +372,10 @@ int main(int argc, char* argv[])
 
    map2d1d(fmidyz, mid, m2yz, n2yz);
 
-   iC ( sampleyz(md,lid,mat) );
+   iC ( samplebpyz(md,lid,mat) );
    map2d1d(ldatayz, mat, nxyz, m2yz);
 
-   iC ( sampleyz(rid,nd,mat) );
+   iC ( samplebpyz(rid,nd,mat) );
    map2d1d(rdatayz, mat, n2yz, nk);
 
 
@@ -434,17 +428,9 @@ int main(int argc, char* argv[])
                     m2xx, n2xx, m2yy, n2yy, m2zz, n2zz, 
                     m2xz, n2xz, m2xy, n2xy, m2yz, n2yz);
 
-    for(i=0;i<nxyz;i++)
-         x[i] = px[i];
-    ElasticPx<<x;
-
-    for(i=0;i<nxyz;i++)
-         x[i] = py[i];
-    ElasticPy<<x;
-
-    for(i=0;i<nxyz;i++)
-         x[i] = pz[i];
-    ElasticPz<<x;
+	sf_floatwrite(px, nxyz, Fpx);
+	sf_floatwrite(py, nxyz, Fpy);
+	sf_floatwrite(pz, nxyz, Fpz);
 
     free(px);
     free(py);
@@ -452,7 +438,7 @@ int main(int argc, char* argv[])
 
     t5=clock();
     timespent=(float)(t5-t44)/CLOCKS_PER_SEC;
-    sf_warning("CPU time for wave-modes separation.: %f(second)",timespent);
+    sf_warning("CPU time for wave-modes decomposition.: %f(second)",timespent);
 
     free(ldataxx);
     free(ldatayy);
@@ -480,7 +466,7 @@ int main(int argc, char* argv[])
 }
 
 /* Apy2  */
-static int sampleyy(vector<int>& rs, vector<int>& cs, DblNumMat& res)
+static int samplebpyy(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 {
     int nr = rs.size();
     int nc = cs.size();
@@ -565,7 +551,7 @@ static int sampleyy(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 }
 
 /* Apx2  */
-static int samplexx(vector<int>& rs, vector<int>& cs, DblNumMat& res)
+static int samplebpxx(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 {
     int nr = rs.size();
     int nc = cs.size();
@@ -650,7 +636,7 @@ static int samplexx(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 }
 
 /* Apz2  */
-static int samplezz(vector<int>& rs, vector<int>& cs, DblNumMat& res)
+static int samplebpzz(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 {
     int nr = rs.size();
     int nc = cs.size();
@@ -735,7 +721,7 @@ static int samplezz(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 }
 
 /* ApyApx  */
-static int samplexy(vector<int>& rs, vector<int>& cs, DblNumMat& res)
+static int samplebpxy(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 {
     int nr = rs.size();
     int nc = cs.size();
@@ -821,7 +807,7 @@ static int samplexy(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 }
 
 /* ApxApz  */
-static int samplexz(vector<int>& rs, vector<int>& cs, DblNumMat& res)
+static int samplebpxz(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 {
     int nr = rs.size();
     int nc = cs.size();
@@ -907,7 +893,7 @@ static int samplexz(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 }
 
 /* ApyApz  */
-static int sampleyz(vector<int>& rs, vector<int>& cs, DblNumMat& res)
+static int samplebpyz(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 {
     int nr = rs.size();
     int nc = cs.size();
@@ -992,263 +978,6 @@ static int sampleyz(vector<int>& rs, vector<int>& cs, DblNumMat& res)
     return 0;
 }
 
-/* Apy2+Apx2  */
-static int samplex2y2(vector<int>& rs, vector<int>& cs, DblNumMat& res)
-{
-    int nr = rs.size();
-    int nc = cs.size();
-
-    res.resize(nr,nc);
-
-    setvalue(res,0.0);
- 
-    double c33, c44, c66, c11, c13c44, c11c66, a11, a12, a22, a33, a13, a23;
-
-    double kx, ky, kz;
-    double upx, upy, upz;
-
-    for(int a=0; a<nr; a++) 
-    {
-        int i=rs[a];
-        double vp2 = vp[i]*vp[i];
-        double vs2 = vs[i]*vs[i];
-        double ep2 = 1.0+2*ep[i];
-        double de2 = 1.0+2*de[i];
-        double ga2 = 1.0+2*ga[i];
-
-        double cos_ph=cos(ph[i]);
-        double sin_ph=sin(ph[i]);
-        double cos_th=cos(th[i]);
-        double sin_th=sin(th[i]);
-
-        for(int b=0; b<nc; b++)
-        {
-            double kx0 = rkx[cs[b]];
-            double ky0 = rky[cs[b]];
-            double kz0 = rkz[cs[b]];
-            if(kx0==0&&ky0==0&&kz0==0)
-            {
-               res(a,b) = 0.0;
-               continue;
-            }
-
-            /* tilted axis proccessing */
-            kx = cos_th*cos_ph*kx0 - sin_ph*ky0 + sin_th*cos_ph*kz0;
-            ky = cos_th*sin_ph*kx0 + cos_ph*ky0 + sin_th*sin_ph*kz0;
-            kz = -sin_th*kx0                    + cos_th*kz0;
-
-            c33=vp2;
-            c44=vs2;
-            c11=ep2*c33;
-            c66=ga2*c44;
-            c13c44=sqrt((de2*c33-c44)*(c33-c44));
-            c11c66=c11-c66;
-
-            a11= c11*kx*kx + c66*ky*ky + c44*kz*kz;
-            a22= c66*kx*kx + c11*ky*ky + c44*kz*kz;
-            a33= c44*kx*kx + c44*ky*ky + c33*kz*kz;
-            a12= c11c66*kx*ky;
-            a13= c13c44*kx*kz;
-            a23= c13c44*ky*kz;
-
-            Chr[0] = a11;
-            Chr[4] = a22;
-            Chr[8] = a33;
-            Chr[1] = Chr[3] = a12;
-            Chr[2] = Chr[6] = a13;
-            Chr[5] = Chr[7] = a23;
-
-            // LAPACK's ssyev routine (slow but accurate) 
-            dsyev_(&jobz, &uplo, &M, Chr, &LDA, ww, work, &LWORK, &INFO);
-
-            upx=Chr[6];
-            upy=Chr[7];
-            upz=Chr[8];
-
-            if(upx*kx + upy*ky+ upz*kz < 0.) {
-                upx=-Chr[6];
-                upy=-Chr[7];
-            }
-
-            res(a,b) = upx*upx+ upy*upy;
-              
-         }// b loop
-    }// a loop
-
-    return 0;
-}
-
-/* Apx2 + Apz2  */
-static int samplex2z2(vector<int>& rs, vector<int>& cs, DblNumMat& res)
-{
-    int nr = rs.size();
-    int nc = cs.size();
-
-    res.resize(nr,nc);
-
-    setvalue(res,0.0);
-
-    double c33, c44, c66, c11, c13c44, c11c66, a11, a12, a22, a33, a13, a23;
-
-    double kx, ky, kz;
-    double upx, upy, upz;
-
-    for(int a=0; a<nr; a++) 
-    {
-        int i=rs[a];
-        double vp2 = vp[i]*vp[i];
-        double vs2 = vs[i]*vs[i];
-        double ep2 = 1.0+2*ep[i];
-        double de2 = 1.0+2*de[i];
-        double ga2 = 1.0+2*ga[i];
-
-        double cos_ph=cos(ph[i]);
-        double sin_ph=sin(ph[i]);
-        double cos_th=cos(th[i]);
-        double sin_th=sin(th[i]);
-
-        for(int b=0; b<nc; b++)
-        {
-            double kx0 = rkx[cs[b]];
-            double ky0 = rky[cs[b]];
-            double kz0 = rkz[cs[b]];
-            if(kx0==0&&ky0==0&&kz0==0)
-            {
-               res(a,b) = 0.0;
-               continue;
-            }
-
-            c33=vp2;
-            c44=vs2;
-            c11=ep2*c33;
-            c66=ga2*c44;
-            c13c44=sqrt((de2*c33-c44)*(c33-c44));
-            c11c66=c11-c66;
-
-            /* tilted axis proccessing */
-            kx = cos_th*cos_ph*kx0 - sin_ph*ky0 + sin_th*cos_ph*kz0;
-            ky = cos_th*sin_ph*kx0 + cos_ph*ky0 + sin_th*sin_ph*kz0;
-            kz = -sin_th*kx0                    + cos_th*kz0;
-
-            a11= c11*kx*kx + c66*ky*ky + c44*kz*kz;
-            a22= c66*kx*kx + c11*ky*ky + c44*kz*kz;
-            a33= c44*kx*kx + c44*ky*ky + c33*kz*kz;
-            a12= c11c66*kx*ky;
-            a13= c13c44*kx*kz;
-            a23= c13c44*ky*kz;
-
-            Chr[0] = a11;
-            Chr[4] = a22;
-            Chr[8] = a33;
-            Chr[1] = Chr[3] = a12;
-            Chr[2] = Chr[6] = a13;
-            Chr[5] = Chr[7] = a23;
-
-            // LAPACK's ssyev routine (slow but accurate) 
-            dsyev_(&jobz, &uplo, &M, Chr, &LDA, ww, work, &LWORK, &INFO);
-
-            upx=Chr[6];
-            upy=Chr[7];
-            upz=Chr[8];
-
-            if(upx*kx + upy*ky+ upz*kz < 0.) {
-                upx=-Chr[6];
-                upz=-Chr[8];
-            }
-
-            res(a,b) = upx*upx +upz*upz;
-              
-         }// b loop
-    }// a loop
-
-    return 0;
-}
-
-/* Apy2 + Apz2 */
-static int sampley2z2(vector<int>& rs, vector<int>& cs, DblNumMat& res)
-{
-    int nr = rs.size();
-    int nc = cs.size();
-
-    res.resize(nr,nc);
-
-    setvalue(res,0.0);
-
-    double c33, c44, c66, c11, c13c44, c11c66, a11, a12, a22, a33, a13, a23;
-
-    double kx, ky, kz;
-    double upx, upy, upz;
-
-    for(int a=0; a<nr; a++) 
-    {
-        int i=rs[a];
-        double vp2 = vp[i]*vp[i];
-        double vs2 = vs[i]*vs[i];
-        double ep2 = 1.0+2*ep[i];
-        double de2 = 1.0+2*de[i];
-        double ga2 = 1.0+2*ga[i];
-
-        double cos_ph=cos(ph[i]);
-        double sin_ph=sin(ph[i]);
-        double cos_th=cos(th[i]);
-        double sin_th=sin(th[i]);
-
-        for(int b=0; b<nc; b++)
-        {
-            double kx0 = rkx[cs[b]];
-            double ky0 = rky[cs[b]];
-            double kz0 = rkz[cs[b]];
-            if(kx0==0&&ky0==0&&kz0==0)
-            {
-               res(a,b) = 0.0;
-               continue;
-            }
-
-            c33=vp2;
-            c44=vs2;
-            c11=ep2*c33;
-            c66=ga2*c44;
-            c13c44=sqrt((de2*c33-c44)*(c33-c44));
-            c11c66=c11-c66;
-
-            /* tilted axis proccessing */
-            kx = cos_th*cos_ph*kx0 - sin_ph*ky0 + sin_th*cos_ph*kz0;
-            ky = cos_th*sin_ph*kx0 + cos_ph*ky0 + sin_th*sin_ph*kz0;
-            kz = -sin_th*kx0                    + cos_th*kz0;
-
-            a11= c11*kx*kx + c66*ky*ky + c44*kz*kz;
-            a22= c66*kx*kx + c11*ky*ky + c44*kz*kz;
-            a33= c44*kx*kx + c44*ky*ky + c33*kz*kz;
-            a12= c11c66*kx*ky;
-            a13= c13c44*kx*kz;
-            a23= c13c44*ky*kz;
-
-            Chr[0] = a11;
-            Chr[4] = a22;
-            Chr[8] = a33;
-            Chr[1] = Chr[3] = a12;
-            Chr[2] = Chr[6] = a13;
-            Chr[5] = Chr[7] = a23;
-
-            // LAPACK's ssyev routine (slow but accurate) 
-            dsyev_(&jobz, &uplo, &M, Chr, &LDA, ww, work, &LWORK, &INFO);
-
-            upx=Chr[6];
-            upy=Chr[7];
-            upz=Chr[8];
-
-            if(upx*kx + upy*ky+ upz*kz < 0.) {
-                upy=-Chr[7];
-                upz=-Chr[8];
-            }
-
-            res(a,b) = upy*upy + upz*upz;
-              
-         }// b loop
-    }// a loop
-
-    return 0;
-}
 static void map2d1d(float *d, DblNumMat mat, int m, int n)
 {
    int i, j, k;
