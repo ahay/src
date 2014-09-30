@@ -17,7 +17,10 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 #include <rsf.h>
+
+#ifdef _OPENMP
 #include <omp.h>
+#endif
 
 #include "fft2w.h"
 
