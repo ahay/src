@@ -10,7 +10,7 @@ zerotrace hilbert cdivdir cabs cemd1 cemd2 snr2 snr3 preerror
 threshold1 tsmf fxdecon simidenoise bin2rsf rsf2bin halfthr hradon
 suplane simidenoise1 rmtrace prekirch psmig pocssemb simivscan afd2d
 prekirchsr simpostkirch presr nlm1 nlm2 dblendseis svmf genshotscyk 
-fwicyk afd2domp low 
+afd2domp low 
 '''
 ccprogs = 'diffcxx'
 
