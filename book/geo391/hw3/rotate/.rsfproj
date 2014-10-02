@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfgrey', 'sfput', 'sfmath', 'sfmask', 'sfsmooth', 'sfadd']
+data=['data/ctscan/slice.rsf']
+size=   41156608
