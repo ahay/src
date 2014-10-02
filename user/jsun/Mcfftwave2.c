@@ -17,14 +17,16 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 #include <rsf.h>
-
 #include "cfft2w.h"
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 int main(int argc, char* argv[])
 {
     bool verb,complx;        
     int it,iz,im,ik,ix,i,j;     /* index variables */
-    int nt,nz,nx, m2, nk, nzx, nz2, nx2, nzx2, n2, pad1;
+    int nt,nz,nx, m2, nk, nzx, nz2, nx2, nzx2, n2, pad1,nth;
     sf_complex c;
 
     float  *rr;      /* I/O arrays*/
@@ -67,6 +69,14 @@ int main(int argc, char* argv[])
     sf_oaxa(Fo,at,3);
     
     if (!sf_getint("pad1",&pad1)) pad1=1; /* padding factor on the first axis */
+
+#ifdef _OPENMP
+#pragma omp parallel
+    {
+      nth = omp_get_num_threads();
+    }
+    if (verb) sf_warning(">>>> Using %d threads <<<<<", nth);
+#endif
 
     nk = cfft2_init(pad1,nz,nx,&nz2,&nx2);
 
