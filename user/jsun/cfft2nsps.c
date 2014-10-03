@@ -26,9 +26,7 @@
 
 static int n1, n2, nk;
 static float wt;
-
 static sf_complex **cc,**dd;
-
 #ifdef SF_HAS_FFTW
 static fftwf_plan cfg=NULL, icfg=NULL;
 #else
@@ -56,23 +54,36 @@ int cfft2_init(int pad1           /* padding on the first axis */,
 #endif
 
     nk = n1 = kiss_fft_next_fast_size(nx*pad1);
-    
-#ifndef SF_HAS_FFTW
-    cfg1  = kiss_fft_alloc(n1,0,NULL,NULL);
-    icfg1 = kiss_fft_alloc(n1,1,NULL,NULL);
-#endif
-  
     n2 = kiss_fft_next_fast_size(ny);
 
     cc = sf_complexalloc2(n1,n2);
-    dd = sf_complexalloc2(nk,n2);
     
-#ifndef SF_HAS_FFTW
+#ifdef SF_HAS_FFTW
+    dd = sf_complexalloc2(nk,n2);
+
+    cfg = fftwf_plan_dft_2d(n2,n1,
+			    (fftwf_complex *) cc[0], 
+			    (fftwf_complex *) dd[0],
+			    FFTW_FORWARD, FFTW_MEASURE);
+
+    icfg = fftwf_plan_dft_2d(n2,n1,
+			     (fftwf_complex *) dd[0], 
+			     (fftwf_complex *) cc[0],
+			     FFTW_BACKWARD, FFTW_MEASURE);
+
+    if (NULL == cfg || NULL == icfg) sf_error("FFTW failure.");
+#else
+    cfg1  = kiss_fft_alloc(n1,0,NULL,NULL);
+    icfg1 = kiss_fft_alloc(n1,1,NULL,NULL);
+
     cfg2  = kiss_fft_alloc(n2,0,NULL,NULL);
     icfg2 = kiss_fft_alloc(n2,1,NULL,NULL);
  	
     tmp =    (kiss_fft_cpx **) sf_alloc(n2,sizeof(*tmp));
     tmp[0] = (kiss_fft_cpx *)  sf_alloc(nk*n2,sizeof(kiss_fft_cpx));
+#ifdef _OPENMP
+#pragma omp parallel for private(i2) shared(tmp,n2,nk)
+#endif
     for (i2=0; i2 < n2; i2++) {
 	tmp[i2] = tmp[0]+i2*nk;
     }
@@ -95,17 +106,10 @@ void cfft2(sf_complex *inp /* [n1*n2] */,
 {
     int i1, i2;
 
-#ifdef SF_HAS_FFTW
-    if (NULL==cfg) {
-      cfg = fftwf_plan_dft_2d(n2,n1,
-			      (fftwf_complex *) cc[0], 
-			      (fftwf_complex *) dd[0],
-			      FFTW_FORWARD, FFTW_MEASURE);
-      if (NULL == cfg) sf_error("FFTW failure.");
-    }
-#endif
-
     /* FFT centering */
+#ifdef _OPENMP
+#pragma omp parallel for private(i2,i1) shared(cc,inp,n1,n2)
+#endif
     for (i2=0; i2<n2; i2++) {
 	for (i1=0; i1<n1; i1++) {
 #ifdef SF_HAS_COMPLEX_H
@@ -113,28 +117,29 @@ void cfft2(sf_complex *inp /* [n1*n2] */,
 #else
 		cc[i2][i1] = ((i2%2==0)==(i1%2==0))? inp[i2*n1+i1]:sf_cneg(inp[i2*n1+i1]);
 #endif
-	  /*
-#ifdef SF_HAS_COMPLEX_H
-		cc[i2][i1] = ((i2%2==0)==(i1%2==0))? inp[i2*n1+i1]:(-1*inp[i2*n1+i1]);
-#else
-		cc[i2][i1] = ((i2%2==0)==(i1%2==0))? inp[i2*n1+i1]:sf_cneg(inp[i2*n1+i1]);
-#endif
-	  */
 	}
     }
 
 #ifdef SF_HAS_FFTW
     fftwf_execute(cfg);
+#ifdef _OPENMP
+#pragma omp parallel for private(i2,i1) shared(dd,out,nk,n2)
+#endif
     for (i2=0; i2<n2; i2++) {
 	for (i1=0; i1<nk; i1++) {
 	    out[i2*nk+i1]=dd[i2][i1];
 	}
     }
-#else	
+#else
+#ifdef _OPENMP
+#pragma omp parallel for private(i2) shared(cfg1,cc,tmp,n2)
+#endif	
     for (i2=0; i2 < n2; i2++) {
 	kiss_fft_stride(cfg1,(kiss_fft_cpx *) cc[i2],tmp[i2],1);
     }
-
+#ifdef _OPENMP
+#pragma omp parallel for private(i1,i2) shared(cfg2,tmp,ctrace2,trace2,out,nk,n2)
+#endif
     for (i1=0; i1 < nk; i1++) {
 	kiss_fft_stride(cfg2,tmp[0]+i1,ctrace2,nk);
 	for (i2=0; i2<n2; i2++) {
@@ -147,13 +152,7 @@ void cfft2(sf_complex *inp /* [n1*n2] */,
 void icfft2_allocate(sf_complex *inp /* [nk*n2] */)
 /*< allocate inverse transform >*/
 {
-#ifdef SF_HAS_FFTW
-    icfg = fftwf_plan_dft_2d(n2,n1,
-			     (fftwf_complex *) inp, 
-			     (fftwf_complex *) cc[0],
-			     FFTW_BACKWARD, FFTW_MEASURE);
-    if (NULL == icfg) sf_error("FFTW failure.");
-#endif
+  /*kept for backward compatibility*/
 }
 
 void icfft2(sf_complex *out /* [n1*n2] */, 
@@ -163,21 +162,37 @@ void icfft2(sf_complex *out /* [n1*n2] */,
     int i1, i2;
 
 #ifdef SF_HAS_FFTW
+#ifdef _OPENMP
+#pragma omp parallel for private(i2,i1) shared(dd,inp,nk,n2)
+#endif
+    for (i2=0; i2<n2; i2++) {
+	for (i1=0; i1<nk; i1++) {
+	    dd[i2][i1]=inp[i2*nk+i1];
+	}
+    }
     fftwf_execute(icfg);
 #else
+#ifdef _OPENMP
+#pragma omp parallel for private(i1,i2) shared(icfg2,tmp,ctrace2,inp,nk,n2)
+#endif
     for (i1=0; i1 < nk; i1++) {
 	kiss_fft_stride(icfg2,(kiss_fft_cpx *) (inp+i1),ctrace2,nk);
-		
 	for (i2=0; i2<n2; i2++) {
 	    tmp[i2][i1] = ctrace2[i2];
 	}
     }
+#ifdef _OPENMP
+#pragma omp parallel for private(i2) shared(icfg1,cc,tmp,n2)
+#endif
     for (i2=0; i2 < n2; i2++) {
 	kiss_fft_stride(icfg1,tmp[i2],(kiss_fft_cpx *) cc[i2],1);
     }
 #endif
     
     /* FFT centering and normalization*/
+#ifdef _OPENMP
+#pragma omp parallel for private(i2,i1) shared(cc,out,n1,n2,wt)
+#endif
     for (i2=0; i2<n2; i2++) {
 	for (i1=0; i1<n1; i1++) {
 #ifdef SF_HAS_COMPLEX_H
@@ -208,7 +223,6 @@ void cfft2_finalize()
     free(cfg2); cfg2=NULL;
     free(icfg2); icfg2=NULL;
 #endif
-
     free(*cc);
     free(cc);
     free(*dd);

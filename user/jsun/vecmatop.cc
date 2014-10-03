@@ -1,5 +1,4 @@
-#include "blas.h"
-#include "lapack.h"
+#include <rsf.hh>
 
 #include "numvec.hh"
 #include "nummat.hh"
@@ -280,8 +279,12 @@ int zgmres(int (*A)(const CpxNumVec&, CpxNumVec&), const CpxNumVec& b, const Cpx
 	int lwork = 10*(j+2);
 	FltNumVec rwork(10*(j+2));
 	int info;
-	cgelss_(&m,&n,&nrhs,Hjtmp.data(),&lda,betmp.data(),&ldb,s.data(),&rcond,&rank,work.data(),
-		&lwork,rwork.data(),&info);
+	cgelss_(&m,&n,&nrhs,
+		(MKL_Complex8*) Hjtmp.data(),&lda,
+		(MKL_Complex8*) betmp.data(),&ldb,
+		s.data(),&rcond,&rank,
+		(MKL_Complex8*) work.data(),&lwork,
+		rwork.data(),&info);
 	for(int a=0; a<j+1; a++)	  y(a) = betmp(a);
       }
       iC( zgemv(-1.0, Hj, y, 1, be) );
@@ -385,7 +388,13 @@ int pinv(const CpxNumMat& M, float eps, CpxNumMat& R)
       CpxNumVec work(lwork);
       FltNumVec rwork(lwork);
       int info;
-      cgesvd_(&jobu, &jobvt, &m, &n, MC.data(), &m, S.data(), U.data(), &m, VT.data(), &k, work.data(), &lwork, rwork.data(), &info);    iA(info==0);
+      cgesvd_(&jobu, &jobvt, &m, &n, 
+	      (MKL_Complex8*) MC.data(), &m, S.data(), 
+	      (MKL_Complex8*) U.data(), &m, 
+	      (MKL_Complex8*) VT.data(), &k, 
+	      (MKL_Complex8*) work.data(), &lwork, 
+	      rwork.data(), &info);    
+      iA(info==0);
     }
     //threshold
     float cutoff=eps*S(0); //relative thresholding
@@ -575,7 +584,11 @@ int lowrank(int m, int n, int (*sample)(vector<int>&, vector<int>&, CpxNumMat&),
     CpxNumVec work(3*n);
     FltNumVec rwork(6*n);
     int info;
-    cgeqpf_(&m, &n, M2.data(), &lda, jpvt.data(), tau.data(), work.data(), rwork.data(), &info);    iA(info==0);
+    cgeqpf_(&m, &n, 
+	    (MKL_Complex8*) M2.data(), &lda, jpvt.data(), 
+	    (MKL_Complex8*) tau.data(), 
+	    (MKL_Complex8*) work.data(), rwork.data(), &info);    
+    iA(info==0);
     float cutoff = eps*abs(M2(0,0));
     int cnt=0;
     for(int k=0; k<min(m,n); k++)      if(abs(M2(k,k))>cutoff)	cnt++;
@@ -608,7 +621,11 @@ int lowrank(int m, int n, int (*sample)(vector<int>&, vector<int>&, CpxNumMat&),
     CpxNumVec work(3*n);
     FltNumVec rwork(6*n);
     int info;
-    cgeqpf_(&m, &n, M1.data(), &lda, jpvt.data(), tau.data(), work.data(), rwork.data(), &info);    iA(info==0);
+    cgeqpf_(&m, &n, 
+	    (MKL_Complex8*) M1.data(), &lda, jpvt.data(), 
+	    (MKL_Complex8*) tau.data(), 
+	    (MKL_Complex8*) work.data(), rwork.data(), &info);    
+    iA(info==0);
     float cutoff = eps*abs(M1(0,0)); //the diagonal element
     int cnt=0;
     for(int k=0; k<min(m,n); k++)	if(abs(M1(k,k))>cutoff)	  cnt++;
@@ -647,7 +664,7 @@ int lowrank(int m, int n, int (*sample)(vector<int>&, vector<int>&, CpxNumMat&),
     mid.resize(IM1.m(), tmp.n());
     iC( zgemm(1.0, IM1, tmp, 0.0, mid) );
   }
-  if(0) {
+  if(1) {
     int nc = min(npk,n);
     vector<int> cs(nc);
     for(int k=0; k<nc; k++)      cs[k] = int( floor(drand48()*n) );
