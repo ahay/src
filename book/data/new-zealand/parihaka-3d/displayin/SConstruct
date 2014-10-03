@@ -16,11 +16,27 @@ Flow(['image.rsf','image_hdr.rsf'],
      ''',stdout=0, stdin=0)
        
 Result("image","sfwindow j3=50 | sfgrey title='Parihaka 3d'")
-Result("image2415","image","sfwindow min3=2415 max3=2415 | sfgrey title='Parihaka 3d line 2415'")
+Plot("image2415","image",
+     "sfwindow min3=2415 max3=2415 | sfgrey title='Parihaka 3d line 2415'")
+Plot("imagex5031","image",
+	"""
+	sfwindow min2=5031 max2=5031
+	| sfput label2='xline' 
+	| sfgrey title='Parihaka 3d xline 5031'
+	""")
+Result("ilxl","image2415 imagex5031",'SideBySideAniso')
+Result("il","image2415",'SideBySideAniso')
+Result("xl","image2415",'SideBySideAniso')
+
 Result("image3d","image",
        '''
        byte 
        | grey3 frame1=600 frame2=550 frame3=450 title='Parihaka 3D'
+       ''')
+Result("image3d1","image",
+       '''
+       byte 
+       | grey3 frame1=600 frame2=550 frame3=450 title='Parihaka 3D' flat=n
        ''')
 
        

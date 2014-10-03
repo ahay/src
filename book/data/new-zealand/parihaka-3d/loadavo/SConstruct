@@ -1,0 +1,90 @@
+from rsf.proj import *
+import os
+remote='"/Volumes/HD-PCFU3/newzealand//Taranaiki\ B\ asin/PARIHAKA-3D/C40502_Parihaka_M3D_Final_PSTM_Far_Stack_IL825-2815.SEGY"'
+# before running past into command line:
+# ln -s /Volumes/HD-PCFU3/newzealand//Taranaiki\ B\ asin/PARIHAKA-3D/C40502_Parihaka_M3D_Final_PSTM_Far_Stack_IL825-2815.SEGY farstack.sgy
+# or ln -s /Volumes/data/newzealand/Taranaiki B asin/PARIHAKA-3D/C40502_Parihaka_M3D_Final_PSTM_Far_Stack_IL825-2815.SEGY farstack.sgy
+
+
+# this does not work:   Flow('farstack.sgy',remote,'ln -s "${SOURCE} ${TARGET}"')
+
+#https://s3.amazonaws.com/open.source.geoscience/open_data/newzealand/Taranaiki_Basin/PARIHAKA-3D/Parihaka_PSTM_full_angle.sgy
+
+Flow(['farstack.rsf','farstack_hdr.rsf',
+      'farstack.thdr','farstack.bhdr'],
+     'farstack.sgy',
+     '''
+     sfsegyread
+        tfile=${TARGETS[1]} 
+        hfile=${TARGETS[2]}  
+	bfile=${TARGETS[3]} 
+     ''')
+
+Flow('headerattr.txt','farstack_hdr.rsf',
+     'sfheaderattr > $TARGET && /bin/cat $TARGET',stdout=-1)
+
+#sftahread input=farstack.rsf | sftahgethw key=sx,gx,offset >/dev/null
+#sfheaderattr <farstack_hdr.rsf 
+
+# map traces from sequential segy order to 3d volume using header
+Flow(['image.rsf','image_hdr.rsf'],['farstack.rsf','farstack_hdr.rsf'],
+     '''
+     sftahsort \
+          input=${SOURCES[0]} \
+	  sort="iline:1736,2657 xline:4200,5325"
+	  verbose=1 \
+     | sftahwrite \
+          output=${TARGETS[0]} \
+          label2="xline" o2=4200 n2=1126 d2=1 \
+          label3="iline" o3=1736 n3=922 d3=1
+	  verbose=1
+     ''',stdout=0, stdin=0)
+
+Flow('trim_image','image','sfwindow n1=1168')
+Flow('Parahaka_PSTM_far_stack.sgy',
+     'trim_image.rsf farstack_hdr.rsf farstack.thdr',
+     '''
+     sfsegywrite 
+        tfile=${SOURCES[1]} 
+        hfile=${SOURCES[2]}   
+     ''')
+
+Result("trim_image","sfwindow j3=50 | sfgrey title='Parihaka 3d'")
+Plot("image2415","trim_image",
+     """
+     sfwindow min3=2415 max3=2415
+     | sfgrey title='Parihaka 3d far stack line 2415'
+     """)
+
+Plot("imagex5031","trim_image",
+     """
+	sfwindow min2=5031 max2=5031
+	| sfput label2='xline' 
+	| sfgrey title='Parihaka 3d far stack xline 5031'
+     """)
+
+Result("ilxl","image2415 imagex5031",'SideBySideAniso')
+Result("il","image2415",'SideBySideAniso')
+Result("xl","image2415",'SideBySideAniso')
+
+Result("image3d","image",
+       '''
+       sfwindow n1=1168 
+       | byte 
+       | grey3 frame1=600 frame2=550 frame3=450 title='Parihaka 3D'
+       ''')
+Result("image3d1","image",
+       '''
+       sfwindow n1=1168 
+       | byte 
+       | grey3 frame1=600 frame2=550 frame3=450 title='Parihaka 3D' flat=n
+       ''')
+
+Result("ilcmp","image2415  ../displayin/image2415.vpl",'SideBySideAniso')
+Result("xlcmp","imagex5031 ../displayin/imagex5031.vpl",'SideBySideAniso')
+
+
+
+
+
+End()
