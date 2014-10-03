@@ -4,7 +4,9 @@ Cooke in the Summer of 2014.  Some of these data are:
 PSTM_full_angle.sgy               a 5.1 gbyte subset selected by Dennis Cooke
 parihaka\ inline\ cross\ line.png an inline/xline image of the subset     
 
-There are 47-49 gybte data volumes:
+There are 47-49 gybte data volumes.  These volumes are not on a server for you
+to download.  I am trying to extract a subset to make available on a public
+server. 
 C40502_Parihaka_M3D_Final_PSTM_Far_Stack_IL825-2815.SEGY 
 C40502_Parihaka_M3D_Final_PSTM_Mid_Stack_IL824-2813.SEGY 
 C40502_Parihaka_M3D_Final_PSTM_Near_Stack_IL824-2811.SEGY 
