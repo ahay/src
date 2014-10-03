@@ -42,7 +42,7 @@ Flow(['image.rsf','image_hdr.rsf'],['farstack.rsf','farstack_hdr.rsf'],
 
 Flow('trim_image','image','sfwindow n1=1168')
 Flow('Parahaka_PSTM_far_stack.sgy',
-     'trim_image.rsf farstack_hdr.rsf farstack.thdr',
+     'trim_image.rsf image_hdr.rsf farstack.thdr',
      '''
      sfsegywrite 
         tfile=${SOURCES[1]} 

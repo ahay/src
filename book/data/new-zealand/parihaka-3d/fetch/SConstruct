@@ -36,23 +36,5 @@ Flow('headerattr.txt','migrated_hdr.rsf',
 #iline      73           1735 @ 0	          2657 @ 1037036        2196.5
 #xline      74           4200 @ 0	          5325 @ 1130	       4762.49
 #******************************************************************************* 
-
-# map traces from sequential segy order to 3d volume using header
-Flow(['image.rsf','image_hdr.rsf'],['migrated.rsf','migrated_hdr.rsf'],
-     '''
-     sftahread \
-          input=${SOURCES[0]} \
-	  verbose=1 \
-     | sftahwrite \
-          output=${TARGETS[0]} \
-          label2="xline" o2=4200 n2=1126 d2=1 \
-          label3="iline" o3=1736 n3=922 d3=1
-	  verbose=1
-     ''',stdout=0, stdin=0)
-       
-Result("image2415","image","sfwindow min3=2415 max3=2415 | sfgrey title='Parihaka 3d'")
-
-Result("imagex5031","image","sfwindow min2=5031 max2=5031 | sfgrey title='Parihaka 3d'")
-
    
 End()
