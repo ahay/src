@@ -116,7 +116,7 @@ static int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 			r = sqrt(r*(1-sm) + sm*sqrt(r*r + 2*(qm-1)*x*z/sm));
 		break;
 		}
-		default: // Acoustic approximation
+		case 2: // Acoustic approximation
 		{
 			z = wz*z*z;
 			x = wx*x*x;
@@ -212,7 +212,7 @@ int main(int argc, char** argv)
 		sf_warning("==================================");
     		break;
     	}
-    	default:
+    	case 2:
     	{
 		sf_warning("==================================");
     		sf_warning("Acoustic approximation");
