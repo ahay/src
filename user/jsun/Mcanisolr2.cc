@@ -149,7 +149,7 @@ int main(int argc, char** argv)
 
     par.get("dt",dt); // time step
 
-    iRSF velz, velx("velx"), vels("vels"), eta("eta"), theta("theta");
+    iRSF velz, velx("velx"), eta("eta"), theta("theta");
 
     int nz,nx;
     velz.get("n1",nz);
@@ -158,7 +158,6 @@ int main(int argc, char** argv)
 
     vx.resize(m);
     vz.resize(m);
-    vs.resize(m);
     q.resize(m);
     t.resize(m);
 
@@ -169,12 +168,18 @@ int main(int argc, char** argv)
 
     velx >> vx;
     velz >> vz;
-    vels >> vs;
     eta >> q;
     theta >> t;
 
+    /* Get vs*/
+    if (approx == 0 || approx==1) {
+	iRSF vels("vels");
+	vs.resize(m);
+	vels >> vs;
+    }
+
     par.get("approx",approx,2); // Type of approximation (0=exact 1=zone 2=acoustic)
-    par.get("relation",relat,3);// Type of q relationship (0=shale, 1=sand, 2=carbonate, default being smallest error)
+    par.get("relation",relat,3); // Type of q relationship (0=shale, 1=sand, 2=carbonate, default being smallest error)
     
     /* Invert for cij*/
     if (approx == 0 || approx == 1) {
