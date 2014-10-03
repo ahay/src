@@ -21,14 +21,15 @@
 #include <string.h>
 #include <unistd.h>
 #include <rsf.h>
+#ifdef _OPENMP
 #include <omp.h>
-
+#endif
 int main(int argc, char * argv[])
 {
 
     sf_file inA, outC, inB;
     int an1, an2, bn1, bn2;
-    int im, in, ik, m, n, k, nth;
+    int im, in, ik, m, n, k;
     
     sf_complex **a, **b, **c;
     sf_axis aax1, aax2, bax1, bax2, cax1, cax2;
@@ -70,15 +71,6 @@ int main(int argc, char * argv[])
     n = an2;
     k = bn2;
     
-#ifdef _OPENMP
-#pragma omp parallel
-    {
-      nth = omp_get_num_threads();
-      /* omp_set_num_threads(nth); */
-    }
-    sf_warning(">>>> Using %d threads <<<<<", nth);
-#endif
-
     c = sf_complexalloc2(m,k);
 #ifdef _OPENMP
 #pragma omp parallel for private(im,ik) shared(c,a,b,an1,an2,bn2)

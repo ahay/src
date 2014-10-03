@@ -7,6 +7,7 @@ progs = 'fftwave1dd cfftwave1dd cfftwave1in fftwave2p fftwave3p cfftwave2 cfftwa
 
 ccprogs = 'tilr2 ortholr3 cortholr3 cisolr2 cisolr2rev cisolr3 ctilr2 cisolr2grad cisolr2abc cisolr2abc1 cisolr1 canisolr2 canisolr2abc cfraclr2 fraclr2 fraclr2test tilrzone ortholrzone'
 # abclr2 isolr2sta isolr2abc
+# eiktest eiktest2 cisolr1eik eiksol cfraclr2 rfraclr2 cisolr2twostep
 
 mpi_progs = 'mpilsrtm'
 
