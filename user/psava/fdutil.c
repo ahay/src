@@ -556,6 +556,8 @@ lint2d lint2d_make(int    na,
 	ca->w01[ia] = (  f1)*(1-f2);
 	ca->w10[ia] = (1-f1)*(  f2);
 	ca->w11[ia] = (  f1)*(  f2);
+
+	sf_warning("%g",ca->w00[ia]+ca->w01[ia]+ca->w10[ia]+ca->w11[ia]);
     }
 
     return ca;
@@ -654,111 +656,26 @@ void lint2d_hold(float**uu,
 
 /*------------------------------------------------------------*/
 void lint2d_inject(float**uu,
-		   float *ww,
+		   float *dd,
 		   lint2d ca)
 /*< inject into wavefield >*/
 {
     int   ia;
-    float wa;
-
-/*#ifdef _OPENMP*/
-/*#pragma omp parallel for		\*/
-/*    schedule(dynamic,1)			\*/
-/*    private(ia,wa)				\*/
-/*    shared(ca,ww,uu)*/
-/*#endif*/
-    for (ia=0;ia<ca->n;ia++) {
-	wa = ww[ia];
-	
-	uu[ ca->jx[ia]   ][ ca->jz[ia]   ] += wa * ca->w00[ia];
-	uu[ ca->jx[ia]   ][ ca->jz[ia]+1 ] += wa * ca->w01[ia];
-	uu[ ca->jx[ia]+1 ][ ca->jz[ia]   ] += wa * ca->w10[ia];
-	uu[ ca->jx[ia]+1 ][ ca->jz[ia]+1 ] += wa * ca->w11[ia];
+    for(ia=0;ia<ca->n;ia++) {	
+	uu[ ca->jx[ia]   ][ ca->jz[ia]   ] += dd[ia] * ca->w00[ia];
+	uu[ ca->jx[ia]   ][ ca->jz[ia]+1 ] += dd[ia] * ca->w01[ia];
+	uu[ ca->jx[ia]+1 ][ ca->jz[ia]   ] += dd[ia] * ca->w10[ia];
+	uu[ ca->jx[ia]+1 ][ ca->jz[ia]+1 ] += dd[ia] * ca->w11[ia];
     }
 }
 
-/*------------------------------------------------------------*/
-void lint3d_inject(float***uu,
-		   float  *ww,
-		   lint3d  ca)
-/*< inject into wavefield >*/
-{
-    int   ia;
-    float wa;
-
-/*#ifdef _OPENMP*/
-/*#pragma omp parallel for schedule(dynamic,1) private(ia,wa) shared(ca,ww,uu)*/
-/*#endif*/
-    for (ia=0;ia<ca->n;ia++) {
-	wa = ww[ia];
-	
-	uu[ ca->jy[ia]   ][ ca->jx[ia]   ][ ca->jz[ia]   ] += wa * ca->w000[ia];
-	uu[ ca->jy[ia]   ][ ca->jx[ia]   ][ ca->jz[ia]+1 ] += wa * ca->w001[ia];
-	uu[ ca->jy[ia]   ][ ca->jx[ia]+1 ][ ca->jz[ia]   ] += wa * ca->w010[ia];
-	uu[ ca->jy[ia]   ][ ca->jx[ia]+1 ][ ca->jz[ia]+1 ] += wa * ca->w011[ia];
-	uu[ ca->jy[ia]+1 ][ ca->jx[ia]   ][ ca->jz[ia]   ] += wa * ca->w100[ia];
-	uu[ ca->jy[ia]+1 ][ ca->jx[ia]   ][ ca->jz[ia]+1 ] += wa * ca->w101[ia];
-	uu[ ca->jy[ia]+1 ][ ca->jx[ia]+1 ][ ca->jz[ia]   ] += wa * ca->w110[ia];
-	uu[ ca->jy[ia]+1 ][ ca->jx[ia]+1 ][ ca->jz[ia]+1 ] += wa * ca->w111[ia];
-    }
-}
-
-/*------------------------------------------------------------*/
-void lint2d_inject1(float**uu,
-		    float  ww,
-		    lint2d ca)
-/*< inject into wavefield >*/
-{
-    int   ia;
-
-/*#ifdef _OPENMP*/
-/*#pragma omp parallel for schedule(dynamic,1) private(ia) shared(ca,ww,uu)*/
-/*#endif*/
-    for (ia=0;ia<ca->n;ia++) {
-
-	uu[ ca->jx[ia]   ][ ca->jz[ia]   ] += ww * ca->w00[ia];
-	uu[ ca->jx[ia]   ][ ca->jz[ia]+1 ] += ww * ca->w01[ia];
-	uu[ ca->jx[ia]+1 ][ ca->jz[ia]   ] += ww * ca->w10[ia];
-	uu[ ca->jx[ia]+1 ][ ca->jz[ia]+1 ] += ww * ca->w11[ia];
-    }
-}
-
-/*------------------------------------------------------------*/
-void lint3d_inject1(float***uu,
-		    float   ww,
-		    lint3d  ca)
-/*< inject into wavefield >*/
-{
-    int   ia;
-
-/*#ifdef _OPENMP*/
-/*#pragma omp parallel for schedule(dynamic,1) private(ia) shared(ca,ww,uu)*/
-/*#endif*/
-    for (ia=0;ia<ca->n;ia++) {
-
-	uu[ ca->jy[ia]   ][ ca->jx[ia]   ][ ca->jz[ia]   ] += ww * ca->w000[ia];
-	uu[ ca->jy[ia]   ][ ca->jx[ia]   ][ ca->jz[ia]+1 ] += ww * ca->w001[ia];
-	uu[ ca->jy[ia]   ][ ca->jx[ia]+1 ][ ca->jz[ia]   ] += ww * ca->w010[ia];
-	uu[ ca->jy[ia]   ][ ca->jx[ia]+1 ][ ca->jz[ia]+1 ] += ww * ca->w011[ia];
-	uu[ ca->jy[ia]+1 ][ ca->jx[ia]   ][ ca->jz[ia]   ] += ww * ca->w100[ia];
-	uu[ ca->jy[ia]+1 ][ ca->jx[ia]   ][ ca->jz[ia]+1 ] += ww * ca->w101[ia];
-	uu[ ca->jy[ia]+1 ][ ca->jx[ia]+1 ][ ca->jz[ia]   ] += ww * ca->w110[ia];
-	uu[ ca->jy[ia]+1 ][ ca->jx[ia]+1 ][ ca->jz[ia]+1 ] += ww * ca->w111[ia];
-    }
-}
-
-/*------------------------------------------------------------*/
 void lint2d_extract(float**uu,
 		    float* dd,
 		    lint2d ca)
 /*< extract from wavefield >*/
 {
     int ia;
-
-/*#ifdef _OPENMP*/
-/*#pragma omp parallel for schedule(dynamic,1) private(ia) shared(ca,dd,uu)*/
-/*#endif*/
-    for (ia=0;ia<ca->n;ia++) {
+    for(ia=0;ia<ca->n;ia++) {
 	dd[ia] =
 	    uu[ ca->jx[ia]  ][ ca->jz[ia]  ] * ca->w00[ia] +
 	    uu[ ca->jx[ia]  ][ ca->jz[ia]+1] * ca->w01[ia] +
@@ -767,16 +684,31 @@ void lint2d_extract(float**uu,
     }
 }  
 
+/*------------------------------------------------------------*/
+void lint3d_inject(float***uu,
+		   float  *dd,
+		   lint3d  ca)
+/*< inject into wavefield >*/
+{
+    int ia;
+    for (ia=0;ia<ca->n;ia++) {	
+	uu[ ca->jy[ia]   ][ ca->jx[ia]   ][ ca->jz[ia]   ] += dd[ia] * ca->w000[ia];
+	uu[ ca->jy[ia]   ][ ca->jx[ia]   ][ ca->jz[ia]+1 ] += dd[ia] * ca->w001[ia];
+	uu[ ca->jy[ia]   ][ ca->jx[ia]+1 ][ ca->jz[ia]   ] += dd[ia] * ca->w010[ia];
+	uu[ ca->jy[ia]   ][ ca->jx[ia]+1 ][ ca->jz[ia]+1 ] += dd[ia] * ca->w011[ia];
+	uu[ ca->jy[ia]+1 ][ ca->jx[ia]   ][ ca->jz[ia]   ] += dd[ia] * ca->w100[ia];
+	uu[ ca->jy[ia]+1 ][ ca->jx[ia]   ][ ca->jz[ia]+1 ] += dd[ia] * ca->w101[ia];
+	uu[ ca->jy[ia]+1 ][ ca->jx[ia]+1 ][ ca->jz[ia]   ] += dd[ia] * ca->w110[ia];
+	uu[ ca->jy[ia]+1 ][ ca->jx[ia]+1 ][ ca->jz[ia]+1 ] += dd[ia] * ca->w111[ia];
+    }
+}
+
 void lint3d_extract(float***uu,
 		    float  *dd,
 		    lint3d  ca)
 /*< extract from wavefield >*/
 {
     int ia;
-
-/*#ifdef _OPENMP*/
-/*#pragma omp parallel for schedule(dynamic,1) private(ia) shared(ca,dd,uu)*/
-/*#endif*/
     for (ia=0;ia<ca->n;ia++) {
 	dd[ia] =
 	    uu[ ca->jy[ia]  ][ ca->jx[ia]  ][ ca->jz[ia]  ] * ca->w000[ia] +
@@ -790,6 +722,39 @@ void lint3d_extract(float***uu,
     }
 }  
 
+/*------------------------------------------------------------*/
+void lint2d_inject1(float**uu,
+		    float  dd,
+		    lint2d ca)
+/*< inject into wavefield >*/
+{
+    int ia;
+    for (ia=0;ia<ca->n;ia++) {
+	uu[ ca->jx[ia]   ][ ca->jz[ia]   ] += dd * ca->w00[ia];
+	uu[ ca->jx[ia]   ][ ca->jz[ia]+1 ] += dd * ca->w01[ia];
+	uu[ ca->jx[ia]+1 ][ ca->jz[ia]   ] += dd * ca->w10[ia];
+	uu[ ca->jx[ia]+1 ][ ca->jz[ia]+1 ] += dd * ca->w11[ia];
+    }
+}
+
+/*------------------------------------------------------------*/
+void lint3d_inject1(float***uu,
+		    float   dd,
+		    lint3d  ca)
+/*< inject into wavefield >*/
+{
+    int ia;
+    for (ia=0;ia<ca->n;ia++) {
+	uu[ ca->jy[ia]   ][ ca->jx[ia]   ][ ca->jz[ia]   ] += dd * ca->w000[ia];
+	uu[ ca->jy[ia]   ][ ca->jx[ia]   ][ ca->jz[ia]+1 ] += dd * ca->w001[ia];
+	uu[ ca->jy[ia]   ][ ca->jx[ia]+1 ][ ca->jz[ia]   ] += dd * ca->w010[ia];
+	uu[ ca->jy[ia]   ][ ca->jx[ia]+1 ][ ca->jz[ia]+1 ] += dd * ca->w011[ia];
+	uu[ ca->jy[ia]+1 ][ ca->jx[ia]   ][ ca->jz[ia]   ] += dd * ca->w100[ia];
+	uu[ ca->jy[ia]+1 ][ ca->jx[ia]   ][ ca->jz[ia]+1 ] += dd * ca->w101[ia];
+	uu[ ca->jy[ia]+1 ][ ca->jx[ia]+1 ][ ca->jz[ia]   ] += dd * ca->w110[ia];
+	uu[ ca->jy[ia]+1 ][ ca->jx[ia]+1 ][ ca->jz[ia]+1 ] += dd * ca->w111[ia];
+    }
+}
 
 /*------------------------------------------------------------*/
 void fdbell_init(int n)

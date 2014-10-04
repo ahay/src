@@ -44,7 +44,7 @@ aweop2d aweop3d
 accumulate
 decibel
 itrack2d itrack3d
-inj2d
+injop2d injop3d
 '''
 
 # Python targets
