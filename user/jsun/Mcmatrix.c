@@ -21,8 +21,9 @@
 #include <string.h>
 #include <unistd.h>
 #include <rsf.h>
+#ifdef _OPENMP
 #include <omp.h>
-
+#endif
 int main(int argc, char * argv[])
 {
 

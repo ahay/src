@@ -35,8 +35,8 @@ int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
     for(int a=0; a<nr; a++) {
 	for(int b=0; b<nc; b++) {
 	    float phase = vs[rs[a]]*ks[cs[b]]*dt; 
-	    res(a,b) = cpx(cos(phase),sin(phase)); 
-//	    sf_warning("real=%g, imag=%g", real(res(a,b)),imag(res(a,b)));
+	    res(a,b) = cpx(cos(phase),sin(phase));
+	    //res(a,b) = cpx(cos(phase)-1.,sin(phase));
 	}
     }
     return 0;
