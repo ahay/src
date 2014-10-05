@@ -1020,12 +1020,12 @@ void abcone2d_apply(float**   uo,
 {
     int iz,ix,iop;
 
-#ifdef _OPENMP
-#pragma omp parallel for			\
-    schedule(dynamic,1)				\
-    private(iz,ix,iop)				\
-    shared(fdm,nop,uo,um,abc)
-#endif
+/*#ifdef _OPENMP*/
+/*#pragma omp parallel for		\*/
+/*    schedule(dynamic)			\*/
+/*    private(iz,ix,iop)			\*/
+/*    shared(fdm,abc,nop,uo,um)*/
+/*#endif*/
     for(ix=0;ix<fdm->nxpad;ix++) {
 	for(iop=0;iop<nop;iop++) {
 
@@ -1047,12 +1047,12 @@ void abcone2d_apply(float**   uo,
 	}
     }
 
-#ifdef _OPENMP
-#pragma omp parallel for			\
-    schedule(dynamic,1)				\
-    private(iz,ix,iop)				\
-    shared(fdm,nop,uo,um,abc)
-#endif
+/*#ifdef _OPENMP*/
+/*#pragma omp parallel for		\*/
+/*    schedule(dynamic)			\*/
+/*    private(iz,ix,iop)			\*/
+/*    shared(fdm,nop,uo,um,abc)*/
+/*#endif*/
     for(iz=0;iz<fdm->nzpad;iz++) {
 	for(iop=0;iop<nop;iop++) {
 
@@ -1083,13 +1083,12 @@ void abcone3d_apply(float  ***uo,
 {
     int iz,ix,iy,iop;
 
-#ifdef _OPENMP
-#pragma omp parallel for			\
-    schedule(dynamic,1)				\
-    private(iz,ix,iy,iop)			\
-    shared(fdm,nop,uo,um,abc)
-#endif
-
+/*#ifdef _OPENMP*/
+/*#pragma omp parallel for			\*/
+/*    schedule(dynamic)				\*/
+/*    private(iz,ix,iy,iop)			\*/
+/*    shared(fdm,abc,nop,uo,um)*/
+/*#endif*/
     for    (iy=0;iy<fdm->nypad;iy++) {
 	for(ix=0;ix<fdm->nxpad;ix++) {
 	    for(iop=0;iop<nop;iop++) {
@@ -1113,13 +1112,12 @@ void abcone3d_apply(float  ***uo,
 	}
     }
     
-#ifdef _OPENMP
-#pragma omp parallel for			\
-    schedule(dynamic,1)				\
-    private(iz,ix,iy,iop)			\
-    shared(fdm,nop,uo,um,abc)
-#endif
-
+/*#ifdef _OPENMP*/
+/*#pragma omp parallel for			\*/
+/*    schedule(dynamic)				\*/
+/*    private(iz,ix,iy,iop)			\*/
+/*    shared(fdm,abc,nop,uo,um)*/
+/*#endif*/
     for    (iy=0;iy<fdm->nypad;iy++) {
 	for(iz=0;iz<fdm->nzpad;iz++) {
 	    for(iop=0;iop<nop;iop++) {
@@ -1141,13 +1139,12 @@ void abcone3d_apply(float  ***uo,
 	}
     }
 
-#ifdef _OPENMP
-#pragma omp parallel for			\
-    schedule(dynamic,1)				\
-    private(iz,ix,iy,iop)			\
-    shared(fdm,nop,uo,um,abc)
-#endif
-
+/*#ifdef _OPENMP*/
+/*#pragma omp parallel for			\*/
+/*    schedule(dynamic)				\*/
+/*    private(iz,ix,iy,iop)			\*/
+/*    shared(fdm,abc,nop,uo,um)*/
+/*#endif*/
     for    (ix=0;ix<fdm->nxpad;ix++) {
 	for(iz=0;iz<fdm->nzpad;iz++) {
 	    for(iop=0;iop<nop;iop++) {
@@ -1175,7 +1172,7 @@ void abcone3d_apply(float  ***uo,
 /*------------------------------------------------------------*/
 sponge sponge_make(int nb)
 /*< init boundary sponge >*/
-
+    
 /* Sponge boundary conditions multiply incoming wavefields
 by smaller coefficients to attenuate the wavefield over time and space.
 
@@ -1207,10 +1204,10 @@ void sponge2d_apply(float**   uu,
     float w;
 
 #ifdef _OPENMP
-#pragma omp parallel for			\
-    schedule(dynamic,1)				\
-    private(ib,iz,ix,ibz,ibx,w)			\
-    shared(fdm,uu)
+#pragma omp parallel for		\
+    schedule(dynamic)			\
+    private(ib,ix,ibz,w)		\
+    shared(fdm,spo,uu)
 #endif
     for(ib=0; ib<fdm->nb; ib++) {
 	w = spo->w[fdm->nb-ib-1];
@@ -1220,45 +1217,22 @@ void sponge2d_apply(float**   uu,
 	    uu[ix][ib ] *= w; /*    top sponge */
 	    uu[ix][ibz] *= w; /* bottom sponge */
 	}
-
-	ibx = fdm->nxpad-ib-1;
-	for(iz=0; iz<fdm->nzpad; iz++) {
-	    uu[ib ][iz] *= w; /*   left sponge */
-	    uu[ibx][iz] *= w; /*  right sponge */
-	}
-
     }
-}
-
-void sponge2d_apply_test(float**   uu,
-		    sponge   spo,
-		    fdm2d    fdm)
-/*< apply boundary sponge >*/
-{
-    int iz,ix,ib,ibz,ibx;
-    float w;
 
 #ifdef _OPENMP
-#pragma omp parallel for			\
-    schedule(dynamic,1)				\
-    private(ib,iz,ix,ibz,ibx,w)			\
-    shared(fdm,uu)
+#pragma omp parallel for		\
+    schedule(dynamic)			\
+    private(ib,iz,ibx,w)		\
+    shared(fdm,spo,uu)
 #endif
     for(ib=0; ib<fdm->nb; ib++) {
-	w = spo->w[ib];
-
-	ibz = fdm->nzpad-ib-1;
-	for(ix=0; ix<fdm->nxpad; ix++) {
-	    uu[ix][ib ] *= w; /*    top sponge */
-	    uu[ix][ibz] *= w; /* bottom sponge */
-	}
+	w = spo->w[fdm->nb-ib-1];
 
 	ibx = fdm->nxpad-ib-1;
 	for(iz=0; iz<fdm->nzpad; iz++) {
 	    uu[ib ][iz] *= w; /*   left sponge */
 	    uu[ibx][iz] *= w; /*  right sponge */
 	}
-
     }
 }
 
@@ -1273,9 +1247,9 @@ void sponge3d_apply(float  ***uu,
 
 #ifdef _OPENMP
 #pragma omp parallel for			\
-    schedule(dynamic,1)				\
-    private(ib,iz,ix,iy,ibz,ibx,iby,w)		\
-    shared(fdm,uu)
+    schedule(dynamic)				\
+    private(ib,ix,iy,ibz,w)			\
+    shared(fdm,spo,uu)
 #endif
     for(ib=0; ib<fdm->nb; ib++) {
 	w = spo->w[fdm->nb-ib-1];
@@ -1287,6 +1261,16 @@ void sponge3d_apply(float  ***uu,
 		uu[iy][ix][ibz] *= w; /* z max */
 	    }
 	}
+    }
+
+#ifdef _OPENMP
+#pragma omp parallel for			\
+    schedule(dynamic)				\
+    private(ib,iz,iy,ibx,w)			\
+    shared(fdm,spo,uu)
+#endif
+    for(ib=0; ib<fdm->nb; ib++) {
+	w = spo->w[fdm->nb-ib-1];
 
 	ibx = fdm->nxpad-ib-1;
 	for    (iy=0; iy<fdm->nypad; iy++) {
@@ -1295,6 +1279,16 @@ void sponge3d_apply(float  ***uu,
 		uu[iy][ibx][iz] *= w; /* x max */
 	    }
 	}
+    }
+
+#ifdef _OPENMP
+#pragma omp parallel for			\
+    schedule(dynamic)				\
+    private(ib,iz,ix,iby,w)			\
+    shared(fdm,spo,uu)
+#endif
+    for(ib=0; ib<fdm->nb; ib++) {
+	w = spo->w[fdm->nb-ib-1];
 	
 	iby = fdm->nypad-ib-1;
 	for    (ix=0; ix<fdm->nxpad; ix++) {
