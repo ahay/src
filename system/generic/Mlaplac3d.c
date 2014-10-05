@@ -1,6 +1,7 @@
 /* 2-D finite-difference Laplacian operation. */
 /*
   Copyright (C) 2004 University of Texas at Austin
+  Copyright (C) 2014 Colorado School of Mines
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,38 +20,39 @@
 
 #include <rsf.h>
 
-#include "laplac2.h"
+#include "laplac3.h"
 
 int main(int argc, char* argv[])
 {
-    int n1,n2,n12, n3,i3;
+    int n1,n2,n3, n123, n4,i4;
     float *pp,*qq;
     bool adj;
     sf_file in,out;
 
     sf_init(argc,argv);
 
-    in  = sf_input ( "in");
+    in  = sf_input(  "in");
     out = sf_output("out");
 
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
     if (!sf_histint(in,"n2",&n2)) sf_error("No n2= in input");
-    n3 = sf_leftsize(in,2);
-    n12 = n1*n2;
+    if (!sf_histint(in,"n3",&n3)) sf_error("No n3= in input");
+    n4 = sf_leftsize(in,3);
+    n123 = n1*n2*n3;
 
     if (!sf_getbool("adj",&adj)) adj=false; /* adjoint flag */
 
-    pp = sf_floatalloc(n12);
-    qq = sf_floatalloc(n12);
+    pp = sf_floatalloc(n123);
+    qq = sf_floatalloc(n123);
 
-    laplac2_init(n1,n2);
+    laplac3_init(n1,n2,n3);
 
-    for (i3=0; i3<n3; i3++) {
-	sf_floatread(pp,n12,in);
-	if (adj) laplac2_lop ( true,false,n12,n12,qq,pp);
-	else     laplac2_lop (false,false,n12,n12,pp,qq);
-	sf_floatwrite(qq,n12,out);
+    for (i4=0; i4<n4; i4++) {
+	sf_floatread(pp,n123,in);
+	if (adj) laplac3_lop ( true,false,n123,n123,qq,pp);
+	else     laplac3_lop (false,false,n123,n123,pp,qq);
+	sf_floatwrite(qq,n123,out);
     }
 
     exit(0);
