@@ -39,16 +39,37 @@ mpigpufwi
 ######################################################################
 try:  # distributed version
     Import('env root pkgdir bindir libdir incdir')
+    srcroot = '../..' 
+    glob_build = True 	# scons command launched in RSFSRC
     env = env.Clone()
 except: # local version
+    glob_build = False 	# scons command launched in the local directory
+    srcroot = os.environ.get('RSFSRC', '../..')
+    sys.path.append(os.path.join(srcroot,'framework'))
     env = bldutil.Debug()
-    root = None
+    root = bindir = libdir = pkgdir = None
     SConscript('../pwd/SConstruct')
 
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
             LIBS=[env.get('DYNLIB','')+'rsfpwd',
                   env.get('DYNLIB','')+'rsf'])
+
+######################################################################
+# F90 mains
+targets = bldutil.UserSconsTargets()
+targets.f90 = ''' 
+'''
+
+F90 = env.get('F90')
+if 'f90' in env.get('API',[]) and F90:
+	F90base= os.path.basename(F90)
+ 	if F90base[:8]== 'gfortran' or F90base[:3]=='gfc':
+		env.Append(F90FLAGS=' -fopenmp -fbackslash ')
+        elif F90base == 'ifort':
+    		env.Append(F90FLAGS=' -module -fbackslash -fopenmp ${SOURCE.dir}')
+
+targets.build_all(env, glob_build, srcroot, bindir, libdir, pkgdir)
 
 ######################################################################
 # fftw settings
