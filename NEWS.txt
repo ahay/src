@@ -19,7 +19,7 @@ To SCons:
 
 * Added SLURM support for running MPI jobs through SCons
 * Added usedatapath= in Fetch for placing downloaded data in DATAPATH by default
-* Upgraded to scons-2.3.3
+* Upgraded to scons-2.3.4
 * Allow Fetch to run with top=None
 
 To documentation:

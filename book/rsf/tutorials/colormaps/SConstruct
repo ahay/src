@@ -73,4 +73,21 @@ Result('sorted',
 
 # Plotted as Euclidean distance
 
+Flow('euclid','intensity','bin1 x0=0 dx=1 nx=256 head=$SOURCE')
+
+Result('euclid',
+       '''
+       grey allpos=y pclip=100 
+       title="Color intensity, Euclidean distance" wantaxis=n 
+       screenht=2 screenwd=14 transp=n wheretitle=t
+       ''')
+
+# Now let us try other palettes
+
+Result('linear','random',
+       '''
+       grey pclip=100 mean=y color=linearlfb screenratio=0.9 scalebar=y 
+       title=linearlfb
+       ''')
+
 End()

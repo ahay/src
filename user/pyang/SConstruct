@@ -69,7 +69,7 @@ if 'f90' in env.get('API',[]) and F90:
         elif F90base == 'ifort':
     		env.Append(F90FLAGS=' -module -fbackslash -fopenmp ${SOURCE.dir}')
 
-targets.build_all(env, glob_build, srcroot, bindir, libdir, pkgdir)
+#targets.build_all(env, glob_build, srcroot, bindir, libdir, pkgdir)
 
 ######################################################################
 # fftw settings
