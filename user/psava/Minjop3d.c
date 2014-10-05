@@ -36,10 +36,8 @@ int main(int argc, char* argv[])
 
     /*------------------------------------------------------------*/
     /* setup I/O */
-    Fcoo = sf_input ("coo"); /* coordinates */
-    ac = sf_iaxa(Fcoo,3);
-    sf_setlabel(ac,"c");
-    sf_setunit(ac,"");
+    Fcoo = sf_input("coo"); /* coordinates */
+    ac = sf_iaxa(Fcoo,3); sf_setlabel(ac,"c"); sf_setunit(ac,"");
     coo = (pt3d*) sf_alloc(sf_n(ac),sizeof(*coo)); 
     pt3dread1(Fcoo,coo,sf_n(ac),3); /* read (x,y,z) coordinates */
 
@@ -48,8 +46,8 @@ int main(int argc, char* argv[])
 	Ftrc = sf_output("out"); /* traces   */
 
 	az = sf_iaxa(Fwfl,1); sf_setlabel(az,"z");
-	ay = sf_iaxa(Fwfl,2); sf_setlabel(ay,"z");
-	ax = sf_iaxa(Fwfl,3); sf_setlabel(ax,"x");
+	ax = sf_iaxa(Fwfl,2); sf_setlabel(ax,"x");
+	ay = sf_iaxa(Fwfl,3); sf_setlabel(ay,"y");
 	at = sf_iaxa(Fwfl,4); sf_setlabel(at,"t");
 
 	aa = sf_maxa(1,0,1);
@@ -97,7 +95,7 @@ int main(int argc, char* argv[])
 
     /* allocate wavefield arrays */
     wco = sf_floatalloc (sf_n(ac));
-    wfl = sf_floatalloc3(sf_n(az),sf_n(ay),sf_n(ax));
+    wfl = sf_floatalloc3(sf_n(az),sf_n(ax),sf_n(ay));
 
     /* interpolation coefficients */
     fdm = fdutil3d_init(verb,'n',az,ax,ay,0,1);
@@ -124,7 +122,7 @@ int main(int argc, char* argv[])
 	    for        (iy=0; iy<sf_n(ay); iy++)
 		for    (ix=0; ix<sf_n(ax); ix++)
 		    for(iz=0; iz<sf_n(az); iz++)
-		    wfl[iy][ix][iz]=0;
+			wfl[iy][ix][iz]=0;
 	    lint3d_inject(wfl,wco,cow);
 
 	    sf_floatwrite(wfl[0][0],sf_n(az)*sf_n(ay)*sf_n(ax),Fwfl);

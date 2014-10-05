@@ -36,10 +36,8 @@ int main(int argc, char* argv[])
 
     /*------------------------------------------------------------*/
     /* setup I/O */
-    Fcoo = sf_input ("coo"); /* coordinates */
-    ac = sf_iaxa(Fcoo,2);
-    sf_setlabel(ac,"c");
-    sf_setunit(ac,"");
+    Fcoo = sf_input("coo"); /* coordinates */
+    ac = sf_iaxa(Fcoo,2); sf_setlabel(ac,"c"); sf_setunit(ac,"");
     coo = (pt2d*) sf_alloc(sf_n(ac),sizeof(*coo)); 
     pt2dread1(Fcoo,coo,sf_n(ac),2); /* read (x,z) coordinates */
 

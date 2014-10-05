@@ -180,6 +180,7 @@ fdm3d fdutil3d_init(bool verb_,
     fdm->verb=verb_;
 
     fdm->nb=nb_;
+    
 
     fdm->nz=sf_n(az_);
     fdm->nx=sf_n(ax_);

@@ -47,9 +47,9 @@ int main(int argc, char* argv[])
     bool adj;            /* adjoint operator flag */
 
     /* I/O files */
-    sf_file Fsou=NULL; /* inp wfl */
-    sf_file Fvel=NULL; /* vel     */
-    sf_file Fwfl=NULL; /* out wfl */
+    sf_file Fvel=NULL; /* velocity */
+    sf_file Fm=NULL;   /* model    */
+    sf_file Fd=NULL;   /* data     */
 
     /* cube axes */
     sf_axis at,az,ay,ax;
@@ -86,16 +86,25 @@ int main(int argc, char* argv[])
 
     /*------------------------------------------------------------*/
     /* I/O files */
-    Fsou = sf_input ("in" ); /* wavelet   */
     Fvel = sf_input ("vel"); /* velocity  */
-    Fwfl = sf_output("out"); /* wavefield */
+
+    if(adj) {
+	Fd = sf_input ("in" ); /*  data */
+	Fm = sf_output("out"); /* model */
+    } else {
+	Fm = sf_input ("in" ); /* model */
+	Fd = sf_output("out"); /*  data */
+    }
 
     /*------------------------------------------------------------*/
     /* axes */
-    at = sf_iaxa(Fsou,4); sf_setlabel(at,"t"); if(verb) sf_raxa(at); /* t */
     az = sf_iaxa(Fvel,1); sf_setlabel(az,"z"); if(verb) sf_raxa(az); /* z */
     ax = sf_iaxa(Fvel,2); sf_setlabel(ax,"x"); if(verb) sf_raxa(ax); /* x */
     ay = sf_iaxa(Fvel,3); sf_setlabel(ay,"y"); if(verb) sf_raxa(ay); /* y */
+
+    if(adj) at = sf_iaxa(Fd,4); 
+    else    at = sf_iaxa(Fm,4);
+    sf_setlabel(at,"t"); if(verb) sf_raxa(at); /* t */
 
     nt = sf_n(at); dt = sf_d(at);
     nz = sf_n(az); dz = sf_d(az);
@@ -105,16 +114,22 @@ int main(int argc, char* argv[])
     nslice = nz*nx*ny*sizeof(float); /* wavefield slice */
     /*------------------------------------------------------------*/
 
-    sf_oaxa(Fwfl,az,1);
-    sf_oaxa(Fwfl,ax,2);
-    sf_oaxa(Fwfl,ay,3);
-    sf_oaxa(Fwfl,at,4);
+    if(adj) {
+	sf_oaxa(Fm,az,1);
+	sf_oaxa(Fm,ax,2);
+	sf_oaxa(Fm,ay,3);
+	sf_oaxa(Fm,at,4);
+    } else {
+	sf_oaxa(Fd,az,1);
+	sf_oaxa(Fd,ax,2);
+	sf_oaxa(Fd,ay,3);
+	sf_oaxa(Fd,at,4);
+    }
 
     /*------------------------------------------------------------*/
     /* expand domain for FD operators and ABC */
     if( !sf_getint("nb",&nb) || nb<NOP) nb=NOP;
     /*( nb=2 boundary padding in grid points )*/
-
     fdm=fdutil3d_init(verb,fsrf,az,ax,ay,nb,1);
 
     sf_setn(az,fdm->nzpad); sf_seto(az,fdm->ozpad); if(verb) sf_raxa(az);
@@ -170,34 +185,33 @@ int main(int argc, char* argv[])
     PADLOOP( aa[iy][ix][iz]=um[iy][ix][iz]=uo[iy][ix][iz]=up[iy][ix][iz]=ua[iy][ix][iz]=0; );
 
     WFLLOOP( tt[iy][ix][iz]=0; );
-    for(it=0;it<nt;it++) sf_floatwrite(tt[0][0],nz*nx*ny,Fwfl);/* reserve wfl */ 
-    sf_seek(Fwfl,0,SEEK_SET);                                  /* seek back */
+    if(adj) {
+	for(it=0;it<nt;it++) sf_floatwrite(tt[0],nz*nx,Fm); /* reserve wfl */ 
+	sf_seek(Fm,0,SEEK_SET);                             /* seek back */
+    } else {
+	for(it=0;it<nt;it++) sf_floatwrite(tt[0],nz*nx,Fd); /* reserve wfl */ 
+	sf_seek(Fd,0,SEEK_SET);                             /* seek back */
+    }
 
+    /* 
+     * MAIN LOOP
+     */
     for (it=0;it<nt;it++){ if(verb) fprintf(stderr,"\b\b\b\b\b\b%04d",it);
-	if(adj) sf_seek(Fsou,(off_t)(nt-1-it)*nslice,SEEK_SET);
-	sf_floatread(tt[0][0],nz*nx*ny,Fsou); wpad3d(aa,tt,fdm);   /* read inp wfl */
-	
-	if(dabc){ 
-	    abcone3d_apply(uo,um,NOP,abc,fdm); /* abc apply */
-	    sponge3d_apply(um,spo,fdm);
-	    sponge3d_apply(uo,spo,fdm);
+	if(adj) {
+	    sf_seek(Fd,(off_t)(nt-1-it)*nslice,SEEK_SET);
+	    sf_floatread(tt[0][0],nz*nx*ny,Fd);
+	} else {
+	    sf_floatread(tt[0][0],nz*nx*ny,Fm);
 	}
+	wpad3d(aa,tt,fdm);
 
 #ifdef _OPENMP
-#pragma omp parallel						\
+#pragma omp parallel for					\
+    schedule(dynamic)						\
     private(ix,iy,iz)						\
     shared(fdm,ua,uo,um,up,aa,vp,co,cax,cbx,cay,cby,caz,cbz)
 #endif
-	{ /* start parallel section */
-#ifdef _OPENMP
-#pragma omp for	schedule(dynamic,fdm->ompchunk)	
-#endif
-	PADLOOP( uo[iy][ix][iz] += aa[iy][ix][iz]; );               /* inject source */
-
-#ifdef _OPENMP
-#pragma omp for	schedule(dynamic,fdm->ompchunk)	
-#endif	
-	FDMLOOP(	/* 4th order Laplacian operator */
+	FDMLOOP( /*  Laplacian */
 	    ua[iy][ix][iz] =       co * uo[iy  ][ix  ][iz  ] + 
 	    cax*(uo[iy  ][ix-1][iz  ] + uo[iy  ][ix+1][iz  ]) +
 	    cbx*(uo[iy  ][ix-2][iz  ] + uo[iy  ][ix+2][iz  ]) +
@@ -207,16 +221,30 @@ int main(int argc, char* argv[])
 	    cbz*(uo[iy  ][ix  ][iz-2] + uo[iy  ][ix  ][iz+2]);
 	    );
 	
+	/* sponge abc */
+	if(dabc) sponge3d_apply(ua,spo,fdm);  
+
 #ifdef _OPENMP
-#pragma omp for	schedule(dynamic,fdm->ompchunk)	
+#pragma omp parallel for						\
+    schedule(dynamic)							\
+    private(ix,iz)							\
+    shared(fdm,ua,uo,up,um,aa,vp)
 #endif
-	PADLOOP( up[iy][ix][iz] = 2*uo[iy][ix][iz] - um[iy][ix][iz] + ua[iy][ix][iz] * vp[iy][ix][iz]; );  /* time step */
-	
-	} /* end parallel section */
-	ut=um; um=uo; uo=up; up=ut; /* circulate wavefield arrays */
-	
-	if(adj) sf_seek(Fwfl,(off_t)(nt-1-it)*nslice,SEEK_SET);
-	wwin3d(tt,up,fdm); sf_floatwrite(tt[0][0],nz*nx*ny,Fwfl); /* write out wfl */
+	/* time step */
+	PADLOOP( up[iy][ix][iz] = 2*uo[iy][ix][iz] - um[iy][ix][iz] + (aa[iy][ix][iz]+ua[iy][ix][iz]) * vp[iy][ix][iz]; );  
+
+	wwin3d(tt,up,fdm);
+	if(adj) {
+	    sf_seek(Fm,(off_t)(nt-1-it)*nslice,SEEK_SET);
+	    sf_floatwrite(tt[0][0],nz*nx*ny,Fm); 
+	} else {
+	    sf_floatwrite(tt[0][0],nz*nx*ny,Fd); 
+	}
+
+	/* circulate wavefield arrays */
+	ut=um; um=uo; uo=up; up=ut; 
+	/* one-way abc */
+	if(dabc) abcone3d_apply(uo,um,NOP,abc,fdm);
     } /* it */
     if(verb) fprintf(stderr,"\n");
 
