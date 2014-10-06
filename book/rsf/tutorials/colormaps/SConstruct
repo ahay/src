@@ -82,7 +82,7 @@ Result('euclid',
        screenht=2 screenwd=14 transp=n wheretitle=t
        ''')
 
-# Now let us try other palettes
+# Great Pyramid of Giza
 
 Result('linear','random',
        '''
@@ -90,4 +90,30 @@ Result('linear','random',
        title=linearlfb
        ''')
 
+Flow('pyramid',None,
+     'math n1=101 n2=101 o1=-50 o2=-50 output="100-abs(x1+x2)-abs(x1-x2)"')
+
+for case in ('spectral','linearlfb'):
+       Result('pyramid-'+case,'pyramid',
+            'grey screenratio=1 scalebar=y allpos=y pclip=100 color=%s wanttitle=n' % case)
+       Result('pyramid3d-'+case,'pyramid',
+              'plsurf allpos=y pclip=100 color=%s mesh=n' % case)
+
+# Lightness profile
+
+Flow('spectral_m','spectral','mask min=0.04045 | dd type=float')
+Flow('spectral1','spectral spectral_m',
+     'math mask=${SOURCES[1]} output="mask*((input+0.055)/1.055)^2.4" ')
+Flow('spectral2','spectral spectral_m',
+     'math mask=${SOURCES[1]} output="(1-mask)*input/12.92" ')
+Flow('spectral3','spectral1 spectral2','add ${SOURCES[1]} | scale dscale=100')
+
+Flow('cy','spectral3','stack axis=1 norm=n scale=0.2126,0.7152,0.0722 | scale dscale=0.01')
+
+Flow('cy_m','cy','mask min=0.008856 | dd type=float')
+Flow('cy1','cy cy_m','math mask=${SOURCES[1]} output="mask*input^(1/3)" ')
+Flow('cy2','cy cy_m','math mask=${SOURCES[1]} output="(1-mask)*((7.787*input) + (16/116))" ')
+
+Flow('cie-l','cy1 cy2','add ${SOURCES[1]} | math output="116*input - 16" ')
+ 
 End()

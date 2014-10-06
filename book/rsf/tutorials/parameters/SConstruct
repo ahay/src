@@ -1,0 +1,68 @@
+from rsf.proj import *
+import math
+
+# Download data
+
+horizon = 'Penobscot_HorB.txt'
+
+Fetch(horizon,'data',
+      server='https://raw.githubusercontent.com',
+      top='agile-geoscience/notebooks/master')
+
+# Convert from xyz triples to horizon
+
+Flow('xyz',horizon,
+     '''
+     echo n1=3 n2=254674 data_format=ascii_float in=$SOURCE |
+     dd form=native
+     ''')
+
+Flow('xy','xyz','window n1=2 | dd type=int')
+Flow('horizon','xyz xy',
+     '''
+     window f1=2 squeeze=n | 
+     intbin head=${SOURCES[1]} xkey=0 ykey=1 |
+     window | lapfill grad=y verb=y niter=500 |
+     put label=Time unit=ms label1=Inline label2=Crossline
+     ''')
+
+Result('horizon',
+     '''
+     grey color=x bias=950 clip=133 scalebar=y title=Horizon 
+     yreverse=n transp=n screenwd=11.9 screenht=9.26
+     ''')
+
+Flow('sobel','horizon','grad2')
+
+Result('sobel',
+       '''
+       grey allpos=y title="Sobel filter"
+       yreverse=n transp=n screenwd=11.9 screenht=9.26
+       ''')
+
+# Canny edge detection
+
+Flow('square',None,
+     '''
+     math n1=128 n2=128 output="abs(x1+x2-128)+abs(x1-x2)" |
+     mask min=32 max=32 | dd type=float
+     ''')
+
+a=math.pi/12 # 15 degrees
+c=math.cos(a)
+s=math.sin(a)
+
+Flow('x','square','math output="64+(%g)*(x1-64)+(%g)*(x2-64)" ' % (c,-s))
+Flow('y','square','math output="64+(%g)*(x1-64)+(%g)*(x2-64)" ' % (s, c))
+Flow('xyr','x y','cat axis=3 ${SOURCES[1]}')
+
+Flow('rotate','square xyr',
+     '''
+     iwarp2 warp=${SOURCES[1]} |
+     smooth rect1=2 rect2=2 repeat=3 |
+     noise type=n range=0.2
+     ''')
+
+Plot('rotate','grey screenratio=1 wantaxis=n title="noisy image" wheretitle=t')
+
+End()
