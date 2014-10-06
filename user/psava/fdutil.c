@@ -558,7 +558,7 @@ lint2d lint2d_make(int    na,
 	ca->w10[ia] = (1-f1)*(  f2);
 	ca->w11[ia] = (  f1)*(  f2);
 
-	sf_warning("%g",ca->w00[ia]+ca->w01[ia]+ca->w10[ia]+ca->w11[ia]);
+	/* sf_warning("%g",ca->w00[ia]+ca->w01[ia]+ca->w10[ia]+ca->w11[ia]); */
     }
 
     return ca;
