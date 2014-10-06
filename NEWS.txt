@@ -46,6 +46,7 @@ To programs:
 * Computing median of an even number of points in sfmedian using
   Dellinger's algorithm
 * Renamed sfsvd sfpysvd and fixed sizes for output vectors
+* Enabled depth= option for sfgraph with lines
 
 ===Bug fixes===
 

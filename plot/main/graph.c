@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
     vp_init();
 
     if (NULL != sf_getstring("depth")) {
-	depth = sf_input("depth"); /* values for colored symbols */
+	depth = sf_input("depth"); /* values for colored plots */
 	if (SF_UCHAR != sf_gettype(depth)) 
 	    sf_error("Need uchar in depth");
     } else {
@@ -211,6 +211,7 @@ int main(int argc, char* argv[])
 	    for (i1=0; i1 < n1; i1++) {
 		xi = x[i2][i1];
 		yi = y[i2][i1];
+		if (NULL != depth) vp_color(z[i2][i1]+256);
 
 		if (isfinite(xi) && 
 		    isfinite(yi)) {
@@ -218,9 +219,6 @@ int main(int argc, char* argv[])
 			vp_umove(xi,yi);
 			vp_where (&xc, &yc);
 			vp_tjust (TH_SYMBOL, TV_SYMBOL);
-
-			if (NULL != depth) vp_color(z[i2][i1]+256);
-
 			vp_gtext (xc,yc,symsize,0.,0.,symsize,sym);
 		    } else if (start) {
 			vp_umove(xi,yi);
