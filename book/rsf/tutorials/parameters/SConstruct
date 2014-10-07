@@ -70,6 +70,16 @@ Plot('canny',
      grey screenratio=1 wantaxis=n title="Canny filter" wheretitle=t
      ''')
 
-Result('canny','rotate canny','SideBySideIso',vppen='xsize=11')
+Flow('clean','rotate','impl2 rect1=20 rect2=20')
+
+Flow('canny2','clean','canny')
+
+Plot('canny2',
+     '''
+     dd type=float | math output=1-input | 
+     grey screenratio=1 wantaxis=n title="Canny filter 2" wheretitle=t
+     ''')
+
+Result('canny','rotate canny canny2','SideBySideIso',vppen='xsize=11')
 
 End()
