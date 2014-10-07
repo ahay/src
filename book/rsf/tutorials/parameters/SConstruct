@@ -84,6 +84,26 @@ Result('canny','rotate canny canny2','SideBySideIso',vppen='xsize=11')
 
 # Apply to horizon
 
+Flow('hcanny','horizon','canny')
 
+Result('hcanny',
+     '''
+     dd type=float | 
+     grey title="Canny filter 1" 
+     yreverse=n transp=n screenwd=11.9 screenht=9.26
+     ''')
+
+Flow('hclean','horizon','impl2 rect1=10 rect2=10 tau=1')
+
+Flow('hcanny2','hclean','canny')
+
+Result('hcanny2',
+     '''
+     dd type=float | 
+     grey title="Canny filter 2" 
+     yreverse=n transp=n screenwd=11.9 screenht=9.26
+     ''')
+
+# Overlay plot
 
 End()
