@@ -24,7 +24,7 @@
 
 int main(int argc, char* argv[])
 {
-    bool verb,complx;        
+    bool verb,complx;
     int it,iz,im,ik,ix,i,j;     /* index variables */
     int nt,nz,nx, m2, nk, nzx, nz2, nx2, nzx2, n2, pad1,nth;
     sf_complex c;
