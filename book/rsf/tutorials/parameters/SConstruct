@@ -43,10 +43,7 @@ Result('sobel',
 # Canny edge detection
 
 Flow('square',None,
-     '''
-     math n1=128 n2=128 output="abs(x1+x2-128)+abs(x1-x2)" |
-     mask min=32 max=32 | dd type=float
-     ''')
+     'spike n1=128 n2=128 k1=32 l1=96 k2=32 l2=96 d1=1 d2=1')
 
 a=math.pi/12 # 15 degrees
 c=math.cos(a)
@@ -59,10 +56,20 @@ Flow('xyr','x y','cat axis=3 ${SOURCES[1]}')
 Flow('rotate','square xyr',
      '''
      iwarp2 warp=${SOURCES[1]} |
-     smooth rect1=2 rect2=2 repeat=3 |
+     smooth rect1=3 rect2=3 repeat=3 |
      noise type=n range=0.2
      ''')
 
 Plot('rotate','grey screenratio=1 wantaxis=n title="noisy image" wheretitle=t')
+
+Flow('canny','rotate','canny')
+
+Plot('canny',
+     '''
+     dd type=float | math output=1-input | 
+     grey screenratio=1 wantaxis=n title="Canny filter" wheretitle=t
+     ''')
+
+Result('canny','rotate canny','SideBySideIso',vppen='xsize=11')
 
 End()
