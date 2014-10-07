@@ -128,5 +128,32 @@ for case in ('spectral','linearlfb'):
               ''' % (case,case.capitalize()))
 
 # Plot horizon
+
+horizon = 'Penobscot_HorB.txt'
+
+Fetch(horizon,'data',
+      server='https://raw.githubusercontent.com',
+      top='agile-geoscience/notebooks/master')
+
+# Convert from xyz triples to horizon
+
+Flow('xyz',horizon,
+     '''
+     echo n1=3 n2=254674 data_format=ascii_float in=$SOURCE |
+     dd form=native
+     ''')
+
+Flow('xy','xyz','window n1=2 | dd type=int')
+Flow('horizon','xyz xy',
+     '''
+     window f1=2 squeeze=n | 
+     intbin head=${SOURCES[1]} xkey=0 ykey=1 |
+     window | lapfill grad=y verb=y niter=500 |
+     put label=Time unit=ms label1=Inline label2=Crossline
+     ''')
+
+for case in ('spectral','linearlfb'):
+       Result('horizon-'+case,'horizon',
+              'grey color=%s bias=950 clip=133 scalebar=y title=Horizon yreverse=n transp=n' % case)
  
 End()
