@@ -35,8 +35,9 @@ To the Python package:
 
 To programs:
 
-* Added color=lb (Light-Bartlein), color=gist_earth, 
-  color=spectral, and color=seismic color schemes
+* Added new color schemes (color= in sfgrey): lb (Light-Bartlein),
+  gist_earth, spectral, seismic, owb (orange-white-black), and rwb
+  (red-white-black)
 * sfipick: example Tkinter script for interactive picking
 * sfvelan: interactive velocity picking using matplotlib
 * Added x0= and mwt= parameters in sfconjgrad
