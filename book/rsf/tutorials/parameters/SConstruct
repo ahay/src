@@ -67,10 +67,10 @@ Flow('canny','rotate','canny')
 Plot('canny',
      '''
      dd type=float | math output=1-input | 
-     grey screenratio=1 wantaxis=n title="Canny filter" wheretitle=t
+     grey screenratio=1 wantaxis=n title="Canny filter 1" wheretitle=t
      ''')
 
-Flow('clean','rotate','impl2 rect1=20 rect2=20')
+Flow('clean','rotate','impl2 rect1=10 rect2=10 tau=1 pclip=90')
 
 Flow('canny2','clean','canny')
 
@@ -81,5 +81,9 @@ Plot('canny2',
      ''')
 
 Result('canny','rotate canny canny2','SideBySideIso',vppen='xsize=11')
+
+# Apply to horizon
+
+
 
 End()
