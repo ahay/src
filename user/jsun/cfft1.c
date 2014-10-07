@@ -44,6 +44,7 @@ void cfft1(sf_complex *inp /* [n1] */,
 {
     int i;
 
+
     if (NULL==cfg) {
       cfg  = kiss_fft_alloc(n1,0,NULL,NULL);
       if (NULL == cfg) sf_error("FFT allocation failure.");
@@ -51,9 +52,9 @@ void cfft1(sf_complex *inp /* [n1] */,
 
     for (i=0; i<n1; i++) {
 #ifdef SF_HAS_COMPLEX_H
-      cc[i] = i%2? inp[i]:(-1*inp[i]);
+      cc[i] = i%2? -inp[i]:inp[i];
 #else
-      cc[i] = i%2? inp[i]:sf_cneg(inp[i]);
+      cc[i] = i%2? sf_cneg(inp[i]):inp[i];
 #endif
     }
 
@@ -78,7 +79,7 @@ void icfft1(sf_complex *out /* [n1] */,
 
     for (i=0; i<n1; i++) {
 #ifdef SF_HAS_COMPLEX_H
-	out[i] = (i%2? wt:-wt) * cc[i];
+	out[i] = (i%2? -wt:wt) * cc[i];
 #else
 	out[i] = sf_crmul(cc[i],(i%2? wt:-wt));
 #endif
