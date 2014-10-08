@@ -93,7 +93,6 @@ namespace TSOpt {
         
         cerr << "lendom = " << lendom<< endl;
         
-
         IPNT i;
         
         // allocate data arrays
@@ -294,6 +293,17 @@ namespace TSOpt {
                         (pow(1. + wty*wy + wtx*wx + wtz*wz, power));
                     }
                 }
+            }
+            
+            // copy data back
+            if ((ebc[0]==1)&&(flag0==1)) {
+                swap(sbc[0],ebc[0]);
+            }
+            if ((ebc[1]==1)&&(flag1==1)) {
+                swap(sbc[1],ebc[1]);
+            }
+            if ((ebc[2]==1)&&(flag2==1)) {
+                swap(sbc[2],ebc[2]);
             }
             
             fftwf_execute(icfg);
