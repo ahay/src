@@ -1,1 +1,1 @@
-$RSFSRC
+/usr/local:$RSFSRC/build
