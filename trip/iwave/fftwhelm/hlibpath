@@ -1,2 +1,2 @@
-/usr/local/lib/libfftw3f.a
+$FFTW_DIR/lib/libfftw3f.a
 

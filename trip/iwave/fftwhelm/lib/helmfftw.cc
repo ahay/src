@@ -49,6 +49,7 @@ namespace TSOpt {
       RARR  & rax = gx.getMetadata();
       RARR const & ray = gy.getMetadata();
       int dimx; int dimy;
+      int idxdatum = (int)(datum/d_arr[0]+0.5f);
       int lendom;
       ra_ndim(&rax,&dimx);
       ra_ndim(&ray,&dimy);
@@ -72,6 +73,7 @@ namespace TSOpt {
           s[ii]=max(gsy[ii],gsx[ii]);
           e[ii]=min(gey[ii],gex[ii]);
       }
+        cerr << " idxdatum = " << idxdatum << endl;
         cerr << " dimx = " << dimx << endl;
         
         lendom = 1;
@@ -84,7 +86,6 @@ namespace TSOpt {
         }
 
         float _power=power;
-        float _datum=datum;
         fftwf_r2r_kind bctable[2][2];
         bctable[0][0] = FFTW_REDFT10;
         bctable[0][1] = FFTW_REDFT01;
@@ -162,7 +163,10 @@ namespace TSOpt {
           float wt =  1.0/(2*f2c[0]);
 
           // copy data back
-          for (i[0]=s[0];i[0]<=e[0];i[0]++) {
+          int ids, ide;
+          ids = (sbc[0]==0)?max(s[0],idxdatum):s[0];
+          ide = (sbc[0]==0)?e[0]:min(e[0],e[0]-idxdatum);
+          for (i[0]=ids;i[0]<=ide;i[0]++) {
               //rax._s1[e[0]-i[0]+s[0]]=wt*outdata[i[0]-s[0]];
               rax._s1[s[0]*(e[0]+s[0]-2*s[0])+i[0]]=wt*outdata[i[0]-s[0]];
           }
@@ -172,6 +176,7 @@ namespace TSOpt {
         if (dimx==2) {
             for (i[1]=s[1];i[1]<=e[1];i[1]++) {
                 for (i[0]=s[0];i[0]<=e[0];i[0]++) {
+                    //rax._s2[i[1]][i[0]]=0.0f;
                     //indata[(i[1]-s[1])*f2c[0] + i[0]-s[0]]=ray._s2[i[1]][e[0]-i[0]+s[0]];
                     indata[(i[1]-s[1])*f2c[0] + i[0]-s[0]]=ray._s2[sbc[1]*(e[1]+s[1]-2*i[1])+i[1]][sbc[0]*(e[0]+s[0]-2*i[0])+i[0]];//e[0]-i[0]+s[0]];
                 }
@@ -232,8 +237,14 @@ namespace TSOpt {
 //                cerr << "sbc[" << ii << "] = " << sbc[ii] << endl;
 //                cerr << "ebc[" << ii << "] = " << ebc[ii] << endl;
 //            }
+            int ids, ide;
             for (i[1]=s[1];i[1]<=e[1];i[1]++) {
-                for (i[0]=s[0];i[0]<=e[0];i[0]++) {
+//                for (i[0]=s[0]; i[0]<max(s[0],idxdatum); i[0]++) {
+//                    rax._s2[sbc[1]*(e[1]+s[1]-2*i[1])+i[1]][sbc[0]*(e[0]+s[0]-2*i[0])+i[0]]=0.f;
+//                }
+                ids = (sbc[0]==0)?max(s[0],idxdatum):s[0];
+                ide = (sbc[0]==0)?e[0]:min(e[0],e[0]-idxdatum);
+                for (i[0]=ids;i[0]<=ide;i[0]++) {
                     //rax._s2[i[1]][e[0]-i[0]+s[0]]=wt*outdata[(i[1]-s[1])*f2c[0] + i[0]-s[0]];
                     rax._s2[sbc[1]*(e[1]+s[1]-2*i[1])+i[1]][sbc[0]*(e[0]+s[0]-2*i[0])+i[0]]=wt*outdata[(i[1]-s[1])*f2c[0]+i[0]-s[0]];
                 }
@@ -308,10 +319,15 @@ namespace TSOpt {
             
             fftwf_execute(icfg);
             float wt =  1.0/(2*f2c[2]*2*f2c[1]*2*f2c[0]);
+            
             // copy data back
+            int ids, ide;
+
             for (i[2]=s[2];i[2]<=e[2];i[2]++) {
                 for (i[1]=s[1];i[1]<=e[1];i[1]++) {
-                    for (i[0]=s[0];i[0]<=e[0];i[0]++) {
+                    ids = (sbc[0]==0)?max(s[0],idxdatum):s[0];
+                    ide = (sbc[0]==0)?e[0]:min(e[0],e[0]-idxdatum);
+                    for (i[0]=ids; i[0]<=ide;i[0]++) {
                         //rax._s3[i[2]][i[1]][e[0]-i[0]+s[0]]=wt*outdata[((i[2]-s[2])*f2c[1]+(i[1]-s[1]))*f2c[0]+i[0]-s[0]];
                         rax._s3[sbc[2]*(e[2]+s[2]-2*i[2])+i[2]][sbc[1]*(e[1]+s[1]-2*i[1])+i[1]][sbc[0]*(e[0]+s[0]-2*i[0])+i[0]]=wt*outdata[((i[2]-s[2])*f2c[1]+(i[1]-s[1]))*f2c[0]+i[0]-s[0]];
                     }
@@ -330,7 +346,7 @@ namespace TSOpt {
       if (dimx<1 || dimx>3) {
 	RVLException e;
 	e<<"Error: HelmFFTWFO::operator()\n";
-	e<<"dim = "<<dimx<<" outside of admissible set {1, 2}\n";
+	e<<"dim = "<<dimx<<" outside of admissible set {1, 2, 3}\n";
 	throw e;
       }
     }
@@ -378,7 +394,7 @@ namespace TSOpt {
 	  throw e;	  
 	}
 
-	if (gdom->getGrid().dim != 2 && gdom->getGrid().dim != 3) {
+	if (gdom->getGrid().dim != 1 && gdom->getGrid().dim != 2 && gdom->getGrid().dim != 3) {
 	  RVLException e;
 	  e<<"Error: GridHelmFFTWOp::apply\n";
 	  e<<"  current implementation is 2D and 3D only\n";
