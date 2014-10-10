@@ -534,7 +534,6 @@ lint2d lint2d_make(int    na,
     ca->jx  = sf_intalloc(na);
 
     for (ia=0;ia<na;ia++) {
-	
 	if(aa[ia].z >= fdm->ozpad && 
 	   aa[ia].z <  fdm->ozpad + (fdm->nzpad-1)*fdm->dz &&
 	   aa[ia].x >= fdm->oxpad && 
@@ -557,8 +556,6 @@ lint2d lint2d_make(int    na,
 	ca->w01[ia] = (  f1)*(1-f2);
 	ca->w10[ia] = (1-f1)*(  f2);
 	ca->w11[ia] = (  f1)*(  f2);
-
-	/* sf_warning("%g",ca->w00[ia]+ca->w01[ia]+ca->w10[ia]+ca->w11[ia]); */
     }
 
     return ca;

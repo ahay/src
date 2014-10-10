@@ -120,6 +120,7 @@ def bWRawe(data,wfld,velo,dens,coor,custom,par):
     Flow(data+'_R',data,'reverse which=2 opt=i verb=y')
     fdmod.awefd2d(wfld+'_',wfld+'_R',
                   data+'_R',velo,dens,coor,coor,iwindow(par)+custom,par)
+    Flow(wfld,wfld+'_R','reverse which=2 opt=i verb=y')
 
 # WR: forward in time
 def fWRcda(data,wfld,velo,coor,custom,par):
