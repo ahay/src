@@ -10,7 +10,7 @@ Flow('cmp','cmp.HH','dd form=native | tpow tpow=2 | mutter v0=1.4 half=n')
 
 def grey(title,other=''):
     return '''
-    grey title="%s" labelsz=12 titlesz=16 labelfat=6 titlefat=6 
+    grey title="%s"  labelfat=3 titlefat=3 font=2 labelsz=8 titlesz=8
     scalebar=y  label1="Time (s)" label2="Offset (km)" %s
     ''' % (title,other)
 
@@ -30,8 +30,6 @@ Flow('mis','cmp1 dip2 mask1',
      ''')
 Flow('mis2','mis cmp','window min2=0 n2=6 | cat axis=2 ${SOURCES[1]}')
 Flow('mis3','mis2','window f2=1 | reverse which=2 opt=n | cat axis=2 $SOURCE')
-
-#Plot('mis2','grey title="Near Offsets Interpolated" ')
 
 # Predict multiples
 ###################
@@ -99,14 +97,14 @@ Plot('markB',None,'box font=2 x0=7.5 y0=1.9 label="B" xt=0.5 yt=0.5 size=0.5')
 Plot('markC',None,'box font=2 x0=8.2 y0=4.2 label="C" xt=0.5 yt=0.5 size=0.5')
 Plot('markD',None,'box font=2 x0=7.5 y0=5 label="D" xt=0.5 yt=0.5 size=0.5')
 
-Plot('vnoissA','vnoiss markA markB markC markD','Overlay')
+Plot('vnoissA','vnoissIRLS markA markB markC markD','Overlay')
 Plot('vnoissmcaA','vnoissmca markA markB markC markD','Overlay')
 Plot('vcmpA','vcmp markA markB markC markD','Overlay')
 
-Result('signal','signs signsmca','SideBySideAniso')
-Result('nois','noiss noissmca','SideBySideAniso')
+Result('signal','signsIRLS signsmca','SideBySideAniso')
+Result('nois','noissIRLS noissmca','SideBySideAniso')
 
-Result('vsignal','vsigns vsignsmca vcmp','SideBySideAniso')
+Result('vsignal','vsignsIRLS vsignsmca vcmp','SideBySideAniso')
 Result('vnois','vnoissA vnoissmcaA vcmpA','SideBySideAniso')
 
 
