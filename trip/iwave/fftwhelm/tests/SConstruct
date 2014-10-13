@@ -54,8 +54,8 @@ towed_array     = os.path.join(IWAVE,'trace/main/towed_array.x')
 acd             = os.path.join(IWAVE,'acdpml/main/acdpml.x')
 DSO             = os.path.join(IWAVE,'acd/main/DSO.x')
 helm            = os.path.join(IWAVE,'grid/main/helm.x')
-helmadj         = os.path.join(IWAVE,'fftwhelm/main/HelmAdjTest.x')
 helmfftw        = os.path.join(IWAVE,'fftwhelm/main/GridHelmFFTW.x')
+helmadj         = os.path.join(IWAVE,'fftwhelm/main/HelmAdjTest.x')
 fftwtest        = os.path.join(IWAVE,'fftwhelm/main/fftwtest.x')
 mute            = os.path.join(IWAVE,'acd/main/mute.x')
 tapermute       = os.path.join(IWAVE,'acd/main/tapernmute.x')
@@ -145,25 +145,13 @@ Flow('csq1d','csq','sfwindow f1=100 n1=1')
 exe_serial  = {}
 
 jobs = [
-  { 'job': 'helmadjtest',
-    'pre': 'sfadd < csq.rsf scale=0.0 > csqoutx.rsf && ' +
-         ' sfadd < csq.rsf scale=0.0 > csqouty.rsf',
-    'src': ['csq.rsf'],
-    'tgt': ['csqout.rsf'],
-    'cmd': helmadj + ' ' +
-         ' weight0=10 weight1=10 power=-0.5 datum=100 ' +
-         ' sbc0=1 sbc1=0 ebc0=0 ebc1=0 inx=csq.rsf outx=csqoutx.rsf ' +
-         ' iny=s1000csq.rsf outy=csqouty.rsf ' +
-         ' partask='+getThreads(exe_serial),
-    'exe': exe_serial
-  },
   { 'job': 'helmfftw1D_00',
     'pre': 'sfadd < csq1d.rsf scale=0.0 > s00csq1d.rsf',
     'src': ['csq1d.rsf'],
     'tgt': ['s00csq1d.rsf'],
     'cmd': helmfftw + ' ' +
-         ' weight0=10 weight1=10 power=-0.5 datum=1000 ' +
-         ' sbc0=0 sbc1=0 in=csq1d.rsf out=s00csq1d.rsf ' +
+         ' weight0=100 weight1=100 power=-0.5 datum=100 ' +
+         ' sbc0=0 ebc0=0 in=csq1d.rsf out=s00csq1d.rsf ' +
          ' partask='+getThreads(exe_serial),
     'exe': exe_serial
   },
@@ -172,7 +160,7 @@ jobs = [
     'src': ['csq.rsf'],
     'tgt': ['s0000csq.rsf'],
     'cmd': helmfftw + ' ' +
-         ' weight0=10 weight1=10 power=-0.5 datum=1000 ' +
+         ' weight0=100 weight1=100 power=-0.5 datum=0 ' +
          ' sbc0=0 sbc1=0 ebc0=0 ebc1=0 in=csq.rsf out=s0000csq.rsf ' +
          ' partask='+getThreads(exe_serial),
     'exe': exe_serial
@@ -182,9 +170,31 @@ jobs = [
     'src': ['csq.rsf'],
     'tgt': ['s1000csq.rsf'],
     'cmd': helmfftw + ' ' +
-         ' weight0=10 weight1=10 power=-0.5 datum=1000 ' +
+         ' weight0=100 weight1=100 power=-0.5 datum=100 ' +
          ' sbc0=1 sbc1=0 ebc0=0 ebc1=0 in=csq.rsf out=s1000csq.rsf ' +
          ' partask='+getThreads(exe_serial),
+    'exe': exe_serial
+  },
+  { 'job': 'helmadjtest',
+    'pre': 'sfadd < csq.rsf scale=0.0 > csqoutx.rsf && ' + 
+         ' sfadd < csq.rsf scale=0.0 > csqouty.rsf',
+    'src': ['csq.rsf'],
+    'tgt': ['csqout.rsf'],
+    'cmd': helmadj + ' ' +
+         ' weight0=50 weight1=50 power=-0.5 datum=0 ' +
+         ' sbc0=1 sbc1=0 ebc0=0 ebc1=0 inx=csq.rsf outx=csqoutx.rsf ' +
+         ' iny=dcsq.rsf outy=csqouty.rsf ' +
+         ' partask='+getThreads(exe_serial),
+    'exe': exe_serial
+  },
+  { 'job': 'helmfftw2D_1000adj',
+    'pre': 'sfadd < csq.rsf scale=0.0 > s1000csqadj.rsf',
+    'src': ['csq.rsf'],
+    'tgt': ['s1000csqadj.rsf'],
+    'cmd': helmfftw + ' ' +
+         ' weight0=100 weight1=100 power=-0.5 datum=100 ' +
+         ' sbc0=1 sbc1=0 ebc0=0 ebc1=0 in=s1000csq.rsf out=s1000csqadj.rsf ' +
+         ' adjoint=1 partask='+getThreads(exe_serial),
     'exe': exe_serial
   },
   { 'job': 'helmfftw2D_0100',
@@ -192,7 +202,7 @@ jobs = [
     'src': ['csq.rsf'],
     'tgt': ['s0100csq.rsf'],
     'cmd': helmfftw + ' ' +
-         ' weight0=10 weight1=10 power=-0.5 datum=1000 ' +
+         ' weight0=100 weight1=100 power=-0.5 datum=100 ' +
          ' sbc0=0 sbc1=0 ebc0=1 ebc1=0 in=csq.rsf out=s0100csq.rsf ' +
          ' partask='+getThreads(exe_serial),
     'exe': exe_serial
@@ -202,7 +212,7 @@ jobs = [
     'src': ['csq.rsf'],
     'tgt': ['s0011csq.rsf'],
     'cmd': helmfftw + ' ' +
-         ' weight0=10 weight1=10 power=-0.5 datum=1000 ' +
+         ' weight0=100 weight1=100 power=-0.5 datum=100 ' +
          ' sbc0=0 sbc1=1 ebc0=0 ebc1=1 in=csq.rsf out=s0011csq.rsf ' +
          ' partask='+getThreads(exe_serial),
     'exe': exe_serial
@@ -212,20 +222,9 @@ jobs = [
     'src': ['ecsq.rsf'],
     'tgt': ['s000000csq.rsf'],
     'cmd': helmfftw + ' ' +
-         ' weight0=10 weight1=10 power=-0.5 datum=1000 ' +
+         ' weight0=100 weight1=100 power=-0.5 datum=100 ' +
          ' sbc0=0 sbc1=0 sbc2=0 ebc0=0 ebc1=0 ebc2=0 ' +
          ' in=ecsq.rsf out=s000000csq.rsf ' +
-         ' partask='+getThreads(exe_serial),
-    'exe': exe_serial
-  },
-  { 'job': 'helmfftw3D_100000',
-    'pre': 'sfadd < ecsq.rsf scale=0.0 > s100000csq.rsf',
-    'src': ['ecsq.rsf'],
-    'tgt': ['s100000csq.rsf'],
-    'cmd': helmfftw + ' ' +
-         ' weight0=10 weight1=10 power=-0.5 datum=1000 ' +
-         ' sbc0=0 sbc1=0 sbc2=0 ebc0=0 ebc1=0 ebc2=0 ' +
-         ' in=ecsq.rsf out=s100000csq.rsf ' +
          ' partask='+getThreads(exe_serial),
     'exe': exe_serial
   },
@@ -234,7 +233,7 @@ jobs = [
     'src': ['ecsq.rsf'],
     'tgt': ['s010000csq.rsf'],
     'cmd': helmfftw + ' ' +
-         ' weight0=10 weight1=10 power=-0.5 datum=1000 ' +
+         ' weight0=100 weight1=100 power=-0.5 datum=100 ' +
          ' sbc0=0 sbc1=0 sbc2=0 ebc0=1 ebc1=0 ebc2=0 ' +
          ' in=ecsq.rsf out=s010000csq.rsf ' +
          ' partask='+getThreads(exe_serial),
@@ -245,7 +244,7 @@ jobs = [
     'src': ['ecsq.rsf'],
     'tgt': ['s000011csq.rsf'],
     'cmd': helmfftw + ' ' +
-         ' weight0=10 weight1=10 power=-0.5 datum=1000 ' +
+         ' weight0=100 weight1=100 power=-0.5 datum=100 ' +
          ' sbc0=0 sbc1=0 sbc2=1 ebc0=0 ebc1=0 ebc2=1 ' +
          ' in=ecsq.rsf out=s000011csq.rsf ' +
          ' partask='+getThreads(exe_serial),

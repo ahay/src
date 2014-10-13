@@ -151,7 +151,7 @@ namespace TSOpt {
               if (icfg==NULL) fprintf(stderr,"FFTW failure.\n");
           }
           
-          float wtz = 2*M_PI/(2*f2c[0])*weights[0];
+          float wtz = 2*M_PI/(2*f2c[0]*d_arr[0])*weights[0];
           wtz = wtz * wtz;
           float wz;
           for (i[0]=0; i[0]<f2c[0]; i[0]++) {
@@ -216,9 +216,9 @@ namespace TSOpt {
                 if (icfg==NULL) fprintf(stderr,"FFTW failure.\n");
             }
             
-            float wtx = 2*M_PI/(2*f2c[1])*weights[1];
+            float wtx = 2*M_PI/(2*f2c[1]*d_arr[1])*weights[1];
             wtx = wtx * wtx;
-            float wtz = 2*M_PI/(2*f2c[0])*weights[0];
+            float wtz = 2*M_PI/(2*f2c[0]*d_arr[0])*weights[0];
             wtz = wtz * wtz;
             float wx, wz;
             
@@ -292,11 +292,11 @@ namespace TSOpt {
                 if (icfg==NULL) fprintf(stderr,"FFTW failure.\n");
             }
             
-            float wty = 2*M_PI/(2*f2c[2])*weights[2];
+            float wty = 2*M_PI/(2*f2c[2]*d_arr[2])*weights[2];
             wty = wty * wty;
-            float wtx = 2*M_PI/(2*f2c[1])*weights[1];
+            float wtx = 2*M_PI/(2*f2c[1]*d_arr[1])*weights[1];
             wtx = wtx * wtx;
-            float wtz = 2*M_PI/(2*f2c[0])*weights[0];
+            float wtz = 2*M_PI/(2*f2c[0]*d_arr[0])*weights[0];
             wtz = wtz * wtz;
             float wy, wx, wz;
   
