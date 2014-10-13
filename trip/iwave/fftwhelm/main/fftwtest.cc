@@ -61,11 +61,9 @@ int main(int argc, char ** argv) {
     char * in   = NULL;            /* input RSF header file */
     char * out  = NULL;            /* output RSF header file */
     //    char * outd = NULL;            /* output RSF data file (for write, if needed) */
-    char * ref  = NULL;            /* reference RSF data file (optional) - if supplied, array is */
     /* subtracted at start, added back at end */
     grid g;
     grid gout;
-    grid gref;
     
     IPNT n_arr;
     IPNT gs_arr;
@@ -76,15 +74,10 @@ int main(int argc, char ** argv) {
     char * data_format;
     float scale1=1.0f, scale2=1.0f;
     
-    RPNT w_arr;                    /* weight array */
-    float datum;                   /* datum depth */
     float power;                   /* power to apply */
     float wt;
     float weightx, weightz, wx, wz;
     int nz, nx, nz2, nx2, ix, iz,nzc;
-    float * work = NULL;
-    int lenwork;
-    int ier, pad1, flag=0;
     
     //    FILE * fp;
     
@@ -99,7 +92,6 @@ int main(int argc, char ** argv) {
     fftwf_complex *dd=NULL;
     fftwf_plan cfg=NULL, icfg=NULL;
     //    int i;
-    int bc;
     
     xargc = argc;
     xargv = argv;

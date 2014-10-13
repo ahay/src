@@ -114,8 +114,8 @@ int main(int argc, char ** argv) {
         // make it a product, so it's compatible with domain of op
         StdProductSpace<ireal> dom(csqsp);
         
-        Vector<ireal> m_in(iwop.getDomain());
-        Vector<ireal> m_out(iwop.getDomain());
+        Vector<ireal> m_in(dom);
+        Vector<ireal> m_out(dom);
         
         AssignFilename minfn(valparse<std::string>(*pars,"csqin"));
         Components<ireal> cmin(m_in);

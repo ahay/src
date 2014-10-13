@@ -73,16 +73,16 @@ namespace TSOpt {
           s[ii]=max(gsy[ii],gsx[ii]);
           e[ii]=min(gey[ii],gex[ii]);
       }
-        cerr << " idxdatum = " << idxdatum << endl;
-        cerr << " dimx = " << dimx << endl;
+        //cerr << " idxdatum = " << idxdatum << endl;
+        //cerr << " dimx = " << dimx << endl;
         
         lendom = 1;
         for (int ii=0; ii<dimx; ii++) {
             f2c[ii] = n_arr[ii];//(n_arr[ii]+4)%2==1? (n_arr[ii]+5):(n_arr[ii]+4);
             lendom=lendom*f2c[ii];
-            cerr << "f2c["<< ii <<"] = " << f2c[ii] << endl;
-            cerr << "n_arr["<< ii << "] = " << n_arr[ii] << endl;
-            cerr << "length " << ii << " = " << e[ii] - s[ii] +1<< endl;
+            //cerr << "f2c["<< ii <<"] = " << f2c[ii] << endl;
+            //cerr << "n_arr["<< ii << "] = " << n_arr[ii] << endl;
+            //cerr << "length " << ii << " = " << e[ii] - s[ii] +1<< endl;
         }
 
         float _power=power;
@@ -92,7 +92,7 @@ namespace TSOpt {
         bctable[1][0] = FFTW_RODFT01;
         bctable[1][1] = FFTW_RODFT10;
         
-        cerr << "lendom = " << lendom<< endl;
+        //cerr << "lendom = " << lendom<< endl;
         
         IPNT i;
         
@@ -166,6 +166,12 @@ namespace TSOpt {
           int ids, ide;
           ids = (sbc[0]==0)?max(s[0],idxdatum):s[0];
           ide = (sbc[0]==0)?e[0]:min(e[0],e[0]-idxdatum);
+          if (ids > ide) {
+              RVLException e;
+              e<<"Error: GridHelmFFTWOp::apply\n";
+              e<<"   datum is too big\n";
+              throw e;
+          }
           for (i[0]=ids;i[0]<=ide;i[0]++) {
               //rax._s1[e[0]-i[0]+s[0]]=wt*outdata[i[0]-s[0]];
               rax._s1[s[0]*(e[0]+s[0]-2*s[0])+i[0]]=wt*outdata[i[0]-s[0]];

@@ -54,6 +54,7 @@ towed_array     = os.path.join(IWAVE,'trace/main/towed_array.x')
 acd             = os.path.join(IWAVE,'acdpml/main/acdpml.x')
 DSO             = os.path.join(IWAVE,'acd/main/DSO.x')
 helm            = os.path.join(IWAVE,'grid/main/helm.x')
+helmadj         = os.path.join(IWAVE,'fftwhelm/main/HelmAdjTest.x')
 helmfftw        = os.path.join(IWAVE,'fftwhelm/main/GridHelmFFTW.x')
 fftwtest        = os.path.join(IWAVE,'fftwhelm/main/fftwtest.x')
 mute            = os.path.join(IWAVE,'acd/main/mute.x')
@@ -144,6 +145,18 @@ Flow('csq1d','csq','sfwindow f1=100 n1=1')
 exe_serial  = {}
 
 jobs = [
+  { 'job': 'helmadjtest',
+    'pre': 'sfadd < csq.rsf scale=0.0 > csqoutx.rsf && ' +
+         ' sfadd < csq.rsf scale=0.0 > csqouty.rsf',
+    'src': ['csq.rsf'],
+    'tgt': ['csqout.rsf'],
+    'cmd': helmadj + ' ' +
+         ' weight0=10 weight1=10 power=-0.5 datum=100 ' +
+         ' sbc0=1 sbc1=0 ebc0=0 ebc1=0 inx=csq.rsf outx=csqoutx.rsf ' +
+         ' iny=s1000csq.rsf outy=csqouty.rsf ' +
+         ' partask='+getThreads(exe_serial),
+    'exe': exe_serial
+  },
   { 'job': 'helmfftw1D_00',
     'pre': 'sfadd < csq1d.rsf scale=0.0 > s00csq1d.rsf',
     'src': ['csq1d.rsf'],
