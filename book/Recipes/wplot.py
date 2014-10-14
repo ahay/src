@@ -150,6 +150,23 @@ def igrey3d(custom,par):
          par['iratio3d'],par['iheight3d'],par['pointz'],par['pointx'],
          par['labelattr']+' '+custom)
 
+def igrey4d(custom,par):
+    return '''
+    grey4 title="" framelabel=n parallel2=n
+    label1=%s unit1=%s
+    label2=%s unit2=%s
+    label3=%s unit3=%s
+    frame1=%d frame2=%d frame3=%d
+    flat=y screenratio=%g screenht=%g point1=%g point2=%g
+    xll=1.5 yll=1.5
+    %s
+    '''%(par['lz'],par['uz'],
+         par['lx'],par['ux'],
+         par['ly'],par['uy'],
+         par['nz']/2,par['nx']/2,par['ny']/2,
+         par['iratio3d'],par['iheight3d'],par['pointz'],par['pointx'],
+         par['labelattr']+' '+custom)
+
 def imovie3d(movie,byte,nfrm,custom,par):
     for ifrm in range(nfrm):
         ftag="-f%03d"%ifrm
