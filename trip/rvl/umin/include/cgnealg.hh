@@ -743,6 +743,33 @@ namespace RVLUmin {
       }
     }
 
+      
+    CGNEAlg<Scalar> * build(Vector<Scalar> & x,
+                            LinearOp<Scalar> const & A,
+                            LinearOp<Scalar> const & M,
+                            Vector<Scalar> const & d,
+                            atype & rnorm,
+                            atype & nrnorm,
+                            ostream & str) const {
+    try {
+        if (verbose)
+            return new CGNEAlg<Scalar>(x,A,M,d,rnorm,nrnorm,rtol,nrtol,maxcount,Delta,str);
+        else
+            return new CGNEAlg<Scalar>(x,A,M,d,rnorm,nrnorm,rtol,nrtol,maxcount,Delta,nullstr);
+        }
+        catch (RVLException & e) {
+            e<<"\ncalled from CGNEPolicy::build\n";
+            e<<"inputs: \n";
+            e<<"**** x:\n";
+            x.write(e);
+            e<<"**** A:\n";
+            A.write(e);
+            e<<"**** d:\n";
+            d.write(e);
+            throw e;
+        }
+    }
+      
     /** post-construction initialization
 	@param _rtol - residual norm stopping threshhold
 	@param _nrtol - normal residual (LS gradient) norm stopping threshhold
