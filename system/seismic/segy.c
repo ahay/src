@@ -123,324 +123,210 @@ static byte ASCtoEBC[256] = {
 typedef struct Segy {
     const char *name;
     unsigned int size;
+    const char *desc;
 } segy;
 
 static const segy bheadkey[] = {
-    {"jobid",4},  /* job identification number */
-    {"lino",4},	  /* line number (only one line per reel) */
-    {"reno",4},	  /* reel number */
-    {"ntrpr",2},  /* number of data traces per record */
-    {"nart",2},	  /* number of auxiliary traces per record */
-    {"hdt",2},    /* sample interval in micro secs for this reel */
-    {"dto",2},    /* same for original field recording */
-    {"hns",2},    /* number of samples per trace for this reel */
-    {"nso",2},    /* same for original field recording */
-    {"format",2}, /* data sample format code:
-		     1 = floating point, 4 byte (32 bits)
-		     2 = fixed point, 4 byte (32 bits)
-		     3 = fixed point, 2 byte (16 bits)
-		     4 = fixed point w/gain code, 4 byte (32 bits)
-		     5 = IEEE floating point, 4 byte (32 bits)
-		     8 = two's complement integer, 1 byte (8 bits)
-		  */
-    {"fold",2},	  /* CDP fold expected per CDP ensemble */
-    {"tsort",2},  /* trace sorting code: 
-		     1 = as recorded (no sorting)
-		     2 = CDP ensemble
-		     3 = single fold continuous profile
-		     4 = horizontally stacked */
-    {"vscode",2}, /* vertical sum code:
-		     1 = no sum
-		     2 = two sum ...
-		     N = N sum (N = 32,767) */
-    
-    {"hsfs",2},	  /* sweep frequency at start */
-    
-    {"hsfe",2},	  /* sweep frequency at end */
-
-    {"hslen",2},  /* sweep length (ms) */
-
-    {"hstyp",2},  /* sweep type code:
-		     1 = linear
-		     2 = parabolic
-		     3 = exponential
-		     4 = other */
-    
-    {"schn",2},	  /* trace number of sweep channel */
-
-    {"hstas",2},  /* sweep trace taper length at start if tapered (the
-		     taper starts at zero time and is effective for
-		     this length) */
-    
-    {"hstae",2},  /* sweep trace taper length at end (the ending taper
-		     starts at sweep length minus the taper length at
-		     end) */
-
-    {"htatyp",2}, /* sweep trace taper type code:
-		     1 = linear
-		     2 = cos-squared
-		     3 = other */
-
-    {"hcorr",2},  /* correlated data traces code:
-		     1 = no
-		     2 = yes */
-
-    {"bgrcv",2},  /* binary gain recovered code:
-		     1 = yes
-		     2 = no */
-
-    {"rcvm",2},	  /* amplitude recovery method code:
-		     1 = none
-		     2 = spherical divergence
-		     3 = AGC
-		     4 = other */
-
-    {"mfeet",2},  /* measurement system code:
-		     1 = meters
-		     2 = feet */
-
-    {"polyt",2},  /* impulse signal polarity code:
-		     1 = increase in pressure or upward
-		     geophone case movement gives
-		     negative number on tape
-		     2 = increase in pressure or upward
-		     geophone case movement gives
-		     positive number on tape */
-
-    {"vpol",2}	  /* vibratory polarity code:
-		     code	seismic signal lags pilot by
-		     1	337.5 to  22.5 degrees
-		     2	 22.5 to  67.5 degrees
-		     3	 67.5 to 112.5 degrees
-		     4	112.5 to 157.5 degrees
-		     5	157.5 to 202.5 degrees
-		     6	202.5 to 247.5 degrees
-		     7	247.5 to 292.5 degrees
-		     8	293.5 to 337.5 degrees */
+    {"jobid",4, "job identification number"},
+    {"lino",4, "line number (only one line per reel)"},
+    {"reno",4,	  " reel number"},
+    {"ntrpr",2,  "number of data traces per record"},
+    {"nart",2,	  "number of auxiliary traces per record"},
+    {"hdt",2,    "sample interval in micro secs for this reel"},
+    {"dto",2,    "same for original field recording"},
+    {"hns",2,    "number of samples per trace for this reel"},
+    {"nso",2,    "same for original field recording"},
+    {"format",2, "data sample format code:"
+     "\n\t1 = floating point, 4 byte (32 bits)"
+     "\n\t2 = fixed point, 4 byte (32 bits)"
+     "\n\t3 = fixed point, 2 byte (16 bits)"
+     "\n\t4 = fixed point w/gain code, 4 byte (32 bits)"
+     "\n\t5 = IEEE floating point, 4 byte (32 bits)"
+     "\n\t8 = two's complement integer, 1 byte (8 bits)"},
+    {"fold",2,	  "CDP fold expected per CDP ensemble"},
+    {"tsort",2,  "trace sorting code:" 
+     "\n\t1 = as recorded (no sorting)"
+     "\n\t2 = CDP ensemble"
+     "\n\t3 = single fold continuous profile"
+     "\n\t4 = horizontally stacked"},
+    {"vscode",2, "vertical sum code:"
+     "\n\t1 = no sum"
+     "\n\t2 = two sum ..."
+     "\n\tN = N sum (N = 32,767)"},   
+    {"hsfs",2,	  "sweep frequency at start"},
+    {"hsfe",2,	  "sweep frequency at end"},
+    {"hslen",2,  "sweep length (ms)"},
+    {"hstyp",2,  "sweep type code:"
+     "\n\t1 = linear"
+     "\n\t2 = parabolic"
+     "\n\t3 = exponential"
+     "\n\t4 = other"},    
+    {"schn",2,	  "trace number of sweep channel"},
+    {"hstas",2,  "sweep trace taper length at start if tapered "
+     "(the taper starts at zero time and is effective for this length)"},   
+    {"hstae",2,  "sweep trace taper length at end "
+     "(the ending taper starts at sweep length minus the taper length at end)"},
+    {"htatyp",2, "sweep trace taper type code:"
+     "\n\t1 = linear"
+     "\n\t2 = cos-squared"
+     "\n\t3 = other"},
+    {"hcorr",2,  "correlated data traces code:"
+     "\n\t1 = no"
+     "\n\t2 = yes"},
+    {"bgrcv",2,  "binary gain recovered code:"
+     "\n\t1 = yes"
+     "\n\t2 = no"},
+    {"rcvm",2,	 "amplitude recovery method code:"
+     "\n\t1 = none"
+     "\n\t2 = spherical divergence"
+     "\n\t3 = AGC"
+     "\n\t4 = other"},
+    {"mfeet",2,  "measurement system code:"
+     "\n\t1 = meters"
+     "\n\t2 = feet"},
+    {"polyt",2,  "impulse signal polarity code:"
+     "\n\t1 = increase in pressure or upward geophone case movement gives negative number on tape"
+     "\n\t2 = increase in pressure or upward geophone case movement gives positive number on tape"},
+    {"vpol",2,	  "vibratory polarity code:"
+     "\n\tcode	seismic signal lags pilot by"
+     "\n\t1	337.5 to  22.5 degrees"
+     "\n\t2	 22.5 to  67.5 degrees"
+     "\n\t3	 67.5 to 112.5 degrees"
+     "\n\t4	112.5 to 157.5 degrees"
+     "\n\t5	157.5 to 202.5 degrees"
+     "\n\t6	202.5 to 247.5 degrees"
+     "\n\t7	247.5 to 292.5 degrees"
+     "\n\t8	293.5 to 337.5 degrees"},
 };
 
 static const segy standard_segy_key[] = {
-    {"tracl",  4},  /* trace sequence number within line 0 */
-
-    {"tracr",  4},  /* trace sequence number within reel 4 */
-
-    {"fldr",   4},  /* field record number 8 */
-
-    {"tracf",  4},  /* trace number within field record 12 */
-
-    {"ep",     4},  /* energy source point number 16 */
-
-    {"cdp",    4},  /* CDP ensemble number 20 */
-
-    {"cdpt",   4},  /* trace number within CDP ensemble 24 */
-
-    {"trid",   2},  /* trace identification code:
-                        1 = seismic data
-                        2 = dead
-                        3 = dummy
-                        4 = time break
-                        5 = uphole
-                        6 = sweep
-                        7 = timing
-                        8 = water break
-                        9---, N = optional use (N = 32,767) 28 */
-
-    {"nvs",    2},  /* number of vertically summed traces (see
-		    vscode in bhed structure) 30 */
-
-    {"nhs",    2},  /* number of horizontally summed traces (see
-		    vscode in bhed structure) 32 */
-
-    {"duse",   2},  /* data use:
-		    1 = production
-		    2 = test 34 */
-
-    {"offset", 4},  /* distance from source point to receiver
-		    group (negative if opposite to direction
-		    in which the line was shot) 36 */
-
-    {"gelev",  4},  /* receiver group elevation from sea level
-		    (above sea level is positive) 40 */
-
-    {"selev",  4},  /* source elevation from sea level
-		     (above sea level is positive) 44 */
-
-    {"sdepth", 4},  /* source depth (positive) 48 */
-
-    {"gdel",   4},  /* datum elevation at receiver group 52 */
-
-    {"sdel",   4},  /* datum elevation at source 56 */
-
-    {"swdep",  4},  /* water depth at source 60 */
-
-    {"gwdep",  4},  /* water depth at receiver group 64 */
-
-    {"scalel", 2},  /* scale factor for previous 7 entries
-		     with value plus or minus 10 to the
-		     power 0, 1, 2, 3, or 4 (if positive,
-		     multiply, if negative divide) 68 */
-
-    {"scalco", 2},  /* scale factor for next 4 entries
-		     with value plus or minus 10 to the
-		     power 0, 1, 2, 3, or 4 (if positive,
-		     multiply, if negative divide) 70 */
-
-    {"sx",     4},  /* X source coordinate 72 */
-
-    {"sy",     4},  /* Y source coordinate 76 */
-
-    {"gx",     4},  /* X group coordinate 80 */
-
-    {"gy",     4},  /* Y source coordinate 84 */
-
-    {"counit", 2},  /* coordinate units code:
-		     for previoius four entries
-		     1 = length (meters or feet)
-		     2 = seconds of arc (in this case, the
-		     X values are unsigned intitude and the Y values
-		     are latitude, a positive value designates
-		     the number of seconds east of Greenwich
-		     or north of the equator 88 */
-
-    {"wevel",   2},  /* weathering velocity 90 */
-
-    {"swevel",  2},  /* subweathering velocity 92 */
-
-    {"sut",     2},  /* uphole time at source 94 */
-
-    {"gut",     2},  /* uphole time at receiver group 96 */
-
-    {"sstat",   2},  /* source static correction 98 */
-
-    {"gstat",   2},  /* group static correction 100 */
-
-    {"tstat",   2},  /* total static applied 102 */
-
-    {"laga",    2},  /* lag time A, time in ms between end of 240-
-		      byte trace identification header and time
-		      break, positive if time break occurs after
-		      end of header, time break is defined as
-		      the initiation pulse which maybe recorded
-		      on an auxiliary trace or as otherwise
-		      specified by the recording system 104 */
-
-    {"lagb",    2},  /* lag time B, time in ms between the time
-		      break and the initiation time of the energy source,
-		      may be positive or negative 106 */
-
-    {"delrt",   2},  /* delay recording time, time in ms between
-		      initiation time of energy source and time
-		      when recording of data samples begins
-		      (for deep water work if recording does not
-		      start at zero time) 108 */
-
-    {"muts",    2},  /* mute time--start 110 */
-
-    {"mute",    2},  /* mute time--end 112 */
-
-    {"ns",      2},  /* number of samples in this trace 114 */
-
-    {"dt",      2},  /* sample interval, in micro-seconds 116 */
-
-    {"gain",    2},  /* gain type of field instruments code:
-		      1 = fixed
-		      2 = binary
-		      3 = floating point
-		      4 ---- N = optional use 118 */
-
-    {"igc",    2},   /* instrument gain constant 120 */
-
-    {"igi",    2},   /* instrument early or initial gain 122 */
-
-    {"corr",   2},   /* correlated:
-		      1 = no
-		      2 = yes 124 */    
-
-    {"sfs",    2},   /* sweep frequency at start 126 */
-
-    {"sfe",    2},   /* sweep frequency at end 128 */
-
-    {"slen",   2},   /* sweep length in ms 130 */
-
-    {"styp",   2},   /* sweep type code:
-		      1 = linear
-		      2 = cos-squared
-		      3 = other 132 */   
-
-    {"stas",   2},   /* sweep trace length at start in ms 134 */
-
-    {"stae",   2},   /* sweep trace length at end in ms 136 */
-
-    {"tatyp",  2},   /* taper type: 1=linear, 2=cos^2, 3=other 138 */
-
-    {"afilf",  2},   /* alias filter frequency if used 140 */
-
-    {"afils",  2},   /* alias filter slope 142 */
-
-    {"nofilf", 2},   /* notch filter frequency if used 144 */
-
-    {"nofils", 2},   /* notch filter slope 146 */
-
-    {"lcf",    2},   /* low cut frequency if used 148 */
-
-    {"hcf",    2},   /* high cut frequncy if used 150 */
-
-    {"lcs",    2},   /* low cut slope 152 */
-
-    {"hcs",    2},   /* high cut slope 154 */
-
-    {"year",   2},   /* year data recorded 156 */
-
-    {"day",    2},   /* day of year 158 */
-
-    {"hour",   2},   /* hour of day (24 hour clock) 160 */
-
-    {"minute", 2},   /* minute of hour 162 */
-
-    {"sec",    2},   /* second of minute 164 */
-
-    {"timbas", 2},   /* time basis code:
-		      1 = local
-		      2 = GMT
-		      3 = other 166 */   
-
-    {"trwf",   2},   /* trace weighting factor, defined as 1/2^N
-		      volts for the least sigificant bit 168 */
-
-    {"grnors", 2},   /* geophone group number of roll switch
-		      position one 170 */
-
-    {"grnofr", 2},   /* geophone group number of trace one within
-		      original field record 172 */
-
-    {"grnlof", 2},   /* geophone group number of last trace within
-		      original field record 174 */
-
-    {"gaps",   2},   /* gap size (total number of groups dropped) 176 */
-
-    {"otrav",  2},   /* overtravel taper code:
-		      1 = down (or behind)
-		      2 = up (or ahead) 71/178 */
-    {"cdpx",   4},   /* X coordinate of CDP 180 */
-    {"cdpy",   4},   /* Y coordinate of CDP 184 */
-    {"iline",  4},   /* in-line number 188 */
-    {"xline",  4},   /* cross-line number 192 */
-    {"shnum",  4},   /* shotpoint number 196 */
-    {"shsca",  2},   /* shotpoint scalar 200 */
-    {"tval",   2},   /* trace value meas. 202 */
-    {"tconst4",4},   /* transduction const 204 */
-    {"tconst2",2},   /* transduction const 208 */
-    {"tunits", 2},   /* transduction units 210 */
-    {"device", 2},   /* device identifier 212 */
-    {"tscalar",2},   /* time scalar 214 */
-    {"stype",  2},   /* source type 216 */
-    {"sendir", 4},   /* source energy dir. 218 */
-    {"unknown",2},   /* unknown 222 */
-    {"smeas4", 4},   /* source measurement 224 */
-    {"smeas2", 2},   /* source measurement 228 */
-    {"smeasu", 2},   /* source measurement unit 230 */
-    {"unass1", 4},   /* unassigned 232 */
-    {"unass2", 4}    /* unassigned 236 */
+    {"tracl",  4,  "trace sequence number within line 0"},
+    {"tracr",  4,  "trace sequence number within reel 4"},
+    {"fldr",   4,  "field record number 8"},
+    {"tracf",  4,  "trace number within field record 12"},
+    {"ep",     4,  "energy source point number 16"},
+    {"cdp",    4,  "CDP ensemble number 20"},
+    {"cdpt",   4,  "trace number within CDP ensemble 24"},
+    {"trid",   2,  "trace identification code:"
+     "\n\t1 = seismic data"
+     "\n\t2 = dead"
+     "\n\t3 = dummy"
+     "\n\t4 = time break"
+     "\n\t5 = uphole"
+     "\n\t6 = sweep"
+     "\n\t7 = timing"
+     "\n\t8 = water break"
+     "\n\t9---, N = optional use (N = 32,767) 28"},
+    {"nvs",    2,  "number of vertically summed traces (see vscode in bhed structure) 30"},
+    {"nhs",    2,  "number of horizontally summed traces (see vscode in bhed structure) 32"},
+    {"duse",   2,  "data use:"
+     "\n\t1 = production"
+     "\n\t2 = test 34"},
+    {"offset", 4,  "distance from source point to receiver group (negative if opposite to direction in which the line was shot) 36"},
+    {"gelev",  4,  "receiver group elevation from sea level (above sea level is positive) 40"},
+    {"selev",  4,  "source elevation from sea level (above sea level is positive) 44"},
+    {"sdepth", 4,  "source depth (positive) 48"},
+    {"gdel",   4,  "datum elevation at receiver group 52"},
+    {"sdel",   4,  "datum elevation at source 56"},
+    {"swdep",  4,  "water depth at source 60"},
+    {"gwdep",  4,  "water depth at receiver group 64"},
+    {"scalel", 2,  "scale factor for previous 7 entries with value plus or minus 10 to the power 0, 1, 2, 3, or 4 (if positive, multiply, if negative divide) 68"},
+    {"scalco", 2,  "scale factor for next 4 entries with value plus or minus 10 to the power 0, 1, 2, 3, or 4 (if positive, multiply, if negative divide) 70"},
+    {"sx",     4,  "X source coordinate 72"},
+    {"sy",     4,  "Y source coordinate 76"},
+    {"gx",     4,  "X group coordinate 80"},
+    {"gy",     4,  "Y source coordinate 84"},
+    {"counit", 2,  "coordinate units code:"
+     "\n\tfor previoius four entries"
+     "\n\t1 = length (meters or feet)"
+     "\n\t2 = seconds of arc (in this case, the"
+     "\n\tX values are unsigned intitude and the Y values"
+     "\n\tare latitude, a positive value designates"
+     "\n\tthe number of seconds east of Greenwich or north of the equator 88"},
+    {"wevel",   2,  "weathering velocity 90"},
+    {"swevel",  2,  "subweathering velocity 92"},
+    {"sut",     2,  "uphole time at source 94"},
+    {"gut",     2,  "uphole time at receiver group 96"},
+    {"sstat",   2,  "source static correction 98"},
+    {"gstat",   2,  "group static correction 100"},
+    {"tstat",   2,  "total static applied 102"},
+    {"laga",    2,  "lag time A, time in ms between end of 240-byte trace identification header and time "
+     "break, positive if time break occurs after end of header, time break is defined as "
+     "the initiation pulse which maybe recorded on an auxiliary trace or as otherwise "
+     "specified by the recording system 104"},
+    {"lagb",    2,  "lag time B, time in ms between the time break and the initiation time of the energy source, "
+     "may be positive or negative 106"},
+    {"delrt",   2,  "delay recording time, time in ms between initiation time of energy source and time "
+     "when recording of data samples begins (for deep water work if recording does not start at zero time) 108"},
+    {"muts",    2,  "mute time--start 110"},
+    {"mute",    2,  "mute time--end 112"},
+    {"ns",      2,  "number of samples in this trace 114"},
+    {"dt",      2,  "sample interval, in micro-seconds 116"},
+    {"gain",    2,  "gain type of field instruments code:"
+     "\n\t1 = fixed"
+     "\n\t2 = binary"
+     "\n\t3 = floating point"
+     "\n\t4 ---- N = optional use 118"},
+    {"igc",    2,   "instrument gain constant 120"},
+    {"igi",    2,   "instrument early or initial gain 122"},
+    {"corr",   2,   "correlated:"
+     "\n\t1 = no"
+     "\n\t2 = yes 124"},    
+    {"sfs",    2,   "sweep frequency at start 126"},
+    {"sfe",    2,   "sweep frequency at end 128"},
+    {"slen",   2,   "sweep length in ms 130"},
+    {"styp",   2,   "sweep type code:"
+     "\n\t1 = linear"
+     "\n\t2 = cos-squared"
+     "\n\t3 = other 132"},   
+    {"stas",   2,   "sweep trace length at start in ms 134"},
+    {"stae",   2,   "sweep trace length at end in ms 136"},
+    {"tatyp",  2,   "taper type: 1=linear, 2=cos^2, 3=other 138"},
+    {"afilf",  2,   "alias filter frequency if used 140"},
+    {"afils",  2,   "alias filter slope 142"},
+    {"nofilf", 2,   "notch filter frequency if used 144"},
+    {"nofils", 2,   "notch filter slope 146"},
+    {"lcf",    2,   "low cut frequency if used 148"},
+    {"hcf",    2,   "high cut frequncy if used 150"},
+    {"lcs",    2,   "low cut slope 152"},
+    {"hcs",    2,   "high cut slope 154"},
+    {"year",   2,   "year data recorded 156"},
+    {"day",    2,   "day of year 158"},
+    {"hour",   2,   "hour of day (24 hour clock) 160"},
+    {"minute", 2,   "minute of hour 162"},
+    {"sec",    2,   "second of minute 164"},
+    {"timbas", 2,   "time basis code:"
+     "\n\t1 = local"
+     "\n\t2 = GMT"
+     "\n\t3 = other 166"},   
+    {"trwf",   2,   "trace weighting factor, defined as 1/2^N volts for the least sigificant bit 168"},
+    {"grnors", 2,   "geophone group number of roll switch position one 170"},
+    {"grnofr", 2,   "geophone group number of trace one within original field record 172"},
+    {"grnlof", 2,   "geophone group number of last trace within original field record 174"},
+    {"gaps",   2,   "gap size (total number of groups dropped) 176"},
+    {"otrav",  2,   "overtravel taper code:"
+     "\n\t1 = down (or behind)"
+     "\n\t2 = up (or ahead) 71/178"},
+    {"cdpx",   4,   "X coordinate of CDP 180"},
+    {"cdpy",   4,   "Y coordinate of CDP 184"},
+    {"iline",  4,   "in-line number 188"},
+    {"xline",  4,   "cross-line number 192"},
+    {"shnum",  4,   "shotpoint number 196"},
+    {"shsca",  2,   "shotpoint scalar 200"},
+    {"tval",   2,   "trace value meas. 202"},
+    {"tconst4",4,   "transduction const 204"},
+    {"tconst2",2,   "transduction const 208"},
+    {"tunits", 2,   "transduction units 210"},
+    {"device", 2,   "device identifier 212"},
+    {"tscalar",2,   "time scalar 214"},
+    {"stype",  2,   "source type 216"},
+    {"sendir", 4,   "source energy dir. 218"},
+    {"unknown",2,   "unknown 222"},
+    {"smeas4", 4,   "source measurement 224"},
+    {"smeas2", 2,   "source measurement 228"},
+    {"smeasu", 2,   "source measurement unit 230"},
+    {"unass1", 4,    "unassigned 232"},
+    {"unass2", 4,    "unassigned 236"},
 };
 
 static segy segy_key[SF_MAXKEYS];
@@ -907,6 +793,12 @@ const char* segykeyword (int k)
 /*< Find a SEGY key from its number >*/
 {
     return segy_key[k].name;
+}
+
+const char* segydesc (int k) 
+/*< Find a SEGY key description from its number >*/
+{
+    return segy_key[k].desc;
 }
 
 void head2segy(char* buf, const int* trace, int nk)

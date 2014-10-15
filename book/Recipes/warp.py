@@ -137,7 +137,7 @@ def warp3(name,       # name prefix
     def freqplot3(title):
         return '''
         window min1=%g max1=%g |
-        scale scale dscale=%g |
+        scale dscale=%g |
         byte clip=%g bias=%g bar=bar.rsf |
         grey3 title="%s" flat=n frame1=%d frame2=%d frame3=%d
         point1=0.75 point2=0.75

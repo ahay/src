@@ -19,29 +19,10 @@
 
 #include <rsf.h>
 
-static int n1;
-static float *data;
-
-static float middle(float x)
-{
-    int i1;
-    double left, right;
-
-    left = 0.0;
-    for (i1=0; i1 < n1/2; i1++ ) {
-	left += logf(x-data[i1]);
-    }
-    right = 0.0;
-    for (i1=n1/2; i1 < n1; i1++) {
-	right += logf(data[i1]-x);
-    }
-    return (float) (left-right);
-}
-
 int main(int argc, char* argv[]) 
 {
-    int i2, n2;
-    float median, median1, median2, mid, mid1, mid2;
+    int i2, n2, n1;
+    float median, median1, median2, *data;
     sf_file in, out;
 
     sf_init (argc,argv);
@@ -58,25 +39,9 @@ int main(int argc, char* argv[])
 	if (n1%2) { /* odd number */
 	    median = sf_quantile((n1-1)/2,n1,data);
 	} else { /* even number */
-	    /* Use method from J. Dellinger, 1984, What is the Median of {1,2,3,5} ?: SEP-41, 409-416. */
-
 	    median1 = sf_quantile(n1/2-1,n1,data);
 	    median2 = sf_quantile(n1/2,n1,data);
-
-	    if (median1 == median2) {
-		median = median1;
-	    } else {
-                median = 0.5*(median1+median2);
-		mid = middle(median);
-		mid1 = middle(median1);
-		mid2 = middle(median2);
-
-		if (mid > 0.0 && mid1 < 0.0) { 
-		    median = sf_zero (middle, median1, median, mid1, mid, SF_EPS, false); 
-		} else if (mid < 0.0 && mid2 > 0.0) {
-		    median = sf_zero (middle, median, median2, mid, mid2, SF_EPS, false); 
-		}
-	    }
+	    median = 0.5*(median1+median2);
 	}
 	sf_floatwrite(&median,1,out);
     }

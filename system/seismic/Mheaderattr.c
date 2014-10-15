@@ -27,7 +27,7 @@
 
 int main(int argc, char* argv[])
 {
-    bool segy;
+    bool segy, desc;
     int i1, i2, n1, n2;
     double *max=NULL, *min=NULL, *mean=NULL;
     int *inp=NULL, *indxmax=NULL, *indxmin=NULL;
@@ -82,6 +82,9 @@ int main(int argc, char* argv[])
     if (!sf_getbool("segy",&segy)) segy=true;
     /* if SEGY headers */
 
+    if (!sf_getbool("desc",&desc)) desc=false;
+    /* if describe keys */
+
     if (segy) {
 	segy_init(n1,head);
     } else {
@@ -89,27 +92,28 @@ int main(int argc, char* argv[])
     }
     
     /* put headers on table of numbers */
-    fprintf(stdout,"******************************************************************************* \n");
-    fprintf(stdout,"     key     \t            min     \t              max    \t          mean\n");
-    fprintf(stdout,"------------------------------------------------------------------------------- \n");
+    printf("******************************************************************************* \n");
+    printf("     key     \t            min     \t              max    \t          mean\n");
+    printf("------------------------------------------------------------------------------- \n");
     for (i1=0; i1 < n1; i1++) {
 	if (min[i1] != 0 || max[i1] != 0) {
 	    if (SF_INT == typehead) {
-		fprintf(stdout,"%-8s %4d %14ld @ %d\t%14ld @ %d\t%14g\n",
-			segykeyword(i1),i1,
-			lrint(min[i1]),indxmin[i1],
-			lrint(max[i1]),indxmax[i1],
-			mean[i1]/n2);
+		printf("%-8s %4d %14ld @ %d\t%14ld @ %d\t%14g\n",
+		       segykeyword(i1),i1,
+		       lrint(min[i1]),indxmin[i1],
+		       lrint(max[i1]),indxmax[i1],
+		       mean[i1]/n2);
 	    } else {
-		fprintf(stdout,"%-8s %4d %14g @ %d\t%14g @ %d\t%14g\n",
-			segykeyword(i1),i1,
-			min[i1],indxmin[i1],
-			max[i1],indxmax[i1],
-			mean[i1]/n2);
+		printf("%-8s %4d %14g @ %d\t%14g @ %d\t%14g\n",
+		       segykeyword(i1),i1,
+		       min[i1],indxmin[i1],
+		       max[i1],indxmax[i1],
+		       mean[i1]/n2);
 	    }
+	    if (desc) printf("[%s]\n",segydesc(i1));
 	} 
     }
-    fprintf(stdout,"******************************************************************************* \n");
+    printf("******************************************************************************* \n");
 
     exit(0);
 }

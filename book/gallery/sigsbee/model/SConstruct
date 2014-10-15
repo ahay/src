@@ -1,7 +1,5 @@
 from rsf.proj import *
-
-sys.path.insert(0,'..')
-import sigsbee
+from rsf.gallery import sigsbee
 
 for vel in ('migvel','strvel'):
     sigsbee.getvel(vel,vel)
@@ -47,9 +45,9 @@ Flow('exp','refl left right',
      nt=%d dt=%g 
      ''' % (nt,dt))
 
-Flow('sigexp','exp','transp | window f2=1000 n2=3201 | costaper nw2=25')
+Flow('sigexp0','exp','transp | window f2=1000 n2=3201 | costaper nw2=25')
 
-Result('sigexp','grey title="Exploding Reflector Data" ')
+Result('sigexp','sigexp0','grey title="Exploding Reflector Data" ')
 
 sigsbee.getshots('shots')
 Result('shots','byte | grey3 frame1=750 frame2=150 frame3=250 flat=n title=Shots point1=0.8')

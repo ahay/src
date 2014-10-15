@@ -25,8 +25,8 @@ int main(int argc, char* argv[])
     int nx, nx2, nk, nt, m, ix, ik, it, im, n2;
     float dt, f;
     float *curr, **wave;
-    sf_complex **lft, **rht, *cwave, *cwavem;
-    sf_file inp, out, left, right;
+    sf_complex **lft, **rht, *cwave, *cwavem, **mat;
+    sf_file inp, out, prop, left, right;
 
     sf_init(argc,argv);
     inp = sf_input("in");
@@ -50,31 +50,48 @@ int main(int argc, char* argv[])
     curr = sf_floatalloc(nx2);
     cwave = sf_complexalloc(nk);
 
-    left = sf_input("left");   /* Left matrix */
-    right = sf_input("right"); /* Right matrix */
-
-    if (SF_COMPLEX != sf_gettype(left) ||
-	SF_COMPLEX != sf_gettype(right)) sf_error("Need complex left and right");
-
-    if (!sf_histint(left,"n1",&n2) || n2 != nx) sf_error("Need n1=%d in left",nk);
-    if (!sf_histint(left,"n2",&m)) sf_error("Need n2=%d in left",m);
-
-    if (!sf_histint(right,"n1",&n2) || n2 != m) sf_error("Need n1=%d in right",m);
-    if (!sf_histint(right,"n2",&n2) || n2 != nk) sf_error("Need n2=%d in right",nx);
-
-    lft = sf_complexalloc2(nx,m);
-    rht = sf_complexalloc2(m,nk);
-
-    sf_complexread(lft[0],nx*m,left);
-    sf_complexread(rht[0],nk*m,right);
+    if (NULL != sf_getstring("right")) {
+	left = sf_input("left");   /* Left matrix */
+	right = sf_input("right"); /* Right matrix */
 	
-    sf_fileclose(left);
-    sf_fileclose(right);
+	if (SF_COMPLEX != sf_gettype(left) ||
+	    SF_COMPLEX != sf_gettype(right)) sf_error("Need complex left and right");
+	
+	if (!sf_histint(left,"n1",&n2) || n2 != nx) sf_error("Need n1=%d in left",nk);
+	if (!sf_histint(left,"n2",&m)) sf_error("Need n2=%d in left",m);
+	
+	if (!sf_histint(right,"n1",&n2) || n2 != m) sf_error("Need n1=%d in right",m);
+	if (!sf_histint(right,"n2",&n2) || n2 != nk) sf_error("Need n2=%d in right",nx);
+	
+	lft = sf_complexalloc2(nx,m);
+	rht = sf_complexalloc2(m,nk);
+	
+	sf_complexread(lft[0],nx*m,left);
+	sf_complexread(rht[0],nk*m,right);
+	
+	sf_fileclose(left);
+	sf_fileclose(right);
 
-    cwavem = sf_complexalloc(nk);
-    wave = sf_floatalloc2(nx,m);
+	cwavem = sf_complexalloc(nk);
+	wave = sf_floatalloc2(nx,m);
 
-    ifft1_allocate(cwavem);
+	ifft1_allocate(cwavem);
+
+	mat = NULL;
+    } else { /* Use propagator matrix (for testing) */
+	 prop = sf_input("prop");
+	 if (SF_COMPLEX != sf_gettype(prop)) sf_error("Need complex prop");
+
+	lft = NULL;
+	rht = NULL;
+
+	mat = sf_complexalloc2(nk,nx);
+	sf_complexread(mat[0],nx*nk,prop);
+	sf_fileclose(prop);
+
+	cwavem = NULL;
+	wave = NULL;
+    }
  
     /* read the initial data */
     sf_floatread (curr,nx,inp);
@@ -88,22 +105,34 @@ int main(int argc, char* argv[])
 	/* FFT: curr -> cwave */
 	fft1(curr,cwave);
 
-	for (im = 0; im < m; im++) {
-	    for (ik = 0; ik < nk; ik++) {
+	if (NULL == mat) {
+	    for (im = 0; im < m; im++) {
+		for (ik = 0; ik < nk; ik++) {
 #ifdef SF_HAS_COMPLEX_H
-		cwavem[ik] = cwave[ik]*rht[ik][im];
+		    cwavem[ik] = cwave[ik]*rht[ik][im];
 #else
-		cwavem[ik] = sf_cmul(cwave[ik],rht[ik][im]);
+		    cwavem[ik] = sf_cmul(cwave[ik],rht[ik][im]);
 #endif
+		}
+		/* Inverse FFT: cwavem -> wave[im] */
+		ifft1(wave[im],cwavem);
 	    }
-	    /* Inverse FFT: cwavem -> wave[im] */
-	    ifft1(wave[im],cwavem);
 	}
 
 	for (ix = 0; ix < nx; ix++) {
 	    f = 0.0f;
-	    for (im = 0; im < m; im++) {
-		f += crealf(lft[im][ix])*wave[im][ix];
+	    if (NULL == mat) {
+		for (im = 0; im < m; im++) {
+		    f += crealf(lft[im][ix])*wave[im][ix];
+		}
+	    } else {
+		for (ik = 0; ik < nk; ik++) {
+#ifdef SF_HAS_COMPLEX_H
+		    f += crealf(mat[ix][ik] * cwave[ik]);
+#else
+		    f += crealf(sf_cmul(mat[ix][ik],cwave[ik]));
+#endif
+		}
 	    }
 	    curr[ix] = f;
 	} 
