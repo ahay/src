@@ -122,8 +122,8 @@ int tukey(float a, float cutoff, float vm, vector<float>& tuk)
 {
     float kmax = hypot(ksz[nkzs-1],ksx[nkxs-1]);
     float kbond;
-    kbond = cutoff/vm;
-    if (kbond > k) sf_error("cutoff wavenumber %f larger than maximum wavenumber %f!",kbond,kmax);
+    kbond = 2*SF_PI*cutoff/vm;
+    if (kbond > k) sf_warning("cutoff wavenumber %f larger than maximum wavenumber %f!",kbond,kmax);
     for (int ikx=0; ikx<nkxs; ikx++) {
 	for (int ikz=0; ikz<nkzs; ikz++) {
    	    float k = hypot(ksz[ikz],ksx[ikx]);
@@ -164,7 +164,7 @@ int main(int argc, char** argv)
     par.get("compen",compen,false); // compensate attenuation, only works if mode=0,1 (viscoacoustic)
     if (mode==0 || mode==1)
 	if (compen) {
-	    par.get("taper",aa,0.5); // taper ratio for tukey window
+	    par.get("taper",aa,0.2); // taper ratio for tukey window
 	    par.get("cutoff",cut,250.); // cutoff frequency
 	    par.get("vmax",vmax,6000.); // maximum velocity
 	    sf_warning("Compensating for attenuation!");
