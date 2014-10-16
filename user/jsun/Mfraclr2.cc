@@ -118,18 +118,20 @@ int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
     return 0;
 }
 
-int tukey(float a, float cutoff, vector<float>& tuk)
+int tukey(float a, float cutoff, float vm, vector<float>& tuk)
 {
-    float k = hypot(ksz[nkzs-1],ksx[nkxs-1]);
-    if (cutoff > k) sf_error("cutoff frequency larger than maximum frequency %f!",k);
+    float kmax = hypot(ksz[nkzs-1],ksx[nkxs-1]);
+    float kbond;
+    kbond = cutoff/vm;
+    if (kbond > k) sf_error("cutoff wavenumber %f larger than maximum wavenumber %f!",kbond,kmax);
     for (int ikx=0; ikx<nkxs; ikx++) {
 	for (int ikz=0; ikz<nkzs; ikz++) {
-	    k = hypot(ksz[ikz],ksx[ikx]);
+   	    float k = hypot(ksz[ikz],ksx[ikx]);
 	    int ik = ikz+ikx*nkzs;
-	    if (k > cutoff)
+	    if (k > kbond)
 		tuk[ik] = 0.;
-	    else if (k >= cutoff*(1.-0.5*a))
-		tuk[ik] = 0.5*(1.+cos(SF_PI*(2.*k/(a*cutoff)-2./a+1.)));
+	    else if (k >= kbond*(1.-0.5*a))
+		tuk[ik] = 0.5*(1.+cos(SF_PI*(2.*k/(a*kbond)-2./a+1.)));
 	    else
 		tuk[ik] = 1.;
 	}
@@ -158,12 +160,13 @@ int main(int argc, char** argv)
     
     par.get("rev",rev,false); // reverse propagation
     par.get("mode",mode,0); // mode of propagation: 0 is viscoacoustic (default); 1 is loss-dominated; 2 is dispersion dominated; 3 is acoustic
-    float aa,cut;
+    float aa,cut,vmax;
     par.get("compen",compen,false); // compensate attenuation, only works if mode=0,1 (viscoacoustic)
     if (mode==0 || mode==1)
 	if (compen) {
 	    par.get("taper",aa,0.5); // taper ratio for tukey window
 	    par.get("cutoff",cut,250.); // cutoff frequency
+	    par.get("vmax",vmax,6000.); // maximum velocity
 	    sf_warning("Compensating for attenuation!");
 	}
     par.get("sign",sign,0); // sign of solution: 0 is positive, 1 is negative
@@ -267,7 +270,7 @@ int main(int argc, char** argv)
 	} 
     } else {
 	vector<float> lpass(n);
-	tukey(aa, cut, lpass);
+	tukey(aa, cut, vmax, lpass);
 	for (int k1=0; k1 < n; k1++) {
 	    for (int k2=0; k2 < n2; k2++) {
 		int k = k2 + k1*n2;
