@@ -1,3 +1,6 @@
 from rsf.tex import *
 
+import os
+os.environ['PSTEXPENOPTS'] = 'color=y fat=1 fatmult=1.5 force=y forcebw=y'
+
 End(color='ALL')
