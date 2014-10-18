@@ -464,6 +464,8 @@ int main(int argc, char* argv[])
 	
 		/*Apply boundary & check zero thickness---------------------------------------------------------------------------*/
 		
+		dk[0] = 0;
+		dk[nr2+1] = 0;
 		xxtem[0] = xx[0]; /*Fixed source*/
 		xxtem[nr2+1] = xx[nr2+1]; /*Fixed receiver*/
 		int t,a,b1,b2,b3; /* Counter*/
