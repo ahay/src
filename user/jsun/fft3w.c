@@ -51,7 +51,7 @@ int fft3_init(bool cmplx1        /* if complex transform */,
 #ifdef SF_HAS_FFTW
 #ifdef _OPENMP
     fftw_init_threads();
-    sf_warning("Using threaded FFTW3! \n");
+    sf_warning("Using threaded FFTW3! %d\n",omp_get_max_threads());
 #endif
 #else
     int i2, i3;

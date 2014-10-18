@@ -170,16 +170,17 @@ int main(int argc, char** argv)
     velz >> vz;
     eta >> q;
     theta >> t;
+    
 
+    par.get("approx",approx,2); // Type of approximation (0=exact 1=zone 2=acoustic)
+    par.get("relation",relat,3); // Type of q relationship (0=shale, 1=sand, 2=carbonate, default being smallest error)
+   
     /* Get vs*/
     if (approx == 0 || approx==1) {
 	iRSF vels("vels");
 	vs.resize(m);
 	vels >> vs;
-    }
-
-    par.get("approx",approx,2); // Type of approximation (0=exact 1=zone 2=acoustic)
-    par.get("relation",relat,3); // Type of q relationship (0=shale, 1=sand, 2=carbonate, default being smallest error)
+    } 
     
     /* Invert for cij*/
     if (approx == 0 || approx == 1) {
