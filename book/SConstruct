@@ -30,6 +30,7 @@ nonreproducible = '''
 geo391/hw2/sorting
 rsf/bash/plot
 rsf/rsf/plplot
+rsf/tutorials/colormaps
 slim/geo2008NewInsightsPareto/geop
 slim/geo2008NewInsightsPareto/pareto
 slim/slimUserManual/sffdct
