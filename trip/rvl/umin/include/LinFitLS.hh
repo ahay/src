@@ -330,8 +330,10 @@ namespace RVLUmin {
                 
                 Vector<Scalar> tmpd(lop.getRange());
                 lop.applyOp(q,tmpd);
-                sblop.applyAdjOp(dx,tmpd,g);
-                g.scale(-1.0f);
+                sblop.applyAdjOp(dx,tmpd,tmpb);
+                tmpb.scale(-1.0f);
+                preop.applyOp(tmpb,g);
+
             }
             catch (RVLException & e) {
                 e<<"\ncalled from PIVAObj::applyGradient\n";
