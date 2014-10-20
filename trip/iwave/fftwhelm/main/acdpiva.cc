@@ -35,6 +35,7 @@ using RVL::OperatorEvaluation;
 using RVL::LinearOp;
 using RVL::LinearOpFO;
 using RVL::OpComp;
+using RVL::CompLinearOp;
 using RVL::SymmetricBilinearOp;
 using RVL::AssignFilename;
 using RVL::AssignParams;
@@ -57,6 +58,7 @@ using TSOpt::IOTask;
 using TSOpt::IWaveOp;
 using TSOpt::SEGYTaperMute;
 using TSOpt::GridMaskOp;
+using TSOpt::GridWindowOp;
 using TSOpt::GridHelmFFTWOp;
 
 #ifdef IWAVE_USE_MPI
@@ -199,31 +201,26 @@ int main(int argc, char ** argv) {
             }
 #endif
             // assign window widths - default = 0;
-            RPNT swind,ewind;
-            RASN(swind,RPNT_0);
-            RASN(ewind,RPNT_0);
-            swind[0]=valparse<float>(*pars,"sww1",0.0f);
-            swind[1]=valparse<float>(*pars,"sww2",0.0f);
-            swind[2]=valparse<float>(*pars,"sww3",0.0f);
-            ewind[0]=valparse<float>(*pars,"eww1",0.0f);
-            ewind[1]=valparse<float>(*pars,"eww2",0.0f);
-            ewind[2]=valparse<float>(*pars,"eww3",0.0f);
+            RPNT wind;
+            RASN(wind,RPNT_0);
+            wind[0]=valparse<float>(*pars,"ww1",0.0f);
+            wind[1]=valparse<float>(*pars,"ww2",0.0f);
+            wind[2]=valparse<float>(*pars,"ww3",0.0f);
             
-            GridDerivOp dsop(op.getDomain(),dsdir,valparse<float>(*pars,"DSWeight",0.0f));
             // need to read in model space for bg input to GridWindowOp
             Vector<ireal> m_in(op.getDomain());
             AssignFilename minfn(valparse<std::string>(*pars,"csqext"));
             Components<ireal> cmin(m_in);
             cmin[0].eval(minfn);
-            GridMaskOp mop(op.getDomain(),m_in,swind,ewind);
-            OperatorEvaluation<float> mopeval(mop,m_in);
-            LinearOp<float> const & lmop=mopeval.getDeriv();
+            GridWindowOp wop(op.getDomain(),m_in,wind);
+            OperatorEvaluation<float> wopeval(wop,m_in);
+            LinearOp<float> const & lwop=wopeval.getDeriv();
             
             // choice of preop is placeholder
             ScaleOpFwd<float> rgop(op.getDomain(),valparse<float>(*pars,"eps",1.0f));
+            GridDerivOp dsop0(op.getDomain(),dsdir,valparse<float>(*pars,"DSWeight",0.0f));
             
-            //            OpComp<float> dsop(mop,dsop0);
-            //            OpComp<float> fop(mop,op);
+            CompLinearOp<float> dsop(lwop,dsop0);
             TensorOp<float> top(op,rgop);
             
             // create RHS of block system
@@ -249,16 +246,24 @@ int main(int argc, char ** argv) {
             IPNT sbc;
             sbc[0]=valparse<int>(*pars,"sbc0",1);
             sbc[1]=valparse<int>(*pars,"sbc1",0);
+            sbc[2]=valparse<int>(*pars,"sbc2",0);
             IPNT ebc;
             ebc[0]=valparse<int>(*pars,"ebc0",1);
             ebc[1]=valparse<int>(*pars,"ebc1",0);
+            ebc[2]=valparse<int>(*pars,"ebc2",0);
             float power=0.0f;
             float datum=0.0f;
             power=valparse<float>(*pars,"power",0.0f);
             datum=valparse<float>(*pars,"datum",0.0f);
             
             GridHelmFFTWOp hop(op.getDomain(),w_arr,sbc,ebc,power,datum);
-            PIVAObj<float> f(top,hop,dsop,td,dm0,pd,res);
+            CompLinearOp<float> preop(lwop,hop);
+            
+//            if (retrieveGlobalRank() == 0) {
+//                cerr << "\n before hop.applyOp \n";
+//            }
+            //hop.applyOp(m_in,dm);
+            PIVAObj<float> f(top,preop,dsop,td,dm0,pd,res);
             GridExtendOp g(dom,op.getDomain());
             FcnlOpComp<float> gf(f,g);
             
@@ -292,79 +297,88 @@ int main(int argc, char ** argv) {
                 cgrad[0].eval(gradfn);
                 //strgrad << "\n getgradient norm = " << (Fm.getGradient()).norm() << endl;
                 grad.copy(Fm.getGradient());
+
+                FunctionalBd<float> const & f1 =
+                dynamic_cast<FunctionalBd<float> const &>(Fm.getFunctional()); // current clone of fbd
+                FcnlOpComp<float> const & f2 =
+                dynamic_cast<FcnlOpComp<float> const &>(f1.getFunctional()); // function in fbd = gf = fcnaopcomp
+                FunctionalEvaluation<float> const & fe2 = f2.getFcnlEval();  // current feval part of gf
+                PIVAObj<float > const & f3 =
+                dynamic_cast<PIVAObj<float> const & >(fe2.getFunctional());  // current clone of PIVAObj
+                dm.copy(f3.getLSSoln()); // copy dx from PIVAObj
             }
-            
-            LBFGSBT<float> alg(fbd,m,
-                               valparse<float>(*pars,"InvHessianScale",1.0f),
-                               valparse<int>(*pars,"MaxInvHessianUpdates",5),
-                               valparse<int>(*pars,"MaxLineSrchSteps",10),
-                               valparse<bool>(*pars,"VerboseDisplay",true),
-                               valparse<float>(*pars,"FirstStepLength",1.0f),
-                               valparse<float>(*pars,"GAStepAcceptThresh",0.1f),
-                               valparse<float>(*pars,"GAStepDoubleThresh",0.9f),
-                               valparse<float>(*pars,"LSBackTrackFac",0.5f),
-                               valparse<float>(*pars,"LSDoubleFac",1.8f),
-                               valparse<float>(*pars,"MaxFracDistToBdry",1.0),
-                               valparse<float>(*pars,"LSMinStepFrac",1.e-06),
-                               valparse<int>(*pars,"MaxLBFGSIter",3),
-                               valparse<float>(*pars,"AbsGradThresh",0.0),
-                               valparse<float>(*pars,"RelGradThresh",1.e-2),
-                               res);
-            if (valparse<int>(*pars,"MaxLBFGSIter",3) <= 0) {
-                float val = alg.getFunctionalEvaluation().getValue();
-                res<<"=========================== LINFITLS ==========================\n";
-                res<<"value of IVA functional = "<<val<<"\n";
-                res<<"=========================== LINFITLS ==========================\n";
-            }
-            else {
-                alg.run();
-            }
-            
-            // fish reflectivity out of mess
-            // LBFGSBT -> FunctionalEval -> Functional=FunctionalBd -> Functional=FcnlOpComp ->
-            // FunctionalEval = LSLinFit Eval -> Functional -> LSSoln
-            FunctionalEvaluation<float> const & fe1 = alg.getFunctionalEvaluation(); // eval of fbd
-            FunctionalBd<float> const & f1 =
-            dynamic_cast<FunctionalBd<float> const &>(fe1.getFunctional()); // current clone of fbd
-            FcnlOpComp<float> const & f2 =
-            dynamic_cast<FcnlOpComp<float> const &>(f1.getFunctional()); // function in fbd = gf = fcnaopcomp
-            FunctionalEvaluation<float> const & fe2 = f2.getFcnlEval(); // current feval part of gf
-            PIVAObj<float> const & f3 =
-            dynamic_cast<PIVAObj<float> const & >
-            (fe2.getFunctional()); // current clone of LSLinFit
-            dm.copy(f3.getLSSoln()); // copy dx from LSLinFit
-            
-            std::string dataest = valparse<std::string>(*pars,"dataest","");
-            std::string datares = valparse<std::string>(*pars,"datares","");
-            std::string normalres = valparse<std::string>(*pars,"normalres","");
-            if (dataest.size()>0) {
-                OperatorEvaluation<float> gopeval(g,m);
-                OperatorEvaluation<float> opeval(op,gopeval.getValue());
-                Vector<float> est(op.getRange());
-                AssignFilename estfn(dataest);
-                est.eval(estfn);
-                opeval.getDeriv().applyOp(dm,est);
-                if (datares.size()>0) {
-                    Vector<float> res(op.getRange());
-                    AssignFilename resfn(datares);
-                    res.eval(resfn);
-                    res.copy(est);
-                    res.linComb(-1.0f,mdd);
-                    if (normalres.size()>0){
-                        OperatorEvaluation<float> topeval(top,gopeval.getValue());
-                        Vector<float> nres(op.getDomain());
-                        AssignFilename nresfn(normalres);
-                        nres.eval(nresfn);
-                        Vector<float> tres(top.getRange());
-                        Components<float> ctres(tres);
-                        ctres[0].copy(res);
-                        ctres[1].zero();
-                        topeval.getDeriv().applyAdjOp(tres,nres);
-                    }
-                }
-            }
-            
-            if (retrieveRank() == 0) {
+//            
+//            LBFGSBT<float> alg(fbd,m,
+//                               valparse<float>(*pars,"InvHessianScale",1.0f),
+//                               valparse<int>(*pars,"MaxInvHessianUpdates",5),
+//                               valparse<int>(*pars,"MaxLineSrchSteps",10),
+//                               valparse<bool>(*pars,"VerboseDisplay",true),
+//                               valparse<float>(*pars,"FirstStepLength",1.0f),
+//                               valparse<float>(*pars,"GAStepAcceptThresh",0.1f),
+//                               valparse<float>(*pars,"GAStepDoubleThresh",0.9f),
+//                               valparse<float>(*pars,"LSBackTrackFac",0.5f),
+//                               valparse<float>(*pars,"LSDoubleFac",1.8f),
+//                               valparse<float>(*pars,"MaxFracDistToBdry",1.0),
+//                               valparse<float>(*pars,"LSMinStepFrac",1.e-06),
+//                               valparse<int>(*pars,"MaxLBFGSIter",3),
+//                               valparse<float>(*pars,"AbsGradThresh",0.0),
+//                               valparse<float>(*pars,"RelGradThresh",1.e-2),
+//                               res);
+//            if (valparse<int>(*pars,"MaxLBFGSIter",3) <= 0) {
+//                float val = alg.getFunctionalEvaluation().getValue();
+//                res<<"=========================== LINFITLS ==========================\n";
+//                res<<"value of IVA functional = "<<val<<"\n";
+//                res<<"=========================== LINFITLS ==========================\n";
+//            }
+//            else {
+//                alg.run();
+//            }
+//            
+//            // fish reflectivity out of mess
+//            // LBFGSBT -> FunctionalEval -> Functional=FunctionalBd -> Functional=FcnlOpComp ->
+//            // FunctionalEval = LSLinFit Eval -> Functional -> LSSoln
+//            FunctionalEvaluation<float> const & fe1 = alg.getFunctionalEvaluation(); // eval of fbd
+//            FunctionalBd<float> const & f1 =
+//            dynamic_cast<FunctionalBd<float> const &>(fe1.getFunctional()); // current clone of fbd
+//            FcnlOpComp<float> const & f2 =
+//            dynamic_cast<FcnlOpComp<float> const &>(f1.getFunctional()); // function in fbd = gf = fcnaopcomp
+//            FunctionalEvaluation<float> const & fe2 = f2.getFcnlEval(); // current feval part of gf
+//            PIVAObj<float> const & f3 =
+//            dynamic_cast<PIVAObj<float> const & >
+//            (fe2.getFunctional()); // current clone of LSLinFit
+//            dm.copy(f3.getLSSoln()); // copy dx from LSLinFit
+//            
+//            std::string dataest = valparse<std::string>(*pars,"dataest","");
+//            std::string datares = valparse<std::string>(*pars,"datares","");
+//            std::string normalres = valparse<std::string>(*pars,"normalres","");
+//            if (dataest.size()>0) {
+//                OperatorEvaluation<float> gopeval(g,m);
+//                OperatorEvaluation<float> opeval(op,gopeval.getValue());
+//                Vector<float> est(op.getRange());
+//                AssignFilename estfn(dataest);
+//                est.eval(estfn);
+//                opeval.getDeriv().applyOp(dm,est);
+//                if (datares.size()>0) {
+//                    Vector<float> res(op.getRange());
+//                    AssignFilename resfn(datares);
+//                    res.eval(resfn);
+//                    res.copy(est);
+//                    res.linComb(-1.0f,mdd);
+//                    if (normalres.size()>0){
+//                        OperatorEvaluation<float> topeval(top,gopeval.getValue());
+//                        Vector<float> nres(op.getDomain());
+//                        AssignFilename nresfn(normalres);
+//                        nres.eval(nresfn);
+//                        Vector<float> tres(top.getRange());
+//                        Components<float> ctres(tres);
+//                        ctres[0].copy(res);
+//                        ctres[1].zero();
+//                        topeval.getDeriv().applyAdjOp(tres,nres);
+//                    }
+//                }
+//            }
+//            
+            if (retrieveGlobalRank()==0) {
                 std::string outfile = valparse<std::string>(*pars,"outfile","");
                 if (outfile.size()>0) {
                     ofstream outf(outfile.c_str());

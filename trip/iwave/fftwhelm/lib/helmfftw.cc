@@ -122,7 +122,11 @@ namespace TSOpt {
             indata[i[1]]=0.0f;
             outdata[i[1]]=0.0f;
         }
-        
+//        if (retrieveGlobalRank() == 0) {
+//            cerr << "\n before HelmFFTWOp::apply \n";
+//            cerr << "\n RARR_MAX_NDIM=" << RARR_MAX_NDIM << endl;
+//            cerr << "\n dimx=" << dimx << endl;
+//        }        
 #if RARR_MAX_NDIM > 0
       if (dimx==1) {
           for (i[0]=s[0];i[0]<=e[0];i[0]++) {
@@ -262,6 +266,7 @@ namespace TSOpt {
             for (i[2]=s[2];i[2]<=e[2];i[2]++) {
                 for (i[1]=s[1];i[1]<=e[1];i[1]++) {
                     for (i[0]=s[0];i[0]<=e[0];i[0]++) {
+                        //cerr << " id = " << ((i[2]-s[2])*f2c[1]+(i[1]-s[1]))*f2c[0]+i[0]-s[0] << endl;
                         indata[((i[2]-s[2])*f2c[1]+(i[1]-s[1]))*f2c[0]+i[0]-s[0]]=ray._s3[sbc[2]*(e[2]+s[2]-2*i[2])+i[2]][sbc[1]*(e[1]+s[1]-2*i[1])+i[1]][sbc[0]*(e[0]+s[0]-2*i[0])+i[0]];//e[0]-i[0]+s[0]];
                     }
                 }
@@ -400,19 +405,21 @@ namespace TSOpt {
 	  throw e;	  
 	}
 
-	if (gdom->getGrid().dim != 1 && gdom->getGrid().dim != 2 && gdom->getGrid().dim != 3) {
-	  RVLException e;
-	  e<<"Error: GridHelmFFTWOp::apply\n";
-	  e<<"  current implementation is 2D and 3D only\n";
-	  throw e;
-	}
-
 	IPNT n_arr;
 	RPNT d_arr;
         if (retrieveGlobalRank() == 0) {
+	  if (gdom->getGrid().dim != 1 && gdom->getGrid().dim != 2 && gdom->getGrid().dim != 3) {
+	    RVLException e;
+	    e<<"Error: GridHelmFFTWOp::apply\n";
+	    e<<"  current implementation is 2D and 3D only\n";
+	    throw e;
+	  }
 	  get_d(d_arr,gdom->getGrid());
 	  get_n(n_arr,gdom->getGrid());
 	}
+//        if (retrieveGlobalRank() == 0) {
+//                cerr << "\n In GridHelmFFTWOp::apply \n";
+//            }
 	HelmFFTWFO fo(n_arr,d_arr,weights,sbc,ebc,power,datum);
 	MPISerialFunctionObject<float> mpifo(fo);
 	cy[j].eval(mpifo,cx[j]);    

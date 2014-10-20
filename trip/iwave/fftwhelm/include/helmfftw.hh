@@ -120,6 +120,9 @@ namespace TSOpt {
                 RASN(weights,_weights);
                 IASN(sbc,_sbc);
                 IASN(ebc,_ebc);
+//                if (retrieveGlobalRank() == 0) {
+//                cerr << "\n In GridHelmFFTWOp \n";
+//            }
             }
             catch (RVLException & e) {
                 e<<"\ncalled from GridHelmFFTWOp constructor\n";
