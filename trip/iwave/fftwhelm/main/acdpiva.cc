@@ -200,20 +200,32 @@ int main(int argc, char ** argv) {
                 throw e;
             }
 #endif
+  	    RPNT swind,ewind;
+ 	    RASN(swind,RPNT_0);
+  	    RASN(ewind,RPNT_0);
+ 	    swind[0]=valparse<float>(*pars,"sww1",0.0f);
+ 	    swind[1]=valparse<float>(*pars,"sww2",0.0f);
+  	    swind[2]=valparse<float>(*pars,"sww3",0.0f);
+  	    ewind[0]=valparse<float>(*pars,"eww1",0.0f);
+ 	    ewind[1]=valparse<float>(*pars,"eww2",0.0f);
+     	    ewind[2]=valparse<float>(*pars,"eww3",0.0f);
+
+
             // assign window widths - default = 0;
-            RPNT wind;
-            RASN(wind,RPNT_0);
-            wind[0]=valparse<float>(*pars,"ww1",0.0f);
-            wind[1]=valparse<float>(*pars,"ww2",0.0f);
-            wind[2]=valparse<float>(*pars,"ww3",0.0f);
+            //RPNT wind;
+            //RASN(wind,RPNT_0);
+            //wind[0]=valparse<float>(*pars,"ww1",0.0f);
+            //wind[1]=valparse<float>(*pars,"ww2",0.0f);
+            //wind[2]=valparse<float>(*pars,"ww3",0.0f);
             
             // need to read in model space for bg input to GridWindowOp
             Vector<ireal> m_in(op.getDomain());
             AssignFilename minfn(valparse<std::string>(*pars,"csqext"));
             Components<ireal> cmin(m_in);
             cmin[0].eval(minfn);
-            GridWindowOp wop(op.getDomain(),m_in,wind);
-            OperatorEvaluation<float> wopeval(wop,m_in);
+            //GridWindowOp wop(op.getDomain(),m_in,wind);
+            GridMaskOp mop(op.getDomain(),m_in,swind,ewind);
+            OperatorEvaluation<float> wopeval(mop,m_in);
             LinearOp<float> const & lwop=wopeval.getDeriv();
             
             // choice of preop is placeholder
@@ -221,6 +233,7 @@ int main(int argc, char ** argv) {
             GridDerivOp dsop0(op.getDomain(),dsdir,valparse<float>(*pars,"DSWeight",0.0f));
             
             CompLinearOp<float> dsop(lwop,dsop0);
+            //OpComp<float> cop(lwop,op);
             TensorOp<float> top(op,rgop);
             
             // create RHS of block system
@@ -251,12 +264,14 @@ int main(int argc, char ** argv) {
             ebc[0]=valparse<int>(*pars,"ebc0",1);
             ebc[1]=valparse<int>(*pars,"ebc1",0);
             ebc[2]=valparse<int>(*pars,"ebc2",0);
-            float power=0.0f;
+            float power=0.0f; //powersm=0.0f;
             float datum=0.0f;
             power=valparse<float>(*pars,"power",0.0f);
+            //powersm=valparse<float>(*pars,"powersm",-1.0f);
             datum=valparse<float>(*pars,"datum",0.0f);
             
             GridHelmFFTWOp hop(op.getDomain(),w_arr,sbc,ebc,power,datum);
+            //GridHelmFFTWOp helmop(op.getDomain(),w_arr,sbc,ebc,powersm,datum);
             CompLinearOp<float> preop(lwop,hop);
             
 //            if (retrieveGlobalRank() == 0) {
