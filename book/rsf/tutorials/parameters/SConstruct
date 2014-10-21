@@ -95,15 +95,22 @@ Result('hcanny',
 
 Flow('hclean','horizon','impl2 rect1=10 rect2=10 tau=1')
 
-Flow('hcanny2','hclean','canny')
+Flow('hcanny2','hclean','canny | dd type=float')
 
 Result('hcanny2',
      '''
-     dd type=float | 
      grey title="Canny filter 2" 
      yreverse=n transp=n screenwd=11.9 screenht=9.26
      ''')
 
 # Overlay plot
+
+Result('overlay','horizon hcanny2',
+       '''
+       math edge=${SOURCES[1]} output="input+500*(2-edge)" |
+       grey color=xC bias=950 clip=170 scalebar=y title=Horizon 
+       yreverse=n transp=n screenwd=11.9 screenht=9.26 cliprgb=0
+       maxval=1120
+       ''')
 
 End()

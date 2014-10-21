@@ -36,8 +36,9 @@ void vp_name2coltab (   const char *colname,    /* color table name */
 			/*@out@*/ float *blue)
 /*< Create a color table. nocol is between 2 and 256. >*/
 {
-    int   i, ic, c, clip, reverse;
-    float h, redsave, gray, hnocol, angle, amp, cosa, sina;
+    bool clip;
+    int   i, ic, c, reverse;
+    float h, redsave, gray, hnocol, angle, amp, cosa, sina, cliprgb[3];
     char *rsfroot, filename[PATH_MAX];
     FILE *colfile;
     const float start=0.5, rots=-1.5, hue=1.0;
@@ -46,8 +47,8 @@ void vp_name2coltab (   const char *colname,    /* color table name */
     if (strlen(colname) > 0) c = colname[0];
     else                     c = 'i';
 
-    if (strlen(colname) > 1 && colname[1] == 'C') clip = 1;
-    else                                          clip = 0;
+    if (strlen(colname) > 1 && colname[1] == 'C') clip = true;
+    else                                          clip = false;
  
     if (isupper(c)) reverse = 1;
     else            reverse = 0;
@@ -372,13 +373,20 @@ void vp_name2coltab (   const char *colname,    /* color table name */
         if (blue[ic]  > 1.) blue[ic]  = 1.;
     }       
     
-    /* If clipping flagged, change the 2 values at either end to red */
-    if (clip == 1) 
+    /* If clipping flagged, change the 2 values at either end */
+    if (clip) 
     {
-        red[0]       = 1.; green[0]       = 0.; blue[0]       = 0.;
-        red[1]       = 1.; green[1]       = 0.; blue[1]       = 0.;
-        red[nocol-2] = 1.; green[nocol-2] = 0.; blue[nocol-2] = 0.;
-        red[nocol-1] = 1.; green[nocol-1] = 0.; blue[nocol-1] = 0.;
+	if (!sf_getfloats("cliprgb",cliprgb,3)) {
+	    /* default is red */
+	    cliprgb[0]=1.;
+	    cliprgb[1]=0.;
+	    cliprgb[2]=0.;
+	}
+	
+        red[0]       = cliprgb[0]; green[0]       = cliprgb[1]; blue[0]       = cliprgb[2];
+        red[1]       = cliprgb[0]; green[1]       = cliprgb[1]; blue[1]       = cliprgb[2];
+        red[nocol-2] = cliprgb[0]; green[nocol-2] = cliprgb[1]; blue[nocol-2] = cliprgb[2];
+        red[nocol-1] = cliprgb[0]; green[nocol-1] = cliprgb[1]; blue[nocol-1] = cliprgb[2];
     }
 }
 

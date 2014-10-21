@@ -1,0 +1,48 @@
+from rsf.proj import *
+
+# Download input trace
+
+trace = 'trace_il1190_xl1155.trace'
+
+Fetch(trace,'data',
+      server='https://raw.githubusercontent.com',
+      top='seg/tutorials/master/1410_Phase')
+
+# Convert format to RSF
+
+Flow('trace',trace,
+     '''
+     echo n1=1503 in=$SOURCE data_format=ascii_float 
+     o1=0 d1=0.004 label1=Time unit1=s |
+     dd form=native | window f1=2
+     ''')
+
+# Apply Hilbert transform
+
+Flow('hilb','trace','envelope hilb=y')
+
+# Compute envelope and phase
+
+Flow('envp','trace hilb','math h=${SOURCES[1]} output="sqrt(input*input+h*h)" ')
+Flow('envm','envp','scale dscale=-1')
+
+Flow('phase','trace hilb','math h=${SOURCES[1]} output="h&input" ')
+
+Plot('trace','trace hilb envp envm',
+     '''
+     cat ${SOURCES[1:4]} axis=2 |
+     window f1=500 n1=201 | 
+     graph title="Trace Amplitudes" dash=0,1,0,0 plotcol=5,5,4,4
+     ''')
+
+Plot('phase',
+     '''
+     window f1=500 n1=201 | 
+     graph title="Instantaneous Phase" plotcol=3 label2=Degree unit2=radians
+     ''')
+
+Result('trace','trace phase','OverUnderAniso')
+
+# Repeat on 2-D section
+
+End()
