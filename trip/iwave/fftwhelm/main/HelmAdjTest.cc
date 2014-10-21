@@ -101,16 +101,31 @@ int main(int argc, char ** argv) {
     float axy  = iny.inner(outx);
     float xaty = inx.inner(outy);
       
-    cerr << "<Ax,    y> = " << axy << endl;
-    cerr << "< x, A^Ty> = " << xaty << endl;
-    cerr << " |Ax| * |y| = " << axnm * ynm << endl;
-    cerr << " adjvalue = " << abs(axy - xaty)/(axnm*ynm) << endl;
+    /* output stream */
+    std::stringstream res;
+    res<<scientific;
+      
+    res << "<Ax,    y> = " << axy << endl;
+    res << "< x, A^Ty> = " << xaty << endl;
+    res << " |Ax| * |y| = " << axnm * ynm << endl;
+    res << " adjvalue = " << abs(axy - xaty)/(axnm*ynm) << endl;
       
     GridHelmFFTWOp op1(sp,weights,sbc,ebc,power,datum);
-    int seed = 10001; //getpid();
+    int seed = getpid();
     RVL::RVLRandomize<float> rnd(seed,-1.0f,1.0f);
-    AdjointTest(op1,rnd,cerr);
+    AdjointTest(op1,rnd,res);
       
+      if (retrieveRank() == 0) {
+          std::string outfile = valparse<std::string>(*pars,"outfile","");
+          if (outfile.size()>0) {
+              ofstream outf(outfile.c_str());
+              outf<<res.str();
+              outf.close();
+          }
+          else {
+              cout<<res.str();
+          }
+      }
 
     ps_delete(&pars);
 #ifdef IWAVE_USE_MPI

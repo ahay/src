@@ -98,29 +98,29 @@ for file in fetches.keys():
 Flow('velorig', 'velocity.HH', 'dd form=native')
 Flow('vel','velocity.HH','dd form=native | window j1=' + str(SUBS) + ' j2=' + str(SUBS))
 
-Flow('csqbase','vel','add mode=p < vel.rsf vel.rsf | put id1=0 id2=1 dim=2 gdim=2 ')
+Flow('csq','vel','add mode=p < vel.rsf vel.rsf | put id1=0 id2=1 dim=2 gdim=2 ')
 
-###### add pml layers to the original model
-Flow('rext','csqbase', 'window f2=' + str(N2-1) + ' n2=1 | spray axis=2 d=' + SDX +' n='+str(PML) + '|put o3=0 n3=1 d3=1 n4=1 o4=0 d4=1')
-Flow('lext','csqbase', 'window f2=0 n2=1 | spray axis=2 d=' + SDX +' n='+str(PML) + '| put o2=' + str(-PML*DX) + ' o3=0 n3=1 d3=1 n4=1 o4=0 d4=1')
-Flow('rcsq',['csqbase', 'rext'],'cat axis=2 d=' + SDX + ' csqbase.rsf rext.rsf',stdin=0)
-Flow('lcsq',['lext', 'rcsq'],'cat axis=2 d=' + SDX + ' lext.rsf rcsq.rsf',stdin=0)
-Flow('sext','lcsq', 'window f1='+ str(N1-1) + ' n1=1 | spray axis=1 d=' + SDX + ' n='+str(PML))
-Flow('next','lcsq', 'window f1=0 n1=1 | spray axis=1 d=' + SDX + ' n='+str(PML) + '|put o1=' + str(-PML*DX) + ' n3=1 n4=1 n5=1 n6=1 d3=1 d4=1 d5=1 d6=1 o3=0 o4=0 o5=0 o6=0')
-
-# csq for freesurface case
-Flow('csq',['sext', 'lcsq'],'cat axis=1 d=' + SDX + ' lcsq.rsf sext.rsf | sfput o2=0.0 ',stdin=0)
-# csq for pml at the top of the model
-Flow('csq_2',['next', 'csq'],'cat axis=1 d=' + SDX + '  next.rsf csq.rsf',stdin=0)
-
+####### add pml layers to the original model
+#Flow('rext','csqbase', 'window f2=' + str(N2-1) + ' n2=1 | spray axis=2 d=' + SDX +' n='+str(PML) + '|put o3=0 n3=1 d3=1 n4=1 o4=0 d4=1')
+#Flow('lext','csqbase', 'window f2=0 n2=1 | spray axis=2 d=' + SDX +' n='+str(PML) + '| put o2=' + str(-PML*DX) + ' o3=0 n3=1 d3=1 n4=1 o4=0 d4=1')
+#Flow('rcsq',['csqbase', 'rext'],'cat axis=2 d=' + SDX + ' csqbase.rsf rext.rsf',stdin=0)
+#Flow('lcsq',['lext', 'rcsq'],'cat axis=2 d=' + SDX + ' lext.rsf rcsq.rsf',stdin=0)
+#Flow('sext','lcsq', 'window f1='+ str(N1-1) + ' n1=1 | spray axis=1 d=' + SDX + ' n='+str(PML))
+#Flow('next','lcsq', 'window f1=0 n1=1 | spray axis=1 d=' + SDX + ' n='+str(PML) + '|put o1=' + str(-PML*DX) + ' n3=1 n4=1 n5=1 n6=1 d3=1 d4=1 d5=1 d6=1 o3=0 o4=0 o5=0 o6=0')
+#
+## csq for freesurface case
+#Flow('csq',['sext', 'lcsq'],'cat axis=1 d=' + SDX + ' lcsq.rsf sext.rsf | sfput o2=0.0 ',stdin=0)
+## csq for pml at the top of the model
+#Flow('csq_2',['next', 'csq'],'cat axis=1 d=' + SDX + '  next.rsf csq.rsf',stdin=0)
+#
 Flow('csqsm','csq','smooth rect1=10 rect2=10 repeat=2')
 Flow('csqsm2','csq','smooth rect1=5 rect2=5 repeat=2')
 
 Flow('dcsq', ['csq', 'csqsm2'],'add mode=a scale=1,-1 < csq.rsf csqsm2.rsf |window f1=' + str(NDW) + '|pad beg1=' + str(NDW))
-
-Flow('csq_2sm','csq_2','smooth rect1=10 rect2=10 repeat=2')
-Flow('csq_2sm2','csq_2','smooth rect1=5 rect2=5 repeat=2')
-Flow('dcsq_2', ['csq_2', 'csq_2sm2'],'add mode=a scale=1,-1 < csq_2.rsf csq_2sm2.rsf | window f1=' + str(PML+NDW) + '|pad beg1=' + str(PML+NDW))
+#
+#Flow('csq_2sm','csq_2','smooth rect1=10 rect2=10 repeat=2')
+#Flow('csq_2sm2','csq_2','smooth rect1=5 rect2=5 repeat=2')
+#Flow('dcsq_2', ['csq_2', 'csq_2sm2'],'add mode=a scale=1,-1 < csq_2.rsf csq_2sm2.rsf | window f1=' + str(PML+NDW) + '|pad beg1=' + str(PML+NDW))
 Flow('ecsq','csq','spray axis=3 n=14 d=1.0 o=0.0 | put dim=3 gdim=3 id1=0 id2=1 id3=2')
 Flow('csq1d','csq','sfwindow f1=100 n1=1')
 
@@ -150,8 +150,28 @@ jobs = [
     'src': ['csq1d.rsf'],
     'tgt': ['s00csq1d.rsf'],
     'cmd': helmfftw + ' ' +
-         ' weight0=100 weight1=100 power=-0.5 datum=100 ' +
+         ' weight0=100 weight1=100 power=-0.5 datum=0 ' +
          ' sbc0=0 ebc0=0 in=csq1d.rsf out=s00csq1d.rsf ' +
+         ' partask='+getThreads(exe_serial),
+    'exe': exe_serial
+  },
+  { 'job': 'helmfftw2D_0000p0',
+    'pre': 'sfadd < csq.rsf scale=0.0 > s0000p0csq.rsf',
+    'src': ['csq.rsf'],
+    'tgt': ['s0000p0csq.rsf'],
+    'cmd': helmfftw + ' ' +
+         ' weight0=100 weight1=100 power=0 datum=0 ' +
+         ' sbc0=0 sbc1=0 ebc0=0 ebc1=0 in=csq.rsf out=s0000p0csq.rsf ' +
+         ' partask='+getThreads(exe_serial),
+    'exe': exe_serial
+  },
+  { 'job': 'helmfftw2D_1000p0',
+    'pre': 'sfadd < csq.rsf scale=0.0 > s1000p0csq.rsf',
+    'src': ['csq.rsf'],
+    'tgt': ['s1000p0csq.rsf'],
+    'cmd': helmfftw + ' ' +
+         ' weight0=100 weight1=100 power=0 datum=0 ' +
+         ' sbc0=1 sbc1=0 ebc0=0 ebc1=0 in=csq.rsf out=s1000p0csq.rsf ' +
          ' partask='+getThreads(exe_serial),
     'exe': exe_serial
   },
@@ -170,7 +190,7 @@ jobs = [
     'src': ['csq.rsf'],
     'tgt': ['s1000csq.rsf'],
     'cmd': helmfftw + ' ' +
-         ' weight0=100 weight1=100 power=-0.5 datum=100 ' +
+         ' weight0=100 weight1=100 power=-0.5 datum=0 ' +
          ' sbc0=1 sbc1=0 ebc0=0 ebc1=0 in=csq.rsf out=s1000csq.rsf ' +
          ' partask='+getThreads(exe_serial),
     'exe': exe_serial
@@ -179,11 +199,71 @@ jobs = [
     'pre': 'sfadd < csq.rsf scale=0.0 > csqoutx.rsf && ' + 
          ' sfadd < csq.rsf scale=0.0 > csqouty.rsf',
     'src': ['csq.rsf'],
-    'tgt': ['csqout.rsf'],
+    'tgt': ['csqoutx.rsf','csqouty.rsf','adjrpt.txt'],
     'cmd': helmadj + ' ' +
-         ' weight0=50 weight1=50 power=-0.5 datum=0 ' +
-         ' sbc0=1 sbc1=0 ebc0=0 ebc1=0 inx=csq.rsf outx=csqoutx.rsf ' +
-         ' iny=dcsq.rsf outy=csqouty.rsf ' +
+         ' weight0=100 weight1=100 power=-1 datum=0 ' +
+         ' sbc0=0 sbc1=0 ebc0=0 ebc1=0 inx=csq.rsf outx=csqoutx.rsf ' +
+         ' iny=dcsq.rsf outy=csqouty.rsf outfile=adjrpt.txt' +
+         ' partask='+getThreads(exe_serial),
+    'exe': exe_serial
+  },
+  { 'job': 'helmadjtest0',
+    'pre': 'sfadd < csq.rsf scale=0.0 > csqoutx0.rsf && ' + 
+         ' sfadd < csq.rsf scale=0.0 > csqouty0.rsf',
+    'src': ['csq.rsf'],
+    'tgt': ['csqoutx0.rsf','csqouty0.rsf','adjrpt0.txt'],
+    'cmd': helmadj + ' ' +
+         ' weight0=100 weight1=100 power=-0.5 datum=0 ' +
+         ' sbc0=0 sbc1=0 ebc0=0 ebc1=0 inx=csq.rsf outx=csqoutx0.rsf ' +
+         ' iny=dcsq.rsf outy=csqouty.rsf outfile=adjrpt0.txt' +
+         ' partask='+getThreads(exe_serial),
+    'exe': exe_serial
+  },
+  { 'job': 'helmadjtest1',
+    'pre': 'sfadd < csq.rsf scale=0.0 > csqoutx1.rsf && ' + 
+         ' sfadd < csq.rsf scale=0.0 > csqouty1.rsf',
+    'src': ['csq.rsf'],
+    'tgt': ['csqoutx1.rsf','csqouty1.rsf','adjrpt1.txt'],
+    'cmd': helmadj + ' ' +
+         ' weight0=1000 weight1=1000 power=-1 datum=0 ' +
+         ' sbc0=0 sbc1=0 ebc0=0 ebc1=0 inx=csq.rsf outx=csqoutx1.rsf ' +
+         ' iny=dcsq.rsf outy=csqouty1.rsf outfile=adjrpt1.txt' +
+         ' partask='+getThreads(exe_serial),
+    'exe': exe_serial
+  },
+  { 'job': 'helmadjtest2',
+    'pre': 'sfadd < csq.rsf scale=0.0 > csqoutx2.rsf && ' + 
+         ' sfadd < csq.rsf scale=0.0 > csqouty2.rsf',
+    'src': ['csq.rsf'],
+    'tgt': ['csqoutx2.rsf','csqouty2.rsf','adjrpt2.txt'],
+    'cmd': helmadj + ' ' +
+         ' weight0=100 weight1=100 power=-0.5 datum=0 ' +
+         ' sbc0=1 sbc1=0 ebc0=0 ebc1=0 inx=csq.rsf outx=csqoutx2.rsf ' +
+         ' iny=dcsq.rsf outy=csqouty2.rsf outfile=adjrpt2.txt' +
+         ' partask='+getThreads(exe_serial),
+    'exe': exe_serial
+  },
+  { 'job': 'helmadjtest3',
+    'pre': 'sfadd < csq.rsf scale=0.0 > csqoutx3.rsf && ' + 
+         ' sfadd < csq.rsf scale=0.0 > csqouty3.rsf',
+    'src': ['csq.rsf'],
+    'tgt': ['csqoutx3.rsf','csqouty3.rsf','adjrpt3.txt'],
+    'cmd': helmadj + ' ' +
+         ' weight0=100 weight1=100 power=-0.5 datum=0 ' +
+         ' sbc0=0 sbc1=1 ebc0=0 ebc1=0 inx=csq.rsf outx=csqoutx3.rsf ' +
+         ' iny=dcsq.rsf outy=csqouty3.rsf outfile=adjrpt3.txt' +
+         ' partask='+getThreads(exe_serial),
+    'exe': exe_serial
+  },
+  { 'job': 'helmadjtest4',
+    'pre': 'sfadd < csq.rsf scale=0.0 > csqoutx4.rsf && ' + 
+         ' sfadd < csq.rsf scale=0.0 > csqouty4.rsf',
+    'src': ['csq.rsf'],
+    'tgt': ['csqoutx4.rsf','csqouty4.rsf','adjrpt4.txt'],
+    'cmd': helmadj + ' ' +
+         ' weight0=100 weight1=100 power=-0.5 datum=0 ' +
+         ' sbc0=1 sbc1=1 ebc0=1 ebc1=0 inx=csq.rsf outx=csqoutx4.rsf ' +
+         ' iny=dcsq.rsf outy=csqouty4.rsf outfile=adjrpt4.txt' +
          ' partask='+getThreads(exe_serial),
     'exe': exe_serial
   },
@@ -192,7 +272,7 @@ jobs = [
     'src': ['csq.rsf'],
     'tgt': ['s1000csqadj.rsf'],
     'cmd': helmfftw + ' ' +
-         ' weight0=100 weight1=100 power=-0.5 datum=100 ' +
+         ' weight0=100 weight1=100 power=-0.5 datum=0 ' +
          ' sbc0=1 sbc1=0 ebc0=0 ebc1=0 in=s1000csq.rsf out=s1000csqadj.rsf ' +
          ' adjoint=1 partask='+getThreads(exe_serial),
     'exe': exe_serial
@@ -202,7 +282,7 @@ jobs = [
     'src': ['csq.rsf'],
     'tgt': ['s0100csq.rsf'],
     'cmd': helmfftw + ' ' +
-         ' weight0=100 weight1=100 power=-0.5 datum=100 ' +
+         ' weight0=100 weight1=100 power=-0.5 datum=0 ' +
          ' sbc0=0 sbc1=0 ebc0=1 ebc1=0 in=csq.rsf out=s0100csq.rsf ' +
          ' partask='+getThreads(exe_serial),
     'exe': exe_serial
@@ -212,8 +292,18 @@ jobs = [
     'src': ['csq.rsf'],
     'tgt': ['s0011csq.rsf'],
     'cmd': helmfftw + ' ' +
-         ' weight0=100 weight1=100 power=-0.5 datum=100 ' +
+         ' weight0=100 weight1=100 power=-0.5 datum=0 ' +
          ' sbc0=0 sbc1=1 ebc0=0 ebc1=1 in=csq.rsf out=s0011csq.rsf ' +
+         ' partask='+getThreads(exe_serial),
+    'exe': exe_serial
+  },
+  { 'job': 'helmfftw2D_0111',
+    'pre': 'sfadd < csq.rsf scale=0.0 > s0111csq.rsf',
+    'src': ['csq.rsf'],
+    'tgt': ['s0111csq.rsf'],
+    'cmd': helmfftw + ' ' +
+         ' weight0=100 weight1=100 power=-0.5 datum=0 ' +
+         ' sbc0=0 sbc1=1 ebc0=1 ebc1=1 in=csq.rsf out=s0111csq.rsf ' +
          ' partask='+getThreads(exe_serial),
     'exe': exe_serial
   },
@@ -222,7 +312,7 @@ jobs = [
     'src': ['ecsq.rsf'],
     'tgt': ['s000000csq.rsf'],
     'cmd': helmfftw + ' ' +
-         ' weight0=100 weight1=100 power=-0.5 datum=100 ' +
+         ' weight0=100 weight1=100 power=-0.5 datum=0 ' +
          ' sbc0=0 sbc1=0 sbc2=0 ebc0=0 ebc1=0 ebc2=0 ' +
          ' in=ecsq.rsf out=s000000csq.rsf ' +
          ' partask='+getThreads(exe_serial),
@@ -233,7 +323,7 @@ jobs = [
     'src': ['ecsq.rsf'],
     'tgt': ['s010000csq.rsf'],
     'cmd': helmfftw + ' ' +
-         ' weight0=100 weight1=100 power=-0.5 datum=100 ' +
+         ' weight0=100 weight1=100 power=-0.5 datum=0 ' +
          ' sbc0=0 sbc1=0 sbc2=0 ebc0=1 ebc1=0 ebc2=0 ' +
          ' in=ecsq.rsf out=s010000csq.rsf ' +
          ' partask='+getThreads(exe_serial),
@@ -244,7 +334,7 @@ jobs = [
     'src': ['ecsq.rsf'],
     'tgt': ['s000011csq.rsf'],
     'cmd': helmfftw + ' ' +
-         ' weight0=100 weight1=100 power=-0.5 datum=100 ' +
+         ' weight0=100 weight1=100 power=-0.5 datum=0 ' +
          ' sbc0=0 sbc1=0 sbc2=1 ebc0=0 ebc1=0 ebc2=1 ' +
          ' in=ecsq.rsf out=s000011csq.rsf ' +
          ' partask='+getThreads(exe_serial),
@@ -268,5 +358,13 @@ for i in range(len(jobs)):
         t=Flow(sig['dir'],None,sig['wcd'],stdin=0,stdout=0)
         Flow(sig['tgt'], sig['src'] + [sig['dir']], sig['cmd'], stdin=0, stdout=0)
         Clean(t,sig['dir'])
+
+Result('csq', 'csq', 'put label1=Depth unit1=m label2=Distance unit2=m label="V\_p\^2" unit="m\^2/ms\^2" | grey color=e mean=y title="Marmousi Model"  labelfat=4 font=2 titlefat=4') # screenratio=0.55')
+Result('s0000csq', 's0000csq', 'put label1=Depth unit1=m label2=Distance unit2=m label="V\_p\^2" unit="m\^2/ms\^2" | grey color=e mean=y title="with even bc on all sides"  labelfat=4 font=2 titlefat=4') # screenratio=0.55')
+Result('s0011csq', 's0011csq', 'put label1=Depth unit1=m label2=Distance unit2=m label="V\_p\^2" unit="m\^2/ms\^2" | grey color=e mean=y title="with even bc on z and odd on x"  labelfat=4 font=2 titlefat=4') # screenratio=0.55')
+Result('s1000csq', 's1000csq', 'put label1=Depth unit1=m label2=Distance unit2=m label="V\_p\^2" unit="m\^2/ms\^2" | grey color=e mean=y title="odd bc on top, even on other sides"  labelfat=4 font=2 titlefat=4') # screenratio=0.55')
+
+
+
 End()
 

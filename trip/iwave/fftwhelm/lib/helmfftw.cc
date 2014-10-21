@@ -49,7 +49,7 @@ namespace TSOpt {
       RARR  & rax = gx.getMetadata();
       RARR const & ray = gy.getMetadata();
       int dimx; int dimy;
-      int idxdatum = (int)(datum/d_arr[0]+0.5f);
+      //int idxdatum = (int)(datum/d_arr[0]+0.5f);
       int lendom;
       ra_ndim(&rax,&dimx);
       ra_ndim(&ray,&dimy);
@@ -86,11 +86,18 @@ namespace TSOpt {
         }
 
         float _power=power;
-        fftwf_r2r_kind bctable[2][2];
-        bctable[0][0] = FFTW_REDFT10;
-        bctable[0][1] = FFTW_REDFT01;
-        bctable[1][0] = FFTW_RODFT01;
-        bctable[1][1] = FFTW_RODFT10;
+        fftwf_r2r_kind bcf[2][2];
+        fftwf_r2r_kind bcb[2][2];
+
+        bcf[0][0] = FFTW_REDFT10;
+        bcf[0][1] = FFTW_REDFT11;
+        bcf[1][0] = FFTW_RODFT11;
+        bcf[1][1] = FFTW_RODFT10;
+
+        bcb[0][0] = FFTW_REDFT01;
+        bcb[0][1] = FFTW_REDFT11;
+        bcb[1][0] = FFTW_RODFT11;
+        bcb[1][1] = FFTW_RODFT01;
         
         //cerr << "lendom = " << lendom<< endl;
         
@@ -130,28 +137,20 @@ namespace TSOpt {
 #if RARR_MAX_NDIM > 0
       if (dimx==1) {
           for (i[0]=s[0];i[0]<=e[0];i[0]++) {
-              indata[i[0]-s[0]]=ray._s1[sbc[0]*(e[0]+s[0]-2*s[0])+i[0]];//e[0]-i[0]+s[0]];
+              indata[i[0]-s[0]]=ray._s1[i[0]];
           }
-          
-          if (sbc[0]==1) {
-              swap(sbc[0],ebc[0]);
-          }
-//          for (int ii=0; ii<dimx; ii++) {
-//              cerr << "sbc[" << ii << "] = " << sbc[ii] << endl;
-//              cerr << "ebc[" << ii << "] = " << ebc[ii] << endl;
-//          }
           
           // forward Fourier transform
           if (cfg==NULL) {
               //cfg = fftwf_plan_r2r_1d(f2c[0], indata,  work, FFTW_RODFT01, FFTW_MEASURE);
-              cfg = fftwf_plan_r2r_1d(f2c[0], indata,  work, bctable[sbc[0]][ebc[0]], FFTW_MEASURE);
+              cfg = fftwf_plan_r2r_1d(f2c[0], indata,  work, bcf[sbc[0]][ebc[0]], FFTW_MEASURE);
               if (cfg==NULL) fprintf(stderr,"FFTW failure.\n");
           }
           fftwf_execute(cfg);
           
           if (icfg==NULL){
               //icfg = fftwf_plan_r2r_1d( f2c[0], work1, outdata, FFTW_RODFT10, FFTW_MEASURE);
-              icfg = fftwf_plan_r2r_1d( f2c[0], work1, outdata, bctable[sbc[0]][(ebc[0]+1)%2], FFTW_MEASURE);
+              icfg = fftwf_plan_r2r_1d( f2c[0], work1, outdata, bcb[sbc[0]][ebc[0]], FFTW_MEASURE);
               if (icfg==NULL) fprintf(stderr,"FFTW failure.\n");
           }
           
@@ -167,18 +166,8 @@ namespace TSOpt {
           float wt =  1.0/(2*f2c[0]);
 
           // copy data back
-          int ids, ide;
-          ids = (sbc[0]==0)?max(s[0],idxdatum):s[0];
-          ide = (sbc[0]==0)?e[0]:min(e[0],e[0]-idxdatum);
-          if (ids > ide) {
-              RVLException e;
-              e<<"Error: GridHelmFFTWOp::apply\n";
-              e<<"   datum is too big\n";
-              throw e;
-          }
-          for (i[0]=ids;i[0]<=ide;i[0]++) {
-              //rax._s1[e[0]-i[0]+s[0]]=wt*outdata[i[0]-s[0]];
-              rax._s1[s[0]*(e[0]+s[0]-2*s[0])+i[0]]=wt*outdata[i[0]-s[0]];
+          for (i[0]=s[0];i[0]<=e[0];i[0]++) {
+              rax._s1[i[0]]=wt*outdata[i[0]-s[0]];
           }
       }
 #endif
@@ -186,37 +175,19 @@ namespace TSOpt {
         if (dimx==2) {
             for (i[1]=s[1];i[1]<=e[1];i[1]++) {
                 for (i[0]=s[0];i[0]<=e[0];i[0]++) {
-                    //rax._s2[i[1]][i[0]]=0.0f;
-                    //indata[(i[1]-s[1])*f2c[0] + i[0]-s[0]]=ray._s2[i[1]][e[0]-i[0]+s[0]];
-                    indata[(i[1]-s[1])*f2c[0] + i[0]-s[0]]=ray._s2[sbc[1]*(e[1]+s[1]-2*i[1])+i[1]][sbc[0]*(e[0]+s[0]-2*i[0])+i[0]];//e[0]-i[0]+s[0]];
+                    indata[(i[1]-s[1])*f2c[0] + i[0]-s[0]]=ray._s2[i[1]][i[0]];
                 }
             }
-            int flag0=0, flag1=0;
-            if (sbc[0]==1) {
-                swap(sbc[0],ebc[0]);
-                flag0=1;
-            }
-            if (sbc[1]==1) {
-                swap(sbc[1],ebc[1]);
-                flag1=1;
-            }
-//            for (int ii=0; ii<dimx; ii++) {
-//                cerr << "sbc[" << ii << "] = " << sbc[ii] << endl;
-//                cerr << "ebc[" << ii << "] = " << ebc[ii] << endl;
-//            }
             
             // forward Fourier transform
             if (cfg==NULL) {
-                //cfg = fftwf_plan_r2r_2d(f2c[1], f2c[0], indata,  work, FFTW_REDFT10, FFTW_REDFT01, FFTW_MEASURE);
-                cfg = fftwf_plan_r2r_2d(f2c[1], f2c[0], indata, work, bctable[sbc[1]][ebc[1]], bctable[sbc[0]][ebc[0]], FFTW_MEASURE);
+                cfg = fftwf_plan_r2r_2d(f2c[1], f2c[0], indata, work, bcf[sbc[1]][ebc[1]], bcf[sbc[0]][ebc[0]], FFTW_MEASURE);
                 if (cfg==NULL) fprintf(stderr,"FFTW failure.\n");
             }
             fftwf_execute(cfg);
-//            fprintf(stderr,"work[100][0]= %f\n", work[100][0]);
             // inverse Fourier transform
             if (icfg==NULL){
-                //icfg = fftwf_plan_r2r_2d(f2c[1], f2c[0], work1, outdata, FFTW_REDFT01, FFTW_REDFT10, FFTW_MEASURE);
-                icfg = fftwf_plan_r2r_2d(f2c[1], f2c[0], work1, outdata, bctable[sbc[1]][(ebc[1]+1)%2], bctable[sbc[0]][(ebc[0]+1)%2], FFTW_MEASURE);
+                icfg = fftwf_plan_r2r_2d(f2c[1], f2c[0], work1, outdata, bcb[sbc[1]][ebc[1]], bcb[sbc[0]][ebc[0]], FFTW_MEASURE);
                 if (icfg==NULL) fprintf(stderr,"FFTW failure.\n");
             }
             
@@ -237,26 +208,9 @@ namespace TSOpt {
             fftwf_execute(icfg);
             float wt =  1.0/(2*(f2c[1])*2*f2c[0]);
             // copy data back
-            if ((ebc[0]==1)&&(flag0==1)) {
-                swap(sbc[0],ebc[0]);
-            }
-            if ((ebc[1]==1)&&(flag1==1)) {
-                swap(sbc[1],ebc[1]);
-            }
-//            for (int ii=0; ii<dimx; ii++) {
-//                cerr << "sbc[" << ii << "] = " << sbc[ii] << endl;
-//                cerr << "ebc[" << ii << "] = " << ebc[ii] << endl;
-//            }
-            int ids, ide;
             for (i[1]=s[1];i[1]<=e[1];i[1]++) {
-//                for (i[0]=s[0]; i[0]<max(s[0],idxdatum); i[0]++) {
-//                    rax._s2[sbc[1]*(e[1]+s[1]-2*i[1])+i[1]][sbc[0]*(e[0]+s[0]-2*i[0])+i[0]]=0.f;
-//                }
-                ids = (sbc[0]==0)?max(s[0],idxdatum):s[0];
-                ide = (sbc[0]==0)?e[0]:min(e[0],e[0]-idxdatum);
-                for (i[0]=ids;i[0]<=ide;i[0]++) {
-                    //rax._s2[i[1]][e[0]-i[0]+s[0]]=wt*outdata[(i[1]-s[1])*f2c[0] + i[0]-s[0]];
-                    rax._s2[sbc[1]*(e[1]+s[1]-2*i[1])+i[1]][sbc[0]*(e[0]+s[0]-2*i[0])+i[0]]=wt*outdata[(i[1]-s[1])*f2c[0]+i[0]-s[0]];
+                for (i[0]=s[0];i[0]<=e[0];i[0]++) {
+                    rax._s2[i[1]][i[0]]=wt*outdata[(i[1]-s[1])*f2c[0]+i[0]-s[0]];
                 }
             }
         }
@@ -266,34 +220,19 @@ namespace TSOpt {
             for (i[2]=s[2];i[2]<=e[2];i[2]++) {
                 for (i[1]=s[1];i[1]<=e[1];i[1]++) {
                     for (i[0]=s[0];i[0]<=e[0];i[0]++) {
-                        //cerr << " id = " << ((i[2]-s[2])*f2c[1]+(i[1]-s[1]))*f2c[0]+i[0]-s[0] << endl;
-                        indata[((i[2]-s[2])*f2c[1]+(i[1]-s[1]))*f2c[0]+i[0]-s[0]]=ray._s3[sbc[2]*(e[2]+s[2]-2*i[2])+i[2]][sbc[1]*(e[1]+s[1]-2*i[1])+i[1]][sbc[0]*(e[0]+s[0]-2*i[0])+i[0]];//e[0]-i[0]+s[0]];
+                        indata[((i[2]-s[2])*f2c[1]+(i[1]-s[1]))*f2c[0]+i[0]-s[0]]=ray._s3[i[2]][i[1]][i[0]];
                     }
                 }
             }
-            int flag0=0, flag1=0, flag2=0;
-            if (sbc[0]==1) {
-                swap(sbc[0],ebc[0]);
-                flag0=1;
-            }
-            if (sbc[1]==1) {
-                swap(sbc[1],ebc[1]);
-                flag1=1;
-            }
-            if (sbc[2]==1) {
-                swap(sbc[2],ebc[2]);
-                flag2=1;
-            }
             // forward Fourier transform
             if (cfg==NULL) {
-                cfg = fftwf_plan_r2r_3d(f2c[2], f2c[1], f2c[0], indata, work, bctable[sbc[2]][ebc[2]], bctable[sbc[1]][ebc[1]], bctable[sbc[0]][ebc[0]],FFTW_MEASURE);
+                cfg = fftwf_plan_r2r_3d(f2c[2], f2c[1], f2c[0], indata, work, bcf[sbc[2]][ebc[2]], bcf[sbc[1]][ebc[1]], bcf[sbc[0]][ebc[0]],FFTW_MEASURE);
                 if (cfg==NULL) fprintf(stderr,"FFTW failure.\n");
             }
             fftwf_execute(cfg);
-//            fprintf(stderr,"work[100][0]= %f\n", work[100][0]);
             // inverse Fourier transform
             if (icfg==NULL){
-                icfg = fftwf_plan_r2r_3d(f2c[2], f2c[1], f2c[0], work1, outdata, bctable[sbc[2]][(ebc[2]+1)%2], bctable[sbc[1]][(ebc[1]+1)%2], bctable[sbc[0]][(ebc[0]+1)%2], FFTW_MEASURE);
+                icfg = fftwf_plan_r2r_3d(f2c[2], f2c[1], f2c[0], work1, outdata, bcb[sbc[2]][ebc[2]], bcb[sbc[1]][ebc[1]], bcb[sbc[0]][ebc[0]], FFTW_MEASURE);
                 if (icfg==NULL) fprintf(stderr,"FFTW failure.\n");
             }
             
@@ -317,30 +256,15 @@ namespace TSOpt {
                 }
             }
             
-            // copy data back
-            if ((ebc[0]==1)&&(flag0==1)) {
-                swap(sbc[0],ebc[0]);
-            }
-            if ((ebc[1]==1)&&(flag1==1)) {
-                swap(sbc[1],ebc[1]);
-            }
-            if ((ebc[2]==1)&&(flag2==1)) {
-                swap(sbc[2],ebc[2]);
-            }
-            
             fftwf_execute(icfg);
             float wt =  1.0/(2*f2c[2]*2*f2c[1]*2*f2c[0]);
             
             // copy data back
-            int ids, ide;
 
             for (i[2]=s[2];i[2]<=e[2];i[2]++) {
                 for (i[1]=s[1];i[1]<=e[1];i[1]++) {
-                    ids = (sbc[0]==0)?max(s[0],idxdatum):s[0];
-                    ide = (sbc[0]==0)?e[0]:min(e[0],e[0]-idxdatum);
-                    for (i[0]=ids; i[0]<=ide;i[0]++) {
-                        //rax._s3[i[2]][i[1]][e[0]-i[0]+s[0]]=wt*outdata[((i[2]-s[2])*f2c[1]+(i[1]-s[1]))*f2c[0]+i[0]-s[0]];
-                        rax._s3[sbc[2]*(e[2]+s[2]-2*i[2])+i[2]][sbc[1]*(e[1]+s[1]-2*i[1])+i[1]][sbc[0]*(e[0]+s[0]-2*i[0])+i[0]]=wt*outdata[((i[2]-s[2])*f2c[1]+(i[1]-s[1]))*f2c[0]+i[0]-s[0]];
+                    for (i[0]=s[0]; i[0]<=e[0];i[0]++) {
+                        rax._s3[i[2]][i[1]][i[0]]=wt*outdata[((i[2]-s[2])*f2c[1]+(i[1]-s[1]))*f2c[0]+i[0]-s[0]];
                     }
                 }
             }

@@ -261,7 +261,7 @@ int main(int argc, char ** argv) {
             sbc[1]=valparse<int>(*pars,"sbc1",0);
             sbc[2]=valparse<int>(*pars,"sbc2",0);
             IPNT ebc;
-            ebc[0]=valparse<int>(*pars,"ebc0",1);
+            ebc[0]=valparse<int>(*pars,"ebc0",0);
             ebc[1]=valparse<int>(*pars,"ebc1",0);
             ebc[2]=valparse<int>(*pars,"ebc2",0);
             float power=0.0f; //powersm=0.0f;
