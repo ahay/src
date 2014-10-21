@@ -1,5 +1,4 @@
 from rsf.tex import *
 
-End(use='hyperref,listings,newalg',
-    hires='nearest linear laplace',
-    color='elev trian inter0 inter1')
+End(use='hyperref,listings,amsmath',color='dune inv spec0 elev trian inter0 inter1 shaping',hires='laplace')
+

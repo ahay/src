@@ -86,7 +86,6 @@ Result('trian','trian edges','Overlay')
 # Laplacian filter
 ##################
 
-# !!! CHANGE BELOW !!!
 Flow('lag.asc',None,
      '''
      echo 1 100 n1=2 n=100,100 
@@ -94,7 +93,6 @@ Flow('lag.asc',None,
      ''')
 Flow('lag','lag.asc','dd form=native')
 
-# !!! CHANGE BELOW !!!
 Flow('flt.asc','lag',
      '''
      echo -1 -1 a0=2 n1=2 lag=$SOURCE 
@@ -164,6 +162,44 @@ for prec in range(2):
         iters.append(it)
     Result(inter,iters,'SideBySideIso')
 
+# Shaping regularization
+########################
+# Forward - bi-linear interpolation
+# Backward - triangulation
+# Shaping - triangle smoothing
+
+# Maximum number of iterations
+#############
+nshape = 10 # CHANGE ME!!!
+
+m0 = 'trian'
+m = m0
+
+# Coordinates of observed data
+Flow('obscoord','obsdata','window n1=2')
+
+ms = []
+for i in range(1,nshape+1):
+    mi = 'shaping%d' % i
+    Flow(mi,[m,'obscoord',m0],
+         '''
+         extract head=${SOURCES[1]} xkey=0 ykey=1     |
+         transp | cat ${SOURCES[1]} axis=1 order=2,1  |
+         tri2reg pattern=${SOURCES[2]}                |
+         add ${SOURCES[0]} ${SOURCES[2]} scale=-1,1,1 |
+         smooth rect1=20 rect2=20 repeat=2
+         ''')
+    Plot(mi,
+         '''
+         grey scalebar=y yreverse=n transp=n allpos=y
+         minval=0 maxval=525 color=j clip=500
+         title="Iteration %d" 
+         ''' % i)
+    m = mi
+    ms.append(mi)
+Plot('ms',ms,'Movie',view=1)
+Result('shaping',mi,'Overlay')
+
 # Prediction comparisons
 ########################
 
@@ -178,7 +214,8 @@ Plot('line',None,
      screenratio=1 min1=0 max1=500 min2=0 max2=500
      ''')
 
-for case in ('trian','inter0-%d' % nmax,'inter1-%d' % nmax):
+for case in ('trian','shaping%d' % nshape,
+             'inter0-%d' % nmax,'inter1-%d' % nmax):
     pred = case+'-pred'
     Flow(pred,[case,'coord'],
          'extract head=${SOURCES[1]} xkey=0 ykey=1')

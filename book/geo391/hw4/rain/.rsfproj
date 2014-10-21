@@ -1,3 +1,3 @@
-uses=['sfdd', 'sfwindow', 'sfgraph', 'sfigrad', 'sfgrey', 'sftri2reg', 'sfwilson', 'sfspike', 'sfhelicon', 'sfadd', 'sfstack', 'sfmath', 'sfextract', 'sfcmplx', 'sfbox']
+uses=['sfdd', 'sfwindow', 'sfgraph', 'sfigrad', 'sfgrey', 'sftri2reg', 'sfwilson', 'sfspike', 'sfhelicon', 'sfadd', 'sfextract', 'sftransp', 'sfcat', 'sfsmooth', 'sfstack', 'sfmath', 'sfcmplx', 'sfbox']
 data=['data/rain/border.hh', 'data/rain/elevation.HH', 'data/rain/alldata.hh', 'data/rain/obsdata.hh', 'data/rain/coord.hh', 'data/rain/predict.hh']
-size=    2329928
+size=    6137324
