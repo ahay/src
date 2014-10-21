@@ -261,15 +261,11 @@ backward operator $\mathbf{B}$ is interpolation by Delaunay
 triangulation, and the model shaping operator $\mathbf{S}_m$ is
 triangle smoothing.
 
-\plot{inter1}{width=\textwidth}{Rainfall data
-interpolated using preconditioning with the inverse helical filter.}
+Figure~\ref{fig:shaping} shows the interpolation result using
+10 shaping iterations. The corresponding correlation analysis is shown
+in Figure~\ref{fig:shaping10-pred}.
 
-Figure~\ref{fig:inter1} shows the interpolation result using
-conjugate-gradient optimization with equation~(\ref{eq:precon}) after
-10 and 100 iterations. The corresponding correlation analysis is shown
-in Figure~\ref{fig:inter1-100-pred}.
-
-\plot{shaping}{width=\textwidth}{Rainfall data
+\sideplot{shaping}{width=\textwidth}{Rainfall data
 interpolated using shaping regularization.}
 
 \sideplot{shaping10-pred}{width=0.8\textwidth}{Correlation between
