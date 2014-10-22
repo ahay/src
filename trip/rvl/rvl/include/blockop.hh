@@ -351,6 +351,176 @@ namespace RVL {
       return str;
     }
   };
+    
+    /** Linear Operator defined with product domain and range.
+        Y.H. at Oct 22, 2014 
+     */
+    template<class Scalar>
+    class BlockLinearOp: public LinearOp<Scalar> {
+        
+        friend class OperatorEvaluation<Scalar>;
+        
+    protected:
+        
+        virtual void applyComponent(int i,
+                                    const Vector<Scalar> & x,
+                                    Vector<Scalar> & yi) const = 0;
+        
+        virtual void apply(Vector<Scalar> const & x,
+                           Vector<Scalar> & y) const {
+            try {
+                Components<Scalar> yc(y);
+                for (int i=0;i<(int)yc.getSize();i++)
+                    applyComponent(i,x,yc[i]);
+            }
+            catch (RVLException & e) {
+                e<<"\ncalled from BlockLinearOp::apply\n";
+                throw e;
+            }
+        }
+
+        
+        /** \f$x_j = F_i^*y_i\f$, where \f$x_j \in X_j\f$ */
+        virtual void applyComponentAdj(int i,
+                                       const Vector<Scalar> & yi,
+                                       Vector<Scalar> & x) const = 0;
+        
+        /** applyAdj() is implemented in terms of
+         applyComponentAdj(). Default implementation supplied, which
+         may be overridden. */
+        virtual void applyAdj(const Vector<Scalar> & x,
+                                   Vector<Scalar> & y) const {
+            try {
+                Components<Scalar> xc(x);
+                applyComponentAdj(0,xc[0],y);
+                if (xc.getSize()>0) {
+                    Vector<Scalar> tmp(this->getDomain(),true);
+                    for (int i=1; i<(int)xc.getSize(); i++) {
+                        applyComponentAdj(i,xc[i],tmp);
+                        y.linComb(1.0,tmp);
+                    }
+                }
+            }
+            catch (RVLException & e) {
+                e<<"\ncalled from BlockLinearOp::applyAdjDeriv\n";
+                throw e;
+            }
+        }
+
+        /** Primary clone method returns object of this type;
+         parent clone method delegates. */
+        virtual BlockLinearOp<Scalar> * cloneBlockLinearOp() const = 0;
+        LinearOp<Scalar> * clone() const { return cloneBlockLinearOp(); }
+        
+    public:
+        
+        BlockLinearOp() {}
+        BlockLinearOp(const BlockLinearOp<Scalar> &) {}
+        virtual ~BlockLinearOp() {}
+        
+        /** access to range as ProductSpace */
+        virtual const ProductSpace<Scalar> & getProductRange() const = 0;
+        /** access to range as Space - delegates to getProductRange */
+        const Space<Scalar> & getRange() const { 
+            return getProductRange(); 
+        }
+        
+    };
+    
+    /** Explicit BlockLinearOp construction for two range components
+        Y.H. at Oct 22, 2014
+     */
+    
+    template<typename Scalar>
+    class TensorLinearOp: public BlockLinearOp<Scalar> {
+        
+    private:
+        
+        LinearOp<Scalar> const & op1;
+        LinearOp<Scalar> const & op2;
+        StdProductSpace<Scalar> rng;
+        
+        TensorLinearOp();
+        
+    protected:
+        
+        void applyComponent(int i,
+                            const Vector<Scalar> & x,
+                            Vector<Scalar> & yi) const {
+            try {
+                if (i==0) this->export_apply(op1,x,yi);
+                else if (i==1) this->export_apply(op2,x,yi);
+                else {
+                    RVLException e;
+                    e<<"Error: TensorLinearOp::applyComponent\n";
+                    e<<"index "<<i<<" out of range [0,1]\n";
+                    throw e;
+                }
+            }
+            catch (RVLException & e) {
+                e<<"\ncalled from TensorLinearOp::applyComponent\n";
+                throw e;
+            }
+        }
+        
+        void applyComponentAdj(int i,
+                               const Vector<Scalar> & yi,
+                               Vector<Scalar> & x) const {
+            try {
+                if (i==0) op1.applyAdjOp(yi,x); //this->export_applyAdj(op1,yi,x);
+                else if (i==1) op2.applyAdjOp(yi,x); //this->export_applyAdj(op2,yi,x);
+                else {
+                    RVLException e;
+                    e<<"Error: TensorLinearOp::applyComponentAdj\n";
+                    e<<"index "<<i<<" out of range [0,1]\n";
+                    throw e;
+                }
+            }
+            catch (RVLException & e) {
+                e<<"\ncalled from TensorLinearOp::applyComponentAdj\n";
+                throw e;
+            }
+        }
+        
+        TensorLinearOp<Scalar> * cloneTensorLinearOp() const { return new TensorLinearOp(*this); }
+        BlockLinearOp<Scalar> * cloneBlockLinearOp() const { return cloneTensorLinearOp(); }
+        
+    public:
+        
+        TensorLinearOp(LinearOp<Scalar> const & _op1,
+                 LinearOp<Scalar> const & _op2)
+        : op1(_op1), op2(_op2), rng(op1.getRange(),op2.getRange()) {
+            try {
+                if (op1.getDomain() != op2.getDomain()) {
+                    RVLException e;
+                    e<<"Error: TensorLinearOp constructor\n";
+                    e<<"input operators do not have same domain\n";
+                    throw e;
+                }
+            }
+            catch (RVLException & e) {
+                e<<"\ncalled from TensorLinearOp constructor\n";
+                throw e;
+            }
+        }
+        
+        TensorLinearOp(TensorLinearOp<Scalar> const & op)
+        : op1(op.op1), op2(op.op2), rng(op1.getRange(),op2.getRange()) {}
+        
+        ~TensorLinearOp() {}
+        
+        Space<Scalar> const & getDomain() const { return op1.getDomain(); }
+        ProductSpace<Scalar> const & getProductRange() const { return rng; }
+        
+        ostream & write(ostream & str) const {
+            str<<"TensorLinearOp: 2x1 block operator\n";
+            str<<"*** LinearOp[0,0]:\n";
+            op1.write(str);
+            str<<"*** LinearOp[1,0]:\n";
+            op2.write(str);
+            return str;
+        }
+    };
 
   /* FO implementation. 
 

@@ -1,14 +1,6 @@
 #ifndef __RVLALG_LINFIT_L2_H
 #define __RVLALG_LINFIT_L2_H
 
-/** Given an Operator F and a Vector d in the range of op,
- implements the function
- \f$$
- f(x) = \inf_{dx} \|DF(x)dx - d\|^2
- \f$$
- as an RVL::Functional. The linear least squares solver is specified by
- policy.
- */
 
 #include "alg.hh"
 #include "cgalg.hh"
@@ -24,6 +16,14 @@ namespace RVLUmin {
     using namespace RVL;
     using namespace RVLAlg;
     
+/** Given an Operator F and a Vector d in the range of op,
+ implements the function
+ \f$$
+ f(x) = \inf_{dx} \|DF(x)dx - d\|^2
+ \f$$
+ as an RVL::Functional. The linear least squares solver is specified by
+ policy.
+ */
     template<typename Scalar, typename LSPolicy, typename LSPolicyData>
     class LinFitLS: public Functional<Scalar>, public LSPolicy {
         
@@ -104,7 +104,6 @@ namespace RVLUmin {
                 if(!applied){
                     Scalar val;
                     this->apply(x,val);
-                    // cerr << "\n val=" << val << endl;
                 }
                 OperatorEvaluation<Scalar> opeval(op,x);
                 LinearOp<Scalar> const & lop = opeval.getDeriv();
@@ -112,17 +111,12 @@ namespace RVLUmin {
                 Vector<Scalar> dltd(lop.getRange());
                 // compute dltx and dltd = DF * dltx - d
                 lop.applyOp(dltx,dltd);
-                //  cerr << "\n dltx.norm()=" << dltx.norm() << endl;
                 dltd.linComb(-1.0,d);
-                //cerr << "\n dltd.norm()=" << dltd.norm() << endl;
                 // naive computation of gradient
                 sblop.applyAdjOp(dltx,dltd,g);
-                //  cerr << "\n g.norm()=" << g.norm() << endl;
                 
                 // compute and add correction term to gradient
-                // cerr << "\n LinFitLS refine=" << refine << endl;
                 if (refine) {
-                    // cerr << "\n LinFitLS: inside refine branch\n" ;
                     atype rnorm;
                     atype nrnorm;
                     OpComp<Scalar> gop(preop,lop);
@@ -141,10 +135,7 @@ namespace RVLUmin {
                     preop.applyOp(dx1,dx2);
                     // compute and add correction term tmp to gradient g
                     sblop.applyAdjOp(dx2,d,tmp2);
-                    // cerr << "\n LinFitLS:applyGradient  term1.norm = " << g.norm() << endl;
-                    // cerr << "\n LinFitLS:applyGradient  term2.norm = " << tmp.norm() << endl;
                     g.linComb(1.0, tmp2);
-                    // cerr << "\n LinFitLS:applyGradient  g.norm = " << g.norm() << endl;
                 }
             }
             catch (RVLException & e) {
@@ -224,7 +215,219 @@ namespace RVLUmin {
         }
     };
 
+    template<typename Scalar>
+    class PIVAObj2: public Functional<Scalar> {
+        
+        typedef typename ScalarFieldTraits<Scalar>::AbsType atype;
+        
+    private:
+        
+        Operator<Scalar> const & op;        // operator
+        LinearOp<Scalar> const & preop;     // preconditioner
+        LinearOp<Scalar> const & helmop;    // smoothing op applied to gradient
+        LinearOp<Scalar> const & A;         // annihilator
+        Vector<Scalar>   const & d;         // data
+        Vector<Scalar>   const & x0;        // input initial linear solution
+        Scalar           eps;               // weight on regularization      
+        
+        CGNEPolicyData<Scalar> pdcgne;
+        
+        mutable Vector<Scalar> dx;         // preimage of linear solution
+        mutable Vector<Scalar> dltx;       // linear solution
+        mutable Vector<Scalar> q;          // CG solution
+        mutable bool applied;
+        ostream & str;
+        
+    protected:
+        
+        void apply(const Vector<Scalar> & x,
+                   Scalar & val) const {
+            try {
+                /*         if (applied) {
+                 RVLException e;
+                 e<<"Error: LinFitLS::apply(x,val)\n";
+                 e<<"already applied, may not alter\n";
+                 throw e;
+                 }
+                 */
+                atype rnorm;
+                atype nrnorm;
+                // access Operator through OperatorEvaluation
+                OperatorEvaluation<Scalar> opeval(op,x);
+                
+                // Get Derivative of Operator
+                LinearOp<Scalar> const & lop = opeval.getDeriv();
+                
+                // for non-zero initial solution
+                Vector<Scalar> d0(lop.getRange());
+                lop.applyOp(x0,d0);
+                d0.linComb(1.0,d,-1.0);
+               
+                CompLinearOp<Scalar> nop(preop,lop);
+                ScaleOpFwd<Scalar> rgop(op.getDomain(),eps);
+                TensorLinearOp<Scalar> top(nop, rgop);
 
+                // create RHS of block system
+                Vector<Scalar> td(top.getRange());
+                Components<Scalar> ctd(td);
+                ctd[0].copy(d0);
+                ctd[1].zero();
+                
+                Vector<Scalar> pdx(op.getDomain());
+                dx.zero();
+                pdx.zero();
+                
+                // build least square solver , solve for dx
+                CGNEPolicy<Scalar> cgnep;
+                cgnep.assign(pdcgne);
+                CGNEAlg<Scalar> * solver = cgnep.build(pdx,top,td,rnorm,nrnorm,str);
+                
+                solver->run();
+                
+                // get the value of objective function
+                //val = 0.5*rnorm*rnorm;
+                preop.applyOp(pdx,dx);
+                
+                dx.linComb(1.0,x0);
+                A.applyOp(dx,dltx);
+                val = dltx.norm() * 0.5f;
+                //                if (retrieveGlobalRank() == 0) {
+                //                    cerr << "val="<< val << endl;
+                //                }
+                
+                applied = true;
+                delete solver;
+            }
+            catch (RVLException & e) {
+                e<<"\ncalled from PIVAObj2::apply\n";
+                throw e;
+            }
+        }
+        
+        void applyGradient(const Vector<Scalar> & x,
+                           Vector<Scalar> & g) const {
+            try{
+                if(!applied){
+                    Scalar val;
+                    this->apply(x,val);
+                    // cerr << "\n val=" << val << endl;
+                }
+                atype rnorm;
+                OperatorEvaluation<Scalar> opeval(op,x);
+                LinearOp<Scalar> const & lop = opeval.getDeriv();
+                SymmetricBilinearOp<Scalar> const & sblop = opeval.getDeriv2();
+                
+                //                if (retrieveGlobalRank() == 0) {
+                //                    cerr << "\n before RHS \n";
+                //                }
+                
+                // build RHS
+                Vector<Scalar> tmpb(op.getDomain());
+                Vector<Scalar> tmpm(lop.getDomain());
+                Vector<Scalar> tmpd(lop.getRange());
+
+                // cerr << " before applying A " << endl;
+                A.applyAdjOp(dltx,tmpb);
+                
+                CompLinearOp<Scalar> cop(preop,lop);
+                NormalLinearOp<Scalar> nop(cop);
+                ScaleOpFwd<Scalar> rgop(op.getDomain(),eps);
+ 
+                LinCombLinearOp<Scalar> rnop(1.0, nop, 1.0, rgop);
+                tmpm.zero();
+                
+                CGAlg<Scalar> alg(tmpm,rnop,tmpb,rnorm,pdcgne.rtol,pdcgne.maxcount,pdcgne.Delta,str);
+                alg.run();
+                preop.applyOp(tmpm,q);
+                
+                
+                lop.applyOp(q,tmpd);
+                sblop.applyAdjOp(dx,tmpd,tmpb);
+                tmpb.scale(-1.0f);
+                helmop.applyOp(tmpb,g);
+                
+            }
+            catch (RVLException & e) {
+                e<<"\ncalled from PIVAObj2::applyGradient\n";
+                throw e;
+            }
+            
+        }
+        
+        void applyHessian(const Vector<Scalar> & x,
+                          const Vector<Scalar> & dx,
+                          Vector<Scalar> & dy) const {}
+        
+        Functional<Scalar> * clone() const {
+            return new PIVAObj2<Scalar>(*this);
+        }
+        
+    public:
+        
+        /* typical policy data
+         atype _rtol,
+         atype _nrtol,
+         int _maxcount,
+         */
+        PIVAObj2(Operator<Scalar> const & _op,
+                LinearOp<Scalar> const & _preop,
+                LinearOp<Scalar> const & _helmop,
+                LinearOp<Scalar> const & _A,
+                Vector<Scalar> const & _d,
+                Vector<Scalar> const & _x0,
+                Scalar _eps,
+                CGNEPolicyData<Scalar> const & _pdcgne,
+                ostream & _str=cerr)
+        : op(_op), preop(_preop), helmop(_helmop), A(_A), d(_d), x0(_x0),
+        eps(_eps), pdcgne(_pdcgne), dx(preop.getDomain()), q(op.getDomain()), 
+        dltx(preop.getRange()), applied(false), str(_str) {
+            try{
+                dx.zero();
+                q.zero();
+                if (pdcgne.verbose) {
+                    str<<"\n";
+                    str<<"==============================================\n";
+                    str<<"PIVAObj2 constructor - ls policy data = \n";
+                    pdcgne.write(str);
+                }
+            }
+            catch (RVLException & e) {
+                e<<"\ncalled from LinFitLSP::Constructor\n";
+                throw e;
+            }
+        }
+        
+        PIVAObj2(PIVAObj2<Scalar> const & f)
+        : op(f.op), preop(f.preop), helmop(f.helmop), A(f.A), d(f.d), 
+        x0(f.x0), eps(f.eps), pdcgne(f.pdcgne), dx(f.dx), q(f.q), 
+        dltx(f.dltx), applied(f.applied), str(f.str) {}
+        
+        const Space<Scalar> & getDomain() const { return op.getDomain(); }
+        
+        Scalar getMaxStep(const Vector<Scalar> & x,
+                          const Vector<Scalar> & dx) const {
+            try {
+                return op.getMaxStep(x,dx);
+            }
+            catch (RVLException & e) {
+                e<<"\ncalled from PIVAObj2::getMaxStep\n";
+                throw e;
+            }
+        }
+        
+        Vector<Scalar> const & getLSSoln() const { return dx; }
+        Vector<Scalar> const & getCGSoln() const { return q; }
+        
+        
+        ostream & write(ostream & str) const {
+            str<<"PIVAObj2: \n";
+            str<<"*** operator:\n";
+            op.write(str);
+            str<<"*** data vector:\n";
+            d.write(str);
+            return str;
+        }
+    };
     
     template<typename Scalar>
     class PIVAObj: public Functional<Scalar> {
@@ -235,14 +438,16 @@ namespace RVLUmin {
         
         Operator<Scalar> const & op;        // operator
         LinearOp<Scalar> const & preop;     // preconditioner
+        LinearOp<Scalar> const & helmop;    // smoothing op applied to gradient
         LinearOp<Scalar> const & A;         // annihilator
         Vector<Scalar> const & d;           // data
         Vector<Scalar> const & x0;          // input initial linear solution
         
         CGNEPolicyData<Scalar> pdcgne;
         
-        mutable  Vector<Scalar> dx;         // preimage of linear solution
-        mutable  Vector<Scalar> dltx;       // linear solution
+        mutable Vector<Scalar> dx;         // preimage of linear solution
+        mutable Vector<Scalar> dltx;       // linear solution
+        mutable Vector<Scalar> q;          // CG solution
         mutable bool applied;
         ostream & str;
         
@@ -320,8 +525,7 @@ namespace RVLUmin {
  
                 // build RHS
                 Vector<Scalar> tmpb(op.getDomain());
-                Vector<Scalar> q(op.getDomain());
-                // cerr << " before applying A " << endl; 
+                // cerr << " before applying A " << endl;
                 A.applyAdjOp(dltx,tmpb);
                
                 CompLinearOp<Scalar> nop(lop, lopadj);
@@ -332,7 +536,7 @@ namespace RVLUmin {
                 lop.applyOp(q,tmpd);
                 sblop.applyAdjOp(dx,tmpd,tmpb);
                 tmpb.scale(-1.0f);
-                preop.applyOp(tmpb,g);
+                helmop.applyOp(tmpb,g);
 
             }
             catch (RVLException & e) {
@@ -358,17 +562,19 @@ namespace RVLUmin {
          int _maxcount,
          */
         PIVAObj(Operator<Scalar> const & _op,
-                 LinearOp<Scalar> const & _preop,
+                LinearOp<Scalar> const & _preop,
+                LinearOp<Scalar> const & _helmop,
                 LinearOp<Scalar> const & _A,
-                 Vector<Scalar> const & _d,
-                 Vector<Scalar> const & _x0,
-                 CGNEPolicyData<Scalar> const & _pdcgne,
-                 ostream & _str=cerr)
-        : op(_op), preop(_preop), A(_A), d(_d), x0(_x0), pdcgne(_pdcgne),
-        dx(preop.getDomain()), dltx(preop.getRange()),
+                Vector<Scalar> const & _d,
+                Vector<Scalar> const & _x0,
+                CGNEPolicyData<Scalar> const & _pdcgne,
+                ostream & _str=cerr)
+        : op(_op), preop(_preop), helmop(_helmop), A(_A), d(_d), x0(_x0), pdcgne(_pdcgne),
+        dx(preop.getDomain()), q(op.getDomain()), dltx(preop.getRange()),
         applied(false), str(_str) {
             try{
                 dx.zero();
+                q.zero();
                 if (pdcgne.verbose) {
                     str<<"\n";
                     str<<"==============================================\n";
@@ -383,8 +589,8 @@ namespace RVLUmin {
         }
         
         PIVAObj(PIVAObj<Scalar> const & f)
-        : op(f.op), preop(f.preop), A(f.A), d(f.d), x0(f.x0), pdcgne(f.pdcgne),
-        dx(f.dx), dltx(f.dltx), applied(f.applied), str(f.str) {}
+        : op(f.op), preop(f.preop), helmop(f.helmop), A(f.A), d(f.d), x0(f.x0), pdcgne(f.pdcgne),
+        dx(f.dx), q(f.q), dltx(f.dltx), applied(f.applied), str(f.str) {}
         
         const Space<Scalar> & getDomain() const { return op.getDomain(); }
         
@@ -400,6 +606,8 @@ namespace RVLUmin {
         }
         
         Vector<Scalar> const & getLSSoln() const { return dx; }
+        Vector<Scalar> const & getCGSoln() const { return q; }
+
         
         ostream & write(ostream & str) const {
             str<<"PIVAObj: \n";
@@ -410,5 +618,7 @@ namespace RVLUmin {
             return str;
         }
     };
+    
+    
 }
 #endif
