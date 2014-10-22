@@ -41,13 +41,11 @@ using RVL::AssignFilename;
 using RVL::AssignParams;
 using RVL::RVLRandomize;
 using RVL::ScaleOpFwd;
-using RVL::TensorOp;
 using RVL::AdjointTest;
 using RVLUmin::CGNEPolicy;
 using RVLUmin::CGNEPolicyData;
 using RVLUmin::LBFGSBT;
-using RVLUmin::LinFitLS;
-using RVLUmin::PIVAObj;
+using RVLUmin::PIVAObj2;
 using RVLUmin::CGNEAlg;
 using TSOpt::IWaveEnvironment;
 using TSOpt::IWaveTree;
@@ -200,14 +198,14 @@ int main(int argc, char ** argv) {
                 throw e;
             }
 #endif
-  	    RPNT swind,ewind;
- 	    RASN(swind,RPNT_0);
-  	    RASN(ewind,RPNT_0);
- 	    swind[0]=valparse<float>(*pars,"sww1",0.0f);
- 	    swind[1]=valparse<float>(*pars,"sww2",0.0f);
-  	    swind[2]=valparse<float>(*pars,"sww3",0.0f);
-  	    ewind[0]=valparse<float>(*pars,"eww1",0.0f);
- 	    ewind[1]=valparse<float>(*pars,"eww2",0.0f);
+            RPNT swind,ewind;
+            RASN(swind,RPNT_0);
+            RASN(ewind,RPNT_0);
+            swind[0]=valparse<float>(*pars,"sww1",0.0f);
+            swind[1]=valparse<float>(*pars,"sww2",0.0f);
+            swind[2]=valparse<float>(*pars,"sww3",0.0f);
+            ewind[0]=valparse<float>(*pars,"eww1",0.0f);
+            ewind[1]=valparse<float>(*pars,"eww2",0.0f);
      	    ewind[2]=valparse<float>(*pars,"eww3",0.0f);
 
 
@@ -229,18 +227,18 @@ int main(int argc, char ** argv) {
             LinearOp<float> const & lwop=wopeval.getDeriv();
             
             // choice of preop is placeholder
-            ScaleOpFwd<float> rgop(op.getDomain(),valparse<float>(*pars,"eps",1.0f));
+            //ScaleOpFwd<float> rgop(op.getDomain(),valparse<float>(*pars,"eps",1.0f));
             GridDerivOp dsop0(op.getDomain(),dsdir,valparse<float>(*pars,"DSWeight",0.0f));
             
             CompLinearOp<float> dsop(lwop,dsop0);
             //OpComp<float> cop(lwop,op);
-            TensorOp<float> top(op,rgop);
+            //TensorOp<float> top(op,rgop);
             
             // create RHS of block system
-            Vector<float> td(top.getRange());
-            Components<float> ctd(td);
-            ctd[0].copy(mdd);
-            ctd[1].zero();
+//            Vector<float> td(top.getRange());
+//            Components<float> ctd(td);
+//            ctd[0].copy(mdd);
+//            ctd[1].zero();
             
             // initial input reflectivity
             Vector<ireal> dm0(op.getDomain());
@@ -278,7 +276,8 @@ int main(int argc, char ** argv) {
 //                cerr << "\n before hop.applyOp \n";
 //            }
             //hop.applyOp(m_in,dm);
-            PIVAObj<float> f(top,preop,helmop,dsop,td,dm0,pd,res);
+            float eps = valparse<float>(*pars,"eps",0.0f);
+            PIVAObj2<float> f(op,preop,helmop,dsop0,mdd,dm0,eps,pd,res);
             GridExtendOp g(dom,op.getDomain());
             FcnlOpComp<float> gf(f,g);
             
@@ -318,8 +317,8 @@ int main(int argc, char ** argv) {
                 FcnlOpComp<float> const & f2 =
                 dynamic_cast<FcnlOpComp<float> const &>(f1.getFunctional()); // function in fbd = gf = fcnaopcomp
                 FunctionalEvaluation<float> const & fe2 = f2.getFcnlEval();  // current feval part of gf
-                PIVAObj<float > const & f3 =
-                dynamic_cast<PIVAObj<float> const & >(fe2.getFunctional());  // current clone of PIVAObj
+                PIVAObj2<float > const & f3 =
+                dynamic_cast<PIVAObj2<float> const & >(fe2.getFunctional());  // current clone of PIVAObj
                 dm.copy(f3.getLSSoln()); // copy dx from PIVAObj
             }
 //            
