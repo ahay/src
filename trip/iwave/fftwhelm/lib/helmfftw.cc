@@ -39,6 +39,8 @@ namespace TSOpt {
       fftwf_plan cfg=NULL, icfg=NULL;
         
       IPNT f2c;  // #grid for each axis for FFTW
+      IPNT NLDFT;  // #grid for each axis for FFTW
+
         
       ContentPackage<ireal, RARR>  & gx =
         dynamic_cast<ContentPackage <ireal, RARR>  &> (x);
@@ -75,30 +77,39 @@ namespace TSOpt {
       }
         //cerr << " idxdatum = " << idxdatum << endl;
         //cerr << " dimx = " << dimx << endl;
+        float _power=power;
+        fftwf_r2r_kind bcf[2][2];
+        fftwf_r2r_kind bcb[2][2];
+        
+        //bcf[0][0] = FFTW_REDFT10;
+        bcf[0][0] = FFTW_REDFT00;
+        bcf[0][1] = FFTW_REDFT11;
+        bcf[1][0] = FFTW_RODFT11;
+        bcf[1][1] = FFTW_RODFT00;
+        
+        //bcb[0][0] = FFTW_REDFT01;
+        bcb[0][0] = FFTW_REDFT00;
+        bcb[0][1] = FFTW_REDFT11;
+        bcb[1][0] = FFTW_RODFT11;
+        bcb[1][1] = FFTW_RODFT00;
+        
+        int dimsft[2][2];
+        dimsft[0][0]=-1;
+        dimsft[0][1]=0;
+        dimsft[1][0]=0;
+        dimsft[1][1]=1;
         
         lendom = 1;
         for (int ii=0; ii<dimx; ii++) {
             f2c[ii] = n_arr[ii];//(n_arr[ii]+4)%2==1? (n_arr[ii]+5):(n_arr[ii]+4);
             lendom=lendom*f2c[ii];
+            NLDFT[ii] = f2c[ii]+dimsft[sbc[ii]][ebc[ii]];
             //cerr << "f2c["<< ii <<"] = " << f2c[ii] << endl;
             //cerr << "n_arr["<< ii << "] = " << n_arr[ii] << endl;
             //cerr << "length " << ii << " = " << e[ii] - s[ii] +1<< endl;
         }
 
-        float _power=power;
-        fftwf_r2r_kind bcf[2][2];
-        fftwf_r2r_kind bcb[2][2];
 
-        bcf[0][0] = FFTW_REDFT10;
-        bcf[0][1] = FFTW_REDFT11;
-        bcf[1][0] = FFTW_RODFT11;
-        bcf[1][1] = FFTW_RODFT10;
-
-        bcb[0][0] = FFTW_REDFT01;
-        bcb[0][1] = FFTW_REDFT11;
-        bcb[1][0] = FFTW_RODFT11;
-        bcb[1][1] = FFTW_RODFT01;
-        
         //cerr << "lendom = " << lendom<< endl;
         
         IPNT i;
@@ -154,7 +165,7 @@ namespace TSOpt {
               if (icfg==NULL) fprintf(stderr,"FFTW failure.\n");
           }
           
-          float wtz = 2*M_PI/(2*f2c[0]*d_arr[0])*weights[0];
+          float wtz = 2*M_PI/(2*NLDFT[0]*d_arr[0])*weights[0];
           wtz = wtz * wtz;
           float wz;
           for (i[0]=0; i[0]<f2c[0]; i[0]++) {
@@ -163,7 +174,7 @@ namespace TSOpt {
           }
 
           fftwf_execute(icfg);
-          float wt =  1.0/(2*f2c[0]);
+          float wt =  1.0/(2*NLDFT[0]);
 
           // copy data back
           for (i[0]=s[0];i[0]<=e[0];i[0]++) {
@@ -191,9 +202,9 @@ namespace TSOpt {
                 if (icfg==NULL) fprintf(stderr,"FFTW failure.\n");
             }
             
-            float wtx = 2*M_PI/(2*f2c[1]*d_arr[1])*weights[1];
+            float wtx = 2*M_PI/(2*NLDFT[1]*d_arr[1])*weights[1];
             wtx = wtx * wtx;
-            float wtz = 2*M_PI/(2*f2c[0]*d_arr[0])*weights[0];
+            float wtz = 2*M_PI/(2*NLDFT[0]*d_arr[0])*weights[0];
             wtz = wtz * wtz;
             float wx, wz;
             
@@ -206,7 +217,7 @@ namespace TSOpt {
             }
             
             fftwf_execute(icfg);
-            float wt =  1.0/(2*(f2c[1])*2*f2c[0]);
+            float wt =  1.0/(2*NLDFT[1]*2*NLDFT[0]);
             // copy data back
             for (i[1]=s[1];i[1]<=e[1];i[1]++) {
                 for (i[0]=s[0];i[0]<=e[0];i[0]++) {
@@ -236,11 +247,11 @@ namespace TSOpt {
                 if (icfg==NULL) fprintf(stderr,"FFTW failure.\n");
             }
             
-            float wty = 2*M_PI/(2*f2c[2]*d_arr[2])*weights[2];
+            float wty = 2*M_PI/(2*NLDFT[2]*d_arr[2])*weights[2];
             wty = wty * wty;
-            float wtx = 2*M_PI/(2*f2c[1]*d_arr[1])*weights[1];
+            float wtx = 2*M_PI/(2*NLDFT[1]*d_arr[1])*weights[1];
             wtx = wtx * wtx;
-            float wtz = 2*M_PI/(2*f2c[0]*d_arr[0])*weights[0];
+            float wtz = 2*M_PI/(2*NLDFT[0]*d_arr[0])*weights[0];
             wtz = wtz * wtz;
             float wy, wx, wz;
   
@@ -257,7 +268,7 @@ namespace TSOpt {
             }
             
             fftwf_execute(icfg);
-            float wt =  1.0/(2*f2c[2]*2*f2c[1]*2*f2c[0]);
+            float wt =  1.0/(2*NLDFT[2]*2*NLDFT[1]*2*NLDFT[0]);
             
             // copy data back
 
