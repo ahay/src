@@ -93,7 +93,11 @@ Result('hcanny',
      yreverse=n transp=n screenwd=11.9 screenht=9.26
      ''')
 
-Flow('hclean','horizon','impl2 rect1=10 rect2=10 tau=1')
+# expose a parameter
+
+rect = float(ARGUMENTS.get('rect',10))
+
+Flow('hclean','horizon','impl2 rect1=%g rect2=%g tau=1' % (rect,rect))
 
 Flow('hcanny2','hclean','canny | dd type=float')
 
@@ -111,6 +115,36 @@ Result('overlay','horizon hcanny2',
        grey color=xC bias=950 clip=170 scalebar=y title=Horizon 
        yreverse=n transp=n screenwd=11.9 screenht=9.26 cliprgb=0
        maxval=1120
+       ''')
+
+# Playing with parameters
+
+cannys = []
+for rect in range(1,21):
+    canny = 'canny-%d' % rect
+    Flow(canny,'horizon',
+         '''
+         impl2 rect1=%d rect2=%d tau=1 | canny 
+         ''' % (rect,rect))
+    cannys.append(canny)
+Flow('cannys',cannys,
+     '''
+     cat axis=3 ${SOURCES[1:%d]} | 
+     dd type=float | put o3=1 d3=1
+     ''' % len(cannys))
+Plot('cannys',
+     '''
+     grey title="Canny filter" 
+     yreverse=n transp=n screenwd=11.9 screenht=9.26
+     ''',view=1)
+
+# Stack them
+
+Result('cannys',
+       '''
+       stack axis=3 norm=n |
+       grey allpos=y title="stacked Canny filter"
+       yreverse=n transp=n screenwd=11.9 screenht=9.26
        ''')
 
 End()
