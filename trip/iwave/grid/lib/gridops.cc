@@ -2222,13 +2222,14 @@ namespace TSOpt {
 	  sp->write(e);
 	  throw e;	  
 	}
-
+        if (retrieveGlobalRank() == 0) {
 	if (gdom->getGrid().dim != 2) {
 	  RVLException e;
 	  e<<"Error: GridHelmOp::apply\n";
 	  e<<"  current implementation is 2D only\n";
 	  throw e;
 	}
+        }
 
 	IPNT n_arr;
 	RPNT d_arr;
