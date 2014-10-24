@@ -1,6 +1,5 @@
-/* Time domain full waveform inversion 
-Note: This serial FWI is merely designed to help the understanding of 
-beginners. Enquist absorbing boundary condition (A2) is applied!
+/* Envelope inversion of FWI
+Note: 	Enquist absorbing boundary condition (A2) is applied!
  */
 /*
   Copyright (C) 2014  Xi'an Jiaotong University, UT Austin (Pengliang Yang)
@@ -44,17 +43,7 @@ beginners. Enquist absorbing boundary condition (A2) is applied!
 #include <omp.h>
 #endif
 
-
-void matrix_transpose(float *matrix, float *trans, int n1, int n2)
-/*< matrix transpose: matrix tansposed to be trans >*/
-{
-	int i1, i2;
-
-	for(i2=0; i2<n2; i2++)
-	for(i1=0; i1<n1; i1++)
-	    trans[i2+n2*i1]=matrix[i1+n1*i2];
-}
-
+#include "hilbert.h"
 
 void step_forward(float **p0, float **p1, float **p2, float **vv, float dtz, float dtx, int nz, int nx)
 /*< forward modeling step, Clayton-Enquist ABC incorporated >*/
@@ -214,14 +203,7 @@ void rw_bndr(float *bndr, float **p, int nz, int nx, bool write)
 	}
 }
 
-void cal_residuals(float *dcal, float *dobs, float *dres, int ng)
-/*< calculate residual >*/
-{
-  int ig;
-  for(ig=0; ig<ng; ig++){
-    dres[ig]=dcal[ig]-dobs[ig];
-  }
-}
+
 
 void cal_gradient(float **grad, float **lap, float **gp, int nz, int nx)
 /*< calculate gradient >*/
@@ -258,14 +240,14 @@ void scale_gradient(float **grad, float **vv, float **illum, int nz, int nx, boo
   }
 }
 
-float cal_objective(float *dres, int ng)
-/*< calculate the value of objective function >*/
+float cal_objective(sf_complex *adcal, sf_complex *adobs, int ng, int nt)
+/*< calculate the value of envelope objective function >*/
 {
   int i;
   float a, obj=0;
 
-  for(i=0; i<ng; i++){
-    a=dres[i];
+  for(i=0; i<ng*nt; i++){
+    a=logf(fabsf(adcal[i])/(fabsf(adobs[i])+SF_EPS));
     obj+=a*a;
   }
   return obj;
@@ -405,18 +387,64 @@ void bell_smoothx(float **g, float **smg, int rbell, int nz, int nx)
 	}
 }
 
+void matrix_transpose(float *matrix, float *trans, int n1, int n2)
+/*< matrix transpose: matrix tansposed to be trans >*/
+{
+	int i1, i2;
+
+	for(i2=0; i2<n2; i2++)
+	for(i1=0; i1<n1; i1++)
+	    trans[i2+n2*i1]=matrix[i1+n1*i2];
+}
+
+
+void cal_adjsource(sf_complex *adcal, sf_complex *adobs, float *derr, int ng, int nt)
+/*< calculate adjoint source and store it in derr[] >*/
+{
+  int ig;
+  float a,b,c,d;
+  float *h1;
+  sf_complex *h2;
+  h1=(float *)malloc(ng*nt*sizeof(sf_complex));
+  h2=(sf_complex*)malloc(ng*nt*sizeof(sf_complex));
+
+  for(it=0; it<nt; it++){
+	  for(ig=0; ig<ng; ig++){
+	    a=fabsf(adobs[ig+it*ng])+SF_EPS;
+	    b=fabsf(adcal[ig+it*ng])+SF_EPS;
+	    c=logf(a/b)/(b*b);
+	    //h1[ig+it*ng]=c*crealf(adcal[ig+it*ng]);
+	    h1[ig+it*ng]=c*cimagf(adcal[ig+it*ng]);
+	  }
+  }
+  hilbert_trans(h1, h2);
+
+  for(it=0; it<nt; it++){
+	  for(ig=0; ig<ng; ig++){
+	    a=fabsf(adobs[ig+it*ng])+SF_EPS;
+	    b=fabsf(adcal[ig+it*ng])+SF_EPS;
+	    c=logf(a/b)/(b*b);
+	    d=c*crealf(adcal[ig+it*ng]);
+	    derr[ig+it*ng]=-d+cimagf(h2[ig+it*ng]);
+	  }
+  }
+
+  free(h1);
+  free(h2);
+}
 
 int main(int argc, char *argv[])
 {
 	/* variables on host */
 	bool verb, precon, csdgather;
 	int is, it, iter, niter, distx, distz, csd, rbell;
-	int nz, nx, nt, ns, ng;
+	int nz, nx, ns, ng, nt;
 	int sxbeg, szbeg, gxbeg, gzbeg, jsx, jsz, jgx, jgz;/*  parameters of acquisition geometery */
 	float dx, dz, fm, dt, dtx, dtz, tmp, amp, obj1, obj, beta, epsil, alpha;
 	float *dobs, *dcal, *derr, *wlt, *bndr, *trans, *objval;
 	int *sxz, *gxz;		
-	float **vv, **illum, **lap, **vtmp, **sp0, **sp1, **sp2, **gp0, **gp1, **gp2, **g0, **g1, **cg, *alpha1, *alpha2, **ptr=NULL;	
+	float **vv, **illum, **lap, **vtmp, **sp0, **sp1, **sp2, **gp0, **gp1, **gp2, **g0, **g1, **cg, *alpha1, *alpha2, **ptr=NULL;
+	sf_complex *adobs, *adcal;
 	clock_t start, stop;/* timer */
 	sf_file vinit, shots, vupdates, grads, objs, illums;/* I/O files */
 
@@ -528,7 +556,9 @@ int main(int argc, char *argv[])
 	bndr=(float*)malloc(nt*(2*nz+nx)*sizeof(float));/* boundaries for wavefield reconstruction */
 	trans=(float*)malloc(ng*nt*sizeof(float));/* transposed one shot */
 	dobs=(float*)malloc(ng*nt*sizeof(float));/* observed seismic data */
-	dcal=(float*)malloc(ng*sizeof(float));	/* calculated/synthetic seismic data */
+	dcal=(float*)malloc(ng*nt*sizeof(float));/* calculated/synthetic seismic data */
+	adobs=(sf_complex*)malloc(ng*nt*sizeof(sf_complex));/* analytic observed seismic data */
+	adcal=(sf_complex*)malloc(ng*nt*sizeof(sf_complex));/* analytic calculated/synthetic seismic data */
 	derr=(float*)malloc(ns*ng*nt*sizeof(float));/* residual/error between synthetic and observation */
 	alpha1=(float*)malloc(ng*sizeof(float));/* numerator of alpha, length=ng */
 	alpha2=(float*)malloc(ng*sizeof(float));/* denominator of alpha, length=ng */
@@ -568,15 +598,29 @@ int main(int argc, char *argv[])
 	sg_init(gxz, gzbeg, gxbeg, jgz, jgx, ng, nz);
 	memset(bndr, 0, nt*(2*nz+nx)*sizeof(float));
 	memset(dobs, 0, ng*nt*sizeof(float));
-	memset(dcal, 0, ng*sizeof(float));
+	memset(dcal, 0, ng*nt*sizeof(float));
+	memset(adobs, 0, ng*nt*sizeof(sf_complex));
+	memset(adcal, 0, ng*nt*sizeof(sf_complex));
 	memset(derr, 0, ns*ng*nt*sizeof(float));
 	memset(alpha1, 0, ng*sizeof(float));
 	memset(alpha2, 0, ng*sizeof(float));
 	memset(dobs, 0, ng*nt*sizeof(float));	
 	memset(objval, 0, niter*sizeof(float));
 
+/* 
+	// test the correctness of hilbert transform
+	float a[]={1,2,3,4};
+	sf_complex b[4];
+	hilbert_init(1, 4);
+	hilbert_trans(a,b);
+	for(int ii=0; ii<4; ii++) sf_warning("real b[%d]=%g",ii,crealf(b[ii]));
+	hilbert_close();
+*/
+
+	hilbert_init(ng, nt);
 	for(iter=0; iter<niter; iter++)
 	{
+		obj=0;
 		if(verb) start=clock();// record starting time
 		sf_seek(shots, 0L, SEEK_SET);
 		memcpy(g0[0], g1[0], nz*nx*sizeof(float));
@@ -599,9 +643,12 @@ int main(int argc, char *argv[])
 				ptr=sp0; sp0=sp1; sp1=sp2; sp2=ptr;
 				rw_bndr(&bndr[it*(2*nz+nx)], sp0, nz, nx, true);
 
-				record_seis(dcal, gxz, sp0, ng, nz);
-				cal_residuals(dcal, &dobs[it*ng], &derr[is*ng*nt+it*ng], ng);
+				record_seis(&dcal[it*ng], gxz, sp0, ng, nz);				
 			}
+			hilbert_trans(dcal, adcal);
+			hilbert_trans(dobs, adobs);
+			obj+=cal_objective(adcal, adobs, ng, nt);
+			cal_adjsource(adcal, adobs, &derr[is*ng*nt], ng, nt);
 
 			ptr=sp0; sp0=sp1; sp1=ptr;
 			memset(gp0[0], 0, nz*nx*sizeof(float));
@@ -620,7 +667,7 @@ int main(int argc, char *argv[])
 				ptr=gp0; gp0=gp1; gp1=gp2; gp2=ptr;
 			}
 		}
-		obj=cal_objective(derr, ng*nt*ns);
+		
 
 		scale_gradient(g1, vv, illum, nz, nx, precon);		
 		sf_floatwrite(illum[0], nz*nx, illums);
@@ -653,8 +700,8 @@ int main(int argc, char *argv[])
 				step_forward(sp0, sp1, sp2, vtmp, dtz, dtx, nz, nx);
 				ptr=sp0; sp0=sp1; sp1=sp2; sp2=ptr;
 
-				record_seis(dcal, gxz, sp0, ng, nz);
-				sum_alpha12(alpha1, alpha2, dcal, &dobs[it*ng], &derr[is*ng*nt+it*ng], ng);
+				record_seis(&dcal[it*ng], gxz, sp0, ng, nz);
+				sum_alpha12(alpha1, alpha2, &dcal[it*ng], &dobs[it*ng], &derr[is*ng*nt+it*ng], ng);
 			}
 		}
 		alpha=cal_alpha(alpha1, alpha2, epsil, ng);
@@ -671,6 +718,7 @@ int main(int argc, char *argv[])
 		}
 	}
 	sf_floatwrite(objval, niter, objs);
+	hilbert_close();
 
 	free(*vv); free(vv);
 	free(*vtmp); free(vtmp);
@@ -693,6 +741,8 @@ int main(int argc, char *argv[])
 	free(trans);
 	free(dobs);
 	free(dcal);
+	free(adobs);
+	free(adcal);
 	free(derr);
 	free(alpha1);
 	free(alpha2);

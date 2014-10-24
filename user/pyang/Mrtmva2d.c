@@ -21,7 +21,7 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
   
   Reference: William Symes, Reverse time migration with optimal checkpointing,
-  Geophysics, v. 72 no. 5 p. SM213-SM221 doi: 10.1190/1.2742686 
+  	Geophysics, v. 72 no. 5 p. SM213-SM221 doi: 10.1190/1.2742686 
 */
 #include <rsf.h>
 
@@ -353,7 +353,7 @@ int main(int argc, char* argv[])
   float *wlt, *bndr;
   float **dcal,**rho, **tau, **tau0, **v0, **vv, **sp, **sr, **svz, **svx, **gp, **gr, **gvz, **gvx, **image;
   float ***cp;
-  sf_file Fv, Frho, Ftau, Ftau0, Fw;
+  sf_file Fv, Frho, Ftau, Ftau0, Fw, Fcheck;
   checkpoint *checkpoints;
 
   sf_init(argc,argv);
@@ -366,6 +366,7 @@ int main(int argc, char* argv[])
   Ftau=sf_input("tau");/* tau, computed according to quality factor Q */
   Ftau0=sf_input("tau0");/* tau0, computed according to quality factor Q */
   Fw = sf_output("out");/* image */
+  Fcheck=sf_output("check");
 
   if(!sf_getbool("verb",&verb)) verb=false;
   /* verbosity */
@@ -414,12 +415,12 @@ int main(int argc, char* argv[])
   if (!sf_getint("tdmute",&tdmute))   tdmute=2./(fm*dt);
   /* number of deleyed time samples to mute */
 
-
   _dx=1./dx;
   _dz=1./dz;
   nzpad=nz+2*nb;
   nxpad=nx+2*nb;
   nc=(nt+ntc-1)/ntc;
+  sf_warning("Number of checkpoints: %d",nc);
 
   /* allocate variables */
   wlt=sf_floatalloc(nt);
@@ -509,6 +510,11 @@ int main(int argc, char* argv[])
 	memcpy(checkpoints[ic].vz, svz[0], nzpad*nxpad*sizeof(float));
 	memcpy(checkpoints[ic].vx, svx[0], nzpad*nxpad*sizeof(float));
 	ic++;
+	if(ic==3){
+		sf_warning("ic=%d",ic);
+		window2d(v0, sp);
+		sf_floatwrite(v0[0], nz*nx, Fcheck);
+	}
       }
     }
 
@@ -547,6 +553,7 @@ int main(int argc, char* argv[])
       /*correlation with source wavefield stored in checkpoints cp[] */
       cross_correlation(image, gp, cp[it%ntc]);
     }
+    sf_warning("shot %d finished",is);
   }
   /* the image needs laplacian filtering to remove low-freq noise */
   sf_floatwrite(image[0], nz*nx,Fw);

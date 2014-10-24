@@ -177,55 +177,6 @@ void variable_inverse(float **rho, float **tau0)
 	}
 }
 
-float funI0(float a, float w)
-/*< function I0: w (angular freq)>*/
-{
-	float tmp=w*a;
-	return logf(1.+tmp*tmp)/(2.*a);
-}
-
-float funI1(float a, float w)
-/*< function I1: w (angular freq)>*/
-{
-	float tmp1=w*a;
-	float tmp2=tmp1/(1.+tmp1*tmp1);
-	return (atanf(tmp1)-tmp2)/(2.*a);
-}
-
-float funI2lk(float a, float b, float w)
-/*< function I2: w (angular freq)>*/
-{
-	float tmp1=atanf(w*a)/a-atanf(w*b)/b;
-	float tmp2=a*b/(b*b-a*a);
-	return tmp1*tmp2;
-}
-
-void compute_tau(float **tau, float **Q0, float ***tau_l, int L, float wa, float wb)
-/*<compute tau according to Q0
-Reference: Joakim O. Blanch, Johan O. A. Robertsson, William W. Symes, Modeling 
-of a constant Q: Methodology and algorithm for an efficient and optimally 
-inexpensive viscoelastic technique, GEOPHYSICS Jan 1995, Vol. 60, No. 1, pp. 176-184
- >*/
-{
-	int i1, i2, l, k;
-	float s0, s1, s2;
-
-	for(i2=0; i2<nxpad; i2++)
-	for(i1=0; i1<nzpad; i1++)
-	{
-		s0=s1=s2=0.;
-		for(l=0; l<L-1; l++)
-		{
-			s0+=funI0(tau_l[i2][i1][l], wb)-funI0(tau_l[i2][i1][l], wa);
-		 	s1+=funI1(tau_l[i2][i1][l], wb)-funI1(tau_l[i2][i1][l], wa);
-			for(k=l+1; k<L; k++)
-			s2+=funI2lk(tau_l[i2][i1][l], tau_l[i2][i1][k], wb)
-			   -funI2lk(tau_l[i2][i1][l], tau_l[i2][i1][k], wa);
-		}
-
-		tau[i2][i1]=s0/((s1+s2)*Q0[i2][i1]);
-	}
-}
 /*-----------------------------------------------------------------------------*/
 
 int main(int argc, char* argv[])
