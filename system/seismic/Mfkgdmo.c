@@ -137,7 +137,7 @@ int main(int argc, char* argv[])
 	    for (ib=0; ib < nb; ib++) {
 		b = w*dt[ib];
 		sinb = sinf(b);
-		cosb = sqrtf(1.0f-xi*sinb*sinb);
+		cosb = SF_SIG(cosf(b))*sqrtf(1.0f-xi*sinb*sinb);
 
 		tshift = sf_cmplx(cosb,-sinb);
 
@@ -153,7 +153,7 @@ int main(int argc, char* argv[])
 		    if (shot) {
 			b = k*h*ds[ib];
 			sinb = sinf(b);
-			cosb = sqrtf(1.0f-xi*sinb*sinb);
+			cosb = SF_SIG(cosf(b))*sqrtf(1.0f-xi*sinb*sinb);
 
 			xshift = tshift*sf_cmplx(cosb,sinb);
 		    } else {
