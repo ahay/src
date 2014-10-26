@@ -136,8 +136,10 @@ int main(int argc, char* argv[])
 	
 	    for (ib=0; ib < nb; ib++) {
 		b = w*dt[ib];
+		sinb = sinf(b);
+		cosb = sqrtf(1.0f-xi*sinb*sinb);
 
-		tshift = sf_cmplx(cosf(b),-sinf(b));
+		tshift = sf_cmplx(cosb,-sinb);
 
 		if (inv) {
 		    cstretch4_apply  (map[ib],slice,slice2);
@@ -150,7 +152,10 @@ int main(int argc, char* argv[])
 
 		    if (shot) {
 			b = k*h*ds[ib];
-			xshift = tshift*sf_cmplx(cosf(b),sinf(b));
+			sinb = sinf(b);
+			cosb = sqrtf(1.0f-xi*sinb*sinb);
+
+			xshift = tshift*sf_cmplx(cosb,sinb);
 		    } else {
 			xshift = tshift;
 		    }

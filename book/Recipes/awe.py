@@ -22,12 +22,12 @@ def param(par):
     if(not par.has_key('rzone')):  par['rzone']='n',
     if(not par.has_key('nix')):  par['nix']=par['nx']
     if(not par.has_key('nqx')):  par['nqx']=par['nx']
-    if(not par.has_key('niz')):  par['niz']=par['nz’]
+    if(not par.has_key('niz')):  par['niz']=par['nz']
     if(not par.has_key('nqz')):  par['nqz']=par['nz']
     if(not par.has_key('oix')):  par['oix']=par['ox']
     if(not par.has_key('oqx')):  par['oqx']=par['ox']
     if(not par.has_key('oiz')):  par['oiz']=par['oz']
-    if(not par.has_key('oqz')):  par['oqz']=par['oz’]
+    if(not par.has_key('oqz')):  par['oqz']=par['oz']
 # ------------------------------------------------------------
 def awepar(par):
     awe = ' ' + \
