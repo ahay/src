@@ -401,7 +401,7 @@ void matrix_transpose(float *matrix, float *trans, int n1, int n2)
 void cal_adjsource(sf_complex *adcal, sf_complex *adobs, float *derr, int ng, int nt)
 /*< calculate adjoint source and store it in derr[] >*/
 {
-  int ig;
+  int ig, it;
   float a,b,c,d;
   float *h1;
   sf_complex *h2;
