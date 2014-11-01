@@ -759,8 +759,11 @@ int main(int argc, char* argv[])
 	free(bdd);
 	free(sdd);
 
-	free(spo);
-
+	if (dabc){
+		free(spo);
+		free(abc);	
+	}
+	free(fdm);
 	/* ------------------------------------------------------------------------------------------ */	
 	/* CLOSE FILES AND EXIT */
 	if (Fwav!=NULL) sf_fileclose(Fwav); 

@@ -21,6 +21,12 @@ avvvdwe2d
 avvvdwe3d
 bvvvdwe2d
 bvvvdwe3d
+isoela2d
+bvvvdweps2d
+'''
+
+# python programs
+targets.py = '''
 '''
 
 targets.build_all(env, glob_build, srcroot, bindir, libdir, pkgdir)

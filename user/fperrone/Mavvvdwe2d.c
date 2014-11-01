@@ -92,11 +92,6 @@ Date: November 2013
 
 #define NOP 3 /* derivative operator half-size */
 
-/* Muir's derivative operator */
-//#define C1 +0.598144  //  1225/ 1024      /2 
-//#define C2 -0.039876  // -1225/(1024*  15)/2
-//#define C3 +0.004785  //  1225/(1024* 125)/2 
-//#define C4 -0.000348  // -1225/(1024*1715)/2 
 
 /* LS coefficients */
 #define C1 +1.1989919
@@ -216,8 +211,17 @@ int main(int argc, char* argv[])
 	if(! sf_getint("jsnap",&jsnap)) jsnap=nt;        
         /* # of t steps at which to save wavefield */ 
     }
+	/* absorbing boundary */
+	if( !sf_getint("nb",&nb) || nb<NOP) nb=NOP;
     /*------------------------------------------------------------*/
+    /*------------------------------------------------------------*/
+    /* expand domain for FD operators and ABC */
 
+
+    fdm=fdutil_init(verb,fsrf,az,ax,nb,1);
+
+    sf_setn(az,fdm->nzpad); sf_seto(az,fdm->ozpad); if(verb) sf_raxa(az);
+    sf_setn(ax,fdm->nxpad); sf_seto(ax,fdm->oxpad); if(verb) sf_raxa(ax);
     /*------------------------------------------------------------*/
     /* setup output data header */
     sf_oaxa(Fdat,ar,1);
@@ -255,14 +259,7 @@ int main(int argc, char* argv[])
 	sf_oaxa(Fwfl,at, 3);
     }
 
-    /*------------------------------------------------------------*/
-    /* expand domain for FD operators and ABC */
-    if( !sf_getint("nb",&nb) || nb<NOP) nb=NOP;
 
-    fdm=fdutil_init(verb,fsrf,az,ax,nb,1);
-
-    sf_setn(az,fdm->nzpad); sf_seto(az,fdm->ozpad); if(verb) sf_raxa(az);
-    sf_setn(ax,fdm->nxpad); sf_seto(ax,fdm->oxpad); if(verb) sf_raxa(ax);
     /*------------------------------------------------------------*/
 
 	/* wavelet and data vector */
@@ -381,7 +378,7 @@ int main(int argc, char* argv[])
 					#endif
 					for    (ix=0; ix<fdm->nxpad; ix++) {
 						for(iz=nb; iz<nb+2*NOP; iz++) {
-							fsrfcells[ix][2*NOP+(iz-nb)  ] = um1[ix][iz];
+							fsrfcells[ix][2*NOP+(iz-nb)  ] =  um1[ix][iz];
 							fsrfcells[ix][2*NOP-(iz-nb)-1] = -um1[ix][iz];
 						}
 					}
@@ -419,7 +416,7 @@ int main(int argc, char* argv[])
 						}
 					}
 				}
-
+				
 
 				#ifdef _OPENMP
 				#pragma omp for schedule(dynamic,fdm->ompchunk)
@@ -466,8 +463,6 @@ int main(int argc, char* argv[])
 											 uat[ix+3][iz]);
 					}
 				}
-		
-
 
 				/* step forward in time */
 				#ifdef _OPENMP
@@ -497,24 +492,24 @@ int main(int argc, char* argv[])
 				cut2d(uo,uc,fdm,acz,acx);
 				sf_floatwrite(uc[0],sf_n(acz)*sf_n(acx),Fwfl);
 			}
-
+			
 			/* one-way abc  + sponge apply */	
 			if(dabc) {
 				abcone2d_apply(uo,um1,NOP,abc,fdm);
-				sponge2d_apply(uo,spo,fdm);
 				sponge2d_apply(um1,spo,fdm);
+				sponge2d_apply(uo,spo,fdm);
 			}
-
 			
 			/* circulate wavefield arrays */
 			ut=um2;
 			um2=um1;
 			um1=uo;
 			uo=ut;
+
 			
 	    } /* end time loop */
 	    end_t = clock();
-		if(verb) fprintf(stderr,"\n");
+		if(verb) fprintf(stderr,"\r");
 
 		if (verb){	
 			total_t = (float)(end_t - start_t) / CLOCKS_PER_SEC;
@@ -527,7 +522,7 @@ int main(int argc, char* argv[])
 		// extrapolation
 		start_t = clock();
 		for (it=0; it<nt; it++){
-			if(verb) fprintf(stderr,"%d/%d  \r",it,nt);
+			if(verb) fprintf(stderr,"%d/%d  \n",it,nt);
 
 			// source injection
 			/* inject acceleration source */
@@ -712,8 +707,11 @@ int main(int argc, char* argv[])
     free(rr);
     free(dd);
 
-	free(spo);
-
+	if (dabc){
+		free_sponge(spo);
+		free_abcone2d(abc);	
+	}
+	free(fdm);
 	/* ------------------------------------------------------------------------------------------ */	
 	/* CLOSE FILES AND EXIT */
     if (Fwav!=NULL) sf_fileclose(Fwav); 

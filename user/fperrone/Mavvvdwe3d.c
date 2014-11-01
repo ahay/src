@@ -833,8 +833,11 @@ int main(int argc, char* argv[])
     free(rr);
     free(dd);
 
-	free(spo);
-
+	if (dabc){
+		free(spo);
+		free(abc);	
+	}
+	free(fdm);
 	/* ------------------------------------------------------------------------------------------ */	
 	/* CLOSE FILES AND EXIT */
     if (Fwav!=NULL) sf_fileclose(Fwav); 

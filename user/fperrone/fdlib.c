@@ -358,7 +358,10 @@ void expand(float** a,
 /*< expand domain >*/
 {
     int iz,ix;
-
+	int nb;
+	
+	nb = fdm->nb;
+	
     for     (ix=0;ix<fdm->nx;ix++) {
 	for (iz=0;iz<fdm->nz;iz++) {
 	    b[fdm->nb+ix][fdm->nb+iz] = a[ix][iz];
@@ -366,16 +369,16 @@ void expand(float** a,
     }
 
     for     (ix=0; ix<fdm->nxpad; ix++) {
-	for (iz=0; iz<fdm->nb;    iz++) {
+	for (iz=0; iz<nb;    iz++) {
 	    b[ix][           iz  ] = b[ix][           fdm->nb  ];
-	    b[ix][fdm->nzpad-iz-1] = b[ix][fdm->nzpad-fdm->nb-1];
+	    b[ix][nb+fdm->nz-1+iz] = b[ix][nb+fdm->nz-1];
 	}
     }
 
-    for     (ix=0; ix<fdm->nb;    ix++) {
+    for     (ix=0; ix<nb;    ix++) {
 	for (iz=0; iz<fdm->nzpad; iz++) {
 	    b[           ix  ][iz] = b[           fdm->nb  ][iz];
-	    b[fdm->nxpad-ix-1][iz] = b[fdm->nxpad-fdm->nb-1][iz];
+	    b[nb+fdm->nx-1+ix][iz] = b[nb+fdm->nx-1][iz];
 	}
     }
 }
@@ -915,6 +918,22 @@ http://sepwww.stanford.edu/public/docs/sep11/11_12_abs.html
     return abc;
 }
 
+
+/*------------------------------------------------------------*/
+void free_abcone2d(abcone2d abc)
+/*< Free the space allocated for the one-way radiating boundary >*/
+{
+
+	free(abc->bzl);
+	free(abc->bzh);
+	free(abc->bxl);
+	free(abc->bxh);
+	
+	free(abc);
+}
+
+
+
 /*------------------------------------------------------------*/
 abcone3d abcone3d_make(int     nop,
 		       float    dt,
@@ -1156,9 +1175,9 @@ contrasts */
     
     spo = (sponge) sf_alloc(1,sizeof(*spo));    
     spo->w = sf_floatalloc(nb);
-    sb = 4.0*nb;               
+    sb = nb;  
     for(ib=0; ib<nb; ib++) {
-	fb = ib/(sqrt(2.0)*sb);
+	fb = .3*ib/sb;
 	spo->w[ib] = exp(-fb*fb);
     }
     return spo;
@@ -1199,36 +1218,12 @@ void sponge2d_apply(float**   uu,
     }
 }
 
-void sponge2d_apply_test(float**   uu,
-		    sponge   spo,
-		    fdm2d    fdm)
-/*< apply boundary sponge >*/
+/*------------------------------------------------------------*/
+void free_sponge(sponge spo)
+/*< deallocate the sponge >*/
 {
-    int iz,ix,ib,ibz,ibx;
-    float w;
-
-#ifdef _OPENMP
-#pragma omp parallel for			\
-    schedule(dynamic,1)				\
-    private(ib,iz,ix,ibz,ibx,w)			\
-    shared(fdm,uu)
-#endif
-    for(ib=0; ib<fdm->nb; ib++) {
-	w = spo->w[ib];
-
-	ibz = fdm->nzpad-ib-1;
-	for(ix=0; ix<fdm->nxpad; ix++) {
-	    uu[ix][ib ] *= w; /*    top sponge */
-	    uu[ix][ibz] *= w; /* bottom sponge */
-	}
-
-	ibx = fdm->nxpad-ib-1;
-	for(iz=0; iz<fdm->nzpad; iz++) {
-	    uu[ib ][iz] *= w; /*   left sponge */
-	    uu[ibx][iz] *= w; /*  right sponge */
-	}
-
-    }
+	free(spo->w);
+	free(spo);
 }
 
 /*------------------------------------------------------------*/
