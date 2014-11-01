@@ -23,7 +23,7 @@
 
 int main(int argc, char* argv[]) 
 {
-    bool sub,os,cft;
+    bool sub,os,cft,cos,cmplx;
     int nx, nx2, nk, nt, m, ix, ik, it, im, n2;
     sf_complex *curr, **wave, *cwave, *cwavem, *prev, c, old;
     float dt;
@@ -37,8 +37,6 @@ int main(int argc, char* argv[])
 
     if (SF_COMPLEX != sf_gettype(Fw)) sf_error("Need complex input");
 
-    sf_settype(Fo,SF_FLOAT);
-
     /* Read/Write axes */
 
     if (!sf_histint(Fw,"n1",&nx)) sf_error("No n1= in input");
@@ -48,13 +46,25 @@ int main(int argc, char* argv[])
     if (!sf_getbool("sub",&sub)) sub=false;
     /* if -1 is included in the matrix */
     if (!sf_getbool("os",&os)) os=true;
+    if (!sf_getbool("cos",&cos)) cos=true;
     if (!sf_getbool("cft",&cft)) cft=true;
     if (os) sf_warning("One-step wave extrapolation");
     else {
-      sf_warning("Two-step wave extrapolation");
-      if (!cft)
-	sf_warning("... and real-complex FFT!");
+      if (cos) {
+	sf_warning("Two-step wave extrapolation using cosine");
+	if (!cft)
+	  sf_warning("... and real-complex FFT!");
+      } else {
+	sf_warning("Two-step wave extrapolation using sine");
+      }
     }
+    if (!sf_getbool("cmplx",&cmplx)) cmplx=false;
+    if (!os && !cft && cos && cmplx)
+      sf_error("Cannot output complex using real fft!");
+    if (cmplx)
+      sf_settype(Fo,SF_COMPLEX);
+    else
+      sf_settype(Fo,SF_FLOAT);
 
     sf_putint(Fo,"n2",nt);
     sf_putfloat(Fo,"d2",dt);
@@ -62,7 +72,7 @@ int main(int argc, char* argv[])
     sf_putstring(Fo,"label2","Time");
     sf_putstring(Fo,"unit2","s");
 
-    if (!os && !cft)
+    if (!os && !cft && cos)
       nk = fft1_init(nx,&nx2);
     else {
       nk = cfft1_init(nx,&nx2);
@@ -73,12 +83,12 @@ int main(int argc, char* argv[])
     rcurr= sf_floatalloc(nx2);
     cwave = sf_complexalloc(nk);
     if (!os) {
-      if (cft) {
-	prev   = sf_complexalloc(nx2);
-	rprev = NULL;
-      } else {
+      if (!cft && cos) {
 	prev = NULL;
 	rprev   = sf_floatalloc(nx2);
+      } else {
+	prev   = sf_complexalloc(nx2);
+	rprev = NULL;
       }
     }
 
@@ -93,7 +103,7 @@ int main(int argc, char* argv[])
       if (!sf_histint(right,"n1",&n2) || n2 != m) sf_error("Need n1=%d in right",m);
       if (!sf_histint(right,"n2",&n2) || n2 != nk) sf_error("Need n2=%d in right, now n2=%d",nk,n2);
 
-      if (!os && !cft) {
+      if (!os && !cft && cos) {
 	if (SF_FLOAT != sf_gettype(left) || SF_FLOAT != sf_gettype(right)) sf_error("Need float left and right");
 	lft = NULL;
 	rht = NULL;
@@ -120,7 +130,7 @@ int main(int argc, char* argv[])
 
       cwavem = sf_complexalloc(nk);
       
-      if (!os && !cft) {
+      if (!os && !cft && cos) {
 	ifft1_allocate(cwavem);
 	wave = NULL;
 	rwave = sf_floatalloc2(nx2,m);
@@ -162,16 +172,19 @@ int main(int argc, char* argv[])
     for (ix = 0; ix < nx2; ix++) {
       rcurr[ix]=crealf(curr[ix]);
       if (!os) {
-	if (cft) {
-	  prev[ix] = sf_cmplx(0.,0.);
-	} else {
+	if (!cft && cos) {
 	  rprev[ix] = 0.0f;
+	} else {
+	  prev[ix] = sf_cmplx(0.,0.);
 	}
       }
     }
 
-    if (!os && !cft) {
+    if (!os && !cft && cos) {
       for (it=0; it < nt; it++) {
+	sf_warning("it=%d;",it);
+
+	sf_floatwrite(rcurr,nx,Fo);
 
 	fft1(rcurr,cwave);
 
@@ -212,13 +225,17 @@ int main(int argc, char* argv[])
 	  rcurr[ix] = f;
 	} 
 
-	sf_floatwrite(rcurr,nx,Fo);
       }
       
     } else {
       /* propagation in time */
       for (it=0; it < nt; it++) {
 	sf_warning("it=%d;",it);
+
+	if (cmplx)
+	  sf_complexwrite(curr,nx,Fo);
+	else
+	  sf_floatwrite(rcurr,nx,Fo);
 
         /* FFT: curr -> cwave */
 	cfft1(curr,cwave);
@@ -247,10 +264,10 @@ int main(int argc, char* argv[])
 	    old = curr[ix];
 #ifdef SF_HAS_COMPLEX_H
 	    c = sub? 2*old : sf_cmplx(0.,0.);
-	    c -= prev[ix];
+	    c += cos? -prev[ix]:prev[ix];
 #else
 	    c = sub? sf_crmul(old,2) : sf_cmplx(0.,0.);
-	    c = sf_csub(c,prev[ix]);
+	    c = cos? sf_csub(c,prev[ix]):sf_cadd(c,prev[ix]);
 #endif
 	    prev[ix] = old;
 	  }
@@ -276,7 +293,6 @@ int main(int argc, char* argv[])
 	  rcurr[ix] = crealf(c);
 	}
 
-	sf_floatwrite(rcurr,nx,Fo);
       }
     }
     exit(0);

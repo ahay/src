@@ -24,27 +24,31 @@
 
 int main(int argc, char* argv[])
 {
-    bool verb,complx;
+    bool verb,complx,sub,os;
     int it,iz,im,ik,ix,i,j;     /* index variables */
     int nt,nz,nx, m2, nk, nzx, nz2, nx2, nzx2, n2, pad1,nth;
-    sf_complex c;
+    sf_complex c,old;
 
-    float  *rr;      /* I/O arrays*/
-    sf_complex *ww, *cwave, *cwavem;
-
-    sf_complex **wave, *curr;
-    float *rcurr;
+    /* I/O arrays*/
+    sf_complex *ww,*curr,*prev,*cwave,*cwavem,**wave,**lt, **rt;
+    float *rcurr,*rr;
     
     sf_file Fw,Fr,Fo;    /* I/O files */
     sf_axis at,az,ax;    /* cube axes */
-
-    sf_complex **lt, **rt;
     sf_file left, right;
 
 
     sf_init(argc,argv);
     if(!sf_getbool("verb",&verb)) verb=false; /* verbosity */
     if(!sf_getbool("cmplx",&complx)) complx=true; /* outputs complex wavefield */
+    if(!sf_getbool("os",&os)) os=true; /* one-step flag */
+    if (os) {
+      sf_warning("One-step wave extrapolation");
+      if(!sf_getbool("sub",&sub)) sub=false; /* subtraction flag */
+    } else {
+      sf_warning("Two-step wave extrapolation");
+      if(!sf_getbool("sub",&sub)) sub=true; /* subtraction flag */
+    }
 
     /* setup I/O files */
     Fw = sf_input ("in" );
@@ -110,6 +114,8 @@ int main(int argc, char* argv[])
     sf_floatread(rr,nzx,Fr);
 
     curr   = sf_complexalloc(nzx2);
+    if (!os) prev = sf_complexalloc(nzx2);
+    else prev = NULL;
     if(!complx) rcurr  = sf_floatalloc(nzx2);
     else rcurr=NULL;
 
@@ -121,6 +127,7 @@ int main(int argc, char* argv[])
 
     for (iz=0; iz < nzx2; iz++) {
 	curr[iz] = sf_cmplx(0.,0.);
+	if (!os) prev[iz] = sf_cmplx(0.,0.);
 	if(!complx) rcurr[iz]= 0.;
     }
 
@@ -144,13 +151,23 @@ int main(int argc, char* argv[])
 
 	for (ix = 0; ix < nx; ix++) {
 	    for (iz=0; iz < nz; iz++) {
-		i = iz+ix*nz;  /* original grid */
+	        i = iz+ix*nz;  /* original grid */
 		j = iz+ix*nz2; /* padded grid */
 #ifdef SF_HAS_COMPLEX_H
 		c = ww[it] * rr[i]; // source term
 #else
 		c = sf_crmul(ww[it], rr[i]); // source term
 #endif
+		if (sub) c += curr[j];
+		if (!os) {
+		  old = curr[j];
+#ifdef SF_HAS_COMPLEX_H
+		  c += sub? (old-prev[j]) : -prev[j];
+#else
+		  c = sf_cadd(c,sub? sf_csub(old,prev[j]) : sf_cneg(prev[j]));
+#endif
+		  prev[j] = old;
+		}
 		for (im = 0; im < m2; im++) {
 #ifdef SF_HAS_COMPLEX_H
 		    c += lt[im][i]*wave[im][j];

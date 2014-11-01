@@ -690,6 +690,143 @@ int lowrank(int m, int n, int (*sample)(vector<int>&, vector<int>&, CpxNumMat&),
   return 0;
 }
 
+// hybrid version
+int lowrank_hyb(int m, int n, int (*sample)(vector<int>&, vector<int>&, CpxNumMat&), int (*sample1)(vector<int>&, vector<int>&, CpxNumMat&), float eps, int npk, vector<int>& cidx, vector<int>& ridx, CpxNumMat& mid)
+{
+  iA(m>0 && n>0);
+  {
+    int nc = min(npk,n);
+    vector<int> cs(nc);
+    for(int k=0; k<nc; k++)      cs[k] = int( floor(drand48()*(n-nc)) );
+    sort(cs.begin(), cs.end());
+    for(int k=0; k<nc; k++)      cs[k] += k;
+    //
+    //for(int k=0; k<cidx.size(); k++)      cs.push_back(cidx[k]);
+    //sort(cs.begin(), cs.end());
+    //vector<int>::iterator newend = unique(cs.begin(), cs.end());
+    //cs.resize(newend-cs.begin());
+    //
+    vector<int> rs(m);
+    for(int k=0; k<m; k++)      rs[k] = k;
+    //
+    CpxNumMat M2tmp;    iC( (*sample)(rs, cs, M2tmp) );
+    CpxNumMat M2(M2tmp.n(), M2tmp.m());
+    for(int i=0; i<M2tmp.m(); i++)      for(int j=0; j<M2tmp.n(); j++)	M2(j,i) = conj(M2tmp(i,j));
+    //
+    int m = M2.m();
+    int n = M2.n();
+    int lda = m;
+    NumVec<int> jpvt(n);    setvalue(jpvt, int(0));
+    CpxNumVec tau(max(m,n));
+    CpxNumVec work(3*n);
+    FltNumVec rwork(6*n);
+    int info;
+    cgeqpf_(&m, &n, 
+	    (MKL_Complex8*) M2.data(), &lda, jpvt.data(), 
+	    (MKL_Complex8*) tau.data(), 
+	    (MKL_Complex8*) work.data(), rwork.data(), &info);    
+    iA(info==0);
+    float cutoff = eps*abs(M2(0,0));
+    int cnt=0;
+    for(int k=0; k<min(m,n); k++)      if(abs(M2(k,k))>cutoff)	cnt++;
+    ridx.resize(cnt);
+    for(int k=0; k<cnt; k++)      ridx[k] = (jpvt(k)-1);
+    cerr<<"ROWS "; for(int k=0; k<cnt; k++)      cerr<<ridx[k]<<" ";    cerr<<endl;
+  }
+  {
+    int nr = min(npk,m);
+    vector<int> rs(nr);
+    for(int k=0; k<nr; k++)      rs[k] = int( floor(drand48()*(m-nr)) );
+    sort(rs.begin(), rs.end());
+    for(int k=0; k<nr; k++)      rs[k] += k;
+    //
+    for(unsigned int k=0; k<ridx.size(); k++)      rs.push_back(ridx[k]);
+    sort(rs.begin(), rs.end());
+    vector<int>::iterator newend = unique(rs.begin(), rs.end());
+    rs.resize(newend-rs.begin());
+    //
+    vector<int> cs(n);
+    for(int k=0; k<n; k++)      cs[k] = k;
+    //
+    CpxNumMat M1;    iC( (*sample)(rs, cs, M1) );
+    //
+    int m = M1.m();
+    int n = M1.n();
+    int lda = m;
+    NumVec<int> jpvt(n);      setvalue(jpvt, int(0));
+    CpxNumVec tau(max(m,n));
+    CpxNumVec work(3*n);
+    FltNumVec rwork(6*n);
+    int info;
+    cgeqpf_(&m, &n, 
+	    (MKL_Complex8*) M1.data(), &lda, jpvt.data(), 
+	    (MKL_Complex8*) tau.data(), 
+	    (MKL_Complex8*) work.data(), rwork.data(), &info);    
+    iA(info==0);
+    float cutoff = eps*abs(M1(0,0)); //the diagonal element
+    int cnt=0;
+    for(int k=0; k<min(m,n); k++)	if(abs(M1(k,k))>cutoff)	  cnt++;
+    cidx.resize(cnt);
+    for(int k=0; k<cnt; k++)	cidx[k] = (jpvt(k)-1);
+    cerr<<"COLS "; for(int k=0; k<cnt; k++)      cerr<<cidx[k]<<" ";    cerr<<endl;
+  }
+  {
+    int nc = min(npk,n);
+    vector<int> cs(nc);
+    for(int k=0; k<nc; k++)      cs[k] = int( floor(drand48()*(n-nc)) );
+    sort(cs.begin(), cs.end());
+    for(int k=0; k<nc; k++)      cs[k] += k;
+    for(unsigned int k=0; k<cidx.size(); k++)      cs.push_back(cidx[k]);
+    sort(cs.begin(), cs.end());
+    vector<int>::iterator csnewend = unique(cs.begin(), cs.end());
+    cs.resize(csnewend-cs.begin());
+    //
+    int nr = min(npk,m);
+    vector<int> rs(nr);
+    for(int k=0; k<nr; k++)      rs[k] = int( floor(drand48()*(m-nr)) );
+    sort(rs.begin(), rs.end());
+    for(int k=0; k<nr; k++)      rs[k] += k;
+    for(unsigned int k=0; k<ridx.size(); k++)      rs.push_back(ridx[k]);
+    sort(rs.begin(), rs.end());
+    vector<int>::iterator rsnewend = unique(rs.begin(), rs.end());
+    rs.resize(rsnewend-rs.begin());
+    //
+    CpxNumMat M1;    iC( (*sample1)(rs,cidx,M1) );
+    CpxNumMat IM1;    iC( pinv(M1, (float) 1e-7, IM1) );
+    CpxNumMat M2;    iC( (*sample1)(ridx,cs,M2) );
+    CpxNumMat IM2;    iC( pinv(M2, (float) 1e-7, IM2) );
+    CpxNumMat M3;    iC( (*sample1)(rs,cs,M3) );
+    CpxNumMat tmp(M3.m(), IM2.n());
+    iC( zgemm(1.0, M3, IM2, 0.0, tmp) );
+    mid.resize(IM1.m(), tmp.n());
+    iC( zgemm(1.0, IM1, tmp, 0.0, mid) );
+  }
+  if(1) {
+    int nc = min(npk,n);
+    vector<int> cs(nc);
+    for(int k=0; k<nc; k++)      cs[k] = int( floor(drand48()*n) );
+    int nr = min(npk,m);
+    vector<int> rs(nr);
+    for(int k=0; k<nr; k++)      rs[k] = int( floor(drand48()*m) );
+    CpxNumMat M1;
+    iC( (*sample1)(rs,cidx,M1) );
+    CpxNumMat M2;
+    iC( (*sample1)(ridx,cs,M2) );
+    CpxNumMat Mext;
+    iC( (*sample1)(rs,cs,Mext) );
+    CpxNumMat Mapp(rs.size(), cs.size());
+    CpxNumMat tmp(mid.m(),M2.n());
+    iC( zgemm(1.0, mid, M2, 0.0, tmp) );
+    iC( zgemm(1.0, M1, tmp, 0.0, Mapp) );
+    CpxNumMat Merr(Mext.m(), Mext.n());
+    for(int a=0; a<Mext.m(); a++)
+      for(int b=0; b<Mext.n(); b++)
+	Merr(a,b) = Mext(a,b) - Mapp(a,b);
+    cerr<<"lowrank rel err "<<sqrt(energy(Merr))/sqrt(energy(Mext))<<endl;
+  }
+  return 0;
+}
+
 
 //-------------------------------------------------------------------------
 //just the transpose,
