@@ -125,6 +125,7 @@ int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 		   		double n1= x/k; double n2= y/k; double n3= z/k;
 		   		n1*=n1; n2*=n2; n3*=n3;
 		   		if (n1!=1 && n2!=1 && n3!=1) {
+
 		       		if (c22*(c33-c44)==0 || c33*(c22-c44)==0 || c11*(c33-c55)==0 || c33*(c11-c55)==0 || c22*(c11-c66)==0 || c11*(c22-c66)==0 )
 				sf_warning("Dividing zero when calculating qv&qh!");
 		       		
@@ -168,9 +169,14 @@ int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 		       		double q3 = (qv[2]*n1+qh[2]*n2)/(1.-n3);
 		       		double qm = (q1-1.)*c22*c33*y2*z2 + (q2-1.)*c11*c33*x2*z2 + (q3-1.)*c11*c22*x2*y2;
 				
-				if (fabs(qv[0]-1.0) > 1e-4 && fabs(qh[0]-1.0) > 1e-4 ) {
-		       		sv1= c22*(c33-c22)*(qh[0]-1.)*pow(qv[0]-1.,2)/(2*(c33*(1.-qh[0])+c22*(qv[0]-1.))*(c33*(qv[0]-qh[0])+c22*(qh[0]+qv[0]-pow(qv[0],2)-1.)));
-		       		sh1= c33*(c33-c22)*(qv[0]-1.)*pow(qh[0]-1.,2)/(2*(c33*(1.-qh[0])+c22*(qv[0]-1.))*(c22*(qh[0]-qv[0])+c33*(qh[0]+qv[0]-pow(qh[0],2)-1.)));
+				if (fabs(qv[0]-1.0) > 1e-4 && fabs(qh[0]-1.0) > 1e-4) {
+					if (qv[0]-qh[0]>1e-4) {
+		       				sv1= c22*(c33-c22)*(qh[0]-1.)*pow(qv[0]-1.,2)/(2*(c33*(1.-qh[0])+c22*(qv[0]-1.))*(c33*(qv[0]-qh[0])+c22*(qh[0]+qv[0]-pow(qv[0],2)-1.)));
+		       				sh1= c33*(c33-c22)*(qv[0]-1.)*pow(qh[0]-1.,2)/(2*(c33*(1.-qh[0])+c22*(qv[0]-1.))*(c22*(qh[0]-qv[0])+c33*(qh[0]+qv[0]-pow(qh[0],2)-1.)));			
+					} else {
+						sv1 = 0.5;
+						sh1 = 0.5;
+					}
 		       		} else {
 					qv[0] = 1.0;
 					qh[0] = 1.0;
@@ -178,8 +184,14 @@ int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 					sh1 = 0.5;
 				}
 				if (fabs(qv[1]-1.0) > 1e-4 && fabs(qh[1]-1.0) > 1e-4 ) {
-		       		sv2= c11*(c33-c11)*(qh[1]-1.)*pow(qv[1]-1.,2)/(2*(c33*(1.-qh[1])+c11*(qv[1]-1.))*(c33*(qv[1]-qh[1])+c11*(qh[1]+qv[1]-pow(qv[1],2)-1.)));
-		       		sh2= c33*(c33-c11)*(qv[1]-1.)*pow(qh[1]-1.,2)/(2*(c33*(1.-qh[1])+c11*(qv[1]-1.))*(c11*(qh[1]-qv[1])+c33*(qh[1]+qv[1]-pow(qh[1],2)-1.)));
+					if (qv[1]-qh[1]>1e-4) {
+		       				sv2= c11*(c33-c11)*(qh[1]-1.)*pow(qv[1]-1.,2)/(2*(c33*(1.-qh[1])+c11*(qv[1]-1.))*(c33*(qv[1]-qh[1])+c11*(qh[1]+qv[1]-pow(qv[1],2)-1.)));
+		       				sh2= c33*(c33-c11)*(qv[1]-1.)*pow(qh[1]-1.,2)/(2*(c33*(1.-qh[1])+c11*(qv[1]-1.))*(c11*(qh[1]-qv[1])+c33*(qh[1]+qv[1]-pow(qh[1],2)-1.)));				
+					} else {
+						sv2 = 0.5;
+						sh2 = 0.5;
+					}
+
 		       		} else {
 					qv[1] = 1.0;
 					qh[1] = 1.0;
@@ -187,8 +199,13 @@ int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 					sh2 = 0.5;
 				}
 				if (fabs(qv[2]-1.0) > 1e-4 && fabs(qh[2]-1.0) > 1e-4 ) {
-				sv3= c22*(c11-c22)*(qh[2]-1.)*pow(qv[2]-1.,2)/(2*(c11*(1.-qh[2])+c22*(qv[2]-1.))*(c11*(qv[2]-qh[2])+c22*(qh[2]+qv[2]-pow(qv[2],2)-1.)));
-		       		sh3= c11*(c11-c22)*(qv[2]-1.)*pow(qh[2]-1.,2)/(2*(c11*(1.-qh[2])+c22*(qv[2]-1.))*(c22*(qh[2]-qv[2])+c11*(qh[2]+qv[2]-pow(qh[2],2)-1.)));
+					if (qv[2]-qh[2]>1e-4) {
+						sv3= c22*(c11-c22)*(qh[2]-1.)*pow(qv[2]-1.,2)/(2*(c11*(1.-qh[2])+c22*(qv[2]-1.))*(c11*(qv[2]-qh[2])+c22*(qh[2]+qv[2]-pow(qv[2],2)-1.)));
+		       				sh3= c11*(c11-c22)*(qv[2]-1.)*pow(qh[2]-1.,2)/(2*(c11*(1.-qh[2])+c22*(qv[2]-1.))*(c22*(qh[2]-qv[2])+c11*(qh[2]+qv[2]-pow(qh[2],2)-1.)));
+					} else {
+						sv3 = 0.5;
+						sh3 = 0.5;
+					}
 		       		} else {
 					qv[2] = 1.0;
 					qh[2] = 1.0;
@@ -202,7 +219,7 @@ int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 		       		double sm = s1*n1 + s2*n2 + s3*n3;
 		       		if (sm==0) sf_warning("Dividing zero: sm=%f !",sm);
 		       		r = sqrt(e*(1.-sm) + sm*sqrt(e*e + 2.*qm/sm));
-		       		if (r!=r) sf_warning("r=,n1=,n2=,n3=",r,n1,n2,n3);
+		       		if (r!=r) sf_warning("r=%g,n1=%g,n2=%g,n3=%g, e=%g s1=%g s2=%g s3=%g sh2=%g sv3=%g sh1=%g sh3=%g ",r,n1,n2,n3,e,s1,s2,s3,sh2,sv3,sh1,sh3);
 		   		} else r = sqrt(e);
 	       		} else r = 0.;
 			break;
