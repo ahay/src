@@ -522,7 +522,7 @@ int main(int argc, char* argv[])
 		// extrapolation
 		start_t = clock();
 		for (it=0; it<nt; it++){
-			if(verb) fprintf(stderr,"%d/%d  \n",it,nt);
+			if(verb) fprintf(stderr,"%d/%d  \r",it,nt);
 
 			// source injection
 			/* inject acceleration source */
