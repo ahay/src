@@ -1184,7 +1184,7 @@ contrasts */
     
     spo = (sponge) sf_alloc(1,sizeof(*spo));    
     spo->w = sf_floatalloc(nb);
-    sb = 4.0*nb;               
+    sb = 4*nb;               
     for(ib=0; ib<nb; ib++) {
 	fb = ib/(sqrt(2.0)*sb);
 	spo->w[ib] = exp(-fb*fb);
