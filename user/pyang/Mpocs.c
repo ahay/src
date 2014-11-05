@@ -1,4 +1,4 @@
-/* n-D POCS interpolation using a general Lp-norm optimization
+/* n-D POCS interpolation using a hard thresholding
 Note: Acquistion geometry represented by mask operator.
 */
 /*
