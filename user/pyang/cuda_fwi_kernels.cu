@@ -3,7 +3,6 @@
 /*
   Copyright (C) 2013  Xi'an Jiaotong University (Pengliang Yang)
     Email: ypl.2100@gmail.com	
-    Acknowledgement: This code is written with the help of Baoli Wang.
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -115,7 +114,7 @@ __global__ void cuda_step_forward(float *p0, float *p1, float *vv, float dtz, fl
 		float c1=v1*v1*(s_p1[threadIdx.y+1][threadIdx.x+2]-2.0*s_p1[threadIdx.y+1][threadIdx.x+1]+s_p1[threadIdx.y+1][threadIdx.x]);
 		float c2=v2*v2*(s_p1[threadIdx.y+2][threadIdx.x+1]-2.0*s_p1[threadIdx.y+1][threadIdx.x+1]+s_p1[threadIdx.y][threadIdx.x+1]);
 /*
-		if(i1==0)// top boundary
+		if(i1==0)// top boundary is free surface boundary condition, commentted!!
 		{
 			c1=v1*(-s_p1[threadIdx.y+1][threadIdx.x+1]+s_p1[threadIdx.y+1][threadIdx.x+2]
 						+s_p0[threadIdx.y+1][threadIdx.x+1]-s_p0[threadIdx.y+1][threadIdx.x+2]);
@@ -251,12 +250,13 @@ __global__ void cuda_cal_objective(float *obj, float *err, int ng)
 
 
 __global__ void cuda_cal_gradient(float *g1, float *lap, float *gp, int nz, int nx)
-/*< calculate gradient >*/
+/*< calculate gradient  >*/
 {
 	int i1=threadIdx.x+blockIdx.x*blockDim.x;
 	int i2=threadIdx.y+blockIdx.y*blockDim.y;
 	int id=i1+nz*i2;	
 
+	/* Here, the second derivative of sp has been replaced with laplace according to wave equation:	second_derivative{p}=v^2 lap{p}	*/
 	if (i1<nz && i2<nx) g1[id]+=lap[id]*gp[id];
 }
 

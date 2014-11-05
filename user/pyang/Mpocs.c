@@ -110,9 +110,6 @@ int main(int argc, char* argv[])
 	    	if (nthr < 0) nthr=0;
 	    	if (nthr >= num) nthr=num-1;
 		thr=sf_quantile(nthr,num,thresh);
-		thr*=((float)(niter-iter))/niter;
-		/* thr*=powf(0.01,(iter-1.0)/(niter-1.0)); */
-
 		for(i=0; i<num; i++) mm[i]*=(cabsf(mm[i])>thr?1.:0.);
 
 		/* mm<--A mm*/

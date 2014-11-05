@@ -1,6 +1,6 @@
 /* Forward-backword exact reconstruction using boundary saving
 
-Note: 	It is used as a demonstration that we can reconstruct the modeled
+Note: It is used as a demonstration that we can reconstruct the modeled
 	wavefield exactly via boundary saving.
 */
 /*

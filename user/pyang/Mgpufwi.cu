@@ -1,4 +1,4 @@
-/* CUDA based FWI using Enquist absorbing boundary condition
+/* CUDA based FWI using Enquist absorbing boundary condition (A2)
 
 Note: 	You can try other complex boundary condition but we do not
 	recommend to do so. The main reason is that FWI is to recover
@@ -12,7 +12,6 @@ Note: 	You can try other complex boundary condition but we do not
 /*
   Copyright (C) 2013  Xi'an Jiaotong University (Pengliang Yang)
     Email: ypl.2100@gmail.com	
-    Acknowledgement: This code is written with the help of Baoli Wang.
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -106,7 +105,7 @@ void window(float *v0,float *vv, int nz, int nx, int nz1, int nx1)
 
 	for(i2=0; i2<nx1; i2++)
 	for(i1=0; i1<nz1; i1++)
-		  v0[i1+i2*nz1]=vv[i1+nz*i2];
+		v0[i1+i2*nz1]=vv[i1+nz*i2];
 }
 
 void matrix_transpose(float *matrix, float *trans, int n1, int n2)
@@ -187,6 +186,7 @@ int main(int argc, char *argv[])
    	if (!sf_histint(shots,"csdgather",&csd)) sf_error("csdgather or not required");
 	/* default, common shot-gather; if n, record at every point*/
 
+	/* put the labels, legends and parameters for output rsf file */
 	sf_putint(vupdates,"n1",nz1);	
 	sf_putint(vupdates,"n2",nx1);
 	sf_putfloat(vupdates,"d1",dz);
@@ -270,19 +270,17 @@ int main(int argc, char *argv[])
 	cudaMemset(d_gp0, 0, nz*nx*sizeof(float));
 	cudaMemset(d_gp1, 0, nz*nx*sizeof(float));
 	cuda_ricker_wavelet<<<(nt+511)/512,512>>>(d_wlt, amp, fm, dt, nt);
+	/* configure the source/geophone geometry */
 	if (!(sxbeg>=0 && szbeg>=0 && sxbeg+(ns-1)*jsx<nx1 && szbeg+(ns-1)*jsz<nz1))	
-	{ sf_warning("sources exceeds the computing zone!\n"); exit(1);}
+	{ sf_error("sources exceeds the computing zone!\n"); exit(1);}
 	cuda_set_sg<<<(ns+511)/512,512>>>(d_sxz, sxbeg, szbeg, jsx, jsz, ns, nz);
 	distx=sxbeg-gxbeg;
 	distz=szbeg-gzbeg;
+	if (!(gxbeg>=0 && gzbeg>=0 && gxbeg+(ng-1)*jgx<nx1 && gzbeg+(ng-1)*jgz<nz1))	
+	{ sf_error("geophones exceeds the computing zone!\n"); exit(1);}
 	if (csdgather)	{
-		if (!(gxbeg>=0 && gzbeg>=0 && gxbeg+(ng-1)*jgx<nx1 && gzbeg+(ng-1)*jgz<nz1 &&
-		(sxbeg+(ns-1)*jsx)+(ng-1)*jgx-distx <nx1  && (szbeg+(ns-1)*jsz)+(ng-1)*jgz-distz <nz1))	
-		{ sf_warning("geophones exceeds the computing zone!\n"); exit(1);}
-	}
-	else{
-		if (!(gxbeg>=0 && gzbeg>=0 && gxbeg+(ng-1)*jgx<nx1 && gzbeg+(ng-1)*jgz<nz1))	
-		{ sf_warning("geophones exceeds the computing zone!\n"); exit(1);}
+		if (!(	(sxbeg+(ns-1)*jsx)+(ng-1)*jgx-distx <nx1  && (szbeg+(ns-1)*jsz)+(ng-1)*jgz-distz <nz1))	
+		{ sf_error("geophones exceeds the computing zone!\n"); exit(1);}
 	}
 	cuda_set_sg<<<(ng+511)/512,512>>>(d_gxz, gxbeg, gzbeg, jgx, jgz, ng, nz);
 	cudaMemset(d_bndr, 0, nt*(2*nz+nx)*sizeof(float));
@@ -304,6 +302,14 @@ int main(int argc, char *argv[])
   	cudaEventCreate(&start);	
 	cudaEventCreate(&stop);
 
+	/* Our FWI is carried out via the following steps: 
+		step 1. do modeling to calculate synthetic seismograms;
+		step 2. backpropagate wavefield to obtain the gradient;
+		step 3. compute the conjugate gradient;
+		step 4. find a good step length;
+		step 5. update the current velocity model with estimated step length and conjugate gradient;
+		step 6. repeat step 1-5 in every iteration;
+	*/
 	for(iter=0; iter<niter; iter++)
 	{
 		cudaEventRecord(start);/* record starting time */
@@ -314,78 +320,96 @@ int main(int argc, char *argv[])
 		cudaMemset(d_illum, 0, nz*nx*sizeof(float));
 		for(is=0;is<ns;is++)
 		{
+			/* read one observed shot record */
 			sf_floatread(dobs, ng*nt, shots);
 			matrix_transpose(dobs, trans, nt, ng);
 			cudaMemcpy(d_dobs, trans, ng*nt*sizeof(float), cudaMemcpyHostToDevice);
+			/* configure the source/geophone geometry */
 			if (csdgather)	{
 				gxbeg=sxbeg+is*jsx-distx;
 				cuda_set_sg<<<(ng+511)/512, 512>>>(d_gxz, gxbeg, gzbeg, jgx, jgz, ng, nz);
 			}
 			cudaMemset(d_sp0, 0, nz*nx*sizeof(float));
 			cudaMemset(d_sp1, 0, nz*nx*sizeof(float));
+			/* advance time steps for source wavefield */
 			for(it=0; it<nt; it++)
 			{
+				/* forward modeling: source */
 				cuda_add_source<<<1,1>>>(d_sp1, &d_wlt[it], &d_sxz[is], 1, true);
 				cuda_step_forward<<<dimg,dimb>>>(d_sp0, d_sp1, d_vv, dtz, dtx, nz, nx);
 				ptr=d_sp0; d_sp0=d_sp1; d_sp1=ptr;
-
+				/* record the calculated synthetic seismograms */
 				cuda_record<<<(ng+511)/512, 512>>>(d_sp0, d_dcal, d_gxz, ng);
 				cuda_cal_residuals<<<(ng+511)/512, 512>>>(d_dcal, &d_dobs[it*ng], &d_derr[is*ng*nt+it*ng], ng);
+				/* saving the boundaries */
 				cuda_rw_bndr<<<(2*nz+nx+511)/512,512>>>(&d_bndr[it*(2*nz+nx)], d_sp0, nz, nx, true);
 			}
 
 			cudaMemset(d_gp0, 0, nz*nx*sizeof(float));
 			cudaMemset(d_gp1, 0, nz*nx*sizeof(float));
+			/* backward propagation */
 			for(it=nt-1; it>-1; it--)
 			{
+				/* source backpropagation */
 				ptr=d_sp0;d_sp0=d_sp1;d_sp1=ptr;
 				cuda_rw_bndr<<<(2*nz+nx+255)/256,256>>>(&d_bndr[it*(2*nz+nx)], d_sp1, nz, nx, false);
 				cuda_step_backward<<<dimg,dimb>>>(d_illum, d_lap, d_sp0, d_sp1, d_vv, dtz, dtx, nz, nx);
 				cuda_add_source<<<1,1>>>(d_sp1, &d_wlt[it], &d_sxz[is], 1, false);
 
+				/* extrapolate residual wavefield */
 				cuda_add_source<<<(ng+511)/512, 512>>>(d_gp1, &d_derr[is*ng*nt+it*ng], d_gxz, ng, true);
 				cuda_step_forward<<<dimg,dimb>>>(d_gp0, d_gp1, d_vv, dtz, dtx, nz, nx);
 
+				/* do summation for the gradient: equation 9 */
 				cuda_cal_gradient<<<dimg,dimb>>>(d_g1, d_lap, d_gp1, nz, nx);
 				ptr=d_gp0; d_gp0=d_gp1; d_gp1=ptr;
 			}
 		}
+		/* calculate the value of the objective function */
 		cuda_cal_objective<<<1, Block_Size>>>(&d_pars[0], d_derr, ns*ng*nt);
 		cudaMemcpy(&obj, &d_pars[0], sizeof(float), cudaMemcpyDeviceToHost);
 
+		/* compute source illumination and save it into snaps */
 		cudaMemcpy(vv, d_illum, nz*nx*sizeof(float), cudaMemcpyDeviceToHost);
 		window(v0, vv, nz, nx, nz1, nx1);
 		sf_floatwrite(v0, nz1*nx1, illums);
 
+		/* compute the gradient of FWI by scaling, precondition incorporated here: equations 9 and 10 */
 		cuda_scale_gradient<<<dimg,dimb>>>(d_g1, d_vv, d_illum, nz, nx, precon);
 		cudaMemcpy(vv, d_g1, nz*nx*sizeof(float), cudaMemcpyDeviceToHost);
 		window(v0, vv, nz, nx, nz1, nx1);
 		sf_floatwrite(v0, nz1*nx1, grads);
+		/* Gaussian smoothing for the sharp gradient */
 		cuda_bell_smoothz<<<dimg,dimb>>>(d_g1, d_illum, rbell, nz, nx);
 		cuda_bell_smoothx<<<dimg,dimb>>>(d_illum, d_g1, rbell, nz, nx);
 
+		/* calculate the factor beta in conjugate gradient method: equation 7 */
 		if (iter>0) cuda_cal_beta<<<1, Block_Size>>>(&d_pars[1], d_g0, d_g1, d_cg, nz*nx); 
 		cudaMemcpy(&beta, &d_pars[1], sizeof(float), cudaMemcpyDeviceToHost);
+		/* compute the conjugate gradient */
 		cuda_cal_conjgrad<<<dimg, dimb>>>(d_g1, d_cg, beta, nz, nx);
-
+		/* estimate epsilon according to equation 11 */
 		cuda_cal_epsilon<<<1, Block_Size>>>(d_vv, d_cg, &d_pars[2], nz*nx);
 		cudaMemcpy(&epsil, &d_pars[2], sizeof(float), cudaMemcpyDeviceToHost);
 
 		sf_seek(shots, 0L, SEEK_SET);
 		cudaMemset(d_alpha1, 0, ng*sizeof(float));
 		cudaMemset(d_alpha2, 0, ng*sizeof(float));
+		/* obtain a tentative velocity model to estimate a good stepsize alpha */
 		cuda_cal_vtmp<<<dimg, dimb>>>(d_vtmp, d_vv, d_cg, epsil, nz, nx);
 		for(is=0;is<ns;is++)
 		{
 			sf_floatread(dobs, ng*nt, shots);
 			matrix_transpose(dobs, trans, nt, ng);
 			cudaMemcpy(d_dobs, trans, ng*nt*sizeof(float), cudaMemcpyHostToDevice);
+			/* configure the source/geophone geometry */
 			if (csdgather)	{
 				gxbeg=sxbeg+is*jsx-distx;
 				cuda_set_sg<<<(ng+511)/512, 512>>>(d_gxz, gxbeg, gzbeg, jgx, jgz, ng, nz);
 			}
 			cudaMemset(d_sp0, 0, nz*nx*sizeof(float));
 			cudaMemset(d_sp1, 0, nz*nx*sizeof(float));
+			/* remodeling with tentative velocity model vtmp */
 			for(it=0; it<nt; it++)
 			{
 				cuda_add_source<<<1,1>>>(d_sp1, &d_wlt[it], &d_sxz[is], 1, true);
@@ -393,12 +417,15 @@ int main(int argc, char *argv[])
 				ptr=d_sp0; d_sp0=d_sp1; d_sp1=ptr;
 
 				cuda_record<<<(ng+511)/512, 512>>>(d_sp0, d_dcal, d_gxz, ng);
+				/* compute the numerator and the denominator of alpha: equations 5 and 12 */
 				cuda_sum_alpha12<<<(ng+511)/512, 512>>>(d_alpha1, d_alpha2, d_dcal, &d_dobs[it*ng], &d_derr[is*ng*nt+it*ng], ng);
 			}
 		}
+		/* find a good stepsize alpha: equation 5*/
 		cuda_cal_alpha<<<1,Block_Size>>>(&d_pars[3], d_alpha1, d_alpha2, epsil, ng);
 		cudaMemcpy(&alpha, &d_pars[3], sizeof(float), cudaMemcpyDeviceToHost);
 
+		/* update the velocity model according to previous velocity, conjugate gradient and estimated stepsize */
 		cuda_update_vel<<<dimg,dimb>>>(d_vv, d_cg, alpha, nz, nx);
 		cudaMemcpy(vv, d_vv, nz*nx*sizeof(float), cudaMemcpyDeviceToHost);
 		window(v0, vv, nz, nx, nz1, nx1);
@@ -408,8 +435,9 @@ int main(int argc, char *argv[])
   		cudaEventSynchronize(stop);
   		cudaEventElapsedTime(&mstimer, start, stop);
 
-		if(iter==0) {obj1=obj; objval[iter]=1.0;}
-		else	objval[iter]=obj/obj1;
+		/* compute the normalized objective function */
+		if(iter==0) 	{obj1=obj; objval[iter]=1.0;}
+		else		objval[iter]=obj/obj1;
 
 		if(verb) {/* output important information at each FWI iteration */
 			sf_warning("obj=%f  beta=%f  epsil=%f  alpha=%f",obj, beta, epsil, alpha);

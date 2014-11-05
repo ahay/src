@@ -115,7 +115,7 @@ int main(int argc, char* argv[])
     	if (nthr < 0) nthr=0;
     	if (nthr >= num) nthr=num-1;
 	thr=sf_quantile(nthr,num,dout);
-	thr*=powf(0.01, iter/(niter-1));
+	//thr*=powf(0.01, iter/(niter-1));
 	sf_cpthresh(dcurr, num,thr, p,mode);
 
 	fftn_lop(false, false, num, num, dcurr, dtmp);
