@@ -20,23 +20,23 @@ Plot('wavb','grey gainpanel=all title=Backward scalebar=y color=j',view=1)
 Plot('snap1f','wavf',
 	'''
 	window n3=1 min3=0.28 |grey title="Forward:t=0.28s" label1=Depth unit1=km 
-	label2=Lateral unit2=km screenratio=1 color=j
+	label2=Lateral unit2=km screenratio=1 
 	''')
 Plot('snap2f','wavf',
 	'''
 	window n3=1 min3=0.4 |grey title="Forward:t=0.4s" label1=Depth unit1=km 
-	label2=Lateral unit2=km screenratio=1 color=j
+	label2=Lateral unit2=km screenratio=1 
 	''')
 
 Plot('snap1b','wavf',
 	'''
 	window n3=1 min3=0.28 |grey title="Backward:t=0.28s" label1=Depth unit1=km 
-	label2=Lateral unit2=km screenratio=1 color=j
+	label2=Lateral unit2=km screenratio=1 
 	''')
 Plot('snap2b','wavf',
 	'''
 	window n3=1 min3=0.4 |grey title="Backward:t=0.4s" label1=Depth unit1=km 
-	label2=Lateral unit2=km screenratio=1 color=j
+	label2=Lateral unit2=km screenratio=1
 	''')
 Result('fb','snap1f snap2f snap2b snap1b','TwoColumns')
 
