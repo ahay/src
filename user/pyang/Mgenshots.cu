@@ -56,6 +56,15 @@ extern "C" {
 
 #include "cuda_fwi_kernels.cu"
 
+void sf_check_gpu_error (const char *msg) 
+/*< check GPU errors >*/
+{
+    cudaError_t err = cudaGetLastError ();
+    if (cudaSuccess != err) { 
+	sf_error ("Cuda error: %s: %s", msg, cudaGetErrorString (err)); 
+	exit(0);   
+    }
+}
 
 void matrix_transpose(float *matrix, float *trans, int n1, int n2)
 /*< matrix transpose: matrix tansposed to be trans >*/
@@ -92,15 +101,6 @@ void window(float *v0,float *vv, int nz, int nx, int nz1, int nx1)
 		  v0[i1+i2*nz1]=vv[i1+nz*i2];
 }
 
-void sf_check_gpu_error (const char *msg) 
-/*< check GPU errors >*/
-{
-    cudaError_t err = cudaGetLastError ();
-    if (cudaSuccess != err) { 
-	sf_error ("Cuda error: %s: %s", msg, cudaGetErrorString (err)); 
-	exit(0);   
-    }
-}
 
 int main(int argc, char *argv[])
 {
@@ -167,6 +167,7 @@ int main(int argc, char *argv[])
 	if (!sf_getbool("csdgather",&csdgather)) csdgather=false;
 	/* default, common shot-gather; if n, record at every point*/
 
+	/* put the labels, legends and parameters in output */
 	sf_putint(shots,"n1",nt);	
 	sf_putint(shots,"n2",ng);
 	sf_putint(shots,"n3",ns);
@@ -199,6 +200,7 @@ int main(int argc, char *argv[])
 	nx=(int)((nx1+Block_Size1-1)/Block_Size1)*Block_Size1;
 	nz=(int)((nz1+Block_Size2-1)/Block_Size2)*Block_Size2;
 
+	/* allocate memory for variables on host */
 	v0=(float*)malloc(nz1*nx1*sizeof(float));
 	vv=(float*)malloc(nz*nx*sizeof(float));
 	dobs=(float*)malloc(ng*nt*sizeof(float));
@@ -210,7 +212,7 @@ int main(int argc, char *argv[])
 
     	cudaSetDevice(0);
 	sf_check_gpu_error("Failed to initialize device!");
-	/* allocate memories for variables on device */
+	/* allocate memory for variables on device */
 	cudaMalloc(&d_vv, nz*nx*sizeof(float));
 	cudaMalloc(&d_sp0, nz*nx*sizeof(float));
 	cudaMalloc(&d_sp1, nz*nx*sizeof(float));
@@ -220,40 +222,42 @@ int main(int argc, char *argv[])
 	cudaMalloc(&d_dobs, ng*nt*sizeof(float));
 	sf_check_gpu_error("Failed to allocate required memory!");
 
+	/* set GPU block size */
 	dim3 dimg=dim3(nz/Block_Size1, nx/Block_Size2),dimb=dim3(Block_Size1, Block_Size2); 
 
 	cudaMemcpy(d_vv, vv, nz*nx*sizeof(float), cudaMemcpyHostToDevice);
 	cudaMemset(d_sp0,0,nz*nx*sizeof(float));
 	cudaMemset(d_sp1,0,nz*nx*sizeof(float));
 	cuda_ricker_wavelet<<<(nt+511)/512,512>>>(d_wlt, amp, fm, dt, nt);
+	/* configure source/geophone geometry */
 	if (!(sxbeg>=0 && szbeg>=0 && sxbeg+(ns-1)*jsx<nx1 && szbeg+(ns-1)*jsz<nz1))	
-	{ sf_warning("sources exceeds the computing zone!\n"); exit(1);}
+	{ sf_error("sources exceeds the computing zone!\n"); exit(1);}
 	cuda_set_sg<<<(ns+511)/512,512>>>(d_sxz, sxbeg, szbeg, jsx, jsz, ns, nz);
 	distx=sxbeg-gxbeg;
 	distz=szbeg-gzbeg;
+	if (!(gxbeg>=0 && gzbeg>=0 && gxbeg+(ng-1)*jgx<nx1 && gzbeg+(ng-1)*jgz<nz1))	
+	{ sf_error("geophones exceeds the computing zone!\n"); exit(1);}
 	if (csdgather)	{
-		if (!(gxbeg>=0 && gzbeg>=0 && gxbeg+(ng-1)*jgx<nx1 && gzbeg+(ng-1)*jgz<nz1 &&
-		(sxbeg+(ns-1)*jsx)+(ng-1)*jgx-distx <nx1  && (szbeg+(ns-1)*jsz)+(ng-1)*jgz-distz <nz1))	
-		{ sf_warning("geophones exceeds the computing zone!\n"); exit(1);}
-	}else{
-		if (!(gxbeg>=0 && gzbeg>=0 && gxbeg+(ng-1)*jgx<nx1 && gzbeg+(ng-1)*jgz<nz1))	
-		{ sf_warning("geophones exceeds the computing zone!\n"); exit(1);}
+		if (!(	(sxbeg+(ns-1)*jsx)+(ng-1)*jgx-distx <nx1  && (szbeg+(ns-1)*jsz)+(ng-1)*jgz-distz <nz1))	
+		{ sf_error("geophones exceeds the computing zone!\n"); exit(1);}
 	}
 	cuda_set_sg<<<(ng+511)/512,512>>>(d_gxz, gxbeg, gzbeg, jgx, jgz, ng, nz);
 
+	/* creat cuda timer */
 	cudaEvent_t start, stop;
   	cudaEventCreate(&start);	
 	cudaEventCreate(&stop);
-	for(is=0;is<ns;is++)
+	for(is=0;is<ns;is++)/* generate ns shots one by one */
 	{
 		cudaEventRecord(start);
 		cudaMemset(d_dobs, 0, ng*nt*sizeof(float));
-		if (csdgather)	{
+		if (csdgather)	{/* reset position according to gather type */
 			gxbeg=sxbeg+is*jsx-distx;
 			cuda_set_sg<<<(ng+511)/512, 512>>>(d_gxz, gxbeg, gzbeg, jgx, jgz, ng, nz);
 		}
 		cudaMemset(d_sp0, 0, nz*nx*sizeof(float));
 		cudaMemset(d_sp1, 0, nz*nx*sizeof(float));
+		/* forward modeling */
 		for(it=0; it<nt; it++)
 		{
 			cuda_add_source<<<1,1>>>(d_sp1, &d_wlt[it], &d_sxz[is], 1, true);
@@ -261,7 +265,7 @@ int main(int argc, char *argv[])
 			ptr=d_sp0; d_sp0=d_sp1; d_sp1=ptr;
 			cuda_record<<<(ng+511)/512, 512>>>(d_sp0, &d_dobs[it*ng], d_gxz, ng);
 
-			if(chk && it==kt){			
+			if(chk && it==kt){/* record a snapshot */			
 				float *test=(float*)malloc(nz*nx*sizeof(float));
 
 				cudaMemcpy(test, d_sp0, nz*nx*sizeof(float), cudaMemcpyDeviceToHost);
@@ -271,6 +275,7 @@ int main(int argc, char *argv[])
 				free(test);
 			}
 		}
+		/* save the modeled shot in trace-by-trace format */
 		cudaMemcpy(dobs, d_dobs, ng*nt*sizeof(float), cudaMemcpyDeviceToHost);
 		matrix_transpose(dobs, trans, ng, nt);
 		sf_floatwrite(trans,ng*nt,shots);
@@ -283,14 +288,15 @@ int main(int argc, char *argv[])
 	}
 	cudaEventDestroy(start);
 	cudaEventDestroy(stop);
-	totaltime/=ns;
+	totaltime/=ns;/* compute the average time cost */
 	sf_floatwrite(&totaltime,1,time);
 
+	/* free host variables */
 	free(v0);
 	free(vv);
 	free(dobs);
 	free(trans);
-	/* free the variables on device */
+	/* free device variables */
 	cudaFree(d_vv);
 	cudaFree(d_sp0);
 	cudaFree(d_sp1);

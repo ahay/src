@@ -167,7 +167,8 @@ int main(int argc, char *argv[])
 	/* first recorded time */
     	if (!sf_getint("jt",&jt)) jt=1;	
 	/* time interval */
-
+	
+	/* put the labels, legends and parameters in output */
 	sf_putint(Fw1,"n1",nz1);
 	sf_putint(Fw1,"n2",nx1);
     	sf_putint(Fw1,"n3",(nt-ft)/jt);
@@ -194,6 +195,7 @@ int main(int argc, char *argv[])
 
     	cudaSetDevice(0);
 	sf_check_gpu_error("Failed to initialize device!");
+	/* allocate memory for variables */
 	cudaMalloc(&d_vv, nz*nx*sizeof(float));
 	cudaMalloc(&d_sp0, nz*nx*sizeof(float));
 	cudaMalloc(&d_sp1, nz*nx*sizeof(float));
@@ -206,46 +208,48 @@ int main(int argc, char *argv[])
 	cudaMalloc(&d_bndr, nt*(2*nx+nz)*sizeof(float));
 	sf_check_gpu_error("Failed to allocate required memory on device!");
 
+	/* set GPU block size */
 	dim3 dimg=dim3(nz/Block_Size1, nx/Block_Size2),dimb=dim3(Block_Size1, Block_Size2); 
 
+	/* initialize the variables */
 	cudaMemcpy(d_vv, vv, nz*nx*sizeof(float), cudaMemcpyHostToDevice);
 	cudaMemset(d_sp0,0,nz*nx*sizeof(float));
 	cudaMemset(d_sp1,0,nz*nx*sizeof(float));
 	cuda_ricker_wavelet<<<(nt+511)/512,512>>>(d_wlt,amp, fm, dt, nt);
+	/* configure source/geophone geometry */
 	if (!(sxbeg>=0 && szbeg>=0 && sxbeg+(ns-1)*jsx<nx1 && szbeg+(ns-1)*jsz<nz1))	
-	{ printf("sources exceeds the computing zone!\n"); exit(1);}
+	{ sf_error("sources exceeds the computing zone!\n"); exit(1);}
 	cuda_set_sg<<<(ns+511)/512,512>>>(d_sxz, sxbeg, szbeg, jsx, jsz, ns, nz);
 	distx=sxbeg-gxbeg;
 	distz=szbeg-gzbeg;
+	if (!(gxbeg>=0 && gzbeg>=0 && gxbeg+(ng-1)*jgx<nx1 && gzbeg+(ng-1)*jgz<nz1))	
+	{ sf_error("geophones exceeds the computing zone!\n"); exit(1);}
 	if (csdgather)	{
-		if (!(gxbeg>=0 && gzbeg>=0 && gxbeg+(ng-1)*jgx<nx1 && gzbeg+(ng-1)*jgz<nz1 &&
-		(sxbeg+(ns-1)*jsx)+(ng-1)*jgx-distx <nx1  && (szbeg+(ns-1)*jsz)+(ng-1)*jgz-distz <nz1))	
-		{ printf("geophones exceeds the computing zone!\n"); exit(1);}
-	}
-	else{
-		if (!(gxbeg>=0 && gzbeg>=0 && gxbeg+(ng-1)*jgx<nx1 && gzbeg+(ng-1)*jgz<nz1))	
-		{ printf("geophones exceeds the computing zone!\n"); exit(1);}
+		if (!((sxbeg+(ns-1)*jsx)+(ng-1)*jgx-distx <nx1  && (szbeg+(ns-1)*jsz)+(ng-1)*jgz-distz <nz1))	
+		{ sf_error("geophones exceeds the computing zone!\n"); exit(1);}
 	}
 	cuda_set_sg<<<(ng+511)/512,512>>>(d_gxz, gxbeg, gzbeg, jgx, jgz, ng, nz);
 	
 	for(is=0; is<ns; is++)
 	{
 		cudaMemset(d_dobs, 0, ng*nt*sizeof(float));
-		if (csdgather)	{
+		if (csdgather)	{/* reset position according to gather type */
 			gxbeg=sxbeg+is*jsx-distx;
 			cuda_set_sg<<<(ng+511)/512, 512>>>(d_gxz, gxbeg, gzbeg, jgx, jgz, ng, nz);
 		}
 		cudaMemset(d_sp0, 0, nz*nx*sizeof(float));
 		cudaMemset(d_sp1, 0, nz*nx*sizeof(float));
+		/* forward modeling */
 		for(it=0; it<nt; it++)
 		{
 			cuda_add_source<<<1,1>>>(d_sp1, &d_wlt[it], &d_sxz[is], 1, true);
 			cuda_step_forward<<<dimg,dimb>>>(d_sp0, d_sp1, d_vv, dtz, dtx, nz, nx);
 			ptr=d_sp0; d_sp0=d_sp1; d_sp1=ptr;
+			/* save the boundaries */
 			cuda_rw_bndr<<<((2*nz+nx)+511)/512,512>>>(&d_bndr[it*(2*nz+nx)], d_sp0, nz, nx, true);
 
 			if(it>=ft)
-			{
+			{/* save a snapshot */
 				cudaMemcpy(vv, d_sp0, nz*nx*sizeof(float), cudaMemcpyDeviceToHost);
 				window(v0, vv, nz, nx, nz1, nx1);
 				sf_floatwrite(v0,nz1*nx1,Fw1);
@@ -253,15 +257,17 @@ int main(int argc, char *argv[])
 		}
 
 		ptr=d_sp0;d_sp0=d_sp1;d_sp1=ptr;
+		/* backpropagation */
 		for(it=nt-1; it>-1; it--)
 		{
 			if(it>=ft)
-			{
+			{/*save a snapshot */
 				cudaMemcpy(vv, d_sp1, nz*nx*sizeof(float), cudaMemcpyDeviceToHost);
 				window(v0, vv, nz, nx, nz1, nx1);
 				sf_floatwrite(v0,nz1*nx1,Fw2);
 			}
 
+			/* insert the saved boundaries for wavefield reconstruction */
 			cuda_rw_bndr<<<(2*(nz+nx)+511)/512,512>>>(&d_bndr[it*(2*nz+nx)], d_sp1, nz, nx, false);
 			cuda_step_backward<<<dimg,dimb>>>(d_illum, d_lap, d_sp0, d_sp1, d_vv, dtz, dtx, nz, nx);
 			cuda_add_source<<<1,1>>>(d_sp1, &d_wlt[it], &d_sxz[is], 1, false);

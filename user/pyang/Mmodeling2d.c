@@ -26,7 +26,6 @@ Note: 	Clayton-Enquist absorbing boundary condition (A2) is applied!
 #include <rsf.h>
 #include <time.h>
 
-
 void matrix_transpose(float *matrix, float *trans, int n1, int n2)
 /*< matrix transpose: matrix tansposed to be trans >*/
 {
@@ -36,7 +35,6 @@ void matrix_transpose(float *matrix, float *trans, int n1, int n2)
 	for(i1=0; i1<n1; i1++)
 	    trans[i2+n2*i1]=matrix[i1+n1*i2];
 }
-
 
 void step_forward(float **p0, float **p1, float **p2, float **vv, float dtz, float dtx, int nz, int nx)
 /*< forward modeling step, Clayton-Enquist ABC incorporated >*/
@@ -211,6 +209,7 @@ int main(int argc, char* argv[])
 	if (!sf_getbool("csdgather",&csdgather)) csdgather=false;
 	/* default, common shot-gather; if n, record at every point*/
 
+	/* put the labels, legends and parameters in output */
 	sf_putint(shots,"n1",nt);	
 	sf_putint(shots,"n2",ng);
 	sf_putint(shots,"n3",ns);
@@ -239,7 +238,7 @@ int main(int argc, char* argv[])
 
 	dtx=dt/dx; 
 	dtz=dt/dz; 
-
+	/* allocate the variables */
 	wlt=(float*)malloc(nt*sizeof(float));
 	bndr=(float*)malloc(nt*(2*nz+nx)*sizeof(float));
 	dobs=(float*)malloc(ng*nt*sizeof(float));
@@ -251,6 +250,7 @@ int main(int argc, char* argv[])
 	sxz=(int*)malloc(ns*sizeof(int));
 	gxz=(int*)malloc(ng*sizeof(int));
 
+	/* initialize variables */
 	for(it=0; it<nt; it++){
 		tmp=SF_PI*fm*(it*dt-1.0/fm);tmp=tmp*tmp;
 		wlt[it]=amp*(1.0-2.0*tmp)*expf(-tmp);
@@ -262,18 +262,17 @@ int main(int argc, char* argv[])
 	memset(p0[0],0,nz*nx*sizeof(float));
 	memset(p1[0],0,nz*nx*sizeof(float));
 	memset(p2[0],0,nz*nx*sizeof(float));
+	/* configure source/geophone geometry */
 	if (!(sxbeg>=0 && szbeg>=0 && sxbeg+(ns-1)*jsx<nx && szbeg+(ns-1)*jsz<nz))	
-	{ printf("sources exceeds the computing zone!\n"); exit(1);}
+	{ sf_error("sources exceeds the computing zone!\n"); exit(1);}
  	sg_init(sxz, szbeg, sxbeg, jsz, jsx, ns, nz);
 	distx=sxbeg-gxbeg;
 	distz=szbeg-gzbeg;
+	if (!(gxbeg>=0 && gzbeg>=0 && gxbeg+(ng-1)*jgx<nx && gzbeg+(ng-1)*jgz<nz))	
+	{ sf_error("geophones exceeds the computing zone!\n"); exit(1);}
 	if (csdgather)	{
-		if (!(gxbeg>=0 && gzbeg>=0 && gxbeg+(ng-1)*jgx<nx && gzbeg+(ng-1)*jgz<nz &&
-		(sxbeg+(ns-1)*jsx)+(ng-1)*jgx-distx <nx  && (szbeg+(ns-1)*jsz)+(ng-1)*jgz-distz <nz))	
-		{ printf("geophones exceeds the computing zone!\n"); exit(1);}
-	}else{
-		if (!(gxbeg>=0 && gzbeg>=0 && gxbeg+(ng-1)*jgx<nx && gzbeg+(ng-1)*jgz<nz))	
-		{ printf("geophones exceeds the computing zone!\n"); exit(1);}
+		if (!(	(sxbeg+(ns-1)*jsx)+(ng-1)*jgx-distx <nx  && (szbeg+(ns-1)*jsz)+(ng-1)*jgz-distz <nz))	
+		{ sf_error("geophones exceeds the computing zone!\n"); exit(1);}
 	}
 	sg_init(gxz, gzbeg, gxbeg, jgz, jgx, ng, nz);
 
@@ -281,13 +280,14 @@ int main(int argc, char* argv[])
 	{
 		start = clock();
 
-		if (csdgather)	{
+		if (csdgather){/* reset position according to gather type */
 			gxbeg=sxbeg+is*jsx-distx;
 			sg_init(gxz, gzbeg, gxbeg, jgz, jgx, ng, nz);
 		}
 		memset(p0[0],0,nz*nx*sizeof(float));
 		memset(p1[0],0,nz*nx*sizeof(float));
 		memset(p2[0],0,nz*nx*sizeof(float));
+		/* forward modeling */
 		for(it=0; it<nt; it++)
 		{
 			add_source(p1, &wlt[it], &sxz[is], 1, nz, true);			
@@ -295,10 +295,12 @@ int main(int argc, char* argv[])
 			ptr=p0; p0=p1; p1=p2; p2=ptr;
 			record_seis(&dobs[it*ng], gxz, p0, ng, nz);
 
+			/* record a snapshot */
 			if(it==kt){
 				sf_floatwrite(p0[0],nz*nx, check);
 			}
 		}
+		/* save the modeled shot in trace-by-trace format */
 		matrix_transpose(dobs, trans, ng, nt);
 		sf_floatwrite(trans,ng*nt,shots);
 		
@@ -306,9 +308,10 @@ int main(int argc, char* argv[])
  		sf_warning("shot %d finished: %f (s)", is+1,((float)(end-start))/CLOCKS_PER_SEC); 
 		totaltime+=((float)(end-start))/CLOCKS_PER_SEC;
 	}
-	totaltime/=ns;
+	totaltime/=ns; /* compute the average time cost */
 	sf_floatwrite(&totaltime,1,time);
 
+	/* free the variables */
 	free(sxz);
 	free(gxz);
 	free(bndr);

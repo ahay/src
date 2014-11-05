@@ -11,7 +11,7 @@ pocs3d pocs pocsseislet rtm2d rtmadcig mysnr
 Testfd2d Testfd3d Testeb Testelastic2d Testaniso Testspml
 viscoacoustic2d rtmva2d viscoelastic2d 
 '''
-
+#istpad
 
 ######################################################################
 # C++ main programs
