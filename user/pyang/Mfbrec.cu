@@ -1,10 +1,13 @@
 /* Forward-backword exact reconstruction using boundary saving
-
 Note: It is used as a demonstration that we can reconstruct the modeled
 	wavefield exactly via boundary saving.
 */
 /*
-  Copyright (C) 2013  Xi'an Jiaotong University (Pengliang Yang)
+  Copyright (C) 2013  Xi'an Jiaotong University, UT Austin (Pengliang Yang)
+    Email: ypl.2100@gmail.com	
+  The code is distributed as a proof-of-concept for the paper:"A GPU
+  implementation of time domain full waveform inversion". Thanks go to 
+  Baoli Wang for the help in coding.
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -186,6 +189,7 @@ int main(int argc, char *argv[])
 	nx=(int)((nx1+Block_Size1-1)/Block_Size1)*Block_Size1;
 	nz=(int)((nz1+Block_Size2-1)/Block_Size2)*Block_Size2;
 
+	/* allocate variables on host */
 	v0=(float*)malloc(nz1*nx1*sizeof(float));
 	vv=(float*)malloc(nz*nx*sizeof(float));
 	dobs=(float*)malloc(ng*nt*sizeof(float));
@@ -195,7 +199,7 @@ int main(int argc, char *argv[])
 
     	cudaSetDevice(0);
 	sf_check_gpu_error("Failed to initialize device!");
-	/* allocate memory for variables */
+	/* allocate variables on device */
 	cudaMalloc(&d_vv, nz*nx*sizeof(float));
 	cudaMalloc(&d_sp0, nz*nx*sizeof(float));
 	cudaMalloc(&d_sp1, nz*nx*sizeof(float));
