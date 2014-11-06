@@ -1,8 +1,11 @@
 /* 2-D forward modeling to generate shot records 
-Note: 	Clayton-Enquist absorbing boundary condition (A2) is applied!
+Note: Clayton-Enquist absorbing boundary condition (A2) is applied!
  */
 /*
-  Copyright (C) 2014  Xi'an Jiaotong University, UT Austin (Pengliang Yang)
+  Copyright (C) 2013  Xi'an Jiaotong University, UT Austin (Pengliang Yang)
+    Email: ypl.2100@gmail.com	
+  The code is distributed as a proof-of-concept for the paper:"A GPU
+  implementation of time domain full waveform inversion". 
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
