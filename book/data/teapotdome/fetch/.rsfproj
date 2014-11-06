@@ -1,3 +1,3 @@
-uses=['sfgrey', 'sfbyte', 'sfgrey3', 'sfsegyread', 'sfheaderattr', 'sftahscscale', 'sftahwrite', 'sfscale', 'sfgraph', 'sfwindow', 'sfcmplx', 'sftahsort']
+uses=['sfgrey', 'sfbyte', 'sfgrey3', 'sfsegyread', 'sfheaderattr', 'sftahsort', 'sftahmakeskey', 'sftahnmo', 'sftahwrite', 'sfwindow', 'sfput', 'sfbandpass', 'sfdd', 'sfheadermath', 'sfwiggle', 'sfmask', 'sfmul', 'sfheaderwindow', 'sfintbin3']
 data=['teapot/final_stack.rsf', 'teapot/npr3_gathers.sgy', 'teapot/npr3_field.sgy', 'teapot/3dload_Teapot_Dome_3D.pdf', 'teapot/teapot_processing.pdf']
-size= 7727281400
+size= 3209049892

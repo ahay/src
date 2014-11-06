@@ -1,6 +1,6 @@
 from rsf.proj import *
 
-#SConscript('../fetch/SConstruct')
+SConscript('../fetch/SConstruct')
 
 Flow(['gather_subset.rsf','gather_subset_hdr.rsf','onetrace.rsf','onetrace_hdr.rsf'],
      ['../fetch/npr3_gathers.rsf','../fetch/npr3_gathers_hdr.rsf'],
