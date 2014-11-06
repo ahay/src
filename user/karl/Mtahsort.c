@@ -226,7 +226,7 @@ int main(int argc, char* argv[])
 
   /* get the sort key */
   sort=sf_getstring("sort");
-  /* /n
+  /* \n
      list of the sort keys.  Each key must be a trace header key name.
      It may be preceeded with + (the default) for ascending or - for 
      descending sort direction.  The key may be followed with :min,max 
