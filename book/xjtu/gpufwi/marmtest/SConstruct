@@ -10,7 +10,7 @@ Flow('vel','marmvel.hh',
 Plot('vel',
 	'''
 	grey color=j mean=y title="Marmousi model" scalebar=y bartype=v barlabel="V" 
-	barunit="m/s" screenratio=0.45 
+	barunit="m/s" screenratio=0.45 color=j 
 	''')
 
 Flow('shots','vel',
@@ -32,7 +32,7 @@ Plot('smvel',
      '''
      grey title="Smoothed Marmousi model" wantitle=y allpos=y color=j
      pclip=100 scalebar=y bartype=v barlabel="V" barunit="m/s"
-	screenratio=0.45 
+	screenratio=0.45 color=j 
      ''' )
 
 Result('marm','vel smvel','TwoRows')

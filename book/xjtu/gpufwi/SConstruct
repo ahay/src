@@ -5,4 +5,4 @@ End(options='manuscript', use='''amsmath,amsfonts,amssymb,hyperref,url,tikz''',
 %\usetikzlibrary{decorations.pathreplacing} 
 %\usetikzlibrary{shapes,arrows,chains}
 	''',
-	color='shotsnap vsnap')
+	color='marm vsnap')
