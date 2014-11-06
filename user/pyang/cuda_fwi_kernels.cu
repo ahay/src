@@ -1,8 +1,11 @@
 /* Kernels of CUDA based FWI
 */
 /*
-  Copyright (C) 2013  Xi'an Jiaotong University (Pengliang Yang)
+  Copyright (C) 2013  Xi'an Jiaotong University, UT Austin (Pengliang Yang)
     Email: ypl.2100@gmail.com	
+  The code is distributed as a proof-of-concept for the paper:"A GPU
+  implementation of time domain full waveform inversion". Thanks go to 
+  Baoli Wang for the help in coding.
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
