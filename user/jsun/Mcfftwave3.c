@@ -1,4 +1,4 @@
-/* Simple 3-D wave propagation */
+/* Simple 3-D lowrank onestep wave propagation */
 /*
   Copyright (C) 2009 University of Texas at Austin
   
@@ -18,7 +18,7 @@
 */
 #include <rsf.h>
 
-#include "cfft3.h"
+#include "cfft3w.h"
 
 int main(int argc, char* argv[])
 {
@@ -112,6 +112,8 @@ int main(int argc, char* argv[])
     cwavem = sf_complexalloc(nk);
     wave = sf_complexalloc2(nzx2,m2);
 
+    icfft3_allocate(cwavem);
+
     for (iz=0; iz < nzx2; iz++) {
 	curr[iz]=sf_cmplx(0.,0.);
 	rcurr[iz]=0.;
@@ -179,5 +181,6 @@ int main(int argc, char* argv[])
 	}
     }
     
+    cfft3_finalize();
     exit (0);
 }
