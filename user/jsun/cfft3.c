@@ -17,12 +17,6 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 #include <rsf.h>
-#ifdef _OPENMP
-#include <omp.h>
-#endif
-#ifdef SF_HAS_FFTW
-#include <fftw3.h>
-#endif
 
 static int n1, n2, n3, nk;
 static float wt;
