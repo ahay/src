@@ -433,7 +433,7 @@ int main(int argc, char** argv)
     }
 
 
-     vector<int> lidx, ridx;
+    vector<int> lidx, ridx;
     DblNumMat mid;
 
     iC( ddlowrank(m,n,sample,eps,npk,lidx,ridx,mid) );
