@@ -87,7 +87,8 @@ char  **sf_realloc2(void** ptrin,
     ptr[0][0] points to a contiguous array >*/ 
 {
     size_t i2;
-    char **ptr=(char**)ptrin,**ptr2;
+    char **ptr=(char**)ptrin;
+    CHAR **ptr2;
     
     if (ptr[1] != ptr[0] + n1bytes){
       sf_error("realloc2 cannot change n1bytes. new n1bytes=%d.",n1bytes);
