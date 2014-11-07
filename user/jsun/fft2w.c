@@ -30,7 +30,7 @@ static int n1, n2, nk;
 static float wt;
 
 static float **ff=NULL;
-static sf_complex **cc=NULL;
+static sf_complex **cc=NULL,*dd=NULL;
 
 #ifdef SF_HAS_FFTW
 static fftwf_plan cfg=NULL, icfg=NULL;
@@ -83,6 +83,7 @@ int fft2_init(bool cmplx1        /* if complex transform */,
     } else {
 	ff = sf_floatalloc2(n1,n2);
     }
+    dd = sf_complexalloc(nk*n2);
 	
 #ifndef SF_HAS_FFTW
     cfg2  = kiss_fft_alloc(n2,0,NULL,NULL);
@@ -116,11 +117,11 @@ void fft2(float *inp      /* [n1*n2] */,
     if (NULL==cfg) {
 	cfg = cmplx? 
 	    fftwf_plan_dft_2d(n2,n1,
-			      (fftwf_complex *) cc[0], 
-			      (fftwf_complex *) out,
+			      (fftwf_complex *) cc[0],
+			      (fftwf_complex *) dd,
 			      FFTW_FORWARD, FFTW_MEASURE):
 	    fftwf_plan_dft_r2c_2d(n2,n1,
-				  ff[0], (fftwf_complex *) out,
+				  ff[0], (fftwf_complex *) dd,
 				  FFTW_MEASURE);
 	if (NULL == cfg) sf_error("FFTW failure.");
     }
@@ -139,6 +140,8 @@ void fft2(float *inp      /* [n1*n2] */,
     
 #ifdef SF_HAS_FFTW
     fftwf_execute(cfg);
+    for (i1=0; i1 < nk*n2; i1++)
+      out[i1] = dd[i1];
 #else	
     for (i2=0; i2 < n2; i2++) {
 	if (cmplx) {
