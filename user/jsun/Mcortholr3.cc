@@ -79,24 +79,28 @@ int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
 	   double dd=bb-aa*aa/3.0;
 	   double qq=2.0*aa*aa*aa/27.0-aa*bb/3.0+cc;
 	   double Q=pow(dd/3,3)+pow(qq/2,2);
-	   if (Q>0) sf_warning ("!!Q is positive!! Q=%g \n", Q);
-	   double r,cv,vv;
-	   if (abs(dd)<0.0000001) {
-	       r=0;
+	   double r;
+	   if (Q>0) {
+	       //sf_warning ("!!Q is positive!! Q=%g \n", Q);
+	       r = 0;
 	   } else {
-	       cv=-qq/(2*sqrt(abs(-dd*dd*dd/27.0)));
-	       vv=acos(cv);
-	       if (mode==1)
-		   r=2*sqrt(abs(-dd/3.0))*cos(vv/3.0+2.0*SF_PI/3.0)-aa/3.0;
-	       else if (mode==2) 
-		   r=2*sqrt(abs(-dd/3.0))*cos(vv/3.0+2.0*2.0*SF_PI/3.0)-aa/3.0;
-	       else
-		   r=2*sqrt(abs(-dd/3.0))*cos(vv/3.0)-aa/3.0;
-
-	       r=sqrt(abs(r));
+	       double cv,vv;
+	       if (abs(dd)<0.0000001) {
+		 r=0;
+	       } else {
+		   cv=-qq/(2*sqrt(abs(-dd*dd*dd/27.0)));
+		   vv=acos(cv);
+		   if (mode==1)
+		     r=2*sqrt(abs(-dd/3.0))*cos(vv/3.0+2.0*SF_PI/3.0)-aa/3.0;
+		   else if (mode==2) 
+		     r=2*sqrt(abs(-dd/3.0))*cos(vv/3.0+2.0*2.0*SF_PI/3.0)-aa/3.0;
+		   else
+		     r=2*sqrt(abs(-dd/3.0))*cos(vv/3.0)-aa/3.0;
+		   
+		   r=sqrt(abs(r));
+	       }
 	   }
 	   res(a,b) = cpx(cos(r*dt),sin(r*dt));
-//	   res(a,b) = 2*(cos(r*dt)-1); 
 	}
     }
     return 0;
