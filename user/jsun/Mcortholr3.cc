@@ -164,9 +164,9 @@ int main(int argc, char** argv)
     c66 >> C66;
 
     if (tilt) {
-	iRSF seta1("seta1");
+	iRSF seta1("seta1"),seta2("seta2");
 	seta1 >> q1;
-	seta1 >> q2;
+	seta2 >> q2;
 	/* from degrees to radians */
 	for (int im=0; im < m; im++) {
 	    q1[im] *= SF_PI/180.;
