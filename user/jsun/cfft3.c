@@ -1,4 +1,4 @@
-/* 3-D FFT interface */
+/* 3-D complex-complex FFT interface */
 /*
   Copyright (C) 2010 University of Texas at Austin
   
@@ -17,6 +17,12 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 #include <rsf.h>
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+#ifdef SF_HAS_FFTW
+#include <fftw3.h>
+#endif
 
 static int n1, n2, n3, nk;
 static float wt;
@@ -166,7 +172,7 @@ void icfft3(sf_complex *out /* [n1*n2*n3] */,
     /* IFFT over first axis */
     for (i3=0; i3 < n3; i3++) {
 	for (i2=0; i2 < n2; i2++) {
-	    kiss_fft_stride(icfg1,tmp[i3][i2],(kiss_fft_cpx *) cc[i3][i2],1);		
+	    kiss_fft_stride(icfg1,tmp[i3][i2],(kiss_fft_cpx *) cc[i3][i2],1);
 	}
     }
 
