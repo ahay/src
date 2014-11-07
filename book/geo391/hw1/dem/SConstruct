@@ -1,28 +1,13 @@
 from rsf.proj import *
 
 # Download data
-txt = 'st-helens_after.txt' 
-Fetch(txt,'data',
-      server='https://raw.githubusercontent.com',
-      top='agile-geoscience/notebooks/master')
-Flow('data.asc',txt,'/usr/bin/tail -n +6')
-
-# Convert to RSF format
-Flow('data','data.asc',
-     '''
-     echo in=$SOURCE data_format=ascii_float
-     label=Elevation unit=m
-     n1=979  o1=557.805  d1=0.010030675 label1=X
-     n2=1400 o2=5107.965 d2=0.010035740 label2=Y |
-     dd form=native | 
-     clip2 lower=0 | lapfill grad=y niter=200 
-     ''')
+Fetch('austin-w.HH','bay')
 
 # Convert to byte form
-Flow('byte','data',
+Flow('byte','austin-w.HH',
      '''
      dd form=native |
-     byte pclip=100 allpos=y bias=2231
+     byte pclip=100 allpos=y
      ''')
 
 # Display

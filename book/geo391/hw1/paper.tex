@@ -6,7 +6,7 @@
   This homework has three parts. 
   \begin{enumerate}
   \item Theoretical questions and computations related to digital representation of numbers.
-  \item Analyzing digital elevation data from the Mount St. Helens area. You will apply 
+  \item Analyzing digital elevation data from the Austin area. You will apply 
   histogram equalization to enhance the image.
   \item Analyzing seismic reflection data. You will apply an amplitude gain 
   correction to enhance the image.
@@ -37,14 +37,14 @@ svn co http://svn.code.sf.net/p/rsf/code/trunk/book/geo391/hw1
 \section{Digital representation of numbers}
 
 You can either write your answers to theoretical questions on paper or
-edit them in the file \texttt{hw1/paper.tex}. Please show all the
+edit them in the file \verb#hw1/paper.tex#. Please show all the
 mathematical derivations that you perform.
 
 \begin{enumerate}
 
 \item UT's ``burnt orange'' color is expressed by code
-  \texttt{\#BF5700}, where each pair of symbols (\texttt{BF},
-  \texttt{57}, and \texttt{00}) refers to a hexadecimal (base 16)
+  \texttt{\#CC5500}, where each pair of symbols (\texttt{CC},
+  \texttt{55}, and \texttt{00}) refers to a hexadecimal (base 16)
   representation of the red, green, and blue components. Convert these
   numbers to an octal (base 8) and a decimal (base 10) representations.
 
@@ -56,10 +56,6 @@ mathematical derivations that you perform.
 
 \lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
 \lstinputlisting[frame=single,title=string.c]{string.c}
-
-\item Write a program that prints out ``little'' if the computer is
-  little-endian and ``big'' if the computer is big-endian. Test it on
-  your computer.
 
 \item In the IEEE double-precision floating-point standard, 64 bits
   (binary digits) are used to represent a real number: 1 bit for the
@@ -73,15 +69,29 @@ mathematical derivations that you perform.
   $k=1,2,\ldots,52$. What is the largest number that can be expressed
   in this system?
 
+\item The C program listed below tries to compute the \emph{machine
+    epsilon}: the smallest positive number $\epsilon$ such that
+  $1+\epsilon > 1$ in double-precision floating-point arithmetic. 
+
+\begin{enumerate}
+\item Add the missing part of the program so that, when compiled, it
+  runs without an assertion error.
+\item Modify the program to find the machine epsilon for single-precision floating-point arithmetic.
+\end{enumerate}
+
+\lstinputlisting[frame=single,title=epsilon.c]{epsilon.c}
+
 \end{enumerate}
 
 
 \section{Histogram equalization}
 \inputdir{dem}
 
-\sideplot{byte}{width=\textwidth}{Digital elevation map of Mount St. Helens area.}
+\sideplot{byte}{width=\textwidth}{Digital elevation map of the 
+West Austin area.}
 
-Figure~\ref{fig:byte} shows a digital elevation map of the Mount St. Helens area in Washington. Start by reproducing this figure on your screen.
+Figure~\ref{fig:byte} shows a digital elevation map of the West Austin
+area. Start by reproducing this figure on your screen.
 \begin{enumerate}
 \item Change directory to \verb#hw1/dem#
 \item Run
@@ -108,10 +118,11 @@ run \texttt{sfattr} without input.
 \end{enumerate}
 
 Each image has a certain distribution of values (a histogram). The
-histogram for the elevation map values is shown in
-Figure~\ref{fig:hist}. When different values in a histogram are not
-uniformly distributed, the image can have a low contrast. One way of
-improving the contrast is \emph{histogram equalization}.
+histogram for the west Austin elevation map is shown in
+Figure~\ref{fig:hist}. Notice the digitization artifacts. When
+different values in a histogram are not uniformly distributed, the
+image can have a low contrast. One way of improving the contrast is
+\emph{histogram equalization}.
 
 \sideplot{hist}{width=\textwidth}{Normalized histogram (solid line)
   and cumulative histogram (dashed line) of the digital elevation
@@ -161,10 +172,12 @@ in Figure~\ref{fig:hist} with equalized data. Run
 \begin{verbatim}
 scons hist.view
 \end{verbatim}
-to display the figure on your screen.
+to display the figure on your screen.`
+\item \textbf{EXTRA CREDIT} for implementing the histogram
+equalization algorithm in a different computer language.
 \end{enumerate}	
 
-%\newpage
+\newpage
 
 \lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
 \lstinputlisting[frame=single,title=dem/SConstruct]{dem/SConstruct}
@@ -214,8 +227,6 @@ scons tpow.view
   function for different values of $\alpha$ and display it in a figure. 
   Does the function appear to have a unique minimum or maximum?
 
-\newpage
-
 \lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
 \lstinputlisting[frame=single,title=tpow/objective.c]{tpow/objective.c}
 
@@ -235,8 +246,6 @@ estimation of $\alpha$ and testing it on the shot gather from
 Figure~\ref{fig:tpow}.
 
 \end{enumerate}
-
-\newpage
 
 \lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
 \lstinputlisting[frame=single,title=tpow/SConstruct]{tpow/SConstruct}
@@ -270,3 +279,4 @@ e-mail.
 
 \bibliographystyle{seg}
 \bibliography{hw1}
+

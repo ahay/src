@@ -67,6 +67,7 @@ In programs:
 
 In the build system:
 
+* Fixed MEXSUFFIX for 64-bit Macs
 * Added '.exe' suffix for python programs in Cygwin
 
 ===Changes in defaults and interfaces===

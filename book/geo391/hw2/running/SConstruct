@@ -35,14 +35,11 @@ import sys
 
 if sys.platform=='darwin':
      gtime = WhereIs('gtime')
+     if not gtime:
+          print "For computing CPU time, please install gtime."
 else:
      gtime = WhereIs('gtime') or WhereIs('time')
 
-if not gtime:
-    print '''
-For computing CPU time, please install GNU time!
-    '''
-     
 # slow or fast
 for case in ('fast','slow'):
 

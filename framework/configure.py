@@ -1966,7 +1966,10 @@ def matlab(context):
         suffix = 'sol'
     elif plat['OS'] == 'darwin':
         if plat['cpu'] == 'i386':
-            suffix = 'maci'
+            if plat['arch'] == '64bit':
+                suffix = 'maci64'
+            else:
+                suffix = 'maci'
         else:
             suffix = 'mac'
     else:

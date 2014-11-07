@@ -5,10 +5,10 @@
 \begin{abstract}
   This homework has four parts. 
   \begin{enumerate}
-  \item Theoretical and programming questions related to data attributes and digital convolution.  
+  \item Theoretical questions related to data attributes.
   \item Measuring the performance of sorting algorithms.
   \item Analyzing a digital elevation map by applying a running average filter.
-  \item Analyzing a digital elevation map by applying derivative filters.
+  \item Analyzing your own data by applying a running average filter.
   \end{enumerate}
 \end{abstract}
 
@@ -22,7 +22,8 @@ Completing the computational part of this homework assignment requires
 \url{http://www.ahay.org/wiki/SEGTeX}
 \end{itemize}
 To do the assignment on your personal computer, you need to install
-the required environments. 
+the required environments. Please ask for help if you don't know where
+to start.
 
 The homework code is available from the \texttt{Madagascar} repository
 by running
@@ -30,11 +31,12 @@ by running
 svn co http://svn.code.sf.net/p/rsf/code/trunk/book/geo391/hw2
 \end{verbatim}
 
-\section{Data attributes and digital convolution}
+\section{Data attributes}
 
 You can either write your answers to theoretical questions on paper or
 edit them in the file \texttt{hw2/paper.tex}. Please show all the
 mathematical derivations that you perform.
+
 
 \begin{enumerate}
 
@@ -51,40 +53,21 @@ a zero-mean Gaussian distribution: $E[a_n]=0$, $E[a_n^2]=\sigma^2$,
 $E[a_n^4]=3\,\sigma^4$. Find the mathematical expectation of
 $\phi[\mathbf{a}]$.
 
-\item The matrix in equation~(\ref{eq:conv}) represents a convolution operator with zero boundary conditions.
+\item The \emph{skewness} attribute evaluates the asymmetry of the data
+  distribution. For zero-mean data, it is defined as
 \begin{equation}
-\label{eq:conv}
-\mathbf{F} = \left[\begin{array}{llllll}
-f_1 & f_0 & 0   & 0   & 0   & 0   \\
-f_2 & f_1 & f_0 & 0   & 0   & 0   \\
-f_3 & f_2 & f_1 & f_0 & 0   & 0   \\
-0   & f_3 & f_2 & f_1 & f_0 & 0   \\
-0   & 0   & f_3 & f_2 & f_1 & f_0 \\
-0   & 0   & 0   & f_3 & f_2 & f_1 \\
-\end{array}\right]\;.
+  \label{eq:skewness}
+\kappa[\mathbf{a}] = \frac{\displaystyle \sum\limits_{n=1}^N
+  a_n^3}{\displaystyle \left(\frac{1}{N}\,\sum\limits_{n=1}^{N} a_n^2\right)^{3/2}}\;.
 \end{equation}
 
-The operator is implemented in the C function \texttt{hw2/conv.c}.
-
-\lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
-\lstinputlisting[frame=single,firstline=15,title=hw2/conv.c]{conv.c}
-
-\begin{enumerate}
-\item Modify the matrix and the program to implement periodic boundary conditions.
-\item Add the code for the adjoint (matrix transpose) operator.
-\end{enumerate}
-
-\item The C code in \texttt{hw2/filter.c} implements a recursive filtering
-  operator.
-
-\lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
-\lstinputlisting[frame=single,firstline=13,title=hw2/filter.c]{filter.c}
-
-\begin{enumerate}
-\item Express this filter in the $Z$-transform notation as a ratio
-  of two polynomials.
-\item Add code for the adjoint operator.
-\end{enumerate}
+Define skewness squared $\kappa^2[\mathbf{a}]$ in terms of the similarity
+measure (squared correlation coefficient) 
+\begin{equation}
+\label{eq:gamma}
+\gamma^2[\mathbf{a},\mathbf{b}] = 
+\frac{\displaystyle \left(\sum\limits_{n=1}^N a_n\,b_n\right)^2}{\displaystyle \sum\limits_{n=1}^N a_n^2\,\sum\limits_{n=1}^N b_n^2}\;.
+\end{equation}
 
 \end{enumerate}
 
@@ -134,9 +117,8 @@ scons view
 to observe the change in the algorithm cost. What is the new
 experimental value of $\epsilon$?
 
-\item \textbf{EXTRA CREDIT} for
-further improving the speed of the 
-\texttt{quick\_sort} algorithm.
+\item \textbf{EXTRA CREDIT} for improving the speed of the 
+\texttt{quick\_sort} algorithm even further.
 \end{enumerate}
 
 \lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
@@ -151,7 +133,9 @@ further improving the speed of the
 \sideplot{dem}{width=0.9\textwidth}{Digital elevation map of the 
 west Austin area.}
 
-In this part of the homework, we will analyze the digital elevation map of the West Austin Area, shown in Figure~\ref{fig:dem}. Our task is to separate the data into ``signal'' and
+We return the digital elevation map of the West Austin Area, shown in Figure~\ref{fig:dem}.
+
+In this exercise, we will separate the data into ``signal'' and
 ``noise'' by applying running mean and median filters.  The result of
 applying a running median filter is shown in
 Figure~\ref{fig:ave,res}. Running median effectively smooths the data
@@ -184,78 +168,25 @@ scons time.vpl
   computations using the slow sorting from function \texttt{median} in
   program \texttt{running.c} and the fast quantile algorithm (library
   function \texttt{sf\_quantile} ). Your goal is to make the algorithm
-  even faster. You may consider parallelization, reusing previous windows,
+  even faster. Consider parallelization, reusing previous windows,
   other fast sorting strategies, etc.
 \end{enumerate}
 
 \lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
 \lstinputlisting[frame=single,title=running/SConstruct]{running/SConstruct}
 
-\section{Derivative filters}
-\inputdir{helix}
+\section{Your own data}
 
-In this part of the assignment, we return to the digital elevation map
-of the of the of the Mount St. Helens area, shown in
-Figure~\ref{fig:data}.
-
-\sideplot{data}{width=\textwidth}{Digital elevation map of Mount St. Helens area.}
-
-Figure~\ref{fig:der} shows a directional derivative, a digital approximation to
-\begin{equation}
-\label{eq:der}
-\cos{\alpha}\,\frac{\partial}{\partial x_1} + \sin{\alpha}\,\frac{\partial}{\partial x_2}\;,
-\end{equation}
-applied to the data. A directional derivative highlights the structure
-of the mountain as if illuminating it with a light source.
-
-\sideplot{der}{width=\textwidth}{Directional derivative of elevation.}
-
-Figure~\ref{fig:helder} shows an application of \emph{helical
-derivative}, a filter designed by spectral factorization of the
-Laplacian filter
-\begin{equation}
-\label{eq:lap4}
-L(Z_1,Z_2) = 4 - Z_1 - 1/Z_1 - Z_2 - 1/Z_2\;.
-\end{equation}
-To invert the Laplacian filter, we put on a helix, where it takes
-the form
-\begin{equation}
-\label{eq:lap1}
-L_H(Z) = 4 - Z - Z^{-1} - Z^{N_1} - Z^{-N_1}\;,
-\end{equation} 
-and factor it into two minimum-phase parts $L_H(Z) = D(Z)\,D(1/Z)$
-using the Wilson-Burg algorithm. The helical derivative $D(Z)$
-enhances the image but does not have a preferential direction.
-
-\sideplot{helder}{width=\textwidth}{Helix derivative of elevation.}
-
+Your final task is to apply the technique of the previous section to
+your own data:
 \begin{enumerate}
-\item Change directory to \texttt{hw2/helix}.
-\item Run 
-\begin{verbatim}
-scons view
-\end{verbatim}
-to reproduce the figures on your screen.
-\item Edit the \texttt{SConstruct} file. Find the parameter that corresponds to $\alpha$ in equation~(\ref{eq:der}) and try to modify it until you create the most interesting image. After changing the parameter, you can view the result by running
-\begin{verbatim}
-scons der.view
-\end{verbatim}
-\item \textbf{EXTRA CREDIT} for suggesting and implementing a method for finding optimal $\alpha$ automatically.
-\item A more accurate version of the Laplacian filter is
-\begin{eqnarray}
-\nonumber
-\hat{L}_2(Z_1,Z_2) = 20 & - & 4\,Z_1 - 4\,Z_1^{-1} - 4\,Z_2 - 4\,Z_2^{-1} \\
-&  & - Z_1\,Z_2 - Z_1\,Z_2^{-1} - Z_2\,Z_1^{-1} - Z_1^{-1}\,Z_2^{-1}\;.
-\label{eq:lap9}
-\end{eqnarray}
-Modify the \texttt{SConstruct} file to use filter~(\ref{eq:lap9}) instead of~(\ref{eq:lap4}).
-\item  \textbf{EXTRA CREDIT} An even more accurate version of the Laplacian filter involves polynomial division in addition to polynomial multiplication. Find the coefficient for the polynomial division and modify the \texttt{SConstruct} file to implement the corresponding helical derivative.
+\item Select a dataset suitable for running mean/median filters.
+\item Apply the algorithm of the previous section and choose
+  appropriate parameters.
+\item Include the results in your homework.
 \end{enumerate}
 
-\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
-\lstinputlisting[frame=single,title=helix/SConstruct]{helix/SConstruct}
-
-%\newpage
+\newpage
 
 \section{Completing the assignment}
 
