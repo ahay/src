@@ -87,6 +87,17 @@ def get_author(source,default,tag):
     else:
         return ', '.join(authors[:-1]) + ', and ' + authors[-1]
 
+def get_title(source,default,tag):
+    title = default.get(tag[1])
+    if not title:
+        paper = source.get_contents()
+        # remove comments
+        paper = re.sub(r'[%][^\n]+','',paper)
+        title = re_title.search(paper)
+        if title:
+            title = re.sub(r'\\',' ',title.group(1)) # remove line breaks 
+    return title
+
 def get_authors(source,default):
     authors = {}
     for src in source:
@@ -126,6 +137,7 @@ def report_toc(target=None,source=None,env=None):
     "Build a table of contents from a collection of papers"
     sections = env.get('sections',{})
     authors = env.get('authors',{})
+    titles = env.get('titles',{})
     book = env.get('book')
     if book:
         maketitle = ''
@@ -148,11 +160,10 @@ def report_toc(target=None,source=None,env=None):
         paper = re.sub(r'[%][^\n]+','',paper)
         if not book:
             author = get_author(src,authors,tag)
-        title = re_title.search(paper)
+        title = get_title(src,titles,tag)
         if sections.has_key(tag[1]):
             toc.write('\n\\geosection*{%s}\n' % sections[tag[1]])
         if author and title:
-            title = re.sub(r'\\',' ',title.group(1)) # remove line breaks 
             toc.write('\TOCentry[%s]{%s}{\pageref{%s.start}}\n' %
                       (author,title,tag[1]))
         else:
@@ -494,7 +505,7 @@ class RSFReport(Environment):
                 self.paper = 0
         # make table of contents
         kw.update({'action':Action(report_toc),
-                   'varlist':['year','sections','authors']})
+                   'varlist':['year','sections','authors','titles']})
         apply(self.Command,('toc.tex',papers),kw)
         rsf.tex.Paper('toc',lclass='georeport',scons=0)
         map(lambda tex: self.Depends('toc.tex',tex),
