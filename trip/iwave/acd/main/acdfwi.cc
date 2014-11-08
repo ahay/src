@@ -12,7 +12,7 @@
 #include "LBFGSBT.hh"
 #include "LinFitLS.hh"
 #include "LinFitLSSM.hh"
-#include "acdiva_selfdoc.h"
+#include "acdfwi_selfdoc.h"
 #include <par.h>
 #include "adjtest.hh"
 #include "segyops.hh"
@@ -67,7 +67,7 @@ using TSOpt::SEGYSpace;
 #endif
 using TSOpt::GridExtendOp;
 using TSOpt::GridDerivOp;
-using TSOpt::GridHelmOp;
+//using TSOpt::GridHelmOp;
 
 int xargc;
 char **xargv;
@@ -86,7 +86,6 @@ char **xargv;
     [intended near-term update: require only physical space material
     params, generate extended version internally, so automatic 
     compatibility with data]
-
 */
 int main(int argc, char ** argv) {
 
@@ -116,16 +115,20 @@ int main(int argc, char ** argv) {
 
       /* the Op */
       IWaveOp iwop(*pars,stream);
+
+      //      SEGYTaperMute(float _s=0.0f, float _tm=0.0f, float _w=0.0f, int _type = 0, float _taper_min=0.0f, float _taper_max=0.0f, float _width=0.0f, int _tapertype=0, float _tw=0.0f)
         
       SEGYTaperMute tnm(valparse<float>(*pars,"mute_slope",0.0f),
                         valparse<float>(*pars,"mute_zotime",0.0f),
-                        valparse<float>(*pars,"mute_width",0.0f),0,
-                        valparse<float>(*pars,"min",0.0f),
-                        valparse<float>(*pars,"max",numeric_limits<float>::max()),
+                        valparse<float>(*pars,"mute_width",0.0f),
+			valparse<int>(*pars,"mute_type",0),
+                        valparse<float>(*pars,"taper_min",-numeric_limits<float>::max()),
+                        valparse<float>(*pars,"taper_max",numeric_limits<float>::max()),
                         valparse<float>(*pars,"taper_width",0.0f),
                         valparse<int>(*pars,"taper_type",0),
                         valparse<float>(*pars,"time_width",0.0f));
-        
+
+      // time width = width of final time taper
       LinearOpFO<float> tnmop(iwop.getRange(),iwop.getRange(),tnm,tnm);
       OpComp<float> op(iwop,tnmop);
     
@@ -136,9 +139,7 @@ int main(int argc, char ** argv) {
       GridSpace csqsp(valparse<std::string>(*pars,"csq"),"notype",true);
 #endif
       // make it a product, so it's compatible with domain of op
-      StdProductSpace<ireal> dom(csqsp);
-      
-
+      StdProductSpace<ireal> dom(csqsp); 
 
       // vel-squared model!
       Vector<ireal> m0(dom);
@@ -161,17 +162,13 @@ int main(int argc, char ** argv) {
         mdd.eval(mddfn);
       }
       { // read data - only needed to define muted data
-        Vector<ireal> dd(op.getRange());
-        AssignFilename ddfn(valparse<std::string>(*pars,"data"));
-        Components<ireal> cdd(dd);
-        cdd[0].eval(ddfn);
-        tnmop.applyOp(dd,mdd);
+	Vector<ireal> dd(op.getRange());
+	AssignFilename ddfn(valparse<std::string>(*pars,"data"));
+	Components<ireal> cdd(dd);
+	cdd[0].eval(ddfn);
+	tnmop.applyOp(dd,mdd);
       }
 
-      /* output stream */
-      std::stringstream res;
-      res<<scientific;
-    
       // choice of GridDerivOp for semblance op is placeholder - extended axis is dim-th, with id=dim+1
       // note default weight of zero!!!
       // Note added 10.03.14: getGrid is not usably implemented for MPIGridSpace at this time, so 
@@ -188,25 +185,30 @@ int main(int argc, char ** argv) {
 	throw e;
       }
 #endif
-    // assign window widths - default = 0;
-    RPNT swind,ewind;
-    RASN(swind,RPNT_0);
-    RASN(ewind,RPNT_0);
-    swind[0]=valparse<float>(*pars,"sww1",0.0f);
-    swind[1]=valparse<float>(*pars,"sww2",0.0f);
-    swind[2]=valparse<float>(*pars,"sww3",0.0f);
-    ewind[0]=valparse<float>(*pars,"eww1",0.0f);
-    ewind[1]=valparse<float>(*pars,"eww2",0.0f);
-    ewind[2]=valparse<float>(*pars,"eww3",0.0f);
+      // does not appear to work properly
+      // assign window widths - default = 0;
+      /*
+      RPNT swind,ewind;
+      RASN(swind,RPNT_0);
+      RASN(ewind,RPNT_0);
+      swind[0]=valparse<float>(*pars,"sww1",0.0f);
+      swind[1]=valparse<float>(*pars,"sww2",0.0f);
+      swind[2]=valparse<float>(*pars,"sww3",0.0f);
+      ewind[0]=valparse<float>(*pars,"eww1",0.0f);
+      ewind[1]=valparse<float>(*pars,"eww2",0.0f);
+      ewind[2]=valparse<float>(*pars,"eww3",0.0f);
+      
+      // need to read in model space for bg input to GridWindowOp
+      Vector<ireal> m_in(op.getDomain());
+      AssignFilename minfn(valparse<std::string>(*pars,"csq"));
+      Components<ireal> cmin(m_in);
+      cmin[0].eval(minfn);
+      GridMaskOp mop(op.getDomain(),m_in,swind,ewind);
+      */
 
-     // need to read in model space for bg input to GridWindowOp
-     Vector<ireal> m_in(op.getDomain());
-     AssignFilename minfn(valparse<std::string>(*pars,"csq"));
-     Components<ireal> cmin(m_in);
-     cmin[0].eval(minfn);
-     GridMaskOp mop(op.getDomain(),m_in,swind,ewind);
-     OpComp<float> cop(mop,op);
-     StdLeastSquaresFcnlGN<float> f(cop,mdd);
+      //      GridWindowOp wop(iwop.getDomain(),
+      //      OpComp<float> cop(mop,op);
+      StdLeastSquaresFcnlGN<float> f(op,mdd);
 
       // choice of preop is placeholder
       // ScaleOpFwd<float> preop(op.getDomain(),1.0f);
@@ -232,6 +234,14 @@ int main(int argc, char ** argv) {
 
       FunctionalBd<float> fbd(f,ultest);
 
+      /* output stream */
+
+      std::stringstream outstr;
+      outstr<<scientific;
+      std::ostream * optr = &outstr;
+      std::string outfile = valparse<std::string>(*pars,"outfile","");
+      if ((outfile.size()==0) && (retrieveRank()==0)) optr = &cout;
+
       LBFGSBT<float> alg(fbd,m,
 			 valparse<float>(*pars,"InvHessianScale",1.0f),
 			 valparse<int>(*pars,"MaxInvHessianUpdates",5),
@@ -244,48 +254,77 @@ int main(int argc, char ** argv) {
 			 valparse<float>(*pars,"LSDoubleFac",1.8f),
 			 valparse<float>(*pars,"MaxFracDistToBdry",1.0), 
 			 valparse<float>(*pars,"LSMinStepFrac",1.e-06),
-			 valparse<int>(*pars,"MaxLBFGSIter",3), 
+			 valparse<int>(*pars,"MaxLBFGSIter",10), 
 			 valparse<float>(*pars,"AbsGradThresh",0.0), 
 			 valparse<float>(*pars,"RelGradThresh",1.e-2), 
-			 res);
+			 *optr);
+
       if (valparse<int>(*pars,"MaxLBFGSIter",3) <= 0) {
 	float val = alg.getFunctionalEvaluation().getValue();
-	res<<"=========================== LINFITLS ==========================\n";
-	res<<"value of IVA functional = "<<val<<"\n";    
-	res<<"=========================== LINFITLS ==========================\n";
+      //	StdLeastSquaresFcnlGN<float> ft(cop,mdd);
+      //	FunctionalEvaluation<float> feval(ft,m);
+	FunctionalEvaluation<float> feval(f,m);
+	//	Vector<float> grad(alg.getFunctionalEvaluation().getDomain());
+	Vector<float> grad(feval.getDomain());
+	AssignFilename gfn("grad.rsf");
+	Components<float> cgrad(grad);
+	cgrad[0].eval(gfn);
+	cerr<<"fcnl gradient"<<endl;
+	grad.copy(feval.getGradient());
+	cerr<<"grad norm from fcnl = "<<grad.norm()<<endl;
+	cerr<<"fcnl value"<<endl;
+	cerr<<"val = "<<feval.getValue()<<endl;
+	Vector<float> din(op.getRange());
+	OperatorEvaluation<float> opeval1(op,m);
+	AssignFilename dinfn("din.su");
+	din.eval(dinfn);
+	din.copy(mdd);
+	cerr<<"norm of simulated data = "<<opeval1.getValue().norm()<<endl;
+	din.linComb(-1.0,opeval1.getValue());
+	cerr<<"norm of residual = "<<din.norm()<<endl;
+	Vector<float> grad1(op.getDomain());
+	AssignFilename gfn1("grad1.rsf");
+	Components<float> cgrad1(grad1);
+	cgrad1[0].eval(gfn1);
+	grad1.zero();
+	opeval1.getDeriv().applyAdjOp(din,grad1);
+	cerr<<"grad norm from basic = "<<grad1.norm()<<endl;
+	cerr <<"=========================== LINFITLS ==========================\n";
+	cerr <<"value of FWI functional = "<<val<<"\n";    
+	cerr <<"=========================== LINFITLS ==========================\n";
       }
       else {
-	alg.run();
-      }
-
+        alg.run();
+      }      
+      
       std::string dataest = valparse<std::string>(*pars,"dataest","");
       std::string datares = valparse<std::string>(*pars,"datares","");
       std::string normalres = valparse<std::string>(*pars,"normalres","");
       if (dataest.size()>0) {
-          OperatorEvaluation<float> opeval(op,m);
-          Vector<float> est(op.getRange());
-          AssignFilename estfn(dataest);
-          est.eval(estfn);
-          est.copy(opeval.getValue());
-          if (datares.size()>0) {
-              Vector<float> res(op.getRange());
-              AssignFilename resfn(datares);
-              res.eval(resfn);
-              res.copy(est);
-              res.linComb(-1.0f,mdd);
-          }
+	OperatorEvaluation<float> opeval(op,m);
+	AssignFilename mdlfn("model.rsf");
+	Vector<float> mdl(op.getDomain());
+	Components<float> cmdl(mdl);
+	cmdl[0].eval(mdlfn);
+	mdl.copy(opeval.getPoint());
+
+	Vector<float> est(op.getRange());
+	AssignFilename estfn(dataest);
+	est.eval(estfn);
+	est.copy(opeval.getValue());
+	if (datares.size()>0) {
+	  Vector<float> res(op.getRange());
+	  AssignFilename resfn(datares);
+	  res.eval(resfn);
+	  res.copy(est);
+	  res.linComb(-1.0f,mdd);
+	}
       }
 
-      if (retrieveRank() == 0) {
-	std::string outfile = valparse<std::string>(*pars,"outfile","");
-	if (outfile.size()>0) {
-	  ofstream outf(outfile.c_str());
-	  outf<<res.str();
-	  outf.close();
-	}
-	else {
-	  cout<<res.str();
-	}
+      if ((outfile.size()>0) && (retrieveRank()==0)) {
+	ofstream outf(outfile.c_str());
+	outf<<outstr.str();
+	outf.close();
       }
     
 #ifdef IWAVE_USE_MPI
