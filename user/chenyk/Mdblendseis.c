@@ -28,8 +28,8 @@ void seisthr(int n1, int n2, int thr, char *thrtype, float **din, float **dout);
 int main(int argc, char* argv[])
 {
   int i1,i2,i3,n1,n2,n3,order,iter,niter,verb; /*l means long trace*/
-  float dt,thr,eps,lambda;
-  float *times, **tracesin, **tracesout, **tracestmp, **dips;
+  float dt,thr,eps,lambda,sum;
+  float *times, **tracesin, **tracesout, **misfit, **tracestmp, **dips;
   char *mode,*type,*thrtype;
   bool unit=false, inv=true, ifinit;	
   sf_file in=NULL, out=NULL, shottime=NULL, dip=NULL, init=NULL;
@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
   times=sf_floatalloc(n2);
   tracesin=sf_floatalloc2(n1,n2);
   tracesout=sf_floatalloc2(n1,n2);
-  if(mode[0]=='d') {dips=sf_floatalloc2(n1,n2); tracestmp=sf_floatalloc2(n1,n2); }
+  if(mode[0]=='d') {dips=sf_floatalloc2(n1,n2); tracestmp=sf_floatalloc2(n1,n2); misfit=sf_floatalloc2(n1,n2);}
 
 
   for(i3=0;i3<n3;i3++)
@@ -125,13 +125,17 @@ int main(int argc, char* argv[])
 
 	  for(iter=0;iter<niter;iter++)
 	    {
+	      sum=0;
 	      blend(n1,n2,dt,tracesout,tracestmp,times);
 		for(i1=0;i1<n1;i1++)
 		  for(i2=0;i2<n2;i2++)
-		  {  tracestmp[i2][i1]=tracesout[i2][i1]+lambda*(tracesin[i2][i1]-tracestmp[i2][i1]); }
+		  {
+			misfit[i2][i1]=tracesin[i2][i1]-tracestmp[i2][i1];
+			sum+=powf(fabs(misfit[i2][i1]),2);
+			tracestmp[i2][i1]=tracesout[i2][i1]+lambda*(misfit[i2][i1]); }
 	
 	      seisthr(n1,n2,thr,thrtype,tracestmp,tracesout);
-	    if(verb==1) sf_warning("Current status: i3=%d, iter=%d",i3,iter);		
+	    if(verb==1) sf_warning("Current status: i3=%d, iter=%d, misfit=%.2g",i3,iter,sum);		
 	    }
 
 	}
