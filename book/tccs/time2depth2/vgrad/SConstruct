@@ -1,0 +1,245 @@
+from rsf.proj import *
+
+v0 = 1.5
+gz = 0.75
+gx = 0.5
+
+# velocity model
+Flow('vel',None,
+     '''
+     math n1=101 n2=351 d1=0.02 d2=0.02 output="%g+%g*x1+%g*x2"
+     label1=Depth unit1=km label2=Position unit2=km label=Velocity unit=km/s
+     ''' % (v0,gz,gx))
+
+Plot('vel',
+     '''
+     window n2=301 f2=25 |
+     grey color=j scalebar=y allpos=y barreverse=y
+     title=Model minval=1.5 maxval=8.5 clip=8.5
+     labelsz=10 titlesz=12 titlefat=6 labelfat=6
+     screenratio=0.65 screenht=9
+     ''')
+Plot('cvel','ax0',
+     '''
+     window n2=301 f2=25 |
+     contour nc=1 c0=3 scalebar=y plotcol=7 plotfat=8
+     wantaxis=n wanttitle=n screenratio=0.65 screenht=9
+     ''')
+Plot('velo','vel cvel','Overlay')
+
+# analytical x0
+Flow('ax0','vel',
+     '''
+     math output="x2+(sqrt((%g+%g*x2)*(%g+%g*x2)+%g*x1*%g*x1)-(%g+%g*x2))/%g" |
+     put label=Position unit=km
+     ''' % (v0,gx,v0,gx,gx,gx,v0,gx,gx))
+
+Plot('ax0',
+     '''
+     window n2=301 f2=25 |
+     grey color=j scalebar=y allpos=y barreverse=y
+     title="Analytical x\_0\^" screenratio=0.65 screenht=9
+     labelsz=10 titlesz=12 titlefat=6 labelfat=6
+     ''')
+Plot('cax0','ax0',
+     '''
+     window n2=301 f2=25 |
+     contour nc=100 scalebar=y plotcol=7 plotfat=7
+     wantaxis=n wanttitle=n screenratio=0.65 screenht=9
+     ''')
+Plot('x0','ax0 cax0','Overlay')
+
+# analytical t0
+Flow('at0','vel',
+     '''
+     math output="acosh(((%g*%g+%g*%g)*(sqrt((%g+%g*x2)*(%g+%g*x2)+%g*x1*%g*x1)+%g*x1)
+     -input*%g*%g)/(input*%g*%g))/sqrt(%g*%g+%g*%g)" | cut n1=1 |
+     put label=Time unit=s
+     ''' % (gx,gx,gz,gz,v0,gx,v0,gx,gx,gx,gz,gz,gz,gx,gx,gz,gz,gx,gx))
+
+Plot('at0',
+     '''
+     window n2=301 f2=25 |
+     grey color=j scalebar=y allpos=y barreverse=y
+     title="Analytical t\_0\^" screenratio=0.65 screenht=9
+     labelsz=10 titlesz=12 titlefat=6 labelfat=6
+     ''')
+Plot('cat0','at0',
+     '''
+     window n2=301 f2=25 |
+     contour nc=75 scalebar=y plotcol=7 plotfat=7
+     wantaxis=n wanttitle=n screenratio=0.65 screenht=9
+     ''')
+Plot('t0','at0 cat0','Overlay')
+
+# analytical Dix
+Flow('dix',None,
+     '''
+     math n1=251 n2=351 d1=0.004 d2=0.02 output="(%g+%g*x2)*sqrt(%g*%g+%g*%g)/
+     (sqrt(%g*%g+%g*%g)*(cosh(sqrt(%g*%g+%g*%g)*x1))-%g*sinh(sqrt(%g*%g+%g*%g)*x1))"
+     label1=Time unit1=s label2=Position unit2=km label=Velocity unit=km/s
+     ''' % (v0,gx,gz,gz,gx,gx,gz,gz,gx,gx,gz,gz,gx,gx,gz,gz,gz,gx,gx))
+
+Plot('dix',
+     '''
+     window n2=301 f2=25 |
+     grey color=j scalebar=y allpos=y barreverse=y
+     title="Dix Velocity" minval=1.5 maxval=8.5 clip=8.5
+     labelsz=10 titlesz=12 titlefat=6 labelfat=6
+     screenratio=0.65 screenht=9
+     ''')
+Plot('cdix','dix',
+     '''
+     window n2=301 f2=25 |
+     math output=1 | rays2 a0=180 nr=1 dt=0.01 nt=557 yshot=3 |
+     graph transp=y yreverse=y scalebar=y plotcol=7 plotfat=8
+     wantaxis=n wanttitle=n min1=0 max1=2 min2=0.5 max2=6.5
+     screenratio=0.65 screenht=9
+     ''')
+Plot('odix','dix cdix','Overlay')
+
+Result('analy','x0 t0','OverUnderAniso')
+
+# convert Dix to depth
+Flow('init','dix',
+     '''
+     time2depth velocity=$SOURCE intime=y twoway=n nz=101 dz=0.02 |
+     put label1=Depth unit1=km
+     ''')
+
+Plot('init',
+     '''
+     window n2=301 f2=25 |
+     grey color=j scalebar=y allpos=y barreverse=y
+     title="Dix Velocity Converted to Depth" minval=1.5 maxval=8.5 clip=8.5
+     labelsz=10 titlesz=12 titlefat=6 labelfat=6
+     screenratio=0.65 screenht=9
+     ''')
+
+Result('vgrad','velo odix','OverUnderAniso')
+
+# mask
+Flow('mask','ax0',
+     '''
+     math output=-1 | cut n2=25 | cut n2=25 f2=326 | dd type=int
+     ''')
+
+# inversion
+Flow('t2d tt2d xt2d ft2d gt2d ct2d','init dix mask',
+     '''
+     tdconvert niter=3 verb=n cgiter=2000 eps=5 shape=y rect1=4 rect2=15 dix=${SOURCES[1]} mask=${SOURCES[2]}
+     t0=${TARGETS[1]} x0=${TARGETS[2]} f0=${TARGETS[3]} grad=${TARGETS[4]} cost=${TARGETS[5]}
+     ''')
+
+# cost
+Plot('cost0','ct2d',
+     '''
+     window n2=301 f2=25 | window n3=1 f3=0 | 
+     grey color=j scalebar=y barreverse=y barlabel=Cost barunit=
+     title="Initial f" minval=-0.22 maxval=0.004 clip=0.22
+     labelsz=10 titlesz=12 titlefat=6 labelfat=6
+     screenratio=0.65 screenht=9
+     ''')
+Plot('cost3','ct2d',
+     '''
+     window n2=301 f2=25 | window n3=1 f3=3 | 
+     grey color=j scalebar=y barreverse=y barlabel=Cost barunit=
+     title="Final f" minval=-0.22 maxval=0.004 clip=0.22
+     labelsz=10 titlesz=12 titlefat=6 labelfat=6
+     screenratio=0.65 screenht=9
+     ''')
+
+Result('cost','cost0 cost3','OverUnderAniso')
+
+# error
+Plot('error0','init vel',
+     '''
+     add scale=1,-1 ${SOURCES[1]} | window n2=301 f2=25 |
+     grey color=j scalebar=y barreverse=y
+     title="Initial Model Error" minval=-0.3 maxval=0.08 clip=0.3
+     labelsz=10 titlesz=12 titlefat=6 labelfat=6
+     screenratio=0.65 screenht=9
+     ''')
+Plot('error3','t2d vel',
+     '''
+     add scale=1,-1 ${SOURCES[1]} | window n2=301 f2=25 |
+     grey color=j scalebar=y barreverse=y
+     title="Final Model Error" minval=-0.3 maxval=0.08 clip=0.3
+     labelsz=10 titlesz=12 titlefat=6 labelfat=6
+     screenratio=0.65 screenht=9
+     ''')
+
+Result('error','error0 error3','OverUnderAniso')
+
+# reflection data
+Flow('ref',None,
+     'math n1=1101 d1=0.01 o1=-2 n2=8 d2=0.2 o2=0.5 output=x2')
+Flow('dip','ref','math output=0')
+
+Plot('ref',
+     '''
+     graph min2=0 max2=2 min1=0.5 max1=6.5 scalebar=y
+     yreverse=y labelsz=5 titlesz=7
+     plotcol=7 plotfat=7 labelsz=10 titlesz=12 titlefat=6 labelfat=6
+     screenratio=0.65 screenht=9
+     ''')
+
+Flow('data','ref dip',
+     '''
+     kirmod dip=${SOURCES[1]} 
+     nh=401 dh=0.01 h0=0 
+     ns=101 ds=0.02 s0=0.5 
+     freq=40 dt=0.004 nt=501 type=v twod=y 
+     vel=0.5 gradz=0.75 gradx=0.5 verb=y |
+     tpow tpow=1.5 | window
+     ''')
+Flow('data0','data',
+     '''
+     put d2=10 d3=20 o3=500 | 
+     spray axis=4 n=1 o=0 d=10 |
+     transp plane=23 | transp plane=34 |
+     put label1="Time" unit1="s" label2="Midpoint" unit2="m"
+     label3="Crossline" unit3="m" label4="Offset" unit4="m"
+     ''')
+
+# migration
+for case in ['init','t2d','vel']:
+    Flow(case+'0',case,
+         '''
+         put d1=20 d2=20 | 
+         window n2=301 f2=25 |
+         spline n1=201 d1=10 o1=0 | transp |
+         spline n1=601 d1=10 o1=500 | transp |
+         spray axis=3 n=1 d=10 o=0 |
+         scale dscale=1000 |
+         put label1="Depth" unit1="m" label2="Distance" unit2="m"
+         label3="Crossline" unit3="m"
+         ''')
+
+    Flow([case+'mig',case+'dag',case+'cig'],['data0',case+'0'],
+         '''
+         dmigda vel=${SOURCES[1]}
+         dag=${TARGETS[1]} cig=${TARGETS[2]}
+         izn=201 izo=0 izd=10
+         ixn=1 ixo=1500 ixd=10
+         iscato=0 iscatn=31 iscatd=5
+         dipo=-80 dipn=161 dipd=1
+         ''')
+
+    if case=='init':
+        title="Initial"
+    elif case=='t2d':
+        title="Inverted"
+    else:
+        title="Exact"
+
+    Plot(case+'cig',
+         '''
+         put d1=0.01 d2=2.5 |
+         grey title=%s label1=Depth unit1=km label2=Angle unit2=degree
+         labelsz=14 titlesz=18 titlefat=10 labelfat=10
+         ''' % title)
+
+Result('cigv','velcig initcig t2dcig','SideBySideAniso')
+
+End()

@@ -1,0 +1,4 @@
+from rsf.tex import *
+
+End(color='imageray vz0 pdt pdx diffcost bgrad vdix init inv dinv vgrad analy cost error cig1 cig2 hs2grad hs2analy hs2cost hs2error cig0',
+    hires='imageray vz0 pdt pdx diffcost bgrad vdix init inv dinv vgrad analy cost error cig1 cig2 hs2grad hs2analy hs2cost hs2error dmig dmig0 cig0')

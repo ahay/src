@@ -1,0 +1,976 @@
+\title{A robust approach to time-to-depth conversion and interval velocity 
+estimation from time migration in the presence of lateral velocity variations}
+
+\author{Siwei Li and Sergey Fomel}
+
+%\ms{GEO-2013}
+
+\address{Bureau of Economic Geology \\
+John A. and Katherine G. Jackson School of Geosciences \\
+The University of Texas at Austin \\
+University Station, Box X \\
+Austin, TX 78713-8924}
+
+\lefthead{Li \& Fomel}
+\righthead{Time-to-depth conversion}
+\footer{TCCS-8}
+
+\maketitle
+
+\begin{abstract}
+
+The problem of conversion from time-migration velocity to an interval velocity in depth in 
+the presence of lateral velocity variations can be reduced to solving a system 
+of partial differential equations. In this paper, we formulate the problem as a nonlinear 
+least-squares optimization for seismic interval velocity and seek its solution 
+iteratively. The input for inversion is the Dix velocity which also serves as an initial guess. The inversion 
+gradually updates the interval velocity in order to account for lateral velocity 
+variations that are neglected in the Dix inversion. The algorithm has a moderate cost thanks 
+to regularization that speeds up convergence while ensuring a smooth output. The proposed method 
+\old{is}\new{should be} numerically robust compared to the previous approaches, which amount to extrapolation 
+in depth monotonically. For a successful time-to-depth conversion, image-ray caustics should be either 
+nonexistent or excluded from the computational domain. The resulting velocity can be used in subsequent 
+depth-imaging model building. Both synthetic and field data examples demonstrate the applicability 
+of the proposed approach.
+
+\end{abstract}
+
+\section{Introduction}
+
+Time-domain seismic processing has been a popular and effective tool in areas with mild lateral velocity 
+variations \cite[]{yilmaz,robein,bartel}. Time migration produces images in the time 
+coordinate as opposed to the usual depth coordinate. The time coordinate, along with time-migration velocities, is 
+determined during time migration by optimizing image qualities. However, it is highly sensitive to lateral 
+velocity changes \cite[]{black,bevc2}. Therefore, the time-migrated image is usually 
+distorted \cite[]{hubral,cameron1,cameron2,cameron3,iversen}. For this reason, in many cases time migrations are 
+inadequate for accurate geological interpretation of subsurface structures. On the other hand, time-migration 
+velocities can be conveniently and efficiently estimated either by repeated migrations \cite[]{yilmaz2} or by 
+velocity continuation \cite[]{fomel1}. Depth migration can handle general media and output 
+images in regular Cartesian depth coordinates. But it requires an accurate interval 
+velocity model construction, which is in practice both challenging and time-consuming. An iterative process of 
+tomographic updates is often employed \cite[]{bishop,stork}, where a good initial interval velocity model is 
+crucial for achieving the global minimum. It is thus of great interest to convert the time-migration velocity 
+to the depth domain in order to unravel inherent distortions in time-domain images and to provide a reasonable 
+starting model for building depth-imaging velocities.
+
+The relationship between time and depth coordinates was first explained by \cite{hubral} through the concept of 
+\textit{image rays}. An interval velocity model can be converted to one in the time domain by 
+tracing image rays that dive into earth with slowness vector normal to the surface. The time 
+coordinates are then defined by the traveltime along image rays and its surface location 
+\cite[]{larner,robein}. However this process is not trivially revertible and it does not reveal directly the 
+connection between time-migration velocity and interval velocity. 
+According to \cite{dix}, in a layered medium where $v = v(z)$, the image rays run straightly 
+downward and the time-migration velocities are the root-mean-square (RMS) velocities appearing in a truncated 
+Taylor approximation for traveltimes. The Dix inversion formula is exact in a $v(z)$ medium, where the conversion 
+between time- and depth-domain attributes is theoretically straightforward.
+
+Even a mild lateral velocity variation can cause image rays to bend and invalidate Dix inversion. 
+\cite{cameron1,cameron2} studied and established theoretical relations between the time-migration velocity and the 
+seismic velocity in depth for general media using the paraxial ray-tracing theory. They showed 
+that\old{,} the conventional Dix velocity is equal to the ratio of the interval velocity and the 
+geometrical spreading of image rays. This is consistent with Dix formula because when $v = v(z)$ the geometrical 
+spreading equals to one everywhere. In order to carry out the time-to-depth conversion in the presence of lateral 
+velocity variations, one can solve a nonlinear partial differential equation 
+(PDE) of elliptic type with boundary conditions on the surface \cite[]{cameron3}. The problem is mathematically 
+ill-posed. \cite{cameron3} adopt a two-step numerical procedure for the time-to-depth conversion. The first step 
+is a Lax-Friedrichs-like finite-difference method or a spectral 
+Chebyshev method to solve for geometrical spreading in the time coordinate. The next step is a Dijkstra-like solver 
+motivated by the fast marching method \cite[]{sethian} for velocity conversion and coordinate mapping. In this 
+approach, it is crucial to yield the development of low harmonics and damp the high harmonics during the first 
+stage. \cite{iversen} discussed an extension of the time-to-depth conversion problem along 2-D profiles in 3-D. 
+An essential part of the algorithm is the time-stepping (integration) along image-rays. The robustness of 
+these methods may not be satisfactory in practice because of stability issues that arise from the ill-posed 
+nature of the problem.
+
+In this paper, we start with the theoretical relations derived by \cite{cameron1,cameron2} but cast the 
+original problem in a nonlinear iterative optimization framework. This idea is motivated by the observation that, 
+for arbitrary depth velocity model, two of the PDEs can be always satisfied, while the remaining one associated 
+with image-ray geometrical spreading can be rewritten in the form of a cost functional that 
+indicates errors in interval velocity. A key benefit in our formulation is that each 
+\old{linearization update on the interval velocity will contain information from the 
+whole computational domain}\new{iteration will give a global update of the whole velocity model}. 
+In contrast, the previous approaches only consider information locally at each time step. Another advantage 
+is that we are able to include regularization in the optimization framework in order to deal with 
+the ill-posedness issue.
+
+The paper is organized as follows. We first show theoretical derivations of all 
+necessary components involved in the proposed approach. Next, we develop a numerical implementation 
+for 2-D time-to-depth conversion. Finally, we test the algorithm on synthetic and field data examples. 
+\old{Some discussion on the proposed method is given in concluding the paper.}\new{We conclude the 
+paper by giving some discussions on the proposed method.}
+
+\section{Theory}
+
+For completeness, we will first review some basic concepts related to time-to-depth conversion. Then we show 
+the theoretical derivation for an optimization formulation of the problem and a corresponding inversion 
+procedure. For simplicity, we restrict our analysis below to the 2-D case.
+
+\subsection{Connection between time- and depth-domain attributes}
+\inputdir{.}
+
+In Figure~\ref{fig:imageray}, we illustrate image rays in 2-D and a \textit{forward} mapping from depth coordinate 
+$(z,x)$ to time coordinate $(t_0,x_0)$ \cite[]{hubral}. \new{Throughout this paper $t_0$ stands for one-way time, 
+while time migration usually produces images in two-way time \cite[]{yilmaz}, i.e. $(2 t_0,x_0)$.} Under the 
+assumption of no caustics, for each subsurface location $(z,x)$ we consider the image ray from $(z,x)$ to the 
+surface, where it emerges at point $(0,x_0)$, with slowness vector normal to the surface. Here $x_0$ is the 
+location of the image ray at the earth surface and is a scalar. $t_0$ is the traveltime along this image ray between 
+$(z,x)$ and $(0,x_0)$. The forward mapping $t_0 (z,x)$ and $x_0 (z,x)$ can be done with a knowledge of interval 
+velocity $v (z,x)$. A unique \textit{inverse} mapping $z (t_0,x_0)$ and $x (t_0,x_0)$ also exists that enables 
+us to directly map the time-migrated image to depth.
+\plot{imageray}{width=0.95\textwidth}{Image ray in (left) the depth-domain 
+can be traced with a source at location $x_0$ with slowness vector normal 
+to the earth surface. Each depth coordinate $(z,x)$ along this image ray 
+is then mapped into (right) the time coordinate $(t_0,x_0)$ by using its 
+corresponding traveltime $t_0$ and source location $x_0$.}
+
+The counterpart for $v (z,x)$ in the time-domain is the time-migration velocity $v_m (t_0,x_0)$, which is 
+commonly estimated in prestack Kirchhoff time migration \cite[]{yilmaz,fomel1}. In a $v (z)$ medium, $v_m$ 
+corresponds to the root-mean-square (RMS) velocity:
+\begin{equation}
+\label{eq:rms}
+v_m (t_0) = \sqrt{\frac{1}{t_0} \int_0^{t_0} v^2 (z(t))\,dt}\;.
+\end{equation}
+A time-to-depth velocity conversion can be done by first applying the Dix inversion formula \cite[]{dix}, which 
+is theoretically exact in this case:
+\begin{equation}
+\label{eq:dix}
+v_d (t) = \sqrt{\frac{d}{d t_0} (t_0 v_m^2 (t_0))}\;,
+\end{equation}
+followed by performing a simple conversion from $v_d (t)$ to $v (z)$ according to 
+$z = \frac{1}{2} \int_0^t v_d (t) dt$. 
+
+In equations \ref{eq:rms} and \ref{eq:dix}, there is no dependency on $x_0$ or $x$, because image rays are 
+all vertical. For an arbitrary medium, image rays will bend as they travel through the medium \cite[]{larner}. 
+Therefore, in general, $v_m$ is a function of both $t_0$ and 
+$x_0$ and no longer satisfies the simple expression \ref{eq:rms}, which limits the applicability of the Dix 
+formula. \cite{cameron1} proved that the seismic velocity and the Dix velocity in this case are connected through 
+geometrical spreading $Q$ of image rays:
+\begin{equation}
+\label{eq:cameron}
+v_d (t_0,x_0) \equiv \sqrt{\frac{\partial}{\partial t_0} (t_0 v_m^2 (t_0,x_0))} 
+= \frac{v(z(t_0,x_0),x(t_0,x_0))}{Q(t_0,x_0)}\;.
+\end{equation}
+In equation \ref{eq:cameron}, the generalized Dix velocity is defined by \cite{cameron1} in a way similar 
+to equation \ref{eq:dix} with a change from $d / dt_0$ to a partial differentiation with respect to $t_0$. The 
+quantity $Q$ is related to $x_0 (z,x)$ using its definition \cite[]{popov,cameron1}, as follows:
+\begin{equation}
+\label{eq:Q}
+| \nabla x_0 |^2 = \frac{1}{Q^2}\;.
+\end{equation}
+
+Combining equations \ref{eq:cameron} and \ref{eq:Q} results in
+\begin{equation}
+\label{eq:x0}
+| \nabla x_0 (z,x) |^2 = \frac{v_d^2 (t_0 (z,x),x_0 (z,x))}{v^2 (z,x)}\;.
+\end{equation}
+The traveltimes along image rays obey the eikonal equation \cite[]{hubral,chapman}, thus
+\begin{equation}
+\label{eq:t0}
+| \nabla t_0 (z,x) |^2 = \frac{1}{v^2 (z,x)}\;.
+\end{equation}
+Finally, since $x_0$ remains constant along each image ray, there is an orthogonality condition between 
+gradients of $t_0$ and $x_0$ \cite[]{cameron1}:
+\begin{equation}
+\label{eq:ortho}
+\nabla t_0 (z,x) \cdot \nabla x_0 (z,x) = 0\;.
+\end{equation}
+
+Equations \ref{eq:x0}, \ref{eq:t0} and \ref{eq:ortho} form a system of nonlinear PDEs for $t_0 (z,x)$ and 
+$x_0 (z,x)$. The input is $v_d (t_0,x_0)$, estimated from $v_m (t_0,x_0)$ by equation \ref{eq:cameron}. Solving a 
+boundary-value problem for the PDEs should provide $v (z,x)$, as well as $t_0 (z,x)$ and $x_0 (z,x)$. 
+Because seismic acquisitions are 
+limited to the earth surface, we can only use boundary conditions at the surface. For a rectangular Cartesian 
+domain with $z =0$ being the surface, the boundary conditions are
+\begin{equation}
+\label{eq:boundary}
+\left\{ \begin{array}{lcl}
+t_0 (0, x) & = & 0\;, \\
+x_0 (0, x) & = & x\;.
+\end{array} \right.
+\end{equation}
+
+In Appendix A, we show that the time-to-depth conversion is an ill-posed problem because it requires solving 
+a Cauchy-type problem for an elliptic PDE. The missing boundary conditions on sides of the computational domain 
+other than those in equation \ref{eq:boundary} can induce numerical instability when extrapolating in $t_0$ 
+(or, equivalently, $z$). Instead, we consider an alternative formulation of the problem in the following section.
+
+\subsection{The optimization formulation}
+
+Given boundary conditions \ref{eq:boundary}, equation \ref{eq:t0} describes the traveltime $t_0$ 
+of a velocity model with a plane-wave source at the surface. For a given $t_0$, equation 
+\ref{eq:ortho} is a first-order linear PDE on $x_0$ and thus computation of $x_0$ is 
+straightforward. Our idea is inspired by a natural logic: if the resulting $x_0$ does not satisfy equation 
+\ref{eq:x0}, we need to modify $v$ in a way such that the misfit decreases, and repeat the 
+process until convergence.
+
+Mathematically, we define a cost function $f (z,x)$ based on equation \ref{eq:x0}:
+\begin{equation}
+\label{eq:costf}
+f (z,x) = \nabla x_0 \cdot \nabla x_0 - v_d^2\,w\;,
+\end{equation}
+where for convenience we use slowness-squared $w (z,x) = v^{-2} (z,x)$ instead of $v$. Note that $f$ is 
+dimensionless. The discretized form of equation \ref{eq:costf} reads
+\begin{equation}
+\label{eq:cost}
+\mathbf{f} = (\nabla \mathbf{x_0} \cdot \nabla)\,\mathbf{x_0} 
+- \mbox{diag}(\mathbf{v_d} \star \mathbf{v_d})\,\mathbf{w} 
+\equiv \mathbf{L}_{x_0}\,\mathbf{x_0} 
+- \mbox{diag}(\mathbf{v_d} \star \mathbf{v_d})\,\mathbf{w}\;.
+\end{equation}
+In equation \ref{eq:cost}, $\mathbf{f}, \mathbf{x_0}, \mathbf{v_d}$ and $\mathbf{w}$ are all column vectors after 
+discretizing the computational domain $(z,x)$. For example, $\mathbf{x_0}$ is the discretized column vector of 
+$x_0 (z,x)$. The vector $\mathbf{v_d}$ may require interpolation because it is in $(t_0,x_0)$ while 
+the discretization is in $(z,x)$. The interpolation can be done after forward mapping from $(z,x)$ to $(t_0,x_0)$ 
+at current velocity model. We denote an operator which is a matrix 
+$\mathbf{L}_{x_0} = \nabla \mathbf{x_0} \cdot \nabla$. The other operator $\mbox{diag}()$ expands a vector 
+into a diagonal matrix. Finally, the symbol $\star$ stands for an element-wise vector-vector multiplication.
+
+As is common in many optimization problems, we seek to minimize the least-squares norm of $\mathbf{f}$:
+\begin{equation}
+\label{eq:objective}
+E [\mathbf{w}] = \frac{1}{2} \|\mathbf{f}\|^2 = \frac{1}{2} \mathbf{f}^T \mathbf{f}\;,
+\end{equation}
+where the superscript $T$ stands for transpose. The Gauss-Newton method in optimization 
+requires linearizing the cost function in equation \ref{eq:cost}:
+\begin{equation}
+\label{eq:lincost}
+\frac{\partial f}{\partial w} = 
+2\,(\nabla x_0 \cdot \nabla)\,\frac{\partial x_0}{\partial w} -
+2\,v_d\,w\,\frac{\partial v_d}{\partial w} - v_d^2\;.
+\end{equation}
+The Fr\'{e}chet derivative matrix $\mathbf{J}$ required by inversion is the discretized 
+form of equation \ref{eq:lincost}, i.e., $\mathbf{J} = \partial \mathbf{f} / \partial \mathbf{w}$. In Appendix 
+B we find that $\mathbf{J}$ is a cascade and summation of several parts. An update 
+$\delta \mathbf{w}$ at current $\mathbf{w}$ is found by solving the following normal equation arising from 
+the Gauss-Newton approach \cite[]{bjorck}:
+\begin{equation}
+\label{eq:normal}
+\delta \mathbf{w} = \left[ \mathbf{J}^T \mathbf{J} \right]^{-1} \mathbf{J}^T (- \mathbf{f})\;.
+\end{equation}
+
+Equations \ref{eq:objective} and \ref{eq:normal} together suggest a nonlinear inversion 
+procedure for solving the original system of PDEs \ref{eq:x0}, \ref{eq:t0} and \ref{eq:ortho}. The inversion 
+is analogous to traveltime tomography but with more complexity. The cost \ref{eq:costf} can be interpreted as 
+difference between modeled and observed geometrical spreadings. However, both of them depend on the model $v$, 
+while in traveltime tomography the observed arrival times are independent of $v$. The forward modeling in our case 
+involves two steps, which construct a curvilinear coordinate system that is sensitive to lateral velocity 
+variations. On the other hand, the forward modeling in traveltime tomography consists of only one step\old{, 
+i.e., solving equation \ref{eq:t0} with a point-source boundary condition}. Last but not least, unlike 
+traveltime tomography, we have observations everywhere in the computational domain, except for \old{some null 
+space created during}\new{areas excluded due to instabilities of the} numerical implementation, as we will 
+discuss later.\old{ Note that the inversion is applied directly for slowness-squared $\mathbf{w}$ (and thus 
+velocity), and the update $\delta \mathbf{w}$ will incorporate dependency of velocities throughout the domain, 
+as physically honored by image rays. Previous methods \mbox{\cite[]{cameron1,cameron2,iversen}} that rely on 
+time-stepping in $t_0$ account for such dependencies only locally.}
+
+Before introducing a numerical implementation, we would like to point out several important facts 
+and assumptions that make a successful time-to-depth conversion possible by the proposed method:
+\begin{itemize}
+\item Caustics must be excluded from the computational domain. In regions where caustics develop, the gradient 
+$\nabla x_0$ goes to infinity and the cost function is not well-defined. For all numerical examples in this 
+paper, we do not encounter this issue. In the Discussion section, we provide a possible strategy to cope with 
+this limitation.
+\item According to derivations in Appendix B, the calculation of $\delta \mathbf{w}$ depends on 
+values of $\partial \mathbf{v_d} / \partial \mathbf{t_0}$ and $\partial \mathbf{v_d} / \partial \mathbf{x_0}$. 
+Thus the input $v_d$ should be differentiable. This requirement can be satisfied during $v_m$ estimation by 
+using regularization \cite[]{fomel1}.
+\item Similarly to all nonlinear inversions, the proposed method requires a 
+prior model that is sufficiently close to desired model at the global minimum $E = 0$. Meanwhile, to 
+guarantee stability and a smooth output, some form of regularization should be imposed during 
+inversion \cite[]{engl,zhdanov}.
+\item Our formulation does not change the ill-posed nature of the original problem. One 
+assumption is that condition \ref{eq:boundary} describes all \textit{in-flow} domain boundaries of $t_0$ and 
+$x_0$. In other words, the image rays are only allowed to be either parallel to or exiting (\textit{out-flow}) 
+all other boundaries \new{of the computational domain} except the surface.
+\end{itemize}
+
+For the prior model, we adopt the Dix-inverted model. In other words, we seek to refine the interval 
+velocity given by equation \ref{eq:dix} by taking the geometrical spreading of image rays into consideration 
+according to equation \ref{eq:cameron}.
+
+\section{Numerical Implementation}
+
+Below we outline the steps involved in computing one linearization update:
+
+\begin{enumerate}
+\item Given current $v (z,x)$, solve equation \ref{eq:t0} for $t_0 (z,x)$ with $t_0 (0,x) = 0$;
+\item Given $t_0 (z,x)$ and $x_0 (0,x) = x$, solve equation \ref{eq:ortho} for $x_0 (z,x)$;
+\item Given $t_0 (z,x)$ and $x_0 (z,x)$, interpolate $v_d (z,x)$ from $v_d (t_0,x_0)$ and compute $f (z,x)$ 
+based on equation \ref{eq:costf};
+\item Assemble linear operator \ref{eq:final} and solve equation \ref{eq:normal} for $\delta w (z,x)$.
+\end{enumerate}
+
+First, we apply the fast-marching method \cite[]{sethian,sethian2} to solve the eikonal equation 
+\ref{eq:t0} by initializing a plane-wave source at $z = 0$. Computation for $x_0$ can be incorporated into $t_0$ 
+by adopting the upwind finite-differences of $t_0$ for equation \ref{eq:ortho}. In Figure~\ref{fig:fmm}, consider 
+a currently updated grid point $C$ during forward modeling of $t_0$. If it has only one upwind neighbor $A$ that 
+is inside the wave-front, $t_0 (C) > t_0 (A)$, then the image ray must be aligned with grid segment $AC$ and
+therefore $x_0 (C) = x_0 (A)$. \new{We refer to this scenario as one-sided.} If $C$ has two upwind neighbors $A$ 
+and $B$, $t_0 (C) > \mbox{max}\{t_0 (A), t_0 (B)\}$, and they are both inside the wave-front, then the image 
+ray must intersect the simplex $ABC$ from an angle. In this case, we compute $x_0 (C)$ from
+\begin{equation}
+\label{eq:two}
+\frac{(t_0 (C) - t_0 (A))(x_0 (C) - x_0 (A))}{h_z^2} + 
+\frac{(t_0 (C) - t_0 (B))(x_0 (C) - x_0 (B))}{h_x^2} = 0\;.
+\end{equation}
+\plot{fmm}{width=0.55\textwidth}{A modified fast-marching method for 
+forward modeling. Black dots represent region that has 
+been swept by the wave-front, gray dots are the expanding 
+wave-front and grid points being updated, and white dots are region 
+yet to be reached.}
+
+Because $\mathbf{x_0}$ at certain grid points is calculated by one-sided scenario, $\mathbf{L}_{x_0}$ there 
+contains all zeros. Consequently, an evaluation of the cost $\mathbf{f}$ at these locations with 
+$\mathbf{L}_{x_0}\,\mathbf{x_0}$ becomes inaccurate. We exclude these regions from $\mathbf{f}$ and expect 
+inversion to fill \old{the null space}\new{them}.
+
+Next, we apply simple bilinear interpolation for $v_d (z,x)$ and estimate $\delta \mathbf{w}$ by 
+solving equation \ref{eq:normal} using shaping regularization \cite[]{fomel2}. We use a 
+triangular smoother with adjustable size as the shaping operator. We find in numerical tests that shaping 
+significantly improves convergence speed compared to that of the traditional Tikhonov 
+regularization \cite[]{tikhonov} with gradient operators. We also observe that without regularization the 
+model update can be undesirably oscillatory. We believe this phenomenon is related to the ill-posedness of 
+the PDEs.
+
+Finally, we reduce computational cost by adopting the method of 
+conjugate gradients \cite[]{hestenes} and an efficient implementation of $\mathbf{J}$, as well as its 
+adjoint, according to the equations derived in Appendix B. For this purpose, we choose the upwind 
+finite-difference scheme \cite[]{franklin,li1} based on 
+$\mathbf{t_0}$ for both $\mathbf{L}_{t_0}$ and $\mathbf{L}_{x_0}$. As shown by \cite{li3}, applying 
+$\mathbf{J}$ and its transpose involves only sparse triangularized matrix-vector multiplications and 
+is therefore inexpensive. \new{For example, at each grid point $\mathbf{L}_{t_0}^{-1}$ relies on only its 
+upwind neighbors. The computational complexity of $\mathbf{J}$ and $\mathbf{J}^T$ is $O (N)$, where 
+$N$ is the total number of grid points.}
+
+\section{Examples}
+
+\subsection{Constant velocity gradient model}
+\inputdir{vgrad}
+
+In a medium with a constant velocity gradient
+\begin{equation}
+\label{eq:constg0}
+v (z,x) = v_0 + g_z z + g_x x\;,
+\end{equation}
+image rays are segments of circles parallel to each other, and all attributes involved in time-to-depth 
+conversion have analytical solutions. In Appendix C, we derive the following 
+relationships:
+\begin{equation}
+\label{eq:analx}
+x_0 (z,x) = x + \frac{\sqrt{(v_0+g_x x)^2 + g_x^2 z^2} - (v_0 + g_x x)}{g_x}\;,
+\end{equation}
+\begin{equation}
+\label{eq:analt}
+t_0 (z,x) = \frac{1}{g} \mathrm{arccosh} \left[ \frac{g^2 \left( \sqrt{(v_0+g_x x)^2 + g_x^2 z^2}
++ g_z z \right) - v g_z^2}{v g_x^2} \right]\;,
+\end{equation}
+where $g = \sqrt{g_z^2 + g_x^2}$. The migration velocity $v_m$ and Dix velocity $v_d$ take the 
+following expressions:
+\begin{equation}
+\label{eq:analvm}
+v_m (t_0,x_0) = \frac{(v_0 + g_x x_0)^2}{t_0 \left( g \coth (g t_0) - g_z \right)}\;,
+\end{equation}
+\begin{equation}
+\label{eq:analvd}
+v_d (t_0,x_0) = \frac{(v_0 + g_x x_0) g}{g \cosh (g t_0) - g_z \sinh (g t_0)}\;.
+\end{equation}
+
+It is easy to verify from equations \ref{eq:analx} and \ref{eq:analt} that 
+$|\nabla x_0| = 1$, $|\nabla t_0| = 1/v$ and $\nabla x_0 \cdot \nabla t_0 = 0$. Because there is no geometrical 
+spreading of image rays in this case, the Dix velocity will be equal to the interval velocity according to 
+equation \ref{eq:cameron}. However, a Dix-inverted model will still be distorted if $g_x \not= 0$ because of the 
+lateral shift of image rays.
+
+Figures~\ref{fig:vgrad} and \ref{fig:analy} show a velocity model with $v (z,x) = 1.5 + 0.75 z + 0.5 x$ km/s and 
+the corresponding analytical $v_d (t_0,x_0)$, $x_0 (z,x)$ and $t_0 (z,x)$. Clearly, the right domain boundary is 
+of in-flow type that violates our assumption. To address this challenge, we include Dix velocity 
+in regions beyond the original left and right boundaries during inversion, but mask out the cost in these regions. 
+It means that the time-to-depth conversion is performed in a sub-domain of time-domain attributes, such that 
+information on the in-flow boundary is available. Afterwards, we apply Dix inversion to the expanded model and 
+use the result as the prior model. We use the exact Dix velocity in equation \ref{eq:analvd} 
+for evaluating the right-hand side of \ref{eq:x0}. Then, in total three linearization updates are carried 
+out, which decreases $E$ to relative $0.6\%$. \new{The radiuses of triangular smoother in shaping are $8$ m 
+vertically and $30$ m horizontally ($8$ m $\times$ $30$ m).} At last, we cut the computational domain back to its 
+original size. Figures \ref{fig:cost} and \ref{fig:error} compare the cost and model misfit before and after 
+inversion.
+
+We also synthesize data with Kirchhoff modeling \cite[]{haddon} for several horizontal reflectors using the exact 
+model, and examine the subsurface scattering-angle common-image-gathers from Kirchhoff prestack depth 
+migration \cite[]{xu} as an evidence of interval velocity improvements. In 
+Figure~\ref{fig:cigv}, the shallower events do not improve significantly because the image rays have not yet bent 
+considerably. Deeper events become noticeably 
+flatter after applying the proposed method.
+\plot{vgrad}{width=0.95\textwidth}{(Top) a constant velocity gradient 
+model and (bottom) the analytical Dix velocity $v_d$. A curved image 
+ray is mapped to the time domain as a straight line.}
+\plot{analy}{width=0.95\textwidth}{Analytical values of (top) $t_0$ 
+and (bottom) $x_0$ of the model in Figure~\ref{fig:vgrad}. Both figures 
+are overlaid with contour lines that, according to equation 
+\ref{eq:ortho}, are perpendicular to each other. Each contour line of 
+$x_0$ is an image ray, while the contours of $t_0$ illustrate the 
+propagation of a plane-wave.}
+\plot{cost}{width=0.95\textwidth}{The cost defined by equation 
+\ref{eq:costf} (top) before and (bottom) after inversion. The 
+least-squares norm of cost $E$ is decreased from $9.855$ to $0.057$.}
+\plot{error}{width=0.95\textwidth}{The difference between exact model 
+and (top) initial model and (bottom) inverted model. The least-squares 
+norm of model misfit is decreased from $15.6\mbox{ km}^2/\mbox{s}^2$ 
+to $2.7\mbox{ km}^2/\mbox{s}^2$.}
+\plot{cigv}{width=0.95\textwidth}{Comparison of the subsurface 
+scattering-angle common-image-gathers at $x = 1.5$ km of (left) 
+exact model, (middle) prior model and (right) inverted model.}
+
+\subsection{Constant horizontal slowness-squared gradient model}
+\inputdir{hs2grad}
+
+Another medium that provides analytical time-to-depth conversion formulas is
+\begin{equation}
+\label{eq:consths20}
+w (z,x) = w_0 - 2 q_x x\;,
+\end{equation}
+i.e., the slowness-squared changes linearly in the horizontal direction. In Appendix D, we show that in this case 
+the coordinate mapping follows
+\begin{equation}
+\label{eq:s2analx0}
+x_0 (z,x) = \frac{2 w_0 x + q_x z^2}{w_0 + 2 q_x x + \sqrt{(w_0 - 2 q_x x)^2 - 4 q_x^2 z^2}}\;,
+\end{equation}
+\begin{equation}
+\label{eq:s2analt0}
+t_0 (z,x) = \frac{\sqrt{2} z \left[ 2 w_0 - 4 q_x x + \sqrt{(w_0 - 2 q_x x)^2 - 4 q_x^2 z^2} 
+\right]}{3 \left[ w_0 - 2 q_x x + \sqrt{(w_0 - 2 q_x x)^2 - 4 q_x^2 z^2} \right]^{\frac{1}{2}}}\;.
+\end{equation}
+The analytical expression for $v_d (t_0,x_0)$ is more complex and can be found in equations \ref{eq:rootdepcubic} 
+and \ref{eq:s2analvd}.
+
+In Figure~\ref{fig:hs2analy} we illustrate $x_0 (z,x)$ and $t_0 (z,x)$ in the model $w (z,x) = 1 - 0.052 x$ 
+$\mbox{s}^2 / \mbox{km}^2$. To deal with the in-flow boundary issue, we apply the method described previously for 
+the constant velocity gradient example. Unlike equation \ref{eq:analx}, equation \ref{eq:s2analx0} indicates 
+varying geometrical spreadings in the domain. Figure~\ref{fig:hs2grad} shows the corresponding analytical 
+$Q^2 (z,x)$ and $v_d (t_0,x_0)$. The geometrical spreading is significant at the lower-right corner of the domain, 
+which translates to the cost at approximately the same location in Figure~\ref{fig:hs2cost}. We use analytical 
+Dix velocity as the input in the inversion. Starting from the Dix-inverted model and after three linearization 
+updates, $E$ decreases to relative $0.0045\%$. \new{The size of triangular smoother is $8$ m $\times$ $20$ m.} 
+The model misfit, as demonstrated in Figure~\ref{fig:hs2error}, is also improved.
+\plot{hs2analy}{width=0.95\textwidth}{Analytical values of (top) 
+$t_0$ and (bottom) $x_0$, overlaid with contour lines.}
+\plot{hs2grad}{width=0.95\textwidth}{The (top) geometrical 
+spreading and (bottom) Dix velocity associated with the model used in 
+Figure~\ref{fig:hs2analy}.}
+\plot{hs2cost}{width=0.95\textwidth}{The cost (top) before and 
+(bottom) after inversion. The least-squares norm of cost $E$ is 
+decreased from $10.431$ to $0.047$.}
+\plot{hs2error}{width=0.95\textwidth}{The difference between exact 
+model and (top) initial model and (bottom) inverted model. The 
+least-squares norm of model misfit is decreased from 
+$5.0\mbox{ km}^2/\mbox{s}^2$ to $0.5\mbox{ km}^2/\mbox{s}^2$.}
+
+\subsection{Spiral model}
+\inputdir{synth}
+\plot{vz0}{width=0.95\textwidth}{(Top) a synthetic model and 
+(middle) Dix velocity converted to depth. Both overlaid with image 
+rays. (Bottom) the model perturbation for testing linearization.}
+
+Figure~\ref{fig:vz0} shows a synthetic model borrowed from \cite{cameron2}. The Dix inversion recovers the 
+shallow part of the model but deteriorates quickly as geometrical spreading of image rays grows in the deeper 
+section.
+
+As a simple verification for the linearization process, we add a small positive velocity perturbation at location 
+$(1,3)$ km to the synthetic model. Comparisons between the exact and linearly predicted attributes are 
+illustrated in Figures~\ref{fig:pdt}, \ref{fig:pdx} and \ref{fig:diffcost}. In accordance with forward 
+modeling, where we solve firstly $t_0$, then $x_0$, and finally $f$, the linearization (see Appendix B) is carried 
+out following the same sequence. First, Figure~\ref{fig:pdt} justifies our upwind finite-differences 
+implementation of the linearized eikonal equation. The positive perturbation in $v$ in Figure~\ref{fig:vz0} causes 
+$t_0$ to decrease in a narrow downwind region. Next, the area affected by the perturbation in Figure~\ref{fig:pdx} 
+is wider than that in Figure~\ref{fig:pdt}. It also has both positive and negative amplitudes. These phenomenon 
+are physical because image rays should bend in opposite directions in response to the perturbation. Finally, 
+effects in cost $f$ in Figure~\ref{fig:diffcost} show alternating polarities and are broader in width compared to 
+that of $d t_0$ and $d x_0$. They indicate a complicated dependency of $f$ on $w$. Note the good agreements in 
+both shape and magnitude between exact and linearly predicted quantities in all three steps.
+
+Because there is no analytical formula for Dix velocity in this model, we compute $v_d$ by tracing image 
+rays numerically in the exact model $v$. Also, based on Figure~\ref{fig:vz0}, there is no in-flow boundary other 
+than $z = 0$. Therefore, we do not need to extend the domain as in the preceding examples. We 
+use the Dix-inverted model as the prior model and run the inversion. It turns out that the first linearization 
+update is sufficient for achieving the desired global minimum as shown in Figure~\ref{fig:bgrad}.
+\plot{pdt}{width=0.95\textwidth}{(Top) exact $d t_0$ and (bottom) 
+linearly predicted $d t_0$ by equation \ref{eq:dt0}.}
+\plot{pdx}{width=0.95\textwidth}{(Top) exact $d x_0$ and (bottom) 
+linearly predicted $d x_0$ by equation \ref{eq:dortho}.}
+\plot{diffcost}{width=0.95\textwidth}{(Top) exact $d f$ and (bottom) 
+linearly predicted $d f$ by equation \ref{eq:final}.}
+\plot{bgrad}{width=0.95\textwidth}{(Top) the exact $\delta w$ 
+and (middle) the computed $\delta w$ of the first linearization step. 
+(Bottom) the inverted interval velocity model. Compare with 
+Figure~\ref{fig:vz0}.}
+
+\subsection{Field data example}
+\inputdir{beinew}
+
+The field data shown in Figure~\ref{fig:vdix} is from a section of Gulf of Mexico dataset \cite[]{claerbout}. We 
+estimate $v_m$ using the method of velocity continuation \cite[]{fomel1} and convert it to $v_d$. Similar to 
+the spiral model, no domain extension is needed. In Figure~\ref{fig:init}, the Dix-inverted prior model highly 
+resembles the Dix velocity, because the Dix formula only scales the vertical axis from time to depth regardless 
+of horizontal $v_d$ variations. Figure~\ref{fig:inv} compares the cost before and after five linearization 
+updates\old{.}\new{, with a $125$ m $\times$ $335$ m triangular smoother.} In Figure~\ref{fig:hist}, the 
+$l_2$ norm of the cost, $E$, has a rapid decrease to relative $1.3$\%. Figure~\ref{fig:dinv} illustrates the 
+inverted model and interval velocity update.
+\plot{vdix}{width=0.95\textwidth}{(Top) the estimated 
+time-migration velocity of a section of Gulf of Mexico dataset and 
+(bottom) the corresponding time-migrated image.}
+\plot{init}{width=0.95\textwidth}{(Top) the Dix velocity 
+converted from $v_m$ in Figure~\ref{fig:vdix} and (bottom) the 
+Dix-inverted prior model for inversion, overlaid with image rays.}
+\plot{inv}{width=0.95\textwidth}{The cost of (top) prior model 
+($E = 140.25$) and (bottom) inverted model ($E = 1.81$).}
+\sideplot{hist}{width=0.55\textwidth}{Convergence history of 
+the proposed optimization-based time-to-depth conversion.}
+\plot{dinv}{width=0.95\textwidth}{(Top) the inverted model, 
+overlaid with image rays, and (bottom) its difference from the prior 
+model in Figure~\ref{fig:init}.}
+
+Next, we map the time-migrated image to depth using $t_0$ and $x_0$ generated during inversion. Spline 
+interpolation \cite[]{press} is used during the coordinate mapping. We also migrate the 
+prestack data by Kirchhoff depth migration \cite[]{li2} (PSDM). Figure~\ref{fig:dmig} compares the 
+time-mapped image and PSDM image of the inverted model. A good agreement between these two images justifies that 
+time-to-depth conversion has effectively unravelled the distorted time coordinate. Figure~\ref{fig:ddmig0} compares 
+PSDM images of the prior and inverted models. The velocity update in Figure~\ref{fig:dinv} results in not only 
+changes in structural dips (for example at $(3,12)$ km) but also improved reflector continuity (for example at 
+$(3.7,11)$ km). Moreover, the Kirchhoff migration outputs surface offset common-image 
+gathers. We choose two midpoint locations, $x = 11$ km and $x = 12$ km, 
+and show their common-image gathers in Figure~\ref{fig:cig0}. In deeper sections, flat dashed lines are 
+overlaid as references for the 
+flatness of gathers. The two common-image gathers of prior model appear curved in opposite directions. After 
+time-to-depth conversion, both gathers get flattened across the whole offset range, 
+verifying a correct velocity update.
+\plot{dmig}{width=0.95\textwidth}{(Top) the time-migrated image 
+in Figure~\ref{fig:vdix} is mapped to depth using products of the 
+time-to-depth conversion. (Bottom) PSDM image using inverted model 
+in Figure~\ref{fig:dinv}.}
+\plot{ddmig0}{width=0.92\textwidth}{PSDM images of (top) the 
+prior model and (bottom) the inverted model. Both images are plotted 
+for the same central deep part.}
+\plot{cig0}{width=0.95\textwidth}{The surface offset 
+common-image gathers of prior and inverted models.}
+
+\section{Discussion}
+
+\new{Note that in our method the inversion is applied directly for slowness-squared $\mathbf{w}$ (and thus 
+velocity), and the update $\delta \mathbf{w}$ will incorporate dependency of velocities throughout 
+the domain, as physically honored by image rays. Previous methods \cite[]{cameron1,cameron2,iversen} 
+that rely on time-stepping in $t_0$ account for such dependencies only locally. Moreover, regularization 
+provides a convenient and effective way of handling ill-posedness of the underlying PDEs. For these 
+reasons, the proposed method should be numerically robust compared to the previous approaches.}
+
+A 3-D extension of the proposed method is straightforward. Instead of a scalar $x_0$ we 
+need to handle both inline and crossline coordinates $\mathbf{x_0} = (x_0, y_0)$. Consequently, the geometrical 
+spreading in 3-D becomes a matrix $\mathbf{Q}$, whose determinant 
+is related to the generalized Dix velocity $v_d (t_0,\mathbf{x_0})$ and interval velocity $v (z,\mathbf{x})$ 
+\cite[]{cameron1}. Starting from this relationship, an iterative time-to-depth conversion can be established by 
+following procedures similar to the ones described in this paper.
+
+The main limitation of our approach is the failure of underlying theory at caustics, which in turn limits either 
+the depth or the extent of lateral velocity variation of the model. A possible solution is to divide 
+the original domain into several depth intervals, then apply velocity estimation and redatuming 
+from one interval to another recursively \cite[]{bevc1,li2}. By doing so, image-ray crossing may 
+not develop within each interval thanks to a limited depth.
+
+Another issue is the handling of in-flow boundaries other than the earth surface. In the synthetic examples, 
+we avoided this problem by limiting the interval velocity model within image ray coverage. Alternatively, we could 
+pad the input $v_d$ laterally. The padding should simply replicate the original boundaries. By doing so, image 
+rays at the new left and right boundaries must run straightly downward as the media there are of $v (z)$ type. 
+Although we could not expect the inversion to fix the in-flow boundary, the resulting errors should be local 
+around that boundary.
+
+Finally, in our approach time-migration velocity not only determines the prior model but also 
+drives the inversion. Consequently, errors in time-migration velocity have a direct influence on the accuracy of 
+inverted model. Note that usually the picking of time-migration velocity is carried out with 
+certain smoothing. Combined with regularization in the time-to-depth conversion, the resulting interval velocity 
+model may contain limited fine-scale features and high velocity contrasts. In this regard, we suggest our method 
+as an efficient estimation of an initial guess for subsequent depth-imaging velocity model refinements.
+
+\section{Conclusions}
+
+We have introduced a novel nonlinear inversion formulation for time-to-depth velocity conversion and 
+coordinate mapping, which involves iterative least-squares optimization constrained by a system of partial differential 
+equations. We turn one of the governing equations that relates seismic velocity to geometrical spreading of image 
+rays into a cost function, and linearize the other two equations: the eikonal equation and the orthogonality 
+condition. Regularization provides extra constraints during inversion\old{ and helps fill the null space}. The 
+proposed method appears to be robust and the inversion in practice converges fast.
+
+\section{Acknowledgments}
+
+We are grateful to Tijmen Jan Moser, Alexey Stovas, Anton Duchkov, and two anonymous reviewers for their 
+valuable comments and suggestions. We thank BGP International for partial financial support of this research. We 
+also thank Alexander Klokov, Alexander Vladimirsky and Changlong Wang for helpful discussions.
+
+\appendix
+\section{Appendix A: Ill-posedness of the time-to-depth conversion problem}
+
+Let us consider the problem of solving for $z (t_0,x_0)$ and $x (t_0,x_0)$ instead of 
+$t_0 (z,x)$ and $x_0 (z,x)$ by recasting 
+equations \ref{eq:x0}, \ref{eq:t0} and \ref{eq:ortho} in the time coordinates:
+\begin{equation}
+\label{eq:igradx}
+\left(\frac{\partial x}{\partial x_0}\right)^2 + 
+\left(\frac{\partial z}{\partial x_0}\right)^2 
+= \frac{v^2 (z (t_0,x_0), x (t_0,x_0))}{v_d^2 (t_0,x_0)}\;,
+\end{equation}
+\begin{equation}
+\label{eq:igradt}
+\left(\frac{\partial x}{\partial t_0}\right)^2 + 
+\left(\frac{\partial z}{\partial t_0}\right)^2 
+= v^2 (z (t_0,x_0), x (t_0,x_0))\;, 
+\end{equation}
+\begin{equation}
+\label{eq:idotp}
+\frac{\partial x}{\partial x_0}\,\frac{\partial x}{\partial t_0} + 
+\frac{\partial z}{\partial x_0}\,\frac{\partial z}{\partial t_0} 
+= 0\;.
+\end{equation}
+The corresponding boundary conditions are
+\begin{equation}
+\label{eq:ixb}
+\left\{ \begin{array}{lcl}
+z (0, x_0) & = & 0\;, \\
+x (0, x_0) & = & x_0\;.
+\end{array} \right.
+\end{equation}
+
+From equation \ref{eq:idotp}
+\begin{equation}
+\label{eq:xt}
+\frac{\partial x}{\partial t_0} = - \frac{\partial z}{\partial x_0}\,\frac{\partial z}{\partial t_0}\,
+\left/ \frac{\partial x}{\partial x_0} \right.\;.
+\end{equation}
+Substituting equation \ref{eq:xt} into equation \ref{eq:igradt} and combining with equation \ref{eq:igradx} 
+produces
+\begin{equation}
+\label{eq:zt2}
+\frac{\partial z}{\partial t_0} = v_d \frac{\partial x}{\partial x_0}\;;
+\end{equation}
+\begin{equation}
+\label{eq:xt2}
+\frac{\partial x}{\partial t_0} = - v_d \frac{\partial z}{\partial x_0}\;,
+\end{equation}
+where we assume that both $\partial z/\partial t_0$ and $\partial x/\partial x_0$ remain positive and there is no 
+caustics.
+
+On the first glance, equations \ref{eq:zt2} and \ref{eq:xt2} seem suitable for numerically extrapolating 
+$x (t_0,x_0)$ and $z (t_0,x_0)$ in $t_0$ direction using the boundary conditions \ref{eq:ixb}. 
+After such an extrapolation, one would be able to reconstruct $v (t_0,x_0)$ from equation \ref{eq:igradt} and 
+thus solve the original problem. However, by further decoupling the system using the equivalence of the 
+second-order mixed derivatives, we discover that the underlying PDEs are elliptic. For instance, applying 
+$\partial / \partial x_0$ to both sides of equation \ref{eq:xt2} results in
+\begin{equation}
+\label{eq:xt3}
+\frac{\partial^2 x}{\partial t_0 \partial x_0} =
+- \frac{\partial}{\partial x_0} \left(v_d \frac{\partial z}{\partial x_0}\right)\;.
+\end{equation}
+Meanwhile, dividing by $v_d$ and applying $\partial / \partial t_0$ to both sides of equation \ref{eq:zt2} 
+leads to
+\begin{equation}
+\label{eq:zt3}
+\frac{\partial}{\partial t_0} \left(\frac{1}{v_d} \frac{\partial z}{\partial t_0}\right) =
+\frac{\partial^2 x}{\partial x_0 \partial t_0}\;.
+\end{equation}
+Comparing equations \ref{eq:xt3} and \ref{eq:zt3}, we find
+\begin{equation}
+\label{eq:zpde}
+\frac{\partial}{\partial x_0}\,
+\left(v_d \frac{\partial z}{\partial x_0}\right)
++ \frac{\partial}{\partial t_0}\,
+\left(\frac{1}{v_d} \frac{\partial z}{\partial t_0}\right) = 0\;.
+\end{equation}
+Analogously,
+\begin{equation}
+\label{eq:xpde}
+\frac{\partial}{\partial x_0}\,
+\left(v_d \frac{\partial x}{\partial x_0}\right)
++ \frac{\partial}{\partial t_0}\,
+\left(\frac{1}{v_d} \frac{\partial x}{\partial t_0}\right) = 0\;.
+\end{equation}
+
+Solving elliptic equations \ref{eq:zpde} and \ref{eq:xpde} with the Cauchy-type boundary conditions 
+\ref{eq:ixb} is an ill-posed problem \cite[]{evans}. A different formulation, leading to a non-linear 
+elliptic PDE, was previously discussed by \cite{cameron3}.
+
+\appendix
+\section{Appendix B: The Fr\'{e}chet derivative operator}
+
+We continue the derivation of the Fr\'{e}chet derivative matrix from equation 
+\ref{eq:lincost}. Using the same notations as introduced in equation \ref{eq:cost}, after discretization equation 
+\ref{eq:lincost} becomes 
+\begin{equation}
+\label{eq:gradient}
+\mathbf{J} \equiv \frac{\partial \mathbf{f}}{\partial \mathbf{w}} 
+= 2\,\mathbf{L}_{x_0}\,\frac{\partial \mathbf{x_0}}{\partial \mathbf{w}} 
+- 2\,\mbox{diag}(\mathbf{v_d} \star \mathbf{w})\,\frac{\partial \mathbf{v_d}}{\partial \mathbf{w}} 
+- \mbox{diag}(\mathbf{v_d} \star \mathbf{v_d})\;.
+\end{equation}
+
+Because $v_d$ is in time-domain $(t_0,x_0)$, we need to apply the chain-rule for its derivative with respect to 
+$w$, i.e.,
+\begin{equation}
+\label{eq:dvdix}
+\frac{\partial \mathbf{v_d}}{\partial \mathbf{w}} = \frac{\partial \mathbf{v_d}}{\partial \mathbf{t_0}} 
+\,\frac{\partial \mathbf{t_0}}{\partial \mathbf{w}} + \frac{\partial \mathbf{v_d}}{\partial \mathbf{x_0}} 
+\,\frac{\partial \mathbf{x_0}}{\partial \mathbf{w}}\;,
+\end{equation}
+where $\mathbf{t_0}$ is the discretized column vector of $t_0 (z,x)$. According to equation \ref{eq:ortho} and 
+after denoting another matrix operator $\mathbf{L}_{t_0} = \nabla \mathbf{t_0} \cdot \nabla$, we find
+\begin{equation}
+\label{eq:dortho}
+\frac{\partial \mathbf{x_0}}{\partial \mathbf{w}} = 
+- (\nabla \mathbf{t_0} \cdot \nabla)^{-1}(\nabla \mathbf{x_0} \cdot \nabla)\,
+\frac{\partial \mathbf{t_0}}{\partial \mathbf{w}} \equiv 
+- \mathbf{L}_{t_0}^{-1} \mathbf{L}_{x_0}\,\frac{\partial \mathbf{t_0}}{\partial \mathbf{w}}\;.
+\end{equation}
+Another differentiation of equation \ref{eq:t0} leads to
+\begin{equation}
+\label{eq:dt0}
+\frac{\partial \mathbf{t_0}}{\partial \mathbf{w}} = \frac{1}{2} (\nabla \mathbf{t_0} \cdot \nabla)^{-1} 
+\equiv \frac{1}{2} \mathbf{L}_{t_0}^{-1}\;.
+\end{equation}
+
+Finally, by inserting equations \ref{eq:dvdix} through \ref{eq:dt0} into \ref{eq:gradient}, we complete the 
+derivation of the Fr\'{e}chet derivative matrix:
+\begin{eqnarray}
+\label{eq:final}
+\mathbf{J} & = & - \mathbf{L}_{x_0} \mathbf{L}_{t_0}^{-1} \mathbf{L}_{x_0} \mathbf{L}_{t_0}^{-1} 
+- \mbox{diag}(\mathbf{v_d} \star \mathbf{w}) \frac{\partial \mathbf{v_d}}{\partial \mathbf{t_0}} \mathbf{L}_{t_0}^{-1} \nonumber \\
+& + & \mbox{diag}(\mathbf{v_d} \star \mathbf{w}) \frac{\partial \mathbf{v_d}}{\partial \mathbf{x_0}} 
+\mathbf{L}_{t_0}^{-1} \mathbf{L}_{x_0} \mathbf{L}_{t_0}^{-1} - \mbox{diag}(\mathbf{v_d} \star \mathbf{v_d})\;.
+\end{eqnarray}
+
+\appendix
+\section{Appendix C: Analytical expressions for the constant velocity gradient medium}
+In order to derive the time-to-depth conversion analytically, we first trace image rays in the depth 
+coordinate for $z (t_0,x_0)$ and $x (t_0,x_0)$. Then we carry out a direct inversion to find $t_0 (z,x)$ and 
+$x_0 (z,x)$. The Dix velocity can be obtained at last following equations \ref{eq:cameron} and \ref{eq:Q}.
+
+Continuing from equation \ref{eq:constg0}, we write the velocity in a coordinate relative to the image ray 
+\begin{equation}
+\label{eq:constg}
+v (z,x) = v_0 + g_z z + g_x x = \tilde{v}_0 + \mathbf{g} \cdot (\mathbf{x} - \mathbf{x_0})\;,
+\end{equation}
+where $\mathbf{g} = [g_z,g_x]^T$ and $\tilde{v}_0 = v_0 + g_x x_0$. At the starting point, image ray satisfies
+\begin{equation}
+\label{eq:viray}
+\left\{ \begin{array}{lcl}
+\mathbf{x_0} & = & [0, x_0]^T\;, \\
+\mathbf{p_0} & = & [\tilde{v}_0^{-1}, 0]^T\;, \\
+t_0 & = & t\;.
+\end{array} \right.
+\end{equation}
+Here we denote ray parameter $\mathbf{p} = \nabla t$ and $\mathbf{p_0}$ is the ray parameter at source. The 
+Hamiltonian for ray tracing reads $H (\mathbf{x},\mathbf{p}) = \mathbf{p} \cdot \mathbf{p} - v^{-2} \equiv 0$. 
+The corresponding ray tracing system is \cite[]{cerveny}:
+\begin{equation}
+\label{eq:vraysys}
+\left\{ \begin{array}{lcl}
+d \mathbf{x} / d \xi & = & \mathbf{p} v^3\;, \\
+d \mathbf{p} / d \xi & = & -\nabla v\;, \\
+d t / d \xi & = & \nabla t \cdot d \mathbf{x} / d \xi = \mathbf{p} \cdot \mathbf{p} v^3 = v\;.
+\end{array} \right.
+\end{equation}
+
+Equation \ref{eq:constg} indicates $\nabla v = \mathbf{g}$, which means $d \mathbf{p} / d \xi$ can be 
+integrated analytically and provides
+\begin{equation}
+\label{eq:vrayint1}
+\mathbf{p} = \mathbf{p_0} - \mathbf{g} \xi\;.
+\end{equation}
+From the eikonal equation and considering 
+$\mathbf{p_0} \cdot \mathbf{p_0} = \tilde{v}_0^{-2}$ and $g = |\mathbf{g}| = \sqrt{g_z^2 + g_x^2}$, we have
+\begin{equation}
+\label{eq:vrayint2}
+v = \frac{1}{\sqrt{\mathbf{p} \cdot \mathbf{p}}} = 
+\left( \tilde{v}_0^{-2} - 2 \mathbf{p_0} \cdot \mathbf{g} \xi + g^2 \xi^2 \right)^{-\frac{1}{2}}\;.
+\end{equation}
+Integrating equation \ref{eq:vrayint2} over $\xi$ gives
+\begin{equation}
+\label{eq:vrayint3}
+t = \frac{1}{g} \mathrm{arccosh} 
+\left( 1 + \frac{g^2 \xi^2}{\tilde{v}_0^{-2} + v^{-1} \tilde{v}_0^{-1} 
+- \mathbf{p_0} \cdot \mathbf{g} \xi} \right)\;.
+\end{equation}
+Meanwhile, combining equations \ref{eq:constg} and \ref{eq:vraysys}, we find 
+$d \mathbf{p} / d \xi \cdot (\mathbf{x} - \mathbf{x_0}) + d \mathbf{x} / d \xi \cdot \mathbf{p} = \tilde{v}_0$, 
+i.e., $\mathbf{p} \cdot (\mathbf{x} - \mathbf{x_0}) = \tilde{v}_0 \xi$. Suppose
+\begin{equation}
+\label{eq:alphabeta1}
+\mathbf{x} - \mathbf{x_0} = \alpha \mathbf{p_0} + \beta \mathbf{g}
+\end{equation}
+then
+\begin{equation}
+\label{eq:alphabeta2}
+\left\{ \begin{array}{lcl}
+\mathbf{g} \cdot (\mathbf{x} - \mathbf{x_0}) & = & \alpha \mathbf{p_0} \cdot \mathbf{g} + \beta g^2 = v - \tilde{v}_0\;, \\
+\mathbf{p_0} \cdot (\mathbf{x} - \mathbf{x_0}) & = & \alpha \tilde{v}_0^{-2} + \beta \mathbf{p_0} \cdot \mathbf{g}
+= \tilde{v}_0 \xi + (v - \tilde{v}_0) \xi = v \xi\;.
+\end{array} \right.
+\end{equation}
+Solving equation \ref{eq:alphabeta2} provides $\alpha (\xi,v)$ and $\beta (\xi,v)$, which after substituting into 
+equation \ref{eq:alphabeta1} leads to
+\begin{equation}
+\label{eq:vrayint4}
+\mathbf{x} = \mathbf{x_0} + \frac{(v - \tilde{v}_0) \left[\mathbf{g} 
+- (\mathbf{p_0} \cdot \mathbf{g}) \tilde{v}_0^2 \mathbf{p_0} \right]
++ v \tilde{v}_0^2 \left[ g^2 \mathbf{p_0} - (\mathbf{p_0} \cdot \mathbf{g}) \mathbf{g} \right] \xi}
+{g^2 - (\mathbf{p_0} \cdot \mathbf{g})^2 \tilde{v}_0^2}\;.
+\end{equation}
+Note equation \ref{eq:viray} states $\mathbf{p_0} \cdot \mathbf{g} = g_z \tilde{v}_0^{-1}$ and thus equations 
+\ref{eq:vrayint1}, \ref{eq:vrayint3} and \ref{eq:vrayint4} can be further simplified.
+
+To connect depth- and time-domain attributes, we first invert equation \ref{eq:vrayint3} such that $\xi$ is 
+expressed by $t_0$ and $x_0$
+\begin{equation}
+\label{eq:viray2}
+\xi (t_0,x_0) = \frac{g_z (1 - \cosh (|g t_0|))
++ g \sinh (g t_0)}{g^2 \tilde{v}_0^2}\;.
+\end{equation}
+Next, we insert equations \ref{eq:vrayint2} and \ref{eq:viray2} into \ref{eq:vrayint4} in order to change its 
+parameterization from $(\xi,v)$ to $(t_0,x_0)$. The result is written for the $z$ and $x$ components of 
+$\mathbf{x}$ separately, as follows:
+\begin{equation}
+\label{eq:viray3}
+x (t_0,x_0) = x_0 + \frac{\tilde{v}_0 g_x (1 - \cosh (g t_0))}{g (g \cosh (g t_0) - g_z \sinh (g t_0))}\;,
+\end{equation}
+\begin{equation}
+\label{eq:viray4}
+z (t_0,x_0) = \frac{\tilde{v}_0 \left[ g_z (1 - \cosh (g t_0)) + g \sinh (g t_0) \right]}
+{g (g \cosh (g t_0) - g_z \sinh (g t_0))}\;.
+\end{equation}
+Inverting equations \ref{eq:viray3} and \ref{eq:viray4} results in
+\begin{equation}
+\label{eq:vanalx}
+x_0 (z,x) = x + \frac{\sqrt{(v_0 + g_x x)^2 + g_x^2 z^2} - (v_0 + g_x x)}{g_x}\;,
+\end{equation}
+\begin{equation}
+\label{eq:vanalt}
+t_0 (z,x) = \frac{1}{g} \mathrm{arccosh} \left\{ \frac{g^2 \left[ \sqrt{(v_0 + g_x x)^2 + g_x^2 z^2}
++ g_z z \right] - v g_z^2}{v g_x^2} \right\}\;.
+\end{equation}
+
+In the last step, we derive the analytical formula for the Dix velocity. Note that from equation 
+\ref{eq:vanalx} $|\nabla x_0|^2 = 1$, i.e., there is no geometrical spreading. The image rays are circles parallel 
+to each other. Therefore according to equation \ref{eq:cameron} $v_d = v$ and is found by combining equations 
+\ref{eq:vrayint2} and \ref{eq:viray2}
+\begin{equation}
+\label{eq:vanalvd}
+v_d (t_0,x_0) = \frac{(v_0 + g_x x_0) g}{g \cosh (g t_0) - g_z \sinh (g t_0)}\;.
+\end{equation}
+The time-migration velocity $v_m$, on the other hand, is
+\begin{equation}
+\label{eq:vanalvm}
+v_m (t_0,x_0) = \frac{(v_0 + g_x x_0)^2}{t_0 ( g \coth (g t_0) - g_z )}\;.
+\end{equation}
+
+\appendix
+\section{Appendix D: Analytical expressions for the constant horizontal slowness-squared gradient medium}
+In this appendix, we study the following medium:
+\begin{equation}
+\label{eq:s2constg}
+w (z,x) = w_0 - 2 q_x x = w_0 - 2 \mathbf{q} \cdot \mathbf{x}\;,
+\end{equation}
+where $\mathbf{q} = [0,q_x]^T$.
+
+Similarly to the constant velocity gradient medium, it is convenient to write down the ray-tracing system in 
+the form \cite[]{cerveny}
+\begin{equation}
+\label{eq:s2raysys}
+\left\{ \begin{array}{lcl}
+d \mathbf{x} / d \sigma & = & \mathbf{p}\;, \\
+d \mathbf{p} / d \sigma & = & \nabla w / 2\;, \\
+d t / d \sigma & = & \nabla t \cdot d \mathbf{x} / d \sigma = \mathbf{p} \cdot \mathbf{p}\;.
+\end{array} \right.
+\end{equation}
+Given equation \ref{eq:s2constg}, $\nabla w = -2 \mathbf{q}$ and thus $d \mathbf{p} / d \sigma = - \mathbf{q}$. 
+After integration over $\sigma$, equation \ref{eq:s2raysys} becomes
+\begin{equation}
+\label{eq:s2rayint}
+\left\{ \begin{array}{lcl}
+\mathbf{x} & = & \mathbf{x_0} + \mathbf{p_0} \sigma - \mathbf{q} \sigma^2/2\;, \\
+\mathbf{p} & = & \mathbf{p_0} - \mathbf{q} \sigma\;, \\
+t & = & | \mathbf{p_0} |^2 \sigma - \mathbf{p_0} \cdot \mathbf{q} \sigma^2 + | \mathbf{q} |^2 \sigma^3/3\;.
+\end{array} \right.
+\end{equation}
+
+For a particular image ray
+\begin{equation}
+\label{eq:s2iray}
+\left\{ \begin{array}{lcl}
+\mathbf{x_0} & = & [0, x_0]^T\;, \\
+\mathbf{p_0} & = & [\sqrt{w_0 - 2 q_x x_0}, 0]^T\;, \\
+t_0 & = & t\;,
+\end{array} \right.
+\end{equation}
+the equation for $\mathbf{x}$ in \ref{eq:s2rayint} simplifies to
+\begin{equation}
+\label{eq:s2iray2}
+\left\{ \begin{array}{lcl}
+x = x_0 - q_x \sigma^2/2\;, \\
+z = \sigma \sqrt{w_0 - 2 q_x x_0}\;.
+\end{array} \right.
+\end{equation}
+Solving equation \ref{eq:s2iray2} for $\sigma$ as a function of $z$ and $x$
+\begin{equation}
+\label{eq:s2analsig}
+\sigma (z,x) = \left[ \frac{(w_0 - 2 q_x x) 
+- \sqrt{(w_0 - 2 q_x x)^2 - 4 q_x^2 z^2}}{2 q_x^2} 
+\right]^{\frac{1}{2}}\;.
+\end{equation}
+Combining equations \ref{eq:s2rayint} through \ref{eq:s2analsig}, we find
+\begin{eqnarray}
+\label{eq:s2analx}
+x_0 (z,x) & = & x + \frac{1}{2} q_x \sigma^2 \nonumber \\
+& = & \frac{2 w_0 x + q_x z^2}{w_0 + 2 q_x x + \sqrt{(w_0 - 2 q_x x)^2 - 4 q_x^2 z^2}}\;,
+\end{eqnarray}
+\begin{eqnarray}
+\label{eq:s2analt}
+t_0 (z,x) & = & (w_0 - 2 q_x x_0) \sigma + \frac{1}{3} q_x^2 \sigma^3 \nonumber \\
+& = & \frac{\sqrt{2} z \left[ 2 w_0 - 4 q_x x + \sqrt{(w_0 - 2 q_x x)^2 - 4 q_x^2 z^2} 
+\right]}{3 \left[ w_0 - 2 q_x x + \sqrt{(w_0 - 2 q_x x)^2 - 4 q_x^2 z^2} \right]^{\frac{1}{2}}}\;.
+\end{eqnarray}
+
+According to equation \ref{eq:Q}, \ref{eq:s2analx} can give rise to the geometrical spreading:
+\begin{equation}
+\label{eq:s2analQ}
+Q^2 (z,x) =
+\frac{2 [(w_0 - 2 q_x x)^2 - 4 q_x^2 z^2]}
+{(w_0 - 2 q_x x) \left[ w_0 - 2 q_x x + \sqrt{(w_0 - 2 q_x x)^2 - 4 q_x^2 z^2} \right]}\;.
+\end{equation}
+It is more convenient to express equations \ref{eq:s2constg} and \ref{eq:s2analQ} in $\sigma$ and $x_0$ instead 
+of directly in $t_0$ and $x_0$:
+\begin{equation}
+\label{eq:s2constg2}
+w (\sigma,x_0) = w_0 - 2 q_x x_0 + q_x^2 \sigma^2\;,
+\end{equation}
+\begin{equation}
+\label{eq:s2analQ2}
+Q^2 (\sigma,x_0) = 1 +
+q_x^2 \sigma^2 \left( \frac{1}{w_0 - 2 q_x x_0} - \frac{4}{w_0 - 2 q_x x_0 + q_x^2 \sigma^2} \right)\;,
+\end{equation}
+where we must resolve $\sigma = \sigma (t_0,x_0)$. This is done by revisiting equation \ref{eq:s2analt}. For 
+given $t_0$ and $x_0$, $\sigma$ is the root of a depressed cubic function of the following form:
+\begin{equation}
+\label{eq:depcubic}
+\sigma^3 + \frac{3 (w_0 - 2 q_x x_0)}{q_x^2} \sigma - \frac{3}{q_x^2} t_0 = 0\;.
+\end{equation}
+After some algebraic manipulations, we find
+\begin{eqnarray}
+\label{eq:rootdepcubic}
+\sigma (t_0,x_0) & = & 
+\left[ \frac{3 t_0 + \sqrt{9 t_0^2 + 4 (w_0 - 2 q_x x_0)^3 / q_x^2}}{2 q_x^2} \right]^{\frac{1}{3}} \nonumber \\
+& - & \frac{w_0 - 2 q_x x_0}{q_x} 
+\left[ \frac{2}{3 q_x t_0 + \sqrt{9 q_x^2 t_0^2 + 4 (w_0 - 2 q_x x_0)^3}} \right]^{\frac{1}{3}}\;.
+\end{eqnarray}
+
+Finally, inserting equations \ref{eq:s2constg2} and \ref{eq:s2analQ2} into equation \ref{eq:cameron} results 
+in the Dix velocity:
+\begin{equation}
+\label{eq:s2analvd}
+v_d (t_0,x_0) = \frac{\sqrt{w_0 - 2 q_x x_0}}{w_0 - 2 q_x x_0 - q_x^2 \sigma^2}\;.
+\end{equation}
+\bibliographystyle{seg}
+\bibliography{t2df}
