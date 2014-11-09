@@ -70,10 +70,10 @@ float forward_operator(const int uts,
 
     misfit = calc_misfit(obs, syn, recloc, n1, n2, ns);
 
-    return misfit; 
-
     /* free memory */
     sparse_free(uts);
+
+    return misfit; 
 }
 
 float adjfwi_operator(const int uts, 
@@ -136,10 +136,10 @@ float adjfwi_operator(const int uts,
     }
     }
  
-    return misfit; 
-   
     /* free memory */
     sparse_free(uts);
+
+    return misfit; 
 }
 
 
