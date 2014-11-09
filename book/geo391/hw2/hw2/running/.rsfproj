@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfgrey', 'sfadd', 'sfspike', 'sfstack', 'sfcat', 'sftransp', 'sfgraph']
+data=['data/bay/austin-w.HH']
+size=   17308812
