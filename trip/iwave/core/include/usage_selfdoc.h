@@ -1,0 +1,22 @@
+#ifndef __USAGE_SELFDOC__
+#define __USAGE_SELFDOC__
+  " Typical parameter list. May be copied, edited, and used for input: either",
+  " include parameters on command line (for example in Flow), or place",
+  " in file <foo> and include \"par=<foo>\" on command line. Any parameter",
+  " included explicitly in command line overrides parameter with same key",
+  " in par file.",
+  " ",
+  " Invoke single threaded execution by ",
+  " ",
+  " \"sfacd [parameters]  [Madagascar install]\"",
+  " ",
+  " or ",
+  " ",
+  " \"acd.x [parameters] [standalone install]\"",
+  " ",
+  " or multi-threaded execution using interactive or batch MPI (for which",
+  " code must be compiled with MPI enabled).",
+  " ",
+    " Given parameter values are defaults; non-optional values indicated by",
+    " corner brackets.",
+#endif
