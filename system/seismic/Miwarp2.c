@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
 {
     bool inv;
     int nt, nx, n1, n2, i3, n3, ntx;
-    float o1, d1, o2, d2, eps;
+    float o1, d1, o2, d2, eps, dt, dx, t0, x0;
     float **slice, **tstr, **xstr, **slice2;
     sf_file in, out, warp;
 
@@ -50,30 +50,49 @@ int main(int argc, char* argv[])
 
     ntx = nt*nx;
 
-    if (inv && !sf_getint("n1",&n1)) n1=nt;
-    if (!sf_getfloat("d1",&d1) && !sf_histfloat(in,"d1",&d1)) d1=1.;
-    if (!sf_getfloat("o1",&o1) && !sf_histfloat(in,"o1",&o1)) o1=0.;
-
-    if (inv && !sf_getint("n2",&n2)) n2=nx;
-    /* output samples - for inv=y */
-    if (!sf_getfloat("d2",&d2) && !sf_histfloat(in,"d2",&d2)) d2=1.;
-    /*( d2=1 output sampling - for inv=y )*/
-    if (!sf_getfloat("o2",&o2) && !sf_histfloat(in,"o2",&o2)) o2=0.;
-    /*( o2=0 output origin - for inv=y )*/ 
-
     if (inv) {
-       sf_putint(out,"n1",n1);
-       sf_putfloat(out,"d1",d1);
-       sf_putfloat(out,"o1",o1);
+	if (!sf_getint("n1",&n1)) n1=nt;
+	if (!sf_getfloat("d1",&d1) && !sf_histfloat(in,"d1",&d1)) d1=1.;
+        /*( d1=1 output sampling - for inv=y )*/
+	if (!sf_getfloat("o1",&o1) && !sf_histfloat(in,"o1",&o1)) o1=0.;
+        /*( o1=0 output origin - for inv=y )*/ 
 
-       sf_putint(out,"n2",n2);
-       sf_putfloat(out,"d2",d2);
-       sf_putfloat(out,"o2",o2);
+	if (!sf_getint("n2",&n2)) n2=nx;
+	/* output samples - for inv=y */
+	if (!sf_getfloat("d2",&d2) && !sf_histfloat(in,"d2",&d2)) d2=1.;
+	/*( d2=1 output sampling - for inv=y )*/
+	if (!sf_getfloat("o2",&o2) && !sf_histfloat(in,"o2",&o2)) o2=0.;
+	/*( o2=0 output origin - for inv=y )*/ 
+
+	sf_putint(out,"n1",n1);
+	sf_putfloat(out,"d1",d1);
+	sf_putfloat(out,"o1",o1);
+	
+	sf_putint(out,"n2",n2);
+	sf_putfloat(out,"d2",d2);
+	sf_putfloat(out,"o2",o2);
     } else {
-       sf_putint(out,"n1",nt);
-       sf_putint(out,"n2",nx);
-    }
+	if (!sf_histfloat(in,"d1",&d1)) d1=1.;
+	if (!sf_histfloat(in,"o1",&o1)) o1=0.;
 
+	if (!sf_histfloat(in,"d2",&d2)) d2=1.;
+	if (!sf_histfloat(in,"o2",&o2)) o2=0.;
+
+	if (!sf_getfloat("d1",&dt) && !sf_histfloat(warp,"d1",&dt)) dt=d1;
+	if (!sf_getfloat("o1",&t0) && !sf_histfloat(warp,"o1",&t0)) t0=o1;
+	
+	if (!sf_getfloat("d2",&dx) && !sf_histfloat(warp,"d2",&dx)) dx=d2;
+	if (!sf_getfloat("o2",&x0) && !sf_histfloat(warp,"o2",&x0)) x0=o2;
+
+	sf_putint(out,"n1",nt);
+	sf_putfloat(out,"d1",dt);
+	sf_putfloat(out,"o1",t0);
+	
+	sf_putint(out,"n2",nx);
+	sf_putfloat(out,"d2",dx);
+	sf_putfloat(out,"o2",x0);
+    }
+    
     if (!sf_getfloat("eps",&eps)) eps=0.01;
     /* stretch regularization */
 

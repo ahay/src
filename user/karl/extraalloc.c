@@ -88,7 +88,7 @@ char  **sf_realloc2(void** ptrin,
 {
     size_t i2;
     char **ptr=(char**)ptrin;
-    CHAR **ptr2;
+    char **ptr2;
     
     if (ptr[1] != ptr[0] + n1bytes){
       sf_error("realloc2 cannot change n1bytes. new n1bytes=%d.",n1bytes);
