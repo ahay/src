@@ -14,6 +14,9 @@ To the reproducible documents collection:
 * tccs/deblend: Iterative deblending of simultaneous-source seismic
   data using seislet-domain shaping regularization (Chen, Fomel, and
   Hu)
+* tccs/time2depth2: A robust approach to time-to-depth conversion and
+  interval velocity estimation from time migration in the presence of
+  lateral velocity variations (Li and Fomel)
 
 To SCons:
 
