@@ -18,10 +18,10 @@
  */
  
 #include <rsf.h>
+#include <rsfpwd.h>
 /*^*/
 
 #include "prertm.h"
-#include "pwdsl.h"
 
 static float *tmp;
 

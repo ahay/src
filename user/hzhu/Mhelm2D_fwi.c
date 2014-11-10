@@ -18,6 +18,8 @@
 */
 
 #include <rsf.h>
+#include <rsfpwd.h>
+
 #include <umfpack.h>
 
 #ifdef _OPENMP
@@ -28,7 +30,6 @@
 #include "sparsesolver.h"
 #include "optimization.h" 
 #include "waveoperator.h"
-#include "pwsmooth.h"
 
 int main(int argc, char* argv[])
 {
