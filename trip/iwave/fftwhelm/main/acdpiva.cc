@@ -212,18 +212,18 @@ int main(int argc, char ** argv) {
 
 
             // assign window widths - default = 0;
-            //RPNT wind;
-            //RASN(wind,RPNT_0);
-            //wind[0]=valparse<float>(*pars,"ww1",0.0f);
-            //wind[1]=valparse<float>(*pars,"ww2",0.0f);
-            //wind[2]=valparse<float>(*pars,"ww3",0.0f);
+            RPNT wind;
+            RASN(wind,RPNT_0);
+            wind[0]=valparse<float>(*pars,"ww1",0.0f);
+            wind[1]=valparse<float>(*pars,"ww2",0.0f);
+            wind[2]=valparse<float>(*pars,"ww3",0.0f);
             
             // need to read in model space for bg input to GridWindowOp
             Vector<ireal> m_in(op.getDomain());
             AssignFilename minfn(valparse<std::string>(*pars,"csqext"));
             Components<ireal> cmin(m_in);
             cmin[0].eval(minfn);
-            //GridWindowOp wop(op.getDomain(),m_in,wind);
+            GridWindowOp wop(op.getDomain(),m_in,wind);
             GridMaskOp mop(op.getDomain(),m_in,swind,ewind);
             OperatorEvaluation<float> wopeval(mop,m_in);
             LinearOp<float> const & lwop=wopeval.getDeriv();
@@ -278,7 +278,8 @@ int main(int argc, char ** argv) {
 //                cerr << "\n before hop.applyOp \n";
 //            }
             //hop.applyOp(m_in,dm);
-            PIVAObj<float> f(top,preop,helmop,dsop,td,dm0,pd,res);
+            //PIVAObj<float> f(top,preop,helmop,dsop,td,dm0,pd,res);
+            PIVAObj<float> f(op,preop,helmop,dsop,mdd,dm0,pd,res);
             GridExtendOp g(dom,op.getDomain());
             FcnlOpComp<float> gf(f,g);
             

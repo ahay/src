@@ -432,6 +432,7 @@ int acd_timegrid(PARARRAY *pars, FILE * stream, grid const & g, ireal & dt) {
     }
 
     dt = a*cfl/(cmax*sqrt((float)(g.dim)));
+    //cerr << "dt="<< dt << endl;
 #ifdef IWAVE_VERBOSE
     fprintf(stream,"NOTE: acd_readtimegrid: on return, dt=%e\n",dt);
     fflush(stream);
@@ -590,6 +591,9 @@ void acd_check(RDOM * dom, void * specs, FILE * stream) {
     if (vmax<0.0f || sqrt(vmax)>acdpars->cmax || 
 	vmin<0.0f || sqrt(vmin)<acdpars->cmin) {
       RVLException e;
+      e<<"i = " << i << "\n";
+      e<<"sqrt(vmax) = " << sqrt(vmax) << "\n";
+      e<<"sqrt(vmin) = " << sqrt(vmin) << "\n";
       e<<"Error: input csq at index "<<i<<" = "<<(dom->_s[0]._s0)[i]<<"\n";
       e<<"  out of bounds ["<<acdpars->cmin<<", "<<acdpars->cmax<<"]\n";
       throw e;

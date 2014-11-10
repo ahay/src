@@ -16,6 +16,7 @@ void acd_2d_8_d(float **uc, float **ucd, float **up, float **upd, float **csq,
         c3, float *c4, int *lbc, int *rbc) {
     int i0, i1;
     for (i1 = s[1]; i1 < e[1]+1; ++i1)
+#pragma ivdep
         for (i0 = s[0]; i0 < e[0]+1; ++i0) {
             float lap = (c0*uc[i1][i0]	+
                          c1[0]*(uc[i1][i0+1] + uc[i1][i0-1]) +
@@ -41,6 +42,7 @@ void acd_2d_8_d(float **uc, float **ucd, float **up, float **upd, float **csq,
         }
     /* boundary conditions - note that uc[-1][i]=0 etc. */
     if (lbc[1])
+#pragma ivdep
         for (i0 = s[0]; i0 < e[0]+1; ++i0) {
             upd[s[1] - 2][i0] = -upd[s[1]+0][i0];
             up[s[1] - 2][i0] = -up[s[1]+0][i0];
@@ -50,6 +52,7 @@ void acd_2d_8_d(float **uc, float **ucd, float **up, float **upd, float **csq,
             up[s[1] - 4][i0] = -up[s[1]+2][i0];
         }
     if (rbc[1])
+#pragma ivdep
         for (i0 = s[0]; i0 < e[0]+1; ++i0) {
             upd[e[1] + 2][i0] = -upd[e[1]-0][i0];
             up[e[1] + 2][i0] = -up[e[1]-0][i0];
@@ -59,6 +62,7 @@ void acd_2d_8_d(float **uc, float **ucd, float **up, float **upd, float **csq,
             up[e[1] + 4][i0] = -up[e[1]-2][i0];
         }
     if (lbc[0])
+#pragma ivdep
         for (i1 = s[1]; i1 < e[1]+1; ++i1) {
             upd[i1][s[0] - 2] = -upd[i1][s[0]+0];
             up[i1][s[0] - 2] = -up[i1][s[0]+0];
@@ -68,6 +72,7 @@ void acd_2d_8_d(float **uc, float **ucd, float **up, float **upd, float **csq,
             up[i1][s[0] - 4] = -up[i1][s[0]+2];
         }
     if (rbc[0])
+#pragma ivdep
         for (i1 = s[1]; i1 < e[1]+1; ++i1) {
             upd[i1][e[0] + 2] = -upd[i1][e[0]-0];
             up[i1][e[0] + 2] = -up[i1][e[0]-0];

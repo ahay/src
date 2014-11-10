@@ -79,26 +79,29 @@ namespace TSOpt {
 #if RARR_MAX_NDIM > 0
       if (dimx==1) {
 #pragma ivdep
-	for (i[0]=siw[0];i[0]<=e[0]-eiw[0];i[0]++) {
+	for (i[0]=s[0]+siw[0];i[0]<=e[0]-eiw[0];i[0]++) {
+          fac[0] = iwave_min(iwave_min(REAL_ONE,iwave_max(REAL_ZERO,(ireal(i[0]-s[0]-siw[0]+1))/ireal(5.0f))),iwave_min(REAL_ONE,iwave_max(REAL_ZERO,(ireal(e[0]-eiw[0]+1-i[0]))/ireal(5.0f))));
 	  if (bias) {
-	    rax._s1[i[0]]+=ray._s1[i[0]];
+	    rax._s1[i[0]]+=ray._s1[i[0]]*fac[0];
 	  }
 	  else{
-	    rax._s1[i[0]]=ray._s1[i[0]];
+	    rax._s1[i[0]]=ray._s1[i[0]]*fac[0];
 	  }
 	}
       }
 #endif
 #if RARR_MAX_NDIM > 1
       if (dimx==2) {
-	for (i[1]=siw[1];i[1]<=e[1]-eiw[1];i[1]++) {
+	for (i[1]=s[1]+siw[1];i[1]<=e[1]-eiw[1];i[1]++) {
+          fac[1] = iwave_min(iwave_min(REAL_ONE,iwave_max(REAL_ZERO,(ireal(i[1]-s[1]-siw[1]+1))/ireal(5.0f))),iwave_min(REAL_ONE,iwave_max(REAL_ZERO,(ireal(e[1]-eiw[1]+1-i[1]))/ireal(5.0f))));
 #pragma ivdep
-	  for (i[0]=siw[0];i[0]<=e[0]-eiw[0];i[0]++) {
+	  for (i[0]=s[0]+siw[0];i[0]<=e[0]-eiw[0];i[0]++) {
+            fac[0] = fac[1]*iwave_min(iwave_min(REAL_ONE,iwave_max(REAL_ZERO,(ireal(i[0]-s[0]-siw[0]+1))/ireal(5.0f))),iwave_min(REAL_ONE,iwave_max(REAL_ZERO,(ireal(e[0]-eiw[0]+1-i[0]))/ireal(5.0f))));
 	    if (bias) {
-	      rax._s2[i[1]][i[0]]+=ray._s2[i[1]][i[0]];
+	      rax._s2[i[1]][i[0]]+=fac[0]*ray._s2[i[1]][i[0]];
 	    }
 	    else{
-	      rax._s2[i[1]][i[0]]=ray._s2[i[1]][i[0]];
+	      rax._s2[i[1]][i[0]]=fac[0]*ray._s2[i[1]][i[0]];
 	    }
 	  }
 	}
@@ -106,15 +109,18 @@ namespace TSOpt {
 #endif
 #if RARR_MAX_NDIM > 2
       if (dimx==3) {
-	for (i[2]=siw[2];i[2]<=e[2]-eiw[2];i[2]++) {
-	  for (i[1]=siw[1];i[1]<=e[1]-eiw[1];i[1]++) {
+	for (i[2]=s[2]+siw[2];i[2]<=e[2]-eiw[2];i[2]++) {
+	  //fac[2] = iwave_min(iwave_min(REAL_ONE,iwave_max(REAL_ZERO,(ireal(i[2]-s[2]-siw[2]+1))/ireal(5.0f))),iwave_min(REAL_ONE,iwave_max(REAL_ZERO,(ireal(e[2]-eiw[2]+1-i[2]))/ireal(5.0f))));
+	  for (i[1]=s[1]+siw[1];i[1]<=e[1]-eiw[1];i[1]++) {
+            fac[1] = fac[2]*iwave_min(iwave_min(REAL_ONE,iwave_max(REAL_ZERO,(ireal(i[1]-s[1]-siw[1]+1))/ireal(5.0f))),iwave_min(REAL_ONE,iwave_max(REAL_ZERO,(ireal(e[1]-eiw[1]+1-i[1]))/ireal(5.0f))));
 #pragma ivdep
-	    for (i[0]=siw[0];i[0]<=e[0]-eiw[0];i[0]++) {
+	    for (i[0]=s[0]+siw[0];i[0]<=e[0]-eiw[0];i[0]++) {
+            fac[0] = fac[1]*iwave_min(iwave_min(REAL_ONE,iwave_max(REAL_ZERO,(ireal(i[0]-s[0]-siw[0]+1))/ireal(5.0f))),iwave_min(REAL_ONE,iwave_max(REAL_ZERO,(ireal(e[0]-eiw[0]+1-i[0]))/ireal(5.0f))));
 	      if (bias) {
-		rax._s3[i[2]][i[1]][i[0]]+=ray._s3[i[2]][i[1]][i[0]];
+		rax._s3[i[2]][i[1]][i[0]]+=fac[0]*ray._s3[i[2]][i[1]][i[0]];
 	      }
 	      else{
-		rax._s3[i[2]][i[1]][i[0]]=ray._s3[i[2]][i[1]][i[0]];
+		rax._s3[i[2]][i[1]][i[0]]=fac[0]*ray._s3[i[2]][i[1]][i[0]];
 	      }
 	    }
 	  }

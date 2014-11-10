@@ -66,6 +66,7 @@ void acd_2d_8(float ** uc,
     }
   }
   if (lbc[0]) {
+#pragma ivdep
     for (i1=s[1];i1<=e[1];i1++) {
       up[i1][s[0]-2]=-up[i1][s[0]+0];
       up[i1][s[0]-3]=-up[i1][s[0]+1];
@@ -73,6 +74,7 @@ void acd_2d_8(float ** uc,
     }
   }
   if (rbc[0]) {
+#pragma ivdep
     for (i1=s[1];i1<=e[1];i1++) {
       up[i1][e[0]+2]=-up[i1][e[0]-0];
       up[i1][e[0]+3]=-up[i1][e[0]-1];

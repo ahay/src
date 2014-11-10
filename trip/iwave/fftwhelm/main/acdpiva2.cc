@@ -321,6 +321,36 @@ int main(int argc, char ** argv) {
                 dynamic_cast<PIVAObj2<float> const & >(fe2.getFunctional());  // current clone of PIVAObj
                 dm.copy(f3.getLSSoln()); // copy dx from PIVAObj
             }
+      std::string dataest = valparse<std::string>(*pars,"dataest","");
+      std::string datares = valparse<std::string>(*pars,"datares","");
+//      std::string normalres = valparse<std::string>(*pars,"normalres","");
+      if (dataest.size()>0) {
+          OperatorEvaluation<float> gopeval(g,m);
+          OperatorEvaluation<float> opeval(op,gopeval.getValue());
+          Vector<float> est(op.getRange());
+          AssignFilename estfn(dataest);
+          est.eval(estfn);
+          opeval.getDeriv().applyOp(dm,est);
+          if (datares.size()>0) {
+              Vector<float> res(op.getRange());
+              AssignFilename resfn(datares);
+              res.eval(resfn);
+              res.copy(est);
+              res.linComb(-1.0f,mdd);
+//              if (normalres.size()>0){
+//                  OperatorEvaluation<float> topeval(top,gopeval.getValue());
+//                  Vector<float> nres(op.getDomain());
+//                  AssignFilename nresfn(normalres);
+//                  nres.eval(nresfn);
+//                  Vector<float> tres(top.getRange());
+//                  Components<float> ctres(tres);
+//                  ctres[0].copy(res);
+//                  ctres[1].zero();
+//                  topeval.getDeriv().applyAdjOp(tres,nres);
+//              }
+          }
+      }
+
 //            
 //            LBFGSBT<float> alg(fbd,m,
 //                               valparse<float>(*pars,"InvHessianScale",1.0f),
@@ -346,50 +376,6 @@ int main(int argc, char ** argv) {
 //            }
 //            else {
 //                alg.run();
-//            }
-//            
-//            // fish reflectivity out of mess
-//            // LBFGSBT -> FunctionalEval -> Functional=FunctionalBd -> Functional=FcnlOpComp ->
-//            // FunctionalEval = LSLinFit Eval -> Functional -> LSSoln
-//            FunctionalEvaluation<float> const & fe1 = alg.getFunctionalEvaluation(); // eval of fbd
-//            FunctionalBd<float> const & f1 =
-//            dynamic_cast<FunctionalBd<float> const &>(fe1.getFunctional()); // current clone of fbd
-//            FcnlOpComp<float> const & f2 =
-//            dynamic_cast<FcnlOpComp<float> const &>(f1.getFunctional()); // function in fbd = gf = fcnaopcomp
-//            FunctionalEvaluation<float> const & fe2 = f2.getFcnlEval(); // current feval part of gf
-//            PIVAObj<float> const & f3 =
-//            dynamic_cast<PIVAObj<float> const & >
-//            (fe2.getFunctional()); // current clone of LSLinFit
-//            dm.copy(f3.getLSSoln()); // copy dx from LSLinFit
-//            
-//            std::string dataest = valparse<std::string>(*pars,"dataest","");
-//            std::string datares = valparse<std::string>(*pars,"datares","");
-//            std::string normalres = valparse<std::string>(*pars,"normalres","");
-//            if (dataest.size()>0) {
-//                OperatorEvaluation<float> gopeval(g,m);
-//                OperatorEvaluation<float> opeval(op,gopeval.getValue());
-//                Vector<float> est(op.getRange());
-//                AssignFilename estfn(dataest);
-//                est.eval(estfn);
-//                opeval.getDeriv().applyOp(dm,est);
-//                if (datares.size()>0) {
-//                    Vector<float> res(op.getRange());
-//                    AssignFilename resfn(datares);
-//                    res.eval(resfn);
-//                    res.copy(est);
-//                    res.linComb(-1.0f,mdd);
-//                    if (normalres.size()>0){
-//                        OperatorEvaluation<float> topeval(top,gopeval.getValue());
-//                        Vector<float> nres(op.getDomain());
-//                        AssignFilename nresfn(normalres);
-//                        nres.eval(nresfn);
-//                        Vector<float> tres(top.getRange());
-//                        Components<float> ctres(tres);
-//                        ctres[0].copy(res);
-//                        ctres[1].zero();
-//                        topeval.getDeriv().applyAdjOp(tres,nres);
-//                    }
-//                }
 //            }
 //            
             if (retrieveGlobalRank()==0) {

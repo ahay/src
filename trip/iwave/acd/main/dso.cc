@@ -33,6 +33,7 @@ using RVL::RVLRandomize;
 using RVL::AdjointTest;
 using TSOpt::IWaveEnvironment;
 using TSOpt::GridWindowOp;
+using TSOpt::GridMaskOp;
 #ifdef IWAVE_USE_MPI
 using TSOpt::MPIGridSpace;
 #else
@@ -86,34 +87,45 @@ int main(int argc, char ** argv) {
 #endif
             
             // assign window widths - default = 0;
-            RPNT wind;
-            RASN(wind,RPNT_0);
-            wind[0]=valparse<float>(*pars,"windw1",0.0f);
-            wind[1]=valparse<float>(*pars,"windw2",0.0f);
-            wind[2]=valparse<float>(*pars,"windw3",0.0f);
+            RPNT swind,ewind;
+            RASN(swind,RPNT_0);
+            RASN(ewind,RPNT_0);
+            swind[0]=valparse<float>(*pars,"sww1",0.0f);
+            swind[1]=valparse<float>(*pars,"sww2",0.0f);
+            swind[2]=valparse<float>(*pars,"sww3",0.0f);
+            ewind[0]=valparse<float>(*pars,"eww1",0.0f);
+            ewind[1]=valparse<float>(*pars,"eww2",0.0f);
+            ewind[2]=valparse<float>(*pars,"eww3",0.0f);
+//            RASN(wind,RPNT_0);
+//            wind[0]=valparse<float>(*pars,"ww1",0.0f);
+//            wind[1]=valparse<float>(*pars,"ww2",0.0f);
+//            wind[2]=valparse<float>(*pars,"ww3",0.0f);
             
             GridDerivOp dsop(dom,dsdir,valparse<float>(*pars,"DSWeight",1.0f));
             
             Vector<ireal> m_in(dom);
+            Vector<ireal> tmp(dom);
             Vector<ireal> m_out(dom);
             
-            AssignFilename m_infn(valparse<std::string>(*pars,"csqext"));
+            AssignFilename m_infn(valparse<std::string>(*pars,"csqin"));
             Components<ireal> cm_in(m_in);
             cm_in[0].eval(m_infn);
             
-            GridWindowOp wop(dom,m_in,wind);
-            OpComp<float> op(wop,dsop);
+            GridMaskOp wop(dom,m_in,swind,ewind);
+            OperatorEvaluation<ireal> wopeval(wop,m_in);
+            CompLinearOp<float> lop(wopeval.getDeriv(),dsop);
             
-            AssignFilename m_outfn(valparse<std::string>(*pars,"dcsqextout"));
+            AssignFilename m_outfn(valparse<std::string>(*pars,"csqout"));
             Components<ireal> cm_out(m_out);
             cm_out[0].eval(m_outfn);
             
             RVLRandomize<float> rnd(getpid(),-1.0,1.0);
             
-            OperatorEvaluation<ireal> opeval(op,m_in);
-            AdjointTest<float>(opeval.getDeriv(),rnd,cerr);
-            
-            opeval.getDeriv().applyOp(m_in,m_out);
+            AdjointTest<float>(lop,rnd,cerr);
+           
+            tmp.zero();
+            lop.applyOp(m_in,tmp);
+            lop.applyOp(tmp,m_out);
             
 #ifdef IWAVE_USE_MPI
         }

@@ -201,6 +201,7 @@ void acdpml_2d_4_d(float **uc, float **ucd, float **up, float **upd, float **
     }
     /* Homogeneous Dirichlet boundary conditions */
     if (lbc[1])
+#pragma ivdep
         for (i0 = s[0]; i0 < e[0]+1; ++i0) {
             upd[s[1] - 2][i0] = -upd[s[1]][i0];
             up[s[1] - 2][i0] = -up[s[1]][i0];
@@ -208,6 +209,7 @@ void acdpml_2d_4_d(float **uc, float **ucd, float **up, float **upd, float **
             up[s[1] - 1][i0] = 0;
         }
     if (rbc[1])
+#pragma ivdep
         for (i0 = s[0]; i0 < e[0]+1; ++i0) {
             upd[e[1] + 2][i0] = -upd[e[1]][i0];
             up[e[1] + 2][i0] = -up[e[1]][i0];
@@ -215,6 +217,7 @@ void acdpml_2d_4_d(float **uc, float **ucd, float **up, float **upd, float **
             up[e[1] + 1][i0] = 0;
         }
     if (lbc[0])
+#pragma ivdep
         for (i1 = s[1]; i1 < e[1]+1; ++i1) {
             upd[i1][s[0] - 2] = -upd[i1][s[0]];
             up[i1][s[0] - 2] = -up[i1][s[0]];
@@ -222,6 +225,7 @@ void acdpml_2d_4_d(float **uc, float **ucd, float **up, float **upd, float **
             up[i1][s[0] - 1] = 0;
         }
     if (rbc[0])
+#pragma ivdep
         for (i1 = s[1]; i1 < e[1]+1; ++i1) {
             upd[i1][e[0] + 2] = -upd[i1][e[0]];
             up[i1][e[0] + 2] = -up[i1][e[0]];

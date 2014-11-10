@@ -84,6 +84,7 @@ void acdpml_2d_4_b(float **uc, float **ucb, float **up, float **upb, float **
     // compute interior of the domain
     // update wavefield up */
     for (i1 = s[1]; i1 < e[1]+1; ++i1)
+#pragma ivdep
         for (i0 = s[0]; i0 < e[0]+1; ++i0)
             up[i1][i0] = 1.0/(1.0+(dp1[i1]+dp0[i0])*dt/2.0)*(uc[i1][i0]*(2.0-
                 dp1[i1]*dp0[i0]*dt*dt)+up[i1][i0]*((dp1[i1]+dp0[i0])/2.0*dt-
@@ -113,6 +114,7 @@ void acdpml_2d_4_b(float **uc, float **ucb, float **up, float **upb, float **
     else
         pushcontrol1b(1);
     if (rbc[0])
+#pragma ivdep
         for (i1 = e[1]; i1 > s[1]-1; --i1) {
             upb[i1][e[0] + 1] = 0.0;
             upb[i1][e[0]] = upb[i1][e[0]] - upb[i1][e[0] + 2];
@@ -120,6 +122,7 @@ void acdpml_2d_4_b(float **uc, float **ucb, float **up, float **upb, float **
         }
     popcontrol1b(&branch);
     if (branch == 0)
+#pragma ivdep
         for (i1 = e[1]; i1 > s[1]-1; --i1) {
             upb[i1][s[0] - 1] = 0.0;
             upb[i1][s[0]] = upb[i1][s[0]] - upb[i1][s[0] - 2];
@@ -127,6 +130,7 @@ void acdpml_2d_4_b(float **uc, float **ucb, float **up, float **upb, float **
         }
     popcontrol1b(&branch);
     if (branch == 0) {
+#pragma ivdep
         for (i0 = e[0]; i0 > s[0]-1; --i0) {
             upb[e[1] + 1][i0] = 0.0;
             tmp0b = upb[e[1] + 2][i0];
@@ -137,6 +141,7 @@ void acdpml_2d_4_b(float **uc, float **ucb, float **up, float **upb, float **
     }
     popcontrol1b(&branch);
     if (branch == 0) {
+#pragma ivdep
         for (i0 = e[0]; i0 > s[0]-1; --i0) {
             upb[s[1] - 1][i0] = 0.0;
             tmpb = upb[s[1] - 2][i0];
@@ -147,6 +152,7 @@ void acdpml_2d_4_b(float **uc, float **ucb, float **up, float **upb, float **
     }
     i0 = e[0];
     /* **csqb = 0.0; */
+#pragma ivdep
     for (i1 = e[1]-1; i1 > s[1]-1; --i1) {
         temp10 = 4.0*di[0]*(dt*dp0[i0]+2.0);
         temp10b = (dp1[i1]-dp0[i0])*dt*2.0*phi0b[i1][i0];
@@ -181,6 +187,7 @@ void acdpml_2d_4_b(float **uc, float **ucb, float **up, float **upb, float **
     }
     popinteger4(&i1);
     i1 = e[1];
+#pragma ivdep
     for (i0 = e[0]; i0 > s[0]-1; --i0) {
         temp8 = 4.0*di[0]*(dt*dp0[i0]+2.0);
         temp8b = (dp1[i1]-dp0[i0])*dt*2.0*phi0b[i1][i0];
@@ -215,6 +222,7 @@ void acdpml_2d_4_b(float **uc, float **ucb, float **up, float **upb, float **
     }
     popinteger4(&i0);
     i0 = s[0] - 1;
+#pragma ivdep
     for (i1 = e[1]; i1 > s[1]-1; --i1) {
         temp6 = 4.0*di[0]*(dt*dp0[i0]+2.0);
         temp6b = (dp1[i1]-dp0[i0])*dt*2.0*phi0b[i1][i0];
@@ -249,6 +257,7 @@ void acdpml_2d_4_b(float **uc, float **ucb, float **up, float **upb, float **
     }
     popinteger4(&i1);
     i1 = s[1] - 1;
+#pragma ivdep
     for (i0 = e[0]; i0 > s[0]-1; --i0) {
         temp4 = 4.0*di[0]*(dt*dp0[i0]+2.0);
         temp4b = (dp1[i1]-dp0[i0])*dt*2.0*phi0b[i1][i0];
@@ -315,6 +324,7 @@ void acdpml_2d_4_b(float **uc, float **ucb, float **up, float **upb, float **
         [i0+1])*temp1b/temp1;
     phi1b[i1][i0] = (2.0-dt*dp1[i1])*phi1b[i1][i0]/(dt*dp1[i1]+2.0);
     for (i1 = e[1]-1; i1 > s[1]-1; --i1)
+#pragma ivdep
         for (i0 = e[0]-1; i0 > s[0]-1; --i0) {
             temp0 = 4.0*4.0*di[0]*(dt*dp0[i0]+2.0);
             temp0b = (dp1[i1]-dp0[i0])*dt*2.0*phi0b[i1][i0];
@@ -357,6 +367,7 @@ void acdpml_2d_4_b(float **uc, float **ucb, float **up, float **upb, float **
             phi1b[i1][i0] = (2.0-dt*dp1[i1])*phi1b[i1][i0]/(dt*dp1[i1]+2.0);
         }
     for (i1 = e[1]; i1 > s[1]-1; --i1)
+#pragma ivdep
         for (i0 = e[0]; i0 > s[0]-1; --i0) {
             tempb = upb[i1][i0]/((dp1[i1]+dp0[i0])*(dt/2.0)+1.0);
             tempb0 = csq[i1][i0]*tempb;

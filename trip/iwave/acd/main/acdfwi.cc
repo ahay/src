@@ -299,7 +299,6 @@ int main(int argc, char ** argv) {
       
       std::string dataest = valparse<std::string>(*pars,"dataest","");
       std::string datares = valparse<std::string>(*pars,"datares","");
-      std::string normalres = valparse<std::string>(*pars,"normalres","");
       if (dataest.size()>0) {
 	OperatorEvaluation<float> opeval(op,m);
 	AssignFilename mdlfn("model.rsf");

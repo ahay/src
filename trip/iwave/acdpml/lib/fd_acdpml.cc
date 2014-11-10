@@ -19,14 +19,14 @@ extern void acdpml_2d_4(float **, float **, float **,
                         int *,    int *,
                         float,    float *,  float *,
                         int *,    int *);
-extern void acdpml_2d_8(float ** uc, float ** up, float ** csq,
-                        float ** phi1, float ** phi0,
-                        float * dp1,   float * dp0,
-                        float *di, float dt,
-                        int * s,   int * e,
-                        float c0,  float * c1,  float * c2,
-                        float *c3, float * c4,
-                        int * lbc, int * rbc);
+extern void acdpml_2d_8(float **, float **, float **,
+                        float **, float **,
+                        float *,   float *,
+                        float *, float,
+                        int *,   int *,
+                        float,  float *,  float *,
+                        float *, float *,
+                        int *, int *);
 
 extern int acdpml_step(RDOM*, int, void *);
 
@@ -137,6 +137,8 @@ int acdpml_modelinit(PARARRAY *pars,
     get_d(dxs, g);
     gd0 = g.axes[0].n+1;
     gd1 = g.axes[1].n+1;
+    //cerr << "gd0=" << gd0 << endl;
+    //cerr << "gd1=" << gd1 << endl;
     if (!(acdpmlpars->dp0)) {
         //acdpmlpars->dp0 = (ireal *)usermalloc_(g.axes[0].n * sizeof(ireal));
         acdpmlpars->dp0 = (ireal *)malloc((gd0)*sizeof(ireal));
@@ -528,7 +530,6 @@ int acdpml_timegrid(PARARRAY *pars, FILE * stream, grid const & g, ireal & dt) {
     fprintf(stream,"NOTE: acd_readtimegrid: on return, dt=%e\n",dt);
     fflush(stream);
 #endif
-    fprintf(stderr, "dt = %f\n", dt);
     return 0;
 }
 
