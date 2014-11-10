@@ -1,0 +1,112 @@
+from rsf.proj import *
+from rsf.prog import RSFROOT
+from rsf.recipes.beg import server as private
+
+def Grey(data,other):
+	Result(data,
+           '''
+		   	grey transp=y color=j 
+			unit1=s unit2= allpos=y scalebar=y 
+			parallel2=n labelsz=6  %s'''%(other))#screenratio=1
+
+def Grey3(data,other):
+	Result(data,
+           '''
+		   	byte  | transp plane=23 memsize=1000 | grey3 flat=n transp=y color=j 
+			unit1=s unit2= allpos=y  frame1=100 frame2=1 frame3=20 label2=Trace label1=Time
+			label3=Frequency unit1=s unit2= unit3=Hz framelabelcol=VP_BLACK  
+			parallel2=n labelsz=6 screenratio=1 point1=0.8 point2=0.8 %s'''%(other)) 
+
+
+data = 'bend_l1_pmig_enhanc.sgy'
+Fetch(data,'vecta',private)
+Flow('data',data,'segyread read=data | window n2=471 max1=1.5 | scale axis=2')
+
+Result('data','grey clip=0.44 title="Input Data" ')
+#Grey('data','scalebar=n label1=Time unit1=s label2=Trace unit2= title="Input Data" color= ')
+
+nt=751
+nx=471
+dt=0.002
+dx=1
+nf=126
+df=(1/2/dt)/(nf-1);
+
+
+## TF 
+Flow('timefreq','data','timefreq rect=5 nw=%d dw=%g'%(nf,df))
+Flow('timefreq-stft','data','st rect=5 nw=%d dw=%g'%(nf,df))
+#for freq in (10,20,30,40,50,60,70,80,90,100,110):
+#    slice = 'slice%d' % freq
+#    Result(slice,'timefreq',
+#           'window n2=1 min2=%d | grey title="%g Hz" transp=y color=j unit1=s unit2= allpos=y scalebar=y parallel2=n labelsz=6 screenratio=1' % (freq,freq))
+
+########################################################################
+# INITIALIZATION for Matlab
+########################################################################
+matlab         = WhereIs('matlab')
+matROOT = '../matfun'
+matfun = 'pp'
+matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
+
+if not matlab:
+    sys.stderr.write('\nCannot find Matlab.\n')
+    sys.exit(1)
+
+
+
+############################################################
+## process field data
+############################################################
+Flow('tfsswt1 tfsswt2 tfsswt3 tfsswt4 tfsswt5 tfsswt6 tfsswt',[os.path.join(matROOT,matfun+'.m'),'data'],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}','${TARGET}','${TARGETS[1]}','${TARGETS[2]}','${TARGETS[3]}','${TARGETS[4]}','${TARGETS[5]}','${TARGETS[6]}');quit"
+     '''%vars(),stdin=0,stdout=-1)
+
+Flow('pp-tfsswt1','tfsswt1','put o1=%g d1=%g n1=%d o2=%g d2=%g n2=%d'%(0,dt,nt,0,dx,nx))
+Flow('pp-tfsswt2','tfsswt2','put o1=%g d1=%g n1=%d o2=%g d2=%g n2=%d'%(0,dt,nt,0,dx,nx))
+Flow('pp-tfsswt3','tfsswt3','put o1=%g d1=%g n1=%d o2=%g d2=%g n2=%d'%(0,dt,nt,0,dx,nx))
+Flow('pp-tfsswt4','tfsswt4','put o1=%g d1=%g n1=%d o2=%g d2=%g n2=%d'%(0,dt,nt,0,dx,nx))
+Flow('pp-tfsswt5','tfsswt5','put o1=%g d1=%g n1=%d o2=%g d2=%g n2=%d'%(0,dt,nt,0,dx,nx))
+Flow('pp-tfsswt6','tfsswt6','put o1=%g d1=%g n1=%d o2=%g d2=%g n2=%d'%(0,dt,nt,0,dx,nx))
+Flow('pp-tfsswt','tfsswt','put o1=%g d1=%g n1=%d o2=%g d2=%g n2=%d o3=%g d3=%g n3=%d'%(0,dt,nt,0,df,nf,0,dx,nx))
+
+Grey('pp-tfsswt1','title="20 Hz"')
+Grey('pp-tfsswt2','title="40 Hz"')
+Grey('pp-tfsswt3','title="60 Hz"')
+Grey('pp-tfsswt4','title="80 Hz"')
+Grey('pp-tfsswt5','title="100 Hz"')
+Grey('pp-tfsswt6','title="120 Hz"')
+Grey3('pp-tfsswt','title="SSWT"')
+
+Grey3('timefreq','title="TFL"')
+Flow('timefreq-st','timefreq-stft','cabs')
+Grey3('timefreq-st','title="ST" frame3=60')
+
+Flow('lowf0','pp-tfsswt','window f2=15 n2=1')
+Flow('higf0','pp-tfsswt','window f2=30 n2=1')
+
+Plot('label1',None,
+	'''
+	box x0=5.8 y0=7.1 label="Gas?" xt=-0.5 yt=0.5 length=0.8 
+	''')
+
+Plot('label2',None,
+	'''
+	box x0=5.9 y0=4.5 label="Gas?" xt=-0.5 yt=0.5 length=0.8 
+	''')
+
+
+Grey('lowf0','title="30 Hz" scalebar=n label1=Time unit1=s label2=Trace unit2=')
+Grey('higf0','title="60 Hz" scalebar=n label1=Time unit1=s label2=Trace unit2=')
+
+Result('lowf','Fig/lowf0.vpl label1 label2','Overlay')
+Result('higf','Fig/higf0.vpl label1 label2','Overlay')
+
+Result('weak-ss','pp-tfsswt','window n2=1 f2=20 | window min1=1.15 | grey color=j')
+Result('weak-l','timefreq','window n2=1 f2=20 | window min1=1.15 | grey color=j')
+Result('weak-s','timefreq-st','window n2=1 f2=20 | window min1=1.15 | grey color=j')
+Result('weak-data','data','window min1=1.15 | grey color=j')
+
+
+End()
