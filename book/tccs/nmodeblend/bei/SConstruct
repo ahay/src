@@ -1,0 +1,339 @@
+from rsf.proj import *
+
+def Grey3(data,other):
+	Result(data,
+       '''
+       byte clip=0.2|
+       transp plane=23 |
+       grey3 flat=n  frame1=500 frame2=125 frame3=5
+       title=Data point1=0.8 point2=0.8  %s pclip=5
+       '''%other)
+#clip=0.0001 
+
+def Vel(data,other):
+	Result(data,
+     '''
+     grey color=j allpos=y bias=1.5 clip=0.7
+     scalebar=y barreverse=y barunit=km/s
+     label2=Midpoint unit2=km label1=Time unit1=s 
+     title="NMO Velocity"  %s
+     '''%other )
+
+def Pick(data,other):
+	 Result(data,
+       '''
+       byte allpos=y gainpanel=all |
+       transp plane=23 |
+       grey3 flat=n frame1=500 frame2=125 frame3=25 
+       label1=Time unit1=s color=j framelabelcol=VP_BLACK
+       label3=Velocity unit3=km/s 
+       label2=Midpoint unit2=km
+       title="Velocity Scan" point1=0.8 point2=0.8 %s 
+       '''%other)
+
+# Create labels
+labels=[]
+Plot('label1',None,
+	'''
+	box x0=3 y0=5.8 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+labels.append('label1')
+
+Plot('label2',None,
+	'''
+	box x0=4 y0=5.8 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+labels.append('label2')
+
+Plot('label3',None,
+	'''
+	box x0=5 y0=5.8 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+labels.append('label3')
+
+Plot('label4',None,
+	'''
+	box x0=6 y0=5.8 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+labels.append('label4')
+
+Plot('label5',None,
+	'''
+	box x0=7 y0=5.8 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+labels.append('label5')
+
+Plot('label6',None,
+	'''
+	box x0=8 y0=5.8 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+labels.append('label6')
+
+Plot('label7',None,
+	'''
+	box x0=9 y0=5.8 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+labels.append('label7')
+
+Plot('label8',None,
+	'''
+	box x0=10 y0=5.8 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+labels.append('label8')
+
+Plot('label9',None,
+	'''
+	box x0=11 y0=5.8 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+labels.append('label9')
+
+Plot('label10',None,
+	'''
+	box x0=12 y0=5.8 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+labels.append('label10')
+
+## Creating framebox
+x=0
+y=1.2
+w=250
+w1=0.96
+
+Flow('frame.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	string.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame','frame.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=7.705 max1=16.0465 min2=0 max2=4 pad=n plotfat=10 plotcol=3 
+	wantaxis=n wanttitle=n yreverse=y scalebar=n
+	''')
+
+# Download data
+Fetch('beinew.HH','midpts')
+
+# Set dimensions
+Flow('gulf','beinew.HH',
+     '''
+     dd form=native |
+     put
+     label1=Time unit1=s
+     label2=Half-Offset unit2=km
+     label3=Midpoint unit3=km | scale axis=3
+     ''')
+
+# Display
+Grey3('gulf','title="Data (Original)"')
+
+# Velocity scan
+Flow('vscan-gulf','gulf',
+     'vscan v0=1.5 dv=0.02 nv=51 semblance=y',
+     split=[3,250], reduce='cat')
+Pick('vscan-gulf','title="Velocity Scan (Original)"')
+
+# Velocity picking
+Flow('vnmo-gulf','vscan-gulf','pick rect1=100 rect2=10')
+Vel('vnmo-gulf','')
+
+# Stacking
+##########
+Flow('nmo-gulf','gulf vnmo-gulf','nmo velocity=${SOURCES[1]}')
+Flow('stack-gulf','nmo-gulf','stack')
+# DMO
+########################
+Flow('nmo0-gulf','gulf vnmo-gulf','nmo velocity=${SOURCES[1]}')
+Flow('dstack-gulf','nmo0-gulf',
+     '''
+     window f1=250 | 
+     logstretch | fft1 | 
+     transp plane=13 memsize=1000 |
+     finstack | 
+     transp memsize=1000 |
+     fft1 inv=y | logstretch inv=y | 
+     pad beg1=250 | put unit1=s
+     ''')
+
+Plot('stack-gulf','grey title="Stack"')
+Plot('dstack-gulf','grey title="DMO Stack"')
+Plot('pstm-gulf','pstm','grey title="PSTM"')
+Result('comp','stack-gulf dstack-gulf pstm-gulf','SideBySideAniso')
+
+
+# Common-offset domain prestack kirchhoff time migration (PSTM)
+Flow('tcmps','gulf','transp memsize=1000 plane=23')
+Flow('pstm','tcmps vnmo-gulf',
+     '''
+     mig2 vel=${SOURCES[1]} apt=5 antialias=1
+     ''',split=[3,48,[0]],reduce='add')
+# Time-to-Depth conversion
+Flow('semblance-gulf','vscan-gulf vnmo-gulf','slice pick=${SOURCES[1]}')
+Flow('vinv-gulf','vnmo-gulf semblance-gulf','dix weight=${SOURCES[1]} rect1=100 rect2=10')
+
+
+##########################################
+## The following is for blending test
+##########################################
+Flow('dithert',None,'math output=1 n1=48 n2=250 | noise rep=y seed=2013 var=3 ')
+Flow('gulf1-dither','gulf dithert','datstretch inv=y datum=${SOURCES[1]} | math output="input*3"')
+
+## Blending
+Flow('gulf-b','gulf gulf1-dither','add scale=1,1 ${SOURCES[1]}')
+Grey3('gulf-b','title="Data (Blended)"')
+
+# Velocity scan
+Flow('vscan-b','gulf-b',
+     'vscan v0=1.5 dv=0.02 nv=51 semblance=y',
+     split=[3,250], reduce='cat')
+Pick('vscan-b','title="Velocity Scan (Blended)"')
+
+# Velocity picking for blended data
+Flow('vnmo-b','vscan-b','pick rect1=100 rect2=10')
+Vel('vnmo-b','')
+Flow('vnmo-db','vscan-db','pick rect1=100 rect2=10')
+Vel('vnmo-db','')
+
+# Stacking
+##########
+Flow('nmo-b0','gulf-b vnmo-b','nmo velocity=${SOURCES[1]}')
+Flow('nmo-b','gulf-b vnmo-b','nmo velocity=${SOURCES[1]}')
+Flow('stack-b','nmo-b','stack')
+Flow('nmo-b1','gulf-b vnmo-db','nmo velocity=${SOURCES[1]}')
+
+
+# DMO
+########################
+Flow('nmo0-b','gulf-b vnmo-b','nmo velocity=${SOURCES[1]}')
+Flow('dstack-b','nmo0-b',
+     '''
+     window f1=250 | 
+     logstretch | fft1 | 
+     transp plane=13 memsize=1000 |
+     finstack | 
+     transp memsize=1000 |
+     fft1 inv=y | logstretch inv=y | 
+     pad beg1=250 | put unit1=s
+     ''')
+
+Grey3('nmo-b','')
+Plot('stack-b','grey title="Stack (Blended)"')
+Plot('dstack-b','grey title="DMO Stack (Blended)"')
+Plot('pstm-gulfb','pstm-b','grey title="PSTM (Blended)" ')
+Result('comp-b','stack-b dstack-b pstm-gulfb','SideBySideAniso')
+
+
+# Common-offset domain prestack kirchhoff time migration (PSTM)
+Flow('tcmps-b','gulf-b','transp memsize=1000 plane=23')
+Flow('pstm-b','tcmps-b vnmo-b',
+     '''
+     mig2 vel=${SOURCES[1]} apt=5 antialias=1
+     ''',split=[3,48,[0]],reduce='add')
+# Time-to-Depth conversion
+Flow('semblance-b','vscan-b vnmo-b','slice pick=${SOURCES[1]}')
+Flow('vinv-b','vnmo-b semblance-b','dix weight=${SOURCES[1]} rect1=100 rect2=10')
+Flow('semblance-db','vscan-db vnmo-db','slice pick=${SOURCES[1]}')
+Flow('vinv-db','vnmo-db semblance-db','dix weight=${SOURCES[1]} rect1=100 rect2=10')
+
+##########################################
+## The following is for deblending test
+##########################################
+
+# Stacking
+##########
+
+Flow('nmo-db0','nmo-b0','transp | mf nfw=9 | transp')
+Flow('nmo-db','nmo-b1','transp | mf nfw=9 | transp')
+
+Flow('stack-db0','nmo-db0','stack')
+Flow('stack-db','nmo-db','stack')
+
+# DMO
+########################
+
+Flow('dstack-db','nmo-db',
+     '''
+     window f1=250 | 
+     logstretch | fft1 | 
+     transp plane=13 memsize=1000 |
+     finstack | 
+     transp memsize=1000 |
+     fft1 inv=y | logstretch inv=y | 
+     pad beg1=250 | put unit1=s
+     ''')
+
+Grey3('nmo-db','')
+Plot('stack-db','grey title="Stack (Blended)" ')
+Plot('dstack-db','grey title="DMO Stack (Blended)" ')
+Plot('pstm-gulfdb','pstm-db','grey title="PSTM (Deblended)" clip=0.05 ')
+Result('comp-db','stack-db dstack-db pstm-gulfdb','SideBySideAniso')
+
+# Common-offset domain prestack kirchhoff time migration (PSTM)
+Flow('cmps-db0','nmo-db0 vnmo-b','inmo velocity=${SOURCES[1]}')
+Grey3('cmps-db0','title="Data (Deblended)" ')
+
+Flow('cmps-db','nmo-db vnmo-db','inmo velocity=${SOURCES[1]}')
+Grey3('cmps-db','title="Data (Deblended)"')
+
+# Velocity scan
+Flow('vscan-db','cmps-db0',
+     'vscan v0=1.5 dv=0.02 nv=51 semblance=y',
+     split=[3,250], reduce='cat')
+Pick('vscan-db','title="Velocity Scan (Deblended)"')
+
+
+# Time-to-Depth conversion
+## unblended
+Flow('pstmz','pstm vinv-gulf','time2depth intime=y velocity=${SOURCES[1]} nz=520 dz=0.008 z0=0')
+Result('pstmz',
+       '''
+       grey title="PSKTM (Original)" clip=0.05  label1=Depth unit1=km max1=4 
+       ''')
+Result('pstm',['Fig/pstmz.vpl']+labels+['frame'], 'Overlay')
+
+
+## blended
+Flow('pstm-bz','pstm-b vinv-b','time2depth intime=y velocity=${SOURCES[1]} nz=520 dz=0.008 z0=0')
+
+Result('pstm-bz',
+       '''
+       grey title="PSKTM (Blended)"  clip=0.05  label1=Depth unit1=km max1=4 
+       ''')
+Result('pstm-b',['Fig/pstm-bz.vpl']+labels+['frame'], 'Overlay')
+
+## deblended
+
+Flow('pstm-db','cmps-db vnmo-db',
+     '''
+     transp memsize=1000 plane=23 | mig2 vel=${SOURCES[1]} apt=5 antialias=1
+     ''',split=[3,48,[0]],reduce='add')
+Flow('pstm-dbz','pstm-db vinv-db','time2depth intime=y velocity=${SOURCES[1]} nz=520 dz=0.008 z0=0')
+Result('pstm-dbz',
+       '''
+       grey title="PSKTM (Deblended)" clip=0.05 label1=Depth unit1=km max1=4 
+       ''')
+Result('pstm-db',['Fig/pstm-dbz.vpl']+labels+['frame'], 'Overlay')
+
+
+Flow('pstmzoom','pstmz','window n1=120 f1=150 ')
+Flow('pstm-bzoom','pstm-bz','window n1=120 f1=150 ')
+Flow('pstm-dbzoom','pstm-dbz','window n1=120 f1=150 ')
+Result('pstmzoom',
+       '''
+       grey title="Zoom (Unblended)" clip=0.05 label1=Depth unit1=km  
+       ''')
+Result('pstm-bzoom',
+       '''
+       grey title="Zoom (blended)" clip=0.05 label1=Depth unit1=km 
+       ''')
+Result('pstm-dbzoom',
+       '''
+       grey title="Zoom (Deblended)" clip=0.05 label1=Depth unit1=km 
+       ''')
+
+
+
+
+Result('gulf-comp','Fig/gulf.vpl Fig/gulf-b.vpl Fig/cmps-db.vpl','SideBySideIso')
+Result('vscan-comp','Fig/vscan-gulf.vpl Fig/vscan-b.vpl Fig/vscan-db.vpl','SideBySideIso')
+Result('pstm-comp','Fig/pstm.vpl Fig/pstm-b.vpl Fig/pstm-db.vpl','SideBySideAniso')
+
+
+End()
