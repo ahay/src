@@ -134,15 +134,15 @@ Flow('vrms','voft',
      ''')
 
 # Velocity scan
-Flow('vscan','data',
+Flow('svscan','data',
      'noise var=1e-6 seed=101013 | vscan v0=1.5 dv=0.02 nv=51 semblance=y',
      split=[3,201], reduce='cat')
-Pick3('vscan','title="Velocity Scan (Original)"')
+Pick3('svscan','title="Velocity Scan (Original)"')
 
 # Using vnmo instead of vrms
 ########################
 # Velocity picking
-Flow('vnmo','vscan','pick rect1=100 rect2=10')
+Flow('vnmo','svscan','pick rect1=100 rect2=10')
 
 for vel in ('vrms','vnmo'):
     Plot(vel,
@@ -190,21 +190,21 @@ for stack in stacks.keys():
            ''' % stacks[stack])
 
 # Common-offset domain prestack kirchhoff time migration (PSTM)
-Flow('pstm','data vnmo',
+Flow('spstm','data vnmo',
      '''
 	 transp memsize=1000 plane=23 |
 	 prekirch vel=${SOURCES[1]} | stack axis=3 | halfint inv=y adj=y
      ''',split=[3,51,[0]])
 
 ## Dix inversion
-Flow('semblance','vscan vnmo','slice pick=${SOURCES[1]}')
+Flow('semblance','svscan vnmo','slice pick=${SOURCES[1]}')
 Flow('vesti','vnmo semblance','dix weight=${SOURCES[1]} rect1=100 rect2=10')
 
 # Time-to-Depth conversion
-Flow('pstmz','pstm vesti','time2depth intime=y velocity=${SOURCES[1]} dz=0.01 nz=551')
+Flow('pstmz','spstm vesti','time2depth intime=y velocity=${SOURCES[1]} dz=0.01 nz=551')
 Greymig('pstmz','title="PSKTM (Original)"')
 
-Result('pstm',['Fig/pstmz.vpl']+labels, 'Overlay')
+Result('spstm',['Fig/pstmz.vpl']+labels, 'Overlay')
 
 ##########################################
 ## The following is for blending test
@@ -217,13 +217,13 @@ Flow('data-b','data data1-dither','add scale=1,2 ${SOURCES[1]}')
 Grey3('data-b','title="Data (Blended)"')
 
 # Velocity scan
-Flow('vscan-b','data-b',
+Flow('svscan-b','data-b',
      'noise var=1e-7 seed=101013 | vscan v0=1.5 dv=0.02 nv=51 semblance=y',
      split=[3,201], reduce='cat')
-Pick3('vscan-b','title="Velocity Scan (Blended)"')
+Pick3('svscan-b','title="Velocity Scan (Blended)"')
 
 # Velocity picking for blended data
-Flow('vnmo-b','vscan-b','pick rect1=100 rect2=10')
+Flow('vnmo-b','svscan-b','pick rect1=100 rect2=10')
 Vel('vnmo-b','')
 
 # Stacking
@@ -248,26 +248,26 @@ Flow('dstack-b','nmo0-b',
 Grey3('nmo-b','')
 Plot('stack-b','grey title="Stack (Blended)"')
 Plot('dstack-b','grey title="DMO Stack (Blended)"')
-Plot('pstm-datab','pstm-b','grey title="PSTM (Blended)"')
-Result('comp-b','stack-b dstack-b pstm-datab','SideBySideAniso')
+Plot('spstm-datab','spstm-b','grey title="PSTM (Blended)"')
+Result('comp-b','stack-b dstack-b spstm-datab','SideBySideAniso')
 
 
 # Common-offset domain prestack kirchhoff time migration (PSTM)
-Flow('pstm-b','data-b vnmo-b',
+Flow('spstm-b','data-b vnmo-b',
      '''
 	 transp memsize=1000 plane=23 |
 	 prekirch vel=${SOURCES[1]} | stack axis=3 | halfint inv=y adj=y
      ''',split=[3,51,[0]])
 
 ## Dix inversion
-Flow('semblance-b','vscan-b vnmo-b','slice pick=${SOURCES[1]}')
+Flow('semblance-b','svscan-b vnmo-b','slice pick=${SOURCES[1]}')
 Flow('vesti-b','vnmo-b semblance-b','dix weight=${SOURCES[1]} rect1=100 rect2=10')
 
 # Time-to-Depth conversion
-Flow('pstmz-b','pstm-b vesti-b','time2depth intime=y velocity=${SOURCES[1]} dz=0.01 nz=551')
+Flow('pstmz-b','spstm-b vesti-b','time2depth intime=y velocity=${SOURCES[1]} dz=0.01 nz=551')
 Greymig('pstmz-b','title="PSKTM (Blended)"')
 
-Result('pstm-b',['Fig/pstmz-b.vpl']+labels, 'Overlay')
+Result('spstm-b',['Fig/pstmz-b.vpl']+labels, 'Overlay')
 
 ##########################################
 ## The following is for deblending test
@@ -295,8 +295,8 @@ Flow('dstack-db','nmo-db',
 Grey3('nmo-db','')
 Plot('stack-db','grey title="Stack (Blended)"')
 Plot('dstack-db','grey title="DMO Stack (Blended)"')
-Plot('pstm-datadb','pstm-db','grey title="PSTM (Deblended)" clip=500000')
-Result('comp-db','stack-db dstack-db pstm-datadb','SideBySideAniso')
+Plot('spstm-datadb','spstm-db','grey title="PSTM (Deblended)" clip=500000')
+Result('comp-db','stack-db dstack-db spstm-datadb','SideBySideAniso')
 
 
 # Common-offset domain prestack kirchhoff time migration (PSTM)
@@ -304,28 +304,28 @@ Flow('data-db','nmo-db vnmo-b','inmo velocity=${SOURCES[1]}')
 Grey3('data-db','title="Data (Deblended)"')
 
 # Velocity scan
-Flow('vscan-db','data-db',
+Flow('svscan-db','data-db',
      'noise var=1e-6 seed=101013 | vscan v0=1.5 dv=0.02 nv=51 semblance=y',
      split=[3,201], reduce='cat')
-Pick3('vscan-db','title="Velocity Scan (Deblended)"')
+Pick3('svscan-db','title="Velocity Scan (Deblended)"')
 
 
 # Common-offset domain prestack kirchhoff time migration (PSTM)
-Flow('pstm-db','data-db vnmo-b',
+Flow('spstm-db','data-db vnmo-b',
      '''
 	 transp memsize=1000 plane=23 |
 	 prekirch vel=${SOURCES[1]} | stack axis=3 | halfint inv=y adj=y
      ''',split=[3,51,[0]])
 
 # Time-to-Depth conversion
-Flow('pstmz-db','pstm-db vesti-b','time2depth intime=y velocity=${SOURCES[1]} dz=0.01 nz=551')
+Flow('pstmz-db','spstm-db vesti-b','time2depth intime=y velocity=${SOURCES[1]} dz=0.01 nz=551')
 Greymig('pstmz-db','title="PSKTM (Deblended)"')
 
-Result('pstm-db',['Fig/pstmz-db.vpl']+labels, 'Overlay')
+Result('spstm-db',['Fig/pstmz-db.vpl']+labels, 'Overlay')
 
 
 Result('data-comp','Fig/data.vpl Fig/data-b.vpl Fig/data-db.vpl','SideBySideIso')
-Result('vscan-comp','Fig/vscan.vpl Fig/vscan-b.vpl Fig/vscan-db.vpl','SideBySideIso')
-Result('pstm-comp','Fig/pstm.vpl Fig/pstm-b.vpl Fig/pstm-db.vpl','SideBySideIso')
+Result('svscan-comp','Fig/svscan.vpl Fig/svscan-b.vpl Fig/svscan-db.vpl','SideBySideIso')
+Result('spstm-comp','Fig/spstm.vpl Fig/spstm-b.vpl Fig/spstm-db.vpl','SideBySideIso')
 
 End()
