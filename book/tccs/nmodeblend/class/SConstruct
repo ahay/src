@@ -163,8 +163,8 @@ Flow('datx','datt ditherx','transp plane=12 | datstretch inv=y datum=${SOURCES[1
 Flow('datas-csg','data-csg datx','add scale=1,1 ${SOURCES[1]} ')
 Greycsg('datas-csg','title="Blended(CSG)"')
 
-Flow('data-b','datas-csg','shot2cmp positive=y | window n3=201 f3=50 | put o3=0')
-Greycmg('data-b','title="Blended data (CMG)"')
+Flow('data-blend','datas-csg','shot2cmp positive=y | window n3=201 f3=50 | put o3=0')
+Greycmg('data-blend','title="Blended data (CMG)"')
 
 
 End()

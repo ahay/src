@@ -17,6 +17,11 @@ To the reproducible documents collection:
 * tccs/time2depth2: A robust approach to time-to-depth conversion and
   interval velocity estimation from time migration in the presence of
   lateral velocity variations (Li and Fomel)
+* tccs/nmodeblend: Deblending using normal moveout and median
+  filtering in common-midpoint gathers (Chen, Yuan, Jin, Chen, and
+  Zhang)
+* tccs/synwav: Time-frequency analysis of seismic data using
+  synchrosqueezing wavelet transform (Chen, Liu, Chen, Li, and Wang)
 
 To SCons:
 

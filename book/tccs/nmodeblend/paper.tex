@@ -55,30 +55,11 @@ The technique of simultaneous-source (sometimes called \emph{multisource}) acqui
 
 In blended acquisition, more than one source \old{are}\new{is} shot simultaneously, regardless of their interactive interference. The term \emph{source} denotes a shot array, which can contain all the shots in a conventional acquisition system. When more than one source \old{are}\new{is} involved in acquisition, either a denser or a wider shot coverage can be obtained for a given constant acquisition period. Figure \ref{fig:demo1} \old{demonstrates}\new{depicts} two simultaneous sources shooting from the same position \old{to}\new{towards} the same direction. In this case, a two-times denser coverage can be obtained. Figure \ref{fig:demo2} \old{demonstrates}\new{depicts} two simultaneous sources far from each other shooting along the same direction, in which case, a two-times wider shot coverage can be obtained. The number of simultaneous sources can be even larger, \old{causing}\new{yielding} a much denser and wider shot coverage. The shooting sequence of the shots and the direction of each source can also be variable. \old{However, i}\new{I}t's natural\new{,} that the observed data will contain\old{s} strong interference, and the more simultaneous sources involved, the \old{stronger}\new{more severe} the interference will be. For the blended acquisition geometry as shown in Figure \ref{fig:demo2}\old{,} we \old{will} acquire \old{the} blended data\old{,} with strong interference, as shown in Figure \ref{fig:blenddemo}. Figure \ref{fig:datademo} shows the acquired data using conventional acquisition, suppos\old{ed}\new{ing} that the two sources in Figure \ref{fig:demo2} are fired with large-enough time interval.
 
+\inputdir{.}
 
-\begin{figure}[htb!]
-  \centering
-% \subfigure[]{\includegraphics[width=0.485\columnwidth,height=0.45\columnwidth]{Fig/demo1}
- \subfigure[]{\includegraphics[width=\columnwidth,height=0.5\columnwidth]{Fig/demo1}
-    \label{fig:demo1}}
-%  \subfigure[]{\includegraphics[width=0.485\columnwidth,height=0.45\columnwidth]{Fig/demo2}
-  \subfigure[]{\includegraphics[width=\columnwidth,height=0.5\columnwidth]{Fig/demo2}
-    \label{fig:demo2}}
-   \caption{Demonstration for denser shot coverage (a) and wider shot coverage (b). Red points denote shot positions for source 1. Green points denote shot positions for source 2. Blue points denote receiver positions. Red and green strings denote the shooting rays. Arrows denote the shooting directions.} 
-   \label{fig:demo1,demo2}%,sean-errorfk}
-\end{figure}
+\multiplot{2}{demo1,demo2}{width=\columnwidth,height=0.5\columnwidth}{Demonstration for denser shot coverage (a) and wider shot coverage (b). Red points denote shot positions for source 1. Green points denote shot positions for source 2. Blue points denote receiver positions. Red and green strings denote the shooting rays. Arrows denote the shooting directions.}
 
-\begin{figure}[htb!]
-  \centering
-% \subfigure[]{\includegraphics[width=0.485\columnwidth,height=0.45\columnwidth]{Fig/demo1}
- \subfigure[]{\includegraphics[width=0.485\columnwidth]{Fig/datademo}
-    \label{fig:datademo}}
-%  \subfigure[]{\includegraphics[width=0.485\columnwidth,height=0.45\columnwidth]{Fig/demo2}
-  \subfigure[]{\includegraphics[width=0.485\columnwidth]{Fig/blenddemo}
-    \label{fig:blenddemo}}
-   \caption{(a) Unblended data. (b) Blended data.} 
-   \label{fig:datademo,blenddemo}%,sean-errorfk}
-\end{figure}
+\multiplot{2}{datademo,blenddemo}{width=0.485\columnwidth}{(a) Unblended data. (b) Blended data.} 
 
 There are two main ways to deal with the challenges \old{set up}\new{posed} by simultaneous-source acquisition. The first \old{way} is \new{to use} \old{using} a first-separate and second-process strategy \cite[]{yangkang20131}, which is also known as "deblending" \cite[]{pana1}. The other is \new{to use}\old{using} direct imaging and waveform inversion by applying some constraint\new{s} to attenuate the artifacts caused by interference \cite[]{verschuur2011,daiwei2012}. Although the direct imaging approach has achieved some encouraging results, the preferable way \new{so far} is still \new{to} focus\old{ing} on the separation of blended data into individual \new{sources as if acquired conventionally}\old{ones}\new{.} \old{for the time being.}
 
@@ -93,18 +74,10 @@ Median filter\new{ing} \old{(MF)} is \old{famous}\new{notable} for its ability \
 \subsection{Independent marine-streamer simultaneous shooting (IMSSS) }
 As shown in Figure \ref{fig:streamer}, our blended survey is based on independent marine-streamer simultaneous shooting (IMSSS). Figure \ref{fig:streamer} shows four \old{indenpendent}\new{independent} marine-streamer sources. Note that the number of simultaneous sources \old{is}\new{need} not \new{be} limited to four. They shoot independently as \new{in} the conventional way and \old{get}\new{yield} their own data. For a 3D seismic survey, the IMSSS can help\old{s} \old{to} cover \old{the}\new{a} 2D surface area \old{much faster}\new{efficiently}. \old{In the case of}\new{With} four sources, the efficiency \old{can be}\new{is} increased by four times. \old{However, t}\new{T}he \old{tremendously} increased efficiency\new{, however,} is compromised by \old{the} interference among the four sources. \old{\new{In} \old{T}\new{t}he following sections we \old{will} introduce a simple but effective way to deal with the problem.}
 
-\begin{figure}[htb!]
-  \centering
-% \subfigure[]{\includegraphics[width=0.485\columnwidth,height=0.45\columnwidth]{Fig/demo1}
- \includegraphics[width=\columnwidth,height=0.5\columnwidth]{Fig/streamer_demo}
-   \caption{Demonstration \old{for}\new{of} independent marine-streamer simultaneous shooting (IMSSS).} 
-    \label{fig:streamer}
-\end{figure}
+\plot{streamer}{width=\columnwidth,height=0.5\columnwidth}{Demonstration \old{for}\new{of} independent marine-streamer simultaneous shooting (IMSSS).} 
 
 \subsection{Transformation between different domains}
 The coherency of \old{the} simultaneous-source data is not the same in different domains. The interference appears coherent in common\new{-}shot gathers (CSG)\old{,}\new{;} however, the interference turns \new{out} to be incoherent when observed in common\new{-}midpoint gathers (CMG), common\new{-}offset gathers (COG) and common\new{-}receiver gathers (CRG).The transformation from shot-receiver domain to midpo\new{i}nt-half-offset domain can be realized by the following equations:
-
-
 
 \begin{align}
 \label{eq:trans1}
@@ -121,19 +94,10 @@ The transformation from shot-offset domain (\old{as }the acquired data from mari
 \end{align}
 where $\mathbf{h}'$ denotes the full offset.
 
-Figure \ref{fig:data-csg} \old{demonstrates}\new{shows} \old{a }synthetic shot-offset domain unblended data simulated from marine-streamer acquisition. Figure \ref{fig:datas-csg} \old{demonstrates}\new{shows} the corresponding shot-offset\new{-}domain blended data using the IMSSS blended acquisition (with two sources). We can observe that the interference from \new{the} other source appears to be coherent in CSG. After transformation from \new{the} shot-offset domain to \new{the} midpoint-half-offset domain, the blending noise \old{turns into}\new{becomes} random \new{and} spike-like\new{,}\old{ noise,} as shown in Figure \ref{fig:datas-cmg}. Then deblending problem thus turns into a common denoising problem. Thus, in this section of examples, we focus on removing spiky noise in CMG. In the following sections, CSG also refers \new{to} the shot-offset domain and CMG also refers \new{to} the midpoint-half-offset domain. 
+Figure \ref{fig:data-csg} \old{demonstrates}\new{shows} \old{a }synthetic shot-offset domain unblended data simulated from marine-streamer acquisition. Figure \ref{fig:datas-csg} \old{demonstrates}\new{shows} the corresponding shot-offset\new{-}domain blended data using the IMSSS blended acquisition (with two sources). We can observe that the interference from \new{the} other source appears to be coherent in CSG. After transformation from \new{the} shot-offset domain to \new{the} midpoint-half-offset domain, the blending noise \old{turns into}\new{becomes} random \new{and} spike-like\new{,}\old{ noise,} as shown in Figure \ref{fig:data-blend}. Then deblending problem thus turns into a common denoising problem. Thus, in this section of examples, we focus on removing spiky noise in CMG. In the following sections, CSG also refers \new{to} the shot-offset domain and CMG also refers \new{to} the midpoint-half-offset domain. 
 
-\begin{figure}[htb!]
-\centering
-\subfigure[]{\includegraphics[width=0.46\columnwidth]{class/Fig/data-csg.pdf}
-\label{fig:data-csg}}
-\subfigure[]{\includegraphics[width=0.46\columnwidth]{class/Fig/datas-csg.pdf}
-\label{fig:datas-csg}}
-\subfigure[]{\includegraphics[width=0.46\columnwidth]{class/Fig/data-b.pdf}
-\label{fig:datas-cmg}}
-\caption{(a) Unblended data in \new{the} shot-offset domain. (b) Blended data in \new{the} shot-offset domain. (c) Blended data in \new{the} midpoint-half-offset domain.}
-\label{fig:data-csg,datas-csg,datas-cmg}
-\end{figure}
+\inputdir{class}
+\multiplot{3}{data-csg,datas-csg,data-blend}{width=0.46\columnwidth}{(a) Unblended data in \new{the} shot-offset domain. (b) Blended data in \new{the} shot-offset domain. (c) Blended data in \new{the} midpoint-half-offset domain.}
 
 \subsection{Median filter\new{ing}}
 Conventional \new{median filtering}\old{MF} is based on a scalar-value sorting process. When a set of scalars is sorted \old{to be an}\new{into an} ascending or descending sequence, the middle value is chosen \old{to}\new{as} standard for this sequence. In signal-processing or geophysical data analysis fields, this filter is commonly used to remove spiky noise. The more general mathematical formulation of \old{a} \new{median filtering}\old{MF} is given as:
@@ -147,22 +111,8 @@ Unlike 2D signal\old{-}processing \old{field}, where the signal is multi-dimensi
 
 \old{In the case of}\new{For} dipping events, \old{a} multidimensional \new{median filtering}\old{MF} can be used as a substitute \cite[]{mediandeblend}\old{, otherwise \old{the} dipping events will be harmed seriously}. \old{However, a m}\new{M}ultidimensional \new{median filtering}\old{MF}\new{, however,} requires a precise estimation of the local slope of the seismic events, which may be difficult in field\new{-}data processing \old{because of}\new{in the presence of} \old{the} intense random or spiky noise. Besides, using \old{a} multidimensional \new{median filtering}\old{MF} needs much more computational cost and memory. \old{In this paper}\new{Here}, we propose \old{to use}\new{using} \new{median filtering}\old{MF} after NMO in the CMG, where the events are flatten and the effectiveness of \new{median filtering}\old{MF} is maximized.
 
-
-\begin{figure}[htb!]
-  \centering
-% \subfigure[]{\includegraphics[width=0.485\columnwidth,height=0.45\columnwidth]{Fig/demo1}
- \subfigure[]{\includegraphics[width=0.485\columnwidth]{timespace/Fig/huos}
-    \label{fig:huos}}
- \subfigure[]{\includegraphics[width=0.485\columnwidth]{timespace/Fig/huos-tmf}
-    \label{fig:huos-tmf}}
- \subfigure[]{\includegraphics[width=0.485\columnwidth]{timespace/Fig/huos-xmf7}
-    \label{fig:huos-xmf7}}
-%  \subfigure[]{\includegraphics[width=0.485\columnwidth,height=0.45\columnwidth]{Fig/demo2}
-  \subfigure[]{\includegraphics[width=0.485\columnwidth]{timespace/Fig/huos-xmf11}
-    \label{fig:huos-xmf11}}
-   \caption{(a) Blended data. (b) Median filtering along \new{the} time direction (filter length is 11). (c) Median filtering along space direction (filter length is 7). (d) Median filtering along space direction (filter length is 11). } 
-   \label{fig:huos,huos-tmf,huos-xmf7,huos-xmf11}%,sean-errorfk}
-\end{figure}
+\inputdir{timespace}
+\multiplot{4}{huos,huos-tmf,huos-xmf7,huos-xmf11}{width=0.485\columnwidth}{(a) Blended data. (b) Median filtering along \new{the} time direction (filter length is 11). (c) Median filtering along space direction (filter length is 7). (d) Median filtering along space direction (filter length is 11). } 
 
 \subsection{Median filtering after NMO}
 By utilizing the effectiveness of \new{median filtering}\old{MF} in removing spike-like noise and inserting \new{median filtering}\old{MF} into a common seismic processing workflow, we propose the following new processing workflow:
@@ -179,43 +129,35 @@ The key point in the above workflow is flattening the seismic events in order to
 
 \section{Examples}
 
-\begin{figure}[htb!]
-\centering
-\subfigure[]{\includegraphics[width=0.46\columnwidth,height=0.600\columnwidth]{simple/Fig/cmpa.pdf}
-\label{fig:cmpa}}
-\subfigure[]{\includegraphics[width=0.46\columnwidth,height=0.600\columnwidth]{simple/Fig/cmp.pdf}
-\label{fig:cmp}}
-\subfigure[]{\includegraphics[width=0.46\columnwidth,height=0.600\columnwidth]{simple/Fig/semblancescn.pdf}
-\label{fig:semblancescn}}
-\caption{(a) Clean CMP gather. (b) Blended CMP gather. (c) Velocity scan for blended \old{cmp}\new{CMP} gather.}
-\label{fig:cmpa,cmp,semblancescn}
-\end{figure}
+\inputdir{simple}
+\multiplot{3}{cmpa,cmp,semblancescn}{width=0.46\columnwidth,height=0.600\columnwidth}{(a) Clean CMP gather. (b) Blended CMP gather. (c) Velocity scan for blended \old{cmp}\new{CMP} gather.}
 
-\begin{figure}[htb!]
-\centering
-\subfigure[]{\includegraphics[width=0.46\columnwidth,height=0.600\columnwidth]{simple/Fig/semblancenmo}
-\label{fig:semblancenmo}}
-\subfigure[]{\includegraphics[width=0.46\columnwidth,height=0.600\columnwidth]{simple/Fig/semblancenmomf}
-\label{fig:semblancenmomf}}
-\caption{(a) CMP gather after NMO. (b) CMP gather after NMO and median filtering.}
-\label{fig:semblancenmo,semblancenmomf}
-\end{figure}
+\multiplot{2}{semblancenmo,semblancenmomf}{width=0.46\columnwidth,height=0.600\columnwidth}{(a) CMP gather after NMO. (b) CMP gather after NMO and median filtering.}
 
-\begin{figure}[htb!]
-\centering
-\subfigure[]{\includegraphics[width=0.46\columnwidth,height=0.600\columnwidth]{simple/Fig/semblanceinmo.pdf}
-\label{fig:semblanceinmo}}
-\subfigure[]{\includegraphics[width=0.46\columnwidth,height=0.600\columnwidth]{simple/Fig/semblancediffmf.pdf}
-\label{fig:semblancediffmf}}
-\subfigure[]{\includegraphics[width=0.46\columnwidth,height=0.600\columnwidth]{simple/Fig/semblanceerrormf.pdf}
-\label{fig:semblanceerrormf}}
-\caption{(a) CMP gathering after deblending. (b) Blending noise section. (c) Deblending error section.}
-\label{fig:semblanceinmo,semblancediffmf,semblanceerrormf}
-\end{figure}
+\multiplot{3}{semblanceinmo,semblancediffmf,semblanceerrormf}{width=0.46\columnwidth,height=0.600\columnwidth}{(a) CMP gathering after deblending. (b) Blending noise section. (c) Deblending error section.}
+
 The first example is a single synthetic CMP gather. The clean unblended data, blended data\new{,} and velocity scan of the blended data are shown in Figures \ref{fig:cmpa}, \ref{fig:cmp}\new{,} and \ref{fig:semblancescn}, respectively. Figure \ref{fig:semblancenmo,semblancenmomf} shows the blended data after NMO \new{correction} and deblended data after NMO \new{correction} and median filtering. The \new{median filtering}\old{MF} is effective in that \old{all}\new{most of} the interferences have been removed. After inverse NMO on Figure \ref{fig:semblancenmomf}, the deblended data in CMP gather is shown in Figure \ref{fig:semblanceinmo}. The blending noise section is shown in Figure \ref{fig:semblancediffmf}. From the deblending error section as shown in Figure \ref{fig:semblanceerrormf}, we conclude that the proposed method can achieve \old{perfect}\new{an excellent} result, because the deblending error is small.
+
+\inputdir{synth}
+
+\multiplot{3}{data,data-b,data-db}{width=0.46\columnwidth}{\old{Comparison for}\new{Comparison of} CMP gathers. (a) Original unblended CMP gathers. (b) Blended CMP gathers. (c) Deblended CMP gathers.}
+
+\multiplot{3}{vscan,vscan-b,vscan-db}{width=0.46\columnwidth}{\old{Comparison for}\new{Comparison of} velocity scans. (a) Velocity scan for original unblended data. (b) Velocity scan for blended data. (c) Velocity scan for deblended data.}
+
+\multiplot{3}{pstm,pstm-b,pstm-db}{width=0.46\columnwidth}{\old{Comparison for}\new{Comparison of} migrated images using prestack \old{k}\new{K}irchhoff time migration (PSKTM). (a) Migrated image for unblended data. (b) Migrated image for blended data. (c) Migrated image for deblended data.}
 
 We \old{next use}\new{now provide} two examples to demonstrate the performance of the proposed workflow described \old{in the previous content}\new{previously}. \new{In the next two examples, we use two sources to simulate the blended data.}
 The second example is based on a simple synthetic dataset, which contains four reflectors. The velocity \new{in the} model is linearly increasing along the depth axis. We use Kirchhoff modeling to simulate the CSG and blend \old{them}\new{the data} according to IMSSS. After \old{a} common velocity\new{-}semblance scanning, we can pick the \old{normal moveout (NMO)}\new{NMO} velocity and \old{implement}\new{apply} NMO. \old{After a}\new{A}pplying \old{a} \new{median filtering}\old{MF} with a 9-point filter length along the offset direction\old{, we} remove\new{s} the blending noise. By inverse NMO, we get the deblended dataset in the common\new{-}midpoint domain.  Figure \ref{fig:data,data-b,data-db} shows the \old{comparison for}\new{comparison of} CMG\new{s}. Figure \ref{fig:vscan,vscan-b,vscan-db} shows the \old{comparison for}\new{comparison of} velocity scan, \old{from}\new{in} which we \old{find}\new{see} the velocity scan for the blended CMG is \old{nearly} smeared \old{in}\new{along with} the noise. \old{However, a}\new{A}fter scanning the \old{initially} deblended data \new{coming from the first rough velocity scan and first NMO correction}, we \old{can}\new{however} obtain a convincing velocity map. Using the updated NMO with new velocit\old{y}\new{ies}, we \old{may} get flatter events \old{which is}\new{that are} more suitable for median filtering.  Figure \ref{fig:pstm,pstm-b,pstm-db} shows the \old{comparison for}\new{comparison of} migrated images. \new{In this example, we use prestack kirchhoff time migration (PSKTM) \cite[]{docherty1991} as the migration operator. We then use Dix inversion \cite[]{dix1955} to convert the time image to depth image.} \old{It's obvious that t}\new{T}he migrated image after deblending is much cleaner than that of \new{the} blended data. 
+
+\inputdir{bei}
+
+\multiplot{3}{gulf,gulf-b,cmps-db}{width=0.46\columnwidth}{\old{Comparison for}\new{Comparison of} CMP gathers. (a) Original unblended CMP gathers. (b) Blended CMP gathers. (c) Deblended CMP gathers.}
+
+\multiplot{3}{gulf-vscan,gulf-vscan-b,gulf-vscan-db}{width=0.46\columnwidth}{\old{Comparison for}\new{Comparison of} velocity scans. (a) Velocity scan for original unblended data. (b) Velocity scan for blended data. (c) Velocity scan for deblended data.}
+
+\multiplot{3}{gulf-pstm,gulf-pstm-b,gulf-pstm-db}{width=0.46\columnwidth}{\old{Comparison for}\new{Comparison of} migrated images using prestack \old{k}\new{K}irchhoff time migration (PSKTM). (a) Migrated image for unblended data. (b) Migrated image for blended data. (c) Migrated image for deblended data.}
+
+\multiplot{3}{gulf-pstmzoom,gulf-pstm-bzoom,gulf-pstm-dbzoom}{width=0.46\columnwidth}{\old{Comparison for}\new{Comparison of} zoomed migrated images using prestack \old{k}\new{K}irchhoff time migration (PSKTM). (a) Zoomed migrated image for unblended data. (b) Zoomed migrated image for blended data. (c) Zoomed migrated image for deblended data.}
 
 The third example is a marine field dataset\old{, which comes } from the Gulf of Mexico. Figure \ref{fig:gulf,gulf-b,cmps-db} shows the \old{comparison for}\new{comparison of} CMG\new{s}. Figure \ref{fig:gulf-vscan,gulf-vscan-b,gulf-vscan-db} shows the \old{comparison for}\new{comparison of} velocity scan\new{s}. Figure \ref{fig:gulf-pstm,gulf-pstm-b,gulf-pstm-db} shows the \old{comparison for}\new{comparison of} \new{the} migrated image. \new{In this example, we use the same migration approach to obtain the seismic images.} We \old{can get}\new{have} the similar observation \new{to that for} \old{as} the second example\old{.}\new{:} \old{T}\new{t}he migrated image for the deblended data is cleaner, especially for the shallow part, indicated by the arrows \new{and frame boxes}. \new{For a better view, we zoom the parts indicated by frame boxes and show them in Figure \ref{fig:gulf-pstmzoom,gulf-pstm-bzoom,gulf-pstm-dbzoom}. It's obvious to see the improvement for the final migrated image after using the proposed deblending approach.}
 
@@ -224,92 +166,6 @@ We have proposed a basic workflow for dealing with blended data. The processing 
 
 \section{Acknowledgments}
 Yangkang Chen would like to thank FairfieldNodal for the opportunity for a summer internship. We also thank Sergey Fomel, Josef Paffenholz and Araz Mahdad for inspiring discussions and helpful suggestions. We \old{also} thank developers of Madagascar open-source platform for providing accessible codes.
-
-
-
-\begin{figure}[htb!]
-\centering
-\subfigure[]{\includegraphics[width=0.46\columnwidth]{synth/Fig/data.pdf}
-\label{fig:data}}
-\subfigure[]{\includegraphics[width=0.46\columnwidth]{synth/Fig/data-b.pdf}
-\label{fig:data-b}}
-\subfigure[]{\includegraphics[width=0.46\columnwidth]{synth/Fig/data-db.pdf}
-\label{fig:data-db}}
-\caption{\old{Comparison for}\new{Comparison of} CMP gathers. (a) Original unblended CMP gathers. (b) Blended CMP gathers. (c) Deblended CMP gathers.}
-\label{fig:data,data-b,data-db}
-\end{figure}
-
-\begin{figure}[htb!]
-\centering
-\subfigure[]{\includegraphics[width=0.46\columnwidth]{synth/Fig/vscan.pdf}
-\label{fig:vscan}}
-\subfigure[]{\includegraphics[width=0.46\columnwidth]{synth/Fig/vscan-b.pdf}
-\label{fig:vscan-b}}
-\subfigure[]{\includegraphics[width=0.46\columnwidth]{synth/Fig/vscan-db.pdf}
-\label{fig:vscan-db}}
-\caption{\old{Comparison for}\new{Comparison of} velocity scans. (a) Velocity scan for original unblended data. (b) Velocity scan for blended data. (c) Velocity scan for deblended data.}
-\label{fig:vscan,vscan-b,vscan-db}
-\end{figure}
-
-\begin{figure}[htb!]
-\centering
-\subfigure[]{\includegraphics[width=0.46\columnwidth]{synth/Fig/pstm.pdf}
-\label{fig:pstm}}
-\subfigure[]{\includegraphics[width=0.46\columnwidth]{synth/Fig/pstm-b.pdf}
-\label{fig:pstm-b}}
-\subfigure[]{\includegraphics[width=0.46\columnwidth]{synth/Fig/pstm-db.pdf}
-\label{fig:pstm-db}}
-\caption{\old{Comparison for}\new{Comparison of} migrated images using prestack \old{k}\new{K}irchhoff time migration (PSKTM). (a) Migrated image for unblended data. (b) Migrated image for blended data. (c) Migrated image for deblended data.}
-\label{fig:pstm,pstm-b,pstm-db}
-\end{figure}
-
-\begin{figure}[htb!]
-\centering
-\subfigure[]{\includegraphics[width=0.46\columnwidth]{bei/Fig/gulf.pdf}
-\label{fig:gulf}}
-\subfigure[]{\includegraphics[width=0.46\columnwidth]{bei/Fig/gulf-b.pdf}
-\label{fig:gulf-b}}
-\subfigure[]{\includegraphics[width=0.46\columnwidth]{bei/Fig/cmps-db.pdf}
-\label{fig:cmps-db}}
-\caption{\old{Comparison for}\new{Comparison of} CMP gathers. (a) Original unblended CMP gathers. (b) Blended CMP gathers. (c) Deblended CMP gathers.}
-\label{fig:gulf,gulf-b,cmps-db}
-\end{figure}
-
-\begin{figure}[htb!]
-\centering
-\subfigure[]{\includegraphics[width=0.46\columnwidth]{bei/Fig/vscan-gulf.pdf}
-\label{fig:gulf-vscan}}
-\subfigure[]{\includegraphics[width=0.46\columnwidth]{bei/Fig/vscan-b.pdf}
-\label{fig:gulf-vscan-b}}
-\subfigure[]{\includegraphics[width=0.46\columnwidth]{bei/Fig/vscan-db.pdf}
-\label{fig:gulf-vscan-db}}
-\caption{\old{Comparison for}\new{Comparison of} velocity scans. (a) Velocity scan for original unblended data. (b) Velocity scan for blended data. (c) Velocity scan for deblended data.}
-\label{fig:gulf-vscan,gulf-vscan-b,gulf-vscan-db}
-\end{figure}
-
-\begin{figure}[htb!]
-\centering
-\subfigure[]{\includegraphics[width=0.46\columnwidth]{bei/Fig/pstm.pdf}
-\label{fig:gulf-pstm}}
-\subfigure[]{\includegraphics[width=0.46\columnwidth]{bei/Fig/pstm-b.pdf}
-\label{fig:gulf-pstm-b}}
-\subfigure[]{\includegraphics[width=0.46\columnwidth]{bei/Fig/pstm-db.pdf}
-\label{fig:gulf-pstm-db}}
-\caption{\old{Comparison for}\new{Comparison of} migrated images using prestack \old{k}\new{K}irchhoff time migration (PSKTM). (a) Migrated image for unblended data. (b) Migrated image for blended data. (c) Migrated image for deblended data.}
-\label{fig:gulf-pstm,gulf-pstm-b,gulf-pstm-db}
-\end{figure}
-
-\begin{figure}[htb!]
-\centering
-\subfigure[]{\includegraphics[width=0.46\columnwidth]{bei/Fig/pstmzoom.pdf}
-\label{fig:gulf-pstmzoom}}
-\subfigure[]{\includegraphics[width=0.46\columnwidth]{bei/Fig/pstm-bzoom.pdf}
-\label{fig:gulf-pstm-bzoom}}
-\subfigure[]{\includegraphics[width=0.46\columnwidth]{bei/Fig/pstm-dbzoom.pdf}
-\label{fig:gulf-pstm-dbzoom}}
-\caption{\old{Comparison for}\new{Comparison of} zoomed migrated images using prestack \old{k}\new{K}irchhoff time migration (PSKTM). (a) Zoomed migrated image for unblended data. (b) Zoomed migrated image for blended data. (c) Zoomed migrated image for deblended data.}
-\label{fig:gulf-pstmzoom,gulf-pstm-bzoom,gulf-pstm-dbzoom}
-\end{figure}
 
 \bibliographystyle{seg}
 \bibliography{nmo}
