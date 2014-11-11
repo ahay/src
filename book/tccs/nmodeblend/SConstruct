@@ -1,5 +1,3 @@
 from rsf.tex import*
-import os, sys
-os.environ['PSTEXPENOPTS']='color=y fat=3 fatmult=1.5 serifs=n'
 
 End(use='amsmath,subfigure,listings',color='ALL')
