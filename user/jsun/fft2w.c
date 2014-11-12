@@ -140,6 +140,7 @@ void fft2(float *inp      /* [n1*n2] */,
     
 #ifdef SF_HAS_FFTW
     fftwf_execute(cfg);
+
     for (i1=0; i1 < nk*n2; i1++)
       out[i1] = dd[i1];
 #else	
@@ -163,17 +164,7 @@ void fft2(float *inp      /* [n1*n2] */,
 void ifft2_allocate(sf_complex *inp /* [nk*n2] */)
 /*< allocate inverse transform >*/
 {
-#ifdef SF_HAS_FFTW
-    icfg = cmplx? 
-	fftwf_plan_dft_2d(n2,n1,
-			  (fftwf_complex *) inp, 
-			  (fftwf_complex *) cc[0],
-			  FFTW_BACKWARD, FFTW_MEASURE):
-	fftwf_plan_dft_c2r_2d(n2,n1,
-			      (fftwf_complex *) inp, ff[0],
-			      FFTW_MEASURE);
-    if (NULL == icfg) sf_error("FFTW failure.");
-#endif
+  /* for backward compatibility */
 }
 
 void ifft2(float *out      /* [n1*n2] */, 
@@ -183,6 +174,23 @@ void ifft2(float *out      /* [n1*n2] */,
     int i1, i2;
 
 #ifdef SF_HAS_FFTW
+    if (NULL==icfg) {
+      icfg = cmplx? 
+	fftwf_plan_dft_2d(n2,n1,
+			  (fftwf_complex *) dd, 
+			  (fftwf_complex *) cc[0],
+			  FFTW_BACKWARD, FFTW_MEASURE):
+	fftwf_plan_dft_c2r_2d(n2,n1,
+			      (fftwf_complex *) dd, ff[0],
+			      FFTW_MEASURE);
+      if (NULL == icfg) sf_error("FFTW failure.");
+    }
+#endif
+
+#ifdef SF_HAS_FFTW
+    for (i1=0; i1 < nk*n2; i1++)
+      dd[i1] = inp[i1];
+
     fftwf_execute(icfg);
 #else
     for (i1=0; i1 < nk; i1++) {
