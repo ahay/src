@@ -86,94 +86,35 @@ The first field data (Figure \ref{fig:data}) is a land seismic survey used previ
 The deep-layer of the TF cube show coherent frequency components, indicating the %layered shape, which may corresponds to the deep-layer 
 potential week signal which can not be sensed visually or by the other two TF analysis approaches. The detection of deep-layer week signal is significant because these weak signals usually indicate the existence of layers that has obvious impedance difference compared with their overburden layers. Especially when the detected signals are mainly existing in the low frequency band, the detection will indicate the existence of residual oil\&gas traps.
 
+\inputdir{gch1}
 
-\begin{figure}[htb!]
-  \centering
-  \subfigure[]{\includegraphics[width=\columnwidth,height=0.320\columnwidth]{gch1/Fig/s-0}
-    \label{fig:s-0}}
-  \subfigure[]{\includegraphics[width=\columnwidth,height=0.320\columnwidth]{gch1/Fig/st-0}
-    \label{fig:st-0}}
-  \subfigure[]{\includegraphics[width=\columnwidth,height=0.320\columnwidth]{gch1/Fig/proj-0}
-    \label{fig:proj-0}}
-  \subfigure[]{\includegraphics[width=\columnwidth,height=0.320\columnwidth]{gch1/Fig/gch1-tfsswt}
-    \label{fig:gch1-tfsswt}}
-	\caption{(a) Synthetic signal with three constant-frequency components and two spikes, borrowed from \cite[]{guochang20112}. (b) Time-frequency map of the S transform. (c) Time-frequency map using local attributes. (d) Time-frequency map using the synchrosqueezing wavelet transform.}
-   \label{fig:s-0,st-0,proj-0,gch1-tfsswt}
-\end{figure}
-
+\multiplot{4}{s-0,st-0,proj-0,gch1-tfsswt}{width=\columnwidth,height=0.320\columnwidth}{(a) Synthetic signal with three constant-frequency components and two spikes, borrowed from \cite[]{guochang20112}. (b) Time-frequency map of the S transform. (c) Time-frequency map using local attributes. (d) Time-frequency map using the synchrosqueezing wavelet transform.}
 
 The second field data example is a post-stack field data set, which is also used in the literature by \cite{guochang20112}. The data is shown in Figure \ref{fig:data2}. In this example, we extract three constant-frequency slices corresponding to 20Hz, 40Hz, and 60 Hz, using three different TF decomposition approaches: TF decomposition using the S transform, TF decomposition using local attributes and TF decomposition using the SSWT. We also extract a time-frequency spectral map for the 80th trace in the field data shown in Figure \ref{fig:data2}. All the constant-frequency slices and TF spectral map are shown in Figure \ref{fig:s1-0,s2-0,s3-0,tf-s,l1-0,l2-0,l3-0,tf-l,ss1-0,ss2-0,ss3-0,tf-ss}.
 
+\inputdir{pp}
+
+\multiplot{3}{data,lowf,higf}{width=0.8\columnwidth,height=0.45\columnwidth}{(a) Input data. (a) Frequency slice corresponding to 30 Hz. (b) Frequency slice corresponding to 60 Hz.}
+
+\multiplot{3}{timefreq-st,timefreq,pp-tfsswt}{width=0.8\columnwidth,height=0.45\columnwidth}{(a) Time-frequency map of the S transform. (b) Time-frequency map using local attributes. (c) Time-frequency map using the synchrosqueezing wavelet transform.}
+
 From the constant-frequency slices shown in Figure \ref{fig:s1-0,s2-0,s3-0,tf-s,l1-0,l2-0,l3-0,tf-l,ss1-0,ss2-0,ss3-0,tf-ss}, we can observe that the S transform has the lowest time resolution, followed by the local-attributes related TF decomposition. The constant-frequency slices and the TF spectral map from the SSWT both show that the TF decomposed results have the largest resolution both in time and frequency. From the TF spectral map, the S transform has a slightly lower frequency resolution. By the SSWT based TF decomposition, we can detect several low-frequency anomalies. In this example, we just emphasize four clearest anormalies, and point out them by four frame boxes with different colors. To better illustrate the result, let us first focus on Figure \ref{fig:ss1}. The four frame boxes pointed out four strong-amplitude areas, which do not show in its corresponding higher-frequency slices. Thus, these four anomalies may indicate potential oil\&gas traps with high probability. Even though from the constant-frequency slices using other two approaches have more or less some anomalies, these anomalies are not very easy to detect. Some highly-potential sweet spots have been lost by using the other two approaches, e.g., area pointed out by the four frame boxes. The best strategy for implementing the SSWT based TF decomposition onto the interpretation for subsurface phenomenons is to combine the SSWT based TF decomposition with the conventional approaches. While the SSWT based TF decomposition can point out the potential anomalies with high fidelity, a more convincing conclusion can be obtained by considering the results from the other approaches.
+
+\inputdir{lowf}
+
+\multiplot{12}{s1,s2,s3,tf-s,l1,l2,l3,tf-l,ss1,ss2,ss3,tf-ss}{width=0.25\columnwidth,height=0.320\columnwidth}{(a)-(c) Frequency slices of 20Hz, 40Hz, and 60 Hz, using the S transform. (d) Time-frequency spectral map using the S transform for 80th trace of the seismic profile shown in Figure \ref{fig:data2}. (e)-(g) Frequency slices of 20Hz, 40Hz, and 60 Hz, using the local-attributes related TF decomposition. (h) Time-frequency spectral map using the local-attributes related TF decomposition for 80th trace of the seismic profile shown in Figure \ref{fig:data2}.  (i)-(k) Frequency slices of 20Hz, 40Hz, and 60 Hz, using the SSWT. (l) Time-frequency spectral map using the SSWT for 80th trace of the seismic profile shown in Figure \ref{fig:data2}. }
+
+\plot{old-1}{width=\columnwidth,height=0.55\columnwidth}{Field data example for detecting low frequency anomalies.}
 
 \section{Conclusions}
 We have proposed a new TF analysis approach for seismic data using the synchrosqueezing wavelet transform. The proposed approach can achieve higher resolution both in time and frequency compared with the S transform and the local-attributes based TF decomposition. Numerical examples show that the SSWT can capture the variable-frequency components embedded in the non-stationary signal exactly. We show the potential of the SSWT %based time-frequency decomposition 
 in detecting anomalies of high-frequency attenuation, which is crucial for finding  oil \& gas traps. Field data  tests also show that the proposed TF analysis approach can also help to detect deep-layer weak signal that is usually smeared in seismic data, which in turns can help to find deserted residual oil \& gas.
 
-\begin{figure}[htb!]
-  \centering
-  \subfigure[]{\includegraphics[width=0.8\columnwidth,height=0.45\columnwidth]{pp/Fig/data}
-    \label{fig:data}}
-  \subfigure[]{\includegraphics[width=0.8\columnwidth,height=0.45\columnwidth]{pp/Fig/lowf}
-    \label{fig:lowf}}
-  \subfigure[]{\includegraphics[width=0.8\columnwidth,height=0.45\columnwidth]{pp/Fig/higf}
-    \label{fig:higf}}
-	\caption{(a) Input data. (a) Frequency slice corresponding to 30 Hz. (b) Frequency slice corresponding to 60 Hz.}
-   \label{fig:data,lowf,higf}
-\end{figure}
 
-\begin{figure}[htb!]
-  \centering
-  \subfigure[]{\includegraphics[width=0.8\columnwidth,height=0.45\columnwidth]{pp/Fig/timefreq-st}
-    \label{fig:timefreq-st}}
-  \subfigure[]{\includegraphics[width=0.8\columnwidth,height=0.45\columnwidth]{pp/Fig/timefreq}
-    \label{fig:timefreq}}
-  \subfigure[]{\includegraphics[width=0.8\columnwidth,height=0.45\columnwidth]{pp/Fig/pp-tfsswt}
-    \label{fig:pp-tfsswt}}
-	\caption{(a) Time-frequency map of the S transform. (b) Time-frequency map using local attributes. (c) Time-frequency map using the synchrosqueezing wavelet transform.}
-   \label{fig:timefreq-st,timefreq,pp-tfsswt}
-\end{figure}
-
-\begin{figure}[htb!]
-  \centering
-  \includegraphics[width=\columnwidth,height=0.55\columnwidth]{lowf/Fig/old-1}
-	\caption{Field data example for detecting low frequency anomalies.}
-   \label{fig:data2}
-\end{figure}
 
 \section{Acknowledgments}
 We would like to thank Guochang Liu for making the benchmark synthetic example publicly available, and developers of Madagascar software package for providing corresponding codes for testing the algorithms and preparing the figures.
 
-\begin{figure}[htb!]
-  \centering
-  \subfigure[]{\includegraphics[width=0.25\columnwidth,height=0.320\columnwidth]{lowf/Fig/s1-0}
-    \label{fig:s1}}
-  \subfigure[]{\includegraphics[width=0.25\columnwidth,height=0.320\columnwidth]{lowf/Fig/s2-0}
-    \label{fig:s2}}
-  \subfigure[]{\includegraphics[width=0.25\columnwidth,height=0.320\columnwidth]{lowf/Fig/s3-0}
-    \label{fig:s3}}
-  \subfigure[]{\includegraphics[width=0.18\columnwidth,height=0.320\columnwidth]{lowf/Fig/tf-s}
-    \label{fig:tf-s}}
-  \subfigure[]{\includegraphics[width=0.25\columnwidth,height=0.320\columnwidth]{lowf/Fig/l1-0}
-    \label{fig:l1}}
-  \subfigure[]{\includegraphics[width=0.25\columnwidth,height=0.320\columnwidth]{lowf/Fig/l2-0}
-    \label{fig:l2}}
-  \subfigure[]{\includegraphics[width=0.25\columnwidth,height=0.320\columnwidth]{lowf/Fig/l3-0}
-    \label{fig:l3}}
-  \subfigure[]{\includegraphics[width=0.18\columnwidth,height=0.320\columnwidth]{lowf/Fig/tf-l}
-    \label{fig:tf-l}}
-  \subfigure[]{\includegraphics[width=0.25\columnwidth,height=0.320\columnwidth]{lowf/Fig/ss1-0}
-    \label{fig:ss1}}
-  \subfigure[]{\includegraphics[width=0.25\columnwidth,height=0.320\columnwidth]{lowf/Fig/ss2-0}
-    \label{fig:ss2}}
-  \subfigure[]{\includegraphics[width=0.25\columnwidth,height=0.320\columnwidth]{lowf/Fig/ss3-0}
-    \label{fig:ss3}}
-  \subfigure[]{\includegraphics[width=0.18\columnwidth,height=0.320\columnwidth]{lowf/Fig/tf-ss}
-    \label{fig:tf-ss}}
-
-	\caption{(a)-(c) Frequency slices of 20Hz, 40Hz, and 60 Hz, using the S transform. (d) Time-frequency spectral map using the S transform for 80th trace of the seismic profile shown in Figure \ref{fig:data2}. (e)-(g) Frequency slices of 20Hz, 40Hz, and 60 Hz, using the local-attributes related TF decomposition. (h) Time-frequency spectral map using the local-attributes related TF decomposition for 80th trace of the seismic profile shown in Figure \ref{fig:data2}.  (i)-(k) Frequency slices of 20Hz, 40Hz, and 60 Hz, using the SSWT. (l) Time-frequency spectral map using the SSWT for 80th trace of the seismic profile shown in Figure \ref{fig:data2}. }
-   \label{fig:s1-0,s2-0,s3-0,tf-s,l1-0,l2-0,l3-0,tf-l,ss1-0,ss2-0,ss3-0,tf-ss}
-\end{figure}
 
 \bibliographystyle{seg}
 \bibliography{synwav}
