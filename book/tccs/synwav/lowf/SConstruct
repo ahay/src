@@ -121,7 +121,7 @@ Flow('st','old','st  | math output="abs(input)" | real ')
 # INITIALIZATION for Matlab
 ########################################################################
 matlab         = WhereIs('matlab')
-matROOT = '../matfun'
+matROOT = '../Matfun'
 matfun = 'lowf'
 matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
 

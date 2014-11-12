@@ -45,7 +45,7 @@ Flow('timefreq-stft','data','st rect=5 nw=%d dw=%g'%(nf,df))
 # INITIALIZATION for Matlab
 ########################################################################
 matlab         = WhereIs('matlab')
-matROOT = '../matfun'
+matROOT = '../Matfun'
 matfun = 'pp'
 matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
 
