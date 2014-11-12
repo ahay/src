@@ -63,6 +63,23 @@ struct fdm3{
 };
 /*^*/
 
+
+typedef struct{
+    int ix,iz;
+    int fx,fz,nx,nz;
+    float sincx[9], sincz[9];
+}scoef2;
+/*^*/
+
+
+typedef struct{
+    int iy,ix,iz;
+    int fy,fx,fz,ny,nx,nz;
+    float sincy[9],sincx[9], sincz[9];
+}scoef3;
+/*^*/
+
+
 struct lcoef2{
     int n;
     float *w00;
@@ -511,6 +528,231 @@ void bfill(float** b,
     }
 }
 
+
+/*------------------------------------------------------------*/
+void sinc3d_init(int nc,
+                 pt3d* aa,
+                 fdm3d fdm,
+                 scoef3 *swout)
+/*< init the sinc3d interpolation for injection/extraction >*/
+{
+  float inp[9]; 
+  float xo[9];
+  for (int i=0; i<9; i++)
+    inp[i] = 0.0f;
+  inp[4] = 1.0f;
+  // allocate and set loop
+  for (int ic=0; ic<nc; ++ic){
+    int iy = (int)((aa[ic].y -fdm->oypad)/fdm->dy+0.499f); 
+    swout[ic].iy = iy;
+    swout[ic].fy = 0;
+    swout[ic].ny = 9;
+    float dy = iy*fdm->dy+fdm->oypad-aa[ic].y; 
+    for (int i=0; i<9; ++i)
+      xo[i] = -4.0f+dy+i*1.0f;
+   	ints8r (9, 1.0f, -4.0, inp, 0.0f, 0.0f, 9, xo, swout[ic].sincy);
+    if(swout[ic].sincy[4]==1.0f){
+      swout[ic].ny = 1;
+      swout[ic].fy = 4;
+    }
+
+    int ix = (int)((aa[ic].x -fdm->oxpad)/fdm->dx+0.499f); 
+    swout[ic].ix = ix;
+    swout[ic].fx = 0;
+    swout[ic].nx = 9;
+    float dx = ix*fdm->dx+fdm->oxpad-aa[ic].x; 
+    for (int i=0; i<9; ++i)
+      xo[i] = -4.0f+dx+i*1.0f;
+   	ints8r (9, 1.0f, -4.0, inp, 0.0f, 0.0f, 9, xo, swout[ic].sincx);
+    if(swout[ic].sincx[4]==1.0f){
+      swout[ic].nx = 1;
+      swout[ic].fx = 4;
+    }
+
+    int iz = (int)((aa[ic].z -fdm->ozpad)/fdm->dz+0.499f);
+    swout[ic].iz = iz;
+    swout[ic].fz = 0;
+    swout[ic].nz = 9;
+    float dz = iz*fdm->dz+fdm->ozpad-aa[ic].z;
+    for (int i=0; i<9; ++i)
+      xo[i] = -4.0+dz+i*1.0f;
+   	ints8r (9, 1.0f, -4.0, inp, 0.0f, 0.0f, 9, xo, swout[ic].sincz);
+    if(swout[ic].sincz[4]==1.0f){
+      swout[ic].nz = 1;
+      swout[ic].fz = 4;
+    }
+
+  }  
+}
+
+
+/*------------------------------------------------------------*/
+void sinc3d_inject(float***uu,
+		   float *dd,
+		   scoef3 *ca,
+       int na)
+/*< inject into wavefield >*/
+{
+  int   ia, iy, ix, iz, sy, sx, sz;
+  float w, wy, wx, wz;
+
+  for(ia=0;ia<na;ia++) {	
+    w = dd[ia];
+    iy = ca[ia].iy;
+    ix = ca[ia].ix;
+    iz = ca[ia].iz;
+    for (int iyy=ca[ia].fy; iyy<ca[ia].fy+ca[ia].ny;iyy++){
+      sy = -4 +iyy;
+      wy = ca[ia].sincy[iyy];
+      for (int ixx=ca[ia].fx; ixx<ca[ia].fx+ca[ia].nx;ixx++){
+        sx = -4 +ixx;
+        wx = ca[ia].sincx[ixx];
+        for(int izz=ca[ia].fz; izz<ca[ia].fz+ca[ia].nz; izz++){
+          sz = -4 +izz;
+          wz = ca[ia].sincz[izz];
+          uu[iy+sy][ix+sx][iz+sz] += w*wy*wx*wz; // scatter
+        }
+      }  
+    }
+  }
+}
+
+/*------------------------------------------------------------*/
+void sinc3d_extract(float***uu,
+		   float *dd,
+		   scoef3 *ca,
+       int na)
+/*< inject into wavefield >*/
+{
+  int   ia, iy, ix, iz, sy, sx, sz;
+  float wy, wx, wz;
+
+  for(ia=0;ia<na;ia++) {	
+    iy = ca[ia].iy;
+    ix = ca[ia].ix;
+    iz = ca[ia].iz;
+    for (int iyy=ca[ia].fy; iyy<ca[ia].fy+ca[ia].ny;iyy++){
+      sy = -4 +iyy;
+      wy = ca[ia].sincy[iyy];
+      for (int ixx=ca[ia].fx; ixx<ca[ia].fx+ca[ia].nx;ixx++){
+        sx = -4 +ixx;
+        wx = ca[ia].sincx[ixx];
+        for(int izz=ca[ia].fz; izz<ca[ia].fz+ca[ia].nz; izz++){
+          sz = -4 +izz;
+          wz = ca[ia].sincz[izz];
+          dd[ia] += uu[iy+sy][ix+sx][iz+sz]*wy*wx*wz; // gather 
+        }
+      }  
+    }
+  }
+}
+
+
+
+/*------------------------------------------------------------*/
+void sinc2d_init(int nc,
+                 pt2d* aa,
+                 fdm2d fdm,
+                 scoef2 *swout)
+/*< init the sinc2d interpolation for injection/extraction >*/
+{
+
+  float inp[9]; 
+  float xo[9];
+  for (int i=0; i<9; i++)
+    inp[i] = 0.0f;
+  inp[4] = 1.0f;
+  // allocate and set loop
+  for (int ic=0; ic<nc; ++ic){
+    int ix = (int)((aa[ic].x -fdm->oxpad)/fdm->dx+0.499f); 
+    int iz = (int)((aa[ic].z -fdm->ozpad)/fdm->dz+0.499f);
+    swout[ic].fx = 0;
+    swout[ic].nx = 9;
+    swout[ic].fz = 0;
+    swout[ic].nz = 9;
+  
+    swout[ic].ix = ix;
+    swout[ic].iz = iz;
+    
+    float dx = ix*fdm->dx+fdm->oxpad-aa[ic].x; 
+    float dz = iz*fdm->dz+fdm->ozpad-aa[ic].z;
+
+    for (int i=0; i<9; ++i)
+      xo[i] = -4.0f+dx+i*1.0f;
+   	ints8r (9, 1.0f, -4.0, inp, 0.0f, 0.0f, 9, xo, swout[ic].sincx);
+
+    if(swout[ic].sincx[4]==1.0f){
+      swout[ic].nx = 1;
+      swout[ic].fx = 4;
+    }
+
+    for (int i=0; i<9; ++i)
+      xo[i] = -4.0+dz+i*1.0f;
+   	ints8r (9, 1.0f, -4.0, inp, 0.0f, 0.0f, 9, xo, swout[ic].sincz);
+
+    if(swout[ic].sincz[4]==1.0f){
+      swout[ic].nz = 1;
+      swout[ic].fz = 4;
+    }
+
+  }  
+}
+
+
+/*------------------------------------------------------------*/
+void sinc2d_inject(float**uu,
+		   float *dd,
+		   scoef2 *ca,
+       int na)
+/*< inject into wavefield >*/
+{
+
+  int   ia, ix, iz, sx, sz;
+  float w, wx, wz;
+
+  for(ia=0;ia<na;ia++) {	
+    w = dd[ia];
+    ix = ca[ia].ix;
+    iz = ca[ia].iz;
+    for (int ixx=ca[ia].fx; ixx<ca[ia].fx+ca[ia].nx;ixx++){
+      sx = -4 +ixx;
+      wx = ca[ia].sincx[ixx];
+      for(int izz=ca[ia].fz; izz<ca[ia].fz+ca[ia].nz; izz++){
+        sz = -4 +izz;
+        wz = ca[ia].sincz[izz];
+        uu[ix+sx][iz+sz] += w*wx*wz; // scatter
+      }
+    }  
+  }
+}
+
+/*------------------------------------------------------------*/
+void sinc2d_extract(float**uu,
+		   float *dd,
+		   scoef2 *ca,
+       int na)
+/*< inject into wavefield >*/
+{
+  int   ia, ix, iz, sx, sz;
+  float wx, wz;
+
+  for(ia=0;ia<na;ia++) {	
+    ix = ca[ia].ix;
+    iz = ca[ia].iz;
+    for (int ixx=ca[ia].fx; ixx<ca[ia].fx+ca[ia].nx-1; ixx++){
+      sx = -4 +ixx;
+      wx = ca[ia].sincx[ixx];
+      for(int izz=ca[ia].fz; izz<ca[ia].fz+ca[ia].nz-1; izz++){
+        sz = -4 +izz;
+        wz = ca[ia].sincz[izz];
+        dd[ia] += uu[ix+sx][iz+sz]*wx*wz; // gather
+      }
+    }  
+  }
+}
+
+
+
 /*------------------------------------------------------------*/
 lint2d lint2d_make(int    na, 
 		   pt2d*  aa, 
@@ -534,6 +776,7 @@ lint2d lint2d_make(int    na,
     ca->jx  = sf_intalloc(na);
 
     for (ia=0;ia<na;ia++) {
+	
 	if(aa[ia].z >= fdm->ozpad && 
 	   aa[ia].z <  fdm->ozpad + (fdm->nzpad-1)*fdm->dz &&
 	   aa[ia].x >= fdm->oxpad && 
@@ -556,6 +799,8 @@ lint2d lint2d_make(int    na,
 	ca->w01[ia] = (  f1)*(1-f2);
 	ca->w10[ia] = (1-f1)*(  f2);
 	ca->w11[ia] = (  f1)*(  f2);
+
+	/* sf_warning("%g",ca->w00[ia]+ca->w01[ia]+ca->w10[ia]+ca->w11[ia]); */
     }
 
     return ca;
@@ -1184,7 +1429,7 @@ contrasts */
     
     spo = (sponge) sf_alloc(1,sizeof(*spo));    
     spo->w = sf_floatalloc(nb);
-    sb = 4*nb;               
+    sb = 4.0*nb;               
     for(ib=0; ib<nb; ib++) {
 	fb = ib/(sqrt(2.0)*sb);
 	spo->w[ib] = exp(-fb*fb);
