@@ -18,8 +18,6 @@ def param(par):
     if(not par.has_key('gaus')):     par['gaus']='y'
 
     #Default parameters:
-    if(not par.has_key('szone')):  par['szone']='n',
-    if(not par.has_key('rzone')):  par['rzone']='n',
     if(not par.has_key('nix')):  par['nix']=par['nx']
     if(not par.has_key('nqx')):  par['nqx']=par['nx']
     if(not par.has_key('niz')):  par['niz']=par['nz']
@@ -28,6 +26,7 @@ def param(par):
     if(not par.has_key('oqx')):  par['oqx']=par['ox']
     if(not par.has_key('oiz')):  par['oiz']=par['oz']
     if(not par.has_key('oqz')):  par['oqz']=par['oz']
+        
 # ------------------------------------------------------------
 def awepar(par):
     awe = ' ' + \
@@ -36,10 +35,10 @@ def awepar(par):
           verb=%(verb)s fsrf=%(fsrf)s
           snap=%(snap)s jsnap=%(jsnap)d jdata=%(jdata)d
           dabc=%(dabc)s nb=%(nb)d
-          szone=%(szone)s rzone=%(rzone)s 
           nqx=%(nqx)d nqz=%(nqz)d
           oqx=%(oqx)g oqz=%(oqz)g 
-          nix=%(nix)d niz=%(niz)d oix=%(oix)g oiz=%(oiz)g
+          nix=%(nix)d niz=%(niz)d
+          oix=%(oix)g oiz=%(oiz)g
           '''%par + ' '
     return awe
 
