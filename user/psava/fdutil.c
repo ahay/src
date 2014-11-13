@@ -1,4 +1,6 @@
 #include <rsf.h>
+#include <rsf_su.h>
+
 #include "fdutil.h"
 #include <stdio.h>
 
