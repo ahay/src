@@ -195,11 +195,7 @@ int main(int argc, char ** argv) {
       ewind[1]=valparse<float>(*pars,"eww2",0.0f);
       ewind[2]=valparse<float>(*pars,"eww3",0.0f);
       
-      // need to read in model space for bg input to GridWindowOp
-      Vector<ireal> m_in(op.getDomain());
-      AssignFilename minfn(valparse<std::string>(*pars,"csq"));
-      Components<ireal> cmin(m_in);
-      cmin[0].eval(minfn);
+      // set bg to be the output velocity in GridMaskOp
       GridMaskOp mop(op.getDomain(),m,swind,ewind);
       
 
