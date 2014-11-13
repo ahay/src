@@ -217,13 +217,10 @@ namespace RVL {
     }
 
     virtual bool compare(LinearAlgebraPackage<Scalar> const & lap) const {
-      try {
-	dynamic_cast<RVLLinearAlgebraPackage<Scalar> const &>(lap);
-	return true;
-      }
-      catch (bad_cast) {
-	return false;
-      }
+      RVLLinearAlgebraPackage<Scalar> const * laptr=NULL;
+      laptr=dynamic_cast<RVLLinearAlgebraPackage<Scalar> const *>(&lap);
+      if (laptr) return true;
+      return false;
     }
 
     /** added to spparate instantiation from initialization */

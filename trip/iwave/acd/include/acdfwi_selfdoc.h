@@ -7,10 +7,12 @@ const char * sdoc[] = {
   " Authors: Muhong Zhou, Yin Huang, William W. Symes",
   " ",
 #include <usage_selfdoc.h>
-  " ",
-  " Parameters for acoustic constant density operator:",
-  " ",
-#include <acd_pars.h>
+#include <acdfwi_pars.h>
+#include <segytapermute_pars.h>
+#include <umin_pars.h>
+#include <lnsrch_pars.h>
+#include <lbfgs_pars.h>
+#include <trgn_pars.h>
   NULL };
 
 #endif

@@ -2,6 +2,7 @@
 #include "grid.h"
 #include "gridpp.hh"
 #include "gridops.hh"
+#include "segyops.hh"
 #include "istate.hh"
 #include "iwop.hh"
 #include "functions.hh"
@@ -9,13 +10,10 @@
 #include "ls.hh"
 #include "blockop.hh"
 #include "cgnealg.hh"
+#include "TRGNAlg.hh"
 #include "LBFGSBT.hh"
-#include "LinFitLS.hh"
-#include "LinFitLSSM.hh"
 #include "acdfwi_selfdoc.h"
 #include <par.h>
-#include "adjtest.hh"
-#include "segyops.hh"
 
 //#define GTEST_VERBOSE
 IOKEY IWaveInfo::iwave_iokeys[]
@@ -26,7 +24,7 @@ IOKEY IWaveInfo::iwave_iokeys[]
   {"",       0, false, false}
 };
 
-using RVL::parse;
+using RVL::valparse;
 using RVL::RVLException;
 using RVL::Vector;
 using RVL::Components;
@@ -41,14 +39,11 @@ using RVL::AssignFilename;
 using RVL::AssignParams;
 using RVL::RVLRandomize;
 using RVL::ScaleOpFwd;
+using RVL::ResidualOperator;
 using RVL::TensorOp;
-using RVL::AdjointTest;
 using RVLUmin::CGNEPolicy;
-using RVLUmin::CGNEPolicyData;
+using RVLUmin::TRGNAlg;
 using RVLUmin::LBFGSBT;
-using RVLUmin::LinFitLS;
-using RVLUmin::LinFitLSSM;
-using RVLUmin::CGNEAlg;
 using TSOpt::IWaveEnvironment;
 using TSOpt::IWaveTree;
 using TSOpt::IWaveSampler;
@@ -168,6 +163,8 @@ int main(int argc, char ** argv) {
 	cdd[0].eval(ddfn);
 	tnmop.applyOp(dd,mdd);
       }
+      // residual operator - used in TRCG, zero cost so just build it
+      ResidualOperator<float> rop(op,mdd);
 
       // choice of GridDerivOp for semblance op is placeholder - extended axis is dim-th, with id=dim+1
       // note default weight of zero!!!
@@ -242,27 +239,59 @@ int main(int argc, char ** argv) {
       std::string outfile = valparse<std::string>(*pars,"outfile","");
       if ((outfile.size()==0) && (retrieveRank()==0)) optr = &cout;
 
-      LBFGSBT<float> alg(fbd,m,
-			 valparse<float>(*pars,"InvHessianScale",1.0f),
-			 valparse<int>(*pars,"MaxInvHessianUpdates",5),
-			 valparse<int>(*pars,"MaxLineSrchSteps",10),
-			 valparse<bool>(*pars,"VerboseDisplay",true), 
-			 valparse<float>(*pars,"FirstStepLength",1.0f), 
-			 valparse<float>(*pars,"GAStepAcceptThresh",0.1f),
-			 valparse<float>(*pars,"GAStepDoubleThresh",0.9f), 
-			 valparse<float>(*pars,"LSBackTrackFac",0.5f), 
-			 valparse<float>(*pars,"LSDoubleFac",1.8f),
-			 valparse<float>(*pars,"MaxFracDistToBdry",1.0), 
-			 valparse<float>(*pars,"LSMinStepFrac",1.e-06),
-			 valparse<int>(*pars,"MaxLBFGSIter",10), 
-			 valparse<float>(*pars,"AbsGradThresh",0.0), 
-			 valparse<float>(*pars,"RelGradThresh",1.e-2), 
-			 *optr);
+      // switch on method
+      Algorithm * alg = NULL;
+      std::string optmethod = valparse<std::string>(*pars,"OptMethod","lbfgs");
+      if (optmethod == "lbfgs") {
+	alg = new LBFGSBT<float>
+	  (fbd, m,
+	   valparse<float>(*pars,"InvHessianScale",1.0f),
+	   valparse<int>(*pars,"MaxInvHessianUpdates",5),
+	   valparse<int>(*pars,"MaxSubSteps",10),
+	   valparse<bool>(*pars,"VerboseDisplay",true), 
+	   valparse<float>(*pars,"InitStepBound",1.0f), 
+	   valparse<float>(*pars,"MinDecrease",0.1f),
+	   valparse<float>(*pars,"GoodDecrease",0.9f), 
+	   valparse<float>(*pars,"StepDecrFactor",0.5f), 
+	   valparse<float>(*pars,"StepIncrFactor",1.8f),
+	   valparse<float>(*pars,"MaxFracDistToBdry",1.0), 
+	   valparse<float>(*pars,"LSMinStepFrac",1.e-06),
+	   valparse<int>(*pars,"MaxSteps",10), 
+	   valparse<float>(*pars,"AbsGradThresh",0.0), 
+	   valparse<float>(*pars,"RelGradThresh",1.e-2), 
+	   *optr);
+      }
+      else if (optmethod == "trcg") {
+	TRGNAlg<float, CGNEPolicy<float> > * tralg = new TRGNAlg<float, CGNEPolicy<float> >
+	  (rop, m,
+	   valparse<int>(*pars,"MaxSteps",10),             // _maxcount,
+	   valparse<float>(*pars,"ResidualTol",0.0f),       // _jtol,
+	   valparse<float>(*pars,"AbsGradThresh",0.0f),    // _agtol,
+	   valparse<float>(*pars,"RelGradThresh",1.0e-2),  // _rgtol,
+	   valparse<float>(*pars,"MinDecrease",0.1f),      // _eta1
+	   valparse<float>(*pars,"GoodDecrease",0.9f),     // _eta2
+	   valparse<float>(*pars,"StepDecrFactor",0.5f),   // _gamma1
+	   valparse<float>(*pars,"StepIncrFactor",1.8f),   // _gamma2
+	   *optr);
+
+	// assign CG params
+	tralg->assign
+	  (valparse<float>(*pars,"CGNE_ResTol",0.0f),      // rtol
+	   valparse<float>(*pars,"CGNE_GradTol",0.001f),   // nrtol,
+	   valparse<float>(*pars,"InitStepBound",1.0f),    // Delta
+	   valparse<int>(*pars,"MaxSubSteps",10),          // maxcount
+	   valparse<bool>(*pars,"VerboseDisplay",true));   // verbose
+	alg=tralg;
+      }
+      else {
+	RVLException e;
+	e<<"Error: acdfwi\n";
+	e<<"  failed to specify legit opt method choice\n";
+	e<<"  currently available: lbfgs or trcg\n";
+	throw(e);
+      }
 
       if (valparse<int>(*pars,"MaxLBFGSIter",3) <= 0) {
-	float val = alg.getFunctionalEvaluation().getValue();
-      //	StdLeastSquaresFcnlGN<float> ft(cop,mdd);
-      //	FunctionalEvaluation<float> feval(ft,m);
 	FunctionalEvaluation<float> feval(f,m);
 	//	Vector<float> grad(alg.getFunctionalEvaluation().getDomain());
 	Vector<float> grad(feval.getDomain());
@@ -289,12 +318,9 @@ int main(int argc, char ** argv) {
 	grad1.zero();
 	opeval1.getDeriv().applyAdjOp(din,grad1);
 	cerr<<"grad norm from basic = "<<grad1.norm()<<endl;
-	cerr <<"=========================== LINFITLS ==========================\n";
-	cerr <<"value of FWI functional = "<<val<<"\n";    
-	cerr <<"=========================== LINFITLS ==========================\n";
       }
       else {
-        alg.run();
+        alg->run();
       }      
       
       std::string dataest = valparse<std::string>(*pars,"dataest","");
@@ -325,6 +351,8 @@ int main(int argc, char ** argv) {
 	outf<<outstr.str();
 	outf.close();
       }
+
+      if (alg) delete(alg);
     
 #ifdef IWAVE_USE_MPI
     }
