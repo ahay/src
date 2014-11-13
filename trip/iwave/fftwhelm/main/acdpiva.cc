@@ -278,8 +278,8 @@ int main(int argc, char ** argv) {
 //                cerr << "\n before hop.applyOp \n";
 //            }
             //hop.applyOp(m_in,dm);
-            //PIVAObj<float> f(top,preop,helmop,dsop,td,dm0,pd,res);
-            PIVAObj<float> f(op,preop,helmop,dsop,mdd,dm0,pd,res);
+            PIVAObj<float> f(top,preop,helmop,dsop,td,dm0,pd,res);
+            //PIVAObj<float> f(op,preop,helmop,dsop,mdd,dm0,pd,res);
             GridExtendOp g(dom,op.getDomain());
             FcnlOpComp<float> gf(f,g);
             

@@ -3,7 +3,7 @@
   " ",
     " Linear top mute with cubic taper, cubic taper on offset or gx, ",
   " zero-slope bottom mute with cubic taper.",
-  " iwave/trace/segyops.hh",
+  " iwave/trace/include/segyops.hh",
   " ",
   " ------------------- begin segytapermute parameters -------------------------",
   " ",

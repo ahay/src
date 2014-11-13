@@ -184,7 +184,7 @@ int main(int argc, char ** argv) {
 #endif
       // does not appear to work properly
       // assign window widths - default = 0;
-      /*
+      
       RPNT swind,ewind;
       RASN(swind,RPNT_0);
       RASN(ewind,RPNT_0);
@@ -200,12 +200,12 @@ int main(int argc, char ** argv) {
       AssignFilename minfn(valparse<std::string>(*pars,"csq"));
       Components<ireal> cmin(m_in);
       cmin[0].eval(minfn);
-      GridMaskOp mop(op.getDomain(),m_in,swind,ewind);
-      */
+      GridMaskOp mop(op.getDomain(),m,swind,ewind);
+      
 
       //      GridWindowOp wop(iwop.getDomain(),
-      //      OpComp<float> cop(mop,op);
-      StdLeastSquaresFcnlGN<float> f(op,mdd);
+      OpComp<float> cop(mop,op);
+      StdLeastSquaresFcnlGN<float> f(cop,mdd);
 
       // choice of preop is placeholder
       // ScaleOpFwd<float> preop(op.getDomain(),1.0f);
