@@ -18,7 +18,7 @@
 */
 #include <rsf.h>
 
-#include "cfft3w.h"
+#include "cfft3.h"
 
 int main(int argc, char* argv[])
 {
@@ -112,8 +112,6 @@ int main(int argc, char* argv[])
     cwavem = sf_complexalloc(nk);
     wave = sf_complexalloc2(nzx2,m2);
 
-    icfft3_allocate(cwavem);
-
     for (iz=0; iz < nzx2; iz++) {
 	curr[iz]=sf_cmplx(0.,0.);
 	rcurr[iz]=0.;
@@ -181,6 +179,5 @@ int main(int argc, char* argv[])
 	}
     }
     
-    cfft3_finalize();
     exit (0);
 }
