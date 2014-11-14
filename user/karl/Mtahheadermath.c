@@ -144,7 +144,9 @@ int main(int argc, char* argv[])
       /* see if the segy keywords are in the input history file.  If they
 	 are missing or different than I think they should be add them to
 	 the output file history */
-      if(!sf_histint(in,segykeyword(i),&tempint) || tempint!=i){
+      /* no idea why this always has to be added to history, but I get 
+	 errors it I remove 1 || */
+      if(1 || !sf_histint(in,segykeyword(i),&tempint) || tempint!=i){
 	sf_putint(out,segykeyword(i),i);
       }
     }
