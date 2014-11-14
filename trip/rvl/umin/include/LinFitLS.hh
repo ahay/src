@@ -226,9 +226,10 @@ namespace RVLUmin {
         LinearOp<Scalar> const & preop;     // preconditioner
         LinearOp<Scalar> const & helmop;    // smoothing op applied to gradient
         LinearOp<Scalar> const & A;         // annihilator
+        LinearOp<Scalar> const & R;         // regularization
         Vector<Scalar>   const & d;         // data
         Vector<Scalar>   const & x0;        // input initial linear solution
-        Scalar           eps;               // weight on regularization      
+        //Scalar           eps;               // weight on regularization      
         
         CGNEPolicyData<Scalar> pdcgne;
         
@@ -264,36 +265,40 @@ namespace RVLUmin {
                 d0.linComb(1.0,d,-1.0);
                
                 CompLinearOp<Scalar> nop(preop,lop);
-                ScaleOpFwd<Scalar> rgop(op.getDomain(),eps);
-                TensorLinearOp<Scalar> top(nop, rgop);
+                TensorLinearOp<Scalar> top(nop, R);
 
                 // create RHS of block system
                 Vector<Scalar> td(top.getRange());
                 Components<Scalar> ctd(td);
                 ctd[0].copy(d0);
                 ctd[1].zero();
-                
-                Vector<Scalar> pdx(op.getDomain());
+//                if (retrieveGlobalRank() == 0) {
+//                    cerr << "norm of input data d.norm() = " << d.norm() << endl;
+//                    cerr << "norm of data d0.norm() = " << d0.norm() << endl;
+//                    cerr << "norm of data td.norm() = " << td.norm() << endl;
+//                }
+                //Vector<Scalar> pdx(op.getDomain());
                 dx.zero();
-                pdx.zero();
+                //pdx.zero();
                 
                 // build least square solver , solve for dx
                 CGNEPolicy<Scalar> cgnep;
                 cgnep.assign(pdcgne);
-                CGNEAlg<Scalar> * solver = cgnep.build(pdx,top,td,rnorm,nrnorm,str);
+                CGNEAlg<Scalar> * solver = cgnep.build(dx,top,td,rnorm,nrnorm,str);
+//                CGNEAlg<Scalar> * solver = cgnep.build(dx,nop,d0,rnorm,nrnorm,str);
                 
                 solver->run();
                 
                 // get the value of objective function
                 //val = 0.5*rnorm*rnorm;
-                preop.applyOp(pdx,dx);
-                
+                //preop.applyOp(pdx,dx);
                 dx.linComb(1.0,x0);
                 A.applyOp(dx,dltx);
                 val = dltx.norm() * 0.5f;
-                //                if (retrieveGlobalRank() == 0) {
-                //                    cerr << "val="<< val << endl;
-                //                }
+                if (retrieveGlobalRank() == 0) {
+                    cerr << "val="<< val << endl;
+                    cerr << "dx.norm()=" << dx.norm() << endl;
+                }
                 
                 applied = true;
                 delete solver;
@@ -331,14 +336,14 @@ namespace RVLUmin {
                 
                 CompLinearOp<Scalar> cop(preop,lop);
                 NormalLinearOp<Scalar> nop(cop);
-                ScaleOpFwd<Scalar> rgop(op.getDomain(),eps);
+                NormalLinearOp<Scalar> rop(R);
  
-                LinCombLinearOp<Scalar> rnop(1.0, nop, 1.0, rgop);
+                LinCombLinearOp<Scalar> rnop(1.0, nop, 1.0, rop);
                 tmpm.zero();
                 
-                CGAlg<Scalar> alg(tmpm,rnop,tmpb,rnorm,pdcgne.rtol,pdcgne.maxcount,pdcgne.Delta,str);
+                CGAlg<Scalar> alg(q,rnop,tmpb,rnorm,pdcgne.rtol,pdcgne.maxcount,pdcgne.Delta,str);
                 alg.run();
-                preop.applyOp(tmpm,q);
+                //preop.applyOp(tmpm,q);
                 
                 
                 lop.applyOp(q,tmpd);
@@ -373,13 +378,14 @@ namespace RVLUmin {
                 LinearOp<Scalar> const & _preop,
                 LinearOp<Scalar> const & _helmop,
                 LinearOp<Scalar> const & _A,
+                LinearOp<Scalar> const & _R,
                 Vector<Scalar> const & _d,
                 Vector<Scalar> const & _x0,
-                Scalar _eps,
+                //Scalar _eps,
                 CGNEPolicyData<Scalar> const & _pdcgne,
                 ostream & _str=cerr)
-        : op(_op), preop(_preop), helmop(_helmop), A(_A), d(_d), x0(_x0),
-        eps(_eps), pdcgne(_pdcgne), dx(preop.getDomain()), q(op.getDomain()), 
+        : op(_op), preop(_preop), helmop(_helmop), A(_A), R(_R), d(_d), x0(_x0),
+        pdcgne(_pdcgne), dx(preop.getDomain()), q(op.getDomain()), 
         dltx(preop.getRange()), applied(false), str(_str) {
             try{
                 dx.zero();
@@ -398,8 +404,8 @@ namespace RVLUmin {
         }
         
         PIVAObj2(PIVAObj2<Scalar> const & f)
-        : op(f.op), preop(f.preop), helmop(f.helmop), A(f.A), d(f.d), 
-        x0(f.x0), eps(f.eps), pdcgne(f.pdcgne), dx(f.dx), q(f.q), 
+        : op(f.op), preop(f.preop), helmop(f.helmop), A(f.A), R(f.R), d(f.d), 
+        x0(f.x0), pdcgne(f.pdcgne), dx(f.dx), q(f.q), 
         dltx(f.dltx), applied(f.applied), str(f.str) {}
         
         const Space<Scalar> & getDomain() const { return op.getDomain(); }
