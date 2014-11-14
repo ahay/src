@@ -277,8 +277,9 @@ int main(int argc, char ** argv) {
 //                cerr << "\n before hop.applyOp \n";
 //            }
            // hop.applyOp(m_in,dm);
-           // float eps = valparse<float>(*pars,"eps",0.0f);
-            PIVAObj2<float> f(op,preop,helmop,dsop0,rgop,mdd,dm0,pd,res);
+	    float eps = valparse<float>(*pars,"eps",0.0f);
+	    PIVAObj2<float> f(op,preop,helmop,dsop0,mdd,dm0,eps,pd,res);
+//	    PIVAObj2<float> f(op,preop,helmop,dsop0,rgop,mdd,dm0,pd,res);
             GridExtendOp g(dom,op.getDomain());
             FcnlOpComp<float> gf(f,g);
             
