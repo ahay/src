@@ -157,7 +157,7 @@ int main(int argc, char* argv[])
         ratcomb[i]=ratcomb1[i]+ratcomb2[i];
     }
 
-    /* multiply ds to get perturbation */ 
+    /* multiply ds to get perturbation 
     for (i2=0; i2 < ntr; i2++ ) { 
     for (ig=0; ig < ng; ig++) { 
         for (i1=0;i1 < n1; i1++) { 
@@ -165,7 +165,7 @@ int main(int argc, char* argv[])
             ratcomb[i]=ratcomb[i]*ds[i2][i1];
         }
     }
-    } 
+    }*/  
 
     sf_floatwrite(ratcomb,n2g,warped);
 
