@@ -22,6 +22,7 @@ despike2-ed
 despike1-ed
 vel1d
 picks2rsf
+convkernel
 '''
 
 # Python targets
