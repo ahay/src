@@ -741,10 +741,10 @@ void sinc2d_extract(float**uu,
   for(ia=0;ia<na;ia++) {	
     ix = ca[ia].ix;
     iz = ca[ia].iz;
-    for (int ixx=ca[ia].fx; ixx<ca[ia].fx+ca[ia].nx-1; ixx++){
+    for (int ixx=ca[ia].fx; ixx<ca[ia].fx+ca[ia].nx; ixx++){
       sx = -4 +ixx;
       wx = ca[ia].sincx[ixx];
-      for(int izz=ca[ia].fz; izz<ca[ia].fz+ca[ia].nz-1; izz++){
+      for(int izz=ca[ia].fz; izz<ca[ia].fz+ca[ia].nz; izz++){
         sz = -4 +izz;
         wz = ca[ia].sincz[izz];
         dd[ia] += uu[ix+sx][iz+sz]*wx*wz; // gather
