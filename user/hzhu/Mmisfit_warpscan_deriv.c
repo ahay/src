@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
     int n1, m[4], ntr, n2, order, ng, rect[4], niter, n2g, dim;
     float **inp, **oth, **ds, o1, d1, o2, d2, g0, dg, o, d;
     float *rat1, *rat2, *rat1_deriv, *rat2_deriv;
-    float *ratcomb1, *ratcomb2, *ratcomb;
+    float *ratcomb1, *ratcomb2, *ratcomb, *ratcomb_tmp;
     sf_file in, warped, other, perturb;
     int i,i1,i2,ig; 
 
@@ -132,40 +132,44 @@ int main(int argc, char* argv[])
     ratcomb1 = sf_floatalloc (n2g);
     ratcomb2 = sf_floatalloc (n2g);
     ratcomb = sf_floatalloc (n2g);
+    ratcomb_tmp = sf_floatalloc(n2g);
 
     warpscan_init(n1,o1,d1,n2,o2,d2,ng,g0,dg,
                   ntr,order,dim,m,rect,niter,verb);
     
     sf_floatread(inp[0],n1*ntr,in);
     sf_floatread(oth[0],n2*ntr,other);
-    sf_floatread(ds[0],n1*ntr,perturb);
+    sf_floatread(ds[0],n2*ntr,perturb);
 
     /* interpolate input data */
     interpolate_inp(inp, oth);
 
     /* the first part */
-    warpscan_partone(inp,oth,rat1);
-    warpscan_parttwo_deriv(oth,rat2_deriv);
-    warpscan_combine(rat1,rat2_deriv,ratcomb1);
+    warpscan_partone_deriv(rat1_deriv);
+    warpscan_parttwo(oth,rat2);
+    warpscan_combine(rat1_deriv,rat2,ratcomb1);
 
     /* the second part */
-    warpscan_parttwo(inp,oth,rat2);
-    warpscan_partone_deriv(inp,oth,rat1,rat1_deriv);
-    warpscan_combine(rat2,rat1_deriv,ratcomb2);
+    warpscan_parttwo_deriv(oth,rat2,rat2_deriv);
+    warpscan_partone(oth,rat1);
+    warpscan_combine(rat2_deriv,rat1,ratcomb2);
+
+    /* combine original local similarity */
+    warpscan_combine(rat1,rat2,ratcomb_tmp);
 
     for (i=0;i<n2g;i++) {  
-        ratcomb[i]=ratcomb1[i]+ratcomb2[i];
+        ratcomb[i]=(ratcomb1[i]+ratcomb2[i])*ratcomb_tmp[i];
     }
 
-    /* multiply ds to get perturbation 
+    /* multiply ds to get perturbation */ 
     for (i2=0; i2 < ntr; i2++ ) { 
     for (ig=0; ig < ng; ig++) { 
-        for (i1=0;i1 < n1; i1++) { 
+        for (i1=0;i1 < n2; i1++) { 
             i=(i2*ng+ig)*n2+i1; 
             ratcomb[i]=ratcomb[i]*ds[i2][i1];
         }
     }
-    }*/  
+    }
 
     sf_floatwrite(ratcomb,n2g,warped);
 

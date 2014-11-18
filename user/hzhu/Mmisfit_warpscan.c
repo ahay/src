@@ -134,9 +134,10 @@ int main(int argc, char* argv[])
     /* interpolate input data */
     interpolate_inp(inp, oth);
 
-    warpscan_partone(inp,oth,rat1);
-    warpscan_parttwo(inp,oth,rat2);
-    warpscan_combine(rat1,rat2,ratcomb);
+    /* compute two part */
+    warpscan_partone(oth,rat1);
+    warpscan_parttwo(oth,rat2);
+    warpscan_combine_square(rat1,rat2,ratcomb);
 
     sf_floatwrite(ratcomb,n2g,warped);
 
