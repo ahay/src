@@ -100,8 +100,7 @@ void interpolate_inp(float **inp,
     dout = sqrtf(n2g/dout);
 }
 
-void warpscan_partone(float** inp /* input data [ntr][n1] */, 
-	                  float** oth /* target data [ntr][n2] */,
+void warpscan_partone(float** oth /* target data [ntr][n2] */,
 	                  float* rat1)
 /*< scan >*/
 {
@@ -119,10 +118,7 @@ void warpscan_partone(float** inp /* input data [ntr][n1] */,
     sf_divn(num,den,rat1);
 }
 
-void warpscan_partone_deriv(float** inp /* input data [ntr][n1] */, 
-	                        float** oth /* target data [ntr][n2] */,
-                            float*  rat1 /* perturb data [ntr][n2] */,
-	                        float*  rat1_deriv)
+void warpscan_partone_deriv(float* rat1_deriv)
 /*< scan >*/
 {
     int i1, i2, ig, i;
@@ -130,22 +126,16 @@ void warpscan_partone_deriv(float** inp /* input data [ntr][n1] */,
     for (i2=0; i2 < ntr; i2++) {
 	for (ig=0; ig < ng; ig++) {
 	    for (i1=0; i1 < n2; i1++) {
-		i = (i2*ng+ig)*n2+i1;
-		num[i] = -2.0*rat1[i];
-        if ( fabsf(out[i2][ig][i1]) > 1.e-6 ) { 
-            num[i] += oth[i2][i1]/out[i2][ig][i1];
-        }
-        num[i] = num[i] * dout; 
-
-		den[i] = out[i2][ig][i1]*dout; 
+		i = (i2*ng + ig)*n2+i1;
+		num[i] = 1.0*dout;
+		den[i] = out[i2][ig][i1]*dout;
 	    }
 	}
     }
     sf_divn(num,den,rat1_deriv);
 }
 
-void warpscan_parttwo(float** inp /* input data [ntr][n1] */, 
-	                  float** oth /* target data [ntr][n2] */,
+void warpscan_parttwo(float** oth /* target data [ntr][n2] */,
 	                  float* rat2)
 /*< scan >*/
 {
@@ -163,8 +153,9 @@ void warpscan_parttwo(float** inp /* input data [ntr][n1] */,
     sf_divn(num,den,rat2);
 }
 
-void warpscan_parttwo_deriv(float** oth /* target data [ntr][n2] */, 
-	                        float* rat2_deriv)
+void warpscan_parttwo_deriv(float** oth /* target data [ntr][n2] */,
+                            float*  rat2,
+	                        float*  rat2_deriv)
 /*< scan >*/
 {
     int i1, i2, ig, i;
@@ -172,9 +163,13 @@ void warpscan_parttwo_deriv(float** oth /* target data [ntr][n2] */,
     for (i2=0; i2 < ntr; i2++) {
 	for (ig=0; ig < ng; ig++) {
 	    for (i1=0; i1 < n2; i1++) {
-		i = (i2*ng + ig)*n2+i1;
-		num[i] = 1.0*doth;
-		den[i] = oth[i2][i1]*doth;
+		i = (i2*ng+ig)*n2+i1;
+		num[i] = -2.0*rat2[i];
+        if ( fabsf(oth[i2][i1]) > 1.e-8 ) { 
+            num[i] += out[i2][ig][i1]/oth[i2][i1];
+        }
+        num[i] = num[i] * doth; 
+		den[i] = oth[i2][i1]*doth; 
 	    }
 	}
     }
@@ -189,9 +184,22 @@ void warpscan_combine(const float *one,
     int i;
     float p;
     for ( i = 0 ; i < n2g; i++ ) { 
-	    // p=fabsf( one[i] * two[i] );
-	    p=one[i] * two[i];
+	    p=one[i]*two[i];
         prod[i]=p;
     }
 }
+
+void warpscan_combine_square(const float *one,
+                             const float *two,
+                             float *prod)
+/*< combine >*/
+{
+    int i;
+    float p;
+    for ( i = 0 ; i < n2g; i++ ) { 
+	    p=one[i]*two[i];
+        prod[i]=p*p;
+    }
+}
+
 /* 	$Id: Mwarpscan.c 744 2004-08-17 18:46:07Z fomels $	 */
