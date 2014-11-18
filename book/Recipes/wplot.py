@@ -481,7 +481,28 @@ def istagger2d(cube,custom,par,nfrm=2,scale=1,ratio=1,ymax=10,xmax=14):
 
 # ------------------------------------------------------------
 # plot 3x3 matrix of plots
+def inine3d(cube,byte,custom,par,scale=0.3,ymax=10,ratio=1):
+    nfrm=9
+
+    dy=ymax;
+    dx=ymax/ratio
+
+    for ifrm in range(nfrm):
+        tag="%d"%ifrm
+
+        Plot(cube+tag,byte,
+             'window n4=1 f4=%d |'%ifrm
+             + igrey3d('wantaxis=n titlesz=%d title=%d %s'%(4/scale,ifrm,custom),par))
+        Plot(cube+tag+'_',
+             cube+tag,'Overlay',vppen='yscale=%f xscale=%f ycenter=%f xcenter=%f'
+             %(scale,scale,-1+int(-2+ifrm/3)*dy,-1-(ifrm%3)*dx))
+    Result(cube,[cube+"%d_"%ifrm for ifrm in range(nfrm)],'Overlay')
+
 def inine(cube,byte,custom,par,scale=0.3,ymax=10,ratio=1):
+	inine2d(cube,byte,custom,par,scale=0.3,ymax=10,ratio=1)
+
+# plot 3x3 matrix of plots
+def inine2d(cube,byte,custom,par,scale=0.3,ymax=10,ratio=1):
     nfrm=9
 
     dy=ymax;
