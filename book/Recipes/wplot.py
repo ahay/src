@@ -557,3 +557,46 @@ def cfive(cube,byte,custom,par,scale=0.2,ymax=9):
              cube+tag,'Overlay',vppen='yscale=%f xscale=%f ycenter=%f xcenter=%f'
              %(scale,scale,-2-4*dy+(ifrm%5)*dy,-2))        
     Result(cube,[cube+"%d_"%ifrm for ifrm in range(nfrm)],'Overlay')
+
+
+# ------------------------------------------------------------
+def array2d(cube,byte,custom,par,
+    nh=3,nv=3,
+    scale=0.3,ymax=10,ratio=1):
+    
+    nfrm=nh*nv
+    dy=ymax;
+    dx=ymax/ratio
+        
+    for ifrm in range(nfrm):
+        tag="%d"%ifrm
+        
+        Plot(cube+tag,byte,
+             'window n3=1 f3=%d |'%ifrm 
+             + igrey2d('wantaxis=n titlesz=%d title=%d %s'%(4/scale,ifrm,custom),par))
+        Plot(cube+tag+'_',
+             cube+tag,'Overlay',
+             vppen='yscale=%f xscale=%f ycenter=%f xcenter=%f'
+             %(scale,scale,-1+(-nv+1+int(ifrm/nh))*dy,-1-(ifrm%nh)*dx))        
+    Result(cube,[cube+"%d_"%ifrm for ifrm in range(nfrm)],'Overlay')
+
+# ------------------------------------------------------------
+def array3d(cube,byte,custom,par,
+    nh=3,nv=3,
+    scale=0.3,ymax=10,ratio=1):
+    
+    nfrm=nh*nv
+    dy=ymax;
+    dx=ymax/ratio
+        
+    for ifrm in range(nfrm):
+        tag="%d"%ifrm
+        
+        Plot(cube+tag,byte,
+             'window n4=1 f4=%d |'%ifrm 
+             + igrey3d('wantaxis=n titlesz=%d title=%d wheretitle=b %s'%(4/scale,ifrm,custom),par))
+        Plot(cube+tag+'_',
+             cube+tag,'Overlay',
+             vppen='yscale=%f xscale=%f ycenter=%f xcenter=%f'
+             %(scale,scale,-1+(-nv+1+int(ifrm/nh))*dy,-1-(ifrm%nh)*dx))        
+    Result(cube,[cube+"%d_"%ifrm for ifrm in range(nfrm)],'Overlay')
