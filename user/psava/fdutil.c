@@ -729,31 +729,81 @@ void sinc2d_inject(float**uu,
 }
 
 /*------------------------------------------------------------*/
-void sinc2d_extract(float**uu,
-		   float *dd,
-		   scoef2 *ca,
-       int na)
+void sinc2d_inject1(float**uu,
+                   float dd,
+                   scoef2 *ca,
+                   int na)
 /*< inject into wavefield >*/
 {
-  int   ia, ix, iz, sx, sz;
-  float wx, wz;
-
-  for(ia=0;ia<na;ia++) {	
-    ix = ca[ia].ix;
-    iz = ca[ia].iz;
-    for (int ixx=ca[ia].fx; ixx<ca[ia].fx+ca[ia].nx; ixx++){
-      sx = -4 +ixx;
-      wx = ca[ia].sincx[ixx];
-      for(int izz=ca[ia].fz; izz<ca[ia].fz+ca[ia].nz; izz++){
-        sz = -4 +izz;
-        wz = ca[ia].sincz[izz];
-        dd[ia] += uu[ix+sx][iz+sz]*wx*wz; // gather
-      }
-    }  
-  }
+    
+    int   ia, ix, iz, sx, sz;
+    float w, wx, wz;
+    
+    for(ia=0;ia<na;ia++) {
+        w = dd;
+        ix = ca[ia].ix;
+        iz = ca[ia].iz;
+        for (int ixx=ca[ia].fx; ixx<ca[ia].fx+ca[ia].nx;ixx++){
+            sx = -4 +ixx;
+            wx = ca[ia].sincx[ixx];
+            for(int izz=ca[ia].fz; izz<ca[ia].fz+ca[ia].nz; izz++){
+                sz = -4 +izz;
+                wz = ca[ia].sincz[izz];
+                uu[ix+sx][iz+sz] += w*wx*wz; // scatter
+            }
+        }  
+    }
 }
 
+/*------------------------------------------------------------*/
+void sinc2d_extract(float**uu,
+                    float *dd,
+                    scoef2 *ca,
+                    int na)
+/*< inject into wavefield >*/
+{
+    int   ia, ix, iz, sx, sz;
+    float wx, wz;
+    
+    for(ia=0;ia<na;ia++) {
+        ix = ca[ia].ix;
+        iz = ca[ia].iz;
+        for (int ixx=ca[ia].fx; ixx<ca[ia].fx+ca[ia].nx; ixx++){
+            sx = -4 +ixx;
+            wx = ca[ia].sincx[ixx];
+            for(int izz=ca[ia].fz; izz<ca[ia].fz+ca[ia].nz; izz++){
+                sz = -4 +izz;
+                wz = ca[ia].sincz[izz];
+                dd[ia] += uu[ix+sx][iz+sz]*wx*wz; // gather
+            }
+        }  
+    }
+}
 
+/*------------------------------------------------------------*/
+void sinc2d_extract1(float**uu,
+                    float *dd,
+                    scoef2 *ca,
+                    int na)
+/*< inject into wavefield >*/
+{
+    int   ia, ix, iz, sx, sz;
+    float wx, wz;
+    
+    for(ia=0;ia<na;ia++) {
+        ix = ca[ia].ix;
+        iz = ca[ia].iz;
+        for (int ixx=ca[ia].fx; ixx<ca[ia].fx+ca[ia].nx; ixx++){
+            sx = -4 +ixx;
+            wx = ca[ia].sincx[ixx];
+            for(int izz=ca[ia].fz; izz<ca[ia].fz+ca[ia].nz; izz++){
+                sz = -4 +izz;
+                wz = ca[ia].sincz[izz];
+                dd[0] += uu[ix+sx][iz+sz]*wx*wz; // gather
+            }
+        }
+    }
+}
 
 /*------------------------------------------------------------*/
 lint2d lint2d_make(int    na, 

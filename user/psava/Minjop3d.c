@@ -119,7 +119,7 @@ int main(int argc, char* argv[])
 	} else {
 	    sf_floatread(wco,sf_n(ac),Ftrc);
 
-	    for        (iy=0; iy<sf_n(ay); iy++)
+	    for    (iy=0; iy<sf_n(ay); iy++)
 		for    (ix=0; ix<sf_n(ax); ix++)
 		    for(iz=0; iz<sf_n(az); iz++)
 			wfl[iy][ix][iz]=0;
