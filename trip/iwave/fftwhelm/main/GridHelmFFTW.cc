@@ -67,7 +67,7 @@ int main(int argc, char ** argv) {
         //cerr << "sbc[" << i << "] = " << sbc[i] << endl;
         //cerr << "ebc[" << i << "] = " << ebc[i] << endl;
     }
-    gsp sp(inp, "notype", false
+    gsp sp(inp, "notype", true
 #ifdef IWAVE_USE_MPI 
 	   , retrieveGlobalComm()
 #endif

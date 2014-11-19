@@ -111,7 +111,8 @@ int main(int argc, char ** argv) {
     res << " adjvalue = " << abs(axy - xaty)/(axnm*ynm) << endl;
       
     GridHelmFFTWOp op1(sp,weights,sbc,ebc,power,datum);
-    int seed = getpid();
+    int seed = time(0);//1990;//getpid();
+    cerr << " seed = " << seed << endl;
     RVL::RVLRandomize<float> rnd(seed,-1.0f,1.0f);
     AdjointTest(op1,rnd,res);
       

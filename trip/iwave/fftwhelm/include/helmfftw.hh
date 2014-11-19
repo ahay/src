@@ -39,7 +39,6 @@ namespace TSOpt {
     private:
         RPNT weights;
         ireal power, datum;
-        int DirichletSides;
         IPNT n_arr;
         RPNT d_arr;
         IPNT sbc;      // starting boundary condition for each dimension
@@ -55,7 +54,7 @@ namespace TSOpt {
                    ireal _power=0.0f,
                    ireal _datum=0.0f
                    )
-        : power(_power), datum(_datum){
+        : power(_power), datum(_datum) {
             IASN(n_arr,_narr);
             RASN(d_arr,_darr);
             RASN(weights,_weights);
@@ -64,7 +63,7 @@ namespace TSOpt {
         }
         
         HelmFFTWFO(HelmFFTWFO const & f)
-        : power(f.power), datum(f.datum){
+        : power(f.power), datum(f.datum) {
             IASN(n_arr,f.n_arr);
             RASN(d_arr,f.d_arr);
             RASN(weights,f.weights);
@@ -120,9 +119,6 @@ namespace TSOpt {
                 RASN(weights,_weights);
                 IASN(sbc,_sbc);
                 IASN(ebc,_ebc);
-//                if (retrieveGlobalRank() == 0) {
-//                cerr << "\n In GridHelmFFTWOp \n";
-//            }
             }
             catch (RVLException & e) {
                 e<<"\ncalled from GridHelmFFTWOp constructor\n";

@@ -51,11 +51,10 @@ namespace TSOpt {
       RARR  & rax = gx.getMetadata();
       RARR const & ray = gy.getMetadata();
       int dimx; int dimy;
-      //int idxdatum = (int)(datum/d_arr[0]+0.5f);
+      int idxdatum = (int)(datum/d_arr[0]+0.5f);
       int lendom;
       ra_ndim(&rax,&dimx);
       ra_ndim(&ray,&dimy);
-
       if (dimx != dimy) {
           RVLException e;
           e<<"Error: HelmFFTWFO::operator()\n";
@@ -70,47 +69,42 @@ namespace TSOpt {
       IPNT s; IPNT e;
       ra_a_gse(&rax,gsx,gex);
       ra_a_gse(&ray,gsy,gey);
-        
+
       for (int ii=0;ii<dimx;ii++)  {
           s[ii]=max(gsy[ii],gsx[ii]);
           e[ii]=min(gey[ii],gex[ii]);
       }
-        //cerr << " idxdatum = " << idxdatum << endl;
-        //cerr << " dimx = " << dimx << endl;
+
         float _power=power;
         fftwf_r2r_kind bcf[2][2];
         fftwf_r2r_kind bcb[2][2];
         
-        //bcf[0][0] = FFTW_REDFT10;
-        bcf[0][0] = FFTW_REDFT00;
+        bcf[0][0] = FFTW_REDFT10;
+        //bcf[0][0] = FFTW_REDFT00;
         bcf[0][1] = FFTW_REDFT11;
         bcf[1][0] = FFTW_RODFT11;
         bcf[1][1] = FFTW_RODFT00;
         
-        //bcb[0][0] = FFTW_REDFT01;
-        bcb[0][0] = FFTW_REDFT00;
+        bcb[0][0] = FFTW_REDFT01;
+        //bcb[0][0] = FFTW_REDFT00;
         bcb[0][1] = FFTW_REDFT11;
         bcb[1][0] = FFTW_RODFT11;
         bcb[1][1] = FFTW_RODFT00;
         
         int dimsft[2][2];
-        dimsft[0][0]=-1;
+        dimsft[0][0]=0;
         dimsft[0][1]=0;
         dimsft[1][0]=0;
         dimsft[1][1]=1;
         
-        lendom = 1;
-        for (int ii=0; ii<dimx; ii++) {
-            f2c[ii] = n_arr[ii];//(n_arr[ii]+4)%2==1? (n_arr[ii]+5):(n_arr[ii]+4);
+        f2c[0] = (sbc[0]==1)?(n_arr[0]-idxdatum):n_arr[0];
+        lendom=f2c[0];
+        NLDFT[0] = f2c[0]+dimsft[sbc[0]][ebc[0]];
+        for (int ii=1; ii<dimx; ii++) {
+            f2c[ii] = n_arr[ii];
             lendom=lendom*f2c[ii];
             NLDFT[ii] = f2c[ii]+dimsft[sbc[ii]][ebc[ii]];
-            //cerr << "f2c["<< ii <<"] = " << f2c[ii] << endl;
-            //cerr << "n_arr["<< ii << "] = " << n_arr[ii] << endl;
-            //cerr << "length " << ii << " = " << e[ii] - s[ii] +1<< endl;
         }
-
-
-        //cerr << "lendom = " << lendom<< endl;
         
         IPNT i;
         
@@ -135,20 +129,24 @@ namespace TSOpt {
             e<<"Error: HelmFFTWOp::apply - failed to allocate " << lendom << " fftwf_complex for output data\n";
             throw e;
         }
-        
         for (i[1]=0;i[1]<lendom;i[1]++){
             indata[i[1]]=0.0f;
             outdata[i[1]]=0.0f;
         }
-//        if (retrieveGlobalRank() == 0) {
-//            cerr << "\n before HelmFFTWOp::apply \n";
-//            cerr << "\n RARR_MAX_NDIM=" << RARR_MAX_NDIM << endl;
-//            cerr << "\n dimx=" << dimx << endl;
-//        }        
+        int ids;
+        ids = (sbc[0]==1)?max(s[0],idxdatum):s[0];
+        if (ids > e[0]) {
+            RVLException e;
+            e<<"Error: GridHelmFFTWOp::apply\n";
+            e<<"   datum is too big\n";
+            throw e;
+        }
+        
 #if RARR_MAX_NDIM > 0
       if (dimx==1) {
-          for (i[0]=s[0];i[0]<=e[0];i[0]++) {
-              indata[i[0]-s[0]]=ray._s1[i[0]];
+          // copy data
+          for (i[0]=ids;i[0]<=e[0];i[0]++) {
+              indata[i[0]-ids]=ray._s1[i[0]];
           }
           
           // forward Fourier transform
@@ -177,16 +175,16 @@ namespace TSOpt {
           float wt =  1.0/(2*NLDFT[0]);
 
           // copy data back
-          for (i[0]=s[0];i[0]<=e[0];i[0]++) {
-              rax._s1[i[0]]=wt*outdata[i[0]-s[0]];
+          for (i[0]=ids;i[0]<=e[0];i[0]++) {
+              rax._s1[i[0]]=wt*outdata[i[0]-ids];
           }
       }
 #endif
 #if RARR_MAX_NDIM > 1
         if (dimx==2) {
             for (i[1]=s[1];i[1]<=e[1];i[1]++) {
-                for (i[0]=s[0];i[0]<=e[0];i[0]++) {
-                    indata[(i[1]-s[1])*f2c[0] + i[0]-s[0]]=ray._s2[i[1]][i[0]];
+                for (i[0]=ids;i[0]<=e[0];i[0]++) {
+                    indata[(i[1]-s[1])*f2c[0] + i[0]-ids]=ray._s2[i[1]][i[0]];
                 }
             }
             
@@ -220,8 +218,8 @@ namespace TSOpt {
             float wt =  1.0/(2*NLDFT[1]*2*NLDFT[0]);
             // copy data back
             for (i[1]=s[1];i[1]<=e[1];i[1]++) {
-                for (i[0]=s[0];i[0]<=e[0];i[0]++) {
-                    rax._s2[i[1]][i[0]]=wt*outdata[(i[1]-s[1])*f2c[0]+i[0]-s[0]];
+                for (i[0]=ids;i[0]<=e[0];i[0]++) {
+                    rax._s2[i[1]][i[0]]=wt*outdata[(i[1]-s[1])*f2c[0]+i[0]-ids];
                 }
             }
         }
@@ -230,8 +228,8 @@ namespace TSOpt {
         if (dimx==3) {
             for (i[2]=s[2];i[2]<=e[2];i[2]++) {
                 for (i[1]=s[1];i[1]<=e[1];i[1]++) {
-                    for (i[0]=s[0];i[0]<=e[0];i[0]++) {
-                        indata[((i[2]-s[2])*f2c[1]+(i[1]-s[1]))*f2c[0]+i[0]-s[0]]=ray._s3[i[2]][i[1]][i[0]];
+                    for (i[0]=ids;i[0]<=e[0];i[0]++) {
+                        indata[((i[2]-s[2])*f2c[1]+(i[1]-s[1]))*f2c[0]+i[0]-ids]=ray._s3[i[2]][i[1]][i[0]];
                     }
                 }
             }
@@ -274,8 +272,8 @@ namespace TSOpt {
 
             for (i[2]=s[2];i[2]<=e[2];i[2]++) {
                 for (i[1]=s[1];i[1]<=e[1];i[1]++) {
-                    for (i[0]=s[0]; i[0]<=e[0];i[0]++) {
-                        rax._s3[i[2]][i[1]][i[0]]=wt*outdata[((i[2]-s[2])*f2c[1]+(i[1]-s[1]))*f2c[0]+i[0]-s[0]];
+                    for (i[0]=ids; i[0]<=e[0];i[0]++) {
+                        rax._s3[i[2]][i[1]][i[0]]=wt*outdata[((i[2]-s[2])*f2c[1]+(i[1]-s[1]))*f2c[0]+i[0]-ids];
                     }
                 }
             }
@@ -349,12 +347,11 @@ namespace TSOpt {
 	    e<<"  current implementation is 2D and 3D only\n";
 	    throw e;
 	  }
+
 	  get_d(d_arr,gdom->getGrid());
 	  get_n(n_arr,gdom->getGrid());
 	}
-//        if (retrieveGlobalRank() == 0) {
-//                cerr << "\n In GridHelmFFTWOp::apply \n";
-//            }
+
 	HelmFFTWFO fo(n_arr,d_arr,weights,sbc,ebc,power,datum);
 	MPISerialFunctionObject<float> mpifo(fo);
 	cy[j].eval(mpifo,cx[j]);    

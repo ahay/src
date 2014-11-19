@@ -52,11 +52,10 @@ stdmdl          = os.path.join(RSFBIN,'sfstandardmodel')
 IWAVE           = os.getenv('IWAVE')
 towed_array     = os.path.join(IWAVE,'trace/main/towed_array.x')
 acd             = os.path.join(IWAVE,'acdpml/main/acdpml.x')
-DSO             = os.path.join(IWAVE,'acd/main/DSO.x')
+dso             = os.path.join(IWAVE,'acd/main/dso.x')
 helm            = os.path.join(IWAVE,'grid/main/helm.x')
 helmfftw        = os.path.join(IWAVE,'fftwhelm/main/GridHelmFFTW.x')
 helmadj         = os.path.join(IWAVE,'fftwhelm/main/HelmAdjTest.x')
-fftwtest        = os.path.join(IWAVE,'fftwhelm/main/fftwtest.x')
 mute            = os.path.join(IWAVE,'acd/main/mute.x')
 tapermute       = os.path.join(IWAVE,'acd/main/tapernmute.x')
 window          = os.path.join(IWAVE,'acd/main/window.x')
@@ -121,8 +120,9 @@ Flow('dcsq', ['csq', 'csqsm2'],'add mode=a scale=1,-1 < csq.rsf csqsm2.rsf |wind
 #Flow('csq_2sm','csq_2','smooth rect1=10 rect2=10 repeat=2')
 #Flow('csq_2sm2','csq_2','smooth rect1=5 rect2=5 repeat=2')
 #Flow('dcsq_2', ['csq_2', 'csq_2sm2'],'add mode=a scale=1,-1 < csq_2.rsf csq_2sm2.rsf | window f1=' + str(PML+NDW) + '|pad beg1=' + str(PML+NDW))
-Flow('ecsq','csq','spray axis=3 n=14 d=1.0 o=0.0 | put dim=3 gdim=3 id1=0 id2=1 id3=2')
-Flow('csq1d','csq','sfwindow f1=100 n1=1')
+Flow('ecsq','csq','spray axis=3 n=14 d=1.0 o=0.0 | put dim=2 gdim=3 id1=0 id2=1 id3=2')
+Flow('csq1d','csq','sfwindow f1=100 n1=1 | put dim=1 gdim=1')
+Flow('dcsq1d','dcsq','sfwindow f1=100 n1=1 | put dim=1 gdim=1')
 
 # create base wavelet (just time series, without source position
 # information) via suwaveform
@@ -201,7 +201,7 @@ jobs = [
     'src': ['csq.rsf'],
     'tgt': ['csqoutx.rsf','csqouty.rsf','adjrpt.txt'],
     'cmd': helmadj + ' ' +
-         ' weight0=100 weight1=100 power=-1 datum=0 ' +
+         ' weight0=100 weight1=100 power=0 datum=0 ' +
          ' sbc0=0 sbc1=0 ebc0=0 ebc1=0 inx=csq.rsf outx=csqoutx.rsf ' +
          ' iny=dcsq.rsf outy=csqouty.rsf outfile=adjrpt.txt' +
          ' partask='+getThreads(exe_serial),
@@ -213,7 +213,7 @@ jobs = [
     'src': ['csq.rsf'],
     'tgt': ['csqoutx0.rsf','csqouty0.rsf','adjrpt0.txt'],
     'cmd': helmadj + ' ' +
-         ' weight0=100 weight1=100 power=-0.5 datum=0 ' +
+         ' weight0=100 weight1=100 power=-0.25 datum=400 ' +
          ' sbc0=0 sbc1=0 ebc0=0 ebc1=0 inx=csq.rsf outx=csqoutx0.rsf ' +
          ' iny=dcsq.rsf outy=csqouty.rsf outfile=adjrpt0.txt' +
          ' partask='+getThreads(exe_serial),
@@ -225,8 +225,8 @@ jobs = [
     'src': ['csq.rsf'],
     'tgt': ['csqoutx1.rsf','csqouty1.rsf','adjrpt1.txt'],
     'cmd': helmadj + ' ' +
-         ' weight0=1000 weight1=1000 power=-1 datum=0 ' +
-         ' sbc0=0 sbc1=0 ebc0=0 ebc1=0 inx=csq.rsf outx=csqoutx1.rsf ' +
+         ' weight0=500 weight1=500 power=-0.5 datum=400 ' +
+         ' sbc0=1 sbc1=0 ebc0=0 ebc1=0 inx=csq.rsf outx=csqoutx1.rsf ' +
          ' iny=dcsq.rsf outy=csqouty1.rsf outfile=adjrpt1.txt' +
          ' partask='+getThreads(exe_serial),
     'exe': exe_serial
@@ -238,7 +238,7 @@ jobs = [
     'tgt': ['csqoutx2.rsf','csqouty2.rsf','adjrpt2.txt'],
     'cmd': helmadj + ' ' +
          ' weight0=100 weight1=100 power=-0.5 datum=0 ' +
-         ' sbc0=1 sbc1=0 ebc0=0 ebc1=0 inx=csq.rsf outx=csqoutx2.rsf ' +
+         ' sbc0=1 sbc1=1 ebc0=0 ebc1=0 inx=csq.rsf outx=csqoutx2.rsf ' +
          ' iny=dcsq.rsf outy=csqouty2.rsf outfile=adjrpt2.txt' +
          ' partask='+getThreads(exe_serial),
     'exe': exe_serial
@@ -250,7 +250,7 @@ jobs = [
     'tgt': ['csqoutx3.rsf','csqouty3.rsf','adjrpt3.txt'],
     'cmd': helmadj + ' ' +
          ' weight0=100 weight1=100 power=-0.5 datum=0 ' +
-         ' sbc0=0 sbc1=1 ebc0=0 ebc1=0 inx=csq.rsf outx=csqoutx3.rsf ' +
+         ' sbc0=0 sbc1=0 ebc0=1 ebc1=1 inx=csq.rsf outx=csqoutx3.rsf ' +
          ' iny=dcsq.rsf outy=csqouty3.rsf outfile=adjrpt3.txt' +
          ' partask='+getThreads(exe_serial),
     'exe': exe_serial
@@ -262,7 +262,7 @@ jobs = [
     'tgt': ['csqoutx4.rsf','csqouty4.rsf','adjrpt4.txt'],
     'cmd': helmadj + ' ' +
          ' weight0=100 weight1=100 power=-0.5 datum=0 ' +
-         ' sbc0=1 sbc1=1 ebc0=1 ebc1=0 inx=csq.rsf outx=csqoutx4.rsf ' +
+         ' sbc0=1 sbc1=1 ebc0=1 ebc1=1 inx=csq.rsf outx=csqoutx4.rsf ' +
          ' iny=dcsq.rsf outy=csqouty4.rsf outfile=adjrpt4.txt' +
          ' partask='+getThreads(exe_serial),
     'exe': exe_serial
@@ -359,10 +359,10 @@ for i in range(len(jobs)):
         Flow(sig['tgt'], sig['src'] + [sig['dir']], sig['cmd'], stdin=0, stdout=0)
         Clean(t,sig['dir'])
 
-Result('csq', 'csq', 'put label1=Depth unit1=m label2=Distance unit2=m label="V\_p\^2" unit="m\^2/ms\^2" | grey color=e mean=y title="Marmousi Model"  labelfat=4 font=2 titlefat=4') # screenratio=0.55')
-Result('s0000csq', 's0000csq', 'put label1=Depth unit1=m label2=Distance unit2=m label="V\_p\^2" unit="m\^2/ms\^2" | grey color=e mean=y title="with even bc on all sides"  labelfat=4 font=2 titlefat=4') # screenratio=0.55')
-Result('s0011csq', 's0011csq', 'put label1=Depth unit1=m label2=Distance unit2=m label="V\_p\^2" unit="m\^2/ms\^2" | grey color=e mean=y title="with even bc on z and odd on x"  labelfat=4 font=2 titlefat=4') # screenratio=0.55')
-Result('s1000csq', 's1000csq', 'put label1=Depth unit1=m label2=Distance unit2=m label="V\_p\^2" unit="m\^2/ms\^2" | grey color=e mean=y title="odd bc on top, even on other sides"  labelfat=4 font=2 titlefat=4') # screenratio=0.55')
+#Result('csq', 'csq', 'put label1=Depth unit1=m label2=Distance unit2=m label="V\_p\^2" unit="m\^2/ms\^2" | grey color=e mean=y title="Marmousi Model"  labelfat=4 font=2 titlefat=4') # screenratio=0.55')
+#Result('s0000csq', 's0000csq', 'put label1=Depth unit1=m label2=Distance unit2=m label="V\_p\^2" unit="m\^2/ms\^2" | grey color=e mean=y title="with even bc on all sides"  labelfat=4 font=2 titlefat=4') # screenratio=0.55')
+#Result('s0011csq', 's0011csq', 'put label1=Depth unit1=m label2=Distance unit2=m label="V\_p\^2" unit="m\^2/ms\^2" | grey color=e mean=y title="with even bc on z and odd on x"  labelfat=4 font=2 titlefat=4') # screenratio=0.55')
+#Result('s1000csq', 's1000csq', 'put label1=Depth unit1=m label2=Distance unit2=m label="V\_p\^2" unit="m\^2/ms\^2" | grey color=e mean=y title="odd bc on top, even on other sides"  labelfat=4 font=2 titlefat=4') # screenratio=0.55')
 
 
 
