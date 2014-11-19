@@ -8,41 +8,56 @@ Fetch('L-30.las','1406_Make_a_synthetic',
 # Convert to RSF
 Flow('L-30','L-30.las','las2rsf $SOURCE $TARGET',stdin=0,stdout=-1)
 
-# Examine with "< L-30.rsf sfheaderattr segy=n"
+# Examine with "< L-30.rsf sfheaderattr segy=n desc=y"
 
 # Mask bad values
 Flow('mask1','L-30','headermath segy=n output=RHOB | mask min=0')
 Flow('mask2','L-30','headermath segy=n output=DT   | mask min=0')
 Flow('mask','mask1 mask2','mul ${SOURCES[1]}')
 
-# Extract values
+scale = dict(RHOB=1000,DT=3.28084,DEPT=1/3.28084) # convert to SI units
+threshold = dict(RHOB=100,DT=10)
 
 for case in ('DT','RHOB','DEPT'):
+     # Extract values
      Flow(case,'L-30 mask',
           '''
           headermath segy=n output=%s | 
-          headerwindow mask=${SOURCES[1]} | window | 
+          headerwindow mask=${SOURCES[1]} | window |
+          scale dscale=%g | 
           put o1=3058.5 d1=0.5 label1=Depth unit1=ft
-          ''' % case)
-     Plot(case,'graph title=%s' % case)
+          ''' % (case,scale[case]))
 
-# Clipping spikes
+     # Clip spikes
+     if case != 'DEPT':
+          despike = case+'-despike'
+          Flow(despike,case,'despike wide=13')
+          
+          spikemask = case+'-spikemask'
+          Flow(spikemask,[despike,case],
+               '''
+               math orig=${SOURCES[1]} output="abs(input-orig)" |
+               mask min=%g
+               ''' % threshold[case])
 
-Flow('despike','RHOB','despike wide=13')
+          Flow(despike+'2',[spikemask,despike,case],
+               '''
+               dd type=float |
+               math orig=${SOURCES[2]} filt=${SOURCES[1]}
+               output="input*filt+(1-input)*orig"
+               ''')
+          Result(case,[case,despike+'2'],
+                 '''
+                 cat axis=2 ${SOURCES[1]} |
+                 graph title=%s
+                 ''' % case)
 
-Flow('spikemask','despike RHOB',
-     'math orig=${SOURCES[1]} output="abs(input-orig)" | mask max=0.1')
+# Compute time-to-depth relationship
 
-Flow('despike2','spikemask despike RHOB',
-     '''
-     dd type=float |
-     math orig=${SOURCES[1]} filt=${SOURCES[2]}
-     output="input*orig+(1-input)*filt"
-     ''')
-Plot('despike2','graph wanttitle=n wantaxis=n plotcol=5')
+log_start_time = 0.410553230106 # (s)
 
-Result('RHOB','RHOB despike2','Overlay')
+Flow('tdr','dt','causint | math output="%g+(%g)*input" ' % (log_start_time,0.1524/1e6))
 
-# same for DT
-     
+Result('tdr','graph title=Time yreverse=y transp=y')
+
 End()

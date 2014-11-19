@@ -335,7 +335,7 @@ void segy_init(int nkeys, sf_file hdr)
 /*< initialize trace headers >*/
 {
     int ik, nk, len, namelen;
-    char key[11], *name;
+    char key[11], *name, *desc;
 
     if (nkeys > SF_MAXKEYS) 
 	sf_error("%s: The header is too long: %d > %d",
@@ -353,14 +353,23 @@ void segy_init(int nkeys, sf_file hdr)
 		 NULL == (name = sf_histstring(hdr,key))) )
 		name = "?";
 	
-	    snprintf(key,11,"key%d_len",ik-SF_NKEYS+1);
-	    if (!sf_getint(key,&len)) len=4;
-
 	    namelen = strlen(name) + 1;
 	    segy_key[ik].name = sf_charalloc(namelen);
 	    strncpy((char*) segy_key[ik].name,name,namelen);
-	    
+	
+	    snprintf(key,11,"key%d_len",nk);
+	    if (!sf_getint(key,&len)) len=4;
+
 	    segy_key[ik].size=len;
+
+	    if ( NULL == (desc = sf_getstring(name)) &&
+		(NULL == hdr ||
+		 NULL == (desc = sf_histstring(hdr,name))) ) 
+		desc = "?";
+	    
+	    namelen = strlen(desc) + 1;
+	    segy_key[ik].desc = sf_charalloc(namelen);
+	    strncpy((char*) segy_key[ik].desc,desc,namelen);
 	}
     }
 }
@@ -369,7 +378,7 @@ void other_init(int nkeys, sf_file hdr)
 /*< initialize non-SEGY trace headers >*/
 {
     int ik, nk, len, namelen;
-    char key[11], *name;
+    char key[11], *name, *desc;
 
     if (nkeys > SF_MAXKEYS) 
 	sf_error("%s: The header is too long: %d > %d",
@@ -383,15 +392,24 @@ void other_init(int nkeys, sf_file hdr)
 	     (NULL == hdr ||
 	      NULL == (name = sf_histstring(hdr,key))) )
 	    name = "?";
-	
-	snprintf(key,11,"key%d_len",ik-SF_NKEYS+1);
-	if (!sf_getint(key,&len)) len=4;
 
 	namelen = strlen(name) + 1;
 	segy_key[ik].name = sf_charalloc(namelen);
 	strncpy((char*) segy_key[ik].name,name,namelen);
+	
+	snprintf(key,11,"key%d_len",nk);
+	if (!sf_getint(key,&len)) len=4;
 	    
 	segy_key[ik].size=len;
+
+	if ( NULL == (desc = sf_getstring(name)) &&
+	     (NULL == hdr ||
+	      NULL == (desc = sf_histstring(hdr,name))) )
+	    desc = "?";
+
+	namelen = strlen(desc) + 1;
+	segy_key[ik].desc = sf_charalloc(namelen);
+	strncpy((char*) segy_key[ik].desc,desc,namelen);
     }
 }
 

@@ -1,4 +1,4 @@
-/* Integer header attributes. 
+/* Display header attributes. 
 
    Only nonzero values are reported.
 */
