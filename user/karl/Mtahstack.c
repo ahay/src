@@ -74,6 +74,7 @@ PARAMETERS
 */
 #include <string.h>
 #include <rsf.h>
+# include <rsf_su.h>
 #include <rsfsegy.h>
 
 #include "tahsub.h"
@@ -102,6 +103,21 @@ int main(int argc, char* argv[])
   int eof_get_tah;
   int fold;
   int itrace=0;
+  int ntaper;
+  int numxmute;
+  int numtmute;
+  float* taper;
+  char **list_of_floats;
+  float* xmute;
+  float* tmute;
+  int indx_of_offset;
+  float offset;
+  float d1;
+  float o1;
+  float mute_start;
+  int imute_start;
+  int indx_taper;
+
 
   /*****************************/
   /* initialize verbose switch */
@@ -113,7 +129,7 @@ int main(int argc, char* argv[])
      flag to control amount of print
      0 terse, 1 informative, 2 chatty, 3 debug
   */
-sf_warning("verbose=%d",verbose);
+  sf_warning("verbose=%d",verbose);
  
   /******************************************/
   /* input and output data are stdin/stdout */
@@ -197,6 +213,41 @@ sf_warning("verbose=%d",verbose);
        segmentation fault. */
     indx_of_keys[ikey]=segykey(list_of_keys[ikey]);
   }
+  /* get the mute parameters */
+  if(NULL==(list_of_floats=sf_getnstring("xmute",&numxmute))){
+    xmute=NULL;
+    numxmute=0;
+  } else {
+    xmute=sf_floatalloc(numxmute);
+    if(!sf_getfloats("xmute",xmute,numxmute))sf_error("unable to read xmute");
+  }
+  if(NULL==(list_of_floats=sf_getnstring("tmute",&numtmute))){
+    tmute=NULL;
+    numtmute=0;
+  } else {
+    tmute=sf_floatalloc(numtmute);
+    if(!sf_getfloats("tmute",tmute,numtmute))sf_error("unable to read tmute");
+  }
+  if(numxmute!=numtmute)sf_error("bad mute parameters: numxmute!=numtmute");
+  if(numxmute<=0)ntaper=0;
+  else {
+    if(!sf_getint("ntaper",&ntaper))ntaper=12;
+    /* \n
+       length of the taper on the stack mute
+    */
+    taper=sf_floatalloc(ntaper);
+    for(indx_time=0; indx_time<ntaper; indx_time++){
+      float val_sin=sin((indx_time+1)*SF_PI/(2*ntaper));
+      taper[indx_time]=val_sin*val_sin;
+    }
+    indx_of_offset=segykey("offset");
+  }
+
+  if (!sf_histfloat(in,"d1",&d1))
+    sf_error("input data does not define d1");
+  if (!sf_histfloat(in,"o1",&o1))
+    sf_error("input data does not define o1");
+
   stktrace          = sf_floatalloc(n1_traces);
   stkheader         = sf_floatalloc(n1_headers);
   time_variant_fold = sf_floatalloc(n1_traces);
@@ -220,19 +271,36 @@ sf_warning("verbose=%d",verbose);
     */
     if(fold==0){
       memcpy(stkheader,fheader,n1_headers*sizeof(int));
-      memcpy(stktrace ,intrace,n1_traces*sizeof(int));
       for(indx_time=0; indx_time<n1_traces; indx_time++){
-	if(intrace[indx_time]!=0)time_variant_fold[indx_time]=1.0;
-	else time_variant_fold[indx_time]=0.0;
-      }
-    } else {
-      for(indx_time=0; indx_time<n1_traces; indx_time++){
-	if(intrace[indx_time]!=0){
-	  stktrace[indx_time]+=intrace[indx_time];
-	  time_variant_fold[indx_time]++;
-	}
+	time_variant_fold[indx_time]=0.0;
+	stktrace[indx_time]=0.0;
       }
     }
+    if(xmute==NULL)mute_start=o1;
+    else{
+      if(typehead == SF_INT)offset=((int  *)fheader)[indx_of_offset];
+      else                  offset=((float*)fheader)[indx_of_offset];
+      intlin(numxmute,xmute,tmute,
+	     tmute[0],tmute[numxmute-1],1,
+	     &offset,&mute_start);
+      if(mute_start<o1)mute_start=o1;
+    }
+    imute_start=(int)(((mute_start-o1)/d1)+.5);
+    if(0)fprintf(stderr,"imute_start=%d\n",imute_start);
+    for(; imute_start<n1_traces && intrace[imute_start]==0;
+	  imute_start++); /* increate imute_start to first non-zero sample */
+    if(0)fprintf(stderr,"updated imute_start=%d\n",imute_start);
+    for(indx_time=imute_start, indx_taper=0; 
+	indx_time<imute_start+ntaper && indx_time<n1_traces; 
+	indx_time++, indx_taper++){
+      stktrace[indx_time]+=taper[indx_taper]*intrace[indx_time];
+      time_variant_fold[indx_time]+=taper[indx_taper];
+    }
+    for(; indx_time<n1_traces; indx_time++){
+      stktrace[indx_time]+=intrace[indx_time];
+      time_variant_fold[indx_time]++;
+    }
+
     fold++;
     eof_get_tah=get_tah(intrace, fheader, n1_traces, n1_headers, in);
 
