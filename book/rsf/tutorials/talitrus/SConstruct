@@ -44,7 +44,7 @@ Result('eye2','image eye',
        '''
        math m=${SOURCES[1]} output="(1-m)*input+m*1000" | 
        grey title="Talitrus Saltator" 
-       allpos=y transp=n screenwd=8.2 screenht=9.6 clip=86 color=IC
+       allpos=y transp=n screenwd=8.2 screenht=9.6 clip=86 color=iC
        ''')
 
 End()
