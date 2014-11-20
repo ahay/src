@@ -242,7 +242,7 @@ int main(int argc, char* argv[])
     /* loop reading traces in supergather */
     
     if(fold==0){
-      if(verbose>0)fprintf(stderr,"start a new gather\n"); 
+      if(verbose>1)fprintf(stderr,"start a new gather\n"); 
       /* apply any initialization */
       memcpy(stkheader,fheader,n1_headers*sizeof(int));
     }
