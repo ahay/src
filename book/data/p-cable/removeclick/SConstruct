@@ -1,0 +1,52 @@
+from rsf.proj import *
+
+Flow('input','../segy/DeconShots3.rsf',
+     '''
+      sftahsort input=${SOURCES} sort=tracl:1,1000 \
+      | sftahwrite output=${TARGETS} \
+        o2=1 n2=1000 d2=1 label2=tracl \
+     ''',stdout=0,stdin=0)
+
+Result('input',
+      '''
+       sfwindow n2=1000 f2=0 | sfput n2=200 n3=5 | sfgrey title="in 1000 traces"
+      ''')
+Result('inputw','input',
+      '''
+       sfwindow n2=960 f2=0 |  sfput n2=96 n3=10 |sfwiggle title="in 1000 traces"
+      ''')
+Result('inputw1','input',
+      '''
+       sfwindow n2=960 f2=0 max1=1 |  sfput n2=24 n3=40 |sfwiggle title="in 1000 traces"
+      ''')
+Result('inputg','input',
+      '''
+       sfwindow n2=960 f2=0 min1=2 max1=2.5 |  sfput n2=96 n3=10 |sfgrey title="in 1000 traces"
+      ''')
+
+
+Flow('removeclick','../segy/DeconShots3.rsf',
+     '''
+      sftahsort input=${SOURCES} sort=tracl:1,1000 \
+      | /home/karl/RSFSRC/user/karl/sftahremoveclick key=fldr verbose=3 \
+      | sftahwrite output=${TARGETS} \
+        o2=1 n2=1000 d2=1 label2=tracl \
+     ''',stdout=0,stdin=0)
+
+Result('removeclick',
+       '''
+          sfwindow n2=1000 f2=0 | sfput n2=200 n3=5 | sfgrey title="out 1000 traces"
+       ''')
+
+Flow('diff','input removeclick','sfadd ${SOURCES[1]} scale=1,-1')
+Result('diff',
+       '''
+          sfwindow n2=1000 f2=0 | sfput n2=200 n3=5 | sfgrey title="out 1000 traces"
+       ''')
+Flow('diffg','input removeclick','sfadd ${SOURCES[1]} scale=1,-1')
+Result('diffg','diff',
+       '''
+          sfwindow n2=960 f2=0 min1=2 max1=2.5 |  sfput n2=96 n3=10 | sfgrey title="out 1000 traces"
+       ''')
+
+End()
