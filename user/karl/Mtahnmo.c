@@ -178,10 +178,10 @@ int main(int argc, char* argv[])
   /* continue initialization specific to this tah program */
   /********************************************************/
   if (!sf_histfloat(in,"d1",&d1))
-    sf_error("input data not define d1");
+    sf_error("input data does not define d1");
   if (!sf_histfloat(in,"o1",&o1))
-    sf_error("input data not define o1");
-  /* kls should read label1 and verify it is time  
+    sf_error("input data does not define o1");
+  /* Kls should read label1 and verify it is time  
   if (!sf_histstring(in,"label1",&label1))
     sf_error("input data not define label1");
   */
