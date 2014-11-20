@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
 {
     bool nan;
     int i, n, nbuf;
-    float clip, *trace;
+    float clip, value, *trace;
     sf_file in=NULL, out=NULL; /* Input and output files */
 
     /* Initialize RSF */
@@ -51,6 +51,9 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("clip",&clip)) sf_error("Need clip=");
     /* clip value */
 
+    if (!sf_getfloat("value",&value)) value=clip;
+    /* replacement value */
+
     /* allocate floating point buffer */
     nbuf = sf_bufsiz(in)/sizeof(float);
     trace = sf_floatalloc (nbuf);
@@ -64,9 +67,9 @@ int main(int argc, char* argv[])
 	for (i=0; i < nbuf; i++) {
 	    nan = (bool) !isfinite(trace[i]);
 
-	    if (nan) trace[i] = SF_SIG(trace[i])*clip; 
-	    else if (trace[i] >  clip) trace[i]= clip;
-	    else if (trace[i] < -clip) trace[i]=-clip;
+	    if (nan) trace[i] = SF_SIG(trace[i])*value; 
+	    else if (trace[i] >  clip) trace[i]= value;
+	    else if (trace[i] < -clip) trace[i]=-value;
 	}
 
 	sf_floatwrite(trace,nbuf,out);

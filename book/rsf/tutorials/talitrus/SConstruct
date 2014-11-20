@@ -30,8 +30,21 @@ Result('sobel','grey title="Sobel filter" allpos=y')
 
 Flow('time','sobel','eikonal yshot=400 zshot=204 vel=n')
 
-Plot('eye','time','clip clip=400 | contour nc=1 c0=200 plotfat=5 plotcol=2 transp=n screenwd=8.2 screenht=9.6 wantaxis=n wanttitle=n')
+Plot('eye','time',
+     '''
+     clip clip=400 | contour nc=1 c0=200 plotfat=5 plotcol=2 
+     transp=n screenwd=8.2 screenht=9.6 wantaxis=n wanttitle=n
+     ''')
 
 Result('eye','image eye','Overlay')
+
+Flow('eye','time','mask max=200 | dd type=float')
+
+Result('eye2','image eye',
+       '''
+       math m=${SOURCES[1]} output="(1-m)*input+m*1000" | 
+       grey title="Talitrus Saltrator" 
+       allpos=y transp=n screenwd=8.2 screenht=9.6 clip=86 color=IC
+       ''')
 
 End()
