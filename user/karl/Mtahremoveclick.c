@@ -77,7 +77,7 @@ double dot(float* vector1, float* vector2, int veclength){
   double dotprod;
   dotprod=0;
   for (indx=0; indx<veclength; indx++){
-    dotprod+=vector1[indx]*vector1[indx];
+    dotprod+=vector1[indx]*vector2[indx];
   }
   return dotprod;
 }
