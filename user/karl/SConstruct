@@ -29,6 +29,7 @@ karlpocs
 tahmakeevent
 tahheadermath
 make_ix_indx
+tahremoveclick
 '''
 
 env.Prepend(CPPPATH=[RSFSRC+'/include'],
