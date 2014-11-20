@@ -18,7 +18,7 @@ Flow('image','byte',
      put o1=0 d1=1 o2=0 d2=1
      ''')
 
-Plot('image','grey title="Talitrus Saltrator" allpos=y transp=n screenwd=8.2 screenht=9.6')
+Plot('image','grey title="Talitrus Saltator" allpos=y transp=n screenwd=8.2 screenht=9.6')
 
 Result('image','Overlay')
 
@@ -43,7 +43,7 @@ Flow('eye','time','mask max=200 | dd type=float')
 Result('eye2','image eye',
        '''
        math m=${SOURCES[1]} output="(1-m)*input+m*1000" | 
-       grey title="Talitrus Saltrator" 
+       grey title="Talitrus Saltator" 
        allpos=y transp=n screenwd=8.2 screenht=9.6 clip=86 color=IC
        ''')
 
