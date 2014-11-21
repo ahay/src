@@ -128,6 +128,37 @@ def ellipse(cc,xcenter,zcenter,semiA,semiB,sampling,custom,par):
         )
 
 # ------------------------------------------------------------
+def hsine2d(cc,base,ampl,peri,custom,par,jx=1):
+    M8R='$RSFROOT/bin/sf'
+    DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
+   
+    cco=cc+'o'
+    ccz=cc+'z'
+    ccx=cc+'x'
+   
+    Flow(cc,None,
+         '''
+         %smath output=0 n1=%d o1=%g d1=%g |
+         window j1=%d >%s datapath=%s/;
+         '''%(M8R,par['nx'],par['ox'],par['dx'],jx,cco,DPT) +
+         '''
+         %smath <%s output="%g+%g*sin(2*3.14*x1/%g)" >%s datapath=%s/;
+         '''%(M8R,cco,base,ampl,peri,ccz,DPT) +
+         '''
+         %smath <%s output="x1" >%s datapath=%s/;
+         '''%(M8R,cco,ccx,DPT) +
+         '''
+         %scat axis=2 space=n %s %s |
+         transp |
+         put o1=0 d1=1 label1="" unit1="" label2="" unit2="">${TARGETS[0]};
+         '''%(M8R,ccx,ccz) +
+         '''
+         %srm %s %s %s
+         '''%(M8R,cco,ccx,ccz),
+              stdin=0,
+              stdout=0)
+
+# ------------------------------------------------------------
 def horizontal2d(cc,zcoord,custom,par,jx=1):
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
