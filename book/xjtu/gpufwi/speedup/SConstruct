@@ -64,7 +64,7 @@ Plot('timeall','timealla timeallb',
 	label1="nx(Datasize: nx=nz)" unit1= title="Time cost for different datasize"
 	''')
 Plot('s0',None,'box font=2 x0=8.5 y0=6 label="CPU" xt=0.000000 yt=0.000000')
-Plot('s1',None,'box font=2 x0=8.5 y0=3.5 label="GPU" xt=0.000000 yt=0.000000')
+Plot('s1',None,'box font=2 x0=8.5 y0=2.5 label="GPU" xt=0.000000 yt=0.000000')
 Result('timecost','timeall s0 s1','Overlay')
 
 End()
