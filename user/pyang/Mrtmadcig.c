@@ -576,7 +576,7 @@ int main(int argc, char* argv[])
 		for(ia=0; ia<na; ia++)
 		for(i2=0; i2<nx; i2++)
 		for(i1=0; i1<nz; i1++)
-			adcig[ia][i2][i1]+=num[ia][i2][i1]*vv[i2][i1]/(16.0*(den[i2][i1]+SF_EPS)*sinf((ia+1)*da));
+			adcig[ia][i2][i1]+=16.0*num[ia][i2][i1]*vv[i2+nb][i1+nb]/((den[i2][i1]+SF_EPS)*sinf((ia+1)*da));
 	}
 	sf_floatwrite(adcig[0][0], na*nz*nx,rtmadcig);
 
