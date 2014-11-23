@@ -60,10 +60,10 @@ void step_forward(float **p0, float **p1, float **p2, float **vv, float dtz, flo
 	    p2[ix][iz]=2.0*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
     }
 
-    for (ix=1; ix < nx-1; ix++) { 
-	/* top boundary */
 /*
-	iz=0;
+    // top boundary 
+    iz=0;
+    for (ix=1; ix < nx-1; ix++) { 
 	v1=vv[ix][iz]*dtz; 
 	v2=vv[ix][iz]*dtx;
 	diff1=	(p1[ix][iz+1]-p1[ix][iz])-
@@ -72,9 +72,11 @@ void step_forward(float **p0, float **p1, float **p2, float **vv, float dtz, flo
 	diff1*=v1;
  	diff2*=0.5*v2*v2;
 	p2[ix][iz]=2.0*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
+    }
 */
-	/* bottom boundary */
-	iz=nz-1;
+    /* bottom boundary */
+    iz=nz-1;
+    for (ix=1; ix < nx-1; ix++) { 
 	v1=vv[ix][iz]*dtz; 
 	v2=vv[ix][iz]*dtx;
 	diff1=-(p1[ix][iz]-p1[ix][iz-1])+(p0[ix][iz]-p0[ix][iz-1]);
@@ -84,9 +86,9 @@ void step_forward(float **p0, float **p1, float **p2, float **vv, float dtz, flo
 	p2[ix][iz]=2.0*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
     }
 
+    /* left boundary */
+    ix=0;
     for (iz=1; iz <nz-1; iz++){ 
-	/* left boundary */
-	ix=0;
 	v1=vv[ix][iz]*dtz; 
 	v2=vv[ix][iz]*dtx;
 	diff1=p1[ix][iz-1]-2.0*p1[ix][iz]+p1[ix][iz+1];
@@ -94,8 +96,11 @@ void step_forward(float **p0, float **p1, float **p2, float **vv, float dtz, flo
 	diff1*=0.5*v1*v1;
 	diff2*=v2;
 	p2[ix][iz]=2.0*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
-	/* right boundary */
-	ix=nx-1;
+    }
+
+    /* right boundary */
+    ix=nx-1;
+    for (iz=1; iz <nz-1; iz++){ 
 	v1=vv[ix][iz]*dtz; 
 	v2=vv[ix][iz]*dtx;
 	diff1=p1[ix][iz-1]-2.0*p1[ix][iz]+p1[ix][iz+1];
@@ -178,8 +183,8 @@ int main(int argc, char* argv[])
     	if(!sf_getbool("chk",&chk)) chk=false;
     	/*check whether GPU-CPU implementation coincide with each other or not */
 	if(chk){
-    		if (!sf_getint("kt",&kt))  kt=100;/* check it at it=100 */
 		check=sf_output("check");/* output shotsnap for correctness checking*/
+		if (!sf_getint("kt",&kt))  kt=100;/* check it at it=100 */
 	}
 	if (!sf_getfloat("amp",&amp)) amp=1000;
 	/* maximum amplitude of ricker */
@@ -272,10 +277,10 @@ int main(int argc, char* argv[])
 	distx=sxbeg-gxbeg;
 	distz=szbeg-gzbeg;
 	if (!(gxbeg>=0 && gzbeg>=0 && gxbeg+(ng-1)*jgx<nx && gzbeg+(ng-1)*jgz<nz))	
-	{ sf_error("geophones exceeds the computing zone!\n"); exit(1);}
+	{ printf("geophones exceeds the computing zone!\n"); exit(1);}
 	if (csdgather)	{
-		if (!(	(sxbeg+(ns-1)*jsx)+(ng-1)*jgx-distx <nx  && (szbeg+(ns-1)*jsz)+(ng-1)*jgz-distz <nz))	
-		{ sf_error("geophones exceeds the computing zone!\n"); exit(1);}
+		if (!((sxbeg+(ns-1)*jsx)+(ng-1)*jgx-distx <nx  && (szbeg+(ns-1)*jsz)+(ng-1)*jgz-distz <nz))	
+		{ printf("geophones exceeds the computing zone!\n"); exit(1);}
 	}
 	sg_init(gxz, gzbeg, gxbeg, jgz, jgx, ng, nz);
 
@@ -299,7 +304,7 @@ int main(int argc, char* argv[])
 			record_seis(&dobs[it*ng], gxz, p0, ng, nz);
 
 			/* record a snapshot */
-			if(it==kt){
+			if(chk &&it==kt){
 				sf_floatwrite(p0[0],nz*nx, check);
 			}
 		}
