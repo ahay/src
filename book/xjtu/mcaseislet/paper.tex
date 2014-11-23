@@ -232,7 +232,7 @@ Note that we are using seislet transform which has different scales for signal r
 \begin{equation}
  \mathrm{diag}(W_{ii})x_i= s(x_i)<s_0?1:0,
 \end{equation}
-where $s_0$ is user-defined scale, while $s(x_i)$ is the scale that the coefficient $x_i$ corresponds to.  Put all things together, in the MCA shaping regularization we are using a scale-dependent exponential shrinkage operator which is composite operator cascaded with a scale-muting operator $W_{s}$ and a exponential weighting operator $W_{exp}$:
+where $s_0$ is user-defined scale, while $s(x_i)$ is the scale that the coefficient $x_i$ corresponds to.  Put all things together, in the MCA shaping regularization we are using a scale-dependent exponential shrinkage operator which is composite operator cascaded with a scale-muting operator $W_{s}$ and an exponential weighting operator $W_{exp}$:
 \begin{equation}
  S(x)=W_{exp} W_s x.
 \end{equation}
