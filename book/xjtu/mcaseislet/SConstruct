@@ -1,4 +1,3 @@
 from rsf.tex import *
 
-End(lclass='geophysics',  
-	use='algorithm,algorithmic,amsmath,amssymb,graphicx,url',color='ALL')
+End(use='algorithm,algorithmic,amsmath,amssymb',color='ALL')

@@ -1,16 +1,12 @@
 from rsf.proj import *
-
-import os
-private = {'login':os.environ.get('BEG_LOGIN'),
-           'password':os.environ.get('BEG_PASSWORD'),
-           'server':os.environ.get('BEG_SERVER')}
+from rsf.recipes.beg import server as private
 
 #Fetch('cmp.HH','acig',private)
 Flow('cmp','cmp.HH','dd form=native | tpow tpow=2 | mutter v0=1.4 half=n')
 
 def grey(title,other=''):
     return '''
-    grey title="%s"  labelfat=3 titlefat=3 font=2 labelsz=8 titlesz=8
+    grey title="%s" labelsz=12 titlesz=16 labelfat=6 titlefat=6 
     scalebar=y  label1="Time (s)" label2="Offset (km)" %s
     ''' % (title,other)
 
@@ -30,6 +26,8 @@ Flow('mis','cmp1 dip2 mask1',
      ''')
 Flow('mis2','mis cmp','window min2=0 n2=6 | cat axis=2 ${SOURCES[1]}')
 Flow('mis3','mis2','window f2=1 | reverse which=2 opt=n | cat axis=2 $SOURCE')
+
+#Plot('mis2','grey title="Near Offsets Interpolated" ')
 
 # Predict multiples
 ###################
@@ -69,9 +67,9 @@ Flow('masks','mask','window n2=64')
 Flow('comps','cmp2s mdip2s','seisigk dips=${SOURCES[1]} verb=y niter=1000')
 
 Flow('noissIRLS','comps masks','window f3=1 | add mode=p ${SOURCES[1]}')
-Flow('signsIRLS','mis2 noiss','window n2=64 | add scale=1,-1 ${SOURCES[1]}')
-Flow('vsignsIRLS','signs','vscan semblance=y v0=1 nv=100 dv=0.02 half=n')
-Flow('vnoissIRLS','noiss','vscan semblance=y v0=1 nv=100 dv=0.02 half=n')
+Flow('signsIRLS','mis2 noissIRLS','window n2=64 | add scale=1,-1 ${SOURCES[1]}')
+Flow('vsignsIRLS','signsIRLS','vscan semblance=y v0=1 nv=100 dv=0.02 half=n')
+Flow('vnoissIRLS','noissIRLS','vscan semblance=y v0=1 nv=100 dv=0.02 half=n')
 
 Plot('noissIRLS','window f2=6 | ' + grey('Seislet-IRLS (noise)','clip=228'))
 Plot('signsIRLS','window f2=6 | ' + grey('Seislet-IRLS (signal)','clip=228'))
@@ -83,7 +81,7 @@ Plot('vnoissIRLS',grey('Seislet-IRLS (noise)','color=j allpos=y maxval=0.75'))
 Flow('compsmca','cmp2s mdip2s','mcaseislet dips=${SOURCES[1]} verb=y order=1 type=l eps=0.01 niter=15 pclip=10 pscale=13')
 
 Flow('noissmca','compsmca masks','window f3=1 | add mode=p ${SOURCES[1]}')
-Flow('signsmca','mis2 noiss','window n2=64 | add scale=1,-1 ${SOURCES[1]}')
+Flow('signsmca','mis2 noissmca','window n2=64 | add scale=1,-1 ${SOURCES[1]}')
 Flow('vsignsmca','signsmca','vscan semblance=y v0=1 nv=100 dv=0.02 half=n')
 Flow('vnoissmca','noissmca','vscan semblance=y v0=1 nv=100 dv=0.02 half=n')
 
