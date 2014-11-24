@@ -53,7 +53,8 @@ env.Append(LIBS=[env.get('DYNLIB','')+'rsf'],
 
 if CTP:
     env.Append(LIBS=['cudart','cufft','cusparse'],
-               LIBPATH=[os.path.join(CTP,'lib'),os.path.join(CTP,'lib')])
+               LIBPATH=filter(os.path.isdir,[os.path.join(CTP,'lib64'),
+                                             os.path.join(CTP,'lib')]))
 
 cuda_mains = Split(cuda_progs)
 for prog in cuda_mains:

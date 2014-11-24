@@ -1198,8 +1198,9 @@ def cuda(context):
         context.env['CC'] = nvcc
         context.env['CFLAGS'] = '--x=cu'
         context.env['LIBS'] = ['cudart']
-        context.env['LIBPATH'] = [os.path.join(CUDA_TOOLKIT_PATH,'lib64'),
-                                  os.path.join(CUDA_TOOLKIT_PATH,'lib')]
+        context.env['LIBPATH'] = filter(os.path.isdir,
+                                        [os.path.join(CUDA_TOOLKIT_PATH,'lib64'),
+                                        os.path.join(CUDA_TOOLKIT_PATH,'lib')])
         context.env['LINKFLAGS'] = ''
         res = context.TryLink(text,'.c')
         context.env['CC'] = cc
