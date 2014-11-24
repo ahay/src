@@ -461,7 +461,7 @@ Author:  Dave Hale, Colorado School of Mines, 07/16/90
 			wor = wn[i]*invr;
 			uu = (s[i]-wor)*(s[i]+wor);
 			/*if(uu<=0) err("\tRaypath has a too large curvature!\n\t A smoother velocity is required. \n");*/
-			uu=MAX(0,uu);
+			uu=SF_MAX(0,uu);
  			unew = sqrt(uu); 
 			uold = un[i];
 			un[i] = unew;
@@ -669,8 +669,8 @@ float svp(float a, float a1111, float a3333,float a1133,float a1313)
 	cos2t=cost*cost;
 	psi=1.-b2/a2;
 	gamma=0.25*psi*psi+(2*d-e)*psi*sin2t*cos2t+(psi+e)*e*sin2t*sin2t;
-	sqgamma=sqrt(MAX(gamma,0));
-	v=sqrt(MAX(a3333*(1.+e*sin2t-0.5*psi+sqgamma),0));
+	sqgamma=sqrt(SF_MAX(gamma,0));
+	v=sqrt(SF_MAX(a3333*(1.+e*sin2t-0.5*psi+sqgamma),0));
 
 	return(1/v);
 }
