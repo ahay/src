@@ -29,7 +29,6 @@ using namespace std;
 //FltNumVec ks; //k
 static std::valarray<float> vs;
 static std::valarray<double> ks;
-static float pi=SF_PI;
 static float dt,dx;
 
 static float sinc(float x)
@@ -46,7 +45,7 @@ int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
     setvalue(res,0.0);
     for(int a=0; a<nr; a++) {
 	for(int b=0; b<nc; b++) {
-	    res(a,b) = 2.0*pi*ks[cs[b]]*sinc(pi*vs[rs[a]]*fabs(ks[cs[b]])*dt);
+	    res(a,b) = 2.0*SF_PI*ks[cs[b]]*sinc(SF_PI*vs[rs[a]]*fabs(ks[cs[b]])*dt);
 	}
     }
     return 0;
@@ -70,7 +69,7 @@ int fdx16(vector<int>& rs, vector<int>& cs, DblNumMat& res)
     for(int a=0; a<nr; a++) {
 	for(int b=0; b<nc; b++) {
            v = vs[rs[a]];
-           k = ks[cs[b]]*2*pi; 
+           k = ks[cs[b]]*2*SF_PI; 
 	   res(a,b) = c1*sin(k*dx/2.0)+c2*sin(k*dx*3.0/2.0)+c3*sin(k*dx*5.0/2.0)+c4*sin(k*dx*7.0/2.0)+c5*sin(k*dx*9.0/2.0)+
 	              c6*sin(k*dx*11.0/2.0)+c7*sin(k*dx*13.0/2.0)+c8*sin(k*dx*15.0/2.0);
 	   res(a,b) = res(a,b)*2.0;// exp(ikx)-exp(-ikx) = 2*sin(kx)
@@ -228,8 +227,8 @@ int main(int argc, char** argv)
     DblNumMat ktmp(1,N); for(int k=0; k<N; k++) ktmp._data[k]=ks[k];
     DblNumMat ktmpc(1,count); for(int k=0; k<count; k++) ktmpc._data[k]=ks[ksc[k]];
     DblNumMat B(SIZE,N), Bc(SIZE,count);
-    iC(ddgemm(2*pi*dx,s,ktmp,0.0,B));
-    iC(ddgemm(2*pi*dx,s,ktmpc,0.0,Bc));
+    iC(ddgemm(2*SF_PI*dx,s,ktmp,0.0,B));
+    iC(ddgemm(2*SF_PI*dx,s,ktmpc,0.0,Bc));
     for(int k=0; k<B._m*B._n; k++) B._data[k]=sin(B._data[k]);
     for(int k=0; k<Bc._m*Bc._n; k++) Bc._data[k]=sin(Bc._data[k]);
     DblNumMat IB(N,SIZE);    iC( ddpinv(B, 1e-16, IB) );

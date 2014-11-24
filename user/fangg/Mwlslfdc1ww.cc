@@ -33,7 +33,6 @@ using namespace std;
 static std::valarray<float> vs;
 static std::valarray<double> ks;
 
-static float pi=SF_PI;
 static float twopi = 2.0*SF_PI;
 static float dt, dx;
 static float taper;
@@ -56,7 +55,7 @@ int samplex(vector<int>& rs, vector<int>& cs, DblNumMat& res)
     setvalue(res,0.0);
     for(int a=0; a<nr; a++) {
 	for(int b=0; b<nc; b++) {
-	    tmp = sin(pi*vs[rs[a]]*(ks[cs[b]])*dt);
+	    tmp = sin(SF_PI*vs[rs[a]]*(ks[cs[b]])*dt);
 	    if (tmp > 1-taper) {
 		tmp = 1-taper;
 	    }
@@ -81,7 +80,7 @@ int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
     setvalue(res,0.0);
     for(int a=0; a<nr; a++) {
 	for(int b=0; b<nc; b++) {
-	    tmp = sin(pi*vs[rs[a]]*(ks[cs[b]])*dt);
+	    tmp = sin(SF_PI*vs[rs[a]]*(ks[cs[b]])*dt);
 	    if (tmp > 1-taper) {
 		tmp = 1-taper;
 	    }
@@ -208,7 +207,7 @@ int main(int argc, char** argv)
     int LEN = sx._m;
     DblNumMat B(LEN,nx);
 
-    iC(ddgemm(2*pi*dx,sx,ktmp,0.0,B));
+    iC(ddgemm(2*SF_PI*dx,sx,ktmp,0.0,B));
 
     for(int k=0; k<B._m*B._n; k++) B._data[k]=sin(B._data[k]);
 

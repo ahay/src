@@ -67,10 +67,10 @@ int main(int argc, char** argv)
         FltNumVec rwork(lwork);
         int info;
         cgesvd_(&jobu, &jobvt, &m, &n, 
-	        (MKL_Complex8*) MC.data(), &m, S.data(), 
-	        (MKL_Complex8*) U.data(), &m, 
-	        (MKL_Complex8*) VT.data(), &k, 
-	        (MKL_Complex8*) work.data(), &lwork, 
+	        ( __CLPK_complex*) MC.data(), &m, S.data(), 
+	        ( __CLPK_complex*) U.data(), &m, 
+	        ( __CLPK_complex*) VT.data(), &k, 
+	        ( __CLPK_complex*) work.data(), &lwork, 
 	        rwork.data(), &info);    
 	iA(info==0);
     }

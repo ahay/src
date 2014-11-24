@@ -1,6 +1,12 @@
 #ifndef _sf_lapack_h_
 #define _sf_lapack_h_
 
+#ifdef __APPLE__
+
+#include <Accelerate/Accelerate.h>
+
+#else
+
 #ifdef HAVE_MKL
 
 #include <mkl.h>
@@ -812,6 +818,8 @@ void zupmtr_(char *side, char *uplo, char *trans, int *m, int *n, cpx16 *ap, cpx
 
 void cgeqpf_(int *m, int *n, cpx8 *a, int *lda, int *jpvt, cpx8 *tau, cpx8 *work, float* rwork, int *info);
 void zgeqpf_(int *m, int *n, cpx16 *a, int *lda, int *jpvt, cpx16 *tau, cpx16 *work, double* rwork, int *info);
+
+#endif
 
 #endif
 

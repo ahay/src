@@ -19,7 +19,7 @@ bfio bfio_eval2 bfio_eval3 bfio_apeval2 bfio_eval34 rankoneapprox
 
 # C programs
 cprogs = '''
-nmo3_ort inmo3_ort
+inmo3_ort
 '''
 
 try:  # distributed version

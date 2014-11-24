@@ -29,7 +29,6 @@ using namespace std;
 static std::valarray<float> vs;
 static std::valarray<double> ks;
 static std::valarray<double> kx, kz;
-static float pi=SF_PI;
 static float dt;
 
 int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
@@ -40,7 +39,7 @@ int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
     setvalue(res,0.0);
     for(int a=0; a<nr; a++) {
 	for(int b=0; b<nc; b++) {
-        res(a,b) = 2.0*cos(2.0*pi*vs[rs[a]]*ks[cs[b]]*dt);
+        res(a,b) = 2.0*cos(2.0*SF_PI*vs[rs[a]]*ks[cs[b]]*dt);
 	}
     }
     return 0;
@@ -188,8 +187,8 @@ int main(int argc, char** argv)
     iC(ddgemm(dx,s2,kxtmp,0.0,Bx));
     iC(ddgemm(dz,s1,kztmpc,0.0,Bc));
     iC(ddgemm(dx,s2,kxtmpc,0.0,Bxc));
-    for(int k=0; k<B._m*B._n; k++) B._data[k]=cos(2.0*pi*(B._data[k]+Bx._data[k]));
-    for(int k=0; k<Bc._m*Bc._n; k++) Bc._data[k]=cos(2.0*pi*(Bc._data[k]+Bxc._data[k]));
+    for(int k=0; k<B._m*B._n; k++) B._data[k]=cos(2.0*SF_PI*(B._data[k]+Bx._data[k]));
+    for(int k=0; k<Bc._m*Bc._n; k++) Bc._data[k]=cos(2.0*SF_PI*(Bc._data[k]+Bxc._data[k]));
     DblNumMat IBc(COUNT,LEN);    iC( ddpinv(Bc, 1e-16, IBc) );
     DblNumMat coef(ridx.size(),LEN);
     DblNumMat M2c;
@@ -234,9 +233,9 @@ int main(int argc, char** argv)
     std::valarray<float> fMlr(nz*3),ktmp(nz);
     DblNumMat vratio(nz,3);
     for (int k=0; k < nz; k++) {
-        ktmp[k] = k*dk2*2.0*pi;
+        ktmp[k] = k*dk2*2.0*SF_PI;
     } 
-    float gt, seta, dangle=pi/8;
+    float gt, seta, dangle=SF_PI/8;
     for (int aj=0; aj<3; aj++) {
         seta = dangle*aj;
         vratio(0,aj) = 1.0;

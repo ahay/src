@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
     int n1, n2, n12, i1, i2, i, it, nt, ne, b1, e1, b2, e2;
     float o1, o2, d1, d2, zero, **data=NULL, **xyz=NULL, *e=NULL;
     double BBox[4], error;
-    Point *heap=NULL, *h=NULL;
+    hpoint *heap=NULL, *h=NULL;
     sf_file in=NULL, out=NULL, edge=NULL;
     Node q;
 
@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
     sf_putint(out,"n2",nt);
 
     n12 = n1*n2;
-    heap = (Point *) sf_alloc (n12,sizeof(Point));
+    heap = (hpoint *) sf_alloc (n12,sizeof(hpoint));
 
     data = sf_floatalloc2(n1,n2);
     sf_floatread(data[0],n12,in);

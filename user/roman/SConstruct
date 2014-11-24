@@ -3,8 +3,9 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-fitcrs fitcrspicks fitnonhcrspicks readsample readsampleref vscancrs 
-wavegeom rtmgeom cigangle opsmigrk gsray2rays2d gsrayvti traveltimelen traveltime2d traveltimelen3d
+fitcrs fitcrspicks fitnonhcrspicks readsample readsampleref wavegeom
+rtmgeom cigangle opsmigrk gsray2rays2d gsrayvti traveltimelen
+traveltime2d traveltimelen3d
 '''
 # traveltime2d rkawefd2d
 

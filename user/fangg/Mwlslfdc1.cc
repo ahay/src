@@ -31,7 +31,6 @@ using namespace std;
 static std::valarray<float> vs;
 static std::valarray<double> ks;
 
-static float pi=SF_PI;
 static float twopi = 2.0*SF_PI;
 static float dt, dx;
 static float tpa, tpb;
@@ -73,12 +72,12 @@ int sampletp(vector<int>& rs, vector<int>& cs, DblNumMat& res)
     res.resize(nr,nc);  
     setvalue(res,0.0);
     for(int a=0; a<nr; a++) { // x 
-	k0 = 0.5*pi/(vs[rs[a]]*dt*0.5);
+	k0 = 0.5*SF_PI/(vs[rs[a]]*dt*0.5);
 	for(int b=0; b<nc; b++) { // k
 	    k  = twopi*ks[cs[b]];
 	    tp = tpfun(tpa, tpb, k, k0);
 	    //sf_warning("tp=%f, k0=%f, k=%f", tp, k0, k);
-	    tmp = tp*sin(pi*vs[rs[a]]*(ks[cs[b]])*dt);
+	    tmp = tp*sin(SF_PI*vs[rs[a]]*(ks[cs[b]])*dt);
 	    res(a,b) =2.0*tmp/vs[rs[a]]/dt;
 	}
     }
@@ -94,7 +93,7 @@ int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
     setvalue(res,0.0);
     for(int a=0; a<nr; a++) { // x 
 	for(int b=0; b<nc; b++) { // k
-	    tmp = sin(pi*vs[rs[a]]*(ks[cs[b]])*dt);
+	    tmp = sin(SF_PI*vs[rs[a]]*(ks[cs[b]])*dt);
 	    res(a,b) =2.0*tmp/vs[rs[a]]/dt;
 	}
     }
@@ -214,7 +213,7 @@ int main(int argc, char** argv)
     int LEN = sx._m;
     DblNumMat B(LEN,nx);
     
-    iC(ddgemm(2*pi*dx,sx,ktmp,0.0,B));
+    iC(ddgemm(2*SF_PI*dx,sx,ktmp,0.0,B));
 
     for(int k=0; k<B._m*B._n; k++) B._data[k]=sin(B._data[k]);
     
@@ -330,7 +329,7 @@ int main(int argc, char** argv)
     std::valarray<float> Mtp(nx*nx);
     float tp;
     for (int ix=0; ix<nx; ix++) {
-	k0 = 0.5*pi/(vs[ix]*dt*0.5);
+	k0 = 0.5*SF_PI/(vs[ix]*dt*0.5);
 	for (int ik=0; ik<nx; ik++) {
 	    kk  = twopi*ks[ik];
 	    tp = tpfun(tpa, tpb, kk, k0);

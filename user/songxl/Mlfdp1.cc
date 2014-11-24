@@ -28,7 +28,6 @@ using namespace std;
 //DblNumVec ks; //k
 static std::valarray<float> vs;
 static std::valarray<double> ks;
-static float pi=SF_PI;
 static float dt,dx;
 
 int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
@@ -39,7 +38,7 @@ int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
     setvalue(res,0.0);
     for(int a=0; a<nr; a++) {
 	for(int b=0; b<nc; b++) {
-        res(a,b) = 2.0*cos(2*pi*vs[rs[a]]*ks[cs[b]]*dt);
+        res(a,b) = 2.0*cos(2*SF_PI*vs[rs[a]]*ks[cs[b]]*dt);
 	}
     }
     return 0;
@@ -62,7 +61,7 @@ int FD10(vector<int>& cs, DblNumMat& res)
     res(0,0)=1.0;
     for(int b=1; b<nc; b++) {
        k = ks[cs[b]]; 
-       res(b,0) = acos(0.5*v*v*dt*dt*(aa+2*b1*cos(2*pi*k*dx)+2.0*b2*cos(4*pi*k*dx)+2.0*b3*cos(6*pi*k*dx)+2.0*b4*cos(8*pi*k*dx)+2.0*b5*cos(10*pi*k*dx))+1.0)/(k*2.0*pi*dt*v);
+       res(b,0) = acos(0.5*v*v*dt*dt*(aa+2*b1*cos(2*SF_PI*k*dx)+2.0*b2*cos(4*SF_PI*k*dx)+2.0*b3*cos(6*SF_PI*k*dx)+2.0*b4*cos(8*SF_PI*k*dx)+2.0*b5*cos(10*SF_PI*k*dx))+1.0)/(k*2.0*SF_PI*dt*v);
     }
     return 0;
 }
@@ -144,7 +143,7 @@ int main(int argc, char** argv)
     iC( sample(rs,cs,Mexact) );
 
     //float dk2=dk/2.0;
-    float dk2=dk*2.0*pi;
+    float dk2=dk*2.0*SF_PI;
     DblNumMat Mlr(N,N);
 
 
@@ -176,8 +175,8 @@ int main(int argc, char** argv)
     DblNumMat ktmp(1,N); for(int k=0; k<N; k++) ktmp._data[k]=ks[k];
     DblNumMat ktmpc(1,count); for(int k=0; k<count; k++) ktmpc._data[k]=ks[ksc[k]];
     DblNumMat B(SIZE,N), Bc(SIZE,count);
-    iC(ddgemm(2*pi*dx,s,ktmp,0.0,B));
-    iC(ddgemm(2*pi*dx,s,ktmpc,0.0,Bc));
+    iC(ddgemm(2*SF_PI*dx,s,ktmp,0.0,B));
+    iC(ddgemm(2*SF_PI*dx,s,ktmpc,0.0,Bc));
     for(int k=0; k<B._m*B._n; k++) B._data[k]=cos(B._data[k]);
     for(int k=0; k<Bc._m*Bc._n; k++) Bc._data[k]=cos(Bc._data[k]);
     DblNumMat IB(N,SIZE);    iC( ddpinv(B, 1e-16, IB) );
@@ -214,9 +213,9 @@ int main(int argc, char** argv)
     for (int k=1; k < N; k++) {
         tg = 0.0;
         for (int j=0; j < SIZE; j++) {
-            tg += 0.5*G(0,j)*cos(j*dx*ks[k]*2.0*pi);
+            tg += 0.5*G(0,j)*cos(j*dx*ks[k]*2.0*SF_PI);
         }
-        fMlr[k] = acos(tg)/(ks[k]*2.0*pi*dt*vs[0]); 
+        fMlr[k] = acos(tg)/(ks[k]*2.0*SF_PI*dt*vs[0]); 
     }
     outm << fMlr;
 

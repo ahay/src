@@ -35,11 +35,6 @@
 #define C1  0.66666666666666666666 /*  2/3  */	
 #define C2 -0.08333333333333333333 /* -1/12 */
 
-#define ABS(x) ((x) < 0 ? -(x) : (x))
-#define SGN(x) ((x) < 0 ? -1.0 : 1.0)
-#define MAX(x,y) ((x) > (y) ? (x) : (y))
-#define MIN(x,y) ((x) < (y) ? (x) : (y))
-
 /* centered FD derivative stencils */
 #define DX(a,ix,iz,s) (C2*(a[ix+2][iz  ] - a[ix-2][iz  ]) +  \
                        C1*(a[ix+1][iz  ] - a[ix-1][iz  ])  )*s

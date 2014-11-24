@@ -28,7 +28,7 @@ http://www.ahay.org/rsflog/index.php?/archives/340-Program-of-the-month-sfwiggle
 #include <rsf.h>
 #include <rsfplot.h>
 
-static void check(float *x, float *y);
+static void checkit(float *x, float *y);
 static bool transp;
 
 int main(int argc, char* argv[])
@@ -215,13 +215,13 @@ int main(int argc, char* argv[])
 
 		x0 = x1;
 		y0 = zero;
-		check(&x0,&y0);
+		checkit(&x0,&y0);
 
 		vp_umove(x0,y0);
 
 		x0 = x2;
 		y0 = zero;
-		check(&x0,&y0);
+		checkit(&x0,&y0);
 
 		vp_udraw(x0,y0);
 		vp_egroup();
@@ -233,7 +233,7 @@ int main(int argc, char* argv[])
 		if (q[0] > 0.) { /* start polygon */
 		    x0 = x1;
 		    y0 = zero;
-		    check(&x0,&y0);
+		    checkit(&x0,&y0);
 
 		    px[i] = x0;
 		    py[i] = y0;
@@ -248,7 +248,7 @@ int main(int argc, char* argv[])
 			if (q[i1] > 0.) { /* start polygon */
 			    x0 = o1+(i1 - q[i1]/(q[i1] - q[i1-1]))*d1;
 			    y0 = zero;
-			    check(&x0,&y0);
+			    checkit(&x0,&y0);
 
 			    px[i] = x0;
 			    py[i] = y0;
@@ -265,7 +265,7 @@ int main(int argc, char* argv[])
 			} else { /* end polygon */
 			    x0 = o1+(i1 - q[i1]/(q[i1] - q[i1-1]))*d1;
 			    y0 = zero;
-			    check(&x0,&y0);
+			    checkit(&x0,&y0);
 
 			    px[i] = x0;
 			    py[i] = y0;
@@ -280,7 +280,7 @@ int main(int argc, char* argv[])
 		if (0 != i) { /* end polygon */
 		    x0 = x2;
 		    y0 = zero;
-		    check(&x0,&y0);
+		    checkit(&x0,&y0);
 
 		    px[i] = x0;
 		    py[i] = y0;
@@ -298,7 +298,7 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-static void check(float *x, float *y)
+static void checkit(float *x, float *y)
 {
     float t;
 

@@ -28,7 +28,6 @@ using namespace std;
 //FltNumVec ks; //k
 static std::valarray<float> vz,vx,q,t;
 static std::valarray<double> kx, kz;
-static float pi=SF_PI;
 static float dt;
 
 int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
@@ -58,7 +57,7 @@ int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
             double r = x+z;
             r = r+sqrt(r*r-qq*x*z);
             r = sqrt(0.5*r);
-            res(a,b) = 2.0*cos(2.0*pi*r*dt);
+            res(a,b) = 2.0*cos(2.0*SF_PI*r*dt);
            
 	}
     }
@@ -226,7 +225,7 @@ int main(int argc, char** argv)
     iC(ddgemm(dx,s2,kxtmp,0.0,Bc));
 //    iC(dgemm(dz,s1,kztmpc,0.0,Bc));
 //    iC(dgemm(dx,s2,kxtmpc,0.0,Bxc));
-    for(int k=0; k<B._m*B._n; k++) B._data[k]=cos(2.0*pi*(B._data[k]+Bc._data[k]));
+    for(int k=0; k<B._m*B._n; k++) B._data[k]=cos(2.0*SF_PI*(B._data[k]+Bc._data[k]));
 //    for(int k=0; k<Bc._m*Bc._n; k++) Bc._data[k]=cos(2.0*pi*(Bc._data[k]+Bxc._data[k]));
     float ACCU=1e-4;
     DblNumMat WGT(nxz,1);

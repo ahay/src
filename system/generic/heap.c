@@ -17,98 +17,98 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include <stdlib.h>
+#include <rsf.h>
 #include "heap.h"
 
 #ifndef _heap_h
 
-typedef struct Point {
-  double v;
-  void* d;
-  struct Point **h;
-} Point; 
+typedef struct sPoint {
+    double v;
+    void* d;
+    struct sPoint **h;
+} hpoint; 
 /*^*/
 
 #endif
 
-static Point **x, **xn, **x1;
+static hpoint **x, **xn, **x1;
 
 void heap_init (int n)
 /*< initialize with the maximum number of points >*/
 {
-  x = (Point **) malloc ((n+1)*sizeof (Point *)); 
-  xn = x;
-  x1 = x+1;
+    x = (hpoint **) sf_alloc (n+1,sizeof (hpoint *)); 
+    xn = x;
+    x1 = x+1;
 }
 
 void heap_close (void)
 /*< free the storage >*/
 {
-  free (x);
+    free (x);
 }
 
-void heap_insert (Point* v)
+void heap_insert (hpoint* v)
 /*< insert a point >*/
 {
-  Point **xi, **xp;
-  unsigned int p;
+    hpoint **xi, **xp;
+    unsigned int p;
 
-  xi = ++xn;
-  *xi = v;
-  p = xn-x;
-  for (p >>= 1; p > 0; p >>= 1) {
-    xp = x + p;
-    if (v->v < (*xp)->v) break;
-    (*xp)->h = xi; *xi = *xp; xi = xp; 
-  }
-  v->h = xi; *xi = v; 
+    xi = ++xn;
+    *xi = v;
+    p = xn-x;
+    for (p >>= 1; p > 0; p >>= 1) {
+	xp = x + p;
+	if (v->v < (*xp)->v) break;
+	(*xp)->h = xi; *xi = *xp; xi = xp; 
+    }
+    v->h = xi; *xi = v; 
 }
 
-Point* heap_extract (void)
+hpoint* heap_extract (void)
 /*< extract the maximum >*/
 {
-  unsigned int c;
-  int n;
-  Point *v, *t;
-  Point **xi, **xc;
+    unsigned int c;
+    int n;
+    hpoint *v, *t;
+    hpoint **xi, **xc;
 
-  v = *x1;
-  *(xi = x1) = t = *(xn--);
-  n = xn-x;
-  for (c = 2; c <= (unsigned int) n; c <<= 1) {
-    xc = x + c;
-    if (c < (unsigned int) n && (*xc)->v < (*(xc+1))->v) {
-      c++; xc++;
+    v = *x1;
+    *(xi = x1) = t = *(xn--);
+    n = xn-x;
+    for (c = 2; c <= (unsigned int) n; c <<= 1) {
+	xc = x + c;
+	if (c < (unsigned int) n && (*xc)->v < (*(xc+1))->v) {
+	    c++; xc++;
+	}
+	if (t->v >= (*xc)->v) break;
+	(*xc)->h = xi; *xi = *xc; xi = xc;
     }
-    if (t->v >= (*xc)->v) break;
-    (*xc)->h = xi; *xi = *xc; xi = xc;
-  }
-  t->h = xi; *xi = t; 
-  return v;
+    t->h = xi; *xi = t; 
+    return v;
 }
 
-void heap_update (Point *v)
+void heap_update (hpoint *v)
 /*< restore the heap: the value has been altered >*/
 {
-  unsigned int c;
-  int n;
-  Point **xc, **xi;
+    unsigned int c;
+    int n;
+    hpoint **xc, **xi;
 
-  xi = v->h; *xi = v; 
-  n = xn-x; c = xi-x;
-  for (c <<= 1; c <= (unsigned int) n; c <<= 1) {
-    xc = x + c;
-    if (c < (unsigned int) n && (*xc)->v < (*(xc+1))->v) {
-      c++; xc++;
+    xi = v->h; *xi = v; 
+    n = xn-x; c = xi-x;
+    for (c <<= 1; c <= (unsigned int) n; c <<= 1) {
+	xc = x + c;
+	if (c < (unsigned int) n && (*xc)->v < (*(xc+1))->v) {
+	    c++; xc++;
+	}
+	if (v->v >= (*xc)->v) break;
+	(*xc)->h = xi; *xi = *xc; xi = xc;
     }
-    if (v->v >= (*xc)->v) break;
-    (*xc)->h = xi; *xi = *xc; xi = xc;
-  }
-  v->h = xi; *xi = v; c = xi-x;
-  for (c >>= 1; c > 0; c >>= 1) {
-    xc = x + c;
-    if (v->v < (*xc)->v) break;
-    (*xc)->h = xi; *xi = *xc; xi = xc; 
-  }
-  v->h = xi; *xi = v; 
+    v->h = xi; *xi = v; c = xi-x;
+    for (c >>= 1; c > 0; c >>= 1) {
+	xc = x + c;
+	if (v->v < (*xc)->v) break;
+	(*xc)->h = xi; *xi = *xc; xi = xc; 
+    }
+    v->h = xi; *xi = v; 
 }

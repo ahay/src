@@ -27,7 +27,6 @@ using namespace std;
 
 static std::valarray<float> vs;
 static std::valarray<double> ks;
-static float pi=SF_PI;
 static float dt, dx;
 
 static float sinc(float x)
@@ -44,7 +43,7 @@ int samplex(vector<int>& rs, vector<int>& cs, DblNumMat& res)
     setvalue(res,0.0);
     for(int a=0; a<nr; a++) {
 	for(int b=0; b<nc; b++) {
-	    res(a,b) = 2.0*pi*ks[cs[b]]*sinc(pi*vs[rs[a]]*fabs(ks[cs[b]])*dt);
+	    res(a,b) = 2.0*SF_PI*ks[cs[b]]*sinc(SF_PI*vs[rs[a]]*fabs(ks[cs[b]])*dt);
 	}
     }
     return 0;
@@ -223,8 +222,8 @@ int main(int argc, char** argv)
     int LEN = sx._m;
     DblNumMat B(LEN,nx);
     DblNumMat Bc(LEN,COUNT);
-    iC(ddgemm(2*pi*dx,sx,ktmp,0.0,B));
-    iC(ddgemm(2*pi*dx,sx,ktmpc,0.0,Bc));
+    iC(ddgemm(2*SF_PI*dx,sx,ktmp,0.0,B));
+    iC(ddgemm(2*SF_PI*dx,sx,ktmpc,0.0,Bc));
     for(int k=0; k<B._m*B._n; k++) B._data[k]=sin(B._data[k]);
     for(int k=0; k<Bc._m*Bc._n; k++) Bc._data[k]=sin(Bc._data[k]);
     DblNumMat IB(nx,LEN);    iC( ddpinv(B, 1e-16, IB) );

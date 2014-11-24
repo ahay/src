@@ -20,7 +20,8 @@
 
 #include <math.h>
 #include <rsf.h>
-#include "vscanutil.h"
+
+#include "fint1.h"
 
 static float v, h, v1, s;
 

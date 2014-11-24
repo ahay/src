@@ -28,7 +28,6 @@ using namespace std;
 //DblNumVec ks; //k
 static std::valarray<float> vs;
 static std::valarray<double> ks;
-static float pi=SF_PI;
 static float dt,dx;
 
 int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
@@ -39,7 +38,7 @@ int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
     setvalue(res,0.0);
     for(int a=0; a<nr; a++) {
 	for(int b=0; b<nc; b++) {
-        res(a,b) = 2.0*cos(2*pi*vs[rs[a]]*ks[cs[b]]*dt);
+        res(a,b) = 2.0*cos(2*SF_PI*vs[rs[a]]*ks[cs[b]]*dt);
 	}
     }
     return 0;
@@ -63,7 +62,7 @@ int FD10(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 	for(int b=0; b<nc; b++) {
            v = vs[rs[a]];
            k = ks[cs[b]]; 
-           res(a,b) = v*v*dt*dt*(aa+2*b1*cos(2*pi*k*dx)+2.0*b2*cos(4*pi*k*dx)+2.0*b3*cos(6*pi*k*dx)+2.0*b4*cos(8*pi*k*dx)+2.0*b5*cos(10*pi*k*dx))+2.0;
+           res(a,b) = v*v*dt*dt*(aa+2*b1*cos(2*SF_PI*k*dx)+2.0*b2*cos(4*SF_PI*k*dx)+2.0*b3*cos(6*SF_PI*k*dx)+2.0*b4*cos(8*SF_PI*k*dx)+2.0*b5*cos(10*SF_PI*k*dx))+2.0;
 	}
     }
     return 0;
@@ -203,8 +202,8 @@ int main(int argc, char** argv)
     DblNumMat ktmp(1,N); for(int k=0; k<N; k++) ktmp._data[k]=ks[k];
     DblNumMat ktmpc(1,count); for(int k=0; k<count; k++) ktmpc._data[k]=ks[ksc[k]];
     DblNumMat B(SIZE,N), Bc(SIZE,count);
-    iC(ddgemm(2*pi*dx,s,ktmp,0.0,B));
-    iC(ddgemm(2*pi*dx,s,ktmpc,0.0,Bc));
+    iC(ddgemm(2*SF_PI*dx,s,ktmp,0.0,B));
+    iC(ddgemm(2*SF_PI*dx,s,ktmpc,0.0,Bc));
     for(int k=0; k<B._m*B._n; k++) B._data[k]=cos(B._data[k]);
     for(int k=0; k<Bc._m*Bc._n; k++) Bc._data[k]=cos(Bc._data[k]);
     DblNumMat IB(N,SIZE);    iC( ddpinv(B, 1e-16, IB) );

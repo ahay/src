@@ -280,10 +280,10 @@ int zgmres(int (*A)(const CpxNumVec&, CpxNumVec&), const CpxNumVec& b, const Cpx
 	FltNumVec rwork(10*(j+2));
 	int info;
 	cgelss_(&m,&n,&nrhs,
-		(MKL_Complex8*) Hjtmp.data(),&lda,
-		(MKL_Complex8*) betmp.data(),&ldb,
+		(__CLPK_complex*) Hjtmp.data(),&lda,
+		(__CLPK_complex*) betmp.data(),&ldb,
 		s.data(),&rcond,&rank,
-		(MKL_Complex8*) work.data(),&lwork,
+		(__CLPK_complex*) work.data(),&lwork,
 		rwork.data(),&info);
 	for(int a=0; a<j+1; a++)	  y(a) = betmp(a);
       }
@@ -389,10 +389,10 @@ int pinv(const CpxNumMat& M, float eps, CpxNumMat& R)
       FltNumVec rwork(lwork);
       int info;
       cgesvd_(&jobu, &jobvt, &m, &n, 
-	      (MKL_Complex8*) MC.data(), &m, S.data(), 
-	      (MKL_Complex8*) U.data(), &m, 
-	      (MKL_Complex8*) VT.data(), &k, 
-	      (MKL_Complex8*) work.data(), &lwork, 
+	      (__CLPK_complex*) MC.data(), &m, S.data(), 
+	      (__CLPK_complex*) U.data(), &m, 
+	      (__CLPK_complex*) VT.data(), &k, 
+	      (__CLPK_complex*) work.data(), &lwork, 
 	      rwork.data(), &info);    
       iA(info==0);
     }
@@ -585,9 +585,9 @@ int lowrank(int m, int n, int (*sample)(vector<int>&, vector<int>&, CpxNumMat&),
     FltNumVec rwork(6*n);
     int info;
     cgeqpf_(&m, &n, 
-	    (MKL_Complex8*) M2.data(), &lda, jpvt.data(), 
-	    (MKL_Complex8*) tau.data(), 
-	    (MKL_Complex8*) work.data(), rwork.data(), &info);    
+	    (__CLPK_complex*) M2.data(), &lda, jpvt.data(), 
+	    (__CLPK_complex*) tau.data(), 
+	    (__CLPK_complex*) work.data(), rwork.data(), &info);    
     iA(info==0);
     float cutoff = eps*abs(M2(0,0));
     int cnt=0;
@@ -622,9 +622,9 @@ int lowrank(int m, int n, int (*sample)(vector<int>&, vector<int>&, CpxNumMat&),
     FltNumVec rwork(6*n);
     int info;
     cgeqpf_(&m, &n, 
-	    (MKL_Complex8*) M1.data(), &lda, jpvt.data(), 
-	    (MKL_Complex8*) tau.data(), 
-	    (MKL_Complex8*) work.data(), rwork.data(), &info);    
+	    (__CLPK_complex*) M1.data(), &lda, jpvt.data(), 
+	    (__CLPK_complex*) tau.data(), 
+	    (__CLPK_complex*) work.data(), rwork.data(), &info);    
     iA(info==0);
     float cutoff = eps*abs(M1(0,0)); //the diagonal element
     int cnt=0;

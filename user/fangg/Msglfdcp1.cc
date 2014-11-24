@@ -27,7 +27,6 @@ using namespace std;
 
 static std::valarray<float> vs;
 static std::valarray<double> ks;
-static float pi=SF_PI;
 static float dt,dx;
 
 static float sinc(float x)
@@ -44,7 +43,7 @@ int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
     setvalue(res,0.0);
     for(int a=0; a<nr; a++) {
 	for(int b=0; b<nc; b++) {
-	    res(a,b) = 2.0*pi*ks[cs[b]]*sinc(pi*vs[rs[a]]*fabs(ks[cs[b]])*dt);
+	    res(a,b) = 2.0*SF_PI*ks[cs[b]]*sinc(SF_PI*vs[rs[a]]*fabs(ks[cs[b]])*dt);
 	}
     }
     return 0;
@@ -60,7 +59,7 @@ int fdx4(vector<int>& cs, DblNumMat& res)
     float v, k;
     for(int b=0; b<nc; b++) {
 	v = vs[0];
-	k = ks[cs[b]]*2*pi; 
+	k = ks[cs[b]]*2*SF_PI; 
 	res(b,0) = c1*sin(k*dx/2.0)+c2*sin(k*dx*3.0/2.0);
 	res(b,0) = asin(dt*v*res(b,0))/(0.5*k*dt*v)-1;// exp(ikx)-exp(-ikx) = 2*sin(kx)
     }
@@ -79,7 +78,7 @@ int fdx6(vector<int>& cs, DblNumMat& res)
 
     for(int b=0; b<nc; b++) {
 	v = vs[0];
-	k = ks[cs[b]]*2*pi; 
+	k = ks[cs[b]]*2*SF_PI; 
 	res(b,0) = c1*sin(k*dx/2.0)+c2*sin(k*dx*3.0/2.0)+c3*sin(k*dx*5.0/2.0);
 	res(b,0) = asin(dt*v*res(b,0))/(0.5*k*dt*v)-1;// exp(ikx)-exp(-ikx) = 2*sin(kx)
     }
@@ -100,7 +99,7 @@ int fdx8(vector<int>& cs, DblNumMat& res)
 
     for(int b=0; b<nc; b++) {
 	v = vs[0];
-	k = ks[cs[b]]*2*pi; 
+	k = ks[cs[b]]*2*SF_PI; 
 	res(b,0) = c1*sin(k*dx/2.0)+c2*sin(k*dx*3.0/2.0)+c3*sin(k*dx*5.0/2.0)+c4*sin(k*dx*7.0/2.0);
 	res(b,0) = asin(dt*v*res(b,0))/(0.5*k*dt*v)-1;// exp(ikx)-exp(-ikx) = 2*sin(kx)
     }
@@ -126,7 +125,7 @@ int fdx16(vector<int>& cs, DblNumMat& res)
 
     for(int b=0; b<nc; b++) {
 	v = vs[0];
-	k = ks[cs[b]]*2*pi; 
+	k = ks[cs[b]]*2*SF_PI; 
 	res(b,0) = c1*sin(k*dx/2.0)+c2*sin(k*dx*3.0/2.0)+c3*sin(k*dx*5.0/2.0)+c4*sin(k*dx*7.0/2.0)+c5*sin(k*dx*9.0/2.0)+
 	    c6*sin(k*dx*11.0/2.0)+c7*sin(k*dx*13.0/2.0)+c8*sin(k*dx*15.0/2.0);
 	res(b,0) = asin(dt*v*res(b,0))/(0.5*k*dt*v)-1;// exp(ikx)-exp(-ikx) = 2*sin(kx)
@@ -160,7 +159,7 @@ int fdx16(vector<int>& cs, DblNumMat& res)
 
     for(int b=0; b<nc; b++) {
 	v = vs[0];
-	k = ks[cs[b]]*2*pi; 
+	k = ks[cs[b]]*2*SF_PI; 
 	res(b,0) = c1*sin(k*dx/2.0)+c2*sin(k*dx*3.0/2.0)+c3*sin(k*dx*5.0/2.0)+c4*sin(k*dx*7.0/2.0)+c5*sin(k*dx*9.0/2.0)+
 	    c6*sin(k*dx*11.0/2.0)+c7*sin(k*dx*13.0/2.0)+c8*sin(k*dx*15.0/2.0)+c9*sin(k*dx*17.0/2.0)+c10*sin(k*dx*19.0/2.0)+
             c11*sin(k*dx*21.0/2.0)+c12*sin(k*dx*23.0/2.0)+c13*sin(k*dx*25.0/2.0)+c14*sin(k*dx*27.0/2.0)+c15*sin(k*dx*29.0/2.0)+
@@ -251,7 +250,7 @@ int main(int argc, char** argv)
     for(int k=0; k<n; k++) cs[k]=k;
     iC( sample(ridx,cs,M2) );
 
-    float dk2=dk*2*pi;
+    float dk2=dk*2*SF_PI;
     
     /* d/dx */
     int len=0;
@@ -273,8 +272,8 @@ int main(int argc, char** argv)
     DblNumMat ktmp(1,N); for(int k=0; k<N; k++) ktmp._data[k]=ks[k];
     DblNumMat ktmpc(1,count); for(int k=0; k<count; k++) ktmpc._data[k]=ks[ksc[k]];
     DblNumMat B(len,N), Bc(len,count);
-    iC(ddgemm(2*pi*dx,s,ktmp,0.0,B));
-    iC(ddgemm(2*pi*dx,s,ktmpc,0.0,Bc));
+    iC(ddgemm(2*SF_PI*dx,s,ktmp,0.0,B));
+    iC(ddgemm(2*SF_PI*dx,s,ktmpc,0.0,Bc));
     for(int k=0; k<B._m*B._n; k++) B._data[k]=sin(B._data[k]);
     for(int k=0; k<Bc._m*Bc._n; k++) Bc._data[k]=sin(Bc._data[k]);
     DblNumMat IB(N,len);    iC( ddpinv(B, 1e-16, IB) );
@@ -343,9 +342,9 @@ int main(int argc, char** argv)
     for (int k=0; k < N; k++) {
         tg = 0.0;
         for (int l=1; l <= len; l++) {
-            tg += G(0,l-1)*sin((2*l-1)*dx*(ks[k])*pi);
+            tg += G(0,l-1)*sin((2*l-1)*dx*(ks[k])*SF_PI);
         }
-        fMlr[k] = asin( dt*vs[0]*tg/2.0 )/((ks[k])*pi*dt*vs[0])-1.0; 
+        fMlr[k] = asin( dt*vs[0]*tg/2.0 )/((ks[k])*SF_PI*dt*vs[0])-1.0; 
     }
     Mlrfile << fMlr;
 

@@ -22,7 +22,7 @@
 static const int nw = 3;
 static const float a[] = {7./3., -5./3., 1./3.};
 
-void extend (int ne     /* padding */, 
+void extend1 (int ne     /* padding */, 
 	     int nd     /* data length */, 
 	     float *dat /* data [nd] */, 
 	     float *ext /* extension [nd+2*ne] */)
@@ -58,13 +58,13 @@ void extend2 (int ne         /* padding */,
 {
     int i1, i2;
     for (i2=0; i2 < n2; i2++) {
-	extend (ne,n1,dat[i2],ext[i2+ne]);
+	extend1 (ne,n1,dat[i2],ext[i2+ne]);
     }
     for (i1=0; i1 < n1+2*ne; i1++) {
 	for (i2=0; i2 < n2; i2++) {
 	    tmp1[i2] = ext[i2+ne][i1];
 	}
-	extend (ne,n2,tmp1,tmp2);
+	extend1 (ne,n2,tmp1,tmp2);
 	for (i2=0; i2 < n2+2*ne; i2++) {
 	    ext[i2][i1] = tmp2[i2];
 	} 

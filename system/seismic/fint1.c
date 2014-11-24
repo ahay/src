@@ -117,7 +117,7 @@ void vint1_set (vint1 fnt, float** dat /* [dim][n1] */)
 {
     int i;
     for (i = 0; i < fnt->dim; i++) {
-	extend (fnt->nw,fnt->n1,dat[i],fnt->spl[i]);
+	extend1 (fnt->nw,fnt->n1,dat[i],fnt->spl[i]);
 
 	fnt->spl[i][                  0] *= (5./6.);
 	fnt->spl[i][fnt->n1+2*fnt->nw-1] *= (5./6.);
@@ -129,7 +129,7 @@ void vint1_set (vint1 fnt, float** dat /* [dim][n1] */)
 void fint1_set (fint1 fnt, float* dat)
 /*< set single-function grid >*/
 {
-    extend (fnt->nw,fnt->n1,dat,fnt->spl);
+    extend1 (fnt->nw,fnt->n1,dat,fnt->spl);
     fnt->spl[0] *= (5./6.);
     fnt->spl[fnt->n1+2*fnt->nw-1] *= (5./6.);
     sf_tridiagonal_solve (fnt->slv,fnt->spl);

@@ -22,18 +22,8 @@
 
 #include "wkbjti.h"
 
-#define ABS(x) ((x) < 0 ? -(x) : (x))
-#define SGN(x) ((x) < 0 ? -1.0 : 1.0)
-#define MAX(x,y) ((x) > (y) ? (x) : (y))
-#define MIN(x,y) ((x) < (y) ? (x) : (y))
-
 #define LHD 20
 #define NHD 1+2*LHD
-
-#ifndef PI
-#define PI (3.141592653589793)
-#endif
-#define NINT(x) ((int)((x)>0.0?(x)+0.5:(x)-0.5))
 
 #define TINY 1.0e-4
 #define CFL 0.98
@@ -92,27 +82,27 @@ void wkbjti (float xs                /* x source location*/,
 	ez = fz+(nz-1)*dz;
 	/* determine polar coordinate sampling */
 	rmaxs = fx*fx+fz*fz;
-	rmaxs = MAX(rmaxs,fx*fx+ez*ez);
-	rmaxs = MAX(rmaxs,ex*ex+ez*ez);
-	rmaxs = MAX(rmaxs,ex*ex+fz*fz);
+	rmaxs = SF_MAX(rmaxs,fx*fx+ez*ez);
+	rmaxs = SF_MAX(rmaxs,ex*ex+ez*ez);
+	rmaxs = SF_MAX(rmaxs,ex*ex+fz*fz);
 	rmax = sqrt(rmaxs);
-	dr = MIN(ABS(dx),ABS(dz));
-	nr = 1+NINT(rmax/dr);
+	dr = SF_MIN(SF_ABS(dx),SF_ABS(dz));
+	nr = 1+SF_NINT(rmax/dr);
 	dr = rmax/(nr-1);
 	fr = 0.0;
 	if (fx==0.0 && fz==0.0) {
-		fa = 0.0;  ea = PI/2.0;
+		fa = 0.0;  ea = SF_PI/2.0;
 	} else if (fx<0.0 && fz==0.0) {
-		fa = -PI/2.0;  ea = PI/2.0;
+		fa = -SF_PI/2.0;  ea = SF_PI/2.0;
 	} else if (fx==0.0 && fz<0.0) {
-		fa = 0.0;  ea = PI;
+		fa = 0.0;  ea = SF_PI;
 	} else {
-		fa = -PI;  ea = PI;
+		fa = -SF_PI;  ea = SF_PI;
 	}
 	da = dr/rmax;
-	na = 1+NINT((ea-fa)/da);
+	na = 1+SF_NINT((ea-fa)/da);
 	da = (ea-fa)/(na-1);
-	if (fa==-PI && ea==PI)
+	if (fa==-SF_PI && ea==SF_PI)
 		na = na-1;
 	/* allocate space */
 	a1111p = sf_floatalloc2(na,nr);
@@ -158,12 +148,12 @@ void wkbjti (float xs                /* x source location*/,
 			     .5*(a1133p[0][ia]),.5*(a1313p[0][ia]));
 	  t12 = dr*svp(a+.01,.5*(a1111p[0][ia]),.5*(a3333p[0][ia]),
 			     .5*(a1133p[0][ia]),.5*(a1313p[0][ia]));*/
-	  wp[1][ia] = SGN(a)*dr*dsvg(a,.5*(a1111p[0][ia]+a1111p[1][ia]),.5*(a3333p[0][ia]+a3333p[1][ia]),
+	  wp[1][ia] = SF_SIG(a)*dr*dsvg(a,.5*(a1111p[0][ia]+a1111p[1][ia]),.5*(a3333p[0][ia]+a3333p[1][ia]),
 			     .5*(a1133p[0][ia]+a1133p[1][ia]),.5*(a1313p[0][ia]+a1313p[1][ia]),&angp);
-	  /*wp[1][ia] = SGN(a)*dr*dsvg(a,a1111p[1][ia],a3333p[1][ia],
+	  /*wp[1][ia] = SF_SIG(a)*dr*dsvg(a,a1111p[1][ia],a3333p[1][ia],
 				      a1133p[1][ia],a1313p[1][ia],&angp);*/
 	  /*wp[1][ia] = 0;*/
-	  wp[1][ia] = SGN(a)*dr*dsvp(a,.5*(a1111p[0][ia]+a1133p[1][ia]),.5*(a3333p[0][ia]+a3333p[1][ia]),
+	  wp[1][ia] = SF_SIG(a)*dr*dsvp(a,.5*(a1111p[0][ia]+a1133p[1][ia]),.5*(a3333p[0][ia]+a3333p[1][ia]),
 			     .5*(a1133p[0][ia]+a1133p[1][ia]),.5*(a1313p[0][ia]+a1313p[1][ia]));
 	  sp[1][ia] = svp(angp,a1111p[1][ia],a3333p[1][ia],
 				      a1133p[1][ia],a1313p[1][ia]);
@@ -322,19 +312,19 @@ Author:  Dave Hale, Colorado School of Mines, 07/16/90
 	}
 	
 	/* determine if angular coordinate wraps around */
-	wrap = ABS(na*da-2.0*PI)<0.01*ABS(da);
+	wrap = SF_ABS(na*da-2.0*SF_PI)<0.01*SF_ABS(da);
 	
 	/* loop over intermediate steps with adaptive stepsize */
 	while (drleft>0.0) {
 		
 		/* determine adaptive step size according to CFL condition */
 		for (i=0,cmax=TINY; i<na; ++i) {
-			if (r*ABS(un[i])<TINY*ABS(wn[i]))
+			if (r*SF_ABS(un[i])<TINY*SF_ABS(wn[i]))
 				cmax = 1.0/TINY;
 			else
-				cmax = MAX(cmax,ABS(wn[i]/(r*un[i])));
+				cmax = SF_MAX(cmax,SF_ABS(wn[i]/(r*un[i])));
 		}
-		dr = MIN(drleft,CFL/cmax*r*da);
+		dr = SF_MIN(drleft,CFL/cmax*r*da);
 
 		if(dr<drleft)
 		  fprintf(stderr,"r=%f dr=%f drleft=%f\n",r,dr,drleft);
@@ -435,13 +425,13 @@ Author:  Dave Hale, Colorado School of Mines, 07/16/90
 		}*/
 
 		for (i=1; i<na-1; ++i) {
-		  /*b = SGN(wn[i])*pow(ABS(wn[i]/(r*s[i])),.3);
-		  b = SGN(wn[i]);*/
+		  /*b = SF_SIG(wn[i])*pow(ABS(wn[i]/(r*s[i])),.3);
+		  b = SF_SIG(wn[i]);*/
 		  x = wn[i]/(r*s[i]);
 		  b = 2*x/(1+x*x);
-		  b = SGN(x)*(1-pow(ABS(x)-1,200));
+		  b = SF_SIG(x)*(1-pow(SF_ABS(x)-1,200));
 		  /*b = x;
-		  b = SGN(x);*/
+		  b = SF_SIG(x);*/
 		  a = 0.5*(1-b);
 		  c = 1-a; 
 		  wtemp[i] = wn[i]+dr*(a*un[i+1]+b*un[i]-c*un[i-1])*oda;
@@ -640,7 +630,7 @@ Author: Zhenyue Liu, Colorado School of Mines, 7/06/92
 /*      elimination   */
 	for(k=0; k<n-1; ++k){
 	    c[k] = 0;
- 	    if(ABS(d[k])<ABS(c[k+1])){
+ 	    if(SF_ABS(d[k])<SF_ABS(c[k+1])){
 	        exch(d[k],c[k+1]);
 		exch(e[k],d[k+1]);
 		exch(c[k],e[k+1]);
@@ -716,7 +706,7 @@ float svg(float a, float a1111, float a3333,float a1133,float a1313)
   float dv,dgamma,sina,f1,f2,sint1,sint2,vg;
   float tol=TINY,dsin,err,bb,sinda,cosda;
 
-  a = ABS(a); 
+  a = SF_ABS(a); 
   a2= a3333;
   b2= a1313;
   e = .5*(a1111-a3333)/a3333;
@@ -736,7 +726,7 @@ float svg(float a, float a1111, float a3333,float a1133,float a1313)
   cosda=1/sqrt(1+bb*bb);
   sinda=bb*cosda;
   f1=sina-sint*cosda-cost*sinda;
-  err=ABS(f1);
+  err=SF_ABS(f1);
   if(sint<.5)
     sint1=sint+.01;
   else
@@ -757,7 +747,7 @@ float svg(float a, float a1111, float a3333,float a1133,float a1313)
      cosda=1/sqrt(1+bb*bb);
      sinda=bb*cosda;
      f2=sina-sint1*cosda-cost*sinda;
-     err=ABS(f2);
+     err=SF_ABS(f2);
      sint2=sint1;
      dsin=-f2*(sint1-sint)/(f2-f1);
      sint1+=dsin;
@@ -784,7 +774,7 @@ float dsvg(float a, float a1111, float a3333,float a1133,float a1313, float *ang
   double dv,dgamma,sina,f1,f2,sint1,sint2,vg,dvg;
   double tol=EPSS,dsin,err,bb,sinda,cosda;
 
-  a = ABS(a); 
+  a = SF_ABS(a); 
   a2= a3333;
   b2= a1313;
   e = .5*(a1111-a3333)/a3333;
@@ -804,11 +794,11 @@ float dsvg(float a, float a1111, float a3333,float a1133,float a1313, float *ang
   cosda=1/sqrt(1+bb*bb);
   sinda=bb*cosda;
   f1=sina-sint*cosda-cost*sinda;
-  err=ABS(f1);
-  if(ABS(sint)<.5)
-    sint1=sint+SGN(sint)*.01;
+  err=SF_ABS(f1);
+  if(SF_ABS(sint)<.5)
+    sint1=sint+SF_SIG(sint)*.01;
   else
-    sint1=sint-SGN(sint)*.01;
+    sint1=sint-SF_SIG(sint)*.01;
 
   while(err>tol && itr<ntr) {
      cost=sqrt(1-sint1*sint1);
@@ -825,7 +815,7 @@ float dsvg(float a, float a1111, float a3333,float a1133,float a1313, float *ang
      cosda=1/sqrt(1+bb*bb);
      sinda=bb*cosda;
      f2=sina-sint1*cosda-cost*sinda;
-     err=ABS(f2);
+     err=SF_ABS(f2);
      sint2=sint1;
      dsin=-f2*(sint1-sint)/(f2-f1);
      sint1+=dsin;
@@ -964,9 +954,9 @@ Author:  Dave Hale, Colorado School of Mines, 06/15/90
 			if (x !=0.0)
 				a = atan2((double) y,(double) x);
 			else if (y>0.0)
-				a = PI/2.0;
+				a = SF_PI/2.0;
 			else if (y<0.0)
-				a = -PI/2.0;
+				a = -SF_PI/2.0;
 			else if (y==0.0)
 				a = 0.0;
 			
