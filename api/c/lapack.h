@@ -5,6 +5,8 @@
 
 #include <Accelerate/Accelerate.h>
 
+#define MKL_Complex8 __CLPK_complex 
+
 #else
 
 #ifdef HAVE_MKL

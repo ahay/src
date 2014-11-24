@@ -21,10 +21,6 @@
 
 #include <rsf.h>
 
-#define MAX(a,b) ((a)>(b)?a:b)
-#define MIN(a,b) ((a)<(b)?a:b)
-
-
 float fir(int ma, int na, float *a,
 	  float *x, int d1)
 /*< FIR filter
@@ -90,12 +86,12 @@ void firs(int ma, int na, float *a,
     for(n=0; n<n1; n++)
     {
 	if(d1>0){
-	    min = MAX(ma, n-n1+1);
-	    max = MIN(na, n);
+	    min = SF_MAX(ma, n-n1+1);
+	    max = SF_MIN(na, n);
 	    sign = 1;
 	}else{
-	    min = MAX(ma, -n);
-	    max = MIN(n1-n-1, na);
+	    min = SF_MAX(ma, -n);
+	    max = SF_MIN(n1-n-1, na);
 	    sign = -1;
 	}
 	out = 0.0;

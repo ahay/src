@@ -47,10 +47,10 @@ int rankoneapprox(const CpxNumMat& M1, const CpxNumMat& M2, CpxNumVec& alpha, Cp
         FltNumVec rwork(lwork);
         int info;
         cgesvd_(&jobu, &jobvt, &m, &n, 
-	        (__CLPK_complex*) MC.data(), &m, S1.data(), 
-	        (__CLPK_complex*) U1.data(), &m, 
-	        (__CLPK_complex*) VT1.data(), &k, 
-	        (__CLPK_complex*) work.data(), &lwork, 
+	        (MKL_Complex8*) MC.data(), &m, S1.data(), 
+	        (MKL_Complex8*) U1.data(), &m, 
+	        (MKL_Complex8*) VT1.data(), &k, 
+	        (MKL_Complex8*) work.data(), &lwork, 
 	        rwork.data(), &info);    
 	iA(info==0);
     }
@@ -71,10 +71,10 @@ int rankoneapprox(const CpxNumMat& M1, const CpxNumMat& M2, CpxNumVec& alpha, Cp
 	FltNumVec rwork(lwork);
 	int info;
 	cgesvd_(&jobu, &jobvt, &m, &n, 
-		(__CLPK_complex*) MC.data(), &m, S2.data(), 
-		(__CLPK_complex*) U2.data(), &m, 
-		(__CLPK_complex*) VT2.data(), &k, 
-		(__CLPK_complex*) work.data(), &lwork, 
+		(MKL_Complex8*) MC.data(), &m, S2.data(), 
+		(MKL_Complex8*) U2.data(), &m, 
+		(MKL_Complex8*) VT2.data(), &k, 
+		(MKL_Complex8*) work.data(), &lwork, 
 		rwork.data(), &info);    
 	iA(info==0);
     }
@@ -115,10 +115,10 @@ int rankoneapprox(const CpxNumMat& M1, const CpxNumMat& M2, CpxNumVec& alpha, Cp
 	FltNumVec rwork(lwork);
 	int info;
 	cgesvd_(&jobu, &jobvt, &m, &n, 
-		(__CLPK_complex*) MC.data(), &m, SM.data(), 
-		(__CLPK_complex*) UM.data(), &m, 
-	        (__CLPK_complex*) VTM.data(), &k, 
-	        (__CLPK_complex*) work.data(), &lwork, 
+		(MKL_Complex8*) MC.data(), &m, SM.data(), 
+		(MKL_Complex8*) UM.data(), &m, 
+	        (MKL_Complex8*) VTM.data(), &k, 
+	        (MKL_Complex8*) work.data(), &lwork, 
 		rwork.data(), &info);    
 	iA(info==0);
     }
