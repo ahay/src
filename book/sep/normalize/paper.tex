@@ -1,0 +1,551 @@
+\lefthead{Rickett}
+\righthead{Normalized migration}
+\footer{SEP--108}
+\title{Model-space vs. data-space normalization for recursive 
+depth migration}  
+\email{james@sep.stanford.edu}
+
+\author{James Rickett}
+\maketitle
+
+\begin{abstract}
+Illumination problems caused by finite-recording aperture and lateral 
+velocity lensing can lead to amplitude fluctuations in migrated
+images. 
+I calculate both model and data-space weighting functions that
+compensate for these illumination problems in recursive depth
+migration results based on downward-contination. 
+These weighting functions can either be applied directly with 
+migration to mitigate the effects of poor subsurface 
+illumination, or used as preconditioning operators in iterative
+least-squares ($L2$) migrations.
+Computational shortcuts allow the weighting functions to be computed 
+at about the cost of a single migration.
+Results indicate that model-space normalization can significantly
+reduce amplitude fluctuations due to illumination
+problems. 
+However, for the examples presented here, data-space normalization
+proved susceptible to coherent noise contamination.
+\end{abstract}
+
+\section{Introduction}
+Migration is the adjoint of a linear forward modeling 
+operator rather than the inverse [e.g. \longcite{bei}]. 
+This means that, although migration treats kinematics correctly, the 
+amplitudes of migrated images do not accurately represent seismic
+reflectivity. 
+
+\par
+Geophysical inverse theory provides a rigorous framework for
+estimating earth models that are consistent with some observed
+data.  
+Typically the matrices involved in industrial-scale geophysical
+inverse problems are too large to invert directly, and we depend on 
+iterative gradient-based linear solvers to estimate solutions.
+However, operators such as prestack depth migration are so expensive
+to apply that we can only afford to iterate a handful of times, at
+best.  
+
+\par
+In this paper I compute diagonal weighting functions that can be
+applied directly to migrated images to compensate for the inadequacies
+of the adjoint with respect to seismic amplitudes.
+Furthermore, these weighting functions can be applied as
+preconditioning operators that speed the convergence of iterative
+linear solvers, facilitating least-squares recursive depth 
+migration.  
+
+\par
+As well as looking at model-space weights, I also consider data-space
+weighting functions derived from the operator ${\bf A}\, {\bf A}'$
+(where ${\bf A}$ is our linear forward modeling operator), 
+and develop a framework for computing and applying both model and
+data-space weights simultaneously.  
+
+%%Only considering a diagonal main diagonal of ${\bf A}'\, {\bf A}$ simplifies
+%%matters significantly: 
+%%the factorization itself reduces to taking a square root, and
+%%inverting the factors reduces to simple division. The only potential
+%%pitfall comes with division by zero.
+
+
+
+%%%% MODEL-SPACE WEIGHTS %%
+%%For most geometries (and for non-zero offset imaging) the 
+%%appropriate model-space weighting operator is no longer strictly a
+%%diagonal matrix.  However, a diagonal matrix is a cost-effective
+%%approximation that may at least compensates for gross illumination
+%%problems. 
+%%
+%%I try other model-space weighting functions to compensate for
+%%inadequate recording geometries, in addition to the previously
+%%discussed diagonal weighting function that is appropriate for fully
+%%sampled shot-gathers.
+
+%% DATA-SPACE WEIGHTS %%
+
+
+%% NON-DIAGONAL WEIGHTS %%
+
+
+\section{Model-space weighting functions}
+For an over-determined system of equations, the inverse problem 
+can be summarized as follows - given a linear 
+forward modeling operator ${\bf A}$, and some recorded data ${\bf d}$,
+estimate a model ${\bf m}$ such that ${\bf A} \, {\bf m}
+\approx {\bf d}$.
+The model that minimizes the expected error in predicted data
+is given by:
+\begin{equation} \label{eqn:l2eqn}
+{\bf m}_{L2} = ({\bf A}'\, {\bf A})^{-1} \; {\bf A}' \, {\bf d}.
+\end{equation}
+%%Typically the matrices involved in industrial-scale geophysical
+%%inverse problems are too large to invert directly, and we depend on 
+%%iterative gradient-based linear solvers to estimate solutions.
+%%However, operators such as prestack depth migration are so expensive
+%%to apply that we can only afford to iterate a handful of times, at
+%%best.  
+
+\par
+To attempt to speed convergence, we can always change model-space
+variables from ${\bf m}$ to ${\bf x}$ through a linear operator 
+${\bf P}$, and solve the following new system for ${\bf x}$, 
+\begin{equation}
+{\bf d}={\bf A \, P \, x} = {\bf B \, x}.
+\end{equation}
+When we find a solution, we can then recover the model estimate,  
+${\bf m}_{L2}={\bf P} \, {\bf x}$.
+If we choose the operator ${\bf P}$ such that ${\bf B}' {\bf B}
+\approx {\bf I}$, then even simply applying the adjoint (${\bf B}'$)
+will yield a good model estimate; furthermore, gradient-based solvers
+should converge to a solution of the new system rapidly in only a few
+iterations. The problem then becomes: what is a good choice of 
+${\bf P}$?
+
+\par
+Rather than trying to solve the full inverse problem given by 
+equation~(\ref{eqn:l2eqn}), I look for a diagonal 
+operator ${\bf W}_{\rm m}$ such that   
+\begin{equation} \label{eqn:mwdirectsoln}
+{\bf W}_{\rm m}^{2} \; {\bf A}' \, {\bf d} 
+\approx {\bf m}_{L2}.
+\end{equation}
+
+\par
+${\bf W}_{\rm m}$ can be applied to the migrated (adjoint)
+image with equation~(\ref{eqn:mwdirectsoln}); however,
+in their review of $L2$ migration, \longcite{ronen2000} observe that 
+normalized migration is only a good substitute for full (iterative) 
+$L2$ migration in areas of high signal-to-noise.  
+In these cases, ${\bf W}_{\rm m}$ can be used as a model-space
+preconditioner to the full $L2$ problem, as described in 
+the introduction.
+
+\par
+\longcite{adjointscaling} noticed that if we model and remigrate a
+reference image, the ratio between the reference image and the
+modeled/remigrated image will be a weighting function with the
+correct physical units. For example, the weighting function, 
+${\bf W}_{\rm m}$, whose square is given by 
+\begin{equation} \label{eqn:adjointscaling}
+{\bf W}_{\rm m}^{2} = \frac{ {\rm\bf diag} ({\bf m}_{\rm ref}) }
+{ {\rm\bf diag} ({\bf A}'\, {\bf A} \; {\bf m}_{\rm ref}) } \approx 
+\left( {\bf A}'\, {\bf A}\right)^{-1},
+\end{equation}
+will have the same units as ${\bf A}^{-1}$.
+Furthermore, ${\bf W}_{\rm m}^{2}$ will be the {\em ideal} weighting
+function if the reference model equals the true model and we have the
+correct modeling/migration operator.
+
+\par
+Equation~(\ref{eqn:adjointscaling}) with forms the basis for the first
+part of this paper.
+However, when following this approach, there are two 
+important practical considerations to take into account:  firstly, the
+choice of reference image, and secondly, the problem of dealing with
+zeros in the denominator.
+
+\par
+Similar normalization schemes 
+[e.g. \longcite{slawson95,nizarsthesis,duquet2000}] 
+have been proposed for Kirchhoff migration operators.  
+In fact, both \longcite{nemeth99} and \longcite{duquet2000} report
+success with using diagonal model-space weighting functions as
+preconditioners for Kirchhoff $L2$ migrations.
+However, normalization schemes that work for Kirchhoff migrations are
+not computationally feasible for recursive migration algorithms based
+on downward-continuation.  
+%%Appendix~\ref{paper:kirch} explains how Kirchhoff normalization
+%%schemes fit into the framework of equation~(\ref{eqn:adjointscaling}).
+
+\subsection{Three choices of reference image}
+The ideal reference image would be the true subsurface model. 
+However, since we do not know what that is, we have to substitute an
+alternative model.  
+I experiment with three practical alternatives, which I will denote
+${\bf m}_{\rm 1}$, ${\bf m}_{\rm 2}$, and ${\bf m}_{\rm 3}$.
+
+\par
+\longcite{adjointscaling} attribute to
+Symes the idea of using the adjoint (migrated) image as the reference
+model.  The rationale for this is that migration provides a robust
+estimate of the true model. 
+As the first alternative I take Symes' suggestion, so that 
+${\bf m}_{\rm 1}={\bf A}' {\bf d}$.  
+%%A potential problem with this choice is that it may depend too much on 
+%%the data: the weighting function may be poorly determined in areas
+%%with little or no signal, and it will be difficult to separate data
+%%problems from operator problems.
+The second alternative is to try an reference image of purely random
+numbers: ${\bf m}_{\rm 2}={\bf r}$, where ${\bf r}$ is a random vector.
+This is has the advantage of not being influenced by the data, but has
+the disadvantage that different realizations of ${\bf r}$ may produce
+different weighting functions. 
+The third alternative that I consider is a monochromatic reference
+image (${\bf m}_{\rm 3}$) consisting of purely flat events: 
+literally flat-event calibration.
+
+\subsection{Stabilizing the denominator}
+To avoid division by zero, \longcite{adjointscaling} suggest
+multiplying both the numerator and denominator in  
+equation~(\ref{eqn:adjointscaling}) by 
+${\rm\bf diag} ({\bf A}'\, {\bf A} \; {\bf m}_{\rm ref})$, and
+stabilizing the division by adding a small positive number to the
+denominator:
+\begin{equation}
+{\bf W}_{\rm m}^{2} = \frac{ {\rm\bf diag} ( {\bf m}_{\rm ref} ) 
+\cdot {\rm\bf diag} ({\bf A}'\, {\bf A} \; {\bf m}_{\rm ref})}
+{ \left| {\rm\bf diag} ( {\bf A}'\,  {\bf A} \; {\bf m}_{\rm ref}) 
+\right|^2 + \epsilon^2 {\bf I}}, 
+\end{equation}
+Although this does solve the problem of division by zero, the
+numerator and denominator will still oscillate rapidly in amplitude
+with the phase of the image.
+
+\par
+Illumination, however, should be independent of the wavefield's
+phase. Therefore, I calculate weighting functions from the ratio of
+the smoothed analytic signal envelopes (denoted by $<>$) of the
+model-space images:  
+\begin{equation} \label{eqn:adjointscaling2}
+{\bf W}_{\rm m}^{2} = \frac{ {\rm\bf diag} ( <{\bf m}_{\rm ref}> ) }
+{ {\rm\bf diag} ( <{\bf A}'\,  {\bf A} \; {\bf m}_{\rm ref}>) + 
+\epsilon^2 {\bf I}}, 
+\end{equation}
+where $\epsilon$ is a damping parameter that is related to the 
+signal-to-noise level.
+
+
+\subsection{Numerical comparison}
+\inputdir{amoco}
+
+The Amoco 2.5-D synthetic dataset \cite{amoco25d}
+provides an excellent test for the weighting functions discussed
+above.  
+
+\par
+The velocity model (Figure~\ref{fig:amocovel}) contains
+significant structural complexity in the upper 3.8~km, and a flat
+reflector of uniform amplitude at about 3.9~km depth.  
+Since the entire velocity model (``Canadian foothills overthrusting 
+onto the North Sea'') is somewhat pathological, I restricted my
+experiments to the North Sea section of the dataset ($x>10$~km).
+The data were generated by 3-D acoustic finite-difference modeling of
+the 2.5-D velocity model.   
+However, making the test more difficult is the fact that the 2-D
+linear one-way recursive extrapolators \cite{ristow94} that I use for 
+modeling and migration do not accurately predict the 3-D geometric
+spreading and multiple reflections that are present in this dataset.
+\plot{amocovel}{width=\textwidth}{Velocity (in km/s) model used to 
+generate the synthetic Amoco 2.5-D dataset.}
+%%\sideplot{amocogather18}{width=3in,height=3in}
+%%{Synthetic shot-gathers from the 
+%%Amoco 2.5-D dataset ($s_x=18.2$~km). Panel~(a) shows the gather
+%%generated by full two-way finite-difference modeling.  Panel~(b) shows
+%%the gather generated by linear one-way modeling.}
+
+\par
+Figure~\ref{fig:amocomigs} compares the migrated image (${\bf m}_1$)
+with the results of remodeling and remigrating the three reference
+images described above.  The imprint of the recording geometry is
+clearly visible on the three remigrations in
+Figures~\ref{fig:amocomigs}~(b-d).
+%%\plot{amocomigs}{width=\textwidth,height=6in}{Comparison of calibration images:
+%%(a) original migration, (b) original migration after modeling and
+%%migration, (c) random image after modeling and migration, and (d) flat
+%%event image after modeling and migration.}   
+
+\par
+Figure~\ref{fig:amocowghts} compares the illumination calculated from
+the three reference images with the raw shot illumination.
+Noticably, the shot-only weighting function [panel (a)] does not take
+into account the off-end (as opposed to split-spread) receiver geometry. 
+Panel~(b), the weighting function derived from
+model ${\bf m}_1$, appears slightly noisy.  However, in well-imaged
+areas (e.g. along the target reflector), the weighting function is
+well-behaved.  
+Panel~(c) shows the weighting function derived from the random
+reference image (${\bf m}_2$).  Despite the smoothing, this weighting 
+function clearly bears the stamp of the random number field. A feature
+of white noise is that no amount of smoothing will be able to
+remove the effect of the random numbers completely.
+The final panel~(d) shows the flat-event illumination weighting
+function, derived from ${\bf m}_3$.  This is noise-free and very
+well-behaved since it depends only on the velocity model and recording
+geometry, not the data. 
+\plot{amocomigs}{width=\textwidth}{Comparison of calibration images:
+(a) original migration, (b) original migration after modeling and
+migration, (c) random image after modeling and migration, and (d) flat
+event image after modeling and migration.}   
+\plot{amocowghts}{width=\textwidth}{Comparison of
+weighting functions: (a) original migration, (b) original migration
+after modeling and migration, (c) random image after modeling and
+migration, and (d) flat event image after modeling and migration.}   
+
+
+\par
+For a quantitative comparison, I picked the maximum amplitude of the 
+3.9~s reflection event on the calibrated images.  
+The normalized standard deviation (NSD) of these
+amplitudes is shown in Table~\ref{table:normsd}, where 
+\begin{equation}
+\mbox{NSD} = 
+\sqrt{ \sum_{i_x} \left( \frac{a_{i_x}}{\bar a} - 1 \right )^2}.
+\end{equation}
+Table~\ref{table:normsd}, therefore, provides a measure of how well
+the various weighting function compensate for illumination
+difficulties. 
+The amplitudes of the raw migration, and the migration after
+flat-event normalization are shown in Figure~\ref{fig:eventamp}.
+This illustrates the numerical results from Table~\ref{table:normsd}:
+for this model the normalization procedure improves amplitude
+reliability by almost a factor of two.
+\begin{table} 
+\begin{center}
+\begin{tabular}{||cl|c||} \hline
+\multicolumn{2}{||c|}{Weighting function:}  & NSD:
+\rule[-.3cm]{0cm}{.9cm} \\ \hline
+\multicolumn{2}{||c|}{No weighting function} & 0.229 \rule[-.3cm]{0cm}{.9cm} \\
+\multicolumn{2}{||c|}{Shot illumination} & 0.251\rule[-.3cm]{0cm}{.9cm}  \\
+${\bf m}_{\rm ref}={\bf m}_1$ & (migrated image) & 0.148
+\rule[-.3cm]{0cm}{.9cm} \\
+${\bf m}_{\rm ref}={\bf m}_2$ & (random image) &
+0.195\rule[-.3cm]{0cm}{.9cm}  \\
+${\bf m}_{\rm ref}={\bf m}_3$ & (flat events) & 0.140
+\rule[-.3cm]{0cm}{.9cm} \\
+%%\multicolumn{2}{||c|}{Two iterations of CG} & 0.176
+%%\rule[-.3cm]{0cm}{.9cm}  \\
+\hline
+\end{tabular} \end{center}
+\caption{Comparison of the reflector strength for different choices of
+illumination-based weighting function.} \label{table:normsd}
+\end{table}
+\sideplot{eventamp}{width=3in}{Normalized peak amplitude of 3.9~km 
+reflector after migration (solid line), and then normalization by
+flat-event illumination (dashed line) derived with 
+${\bf m}_{\rm ref}={\bf m}_3$. The ideal result would be a constant
+amplitude of 1.} 
+
+%%To compare the results of a well-scaled adjoint with full $L2$
+%%Fourier finite-difference migration, I ran 10~iterations of full
+%%conjugate gradients, using an out-of-core optimization library
+%%\cite{oclib}.  
+
+%\plot{amocoinv}{width=\textwidth,height=3in}{Results of full $L2$ inversion
+%of the Amoco 2.5-D dataset with FFD modelig/migration. Panel~(a) shows 
+%results after two iterations, and panel~(b) shows results after ten
+%iterations. }
+%%%%%%%%%%%%%%%%%%  Explain choice of parameters
+%%%%%%%%%%%%%%%%%%  Noise got boosted up
+
+\subsection{Computational cost}
+As it stands, the cost of computing a weighting function of this kind
+is twice the cost of a single migration.  Add the cost of the
+migration itself, and this approach is 25\% cheaper than running two
+iterations of conjugate gradients, which costs two migrations per
+iteration. 
+
+\par
+However, the bandwidth of the weighting functions is much lower than
+that of the migrated images. This allows considerable
+computational savings, as modeling and remigrating a narrow frequency
+band around the central frequency produces similar weighting functions
+than the full bandwidth.  Repeating the first experiment 
+(${\bf m}_{\rm ref}={\bf m}_1$) with half the frequencies gives a
+$\mbox{NSD}=0.147$ - the same as before within the limits of numerical
+error.  
+
+\section{Data-space weighting functions}
+If the system of equations, ${\bf d}={\bf A}\, {\bf m}$,
+is underdetermined, then a standard approach is to find the solution with 
+the minimum norm.  For the $L2$ norm, this is the solution to 
+\begin{equation} \label{eqn:underdetsol}
+\hat{\bf m}_{L2} ={\bf A}' \; 
+\left(
+{\bf A} \, {\bf A}'
+\right)^{-1} \;
+{\bf d}.
+\end{equation}
+
+\par
+As a corollary to the the methodology outlined above for creating
+model-space weighting functions, \longcite{gee} suggests constructing 
+diagonal approximations to ${\bf A} \, {\bf A}'$ by probing the
+operator with a reference data vector, ${\bf d}_{\rm ref}$. 
+This gives data-space weighting functions of the form,
+\begin{equation} \label{eqn:wd}
+{\bf W}_{\rm d}^{2} = \frac{ {\rm\bf diag} ({\bf d}_{\rm ref}) }
+{ {\rm\bf diag} ({\bf A}\, {\bf A}' \; {\bf d}_{\rm ref}) } \approx 
+\left( {\bf A}\, {\bf A}' \right)^{-1},
+\end{equation}
+which can be used to provide a direct approximation to the
+solution in equation~(\ref{eqn:underdetsol}),
+\begin{equation}
+\hat{\bf m}_{L2} \approx {\bf A}' \; 
+{\bf W}_{\rm d}^2 \;
+{\bf d}.
+\end{equation}
+
+\par
+Alternatively, we could use ${\bf W}_{\rm d}$ as a data-space
+preconditioning operator to help speed up 
+the convergence of an iterative solver:
+\begin{equation} \label{fig:underdetprec}
+{\bf W}_{\rm d} \, {\bf d}={\bf W}_{\rm d} \, {\bf A}\, {\bf m}. 
+\end{equation}
+
+\subsection{Combining weighting functions}
+With two possible preconditioning operators, ${\bf W}_{\rm m}$ and
+${\bf W}_{\rm d}$, the question remains, what is the best strategy for
+combining them?
+
+%%\longcite{nizarsthesis} calculated both ${\bf W}_{\rm m}$ and
+%%${\bf W}_{\rm d}$ from fold charts, but observed that because they 
+%%both contain the inverse units to the operator, ${\bf A}$, he
+%%should not apply them both at once. Instead he combined the two
+%%preconditioning operators, and solved the system
+%%\begin{eqnarray} 
+%%{\bf W}_{\rm d}^{n} \;{\bf d} &= &{\bf W}_{\rm d}^{n} \; {\bf A}\; 
+%%{\bf W}_{\rm m}^{n-1}\; {\bf x} \\
+%%{\bf m}& =& {\bf W}_{\rm m}^{n-1}\; {\bf x},
+%%\end{eqnarray}
+%%where $0\leq n \leq 1$ is an adjustable parameter.
+%%\longcite{nizarsthesis} provided no advice on the choice of $n$, but
+%%for the problem he was solving, he observed that applying both  
+%%${\bf W}_{\rm m}$ and ${\bf W}_{\rm d}$ with $n=1/2$ converged to a
+%%solution more rapidly than either end member ($n = 0 \mbox{ or } 1$).
+
+\par
+The first strategy that I propose is to calculate a
+model-space weighting function, ${\bf W}_{\rm m}$, and use it to
+create a new preconditioned system with the form of 
+\[
+{\bf d} = {\bf A} \; {\bf W}_{\rm m} \; {\bf x} = {\bf B} \; {\bf x}.
+\]
+Now probe the composite operator, ${\bf B}$, for a data-space
+weighting function for the new system,
+\begin{equation}  \label{eqn:both}
+\tilde{\bf W}_{\rm d}^{2} = \frac{ <{\rm\bf diag} ({\bf d}_{\rm ref})> }
+{<{\rm\bf diag} ({\bf B}\, {\bf B}' \; {\bf d}_{\rm ref})> +
+\epsilon_{\rm d} {\bf I}} \approx 
+\frac{1}{{\bf B}\, {\bf B}'}.
+\end{equation}
+The new data-space weighting function is dimensionless, and can be
+applied in consort with the model-space operator. This leads to a new
+system of equations,
+\begin{eqnarray}
+\tilde{\bf W}_{\rm d} \; {\bf d} &=& \tilde{\bf W}_{\rm d} \; {\bf A}\;
+{\bf W}_{\rm m} \; {\bf x} \\
+{\rm with} \hspace{0.15in}
+{\bf m}& =& {\bf W}_{\rm m}\; {\bf x}, \nonumber
+\end{eqnarray}
+with appropriate model-space and data-space preconditioning 
+operators. 
+The adjoint solution to this system is given by
+\begin{equation}
+{\bf m} = {\bf W}_{\rm m}^2 \; {\bf A}' \; \tilde{\bf W}_{\rm d}^2 
+\; {\bf d}.
+\end{equation}
+
+\par
+A second alternative strategy is the corollary of this: create a new
+system that is preconditioned by an appropriate data-space weighting
+function, and then calculate a model-space weighing function based on
+the new system.
+%%The first step is to calculate ${\bf W}_{\rm d}$ with
+%%equation~(\ref{eqn:wd}), and set up a new system of equations,
+%%\begin{equation}
+%%{\bf W}_{\rm d} \; {\bf d} =  {\bf W}_{\rm d}\; {\bf A}\; {\bf m} 
+%%= {\bf C}\; {\bf m}.
+%%\end{equation}
+%%The second step is to calculate a model-space weighting function based
+%%on this new operator, 
+%%\begin{equation} 
+%%\tilde{\bf W}_{\rm m}^{2} = \frac{ <{\rm\bf diag} 
+%%({\bf m}_{\rm ref})> }
+%%{<{\rm\bf diag} ({\bf C}' \, {\bf C} \; {\bf m}_{\rm ref})> +
+%%\epsilon_{\rm m} {\bf I}}.
+%%\end{equation}
+%%The preconditioned composite system of equations is now
+%%\begin{eqnarray}
+%%{\bf W}_{\rm d} \; {\bf d} &=& {\bf W}_{\rm d} \; {\bf A}\;
+%%\tilde{\bf W}_{\rm m} \; {\bf x} \\
+%%{\rm with} \hspace{0.15in}
+%%{\bf m}& =& \tilde{\bf W}_{\rm m}\; {\bf x}.
+%%\end{eqnarray}
+
+\subsection{Numerical comparisons}
+Again, the Amoco 2.5-D dataset provides an excellent test dataset for
+comparing flavors of weighting function.
+Unfortunately the data-space weights proved susceptible to coherent
+noise in the form of multiples not predicted by the modeling
+operator.  While data-space weights did improve the signal in poorly
+illuminated areas, they also boosted up the noise level causing an
+{\em increase} in NSD. So further work will be required to make this
+approach useful.
+
+\section{Discussion}
+While the methodologies described in this paper are valid for general 
+linear operators, they have several fundamental limitations. Most
+importantly, they require an accurate forward modeling operator: both
+the physics of wave propagation and the true earth velocity must be
+accurately modeled. 
+While the physics of wave-propagation is broadly understood, earth 
+velocity models are never completely true-to-life.
+
+\par
+Another important caveat is that the ``wave-equation methods''
+outlined here require the data and models to be represented on a
+regular grid.  
+While we can choose our model-space, prestack seismic data is never 
+recorded on a perfectly regular grid.  Before we can apply any
+wave-equation technique (such as those described here), we need to
+regularize the data.  
+\longcite{nizarsthesis} and \longcite{sergeysthesis} provide two 
+different approaches to solving this problem.
+
+\section{Conclusion}
+Model-space weighting functions based on
+equation~(\ref{eqn:adjointscaling2}) provide a robust way to
+compensate for illumination problems during recursive depth migration
+based on downward-continuation. 
+Data-space weights can be calculated either to work alone, or in
+consort with model-space weights. 
+However they are less robust to errors caused by inadequate forward
+modeling. 
+
+\section{Acknowledgements}
+I would like to thank BP Amoco for releasing this dataset to SEP, and
+Joe Dellinger for installing it in our data library.
+
+\bibliographystyle{sep}
+\bibliography{jamesthesis}
+
+
+
+
+
+
+
+
+
