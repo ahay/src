@@ -45,4 +45,12 @@ Result('trace','trace phase','OverUnderAniso')
 
 # Repeat on 2-D section
 
+sgy = 'penobscot_xl1155.sgy'
+
+Fetch(sgy,'data',
+      server='https://raw.githubusercontent.com',
+      top='seg/tutorials/master/1410_Phase')
+
+Flow('data tdata',sgy,'segyread tfile=${TARGETS[1]}')
+
 End()

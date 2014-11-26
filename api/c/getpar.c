@@ -241,6 +241,7 @@ bool sf_getstrings (const char* key,/*@out@*/ char** par,size_t n)
 bool sf_getbool (const char* key,/*@out@*/ bool* par)
 /*< get a bool parameter from the command line >*/
 {
+    if (NULL == pars) return false;
     return sf_simtab_getbool(pars,key,par);
 }
 
