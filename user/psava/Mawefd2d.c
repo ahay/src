@@ -403,11 +403,11 @@ int main(int argc, char* argv[])
 	    if(expl) {
 		if(adj) sf_seek(Fwav,(off_t)(nt-1-it)*1 *sizeof(float),SEEK_SET);
 		sf_floatread(ww, 1,Fwav);
-		lint2d_bell1(up,ww[0],cs);
+		lint2d_inject1(up,ww[0],cs);
 	    } else {
 		if(adj) sf_seek(Fwav,(off_t)(nt-1-it)*ns*sizeof(float),SEEK_SET);
 		sf_floatread(ww,ns,Fwav);
-		lint2d_bell(up,ww,cs);
+		lint2d_inject(up,ww,cs);
 	    }
 	    
 	    /* extract data at receivers */
