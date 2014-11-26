@@ -1,0 +1,38 @@
+from rsf.proj import *
+
+Flow('rect',None,
+     '''
+     spike d1=1 d2=1 n1=20 n2=20 k1=10 k2=5 l2=16 mag=25 
+     label1= unit1= label2= unit2= |
+     smooth rect1=5 
+     ''')
+Flow('rect2','rect','reverse which=1 opt=i | cat axis=3 $SOURCE | max axis=3')
+Flow('image','rect2','transp               | cat axis=3 $SOURCE | min axis=3')
+
+Flow('noise','image','noise seed=2014 range=0.2')
+Flow('median','noise','despike2 wide1=3 wide2=3')
+
+Result('median','grey allpos=y screenratio=1 wanttitle=n')
+
+# Red channel of an astronomical image
+
+Fetch('m32.jpg','master',
+      server='https://raw.githubusercontent.com',
+      top='kwinkunks/timefreak')
+
+Flow('m32','m32.jpg','jpg2byte | window n1=1 | dd type=float')
+
+# median filter
+
+Flow('m32-med','m32','despike2 wide1=5 wide2=5')
+
+# gaussian filter
+
+Flow('m32-gss','m32','gaussmooth rect=5 | transp | gaussmooth rect=5 | transp')
+
+for case in ('','-med','-gss'):
+    Result('m32'+case,'grey allpos=y screenratio=1 wanttitle=n')
+
+# Another image
+    
+End()

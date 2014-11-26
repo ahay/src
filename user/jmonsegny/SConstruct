@@ -8,7 +8,8 @@ try:  # distributed version
 except: # local version
     env = bldutil.Debug()
     root = None
-    SConscript('../../api/c++/SConstruct')
+    
+SConscript('../../api/c++/SConstruct')
 
 cuprogs = '''
 gpurayt
