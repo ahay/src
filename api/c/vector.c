@@ -67,6 +67,17 @@ vc3d vec3d(pt3d* O, pt3d* A)
     return V;
 }
 
+vc2d vec2d(pt2d* O, pt2d* A)
+/*< build 2D vector >*/
+{
+    vc2d V;
+
+    V.dx = A->x - O->x;
+    V.dz = A->z - O->z;
+
+    return V;
+}
+
 /*------------------------------------------------------------*/
 vc3d axa3d( int n)
 /*< build 3D unit vector >*/
@@ -97,6 +108,12 @@ double scp3d(vc3d* U, vc3d* V)
     return U->dx*V->dx + U->dy*V->dy + U->dz*V->dz;
 }
 
+double scp2d(vc2d* U, vc2d* V)
+/*< scalar product of 2D vectors >*/
+{
+    return U->dx*V->dx + U->dz*V->dz;
+}
+
 /*------------------------------------------------------------*/
 vc3d vcp3d(vc3d* U, vc3d* V)
 /*< vector product of 3D vectors >*/
@@ -121,6 +138,15 @@ double len3d(vc3d* V)
     return l;
 }
 
+double len2d(vc2d* V)
+/*< 2D vector length >*/
+{
+    double l;
+    l = sqrtf( V->dx*V->dx +
+               V->dz*V->dz);
+    return l;
+}
+
 /*------------------------------------------------------------*/
 vc3d nor3d(vc3d* V)
 /*< normalize 3D vector >*/
@@ -131,6 +157,19 @@ vc3d nor3d(vc3d* V)
 
     W.dx = V->dx / l;
     W.dy = V->dy / l;
+    W.dz = V->dz / l;
+
+    return W;
+}
+
+vc2d nor2d(vc2d* V)
+/*< normalize 2D vector >*/
+{
+    vc2d W;
+    double l;
+    l = len2d(V);
+
+    W.dx = V->dx / l;
     W.dz = V->dz / l;
 
     return W;
@@ -155,6 +194,24 @@ double ang3d(vc3d* U, vc3d* V)
     return a;
 }
 
+double ang2d(vc2d* U, vc2d* V)
+/*< angle between 2D vectors >*/
+{
+    double c,a;
+
+    c = U->dx * V->dx +
+        U->dz * V->dz;
+    c/= len2d(U);
+    c/= len2d(V);
+
+    c = SF_SIG(c) * SF_MIN( 1., SF_ABS(c));
+
+    a = 180*acosf(c)/SF_PI;
+
+    return a;
+}
+
+
 /*------------------------------------------------------------*/
 pt3d tip3d(pt3d* O, vc3d* V)
 /*< tip of a 3D vector >*/
@@ -169,6 +226,18 @@ pt3d tip3d(pt3d* O, vc3d* V)
     return A;    
 }
 
+pt2d tip2d(pt2d* O, vc2d* V)
+/*< tip of a 3D vector >*/
+{
+    pt2d A;
+
+    A.x = O->x + V->dx;
+    A.z = O->z + V->dz;
+    A.v = 0;
+
+    return A;
+}
+
 /*------------------------------------------------------------*/
 vc3d scl3d(vc3d* V, float s)
 /*< scale a 3D vector >*/
@@ -177,6 +246,17 @@ vc3d scl3d(vc3d* V, float s)
 
      W.dx = V->dx * s;
      W.dy = V->dy * s;
+     W.dz = V->dz * s;
+
+     return W;
+}
+
+vc2d scl2d(vc2d* V, float s)
+/*< scale a 2D vector >*/
+{
+     vc2d W;
+
+     W.dx = V->dx * s;
      W.dz = V->dz * s;
 
      return W;
