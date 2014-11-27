@@ -17,8 +17,10 @@ typedef struct fdm3 *fdm3d;
 /*^*/
 
 typedef struct scoef2 *scoef2d;
+/*^*/
 
 typedef struct scoef3 *scoef3d;
+/*^*/
 
 typedef struct lcoef2 *lint2d;
 /*^*/
