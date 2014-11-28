@@ -27,7 +27,7 @@ Flow('dip1','ppq','window n3=1')
 Flow('dip2','ppq','window f3=1')
 Plot('dip1','window n2=180 |grey title="First Dip" label1="Time (s)" label2=Trace pclip=100 scalebar=y color=j font=2 labelsz=12 titlesz=12  labelfat=4 titlefat=4')
 Plot('dip2','window n2=180 |grey title="Second Dip"  label1="Time (s)" label2=Trace pclip=100 scalebar=y color=j font=2 labelsz=12 titlesz=12  labelfat=4 titlefat=4')
-Result('dips','dip1 dip2','SideBySideIso')
+Result('dips','dip1 dip2','SideBySideAniso')
 
 # Seislet-based MCA inpainting (exponential shrinkage):
 Flow('rec0','sean2 ppq mask',

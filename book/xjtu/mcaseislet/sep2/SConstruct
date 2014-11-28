@@ -1,7 +1,7 @@
 from rsf.proj import *
 from rsf.recipes.beg import server as private
 
-#Fetch('cmp.HH','acig',private)
+Fetch('cmp.HH','acig',private)
 Flow('cmp','cmp.HH','dd form=native | tpow tpow=2 | mutter v0=1.4 half=n')
 
 def grey(title,other=''):
