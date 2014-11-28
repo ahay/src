@@ -6,7 +6,7 @@ Flow('cmp','cmp.HH','dd form=native | tpow tpow=2 | mutter v0=1.4 half=n')
 
 def grey(title,other=''):
     return '''
-    grey title="%s" labelsz=12 titlesz=16 labelfat=6 titlefat=6 
+    grey title="%s" font=2 labelfat=4 titlefat=4
     scalebar=y  label1="Time (s)" label2="Offset (km)" %s
     ''' % (title,other)
 
