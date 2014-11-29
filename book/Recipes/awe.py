@@ -24,6 +24,7 @@ def awepar(par):
           ompchunk=%(ompchunk)d ompnth=%(ompnth)d
           verb=%(verb)s fsrf=%(fsrf)s
           dabc=%(dabc)s nb=%(nb)d
+          snap=%(snap)s jsnap=%(jsnap)d
           '''%par + ' '
     return awe
 
@@ -38,8 +39,8 @@ def eicpar(par):
 def iwindow(par):
     win = ' ' + \
           '''
-          nqz=%(nz)d oqz=%(oz)g dqz=%(dz)g 
-          nqx=%(nx)d oqx=%(ox)g dqx=%(dx)g
+          nqz=%(nqz)d oqz=%(oqz)g dqz=%(dqz)g 
+          nqx=%(nqx)d oqx=%(oqx)g dqx=%(dqx)g
           ''' % par + ' '
     return win
 
