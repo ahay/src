@@ -50,6 +50,7 @@ main(int argc, char** argv)
   bool hybrid;  /* hybrid ABC if hybrid=y */
   bool snap;  /* output snapshot if snap=y */
   bool optfd; /* optimized fd stencil if optfd=y */
+  bool expl; /* Multiple sources, one wvlt */
   int jsnap;  /* output snapshot every jsnap timestep */
   int nbd;  /* ABC boundary size */
   int fdorder;  /* finite difference spatial accuracy order */
@@ -76,6 +77,7 @@ main(int argc, char** argv)
   if (!sf_getint("nb",&nbd))  nbd=10;
   if (!sf_getbool("hybridbc",&hybrid))  hybrid=true;
   if (!sf_getbool("snap",&snap))  snap=false;
+  if(! sf_getbool("expl",&expl)) expl=false;
   if (snap) {
     if (!sf_getint("jsnap",&jsnap))  jsnap=1;
   }
@@ -152,7 +154,8 @@ main(int argc, char** argv)
   float* fdcoef = compute_fdcoef(nop,dz2,dx2,dy2,optfd);
 
   /* Allocate memories */
-  ws = sf_floatalloc2(ns,nt);
+  if (expl) ws = sf_floatalloc2(1,nt);
+  else ws = sf_floatalloc2(ns,nt);
   vel = sf_floatalloc3(nzpad,nxpad,nypad);
   u_dat = sf_floatalloc(nr);
   src3d = pt3dalloc1(ns);
@@ -175,10 +178,16 @@ main(int argc, char** argv)
 
   free(**tmp_array);  free(*tmp_array);  free(tmp_array);
   /* read wavelet */                 
-  sf_floatread(ws[0],ns*nt,file_wav);
-  for (int it=0; it<nt; it++)  
-    for (int is=0; is<ns; is++)
-      ws[it][is] *= dt2;
+  if (expl) sf_floatread(ws[0],nt,file_wav);
+  else sf_floatread(ws[0],ns*nt,file_wav);
+  if (expl) {
+    for (int it=0; it<nt; it++)
+      ws[it][0] *= dt2;
+  } else {
+    for (int it=0; it<nt; it++)
+      for (int is=0; is<ns; is++)
+        ws[it][is] *= dt2;
+  }
 
   if (hybrid) {
     damp = damp_make(nbd-nop); /* compute damping profiles for hybrid bc */
@@ -203,9 +212,14 @@ main(int argc, char** argv)
     step_forward(u0,u1,vel,fdcoef,nop,nzpad,nxpad,nypad);
 
     /* backward inject source wavelet */
-    if (adj) sinc3d_inject(u0,ws[nt-1-it],cssinc);
+    if (adj) {
+      if (expl) sinc3d_inject1(u0,ws[nt-1-it][0],cssinc);
+      else sinc3d_inject(u0,ws[nt-1-it],cssinc);
+    } else {
     /* forward inject source wavelet */
-    else sinc3d_inject(u0,ws[it],cssinc);
+      if (expl) sinc3d_inject1(u0,ws[it][0],cssinc);
+      else sinc3d_inject(u0,ws[it],cssinc);
+    }
 
     /* apply abc */
     apply_abc(u0,u1,vel,dz,dx,dy,nzpad,nxpad,nypad,nbd,nop,damp);
