@@ -55,7 +55,7 @@ main(int argc, char** argv)
   int nbd;  /* ABC boundary size */
   int fdorder;  /* finite difference spatial accuracy order */
   int nzpad,nxpad,nypad; /* boundary padded model size */
-  int ix,it,nx,ny,nz,nt,ns,nr;
+  int ix,iy,iz,it,nx,ny,nz,nt,ns,nr;
   float dx,dy,dz,dt,x0,y0,z0,t0;
   float dx2,dy2,dz2,dt2;
   float* damp=NULL; /* damping profile for hybrid bc */
@@ -112,9 +112,9 @@ main(int argc, char** argv)
 
   /* set up output header files */
   if (snap) {
-    sf_putint(file_wfl,"n1",nzpad);
-    sf_putint(file_wfl,"n2",nxpad);
-    sf_putint(file_wfl,"n3",nypad);
+    sf_putint(file_wfl,"n1",nz);
+    sf_putint(file_wfl,"n2",nx);
+    sf_putint(file_wfl,"n3",ny);
     sf_putint(file_wfl,"n4",nt/jsnap+1);
     sf_putfloat(file_wfl,"d1",dz);
     sf_putfloat(file_wfl,"d2",dx);
@@ -195,6 +195,7 @@ main(int argc, char** argv)
   }
 
   /* allocate memory for wavefield variables */
+  float** oslice = sf_floatalloc2(nz,nx); /* output 3D wavefield slice-by-slice */
   u0 = sf_floatalloc3(nzpad,nxpad,nypad);
   u1 = sf_floatalloc3(nzpad,nxpad,nypad);
   /* initialize variables */
@@ -228,8 +229,14 @@ main(int argc, char** argv)
     ptr_tmp = u0;  u0 = u1;  u1 = ptr_tmp;
 
     /* extract snapshot */
-    if (snap && it%jsnap==0)
-      sf_floatwrite(u0[0][0],nzpad*nxpad*nypad,file_wfl);
+    if (snap && it%jsnap==0) {
+      for (iy=nbd; iy<nypad-nbd; iy++) {
+        for (ix=nbd; ix<nxpad-nbd; ix++)
+          for (iz=nbd; iz<nzpad-nbd; iz++)
+            oslice[ix-nbd][iz-nbd] = u0[iy][ix][iz];
+        sf_floatwrite(oslice[0],nx*nz,file_wfl);
+      }
+    }
 
     /* extract receiver data */
     sinc3d_extract(u0,u_dat,crsinc);

@@ -547,7 +547,55 @@ def cdartm3d(imag,data,rcoo,velo,custom,par):
          '''%(M8R,rwfl),
               stdin=0,
               stdout=0)
-    
+ # ------------------------------------------------------------
+# zero-offset RTM with awefd2dopt/awefd3dopt - constant density
+def cdaoptrtm2d(imag,data,rcoo,velo,custom,par):
+    M8R='$RSFROOT/bin/sf'
+    DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
+
+    rwfl = imag+'wwfl'
+
+    Flow(imag,[data,rcoo,velo],
+         '''
+         %sawefd2dopt < ${SOURCES[0]} adj=y %s verb=n
+         sou=${SOURCES[1]}
+         rec=${SOURCES[1]}
+         vel=${SOURCES[2]}
+         wfl=%s datapath=%s/ %s
+         >/dev/null;
+         '''%(M8R,awepar(par)+' jsnap=%d'%(par['nt']-1),rwfl,DPT,custom) +
+         '''
+         %swindow < %s n3=1 f3=1 >${TARGETS[0]};
+         '''%(M8R,rwfl) +
+         '''
+         %srm %s
+         '''%(M8R,rwfl),
+              stdin=0,
+              stdout=0)
+
+def cdaoptrtm3d(imag,data,rcoo,velo,custom,par):
+    M8R='$RSFROOT/bin/sf'
+    DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
+
+    rwfl = imag+'wwfl'
+
+    Flow(imag,[data,rcoo,velo],
+         '''
+         %sawefd3dopt < ${SOURCES[0]} adj=y %s verb=n
+         sou=${SOURCES[1]}
+         rec=${SOURCES[1]}
+         vel=${SOURCES[2]}
+         wfl=%s datapath=%s/ %s
+         >/dev/null;
+         '''%(M8R,awepar(par)+' jsnap=%d'%(par['nt']-1),rwfl,DPT,custom) +
+         '''
+         %swindow < %s n4=1 f4=1 >${TARGETS[0]};
+         '''%(M8R,rwfl) +
+         '''
+         %srm %s
+         '''%(M8R,rwfl),
+              stdin=0,
+              stdout=0)
 # ------------------------------------------------------------
 def dPAD2d(wfld,trac,ix,iz,par):
     Flow(wfld,trac,
