@@ -116,7 +116,7 @@ main(int argc, char** argv)
   if (snap) {
     sf_putint(file_wfl,"n1",nz);
     sf_putint(file_wfl,"n2",nx);
-    sf_putint(file_wfl,"n3",nt/jsnap+1);
+    sf_putint(file_wfl,"n3",(nt-1)/jsnap+1);
     sf_putfloat(file_wfl,"d1",dz);
     sf_putfloat(file_wfl,"d2",dx);
     sf_putfloat(file_wfl,"d3",dt*jsnap);
