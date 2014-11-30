@@ -14,6 +14,9 @@ def param(par):
     if(not par.has_key('ompnth')):   par['ompnth']=0
     if(not par.has_key('fsrf')):     par['fsrf']='n'
     if(not par.has_key('verb')):     par['verb']='n'
+    if(not par.has_key('fdorder')):    par['fdorder']=8
+    if(not par.has_key('optfd')):    par['optfd']='y'
+    if(not par.has_key('hybridbc')):    par['hybridbc']='y'
 
     if(not par.has_key('gaus')):     par['gaus']='y'
 
@@ -43,6 +46,16 @@ def iwindow(par):
           nqx=%(nqx)d oqx=%(oqx)g dqx=%(dqx)g
           ''' % par + ' '
     return win
+
+def aweoptpar(par):
+    aweopt = ' ' + \
+          '''
+          verb=%(verb)s
+          fdorder=%(fdorder)d optfd=%(optfd)s
+          dabc=%(dabc)s nb=%(nb)d hybridbc=%(hybridbc)s 
+          snap=%(snap)s jsnap=%(jsnap)d
+          '''%par + ' '
+    return aweopt
 
 # ------------------------------------------------------------
 # wavelet
@@ -101,7 +114,27 @@ def cdafd3d(odat,owfl,idat,velo,sou,rec,custom,par):
          sou=${SOURCES[2]} rec=${SOURCES[3]}
          wfl=${TARGETS[1]}
          ''' + ' ' + awepar(par) + ' ' + custom)
+
+# ------------------------------------------------------------
+# constant-density acoustic FD modeling with optimized fd and hybrid bc
+def cdafd2dopt(odat,owfl,idat,velo,sou,rec,custom,par):    
+    Flow([odat,owfl],[idat,velo,sou,rec],
+         '''
+         awefd2dopt
+         vel=${SOURCES[1]}
+         sou=${SOURCES[2]} rec=${SOURCES[3]}
+         wfl=${TARGETS[1]}
+         ''' + ' ' + aweoptpar(par) + ' ' + custom)
          
+def cdafd3dopt(odat,owfl,idat,velo,sou,rec,custom,par):    
+    Flow([odat,owfl],[idat,velo,sou,rec],
+         '''
+         awefd3dopt
+         vel=${SOURCES[1]}
+         sou=${SOURCES[2]} rec=${SOURCES[3]}
+         wfl=${TARGETS[1]}
+         ''' + ' ' + aweoptpar(par) + ' ' + custom)
+
 # ------------------------------------------------------------
 # AWE modeling operator
 def aweop2d(wfl,sou,vel,custom,par):
