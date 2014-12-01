@@ -25,7 +25,8 @@ with optimized fd scheme option and hybrid one-way ABC option */
 
 static float* compute_fdcoef(int nop, float dz2, float dx2, bool is_optimized);
 static int factorial(int n);
-static float* private_fdcoef(int N);
+static float* normal_fdcoef(int nop);
+static float* optimal_fdcoef(int nop);
 
 static void expand_domain(float** vtmp, float** v, int nz, int nx, int nbd);
 static void step_forward(float** u0, float** u1, float** vel,
@@ -116,7 +117,7 @@ main(int argc, char** argv)
   if (snap) {
     sf_putint(file_wfl,"n1",nz);
     sf_putint(file_wfl,"n2",nx);
-    sf_putint(file_wfl,"n3",(nt-1)/jsnap+1);
+    sf_putint(file_wfl,"n3",nt/jsnap+1);
     sf_putfloat(file_wfl,"d1",dz);
     sf_putfloat(file_wfl,"d2",dx);
     sf_putfloat(file_wfl,"d3",dt*jsnap);
@@ -270,102 +271,18 @@ compute_fdcoef(int nop, float dz2, float dx2, bool is_optimized)
   float* fdcoef = sf_floatalloc(ndim*nop+1);
   float d2[ndim];
   d2[0] = dz2; d2[1] = dx2;
-  if (!is_optimized) {
-    float *ccc = private_fdcoef(nop*2);
-    for (int idim=0; idim<ndim; idim++) {
-      for (int ii=1; ii<=nop; ii++)
-        fdcoef[idim*nop+ii] = ccc[ii]/d2[idim];
-    }
-  } else { // optimized
-    if (nop==1) { /* 2nd-order (unoptimized) */
-      for (int idim=0; idim<ndim; idim++)
-        fdcoef[idim*nop+1] = 1.f / d2[idim];
-    } else if (nop==2) {  /* 4th-order */
-      for (int idim=0; idim<ndim; idim++) {
-        fdcoef[idim*nop+1] = 1.369074 / d2[idim];
-        fdcoef[idim*nop+2] = - 0.09266816 / d2[idim];
-      }
-    } else if (nop==3) { /* 6th-order */
-      for (int idim=0; idim<ndim; idim++) {
-        fdcoef[idim*nop+1] = 1.573661f / d2[idim];
-        fdcoef[idim*nop+2] = - 0.1820268f / d2[idim];
-        fdcoef[idim*nop+3] = 0.01728053f / d2[idim];
-      }
-    } else if (nop==4) { /* 8th-order */
-      for (int idim=0; idim<ndim; idim++) {
-        fdcoef[idim*nop+1] = 1.700010f / d2[idim];
-        fdcoef[idim*nop+2] = - 0.2554615f / d2[idim];
-        fdcoef[idim*nop+3] = 0.04445392f / d2[idim];
-        fdcoef[idim*nop+4] = - 0.004946851f / d2[idim];
-      }
-    } else if (nop==5) { /* 10th-order */
-      for (int idim=0; idim<ndim; idim++) {
-        fdcoef[idim*nop+1] = 1.782836f / d2[idim];
-        fdcoef[idim*nop+2] = - 0.3124513f / d2[idim];
-        fdcoef[idim*nop+3] = 0.07379487f / d2[idim];
-        fdcoef[idim*nop+4] = - 0.01532122f / d2[idim];
-        fdcoef[idim*nop+5] = 0.001954439f / d2[idim];
-      }
-    } else if (nop==6) { /* 12th-order */
-      for (int idim=0; idim<ndim; idim++) {
-        fdcoef[idim*nop+1] = 1.837023f / d2[idim];
-        fdcoef[idim*nop+2] = - 0.3538895f / d2[idim];
-        fdcoef[idim*nop+3] = 0.09978343f / d2[idim];
-        fdcoef[idim*nop+4] = - 0.02815486f / d2[idim];
-        fdcoef[idim*nop+5] = 0.006556587f / d2[idim];
-        fdcoef[idim*nop+6] = - 0.0009405699f / d2[idim];
-      }
-    } else if (nop==7) { /* 14th-order */
-      for (int idim=0; idim<ndim; idim++) {
-        fdcoef[idim*nop+1] = 1.874503f / d2[idim];
-        fdcoef[idim*nop+2] = - 0.3845794f / d2[idim];
-        fdcoef[idim*nop+3] = 0.1215162f / d2[idim];
-        fdcoef[idim*nop+4] = - 0.04121749f / d2[idim];
-        fdcoef[idim*nop+5] = 0.01295522f / d2[idim];
-        fdcoef[idim*nop+6] = - 0.003313813f / d2[idim];
-        fdcoef[idim*nop+7] = 0.0005310053f / d2[idim];
-      }
-    } else if (nop==8) { /* 16th-order */
-      for (int idim=0; idim<ndim; idim++) {
-        fdcoef[idim*nop+1] = 1.901160f / d2[idim];
-        fdcoef[idim*nop+2] = - 0.4074304f / d2[idim];
-        fdcoef[idim*nop+3] = 0.1390909f / d2[idim];
-        fdcoef[idim*nop+4] = - 0.05318775f / d2[idim];
-        fdcoef[idim*nop+5] = 0.02004823f / d2[idim];
-        fdcoef[idim*nop+6] = - 0.006828249f / d2[idim];
-        fdcoef[idim*nop+7] = 0.001895771f / d2[idim];
-        fdcoef[idim*nop+8] = - 0.0003369052f / d2[idim];
-      }
-    } else if (nop==9) {  /* 18-th order */
-      for (int idim=0; idim<ndim; idim++) {
-        fdcoef[idim*nop+1] = 1.919909f / d2[idim];
-        fdcoef[idim*nop+2] = - 0.4240446f / d2[idim];
-        fdcoef[idim*nop+3] = 0.1526043f / d2[idim];
-        fdcoef[idim*nop+4] = - 0.06322328f / d2[idim];
-        fdcoef[idim*nop+5] = 0.02676005f / d2[idim];
-        fdcoef[idim*nop+6] = - 0.01080739f / d2[idim];
-        fdcoef[idim*nop+7] = 0.003907747f / d2[idim];
-        fdcoef[idim*nop+8] = - 0.001158024f / d2[idim];
-        fdcoef[idim*nop+9] = 0.0002240247f / d2[idim];
-      }
-    } else if (nop==10) {  /* 20-th order */
-      for (int idim=0; idim<ndim; idim++) {
-        fdcoef[idim*nop+1] = 1.918204f / d2[idim];
-        fdcoef[idim*nop+2] = - 0.4225858f / d2[idim];
-        fdcoef[idim*nop+3] = 0.1514992f / d2[idim];
-        fdcoef[idim*nop+4] = - 0.06249474f / d2[idim];
-        fdcoef[idim*nop+5] = 0.02637196f / d2[idim];
-        fdcoef[idim*nop+6] = - 0.01066631f / d2[idim];
-        fdcoef[idim*nop+7] = 0.003915625f / d2[idim];
-        fdcoef[idim*nop+8] = - 0.001219872f / d2[idim];
-        fdcoef[idim*nop+9] = 0.0002863976f / d2[idim];
-        fdcoef[idim*nop+10] = - 0.00003744830f / d2[idim];
-      }
+
+  float *ccc;
+  if (is_optimized) ccc= optimal_fdcoef(nop);
+  else ccc = normal_fdcoef(nop);
+
+  fdcoef[0] = 0.f;
+  for (int idim=0; idim<ndim; idim++) {
+    for (int ii=1; ii<=nop; ii++) {
+      fdcoef[idim*nop+ii] = ccc[ii]/d2[idim];
+      fdcoef[0] += fdcoef[idim*nop+ii];
     }
   }
-  fdcoef[0] = 0.f;
-  for (int ii=1; ii<ndim*nop+1; ii++)
-    fdcoef[0] += fdcoef[ii];
   fdcoef[0] *= - 2.0f;
   return fdcoef;
 }
@@ -380,18 +297,46 @@ factorial(int n)
 }
 
 static float*
-private_fdcoef(int N)
+normal_fdcoef(int nop)
 {
-  float *cc = calloc(N/2+1,sizeof(float));
-  int halfN = N/2;
-  int halfN_fact = factorial(halfN);
+  float *cc = calloc(nop+1,sizeof(float));
+  int halfN_fact = factorial(nop);
   halfN_fact *= halfN_fact;
-  for (int n=1; n<=N/2+1; n++) {
-    cc[n] = - 2.f / (n*n) * cos(n*M_PI) * halfN_fact/factorial(halfN+n)/factorial(halfN-n); 
+  for (int n=1; n<=nop; n++) {
+    cc[n] = - 2.f / (n*n) * cos(n*M_PI) * halfN_fact/factorial(nop+n)/factorial(nop-n); 
   }
   return cc;
 }
 
+static float*
+optimal_fdcoef(int nop)
+{
+  float *opt_c[11];
+  float opt_c1[2] = {0.f, 1.f}; // nop=1
+  float opt_c2[3] = {0.f, 1.369074f, - 0.09266816}; // nop=2
+  float opt_c3[4] = {0.f, 1.573661f, - 0.1820268f, 0.01728053f}; // nop=3
+  float opt_c4[5] = {0.f, 1.700010f, - 0.2554615f, 0.04445392f, - 0.004946851f}; // nop=4
+  float opt_c5[6] = {0.f, 1.782836f, - 0.3124513f, 0.07379487f, - 0.01532122f,
+                 0.001954439f}; // nop=5
+  float opt_c6[7] = {0.f, 1.837023f, - 0.3538895f, 0.09978343f, - 0.02815486f,
+                 0.006556587f, - 0.0009405699f}; // nop=6
+  float opt_c7[8] = {0.f, 1.874503f, - 0.3845794f, 0.1215162f, - 0.04121749f,
+                 0.01295522f, - 0.003313813f, 0.0005310053f}; // nop=7
+  float opt_c8[9] = {0.f, 1.901160f, - 0.4074304f, 0.1390909f, - 0.05318775f,
+                 0.02004823f, - 0.006828249f, 0.001895771f, - 0.0003369052f}; // nop=8
+  float opt_c9[10] = {0.f, 1.919909f, - 0.4240446f, 0.1526043f, - 0.06322328f,
+                  0.02676005f, - 0.01080739f, 0.003907747f, - 0.001158024f,
+                  0.0002240247f}; // nop=9
+  float opt_c10[11] = {0.f, 1.918204f, - 0.4225858f, 0.1514992f, - 0.06249474f,
+                   0.02637196f, - 0.01066631f, 0.003915625f, - 0.001219872f,
+                   0.0002863976f, - 0.00003744830f}; // nop=10
+  opt_c[1] = opt_c1;  opt_c[2] = opt_c2;  opt_c[3] = opt_c3;  opt_c[4] = opt_c4;
+  opt_c[5] = opt_c5;  opt_c[6] = opt_c6;  opt_c[7] = opt_c7;  opt_c[8] = opt_c8;
+  opt_c[9] = opt_c9;  opt_c[10] = opt_c10;
+  float *cc =  malloc((nop+1)*sizeof(float));
+  memcpy(cc,opt_c[nop],sizeof(float)*(nop+1));
+  return cc;
+}
 
 static void
 expand_domain(float** vtmp, float** v, int nz, int nx, int nbd)
@@ -514,7 +459,6 @@ apply_abc(float** uu2, float** uu1, int nz, int nx, int nbd,
     }
   }
 }
-
 
 static float*
 damp_make(int ntransit)
