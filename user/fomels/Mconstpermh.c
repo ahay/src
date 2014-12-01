@@ -1,4 +1,4 @@
-/* Constant-velocity prestack exploding reflector. */
+/* Constant-velocity prestack exploding reflector in offset. */
 /*
   Copyright (C) 2010 University of Texas at Austin
   
@@ -23,8 +23,8 @@
 int main(int argc, char* argv[])
 {
     bool mig;
-    int it, nt, ix, nx, iz, nz, ih, nh, it1, it2, its, snap;
-    float dt, dx, dz, dh, v, kx, kz, kh, h, x, c;
+    int it, nt, ix, nx, iz, nz, ih, nh, ih1, ih2, ihs, snap;
+    float dt, dx, dz, dh, v, kx, kz, w, h, x, c;
     float ***prev, ***curr, **img, **dat;
     sf_file data, image, snaps;
 
@@ -43,14 +43,14 @@ int main(int argc, char* argv[])
 	data = sf_input("in");
 	image = sf_output("out");
 
-	if (!sf_histint(data,"n1",&nh)) sf_error("No n1=");
-	if (!sf_histfloat(data,"d1",&dh)) sf_error("No d1=");
+	if (!sf_histint(data,"n1",&nt)) sf_error("No n1=");
+	if (!sf_histfloat(data,"d1",&dt)) sf_error("No d1=");
 
 	if (!sf_histint(data,"n2",&nx)) sf_error("No n2=");
 	if (!sf_histfloat(data,"d2",&dx)) sf_error("No d2=");
 
-	if (!sf_histint(data,"n3",&nt)) sf_error("No n3=");
-	if (!sf_histfloat(data,"d3",&dt)) sf_error("No d3=");
+	if (!sf_histint(data,"n3",&nh)) sf_error("No n3=");
+	if (!sf_histfloat(data,"d3",&dh)) sf_error("No d3=");
 
 	if (!sf_getint("nz",&nz)) sf_error("Need nz=");
 	/* depth samples (if migration) */
@@ -82,35 +82,34 @@ int main(int argc, char* argv[])
 	if (!sf_getfloat("dh",&dh)) sf_error("Need dh=");
 	/* offset sampling (if modeling) */
 
-	sf_putint(data,"n1",nh);
-	sf_putfloat(data,"d1",dh);
-	sf_putstring(data,"label1","Half-Offset");
+	sf_putint(data,"n1",nt);
+	sf_putfloat(data,"d1",dt);
+	sf_putstring(data,"label1","Time");
+	sf_putstring(data,"unit1","s");
 
-	sf_putint(data,"n3",nt);
-	sf_putfloat(data,"d3",dt);
-	sf_putstring(data,"label3","Time");
-	sf_putstring(data,"unit3","s");
+	sf_putint(data,"n3",nh);
+	sf_putfloat(data,"d3",dh);
+	sf_putstring(data,"label3","Half-Offset");
+	
     }
 
     img = sf_floatalloc2(nz,nx);
-    dat = sf_floatalloc2(nh,nx);
+    dat = sf_floatalloc2(nt,nx);
 
-    prev = sf_floatalloc3(nh,nx,nz);
-    curr = sf_floatalloc3(nh,nx,nz);
+    prev = sf_floatalloc3(nt,nx,nz);
+    curr = sf_floatalloc3(nt,nx,nz);
 
     if (!sf_getfloat("v",&v)) sf_error("Need v=");
     /* velocity */
 
-    v *= SF_PI*dt;
-
     dx = cosft_dk(nx,dx);
     dz = cosft_dk(nz,dz);
-    dh = cosft_dk(nh,dh);
+    dt = cosft_dk(nt,dt);
 
    if (NULL != snaps) {
-	sf_putint(snaps,"n1",nh);
-	sf_putfloat(snaps,"d1",dh);
-	sf_putstring(snaps,"label1","Half-Offset");
+	sf_putint(snaps,"n1",nt);
+	sf_putfloat(snaps,"d1",dt);
+	sf_putstring(snaps,"label1","Time");
 
 	sf_putint(snaps,"n2",nx);
 	sf_putfloat(snaps,"d2",dx);
@@ -120,17 +119,17 @@ int main(int argc, char* argv[])
 	sf_putfloat(snaps,"d3",dz);
 	sf_putstring(snaps,"label3","Depth");
 
-	sf_putint(snaps,"n4",nt/snap);
-	sf_putfloat(snaps,"d4",dt*snap);
+	sf_putint(snaps,"n4",nh/snap);
+	sf_putfloat(snaps,"d4",dh*snap);
 	sf_putfloat(snaps,"o4",0.);
-	sf_putstring(snaps,"label4","Time");
+	sf_putstring(snaps,"label4","Half-Offset");
     }
 
     for (iz=0; iz < nz; iz++) {
 	for (ix=0; ix < nx; ix++) {
-	    for (ih=0; ih < nh; ih++) {
-		prev[iz][ix][ih] = 0.;
-		curr[iz][ix][ih] = 0.;
+	    for (it=0; it < nt; it++) {
+		prev[iz][ix][it] = 0.;
+		curr[iz][ix][it] = 0.;
 	    }
 	}
     }
@@ -143,83 +142,85 @@ int main(int argc, char* argv[])
 	    }
 	}
 
-	/* step backward in time */
-	it1 = nt-1;
-	it2 = -1;
-	its = -1;
+	/* step backward in offset */
+	ih1 = nh-1;
+	ih2 = -1;
+	ihs = -1;
 
     } else { /* modeling */
 	sf_floatread(img[0],nz*nx,image);
 
 	/* Initialize model */
-	for (iz=1; iz < nz; iz++) {
+	for (iz=0; iz < nz; iz++) {
 	    for (ix=0; ix < nx; ix++) {
 		curr[iz][ix][0] = img[ix][iz];
 	    }
 	}
-	cosft3(false,nh,nx,nz,curr);
+	cosft3(false,nt,nx,nz,curr);
 	
-	/* step forward in time */
-	it1 = 0;
-	it2 = nt;
-	its = +1;
+	/* step forward in offset */
+	ih1 = 0;
+	ih2 = nt;
+	ihs = +1;
     }
 
 
-    /* time stepping */
-    for (it=it1; it != it2; it += its) {
-	sf_warning("it=%d;",it);
+    /* offset stepping */
+    for (ih=ih1; ih != ih2; ih += ihs) {
+	sf_warning("ih=%d;",ih);
 
 	if (mig) { /* migration <- read data */
-	    sf_floatread(dat[0],nh*nx,data);
-	    cosft2(false,nh,nx,dat);	    
+	    sf_floatread(dat[0],nt*nx,data);
+	    cosft2(false,nt,nx,dat);	    
 	} else {
 	    for (ix=0; ix < nx; ix++) {
-		for (ih=0; ih < nh; ih++) {
-		    dat[ix][ih] = 0.;
+		for (it=0; it < nt; it++) {
+		    dat[ix][it] = 0.;
 		}
 	    }
 	}
 
-	if (NULL != snaps && 0 == it%snap) 
-	    sf_floatwrite(curr[0][0],nh*nx*nz,snaps);
+	if (NULL != snaps && 0 == ih%snap) 
+	    sf_floatwrite(curr[0][0],nt*nx*nz,snaps);
 
-	for (iz=1; iz < nz; iz++) {
+	for (iz=0; iz < nz; iz++) {
 	    kz = iz*dz;
 	    for (ix=0; ix < nx; ix++) {
-		kx = ix*dx;
-		x = (kz*kz+kx*kx)/kz;
-		for (ih=0; ih < nh; ih++) {
-		    kh = ih*dh;
-		    h = (kz*kz+kh*kh)/kz;
-		    
-		    c = curr[iz][ix][ih];
+		kx = (iz==0)? dx: ix*dx;
+		x = 4.0f/((kz*kz+kx*kx)*v*v);
+		for (it=1; it < nt; it++) {
+		    w = it*dt;
+		    w = 1.0f/(w*w);
+
+		    c = curr[iz][ix][it];
 
 		    if (mig) {
-			c += (iz==nz-1)? dat[ix][ih]*0.5: dat[ix][ih];
+			c += dat[ix][it];
 		    } else {
-			dat[ix][ih] += (iz==nz-1)? c*0.5: c;
+			dat[ix][it] += c;
 		    }
 
-		    curr[iz][ix][ih] = 2*cosf(v*sqrtf(x*h))*c - prev[iz][ix][ih];
-		    prev[iz][ix][ih] = c;
+		    if (w < x) {
+			curr[iz][ix][it] = 2*cosf(kz*sqrtf(x-w))*c - prev[iz][ix][ih];
+		    }
+		    prev[iz][ix][it] = c;
 		}
 	    }
 	}
 
 	if (!mig) { /* modeling -> write out data */
-	    cosft2(true,nh,nx,dat);
-	    sf_floatwrite(dat[0],nh*nx,data);
+	    cosft2(true,nt,nx,dat);
+	    sf_floatwrite(dat[0],nt*nx,data);
 	}
     }
     sf_warning(".");
 
     if (mig) {
-	for (iz=1; iz < nz; iz++) {
+	for (iz=0; iz < nz; iz++) {
 	    for (ix=0; ix < nx; ix++) {
-		for (ih=0; ih < nh; ih++) {
-		    c = curr[iz][ix][ih];
-		    img[ix][iz] += (iz==nz-1)? c*0.5: c;
+		for (it=0; it < nt; it++) {
+		    c = curr[iz][ix][it];
+		    img[ix][iz] += c;
 		}
 	    }
 	}

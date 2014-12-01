@@ -19,7 +19,9 @@ with optimized fd scheme option and hybrid one-way ABC option */
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 #include <rsf.h>
+#ifdef _OPENMP
 #include <omp.h>
+#endif
 #include "fdutil.h"
 
 static float* compute_fdcoef(int nop, float dz2, float dx2, float dy2, bool is_optimized);

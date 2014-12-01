@@ -223,11 +223,12 @@ extern void bcopy (const void *src, void *dst, size_t len);
 #include <X11/Xutil.h>
 
 #include <X11/IntrinsicP.h>
+#include <X11/Intrinsic.h>
+
 #include <X11/Xatom.h>
 #include <X11/Object.h>
 #include <X11/ObjectP.h>
 
-#include <X11/Intrinsic.h>
 #include <X11/StringDefs.h>
 
 #include <X11/cursorfont.h>
@@ -495,7 +496,7 @@ static Widget PopUpWidget;
 static Widget PointLabelWidget;
 static Widget xOffset,yOffset;
 static Widget xLabel,yLabel; 
-static Widget Color,Fat,Boxit,Size,XOVAL,YOVAL,POINTER;
+static Widget Color,Fat,Boxit,WSize,XOVAL,YOVAL,POINTER;
 
 static float vpx, vpy;
 static FILE *outfp;
@@ -517,7 +518,7 @@ void PopupConfirm(
     sscanf(XawDialogGetValueString(yOffset),"%f",&yoff );
     sscanf(XawDialogGetValueString(Color),"%d",&col );
     sscanf(XawDialogGetValueString(Fat),"%d",&fat );
-    sscanf(XawDialogGetValueString(Size),"%f",&size );
+    sscanf(XawDialogGetValueString(WSize),"%f",&size );
     sscanf(XawDialogGetValueString(Boxit),"%s",boxit );
     sscanf(XawDialogGetValueString(YOVAL),"%f",&y_oval );
     sscanf(XawDialogGetValueString(XOVAL),"%f",&x_oval );
@@ -702,14 +703,14 @@ void doPointPopup(FILE* fp, float x, float y )
 	XtSetArg( argList[0], XtNvalue, (XtArgVal)size_string ); args++;
 	XtSetArg( argList[1], XtNlabel, (XtArgVal)"Size" ); args++;
 	XtSetArg( argList[2], XtNfromHoriz, (XtArgVal) Color); args++;
-	Size = XtCreateManagedWidget("dialog5", dialogWidgetClass,
+	WSize = XtCreateManagedWidget("dialog5", dialogWidgetClass,
 				     otherBox2, argList, args);
 
 	args = 0;
 	sprintf( box_string, "%s","yes");
 	XtSetArg( argList[0], XtNvalue, (XtArgVal)box_string ); args++;
 	XtSetArg( argList[1], XtNlabel, (XtArgVal)"Box" ); args++;
-	XtSetArg( argList[2], XtNfromHoriz, (XtArgVal) Size); args++;
+	XtSetArg( argList[2], XtNfromHoriz, (XtArgVal) WSize); args++;
 	Boxit = XtCreateManagedWidget("dialog6", dialogWidgetClass,
 				      otherBox2, argList, args);
 
@@ -1516,7 +1517,7 @@ int xt_pause(int doNEXT, int doPREV, int doREST, int doQUIT, int doRUN, int doST
 
 }
 
-FileInfo       *inFiles;
+VplFileInfo       *inFiles;
 int		num_files;
 
 xtFrame *redraw_frame=0;
@@ -1549,7 +1550,7 @@ void xt_dovplot (int nn, FILE **inpltin, char **innames)
     going_forwards = YES;
 
     /* allocate space for array inFiles[] */
-    inFiles = (FileInfo *) sf_alloc (nn,sizeof (FileInfo));
+    inFiles = (VplFileInfo *) sf_alloc (nn,sizeof (VplFileInfo));
 
     /* fill array inFiles */
     for (i = 0; i < nn; i++)

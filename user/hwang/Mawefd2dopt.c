@@ -20,7 +20,9 @@ with optimized fd scheme option and hybrid one-way ABC option */
 */
 
 #include <rsf.h>
+#ifdef _OPENMP
 #include <omp.h>
+#endif
 #include "fdutil.h"
 
 static float* compute_fdcoef(int nop, float dz2, float dx2, bool is_optimized);

@@ -26,6 +26,7 @@
 #include <X11/Intrinsic.h>
 #include <X11/StringDefs.h>
 
+
 #include "_vp.h"
 #include "../include/params.h"
 #include "../include/enum.h"
@@ -38,7 +39,7 @@ typedef struct
 	FILE	*stream;
 	char	name[MAXFLEN+1];
 	int	fnew;
-} FileInfo;
+} VplFileInfo;
  
 /* global definitions */
 #define	TBORDER 22
@@ -66,7 +67,7 @@ extern int skipit;
 extern int xt_paused;
 extern int xt_after_erase;
 
-extern FileInfo *inFiles;
+extern VplFileInfo *inFiles;
 extern int mouse_clicked,cursx,cursy;
 
 extern Drawable pen_drawable; /* drawable, could be the window or a pixmap */
