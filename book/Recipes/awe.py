@@ -549,7 +549,7 @@ def cdartm3d(imag,data,rcoo,velo,custom,par):
               stdout=0)
  # ------------------------------------------------------------
 # zero-offset RTM with awefd2dopt/awefd3dopt - constant density
-def cdaoptrtm2d(imag,data,rcoo,velo,custom,par):
+def cdartm2dopt(imag,data,rcoo,velo,custom,par):
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
 
@@ -573,7 +573,7 @@ def cdaoptrtm2d(imag,data,rcoo,velo,custom,par):
               stdin=0,
               stdout=0)
 
-def cdaoptrtm3d(imag,data,rcoo,velo,custom,par):
+def cdartm3dopt(imag,data,rcoo,velo,custom,par):
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
 
