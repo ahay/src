@@ -46,6 +46,7 @@ accumulate
 decibel
 itrack2d itrack3d
 injop2d injop3d
+transp12
 '''
 
 # Python targets

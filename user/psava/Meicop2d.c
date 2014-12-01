@@ -258,7 +258,7 @@ int main(int argc, char* argv[])
 
 	    if(it<nt-nht) {
 		itO = it + nht;
-		if( !oprcausal ) sf_seek(Fopr,(off_t)(nt-1-itO)*nslice,SEEK_SET);
+		if( !oprcausal ) sf_seek(Fopr,(off_t)(nt-2-itO)*nslice,SEEK_SET);
 		else             sf_seek(Fopr,(off_t)      itO *nslice,SEEK_SET);
 		sf_floatread(opr[ lht ][0],nz*nx,Fopr);
 	    }
