@@ -58,6 +58,7 @@ main(int argc, char** argv)
   bool snap;  /* output snapshot if snap=y */
   bool optfd; /* optimized fd stencil if optfd=y */
   bool expl; /* Multiple sources, one wvlt */
+  bool sinc;
   int jsnap;  /* output snapshot every jsnap timestep */
   int nbd;  /* ABC boundary size */
   int fdorder;  /* finite difference spatial accuracy order */
@@ -75,6 +76,7 @@ main(int argc, char** argv)
   pt2d* src2d = NULL;  /* source position */
   pt2d* rec2d = NULL;  /* receiver position */
   scoef2d cssinc = NULL, crsinc = NULL;  /* sinc interpolation */
+  lint2d cslint = NULL, crlint = NULL;  /* linear interpolation */
   fdm2d fdm = NULL;
   /* sponge spo = NULL; */
 
@@ -86,6 +88,7 @@ main(int argc, char** argv)
   if (!sf_getbool("hybridbc",&hybrid))  hybrid = true;
   if (!sf_getbool("snap",&snap))  snap = false;
   if(! sf_getbool("expl",&expl)) expl=false;
+  if(! sf_getbool("sinc",&sinc)) sinc=true;
   if (snap) {
     if (!sf_getint("jsnap",&jsnap))  jsnap = 1;
   }
@@ -169,10 +172,12 @@ main(int argc, char** argv)
 
   /* source and receiver position */
   pt2dread1(file_src,src2d,ns,2);  /* read format: (x,z) */
-  cssinc = sinc2d_make(ns,src2d,fdm);
+  if (sinc) cssinc = sinc2d_make(ns,src2d,fdm);
+  else cslint = lint2d_make(ns,src2d,fdm);
 
   pt2dread1(file_rec,rec2d,nr,2);
-  crsinc = sinc2d_make(nr,rec2d,fdm);
+  if (sinc) crsinc = sinc2d_make(nr,rec2d,fdm);
+  else crlint = lint2d_make(nr,rec2d,fdm);
   
   /* read velocity and pad */
   sf_floatread(tmp_array[0],nz*nx,file_vel);
@@ -219,14 +224,24 @@ main(int argc, char** argv)
 
     step_forward(u0,u1,vel,fdcoef,nop,nzpad,nxpad);
 
-    /* backward inject source wavelet */
     if (adj) {
-      if (expl) sinc2d_inject1(u0,ws[nt-1-it][0],cssinc);
-      else sinc2d_inject(u0,ws[nt-1-it],cssinc);
+    /* backward inject source wavelet */
+      if (expl) {
+        if (sinc) sinc2d_inject1(u0,ws[nt-1-it][0],cssinc);
+        else lint2d_inject1(u0,ws[nt-1-it][0],cslint);
+      } else {
+        if (sinc) sinc2d_inject(u0,ws[nt-1-it],cssinc);
+        else lint2d_inject(u0,ws[nt-1-it],cslint);
+      }
     } else {
     /* forward inject source wavelet */
-      if (expl) sinc2d_inject1(u0,ws[it][0],cssinc);
-      else sinc2d_inject(u0,ws[it],cssinc);
+      if (expl) {
+        if (sinc) sinc2d_inject1(u0,ws[it][0],cssinc);
+        else lint2d_inject1(u0,ws[it][0],cslint);
+      } else {
+        if (sinc) sinc2d_inject(u0,ws[it],cssinc);
+        else lint2d_inject(u0,ws[it],cslint);
+      }
     }
 
     /* apply abc */
@@ -242,7 +257,8 @@ main(int argc, char** argv)
     }
 
     /* extract receiver data */
-    sinc2d_extract(u0,u_dat,crsinc);
+    if (sinc) sinc2d_extract(u0,u_dat,crsinc);
+    else lint2d_extract(u0,u_dat,crlint);
 
     sf_floatwrite(u_dat,nr,file_dat);
   }
