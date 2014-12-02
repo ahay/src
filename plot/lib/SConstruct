@@ -60,7 +60,7 @@ if root:
     install = env.Install(libdir,libs)
     env.Install(incdir,inc)
 
-    for color in Split('cubeyf1 gist_earth linearlfb lb seismic spectral owb rwb'):
+    for color in Split('cubeyf1 gist_earth linearlfb lb seismic spectral owb rwb izoaz'):
         env.Install(incdir,color+'.csv')
 
     if dynlib and env['PLATFORM'] == 'darwin':                

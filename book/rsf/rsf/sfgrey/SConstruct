@@ -69,7 +69,8 @@ colors = {
     'linearlfb': 'LinearL Face Based',
     'x': 'Cube Helix',
     'lb': 'Light Bartlein',
-    'seismic': 'Seismic-OpendTect'
+    'seismic': 'Seismic-OpendTect',
+    'izoaz': 'Isoluminant Azimuth'
 }
 
 for col in colors.keys():
