@@ -54,6 +54,7 @@ main(int argc, char** argv)
   bool snap;  /* output snapshot if snap=y */
   bool optfd; /* optimized fd stencil if optfd=y */
   bool expl; /* Multiple sources, one wvlt */
+  bool sinc;
   int jsnap;  /* output snapshot every jsnap timestep */
   int nbd;  /* ABC boundary size */
   int fdorder;  /* finite difference spatial accuracy order */
@@ -71,6 +72,7 @@ main(int argc, char** argv)
   pt3d* src3d=NULL;  /* source position */
   pt3d* rec3d=NULL;  /*receiver position*/
   scoef3d cssinc = NULL, crsinc = NULL;  /* sinc interpolation */
+  lint3d cslint = NULL, crlint = NULL;
   fdm3d fdm = NULL;
 
   if (!sf_getbool("verb",&verb))  verb=false;
@@ -81,6 +83,7 @@ main(int argc, char** argv)
   if (!sf_getbool("hybridbc",&hybrid))  hybrid=true;
   if (!sf_getbool("snap",&snap))  snap=false;
   if(! sf_getbool("expl",&expl)) expl=false;
+  if(! sf_getbool("sinc",&sinc)) sinc=true;
   if (snap) {
     if (!sf_getint("jsnap",&jsnap))  jsnap=1;
   }
@@ -170,10 +173,12 @@ main(int argc, char** argv)
 
   /* source and receiver position */
   pt3dread1(file_src,src3d,ns,3);  /* read format: (x,y,z) */
-  cssinc = sinc3d_make(ns,src3d,fdm);
+  if (sinc) cssinc = sinc3d_make(ns,src3d,fdm);
+  else cslint = lint3d_make(ns,src3d,fdm);
 
   pt3dread1(file_rec,rec3d,nr,3);  /* read format: (x,y,z) */
-  crsinc = sinc3d_make(nr,rec3d,fdm);
+  if (sinc) crsinc = sinc3d_make(nr,rec3d,fdm);
+  else crlint = lint3d_make(nr,rec3d,fdm);
 
   /* read velocity and pad */
   sf_floatread(tmp_array[0][0],nz*nx*ny,file_vel);
@@ -217,12 +222,22 @@ main(int argc, char** argv)
 
     /* backward inject source wavelet */
     if (adj) {
-      if (expl) sinc3d_inject1(u0,ws[nt-1-it][0],cssinc);
-      else sinc3d_inject(u0,ws[nt-1-it],cssinc);
+      if (expl) {
+        if (sinc) sinc3d_inject1(u0,ws[nt-1-it][0],cssinc);
+        else lint3d_inject1(u0,ws[nt-1-it][0],cslint);
+      } else { 
+        if (sinc) sinc3d_inject(u0,ws[nt-1-it],cssinc);
+        else lint3d_inject(u0,ws[nt-1-it],cslint);
+      }
     } else {
     /* forward inject source wavelet */
-      if (expl) sinc3d_inject1(u0,ws[it][0],cssinc);
-      else sinc3d_inject(u0,ws[it],cssinc);
+      if (expl) {
+        if (sinc) sinc3d_inject1(u0,ws[it][0],cssinc);
+        else lint3d_inject1(u0,ws[it][0],cslint);
+      } else {
+        if (sinc) sinc3d_inject(u0,ws[it],cssinc);
+        else lint3d_inject(u0,ws[it],cslint);
+      }
     }
 
     /* apply abc */
@@ -242,7 +257,8 @@ main(int argc, char** argv)
     }
 
     /* extract receiver data */
-    sinc3d_extract(u0,u_dat,crsinc);
+    if (sinc) sinc3d_extract(u0,u_dat,crsinc);
+    else lint3d_extract(u0,u_dat,crlint);
 
     sf_floatwrite(u_dat,nr,file_dat);
 
