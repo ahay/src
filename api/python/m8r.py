@@ -248,7 +248,7 @@ class File(object):
         return stack[0]
     def dot2(self):
         'Dot product with itself'
-        abs2 = Filter('math')(output="abs(input)")[self]
+        abs2 = Filter('math')(output="abs(input)").real[self]
         return abs2.dot(abs2)
     def __array__(self,context=None):
         'numpy array'
