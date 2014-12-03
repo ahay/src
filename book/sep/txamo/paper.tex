@@ -128,10 +128,10 @@ $t_0\, \theta_{10}$ and $t_2\,\theta_{02}$ are the summation paths of
 the DMO and inverse DMO  
 operators \cite[]{GPR29-03-03740406}:
 \begin{eqnarray}
-\theta_{10}({\bf x_1;x_0, h_1})=
+\theta_{10}({\bf x_1;x_0, h_1}) & = &
 \left(1-{\bf \left(x_1-x_0\right)^2 \over h_1^2}\right)^{-1/2}\;,
 \label{eqn:DMOtt}\\
-\theta_{02}({\bf x_0;x_2, h_2})=
+\theta_{02}({\bf x_0;x_2, h_2}) & = &
 \left(1-{\bf \left(x_0-x_2\right)^2 \over h_2^2}\right)^{1/2}\;,
 \label{eqn:IDMOtt}
 \end{eqnarray}
@@ -202,7 +202,7 @@ where
 \theta_{10}\left({\bf x_1;x_0, h_1}\right)=
 {\left|{\bf h_1 \over h_2}\right|}\,
 \sqrt{{\bf {h_2^2-\left(x_2-x_0\right)^2} \over
-{h_1^2-\left(x_1-x_0\right)^2}}}=
+{h_1^2-\left(x_1-x_0\right)^2}}}
 \nonumber \\
 & = &
 {\left|{\bf h_1 \over h_2}\right|}\,
@@ -212,16 +212,15 @@ where
 \left(y_2-y_1\right)\,\cos{\varphi}\right)^2}}\;,
 \label{eqn:AMOtt}
 \end{eqnarray}
-\begin{eqnarray*}
-w_{12}\left({\bf x_1;x_2, h_2},t_2\right) = 
-\end{eqnarray*}
-\begin{equation}
-= w_{02}\left({\bf x_0;x_2, h_2},t_2\right)\,
+\begin{eqnarray}
+\nonumber
+w_{12}\left({\bf x_1;x_2, h_2},t_2\right) = \\
+w_{02}\left({\bf x_0;x_2, h_2},t_2\right)\,
 w_{10}\left({\bf x_1;x_0, h_1},t_2\,
 \theta_{02}\left({\bf x_0;x_2, h_2}\right)\right)\,
 {\csc{\varphi}\over \sqrt{\theta_{02}\left({\bf x_0;x_2, h_2}\right)}}\;,
 \label{eqn:AMOwf}
-\end{equation}
+\end{eqnarray}
 $d{\bf x_1}=dx_1\,dy_1$. Equation 
 $t_1=t_2\,\theta_{12}\left({\bf x_1;x_2, h_2}\right)$ is the same
 as equation (4) in \cite[]{Biondi.sep.80.125} except for a different
@@ -478,12 +477,10 @@ w_{02}\left({\bf x_0;x_2, h_2},t_2\right)  =
 \label{eqn:HIDMOwf}
 \end{equation}  
 As follows from (\ref{eqn:HDMOwf}),(\ref{eqn:HIDMOwf}), and (\ref{eqn:AMOwf}),
-\begin{eqnarray*}
-w_{12}\left({\bf x_1;x_2, h_2},t_2\right) = {t_2 \over {2\,\pi}}\,
-\times
-\end{eqnarray*}
 \begin{eqnarray}
-\times\,
+\nonumber
+w_{12}\left({\bf x_1;x_2, h_2},t_2\right) = {t_2 \over {2\,\pi}}\,
+\times \\
 {{{\bf \left|h_1\right|\,\left|h_2\right|}\,\sin{\varphi}}\over
 {\left({\bf h_1^2}\,\sin{\varphi}^2-
 \left(\left(x_2-x_1\right)\,\sin{\varphi}-
@@ -509,12 +506,10 @@ w_{02}\left({\bf x_0;x_2, h_2},t_2\right)  =
 Inserting (\ref{eqn:DMOwf}) and (\ref{eqn:IDMOwf}) into (\ref{eqn:AMOwf}) yields
 %\pagebreak
 %\samepage{
-\begin{eqnarray*}
-w_{12}\left({\bf x_1;x_2, h_2},t_2\right) = {t_2 \over {2\,\pi}}\,
-{\left|{\bf h_2 \over h_1}\right|}\,\times
-\end{eqnarray*}
 \begin{eqnarray}
-\times\,
+\nonumber
+w_{12}\left({\bf x_1;x_2, h_2},t_2\right) = {t_2 \over {2\,\pi}}\,
+{\left|{\bf h_2 \over h_1}\right|}\,\times \\
 {{{\bf h_1^2}\,\sin{\varphi}^2+
 \left(\left(x_2-x_1\right)\,\sin{\varphi}-
 \left(y_2-y_1\right)\,\cos{\varphi}\right)^2}\over
