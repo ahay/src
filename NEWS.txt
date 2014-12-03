@@ -22,6 +22,8 @@ To the reproducible documents collection:
   Zhang)
 * tccs/synwav: Time-frequency analysis of seismic data using
   synchrosqueezing wavelet transform (Chen, Liu, Chen, Li, and Wang)
+* sep/txamo: The time and space formulation of azimuth moveout (Fomel
+  and Biondi)
 
 To SCons:
 

@@ -57,7 +57,7 @@ particular common-azimuth
 and common-offset data and 3-D modeling for a different azimuth and
 offset. This   
 definition resembles the viewpoint on DMO developed by Deregowski and Rocca 
-\shortcite{GPR29.03.03740406}. As with the DMO case, the
+\shortcite{GPR29-03-03740406}. As with the DMO case, the
 migration and modeling  approach  reveals the physics of the AMO
 aperture and limits its boundaries. 
 It is the aperture limitation
@@ -129,7 +129,7 @@ where ${\bf D}_t^{1/2}$ stands for the operator of half-order differentiation
 (equivalent to $(i \omega)^{1/2}$ multiplication in Fourier domain),
 $t_0\, \theta_{10}$ and $t_2\,\theta_{02}$ are the summation paths of
 the DMO and inverse DMO  
-operators \cite{GPR29.03.03740406}:
+operators \cite{GPR29-03-03740406}:
 \begin{eqnarray}
 \theta_{10}({\bf x_1;x_0, h_1})=
 \left(1-{\bf \left(x_1-x_0\right)^2 \over h_1^2}\right)^{-1/2}\;,
@@ -293,7 +293,7 @@ correction in marine seismics. The next section develops
 a way of solving
 this problem, which
 refers to the kinematic theory of AMO and follows the ideas that
-Deregowski and Rocca \shortcite{GPR29.03.03740406} applied
+Deregowski and Rocca \shortcite{GPR29-03-03740406} applied
 to DMO-type operators.    
 
 \section{AMO APERTURE: CASCADING MIGRATION AND MODELING}
@@ -310,7 +310,7 @@ common-offset common-azimuth migration and the 3-D modeling for a different
 azimuth and offset. An analogous point of
 view was
 developed for the 2-D case
-by Deregowski and Rocca \shortcite{GPR29.03.03740406}.      
+by Deregowski and Rocca \shortcite{GPR29-03-03740406}.      
 \par
 Let's consider the general symmetric ellipsoid equation
 \begin{equation}
@@ -320,7 +320,7 @@ z(x,y)=\sqrt{R^2-\beta\,\left(x-x_1\right)^2-\left(y-y_1\right)^2}\;,
 where $z$ stands for the depth coordinate, $R$ is the small semi-axis of the
 ellipsoid, and $\beta$ is a nondimensional parameter describing the
 stretching of the ellipse $(\beta < 1)$. Deregowski and
-Rocca \shortcite{GPR29.03.03740406} derived the following connections
+Rocca \shortcite{GPR29-03-03740406} derived the following connections
 between the geometric properties of the reflector and the coordinates
 of the corresponding spike in the data:
 \begin{equation}
@@ -435,7 +435,8 @@ of the impulse responses. The dashed lines indicate the AMO impulse
 response with an azimuth rotation of 3 degrees (projection on the $x$
 plane); the solid lines, the 2-D offset continuation impulse response.}
 
-\activeplot{amoavs}{width=5.in,height=3.5in}{figdir}{AMO impulse
+\inputdir{.}
+\plot{amoavs}{width=5in}{AMO impulse
 response traveltime in three dimensions (the AVS display). Parameters:
 $\left|{\bf h1}\right|=1000$ m,  
 $\left|{\bf h2}\right|=750$ m, $t_1=1$ sec, $v=2000$ m/s,
@@ -453,21 +454,22 @@ same approach is repeated here in a simpler way by transferring the
 analysis to the natural time-space domain. A new contribution to the
 evaluation of the AMO operator follows from applying a different
 approach, which extends the geometric theory of DMO
-\cite{GPR29.03.03740406} to the AMO case. Cascading prestack
+\cite{GPR29-03-03740406} to the AMO case. Cascading prestack
 migration and modeling allows us to evaluate the AMO operator aperture.
 The compactness of the AMO aperture indicates that the integral operator can be
 performed at a low cost and therefore
 promises economic benefits for its practical implementation.
 %\nopagebreak
-\bibliographystyle{sep}\bibliography{SEP,EAEG,../sergey4/paper,GEOTLE}
+\bibliographystyle{seg}
+\bibliography{SEP2,SEG,paper}
 
 %\pagebreak
-\appendname{A}\appendix\sephead{APPENDIX A}
-\section{AMO AMPLITUDE}
+\appendix
+\section{APPENDIX A: AMO AMPLITUDE}
 The weighting function of the AMO operator can be determined from 
 cascading the DMO and inverse DMO operators by means of equation
 (\ref{eqn:AMOwf}). In the case of Hale's DMO \cite{Hale} and
-its adjoint \cite{GEO52.07.09730984},
+its adjoint \cite{GEO52-07-09730984},
 \begin{equation}
 w_{10}\left({\bf x_1;x_0, h_1},t_0\right) = 
 \sqrt{t_0 \over 2\,\pi}\,
@@ -529,9 +531,10 @@ w_{12}\left({\bf x_1;x_2, h_2},t_2\right) = {t_2 \over {2\,\pi}}\,
 \end{eqnarray}
 %}
 %\pagebreak
-\appendname{B}\appendix\sephead{APPENDIX B}
-\section{DERIVING THE AMO APERTURE}
-\activesideplot{amosym}{width=3.5in}{figdir}{Reflection from the
+\appendix
+\section{APPENDIX B: DERIVING THE AMO APERTURE}
+\inputdir{XFig}
+\sideplot{amosym}{width=3.5in}{Reflection from the
 ellipsoid of a prestack migration impulse response (a scheme). Top: Map view.
 Bottom: Section of the ellipsoid with the plane drawn through the
 central line and the reflection point.}
@@ -589,7 +592,7 @@ As follows from (\ref{eqn:xileq}), (\ref{eqn:xi2x0}), and (\ref{eqn:rbeta}),
 \end{equation}
 Inequality (\ref{eqn:x0leq}) is the known aperture limitation of the DMO
 operator (\ref{eqn:DMO}) found by Deregowski and Rocca
-\shortcite{GPR29.03.03740406}. The equality in (\ref{eqn:x0leq}) is achieved 
+\shortcite{GPR29-03-03740406}. The equality in (\ref{eqn:x0leq}) is achieved 
 when the reflection point is on the surface, where the reflector dip
 increases to 90 degrees.
 %\nopagebreak
