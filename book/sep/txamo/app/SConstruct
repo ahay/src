@@ -13,18 +13,17 @@ Flow('x0',None,
      output="x1-x2*cos(x3)/sin(x3)"
      ''')
 Flow('vk','x0','math output="(%g*sin(x3)^2-x2*x2)/(%g*sin(x3)^2-(x1*sin(x3)-x2*cos(x3))^2)" ' % (h2*h2,h1*h1))
-Flow('time','vk',
-     '''
-     mask min=0 | dd type=float |
-     math vk=$SOURCE output="%g*input*sqrt(abs(vk))"
-     ''' % (t1*h1/h2))
+Flow('vmask','vk','mask min=0 | dd type=float')
+Flow('time','vk','math output="%g*sqrt(abs(input))" ' % (t1*h1/h2))
 
 for case in range(2):
     v1 = (2.0,0.01)[case]
     tmean = (0.8,0.4)[case]
     
     r=v1*t1/2
-    b=t1*t1/(t1*t1+(2*h1/v1)**2)
+    dt=2*h1/v1
+    b=t1*t1/(t1*t1+dt*dt)
+    r=r*r
 
     rx = 'rx%d' % case
     ry = 'ry%d' % case
@@ -38,10 +37,11 @@ for case in range(2):
 
     time = 'time-%d' % case
     
-    Flow(time,[rx,ry,'time'],
+    Flow(time,[rx,ry,'time','vmask'],
          '''
          math rx=${SOURCES[0]} ry=${SOURCES[1]} output="%g-%g*rx*rx-ry*ry" |
-         mask min=0 | dd type=float | math t=${SOURCES[2]} output="input*abs(t-%g)"
+         mask min=0 | dd type=float | 
+         math t=${SOURCES[2]} m=${SOURCES[3]} output="input*m*abs(t-%g)"
          ''' % (r,b,tmean))
 
 Flow('time4','time-0','window n3=1')
