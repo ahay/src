@@ -15,7 +15,8 @@ Flow('offset',head,'dd form=native | window n1=1 f1=15')
 Result('cmp-win','cmpx cmpy',
        '''
        cmplx ${SOURCES[:2]} |
-       graph abel1=cmp_x label2=cmp_y symbol=x title="CMP distribution"
+       graph label1="In-line midpoint" label2="Cross-line midpoint" 
+       symbol=x title="CMP distribution"
        ''',stdin=0)
 
 Fetch('vnmo.H','jupiter',private)
