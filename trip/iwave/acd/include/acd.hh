@@ -27,10 +27,8 @@ void acd_timestep(std::vector<RDOM *> dom,
 
 int acd_create_sten(void *, 
 		    FILE *, 
-		    //		    IWaveInfo const &,
 		    int, 
 		    IPNT[RDOM_MAX_NARR], 
-		    //		    int[RDOM_MAX_NARR][RDOM_MAX_NARR], 
 		    STENCIL *);
 
 void acd_check(RDOM * dom,
@@ -72,7 +70,6 @@ typedef struct {
 
 /* default fraction of max time step */
 #define CFL_DEF 0.95
-
 
 #endif
 
