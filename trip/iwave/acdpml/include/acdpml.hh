@@ -27,10 +27,8 @@ void acdpml_timestep(std::vector<RDOM *> dom,
 
 int acdpml_create_sten(void *,
 		    FILE *,
-            IWaveInfo const &,
 		    int, 
 		    IPNT[RDOM_MAX_NARR], 
-		    //		    int[RDOM_MAX_NARR][RDOM_MAX_NARR], 
 		    STENCIL *);
 
 void acdpml_check(RDOM * dom,

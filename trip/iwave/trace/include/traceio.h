@@ -158,7 +158,7 @@ typedef struct s_tracegeom {
 
     @param[out] tg - (tracegeom *) trace geometry object to be constructed
     @param[in] fin - (char *) name of header (input) file.
-    @param[in] fout - (char *) name of data (output) file
+    @param[in] dt  - (float) time step for internal time loop, used to reserve buffer space
     @param[in] tol - (float) tolerance for distinguishing source positions with l-infty norm; should be computed in calling unit as fraction of maximum space step of grid to be sampled, possibly using cpp macro SRC_TOL defined in the header file.
     @param[in] stream - (FILE *) output stream for diagnostic information.
 

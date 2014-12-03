@@ -108,14 +108,14 @@ namespace TSOpt {
 
 	    if (!fwd) {
 	      rd_gse(&(((pstate->model).ld_s)[i]),ia,gs,ge);
-	      if (err=ra_create(&rsave,(pstate->model).g.dim,gs,ge)) {
+	      if ((err=ra_create(&rsave,(pstate->model).g.dim,gs,ge))) {
 		fprintf(stream,"\nError: giwave_synch from ra_create err=%d\n",err);
 		RVLException e;
 		e<<"\nError: IwaveSynch from ra_create err="<<err<<"\n";
 		throw e;
 	      }
 	      ra_zero(&rsave);
-	      if (err=ra_copy(&rsave,&(((((pstate->model).ld_s)[i])._s)[ia]))) {
+	      if ((err=ra_copy(&rsave,&(((((pstate->model).ld_s)[i])._s)[ia])))) {
 		fprintf(stream,"\nError: giwave_synch from ra_copy err=%d\n",err);
 		RVLException e;
 		e<<"\nError: IWaveSynch from ra_copy err="<<err<<"\n";
@@ -198,7 +198,7 @@ namespace TSOpt {
 		throw e;
 	      }
 	      fflush(stream);
-	      if (err=ra_axpy(&(((((pstate->model).ld_s)[i])._s)[ia]),&rsave,REAL_ONE)) {
+	      if ((err=ra_axpy(&(((((pstate->model).ld_s)[i])._s)[ia]),&rsave,REAL_ONE))) {
 		fprintf(stream,"\nError: giwave_synch from ra_axpy err=%d\n",err);
 		ra_dump(&(((((pstate->model).ld_r)[i])._s)[ia]),stream);
 		ra_dump(&rsave,stream);

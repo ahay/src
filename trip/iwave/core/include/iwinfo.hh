@@ -7,6 +7,10 @@
 #include "write.hh"
 #include "model.h"
 
+/** This file defines the function interfaces for which
+    implementations must be provided to create an IWAVE application.
+ */ 
+
 using RVL::RVLException;
 
 size_t pow2(int);
@@ -18,42 +22,58 @@ size_t pow2(int);
 class IWaveInfo;
 
 /**
- Time step function. 
- 
+
+Time step function. Interface for time steps of all orders of
+derivatives - order inferred from structure of input. The first
+argument is an array of \ref RDOM s - each \ref RDOM contains all
+static and dynamic fields interacting in the simulation. For the kth
+derivative (or adjoint derivative), 2<sup>k</sup> \ref RDOM s (copies
+of the basic field setup) are required. The fwd flag indicates whether
+the computation is part of a forward (true) or adjoint (false) time
+loop. For multistep methods (for expl leapfrog), iv indicates the
+substep of the overall step being computed.  <p>
+
+An example design: this function can determine the order of derivative
+by taking the log base 2 of dom.size(), extract the \ref RARR s from
+the \ref RDOM s, the C arrays and array metadata from the \ref RARR
+s, and pass the necessary information for time stepping to low-level
+C functions.
+
+ <p>
  @param[out] dom - std::vector<RDOM *> storing dynamic and static fields
+ @param[in] fwd - flag for forward vs. backward (adjoint) time step
  @param[in] iv - internal (sub)step index
  @param[in] fdpars - opaque FD_MODEL parameter object 
  @return 0 on success, else error code
 
- called in iwave_run. 
+ called in IWaveSim::run
 
  */
 typedef void (*FD_TIMESTEP)(std::vector<RDOM *> dom, bool fwd, int iv, void* fdpars);
 
-/** FD model constructor - should do at least these three things: - 
-    
-    <ul> 
-    
-    <li>assign FD_MODEL ("this") to IMODEL.specs (would do this in a
-    base class if there were such a thing)</li>
-    
-    <li> assign all function pointers in FD_MODEL, including this
-    one </li>
-    
-    <li> create appropriate data structure to serve as fdpars
-    parameter struct for FD_MODEL specialization, initialize data
-    members of FD_MODEL.fdpars using data from pars, the IMODEL data
-    members, or any other source, as required.</li> 
-    
-    </ul>
+/** FD model internals initializer - creates appropriate data
+    structure to serve as fdpars parameter struct for \ref IMODEL
+    specialization, initialize data members of \ref IMODEL.fdpars
+    using data from pars, grid, and dt. The data members include (for
+    example) scheme-characteristic finite difference coefficients,
+    parameters and arrays for absorbing boundary conditions, arrays to
+    indicate whether boundar faces are inter-domain or external for
+    domain decomposition, and other parameters convenient for defining
+    time steps.
     
     @param[in] pars - parameter array, assumed initialized.
     
     @param[in] stream - verbose output stream
     
-    @param[out] mdl - \ref IMODEL whose static arrays are being initialized
+    @param[in] g - primal simulation \ref grid , initialized via I/O
+    on first IOKEY
     
-    @param[in] gridkey - key string for source of grid model info
+    @param[in] dt - time step, will have been initialized on call by prior
+    call to FD_TIMEGRID
+
+    @param[out] specs - fd parameter struct containing app-particular
+    info such as coefficient arrays, Courant numbers, PML damping
+    arrays, etc. 
     
     @return - 0 on success, else error code.
 */
@@ -68,63 +88,28 @@ typedef int (*FD_MODELINIT)(PARARRAY * pars,
 typedef void (*FD_MODELDEST)(void ** specs);
 
 
-  /** initializes \ref TIMEINDEX data member of \ref IMODEL mdl - this
-      chiefly means compute time step. Might be read from pars, or
-      computed from velocity or other fields initialized by readmedia,
-      hence called after readmedia in fd_mread.
-
-      Preconditions: output stream open, \ref PARARRAY pars
-      initialized, \ref IMODEL mdl initialized.
-
-      Postconditions: mdl.tsind.dt and other data members set
-      appropriately.
-
-      @param[in] pars - parameter array, assumed initialized.
-
-      @param[in] stream - verbose output stream
-
-      @param[out] mdl - \ref IMODEL whose static arrays are being initialized
-      
-      @return - 0 on success, else error code.
-
-  */
+/** Computes time step for internal simulation time grid. This must be
+    possible based on information contained in pars, eg. max wave
+    velocity, scheme type and order, etc., and primal spatial grid g,
+    eg. space steps.
+    
+    @param[in] pars - parameter array, assumed initialized.
+    
+    @param[in] stream - verbose output stream
+    
+    @param[in] g - primal simulation \ref grid , initialized via I/O
+    on first IOKEY
+    
+    @param[out] dt - time step, will have been initialized on call by prior
+    call to FD_TIMEGRID
+    
+    @return - 0 on success, else error code.
+    
+*/
 typedef int (*FD_TIMEGRID)(PARARRAY * pars, 
 			   FILE * stream, 
 			   grid const & g, 
 			   ireal & dt);
-
-  /** assigns stencil dependency array. This array is auxiliary
-      information used in creating a stencil struct. It describes the
-      relations between fields, at the level of the PDEs. Since IWAVE
-      applies to linear first-order systems of pdes, each field can
-      depend on other fields either through their values or through
-      the values of their partial derivatives. These dependency types
-      are encoded as follows:
-
-      <ul>
-      <li> dependent on value -> DEP_F</li>
-      <li> dependent on 1st derivative wrt axis-z -> DEP_DFDZ</li>
-      <li> dependent on 1st derivative wrt axis-x -> DEP_DFDX</li>
-      <li> dependent on 1st derivative wrt axis-y -> DEP_DFDY</li>
-      </ul>
-
-      The [i][j] element of the dependency matrix (output) contains
-      the type code for the dependence of field i on field j. The type
-      codes DEP_* are defined in this file (fd.h).
-
-      Preconditions: output stream open, model dimension set,
-      dependency matrix statically allocated in fd_modelcrea.
-
-      Postconditions: dependency matrix initialized
-
-      @param[in] stream - output stream 
-      @param[in] ndim - model dimension (1, 2, or 3)
-      @param[out] stendep - stencil dependency matrix
-      @return - 0 for success, else error code.
-
-      called in fd_modelcrea
-  */
-//  int (*build_sten_dep)(FILE * stream, int ndim, int stendep[RDOM_MAX_NARR][RDOM_MAX_NARR]);
 
   /** creates FD stencils. A \ref stencil describes the dependencies
       between arrays participating in a finite difference scheme, in
@@ -132,39 +117,53 @@ typedef int (*FD_TIMEGRID)(PARARRAY * pars,
       boundary condition implementation, and for data exchange between
       processors in a domain decomposition.
 
+      See documentation for \ref stencil for a detailed description of stencil construction.
+
       Preconditions - output stream open, model spatial dimension available,
       grid type and stencil dependency arrays initialized. Follows calls to 
       set_grid_type and build_sten_dep.
       
       Postconditions - \ref stencil object initialized
 
+      @param[in] specs - \ref IMODEL .specs struct, containing
+      model-dependent info 
+
       @param[in] stream - verbose output stream
-      @param[in] ndim - model spatial dimension
-      @param[in] gtype - grid type array
-      @param[in] stendep - stencil dependency matrix 
+
+      @param[in] ndim - model spatial dimension 
+
+      @param[in] gtype - grid type array - assigned from FIELDS - for
+      each dim, 0 for primal, 1 for dual (staggered)
+
       @param[out] sten - stencil object
-      @param[in] fdpars - opaque FD parameter object
+
       @return - 0 for success, else error code
 
       called in fd_modelcrea
   */
   typedef int (*FD_STENCIL)(void * specs,
 			    FILE * stream,
-			    IWaveInfo const & ic,
 			    int ndim, 
 			    IPNT gtype[RDOM_MAX_NARR], 
-			    //		     int stendep[RDOM_MAX_NARR][RDOM_MAX_NARR], 
 			    STENCIL * sten);
 
-/* sanity check for coefficient fields - called after
-   these are initialized, at beginning of time loop. Throws 
-   suitable exception for bound transgression or other sin. 
+/** sanity check for coefficient fields - called after
+   these are initialized, at beginning of time loop. Should
+   throw RVLException for bound transgression or other sin. 
    Parameters for tests stored in model->specs. These 
    tests a priori refer only to the reference RDOM.
+
+   @param dom    - reference RDOM, containing reference simulation fields
+   
+   @param specs  - \ref IMODEL .specs object
+
+   @param stream - verbose output stream
+
+   called in IWaveSim::run
 */
 typedef void (*FD_CHECK)(RDOM * dom,
 			 void * specs,
-			 FILE * sream);
+			 FILE * stream);
 
 /*
   IWAVE field spec struct. Model field structure 

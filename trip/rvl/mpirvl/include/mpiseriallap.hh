@@ -66,13 +66,9 @@ namespace RVL {
     }
 
     virtual bool compare(LinearAlgebraPackage<Scalar> const & lap) const {
-      try {
-        dynamic_cast<MPISerialLAP<Scalar> const &>(lap);
-        return true;
-      }
-      catch (bad_cast) {
-        return false;
-      }
+      MPISerialLAP<Scalar> const * tmp = NULL;
+      if ((tmp=dynamic_cast<MPISerialLAP<Scalar> const *>(&lap))) return true;
+      return false;
     }    
 
     /** added to spparate instantiation from initialization */

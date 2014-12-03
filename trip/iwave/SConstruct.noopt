@@ -26,7 +26,7 @@ vars.Add('CFLAGS','flags passed to C compiler only (not C++)','-std=c99')
 vars.Add('CCFLAGS','flags passed to C/C++ compiler','-g -pedantic -Wunused -Wimplicit -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_GNU_SOURCE')
 vars.Add('CXX','path or alias for C++ compiler','g++')
 vars.Add('CXXFLAGS','flags passed to C++ compiler only (not C)','')
-vars.Add('LINKFLAGS','flags passed only to linker','-L/home/yh15/tools/fftw3.3.4/lib')
+vars.Add('LINKFLAGS','flags passed only to linker','')
 vars.Add('AR','static library (object archive) creation','ar')
 
 # initialize build environment

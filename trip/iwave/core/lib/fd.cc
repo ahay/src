@@ -295,7 +295,8 @@ int fd_modelcrea(IPNT cdims, IPNT crank, PARARRAY * par, FILE * stream, IMODEL *
     */
     //    cerr<<"->create_sten"<<endl;
     //    if ( (err=fdm->create_sten(fdm,stream,ndim,gtype,sten_dep_mat,&sten)) )  {
-    if ( (err=ic.get_stencil()(model->specs,stream,ic,ndim,gtype,&sten)) )  {
+    //    if ( (err=ic.get_stencil()(model->specs,stream,ic,ndim,gtype,&sten)) )  {
+    if ( (err=ic.get_stencil()(model->specs,stream,ndim,gtype,&sten)) )  {
       fprintf(stream,"ERROR: fd_modelcrea from create_sten, err=%d\n",err);
       fflush(stream);
       return err;

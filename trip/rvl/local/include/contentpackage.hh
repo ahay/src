@@ -37,19 +37,109 @@ copyright holder.
 #include "dejavu.hh"
 
 namespace RVL {
-  
+
+  // forward declaration
+  template<typename T, typename M>
+  class ContentPackage;
+
   // rewrite of ADP's ContentPackage - now stores only a single 
   // metadata object, which is supposed to be collective
   
   /** Helper function template to extract the size of a data array
-      implicit in a MetaType object. The base template will work for
-      any intrinsic integer MetaType (size_t, int, long, uint,...).
-      More complex MetaTypes will require template specialization. */
+      implicit in a MetaType object. No sensible default, so throws
+      exception. Specializations provided for intrinsic integer
+      MetaType (size_t, int, long, uint,...). Note - returns size
+      of data in WORDS - DataType not being specified cannot convert
+      to bytes here. */
 
-  template<class MetaType>
+  template<typename MetaType>
   size_t getDataSize(MetaType const & md) {
     size_t t = md;
     return t;
+  }
+
+  /** Metadata types are not constant sized, so serialization requires
+      a size function. Obvious specializations supplied for int types.
+      note that return is size in BYTES.
+  */
+
+  template<class MetaType>
+  size_t getMetaSize(MetaType const & md) {
+    return sizeof(MetaType);
+  }
+
+  /** works for any fixed size data, eg. a struct with default-constructed
+      members of fixed size */
+  template<typename MetaType>
+  char * serialize(MetaType const & mt, size_t & len) {
+    len = getMetaSize<MetaType>(mt);
+    char * cbuf = new char[len];
+    memcpy(cbuf, (char *)(&mt), len);
+    return cbuf;
+  }
+
+  /** Obvious implementation for int types - will need to be specialized
+      for others. Will not compile for variable size metatypes for which
+      default construction is not defined. */
+  template<typename MetaType>
+  MetaType * deserialize(char * cbuf, size_t len) {
+    // functional only for data of fixed size and 
+    // default construction - test this first
+    MetaType * mt = new MetaType;
+    if (len < getMetaSize<MetaType>(*mt)) {
+      RVLException e;
+      e<<"ERROR: deserialize[ContentPackage MetaType]\n";
+      e<<"  asserted size of char buf too small to hold\n";
+      e<<"  metadata object of this type\n";
+      throw e;
+    }
+    memcpy((char *)mt,cbuf,getMetaSize<MetaType>(*mt));
+    return mt;
+  }
+
+  /** serializes CP into two contiguous blocks: (1) serialized
+      metadata, followed by (2) data array.
+  */
+  template<typename DataType, typename MetaType>
+  char * serialize(ContentPackage<DataType,MetaType> const & cp, size_t & len) {
+    size_t mlen = 0;
+    char * mbuf = serialize<MetaType>(cp.getMetadata(), mlen);
+    size_t dlen = getDataSize<MetaType>(cp.getMetadata())*sizeof(DataType);
+    len = mlen + dlen;
+    char * cbuf = new char[len];
+    memcpy(cbuf,mbuf,mlen);
+    memcpy(&(cbuf[mlen]),(char *)(cp.getData()),dlen);
+    delete [] mbuf;
+    return cbuf;
+  }
+
+  /** Assumes that serialized CP consists of two contiguous blocks:
+      (1) serialized metadata, followed by (2) data array. 
+  */
+  template<typename DataType, typename MetaType>
+  ContentPackage<DataType,MetaType> * deserialize(char * cbuf, size_t len) {
+    try {
+      MetaType * mt = deserialize<MetaType>(cbuf,len);
+      int clen = getMetaSize<MetaType>(*mt) + getDataSize<MetaType>(*mt)*sizeof(DataType);
+      if (len != clen) {
+	RVLException e;
+	e<<"ERROR: deserialize[ContentPackage]\n";
+	e<<"  asserted size of char buffer appears to differ from that needed\n";
+	e<<"  to store CP object of given type\n";
+	e<<"  asserted size of char buffer = "<<len<<"\n";
+	e<<"  require buffer size for CP   = "<<clen<<"\n";
+	throw e;
+      }
+      ContentPackage<DataType,MetaType> * cp = new ContentPackage<DataType,MetaType>;
+      cp->initialize(*mt);
+      delete mt;
+      memcpy((char *)(cp->getData()), &(cbuf[getMetaSize<MetaType>(*mt)]),getDataSize<MetaType>(*mt)*sizeof(DataType) );
+      return cp;
+    }
+    catch (RVLException & e) {
+      e<<"\ncalled from deserialize[ContentPackage]\n";
+      throw e;
+    }
   }
 
   /** Helper template for implementation of standard write method. Will
@@ -227,6 +317,10 @@ namespace RVL {
     }
     bool operator!=(ContentPackage<DataType,MetaType> const & a) const { 
       return !operator==(a); 
+    }
+
+    bool isCompatible(ContentPackage<DataType,MetaType> const & a) const {
+      return (this->getMetadata() == a.getMetadata());
     }
 
     /** access metadata, mutable */
@@ -418,13 +512,6 @@ namespace RVL {
 	//	this->write(cerr);
 	std::vector<PackageContainer<DataType,MetaType> const *> pcx(x.size());
 	for (size_t i=0;i<x.size();i++) {
-	  // first check against aliasing
-	  if (this == pcx[i]) {
-	    RVLException e;
-	    e<<"Error: PackageContainer::eval(FO)\n";
-	    e<<"input argument "<<i<<" aliased with output\n";
-	    throw e;
-	  }
 	  if (!(pcx[i] = dynamic_cast<PackageContainer<DataType,MetaType> 
 		const *>(x[i]))) {
 	    RVLException e;
@@ -434,6 +521,13 @@ namespace RVL {
 	      e<<"*** arg "<<j<<":\n";
 	      x[j]->write(e);
 	    }
+	    throw e;
+	  }
+	  // cannot alias input with output
+	  if (this == pcx[i]) {
+	    RVLException e;
+	    e<<"Error: PackageContainer::eval(FO)\n";
+	    e<<"input argument "<<i<<" aliased with output\n";
 	    throw e;
 	  }
 	  pcx[i]->reset();

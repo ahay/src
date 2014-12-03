@@ -518,7 +518,7 @@ int setrecvexchange(IMODEL * model, PARALLELINFO * pinfo, FILE * stream, IWaveIn
 
   int err=0;
 #ifdef IWAVE_USE_MPI
-  int n, i, iv, j, ia, overlap, ndim, tmp_narr, index;
+  int i, iv, j, ia, overlap, ndim, tmp_narr, index;
   RDOM *ld_r, *ld_s, *ld_c;
 
   MPI_Status status;

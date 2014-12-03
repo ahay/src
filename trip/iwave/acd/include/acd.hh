@@ -27,7 +27,7 @@ void acd_timestep(std::vector<RDOM *> dom,
 
 int acd_create_sten(void *, 
 		    FILE *, 
-		    IWaveInfo const &,
+		    //		    IWaveInfo const &,
 		    int, 
 		    IPNT[RDOM_MAX_NARR], 
 		    //		    int[RDOM_MAX_NARR][RDOM_MAX_NARR], 

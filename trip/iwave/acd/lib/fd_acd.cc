@@ -125,7 +125,6 @@ int acd_modelinit(PARARRAY *pars,
     IASN(crank, IPNT_0); /* default cartisian ranks */ 
 
 #ifdef IWAVE_USE_MPI
-    int rk=retrieveRank();
     MPI_Comm cm=retrieveComm();
 
     if ( MPI_Cart_get(cm, RARR_MAX_NDIM, cdims, cpers, crank) != MPI_SUCCESS )  {
@@ -256,10 +255,9 @@ void acd_modeldest(void ** fdpars) {
 
 int acd_create_sten(void * fdm,
 		    FILE * stream,
-		    IWaveInfo const & ic,
+		    //      		    IWaveInfo const & ic,
 		    int ndim,
 		    IPNT gtype[RDOM_MAX_NARR], 
-		    //		    int sten_dep_mat[RDOM_MAX_NARR][RDOM_MAX_NARR], 
 		    STENCIL * sten) {
     ACD_TS_PARS * acdpars = (ACD_TS_PARS *)(fdm);
     STENCIL_MASK mask;/* workspace */

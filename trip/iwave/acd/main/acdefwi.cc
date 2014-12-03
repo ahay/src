@@ -207,7 +207,7 @@ int main(int argc, char ** argv) {
      cmin[0].eval(minfn);
      GridMaskOp mop(op.getDomain(),m_in,swind,ewind);
      OperatorEvaluation<float> mopeval(mop,m_in);
-     LinearOp<float> const & lmop=mopeval.getDeriv();
+     //     LinearOp<float> const & lmop=mopeval.getDeriv();
      OpComp<float> cop(mop,op);
      OpComp<float> cdsop(mop,dsop);
 

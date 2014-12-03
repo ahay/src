@@ -6,7 +6,7 @@ Implements regular grid data structure and related i/o, based on RSF
 file format (http://www.reproducibility.org/wiki/Guide_to_RSF_file_format)
 <p>
 <ul>
-<li> struct \ref axis defines a grid axis. An axis has four attributes: the
+<li> struct \ref axis defines a \ref grid axis. An \ref axis has four attributes: the
 number of gridpoints on the axis (n), the step between gridpoints (d),
 the coordinate of the first gridpoint (o), and the axis index (id)
 which indicates its position in the a reference ordering of
@@ -17,7 +17,7 @@ axes (see Notes below for more on this). Functions provided:
 <li>\ref print_axis : print axis to stdout </li>
 <li>\ref compare_axis : compare two axes for equality </li>
 </ul>
-<li> struct \ref grid consists of up to \ref RARR_MAX_NDIM axes. Functions 
+<li> struct \ref grid consists of up to \ref IWAVEBASE::RARR_MAX_NDIM axes. Functions 
 provided:
 <ul>
 <li>\ref init_grid : initializes grid of dimension dim - default-initializes dim axes, assigns id's in natural order </li>

@@ -81,10 +81,10 @@ namespace TSOpt {
 #ifdef IWAVE_USE_MPI
 	MPIGridSpace const * gsp = NULL;
 	MPISEGYSpace const * tsp = NULL;
-	if (gsp=dynamic_cast<MPIGridSpace const *>((sp._s)[i])) {
+	if ((gsp=dynamic_cast<MPIGridSpace const *>((sp._s)[i]))) {
 	  _s[i]=new MPIGridSpace(*gsp);
 	}
-	else if (tsp=dynamic_cast<MPISEGYSpace const *>((sp._s)[i])) {
+	else if ((tsp=dynamic_cast<MPISEGYSpace const *>((sp._s)[i]))) {
 	  _s[i]=new MPISEGYSpace(*tsp);	    
 	}
 	else {
