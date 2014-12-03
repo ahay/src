@@ -21,9 +21,15 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 /* Modified for inclusion with Madagascar. */
-#include <rsf.h>
 
 #include "gmres.h"
+
+#include "_bool.h"
+/*^*/
+
+#include "error.h"
+#include "alloc.h"
+#include "blas.h"
 
 static int m, n;
 static float * v, * h, * g, * c, * s;
@@ -50,8 +56,8 @@ back_sub (int m, int nn,
     }
 }
 
-void gmres_init(int nx      /* data size */, 
-		int restart /* memory */) 
+void sf_gmres_init(int nx      /* data size */, 
+		   int restart /* memory */) 
 /*< initialize >*/
 {
     m=restart;
@@ -64,7 +70,7 @@ void gmres_init(int nx      /* data size */,
     s   = sf_floatalloc(m);
 }
 
-void gmres_close(void)
+void sf_gmres_close(void)
 /*< free allocated storage >*/
 {   
   free (v);
@@ -74,13 +80,13 @@ void gmres_close(void)
   free (s);
 }
 
-void gmres (const float *f                                         /* data */, 
-	    float *x                                               /* estimated model */,
-	    void (*myatimes) (int, const float *, float *, void *) /* operator */,
-	    void * user_data                                       /* internal data */,
-	    int itmax                                              /* number of iterations */, 
-	    float tol                                              /* tolerance */, 
-	    bool verb                                              /* verbosity */)
+void sf_gmres (const float *f                                         /* data */, 
+	       float *x                                               /* estimated model */,
+	       void (*myatimes) (int, const float *, float *, void *) /* operator */,
+	       void * user_data                                       /* internal data */,
+	       int itmax                                              /* number of iterations */, 
+	       float tol                                              /* tolerance */, 
+	       bool verb                                              /* verbosity */)
 /*< GMRES solver >*/
 {
   int iter;

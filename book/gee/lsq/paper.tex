@@ -22,12 +22,12 @@ The first level of computer use in science and engineering is \bx{modeling}.
 Beginning from physical principles and design ideas,
 the computer mimics nature.
 Then the worker looks at the result, thinks a while,
-alters the modeling program and tries again.
+alters the modeling program, and tries again.
 The next, deeper level of computer use is that the computer 
 examines the results of modeling and reruns the modeling job.
 This deeper level
 is variously called
-``\bx{fitting},'' or
+``\bx{fitting},'' 
 ``\bx{estimation},'' or
 ``\bx{inversion}.''
 We inspect the \bx{conjugate-direction method} of fitting
@@ -291,8 +291,8 @@ especially at high frequencies but not necessarily at low frequencies.
 \end{equation}
 A danger of this goal is that the model could have a zero-frequency component
 of infinite magnitude as well as large amplitudes for low frequencies.
-To suppress such bad behavior, we need the second goal, a model residual
-which is to be minimized.  We need a small number $\epsilon$.
+To suppress such bad behavior we need the second goal, a model residual
+to be minimized.  We need a small number $\epsilon$.
 The model goal is:
 \begin{equation}
 0 \quad\approx\quad \epsilon \ m
@@ -337,7 +337,7 @@ Now we recognize we have a low-cut filter with
 We address the question of shifting signals into best alignment. The
 most natural approach might seem to be via cross correlations, which
 is indeed a good approach when signals are shifted by large amounts.
-Here we assume signals are shifted by small amounts, often less than a
+Here, we assume signals are shifted by small amounts, often less than a
 single pixel.  We take an approach closely related to differential
 equations. Consider this definition of a residual.
 \begin{equation}
@@ -402,10 +402,10 @@ $\bold t \cdot \bold t$, and
 $\bold x \cdot \bold t$
 were smoothed over time with a triangle filter.
 
-\sideplot{puckin}{width=3in}{
+\sideplot{puckin}{width=0.8\textwidth}{
 	Input synthetic seismic data includes a low level of noise.}  
 
-\sideplot{residual5}{width=3in}{
+\sideplot{residual5}{width=0.8\textwidth}{
 	Residuals, i.e., an evaluation of $U_x + pU_t$.}  
 
 \sideplot{puckout}{width=0.8\textwidth}{
@@ -623,7 +623,7 @@ Likewise, the {\it transposed} matrix $\bold F\T$ is defined by:
   f_{11} & f_{21} & f_{31}  \\
   f_{12} & f_{22} & f_{32}  \end{array} \right] 
 \end{equation}
-Using this matrix ${\bold F\T}$ there is a simple expression
+Using this matrix ${\bold F\T}$, there is a simple expression
 for the gradient calculated in equation~(\ref{eqn:Q1comp}).
 It is used in nearly every example in this book.
 %
@@ -754,7 +754,7 @@ We see it everywhere.
 
 \par
 Let us examine all the second derivatives of $Q(m_1,m_2)$ defined by equation (\ref{eqn:allquadratics}).
-Any multiplying $\dd$ does not survive the second derivative, therefore, the terms we are left with are
+Any multiplying $\dd$ does not survive the second derivative, therefore, the terms we are left with are:
 \begin{equation}
 Q(m_1,m_2) = (\ff_1\cdot\ff_1) m_1^2 +
            2 (\ff_1\cdot\ff_2) m_1 m_2 +
@@ -932,7 +932,7 @@ by setting to zero, both
 $\partial Q/\partial \bar X$ and $\partial Q/\partial X$.
 We noted that only one of
 $\partial Q/\partial \bar X$ and $\partial Q/\partial X$
-is necessarily zero
+is necessarily zero,
 because these terms are conjugates of each other.
 Now, take the derivative of $Q$
 with respect to the (possibly complex, row) vector $\bold m\T$.
@@ -1085,7 +1085,7 @@ We also sometimes use analytical methods on matrices of size $4\times 4$
 if the matrix contains many zeros.
 My 1988 desktop workstation solved a $100 \times 100$
 system in a minute.
-Ten years later it would do a $600\times 600$ system in roughly a minute.
+Ten years later, it would do a $600\times 600$ system in roughly a minute.
 A nearby more powerful computer would do
 1,000 $\times$ 1,000 in a minute.
 Because the computing effort increases with the third power of the size,
@@ -1576,7 +1576,7 @@ A plane is made from an arbitrary linear combination of two vectors.
 One vector is chosen to be the gradient vector, say  $\bold g$.
 The other vector is chosen to be the previous descent step vector,
 say  $\bold s = \bold x_j - \bold x_{j-1}$.
-Instead of  $\alpha \, \bold g$  we need a linear combination,
+Instead of  $\alpha \, \bold g$,  we need a linear combination,
 say  $\alpha \bold g + \beta  \bold s$.
 For minimizing quadratic functions the \bx{plane search} requires
 only the solution of a two-by-two set of linear equations
@@ -1971,7 +1971,7 @@ Let us see an example of a situation in which roundoff becomes a problem.
 Suppose we add 100 million 1.0s.  You expect the sum to be 100 million.
 I got a sum of 16.7 million.
 Why?
-After the sum gets to 16.7 million adding a one to it adds nothing.
+After the sum gets to 16.7 million, adding a one to it adds nothing.
 The extra 1.0 disappears in single precision roundoff.
 \par
 \begin{verbatim}
@@ -1987,7 +1987,7 @@ The previous code must be a little more complicated than I had hoped
 because modern compilers are so clever.
 When told to add all the values in a vector the compiler wisely
 adds the numbers in groups, and then adds the groups.
-Thus I had to hide the fact I was adding ones by getting those ones
+Thus, I had to hide the fact I was adding ones by getting those ones
 from a subroutine that seems to depend upon the sum (but really
 does not).
 
@@ -2044,12 +2044,12 @@ we consider how
 {\it \bx{inversion}} in the application called \bx{moveout and stack}.
 \sideplot{invstack}{width=.8\textwidth,height=.8\textwidth}{
   Top is a model trace $\bold m$.
-  Next are the synthetic data traces, $\bold d = \bold M \bold m$.
+  Next, are the synthetic data traces, $\bold d = \bold F \bold m$.
   Then, labeled {\tt niter=0} is the \protect\bx{stack},
   a result of processing by adjoint modeling.
-  Increasing values of {\tt niter} show $\bold x$
+  Increasing values of {\tt niter} show $\bold m$
   as a function of iteration count in the fitting goal
-  $\bold d \approx \bold M \bold m$.
+  $\bold d \approx \bold F \bold m$.
   (Carlos Cunha-Filho)
 }
 \par
@@ -2357,9 +2357,9 @@ That sounds easy.
 On the other hand,
 the same equations are valid when $x$ and $y$ are interchanged,
 therefore we get twice as many equations as unknowns.
-Ideally, either of these sets of equations
+Ideally either of these sets of equations
 is equivalent to the other;
-but for real data we expect to be fitting this fitting goal:
+but for real data, we expect to be fitting this fitting goal:
 \begin{equation}
 \nabla \phi \quad \approx \quad {\Im  \bar Z \nabla Z \over \bar Z Z}
 \label{eqn:integrateme}
@@ -2526,7 +2526,7 @@ the solution $\tau$ is that of Poisson's equation.
 \nabla^2 \tau \eq - \ \nabla \cdot {\bf d} 
 \label{eqn:PoissonEQ}
 \end{equation} 
-In the Fourier domain we can have an analytic solution.
+In the Fourier domain, we can have an analytic solution.
 There, $-\nabla^2 = k_x^2 + k_y^2$ 
 where $(k_x , k_y)$ are the Fourier frequencies on the $(x , y )$ axes.
 Instead of thinking 
@@ -2545,16 +2545,16 @@ $\nabla \cdot {\bf d}$. Recall that $- i\omega \Delta t \approx i
 \hat{\omega} \Delta t = 1-Z = 1-{\rm exp}(-i \omega \Delta t)$, 
 which is a Fourier 
 domain way of saying that difference equations tend to differential equations at low 
-frequencies. Likewise a symmetric second time derivative has a finite-difference 
+frequencies. Likewise, a symmetric second time derivative has a finite-difference 
 representation proportional to $(-2+Z+1/Z)$ and in a two-dimensional space, a 
-finite-difference representation of the Laplacian operator is proportional to $(-4+X+1/X+Y+1/Y)$ where $X = {\rm exp}(i k_x \Delta x )$ and $Y = {\rm exp}(i k_y \Delta y )$. 
+finite-difference representation of the Laplacian operator is proportional to $(-4+X+1/X+Y+1/Y)$, where $X = {\rm exp}(i k_x \Delta x )$ and $Y = {\rm exp}(i k_y \Delta y )$. 
 Fourier solutions have peculiarities (periodic boundary conditions) 
 that are not always appropriate in practice, but having these solutions available 
 is often a nice place to start from when solving an application that cannot be solved 
 in Fourier space.
 
 \par
-For example, suppose we feel some data values are bad and we
+For example, suppose we feel some data values are bad, and we
 would like to throw out the regression equations involving the bad data points. At 
 Vesuvius, we might consider the strength of the radar return (which we have
 previously ignored) and use it as a weighting function ${\bf W}$.
@@ -2575,7 +2575,7 @@ the iterative solution to the real problem.
 With the Vesuvius data, we could construct a weight ${\bf W}$ from the signal strength.
 We also have available the curl, which should vanish.
 Vanishing is an indicator of questionable data
-that could be weighted down relative to other data.
+that should be weighted down relative to other data.
 
 
 %\begin{notforlecture}
@@ -3284,7 +3284,7 @@ What is the null space?
 
 \item In 1695,
 150 years before Lord Kelvin's absolute temperature scale,
-120 years before Sadi Carnot's PhD~thesis,
+120 years before Sadi Carnot's PhD.~thesis,
 40 years before Anders Celsius,
 and 20 years before Gabriel Fahrenheit,
 the French physicist Guillaume Amontons,
@@ -3299,7 +3299,7 @@ Had he lived after Anders Celsius, he might have calculated this temperature to 
 Absolute  zero is now known to be $-273^\circ$C.
 \par
 It is your job to be Amontons' lab assistant.
-You make your {\it i}th measurement of temperature $T_i$ with Issac
+You make your {\it i}-th measurement of temperature $T_i$ with Issac
 Newton's thermometer; 
 and you measure pressure $P_i$ and volume $V_i$ in the metric system.
 Amontons needs you to fit his data with the regression $0 \approx \alpha (T_i - T_0 ) - P_i V_i$ and calculate the temperature shift $T_0$ that Newton should have made when he defined his temperature scale.

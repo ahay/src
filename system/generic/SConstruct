@@ -71,10 +71,8 @@ for prog in mains:
                 other = string.replace(other,'.exe','')
             docalias[other] = 'sf'+prog
 
-for prog in Split('gaussshape2 matmult2'):
+for prog in Split('gaussshape2'):
     sources = ['Test' + prog,prog]
-    if prog=='matmult2':
-        sources.append('gmres')
     bldutil.depends(env,sources,prog)
     sources = map(lambda x: x + '.o',sources)
     env.Object('Test' + prog + '.c')

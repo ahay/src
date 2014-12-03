@@ -1,9 +1,11 @@
 #include <stdio.h>
 
-#include <rsf.h>
-
 #include "matmult2.h"
 #include "gmres.h"
+#include "alloc.h"
+#include "cdstep.h"
+#include "_defs.h"
+#include "bigsolver.h"
 
 int main (void) {
     float** a;
@@ -33,12 +35,12 @@ int main (void) {
     }
     printf("\n");
 
-    matmult2_init(a); 
+    sf_matmult2_init(a); 
 
     printf ("cdstep\n------\n");
     for (iter =0; iter < 5; iter++) {
 	sf_cdstep_init();
-	sf_left_solver( matmult2_lop, sf_cdstep, 4, x, y, iter, 
+	sf_left_solver( sf_matmult2_lop, sf_cdstep, 4, x, y, iter, 
 			"res", res, "end");
 	sf_cdstep_close();
 	printf ("x = ");
@@ -54,13 +56,13 @@ int main (void) {
     }
 
     printf ("gmres\n------\n");
-    gmres_init(4,4);
+    sf_gmres_init(4,4);
 
     for (iter =0; iter < 5; iter++) {
 	for (i=0; i < 4; i ++) {
 	    x[i] = 0.0f;
 	}
-	gmres( y, x, matmult2, a, iter, 0.01*SF_EPS, false); 
+	sf_gmres( y, x, sf_matmult2, a, iter, 0.01*SF_EPS, false); 
 	printf ("x = ");
 	for (i=0; i < 4; i ++) {
 	    printf (" %12.8f",x[i]);

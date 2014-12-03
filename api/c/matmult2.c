@@ -17,21 +17,21 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include <rsf.h>
-/*^*/
-
 #include "matmult2.h"
+
+#include "adjnull.h"
+/*^*/
 
 static float** B;
 
-void matmult2_init (float** bb) 
+void sf_matmult2_init (float** bb) 
 /*< initialize with a pointer to a matrix >*/
 {
     B = bb;
 }
 
-void matmult2_lop (bool adj, bool add, 
-		  int nx, int ny, float* x, float*y) 
+void sf_matmult2_lop (bool adj, bool add, 
+		      int nx, int ny, float* x, float*y) 
 /*< linear operator, no adjoint >*/
 {
     int ix, iy;
@@ -44,7 +44,7 @@ void matmult2_lop (bool adj, bool add,
     }
 }
 
-void matmult2 (int nx, const float* x, float* y, void* mat) 
+void sf_matmult2 (int nx, const float* x, float* y, void* mat) 
 /*< square linear operator, no adjoint >*/
 {
     float** A;

@@ -12,14 +12,14 @@ aastretch adjnull alloc axa banded bigsolver blas box c99 causint
 ccdstep ccgstep cconjgrad ccopy cell celltrace cdstep cgstep chain
 clist cmatmult conjgrad conjprec copy cosft ctriangle ctrianglen
 decart deriv divn dottest doubint edge eno eno2 eno3 error fftlabel
-file files freqfilt freqfilt2 ftutil fzero gaussel getpar grad2fill
-halfint helicon helix hilbert igrad1 igrad2 impl2 int1 int2 int3
-interp interp_spline irls komplex llist lsint2 mask math1 multidivn
-multidivnL1 neighbors omptools parallel point polydiv pqueue pweno
-randn recfilt repeat runge quantile quadratic sharpen sharpinv simtab
-slice spline stack stretch system tent2 timer tinysolver triangle
-triangle1 triangle2 trianglen tridiagonal vector wavelet weight
-weight2
+file files freqfilt freqfilt2 ftutil fzero gaussel getpar gmres
+grad2fill halfint helicon helix hilbert igrad1 igrad2 impl2 int1 int2
+int3 interp interp_spline irls komplex llist lsint2 mask math1
+matmult2 multidivn multidivnL1 neighbors omptools parallel point
+polydiv pqueue pweno randn recfilt repeat runge quantile quadratic
+sharpen sharpinv simtab slice spline stack stretch system tent2 timer
+tinysolver triangle triangle1 triangle2 trianglen tridiagonal vector
+wavelet weight weight2
 '''
 
 try: # distribution version
@@ -92,7 +92,7 @@ if root:
 ############################################################################
 for file in Split('''
                   banded cmatmult eno2 fft file gaussel getpar lsint2
-                  quantile simtab triangle2 trianglen
+                  matmult2 quantile simtab triangle2 trianglen
                   '''):
     test = env.StaticObject('Test' + file + '.c')
     prog = env.Program(file,[test,slib],

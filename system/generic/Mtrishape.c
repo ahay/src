@@ -24,7 +24,6 @@
 #include "list_struct.h"
 #include "delaunay.h"
 #include "trishape.h"
-#include "gmres.h"
     
 int main(int argc, char* argv[])
 {
@@ -169,12 +168,12 @@ int main(int argc, char* argv[])
 
     if (niter > 0) {
 	if (fast) {
-	    gmres_init(n12,niter); 
+	    sf_gmres_init(n12,niter); 
 
 	    /* make right-hand side */
 	    trishape_smooth(z);
 	    /* invert */
-	    gmres(z,m,trishape,NULL,niter,tol,true);
+	    sf_gmres(z,m,trishape,NULL,niter,tol,true);
 	    if (sym) trishape_smooth(m);
 	} else {
 	    for (i =0; i < n12; i++) {
