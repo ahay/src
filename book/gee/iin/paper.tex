@@ -9,9 +9,9 @@
 {\em Regularization} is a method used in mathematics and statistics
 to deal with insufficient information.
 The reader must supply additional information in the form of an operator.
-Where is this operator to come from, and what does it mean?
-It amounts to us practitioners specifying a ``style'' of model.
-Where the model is a signal or an image
+From where is this operator to come, and what does it mean?
+It amounts to us, as practitioners, specifying a ``style'' of model.
+Where the model is a signal or an image,
 it amounts to specifying one weighting function in physical space
 and another in Fourier space.
 
@@ -28,14 +28,14 @@ and another in Fourier space.
 \par
 A method for restoring \bx{missing data} is to ensure that the restored data,
 after specified filtering, has minimum energy.
-Specifying the filter chooses the interpolation philosophy.
+Specifying the filter is choosing the interpolation philosophy.
 Generally the filter is a \bx{roughening} filter.
 \sx{filter ! roughening}
 When a roughening filter goes off the end of smooth data,
-it typically produces a big end transient.
+it typically produces a large transient at the end.
 Minimizing energy implies a choice for unknown data values
-at the end, to minimize the transient.
-We will examine five cases and then make some generalizations.
+at the end to minimize the transient.
+We examine five cases and then make some generalizations.
 \par
 \boxit{A method for restoring missing data
         is to ensure that the restored data,
@@ -46,7 +46,8 @@ Let $u$ denote an unknown (missing) value.
 The dataset on which the examples are based is
 $(\cdots, u, u,$ 
 $1, u, 2, 1, 2, u, u, \cdots )$.
-Theoretically we could adjust the missing $u$ values (each different)
+Theoretically, 
+we could adjust the missing $u$ values (each different)
 to minimize the energy in the unfiltered data.
 Those adjusted values would obviously turn out to be all zeros.
 The unfiltered data is data that has been filtered by
@@ -62,8 +63,8 @@ The interpolated data matches the given data where they overlap.%
   Top is given data.
   Middle is given data with interpolated values.
   Missing values seem to be interpolated by straight lines.
-  Bottom shows the filter $(1,-1)$,
-  whose output has minimum energy.
+  Bottom shows the filter $(1,-1)$.
+  Its output (not shown) has minimum energy.
 }
 \sideplot{mparab}{width=.73\textwidth}{
   Top is the same input data as in Figure~\protect\ref{fig:mlines}.
@@ -101,17 +102,17 @@ The interpolated data matches the given data where they overlap.%
 }
 \par
 Figures~\ref{fig:mlines}--\ref{fig:moscil}
-illustrate that the rougher the filter,
+illustrate the rougher the filter,
 the smoother the interpolated data,
 and vice versa.
-Let us switch our attention from the residual spectrum
-to the residual itself.
+Switch attention from the residual spectrum
+to the residual.
 The residual for Figure~\ref{fig:mlines}
 is the {\it slope} of the signal
-(because the filter $(1,-1)$ is a {\it first derivative}),
+(because the filter $[1,-1]$ is a {\it first derivative}),
 and the slope is constant (uniformly distributed) along the straight lines
 where the least-squares procedure is choosing signal values.
-So these examples confirm the idea
+So, these examples confirm the idea
 that the \bx{least-squares method} abhors large values
 (because they are squared).
 Thus, least squares tends to distribute residuals uniformly
@@ -123,22 +124,24 @@ what is the best filter to use?
 It suggests choosing
 the filter to have an amplitude spectrum
 that is inverse to the spectrum we want for the interpolated data.
-A systematic approach is given in chapter \ref{paper:mda},
+A systematic approach is given in Chapter \ref{paper:mda},
 but I offer a simple subjective analysis here:
 Looking at the data, we see that all points are positive.
 It seems, therefore, that
 the data is rich in low frequencies;
-thus the filter should contain something like $(1,-1)$,
+thus, the filter should contain something like $(1,-1)$,
 which vanishes at zero frequency.
-Likewise, the data seems to contain Nyquist frequency,
-so the filter should contain $(1,1)$.
+Likewise, the data seems to contain Nyquist frequency;
+so, the filter should contain $(1,1)$.
 The result of using the filter $(1,-1)\ast (1,1)=(1,0,-1)$
 is shown in Figure~\ref{fig:mbest}.
-This is my best subjective interpolation
+Foregoing is my best subjective interpolation
 based on the idea that the missing data should look like the given data.
-The \bx{interpolation} and \bx{extrapolation}s are so good that
+The resulting \bx{interpolation} and \bx{extrapolation}s are so good that
 you can hardly guess which data values are given
 and which are interpolated.
+We care about this because the goal in geophysical image making is to create an image
+that hides locations of our measurements (and missing measurements!).
 \sideplot{mbest}{width=.73\textwidth}{
   Top is the same as in
   Figures~\protect\ref{fig:mlines} to \protect\ref{fig:moscil}.
@@ -152,13 +155,12 @@ and which are interpolated.
 
 \subsection{Missing-data program}
 \sx{missing data}
-Now let us see how Figures \ref{fig:mlines}-\ref{fig:mbest}
-could have been calculated and how they were calculated.
-They could have been calculated with matrices
-where the matrices were pulled apart according to subscripts of known and missing data.
+Now, let us see how Figures \ref{fig:mlines}-\ref{fig:mbest} were calculated.
+Matrices could have been pulled apart according to subscripts of known and missing data.
 Instead I computed them with operators,
 and applied only operators and their adjoints.
-First we inspect the matrix approach
+First, 
+we inspect the matrix approach
 because it is more conventional.
 
 \subsubsection{Matrix approach to missing data}
@@ -167,23 +169,23 @@ because it is more conventional.
 Customarily, we have referred to data by the symbol $\bold d$.
 Now that we are dividing the data space into two parts,
 known and unknown (or missing),
-we will refer to this complete space
+we refer to this complete space
 as the model (or map) space $\bold m$.
 \par
 There are 15 data points in Figures \ref{fig:mlines}-\ref{fig:mbest}.
 Of the 15, 4 are known and 11 are missing.
 Denote the known by $k$ and the missing by $u$.
-Then the sequence of missing and known
+Then, the sequence of missing and known
 is $(u,u,u,u,k,u,k,k,k,u,u,u,u,u,u)$.
 Because I cannot print $15\times 15$ matrices,
 please allow me to describe instead a data space of 6 values
 $(m_1, m_2, m_3, m_4, m_5, m_6)$ with known values only $m_2$ and $m_3$,
-that is arranged like $(u,k,k,u,u,u)$.
+$\bold m$ arranged as $(u,k,k,u,u,u)$.
 \par
 Our approach is to minimize the energy in the residual,
 which is the filtered map (model) space.
 We state the fitting goals
-$\bold 0\approx \bold F\bold m$ as
+$\bold 0\approx \bold F\bold m$ as:
 \begin{equation} 
 \left[ 
 \begin{array}{c}
@@ -222,10 +224,10 @@ $\bold 0\approx \bold F\bold m$ as
 \label{eqn:headache}
 \end{equation}
 
-We rearrange the above fitting goals,
-bringing the columns multiplying known data values
+Rearranging these fitting goals,
+and bringing the columns multiplying known data values
 ($m_2$ and $m_3$) to the left,
-getting $\bold y =-\bold F_k \bold m_k \approx \bold F_u \bold m_u$.
+we get $\bold y =-\bold F_k \bold m_k \approx \bold F_u \bold m_u$.
 \begin{equation} 
 \left[ 
 \begin{array}{c}
@@ -276,11 +278,12 @@ getting $\bold y =-\bold F_k \bold m_k \approx \bold F_u \bold m_u$.
   \end{array} \right]
 \label{eqn:wristpain}
 \end{equation}
-This is the familiar form of an overdetermined system of equations
+Equation (\ref{eqn:wristpain}) 
+is the familiar form of an overdetermined system of equations
 $\bold y \approx \bold F_u \bold m_u$
-which we could solve
+that we could solve
 for $\bold m_u$
-as illustrated earlier by conjugate directions,
+as illustrated earlier by conjugate directions
 or by a wide variety of well-known methods.
 
 \par
@@ -288,8 +291,8 @@ The trouble with this matrix approach is that it is awkward to program
 the partitioning of the operator into the known and missing parts,
 particularly if the application of the operator uses arcane techniques,
 such as those used by the fast--Fourier-transform operator
-or various numerical approximations to differential or partial
-differential operators that depend on regular data sampling.
+or various numerical approximations to differential, or partial
+differential, operators that depend on regular data sampling.
 Even for the modest convolution operator,
 we already have a library of convolution programs
 that handle a variety of end effects,
@@ -297,20 +300,20 @@ and it would be much nicer to use the library as it is
 rather than recode it for all possible geometrical arrangements
 of missing data values.
 \par
-Note:
-Here I take the main goal to be the clarity of the code,
-not the efficiency or accuracy of the solution.
-So, if your application consumes too many resources,
-and if you have many more known points than missing ones,
-maybe you should fit
-$\bold y \approx \bold F_u \bold m_u$
-and ignore the suggestions below.
+%Note:
+%Here I take the main goal to be the clarity of the code,
+%not the efficiency or accuracy of the solution.
+%So, if your application consumes too many resources,
+%and if you have many more known points than missing ones,
+%maybe you should fit
+%$\bold y \approx \bold F_u \bold m_u$
+%and ignore the suggestions below.
 
 \subsubsection{Operator approach to missing data}
 \sx{missing data}
 \par
 For the operator approach to the fitting goal
-$ -\bold F_k \bold m_k \approx \bold F_u \bold m_u$
+$ -\bold F_k \bold m_k \approx \bold F_u \bold m_u$,
 we rewrite it as
 $ -\bold F_k \bold m_k \approx \bold F \bold J \bold m $ where
 
@@ -361,10 +364,10 @@ Experience shows that a better name than ``mask matrix'' is
 because what comes out of it,
 that which is selected,
 is a less-confusing name for it than which is rejected.
-With a selector matrix the whole data space seems freely adjustable,
+With a selector matrix, the whole data space seems freely adjustable,
 both the missing data values and known values.
 We see that the CD method does not change the known (constrained) values.
-In general, we derive the fitting goal (\ref{eqn:migraine}) by
+In general, we derive the fitting goal (\ref{eqn:migraine}) by:
 \begin{eqnarray}
  \label{eqn:misfitgoal}
  \bold 0 &\approx& \bold F \bold m \\
@@ -408,11 +411,11 @@ from the proposed change in the data $\Delta\bold m$.
 \Delta\bold r \quad \longleftarrow \quad \bold F \bold J \Delta \bold m
 \label{eqn:lastmistheory}
 \end{equation}
-This applies the filtering again.
-Then use the method of steepest descent (or conjugate direction)
+Equation (\ref{eqn:lastmistheory}) applies the filtering again.
+Then, use the method of steepest descent (or conjugate direction)
 to choose the appropriate scaling (or inclusion of previous step)
 of $\Delta \bold m$ and $\Delta \bold r$,
-and update $\bold m$ and $\bold r$ accordingly
+and update $\bold m$ and $\bold r$, accordingly,
 and iterate.
 
 \begin{comment}
@@ -484,8 +487,8 @@ correspond to missing data locations.
 It uses our convolution operator
 \texttt{tcai1()}.
 % \vpageref{lst:tcai1}.
-You can also check the Index for other
-\bx{operators} and \bx{modules}.
+You can also check the book Index for other
+operators and modules.
 %\progdex{mis1}{1-D missing data}
 \moddex{mis1}{1-D missing data}{54}{76}{user/gee}
 \noindent
@@ -497,22 +500,22 @@ You can also check the Index for other
 
 \par
 I sought reference material on conjugate gradients with constraints
-and didn't find anything,
-leaving me to fear that this chapter was in error
-and that I had lost the magic property of convergence
+and did not find anything,
+leaving me to fear that this chapter was in error,
+and I had lost the magic property of convergence
 in a finite number of iterations.
-I tested the code and it did converge in a finite number of iterations.
+I tested the code, and it did converge in a finite number of iterations.
 The explanation is that these constraints are almost trivial.
 We pretended we had extra variables,
-and computed a $\Delta \bold m =\bold g$ for each of them.
+and computed a $\Delta \bold m =\bold g$ for each.
 Using $\bold J$ we then set the gradient $\Delta \bold m =\bold g$ to zero,
-hence making no changes to anything,
-like as if we had never calculated the extra  $\Delta \bold m$'s.
+therefore making no changes to anything,
+like as if we had never calculated the extra  $\Delta \bold m$s.
 
 
 \section{WELLS NOT MATCHING THE SEISMIC MAP}
 \inputdir{chevron}
-Accurate knowledge comes from a \bx{well},
+Accurate knowledge comes from \bx{wells},
 but wells are expensive and far apart.
 Less accurate knowledge comes from surface seismology,
 but this knowledge is available densely in space
@@ -530,17 +533,17 @@ are sometimes attributed to velocity \bx{anisotropy}.
 To work with such measurements,
 we do not need to track down the physical model,
 we need only to merge the information somehow
-so we can appropriately \bx{map} the trends between wells
+to appropriately \bx{map} the trends between wells
 and make a proposal for the next drill site.
-Here we consider only a scalar value at each location.
+Here, we consider only a scalar value at each location.
 Take $\bold w$ to be a vector of 15 components,
 each component being the seismic travel time to some fixed depth in a well.
-Likewise let $\bold s$ be a 600-component vector
+Likewise, let $\bold s$ be a 600-component vector
 each with the seismic travel time to that fixed depth
 as estimated wholly from surface seismology.
 Such empirical corrections are often called ``\bx{fudge factor}s''.
 An example is the Chevron oil field in Figure \ref{fig:wellseis}.
-\plot{wellseis}{width=4.5in,height=3in}{
+\plot{wellseis}{width=\textwidth,height=.5\textwidth}{
   Binning by data push.
   Left is seismic data.
   Right is well locations.
@@ -551,7 +554,7 @@ The binning of the seismic data in Figure \ref{fig:wellseis}
 is not really satisfactory when we have available
 the techniques of missing data estimation
 to fill the empty bins.
-Using the ideas of subroutine \texttt{mis1()} 
+Using the ideas of subroutine \texttt{mis1()} ,
 we can extend the seismic data into the empty part of the plane.
 We use the same principle that we minimize the energy in 
 the filtered map where the map must match the data where it is known.
@@ -562,23 +565,25 @@ to obtain the result in Figure \ref{fig:misseis}.
   Seismic binned (left) and extended (right)
   by minimizing energy in $\nabla^2 \bold s$.
 }
+\par
 There are basically two ways to handle boundary conditions.
-First as we did in Figure \ref{fig:mlines},
+First, as we did in Figure \ref{fig:mlines},
 by using a transient filter operator
-which assumes zero outside to region of interest.
+that assumes zero outside to the region of interest.
 Second is to use an internal filter operator.
-It's a bit trickier.
-Solutions could be growing at the boundaries.
-That's almost never desirable.
-In that case it is better to assign boundary values.
-That is what I did here in Figure \ref{fig:misseis}.
-I didn't do it because it is better,
-but to minimize the area surrounding the data of interest.
+Internal filters introduce the hazard that
+solutions could be growing at the boundaries.
+Growing solutions are rarely desirable.
+In that case,
+it is better to assign boundary values,
+which is what I did here in Figure \ref{fig:misseis}.
+I did not do it because it is better,
+but did it to minimize the area surrounding the data of interest.
 
 \par
 The first job is to fill the gaps in the seismic data.
-We just finished doing a job like this in one dimension.
-I'll give you more computational details later.
+We did such a job in one dimension in Figures \ref{fig:mlines}--\ref{fig:mbest}.
+More computational details later come later.
 Let us call the extended seismic data  $\bold s$.
 
 \par
@@ -587,37 +592,37 @@ of infinitely many hypothetical wells that must match the real wells,
 where we have real wells.
 We must find a map that matches the wells exactly
 and somehow matches the seismic information elsewhere.
-Let us define the vector $\bold w$ as shown in Figure \ref{fig:wellseis}
+Let us define the vector $\bold w$, as shown in Figure \ref{fig:wellseis}
 so $\bold w$ is
 observed values at wells and zeros elsewhere.
 
 \par
 Where the seismic data contains sharp bumps or streaks,
-we want our final earth model to have those features.
-The wells cannot provide the rough features because the wells
-are too far apart to provide high spatial frequencies.
+we want our final Earth model to have those features.
+The wells cannot provide the rough features, because the wells
+are too far apart to provide high-spatial frequencies.
 The well information generally conflicts with the seismic data 
-at low spatial frequencies because of systematic discrepancies between
+at low-spatial frequencies because of systematic discrepancies between
 the two types of measurements.
 Thus we must accept that $\bold m$ and $\bold s$ may differ
-at low spatial frequencies (where gradient and Laplacian are small).
+at low-spatial frequencies (where gradient and Laplacian are small).
 
 \par
 Our final map $\bold m$ would be very unconvincing if
 it simply jumped from a well value at one point
 to a seismic value at a neighboring point.
 The map would contain discontinuities around each well.
-Our philosophy of finding an earth model $\bold m$
-is that our earth map should contain no obvious 
+Our philosophy of finding an Earth model $\bold m$
+is that our Earth map should contain no obvious 
 ``footprint'' of the data acquisition (well locations).
 We adopt the philosophy that the difference
-between the final map (extended wells)
+between the final map (extended wells),
 and the seismic information $\bold x=\bold m-\bold s$ should be smooth.
 Thus,
-we seek the minimum residual $\bold r$
+we seek the minimum residual $\bold r$,
 which is the roughened difference between the seismic data $\bold s$
 and the map $\bold m$ of hypothetical omnipresent wells.
-With roughening operator $\bold A$ we fit
+With roughening operator $\bold A$ we fit:
 \begin{equation}
 \bold 0\quad\approx\quad \bold r \eq \bold A ( \bold m - \bold s )
 	\eq \bold A \bold x
@@ -625,17 +630,15 @@ With roughening operator $\bold A$ we fit
 \end{equation}
 along with the constraint
 that the map should match the wells at the wells.
-We could write this as
-$\bold 0 = (\bold I-\bold J) ( \bold m - \bold w )$.
 We honor this constraint by initializing the map $\bold m = \bold w$
 to the wells (where we have wells, and zero elsewhere).
 After we find the gradient direction to suggest some changes
-to $\bold m$, we simply will not allow those changes at well locations.
-We do this with a mask.
-We apply a ``missing data selector'' to the gradient.
-It zeros out possible changes at well locations.
+to $\bold m$, we simply do not allow those changes at well locations
+by using a mask.
+We apply a ``missing data selector'' to the gradient
+which zeros out possible changes at well locations.
 Like with the goal (\ref{eqn:misfitgoal2}),
-we have
+we have:
 \begin{equation}
 \bold 0\quad\approx\quad \bold r \eq
 \bold A \bold J \bold x + \bold A \bold x_{\rm known}
@@ -644,12 +647,12 @@ After minimizing $\bold r$ by adjusting $\bold x$,
 we have our solution $ \bold m =  \bold x + \bold s $.
 
 \par
-Now we prepare some roughening operators $\bold A$.
+Now, we prepare some roughening operators $\bold A$.
 We have already coded a 2-D gradient operator
 \texttt{igrad2}.
 % \vpageref{lst:igrad2}.
-Let us combine it with its adjoint to get the 2-D laplacian operator.
-(You might notice that the laplacian operator is ``self-adjoint'' meaning
+Let us combine it with its adjoint to get the 2-D Laplacian operator.
+(You might notice that the Laplacian operator is ``self-adjoint,'' meaning
 that the operator does the same calculation that its adjoint does.
 Any operator of the form $\bold A\T\bold A$ is self-adjoint because
 $(\bold A\T\bold A)\T=\bold A\T (\bold A\T)\T=\bold A\T\bold A$. )
@@ -661,7 +664,7 @@ is the same idea as \texttt{mis1()}
 %\vpageref{lst:mis1} 
 except that 
 the filter $\bold A$ has been specialized to the 
-laplacian
+Laplacian
 implemented by module \texttt{laplac2}.
 % \vpageref{lst:laplac2}. 
 
@@ -670,7 +673,7 @@ implemented by module \texttt{laplac2}.
 
 \par
 Subroutine \texttt{lapfill()}
-can be used for each of our two applications,
+can be used for each of our two applications:
 (1) extending the seismic data to fill space, and
 (2) fitting the map exactly to the wells and approximately to the seismic data.
 When extending the seismic data,
@@ -702,19 +705,19 @@ Figure \ref{fig:diffdiff} shows the difference $\bold x$ between
 the extended seismic data and the extended wells.
 Notice that for $\nabla$ the difference shows
 a localized ``tent pole'' disturbance about each well.
-For $\nabla^2$ there could be large overshoot between wells,
+For $\nabla^2$, there could be a large overshoot between wells,
 especially if two nearby wells have significantly different values.
-I don't see that problem here.
+I do not see that problem here.
 \par
 My overall opinion is that the Laplacian does the better job in this case.
-I have that opinion because in viewing the extended gradient
+I have that opinion because in viewing the extended gradient,
 I can clearly see where the wells are.
 The wells are where we have acquired data.
-We'd like our map of the world to not show where we acquired data.
+We would like our map of the world to not show where we acquired data.
 Perhaps our estimated map of the world cannot help but show where
-we have and have not acquired data, but we'd like to minimize that aspect.
+we have and have not acquired data, but we would like to minimize that aspect.
 \par
-\boxit{ A good image of the earth hides our data \bx{acquisition footprint}.  }
+\boxit{ A good image of the Earth hides our data \bx{acquisition footprint}.  }
 
 
 \plot{diffdiff}{width=\textwidth,height=.375\textwidth}{
@@ -731,25 +734,25 @@ To understand the behavior theoretically,
 recall that in one dimension 
 the filter $\nabla$ interpolates with straight lines
 and $\nabla^2$ interpolates with cubics.
-This is because the fitting goal
+The reason is that the fitting goal
 $\bold 0 \approx \nabla \bold m$,
 leads to
 $\frac{\partial }{\partial \bold m\T} \bold m\T\nabla\T\,\nabla \bold m = \bold 0$
-or $\nabla\T\,\nabla \bold m = \bold 0$, whereas the fitting goal 
+or $\nabla\T\,\nabla \bold m = \bold 0$; whereas, the fitting goal 
         $\bold 0 \approx \nabla^2 \bold m$
 leads to
-        $\nabla^4 \bold m = \bold 0$
+        $\nabla^4 \bold m = \bold 0$,
 which is satisfied by cubics.
 In two dimensions, minimizing the output of $\nabla$
 gives us solutions of Laplace's equation with sources at the known data.
-It is as if $\nabla$ stretches a rubber sheet over poles at each well,
-whereas $\nabla^2$ bends a stiff plate.
+It is as if $\nabla$ stretches a rubber sheet over poles at each well;
+whereas, $\nabla^2$ bends a stiff plate.
 \par
 Just because $\nabla^2$ gives smoother maps than  $\nabla$
 does not mean those maps are closer to reality.
-This is a deeper topic, addressed in Chapter~\ref{paper:mda}.
+An objectively better choice for the model styling goal is addressed in Chapter~\ref{paper:mda}.
 It is the same issue we noticed when comparing
-figures \ref{fig:mlines}-\ref{fig:mbest}.
+Figures \ref{fig:mlines}-\ref{fig:mbest}.
 
 \section{SEARCHING THE SEA OF GALILEE}
 \sx{Sea of Galilee}
@@ -768,7 +771,7 @@ the depth to bottom,
 but images useful for the purpose
 of identifying \bx{archaeological}, geological, or
 geophysical details of the sea bottom.
-The Sea of Galilee is unique
+The Sea of Galilee is unique,
 because it is a {\it fresh}-water lake {\it below} sea-level.
 It seems to be connected to the great rift (pull-apart)
 valley crossing east Africa.
@@ -780,16 +783,16 @@ We might find archaeological objects.
   Views of the bottom of the Sea of Galilee.
 }
 The raw data is 132,044 triples, $(x_i,y_i,z_i)$,
-where $x_i$ ranges over about 12 km and
-where $y_i$ ranges over about 20 km.
+where $x_i$ ranges over 12 km and
+where $y_i$ ranges over 20 km.
 The lines you see in Figure \ref{fig:locfil}
 are sequences of data points, i.e., the track of the survey vessel.
-The depths $z_i$ are recorded to an accuracy of about 10 cm.
+The depths $z_i$ are recorded at a discretization interval of 10 cm.
 \par
 The first frame in Figure~\ref{fig:locfil} shows simple binning.
 A coarser mesh would avoid the empty bins but lose resolution.
 As we refine the mesh for more detail,
-the number of empty bins grows
+the number of empty bins grows,
 as does the care needed in devising a technique
 for filling them.
 This first frame uses the simple idea from Chapter \ref{paper:ajt} of
@@ -822,24 +825,24 @@ a filtered version of the depth,
 a filtered version of something real.
 Such filtering can enhance the appearance of interesting features.
 For example,
-scanning the shoreline of the roughened image
+in scanning the shoreline of the roughened image
 (after missing data was filled),
 we see several ancient shorelines, now submerged.
 %\boxit{
 %The adjoint is the easiest image to build.
-The roughened map is often more informative than the map itself.
+The roughened map is often more informative than the map.
 %}
 \par
 The views expose several defects
 of the data acquisition and of our data processing.
 The impulsive glitches (St.~Peter's fish?)
-need to be removed but we must be careful not to throw
+need to be removed; but we must be careful not to throw
 out the sunken ships along with the bad data points.
 Even our best image shows clear evidence of the recording vessel's tracks.
 Strangely, some tracks are deeper than others.
-Perhaps the survey is assembled from work done in different seasons
+Perhaps the survey is assembled from work done in different seasons,
 and the water level varied by season.
-Perhaps some days the vessel was more heavily loaded
+Perhaps, some days the vessel was more heavily loaded
 and the depth sounder was on a deeper keel.
 As for the navigation equipment,
 we can see that some data values are reported outside the lake!
@@ -849,8 +852,8 @@ we can see that some data values are reported outside the lake!
 We want the sharpest possible view
 of this classical site.
 A treasure hunt is never easy
-and no one guarantees we will
-find anything of great value
+and no one guarantees we can
+find anything of great value;
 but at least the exercise is a good warm-up
 for submarine petroleum exploration.
 
@@ -861,7 +864,7 @@ In Chapter \ref{paper:ajt} we defined \bx{linear interpolation}
 \sx{interpolation}
 as the extraction of values from between mesh points.
 In a typical setup (occasionally the role of data and model are swapped),
-a model is given on a uniform mesh
+a model is given on a uniform mesh,
 and we solve the easy problem of extracting values
 between the mesh points with subroutine \texttt{lint1()}.
 % \vpageref{lst:lint1}.
@@ -872,12 +875,10 @@ from which we can extract that data by \bx{linear interpolation}.
 The adjoint operator for subroutine {\tt lint1()}
 simply piles data back into its proper location in model space
 without regard to how many data values land in each region.
-Thus some model values may have many data points added
-to them while other model values get none.
+Thus, some locations may receive much data while other locations get none.
 We could interpolate by minimizing the energy in the model gradient,
-or that in the second derivative of the model,
-or that in the output of any other roughening filter
-applied to the model.
+in the second derivative of the model,
+or in any roughening model.
 \par
 Formalizing now our wish
 that data $\bold d$ be extractable by \bx{linear interpolation} $\bold F$,
@@ -898,7 +899,7 @@ and suppose we have a data point near each end of the model
 and a third data point exactly in the middle.
 Then,
 for a model space 6 points long,
-the fitting goal could look like
+the fitting goal could look like:
 \def\E{\epsilon}
 \begin{equation} { 
 \left[ 
@@ -962,15 +963,15 @@ The model residual is the roughened model.
 
 \par
 Finding something unexpected is good science and engineering.
-For this we look both in data space and in model space.
-In data space we look at the residual $\bold r$.
+We should look both in data space and model space.
+In data space, we look at the residual $\bold r$.
 In model space, we look at the residual projected there
 $\Delta \bold m =\bold F\T\bold r$.
-After iterating to completion we have
+After iterating to completion, we have
 $\Delta \bold m = \bold 0 = \bold F\T \bold r_d + \bold A\T\bold r_m$,
 a sum of two images identical but for polarity.
-They tell us what we have learned from the data;
-how the model differs from what we thought it would be.
+This image tells us what we have learned from the data;
+and how the model differs from what we thought it would be.
 
 \begin{comment}
 \par
@@ -1015,11 +1016,11 @@ After all the definitions,
 we load the negative of the data into the residual.
 If a starting model $\bold m_0$ is present,
 then we update the data part of the residual
-$\bold r_d=\bold F \bold m_0 - \bold d$
+$\bold r_d=\bold F \bold m_0 - \bold d$,
 and we load
 the model part of the residual
 $ \bold r_m = \bold A \bold m_0$.
-Otherwise we begin from a zero model $\bold m_0=\bold 0$ and thus
+Otherwise, we begin from a zero model $\bold m_0=\bold 0$; and thus,
 the model part of the residual $ \bold r_m$ is also zero.
 After this initialization, subroutine 
 \texttt{solver\_reg()} % \vpageref{lst:solver_reg}
@@ -1054,7 +1055,7 @@ in the convolution input (not the filter).
 Using this value of $\Delta \bold m$,
 % {\tt invint1()} 
 we can
-find the implied change in residual $\Delta \bold r$ as
+find the implied change in residual $\Delta \bold r$ as:
 \begin{equation}
         \Delta
         \left[
@@ -1076,8 +1077,8 @@ find the implied change in residual $\Delta \bold r$ as
 and the last thing in the loop is to use
 the optimization step function \texttt{stepper()} 
 % conjugate-direction subroutine \texttt{cgplus()} \vpageref{lst:cgplus}
-to choose the length of the step size
-and to choose how much of the previous step to include.
+to decide the length of the step size
+and to decide how much of the previous step to include.
 \par
 An example of using the new solver is subroutine \texttt{invint1}.
 %\vpageref{lst:invint1}.
@@ -1102,13 +1103,13 @@ signal samples are given.
 }
 \par
 To show an example where the result is clearly a theoretical answer,
-I prepared another figure with the simpler filter $(1,-1)$.
+I prepared another figure with the simpler filter $\bold A = (1,-1)$.
 When we minimize energy in the first derivative of the waveform,
-the residual distributes itself uniformly
+the residual becomes distributed uniformly
 between data points
 so the solution there is a straight line.
-Theoretically it should be a straight line
-because a straight line has a vanishing second derivative,
+Theoretically, it should be a straight line,
+because a straight line has a vanishing second derivative;
 and that condition arises by differentiating by $\bold x\T$,
 the minimized quadratic form
 $\bold x\T \bold A\T\bold A \bold x$, and getting
@@ -1125,7 +1126,7 @@ The $(1,-1)$ result is shown in Figure \ref{fig:im1-1a}.
 The example of
 Figure \ref{fig:im1-1a}
 has been a useful test case for me.
-You'll see it again in later chapters.
+You will see it again in later chapters.
 What I would like to show you here is a movie showing the convergence
 to Figure \ref{fig:im1-1a}.
 Convergence occurs rapidly where data points are close together.
@@ -1159,7 +1160,7 @@ First, the map had ample pixel resolution compared to other sources of error,
 so I switched from linear interpolation to binning.
 Once I was using binning,
 I had available the simpler empty-bin approaches.
-These have the further advantage that it is not necessary
+These approaches have the advantage that it is not necessary
 to experiment with the relative weighting between
 the two goals in (\ref{eqn:toldisregression}).
 A formulation like (\ref{eqn:toldisregression}) is more likely
@@ -1169,20 +1170,20 @@ perhaps in reflection seismology where high resolution is meaningful.
 
 \section{PRECONCEPTION AND CROSS VALIDATION}
 
-First we first look at data $\bold d$.
+First, we first look at data $\bold d$.
 Then we think about a model $\bold m$,
 and an operator $\bold L$ to link the model and the data.
-Sometimes the operator is merely the first term in a series expansion
+Sometimes, the operator is merely the first term in a series expansion
 about $(\bold m_0,\bold d_0)$.
-Then we fit
+Then, we fit
 $\bold d-\bold d_0 \approx \bold L ( \bold m-\bold m_0)$.
 To fit the model, we must reduce the fitting residuals.
-Realizing that the importance of a data residual
-is not always simply the size of the residual
-but is generally a function of it,
+Realizing the importance of a data residual
+is not always simply the size of the residual,
+but is a function of it,
 we conjure up (topic for later chapters)
 a weighting function (which could be a filter) operator $\bold W$.
-This defines our data residual:
+With $\bold W$ we define our data residual:
 \begin{equation}
 \bold r_d \eq \bold W
 [ \bold L
@@ -1193,39 +1194,40 @@ This defines our data residual:
 \end{equation}
 
 \par
-Next we realize that the data might not be adequate to determine the model,
+Next, we realize that the data might not be adequate to determine the model,
 perhaps because our comfortable dense sampling of the model
 ill fits our economical sparse sampling of data.
-Thus we adopt a fitting goal that mathematicians call ``regularization''
-and we might call a ``model style'' goal
+Thus we adopt a fitting goal that mathematicians call ``regularization,''
+and we might call a ``model styling'' goal
 or more simply,
 a quantification of our preconception of the best model.
-We express this by choosing an operator $\bold A$,
+We quantify our goals  by choosing an operator $\bold A$,
 often simply a roughener like a gradient
 (the choice again a topic in this and later chapters).
 It defines our model residual by
 $\bold A \bold m$ or
-$\bold A ( \bold m-\bold m_0)$, say we choose
+$\bold A ( \bold m-\bold m_0)$, say we choose:
 \begin{equation}
 \bold r_m \eq \bold A \bold m 
 \end{equation}
 
 \par
-In an ideal world, our model preconception (prejudice?) would not conflict
-with measured data, however,
-life is not so simple.
-Since conflicts between data and preconceived notions invariably arise
-(and they are why we go to the expense of acquiring data)
-we need an adjustable parameter
-that measures our ``bullheadedness'', how much we intend
+In an ideal world,
+our model preconception (\bx{prejudice}?)
+would not conflict with measured data,
+but real life is much more interesting than that.
+The reason we pay for data acquisition
+is that conflicts between data and preconceived notions invariably arise.
+We need an adjustable parameter
+that measures our ``\bx{bullheadedness},'' how much we intend
 to stick to our preconceived notions in spite of contradicting data.
-This parameter is generally called epsilon $\epsilon$
+This parameter is generally called epsilon $\epsilon$,
 because we like to imagine that our bullheadedness (prejudice?) is small.
 (In mathematics, $\epsilon$ is often taken to be
 an infinitesimally small quantity.)
 Although any bullheadedness seems like a bad thing,
 it must be admitted that measurements are imperfect too.
-Thus as a practical matter we often find ourselves minimizing
+Thus, as a practical matter, we often find ourselves minimizing:
 \begin{equation}
 \min \quad := \quad
 \bold r_d \cdot \bold r_d \ +\  \epsilon^2\ \bold r_m \cdot \bold r_m 
@@ -1234,8 +1236,9 @@ and wondering what to choose for $\epsilon$.
 I have two suggestions:
 My simplest suggestion is to choose $\epsilon$
 so that the residual of data fitting matches that of model styling.
-Thus
+Thus:
 \begin{equation}
+\label{eqn:epsilondata}
 \epsilon \eq \sqrt{\frac{ \bold r_d \cdot \bold r_d }{ \bold r_m \cdot \bold r_m }}
 \end{equation}
 My second suggestion is to think of the force on our final solution.
@@ -1246,8 +1249,9 @@ and another for the model styling:
 \bold g_d &=& \bold L\T \bold W\T \bold r_d  \\
 \bold g_m &=& \bold A\T \bold r_m
 \end{eqnarray}
-We could balance these forces by the choice
+We could balance these forces by the choice:
 \begin{equation}
+\label{eqn:epsilongrad}
 \epsilon \eq \sqrt{
 \bold g_d \cdot \bold g_d
 \over
@@ -1258,29 +1262,29 @@ We could balance these forces by the choice
 Although we often ignore $\epsilon$ in discussing the formulation
 of an application, when time comes to solve the problem, reality intercedes.
 Generally, $\bold r_d$ has different physical units than $\bold r_m$
-(likewise $\bold g_d$ and $\bold g_m$)
+(likewise $\bold g_d$ and $\bold g_m$),
 and we cannot allow our solution
 to depend on the accidental choice of units
 in which we express the problem.
 I have had much experience choosing $\epsilon$, but it is
-only recently that I boiled it down to the above two suggestions.
-Normally I also try other values, like double or half those
-of the above choices,
+only recently that I boiled it down to the  suggestions of equations (\ref{eqn:epsilondata}) and
+(\ref{eqn:epsilongrad}).
+Normally I also try other values, like double or half previous choices,
 and I examine the solutions for subjective appearance.
-If you find any insightful examples, please tell me about them.
-
+The epsilon story continues
+in Chapter \ref{paper:prc}.
 \par
 Computationally, we could choose a new $\epsilon$ with each iteration,
 but it is more expeditious
 to freeze $\epsilon$, solve the problem,
 recompute $\epsilon$, and solve the problem again.
-I have never seen a case where more than one repetition was necessary.
+I have never seen a case in which more than one repetition was necessary.
 
 \par
 People who work with small applications
 (less than about $10^3$ vector components)
 have access to an attractive theoretical approach
-called cross-validation.
+called ``cross-validation.''
 Simply speaking,
 we could solve the problem many times,
 each time omitting a different data value.
@@ -1289,10 +1293,10 @@ that could be used to predict
 the omitted data value.
 The quality of these predictions
 is a function of $\epsilon$
-and this provides a guide to finding it.
+which provides a guide to finding it.
 My objections to cross validation are two-fold:
-First, I don't know how to apply it in the large applications
-like we solve in this book
+First, I do not know how to apply it in the large applications
+we solve in this book
 (I should think more about it);
 and second,
 people who worry much about $\epsilon$,
@@ -1301,7 +1305,7 @@ more carefully about
 their choice of the filters $\bold W$ and $\bold A$,
 which is the focus of this book.
 Notice that both $\bold W$ and $\bold A$
-can be defined with a scaling factor which is like scaling $\epsilon$.
+can be defined with a scaling factor like $\epsilon$.
 Often more important in practice,
 with $\bold W$ and $\bold A$
 we have a scaling factor that need not be constant but
@@ -1385,6 +1389,23 @@ within the data space and/or model space.
         Should you refine your model mesh,
         or can you use the same model mesh
         that you used when binning?
+\item
+	Nuclear energy,
+	having finally reached its potential,
+	has dried up the prospecting industries so you find yourself
+	doing
+	\bx{medical imaging} (or \bx{earthquake seismology}).
+	You probe the human body from all sides
+	on a dense regular mesh in cylindrical coordinates.
+	Unfortunately,
+	you need to represent your data in Fourier space.
+	There is no such thing as a fast Fourier transform in cylindrical coordinates,
+	while slow Fourier transforms are pitifully slow.
+	Your only hope to keep up with your competitors
+	is to somehow do your FTs in cartesian coordinates.
+	Write down the sequence of steps
+	to achieve your goals
+	using the methods of this chapter.
 \end{exer}
 
 
