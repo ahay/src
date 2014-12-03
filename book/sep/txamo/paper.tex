@@ -34,8 +34,7 @@ common-azimuth common-offset seismic reflection data to different
 azimuths and offsets\footnote{Here azimuth corresponds to the
 direction of a source-receiver pair, and offset is the distance
 between the source and the receiver.}. A constructive approach to 
-AMO was proposed by Biondi and Chemingui
-\shortcite{Biondi.sep.80.125}.  According to this approach, an AMO
+AMO was proposed by \cite{Biondi.sep.80.125}.  According to this approach, an AMO
 operator is built by cascading the dip moveout (DMO) operator that
 transforms the input common-azimuth data to zero offset, and the inverse
 DMO that transforms the zero-offset data to a new offset and azimuth.
@@ -56,14 +55,12 @@ defines AMO as a cascade of 3-D migration (inversion) for
 particular common-azimuth  
 and common-offset data and 3-D modeling for a different azimuth and
 offset. This   
-definition resembles the viewpoint on DMO developed by Deregowski and Rocca 
-\shortcite{GPR29-03-03740406}. As with the DMO case, the
+definition resembles the viewpoint on DMO developed by \cite{GPR29-03-03740406}. As with the DMO case, the
 migration and modeling  approach  reveals the physics of the AMO
 aperture and limits its boundaries. 
 It is the aperture limitation
 that allows us to overcome the paradoxical inconsistency between 2-D
-and 3-D AMO operators discussed by  Biondi and Chemingui
-\shortcite{Biondi.sep.80.125}. 
+and 3-D AMO operators discussed by \cite{Biondi.sep.80.125}. 
 If the aperture is chosen properly, the AMO operator converges to the 2-D
 offset continuation limit as the azimuth rotation approaches zero.  
 This remarkable fact supports the proof of economical
@@ -77,7 +74,7 @@ In this section, we present a new version of the AMO derivation.
 Since 
 the entire derivation is performed in the time-space domain, it is more
 straightforward than the stationary phase technique developed for the
-same purpose by Biondi and Chemingui \shortcite{Biondi.sep.80.125}.
+same purpose by \cite{Biondi.sep.80.125}.
 \par
 Let $P_1\left({\bf x_1},t_1;{\bf h_1}\right)$ be the in\-put of an AMO
 ope\-ra\-tor  (com\-mon-azi\-muth and com\-mon-off\-set seismic
@@ -101,7 +98,7 @@ path, and $w_{12}$ is the weighting function. In this section we will
 evaluate $\theta_{12}$ and $w_{12}$ using the cascade of integral 3-D DMO and
 inverse DMO operators in the time-space domain. The idea of this
 derivation originated in Biondi and Chemingui's paper
-\shortcite{Biondi.sep.80.125}, where it was  
+\cite[]{Biondi.sep.80.125}, where it was  
 applied with the frequency-domain DMO and inverse DMO operators. In
 the next section, 
 we apply a new geometric approach to evaluate the AMO aperture (range of
@@ -129,7 +126,7 @@ where ${\bf D}_t^{1/2}$ stands for the operator of half-order differentiation
 (equivalent to $(i \omega)^{1/2}$ multiplication in Fourier domain),
 $t_0\, \theta_{10}$ and $t_2\,\theta_{02}$ are the summation paths of
 the DMO and inverse DMO  
-operators \cite{GPR29-03-03740406}:
+operators \cite[]{GPR29-03-03740406}:
 \begin{eqnarray}
 \theta_{10}({\bf x_1;x_0, h_1})=
 \left(1-{\bf \left(x_1-x_0\right)^2 \over h_1^2}\right)^{-1/2}\;,
@@ -145,7 +142,7 @@ along the
 ${\bf h_2}$ azimuth. 
 Integral operators (\ref{eqn:DMO}) and (\ref{eqn:IDMO}) correspond to
 the high-frequency asymptotic (the geometrical seismic) description of
-the wave field. As shown by Stovas and Fomel \shortcite{myDMO}, 
+the wave field. As shown by \cite{myDMO}, 
 operator (\ref{eqn:IDMO}) has an asymptotically equivalent
 form
 \begin{equation}
@@ -227,14 +224,14 @@ w_{10}\left({\bf x_1;x_0, h_1},t_2\,
 \end{equation}
 $d{\bf x_1}=dx_1\,dy_1$. Equation 
 $t_1=t_2\,\theta_{12}\left({\bf x_1;x_2, h_2}\right)$ is the same
-as equation (4) in \cite{Biondi.sep.80.125} except for a different
+as equation (4) in \cite[]{Biondi.sep.80.125} except for a different
 notation. The weighting function of the derived AMO operator
 $\left(w_{12}\right)$ 
 depends on the weighting functions of DMO and inverse DMO that are involved in
 the construction. In Appendix A, we apply equation (\ref{eqn:AMOwf}) to two
 popular versions of the DMO weighting functions that
-correspond to Hale's \shortcite{Hale} and Zhang's
-\shortcite{Zhang.sep.59.201} DMO operators.
+correspond to Hale's \cite[]{Hale} and Zhang's
+\cite[]{Zhang.sep.59.201} DMO operators.
 \par
 Deriving formula (\ref{eqn:AMOtt}), we have to assume
 that the input 
@@ -282,9 +279,8 @@ where $U=h_1^2+h_2^2-\left(\Delta\,x\right)^2$, and
 $V=\sqrt{U^2-4\,h_1^2h_2^2}$.
 %}
 Equation (\ref{eqn:OCtt}) corresponds to formula (6) in
-\cite{Biondi.sep.80.125} (with a typo corrected). The same
-expression was obtained in a different way by Stovas and Fomel
-\shortcite{myDMO}. 
+\cite[]{Biondi.sep.80.125} (with a typo corrected). The same
+expression was obtained in a different way by \cite{myDMO}. 
 The apparent difference between the 2-D and 3-D solutions introduces the
 problem of finding a consistent description valid for both cases.
 Such a description is especially important for practical applications
@@ -293,8 +289,8 @@ correction in marine seismics. The next section develops
 a way of solving
 this problem, which
 refers to the kinematic theory of AMO and follows the ideas that
-Deregowski and Rocca \shortcite{GPR29-03-03740406} applied
-to DMO-type operators.    
+\cite{GPR29-03-03740406} applied
+to DMO-type operators.
 
 \section{AMO APERTURE: CASCADING MIGRATION AND MODELING}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -310,19 +306,19 @@ common-offset common-azimuth migration and the 3-D modeling for a different
 azimuth and offset. An analogous point of
 view was
 developed for the 2-D case
-by Deregowski and Rocca \shortcite{GPR29-03-03740406}.      
+by \cite{GPR29-03-03740406}.      
 \par
 Let's consider the general symmetric ellipsoid equation
 \begin{equation}
 z(x,y)=\sqrt{R^2-\beta\,\left(x-x_1\right)^2-\left(y-y_1\right)^2}\;,
 \label{eqn:ellips}
 \end{equation}
-where $z$ stands for the depth coordinate, $R$ is the small semi-axis of the
-ellipsoid, and $\beta$ is a nondimensional parameter describing the
-stretching of the ellipse $(\beta < 1)$. Deregowski and
-Rocca \shortcite{GPR29-03-03740406} derived the following connections
-between the geometric properties of the reflector and the coordinates
-of the corresponding spike in the data:
+where $z$ stands for the depth coordinate, $R$ is the small semi-axis
+of the ellipsoid, and $\beta$ is a nondimensional parameter describing
+the stretching of the ellipse $(\beta < 1)$. \cite{GPR29-03-03740406}
+derived the following connections between the geometric properties of
+the reflector and the coordinates of the corresponding spike in the
+data:
 \begin{equation}
 R={{v\,t_1}\over 2}\;;\;
 \beta={t_1^2 \over t_1^2+{{4\,{\bf h_1}^2}\over v^2}}\;,
@@ -425,7 +421,7 @@ inverse DMO explicitly, the total size of the two operators would be
 about ${\bf\left|h_1\right|+\left|h_2\right|}$, which is
 substantially greater. This fact proves that in the case of small
 azimuth rotations the AMO price is less than those of not only 3-D prestack
-migration, but also 3-D DMO and inverse DMO combined \cite{anat}.
+migration, but also 3-D DMO and inverse DMO combined \cite[]{anat}.
 Figure \ref{fig:amoavs} shows the saddle shape of the AMO operator impulse
 response in a 3-D AVS display. 
 
@@ -446,15 +442,14 @@ $\varphi=30^{\circ}$.}
 \section{Conclusions}
 
 We have applied two different theoretical approaches to AMO to find a
-complete definition of the integral
-operator (\ref{eqn:AMO}). Biondi and Chemingui \shortcite{Biondi.sep.80.125}
-proposed cascading the DMO and inverse DMO operators to define AMO in
-the frequency domain. The
+complete definition of the integral operator
+(\ref{eqn:AMO}). \cite{Biondi.sep.80.125} proposed cascading the DMO
+and inverse DMO operators to define AMO in the frequency domain. The
 same approach is repeated here in a simpler way by transferring the
 analysis to the natural time-space domain. A new contribution to the
 evaluation of the AMO operator follows from applying a different
 approach, which extends the geometric theory of DMO
-\cite{GPR29-03-03740406} to the AMO case. Cascading prestack
+\cite[]{GPR29-03-03740406} to the AMO case. Cascading prestack
 migration and modeling allows us to evaluate the AMO operator aperture.
 The compactness of the AMO aperture indicates that the integral operator can be
 performed at a low cost and therefore
@@ -468,8 +463,8 @@ promises economic benefits for its practical implementation.
 \section{APPENDIX A: AMO AMPLITUDE}
 The weighting function of the AMO operator can be determined from 
 cascading the DMO and inverse DMO operators by means of equation
-(\ref{eqn:AMOwf}). In the case of Hale's DMO \cite{Hale} and
-its adjoint \cite{GEO52-07-09730984},
+(\ref{eqn:AMOwf}). In the case of Hale's DMO \cite[]{Hale} and
+its adjoint \cite[]{GEO52-07-09730984},
 \begin{equation}
 w_{10}\left({\bf x_1;x_0, h_1},t_0\right) = 
 \sqrt{t_0 \over 2\,\pi}\,
@@ -497,7 +492,7 @@ w_{12}\left({\bf x_1;x_2, h_2},t_2\right) = {t_2 \over {2\,\pi}}\,
 \label{eqn:HAMOwfdf}
 \end{eqnarray}
 In the case of the so-called {\em true-amplitude} DMO
-\cite{black} and its asymptotic inverse,
+\cite[]{black} and its asymptotic inverse,
 \begin{equation}
 w_{10}\left({\bf x_1;x_0, h_1},t_0\right)  = 
 \sqrt{t_0 \over 2\,\pi}\,
@@ -590,11 +585,10 @@ As follows from (\ref{eqn:xileq}), (\ref{eqn:xi2x0}), and (\ref{eqn:rbeta}),
 {{\bf h_1^2}\over \sqrt{{{v^2\,t_1^2}\over 2}+{\bf h_1^2}}}\;.
 \label{eqn:x0leq}
 \end{equation}
-Inequality (\ref{eqn:x0leq}) is the known aperture limitation of the DMO
-operator (\ref{eqn:DMO}) found by Deregowski and Rocca
-\shortcite{GPR29-03-03740406}. The equality in (\ref{eqn:x0leq}) is achieved 
-when the reflection point is on the surface, where the reflector dip
-increases to 90 degrees.
+Inequality (\ref{eqn:x0leq}) is the known aperture limitation of the
+DMO operator (\ref{eqn:DMO}) found by \cite{GPR29-03-03740406}. The
+equality in (\ref{eqn:x0leq}) is achieved when the reflection point is
+on the surface, where the reflector dip increases to 90 degrees.
 %\nopagebreak
 \par
 Now the only unknown left in our problem is the $y$-coordinate of the
