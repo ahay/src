@@ -1,0 +1,670 @@
+\published{SEP report, 84, 25-37 (1995)}
+
+\lefthead{Fomel \& Biondi} \righthead{t-x AMO} 
+\footer{SEP--84}
+
+\title{The time and space formulation \\ of azimuth moveout}
+%\keywords{DMO, three-dimensional, prestack }
+
+\email{sergey@sep.stanford.edu, biondo@sep.stanford.edu} 
+\author{Sergey Fomel and Biondo L. Biondi}
+\maketitle
+
+\begin{abstract}
+%%%%%%
+Azimuth moveout (AMO) transforms 3-D prestack seismic data from one
+common azimuth and offset to different azimuths and offsets.
+AMO in the time-space domain is represented by a three-dimensional
+integral operator. The operator components are the summation path,
+the weighting function, and the aperture. To determine the summation path and
+the weighting function, we derive the AMO operator by cascading dip
+moveout (DMO) and inverse DMO for different azimuths in the time-space
+domain. To evaluate the aperture, we apply a geometric approach,
+defining AMO as the result of cascading prestack migration (inversion)
+and modeling. The aperture limitations provide a consistent
+description of AMO for small azimuth rotations (including zero) and justify the
+economic efficiency of the method. 
+\end{abstract}
+
+\section{Introduction}
+
+%%%%%%%%%%%%%%%%%%%
+Azimuth moveout (AMO) is by definition an operator that transforms
+common-azimuth common-offset seismic reflection data to different
+azimuths and offsets\footnote{Here azimuth corresponds to the
+direction of a source-receiver pair, and offset is the distance
+between the source and the receiver.}. A constructive approach to 
+AMO was proposed by Biondi and Chemingui
+\shortcite{Biondi.sep.80.125}.  According to this approach, an AMO
+operator is built by cascading the dip moveout (DMO) operator that
+transforms the input common-azimuth data to zero offset, and the inverse
+DMO that transforms the zero-offset data to a new offset and azimuth.
+Evaluating the cascade of the frequency-domain DMO and  inverse DMO
+operators by means of the stationary phase technique produces the
+integral (Kirchhoff-type) 3-D AMO operator in the time-space domain. 
+\par
+The first part of this paper applies an analogous idea to construct the AMO
+operator from the time-space domain DMO and
+achieves the same result in a simpler way.
+Cascading DMO and inverse DMO allows us to evaluate the AMO operator's
+summation path and the corresponding weighting function. However, it
+is not sufficient for evaluating the third major component of the
+integral operator, that is, its aperture (range of integration). To solve this
+problem, we apply an 
+alternative approach, that 
+defines AMO as a cascade of 3-D migration (inversion) for 
+particular common-azimuth  
+and common-offset data and 3-D modeling for a different azimuth and
+offset. This   
+definition resembles the viewpoint on DMO developed by Deregowski and Rocca 
+\shortcite{GPR29.03.03740406}. As with the DMO case, the
+migration and modeling  approach  reveals the physics of the AMO
+aperture and limits its boundaries. 
+It is the aperture limitation
+that allows us to overcome the paradoxical inconsistency between 2-D
+and 3-D AMO operators discussed by  Biondi and Chemingui
+\shortcite{Biondi.sep.80.125}. 
+If the aperture is chosen properly, the AMO operator converges to the 2-D
+offset continuation limit as the azimuth rotation approaches zero.  
+This remarkable fact supports the proof of economical
+efficiency of AMO in comparison with the prestack migration operator,
+which is known to have an unlimited aperture. 
+
+\section{CASCADING DMO AND INVERSE DMO
+IN TIME-SPACE DOMAIN}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+In this section, we present a new version of the AMO derivation.
+Since 
+the entire derivation is performed in the time-space domain, it is more
+straightforward than the stationary phase technique developed for the
+same purpose by Biondi and Chemingui \shortcite{Biondi.sep.80.125}.
+\par
+Let $P_1\left({\bf x_1},t_1;{\bf h_1}\right)$ be the in\-put of an AMO
+ope\-ra\-tor  (com\-mon-azi\-muth and com\-mon-off\-set seismic
+reflection data after normal moveout correction) and 
+$P_2\left({\bf x_2},t_2;{\bf h_2}\right)$ be the output. Here 
+${\bf x_i}\; (i=1,2)$ are midpoint locations on the surface:
+${\bf x_i}=\left\{x_i,y_i\right\}$, and 
+${\bf h_i}$ are half-offset vectors.
+The 3-D AMO operator has the following general form:
+\begin{equation} 
+P_2\left({\bf x_2},t_2;{\bf h_2}\right)  =  {\bf D}_{t_2} \int\int 
+w_{12}\left({\bf x_1;x_2,h_2},t_2\right)\,
+P_1\left({\bf x_1},
+t_2\,\theta_{12}\left({\bf x_1;x_2, h_2}\right);\,
+{\bf h_1}\right)\,d{\bf x_1}\;,
+\label{eqn:AMO}
+\end{equation}
+where ${\bf D}$ is the differentiation operator $\left({\bf
+D}_t\equiv{d \over dt}\right)$, $t_2\,\theta_{12}$ is the summation
+path, and $w_{12}$ is the weighting function. In this section we will
+evaluate $\theta_{12}$ and $w_{12}$ using the cascade of integral 3-D DMO and
+inverse DMO operators in the time-space domain. The idea of this
+derivation originated in Biondi and Chemingui's paper
+\shortcite{Biondi.sep.80.125}, where it was  
+applied with the frequency-domain DMO and inverse DMO operators. In
+the next section, 
+we apply a new geometric approach to evaluate the AMO aperture (range of
+integration in (\ref{eqn:AMO})). 
+\par
+To derive (\ref{eqn:AMO}) in the time-space domain, 
+an integral
+(Kirchoff-type) DMO operator of the form
+\begin{equation}
+P_0\left({\bf x_0},t_0;{\bf 0}\right)={\bf D}_{-t_0}^{1/2}\,\int 
+w_{10}\left({\bf x_1;x_0,h_1},t_0\right)\,
+P_1\left({\bf x_1},t_0\,\theta_{10}\left({\bf x_1;x_0,h_1}\right);
+{\bf h_1}\right)\,d\hat{x}_1
+\label{eqn:DMO}
+\end{equation}
+is cascaded with an inverse DMO of the form
+\begin{equation}
+P_2\left({\bf x_2},t_2;{\bf h_2}\right)={\bf D}_{t_2}^{1/2}\,\int 
+w_{02}\left({\bf x_0;x_2, h_2},t_2\right)\,
+P_0\left({\bf x_0},t_2\,\theta_{02}\left({\bf x_0;x_2, h_2}\right);
+{\bf 0}\right)\,d\hat{x}_0\;,
+\label{eqn:IDMO}
+\end{equation}
+where ${\bf D}_t^{1/2}$ stands for the operator of half-order differentiation
+(equivalent to $(i \omega)^{1/2}$ multiplication in Fourier domain),
+$t_0\, \theta_{10}$ and $t_2\,\theta_{02}$ are the summation paths of
+the DMO and inverse DMO  
+operators \cite{GPR29.03.03740406}:
+\begin{eqnarray}
+\theta_{10}({\bf x_1;x_0, h_1})=
+\left(1-{\bf \left(x_1-x_0\right)^2 \over h_1^2}\right)^{-1/2}\;,
+\label{eqn:DMOtt}\\
+\theta_{02}({\bf x_0;x_2, h_2})=
+\left(1-{\bf \left(x_0-x_2\right)^2 \over h_2^2}\right)^{1/2}\;,
+\label{eqn:IDMOtt}
+\end{eqnarray}
+$w_{10}$ and $w_{02}$ are the corresponding weighting functions (amplitudes of
+impulse responses), $\hat{x}_1$ is the component of ${\bf x_1}$ along the
+${\bf h_1}$ azimuth, and $\hat{x}_0$ is the component of ${\bf x_0}$
+along the
+${\bf h_2}$ azimuth. 
+Integral operators (\ref{eqn:DMO}) and (\ref{eqn:IDMO}) correspond to
+the high-frequency asymptotic (the geometrical seismic) description of
+the wave field. As shown by Stovas and Fomel \shortcite{myDMO}, 
+operator (\ref{eqn:IDMO}) has an asymptotically equivalent
+form
+\begin{equation}
+P_2\left({\bf x_2},t_2;{\bf h_2}\right)=\int 
+\tilde{w}_{02}\left({\bf x_0;x_2, h_2},t_2\right)\,
+{\bf D}_{-t_0}^{1/2}P_0\left({\bf x_0},t_2\,\theta_{02}
+\left({\bf x_0;x_2, h_2}\right);
+{\bf 0}\right)\,d\hat{x}_0\;,
+\label{eqn:tIDMO}
+\end{equation}
+where $\tilde{w}_{02}=w_{02}\,\sqrt{\theta_{02}}$.
+\par
+Both DMO and inverse DMO operate on 3-D seismic data
+as 2-D operators, since their apertures are defined on a line. This
+implies that for a given input midpoint ${\bf x_1}$, the corresponding
+location of ${\bf x_0}$ must belong to the
+line going through ${\bf x_1}$, with the azimuth defined by the input
+offset ${\bf h_1}$. 
+Similarly, ${\bf x_0}$ must be on the line going through 
+${\bf x_2}$ with the azimuth of ${\bf h_2}$ (Figure \ref{fig:amox12}).
+These theoretical facts lead us to the following conclusion: 
+\begin{quote}
+{\em For a given pair of input and output midpoints ${\bf x_1}$ and ${\bf x_2}$
+of the AMO operator, the corresponding midpoint ${\bf x_0}$ on
+the intermediate zero-offset gather is determined by the  intersection of 
+two lines drawn
+through ${\bf x_1}$ and ${\bf x_2}$
+in the offset directions.} 
+\end{quote}
+Applying the geometric connection among the three midpoints, we can
+find the cascade 
+of the DMO
+and inverse DMO operators in one step.
+For this purpose, it is convenient to choose an orthogonal coordinate
+system $\{x,y\}$ on the 
+surface in such a way that the direction of the $x$ axis corresponds
+to the input azimuth 
+(Figure \ref{fig:amox12}).
+In this case the connection between the three midpoints is given by
+\begin{eqnarray}
+y_0=y_1\;;\;x_0=x_2-\left(y_2-y_1\right) \cot{\varphi}\;,
+\label{eqn:x012}\\
+d\hat{x}_1=dx_1\;;\;d\hat{x}_0=dy_1 \csc{\varphi}\;.
+\label{eqn:jacob}
+\end{eqnarray}
+
+\inputdir{XFig}
+\plot{amox12}{width=5.in,height=2.5in}{Geometric
+relationships between input and output midpoint locations in AMO.}
+\par
+Substituting (\ref{eqn:DMO}) into (\ref{eqn:tIDMO}) and taking into account
+(\ref{eqn:jacob}) produces the 3-D integral AMO operator (\ref{eqn:AMO}),
+where
+\begin{eqnarray}
+\theta_{12}\left({\bf x_1;x_2, h_2}\right) & = &
+\theta_{02}\left({\bf x_0;x_2, h_2}\right)\,
+\theta_{10}\left({\bf x_1;x_0, h_1}\right)=
+{\left|{\bf h_1 \over h_2}\right|}\,
+\sqrt{{\bf {h_2^2-\left(x_2-x_0\right)^2} \over
+{h_1^2-\left(x_1-x_0\right)^2}}}=
+\nonumber \\
+& = &
+{\left|{\bf h_1 \over h_2}\right|}\,
+\sqrt{{{\bf h_2^2}\,\sin{\varphi}^2-\left(y_2-y_1\right)^2} \over
+{{\bf h_1^2}\,\sin{\varphi}^2-
+\left(\left(x_2-x_1\right)\,\sin{\varphi}-
+\left(y_2-y_1\right)\,\cos{\varphi}\right)^2}}\;,
+\label{eqn:AMOtt}
+\end{eqnarray}
+\begin{eqnarray*}
+w_{12}\left({\bf x_1;x_2, h_2},t_2\right) = 
+\end{eqnarray*}
+\begin{equation}
+= w_{02}\left({\bf x_0;x_2, h_2},t_2\right)\,
+w_{10}\left({\bf x_1;x_0, h_1},t_2\,
+\theta_{02}\left({\bf x_0;x_2, h_2}\right)\right)\,
+{\csc{\varphi}\over \sqrt{\theta_{02}\left({\bf x_0;x_2, h_2}\right)}}\;,
+\label{eqn:AMOwf}
+\end{equation}
+$d{\bf x_1}=dx_1\,dy_1$. Equation 
+$t_1=t_2\,\theta_{12}\left({\bf x_1;x_2, h_2}\right)$ is the same
+as equation (4) in \cite{Biondi.sep.80.125} except for a different
+notation. The weighting function of the derived AMO operator
+$\left(w_{12}\right)$ 
+depends on the weighting functions of DMO and inverse DMO that are involved in
+the construction. In Appendix A, we apply equation (\ref{eqn:AMOwf}) to two
+popular versions of the DMO weighting functions that
+correspond to Hale's \shortcite{Hale} and Zhang's
+\shortcite{Zhang.sep.59.201} DMO operators.
+\par
+Deriving formula (\ref{eqn:AMOtt}), we have to assume
+that the input 
+and output offset azimuths are different ($\varphi \neq 0$). In the case
+of equal azimuths, AMO reduces to 2-D offset continuation (OC). The
+location of ${\bf x_0}$ in this case is not constrained by the input
+and output midpoints and can take different values on the line.
+Therefore the superposition of DMO and inverse DMO for offset
+continuation is a convolution on that line. To find the summation path
+of the OC operator, we should consider the envelope of the family of traveltime
+curves (where $x_0$ is the parameter of a curve in the family):
+\begin{equation}
+t_1=t_2\,\theta_{12}\left(x_1;x_2, h_2\right) =
+t_2\,{\left| h_1 \over h_2\right|}\,
+\sqrt{ {h_2^2-\left(x_2-x_0\right)^2} \over
+{h_1^2-\left(x_1-x_0\right)^2}}\;.
+\label{eqn:OCfamily}
+\end{equation} 
+Solving the envelope condition
+\begin{equation}
+{\partial \theta_{12} \over \partial x_0}=0
+\label{eqn:OCenvelop}
+\end{equation}
+with respect to $x_0$ produces
+\begin{equation}
+x_0={{\left(\Delta\,x\right)^2+h_2^2-h_1^2+
+\mbox{sign}\left(h_1^2-h_2^2\right)\,
+\sqrt{\left(\left(\Delta\,x\right)^2-h_1^2-h_2^2\right)^2-4\,h_1^2\,h_2^2}}
+\over {2\,\left(\Delta\,x\right)}}\;,
+\label{eqn:OCx0}
+\end{equation}
+where $\Delta\,x=x_1-x_2$.
+Substituting (\ref{eqn:OCx0}) into (\ref{eqn:OCfamily}), we get the explicit
+expression of the OC summation path:
+%\samepage{
+\begin{eqnarray}
+t_1 & = & \nonumber \\
+& & {t_2 \over \left|h_2\right|}\,\sqrt{{U+V} \over 2}
+\;\mbox{for $h_2 > h_1$}\;, \nonumber \\
+& & {t_2 \left|h_1\right|}\,\sqrt{2 \over {U+V}}
+\;\mbox{for $h_2 < h_1$}\;, 
+\label{eqn:OCtt}
+\end{eqnarray}  
+where $U=h_1^2+h_2^2-\left(\Delta\,x\right)^2$, and
+$V=\sqrt{U^2-4\,h_1^2h_2^2}$.
+%}
+Equation (\ref{eqn:OCtt}) corresponds to formula (6) in
+\cite{Biondi.sep.80.125} (with a typo corrected). The same
+expression was obtained in a different way by Stovas and Fomel
+\shortcite{myDMO}. 
+The apparent difference between the 2-D and 3-D solutions introduces the
+problem of finding a consistent description valid for both cases.
+Such a description is especially important for practical applications
+dealing with small angles of azimuth rotation, e.g. cable feather
+correction in marine seismics. The next section develops
+a way of solving
+this problem, which
+refers to the kinematic theory of AMO and follows the ideas that
+Deregowski and Rocca \shortcite{GPR29.03.03740406} applied
+to DMO-type operators.    
+
+\section{AMO APERTURE: CASCADING MIGRATION AND MODELING}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+The impulse response of the AMO operators corresponds to a spike on
+the initial constant-offset constant-azimuth gather. Such a spike
+can physically occur in the case of a focusing ellipsoidal
+reflector whose focuses are coincident with the initial source and
+receiver locations (the impulse response of prestack common-offset
+migration). Therefore, the impulse response of AMO corresponds 
+kinematically to a reflection from this ellipsoid. These
+considerations allow us to define AMO as the cascade of the 3-D
+common-offset common-azimuth migration and the 3-D modeling for a different
+azimuth and offset. An analogous point of
+view was
+developed for the 2-D case
+by Deregowski and Rocca \shortcite{GPR29.03.03740406}.      
+\par
+Let's consider the general symmetric ellipsoid equation
+\begin{equation}
+z(x,y)=\sqrt{R^2-\beta\,\left(x-x_1\right)^2-\left(y-y_1\right)^2}\;,
+\label{eqn:ellips}
+\end{equation}
+where $z$ stands for the depth coordinate, $R$ is the small semi-axis of the
+ellipsoid, and $\beta$ is a nondimensional parameter describing the
+stretching of the ellipse $(\beta < 1)$. Deregowski and
+Rocca \shortcite{GPR29.03.03740406} derived the following connections
+between the geometric properties of the reflector and the coordinates
+of the corresponding spike in the data:
+\begin{equation}
+R={{v\,t_1}\over 2}\;;\;
+\beta={t_1^2 \over t_1^2+{{4\,{\bf h_1}^2}\over v^2}}\;,
+\label{eqn:rbeta}
+\end{equation}
+where $v$ is the wave velocity. 
+The center of the ellipsoid is at the initial midpoint ${\bf x_1}$.
+\par
+This section addresses the kinematic problem of reflection
+from the ellipsoid defined by (\ref{eqn:ellips}). In particular, we are looking for
+the answer to the following question: {\em For a given elliptic
+reflector defined by the input midpoint, offset, and time coordinates,
+what points on the surface can form a source-receiver pair valid for a
+reflection?} If a point in the output midpoint-offset space
+cannot be related to a reflection pattern, we should exclude it from the AMO
+impulse response defined in (\ref{eqn:AMO}).
+\par 
+Fermat's principle provides a general method of solving the kinematic reflection problems. Consider a formal expression for the two-point
+reflection traveltime 
+\begin{equation}
+t={\sqrt{
+(\mbox{\boldmath{$s - \xi$}})^2+z^2(\xi_x,\xi_y)}
+\over v}+
+{\sqrt{
+(\mbox{\boldmath{$r - \xi$}})^2+z^2(\xi_x,\xi_y)}
+\over v}\;,
+\label{eqn:reflecttt}
+\end{equation}  
+where \boldmath$\xi=$\unboldmath$\left\{\xi_x,\xi_y\right\}$ is the vertical
+projection of the reflection 
+point to the surface, ${\bf s}=\left\{s_x,s_y\right\}={\bf x_2-h_2}$
+is the source location, and 
+${\bf r}=\left\{r_x,r_y\right\}={\bf x_2+h_2}$ is the receiver location.
+According to Fermat's principle, the reflection ray path between two
+fixed points must correspond to the
+extremum value of the traveltime. Hence, in the vicinity of a
+reflected ray,
+\begin{equation}
+{\partial t \over \partial \xi_x}=0\;;\;
+{\partial t \over \partial \xi_y}=0\;.
+\label{eqn:fermat}
+\end{equation}   
+Solving the system of equations (\ref{eqn:fermat}) for $\xi_x$ and $\xi_y$
+allows us to find the reflection ray path for a given source-receiver
+pair on the surface. The solution is derived in Appendix B to be
+\begin{equation}
+\xi_x={{x_0-\beta\,x_1}\over{1-\beta}}\;,
+\label{eqn:x02xi}
+\end{equation} 
+\begin{equation}
+\xi_y=y_1+\left(x_0-\xi_x\right)\,\cot{\varphi}-
+{{\left(y_2-y_1\right)\,\left[
+\left(x_0-\xi_x\right)^2-\beta\,\left(x_1-\xi_x\right)^2+R^2
+\right]}\over
+{{\bf h_2^2}\sin^2{\varphi}-\left(y_2-y_1\right)^2}}\;,
+\label{eqn:xiy}
+\end{equation} 
+where $x_0$ has the same meaning as in the preceding section
+and is defined by (\ref{eqn:x012}).
+\par
+Since the reflection point is contained inside the ellipsoid,
+its projection obeys the evident inequality
+\begin{equation}
+\left(\xi_y-y_1\right)^2\leq R^2-\beta\,\left(\xi_x-x_1\right)^2\;.
+\label{eqn:xiyleq}
+\end{equation}
+It is inequality (\ref{eqn:xiyleq}) that defines the aperture of the AMO
+operator.
+
+\inputdir{app}
+\plot{amoapp}{width=6.in,height=6.in}{The AMO impulse
+response traveltime. Parameters: $\left|{\bf h1}\right|=1000$ m,
+$\left|{\bf h2}\right|=750$ m, $t_1=1$ sec. The top plots illustrate
+the case of an unrealistically low velocity ($v=10$ m/s); on the bottom,
+$v=2000$ m/s. On the left side the azimuth rotation
+$\varphi=30^{\circ}$; on the right, $\varphi=3^{\circ}$ }
+\par
+The AMO operator's contours for
+different azimuth rotation angles are shown in  
+Figure \ref{fig:amoapp}. 
+Comparing the results for the case of an unrealistically low velocity
+(the top two plots in Figure \ref{fig:amoapp}) and the case of a realistic
+velocity (the bottom two plots) clearly demonstrates  
+the gain in the reduction of the aperture size 
+achieved by the aperture limitation.
+The gain is
+especially spectacular for small azimuths. When the azimuth rotation
+approaches zero, the area of the 3-D aperture monotonously shrinks to a
+line, and the limit of the traveltime of the AMO impulse response
+(the inverse of (\ref{eqn:AMOtt})) approaches the offset continuation operator
+(\ref{eqn:OCtt}) (Figures \ref{fig:amocom}). This means that
+taking into account 
+the aperture limitations of AMO provides a consistent description
+valid for small azimuth rotations including zero (the offset 
+continuation case). Obviously, the cost of an integral operator is
+proportional to its size. The size of the offset continuation
+operator cannot extend the difference between the offsets ${\bf
+\left|\left|h_1\right|-\left|h_2\right|\right|}$. If we applied DMO and
+inverse DMO explicitly, the total size of the two operators would be
+about ${\bf\left|h_1\right|+\left|h_2\right|}$, which is
+substantially greater. This fact proves that in the case of small
+azimuth rotations the AMO price is less than those of not only 3-D prestack
+migration, but also 3-D DMO and inverse DMO combined \cite{anat}.
+Figure \ref{fig:amoavs} shows the saddle shape of the AMO operator impulse
+response in a 3-D AVS display. 
+
+\activesideplot{amocom}{width=3.5in}{figdir}{Traveltime curves
+of the impulse responses. The dashed lines indicate the AMO impulse
+response with an azimuth rotation of 3 degrees (projection on the $x$
+plane); the solid lines, the 2-D offset continuation impulse response.}
+
+\activeplot{amoavs}{width=5.in,height=3.5in}{figdir}{AMO impulse
+response traveltime in three dimensions (the AVS display). Parameters:
+$\left|{\bf h1}\right|=1000$ m,  
+$\left|{\bf h2}\right|=750$ m, $t_1=1$ sec, $v=2000$ m/s,
+$\varphi=30^{\circ}$.}
+
+%\pagebreak
+\section{Conclusions}
+
+We have applied two different theoretical approaches to AMO to find a
+complete definition of the integral
+operator (\ref{eqn:AMO}). Biondi and Chemingui \shortcite{Biondi.sep.80.125}
+proposed cascading the DMO and inverse DMO operators to define AMO in
+the frequency domain. The
+same approach is repeated here in a simpler way by transferring the
+analysis to the natural time-space domain. A new contribution to the
+evaluation of the AMO operator follows from applying a different
+approach, which extends the geometric theory of DMO
+\cite{GPR29.03.03740406} to the AMO case. Cascading prestack
+migration and modeling allows us to evaluate the AMO operator aperture.
+The compactness of the AMO aperture indicates that the integral operator can be
+performed at a low cost and therefore
+promises economic benefits for its practical implementation.
+%\nopagebreak
+\bibliographystyle{sep}\bibliography{SEP,EAEG,../sergey4/paper,GEOTLE}
+
+%\pagebreak
+\appendname{A}\appendix\sephead{APPENDIX A}
+\section{AMO AMPLITUDE}
+The weighting function of the AMO operator can be determined from 
+cascading the DMO and inverse DMO operators by means of equation
+(\ref{eqn:AMOwf}). In the case of Hale's DMO \cite{Hale} and
+its adjoint \cite{GEO52.07.09730984},
+\begin{equation}
+w_{10}\left({\bf x_1;x_0, h_1},t_0\right) = 
+\sqrt{t_0 \over 2\,\pi}\,
+{{\bf {\left|h_1\right|} \over {h_2^2-\left(x_1-x_0\right)^2}}}\;,
+\label{eqn:HDMOwf}
+\end{equation}
+\begin{equation}
+w_{02}\left({\bf x_0;x_2, h_2},t_2\right)  = 
+\sqrt{t_2 \over 2\,\pi}\,
+{{\bf {\left|h_2\right|} \over {h_2^2-\left(x_0-x_2\right)^2}}}\;.
+\label{eqn:HIDMOwf}
+\end{equation}  
+As follows from (\ref{eqn:HDMOwf}),(\ref{eqn:HIDMOwf}), and (\ref{eqn:AMOwf}),
+\begin{eqnarray*}
+w_{12}\left({\bf x_1;x_2, h_2},t_2\right) = {t_2 \over {2\,\pi}}\,
+\times
+\end{eqnarray*}
+\begin{eqnarray}
+\times\,
+{{{\bf \left|h_1\right|\,\left|h_2\right|}\,\sin{\varphi}}\over
+{\left({\bf h_1^2}\,\sin{\varphi}^2-
+\left(\left(x_2-x_1\right)\,\sin{\varphi}-
+\left(y_2-y_1\right)\,\cos{\varphi}\right)^2\right)\,
+\left({\bf h_2^2}\,\sin{\varphi}^2-\left(y_2-y_1\right)^2\right)}}\;.
+\label{eqn:HAMOwfdf}
+\end{eqnarray}
+In the case of the so-called {\em true-amplitude} DMO
+\cite{black} and its asymptotic inverse,
+\begin{equation}
+w_{10}\left({\bf x_1;x_0, h_1},t_0\right)  = 
+\sqrt{t_0 \over 2\,\pi}\,
+{\bf {h_1^2+\left(x_1-x_0\right)^2} \over
+\left|h_1\right|\,\left(h_1^2-\left(x_1-x_0\right)^2\right)}\;,
+\label{eqn:DMOwf}
+\end{equation}
+\begin{equation}
+w_{02}\left({\bf x_0;x_2, h_2},t_2\right)  = 
+\sqrt{t_2 \over 2\,\pi}\,
+{{\bf {\left|h_2\right|} \over {h_2^2-\left(x_0-x_2\right)^2}}}\;.
+\label{eqn:IDMOwf}
+\end{equation}  
+Inserting (\ref{eqn:DMOwf}) and (\ref{eqn:IDMOwf}) into (\ref{eqn:AMOwf}) yields
+%\pagebreak
+%\samepage{
+\begin{eqnarray*}
+w_{12}\left({\bf x_1;x_2, h_2},t_2\right) = {t_2 \over {2\,\pi}}\,
+{\left|{\bf h_2 \over h_1}\right|}\,\times
+\end{eqnarray*}
+\begin{eqnarray}
+\times\,
+{{{\bf h_1^2}\,\sin{\varphi}^2+
+\left(\left(x_2-x_1\right)\,\sin{\varphi}-
+\left(y_2-y_1\right)\,\cos{\varphi}\right)^2}\over
+{\left({\bf h_1^2}\,\sin{\varphi}^2-
+\left(\left(x_2-x_1\right)\,\sin{\varphi}-
+\left(y_2-y_1\right)\,\cos{\varphi}\right)^2\right)\,
+\left({\bf h_2^2}\,\sin{\varphi}^2-\left(y_2-y_1\right)^2\right)}}\;.
+\label{eqn:AMOwfdf}
+\end{eqnarray}
+%}
+%\pagebreak
+\appendname{B}\appendix\sephead{APPENDIX B}
+\section{DERIVING THE AMO APERTURE}
+\activesideplot{amosym}{width=3.5in}{figdir}{Reflection from the
+ellipsoid of a prestack migration impulse response (a scheme). Top: Map view.
+Bottom: Section of the ellipsoid with the plane drawn through the
+central line and the reflection point.}
+
+%\samepage{
+This appendix describes the derivation of the main formulas for the
+aperture evaluation that follow from the Fermat principle (\ref{eqn:fermat}).
+In order to avoid the algebraic
+complications  of (\ref{eqn:fermat}), we simplify the
+problem by taking into account the cylindrical symmetry of the ellipsoidal
+reflector (\ref{eqn:ellips}).
+%\nopagebreak
+\par
+Consider a plane drawn through the reflection point and the central line
+of the ellipsoid (the axis of the cylindrical symmetry). This plane
+has to contain the central (normally reflected) ray from the
+reflector. This conclusion follows from the fact that all the normal
+reflections emerge at the central line because of the cylindrical
+symmetry, as shown in Figure \ref{fig:amosym}. The intersection of the 3-D
+reflector and the plane is the 
+2-D ellipse
+\begin{equation}
+\hat{z}(x)=\sqrt{R^2-\beta\,\left(x-x_1\right)^2}\;.
+\label{eqn:ellips2D}
+\end{equation}
+The connection between the emergence point of the normal ray $x_0$ and
+the $x$ coordinate of the reflection point $\xi_x$ can be derived from the
+relationship evident in Figure \ref{fig:amosym}, as follows:
+\begin{equation}
+x_0=\xi_x-\hat{z}\left(\xi_x\right)\,\tan{\alpha}=
+\xi_x+\hat{z}\left(\xi_x\right)\hat{z}'\left(\xi_x\right)=\xi_x\,(1-\beta)+
+\beta\,x_1\,.
+\label{eqn:xi2x0}
+\end{equation}
+Equation (\ref{eqn:xi2x0}) allows us to evaluate $\xi_x$ in terms of
+$x_0$ and get (\ref{eqn:x02xi}). The emergence point of the normal ray $x_0$
+corresponds to the 
+midpoint on an imaginary zero-offset section ( with a coincident
+source and receiver). Therefore, the location of this point is
+determined for given input 
+and output midpoints in accordance with expression (\ref{eqn:x012}).
+%} 
+\par
+Obviously, the reflection point has to be inside the ellipse
+(\ref{eqn:ellips2D}). Therefore, its projection obeys the inequality
+\begin{equation}
+\left|\xi_x-x_1\right| \leq {R\over \sqrt{\beta}}\;.
+\label{eqn:xileq}
+\end{equation} 
+As follows from (\ref{eqn:xileq}), (\ref{eqn:xi2x0}), and (\ref{eqn:rbeta}),
+\begin{equation}
+\left|x_0-x_1\right| \leq {R\,(1-\beta)\over \sqrt{\beta}}=
+{{\bf h_1^2}\over \sqrt{{{v^2\,t_1^2}\over 2}+{\bf h_1^2}}}\;.
+\label{eqn:x0leq}
+\end{equation}
+Inequality (\ref{eqn:x0leq}) is the known aperture limitation of the DMO
+operator (\ref{eqn:DMO}) found by Deregowski and Rocca
+\shortcite{GPR29.03.03740406}. The equality in (\ref{eqn:x0leq}) is achieved 
+when the reflection point is on the surface, where the reflector dip
+increases to 90 degrees.
+%\nopagebreak
+\par
+Now the only unknown left in our problem is the $y$-coordinate of the
+reflection point $\xi_y$. To find this unknown, we substitute
+(\ref{eqn:x02xi}) into (\ref{eqn:reflecttt}), choosing the convenient
+parameterization
+\begin{equation}
+{\bf s  =  x_0+ h_s\;;\; r  =   x_0+ h_r}\;, 
+\label{eqn:x02sr}
+\end{equation}
+where ${\bf h_r-h_s}=2\,{\bf h_2}$, and ${\bf h_r+h_s}=2\ {\bf
+\left(x_1-x_0\right)}$ (Figure \ref{fig:amosym}). The 
+two-point traveltime function in (\ref{eqn:reflecttt}) transforms to the form
+\begin{eqnarray}
+t & = & {\sqrt{\left(x_0-\xi_x\right)^2-\beta\,\left(x_1-\xi_x\right)^2+R^2+
+{\bf h_s^2}+2\,{\bf h_s^2}\cdot\left(\mbox{\boldmath{$x_0-\xi$}}\right)}
+\over v}+
+\nonumber \\
+& & + {\sqrt{\left(x_0-\xi_x\right)^2-\beta\,\left(x_1-\xi_x\right)^2+R^2+
+{\bf h_r^2}+2\,{\bf h_r^2}\cdot\left(\mbox{\boldmath{$x_0-\xi$}}\right)}
+\over v}\;.
+\label{eqn:reflectrt}
+\end{eqnarray} 
+Applying the second equation from (\ref{eqn:fermat}), we get a simple linear
+equation for $\xi_y$, which has the explicit solution (\ref{eqn:xiy}).
+From (\ref{eqn:x02xi}) and (\ref{eqn:xiy}) one can find the reflection
+point location for given midpoint and offset. To find the limits of
+possible output midpoint locations, we constrain the reflection
+point to be inside the ellipsoid (\ref{eqn:ellips}) similarly to the way we did
+in two dimensions when deriving (\ref{eqn:x0leq}). First, let's consider the
+case of $y_2=y_1$ (the output midpoint ${\bf x_2}$ is on the line drawn
+through ${\bf x_1}$ in the direction of the input azimuth). In this
+case, combining expression (\ref{eqn:xiy}) and inequality (\ref{eqn:xiyleq})
+produces
+\begin{equation}
+\left|x_0-x_1\right| \leq {R\,(1-\beta)\over 
+\sqrt{\beta+\beta^2\,\cot^2{\varphi}}}\;.
+\label{eqn:x0leq3D}
+\end{equation}
+For any azimuth rotation angle $\varphi$ less than 90 degrees, the
+limitation (\ref{eqn:x0leq3D}) is smaller than that of the DMO operator
+(\ref{eqn:x0leq}). The difference increases with the decrease of the
+azimuth rotation, since the AMO aperture section
+on the line $y_2=y_1$ monotonously shrinks to a point $x_2=x_0=x_1$
+when $\varphi$ approaches zero. To extend this conclusion to the whole
+3-D aperture, we can find the contour of the aperture by putting the
+reflection point 
+at the edge of the ellipsoid (\ref{eqn:ellips}), as follows:  
+\begin{equation}
+\left(\xi_y-y_1\right)^2= R^2-\beta\,\left(\xi_x-x_1\right)^2
+\label{eqn:edge}
+\end{equation}
+and solving (\ref{eqn:xiy}) for $y_2$. The aperture contour can then be defined by
+the system of parametric expressions
+\begin{equation}
+y_2\left(\xi_x\right)  = 
+y_1+d\left(\xi_x\right)\,\sin{\varphi}\;,
+\label{eqn:ycon}
+\end{equation}
+\begin{equation}
+x_2\left(\xi_x\right)  =  \xi_x\,(1-\beta)+\beta\,x_1+
+d\left(\xi_x\right)\,\cos{\varphi}\;,
+\label{eqn:xcon}
+\end{equation}
+where
+\begin{equation}
+d\left(\xi_x\right)= 
+{{d_y^2+d_x^2-
+\sqrt{\left(d_y^2+d_x^2\right)^2+
+4\,{\bf h_2^2}\,\left(
+d_y\,\sin{\varphi}+d_x\,\cos{\varphi}\right)^2}}\over
+{2\,\left(d_y\,\sin{\varphi}+d_x\,\cos{\varphi}
+\right)}}\;,
+\label{eqn:dxi}
+\end{equation}
+$d_x\left(\xi_x\right)=\xi_x-x_0=\beta\,\left(\xi_x-x_1\right)$,
+and $d_y\left(\xi_x\right)=\xi_y-y_1$ is defined by (\ref{eqn:edge}).
