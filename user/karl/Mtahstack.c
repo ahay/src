@@ -32,9 +32,9 @@ sftahread \\
    input=npr3_gathers.rsf \\
 | sftahnmo \\
    verbose=1  \\
-   tnmo=0,.373,.619,.826,.909,1.017,1.132,1.222,1.716,3.010 \\
-   vnmo=9086,10244,11085,10803,10969,11578,12252,12669,14590,17116 \\
-| sftahstack key=iline,xline verbose=1 \\
+    tnmo=0,2,6,10.5,16 vnmo=1500,1500,2250,3250,3700  \\
+| sftahstack key=iline,xline \
+    xmute=0,20000 tmute=0,20 ntaper=25 \\
 | sftahwrite \\
    verbose=1                           \\
    label2="xline" o2=1 n2=188 d2=1   \\
@@ -65,6 +65,26 @@ PARAMETERS
 	between gathers.  A gather is a sequence of traces with the 
 	same value for all the header keys.  Stack summs traces in 
 	the gather, divides by the fold, and outputs the stack trace.
+
+   floats xmute= NULL
+
+        List of floats the same length as list of floats in the tmute
+	parameter.  The (xmute,tmute) pairs are interpolated using the
+	trace headers offset to determine trace start time.  The mute is
+	always increased to the first non-zero sample.  The default mutes 
+	at the first non-zero sample.
+
+   floats tmute= NULL
+
+        List of floats the same length as list of floats in the xmute
+	parameter.  The (xmute,tmute) pairs are interpolated using the
+	trace headers offset to determine trace start time. The mute is
+	always increased to the first non-zero sample.  The default mutes 
+	at the first non-zero sample.
+
+   float ntaper=12
+        the length of the taper to use at the start of the trace.
+	
 */
 
 /*
