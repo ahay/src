@@ -1,5 +1,6 @@
 from rsf.proj import *
 
+# marmvel.hh contains Marmousi model which can be downloaded from the server using Fetch.
 Fetch('marmvel.hh','marm')
 
 Flow('vel','marmvel.hh',
@@ -10,7 +11,7 @@ Flow('vel','marmvel.hh',
 Plot('vel',
 	'''
 	grey color=j mean=y title="Marmousi model" scalebar=y bartype=v barlabel="V" 
-	barunit="m/s" screenratio=0.45 color=j 
+	barunit="m/s" screenratio=0.45 color=j labelsz=10 titlesz=12
 	''')
 
 Flow('shots','vel',
@@ -21,9 +22,9 @@ Flow('shots','vel',
 Result('shots','grey color=g title=shot label2= unit2=')
 
 
-Plot('shot4','shots','window n3=1 f3=4| grey color=g title=shot4 label2=Lateral unit2=m')
-Plot('shot11','shots','window n3=1 f3=11| grey color=g title=shot11 label2=Lateral unit2=m')
-Plot('shot17','shots','window n3=1 f3=17| grey color=g title=shot17 label2=Lateral unit2=m')
+Plot('shot4','shots','window n3=1 f3=4| grey color=g title=shot4 label2=Lateral unit2=m labelsz=14 titlesz=14')
+Plot('shot11','shots','window n3=1 f3=11| grey color=g title=shot11 label2=Lateral unit2=m labelsz=14 titlesz=14')
+Plot('shot17','shots','window n3=1 f3=17| grey color=g title=shot17 label2=Lateral unit2=m labelsz=14 titlesz=14')
 Result('shotsnap','shot4 shot11 shot17','SideBySideAniso')
 
 # smoothed velocity model   
@@ -32,7 +33,7 @@ Plot('smvel',
      '''
      grey title="Smoothed Marmousi model" wantitle=y allpos=y color=j
      pclip=100 scalebar=y bartype=v barlabel="V" barunit="m/s"
-	screenratio=0.45 color=j 
+	screenratio=0.45 color=j labelsz=10 titlesz=12
      ''' )
 
 Result('marm','vel smvel','TwoRows')
@@ -51,33 +52,33 @@ Result('vsnaps',
 Plot('vsnap1','vsnaps', 
 	'''
 	window n3=1|grey title="Updated velocity, iter=1" allpos=y color=j pclip=100 
-	scalebar=y bartype=v barlabel="V" barunit="m/s" 
+	scalebar=y bartype=v barlabel="V" barunit="m/s" labelsz=10 titlesz=12
 	''')
 Plot('vsnap20','vsnaps', 
 	'''
 	window n3=1 f3=19|grey title="Updated velocity, iter=20" allpos=y color=j pclip=100 
-	scalebar=y bartype=v barlabel="V" barunit="m/s" 
+	scalebar=y bartype=v barlabel="V" barunit="m/s" labelsz=10 titlesz=12
 	''')
 Plot('vsnap50','vsnaps', 
 	'''
 	window n3=1 f3=49|grey title="Updated velocity, iter=50" allpos=y color=j pclip=100 
-	scalebar=y bartype=v barlabel="V" barunit="m/s" 
+	scalebar=y bartype=v barlabel="V" barunit="m/s" labelsz=10 titlesz=12
 	''')
 
 Plot('vsnap100','vsnaps', 
 	'''
 	window n3=1 f3=99|grey title="Updated velocity, iter=100" allpos=y color=j pclip=100 
-	scalebar=y bartype=v barlabel="V" barunit="m/s" 
+	scalebar=y bartype=v barlabel="V" barunit="m/s" labelsz=10 titlesz=12
 	''')
 Plot('vsnap180','vsnaps', 
 	'''
 	window n3=1 f3=179|grey title="Updated velocity, iter=180" allpos=y color=j pclip=100 
-	scalebar=y bartype=v barlabel="V" barunit="m/s" 
+	scalebar=y bartype=v barlabel="V" barunit="m/s" labelsz=10 titlesz=12
 	''')
 Plot('vsnap300','vsnaps', 
 	'''
 	window n3=1 f3=299|grey title="Updated velocity, iter=300" allpos=y color=j pclip=100 
-	scalebar=y bartype=v barlabel="V" barunit="m/s" 
+	scalebar=y bartype=v barlabel="V" barunit="m/s" labelsz=10 titlesz=12
 	''')
 
 Result('vsnap','vsnap1 vsnap20 vsnap50 vsnap100 vsnap180 vsnap300','TwoRows')
