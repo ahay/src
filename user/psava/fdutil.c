@@ -560,7 +560,7 @@ scoef3d sinc3d_make(int nc,
     swout[ic].ny = 9;
     float dy = iy*fdm->dy+fdm->oypad-aa[ic].y; 
     for (int i=0; i<9; ++i)
-      xo[i] = -4.0f+dy+i*1.0f;
+      xo[i] = -4.0f+dy/fdm->dy+i*1.0f;
    	ints8r (9, 1.0f, -4.0, inp, 0.0f, 0.0f, 9, xo, swout[ic].sincy);
     if(swout[ic].sincy[4]==1.0f){
       swout[ic].ny = 1;
@@ -573,7 +573,7 @@ scoef3d sinc3d_make(int nc,
     swout[ic].nx = 9;
     float dx = ix*fdm->dx+fdm->oxpad-aa[ic].x; 
     for (int i=0; i<9; ++i)
-      xo[i] = -4.0f+dx+i*1.0f;
+      xo[i] = -4.0f+dx/fdm->dx+i*1.0f;
    	ints8r (9, 1.0f, -4.0, inp, 0.0f, 0.0f, 9, xo, swout[ic].sincx);
     if(swout[ic].sincx[4]==1.0f){
       swout[ic].nx = 1;
@@ -586,7 +586,7 @@ scoef3d sinc3d_make(int nc,
     swout[ic].nz = 9;
     float dz = iz*fdm->dz+fdm->ozpad-aa[ic].z;
     for (int i=0; i<9; ++i)
-      xo[i] = -4.0+dz+i*1.0f;
+      xo[i] = -4.0+dz/fdm->dz+i*1.0f;
    	ints8r (9, 1.0f, -4.0, inp, 0.0f, 0.0f, 9, xo, swout[ic].sincz);
     if(swout[ic].sincz[4]==1.0f){
       swout[ic].nz = 1;
@@ -758,7 +758,7 @@ scoef2d sinc2d_make(int nc,
     float dz = iz*fdm->dz+fdm->ozpad-aa[ic].z;
 
     for (int i=0; i<9; ++i)
-      xo[i] = -4.0f+dx+i*1.0f;
+      xo[i] = -4.0f+dx/fdm->dx+i*1.0f;
    	ints8r (9, 1.0f, -4.0, inp, 0.0f, 0.0f, 9, xo, swout[ic].sincx);
 
     if(swout[ic].sincx[4]==1.0f){
@@ -767,7 +767,7 @@ scoef2d sinc2d_make(int nc,
     }
 
     for (int i=0; i<9; ++i)
-      xo[i] = -4.0+dz+i*1.0f;
+      xo[i] = -4.0+dz/fdm->dz+i*1.0f;
    	ints8r (9, 1.0f, -4.0, inp, 0.0f, 0.0f, 9, xo, swout[ic].sincz);
 
     if(swout[ic].sincz[4]==1.0f){
