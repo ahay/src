@@ -5,16 +5,16 @@ Flow(['cmps.rsf' , 'xlines_hdr.rsf'],
      ['../ntg/shots-receivers-23900_headfix.rsf',
       '../ntg/shots-receivers-23900_headfix_hdr.rsf'],
      '''
-     sftahsort input=$SOURCE sort="xline:600,601  offset"
-     | sftahnmo tnmo=0,2,6,10.5,16 vnmo=1500,1500,2250,3250,3700
-     | sftahmakeskey pkey=xline skey=cdpt 
-     | sftahstack key=xline,cdpt \
+     sftahsort input=$SOURCE sort="xline:600,601 offset"
+     | sftahnmo tnmo=0,2,6,10.5,16 vnmo=1500,1500,2250,3250,3700 \
+     | sftahmute \
        xmute=0,20000 tmute=0,20 ntaper=25 \
-     | sftahnmo tnmo=0,2,6,10.5,16 vnmo=1500,1500,2250,3250,3700 inv=y
+     | sftahnmo tnmo=0,2,6,10.5,16 vnmo=1500,1500,2250,3250,3700 inv=y \
+     | sftahmakeskey pkey=xline skey=cdpt
      | sftahwrite \
-       verbose=1
-       label2=cdpt  o2=1 n2=100 d2=1 
-       label3=xline o3=600 n3=1 d3=1 
+       verbose=1 \
+       label2=cdpt  o2=1 n2=100 d2=1 \
+       label3=xline o3=600 n3=1 d3=1 \
        output=${TARGETS[0]}
      ''',stdout=0,stdin=0)
        
