@@ -61,6 +61,30 @@ if pdfread:
     Result('2D_Model_Subset','2D_Model_Subset.pdf',
            pdfread + ' $SOURCE',stdin=0,stdout=0)
 
+    Fetch('2D_Model_Subset_plots.pdf',dir='2d_model_subset',
+          server='http://s3.amazonaws.com',
+	  top='open.source.geoscience/open_data/seam_ph1_2d_classic')
+    Result('2D_Model_Subset_plots','2D_Model_Subset_plots.pdf',
+           pdfread + ' $SOURCE',stdin=0,stdout=0)
+
+    Fetch('Shots_Receivers_23900.pdf',dir='2d_data_subset',
+          server='http://s3.amazonaws.com',
+	  top='open.source.geoscience/open_data/seam_ph1_2d_classic')
+    Result('Shots_Receivers_23900','Shots_Receivers_23900.pdf',
+           pdfread + ' $SOURCE',stdin=0,stdout=0)
+
+    Fetch('Shot_Receivers_23900_plots.pdf',dir='2d_data_subset',
+          server='http://s3.amazonaws.com',
+	  top='open.source.geoscience/open_data/seam_ph1_2d_classic')
+    Result('Shot_Receivers_23900_plots','Shot_Receivers_23900_plots.pdf',
+           pdfread + ' $SOURCE',stdin=0,stdout=0)
+
+    Fetch('Seam_wavelet.pdf',dir='seam_phase_1_wavelets',
+          server='http://s3.amazonaws.com',
+	  top='open.source.geoscience/open_data/seam_ph1_2d_classic')
+    Result('Seam_wavelet','Seam_wavelet.pdf',
+           pdfread + ' $SOURCE',stdin=0,stdout=0)
+
 Fetch('Shots_Receivers_23900.sgy',dir='2d_data_subset',
           server='http://s3.amazonaws.com',
 	  top='open.source.geoscience/open_data/seam_ph1_2d_classic')
@@ -215,6 +239,21 @@ Flow('den','Den_Elastic_N23900.rsf',
       
 Result('den',"sfgrey title='den' scalebar=y color=j")
 
+for wavelet in ["SEAM_wavelet_8ms", 
+                "SEAM_wavelet-g_8ms", 
+		"SEAM_wavelet-g-zph_8ms", 
+		"desig_8ms"] :
+   Fetch(wavelet+".sgy",dir='seam_phase_1_wavelets',
+             server='http://s3.amazonaws.com',
+   	     top='open.source.geoscience/open_data/seam_ph1_2d_classic')
+   Flow(['%s.rsf'%wavelet ,'%s_hdr.rsf'%wavelet,
+         '%s.thdr'%wavelet,'%s.bhdr'%wavelet],
+         '%s.sgy'%wavelet,
+        '''
+        sfsegyread tfile=${TARGETS[1]} 
+        hfile=${TARGETS[2]}  bfile=${TARGETS[3]} 
+        ''')
 
+   Result(wavelet,'sfput d2=20 label2="sx" | sfwiggle title=%s'%wavelet)
 
 End()
