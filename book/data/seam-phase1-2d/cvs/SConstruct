@@ -14,7 +14,7 @@ Flow(['stk.rsf' , 'stk_hdr.rsf'],
        label2=xline o2=148 n2=1501 d2=1 
        output=${TARGETS[0]}
      ''',stdout=0,stdin=0)
-Result('stk','sfpow pow1=1.5 | sfgrey label="stack v=1500"')
+Result('stk','sfpow pow1=1.5 | sfgrey title="stack v=1500"')
 
 Flow(['xline1500.rsf' , 'xline1500_hdr.rsf'],
      ['../ntg/shots-receivers-23900_headfix.rsf',
@@ -28,7 +28,7 @@ Flow(['xline1500.rsf' , 'xline1500_hdr.rsf'],
        label2=cdpt o2=1 n2=120 d2=1 
        output=${TARGETS[0]}
      ''',stdout=0,stdin=0)
-Result('xline1500','sfpow pow1=1.5 | sfgrey label="nmo gather v=1500"')
+Result('xline1500','sfpow pow1=1.5 | sfgrey title="nmo gather v=1500"')
 
 
 Flow(['xline3300.rsf' , 'xline3300_hdr.rsf'],
@@ -43,7 +43,7 @@ Flow(['xline3300.rsf' , 'xline3300_hdr.rsf'],
        label2=cdpt o2=1 n2=120 d2=1 
        output=${TARGETS[0]}
      ''',stdout=0,stdin=0)
-Result('xline3300','sfpow pow1=1.5 | sfgrey label="nmo gather v=1500"')
+Result('xline3300','sfpow pow1=1.5 | sfgrey title="nmo gather v=3300"')
 
 
 
@@ -112,6 +112,6 @@ Flow(['stack.rsf' , 'stack.rsf'],
        output=${TARGETS[0]}
      ''',stdout=0,stdin=0)
        
-Result('stack','sfpow pow1=2 | sfgrey label="v(t) stack"')
+Result('stack','sfpow pow1=2 | sfgrey title="v(t) stack"')
 
 End()
