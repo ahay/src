@@ -1,0 +1,12 @@
+from rsf.proj import *
+
+Fetch('avo.HH','avo')
+Flow('avo','avo.HH','dd form=native')
+
+Flow('b1','avo','window f1=50 n1=250 j2=2')
+Flow('n','b1','window n2=12')
+Flow('ms','b1','window f2=12 n2=12 | scale dscale=0.80')
+Flow('f','b1','window f2=24')
+Flow('bsr','n ms f','cat axis=2 ${SOURCES[1:3]}')
+
+End()
