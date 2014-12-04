@@ -59,7 +59,7 @@ if pdfread:
           server='http://s3.amazonaws.com',
 	  top='open.source.geoscience/open_data/seam_ph1_2d_classic')
     Result('2D_Model_Subset','2D_Model_Subset.pdf',
-           pdfread + ' $SOURCE',stdin=0)
+           pdfread + ' $SOURCE',stdin=0,stdout=0)
 
 Fetch('Shots_Receivers_23900.sgy',dir='2d_data_subset',
           server='http://s3.amazonaws.com',
@@ -176,7 +176,5 @@ Flow('vp','Vp_Elastic_N23900.rsf',
      ''')
       
 Result('vp',"sfgrey title='vp' scalebar=y color=j")
-Result('vp',"sfgrey title='vp' scalebar=y color=j")
-
 
 End()
