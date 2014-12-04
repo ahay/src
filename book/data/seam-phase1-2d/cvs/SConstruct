@@ -1,0 +1,117 @@
+from rsf.proj import *
+import math
+
+Flow(['stk.rsf' , 'stk_hdr.rsf'],
+     ['../ntg/shots-receivers-23900_headfix.rsf',
+      '../ntg/shots-receivers-23900_headfix_hdr.rsf'],
+     '''
+     /Users/karl/RSFSRC/user/karl/sftahsort \
+        input=$SOURCE sort="xline:148,200 offset" \
+     | sftahnmo tnmo=0 vnmo=1500 \
+     | sftahstack key=xline \
+     | sftahwrite \
+       verbose=1
+       label2=xline o2=148 n2=1501 d2=1 
+       output=${TARGETS[0]}
+     ''',stdout=0,stdin=0)
+Result('stk','sfpow pow1=1.5 | sfgrey')
+
+Flow(['xline1500.rsf' , 'xline1500_hdr.rsf'],
+     ['../ntg/shots-receivers-23900_headfix.rsf',
+      '../ntg/shots-receivers-23900_headfix_hdr.rsf'],
+     '''
+     sftahsort input=$SOURCE sort="xline:600,600 offset"
+     | sftahnmo tnmo=0 vnmo=1500 \
+     | sftahmakeskey pkey=xline skey=cdpt 
+     | sftahwrite \
+       verbose=1
+       label2=cdpt o2=1 n2=120 d2=1 
+       output=${TARGETS[0]}
+     ''',stdout=0,stdin=0)
+Result('xline1500','sfpow pow1=1.5 | sfgrey')
+
+
+Flow(['xline3300.rsf' , 'xline3300_hdr.rsf'],
+     ['../ntg/shots-receivers-23900_headfix.rsf',
+      '../ntg/shots-receivers-23900_headfix_hdr.rsf'],
+     '''
+     sftahsort input=$SOURCE sort="xline:600,600 offset"
+     | sftahnmo tnmo=0 vnmo=3300 \
+     | sftahmakeskey pkey=xline skey=cdpt 
+     | sftahwrite \
+       verbose=1
+       label2=cdpt o2=1 n2=120 d2=1 
+       output=${TARGETS[0]}
+     ''',stdout=0,stdin=0)
+Result('xline3300','sfpow pow1=1.5 | sfgrey')
+
+
+
+stkfiles=[]
+for vel in range(1400, 4500,50):
+    print('vel=',vel)
+    stkfiles.append("stk%d.rsf"%vel)
+    print("stkfiles=",stkfiles)
+    
+    Flow(['stk%d.rsf'%vel , 'stk%d_hdr.rsf'%vel ],
+         ['../ntg/shots-receivers-23900_headfix.rsf',
+	  '../ntg/shots-receivers-23900_headfix_hdr.rsf'],
+         '''
+         sftahsort input=$SOURCE sort="xline offset"
+         | sftahnmo tnmo=0 vnmo=%d \
+         | sftahstack key=xline \
+	   xmute=0,20000 tmute=0,20 ntaper=25 \
+         | sftahwrite \
+           verbose=1
+           label2=xline o2=148 n2=1501 d2=1 
+           output=${TARGETS[0]}
+         '''%vel,stdout=0,stdin=0)
+
+print("final stkfiles=",stkfiles)
+Flow("velscan",stkfiles,
+     '''
+     sfcat ${SOURCES[0:-2]} 
+     | sfput label3="vel" d3=50 o3=1400     
+     ''',stdin=0)
+
+Result('velscan','sfpow pow1=1.5 | sfgrey title="velocity scan"')
+#Result('velscan1','velscan','sfwindow max1=1 n2=600 |sfgrey title="velocity scan"')
+Result('velscan1','velscan','sfpow pow1=1.5 | sfwindow j2=4 max1=8 | sftransp plane=23 | sfgrey title="velocity scan"')
+Result('velscan2','velscan',
+       '''
+          sfpow pow1=2 
+          | sfwindow min2=600 max2=602 
+          | sftransp plane=23 
+          | sfwiggle title="velocity scan"
+       ''')
+Result('velscan3','velscan',
+       '''
+          sfpow pow1=1.5 
+          | sfwindow min2=600 max2=602 
+          | sftransp plane=23 
+          | sfwiggle title="velocity scan"
+       ''')
+
+#Result('stk1300',
+#        '''
+#          sfwindow max1=.6 \
+#          |  sfgrey title="stk v=1300"
+#       ''')
+ 
+Flow(['stack.rsf' , 'stack.rsf'],
+     ['../ntg/shots-receivers-23900_headfix.rsf',
+      '../ntg/shots-receivers-23900_headfix_hdr.rsf'],
+     '''
+     sftahsort input=$SOURCE sort="xline offset"
+     | sftahnmo tnmo=0,2,6,10.5,16 vnmo=1500,1500,2250,3250,3700 \
+     | sftahstack key=xline \
+       xmute=0,20000 tmute=0,20 ntaper=25 \
+     | sftahwrite \
+       verbose=1
+       label2=xline o2=148 n2=1501 d2=1 
+       output=${TARGETS[0]}
+     ''',stdout=0,stdin=0)
+       
+Result('stack','sfpow pow1=2 | sfgrey')
+
+End()
