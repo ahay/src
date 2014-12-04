@@ -36,10 +36,52 @@ class TestFrame(wx.Frame):
             os.path.basename(cwd))
         wx.Frame.__init__(self,None,-1,proj)
         self.pid = 0
-        self.results = []
-        self.flip = {}
 
         signal(SIGINT,self.handler)
+        panel = self.set_buttons()
+
+        self.results = commands.getoutput("scons -s results").split()
+        c = self.results[-1:][0]
+        if (c < 'A' or c > 'z'): 
+            self.results.pop() # remove scons junk
+        length = max(map(len,self.results))
+
+        self.flip = {}
+        r=50
+
+        for fig in self.results:
+            self.flip[fig] = False
+            cb = wx.CheckBox(panel,-1,fig,(35,r))
+            cb.Bind(wx.EVT_CHECKBOX, self.set_flip)
+            r += 30
+
+#    Button(frame,text=fig,cursor='hand2',command=show(fig),width=length).grid(row=r,column=1)
+
+    def set_flip(self, event):        
+        sender = event.GetEventObject()
+        fig = sender.GetLabel()
+        self.flip[fig] = sender.GetValue()
+        print self.flip
+
+    def set_buttons(self):
+        panel = wx.Panel(self,-1)
+
+        bquit = wx.Button(panel,-1,'Quit',pos=(10,10))
+        bquit.SetBackgroundColour('pink') 
+        self.Bind(wx.EVT_BUTTON,self.quit,bquit)
+
+        bflip = wx.Button(panel,-1,'Flip',pos=(100,10))
+        bflip.SetBackgroundColour('light green') 
+        self.Bind(wx.EVT_BUTTON,self.flipit,bflip)
+
+        bcycl = wx.Button(panel,-1,'Cycle',pos=(190,10))
+        bcycl.SetBackgroundColour('light yellow') 
+        self.Bind(wx.EVT_BUTTON,self.showall,bcycl)
+
+        return panel
+
+    def quit(self,event):
+        sys.exit(0)
 
     def handler(self,signum,frame):
         sys.stdout.write("\n%s: aborting...\n" % sys.argv[0])
@@ -47,16 +89,16 @@ class TestFrame(wx.Frame):
             os.kill(self.pid,SIGINT)
         sys.exit(1)
 
-    def showall(self):
+    def showall(self,event):
         self.pid = os.fork()
         if not self.pid:
-            for fig in results:
+            for fig in self.results:
                 os.system ("scons %s.view" % fig)
         sys.exit()
 
-    def flipit(self):
+    def flipit(self,event):
         figs = map(lambda x: 'Fig/%s.vpl' % x,
-                   filter(lambda y: self.flip[y].get(),results))
+                   filter(lambda y: self.flip[y].get(),self.results))
         if figs:
             self.pid = os.fork()
             if not self.pid:
@@ -65,35 +107,10 @@ class TestFrame(wx.Frame):
                 os.system (command)
                 sys.exit()
 
-#quit = Button(frame,text="Quit",background="red",command=sys.exit)
-#quit.pack(side=LEFT)
-
-#fbut = Button(frame,text="Flip",background="green",command=flipit)
-#fbut.pack(side=RIGHT)
-
-#cycle = Button(frame,text="Cycle",background="yellow",command=showall)
-#cycle.pack(side=RIGHT)
-
-#results = commands.getoutput("scons -s results").split()
-#c = results[-1:][0]
-#if (c < 'A' or c > 'z'): 
-#    results.pop() # remove scons junk
-#length = max(map(len,results))
-
-#def show(fig):
-#    def showfig():
-#        os.system("scons %s.view" % fig)
-#    return showfig
-
-#flip = {}
-#r=0
-#frame = Frame(root)
-#for fig in results:
-#    flip[fig] = IntVar()
-#    Checkbutton(frame,variable=flip[fig]).grid(row=r,column=0)
-#    Button(frame,text=fig,cursor='hand2',command=show(fig),width=length).grid(row=r,column=1)
-#    r += 1
-#frame.pack()
+    def show(self,fig):
+        def showfig():
+            os.system("scons %s.view" % fig)
+        return showfig
 
 if __name__=='__main__':
     app = wx.App()
