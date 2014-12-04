@@ -20,3 +20,4 @@ sfmshots - compute 2D synthetic using Pengliang's 4th order space 3rd order time
 sfawefd3d - compute 2D synthetic using Sava's 4th order space 3rd order time
 sfmshots1 - run 151 shots using pscons parallel on 151 cores, 10 nodes
 sfawefd2d_split - run 151 shots using split and pscons on 151 cores, 10 nodes
+ntg
