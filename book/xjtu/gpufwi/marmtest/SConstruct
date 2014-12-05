@@ -83,6 +83,12 @@ Plot('vsnap300','vsnaps',
 
 Result('vsnap','vsnap1 vsnap20 vsnap50 vsnap100 vsnap180 vsnap300','TwoRows')
 
+#########################################################################
+#Plot('vsnapa','vsnap1 vsnap100','OverUnderAniso',vppen='txscale=2')
+#Plot('vsnapb','vsnap20 vsnap180','OverUnderAniso',vppen='txscale=2')
+#Plot('vsnapc','vsnap50 vsnap300','OverUnderAniso',vppen='txscale=2')
+#Result('vsnap','vsnapa vsnapb vsnapc','SideBySideAniso',vppen='txscale=1.')
+
 Result('grads','grey title="Updated gradient" scalebar=y color=j ')
 Result('illums','grey title="illumination" scalebar=y color=j')
 
