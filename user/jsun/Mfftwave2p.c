@@ -22,14 +22,19 @@
 #endif
 
 #include "fft2w.h"
+#include "absorb.h"
 
 int main(int argc, char* argv[])
 {
-    bool verb, cmplx;        
+    bool verb, cmplx;
     int it,iz,im,ik,ix,i,j, snap;     /* index variables */
     int nt,nz,nx, m2, nk, nzx, nz2, nx2, nzx2, n2, pad1;
     int nth;
     float c, old, dt;
+
+    bool abc;
+    int nbt,nbb,nbl,nbr; /* abc width */
+    float ct,cb,cl,cr; /* decay parameter */
 
     float  *ww,*rr;      /* I/O arrays*/
     sf_complex *cwave, *cwavem;
@@ -43,6 +48,17 @@ int main(int argc, char* argv[])
 
     sf_init(argc,argv);
     if(!sf_getbool("verb",&verb)) verb=false; /* verbosity */
+    if(!sf_getbool("abc",&abc)) abc=false; /* absorbing flag */
+    if (abc) {
+      if(!sf_getint("nbt",&nbt)) sf_error("Need nbt!");
+      if(!sf_getint("nbb",&nbb)) nbb = nbt;
+      if(!sf_getint("nbl",&nbl)) nbl = nbt;
+      if(!sf_getint("nbr",&nbr)) nbr = nbt;
+      if(!sf_getfloat("ct",&ct)) sf_error("Need ct!");
+      if(!sf_getfloat("cb",&cb)) cb = ct;
+      if(!sf_getfloat("cl",&cl)) cl = ct;
+      if(!sf_getfloat("cr",&cr)) cr = ct;
+    }
 
     /* setup I/O files */
     Fw = sf_input ("in" );
@@ -114,7 +130,7 @@ int main(int argc, char* argv[])
     rr=sf_floatalloc(nzx); sf_floatread(rr,nzx,Fr);
 
     curr = sf_floatalloc(nzx2);
-    prev = sf_floatalloc(nzx);
+    prev = sf_floatalloc(nzx2);
 
     cwave  = sf_complexalloc(nk);
     cwavem = sf_complexalloc(nk);
@@ -122,14 +138,14 @@ int main(int argc, char* argv[])
 
     ifft2_allocate(cwavem);
 
-    for (iz=0; iz < nzx; iz++) {
-	prev[iz]=0.;
-    }
-
     for (iz=0; iz < nzx2; iz++) {
+	prev[iz]=0.;
 	curr[iz]=0.;
     }
 
+    /* initialize abc */
+    if (abc)
+      abc_init(nz,nx,nz2,nx2,nbt,nbb,nbl,nbr,ct,cb,cl,cr);
 
     /* MAIN LOOP */
     for (it=0; it<nt; it++) {
@@ -155,8 +171,8 @@ int main(int argc, char* argv[])
 		j = iz+ix*nz2; /* padded grid */
 		
 		old = c = curr[j];
-		c += c + ww[it] * rr[i] - prev[i];
-		prev[i] = old;
+		c += c + ww[it] * rr[i] - prev[j];
+		prev[j] = old;
 
 		for (im = 0; im < m2; im++) {
 		    c += lt[im][i]*wave[im][j];
@@ -170,8 +186,15 @@ int main(int argc, char* argv[])
 		sf_floatwrite(curr+ix*nz2,nz,snaps);
 	    }
 	}
+	if (abc) {
+	  abc_apply(prev);
+	  abc_apply(curr);
+	}
     }
     if(verb) sf_warning(".");   
+
+    if (abc)
+      abc_close();
 
     /* write final wavefield to output */
     for (ix = 0; ix < nx; ix++) {
