@@ -26,5 +26,22 @@ Flow('transpose','stack',
      ''')
 Result('tslice','transpose','sfgrey title=stack pclip=97 gainpanel=a')
 
+Flow(['smstack.rsf','smstack_hdr.rsf'],'../segy/DeconShots3.rsf',
+    '''
+      sftahsort input=$SOURCE sort="iline:5200,5249 xline:1501,1550 offset" \
+      | sftahnmo tnmo=0,.1,.4,3 vnmo=1500,1650,1900,2100 str=.2 \
+      | sftahstack key=iline,xline \
+      | sftahwrite \
+        verbose=1 \
+	label2=xline o2=1501 n2=50 d2=1 
+        label3=iline o3=5200 n3=50  d3=1   
+	output=${TARGETS[0]}
+    ''',stdout=0,stdin=0)
+Result('smstack','smstack',
+        '''
+	   sfwindow n1=3000  \
+	   |  sfgrey title="stack"
+	''')
+
  	
 End()
