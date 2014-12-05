@@ -128,7 +128,8 @@ def createSlurmfile(name,email,nodes,ppn,time,last,next,tasks,relaunch,run,conte
     if nodetype:
       lines.append('#SBATCH --partition=%s'%nodetype)
     if email:
-        lines.append('#SBATCH --mail-type=ALL')
+        lines.append('#SBATCH --mail-type=FAIL')
+        lines.append('#SBATCH --mail-type=END')
         lines.append('#SBATCH --mail-user=%s' % email)
     lines.append('#-----------')
 #    lines.append('export DATAPATH=%s' % rsf.path.getpath(os.getcwd()))
@@ -186,7 +187,7 @@ def createPBSfile(name,email,nodes,ppn,time,last,next,tasks,relaunch,run,content
     lines.append('#PBS -l walltime=%d:00:00' % time)
     lines.append('#PBS -V')
     if email:
-        lines.append('#PBS -m a')
+        lines.append('#PBS -m e')
         lines.append('#PBS -M %s' % email)
     lines.append('#-----------')
     lines.append('export SCONS_OVERRIDE=1')
@@ -593,6 +594,7 @@ def End(**kw):
             else:
                 if os.path.isdir(pbs_dirt):
                     print '......pbs directory already exists'
+                    print 'using this version'
                 else:
                     raise Exception('pbs directory exists, but is not suitable for script files?')
 
