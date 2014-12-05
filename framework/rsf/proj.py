@@ -361,15 +361,21 @@ class Project(Environment):
         # self.jobs is the number of jobs
         # self.ip is the current CPU
 
-        self.hosts = self.path + 'hosts.txt'
-        if (os.path.isfile(self.hosts)):
-            os.unlink(self.hosts)
-        hosts_fd=open(self.hosts,'w')
-        hosts_fd.write("numnodes %4d\n"%len(self.nodes))
-        hosts_fd.write("host                                    state\n") 
-        for host in self.nodes:
-            hosts_fd.write(string.ljust(host,40)+string.ljust("notrunning",10)+"\n")
-        hosts_fd.close()
+        # Esteban Diaz comment: ediazpan@mines.edu        
+        # This bit of the code conflicts with our configuration at mines
+        # maybe the file could be named hosts-(uname).txt 
+        # In our cluster config, we have several sconstructs that 
+        # try to write the same file. Hence, it produces problems. 
+
+        #self.hosts = self.path + 'hosts.txt'
+        #if (os.path.isfile(self.hosts)):
+        #    os.unlink(self.hosts)
+        #hosts_fd=open(self.hosts,'w')
+        #hosts_fd.write("numnodes %4d\n"%len(self.nodes))
+        #hosts_fd.write("host                                    state\n") 
+        #for host in self.nodes:
+        #    hosts_fd.write(string.ljust(host,40)+string.ljust("notrunning",10)+"\n")
+        #hosts_fd.close()
 
         for key in self['ENV'].keys():
             # quote the env values because stampede has env variable 
