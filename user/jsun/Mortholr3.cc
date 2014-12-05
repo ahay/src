@@ -90,8 +90,8 @@ int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 	   		double Q=pow(dd/3,3)+pow(qq/2,2);
 			//sf_warning("aa %g bb %g cc %g dd %g qq %g Q %g",aa,bb,cc,dd,qq,Q);
 	   		if (Q>0) {
-				//sf_warning ("!!Q is positive!! roots aren't real Q=%g dd=%g qq=%g", Q,dd,qq);
-	   			r=0;
+			    sf_warning ("!!Q is positive!! roots aren't real Q=%g dd=%g qq=%g", Q,dd,qq);
+			    r=0;
 			}
 			else {  
 				double cv,vv;
