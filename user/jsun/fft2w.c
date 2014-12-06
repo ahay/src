@@ -224,10 +224,29 @@ void ifft2(float *out      /* [n1*n2] */,
 void fft2_finalize()
 /*< clean up fftw >*/
 {
+/* make sure everything is back to its pristine state */
 #ifdef SF_HAS_FFTW
 #ifdef _OPENMP
     fftw_cleanup_threads();
 #endif
+    fftwf_destroy_plan(cfg);
+    fftwf_destroy_plan(icfg);
+    fftwf_cleanup();
+    cfg=NULL;
+    icfg=NULL;
+#else
+    if (NULL != cfg) { free(cfg); cfg=NULL; }
+    if (NULL != icfg) { free(icfg); icfg=NULL; }
+    if (NULL != cfg1) { free(cfg1); cfg1=NULL; }
+    if (NULL != icfg1) { free(icfg1); icfg1=NULL; }
+    if (NULL != cfg2) { free(cfg2); cfg2=NULL; }
+    if (NULL != icfg2) { free(icfg2); icfg2=NULL; }
+    if (NULL != tmp) { free(*tmp); free(tmp); tmp=NULL; }
+    if (NULL != ctrace2) { free(ctrace2); ctrace2=NULL; }
+    if (NULL != trace2) { free(trace2); trace2=NULL; }
 #endif
+    if (NULL != ff) { free(*ff); free(ff); ff=NULL; }
+    if (NULL != cc) { free(*cc); free(cc); cc=NULL; }
+    if (NULL != dd) { free(dd); dd=NULL; }
 }
 
