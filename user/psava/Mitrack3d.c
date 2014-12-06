@@ -188,12 +188,11 @@ int main(int argc, char* argv[])
 	    }
 
 	    if(!orbit) {
-		for(jn=0; jn<sf_n(an); jn++)        
-		wnn[ompith][jn] = sf_cmplx(0.0,0.0);
-			    
+
 		/* stack nn <- ff */
-		for(jn=0; jn<sf_n(an); jn++) {
+		for(jn=0; jn<sf_n(an); jn++)        
 		    wnn[ompith][jn] = sf_cmplx(0.0,0.0);
+		for(jn=0; jn<sf_n(an); jn++) {
 		    vecON = vec3d(&oo, &nn[jn]);          /* vector O-N */
 		    for(jf=0; jf<sf_n(af); jf++) {
 			vecOF = vec3d(&oo, &ff[jf]);      /* vector O-F */
@@ -233,11 +232,10 @@ int main(int argc, char* argv[])
 
 	    if(!orbit) {
 		for(jn=0; jn<sf_n(an); jn++)        
-		wnn[ompith][jn] = sf_cmplx(0.0,0.0);
+		    wnn[ompith][jn] = sf_cmplx(0.0,0.0);
 			    
 		/* stack nn <- ff */
 		for(jn=0; jn<sf_n(an); jn++) {
-		    wnn[ompith][jn] = sf_cmplx(0.0,0.0);
 
 		    vecON = vec3d(&oo, &nn[jn]);          /* vector O-N */
 		    for(jf=0; jf<sf_n(af); jf++) {
