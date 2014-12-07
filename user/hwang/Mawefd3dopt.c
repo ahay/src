@@ -522,12 +522,13 @@ apply_abc(float*** uu2, float*** uu1, int nz, int nx, int ny, int nbd,
       }
       if (damp != NULL) {
         for (int ib=0; ib<nbd-nop; ib++) {
+          float damp_ib = damp[ib];
           int iz = nbd-ib-1;
           float uu2_bc = uu1[iy][ix][iz+1] + (uu1[iy][ix][iz] - uu2[iy][ix][iz+1])*bzl[iy][ix];
-          uu2[iy][ix][iz] = uu2_bc*(1.f - damp[ib]) + uu2[iy][ix][iz]*damp[ib];
+          uu2[iy][ix][iz] = uu2_bc*(1.f - damp_ib) + uu2[iy][ix][iz]*damp_ib;
           iz = nzpad-nbd+ib;
           uu2_bc = uu1[iy][ix][iz-1] + (uu1[iy][ix][iz] - uu2[iy][ix][iz-1])*bzh[iy][ix];
-          uu2[iy][ix][iz] = uu2_bc*(1.f - damp[ib]) + uu2[iy][ix][iz]*damp[ib];
+          uu2[iy][ix][iz] = uu2_bc*(1.f - damp_ib) + uu2[iy][ix][iz]*damp_ib;
         }
       }
     }
@@ -548,12 +549,13 @@ apply_abc(float*** uu2, float*** uu1, int nz, int nx, int ny, int nbd,
       }
       if (damp != NULL) {
         for (int ib=0; ib<nbd-nop; ib++) {
+          float damp_ib = damp[ib];
           int ix = nbd-ib-1;
           float uu2_bc = uu1[iy][ix+1][iz] + (uu1[iy][ix][iz] - uu2[iy][ix+1][iz])*bxl[iy][iz];
-          uu2[iy][ix][iz] = uu2_bc*(1.f - damp[ib]) + uu2[iy][ix][iz]*damp[ib];
+          uu2[iy][ix][iz] = uu2_bc*(1.f - damp_ib) + uu2[iy][ix][iz]*damp_ib;
           ix = nxpad-nbd+ib;
           uu2_bc = uu1[iy][ix-1][iz] + (uu1[iy][ix][iz] - uu2[iy][ix-1][iz])*bxh[iy][iz];
-          uu2[iy][ix][iz] = uu2_bc*(1.f - damp[ib]) + uu2[iy][ix][iz]*damp[ib];
+          uu2[iy][ix][iz] = uu2_bc*(1.f - damp_ib) + uu2[iy][ix][iz]*damp_ib;
         }
       }
     }
@@ -574,12 +576,13 @@ apply_abc(float*** uu2, float*** uu1, int nz, int nx, int ny, int nbd,
       }
       if (damp != NULL) {
         for (int ib=0; ib<nbd-nop; ib++) {
+          float damp_ib = damp[ib];
           int iy = nbd-ib-1;
           float uu2_bc = uu1[iy+1][ix][iz] + (uu1[iy][ix][iz] - uu2[iy+1][ix][iz])*byl[ix][iz];
-          uu2[iy][ix][iz] = uu2_bc*(1.f - damp[ib]) + uu2[iy][ix][iz]*damp[ib];
+          uu2[iy][ix][iz] = uu2_bc*(1.f - damp_ib) + uu2[iy][ix][iz]*damp_ib;
           iy = nypad-nbd+ib;
           uu2_bc = uu1[iy-1][ix][iz] + (uu1[iy][ix][iz] - uu2[iy-1][ix][iz])*byh[ix][iz];
-          uu2[iy][ix][iz] = uu2_bc*(1.f - damp[ib]) + uu2[iy][ix][iz]*damp[ib];
+          uu2[iy][ix][iz] = uu2_bc*(1.f - damp_ib) + uu2[iy][ix][iz]*damp_ib;
         }
       }
     }
