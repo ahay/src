@@ -1,0 +1,152 @@
+from rsf.proj import *
+
+def cubeplot(title,clip='',extra=''):
+    return '''
+    byte gainpanel=all %s |
+    grey3 frame1=32 frame2=256 frame3=10 flat=y point1=0.7 point2=0.7
+    label1=Offset unit1=km label2="Midpoint wavenumber" unit2=1/km
+    label3="Frequency" unit3=Hz
+    title="%s" %s wanttitle=n labelfat=4 font=2 titlefat=4
+    ''' % (clip,title,extra)
+
+Fetch('french.asc','french')
+
+Flow('french','french.asc',
+     '''
+     dd form=native | transp | scale dscale=0.0005 |
+     put d1=0.10265 d2=0.10265
+     label1=North-South label2=West-East unit1=km unit2=km
+     ''')
+Plot('french',
+     '''
+     grey Xcolor=j allpos=y scalebar=n barlabel="Depth (km)"
+     screenratio=1
+     title="French model"
+     ''')
+Flow('french1','french.asc','dd form=native | transp | scale dscale=2')
+Flow('refl','french1',
+     '''
+     remap1 n1=161 o1=0 d1=51.325 | transp |
+     remap1 n1=161 o1=0 d1=51.325 | transp
+     ''')
+
+Result('french3','refl',
+       '''
+       unif3 v00=1.5,2.5 n1=401 d1=10.265 | 
+       put d1=0.003849375 d2=0.012720496894409938 d3=0.012720496894409938 |
+       transp plane=23 |
+       byte allpos=y bias=1 |
+       grey3 color=I wanttitle=n label1="Depth (km)" label2=Inline unit2=km
+       label3=Crossline unit3=km point1=0.8 point2=0.7
+       labelfat=4 font=2 titlefat=4 frame1=175 frame2=80 frame3=60 flat=n
+       ''')
+
+Flow('slice','french',
+     '''
+     window n1=1 f1=30 | put d1=0.025 |
+     remap1 n1=256 o1=0 d1=0.008 |
+     unif2 n1=256 d1=0.004 v00=1,2
+     ''')
+Result('slice','refl',
+       '''
+       unif3 v00=1.5,2.5 n1=401 d1=10.265 | 
+       put d1=0.003849375 d2=0.012720496894409938 d3=0.012720496894409938 |
+       transp plane=23 |
+       byte allpos=y bias=1 | window n3=1 f3=60 |
+       grey color=I wanttitle=n label1="Depth (km)" label2=Inline unit2=km
+       labelfat=4 font=2 titlefat=4 flat=n
+       ''')
+#title="2-D slice" label1="Depth" screenratio=0.5 screenht=6
+Flow('cup','slice',
+     '''
+     deriv | bandpass flo=10 fhi=50 |
+     transp memsize=1000| bandpass fhi=50 | transp
+     ''')
+Result('cup',
+       '''
+       grey label1=Time unit1=s label2=Midpoint pclip=99.5
+       wanttitle=n labelfat=4 font=2 titlefat=4
+       ''')
+
+Flow('fdata','cup',
+     '''
+     halfint inv=y |
+     preconstkirch zero=y inv=y h0=0 dh=0.008 nh=64 vel=1.5 |
+     window
+     ''')
+
+Result('fdata',
+       cubeplot('Data','clip=2.1713','label1=Time unit1=s \
+       label2="Midpoint" unit2=km label3="Half offset" unit3=km \
+       frame1=150 frame2=125 frame3=25') )
+
+Result('cubefdata','fdata',
+       cubeplot('Data','clip=3.1713','label1=Time unit1=s \
+       label2="Midpoint" unit2=km label3="Offset" unit3=km \
+       frame1=150 frame2=125 frame3=25 point1=0.8 point2=0.75 flat=n') )
+
+Flow('fnoise','fdata','noise seed=2008 var=0.56958')
+Result('fnoise',
+       cubeplot('Noisy data','clip=2.1713','label1=Time unit1=s \
+       label2="Midpoint" unit2=km label3="Half offset" unit3=km \
+       frame1=150 frame2=125 frame3=25') )
+
+#################
+## 3D t-x-y APF
+################
+Flow('fpred3','fnoise',
+     '''
+     txrna3 a=5,2,2 rect1=15 rect2=10 rect3=10 niter=30
+     verb=y
+     ''')
+
+Result('fpred3',
+       cubeplot('3D t-x APF','clip=2.1713','label1=Time unit1=s \
+       label2="Midpoint" unit2=km label3="Half offset" unit3=km \
+       frame1=150 frame2=125 frame3=25') )
+
+Flow('ferr3','fnoise fpred3','add scale=1,-1 ${SOURCES[1]}')
+Result('ferr3',
+       cubeplot('3D t-x APF noise','clip=2.1713','label1=Time unit1=s \
+       label2="Midpoint" unit2=km label3="Half offset" unit3=km \
+       frame1=150 frame2=125 frame3=25') )
+
+
+#################
+## 3D f-x-y NRNA
+################
+
+Flow('fcmp','fnoise',
+     'fft1 | transp plane=13 memsize=1000  | transp plane=12 memsize=1000')
+
+Flow('shifts','fcmp',
+     '''
+     cshifts2 ns1=2 ns2=2 | transp plane=34 memsize=300
+     ''')
+
+Flow('flt pre','shifts fcmp',
+     'clpf match=${SOURCES[1]} pred=${TARGETS[1]} rect1=10 rect2=10 niter=30')
+
+
+Flow('tpre','pre',
+     '''
+     transp plane=13 memsize=10000 |
+     transp plane=23 memsize=10000 |
+     fft1 inv=y
+     ''')
+
+
+Result('tpre',
+       cubeplot('3D fx RNA','clip=2.1713','label1=Time unit1=s \
+       label2="Midpoint" unit2=km label3="Half offset" unit3=km \
+       frame1=150 frame2=125 frame3=25') )
+
+Flow('diff3d','fnoise tpre','add scale=1,-1 ${SOURCES[1]}')
+Result('diff3d',
+       cubeplot('3D fx RNA','clip=2.1713','label1=Time unit1=s \
+       label2="Midpoint" unit2=km label3="Half offset" unit3=km \
+       frame1=150 frame2=125 frame3=25') )
+
+
+
+End()

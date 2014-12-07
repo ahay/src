@@ -1,0 +1,130 @@
+from rsf.proj import *
+from math import pi
+
+#############################
+# Setup model
+#############################
+# Make one model
+def grey(title,allpos=1):
+    return '''
+    grey transp=n title="%s"
+    ''' % (title)
+Flow('sigmoid',None,
+     '''
+     sigmoid d1=.004 n1=200 d2=.008 n2=200 taper=n |
+     smooth rect1=3 diff1=1 | smooth rect1=3  |
+     noise seed=2008 var=0
+     ''')
+
+Result('sigmoid',
+       '''
+       grey clip=0.00358515 wanttitle=n label2=Distance
+       labelfat=4 font=2 titlefat=4
+       ''')
+
+Flow('noise','sigmoid','noise seed=2008 var=6.e-7')
+Result('noise',
+       '''
+       grey clip=0.00358515 wanttitle=n label2=Distance
+       labelfat=4 font=2 titlefat=4
+       ''')
+
+#######################
+# Adaptive PF
+#######################
+Flow('apfs','noise',
+     '''
+     txrna2 a=10,5 rect1=20 rect2=20 niter=50
+     verb=y
+     ''')
+
+Result('apfs',
+       '''
+       grey clip=0.00358515 wanttitle=n label2=Distance
+       labelfat=4 font=2 titlefat=4
+       ''')
+Result('apfn','noise apfs',
+       '''
+       add scale=1,-1 ${SOURCES[1]} |
+       grey clip=0.00358515 wanttitle=n label2=Distance
+       labelfat=4 font=2 titlefat=4
+       ''')
+
+
+# 2D fxRNA
+Flow('sfx','noise','fft1 | transp plaen=12 memsize=1000')
+################
+# fx RNA
+###############
+na = 5
+n1=200
+shifts = []
+for s in range(1,na):
+    shift = 'shift-%d' % s
+    Flow(shift,'sfx','window f1=%d | pad end1=%d' % (s,s))
+    shifts.append(shift)
+
+    shift = 'shift%d' % s
+    Flow(shift,'sfx',' pad beg1=%d | window n1=%d' % (s,n1))
+    shifts.append(shift)
+Flow('shift',shifts,'cat axis=3 ${SOURCES[1:%d]} | put o1=0' % len(shifts))
+
+Flow('spef spre','shift sfx',
+     'clpf match=${SOURCES[1]} rect2=20 rect1=20 niter=30 pred=${TARGETS[1]}')
+
+Flow('sfxrna','spre','transp plane=12 memszie=1000 | fft1 inv=y')
+Result('sfxrna',
+       '''
+       grey clip=0.00358515 wanttitle=n label2=Distance
+       labelfat=4 font=2 titlefat=4
+       ''')
+
+Flow('sfxnoiz','noise sfxrna','add scale=1,-1 ${SOURCES[1]}')
+Result('sfxnoiz',
+       '''
+       grey clip=0.00358515 wanttitle=n label2=Distance
+       labelfat=4 font=2 titlefat=4
+       ''')
+
+
+# FX decon
+Flow('patch','noise','patch w=200,50')
+Flow('wpatch','patch','window')
+fxds = []
+mpas = []
+for nw in range(0,7):
+    data = 'data%d' % nw
+    fxd  = 'fx%d'   % nw
+    Flow(data,'wpatch','window n3=1 f3=%d' % nw)
+    Flow(fxd,data,'fxdecon lenf=4 n2w=10')
+    fxds.append(fxd)
+
+    lom = 'lom%d' %nw
+    lag = 'lag%d' %nw
+    mpa = 'mpa%d' %nw
+    Flow([lom, lag],data,'lpef niter=100 a=5,5 lag=${TARGETS[1]}')
+    Flow(mpa,[data,lom],'helicon filt=${SOURCES[1]}')
+    mpas.append(mpa)
+Flow('fxpatch',fxds,
+     '''
+     cat ${SOURCES[1:%d]} axis=3 | transp plane=34 |
+     patch inv=y weight=y
+     ''' % len(fxds))
+Result('fxpatch',
+       '''
+       grey yreverse=y transp=y poly=y label2=Position
+       title="f-x deconvolution signal"
+       clip=0.00358515
+       labelfat=2 font=2 titlefat=2 unit2=km
+       ''')
+Flow('fxdiff','noise fxpatch','add scale=1,-1 ${SOURCES[1]}')
+Result('fxdiff',
+       '''
+       grey yreverse=y transp=y poly=y label2=Position
+       title="f-x deconvolution noise"
+       clip=0.00358515
+       labelfat=2 font=2 titlefat=2 unit2=km
+       ''')
+
+
+End()

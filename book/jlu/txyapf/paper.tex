@@ -1,0 +1,535 @@
+\title{Adaptive prediction filtering in $t$-$x$-$y$ domain for random noise attenuation using regularized nonstationary autoregression}
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+
+\ms{GEO-2014-0011}
+
+\address{
+\footnotemark[1] College of Geo-exploration Science and Technology,\\
+Jilin University \\
+No.938 Xi minzhu street \\
+Changchun, China, 130026}
+
+\author{Yang Liu\footnotemark[1], Ning Liu\footnotemark[1], Cai Liu\footnotemark[1]}
+
+\footer{GEO-2014-0011}
+\lefthead{Liu etc.}
+\righthead{$t$-$x$-$y$ APF}
+\maketitle
+
+\begin{abstract}
+Many natural phenomena, including geologic events and geophysical
+data, are fundamentally nonstationary. They may exhibit stationarity
+on a short timescale but eventually alter their behavior in time and
+space. We propose a 2D $t$-$x$ adaptive prediction filter (APF) and
+further extend this to a 3D $t$-$x$-$y$ version for random noise
+attenuation based on regularized nonstationary autoregression
+(RNA). Instead of using patching, a popular method for handling
+nonstationarity, we obtain smoothly nonstationary APF coefficients by
+solving a global regularized least-squares problem. We use shaping
+regularization to control the smoothness of the coefficients of
+APF. 3D space-noncausal $t$-$x$-$y$ APF uses neighboring traces around
+the target traces in the 3D seismic cube to predict noise-free signal,
+so it provides more accurate prediction results than the 2D
+version. In comparison with other denoising methods, such as
+frequency-space deconvolution, time-space prediction filter, and
+frequency-space RNA, we test the feasibility of our method in reducing
+seismic random noise on three synthetic datasets. Results of applying
+the proposed method to seismic field data demonstrate that
+nonstationary $t$-$x$-$y$ APF is effective in practice.
+
+\end{abstract}
+
+\section{Introduction}
+
+Attenuation of noise is a persistent problem in seismic
+exploration. Random noise can come from various sources. Although
+stacking can at least partly suppress random noise in prestack data,
+residual random noise after stacking will decrease the accuracy of
+the final data interpretation. In recent years, several authors have
+developed effective methods of eliminating random noise. For example,
+\cite{Ristau01} compared several adaptive filters, which they applied
+in an attempt to reduce random noise in geophysical
+data. \cite{Karsli06} applied complex-trace analysis to seismic data
+for random-noise suppression, recommending it for low-fold seismic
+data. Some transform methods were also used to deal with seismic
+random noise, e.g., the discrete cosine transform \cite[]{Lu07}, the
+curvelet transform \cite[]{Neelamani08}, and the seislet transform
+\cite[]{Fomel10}. 
+
+Seismic reflections are recorded according to special geometry and
+always appear lateral continuity, which is used to distinguish events
+from the background noise. If events of interest are linear (lines in
+2D data and planes in 3D data), one can predict linear events by using
+prediction techniques in the frequency-space domain or
+the time-space domain \cite[]{Abma95}. The $f$-$x$ prediction
+technique was introduced by \cite{Canales84} and further developed by
+\cite{Gulunay86}, and is a standard industry 
+method known as ``FXDECON''.
+\cite{Sacchi01} utilized the autoregressive-moving average
+(ARMA) structure of the signal to estimate $f$-$x$ prediction-error
+filter (PEF) and the noise sequence. \cite{Liu12} developed $f$-$x$
+regularized nonstationary autoregression (RNA) to attenuate random
+noise. \cite{Liu13} further extended 2D $f$-$x$ RNA to 3D noncausal
+regularized nonstationary autoregression (NRNA) for random noise
+elimination.
+
+The prediction process can be also achieved in $t$-$x$ domain
+\cite[]{Claerbout92}. \cite{Abma95} discussed $f$-$x$ and $t$-$x$
+approaches to predict linear events from random noise. $t$-$x$
+prediction always passes less random noise than $f$-$x$ prediction
+method because the $f$-$x$ prediction technique, while dividing the
+prediction problem into separate problems for each frequency, produces
+a filter as long as the data series in time. However, seismic data are
+naturally nonstationary, and a standard $t$-$x$ prediction filter can
+only be used to process stationary data \cite[]{Claerbout92}. Patching
+is a common method to handle nonstationarity \cite[]{Claerbout10},
+although it occasionally fails in the assumption of piecewise constant
+dips. \cite{Crawley99} proposed smoothly nonstationary
+prediction-error filters (PEFs) with ``micropatches'' and radial
+smoothing, which typically produces better results than the
+rectangular patching approach. \cite{GEO67-06-19461960} developed a
+plane-wave destruction (PWD) filter \cite[]{Claerbout92} as an
+alternative to $t$-$x$ PEF and applied a PWD operator to represent
+nonstationary. However, PWD method depends on the assumption of a
+small number of smoothly variable seismic dips. When background random
+noise is strong, the dip estimation is a difficult
+problem. \cite{Sacchi09} proposed an algorithm to compute time and
+space variant prediction filters for noise attenuation, which is
+implemented by a recursive scheme where the filter is continuously
+adapted to predict the signal.
+
+In this paper, we propose a $t$-$x$ adaptive prediction filter (APF)
+to preserve nonstationary signal and attenuate random noise. The key
+idea is the use of shaping regularization \cite[]{Fomel07} to
+constrain the time and space smoothness of filter coefficients in the
+corresponding ill-posed autoregression problem. The structure of
+space-causal and space-noncausal APF is also discussed. We test
+nonstationary characteristics of APF by using a 2D synthetic curved
+model, a 2D synthetic poststack model, and a 3D prestack French
+model. Results of applying the proposed method to the field example
+demonstrate that regularized APF can be effective in eliminating
+random noise.
+
+\section{Theory}
+
+\subsection{$t$-$x$ adaptive prediction filtering using RNA}
+
+Consider a 2D prediction filter (general for stationary PF) with
+ten prediction coefficients $B_{i,j}$:
+\begin{equation}
+   \begin{array}{ccc}
+      \cdot         &B_{-2,1}  &B_{-2,2} \\
+      \cdot         &B_{-1,1}  &B_{-1,2} \\
+      1(t,x)        &B_{0,1}   &B_{0,2}  \\
+      \cdot         &B_{1,1}   &B_{1,2}  \\
+      \cdot         &B_{2,1}   &B_{2,2}  
+  \end{array}
+\label{eqn:noilace}
+\end{equation}
+where $i$ is time shift, $j$ is space shift, the vertical axis is time
+axis, and the horizontal axis is space axis. The output position is
+under the ``$1(t,x)$'' coefficient on the left side of filter and
+``$1(t,x)$'' indicates time- and space-varying samples. The filter is
+noncausal along the time axis and causal along the space axis. More
+filter structures will be discussed later. The PF has the different
+coefficients from PEF, which includes causal time prediction
+coefficients.
+
+To obtain stationary PF coefficients, one can solve the
+over-determined least-squares problem 
+{\setlength\arraycolsep{2pt}
+\begin{eqnarray}
+  \label{eq:pred1}
+\tilde{B}_{i,j} &=& \arg\min_{B_{i,j}}\|S(t,x)-
+              \sum_{j=1}^{N}\sum_{i=-M}^{M} B_{i,j}S_{i,j}(t,x)\|_2^2 \;,
+\end{eqnarray}}
+where $S_{i,j}(t,x)$ represents the translation of linear events
+$S(t,x)$ in both time and space directions with time shift $i$ and
+space shift $j$. The choice of the filter size depends on the maximum
+dip of the plane waves in the data and the number of dips. For
+nonlinear events, cutting data into overlapping windows (patching) is
+a common method to handle nonstationarity
+\cite[]{Claerbout10}, although it occasionally fails in the presence
+of variable dips.
+
+For nonstationary situations, we can also assume local linearization
+of the data. For estimating APF coefficients, nonstationary
+autoregression allows the coefficients $B_{i,j}$ to change with both
+$t$ and $x$. The new adaptive filter can be designed as
+\begin{equation}
+   \begin{array}{ccc} 
+      \cdot   &B_{-2,1}(t,x)  &B_{-2,2}(t,x) \\
+      \cdot   &B_{-1,1}(t,x)  &B_{-1,2}(t,x) \\
+      1(t,x)  &B_{0,1}(t,x)   &B_{0,2}(t,x)  \\
+      \cdot   &B_{1,1}(t,x)   &B_{1,2}(t,x)  \\
+      \cdot   &B_{2,1}(t,x)   &B_{2,2}(t,x) 
+   \end{array}
+\label{eqn:ailacefil}
+\end{equation}
+
+In the linear notation, prediction coefficients $B_{i,j}(t,x)$ can be
+obtained by solving the under-determined least-squares problem
+{\setlength\arraycolsep{2pt}
+\begin{eqnarray}
+  \label{eq:pred2}
+\tilde{B}_{i,j}(t,x) &=& \arg\min_{B_{i,j}(t,x)}\|S(t,x)-
+  \sum_{j=1}^{N} \sum_{i=-M}^{M} B_{i,j}(t,x)S_{i,j}(t,x)\|_2^2 \nonumber \\
+  & & + \epsilon^2\, \sum_{j=1}^{N} \sum_{i=-M}^{M} 
+  \|\mathbf{D}[B_{i,j}(t,x)]\|_2^2\;,
+\end{eqnarray}}
+where $\mathbf{D}$ is the regularization operator and $\epsilon$ is a
+scalar regularization parameter. This approach was described by
+\cite{Fomel09} as regularized nonstationary autoregression (RNA). Shaping
+regularization \cite[]{Fomel07} specified a shaping (smoothing)
+operator $\mathbf{R}$ instead of $\mathbf{D}$ and provided better
+numerical properties than Tikhonov's regularization
+\cite[]{Tikhonov63} in equation~\ref{eq:pred2}. The advantages of 
+the shaping regularization include an intuitive selection of
+regularization parameters and fast iteration convergence. Coefficients
+$B_{i,j}(t,x)$ get constrained by regularization. The required
+parameters are the size and shape of the filter, $B_{i,j}(t,x)$, and
+the smoothing radius for shaping regularization. The size of APF
+controls the range and the number of the predicted dips. Larger filter
+parameters, $N$ and $M$, are able to predict more accurate dips,
+however, the APFs with the large filter size pass more random noise
+and add more computational cost. As the smoothing radius of the APF
+increases, the APF removes not only more random noise but also some
+structural details. The APF is able to be extended to the adaptive PEF
+(APEF), which shows a expected representation of nonstationary signal
+and is fit for seismic data interpolation \cite[]{Liu11a} and random
+noise attenuation \cite[]{Liu11b}. However, the structure of APEF is
+different from that of APF, which excludes the causal time prediction
+coefficients and forces only lateral predictions. Meanwhile, in this
+paper, we use a two-step method that estimates APF coefficients by
+solving an under-determined problem and calculates noise-free signal.
+The proposed method is different from the two-step APEF denoising
+including APEF estimation for signal and noise plus signal and noise
+separation by solving a least-square system as shown in
+\cite{Liu11b}.
+
+\subsection{3D space-noncausal adaptive prediction filtering}
+Equation~\ref{eq:pred1} and \ref{eq:pred2} show space-forward
+prediction equations, which are similar as the causal prediction
+filtering equations in $f$-$x$ domain \cite[]{Gulunay00}. Furthermore,
+$t$-$x$ prediction filter also includes time-noncausal
+coefficients. In the case of both space-forward and space-backward
+prediction equations (space-noncausal prediction filter),
+equation~\ref{eq:pred2} can be written
+\cite[]{GEO56-06-07850794,Naghizadeh09,Liu12,Liu13} with the results
+averaged: 
+{\setlength\arraycolsep{2pt}
+\begin{eqnarray}
+  \label{eq:pred3}
+\tilde{B}_{i,j}(t,x) &=& \arg\min_{B_{i,j}(t,x)}\|S(t,x)-
+  \sum_{j=-N,j\neq0}^{N} \sum_{i=-M}^{M}
+   B_{i,j}(t,x)S_{i,j}(t,x)\|_2^2 \nonumber \\
+  & & + \epsilon^2\, \sum_{j=-N,j\neq0}^{N} \sum_{i=-M}^{M} 
+  \|\mathbf{R}[B_{i,j}(t,x)]\|_2^2\;,
+\end{eqnarray}}
+
+Equation~\ref{eq:pred3} shows that one sample in $t$-$x$ domain can be
+predicted by the samples in adjacent traces with weight coefficients
+$B_{i,j}(t,x)$, which is time- and space-varying. The equation assumes
+that the seismic data only consist of plane waves
+$\sum_{j=-N,j\neq0}^{N}
+\sum_{i=-M}^{M} B_{i,j}(t,x)S_{i,j}(t,x)$ and random noise
+that corresponds to a least-squares error.
+
+Figure~\ref{fig:causal2d,noncausal2d}a shows a 2D space-causal APF
+structure, which is time-noncausal filter. White grids stand for
+prediction samples and the dark-grey grid is the output (or target)
+position, while light-grey grids are unused samples. The filter size
+of the space-causal APF is $N\times(2M+1)$. Meanwhile, space-noncausal
+APF (Figure~\ref{fig:causal2d,noncausal2d}b) has a symmetric structure
+along time and space axes. The filter size of the space-noncausal APF
+is $2N\times(2M+1)$. The 3D $t$-$x$-$y$ APF also has space-causal or
+space-noncausal structure, Figure~\ref{fig:noncausal3d} shows the
+noncausal one. In a 3D seismic datacube, the plane events can be
+predicted along two different spatial directions. A 2D $t$-$x$ APF
+will have difficulty preserving accurate plane waves because it only
+uses the information in $x$ or $y$ direction, however, a 3D
+$t$-$x$-$y$ APF provides a more natural structure. $t$-$x$-$y$
+adaptive prediction filtering for random noise attenuation follows two
+steps:
+
+1. Estimating 3D space-noncausal APF coefficients
+   $\tilde{B}_{i,j,k}(t,x,y)$ by solving the regularized least-squares
+   problem (equation~\ref{eq:pred2} or \ref{eq:pred3} in 2D):
+   {\setlength\arraycolsep{2pt}
+\begin{eqnarray}
+  \label{eq:pred4}
+\tilde{B}_{i,j,k}(t,x,y) &=& \arg\min_{B_{i,j,k}(t,x,y)}\|S(t,x,y)-
+  \sum_{k=-L,k\neq0}^{L} \sum_{j=-N,j\neq0}^{N} \sum_{i=-M}^{M} 
+  B_{i,j,k}(t,x,y)S_{i,j,k}(t,x,y)\|_2^2 \nonumber \\
+  & & + \epsilon^2\, \sum_{k=-L,k\neq0}^{L} \sum_{j=-N,j\neq0}^{N} 
+  \sum_{i=-M}^{M} 
+  \|\mathbf{R}[B_{i,j,k}(t,x,y)]\|_2^2\;,
+\end{eqnarray}}
+
+2. Calculating noise-free signal $\tilde{S}(t,x,y)$ according to
+{\setlength\arraycolsep{2pt}
+\begin{eqnarray}
+  \label{eq:signal}
+\tilde{S}(t,x,y) &=& \sum_{k=-L,k\neq0}^{L} \sum_{j=-N,j\neq0}^{N}
+    \sum_{i=-M}^{M} \tilde{B}_{i,j,k}(t,x,y)S_{i,j,k}(t,x,y) \;,
+\end{eqnarray}}
+
+\inputdir{figures}
+ \multiplot{2}{causal2d,noncausal2d}{width=0.47\textwidth}{Schematic
+               illustration of a 2D $t$-$x$ APF. A space-causal filter
+               (a) and a space-noncausal filter (b).}
+ \plot{noncausal3d}{width=0.47\textwidth}{Schematic
+               illustration of a 3D $t$-$x$-$y$ space-noncausal
+               APF.}
+
+\section{Synthetic data test}
+
+\subsection{2D curved model}
+We start with a synthetic example (Figure~\ref{fig:jcacov,noiz}a)
+created by Raymond Abma, which was originally used for testing
+nonstationary interpolation \cite[]{Liu11a}. The number of time
+samples is 401 and the number of space samples is
+240. Figure~\ref{fig:jcacov,noiz}b is the data with
+uniformly-distributed random noise added. We compare $t$-$x$ APF with
+$f$-$x$ deconvolution \cite[]{Gulunay86}, $t$-$x$ PF \cite[]{Abma95},
+and $f$-$x$ RNA \cite[]{Liu12} and test their ability for random noise
+attenuation. Figure~\ref{fig:fxpatch,fxdiff,txpatch,txdiff} shows the
+denoised results by using stationary methods. Both the $f$-$x$
+deconvolution and the $t$-$x$ PF fail in handling nonstationary curved
+events. The data was divided into 5 patches with 40\% overlap along
+space axis. $f$-$x$ deconvolution eliminates both signal and noise
+(Figure~\ref{fig:fxpatch,fxdiff,txpatch,txdiff}a and
+\ref{fig:fxpatch,fxdiff,txpatch,txdiff}b) and 
+creates some artificial events with weak energy, which are parallel
+with the curved event. $t$-$x$ PF preserves signal better and
+introduces artifacts fewer than $f$-$x$ deconvolution
+(Figure~\ref{fig:fxpatch,fxdiff,txpatch,txdiff}c), but the difference
+(Figure~\ref{fig:fxpatch,fxdiff,txpatch,txdiff}d) between
+Figure~\ref{fig:jcacov,noiz}b and
+\ref{fig:fxpatch,fxdiff,txpatch,txdiff}c also shows obvious signal.
+
+Another approach is to apply nonstationary filters. The denoised
+results by using $f$-$x$ RNA and $t$-$x$ APF are shown in
+Figure~\ref{fig:fxrna,fxnoiz,aspred,asnoiz}a and
+\ref{fig:fxrna,fxnoiz,aspred,asnoiz}c, respectively. The filter length
+of $f$-$x$ RNA is 8 and it has a 10-sample (frequency) and 20-sample
+(space) smoothing radius. $f$-$x$ RNA
+(Figure~\ref{fig:fxrna,fxnoiz,aspred,asnoiz}a) has a better result
+than stationary methods, e.g., $f$-$x$ deconvolution
+(Figure~\ref{fig:fxpatch,fxdiff,txpatch,txdiff}a) and $t$-$x$ PF
+(Figure~\ref{fig:fxpatch,fxdiff,txpatch,txdiff}c), however, there is
+still signal trend in the noise section
+(Figure~\ref{fig:fxpatch,fxdiff,txpatch,txdiff}b) and artificial
+events appear that are similar to those from $f$-$x$
+deconvolution. For the $t$-$x$ APF, the choice of the filter length in
+space is similar to that in $f$-$x$ RNA. We tend to use a 12-sample
+filter in space, and the filter length in time for the $t$-$x$ APF is
+selected to five samples.  As the time-length of the $t$-$x$ APF
+increases, the $t$-$x$ APF passes more random noise. We use the
+shaping regularization with a 60-sample (time) and 20-sample (space)
+smoothing radius to constrain the APF coefficient space. The denoised
+result and removed noise are shown in
+Figure~\ref{fig:fxrna,fxnoiz,aspred,asnoiz}c and
+\ref{fig:fxrna,fxnoiz,aspred,asnoiz}d, respectively. $t$-$x$ APF also
+introduces a few artifacts, but the artifacts show a random-trend
+distribution
+(Figure~\ref{fig:fxrna,fxnoiz,aspred,asnoiz}c). Meanwhile, the $t$-$x$
+APF, shown in Figure~\ref{fig:fxrna,fxnoiz,aspred,asnoiz}d, preserves
+signal better than the $f$-$x$ RNA.
+
+\inputdir{curve}
+\multiplot{2}{jcacov,noiz}{width=0.55\columnwidth}{Curved
+              model (a) and noisy data (b).}
+
+\multiplot{4}{fxpatch,fxdiff,txpatch,txdiff}{width=0.55\columnwidth}{Comparison
+              of stationary methods. The denoised result by $f$-$x$
+              deconvolution (a), the noise removed by $f$-$x$
+              deconvolution (b), the denoised result by $t$-$x$ PF
+              (c), and the noise removed by $t$-$x$ PF (d).}
+
+\multiplot{4}{fxrna,fxnoiz,aspred,asnoiz}{width=0.55\columnwidth}{Comparison of
+              nonstationary methods. The denoised result by $f$-$x$
+              RNA (a), the noise removed by $f$-$x$ RNA (b), the
+              denoised result by $t$-$x$ APF (c), and the noise
+              removed by $t$-$x$ APF (d).}
+
+For further discussion, we added extra spike noise to
+Figure~\ref{fig:jcacov,noiz}b, the new noisy model with a wiggle display
+is shown in Figure~\ref{fig:noiz1,txpatch1,fxrna1,aspred1}a. When
+comparing with the $t$-$x$ PF with patching
+(Figure~\ref{fig:noiz1,txpatch1,fxrna1,aspred1}b) and the $f$-$x$ RNA
+(Figure~\ref{fig:noiz1,txpatch1,fxrna1,aspred1}c), the $t$-$x$ APF
+shows better signal-protection ability, however, the quality of the
+denoised result gets worse than
+Figure~\ref{fig:fxrna,fxnoiz,aspred,asnoiz}c because of the spikes
+(Figure~\ref{fig:noiz1,txpatch1,fxrna1,aspred1}d). Larger smoothing
+radius can reduce the artifacts at the cost of attenuating part of the
+signals.
+
+\multiplot{4}{noiz1,txpatch1,fxrna1,aspred1}{width=0.55\columnwidth}{Tests
+              of hybrid noise model by using different methods. Data
+              with hybrid noise (a), $t$-$x$ PF (b), $f$-$x$ RNA (c),
+              and $t$-$x$ APF (d).}
+
+\subsection{2D poststack model}
+The second example is shown in Figure~\ref{fig:sigmoid,noise}a.  The
+input data are borrowed from \cite{Claerbout09}: a synthetic seismic
+image containing dipping beds, an unconformity and a
+fault. Figure~\ref{fig:sigmoid,noise}b shows the same image with
+Gaussian noise added. The challenge in this example is to account for
+both nonstationary and event
+truncations. Figure~\ref{fig:sfxrna,sfxnoiz,apfs,apfn}a shows the
+denoised result using the $f$-$x$ RNA, which was implemented in each
+frequency slice. Note that the $f$-$x$ RNA can eliminate part of
+noise, but the result shows some artificial events, which are parallel
+with the events. The difference
+(Figure~\ref{fig:sfxrna,sfxnoiz,apfs,apfn}b) between
+Figure~\ref{fig:sigmoid,noise}b and
+Figure~\ref{fig:sfxrna,sfxnoiz,apfs,apfn}a also shows the
+corresponding artifacts. The denoised result and the noise removed
+using the $t$-$x$ APF are shown in
+Figure~\ref{fig:sfxrna,sfxnoiz,apfs,apfn}c and
+Figure~\ref{fig:sfxrna,sfxnoiz,apfs,apfn}d, respectively. The APF has
+10 (time) $\times$ 10 (space) coefficients for each sample and a
+20-sample (time) $\times$ 20-sample (space) smoothing radius. The
+proposed method eliminates most of random noise and preserves the
+truncations well.
+
+\inputdir{sigmoid}
+\multiplot{2}{sigmoid,noise}{width=0.47\columnwidth}{2D poststack
+              model (a) and noisy data (b).}
+
+\multiplot{4}{sfxrna,sfxnoiz,apfs,apfn}{width=0.47\columnwidth}{Comparison of
+              nonstationary methods. The denoised result by $f$-$x$
+              RNA (a), the noise removed by $f$-$x$ RNA (b), the
+              denoised result by $t$-$x$ APF (c), and the noise
+              removed by $t$-$x$ APF (d).}
+
+\subsection{3D prestack French model}
+
+We created a 3D example by Kirchhoff modeling
+(Figure~\ref{fig:fdata,fnoise}a), the corresponding velocity model is
+a slice out of the benchmark French model
+\cite[]{French74,Liu10c}. Three surfaces of
+Figure~\ref{fig:fdata,fnoise}a illustrate the corresponding slices at
+time=0.6s, midpoint=1.0km, and
+half-offset=0.2km. Figure~\ref{fig:fdata,fnoise}b is the noisy
+data. The challenge in this example is to account for multi-dimension,
+nonstationarity, and conflicting dips. For comparison, we use 3D
+$f$-$x$-$y$ NRNA \cite[]{Liu13} to attenuate random noise
+({Figure~\ref{fig:tpre,diff3d,fpred3,ferr3}a}). The 3D NRNA method
+produces a reasonable result. In
+Figure~\ref{fig:tpre,diff3d,fpred3,ferr3}b, 3D $f$-$x$-$y$ NRNA shows
+a better ability of signal preservation than 2D version
+\cite[]{Liu12}. However, 3D NRNA still produces artificial events parallel
+with curved events. We design a 3D $t$-$x$-$y$ APF with 5 (time)
+$\times$ 4 (midpoint) $\times$ 4 (half offset) coefficients for each
+sample and 15-sample (time), 10-sample (midpoint), and 10-sample (half
+offset) smoothing radius to further handle the variability of
+event. Figure~\ref{fig:tpre,diff3d,fpred3,ferr3}c and
+\ref{fig:tpre,diff3d,fpred3,ferr3}d show the denoised result and the
+difference between noisy data (Figure~\ref{fig:fdata,fnoise}b) and the
+denoised result (Figure~\ref{fig:tpre,diff3d,fpred3,ferr3}c) plotted
+at the same clip value, respectively. The proposed method succeeds in
+the sense that it is hard to distinguish the curved and conflicting
+events in the removed noise. Meanwhile, the 3D $t$-$x$-$y$ APF has
+fewer artificial events, which are more visible for 3D $f$-$x$-$y$
+NRNA (Figure~\ref{fig:tpre,diff3d,fpred3,ferr3}a).
+
+\inputdir{french}
+\multiplot{2}{fdata,fnoise}{width=0.47\columnwidth}{3D
+              synthetic data (a) and the corresponding noisy data
+              (b).}
+
+\multiplot{4}{tpre,diff3d,fpred3,ferr3}{width=0.47\columnwidth}{The 
+              denoised result by 3D $f$-$x$-$y$ NRNA (a), the noise
+              removed by 3D $f$-$x$-$y$ NRNA (b), the denoised result
+              by 3D $t$-$x$-$y$ APF (c), and the noise removed by 3D
+              $t$-$x$-$y$ APF (d).}
+
+\section{Field data test}
+For the field data test, we use a time-migrated seismic image from
+\cite{Liu13}. The input is shown in Figure~\ref{fig:data}. 
+The three sections in Figure~\ref{fig:data} show the time slice at
+time position of 0.34 s (top section), X line section at Y space
+position of 7.62 km (bottom left section), and Y line section at X
+space position of 1.41 km (bottom right section). The datacube
+displays simple plane layers above 1.0 s and complex structure below
+1.0 s.  Noise is mainly strong random noise caused by the surface
+conditions in this area. For comparison, we apply $f$-$x$-$y$ NRNA to
+remove the random noise. We use a total of 24 neighboring traces
+around each output trace after applying a Fourier transform along time
+axis. The denoised result is shown in Figure~\ref{fig:tpre1}, which
+gives a much clearer lateral continuity than original field
+data. $f$-$x$-$y$ NRNA improves the both shallow plane events and deep
+dipping events. Figure~\ref{fig:diff3d} shows the difference section,
+in which the processed data using $f$-$x$-$y$ NRNA have been
+subtracted from the original data. Some horizontal events are shown in
+Figure~\ref{fig:diff3d}, especially at locations from 0.3 s to 1.0 s
+in Y line section (bottom right section). Figure~\ref{fig:ppred3}
+shows that the proposed $t$-$x$-$y$ APF method also produces
+reasonable result, where continuity of events and geology structure
+are enhanced, and there is little noise left. The $t$-$x$-$y$ APF
+parameters correspond to 5 (time) $\times$ 4 (X) $\times$ 4 (Y)
+coefficients for each sample ($M$=2, $N$=2, and $L$=2 in
+Equation~\ref{eq:pred4} and
+\ref{eq:signal}) and 20-sample (time), 10-sample (X), and 10-sample
+(Y) smoothing radius for regularization operator $\mathbf{R}$. After
+carefully comparing with the filtering result of 3D $f$-$x$-$y$ NRNA
+(Figure~\ref{fig:tpre1}), 3D $t$-$x$-$y$ APF (Figure~\ref{fig:ppred3})
+can be seen to preserve more detailed structure because $t$-$x$-$y$
+APF has extra nonstationarity along time axis while $f$-$x$-$y$ NRNA
+only consider nonstationarity along the two space axis. Splitting into
+windows can partly help $f$-$x$-$y$ NRNA to improve the result, but it
+still cannot provide a naturally nonstationary domain. Comparing with
+Figure~\ref{fig:diff3d}, the difference (Figure~\ref{fig:diff3})
+between Figure~\ref{fig:data} and Figure~\ref{fig:ppred3} shows no
+obvious horizontal events and random noise is more
+uniformly-distributed.
+
+\inputdir{real3d}
+\plot{data}{width=0.9\columnwidth}{3D field data.}
+\plot{tpre1}{width=0.9\columnwidth}{The denoised result by using 
+             3D $f$-$x$-$y$ NRNA.}
+\plot{ppred3}{width=0.9\columnwidth}{The denoised result by using 
+             3D $t$-$x$-$y$ APF.}
+\plot{diff3d}{width=0.9\columnwidth}{The difference between the noisy data 
+             (Figure~\ref{fig:data}) and the denoised result by using 3D
+             $f$-$x$-$y$ NRNA (Figure~\ref{fig:tpre1}).}
+\plot{diff3}{width=0.9\columnwidth}{The difference between the noisy data 
+             (Figure~\ref{fig:data}) and the denoised result by using 3D
+             $t$-$x$-$y$ APF (Figure~\ref{fig:ppred3}).}
+
+\section{Conclusions}
+We have introduced a new approach to adaptive prediction filter (APF)
+for seismic random noise attenuation in $t$-$x$-$y$ domain. Our
+approach uses regularized nonstationary autoregression (RNA) to handle
+time-space variation of nonstationary seismic data. These properties
+are useful for application such as random noise attenuation. The
+predicted signal provides a noise-free estimation of local plane
+events. Compared with the $f$-$x$-$y$ NRNA method, $t$-$x$-$y$ APF can
+capture more detailed signal and avoid most artifacts, which occur
+more in frequency domain methods. However, the $f$-$x$-$y$ NRNA method
+uses fewer prediction coefficients (no time prediction) to save
+storage space and can be applied in parallel to different frequency
+slices. Therefore, $f$-$x$-$y$ NRNA is appropriate for mild complex
+structure and fast computation while $t$-$x$-$y$ APF is more
+appropriate for very complex structures.  Experiments with synthetic
+examples and field data tests show that the proposed filters are able
+to depict variations in the nonstationary signal and provide a
+accurate estimation of complex wavefields even in the presence of
+strongly curved and conflicting events.
+
+\section{Acknowledgments}
+We thank Jeffrey Shragge, Kris Innanen, and three 
+anonymous reviewers for helpful suggestions, which improved the
+quality of the paper. This work is partly supported by National
+Natural Science Foundation of China (Grant No. 41274119, 41430322),
+863 Program of China (Grant No. 2012AA09A2010), and 973 Program
+of China (Grant No. 2013CB429805). All results are reproducible in the
+Madagascar open-source software environment \cite[]{m8r}.
+
+\bibliographystyle{seg}
+\bibliography{SEG,SEP2,paper}
+
