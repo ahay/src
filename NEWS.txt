@@ -24,6 +24,9 @@ To the reproducible documents collection:
   synchrosqueezing wavelet transform (Chen, Liu, Chen, Li, and Wang)
 * sep/txamo: The time and space formulation of azimuth moveout (Fomel
   and Biondi)
+* jlu/txyapf: Adaptive prediction filtering in t-x-y domain for random
+  noise attenuation using regularized nonstationary autoregression
+  (Liu, Liu, and Liu)
 
 To SCons:
 
