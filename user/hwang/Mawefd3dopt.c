@@ -33,9 +33,12 @@ static void expand_domain(float*** vtmp, float*** v, int nz, int nx, int ny, int
 static void step_forward(float*** u0, float*** u1, float*** vel, float* fdcoef,
                   int nop, int nzpad, int nxpad, int nypad);
 static float* damp_make(int ntransit);
-static void apply_abc(float*** uu2, float*** uu1, float*** vel,
-              float dz, float dx, float dy,
-              int nzpad, int nxpad, int nypad, int nbd, int nop, float* damp);
+static void make_abc(float*** vel, float** bzl, float** bzh,
+         float** bxl, float** bxh, float** byl, float** byh,
+         float dt, float dz, float dx, float dy, int nz, int nx, int ny, int nbd);
+static void apply_abc(float*** uu2, float*** uu1, int nz, int nx, int ny, int nbd,
+            float** bzl, float** bzh, float** bxl, float** bxh, float** byl, float** byh,
+            int nop, float* damp);
 
 int
 main(int argc, char** argv)
@@ -180,6 +183,7 @@ main(int argc, char** argv)
   if (sinc) crsinc = sinc3d_make(nr,rec3d,fdm);
   else crlint = lint3d_make(nr,rec3d,fdm);
 
+
   /* read velocity and pad */
   sf_floatread(tmp_array[0][0],nz*nx*ny,file_vel);
   expand_domain(tmp_array,vel,nz,nx,ny,nbd);
@@ -197,6 +201,15 @@ main(int argc, char** argv)
         ws[it][is] *= dt2;
   }
 
+  float **bzl,**bzh,**bxl,**bxh,**byl,**byh;  /* A1 one-way ABC implicit scheme coefficients  */
+  bzl = sf_floatalloc2(nxpad,nypad);
+  bzh = sf_floatalloc2(nxpad,nypad);
+  bxl = sf_floatalloc2(nzpad,nypad);
+  bxh = sf_floatalloc2(nzpad,nypad);
+  byl = sf_floatalloc2(nzpad,nxpad);
+  byh = sf_floatalloc2(nzpad,nxpad);
+  make_abc(vel,bzl,bzh,bxl,bxh,byl,byh,dt,dz,dx,dy,nz,nx,ny,nbd);
+  
   if (hybrid) {
     damp = damp_make(nbd-nop); /* compute damping profiles for hybrid bc */
     if (nbd==nop) nbd = 2*nop;
@@ -211,10 +224,16 @@ main(int argc, char** argv)
   memset(u1[0][0],0,sizeof(float)*nzpad*nxpad*nypad);
   memset(u_dat,0,sizeof(float)*nr);
 
+
   /* v = (v*dt)^2 */
   for (ix=0;ix<nzpad*nxpad*nypad;ix++)
     *(vel[0][0]+ix) *= *(vel[0][0]+ix)*dt2;
 
+
+
+#ifdef _OPENMP
+double wall_clock_time_s = omp_get_wtime();
+#endif
   for (it=0;it<nt;it++) {
     if (verb)  sf_warning("it=%d;",it+1);
 
@@ -241,7 +260,7 @@ main(int argc, char** argv)
     }
 
     /* apply abc */
-    apply_abc(u0,u1,vel,dz,dx,dy,nzpad,nxpad,nypad,nbd,nop,damp);
+    apply_abc(u0,u1,nz,nx,ny,nbd,bzl,bzh,bxl,bxh,byl,byh,nop,damp);
 
     /* loop over pointers */
     ptr_tmp = u0;  u0 = u1;  u1 = ptr_tmp;
@@ -263,6 +282,10 @@ main(int argc, char** argv)
     sf_floatwrite(u_dat,nr,file_dat);
 
   }
+#ifdef _OPENMP
+  double wall_clock_time_e = omp_get_wtime();
+  sf_warning("\nElapsed time: %lf s",wall_clock_time_e-wall_clock_time_s);
+#endif
   if (verb)  fprintf(stderr,"\n");
 
   free(**u0); free(*u0); free(u0);
@@ -365,110 +388,6 @@ damp_make(int ntransit)
   return damp;
 }
 
-
-static void 
-apply_abc(float*** uu2, float*** uu1, float*** vel,
-          float dz, float dx, float dy,
-          int nzpad, int nxpad, int nypad, int nbd, int nop, float* damp)
-{ /* absorbing boundary condition (A1 type) Forward-Eular scheme */
-#ifdef _OPENMP
-#pragma omp parallel for schedule(static,1)
-#endif
-  /* up and bottom boundary */
-  for (int iy=0;iy<nypad;iy++) {
-    for (int ix=0;ix<nxpad;ix++) {
-      for (int iz=0;iz<nop;iz++) { /* one-way zones */
-        uu2[iy][ix][iz] =
-          uu1[iy][ix][iz] + (uu1[iy][ix][iz+1] - uu1[iy][ix][iz])*sqrtf(vel[iy][ix][iz])/dz;
-
-        uu2[iy][ix][nzpad-iz-1] = 
-          uu1[iy][ix][nzpad-iz-1]
-          - (uu1[iy][ix][nzpad-iz-1]-uu1[iy][ix][nzpad-iz-2])
-          * sqrtf(vel[iy][ix][nzpad-iz-1])/dz;
-      }
-      if (damp != NULL) {
-        for (int iz=nop; iz<nbd; iz++) { /* transition zones */
-          float u2_bc =
-            uu1[iy][ix][iz] + (uu1[iy][ix][iz+1] - uu1[iy][ix][iz])*sqrtf(vel[iy][ix][iz])/dz;
-          uu2[iy][ix][iz] = u2_bc*(1.f - damp[nbd-iz-1]) + uu2[iy][ix][iz]*damp[nbd-iz-1];
-
-          u2_bc =
-            uu1[iy][ix][nzpad-iz-1]
-            - (uu1[iy][ix][nzpad-iz-1]-uu1[iy][ix][nzpad-iz-2])
-            * sqrtf(vel[iy][ix][nzpad-iz-1])/dz;
-          uu2[iy][ix][nzpad-iz-1] = 
-            u2_bc*(1.f - damp[nbd-iz-1]) + damp[nbd-iz-1]*uu2[iy][ix][nzpad-iz-1];
-        }
-      }
-    }
-  }
-#ifdef _OPENMP
-#pragma omp parallel for schedule(static,1)
-#endif
-  /* left and right boundary */
-  for (int iy=0;iy<nypad;iy++) {
-    for (int iz=0;iz<nzpad;iz++) {
-      for (int ix=0;ix<nop;ix++) { /* one-way zones */
-        uu2[iy][ix][iz] =
-          uu1[iy][ix][iz] + (uu1[iy][ix+1][iz] - uu1[iy][ix][iz])*sqrtf(vel[iy][ix][iz])/dx;
-
-        uu2[iy][nxpad-ix-1][iz] = 
-          uu1[iy][nxpad-ix-1][iz]
-          - (uu1[iy][nxpad-ix-1][iz]-uu1[iy][nxpad-ix-2][iz])
-          * sqrtf(vel[iy][nxpad-ix-1][iz])/dx;
-      }
-      if (damp != NULL) {
-        for (int ix=nop; ix<nbd; ix++) { /* transition zones */
-          float u2_bc =
-            uu1[iy][ix][iz] 
-            + (uu1[iy][ix+1][iz] - uu1[iy][ix][iz])*sqrtf(vel[iy][ix][iz])/dx;
-          uu2[iy][ix][iz] = u2_bc*(1.f - damp[nbd-ix-1]) + uu2[iy][ix][iz]*damp[nbd-ix-1];
-
-          u2_bc =
-            uu1[iy][nxpad-ix-1][iz]
-            - (uu1[iy][nxpad-ix-1][iz]-uu1[iy][nxpad-ix-2][iz])
-            * sqrtf(vel[iy][nxpad-ix-1][iz])/dx;
-          uu2[iy][nxpad-ix-1][iz] =
-            u2_bc*(1.f - damp[nbd-ix-1]) + damp[nbd-ix-1]*uu2[iy][nxpad-ix-1][iz];
-        }
-      }
-    }
-  }
-#ifdef _OPENMP
-#pragma omp parallel for schedule(static,1)
-#endif
-  /* front and back boundary */
-  for (int ix=0;ix<nxpad;ix++) {
-    for (int iz=0;iz<nzpad;iz++) {
-      for (int iy=0;iy<nop;iy++) { /* one-way zones */
-        uu2[iy][ix][iz] =
-          uu1[iy][ix][iz] + (uu1[iy+1][ix][iz] - uu1[iy][ix][iz])*sqrtf(vel[iy][ix][iz])/dy;
-
-        uu2[nypad-iy-1][ix][iz] =
-          uu1[nypad-iy-1][ix][iz]
-          - (uu1[nypad-iy-1][ix][iz] - uu1[nypad-iy-2][ix][iz])
-          * sqrtf(vel[nypad-iy-1][ix][iz])/dy;
-      }
-      if (damp != NULL) {
-        for (int iy=nop; iy<nbd; iy++) { /* transition zones */
-          float u2_bc = 
-            uu1[iy][ix][iz] + (uu1[iy+1][ix][iz] - uu1[iy][ix][iz])*sqrtf(vel[iy][ix][iz])/dy;
-          uu2[iy][ix][iz] = u2_bc*(1.f - damp[nbd-iy-1]) + uu2[iy][ix][iz]*damp[nbd-iy-1];
-
-          u2_bc =
-            uu1[nypad-iy-1][ix][iz]
-            - (uu1[nypad-iy-1][ix][iz] - uu1[nypad-iy-2][ix][iz])
-            * sqrtf(vel[nypad-iy-1][ix][iz])/dy;
-          uu2[nypad-iy-1][ix][iz] = 
-            u2_bc*(1.f - damp[nbd-iy-1]) + damp[nbd-iy-1]*uu2[nypad-iy-1][ix][iz];
-        }
-      }
-
-    }
-  }
-  return;
-}
-
 static float*
 compute_fdcoef(int nop, float dz2, float dx2, float dy2, bool is_optimized)
 /* Optimized fd coeffifients from
@@ -546,4 +465,124 @@ optimal_fdcoef(int nop)
   float *cc =  malloc((nop+1)*sizeof(float));
   memcpy(cc,opt_c[nop],sizeof(float)*(nop+1));
   return cc;
+}
+
+static void
+make_abc(float*** vel, float** bzl, float** bzh,
+         float** bxl, float** bxh, float** byl, float** byh,
+         float dt, float dz, float dx, float dy, int nz, int nx, int ny, int nbd)
+{
+  int nzpad = nz + 2*nbd;
+  int nxpad = nx + 2*nbd;
+  int nypad = ny + 2*nbd;
+  float dp;
+  for (int iy=0; iy<nypad; iy++) {
+    for (int ix=0; ix<nxpad; ix++) {
+      dp = vel[iy][ix][nbd]*dt/dz; bzl[iy][ix] = (1.- dp)/(1. + dp);
+      dp = vel[iy][ix][nzpad-nbd-1]*dt/dz; bzh[iy][ix] = (1.-dp)/(1.+dp);
+    }
+  }
+
+  for (int iy=0; iy<nypad; iy++) {
+    for (int iz=0; iz<nzpad; iz++) {
+      dp = vel[iy][nbd][iz]*dt/dx; bxl[iy][iz] = (1.- dp)/(1. + dp);
+      dp = vel[iy][nxpad-nbd-1][iz]*dt/dx; bxh[iy][iz] = (1. - dp)/(1. + dp);
+    }
+  }
+
+  for (int ix=0; ix<nxpad; ix++) {
+    for (int iz=0; iz<nzpad; iz++) {
+      dp = vel[nbd][ix][iz]*dt/dy; byl[ix][iz] = (1.- dp)/(1. + dp);
+      dp = vel[nypad-nbd-1][ix][iz]*dt/dy; byh[ix][iz] = (1.- dp)/(1. + dp);
+    }
+  }
+  return;
+}
+
+static void
+apply_abc(float*** uu2, float*** uu1, int nz, int nx, int ny, int nbd,
+          float** bzl, float** bzh, float** bxl, float** bxh, float** byl, float** byh,
+          int nop, float* damp)
+{
+  int nxpad = nx + 2*nbd;
+  int nypad = ny + 2*nbd;
+  int nzpad = nz + 2*nbd;
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static)
+#endif
+  for (int iy=0; iy<nypad; iy++) {
+    for (int ix=0; ix<nxpad; ix++) {
+      for (int ib=nbd-nop; ib<nbd; ib++) {
+        int iz = nbd-ib-1;
+        uu2[iy][ix][iz] = uu1[iy][ix][iz+1] 
+                        + (uu1[iy][ix][iz] - uu2[iy][ix][iz+1])*bzl[iy][ix];
+        iz = nzpad-nbd+ib;
+        uu2[iy][ix][iz] = uu1[iy][ix][iz-1] 
+                        + (uu1[iy][ix][iz] - uu2[iy][ix][iz-1])*bzh[iy][ix];
+      }
+      if (damp != NULL) {
+        for (int ib=0; ib<nbd-nop; ib++) {
+          int iz = nbd-ib-1;
+          float uu2_bc = uu1[iy][ix][iz+1] + (uu1[iy][ix][iz] - uu2[iy][ix][iz+1])*bzl[iy][ix];
+          uu2[iy][ix][iz] = uu2_bc*(1.f - damp[ib]) + uu2[iy][ix][iz]*damp[ib];
+          iz = nzpad-nbd+ib;
+          uu2_bc = uu1[iy][ix][iz-1] + (uu1[iy][ix][iz] - uu2[iy][ix][iz-1])*bzh[iy][ix];
+          uu2[iy][ix][iz] = uu2_bc*(1.f - damp[ib]) + uu2[iy][ix][iz]*damp[ib];
+        }
+      }
+    }
+  }
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static)
+#endif
+  for (int iy=0; iy<nypad; iy++) {
+    for (int iz=0;iz<nzpad; iz++) {
+      for (int ib=nbd-nop; ib<nbd; ib++) {
+        int ix = nbd-ib-1;
+        uu2[iy][ix][iz] = uu1[iy][ix+1][iz] 
+                        + (uu1[iy][ix][iz] - uu2[iy][ix+1][iz])*bxl[iy][iz];
+        ix = nxpad-nbd+ib;
+        uu2[iy][ix][iz] = uu1[iy][ix-1][iz] 
+                        + (uu1[iy][ix][iz] - uu2[iy][ix-1][iz])*bxh[iy][iz];
+      }
+      if (damp != NULL) {
+        for (int ib=0; ib<nbd-nop; ib++) {
+          int ix = nbd-ib-1;
+          float uu2_bc = uu1[iy][ix+1][iz] + (uu1[iy][ix][iz] - uu2[iy][ix+1][iz])*bxl[iy][iz];
+          uu2[iy][ix][iz] = uu2_bc*(1.f - damp[ib]) + uu2[iy][ix][iz]*damp[ib];
+          ix = nxpad-nbd+ib;
+          uu2_bc = uu1[iy][ix-1][iz] + (uu1[iy][ix][iz] - uu2[iy][ix-1][iz])*bxh[iy][iz];
+          uu2[iy][ix][iz] = uu2_bc*(1.f - damp[ib]) + uu2[iy][ix][iz]*damp[ib];
+        }
+      }
+    }
+  }
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static)
+#endif
+  for (int ix=0; ix<nxpad; ix++) {
+    for (int iz=0;iz<nzpad; iz++) {
+      for (int ib=nbd-nop; ib<nbd; ib++) {
+        int iy = nbd-ib-1;
+        uu2[iy][ix][iz] = uu1[iy+1][ix][iz] 
+                        + (uu1[iy][ix][iz] - uu2[iy+1][ix][iz])*byl[ix][iz];
+        iy = nypad-nbd+ib;
+        uu2[iy][ix][iz] = uu1[iy-1][ix][iz] 
+                        + (uu1[iy][ix][iz] - uu2[iy-1][ix][iz])*byh[ix][iz];
+      }
+      if (damp != NULL) {
+        for (int ib=0; ib<nbd-nop; ib++) {
+          int iy = nbd-ib-1;
+          float uu2_bc = uu1[iy+1][ix][iz] + (uu1[iy][ix][iz] - uu2[iy+1][ix][iz])*byl[ix][iz];
+          uu2[iy][ix][iz] = uu2_bc*(1.f - damp[ib]) + uu2[iy][ix][iz]*damp[ib];
+          iy = nypad-nbd+ib;
+          uu2_bc = uu1[iy-1][ix][iz] + (uu1[iy][ix][iz] - uu2[iy-1][ix][iz])*byh[ix][iz];
+          uu2[iy][ix][iz] = uu2_bc*(1.f - damp[ib]) + uu2[iy][ix][iz]*damp[ib];
+        }
+      }
+    }
+  }
+  return;
 }
