@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sfwindow', 'sfbandpass', 'sflpad', 'sfmath', 'sfapef', 'sfmiss4', 'sfgrey', 'sfnoise', 'sfsmooth', 'sflpef', 'sfhconv', 'sfsignoi', 'sftxrna2', 'sfadd', 'sffft1', 'sftransp', 'sfpad', 'sfcat', 'sfput', 'sfclpf', 'sfpatch', 'sffxdecon', 'sfhelicon', 'sfsaltpepper', 'sfwiggle']
+data=['PRIVATE']
+size=   55876608
