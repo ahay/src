@@ -1,6 +1,6 @@
 function demo_tau_method
 %% Copyright (c) Xi'an Jiaotong University 2014
-% % Originally written by Guowei Zhang, modified by Pengliang Yang
+% % Originally written by Guowei Zhang, adapted by Pengliang Yang
 % %
 % % Reference: Joakim O. Blanch, Johan O.A. Robertsson, and William W. Symmes,
 % %  Modeling of a constant Q: methodology and algorithm for an efficient and 
