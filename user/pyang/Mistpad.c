@@ -35,7 +35,7 @@ Note: Acquistion geometry specified by mask operator
 unsigned int nextpower2(unsigned int n)
 /*< next power of 2 (>=n) >*/
 {
- /* passed no is a power of 2, return the same.  */
+ /* if n is a power of 2, return the same.  */
  if (!(n & (n-1)))     return (n);
  
  while (n & (n-1))    n = n & (n-1); 
@@ -45,10 +45,10 @@ unsigned int nextpower2(unsigned int n)
 
 int main(int argc, char* argv[])
 {
-    	bool verb, padding;
+    	bool verb, pow2;
     	char key[7], *mode;;
-    	int n1, n2, n2padded, num, dim, n[SF_MAX_DIM], npadded[SF_MAX_DIM], ii[SF_MAX_DIM];
-	int i, j, i1, i2, index, nw, iter, niter, nthr;
+    	int n1, n2, n1padded, n2padded, num, dim, n[SF_MAX_DIM], npadded[SF_MAX_DIM], ii[SF_MAX_DIM];
+	int i, j, i1, i2, index, nw, iter, niter, nthr, *pad;
     	float thr, pclip, normp;
     	float *dobs_t, *thresh, *mask;
     	fftwf_complex *mm, *dd, *dobs;
@@ -62,8 +62,8 @@ int main(int argc, char* argv[])
  
     	if(!sf_getbool("verb",&verb))    	verb=false;
     	/* verbosity */
-    	if(!sf_getbool("pad",&padding))    	padding=false;
-    	/* zero-padding or not */
+    	if(!sf_getbool("pow2",&pow2))    	pow2=false;
+    	/* round up the length of each axis to be power of 2 */
     	if (!sf_getint("niter",&niter)) 	niter=100;
     	/* total number of iterations */
     	if (!sf_getfloat("pclip",&pclip)) 	pclip=10.;
@@ -75,9 +75,7 @@ int main(int argc, char* argv[])
     	if (pclip <=0. || pclip > 100.)	sf_error("pclip=%g should be > 0 and <= 100",pclip);
     	if (!sf_getfloat("normp",&normp)) 	normp=1.;
     	/* quasi-norm: normp<2 */
-
-    	/* dimensions */
-   	for (i=0; i < SF_MAX_DIM; i++) {
+   	for (i=0; i < SF_MAX_DIM; i++) {/* dimensions */
 		snprintf(key,3,"n%d",i+1);
 		if (!sf_getint(key,n+i) && 
 		    (NULL == in || !sf_histint(in,key,n+i))) break;
@@ -86,26 +84,30 @@ int main(int argc, char* argv[])
     	}
     	if (0==i) sf_error("Need n1=");
     	dim=i;
+    	pad=sf_intalloc (dim);
+	for (i=0; i<dim; i++) pad[i]=0;
+	sf_getints("pad",pad,dim); /* number of zeros to be padded for each axis */
 
     	n1=n[0];
     	n2=sf_leftsize(in,1);
-	nw=n1/2+1;
 	for (i=0; i<SF_MAX_DIM; i++) npadded[i]=1;
-	npadded[0]=n1;
+	npadded[0]=n1+pad[0];
+	n1padded=npadded[0];
 	n2padded=1;
 	for (i=1; i<dim; i++){
-	  npadded[i]=n[i];
-	  if (padding) {/* zero-padding in spatial direction */
+	  npadded[i]=n[i]+pad[i];
+	  if (pow2) {/* zero-padding to be power of 2 */
 	    npadded[i]=nextpower2(n[i]);
 	    fprintf(stderr,"n%d=%d n%dpadded=%d\n",i,n[i],i,npadded[i]);
 	  }
 	  n2padded*=npadded[i];
 	}
+	nw=npadded[0]/2+1;
 	num=nw*n2padded;/* data: total number of elements in frequency domain */
 
     	/* allocate data and mask arrays */
 	thresh=(float*)            malloc(nw*n2padded*sizeof(float));
-    	dobs_t=(float*)      fftwf_malloc(n1*n2padded*sizeof(float)); 	     /* time domain observation */
+    	dobs_t=(float*)      fftwf_malloc(n1padded*n2padded*sizeof(float));  /* time domain observation */
     	dobs=(fftwf_complex*)fftwf_malloc(nw*n2padded*sizeof(fftwf_complex));/* freq-domain observation */
     	dd=(fftwf_complex*)  fftwf_malloc(nw*n2padded*sizeof(fftwf_complex));
     	mm=(fftwf_complex*)  fftwf_malloc(nw*n2padded*sizeof(fftwf_complex));
@@ -115,24 +117,24 @@ int main(int argc, char* argv[])
     	} else sf_error("mask needed!");
 
 	/* initialize the input data and mask arrays */
-	memset(dobs_t,0,n1*n2padded*sizeof(float));
+	memset(dobs_t,0,n1padded*n2padded*sizeof(float));
 	memset(mask,0,n2padded*sizeof(float));
 	for (i=0; i<n1*n2; i+=n1){
 	  sf_line2cart(dim,n,i,ii);
 	  j=sf_cart2line(dim,npadded,ii);
 	  sf_floatread(&dobs_t[j], n1, in);
-	  sf_floatread(&mask[j/n1], 1, Fmask);
+	  sf_floatread(&mask[j/n1padded], 1, Fmask);
 	}
 
 	/* FFT for the 1st dimension and the remaining dimensions */
-    	fft1=fftwf_plan_many_dft_r2c(1, &n1, n2padded, dobs_t, &n1, 1, n1, dobs, &n1, 1, nw, FFTW_MEASURE);	
-   	ifft1=fftwf_plan_many_dft_c2r(1, &n1, n2padded, dobs, &n1, 1, nw, dobs_t, &n1, 1, n1, FFTW_MEASURE);
+     	fft1=fftwf_plan_many_dft_r2c(1, &n1padded, n2padded, dobs_t, &n1padded, 1, n1padded, dobs, &n1padded, 1, nw, FFTW_MEASURE);
+   	ifft1=fftwf_plan_many_dft_c2r(1, &n1padded, n2padded, dobs, &n1padded, 1, nw, dobs_t, &n1padded, 1, n1padded, FFTW_MEASURE);
 	fftrem=fftwf_plan_many_dft(dim-1, &npadded[1], nw, dd, &npadded[1], nw, 1, dd, &npadded[1], nw, 1, FFTW_FORWARD, FFTW_MEASURE);
 	ifftrem=fftwf_plan_many_dft(dim-1, &npadded[1], nw, dd, &npadded[1], nw, 1, dd, &npadded[1], nw, 1, FFTW_BACKWARD, FFTW_MEASURE);
 
 	/* transform the data from time domain to frequency domain: dobs_t-->dobs */
 	fftwf_execute(fft1);
-	for(i=0; i<num; i++) dobs[i]/=sqrtf(n1);
+	for(i=0; i<num; i++) dobs[i]/=sqrtf(n1padded);
 	memset(mm,0,num*sizeof(fftwf_complex));
 
 	/* Iterative Shrinkage-Thresholding (IST) Algorithm:
@@ -176,7 +178,7 @@ int main(int argc, char* argv[])
 	for(i=0; i<num; i++) dd[i]/=sqrtf(n2padded);
 	memcpy(dobs, dd, num*sizeof(fftwf_complex));
 	fftwf_execute(ifft1);
-	for(i=0; i<n1*n2padded; i++) dobs_t[i]/=sqrtf(n1);
+	for(i=0; i<n1padded*n2padded; i++) dobs_t[i]/=sqrtf(n1padded);
 	
 	for (i=0; i<n1*n2; i+=n1){
 	  sf_line2cart(dim,n,i,ii);
