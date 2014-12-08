@@ -1,5 +1,5 @@
 /* n-D POCS interpolation using a hard thresholding
-Note: Acquistion geometry represented by mask operator.
+Note: Acquistion geometry specified by mask operator.
 */
 /*
   Copyright (C) 2013  Xi'an Jiaotong University, UT Austin (Pengliang Yang)
@@ -96,6 +96,7 @@ int main(int argc, char* argv[])
 	for(i=0; i<num; i++) dobs[i]/=sqrtf(n1);
 	memset(dd,0,num*sizeof(fftwf_complex));
 
+	/* Projection onto convex sets (POCS) Algorithm:dd^{k+1}=dobs+(1-M)AT[A^* dd^k]	*/
     	for(iter=0; iter<niter; iter++)
     	{
 		/* mm<--A^t dd */
@@ -105,7 +106,6 @@ int main(int argc, char* argv[])
 
 		/* perform hard thresholding: mm<--T{mm} */
 		for(i=0; i<num; i++)	thresh[i]=cabsf(mm[i]);
-
 	   	nthr = 0.5+num*(1.-0.01*pclip); 
 	    	if (nthr < 0) nthr=0;
 	    	if (nthr >= num) nthr=num-1;
@@ -116,7 +116,7 @@ int main(int argc, char* argv[])
 		fftwf_execute(ifft2);
 		for(i=0; i<num; i++) mm[i]/=sqrtf(n2);		
 
-		/* d_rec = d_obs+(1-M)*A T{ At(d_rec) } */
+		/* dd^{k+1}=dobs+(1-M)AT[A^* dd^k] */
 		for(i2=0; i2<n2; i2++)
 		for(i1=0; i1<nw; i1++)
 		{ 

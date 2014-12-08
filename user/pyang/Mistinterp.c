@@ -1,5 +1,5 @@
-/* n-D IST interpolation using a general Lp-norm optimization
-Note: acquistion geometry illustrated by mask operator
+/* n-D IST interpolation using a generalized shrinkage operator
+Note: Acquistion geometry specified by mask operator
 */
 /*
   Copyright (C) 2014  Xi'an Jiaotong University, UT Austin (Pengliang Yang)
@@ -26,34 +26,42 @@ Note: acquistion geometry illustrated by mask operator
 #include <omp.h>
 #endif
 
+#include "pthresh.h"
+
 #ifdef SF_HAS_FFTW
 #include <fftw3.h>
 
-
 int main(int argc, char* argv[])
 {
-    	bool verb;
+    	bool verb, padding;
     	int i, i1, i2, index, n1, n2, num, dim, n[SF_MAX_DIM], nw, iter, niter, nthr;
-    	float thr, pclip;
+    	float a, thr, pclip;
     	float *dobs_t, *thresh, *mask;
     	char key[7];
     	fftwf_complex *mm, *dd, *dobs;
     	fftwf_plan fft1, ifft1, fftrem, ifftrem;/* execute plan for FFT and IFFT */
-    	sf_file in, out, Fmask;/* mask and I/O files*/ 
+    	sf_file in, out, Fmask;	/* mask and I/O files*/ 
 
-    	sf_init(argc,argv);/* Madagascar initialization */
+    	sf_init(argc,argv);	/* Madagascar initialization */
     	in=sf_input("in");	/* read the data to be interpolated */
     	out=sf_output("out"); 	/* output the reconstructed data */
     	Fmask=sf_input("mask");	/* read the (n-1)-D mask for n-D data */
  
     	if(!sf_getbool("verb",&verb))    	verb=false;
     	/* verbosity */
+    	if(!sf_getbool("pad",&padding))    	padding=false;
+    	/* zero-padding or not */
     	if (!sf_getint("niter",&niter)) 	niter=100;
-    	/* total number iterations */
+    	/* total number of iterations */
     	if (!sf_getfloat("pclip",&pclip)) 	pclip=10.;
-    	/* starting data clip percentile (default is 99)*/
-    	if (pclip <=0. || pclip > 100.)
-	sf_error("pclip=%g should be > 0 and <= 100",pclip);
+    	/* starting data clip percentile (default is 10)*/
+    	if ( !(mode=sf_getstring("mode")) ) 	mode = "exp";
+    	/* thresholding mode: 'hard', 'soft','pthresh','exp';
+		'hard', hard thresholding;	'soft', soft thresholding; 
+		'pthresh', generalized quasi-p; 'exp', exponential shrinkage */
+    	if (pclip <=0. || pclip > 100.)	sf_error("pclip=%g should be > 0 and <= 100",pclip);
+    	if (!sf_getfloat("normp",&normp)) 	normp=1.;
+    	/* quasi-norm: normp<2 */
 
     	/* dimensions */
    	for (i=0; i < SF_MAX_DIM; i++) {
@@ -79,10 +87,10 @@ int main(int argc, char* argv[])
     	dd=(fftwf_complex*)fftwf_malloc(nw*n2*sizeof(fftwf_complex));
     	mm=(fftwf_complex*)fftwf_malloc(nw*n2*sizeof(fftwf_complex));
 
-	/* FFT for 1st dimension */
+	/* FFT/IFFT for 1st dimension */
     	fft1=fftwf_plan_many_dft_r2c(1, &n1, n2, dobs_t, &n1, 1, n1, dobs, &n1, 1, nw, FFTW_MEASURE);	
    	ifft1=fftwf_plan_many_dft_c2r(1, &n1, n2, dobs, &n1, 1, nw, dobs_t, &n1, 1, n1, FFTW_MEASURE);
-	/* FFT for remaining dimensions */
+	/* FFT/IFFT for remaining dimensions */
 	fftrem=fftwf_plan_many_dft(dim-1, &n[1], nw, dd, &n[1], nw, 1, dd, &n[1], nw, 1, FFTW_FORWARD, FFTW_MEASURE);
 	ifftrem=fftwf_plan_many_dft(dim-1, &n[1], nw, dd, &n[1], nw, 1, dd, &n[1], nw, 1, FFTW_BACKWARD, FFTW_MEASURE);
 
@@ -98,14 +106,19 @@ int main(int argc, char* argv[])
 	for(i=0; i<num; i++) dobs[i]/=sqrtf(n1);
 	memset(mm,0,num*sizeof(fftwf_complex));
 
-    	for(iter=1; iter<=niter; iter++)
+	/* Iterative Shrinkage-Thresholding (IST) Algorithm:
+	   	mm^{k+1}=T[mm^k+A^* M^* (dobs-M A mm^k)]
+		   	=T[mm^k+A^*(dobs-M A mm^k)]; 
+	   	dd^=A mm^; 
+	*/
+    	for(iter=0; iter<niter; iter++)
     	{
 		/* dd<-- A mm^k */
 		memcpy(dd, mm, num*sizeof(fftwf_complex));
 		fftwf_execute(ifftrem);
 		for(i=0; i<num; i++) dd[i]/=sqrtf(n2);
 
-		/* apply mask: dd<-- dobs-M dd */
+		/* apply mask: dd<--dobs-M A mm^k=dobs-M dd */
 		for(i2=0; i2<n2; i2++)
 		for(i1=0; i1<nw; i1++)
 		{ 
@@ -113,32 +126,19 @@ int main(int argc, char* argv[])
 			dd[index]=dobs[index]-mask[i2]*dd[index];
 		}
 
-		/* apply adjoint mask: dd<-- M^* dd (M^*=M) */
-		for(i2=0; i2<n2; i2++)
-		for(i1=0; i1<nw; i1++)
-		{ 
-			index=i1+nw*i2;
-			dd[index]=mask[i2]*dd[index];
-		}
-
-		/* mm^k += A^* dd */
+		/* mm^k += A^*(dobs-M A mm^k); dd=dobs-M A mm^k */
 		fftwf_execute(fftrem);
-		for(i=0; i<num; i++) mm[i]+=dd[i]/sqrtf(n2);
-		
+		for(i=0; i<num; i++) mm[i]+=dd[i]/sqrtf(n2);		
 
 		/* perform thresholding */
 		for(i=0; i<num; i++)	thresh[i]=cabsf(mm[i]);
-
-
-	   	nthr = 0.5+num*(1.-0.01*pclip); 
+	   	nthr = 0.5+num*(1.-0.01*pclip);  /*round off*/
 	    	if (nthr < 0) nthr=0;
 	    	if (nthr >= num) nthr=num-1;
 		thr=sf_quantile(nthr,num,thresh);
-		/* thr*=powf(0.01,(iter-1.0)/(niter-1.0)); */
+		sf_cpthresh(mm, num, thr, normp, mode);
 
-		for(i=0; i<num; i++) mm[i]*=(cabsf(mm[i])>thr?1.:0.);
-
-		if (verb)    sf_warning("iteration %d;",iter);
+		if (verb)    sf_warning("iteration %d;",iter+1);
     	}
 
 	/* transform the data from frequency domain to time domain: dobs-->dobs_t */
