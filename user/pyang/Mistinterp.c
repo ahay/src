@@ -33,7 +33,7 @@ Note: Acquistion geometry specified by mask operator
 
 int main(int argc, char* argv[])
 {
-    	bool verb, padding;
+    	bool verb;
     	char key[7], *mode;
     	int i, i1, i2, index, n1, n2, num, dim, n[SF_MAX_DIM], nw, iter, niter, nthr;
     	float thr, pclip, normp;
@@ -49,18 +49,16 @@ int main(int argc, char* argv[])
  
     	if(!sf_getbool("verb",&verb))    	verb=false;
     	/* verbosity */
-    	if(!sf_getbool("pad",&padding))    	padding=false;
-    	/* zero-padding or not */
     	if (!sf_getint("niter",&niter)) 	niter=100;
     	/* total number of iterations */
     	if (!sf_getfloat("pclip",&pclip)) 	pclip=10.;
     	/* starting data clip percentile (default is 10)*/
     	if ( !(mode=sf_getstring("mode")) ) 	mode = "exp";
     	/* thresholding mode: 'hard', 'soft','pthresh','exp';
-		'hard', hard thresholding;	'soft', soft thresholding; 
-		'pthresh', generalized quasi-p; 'exp', exponential shrinkage */
+	 'hard', hard thresholding;	'soft', soft thresholding; 
+	 'pthresh', generalized quasi-p; 'exp', exponential shrinkage */
     	if (pclip <=0. || pclip > 100.)	sf_error("pclip=%g should be > 0 and <= 100",pclip);
-    	if (!sf_getfloat("normp",&normp)) 	normp=1.;
+    	if (!sf_getfloat("normp",&normp)) 	normp=0.9;
     	/* quasi-norm: normp<2 */
 
     	/* dimensions */
@@ -71,7 +69,6 @@ int main(int argc, char* argv[])
 		/*( n# size of #-th axis )*/  
 		sf_putint(out,key,n[i]);
     	}
-
     	if (0==i) sf_error("Need n1=");
     	dim=i;
 
