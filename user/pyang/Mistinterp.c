@@ -34,10 +34,10 @@ Note: Acquistion geometry specified by mask operator
 int main(int argc, char* argv[])
 {
     	bool verb, padding;
+    	char key[7], *mode;
     	int i, i1, i2, index, n1, n2, num, dim, n[SF_MAX_DIM], nw, iter, niter, nthr;
-    	float a, thr, pclip;
+    	float thr, pclip, normp;
     	float *dobs_t, *thresh, *mask;
-    	char key[7];
     	fftwf_complex *mm, *dd, *dobs;
     	fftwf_plan fft1, ifft1, fftrem, ifftrem;/* execute plan for FFT and IFFT */
     	sf_file in, out, Fmask;	/* mask and I/O files*/ 
