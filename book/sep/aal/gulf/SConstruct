@@ -1,0 +1,21 @@
+from rsf.proj import *
+
+Fetch('Gulfnear.HH','mig')
+
+Flow('gulflowb','Gulfnear.HH',
+     '''
+     dd form=native |
+     window f2=200 n2=480 n1=1000 |
+     bandpass flo=10 fhi=50
+     ''')
+
+Plot('Gulfdata','gulflowb',
+     '''
+     window f2=60 n2=360 max1=2.0 |
+     pow pow1=0.5 | 
+     grey labelrot=n label1=Time unt1=s label2=Midpoint unit2=m 
+     labelfat=2 labelsz=4 titlefat=2 titlesz=5 
+     xll=3.0 yll=5.28  xur=11.0 yur=9.77  title="(a)" 
+     ''')
+
+End()

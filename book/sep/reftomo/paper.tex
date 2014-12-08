@@ -1,0 +1,410 @@
+
+\lefthead{Claerbout}
+\righthead{Reflection tomography}
+\footer{SEP--79}
+
+\title{Reflection tomography:  Kjartansson revisited}
+%\keywords{velocity, modeling, deconvolution, amplitudes, tomography, slant stack }
+
+\author{Jon F. Claerbout}
+\maketitle
+
+\begin{abstract}
+	I begin experiments with Kjartansson's data set with the
+	goal of constructing a near-but-below-surface velocity model.
+	I test lateral extrapolation of data before tomography
+	and propose an alternate definition of pilot trace.
+	Traditionally, a pilot trace is defined as a stack trace.
+	Here I define a pilot trace as
+	the output of a three-dimensional prediction filter.
+	This pilot trace is designed to be
+	insensitive to velocity, dip, and shot statics.
+	The crosscorrelation of this pilot trace with the observed trace
+	is highly sensitive to geophone statics
+	as well as deeper lateral velocity variations beneath the geophones.
+	This crosscorrelation function of midpoint and offset
+	is slant-stacked transforming offset to depth.
+	With suitable normalization the result is a volume
+	of coherency with axes of depth, midpoint, and slowness.
+	The strange ``footprint'' of the 3-D prediction filter
+	confuses the construction of a specific slowness model.
+	A less confusing alternate is a Snell wave approach.
+\end{abstract}
+
+
+\section{INTRODUCTION}
+\inputdir{kjar}
+\cite{Kjartansson.sep.23}
+showed that shallow absorption
+or velocity anomalies can masquerade as gas-bearing bright spots.
+(For a brief summary see \cite[]{Claerbout.blackwell.85}.)~
+Kjartansson showed that the bright-spots masquerade is easily uncovered
+by making a plot of energy in some time gate
+as a function of midpoint and offset.
+His plot shows streaking generally aligned
+with the shot axis and with the geophone axis
+whereas an amplitude streak resulting from a small bright spot should
+be aligned on a constant midpoint.
+More careful examination shows that
+the alignments of Kjartansson's data
+are not precisely along the shot and geophone axes,
+but they are tilted slightly towards the midpoint axis.
+For my recalculation of Kjartansson's figure, see
+Figure~\ref{fig:kjamp}.
+\plot{kjamp}{width=6in,height=1in}{
+	Kjartansson's Grand Isle data,
+	root-mean-square energy in the time interval 2.0-2.6 sec,
+	after NMO with velocity 2.05.
+	}
+
+Kjartansson interprets the tilt as a measure of depth of burial
+of the anomaly and he slant stacks to provide a map of
+anomaly depth versus midpoint.
+(Actually he does better than slant stack,
+he attempts a planar decomposition).
+In Figure~\ref{fig:kjamp} there is a pronounced streak at a
+$45^\circ$ angle associated with a missing shot.
+A missing shot is equivalent to perfect absorption directly under
+the shot, so this $45^\circ$ streak corresponds to zero depth
+under the shot.
+Likewise, if we were to see a $45^\circ$ streak of opposite orientation,
+it would correspond to zero depth under the geophone.
+A vertical streak corresponds to absorption
+at the reflector under the midpoint.
+At any depth, there are two applicable angles, one tipping one way
+(for shots) and one tipping the other (for geophones).
+
+\par
+Kjartansson does not analyze anomalies with regard to whether
+they result from  absorption or focusing,
+but those of us who have worked with migration for many years
+tend to regard all amplitude variations as focusing phenomena because
+focusing so easily gives amplitude variations.
+Kjartansson shows one NMO corrected CMP gather
+that clearly shows time shifts,
+but when he assembles a plane of times in midpoint-offset space,
+alignments of interesting events are not so clear as with amplitudes.
+His slant stack of this plane is disappointing compared to his amplitudes.
+(Those seismologists who believe that observational seismology
+gives reliable timing measurements but unreliable amplitude measurements
+will be surprised by Kjartansson's very convincing results.)
+In summary, Kjartansson's work showed clearly the locations
+of likely lateral-velocity variation anomalies, but provided
+no direct path toward building a best fitting velocity model.
+
+\par
+A variety of factors led me to revisit this data and its analysis:
+Two members of our group had developed wave-equation datuming code
+and were about to struggle with the problem of estimating the velocity model.
+Computers are much more powerful than they were when Kjartansson did his work.
+Kjartansson's data (or a subset) were recently found and loaded on our machines.
+My recent research direction,
+data adaptive multidimensional filters (DAMF), encouraged me to believe
+that I could readily accomplish potentially complicated corrections,
+prediction of one shot profile from another, for example,
+without need for an elaborate theory.
+I suspected that DAMF might provide the missing components
+needed to create a near surface (top 500 ms)
+lateral velocity variation model
+using only its distortion of deep reflections and so I set out to try.
+
+%\par
+%First we review the overall problem setting,
+%and then turn to the more complicated matter of constructing
+%pilot traces whose crosscorrelation with data contains
+%essentially only geophone-neighborhood causes.
+
+Figures~\ref{fig:kartom.0}-\ref{fig:kartom.2} show various
+slant-stack like transformations of the logarithm of the amplitude
+in Figure~\ref{fig:kjamp}.
+
+
+\activeplot{kartom.0}{width=6in,height=2in}{\CAKEDIR}{
+	Top shows the log amplitude of the energy in a
+	time gate from 2.0-2.6s (after NMO with v=2.05).
+	Bottom shows a slant stack ranging from common shot
+	to common geophone.  Think of the vertical axis on
+	the bottom plot as ranging along the ray path.
+	The missing shot streak on the top panel becomes
+	a clipped impulse function on the bottom at km=4.2 and time=-1.0.
+	The missing shot streak truncates at near offset
+	and at far offset. The near-offset truncation gives
+	a near vertical streak through the clipped impulse.
+	The wide-offset truncation gives a near $45^{\circ}$ streak
+	through the pulse.
+	Geophysically interesting are about a dozen ``blobs''
+	on the bottom frame
+	about 300-600ms from the earth surface either on
+	the shot path or geophone path.
+	}
+
+\activeplot{extend}{width=6in,height=3in}{\CAKEDIR}{
+	Top is the
+	logarithm of amplitude as in Figure~\protect\ref{fig:kartom.0}
+	except that it is padded.
+	Bottom shows the padded amplitude after extension from
+	an initial guess that the logarithm take on its mean value.
+	Failure to fill in a short line segment from about 6 to 7km
+	at about 2km offset results from the mask program assuming
+	that only zero-valued data is missing.
+	The extension uses a prediction filter predicting
+	in the upward direction, so the upward side shows
+	stronger short wavelengths than the downward side.
+	}
+
+\activeplot{kartom.2}{width=6in,height=3in}{\CAKEDIR}{
+	Repetition of Figure~\protect\ref{fig:kartom.0} with
+	extended data.
+	}
+
+To mimic Kjartansson's plot of amplitude versus midpoint and depth,
+I folded and summed the bottoms panels
+of each of
+Figure~\ref{fig:kartom.0} and
+Figure~\ref{fig:kartom.2} about $t=0$
+thereby combining information from the upgoing and downgoing path.
+The result is shown in Figure~\ref{fig:einarmodl}.
+\activeplot{einarmodl}{width=6in,height=2in}{\CAKEDIR}{
+	Tomographic distribution of energy with midpoint and traveltime depth.
+	Top is for amplitudes before extension,
+	bottom is after.
+	}
+
+\section{VALUE OF DATA EXTENSION}
+The value of extending the data should not be judged
+on results shown above.
+First, the extension methodology is new and there was no time
+to tune the parameters.
+Another unfamiliar new problem is that logarithms have an additive constant
+that I was unsure of how to optimize.
+My motivation for the extension was caused by observing steady growth
+of side boundary effects (midpoint axis) as the number of iterations
+in the tomography problem increased.
+Keep in mind the background that
+this data set is $48\times 375=18,000$ points so assuming we seek
+a model space of the same number of points,
+the solver theoretically requires 18,000 iterations.
+My experimental work was limited to  5-25 iterations.
+A question in my mind was and is,
+how close are these solutions to the final limit?
+I hypothesize that truncation of a data set could severely
+limit the rate of convergence during the first 5-25 iterations
+and that extending the data would accelerate convergence.
+Time did not allow adequate testing of this interesting hypothesis.
+\par
+I also saw that the solution
+deteriorates in an interesting manner at high iterations.
+Damping can be installed in the tomography,
+but I had no time to experiment or think of the theory.
+I wondered how the above problems would be affected by
+extending the data, which seemed to help, but which
+seems to have been less important than other variables,
+particularly, the iteration count.
+\par
+An overarching doubt is whether the underlying absorption model
+warrants any more effort, since I believe that focusing
+is a more likely model.
+
+
+\section{CODING THE TOMOGRAPHY }
+I am using subroutine \texttt{xtomo()} \vpageref{/prog:xtomo}.
+\gprogblock{xtomo}{xtomo.rt}
+\par
+The inversion problem in tomography was solved
+by using the conjugate-gradient subroutine {\tt cgstep()}
+described in PVI invoked by subroutine \texttt{tominv()} \vpageref{/prog:tominv}.
+It allows for damping {\tt eps} but I did not test damping.
+\gprogblock{tominv}{tominv.rt}
+
+I omitted the listing of the main program
+because it merely serves to connect
+the listed subroutines to our file system.
+%\gprogblock{Tomo}{Tomo.rs}
+
+
+
+\section{SPECULATION ON PILOT TRACE AND VELOCITY ESTIMATION}
+
+\par
+Although I am enthusiastic
+about the new potential I see in using DAMF
+(data adaptive multidimensional filtering)
+for determining a pilot trace,
+DAMF is complicated and unfamiliar,
+so we first review the sequence of steps
+that follow the preparation of the pilot traces.
+Kjartansson's pilot trace is simply a moved out CDP stack.
+Kjartansson crosscorrelates pilots against
+individual traces and then scans each crosscorrelation
+for a maximum value, a process I will call picking.
+It is the picked times that are plotted in the midpoint-offset plane.
+The principle of superposition of seismic events
+of various stepouts applies before picking, not after,
+so it is not surprising that Kjartansson's attempted decomposition
+of his already noisy time picks yields an unconvincing map of time anomalies.
+I plan to attack this problem by simultaneously doing two things differently.
+
+\par
+First, my DAMF pilot traces
+should be stable in the presence of velocity residual,
+varying reflector image,
+and shot statics but totally
+independent of the single effect
+of delay near and below the geophones.
+(This makes them a good base from which to measure those delays.)~
+Second, I do not pick the crosscorrelation until after
+slant stacking (which transforms offset to depth).
+Thus, I pick to collapse a volume of coherency
+as a function of depth, midpoint, and slowness
+to get a plane of slowness as a function of depth and midpoint.
+\par
+This plan raises an interesting question,
+``What is the theoretical validity of the operation of
+backprojecting a crosscorrelation function?''
+The validity is certainly limited by some commutivity issues.
+I plan to revisit this question after my codes are more complete.
+
+\subsection{Prediction filter templates}
+My new DAMF prediction filters are three dimensional.
+The locations of filter coefficients in the
+midpoint-offset space is shown in the mask below:
+\begin{verbatim}
+     .00     .00     .00    2.00     .00     .00     .00
+    1.00     .00     .00     .00     .00     .00     .00
+    1.00    1.00     .00     .00     .00     .00     .00
+    1.00    1.00    1.00     .00     .00     .00     .00
+    1.00    1.00    1.00    1.00     .00     .00     .00
+    1.00    1.00    1.00    1.00    1.00     .00     .00
+    1.00    1.00    1.00    1.00    1.00    1.00     .00
+    1.00    1.00    1.00    1.00    1.00    1.00    1.00
+    1.00    1.00    1.00    1.00    1.00    1.00    1.00
+\end{verbatim}
+\par
+In the above mask, the vertical axis is midpoint and the horizontal is offset.
+Where the mask contains a zero,
+the filter coefficient is constrained to zero.
+Where the mask contains ``1.00'',
+the filter coefficient is free,
+both in this filter plane and in planes above and below
+which filter on the time axis.
+Where the mask contains ``2.00''
+the filter coefficient is constrained to be ``1.00''
+in this plane and zero in other planes.
+\par
+Kjartansson's filter, by comparison, lies on one time slice.
+It is a ``1.00'' on the predicted point
+and $-1/47$ on each of the other traces at this midpoint.
+\par
+Figure~\ref{fig:xcorr} shows
+the zero lag crosscorrelation of data with its prediction.
+Naturally, the crosscorrelation is sensitive to amplitude
+as well as timing, so the crosscorrelation at zero lag
+is shown before and after normalization.
+Naturally also, the crosscorrelation need not be positive,
+but tends to be positive
+(since we are correlating a signal with its prediction)
+so I had a little trouble getting the brightness adjusted 
+suitably for plotting.
+
+\activeplot{xcorr}{width=6in,height=3.5in}{\CAKEDIR}{
+	Zero lag crosscorrelation of data with its prediction.
+	Top without normalization.
+	Bottom with normalization.
+	Amplitude normalization means the display
+	is sensitive to time shifts.
+	Press button for movie cube.
+	}
+
+
+\section{WITHOUT PILOT TRACES}
+Because of my confusion in trying to imagine construction
+of a specific velocity model from the odd-shaped footprint
+of the prediction portion of the 3-D filter,
+I offer a suggestion of another method.
+\par
+Recall that spectra and autocorrelations of independent signals add,
+so we can think of observing a crosscorrelation at the surface
+and then distributing it along a ray path.
+\par
+Suppose we forget fancy pilot traces
+and cross correlate each surface trace with its neighbor.  
+Then we could distribute (spray) each of these crosscorrelations
+back along its ray from the surface to the reflector.
+(You can see that subroutine \texttt{xtomo()} \vpageref{/prog:xtomo} was designed with this in mind.)
+\par
+Thus at all depths we get a crosscorrelation function
+from which we can pick a lag $\Delta t$,
+thus getting $\Delta t / \Delta g$
+for all $(x,z)$.
+Since we are principally concerned with a region fairly near
+the surface, we can think of $g$ and $x$ as being much the same.
+Integration over $g$ gives us the slowness model:
+\begin{equation}
+s(g,z) \quad = \quad
+\int \ dg\ {\partial\over\partial z} \left(dt\over dg\right)
+\label{eqn:corrtomo}
+\end{equation}
+\par
+An alternate but similar approach is to start off
+by transforming $s$ to $p_s$, i.e.~transform to Snell waves
+\cite[]{Claerbout.blackwell.85}.
+This completely smears out the shot statics
+and has other interesting statistical attributes.
+After moveout correction, in the presense of modest dips,
+the upcoming waves should be quasi flat and the rays
+quasi parallel.  Thus $\Delta t /\Delta g$
+measured from the peak of the crosscorrelation of
+adjoining geophones should be
+approximately zero and departures from zero should
+be sensitive to lateral velocity variations.
+After tomographically projecting $\Delta t /\Delta g$
+downward into the earth, application of equation~(\ref{eqn:corrtomo})
+should produce slowness as a function of depth.
+\par
+Now we might ask, what are the similarity and difference
+of the Snell-wave approach and the DAMF-prediction approach?
+The Snell-wave approach seems clearest for constructing
+the slowness model.
+The DAMF-prediction approach should best be able to handle dip.
+I conclude further experimental work is needed.
+
+\section{FINAL SPECULATION}
+This interesting and challenging data set deserves much further study.
+I believe the supplemental code that is required is a prestack
+finite difference upward and downward continuation.
+Shots and geophones need to be upward and downward continued
+through the top 600ms
+with various experimental lateral velocity variations.
+This might seem like a ``solved problem'' but
+I see many difficulties.
+It must be done rapidly and without excessive artifacts.
+I think this means
+it needs to be done {\it after} NMO,
+again something which seems theoretically realistic,
+but which we have little experience since early days of SEP.
+\par
+Given that we can master the technology of rapid upward
+and downward continuation, suppose we estimate static shifts
+by traditional delay of each trace from the CDP stack.
+Then we can attribute half the delay to the shot path
+and half to the geophone path.
+To ascertain a better depth for the anomaly than the zero depth
+we can make a Kjartansson-style amplitude tomograph.
+Now we could downward continue shots only
+treating the shot static as a velocity anomaly
+to be distributed over the range indicated by the amplitude tomograph.
+From this shot-downward continued data,
+we could redo the amplitude tomograph,
+presumably seeing a revised and improved model for geophones.
+Hopefully an orderly bootstrapping procedure can be found.
+
+
+\section{Acknowledgments}
+I'd like to thank David Lumley for finding and reading
+Kjartansson's data tape.
+
+
+\bibliographystyle{seg}
+\bibliography{SEP2}
+
+

@@ -1,0 +1,17 @@
+from rsf.proj import *
+from rsf.recipes.beg import server
+
+Fetch('kjnmo.HH','kjar',server)
+Flow('kjnmo','kjnmo.HH','dd form=native')
+
+# comment this out on CD-ROM to escape SDA dependence.
+#${CDDATA}/kjnmo.H archive: ${DAVID}  Bigcable.x
+#	< ${DAVID} Window min1=2.0 | Bigcable.x | Window f3=50 n3=375 | Nmo v=2.05|Window max1=2.6| Tpow tpow=2 > ${CDDATA}/kjnmo.H out=${CDDATA}/kjnmo.F
+
+Result('kjamp','kjnmo',
+       '''
+       mul $SOURCE | stack axis=1 norm=n | math output="sqrt(input)" |
+       grey pclip=100 crowd1=.84 crowd2=.80 title="Amp(raw)" allpos=y
+       ''')
+
+End()
