@@ -67,7 +67,6 @@ using TSOpt::SEGYSpace;
 #endif
 using TSOpt::GridExtendOp;
 using TSOpt::GridDerivOp;
-using TSOpt::GridHelmOp;
 
 int xargc;
 char **xargv;
