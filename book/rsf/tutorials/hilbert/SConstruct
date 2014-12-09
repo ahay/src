@@ -52,5 +52,17 @@ Fetch(sgy,'data',
       top='seg/tutorials/master/1410_Phase')
 
 Flow('data tdata',sgy,'segyread tfile=${TARGETS[1]}')
+Flow('hdata','data','envelope hilb=y')
+Flow('edata','data hdata','math h=${SOURCES[1]} output="sqrt(input*input+h*h)" ')
+Flow('pdata','data hdata','math h=${SOURCES[1]} output="h&input" ')
+
+Plot('data','window min1=2 max1=3 | grey title="Original" scalebar=y')
+Plot('hdata','window min1=2 max1=3 | grey title="Hilbert" scalebar=y')
+Plot('edata','window min1=2 max1=3 | grey title="Envelope" scalebar=y color=j allpos=y')
+Plot('pdata','window min1=2 max1=3 | grey title="Phase" scalebar=y color=j')
+
+Result('data','data hdata edata pdata','TwoRows')
+
+# Plot envelope peaks
 
 End()
