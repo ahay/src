@@ -404,40 +404,40 @@ void expand3d(float ***a,
 	      fdm3d  fdm)
 /*< expand domain >*/
 {
-    int iz,ix,i3;
+    int iz,ix,iy;
 
-    for         (i3=0;i3<fdm->ny;i3++) {
+    for         (iy=0;iy<fdm->ny;iy++) {
 	for     (ix=0;ix<fdm->nx;ix++) {
 	    for (iz=0;iz<fdm->nz;iz++) {
-		b[fdm->nb+i3][fdm->nb+ix][fdm->nb+iz] = a[i3][ix][iz];
+		b[fdm->nb+iy][fdm->nb+ix][fdm->nb+iz] = a[iy][ix][iz];
 	    }
 	}
     }
 
-    for         (i3=0; i3<fdm->nypad; i3++) {
+    for         (iy=0; iy<fdm->nypad; iy++) {
 	for     (ix=0; ix<fdm->nxpad; ix++) {
 	    for (iz=0; iz<fdm->nb;    iz++) {
-		b[i3][ix][           iz  ] = b[i3][ix][           fdm->nb  ];
-		b[i3][ix][fdm->nzpad-iz-1] = b[i3][ix][fdm->nzpad-fdm->nb-1];
+		b[iy][ix][           iz  ] = b[iy][ix][           fdm->nb  ];
+		b[iy][ix][fdm->nzpad-iz-1] = b[iy][ix][fdm->nzpad-fdm->nb-1];
 	    }
 	}
     }
 
 
-    for         (i3=0; i3<fdm->nypad; i3++) {
+    for         (iy=0; iy<fdm->nypad; iy++) {
 	for     (ix=0; ix<fdm->nb;    ix++) {
 	    for (iz=0; iz<fdm->nzpad; iz++) {
-		b[i3][           ix  ][iz] = b[i3][           fdm->nb  ][iz];
-		b[i3][fdm->nxpad-ix-1][iz] = b[i3][fdm->nxpad-fdm->nb-1][iz];
+		b[iy][           ix  ][iz] = b[iy][           fdm->nb  ][iz];
+		b[iy][fdm->nxpad-ix-1][iz] = b[iy][fdm->nxpad-fdm->nb-1][iz];
 	    }
 	}
     }
 
-    for         (i3=0; i3<fdm->nb;    i3++) {
+    for         (iy=0; iy<fdm->nb;    iy++) {
 	for     (ix=0; ix<fdm->nxpad; ix++) {
 	    for (iz=0; iz<fdm->nzpad; iz++) {
-		b[           i3  ][ix][iz] = b[           fdm->nb  ][ix][iz];
-		b[fdm->nypad-i3-1][ix][iz] = b[fdm->nypad-fdm->nb-1][ix][iz];
+		b[           iy  ][ix][iz] = b[           fdm->nb  ][ix][iz];
+		b[fdm->nypad-iy-1][ix][iz] = b[fdm->nypad-fdm->nb-1][ix][iz];
 	    }
 	}
     }
@@ -463,6 +463,8 @@ void cut2d(float**  a,
 
     jz = floor(sf_d(cz)/fdm->dz);
     jx = floor(sf_d(cx)/fdm->dx);
+    
+    //sf_warning("fx=%d fz=%d jx=%d jz=%d",fx,fy,fx,jx,jy,jz);
 
 #ifdef _OPENMP
 #pragma omp parallel for			\
@@ -489,9 +491,9 @@ void cut3d(float*** a,
     int iz,ix,iy, nz,nx,ny, jz,jx,jy;
     int fz,fx,fy;
 
-    fz = (floor)((sf_o(cz)-fdm->ozpad)/fdm->dz);
-    fx = (floor)((sf_o(cx)-fdm->oxpad)/fdm->dx);
-    fy = (floor)((sf_o(cy)-fdm->oypad)/fdm->dy);
+    fz = (floor)((sf_o(cz)-fdm->ozpad)/fdm->dz +0.0001f);
+    fx = (floor)((sf_o(cx)-fdm->oxpad)/fdm->dx +0.0001f);
+    fy = (floor)((sf_o(cy)-fdm->oypad)/fdm->dy +0.0001f);
 
     nz = sf_n(cz);
     nx = sf_n(cx);
@@ -501,6 +503,8 @@ void cut3d(float*** a,
     jx = floor(sf_d(cx)/fdm->dx);
     jy = floor(sf_d(cy)/fdm->dy);
 
+    //sf_warning("fx=%d fy=%d fz=%d jx=%d jy=%d jz=%d",fx,fy,fx,jx,jy,jz);
+    
 #ifdef _OPENMP
 #pragma omp parallel for			\
     schedule(dynamic,fdm->ompchunk)		\
@@ -670,12 +674,13 @@ void sinc3d_extract(float***uu,
   int   ia, iy, ix, iz, sy, sx, sz;
   float wy, wx, wz;
   int na = ca[0].n;
+  float gather;
 
-  for(ia=0;ia<na;ia++) {	
+  for(ia=0;ia<na;ia++) {
     iy = ca[ia].iy;
     ix = ca[ia].ix;
     iz = ca[ia].iz;
-    float gather = 0.f;
+      gather = 0.0f;
     for (int iyy=ca[ia].fy; iyy<ca[ia].fy+ca[ia].ny;iyy++){
       sy = -4 +iyy;
       wy = ca[ia].sincy[iyy];
@@ -685,7 +690,7 @@ void sinc3d_extract(float***uu,
         for(int izz=ca[ia].fz; izz<ca[ia].fz+ca[ia].nz; izz++){
           sz = -4 +izz;
           wz = ca[ia].sincz[izz];
-          gather += uu[iy+sy][ix+sx][iz+sz]*wy*wx*wz; // gather 
+          gather += uu[iy+sy][ix+sx][iz+sz]*wy*wx*wz; // gather
         }
       }  
     }
