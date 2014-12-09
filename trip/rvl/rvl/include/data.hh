@@ -111,12 +111,14 @@ namespace RVL {
       : val(_val) {}
     virtual ~ScalarRedn() {}
 
-    /** post-construction (re)initialization - default is undefined, so pure virtual */
+    /** post-construction (re)initialization - default is undefined,
+	so pure virtual */
     virtual void setValue() = 0;
     /** post-construction (re)initialization */
-    void setValue(Scalar _val) { val=_val; }
-    /** access */
-    Scalar getValue() const { return val; }
+    virtual void setValue(Scalar _val) { val=_val; }
+    /** access - virtual so that additional behaviour may be added 
+	in child class overrides, for expl cross-process reduction */
+    virtual Scalar getValue() const { return val; }
   };
   
   /** Function object with const eval and scalar reduction attributes */

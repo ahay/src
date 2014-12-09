@@ -1,21 +1,23 @@
 #include "gridops.hh"
 
 /* helmholtz power function */
-extern "C" void helm_(int,         /* bc */
-                      integer *,   /* n1 */
-                      integer *,   /* n2 */
-                      float *,     /* d1 */
-                      float *,     /* d2 */
-                      float *,     /* w1 */
-                      float *,     /* w2 */
-                      float *,     /* p */
-                      float *,     /* datum */
-                      float *,     /* data in */
-                      float *,     /* data out */
-                      float *,     /* workspace */
-                      integer *,   /* length of workspace */
-                      integer *    /* error flag */
+/*
+extern "C" void helm_(int,         // bc 
+                      integer *,   // n1 
+                      integer *,   // n2 
+                      float *,     // d1 
+                      float *,     // d2 
+                      float *,     // w1 
+                      float *,     // w2 
+                      float *,     // p 
+                      float *,     // datum 
+                      float *,     // data in 
+                      float *,     // data out 
+                      float *,     // workspace 
+                      integer *,   // length of workspace 
+                      integer *    // error flag 
 		      );
+*/
 
 namespace TSOpt {
 
@@ -2004,7 +2006,7 @@ namespace TSOpt {
     return str;
   }
 
-
+  /*
   void HelmFO::operator()(LocalDataContainer<ireal> & x,
 			  LocalDataContainer<ireal> const & y){
     try{
@@ -2265,5 +2267,5 @@ namespace TSOpt {
       throw e;
     }
   }
-
+  */
 }

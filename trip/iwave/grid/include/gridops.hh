@@ -11,7 +11,8 @@
 #else
 #include "gridpp.hh"
 #endif
-#include <f2c.h>
+// required for old NCAR-fft-based helmholtz
+//#include <f2c.h>
 
 using RVL::ScalarFieldTraits;
 using RVL::SpaceTest;
@@ -403,7 +404,8 @@ namespace TSOpt {
   };	
 
   /* lenwork must be > 6*n1*n2+3*max(n2,2*n1)+21 */
-    
+
+  /*    
 #ifdef IWAVE_USE_MPI
   typedef MPIGridSpace myGridSpace;
 #else
@@ -506,5 +508,6 @@ namespace TSOpt {
     }
         
   };
+  */
 }
 #endif
