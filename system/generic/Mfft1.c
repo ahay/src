@@ -1,6 +1,7 @@
 /* Fast Fourier Transform along the first axis. */
 /*
   Copyright (C) 2004 University of Texas at Austin
+  Copyright (C) 2014 Colorado School of Mines
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -18,6 +19,9 @@
 */
 
 #include <rsf.h>
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 #ifdef SF_HAS_FFTW
 #include <fftw3.h>
@@ -25,163 +29,193 @@
 
 int main (int argc, char *argv[])
 {
-    bool inv, sym, opt;
-    int n1, nt, nw, i1, i2, n2;
-    float dw, *p, d1, o1, wt, shift;
-    kiss_fft_cpx *pp, ce;
+    bool  verb,inv, sym, opt;
+    int   n1, nw, nt,i1;
+    float o1;
+    float d1, dw;
+    float wght, shift;
     char *label;
-    sf_file in=NULL, out=NULL;
+    sf_file Fin=NULL, Fou=NULL;
 
 #ifdef SF_HAS_FFTW
-    fftwf_plan cfg;
+    fftwf_plan    *ompcfg;
 #else
-    kiss_fftr_cfg cfg;
+    kiss_fftr_cfg *ompcfg;
 #endif
 
+    int nbuf, ibuf, left;
+    int            ompnth=1; /* number of threads */
+    int            ompith=0; /* thread index */
+    float        **ompP;
+    kiss_fft_cpx **ompQ;
+    kiss_fft_cpx  *ompE;
+
+/*------------------------------------------------------------*/
     sf_init(argc, argv);
-    in  = sf_input("in");
-    out = sf_output("out");
+#ifdef _OPENMP
+    ompnth=omp_init();
+#endif
 
-    if (!sf_getbool("inv",&inv)) inv=false;
-    /* if y, perform inverse transform */
-    if (!sf_getbool("sym",&sym)) sym=false;
-    /* if y, apply symmetric scaling to make the FFT operator Hermitian */
-    if (!sf_getbool("opt",&opt)) opt=true;
-    /* if y, determine optimal size for efficiency */
-
+    Fin  = sf_input ("in");
+    Fou = sf_output("out");
+    
+    if(! sf_getbool("verb",&verb)) verb=false; /* Verbosity flag */
+    if (!sf_getbool("inv",&inv))    inv=false; /* y, perform inverse transform */
+    if (!sf_getbool("sym",&sym))    sym=false; /* y, symmetric scaling for Hermitian FFT */
+    if (!sf_getbool("opt",&opt))    opt=true;  /* y, determine optimal size for efficiency */
+    
     if (inv) {
-	if (SF_COMPLEX != sf_gettype(in)) sf_error("Need complex input");
-	sf_settype (out,SF_FLOAT);
+	if (SF_COMPLEX != sf_gettype(Fin)) sf_error("Need complex input");
+	sf_settype (Fou,SF_FLOAT);
     } else {
-	if (SF_FLOAT   != sf_gettype(in)) sf_error("Need float input");
-    	sf_settype (out,SF_COMPLEX);
+	if (SF_FLOAT   != sf_gettype(Fin)) sf_error("Need float input");
+    	sf_settype (Fou,SF_COMPLEX);
     }
-
-    n2 = sf_leftsize(in,1);
-
+    
     if (!inv) {
-	if (!sf_histint  (in,"n1",&n1)) n1=1;
-	if (!sf_histfloat(in,"d1",&d1)) d1=1.;
-	if (!sf_histfloat(in,"o1",&o1)) o1=0.;
-
+	if (!sf_histint  (Fin,"n1",&n1)) n1=1;
+	if (!sf_histfloat(Fin,"d1",&d1)) d1=1.;
+	if (!sf_histfloat(Fin,"o1",&o1)) o1=0.;
+	
 	/* determine wavenumber sampling (for real to complex FFT) */
 	nt = opt? 2*kiss_fft_next_fast_size((n1+1)/2): n1;
 	if (nt%2) nt++;
 	nw = nt/2+1;
 	dw = 1./(nt*d1);
 
-	sf_putint  (out,"n1",nw);
-	sf_putfloat(out,"o1",0.);
-	sf_putfloat(out,"d1",dw);
-
-	sf_putfloat(out,"fft_o1",o1);
-	sf_putfloat(out,"fft_n1",n1);
+	sf_putint  (Fou,"n1",nw);
+	sf_putfloat(Fou,"o1",0.);
+	sf_putfloat(Fou,"d1",dw);
+	sf_putfloat(Fou,"fft_o1",o1);
+	sf_putfloat(Fou,"fft_n1",n1);
 
 	/* fix label */
-	if (NULL != (label = sf_histstring(in,"label1"))) {
-	    sf_putstring(out,"fft_label1",label);
-	    if (!sf_fft_label(1,label,out))
-		sf_putstring(out,"label1","Wavenumber");
+	if (NULL != (label = sf_histstring(Fin,"label1"))) {
+	    sf_putstring(Fou,"fft_label1",label);
+	    if (!sf_fft_label(1,label,Fou))
+		sf_putstring(Fou,"label1","Wavenumber");
 	}
     } else {
-	if (!sf_histint  (in,"n1",&nw)) sf_error("No n1= in input");
-	if (!sf_histfloat(in,"d1",&dw)) sf_error("No d1= in input");
-	if (!sf_histfloat(in,"fft_o1",&o1)) o1=0.; 
+	if (!sf_histint  (Fin,"n1",&nw)) sf_error("No n1= in input");
+	if (!sf_histfloat(Fin,"d1",&dw)) sf_error("No d1= in input");
+	if (!sf_histfloat(Fin,"fft_o1",&o1)) o1=0.; 
 
 	nt = 2*(nw-1);
 	d1 = 1./(nt*dw);
 
-	if (!opt || !sf_histint  (in,"fft_n1",&n1)) n1 = nt;
+	if (!opt || !sf_histint(Fin,"fft_n1",&n1)) n1 = nt;
 
-	sf_putint  (out,"n1",n1);
-	sf_putfloat(out,"d1",d1);
-	sf_putfloat(out,"o1",o1);
+	sf_putint  (Fou,"n1",n1);
+	sf_putfloat(Fou,"d1",d1);
+	sf_putfloat(Fou,"o1",o1);
 
 	/* fix label */
-	if (NULL != (label = sf_histstring(in,"fft_label1"))) {
-	    sf_putstring(out,"label1",label);
-	} else if (NULL != (label = sf_histstring(in,"label1"))) {
-	    (void) sf_fft_label(1,label,out);
+	if (NULL != (label = sf_histstring(Fin,"fft_label1"))) {
+	    sf_putstring(Fou,"label1",label);
+	} else if (NULL != (label = sf_histstring(Fin,"label1"))) {
+	    (void) sf_fft_label(1,label,Fou);
 	}
-    }	
-    sf_fft_unit(1,sf_histstring(in,"unit1"),out);
-
-    p = sf_floatalloc(nt);
-    pp = (kiss_fft_cpx*) sf_complexalloc(nw);
-
-#ifdef SF_HAS_FFTW
-    if (inv) {
-	cfg = fftwf_plan_dft_c2r_1d(nt, (fftwf_complex *) pp, p,
-				    FFTW_ESTIMATE);
-    } else {
-	cfg = fftwf_plan_dft_r2c_1d(nt, p, (fftwf_complex *) pp,
-				    FFTW_ESTIMATE);
     }
-    if (NULL == cfg) sf_error("FFTW failure.");
+    sf_fft_unit(1,sf_histstring(Fin,"unit1"),Fou);
+     
+    /*------------------------------------------------------------*/
+    /* Hermitian weight */
+    wght = sym ? 1./sqrtf((float) nt): 1.0/nt;
+
+    /*------------------------------------------------------------*/
+    /* allocate arrays */    
+    ompP = sf_floatalloc2(nt,ompnth);
+    ompQ=(kiss_fft_cpx**) sf_complexalloc2(nw,ompnth);
+    ompE=(kiss_fft_cpx* ) sf_complexalloc (   ompnth);
+    
+    /*------------------------------------------------------------*/
+    /* init FFT plan */
+#ifdef SF_HAS_FFTW
+    ompcfg  = (fftwf_plan*) sf_alloc(ompnth,sizeof(fftwf_plan));
+    for(ompith=0; ompith<ompnth; ompith++)
+	if (inv) ompcfg[ompith] = fftwf_plan_dft_c2r_1d(nt,               (fftwf_complex *) ompQ[ompith], ompP[ompith],FFTW_ESTIMATE);
+	else     ompcfg[ompith] = fftwf_plan_dft_r2c_1d(nt, ompP[ompith], (fftwf_complex *) ompQ[ompith],              FFTW_ESTIMATE);    
 #else
-    cfg = kiss_fftr_alloc(nt,inv?1:0,NULL,NULL);
+    ompcfg  = (kiss_fftr_cfg*) sf_alloc(ompnth,sizeof(kiss_fftr_cfg));
+    for(ompith=0; ompith<ompnth; ompith++)
+	ompcfg[ompith] = kiss_fftr_alloc(nt,inv?1:0,NULL,NULL);
 #endif
 
-    wt = sym? 1./sqrtf((float) nt): 1.0/nt;
+    /*------------------------------------------------------------*/
+    ompith=0;
+    for (left=sf_leftsize(Fin,1); left>0; left-=ompnth) {
+	if(verb) fprintf(stderr,"\b\b\b\b\b\b\b%6d",left);
+	
+	/* read buffer size */
+	nbuf=SF_MIN(left,ompnth);
+	
+	if (!inv) { /* FORWARD TRANSFORM */
+	    sf_floatread (ompP[0],n1*nbuf,Fin);
 
-    for (i2=0; i2 < n2; i2++) {
-	if (!inv) {
-	    sf_floatread (p,n1,in);
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static)				\
+    private(ibuf,i1,ompith,shift)					\
+    shared( nbuf,n1,nt,nw,dw,o1,wght,ompP,ompQ,ompE,ompcfg)
+#endif
+	    for(ibuf=0; ibuf<nbuf; ibuf++) {
+#ifdef _OPENMP
+		ompith = omp_get_thread_num();
+#endif
 
-	    if (sym) {
-		for (i1=0; i1 < n1; i1++) {
-		    p[i1] *= wt;
-		}
-	    }
-
-	    for (i1=n1; i1 < nt; i1++) {
-		p[i1]=0.0;
-	    }
+		if (sym) for(i1=0;  i1<n1; i1++) ompP[ibuf][i1] *= wght;
+		;        for(i1=n1; i1<nt; i1++) ompP[ibuf][i1]  = 0.0;
 
 #ifdef SF_HAS_FFTW
-	    fftwf_execute(cfg);
+		fftwf_execute(ompcfg[ompith]);
 #else
-	    kiss_fftr (cfg,p,pp);
+		kiss_fftr(ompcfg[ompith],ompP[ibuf],ompQ[ibuf]);
 #endif
-
-	    if (0. != o1) {
-		for (i1=0; i1 < nw; i1++) {
-		    shift = -2.0*SF_PI*i1*dw*o1;
-		    ce.r = cosf(shift);
-		    ce.i = sinf(shift);
-		    pp[i1]=sf_cmul(pp[i1],ce);
+	    
+	        if (0. != o1) { shift = -2.0*SF_PI*dw*o1;
+		    for (i1=0; i1<nw; i1++) {
+			ompE[ompith].r = cosf(shift*i1);
+			ompE[ompith].i = sinf(shift*i1);
+			ompQ[ibuf][i1]=sf_cmul(ompQ[ibuf][i1],ompE[ompith]);
+		    }
 		}
+
 	    }
 
-	    sf_floatwrite((float*) pp,2*nw,out);
+	    sf_floatwrite((float*) ompQ[0],2*nw*nbuf,Fou);
 	} else {
-	    sf_floatread((float*) pp,2*nw,in);
+	    sf_floatread( (float*) ompQ[0],2*nw*nbuf, Fin);
 
-	    if (0. != o1) {
-		for (i1=0; i1 < nw; i1++) {
-		    shift = +2.0*SF_PI*i1*dw*o1;
-		    ce.r = cosf(shift);
-		    ce.i = sinf(shift);
-		    pp[i1]=sf_cmul(pp[i1],ce);
-		}
-	    }
-
-#ifdef SF_HAS_FFTW
-	    fftwf_execute(cfg);
-#else
-	    kiss_fftri(cfg,pp,p);
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static)			\
+    private(ibuf,i1,ompith,shift)				\
+    shared( nbuf,n1,nw,dw,o1,wght,ompP,ompQ,ompE,ompcfg)
+#endif
+	    for(ibuf=0; ibuf<nbuf; ibuf++) {
+#ifdef _OPENMP
+		ompith = omp_get_thread_num();
 #endif
 
-	    for (i1=0; i1 < n1; i1++) {
-		p[i1] *= wt;
+		if (0. != o1) { shift = +2.0*SF_PI*dw*o1;
+		    for(i1=0; i1<nw; i1++) {
+			ompE[ompith].r = cosf(shift*i1);
+			ompE[ompith].i = sinf(shift*i1);
+			ompQ[ibuf][i1]=sf_cmul(ompQ[ibuf][i1],ompE[ompith]);
+		    }
+		}
+
+#ifdef SF_HAS_FFTW
+		fftwf_execute(ompcfg[ompith]);
+#else
+		kiss_fftri(ompcfg[ompith],ompQ[ibuf],ompP[ibuf]);
+#endif
+		
+		for(i1=0; i1<n1; i1++) ompP[ibuf][i1] *= wght;
 	    }
 
-	    sf_floatwrite (p,n1,out);
+	    sf_floatwrite (ompP[0],n1*nbuf,Fou);
 	}
     }
-
+    if(verb) fprintf(stderr,"\n");
 
     exit (0);
 }
-
-/* 	$Id$	 */
