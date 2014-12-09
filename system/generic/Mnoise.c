@@ -29,7 +29,8 @@ http://ahay.org/rsflog/index.php?/archives/262-Program-of-the-month-sfnoise.html
 int main (int argc, char* argv[])
 {
     float mean, var, range, a, b, *dat;
-    int nbuf, nsiz, seed, i;
+    size_t nbuf, nsiz;
+    int seed, i;
     bool normal, rep;
     sf_file in, out;
 
