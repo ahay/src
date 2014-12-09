@@ -1,0 +1,16 @@
+from rsf.proj import *
+
+Plot('over_1',None,
+     '''
+     math n1=50 d1=10 o1=-290
+     output="sqrt(x1^2/4+200^2)/1000" |
+     add add=.05 | 
+     graph min2=0. max2=0.39 wantaxis=0 wanttitle= 
+     yreverse=1 plotfat=20 plotcol=5
+     ''')
+
+Plot('over_csg_p_150','csg_p_150 over_1','Overlay')
+
+Result('first','aw_csg_p_150 csg_p_150 over_csg_p_150','SideBySideAniso')
+
+End()
