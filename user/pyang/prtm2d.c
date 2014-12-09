@@ -1,5 +1,5 @@
 /* 2-D prestack LSRTM linear operator using wavefield reconstruction method
-   NB: Sponge ABC is applied!
+Note: Sponge ABC is applied!
 */
 /*
   Copyright (C) 2014  Xi'an Jiaotong University, UT Austin (Pengliang Yang)
@@ -17,10 +17,6 @@
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-  Reference: Ji, Jun. "An exact adjoint operation pair in time extrapolation 
-  and its application in least-squares reverse-time migration." Geophysics 
-  74.5 (2009): H27-H33.
 */
 #include <rsf.h>
 
@@ -122,11 +118,12 @@ void step_forward(float **u0, float **u1, float **vv, bool adj)
     for (i2=2; i2<nxpad-2; i2++) 
       for (i1=2; i1<nzpad-2; i1++) 
 	{
-	  u0[i2][i1]=2.*u1[i2][i1]-u0[i2][i1]+ vv[i2][i1]*(c0*u1[i2][i1]+
-							   c11*(u1[i2][i1-1]+u1[i2][i1+1])+
-							   c12*(u1[i2][i1-2]+u1[i2][i1+2])+
-							   c21*(u1[i2-1][i1]+u1[i2+1][i1])+
-							   c22*(u1[i2-2][i1]+u1[i2+2][i1]));
+	  u0[i2][i1]=2.*u1[i2][i1]-u0[i2][i1]+ 
+		vv[i2][i1]*(c0*u1[i2][i1]+
+			    c11*(u1[i2][i1-1]+u1[i2][i1+1])+
+			    c12*(u1[i2][i1-2]+u1[i2][i1+2])+
+			    c21*(u1[i2-1][i1]+u1[i2+1][i1])+
+			    c22*(u1[i2-2][i1]+u1[i2+2][i1]));
 	}
   }
 }
@@ -396,8 +393,8 @@ void prtm2d_lop(bool adj, bool add, int nm, int nd, float *mod, float *dat)
 	if(verb) sf_warning("%d;",it);
 	
 	/* reconstruct source wavefield Ps[] */	
+	boundary_rw(sp0, &rwbndr[it*4*(nx+nz)], true);
 	ptr=sp0; sp0=sp1; sp1=ptr;
-	boundary_rw(sp1, &rwbndr[it*4*(nx+nz)], true);
 	step_forward(sp0, sp1, vv, false);
 	add_source(&sxz[is], sp1, 1, &wlt[it], false);
 	
@@ -414,7 +411,7 @@ void prtm2d_lop(bool adj, bool add, int nm, int nd, float *mod, float *dat)
 	
 	for(i2=0; i2<nx; i2++)
 	  for(i1=0; i1<nz; i1++)
-	    mod[i1+nz*i2]+=sp0[i2+nb][i1+nb]*gp0[i2+nb][i1+nb];
+	    mod[i1+nz*i2]+=sp1[i2+nb][i1+nb]*gp0[i2+nb][i1+nb];
       }
     }else{/* Born modeling/demigration: dd=L mm */	
 
@@ -424,7 +421,7 @@ void prtm2d_lop(bool adj, bool add, int nm, int nd, float *mod, float *dat)
 
 	for(i2=0; i2<nx; i2++)
 	  for(i1=0; i1<nz; i1++)
-	    gp0[i2+nb][i1+nb]+=sp0[i2+nb][i1+nb]*mod[i1+nz*i2];
+	    gp0[i2+nb][i1+nb]+=sp1[i2+nb][i1+nb]*mod[i1+nz*i2];
 	
 	ptr=gp0; gp0=gp1; gp1=ptr;
 	apply_sponge(gp0); 

@@ -299,7 +299,7 @@ int main(int argc, char* argv[])
 	for(ix=0;ix<nxpad;ix++){
 	    for(iz=0;iz<nzpad;iz++){
 		tmp=vv[ix][iz]*dt;
-		vv[ix][iz]=tmp*tmp;// vv=vv^2*dt^2
+		vv[ix][iz]=tmp*tmp;/* vv=vv^2*dt^2 */ 
 	    }
 	}	
 	for(it=0; it<nt; it++){
@@ -307,19 +307,14 @@ int main(int argc, char* argv[])
 		wlt[it]=amp*(1.0-2.0*tmp)*expf(-tmp);
 	}
 	if (!(sxbeg>=0 && szbeg>=0 && sxbeg+(ns-1)*jsx<nx && szbeg+(ns-1)*jsz<nz))	
-	{ printf("sources exceeds the computing zone!\n"); exit(1);}
+	{ sf_error("sources exceeds the computing zone!\n"); exit(1);}
 	sg_init(sxz, szbeg, sxbeg, jsz, jsx, ns);
 	distx=sxbeg-gxbeg;
 	distz=szbeg-gzbeg;
-	if (csdgather)	{
-		if (!(gxbeg>=0 && gzbeg>=0 && gxbeg+(ng-1)*jgx<nx && gzbeg+(ng-1)*jgz<nz &&
-		(sxbeg+(ns-1)*jsx)+(ng-1)*jgx-distx <nx  && (szbeg+(ns-1)*jsz)+(ng-1)*jgz-distz <nz))	
-		{ printf("geophones exceeds the computing zone!\n"); exit(1);}
-	}
-	else{
-		if (!(gxbeg>=0 && gzbeg>=0 && gxbeg+(ng-1)*jgx<nx && gzbeg+(ng-1)*jgz<nz))	
-		{ printf("geophones exceeds the computing zone!\n"); exit(1);}
-	}
+	if (!(gxbeg>=0 && gzbeg>=0 && gxbeg+(ng-1)*jgx<nx && gzbeg+(ng-1)*jgz<nz))	
+	{ sf_error("geophones exceeds the computing zone!\n"); exit(1);}
+	if (csdgather && !((sxbeg+(ns-1)*jsx)+(ng-1)*jgx-distx <nx  && (szbeg+(ns-1)*jsz)+(ng-1)*jgz-distz <nz))	
+	{ sf_error("geophones exceeds the computing zone!\n"); exit(1);}
 	sg_init(gxz, gzbeg, gxbeg, jgz, jgx, ng);
 
 	for(is=0; is<ns; is++)
@@ -336,9 +331,9 @@ int main(int argc, char* argv[])
 		{
 			add_source(&sxz[is], p1, 1, &wlt[it], true);
 			step_forward(p0, p1);
+			ptr=p0; p0=p1; p1=ptr;
 			apply_sponge(p1);
 			apply_sponge(p0);
-			ptr=p0; p0=p1; p1=ptr;
 
 			record_seis(&dobs[it*ng], gxz, p0, ng);
 		}

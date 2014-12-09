@@ -202,13 +202,11 @@ void rtm2d_lop(bool adj, bool add, int nm, int nd, float *mod, float *dat)
 		/* output image (mod is image, i.e. truncation of u1) */
 		for(i2=0; i2<nx; i2++)
 		for(i1=0; i1<nz; i1++)
-		{
 			mod[i1+nz*i2]+=u1[i2+nb][i1+nb];
-		}
     	}else{ // modeling
 		for(i2=0; i2<nx; i2++)
 		for(i1=0; i1<nz; i1++)
-			u1[i2+nb][i1+nb]+=mod[i1+nz*i2];// zero-paded
+			u1[i2+nb][i1+nb]+=mod[i1+nz*i2];// zero-paded u1
 
     		for (it=0; it <nt; it++) {
 			sf_warning("%d;",it);	
@@ -222,9 +220,9 @@ void rtm2d_lop(bool adj, bool add, int nm, int nd, float *mod, float *dat)
 			for (i2=0; i2<nx; i2++) dat[i2*nt+it]+=u1[i2+nb][n0+nb];
 
 			step_forward(u0, u1, vv, false);
+			ptr=u0; u0=u1; u1=ptr;
 			apply_sponge(u1, bndr);
 			apply_sponge(u0, bndr);
-			ptr=u0; u0=u1; u1=ptr;
     		}
     	}
 }
