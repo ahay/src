@@ -1,0 +1,10 @@
+from rsf.proj import *
+
+for case in ('reftran','refvert'):
+    Fetch(case+'.HH','ida')
+    Flow(case,case+'.HH','dd form=native')
+
+Result('reftran','reftran tran.text',
+       'grey pclip=90 | vpannotate text=${SOURCES[1]} batch=y')
+
+End()

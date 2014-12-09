@@ -1,0 +1,156 @@
+\lefthead{Claerbout}
+\righthead{Earthquake stacks}
+\footer{SEP--77}
+
+
+\title{Earthquake stacks at constant offset}
+%\keywords{earthquake, traveltime, graphics }
+
+\author{ Jon F. Claerbout }
+
+\begin{abstract}
+	I show Shearer's earthquake stacks
+	over all source-receiver locations at constant offset
+	and compare them to exploration seismic data.
+	This electronic document simply reads the stacks and plots them.
+\end{abstract}
+
+\section{INTRODUCTION}
+
+The figures in this paper show Professor Peter Shearer's stacks
+over many earthquakes
+at constant epicentral distance
+(offset angle).
+Notice that the time scale is minutes and the offset is degrees of angle
+on the earth's surface.
+Otherwise, there are remarkable similarities
+to conventional exploration seismic data.
+For details of how the stacks were made, see the references.
+
+\section{SHEARER's EARTHQUAKE STACKS}
+Professor Shearer has found a way to choose the polarity for each seismogram
+so that the SH waves do not randomly cancel in the stack.
+Since SH waves have no conversions, the SH-wave stack in Figure~\ref{fig:reftran}
+is easier to understand than the P-SV stack shown later.
+The first big event is
+direct S (shear wave).
+It comes tangent to ScS (reflection from the earth's core)
+hitting grazing angle around 90 degrees
+at about 23 minutes of travel time.
+The first
+{\it multiple}
+reflection of ScS at grazing angle
+is at double the epicentral distance and double the travel time.
+It is easily seen at the opposite side of the earth
+near 180 degrees offset.
+Figure~\ref{fig:reftran} also shows six bounces
+of direct S bouncing from the earth's surface
+before the plot ends at one hour travel time.
+Incidentally, many fewer earthquakes are observed near 180 degrees
+than near 90 degrees for the simple geometrical reason that ten
+degrees surrounding the equator is a much bigger area than ten degrees
+surrounding the pole.
+Thus the quality of the stacks degrades rapidly toward the poles.
+
+\activeplot{reftran}{width=6.00in,height=8.00in}{\CAKEDIR}{
+	Transverse component.  SH waves.
+	}
+
+\par
+Waves analogous to familiar water-bottom pegleg multiples
+are readily seen tracking S about 4 minutes later than S.
+The data shows these two events,
+one being a reflection from a layer at 410 km
+and the other from 660 km.
+As with familiar water-bottom peglegs,
+each event is a superposition of two events,
+one with a short path near the source
+and the other with a short path near the receiver.
+
+\par
+Of particular interest are waves identified by Professor Shearer
+that track SS, the first surface multiple of S,
+but arrive about 4 minutes {\it earlier.}
+Were it not for the confusing similarity between ``shear'' and ``Shearer'',
+I would call these ``Shearer'' waves.
+They arrive {\it earlier} than the first multiple of direct S because
+instead of an earth-surface bounce at the middle of the path,
+they bounce a little sooner
+from the {\it underside} of the layers at 660 km and 410 km.
+The nice thing about Shearer's waves is that they are uniquely
+associated with the middle of the path,
+rather than having two bounce locations, as do familiar first-order peglegs.
+We might like to search our files of exploration data
+to see if we can find analogous events.
+
+\par
+In the stack in Figure~\ref{fig:refvert}, Professor Shearer
+has chosen the polarities of each seismogram
+so that P-SV waves stack in phase.
+Because of conversions between P and SV,
+there are a huge number of new events which I leave to you to pick out.
+Waves that propagate further than 180 degrees fold back
+(like discrete Fourier transforms).
+I cannot explain why such folding was not visible on the SH section.
+
+
+
+\activeplot{refvert}{width=6.00in,height=8.00in}{\CAKEDIR}{
+	Vertical component showing P and SV waves.
+	Press button for movie blinking vertical with transverse.
+	}
+
+Figure~\ref{fig:anis} is a plot of signal amplitudes.
+These were the first stacks that Professor Shearer made
+because they require no knowledge of polarity.
+
+\activeplot{anis}{width=6.00in,height=7.50in}{\CAKEDIR}{
+	Transverse and vertical component of signal magnitude.
+	Press button for movie blinking between them
+	to see if you believe in whole-earth anisotropy.
+	}
+
+A challenging goal is to redo these stacks from the original data
+trying to boost the spectral bandwidth of the final result.
+This involves statics corrections and corrections for source depth.
+
+
+\section{ACKNOWLEDGMENT}
+I received this data from Peter Shearer
+and I received his permission to redistribute it to friends and colleagues
+provided I request you to reference its origin,
+should you have occasion to copy it.
+Examples of earlier versions of these stacks are found in the references.
+(The stacks here were done before February 1993.)
+Peter may be willing to supply newer and better stacks.
+His electronic mail address is {\tt shearer@mahi.ucsd.edu}.
+
+
+%\mhead{REFERENCES}
+%Shearer, PM,
+%Imaging Global Body Wave Phases by Stacking long-period seismograms,
+%JGR,  v 96, n B12, paaaages 20,535-20,324 Nove 10, 1991
+%
+%Shearer, P.M.,
+%Constraints on upper mantle discontinuities from observations
+%of long period reflected and converted phases,
+%JGR, vol 96, no.b11, pages 18,147-18,182 Oct 10, 1991
+
+\section{REFERENCES}
+\reference{
+	Shearer, P.M., 1991,
+	Imaging global body wave phases by stacking long-period seismograms.
+	J. Geophy. Res.,  v.~96, n.~B12,
+	pp. 20,535--20,324.
+	% November 10, 1991
+	}
+
+\reference{
+	Shearer, P.M., 1991,
+	Constraints on upper mantle discontinuities from observations
+	of long period reflected and converted phases.
+	J. Geophy. Res.,  v.~96, n.~B11,
+	pp. 18,147--18,182.
+	% October 10, 1991
+	}
+
