@@ -29,7 +29,8 @@ static float getscale(int ntest, int n1, float *abuf);
 int main (int argc, char* argv[])
 {
     off_t n1, n2, n[SF_MAX_DIM];
-    int axis, ndim, i, i2, nsize, nbuf, ntest, *ibuf;
+    int axis, ndim, i, i2, *ibuf;
+    size_t nsize, nbuf, ntest;
     sf_file in=NULL;
     sf_file out=NULL;
     float *fbuf, *abuf, dscale, pclip;
