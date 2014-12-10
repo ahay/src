@@ -20,7 +20,7 @@
 
 static int nkx,nky,nkz;
 static kiss_fft_cfg cfgx,cfgxi,cfgy,cfgyi,cfgz,cfgzi;
-static kiss_fft_cpx *ctracex,*tracey,*ctracez;
+static kiss_fft_cpx *ctracex,*ctracey,*ctracez;
 
 int fft_nk(int n, int opt)
 /*< wavenumber for FT >*/

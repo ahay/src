@@ -59,6 +59,7 @@ To programs:
 * Added segy= and desc= parameters to sfheaderattr
 * Renamed sfsvd sfpysvd and fixed sizes for output vectors
 * Enabled depth= option for sfgraph with lines
+* user/junyan: New contributor (Jun Yan)
 
 ===Bug fixes===
 

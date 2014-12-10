@@ -17,8 +17,6 @@ void bd3_init(int n1,  int n2, int n3    /*model size:x*/,
 void bd3_close(void);
 /*< free memory allocation>*/
 
-float ***extmodel3d(float ***init_model,int nz,int nx,int ny,int np);
-/*< extend model >*/
 
 void bd3_decay(float ***a /*3-D matrix*/);
 /*< boundary decay>*/

@@ -60,6 +60,7 @@ Robin Weiss <robin.weiss@uwa.edu.au>
 Zedong Wu <zedong.wu@kaust.edu.sa>
 Zhiguang Xue <zhiguangxue@gmail.com>
 Jia Yan <jyan@mines.edu>
+Jun Yan <junyan@mail.iggcas.ac.cn>
 Pengliang Yang <ypl.2100@gmail.com>
 Lexing Ying <lexing@math.utexas.edu>
 Hejun Zhu <hzhu@jsg.utexas.edu>

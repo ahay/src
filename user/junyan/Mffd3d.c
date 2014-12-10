@@ -22,8 +22,7 @@
 #include <math.h>
 #include <limits.h>
 #include "abcpass3.h"
-#include "ffdstep3.h"
-#include "srcsm.h"
+
 #ifdef _OPENMP
 #include <omp.h>
 #endif

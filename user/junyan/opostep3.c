@@ -20,7 +20,6 @@
 #include <rsf.h>
 #include "opostep3.h"
 #include "fft3.h"
-//#include "fft3d_JYAN.h"
 
 #ifdef _OPENMP
 #include <omp.h>
