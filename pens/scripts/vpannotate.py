@@ -91,7 +91,7 @@ if __name__ == "__main__":
     Annotates a Vplot file with a box.
 
     Usage:
-    %s [batch=0] [text=box.par] file.vpl [annotated.vpl]
+    %s [batch=0] [text=box.par] < file.vpl [annotated.vpl]
     ''' % prog
 
     if argc < 2:
