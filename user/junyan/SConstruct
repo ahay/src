@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-psti2d psti3d pamti2d pamti3d opoti2d opoti3d pse2d pse3d pame2d pame3d opame2d sgelfd2dpml sgelfd2dpml2
+psti2d psti3d pamti2d pamti3d opoti2d opoti3d pse2d pse3d pame2d pame3d opame2d sgelfd2dpml sgelfd2dpml2  ffd3d
 '''
 
 ccprogs = '''opame2dckxx opame2dckxz opame2dckzz osam2dckxx osam2dckxxxx osam2dckxxxz osam2dckxxzz osam2dckxzzz osam2dckzz osam2dckzzzz osam3dckxx osam3dckxxxx osam3dckxxxy osam3dckxxxz osam3dckxxyy osam3dckxxyz osam3dkxxzz osam3dckxy osam3dckxyyy osam3dckxyyz osam3dckxyzz osam3dckxz osam3dckxzzz osam3dckyy osam3dckyyyy osam3dckyyyz osam3dckyyzz osam3dckyz osam3dckyzzz osam3dckzz osam3dckzzzz 
