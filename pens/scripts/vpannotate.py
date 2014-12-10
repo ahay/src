@@ -60,18 +60,29 @@ To create the annotated file, QUIT out of xtpen.
         run = '%s message="%s" %s interact=%s boxy=y < %s' % (xtpen,message,args,textfile,inp)
         syswait(run)
 
-    boxvpl = tempfile.mktemp(suffix='.vpl')
+    boxes = []
+
+    try:
+        tfile = open(textfile,'r')
+        for line in tfile.readlines():
+            boxvpl = tempfile.mktemp(suffix='.vpl')
     
-    run = '%s par=%s %s > %s' % (box,textfile,args,boxvpl)
-    syswait(run)
+            run = '%s %s %s > %s' % (box,line.rstrip(),args,boxvpl)
+            syswait(run)
+
+            boxes.append(boxvpl)
+        tfile.close()
+    except:
+        pass
+
+    boxvpl = ' '.join(boxes)
 
     result = '''
 This is the annotated vplot figure.
 You might play with vpstyle=y, if you only want to 
 see the original portion.
     '''
-
-    
+   
     if interactive:
         run = '%s %s %s erase=once vpstyle=n %s | %s  message="%s" ' % (vppen,inp,boxvpl,args,xtpen,result)
     else:
@@ -79,7 +90,8 @@ see the original portion.
     syswait(run)
 
     # cleanup
-    os.unlink(boxvpl)
+    for boxvpl in boxes:
+        os.unlink(boxvpl)
 
 if __name__ == "__main__":
     # own user interface instead of that provided by RSF's Python API
@@ -105,13 +117,13 @@ if __name__ == "__main__":
     files = []
     for arg in sys.argv:
         if '=' in arg:
-            if arg[:5] == 'batch':
-                if arg[5]=='y' or arg[5]=='1':
+            if arg[:6] == 'batch=':
+                if arg[6]=='y' or arg[6]=='1':
                     interactive = 0
                 else:
                     interactive = 1
-            elif arg[:4] == 'text':
-                textfile = arg[4:]
+            elif arg[:5] == 'text=':
+                textfile = arg[5:]
             else:
                 args.append(arg)
         else:

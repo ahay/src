@@ -1,3 +1,5 @@
+\published{SEP report, 77, 361-366 (1993)}
+
 \lefthead{Claerbout}
 \righthead{Earthquake stacks}
 \footer{SEP--77}
@@ -28,6 +30,8 @@ to conventional exploration seismic data.
 For details of how the stacks were made, see the references.
 
 \section{SHEARER's EARTHQUAKE STACKS}
+\inputdir{stacks}
+
 Professor Shearer has found a way to choose the polarity for each seismogram
 so that the SH waves do not randomly cancel in the stack.
 Since SH waves have no conversions, the SH-wave stack in Figure~\ref{fig:reftran}
@@ -52,7 +56,7 @@ degrees surrounding the equator is a much bigger area than ten degrees
 surrounding the pole.
 Thus the quality of the stacks degrades rapidly toward the poles.
 
-\activeplot{reftran}{width=6.00in,height=8.00in}{\CAKEDIR}{
+\plot{reftran}{width=6.00in,height=8.00in}{
 	Transverse component.  SH waves.
 	}
 
@@ -95,19 +99,19 @@ I cannot explain why such folding was not visible on the SH section.
 
 
 
-\activeplot{refvert}{width=6.00in,height=8.00in}{\CAKEDIR}{
+\plot{refvert}{width=6.00in,height=8.00in}{
 	Vertical component showing P and SV waves.
-	Press button for movie blinking vertical with transverse.
+%	Press button for movie blinking vertical with transverse.
 	}
 
 Figure~\ref{fig:anis} is a plot of signal amplitudes.
 These were the first stacks that Professor Shearer made
 because they require no knowledge of polarity.
 
-\activeplot{anis}{width=6.00in,height=7.50in}{\CAKEDIR}{
+\plot{anis}{width=6.00in,height=7.50in}{
 	Transverse and vertical component of signal magnitude.
-	Press button for movie blinking between them
-	to see if you believe in whole-earth anisotropy.
+%	Press button for movie blinking between them
+	See if you believe in whole-earth anisotropy.
 	}
 
 A challenging goal is to redo these stacks from the original data
@@ -125,32 +129,9 @@ Examples of earlier versions of these stacks are found in the references.
 Peter may be willing to supply newer and better stacks.
 His electronic mail address is {\tt shearer@mahi.ucsd.edu}.
 
+\nocite{shearer1}
+\nocite{shearer2}
 
-%\mhead{REFERENCES}
-%Shearer, PM,
-%Imaging Global Body Wave Phases by Stacking long-period seismograms,
-%JGR,  v 96, n B12, paaaages 20,535-20,324 Nove 10, 1991
-%
-%Shearer, P.M.,
-%Constraints on upper mantle discontinuities from observations
-%of long period reflected and converted phases,
-%JGR, vol 96, no.b11, pages 18,147-18,182 Oct 10, 1991
-
-\section{REFERENCES}
-\reference{
-	Shearer, P.M., 1991,
-	Imaging global body wave phases by stacking long-period seismograms.
-	J. Geophy. Res.,  v.~96, n.~B12,
-	pp. 20,535--20,324.
-	% November 10, 1991
-	}
-
-\reference{
-	Shearer, P.M., 1991,
-	Constraints on upper mantle discontinuities from observations
-	of long period reflected and converted phases.
-	J. Geophy. Res.,  v.~96, n.~B11,
-	pp. 18,147--18,182.
-	% October 10, 1991
-	}
+\bibliographystyle{seg}
+\bibliography{shearer}
 

@@ -9,6 +9,13 @@ for case in ('reftran','refvert'):
          ''' % (dict(reftran='Transverse',refvert='Vertical')[case]))
     
 Result('reftran','reftran tran.text','Annotate')
+Result('refvert','Overlay')
 
+Fetch('anis.AA','ida')
+
+Plot('left','anis.AA','window n3=1 | grey title=transverse')
+Plot('rite','anis.AA','window f3=1 | grey title=vertical')
+
+Result('anis','left rite','SideBySideAniso')
 
 End()
