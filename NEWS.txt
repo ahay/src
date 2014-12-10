@@ -27,6 +27,7 @@ To the reproducible documents collection:
 * jlu/txyapf: Adaptive prediction filtering in t-x-y domain for random
   noise attenuation using regularized nonstationary autoregression
   (Liu, Liu, and Liu)
+* sep/shearer: Earthquake stacks at constant offset (Claerbout)
 
 To SCons:
 
