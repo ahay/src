@@ -84,7 +84,7 @@ int main(int argc, char* argv[])
 	p2 = p*p; 
 	p21 = p2 + 1.;
 
-	sf_warning("got %d of %d: %g", ip, np, p);
+	sf_warning("got %d of %d: %g;", ip, np, p);
 
 	s0 = 579840.*p21;
 	ss->flt[0] = 720.*(397. - 151.*p2);
@@ -148,6 +148,8 @@ int main(int argc, char* argv[])
 	nh[ip] = aa->nh;
 	sf_deallocatehelix (aa);
     }
+    sf_warning(".");
+
     sf_intwrite (nh,np,nhh);
 
     exit(0);

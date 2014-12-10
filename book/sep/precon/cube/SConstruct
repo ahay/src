@@ -57,7 +57,7 @@ def grey3(title):
     grey3 title="%s"
     flat=y point1=0.75 point2=0.75
     frame1=164 frame2=142 frame3=56
-    label1=Time label2="In-line midpoint" label3="Cross-line midpoint"
+    label1=Time label2="In-line" label3="Cross-line"
     unit1=s unit2= unit3= 
     ''' % title
 

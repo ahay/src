@@ -245,7 +245,7 @@ int main (int argc, char* argv[])
     /* regularization parameter */
 
     for (it=0; it < nt; it++) { /* loop over time slices */
-	sf_warning("%d of %d",it+1,nt);
+	sf_warning("%d of %d;",it+1,nt);
 	
 	sf_floatread (dd,nd,in);
 
@@ -267,6 +267,7 @@ int main (int argc, char* argv[])
 	sf_cgstep_close();
 	sf_floatwrite (mm,nm,out);
     }
+    sf_warning(".");
 
 
     exit(0);
