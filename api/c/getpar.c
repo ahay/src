@@ -46,6 +46,10 @@
 
 #define USERNAME_MAX 33
 
+#ifndef MAXNAMLEN
+#define MAXNAMLEN 255
+#endif
+
 static sf_simtab pars;
 static char prog[MAXNAMLEN];
 static char user[USERNAME_MAX];
