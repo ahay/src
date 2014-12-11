@@ -190,7 +190,7 @@ jobs = [
     'src': ['csq.rsf'],
     'tgt': ['s1000csq.rsf'],
     'cmd': helmfftw + ' ' +
-         ' weight0=100 weight1=100 power=-0.5 datum=0 ' +
+         ' weight0=500 weight1=500 power=-0.5 datum=100 ' +
          ' sbc0=1 sbc1=0 ebc0=0 ebc1=0 in=csq.rsf out=s1000csq.rsf ' +
          ' partask='+getThreads(exe_serial),
     'exe': exe_serial

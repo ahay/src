@@ -110,35 +110,58 @@ namespace TSOpt {
         
         float w;   // width of mute zone
         
-        int mute_type; // muting type: 0, conic-like (point source); 1, rectangle (plane-wave src)
+        int mute_type;     // muting type: 0, conic-like (point source); 1, rectangle (plane-wave src)
         
         float taper_min;   // minimum value of keyword where taper starts
         float taper_max;   // maximum value of keyword where taper ends
-        float width; // width of taper zone
-        float tw;    // taper of end time width, unit(ms)
-        int taper_type; // taper type: 0, geophone position; 1, offset
+        float width;       // width of taper zone
+        float tw;          // taper of end time width, unit(ms)
+        int taper_type;    // taper type: 0, geophone position; 1, offset
+
+        // taper parameters for source location
+        float sx_min;      // minimum value of source location
+        float sx_max;      // maximum value of source location
+        float sx_width;    // taper width
 
     public:
         
-        SEGYTaperMute(float _s=0.0f, float _tm=0.0f, float _w=0.0f, int _type = 0, float _taper_min=0.0f, float _taper_max=0.0f, float _width=0.0f, int _tapertype=0, float _tw=0.0f)
-	  : s(_s),tm(_tm),w(_w),mute_type(_type), taper_min(_taper_min), taper_max(_taper_max), width(_width), tw(_tw), taper_type(_tapertype) {}
+        SEGYTaperMute(float _s=0.0f, float _tm=0.0f, float _w=0.0f, int _type = 0, 
+                      float _taper_min=0.0f, float _taper_max=0.0f, float _width=0.0f, 
+                      int _tapertype=0, float _tw=0.0f,
+                      float _sxmin=0.0f, float _sxmax=numeric_limits<float>::max(),
+                      float _sxw=0.0f)
+	  : s(_s),tm(_tm),w(_w),mute_type(_type), 
+            taper_min(_taper_min), taper_max(_taper_max), 
+            width(_width), tw(_tw), taper_type(_tapertype),
+            sx_min(_sxmin), sx_max(_sxmax), sx_width(_sxw) {}
         
         SEGYTaperMute(SEGYTaperMute const & m)
-        : s(m.s),tm(m.tm),w(m.w),mute_type(m.mute_type),taper_min(m.taper_min),taper_max(m.taper_max),width(m.width), tw(m.tw), taper_type(m.taper_type) {}
-        void set(float _s, float _tm, float _w, int _type = 0, float _taper_min =0.0f , float _taper_max = numeric_limits<float>::max(), float _width=0.0f, int _tapertype=0, float _tw=0.0f)
+        : s(m.s),tm(m.tm),w(m.w),mute_type(m.mute_type),
+          taper_min(m.taper_min),taper_max(m.taper_max),
+          width(m.width), tw(m.tw), taper_type(m.taper_type),
+          sx_min(m.sx_min), sx_max(m.sx_max), sx_width(m.sx_width) {}
+ 
+        void set(float _s, float _tm, float _w, int _type = 0, 
+                 float _taper_min =0.0f , float _taper_max = numeric_limits<float>::max(), 
+                 float _width=0.0f, int _tapertype=0, float _tw=0.0f,
+                 float _sxmin=0.0f, int _sxmax=numeric_limits<float>::max(),
+                 float _sxw=0.0f)
         {
             mute_type = _type;
-            s = _s;
+            s  = _s;
             tm = _tm;
-            w = _w;
+            w  = _w;
             
             taper_min = _taper_min;
             taper_max = _taper_max;
-            width = _width;
+            width     = _width;
             taper_type = _tapertype;
             
-            tw=_tw;
+            tw = _tw;
             
+            sx_min = _sxmin;
+            sx_max = _sxmax;
+            sx_width = _sxw; 
         }
         
         ~SEGYTaperMute() {}

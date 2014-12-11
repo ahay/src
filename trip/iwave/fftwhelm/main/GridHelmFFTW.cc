@@ -60,10 +60,10 @@ int main(int argc, char ** argv) {
       weights[i]=valparse<float>(*pars,msg.str(),1.0f);
       stringstream smsg;
       smsg<<"sbc"<<i;
-      sbc[i]=valparse<int>(*pars,smsg.str(),1);
+      sbc[i]=valparse<int>(*pars,smsg.str(),0);
       stringstream emsg;
       emsg<<"ebc"<<i;
-      ebc[i]=valparse<int>(*pars,emsg.str(),1);
+      ebc[i]=valparse<int>(*pars,emsg.str(),0);
         //cerr << "sbc[" << i << "] = " << sbc[i] << endl;
         //cerr << "ebc[" << i << "] = " << ebc[i] << endl;
     }

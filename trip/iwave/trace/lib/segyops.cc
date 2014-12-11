@@ -92,6 +92,7 @@ namespace TSOpt {
             
             Value val;
             float gx;
+            float sx;
             float x;
             float dt;
             float t0;
@@ -117,18 +118,25 @@ namespace TSOpt {
             
             name="sx";
             gethdval(&trin,(char *)(name.c_str()),&val);
-            x = gx - vtof(hdtype((char *)(name.c_str())),val);
+            sx = vtof(hdtype((char *)(name.c_str())),val);
+            x = gx - sx; 
             
             int itw = (int) (tw/dt + 0.1);
             itw = MAX(1,itw);
 
+            float sxt_wt = 1.0f;
+            wt = MAX(1.0,sx_width);
+            if (sx < sx_min) sxt_wt = cosfun2((sx_min-sx)/wt);
+            if (sx > sx_max) sxt_wt = cosfun2((sx-sx_max)/wt);
+//cerr << " sxt_wt = " << sxt_wt << endl;
             // adjust mute so that w=0 works
             if (mute_type) {
                 wm = MAX(dt/s,w);
                 float wtmp = mutefun((gx - s)/wm) * mutefun((tm - gx)/wm);
+                wtmp = wtmp * sxt_wt;
+                wt=MAX(1.0,width);
+                float wttmp=1.0;
                 if (taper_type){ // offset
-                    wt=MAX(1.0,width);
-                    float wttmp=1.0;
                     if (x < taper_min) wttmp = cosfun2((taper_min-x)/wt);
                     else if (x > taper_max) wttmp = cosfun2((x - taper_max)/wt);
 #pragma ivdep                    
@@ -140,8 +148,6 @@ namespace TSOpt {
 
                 }
                 else { // taper geophone position
-                    wt=MAX(1.0,width);
-                    float wttmp=1.0;
                     if (gx < taper_min) wttmp = cosfun2((taper_min-gx)/wt);
                     else if (gx > taper_max) wttmp = cosfun2((gx - taper_max)/wt);
 #pragma ivdep                    
@@ -154,12 +160,12 @@ namespace TSOpt {
             }
             else {
                 wm=MAX(dt,w);
+                float wttmp=1.0;
+                wt=MAX(1.0,width);
                 if (taper_type){ // offset
-                    wt=MAX(1.0,width);
-                    float wttmp=1.0;
                     if (x < taper_min) wttmp = cosfun2((taper_min-x)/wt);
                     else if (x > taper_max) wttmp = cosfun2((x - taper_max)/wt);
-
+		    wttmp = wttmp * sxt_wt;
 #pragma ivdep                    
                     for (int i=0;i<nt-itw;i++)
                         trout.data[i] = trin.data[i]*wttmp*mutefun((i*dt+t0-s*fabs(x)-tm)/wm);
@@ -168,10 +174,9 @@ namespace TSOpt {
                         trout.data[i] = trin.data[i]*wttmp*mutefun((i*dt+t0-s*fabs(x)-tm)/wm)*cosfun(float(nt-i)/(itw+0.0f));
                 }
                 else { // taper geophone position
-                    wt=MAX(dt/taper_min,width);
-                    float wttmp=1.0;
                     if (gx < taper_min) wttmp = cosfun2((taper_min-gx)/wt);
                     else if (gx > taper_max) wttmp = cosfun2((gx - taper_max)/wt);
+                    wttmp = wttmp * sxt_wt;
 #pragma ivdep
                     for (int i=0;i<nt-itw;i++)
                         trout.data[i] = trin.data[i]*wttmp*mutefun((i*dt+t0-s*fabs(x)-tm)/wm);

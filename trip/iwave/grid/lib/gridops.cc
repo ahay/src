@@ -1,10 +1,12 @@
 #include "gridops.hh"
-
+float cosfun3(float t){
+    return 0.5 + cos(M_PI * t)/2.0f;
+}
 /* helmholtz power function */
 /*
 extern "C" void helm_(int,         // bc 
                       integer *,   // n1 
-                      integer *,   // n2 
+                      integer *,   // n2
                       float *,     // d1 
                       float *,     // d2 
                       float *,     // w1 
@@ -18,7 +20,6 @@ extern "C" void helm_(int,         // bc
                       integer *    // error flag 
 		      );
 */
-
 namespace TSOpt {
 
   using RVL::ScalarFieldTraits;
@@ -62,7 +63,6 @@ namespace TSOpt {
 	e<<"dimx="<<dimx<<" dimy="<<dimy<<"\n";
 	throw e;
       }
-            
       // compute grid params
       IPNT gsx; IPNT gex;
       IPNT gsy; IPNT gey;
@@ -82,7 +82,11 @@ namespace TSOpt {
       if (dimx==1) {
 #pragma ivdep
 	for (i[0]=s[0]+siw[0];i[0]<=e[0]-eiw[0];i[0]++) {
-          fac[0] = iwave_min(iwave_min(REAL_ONE,iwave_max(REAL_ZERO,(ireal(i[0]-s[0]-siw[0]+1))/ireal(5.0f))),iwave_min(REAL_ONE,iwave_max(REAL_ZERO,(ireal(e[0]-eiw[0]+1-i[0]))/ireal(5.0f))));
+          if (i[0] < width[0]+s[0]+siw[0]) 
+            fac[0] = cosfun3((width[0]+s[0]+siw[0]-i[0])/width[0]);
+          else if (i[0] > e[0]-eiw[0]-width[0]) 
+                 fac[0] = cosfun3((i[0]-e[0]+eiw[0]+width[0])/width[0]);
+               else fac[0] = 1.0f; //iwave_min(iwave_min(REAL_ONE,iwave_max(REAL_ZERO,(ireal(i[0]-s[0]-siw[0]+1))/ireal(width[0]))),iwave_min(REAL_ONE,iwave_max(REAL_ZERO,(ireal(e[0]-eiw[0]+1-i[0]))/ireal(width[0]))));
 	  if (bias) {
 	    rax._s1[i[0]]+=ray._s1[i[0]]*fac[0];
 	  }
@@ -95,10 +99,18 @@ namespace TSOpt {
 #if RARR_MAX_NDIM > 1
       if (dimx==2) {
 	for (i[1]=s[1]+siw[1];i[1]<=e[1]-eiw[1];i[1]++) {
-          fac[1] = iwave_min(iwave_min(REAL_ONE,iwave_max(REAL_ZERO,(ireal(i[1]-s[1]-siw[1]+1))/ireal(5.0f))),iwave_min(REAL_ONE,iwave_max(REAL_ZERO,(ireal(e[1]-eiw[1]+1-i[1]))/ireal(5.0f))));
+          if (i[1] < width[1]+s[1]+siw[1]) 
+            fac[1] = cosfun3((width[1]+s[1]+siw[1]-i[1])/width[1]);
+          else if (i[1] > e[1]-eiw[1]-width[1]) 
+                 fac[1] = cosfun3((i[1]-e[1]+eiw[1]+width[1])/width[1]);
+               else fac[1] = 1.0f; // iwave_min(iwave_min(REAL_ONE,iwave_max(REAL_ZERO,(ireal(i[1]-s[1]-siw[1]+1))/ireal(width[1]))),iwave_min(REAL_ONE,iwave_max(REAL_ZERO,(ireal(e[1]-eiw[1]+1-i[1]))/ireal(width[1]))));
 #pragma ivdep
 	  for (i[0]=s[0]+siw[0];i[0]<=e[0]-eiw[0];i[0]++) {
-            fac[0] = fac[1]*iwave_min(iwave_min(REAL_ONE,iwave_max(REAL_ZERO,(ireal(i[0]-s[0]-siw[0]+1))/ireal(5.0f))),iwave_min(REAL_ONE,iwave_max(REAL_ZERO,(ireal(e[0]-eiw[0]+1-i[0]))/ireal(5.0f))));
+          if (i[0] < width[0]+s[0]+siw[0]) 
+            fac[0] = cosfun3((width[0]+s[0]+siw[0]-i[0])/width[0]);
+          else if (i[0] > e[0]-eiw[0]-width[0]) 
+                 fac[0] = cosfun3((i[0]-e[0]+eiw[0]+width[0])/width[0]);
+               else fac[0] = 1.0f; //iwave_min(iwave_min(REAL_ONE,iwave_max(REAL_ZERO,(ireal(i[0]-s[0]-siw[0]+1))/ireal(width[0]))),iwave_min(REAL_ONE,iwave_max(REAL_ZERO,(ireal(e[0]-eiw[0]+1-i[0]))/ireal(width[0]))));
 	    if (bias) {
 	      rax._s2[i[1]][i[0]]+=fac[0]*ray._s2[i[1]][i[0]];
 	    }
@@ -112,12 +124,24 @@ namespace TSOpt {
 #if RARR_MAX_NDIM > 2
       if (dimx==3) {
 	for (i[2]=s[2]+siw[2];i[2]<=e[2]-eiw[2];i[2]++) {
-	  //fac[2] = iwave_min(iwave_min(REAL_ONE,iwave_max(REAL_ZERO,(ireal(i[2]-s[2]-siw[2]+1))/ireal(5.0f))),iwave_min(REAL_ONE,iwave_max(REAL_ZERO,(ireal(e[2]-eiw[2]+1-i[2]))/ireal(5.0f))));
+          if (i[2] < width[2]+s[2]+siw[2]) 
+            fac[2] = cosfun3((width[2]+s[2]+siw[2]-i[2])/width[2]);
+          else if (i[2] > e[2]-eiw[2]-width[2]) 
+                 fac[2] = cosfun3((i[2]-e[2]+eiw[2]+width[2])/width[2]);
+               else fac[2] = 1.0f; // iwave_min(iwave_min(REAL_ONE,iwave_max(REAL_ZERO,(ireal(i[2]-s[2]-siw[2]+1))/ireal(width[2]))),iwave_min(REAL_ONE,iwave_max(REAL_ZERO,(ireal(e[2]-eiw[2]+1-i[2]))/ireal(width[2]))));
 	  for (i[1]=s[1]+siw[1];i[1]<=e[1]-eiw[1];i[1]++) {
-            fac[1] = fac[2]*iwave_min(iwave_min(REAL_ONE,iwave_max(REAL_ZERO,(ireal(i[1]-s[1]-siw[1]+1))/ireal(5.0f))),iwave_min(REAL_ONE,iwave_max(REAL_ZERO,(ireal(e[1]-eiw[1]+1-i[1]))/ireal(5.0f))));
+          if (i[1] < width[1]+s[1]+siw[1]) 
+            fac[1] = cosfun3((width[1]+s[1]+siw[1]-i[1])/width[1]);
+          else if (i[1] > e[1]-eiw[1]-width[1]) 
+                 fac[1] = cosfun3((i[1]-e[1]+eiw[1]+width[1])/width[1]);
+               else fac[1] = 1.0f; // iwave_min(iwave_min(REAL_ONE,iwave_max(REAL_ZERO,(ireal(i[1]-s[1]-siw[1]+1))/ireal(width[1]))),iwave_min(REAL_ONE,iwave_max(REAL_ZERO,(ireal(e[1]-eiw[1]+1-i[1]))/ireal(width[1]))));
 #pragma ivdep
 	    for (i[0]=s[0]+siw[0];i[0]<=e[0]-eiw[0];i[0]++) {
-            fac[0] = fac[1]*iwave_min(iwave_min(REAL_ONE,iwave_max(REAL_ZERO,(ireal(i[0]-s[0]-siw[0]+1))/ireal(5.0f))),iwave_min(REAL_ONE,iwave_max(REAL_ZERO,(ireal(e[0]-eiw[0]+1-i[0]))/ireal(5.0f))));
+          if (i[0] < width[0]+s[0]+siw[0]) 
+            fac[0] = cosfun3((width[0]+s[0]+siw[0]-i[0])/width[0]);
+          else if (i[0] > e[0]-eiw[0]-width[0]) 
+                 fac[0] = cosfun3((i[0]-e[0]+eiw[0]+width[0])/width[0]);
+               else fac[0] = 1.0f; //iwave_min(iwave_min(REAL_ONE,iwave_max(REAL_ZERO,(ireal(i[0]-s[0]-siw[0]+1))/ireal(width[0]))),iwave_min(REAL_ONE,iwave_max(REAL_ZERO,(ireal(e[0]-eiw[0]+1-i[0]))/ireal(width[0]))));
 	      if (bias) {
 		rax._s3[i[2]][i[1]][i[0]]+=fac[0]*ray._s3[i[2]][i[1]][i[0]];
 	      }
@@ -158,13 +182,14 @@ namespace TSOpt {
     
   GridMaskOp::GridMaskOp(Space<ireal> const & _dom,
 			 Vector<ireal> const & _bg,
-			 RPNT const & sw, RPNT const & ew)
+			 RPNT const & sw, RPNT const & ew, RPNT const & _width)
     : dom(_dom), bg(_bg) {
     try {
       // generic initialization of iw
       IASN(siw,IPNT_0);
       IASN(eiw,IPNT_0);
-            
+      RASN(width,_width);
+  
       // branch on product structure - unfortunately required
       ProductSpace<ireal> const * pdom = dynamic_cast<ProductSpace<ireal> const *>(&dom);
       ProductSpace<ireal> const * prng = dynamic_cast<ProductSpace<ireal> const *>(&(bg.getSpace()));
@@ -205,9 +230,10 @@ namespace TSOpt {
 	  for (int i=0; i< g.dim; i++) {
 	    siw[i]=(int) (sw[i]/(g.axes[i].d) + 0.1);
 	    eiw[i]=(int) (ew[i]/(g.axes[i].d) + 0.1);
-
+            
 	    siw[i]=iwave_max(siw[i],1);
 	    eiw[i]=iwave_max(eiw[i],1);
+            // cerr << "g.axes[" << i << "].d=" << g.axes[i].d << endl;
 	  }
 	}
       }
@@ -254,7 +280,7 @@ namespace TSOpt {
   void GridMaskOp::apply(Vector<ireal> const & x,
 			 Vector<ireal> & y) const {
     try {
-      GridMaskFO op(siw,eiw,true);
+      GridMaskFO op(siw,eiw,width,true);
       MPISerialFunctionObject<ireal> mpiop(op);
       y.copy(bg);
       y.eval(mpiop,x);
@@ -269,7 +295,7 @@ namespace TSOpt {
 			      Vector<ireal> const & dx,
 			      Vector<ireal> & dy) const {
     try {
-      GridMaskFO op(siw,eiw,false);
+      GridMaskFO op(siw,eiw,width,false);
       MPISerialFunctionObject<ireal> mpiop(op);
       dy.zero();
       dy.eval(mpiop,dx);
@@ -284,7 +310,7 @@ namespace TSOpt {
 				 Vector<ireal> const & dy,
 				 Vector<ireal> & dx) const {
     try {
-      GridMaskFO op(siw,eiw,false);
+      GridMaskFO op(siw,eiw,width,false);
       MPISerialFunctionObject<ireal> mpiop(op);
       dx.zero();
       dx.eval(mpiop,dy);

@@ -6,6 +6,7 @@
 #include "iwop.hh"
 #include "functions.hh"
 #include "op.hh"
+#include "linop.hh"
 #include "blockop.hh"
 #include "cgnealg.hh"
 #include "LBFGSBT.hh"
@@ -68,7 +69,6 @@ using TSOpt::SEGYSpace;
 #endif
 using TSOpt::GridExtendOp;
 using TSOpt::GridDerivOp;
-using TSOpt::GridHelmOp;
 
 int xargc;
 char **xargv;
@@ -125,7 +125,10 @@ int main(int argc, char ** argv) {
                               valparse<float>(*pars,"max",numeric_limits<float>::max()),
                               valparse<float>(*pars,"taper_width",0.0f),
                               valparse<int>(*pars,"taper_type",0),
-                              valparse<float>(*pars,"time_width",0.0f));
+                              valparse<float>(*pars,"time_width",0.0f),
+                              valparse<float>(*pars,"sx_min",0.0f),
+                              valparse<float>(*pars,"sx_max",numeric_limits<float>::max()),
+                              valparse<float>(*pars,"sx_width",0.0f));
             
             LinearOpFO<float> tnmop(iwop.getRange(),iwop.getRange(),tnm,tnm);
             OpComp<float> op(iwop,tnmop);
@@ -143,6 +146,8 @@ int main(int argc, char ** argv) {
             Vector<ireal> m0(dom);
             Vector<ireal> m(dom);
             Vector<ireal> dm(op.getDomain());
+            Vector<ireal> q(op.getDomain());
+            Vector<ireal> qrhs(op.getDomain());
             
             AssignFilename mf0n(valparse<std::string>(*pars,"init_velsq"));
             Components<ireal> cm0(m0);
@@ -156,6 +161,13 @@ int main(int argc, char ** argv) {
             AssignFilename dmfn(valparse<std::string>(*pars,"reflectivity"));
             Components<ireal> cdm(dm);
             cdm[0].eval(dmfn);
+
+            AssignFilename qfn(valparse<std::string>(*pars,"extq"));
+            Components<ireal> cq(q);
+            cq[0].eval(qfn);
+            AssignFilename qrhsfn(valparse<std::string>(*pars,"extqrhs"));
+            Components<ireal> cqrhs(qrhs);
+            cqrhs[0].eval(qrhsfn);
             
             // muted data
             Vector<ireal> mdd(op.getRange());
@@ -199,6 +211,7 @@ int main(int argc, char ** argv) {
             }
 #endif
             RPNT swind,ewind;
+            RPNT width;
             RASN(swind,RPNT_0);
             RASN(ewind,RPNT_0);
             swind[0]=valparse<float>(*pars,"sww1",0.0f);
@@ -207,7 +220,9 @@ int main(int argc, char ** argv) {
             ewind[0]=valparse<float>(*pars,"eww1",0.0f);
             ewind[1]=valparse<float>(*pars,"eww2",0.0f);
      	    ewind[2]=valparse<float>(*pars,"eww3",0.0f);
-
+            width[0]=valparse<int>(*pars,"width0",200.0f);
+            width[1]=valparse<int>(*pars,"width1",200.0f);
+            width[2]=valparse<int>(*pars,"width2",0.0f);
 
             // assign window widths - default = 0;
             //RPNT wind;
@@ -222,23 +237,18 @@ int main(int argc, char ** argv) {
             Components<ireal> cmin(m_in);
             cmin[0].eval(minfn);
             //GridWindowOp wop(op.getDomain(),m_in,wind);
-            GridMaskOp mop(op.getDomain(),m_in,swind,ewind);
+            GridMaskOp mop(op.getDomain(),m_in,swind,ewind,width);
             OperatorEvaluation<float> wopeval(mop,m_in);
             LinearOp<float> const & lwop=wopeval.getDeriv();
+            width[2]=40.0f;
+            GridMaskOp mop0(op.getDomain(),m_in,swind,ewind,width);
+            OperatorEvaluation<float> wopeval0(mop0,m_in);
+            LinearOp<float> const & lwop0=wopeval0.getDeriv();
             
             // choice of preop is placeholder
             //ScaleOpFwd<float> rgop(op.getDomain(),valparse<float>(*pars,"eps",1.0f));
             GridDerivOp dsop0(op.getDomain(),dsdir,valparse<float>(*pars,"DSWeight",0.0f));
             
-            CompLinearOp<float> dsop(lwop,dsop0);
-            //OpComp<float> cop(lwop,op);
-            //TensorOp<float> top(op,rgop);
-            
-            // create RHS of block system
-//            Vector<float> td(top.getRange());
-//            Components<float> ctd(td);
-//            ctd[0].copy(mdd);
-//            ctd[1].zero();
             
             // initial input reflectivity
             Vector<ireal> dm0(op.getDomain());
@@ -250,8 +260,9 @@ int main(int argc, char ** argv) {
             }
             else { dm0.zero(); }
             
-            RPNT w_arr;
+            RPNT w_arr,w_arr0;
             RASN(w_arr,RPNT_1);
+            RASN(w_arr0,RPNT_1);
             w_arr[0]=valparse<float>(*pars,"scale0",1.0f);
             w_arr[1]=valparse<float>(*pars,"scale1",1.0f);
             IPNT sbc;
@@ -263,22 +274,27 @@ int main(int argc, char ** argv) {
             ebc[1]=valparse<int>(*pars,"ebc1",0);
             ebc[2]=valparse<int>(*pars,"ebc2",0);
             float power=0.0f, powersm=0.0f;
-            float datum=0.0f;
-            power=valparse<float>(*pars,"power",0.0f);
+            float datum=0.0f, datumsm=0.0f;
+            power  =valparse<float>(*pars,"power",0.0f);
             powersm=valparse<float>(*pars,"powersm",-1.0f);
-            datum=valparse<float>(*pars,"datum",0.0f);
+            datum  =valparse<float>(*pars,"datum",0.0f);
+            datumsm=valparse<float>(*pars,"datumsm",0.0f);
             
             GridHelmFFTWOp hop(op.getDomain(),w_arr,sbc,ebc,power,datum);
-            GridHelmFFTWOp helmop0(op.getDomain(),w_arr,sbc,ebc,powersm,datum);
+            GridHelmFFTWOp helmop0(op.getDomain(),w_arr0,sbc,ebc,powersm,datumsm);
             CompLinearOp<float> preop(lwop,hop);
-            CompLinearOp<float> helmop(lwop,helmop0);
+            CompLinearOp<float> helmop(lwop0,helmop0);
             ScaleOpFwd<float> rgop(op.getDomain(),valparse<float>(*pars,"eps",0.0f));     
+            CompLinearOp<float> dsop(helmop,dsop0);
 //            if (retrieveGlobalRank() == 0) {
 //                cerr << "\n before hop.applyOp \n";
 //            }
            // hop.applyOp(m_in,dm);
            // float eps = valparse<float>(*pars,"eps",0.0f);
-            PIVAObj2<float> f(op,preop,helmop,dsop0,rgop,mdd,dm0,pd,res);
+            //Vector<ireal> dm1(op.getDomain());
+            //hop.applyOp(dm0,dm1);
+            PIVAObj2<float> f(op,preop,helmop,dsop,rgop,mdd,dm0,pd,res);
+            //PIVAObj2<float> f(op,preop,helmop,dsop,rgop,mdd,dm1,pd,res);
             GridExtendOp g(dom,op.getDomain());
             FcnlOpComp<float> gf(f,g);
             
@@ -321,17 +337,21 @@ int main(int argc, char ** argv) {
                 PIVAObj2<float > const & f3 =
                 dynamic_cast<PIVAObj2<float> const & >(fe2.getFunctional());  // current clone of PIVAObj
                 dm.copy(f3.getLSSoln()); // copy dx from PIVAObj
+                q.copy(f3.getCGSoln());
+                qrhs.copy(f3.getCGRHS());
+                cerr << "in acdpiva2 qrhs.norm() = " << qrhs.norm() << endl;
             }
       std::string dataest = valparse<std::string>(*pars,"dataest","");
       std::string datares = valparse<std::string>(*pars,"datares","");
 //      std::string normalres = valparse<std::string>(*pars,"normalres","");
       if (dataest.size()>0) {
-          OperatorEvaluation<float> gopeval(g,m);
+          OperatorEvaluation<float> gopeval(g,m0);
           OperatorEvaluation<float> opeval(op,gopeval.getValue());
           Vector<float> est(op.getRange());
           AssignFilename estfn(dataest);
           est.eval(estfn);
-          opeval.getDeriv().applyOp(dm,est);
+          CompLinearOp<float> nop(preop,opeval.getDeriv());
+          nop.applyOp(dm,est);
           if (datares.size()>0) {
               Vector<float> res(op.getRange());
               AssignFilename resfn(datares);

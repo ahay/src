@@ -52,26 +52,29 @@ namespace TSOpt {
         
     IPNT siw;     // mask start points in gridpoints
     IPNT eiw;     // mask end points in gridpoints
+    RPNT width; 
     bool bias;
     GridMaskFO();
         
   public:
         
-    GridMaskFO(IPNT const & _siw, IPNT const & _eiw, bool _bias=false)
+    GridMaskFO(IPNT const & _siw, IPNT const & _eiw, RPNT const & _width, bool _bias=false)
       : bias(_bias){
       IASN(siw,_siw);
       IASN(eiw,_eiw);
+      RASN(width,_width);
     }
         
     GridMaskFO(GridMaskFO const & f)
     : bias(f.bias){
       IASN(siw,f.siw);
       IASN(eiw,f.eiw);
+      RASN(width,f.width);
     }
         
     using RVL::LocalEvaluation<ireal>::operator();
-    void operator()(LocalDataContainer<ireal> & x,
-		    LocalDataContainer<ireal> const & y);
+    void operator()(LocalDataContainer<ireal> &,
+		    LocalDataContainer<ireal> const &);
         
     string getName() const { string tmp = "GridMaskFO"; return tmp; }
         
@@ -93,25 +96,26 @@ namespace TSOpt {
     Vector<ireal> const & bg;
     IPNT siw;
     IPNT eiw;
+    RPNT width;
     GridMaskOp();
         
   protected:
         
-    void apply(Vector<ireal> const & x,
-	       Vector<ireal> & y) const;
-    void applyDeriv(Vector<ireal> const & x,
-		    Vector<ireal> const & dx,
-		    Vector<ireal> & dy) const;
-    void applyAdjDeriv(Vector<ireal> const & x,
-		       Vector<ireal> const & dy,
-		       Vector<ireal> & dx) const;
-    void applyDeriv2(const Vector<ireal> & x,
-		     const Vector<ireal> & dx0,
-		     const Vector<ireal> & dx1,
+    void apply(Vector<ireal> const &,
+	       Vector<ireal> &) const;
+    void applyDeriv(Vector<ireal> const &,
+		    Vector<ireal> const &,
+		    Vector<ireal> &) const;
+    void applyAdjDeriv(Vector<ireal> const &,
+		       Vector<ireal> const &,
+		       Vector<ireal> &) const;
+    void applyDeriv2(const Vector<ireal> &,
+		     const Vector<ireal> &,
+		     const Vector<ireal> &,
 		     Vector<ireal> & dy) const { dy.zero(); }
-    void applyAdjDeriv2(const Vector<ireal> & x,
-			const Vector<ireal> & dx0,
-			const Vector<ireal> & dy,
+    void applyAdjDeriv2(const Vector<ireal> &,
+			const Vector<ireal> &,
+			const Vector<ireal> &,
 			Vector<ireal> & dx1) const { dx1.zero(); }
         
     Operator<ireal> * clone() const { return new GridMaskOp(*this); }
@@ -123,13 +127,15 @@ namespace TSOpt {
     */
     GridMaskOp(Space<ireal> const & _dom,
 	       Vector<ireal> const & _bg,
-	       RPNT const & sw = RPNT_0, RPNT const & ew = RPNT_0);
+	       RPNT const & sw = RPNT_0, RPNT const & ew = RPNT_0, 
+               RPNT const & width = RPNT_1);
         
     /** Copy constructor - memberwise */
     GridMaskOp(GridMaskOp const & op)
     : dom(op.dom), bg(op.bg) {
       IASN(siw,op.siw);
       IASN(eiw,op.eiw);
+      RASN(width,op.width);
     }
         
     ~GridMaskOp() {}
@@ -405,7 +411,7 @@ namespace TSOpt {
 
   /* lenwork must be > 6*n1*n2+3*max(n2,2*n1)+21 */
 
-  /*    
+  /*
 #ifdef IWAVE_USE_MPI
   typedef MPIGridSpace myGridSpace;
 #else

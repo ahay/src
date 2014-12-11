@@ -70,7 +70,6 @@ using TSOpt::SEGYSpace;
 #endif
 using TSOpt::GridExtendOp;
 using TSOpt::GridDerivOp;
-using TSOpt::GridHelmOp;
 
 int xargc;
 char **xargv;
@@ -145,6 +144,7 @@ int main(int argc, char ** argv) {
             Vector<ireal> m0(dom);
             Vector<ireal> m(dom);
             Vector<ireal> dm(op.getDomain());
+            Vector<ireal> q(op.getDomain());
             
             AssignFilename mf0n(valparse<std::string>(*pars,"init_velsq"));
             Components<ireal> cm0(m0);
@@ -158,6 +158,10 @@ int main(int argc, char ** argv) {
             AssignFilename dmfn(valparse<std::string>(*pars,"reflectivity"));
             Components<ireal> cdm(dm);
             cdm[0].eval(dmfn);
+
+            AssignFilename qfn(valparse<std::string>(*pars,"extq"));
+            Components<ireal> cq(q);
+            cq[0].eval(qfn);
             
             // muted data
             Vector<ireal> mdd(op.getRange());
@@ -232,7 +236,6 @@ int main(int argc, char ** argv) {
             ScaleOpFwd<float> rgop(op.getDomain(),valparse<float>(*pars,"eps",1.0f));
             GridDerivOp dsop0(op.getDomain(),dsdir,valparse<float>(*pars,"DSWeight",0.0f));
             
-            CompLinearOp<float> dsop(lwop,dsop0);
             //OpComp<float> cop(lwop,op);
             TensorOp<float> top(op,rgop);
             
@@ -267,13 +270,14 @@ int main(int argc, char ** argv) {
             float power=0.0f, powersm=0.0f;
             float datum=0.0f;
             power=valparse<float>(*pars,"power",0.0f);
-            powersm=valparse<float>(*pars,"powersm",-1.0f);
+            powersm=valparse<float>(*pars,"powersm",-0.5f);
             datum=valparse<float>(*pars,"datum",0.0f);
             
             GridHelmFFTWOp hop(op.getDomain(),w_arr,sbc,ebc,power,datum);
             GridHelmFFTWOp helmop(op.getDomain(),w_arr,sbc,ebc,powersm,datum);
             CompLinearOp<float> preop(lwop,hop);
-            
+            CompLinearOp<float> dspop(lwop,helmop);
+            CompLinearOp<float> dsop(dspop,dsop0);
 //            if (retrieveGlobalRank() == 0) {
 //                cerr << "\n before hop.applyOp \n";
 //            }
@@ -322,6 +326,7 @@ int main(int argc, char ** argv) {
                 PIVAObj<float > const & f3 =
                 dynamic_cast<PIVAObj<float> const & >(fe2.getFunctional());  // current clone of PIVAObj
                 dm.copy(f3.getLSSoln()); // copy dx from PIVAObj
+                q.copy(f3.getCGSoln());
             }
 //            
 //            LBFGSBT<float> alg(fbd,m,
