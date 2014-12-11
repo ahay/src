@@ -236,6 +236,7 @@ namespace RVLUmin {
         mutable Vector<Scalar> dx;         // preimage of linear solution
         mutable Vector<Scalar> dltx;       // linear solution
         mutable Vector<Scalar> q;          // CG solution
+        mutable Vector<Scalar> qrhs;       // rhs of CG
         mutable bool applied;
         ostream & str;
         
@@ -272,15 +273,8 @@ namespace RVLUmin {
                 Components<Scalar> ctd(td);
                 ctd[0].copy(d0);
                 ctd[1].zero();
-//                if (retrieveGlobalRank() == 0) {
-//                    cerr << "norm of input data d.norm() = " << d.norm() << endl;
-//                    cerr << "norm of data d0.norm() = " << d0.norm() << endl;
-//                    cerr << "norm of data td.norm() = " << td.norm() << endl;
-//                }
                 //Vector<Scalar> pdx(op.getDomain());
                 dx.zero();
-                //pdx.zero();
-                
                 // build least square solver , solve for dx
                 CGNEPolicy<Scalar> cgnep;
                 cgnep.assign(pdcgne);
@@ -295,10 +289,8 @@ namespace RVLUmin {
                 dx.linComb(1.0,x0);
                 A.applyOp(dx,dltx);
                 val = dltx.norm() * 0.5f;
-                if (retrieveGlobalRank() == 0) {
-                    cerr << "val="<< val << endl;
-                    cerr << "dx.norm()=" << dx.norm() << endl;
-                }
+                Scalar dxn = dx.norm();
+
                 
                 applied = true;
                 delete solver;
@@ -315,41 +307,31 @@ namespace RVLUmin {
                 if(!applied){
                     Scalar val;
                     this->apply(x,val);
-                    // cerr << "\n val=" << val << endl;
                 }
                 atype rnorm;
                 OperatorEvaluation<Scalar> opeval(op,x);
                 LinearOp<Scalar> const & lop = opeval.getDeriv();
                 SymmetricBilinearOp<Scalar> const & sblop = opeval.getDeriv2();
                 
-                //                if (retrieveGlobalRank() == 0) {
-                //                    cerr << "\n before RHS \n";
-                //                }
                 
                 // build RHS
-                Vector<Scalar> tmpb(op.getDomain());
                 Vector<Scalar> tmpm(lop.getDomain());
-                Vector<Scalar> tmpd(lop.getRange());
-
-                // cerr << " before applying A " << endl;
-                A.applyAdjOp(dltx,tmpb);
+                A.applyAdjOp(dltx,qrhs);
                 
                 CompLinearOp<Scalar> cop(preop,lop);
                 NormalLinearOp<Scalar> nop(cop);
                 NormalLinearOp<Scalar> rop(R);
  
                 LinCombLinearOp<Scalar> rnop(1.0, nop, 1.0, rop);
-                tmpm.zero();
                 
-                CGAlg<Scalar> alg(q,rnop,tmpb,rnorm,pdcgne.rtol,pdcgne.maxcount,pdcgne.Delta,str);
+                CGAlg<Scalar> alg(q,rnop,qrhs,rnorm,pdcgne.rtol,pdcgne.maxcount,pdcgne.Delta,str);
                 alg.run();
-                //preop.applyOp(tmpm,q);
                 
-                
+                Vector<Scalar> tmpd(lop.getRange());
                 lop.applyOp(q,tmpd);
-                sblop.applyAdjOp(dx,tmpd,tmpb);
-                tmpb.scale(-1.0f);
-                helmop.applyOp(tmpb,g);
+                sblop.applyAdjOp(dx,tmpd,g);
+                g.scale(-1.0f);
+                //helmop.applyOp(tmpb,g);
                 
             }
             catch (RVLException & e) {
@@ -385,11 +367,12 @@ namespace RVLUmin {
                 CGNEPolicyData<Scalar> const & _pdcgne,
                 ostream & _str=cerr)
         : op(_op), preop(_preop), helmop(_helmop), A(_A), R(_R), d(_d), x0(_x0),
-        pdcgne(_pdcgne), dx(preop.getDomain()), q(op.getDomain()), 
+        pdcgne(_pdcgne), dx(preop.getDomain()), q(op.getDomain()), qrhs(op.getDomain()), 
         dltx(preop.getRange()), applied(false), str(_str) {
             try{
                 dx.zero();
                 q.zero();
+                qrhs.zero();
                 if (pdcgne.verbose) {
                     str<<"\n";
                     str<<"==============================================\n";
@@ -405,7 +388,7 @@ namespace RVLUmin {
         
         PIVAObj2(PIVAObj2<Scalar> const & f)
         : op(f.op), preop(f.preop), helmop(f.helmop), A(f.A), R(f.R), d(f.d), 
-        x0(f.x0), pdcgne(f.pdcgne), dx(f.dx), q(f.q), 
+        x0(f.x0), pdcgne(f.pdcgne), dx(f.dx), q(f.q), qrhs(f.qrhs), 
         dltx(f.dltx), applied(f.applied), str(f.str) {}
         
         const Space<Scalar> & getDomain() const { return op.getDomain(); }
@@ -423,6 +406,10 @@ namespace RVLUmin {
         
         Vector<Scalar> const & getLSSoln() const { return dx; }
         Vector<Scalar> const & getCGSoln() const { return q; }
+        Vector<Scalar> const & getCGRHS() const { 
+          //cerr << "qrhs.norm()=" << qrhs.norm() << endl;
+          return qrhs; 
+        }
         
         
         ostream & write(ostream & str) const {
