@@ -1,0 +1,20 @@
+from rsf.proj import *
+
+nt=500
+dt=0.002
+t0 = nt*dt/7
+
+Flow('trend',None,
+     '''
+     math n1=%d o1=%g d1=0.002 label1=Time unit1=s label=Velocity unit=km/s
+     output="0.2+x1-%g" | cut max1=%g | add add=1.5 
+     ''' % (nt,dt,t0,t0))
+Flow('trend2','trend','math output="0.6+x1-%g" | cut max1=%g | add add=1.5' % (t0,t0))
+
+Flow('switch','trend','noise rep=y type=n mean=0.5 | mask min=0.8 | dd type=float')
+
+Flow('myint','trend trend2 switch','math t2=${SOURCES[1]} m=${SOURCES[2]} output="m*input+(1-m)*t2" ')
+
+# probability of switching
+
+End()
