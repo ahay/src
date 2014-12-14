@@ -43,12 +43,14 @@ int main (int argc, char *argv[])
     kiss_fftr_cfg *ompcfg;
 #endif
 
-    int nbuf, ibuf, left;
+    long int nbuf, ibuf, left, n2buf;
     int            ompnth=1; /* number of threads */
     int            ompith=0; /* thread index */
     float        **ompP;
     kiss_fft_cpx **ompQ;
     kiss_fft_cpx  *ompE;
+
+    float  memsize; /* in Mb */
 
 /*------------------------------------------------------------*/
     sf_init(argc, argv);
@@ -63,7 +65,7 @@ int main (int argc, char *argv[])
     if (!sf_getbool("inv",&inv))    inv=false; /* y, perform inverse transform */
     if (!sf_getbool("sym",&sym))    sym=false; /* y, symmetric scaling for Hermitian FFT */
     if (!sf_getbool("opt",&opt))    opt=true;  /* y, determine optimal size for efficiency */
-    
+
     if (inv) {
 	if (SF_COMPLEX != sf_gettype(Fin)) sf_error("Need complex input");
 	sf_settype (Fou,SF_FLOAT);
@@ -123,13 +125,26 @@ int main (int argc, char *argv[])
     wght = sym ? 1./sqrtf((float) nt): 1.0/nt;
 
     /*------------------------------------------------------------*/
-    /* allocate arrays */    
-    ompP = sf_floatalloc2(nt,ompnth);
-    ompQ=(kiss_fft_cpx**) sf_complexalloc2(nw,ompnth);
-    ompE=(kiss_fft_cpx* ) sf_complexalloc (   ompnth);
-    
+    /* usable memory (Mb) */
+    if(!sf_getfloat("memsize",&memsize)) memsize=1000.0;
+    if(verb) sf_warning("memsize=%g",memsize);
+
+    n2buf=1;
+    while(n2buf/1024.*n1/1024.*SF_FLOAT < memsize) n2buf++;
+    sf_warning("n2buf=%ld",n2buf);
+
     /*------------------------------------------------------------*/
-    /* init FFT plan */
+    if(verb) fprintf(stderr,"allocate arrays");
+
+    ompP =                  sf_floatalloc2  (nt,n2buf);
+    ompQ = (kiss_fft_cpx**) sf_complexalloc2(nw,n2buf);
+    ompE = (kiss_fft_cpx* ) sf_complexalloc (ompnth);
+    
+    if(verb) fprintf(stderr," OK\n");
+
+    /*------------------------------------------------------------*/
+    if(verb) fprintf(stderr,"init FFT");
+
 #ifdef SF_HAS_FFTW
     ompcfg  = (fftwf_plan*) sf_alloc(ompnth,sizeof(fftwf_plan));
     for(ompith=0; ompith<ompnth; ompith++)
@@ -141,16 +156,20 @@ int main (int argc, char *argv[])
 	ompcfg[ompith] = kiss_fftr_alloc(nt,inv?1:0,NULL,NULL);
 #endif
 
+    if(verb) fprintf(stderr," OK\n");
+
     /*------------------------------------------------------------*/
     ompith=0;
-    for (left=sf_leftsize(Fin,1); left>0; left-=ompnth) {
-	if(verb) fprintf(stderr,"\b\b\b\b\b\b\b%6d",left);
+    for (left=sf_leftsize(Fin,1); left>0; ) {
+	if(verb) fprintf(stderr,"\b\b\b\b\b\b\b%6ld",left);
 	
 	/* read buffer size */
-	nbuf=SF_MIN(left,ompnth);
+	nbuf=SF_MIN(left,n2buf);
+	left -= nbuf;
 	
 	if (!inv) { /* FORWARD TRANSFORM */
-	    sf_floatread (ompP[0],n1*nbuf,Fin);
+	    for(ibuf=0; ibuf<nbuf; ibuf++)
+		sf_floatread (ompP[ibuf],n1,Fin);
 
 #ifdef _OPENMP
 #pragma omp parallel for schedule(static)				\
@@ -181,9 +200,11 @@ int main (int argc, char *argv[])
 
 	    }
 
-	    sf_floatwrite((float*) ompQ[0],2*nw*nbuf,Fou);
+	    for(ibuf=0; ibuf<nbuf; ibuf++)
+		sf_floatwrite((float*) ompQ[ibuf],2*nw,Fou);
 	} else {
-	    sf_floatread( (float*) ompQ[0],2*nw*nbuf, Fin);
+	    for(ibuf=0; ibuf<nbuf; ibuf++)
+		sf_floatread( (float*) ompQ[ibuf],2*nw,Fin);
 
 #ifdef _OPENMP
 #pragma omp parallel for schedule(static)			\
@@ -212,10 +233,21 @@ int main (int argc, char *argv[])
 		for(i1=0; i1<n1; i1++) ompP[ibuf][i1] *= wght;
 	    }
 
-	    sf_floatwrite (ompP[0],n1*nbuf,Fou);
+	    for(ibuf=0; ibuf<nbuf; ibuf++)
+		sf_floatwrite (ompP[ibuf],n1,Fou);
 	}
     }
     if(verb) fprintf(stderr,"\n");
+
+/*------------------------------------------------------------*/
+
+    if(verb) fprintf(stderr,"deallocate arrays");
+
+    free(*ompP); free(ompP);
+    free(*ompQ); free(ompQ);
+    ;            free(ompE);
+
+    if(verb) fprintf(stderr," OK\n");
 
     exit (0);
 }
