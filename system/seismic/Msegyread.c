@@ -4,6 +4,7 @@ Data headers and trace headers are separated from the data.
 
 "suread" is equivalent to "segyread su=y"
 
+
 SEGY key names:
 
 tracl: trace sequence number within line 0
@@ -345,7 +346,15 @@ int main(int argc, char *argv[])
 	snprintf(key,7,"key%d",ik+1);
 	if (NULL == (name = sf_getstring(key)) || 
 	    NULL == sf_getstring(name)) break;
-	/*( key# extra key for trace headers )*/
+	/* \n
+	  ( key# extra key for trace headers )
+	  For example to define a new keys iline1 from byte 220 and xline1
+	  from byte 224:
+	  key1=iline1 iline1=220 key1_len=4 
+          key2=xline1 xline1=224 key2_len=4
+
+          key#_len defaults to 4
+	*/
     }
     segy_init(nkeys,NULL);
 
