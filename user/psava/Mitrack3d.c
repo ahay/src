@@ -149,7 +149,7 @@ int main(int argc, char* argv[])
 
     /*------------------------------------------------------------*/
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic)				\
+#pragma omp parallel for schedule(dynamic)			\
     private(ompith,jw,jn,jf,iomega,d,t,a,g,vecON,vecOF,angFON)	\
     shared (       aw,an,af,win,wnn,wff,tim,amp,oo,nn,ff)
 #endif
@@ -178,7 +178,7 @@ int main(int argc, char* argv[])
 		vecON = vec3d(&oo, &nn[jn]);          /* vector O-N */
 		for(jf=0; jf<sf_n(af); jf++) {
 		    vecOF = vec3d(&oo, &ff[jf]);      /* vector O-F */
-		    angFON = ang3d( &vecON, &vecOF);  /* angle F-O-N */
+		    angFON = ang3d(&vecON, &vecOF);  /* angle F-O-N */
 
 		    if( angFON < angMAX ) {
 			g = exp( - pow(angFON,2) * gauANG ); /* gaussian scaling */
@@ -196,7 +196,7 @@ int main(int argc, char* argv[])
 		    vecON = vec3d(&oo, &nn[jn]);          /* vector O-N */
 		    for(jf=0; jf<sf_n(af); jf++) {
 			vecOF = vec3d(&oo, &ff[jf]);      /* vector O-F */
-			angFON = ang3d( &vecON, &vecOF);  /* angle F-O-N */
+			angFON = ang3d(&vecON, &vecOF);  /* angle F-O-N */
 
 			if( angFON < angMAX ) {
 			    g = exp( - pow(angFON,2) * gauANG ); /* gaussian scaling */
@@ -240,7 +240,7 @@ int main(int argc, char* argv[])
 		    vecON = vec3d(&oo, &nn[jn]);          /* vector O-N */
 		    for(jf=0; jf<sf_n(af); jf++) {
 			vecOF = vec3d(&oo, &ff[jf]);      /* vector O-F */
-			angFON = ang3d( &vecON, &vecOF);  /* angle F-O-N */
+			angFON = ang3d(&vecON, &vecOF);  /* angle F-O-N */
 
 			if( angFON < angMAX ) {
 			    g = exp( - pow(angFON,2) * gauANG ); /* gaussian scaling */
