@@ -1,4 +1,4 @@
-/* Read Trace And Header (tah) from standard input, MUTE 
+/* Read Trace And Header (tah) from standard input and FILTER 
 
 tah is the abbreviation of Trace And Header.  Madagascar programs 
 that begin with sftah are a designed to:
@@ -15,53 +15,42 @@ Some programs have su like names.
 Some programs in this suite are sftahread, sftahgethw, ftahhdrmath, 
 and sftahwrite.
 
-The sftahmute program is designed to mute data. Trace and header data 
-(tah) are read from standard input (usually a pipe).  The trace xmute 
-and tmute parameter define the mute start time.  They are interpolated 
-to determine the start time for the trace using the trace header 
-offset.  The ntaper defines the length in samples of the taper.
+The sftahfilter program is designed to apply a filter. Trace and 
+header data (tah) are read from from standard input (usually a pipe).
+A filter is read from the command line or from a file.  If the filter
+is read from a file, it can be a single filter, or one filter for each
+trace.  Future enhancements would be to use trace headers to define
+a location in the filter file and read that filter or even interpolate
+a filter.  That would support shot or receiver dependent filter for
+surface consistant decon.  Another enhancement would be to add 
+frequency domain bandpass filters.  
 
 EXAMPLE:
 
 sftahsort input=shots-receivers-23900_headfix.rsf           \\
    sort="xline:600,601 offset"                              \\
-| sftahnmo tnmo=0,2,6,10.5,16 vnmo=1500,1500,2250,3250,3700 \\
-| sftahmute                                                 \\
-  xmute=0,20000 tmute=0,20 ntaper=25                        \\
-| sftahnmo                                                  \\
-  tnmo=0,2,6,10.5,16                                        \\
-  vnmo=1500,1500,2250,3250,3700                             \\
-  inv=y                                                     \\
+| sftahfilter filt=dephase.rsf                              \\
 | sftahmakeskey pkey=xline skey=cdpt                        \\
 | sftahwrite                                                \\
   verbose=1                                                 \\
   label2=cdpt  o2=1 n2=100 d2=1                             \\
   label3=xline o3=600 n3=1 d3=1                             \\
-  output=mutecmps.rsf                                       \\
+  output=dephasecmps.rsf                                    \\
 >/dev/null
 
 sfgrey <mutecmps.rsf | sfpen
 
-In this example the shot organized prestack data in the file 
-shots-receivers-23900_headfix.rsf are read in xline offset order by 
-sftahsort program.  The headers are in the file 
-shots-receivers-23900_headfix_hdr.rsf, the headers parameter default.
-The headers are merged with the trace amplitudes and the tah data sent 
-down the pipe for nmo, mute, and inverse nmo.  This sequence was used 
-to apply the mute using times that were selected from a prestack 
-gather with moveout applied.
+In this example a deterministic dephase filter is applied to a prestack
+datafile.
 
-The sftahnmo program uses the velocity function defined by the tnmo, 
-vnmo parameters and the offset header to apply normal moveout to 
-the traces.  
+The shot organized prestack cmp data, shots-receivers-23900_headfix.rsf 
+are read in xline offset order by sftahsort program.  The headers are 
+in the file shots-receivers-23900_headfix_hdr.rsf, the headers 
+parameter default.  The headers are merged with the trace amplitudes 
+and the tah data sent down the pipe to apply a filter.
 
-sftahmute zeros the shallow data.  TLhe time samples above the line 
-through (time,offset) pairs (0,0)(20,20000), are set to zero. There 
-is a 25 point taper applied below the zero portion of the traces.
-
-A second sftahnmo execution applied inverse nmoout.  Other than inv=yes 
-the parameters are the same as in the first sftahnmo. 
-
+The sftahfilter program applies a filter contained in the dephase.rsf
+file.
 The program sftahmakeskey is used to create a secondary key used 
 in the following sftahwrite to define the location to wrte the trace 
 in the output file. Sftahmakeskey makes a secondary key (skey=cdpt) 
@@ -70,50 +59,48 @@ The input traces gathered by xline by sftahsort. Sftahmakeskey sets
 cdpt to 1 when the trace has a new xline.  If the trace has the same 
 xline as the previous trace cdpt is incremented
 
-Sftahwrite writes the the trace data to mutecmp.rsf and the headers are 
-written to the file mutecmp_hdr.rsf.  The order of the data in the output 
+Sftahwrite writes the the trace data to dephasecmp.rsf and the headers
+are written to the file mutecmp_hdr.rsf.  The order of the data in the 
 file is defined by the cdpt and xline trace headers, so the  data order
 is (time,cmpt,xline).  Finally, the output volume is displayed using
 sfgrey.
 
 PARAMETERS
-   strings key= no default
 
-        list of header keys to monitor to determine when to break 
-	between gathers.  A gather is a sequence of traces with the 
-	same value for all the header keys.  Stack summs traces in 
-	the gather, divides by the fold, and outputs the stack trace.
+   floats filter=NULL
 
-   floats xmute= NULL
+        A list of floats that is the filter to convolve on the input 
+	traces.
 
-        List of floats the same length as list of floats in the tmute
-	parameter.  The (xmute,tmute) pairs are interpolated using the
-	trace headers offset to determine trace start time.  The mute is
-	NOT moved based on the first live sample.
+   string filter_file=NULL
 
-   floats tmute= NULL
+       Name of an rsf file that contains the filter(s)
 
-        List of floats the same length as list of floats in the xmute
-	parameter.  The (xmute,tmute) pairs are interpolated using the
-	trace headers offset to determine trace start time. The mute is
-	NOT moved based on the first live sample.
+   int filter_index_t0
 
-   float ntaper=12
-        the length of the taper to use at the start of the trace.
+        Index of time=0 on the filter
+
+   int  verbose=1       
+        
+        flag to control amount of print
+        0 terse, 1 informative, 2 chatty, 3 debug
 	
 */
 
 /*
    Program change history:
    date       Who             What
-   12/1/2014 Karl Schleicher Original program.  Derived from Mtahstack.c
+   12/12/2014 Karl Schleicher Original program.  Derived from Mtahstack.c
+                              influences by sfconv, suconv, sufilter
 */
+
 #include <string.h>
 #include <rsf.h>
 #include <rsf_su.h>
 #include <rsfsegy.h>
 
 #include "tahsub.h"
+#include "convolve.h"
 
 int main(int argc, char* argv[])
 {
@@ -121,28 +108,23 @@ int main(int argc, char* argv[])
   sf_file in=NULL, out=NULL;
   int n1_traces;
   int n1_headers;
+  int numfilter;
+  float* filter=NULL;
+  char* filter_file_name;
+  sf_file filter_file=NULL;
+  int filt_indx_t0;
 
   char* header_format=NULL;
   sf_datatype typehead;
   /* kls do I need to add this?  sf_datatype typein; */
   float* fheader=NULL;
   float* intrace=NULL;
+  float* outtrace=NULL;
   int indx_time;
   int itrace=0;
-  int ntaper;
-  int numxmute;
-  int numtmute;
-  float* taper;
   char **list_of_floats;
-  float* xmute;
-  float* tmute;
-  int indx_of_offset;
-  float offset;
   float d1;
   float o1;
-  float mute_start;
-  int imute_start;
-  int indx_taper;
 
 
   /*****************************/
@@ -192,6 +174,49 @@ int main(int argc, char* argv[])
   /* continue with any sf_puthist this tah program calls to */
   /* add to the history file                                */
   /**********************************************************/
+  if(NULL!=(list_of_floats=sf_getnstring("filter",&numfilter))){
+    filter=sf_floatalloc(numfilter);
+    if(!sf_getfloats("filter",filter,numfilter))
+      sf_error("unable to read tmute");
+  }
+
+  filter_file_name = sf_getstring("filter_file");
+  /* \n
+     name of the rsf file containing the filter(s)
+  */
+  if(filter_file_name==NULL && filter==NULL){
+    sf_error("your must input filter or filter_file");
+  }
+  if(filter_file_name!=NULL && filter!=NULL){
+    sf_error("Define the filter once. Do not input filter AND filter_file.");
+  }
+
+  if(filter_file_name!=NULL){
+    filter_file=sf_input("filter_file");
+    if (!sf_histint(filter_file,"n1",&numfilter)){
+      sf_error("No n1= in filter_file.");
+    }
+    filter=sf_floatalloc(numfilter);
+    sf_floatread (filter,numfilter,filter_file);
+  }
+
+  if(!sf_getint("filt_indx_t0",&filt_indx_t0))filt_indx_t0=0;
+    /* \n
+     indx to time 0 in the filter.  Must be in the range [0,numfilter)
+    */
+  if(filt_indx_t0<0 || filt_indx_t0>=numfilter){
+    fprintf(stderr,"length of the filter, numfilter=%d\n",numfilter);
+    fprintf(stderr,"filt_indx_t0=%d numfilter=%d\n",filt_indx_t0,numfilter);
+    sf_error("filt_indx_t0 muxt be in the range [0,numfilter)");
+  }
+
+  if(verbose>0)fprintf(stderr,"allocate intrace.  n1_traces=%d\n",n1_traces);
+  intrace= sf_floatalloc(n1_traces);
+  if(verbose>0){
+    fprintf(stderr,"allocate outtrace.  length=%d\n",n1_traces+numfilter);
+  }
+  outtrace= sf_floatalloc(n1_traces+numfilter);
+
 
   /* put the history from the input file to the output */
   sf_fileflush(out,in);
@@ -202,30 +227,8 @@ int main(int argc, char* argv[])
 
   /* segy_init gets the list header keys required by segykey function  */
   segy_init(n1_headers,in);
-  /* get the mute parameters */
-  if(NULL==(list_of_floats=sf_getnstring("xmute",&numxmute))){
-    sf_error("xmute is a required parameter in sftahmute");
-  } else {
-    xmute=sf_floatalloc(numxmute);
-    if(!sf_getfloats("xmute",xmute,numxmute))sf_error("unable to read xmute");
-  }
-  if(NULL==(list_of_floats=sf_getnstring("tmute",&numtmute))){
-    sf_error("xmute is a required parameter in sftahmute");
-  } else {
-    tmute=sf_floatalloc(numtmute);
-    if(!sf_getfloats("tmute",tmute,numtmute))sf_error("unable to read tmute");
-  }
-  if(numxmute!=numtmute)sf_error("bad mute parameters: numxmute!=numtmute");
-  if(!sf_getint("ntaper",&ntaper))ntaper=12;
-  /* \n
-     length of the taper on the stack mute
-  */
-  taper=sf_floatalloc(ntaper);
-  for(indx_time=0; indx_time<ntaper; indx_time++){
-    float val_sin=sin((indx_time+1)*SF_PI/(2*ntaper));
-    taper[indx_time]=val_sin*val_sin;
-  }
-  indx_of_offset=segykey("offset");
+
+  /* this is how you get a header indx: indx_of_offset=segykey("offset"); */
 
   if (!sf_histfloat(in,"d1",&d1))
     sf_error("input data does not define d1");
@@ -242,33 +245,24 @@ int main(int argc, char* argv[])
     if(verbose>1 || (verbose==1 && itrace<5)){
       fprintf(stderr,"process tah %d in sftahmute\n",itrace);
     }
+
+    /* this is how you read a filter for each location 
+       if (!each) sf_floatread (ff,nf,filt);
+    */
+    convolve_init(numfilter,filter);
+    convolve_lop (false, false,n1_traces,n1_traces+numfilter,intrace,outtrace);
+
     /********************/
     /* process the tah. */
     /********************/
     /* this program applies a mute the to the top of a trace */
 
+    /* this is how you get a header value 
     if(typehead == SF_INT)offset=((int  *)fheader)[indx_of_offset];
     else                  offset=((float*)fheader)[indx_of_offset];
-    intlin(numxmute,xmute,tmute,
-	   tmute[0],tmute[numxmute-1],1,
-	   &offset,&mute_start);
-    if(mute_start<o1)mute_start=o1;
-
-    imute_start=(int)(((mute_start-o1)/d1)+.5);
-    if(0)fprintf(stderr,"imute_start=%d\n",imute_start);
-    for(indx_time=0; 
-	indx_time<imute_start && indx_time<n1_traces;
-	indx_time++){
-      intrace[indx_time]=0.0;
-    }
-
-    for(indx_time=imute_start, indx_taper=0; 
-	indx_time<imute_start+ntaper && indx_time<n1_traces; 
-	indx_time++, indx_taper++){
-      intrace[indx_time]+=taper[indx_taper]*intrace[indx_time];
-    }
-
-    put_tah(intrace, fheader, n1_traces, n1_headers, out);
+    */
+    
+    put_tah(&outtrace[filt_indx_t0], fheader, n1_traces, n1_headers, out);
     itrace++;
   }
 

@@ -1,4 +1,4 @@
-/* Mathematical operations with headers.  Output whole header.
+/* read Trace and Header (tah), compute header values
 
 Known functions for float data: 
 cos,  sin,  tan,  acos,  asin,  atan, 
@@ -56,7 +56,7 @@ PARAMETERS
 	For example, to compute the midpoint x input:
 	output="(sx+gx)/2.0)"
 
-   string outoutkey= no default
+   string outputkey= no default
         the name of the output trace header key to put the evaluation of
 	output.  For example to put the average of sx and gx into cdpx input:
 	outputkey=cdpx

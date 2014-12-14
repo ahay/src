@@ -1,4 +1,4 @@
-/* Read Trace And Header (tah) from STDIN, stack by mathing header key
+/* Read Trace And Header (tah) from STDIN, stack matching header keys
 
 tah is the abbreviation of Trace And Header.  Madagascar programs 
 that begin with sftah are a designed to:
