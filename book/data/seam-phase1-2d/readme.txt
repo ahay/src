@@ -14,7 +14,7 @@ in Madagascar.  Statements about relative runtime and accuracy would be great.
  
 Directories in this test are:
 
-fetch - download and dipslay the pdf's that describe the data.  Fetch and 
+fetch - download and display the pdf's that describe the data.  Fetch and 
         display the seam 3D elastic shot records, vp, vs, density and wavelets.
 sfmshots - compute 2D synthetic using Pengliang's 4th order space 3rd order time
 sfawefd3d - compute 2D synthetic using Sava's 4th order space 3rd order time
