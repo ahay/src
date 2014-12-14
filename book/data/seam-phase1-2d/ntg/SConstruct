@@ -86,6 +86,7 @@ Flow(['ntg.rsf','ntg_hdr.rsf'],
 	  sort="cdp offset:0,200" \
 	  verbose=1 \
      | sftahmakeskey pkey=cdp skey=cdpt \
+     | sftahgain tpow=1.5 verbose=1 \
      | sftahwrite \
          output=${TARGETS[0]} \
          label2=cdp o2=148 n2=1501 d2=1 \
@@ -93,24 +94,21 @@ Flow(['ntg.rsf','ntg_hdr.rsf'],
          verbose=1
      ''',stdout=0, stdin=0)
        
-Result('ntg',"sfpow pow1=1.5 | sfgrey title='near trace gather'")
+Result('ntg',"sfgrey title='near trace gather'")
 Result('ntgzoom','ntg',
 	'''
 	sfwindow min1=1.5 max1=4.5 \
-	| sfpow pow1=1.5 \
 	| sfgrey title='near trace gather'
 	''')
 
 Plot('ntgz1','ntg',
 	'''
 	sfwindow min1=1.75 max1=2.25 \
-	| sfpow pow1=1.5 \
 	| sfgrey title='near trace gather'
 	''')
 Plot('ntgz2','ntg',
 	'''
 	sfwindow min1=3.75 max1=4.25 \
-	| sfpow pow1=1.5 \
 	| sfgrey title='near trace gather'
 	''')
 Result('ntgzoom2','ntgz1 ntgz2','SideBySideAniso')
@@ -123,6 +121,7 @@ Flow(['every10shot.rsf','every10shot_hdr.rsf'],
      sftahread \
           input=${SOURCES[0]} \
 	  verbose=1 \
+     | sftahgain tpow=1.5 verbose=1 \
      | sftahwrite \
           output=${TARGETS[0]} \
           label2="gx" o2=0    n2=901 d2=25 \
@@ -131,7 +130,7 @@ Flow(['every10shot.rsf','every10shot_hdr.rsf'],
      ''',stdout=0,stdin=0)
 
 Result('every10shot',
-       'sfpow pow1=1.5 | sfgrey title="every10shot"')
+       'sfgrey title="every10shot"')
 
 Result('vp','../fetch/vp.rsf',"sfgrey title='Vp' scalebar=y color=j")
 
