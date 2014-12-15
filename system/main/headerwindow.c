@@ -27,13 +27,17 @@ where m2 is the number of nonzero elements in mask.
 
 int main(int argc, char* argv[])
 {
-    int n1, n2, j2, i2, j, esize, *mask;
+    bool inv;
+    int n1, n2, j2, i2, in2, j, esize, *mask;
     off_t pos;
-    char *trace, key[3];
+    char *trace, *zero, key[3];
     sf_file in, head, out;
 
     sf_init (argc,argv);
  
+    if (!sf_getbool("inv",&inv)) inv=false;
+    /* inversion flag */
+
     head = sf_input("mask");
     if (SF_INT != sf_gettype(head))
 	sf_error("Need integer mask");
@@ -48,25 +52,34 @@ int main(int argc, char* argv[])
     out = sf_output ("out");
  
     if (!sf_histint(in,"n1",&n1)) n1=1;
-
-    j2 = sf_leftsize(in,1);
-    if (j2 != n2) sf_error("Wrong input dimensions, need %d by %d",n1,n2);
+    in2 = sf_leftsize(in,1);
 
     esize = sf_esize(in);
     n1 *= esize;
     trace = sf_charalloc(n1);
-    
+   
     for (j2=i2=0; i2 < n2; i2++) {
 	if (mask[i2]) j2++;
     }
-    sf_putint(out,"n2",j2);
+
+    if (inv) {
+	if (in2 != j2) sf_error("Wrong input dimensions, need %d traces",j2);
+	sf_putint(out,"n2",n2);
+	zero = sf_charalloc(n1);
+	memset(zero,0,n1);
+    } else {
+	if (in2 != n2) sf_error("Wrong input dimensions, need %d traces",n2);
+	sf_putint(out,"n2",j2);
+	zero = NULL;
+    }
+
     for (j=2; j < SF_MAX_DIM; j++) {
 	(void) snprintf(key,3,"n%d",j+1);
 	if (!sf_histint(in,key,&j2)) break;
 	sf_putint(out,key,1);
     }
 
-    sf_unpipe(in,(off_t) n1*n2);
+    sf_unpipe(in,(off_t) n1*in2);
     sf_fileflush(out,in);
     sf_setform(in,SF_NATIVE);
     sf_setform(out,SF_NATIVE);
@@ -74,12 +87,13 @@ int main(int argc, char* argv[])
     pos = sf_tell(in);
     for (i2=0; i2<n2; i2++) {
 	if (mask[i2]) {
-	    sf_seek(in,pos+ (off_t) i2*n1,SEEK_SET);
+	    if (!inv) sf_seek(in,pos+ (off_t) i2*n1,SEEK_SET);
 	    sf_charread(trace,n1,in);
 	    sf_charwrite(trace,n1,out);
+	} else if (inv) {
+	    sf_charwrite(zero,n1,out);
 	}
     }
-
 
     exit(0);
 }

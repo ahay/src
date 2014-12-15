@@ -61,6 +61,7 @@ To programs:
 * Renamed sfsvd sfpysvd and fixed sizes for output vectors
 * Enabled depth= option for sfgraph with lines
 * user/junyan: New contributor (Jun Yan)
+* Added inv= flag in sfheaderwindow
 
 ===Bug fixes===
 

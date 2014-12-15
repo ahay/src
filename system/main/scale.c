@@ -66,9 +66,8 @@ int main (int argc, char* argv[])
 
     abuf = sf_floatalloc(n1);
 
-    ntest = n1*pclip/100. + .5;
-    if (ntest < 0)       ntest = 0;
-    else if (ntest > n1) ntest = n1;
+    ntest = SF_MAX(n1*pclip/100. + .5,0);
+    if (ntest > n1) ntest = n1;
 
     if (1 < n1 && 0. == dscale) {
 	switch (type) {

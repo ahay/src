@@ -11,10 +11,19 @@ Flow('trend',None,
      ''' % (nt,dt,t0,t0))
 Flow('trend2','trend','math output="0.6+x1-%g" | cut max1=%g | add add=1.5' % (t0,t0))
 
-Flow('switch','trend','noise rep=y type=n mean=0.5 | mask min=0.8 | dd type=float')
+Flow('switch','trend',
+     'noise rep=y type=n mean=0.5 seed=2014 | mask min=0.8')
+Flow('spikes','switch',
+     '''
+     dd type=float | transp | headerwindow mask=$SOURCE | window |
+     dd type=complex | math output="conj(input)" | dd type=float
+     ''')
+Flow('switch2','spikes switch',
+     '''
+     transp | headerwindow mask=${SOURCES[1]} inv=y | window | causint
+     ''')
 
-Flow('myint','trend trend2 switch','math t2=${SOURCES[1]} m=${SOURCES[2]} output="m*input+(1-m)*t2" ')
-
-# probability of switching
+Flow('myint','trend trend2 switch2',
+     'math t2=${SOURCES[1]} m=${SOURCES[2]} output="m*input+(1-m)*t2" ')
 
 End()
