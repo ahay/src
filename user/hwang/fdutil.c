@@ -607,12 +607,12 @@ void sinc3d_inject(float***uu,
   float w, wy, wx, wz;
 
   int na = ca[0].n;
-#ifdef _OPENMP
-#pragma omp parallel for \
-            schedule(dynamic) \
-            private(ia,ix,iy,iz,sx,sy,sz,w,wy,wx,wz) \
-            shared(na,ca,dd,uu)
-#endif
+/*#ifdef _OPENMP*/
+/*#pragma omp parallel for    \*/
+/*            schedule(dynamic)			     \*/
+/*            private(ia,ix,iy,iz,sx,sy,sz,w,wy,wx,wz)	\*/
+/*            shared(na,ca,dd,uu)*/
+/*#endif*/
   for(ia=0;ia<na;ia++) {	
     w = dd[ia];
     iy = ca[ia].iy;
@@ -645,12 +645,12 @@ void sinc3d_inject1(float***uu,
   float w, wy, wx, wz;
 
   int na = ca[0].n;
-#ifdef _OPENMP
-#pragma omp parallel for \
-            schedule(dynamic) \
-            private(ia,ix,iy,iz,sx,sy,sz,w,wy,wx,wz) \
-            shared(na,ca,dd,uu)
-#endif
+/*#ifdef _OPENMP*/
+/*#pragma omp parallel for    \*/
+/*            schedule(dynamic)			     \*/
+/*            private(ia,ix,iy,iz,sx,sy,sz,w,wy,wx,wz)	\*/
+/*            shared(na,ca,dd,uu)*/
+/*#endif*/
   for(ia=0;ia<na;ia++) {	
     w = dd;
     iy = ca[ia].iy;
@@ -802,12 +802,12 @@ void sinc2d_inject(float**uu,
   float w, wx, wz;
 
   int na = ca[0].n;
-#ifdef _OPENMP
-#pragma omp parallel for \
-            schedule(dynamic) \
-            private(ia,ix,iz,sx,sz,w,wx,wz) \
-            shared(na,ca,dd,uu)
-#endif
+/*#ifdef _OPENMP*/
+/*#pragma omp parallel for    \*/
+/*            schedule(dynamic)		    \*/
+/*            private(ia,ix,iz,sx,sz,w,wx,wz)	\*/
+/*            shared(na,ca,dd,uu)*/
+/*#endif*/
   for(ia=0;ia<na;ia++) {	
     w = dd[ia];
     ix = ca[ia].ix;
@@ -835,12 +835,12 @@ void sinc2d_inject1(float**uu,
     float w, wx, wz;
 
     int na = ca[0].n;
-#ifdef _OPENMP
-#pragma omp parallel for \
-            schedule(dynamic) \
-            private(ia,ix,iz,sx,sz,w,wx,wz) \
-            shared(na,ca,dd,uu)
-#endif
+/*#ifdef _OPENMP*/
+/*#pragma omp parallel for    \*/
+/*            schedule(dynamic)		    \*/
+/*            private(ia,ix,iz,sx,sz,w,wx,wz)	\*/
+/*            shared(na,ca,dd,uu)*/
+/*#endif*/
     for(ia=0;ia<na;ia++) {
         w = dd;
         ix = ca[ia].ix;

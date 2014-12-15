@@ -351,27 +351,27 @@ expand_domain(float*** vtmp, float*** v, int nz, int nx, int ny, int nbd)
 
 static void 
 step_forward(float*** u0, float*** u1, float*** vel, float* fdcoef, int nop,
-            int nzpad, int nxpad, int nypad)
+	     int nzpad, int nxpad, int nypad)
 {
 #ifdef _OPENMP
-#pragma omp parallel for \
-  schedule(static,1) \
-  shared(nxpad,nypad,nzpad,u0,u1,vel,fdcoef)
+#pragma omp parallel for			\
+    schedule(static,1)				\
+    shared(nxpad,nypad,nzpad,u0,u1,vel,fdcoef)
 #endif
-  for (int iy=nop; iy<nypad-nop; iy++) {
-    for (int ix=nop; ix<nxpad-nop; ix++) {
-      for (int iz=nop; iz<nzpad-nop; iz++) {
-        float lap = u1[iy][ix][iz]*fdcoef[0];
-        for (int iop=1; iop<=nop; iop++) {
-          lap += (u1[iy][ix][iz-iop] + u1[iy][ix][iz+iop]) * fdcoef[iop]
-               + (u1[iy][ix-iop][iz] + u1[iy][ix+iop][iz]) * fdcoef[iop+nop]
-               + (u1[iy-iop][ix][iz] + u1[iy+iop][ix][iz]) * fdcoef[iop+nop+nop];
-        }
-        u0[iy][ix][iz] = 2.*u1[iy][ix][iz] - u0[iy][ix][iz] + vel[iy][ix][iz]*lap;
-      }
+    for (int iy=nop; iy<nypad-nop; iy++) {
+	for (int ix=nop; ix<nxpad-nop; ix++) {
+	    for (int iz=nop; iz<nzpad-nop; iz++) {
+		float lap = u1[iy][ix][iz]*fdcoef[0];
+		for (int iop=1; iop<=nop; iop++) {
+		    lap += (u1[iy][ix][iz-iop] + u1[iy][ix][iz+iop]) * fdcoef[iop]
+			+ (u1[iy][ix-iop][iz] + u1[iy][ix+iop][iz]) * fdcoef[iop+nop]
+			+ (u1[iy-iop][ix][iz] + u1[iy+iop][ix][iz]) * fdcoef[iop+nop+nop];
+		}
+		u0[iy][ix][iz] = 2.*u1[iy][ix][iz] - u0[iy][ix][iz] + vel[iy][ix][iz]*lap;
+	    }
+	}
     }
-  }
-  return;
+    return;
 }
 
 static float*
