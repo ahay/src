@@ -605,14 +605,18 @@ void sinc3d_inject(float***uu,
 {
   int   ia, iy, ix, iz, sy, sx, sz;
   float w, wy, wx, wz;
+#ifdef _OPENMP
+  omp_lock_t lck;
+  omp_init_lock(&lck);
+#endif
 
   int na = ca[0].n;
-/*#ifdef _OPENMP*/
-/*#pragma omp parallel for    \*/
-/*            schedule(dynamic)			     \*/
-/*            private(ia,ix,iy,iz,sx,sy,sz,w,wy,wx,wz)	\*/
-/*            shared(na,ca,dd,uu)*/
-/*#endif*/
+#ifdef _OPENMP
+#pragma omp parallel for    \
+           schedule(dynamic)			     \
+           private(ia,ix,iy,iz,sx,sy,sz,w,wy,wx,wz)	\
+           shared(na,ca,dd,uu)
+#endif
   for(ia=0;ia<na;ia++) {	
     w = dd[ia];
     iy = ca[ia].iy;
@@ -627,7 +631,14 @@ void sinc3d_inject(float***uu,
         for(int izz=ca[ia].fz; izz<ca[ia].fz+ca[ia].nz; izz++){
           sz = -4 +izz;
           wz = ca[ia].sincz[izz];
-          uu[iy+sy][ix+sx][iz+sz] += w*wy*wx*wz; // scatter
+          w *= wy*wx*wz;
+#ifdef _OPENMP
+          omp_set_lock(&lck);
+#endif
+          uu[iy+sy][ix+sx][iz+sz] += w; // scatter
+#ifdef _OPENMP
+          omp_unset_lock(&lck);
+#endif
         }
       }  
     }
@@ -643,14 +654,18 @@ void sinc3d_inject1(float***uu,
 {
   int   ia, iy, ix, iz, sy, sx, sz;
   float w, wy, wx, wz;
+#ifdef _OPENMP
+  omp_lock_t lck;
+  omp_init_lock(&lck);
+#endif
 
   int na = ca[0].n;
-/*#ifdef _OPENMP*/
-/*#pragma omp parallel for    \*/
-/*            schedule(dynamic)			     \*/
-/*            private(ia,ix,iy,iz,sx,sy,sz,w,wy,wx,wz)	\*/
-/*            shared(na,ca,dd,uu)*/
-/*#endif*/
+#ifdef _OPENMP
+#pragma omp parallel for    \
+           schedule(dynamic)			     \
+           private(ia,ix,iy,iz,sx,sy,sz,w,wy,wx,wz)	\
+           shared(na,ca,dd,uu)
+#endif
   for(ia=0;ia<na;ia++) {	
     w = dd;
     iy = ca[ia].iy;
@@ -665,7 +680,14 @@ void sinc3d_inject1(float***uu,
         for(int izz=ca[ia].fz; izz<ca[ia].fz+ca[ia].nz; izz++){
           sz = -4 +izz;
           wz = ca[ia].sincz[izz];
-          uu[iy+sy][ix+sx][iz+sz] += w*wy*wx*wz; // scatter
+          w *= wy*wx*wz;
+#ifdef _OPENMP
+          omp_set_lock(&lck);
+#endif
+          uu[iy+sy][ix+sx][iz+sz] += w; // scatter
+#ifdef _OPENMP
+          omp_unset_lock(&lck);
+#endif
         }
       }  
     }
@@ -800,14 +822,18 @@ void sinc2d_inject(float**uu,
 
   int   ia, ix, iz, sx, sz;
   float w, wx, wz;
+#ifdef _OPENMP
+  omp_lock_t lck;
+  omp_init_lock(&lck);
+#endif
 
   int na = ca[0].n;
-/*#ifdef _OPENMP*/
-/*#pragma omp parallel for    \*/
-/*            schedule(dynamic)		    \*/
-/*            private(ia,ix,iz,sx,sz,w,wx,wz)	\*/
-/*            shared(na,ca,dd,uu)*/
-/*#endif*/
+#ifdef _OPENMP
+#pragma omp parallel for    \
+           schedule(dynamic)		    \
+           private(ia,ix,iz,sx,sz,w,wx,wz)	\
+           shared(na,ca,dd,uu)
+#endif
   for(ia=0;ia<na;ia++) {	
     w = dd[ia];
     ix = ca[ia].ix;
@@ -818,7 +844,14 @@ void sinc2d_inject(float**uu,
       for(int izz=ca[ia].fz; izz<ca[ia].fz+ca[ia].nz; izz++){
         sz = -4 +izz;
         wz = ca[ia].sincz[izz];
-        uu[ix+sx][iz+sz] += w*wx*wz; // scatter
+        w *= wx*wz;
+#ifdef _OPENMP
+          omp_set_lock(&lck);
+#endif
+        uu[ix+sx][iz+sz] += w; // scatter
+#ifdef _OPENMP
+          omp_unset_lock(&lck);
+#endif
       }
     }  
   }
@@ -833,14 +866,18 @@ void sinc2d_inject1(float**uu,
     
     int   ia, ix, iz, sx, sz;
     float w, wx, wz;
+#ifdef _OPENMP
+  omp_lock_t lck;
+  omp_init_lock(&lck);
+#endif
 
     int na = ca[0].n;
-/*#ifdef _OPENMP*/
-/*#pragma omp parallel for    \*/
-/*            schedule(dynamic)		    \*/
-/*            private(ia,ix,iz,sx,sz,w,wx,wz)	\*/
-/*            shared(na,ca,dd,uu)*/
-/*#endif*/
+#ifdef _OPENMP
+#pragma omp parallel for    \
+           schedule(dynamic)		    \
+           private(ia,ix,iz,sx,sz,w,wx,wz)	\
+           shared(na,ca,dd,uu)
+#endif
     for(ia=0;ia<na;ia++) {
         w = dd;
         ix = ca[ia].ix;
@@ -851,7 +888,14 @@ void sinc2d_inject1(float**uu,
             for(int izz=ca[ia].fz; izz<ca[ia].fz+ca[ia].nz; izz++){
                 sz = -4 +izz;
                 wz = ca[ia].sincz[izz];
-                uu[ix+sx][iz+sz] += w*wx*wz; // scatter
+                w *= wx*wz;
+#ifdef _OPENMP
+          omp_set_lock(&lck);
+#endif
+                uu[ix+sx][iz+sz] += w; // scatter
+#ifdef _OPENMP
+          omp_unset_lock(&lck);
+#endif
             }
         }  
     }
