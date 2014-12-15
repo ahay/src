@@ -631,11 +631,11 @@ void sinc3d_inject(float***uu,
         for(int izz=ca[ia].fz; izz<ca[ia].fz+ca[ia].nz; izz++){
           sz = -4 +izz;
           wz = ca[ia].sincz[izz];
-          w *= wy*wx*wz;
+          float value = w*wy*wx*wz;
 #ifdef _OPENMP
           omp_set_lock(&lck);
 #endif
-          uu[iy+sy][ix+sx][iz+sz] += w; // scatter
+          uu[iy+sy][ix+sx][iz+sz] += value; // scatter
 #ifdef _OPENMP
           omp_unset_lock(&lck);
 #endif
@@ -680,11 +680,11 @@ void sinc3d_inject1(float***uu,
         for(int izz=ca[ia].fz; izz<ca[ia].fz+ca[ia].nz; izz++){
           sz = -4 +izz;
           wz = ca[ia].sincz[izz];
-          w *= wy*wx*wz;
+          float value = w*wy*wx*wz;
 #ifdef _OPENMP
           omp_set_lock(&lck);
 #endif
-          uu[iy+sy][ix+sx][iz+sz] += w; // scatter
+          uu[iy+sy][ix+sx][iz+sz] += value; // scatter
 #ifdef _OPENMP
           omp_unset_lock(&lck);
 #endif
@@ -844,11 +844,11 @@ void sinc2d_inject(float**uu,
       for(int izz=ca[ia].fz; izz<ca[ia].fz+ca[ia].nz; izz++){
         sz = -4 +izz;
         wz = ca[ia].sincz[izz];
-        w *= wx*wz;
+        float value = w*wx*wz;
 #ifdef _OPENMP
           omp_set_lock(&lck);
 #endif
-        uu[ix+sx][iz+sz] += w; // scatter
+        uu[ix+sx][iz+sz] += value; // scatter
 #ifdef _OPENMP
           omp_unset_lock(&lck);
 #endif
@@ -888,11 +888,11 @@ void sinc2d_inject1(float**uu,
             for(int izz=ca[ia].fz; izz<ca[ia].fz+ca[ia].nz; izz++){
                 sz = -4 +izz;
                 wz = ca[ia].sincz[izz];
-                w *= wx*wz;
+                float value = w*wx*wz;
 #ifdef _OPENMP
           omp_set_lock(&lck);
 #endif
-                uu[ix+sx][iz+sz] += w; // scatter
+                uu[ix+sx][iz+sz] += value; // scatter
 #ifdef _OPENMP
           omp_unset_lock(&lck);
 #endif
