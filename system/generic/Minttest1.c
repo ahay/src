@@ -32,7 +32,7 @@ http://ahay.org/rsflog/index.php?/archives/373-Program-of-the-month-sfinttest1.h
 
 int main(int argc, char* argv[])
 {
-    int n, n2, nd, nw, i2,i3;
+    int n, n2, nd, nw, i2;
     float *mm, *coord, *z, o, d, kai;
     char *intp;
     sf_interpolator interp=NULL;

@@ -30,7 +30,7 @@ See also: inttest1.
 int main(int argc, char* argv[])
 {
     int nw;
-    float *w, kai, x, dsamp;
+    float *w, kai, x;
     char *intp;
     sf_interpolator interp=NULL;
     sf_file filt;
