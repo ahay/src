@@ -146,10 +146,10 @@ int main (int argc, char *argv[])
     if(verb) fprintf(stderr,"init FFT");
 
 #ifdef SF_HAS_FFTW
-    ompcfg  = (fftwf_plan*) sf_alloc(ompnth,sizeof(fftwf_plan));
-    for(ompith=0; ompith<ompnth; ompith++)
-	if (inv) ompcfg[ompith] = fftwf_plan_dft_c2r_1d(nt,               (fftwf_complex *) ompQ[ompith], ompP[ompith],FFTW_ESTIMATE);
-	else     ompcfg[ompith] = fftwf_plan_dft_r2c_1d(nt, ompP[ompith], (fftwf_complex *) ompQ[ompith],              FFTW_ESTIMATE);    
+    ompcfg  = (fftwf_plan*) sf_alloc(n2buf,sizeof(fftwf_plan));
+    for(ibuf=0; ibuf<n2buf; ibuf++)
+	if (inv) ompcfg[ibuf] = fftwf_plan_dft_c2r_1d(nt,             (fftwf_complex *) ompQ[ibuf], ompP[ibuf],FFTW_ESTIMATE);
+	else     ompcfg[ibuf] = fftwf_plan_dft_r2c_1d(nt, ompP[ibuf], (fftwf_complex *) ompQ[ibuf],            FFTW_ESTIMATE);    
 #else
     ompcfg  = (kiss_fftr_cfg*) sf_alloc(ompnth,sizeof(kiss_fftr_cfg));
     for(ompith=0; ompith<ompnth; ompith++)
@@ -185,7 +185,7 @@ int main (int argc, char *argv[])
 		;        for(i1=n1; i1<nt; i1++) ompP[ibuf][i1]  = 0.0;
 
 #ifdef SF_HAS_FFTW
-		fftwf_execute(ompcfg[ompith]);
+		fftwf_execute(ompcfg[ibuf]);
 #else
 		kiss_fftr(ompcfg[ompith],ompP[ibuf],ompQ[ibuf]);
 #endif
@@ -225,7 +225,7 @@ int main (int argc, char *argv[])
 		}
 
 #ifdef SF_HAS_FFTW
-		fftwf_execute(ompcfg[ompith]);
+		fftwf_execute(ompcfg[ibuf]);
 #else
 		kiss_fftri(ompcfg[ompith],ompQ[ibuf],ompP[ibuf]);
 #endif
