@@ -28,6 +28,7 @@ To the reproducible documents collection:
   noise attenuation using regularized nonstationary autoregression
   (Liu, Liu, and Liu)
 * sep/shearer: Earthquake stacks at constant offset (Claerbout)
+* sep/super: A prospect for super resolution (Claerbout)
 
 To SCons:
 

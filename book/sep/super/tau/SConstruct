@@ -23,7 +23,23 @@ Flow('switch2','spikes switch',
      transp | headerwindow mask=${SOURCES[1]} inv=y | window | causint
      ''')
 
-Flow('myint','trend trend2 switch2',
+Flow('int','trend trend2 switch2',
      'math t2=${SOURCES[1]} m=${SOURCES[2]} output="m*input+(1-m)*t2" ')
+Plot('int','graph title="Interval Velocity" label2=Velocity unit2=km/s transp=1 yreverse=1')
+
+Flow('rms','int','mul $SOURCE | causint | math output="sqrt(0.002*input/(x1+0.002))" | clip2 lower=1.5')
+Plot('rms','graph title="RMS Velocity" label2=Velocity unit2=km/s transp=1 yreverse=1')
+
+offset = 3.0
+n2 = 15
+
+Flow('tau','rms',
+     '''
+     mul $SOURCE | spray axis=2 n=%d d=%g o=%g | 
+     math output="sqrt(x1*x1 + x2*x2/input)" 
+     ''' % (n2,offset/n2,offset/n2))
+Plot('tau','graph title="t(\F10 t\F3 )" label2=Time unit2=s label1=Tau yreverse=1')
+
+Result('superres','int rms tau','SideBySideAniso',vppen='txscale=2')
 
 End()
