@@ -131,6 +131,7 @@ int main (int argc, char *argv[])
 
     n2buf=1;
     while(n2buf/1024.*n1/1024.*SF_FLOAT < memsize) n2buf++;
+    n2buf=SF_MIN(n2buf,sf_leftsize(Fin,1));
     sf_warning("n2buf=%ld",n2buf);
 
     /*------------------------------------------------------------*/

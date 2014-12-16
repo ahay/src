@@ -4,10 +4,10 @@ import bldutil
 
 progs = '''
 agc aliasp bandpass bin bin1 boxsmooth canny causint clip clip2
-cmatmult cmatmult2 cosft costaper deriv dipfilter dwt enoint2 equal
+cosft costaper deriv dipfilter dwt enoint2 equal
 extract fern fft1 fft3 grad2 grad3 heat histogram igrad intshow
 inttest1 inttest2 impl1 impl2 impl3 jacobi jacobi2 lapfill laplac laplac3d
-linear linefit lorenz lpad mandelbrot matmult max1 miss2 monof monof2
+linear linefit lorenz lpad mandelbrot max1 miss2 monof monof2
 mutter noise otsu polymask postfilter2 pow reg2tri remap1 roots
 shapebin shapebin1 sharpen slice smooth smoothder smoothreg2 spectra
 spectra2 spline splinefilter hlinfilter swtdenoise tclip threshold trapez tri2reg
