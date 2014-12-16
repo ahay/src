@@ -126,6 +126,9 @@ int main(int argc, char* argv[])
 	fft2(curr,cwave);
 
 	for (im = 0; im < m2; im++) {
+#ifdef _OPENMP
+#pragma omp parallel for private(ik)
+#endif
 	    for (ik = 0; ik < nk; ik++) {
 #ifdef SF_HAS_COMPLEX_H
 		cwavem[ik] = cwave[ik]*rt[ik][im];
@@ -137,6 +140,9 @@ int main(int argc, char* argv[])
 	}
 
 	for (ix = 0; ix < nx; ix++) {
+#ifdef _OPENMP
+#pragma omp parallel for private(iz,i,j,old,c,im)
+#endif
 	    for (iz=0; iz < nz; iz++) {
 		i = iz+ix*nz;  /* original grid */
 		j = iz+ix*nz2; /* padded grid */

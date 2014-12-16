@@ -225,11 +225,10 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 	}
 		
 	/*Apply boundary---------------------------------------------------------------------------*/
-	
-	xxtem[0] = xx[0]; /*Fixed source*/
-	xxtem[n+1] = xx[n+1]; /*Fixed receiver*/
 	dk[0] = 0.0; /*To prevent trash data*/
 	dk[n+1] = 0.0;
+	xxtem[0] = xx[0]; /*Fixed source*/
+	xxtem[n+1] = xx[n+1]; /*Fixed receiver*/
 	
 	for (a=0; a<n; a++) {
 	    b1=0;

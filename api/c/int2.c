@@ -88,6 +88,59 @@ void  sf_int2_init (float** coord          /* coordinates [nd][2] */,
     }
 }
 
+void  sf_int2sh_init (float** coord          /* coordinates [nd][2] */, 
+		    float o1, float o2, 
+		    float d1, float d2,
+		    int   n1, int   n2     /* axes */, 
+		    sf_interpolator interp /* interpolation function */, 
+		    int nf_in              /* interpolator length */, 
+		    int nd_in              /* number of data points */)
+/*< initialize with shift >*/
+{
+    int   id;
+    int   i1, i2; 
+    float x1, x2, ss;
+
+    nf = nf_in;
+    nd = nd_in;
+    m1 = n1;
+    m2 = n2;
+    ss = 1. - 0.5*nf;
+
+    if (!allocated) {
+	nxy  = sf_intalloc2  ( 2,nd);
+	mask = sf_boolalloc  (   nd);
+	w1   = sf_floatalloc2(nf,nd);
+	w2   = sf_floatalloc2(nf,nd);
+    }
+
+    for (id = 0; id < nd; id++) {
+	x1 = ss + (coord[id][0] - o1)/d1 - 0.21;
+	i1 = floorf(x1);
+	x1 -= i1;
+	
+	if (i1 <= - nf || i1 >= n1) {
+	    mask[id] = true;
+	    continue;
+	}
+	
+	x2 = ss + (coord[id][1] - o2)/d2 - 0.21;
+	i2 = floorf(x2);
+	x2 -= i2;
+	
+	if (i2 <= - nf || i2 >= n2) {
+	    mask[id] = true;
+	    continue;
+	}
+   
+	mask[id] = false; 
+	interp (x1, nf, w1[id]);
+	interp (x2, nf, w2[id]);
+	nxy[id][0] = i1;
+	nxy[id][1] = i2;
+    }
+}
+
 void  sf_int2_lop (bool adj, bool add, int nm, int ny, float* x, float* ord)
 /*< linear operator >*/
 { 

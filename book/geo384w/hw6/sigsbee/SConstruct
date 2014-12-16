@@ -37,6 +37,53 @@ Result('zref',
        grey title=Reflectivity titlesz=7
        screenratio=0.3125 screenht=4 labelsz=5
        ''')
+       
+# Reverse-time migration/modeling
+proj = Project()
+prog = proj.Program('rtm.c')
 
+# Forward-time modeling using exploding reflector
+Flow('imagemod wavemod','zvel %s zref' % prog[0],
+     '''
+     ./${SOURCES[1]} data=${SOURCES[2]} 
+     mod=${TARGETS[0]} wave=${TARGETS[1]} n0=0 jt=20 adj=y 
+     ''')
+Flow('imagemodcorrect','imagemod','''halfint inv=y''')
+
+# RTM
+Flow('image wave','zvel %s imagecorrect' % prog[0],
+     '''
+     ./${SOURCES[1]} data=${SOURCES[2]} 
+     wave=${TARGETS[1]} jt=20 n0=0
+     ''')
+# Display wave propagation movie
+Plot('wave',
+     '''
+     window min2=10.025 max2=90 min1=5 max1=30 f3=33 |
+     grey wanttitle=n gainpanel=all
+     ''',view=1)
+Plot('wavemod',
+     '''
+     window min2=10.025 max2=90 min1=5 max1=30 f3=33 |
+     grey wanttitle=n gainpanel=all
+     ''',view=1)
+
+# Display image
+Plot('image',
+     '''
+     window min2=10.025 max2=90 min1=5 max1=30 |
+     grey title=Image scalebay=y screenratio=0.3125 
+     screenht=4 labelsz=5 titlesz=7
+     ''')
+Plot('imagemodcorrect',
+     '''
+     window min2=10.025 max2=90 min1=0 max1=15 |
+     grey title="Zero-Offset Data RTM Fwd modeling" grid=y 
+     label1=Time unit1=s label2=Distance unit2=km scalebar=y
+     screenratio=0.3125 screenht=4 labelsz=5 titlesz=7
+     ''')
+
+Result('imagemod','imagemodcorrect data','SideBySideAniso')
+Result('image','image refl','Overlay')
 
 End()

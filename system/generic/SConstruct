@@ -10,7 +10,7 @@ inttest1 inttest2 impl1 impl2 impl3 jacobi jacobi2 lapfill laplac laplac3d
 linear linefit lorenz lpad mandelbrot matmult max1 miss2 monof monof2
 mutter noise otsu polymask postfilter2 pow reg2tri remap1 roots
 shapebin shapebin1 sharpen slice smooth smoothder smoothreg2 spectra
-spectra2 spline splinefilter swtdenoise tclip threshold trapez tri2reg
+spectra2 spline splinefilter hlinfilter swtdenoise tclip threshold trapez tri2reg
 trirand unif2 unif3
 '''
 

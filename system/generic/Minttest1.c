@@ -25,13 +25,14 @@ http://ahay.org/rsflog/index.php?/archives/373-Program-of-the-month-sfinttest1.h
 #include <rsf.h>
 
 #include "prefilter.h"
+#include "shprefilter.h"
 #include "interp_cube.h"
 #include "interp_sinc.h"
 #include "interp_mom.h"
 
 int main(int argc, char* argv[])
 {
-    int n, n2, nd, nw, i2;
+    int n, n2, nd, nw, i2,i3;
     float *mm, *coord, *z, o, d, kai;
     char *intp;
     sf_interpolator interp=NULL;
@@ -106,12 +107,16 @@ int main(int argc, char* argv[])
 	    prefilter_init (-nw, n, 3*n);
 	    interp = mom_int;
 	    break;
+	case 'h': /*Shifted linear*/
+	    interp = sf_lin_int;
+	    break;
 	default:
 	    sf_error("%s interpolator is not implemented",intp);
 	    break;
     }
 
-    sf_int1_init (coord, o, d, n, interp, nw, nd);
+    if (intp[0] == 'h') sf_int1sh_init (coord, o, d, n, interp, nw, nd);
+    else sf_int1_init (coord, o, d, n, interp, nw, nd);
 
     z = sf_floatalloc(nd);
     mm = sf_floatalloc(n);
@@ -123,6 +128,8 @@ int main(int argc, char* argv[])
 	    sf_banded_solve(spl,mm);
 	} else if ('m' == intp[0]) { 
 	    prefilter_apply (n,mm);
+	} else if ( 'h' == intp[0]) {
+	    shprefilter(n,mm);
 	}
 	sf_int1_lop (false,false,n,nd,mm,z);
 

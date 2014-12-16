@@ -219,7 +219,7 @@ int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 		       		double sm = s1*n1 + s2*n2 + s3*n3;
 		       		if (sm==0) sf_warning("Dividing zero: sm=%f !",sm);
 		       		r = sqrt(e*(1.-sm) + sm*sqrt(e*e + 2.*qm/sm));
-		       		if (r!=r) sf_warning("r=%g,n1=%g,n2=%g,n3=%g, e=%g s1=%g s2=%g s3=%g sh2=%g sv3=%g sh1=%g sh3=%g ",r,n1,n2,n3,e,s1,s2,s3,sh2,sv3,sh1,sh3);
+		       		if (r!=r) sf_warning("r=%g,n1=%g,n2=%g,n3=%g",r,n1,n2,n3);
 		   		} else r = sqrt(e);
 	       		} else r = 0.;
 			break;

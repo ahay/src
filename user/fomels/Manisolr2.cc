@@ -154,7 +154,7 @@ int main(int argc, char** argv)
 
     par.get("dt",dt); // time step
 
-    iRSF velz, velx("velx"), eta("eta"), theta("theta");
+    iRSF velz, velx("velx"), vels("vels"), eta("eta"), theta("theta");
 
     int nz,nx;
     velz.get("n1",nz);
@@ -163,6 +163,7 @@ int main(int argc, char** argv)
 
     vx.resize(m);
     vz.resize(m);
+    vs.resize(m);
     q.resize(m);
     t.resize(m);
 
@@ -173,6 +174,7 @@ int main(int argc, char** argv)
 
     velx >> vx;
     velz >> vz;
+    vels >> vs;
     eta >> q;
     theta >> t;
     

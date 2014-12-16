@@ -172,15 +172,15 @@ void initialize(int i /* Indicator of layer*/,
 	y_k.v2 = v[i]+y_k.gx2*(y_k.x-xref[i])+y_k.gz2*(y_k.z-zref[i]); /* Of the layer from below*/
 	
 	/*Prevent negative value of S*/
-	if (y_k.S11<0 || y_k.S31<0) {
-		sf_warning("S becomes negative for layer %d. Please change the anisotropy parameters",i);
-		exit(0);
-	}
-	
-	if (y_k.S12<0 || y_k.S32<0) {
-		sf_warning("S becomes negative for layer %d. Please change the anisotropy parameters",i+1);
-		exit(0);
-	}
+/*	if (y_k.S11<0 || y_k.S31<0) {*/
+/*		sf_warning("S becomes negative for layer %d. Please change the anisotropy parameters",i);*/
+/*		exit(0);*/
+/*	}*/
+/*	*/
+/*	if (y_k.S12<0 || y_k.S32<0) {*/
+/*		sf_warning("S becomes negative for layer %d. Please change the anisotropy parameters",i+1);*/
+/*		exit(0);*/
+/*	}*/
 	
 	/* y_k1 (y_k+1 th)----------------------------------------------------------------------------*/
 	

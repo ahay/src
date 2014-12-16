@@ -13,6 +13,8 @@ coords = ((0,2,4,6),
           (3,3.5,4,6),
           (0,2,4,6))
 
+#velocities = (1.5,1.5,1.5,1.5,1.5)
+
 velocities = (1.508,
               1.581,
               1.826,
@@ -43,9 +45,11 @@ d = 0.0101 # non-round for reproducibility
 Flow('refs','layers',
      '''
      transp plane=23 | transp plane=12 |
-     spline o1=0 d1=%g n1=%d | window |
-     add add=-0.7 | cut n2=2 f2=1 n1=298 | add add=0.7
+     spline o1=0 d1=%g n1=%d | window
+     |add add=-0.7 | cut n2=2 f2=1 n1=298 | add add=0.7
      ''' % (d,int(1.5+xmax/d)))
+#     |add add=-0.7 | cut n2=2 f2=1 n1=298 | add add=0.7
+
 Flow('dips','refs','deriv scale=y')
 
 Flow('mod2','refs',
@@ -62,9 +66,10 @@ Result('mod2',
        label2="Distance (km)"
        ''' % (zmax/xmax))
 
-shots = (2.0,2.6,3.3,3.95)
+#shots = (2.0,2.6,3.3,3.95)
+shots = (2.0,2.5)
 plots = []
-for s in range(4):
+for s in range(2):
     shot = 'shot%d' % s
     Flow(shot,'refs dips',
          '''

@@ -21,6 +21,7 @@
 #include <rsf.h>
 #include "interp_cube.h"
 #include "interp_sinc.h"
+#include "shprefilter.h"
 
 int main(int argc, char* argv[])
 {
@@ -113,12 +114,16 @@ int main(int argc, char* argv[])
 	    spl2 = sf_spline_init(nw,m[1]);
 	    tmp = sf_floatalloc(m[1]);
 	    break;
+	case 'h':
+	    interp = sf_lin_int;
+	    break;
 	default:
 	    sf_error("%s interpolator is not implemented",intp);
 	    break;
     }
 
-    sf_int2_init (coord, o1, o2, d1, d2, m[0], m[1], interp, nw, nd);
+    if (intp[0] == 'h') sf_int2sh_init (coord, o1, o2, d1, d2, m[0], m[1], interp, nw, nd);
+    else sf_int2_init (coord, o1, o2, d1, d2, m[0], m[1], interp, nw, nd);
 
     z = sf_floatalloc(nd);
     mm = sf_floatalloc2(m[0],m[1]);
@@ -126,6 +131,7 @@ int main(int argc, char* argv[])
     for (i3=0; i3 < n3; i3++) {
         sf_floatread (mm[0],n,in);
         if ('s' == intp[0]) sf_spline2(spl1,spl2,m[0],m[1],mm,tmp);
+        if ('h' == intp[0]) shprefilter2d(m[0],m[1],mm); 
 
 	sf_int2_lop (false,false,n,nd,mm[0],z);
 

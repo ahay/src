@@ -535,8 +535,6 @@ int main(int argc, char* argv[])
 						dk[b3] = fabsf(xx[b3]-xx[b3+1])/2 +dktemp;
 						dk[b3+1] = (-1)*fabsf(xx[b3]-xx[b3+1])/2 +dktemp;
 					}
-					dk[b3] = fabsf(xx[b3]-xx[b3+1])/2 +dktemp;
-					dk[b3+1] = (-1)*fabsf(xx[b3]-xx[b3+1])/2 +dktemp;
 				}
 			}
 		}

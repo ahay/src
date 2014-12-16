@@ -30,7 +30,7 @@ See also: inttest1.
 int main(int argc, char* argv[])
 {
     int nw;
-    float *w, kai, x;
+    float *w, kai, x, dsamp;
     char *intp;
     sf_interpolator interp=NULL;
     sf_file filt;
@@ -88,6 +88,10 @@ int main(int argc, char* argv[])
 	    break;
 	case 'm':
 	    interp = mom_int;
+	    break;
+	case 'h':
+	    x-=0.21; // optimal shift
+	    interp = sf_lin_int;
 	    break;
 	default:
 	    sf_error("%s interpolator is not implemented",intp);

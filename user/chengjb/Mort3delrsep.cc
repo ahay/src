@@ -29,7 +29,7 @@ using namespace std;
 
 /* prepared head files by myself */
 #include "_cjb.h"
-#include "_lapack.h"
+//#include "_lapack.h"
 
 /* head files aumatically produced from C programs */
 extern "C"{
@@ -58,7 +58,7 @@ static int sampleysv3(vector<int>& rs, vector<int>& cs, DblNumMat& resy);
 static int samplezsv3(vector<int>& rs, vector<int>& cs, DblNumMat& resz);
 
 /* conventional computation of polarization operator */
-static void polyp3dort(float ***ap, int nx, int ny, int nz, int im);
+static void polyp3dtti(float ***ap, int nx, int ny, int nz, int im);
 
 static void map2d1d(float *d, DblNumMat mat, int m, int n);
 
@@ -196,8 +196,8 @@ int main(int argc, char* argv[])
    alph>>al;
   
    for(int i=0;i<nxyz;i++){
-      th[i] *= PI/180.0;
-      al[i] *= PI/180.0;
+      th[i] *= SF_PI/180.0;
+      al[i] *= SF_PI/180.0;
    } 
 
    /* Fourier spectra demension */
@@ -211,13 +211,13 @@ int main(int argc, char* argv[])
 
    float dkz,dkx,dky,kz0,kx0,ky0;
 
-   dkx=2*PI/dx/nx;
-   dky=2*PI/dy/ny;
-   dkz=2*PI/dz/nz;
+   dkx=2*SF_PI/dx/nx;
+   dky=2*SF_PI/dy/ny;
+   dkz=2*SF_PI/dz/nz;
 
-   kx0=-PI/dx;
-   ky0=-PI/dy;
-   kz0=-PI/dz;
+   kx0=-SF_PI/dx;
+   ky0=-SF_PI/dy;
+   kz0=-SF_PI/dz;
 
    rkx.resize(nk);
    rky.resize(nk);
