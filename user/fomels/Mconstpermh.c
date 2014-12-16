@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
 {
     bool mig;
     int it, nt, ix, nx, iz, nz, ih, nh, ih1, ih2, ihs, snap;
-    float dt, dx, dz, dh, v, kx, kz, w, h, x, c;
+    float dt, dx, dz, dh, v, kx, kz, w, x, c;
     float ***prev, ***curr, **img, **dat;
     sf_file data, image, snaps;
 
