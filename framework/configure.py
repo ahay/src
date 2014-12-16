@@ -776,21 +776,29 @@ def ffmpeg(context):
     avcodec_register_all ();
     return 0;
     }\n'''
-    ffmpeg = context.env.get('FFMPEG','avcodec')
-    LIBS.append(ffmpeg)
+    ffmpeg = context.env.get('FFMPEG','avcodec avutil')
+    LIBS.extend(ffmpeg.split())
     res = context.TryLink(text,'.c')
 
     if res:
         context.Result(res)
         context.env['FFMPEG'] = ffmpeg
         context.env['FFMPEGPATH'] = ffmpegpath
+        LIBS.pop()
+        LIBS.pop()
     else:
-        context.Result(context_failure)
-        need_pkg('ffmpeg', fatal=False)
-        context.env['FFMPEG'] = None
+        LIBS.pop()
+        res = context.TryLink(text,'.c')
+        if res:
+            context.Result(res)
+            context.env['FFMPEG'] = ffmpeg
+            context.env['FFMPEGPATH'] = ffmpegpath
+        else:
+            context.Result(context_failure)
+            need_pkg('ffmpeg', fatal=False)
+            context.env['FFMPEG'] = None
+        LIBS.pop()
     context.env['CPPPATH'] = oldpath    
-    LIBS.pop()
-
 
 pkg['cairo'] = {'suse':'cairo-devel',
                 'ubuntu':'libcairo2-dev'}

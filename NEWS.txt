@@ -85,6 +85,7 @@ In the build system:
 
 * Fixed MEXSUFFIX for 64-bit Macs
 * Added '.exe' suffix for python programs in Cygwin
+* Updated gdpen compilation for new versions of FFMPEG
 
 ===Changes in defaults and interfaces===
 

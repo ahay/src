@@ -387,11 +387,14 @@ static void ffmpeg_init (void) {
 #if LIBAVCODEC_VERSION_MAJOR < 54
     avcodec_init();
 #endif
+#if LIBAVCODEC_VERSION_INT < 0x363b64 /* 54.59.100 @ ffmpeg-1.0 */
+#define AV_CODEC_ID_MPEG1VIDEO CODEC_ID_MPEG1VIDEO 
+#endif 
     /* register all the codecs */
     avcodec_register_all ();
 
     /* find the mpeg1 video encoder */
-    codec = avcodec_find_encoder (CODEC_ID_MPEG1VIDEO);
+    codec = avcodec_find_encoder (AV_CODEC_ID_MPEG1VIDEO);
     if (!codec) {
         ERR (FATAL, name, "Could not initialize MPEG1 codec\n");
     }
@@ -401,7 +404,11 @@ static void ffmpeg_init (void) {
 #else
     codec_ctx = avcodec_alloc_context3 (codec);
 #endif
-    mpeg_frame = avcodec_alloc_frame ();
+#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(55,28,1)
+#define av_frame_alloc  avcodec_alloc_frame
+#endif
+
+    mpeg_frame = av_frame_alloc(); 
 
     codec_ctx->bit_rate = bitrate;
     /* resolution must be a multiple of two */

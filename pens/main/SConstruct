@@ -149,9 +149,11 @@ if gd:
         ffmpegpath = env.get('FFMPEGPATH',[])
         if type(ffmpegpath) is not types.ListType:
             ffmpegpath = Split(ffmpegpath)
+        if type(ffmpeg) is not types.ListType:
+            ffmpeg = Split(ffmpeg)
         path += ffmpegpath
         defines += ['FFMPEG']
-        libs += [ffmpeg]
+        libs += ffmpeg
         
     obj = env.StaticObject('gdpen.o','gdpen.c',
                            CPPPATH=path,
