@@ -73,11 +73,9 @@ if 'f90' in env.get('API',[]) and F90:
 
 ######################################################################
 # fftw settings
-fftw = env.get('FFTW')
+fftw = env.get('FFTWOMP')
 if fftw:
     env.Prepend(CPPDEFINES=['SF_HAS_FFTW'])
-    if not isinstance(fftw,bool):
-        env.Append(LIBS=['fftw3_threads','fftw3'])
 
 src = Glob('[a-z]*.c')
 

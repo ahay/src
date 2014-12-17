@@ -31,11 +31,9 @@ env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
             LIBS=[env.get('DYNLIB','')+'rsf'])
 
-fftw = env.get('FFTW')
+fftw = env.get('FFTWOMP')
 if fftw:
     env.Prepend(CPPDEFINES=['SF_HAS_FFTW'])
-    if not isinstance(fftw,bool):
-        env.Append(LIBS=['fftw3_threads','fftw3'])
 
 for source in src:
     inc = env.RSF_Include(source,prefix='')

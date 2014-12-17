@@ -33,17 +33,17 @@ except: # local version
 
 src = Glob('[a-z]*.c')
 
-dynpre = env.get('DYNLIB','') 
-
-libs = [dynpre+'rsf']+env.get('LIBS',[])
-dlibs = ['drsf']+env.get('LIBS',[])
-
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'])
 
 fftw = env.get('FFTW')
 if fftw:
     env.Prepend(CPPDEFINES=['SF_HAS_FFTW'])
+
+dynpre = env.get('DYNLIB','') 
+
+libs = [dynpre+'rsf']+env.get('LIBS',[])
+dlibs = ['drsf']+env.get('LIBS',[])
 
 objects = []
 dobjects = []

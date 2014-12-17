@@ -26,7 +26,7 @@
 static int nb, nz, nx, nt, ns, nzpad, nxpad;
 static float dz, dx, _dz, _dx, dt, fm;
 
-void expand2d(float** b, float** a)
+static void expand2d(float** b, float** a)
 /*< expand domain of 'a' to 'b': source(a)-->destination(b) >*/
 {
     int iz,ix;
@@ -284,7 +284,7 @@ int main(int argc, char* argv[])
 	sf_floatread(tmp[0], nz*nx, Frho);
 	expand2d(rho, tmp);
 	sf_floatread(tmp[0], nz*nx, Ftaup);
-	expand2d(taup, tmp[0]);
+	expand2d(taup, tmp);
 	sf_floatread(tmp[0], nz*nx, Ftaus);
 	expand2d(taus, tmp);
 	sf_floatread(tmp[0], nz*nx, Ftau0);
