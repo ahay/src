@@ -38,7 +38,11 @@ int main (int argc, char *argv[])
     sf_file Fin=NULL, Fou=NULL;
 
 #ifdef SF_HAS_FFTW
+  #ifdef SF_HAS_FFTW_OMP
+    fftwf_plan    ompcfg;
+  #else
     fftwf_plan    *ompcfg;
+  #endif
 #else
     kiss_fftr_cfg *ompcfg;
 #endif
@@ -54,9 +58,6 @@ int main (int argc, char *argv[])
 
 /*------------------------------------------------------------*/
     sf_init(argc, argv);
-#ifdef _OPENMP
-    ompnth=omp_init();
-#endif
 
     Fin  = sf_input ("in");
     Fou = sf_output("out");
@@ -147,10 +148,27 @@ int main (int argc, char *argv[])
     if(verb) fprintf(stderr,"init FFT");
 
 #ifdef SF_HAS_FFTW
+  #ifdef SF_HAS_FFTW_OMP
+  fftwf_init_threads();
+  fftwf_plan_with_nthreads(ompnth);
+  if (inv) {
+    ompcfg = fftwf_plan_many_dft_c2r(1, &nt, n2buf,
+                (fftwf_complex *) ompQ[0], NULL, 1, nw,
+                ompP[0], NULL, 1, nt,
+                FFTW_ESTIMATE);
+  } else {
+    ompcfg = fftwf_plan_many_dft_r2c(1, &nt, n2buf,
+                ompP[0], NULL, 1, nt,
+                (fftwf_complex *) ompQ[0], NULL, 1, nw,
+                FFTW_ESTIMATE);
+  }
+  if (NULL == ompcfg) sf_error("FFTW failure.");
+  #else
     ompcfg  = (fftwf_plan*) sf_alloc(n2buf,sizeof(fftwf_plan));
     for(ibuf=0; ibuf<n2buf; ibuf++)
 	if (inv) ompcfg[ibuf] = fftwf_plan_dft_c2r_1d(nt,             (fftwf_complex *) ompQ[ibuf], ompP[ibuf],FFTW_ESTIMATE);
 	else     ompcfg[ibuf] = fftwf_plan_dft_r2c_1d(nt, ompP[ibuf], (fftwf_complex *) ompQ[ibuf],            FFTW_ESTIMATE);    
+  #endif
 #else
     ompcfg  = (kiss_fftr_cfg*) sf_alloc(ompnth,sizeof(kiss_fftr_cfg));
     for(ompith=0; ompith<ompnth; ompith++)
@@ -172,6 +190,10 @@ int main (int argc, char *argv[])
 	    for(ibuf=0; ibuf<nbuf; ibuf++)
 		sf_floatread (ompP[ibuf],n1,Fin);
 
+#ifdef SF_HAS_FFTW_OMP
+    fftwf_execute(ompcfg);
+#endif
+
 #ifdef _OPENMP
 #pragma omp parallel for schedule(static)				\
     private(ibuf,i1,ompith,shift)					\
@@ -185,10 +207,12 @@ int main (int argc, char *argv[])
 		if (sym) for(i1=0;  i1<n1; i1++) ompP[ibuf][i1] *= wght;
 		;        for(i1=n1; i1<nt; i1++) ompP[ibuf][i1]  = 0.0;
 
+#ifndef SF_HAS_FFTW_OMP
 #ifdef SF_HAS_FFTW
 		fftwf_execute(ompcfg[ibuf]);
 #else
 		kiss_fftr(ompcfg[ompith],ompP[ibuf],ompQ[ibuf]);
+#endif
 #endif
 	    
 	        if (0. != o1) { shift = -2.0*SF_PI*dw*o1;
@@ -206,6 +230,10 @@ int main (int argc, char *argv[])
 	} else {
 	    for(ibuf=0; ibuf<nbuf; ibuf++)
 		sf_floatread( (float*) ompQ[ibuf],2*nw,Fin);
+
+#ifdef SF_HAS_FFTW_OMP
+    fftwf_execute(ompcfg);
+#endif
 
 #ifdef _OPENMP
 #pragma omp parallel for schedule(static)			\
@@ -225,10 +253,12 @@ int main (int argc, char *argv[])
 		    }
 		}
 
+#ifndef SF_HAS_FFTW_OMP
 #ifdef SF_HAS_FFTW
 		fftwf_execute(ompcfg[ibuf]);
 #else
 		kiss_fftri(ompcfg[ompith],ompQ[ibuf],ompP[ibuf]);
+#endif
 #endif
 		
 		for(i1=0; i1<n1; i1++) ompP[ibuf][i1] *= wght;
@@ -249,6 +279,5 @@ int main (int argc, char *argv[])
     ;            free(ompE);
 
     if(verb) fprintf(stderr," OK\n");
-
     exit (0);
 }

@@ -132,6 +132,7 @@ def check_all(context):
     #    sse (context) # FDNSI
     cuda(context) # FDNSI
     fftw(context) # FDNSI
+    fftwomp(context) # FDNSI
     petsc(context) # FDNSI
     psp(context) #FDNSI
     sparse(context) #FDNSI
@@ -1264,6 +1265,41 @@ def fftw(context):
             context.env['FFTW'] = None
             LIBS.pop()
             need_pkg('fftw', fatal=False)
+
+def fftwomp(context):
+    context.Message("checking for openMP supported FFTW ... ")
+
+    LIBS = path_get(context,'LIBS')
+    
+    text = '''
+    #include <fftw3.h>
+    int main(int argc,char* argv[]) {
+    fftwf_init_threads();
+    fftwf_plan_with_nthreads(1);
+    fftwf_cleanup_threads();
+    return 0;
+    }\n'''
+    res = context.TryLink(text,'.c')
+
+    if res:
+        context.Result(res)
+        context.env['FFTWOMP'] = True
+    else:
+        fftw_omp = context.env.get('FFTWOMP','fftw3f_omp')
+        LIBS.insert(0,fftw_omp)
+        if not 'fftw3f' in LIBS:
+            fftw = context.env.get('FFTW','fftw3f')
+            LIBS.append(fftw)
+        res = context.TryLink(text,'.c')
+        if res:
+            context.Result(res)
+            context.env['FFTWOMP'] = ['fftw3f_omp','fftw3f']
+            context.env['LIBS'] = LIBS
+        else:
+            context.Result(context_failure)
+            context.env['FFTWOMP'] = None
+            LIBS.pop(0)
+            LIBS.pop()
  
 pkg['petsc'] = {'ubuntu':'petsc-dev',
                 'fedora':'petsc-devel'}
@@ -2172,6 +2208,7 @@ def options(file):
     opts.Add('SPARSEPATH','SuiteSparse - path to headers')
     opts.Add('SPARSELIBS','SuiteSparse - libraries')
     opts.Add('FFTW','The FFTW library')
+    opts.Add('FFTWOMP','The FFTW library with openMP support')
     opts.Add('OMP','OpenMP support')
     opts.Add('PTHREADS','Posix threads support')
     opts.Add('SSE','Streaming SIMD Extensions compilation flags')
@@ -2240,3 +2277,4 @@ def options(file):
     opts.Add('PFFT','The PFFT library')
     
     return opts
+
