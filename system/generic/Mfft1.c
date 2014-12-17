@@ -58,6 +58,9 @@ int main (int argc, char *argv[])
 
 /*------------------------------------------------------------*/
     sf_init(argc, argv);
+#ifdef _OPENMP
+    ompnth=omp_init();
+#endif
 
     Fin  = sf_input ("in");
     Fou = sf_output("out");
