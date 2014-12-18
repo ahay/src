@@ -1,6 +1,6 @@
 try:    from rsf.cluster import *
 except: from rsf.proj    import *
-import math
+import math,uuid
     
 # ------------------------------------------------------------
 # point
@@ -42,8 +42,8 @@ def rectangle(cc,zmin,zmax,xmin,xmax,custom,par):
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
 
-    ccx=cc+'x'
-    ccz=cc+'z'
+    ccx=cc+'x'+uuid.uuid4().get_hex()
+    ccz=cc+'z'+uuid.uuid4().get_hex()
 
     Flow(cc,None,
          '''
@@ -70,8 +70,8 @@ def circle(cc,xcenter,zcenter,radius,sampling,custom,par):
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
     
-    ccx=cc+'x'
-    ccz=cc+'z'
+    ccx=cc+'x'+uuid.uuid4().get_hex()
+    ccz=cc+'z'+uuid.uuid4().get_hex()
 
     Flow(cc,None,
          '''
@@ -98,9 +98,9 @@ def ellipse(cc,xcenter,zcenter,semiA,semiB,sampling,custom,par):
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
 
-    ccr=cc+'r'
-    ccx=cc+'x'
-    ccz=cc+'z'
+    ccr=cc+'r'+uuid.uuid4().get_hex()
+    ccx=cc+'x'+uuid.uuid4().get_hex()
+    ccz=cc+'z'+uuid.uuid4().get_hex()
 
     Flow(cc,None,
          '''
@@ -132,9 +132,9 @@ def hsine2d(cc,base,ampl,peri,custom,par,jx=1):
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
    
-    cco=cc+'o'
-    ccz=cc+'z'
-    ccx=cc+'x'
+    cco=cc+'o'+uuid.uuid4().get_hex()
+    ccz=cc+'z'+uuid.uuid4().get_hex()
+    ccx=cc+'x'+uuid.uuid4().get_hex()
    
     Flow(cc,None,
          '''
@@ -163,9 +163,9 @@ def horizontal2d(cc,zcoord,custom,par,jx=1):
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
     
-    cco=cc+'o'
-    ccz=cc+'z'
-    ccx=cc+'x'
+    cco=cc+'o'+uuid.uuid4().get_hex()
+    ccz=cc+'z'+uuid.uuid4().get_hex()
+    ccx=cc+'x'+uuid.uuid4().get_hex()
     
     Flow(cc,None,
          '''
@@ -194,10 +194,10 @@ def horizontal3d(cc,zcoord,custom,par,jx=1,jy=1,fx=0,fy=0):
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
     
-    cco=cc+'o'
-    ccz=cc+'z'
-    ccy=cc+'y'
-    ccx=cc+'x'
+    cco=cc+'o'+uuid.uuid4().get_hex()
+    ccz=cc+'z'+uuid.uuid4().get_hex()
+    ccy=cc+'y'+uuid.uuid4().get_hex()
+    ccx=cc+'x'+uuid.uuid4().get_hex()
 
     nx=(par['nx']-fx-1)/jx+1
     ny=(par['ny']-fy-1)/jy+1
@@ -235,10 +235,10 @@ def YZsheet3d(cc,xcoord,custom,par,jy=1,jz=1):
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
     
-    cco=cc+'o'
-    ccz=cc+'z'
-    ccy=cc+'y'
-    ccx=cc+'x'
+    cco=cc+'o'+uuid.uuid4().get_hex()
+    ccz=cc+'z'+uuid.uuid4().get_hex()
+    ccy=cc+'y'+uuid.uuid4().get_hex()
+    ccx=cc+'x'+uuid.uuid4().get_hex()
 
     ny=(par['ny']-1)/jy+1
     nz=(par['nz']-1)/jz+1
@@ -276,10 +276,10 @@ def ZXsheet3d(cc,ycoord,custom,par,jx=1,jz=1):
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
     
-    cco=cc+'o'
-    ccz=cc+'z'
-    ccy=cc+'y'
-    ccx=cc+'x'
+    cco=cc+'o'+uuid.uuid4().get_hex()
+    ccz=cc+'z'+uuid.uuid4().get_hex()
+    ccy=cc+'y'+uuid.uuid4().get_hex()
+    ccx=cc+'x'+uuid.uuid4().get_hex()
 
     nx=(par['nx']-1)/jx+1
     nz=(par['nz']-1)/jz+1
@@ -317,10 +317,10 @@ def XYsheet3d(cc,zcoord,custom,par,jx=1,jy=1):
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
     
-    cco=cc+'o'
-    ccz=cc+'z'
-    ccy=cc+'y'
-    ccx=cc+'x'
+    cco=cc+'o'+uuid.uuid4().get_hex()
+    ccz=cc+'z'+uuid.uuid4().get_hex()
+    ccy=cc+'y'+uuid.uuid4().get_hex()
+    ccx=cc+'x'+uuid.uuid4().get_hex()
 
     nx=(par['nx']-1)/jx+1
     ny=(par['ny']-1)/jy+1
@@ -358,9 +358,9 @@ def vertical2d(cc,xcoord,custom,par):
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
     
-    cco=cc+'o'
-    ccz=cc+'z'
-    ccx=cc+'x'
+    cco=cc+'o'+uuid.uuid4().get_hex()
+    ccz=cc+'z'+uuid.uuid4().get_hex()
+    ccx=cc+'x'+uuid.uuid4().get_hex()
     
     Flow(cc,None,
          '''
@@ -388,9 +388,9 @@ def boxarray2d(cc,nz,oz,dz,nx,ox,dx,par):
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
 
-    cco=cc+'o'
-    ccz=cc+'z'
-    ccx=cc+'x'
+    cco=cc+'o'+uuid.uuid4().get_hex()
+    ccz=cc+'z'+uuid.uuid4().get_hex()
+    ccx=cc+'x'+uuid.uuid4().get_hex()
 
     Flow(cc,None,
          '''

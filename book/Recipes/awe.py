@@ -1,5 +1,6 @@
 try:    from rsf.cluster import *
 except: from rsf.proj    import *
+import uuid
 
 # ------------------------------------------------------------
 def param(par):
@@ -258,9 +259,9 @@ def cicmig(icic,
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH')
 
-    swfl=icic+'swfl'
-    rdrv=icic+'rdrv'
-    rwfl=icic+'rwfl'
+    swfl=icic+'swfl'+uuid.uuid4().get_hex()
+    rdrv=icic+'rdrv'+uuid.uuid4().get_hex()
+    rwfl=icic+'rwfl'+uuid.uuid4().get_hex()
 
     Flow(icic,[sdat,scoo,rdat,rcoo,velo,dens],
          '''
@@ -306,9 +307,9 @@ def cicmigCD(icic,
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH')
 
-    swfl=icic+'swfl'
-    rdrv=icic+'rdrv'
-    rwfl=icic+'rwfl'
+    swfl=icic+'swfl'+uuid.uuid4().get_hex()
+    rdrv=icic+'rdrv'+uuid.uuid4().get_hex()
+    rwfl=icic+'rwfl'+uuid.uuid4().get_hex()
 
     Flow(icic,[sdat,scoo,rdat,rcoo,velo],
          '''
@@ -353,9 +354,9 @@ def eicmig(icic,
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH')
 
-    swfl=ieic+'swfl'
-    rdrv=ieic+'rdrv'
-    rwfl=ieic+'rwfl'
+    swfl=ieic+'swfl'+uuid.uuid4().get_hex()
+    rdrv=ieic+'rdrv'+uuid.uuid4().get_hex()
+    rwfl=ieic+'rwfl'+uuid.uuid4().get_hex()
 
     Flow([icic,ieic],[sdat,scoo,rdat,rcoo,icoo,velo,dens],
          '''
@@ -407,9 +408,9 @@ def eicmigCD(icic,
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH')
 
-    swfl=ieic+'swfl'
-    rdrv=ieic+'rdrv'
-    rwfl=ieic+'rwfl'
+    swfl=ieic+'swfl'+uuid.uuid4().get_hex()
+    rdrv=ieic+'rdrv'+uuid.uuid4().get_hex()
+    rwfl=ieic+'rwfl'+uuid.uuid4().get_hex()
 
     Flow([icic,ieic],[sdat,scoo,rdat,rcoo,icoo,velo],
          '''
@@ -453,7 +454,7 @@ def awertm2d(imag,data,rcoo,velo,dens,custom,par):
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
 
-    rwfl = imag+'wwfl'
+    rwfl = imag+'wwfl'+uuid.uuid4().get_hex()
 
     Flow(imag,[data,rcoo,velo,dens],
          '''
@@ -478,7 +479,7 @@ def awertm3d(imag,data,rcoo,velo,dens,custom,par):
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
 
-    rwfl = imag+'wwfl'
+    rwfl = imag+'wwfl'+uuid.uuid4().get_hex()
 
     Flow(imag,[data,rcoo,velo,dens],
          '''
@@ -504,7 +505,7 @@ def cdartm2d(imag,data,rcoo,velo,custom,par):
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
 
-    rwfl = imag+'wwfl'
+    rwfl = imag+'wwfl'+uuid.uuid4().get_hex()
 
     Flow(imag,[data,rcoo,velo],
          '''
@@ -528,7 +529,7 @@ def cdartm3d(imag,data,rcoo,velo,custom,par):
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
 
-    rwfl = imag+'wwfl'
+    rwfl = imag+'wwfl'+uuid.uuid4().get_hex()
 
     Flow(imag,[data,rcoo,velo],
          '''
@@ -553,7 +554,7 @@ def cdartm2dopt(imag,data,rcoo,velo,custom,par):
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
 
-    rwfl = imag+'wwfl'
+    rwfl = imag+'wwfl'+uuid.uuid4().get_hex()
 
     Flow(imag,[data,rcoo,velo],
          '''
@@ -577,7 +578,7 @@ def cdartm3dopt(imag,data,rcoo,velo,custom,par):
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
 
-    rwfl = imag+'wwfl'
+    rwfl = imag+'wwfl'+uuid.uuid4().get_hex()
 
     Flow(imag,[data,rcoo,velo],
          '''

@@ -1,6 +1,6 @@
 try:    from rsf.cluster import *
 except: from rsf.proj    import *
-import fdmod
+import fdmod,uuid
 
 # ------------------------------------------------------------
 def awepar(par):
@@ -71,9 +71,9 @@ def cicmig(icic,
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH')
 
-    swfl=icic+'swfl'
-    rdrv=icic+'rdrv'
-    rwfl=icic+'rwfl'
+    swfl=icic+'swfl'+uuid.uuid4().get_hex()
+    rdrv=icic+'rdrv'+uuid.uuid4().get_hex()
+    rwfl=icic+'rwfl'+uuid.uuid4().get_hex()
 
     Flow(icic,[sdat,scoo,rdat,rcoo,velo,dens],
          '''
@@ -119,9 +119,9 @@ def cicmigCD(icic,
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH')
 
-    swfl=icic+'swfl'
-    rdrv=icic+'rdrv'
-    rwfl=icic+'rwfl'
+    swfl=icic+'swfl'+uuid.uuid4().get_hex()
+    rdrv=icic+'rdrv'+uuid.uuid4().get_hex()
+    rwfl=icic+'rwfl'+uuid.uuid4().get_hex()
 
     Flow(icic,[sdat,scoo,rdat,rcoo,velo],
          '''
@@ -166,9 +166,9 @@ def eicmig(icic,
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH')
 
-    swfl=ieic+'swfl'
-    rdrv=ieic+'rdrv'
-    rwfl=ieic+'rwfl'
+    swfl=ieic+'swfl'+uuid.uuid4().get_hex()
+    rdrv=ieic+'rdrv'+uuid.uuid4().get_hex()
+    rwfl=ieic+'rwfl'+uuid.uuid4().get_hex()
 
     Flow([icic,ieic],[sdat,scoo,rdat,rcoo,icoo,velo,dens],
          '''
@@ -220,9 +220,9 @@ def eicmigCD(icic,
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH')
 
-    swfl=ieic+'swfl'
-    rdrv=ieic+'rdrv'
-    rwfl=ieic+'rwfl'
+    swfl=ieic+'swfl'+uuid.uuid4().get_hex()
+    rdrv=ieic+'rdrv'+uuid.uuid4().get_hex()
+    rwfl=ieic+'rwfl'+uuid.uuid4().get_hex()
 
     Flow([icic,ieic],[sdat,scoo,rdat,rcoo,icoo,velo],
          '''
@@ -285,8 +285,8 @@ def zofmig(imag,data,rcoo,velo,dens,custom,par):
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
 
-    rdat = imag+'rdat'
-    rwfl = imag+'wwfl'
+    rdat = imag+'rdat'+uuid.uuid4().get_hex()
+    rwfl = imag+'wwfl'+uuid.uuid4().get_hex()
 
     Flow(imag,[data,rcoo,velo,dens],
          '''
@@ -315,8 +315,8 @@ def zofmigCD(imag,data,rcoo,velo,custom,par):
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
 
-    rdat = imag+'rdat'
-    rwfl = imag+'wwfl'
+    rdat = imag+'rdat'+uuid.uuid4().get_hex()
+    rwfl = imag+'wwfl'+uuid.uuid4().get_hex()
 
     Flow(imag,[data,rcoo,velo],
          '''
@@ -370,9 +370,9 @@ def fwiker(kern,
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH')
 
-    swfl=kern+'swfl'
-    rdrv=kern+'rdrv'
-    rwfl=kern+'rwfl'
+    swfl=kern+'swfl'+uuid.uuid4().get_hex()
+    rdrv=kern+'rdrv'+uuid.uuid4().get_hex()
+    rwfl=kern+'rwfl'+uuid.uuid4().get_hex()
 
     Flow(kern,[sdat,scoo,rdat,rcoo,velo,dens],
          '''
@@ -418,9 +418,9 @@ def fwikerCD(kern,
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH')
 
-    swfl=kern+'swfl'
-    rdrv=kern+'rdrv'
-    rwfl=kern+'rwfl'
+    swfl=kern+'swfl'+uuid.uuid4().get_hex()
+    rdrv=kern+'rdrv'+uuid.uuid4().get_hex()
+    rwfl=kern+'rwfl'+uuid.uuid4().get_hex()
 
     Flow(kern,[sdat,scoo,rdat,rcoo,velo],
          '''

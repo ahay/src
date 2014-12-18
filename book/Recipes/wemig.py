@@ -1,7 +1,7 @@
 try:    from rsf.cluster import *
 except: from rsf.proj    import *
 import spmig,sgmig,zomig,fdmod
-import random
+import random,uuid
 
 def param(par):
     p  = ' '
@@ -147,9 +147,9 @@ def rtmcic(imag,velo,dens,
 
     awepar = 'ompchunk=%(ompchunk)d ompnth=%(ompnth)d verb=y free=n snap=%(snap)s jsnap=%(jdata)d jdata=%(jdata)d dabc=%(dabc)s nb=%(nb)d'%par + ' ' + custom
 
-    swfl=imag+'swfl'
-    rdrv=imag+'rdrv'
-    rwfl=imag+'rwfl'
+    swfl=imag+'swfl'+uuid.uuid4().get_hex()
+    rdrv=imag+'rdrv'+uuid.uuid4().get_hex()
+    rwfl=imag+'rwfl'+uuid.uuid4().get_hex()
 
     Flow(imag,[sdat,scoo,rdat,rcoo,velo],
          '''
@@ -191,9 +191,9 @@ def cdrtm(imag,velo,
 
     awepar = 'ompchunk=%(ompchunk)d ompnth=%(ompnth)d verb=y free=n snap=%(snap)s jsnap=%(jdata)d jdata=%(jdata)d dabc=%(dabc)s nb=%(nb)d'%par + ' ' + custom
 
-    swfl=imag+'swfl'
-    rdrv=imag+'rdrv'
-    rwfl=imag+'rwfl'
+    swfl=imag+'swfl'+uuid.uuid4().get_hex()
+    rdrv=imag+'rdrv'+uuid.uuid4().get_hex()
+    rwfl=imag+'rwfl'+uuid.uuid4().get_hex()
 
     Flow(imag,[sdat,scoo,rdat,rcoo,velo],
          '''
