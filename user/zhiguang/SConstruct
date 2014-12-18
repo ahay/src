@@ -30,7 +30,7 @@ env.Prepend(CPPPATH=['../../include'],
             LIBS=[env.get('DYNLIB','')+'rsfpwd',
                   env.get('DYNLIB','')+'rsf'])
 
-fftw = env.get('FFTW')
+fftw = env.get('FFTWOMP')
 if fftw:
     env.Prepend(CPPDEFINES=['SF_HAS_FFTW'])
 

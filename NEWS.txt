@@ -63,6 +63,7 @@ To programs:
 * Enabled depth= option for sfgraph with lines
 * user/junyan: New contributor (Jun Yan)
 * Added inv= flag in sfheaderwindow
+* Added polyneg= flag in sfwiggle
 
 ===Bug fixes===
 

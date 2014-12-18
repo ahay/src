@@ -1,0 +1,41 @@
+from rsf.proj import *
+
+# 3-Layer Model Parameters [Layer1, Layer2, Layer 3]
+vp_mod = [2500.0, 2600.0, 2550.0] # P-wave velocity (m/s)
+vs_mod = [1200.0, 1300.0, 1200.0] # S-wave velocity (m/s)
+rho_mod= [1.95, 2.0, 1.98] # Density (g/cc)
+
+Flow('depth1',None,'math o1=0 d1=1 n1=61 label1=Thickness unit1=m output=500')
+Flow('depth2','depth1','math output=500+x1')
+
+Flow('depths','depth1 depth2','cat axis=2 ${SOURCES[1]}')
+
+Result('depths','graph max2=600 min2=400 yreverse=y label2=Depth unit2=m title=Layers')
+
+Flow('time1','depth1','scale dscale=%g' % (2/vp_mod[0]))
+Flow('time2','depth2 depth1 time1',
+     'math t1=${SOURCES[2]} z1=${SOURCES[1]} output="t1+%g*(input-z1)" ' %  (2/vp_mod[1]))
+
+Flow('times','time1 time2','cat axis=2 ${SOURCES[1]}')
+Plot('times','graph max2=0.5 min2=0.3 yreverse=y wantaxis=n wanttitle=n plotcol=6 plotfat=3')
+
+ai_mod = [vp_mod[k]*rho_mod[k]/1000 for k in range(3)]
+
+Flow('ai','times','unif2 v00=%s n1=5001 d1=0.0001 label1=Time unit1=s' % ','.join(map(str,ai_mod)))
+
+Result('ai','window min1=0.3 | grey color=lb mean=y title="Acoustic Impedance" barlabel=AI scalebar=y')
+
+Flow('seismic','ai','ai2refl | ricker1 frequency=30 | window min1=0.3')
+
+Plot('pos','seismic','wiggle poly=y yreverse=y transp=y wanttitle=n plotcol=1 grid2=n')
+Plot('neg','seismic','wiggle poly=y yreverse=y transp=y wanttitle=n plotcol=2 polyneg=y grid2=n')
+Plot('seismic','wiggle yreverse=y transp=y wanttitle=n plotcol=7 grid2=n')
+
+Result('seismic','pos neg seismic times','Overlay')
+
+Flow('tuning','seismic','window n1=1 min1=0.4 | scale dscale=1000')
+
+Result('tuning',
+       'graph title="Upper Interface Amplitude" plotfat=10 plotcol=5 grid=y label2=Amplitude unit2=')
+
+End()

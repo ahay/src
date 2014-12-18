@@ -1,6 +1,6 @@
 /* Simple reflection tomography  */
 /*
- Copyright (C) 2008 Colorado School of Mines
+ Copyright (C) 2014 The University of Texas at Austin
  
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by

@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
     float o1, o2, o3, d1, d2, d3, **xp, pclip, zplot, zdata, x1, x2, y1, y2;
     float gpow, scale, x0, y0, zero, xmax, xmin, bias=0.0;
     float **pdata=NULL, *q=NULL, *x=NULL, *y=NULL, *px=NULL, *py=NULL, *tmp;
-    bool poly, seemean, verb, xreverse, yreverse;
+    bool poly, polyneg, seemean, verb, xreverse, yreverse;
     sf_file in, xpos;
 
     sf_init(argc,argv);
@@ -109,6 +109,9 @@ int main(int argc, char* argv[])
 
     if (!sf_getbool("poly",&poly)) poly=false;
     /* if draw polygons */
+
+    if (!sf_getbool("polyneg",&polyneg)) polyneg=false;
+    /* if polygons for negative values */
 
     if (poly) {
 	if (!sf_getint("fatp",&fatp)) fatp = 1;
@@ -230,7 +233,8 @@ int main(int argc, char* argv[])
 	    if (poly) {
 		vp_bgroup("polygons");
 		i = 0;
-		if (q[0] > 0.) { /* start polygon */
+		if (( polyneg && q[0] < 0.) || 
+		    (!polyneg && q[0] > 0.)) { /* start polygon */
 		    x0 = x1;
 		    y0 = zero;
 		    checkit(&x0,&y0);
@@ -245,7 +249,8 @@ int main(int argc, char* argv[])
 
 		for (i1 = 0; i1 < n1; i1++) {
 		    if (0 == i) {
-			if (q[i1] > 0.) { /* start polygon */
+			if (( polyneg && q[i1] < 0.) ||
+			    (!polyneg && q[i1] > 0.)) { /* start polygon */
 			    x0 = o1+(i1 - q[i1]/(q[i1] - q[i1-1]))*d1;
 			    y0 = zero;
 			    checkit(&x0,&y0);
@@ -258,7 +263,8 @@ int main(int argc, char* argv[])
 			    i++;
 			}
 		    } else {
-			if (q[i1] > 0.) { /* continue polygon */
+			if (( polyneg && q[i1] < 0.) ||
+			    (!polyneg && q[i1] > 0.)) { /* continue polygon */
 			    px[i] = x[i1];
 			    py[i] = y[i1];
 			    i++;
