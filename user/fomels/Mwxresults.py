@@ -57,23 +57,28 @@ class TestFrame(wx.Frame):
         self.flip = {}
 
         panel = wx.Panel(self,-1)
-        rsizer = wx.GridSizer(rows=len(self.results),cols=2,hgap=5,vgap=5)
+        rsizer = wx.FlexGridSizer(rows=len(self.results),cols=2,vgap=5)
 
         for fig in self.results:
             self.flip[fig] = False
+
+            title = self.get_title(fig)
+            if title:
+                title = '%s [%s]' % (fig,title)
+            else:
+                title = fig
+            cb = wx.CheckBox(panel,-1,title)
+            cb.Bind(wx.EVT_CHECKBOX, self.set_flip)
+            rsizer.Add(cb,0,0)
 
             b = wx.Button(panel,-1,'show')
             self.Bind(wx.EVT_BUTTON,self.show(fig),b)
             rsizer.Add(b,0,0)
 
-            cb = wx.CheckBox(panel,-1,fig)
-            cb.Bind(wx.EVT_CHECKBOX, self.set_flip)
-            rsizer.Add(cb,0,0)
-
         panel.SetSizer(rsizer)
         rsizer.Fit(self)
         
-        sizer.Add(panel,0,wx.ALL,10)
+        sizer.Add(panel,0,wx.ALL|wx.EXPAND,15)
  
         self.SetSizer(sizer)
         sizer.Fit(self)
@@ -134,6 +139,33 @@ class TestFrame(wx.Frame):
         def showfig(event):
             os.system("scons %s.view" % fig)
         return showfig
+
+    def get_title(self,fig):
+        vpl = os.path.join('Fig',fig+'.vpl')
+        if not os.path.isfile(vpl):
+            return None
+        txt = os.path.join('Fig',fig+'.txt')
+        os.system('sfpldb < %s > %s' % (vpl,txt))
+        try:
+            plot = open(txt,'r')
+            for line in plot:
+                if line[0] == '[':
+                    line2 = plot.next()
+                    if line2[:5] == 'title':
+                        while line2:
+                            line2 = plot.next()
+                            if line2[0] == 'G':
+                                title = plot.next()
+                                plot.close()
+                                os.unlink(txt)
+                                return title.rstrip()
+            plot.close()
+            os.unlink(txt)
+            return None
+        except:
+            plot.close()
+            os.unlink(txt)
+            return None
 
 if __name__=='__main__':
     app = wx.App()
