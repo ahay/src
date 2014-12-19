@@ -19,5 +19,9 @@ Plot('held','fill hel',
 
 Result('helgal','ruf2 held','SideBySideAniso')
 
+Flow('sfill','mesh','shapefill verb=y rect1=2 rect2=2 niter=20')
+Plot('sfill','igrad | ' + plot('Filled and d/dx (Shaping)'))
+
+
 ###########################################################################
 End()
