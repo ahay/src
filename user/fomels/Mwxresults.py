@@ -40,35 +40,41 @@ class TestFrame(wx.Frame):
 
         signal(SIGINT,self.handler)
 
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
         panel = wx.Panel(self,-1)
         buttons = self.set_buttons(panel)
+        panel.SetSizer(buttons)
+        buttons.Fit(self)
 
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(buttons)
+        sizer.Add(panel,0,wx.ALL|wx.EXPAND,5)
 
         self.results = commands.getoutput("scons -s results").split()
         c = self.results[-1:][0]
         if (c < 'A' or c > 'z'): 
             self.results.pop() # remove scons junk
-        length = max(map(len,self.results))
 
         self.flip = {}
 
+        panel = wx.Panel(self,-1)
+        rsizer = wx.GridSizer(rows=len(self.results),cols=2,hgap=5,vgap=5)
+
         for fig in self.results:
             self.flip[fig] = False
-            row = wx.BoxSizer(wx.HORIZONTAL)
-
-            cb = wx.CheckBox(panel,-1,fig)
-            cb.Bind(wx.EVT_CHECKBOX, self.set_flip)
-            row.Add(cb,0,wx.ALL|wx.EXPAND,5)
 
             b = wx.Button(panel,-1,'show')
             self.Bind(wx.EVT_BUTTON,self.show(fig),b)
-            row.Add(b,0,wx.ALL|wx.EXPAND,5)
+            rsizer.Add(b,0,0)
 
-            sizer.Add(row,0,wx.ALL|wx.EXPAND,5)
+            cb = wx.CheckBox(panel,-1,fig)
+            cb.Bind(wx.EVT_CHECKBOX, self.set_flip)
+            rsizer.Add(cb,0,0)
 
-        sizer.Add(panel,0,wx.ALL|wx.EXPAND,5)
+        panel.SetSizer(rsizer)
+        rsizer.Fit(self)
+        
+        sizer.Add(panel,0,wx.ALL,10)
+ 
         self.SetSizer(sizer)
         sizer.Fit(self)
 
@@ -78,24 +84,24 @@ class TestFrame(wx.Frame):
         self.flip[fig] = sender.GetValue()
  
     def set_buttons(self,panel):
-        sizer = wx.BoxSizer(wx.HORIZONTAL)
+        bsizer = wx.BoxSizer(wx.HORIZONTAL)
 
         bcycl = wx.Button(panel,-1,'Cycle')
         bcycl.SetBackgroundColour('light yellow') 
         self.Bind(wx.EVT_BUTTON,self.showall,bcycl)
-        sizer.Add(bcycl,0,wx.ALL|wx.EXPAND,5)
+        bsizer.Add(bcycl,0,wx.ALL,5)
 
         bflip = wx.Button(panel,-1,'Flip')
         bflip.SetBackgroundColour('light green') 
         self.Bind(wx.EVT_BUTTON,self.flipit,bflip)
-        sizer.Add(bflip,0,wx.ALL|wx.EXPAND,5)
+        bsizer.Add(bflip,0,wx.ALL,5)
 
         bquit = wx.Button(panel,-1,'Quit')
         bquit.SetBackgroundColour('pink') 
         self.Bind(wx.EVT_BUTTON,self.quit,bquit)
-        sizer.Add(bquit,0,wx.ALL|wx.EXPAND,5)
+        bsizer.Add(bquit,0,wx.ALL,5)
 
-        return sizer
+        return bsizer
 
     def quit(self,event):
         sys.exit(0)
