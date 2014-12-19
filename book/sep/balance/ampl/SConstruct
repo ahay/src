@@ -1,0 +1,20 @@
+from rsf.proj import *
+
+Fetch('trend.HH','viking')
+
+Flow('trend','trend.HH','dd form=native | put label1=Offset unit1=km label2=Shot unit2=km')
+
+n1=120
+n2=994
+
+Flow('rms','trend',
+     '''
+     mul $SOURCE | stack axis=2 norm=n | stack axis=1 norm=n |
+     math output="sqrt(%d/input)" | spray axis=1 n=%d | spray axis=2 n=%d
+     ''' % (n1*n2,n1,n2))
+
+Flow('rtrend','trend rms','div ${SOURCES[1]}')
+
+Result('amplitude','rtrend','grey mean=y wanttitle=n')
+
+End()
