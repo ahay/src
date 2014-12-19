@@ -3,7 +3,12 @@
 #    
 try:    from rsf.cluster import *
 except: from rsf.proj    import *
-import pplot,uuid
+import pplot
+import random
+
+random.seed(1003)
+def add(x,y): return x+y
+def myid(n): return '_'+reduce(add,['%d'%random.randint(0,9) for i in range(n)])
 
 # reset default parameters
 def param(par):
@@ -409,8 +414,8 @@ def wom2d(wom,wfld,velo,vmean,nfrm,weight,par):
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
 
-    wtmp = wfld + 'tmp'+uuid.uuid4().get_hex()
-    vtmp = wfld + 'vel'+uuid.uuid4().get_hex()
+    wtmp = wfld + 'tmp'+myid(16)
+    vtmp = wfld + 'vel'+myid(16)
 
     Flow(wom,[velo,wfld],
         '''
@@ -439,8 +444,8 @@ def ovl2d(wom,wfld,velo,vmean,nfrm,weight,par):
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
 
-    wtmp = wfld + 'tmp'+uuid.uuid4().get_hex()
-    vtmp = wfld + 'vel'+uuid.uuid4().get_hex()
+    wtmp = wfld + 'tmp'+myid(16)
+    vtmp = wfld + 'vel'+myid(16)
 
     Flow(wom,[velo,wfld],
         '''

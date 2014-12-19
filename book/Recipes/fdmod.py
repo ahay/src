@@ -1,6 +1,11 @@
 try:    from rsf.cluster import *
 except: from rsf.proj    import *
-import pplot,math,uuid
+import pplot,math
+import random
+
+random.seed(1006)
+def add(x,y): return x+y
+def myid(n): return '_'+reduce(add,['%d'%random.randint(0,9) for i in range(n)])
 
 # ------------------------------------------------------------
 def obsolete(old,new):
@@ -418,9 +423,9 @@ def horizontal(cc,coord,par):
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
     
-    cco=cc+'o'+uuid.uuid4().get_hex()
-    ccz=cc+'z'+uuid.uuid4().get_hex()
-    ccx=cc+'x'+uuid.uuid4().get_hex()
+    cco=cc+'o'+myid(16)
+    ccz=cc+'z'+myid(16)
+    ccx=cc+'x'+myid(16)
     
     Flow(cc,None,
          '''
@@ -445,9 +450,9 @@ def horizontal(cc,coord,par):
 def horizontalupercent(cc,coord,par):
     DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
     
-    cco=cc+'o'+uuid.uuid4().get_hex()
-    ccz=cc+'z'+uuid.uuid4().get_hex()
-    ccx=cc+'x'+uuid.uuid4().get_hex()
+    cco=cc+'o'+myid(16)
+    ccz=cc+'z'+myid(16)
+    ccx=cc+'x'+myid(16)
     
     Flow(cc,None,
          '''  
@@ -473,9 +478,9 @@ def cable2d(cc,zrec,orec,nrec,drec,par):
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
     
-    cco=cc+'o'+uuid.uuid4().get_hex()
-    ccz=cc+'z'+uuid.uuid4().get_hex()
-    ccx=cc+'x'+uuid.uuid4().get_hex()
+    cco=cc+'o'+myid(16)
+    ccz=cc+'z'+myid(16)
+    ccx=cc+'x'+myid(16)
     
     Flow(cc,None,
          '''
@@ -539,9 +544,9 @@ def vertical(cc,coord,par):
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
     
-    cco=cc+'o'+uuid.uuid4().get_hex()
-    ccz=cc+'z'+uuid.uuid4().get_hex()
-    ccx=cc+'x'+uuid.uuid4().get_hex()
+    cco=cc+'o'+myid(16)
+    ccz=cc+'z'+myid(16)
+    ccx=cc+'x'+myid(16)
     
     Flow(cc,None,
          '''
@@ -567,10 +572,10 @@ def vertical3d(cc,coordx,coordy,par):
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
 
-    cco=cc+'o'+uuid.uuid4().get_hex()
-    ccx=cc+'x'+uuid.uuid4().get_hex()
-    ccy=cc+'y'+uuid.uuid4().get_hex()
-    ccz=cc+'z'+uuid.uuid4().get_hex()
+    cco=cc+'o'+myid(16)
+    ccx=cc+'x'+myid(16)
+    ccy=cc+'y'+myid(16)
+    ccz=cc+'z'+myid(16)
 
     Flow(cc,None,
          '''
@@ -614,8 +619,8 @@ def circle(cc,xcenter,zcenter,radius,sampling,par):
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
     
-    ccx=cc+'x'+uuid.uuid4().get_hex()
-    ccz=cc+'z'+uuid.uuid4().get_hex()
+    ccx=cc+'x'+myid(16)
+    ccz=cc+'z'+myid(16)
 
     Flow(cc,None,
          '''
@@ -783,8 +788,8 @@ def makeline(line,zmin,zmax,xmin,xmax,par):
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
 
-    linez=line+'z'+uuid.uuid4().get_hex()
-    linex=line+'x'+uuid.uuid4().get_hex()
+    linez=line+'z'+myid(16)
+    linex=line+'x'+myid(16)
 
     Flow(line,None,
          '''
@@ -1168,7 +1173,7 @@ def zom(imag,data,velo,dens,rcoo,custom,par):
     
     awepar = 'ompchunk=%(ompchunk)d ompnth=%(ompnth)d verb=y free=n snap=%(snap)s jsnap=%(jdata)d jdata=%(jdata)d dabc=%(dabc)s nb=%(nb)d'%par + ' ' + custom
 
-    rwfl = imag+'wwfl'+uuid.uuid4().get_hex()
+    rwfl = imag+'wwfl'+myid(16)
 
     Flow(imag,[data,rcoo,velo,dens],
          '''
@@ -1197,8 +1202,8 @@ def cdzom(imag,data,velo,rcoo,custom,par):
 
     awepar = 'ompchunk=%(ompchunk)d ompnth=%(ompnth)d verb=y free=n snap=%(snap)s jsnap=%(jdata)d jdata=%(jdata)d dabc=%(dabc)s nb=%(nb)d'%par + ' ' + custom
 
-    rdat = imag+'rdat'+uuid.uuid4().get_hex()
-    rwfl = imag+'wwfl'+uuid.uuid4().get_hex()
+    rdat = imag+'rdat'+myid(16)
+    rwfl = imag+'wwfl'+myid(16)
 
     Flow(imag,[data,rcoo,velo],
          '''
@@ -1229,8 +1234,8 @@ def cdzom3d(imag,data,velo,rcoo,custom,par):
 
     awepar = 'ompchunk=%(ompchunk)d ompnth=%(ompnth)d verb=y free=n snap=%(snap)s jsnap=%(jdata)d jdata=%(jdata)d dabc=%(dabc)s nb=%(nb)d'%par + ' ' + custom
 
-    rdat = imag+'rdat'+uuid.uuid4().get_hex()
-    rwfl = imag+'wwfl'+uuid.uuid4().get_hex()
+    rdat = imag+'rdat'+myid(16)
+    rwfl = imag+'wwfl'+myid(16)
 
     Flow(imag,[data,rcoo,velo],
          '''
@@ -1261,8 +1266,8 @@ def wom(wom,wfld,velo,vmean,par):
 
     if(not par.has_key('wweight')): par['wweight']=1
 
-    wtmp = wfld + 'tmp'+uuid.uuid4().get_hex()
-    vtmp = wfld + 'vel'+uuid.uuid4().get_hex()
+    wtmp = wfld + 'tmp'+myid(16)
+    vtmp = wfld + 'vel'+myid(16)
 
     Flow(wom,[velo,wfld],
         '''
@@ -1335,8 +1340,8 @@ def iom(iom,imag,velo,vmean,par):
 
     if(not par.has_key('iweight')): par['iweight']=1
 
-    itmp = imag + 'tmp'+uuid.uuid4().get_hex()
-    vtmp = imag + 'vel'+uuid.uuid4().get_hex()
+    itmp = imag + 'tmp'+myid(16)
+    vtmp = imag + 'vel'+myid(16)
 
     Flow(iom,[velo,imag],
         '''
@@ -1457,11 +1462,11 @@ def artm(imag,sdat,rdat,velo,dens,sacq,racq,iacq,custom,par):
 
     if(not par.has_key('nbuf')): par['nbuf']=100
     
-    swfl = imag+'_us'+uuid.uuid4().get_hex() #   source wavefield
-    rwfl = imag+'_ur'+uuid.uuid4().get_hex() # receiver wavefield
-    twfl = imag+'_ut'+uuid.uuid4().get_hex() #     temp wavefield
-    sout = imag+'_ds'+uuid.uuid4().get_hex() #   source data (not the input sdat!)
-    rout = imag+'_dr'+uuid.uuid4().get_hex() # receiver data (not the input rdat!)
+    swfl = imag+'_us'+myid(16) #   source wavefield
+    rwfl = imag+'_ur'+myid(16) # receiver wavefield
+    twfl = imag+'_ut'+myid(16) #     temp wavefield
+    sout = imag+'_ds'+myid(16) #   source data (not the input sdat!)
+    rout = imag+'_dr'+myid(16) # receiver data (not the input rdat!)
     
     iwindow = ' ' + \
               '''
@@ -1474,7 +1479,7 @@ def artm(imag,sdat,rdat,velo,dens,sacq,racq,iacq,custom,par):
     awefd(sout,swfl,sdat,velo,dens,sacq,iacq,iwindow+custom,par)
     
     # receiver wavefield (z,x,t)
-    tdat = imag+'_tds'+uuid.uuid4().get_hex()
+    tdat = imag+'_tds'+myid(16)
     Flow(tdat,rdat,'reverse which=2 opt=i verb=y')
     awefd(rout,twfl,tdat,velo,dens,racq,iacq,iwindow+custom,par)
     Flow(rwfl,twfl,'reverse which=4 opt=i verb=y')
@@ -1489,11 +1494,11 @@ def ertm(imag,sdat,rdat,cccc,dens,sacq,racq,iacq,custom,par):
 
     if(not par.has_key('nbuf')): par['nbuf']=100
     
-    swfl = imag+'_us'+uuid.uuid4().get_hex() #   source wavefield
-    rwfl = imag+'_ur'+uuid.uuid4().get_hex() # receiver wavefield
-    twfl = imag+'_ut'+uuid.uuid4().get_hex() #     temp wavefield
-    sout = imag+'_ds'+uuid.uuid4().get_hex() #   source data (not the input sdat!)
-    rout = imag+'_dr'+uuid.uuid4().get_hex() # receiver data (not the input rdat!)
+    swfl = imag+'_us'+myid(16) #   source wavefield
+    rwfl = imag+'_ur'+myid(16) # receiver wavefield
+    twfl = imag+'_ut'+myid(16) #     temp wavefield
+    sout = imag+'_ds'+myid(16) #   source data (not the input sdat!)
+    rout = imag+'_dr'+myid(16) # receiver data (not the input rdat!)
     
     iwindow = ' ' + \
               '''
@@ -1506,7 +1511,7 @@ def ertm(imag,sdat,rdat,cccc,dens,sacq,racq,iacq,custom,par):
     ewefd2(sout,swfl,sdat,cccc,dens,sacq,iacq," ssou=y opot=n" + custom+iwindow,par)
     
     # receiver wavefield (z,x,t)
-    tdat = imag+'_tds'+uuid.uuid4().get_hex()
+    tdat = imag+'_tds'+myid(16)
     Flow(tdat,rdat,'reverse which=4 opt=i verb=y')
     ewefd2(rout,twfl,tdat,cccc,dens,racq,iacq," ssou=n opot=n" + custom+iwindow,par)
 
