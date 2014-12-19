@@ -146,27 +146,29 @@ class TestFrame(wx.Frame):
             return None
         txt = os.path.join('Fig',fig+'.txt')
         os.system('sfpldb < %s > %s' % (vpl,txt))
+        titles = []
         try:
             plot = open(txt,'r')
             for line in plot:
-                if line[0] == '[':
+                if line[0] != '[':
+                    continue
+                line2 = plot.next()
+                if line2[:5] != 'title':
+                    continue
+                while line2:
                     line2 = plot.next()
-                    if line2[:5] == 'title':
-                        while line2:
-                            line2 = plot.next()
-                            if line2[0] == 'G':
-                                title = plot.next()
-                                plot.close()
-                                os.unlink(txt)
-                                return title.rstrip()
-            plot.close()
-            os.unlink(txt)
-            return None
+                    if line2[0] == 'G':
+                        title = plot.next()
+                        titles.append(title.rstrip())
+                        break
+            title = ','.join(titles)
         except:
-            plot.close()
-            os.unlink(txt)
-            return None
-
+            title = None
+        
+        plot.close()
+        os.unlink(txt) 
+        return title
+  
 if __name__=='__main__':
     app = wx.App()
     frame = TestFrame()
