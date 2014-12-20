@@ -64,6 +64,7 @@ To programs:
 * user/junyan: New contributor (Jun Yan)
 * Added inv= flag in sfheaderwindow
 * Added polyneg= flag in sfwiggle
+* Added key= and nkey= parameters to sfheadermath
 
 ===Bug fixes===
 

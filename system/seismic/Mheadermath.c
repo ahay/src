@@ -36,7 +36,7 @@ An addition operation can be performed by sfadd.
 int main(int argc, char* argv[])
 {
     bool segy;
-    int i, i1, i2, n1, n2, n3, n, nt, len, nkey;
+    int i, i1, i2, n1, n2, n3, n, nt, len, nkey, row;
     sf_file in, out;
     int mem; /* for avoiding int to off_t typecast warning */
     off_t memsize;
@@ -57,26 +57,38 @@ int main(int argc, char* argv[])
 
     if (SF_FLOAT != type && SF_INT != type) sf_error("Need float or int input");
 
+    if (!sf_getbool("segy",&segy)) segy=true;
+    /* if SEGY headers */
+
     if (!sf_histint(in,"n1",&n1)) n1=1;
     if (!sf_histint(in,"n2",&n2)) n2=1;
     n3 = sf_leftsize(in,2); /* left dimensions after the first two */
-    if (n1 > 1) {
-	if (n2 > 1) { /* input: many keys */
-	    sf_putint(out,"n1",1);
-	} else { /* input: one key, arranged in n1 */
-	    n2 = n1;
-	    n1 = 1;
-	}
-    }
-
-    if (!sf_getbool("segy",&segy)) segy=true;
-    /* if SEGY headers */
 
     if (segy) {
 	segy_init(n1,in);
     } else {
 	other_init(n1,in);
     }
+
+    if (NULL != (key = sf_getstring("key"))) { 
+	/* key to replace */
+	row = segykey(key);
+	free(key);
+    } else {
+	if (!sf_getint("nkey",&row)) row=-1;
+	/* number of key to replace */
+    }	
+    if (row > n1) sf_error("nkey=%d is too large, need nkey <= %d",row,n1);
+    
+    if (n1 > 1) {
+	if (n2 > 1) { /* input: many keys */
+	    if (row < 0) sf_putint(out,"n1",1);
+	} else { /* input: one key, arranged in n1 */
+	    n2 = n1;
+	    n1 = 1;
+	}
+    }
+
 
     for (i=0; i < n1; i++) {
 	sf_putint(out,segykeyword(i),i+3);
@@ -98,9 +110,7 @@ int main(int argc, char* argv[])
 	    sf_putint(out,key,nkey+3);
 	free(key);
     }
-
-
-
+  
     if (!sf_histfloat(in,n1>1? "d2":"d1",&d2)) d2=1.;
     if (!sf_histfloat(in,n1>1? "o2":"o1",&o2)) o2=0.;
 
@@ -159,10 +169,24 @@ int main(int argc, char* argv[])
 	
 	if (SF_FLOAT == type) { 
 	    sf_math_evaluate (len, nt, fbuf, fst);
-	    sf_floatwrite(fst[1],nt,out);
+	    if (row < 0) {
+		sf_floatwrite(fst[1],nt,out);
+	    } else {
+		for (i2=0; i2 < nt; i2++) {
+		    ftra[i2][row] = fst[1][i2];
+		}
+		sf_floatwrite(ftra[0],n1*nt,out);
+	    }
 	} else {
 	    sf_int_math_evaluate (len, nt, ibuf, ist);
-	    sf_intwrite(ist[1],nt,out);
+	    if (row < 0) {
+		sf_intwrite(ist[1],nt,out);
+	    } else {
+		for (i2=0; i2 < nt; i2++) {
+		    itra[i2][row] = ist[1][i2];
+		}
+		sf_intwrite(itra[0],n1*nt,out);
+	    }
 	}
     }
 
