@@ -1,40 +1,6 @@
 from rsf.proj import *
 
-# files have names like:
-#https://s3.amazonaws.com/open.source.geoscience/open_data/newzealand/Taranaiki_Basin/PARIHAKA-3D/Parihaka_PSTM_full_angle.sgy
-
-# first, look at the pdf files
-pdfread = WhereIs('acroread') or WhereIs('kpdf') or WhereIs('evince') or \
-    WhereIs('xpdf') or WhereIs('gv') or WhereIs('open')
-
-if pdfread:
-   file='G3D1206-002release'
-   Fetch('%s.pdf'%file,dir='g3d1206-002a',
-         server='https://s3.amazonaws.com',
-         top='open.source.geoscience/open_data/boem')
-   Result(file,file+'.pdf',
-         pdfread + ' $SOURCE',stdin=0,stdout=0)
-
-file='G3D1206_002_L87_080'
-Fetch('%s.sgy'%file,dir='g3d1206-002a',
-       server='https://s3.amazonaws.com',
-       top='open.source.geoscience/open_data/boem',
-       usedatapath=1)
-#https://s3.amazonaws.com/open.source.geoscience/open_data/boem/g3d1206-002a/G3D1206_002_L87_080.sgy
-Flow(['%s.rsf'%file,'%s_hdr.rsf'%file,
-      '%s.thdr'%file,'%s.bhdr'%file],
-     '%s.sgy'%file,
-     '''
-     sfsegyread
-        tfile=${TARGETS[1]} 
-        hfile=${TARGETS[2]}  
-        bfile=${TARGETS[3]}
-      ''')
-Flow('%sheaderattr.txt'%file,'%s_hdr.rsf'%file,
-        'sfheaderattr > $TARGET && /bin/cat $TARGET',stdout=-1)
-
-
-#< G3D1206_002_L87_080_hdr.rsf sfheaderattr
+#< ../fetch/G3D1206_002_L87_080_hdr.rsf sfheaderattr
 #91 headers, 311640 traces
 #******************************************************************************* 
 #     key     	            min     	              max    	          mean
@@ -60,10 +26,36 @@ Flow('%sheaderattr.txt'%file,'%s_hdr.rsf'%file,
 #unknown    85             64 @ 0	           651 @ 311110	         357.5
 #******************************************************************************* 
 
+Flow('mapped_stack.rsf mapped_stack_hdr.rsf',
+     '../fetch/G3D1206_002_L87_080.rsf ../fetch/G3D1206_002_L87_080_hdr.rsf',
+     '''
+     sftahread \
+        input=${SOURCES[0]} \
+	verbose=1 \
+     | sftahheadermath outputkey=iline output=unknown \
+     | sftahheadermath outputkey=xline output=cdp \
+     | sftahwrite \
+        output=${TARGETS[0]} \
+        label2="xline" o2=1 n2=530 d2=1 \
+        label3="iline" o3=64 n3=588 d3=1 \
+	verbose=1 
+     ''',stdout=0, stdin=0)
+
+#Result('mapped_stack','sfwindow j3=20 |  sfgrey')
+
+
 #sftahread input=migrated.rsf | sftahgethw key=sx,gx,offset >/dev/null
 # x coordinate must be divided by 10000 scalel and scaleco are both -10000
 # group interval and group interval are 25 m 
 
+Result("mapped_stack3d","mapped_stack",
+          '''
+          sfput label1=depth unit1=km 
+          | byte 
+          | grey3 
+            frame1=300 frame2=350 frame3=250 
+            title='Parihaka 3D' flat=n
+          ''')
    
 End()
 
