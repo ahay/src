@@ -1,43 +1,46 @@
 from rsf.proj import *
 
-# near trace gather
-Flow(['image.rsf','image_hdr.rsf'],	
-     ['../fetch/migrated.rsf','../fetch/migrated_hdr.rsf'],
-     '''
-     sftahread \
-          input=${SOURCES[0]} \
-	  sort="iline1 cdp" \
-	  verbose=1 \
-     | sftahwrite \
-          output=${TARGETS[0]} \
-          label2="xline" o2=4200 n2=1126 d2=1 \
-          label3="iline" o3=1736 n3=922 d3=1
-	  verbose=1
-     ''',stdout=0, stdin=0)
-       
-Result("image","sfwindow j3=50 | sfgrey title='Parihaka 3d'")
-Plot("image2415","image",
-     "sfwindow min3=2415 max3=2415 | sfgrey title='Parihaka 3d line 2415'")
-Plot("imagex5031","image",
-	"""
-	sfwindow min2=5031 max2=5031
+# angle stacks
+for  file in ['full_angle','near_stack','mid_stack','far_stack']:
+   Flow(['mapped_%s.rsf'%file,'mapped_%s_hdr.rsf'%file],
+        ['../fetch/%s.rsf'%file,'../fetch/%s_hdr.rsf'%file],
+        '''
+        sftahread \
+           input=${SOURCES[0]} \
+	   verbose=1 \
+        | sftahwrite \
+           output=${TARGETS[0]} \
+           label2="xline" o2=4200 n2=1126 d2=1 \
+           label3="iline" o3=1736 n3=922 d3=1
+	   verbose=1
+	''',stdout=0, stdin=0)
+   Plot('%s2415'%file,'mapped_%s'%file,
+        '''
+        sfwindow min3=2415 max3=2415 
+	| sfgrey title='Parihaka 3d %s line 2415'
+        '''%file)
+   Plot('%sx5031'%file,'mapped_%s'%file,
+        '''
+        sfwindow min2=5031 max2=5031
 	| sfput label2='xline' 
-	| sfgrey title='Parihaka 3d xline 5031'
-	""")
-Result("ilxl","image2415 imagex5031",'SideBySideAniso')
-Result("il","image2415",'SideBySideAniso')
-Result("xl","image2415",'SideBySideAniso')
+	| sfgrey title='Parihaka 3D %s xline 5031'
+        '''%file)
+   Result("%s_ilxl"%file,"%s2415 %sx5031"%(file,file),'SideBySideAniso')
+   Result("%s3d"%file,"mapped_%s"%file,
+          '''
+          byte 
+          | grey3 
+            frame1=600 frame2=550 frame3=450 
+            title='Parihaka 3D %s' flat=n
+          '''%file)
+   # zooms
+   Result("zoom%s3d"%file,"mapped_%s"%file,
+          '''
+	  window min1=.8 max1=2.8 min2=4736 max2=5325 min3=2200 max3=2650 
+          |byte 
+          | grey3 
+            frame1=600 frame2=295 frame3=215 
+            title='Parihaka 3D %s' flat=n
+          '''%file)
 
-Result("image3d","image",
-       '''
-       byte 
-       | grey3 frame1=600 frame2=550 frame3=450 title='Parihaka 3D'
-       ''')
-Result("image3d1","image",
-       '''
-       byte 
-       | grey3 frame1=600 frame2=550 frame3=450 title='Parihaka 3D' flat=n
-       ''')
-
-       
 End()
