@@ -1,0 +1,102 @@
+from rsf.proj import *
+
+# files have names like:
+#https://s3.amazonaws.com/open.source.geoscience/open_data/newzealand/Taranaiki_Basin/Keri_3D/Kerry3D.segy
+# before running with local data:
+#ln -s /Volumes/data/newzealand/Taranaiki\ B\ asin/WAIHAPA-3D/3D-Waihapa.sgy .
+#Fetch('Kerry3D.segy',dir='newzealand/Taranaiki_Basin/Keri_3D',
+#          server='http://s3.amazonaws.com',
+#	  top='open.source.geoscience/open_data',
+#	  usedatapath=1)
+
+
+Flow(['3D-Waihapa.rsf','3D-Waihapa_hdr.rsf',
+      '3D-Waihapa.thdr','3D-Waihapa.bhdr'],
+     '3D-Waihapa.sgy',
+     '''
+     sfsegyread
+        tfile=${TARGETS[1]} 
+        hfile=${TARGETS[2]}  
+	bfile=${TARGETS[3]} 
+     ''')
+
+#        key1=iline1
+#        iline1=220 
+
+Flow('headerattr.txt','3D-Waihapa_hdr.rsf',
+     'sfheaderattr > $TARGET && /bin/cat $TARGET',stdout=-1)
+
+#sftahread input=3D-Waihapa.rsf | sftahgethw key=tracr,tracf,ep,cdp,cdpt >/dev/null
+# xline appears to be in header tracr, tracf, or cdpt
+# iline appears to be in ep
+# i'll use ep and cdpt
+# x coordinate must be divided by 10000 scalel and scaleco are both -10000
+# group interval and group interval are 25 m 
+#<3D-Waihapa_hdr.rsf.rsf sfheaderattr 
+#91 headers, 513600 traces
+#****************************************************************************** 
+#     key     	            min     	              max    	          mean
+#------------------------------------------------------------------------------ 
+#tracl       0              1 @ 0	         69235 @ 69234	         34618
+#tracr       1              1 @ 0	           305 @ 304	           153
+#tracf       3              1 @ 0	           305 @ 304	           153
+#ep          4             97 @ 0	           323 @ 68930	           210
+#cdp         5              1 @ 0	         69235 @ 69234	         34618
+#cdpt        6              1 @ 0	           305 @ 304	           153
+#trid        7              1 @ 0	             1 @ 0	             1
+#scalel     19              1 @ 0	             1 @ 0	             1
+#scalco     20              1 @ 0	             1 @ 0	             1
+#sx         21        2625018 @ 0	       2630612 @ 69225	   2.62782e+06
+#sy         22        6197320 @ 67405	       6204886 @ 304	    6.2011e+06
+#gx         23        2625018 @ 0	       2630612 @ 69225	   2.62782e+06
+#gy         24        6197320 @ 67405	       6204886 @ 304	    6.2011e+06
+#laga       33           -347 @ 0	          -347 @ 0	          -347
+#ns         38           2501 @ 0	          2501 @ 0	          2501
+#dt         39           2000 @ 0	          2000 @ 0	          2000
+#****************************************************************************** 
+
+# use trace headers to create a 3d volume
+Flow(['image.rsf','image_hdr.rsf'],['3D-Waihapa.rsf','3D-Waihapa_hdr.rsf'],
+     '''
+     sftahread \
+          input=${SOURCES[0]} \
+	  verbose=1 \
+     | sftahheadermath output=ep outputkey=iline
+     | sftahheadermath output=cdpt outputkey=xline
+     | sftahwrite \
+          output=${TARGETS[0]} \
+          label2="xline"    o2=1  n2=305 d2=1 \
+          label3="iline"    o3=97 n3=227 d3=1
+	  verbose=1
+     ''',stdout=0, stdin=0)
+       
+Result("image","sfgrey title='3D-Waihapa'")
+#Result("zoomimage","image",
+#       "window min1=1 max1=2 j3=10 | sfgrey title='3D-Waihapa'")
+Result("image3df","image",
+       '''
+       byte 
+       | grey3 frame1=1350 frame2=152 frame3=114 title='3D-Waihapa'
+       ''')
+
+Result("image3d","image",
+       '''
+       byte 
+       | grey3 frame1=1350 frame2=152 frame3=114 
+         title='3D-Waihapa' flat=n
+       ''')
+
+Plot('image211','image',
+     '''
+     sfwindow min3=211 max3=211 
+     | sfgrey title='Waihapa 3d line 211'
+     ''')
+Plot('imagex153','image',
+     '''
+     sfwindow min2=153 max2=153
+     | sfput label2='xline' 
+     | sfgrey title='Waihapa 3d xline 153'
+     ''')
+Result("imageilxl","image211 imagex153",'SideBySideAniso')
+   
+End()
