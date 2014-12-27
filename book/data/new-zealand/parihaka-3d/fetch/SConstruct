@@ -2,12 +2,9 @@ from rsf.proj import *
 
 # files have names like:
 #https://s3.amazonaws.com/open.source.geoscience/open_data/newzealand/Taranaiki_Basin/PARIHAKA-3D/Parihaka_PSTM_full_angle.sgy
-#https://s3.amazonaws.com/open.source.geoscience/open_data/newzealand/Taranaiki_Basin/PARIHAKA-3D/Parahaka_PSTM_far_stack.sgy
-#https://s3.amazonaws.com/open.source.geoscience/open_data/newzealand/Taranaiki_Basin/PARIHAKA-3D/Parahaka_PSTM_far_stack.sgy
-#https://s3.amazonaws.com/open.source.geoscience/open_data/newzealand/Taranaiki_Basin/PARIHAKA-3D/Parihaka_PSTM_far_angle.sgy
-#https://s3.amazonaws.com/open.source.geoscience/open_data/newzealand/Parahaka_PSTM_far_angle.sgy
-#https://s3.amazonaws.com/open.source.geoscience/open_data/newzealand/Taranaiki_Basin/PARIHAKA-3D/Parahaka_PSTM_far_angle.sgy
-for file in ['full_angle','far_angle','mid_stack','near_stack']:
+
+
+for file in ['full_angle','near_stack','mid_stack','far_stack']:
    Fetch('Parihaka_PSTM_%s.sgy'%file,dir='PARIHAKA-3D',
           server='https://s3.amazonaws.com',
 	  top='open.source.geoscience/open_data/newzealand/Taranaiki_Basin',
@@ -24,21 +21,7 @@ for file in ['full_angle','far_angle','mid_stack','near_stack']:
    Flow('%sheaderattr.txt'%file,'%s_hdr.rsf'%file,
         'sfheaderattr > $TARGET && /bin/cat $TARGET',stdout=-1)
 
-#Fetch('ParihakaPSTMfarangle.sgy',dir='newzealand',
-#       server='https://s3.amazonaws.com',
-#       top='open.source.geoscience/open_data/',
-#       usedatapath=1)
-#Flow(['far_angle.rsf','far_angle_hdr.rsf',
-#      'far_angle.thdr','far_angle.bhdr'],
-#     'ParihakaPSTMfarangle.sgy',
-#     '''
-#     sfsegyread
-#        tfile=${TARGETS[1]} 
-#        hfile=${TARGETS[2]}  
-#	bfile=${TARGETS[3]} 
-#     ''')
 
-#https://s3.amazonaws.com/open.source.geoscience/open_data/newzealand/Parahaka_PSTM_far_angle.sgy
 #sftahread input=migrated.rsf | sftahgethw key=sx,gx,offset >/dev/null
 # x coordinate must be divided by 10000 scalel and scaleco are both -10000
 # group interval and group interval are 25 m 
