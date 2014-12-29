@@ -44,7 +44,7 @@ int main(int argc, char* argv[])
   if (!sf_getint("l", &last)) last=1;
   /* length of each zero part */
 
-  njump=(o2+(n2-1)*d2)/jump;
+  njump=(o2+(n2-1)*d2)/jump+1;
 
   dd=sf_floatalloc2(n1, n2);
 
