@@ -268,7 +268,7 @@ int main(int argc, char* argv[])
     rat1 = sf_floatalloc(nt);
     rat2 = sf_floatalloc(nt);
     rat = sf_floatalloc(nt);
-	sf_floatread(traceref,nt,ref);
+
 	int n[2]; n[0]=nt;n[1]=1;	
 	bool verb=false;	
 	int rect[2]; rect[0]=10;rect[1]=1;
@@ -283,6 +283,7 @@ int main(int argc, char* argv[])
     nmo = fint1_init(nw,nt,mute);
 
     for (ix=0; ix < nx; ix++) {
+    	sf_floatread(traceref,nt,ref);
 	sf_warning("cmp %d of %d;",ix+1,nx);
 
 	for (it=0; it < nt*nv*ns; it++) {
