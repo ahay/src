@@ -86,17 +86,22 @@ BIG TODO: remove ld_s, ld_r to particular models and get rid of domains;
           they should be special objects that are prepared before send:
           copy overlaped data before sending, etc.
 */
-/* WWS 22.08.02: added g, dt, it, removed ndim, nt */
+/* WWS 22.08.12: added g, dt, it, removed ndim, nt */
 /* Igor, Feb 26: added physical domain ld_p
 RDOM ld_p
 */
 /**
  * Model - data members.
  *
- * Contains almost all data structures for a simulation except the 
- * parallel information. Also contains pointer to \ref FD_MODEL
+ * Contains almost all data structures for a simulation except the
+ * parallel information. Also contains pointer to opaque <i>specs</i>
+ * data structure characterizing specific model.
+ * 
+ * Class structure: this is a base class. Several members represent
+ * virtual attributes to be initialized by subclass construction - 
+ * obviously including specs, but also active field list and various domains.
  */
-typedef struct IMODEL {
+typedef struct s_imodel {
   /**
    * pointer to struct containing FD scheme parameters. Must be initialized by
    * IWaveInfo::fd_modelinit
@@ -125,6 +130,9 @@ typedef struct IMODEL {
   /** Time step information */
   TIMESTEPINDEX tsind;
 
+  /** array of active array names */
+  std::vector<std::string> active;
+
   /** Allocated domain */
   RDOM ld_a;
   /** Computational virtual domain */
@@ -143,7 +151,7 @@ typedef struct IMODEL {
 typedef int (*IMODELINIT_FUN)(PARARRAY *pars, FILE *stream, IMODEL *model);
 /*----------------------------------------------------------------------------*/
 /**
- *  Sets model struct defaults.
+ *  Sets model struct defaults - base class constructor.
  */
 int im_construct(IMODEL *model);
 /*----------------------------------------------------------------------------*/

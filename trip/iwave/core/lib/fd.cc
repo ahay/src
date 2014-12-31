@@ -8,18 +8,20 @@
 
 /* helper functions */
 
-int fd_isdyn(int i, IWaveInfo const & ic) {
-  if (i<0 || i>=ic.get_num_fields()) return 0;
-  return ic.get_iwave_fields()[i].dynamic;
+int fd_isarr(int i, IMODEL & model, IWaveInfo const & ic) {
+  if (i<0 || i >= ic.get_num_fields()) return 0;
+  for (int j=0; j<model.active.size();j++) 
+    if (ic.iwave_fields[i].field == model.active[j]) return 1;
+  return 0;
 }
 
-int fd_isarr(int i, IWaveInfo const & ic) {
-  if (i >= ic.get_num_fields()) return false;
-  return true;
+int fd_isdyn(int i, IWaveInfo const & ic) {
+  if (i>-1 || i < ic.get_num_fields()) return ic.get_iwave_fields()[i].dynamic;
+  return 0;
 }
 
 const char* fd_ind2str(int i, IWaveInfo const & ic) {
-  if (fd_isarr(i,ic)) return ic.get_iwave_fields()[i].field.c_str();
+  if (i>-1 && i<=ic.get_num_fields()) return ic.get_iwave_fields()[i].field.c_str();
   return NULL;
 }
 
@@ -95,22 +97,31 @@ int fd_readgrid(PARARRAY * pars,
   ireal dx;
   for (int idim=0; idim<model->g.dim; idim++ ) {
     if ((dx=model->g.axes[idim].d)<REAL_EPS) {
-      fprintf(stream, "dx[%d] = %f\n", idim,dx);
+      fprintf(stream, "ERROR: fd_readgrid, dx[%d] = %f\n", idim,dx);
       return E_BADINPUT;
     }
-    stringstream key;
-    key.str()="nl";
-    key<<idim+1;
-    //    snprintf(key,kl,"nl%d",idim+1);
-    ireal tmp=0.0;
-    ps_flreal(*pars, key.str().c_str(), &tmp);
-    model->nls[idim]=iwave_max(0,(int)((ceil)(tmp/dx)));
+    {
+      stringstream key;
+      key<<"nl"<<idim+1<<'\0';
+      //    snprintf(key,kl,"nl%d",idim+1);
+      ireal tmp=0.0;
+      //      fprintf(stderr,"read key=%s\n",key.str().c_str());
+      ps_flreal(*pars, key.str().c_str(), &tmp);
+      //      fprintf(stderr,"result=%g\n",tmp);
+      model->nls[idim]=iwave_max(0,(int)((ceil)(tmp/dx)));
+    }
     //    snprintf(key,kl,"nr%d",idim+1);
-    key.str()="nr";
-    key<<idim+1;
-    tmp=0.0;
-    ps_flreal(*pars,key.str().c_str(),&tmp);
-    model->nrs[idim]=iwave_max(0,(int)((ceil)(tmp/dx)));
+    {
+      stringstream key;
+      key<<"nr"<<idim+1<<'\0';
+      ireal tmp=0.0;
+      //      fprintf(stderr,"read key=%s\n",key.str().c_str());
+      ps_flreal(*pars,key.str().c_str(),&tmp);
+      //      fprintf(stderr,"result=%g\n",tmp);
+      model->nrs[idim]=iwave_max(0,(int)((ceil)(tmp/dx)));
+    }
+    //    fprintf(stderr,"fd_readgrid:: nls[%d]=%d, nrs[%d]=%d\n",idim,model->nls[idim],idim,model->nrs[idim]);
+    //    ps_printall(*pars,stderr);
   }
   
   return err;
@@ -118,7 +129,6 @@ int fd_readgrid(PARARRAY * pars,
 
 int fd_setcompdom(FILE * stream, IPNT cdims, IPNT crank, 
                   IMODEL * model, IPNT dgs[], IPNT dge[],
-		  /*		  int m_size, */
 		  IPNT gtype[RDOM_MAX_NARR],
 		  IWaveInfo const & ic) {
     /**
@@ -129,13 +139,12 @@ int fd_setcompdom(FILE * stream, IPNT cdims, IPNT crank,
     IPNT gn_pa;
     IPNT ls, le; 
     IPNT ns;
-    /*  int iv, i, idim; */
     int i, idim;
     int ndim = (model->g).dim;
 
     for (i = 0;i < RDOM_MAX_NARR;i++) {
-	IASN(dgs[i], IPNT_1);
-	IASN(dge[i], IPNT_0);
+      IASN(dgs[i], IPNT_1);
+      IASN(dge[i], IPNT_0);
     }
  
     get_n(ns, model->g);
@@ -143,78 +152,66 @@ int fd_setcompdom(FILE * stream, IPNT cdims, IPNT crank,
     IASN(ge_pa, IPNT_0);
     IASN(ls, IPNT_1);
     IASN(le, IPNT_0);
-#if INCLUDE_BOUNDARY_PNTS
-    /*< include left and right boundary pnts */   
+
     /*< ls, le: local start, end for primal grid */
     for (idim = 0;idim < ndim;idim ++) {
-	gs_pa[idim] = -model->nls[idim];
-	ge_pa[idim] = ns[idim] + model->nrs[idim] - 1;
-	gn_pa[idim] = ns[idim] + model->nls[idim] + model->nrs[idim];
-	ls[idim] = gn_pa[idim] * (long)crank[idim];
-	ls[idim] = gs_pa[idim] + ls[idim] / (long)cdims[idim];
-	le[idim] = gn_pa[idim] * (long)(crank[idim] + 1);
-	le[idim] = gs_pa[idim] + le[idim] / (long)cdims[idim]-1;
-	if (le[idim] < ls[idim]) {
-	    fprintf(stream, "Error: in fd_setcompdom: le[%d] = %d < ls[%d] = %d\n",
-		    idim, le[idim], idim, ls[idim]);
-	    return E_INTERNAL;
-	}
+      gs_pa[idim] = -model->nls[idim];
+      ge_pa[idim] = ns[idim] + model->nrs[idim] - 1;
+      gn_pa[idim] = ns[idim] + model->nls[idim] + model->nrs[idim];
+      ls[idim] = gn_pa[idim] * (long)crank[idim];
+      ls[idim] = gs_pa[idim] + ls[idim] / (long)cdims[idim];
+      le[idim] = gn_pa[idim] * (long)(crank[idim] + 1);
+      le[idim] = gs_pa[idim] + le[idim] / (long)cdims[idim]-1;
+      if (le[idim] < ls[idim]) {
+	fprintf(stream, "Error: in fd_setcompdom: le[%d] = %d < ls[%d] = %d\n",
+		idim, le[idim], idim, ls[idim]);
+	return E_INTERNAL;
+      }
     } 
 
-    /*  for (i = 0;i < m_size;i ++) { */
+#if INCLUDE_BOUNDARY_PNTS
+    /*< include left and right boundary pnts in all arrays */   
     for (i = 0;i < RDOM_MAX_NARR;i ++) {
-	/*    iv = getindices(i); */
-	/*    if (!fd_isarr(iv)) continue; */
-      if (!fd_isarr(i,ic)) continue;
+      if (!fd_isarr(i,*model,ic)) {
 	for (idim = 0;idim < ndim;idim ++) {
-	    dgs[i][idim] = ls[idim];
-	    dge[i][idim] = le[idim];
-	    if ( crank[idim] == cdims[idim]-1 && 
-		 gtype[i][idim] == DUAL_GRID )
-		dge[i][idim] --;
+	  dgs[i][idim] = ls[idim];
+	  dge[i][idim] = le[idim];
+	  if ( crank[idim] == cdims[idim]-1 && 
+	       gtype[i][idim] == DUAL_GRID )
+	    dge[i][idim] --;
 	}
+      }
     }
 #else
-    /*< not include left and right boundary pnts */
+    /*< not include left and right boundary pnts in dynamic arrays */
     /*< ls, le: local start, end for primal grid */
-    for (idim = 0;idim < ndim;idim ++) {
-	gs_pa[idim] = -model->nls[idim]+1;
-	ge_pa[idim] = ns[idim] + model->nrs[idim] - 2;
-	gn_pa[idim] = ns[idim] + model->nls[idim] + model->nrs[idim] - 2;
-	ls[idim] = gn_pa[idim] * (long)crank[idim];
-	ls[idim] = gs_pa[idim] + ls[idim] / (long)cdims[idim];
-	le[idim] = gn_pa[idim] * (long)(crank[idim] + 1);
-	le[idim] = gs_pa[idim] + le[idim] / (long)cdims[idim]-1;
-	if (le[idim] < ls[idim]) {
-	    fprintf(stream, "Error: in fd_setcompdom: le[%d] = %d < ls[%d] = %d\n",
-		    idim, le[idim], idim, ls[idim]);
-	    return E_INTERNAL;
-	}
-	//	cerr<<"fd_setcompdom: ls["<<idim<<"]="<<ls[idim]<<" le["<<idim<<"]="<<le[idim]<<"\n";
+    /*    for (idim = 0;idim < ndim;idim ++) {
+      gs_pa[idim] = -model->nls[idim]+1;
+      ge_pa[idim] = ns[idim] + model->nrs[idim] - 2;
+      gn_pa[idim] = ns[idim] + model->nls[idim] + model->nrs[idim] - 2;
+      ls[idim] = gn_pa[idim] * (long)crank[idim];
+      ls[idim] = gs_pa[idim] + ls[idim] / (long)cdims[idim];
+      le[idim] = gn_pa[idim] * (long)(crank[idim] + 1);
+      le[idim] = gs_pa[idim] + le[idim] / (long)cdims[idim]-1;
+      if (le[idim] < ls[idim]) {
+	fprintf(stream, "Error: in fd_setcompdom: le[%d] = %d < ls[%d] = %d\n",
+		idim, le[idim], idim, ls[idim]);
+	return E_INTERNAL;
+      }
+      //	cerr<<"fd_setcompdom: ls["<<idim<<"]="<<ls[idim]<<" le["<<idim<<"]="<<le[idim]<<"\n";
     } 
-
+    */
     for (i = 0;i < RDOM_MAX_NARR;i ++) {
-	/*    iv = getindices(i); */
-	/*    fprintf(stream,"fd_setcompdom - array %d index %d\n",i,iv); */
-	/*    if (isarr(iv)) {  */
-      if (fd_isarr(i,ic)) {
-	    /*      fprintf(stream,"fd_setcompdom - assigning array %d ",iv); */
-	    /*      fprintf(stream,"fd_setcompdom - assigning array %d ",i);  */
-	    for (idim = 0;idim < ndim;idim ++) {
-		/*	dgs[iv][idim] = ls[idim]; */
-		dgs[i][idim] = ls[idim];
-		/*	dge[iv][idim] = le[idim]; */
-		dge[i][idim] = le[idim];
-		if (crank[idim] == 0 && 
-		    /*	    gtype[iv][idim] == DUAL_GRID) */
-		    gtype[i][idim] == DUAL_GRID)
-		    /*	  dgs[iv][idim] --; */
-		    dgs[i][idim] --;
-		/*	fprintf(stream,"dgs[%d]=%d, dge[%d]=%d",idim,dgs[iv][idim],idim,dge[iv][idim]); */
-		/*	fprintf(stream,"dgs[%d]=%d, dge[%d]=%d",idim,dgs[i][idim],idim,dge[i][idim]); */
-	    }
-	    /*      fprintf(stream,"\n"); */
-	}   
+      if (fd_isarr(i,*model,ic)) {
+	for (idim = 0;idim < ndim;idim ++) {
+	  dgs[i][idim] = ls[idim]+fd_isdyn(i,ic);
+	  dge[i][idim] = le[idim]-fd_isdyn(i,ic);
+	  if (crank[idim] == 0 && gtype[i][idim] == DUAL_GRID)
+	    dgs[i][idim] --;
+	  fprintf(stream,"fd_setcompdom: iarr=%d isdyn=%d dgs[%d]=%d, dge[%d]=%d\n",i,fd_isdyn(i,ic),idim,dgs[i][idim],idim,dge[i][idim]); 
+	}
+	//	fprintf(stream,"\n"); 
+      }   
     }
 #endif
 
@@ -293,7 +290,7 @@ int fd_modelcrea(IPNT cdims, IPNT crank, PARARRAY * par, FILE * stream, IMODEL *
       return err;
     }
     */
-    //    cerr<<"->create_sten"<<endl;
+    //    cerr<<"fd_modelcrea->create_sten"<<endl;
     //    if ( (err=fdm->create_sten(fdm,stream,ndim,gtype,sten_dep_mat,&sten)) )  {
     //    if ( (err=ic.get_stencil()(model->specs,stream,ic,ndim,gtype,&sten)) )  {
     if ( (err=ic.get_stencil()(model->specs,stream,ndim,gtype,&sten)) )  {
@@ -302,7 +299,7 @@ int fd_modelcrea(IPNT cdims, IPNT crank, PARARRAY * par, FILE * stream, IMODEL *
       return err;
     }
 
-    //    cerr<<"finished with fdm\n";
+    // cerr<<"finished with fdm\n";
     /* print out stencil if desired */
 #ifdef VERBOSE
     //    sten_out(sten, stream, fd_ind2str);
@@ -316,6 +313,7 @@ int fd_modelcrea(IPNT cdims, IPNT crank, PARARRAY * par, FILE * stream, IMODEL *
 	IASN(dge[idim], IPNT_0);
     }
 
+    // cerr<<"setcompdom\n";
     if ((err=fd_setcompdom(stream, cdims, crank, model, dgs, dge, gtype, ic)) ) {
 	fprintf(stream,"ERROR: fd_modelcrea from fd_setcompdom, err=%d\n",err);
 	fflush(stream);
@@ -323,6 +321,7 @@ int fd_modelcrea(IPNT cdims, IPNT crank, PARARRAY * par, FILE * stream, IMODEL *
     }
     /*--------------------------------------------------------------------------*/
     /*-declare computational domain---------------------------------------------*/
+    // cerr<<"declare\n";
     err = rd_a_declare(&(model->ld_c), RDOM_MAX_NARR, ndim, dgs, dge);
     if ( err ) {
 	fprintf(stream, "ERROR. fd_modelcrea from rd_a_declare err=%d\n", 
@@ -336,6 +335,7 @@ int fd_modelcrea(IPNT cdims, IPNT crank, PARARRAY * par, FILE * stream, IMODEL *
 	IASN(dgsa[idim], IPNT_1);
 	IASN(dgea[idim], IPNT_0);
     }
+    // cerr<<"ex_compute\n";
     for ( iv = 0; iv < RDOM_MAX_NARR; ++iv ) {
 	/*    fprintf(stderr,"iv=%d\n",iv); */
 	err = ex_compute(iv, &sten, &(model->ld_c), 
@@ -374,11 +374,12 @@ int fd_modelcrea(IPNT cdims, IPNT crank, PARARRAY * par, FILE * stream, IMODEL *
 
     /*--------------------------------------------------------------------------*/
     /*-allocate main domain, create computational domain------------------------*/
+    // cerr<<"allocate\n";
     err = rd_a_create(&(model->ld_a), RDOM_MAX_NARR, ndim, dgsa, dgea);
     if ( err ) {
-	fprintf(stream, "ERROR. fd_modelcrea from rd_a_create allocated domain err=%d.\n", err);
-	fflush(stream);
-	return E_INTERNAL;
+      fprintf(stream, "ERROR. fd_modelcrea from rd_a_create allocated domain err=%d.\n", err);
+      fflush(stream);
+      return E_INTERNAL;
     }
 
 #ifdef IWAVE_VERBOSE
@@ -388,8 +389,7 @@ int fd_modelcrea(IPNT cdims, IPNT crank, PARARRAY * par, FILE * stream, IMODEL *
 
     model->ld_c = model->ld_a;
     for (i = 0;i < RDOM_MAX_NARR;i ++) {
-      //	if ( !(isdyn(fdm,i)) ) continue;
-      if ( !(fd_isdyn(i,ic)) ) continue;
+      if ( !(fd_isarr(i,*model,ic) && fd_isdyn(i,ic)) ) continue;
 	err = rd_greset(&(model->ld_c), i, dgs[i], dge[i]);
 	if ( err ) {
 	  fprintf(stream,"in modelcrea: reset failed for array %s err=%d\n", 
@@ -457,8 +457,7 @@ int fd_modelcrea(IPNT cdims, IPNT crank, PARARRAY * par, FILE * stream, IMODEL *
     for (inei = 0;inei < nnei;inei ++) {
 	model->ld_r[inei] = model->ld_s[inei] = model->ld_a;
 	for (i = 0;i < RDOM_MAX_NARR;i ++) {
-	  //	    if (!(isdyn(fdm,i)))  continue;
-	  if (!(fd_isdyn(i,ic)))  continue;
+	  if (!(fd_isarr(i,*model,ic) && fd_isdyn(i,ic)))  continue;
 	    err = rd_greset(model->ld_r + inei, i, dgsrs[inei][i], dgers[inei][i]);
 	    if ( err ) {
 		fprintf(stream, 
@@ -470,6 +469,7 @@ int fd_modelcrea(IPNT cdims, IPNT crank, PARARRAY * par, FILE * stream, IMODEL *
 	    }
 	}
     }
+    // cerr<<"set local grid\n";
     /*--------------------------------------------------------------------------*/
     /*-set local grid ----------------------------------------------------------*/
     /* must have a variable defined on PRIMAL grid in every axis */
@@ -507,10 +507,10 @@ int fd_modelcrea(IPNT cdims, IPNT crank, PARARRAY * par, FILE * stream, IMODEL *
 #endif
     /*--------------------------------------------------------------------------*/
 
-    /* deallocate stencil */
+    //    cerr<<"fd_modelcrea->deallocate stencil\n";
     sten_destroy(&sten);
 
-    //    cerr<<"leaving modelcrea\n";
+    //    cerr<<"leaving fd_modelcrea\n";
     return 0;
 }
 

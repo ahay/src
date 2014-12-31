@@ -420,6 +420,7 @@ namespace TSOpt {
 	throw e;
       }
     }
+
   }
 
   IWaveSampler::~IWaveSampler() {
@@ -1087,7 +1088,7 @@ namespace TSOpt {
       // step 2a: build checkpoint structure if required
       // work out number of dynamic arrays
       ndyn = 0;
-      for (int i=0;i<RDOM_MAX_NARR;i++) if (fd_isdyn(i,ic)) ndyn++; 
+      for (int i=0;i<RDOM_MAX_NARR;i++) if (fd_isarr(i,(w->getRefStateArray())[0]->model,ic) && fd_isdyn(i,ic)) ndyn++; 
       if (ndyn==0) {
 	RVLException e;
 	e<<"Error: IWaveSim constructor\n";
@@ -1109,7 +1110,7 @@ namespace TSOpt {
 	for (int i=0;i<snaps;i++) cps[i]=&(cpstmp2[i*pow2(order-1)]);
 	int l=0;
 	for (int k=0;k<(w->getRefStateArray())[0]->model.ld_a.narr;k++) {
-	  if (fd_isdyn(k,ic)) {
+	  if (fd_isarr(k,(w->getRefStateArray())[0]->model,ic) && fd_isdyn(k,ic)) {
 	    // pull out gs, ge for kth rarr in w->getRefStateArray[0] 
 	    IPNT gs;
 	    IPNT ge;
@@ -1167,6 +1168,12 @@ namespace TSOpt {
 	  //	    fprint_axis(stderr,tmp->getAxis(k));
 	  //	  fprintf(stderr,"  add to grid:\n");
 	  //	  fprint_grid(stderr,g);
+
+	  // IMPORTANT MOD 11.12.14: since physical domain is spec'd by FIELD ID 0,
+	  // only add spatial axes for FIELD ID 0. These axes were already fixed in 
+	  // step 1, by initial construction of grid. So skip all subsequent axes
+	  // with id < dim
+
 	  for (int j=0; j<tmp->getNumAxes();j++) {
 	    // IMPORTANT CHANGE 07.12.13: the time axis is special, because
 	    // the internal step is already fixed by the IWAVE constructor.
@@ -1206,8 +1213,9 @@ namespace TSOpt {
 	      // notice that now simulation time axis has been DETERMINED, so 
 	      // must be used in trace sampler!!!!
 	    }
-	      
-	    if (!grid_union(&g,a)) {
+
+	    if ((a->id > g.dim-1) && (!grid_union(&g,a))) {
+	      //	      cerr<<"Error: IWaveSim constructor from grid_union\n";
 	      RVLException e;
 	      e<<"Error: IWaveSim constructor from grid_union\n";
 	      fprintf(stream,"Error: IWaveSim constructor from grid_union\n");
@@ -1218,7 +1226,7 @@ namespace TSOpt {
 	      fprint_grid(stream,g);
 	      throw e;
 	    }
-	    // having added to grid, trash it
+	    // having added to grid, or not, trash it
 	    delete a;
 	  
 	  }
@@ -1570,7 +1578,7 @@ namespace TSOpt {
 	      for (int j=0;j<(int)pow2(order-1);j++) {
 		int l = 0;
 		for (int k=0;k<RDOM_MAX_NARR;k++) {
-		  if (fd_isdyn(k,ic)) {		  
+		  if (fd_isarr(k,w->getStateArray()[0]->model,ic) && fd_isdyn(k,ic)) {		  
 		    if (ra_a_copy(&(cps[cp][j][l]),&(((w->getRefRDOMArray())[j])->_s[k]))) {
 		      RVLException e;
 		      e<<"Error: IWaveSim::run\n";
@@ -1734,7 +1742,7 @@ namespace TSOpt {
 	      for (int j=0;j<(int)pow2(order-1);j++) {
 		int l = 0;
 		for (int k=0;k<RDOM_MAX_NARR;k++) {
-		  if (fd_isdyn(k,ic)) {		  
+		  if (fd_isarr(k,w->getStateArray()[0]->model,ic) && fd_isdyn(k,ic)) {		  
 		    if (ra_a_copy(&(((w->getRefRDOMArray())[j])->_s[k]),&(cps[cp][j][l]))) {
 		      RVLException e;
 		      e<<"Error: IWaveSim::run\n";

@@ -51,6 +51,8 @@ int im_construct(IMODEL * model) {
   model->tsind.niv=0;
   model->tsind.dt=REAL_ZERO;
 
+  model->active.resize(0);
+
   return 0;
 }
 

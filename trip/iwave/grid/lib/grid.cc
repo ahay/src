@@ -241,6 +241,7 @@ bool grid_union(grid * g, axis const * ax) {
   }
   // insert new axis in id order
   g->gdim++;
+  // fprintf(stderr,"grid_union -> inserting new axis %d\n",g->gdim);
   if (g->gdim > RARR_MAX_NDIM) {
     fprintf(stderr,"Error: grid_union\n");
     fprintf(stderr,"  attempt to exceed max # of axes = %d\n",RARR_MAX_NDIM);
@@ -250,22 +251,22 @@ bool grid_union(grid * g, axis const * ax) {
   while (g->axes[idx].id < ax->id && g->axes[idx].id > -1) idx++;
   // if at uninit id, just copy
   if (g->axes[idx].id < 0) {
-    //    fprintf(stderr,"grid_union: copy new axis onto axis %d\n",idx);
+    // fprintf(stderr,"grid_union: copy new axis onto axis %d\n",idx);
     copy_axis(&(g->axes[idx]),ax);
-    //    fprintf(stderr,"grid_union: resulting grid\n");
-    //    fprint_grid(stderr,*g);
+    // fprintf(stderr,"grid_union: resulting grid\n");
+    // fprint_grid(stderr,*g);
   }
   else {
     // else shift all subsequent axes out of way
-    //    fprintf(stderr,"grid_union: gdim=%d new ax id =%d idx=%d\n",g->gdim,ax->id,idx);
+    // fprintf(stderr,"grid_union: gdim=%d new ax id =%d idx=%d\n",g->gdim,ax->id,idx);
     for (int i=g->gdim-1; i>idx; i--) {
-      //      fprintf(stderr,"grid_union: copy axis %d onto axis %d\n",i-1,i);
+      // fprintf(stderr,"grid_union: copy axis %d onto axis %d\n",i-1,i);
       copy_axis(&(g->axes[i]),&(g->axes[i-1]));
     }
-    //    fprintf(stderr,"grid_union: copy new axis onto axis %d\n",idx);
+    // fprintf(stderr,"grid_union: copy new axis onto axis %d\n",idx);
     copy_axis(&(g->axes[idx]),ax);
-    //    fprintf(stderr,"grid_union: resulting grid\n");
-    //    fprint_grid(stderr,*g);
+    // fprintf(stderr,"grid_union: resulting grid\n");
+    // fprint_grid(stderr,*g);
   }
   return true;
 }

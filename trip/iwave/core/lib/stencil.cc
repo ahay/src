@@ -30,13 +30,14 @@ int mask_create(STENCIL_MASK *mask, int ip, int ir, int n)
     mask->n = n;
     mask->ip = ip;
     mask->ir = ir;
-
+    //   fprintf(stderr,"mask_create n=%d\n",n);
     return 0;
 }
 /*----------------------------------------------------------------------------*/
 
 int mask_destroy(STENCIL_MASK *mask)
 {
+  //  fprintf(stderr,"mask_destroy\n");
     userfree_(mask->s);
     mask_setnull(mask);
     
@@ -81,7 +82,10 @@ int sten_create(STENCIL *sten, int nmask)
     {
         sten->masks = (STENCIL_MASK*)usermalloc_(nmask* sizeof(STENCIL_MASK));
         if ( sten->masks == NULL ) return E_ALLOC;
-        for ( m = 0; m < nmask; ++m ) mask_setnull(sten->masks + m);
+        for ( m = 0; m < nmask; ++m ) {
+	  //	  fprintf(stderr,"sten_create mask %d\n",m);
+	  mask_setnull(sten->masks + m);
+	}
     }
     
     sten->nmask = nmask;
@@ -92,11 +96,15 @@ int sten_create(STENCIL *sten, int nmask)
 int sten_destroy(STENCIL *sten)
 {
     int m;
-    
-    for ( m = 0; m < sten->nmask; ++m ) mask_destroy(sten->masks + m);
+    //    fprintf(stderr,"sten_destroy: nmask=%d\n",sten->nmask);
+    for ( m = 0; m < sten->nmask; ++m ) {
+      //      fprintf(stderr,"sten_destroy: mask %d\n",m);
+      mask_destroy(sten->masks + m);
+    }
+    //    fprintf(stderr,"sten_destroy: mask array\n");
     userfree_(sten->masks);
     sten_setnull(sten);
-    
+    //    fprintf(stderr,"sten_destroy: return\n");
     return 0;
 }
 /*----------------------------------------------------------------------------*/

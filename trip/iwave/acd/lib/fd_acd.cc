@@ -85,11 +85,16 @@ int acd_build_sten_dep(FILE * stream,
 /* working functions                                                          */
 /*----------------------------------------------------------------------------*/
 
-int acd_modelinit(PARARRAY *pars, 
+/*int acd_modelinit(PARARRAY *pars, 
 		  FILE *stream, 
 		  grid const & g,
 		  ireal dt,
+		  std::vector<std::string> & active,
 		  void ** fdpars) {
+*/
+int acd_modelinit(PARARRAY pars, 
+		  FILE *stream,
+		  IMODEL & model) {
 
     int err=0;           /* return value */
     ACD_TS_PARS *acdpars;   /* model pars */
@@ -100,7 +105,7 @@ int acd_modelinit(PARARRAY *pars,
     IPNT cpers;          /* workspace for periodic wrap info  - currently not used */
 #endif
 
-    int i;               /* counter */
+    int i;       /* counter */
     RPNT dxs;    /* grid steps */
     ireal lam;   /* slownesses dt/dx */
     int idim;    /* counter */
@@ -108,45 +113,45 @@ int acd_modelinit(PARARRAY *pars,
     /* allocate sgn model ----------------------------------------------------*/   
     acdpars = (ACD_TS_PARS*)usermalloc_(sizeof(ACD_TS_PARS));
     if ( acdpars == NULL ) { 
-	err=E_ALLOC;
-	fprintf(stream,"ERROR: acd_modelinit\n");
-	fprintf(stream,"failed to allocate SGN_TS_PARS object\n");
-	return err;
+      err=E_ALLOC;
+      fprintf(stream,"ERROR: acd_modelinit\n");
+      fprintf(stream,"failed to allocate SGN_TS_PARS object\n");
+      return err;
     }
-	    
+    
     /* assign heritage pars
     // 11.04.12: remove these
     //  sgnm->psingle = 0; // TODO: single pressures in Step 3 
     //  IASN(sgnm->eflags,IPNT_1); // this is related - with code from old sg added, could try using this device */
-
+    
     /* decode dimensions, parallel rank - read grid dimn on rank 0, broadcast */
-
+    
     IASN(cdims, IPNT_1); /* default grid size */ 
     IASN(crank, IPNT_0); /* default cartisian ranks */ 
-
+    
 #ifdef IWAVE_USE_MPI
     MPI_Comm cm=retrieveComm();
-
+    
     if ( MPI_Cart_get(cm, RARR_MAX_NDIM, cdims, cpers, crank) != MPI_SUCCESS )  {
-	fprintf(stream, "ERROR. Internal: cannot get Cartesian coordinates.\n");
-	return E_INTERNAL;
+      fprintf(stream, "ERROR. Internal: cannot get Cartesian coordinates.\n");
+      return E_INTERNAL;
     }
-
-    MPI_Bcast((void*)(&(g.dim)),1,MPI_INT,0,cm);
+    
+    MPI_Bcast((void*)(&(model.g.dim)),1,MPI_INT,0,cm);
 #endif
-
+    
     /* set boundary flags */
     IASN(acdpars->lbc, IPNT_0); /* default left bc flag */ 
     IASN(acdpars->rbc, IPNT_0); /* default right bc flag */ 
 
-    for (i=0;i<g.dim;i++) {
-	if (crank[i]==0) acdpars->lbc[i]=1;
-	if (crank[i]==cdims[i]-1) acdpars->rbc[i]=1;
+    for (i=0;i<model.g.dim;i++) {
+      if (crank[i]==0) acdpars->lbc[i]=1;
+      if (crank[i]==cdims[i]-1) acdpars->rbc[i]=1;
     }
 
     /* decode order - with version 2.0, deprecated syntax "scheme_phys" etc. is dropped */
     acdpars->k=1;
-    parse(*pars,"order",acdpars->k);
+    parse(pars,"order",acdpars->k);
 #ifdef IWAVE_VERBOSE
     fprintf(stream,"NOTE: initializing ACD with half-order = %d\n",acdpars->k);
 #endif
@@ -159,13 +164,13 @@ int acd_modelinit(PARARRAY *pars,
     RASN(acdpars->c4,RPNT_0);
 
     /* initialize bound check params */
-    if (!parse(*pars,"cmax",acdpars->cmax)) {
+    if (!parse(pars,"cmax",acdpars->cmax)) {
       RVLException e;
       e<<"Error: acd_modelinit\n";
       e<<"  failed to find cmax in param table\n";
       throw e;
     }
-    if (!parse(*pars,"cmin",acdpars->cmin)) {
+    if (!parse(pars,"cmin",acdpars->cmin)) {
       RVLException e;
       e<<"Error: acd_modelinit\n";
       e<<"  failed to find cmin in param table\n";
@@ -173,68 +178,74 @@ int acd_modelinit(PARARRAY *pars,
     }
 
     /* extract grid steps from grid */
-    get_d(dxs, g);
+    get_d(dxs, model.g);
 
     /* set model dimn par */
-    acdpars->ndim = g.dim;
+    acdpars->ndim = model.g.dim;
 
     acdpars->c0 = 0.0;
     for (idim = 0;idim < acdpars->ndim;idim ++) {
 
-	if (dxs[idim] <= 0.0) {
-	    fprintf(stream, "Error: bad input: wrong grid space step, dim=%d, step=%g\n",
-		    idim, dxs[idim]);
-	    return E_BADINPUT;
-	}
-	lam = dt / dxs[idim];
-
-	/* assign scaled Courant numbers for orders 2, 4, and 8 - these are the only */
-	/* choices implemented */
-	if (acdpars->k==1) {
-	    acdpars->c1[idim]   = lam*lam;
-	    acdpars->c0        += lam*lam*(-2.0);
-	}
-	else if (acdpars->k==2) {
-	    acdpars->c1[idim]   = lam*lam*(4.0/3.0);
-	    acdpars->c2[idim]   = lam*lam*(-1.0/12.0);
-	    acdpars->c0        += lam*lam*(-5.0/2.0);
-	}
-	else if (acdpars->k==4) {
-	    acdpars->c1[idim]   = lam*lam*(8.0/5.0);
-	    acdpars->c2[idim]   = lam*lam*(-1.0/5.0);
-	    acdpars->c3[idim]   = lam*lam*(8.0/315.0);
-	    acdpars->c4[idim]   = lam*lam*(-1.0/560.0);
-	    acdpars->c0        += lam*lam*(-205.0/72.0);
-	}
-	else {
-	    fprintf(stream,"ERROR: acd_readschemeinfo\n");
-	    fprintf(stream,"assigned scheme half-order = %d not defined\n",acdpars->k);
-	    fprintf(stream,"currently defined schemes: half-orders 1, 2, and 4\n");
-	    fflush(stream);
-	    return E_BADINPUT;
-	}
+      if (dxs[idim] <= 0.0) {
+	fprintf(stream, "Error: bad input: wrong grid space step, dim=%d, step=%g\n",
+		idim, dxs[idim]);
+	return E_BADINPUT;
+      }
+      lam = model.tsind.dt / dxs[idim];
+      
+      /* assign scaled Courant numbers for orders 2, 4, and 8 - these are the only */
+      /* choices implemented */
+      if (acdpars->k==1) {
+	acdpars->c1[idim]   = lam*lam;
+	acdpars->c0        += lam*lam*(-2.0);
+      }
+      else if (acdpars->k==2) {
+	acdpars->c1[idim]   = lam*lam*(4.0/3.0);
+	acdpars->c2[idim]   = lam*lam*(-1.0/12.0);
+	acdpars->c0        += lam*lam*(-5.0/2.0);
+      }
+      else if (acdpars->k==4) {
+	acdpars->c1[idim]   = lam*lam*(8.0/5.0);
+	acdpars->c2[idim]   = lam*lam*(-1.0/5.0);
+	acdpars->c3[idim]   = lam*lam*(8.0/315.0);
+	acdpars->c4[idim]   = lam*lam*(-1.0/560.0);
+	acdpars->c0        += lam*lam*(-205.0/72.0);
+      }
+      else {
+	fprintf(stream,"ERROR: acd_readschemeinfo\n");
+	fprintf(stream,"assigned scheme half-order = %d not defined\n",acdpars->k);
+	fprintf(stream,"currently defined schemes: half-orders 1, 2, and 4\n");
+	fflush(stream);
+	return E_BADINPUT;
+      }
 #ifdef IWAVE_VERBOSE
-	fprintf(stderr, "k=%d lam[%d] = %g\n", acdpars->k, idim, lam);
-	if (acdpars->k==1)
-	  fprintf(stderr,"c1[%d]=%g\n",
-		  idim,acdpars->c1[idim]);
-	if (acdpars->k==2) 
-	  fprintf(stderr,"c1[%d]=%g c2[%d]=%g\n",
-		  idim,acdpars->c1[idim],idim,acdpars->c2[idim]);
-	if (acdpars->k==4) 
-	  fprintf(stderr,"c1[%d]=%g c2[%d]=%g c3[%d]=%g c4[%d]=%g\n",
-		  idim,acdpars->c1[idim],idim,acdpars->c2[idim],
-		  idim,acdpars->c3[idim],idim,acdpars->c4[idim]);
+      fprintf(stderr, "k=%d lam[%d] = %g\n", acdpars->k, idim, lam);
+      if (acdpars->k==1)
+	fprintf(stderr,"c1[%d]=%g\n",
+		idim,acdpars->c1[idim]);
+      if (acdpars->k==2) 
+	fprintf(stderr,"c1[%d]=%g c2[%d]=%g\n",
+		idim,acdpars->c1[idim],idim,acdpars->c2[idim]);
+      if (acdpars->k==4) 
+	fprintf(stderr,"c1[%d]=%g c2[%d]=%g c3[%d]=%g c4[%d]=%g\n",
+		idim,acdpars->c1[idim],idim,acdpars->c2[idim],
+		idim,acdpars->c3[idim],idim,acdpars->c4[idim]);
 #endif
     }
 #ifdef IWAVE_VERBOSE
     fprintf(stderr,"c0=%g\n",acdpars->c0);
 #endif
     /* reserve a copy of dt for use in source scaling */
-    acdpars->dt = dt;
-
+    acdpars->dt = model.tsind.dt;
+    
+    /* identify active fields */
+    model.active.resize(3);
+    model.active[0]="csq";
+    model.active[1]="uc";
+    model.active[2]="up";
+    
     /* assign param object pointer */
-    *fdpars = (void*)acdpars;
+    model.specs = (void*)acdpars;
     return 0;
 }
 

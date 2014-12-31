@@ -60,7 +60,9 @@ typedef void (*FD_TIMESTEP)(std::vector<RDOM *> dom, bool fwd, int iv, void* fdp
     indicate whether boundar faces are inter-domain or external for
     domain decomposition, and other parameters convenient for defining
     time steps.
-    
+  
+    This function acts as the constructor for a concrete subclass of IMODEL.
+
     @param[in] pars - parameter array, assumed initialized.
     
     @param[in] stream - verbose output stream
@@ -78,11 +80,17 @@ typedef void (*FD_TIMESTEP)(std::vector<RDOM *> dom, bool fwd, int iv, void* fdp
     @return - 0 on success, else error code.
 */
 
+/*
 typedef int (*FD_MODELINIT)(PARARRAY * pars, 
 			    FILE * stream, 
 			    grid const & g,
 			    ireal dt,
+			    std::vector<std::string> & active,
 			    void ** specs);
+*/
+typedef int (*FD_MODELINIT)(PARARRAY pars, 
+			    FILE * stream, 
+			    IMODEL & model);
 
 /** corresponding destructor */
 typedef void (*FD_MODELDEST)(void ** specs);

@@ -63,6 +63,7 @@ bool fd_update(int ia, int iv, IWaveInfo const & ic);
 //int isdyn(FD_MODEL * fd, int i);
 // new interface 11.13 - depends only on static data
 int fd_isdyn(int i, IWaveInfo const & ic);
+int fd_isarr(int i, IMODEL & model, IWaveInfo const & ic);
 
 /** number of substeps defined in scheme */
 int fd_numsubsteps(IWaveInfo const & ic);

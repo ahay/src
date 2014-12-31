@@ -110,12 +110,21 @@ int iwave_construct(IWAVE * state,
   fflush(stream);
 #endif
 
-  err=ic.get_minit()(pars,stream,(state->model).g,((state->model).tsind).dt,&((state->model).specs));
+  // cerr<<"minit\n";
+  /*
+  err=ic.get_minit()(pars,stream,
+		     (state->model).g,
+		     ((state->model).tsind).dt,
+		     (state->model).active,
+		     &((state->model).specs));
+  */
+  err=ic.get_minit()(*pars,stream,state->model);
   if (err) {
     fprintf(stream,"ERROR: iwave_construct from fd_model_init\n");
     return err;
   }
 
+  // cerr<<"numsubsteps\n";
   /* transfer number of substeps to TSINDEX member of IMODEL */
   (state->model).tsind.niv=fd_numsubsteps(ic);
 
@@ -123,6 +132,8 @@ int iwave_construct(IWAVE * state,
   fprintf(stream,"readparpars\n");
   fflush(stream);
 #endif
+
+  // cerr<<"readparpars\n";
 
   /* read misc. flags */
   readparpars(pars,
@@ -138,6 +149,7 @@ int iwave_construct(IWAVE * state,
   fflush(stream);
 #endif
 
+  // cerr<<"initexch\n";
   err=initexch(&(state->pinfo),(state->model).g.dim,stream);
   if (err) {
     if (err==E_NOTINGRID) {
@@ -157,7 +169,8 @@ int iwave_construct(IWAVE * state,
   fflush(stream);
 #endif
 
-  //  cerr<<"before modelcrea\n";
+  
+  // cerr<<"before modelcrea\n";
   err=fd_modelcrea((state->pinfo).cdims,
 		   (state->pinfo).crank,
 		   pars,
@@ -169,7 +182,7 @@ int iwave_construct(IWAVE * state,
     return err;
   }
 
-  //  cerr<<"return from modelcrea"<<endl;
+  // cerr<<"return from modelcrea"<<endl;
 #ifdef IWAVE_VERBOSE
   fprintf(stream,"setrecvexchange\n");
   fflush(stream);

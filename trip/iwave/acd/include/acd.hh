@@ -7,11 +7,17 @@
 #include "acd_gfdm.h"
 #include "acd_gfdm2.h"
 
+/*
 int acd_modelinit(PARARRAY *pars,
 		  FILE *stream,
 		  grid const & g,
 		  ireal dt,
+		  std::vector<std::string> & active,
 		  void ** specs);
+*/
+int acd_modelinit(PARARRAY pars,
+		  FILE *stream,
+		  IMODEL & model);
 
 void acd_modeldest(void ** specs);
 
