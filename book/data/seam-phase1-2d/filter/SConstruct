@@ -41,7 +41,7 @@ Flow('wave1.rsf wave1_hdr.rsf',
         input=${SOURCES[0]} \
 	headers=${SOURCES[1]} \
 	verbose=1 \
-     | /Users/karl/RSFSRC/user/karl/sftahfilter \
+     | sftahfilter \
        verbose=3 \
        filter_file=${SOURCES[2]}
      | sftahwrite \
@@ -58,7 +58,7 @@ Flow('wave2.rsf wave2_hdr.rsf',
         input=${SOURCES[0]} \
 	headers=${SOURCES[1]} \
 	verbose=1 \
-     | /Users/karl/RSFSRC/user/karl/sftahfilter \
+     | sftahfilter \
        verbose=3 \
        filter_file=${SOURCES[2]}   \
        filt_indx_t0=84             \
