@@ -31,5 +31,8 @@ ntg - (near trace gather) print some headers, compute additiona trace headers
 cvs - (constant velocity stack)  plot gathers with nmo applied.  Make and plot 
       constant velocity stacks for range of velocities.  Compute v(t) stack.
 vscan - (velocity scan)  compute and plot velocity semblance.
+filter - directory to test new sftahfilter program using wavelet and desig 
+      filter
+
 
 
