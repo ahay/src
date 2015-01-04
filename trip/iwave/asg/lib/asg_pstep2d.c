@@ -1,4 +1,4 @@
-#include "utils.h"
+#include "cstd.h"
 
 void asg_pstep2d(float ** restrict bulk, 
 		 float ** restrict p0, float ** restrict p1,
@@ -6,7 +6,8 @@ void asg_pstep2d(float ** restrict bulk,
 		 float ** restrict ep, float ** restrict epp,
 		 float * restrict sdiv,
 		 int * gsc, int * gec, 
-		 int maxoff, float * restrict c[RARR_MAX_NDIM]) {
+		 int * lbc, int * rbc,
+		 int maxoff, float ** restrict c) {
   
   int i0, i1;
   int ioff;
@@ -21,8 +22,43 @@ void asg_pstep2d(float ** restrict bulk,
       }
     }
     for (i0=gsc[0]; i0 <= gec[0]; i0++) {
-      p0[i1][i0] = (p0[i1][i0]*ep[0][i0] + bulk[i1][i0]*sdiv[i0])*epp[0][i0];
-      p1[i1][i0] = (p1[i1][i0]*ep[1][i1] + bulk[i1][i0]*sdiv[i0])*epp[1][i1];
+      p0[i1][i0] = (p0[i1][i0]*ep[0][i0] - bulk[i1][i0]*sdiv[i0])*epp[0][i0];
+      p1[i1][i0] = (p1[i1][i0]*ep[1][i1] - bulk[i1][i0]*sdiv[i0])*epp[1][i1];
     }
   }
+
+  // boundary conditions - p is odd about index just before/after comp domain
+  if (lbc[0]) {
+    for (i1=gsc[1];i1<=gec[1];i1++) {
+      p0[i1][gsc[0]-1]=0.0f;
+      for (ioff=1;ioff<maxoff;ioff++) {
+	p0[i1][gsc[0]-ioff-1]=-p0[i1][gsc[0]+ioff-1];
+      }
+    }
+  }
+  if (rbc[0]) {
+    for (i1=gsc[1];i1<=gec[1];i1++) {
+      p0[i1][gec[0]+1]=0.0f;
+      for (ioff=1;ioff<maxoff;ioff++) {
+	p0[i1][gec[0]+ioff+1]=-p0[i1][gec[0]-ioff+1];
+      }
+    }
+  }
+  if (lbc[1]) {
+    for (i0=gsc[0];i0<=gsc[0];i0++) {
+      p1[gsc[1]-1][i0]=0.0f;
+      for (ioff=1;ioff<maxoff;ioff++) {
+	p1[gsc[1]-ioff-1][i0]=-p1[gsc[1]+ioff-1][i0];
+      }
+    }
+  }
+  if (rbc[1]) {
+    for (i0=gsc[0];i0<=gsc[0];i0++) {
+      p1[gec[1]+1][i0]=0.0f;
+      for (ioff=1;ioff<maxoff;ioff++) {
+	p1[gec[1]+ioff+1][i0]=-p1[gec[1]-ioff+1][i0];
+      }
+    }
+  }
+
 }

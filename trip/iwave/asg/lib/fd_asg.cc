@@ -3,13 +3,19 @@
 using RVL::valparse;
 using RVL::RVLException;
 
+// max FD half-order
+#define MAXK 12
+
+extern float * sgcoeffs(int k);
+
 extern "C" void asg_pstep2d(float ** restrict bulk, 
 			    float ** restrict p0, float ** restrict p1,
 			    float ** restrict v0, float ** restrict v1,
 			    float ** restrict ep, float ** restrict epp,
 			    float * restrict sdiv,
 			    int * gsc, int * gec, 
-			    int maxoff, float * restrict c[RARR_MAX_NDIM]);
+			    int * lbc, int * rbc,
+			    int maxoff, float ** restrict c);
 
 extern "C" void asg_pstep3d(float *** restrict bulk, 
 			    float *** restrict p0, float *** restrict p1, float *** restrict p2,
@@ -17,6 +23,7 @@ extern "C" void asg_pstep3d(float *** restrict bulk,
 			    float ** restrict ep, float ** restrict epp,
 			    float * restrict sdiv,
 			    int * gsc, int * gec, 
+			    int * lbc, int * rbc,
 			    int maxoff, float ** restrict c);
 
 extern "C" void asg_vstep2d(float ** restrict buoy,
@@ -26,6 +33,7 @@ extern "C" void asg_vstep2d(float ** restrict buoy,
 			    float ** restrict gradp,
 			    int * gsc_v0, int * gec_v0,
 			    int * gsc_v1, int * gec_v1,
+			    int * lbc, int * rbc,
 			    int maxoff,float ** restrict c);
 
 extern "C" void asg_vstep3d(float *** restrict buoy,
@@ -36,6 +44,7 @@ extern "C" void asg_vstep3d(float *** restrict buoy,
 			    int * gsc_v0, int * gec_v0,
 			    int * gsc_v1, int * gec_v1,
 			    int * gsc_v2, int * gec_v2,
+			    int * lbc, int * rbc,
 			    int maxoff,float ** restrict c);
 
 /*
@@ -133,7 +142,8 @@ int asg_modelinit(PARARRAY pars,
 	throw e;
       }
       lam = model.tsind.dt / dxs[idim];
-      for (int i=0;i<asgpars->k;i++) (asgpars->coeffs)[idim][i]=lam*SCHEME_COEFFS[asgpars->k][i];
+      asgpars->coeffs[idim] = sgcoeffs(asgpars->k);
+      for (int i=0;i<asgpars->k;i++) (asgpars->coeffs)[idim][i]*=lam;
     }
 
     /* initialize bound check params */
@@ -145,6 +155,8 @@ int asg_modelinit(PARARRAY pars,
 
     /* initialize pml stuff */
     asgpars->amp = valparse<ireal>(pars,"pmlampl",REAL_ZERO);
+    IASN(asgpars->nls,model.nls);
+    IASN(asgpars->nrs,model.nrs);
 
     for (int i=0;i<RARR_MAX_NDIM; i++) {
       asgpars->ep[i]=NULL;
@@ -197,7 +209,15 @@ int asg_modelinit(PARARRAY pars,
 void asg_modeldest(void ** fdpars) {
   // cerr<<"destroy\n";
     /* destroy asgpars - all data members allocated on stack */
-    userfree_(*fdpars);
+  ASG_TS_PARS * asgpars = (ASG_TS_PARS *)fdpars;
+  for (int i=0; i<asgpars->ndim; i++) {
+    if (asgpars->ep[i]) userfree_(asgpars->ep[i]);
+    if (asgpars->epp[i]) userfree_(asgpars->epp[i]);
+    if (asgpars->ev[i]) userfree_(asgpars->ev[i]);
+    if (asgpars->evp[i]) userfree_(asgpars->evp[i]);
+    userfree_(asgpars->coeffs[i]);
+  }
+  userfree_(*fdpars);
 }
 
 /*----------------------------------------------------------------------------*/
@@ -384,12 +404,21 @@ void asg_timestep(std::vector<RDOM *> dom,
     if(fwd == true) {
       if (ndim == 2) {
 	if (iv == 0) {
+	  // this loop nest and similar for 3D guarantees that pml pressure arrays 
+	  // are identical in physical domain. Since source is added to p0 before
+	  // timestep called, in effect it is added to all copies of pressure.
+	  for (int i1=gsc_p[1]+asgpars->nls[1]; i1<=gec_p[1]-asgpars->nrs[1];i1++) {
+	    for (int i0=gsc_p[0]+asgpars->nls[0]; i0<=gec_p[0]-asgpars->nrs[0];i0++) {
+	      p12[i1][i0]=p02[i1][i0];
+	    }
+	  }
 	  asg_pstep2d(bulk2,
 		      p02,p12,
 		      v02,v12,
 		      ep, epp,
 		      sdiv,
 		      gsc_p,gec_p,
+		      asgpars->lbc,asgpars->rbc,
 		      asgpars->k,asgpars->coeffs);
 	}
 	if (iv == 1) {
@@ -400,17 +429,27 @@ void asg_timestep(std::vector<RDOM *> dom,
 		      gradp,
 		      &(gsc_v[0][0]),&(gec_v[0][0]),
 		      &(gsc_v[1][0]),&(gec_v[1][0]),
+		      asgpars->lbc,asgpars->rbc,
 		      asgpars->k,asgpars->coeffs);
 	}
       }
       if (ndim == 3) {
 	if (iv == 0) {
+	  for (int i2=gsc_p[2]+asgpars->nls[2]; i2<=gec_p[2]-asgpars->nrs[2];i2++) {
+	    for (int i1=gsc_p[1]+asgpars->nls[1]; i1<=gec_p[1]-asgpars->nrs[1];i1++) {
+	      for (int i0=gsc_p[0]+asgpars->nls[0]; i0<=gec_p[0]-asgpars->nrs[0];i0++) {
+		p13[i2][i1][i0]=p03[i2][i1][i0];
+		p23[i2][i1][i0]=p03[i2][i1][i0];
+	      }
+	    }
+	  }
 	  asg_pstep3d(bulk3,
 		      p03,p13,p23,
 		      v03,v13,v23,
 		      ep, epp,
 		      sdiv,
 		      gsc_p,gec_p,
+		      asgpars->lbc,asgpars->rbc,
 		      asgpars->k,asgpars->coeffs);
 	}
 	if (iv == 1) {
@@ -422,6 +461,7 @@ void asg_timestep(std::vector<RDOM *> dom,
 		      &(gsc_v[0][0]),&(gec_v[0][0]),
 		      &(gsc_v[1][0]),&(gec_v[1][0]),
 		      &(gsc_v[2][0]),&(gec_v[2][0]),
+		      asgpars->lbc,asgpars->rbc,
 		      asgpars->k,asgpars->coeffs);
 	}
       }

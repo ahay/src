@@ -9,14 +9,21 @@
 /* helper functions */
 
 int fd_isarr(int i, IMODEL & model, IWaveInfo const & ic) {
-  if (i<0 || i >= ic.get_num_fields()) return 0;
-  for (int j=0; j<model.active.size();j++) 
-    if (ic.iwave_fields[i].field == model.active[j]) return 1;
+  if (i<0 || i >= ic.get_num_fields()) {
+    return 0;
+  }
+  for (int j=0; j<model.active.size();j++) {
+    if (ic.iwave_fields[i].field == model.active[j]) {
+      return 1;
+    }
+  }
   return 0;
 }
 
 int fd_isdyn(int i, IWaveInfo const & ic) {
-  if (i>-1 || i < ic.get_num_fields()) return ic.get_iwave_fields()[i].dynamic;
+  if (i>-1 || i < ic.get_num_fields()) {
+    return ic.get_iwave_fields()[i].dynamic;
+  }
   return 0;
 }
 

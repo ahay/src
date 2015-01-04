@@ -73,8 +73,26 @@ namespace TSOpt {
     
     std::vector<IWAVE *> & getStateArray() { return sa; }
     std::vector<IWAVE *> const & getStateArray() const { return sa; }
-    std::vector<IWAVE *> & getRefStateArray() { return ref->getStateArray(); }
-    std::vector<IWAVE *> const & getRefStateArray() const { return ref->getStateArray(); }
+    std::vector<IWAVE *> & getRefStateArray() { 
+      if (ref) return ref->getStateArray();
+      else {
+	RVLException e;
+	e<<"ERROR: IWaveTree::getRefStateArray()\n";
+	e<<"  ref state not initialized - probably order = 0\n";
+	e<<"  so no derivative so no reference state\n";
+	throw e;
+      }
+    }
+    std::vector<IWAVE *> const & getRefStateArray() const { 
+      if (ref) {return ref->getStateArray(); }
+      else {
+	RVLException e;
+	e<<"ERROR: IWaveTree::getRefStateArray()\n";
+	e<<"  ref state not initialized - probably order = 0\n";
+	e<<"  so no derivative so no reference state\n";
+	throw e;
+      }
+    }
     std::vector<RDOM *> const & getRDOMArray() const { return rd; }
     std::vector<RDOM *> const & getRefRDOMArray() const { return ref->getRDOMArray(); }
 

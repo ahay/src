@@ -941,6 +941,7 @@ namespace TSOpt {
   IWaveTree::IWaveTree(std::vector<IWAVE *> sv, IWaveInfo const & _ic)
     : own(false), sa(iwave_max(sv.size()/2,0)),
       rd(iwave_max(sv.size()/2,0)), ic(_ic) {
+    // cerr<<"iwavetree private constructor\n";
     if (sv.size()>1) {
       for (size_t i=0;i<sv.size()/2;i++) {
 	sa[i]=sv[i];
@@ -954,12 +955,14 @@ namespace TSOpt {
       throw e;
     }
     ref=NULL;
+    // cerr<<"exit iwavetree private constructor\n";
   }
 
   IWaveTree::IWaveTree(PARARRAY & _pars, FILE * _stream, IWaveInfo const & _ic,
 		       int order)
     : own(true), sa(pow2(order)), rd(pow2(order)), ic(_ic) {
     try {
+      // cerr<<"iwavetree constructor\n";
       for (size_t i=0; i<sa.size(); i++) {
 	sa[i]=new IWAVE;
 	int err=0;
@@ -984,6 +987,7 @@ namespace TSOpt {
       if (order>0) ref = new IWaveTree(sa,ic);
       else ref=NULL;
       // extract time step, set up step index 
+      // cerr<<"exit IWaveTree constructor\n";
     }
     catch (RVLException & e) {
       e<<"\ncalled from IWaveTree constructor\n";
@@ -1016,6 +1020,7 @@ namespace TSOpt {
       dryrun(_dryrun), drystr(_drystr), 
       announce(_announce) {
     try {
+      // cerr<<"iwavesim constr\n";
       // sanity
       if (!fwd && ((snaps<=0) || (order<=0))) {
 	RVLException e;
@@ -1033,16 +1038,17 @@ namespace TSOpt {
 	throw e;
       }
 
-      // step 1: create list of i/o tasks
+      
+      // cerr<<"step 1: create list of i/o tasks\n";
       IOTask(t,order,fwd,ic);
 #ifdef IWAVE_VERBOSE
       cerr<<"IWaveSim constructor: fwd="<<fwd<<" order="<<order<<endl;
       IOTaskWriter(t,cerr);
 #endif
-      // step 2: build state
+      // cerr<<"step 2: build state\n";
       w = new IWaveTree(pars, stream, ic, order);
 
-      // step 2a: build grid.
+      // cerr<<"step 2a: build grid.\n";
       // start with spatial grid, which has been initialized
       // in particular g.dim = problem spatial dimn
       // copy only the spatial axes, leaving the rest to
@@ -1072,10 +1078,10 @@ namespace TSOpt {
       }
       g.dim =  dim;
       g.gdim=g.dim;
-      //      cerr<<"---------------\n";
-      //      cerr<<"IWaveSim: sim grid g after initial construction from model.g:\n";
+      // cerr<<"---------------\n";
+      // cerr<<"IWaveSim: sim grid g after initial construction from model.g:\n";
       //      fprint_grid(stderr,g);
-      //      cerr<<"---------------\n";
+      // cerr<<"---------------\n";
 
       // axis order is rigidly:
       // z, x, y (for 3d) or z, x (for 2d);
@@ -1085,10 +1091,13 @@ namespace TSOpt {
       // storage order in rsf data structure - correspondence is
       // by axis id
       
-      // step 2a: build checkpoint structure if required
+      // cerr<<"step 2a: build checkpoint structure if required\n";
       // work out number of dynamic arrays
       ndyn = 0;
-      for (int i=0;i<RDOM_MAX_NARR;i++) if (fd_isarr(i,(w->getRefStateArray())[0]->model,ic) && fd_isdyn(i,ic)) ndyn++; 
+      for (int i=0;i<RDOM_MAX_NARR;i++) {
+	// cerr<<"i="<<i<<" ndyn="<<ndyn<<endl;
+	if (fd_isarr(i,(w->getStateArray())[0]->model,ic) && fd_isdyn(i,ic)) ndyn++; 
+      }
       if (ndyn==0) {
 	RVLException e;
 	e<<"Error: IWaveSim constructor\n";
@@ -1096,7 +1105,7 @@ namespace TSOpt {
 	throw e;
       }
 
-      // step 2b: in adjoint case, allocate checkpoint buffers
+      // cerr<<"step 2b: in adjoint case, allocate checkpoint buffers\n";
       // IWAVEs 0,...,order-1 contain the reference data for the 
       // adjoint computation, so need order * snaps * ndyn RARRAYs.
       if (!fwd) {
@@ -1137,7 +1146,7 @@ namespace TSOpt {
 	}
       }
 
-      // step 3: construct list of samplers, axes
+      // cerr<<"step 3: construct list of samplers, axes\n";
       // note sampler exposed to first IWAVE - grid, time step info
       s.clear();
       for (size_t i=0; i<t.size(); i++) {
@@ -1242,6 +1251,7 @@ namespace TSOpt {
       //#ifdef IWAVE_USE_MPI
       //      mpi_update_grid(&g);
       //#endif
+      // cerr<<"exit iwavesim constructor\n";
     }
     catch (RVLException & e) {
       e<<"\ncalled from IWaveSim constructor\n";
@@ -1281,6 +1291,7 @@ namespace TSOpt {
 
   void IWaveSim::run() {
     try {
+      // cerr<<"iwavesim::run\n";
       // initialize step
       IPNT step;
       IPNT start;
@@ -1373,7 +1384,7 @@ namespace TSOpt {
 	}
 
 	if (fwd) {
-	  //	  cerr<<"\nIWaveSim::run - FORWARD WET RUN\n\n";
+	  // cerr<<"\nIWaveSim::run - FORWARD WET RUN\n\n";
 	  if (dryrun) {
 	    drystr<<"\nIWaveSim::run - FORWARD DRY RUN\n\n";
 	  }
@@ -1383,7 +1394,7 @@ namespace TSOpt {
 	  }
 
 	  for (int it=start[g.dim]; it<stop[g.dim]; it++) {
-	    
+	    // cerr<<"it="<<it<<endl;
 	    //	    cerr<<"rk="<<retrieveGlobalRank()<<" it="<<it<<endl;
 	    if (dryrun) drystr<<"\n";
 	    step[g.dim]=it;

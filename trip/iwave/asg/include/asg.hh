@@ -3,7 +3,7 @@
 
 #include "iwave.h"
 #include "except.hh"
-#include "sgcoeffs.h"
+//#include "sgcoeffs.h"
 
 /*
 int asg_modelinit(PARARRAY *pars,

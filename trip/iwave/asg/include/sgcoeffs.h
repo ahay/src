@@ -10,8 +10,7 @@ Coefficients for 2-2k schemes
 #define __SGCOEFFS_H_
 /*----------------------------------------------------------------------------*/
 
-static const int MAXK = 7;
-
+// for test purposes
 static const ireal COEFF1[] = {                   -1.0e0}; /* 2-2 */
 static const ireal COEFF2[] = {             -9.0e0/8.0e0,           1.0e0/24.0e0}; /* 2-4 */
 static const ireal COEFF3[] = {           -75.0e0/64.0e0,         25.0e0/384.0e0,           -3.0e0/640.0e0}; /* 2-6 */
