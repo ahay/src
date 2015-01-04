@@ -3,6 +3,7 @@
 #include "grid.h"
 #include "traceio.h"
 #include "istate.hh"
+#include "sgcoeffs.h" // igor's tabulated coeffs
 
 //#define GTEST_VERBOSE
 
@@ -12,13 +13,15 @@ IOKEY IWaveInfo::iwave_iokeys[]
   {"buoyancy",   1, true,  true },
   {"source",     2, true,  false},
   {"data_p",     2, false, true },
-  {"data_v0",    3, false, true },
-  {"data_v1",    4, false, true },
+  {"data_v0",    5, false, true },
+  {"data_v1",    6, false, true },
   {"movie_p",    2, false, false},
-  {"movie_v0",   3, false, false},
-  {"movie_v1",   4, false, false},
+  {"movie_v0",   5, false, false},
+  {"movie_v1",   6, false, false},
   {"",           0, false, false}
 };
+
+extern float * sgcoeffs(int k);
 
 namespace {
 
@@ -301,6 +304,18 @@ namespace {
     }  
   };
 
+  TEST_F(ASGSimTest, check_FD_coeffs) {
+    for (int k=1;k<8;k++) {
+      float * c = sgcoeffs(k);
+      cerr<<"FD coeffs k="<<k<<endl;
+      cerr<<"  computed:\n";
+      for (int i=0;i<k;i++) cerr<<c[i]<<" ";
+      cerr<<"\n  tabulated:\n";
+      for (int i=0;i<k;i++) cerr<<SCHEME_COEFFS[k-1][i]<<" ";
+      cerr<<"\n";
+    }
+  }
+
   TEST_F(ASGSimTest, setup_environment) {
     try {
 
@@ -343,6 +358,7 @@ namespace {
       int order=0;
       IWaveTree * wt = new IWaveTree(*par,stream,ic,order);
       IWAVE & w = *(wt->getStateArray()[0]);
+      
       iwave_printf(&w, par, stream);
 
       IPNT cgs0, cge0, gs0, ge0;
@@ -418,96 +434,6 @@ namespace {
 #ifndef GTEST_VERBOSE
 
 #endif
-    }
-    catch (RVLException & e) {
-      e.write(cerr);
-      exit(1);
-    }
-  }    
-
-  TEST_F(ASGSimTest, iwavetree_2D_serial_pml_order0) {
-    try {
-
-      PARARRAY * par = NULL;
-      FILE * stream = NULL;
-      IWaveEnvironment(argc2, argv2, 0, &par, &stream);
-
-      // build order zero IWaveTree, check 
-      int order=0;
-      IWaveTree * wt = new IWaveTree(*par,stream,ic,order);
-      IWAVE & w = *(wt->getStateArray()[0]);
-      iwave_printf(&w, par, stream);
-
-      IPNT cgs0, cge0, gs0, ge0;
-      ra_a_gse(&((w.model).ld_c._s[0]),gs0,ge0);
-      ra_gse(&((w.model).ld_c._s[0]),cgs0,cge0);
-      EXPECT_EQ(0,gs0[0]);
-      EXPECT_EQ(435,ge0[0]);
-      EXPECT_EQ(-20,gs0[1]);
-      EXPECT_EQ(819,ge0[1]);
-      EXPECT_EQ(0,cgs0[0]);
-      EXPECT_EQ(435,cge0[0]);
-      EXPECT_EQ(-20,cgs0[1]);
-      EXPECT_EQ(819,cge0[1]);
-      IPNT cgs1, cge1, gs1, ge1;
-      ra_a_gse(&((w.model).ld_c._s[1]),gs1,ge1);
-      ra_gse(&((w.model).ld_c._s[1]),cgs1,cge1);
-      EXPECT_EQ(0,gs1[0]);
-      EXPECT_EQ(435,ge1[0]);
-      EXPECT_EQ(-20,gs1[1]);
-      EXPECT_EQ(819,ge1[1]);
-      EXPECT_EQ(0,cgs1[0]);
-      EXPECT_EQ(435,cge1[0]);
-      EXPECT_EQ(-20,cgs1[1]);
-      EXPECT_EQ(819,cge1[1]);
-      IPNT cgs2, cge2, gs2, ge2;
-      ra_a_gse(&((w.model).ld_c._s[2]),gs2,ge2);
-      ra_gse(&((w.model).ld_c._s[2]),cgs2,cge2);
-      EXPECT_EQ(-1,gs2[0]);
-      EXPECT_EQ(436,ge2[0]);
-      EXPECT_EQ(-19,gs2[1]);
-      EXPECT_EQ(818,ge2[1]);
-      EXPECT_EQ(1,cgs2[0]);
-      EXPECT_EQ(434,cge2[0]);
-      EXPECT_EQ(-19,cgs2[1]);
-      EXPECT_EQ(818,cge2[1]);
-      IPNT cgs3, cge3, gs3, ge3;
-      ra_a_gse(&((w.model).ld_c._s[3]),gs3,ge3);
-      ra_gse(&((w.model).ld_c._s[3]),cgs3,cge3);
-      EXPECT_EQ(1,gs3[0]);
-      EXPECT_EQ(434,ge3[0]);
-      EXPECT_EQ(-21,gs3[1]);
-      EXPECT_EQ(820,ge3[1]);
-      EXPECT_EQ(1,cgs3[0]);
-      EXPECT_EQ(434,cge3[0]);
-      EXPECT_EQ(-19,cgs3[1]);
-      EXPECT_EQ(818,cge3[1]);
-      IPNT cgs5, cge5, gs5, ge5;
-      ra_a_gse(&((w.model).ld_c._s[5]),gs5,ge5);
-      ra_gse(&((w.model).ld_c._s[5]),cgs5,cge5);
-      EXPECT_EQ(-1,gs5[0]);
-      EXPECT_EQ(435,ge5[0]);
-      EXPECT_EQ(-19,gs5[1]);
-      EXPECT_EQ(818,ge5[1]);
-      EXPECT_EQ(0,cgs5[0]);
-      EXPECT_EQ(434,cge5[0]);
-      EXPECT_EQ(-19,cgs5[1]);
-      EXPECT_EQ(818,cge5[1]);
-      IPNT cgs6, cge6, gs6, ge6;
-      ra_a_gse(&((w.model).ld_c._s[6]),gs6,ge6);
-      ra_gse(&((w.model).ld_c._s[6]),cgs6,cge6);
-      EXPECT_EQ(1,gs6[0]);
-      EXPECT_EQ(434,ge6[0]);
-      EXPECT_EQ(-21,gs6[1]);
-      EXPECT_EQ(819,ge6[1]);
-      EXPECT_EQ(1,cgs6[0]);
-      EXPECT_EQ(434,cge6[0]);
-      EXPECT_EQ(-20,cgs6[1]);
-      EXPECT_EQ(818,cge6[1]);
-
-      delete wt;
-      ps_delete(&par);
-      fclose(stream);
     }
     catch (RVLException & e) {
       e.write(cerr);
@@ -595,8 +521,104 @@ namespace {
       exit(1);
     }
   }
-}
 
+  TEST_F(ASGSimTest, iwavetree_2D_serial_pml_order0) {
+    try {
+
+      PARARRAY * par = NULL;
+      FILE * stream = NULL;
+      IWaveEnvironment(argc2, argv2, 0, &par, &stream);
+
+      // build order zero IWaveTree, check 
+      int order=0;
+      IWaveTree * wt = new IWaveTree(*par,stream,ic,order);
+      IWAVE & w = *(wt->getStateArray()[0]);
+      fprintf(stream,"PML buffer lengths:\n");
+      fprintf(stream,"nls[0]=%d\n",w.model.nls[0]);
+      fprintf(stream,"nrs[0]=%d\n",w.model.nrs[0]);
+      fprintf(stream,"nls[1]=%d\n",w.model.nls[1]);
+      fprintf(stream,"nrs[1]=%d\n",w.model.nrs[1]);
+
+      iwave_printf(&w, par, stream);
+
+      IPNT cgs0, cge0, gs0, ge0;
+      ra_a_gse(&((w.model).ld_c._s[0]),gs0,ge0);
+      ra_gse(&((w.model).ld_c._s[0]),cgs0,cge0);
+      EXPECT_EQ(0,gs0[0]);
+      EXPECT_EQ(435,ge0[0]);
+      EXPECT_EQ(-20,gs0[1]);
+      EXPECT_EQ(819,ge0[1]);
+      EXPECT_EQ(0,cgs0[0]);
+      EXPECT_EQ(435,cge0[0]);
+      EXPECT_EQ(-20,cgs0[1]);
+      EXPECT_EQ(819,cge0[1]);
+      IPNT cgs1, cge1, gs1, ge1;
+      ra_a_gse(&((w.model).ld_c._s[1]),gs1,ge1);
+      ra_gse(&((w.model).ld_c._s[1]),cgs1,cge1);
+      EXPECT_EQ(0,gs1[0]);
+      EXPECT_EQ(435,ge1[0]);
+      EXPECT_EQ(-20,gs1[1]);
+      EXPECT_EQ(819,ge1[1]);
+      EXPECT_EQ(0,cgs1[0]);
+      EXPECT_EQ(435,cge1[0]);
+      EXPECT_EQ(-20,cgs1[1]);
+      EXPECT_EQ(819,cge1[1]);
+      IPNT cgs2, cge2, gs2, ge2;
+      ra_a_gse(&((w.model).ld_c._s[2]),gs2,ge2);
+      ra_gse(&((w.model).ld_c._s[2]),cgs2,cge2);
+      EXPECT_EQ(-1,gs2[0]);
+      EXPECT_EQ(436,ge2[0]);
+      EXPECT_EQ(-19,gs2[1]);
+      EXPECT_EQ(818,ge2[1]);
+      EXPECT_EQ(1,cgs2[0]);
+      EXPECT_EQ(434,cge2[0]);
+      EXPECT_EQ(-19,cgs2[1]);
+      EXPECT_EQ(818,cge2[1]);
+      IPNT cgs3, cge3, gs3, ge3;
+      ra_a_gse(&((w.model).ld_c._s[3]),gs3,ge3);
+      ra_gse(&((w.model).ld_c._s[3]),cgs3,cge3);
+      EXPECT_EQ(1,gs3[0]);
+      EXPECT_EQ(434,ge3[0]);
+      EXPECT_EQ(-21,gs3[1]);
+      EXPECT_EQ(820,ge3[1]);
+      EXPECT_EQ(1,cgs3[0]);
+      EXPECT_EQ(434,cge3[0]);
+      EXPECT_EQ(-19,cgs3[1]);
+      EXPECT_EQ(818,cge3[1]);
+      IPNT cgs5, cge5, gs5, ge5;
+      ra_a_gse(&((w.model).ld_c._s[5]),gs5,ge5);
+      ra_gse(&((w.model).ld_c._s[5]),cgs5,cge5);
+      EXPECT_EQ(-1,gs5[0]);
+      EXPECT_EQ(435,ge5[0]);
+      EXPECT_EQ(-19,gs5[1]);
+      EXPECT_EQ(818,ge5[1]);
+      EXPECT_EQ(0,cgs5[0]);
+      EXPECT_EQ(434,cge5[0]);
+      EXPECT_EQ(-19,cgs5[1]);
+      EXPECT_EQ(818,cge5[1]);
+      IPNT cgs6, cge6, gs6, ge6;
+      ra_a_gse(&((w.model).ld_c._s[6]),gs6,ge6);
+      ra_gse(&((w.model).ld_c._s[6]),cgs6,cge6);
+      EXPECT_EQ(1,gs6[0]);
+      EXPECT_EQ(434,ge6[0]);
+      EXPECT_EQ(-21,gs6[1]);
+      EXPECT_EQ(819,ge6[1]);
+      EXPECT_EQ(1,cgs6[0]);
+      EXPECT_EQ(434,cge6[0]);
+      EXPECT_EQ(-20,cgs6[1]);
+      EXPECT_EQ(818,cge6[1]);
+
+      delete wt;
+      ps_delete(&par);
+      fclose(stream);
+    }
+    catch (RVLException & e) {
+      e.write(cerr);
+      exit(1);
+    }
+  }    
+
+}
 
 int xargc;
 char **xargv;

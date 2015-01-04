@@ -21,7 +21,7 @@ RSFSRC          = os.getenv('RSFSRC')
 towed_array     = os.path.join(RSFSRC,'trip/iwave/trace/main/towed_array.x')
 acd             = os.path.join(RSFSRC,'trip/iwave/acd/main/acd.x')
 acdcgne         = os.path.join(RSFSRC,'trip/iwave/acd/main/acdcgne.x')
-acdlbfgs        = os.path.join(RSFSRC,'trip/iwave/acd/main/acdlbfgs.x')
+acdfwi          = os.path.join(RSFSRC,'trip/iwave/acd/main/acdfwi.x')
 acdiva          = os.path.join(RSFSRC,'trip/iwave/acd/main/acdiva.x')
 acdds_grad      = os.path.join(RSFSRC,'trip/iwave/acd/main/acdds_grad.x')
 acddscheb_grad  = os.path.join(RSFSRC,'trip/iwave/acd/main/acddscheb_grad.x')
@@ -96,6 +96,17 @@ Flow('shot6km.su',['wavelet_hdr6km.su','csq24.rsf','hdr6km.su'],
      data=../shot6km.su 
      ''',
      stdin=0,stdout=0,workdir='shot6km.work')
+
+# rtm - one shot
+Flow('noahrtm',['wavelet_hdr6km.su','csq24noah.rsf','shot6km.su'],
+     'add < ../csq24noah.rsf > ../noahrtm.rsf scale=0.0 && ' + 
+     acd  + ' ' +  
+     '''
+     deriv=1 adjoint=1 order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 
+     csq=../csq24noah.rsf source=../wavelet_hdr6km.su 
+     data=../shot6km.su csq_b1=../noahrtm.rsf nsnaps=20
+     ''',
+     stdin=0,stdout=0,workdir='noahrtm.work')
 
 # simulation - one shot, smoothed velo
 Flow('shot6kmsm2.su',['wavelet_hdr6km.su','csq24sm2.rsf'],
@@ -233,6 +244,22 @@ Flow(['icsq6kmnoahnm.rsf', 'icsq6kmnoahnm_est.su', 'icsq6kmnoahnm_res.su'], ['bo
 	datamut=mut.su mute_slope=0.0 mute_zotime=0 mute_width=200
 	''',
 	stdin=0,stdout=0,workdir='icsq6kmnoahnm.work')
+
+# OLS
+Flow(['ols6km'],['shot6km.su', 'wavelet_hdr6km.su', 'csq24noah'],
+        'add < ../csq24noah.rsf > ../ols6km.rsf scale=1.0 && ' +  
+	acdfwi + ' ' +
+	'''
+	order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 nsnaps=20 
+	mute_slope=0.0 mute_zotime=0 mute_width=2
+	source=../wavelet_hdr6km.su
+	csq=../csq24noah.rsf init_csq=../csq24noah.rsf final_csq=../ols6km.rsf
+	data=../shot6km.su datamut=mute.su outfile=fwi.out
+	mute_slope=0.0 mute_zotime=0 mute_width=200 mute_type=0
+	taper_min=0.0 taper_max=3000.0 taper_width=200 taper_type=0
+	time_width=0 dataest=est.su datares=res.su
+	''',
+	stdin=0,stdout=0,workdir='ols6km.work')
 
 # movie-src output file
 Flow('movie6km','wavelet_hdr6km.su csq24sm',
