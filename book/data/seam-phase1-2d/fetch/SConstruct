@@ -1,29 +1,7 @@
 from rsf.proj import *
 
-# data on open.source.geoscience online repository:
-#dir='2d_data_subset',
-#          server='http://s3.amazonaws.com',
-#	  top='open.source.geoscience/open_data/seam_ph1_2d_classic')
-#Shot_Receivers_23900_plots.pdf	Shots_Receivers_23900.sgy
-#Shots_Receivers_23900.pdf
-
-
-#dir='2d_model_subset',
-#          server='http://s3.amazonaws.com',
-#	  top='open.source.geoscience/open_data/seam_ph1_2d_classic')
-#2D_Model_Subset.pdf		Vp_Elastic_N23900.sgy
-#2D_Model_Subset_plots.pdf	Vs_Elastic_N23900.sgy
-#Den_Elastic_N23900.sgy
-
-
-#dir='seam_phase_1_wavelets',
-#          server='http://s3.amazonaws.com',
-#	  top='open.source.geoscience/open_data/seam_ph1_2d_classic'
-#SEAM_wavelet-g-zph_8ms.sgy	Seam_wavelet.pdf
-#SEAM_wavelet-g_8ms.sgy		desig_8ms.sgy
-#SEAM_wavelet_8ms.sgy
-
-
+# well log data on open.source.geoscience online repository not fetched in
+# this SConstruct file.
 #dir='well_1',
 #          server='http://s3.amazonaws.com',
 #	  top='open.source.geoscience/open_data/seam_ph1_2d_classic')
@@ -40,7 +18,7 @@ from rsf.proj import *
 #PorosityTotal.Well.1		Well_Log_Plots.pdf
 #ResistivityHorizontal.Well.1
 
-# there is also a single tar file
+#Everything is in a single tar file, but this scons uses the individual files
 #Fetch('seam_phase_1_2d_classic.tar.gz',dir='seam_ph1_2d_classic',
 #          server='http://s3.amazonaws.com',
 #	  top='open.source.geoscience/open_data')
@@ -50,11 +28,6 @@ pdfread = WhereIs('acroread') or WhereIs('kpdf') or WhereIs('evince') or \
     WhereIs('xpdf') or WhereIs('gv') or WhereIs('open')
 
 if pdfread:
-    # download and view the survey notes:
-    #Fetch('31_81_S.PDF',dir='2d_data_subset',
-    #      server='http://s3.amazonaws.com',
-    #      top='open.source.geoscience/open_data/seam_ph1_2d_classic')
-
     Fetch('2D_Model_Subset.pdf',dir='2d_model_subset',
           server='http://s3.amazonaws.com',
 	  top='open.source.geoscience/open_data/seam_ph1_2d_classic')
@@ -72,7 +45,7 @@ if pdfread:
 	  top='open.source.geoscience/open_data/seam_ph1_2d_classic')
     Result('Shots_Receivers_23900','Shots_Receivers_23900.pdf',
            pdfread + ' $SOURCE',stdin=0,stdout=0)
-
+ 
     Fetch('Shot_Receivers_23900_plots.pdf',dir='2d_data_subset',
           server='http://s3.amazonaws.com',
 	  top='open.source.geoscience/open_data/seam_ph1_2d_classic')
@@ -167,7 +140,10 @@ Flow(['Vp_Elastic_N23900.rsf' ,'Vp_Elastic_N23900_hdr.rsf',
 Flow('Vp_headerattr.txt','Vp_Elastic_N23900_hdr.rsf',
      'sfheaderattr > $TARGET && /bin/cat $TARGET',stdout=-1)
 
+#The headers can be investigated by pasteing this into a terminal (not the #): 
 #<Vp_Elastic_N23900_hdr.rsf sfheaderattr 
+# the results of the command is a summary of the headers. This information is
+# needed to write the sftahwrite.
 #91 headers, 1751 traces
 #*******************************************************************************# 
 #     key     	            min     	              max    	          mean
