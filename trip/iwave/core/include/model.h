@@ -123,7 +123,7 @@ typedef struct s_imodel {
    * of g.
    */
   grid gl;
-  /** artificial boundary layer widths - THESE BELONG ELSEWHERE!! */
+  /** artificial boundary layer widths */
   IPNT nls,nrs;
   /** Number of neighbor processors */
   int nnei;

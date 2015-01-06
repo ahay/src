@@ -85,7 +85,7 @@ int iwave_construct(IWAVE * state,
   //  err = fdm->readtimegrid(pars, stream, (state->model).g, ((state->model).tsind).dt);
   err = ic.get_timegrid()(pars, stream, (state->model).g, ((state->model).tsind).dt);
   if (err) {
-    fprintf(stream, "Error: error in fd_mread after calling readtimegrid\n");
+    fprintf(stream, "Error: iwave from get_timegrid, err=%d\n",err);
     return err;
   }
   if (((state->model).tsind).dt <= REAL_ZERO) {
@@ -110,14 +110,6 @@ int iwave_construct(IWAVE * state,
   fflush(stream);
 #endif
 
-  // cerr<<"minit\n";
-  /*
-  err=ic.get_minit()(pars,stream,
-		     (state->model).g,
-		     ((state->model).tsind).dt,
-		     (state->model).active,
-		     &((state->model).specs));
-  */
   err=ic.get_minit()(*pars,stream,state->model);
   if (err) {
     fprintf(stream,"ERROR: iwave_construct from fd_model_init\n");

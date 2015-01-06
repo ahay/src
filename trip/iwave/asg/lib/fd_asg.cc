@@ -127,14 +127,11 @@ int asg_modelinit(PARARRAY pars,
       throw e;
     }
 
-    /* set model dimn par */
-    asgpars->ndim = model.g.dim;
-
     /* extract grid steps from grid */
     get_d(dxs, model.g);
 
-    /* initialize scaled Courant arrays */
-    for (int idim = 0;idim < asgpars->ndim;idim ++) {
+    /* initialize scaled Courant arrays, pml layers */
+    for (int idim = 0;idim < model.g.dim;idim ++) {
       if (dxs[idim] <= 0.0) {
 	RVLException e;
 	e<<"ERROR: asg_modelinit\n";
@@ -144,26 +141,48 @@ int asg_modelinit(PARARRAY pars,
       lam = model.tsind.dt / dxs[idim];
       asgpars->coeffs[idim] = sgcoeffs(asgpars->k);
       for (int i=0;i<asgpars->k;i++) (asgpars->coeffs)[idim][i]*=lam;
+
+      ireal tmp;
+
+      std::stringstream ln;
+      ln<<"nl"; 
+      ln<<idim+1;
+      tmp = valparse<ireal>(pars,ln.str(),0.0f);
+      model.nls[idim]=iwave_max(0,(int)((ceil)(tmp/dxs[idim])));
+
+      std::stringstream rn;
+      rn<<"nr"; 
+      rn<<idim+1;
+      tmp = valparse<ireal>(pars,rn.str(),0.0f);
+      model.nrs[idim]=iwave_max(0,(int)((ceil)(tmp/dxs[idim])));
     }
 
-    /* initialize bound check params */
-    asgpars->cmax = valparse<ireal>(pars,"cmax");
-    asgpars->cmin = valparse<ireal>(pars,"cmin");
-
-    /* reserve a copy of dt for use in source scaling */
+    /* reserve copies of model attributes to pass to timestep - 
+       these should really be protected attributes of base class
+       in which case they would not need to be copied!
+    */
+    asgpars->ndim = model.g.dim;
     asgpars->dt = model.tsind.dt;
-
-    /* initialize pml stuff */
-    asgpars->amp = valparse<ireal>(pars,"pmlampl",REAL_ZERO);
     IASN(asgpars->nls,model.nls);
     IASN(asgpars->nrs,model.nrs);
 
+    /* initialize pml amplitude */
+    asgpars->amp = valparse<ireal>(pars,"pmlampl",1.0f);
+
+    /* null initialization of pml damping arrays -
+       will flag initialization in timestep function,
+       called after grid initialization - can't do it
+       here, as comp rarrs not yet set */
     for (int i=0;i<RARR_MAX_NDIM; i++) {
       asgpars->ep[i]=NULL;
       asgpars->epp[i]=NULL;
       asgpars->ev[i]=NULL;
       asgpars->evp[i]=NULL;
     }
+
+    /* initialize bound check params */
+    asgpars->cmax = valparse<ireal>(pars,"cmax");
+    asgpars->cmin = valparse<ireal>(pars,"cmin");
 
     /* identify active fields */
     // cerr<<"resize\n";
@@ -279,27 +298,32 @@ int asg_timegrid(PARARRAY * pars,
 void asg_pmlaxis(int n0, int nl, int nr, 
 		 ireal amp, ireal dt, int gtype, 
 		 ireal ** ep, ireal ** epp) {
-  
+
   if (*ep || *epp) return;
   nl=iwave_max(0,nl);
   nr=iwave_max(0,nr);
+
+  cerr<<"pmlaxis: gtype="<<gtype<<" n0="<<n0<<" nr="<<nr<<" nl="<<nl<<"\n";
+
   *ep  = (ireal*)usermalloc_(sizeof(ireal)*n0);
   *epp = (ireal*)usermalloc_(sizeof(ireal)*n0);
   for (int i=0;i<nl;i++) {
-    ireal p = (REAL_ONE - (ireal(i)+0.5*gtype)/ireal(nl));
-    p = amp*p*p*p;
+    ireal p = (ireal(nl-i)-0.5*gtype)/ireal(nl);
+    p = amp*fabs(p*p*p);
     (*ep)[i] = REAL_ONE - 0.5*dt*p;
     (*epp)[i] = REAL_ONE/(REAL_ONE + 0.5*dt*p);
   }
   for (int i=nl; i<n0-nr;i++) {
-    (*ep)[i] = REAL_ZERO;
-    (*epp)[i]= REAL_ZERO;
+    (*ep)[i] = REAL_ONE;
+    (*epp)[i]= REAL_ONE;
   }
   for (int i=n0-nr; i<n0;i++) {
-    ireal p =  (ireal(i-n0+nr+1)+0.5*gtype)/ireal(nr);
-    p = amp*p*p*p;
+    ireal p =  (ireal(i-(n0-nr))+1.0-0.5*gtype)/ireal(nr);
+    p = amp*fabs(p*p*p);
     (*ep)[i] = REAL_ONE - 0.5*dt*p;
     (*epp)[i] = REAL_ONE/(REAL_ONE + 0.5*dt*p);
+    cerr<<"i="<<i<<" p="<<p<<" ep="<<(*ep)[i]<<" epp="<<(*epp)[i]<<endl;
+
   }
 }    
 
@@ -366,9 +390,9 @@ void asg_timestep(std::vector<RDOM *> dom,
   int gsc_v[RARR_MAX_NDIM][RARR_MAX_NDIM];
   int gec_v[RARR_MAX_NDIM][RARR_MAX_NDIM];
   rd_gse(dom[0], i_p[0], gsc_p, gec_p);    
-  rd_gse(dom[0], i_v[0], &(gsc_v[0][0]), &(gec_v[0][0]));    
-  rd_gse(dom[0], i_v[1], &(gsc_v[1][0]), &(gec_v[1][0]));    
-  rd_gse(dom[0], i_v[2], &(gsc_v[2][0]), &(gec_v[2][0]));    
+  rd_gse(dom[0], i_v[0], gsc_v[0], gec_v[0]);    
+  rd_gse(dom[0], i_v[1], gsc_v[1], gec_v[1]);    
+  rd_gse(dom[0], i_v[2], gsc_v[2], gec_v[2]);    
 
   // divergence workspace
   register ireal * sdiv = (ireal *)usermalloc_((gec_p[0]-gsc_p[0]+1)*sizeof(ireal));
@@ -399,19 +423,26 @@ void asg_timestep(std::vector<RDOM *> dom,
 
   int n  = dom.size();
 
-  switch (n) {
-  case 1: {
+  if (n==1) {
     if(fwd == true) {
       if (ndim == 2) {
 	if (iv == 0) {
 	  // this loop nest and similar for 3D guarantees that pml pressure arrays 
 	  // are identical in physical domain. Since source is added to p0 before
 	  // timestep called, in effect it is added to all copies of pressure.
+	  //	  float psq=0.0f;
+	  //	  float bsq=0.0f;
+	  /*
 	  for (int i1=gsc_p[1]+asgpars->nls[1]; i1<=gec_p[1]-asgpars->nrs[1];i1++) {
 	    for (int i0=gsc_p[0]+asgpars->nls[0]; i0<=gec_p[0]-asgpars->nrs[0];i0++) {
-	      p12[i1][i0]=p02[i1][i0];
+	       p12[i1][i0]=p02[i1][i0];
+	      //	      psq+=p02[i1][i0]*p02[i1][i0];
+	      //	      bsq+=bulk2[i1][i0]*bulk2[i1][i0];
 	    }
 	  }
+	  */
+	  //	  cerr<<"psq="<<psq<<endl;
+	  //	  cerr<<"bsq="<<bsq<<endl;
 	  asg_pstep2d(bulk2,
 		      p02,p12,
 		      v02,v12,
@@ -420,8 +451,22 @@ void asg_timestep(std::vector<RDOM *> dom,
 		      gsc_p,gec_p,
 		      asgpars->lbc,asgpars->rbc,
 		      asgpars->k,asgpars->coeffs);
+	  //	  psq=0.0f;
+	  //	  for (int i1=gsc_p[1]+asgpars->nls[1]; i1<=gec_p[1]-asgpars->nrs[1];i1++) {
+	  //	    for (int i0=gsc_p[0]+asgpars->nls[0]; i0<=gec_p[0]-asgpars->nrs[0];i0++) {
+	  //	      psq+=p02[i1][i0]*p02[i1][i0];
+	  //	    }
+	  //	  }
+	  //	  cerr<<"psq="<<psq<<endl;
 	}
 	if (iv == 1) {
+	  //	  float psq=0.0f;
+	  //	  for (int i1=gsc_p[1]+asgpars->nls[1]; i1<=gec_p[1]-asgpars->nrs[1];i1++) {
+	  //	    for (int i0=gsc_p[0]+asgpars->nls[0]; i0<=gec_p[0]-asgpars->nrs[0];i0++) {
+	  //	      psq+=p02[i1][i0]*p02[i1][i0];
+	  //	    }
+	  //	  }
+	  //	  cerr<<"psq="<<psq<<endl;
 	  asg_vstep2d(buoy2,
 		      p02,p12,
 		      v02,v12,
@@ -431,6 +476,13 @@ void asg_timestep(std::vector<RDOM *> dom,
 		      &(gsc_v[1][0]),&(gec_v[1][0]),
 		      asgpars->lbc,asgpars->rbc,
 		      asgpars->k,asgpars->coeffs);
+	  //	  float vsq=0.0f;
+	  //	  for (int i1=gsc_v[0][1]+asgpars->nls[1]; i1<=gec_v[0][1]-asgpars->nrs[1];i1++) {
+	  //	    for (int i0=gsc_v[0][0]+asgpars->nls[0]; i0<=gec_v[0][0]-asgpars->nrs[0];i0++) {
+	  //	      vsq+=v02[i1][i0]*v02[i1][i0];
+	  //	    }
+	  //	  }
+	  //	  cerr<<"vsq="<<vsq<<endl;
 	}
       }
       if (ndim == 3) {
@@ -490,7 +542,7 @@ void asg_timestep(std::vector<RDOM *> dom,
     }
   }
     */
-  default:
+  else {
     RVLException e;
     e<<"Error: asg_timestep(). Only zero, 1st & 2nd derivatives are implemented.\n";
     throw e;
@@ -615,6 +667,147 @@ int asg_create_sten(void * specs,
 
 void asg_check(RDOM * dom,
 	       void * specs,
-	       FILE * stream) {}
+	       FILE * stream) {
+  
+  //  cerr<<"asg_check\n";
+  // cast - always risky! this should be handled by 
+  // inheritance
+  ASG_TS_PARS * asgpars = (ASG_TS_PARS *)specs;
 
+  // test for CFL violation 
+  IPNT s;
+  IPNT e;
+  rd_a_gse(dom, 0, s, e);
+  int ndim;
+  ra_ndim(&(dom->_s[0]),&ndim);
 
+  if (ndim==2) {
+
+    ireal ** bulk = (dom->_s)[0]._s2;
+    ireal ** buoy = (dom->_s)[1]._s2;  
+
+    //extend
+    for (int i0=s[0]+asgpars->nls[0]; i0<=e[0]-asgpars->nrs[0]; i0++) {
+      for (int i1=s[1]; i1<s[1]+asgpars->nls[1]; i1++) {
+	bulk[i1][i0]=bulk[s[1]+asgpars->nls[1]][i0];
+	buoy[i1][i0]=buoy[s[1]+asgpars->nls[1]][i0];
+      }
+      for (int i1=e[1]-asgpars->nrs[1]+1;i1<=e[1];i1++) {
+	bulk[i1][i0]=bulk[e[1]-asgpars->nrs[1]][i0];
+	buoy[i1][i0]=buoy[e[1]-asgpars->nrs[1]][i0];
+      }
+    }
+    for (int i1=s[1]; i1<=e[1]; i1++) {
+      for (int i0=s[0];i0<s[0]+asgpars->nls[0];i0++) {
+	bulk[i1][i0]=bulk[i1][s[0]+asgpars->nls[0]];
+	buoy[i1][i0]=buoy[i1][s[0]+asgpars->nls[0]];
+      }	
+      for (int i0=e[0]-asgpars->nrs[0]+1;i0<=e[0];i0++) {
+	bulk[i1][i0]=bulk[i1][e[0]-asgpars->nrs[0]];
+	buoy[i1][i0]=buoy[i1][e[0]-asgpars->nrs[0]];
+      }
+    }
+
+    // check
+    for (int i1=s[1]; i1<=e[1]; i1++) {
+      for (int i0=s[0]; i0<=e[0]; i0++) {
+	if (bulk[i1][i0]*buoy[i1][i0] > (asgpars->cmax)*(asgpars->cmax)) {
+	  fprintf(stream,"ERROR: asg_check\n");
+	  fprintf(stream,"  input velocity too big at i0=%d i1=%d\n",i0,i1);
+	  fprintf(stream,"  bulk mod = %e\n",bulk[i1][i0]);
+	  fprintf(stream,"  buoyancy = %e\n",buoy[i1][i0]);
+	  fflush(stream);
+	  RVLException e;
+	  e<<"ERROR; asg_check: material parameter fields failed sanity check\n";
+	  throw e;
+	}
+	if (bulk[i1][i0]*buoy[i1][i0] < (asgpars->cmin)*(asgpars->cmin)) {
+	  fprintf(stream,"ERROR: asg_check\n");
+	  fprintf(stream,"  input velocity too small at i0=%d i1=%d\n",i0,i1);
+	  fprintf(stream,"  bulk mod = %e\n",bulk[i1][i0]);
+	  fprintf(stream,"  buoyancy = %e\n",buoy[i1][i0]);
+	  fflush(stream);
+	  RVLException e;
+	  e<<"ERROR; asg_check: material parameter fields failed sanity check\n";
+	  throw e;
+	}
+      }
+    }
+  }
+
+  else if (ndim==3) {
+
+    ireal *** bulk = (dom->_s)[0]._s3;
+    ireal *** buoy = (dom->_s)[1]._s3;
+
+    //extend
+    for (int i0=s[0]+asgpars->nls[0]; i0<=e[0]-asgpars->nrs[0]; i0++) {
+      for (int i2=s[2]+asgpars->nls[2]; i2<=e[2]-asgpars->nrs[2]; i2++) {
+	for (int i1=s[1]; i1<s[1]+asgpars->nls[1]; i1++) {
+	  bulk[i2][i1][i0]=bulk[i2][s[1]+asgpars->nls[1]][i0];
+	  buoy[i2][i1][i0]=buoy[i2][s[1]+asgpars->nls[1]][i0];
+	}
+	for (int i1=e[1]-asgpars->nrs[1]+1;i1<=e[1];i1++) {
+	  bulk[i2][i1][i0]=bulk[i2][e[1]-asgpars->nrs[1]][i0];
+	  buoy[i2][i1][i0]=buoy[i2][e[1]-asgpars->nrs[1]][i0];
+	}
+      }
+    }
+    for (int i0=s[0]+asgpars->nls[0]; i0<=e[0]-asgpars->nrs[0]; i0++) {
+      for (int i1=s[1];i1<=e[1];i1++) {
+	for (int i2=s[2]; i1<s[2]+asgpars->nls[2]; i2++) {
+	  bulk[i2][i1][i0]=bulk[s[2]+asgpars->nls[2]][i1][i0];
+	  buoy[i2][i1][i0]=buoy[s[2]+asgpars->nls[2]][i1][i0];
+	}
+	for (int i2=e[2]-asgpars->nrs[2]+1;i2<=e[2];i2++) {
+	  bulk[i2][i1][i0]=bulk[e[2]-asgpars->nrs[2]][i1][i0];
+	  buoy[i2][i1][i0]=buoy[e[2]-asgpars->nrs[2]][i1][i0];
+	}
+      }
+    }	
+    for (int i2=s[2]; i2<=e[2]; i2++) {
+      for (int i1=s[1]; i1<=e[1]; i1++) {
+	for (int i0=s[0];i0<s[0]+asgpars->nls[0];i0++) {
+	  bulk[i2][i1][i0]=bulk[i2][i1][s[0]+asgpars->nls[0]];
+	  buoy[i2][i1][i0]=buoy[i2][i1][s[0]+asgpars->nls[0]];
+	}	
+	for (int i0=e[0]-asgpars->nrs[0]+1;i0<=e[0];i0++) {
+	  bulk[i2][i1][i0]=bulk[i2][i1][e[0]-asgpars->nrs[0]];
+	  buoy[i2][i1][i0]=buoy[i2][i1][e[0]-asgpars->nrs[0]];
+	}
+      }
+    }
+
+    for (int i2=s[2]; i2<=e[2]; i2++) {
+      for (int i1=s[1]; i1<=e[1]; i1++) {
+	for (int i0=s[0]; i0<=e[0]; i0++) {
+	  if (bulk[i2][i1][i0]*buoy[i2][i1][i0] > (asgpars->cmax)*(asgpars->cmax)) {
+	    fprintf(stream,"ERROR: asg_check\n");
+	    fprintf(stream,"  input velocity too big at i0=%d i1=%d i2=%d\n",i0,i1,i2);
+	    fprintf(stream,"  bulk mod = %e\n",bulk[i2][i1][i0]);
+	    fprintf(stream,"  buoyancy = %e\n",buoy[i2][i1][i0]);
+	    fflush(stream);
+	    RVLException e;
+	    e<<"ERROR; asg_check: material parameter fields failed sanity check\n";
+	    throw e;
+	  }
+	  if (bulk[i2][i1][i0]*buoy[i2][i1][i0] < (asgpars->cmin)*(asgpars->cmin)) {
+	    fprintf(stream,"ERROR: asg_check\n");
+	    fprintf(stream,"  input velocity too small at i0=%d i1=%d i2=%d\n",i0,i1,i2);
+	    fprintf(stream,"  bulk mod = %e\n",bulk[i2][i1][i0]);
+	    fprintf(stream,"  buoyancy = %e\n",buoy[i2][i1][i0]);
+	    fflush(stream);
+	    RVLException e;
+	    e<<"ERROR; asg_check: material parameter fields failed sanity check\n";
+	    throw e;
+	  }
+	}
+      }
+    }
+  }
+  else {
+    RVLException e;
+    e<<"ERROR; asg_check - only dimns 2 or 3 allowed\n";
+    throw e;
+  }
+}

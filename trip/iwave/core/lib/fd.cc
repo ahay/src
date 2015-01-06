@@ -97,10 +97,7 @@ int fd_readgrid(PARARRAY * pars,
     }
   }
 
-  /* until such time as someone implements PML...*/
-  IASN(model->nls,IPNT_0);
-  IASN(model->nrs,IPNT_0);
-
+  /* moved to modelinit, where it belongs - 05.01.15 WWS 
   ireal dx;
   for (int idim=0; idim<model->g.dim; idim++ ) {
     if ((dx=model->g.axes[idim].d)<REAL_EPS) {
@@ -112,7 +109,7 @@ int fd_readgrid(PARARRAY * pars,
       key<<"nl"<<idim+1<<'\0';
       //    snprintf(key,kl,"nl%d",idim+1);
       ireal tmp=0.0;
-      //      fprintf(stderr,"read key=%s\n",key.str().c_str());
+      //      fprintf(stderr,"read key=%s\n"key.str().c_str());
       ps_flreal(*pars, key.str().c_str(), &tmp);
       //      fprintf(stderr,"result=%g\n",tmp);
       model->nls[idim]=iwave_max(0,(int)((ceil)(tmp/dx)));
@@ -130,7 +127,7 @@ int fd_readgrid(PARARRAY * pars,
     //    fprintf(stderr,"fd_readgrid:: nls[%d]=%d, nrs[%d]=%d\n",idim,model->nls[idim],idim,model->nrs[idim]);
     //    ps_printall(*pars,stderr);
   }
-  
+  */
   return err;
 }
 
@@ -215,7 +212,7 @@ int fd_setcompdom(FILE * stream, IPNT cdims, IPNT crank,
 	  dge[i][idim] = le[idim]-fd_isdyn(i,ic);
 	  if (crank[idim] == 0 && gtype[i][idim] == DUAL_GRID)
 	    dgs[i][idim] --;
-	  fprintf(stream,"fd_setcompdom: iarr=%d isdyn=%d dgs[%d]=%d, dge[%d]=%d\n",i,fd_isdyn(i,ic),idim,dgs[i][idim],idim,dge[i][idim]); 
+	  //	  fprintf(stream,"fd_setcompdom: iarr=%d isdyn=%d dgs[%d]=%d, dge[%d]=%d\n",i,fd_isdyn(i,ic),idim,dgs[i][idim],idim,dge[i][idim]); 
 	}
 	//	fprintf(stream,"\n"); 
       }   

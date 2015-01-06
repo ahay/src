@@ -803,6 +803,7 @@ int rsfread(ireal * a,
 	    const IPNT ran, 
 	    const char * fname,
 	    float scale, 
+	    //	    int extend,
 	    FILE * stream,
 	    int panelindex   /* D.S. 01.01.11: extended-model related */
 	    ) {
@@ -1174,7 +1175,7 @@ int rsfwrite(ireal * a,
 	     const IPNT ran, 
 	     const char * fname, 
 	     float scale, // added 04.02.14
-	     //	     int extend,       /* WWS 06.03.11 */ /* masked 04.02.14 */
+	     //int extend,       /* WWS 06.03.11 */ /* masked 04.02.14 */
 	     FILE * stream,
 	     int panelindex  /* D.S. 01.01.11: extended-model related */
 	     ) {

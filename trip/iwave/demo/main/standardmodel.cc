@@ -50,11 +50,11 @@ const char *sdoc[] = {
   " useful for comparing analytic solutions to finite difference   ",
   " variable-density acoustic simulators.                          ",
   "                                                                ", 
-  " Units: m, kg, ms                                               ",
-  " densities: kg/m^3.                                             ",
+  " Units: m, g, ms                                               ",
+  " densities: g/cm^3.                                             ",
   " velocities: m/ms = km/s.                                       ",
-  " bulk moduli: MPa                                               ",
-  " buoyancies: m^3/kg                                             ",
+  " bulk moduli: GPa                                               ",
+  " buoyancies: cm^3/g                                             ",
   "                                                                ",
   " The output format is native binary floats.                     ",
   "                                                                ",
@@ -260,16 +260,17 @@ static inline float dome(float x1c, float x2c, float x3c, float x1, float x2, fl
   rr  = -rr * rr;
 	
   curve = 1800.0-1200.0 * exp(rr);
-		
-  value1=1.5;
-  value2=3.0;
-  value3=1.8;
-  value4=2.1;
-  value5=3.5;
-  value6=2.6;
-  value7=4.0;
-	
-  if (choose == 1){
+
+  if (choose == 2) {
+    value1=1.5;
+    value2=3.0;
+    value3=1.8;
+    value4=2.1;
+    value5=3.5;
+    value6=2.6;
+    value7=4.0;
+  }
+  else if (choose == 1) {
     value1=1.0;
     value2=2.1;
     value3=1.8;
@@ -278,7 +279,7 @@ static inline float dome(float x1c, float x2c, float x3c, float x1, float x2, fl
     value6=2.05;
     value7=2.3;
   }
-  else if (choose == 3){
+  else if (choose == 3) {
     value1 = 2.25;
     value2 = 18.9;
     value3 = 5.832;
@@ -286,6 +287,19 @@ static inline float dome(float x1c, float x2c, float x3c, float x1, float x2, fl
     value5 = 26.95;
     value6 = 13.858;
     value7 = 36.8;
+  }
+  else if (choose == 4) {
+    value1=1.0;
+    value2=0.47619;
+    value3=0.555556;
+    value4=0.5;
+    value5=0.454545;
+    value6=0.487805;
+    value7=0.434783;
+  }
+  else {
+    fprintf(stderr,"illegal value of choose - must be 1, 2, 3, or 4\n");
+    exit(1);
   }
   if (x1 < 350.0) return value1;
   else if ( (x1 >=  350.0) && (x1 < 1000.0) && (x1 <= curve) ) return value2;
