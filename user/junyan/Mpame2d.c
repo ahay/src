@@ -238,7 +238,7 @@ int main(int argc, char* argv[])
     /* propagation in time */
     pamstep2e_init(nzb,nxb,dz,dx,opt);
 
-	nkxz=fft2_init(true,opt,1,nzb,nxb,&nkzz,&nkxx);
+	nkxz=fft2_init(true,1,nzb,nxb,&nkzz,&nkxx);
     for (it=0; it < nt; it++) {
 		fprintf(stderr, "\b\b\b\b\b%d", it);
 

@@ -394,7 +394,11 @@ fprintf(stderr, "End FFT\n");
 			kxyz2 +=0.000001;
 			}
 			tmpdt = -1.0*kx*kx*2.0*(cosf(v0*sqrtf(kx*kx+ky*ky+kz*kz)*dt)-1.0)/(v0*v0*dt*dt*kxyz2);
+#ifdef SF_HAS_COMPLEX_H
+			ukxx[iky][ikx][ikz] *= tmpdt;
+#else
 			ukxx[iky][ikx][ikz] = sf_crmul(ukxx[iky][ikx][ikz],tmpdt);
+#endif
 		}
 	}
 	}
@@ -413,7 +417,11 @@ fprintf(stderr, "End FFT\n");
 			kxyz2 +=0.000001;
 			}
 			tmpdt = -1.0*ky*ky*2.0*(cosf(v0*sqrtf(kx*kx+ky*ky+kz*kz)*dt)-1.0)/(v0*v0*dt*dt*kxyz2);
+#ifdef SF_HAS_COMPLEX_H
+			ukyy[iky][ikx][ikz] *= tmpdt;
+#else
 			ukyy[iky][ikx][ikz] = sf_crmul(ukyy[iky][ikx][ikz],tmpdt);
+#endif
 		}
 	}
 	}
@@ -433,7 +441,11 @@ fprintf(stderr, "End FFT\n");
 			kxyz2 +=0.000001;
 			}
 			tmpdt = -1.0*kz*kz*2.0*(cosf(v0*sqrtf(kx*kx+ky*ky+kz*kz)*dt)-1.0)/(v0*v0*dt*dt*kxyz2);
+#ifdef SF_HAS_COMPLEX_H
+			ukzz[iky][ikx][ikz] *= tmpdt;
+#else
 			ukzz[iky][ikx][ikz] = sf_crmul(ukzz[iky][ikx][ikz],tmpdt);
+#endif
 		}
 	}
 	}
@@ -453,7 +465,11 @@ fprintf(stderr, "End FFT\n");
 			kxyz2 +=0.000001;
 			}
 			tmpdt = -1.0*kx*ky*2.0*(cosf(v0*sqrtf(kx*kx+ky*ky+kz*kz)*dt)-1.0)/(v0*v0*dt*dt*kxyz2);
+#ifdef SF_HAS_COMPLEX_H
+			ukxy[iky][ikx][ikz] *= tmpdt;
+#else
 			ukxy[iky][ikx][ikz] = sf_crmul(ukxy[iky][ikx][ikz],tmpdt);
+#endif
 		}
 	}
 	}
@@ -473,7 +489,11 @@ fprintf(stderr, "End FFT\n");
 			kxyz2 +=0.000001;
 			}
 			tmpdt = -1.0*kx*kz*2.0*(cosf(v0*sqrtf(kx*kx+ky*ky+kz*kz)*dt)-1.0)/(v0*v0*dt*dt*kxyz2);
+#ifdef SF_HAS_COMPLEX_H
+			ukxz[iky][ikx][ikz] *= tmpdt;
+#else
 			ukxz[iky][ikx][ikz] = sf_crmul(ukxz[iky][ikx][ikz],tmpdt);
+#endif
 		}
 	}
 	}
@@ -493,7 +513,11 @@ fprintf(stderr, "End FFT\n");
 			kxyz2 +=0.000001;
 			}
 			tmpdt = -1.0*ky*kz*2.0*(cosf(v0*sqrtf(kx*kx+ky*ky+kz*kz)*dt)-1.0)/(v0*v0*dt*dt*kxyz2);
+#ifdef SF_HAS_COMPLEX_H
+			ukyz[iky][ikx][ikz] *= tmpdt;
+#else
 			ukyz[iky][ikx][ikz] = sf_crmul(ukyz[iky][ikx][ikz],tmpdt);
+#endif
 		}
 	}
 	}
@@ -513,7 +537,11 @@ fprintf(stderr, "End FFT\n");
 			kxyz2 +=0.000001;
 			}
 			tmpdt = -1.0*kx*kx*kx*kx/kxyz2*2.0*(cosf(v0*sqrtf(kx*kx+ky*ky+kz*kz)*dt)-1.0)/(v0*v0*dt*dt*kxyz2);
+#ifdef SF_HAS_COMPLEX_H
+			ukxxxx[iky][ikx][ikz] *= tmpdt;
+#else
 			ukxxxx[iky][ikx][ikz] = sf_crmul(ukxxxx[iky][ikx][ikz],tmpdt);
+#endif
 		}
 	}
 	}
@@ -533,7 +561,11 @@ fprintf(stderr, "End FFT\n");
 			kxyz2 +=0.000001;
 			}
 			tmpdt = -1.0*ky*ky*ky*ky/kxyz2*2.0*(cosf(v0*sqrtf(kx*kx+ky*ky+kz*kz)*dt)-1.0)/(v0*v0*dt*dt*kxyz2);
+#ifdef SF_HAS_COMPLEX_H
+			ukyyyy[iky][ikx][ikz] *= tmpdt;
+#else
 			ukyyyy[iky][ikx][ikz] = sf_crmul(ukyyyy[iky][ikx][ikz],tmpdt);
+#endif
 		}
 	}
 	}
@@ -553,7 +585,11 @@ fprintf(stderr, "End FFT\n");
 			kxyz2 +=0.000001;
 			}
 			tmpdt = -1.0*kz*kz*kz*kz/kxyz2*2.0*(cosf(v0*sqrtf(kx*kx+ky*ky+kz*kz)*dt)-1.0)/(v0*v0*dt*dt*kxyz2);
+#ifdef SF_HAS_COMPLEX_H
+			ukzzzz[iky][ikx][ikz] *= tmpdt; 
+#else
 			ukzzzz[iky][ikx][ikz] = sf_crmul(ukzzzz[iky][ikx][ikz],tmpdt);
+#endif
 		}
 	}
 	}
@@ -573,7 +609,11 @@ fprintf(stderr, "End FFT\n");
 			kxyz2 +=0.000001;
 			}
 			tmpdt = -1.0*kx*kx*kx*ky/kxyz2*2.0*(cosf(v0*sqrtf(kx*kx+ky*ky+kz*kz)*dt)-1.0)/(v0*v0*dt*dt*kxyz2);
+#ifdef SF_HAS_COMPLEX_H
+			ukxxxy[iky][ikx][ikz] *= tmpdt; 
+#else
 			ukxxxy[iky][ikx][ikz] = sf_crmul(ukxxxy[iky][ikx][ikz],tmpdt);
+#endif
 		}
 	}
 	}
@@ -593,7 +633,11 @@ fprintf(stderr, "End FFT\n");
 			kxyz2 +=0.000001;
 			}
 			tmpdt = -1.0*kx*kx*kx*kz/kxyz2*2.0*(cosf(v0*sqrtf(kx*kx+ky*ky+kz*kz)*dt)-1.0)/(v0*v0*dt*dt*kxyz2);
+#ifdef SF_HAS_COMPLEX_H
+			ukxxxz[iky][ikx][ikz] *= tmpdt; 
+#else
 			ukxxxz[iky][ikx][ikz] = sf_crmul(ukxxxz[iky][ikx][ikz],tmpdt);
+#endif
 		}
 	}
 	}
@@ -613,7 +657,11 @@ fprintf(stderr, "End FFT\n");
 			kxyz2 +=0.000001;
 			}
 			tmpdt = -1.0*kx*ky*ky*ky/kxyz2*2.0*(cosf(v0*sqrtf(kx*kx+ky*ky+kz*kz)*dt)-1.0)/(v0*v0*dt*dt*kxyz2);
+#ifdef SF_HAS_COMPLEX_H
+			ukxyyy[iky][ikx][ikz] *= tmpdt; 
+#else
 			ukxyyy[iky][ikx][ikz] = sf_crmul(ukxyyy[iky][ikx][ikz],tmpdt);
+#endif
 		}
 	}
 	}
@@ -633,7 +681,11 @@ fprintf(stderr, "End FFT\n");
 			kxyz2 +=0.000001;
 			}
 			tmpdt = -1.0*ky*ky*ky*kz/kxyz2*2.0*(cosf(v0*sqrtf(kx*kx+ky*ky+kz*kz)*dt)-1.0)/(v0*v0*dt*dt*kxyz2);
+#ifdef SF_HAS_COMPLEX_H
+			ukyyyz[iky][ikx][ikz] *= tmpdt; 
+#else
 			ukyyyz[iky][ikx][ikz] = sf_crmul(ukyyyz[iky][ikx][ikz],tmpdt);
+#endif
 		}
 	}
 	}
@@ -653,7 +705,11 @@ fprintf(stderr, "End FFT\n");
 			kxyz2 +=0.000001;
 			}
 			tmpdt = -1.0*kx*kz*kz*kz/kxyz2*2.0*(cosf(v0*sqrtf(kx*kx+ky*ky+kz*kz)*dt)-1.0)/(v0*v0*dt*dt*kxyz2);
+#ifdef SF_HAS_COMPLEX_H
+			ukxzzz[iky][ikx][ikz] *= tmpdt;
+#else
 			ukxzzz[iky][ikx][ikz] = sf_crmul(ukxzzz[iky][ikx][ikz],tmpdt);
+#endif
 		}
 	}
 	}
@@ -673,7 +729,11 @@ fprintf(stderr, "End FFT\n");
 			kxyz2 +=0.000001;
 			}
 			tmpdt = -1.0*ky*kz*kz*kz/kxyz2*2.0*(cosf(v0*sqrtf(kx*kx+ky*ky+kz*kz)*dt)-1.0)/(v0*v0*dt*dt*kxyz2);
+#ifdef SF_HAS_COMPLEX_H
+			ukyzzz[iky][ikx][ikz] *= tmpdt;
+#else
 			ukyzzz[iky][ikx][ikz] = sf_crmul(ukyzzz[iky][ikx][ikz],tmpdt);
+#endif
 		}
 	}
 	}
@@ -693,7 +753,11 @@ fprintf(stderr, "End FFT\n");
 			kxyz2 +=0.000001;
 			}
 			tmpdt = -1.0*kx*kx*ky*ky/kxyz2*2.0*(cosf(v0*sqrtf(kx*kx+ky*ky+kz*kz)*dt)-1.0)/(v0*v0*dt*dt*kxyz2);
+#ifdef SF_HAS_COMPLEX_H
+			ukxxyy[iky][ikx][ikz] *= tmpdt;
+#else
 			ukxxyy[iky][ikx][ikz] = sf_crmul(ukxxyy[iky][ikx][ikz],tmpdt);
+#endif
 		}
 	}
 	}
@@ -713,7 +777,11 @@ fprintf(stderr, "End FFT\n");
 			kxyz2 +=0.000001;
 			}
 			tmpdt = -1.0*kx*kx*kz*kz/kxyz2*2.0*(cosf(v0*sqrtf(kx*kx+ky*ky+kz*kz)*dt)-1.0)/(v0*v0*dt*dt*kxyz2);
+#ifdef SF_HAS_COMPLEX_H
+			ukxxzz[iky][ikx][ikz] *= tmpdt; 
+#else
 			ukxxzz[iky][ikx][ikz] = sf_crmul(ukxxzz[iky][ikx][ikz],tmpdt);
+#endif
 		}
 	}
 	}
@@ -733,7 +801,11 @@ fprintf(stderr, "End FFT\n");
 			kxyz2 +=0.000001;
 			}
 			tmpdt = -1.0*ky*ky*kz*kz/kxyz2*2.0*(cosf(v0*sqrtf(kx*kx+ky*ky+kz*kz)*dt)-1.0)/(v0*v0*dt*dt*kxyz2);
+#ifdef SF_HAS_COMPLEX_H
+			ukyyzz[iky][ikx][ikz] *= tmpdt;
+#else
 			ukyyzz[iky][ikx][ikz] = sf_crmul(ukyyzz[iky][ikx][ikz],tmpdt);
+#endif
 		}
 	}
 	}
@@ -753,7 +825,11 @@ fprintf(stderr, "End FFT\n");
 			kxyz2 +=0.000001;
 			}
 			tmpdt = -1.0*kx*kx*ky*kz/kxyz2*2.0*(cosf(v0*sqrtf(kx*kx+ky*ky+kz*kz)*dt)-1.0)/(v0*v0*dt*dt*kxyz2);
+#ifdef SF_HAS_COMPLEX_H
+			ukxxyz[iky][ikx][ikz] *= tmpdt; 
+#else
 			ukxxyz[iky][ikx][ikz] = sf_crmul(ukxxyz[iky][ikx][ikz],tmpdt);
+#endif
 		}
 	}
 	}
@@ -773,7 +849,11 @@ fprintf(stderr, "End FFT\n");
 			kxyz2 +=0.000001;
 			}
 			tmpdt = -1.0*kx*ky*ky*kz/kxyz2*2.0*(cosf(v0*sqrtf(kx*kx+ky*ky+kz*kz)*dt)-1.0)/(v0*v0*dt*dt*kxyz2);
+#ifdef SF_HAS_COMPLEX_H
+			ukxyyz[iky][ikx][ikz] *= tmpdt; 
+#else
 			ukxyyz[iky][ikx][ikz] = sf_crmul(ukxyyz[iky][ikx][ikz],tmpdt);
+#endif
 		}
 	}
 	}
@@ -793,7 +873,11 @@ fprintf(stderr, "End FFT\n");
 			kxyz2 +=0.000001;
 			}
 			tmpdt = -1.0*kx*ky*kz*kz/kxyz2*2.0*(cosf(v0*sqrtf(kx*kx+ky*ky+kz*kz)*dt)-1.0)/(v0*v0*dt*dt*kxyz2);
+#ifdef SF_HAS_COMPLEX_H
+			ukxyzz[iky][ikx][ikz] *= tmpdt; 
+#else
 			ukxyzz[iky][ikx][ikz] = sf_crmul(ukxyzz[iky][ikx][ikz],tmpdt);
+#endif
 		}
 	}
 	}

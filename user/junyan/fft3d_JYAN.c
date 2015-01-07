@@ -139,6 +139,7 @@ void fft3d_close()
 	free(cfgzi);
 }
 
+#ifdef _sgsdfgsh
 void fft3d_JYAN(bool inv,       /* forward or inverse */ 
 	    int nz, int nx, int ny,  /* dimensions */
 	    kiss_fft_cpx ***data,    /* data [nky][nkx][nkz] */
@@ -188,3 +189,5 @@ void fft3d_JYAN(bool inv,       /* forward or inverse */
             }
 	}
 }
+
+#endif

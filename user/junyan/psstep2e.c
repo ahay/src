@@ -175,7 +175,11 @@ void psstep2e(float **upold /*previous step*/,
 		for (ikz=0; ikz < nkz; ikz++) {
 			kz = (kz0+ikz*dkz)*2.0*pi;
 			tmpdt = -1.0*kx*kx;
+#ifdef SF_HAS_COMPLEX_H
+			ukxx[ikx][ikz] *= tmpdt; 
+#else
 			ukxx[ikx][ikz] = sf_crmul(ukxx[ikx][ikz],tmpdt);
+#endif
 		}
 	}
 	/* Inverse FFT*/
@@ -187,7 +191,11 @@ void psstep2e(float **upold /*previous step*/,
 		for (ikz=0; ikz < nkz; ikz++) {
 			kz = (kz0+ikz*dkz)*2.0*pi;
 			tmpdt = -1.0*kz*kz;
+#ifdef SF_HAS_COMPLEX_H
+			ukzz[ikx][ikz] *= tmpdt; 
+#else
 			ukzz[ikx][ikz] = sf_crmul(ukzz[ikx][ikz],tmpdt);
+#endif
 		}
 	}
 	ifft2(uzz[0], ukzz[0]);
@@ -199,7 +207,11 @@ void psstep2e(float **upold /*previous step*/,
 		for (ikz=0; ikz < nkz; ikz++) {
 			kz = (kz0+ikz*dkz)*2.0*pi;
 			tmpdt = -1.0*kx*kz;
+#ifdef SF_HAS_COMPLEX_H
+			ukxz[ikx][ikz] *= tmpdt; 
+#else
 			ukxz[ikx][ikz] = sf_crmul(ukxz[ikx][ikz],tmpdt);
+#endif
 		}
 	}
 	/* Inverse FFT*/
@@ -212,7 +224,11 @@ void psstep2e(float **upold /*previous step*/,
 		for (ikz=0; ikz < nkz; ikz++) {
 			kz = (kz0+ikz*dkz)*2.0*pi;
 			tmpdt = -1.0*kx*kx;
+#ifdef SF_HAS_COMPLEX_H
+			wkxx[ikx][ikz] *= tmpdt; 
+#else
 			wkxx[ikx][ikz] = sf_crmul(wkxx[ikx][ikz],tmpdt);
+#endif
 		}
 	}
 	/* Inverse FFT*/
@@ -225,7 +241,11 @@ void psstep2e(float **upold /*previous step*/,
 		for (ikz=0; ikz < nkz; ikz++) {
 			kz = (kz0+ikz*dkz)*2.0*pi;
 			tmpdt = -1.0*kz*kz;
+#ifdef SF_HAS_COMPLEX_H
+			wkzz[ikx][ikz] *= tmpdt;
+#else
 			wkzz[ikx][ikz] = sf_crmul(wkzz[ikx][ikz],tmpdt);
+#endif
 		}
 	}
 	/* Inverse FFT*/
@@ -238,7 +258,11 @@ void psstep2e(float **upold /*previous step*/,
 		for (ikz=0; ikz < nkz; ikz++) {
 			kz = (kz0+ikz*dkz)*2.0*pi;
 			tmpdt = -1.0*kx*kz;
+#ifdef SF_HAS_COMPLEX_H
+			wkxz[ikx][ikz] *= tmpdt;
+#else
 			wkxz[ikx][ikz] = sf_crmul(wkxz[ikx][ikz],tmpdt);
+#endif
 		}
 	}
 	/* Inverse FFT*/

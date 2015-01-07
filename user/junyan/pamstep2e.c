@@ -192,7 +192,11 @@ void pamstep2e(float **upold /*previous step*/,
 			if (!kxz2)
 			kxz2 +=0.000001;
 			tmpdt = 1.0*kx*kx*2.0*(cosf(vp0*sqrtf(kx*kx+kz*kz)*dt)-1.0)/(vp0*vp0*dt*dt*kxz2);
+#ifdef SF_HAS_COMPLEX_H
+			ukxx[ikx][ikz] *= tmpdt;
+#else
 			ukxx[ikx][ikz] = sf_crmul(ukxx[ikx][ikz],tmpdt);
+#endif
 		}
 	}
 	/* Inverse FFT*/
@@ -207,7 +211,11 @@ void pamstep2e(float **upold /*previous step*/,
 			if (!kxz2)
 			kxz2 +=0.000001;
 			tmpdt = 1.0*kz*kz*2.0*(cosf(vs0*sqrtf(kx*kx+kz*kz)*dt)-1.0)/(vs0*vs0*dt*dt*kxz2);
+#ifdef SF_HAS_COMPLEX_H
+			ukzz[ikx][ikz] *= tmpdt;
+#else
 			ukzz[ikx][ikz] = sf_crmul(ukzz[ikx][ikz],tmpdt);
+#endif
 		}
 	}
 	ifft2(uzz[0], ukzz[0]);
@@ -222,7 +230,11 @@ void pamstep2e(float **upold /*previous step*/,
 			if (!kxz2)
 			kxz2 +=0.000001;
 			tmpdt = 1.0*kx*kz*2.0*(cosf(vp0*sqrtf(kx*kx+kz*kz)*dt)-1.0)/(vp0*vp0*dt*dt*kxz2);
+#ifdef SF_HAS_COMPLEX_H
+			ukxzp[ikx][ikz] *= tmpdt;
+#else
 			ukxzp[ikx][ikz] = sf_crmul(ukxzp[ikx][ikz],tmpdt);
+#endif
 		}
 	}
 	/* Inverse FFT*/
@@ -237,7 +249,11 @@ void pamstep2e(float **upold /*previous step*/,
 			if (!kxz2)
 			kxz2 +=0.000001;
 			tmpdt = 1.0*kx*kz*2.0*(cosf(vs0*sqrtf(kx*kx+kz*kz)*dt)-1.0)/(vs0*vs0*dt*dt*kxz2);
+#ifdef SF_HAS_COMPLEX_H
+			ukxzs[ikx][ikz] *= tmpdt;
+#else
 			ukxzs[ikx][ikz] = sf_crmul(ukxzs[ikx][ikz],tmpdt);
+#endif
 		}
 	}
 	/* Inverse FFT*/
@@ -252,7 +268,11 @@ void pamstep2e(float **upold /*previous step*/,
 			if (!kxz2)
 			kxz2 +=0.000001;
 			tmpdt = 1.0*kx*kx*2.0*(cosf(vs0*sqrtf(kx*kx+kz*kz)*dt)-1.0)/(vs0*vs0*dt*dt*kxz2);
+#ifdef SF_HAS_COMPLEX_H
+			wkxx[ikx][ikz] *= tmpdt;
+#else
 			wkxx[ikx][ikz] = sf_crmul(wkxx[ikx][ikz],tmpdt);
+#endif
 		}
 	}
 	/* Inverse FFT*/
@@ -268,7 +288,11 @@ void pamstep2e(float **upold /*previous step*/,
 			if (!kxz2)
 			kxz2 +=0.000001;
 			tmpdt = 1.0*kz*kz*2.0*(cosf(vp0*sqrtf(kx*kx+kz*kz)*dt)-1.0)/(vp0*vp0*dt*dt*kxz2);
+#ifdef SF_HAS_COMPLEX_H
+			wkzz[ikx][ikz] *= tmpdt;
+#else
 			wkzz[ikx][ikz] = sf_crmul(wkzz[ikx][ikz],tmpdt);
+#endif
 		}
 	}
 	/* Inverse FFT*/
@@ -284,7 +308,11 @@ void pamstep2e(float **upold /*previous step*/,
 			if (!kxz2)
 			kxz2 +=0.000001;
 			tmpdt = 1.0*kx*kz*2.0*(cosf(vp0*sqrtf(kx*kx+kz*kz)*dt)-1.0)/(vp0*vp0*dt*dt*kxz2);
+#ifdef SF_HAS_COMPLEX_H
+			wkxzp[ikx][ikz] *= tmpdt;
+#else
 			wkxzp[ikx][ikz] = sf_crmul(wkxzp[ikx][ikz],tmpdt);
+#endif
 		}
 	}
 	/* Inverse FFT*/
@@ -300,7 +328,11 @@ void pamstep2e(float **upold /*previous step*/,
 			if (!kxz2)
 			kxz2 +=0.000001;
 			tmpdt = 1.0*kx*kz*2.0*(cosf(vs0*sqrtf(kx*kx+kz*kz)*dt)-1.0)/(vs0*vs0*dt*dt*kxz2);
+#ifdef SF_HAS_COMPLEX_H
+			wkxzs[ikx][ikz] *= tmpdt;
+#else
 			wkxzs[ikx][ikz] = sf_crmul(wkxzs[ikx][ikz],tmpdt);
+#endif
 		}
 	}
 	/* Inverse FFT*/
