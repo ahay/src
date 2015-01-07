@@ -25,38 +25,40 @@ from rsf.proj import *
 
 # first, look at the pdf files
 pdfread = WhereIs('acroread') or WhereIs('kpdf') or WhereIs('evince') or \
-    WhereIs('xpdf') or WhereIs('gv') or WhereIs('open')
+          WhereIs('xpdf') or WhereIs('gv') or WhereIs('open')
+
+print 'pdfread=',pdfread
 
 if pdfread:
     Fetch('2D_Model_Subset.pdf',dir='2d_model_subset',
           server='http://s3.amazonaws.com',
 	  top='open.source.geoscience/open_data/seam_ph1_2d_classic')
     Result('2D_Model_Subset','2D_Model_Subset.pdf',
-           pdfread + ' $SOURCE',stdin=0)
+           pdfread + ' $SOURCE',stdin=0,stdout=0)
 
     Fetch('2D_Model_Subset_plots.pdf',dir='2d_model_subset',
           server='http://s3.amazonaws.com',
 	  top='open.source.geoscience/open_data/seam_ph1_2d_classic')
     Result('2D_Model_Subset_plots','2D_Model_Subset_plots.pdf',
-           pdfread + ' $SOURCE',stdin=0)
+           pdfread + ' $SOURCE',stdin=0,stdout=0)
 
     Fetch('Shots_Receivers_23900.pdf',dir='2d_data_subset',
           server='http://s3.amazonaws.com',
 	  top='open.source.geoscience/open_data/seam_ph1_2d_classic')
     Result('Shots_Receivers_23900','Shots_Receivers_23900.pdf',
-           pdfread + ' $SOURCE',stdin=0)
+           pdfread + ' $SOURCE',stdin=0,stdout=0)
  
     Fetch('Shot_Receivers_23900_plots.pdf',dir='2d_data_subset',
           server='http://s3.amazonaws.com',
 	  top='open.source.geoscience/open_data/seam_ph1_2d_classic')
     Result('Shot_Receivers_23900_plots','Shot_Receivers_23900_plots.pdf',
-           pdfread + ' $SOURCE',stdin=0)
+           pdfread + ' $SOURCE',stdin=0,stdout=0)
 
     Fetch('Seam_wavelet.pdf',dir='seam_phase_1_wavelets',
           server='http://s3.amazonaws.com',
 	  top='open.source.geoscience/open_data/seam_ph1_2d_classic')
     Result('Seam_wavelet','Seam_wavelet.pdf',
-           pdfread + ' $SOURCE',stdin=0)
+           pdfread + ' $SOURCE',stdin=0,stdout=0)
 
 Fetch('Shots_Receivers_23900.sgy',dir='2d_data_subset',
           server='http://s3.amazonaws.com',
