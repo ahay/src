@@ -35,7 +35,7 @@ access to the data repository.
 The tutorial itself is available from the \textsc{Madagascar} repository
 by running
 \begin{verbatim}
-svn co https://rsf.svn.sourceforge.net/svnroot/rsf/trunk/book/rsf/school2015
+svn co https://rsf.svn.sourceforge.net/svnroot/rsf/trunk/book/rsf/school2015/tutorial
 \end{verbatim}
 
 \section{Introduction}
@@ -50,7 +50,7 @@ Your first assignment:
 \item Open a Unix shell.
 \item Change directory to the tutorial directory
 \begin{verbatim}
-bash$ cd $RSFSRC/book/rsf/school2015
+bash$ cd $RSFSRC/book/rsf/school2015/tutorial
 \end{verbatim}
 \item Open the \texttt{paper.tex} file in your favorite editor, for example by
 running
@@ -109,6 +109,7 @@ The result can be viewed by running
 bash$ scons view
 \end{verbatim}
 
+\section{The RSF file format}
 \inputdir{asc2rsf}
 \sideplot{model}{width=\textwidth}{Stratigraphic layers overlayed on a
  $V(z)$ model.}
@@ -145,7 +146,7 @@ bash$ sfcat axis=2 < lay1.rsf lay2.rsf lay3.rsf lay4.rsf > lays.rsf
   velocity model using the Overlay plotting option.
 \end{enumerate}
 
-\section{Exercise: adapt command-line to SConstruct}
+\section{Exercise: convert command-line arguments into SConstruct}
 \inputdir{adapt}
 This command-line example is borrowed from Paul Sava. Let us do it step by step:
 \begin{itemize}
@@ -197,10 +198,9 @@ traveltimes in Figure~\ref{fig:fme}.The rays and the wavefronts can be overlaid 
 \plot{fme}{width=0.6\textwidth}{Computed traveltimes}
 \plot{combined}{width=0.6\textwidth}{Rays and wavefronts can be overlaid.}
 
-The resulting SConstruct after your adaptation is  as follows:
-\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
-\lstinputlisting[frame=single]{adapt/SConstruct}
-
+Your assignment is to convert the command-line arguments into a SCons script, which can be used for reproducible research. The solution can be viewed in adapt/SConstruct.
+%\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+%\lstinputlisting[frame=single]{adapt/SConstruct}
 
 
 \section{Problem}
