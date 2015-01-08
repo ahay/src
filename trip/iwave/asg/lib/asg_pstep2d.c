@@ -11,8 +11,11 @@ void asg_pstep2d(float ** restrict bulk,
   
   int i0, i1;
   int ioff;
+
+  /* diagnostic printout for model 3 of asg paper
   for (i0=88; i0<95; i0++) 
     fprintf(stderr,"i0=%d ep0=%e epp0=%e\n",i0,ep[0][i0],epp[0][i0]);
+  */
 
   for (i1=gsc[1]; i1 <= gec[1]; i1++) {
     for (i0=gsc[0]; i0 <= gec[0]; i0++) sdiv[i0]=0.0f;

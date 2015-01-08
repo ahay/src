@@ -394,7 +394,11 @@ int acd_create_sten(void * fdm,
 
 //int acd_readtimegrid(PARARRAY *pars, FILE * stream, IMODEL * model) {
 //int acd_readtimegrid(PARARRAY *pars, FILE * stream, grid const & g, ireal & dt) {
-int acd_timegrid(PARARRAY *pars, FILE * stream, grid const & g, ireal & dt) {
+int acd_timegrid(PARARRAY *pars, 
+		 FILE * stream, 
+		 grid const & g, 
+		 ireal & dt,
+		 ireal & rhs) {
 
     ireal cmax;                   /* max velo, computed or read from params */
     ireal cfl = CFL_DEF;          /* default cfl fraction */
@@ -408,6 +412,7 @@ int acd_timegrid(PARARRAY *pars, FILE * stream, grid const & g, ireal & dt) {
 	fprintf(stream,"NOTE: sg_readtimegrid - dt=%12.4e read from param table\n", dt);	
 	fprintf(stream,"NOTE: NOT CHECKED FOR STABILITY!\n");
 #endif
+	rhs=dt*dt;
 	return 0;
     }
     	
@@ -446,7 +451,7 @@ int acd_timegrid(PARARRAY *pars, FILE * stream, grid const & g, ireal & dt) {
     fprintf(stream,"NOTE: acd_readtimegrid: on return, dt=%e\n",dt);
     fflush(stream);
 #endif
-
+    rhs=dt*dt;
     return 0;
 }
 
@@ -475,6 +480,7 @@ int acd_step(RDOM* dom, int iv, void * tspars) {
     ra_gse(&(dom->_s[D_UC]),s,e);
     ra_a_gse(&(dom->_s[D_UC]),s0,e0);
     if (ndim == 2) {
+
 
 	/* 2D computational arrays */
 	uc2   = (dom->_s)[D_UC ]._s2;

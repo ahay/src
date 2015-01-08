@@ -50,6 +50,7 @@ int im_construct(IMODEL * model) {
   model->tsind.iv=0;
   model->tsind.niv=0;
   model->tsind.dt=REAL_ZERO;
+  model->tsind.rhs=REAL_ZERO;
 
   IASN(model->nls,IPNT_0);
   IASN(model->nrs,IPNT_0);

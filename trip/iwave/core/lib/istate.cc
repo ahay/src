@@ -476,6 +476,7 @@ namespace TSOpt {
       e<<"Error: IWaveSampler::getRecipCellVol\n";
       e<<"  samplekey = "<<samplekey<<"\n";
       e<<"  zerodivide by cell volume - check data geometry\n";
+      throw e;
     } 
     return rcv;
   }
@@ -712,7 +713,7 @@ namespace TSOpt {
 	// data buffer for current RARR
 	float * data = dom->_s[ridx]._s0;
 	  
-	// scale for adjoint linearized i/p
+	// scale for adjoint linearized i/o
 	//   - input - by cell volume 
 	//   - output - by reciprocal cell volume
 	// detect linearized i/o by iwdx - if > 0 this i/o op
@@ -905,7 +906,20 @@ namespace TSOpt {
 
 		// read/write trace switch		
 		int traceinput = 0;
-		if (input) traceinput = 1;
+		if (input) {
+		  traceinput = 1;
+		  // this assumes that for reference state
+		  // that (i) all trace input is RHS (questionable),
+		  // and (ii) all trace input should be treated as
+		  // defining a numerical delta (safe)
+		  if (iwdx==0) {
+		    ireal cv=1.0f;
+		    for (int kk=0;kk<(state->model).g.dim;kk++) 
+		      cv*=(state->model).g.axes[kk].d;
+		    scale = (state->model).tsind.rhs/cv;
+		    //		    cerr<<"rhs="<<(state->model).tsind.rhs<<" cv="<<cv<<" iwdx="<<iwdx<<" scale="<<scale<<endl;
+		  }
+		}
 
 		sampletraces(tg,
 			     sampord,
@@ -1394,16 +1408,16 @@ namespace TSOpt {
 	  }
 
 	  for (int it=start[g.dim]; it<stop[g.dim]; it++) {
-	    //	    cerr<<"it="<<it<<endl;
+		    cerr<<"it="<<it<<endl;
 	    //	    cerr<<"rk="<<retrieveGlobalRank()<<" it="<<it<<endl;
 	    if (dryrun) drystr<<"\n";
 	    step[g.dim]=it;
-	    /*
-	      if (!dryrun && (printact > 1)) {
+	    /*	    
+	    if (!dryrun && (printact > 0)) {
 	      float dt = g.axes[g.dim].d;
 	      float ot = g.axes[g.dim].o;
 	      cerr<<"it="<<it<<" t="<<ot+it*dt<<endl;
-	      }
+	    }
 	    */
 	    for (size_t i=0; i<t.size(); i++) {
 	      if (s[i]) {

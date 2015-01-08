@@ -83,7 +83,10 @@ int iwave_construct(IWAVE * state,
 
   //  err = fdm->readtimegrid(pars, stream, &(state->model));
   //  err = fdm->readtimegrid(pars, stream, (state->model).g, ((state->model).tsind).dt);
-  err = ic.get_timegrid()(pars, stream, (state->model).g, ((state->model).tsind).dt);
+  err = ic.get_timegrid()(pars, stream, 
+			  (state->model).g, 
+			  ((state->model).tsind).dt,
+			  ((state->model).tsind).rhs);
   if (err) {
     fprintf(stream, "Error: iwave from get_timegrid, err=%d\n",err);
     return err;

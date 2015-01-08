@@ -22,8 +22,8 @@ void asg_vstep3d(float *** restrict buoy,
 	  gradp[0][i0] += c[0][ioff]*(p0[i2][i1][i0+ioff+1]-p0[i2][i1][i0-ioff]);
       }
       for (i0=gsc_v0[0]; i0 <= gec_v0[0]; i0++ ) 
-	v0[i2][i1][i0] = evp[0][i0]*v0[i2][i1][i0] 
-	  - ev[0][i0]*0.5*(buoy[i2][i1][i0]+buoy[i2][i1][i0+1])*gradp[0][i0];
+	v0[i2][i1][i0] = evp[0][i0]*
+	  (v0[i2][i1][i0]*ev[0][i0] - 0.5*(buoy[i2][i1][i0]+buoy[i2][i1][i0+1])*gradp[0][i0]);
     }
   }
   for (i2=gsc_v1[2]; i2 <= gec_v1[2]; i2++) {
@@ -34,8 +34,8 @@ void asg_vstep3d(float *** restrict buoy,
 	  gradp[1][i0] += c[1][ioff]*(p1[i2][i1+ioff+1][i0]-p1[i2][i1-ioff][i0]);
       }
       for (i0=gsc_v1[0]; i0 <= gec_v1[0]; i0++ ) 
-	v1[i2][i1][i0] = evp[1][i1]*v1[i2][i1][i0] 
-	  - ev[1][i1]*0.5*(buoy[i2][i1][i0]+buoy[i2][i1+1][i0])*gradp[1][i0];
+	v1[i2][i1][i0] = evp[1][i1]*
+	  (v1[i2][i1][i0]*ev[1][i1] - 0.5*(buoy[i2][i1][i0]+buoy[i2][i1+1][i0])*gradp[1][i0]);
     }
   }
   for (i2=gsc_v2[2]; i2 <= gec_v2[2]; i2++) {
@@ -46,8 +46,8 @@ void asg_vstep3d(float *** restrict buoy,
 	  gradp[2][i0] += c[2][ioff]*(p2[i2+ioff+1][i1][i0]-p2[i2-ioff][i1][i0]);
       }
       for (i0=gsc_v2[0]; i0 <= gec_v2[0]; i0++ ) 
-	v2[i2][i1][i0] = evp[2][i2]*v2[i2][i1][i0] 
-	  - ev[2][i2]*0.5*(buoy[i2][i1][i0]+buoy[i2+1][i1][i0])*gradp[2][i0];
+	v2[i2][i1][i0] = evp[2][i2]*
+	  (v2[i2][i1][i0]*ev[2][i2] - 0.5*(buoy[i2][i1][i0]+buoy[i2+1][i1][i0])*gradp[2][i0]);
     }
   }
 

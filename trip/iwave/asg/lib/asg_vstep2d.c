@@ -13,8 +13,10 @@ void asg_vstep2d(float ** restrict buoy,
   int i0, i1;
   int ioff;
 
+  /* diagnostic printout for model 3 of asg paper
   for (i0=88; i0<95; i0++) 
     fprintf(stderr,"i0=%d ev0=%e evp0=%e\n",i0,ev[0][i0],evp[0][i0]);
+  */
 
   for (i1=gsc_v0[1]; i1 <= gec_v0[1]; i1++ ) {
     for (i0=gsc_v0[0]; i0 <= gec_v0[0]; i0++ ) gradp[0][i0]=0;      

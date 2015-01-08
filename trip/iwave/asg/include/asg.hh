@@ -22,7 +22,8 @@ void asg_modeldest(void ** specs);
 int asg_timegrid(PARARRAY * pars, 
 		 FILE * stream, 
 		 grid const & g, 
-		 ireal & dt);
+		 ireal & dt,
+		 ireal & rhs);
 
 void asg_timestep(std::vector<RDOM *> dom, 
 		  bool fwd, 

@@ -24,7 +24,8 @@ void acd_modeldest(void ** specs);
 int acd_timegrid(PARARRAY * pars, 
 		 FILE * stream, 
 		 grid const & g, 
-		 ireal & dt);
+		 ireal & dt,
+		 ireal & rhs);
 
 void acd_timestep(std::vector<RDOM *> dom, 
 		  bool fwd, 

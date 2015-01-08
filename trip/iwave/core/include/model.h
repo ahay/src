@@ -43,6 +43,7 @@ typedef struct {
   int iv;    /**< internal step index */
   int niv;   /**< number of internal steps */
   ireal dt;  /**< real time step */
+  ireal rhs; /**< multiplier for right hand sides in time step formulae */
 } TIMESTEPINDEX;
 
 /**

@@ -243,7 +243,8 @@ void asg_modeldest(void ** fdpars) {
 int asg_timegrid(PARARRAY * pars, 
 		 FILE * stream, 
 		 grid const & g, 
-		 ireal & dt) {
+		 ireal & dt,
+		 ireal & rhs) {
 
   try {
 
@@ -287,6 +288,9 @@ int asg_timegrid(PARARRAY * pars,
     ireal dttmp = dt;
     dt = valparse<ireal>(*pars,"dt",dttmp);
 
+    /* finally,... */
+    rhs = dt;
+
     return 0;
   }
   catch (RVLException & e) {
@@ -303,7 +307,7 @@ void asg_pmlaxis(int n0, int nl, int nr,
   nl=iwave_max(0,nl);
   nr=iwave_max(0,nr);
 
-  cerr<<"pmlaxis: gtype="<<gtype<<" n0="<<n0<<" nr="<<nr<<" nl="<<nl<<"\n";
+  //  cerr<<"pmlaxis: gtype="<<gtype<<" n0="<<n0<<" nr="<<nr<<" nl="<<nl<<"\n";
 
   *ep  = (ireal*)usermalloc_(sizeof(ireal)*n0);
   *epp = (ireal*)usermalloc_(sizeof(ireal)*n0);
@@ -322,8 +326,7 @@ void asg_pmlaxis(int n0, int nl, int nr,
     p = amp*fabs(p*p*p);
     (*ep)[i] = REAL_ONE - 0.5*dt*p;
     (*epp)[i] = REAL_ONE/(REAL_ONE + 0.5*dt*p);
-    cerr<<"i="<<i<<" p="<<p<<" ep="<<(*ep)[i]<<" epp="<<(*epp)[i]<<endl;
-
+    //    cerr<<"i="<<i<<" p="<<p<<" ep="<<(*ep)[i]<<" epp="<<(*epp)[i]<<endl;
   }
 }    
 
@@ -349,15 +352,28 @@ void asg_timestep(std::vector<RDOM *> dom,
   i_v[2] = 7;
 
   /* fill in pml arrays; these are no-ops after the first call */
+  register ireal * restrict ep[RARR_MAX_NDIM];  
+  register ireal * restrict epp[RARR_MAX_NDIM]; 
+  register ireal * restrict ev[RARR_MAX_NDIM];  
+  register ireal * restrict evp[RARR_MAX_NDIM]; 
+  
   for (int idim=0;idim<asgpars->ndim;idim++) {
+    IPNT gsa;
+    IPNT gea;
     rd_a_size(dom[0], i_p[idim], np);
     rd_a_size(dom[0], i_v[idim], nv);
+    rd_a_gse(dom[0], i_p[idim],gsa,gea);
     asg_pmlaxis(np[idim], asgpars->nls[idim], asgpars->nrs[idim], 
 		asgpars->amp, asgpars->dt, 0, 
 		&((asgpars->ep)[idim]), &((asgpars->epp)[idim]));
+    ep[idim]=(asgpars->ep)[idim] - gsa[idim];
+    epp[idim]=(asgpars->epp)[idim] - gsa[idim];
+    rd_a_gse(dom[0], i_v[idim],gsa,gea);
     asg_pmlaxis(nv[idim], asgpars->nls[idim], asgpars->nrs[idim], 
 		asgpars->amp, asgpars->dt, 1, 
 		&((asgpars->ev)[idim]), &((asgpars->evp)[idim]));
+    ev[idim]=(asgpars->ev)[idim] - gsa[idim];
+    evp[idim]=(asgpars->evp)[idim] - gsa[idim];
   }
   
   // address list - 2D
@@ -378,12 +394,6 @@ void asg_timestep(std::vector<RDOM *> dom,
   register ireal *** restrict v13;
   register ireal *** restrict v23;
 
-  // address list - both
-  register ireal ** restrict ep   = asgpars->ep;
-  register ireal ** restrict epp  = asgpars->epp;
-  register ireal ** restrict ev   = asgpars->ev; 
-  register ireal ** restrict evp  = asgpars->evp;
-  
   /* sizes of computational domain - P0 same as P1, P2 */
   IPNT gsc_p;
   IPNT gec_p;
@@ -432,7 +442,6 @@ void asg_timestep(std::vector<RDOM *> dom,
 	  // timestep called, in effect it is added to all copies of pressure.
 	  //	  float psq=0.0f;
 	  //	  float bsq=0.0f;
-	  /*
 	  for (int i1=gsc_p[1]+asgpars->nls[1]; i1<=gec_p[1]-asgpars->nrs[1];i1++) {
 	    for (int i0=gsc_p[0]+asgpars->nls[0]; i0<=gec_p[0]-asgpars->nrs[0];i0++) {
 	       p12[i1][i0]=p02[i1][i0];
@@ -440,7 +449,6 @@ void asg_timestep(std::vector<RDOM *> dom,
 	      //	      bsq+=bulk2[i1][i0]*bulk2[i1][i0];
 	    }
 	  }
-	  */
 	  //	  cerr<<"psq="<<psq<<endl;
 	  //	  cerr<<"bsq="<<bsq<<endl;
 	  asg_pstep2d(bulk2,
@@ -685,6 +693,14 @@ void asg_check(RDOM * dom,
 
     ireal ** bulk = (dom->_s)[0]._s2;
     ireal ** buoy = (dom->_s)[1]._s2;  
+
+    /*
+    for (int j1=s[1];j1<e[1];j1++) {
+      for (int j0=s[0];j0<e[0];j0++) {
+	fprintf(stream,"j0=%d j1=%d bulk=%e\n",j0,j1,bulk[j0][j1]);
+      }
+    }
+    */
 
     //extend
     for (int i0=s[0]+asgpars->nls[0]; i0<=e[0]-asgpars->nrs[0]; i0++) {

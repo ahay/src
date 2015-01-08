@@ -99,7 +99,8 @@ typedef void (*FD_MODELDEST)(void ** specs);
 /** Computes time step for internal simulation time grid. This must be
     possible based on information contained in pars, eg. max wave
     velocity, scheme type and order, etc., and primal spatial grid g,
-    eg. space steps.
+    eg. space steps. Also calculates multiplier to be used on RHS fields - 
+    dt for staggered grid, dt^2 for 2nd order, 2*dt for leapfrog, etc.
     
     @param[in] pars - parameter array, assumed initialized.
     
@@ -108,8 +109,9 @@ typedef void (*FD_MODELDEST)(void ** specs);
     @param[in] g - primal simulation \ref grid , initialized via I/O
     on first IOKEY
     
-    @param[out] dt - time step, will have been initialized on call by prior
-    call to FD_TIMEGRID
+    @param[out] dt - time step
+
+    @param[out] rhs - time step multiplier for RHS
     
     @return - 0 on success, else error code.
     
@@ -117,7 +119,8 @@ typedef void (*FD_MODELDEST)(void ** specs);
 typedef int (*FD_TIMEGRID)(PARARRAY * pars, 
 			   FILE * stream, 
 			   grid const & g, 
-			   ireal & dt);
+			   ireal & dt,
+			   ireal & rhs);
 
   /** creates FD stencils. A \ref stencil describes the dependencies
       between arrays participating in a finite difference scheme, in
