@@ -53,16 +53,15 @@ Flow('vel1','lays',
      put label1=Depth unit1=m label2=Distance unit2=m
      label=Velocity unit=m/s
      ''' % (nz,dz,oz) )
-#Flow('leftv','vel1',
-#    '''
-#    window n2=1 |spray axis=2 n=200 d=10 o=-2000
-#    ''')
-#Flow('rightv','vel1',
-#    '''
-#    window n2=1 f2=400 |spray axis=2 n=200 d=10 o=4010
-#    ''')
-#Flow('vel','leftv vel1 rightv','cat axis=2 ${SOURCES[1:3]} | put o2=0')
-Flow('vel','vel1','cp')
+Flow('leftv','vel1',
+    '''
+    window n2=1 |spray axis=2 n=200 d=10 o=-2000
+    ''')
+Flow('rightv','vel1',
+    '''
+    window n2=1 f2=400 |spray axis=2 n=200 d=10 o=4010
+    ''')
+Flow('vel','leftv vel1 rightv','cat axis=2 ${SOURCES[1:3]} | put o2=0')
 Result('vel','grey title=Velocity color=j scalebar=y barreverse=y allpos=y')
 
 # Get reflectivity from velocity
