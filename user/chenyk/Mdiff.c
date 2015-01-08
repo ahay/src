@@ -24,7 +24,7 @@
 
 int main(int argc, char* argv[])
 {
-    int  i1, i2, n1,n2,n12;
+    int  i1, i2, n1,n2,n3,n12;
     float  s=0, *pp1, *pp2;
     sf_file inp1, inp2,  dif;
 
@@ -40,8 +40,13 @@ int main(int argc, char* argv[])
 	
     if (!sf_histint(inp1,"n1",&n1)) sf_error("No n1= in input");
     if (!sf_histint(inp1,"n2",&n2)) sf_error("No n2= in input");
-    n12 = n1*n2;
+    if (!sf_histint(inp1,"n3",&n3)) n3=1;
 
+    n2 = sf_leftsize(inp1,1); /* left dimensions after the first one */
+    n12 = n1*n2;
+    
+    if (n3!=1) {sf_putint(dif,"n3",1); sf_putint(dif,"d3",1); }
+    
     pp1 = sf_floatalloc(n12);
     pp2 = sf_floatalloc(n12);
     sf_floatread(pp1,n12,inp1);
