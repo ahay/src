@@ -4,10 +4,11 @@ from rsf.proj import *
 #https://s3.amazonaws.com/open.source.geoscience/open_data/newzealand/Taranaiki_Basin/Keri_3D/Kerry3D.segy
 # before running with local data:
 #ln -s /Volumes/data/newzealand/Taranaiki\ B\ asin/WAIHAPA-3D/3D-Waihapa.sgy .
-#Fetch('Kerry3D.segy',dir='newzealand/Taranaiki_Basin/Keri_3D',
-#          server='http://s3.amazonaws.com',
-#	  top='open.source.geoscience/open_data',
-#	  usedatapath=1)
+
+Fetch('3D-Waihapa.sgy',dir='newzealand/Taranaiki_Basin/WAIHAPA-3D',
+          server='http://s3.amazonaws.com',
+	  top='open.source.geoscience/open_data',
+	  usedatapath=1)
 
 
 Flow(['3D-Waihapa.rsf','3D-Waihapa_hdr.rsf',
@@ -98,5 +99,12 @@ Plot('imagex153','image',
      | sfgrey title='Waihapa 3d xline 153'
      ''')
 Result("imageilxl","image211 imagex153",'SideBySideAniso')
+
+Result("imageslice","image",
+	'''
+	sfwindow min1=.2 max1=.202  \
+	| sftransp plane=13 \
+	| sfgrey gainpanel=a
+	''')
    
 End()
