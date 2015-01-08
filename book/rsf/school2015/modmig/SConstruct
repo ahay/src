@@ -95,7 +95,7 @@ Flow('img wave2','dat %s migvel' % prog[0],
      ./${SOURCES[1]} vel=${SOURCES[2]} verb=y mig=y nb=%d c=%g snap=%d snaps=${TARGETS[1]}
      ''' %(nb,decay,snap) )
 
-Result('img','grey title="RTM Image" ')
+Result('img','grey title="RTM Image" unit1=m')
 Plot('wave2m','wave2','window j3=2 | grey gainpanel=all title=Backward')
 
 End()
