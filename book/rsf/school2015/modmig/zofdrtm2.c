@@ -148,7 +148,7 @@ int fdexp(float **img, float **dat, bool adj, par pars, float **vv, float ***wvf
 
 	if (snap > 0 && it%snap == 0) {
 #ifdef _OPENMP
-#pragma omp parallel for private(ix,iz,j)
+#pragma omp parallel for private(ix,iz)
 #endif
 	    for ( ix = 0; ix < nx; ix++) {
 	        for ( iz = 0; iz < nz; iz++ ) { 
