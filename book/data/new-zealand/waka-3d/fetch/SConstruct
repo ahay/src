@@ -1,0 +1,115 @@
+from rsf.proj import *
+
+segyname='BO_WAKA3D-PR3988-FS_3D_Final_Stack.sgy'
+
+#https://s3.amazonaws.com/open.source.geoscience/open_data/newzealand/Cantebury_Basin/WAKA-3D/BO_WAKA3D-PR3988-FS_3D_Final_Stack.sgy.partaa
+
+parts = []
+for p in 'abcdefgh':
+    thispart = segyname + '.parta' + p
+
+    Fetch(thispart,dir='newzealand/Cantebury_Basin/WAKA-3D',
+          server='http://s3.amazonaws.com',top='open.source.geoscience/open_data')
+    parts.append(thispart)
+
+Flow(segyname,
+     parts,
+     '/bin/cat $SOURCES ',stdin=0)
+
+Flow(['BO_WAKA3D-PR3988-FS_3D_Final_Stack.rsf'    ,
+      'BO_WAKA3D-PR3988-FS_3D_Final_Stack_hdr.rsf',
+      'BO_WAKA3D-PR3988-FS_3D_Final_Stack.thdr'   ,
+      'BO_WAKA3D-PR3988-FS_3D_Final_Stack.bhdr'   ],
+     segyname,
+     '''
+     sfsegyread tfile=${TARGETS[1]} 
+     hfile=${TARGETS[2]}  bfile=${TARGETS[3]} 
+     ''')
+
+Flow('headerattr.txt','BO_WAKA3D-PR3988-FS_3D_Final_Stack_hdr.rsf',
+     'sfheaderattr > $TARGET && /bin/cat $TARGET',stdout=-1)
+
+#< BO_WAKA3D-PR3988-FS_3D_Final_Stack_Hdr.rsf /home/karl/RSFSRC/bin/sfheaderattr > headerattr.txt && /bin/cat headerattr.txt
+#91 headers, 3999681 traces
+#****************************************************************************** 
+#     key     	            min     	              max    	          mean
+#------------------------------------------------------------------------------ 
+#tracl       0              1 @ 0	       3999681 @ 3999680    1.99984e+06
+#tracr       1           1000 @ 0	          1800 @ 3996640	1356.01
+#fldr        2           1000 @ 0	          1800 @ 3996640	1356.01
+#tracf       3           1000 @ 0	          1800 @ 3996640	1356.01
+#ep          4            835 @ 0	          6590 @ 5755	       3480.27
+#cdp         5       10000835 @ 0	      18003875 @ 3999680   1.35636e+07
+#trid        7              1 @ 0	             1 @ 0	             1
+#nhs         9             66 @ 3969270	            68 @ 0	       67.9975
+#duse       10              1 @ 0	             1 @ 0	             1
+#scalel     19            -10 @ 0	           -10 @ 0	           -10
+#scalco     20           -100 @ 0	          -100 @ 0	          -100
+#sx         21        1449251 @ 0	       1497664 @ 3315455   1.47349e+06
+#sy         22        4895673 @ 3996640	       4967989 @ 5755	   4.92987e+06
+#gy         24      545722538 @ 3996640	     552955178 @ 5755	   5.49143e+08
+#counit     25              1 @ 0	             1 @ 0	             1
+#ns         38           1500 @ 0	          1500 @ 0	          1500
+#dt         39           4000 @ 0	          4000 @ 0	          4000
+#cdpx       71           1000 @ 0	          1800 @ 3996640       1356.01
+#cdpy       72            835 @ 0	          6590 @ 5755	       3480.27
+#xline      74      235903284 @ 0	     240753594 @ 3315455   2.38331e+08
+#shnum      75      545722538 @ 3996640	     552955178 @ 5755	   5.49143e+08
+#stype      83            256 @ 0	           256 @ 0	           256
+#****************************************************************************** 
+
+# looks like ep and tracr are good headers to use for xline and iline
+
+
+# use trace headers to create a 3d volume
+Flow(['image.rsf','image_hdr.rsf'],['BO_WAKA3D-PR3988-FS_3D_Final_Stack.rsf','BO_WAKA3D-PR3988-FS_3D_Final_Stack_hdr.rsf'],
+     '''
+     sftahread \
+          input=${SOURCES[0]} \
+	  verbose=1 \
+     | sftahheadermath output=ep    outputkey=xline \
+     | sftahheadermath output=tracr outputkey=iline \
+     | sftahwrite \
+          output=${TARGETS[0]} \
+          label2="xline"    o2=835  n2=5756 d2=1 \
+          label3="iline"    o3=1000 n3=800  d3=1 \
+	  verbose=1
+     ''',stdout=0, stdin=0)
+       
+Result("image","window j3=100 |  sfgrey title='waka-3d'")
+#Result("zoomimage","image",
+#       "window min1=1 max1=2 j3=10 | sfgrey title='waka-3d'")
+Result("image3df","image",
+       '''
+       byte 
+       | grey3 frame1=1350 frame2=2875 frame3=400 title='waka-3d'
+       ''')
+
+Result("image3d","image",
+       '''
+       byte 
+       | grey3 frame1=1350 frame2=2875 frame3=400 \
+         title='waka-3d' flat=n
+       ''')
+
+Plot('image1400','image',
+     '''
+     sfwindow min3=1400 max3=1400 
+     | sfgrey title='waka-3d line 1400'
+     ''')
+Plot('imagex1213','image',
+     '''
+     sfwindow min2=1213 max2=1213
+     | sfput label2='xline' 
+     | sfgrey title='waka-3d xline 1213'
+     ''')
+Result("imageilxl","image1400 imagex1213",'SideBySideAniso')
+
+#Result("imageslice","image",
+#	'''
+#	sfwindow min1=.2 max1=.202  \
+#	| sftransp plane=13 \
+#	| sfgrey gainpanel=a title='waka-3d'
+#	''')
+   
+End()
