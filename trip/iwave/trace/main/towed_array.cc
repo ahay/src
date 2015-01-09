@@ -11,22 +11,24 @@ const char * sdoc[] = {
   "",
   "Purpose: create towed streamer source traces, by transferring source",
   "coordinates to both source and receiver coordinates of source trace",
-  "copies. That is, if a source trace has source and receiver coordinates",
-  "src_sx, src_sy, src_selev, src_gx, src_gy, and src_gelev, and an input",
+  "copies. As is standard throughout IWAVE, the source traces are regarded",
+  "as located at their receiver coordinates; since the output data traces",
+  "will get their source coordinates purely from the input data file, the",
+  "source coordinates of the input source traces and the receiver",
+  "coordinates of the input data traces are ignored. That is, if a source",
+  "trace has receiver coordinates src_gx, src_gy, and src_gelev, and an input",
   "data trace has source coordinates data_sx, data_sy, and data_selev, then",
   "a trace with coordinates ",
-  "  src_sx+data_sx,",
-  "  src_sy+data_sy,",
-  "  src_selev+data_selev,",
-  "  src_gx+data_sx,",
-  "  src_gy+data_sy,",
-  "  src_gelev+data_selev,",
+  "  sx = data_sx,",
+  "  sy = data_sy,",
+  "  selev = data_selev,",
+  "  gx = src_gx+data_sx,",
+  "  gy = src_gy+data_sy,",
+  "  gelev = src_gelev+data_selev,",
   "and the other headers and data samples of the source trace is written to",
   "the output towed source file. This algorithm produces a towed source data ",
   "file, representing the input source data translated by the source position",
-  "read from the data file. Note that the array source option for the various",
-  "IWAVE simulators expects to read the source position from the receiver",
-  "coordinates of the source data file.",
+  "read from the data file. ",
   "",
   "Required parameters:",
   "  data           = filename for first modeled trace data",
@@ -142,9 +144,9 @@ int main(int argc, char ** argv) {
 	tgx=tr2[jtr].gx;
 	tgy=tr2[jtr].gy;
 	tgelev=tr2[jtr].gelev;
-	tr2[jtr].sx += tr1.sx;
-	tr2[jtr].sy += tr1.sy;
-	tr2[jtr].selev += tr1.selev;
+	tr2[jtr].sx = tr1.sx;
+	tr2[jtr].sy = tr1.sy;
+	tr2[jtr].selev = tr1.selev;
 	tr2[jtr].gx += tr1.sx;
 	tr2[jtr].gy += tr1.sy;
 	tr2[jtr].gelev += tr1.selev;

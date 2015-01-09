@@ -1408,17 +1408,16 @@ namespace TSOpt {
 	  }
 
 	  for (int it=start[g.dim]; it<stop[g.dim]; it++) {
-		    cerr<<"it="<<it<<endl;
-	    //	    cerr<<"rk="<<retrieveGlobalRank()<<" it="<<it<<endl;
+
 	    if (dryrun) drystr<<"\n";
 	    step[g.dim]=it;
-	    /*	    
+
 	    if (!dryrun && (printact > 0)) {
 	      float dt = g.axes[g.dim].d;
 	      float ot = g.axes[g.dim].o;
 	      cerr<<"it="<<it<<" t="<<ot+it*dt<<endl;
 	    }
-	    */
+	    
 	    for (size_t i=0; i<t.size(); i++) {
 	      if (s[i]) {
 		//		cerr<<"rk="<<retrieveGlobalRank()<<" sampler["<<i<<"]\n";
