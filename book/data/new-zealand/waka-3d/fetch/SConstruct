@@ -94,21 +94,21 @@ Result("image3d","image",
 
 Plot('image1400','image',
      '''
-     sfwindow min3=1400 max3=1400 
-     | sfgrey title='waka-3d line 1400'
+     sfwindow min3=1400 max3=1400       \
+     | sfgrey title='waka-3d line 1400' \
      ''')
 Plot('imagex1213','image',
      '''
-     sfwindow min2=1213 max2=1213
-     | sfput label2='xline' 
+     sfwindow min2=1213 max2=1213 \
+     | sfput label2='xline'       \
      | sfgrey title='waka-3d xline 1213'
      ''')
 Result("imageilxl","image1400 imagex1213",'SideBySideAniso')
 
 #Result("imageslice","image",
 #	'''
-#	sfwindow min1=.2 max1=.202  \
-#	| sftransp plane=13 \
+#	sfwindow min1=.2 max1=.202            \
+#	| sftransp plane=13                   \
 #	| sfgrey gainpanel=a title='waka-3d'
 #	''')
    
