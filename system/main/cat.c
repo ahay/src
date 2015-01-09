@@ -192,7 +192,7 @@ int main (int argc, char* argv[])
     sf_setform(out,SF_NATIVE);
 
     for (i=0; i < nopen; i++) {
-	sf_setform(ins[0],SF_NATIVE);
+	sf_setform(ins[i],SF_NATIVE);
     }
 
     for (i2=0; i2 < n2; i2++) {
