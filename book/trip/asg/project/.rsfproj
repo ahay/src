@@ -1,0 +1,3 @@
+uses=['sftouch', 'sfstandardmodel', 'sfdd', 'sfwindow', 'sfput', 'sfgrey', 'sfspike', 'sfmath', 'sfsegyheader', 'sfsuwrite', 'sftowed_array', 'sfmakevel', 'sfasg', 'sfsuread', 'sfcat', 'sfgraph']
+data=[]
+size=   58715852
