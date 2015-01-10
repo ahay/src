@@ -375,24 +375,6 @@ void asg_timestep(std::vector<RDOM *> dom,
     ev[idim]=(asgpars->ev)[idim] - gsa[idim];
     evp[idim]=(asgpars->evp)[idim] - gsa[idim];
   }
-  
-  // address list - 2D
-  register ireal ** restrict bulk2;
-  register ireal ** restrict buoy2;
-  register ireal ** restrict p02;
-  register ireal ** restrict p12;
-  register ireal ** restrict v02;
-  register ireal ** restrict v12;
-
-  // address list - 3D
-  register ireal *** restrict bulk3;
-  register ireal *** restrict buoy3;
-  register ireal *** restrict p03;
-  register ireal *** restrict p13;
-  register ireal *** restrict p23;
-  register ireal *** restrict v03;
-  register ireal *** restrict v13;
-  register ireal *** restrict v23;
 
   /* sizes of computational domain - P0 same as P1, P2 */
   IPNT gsc_p;
@@ -404,39 +386,28 @@ void asg_timestep(std::vector<RDOM *> dom,
   rd_gse(dom[0], i_v[1], gsc_v[1], gec_v[1]);    
   rd_gse(dom[0], i_v[2], gsc_v[2], gec_v[2]);    
 
-  // divergence workspace
-  register ireal * sdiv = (ireal *)usermalloc_((gec_p[0]-gsc_p[0]+1)*sizeof(ireal));
-  register ireal ** gradp = (ireal **)usermalloc_(RARR_MAX_NDIM * sizeof(ireal*));
   int ndim;
   ra_ndim(&(dom[0]->_s[i_p[0]]),&ndim);
-  for (int i=0;i<ndim; i++) 
-    gradp[i] = (ireal *)usermalloc_((gec_v[i][0]-gsc_v[i][0]+1)*sizeof(ireal));
-
-  if (ndim == 2) {
-    bulk2 = (dom[0]->_s)[0]._s2;
-    buoy2 = (dom[0]->_s)[1]._s2;
-    p02 = (dom[0]->_s)[i_p[0]]._s2;
-    p12 = (dom[0]->_s)[i_p[1]]._s2;
-    v02 = (dom[0]->_s)[i_v[0]]._s2;
-    v12 = (dom[0]->_s)[i_v[1]]._s2;
-  }
-  else if (ndim == 3) {
-    bulk3 = (dom[0]->_s)[0]._s3;
-    buoy3 = (dom[0]->_s)[1]._s3;
-    p03 = (dom[0]->_s)[i_p[0]]._s3;
-    p13 = (dom[0]->_s)[i_p[1]]._s3;
-    p23 = (dom[0]->_s)[i_p[2]]._s3;
-    v03 = (dom[0]->_s)[i_v[0]]._s3;
-    v13 = (dom[0]->_s)[i_v[1]]._s3;
-    v23 = (dom[0]->_s)[i_v[2]]._s3;
-  }
 
   int n  = dom.size();
 
   if (n==1) {
     if(fwd == true) {
       if (ndim == 2) {
+	register ireal ** restrict bulk2 = (dom[0]->_s)[0]._s2;
+	register ireal ** restrict buoy2 = (dom[0]->_s)[1]._s2;
+	register ireal ** restrict p02 = (dom[0]->_s)[i_p[0]]._s2;
+	register ireal ** restrict p12 = (dom[0]->_s)[i_p[1]]._s2;
+	register ireal ** restrict v02 = (dom[0]->_s)[i_v[0]]._s2;
+	register ireal ** restrict v12 = (dom[0]->_s)[i_v[1]]._s2;
+
 	if (iv == 0) {
+	  cerr<<"iv=0\n";
+	  ireal * sdiv = new ireal[gec_p[0]-gsc_p[0]+1];//(ireal *)usermalloc_((gec_p[0]-gsc_p[0]+1)*sizeof(ireal));
+	  cerr<<"sdiv="<<sdiv<<endl;
+	  ireal * sdiv1 = new ireal[gec_p[0]-gsc_p[0]+1];
+	  cerr<<"delete sdiv1\n";
+	  delete [] sdiv1;
 	  // this loop nest and similar for 3D guarantees that pml pressure arrays 
 	  // are identical in physical domain. Since source is added to p0 before
 	  // timestep called, in effect it is added to all copies of pressure.
@@ -459,6 +430,10 @@ void asg_timestep(std::vector<RDOM *> dom,
 		      gsc_p,gec_p,
 		      asgpars->lbc,asgpars->rbc,
 		      asgpars->k,asgpars->coeffs);
+	  cerr<<"sdiv="<<sdiv<<endl;
+	  delete [] sdiv;
+	  cerr<<"after sdiv\n";
+	  //	  userfree_(sdiv);
 	  //	  psq=0.0f;
 	  //	  for (int i1=gsc_p[1]+asgpars->nls[1]; i1<=gec_p[1]-asgpars->nrs[1];i1++) {
 	  //	    for (int i0=gsc_p[0]+asgpars->nls[0]; i0<=gec_p[0]-asgpars->nrs[0];i0++) {
@@ -468,6 +443,7 @@ void asg_timestep(std::vector<RDOM *> dom,
 	  //	  cerr<<"psq="<<psq<<endl;
 	}
 	if (iv == 1) {
+	  cerr<<"iv=1\n";
 	  //	  float psq=0.0f;
 	  //	  for (int i1=gsc_p[1]+asgpars->nls[1]; i1<=gec_p[1]-asgpars->nrs[1];i1++) {
 	  //	    for (int i0=gsc_p[0]+asgpars->nls[0]; i0<=gec_p[0]-asgpars->nrs[0];i0++) {
@@ -475,6 +451,9 @@ void asg_timestep(std::vector<RDOM *> dom,
 	  //	    }
 	  //	  }
 	  //	  cerr<<"psq="<<psq<<endl;
+	  ireal * gradp[RARR_MAX_NDIM];
+	  gradp[0] = (ireal *)usermalloc_((gec_v[0][0]-gsc_v[0][0]+1)*sizeof(ireal));
+	  gradp[1] = (ireal *)usermalloc_((gec_v[1][0]-gsc_v[1][0]+1)*sizeof(ireal));
 	  asg_vstep2d(buoy2,
 		      p02,p12,
 		      v02,v12,
@@ -484,6 +463,12 @@ void asg_timestep(std::vector<RDOM *> dom,
 		      &(gsc_v[1][0]),&(gec_v[1][0]),
 		      asgpars->lbc,asgpars->rbc,
 		      asgpars->k,asgpars->coeffs);
+
+	  cerr<<"gradp["<<0<<"]\n";
+	  userfree_(gradp[0]);
+	  cerr<<"gradp["<<1<<"]\n";
+	  userfree_(gradp[1]);
+  
 	  //	  float vsq=0.0f;
 	  //	  for (int i1=gsc_v[0][1]+asgpars->nls[1]; i1<=gec_v[0][1]-asgpars->nrs[1];i1++) {
 	  //	    for (int i0=gsc_v[0][0]+asgpars->nls[0]; i0<=gec_v[0][0]-asgpars->nrs[0];i0++) {
@@ -494,7 +479,16 @@ void asg_timestep(std::vector<RDOM *> dom,
 	}
       }
       if (ndim == 3) {
+	register ireal *** restrict bulk3 = (dom[0]->_s)[0]._s3;
+	register ireal *** restrict buoy3 = (dom[0]->_s)[1]._s3;
+	register ireal *** restrict p03 = (dom[0]->_s)[i_p[0]]._s3;
+	register ireal *** restrict p13 = (dom[0]->_s)[i_p[1]]._s3;
+	register ireal *** restrict p23 = (dom[0]->_s)[i_p[2]]._s3;
+	register ireal *** restrict v03 = (dom[0]->_s)[i_v[0]]._s3;
+	register ireal *** restrict v13 = (dom[0]->_s)[i_v[1]]._s3;
+	register ireal *** restrict v23 = (dom[0]->_s)[i_v[2]]._s3;
 	if (iv == 0) {
+	  ireal * sdiv = (ireal *)usermalloc_((gec_p[0]-gsc_p[0]+1)*sizeof(ireal));
 	  for (int i2=gsc_p[2]+asgpars->nls[2]; i2<=gec_p[2]-asgpars->nrs[2];i2++) {
 	    for (int i1=gsc_p[1]+asgpars->nls[1]; i1<=gec_p[1]-asgpars->nrs[1];i1++) {
 	      for (int i0=gsc_p[0]+asgpars->nls[0]; i0<=gec_p[0]-asgpars->nrs[0];i0++) {
@@ -511,8 +505,13 @@ void asg_timestep(std::vector<RDOM *> dom,
 		      gsc_p,gec_p,
 		      asgpars->lbc,asgpars->rbc,
 		      asgpars->k,asgpars->coeffs);
+	  userfree_(sdiv);
 	}
 	if (iv == 1) {
+	  ireal * gradp[RARR_MAX_NDIM];
+	  gradp[0] = (ireal *)usermalloc_((gec_v[0][0]-gsc_v[0][0]+1)*sizeof(ireal));
+	  gradp[1] = (ireal *)usermalloc_((gec_v[1][0]-gsc_v[1][0]+1)*sizeof(ireal));
+	  gradp[2] = (ireal *)usermalloc_((gec_v[2][0]-gsc_v[2][0]+1)*sizeof(ireal));
 	  asg_vstep3d(buoy3,
 		      p03,p13,p23,
 		      v03,v13,v23,
@@ -523,6 +522,12 @@ void asg_timestep(std::vector<RDOM *> dom,
 		      &(gsc_v[2][0]),&(gec_v[2][0]),
 		      asgpars->lbc,asgpars->rbc,
 		      asgpars->k,asgpars->coeffs);
+	  cerr<<"gradp["<<0<<"]\n";
+	  userfree_(gradp[0]);
+	  cerr<<"gradp["<<1<<"]\n";
+	  userfree_(gradp[1]);
+	  cerr<<"gradp["<<2<<"]\n";
+	  userfree_(gradp[2]);
 	}
       }
     }
@@ -556,9 +561,6 @@ void asg_timestep(std::vector<RDOM *> dom,
     throw e;
   }
 
-  userfree_(sdiv);
-  for (int i=0; i<ndim; i++) userfree_(gradp[i]);
-  userfree_(gradp);
 }
 
 /**

@@ -43,9 +43,13 @@ Flow('ss',['xs','zs'],'''
      ''', stdin=0)
 
 #Creating data at specified receiver + saving full wavefield every 10th step: 
-Flow(['Fdat', 'Fwfl'], ['Fwav', 'Fvel', 'Fden', 'ss', 'rr'], 'awefd2d  vel=${SOURCES[1]} sou=${SOURCES[3]} rec=${SOURCES[4]} wfl=${TARGETS[1]} den=${SOURCES[2]} verb=y free=y expl=y snap=y dabc=y jdata=1 jsnap=10',split=[2,2,[3]],reduce='cat axis=3') 
+Flow(['Fdat', 'Fwfl'], ['Fwav', 'Fvel', 'Fden', 'ss', 'rr'], 'awefd2d  vel=${SOURCES[1]} sou=${SOURCES[3]} rec=${SOURCES[4]} wfl=${TARGETS[1]} den=${SOURCES[2]} verb=y free=y expl=y snap=y dabc=y jdata=1 jsnap=10',split=[2,2,[3]],reduce='cat axis=3 d=200 o=300') 
 
-Flow(['Fdat_omp', 'Fwfl_omp'], ['Fwav', 'Fvel', 'Fden', 'ss', 'rr'], 'awefd2d  vel=${SOURCES[1]} sou=${SOURCES[3]} rec=${SOURCES[4]} wfl=${TARGETS[1]} den=${SOURCES[2]} verb=y free=y expl=y snap=y dabc=y jdata=1 jsnap=10',split=[2,'omp',[3]],reduce='cat axis=3') 
+Flow(['Fdat_sim', 'Fwfl_sim'], ['Fwav', 'Fvel', 'Fden', 'ss', 'rr'], 'awefd2d  vel=${SOURCES[1]} sou=${SOURCES[3]} rec=${SOURCES[4]} wfl=${TARGETS[1]} den=${SOURCES[2]} verb=y free=y expl=y snap=y dabc=y jdata=1 jsnap=10') 
+
+Flow(['Fdat_omp', 'Fwfl_omp'], ['Fwav', 'Fvel', 'Fden', 'ss', 'rr'], 'awefd2d  vel=${SOURCES[1]} sou=${SOURCES[3]} rec=${SOURCES[4]} wfl=${TARGETS[1]} den=${SOURCES[2]} verb=y free=y expl=y snap=y dabc=y jdata=1 jsnap=10',split=[2,'omp',[3]],reduce='cat axis=3 d=200 o=300') 
+
+Flow(['Fdat_mpi', 'Fwfl_mpi'], ['Fwav', 'Fvel', 'Fden', 'ss', 'rr'], 'awefd2d  vel=${SOURCES[1]} sou=${SOURCES[3]} rec=${SOURCES[4]} wfl=${TARGETS[1]} den=${SOURCES[2]} verb=y free=y expl=y snap=y dabc=y jdata=1 jsnap=10',split=[2,'mpi',[3]],reduce='cat axis=3 d=200 o=300') 
 
 #View the wavefield movie:
 Result('movie', 'Fwfl', 'grey gainpanel=a pclip=99 color=j scalebar=y')
