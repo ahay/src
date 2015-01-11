@@ -152,7 +152,7 @@ struct PML2D{
     float **upright;
     float **downright;
     float **downleft;
-    float **upleft;    
+    float **upleft;
 };
 
 
@@ -160,28 +160,28 @@ struct PML3D{
     float ***Upsizx; float ***Upsizy; float ***UPSIzxy;
     float ***Dpsizx; float ***Dpsizy; float ***DPSIzxy;
     float ***Fpsiyx; float ***Fpsiyz; float ***FPSIyzx;
-    float ***Bpsiyx; float ***Bpsiyz; float ***BPSIyzx;    
+    float ***Bpsiyx; float ***Bpsiyz; float ***BPSIyzx;
     float ***Lpsixy; float ***Lpsixz; float ***LPSIxyz;
-    float ***Rpsixy; float ***Rpsixz; float ***RPSIxyz;        
+    float ***Rpsixy; float ***Rpsixz; float ***RPSIxyz;
     float ***ULPSIzxy; float ***URPSIzxy;
-    float ***DLPSIzxy; float ***DRPSIzxy;    
+    float ***DLPSIzxy; float ***DRPSIzxy;
     float ***UFPSIyzx; float ***UBPSIyzx;
     float ***DFPSIyzx; float ***DBPSIyzx;
     float ***LFPSIxyz; float ***RFPSIxyz;
-    float ***LBPSIxyz; float ***RBPSIxyz;        
+    float ***LBPSIxyz; float ***RBPSIxyz;
     float ***ULU; float ***URU; float ***DRU; float ***DLU;
     float ***UFU; float ***UBU; float ***DBU; float ***DFU;
-    float ***LFU; float ***RFU; float ***RBU; float ***LBU;        
+    float ***LFU; float ***RFU; float ***RBU; float ***LBU;
     float ***ULFW;   float ***URFW;   float ***DRFW;   float ***DLFW;
-    float ***ULBW;   float ***URBW;   float ***DRBW;   float ***DLBW;     
+    float ***ULBW;   float ***URBW;   float ***DRBW;   float ***DLBW;
 };
 
 
 /*------------------------------------------------------------*/
-fdm2d fdutil_init(bool verb_, 
+fdm2d fdutil_init(bool verb_,
 		  bool free_,
-		  sf_axis az_, 
-		  sf_axis ax_, 
+		  sf_axis az_,
+		  sf_axis ax_,
 		  int     nb_,
 		  int ompchunk_);
 /*< init fdm utilities >*/
@@ -225,6 +225,31 @@ void expand(float** a,
 
 
 /*------------------------------------------------------------*/
+void wpad2d(float **out, 
+	    float **inp, 
+	    fdm2d   fdm);
+/*< pad wavefield >*/
+
+
+void wpad3d(float ***out, 
+	    float ***inp, 
+	    fdm3d    fdm);
+/*< pad wavefield >*/
+
+
+void wwin2d(float **out, 
+	    float **inp, 
+	    fdm2d   fdm);
+/*< win wavefield >*/
+
+
+void wwin3d(float ***out, 
+	    float ***inp, 
+	    fdm3d    fdm);
+/*< win wavefield >*/
+
+
+/*------------------------------------------------------------*/
 void expand3d(float ***a, 
 	      float ***b, 
 	      fdm3d  fdm);
@@ -232,46 +257,21 @@ void expand3d(float ***a,
 
 
 /*------------------------------------------------------------*/
-void wpad2d(float **out,
-            float **inp,
-            fdm2d   fdm);
-/*< pad wavefield >*/
-
-
-void wpad3d(float ***out,
-            float ***inp,
-            fdm3d    fdm);
-/*< pad wavefield >*/
-
-
-void wwin2d(float **out,
-            float **inp,
-            fdm2d   fdm);
-/*< win wavefield >*/
-
-
-void wwin3d(float ***out,
-            float ***inp,
-            fdm3d    fdm);
-/*< win wavefield >*/
-
-
-/*------------------------------------------------------------*/
 void cut2d(float**  a,
-           float**  b,
-           fdm2d  fdm,
-           sf_axis cz,
-           sf_axis cx);
+	   float**  b,
+	   fdm2d  fdm,
+	   sf_axis cz, 
+	   sf_axis cx);
 /*< cut a rectangular wavefield subset >*/
 
 
 /*------------------------------------------------------------*/
 void cut3d(float*** a,
-           float*** b,
-           fdm3d  fdm,
-           sf_axis cz,
-           sf_axis cx,
-           sf_axis cy);
+	   float*** b,
+	   fdm3d  fdm,
+	   sf_axis cz, 
+	   sf_axis cx,
+	   sf_axis cy);
 /*< cut a rectangular wavefield subset >*/
 
 
@@ -292,57 +292,57 @@ void bfill(float** b,
 
 /*------------------------------------------------------------*/
 scoef3d sinc3d_make(int nc,
-                    pt3d* aa,
-                    fdm3d fdm);
+                 pt3d* aa,
+                 fdm3d fdm);
 /*< init the sinc3d interpolation for injection/extraction >*/
 
 
 /*------------------------------------------------------------*/
 void sinc3d_inject(float***uu,
-                   float *dd,
-                   scoef3d ca);
+		   float *dd,
+		   scoef3d ca);
 /*< inject into wavefield >*/
 
 
 /*------------------------------------------------------------*/
 void sinc3d_inject1(float***uu,
-                    float dd,
-                    scoef3d ca);
+		   float dd,
+		   scoef3d ca);
 /*< inject into wavefield >*/
 
 
 /*------------------------------------------------------------*/
 void sinc3d_extract(float***uu,
-                    float *dd,
-                    scoef3d ca);
+		   float *dd,
+		   scoef3d ca);
 /*< inject into wavefield >*/
 
 
 /*------------------------------------------------------------*/
 void sinc3d_extract1(float***uu,
-                     float *dd,
-                     scoef3d ca);
+		   float *dd,
+		   scoef3d ca);
 /*< inject into wavefield >*/
 
 
 /*------------------------------------------------------------*/
 scoef2d sinc2d_make(int nc,
-                    pt2d* aa,
-                    fdm2d fdm);
+                 pt2d* aa,
+                 fdm2d fdm);
 /*< init the sinc2d interpolation for injection/extraction >*/
 
 
 /*------------------------------------------------------------*/
 void sinc2d_inject(float**uu,
-                   float *dd,
-                   scoef2d ca);
+		   float *dd,
+		   scoef2d ca);
 /*< inject into wavefield >*/
 
 
 /*------------------------------------------------------------*/
 void sinc2d_inject1(float**uu,
-                    float dd,
-                    scoef2d ca);
+                   float dd,
+                   scoef2d ca);
 /*< inject into wavefield >*/
 
 
@@ -355,8 +355,8 @@ void sinc2d_extract(float**uu,
 
 /*------------------------------------------------------------*/
 void sinc2d_extract1(float**uu,
-                     float *dd,
-                     scoef2d ca);
+                    float *dd,
+                    scoef2d ca);
 /*< extract from wavefield >*/
 
 
@@ -383,43 +383,42 @@ void lint2d_hold(float**uu,
 
 /*------------------------------------------------------------*/
 void lint2d_inject(float**uu,
-		   float *ww,
+		   float *dd,
 		   lint2d ca);
 /*< inject into wavefield >*/
 
 
-/*------------------------------------------------------------*/
-void lint3d_inject(float***uu,
-		   float  *ww,
-		   lint3d  ca);
-/*< inject into wavefield >*/
-
-
-/*------------------------------------------------------------*/
-void lint2d_inject1(float**uu,
-		    float  ww,
-		    lint2d ca);
-/*< inject into wavefield >*/
-
-
-/*------------------------------------------------------------*/
-void lint3d_inject1(float***uu,
-		    float   ww,
-		    lint3d  ca);
-/*< inject into wavefield >*/
-
-
-/*------------------------------------------------------------*/
 void lint2d_extract(float**uu,
 		    float* dd,
 		    lint2d ca);
 /*< extract from wavefield >*/
 
 
+/*------------------------------------------------------------*/
+void lint3d_inject(float***uu,
+		   float  *dd,
+		   lint3d  ca);
+/*< inject into wavefield >*/
+
+
 void lint3d_extract(float***uu,
 		    float  *dd,
 		    lint3d  ca);
 /*< extract from wavefield >*/
+
+
+/*------------------------------------------------------------*/
+void lint2d_inject1(float**uu,
+		    float  dd,
+		    lint2d ca);
+/*< inject into wavefield >*/
+
+
+/*------------------------------------------------------------*/
+void lint3d_inject1(float***uu,
+		    float   dd,
+		    lint3d  ca);
+/*< inject into wavefield >*/
 
 
 /*------------------------------------------------------------*/
@@ -448,15 +447,15 @@ void lint3d_bell(float***uu,
 
 /*------------------------------------------------------------*/
 void lint2d_bell1(float**uu,
-                  float ww,
-                  lint2d ca);
+		 float ww,
+		 lint2d ca);
 /*< apply bell taper >*/
 
 
 /*------------------------------------------------------------*/
 void lint3d_bell1(float***uu,
-                  float  ww,
-                  lint3d  ca);
+		 float  ww,
+		 lint3d  ca);
 /*< apply bell taper >*/
 
 
@@ -508,12 +507,6 @@ void sponge2d_apply(float**   uu,
 /*< apply boundary sponge >*/
 
 
-void sponge2d_apply_test(float**   uu,
-		    sponge   spo,
-		    fdm2d    fdm);
-/*< apply boundary sponge >*/
-
-
 /*------------------------------------------------------------*/
 void sponge3d_apply(float  ***uu,
 		    sponge   spo,
@@ -522,27 +515,27 @@ void sponge3d_apply(float  ***uu,
 
 
 bool cfl_generic(
-    float vpmin, float vpmax, 
-    float dx, float dy, float dz,
-    float dt, float fmax, float safety, 
-    int intervals, char *wave);
+                 float vpmin, float vpmax,
+                 float dx, float dy, float dz,
+                 float dt, float fmax, float safety,
+                 int intervals, char *wave);
 /*< cfl check for both 2d and 3d acoustic fdcode >*/
 
 
 bool cfl_elastic(
-    float vpmin, float vpmax, 
-    float vsmin, float vsmax,
-    float dx, float dy, float dz,
-    float dt, float fmax, float safety, 
-    int intervals);
+                 float vpmin, float vpmax,
+                 float vsmin, float vsmax,
+                 float dx, float dy, float dz,
+                 float dt, float fmax, float safety,
+                 int intervals);
 /*< cfl check for both 2d and 3d elastic fdcode >*/
 
 
 bool cfl_acoustic(
-    float vpmin, float vpmax,
-    float dx, float dy, float dz,
-    float dt, float fmax, float safety,
-    int intervals);
+                  float vpmin, float vpmax,
+                  float dx, float dy, float dz,
+                  float dt, float fmax, float safety,
+                  int intervals);
 /*< cfl check for acoustic wave equation >*/
 
 
@@ -581,7 +574,7 @@ void pml3d_velApply(float ***vx,
 /*------------------------------------------------------------*/
 void pml2d_presApply(float   **u,
                      float  **vx,
-                     float  **vz, 
+                     float  **vz,
                      float    dt,
                      PML2D   pml,
                      float **com,
