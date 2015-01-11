@@ -22,7 +22,7 @@ else:
 
 #-------------------------------------------------------------------------
 
-cprogs = '''permwave2d awefd2dopt'''
+cprogs = '''permwave2d'''
 ccprogs = '''permlr2ddti'''
 cuprogs = '''awefd3dgpu'''
 cmpiprogs = '''mpitransp'''
@@ -44,8 +44,6 @@ clibpath = env.get('LIBPATH')
 clibs = env.get('LIBS')
 env_c = env.Clone()
 # -------
-if 'awefd2dopt' or 'awefd3dopt' in Split(cprogs):
-    env_c.Prepend(LIBS=['su'])
 ctargets = bldutil.HuiSconsTargets(cfiles=cprogs)
 ctargets.build_c(env_c, glob_build, srcroot, bindir, libdir, pkgdir)
 
