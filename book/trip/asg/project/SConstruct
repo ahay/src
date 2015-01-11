@@ -5,7 +5,7 @@ from rsf.proj import *
 asg = 'asg'
 stdmdl='standardmodel'
 ################################# OR ##################################
-#RSFSRC          = os.getenv('RSFSRC')
+RSFSRC          = os.getenv('RSFSRC')
 #asg             = os.path.join(RSFSRC,'trip/iwave/asg/main/asg.x')
 #stdmdl          = os.path.join(RSFSRC,'trip/iwave/demo/main/standardmodel.x')
 #######################################################################
