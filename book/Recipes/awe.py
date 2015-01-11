@@ -121,11 +121,31 @@ def cdafd3d(odat,owfl,idat,velo,sou,rec,custom,par):
          ''' + ' ' + awepar(par) + ' ' + custom)
 
 # ------------------------------------------------------------
+# variable-density acoustic FD modeling with optimized fd and hybrid bc
+def awefd2dopt(odat,owfl,idat,velo,dens,sou,rec,custom,par):
+    Flow([odat,owfl],[idat,velo,dens,sou,rec],
+         '''
+         awefd2dopt cden=n
+         vel=${SOURCES[1]} den=${SOURCES[2]}
+         sou=${SOURCES[3]} rec=${SOURCES[4]}
+         wfl=${TARGETS[1]}
+         ''' + ' ' + awepar(par) + ' ' + custom)
+
+def awefd3dopt(odat,owfl,idat,velo,dens,sou,rec,custom,par):
+    Flow([odat,owfl],[idat,velo,dens,sou,rec],
+         '''
+         awefd3dopt cden=n
+         vel=${SOURCES[1]} den=${SOURCES[2]}
+         sou=${SOURCES[3]} rec=${SOURCES[4]}
+         wfl=${TARGETS[1]}
+         ''' + ' ' + awepar(par) + ' ' + custom)
+ 
+# ------------------------------------------------------------
 # constant-density acoustic FD modeling with optimized fd and hybrid bc
 def cdafd2dopt(odat,owfl,idat,velo,sou,rec,custom,par):    
     Flow([odat,owfl],[idat,velo,sou,rec],
          '''
-         awefd2dopt
+         awefd2dopt cden=y
          vel=${SOURCES[1]}
          sou=${SOURCES[2]} rec=${SOURCES[3]}
          wfl=${TARGETS[1]}
@@ -134,7 +154,7 @@ def cdafd2dopt(odat,owfl,idat,velo,sou,rec,custom,par):
 def cdafd3dopt(odat,owfl,idat,velo,sou,rec,custom,par):    
     Flow([odat,owfl],[idat,velo,sou,rec],
          '''
-         awefd3dopt
+         awefd3dopt cden=y
          vel=${SOURCES[1]}
          sou=${SOURCES[2]} rec=${SOURCES[3]}
          wfl=${TARGETS[1]}
