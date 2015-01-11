@@ -19,9 +19,11 @@ def param(par):
     if(not par.has_key('ompnth')):   par['ompnth']=0
     if(not par.has_key('fsrf')):     par['fsrf']='n'
     if(not par.has_key('verb')):     par['verb']='n'
-    if(not par.has_key('fdorder')):    par['fdorder']=8
-    if(not par.has_key('optfd')):    par['optfd']='y'
-    if(not par.has_key('hybridbc')):    par['hybridbc']='y'
+    if(not par.has_key('fdorder')):    par['fdorder']=4
+    if(not par.has_key('optfd')):    par['optfd']='n'
+    if(not par.has_key('hybridbc')):    par['hybridbc']='n'
+    if(not par.has_key('sinc')):    par['sinc']='n'
+    if(not par.has_key('expl')):    par['expl']='n'
 
     if(not par.has_key('gaus')):     par['gaus']='y'
 
@@ -56,6 +58,7 @@ def aweoptpar(par):
     aweopt = ' ' + \
           '''
           verb=%(verb)s
+          sinc=%(sinc)s expl=%(expl)s
           fdorder=%(fdorder)d optfd=%(optfd)s
           dabc=%(dabc)s nb=%(nb)d hybridbc=%(hybridbc)s 
           snap=%(snap)s jsnap=%(jsnap)d
@@ -109,7 +112,7 @@ def cdafd2d(odat,owfl,idat,velo,sou,rec,custom,par):
          vel=${SOURCES[1]}
          sou=${SOURCES[2]} rec=${SOURCES[3]}
          wfl=${TARGETS[1]}
-         ''' + ' ' + awepar(par) + ' ' + custom)
+         ''' + ' ' + aweoptpar(par) + ' ' + custom)
 
 def cdafd3d(odat,owfl,idat,velo,sou,rec,custom,par):    
     Flow([odat,owfl],[idat,velo,sou,rec],
@@ -118,7 +121,7 @@ def cdafd3d(odat,owfl,idat,velo,sou,rec,custom,par):
          vel=${SOURCES[1]}
          sou=${SOURCES[2]} rec=${SOURCES[3]}
          wfl=${TARGETS[1]}
-         ''' + ' ' + awepar(par) + ' ' + custom)
+         ''' + ' ' + aweoptpar(par) + ' ' + custom)
 
 # ------------------------------------------------------------
 # variable-density acoustic FD modeling with optimized fd and hybrid bc
