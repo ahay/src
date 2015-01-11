@@ -1438,16 +1438,16 @@ namespace TSOpt {
 	    else { 
 	      //	      cerr<<"rk="<<retrieveGlobalRank()<<": timestep\n";
 	      for (int iv=0;iv<fd_numsubsteps(ic);iv++) {
-		cerr<<"timestep\n";
+		//		cerr<<"timestep\n";
 		ic.get_timestep()(w->getRDOMArray(),fwd,iv,fdm);
-	      	cerr<<"synch\n";
+		//	      	cerr<<"synch\n";
 		// in fwd loop, synch ALL dynamic arrays
 		
 		for (size_t k=0; k<w->getStateArray().size(); k++) {
 		  //		  if (w->getStateArray()[k]->printact > 5) 
 		  //		    fprintf(stream,"\n*** SYNCH: iwdx = %d\n\n",k);
 		  synch(w->getStateArray()[k],fwd,it,iv,ic,stream);
-		  cerr<<"  k="<<k<<"\n";
+		  //		  cerr<<"  k="<<k<<"\n";
 		}
 	      }
 	    }
