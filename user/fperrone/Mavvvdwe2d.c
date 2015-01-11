@@ -115,7 +115,7 @@ int main(int argc, char* argv[])
 
     /* cube axes */
     sf_axis at,az,ax;
-    sf_axis as,ar;
+    sf_axis as,ar1,ar2;
 
     int     nt,nz,nx,ns,nr,nb;
     int     it,iz,ix;
@@ -193,14 +193,15 @@ int main(int argc, char* argv[])
     ax = sf_iaxa(Fvel,2); sf_setlabel(ax,"x"); if(verb) sf_raxa(ax); /* space */
 
     as = sf_iaxa(Fsou,2); sf_setlabel(as,"s"); if(verb) sf_raxa(as); /* sources */
-    ar = sf_iaxa(Frec,2); sf_setlabel(ar,"r"); if(verb) sf_raxa(ar); /* receivers */
+    ar2 = sf_iaxa(Frec,2); sf_setlabel(ar2,"r"); if(verb) sf_raxa(ar2); /* receivers */
+	ar1 = sf_iaxa(Frec,1); sf_setlabel(ar1,"r"); if(verb) sf_raxa(ar1); /* receivers */
 
     nt = sf_n(at); dt = sf_d(at);
     nz = sf_n(az); dz = sf_d(az);
     nx = sf_n(ax); dx = sf_d(ax);
 
     ns = sf_n(as);
-    nr = sf_n(ar);
+    nr = sf_n(ar2);
     /*------------------------------------------------------------*/
 
     /*------------------------------------------------------------*/
@@ -224,7 +225,9 @@ int main(int argc, char* argv[])
     sf_setn(ax,fdm->nxpad); sf_seto(ax,fdm->oxpad); if(verb) sf_raxa(ax);
     /*------------------------------------------------------------*/
     /* setup output data header */
-    sf_oaxa(Fdat,ar,1);
+	sf_seto(ar2,sf_o(ar1));
+	sf_setd(ar2,sf_d(ar1));
+    sf_oaxa(Fdat,ar2,1);
 
     sf_setn(at,nt/jdata);
     sf_setd(at,dt*jdata);
@@ -276,7 +279,9 @@ int main(int argc, char* argv[])
 
     cs = lint2d_make(ns,ss,fdm);
     cr = lint2d_make(nr,rr,fdm);
-	fdbell_init(5);
+    
+    bell2d bell;
+    bell = fdbell_init(3);
     /*------------------------------------------------------------*/
     /* setup FD coefficients */
     idz = 1/dz;
@@ -344,13 +349,13 @@ int main(int argc, char* argv[])
     ua=sf_floatalloc2(fdm->nzpad,fdm->nxpad);
     uat=sf_floatalloc2(fdm->nzpad,fdm->nxpad);
 
-    for    (ix=0; ix<fdm->nxpad; ix++) {
-	for(iz=0; iz<fdm->nzpad; iz++) {
+    for		(ix=0; ix<fdm->nxpad; ix++) {
+	for		(iz=0; iz<fdm->nzpad; iz++) {
 	    um2[ix][iz]=0;
 	    um1[ix][iz]=0;
 	    uo[ix][iz]=0;
 	    ua[ix][iz]=0;
-	}
+		}
     }
 
 
@@ -371,8 +376,8 @@ int main(int argc, char* argv[])
 			#endif
 			{
 
+				/* Set free surface ghost cell */
 				if (fsrf){
-					/* free surface */
 					#ifdef _OPENMP
 					#pragma omp for schedule(dynamic,fdm->ompchunk)
 					#endif
@@ -400,9 +405,10 @@ int main(int argc, char* argv[])
 									);
 					}
 				}
-
+				
+				/* Apply free surface BC (no topography, only along the 1st axis) */
 				if (fsrf){
-					// free surface
+
 					#ifdef _OPENMP
 					#pragma omp for schedule(dynamic,fdm->ompchunk)
 					#endif
@@ -417,7 +423,6 @@ int main(int argc, char* argv[])
 					}
 				}
 				
-
 				#ifdef _OPENMP
 				#pragma omp for schedule(dynamic,fdm->ompchunk)
 				#endif
@@ -481,7 +486,8 @@ int main(int argc, char* argv[])
 			// source injection
 			/* inject acceleration source */
 			sf_floatread(ww,ns,Fwav);
-			lint2d_bell(uo,ww,cs);
+			lint2d_bell(uo,ww,bell,cs);
+
 
 			/* extract data at receivers */
 			lint2d_extract(uo,dd,cr);
@@ -509,7 +515,7 @@ int main(int argc, char* argv[])
 			
 	    } /* end time loop */
 	    end_t = clock();
-		if(verb) fprintf(stderr,"\r");
+		if(verb) fprintf(stderr,"\n");
 
 		if (verb){	
 			total_t = (float)(end_t - start_t) / CLOCKS_PER_SEC;
@@ -521,21 +527,21 @@ int main(int argc, char* argv[])
 	    if(verb) fprintf(stderr,"\nADJOINT ACOUSTIC VARIABLE-DENSITY WAVE EXTRAPOLATION \n");
 		// extrapolation
 		start_t = clock();
-		for (it=0; it<nt; it++){
+		for (it=0; it<nt-1; it++){
 			if(verb) fprintf(stderr,"%d/%d  \r",it,nt);
 
 			// source injection
 			/* inject acceleration source */
 			sf_floatread(ww,ns,Fwav);	
-			lint2d_bell(uo,ww,cs);
+			lint2d_bell(uo,ww,bell,cs);
 
 			/* extract data at receivers */
 			if(it%jdata==0) {
 				lint2d_extract(uo,dd,cr);
 				sf_floatwrite(dd,nr,Fdat);
 			}
-			/* extract wavefield in the "box" */
 
+			/* extract wavefield in the "box" */
 			if(snap && it%jsnap==0) {
 				cut2d(uo,uc,fdm,acz,acx);
 				sf_floatwrite(uc[0],sf_n(acz)*sf_n(acx),Fwfl);
@@ -649,7 +655,8 @@ int main(int argc, char* argv[])
 					for(iz=0; iz<fdm->nzpad; iz++) {
 				
 						um1[ix][iz] += 2*uo[ix][iz];
-						um2[ix][iz] = -uo[ix][iz];
+						if (it!=nt-2)
+							um2[ix][iz] = -uo[ix][iz];
 					}
 				}
 		
@@ -670,6 +677,26 @@ int main(int argc, char* argv[])
 			um2=ut;
 
     	} /* end time loop*/
+    	
+    	/* Last time step */
+		if(verb) fprintf(stderr,"%d/%d  \r",it,nt);
+		// source injection
+		/* inject acceleration source */
+		sf_floatread(ww,ns,Fwav);	
+		lint2d_bell(uo,ww,bell,cs);
+	
+		/* extract data at receivers */
+		if(it%jdata==0) {
+			lint2d_extract(uo,dd,cr);
+			sf_floatwrite(dd,nr,Fdat);
+		}
+
+		/* extract wavefield in the "box" */
+		if(snap && it%jsnap==0) {
+			cut2d(uo,uc,fdm,acz,acx);
+			sf_floatwrite(uc[0],sf_n(acz)*sf_n(acx),Fwfl);
+		}    	
+    	
     	end_t = clock();
 		if(verb) fprintf(stderr,"\n");
 

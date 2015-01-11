@@ -305,7 +305,9 @@ int main(int argc, char* argv[])
 
     cs = lint2d_make(ns,ss,fdm);
     cr = lint2d_make(nr,rr,fdm);
-	fdbell_init(5);
+	
+	bell2d bell;
+	bell = fdbell_init(3);
     /*------------------------------------------------------------*/
     /* setup FD coefficients */
     dt2 =    dt*dt;
@@ -581,7 +583,7 @@ int main(int argc, char* argv[])
 	
 	/* inject acceleration source */
 	sf_floatread(ww,ns,Fwav);	
-	lint2d_bell(bup,ww,cs);
+	lint2d_bell(bup,ww,bell,cs);
 
 	/* extract data */
 	lint2d_extract(bup,bdd,cr);

@@ -288,7 +288,7 @@ int main(int argc, char* argv[])
 
     cs = lint3d_make(ns,ss,fdm);
     cr = lint3d_make(nr,rr,fdm);
-	fdbell3d_init(5);
+	fdbell3d_init(1);
     /*------------------------------------------------------------*/
     /* setup FD coefficients */
     idz = 1/dz;

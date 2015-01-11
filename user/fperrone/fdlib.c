@@ -16,6 +16,9 @@ typedef struct fdm2 *fdm2d;
 typedef struct fdm3 *fdm3d;
 /*^*/
 
+typedef struct bcoef2d *bell2d;
+/*^*/
+
 typedef struct lcoef2 *lint2d;
 /*^*/
 
@@ -64,6 +67,13 @@ struct fdm3{
     int ompchunk;
 };
 /*^*/
+
+struct bcoef2d{
+	int nbell;
+	float **bell;
+};
+/*^*/
+
 
 struct lcoef2{
     int n;
@@ -121,6 +131,8 @@ struct ofg{
     float **tt;
 };
 /*^*/
+
+
 
 #endif
 
@@ -782,22 +794,26 @@ void lint3d_extract(float***uu,
 
 
 /*------------------------------------------------------------*/
-void fdbell_init(int n)
+bell2d fdbell_init(int n)
 /*< init bell taper >*/
 {
-    int   iz,ix;
-    float s;
+	int   i1,i2;
+	float s;
+	bell2d bell;
 
-    nbell = n;
-    s = 0.5*nbell;
+	bell = sf_alloc(1,sizeof(*bell));
 
-    bell=sf_floatalloc2(2*nbell+1,2*nbell+1);
+	bell->nbell = n;
+	s = 0.5*bell->nbell;
 
-    for    (ix=-nbell;ix<=nbell;ix++) {
-	for(iz=-nbell;iz<=nbell;iz++) {
-	    bell[nbell+ix][nbell+iz] = exp(-(iz*iz+ix*ix)/s);
+	bell->bell=sf_floatalloc2(2*n+1,2*n+1);
+
+	for		(i2=-n;i2<=n;i2++) {
+		for	(i1=-n;i1<=n;i1++) {
+			bell->bell[n+i2][n+i1] = exp(-(i1*i1+i2*i2)/s);
+		}
 	}
-    }    
+	return bell;
 }
 
 /*------------------------------------------------------------*/
@@ -824,26 +840,32 @@ void fdbell3d_init(int n)
 /*------------------------------------------------------------*/
 void lint2d_bell(float**uu,
 		 float *ww,
+		 bell2d bell,
 		 lint2d ca)
 /*< apply bell taper >*/
 {
-    int   ia,iz,ix;
-    float wa;
+	int   ia,iz,ix;
+	float wa;
+	int nbell;
+	float **b;
 
-    for    (ix=-nbell;ix<=nbell;ix++) {
+	nbell = bell->nbell;
+	b     = bell->bell;
+
+	for    (ix=-nbell;ix<=nbell;ix++) {
 		for(iz=-nbell;iz<=nbell;iz++) {
-	    
-	    	for (ia=0;ia<ca->n;ia++) {
-				wa = ww[ia] * bell[nbell+ix][nbell+iz];
+
+			for (ia=0;ia<ca->n;ia++) {
+				wa = ww[ia] * b[nbell+ix][nbell+iz];
+				//fprintf(stderr,"\n ix+ca->jx[ia]=%d,\t iz+ca->jz[ia]=%d,\t ix=%d, ca->jx[ia]=%d\t ",ix+ca->jx[ia],iz+ca->jz[ia],ix,ca->jx[ia]);
 
 				uu[ ix+ca->jx[ia]   ][ iz+ca->jz[ia]   ] -= wa * ca->w00[ia];
 				uu[ ix+ca->jx[ia]   ][ iz+ca->jz[ia]+1 ] -= wa * ca->w01[ia];
 				uu[ ix+ca->jx[ia]+1 ][ iz+ca->jz[ia]   ] -= wa * ca->w10[ia];
 				uu[ ix+ca->jx[ia]+1 ][ iz+ca->jz[ia]+1 ] -= wa * ca->w11[ia];
-	    	}
-
+			}
 		}
-    }
+	}
 }
 
 /*------------------------------------------------------------*/
