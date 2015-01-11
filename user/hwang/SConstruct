@@ -22,7 +22,7 @@ else:
 
 #-------------------------------------------------------------------------
 
-cprogs = '''permwave2d awefd2dopt awefd3dopt'''
+cprogs = '''permwave2d awefd2dopt'''
 ccprogs = '''permlr2ddti'''
 cuprogs = '''awefd3dgpu'''
 cmpiprogs = '''mpitransp'''

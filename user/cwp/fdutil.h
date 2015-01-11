@@ -10,6 +10,12 @@ typedef struct fdm2 *fdm2d;
 typedef struct fdm3 *fdm3d;
 
 
+typedef struct scoef2 *scoef2d;
+
+
+typedef struct scoef3 *scoef3d;
+
+
 typedef struct lcoef2 *lint2d;
 
 
@@ -62,6 +68,22 @@ struct fdm3{
     bool verb;
     bool free;
     int ompchunk;
+};
+
+
+struct scoef2{
+    int n;
+    int ix,iz;
+    int fx,fz,nx,nz;
+    float sincx[9], sincz[9];
+};
+
+
+struct scoef3{
+    int n;
+    int iy,ix,iz;
+    int fy,fx,fz,ny,nx,nz;
+    float sincy[9],sincx[9], sincz[9];
 };
 
 
@@ -210,21 +232,55 @@ void expand3d(float ***a,
 
 
 /*------------------------------------------------------------*/
+void wpad2d(float **out,
+            float **inp,
+            fdm2d   fdm);
+/*< pad wavefield >*/
+
+
+void wpad3d(float ***out,
+            float ***inp,
+            fdm3d    fdm);
+/*< pad wavefield >*/
+
+
+void wwin2d(float **out,
+            float **inp,
+            fdm2d   fdm);
+/*< win wavefield >*/
+
+
+void wwin3d(float ***out,
+            float ***inp,
+            fdm3d    fdm);
+/*< win wavefield >*/
+
+
+/*------------------------------------------------------------*/
 void cut2d(float**  a,
-	   float**  b,
-	   fdm2d  fdm,
-	   sf_axis c1, 
-	   sf_axis c2);
+           float**  b,
+           fdm2d  fdm,
+           sf_axis cz,
+           sf_axis cx);
 /*< cut a rectangular wavefield subset >*/
 
 
 /*------------------------------------------------------------*/
 void cut3d(float*** a,
-	   float*** b,
-	   fdm3d  fdm,
-	   sf_axis c1, 
-	   sf_axis c2,
-	   sf_axis c3);
+           float*** b,
+           fdm3d  fdm,
+           sf_axis cz,
+           sf_axis cx,
+           sf_axis cy);
+/*< cut a rectangular wavefield subset >*/
+
+
+/*------------------------------------------------------------*/
+void cut3d_slice(float** a,
+                 float** b,
+                 fdm3d  fdm,
+                 sf_axis cz,
+                 sf_axis cx);
 /*< cut a rectangular wavefield subset >*/
 
 
@@ -232,6 +288,76 @@ void cut3d(float*** a,
 void bfill(float** b, 
 	   fdm2d fdm);
 /*< fill boundaries >*/
+
+
+/*------------------------------------------------------------*/
+scoef3d sinc3d_make(int nc,
+                    pt3d* aa,
+                    fdm3d fdm);
+/*< init the sinc3d interpolation for injection/extraction >*/
+
+
+/*------------------------------------------------------------*/
+void sinc3d_inject(float***uu,
+                   float *dd,
+                   scoef3d ca);
+/*< inject into wavefield >*/
+
+
+/*------------------------------------------------------------*/
+void sinc3d_inject1(float***uu,
+                    float dd,
+                    scoef3d ca);
+/*< inject into wavefield >*/
+
+
+/*------------------------------------------------------------*/
+void sinc3d_extract(float***uu,
+                    float *dd,
+                    scoef3d ca);
+/*< inject into wavefield >*/
+
+
+/*------------------------------------------------------------*/
+void sinc3d_extract1(float***uu,
+                     float *dd,
+                     scoef3d ca);
+/*< inject into wavefield >*/
+
+
+/*------------------------------------------------------------*/
+scoef2d sinc2d_make(int nc,
+                    pt2d* aa,
+                    fdm2d fdm);
+/*< init the sinc2d interpolation for injection/extraction >*/
+
+
+/*------------------------------------------------------------*/
+void sinc2d_inject(float**uu,
+                   float *dd,
+                   scoef2d ca);
+/*< inject into wavefield >*/
+
+
+/*------------------------------------------------------------*/
+void sinc2d_inject1(float**uu,
+                    float dd,
+                    scoef2d ca);
+/*< inject into wavefield >*/
+
+
+/*------------------------------------------------------------*/
+void sinc2d_extract(float**uu,
+                    float *dd,
+                    scoef2d ca);
+/*< inject into wavefield >*/
+
+
+/*------------------------------------------------------------*/
+void sinc2d_extract1(float**uu,
+                     float *dd,
+                     scoef2d ca);
+/*< extract from wavefield >*/
 
 
 /*------------------------------------------------------------*/
@@ -317,6 +443,20 @@ void lint2d_bell(float**uu,
 void lint3d_bell(float***uu,
 		 float  *ww,
 		 lint3d  ca);
+/*< apply bell taper >*/
+
+
+/*------------------------------------------------------------*/
+void lint2d_bell1(float**uu,
+                  float ww,
+                  lint2d ca);
+/*< apply bell taper >*/
+
+
+/*------------------------------------------------------------*/
+void lint3d_bell1(float***uu,
+                  float  ww,
+                  lint3d  ca);
 /*< apply bell taper >*/
 
 

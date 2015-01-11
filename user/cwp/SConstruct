@@ -21,6 +21,7 @@ wexwfl weximg wexmig wexmva wexnmig wexzomva wexzoimg
 awesg
 cipcut
 ewefdm
+awefd3dopt
 '''
 
 targets.c_mpi = \
@@ -39,4 +40,7 @@ if glob_build:
 
     env.Install(pkgdir,'cluster.py')
 
-targets.build_all(env, glob_build, srcroot, bindir, libdir, pkgdir)
+env_all = env.Clone()
+env_all.Prepend(LIBS=['su'])
+
+targets.build_all(env_all, glob_build, srcroot, bindir, libdir, pkgdir)
