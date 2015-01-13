@@ -90,7 +90,12 @@ main(int argc, char** argv)
   pt3d* rec3d=NULL;  /*receiver position*/
   scoef3d cssinc = NULL, crsinc = NULL; 
   lint3d cslint = NULL, crlint = NULL;
+
+  /* FDM structure */
   fdm3d fdm = NULL;
+  abcone3d abc = NULL;
+  sponge spo = NULL;
+
   int nbell;
 
   /* init RSF */
@@ -249,12 +254,13 @@ main(int argc, char** argv)
 
   free(**tmp_array);  free(*tmp_array);  free(tmp_array);
 
-  abcone3d abc = NULL;
   /* A1 one-way ABC implicit scheme coefficients  */
   if (dabc) {
     abc = abcone3d_make(nbd,dt,vel,fsrf,fdm);
     if (hybrid)
       damp = damp_make(nbd-nop); /* compute damping profiles for hybrid bc */
+    else
+      spo = sponge_make(fdm->nb);
   }
 
   /* allocate memory for wavefield variables */
@@ -289,34 +295,37 @@ main(int argc, char** argv)
         sf_floatread(ws,1,file_wav);
         ws[0] *= dt2;
         if (sinc) sinc3d_inject1(u0,ws[0],cssinc);
-        else      lint3d_bell1(u0,ws[0],cslint);
-        /* else      lint3d_inject1(u0,ws[0],cslint); */
+        else      lint3d_inject1(u0,ws[0],cslint);
       } else { 
         sf_seek(file_wav,(off_t)(nt-it-1)*ns*sizeof(float),SEEK_SET);
         sf_floatread(ws,ns,file_wav);
         for (int is=0; is<ns; is++) ws[is] *= dt2;
         if (sinc) sinc3d_inject(u0,ws,cssinc);
-        else      lint3d_bell(u0,ws,cslint);
-        /* else      lint3d_inject(u0,ws,cslint); */
+        else      lint3d_inject(u0,ws,cslint);
       }
     } else { /* forward inject source wavelet */
       if (expl) {
         sf_floatread(ws,1,file_wav);
         ws[0] *= dt2;
         if (sinc) sinc3d_inject1(u0,ws[0],cssinc);
-        else      lint3d_bell1(u0,ws[0],cslint);
-        /* else      lint3d_inject1(u0,ws[0],cslint); */
+        else      lint3d_inject1(u0,ws[0],cslint);
       } else {
         sf_floatread(ws,ns,file_wav);
         for (int is=0; is<ns; is++) ws[is] *= dt2;
         if (sinc) sinc3d_inject(u0,ws,cssinc);
-        else      lint3d_bell(u0,ws,cslint);
-        /* else      lint3d_inject(u0,ws,cslint); */
+        else      lint3d_inject(u0,ws,cslint);
       }
     }
 
     /* apply abc */
-    if (dabc) apply_abc(u0,u1,nz,nx,ny,nbd,abc,nop,damp);
+    if (dabc) {
+      if (hybrid) apply_abc(u0,u1,nz,nx,ny,nbd,abc,nop,damp);
+      else {
+        abcone3d_apply(u0,u1,nop,abc,fdm);
+        sponge3d_apply(u0,spo,fdm);
+        sponge3d_apply(u1,spo,fdm);
+      }
+    }
 
     /* loop over pointers */
     ptr_tmp = u0;  u0 = u1;  u1 = ptr_tmp;
