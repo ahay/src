@@ -50,7 +50,7 @@ Flow('headerattr.txt','Kerry3D_hdr.rsf',
 #tscalar    82         -10000 @ 0	        -10000 @ 0	        -10000
 #****************************************************************************** 
 
-# near trace gather
+# create 3d mapped volume using trace headers
 Flow(['image.rsf','image_hdr.rsf'],['Kerry3D.rsf','Kerry3D_hdr.rsf'],
      '''
      sftahsort \
@@ -64,15 +64,41 @@ Flow(['image.rsf','image_hdr.rsf'],['Kerry3D.rsf','Kerry3D_hdr.rsf'],
 	  verbose=1
      ''',stdout=0, stdin=0)
        
-Result("image","sfgrey title='Kerry3D'")
-Result("zoomimage","image",
-       "window min1=1 max1=2 j3=10 | sfgrey title='Kerry3D'")
-Result("image3d","image",
+Result("image","sfwindow j3=50 | sfgrey title='Kerry3D'")
+#Result("zoomimage","image",
+#       "window min1=1 max1=2 j3=10 | sfgrey title='Kerry3D'")
+Result("image3df","image",
        '''
        byte 
        | grey3 frame1=600 frame2=367 frame3=143 title='Kerry3D'
        ''')
 
+Result("image3d","image",
+       '''
+       byte 
+       | grey3 frame1=600 frame2=367 frame3=143 
+         title='Kerry3D' flat=n
+       ''')
+
+Plot('imageil','image',
+     '''
+     sfwindow min3=653 max3=653 
+     | sfgrey title='Kerry 3d line 653'
+     ''')
+Plot('imagexl','image',
+     '''
+     sfwindow min2=425 max2=425
+     | sfput label2='xline' 
+     | sfgrey title='Kerry 3d xline 425'
+     ''')
+Result("imageilxl","imageil imagexl",'SideBySideAniso')
+
+Result("imageslice","image",
+	'''
+	sfwindow min1=1.5 max1=1.504 \
+	| sftransp plane=13 \
+	| sfgrey gainpanel=a title='Kerry 3d'
+	''')
 
    
 End()
