@@ -104,11 +104,6 @@ int main (int argc, char *argv[])
     /* compute second wavefront (it=1) by orthogonal rays */
     it=1;
 
-    Po=wm[0]; 
-    Pp=wm[2]; 
-    Ro=hwt2d_orth(Po,Po,Pp);
-    wo[0] = Ro;
-
     for( ig=1; ig<ng-1; ig++) {
 
 	Pm = wm[ig-1];
@@ -121,11 +116,16 @@ int main (int argc, char *argv[])
 	wo[ig] = Ro;
     }
 
-    Pm=wm[ng-3]; 
-    Po=wm[ng-1]; 
-    Ro=hwt2d_orth(Pm,Po,Po);
-    wo[ng-1] = Ro;
-
+    /* ig=0 */
+    wo[0].x = wm[0].x + (wo[1].x-wm[1].x);
+    wo[0].z = wm[0].z + (wo[1].z-wm[1].z);
+    wo[0].v = hwt2d_getv(wo[0]);
+    
+    /* ig=ng-1 */
+    wo[ng-1].x = wm[ng-1].x + (wo[ng-2].x-wm[ng-2].x);
+    wo[ng-1].z = wm[ng-1].z + (wo[ng-2].z-wm[ng-2].z);
+    wo[ng-1].v = hwt2d_getv(wo[ng-1]);
+    
     pt2dwrite1(Fw,wo,ng,2); /* write wavefront it=1 */
 
     /*------------------------------------------------------------*/

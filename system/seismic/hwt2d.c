@@ -165,7 +165,7 @@ pt2d hwt2d_step(pt2d Qo, pt2d Pm, pt2d Po, pt2d Pp)
 
 /*------------------------------------------------------------*/
 
-pt2d hwt2d_orth( pt2d Pm, pt2d Po, pt2d Pp)
+pt2d hwt2d_orthold( pt2d Pm, pt2d Po, pt2d Pp)
 /*< orthogonal step forward  >*/
 {
     pt2d   Ro;
@@ -180,7 +180,7 @@ pt2d hwt2d_orth( pt2d Pm, pt2d Po, pt2d Pp)
 	tana = (Pp.z-Pm.z) / (Pp.x-Pm.x);
 	ss   = SF_SIG(tana);
 	
-	tana = SF_ABS(tana);	
+	tana = SF_ABS(tana); 	
 	sina = tana/sqrt(1+tana*tana);
 	cosa =    1/sqrt(1+tana*tana);
     } else {
@@ -196,4 +196,36 @@ pt2d hwt2d_orth( pt2d Pm, pt2d Po, pt2d Pp)
     Ro.v=hwt2d_getv(Ro);
     
     return(Ro);
+}
+
+pt2d hwt2d_orth(pt2d P, pt2d O, pt2d M)
+/*< orthogonal step forward  >*/
+{
+    pt2d   R;
+    vc2d OP,OM,MO,OR;
+    float  lo;
+    int sMOP;
+    
+    lo = O.v * at.d;
+
+    MO = vec2d(&M,&O); MO = nor2d(&MO);
+    OM = vec2d(&O,&M); OM = nor2d(&OM);
+    OP = vec2d(&O,&P); OP = nor2d(&OP);
+
+    /* orientation sign */
+    sMOP = ((MO.dz*OP.dx) - (OP.dz*MO.dx))>0?-1:+1;
+/*    sf_warning("sign=%d %g %g %g %g %g %g",sMOP,*/
+/*	       MO.dz*OP.dx, OP.dz*MO.dx,*/
+/*	       MO.dx,MO.dz,OP.dx,OP.dz);*/
+
+    /* bisector vector */
+    OR.dx = OM.dx + OP.dx; 
+    OR.dz = OM.dz + OP.dz;
+    OR = nor2d(&OR);
+
+    R.x = O.x + sMOP * OR.dx * lo;
+    R.z = O.z + sMOP * OR.dz * lo;
+    R.v = hwt2d_getv(R);
+    
+    return(R);
 }
