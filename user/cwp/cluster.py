@@ -118,6 +118,7 @@ def createSlurmfile(name,email,nodes,ppn,time,last,next,tasks,relaunch,run,conte
     lines.append('#!/bin/bash')
     lines.append('#SBATCH -J %s' % (name))
     lines.append('#SBATCH --nodes=%d' % (nodes))
+    lines.append('#SBATCH --cpus-per-task=%d '% (ppn))
     lines.append('#SBATCH --time=%d:00:00' % time)
     lines.append('#SBATCH --job-name=%s' % name)
     lines.append('#SBATCH -o %s/%s.log' % (pbs_dirt,name))
@@ -151,7 +152,7 @@ def createSlurmfile(name,email,nodes,ppn,time,last,next,tasks,relaunch,run,conte
         #lines.append(tasks+'\n')
 
 #    lines.append('echo "JOB: %s done" >> pbs/jobs.txt' % name)
-
+    lines.append('srun --ntasks-per-node=1 rm -rf  /localscratch/$USER') 
     if next == None:
         global SCONSIGNS
         lines.append('sfdbmerge outdb=%s %s ' % (project.path+'.sconsign.dbhash', ' '.join(SCONSIGNS)))
