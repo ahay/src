@@ -1,0 +1,106 @@
+from rsf.proj import *
+
+#https://s3.amazonaws.com/open.source.geoscience/open_data/stratton/segy/processed/Stratton3D_32bit.sgy
+
+Fetch('Stratton3D_32bit.sgy',
+          dir='stratton/segy/processed',
+          server='http://s3.amazonaws.com',
+	  top='open.source.geoscience/open_data',
+	  usedatapath=1)
+
+
+Flow(['final.rsf',
+      'final_hdr.rsf',
+      'final.thdr',
+      'final.bhdr'],
+      'Stratton3D_32bit.sgy',
+     '''
+     sfsegyread
+        tfile=${TARGETS[1]} 
+        hfile=${TARGETS[2]}  
+	bfile=${TARGETS[3]} 
+     ''')
+
+#        key1=iline1
+#        iline1=220 
+
+Flow('headerattr.txt','final_hdr.rsf',
+     'sfheaderattr > $TARGET && /bin/cat $TARGET',stdout=-1)
+
+#sftahread input=XLINES_756-3230.rsf | sftahgethw key=tracr,tracf,ep,cdp,cdpt >/dev/null
+# xline appears to be in header tracr, tracf, or cdpt
+# iline appears to be in ep
+# i'll use ep and cdpt
+#< XLINES_756-3230_hdr.rsf sfheaderattr
+#91 headers, 994230 traces
+#*******************************************************************************
+#     key     	            min     	              max    	          mean
+#-------------------------------------------------------------------------------
+#tracl       0              0 @ 24318	           230 @ 229	       115.495
+#fldr        2              2 @ 0	           310 @ 70840	           156
+#cdp         5              1 @ 0	           230 @ 229	         115.5
+#trid        7              0 @ 24318	             1 @ 0	      0.999972
+#sx         21              0 @ 24318	       2193745 @ 0	   2.18739e+06
+#sy         22              0 @ 24318	        722490 @ 70840	        714000
+#gx         23              0 @ 24318	       2193745 @ 0	   2.18739e+06
+#gy         24              0 @ 24318	        722490 @ 70840	        714000
+#counit     25              0 @ 24318	             1 @ 0	      0.999972
+#ns         38              0 @ 24318	          1501 @ 0	       1500.96
+#dt         39              0 @ 24318	          2000 @ 0	       1999.94
+#****************************************************************************** 
+
+
+# use trace headers to create a 3d volume
+Flow(['image.rsf','image_hdr.rsf'],
+     ['final.rsf',
+      'final_hdr.rsf'],
+     '''
+     sftahread \
+          input=${SOURCES[0]} \
+	  verbose=1 \
+     | sftahheadermath output=fldr outputkey=iline
+     | sftahheadermath output=cdp   outputkey=xline
+     | sftahwrite \
+          output=${TARGETS[0]} \
+          label2="xline"    o2=1  n2=230 d2=1 \
+          label3="iline"    o3=2  n3=309  d3=1
+	  verbose=1
+     ''',stdout=0, stdin=0)
+       
+Result("image","window j3=1 | sfgrey title='stratton-3d'")
+#Result("zoomimage","image",
+#       "window min1=1 max1=2 j3=10 | sfgrey title='stratton-3d'")
+Result("image3df","image",
+       '''
+       byte 
+       | grey3 frame1=1000 frame2=100 frame3=100 title='stratton-3d'
+       ''')
+
+Result("image3d","image",
+       '''
+       byte 
+       | grey3 frame1=1000 frame2=100 frame3=100 
+         title='stratton-3d' flat=n
+       ''')
+
+Plot('imageil','image',
+     '''
+     sfwindow min3=100 max3=100 
+     | sfgrey title='stratton 3d line 100'
+     ''')
+Plot('imagexl','image',
+     '''
+     sfwindow min2=100 max2=100
+     | sfput label2='xline' 
+     | sfgrey title='stratton 3d xline 100'
+     ''')
+Result("imageilxl","imageil imagexl",'SideBySideAniso')
+
+Result("imageslice","image",
+	'''
+	sfwindow min1=2.0 max1=2.004 \
+	| sftransp plane=13 \
+	| sfgrey gainpanel=a title='stratton 3d'
+	''')
+
+End()
