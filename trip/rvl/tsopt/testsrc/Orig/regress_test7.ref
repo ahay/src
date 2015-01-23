@@ -1,7 +1,0 @@
-AdjointTest
-
-adjoint relation holds:|<Ax,y>-<x,A'y>|/|Ax||y| = 8.69677947e-08
-< 100*macheps = 1.19209290e-05
-<Ax,y>  = -2.14176420e-02
-<x,A'y> = -2.14176401e-02
-|Ax||y|  = 2.14176420e-02
