@@ -91,7 +91,7 @@ All routines of class Online
 ***************************************************************************************************************************************/
 
 // last arg called "o" in other contexts
-Online::Online(int sn,Checkpoint *c, bool) : Schedule(sn,c)
+Online::Online(int sn,Checkpoint *c, bool o=false) : Schedule(sn,c)
 {
 
 	checkpoint->init_ord_ch(); //  ord_ch = new int[snaps];
@@ -102,6 +102,8 @@ Online::Online(int sn,Checkpoint *c, bool) : Schedule(sn,c)
 	output = 0;
 	capo = 0;
 	check=-1;
+	// thanks Peng!!
+	if (o) {}
 }
 
 Online::Online(Online &o) : Schedule(o.get_snaps())
