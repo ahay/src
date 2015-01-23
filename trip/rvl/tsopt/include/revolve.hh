@@ -118,10 +118,10 @@ public:
     virtual int get_fine() = 0;	
     /** This function is virtual.*/
     virtual int get_check() = 0;	
-    /** This function is virtual.*/
-    virtual void set_fine(int f) {};  
-    /** This function is virtual.*/
-    virtual void set_capo(int c) {}; 
+    /** This function is virtual. NOTE: SHOULD EITHER BE IMPLEMENTED OR PURE VIRTUAL. */
+    virtual void set_fine(int) {};  
+    /** This function is virtual. NOTE: SHOULD EITHER BE IMPLEMENTED OR PURE VIRTUAL. */
+    virtual void set_capo(int) {}; 
     /** This function is virtual.*/
     int get_snaps() { return snaps; }
     /** This function returns the pointer of a Checkpoint class.

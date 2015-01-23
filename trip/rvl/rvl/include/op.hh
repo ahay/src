@@ -160,10 +160,10 @@ namespace RVL {
 
      implemented to throw exception - override in subclasses that need 2nd deriv.
     */
-    virtual void applyAdjDeriv2(const Vector<Scalar> & x,
-				const Vector<Scalar> & dx0,
-				const Vector<Scalar> & dy,
-				Vector<Scalar> & dx1) const {
+    virtual void applyAdjDeriv2(const Vector<Scalar> &,
+				const Vector<Scalar> &,
+				const Vector<Scalar> &,
+				Vector<Scalar> &) const {
       RVLException e;
       e<<"Error: Operator::applyAdjDeriv2 not implemented\n";
       throw e;
@@ -261,10 +261,12 @@ namespace RVL {
     virtual const Space<Scalar> & getRange() const = 0;
   
     /** can be overridden to express distance to boundary of
-	domain for operators whose domains are not the whole space. */
+	domain for operators whose domains are not the whole space. 
+	First arg: position, second arg: direction
+    */
     virtual typename ScalarFieldTraits<Scalar>::AbsType 
-    getMaxStep(const Vector<Scalar> & x,
-	       const Vector<Scalar> & dx) const {
+    getMaxStep(const Vector<Scalar> &,
+	       const Vector<Scalar> &) const {
       return numeric_limits<typename ScalarFieldTraits<Scalar>::AbsType>::max();
     }
 

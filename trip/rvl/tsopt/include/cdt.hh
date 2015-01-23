@@ -44,7 +44,7 @@ namespace TSOpt {
   public:
     DiscreteTime() {}
 		  
-    DiscreteTime(DiscreteTime const & t) {}
+    DiscreteTime(DiscreteTime const &) {}
     ~DiscreteTime() {  }
 
 	/** Assignment - from int */

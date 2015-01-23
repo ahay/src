@@ -90,8 +90,8 @@ cout << " redefine 'repsup' " << endl;
 All routines of class Online
 ***************************************************************************************************************************************/
 
-
-Online::Online(int sn,Checkpoint *c,bool o=false) : Schedule(sn,c)
+// last arg called "o" in other contexts
+Online::Online(int sn,Checkpoint *c, bool) : Schedule(sn,c)
 {
 
 	checkpoint->init_ord_ch(); //  ord_ch = new int[snaps];
@@ -981,7 +981,8 @@ Revolve::Revolve(int sn,int inf)
 
 }
 
-ACTION::action Revolve::revolve(int* check,int* capo,int* fine,int snaps,int* info)
+// unreferenced final int* is "info" in other contexts
+ACTION::action Revolve::revolve(int* check,int* capo,int* fine,int snaps,int*)
 {
 	ACTION::action whatodo;
 	whatodo=f->revolve();

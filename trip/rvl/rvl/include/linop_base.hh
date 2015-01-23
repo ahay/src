@@ -150,26 +150,31 @@ namespace RVL {
     virtual void applyAdj(const Vector<Scalar> & x,
 			  Vector<Scalar> & y) const = 0;
 
-    /** implemented derivative method - a linear operator is its own derivative */
-    void applyDeriv(const Vector<Scalar> & x, 
+    /** implemented derivative method - a linear operator is its own derivative.
+	First arg: position, of which result is independent.
+     */
+    void applyDeriv(const Vector<Scalar> &, 
 		    const Vector<Scalar> & dx,
 		    Vector<Scalar> & dy) const { this->apply(dx,dy); }
 
-    /** similar to applyDeriv */
-    void applyAdjDeriv(const Vector<Scalar> & x, 
+    /** similar to applyDeriv. 	First arg: position, of which result is independent. */
+    void applyAdjDeriv(const Vector<Scalar> &, 
 		       const Vector<Scalar> & dy,
 		       Vector<Scalar> & dx) const { this->applyAdj(dy,dx); }
      
-    /** implemented deriv2 method - deriv2 of a linear operator is zero */
-    void applyDeriv2(const Vector<Scalar> & x,
-                    const Vector<Scalar> & dx0,
-                    const Vector<Scalar> & dx1,
+    /** implemented deriv2 method - deriv2 of a linear operator is zero. First 
+        three args: position, two perturbation vectors in domain - result is
+        independent of these.
+    */
+    void applyDeriv2(const Vector<Scalar> &,
+                    const Vector<Scalar> &,
+                    const Vector<Scalar> &,
                     Vector<Scalar> & dy) const { dy.zero(); }
       
     /** similar to applyDeriv */
-    void applyAdjDeriv2(const Vector<Scalar> & x,
-                       const Vector<Scalar> & dx0,
-                       const Vector<Scalar> & dy,
+    void applyAdjDeriv2(const Vector<Scalar> &,
+                       const Vector<Scalar> &,
+                       const Vector<Scalar> &,
                        Vector<Scalar> & dx1) const { dx1.zero(); }
 
 

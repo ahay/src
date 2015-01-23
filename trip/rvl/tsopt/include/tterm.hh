@@ -46,7 +46,7 @@ namespace TSOpt {
   class TimeTerm: public Terminator, public Writeable {
   public:
     TimeTerm() {}
-    TimeTerm(TimeTerm const & t) {}
+    TimeTerm(TimeTerm const &) {}
     virtual ~TimeTerm() {}
 
     /** the set method provides the only interface for
