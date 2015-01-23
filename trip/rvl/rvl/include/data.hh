@@ -170,7 +170,7 @@ namespace RVL {
   public:
 
     DataContainer() {}
-    DataContainer(const DataContainer & D) {}
+    DataContainer(const DataContainer &) {}
     virtual ~DataContainer() {}
 
     /** Evaluate a function object.Concrete subtypes must supply this

@@ -9,7 +9,7 @@ class SeqSpace: public Space<double> {
 public:
 
   SeqSpace() {}
-  SeqSpace(const SeqSpace & sp) {}
+  SeqSpace(const SeqSpace &) {}
   ~SeqSpace(){}
   
   DataContainer * buildDataContainer() const { return new SeqDC; }

@@ -144,10 +144,10 @@ namespace RVL {
        implemented to throw exception - override in subclasses 
        that need 2nd deriv.
     */
-    virtual void applyDeriv2(const Vector<Scalar> & x, 
-			     const Vector<Scalar> & dx0,
-			     const Vector<Scalar> & dx1,
-			     Vector<Scalar> & dy) const {
+    virtual void applyDeriv2(const Vector<Scalar> &, 
+			     const Vector<Scalar> &,
+			     const Vector<Scalar> &,
+			     Vector<Scalar> &) const {
       RVLException e;
       e<<"Error: Operator::applyDeriv2 not implemented\n";
       throw e;

@@ -110,7 +110,7 @@ namespace RVL {
   public:
 
     ProductDataContainer() {}
-    ProductDataContainer(const ProductDataContainer & p) {}
+    ProductDataContainer(const ProductDataContainer &) {}
     virtual ~ProductDataContainer() {}
 
     void eval( FunctionObject & f,
