@@ -133,7 +133,14 @@ main(int argc, char** argv)
   file_dat = sf_output("out"); /* data */
 
   if (snap)  file_wfl = sf_output("wfl"); /* wavefield */
-  if (!cden) file_den = sf_input ("den"); /* density */
+  if (!cden) {
+    if (sf_getstring("cden")) {
+      file_den = sf_input ("den"); /* density */
+    } else {
+      cden = true;
+      if (verb) sf_warning("No density file provided, running with constant density");
+    }
+  }
   
   at = sf_iaxa(file_wav,2); sf_setlabel(at,"t"); if(verb) sf_raxa(at); /* time */
   az = sf_iaxa(file_vel,1); sf_setlabel(az,"z"); if(verb) sf_raxa(az); /* depth */
