@@ -3,7 +3,7 @@
 // define boundary index between external, internal axis indices
 #define EXTINT 100
 
-//#define IWAVE_VERBOSE
+#define IWAVE_VERBOSE
 
 namespace TSOpt {
 
@@ -324,15 +324,15 @@ namespace TSOpt {
 	}
 	for (int k=0; k<g.gdim; k++) {
 	  // don't include interior axes!
-	  if (g.axes[k].id < EXTINT) {
+	  //	  if (g.axes[k].id < EXTINT) {
 	    //	    cerr<<"  copy axis "<<i<<"\n";
 	    axis * a = new axis;
 	    copy_axis(a,&(g.axes[k]));
 	    axes.push_back(a);
-	  }
-	  else {
+	    //	  }
+	    //	  else {
 	    //	    cerr<<"  do not copy axis "<<i<<"\n";
-	  }
+	    //	  }
 	}
 
 	// determine whether the grid has spatial axes - these would have id's 
@@ -525,8 +525,13 @@ namespace TSOpt {
 	  }
 	  */
 	  for (int i=g.dim+1; i<g.gdim; i++) {
-	    panelindex += (step[i]-istart[i])*panelnum;
-	    panelnum *= istop[i]-istart[i]+1;
+	    // panel is full simulation - internal extd axes 
+	    // don't count, panels iterate over external extd
+	    // axes
+	    if (g.axes[i].id < EXTINT) {
+	      panelindex += (step[i]-istart[i])*panelnum;
+	      panelnum *= istop[i]-istart[i]+1;
+	    }
 	    //	    cerr<<"axis "<<i<<" has="<<has_Axis(g.axes[i].id) << " input="<<input<<"\n";
 	  }
 	}
@@ -1321,16 +1326,20 @@ namespace TSOpt {
       int panelnum=1;
       int panelindex=0;
       for (int i=g.dim+1; i<g.gdim; i++) {
-	panelnum *= stop[i]-start[i]+1;
+	if (g.axes[i].id < EXTINT) {
+	  panelnum *= stop[i]-start[i]+1;
+	}
       }
       calc_group(&first, &last, panelnum);
       // increment step until at first panel
       while (panelindex < first) {
 	// update step array
 	for (int i=g.dim+1;i<g.gdim;i++) {
-	  if (step[i]<stop[i]) step[i]++;
-	  else {
-	    if (i<g.gdim-1) step[i]=start[i];
+	  if (g.axes[i].id < EXTINT) {
+	    if (step[i]<stop[i]) step[i]++;
+	    else {
+	      if (i<g.gdim-1) step[i]=start[i];
+	    }
 	  }
 	}
 	panelindex++;

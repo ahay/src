@@ -1477,7 +1477,7 @@ namespace {
 
       //      cerr<<"after grid build:\n";
       //      fprint_grid(stderr,g);
-      EXPECT_EQ(4,g.gdim);
+      EXPECT_EQ(5,g.gdim);
       EXPECT_EQ(416,g.axes[0].n);
       EXPECT_EQ(25.0,g.axes[0].d);
       EXPECT_EQ(0.0,g.axes[0].o);
@@ -1494,6 +1494,10 @@ namespace {
       EXPECT_EQ(1.0,g.axes[3].d);
       EXPECT_EQ(0.0,g.axes[3].o);
       EXPECT_EQ(3,g.axes[3].id);
+      EXPECT_EQ(3,g.axes[4].n);
+      EXPECT_EQ(100.0,g.axes[4].d);
+      EXPECT_EQ(-100.0,g.axes[4].o);
+      EXPECT_EQ(101,g.axes[4].id);
 
       delete wt;
       ps_delete(&par);
@@ -1888,42 +1892,6 @@ namespace {
     }
   }
 
-  TEST_F(ACDSimTest, dryrun_sim_fwd_ord0_ext_hx) {
-    try {
-
-      // fake command line environment
-      int argc = 2;
-      char * argvv = new char[128];
-      char ** argv = new char*[2];
-      argv[0]=&(argvv[0]); argv[1]=&(argvv[65]);
-      strcpy(argv[1],"par=parfile");
-      PARARRAY * par = NULL;
-      FILE * stream = NULL;
-      IWaveEnvironment(argc, argv, 0, &par, &stream);
-      delete [] argv;
-      delete [] argvv;
-
-      ps_slcstring(*par,"csq","csq3.rsf");
-
-      // build order zero IWaveTree, check 
-      int order=0;
-      bool fwd = true;
-      int printact=0; int snaps=0;
-      
-      bool dryrun=true;
-      ofstream drystr("dryrun_sim_fwd_ord0_hx");
-      IWaveSim * sim = new IWaveSim(order,fwd,*par,stream,ic,printact,snaps,dryrun,drystr);
-      sim->run();
-      drystr.close();
-      delete sim;
-      ps_delete(&par);
-      fclose(stream);
-    }
-    catch (RVLException & e) {
-      e.write(cerr);
-      exit(1);
-    }
-  }
 
   TEST_F(ACDSimTest, dryrun_sim_fwd_ord0_movie) {
     try {
@@ -2135,6 +2103,43 @@ namespace {
     }
   }
 
+  TEST_F(ACDSimTest, dryrun_sim_fwd_ord0_ext_hx) {
+    try {
+
+      // fake command line environment
+      int argc = 2;
+      char * argvv = new char[128];
+      char ** argv = new char*[2];
+      argv[0]=&(argvv[0]); argv[1]=&(argvv[65]);
+      strcpy(argv[1],"par=parfile");
+      PARARRAY * par = NULL;
+      FILE * stream = NULL;
+      IWaveEnvironment(argc, argv, 0, &par, &stream);
+      delete [] argv;
+      delete [] argvv;
+
+      ps_slcstring(*par,"csq","csq3.rsf");
+      ps_printall(*par,stdout);
+
+      // build order zero IWaveTree, check 
+      int order=0;
+      bool fwd = true;
+      int printact=0; int snaps=0;
+      
+      bool dryrun=true;
+      ofstream drystr("dryrun_sim_fwd_ord0_hx");
+      IWaveSim * sim = new IWaveSim(order,fwd,*par,stream,ic,printact,snaps,dryrun,drystr);
+      sim->run();
+      drystr.close();
+      delete sim;
+      ps_delete(&par);
+      fclose(stream);
+    }
+    catch (RVLException & e) {
+      e.write(cerr);
+      exit(1);
+    }
+  }
 }
 int xargc;
 char **xargv;
