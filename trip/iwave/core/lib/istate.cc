@@ -3,7 +3,7 @@
 // define boundary index between external, internal axis indices
 #define EXTINT 100
 
-#define IWAVE_VERBOSE
+//#define IWAVE_VERBOSE
 
 namespace TSOpt {
 
