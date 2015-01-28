@@ -83,6 +83,15 @@ for prog in ccmains:
     if root:
         env.Install(bindir,prog)
 
+for prog in Split('cmatmult2'):
+    sources = ['Test' + prog,prog]
+    if prog=='cmatmult2':
+        sources.append('cgmres')
+    bldutil.depends(env,sources,prog)
+    sources = map(lambda x: x + '.o',sources)
+    env.Object('Test' + prog + '.c')
+    env.Program(sources,PROGPREFIX='',PROGSUFFIX='.x')
+
 ######################################################################
 # SELF-DOCUMENTATION
 ######################################################################
