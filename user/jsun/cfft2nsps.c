@@ -46,7 +46,11 @@ int cfft2_init(int pad1           /* padding on the first axis */,
     fftwf_init_threads();
     sf_warning("Using threaded FFTW3! \n");
     fftwf_plan_with_nthreads(omp_get_max_threads());
+#else
+    sf_warning("Using FFTW3! \n");
 #endif
+#else
+    sf_warning("Using KissFFT! \n");
 #endif
 
 #ifndef SF_HAS_FFTW
