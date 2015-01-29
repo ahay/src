@@ -149,8 +149,7 @@ int lrexp(sf_complex **img, sf_complex **dat, bool adj, sf_complex **lt, sf_comp
 #ifdef _OPENMP
 #pragma omp parallel for private(ix)
 #endif
-	    /* data injection */
-	    for (ix=0; ix < nx; ix++) {
+	    for (ix=0; ix < nx; ix++) { /* data injection */
 		curr[gpz+ix*nz2] += dat[ix][it];
 	    }
 
@@ -193,8 +192,7 @@ int lrexp(sf_complex **img, sf_complex **dat, bool adj, sf_complex **lt, sf_comp
 #ifdef _OPENMP
 #pragma omp parallel for private(ix)
 #endif
-	    /* record data */
-	    for (ix=0; ix < nx; ix++) {
+	    for (ix=0; ix < nx; ix++) { /* record data */
 		dat[ix][it] = curr[gpz+ix*nz2];
 	    }
 	    /* matrix multiplication */
