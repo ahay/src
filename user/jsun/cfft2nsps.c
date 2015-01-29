@@ -217,6 +217,8 @@ void cfft2_finalize()
     fftwf_cleanup();
     cfg=NULL;
     icfg=NULL;
+    free(*dd);
+    free(dd);
 #else
     free(cfg1); cfg1=NULL;
     free(icfg1); icfg1=NULL;
@@ -225,6 +227,4 @@ void cfft2_finalize()
 #endif
     free(*cc);
     free(cc);
-    free(*dd);
-    free(dd);
 }
