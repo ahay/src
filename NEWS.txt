@@ -29,6 +29,7 @@ To the reproducible documents collection:
   (Liu, Liu, and Liu)
 * sep/shearer: Earthquake stacks at constant offset (Claerbout)
 * sep/super: A prospect for super resolution (Claerbout)
+* trip/asg: Acoustic staggered grid modeling in IWAVE (Symes)
 
 To SCons:
 

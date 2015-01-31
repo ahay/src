@@ -14,7 +14,7 @@ afd2domp low addtrace matlr
 '''
 ccprogs = 'diffcxx'
 
-# afd2domp
+# mutter3
 
 mpiprogs='petsctest'
 

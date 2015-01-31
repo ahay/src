@@ -4,8 +4,10 @@ Papers(copyr='Rice University',
        group='The Rice Inversion Project',
        papers=Split('''
        struct
+       asg
        '''),
-       authors = {'struct':'William Symes'},
+       authors = {'struct':'William Symes',
+                  'asg':'William Symes'},
        line='Selected papers',
        fig=('struct/project','framesrc','width=\\textwidth'))
        
