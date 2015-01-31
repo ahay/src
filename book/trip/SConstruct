@@ -20,7 +20,25 @@ End(use='hyperref,amsmath,setspace,wasysym',
 \newcommand{\oM}{\bar{M}}
 \newcommand{\oF}{\bar{F}}
 \newcommand{\cJ}{\mathcal{J}}
-\newcommand{\bx}{{\bf x}}
 \everymath{\displaystyle}
+\newcommand{\du}{\delta u}
+\newcommand{\dm}{\delta m}
+\newcommand{\lu}{\lambda u}
+\newcommand{\lm}{\lambda m}
+\newcommand{\muu}{\mu u}
+\newcommand{\bF}{{\bf F}}
+\newcommand{\bS}{{\bf S}}
+\newcommand{\bH}{{\bf H}}
+\newcommand{\bM}{{\bf M}}
+\newcommand{\bR}{{\bf R}}
+\newcommand{\bu}{{\bf u}}
+\newcommand{\bx}{{\bf x}}
+\newcommand{\bv}{{\bf v}}
+\newcommand{\be}{{\bf e}}
+\newcommand{\bp}{{\bf p}}
+\newcommand{\cS}{{\cal S}}
+\newcommand{\peq}{\,+\hspace{-0.15cm}=}
+\newcommand{\pp}{\,+\hspace{-0.1cm}+}
+\newcommand{\mm}{\,-\hspace{-0.1cm}-}
 ''')
 

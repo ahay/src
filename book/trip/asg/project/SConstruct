@@ -172,14 +172,14 @@ Flow('movie3','bmh byh src.su',
      ''', stdin=0, stdout=0)
 
 Flow('frame13','movie1','window f3=12 n3=1')
-Flow('frame40_1','movie1','window f3=40 n3=1')
-Flow('frame40_2','movie2','window f3=40 n3=1')
-Flow('frame40_3','movie3','window f3=40 n3=1')
+Flow('frame40-1','movie1','window f3=40 n3=1')
+Flow('frame40-2','movie2','window f3=40 n3=1')
+Flow('frame40-3','movie3','window f3=40 n3=1')
 
-Result('frame13','grey mean=y clip=0.01 scalebar=y barreverse=y')	
-Result('frame40_1','grey mean=y clip=0.01 scalebar=y barreverse=y')	
-Result('frame40_2','grey mean=y clip=0.01 scalebar=y barreverse=y')	
-Result('frame40_3','grey mean=y clip=0.01 scalebar=y barreverse=y')	
+Result('frame13',  'grey mean=y clip=0.01 scalebar=y barreverse=y wanttitle=n')	
+Result('frame40-1','grey mean=y clip=0.01 scalebar=y barreverse=y wanttitle=n')	
+Result('frame40-2','grey mean=y clip=0.01 scalebar=y barreverse=y wanttitle=n')	
+Result('frame40-3','grey mean=y clip=0.01 scalebar=y barreverse=y wanttitle=n')	
 
 # 2-4 results
 j = 1
