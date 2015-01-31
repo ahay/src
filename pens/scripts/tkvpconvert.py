@@ -27,7 +27,7 @@ except:
     sys.stderr.write('Please install Tkinter!\n\n')
     sys.exit(1)
       
-import vpconvert
+import rsf.vpconvert as vpconvert
 
 def select_file(entry):
     '''Select a file into entry'''
