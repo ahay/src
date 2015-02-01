@@ -1,4 +1,8 @@
-/* Data binning in 2-D slices. */
+/* Data binning in 2-D slices. 
+
+December 2014 program of the month:
+http://ahay.org/rsflog/index.php?/archives/419-Program-of-the-month-sfbin.html
+*/
 /*
   Copyright (C) 2004 University of Texas at Austin
   
