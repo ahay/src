@@ -83,6 +83,7 @@ void applyScaling(float ****img,
 int main(int argc, char* argv[])
 {
     bool verb;     /* verbosity flag */
+    bool pos; /* direction of spraying */
     bool adj;      /* adjoint operator flag */
     bool wflcausal, oprcausal; /* causal wfl?, opr? */
 
@@ -124,6 +125,7 @@ int main(int argc, char* argv[])
 #endif
 
     if(! sf_getbool(    "verb",&verb    ))        verb=false; /* verbosity flag */
+    if(! sf_getbool(    "positive",&pos ))        pos=true; /* if positive sprays opr to positive shits, else, sprays to negative shifts */
     if(! sf_getbool(     "adj",&adj     ))         adj=false; /* adjoint flag */
     if(! sf_getbool("wflcausal",&wflcausal)) wflcausal=false; /* causal wfl? */
     if(! sf_getbool("oprcausal",&oprcausal)) oprcausal=false; /* causal opr? */
@@ -272,10 +274,16 @@ int main(int argc, char* argv[])
     shared (nc,ccin,ahx,ahz,aht,mcxall,mczall,mctall,pcxall,pczall,pctall)
 #endif
 		for(ic=0;ic<nc;ic++){ if(ccin[ic]) { /* sum over c only! */
-			EICLOOP( wfl    [mct][mcx][mcz] +=
-				 opr    [pct][pcx][pcz] *
-				 img[ic][iht][ihx][ihz]; );
-		    }
+      if(pos){
+			  EICLOOP( wfl    [mct][mcx][mcz] +=
+				   opr    [pct][pcx][pcz] *
+				  img[ic][iht][ihx][ihz]; );
+		  }else{
+			  EICLOOP( wfl    [pct][pcx][pcz] +=
+				   opr    [mct][mcx][mcz] *
+				  img[ic][iht][ihx][ihz]; );
+      }
+     }
 		}
 	    }
             for(iht=0;iht<sf_n(aht);iht++) {
@@ -326,10 +334,16 @@ int main(int argc, char* argv[])
     shared (nc,ccin,ahx,ahz,aht,mcxall,mczall,mctall,pcxall,pczall,pctall)
 #endif
 		for(ic=0;ic<nc;ic++){ if(ccin[ic]) { /* sum over c and t! */
-			EICLOOP( img[ic][iht][ihx][ihz] +=
-				 opr    [pct][pcx][pcz] *
-				 wfl    [mct][mcx][mcz]; );
-		    }
+      if(pos){
+		   	EICLOOP( img[ic][iht][ihx][ihz] +=
+				   opr    [pct][pcx][pcz] *
+			  	 wfl    [mct][mcx][mcz]; );
+      }else{
+		  	EICLOOP( img[ic][iht][ihx][ihz] +=
+		  		 opr    [mct][mcx][mcz] *
+		  		 wfl    [pct][pcx][pcz]; );
+      }
+    }
 		}
 	    }
             for(iht=0;iht<sf_n(aht);iht++) {
