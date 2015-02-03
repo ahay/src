@@ -30,7 +30,8 @@ int main (int argc, char* argv[])
 {
     float mean, var, range, a, b, *dat;
     size_t nbuf, nsiz;
-    int seed, i;
+    int seed;
+    size_t i;
     bool normal, rep;
     sf_file in, out;
 
