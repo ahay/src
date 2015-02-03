@@ -547,8 +547,10 @@ def Force(content):
     CURRENT_JOB = None
     Serial()
 
-    CURRENT_JOB.add('ssh $PBS_O_HOST "source ~/.bash_profile; cd $PBS_O_WORKDIR; ' + content + '"')
-    CURRENT_JOB.store('ssh $PBS_O_HOST "source ~/.bash_profile; cd $PBS_O_WORKDIR; ' + content + '"')
+    #CURRENT_JOB.add('ssh $PBS_O_HOST "source ~/.bash_profile; cd $PBS_O_WORKDIR; ' + content + '"')
+    #CURRENT_JOB.store('ssh $PBS_O_HOST "source ~/.bash_profile; cd $PBS_O_WORKDIR; ' + content + '"')
+    CURRENT_JOB.add( content )
+    CURRENT_JOB.store( content)
     CURRENT_JOB.relaunch = True
 
 def Run(content):
