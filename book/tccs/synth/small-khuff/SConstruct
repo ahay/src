@@ -1,0 +1,241 @@
+from rsf.proj import *
+from rsf.recipes.beg import server
+# Get velocity model
+
+plot3 = ' window f1=50 f2=15 n2=170 f3=15 n3=98| put o1=3000 |byte gainpanel=a  | grey3 frame1=100 frame2=85 flat=n frame3=49 point1=.7 point2=.8 label1=Depth unit1=m label2=Inline unit2=m label3=Crossline unit3=m  '
+plot3t = 'window f1=50 n1=330 f2=15 n2=170 f3=15 n3=98| put o1=1.579 |byte gainpanel=a mean=y | grey3 frame1=100 frame2=85 flat=n frame3=49 point1=.7 point2=.8 label1=Time unit1=s label2=Inline unit2=m label3=Crossline unit3=m  '
+plot3a = 'window f1=50 n1=330 f2=15 n2=170 f3=15 n3=98 | put o1=3000|byte gainpanel=a mean=y | grey3 frame1=100 frame2=85 flat=n frame3=49 point1=.7 point2=.8 label1=Depth unit1=m bartype=h  '
+plotI = ' window f1=50 | put o1=3000 | window min1=3025 max1=3078 f2=15 n2=170 n3=1 min3=150| grey label1=Depth unit1=m label2=Inline unit2=m pclip=99.5  '
+plotX = ' window f1=50 | put o1=3000 | window min1=3030 max1=3075 n2=1 min2=250 f3=15 n3=98| grey label1=Depth unit1=m label2=Crossline unit2=m pclip=99.5  '
+fetchlst = ['vp','den']
+for thingy in fetchlst:
+     Fetch('khuff-%s.HH'%thingy,'xavier',server)
+     Flow('%s0'%thingy,'khuff-%s.HH'%thingy,
+          '''
+          dd form=native | 
+          transp plane=23 |
+          put o1=0 o2=0 o3=0 d1=0.333232 
+          label1=Depth label2=Inline label3=Crossline
+          unit1=m unit2=m unit3=m 
+          ''')
+     # pad the top a bit
+     Flow(thingy,thingy+'0',
+           '''
+           window n1=1 | 
+           spray axis=1 d=0.333232 n=50 |
+           cat axis=1 ${SOURCE}|
+           put o1=0
+           ''')
+     Flow(thingy+'bar',thingy,'bar gainpanel=a mean=y')
+Result('kvp',['vp','vpbar'],
+          plot3a+
+          '''
+          title=  bar=${SOURCES[1]} color=j scalebar=y barunit="m/s" barlabel="Khuff Velocity"
+          ''')
+Result('kden',['den','denbar'],
+          plot3a+
+          '''
+          title= bar=${SOURCES[1]} color=j scalebar=y barunit="g/cm\^3\_" barlabel="Khuff Density"
+          ''')
+# acoustic impedace
+Flow('ai','vp den','add mode=p ${SOURCES[1]}')
+Flow('aibar','ai','bar gainpanel=a mean=y')
+Result('kai',['ai','aibar'],
+          '''
+          scale dscale=1000|
+          '''
+          +plot3a+
+          '''
+          title= bar=${SOURCES[1]} color=j scalebar=y barunit="kg / s m\^2\_" barlabel="Khuff Acoustic Impedance"
+          ''')
+# reflectivity
+Flow('refl','ai','ai2refl')
+
+# modeling parameters
+nz = 380
+dz = 0.333232
+
+dt = 0.00005
+nt = 1501
+
+freq = 100
+nf = 206
+f0 = 0
+df = (freq*2-f0)*8
+dw = df*2/nf
+# convolution with wavelet
+Flow('model','refl vp',
+    '''
+    depth2time velocity=${SOURCES[1]}
+    dt=%g nt=%i|
+    ricker1 frequency=%g |
+    time2depth velocity=${SOURCES[1]}
+    dz=%g nz=%i |
+    costaper nw2=15costaper nw3=15
+    '''%(dt,nt,freq,dz,nz))
+Result('model',plot3+' title="Convolution Model" ')
+# slowness
+Flow('slo','vp','math output="1/input" | transp | transp plane=23' )
+
+
+# modeling in reservoir
+Flow('wzo','model slo',
+    '''
+    transp | transp plane=23|
+    zomig3  mode=m inv=y
+    --readwrite=y verb=y nrmax=30
+     slo=${SOURCES[1]}
+    nw=%i dw=%g ow=%g
+    '''%(nf,dw,f0))
+
+Flow('zo','wzo',
+    '''
+    transp plane=23 | transp|
+    fft1 inv=y
+    ''')
+Result('zo',plot3+' title="Reservoir Response" label1=Time')
+
+# overburden slowness
+# we want a 3 km thick overburden
+Flow('ovr-slo','slo','noise range=200 rep=y| add add=3800 | math output="1/input" |put d1=15 ') 
+# upward continuation in overburden
+Flow('wzo-ovr','wzo ovr-slo',
+    '''
+    zomig3  mode=d inv=y
+    --readwrite=y verb=y nrmax=30
+     slo=${SOURCES[1]}
+    nw=%i dw=%g ow=%g
+    '''%(nf,dw,f0))
+Flow('zo-ovr','wzo-ovr',
+    '''
+    transp plane=23 | transp|
+    fft1 inv=y
+    ''')
+Result('zo-ovr',
+    plot3t+
+    '''
+     title="Modeled Data"
+    ''')
+
+# calculate data slope
+# Smoothing Parameters
+nx = 50 
+nt = 410
+rect1 = nt/10
+rect2 = 200/10
+rect3 = 128/10
+# Plane Wave Destruction Parameters
+order1 = 4
+# Plane Wave Destruction Slope Estimation
+Flow('slope','zo-ovr',
+     '''
+     dip rect1=%i rect2=%i rect3=%i order=%i verb=y
+     '''%(rect1,rect2,rect3,order1))
+slp = ['Inline','Crossline']
+
+for k in range(2):
+  slope = 'slope%i'%k
+  Flow(slope,'slope','window n4=1 f4=%i'%k)
+  Flow(slope+'bar',slope,'bar gainpanel=a')
+  Plot(slope,[slope,slope+'bar'],
+     plot3t+
+     '''  
+     title="%s Slope" flat=n color=j bar=${SOURCES[1]}
+     barlabel=Slope scalebar=y
+     '''%(slp[k]))
+Result('slope','slope0 slope1','SideBySideIso')
+# Enhance Reflections
+    #spray radii
+ns2=2
+ns3=2
+Flow('reflections','zo-ovr slope',
+     '''
+     pwspray2 ns2=%d ns3=%d dip=${SOURCES[1]} order=%i verb=y eps=0.1|
+     stack axis=2
+     '''% (ns2,ns3,order1))
+Result('reflections',
+    plot3t+
+    '''
+     title="Enhanced Reflections" flat=n pclip=99.9
+    ''')
+# Difference is diffractions
+Flow('diffractions','zo-ovr reflections','add scale=1,-1 ${SOURCES[1]}')
+Result('k-diffractions','diffractions',
+    plot3t+
+    '''
+     title="Separated Diffractions" flat=n pclip=99.9
+    ''')
+# smooth slowness migration
+# smooth out slowness
+for slo in ('slo','ovr-slo'):
+    Flow(slo+'-s',slo,'smooth rect1=%i rect2=%i rect3=%i'%(nz/10,rect2,rect3))
+
+for item in ('diffractions','zo-ovr'):
+
+  Flow(item+'w',item,
+    '''
+    fft1 | window n1=%i| transp | transp plane=23
+    '''%nf)
+# downward continuation in overburden
+  Flow(item+'under',[item+'w','ovr-slo-s'],
+    '''
+    zomig3  mode=d inv=n
+    --readwrite=y verb=y nrmax=30
+     slo=${SOURCES[1]}
+    ''')
+# migration of reservoir
+  Flow(item+'-mig',[item+'under','slo-s'],
+    '''
+    zomig3  mode=m inv=n
+    --readwrite=y verb=y nrmax=30
+     slo=${SOURCES[1]}|
+    transp plane=23 |
+    transp
+    ''')
+Result('zo-ovr-mig',
+   plot3+ 
+   '''
+   title="Conventional Image"
+   ''')
+
+Result('k-diffractions-mig','diffractions-mig',
+   plot3+ 
+   '''
+   title="Diffraction Image" flat=n pclip=99.9
+   ''')
+# crossline=150
+Result('k-diffractions-migI','diffractions-mig',
+   plotI+ 
+   '''
+   title="Diffraction Image" flat=n 
+   ''')
+Result('zo-ovr-migI','zo-ovr-mig',
+   plotI+ 
+   '''
+   title="Conventional Image" flat=n 
+   ''')
+Result('aiI','ai aibar',
+   plotI+ 
+   '''
+   title="Acoustic Impedance" flat=n bar=${SOURCES[1]} mean=y
+   color=j scalebar=y barunit="kg / s m\^2\_" barlabel= 
+   ''')
+
+# inline=250
+Result('k-diffractions-migX','diffractions-mig',
+   plotX+ 
+   '''
+   title="Diffraction Image" flat=n 
+   ''')
+Result('zo-ovr-migX','zo-ovr-mig',
+   plotX+ 
+   '''
+   title="Conventional Image" flat=n 
+   ''')
+Result('aiX','ai aibar',
+   plotX+ 
+   '''
+   title="Acoustic Impedance" flat=n bar=${SOURCES[1]} mean=y
+   color=j scalebar=y barunit="kg / s m\^2\_" barlabel= 
+   ''')
+End()
