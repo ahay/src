@@ -28,6 +28,7 @@ http://ahay.org/rsflog/index.php?/archives/287-Program-of-the-month-sfgrey3.html
 #include <rsf.h>
 #include <rsfplot.h>
 
+#include "../../user/mlai/utilities.h"
 int main(int argc, char* argv[])
 {
     int n1,n2,n3, nreserve, frame1,frame2,frame3, i1,i2,i3, i,j, i0,j0, iframe;
@@ -37,6 +38,9 @@ int main(int argc, char* argv[])
     char *color, *barfile;
     unsigned char **front, **top, **side, **buf, b, *barbuf[1];
     sf_file in, bar=NULL;
+
+    sleepIfFileExist(SECONDS_TO_SLEEP, DO_DEBUG_FILE_NAME);
+
 
     sf_init(argc,argv);
     in = sf_input("in");

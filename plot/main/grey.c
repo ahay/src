@@ -34,7 +34,10 @@ Run "sfdoc stdplot" for more parameters.
 #include <rsf.h>
 #include <rsfplot.h>
 
+
 #define TSIZE 4096
+
+#include "../../user/mlai/utilities.h"
 
 int main(int argc, char* argv[])
 {
@@ -49,6 +52,10 @@ int main(int argc, char* argv[])
     enum {GAIN_EACH=-3,GAIN_ALL=-2,NO_GAIN=-1};
     off_t pos;
     sf_file in, out=NULL, bar=NULL;
+ 
+
+    sleepIfFileExist(SECONDS_TO_SLEEP, DO_DEBUG_FILE_NAME);
+
     
     sf_init(argc,argv);
     in = sf_input("in");
