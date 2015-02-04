@@ -1,8 +1,10 @@
-try:    from rsf.cluster import *
+try:    
+  from rsf.cluster import *
+  from rsf.proj import WhereIs
 except: from rsf.proj    import *
 import os
 
-JHOME=os.environ.get('JAVA_HOME')
+JHOME=WhereIs('java')
 
 # ------------------------------------------------------------
 # ------------------------------------------------------------
@@ -35,21 +37,21 @@ def applyPadding3D(odata3D,idata3D,n1,n2,n3,pad1,pad2,pad3):
 def pickCoord2D(cippicks2D,cprob2D,r1,r2=0.0,jmem='2g'):
 	Flow(cippicks2D,cprob2D,
 	     '''
-	     %s/bin/java -server -ea -Xmx%s cip.RSFGreedyCIPPicker 
+	     %s -server -ea -Xmx%s cip.RSFGreedyCIPPicker 
 	     r1=%f r2=%f opt=coord dim=2
 	     '''%(JHOME,jmem,r1,r2))
 
 def pickCoord3D(cippicks3D,cprob3D,r1,r2=0.0,r3=0.0,jmem='2g'):
 	Flow(cippicks3D,cprob3D,
 	     '''
-	     %s/bin/java -server -ea -Xmx%s cip.RSFGreedyCIPPicker 
+	     %s -server -ea -Xmx%s cip.RSFGreedyCIPPicker 
 	     r1=%f r2=%f r3=%f opt=coord dim=3
 	     '''%(JHOME,jmem,r1,r2,r3))
 
 def pickTensorCoord2D(cippicks2D,cprob2D,tensor2D,rmax,jmem='2g'):
 	Flow(cippicks2D,[cprob2D,tensor2D],
 	     '''
-	     %s/bin/java -server -ea -Xmx%s cip.RSFGreedyCIPPicker 
+	     %s -server -ea -Xmx%s cip.RSFGreedyCIPPicker 
 	     r1=%f opt=coord tfile=${SOURCES[1]} etype=tensor 
 	     dim=2
 	     '''%(JHOME,jmem,rmax))
@@ -57,7 +59,7 @@ def pickTensorCoord2D(cippicks2D,cprob2D,tensor2D,rmax,jmem='2g'):
 def pickTensorCoord3D(cippicks3D,cprob3D,tensor3D,rmax,jmem='2g'):
 	Flow(cippicks3D,[cprob3D,tensor3D],
 	     '''
-	     %s/bin/java -server -ea -Xmx%s cip.RSFGreedyCIPPicker 
+	     %s -server -ea -Xmx%s cip.RSFGreedyCIPPicker 
 	     r1=%f opt=coord tfile=${SOURCES[1]} etype=tensor 
 	     dim=3
 	     '''%(JHOME,jmem,rmax))
@@ -98,7 +100,7 @@ def transpPicksDims3D(opicks,ipicks,plane='12'):
 def showTensorZones3D(oimage,iimage,coord,priority,tensor,rmax=0.0,f=0,j=1,jmem='2g'):
 	Flow(oimage,[iimage,coord,priority,tensor],
 	     '''
-	     %s/bin/java -server -ea -Xmx%s cip.RSFExclusionZones 
+	     %s -server -ea -Xmx%s cip.RSFExclusionZones 
 	     rmax=%f opt=tensor cfile=${SOURCES[1]} pfile=${SOURCES[2]} tfile=${SOURCES[3]} 
 	     first=%d jump=%d dim=3
 	     '''%(JHOME,jmem,rmax,f,j))
@@ -106,7 +108,7 @@ def showTensorZones3D(oimage,iimage,coord,priority,tensor,rmax=0.0,f=0,j=1,jmem=
 def showTensorZones2D(oimage,iimage,coord,priority,tensor,rmax=0.0,f=0,j=1,jmem='2g'):
 	Flow(oimage,[iimage,coord,priority,tensor],
 	     '''
-	     %s/bin/java -server -ea -Xmx%s cip.RSFExclusionZones 
+	     %s -server -ea -Xmx%s cip.RSFExclusionZones 
 	     rmax=%f opt=tensor cfile=${SOURCES[1]} pfile=${SOURCES[2]} tfile=${SOURCES[3]} 
 	     first=%d jump=%d dim=2
 	     '''%(JHOME,jmem,rmax,f,j))
@@ -114,7 +116,7 @@ def showTensorZones2D(oimage,iimage,coord,priority,tensor,rmax=0.0,f=0,j=1,jmem=
 def showEllipsoidZones3D(oimage,iimage,coord,priority,r1=0.0,r2=0.0,r3=0.0,f=0,j=1,jmem='2g'):
 	Flow(oimage,[iimage,coord,priority],
 	     '''
-	     %s/bin/java -server -ea -Xmx%s cip.RSFExclusionZones 
+	     %s -server -ea -Xmx%s cip.RSFExclusionZones 
 	     r1=%f r2=%f r3=%f opt=ellp cfile=${SOURCES[1]} pfile=${SOURCES[2]}
 	     first=%d jump=%d dim=3
 	     '''%(JHOME,jmem,r1,r2,r3,f,j))
@@ -122,7 +124,7 @@ def showEllipsoidZones3D(oimage,iimage,coord,priority,r1=0.0,r2=0.0,r3=0.0,f=0,j
 def showEllipseZones2D(oimage,iimage,coord,priority,r1=0.0,r2=0.0,f=0,j=1,jmem='2g'):
 	Flow(oimage,[iimage,coord,priority],
 	     '''
-	     %s/bin/java -server -ea -Xmx%s cip.RSFExclusionZones 
+	     %s -server -ea -Xmx%s cip.RSFExclusionZones 
 	     r1=%f r2=%f opt=ellp cfile=${SOURCES[1]} pfile=${SOURCES[2]}
 	     first=%d jump=%d dim=2
 	     '''%(JHOME,jmem,r1,r2,f,j))
@@ -130,7 +132,7 @@ def showEllipseZones2D(oimage,iimage,coord,priority,r1=0.0,r2=0.0,f=0,j=1,jmem='
 def showSingleTensorZones3D(oimage,iimage,priority,tensor,c1,c2,c3,rmax=0.0,jmem='2g'):
 	Flow(oimage,[iimage,priority,tensor],
 	     '''
-	     %s/bin/java -server -ea -Xmx%s cip.RSFExclusionZones 
+	     %s -server -ea -Xmx%s cip.RSFExclusionZones 
 	     c1=%f c2=%f c3=%f rmax=%f opt=tsingle pfile=${SOURCES[1]} tfile=${SOURCES[2]} 
 	     dim=3
 	     '''%(JHOME,jmem,c1,c2,c3,rmax))
@@ -138,7 +140,7 @@ def showSingleTensorZones3D(oimage,iimage,priority,tensor,c1,c2,c3,rmax=0.0,jmem
 def showSingleTensorZones2D(oimage,iimage,priority,tensor,c1,c2,rmax=0.0,jmem='2g'):
 	Flow(oimage,[iimage,priority,tensor],
 	     '''
-	     %s/bin/java -server -ea -Xmx%s cip.RSFExclusionZones 
+	     %s -server -ea -Xmx%s cip.RSFExclusionZones 
 	     c1=%f c2=%f rmax=%f opt=tsingle pfile=${SOURCES[1]} tfile=${SOURCES[2]} 
 	     dim=2
 	     '''%(JHOME,jmem,c1,c2,rmax))
@@ -146,7 +148,7 @@ def showSingleTensorZones2D(oimage,iimage,priority,tensor,c1,c2,rmax=0.0,jmem='2
 def showSingleEllipsoidZones3D(oimage,iimage,priority,c1,c2,c3,r1=0.0,r2=0.0,r3=0.0,jmem='2g'):
 	Flow(oimage,[iimage,priority],
 	     '''
-	     %s/bin/java -server -ea -Xmx%s cip.RSFExclusionZones 
+	     %s -server -ea -Xmx%s cip.RSFExclusionZones 
 	     c1=%f c2=%f c3=%f r1=%f r2=%f r3=%f opt=esingle pfile=${SOURCES[1]}
 	     dim=3
 	     '''%(JHOME,jmem,c1,c2,c3,r1,r2,r3))
@@ -154,7 +156,7 @@ def showSingleEllipsoidZones3D(oimage,iimage,priority,c1,c2,c3,r1=0.0,r2=0.0,r3=
 def showSingleEllipseZones2D(oimage,iimage,priority,c1,c2,r1=0.0,r2=0.0,jmem='2g'):
 	Flow(oimage,[iimage,priority],
 	     '''
-	     %s/bin/java -server -ea -Xmx%s cip.RSFExclusionZones 
+	     %s -server -ea -Xmx%s cip.RSFExclusionZones 
 	     c1=%f c2=%f r1=%f r2=%f opt=esingle pfile=${SOURCES[1]}
 	     dim=2
 	     '''%(JHOME,jmem,c1,c2,r1,r2))
@@ -166,7 +168,7 @@ def showSingleEllipseZones2D(oimage,iimage,priority,c1,c2,r1=0.0,r2=0.0,jmem='2g
 def sortTensorEZSemblance3D(opicks,ipicks,priority,tensor,rmax=0.0,jmem='2g'):
 	Flow(opicks,[priority,ipicks,tensor],
 	  '''
-	  %s/bin/java -server -ea -Xmx%s cip.RSFEZSemblanceSort 
+	  %s -server -ea -Xmx%s cip.RSFEZSemblanceSort 
 	  rmax=%f opt=tensor cfile=${SOURCES[1]} tfile=${SOURCES[2]} 
 	  dim=3
 	  '''%(JHOME,jmem,rmax))
@@ -174,7 +176,7 @@ def sortTensorEZSemblance3D(opicks,ipicks,priority,tensor,rmax=0.0,jmem='2g'):
 def sortTensorEZSemblance2D(opicks,ipicks,priority,tensor,rmax=0.0,jmem='2g'):
 	Flow(opicks,[priority,ipicks,tensor],
 	  '''
-	  %s/bin/java -server -ea -Xmx%s cip.RSFEZSemblanceSort 
+	  %s -server -ea -Xmx%s cip.RSFEZSemblanceSort 
 	  rmax=%f opt=tensor cfile=${SOURCES[1]} tfile=${SOURCES[2]} 
 	  dim=2
 	  '''%(JHOME,jmem,rmax))
@@ -182,7 +184,7 @@ def sortTensorEZSemblance2D(opicks,ipicks,priority,tensor,rmax=0.0,jmem='2g'):
 def sortEZSemblance3D(opicks,ipicks,priority,r1=0.0,r2=0.0,r3=0.0,jmem='2g'):
 	Flow(opicks,[priority,ipicks],
 	  '''
-	  %s/bin/java -server -ea -Xmx%s cip.RSFEZSemblanceSort 
+	  %s -server -ea -Xmx%s cip.RSFEZSemblanceSort 
 	  r1=%f r2=%f r3=%f opt=ellp cfile=${SOURCES[1]}
 	  dim=3
 	  '''%(JHOME,jmem,r1,r2,r3))
@@ -190,7 +192,7 @@ def sortEZSemblance3D(opicks,ipicks,priority,r1=0.0,r2=0.0,r3=0.0,jmem='2g'):
 def sortEZSemblance2D(opicks,ipicks,priority,r1=0.0,r2=0.0,jmem='2g'):
 	Flow(opicks,[priority,ipicks],
 	  '''
-	  %s/bin/java -server -ea -Xmx%s cip.RSFEZSemblanceSort 
+	  %s -server -ea -Xmx%s cip.RSFEZSemblanceSort 
 	  r1=%f r2=%f opt=ellp cfile=${SOURCES[1]}
 	  dim=2
 	  '''%(JHOME,jmem,r1,r2))
