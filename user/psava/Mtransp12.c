@@ -12,7 +12,7 @@ int main(int argc, char* argv[])
 
     float  memsize; /* in Mb */
     off_t eseek;
-    long int n2buf,i2buf,n1off;
+    long int n2buf,i2buf,n1off,left;
     long int i1,i2,ii;
 
     float      **rin=NULL; /* data in (i1,n2buf) */
@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
     if(verb) sf_warning("cmplx=%d",cmpl);
 
     /* usable memory (Mb) */
-    if (!sf_getfloat("memsize",&memsize)) memsize=1000.0;
+    if(!sf_getfloat("memsize",&memsize)) memsize=1000.0;
     if(verb) sf_warning("memsize=%g",memsize);
      
     /*------------------------------------------------------------*/
@@ -49,7 +49,7 @@ int main(int argc, char* argv[])
     else     while(n2buf/1024.*sf_n(a1)/1024.*SF_FLOAT  < memsize) n2buf++;
     
     /*------------------------------------------------------------*/
-    if(verb) sf_warning("reserve output");
+    if(verb) fprintf(stderr,"reserve output");
 
     if(cmpl) {
 	cou=sf_complexalloc (sf_n(a2));
@@ -64,12 +64,12 @@ int main(int argc, char* argv[])
     }
     sf_seek(Fou,0,SEEK_SET); 
 
-    if(verb) sf_warning("OK");
+    if(verb) fprintf(stderr," OK\n");
 
     /*------------------------------------------------------------*/
     /* allocate data arrays */
 
-    if(verb) sf_warning("allocate arrays");
+    if(verb) fprintf(stderr,"allocate arrays");
 	
     if(cmpl) {
 	cin=sf_complexalloc2(sf_n(a1),n2buf);
@@ -79,15 +79,15 @@ int main(int argc, char* argv[])
 	rou=sf_floatalloc            (n2buf);
     }
 
-    if(verb) sf_warning("OK");
+    if(verb) fprintf(stderr," OK\n");
 
     /* feedback index */
     ii = (long int)(sf_n(a1)/10.);
     
     /*------------------------------------------------------------*/
     n1off=0;
-    for (i2=sf_n(a2); i2 > 0; i2 -= n2buf) {
-        if (n2buf > i2) n2buf=i2;
+    for (left=sf_n(a2); left > 0; left -= n2buf) {
+        if(n2buf > left) n2buf=left;
 
 	if(cmpl) {
 
@@ -104,6 +104,8 @@ int main(int argc, char* argv[])
 		eseek = (i1*sf_n(a2)+n1off)*sizeof(sf_complex);
 		sf_seek(Fou,eseek,SEEK_SET);
 		sf_complexwrite(cou,n2buf,Fou);
+
+		if(verb && i1%ii==0) fprintf(stderr,".");
 	    }
 
 	} else {
@@ -127,11 +129,12 @@ int main(int argc, char* argv[])
 	}
 	
 	n1off+=n2buf;
-	
 	if(verb) fprintf(stderr," %5.1f%% complete\n",100.0*n1off/sf_n(a2));
     }
 
     /*------------------------------------------------------------*/
+    if(verb) fprintf(stderr,"deallocate arrays");
+
     if(cmpl) {
 	;           free(cou);
 	free(*cin); free(cin);
@@ -139,6 +142,8 @@ int main(int argc, char* argv[])
 	;           free(rou);
 	free(*rin); free(rin);
     }
+
+    if(verb) fprintf(stderr," OK\n");
 
     exit (0);
 }

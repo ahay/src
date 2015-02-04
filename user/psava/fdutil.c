@@ -529,7 +529,7 @@ void bfill(float** b,
     
     for     (ix=0; ix<fdm->nxpad; ix++) {
 	for (iz=0; iz<fdm->nb;    iz++) {
-	    b[ix][           iz  ] = b[ix][           fdm->nb  ];
+/*	    b[ix][           iz  ] = b[ix][           fdm->nb  ]; */
 	    b[ix][fdm->nzpad-iz-1] = b[ix][fdm->nzpad-fdm->nb-1];
 	}
     }
