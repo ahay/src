@@ -181,6 +181,7 @@ for prog in ccmains:
     vti2dpseudosvlrsep vti3dedivcurl vti3delrdecompP vti3delrsep
     vti3delrsephomo vti3delrsephomo vti3delrsephomoP
     vti2delrsep2p vti3delrsepP vti3delrsepSV vti3delrsepSH
+    ort3delrsep
     '''))
     if cancompile:
         prog = env.Program(prog, map(lambda x: x + '.cc',sources)+objs, 
