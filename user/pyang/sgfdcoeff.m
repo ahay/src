@@ -1,4 +1,4 @@
-function c=staggered_fdcoeff(NJ)
+function c=sgfdcoeff(NJ)
 % compute 2*N-order staggered-grid finite difference coefficients (NJ=2N)
 % Example:
 %     format long
