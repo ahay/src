@@ -7,6 +7,8 @@ function c=sgfdcoeff(NJ)
 % 
 % Note: This code is devoted alongside the manuscript of P.L. Yang et al, 
 % Using the effective boundary saving strategy in GPU-based RTM programming
+%
+% Copyright (C) 2013  Xi'an Jiaotong University (Pengliang Yang)
 
 N=NJ/2;
 x=zeros(N,1);

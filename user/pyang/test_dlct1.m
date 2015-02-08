@@ -1,9 +1,12 @@
 function test_dlct1
-
-% Reference: Alkishriwo, Osama A., and Luis F. Chaparro. "A discrete 
-%  linear chirp transform (DLCT) for data compression." Information 
-%  Science, Signal Processing and their Applications (ISSPA), 2012 
-%  11th International Conference on. IEEE, 2012.
+% Description: matlab exmaple of DLCT 
+% Reference: 
+%	Alkishriwo, Osama A., and Luis F. Chaparro. "A discrete 
+%	linear chirp transform (DLCT) for data compression."  
+%  	11th International Conference on Information Science, Signal 
+%  	Processing and their Applications (ISSPA) IEEE, 2012.
+%
+% Copyright (C) 2013  Xi'an Jiaotong University (Pengliang Yang)
 
 clc,clear, close all
 
