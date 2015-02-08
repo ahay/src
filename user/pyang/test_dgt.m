@@ -1,10 +1,12 @@
 function test_dgt
 %dgt.m: This programme is used to compute dual frame and reconstruct 
 %           the original signal.
-%Copyright(c) Xi'an Jiaotong University, Pengliang YANG,2010.5.1
 %
 % Reference: Qian, Shie, and Dapang Chen. "Discrete gabor transform."
 %   Signal Processing, IEEE Transactions on 41.7 (1993): 2429-2438.
+%
+% Copyright (C) 2010  Xi'an Jiaotong University (Pengliang Yang)
+
 clc, clear,close all
 
 Ls = 1024;          % length of the original signal s[n]
