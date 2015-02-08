@@ -51,7 +51,7 @@ void lsrtm2d_close()
 
 
 void lsrtm2d(float dz, float dx, float dt, int n0, int n1, 
-int n2, int nb, int nt, float **vv, float *mod, float *dat, int niter)
+int n2, int nt, float **vv, float *mod, float *dat, int niter)
 /*< LSRTM with conjugate gradient method >*/
 {
   	bool forget;
@@ -61,7 +61,7 @@ int n2, int nb, int nt, float **vv, float *mod, float *dat, int niter)
 	memset(gr, 0, nd*sizeof(float));
 	memset(mm, 0, nm*sizeof(float));
 	memset(gm, 0, nm*sizeof(float));
-	rtm2d_init(dz, dx, dt, n0, n1, n2, nb, nt, vv, mod, dat);
+	rtm2d_init(dz, dx, dt, n0, n1, n2, nt, vv, mod, dat);
 
 	res0=cblas_dsdot(nd, rr, 1, rr, 1);
 	for(iter=0;iter<niter;iter++)
@@ -84,7 +84,7 @@ int n2, int nb, int nt, float **vv, float *mod, float *dat, int niter)
 int main(int argc, char* argv[])
 {   
 	bool verb;
-    	int niter, n1, n2, nb, nt, n0, nx;
+    	int niter, n1, n2, nt, n0, nx;
     	float tol, dt, dx, dz, o1, o2;
     	float *mod, *dat, **vv;      
 
@@ -109,8 +109,6 @@ int main(int argc, char* argv[])
 	/* o1 */
     	if (!sf_histfloat(modl,"o2",&o2)) sf_error("o2");
 	/* o2 */
-    	if (!sf_getint("nb",&nb)) nb=20;
-	/* number (thickness) of ABC boundary grid on each side */
     	if (!sf_getint("n0",&n0)) n0=0;
 	/* shot depth in the grid */
     	if (!sf_getbool("verb",&verb)) verb=false;
@@ -147,13 +145,13 @@ int main(int argc, char* argv[])
 /*
 // method 1: use my own CG solver, no reweighting
 	lsrtm2d_init(n1*n2, nt*n2, tol, verb);
-	lsrtm2d(dz, dx, dt, n0, n1, n2, nb, nt, vv, mod, dat, niter);
+	lsrtm2d(dz, dx, dt, n0, n1, n2, nt, vv, mod, dat, niter);
 	lsrtm2d_close();
 */
 
 
 /* method 2: use bigsolver, no reweighting (=method 1) */
-	rtm2d_init(dz, dx, dt, n0, n1, n2, nb, nt, vv, mod, dat);
+	rtm2d_init(dz, dx, dt, n0, n1, n2, nt, vv, mod, dat);
    	sf_solver(rtm2d_lop, sf_cgstep, n1*n2, nt*n2, mod, dat, niter, "verb", verb, "end");
 	rtm2d_close();
 	sf_cgstep_close();
@@ -164,7 +162,7 @@ int main(int argc, char* argv[])
 // method 3: IRLS with bigsolver reweighting for L0/L1 sparsity-promotion
     	float *w=sf_floatalloc(n1*n2);
     	for (int i=0; i<n1*n2; i++) w[i]=1.0f;
-	rtm2d_init(dz, dx, dt, n0, n1, n2, nb, nt, vv, mod, dat);
+	rtm2d_init(dz, dx, dt, n0, n1, n2, nt, vv, mod, dat);
     	for (int iter = 0; iter < niter; iter++) {
    		sf_solver(rtm2d_lop, sf_cgstep, n1*n2, nt*n2, mod, dat, 1, "x0", mod, "mwt", w, "end");
 

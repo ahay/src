@@ -24,7 +24,7 @@
 int main(int argc, char* argv[])
 {
     	bool adj;    
-    	int n1, n2, nb, nt, n0, nx, nz;
+    	int n1, n2, nt, n0, nx, nz;
     	float dt, dx, dz, o1, o2;
     	float *mod, *dat, **v0;      
 
@@ -49,8 +49,6 @@ int main(int argc, char* argv[])
 	/* o2 */
     	if (!sf_getbool("adj",&adj)) adj=false;
 	/* if y, migration; else, modeling */
-    	if (!sf_getint("nb",&nb)) nb=20;
-	/* number (thickness) of ABC boundary grid on each side */
     	if (!sf_getint("n0",&n0)) n0=0;
 	/* shot depth in the grid */
 
@@ -105,7 +103,7 @@ int main(int argc, char* argv[])
 		sf_floatread(mod,n1*n2,imag);
     	}
 
-	rtm2d_init(dz, dx, dt, n0, n1, n2, nb, nt, v0, mod, dat);
+	rtm2d_init(dz, dx, dt, n0, n1, n2, nt, v0, mod, dat);
 	rtm2d_lop(adj, false, n1*n2, nt*n2, mod, dat);
 	rtm2d_close();
 
