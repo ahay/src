@@ -1,5 +1,5 @@
 /* RTM and angle gather (ADCIG) extraction using poynting vector
-NB: SPML boundary condition combined with 4-th order finite difference,
+SPML boundary condition combined with 4-th order finite difference,
 effective boundary saving strategy used!
 */
 /*
@@ -40,7 +40,7 @@ effective boundary saving strategy used!
 
 static bool 	csdgather;/* common shot gather (CSD) or not */
 static int 	nb, nz, nx, nzpad, nxpad, nt, ns, ng, na;
-static float 	fm, dt, dz, dx, _dz, _dx, vmute, da;
+static float 	fm, dt, dz, dx, _dz, _dx, vmute, da, var;
 
 void expand2d(float** b, float** a)
 /*< expand domain of 'a' to 'b': source(a)-->destination(b) >*/
@@ -382,7 +382,7 @@ void cross_correlation(float ***num, float **den, float **sp, float **gp, float 
 		a=0.5*acosf(a);
 		ia=(int)(a/da);
 		if(ia==na) ia=ia-1;
-		num[ia][i2][i1]+=sp[i2+nb][i1+nb]*gp[i2+nb][i1+nb]; //numerator
+		num[ia][i2][i1]+=sp[i2+nb][i1+nb]*gp[i2+nb][i1+nb]*expf(-(a-ia*da)*(a-ia*da)/var); //numerator
 		den[i2][i1]+=sp[i2+nb][i1+nb]*sp[i2+nb][i1+nb];//denominator
 	}
 }
@@ -463,6 +463,8 @@ int main(int argc, char* argv[])
 	nzpad=nz+2*nb;
 	nxpad=nx+2*nb;
 	da=SF_PI/(float)na;/* angle unit, rad; */
+	var=da/3.;
+	var=2.0*var*var;
 
     	sf_putint(rtmadcig,"n1",nz);
     	sf_putint(rtmadcig,"n2",nx);
@@ -576,7 +578,7 @@ int main(int argc, char* argv[])
 		for(ia=0; ia<na; ia++)
 		for(i2=0; i2<nx; i2++)
 		for(i1=0; i1<nz; i1++)
-			adcig[ia][i2][i1]+=16.0*num[ia][i2][i1]*vv[i2+nb][i1+nb]/((den[i2][i1]+SF_EPS)*sinf((ia+1)*da));
+			adcig[ia][i2][i1]+=num[ia][i2][i1]/(den[i2][i1]+SF_EPS);
 	}
 	sf_floatwrite(adcig[0][0], na*nz*nx,rtmadcig);
 
