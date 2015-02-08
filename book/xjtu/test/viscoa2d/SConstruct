@@ -23,7 +23,7 @@ Flow('tau0',None,
 
 Flow('wav pz px','vel rho tau tau0',
 	'''
-	sfva2d rho=${SOURCES[1]} tau=${SOURCES[2]} tau0=${SOURCES[3]}
+	sfviscoa2d rho=${SOURCES[1]} tau=${SOURCES[2]} tau0=${SOURCES[3]}
 	pz=${TARGETS[1]} px=${TARGETS[2]} nb=30 nt=400 dt=0.001 verb=y kt=250
 	''')
 Plot('wav','grey gainpanel=all title="Forward (8th order)" scalebar=y color=j scalebar=y',view=1)
