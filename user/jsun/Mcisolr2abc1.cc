@@ -41,7 +41,7 @@ int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
 	    int iz  = rs[a] % nz;
 	    int ix  = (int) rs[a]/nz;
 	    float phase = vs[rs[a]]*hypot(ksz[ikz],ksx[ikx])*dt;
-	    if (rev) phase*=-1;
+		if (rev) phase*=-1;
 	    float phf = 1.;
 	    if (iz < nbt)
 		phf *= exp(-powf(ct*(nbt-iz),2));
@@ -84,6 +84,8 @@ int main(int argc, char** argv)
     par.get("npk",npk,20); // maximum rank
 
     par.get("dt",dt); // time step
+    
+	par.get("rev",rev,false); // reversal
 
     par.get("nbt",nbt,0);
     par.get("nbb",nbb,0);
@@ -94,8 +96,6 @@ int main(int argc, char** argv)
     par.get("cb",cb,0.0);
     par.get("cl",cl,0.0);
     par.get("cr",cr,0.0);
-
-    par.get("rev",rev,false);
 
     iRSF vel;
 
