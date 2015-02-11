@@ -32,7 +32,7 @@ randcut
 encode shot2grid
 boxfilter
 lwefd2d
-awefd2d awefd3d ewefd2d ewefd3d
+ewefd2d ewefd3d
 hdefd
 emfdm2d
 hic2ang
@@ -48,6 +48,8 @@ itrack2d itrack3d
 injop2d injop3d
 transp12
 '''
+
+# awefd2d awefd3d
 
 # Python targets
 targets.py = '''

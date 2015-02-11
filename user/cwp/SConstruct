@@ -21,7 +21,7 @@ wexwfl weximg wexmig wexmva wexnmig wexzomva wexzoimg
 awesg
 cipcut
 ewefdm
-awefd2dopt awefd3dopt
+awefd2d awefd3d
 '''
 
 targets.c_mpi = \

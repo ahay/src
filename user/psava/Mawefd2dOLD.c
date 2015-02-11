@@ -79,7 +79,7 @@ int main(int argc, char* argv[])
 
     float **tt=NULL;
     float **ro=NULL;           /* density */
-    float **iro=NULL;			/* inverse density */
+    float **iro=NULL;	       /* inverse density */
     float **uat=NULL;          /* auxiliary wavefield */
     float **vp=NULL;           /* velocity */
     float **vt=NULL;           /* temporary vp*vp * dt*dt */
