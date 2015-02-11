@@ -1,3 +1,6 @@
+#ifndef UTILITIES_H
+#def UTILITIES_H
+
 #include <sys/stat.h>
 #define SECONDS_TO_SLEEP 30
 #define DO_DEBUG_FILE_NAME "/home/mlai/debug/DO_DEBUG"
@@ -27,3 +30,5 @@ static inline void sleepIfFileExist(int seconds_to_sleep, const char* file_name)
 		printf("Done waiting!\n");
     }
 }
+
+#ENDIF /* UTILITIES_H */
