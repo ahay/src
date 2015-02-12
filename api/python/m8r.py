@@ -367,6 +367,8 @@ if _swig_:
             File.__init__(self,tag)
             self.type = _File.type[c_rsf.sf_gettype(self.file)]
             self.form = _File.form[c_rsf.sf_getform(self.file)]
+        def tell(self):
+            return c_rsf.sf_tell(self.file)
         def close(self):
             c_rsf.sf_fileclose(self.file)
         def __del__(self):
