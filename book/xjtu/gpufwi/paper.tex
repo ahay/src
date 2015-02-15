@@ -186,7 +186,7 @@ To do the performance analysis, we run the sequential implementation CPU code an
 \subsection{Marmousi model}
 
 We use the Marmousi model for the benchmark test, as shown in the top panel of Figure~\ref{fig:marm}.
-FWI tacitly requires a good starting model incorporated with low frequency information. Therefore, we use a starting model (bottom panel of Figure~\ref{fig:marm}) obtained by smoothing the original model 20 times with a 5x5 window.
+FWI tacitly requires a good starting model incorporated with low frequency information. 21 shots are deployed as the observations in the FWI, while 3 of them are shown in Figure~\ref{fig:shotsnap}. We use a starting model (bottom panel of Figure~\ref{fig:marm}) obtained by smoothing the original model 20 times with a 5x5 window. 
 
 The FWI is carried out for 300 iterations. A 10 Hz Ricker wavelet is deployed in our modeling and inversion.  We record all the updated velocity to make sure the velocity refinement is going on during the iterative procedure. The updated velocity model at iterations 1, 20, 50, 100, 180 and 300 is displayed in Figure~\ref{fig:vsnap}. Figure~\ref{fig:objs} describes the decreasing misfit function in iterations. As can be seen from the Figures~\ref{fig:vsnap} and \ref{fig:objs}, the velocity model changes significantly at the early stage. Later iterations in FWI make some improvement on small details for the velocity model. More iterations will refine the model further, however, gaining less and less improvement.
 
@@ -201,16 +201,18 @@ The FWI is carried out for 300 iterations. A 10 Hz Ricker wavelet is deployed in
 \plot{objs}{width=0.7\textwidth}{The misfit function decreases with iteration.}
 
 
-\section{Conclusions and discussions}
+\section{Conclusion}
 
 We have implemented GPU-based FWI using the wavefield reconstruction strategy, which averts the issue of CPU-GPU data transfer. The Clayton-Enquist absorbing boundary was utilized to maintain the efficiency of GPU computation. A hybrid nonlinear conjugate gradient method combined with parallel reduction technique was adopted in the FWI optimization. The validity of our  implementation for GPU-based FWI was demonstrated using a numerical test. 
 
+\section{Discussion}
 It is important to point out that FWI can be accelerated in many ways. A good choice of preconditioning operator may lead to fast convergence rate and geologically consistent results \citep{virieux2009overview,ayeni2009joint,guitton2012constrained}. Multishooting and source encoding method is also a possible solution for accelerating FWI \citep{schiemenz2013accelerated,moghaddam2013new}. These techniques can be combined with GPU implementation \citep{wang2011cuda}. There are many reports advocating their acceleration performance based on particular GPU hardware. These reports may be out of date soon once the more powerful and advanced GPU product are released. Although the speedup performance of our implementation may be a little poor due to our hardware condition, we believe that it is useful to give readers the implementation code to do performance analysis using their own GPU cards. The current GPU-based FWI implementation parallelizes the forward modeling process which makes it possible to run FWI on a single node and low-level GPU condition even for a laptop. However, it  is completely possible to obtain higher speedup performance using the latest, high performance GPU products, and further parallelize the code on multi-GPU architectures using message passing interface (MPI) programming.
 
 \section*{Acknowledgments}
 
 The work of the first author is supported by China Scholarship Council during his visit to Bureau of Economic Geology, The University of Texas at Austin. 
-This work is sponsored by National Science Foundation of China (No. 41390454). Thanks go to IFP for the Marmousi model. We wish to thank Sergey Fomel for valuable help to incorporate the codes into Madagascar software package \citep{m8r} (\url{http://www.ahay.org}), which makes all the numerical examples reproducible. The paper is substantially improved according to the suggestions of Joe Dellinger and three other reviewers.
+This work is sponsored by National Science Foundation of China (No. 41390454). Thanks go to IFP for the Marmousi model. We wish to thank Sergey Fomel for valuable help to incorporate the codes into Madagascar software package \citep{m8r} (\url{http://www.ahay.org}), which makes all the numerical examples reproducible. The paper is substantially improved according to the suggestions of Joe Dellinger, Robin Weiss and two other reviewers.
+
 
 
 \append{Misfit function minimization}\label{app:misfit}

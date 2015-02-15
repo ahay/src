@@ -1,8 +1,8 @@
 from rsf.tex import *
 
-End(options='manuscript', use='''amsmath,amsfonts,amssymb,hyperref,url,tikz''',
+End(use='''amsmath,amsfonts,amssymb,hyperref,url,tikz''',
 	include='''
 %\usetikzlibrary{decorations.pathreplacing} 
 %\usetikzlibrary{shapes,arrows,chains}
 	''',
-	color='marm vsnap')
+	color='marm shotsnap vsnap')
