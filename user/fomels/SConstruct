@@ -101,7 +101,7 @@ for prog in ccmains:
         if root:
             env.Install(bindir,prog)
 
-prog = env.Program('cerf',map(lambda x: x + '.cc',['Mcerf','faddeeva']),LIBS=libsxx)
+prog = env.Program('cerf',map(lambda x: x + '.cc',['Mcerf','faddeeva']),LIBS=[dynpre+'rsf++','vecmatop']+libs)
 if root:
     install = env.Install(bindir,prog)
             
@@ -166,7 +166,7 @@ if root:
     main = 'sf%s.py' % user
     
     docs = map(lambda prog: env.Doc(prog,'M' + prog),mains) +  \
-           map(lambda prog: env.Doc(prog,'M%s.cc' % prog,lang='c++'),ccmains) + \
+           map(lambda prog: env.Doc(prog,'M%s.cc' % prog,lang='c++'),ccmains+['cerf']) + \
            map(lambda prog: env.Doc(prog,'_' + prog),['byte2jpg','jpg2byte']) + \
            map(lambda prog: env.Doc(prog,'_' + prog),['byte2tif','tif2byte']) + \
            map(lambda prog: env.Doc(prog,'M'+prog+'.py',lang='python'),pymains)
