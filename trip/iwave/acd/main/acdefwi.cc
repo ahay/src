@@ -10,11 +10,8 @@
 #include "blockop.hh"
 #include "cgnealg.hh"
 #include "LBFGSBT.hh"
-#include "LinFitLS.hh"
-#include "LinFitLSSM.hh"
-#include "acdiva_selfdoc.h"
+#include "acdefwi_selfdoc.h"
 #include <par.h>
-#include "adjtest.hh"
 #include "segyops.hh"
 
 //#define GTEST_VERBOSE
@@ -42,12 +39,9 @@ using RVL::AssignParams;
 using RVL::RVLRandomize;
 using RVL::ScaleOpFwd;
 using RVL::TensorOp;
-using RVL::AdjointTest;
 using RVLUmin::CGNEPolicy;
 using RVLUmin::CGNEPolicyData;
 using RVLUmin::LBFGSBT;
-using RVLUmin::LinFitLS;
-using RVLUmin::LinFitLSSM;
 using RVLUmin::CGNEAlg;
 using TSOpt::IWaveEnvironment;
 using TSOpt::IWaveTree;
@@ -120,34 +114,35 @@ int main(int argc, char ** argv) {
                         valparse<float>(*pars,"mute_zotime",0.0f),
                         valparse<float>(*pars,"mute_width",0.0f),0,
                         valparse<float>(*pars,"min",0.0f),
-                        valparse<float>(*pars,"max",numeric_limits<float>::max()),
+                        valparse<float>(*pars,"max",numeric_limits<float>::max()
+),
                         valparse<float>(*pars,"taper_width",0.0f),
                         valparse<int>(*pars,"taper_type",0),
-                        valparse<float>(*pars,"time_width",0.0f));
+                        valparse<float>(*pars,"time_width",0.0f),
+                        valparse<float>(*pars,"sx_min",0.0f),
+                        valparse<float>(*pars,"sx_max",numeric_limits<float>::max()),
+                        valparse<float>(*pars,"sx_width",0.0f));
         
       LinearOpFO<float> tnmop(iwop.getRange(),iwop.getRange(),tnm,tnm);
       OpComp<float> op(iwop,tnmop);
-    
-      /* generate physical model space */
+   
+/* generate physical model space - a priori distinct from extended space
+ * without even the same grid */
 #ifdef IWAVE_USE_MPI
-      MPIGridSpace csqsp(valparse<std::string>(*pars,"csq"),"notype",true);
+            MPIGridSpace csqsp(valparse<std::string>(*pars,"csq"),"notype",true);
 #else
-      GridSpace csqsp(valparse<std::string>(*pars,"csq"),"notype",true);
+            GridSpace csqsp(valparse<std::string>(*pars,"csq"),"notype",true);
 #endif
-      // make it a product, so it's compatible with domain of op
-      StdProductSpace<ireal> dom(csqsp);
-      
-
-
+ 
       // vel-squared model!
       Vector<ireal> m0(op.getDomain());
       Vector<ireal> m(op.getDomain());
 
-      AssignFilename mf0n(valparse<std::string>(*pars,"init_csq"));
+      AssignFilename mf0n(valparse<std::string>(*pars,"init_csqext"));
       Components<ireal> cm0(m0);
       cm0[0].eval(mf0n);
 
-      AssignFilename mfn(valparse<std::string>(*pars,"final_csq"));
+      AssignFilename mfn(valparse<std::string>(*pars,"final_csqext"));
       Components<ireal> cm(m);
       cm[0].eval(mfn);
       m.copy(m0);
@@ -188,7 +183,7 @@ int main(int argc, char ** argv) {
       }
 #endif
     // assign window widths - default = 0;
-    RPNT swind,ewind;
+    RPNT swind,ewind,width;
     RASN(swind,RPNT_0);
     RASN(ewind,RPNT_0);
     swind[0]=valparse<float>(*pars,"sww1",0.0f);
@@ -197,6 +192,10 @@ int main(int argc, char ** argv) {
     ewind[0]=valparse<float>(*pars,"eww1",0.0f);
     ewind[1]=valparse<float>(*pars,"eww2",0.0f);
     ewind[2]=valparse<float>(*pars,"eww3",0.0f);
+     width[0]=valparse<float>(*pars,"width0",0.0f);
+     width[1]=valparse<float>(*pars,"width1",0.0f);
+     width[2]=valparse<float>(*pars,"width2",0.0f);
+
 
      GridDerivOp dsop(op.getDomain(),dsdir,1.0f);//valparse<float>(*pars,"DSWeight",0.0f));
      // need to read in model space for bg input to GridWindowOp
@@ -204,7 +203,7 @@ int main(int argc, char ** argv) {
      AssignFilename minfn(valparse<std::string>(*pars,"csqext"));
      Components<ireal> cmin(m_in);
      cmin[0].eval(minfn);
-     GridMaskOp mop(op.getDomain(),m_in,swind,ewind);
+     GridMaskOp mop(op.getDomain(),m_in,swind,ewind,width);
      OperatorEvaluation<float> mopeval(mop,m_in);
      //     LinearOp<float> const & lmop=mopeval.getDeriv();
      OpComp<float> cop(mop,op);
