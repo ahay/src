@@ -4,7 +4,7 @@
   " Acoustic constant density extended full waveform inversion",
   " iwave/acd/main/acdefwi.cc", 
 " ",
-  " ------------------------- begin acdfwi parameters -------------------------",
+  " ------------------------- begin acdefwi parameters -------------------------",
   " ",
     " I/O:",
   "          data = <path>      input data file, SU format ",
@@ -54,5 +54,5 @@
   "     OptMethod = lbfgs       optimization method - current choices are ",
   "                             lbfgs (default) and trcg",
     " ",
-  " --------------------------- end acdfwi parameters -------------------------",
+  " --------------------------- end acdefwi parameters -------------------------",
 
