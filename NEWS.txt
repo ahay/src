@@ -30,6 +30,8 @@ To the reproducible documents collection:
 * sep/shearer: Earthquake stacks at constant offset (Claerbout)
 * sep/super: A prospect for super resolution (Claerbout)
 * trip/asg: Acoustic staggered grid modeling in IWAVE (Symes)
+* tccs/synth: Carbonate reservoir characterization using seismic
+  diffraction imaging (Decker, Janson, and Fomel)
 
 To SCons:
 
@@ -66,6 +68,7 @@ To programs:
 * Added inv= flag in sfheaderwindow
 * Added polyneg= flag in sfwiggle
 * Added key= and nkey= parameters to sfheadermath
+* sfcerf: complex error function
 
 ===Bug fixes===
 

@@ -256,7 +256,7 @@ Result('diffractions',
 
 mig = ['exp0','reflections','diffractions']
 for item in mig:
-     Flow(item+'_mig',[item,'left2_s','right2_s'],
+     Flow(item+'-mig',[item,'left2_s','right2_s'],
           '''
           reverse which=1 |
           transp plane=12 memsize=%i|
@@ -265,7 +265,7 @@ for item in mig:
           left=${SOURCES[1]} right=${SOURCES[2]} 
           nz=%d dz=%g
           ''' %(memsize,memsize,nz,dz))
-     Plot(item+'_mig',
+     Plot(item+'-mig',
           '''
           put label1=Time unit1=ms d1=.25
           label2=Inline d2=.025 unit2=km
@@ -275,7 +275,7 @@ for item in mig:
           frame1=%i frame2=%i frame3=%i flat=n
           point2=%g  
           '''%(item,frame1d,frame2*2/5,frame3*2/5,volpt2))
-Result('exp0_mig',
+Result('exp0-mig',
           '''
           put 
           label2=Inline d2=.025 unit2=km
@@ -285,7 +285,7 @@ Result('exp0_mig',
           frame1=%i frame2=%i frame3=%i flat=n
           point2=%g  
           '''%(frame1d,frame2,frame3,volpt2))
-Result('diffractions_mig',
+Result('diffractions-mig',
           '''
           put 
           label2=Inline d2=.025 unit2=km
@@ -301,7 +301,7 @@ Result('diffractions_mig',
 
 # method via /parvaneh/pre-coherency/three-d
 
-Flow('image_slope','exp0_mig',
+Flow('image_slope','exp0-mig',
      '''
      dip rect1=%i rect2=%i rect3=%i order=4
      '''%(rect1d,rect2,rect3))
@@ -337,17 +337,17 @@ ns2=2
 ns3=2
 
 #prediction volume
-Flow('slope_spray','exp0_mig image_slope',
+Flow('slope_spray','exp0-mig image_slope',
      'pwspray2 ns2=%d ns3=%d dip=${SOURCES[1]}'% (ns2,ns3))
 
 # Prediction error
-Flow('copy','exp0_mig','spray axis=2 n=25 d=25 o=0')
+Flow('copy','exp0-mig','spray axis=2 n=25 d=25 o=0')
 Flow('sweight','copy slope_spray', 
      '''
      similarity other=${SOURCES[1]} rect1=10 rect4=1 | math output=1/input
      ''')
 
-Flow('diff','exp0_mig slope_spray',
+Flow('diff','exp0-mig slope_spray',
      '''
      spray axis=2 n=25 d=25 o=0|
      add scale=1,-1 ${SOURCES[1]} 
@@ -403,7 +403,7 @@ for frame in xrange(0,len(frame1lst)):
           scalebar=y bar=${SOURCES[1]} point2=%g
           '''%(frame1lst[frame],frame2lst[frame],frame3lst[frame],volpt2))
      #Conventional Image With Smooth Slowness
-     Plot('image_%i'%frame,'exp0_mig',
+     Plot('image_%i'%frame,'exp0-mig',
           regularize+
           '''
           byte|
@@ -412,7 +412,7 @@ for frame in xrange(0,len(frame1lst)):
           point2=%g
           '''%(frame1lst[frame],frame2lst[frame],frame3lst[frame],volpt2))
      #Diffraction Image With Smooth Slowness
-     Plot('diffimage_%i'%frame,'diffractions_mig',
+     Plot('diffimage_%i'%frame,'diffractions-mig',
           regularize+
           '''
           byte|
@@ -430,8 +430,8 @@ for frame in xrange(0,len(frame1lst)):
          '''%(clip,frame1lst[frame],frame2lst[frame],frame3lst[frame],volpt2))#e!,h
      #Some 2D stuff
      Plot('coh2d_%i'%frame,'cohP2','window n1=1 f1=%i | grey color=e title="Prediction length 2 Coherence"'%(frame1lst[frame]))
-     Plot('dif2d_%i'%frame,'diffractions_mig','window n1=1 f1=%i | grey title="Diffraction Image"'%(frame1lst[frame]))
-     Plot('img2d_%i'%frame,'exp0_mig','window n1=1 f1=%i | grey title="Conventional Image from %g km"'%(frame1lst[frame],dlst[frame]))
+     Plot('dif2d_%i'%frame,'diffractions-mig','window n1=1 f1=%i | grey title="Diffraction Image"'%(frame1lst[frame]))
+     Plot('img2d_%i'%frame,'exp0-mig','window n1=1 f1=%i | grey title="Conventional Image from %g km"'%(frame1lst[frame],dlst[frame]))
      Plot('vp2d_%i'%frame,'vp','window n1=1 f1=%i | grey title="Velocity Model" color=j allpos=y bias=3000'%(frame1lst[frame]))
      #Some 2D Stack Attributes
      stk= 'window n1=10 f1=%i | stack axis=1 | transp|put unit2=km unit1=km  d2=.025 d1=.025 |'%(frame1lst[frame]-5)
@@ -439,16 +439,16 @@ for frame in xrange(0,len(frame1lst)):
      stkb= 'window n1=10 f1=%i  | stack axis=1 | transp|put unit2=km unit1=km  d2=.025 d1=.025 | window min2=.5 max2=2.5 min1=11.75 max1=13.75  | '%(frame1lst[frame]-5)
      stkc= 'window n1=10 f1=%i  | stack axis=1 | transp|put unit2=km unit1=km  d2=.025 d1=.025 | window min2=.5 max2=2 min1=7 max1=8.5  | '%(frame1lst[frame]-5)
      Plot('coh2dstk_%i'%frame,'cohP2',stk+'grey color=e title="Prediction length 2 Coherence"')
-#     Plot('dif2dstk_%i'%frame,'diffractions_mig',stk+' grey title="Diffraction Image from %g km"'%(frame1lst[frame],dlst[frame]))
- #    Plot('img2dstk_%i'%frame,'exp0_mig',stk+'grey title="Conventional Image from %g km"'%(frame1lst[frame],dlst[frame]))
-     Result('dif2dstk_%i'%frame,'diffractions_mig',stk+' grey title="Diffraction Image from %g km"  '%(dlst[frame]))
-     Result('img2dstk_%i'%frame,'exp0_mig',stk+'grey title="Conventional Image from %g km"  '%(dlst[frame]))
-     Result('dif2dstka_%i'%frame,'diffractions_mig',stka+' grey title="Zoomed Diffraction Image from %g km"  '%(dlst[frame]))
-     Result('img2dstka_%i'%frame,'exp0_mig',stka+'grey title="Zoomed Conventional Image from %g km"  '%(dlst[frame]))
-     Result('dif2dstkb_%i'%frame,'diffractions_mig',stkb+' grey title="Zoomed Diffraction Image from %g km"  '%(dlst[frame]))
-     Result('img2dstkb_%i'%frame,'exp0_mig',stkb+'grey title="Zoomed Conventional Image from %g km"  '%(dlst[frame]))
-     Result('dif2dstkc_%i'%frame,'diffractions_mig',stkc+' grey title="Zoomed Diffraction Image from %g km"  '%(dlst[frame]))
-     Result('img2dstkc_%i'%frame,'exp0_mig',stkc+'grey title="Zoomed Conventional Image from %g km"  '%(dlst[frame]))
+#     Plot('dif2dstk_%i'%frame,'diffractions-mig',stk+' grey title="Diffraction Image from %g km"'%(frame1lst[frame],dlst[frame]))
+ #    Plot('img2dstk_%i'%frame,'exp0-mig',stk+'grey title="Conventional Image from %g km"'%(frame1lst[frame],dlst[frame]))
+     Result('dif2dstk_%i'%frame,'diffractions-mig',stk+' grey title="Diffraction Image from %g km"  '%(dlst[frame]))
+     Result('img2dstk_%i'%frame,'exp0-mig',stk+'grey title="Conventional Image from %g km"  '%(dlst[frame]))
+     Result('dif2dstka_%i'%frame,'diffractions-mig',stka+' grey title="Zoomed Diffraction Image from %g km"  '%(dlst[frame]))
+     Result('img2dstka_%i'%frame,'exp0-mig',stka+'grey title="Zoomed Conventional Image from %g km"  '%(dlst[frame]))
+     Result('dif2dstkb_%i'%frame,'diffractions-mig',stkb+' grey title="Zoomed Diffraction Image from %g km"  '%(dlst[frame]))
+     Result('img2dstkb_%i'%frame,'exp0-mig',stkb+'grey title="Zoomed Conventional Image from %g km"  '%(dlst[frame]))
+     Result('dif2dstkc_%i'%frame,'diffractions-mig',stkc+' grey title="Zoomed Diffraction Image from %g km"  '%(dlst[frame]))
+     Result('img2dstkc_%i'%frame,'exp0-mig',stkc+'grey title="Zoomed Conventional Image from %g km"  '%(dlst[frame]))
      Plot('vp2dstk_%i'%frame,'vp',stk+'grey title="Velocity Model" color=j allpos=y bias=5000')
 
 

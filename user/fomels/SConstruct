@@ -101,6 +101,20 @@ for prog in ccmains:
         if root:
             env.Install(bindir,prog)
 
+prog = env.Program('cerf',map(lambda x: x + '.cc',['Mcerf','faddeeva']),LIBS=libsxx)
+if root:
+    install = env.Install(bindir,prog)
+            
+    if dynpre and env['PLATFORM'] == 'darwin':
+        env.AddPostAction(install,
+                          '%s -change build/api/c/libdrsf.dylib '
+                          '%s/libdrsf.dylib %s' % \
+                              (WhereIs('install_name_tool'),libdir,install[0]))
+        env.AddPostAction(install,
+                          '%s -change build/api/c++/libdrsf++.dylib '
+                          '%s/libdrsf++.dylib %s' % \
+                              (WhereIs('install_name_tool'),libdir,install[0]))
+
 jpeg = env.get('JPEG')
 if jpeg:
     jpeg_o = env.StaticObject('_jpeg.c')

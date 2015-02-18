@@ -192,6 +192,13 @@ oRSF::seek( off_t offset, int whence) // seek to a position in a file
     sf_seek(file_,offset, whence);
 }
 
+// file data type
+int 
+oRSF::bufsiz (void)
+{
+    return (int) sf_bufsiz(file_);
+}
+
 // Reading parameters
 /////////////////////
 void 

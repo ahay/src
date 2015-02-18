@@ -115,6 +115,7 @@ static cfunc cfunctable[] = {
     myconj,
     myreal,
     myimag
+/*    cerf - in the future */
 };
 
 

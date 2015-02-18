@@ -89,6 +89,7 @@ Includes gmres.c by Kengo Ichiki
 Includes selected codes from einspline by Kenneth P. Esler, Jr.
 Includes lbfgs.c by Jorge Nocedal and Naoaki Okazaki
 Includes las.py by Warren Weckesser
+Includes faddeeva.cc by Steven G. Johnson
 
 Includes selected codes from CWP/SU by Dave Hale and others (c) Colorado School of Mines 
 Includes selected codes from TRIP by William Symes and others (c) Rice University
