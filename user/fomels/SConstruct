@@ -101,19 +101,24 @@ for prog in ccmains:
         if root:
             env.Install(bindir,prog)
 
-prog = env.Program('cerf',map(lambda x: x + '.cc',['Mcerf','faddeeva']),LIBS=[dynpre+'rsf++','vecmatop']+libs)
-if root:
-    install = env.Install(bindir,prog)
+if 'c++' in env.get('API',[]):
+    prog = env.Program('cerf',map(lambda x: x + '.cc',['Mcerf','faddeeva']),LIBS=[dynpre+'rsf++']+libs)
+    if root:
+        install = env.Install(bindir,prog)
             
-    if dynpre and env['PLATFORM'] == 'darwin':
-        env.AddPostAction(install,
-                          '%s -change build/api/c/libdrsf.dylib '
-                          '%s/libdrsf.dylib %s' % \
-                              (WhereIs('install_name_tool'),libdir,install[0]))
-        env.AddPostAction(install,
-                          '%s -change build/api/c++/libdrsf++.dylib '
-                          '%s/libdrsf++.dylib %s' % \
-                              (WhereIs('install_name_tool'),libdir,install[0]))
+        if dynpre and env['PLATFORM'] == 'darwin':
+            env.AddPostAction(install,
+                              '%s -change build/api/c/libdrsf.dylib '
+                              '%s/libdrsf.dylib %s' % \
+                                  (WhereIs('install_name_tool'),libdir,install[0]))
+            env.AddPostAction(install,
+                              '%s -change build/api/c++/libdrsf++.dylib '
+                              '%s/libdrsf++.dylib %s' % \
+                                  (WhereIs('install_name_tool'),libdir,install[0]))
+else:
+    prog = env.RSF_Place('sfcerf',None,package='c++')
+    if root:
+        env.Install(bindir,prog)
 
 jpeg = env.get('JPEG')
 if jpeg:
