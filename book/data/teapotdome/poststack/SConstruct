@@ -3,7 +3,10 @@ from rsf.recipes.beg import server
 
 file='filt_mig'
 
-Fetch(file+'.sgy','teapot',server)
+Fetch('filt_mig.sgy','teapot',server='http://s3.amazonaws.com',top='')
+
+# comment out the propietatry server
+#Fetch(file+'.sgy','teapot',server)
 # tshot=184 gets cdpy 
 # tshot=180 gets cdpx
 Flow([file,file+'_hdr',file+'.asc',file+'.bin'],file+'.sgy',
@@ -41,7 +44,9 @@ Flow('final.display',file+'mapped',
 	""",stdout=0, stdin=0)
 
 Result('final',file+'mapped','grey')
-Result('zoom',file+'mapped','zoom')
+
+#comment out sfzoom that requires Tkinter not found on Karls Mac
+#Result('zoom',file+'mapped','zoom')
 End()
 
 #Flow('interactive.display',file+'mapped',
