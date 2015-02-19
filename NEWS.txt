@@ -69,6 +69,7 @@ To programs:
 * Added polyneg= flag in sfwiggle
 * Added key= and nkey= parameters to sfheadermath
 * sfcerf: complex error function
+* color scheme can be specified by file name
 
 ===Bug fixes===
 

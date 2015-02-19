@@ -58,11 +58,12 @@ void vp_name2coltab (   const char *colname,    /* color table name */
     /* first, try reading it from a file */
     if (NULL == (rsfroot = getenv("RSFROOT"))) rsfroot="/usr";
     sprintf (filename, "%s/include/%s.csv", rsfroot, colname);
-    if (NULL != (colfile = fopen(filename,"r"))) {
+    if (NULL != (colfile = fopen(colname,"r")) || 
+	NULL != (colfile = fopen(filename,"r"))) {
 	for (i = 0; i < nocol; i++) {
 	    if (reverse == 1) ic = nocol - 1 - i;   /* reverse color table */
 	    else              ic = i;
-   
+	    
 	    if (3 != fscanf(colfile,"%g,%g,%g\n",&red[ic], &green[ic], &blue[ic])) 
 		sf_error("Error reading \"%s\"",filename);
 	}
