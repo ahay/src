@@ -21,6 +21,7 @@
 
 int main(int argc, char* argv[])
 {
+    int dim;
     int n1, n2, n3, n4, i4;
     float ***pp, ***qq;
     sf_file in=NULL, out=NULL;
@@ -29,6 +30,9 @@ int main(int argc, char* argv[])
 
     in = sf_input("in");
     out = sf_output("out");
+
+    if (!sf_getint("dim",&dim)) dim=0;
+    /* dimension of the gradient, 0 for gradient squared */
 
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
     if (!sf_histint(in,"n2",&n2)) sf_error("No n2= in input");
@@ -40,10 +44,13 @@ int main(int argc, char* argv[])
 
     for (i4=0; i4 < n4; i4++) {
 	sf_floatread(pp[0][0],n1*n2*n3,in);
-	sf_sobel32(n1,n2,n3,pp,qq);
+	if (dim) {
+	    sf_sobel3(dim,n1,n2,n3,pp,qq);
+	} else {
+	    sf_sobel32(n1,n2,n3,pp,qq);
+	}
 	sf_floatwrite(qq[0][0],n1*n2*n3,out);
     }
-
 
     exit(0);
 }
