@@ -115,8 +115,7 @@ main(int argc, char** argv)
   if (!sf_getbool("cden",&cden))  cden=false; /* Constant density */
   if (!sf_getbool("adj",&adj))    adj=false; /* adjoint flag */
 
-  if (!sf_getbool("free",&fsrf)) fsrf=false; /* Free surface flag */
-  if (!sf_getbool("fsrf",&fsrf)) fsrf=false; /* Free surface flag */
+  if (!sf_getbool("free",&fsrf) && !sf_getbool("fsrf",&fsrf)) fsrf=false; /* Free surface flag */
 
   if (!sf_getint("nbell",&nbell)) nbell=5; /* gaussian for source injection */
 
@@ -275,6 +274,10 @@ main(int argc, char** argv)
   /* v = (v*dt)^2 */
   for (ix=0;ix<nzpad*nxpad;ix++)
     *(vel[0]+ix) *= *(vel[0]+ix)*dt2;
+  if (fsrf && !hybrid) {
+    for (ix=0; ix<nxpad; ix++)
+      memset(vel[ix],0,sizeof(float)*fdm->nb);
+  }
 
 #if defined _OPENMP && _DEBUG
   double tic;
