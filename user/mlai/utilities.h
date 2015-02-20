@@ -1,9 +1,10 @@
 #ifndef UTILITIES_H
-#def UTILITIES_H
+#define UTILITIES_H
 
 #include <sys/stat.h>
+#include <stdio.h>
 #define SECONDS_TO_SLEEP 30
-#define DO_DEBUG_FILE_NAME "/home/mlai/debug/DO_DEBUG"
+#define DO_DEBUG_FILE_NAME "/tmp/DEBUG"
 
 static inline int doesFileExist(const char* filename)
 /*< Checks if a file exist using stat() function. Returns 1 
@@ -31,4 +32,4 @@ static inline void sleepIfFileExist(int seconds_to_sleep, const char* file_name)
     }
 }
 
-#ENDIF /* UTILITIES_H */
+#endif /* UTILITIES_H */
