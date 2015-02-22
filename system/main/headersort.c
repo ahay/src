@@ -76,7 +76,7 @@ int main(int argc, char* argv[])
 
     trace = sf_charalloc(n1);
 
-    sf_unpipe(in,n1*n2);
+    sf_unpipe(in,((off_t) n1)*((off_t) n2));
     sf_fileflush(out,in);
     sf_setform(in,SF_NATIVE);
     sf_setform(out,SF_NATIVE);

@@ -42,6 +42,7 @@ Jorge Monsegny <jmonsegny@hotmail.com>
 Francesco Perrone <perfrancesco@gmail.com>
 Jack Poulson <jack.poulson@gmail.com>
 James Rickett <jrickett@slb.com>
+Sjoerd de Ridder <sjoerd@sep.stanford.edu>
 Sean Ross-Ross <srossross@gmail.com>
 Colin Russell <crussell@eos.ubc.ca>
 Christos Saragiotis <christos.saragiotis@gmail.com>
