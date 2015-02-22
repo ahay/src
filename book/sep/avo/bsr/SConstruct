@@ -27,10 +27,32 @@ twidth=0.025
 tp1=tp0+twidth
 
 Flow('bsr-picks','bsr-nmo','scale dscale=0.375 | window min1=%g max1=%g | sfmin axis=1' % (tp0,tp1))
-Result('bsr-picks',
-       '''
-       graph  wanttitle=n label1=angle unit1="degree" min2=-0.5 max2=0 symbol=+ symbolsz=5
-       label2="reflection amplitude" unit2=
-       ''')
+Plot('bsr-picks',
+     '''
+     graph  wanttitle=n wantaxis=n min2=-0.5 max2=0 symbol=+ symbolsz=5
+     ''')
+
+vp1=3.00
+vs1=1.2
+rho1=1.7
+
+vp2=1.65
+vs2=0.66
+rho2=1.6
+
+nth=30
+th0=0
+dth=1
+
+Flow('thin-hyd',None,
+     '''
+     zoeppritz na=30 a0=0 da=1 vp1=3 vp2=1.65 vs1=1.2 vs2=0.66 rho1=1.7 rho2=1.6
+     ''')
+Plot('thin-hyd',
+     '''
+     graph wanttitle=n label1=angle unit1="degree" label2="reflection amplitude" unit2=
+     min2=-0.5 max2=0 max1=30 
+     ''')
+Result('thin-hyd','thin-hyd bsr-picks','Overlay')
 
 End()
