@@ -222,9 +222,9 @@ velocity change.}
 Using Zoeppritz equations, the AVO trend corresponding to the modeled 
 velocities at the transition from hydrate to brine-saturated sediments is 
 determined and compared with the one observed in the data 
-(Figure \ref{fig:thin-hyd}).
+(Figure \ref{fig:thin}).
 
-\plot{thin-hyd}{width=4.0in}{AVO Curve obtained from the thin-hydrate
+\plot{thin}{width=4.0in}{AVO Curve obtained from the thin-hydrate
 model (solid line) compared with the one observed in the data (crosses).}
 
 A comparison of both curves yields that the thin-hydrate model not only failed
@@ -303,19 +303,22 @@ explain the observed seismic data.
 below the BSR for a thick-hydrate over brine sediment model. The modeled 
 velocities are correspond to the initial interval velocities.}
 
+\inputdir{bsr}
 
-\activeplot{brine}{width=4.0in}{.}{AVO curve obtained from the thick-hydrate
+\plot{brine}{width=4.0in}{AVO curve obtained from the thick-hydrate
 model (solid line) compared with the one observed in the data (crosses).}
 
-\notinteractive
-\activeplot{gas-vel}{width=2.75in,height=3.25in}{.}{Interval velocities for
+\inputdir{XFig}
+
+\plot{gas-vel}{width=2.75in,height=3.25in}{Interval velocities for
 hydrate-bearing sediments overlaying gas-saturated sediments. The dotted
 lines represent the initial velocities. The arrows indicate where the modeled 
 velocities
 had to be increased or decreased to match the seismic data.}
 
+\inputdir{bsr}
 
-\activeplot{gas}{width=4.0in}{.}{Synthetic AVO curve of hydrates overlaying 
+\plot{gas}{width=4.0in}{Synthetic AVO curve of hydrates overlaying 
 sediments saturated with free gas (solid line) compared with an observed
 one (crosses).}
 
@@ -334,8 +337,9 @@ contrast can be expected at the BSR due to the decrease in P-wave velocity
 at the transition from hydrate to gas. In order to determine the actual effect,
 we performed a prestack migration impedance inversion of the seismic data.
 
-\notinteractive
-\activeplot{final}{width=2.75in,height=3.25in}{.}{Final modeled interval velocity
+\inputdir{XFig}
+
+\plot{final}{width=2.75in,height=3.25in}{Final modeled interval velocity
 model. The dotted line indicates where the initial model differs from
 the final model. The arrows describe the direction the velocity had to be 
 changed in order to fit the seismic data.}
