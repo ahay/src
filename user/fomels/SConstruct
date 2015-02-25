@@ -103,6 +103,7 @@ for prog in ccmains:
 
 if 'c++' in env.get('API',[]):
     prog = env.Program('cerf',map(lambda x: x + '.cc',['Mcerf','faddeeva']),LIBS=[dynpre+'rsf++']+libs)
+    env.Depends('cerf','faddeeva.hh')
     if root:
         install = env.Install(bindir,prog)
             

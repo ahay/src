@@ -27,8 +27,6 @@ static int nx, nz, nbt, nbb, nbl, nbr;
 static float ct, cb, cl, cr;
 static float *wt, *wb, *wl, *wr;
 
-void itoa(int n, char *s);
-
 void bd_init(int n1,  int n2    /*model size:x*/,
              int nb1, int nb2  /*top, bottom*/,
              int nb3, int nb4  /*left, right*/,
