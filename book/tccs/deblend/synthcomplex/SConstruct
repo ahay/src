@@ -1,7 +1,6 @@
 from rsf.proj import*
 import sys
-sys.path.append('../../temp/recipes')
-import deblend2
+from rsf.recipes import deblend2
 
 ## parameters definition
 clip=0.9  		#display percentage

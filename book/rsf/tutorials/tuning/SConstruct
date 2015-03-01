@@ -38,4 +38,99 @@ Flow('tuning','seismic','window n1=1 min1=0.4 | scale dscale=1000')
 Result('tuning',
        'graph title="Upper Interface Amplitude" plotfat=10 plotcol=5 grid=y label2=Amplitude unit2=')
 
+thickness = 17.0  # vertical thickness of layer 2 in metres
+
+#   Angle range for incident rays
+theta1_min = 0.0    # best to leave this set to zero
+theta1_max = 40.0
+theta1_step= 1.0
+
+#   Ricker Wavelet Parameters
+wvlt_length= 0.128  # milliseconds
+wvlt_cfreq = 30.0   # Hz
+wvlt_phase = 0.0    # Degrees
+
+#   Trace Parameters
+tmin = 0.0
+tmax = 0.5
+dt = 0.0001 # changing this from 0.00005 can affect the display quality
+
+#   Plotting Display Parameters
+min_plot_time = 0.15
+max_plot_time = 0.3
+
+t1 = 500/vp_mod[0]
+t2 = t1+2*thickness/vp_mod[1]
+
+Flow('mask1',None,'spike o1=%g d1=%g n1=%d label1=TWT unit1=sec | cut max1=%g' % (tmin,dt,int(tmax/dt),t1))
+Flow('mask2',None,'spike o1=%g d1=%g n1=%d label1=TWT unit1=sec | cut min1=%g' % (tmin,dt,int(tmax/dt),t2))
+
+model = dict(vp=[0.001]+vp_mod,vs=[0.001]+vs_mod,den=[1]+rho_mod)
+minmax = dict(vp=[1.5,4.0],vs=[0.8,2.0],den=[1.6,2.6])
+
+for mod in model.keys():
+     Flow(mod,'mask1 mask2',
+          '''
+          math m1=${SOURCES[0]} m2=${SOURCES[1]} output="%g*((m2*(1-m1)*%g+m2*m1*%g+(1-m2)*%g))"
+          ''' % tuple(model[mod]))
+     Plot(mod,
+          '''
+          window min1=%g max1=%g |
+          graph label2=%s unit2=%s wanttitle=n grid=y transp=y yreverse=y pad=n min2=%g max2=%g
+          labelsz=12 plotfat=10 plotcol=2 g2num=0.025 g2num0=0.275 wherexlabel=t
+          ''' % (min_plot_time,max_plot_time,mod.capitalize(),
+                 ('km/s','')[mod=='den'],minmax[mod][0],minmax[mod][1]))
+
+Result('model','vp vs den','SideBySideAniso')
+
+# Reflectivity
+
+for i in range(2):
+     name = ('upper','lower')[i]
+
+     # Amplitude
+     Flow(name,None,
+          '''
+          zoeppritz na=41 da=1 vp1=%g vp2=%g vs1=%g vs2=%g rho1=%g rho2=%g
+          ''' % (vp_mod[i],vp_mod[i+1],vs_mod[i],vs_mod[i+1],rho_mod[i],rho_mod[i+1]))
+
+     # Reflectivity
+     k1 = int((t1,t2)[i]/dt)
+     Flow(name+'2',name,
+          '''
+          spray axis=1 n=%d o=%g d=%g label=TWT unit=sec
+          ''' % (int((tmax-tmin)/dt),tmin,dt))
+     Flow(name+'-ref',name+'2','spike k1=%d | mul $SOURCE' % k1)
+     Flow(name+'1','ref',
+          'window n1=1 f1=%g | scale dscale=100' % (k1-1))
+     
+     Result(name,[name,name+'1'],
+            '''
+            cat axis=2 ${SOURCES[1]} |
+            graph label1="Angle of Incidence"
+            unit1=deg label2="Reflection Coefficient"
+            title="%s Interface Reflectivity"
+            grid=y gridcol=5 plotfat=5 plotcol=6 dash=0,1
+            ''' % name.capitalize())
+
+Flow('ref','upper-ref lower-ref','add ${SOURCES[1]} | ricker1 frequency=30' )
+Flow('ref-win','ref','window min1=%g max1=%g' % (min_plot_time,max_plot_time))
+
+Plot('ref-pos','ref-win','wiggle poly=y yreverse=y transp=y wanttitle=n plotcol=1 grid2=n')
+Plot('ref-neg','ref-win','wiggle poly=y yreverse=y transp=y wanttitle=n plotcol=2 polyneg=y grid2=n')
+Plot('ref','ref-win',
+     '''
+     wiggle yreverse=y transp=y title="Synthetic Angle Gather"
+     plotcol=7 grid2=n
+     ''')
+Plot('ref-times',None,
+     '''
+     spike n1=2 n2=2 nsp=2 k1=1,2 mag=%g,%g | transp |
+     graph min2=%g max2=%g yreverse=y wantaxis=n wanttitle=n
+     plotcol=6 plotfat=3 pad=n
+     ''' % (t1,t2,min_plot_time,max_plot_time))
+
+Result('ref','ref-pos ref-neg ref ref-times','Overlay')
+
+
 End()

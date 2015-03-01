@@ -195,6 +195,7 @@ def deblendslet(unblended1,
     sig1, sig2 = (init1,init2)
     sigs1=[]
     sigs2=[]
+    sigs=[]
     snrsa=[]
     snrsb=[]
     Flow('zero',unblended1,'math output=0')
@@ -228,13 +229,15 @@ def deblendslet(unblended1,
 	(nsig1,nsig2)=step(sig1,sig2,blended1,blended2,init1,init2,shottime1,shottime2,i,n2,fraction)
 	(sig1,sig2)=shapeslet(nsig1,nsig2,dip1,dip2,mute1,mute2,padno,n2,mode,thr,i)
 
-
-
     	Greyplot(sig1,'title="Esti R 1 (iter=%g)" clip=%g'% (i+1,clip))
     	Greyplot(sig2,'title="Esti R 2 (iter=%g)" clip=%g' % (i+1,clip))	
 
 	sigs1.append(sig1)
     	sigs2.append(sig2)
+	
+	Plot(sig1+'t',[sig1,sig2],'SideBySideAniso')
+	sigs.append(sig1+'t')
+	
         snrsa.append(snra)
         snrsb.append(snrb)
 
@@ -247,6 +250,8 @@ def deblendslet(unblended1,
 #Making movie
     Plot(init1+'-sigs1',sigs1,'Movie')
     Plot(init2+'-sigs2',sigs2,'Movie')
+
+    Plot(init1+'-sigs',sigs,'Movie')
 
     Flow(deblended1,sig1,'cp')
     Flow(deblended2,sig2,'cp')
