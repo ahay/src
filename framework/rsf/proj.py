@@ -126,7 +126,7 @@ def retrieve(target=None,source=None,env=None):
             print 'Could not establish connection with "%s/%s" ' % (server,
                                                                     folder)
             return 3
-        for file in filter(lambda x: not x.startswith(env.path), 
+        for file in filter(lambda x: not os.path.abspath(x).startswith(env.path), 
                            map(str,target)):
             remote = os.path.basename(file)
             if usedatapath:
@@ -163,7 +163,7 @@ def retrieve(target=None,source=None,env=None):
                     os.unlink(file)
                     return 6
         else:
-            for file in filter(lambda x: not x.startswith(env.path),
+            for file in filter(lambda x: not os.path.abspath(x).startswith(env.path),
                                map(str,target)):
                 remote = os.path.basename(file)  
                 rdir =  '/'.join([server,folder,remote])

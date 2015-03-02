@@ -51,7 +51,7 @@ Flow('mask','iline xline','mul ${SOURCES[1]}')
 Flow('offset','../segy/DeconShots3_hdr.rsf mask',
      '''
      window n1=1 f1=11 squeeze=n | headerwindow mask=${SOURCES[1]} | 
-     dd type=float | math output="abs(input)"
+     dd type=float | math output="-abs(input)"
      ''')
 
 Flow('gather','../segy/DeconShots3.rsf offset mask',

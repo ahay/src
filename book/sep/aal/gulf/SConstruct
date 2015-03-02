@@ -13,9 +13,33 @@ Plot('Gulfdata','gulflowb',
      '''
      window f2=60 n2=360 max1=2.0 |
      pow pow1=0.5 | 
-     grey labelrot=n label1=Time unt1=s label2=Midpoint unit2=m 
+     grey label1=Time unt1=s label2=Midpoint unit2=m 
      labelfat=2 labelsz=4 titlefat=2 titlesz=5 
      xll=3.0 yll=5.28  xur=11.0 yur=9.77  title="(a)" 
      ''')
+
+vwater=1500
+alpha=460
+beta=0.5
+twater=0.20
+
+Flow('water','gulflowb','window n2=1 | spike | cut max1=%g' % twater)
+
+Flow('vel','water',
+     '''
+     math output="%g+input*(%g * abs(x1 - %g)^%g)" 
+     ''' % (vwater,alpha,twater,beta))
+
+Flow('Gulfmigaa4s','gulflowb vel','kirchnew velocity=${SOURCES[1]}')
+
+Plot('Gulfmigaa','Gulfmigaa4s',
+     '''
+     window f2=60 n2=360 max1=2.0 | pow pow1=0.5 |
+     grey label1=Time unt1=s wantaxis2=n
+     labelfat=2 labelsz=4 titlefat=2 titlesz=5 
+     xll=3.0 yll=0.32  xur=11.0 yur=4.81  title="(b)" 
+     ''')
+
+Result('Gulfaa','Gulfdata Gulfmigaa','Overlay')
 
 End()
