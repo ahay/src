@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
     if (!sf_getint("npml",&npml)) npml=20;
     /* PML width */
 
-    if (NULL == (order = sf_getstring("order"))) order="c";
+    if (NULL == (order = sf_getstring("order"))) order="j";
     /* discretization scheme (default optimal 9-point) */
 
     fdprep_order(order);

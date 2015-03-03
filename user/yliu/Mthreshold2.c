@@ -22,7 +22,7 @@ int main(int argc, char* argv[])
 {
     int i, n, nc, n1, n2, n3, nr, ir;
     float *dat=NULL, *adat=NULL, t, pclip, d, thrd;
-    bool verb;
+    bool verb, hard;
     sf_complex *cdat=NULL;
     sf_file in=NULL, out=NULL, thr=NULL;
 
@@ -32,6 +32,8 @@ int main(int argc, char* argv[])
 
     if (!sf_getbool("verb",&verb)) verb = false;
     /* verbosity flag */
+    if (!sf_getbool("hard",&hard)) hard = false;
+    /* hard or soft thresholding */
 
     if (!sf_histint(in,"n1",&n1)) sf_error("Need n1= in input");
     if (!sf_histint(in,"n2",&n2)) n2=1;
@@ -89,6 +91,18 @@ int main(int argc, char* argv[])
 	t = sf_quantile(nc,n,adat);
 	
 	if (NULL != dat) {
+		if(hard){
+	    for (i=0; i < n; i++) {
+		d = dat[i];
+		if (d < -t) {
+		    dat[i] = d;
+		} else if (d > t) {
+		    dat[i] = d;
+		} else {
+		    dat[i] = 0.;
+		}
+	    }
+		}else{
 	    for (i=0; i < n; i++) {
 		d = dat[i];
 		if (d < -t) {
@@ -99,6 +113,7 @@ int main(int argc, char* argv[])
 		    dat[i] = 0.;
 		}
 	    }
+		}
 	    sf_floatwrite(dat,n,out);
 	} else {
 	    for (i=0; i < n; i++) {

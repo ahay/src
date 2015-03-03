@@ -75,7 +75,7 @@ main( int argc, char* argv[] )
 
         if( commRank == 0 )
         {
-            std::cout << "origNx=" << origNx << "\n"
+            std::cerr << "origNx=" << origNx << "\n"
                       << "origNy=" << origNy << "\n"
                       << "origNz=" << origNz << "\n"
                       << "origDx=" << origDx << "\n"
@@ -104,7 +104,7 @@ main( int argc, char* argv[] )
         par.get( "pmlSize", pmlSize, 5 ); // number of grid points of PML
 
         if( commRank == 0 )
-            std::cout << "omega=" << omega << "\n"
+            std::cerr << "omega=" << omega << "\n"
                       << "sigma=" << sigma << "\n"
                       << "pmlSize=" << pmlSize << std::endl;
 
@@ -163,18 +163,18 @@ main( int argc, char* argv[] )
         }
 
         if( commRank == 0 )
-            std::cout << "Interpolating to " 
+            std::cerr << "Interpolating to " 
                       << Nx << " x " << Ny << " x " << Nz << std::endl;
         velocity.InterpolateTo( Nx, Ny, Nz );
         if( commRank == 0 )
-            std::cout << "done" << std::endl;
+            std::cerr << "done" << std::endl;
 
         if( vtkVisualize )
         {
             if( commRank == 0 )
             {
-                std::cout << "Writing velocity data...";
-                std::cout.flush();
+                std::cerr << "Writing velocity data...";
+                std::cerr.flush();
             }
             velocity.WritePlane( XY, Nz/2, "velocity-middleXY" );
             velocity.WritePlane( XZ, Ny/2, "velocity-middleXZ" );
@@ -188,14 +188,14 @@ main( int argc, char* argv[] )
         elem::SetBlocksize( factBlocksize );
         mpi::Barrier( comm );
         if( commRank == 0 )
-            std::cout << "Beginning to initialize..." << std::endl;
+            std::cerr << "Beginning to initialize..." << std::endl;
         const double initialStartTime = mpi::Time();
         helmholtz.Initialize( velocity );
         mpi::Barrier( comm );
         const double initialStopTime = mpi::Time();
         const double initialTime = initialStopTime - initialStartTime;
         if( commRank == 0 )
-            std::cout << "Finished initialization: " << initialTime
+            std::cerr << "Finished initialization: " << initialTime
                       << " seconds." << std::endl;
 
         DistUniformGrid<Complex<double> > B
@@ -236,20 +236,20 @@ main( int argc, char* argv[] )
         {
             if( commRank == 0 )
             {
-                std::cout << "Writing source data...";
-                std::cout.flush();
+                std::cerr << "Writing source data...";
+                std::cerr.flush();
             }
             B.WritePlane( XY, Nz/2, "source-middleXY" );
             B.WritePlane( XZ, Ny/2, "source-middleXZ" );
             B.WritePlane( YZ, Nx/2, "source-middleYZ" );
             B.WriteVolume("source");
             if( commRank == 0 )
-                std::cout << "done" << std::endl;
+                std::cerr << "done" << std::endl;
         }
 
         elem::SetBlocksize( solveBlocksize );
         if( commRank == 0 )
-            std::cout << "Beginning solve..." << std::endl;
+            std::cerr << "Beginning solve..." << std::endl;
         mpi::Barrier( comm );
         const double solveStartTime = mpi::Time();
         helmholtz.Solve( B );
@@ -257,28 +257,28 @@ main( int argc, char* argv[] )
         const double solveStopTime = mpi::Time();
         const double solveTime = solveStopTime - solveStartTime;
         if( commRank == 0 )
-            std::cout << "Finished solve: " << solveTime << " seconds."
+            std::cerr << "Finished solve: " << solveTime << " seconds."
                       << std::endl;
 
         if( vtkVisualize )
         {
             if( commRank == 0 )
             {
-                std::cout << "Writing solution data...";
-                std::cout.flush();
+                std::cerr << "Writing solution data...";
+                std::cerr.flush();
             }
             B.WritePlane( XY, Nz/2, "solution-middleXY" );
             B.WritePlane( XZ, Ny/2, "solution-middleXZ" );
             B.WritePlane( YZ, Nx/2, "solution-middleYZ" );
             B.WriteVolume("solution");
             if( commRank == 0 )
-                std::cout << "done" << std::endl;
+                std::cerr << "done" << std::endl;
         }
 
         helmholtz.Finalize();
         if( commRank == 0 ) 
         {
-            std::cout << "Beginning to write output data...please be patient"
+            std::cerr << "Beginning to write output data...please be patient"
             << std::endl;
         }
 

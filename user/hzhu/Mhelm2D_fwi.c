@@ -69,7 +69,7 @@ int main(int argc, char* argv[])
     if (!sf_getint("npml",&npml)) npml=20;
     /* PML width */
 
-    if (NULL == (order = sf_getstring("order"))) order="c";
+    if (NULL == (order = sf_getstring("order"))) order="j";
     /* discretization scheme (default optimal 9-point) */
 
     fdprep_order(order);
@@ -140,7 +140,7 @@ int main(int argc, char* argv[])
     for ( iw = 0; iw < nw; iw ++ ) { 
         omega=(double) 2.*SF_PI*(ow+iw*dw); 
             
-        sf_warning("Calculating frequency %d out of %d for %f HZ.",iw+1,nw,ow+iw*dw);
+        sf_warning("Calculating frequency %d out of %d for %f HZ.\n",iw+1,nw,ow+iw*dw);
 
         sf_complexread(f[0][0],n1*n2*ns,source);
         sf_complexread(obs[0][0],n1*n2*ns,record);
@@ -148,6 +148,7 @@ int main(int argc, char* argv[])
         misfitold = 100000000.0;
         iter = 0;
         while (iter < niter) { 
+			sf_warning("Calculating %d out of %d iteration", iter+1, niter);
 
             misfit0 = adjfwi_operator(uts, pad1, pad2, omega, n1, n2, d1, d2,
                                       npml, ns, f, obs, hermite_false, hermite_true, recloc,
@@ -214,8 +215,8 @@ int main(int argc, char* argv[])
                 sf_warning("alpha is smaller than 0.0");
             }
            
-            sf_warning("In iteration %d, alpha = %f, beta = %f, misfit0 = %f.",iter,alpha,beta,misfit0);
-            sf_warning("Test model alpha=0.1, misfit1 = %f, alpha=0.2, misfit2 = %f.",misfit1,misfit2);
+            sf_warning("In iteration %d, alpha = %f, beta = %f, misfit0 = %f.",iter+1,alpha,beta,misfit0);
+            sf_warning("Test model alpha=0.1, misfit1 = %f, alpha=0.2, misfit2 = %f.\n",misfit1,misfit2);
 
 
             if ( misfit0 > misfitold ) { 
@@ -237,6 +238,7 @@ int main(int argc, char* argv[])
             sf_floatwrite(v[0],n1*n2,out);
 
         }  /* end iteration */ 
+        sf_warning("Ending frequency %d out of %d for %f HZ.\n\n",iw+1,nw,ow+iw*dw);
 
     } /* end frequency */
        

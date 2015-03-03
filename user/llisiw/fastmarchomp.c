@@ -32,7 +32,7 @@ struct Upd {
     double stencil, value, delta;
 };
 
-int neighbors_nearsource(float* time, float* xs);
+static int neighbors_nearsource(float* time, float* xs);
 void pqueue_insert(float* v1);
 float* pqueue_extract(void);
 void pqueue_update(int index);
@@ -185,7 +185,7 @@ void fastmarch_close(void)
     free(x1);
 }
 
-int neighbors_nearsource(float* time /* time */,
+static int neighbors_nearsource(float* time /* time */,
 			 float* xs   /* source location [3] */)
 /* initialize point source */
 {

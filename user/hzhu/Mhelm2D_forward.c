@@ -53,13 +53,15 @@ int main(int argc, char* argv[])
 //#endif
     uts = (uts < 1)? mts: uts;
 
+	sf_warning("Using %d out of %d threads!", uts, mts);
+
     if (!sf_getbool("hermite",&hermite)) hermite=false;
     /* Hermite operator */
     
     if (!sf_getint("npml",&npml)) npml=20;
     /* PML width */
 
-    if (NULL == (order = sf_getstring("order"))) order="c";
+    if (NULL == (order = sf_getstring("order"))) order="j";
     /* discretization scheme (default optimal 9-point) */
 
     fdprep_order(order);
@@ -127,8 +129,7 @@ int main(int argc, char* argv[])
         /* write out wavefield */
         sf_complexwrite(f[0][0],n1*n2*ns,out);
 
-        /* free memory */
-        sparse_free(uts);
+		sparse_free(uts);
     }
 
     exit(0);

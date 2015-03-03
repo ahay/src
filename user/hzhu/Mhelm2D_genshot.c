@@ -24,6 +24,7 @@ int main(int argc, char* argv[])
     sf_file in, out;
     int n1,n2,ns,nw,i,j,k,iw;
     int srcz, srcx0, srcdx;
+	int isource, nsource, dsource;
     float d1,d2,ds,dw,ow;
     float mag;
     float ***f;
@@ -37,18 +38,20 @@ int main(int argc, char* argv[])
     if (!sf_getint("ns",&ns)) ns=1;
     if (!sf_getfloat("d1",&d1)) d1=0.1;
     if (!sf_getfloat("d2",&d2)) d2=0.1;
-    if (!sf_getfloat("ds",&ds)) ds=1.0;
         
     if (!sf_getint("nw",&nw)) nw=1;
     if (!sf_getfloat("dw",&dw)) dw=1.0;
     if (!sf_getfloat("ow",&ow)) ow=1.0;
     if (!sf_getfloat("mag",&mag)) mag=1.0;
     
+    if (!sf_getint("nsource",&nsource)) nsource=1;
+    if (!sf_getint("dsource", &dsource)) dsource=0;
     if (!sf_getint("srcz",&srcz)) sf_error("No srcz=.");
     if (!sf_getint("srcx0",&srcx0)) sf_error("No srcx0=.");
     if (!sf_getint("srcdx",&srcdx)) sf_error("No srcdx=.");
 
     f=sf_floatalloc3(n1,n2,ns);
+	ds=d2*srcdx;
 
     sf_putint(out,"n1",n1);
     sf_putint(out,"n2",n2);
@@ -61,17 +64,24 @@ int main(int argc, char* argv[])
     sf_putfloat(out,"o4",ow);
 
     for (iw=0; iw< nw; iw++ ) { 
-    for (k=0; k< ns; k++) { 
-    for (j=0; j<n2; j++) { 
-    for (i=0; i<n1; i++) {
-        f[k][j][i]=0.0;
-        if (i == srcz ) {
-        if ( j == srcx0+k*srcdx) {
-            f[k][j][i]=mag;
-        }
-        }
-    } /* for i */
-    } /* for j */
+		for (k=0; k< ns; k++) { 
+			for (j=0; j<n2; j++) { 
+				for (i=0; i<n1; i++) {
+					f[k][j][i]=0.0;
+				} /* for i */
+			} /* for j */
+
+			for(j=0; j<n2; j++){
+				for(i=0; i<n1; i++){
+					if (i == srcz ) {
+						if ( j == srcx0+k*srcdx) {
+							for(isource=0; isource<nsource; isource++){
+								f[k][j+isource*dsource][i]=mag;
+							}
+						}
+					}
+				} /* for i */
+			} /* for j */
     } /* for k */
 
     sf_floatwrite(f[0][0],n1*n2*ns,out);
