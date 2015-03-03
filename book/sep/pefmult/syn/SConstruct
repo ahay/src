@@ -13,4 +13,14 @@ Plot('rand','grey labelsz=12 titlesz=12 title="CMP (after randomization)" ')
 
 Result('syn-in','cmp rand','SideBySideAniso')
 
+Flow('cmp3','cmp','spray axis=3 n=50 o=0 d=1 label=Sample')
+Flow('off3','cmp3','window n1=1 | noise rep=y seed=2015')
+Flow('rand3','cmp3 off3','headersort head=${SOURCES[1]}')
+Result('syn-cube','rand3',
+       '''
+       byte |
+       grey3 frame1=50 frame2=30 frame3=30 flat=n title="3-D cube"
+       ''')
+
+
 End()
