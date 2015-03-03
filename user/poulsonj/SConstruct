@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-update_model cal_beta gen_adjsrc gen_acquisition sum_kernel wf2data mpipspadj mpipsp
+mpipsp
 '''
 
 try:  # distributed version
