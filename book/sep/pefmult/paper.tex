@@ -1,0 +1,224 @@
+
+\title{Multiple suppression using prediction-error filter}
+\righthead{Multiple Suppression}
+\lefthead{Sun}
+\footer{SEP--94}
+\email{yalei@sep.stanford.edu}
+%\keywords{ multiple suppression, offset randomization, prediction-error filter }
+
+\author{Yalei Sun}
+
+\maketitle
+
+\begin{abstract}
+I present an approach to multiple suppression, that is 
+based on the moveout between primary and multiple events in the CMP gather.
+After normal moveout correction, primary events will be horizontal, 
+whereas multiple events will not be. 
+For each NMOed CMP gather, I reorder the 
+offset in random order. Ideally, this process has little influence on the 
+primaries, but 
+it destroys the shape of the multiples. In other words, after randomization 
+of the offset order, the multiples appear as random noise. This ``man-made''
+random noise can be removed using prediction-error filter (PEF). 
+The randomization of the offset order can be regarded as a random process, 
+so we can apply it to the CMP gather many times and get many different 
+samples. All the samples can be arranged into a 3-D cube, which is further 
+divided into many small subcubes. A 3-D PEF can then be estimated from each 
+subcube and re-applied 
+to it to remove the multiple energy. After that, all the samples are averaged 
+back into one CMP gather, which is supposed to be free of multiple events. 
+In order to improve the efficiency of the 
+algorithm of estimating the PEF for each subcube, except for the first 
+subcube which starts with a zero-valued initial guess, all the subsequent 
+subcubes take the last estimated PEF as an initial guess. 
+Therefore, the iteration 
+count can be reduced to one step for all the subsequent subcubes with little 
+loss of accuracy. 
+Three examples demonstrate the performance of this new approach, especially in 
+removing the near-offset multiples.
+\end{abstract}
+
+
+\section{INTRODUCTION}
+
+One of the essential differences between multiples and primaries is moveout. 
+On the basis of this difference, a velocity-stacking multiple suppression
+approach was developed by Lumley et al \shortcite{Lumley.sep.82.25}. In the 
+velocity-stacking domain, the multiple and primary energy are separated and 
+a masking function is applied to the data in the velocity-stacking domain to 
+remove the multiple energy. Then the data can be
+inverse-transformed back to the time domain with only primary energy left.
+
+Since the velocity-stacking operator is time-variant, it does not have
+the Toeplitz structure in the frequency domain. Therefore, given an operator
+and its adjoint, the inverse transform has to be formulated as an $L_p$ norm
+optimization problem, which makes this approach fairly expensive. In addition, 
+this approach cannot handle the near-offset multiple events very well. 
+Because the near-offset multiple event is parallel to the primary event, 
+it is very difficult to separate it from primary energy in the velocity 
+stacking domain.
+
+In this paper, I propose a new approach, which also makes use of the moveout
+difference between primary and multiple events. Instead of velocity-stacking 
+transform, normal-moveout correction is applied to the CMP gather. Ideally,  
+the hyperbolic primary events will be flattened after NMO correction, whereas 
+the multiple events
+will not be. There is a residual moveout for the multiple events. I then
+randomize the order of offsets. This process will have little influence over the
+primary, but the shape of the multiple event will be destroyed by the residual
+moveout. In other words, after this randomization, the primary energy is still
+coherent and the multiple energy will look like random noise. Therefore, the
+multiple energy can be removed using a prediction-error filter (PEF). 
+
+The randomization of the offset order can be regarded as a {\em  random 
+process}, which can be applied to a single CMP gather many times to produce 
+an ensemble of samples. The ensemble of samples forms a 3-D cube, which can be 
+further 
+decomposed into many small 3-D subcubes. A 3-D PEF is estimated from each 
+subcube and then convolved with the cube to remove the multiple energy. 
+After that, all the samples are averaged back into one CMP gather, 
+which is ideally free of multiple. 
+Here, the estimation of the PEF for each subcube is posed as an inversion 
+problem.
+
+In order to improve the efficiency of the algorithm, I set the initial guess of 
+the PEF for one subcube to be the PEF of its preceding subcube. 
+In other words, except for the first 
+subcube, which starts with a zero-valued initial guess, all the subsequent 
+subcubes take last estimated PEF as initial guess. Therefore, the iteration 
+steps can be reduced to one step for all the subsequent subcubes with little 
+loss of accuracy. Since we are mainly interested in preserving the horizontal 
+events, there are some requirements regarding the shape of the PEF. 
+
+Two synthetic and one real example are presented to show that this multiple 
+suppression approach can remove the multiples from near to far offset.  
+Especially in the near offset, its performance is very promising. Since this 
+approach is based on PEF, other kinds of random noise will be removed as well 
+as multiples. Therefore, the signal-to-noise ratio will be increased. 
+
+\section{REORDERING THE OFFSET ORDER AND SIMULATING A RANDOM PROCESS}
+\inputdir{syn}
+
+Starting with a NMOed CMP gather, we can rearrange the offset order in a 
+random manner.
+Figure \ref{fig:syn-in} illustrates a synthetic NMOed CMP gather which 
+contains one primary and one multiple event. After offset randomization, 
+the primary event remains horizontal and the multiple event turns into 
+``random noise''.
+
+\plot{syn-in}{width=5in,height=3.2in}{A synthetic NMOed CMP gather 
+contains one primary event and one multiple event.}
+
+If we apply the offset randomization multiple times, all the different samples 
+of this random 
+process can generate a 3-D data cube. As shown in Figure \ref{fig:syn-cube}, 
+the primary energy is coherent along the cube, whereas the multiple part is 
+incoherent. Therefore, not only can we estimate a 2-D PEF in the CMP gather, 
+but also estimate a 3-D PEF in the data cube. It is very natural to expect 
+that the 3-D result will be better than the 2-D, since the 3-D approach 
+exploits the difference between the primary and multiple more thoroughly. 
+
+\activeplot{syn-cube}{width=5in,height=3.2in}{.}{A NMOed CMP gather is 
+transformed into a 3-D data cube by conducting the offset randomization 
+for multiple times.} 
+
+
+\section{{\tt T-X-Y} DOMAIN PREDICTION FILTERING}
+
+The theory of {\tt T-X-Y} prediction filtering can be found in 
+Claerbout \shortcite{Claerbout.tdf.82}. Abma \shortcite{Abma.sepphd.88} 
+applies the {\tt T-X-Y} prediction-error filter to signal/noise separation.  
+The algorithm used in this paper is the same as the one in Abma's thesis. 
+Here, I show three examples of the application of {\tt T-X-Y} 
+prediction filtering to two synthetic CMP gathers and one real CMP gather.
+
+\subsection{A simple synthetic CMP gather}
+
+The synthetic CMP gather consists of a horizontal event which represents 
+the primary and a curved event representing the multiple. After offset 
+randomization, the CMP gather is shown in Figure \ref{fig:syn-in}. Figure 
+\ref{fig:syn-tx} illustrates the result of PEF-based multiple suppression in 
+2-D case. In this simple example, although there are strong aliasing effects 
+in the CMP gather, the 2-D prediction-error filter separates the horizontal 
+and curved events very well.
+
+\activeplot{syn-tx}{width=5in,height=3.2in}{.}{A simple synthetic CMP gather composed of one primary event and one multiple event. This simple example demonstrates the applicability of the PEF based multiple suppression scheme.}
+
+\subsection{A more complicated synthetic CMP gather}
+
+This synthetic gather is generated by the Thompson-Haskell method, which 
+has been used as an example in Lumley et al \shortcite{Lumley.sep.82.25}.
+The gather includes both primary and multiple events. Velocity stacking 
+approach can remove the far offset multiples successfully, but it is not 
+so successful in near offset, since the multiple event is nearly horizontal 
+in the near offset. I show that PEF based approach can handle the near-offset 
+multiples effectively.
+
+Figure \ref{fig:hm-nmo-tx} illustrates that most of the 
+multiple energy has been well-separated from primary energy, from near-offset 
+to far-offset. I also extract three traces from the near offset and compare 
+the difference between the two approaches, as shown in Figure 
+\ref{fig:hm-near-offset-tx}. 
+It is very clear that the PEF scheme has removed most of the multiple energy 
+in the near offset. The signal-to-noise ratio of PEF based approach higher 
+than the other two figures.
+
+\activeplot{hm-nmo-tx}{width=5in,height=3.2in}{.}{A synthetic CMP gather generated by Haskell-Thompson method. After applying the 3-D PEF, both multiple events and random noise have been removed out of the input CMP gather.}
+
+\activeplot{hm-near-offset-tx}{width=5in,height=3.2in}{.}{Comparison of the PEF scheme and velocity-stacking scheme in the near offset. Three traces are extracted from the near offset. The left one is the original input, the middle one is the PEF result, and the right one is the result of velocity stacking approach. It is very easy to identify the primary events in the middle one.}
+
+\subsection{A real CMP gather}
+
+This real CMP gather is extracted from Mobil AVO dataset. The multiple energy 
+is very strong in this dataset. It is not very difficult to locate several 
+high amplitude horizontal events in the original events, as shown in Figure 
+\ref{fig:mo-nmo-tx}. After convolving with the 3-D PEF, these events have been 
+preserved. Most of the multiple energy has been removed. As for the 
+near-offset traces, the signal-to-noise ratio of the PEF approach is also 
+higher than that of the velocity-stacking approach. 
+
+Obviously this result is not as convincing as last one. The reason is 
+actually the assumption of the PEF based approach. The PEF based 
+multiple suppression scheme has an assumption over the amplitude of the 
+primary events, that is, the change of amplitude versus offset should be as 
+small as possible. The first example is generated following this assumption 
+strictly. Since this real data has strong AVO effect, the PEF based approach 
+will remove this effect by forcing the amplitude to be invariant along offset. 
+Therefore, some of the primary energy will be lost for this reason.
+Even for this, the improvement of signal-to-noise ratio in the near offset 
+is still obvious in the near offset, as shown in Figure 
+\ref{fig:mo-near-offset-tx}.
+
+\activeplot{mo-nmo-tx}{width=5in,height=3.2in}{.}{A real CMP gather. This is from Mobil's AVO dataset. The high amplitude events in the input section are primary energy. The middle section is the result of the 3-D PEF scheme. Although most of the multiple events have been removed, the AVO effect is also damaged by the filtering. This shows that the PEF approach has an assumption of constant amplitude along the offset.}
+
+\activeplot{mo-near-offset-tx}{width=5in,height=3.2in}{.}{Comparison of the PEF scheme and velocity-stacking scheme in the near offset. Although the AVO effect has been damaged by the filtering, the signal-to-noise ratio is improved in the near offset.}
+
+\section{CONCLUSION and discussion}
+
+Two synthetic and one real CMP gathers show that this multiple 
+suppression scheme can remove both near-offset and far-offset multiples. 
+This multiple suppression approach has three features. The first 
+one is offset randomization, which destroys the shape of multiple events. The 
+idea of converting coherent noise like multiples into random noise is very 
+novel, it may find applications in other fields. 
+The second is the assumption of primary events being horizontal after normal 
+moveout correction. This assumption makes it difficult in dealing with 
+nonhyperbolic moveout. The third is that this approach cannot handle the 
+amplitude variation along offset. Therefore, it will lose some primary energy 
+caused by AVO or NMO stretch. Obviously, the second and third features 
+will limit the application range of this approach. 
+
+I used a trick to improve the efficiency in using {\tt T-X-Y} PEF. That is, 
+taking the preceding subcube's PEF as an initial guess when estimating a new 
+PEF. In my application, this trick can make the algorithm at least ten times 
+faster than the algorithm without using this trick. The error is less than 
+one percent. 
+
+\section{Acknowledgements}
+
+I thank Dr. Ray Abma of Shell and Dr. Jiuying Guo of Tsinghua University for 
+stimulating discussions during the 66th SEG Denver convention.
+
+\bibliographystyle{sep}
+\bibliography{MISC,SEP}

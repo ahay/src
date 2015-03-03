@@ -1,0 +1,16 @@
+from rsf.proj import *
+
+Flow('prim',None,'spike n1=100 n2=50 o1=0.0 d1=0.004 o2=0.0 d2=0.02 k1=12')
+Flow('hyper','prim','window n1=1 | math output="0.052+sqrt(0.048^2+x1*x1/16)" ')
+Flow('mult','prim hyper','datstretch inv=y datum=${SOURCES[1]}')
+Flow('cmp','prim mult','add ${SOURCES[1]}')
+Plot('cmp','grey labelsz=12 titlesz=12 title="CMP (after NMO)" ')
+
+# randomization
+Flow('off','cmp','window n1=1 | noise rep=y seed=2015')
+Flow('rand','cmp off','headersort head=${SOURCES[1]}')
+Plot('rand','grey labelsz=12 titlesz=12 title="CMP (after randomization)" ')
+
+Result('syn-in','cmp rand','SideBySideAniso')
+
+End()
