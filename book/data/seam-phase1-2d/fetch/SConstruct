@@ -27,42 +27,24 @@ from rsf.proj import *
 pdfread = WhereIs('acroread') or WhereIs('kpdf') or WhereIs('evince') or \
           WhereIs('xpdf') or WhereIs('gv') or WhereIs('open')
 
-print 'pdfread=',pdfread
+pdfs = Split('''
+2D_Model_Subset
+2D_Model_Subset_plots
+Shots_Receivers_23900
+Shot_Receivers_23900_plots
+Seam_wavelet
+''')
 
 if pdfread:
-    Fetch('2D_Model_Subset.pdf',dir='2d_model_subset',
-          server='http://s3.amazonaws.com',
-	  top='open.source.geoscience/open_data/seam_ph1_2d_classic')
-    Result('2D_Model_Subset','2D_Model_Subset.pdf',
-           pdfread + ' $SOURCE',stdin=0,stdout=0)
-
-    Fetch('2D_Model_Subset_plots.pdf',dir='2d_model_subset',
-          server='http://s3.amazonaws.com',
-	  top='open.source.geoscience/open_data/seam_ph1_2d_classic')
-    Result('2D_Model_Subset_plots','2D_Model_Subset_plots.pdf',
-           pdfread + ' $SOURCE',stdin=0,stdout=0)
-
-    Fetch('Shots_Receivers_23900.pdf',dir='2d_data_subset',
-          server='http://s3.amazonaws.com',
-	  top='open.source.geoscience/open_data/seam_ph1_2d_classic')
-    Result('Shots_Receivers_23900','Shots_Receivers_23900.pdf',
-           pdfread + ' $SOURCE',stdin=0,stdout=0)
- 
-    Fetch('Shot_Receivers_23900_plots.pdf',dir='2d_data_subset',
-          server='http://s3.amazonaws.com',
-	  top='open.source.geoscience/open_data/seam_ph1_2d_classic')
-    Result('Shot_Receivers_23900_plots','Shot_Receivers_23900_plots.pdf',
-           pdfread + ' $SOURCE',stdin=0,stdout=0)
-
-    Fetch('Seam_wavelet.pdf',dir='seam_phase_1_wavelets',
-          server='http://s3.amazonaws.com',
-	  top='open.source.geoscience/open_data/seam_ph1_2d_classic')
-    Result('Seam_wavelet','Seam_wavelet.pdf',
-           pdfread + ' $SOURCE',stdin=0,stdout=0)
+    for pdf in pdfs:
+        Fetch(pdf+'.pdf',dir='2d_model_subset',
+              server='http://s3.amazonaws.com',
+              top='open.source.geoscience/open_data/seam_ph1_2d_classic')
+        Flow(pdf,pdf+'.pdf',pdfread + ' $SOURCE',stdin=0,stdout=0)
 
 Fetch('Shots_Receivers_23900.sgy',dir='2d_data_subset',
-          server='http://s3.amazonaws.com',
-	  top='open.source.geoscience/open_data/seam_ph1_2d_classic')
+      server='http://s3.amazonaws.com',
+      top='open.source.geoscience/open_data/seam_ph1_2d_classic')
 
 Flow(['shots-receivers-23900.rsf','shots-receivers-23900_hdr.rsf',
       'shots-receivers-23900.thdr','shots-receivers-23900.bhdr'],
@@ -174,12 +156,11 @@ Flow(['vp1.rsf','vp1_hdr.rsf'],
      ''',stdout=0, stdin=0)
 Flow('vp','Vp_Elastic_N23900.rsf',
      '''
-     sfput d2=20 label2="sx" 
+     sfput d1=10 d2=20 label2=Distance unit2=m label1=Depth unit1=m label=Velocity unit=m/s 
      ''')
       
-Result('vp',"sfgrey title='vp' scalebar=y color=j")
-Result('vp1',"sfgrey title='vp' scalebar=y color=j")
-
+Result('vp',"sfgrey title='Vp' scalebar=y color=j allpos=y barreverse=y")
+#Result('vp1',"sfgrey title='vp' scalebar=y color=j")
 
 Fetch('Vs_Elastic_N23900.sgy',dir='2d_model_subset',
           server='http://s3.amazonaws.com',
@@ -194,10 +175,10 @@ Flow(['Vs_Elastic_N23900.rsf' ,'Vs_Elastic_N23900_hdr.rsf',
 
 Flow('vs','Vs_Elastic_N23900.rsf',
      '''
-     sfput d2=20 label2="sx" 
+     sfput d1=10 d2=20 label2=Distance unit2=m label1=Depth unit1=m label=Velocity unit=m/s 
      ''')
       
-Result('vs',"sfgrey title='vs' scalebar=y color=j")
+Result('vs',"sfgrey title='Vs' scalebar=y color=j allpos=y barreverse=y")
 
 Fetch('Den_Elastic_N23900.sgy',dir='2d_model_subset',
           server='http://s3.amazonaws.com',
@@ -212,10 +193,10 @@ Flow(['Den_Elastic_N23900.rsf' ,'Den_Elastic_N23900_hdr.rsf',
 
 Flow('den','Den_Elastic_N23900.rsf',
      '''
-     sfput d2=20 label2="sx" 
+     sfput d1=10 d2=20 label2=Distance unit2=m label1=Depth unit1=m label=Density unit="g/cm\^3\_" 
      ''')
       
-Result('den',"sfgrey title='den' scalebar=y color=j")
+Result('den',"sfgrey title='Density' scalebar=y color=j allpos=y barreverse=y")
 
 for wavelet in ["SEAM_wavelet_8ms", 
                 "SEAM_wavelet-g_8ms", 
@@ -232,6 +213,6 @@ for wavelet in ["SEAM_wavelet_8ms",
         hfile=${TARGETS[2]}  bfile=${TARGETS[3]} 
         ''')
 
-   Result(wavelet,'sfput d2=20 label2="sx" | sfwiggle title=%s'%wavelet)
+   Result(wavelet,'sfwiggle label2=Amplitude title=%s pclip=100'%wavelet)
 
 End()

@@ -71,7 +71,7 @@ Flow('foldplot','shots-receivers-23900_headfix_hdr.rsf',
 #	    sfgrey title=foldplot pclip=100
 #         '''
 	
-Result('foldplot','sfgrey title=foldplot pclip=100')
+Result('foldplot','sfgrey title=foldplot pclip=100 allpos=y scalebar=y unit1=')
 	 
 # near trace gather - need to use sx,gx headers - tahheadermath?
 # this does not work because input data does not have good offset in 

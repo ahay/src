@@ -21,7 +21,6 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "median.h"
 #include "boundary.h"
 
 int main (int argc, char* argv[]) 
@@ -54,7 +53,7 @@ int main (int argc, char* argv[])
     /* if y, boundary is data, whereas zero*/
     
     if (nfw < 1)  sf_error("Need positive integer input"); 
-    if (nfw%2 == 0)  nfw = (nfw+1);
+    if (nfw%2 == 0) nfw++;
     m=(nfw-1)/2;
     
     trace = sf_floatalloc(n1*n2);
@@ -78,7 +77,7 @@ int main (int argc, char* argv[])
 		for(k=0;k<nfw;k++){
 		    temp1[k]=extendt[(n1+2*m)*i+j+k];
 		}
-		trace[n1*i+j]=medianfilter(temp1,nfw);
+		trace[n1*i+j]=sf_quantile(m,nfw,temp1); 
 	    }
 	}
 	

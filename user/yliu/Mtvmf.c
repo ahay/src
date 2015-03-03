@@ -21,7 +21,6 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "median.h"
 #include "boundary.h"
 
 int main (int argc, char* argv[]) 
@@ -77,7 +76,7 @@ int main (int argc, char* argv[])
     if ((delta%2)!=0) delta = delta+1;
     
     if (nfw <=delta)  sf_error("Need nfw > delta"); 
-    if (nfw%2 == 0)  nfw = (nfw+1);
+    if (nfw%2 == 0)  nfw++;
     m=(nfw-1)/2;
     tempnfw=nfw;
     
@@ -105,7 +104,7 @@ int main (int argc, char* argv[])
 		for(k=0;k<nfw;k++){
 		    temp1[k]=extendt[(n1+2*m)*i+j+k];
 		}
-		medianarray[n1*i+j]=medianfilter(temp1,nfw);
+		medianarray[n1*i+j]=sf_quantile(m,nfw,temp1); 
 	    }
 	}
 	medianv=0.0;
@@ -138,7 +137,7 @@ int main (int argc, char* argv[])
 		}
 		temp3 = sf_floatalloc(tempnfw);
 		bound2(temp2,temp3,n1,tempnfw,j,boundary);
-		result[n1*i+j]=medianfilter(temp3,tempnfw);
+		result[n1*i+j]=sf_quantile((tempnfw-1)/2,tempnfw,temp3); 
 		tempnfw=nfw;
 	    }
 	}
