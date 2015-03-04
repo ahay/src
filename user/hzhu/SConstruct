@@ -3,10 +3,6 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-fwiobj
-fwiupdate
-fwidir
-fwigrad
 helm2D_forward
 helm2D_bornsyn
 helm2D_genshot
@@ -15,7 +11,7 @@ helm2D_rtm
 helm2D_lsm
 helm2D_fwi
 '''
-# iwinlcg0 
+# fwiobj fwiupdate fwidir fwigrad iwinlcg0 
 
 try:  # distributed version
     Import('env root pkgdir bindir')

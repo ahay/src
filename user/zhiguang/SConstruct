@@ -45,6 +45,11 @@ if sparsepath and sparselibs:
     env.Prepend(CPPPATH=sparsepath,
                 LIBS=sparselibs)
 
+if not sparsepath or not sparselibs:
+    for filec in Split('''
+        fdprep fdprep25 fdprep5 fdprep9 fdprep9o fwisparse2d sparsesolver
+        '''):
+        src.remove(File(filec+'.c'))
 
 for source in src:
     inc = env.RSF_Include(source,prefix='')

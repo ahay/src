@@ -18,10 +18,10 @@
 */
 
 #include <rsf.h>
+#include <rsfpwd.h>
 
 #include "fdprep.h"
 #include "sparsesolver.h"
-#include "seislet.h"
 
 bool hermite_false, hermite_true, sparsity;
 static float **v, **vnew, **slope, **recloc, *error;
