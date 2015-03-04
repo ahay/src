@@ -14,11 +14,10 @@ ccprogs = 'tilr2 ortholr3 cortholr3 cisolr2 cisolr2rev cisolr3 ctilr2 cisolr2gra
 # eiktest eiktest2 cisolr1eik eiksol cfraclr2 rfraclr2 cisolr2twostep
 # cisolr2hyb icisolr2
 
-mpi_progs = 'mpilsrtm'
+mpi_progs = 'mpilsrtm mpiewertm mpirtmop mpilsrtmgmres mpircvrtm mpiqrtm'
 
 pyprogs = 'fft'
 pymods = ''
-
 
 try:  # distributed version
     Import('env root pkgdir bindir libdir incdir')
@@ -57,7 +56,8 @@ for prog in mpi_mains:
     sources = ['M' + prog]
     bldutil.depends(env,sources,'M'+prog)
     if mpicc:
-        prog = env.Program(prog,map(lambda x: x + '.c',sources),CC=mpicc)
+        env.StaticObject('M'+prog+'.c',CC=mpicc)
+        prog = env.Program(prog,map(lambda x: x + '.o',sources),CC=mpicc)
     else:
         prog = env.RSF_Place('sf'+prog,None,var='MPICC',package='mpi')
     if root:

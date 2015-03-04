@@ -219,7 +219,7 @@ void cgmres (const sf_complex *f                                              /*
   g[0] = sf_cmplx( tmpf, 0.0f ); /* beta = norm(r_0) */
   my_cscal (n, 1.0f / tmpf, v); /* v1 = r/beta */
 
-  sf_warning("Original residule %e\n", tmpf*tmpf);
+  sf_warning("Original residual %e\n", tmpf*tmpf);
 
   /* main loop */
   while (iter <= itmax)
