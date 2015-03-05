@@ -83,7 +83,7 @@ void rtm2d_init(float dz_, float dx_, float dt_, int n0_, int nz_,
   omp_init();
 #endif
   float t;
-  int ib,i1,i2;
+  int i1,i2;
   t = 1.0/(dz_*dz_);
   c11 = 4.0*t/3.0;
   c12= -t/12.0;
@@ -187,6 +187,7 @@ void rtm2d_lop(bool adj, bool add, int nm, int nd, float *mod, float *dat)
       for (i2=0; i2<nx; i2++) dat[i2*nt+it]+=u1[i2+nbl][n0+nbt];
 
       step_forward(u0, u1, vv, false);
+
       ptr=u0; u0=u1; u1=ptr;
     }
   }

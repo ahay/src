@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 ######################################################################
-# C main programs
+# 1. C main programs
 progs = '''cohn dlct fpocs2d fpocs3d fwi2d fbrec2d 
 istinterp istpad istseislet lsrtm2d lsprtm2d lsinterp2d 
 mwni2d myradon1 myradon2 mythresh mshots mcaseislet matflip modeling2d
@@ -12,28 +12,41 @@ Testfd2d Testfd3d Testeb Testelastic2d Testaniso Testspml
 viscoa2d viscoe2d 
 '''
 
-
 ######################################################################
-# C++ main programs
+# 2. C++ main programs
 ccprogs = '''
 '''
 
 ######################################################################
-# MPI main programs
-mpi_progs = '''
+# 3. MPI main programs
+mpi_cprogs = '''
 mpifwi
 '''
 
 ######################################################################
-# CUDA main programs
+# 4. CUDA main programs
 cuda_progs = '''
 fbrec gpurtm gpufwi genshots gpufd3d gpufbrec3d 
 '''
 
 ######################################################################
-# CUDA+MPI main programs
+# 5. CUDA+MPI main programs
 cuda_mpi_progs = '''
 mpigpufwi
+'''
+
+######################################################################
+# 6. F90 main programs
+f90_progs = '''
+fd2d_test
+'''
+
+######################################################################
+# 7. python mains programs
+pyprogs='''
+shuffle_test
+'''
+pymods='''
 '''
 
 ######################################################################
@@ -49,27 +62,15 @@ except: # local version
     env = bldutil.Debug()
     root = bindir = libdir = pkgdir = None
     SConscript('../pwd/SConstruct')
+    SConscript('../../api/f90/SConstruct')
 
 env.Prepend(CPPPATH=['../../include'],
+	    F90PATH=['../../include'],
             LIBPATH=['../../lib'],
             LIBS=[env.get('DYNLIB','')+'rsfpwd',
+		  env.get('DYNLIB','')+'rsff90',
                   env.get('DYNLIB','')+'rsf'])
 
-######################################################################
-# F90 mains
-targets = bldutil.UserSconsTargets()
-targets.f90 = ''' 
-'''
-
-F90 = env.get('F90')
-if 'f90' in env.get('API',[]) and F90:
-	F90base= os.path.basename(F90)
- 	if F90base[:8]== 'gfortran' or F90base[:3]=='gfc':
-		env.Append(F90FLAGS=' -fopenmp -fbackslash ')
-        elif F90base == 'ifort':
-    		env.Append(F90FLAGS=' -module -fbackslash -fopenmp ${SOURCE.dir}')
-
-#targets.build_all(env, glob_build, srcroot, bindir, libdir, pkgdir)
 
 ######################################################################
 # fftw settings
@@ -85,9 +86,9 @@ for source in Split(src):
     env.Depends(obj,inc)
 
 ######################################################################
-# compiling C programs
-mains = Split(progs)
-for prog in mains:
+# 1. compiling C programs
+cmains = Split(progs)
+for prog in cmains:
     sources = ['M' + prog]
     bldutil.depends(env,sources,'M'+prog)
     if fftw:
@@ -99,7 +100,7 @@ for prog in mains:
         env.Install(bindir,prog)
 
 ######################################################################
-# compiling C++ programs
+# 2. compiling C++ programs
 if 'c++' in env.get('API',[]):
     lapack = env.get('LAPACK')
 else:
@@ -116,10 +117,10 @@ for prog in ccmains:
         env.Install(bindir,prog)
 
 ######################################################################
-# compiling MPI programs
+# 3. compiling MPI programs
 mpicc = env.get('MPICC')
-mpi_mains = Split(mpi_progs)
-for prog in mpi_mains:
+mpi_cmains = Split(mpi_cprogs)
+for prog in mpi_cmains:
     sources = ['M' + prog]
     bldutil.depends(env,sources,'M'+prog)
     if mpicc:
@@ -131,7 +132,7 @@ for prog in mpi_mains:
 
 
 ######################################################################
-# compiling CUDA programs
+# 4. compiling CUDA programs
 CTP = env.get('CUDA_TOOLKIT_PATH')
 NVCC = env.get('NVCC')
 
@@ -159,7 +160,7 @@ for prog in cuda_mains:
         env.Install(bindir,prog)
 
 #######################################################################
-# compiling CUDA+MPI programs
+# 5. compiling CUDA+MPI programs
 
 # YOU MAY HAVE TO EDIT THIS SECTION!!!
 # MPI_LIB and MPI_INC must be defined for your specific system
@@ -191,6 +192,33 @@ for prog in cuda_mpi_mains:
     if root:
         env.Install(bindir,prog)
 
+######################################################################
+# 6. compiling fortran programs
+
+F90 = env.get('F90')
+api = env.get('API',[])
+f90_mains = Split(f90_progs)
+
+for prog in f90_mains:
+    sources = ['M' + prog]
+    if 'f90' in api and F90:
+        bldutil.depends90(env,sources,'M'+prog)
+        prog = env.Program(prog,map(lambda x: x + '.f90',sources))
+    else:
+        prog = env.RSF_Place('sf'+prog,None,var='F90')        
+    if root:
+        env.Install(bindir,prog)
+
+######################################################################
+# 7. compiling python programs, python API not needed
+
+if root: # no compilation, just rename
+	pymains = Split(pyprogs)
+	exe = env.get('PROGSUFFIX','')
+	for prog in pymains:
+		env.InstallAs(os.path.join(bindir,'sf'+prog+exe),'M'+prog+'.py')
+	bldutil.install_py_modules(env,Split(pymods),pkgdir)
+
 
 ######################################################################
 # SELF-DOCUMENTATION
@@ -199,8 +227,10 @@ if root:
     user = os.path.basename(os.getcwd())
     main = 'sf%s.py' % user
     
-    docs = map(lambda prog: env.Doc(prog,'M' + prog),mains+mpi_mains) + \
-	map(lambda prog: env.Doc(prog,'M' + prog+'.cu'),cuda_mains + cuda_mpi_mains)
+    docs = map(lambda prog: env.Doc(prog,'M' + prog),cmains+mpi_cmains) + \
+	map(lambda prog: env.Doc(prog,'M' + prog+'.cu'),cuda_mains + cuda_mpi_mains)+ \
+	map(lambda prog: env.Doc(prog,'M'+prog+'.f90',lang='f90'),f90_mains)+\
+	map(lambda prog: env.Doc(prog,'M'+prog+'.py',lang='python'),pymains)
     env.Depends(docs,'#/framework/rsf/doc.py')	
 
     doc = env.RSF_Docmerge(main,docs)

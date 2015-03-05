@@ -130,7 +130,8 @@ void step_forward(float **u0, float **u1, float **vv, bool adj)
 
 
 void apply_sponge(float **p0)
-/*< apply sponge absorbing boundary condition >*/
+/*< apply sponge (Gaussian taper) absorbing boundary condition
+L=Gaussian taper ABC; L=L*, L is self-adjoint operator. >*/
 {
   int ix,iz,ib,ibx,ibz;
   float w;
@@ -411,7 +412,7 @@ void prtm2d_lop(bool adj, bool add, int nm, int nd, float *mod, float *dat)
 	
 	for(i2=0; i2<nx; i2++)
 	  for(i1=0; i1<nz; i1++)
-	    mod[i1+nz*i2]+=sp1[i2+nb][i1+nb]*gp0[i2+nb][i1+nb];
+	    mod[i1+nz*i2]+=sp0[i2+nb][i1+nb]*gp1[i2+nb][i1+nb];
       }
     }else{/* Born modeling/demigration: dd=L mm */	
 
@@ -421,7 +422,7 @@ void prtm2d_lop(bool adj, bool add, int nm, int nd, float *mod, float *dat)
 
 	for(i2=0; i2<nx; i2++)
 	  for(i1=0; i1<nz; i1++)
-	    gp0[i2+nb][i1+nb]+=sp1[i2+nb][i1+nb]*mod[i1+nz*i2];
+	    gp1[i2+nb][i1+nb]+=sp0[i2+nb][i1+nb]*mod[i1+nz*i2];
 	
 	ptr=gp0; gp0=gp1; gp1=ptr;
 	apply_sponge(gp0); 
