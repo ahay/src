@@ -736,9 +736,9 @@ int fft2_init(bool cmplx1        /* if complex transform */,
 {
 #ifdef SF_HAS_FFTW
 #ifdef _OPENMP
-    fftw_init_threads();
+    fftwf_init_threads();
     /*sf_warning("Using threaded FFTW3!\n");*/
-    fftw_plan_with_nthreads(omp_get_max_threads());
+    fftwf_plan_with_nthreads(omp_get_max_threads());
 #endif
 #else
    int i2;
@@ -914,7 +914,7 @@ void fft2_finalize()
 /* make sure everything is back to its pristine state */
 #ifdef SF_HAS_FFTW
 #ifdef _OPENMP
-    fftw_cleanup_threads();
+    fftwf_cleanup_threads();
 #endif
     fftwf_destroy_plan(cfg);
     fftwf_destroy_plan(icfg);
