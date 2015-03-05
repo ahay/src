@@ -10,16 +10,18 @@
 #include "cgnealg.hh"
 #include "LBFGSBT.hh"
 #include "LinFitLS.hh"
+#include "LinFitLSSM.hh"
 #include "acdds_grad_selfdoc.hh"
 #include <par.h>
 #include "gradtest.hh"
 #include "scantest.hh"
 #include "segyops.hh"
+#include "helmfftw.hh"
 
 //#define GTEST_VERBOSE
 IOKEY IWaveInfo::iwave_iokeys[]
 = {
-    {"csqext",    0, true,  true },
+    {"csq",    0, true,  true },
     {"data",   1, false, true },
     {"source", 1, true,  false},
     {"",       0, false, false}
@@ -46,6 +48,7 @@ using RVLUmin::CGNEPolicy;
 using RVLUmin::CGNEPolicyData;
 using RVLUmin::LBFGSBT;
 using RVLUmin::LinFitLS;
+using RVLUmin::LinFitLSSM;
 using RVLUmin::CGNEAlg;
 using TSOpt::IWaveEnvironment;
 using TSOpt::IWaveTree;
@@ -65,6 +68,7 @@ using TSOpt::SEGYSpace;
 #endif
 using TSOpt::GridExtendOp;
 using TSOpt::GridDerivOp;
+using TSOpt::GridHelmFFTWOp;
 
 int xargc;
 char **xargv;
@@ -141,14 +145,22 @@ int main(int argc, char ** argv) {
             // build grid extension op - checks compatibility between physical,
             // extended model-space specs
             
-            GridExtendOp gext(dom,op.getDomain());
-            
-            // reference vel-squared model - assumed to be data used to spec
-            // physical model space
+            Vector<ireal> m0(dom);
             Vector<ireal> m(dom);
-            AssignFilename mfn(valparse<std::string>(*pars,"csq"));
+            Vector<ireal> dm(op.getDomain());
+
+            AssignFilename mf0n(valparse<std::string>(*pars,"init_velsq"));
+            Components<ireal> cm0(m0);
+            cm0[0].eval(mf0n);
+
+            AssignFilename mfn(valparse<std::string>(*pars,"final_velsq"));
             Components<ireal> cm(m);
             cm[0].eval(mfn);
+            m.copy(m0);
+
+            AssignFilename dmfn(valparse<std::string>(*pars,"reflectivity"));
+            Components<ireal> cdm(dm);
+            cdm[0].eval(dmfn);
             
             // muted data - optionally archived
             Vector<ireal> mdd(op.getRange());
@@ -202,7 +214,7 @@ int main(int argc, char ** argv) {
       width[2]=valparse<float>(*pars,"width2",0.0f);
 
       Vector<ireal> m_in(op.getDomain());
-      AssignFilename minfn(valparse<std::string>(*pars,"csqext"));
+      AssignFilename minfn(valparse<std::string>(*pars,"csq"));
       Components<ireal> cmin(m_in);
       cmin[0].eval(minfn);
       GridMaskOp mop(op.getDomain(),m_in,swind,ewind,width);
@@ -210,36 +222,43 @@ int main(int argc, char ** argv) {
       OperatorEvaluation<float> mopeval(mop,m_in);
       LinearOp<float> const & lmop=mopeval.getDeriv();
 
-            GridDerivOp dsop(op.getDomain(),dsdir,valparse<float>(*pars,"DSWeight",0.0f));
-            TensorOp<float> top(op,dsop);
-            // create RHS of block system
-            Vector<float> td(top.getRange());
-            Components<float> ctd(td);
-            ctd[0].copy(mdd);
-            ctd[1].zero();
-            
-            // choice of preop is placeholder
-            ScaleOpFwd<float> preop(top.getDomain(),1.0f);
-            CGNEPolicyData<float> pd(valparse<float>(*pars,"ResidualTol",100.0*numeric_limits<float>::epsilon()),
-                                     valparse<float>(*pars,"GradientTol",100.0*numeric_limits<float>::epsilon()),
-                                     valparse<float>(*pars,"MaxStep",numeric_limits<float>::max()),
-                                     valparse<int>(*pars,"MaxIter",10),true);
-            // initial input reflectivity
-            Vector<ireal> dm0(op.getDomain());
-            string refname = valparse<std::string>(*pars,"ref0","");
-            if (refname.size()>0){
-                AssignFilename dmfn(refname);
-                Components<ireal> cdm0(dm0);
-                cdm0[0].eval(dmfn);
-            }
-            else{ dm0.zero(); }
-            LinFitLS<float, CGNEPolicy<float>, CGNEPolicyData<float> > f(top,lmop,td,dm0,pd,false,res);
-            // compose with grid extension op
-            FcnlOpComp<float> gf(f,gext);
+      CGNEPolicyData<float> pd(valparse<float>(*pars,"ResidualTol",100.0*numeric_limits<float>::epsilon()),
+             valparse<float>(*pars,"GradientTol",100.0*numeric_limits<float>::epsilon()),
+             valparse<float>(*pars,"MaxStep",numeric_limits<float>::max()),
+             valparse<int>(*pars,"MaxIter",10),true);
+      // initial input reflectivity
+      Vector<ireal> dm0(op.getDomain());
+      string refname = valparse<std::string>(*pars,"ref0","");
+      if (refname.size()>0){
+          AssignFilename dmfn(refname);
+          Components<ireal> cdm0(dm0);
+          cdm0[0].eval(dmfn);
+      }
+      else{ dm0.zero(); }
+
+      RPNT w_arr;
+      RASN(w_arr,RPNT_1);
+      w_arr[0]=valparse<float>(*pars,"scale1",1.0f);
+      w_arr[1]=valparse<float>(*pars,"scale2",1.0f);
+      IPNT sbc, ebc;
+      sbc[0]=valparse<int>(*pars,"sbc0",1);
+      sbc[1]=valparse<int>(*pars,"sbc1",0);
+      sbc[2]=valparse<int>(*pars,"sbc2",0);
+      ebc[0]=valparse<int>(*pars,"ebc0",0);
+      ebc[1]=valparse<int>(*pars,"ebc1",0);
+      ebc[2]=valparse<int>(*pars,"ebc2",0);
+      float power=0.0f;
+      float datum=0.0f;
+      power=valparse<float>(*pars,"power",0.0f);
+      datum=valparse<float>(*pars,"datum",0.0f);
+ 
+      GridHelmFFTWOp hop(op.getDomain(),w_arr,sbc,ebc,power,datum);
+
+            LinFitLSSM<float, CGNEPolicy<float>, CGNEPolicyData<float> > f(op,lmop,hop,mdd,dm0,pd,false,res);
             
             // lower, upper bds for csq
-            Vector<float> lb(gf.getDomain());
-            Vector<float> ub(gf.getDomain());
+            Vector<float> lb(f.getDomain());
+            Vector<float> ub(f.getDomain());
             float lbcsq=valparse<float>(*pars,"cmin");
             lbcsq=lbcsq*lbcsq;
             RVLAssignConst<float> asl(lbcsq);
@@ -256,97 +275,60 @@ int main(int argc, char ** argv) {
             ULBoundsTest<float> ultest(lb,ub,mn);
 #endif
             
-            FunctionalBd<float> fbd(gf,ultest);
+            FunctionalBd<float> fbd(f,ultest);
             
-            // if gradient requested, compute and store, along with other quantities
-            // at reference model
-            string gradname = valparse<std::string>(*pars,"grad","");
-            if (gradname.size()>0) {
-                
-                FunctionalEvaluation<float> Fm(fbd,m);
-                // cerr<<" \n  compute gradient \n";
-                AssignFilename gradfn(gradname);
-                Vector<ireal> grad(dom);
-                Components<ireal> cgrad(grad);
-                cgrad[0].eval(gradfn);
-                //strgrad << "\n getgradient norm = " << (Fm.getGradient()).norm() << endl;
-                grad.copy(Fm.getGradient());
-                //strgrad << "\n grad norm = " << grad.norm() << endl;
-                
-                Vector<ireal> dltm(op.getDomain());
-                AssignFilename dltmfn(valparse<std::string>(*pars,"reflectivity"));
-                Components<ireal> cdltm(dltm);
-                cdltm[0].eval(dltmfn);
-                dltm.zero();
-                
-                FunctionalBd<float> const & f1 =
-                dynamic_cast<FunctionalBd<float> const &>(Fm.getFunctional()); // current clone of fbd
-                FcnlOpComp<float> const & f2 =
-                dynamic_cast<FcnlOpComp<float> const &>(f1.getFunctional()); // function in fbd = gf = fcnaopcomp
-                FunctionalEvaluation<float> const & fe2 = f2.getFcnlEval(); // current feval part of gf
-                LinFitLS<float, CGNEPolicy<float>, CGNEPolicyData<float> > const & f3 =
-                dynamic_cast<LinFitLS<float, CGNEPolicy<float>, CGNEPolicyData<float> > const & >
-                (fe2.getFunctional()); // current clone of LSLinFit
-                dltm.copy(f3.getLSSoln()); // copy dx from LSLinFit
-                
-                std::string dataest = valparse<std::string>(*pars,"dataest","");
-                std::string datares = valparse<std::string>(*pars,"datares","");
-                std::string normalres = valparse<std::string>(*pars,"normalres","");
-                if (dataest.size()>0) {
-                    OperatorEvaluation<float> gopeval(gext,m);
-                    OperatorEvaluation<float> opeval(op,gopeval.getValue());
-                    Vector<float> est(op.getRange());
-                    AssignFilename estfn(dataest);
-                    est.eval(estfn);
-                    opeval.getDeriv().applyOp(dltm,est);
-                    if (datares.size()>0) {
-                        Vector<float> res(op.getRange());
-                        AssignFilename resfn(datares);
-                        res.eval(resfn);
-                        res.copy(est);
-                        res.linComb(-1.0f,mdd);
-                        if (normalres.size()>0){
-                            OperatorEvaluation<float> topeval(top,gopeval.getValue());
-                            Vector<float> nres(op.getDomain());
-                            AssignFilename nresfn(normalres);
-                            nres.eval(nresfn);
-                            // create RHS of block system
-                            Vector<float> tres(top.getRange());
-                            Components<float> ctres(tres);
-                            ctres[0].copy(res);
-                            ctres[1].zero();
-                            topeval.getDeriv().applyAdjOp(tres,nres);
-                        }
-                    }
-                }
+            LBFGSBT<float> alg(fbd,m,
+                               valparse<float>(*pars,"InvHessianScale",1.0f),
+                               valparse<int>(*pars,"MaxInvHessianUpdates",5),
+                               valparse<int>(*pars,"MaxLineSrchSteps",10),
+                               valparse<bool>(*pars,"VerboseDisplay",true),
+                               valparse<float>(*pars,"FirstStepLength",1.0f),
+                               valparse<float>(*pars,"GAStepAcceptThresh",0.1f),
+                               valparse<float>(*pars,"GAStepDoubleThresh",0.9f),
+                               valparse<float>(*pars,"LSBackTrackFac",0.5f),
+                               valparse<float>(*pars,"LSDoubleFac",1.8f),
+                               valparse<float>(*pars,"MaxFracDistToBdry",1.0),
+                               valparse<float>(*pars,"LSMinStepFrac",1.e-06),
+                               valparse<int>(*pars,"MaxLBFGSIter",3),
+                               valparse<float>(*pars,"AbsGradThresh",0.0),
+                               valparse<float>(*pars,"RelGradThresh",1.e-2),
+                               res);
+            if (valparse<int>(*pars,"MaxLBFGSIter",3) <= 0) {
+              float val = alg.getFunctionalEvaluation().getValue();
+              res<<"=========================== LINFITLS ==========================\n";
+              res<<"value of IVA functional = "<<val<<"\n";
+              res<<"=========================== LINFITLS ==========================\n";
             }
-            
-            // if model perturbation supplied, try scan, gradient tests
-            string pertname = valparse<std::string>(*pars,"csq_d1","");
-            if (pertname.size()>0) {
-                
-                Vector<ireal> dm(dom);
-                AssignFilename mfn_d1(pertname);
-                Components<ireal> cm_d1(dm);
-                cm_d1[0].eval(mfn_d1);
-                
-                // perform gradient test if nhval > 0
-                if(valparse<int>(*pars,"nhval",0)>0){
-                    GradientTest(fbd,m,dm,strgrad,
-                                 valparse<int>(*pars,"nhval",0),
-                                 valparse<float>(*pars,"hmin",0.1f),
-                                 valparse<float>(*pars,"hmax",1.0f));
-                }
-                
-                // perform scan if nscan > -1
-                if(valparse<int>(*pars,"nscan",-1)>-1){
-                    Scan(fbd,m,dm,
-                         valparse<int>(*pars,"nscan",-1),
-                         valparse<float>(*pars,"hmin",-1.0f),
-                         valparse<float>(*pars,"hmax",1.0f),
-                         strgrad);	     
-                }
-            }
+            else {
+              alg.run();
+            } 
+
+      FunctionalEvaluation<float> const & fe1 = alg.getFunctionalEvaluation(); // eval of fbd
+      FunctionalBd<float> const & f1 =
+        dynamic_cast<FunctionalBd<float> const &>(fe1.getFunctional()); // current clone of fbd
+      LinFitLSSM<float, CGNEPolicy<float>, CGNEPolicyData<float> > const & f3 =
+            dynamic_cast<LinFitLSSM<float, CGNEPolicy<float>, CGNEPolicyData<float> > const & >
+                (f1.getFunctional()); // current clone of LSLinFit
+      dm.copy(f3.getLSSoln()); // copy dx from LSLinFit
+
+      std::string dataest = valparse<std::string>(*pars,"dataest","");
+      std::string datares = valparse<std::string>(*pars,"datares","");
+      if (dataest.size()>0) {
+          OperatorEvaluation<float> opeval(op,m);
+          Vector<float> est(op.getRange());
+          AssignFilename estfn(dataest);
+          est.eval(estfn);
+          opeval.getDeriv().applyOp(dm,est);
+          if (datares.size()>0) {
+              Vector<float> res(op.getRange());
+              AssignFilename resfn(datares);
+              res.eval(resfn);
+              res.copy(est);
+              res.linComb(-1.0f,mdd);
+          }
+      }
+
+
             if (retrieveRank() == 0) {
                 std::string outfile = valparse<std::string>(*pars,"outfile","");
                 if (outfile.size()>0) {

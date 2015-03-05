@@ -373,6 +373,8 @@ namespace TSOpt {
 	}
 
 	dump_term = valparse<int>(pars,"dump_term",0);
+	taperwidth= valparse<int>(pars,"taperwidth",0);
+	timewidth = valparse<int>(pars,"timewidth",0);
     
 	/* set up axes */
 	axis * at = new axis;
@@ -920,6 +922,11 @@ namespace TSOpt {
 		    //		    cerr<<"rhs="<<(state->model).tsind.rhs<<" cv="<<cv<<" iwdx="<<iwdx<<" scale="<<scale<<endl;
 		  }
 		}
+                //int width=tg->ntraces/4;
+                //int wtime=200;
+		if (traceinput && (samplekey.compare("data")==0)) {
+	            tapermutetraces(tg,step[g.dim] - tracestart, taperwidth, timewidth);
+		}
 
 		sampletraces(tg,
 			     sampord,
@@ -929,7 +936,11 @@ namespace TSOpt {
 			     n, gs,
 			     data,
 			     scale);
+		if (!traceinput && (samplekey.compare("data")==0)) {
+	            tapermutetraces(tg,step[g.dim] - tracestart, taperwidth, timewidth);
+		}
 	      }
+
 
 	      if (save) {
 		//		cerr<<"samplekey="<<samplekey<<" rk="<<retrieveGlobalRank()<<" writetraces\n";

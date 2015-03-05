@@ -3,6 +3,10 @@
 /* axis indices throughout: 0=z, 1=x, 2=y */
 
 /** helper function to avoid deprecated non-const conversion */
+float costap(float t){
+    return 0.5 + cos(M_PI * t)/2.0f;
+}
+
 void mygethdval(segy * tr, const char * ch, Value * val) {
   char * h = (char *)usermalloc_((strlen(ch)+2)*sizeof(char));
   if (h) {
@@ -2280,6 +2284,48 @@ int assembletrace(tracegeom const * tg,
   otr->m=(tg->troff)[nb];
 
   return err;
+}
+
+
+/* 22.02.15 by Yin taper traces */
+void tapermutetraces(tracegeom * tg,
+                     int it,
+                     int width, // width of taper
+                     int wtime  // width of time taper, in ms
+                     ) {
+    
+    int itr;    /* trace counter */
+    int ioff=0;   /* offset into sampled array */
+    /*  int moff;   offset into multiplier array */
+    int ndim;   /* problem dimension */
+    IPNT ind;   /* integer part of sample coords */
+    
+    if (it<0 || it>tg->nt-1) return;
+    
+    ndim=tg->ndim;
+    IASN(ind,IPNT_0);
+    
+    int iet = (int)(wtime/tg->dt);
+    float wt=0,wttime=1.0f;
+    if (width > 0) {
+        for (itr=0;itr<width;itr++) {
+           wt = costap((width-itr)/float(width));
+           (tg->buf)[it+itr*tg->nt]*=wt;
+        }
+        for (itr=tg->ntraces-width;itr<tg->ntraces;itr++) {
+           wt = costap((itr-tg->ntraces+width+1)/float(width));
+           (tg->buf)[it+itr*tg->nt]*=wt;
+        }
+    }
+    if ((iet >0 ) && (tg->nt>10*iet) && (it>=tg->nt-iet)) {
+//	fprintf(stderr," tg->nt=%d \n",tg->nt);
+//	fprintf(stderr," tg->dt=%f \n",tg->dt);
+//	fprintf(stderr," it=%d \n",it);
+        wttime = costap((it-tg->nt+iet+1)/float(iet));
+        for (itr=0; itr<tg->ntraces; itr++) {
+            (tg->buf)[it+itr*tg->nt]*=wttime;
+        }
+    }
 }
 
 

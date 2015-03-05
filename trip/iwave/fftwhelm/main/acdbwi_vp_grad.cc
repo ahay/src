@@ -247,7 +247,7 @@ int main(int argc, char ** argv) {
  
       GridHelmFFTWOp hop(op.getDomain(),w_arr,sbc,ebc,power,datum);
 
-            LinFitLSSM<float, CGNEPolicy<float>, CGNEPolicyData<float> > f(op,lmop,hop,mdd,dm0,pd,res);
+      LinFitLSSM<float, CGNEPolicy<float>, CGNEPolicyData<float> > f(op,lmop,hop,mdd,dm0,pd,false,res);
             
             // lower, upper bds for csq
             Vector<float> lb(f.getDomain());
@@ -293,13 +293,11 @@ int main(int argc, char ** argv) {
                 
                 FunctionalBd<float> const & f1 =
                 dynamic_cast<FunctionalBd<float> const &>(Fm.getFunctional()); // current clone of fbd
-                FcnlOpComp<float> const & f2 =
-                dynamic_cast<FcnlOpComp<float> const &>(f1.getFunctional()); // function in fbd = gf = fcnaopcomp
-                FunctionalEvaluation<float> const & fe2 = f2.getFcnlEval(); // current feval part of gf
+
                 LinFitLSSM<float, CGNEPolicy<float>, CGNEPolicyData<float> > const & f3 =
                 dynamic_cast<LinFitLSSM<float, CGNEPolicy<float>, CGNEPolicyData<float> > const & >
-                (fe2.getFunctional()); // current clone of LSLinFit
-                dltm.copy(f3.getLSSoln()); // copy dx from LSLinFit
+                (f1.getFunctional()); // current clone of LinFitLSSM
+                dltm.copy(f3.getLSSoln()); // copy dx from LinFitLSSM
                 
                 std::string dataest = valparse<std::string>(*pars,"dataest","");
                 std::string datares = valparse<std::string>(*pars,"datares","");
@@ -311,11 +309,11 @@ int main(int argc, char ** argv) {
                     est.eval(estfn);
                     opeval.getDeriv().applyOp(dltm,est);
                     if (datares.size()>0) {
-                        Vector<float> res(op.getRange());
-                        AssignFilename resfn(datares);
-                        res.eval(resfn);
-                        res.copy(est);
-                        res.linComb(-1.0f,mdd);
+                        Vector<float> dres(op.getRange());
+                        AssignFilename dresfn(datares);
+                        dres.eval(dresfn);
+                        dres.copy(est);
+                        dres.linComb(-1.0f,mdd);
                     }
                 }
             }

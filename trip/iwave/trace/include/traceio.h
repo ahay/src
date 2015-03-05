@@ -386,6 +386,11 @@ void sampletraces(tracegeom * tg,
 		  //		  int * mult); */
 		  ireal mult);
 
+void tapermutetraces(tracegeom * tg,
+                     int it,
+                     int width,
+                     int wtime);
+
 /** Trace output. Sets up internal segy for writing, by transferring
     ntout, dtout, scalel, scalco, etc. to header fields. writes out
     traces. Uses axis steps and origin coordinates combined with index
