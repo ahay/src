@@ -71,7 +71,6 @@ env.Prepend(CPPPATH=['../../include'],
 		  env.get('DYNLIB','')+'rsff90',
                   env.get('DYNLIB','')+'rsf'])
 
-
 ######################################################################
 # fftw settings
 fftw = env.get('FFTWOMP')
@@ -198,6 +197,13 @@ for prog in cuda_mpi_mains:
 F90 = env.get('F90')
 api = env.get('API',[])
 f90_mains = Split(f90_progs)
+
+if 'f90' in api and F90:
+    F90base =  os.path.basename(F90)
+    if F90base[:8] == 'gfortran' or F90base[:3] == 'gfc':
+        env.Append(F90FLAGS=' -J${SOURCE.dir}')
+    elif F90base == 'ifort':
+        env.Append(F90FLAGS=' -module ${SOURCE.dir}')
 
 for prog in f90_mains:
     sources = ['M' + prog]
