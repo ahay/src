@@ -19,7 +19,7 @@
 
 #include <rsf.h>
 
-int main(int argc, char *argv)
+int main(int argc, char *argv[])
 {
 	int is,i,j,n1,n2,n3;
 	float threshold, d1, d2, o1, o2, o3, d3;
