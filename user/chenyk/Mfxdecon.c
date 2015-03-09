@@ -36,6 +36,7 @@ int main(int argc, char *argv[])
     int n1wi;	       	/* number of samples in intermed. window */
     int n1taper;	       	/* number of samples in taper		*/
     int n2;	       		/* number of input traces		*/
+    int n3;	       		/* number of input sections		*/
     int n2w;	       	/* number of traces in window		*/
     int N2w;	       	/* number of spacial windows		*/
     int n2wu;	       	/* updated number of traces in window	*/
@@ -43,7 +44,7 @@ int main(int argc, char *argv[])
     int nf;			/* number of frequencies		*/
     int lenf;		/* number of traces for filter		*/
     int i2w,i2,jr,itt;	/* summation indexes			*/
-    int i1,i1w,ifq,ir;	/* summation indexes			*/
+    int i1,i3,i1w,ifq,ir;	/* summation indexes			*/
     int ig,ifv;		/* summation indexes			*/
     bool verb;		/* flag to get advisory messages	*/
     int *ipvt;		/* indices of pivot permutations	*/
@@ -91,7 +92,7 @@ int main(int argc, char *argv[])
     if(!sf_histint(in, "n1", &n1))  sf_error("No n1 in input");  if (verb) sf_warning("n1 = %i",n1);
     if(!sf_histfloat(in, "d1", &dt)) sf_error("No d1 in input"); if (verb) sf_warning("dt= %f",dt);
     if(!sf_histint(in,"n2",&n2))   sf_error("No n2 in input");   if (verb) sf_warning("n2= %f",n2);
-
+    if(!sf_histint(in,"n3",&n3))   n3=1; if (verb) sf_warning("n3= %f",n3);
 
     if(!sf_getfloat("taper",&taper)) taper=.1;
     /* length of taper */
@@ -174,9 +175,11 @@ int main(int argc, char *argv[])
     /* zero output file */
     memset((void *) traceout[0], 0, n2*n1*sizeof(float));
 
+
+    for (i3=0;i3<n3;i3++)
+    {
     /* load traces into the zero-offset array and close tmpfile */
-    sf_floatread(tracein[0],n1*n2,in);
-	
+    sf_floatread(tracein[0],n1*n2,in);	
 	
     /* If dt not set, issue advisory on frequency step df */
     if (dt && verb) sf_warning("df=%f", 1.0/(nfft*dt));
@@ -407,6 +410,11 @@ int main(int argc, char *argv[])
 	} /* end loop over space windows */
 
     } /* end of time windows loop */
+ 
+    /* Write output data to file */
+    sf_floatwrite(traceout[0], n1*n2, out);
+    if(verb) sf_warning("I3=%d is done!\n",i3+1);
+    }
 
     /* Free allocated memory */
     free(traceintw);
@@ -430,9 +438,8 @@ int main(int argc, char *argv[])
     free(ffv);
     free(tracein[0]);
     free(tracein);
- 
-    /* Write output data to file */
-    sf_floatwrite(traceout[0], n1*n2, out);
+    free(traceout[0]);
+    free(traceout);
 
     exit(0);
 }
