@@ -63,6 +63,9 @@ class MainFrame(wx.Frame):
 
         panel = self.fileopen()
         sizer.Add(panel,0,wx.ALL|wx.EXPAND,5)
+
+        panel = self.format()
+        sizer.Add(panel,0,wx.ALL|wx.EXPAND,5)
         
         self.SetSizer(sizer)
         sizer.Fit(self)
@@ -83,9 +86,6 @@ class MainFrame(wx.Frame):
         sizer.Add(self.fileentry,wx.EXPAND)
         sizer.Add(filebutt)
 
-        #        tk.Button(frame, text="...",
-        #          command=lambda: select_file(vpl)).pack(side=tk.LEFT)
-
         return sizer
 
     def file_entry(self,event):
@@ -95,14 +95,31 @@ class MainFrame(wx.Frame):
 
     def select_file(self,event):
         '''Select a file into entry'''
-        wildcard ="Vplot files (*.vpl)|*.vpl| All files (*.*)|*.* "
+        wildcard ="Vplot files (*.vpl)|*.vpl| All files (*.*)|*.*"
         
         dialog = wx.FileDialog(None,"Choose a file",os.getcwd(),'',
                                wildcard,wx.OPEN)
         if dialog.ShowModal() == wx.ID_OK:
             vpl = dialog.GetPath()
+            self.fileentry.SetValue(vpl)
         dialog.Destroy()
-        self.fileentry.SetValue(vpl)
+
+    def format(self):
+        sizer = wx.BoxSizer(wx.HORIZONTAL)
+
+        text  = wx.StaticText(self,-1,'Format:')
+        sizer.Add(text)
+
+        formats = vpconvert.pens.keys()
+        formats.sort()
+        nf = len(formats)
+        for i in range(nf):
+            format = formats[i]
+            print format
+#        rb = tk.Radiobutton(subframe,text=format.upper(),value=format,variable=fmt)
+#        rb.grid(row=i%2,column=i/2,sticky=tk.W)
+
+        return sizer
 
 if __name__ == "__main__":
     app = wx.App(False)
