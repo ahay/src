@@ -1,0 +1,14 @@
+from rsf.proj import *
+
+Fetch('pimp.HH','avo')
+Flow('pimp','pimp.HH','dd form=native')
+
+Plot('pimp','grey wanttitle=n wherexlabel=b label1=Time unit1=s label2=Distance unit2=km wheretitle=t')
+
+Plot('seafloor',None,'box x0=6.268333 y0=7.340000 label="seafloor"              xt=-1 yt=1')
+Plot('bsr-ann', None,'box x0=10.043333 y0=5.425000 label="BSR"                  xt=1  yt=1')
+Plot('hor-refl',None,'box x0=7.218333 y0=3.465000 label="horizontal reflection" xt=-1 yt=-1')
+
+Result('pimp-ann','pimp seafloor bsr-ann hor-refl','Overlay')
+
+End()

@@ -113,13 +113,20 @@ class MainFrame(wx.Frame):
         formats = vpconvert.pens.keys()
         formats.sort()
         nf = len(formats)
+        fsizer = wx.FlexGridSizer(rows=2,cols=(nf+1)/2,hgap=5,vgap=5)
         for i in range(nf):
-            format = formats[i]
-            print format
-#        rb = tk.Radiobutton(subframe,text=format.upper(),value=format,variable=fmt)
-#        rb.grid(row=i%2,column=i/2,sticky=tk.W)
+            fmt = formats[i]
+            rb = wx.RadioButton(self,-1,fmt.upper())
+            self.Bind(wx.EVT_RADIOBUTTON,self.set_format,rb)
+            fsizer.Add(rb)
+        self.format = formats[0]
+        sizer.Add(fsizer)
 
         return sizer
+
+    def set_format(self,event):
+        print self.format
+        self.format = event.GetEventObject().GetLabel().lower()
 
 if __name__ == "__main__":
     app = wx.App(False)
