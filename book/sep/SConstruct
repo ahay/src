@@ -5,7 +5,8 @@ report = (('Optimization','cdstep stack forwd spitz oc2 pwd bspl'),
           ('Imaging','fat stoltst antial angle'),
           ('Traveltimes','waverays lineiko huygens fmeiko fmsec'),
           ('Azimuth Moveout','oc1 norm fkamo'),
-          ('Velocities','vc1 velspec vc2 banana fractal'))
+          ('Velocities','vc1 velspec vc2 banana fractal'),
+          ('AVO \& Elasticity','avo'))
 
 Papers(authors={'precon':'Sergey Fomel and Jon Claerbout',
                 'norm': 'Sergey Fomel and Norman Bleistein',

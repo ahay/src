@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfwindow', 'sfscale', 'sfcat', 'sfput', 'sfbox', 'sfwiggle', 'sfmin', 'sfgraph', 'sfzoeppritz']
+data=['data/avo/avo.HH']
+size=     374908

@@ -32,6 +32,8 @@ To the reproducible documents collection:
 * trip/asg: Acoustic staggered grid modeling in IWAVE (Symes)
 * tccs/synth: Carbonate reservoir characterization using seismic
   diffraction imaging (Decker, Janson, and Fomel)
+* sep/avo: Seismic AVO analysis of methane hydrate structures (Ecker
+  and Lumley)
 
 To SCons:
 
