@@ -15,15 +15,15 @@ Flow('tau',None,
      	math output=0.01 n1=200 n2=200 d1=0.005 d2=0.005
      	label1=x1 unit1=km label2=x2 unit2=km 
      	''')
-Flow('tau0',None,
+Flow('tauo',None,
      	'''
      	math output=0.008 n1=200 n2=200 d1=0.005 d2=0.005
      	label1=x1 unit1=km label2=x2 unit2=km 
      	''')
 
-Flow('wav pz px','vel rho tau tau0',
+Flow('wav pz px','vel rho tau tauo',
 	'''
-	sfviscoa2d rho=${SOURCES[1]} tau=${SOURCES[2]} tau0=${SOURCES[3]}
+	sfviscoa2d rho=${SOURCES[1]} tau=${SOURCES[2]} tauo=${SOURCES[3]}
 	pz=${TARGETS[1]} px=${TARGETS[2]} nb=30 nt=400 dt=0.001 verb=y kt=250
 	''')
 Plot('wav','grey gainpanel=all title="Forward (8th order)" scalebar=y color=j scalebar=y',view=1)
