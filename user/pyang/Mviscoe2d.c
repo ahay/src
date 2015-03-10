@@ -27,7 +27,7 @@
 #endif
 
 const static float c1=1.125, c2=-1./24.;
-static int nb, nz, nx, nt, ns, nzpad, nxpad;
+static int nb, nz, nx, nt, nzpad, nxpad;
 static float dz, dx, _dz, _dx, dt, fm;
 
 static void expand2d(float** b, float** a)
@@ -233,7 +233,7 @@ int main(int argc, char* argv[])
     	if (!sf_histint(Fvp,"n2",&nx)) sf_error("No n2= in input");/* veloctiy model: nx */
     	if (!sf_histfloat(Fvp,"d1",&dz)) sf_error("No d1= in input");/* veloctiy model: dz */
     	if (!sf_histfloat(Fvp,"d2",&dx)) sf_error("No d2= in input");/* veloctiy model: dx */
-    	if (!sf_getint("nb",&nb)) nb=30; /* thickness of PML boundary */
+    	if (!sf_getint("nb",&nb)) nb=30; /* thickness of sponge ABC */
     	if (!sf_getint("nt",&nt)) sf_error("nt required");/* number of time steps */
     	if (!sf_getint("kt",&kt)) sf_error("kt required");/* record wavefield at time kt */
 	if (kt>nt) sf_error("make sure kt<=nt");
@@ -274,8 +274,7 @@ int main(int argc, char* argv[])
 		a=SF_PI*fm*(it*dt-1.0/fm);a*=a;
 		wlt[it]=(1.0-2.0*a)*expf(-a);
 	}
-	for(ib=0;ib<nb;ib++)
-	{
+	for(ib=0;ib<nb;ib++)	{
 		a=0.015*(nb-ib);
 		bndr[ib]=expf(-a*a);
 	}
@@ -307,8 +306,8 @@ int main(int argc, char* argv[])
 		Txx[sx][sz]+=wlt[it];
 		Tzz[sx][sz]+=wlt[it];
 
-		forward_Vx_Vz(Vx, Vz, Txx, Tzz, Txz, rho);
 		forward_Txx_Tzz_Txz(Txx, Tzz, Txz, Rxx, Rzz, Rxz, Vx, Vz, taup, taus, tauo, vp, vs);
+		forward_Vx_Vz(Vx, Vz, Txx, Tzz, Txz, rho);
 
 		apply_sponge(Vz, bndr);
 		apply_sponge(Vx, bndr);

@@ -112,8 +112,21 @@ void apply_sponge(float **u, float *bndr)
 }
 
 
+void variable_inverse(float **rho, float **tauo)
+/*< inverse of variables >*/
+{
+	int i1, i2;
+	
+	for(i2=0; i2<nxpad; i2++)
+	for(i1=0; i1<nzpad; i1++)
+	{
+		rho[i2][i1]=1./rho[i2][i1];
+		tauo[i2][i1]=1./tauo[i2][i1];
+	}
+}
 
-void step_forward(float **p, float **r, float **vz, float **vx, float **vv, float **rho, float **tau, float **tau0)
+
+void step_forward(float **p, float **r, float **vz, float **vx, float **vv, float **rho, float **tau, float **tauo)
 /*< forward modeling step >*/
 {
 	int i1, i2;
@@ -142,7 +155,7 @@ void step_forward(float **p, float **r, float **vz, float **vx, float **vv, floa
 #ifdef _OPENMP
 #pragma omp parallel for default(none)			\
 	private(i1,i2,diff1, diff2, tmp, tmp2)		\
-	shared(nzpad, nxpad, rho, tau, tau0, vv, p, r, vz, vx, dt, _dz, _dx)
+	shared(nzpad, nxpad, rho, tau, tauo, vv, p, r, vz, vx, dt, _dz, _dx)
 #endif
 	for(i2=4; i2<nxpad-3; i2++)
 	for(i1=4; i1<nzpad-3; i1++)
@@ -157,27 +170,13 @@ void step_forward(float **p, float **r, float **vz, float **vx, float **vv, floa
 			+0.009570312500000*(vx[i2+2][i1]-vx[i2-3][i1])
 			-0.000697544642857*(vx[i2+3][i1]-vx[i2-4][i1]);
 		tmp=tmp*rho[i2][i1]*(_dz*diff1+_dx*diff2);
-		tmp2=dt/tau0[i2][i1];
+		tmp2=dt/tauo[i2][i1];
 		r[i2][i1]=((1.-0.5*tmp2)*r[i2][i1]-tmp2*tau[i2][i1]*tmp)/(1.+0.5*tmp2);
 		p[i2][i1]-=dt*((1.+tau[i2][i1])*tmp+r[i2][i1]);
 	}
 }
 
-/*-----------------------------------------------------------------------------*/
-void variable_inverse(float **rho, float **tau0)
-/*< inverse of variables >*/
-{
-	int i1, i2;
-	
-	for(i2=0; i2<nxpad; i2++)
-	for(i1=0; i1<nzpad; i1++)
-	{
-		rho[i2][i1]=1./rho[i2][i1];
-		tau0[i2][i1]=1./tau0[i2][i1];
-	}
-}
 
-/*-----------------------------------------------------------------------------*/
 
 int main(int argc, char* argv[])
 {
@@ -185,8 +184,8 @@ int main(int argc, char* argv[])
 	int jt, ft, ib, it, kt, sx, sz;
 	float tmp;
 	float *wlt, *bndr;
-	float **rho, **tau, **tau0, **v0, **vv, **p, **r, **vz, **vx;
-	sf_file Fv, Frho, Ftau, Ftau0, Fw, Fpx, Fpz;
+	float **rho, **tau, **tauo, **v0, **vv, **p, **r, **vz, **vx;
+	sf_file Fv, Frho, Ftau, Ftauo, Fw, Fpx, Fpz;
 
     	sf_init(argc,argv);
 #ifdef _OPENMP
@@ -196,7 +195,7 @@ int main(int argc, char* argv[])
 	Fv = sf_input("in");/* veloctiy model */
 	Frho=sf_input("rho");/* density */
 	Ftau=sf_input("tau");/* tau, computed according to quality factor Q */
-	Ftau0=sf_input("tau0");/* tau0, computed according to quality factor Q */
+	Ftauo=sf_input("tauo");/* tauo, computed according to quality factor Q */
 	Fw = sf_output("out");/* wavefield snaps */
 
     	if (!sf_histint(Fv,"n1",&nz)) sf_error("No n1= in input");/* veloctiy model: nz */
@@ -236,7 +235,7 @@ int main(int argc, char* argv[])
 	v0=sf_floatalloc2(nz,nx); 	
 	rho=sf_floatalloc2(nzpad, nxpad);
 	tau=sf_floatalloc2(nzpad, nxpad);
-	tau0=sf_floatalloc2(nzpad, nxpad);
+	tauo=sf_floatalloc2(nzpad, nxpad);
 	vv=sf_floatalloc2(nzpad, nxpad);
 	p =sf_floatalloc2(nzpad, nxpad);
 	r =sf_floatalloc2(nzpad, nxpad);
@@ -258,8 +257,8 @@ int main(int argc, char* argv[])
 	expand2d(rho, v0);
 	sf_floatread(v0[0],nz*nx,Ftau);
 	expand2d(tau, v0);
-	sf_floatread(v0[0],nz*nx,Ftau0);
-	expand2d(tau0, v0);
+	sf_floatread(v0[0],nz*nx,Ftauo);
+	expand2d(tauo, v0);
 	memset(p [0],0,nzpad*nxpad*sizeof(float));
 	memset(r [0],0,nzpad*nxpad*sizeof(float));
 	memset(vx[0],0,nzpad*nxpad*sizeof(float));
@@ -278,7 +277,7 @@ int main(int argc, char* argv[])
 			sf_floatwrite(v0[0],nz*nx,Fpx);
 		}
 		p[sx][sz]+=wlt[it];
-		step_forward(p, r, vz, vx, vv, rho, tau, tau0);
+		step_forward(p, r, vz, vx, vv, rho, tau, tauo);
 		apply_sponge(p, bndr);
 		apply_sponge(r, bndr);
 		apply_sponge(vx, bndr);
@@ -290,7 +289,7 @@ int main(int argc, char* argv[])
 	free(bndr);
 	free(*rho); free(rho);
 	free(*tau); free(tau);
-	free(*tau0); free(tau0);
+	free(*tauo); free(tauo);
 	free(*v0); free(v0);
 	free(*vv); free(vv);
 	free(*p); free(p);
