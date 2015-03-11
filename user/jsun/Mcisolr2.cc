@@ -74,7 +74,7 @@ int main(int argc, char** argv)
     if (os)
       par.get("sub",sub,false); // for onestep, default false
     else
-      par.get("sub",sub,true); // for onestep, default true
+      par.get("sub",sub,true); // for twostep, default true
 
     iRSF vel;
 
