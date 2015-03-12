@@ -35,7 +35,7 @@ int main (int argc, char* argv[])
 {
     fint1 nmo;
     bool half, squared, slow;
-    int ix,ih,it,iv, nt,nx,nw, nh, nh2, CDPtype, mute, *mask, nv, *fold;
+    int ix,ih,it,iv, nt,nx,nw, nh, nh2, m, CDPtype, mute, *mask, nv, *fold;
     float dt, t0, h0,dh,h, dy, str, v0,dv,v;
     float **traces, *trace, *off, *stack;
     double *dstack;
@@ -78,6 +78,7 @@ int main (int argc, char* argv[])
     CDPtype=1;
     if (NULL != sf_getstring("offset")) {
 	offset = sf_input("offset");
+	if (SF_FLOAT != sf_gettype(offset)) sf_error("Need float offset");
 	nh2 = sf_filesize(offset);
 	if (nh2 != nh && nh2 != nh*nx) sf_error("Wrong dimensions in offset");
 
@@ -109,7 +110,12 @@ int main (int argc, char* argv[])
     
     if (NULL != sf_getstring("mask")) {
 	msk = sf_input("mask");
-	mask = sf_intalloc(nh);
+	if (SF_INT != sf_gettype(msk)) sf_error("Need integer mask");
+	nh2 = sf_filesize(msk);
+	if (nh2 != nh && nh2 != nh*nx) sf_error("Wrong dimensions in mask");
+	mask = sf_intalloc(nh2);
+	sf_intread (mask,nh2,msk);
+	sf_fileclose(msk);
     } else {
 	msk = NULL;
 	mask = NULL;
@@ -137,8 +143,6 @@ int main (int argc, char* argv[])
     
     for (ix = 0; ix < nx; ix++) {
 	sf_warning("CMP %d of %d;",ix+1,nx);
-	if (NULL != msk) sf_intread(mask,nh,msk);
-	
 	sf_floatread (traces[0],nt*nh,cmp);
 
 	for (iv=0; iv < nv; iv++) {
@@ -152,7 +156,11 @@ int main (int argc, char* argv[])
 
 	    for (ih = 0; ih < nh; ih++) {
 		/* skip dead traces */
-		if (NULL != msk && 0==mask[ih]) continue;
+		if (NULL != msk) {
+		    m = (nh2 == nh)? mask[ih] + (dh/CDPtype)*(ix%CDPtype) : 
+			mask[ix*nh+ih];	
+		    if (0==m) continue;
+		}
 		
 		for (it=0; it < nt; it++) {
 		    trace[it] = traces[ih][it];
