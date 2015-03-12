@@ -1,0 +1,10 @@
+from rsf.proj import *
+
+Result("imageslice","../fetch/image.rsf",
+	'''
+	sfwindow min1=3 max1=3.004            \
+	| sftransp plane=13                   \
+	| sfgrey gainpanel=a title='waka-3d'
+	''')
+   
+End()
