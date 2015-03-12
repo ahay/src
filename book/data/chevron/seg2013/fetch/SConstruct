@@ -1,0 +1,24 @@
+from rsf.proj import *
+
+gzips = []
+for p in 'abcdefgh':
+    gzip = 'ChevGOMLO.tar.gzip.parta' + p
+    Fetch(gzip,dir='seg_workshop_fwi_long_offset2013',
+          server='http://s3.amazonaws.com',top='open.source.geoscience/open_data')
+    gzips.append(gzip)
+
+files=['all','files']
+Flow(files,
+     gzips,
+     '/bin/cat $SOURCES | tar -xvz',stdin=0,stdout=-1)
+
+#Flow(['SEG14.Pisoelastic.rsf','SEG14.Pisoelastic_hdr.rsf',
+#      'SEG14.Pisoelastic.thdr','SEG14.Pisoelastic.bhdr'],
+#     'SEG14.Pisoelastic.segy',
+#     '''
+#     sfsegyread tfile=${TARGETS[1]} 
+#     hfile=${TARGETS[2]}  bfile=${TARGETS[3]} 
+#     ''')
+
+
+End()
