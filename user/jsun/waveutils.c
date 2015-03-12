@@ -63,13 +63,13 @@ typedef struct Geopar {
   /*switch*/
   int mode;
 } * geopar; 
-/*< geometry parameters >*/
+/*^*/
 
 typedef struct Mpipar {
     int cpuid;
     int numprocs;
 } * mpipar; 
-/*< mpi parameters >*/
+/*^*/
 
 #endif
 

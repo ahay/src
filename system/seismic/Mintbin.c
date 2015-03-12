@@ -4,6 +4,8 @@ If inv=n, the input is 2-D (n1 x ntr). The output is 3-D (n1 x n2 x n3), n2 and
 n3 correspond to two selected keys from the header file. 
 
 If inv=y, the input is 3-D, and the output is 2-D.
+
+if xkey < 0, the first axis indexes traces in a gather like cdpt.
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
@@ -34,7 +36,7 @@ int main (int argc, char* argv[])
 {
     bool inv;
     int id, nk, nd, nt, nx, ny, n2, xkey, ykey, *hdr, *x, *y;
-    int xmin, xmax, ymin, ymax, i, ix, iy, **map, nxy;
+    int xmin, xmax, ymin, ymax, i, ix, iy, **map, nxy, j, jp=0;
     off_t pos;
     char *buf, *zero, *xk, *yk, *header;
     sf_file in, out, head, mask, mapf;
@@ -85,7 +87,7 @@ int main (int argc, char* argv[])
 	ykey = segykey("tracf");
     }
     
-    if (xkey < 0 || xkey >= nk) 
+    if (xkey >= nk) 
 	sf_error("xkey=%d is out of the range [0,%d]",xkey,nk-1);
     if (ykey < 0 || ykey >= nk) 
 	sf_error("ykey=%d is out of the range [0,%d]",ykey,nk-1);
@@ -94,10 +96,19 @@ int main (int argc, char* argv[])
     x = sf_intalloc(nd);
     y = sf_intalloc(nd);
 
-    for (id=0; id<nd; id++) {	
+    for (i=id=0; id<nd; id++) {	
 	sf_intread (hdr,nk,head);
-	x[id] = hdr[xkey];
-	y[id] = hdr[ykey];;
+	j = hdr[ykey];
+	y[id] = j; 
+	if (xkey < 0) { /* index traces in a gather */
+	    if (i > 0 && j != jp) i=0;
+	    x[id] = i;
+	    i++;
+	    jp = j;
+	} else {
+	    i = hdr[xkey];
+	    x[id] = i;
+	}
     }
 
     sf_fileclose (head);

@@ -9,8 +9,6 @@
  * *************************************************************************/
 #include <rsf.h>
 
-#include "_cjb.h"
-
 float Ricker(float t, float f0, float t0, float A) 
 /*< ricker wavelet:
  * f0: peak frequency
