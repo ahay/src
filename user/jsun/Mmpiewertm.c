@@ -28,64 +28,12 @@
 #include <fftw3.h>
 #endif
 
-/*******************************************************/
-/* fft utils */
-static bool _cmplx;
-static int _n1, _n2, _nk;
-static float _weight;
-
-static float **ff=NULL;
-static sf_complex **cc=NULL,*dd=NULL;
-
-#ifdef SF_HAS_FFTW
-static fftwf_plan cfg=NULL, icfg=NULL;
-#else
-static kiss_fftr_cfg cfg, icfg;
-static kiss_fft_cfg cfg1, icfg1, cfg2, icfg2;
-static kiss_fft_cpx **tmp, *ctrace2;
-static sf_complex *trace2;
-#endif
-
-int fft2_init(bool cmplx1        /* if complex transform */,
-	      int pad1           /* padding on the first axis */,
-	      int nx,   int ny   /* input data size */, 
-	      int *nx2, int *ny2 /* padded data size */);
-void fft2(float *inp      /* [_n1*_n2] */, 
-	  sf_complex *out /* [_nk*_n2] */);
-void ifft2_allocate(sf_complex *inp /* [_nk*_n2] */);
-void ifft2(float *out      /* [_n1*_n2] */, 
-	   sf_complex *inp /* [_nk*_n2] */);
-void fft2_finalize();
-
-/* abc utils */
-static int _nx, _nz, _nx2, _nz2, _nbt, _nbb, _nbl, _nbr;
-static float _ct, _cb, _cl, _cr;
-static float *_wt, *_wb, *_wl, *_wr;
-
-void abc_init(int n1,  int n2    /*model size*/,
-	      int n12, int n22   /*padded model size*/,
-	      int nb1, int nb2   /*top, bottom*/,
-	      int nb3, int nb4   /*left, right*/,
-	      float c1, float c2 /*top, bottom*/,
-	      float c3, float c4 /*left, right*/);
-void abc_close(void);
-void abc_apply(float *a /*2-D matrix*/);
-void abc_cal(int abc /* decaying type*/,
-             int nb  /* absorbing layer length*/, 
-             float c /* decaying parameter*/,
-             float* w /* output weight[nb] */);
-
-/* header utils */
-void puthead3(sf_file Fo, int n1, int n2, int n3, float d1, float d2, float d3, float o1, float o2, float o3);
-void puthead3x(sf_file Fo, int n1, int n2, int n3, float d1, float d2, float d3, float o1, float o2, float o3);
-void puthead2(sf_file Fo, int n1, int n2, float d1, float d2, float o1, float o2);
-void puthead2x(sf_file Fo, int n1, int n2, float d1, float d2, float o1, float o2);
-
-/* src utils */
-float Ricker(float t, float f0, float t0, float A);
-
-/* muting */
-int muteni(int nt, int nx, float dt, float dx, float dz, int isx, int isz, int gpz, float vel, int wd, float **dat);
+/*automatically generated headers*/
+#include "muting.h"
+#include "absorb.h"
+#include "fft2w.h"
+#include "puthead.h"
+#include "ricker1.h"
 
 /* wave propagation utils*/
 typedef struct Geopar {
@@ -552,8 +500,8 @@ int main(int argc, char* argv[])
       lrewefor2(rcdz, rcdx, wavepz, wavepx, wavesz, wavesx, geop);
 
       if (mute) {
-	muteni(nt, nx1, dt, dx, dz, isx-nbl, isz-nbt, gpz-nbt, vref, wd, rcdz);
-	muteni(nt, nx1, dt, dx, dz, isx-nbl, isz-nbt, gpz-nbt, vref, wd, rcdx);
+	mutingf(nt, nx1, dt, dx, dz, isx-nbl, isz-nbt, gpz-nbt, vref, wd, rcdz);
+	mutingf(nt, nx1, dt, dx, dz, isx-nbl, isz-nbt, gpz-nbt, vref, wd, rcdx);
       }
     }
 
@@ -728,6 +676,8 @@ int main(int argc, char* argv[])
 }
 
 /*****************************************************************/
+<<<<<<< .mine
+=======
 int fft2_init(bool cmplx1        /* if complex transform */,
 	      int pad1           /* padding on the first axis */,
 	      int nx,   int ny   /* input data size */, 
@@ -1185,6 +1135,7 @@ float Ricker(float t, float f0, float t0, float A)
 }
 
 /*****************************************************************/
+>>>>>>> .r13904
 /* forward modeling operator: generating shot gather */
 int lrewefor2(float **rcdz, float** rcdx, float **upz, float **upx, float **usz, float **usx, geopar geop)
 /*< lowrank 2d elastic forward modeling >*/
@@ -1932,36 +1883,3 @@ int lrewebac2(float *imgpp, float *imgps, float *imgsp, float *imgss, float **rc
   return 0;
 }
 
-int muteni(int nt, int nx, float dt, float dx, float dz, int isx, int isz, int gpz, float vel, int wd, float **dat)
-/*< muting function >*/
-{
-  float z2; /* source location */
-  float tt;
-  int *t;
-  int ix,it,cut;
-
-  t = sf_intalloc(nx);
-
-  z2= powf((isz-gpz)*dz,2);
-
-#ifdef _OPENMP
-#pragma omp parallel for default(shared) private(ix,tt,cut)
-#endif
-  for (ix = 0; ix < nx; ix++) {
-    tt = sqrtf( powf((isx-ix)*dx,2) + z2 ) / vel;
-    cut = (int) (tt/dt) + wd; /* why cannot use int to convert */
-    if (cut > nt) cut = nt;
-    t[ix] = cut;
-  }
-
-#ifdef _OPENMP
-#pragma omp parallel for default(shared) private(ix,it)
-#endif
-  for (ix = 0; ix < nx; ix++) {
-    for (it = 0; it < t[ix]; it ++) {
-      dat[ix][it] = 0.0f;
-    }
-  }
-
-  return 0;
-}
