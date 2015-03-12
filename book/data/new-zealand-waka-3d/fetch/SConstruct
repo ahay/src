@@ -105,11 +105,11 @@ Plot('imagex1213','image',
      ''')
 Result("imageilxl","image1400 imagex1213",'SideBySideAniso')
 
-#Result("imageslice","image",
-#	'''
-#	sfwindow min1=.2 max1=.202            \
-#	| sftransp plane=13                   \
-#	| sfgrey gainpanel=a title='waka-3d'
-#	''')
+Result("imageslice","image",
+	'''
+	sfwindow min1=3 max1=3.004            \
+	| sftransp plane=13                   \
+	| sfgrey gainpanel=a title='waka-3d'
+	''')
    
 End()
