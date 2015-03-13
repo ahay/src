@@ -1,0 +1,5 @@
+from rsf.proj import *
+Flow('headerattr.txt','../fetch/ChevGOMLOshots1601-3201_hdr.rsf',
+     'sfheaderattr > $TARGET && /bin/cat $TARGET',stdout=-1)
+
+End()
