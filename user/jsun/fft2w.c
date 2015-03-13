@@ -243,7 +243,7 @@ void fft2_finalize()
     if (NULL != icfg2) { free(icfg2); icfg2=NULL; }
     if (NULL != tmp) { free(*tmp); free(tmp); tmp=NULL; }
     if (NULL != trace2) { free(trace2); trace2=NULL; }
-    if (NULL != ctrace2) { ctrace2=NULL; }
+    if (NULL != ctrace2) { free(ctrace2); ctrace2=NULL; }
 #endif
     if (cmplx) {
       if (NULL != cc) { free(*cc); free(cc); cc=NULL; }

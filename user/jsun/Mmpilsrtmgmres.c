@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
     int nx, nz;
     int nxb, nzb;
     float dx, dz, ox, oz;
-    int spx, spz, gpz, gpx, gpl; /*source/geophone location*/
+    int spz, gpz, gpl; /*source/geophone location*/
     int snpint;
     int top, bot, lft, rht; /*abc boundary*/
     int nt;
@@ -465,10 +465,13 @@ int psrtm(sf_complex*** record, sf_complex** imgsum, geopar geop)
     /* passing variables */
     nx = geop->nx; nz = geop->nz;
     nxb = geop->nxb; nzb = geop->nzb;
+    /*spx = geop->spx;*/
+    spz = geop->spz;
+    gpz = geop->gpz; 
+    /*gpx = geop->gpx;*/
+    gpl = geop->gpl;
     dx = geop->dx; dz = geop->dz; ox = geop->ox; oz = geop->oz; /*not acutally used*/
     snpint = geop->snpint;
-    spx = geop->spx; spz = geop->spz; /*not acutally used*/
-    gpz = geop->gpz; gpx = geop->gpx; gpl = geop->gpl;
     top = geop->top; bot = geop->bot; lft = geop->lft; rht = geop->rht;
     nt = geop->nt;
     dt = geop->dt;

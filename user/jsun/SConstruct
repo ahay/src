@@ -7,9 +7,11 @@ progs = 'fftwave1dd cfftwave1dd cfftwave1in fftwave2p fftwave3p cfftwave2 cfftwa
 # cfftwave2dhalfft
 # icfftwave2 cfftwave1dtest cfftwave2test
 # cfftwave1dinit cfftwave2nspstest
+# lriso2de lrelasiso
 # cfftwave2tt lasthope cfftwave2one waveadjtest cfftwave2abc fftwave2abc
+# icfftwave2 cfftwave1dtest
 
-ccprogs = 'tilr2 ortholr3 cortholr3 cisolr2 cisolr2rev cisolr3 ctilr2 cisolr2grad cisolr2abc cisolr2abc1 cisolr1 canisolr2 canisolr2abc fraclr2 fraclr2test tilrzone ortholrzone'
+ccprogs = 'tilr2 ortholr3 cortholr3 cisolr2 cisolr2rev cisolr3 ctilr2 cisolr2grad cisolr2abc cisolr2abc1 cisolr1 canisolr2 canisolr2abc fraclr2 fraclr2test tilrzone ortholrzone zortholr3 zanisolr2 zanisolr2abc'
 # abclr2 isolr2sta isolr2abc  cfraclr2
 # eiktest eiktest2 cisolr1eik eiksol cfraclr2 rfraclr2 cisolr2twostep
 # cisolr2hyb icisolr2

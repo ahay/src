@@ -1,5 +1,5 @@
-// Complex lowrank decomposition for 2-D isotropic wave propagation. 
-//   Copyright (C) 2010 University of Texas at Austin
+// Complex lowrank decomposition for 2-D viscoacoustic isotropic wave propagation. 
+//   Copyright (C) 2014 University of Texas at Austin
 //  
 //   This program is free software; you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ static float ct,cb,cl,cr;
 static int nkzs,nkxs,nz,nx,nbt,nbb,nbl,nbr;
 static float dt,w0,gama;
 static bool rev,compen,avg;
-static int mode,sign;
+static int mode,sign,abc;
 
 int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
 {
@@ -104,14 +104,25 @@ int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
 		phf = cpx(cosf(phase),sinf(phase)); 
 	    }
 	    /* absorbing boundary */
-	    if (iz < nbt)
+            if (abc==0) {
+              if (iz < nbt)
 		phf *= exp(-powf(ct*(nbt-iz)*abs(ksz[ikz]/hypk),2));
-	    else if (iz > nz-1-nbb)
+              else if (iz > nz-1-nbb)
 		phf *= exp(-powf(cb*(iz-nz+1+nbb)*abs(ksz[ikz]/hypk),2));
-	    if (ix < nbl)
+              if (ix < nbl)
 		phf *= exp(-powf(cl*(nbl-ix)*abs(ksx[ikx]/hypk),2));
-	    else if (ix > nx-1-nbr)
+              else if (ix > nx-1-nbr)
 		phf *= exp(-powf(cr*(ix-nx+1+nbr)*abs(ksx[ikx]/hypk),2));
+            } else {
+              if (iz < nbt)
+		phf *= exp(-powf(ct*(nbt-iz),2));
+              else if (iz > nz-1-nbb)
+		phf *= exp(-powf(cb*(iz-nz+1+nbb),2));
+              if (ix < nbl)
+		phf *= exp(-powf(cl*(nbl-ix),2));
+              else if (ix > nx-1-nbr)
+		phf *= exp(-powf(cr*(ix-nx+1+nbr),2));
+            }
 	    res(a,b) = (rev) ? conj(phf) : phf;
 	}
     }
@@ -179,6 +190,8 @@ int main(int argc, char** argv)
 	sf_warning("Gamma_avg = %f",gama);
     }
     
+    par.get("abc",abc,0); /*absorbing mode: 0-> direction dependent; 1-> direction independent.*/
+
     par.get("nbt",nbt,0);
     par.get("nbb",nbb,0);
     par.get("nbl",nbl,0);

@@ -39,23 +39,7 @@ void puthead1(sf_file Fo, int n1, int n2, float d1, float o1, float d2, float o2
         sf_putstring(Fo,"unit2","2*pi/m");
 }
 
-void puthead2(sf_file Fo, int n1, int n2, float d1, float o1, float d2, float o2)
-/*<  put head for (x,z) domain float-type data sets>*/
-{
-        /* Read/Write axes */
-        sf_putint(Fo,"n1",n1);
-        sf_putint(Fo,"n2",n2);
-        sf_putfloat(Fo,"d1",d1);
-        sf_putfloat(Fo,"o1",o1);
-        sf_putfloat(Fo,"d2",d2);
-        sf_putfloat(Fo,"o2",o2);
-        sf_putstring(Fo,"label1","z");
-        sf_putstring(Fo,"label2","x");
-        sf_putstring(Fo,"unit1","km");
-        sf_putstring(Fo,"unit2","km");
-}
-
-void puthead2x(sf_file Fo, int n1, int n2, float d1, float d2, float o1, float o2)
+void puthead2(sf_file Fo, int n1, int n2, float d1, float d2, float o1, float o2)
 /*<  put head for (x,z) domain float-type 2D data sets>*/
 {
         /* Read/Write axes */
@@ -67,8 +51,24 @@ void puthead2x(sf_file Fo, int n1, int n2, float d1, float d2, float o1, float o
         sf_putfloat(Fo,"o2",o2);
         sf_putstring(Fo,"label1","z");
         sf_putstring(Fo,"label2","x");
-        sf_putstring(Fo,"unit1","km");
-        sf_putstring(Fo,"unit2","km");
+        sf_putstring(Fo,"unit1","m");
+        sf_putstring(Fo,"unit2","m");
+}
+
+void puthead2x(sf_file Fo, int n1, int n2, float d1, float d2, float o1, float o2)
+/*<  put head for (x,t) domain float-type 2D data sets>*/
+{
+        /* Read/Write axes */
+        sf_putint(Fo,"n1",n1);
+        sf_putint(Fo,"n2",n2);
+        sf_putfloat(Fo,"d1",d1);
+        sf_putfloat(Fo,"d2",d2);
+        sf_putfloat(Fo,"o1",o1);
+        sf_putfloat(Fo,"o2",o2);
+        sf_putstring(Fo,"label1","t");
+        sf_putstring(Fo,"label2","x");
+        sf_putstring(Fo,"unit1","second");
+        sf_putstring(Fo,"unit2","m");
 }
 
 void puthead2kx(sf_file Fo, int n1, int n2, float d1, float d2, float o1, float o2)
@@ -88,7 +88,7 @@ void puthead2kx(sf_file Fo, int n1, int n2, float d1, float d2, float o1, float 
 }
 
 void puthead3(sf_file Fo, int n1, int n2, int n3, float d1, float d2, float d3, float o1, float o2, float o3)
-/*<  put head for (x,z,t) domain float-type 3D data sets>*/
+/*<  put head for (z,x,t) domain float-type 3D data sets>*/
 {
         /* Read/Write axes */
         sf_putint(Fo,"n1",n1);
@@ -103,13 +103,13 @@ void puthead3(sf_file Fo, int n1, int n2, int n3, float d1, float d2, float d3, 
         sf_putstring(Fo,"label1","z");
         sf_putstring(Fo,"label2","x");
         sf_putstring(Fo,"label3","t");
-        sf_putstring(Fo,"unit1","km");
-        sf_putstring(Fo,"unit2","km");
+        sf_putstring(Fo,"unit1","m");
+        sf_putstring(Fo,"unit2","m");
         sf_putstring(Fo,"unit3","second");
 }
 
 void puthead3x(sf_file Fo, int n1, int n2, int n3, float d1, float d2, float d3, float o1, float o2, float o3)
-/*<  put head for (y,x,z) domain float-type 3D data sets>*/
+/*<  put head for (t,x,s) shot gather cubes  >*/
 {
         /* Read/Write axes */
         sf_putint(Fo,"n1",n1);
@@ -121,12 +121,12 @@ void puthead3x(sf_file Fo, int n1, int n2, int n3, float d1, float d2, float d3,
         sf_putfloat(Fo,"o1",o1);
         sf_putfloat(Fo,"o2",o2);
         sf_putfloat(Fo,"o3",o3);
-        sf_putstring(Fo,"label1","z");
+        sf_putstring(Fo,"label1","t");
         sf_putstring(Fo,"label2","x");
-        sf_putstring(Fo,"label3","y");
-        sf_putstring(Fo,"unit1","km");
-        sf_putstring(Fo,"unit2","km");
-        sf_putstring(Fo,"unit3","km");
+        sf_putstring(Fo,"label3","shot");
+        sf_putstring(Fo,"unit1","second");
+        sf_putstring(Fo,"unit2","m");
+        sf_putstring(Fo,"unit3","m");
 }
 
 void puthead3kx(sf_file Fo, int n1, int n2, int n3, float d1, float d2, float d3, float o1, float o2, float o3)

@@ -1,4 +1,4 @@
-/*multiply, for Matrix */
+/*multiply, for complex Matrix */
 
 /*
   Copyright (C) 2004 University of Texas at Austin

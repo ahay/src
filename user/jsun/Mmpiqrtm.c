@@ -34,7 +34,8 @@
 #include "waveutils.h"
 
 int psrtm(sf_complex*** record, sf_complex** imgsum, geopar geop);
-int psqrtm_sbs(sf_complex*** record, sf_complex** imgsum, geopar geop, bool sdiv, float eps, int niter, int *rect);
+int psrtm_mov(sf_complex*** record, sf_complex** imgsum, geopar geop, sf_file Ftmpwf, sf_file Ftmpwfb);
+int psqrtm_sbs(sf_complex*** record, sf_complex** imgsum, geopar geop, bool sdiv, float eps, int niter, int *rect, float max);
 int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool sdiv, float eps, int niter, int *rect, float max, sf_file Ftmpwf, sf_file Ftmpwfb);
 int psqrtm_dec(sf_complex*** record, sf_complex** imgsum, geopar geop);
 
@@ -49,7 +50,7 @@ int main(int argc, char* argv[])
     int nx, nz;
     int nxb, nzb;
     float dx, dz, ox, oz;
-    int spx, spz, gpz, gpx, gpl; /*source/geophone location*/
+    int spz, gpz, gpl; /*source/geophone location*/
     int snpint;
     int top, bot, lft, rht; /*abc boundary*/
     int nt;
@@ -83,7 +84,8 @@ int main(int argc, char* argv[])
 
     /*Data/Image*/
     sf_complex ***record, **imgsum;
-    float *img_visc, *img_disp, *ratio;
+    float *img_visc1, *img_disp1, *ratio1;
+    float *img_visc2, *img_disp2, *ratio2;
     int dims[2], rect[2];
 
     /*tmp*/
@@ -234,13 +236,19 @@ int main(int argc, char* argv[])
       record = NULL;
     }
     if (adj && stable==1) {
-      img_visc = sf_floatalloc(nz*nx);
-      img_disp = sf_floatalloc(nz*nx);
-      ratio = sf_floatalloc(nz*nx);
+      img_visc1 = sf_floatalloc(nz*nx);
+      img_visc2 = sf_floatalloc(nz*nx);
+      img_disp1 = sf_floatalloc(nz*nx);
+      img_disp2 = sf_floatalloc(nz*nx);
+      ratio1 = sf_floatalloc(nz*nx);
+      ratio2 = sf_floatalloc(nz*nx);
     } else {
-      img_visc = NULL;
-      img_disp = NULL;
-      ratio = NULL;
+      img_visc1 = NULL;
+      img_visc2 = NULL;
+      img_disp1 = NULL;
+      img_disp2 = NULL;
+      ratio1 = NULL;
+      ratio2 = NULL;
     }
 
     /*read from files*/
@@ -399,7 +407,10 @@ int main(int argc, char* argv[])
       switch (stable) {
       case 0:
 	/*conventional imaging condition*/
-	psrtm(record, imgsum, geop);
+        if (NULL == Ftmpwf && NULL == Ftmpwfb)
+          psrtm(record, imgsum, geop);
+        else
+          psrtm_mov(record, imgsum, geop, Ftmpwf, Ftmpwfb);
 	break;
 
       case 1:
@@ -410,9 +421,12 @@ int main(int argc, char* argv[])
 #ifdef _OPENMP
 #pragma omp parallel for private(ix,iz)
 #endif
-	for (ix=0; ix<nx; ix++)
-	  for (iz=0; iz<nz; iz++)
-	    img_visc[iz+ix*nz] = sf_cabs(imgsum[ix][iz]);
+	for (ix=0; ix<nx; ix++) {
+	  for (iz=0; iz<nz; iz++) {
+	    img_visc1[iz+ix*nz] = fabsf(crealf(imgsum[ix][iz]));
+	    img_visc2[iz+ix*nz] = fabsf(cimagf(imgsum[ix][iz]));
+          }
+        }
 
 	geop->mode = 1;
 	psrtm(record, imgsum, geop);
@@ -420,22 +434,22 @@ int main(int argc, char* argv[])
 #ifdef _OPENMP
 #pragma omp parallel for private(ix,iz)
 #endif
-	for (ix=0; ix<nx; ix++)
-	  for (iz=0; iz<nz; iz++)
-	    img_disp[iz+ix*nz] = sf_cabs(imgsum[ix][iz]);
+	for (ix=0; ix<nx; ix++) {
+	  for (iz=0; iz<nz; iz++) {
+	    img_disp1[iz+ix*nz] = fabsf(crealf(imgsum[ix][iz]));
+	    img_disp2[iz+ix*nz] = fabsf(cimagf(imgsum[ix][iz]));
+          }
+        }
 
 	if (sdiv) {
 	  /*smooth division*/
 	  dims[0] = nz; dims[1] = nx;
 	  sf_divn_init(2, nx*nz, dims, rect, niter, verb);
-	  sf_divne (img_disp, img_visc, ratio, eps);
+	  sf_divne (img_disp1, img_visc1, ratio1, eps);
+	  sf_divne (img_disp2, img_visc2, ratio2, eps);
 	} else {
-#ifdef _OPENMP
-#pragma omp parallel for private(ix,iz)
-#endif
-	  for (ix=0; ix<nx; ix++)
-	    for (iz=0; iz<nz; iz++)
-	      ratio[iz+ix*nz] = img_disp[iz+ix*nz]/(img_visc[iz+ix*nz] + eps);
+          stable_div(nx*nz, img_disp1, img_visc1, ratio1, eps, max);
+          stable_div(nx*nz, img_disp2, img_visc2, ratio2, eps, max);
 	}
 	  
 	/*apply stable imaging condition*/
@@ -444,18 +458,14 @@ int main(int argc, char* argv[])
 #endif
 	for (ix=0; ix<nx; ix++) {
 	  for (iz=0; iz<nz; iz++) {
-#ifdef SF_HAS_COMPLEX_H
-	    imgsum[ix][iz] = imgsum[ix][iz]*ratio[iz+ix*nz];
-#else
-	    imgsum[ix][iz] = sf_crmul(imgsum[ix][iz],ratio[iz+ix*nz]);
-#endif
+            imgsum[ix][iz] = sf_cmplx(crealf(imgsum[ix][iz])*ratio1[iz+ix*nz],cimagf(imgsum[ix][iz])*ratio2[iz+ix*nz]);
 	  }
 	}
 	break;
 	
       case 2: 
 	/*shot-by-shot q-rtm with normalization*/
-	psqrtm_sbs(record, imgsum, geop, sdiv, eps, niter, rect);
+	psqrtm_sbs(record, imgsum, geop, sdiv, eps, niter, rect, max);
 	break;
 
       case 3:
@@ -480,7 +490,7 @@ int main(int argc, char* argv[])
     if (cpuid==0) {
       if (adj) {
 	sf_complexwrite(imgsum[0], nx*nz, Fimg);
-	if (NULL != Fnorm) sf_floatwrite(ratio, nx*nz, Fnorm);
+	if (NULL != Fnorm) sf_floatwrite(ratio1, nx*nz, Fnorm);
       } else {
 	sf_complexwrite(record[0][0], shtnum0*gpl*nt, Frcd);
       }
@@ -494,7 +504,10 @@ int main(int argc, char* argv[])
     free(*ltb); free(ltb);
     free(*rtb); free(rtb);
     free(*imgsum); free(imgsum);
-    if (adj && stable==1) { free(img_visc); free(img_disp); free(ratio); }
+    if (adj && stable==1) { 
+      free(img_visc1); free(img_disp1); free(ratio1);
+      free(img_visc2); free(img_disp2); free(ratio2);
+    }
     if (cpuid==0) {
       free(**record); free(*record); free(record);
     }
@@ -534,7 +547,7 @@ int psrtm(sf_complex*** record, sf_complex** imgsum, geopar geop)
     float **sill;
 
     /*misc*/
-    int ix, iz, it, is;
+    int ix, iz, is;
     int wfnt;
     float wfdt;
 
@@ -548,10 +561,13 @@ int psrtm(sf_complex*** record, sf_complex** imgsum, geopar geop)
     /* passing variables */
     nx = geop->nx; nz = geop->nz;
     nxb = geop->nxb; nzb = geop->nzb;
+    /*spx = geop->spx;*/
+    spz = geop->spz;
+    gpz = geop->gpz;
+    /*gpx = geop->gpx;*/
+    gpl = geop->gpl;
     dx = geop->dx; dz = geop->dz; ox = geop->ox; oz = geop->oz; /*not acutally used*/
     snpint = geop->snpint;
-    spx = geop->spx; spz = geop->spz; /*not acutally used*/
-    gpz = geop->gpz; gpx = geop->gpx; gpl = geop->gpl;
     top = geop->top; bot = geop->bot; lft = geop->lft; rht = geop->rht;
     nt = geop->nt;
     dt = geop->dt;
@@ -698,7 +714,7 @@ int psrtm(sf_complex*** record, sf_complex** imgsum, geopar geop)
     return 0;
 }
 
-int psqrtm_sbs(sf_complex*** record, sf_complex** imgsum, geopar geop, bool sdiv, float eps, int niter, int *rect)
+int psqrtm_sbs(sf_complex*** record, sf_complex** imgsum, geopar geop, bool sdiv, float eps, int niter, int *rect, float max)
 /*< low-rank one-step pre-stack RTM linear operator >*/
 {
     /*geopar variables*/
@@ -729,11 +745,12 @@ int psqrtm_sbs(sf_complex*** record, sf_complex** imgsum, geopar geop, bool sdiv
     float **sill;
     
     /*normolization*/
-    float *img_visc, *img_disp, *ratio;
+    float *img_visc1, *img_disp1, *ratio1;
+    float *img_visc2, *img_disp2, *ratio2;
     int dims[2];
 
     /*misc*/
-    int ix, iz, it, is;
+    int ix, iz, is;
     int wfnt;
     float wfdt;
 
@@ -747,10 +764,13 @@ int psqrtm_sbs(sf_complex*** record, sf_complex** imgsum, geopar geop, bool sdiv
     /* passing variables */
     nx = geop->nx; nz = geop->nz;
     nxb = geop->nxb; nzb = geop->nzb;
+    /*spx = geop->spx;*/
+    spz = geop->spz;
+    gpz = geop->gpz;
+    /*gpx = geop->gpx;*/
+    gpl = geop->gpl;
     dx = geop->dx; dz = geop->dz; ox = geop->ox; oz = geop->oz; /*not acutally used*/
     snpint = geop->snpint;
-    spx = geop->spx; spz = geop->spz; /*not acutally used*/
-    gpz = geop->gpz; gpx = geop->gpx; gpl = geop->gpl;
     top = geop->top; bot = geop->bot; lft = geop->lft; rht = geop->rht;
     nt = geop->nt;
     dt = geop->dt;
@@ -781,9 +801,12 @@ int psqrtm_sbs(sf_complex*** record, sf_complex** imgsum, geopar geop, bool sdiv
     else sill = NULL;
     img = sf_complexalloc2(nz, nx);
     rec = sf_complexalloc2(nt, gpl);
-    img_visc = sf_floatalloc(nz*nx);
-    img_disp = sf_floatalloc(nz*nx);
-    ratio = sf_floatalloc(nz*nx);
+    img_visc1 = sf_floatalloc(nz*nx);
+    img_visc2 = sf_floatalloc(nz*nx);
+    img_disp1 = sf_floatalloc(nz*nx);
+    img_disp2 = sf_floatalloc(nz*nx);
+    ratio1 = sf_floatalloc(nz*nx);
+    ratio2 = sf_floatalloc(nz*nx);
 #ifdef _OPENMP
 #pragma omp parallel for private(ix,iz)
 #endif
@@ -842,9 +865,12 @@ int psqrtm_sbs(sf_complex*** record, sf_complex** imgsum, geopar geop, bool sdiv
 #ifdef _OPENMP
 #pragma omp parallel for private(ix,iz)
 #endif
-	for (ix=0; ix<nx; ix++)
-	  for (iz=0; iz<nz; iz++)
-	    img_visc[iz+ix*nz] = sf_cabs(img[ix][iz]);
+	for (ix=0; ix<nx; ix++) {
+	  for (iz=0; iz<nz; iz++) {
+	    img_visc1[iz+ix*nz] = fabsf(crealf(img[ix][iz]));
+	    img_visc2[iz+ix*nz] = fabsf(cimagf(img[ix][iz]));
+          }
+        }
 
 	geop->mode = 1; /*preceding the user specification -> dispersion-only*/
 	lrosfor2(wvfld, sill, tmprec, geop);
@@ -854,23 +880,23 @@ int psqrtm_sbs(sf_complex*** record, sf_complex** imgsum, geopar geop, bool sdiv
 #ifdef _OPENMP
 #pragma omp parallel for private(ix,iz)
 #endif
-	for (ix=0; ix<nx; ix++)
-	  for (iz=0; iz<nz; iz++)
-	    img_disp[iz+ix*nz] = sf_cabs(img[ix][iz]);
+	for (ix=0; ix<nx; ix++) {
+	  for (iz=0; iz<nz; iz++) {
+	    img_disp1[iz+ix*nz] = fabsf(crealf(img[ix][iz]));
+	    img_disp2[iz+ix*nz] = fabsf(cimagf(img[ix][iz]));
+          }
+        }
 
 	if (sdiv) {
 	  /*smooth division*/
 	  dims[0] = nz; dims[1] = nx;
 	  sf_divn_init(2, nx*nz, dims, rect, niter, verb);
-	  sf_divne (img_disp, img_visc, ratio, eps);
+	  sf_divne (img_disp1, img_visc1, ratio1, eps);
+	  sf_divne (img_disp2, img_visc2, ratio2, eps);
 	} else {
-#ifdef _OPENMP
-#pragma omp parallel for private(ix,iz)
-#endif
-	  for (ix=0; ix<nx; ix++)
-	    for (iz=0; iz<nz; iz++)
-	      ratio[iz+ix*nz] = img_disp[iz+ix*nz]/(img_visc[iz+ix*nz] + eps);
-	}
+          stable_div(nx*nz, img_disp1, img_visc1, ratio1, eps, max);
+          stable_div(nx*nz, img_disp2, img_visc2, ratio2, eps, max);
+        }
 	  
 	/*apply stable imaging condition*/
 #ifdef _OPENMP
@@ -878,11 +904,7 @@ int psqrtm_sbs(sf_complex*** record, sf_complex** imgsum, geopar geop, bool sdiv
 #endif
 	for (ix=0; ix<nx; ix++) {
 	  for (iz=0; iz<nz; iz++) {
-#ifdef SF_HAS_COMPLEX_H
-	    img[ix][iz] = img[ix][iz]*ratio[iz+ix*nz];
-#else
-	    img[ix][iz] = sf_crmul(img[ix][iz],ratio[iz+ix*nz]);
-#endif
+            img[ix][iz] = sf_cmplx(crealf(img[ix][iz])*ratio1[iz+ix*nz],cimagf(img[ix][iz])*ratio2[iz+ix*nz]);
 	  }
 	}
 
@@ -924,7 +946,8 @@ int psqrtm_sbs(sf_complex*** record, sf_complex** imgsum, geopar geop, bool sdiv
     free(*tmprec); free(tmprec);
     free(*rec); free(rec);
     free(*img); free(img);
-    free(img_visc); free(img_disp); free(ratio);
+    free(img_visc1); free(img_disp1); free(ratio1);
+    free(img_visc2); free(img_disp2); free(ratio2);
     if (illum) { free(*sill); free(sill);}
 
     return 0;
@@ -961,7 +984,8 @@ int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool sdiv
     float **sill;
     
     /*normolization*/
-    float *wvfld_visc, *wvfld_disp, *ratio, rat;
+    float *wvfld_visc1, *wvfld_disp1, *ratio1;
+    float *wvfld_visc2, *wvfld_disp2, *ratio2;
     int dims[3],rect1[3];
 
     /*misc*/
@@ -979,10 +1003,13 @@ int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool sdiv
     /* passing variables */
     nx = geop->nx; nz = geop->nz;
     nxb = geop->nxb; nzb = geop->nzb;
+    /*spx = geop->spx;*/
+    spz = geop->spz;
+    gpz = geop->gpz;
+    /*gpx = geop->gpx;*/
+    gpl = geop->gpl;
     dx = geop->dx; dz = geop->dz; ox = geop->ox; oz = geop->oz; /*not acutally used*/
     snpint = geop->snpint;
-    spx = geop->spx; spz = geop->spz; /*not acutally used*/
-    gpz = geop->gpz; gpx = geop->gpx; gpl = geop->gpl;
     top = geop->top; bot = geop->bot; lft = geop->lft; rht = geop->rht;
     nt = geop->nt;
     dt = geop->dt;
@@ -1014,9 +1041,12 @@ int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool sdiv
     else sill = NULL;
     img = sf_complexalloc2(nz, nx);
     rec = sf_complexalloc2(nt, gpl);
-    wvfld_visc = sf_floatalloc(nz*nx*wfnt);
-    wvfld_disp = sf_floatalloc(nz*nx*wfnt);
-    ratio = sf_floatalloc(nz*nx*wfnt);
+    wvfld_visc1 = sf_floatalloc(nz*nx*wfnt);
+    wvfld_visc2 = sf_floatalloc(nz*nx*wfnt);
+    wvfld_disp1 = sf_floatalloc(nz*nx*wfnt);
+    wvfld_disp2 = sf_floatalloc(nz*nx*wfnt);
+    ratio1 = sf_floatalloc(nz*nx*wfnt);
+    ratio2 = sf_floatalloc(nz*nx*wfnt);
 #ifdef _OPENMP
 #pragma omp parallel for private(ix,iz)
 #endif
@@ -1074,10 +1104,14 @@ int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool sdiv
 #ifdef _OPENMP
 #pragma omp parallel for private(ix,iz,it)
 #endif
-	for (it=0; it<wfnt; it++)
-	  for (ix=0; ix<nx; ix++)
-	    for (iz=0; iz<nz; iz++)
-	      wvfld_visc[iz+ix*nz+it*nx*nz] = sf_cabs(wvfld[it][ix][iz]);
+	for (it=0; it<wfnt; it++) {
+	  for (ix=0; ix<nx; ix++) {
+	    for (iz=0; iz<nz; iz++){
+	      wvfld_visc1[iz+ix*nz+it*nx*nz] = fabsf(crealf(wvfld[it][ix][iz]));
+	      wvfld_visc2[iz+ix*nz+it*nx*nz] = fabsf(cimagf(wvfld[it][ix][iz]));
+            }
+          }
+        }
 
 	geop->mode = 1; /*preceding the user specification -> dispersion-only*/
 	if (illum) { /*illumination by source wavefield*/
@@ -1089,35 +1123,26 @@ int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool sdiv
 #ifdef _OPENMP
 #pragma omp parallel for private(ix,iz,it)
 #endif
-	for (it=0; it<wfnt; it++)
-	  for (ix=0; ix<nx; ix++)
-	    for (iz=0; iz<nz; iz++)
-	      wvfld_disp[iz+ix*nz+it*nx*nz] = sf_cabs(wvfld[it][ix][iz]);
+	for (it=0; it<wfnt; it++) {
+	  for (ix=0; ix<nx; ix++) {
+	    for (iz=0; iz<nz; iz++) {
+	      wvfld_disp1[iz+ix*nz+it*nx*nz] = fabsf(crealf(wvfld[it][ix][iz]));
+	      wvfld_disp2[iz+ix*nz+it*nx*nz] = fabsf(cimagf(wvfld[it][ix][iz]));
+            }
+          }
+        }
 
 	if (sdiv) {
 	  /*smooth division*/
 	  dims[0] = nz; dims[1] = nx; dims[2] = wfnt;
 	  rect1[0] = rect[0]; rect1[1] = rect[1]; rect1[2] = 1;
 	  sf_divn_init(3, wfnt*nx*nz, dims, rect1, niter, verb);
-	  sf_divne (wvfld_disp, wvfld_visc, ratio, eps);
+	  sf_divne (wvfld_disp1, wvfld_visc1, ratio1, eps);
+	  sf_divne (wvfld_disp2, wvfld_visc2, ratio2, eps);
 	} else {
-#ifdef _OPENMP
-#pragma omp parallel for private(ix,iz,it)
-#endif
-	  for (it=0; it<wfnt; it++) {
-	    for (ix=0; ix<nx; ix++) {
-	      for (iz=0; iz<nz; iz++) {
-		if (wvfld_visc[iz+ix*nz+it*nx*nz] == 0)
-		  rat = 1.f;
-		else if (wvfld_visc[iz+ix*nz+it*nx*nz] >= wvfld_disp[iz+ix*nz+it*nx*nz])
-		  rat = 1.f;
-		else
-		  rat = wvfld_disp[iz+ix*nz+it*nx*nz]/(wvfld_visc[iz+ix*nz+it*nx*nz] + wvfld_disp[iz+ix*nz+it*nx*nz]/max + eps);
-		ratio[iz+ix*nz+it*nx*nz] = rat;
-	      }
-	    }
-	  }
-	}
+          stable_div(wfnt*nx*nz, wvfld_disp1, wvfld_visc1, ratio1, eps, max);
+          stable_div(wfnt*nx*nz, wvfld_disp2, wvfld_visc2, ratio2, eps, max);
+        }
 
 	/*scaling the source wavefield*/
 #ifdef _OPENMP
@@ -1126,11 +1151,7 @@ int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool sdiv
 	for (it=0; it<wfnt; it++) {
 	  for (ix=0; ix<nx; ix++) {
 	    for (iz=0; iz<nz; iz++) {
-#ifdef SF_HAS_COMPLEX_H
-	      wvfld[it][ix][iz] = wvfld[it][ix][iz]*ratio[iz+ix*nz+it*nx*nz];
-#else
-	      wvfld[it][ix][iz] = sf_crmul(wvfld[it][ix][iz],ratio[iz+ix*nz+it*nx*nz]);
-#endif
+              wvfld[it][ix][iz] = sf_cmplx(crealf(wvfld[it][ix][iz])*ratio1[iz+ix*nz+it*nx*nz],cimagf(wvfld[it][ix][iz])*ratio2[iz+ix*nz+it*nx*nz]);
 	    }
 	  }
 	}
@@ -1142,10 +1163,14 @@ int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool sdiv
 #ifdef _OPENMP
 #pragma omp parallel for private(ix,iz,it)
 #endif
-	for (it=0; it<wfnt; it++)
-	  for (ix=0; ix<nx; ix++)
-	    for (iz=0; iz<nz; iz++)
-	      wvfld_visc[iz+ix*nz+it*nx*nz] = sf_cabs(wvfld_b[it][ix][iz]);
+	for (it=0; it<wfnt; it++) {
+	  for (ix=0; ix<nx; ix++) {
+	    for (iz=0; iz<nz; iz++){
+	      wvfld_visc1[iz+ix*nz+it*nx*nz] = fabsf(crealf(wvfld_b[it][ix][iz]));
+	      wvfld_visc2[iz+ix*nz+it*nx*nz] = fabsf(cimagf(wvfld_b[it][ix][iz]));
+            }
+          }
+        }
 
 	geop->mode = 1; /*preceding the user specification -> dispersion-only*/
 	lrosback2q(wvfld_b, rec, geop);
@@ -1153,35 +1178,26 @@ int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool sdiv
 #ifdef _OPENMP
 #pragma omp parallel for private(ix,iz,it)
 #endif
-	for (it=0; it<wfnt; it++)
-	  for (ix=0; ix<nx; ix++)
-	    for (iz=0; iz<nz; iz++)
-	      wvfld_disp[iz+ix*nz+it*nx*nz] = sf_cabs(wvfld_b[it][ix][iz]);
+	for (it=0; it<wfnt; it++) {
+	  for (ix=0; ix<nx; ix++) {
+	    for (iz=0; iz<nz; iz++) {
+	      wvfld_disp1[iz+ix*nz+it*nx*nz] = fabsf(crealf(wvfld_b[it][ix][iz]));
+	      wvfld_disp2[iz+ix*nz+it*nx*nz] = fabsf(cimagf(wvfld_b[it][ix][iz]));
+            }
+          }
+        }
 
 	if (sdiv) {
 	  /*smooth division*/
 	  dims[0] = nz; dims[1] = nx; dims[2] = wfnt;
 	  rect1[0] = rect[0]; rect1[1] = rect[1]; rect1[2] = 1;
 	  sf_divn_init(3, wfnt*nx*nz, dims, rect1, niter, verb);
-	  sf_divne (wvfld_disp, wvfld_visc, ratio, eps);
+	  sf_divne (wvfld_disp1, wvfld_visc1, ratio1, eps);
+	  sf_divne (wvfld_disp2, wvfld_visc2, ratio2, eps);
 	} else {
-#ifdef _OPENMP
-#pragma omp parallel for private(ix,iz,it)
-#endif
-	  for (it=0; it<wfnt; it++) {
-	    for (ix=0; ix<nx; ix++) {
-	      for (iz=0; iz<nz; iz++) {
-		if (wvfld_visc[iz+ix*nz+it*nx*nz] == 0)
-		  rat = 1.f;
-		else if (wvfld_visc[iz+ix*nz+it*nx*nz] >= wvfld_disp[iz+ix*nz+it*nx*nz])
-		  rat = 1.f;
-		else
-		  rat = wvfld_disp[iz+ix*nz+it*nx*nz]/(wvfld_visc[iz+ix*nz+it*nx*nz] + wvfld_disp[iz+ix*nz+it*nx*nz]/max + eps);
-		ratio[iz+ix*nz+it*nx*nz] = rat;
-	      }
-	    }
-	  }
-	}
+          stable_div(wfnt*nx*nz, wvfld_disp1, wvfld_visc1, ratio1, eps, max);
+          stable_div(wfnt*nx*nz, wvfld_disp2, wvfld_visc2, ratio2, eps, max);
+        }
 
 	/*scaling the receiver wavefield*/
 #ifdef _OPENMP
@@ -1190,11 +1206,7 @@ int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool sdiv
 	for (it=0; it<wfnt; it++) {
 	  for (ix=0; ix<nx; ix++) {
 	    for (iz=0; iz<nz; iz++) {
-#ifdef SF_HAS_COMPLEX_H
-	      wvfld_b[it][ix][iz] = wvfld_b[it][ix][iz]*ratio[iz+ix*nz+it*nx*nz];
-#else
-	      wvfld_b[it][ix][iz] = sf_crmul(wvfld_b[it][ix][iz],ratio[iz+ix*nz+it*nx*nz]);
-#endif
+              wvfld_b[it][ix][iz] = sf_cmplx(crealf(wvfld_b[it][ix][iz])*ratio1[iz+ix*nz+it*nx*nz],cimagf(wvfld_b[it][ix][iz])*ratio2[iz+ix*nz+it*nx*nz]);
 	    }
 	  }
 	}
@@ -1246,7 +1258,8 @@ int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool sdiv
     free(*tmprec); free(tmprec);
     free(*rec); free(rec);
     free(*img); free(img);
-    free(wvfld_visc); free(wvfld_disp); free(ratio);
+    free(wvfld_visc1); free(wvfld_disp1); free(ratio1);
+    free(wvfld_visc2); free(wvfld_disp2); free(ratio2);
     if (illum) { free(*sill); free(sill);}
 
     return 0;
@@ -1283,7 +1296,7 @@ int psqrtm_dec(sf_complex*** record, sf_complex** imgsum, geopar geop)
     float **sill;
     
     /*misc*/
-    int ix, iz, it, is;
+    int ix, iz, is;
     int wfnt;
     float wfdt;
 
@@ -1297,10 +1310,13 @@ int psqrtm_dec(sf_complex*** record, sf_complex** imgsum, geopar geop)
     /* passing variables */
     nx = geop->nx; nz = geop->nz;
     nxb = geop->nxb; nzb = geop->nzb;
+    /*spx = geop->spx;*/
+    spz = geop->spz;
+    gpz = geop->gpz;
+    /*gpx = geop->gpx;*/
+    gpl = geop->gpl;
     dx = geop->dx; dz = geop->dz; ox = geop->ox; oz = geop->oz; /*not acutally used*/
     snpint = geop->snpint;
-    spx = geop->spx; spz = geop->spz; /*not acutally used*/
-    gpz = geop->gpz; gpx = geop->gpx; gpl = geop->gpl;
     top = geop->top; bot = geop->bot; lft = geop->lft; rht = geop->rht;
     nt = geop->nt;
     dt = geop->dt;
@@ -1427,6 +1443,197 @@ int psqrtm_dec(sf_complex*** record, sf_complex** imgsum, geopar geop)
     free(*rec); free(rec);
     free(*img); free(img);
     free(*sill); free(sill);
+
+    return 0;
+}
+
+int psrtm_mov(sf_complex*** record, sf_complex** imgsum, geopar geop, sf_file Ftmpwf, sf_file Ftmpwfb)
+/*< low-rank one-step pre-stack RTM linear operator that outputs movie >*/
+{
+    /*geopar variables*/
+    int nx, nz;
+    int nxb, nzb;
+    float dx, dz, ox, oz;
+    int spx, spz, gpz, gpx, gpl; /*source/geophone location*/
+    int snpint;
+    int top, bot, lft, rht; /*abc boundary*/
+    int nt;
+    float dt;
+    float trunc; 
+    bool adj; /* migration(adjoint) flag -> not used in this case */
+    bool verb; /* verbosity flag */
+    bool illum; /* source illumination flag*/
+    int m2, m2b, pad1;
+    /*pointers*/
+    float *rr;
+    /*extras*/
+    bool roll; /* survey strategy */
+    int rectz,rectx,repeat; /*refl smoothing parameters*/
+    int sht0,shtbgn,shtend,shtnum,shtnum0,shtint;
+    /*mpi*/
+    int cpuid, numprocs;
+
+    sf_complex ***wvfld, ***wvfld_b;
+    sf_complex **tmprec, **rec, **img;
+    float **sill;
+    
+    /*misc*/
+    int ix, iz, is;
+    int wfnt;
+    float wfdt;
+
+    clock_t tstart,tend;
+    double duration;
+
+    int shtcur;
+
+    sf_complex *sendbuf, *recvbuf;
+
+    /* passing variables */
+    nx = geop->nx; nz = geop->nz;
+    nxb = geop->nxb; nzb = geop->nzb;
+    /*spx = geop->spx;*/
+    spz = geop->spz;
+    gpz = geop->gpz;
+    /*gpx = geop->gpx;*/
+    gpl = geop->gpl;
+    dx = geop->dx; dz = geop->dz; ox = geop->ox; oz = geop->oz; /*not acutally used*/
+    snpint = geop->snpint;
+    top = geop->top; bot = geop->bot; lft = geop->lft; rht = geop->rht;
+    nt = geop->nt;
+    dt = geop->dt;
+    trunc = geop->trunc;
+    adj = geop->adj; verb = geop->verb; illum = geop->illum;
+    m2 = geop->m2; m2b = geop->m2b; pad1 = geop->pad1;
+    rr = geop->rr;
+    roll = geop->roll;
+    rectz=geop->rectz;
+    rectx=geop->rectx;
+    repeat=geop->repeat;
+    sht0=geop->sht0;
+    shtbgn=geop->shtbgn;
+    shtend=geop->shtend;
+    shtnum=geop->shtnum;
+    shtnum0=geop->shtnum0;
+    shtint=geop->shtint;
+    cpuid=geop->cpuid;
+    numprocs=geop->numprocs;
+
+    wfnt = (int)(nt-1)/snpint+1;
+    wfdt = dt*snpint;
+
+    /*allocate memory*/
+    tmprec = sf_complexalloc2(nt, gpl);
+    wvfld = sf_complexalloc3(nz, nx, wfnt);
+    wvfld_b = sf_complexalloc3(nz, nx, wfnt);
+    if (illum) sill = sf_floatalloc2(nz, nx);
+    else sill = NULL;
+    img = sf_complexalloc2(nz, nx);
+    rec = sf_complexalloc2(nt, gpl);
+#ifdef _OPENMP
+#pragma omp parallel for private(ix,iz)
+#endif
+      for (ix=0; ix<nx; ix++)
+	for (iz=0; iz<nz; iz++)
+	  imgsum[ix][iz] = sf_cmplx(0.,0.);
+
+    /* start the work */
+    tstart = clock();
+
+    for (is=0; is*numprocs<shtnum; is++){
+
+      shtcur = is*numprocs+cpuid; // current shot index
+
+      /*scatter the data*/
+      if (cpuid==0) sendbuf = record[is*numprocs][0];
+      else sendbuf = NULL;
+      recvbuf = rec[0];
+      MPI_Scatter(sendbuf, gpl*nt, MPI_COMPLEX, recvbuf, gpl*nt, MPI_COMPLEX, 0, MPI_COMM_WORLD); // rec[ix][it] = record[is][ix][it];
+
+      if (shtcur<shtnum0) {
+	spx = shtbgn + shtint*(shtcur);
+	if (roll)
+	  gpx = spx - (int)(gpl/2);
+	else
+	  gpx = 0;
+	geop->spx = spx;
+	geop->gpx = gpx;
+	
+	if (verb) {
+	  sf_warning("============================");
+	  sf_warning("processing shot #%d", shtcur);
+	  sf_warning("nx=%d nz=%d nt=%d", geop->nx, geop->nz, geop->nt);
+	  sf_warning("nxb=%d nzb=%d ", geop->nxb, geop->nzb);
+	  sf_warning("dx=%f dz=%f dt=%f", geop->dx, geop->dz, geop->dt);
+	  sf_warning("top=%d bot=%d lft=%d rht=%d", geop->top, geop->bot, geop->lft, geop->rht);
+	  sf_warning("rectz=%d rectx=%d repeat=%d srctrunc=%f",rectz,rectx,repeat,geop->trunc);
+	  sf_warning("spz=%d spx=%d gpz=%d gpx=%d gpl=%d", spz, spx, gpz, gpx, gpl);
+	  sf_warning("snpint=%d wfdt=%f wfnt=%d ", snpint, wfdt, wfnt);
+	  sf_warning("sht0=%d shtbgn=%d shtend=%d shtnum0=%d shtnum=%d", sht0, shtbgn, shtend, shtnum0, shtnum);
+	  if (roll) sf_warning("Rolling survey!");
+	  else sf_warning("Global survey (gpl=nx)!");
+	  if (illum) sf_warning("Using source illumination!");
+	  else sf_warning("No source illumination!");
+	  sf_warning("============================");
+	}
+	
+	/*generate reflectivity map*/
+	reflgen(nzb, nxb, spz+top, spx+lft, rectz, rectx, repeat, rr);
+
+	/*source wavefield*/
+        lrosfor2(wvfld, sill, tmprec, geop);
+
+	/*receiver wavefield*/
+	lrosback2q(wvfld_b, rec, geop);
+
+	/*cross-correlation imaging condition*/
+	ccrimg(img, wvfld, wvfld_b, sill, geop);
+
+	/* image reduction */
+#ifdef _OPENMP
+#pragma omp parallel for private(ix,iz)
+#endif
+	for (ix=0; ix<nx; ix++) {
+	  for (iz=0; iz<nz; iz++) {
+#ifdef SF_HAS_COMPLEX_H
+	    imgsum[ix][iz] += img[ix][iz];
+#else
+	    imgsum[ix][iz] = sf_cadd(imgsum[ix][iz],img[ix][iz]);
+#endif
+	  }
+	}
+
+	if (NULL!=Ftmpwf && shtcur==0)
+	  sf_complexwrite(wvfld[0][0], wfnt*nx*nz, Ftmpwf);
+	if (NULL!=Ftmpwfb && shtcur==0)
+	  sf_complexwrite(wvfld_b[0][0], wfnt*nx*nz, Ftmpwfb);
+
+      } /*if (shtcur<shtnum0)*/
+
+    } /*shot iteration*/
+
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    /*image reduction*/
+#if MPI_VERSION >= 2
+    sendbuf = (sf_complex *) MPI_IN_PLACE;
+#else /* will fail */
+    sendbuf = NULL;
+#endif 
+    recvbuf = imgsum[0];
+    MPI_Allreduce(sendbuf, recvbuf, nx*nz, MPI_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
+
+    tend = clock();
+    duration=(double)(tend-tstart)/CLOCKS_PER_SEC;
+    if (verb)
+      sf_warning(">> The CPU time of single shot migration is: %f seconds << ", duration);
+
+    free(**wvfld); free(*wvfld); free(wvfld);
+    free(**wvfld_b); free(*wvfld_b); free(wvfld_b);
+    free(*tmprec); free(tmprec);
+    free(*rec); free(rec);
+    free(*img); free(img);
+    if (illum) { free(*sill); free(sill);}
 
     return 0;
 }

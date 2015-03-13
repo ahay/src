@@ -4,7 +4,7 @@
 #ifdef _OPENMP
 #include <omp.h>
 #endif
-#include "absorb.h"
+#include "muting.h"
 
 int mutingf(int nt, int nx, float dt, float dx, float dz, int isx, int isz, int gpz, float vel, int wd, float **dat)
 /*< muting function >*/

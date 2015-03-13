@@ -32,6 +32,7 @@
 
 #ifndef _waveutils_h
 
+/* geometry parameters */
 typedef struct Geopar {
   /* acquisition geometry and mesh setup */
   int nx, nz; /* domain of interest */
@@ -65,6 +66,7 @@ typedef struct Geopar {
 } * geopar; 
 /*^*/
 
+/* mpi parameters */
 typedef struct Mpipar {
     int cpuid;
     int numprocs;
@@ -837,7 +839,7 @@ int lrosback2q(sf_complex ***wvfld, sf_complex **rcd, geopar geop)
     int it,iz,im,ik,ix,i,j,wfit;     /* index variables */
     int nk, nz2, nx2, nzx2;
     sf_complex c;
-    sf_complex *cwave, *cwavem, *currm;
+    sf_complex *cwave, *cwavem;
     sf_complex **wave, *curr;
     sf_complex **ccr;
 
@@ -1014,6 +1016,28 @@ int ccrimg(sf_complex **img, sf_complex ***wvfld, sf_complex ***wvfld_b, float *
 #endif
       }
     }
+  }
+
+  return 0;
+}
+
+int stable_div(int n, float *num, float *den, float *ratio, float eps, float max)
+/*< stable division >*/
+{
+  int i;
+  float rat;
+
+#ifdef _OPENMP
+#pragma omp parallel for private(i)
+#endif
+  for (i = 0; i < n; i++) {
+    if (den[i] == 0.)
+      rat = 1.f;
+    else if (den[i] >= num[i])
+      rat = 1.f;
+    else
+      rat = num[i]/(den[i] + num[i]/max + eps);
+    ratio[i] = rat;
   }
 
   return 0;
