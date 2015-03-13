@@ -29,6 +29,7 @@ static std::valarray<float>  vx, vz, q, t, vs;
 static std::valarray<double> kx, kz, c11, c33, c13, c55;
 static int approx, relat;
 static double dt;
+static bool os, sub;
 
 static int sample(vector<int>& rs, vector<int>& cs, ZpxNumMat& res)
 {
@@ -123,8 +124,17 @@ static int sample(vector<int>& rs, vector<int>& cs, ZpxNumMat& res)
 		break;
 		}
 	    }
-	    res(a,b) = zpx(cos(r*dt),sin(r*dt));
-	    //r = 2*(cos(r*dt)-1);
+	    if (os) {
+	      if (sub) 
+		res(a,b) = zpx(cos(r*dt)-1.,sin(r*dt));
+	      else
+		res(a,b) = zpx(cos(r*dt),sin(r*dt));
+	    } else {
+	      if (sub)
+		res(a,b) = zpx(2.*cos(r*dt)-2.,0.);
+	      else
+		res(a,b) = zpx(2.*cos(r*dt),0.);
+	    }
 	}
     }
     return 0;
@@ -148,6 +158,15 @@ int main(int argc, char** argv)
     par.get("npk",npk,20); // maximum rank
 
     par.get("dt",dt); // time step
+
+    par.get("os",os,true);
+    if (os)
+      par.get("sub",sub,false); // for onestep, default false
+    else
+      par.get("sub",sub,true); // for twostep, default true
+
+    float taper;
+    par.get("taper",taper,1.0); // wavenumber tapering flag
 
     iRSF velz, velx("velx"), eta("eta"), theta("theta");
 
@@ -288,9 +307,37 @@ int main(int argc, char** argv)
     iC ( sample(ridx,nidx,rmat) );
 
     zpx *rdat = rmat.data();
-    std::valarray<sf_complex> rdata(n2*n);    
-    for (int k=0; k < n2*n; k++) 
+    std::valarray<sf_complex> rdata(n2*n);
+    if (taper != 1.0) {
+      sf_warning("Wavenumber domain tapering applied! taper = %f",taper);
+      double kx_trs = taper*fabs(kx0);
+      double kz_trs = taper*fabs(kz0);
+      sf_warning("Applying kz tapering below %f",kz_trs);
+      sf_warning("Applying kx tapering below %f",kx_trs);
+      vector<double> ktp(n);
+      /* constructing the tapering op */
+      for (int ix=0; ix < nkx; ix++) {
+	double kkx = kx0+ix*dkx;
+	for (int iz=0; iz < nkz; iz++) {
+	  double kkz = kz0+iz*dkz;
+	  double ktmp = 1.;
+	  if (fabs(kkx) > kx_trs)
+	    ktmp *= powf((2*kx_trs - fabs(kkx))/(kx_trs),2);
+	  if (fabs(kkz) > kz_trs)
+	    ktmp *= powf((2*kz_trs - fabs(kkz))/(kz_trs),2);
+     	  ktp[iz+ix*nkz] = ktmp;
+	}
+      }
+      for (int k1=0; k1 < n; k1++) {
+	for (int k2=0; k2 < n2; k2++) {
+	  int k = k2 + k1*n2;
+	  rdata[k] = sf_cmplx(real(rdat[k])*ktp[k1],imag(rdat[k])*ktp[k1]);
+	}
+      }
+    } else {
+      for (int k=0; k < n2*n; k++) 
 	rdata[k] = sf_cmplx(real(rdat[k]),imag(rdat[k]));
+    }
     oRSF right;
     right.type(SF_COMPLEX);
     right.put("n1",n2);
