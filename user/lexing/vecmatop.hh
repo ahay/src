@@ -27,6 +27,12 @@ int zgemm(int m, int n, int k, cpx alpha, cpx* A, cpx* B, cpx beta, cpx* C);
 int zgemv(cpx alpha, const CpxNumMat& A, const CpxNumVec& X, cpx beta, CpxNumVec& Y);
 int zgemv(int m, int n, cpx alpha, cpx* A, cpx* X, cpx beta, cpx* Y);
 
+int zzgemm(zpx alpha, const ZpxNumMat& A, const ZpxNumMat& B, zpx beta, ZpxNumMat& C);
+int zzgemm(int m, int n, int k, zpx alpha, zpx* A, zpx* B, zpx beta, zpx* C);
+
+int zzgemv(zpx alpha, const ZpxNumMat& A, const ZpxNumVec& X, zpx beta, ZpxNumVec& Y);
+int zzgemv(int m, int n, zpx alpha, zpx* A, zpx* X, zpx beta, zpx* Y);
+
 //--------------------------------------------------
 int dgmres(int (*A)(const FltNumVec&, FltNumVec&), const FltNumVec& b, const FltNumVec& x0,
 	   int restart, float tol, int maxit, int print,
@@ -44,6 +50,7 @@ int zgmres(int (*A)(const CpxNumVec&, CpxNumVec&), const CpxNumVec& b, const Cpx
 int pinv(const FltNumMat& M, float eps, FltNumMat& R);
 int ddpinv(const DblNumMat& M, double eps, DblNumMat& R);
 int pinv(const CpxNumMat& M, double eps, CpxNumMat& R);
+int ddpinv(const ZpxNumMat& M, double eps, ZpxNumMat& R);
 
 //--------------------------------------------------
 int lowrank(int m, int n, int (*sample)(vector<int>&, vector<int>&, FltNumMat&), float eps, int npk,
@@ -52,6 +59,8 @@ int ddlowrank(int m, int n, int (*sample)(vector<int>&, vector<int>&, DblNumMat&
             vector<int>& cidx, vector<int>& ridx, DblNumMat& mid);
 int lowrank(int m, int n, int (*sample)(vector<int>&, vector<int>&, CpxNumMat&), float eps, int npk,
 	    vector<int>& cidx, vector<int>& ridx, CpxNumMat& mid);
+int ddlowrank(int m, int n, int (*sample)(vector<int>&, vector<int>&, ZpxNumMat&), double eps, int npk,
+            vector<int>& cidx, vector<int>& ridx, ZpxNumMat& mid);
 
 int ztran(const CpxNumMat& A, CpxNumMat& B);
 

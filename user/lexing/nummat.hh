@@ -100,6 +100,7 @@ typedef NumMat<int>    IntNumMat;
 typedef NumMat<double> DblNumMat;
 typedef NumMat<float>  FltNumMat;
 typedef NumMat<cpx>    CpxNumMat;
+typedef NumMat<zpx>    ZpxNumMat;
 
 #endif
 

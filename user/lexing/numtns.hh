@@ -103,6 +103,7 @@ typedef NumTns<int>    IntNumTns;
 typedef NumTns<double> DblNumTns;
 typedef NumTns<float>  FltNumTns;
 typedef NumTns<cpx>    CpxNumTns;
+typedef NumTns<zpx>    ZpxNumTns;
 
 #endif
 

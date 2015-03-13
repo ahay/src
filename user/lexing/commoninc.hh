@@ -23,6 +23,7 @@
 
 //complex number
 #define cpx cpx8
+#define zpx cpx16
 
 //aux functions
 inline int pow2(int l) { assert(l>=0); return (1<<l); }

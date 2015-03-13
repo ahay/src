@@ -102,7 +102,7 @@ typedef NumVec<int>    IntNumVec;
 typedef NumVec<double> DblNumVec;
 typedef NumVec<float>  FltNumVec;
 typedef NumVec<cpx>    CpxNumVec;
-
+typedef NumVec<zpx>    ZpxNumVec;
 
 #endif
 

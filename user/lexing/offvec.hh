@@ -96,7 +96,7 @@ typedef OffVec<int>    IntOffVec;
 typedef OffVec<double> DblOffVec;
 typedef OffVec<float>  FltOffVec;
 typedef OffVec<cpx>    CpxOffVec;
-
+typedef OffVec<cpx16>  ZpxOffVec;
 
 #endif
 
