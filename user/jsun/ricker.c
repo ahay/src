@@ -32,6 +32,7 @@ void ricker_init(int nfft   /* time samples */,
 {
     int iw, nw;
     float dw, w;
+    kiss_fft_cpx cw;
 
     /* determine frequency sampling (for real to complex FFT) */
     nw = nfft/2+1;
@@ -41,10 +42,22 @@ void ricker_init(int nfft   /* time samples */,
 
     for (iw=0; iw < nw; iw++) {
 	w = iw*dw;
-//	w *= w;
-//	shape[iw].r = w*expf(1-w)/nfft;
-	shape[iw].r = (w/(2.*freq))*expf(1-w*w)/nfft;
-	shape[iw].i = 0.;
+	w *= w;
+
+	switch (order) {
+	    case 2: /* half-order derivative */
+		cw.r = 2*SF_PI/nfft;
+		cw.i = iw*2*SF_PI/nfft;
+		cw = sf_csqrtf(cw);
+		shape[iw].r = cw.r*w*expf(1-w)/nfft;
+		shape[iw].i = cw.i*w*expf(1-w)/nfft;
+		break;
+	    case 0:
+	    default:
+		shape[iw].r = w*expf(1-w)/nfft;
+		shape[iw].i = 0.;
+		break;
+	}
     }
 
     sf_freqfilt_init(nfft,nw);

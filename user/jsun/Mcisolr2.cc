@@ -25,7 +25,7 @@ using namespace std;
 static std::valarray<float> vs;
 static std::valarray<float> ks;
 static float dt;
-static bool os,sub;
+static bool os,sub,lap;
 
 int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
 {
@@ -37,16 +37,21 @@ int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
 	for(int b=0; b<nc; b++) {
 	    float phase = vs[rs[a]]*ks[cs[b]]*dt; 
 	    if (os) {
-	      if (sub) 
+	      if (sub) {
 		res(a,b) = cpx(cos(phase)-1.,sin(phase));
-	      else
+		if (lap) {
+		  res(a,b) /= (vs[rs[a]]*dt);
+		}
+	      } else
 		res(a,b) = cpx(cos(phase),sin(phase));
 	    } else {
-	      if (sub)
+	      if (sub) {
 		res(a,b) = cpx(2.*cos(phase)-2.,0.);
-	      else
+		if (lap)
+		  res(a,b) /= (vs[rs[a]]*vs[rs[a]]*dt*dt);
+	      } else
 		res(a,b) = cpx(2.*cos(phase),0.);
-	    }
+	    }    
 	}
     }
     return 0;
@@ -75,6 +80,8 @@ int main(int argc, char** argv)
       par.get("sub",sub,false); // for onestep, default false
     else
       par.get("sub",sub,true); // for twostep, default true
+
+    par.get("lap",lap,false);
 
     iRSF vel;
 

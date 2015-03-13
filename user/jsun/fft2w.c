@@ -242,11 +242,14 @@ void fft2_finalize()
     if (NULL != cfg2) { free(cfg2); cfg2=NULL; }
     if (NULL != icfg2) { free(icfg2); icfg2=NULL; }
     if (NULL != tmp) { free(*tmp); free(tmp); tmp=NULL; }
-    if (NULL != ctrace2) { free(ctrace2); ctrace2=NULL; }
     if (NULL != trace2) { free(trace2); trace2=NULL; }
+    if (NULL != ctrace2) { ctrace2=NULL; }
 #endif
-    if (NULL != ff) { free(*ff); free(ff); ff=NULL; }
-    if (NULL != cc) { free(*cc); free(cc); cc=NULL; }
+    if (cmplx) {
+      if (NULL != cc) { free(*cc); free(cc); cc=NULL; }
+    } else {
+      if (NULL != ff) { free(*ff); free(ff); ff=NULL; }
+    }
     if (NULL != dd) { free(dd); dd=NULL; }
 }
 
