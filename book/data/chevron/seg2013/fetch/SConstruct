@@ -12,13 +12,13 @@ Flow(files,
      gzips,
      '/bin/cat $SOURCES | tar -xvz',stdin=0,stdout=-1)
 
-#Flow(['SEG14.Pisoelastic.rsf','SEG14.Pisoelastic_hdr.rsf',
-#      'SEG14.Pisoelastic.thdr','SEG14.Pisoelastic.bhdr'],
-#     'SEG14.Pisoelastic.segy',
-#     '''
-#     sfsegyread tfile=${TARGETS[1]} 
-#     hfile=${TARGETS[2]}  bfile=${TARGETS[3]} 
-#     ''')
+Flow(['ChevGOMLOshots1601-3201.rsf' ,'ChevGOMLOshots1601-3201_hdr.rsf',
+      'ChevGOMLOshots1601-3201.thdr','ChevGOMLOshots1601-3201.bhdr'],
+      'ChevGOMLOshots1601-3201.segy',
+      '''
+      sfsegyread tfile=${TARGETS[1]} 
+      hfile=${TARGETS[2]}  bfile=${TARGETS[3]} 
+      ''')
 
 
 End()
