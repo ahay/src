@@ -29,6 +29,7 @@ static std::valarray<float>  vx, vz, q, t, vs;
 static std::valarray<double> kx, kz, c11, c33, c13, c55;
 static int approx, relat;
 static double dt;
+static bool os, sub;
 
 static int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
 {
@@ -123,8 +124,17 @@ static int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
 		break;
 		}
 	    }
-	    res(a,b) = cpx(cos(r*dt),sin(r*dt));
-	    //r = 2*(cos(r*dt)-1);
+	    if (os) {
+	      if (sub) 
+		res(a,b) = cpx(cos(r*dt)-1.,sin(r*dt));
+	      else
+		res(a,b) = cpx(cos(r*dt),sin(r*dt));
+	    } else {
+	      if (sub)
+		res(a,b) = cpx(2.*cos(r*dt)-2.,0.);
+	      else
+		res(a,b) = cpx(2.*cos(r*dt),0.);
+	    }
 	}
     }
     return 0;
@@ -148,6 +158,12 @@ int main(int argc, char** argv)
     par.get("npk",npk,20); // maximum rank
 
     par.get("dt",dt); // time step
+
+    par.get("os",os,true);
+    if (os)
+      par.get("sub",sub,false); // for onestep, default false
+    else
+      par.get("sub",sub,true); // for twostep, default true
 
     float taper;
     par.get("taper",taper,1.0); // wavenumber tapering flag
