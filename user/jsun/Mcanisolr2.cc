@@ -30,6 +30,7 @@ static std::valarray<double> kx, kz, c11, c33, c13, c55;
 static int approx, relat;
 static double dt;
 static bool os, sub;
+static int mode;
 
 static int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
 {
@@ -60,7 +61,10 @@ static int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
 		{
 			double second = pow((c11[i]-c55[i])*x*x - (c33[i]-c55[i])*z*z,2) + 4*pow(c13[i]+c55[i],2)*x*x*z*z;
 			second = 0.5*sqrt(second);
-			r = sqrt(0.5*((c11[i]+c55[i])*x*x + (c33[i]+c55[i])*z*z) + second);
+                        if (mode==0)
+                          r = sqrt(0.5*((c11[i]+c55[i])*x*x + (c33[i]+c55[i])*z*z) + second);
+                        else
+                          r = sqrt(0.5*((c11[i]+c55[i])*x*x + (c33[i]+c55[i])*z*z) - second);
 		break;
 		}
 		case 1: // Zone's approximation
@@ -147,6 +151,9 @@ int main(int argc, char** argv)
 
     iRSF par(0);
     int seed;
+
+    // the following option only works for the exact case
+    par.get("mode",mode,0); // wave mode (0=p wave, 1=Sv wave)
 
     par.get("seed",seed,time(NULL)); // seed for random number generator
     srand48(seed);
