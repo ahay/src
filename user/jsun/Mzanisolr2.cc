@@ -31,6 +31,8 @@ static int approx, relat;
 static double dt;
 static bool os, sub;
 static int mode;
+static float ct,cb,cl,cr;
+static int nz,nx,nbt,nbb,nbl,nbr,abc;
 
 static int sample(vector<int>& rs, vector<int>& cs, ZpxNumMat& res)
 {
@@ -129,10 +131,44 @@ static int sample(vector<int>& rs, vector<int>& cs, ZpxNumMat& res)
 		}
 	    }
 	    if (os) {
-	      if (sub) 
+	      if (sub) {
 		res(a,b) = zpx(cos(r*dt)-1.,sin(r*dt));
-	      else
-		res(a,b) = zpx(cos(r*dt),sin(r*dt));
+              } else {
+                double hypk = hypot(z0,x0);
+                double phf=1.;
+                int iz  = rs[a] % nz;
+                int ix  = (int) rs[a]/nz;
+                switch (abc) {
+                case 0:
+                  // no abc
+                  break;
+
+                case 1:
+                  // direction-dependent abc
+                  if (iz < nbt)
+                    phf *= exp(-powf(ct*(nbt-iz)*(z0/hypk),2));
+                  else if (iz > nz-1-nbb)
+                    phf *= exp(-powf(cb*(iz-nz+1+nbb)*(z0/hypk),2));
+                  if (ix < nbl)
+                    phf *= exp(-powf(cl*(nbl-ix)*(x0/hypk),2));
+                  else if (ix > nx-1-nbr)
+                    phf *= exp(-powf(cr*(ix-nx+1+nbr)*(x0/hypk),2));
+                  break;
+
+                case 2:
+                  // direction-independent abc
+                  if (iz < nbt)
+                    phf *= exp(-powf(ct*(nbt-iz),2));
+                  else if (iz > nz-1-nbb)
+                    phf *= exp(-powf(cb*(iz-nz+1+nbb),2));
+                  if (ix < nbl)
+                    phf *= exp(-powf(cl*(nbl-ix),2));
+                  else if (ix > nx-1-nbr)
+                    phf *= exp(-powf(cr*(ix-nx+1+nbr),2));
+                  break;
+                }
+		res(a,b) = zpx(cos(r*dt),sin(r*dt))*phf;
+              }
 	    } else {
 	      if (sub)
 		res(a,b) = zpx(2.*cos(r*dt)-2.,0.);
@@ -172,12 +208,52 @@ int main(int argc, char** argv)
     else
       par.get("sub",sub,true); // for twostep, default true
 
+    // the following option only works for one-step phase function without subtraction
+    par.get("abc",abc,0); // absorbing boundary condition (0=no abc, 1=direction dependent, 2=direction independent)
+
+    par.get("nbt",nbt,0);
+    par.get("nbb",nbb,0);
+    par.get("nbl",nbl,0);
+    par.get("nbr",nbr,0);
+
+    par.get("ct",ct,0.0);
+    par.get("cb",cb,0.0);
+    par.get("cl",cl,0.0);
+    par.get("cr",cr,0.0);
+
+    if (os&&!sub) {
+      switch (abc) {
+      case 0:
+        {	
+          sf_warning("==================================");
+          sf_warning("No ABC applied");
+          break;
+        }
+      case 1:
+        {
+          sf_warning("==================================");
+          sf_warning("Direction-dependent ABC");
+          break;
+        }
+      case 2:
+        {
+          sf_warning("==================================");
+          sf_warning("Direction-independent ABC");
+          break;
+        }
+      }
+    } else {
+      sf_warning("==================================");
+      sf_warning("No ABC applied in this combination");
+      sf_warning("==================================");
+    }
+
     float taper;
     par.get("taper",taper,1.0); // wavenumber tapering flag
 
     iRSF velz, velx("velx"), eta("eta"), theta("theta");
 
-    int nz,nx;
+    //    int nz,nx;
     velz.get("n1",nz);
     velz.get("n2",nx);
     int m = nx*nz;
@@ -220,31 +296,45 @@ int main(int argc, char** argv)
     }
     
     switch (approx) {
-    	case 0:
-    	{	
-		sf_warning("==================================");
-    		sf_warning("Exact velocity");
-		sf_warning("==================================");
-    		break;
-    	}
-    	case 1:
-    	{
-		sf_warning("==================================");
-    		sf_warning("Zone's approximation");
-		sf_warning("==================================");
-    		break;
-    	}
-    	case 2:
-    	{
-		sf_warning("==================================");
-    		sf_warning("Acoustic approximation");
-		sf_warning("==================================");
-    		/* from eta to q */
-    		for (int im=0; im < m; im++) {
-			q[im] = 8*q[im]/(1.0+2*q[im]);
-    		}
-    		break;
-    	}
+    case 0:
+      {
+        switch (mode) {
+        case 0:
+          {	
+            sf_warning("==================================");
+            sf_warning("Propagating P waves");
+            break;
+          }
+        case 1:
+          {
+            sf_warning("==================================");
+            sf_warning("Propagating S waves");
+            break;
+          }
+        }
+        sf_warning("==================================");
+        sf_warning("Exact velocity");
+        sf_warning("==================================");
+        break;
+      }
+    case 1:
+      {
+        sf_warning("==================================");
+        sf_warning("Zone's approximation");
+        sf_warning("==================================");
+        break;
+      }
+    case 2:
+      {
+        sf_warning("==================================");
+        sf_warning("Acoustic approximation");
+        sf_warning("==================================");
+        /* from eta to q */
+        for (int im=0; im < m; im++) {
+          q[im] = 8*q[im]/(1.0+2*q[im]);
+        }
+        break;
+      }
     }
 
     /* fram degrees to radians */
