@@ -6,6 +6,7 @@
 #include <Accelerate/Accelerate.h>
 
 #define MKL_Complex8 __CLPK_complex 
+#define MKL_Complex16 __CLPK_doublecomplex 
 
 #else
 
