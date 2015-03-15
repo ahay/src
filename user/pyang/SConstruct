@@ -68,6 +68,7 @@ env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
             LIBS=[env.get('DYNLIB','')+'rsfpwd',
 		  env.get('DYNLIB','')+'rsff90',
+		  env.get('DYNLIB','')+'rsf++',
                   env.get('DYNLIB','')+'rsf'])
 
 ######################################################################
