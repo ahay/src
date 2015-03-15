@@ -64,11 +64,8 @@ except: # local version
 src = Glob('[a-z]*.c')
 
 env.Prepend(CPPPATH=['../../include'],
-	    F90PATH=['../../include'],
             LIBPATH=['../../lib'],
             LIBS=[env.get('DYNLIB','')+'rsfpwd',
-		  env.get('DYNLIB','')+'rsff90',
-		  env.get('DYNLIB','')+'rsf++',
                   env.get('DYNLIB','')+'rsf'])
 
 ######################################################################
@@ -204,6 +201,8 @@ api = env.get('API',[])
 f90_mains = Split(f90_progs)
 
 if 'f90' in api and F90:
+    env.Prepend(F90PATH=['../../include'],
+                LIBS=[env.get('DYNLIB','')+'rsff90'])
     F90base =  os.path.basename(F90)
     if F90base[:8] == 'gfortran' or F90base[:3] == 'gfc':
         env.Append(F90FLAGS=' -J${SOURCE.dir}')
