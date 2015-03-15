@@ -15,7 +15,7 @@ Plot('solarshort','solarlc',
      frame1=50 frame2=100 frame3=100
      ''')
 
-Flow('kolcube','solarlc','MDHspecfac')
+Flow('kolcube','solarlc','specfac')
 
 Plot('kolcube',
      '''
