@@ -5,12 +5,12 @@
 
 int main(int argc, char* argv[])
 {
-    sf_init(argc,argv); // Initialize RSF
+    sf_init(argc,argv); //! Initialize RSF
     
-    iRSF par(0), in; // input parameter, file
-    oRSF out;        // output file
+    iRSF par(0), in; //! input parameter, file
+    oRSF out;        //! output file
 
-    int n1, n2;      // trace length, number of traces
+    int n1, n2;      //!trace length, number of traces
     float clip;
     
     in.get("n1",n1);
