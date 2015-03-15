@@ -314,7 +314,7 @@ Flow('statics_in','velfiltcdpsnmo',
      suresamp rf=2 comment="upsample to 1 ms"
      ''')
 
-# residual statics extimation.  Plot the shot and receiver
+# residual statics estimation.  Plot the shot and receiver
 # statics as a wiggle trace.
 Flow('sourcestatic.dat recstatic.dat',
      'statics_in',
@@ -361,7 +361,7 @@ Flow('velfiltcdpsmuterstat',
      ''')
 
 # second pass velocity analysis at 9 locations.
-Flow('vpick.txt','vpickorig.txt velfiltcdpsmuterstat',
+Flow('vpick.txt','iva.sh vpickorig.txt velfiltcdpsmuterstat',
      '''
      ./iva.sh
      "cmp1=181 cmp2=229 cmp3=277 cmp4=325 cmp5=373 

@@ -67,6 +67,12 @@ class MainFrame(wx.Frame):
         panel = self.format()
         sizer.Add(panel,0,wx.ALL|wx.EXPAND,5)
         
+        panel = self.fat()
+        sizer.Add(panel,0,wx.ALL|wx.EXPAND,5)
+
+        panel = self.bgcolor()
+        sizer.Add(panel,0,wx.ALL|wx.EXPAND,5)
+
         self.SetSizer(sizer)
         sizer.Fit(self)
 
@@ -127,6 +133,43 @@ class MainFrame(wx.Frame):
     def set_format(self,event):
         print self.format
         self.format = event.GetEventObject().GetLabel().lower()
+
+    def fat(self):
+        sizer = wx.BoxSizer(wx.HORIZONTAL)
+
+        text  = wx.StaticText(self,-1,'Fat:')
+        sizer.Add(text)
+
+        slider = wx.Slider(self,-1,1,1,10,size=(250,-1),
+                           style=wx.SL_HORIZONTAL | wx.SL_AUTOTICKS | wx.SL_LABELS)
+        self.Bind(wx.EVT_SLIDER,self.set_fat,slider)
+        self.fat = 1
+        
+        sizer.Add(slider)
+
+        return sizer
+
+    def set_fat(self,event):
+        self.fat = event.GetEventObject().GetValue()
+
+    def bgcolor(self):
+        sizer = wx.BoxSizer(wx.HORIZONTAL)
+
+        text  = wx.StaticText(self,-1,'Background Color:')
+        sizer.Add(text)
+
+        self.bgcolor = 'black'
+        for color in ('light','dark','black','white'):
+            rb = wx.RadioButton(self,-1,color.capitalize())
+            if color==self.bgcolor:
+                rb.SetValue(True)
+            self.Bind(wx.EVT_RADIOBUTTON,self.set_bgcolor,rb)
+            sizer.Add(rb)
+
+        return sizer
+
+    def set_bgcolor(self,event):
+        self.bgcolor = event.GetEventObject().GetLabel().lower()
 
 if __name__ == "__main__":
     app = wx.App(False)
