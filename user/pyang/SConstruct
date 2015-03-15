@@ -2,6 +2,7 @@ import os, sys, re, string
 sys.path.append('../../framework')
 import bldutil
 
+
 ######################################################################
 # 1. C main programs
 progs = '''cohn dlct fpocs2d fpocs3d fwi2d fbrec2d 
@@ -14,7 +15,7 @@ viscoa2d viscoe2d
 
 ######################################################################
 # 2. C++ main programs
-ccprogs = '''
+ccprogs = '''clip_test
 '''
 
 ######################################################################
@@ -52,17 +53,15 @@ pymods='''
 ######################################################################
 try:  # distributed version
     Import('env root pkgdir bindir libdir incdir')
-    srcroot = '../..' 
-    glob_build = True 	# scons command launched in RSFSRC
     env = env.Clone()
 except: # local version
-    glob_build = False 	# scons command launched in the local directory
-    srcroot = os.environ.get('RSFSRC', '../..')
-    sys.path.append(os.path.join(srcroot,'framework'))
     env = bldutil.Debug()
-    root = bindir = libdir = pkgdir = None
+    root = None
     SConscript('../pwd/SConstruct')
+    SConscript('../../api/c++/SConstruct')
     SConscript('../../api/f90/SConstruct')
+
+src = Glob('[a-z]*.c')
 
 env.Prepend(CPPPATH=['../../include'],
 	    F90PATH=['../../include'],
@@ -77,9 +76,7 @@ fftw = env.get('FFTWOMP')
 if fftw:
     env.Prepend(CPPDEFINES=['SF_HAS_FFTW'])
 
-src = Glob('[a-z]*.c')
-
-for source in Split(src):
+for source in src:
     inc = env.RSF_Include(source,prefix='')
     obj = env.StaticObject(source)
     env.Depends(obj,inc)
@@ -105,6 +102,13 @@ if 'c++' in env.get('API',[]):
 else:
     lapack = None
 
+if lapack:
+    libsxx = [env.get('DYNLIB','')+'rsf++']
+    if not isinstance(lapack,bool):
+        libsxx.extend(lapack)
+    env.Prepend(LIBS=libsxx)
+
+ccprogs = 'clip_test'
 ccmains = Split(ccprogs)
 for prog in ccmains:
     sources = ['M' + prog]
@@ -234,6 +238,7 @@ if root:
     main = 'sf%s.py' % user
     
     docs = map(lambda prog: env.Doc(prog,'M' + prog),cmains+mpi_cmains) + \
+           map(lambda prog: env.Doc(prog,'M%s.cc' % prog,lang='c++'),ccmains) +\
 	map(lambda prog: env.Doc(prog,'M' + prog+'.cu'),cuda_mains + cuda_mpi_mains)+ \
 	map(lambda prog: env.Doc(prog,'M'+prog+'.f90',lang='f90'),f90_mains)+\
 	map(lambda prog: env.Doc(prog,'M'+prog+'.py',lang='python'),pymains)

@@ -125,6 +125,11 @@ void variable_inverse(float **rho, float **tauo)
 	}
 }
 
+void average_variable(float **rho, float **tau)
+/*< average the parameters >*/
+{
+
+}
 
 void step_forward(float **p, float **r, float **vz, float **vx, float **vv, float **rho, float **tau, float **tauo)
 /*< forward modeling step >*/
@@ -184,7 +189,7 @@ int main(int argc, char* argv[])
 	int jt, ft, ib, it, kt, sx, sz;
 	float tmp;
 	float *wlt, *bndr;
-	float **rho, **tau, **tauo, **v0, **vv, **p, **r, **vz, **vx;
+	float **rho, **tau, **tauo, **v0, **vv, **p, **r, **vz, **vx, **aver;
 	sf_file Fv, Frho, Ftau, Ftauo, Fw, Fpx, Fpz;
 
     	sf_init(argc,argv);
@@ -241,6 +246,7 @@ int main(int argc, char* argv[])
 	r =sf_floatalloc2(nzpad, nxpad);
 	vz=sf_floatalloc2(nzpad, nxpad);
 	vx=sf_floatalloc2(nzpad, nxpad);
+	aver=sf_floatalloc2(nzpad, nxpad);
 
 	/* initialization */
 	for(it=0;it<nt;it++){
@@ -296,6 +302,7 @@ int main(int argc, char* argv[])
 	free(*r); free(r);
 	free(*vx); free(vx);
 	free(*vz); free(vz);
+	free(*aver); free(aver);
 
     	exit(0);
 }

@@ -98,6 +98,27 @@ void variable_transform(float **vp, float **vs, float **rho,
 	}
 }
 
+void average_variable(float **rho, float **taup, float **taus, float **aver)
+/*< average the parameters, check guide sofi 2d >*/
+{
+	int i1, i2;
+
+	memcpy(aver[0],taus[0],nzpad*nxpad*sizeof(float));
+	for(i2=1; i2<nxpad-1; i2++)
+	for(i1=0; i1<nzpad-1; i1++)
+		aver[i2][i1]=4./(1./taus[i2][i1]+1./taus[i2][i1+1]+1./taus[i2+1][i1]+1./taus[i2+1][i1+1]);
+	memcpy(taus[0],aver[0],nxpad*nzpad*sizeof(float));
+
+	memcpy(aver[0],rho[0],nzpad*nxpad*sizeof(float));
+	for(i2=1; i2<nxpad-1; i2++)
+	for(i1=0; i1<nzpad-1; i1++)
+		aver[i2][i1]=(rho[i2][i1]+rho[i2][i1+1]+rho[i2+1][i1]+rho[i2+1][i1+1])/4.;
+	memcpy(rho[0],aver[0],nzpad*nxpad*sizeof(float));
+
+	//......
+}
+
+
 /*****************************************************************************
 z corresponds to y in Robertsson's paper. The state variables are capitalized.
 	Txx, Tzz, Tzx: sigma_xx, sigma_zz, sigma_zx;
@@ -211,7 +232,7 @@ int main(int argc, char* argv[])
 	bool verb;
 	int jt, ft, kt, it, ib, sx, sz;
 	float a, *wlt, *bndr;
-	float **tmp, **vp, **vs, **rho, **Vx, **Vz, **Txx, **Tzz, **Txz, **Rxx, **Rzz, **Rxz, **taup, **taus, **tauo;
+	float **tmp, **vp, **vs, **rho, **Vx, **Vz, **Txx, **Tzz, **Txz, **Rxx, **Rzz, **Rxz, **taup, **taus, **tauo, **aver;
 	sf_file Fvp, Fvs, Frho, Ftaup, Ftaus, Ftauo, Fwavx, Fwavz;
     
     	sf_init(argc,argv);
@@ -267,7 +288,7 @@ int main(int argc, char* argv[])
 	Rxx=sf_floatalloc2(nzpad, nxpad);
 	Rzz=sf_floatalloc2(nzpad, nxpad);
 	Rxz=sf_floatalloc2(nzpad, nxpad);
-
+	aver=sf_floatalloc2(nzpad, nxpad);
 
 	/* initialization */
 	for(it=0;it<nt;it++){
@@ -345,6 +366,7 @@ int main(int argc, char* argv[])
 	free(*Rxx); free(Rxx);
 	free(*Rzz); free(Rzz);
 	free(*Rxz); free(Rxz);
+	free(*aver); free(aver);
 
     	exit(0);
 }
