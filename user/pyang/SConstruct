@@ -70,7 +70,7 @@ env.Prepend(CPPPATH=['../../include'],
 
 ######################################################################
 # fftw settings
-fftw = env.get('FFTWOMP')
+fftw = env.get('FFTW') 		#fftw = env.get('FFTWOMP')
 if fftw:
     env.Prepend(CPPDEFINES=['SF_HAS_FFTW'])
 
