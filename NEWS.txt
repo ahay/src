@@ -34,6 +34,8 @@ To the reproducible documents collection:
   diffraction imaging (Decker, Janson, and Fomel)
 * sep/avo: Seismic AVO analysis of methane hydrate structures (Ecker
   and Lumley)
+* tccs/scan3: A fast algorithm for 3D azimuthally anisotropic velocity
+  scan (Hu, Fomel, and Ying)
 
 To SCons:
 
