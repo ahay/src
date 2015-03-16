@@ -68,6 +68,13 @@ env.Prepend(CPPPATH=['../../include'],
             LIBS=[env.get('DYNLIB','')+'rsfpwd',
                   env.get('DYNLIB','')+'rsf'])
 
+F90 = env.get('F90')
+api = env.get('API',[])
+
+if 'f90' in api and F90:
+    env.Prepend(F90PATH=['../../include'],
+                LIBS=[env.get('DYNLIB','')+'rsff90'])
+
 ######################################################################
 # fftw settings
 fftw = env.get('FFTW') 		#fftw = env.get('FFTWOMP')
@@ -196,8 +203,6 @@ for prog in cuda_mpi_mains:
 ######################################################################
 # 6. compiling fortran programs
 
-F90 = env.get('F90')
-api = env.get('API',[])
 f90_mains = Split(f90_progs)
 
 if 'f90' in api and F90:

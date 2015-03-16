@@ -70,7 +70,8 @@ colors = {
     'x': 'Cube Helix',
     'lb': 'Light Bartlein',
     'seismic': 'Seismic-OpendTect',
-    'izoaz': 'Isoluminant Azimuth'
+    'izoaz': 'Isoluminant Azimuth',
+    'montag': 'Spectral Lightness'
 }
 
 for col in colors.keys():

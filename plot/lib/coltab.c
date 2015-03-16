@@ -65,7 +65,7 @@ void vp_name2coltab (   const char *colname,    /* color table name */
 	    else              ic = i;
 	    
 	    if (3 != fscanf(colfile,"%g,%g,%g\n",&red[ic], &green[ic], &blue[ic])) 
-		sf_error("Error reading \"%s\"",filename);
+		sf_error("%s: Error reading \"%s\"",__FILE__,filename);
 	}
 	return;
     }

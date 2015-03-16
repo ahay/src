@@ -57,7 +57,8 @@ To programs:
 
 * Added new color schemes (color= in sfgrey): lb (Light-Bartlein),
   gist_earth, spectral, seismic, owb (orange-white-black),  rwb
-  (red-white-black), and izoaz (isoluminant for azimuth data)
+  (red-white-black), izoaz (isoluminant for azimuth data), 
+  montag (spectral lightness rainbow) 
 * sfipick: example Tkinter script for interactive picking
 * sfvelan: interactive velocity picking using matplotlib
 * Added x0= and mwt= parameters in sfconjgrad
