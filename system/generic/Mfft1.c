@@ -33,7 +33,8 @@ int main (int argc, char *argv[])
   int   n1, nw, nt,i1;
   float o1;
   float d1, dw;
-  float wght, shift;
+  float shift;
+  double wght;
   char *label;
   sf_file Fin=NULL, Fou=NULL;
 
@@ -126,7 +127,7 @@ int main (int argc, char *argv[])
 
   /*------------------------------------------------------------*/
   /* Hermitian weight */
-  wght = sym ? 1./sqrtf((float) nt): 1.0/nt;
+  wght = sym ? 1.0/sqrt((double) nt): 1.0/nt;
 
   /*------------------------------------------------------------*/
   /* usable memory (Mb) */
@@ -136,7 +137,7 @@ int main (int argc, char *argv[])
   n2buf=1;
   while(n2buf/1024.*n1/1024.*SF_FLOAT < memsize) n2buf++;
   n2buf=SF_MIN(n2buf,sf_leftsize(Fin,1));
-  sf_warning("n2buf=%ld",n2buf);
+  /* sf_warning("n2buf=%ld",n2buf); */
 
   /*------------------------------------------------------------*/
   if(verb) fprintf(stderr,"allocate arrays");
