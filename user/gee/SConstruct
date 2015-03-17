@@ -9,7 +9,7 @@ heat3 helicon hmiss hole hpef hshape idempatch imospray invbin invbin1
 invrec1 kolmog levint light lint1 lopef losignoi lpef make maskinv
 misif miss miss1 msmiss mspef nhelicon npef parcel pefdeburst pfactor2
 proj tspline qdome randline sigmoid signoi splinebank splineplane
-synmarine syntop tentwt ungrad velcon3 wavemovie wilson
+synmarine syntop tentwt ungrad velcon3 wavemovie wilson xtomo
 '''
 
 try:  # distributed version

@@ -23,7 +23,7 @@
 int main(int argc, char* argv[])
 {
     int i, niter, n1, n2, n12, i3, n3, ns, order;
-    float *mm, *dd, **pp, lam, eps;
+    float *mm, *dd, *xx, **pp, lam, eps;
     bool *known;
     sf_file in, out, dip, mask;
 
@@ -45,6 +45,7 @@ int main(int argc, char* argv[])
 
     pp = sf_floatalloc2(n1,n2);
     mm = sf_floatalloc(n12);
+    xx = sf_floatalloc(n12);
     known = sf_boolalloc(n12);
     
     if (NULL != sf_getstring ("mask")) {
@@ -67,6 +68,9 @@ int main(int argc, char* argv[])
 	sf_warning("slice %d of %d",i3+1,n3);
 
 	sf_floatread(mm,n12,in);
+	for (i=0; i < n12; i++) {
+	    xx[i] = mm[i];
+	}
 
 	if (NULL != mask) {
 	    sf_floatread(dd,n12,mask);
@@ -92,7 +96,7 @@ int main(int argc, char* argv[])
 	pwsmooth_init(ns, n1, n2, order, eps, pp);
 
 	sf_conjgrad_init(n12, n12, n12, n12, lam, 10*FLT_EPSILON, true, true); 
-	sf_conjgrad(NULL,sf_mask_lop,pwsmooth_lop,dd,mm,mm,niter);
+	sf_conjgrad(NULL,sf_mask_lop,pwsmooth_lop,xx,mm,mm,niter);
 	sf_conjgrad_close();
 
 	pwsmooth_close();
