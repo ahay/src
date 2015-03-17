@@ -762,7 +762,7 @@ int mpirsfwrite(ireal * a,
       /* compute current starting position */
       cur_pos = panelindex * get_datasize_grid(g) * sizeof(float);
 	
-      fprintf(stream, "--- mpirsfwrite: rank=%d current file cursor : %lld, moving to cus_pos: %lld\n",wrank, ftello(fp), cur_pos);
+      //      fprintf(stream, "--- mpirsfwrite: rank=%d current file cursor : %lld, moving to cus_pos: %lld\n",wrank, ftello(fp), cur_pos);
       fseeko(fp,cur_pos,SEEK_SET); 
 
 #ifdef SUXDR
