@@ -12,7 +12,7 @@
 #include "mpigridpp.hh"
 #include "mpisegypp.hh"
 #endif
-#include "istate.hh"
+#include "iwsim.hh"
 
 namespace TSOpt {
 
