@@ -73,6 +73,8 @@ static int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
 			double qv = (pow((c13[i]+c55[i]),2) + c55[i]*(c33[i]-c55[i]))/(c11[i]*(c33[i]-c55[i]));
 			double qh = (pow((c13[i]+c55[i]),2) + c55[i]*(c11[i]-c55[i]))/(c33[i]*(c11[i]-c55[i]));
 			double qm = 0.0, sm = 0.0, sv = 0.0, sh = 0.0 ;
+			double N1 = (x/hypotf(x,z))*(x/hypotf(x,z));
+			double N3 = (z/hypotf(x,z))*(z/hypotf(x,z));
 
 			switch(relat) {
 				case 0: lrst = 0;
@@ -109,9 +111,9 @@ static int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
 			}
 			
 			if(x==0 && z==0) qm=qv;
-			else qm = qh*(x/hypotf(x,z))*(x/hypotf(x,z)) + qv*(z/hypotf(x,z))*(z/hypotf(x,z));
+			else qm = (qh*c11[i]*N1 + qv*c33[i]*N3)/(c11[i]*N1 + c33[i]*N3);
 			if(x==0 && z==0) sm=0.5;
-			else sm=sh*(x/hypotf(x,z))*(x/hypotf(x,z)) + sv*(z/hypotf(x,z))*(z/hypotf(x,z));
+			else sm=(sh*c11[i]*N1 + sv*c33[i]*N3)/(c11[i]*N1 + c33[i]*N3);
 			x = wx*x*x;
 			z = wz*z*z;
 			r = x+z;			
