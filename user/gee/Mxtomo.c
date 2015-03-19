@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
     bool adj;
     int nt, nz, nx, nh, ny, niter, nm, nd;
     float ot, oz, ox, oh, oy;
-    float dt, dz, dx, dh, dy, zmax, hmax;
+    float dt, dz, dx, dh, dy, zmax;
     float *modl, *data;
     sf_file inp, out;
 
@@ -94,7 +94,7 @@ int main(int argc, char* argv[])
 	oh= -oh;  
 	dh= -dh;
     }    
-    hmax = SF_MAX(oh, oh+dh*(nh-1));
+/*    hmax = SF_MAX(oh, oh+dh*(nh-1)); */
 
     if (adj) {
 	sf_floatread(data,nd,inp);

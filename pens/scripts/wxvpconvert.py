@@ -73,6 +73,9 @@ class MainFrame(wx.Frame):
         panel = self.bgcolor()
         sizer.Add(panel,0,wx.ALL|wx.EXPAND,5)
 
+        panel = self.other()
+        sizer.Add(panel,0,wx.ALL|wx.EXPAND,5)
+
         self.SetSizer(sizer)
         sizer.Fit(self)
 
@@ -82,15 +85,15 @@ class MainFrame(wx.Frame):
         sizer = wx.BoxSizer(wx.HORIZONTAL)
 
         filetext  = wx.StaticText(self,-1,'Vplot File:')
+        sizer.Add(filetext)
+
         self.fileentry = wx.TextCtrl(self,size=(200,-1))
         self.Bind(wx.EVT_TEXT, self.file_entry,self.fileentry)
-
-        filebutt  = wx.Button(self,-1,'Select File')
-        self.Bind(wx.EVT_BUTTON,self.select_file,filebutt)
-
-        sizer.Add(filetext)
         sizer.Add(self.fileentry,wx.EXPAND)
-        sizer.Add(filebutt)
+
+        butt  = wx.Button(self,-1,'Select File')
+        self.Bind(wx.EVT_BUTTON,self.select_file,butt)
+        sizer.Add(butt)
 
         return sizer
 
@@ -145,7 +148,7 @@ class MainFrame(wx.Frame):
         self.Bind(wx.EVT_SLIDER,self.set_fat,slider)
         self.fat = 1
         
-        sizer.Add(slider)
+        sizer.Add(slider,wx.EXPAND)
 
         return sizer
 
@@ -166,10 +169,39 @@ class MainFrame(wx.Frame):
             self.Bind(wx.EVT_RADIOBUTTON,self.set_bgcolor,rb)
             sizer.Add(rb)
 
+        sizer.Add((0, 0), 1, wx.EXPAND)
+
+        check = wx.CheckBox(self,-1,'Serifs')
+        check.SetValue(wx.CHK_CHECKED)
+        self.serifs = 1
+        self.Bind(wx.EVT_CHECKBOX, self.check_serifs, check)
+        sizer.Add(check)
+
         return sizer
 
     def set_bgcolor(self,event):
         self.bgcolor = event.GetEventObject().GetLabel().lower()
+
+    def check_serifs(self,event):
+        if event.IsChecked():
+            self.serifs = 1
+        else:
+            self.serifs = 0
+
+    def other(self):
+        sizer = wx.BoxSizer(wx.HORIZONTAL)
+
+        text  = wx.StaticText(self,-1,'Other Options:')
+        sizer.Add(text)
+
+        entry = wx.TextCtrl(self,size=(200,-1))
+        self.Bind(wx.EVT_TEXT, self.options,entry)
+        sizer.Add(entry,wx.EXPAND)
+
+        return sizer
+
+    def options(self,event):
+        self.options = event.GetEventObject().GetValue()
 
 if __name__ == "__main__":
     app = wx.App(False)
