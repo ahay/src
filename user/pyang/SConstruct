@@ -68,13 +68,6 @@ env.Prepend(CPPPATH=['../../include'],
             LIBS=[env.get('DYNLIB','')+'rsfpwd',
                   env.get('DYNLIB','')+'rsf'])
 
-F90 = env.get('F90')
-api = env.get('API',[])
-
-if 'f90' in api and F90:
-    env.Prepend(F90PATH=['../../include'],
-                LIBS=[env.get('DYNLIB','')+'rsff90'])
-
 # fftw settings
 fftw = env.get('FFTW') 		#fftw = env.get('FFTWOMP')
 if fftw:
@@ -87,6 +80,13 @@ sparselibs = env.get('SPARSELIBS')
 if sparsepath and sparselibs:
     env.Prepend(CPPPATH=sparsepath,
                 LIBS=sparselibs)
+
+F90 = env.get('F90')
+api = env.get('API',[])
+
+if 'f90' in api and F90:
+    env.Prepend(F90PATH=['../../include'],
+                LIBS=[env.get('DYNLIB','')+'rsff90'])
 for source in src:
     inc = env.RSF_Include(source,prefix='')
     obj = env.StaticObject(source)

@@ -138,9 +138,10 @@ Test file:	/book/xjtu/test/gpufd3d/SConstruct
 NB: Mgpufbrec3d.cu is performing backward reconstruction for the forward 
 modeled wavefield in 3D with GPU. 
 
-15) 2D Modeling and imaging in visco-acoustic media (under construction)
-Main: 		Mviscoacoustic2d.c, Mrtmva2d.c
-Test file:	/book/xjtu/test/viscoacoustic2d/SConstruct
+15) 2D Modeling and imaging in viscous media (under construction)
+Main: 		Mviscoa2d.c, Mviscoe2d.c
+Test file:	/book/xjtu/test/viscoa2d/SConstruct
+		/book/xjtu/test/viscoe2d/SConstruct
 Note: The wavefield reconstruction method can not be utilized in 
 visco-acoustic and visco-elastic wave equation due to the dissipation. 
 The solution of computation without disk I/O is the use of checkpointing 
