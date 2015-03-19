@@ -29,6 +29,7 @@ try:  # distributed version
 except: # local version
     env = bldutil.Debug()
     root = None
+
     SConscript('../lexing/SConstruct')
 
 src = Glob('[a-z]*.c')
