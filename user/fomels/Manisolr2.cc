@@ -96,8 +96,10 @@ static int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 			qh = rela[lrst]*qv + rela2[lrst];
 			
 			if ( fabs(qv-1.0) > 1e-4 && fabs(qh-1.0) > 1e-4)  { /*Avoid isotropic or elliptical anisotropy*/
-				sv = (c11[i]*(c33[i]-c11[i])*(qh-1)*(qv-1)*(qv-1))/(2*(c33[i]*(1-qh)+c11[i]*(qv-1))*(c33[i]*(qv-qh)+c11[i]*(qh+qv-qv*qv-1)));
-			  	sh = (c33[i]*(c11[i]-c33[i])*(qh-1)*(qh-1)*(qv-1))/(2*(c33[i]*(qh-1)+c11[i]*(1-qv))*(c11[i]*(qh-qv)+c33[i]*(qh+qv-qh*qh-1)));
+				//sv = (c11[i]*(c33[i]-c11[i])*(qh-1)*(qv-1)*(qv-1))/(2*(c33[i]*(1-qh)+c11[i]*(qv-1))*(c33[i]*(qv-qh)+c11[i]*(qh+qv-qv*qv-1)));
+				sv = ((c11[i] - c33[i])*(-1 + qh)*(-1 + qv)*(-1 + qv))/(2*((-c33[i])*(-1 + 2*qv + qh*(1 + qh + (-4 + qv)*qv)) + c11[i]*(-1 + qh*qh - 2*qh*qv + qv*(3 + (-2 + qv)*qv))));
+			  	//sh = (c33[i]*(c11[i]-c33[i])*(qh-1)*(qh-1)*(qv-1))/(2*(c33[i]*(qh-1)+c11[i]*(1-qv))*(c11[i]*(qh-qv)+c33[i]*(qh+qv-qh*qh-1)));
+				sh = ((c11[i] - c33[i])*(-1 + qh)*(-1 + qh)*(-1 + qv))/(2*(c33[i] - c33[i]*(qh*(3 + (-2 + qh)*qh) - 2*qh*qv + qv*qv) + c11[i]*(-1 + 2*qh + qv + (-4 + qh)*qh*qv + qv*qv)));
 			}
 			else  {
 				qv = 1.0;
@@ -107,13 +109,14 @@ static int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 			}
 			
 			if(x==0 && z==0) qm=qv;
-			else qm = qh*(x/hypotf(x,z))*(x/hypotf(x,z)) + qv*(z/hypotf(x,z))*(z/hypotf(x,z));
+			else qm = qh*wx*(x/hypotf(vx[i]*x,vz[i]*z))*(x/hypotf(vx[i]*x,vz[i]*z)) + qv*wz*(z/hypotf(vx[i]*x,vz[i]*z))*(z/hypotf(vx[i]*x,vz[i]*z));
 			if(x==0 && z==0) sm=0.5;
-			else sm=sh*(x/hypotf(x,z))*(x/hypotf(x,z)) + sv*(z/hypotf(x,z))*(z/hypotf(x,z));
+			else sm=sh*wx*(x/hypotf(vx[i]*x,vz[i]*z))*(x/hypotf(vx[i]*x,vz[i]*z)) + sv*wz*(z/hypotf(vx[i]*x,vz[i]*z))*(z/hypotf(vx[i]*x,vz[i]*z));
 			x = wx*x*x;
 			z = wz*z*z;
 			r = x+z;			
 			r = sqrt(r*(1-sm) + sm*sqrt(r*r + 2*(qm-1)*x*z/sm));
+			if (r != r) sf_warning("qm %f qv %f qh %f sm %f sv %f sh %f ",qm,qv,qh,sv,sh);
 		break;
 		}
 		case 2: // Acoustic approximation
