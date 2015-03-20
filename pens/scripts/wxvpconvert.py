@@ -27,37 +27,11 @@ except:
       
 import rsf.vpconvert as vpconvert
 
-def showerror(message):
-    dlg = wx.MessageDialog(None,message,
-                           wx.ICON_ERROR | wx.OK)
-    dlg.ShowModal()
-
-def showinfo(message):
-    dlg = wx.MessageDialog(None,message,
-                           wx.ICON_INFORMATION | wx.OK)
-    dlg.ShowModal()
-
-def convert(vpl,format,opts,pars):
-    '''Convert a VPL file'''
-    if not os.path.isfile(vpl):
-        showerror("Can't find " + vpl)
-        return
-
-    new = '.'.join([os.path.splitext(vpl)[0],format.lower()])
-    opts = ' '.join(map(lambda x: '='.join([x, str(pars[x].get())]), 
-                        pars.keys())) + ' ' + opts
-    
-    fail = vpconvert.convert(vpl,new,format,None,opts,False)
-    
-    run = "%s to %s using \"%s\"" % (vpl,new,opts)
-    if fail:
-        showerror("Could not convert " + run)
-    else:
-        showinfo("Converted " + run)
-
 class MainFrame(wx.Frame):
     def __init__(self):
         wx.Frame.__init__(self,None,title='Vplot Converter',size=(600,300))
+
+        self.pars = {}
 
         sizer = wx.BoxSizer(wx.VERTICAL)
 
@@ -76,11 +50,16 @@ class MainFrame(wx.Frame):
         panel = self.other()
         sizer.Add(panel,0,wx.ALL|wx.EXPAND,5)
 
+        panel = self.action()
+        sizer.Add(panel,0,wx.ALL|wx.EXPAND,5)
+
         self.SetSizer(sizer)
         sizer.Fit(self)
 
     def fileopen(self):
         # Vplot File: _________________ [...]
+
+        self.vpl = ''
 
         sizer = wx.BoxSizer(wx.HORIZONTAL)
 
@@ -100,7 +79,6 @@ class MainFrame(wx.Frame):
     def file_entry(self,event):
         '''Change file name using text box'''
         self.vpl = self.fileentry.GetValue()
-        print self.vpl
 
     def select_file(self,event):
         '''Select a file into entry'''
@@ -126,16 +104,19 @@ class MainFrame(wx.Frame):
         for i in range(nf):
             fmt = formats[i]
             rb = wx.RadioButton(self,-1,fmt.upper())
+            if 'png'==fmt:
+                self.format = 'png'
+                self.pars['format'] = self.format
+                rb.SetValue(True)
             self.Bind(wx.EVT_RADIOBUTTON,self.set_format,rb)
             fsizer.Add(rb)
-        self.format = formats[0]
         sizer.Add(fsizer)
 
         return sizer
 
     def set_format(self,event):
-        print self.format
         self.format = event.GetEventObject().GetLabel().lower()
+        self.pars['format'] = self.format
 
     def fat(self):
         sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -146,14 +127,14 @@ class MainFrame(wx.Frame):
         slider = wx.Slider(self,-1,1,1,10,size=(250,-1),
                            style=wx.SL_HORIZONTAL | wx.SL_AUTOTICKS | wx.SL_LABELS)
         self.Bind(wx.EVT_SLIDER,self.set_fat,slider)
-        self.fat = 1
+        self.pars['fat'] = '1'
         
         sizer.Add(slider,wx.EXPAND)
 
         return sizer
 
     def set_fat(self,event):
-        self.fat = event.GetEventObject().GetValue()
+        self.pars['fat'] = str(event.GetEventObject().GetValue())
 
     def bgcolor(self):
         sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -161,11 +142,13 @@ class MainFrame(wx.Frame):
         text  = wx.StaticText(self,-1,'Background Color:')
         sizer.Add(text)
 
-        self.bgcolor = 'black'
-        for color in ('light','dark','black','white'):
-            rb = wx.RadioButton(self,-1,color.capitalize())
-            if color==self.bgcolor:
+        self.pars['bgcolor'] = 'black'
+        for color in ('black','white','light','dark'):
+            if 'black'==color:
+                rb = wx.RadioButton(self,-1,color.capitalize(),style=wx.RB_GROUP)
                 rb.SetValue(True)
+            else:
+                rb = wx.RadioButton(self,-1,color.capitalize())
             self.Bind(wx.EVT_RADIOBUTTON,self.set_bgcolor,rb)
             sizer.Add(rb)
 
@@ -173,20 +156,20 @@ class MainFrame(wx.Frame):
 
         check = wx.CheckBox(self,-1,'Serifs')
         check.SetValue(wx.CHK_CHECKED)
-        self.serifs = 1
+        self.pars['serifs'] = 'y'
         self.Bind(wx.EVT_CHECKBOX, self.check_serifs, check)
         sizer.Add(check)
 
         return sizer
 
     def set_bgcolor(self,event):
-        self.bgcolor = event.GetEventObject().GetLabel().lower()
+        self.pars['bgcolor'] = event.GetEventObject().GetLabel().lower()
 
     def check_serifs(self,event):
         if event.IsChecked():
-            self.serifs = 1
+            self.pars['serifs'] = 'y'
         else:
-            self.serifs = 0
+            self.pars['serifs'] = 'n'
 
     def other(self):
         sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -194,6 +177,7 @@ class MainFrame(wx.Frame):
         text  = wx.StaticText(self,-1,'Other Options:')
         sizer.Add(text)
 
+        self.opts = ''
         entry = wx.TextCtrl(self,size=(200,-1))
         self.Bind(wx.EVT_TEXT, self.options,entry)
         sizer.Add(entry,wx.EXPAND)
@@ -201,7 +185,54 @@ class MainFrame(wx.Frame):
         return sizer
 
     def options(self,event):
-        self.options = event.GetEventObject().GetValue()
+        self.opts = event.GetEventObject().GetValue()
+
+    def action(self):
+        # [Convert] [Quit]
+        sizer = wx.BoxSizer(wx.HORIZONTAL)
+
+        run = wx.Button(self,-1,'Convert')
+        self.Bind(wx.EVT_BUTTON,self.convert,run)
+        sizer.Add(run)
+
+        sizer.Add((0, 0), 1, wx.EXPAND)
+
+        end = wx.Button(self,-1,'Quit')
+        self.Bind(wx.EVT_BUTTON,self.quit,end)
+        sizer.Add(end)
+
+        return sizer
+
+    def convert(self,event):
+        '''Convert a VPL file'''
+        if not os.path.isfile(self.vpl):
+            self.showerror("Can't find input file" + self.vpl)
+            return
+
+        new = '.'.join([os.path.splitext(self.vpl)[0],self.format.lower()])
+        opts = ' '.join(map(lambda x: '='.join([x, self.pars[x]]), 
+                            self.pars.keys())) + ' ' + self.opts
+    
+        fail = vpconvert.convert(self.vpl,new,self.format,None,opts,False)
+    
+        run = "%s to %s using \"%s\"" % (self.vpl,new,opts)
+        if fail:
+            self.showerror("Could not convert " + run)
+        else:
+            self.showinfo("Converted " + run)
+
+    def showerror(self,message):
+        dlg = wx.MessageDialog(None,message,'Error',
+                               wx.ICON_ERROR | wx.OK)
+        dlg.ShowModal()
+
+    def showinfo(self,message):
+        dlg = wx.MessageDialog(None,message,'Message',
+                               wx.ICON_INFORMATION | wx.OK)
+        dlg.ShowModal()
+
+    def quit(self,event):
+        sys.exit()
 
 if __name__ == "__main__":
     app = wx.App(False)

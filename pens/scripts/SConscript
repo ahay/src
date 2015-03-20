@@ -3,7 +3,7 @@ import bldutil
 Import('env bindir pkgdir')
 
 scripts = '''
-tkvpconvert vpannotate vplot2eps vplot2png vplot2gif vplot2avi vpconvert
+tkvpconvert vpannotate vplot2eps vplot2png vplot2gif vplot2avi vpconvert wxvpconvert
 '''
 
 for src in Split(scripts):
