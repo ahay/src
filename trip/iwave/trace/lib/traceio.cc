@@ -2308,10 +2308,12 @@ void tapermutetraces(tracegeom * tg,
     int iet = (int)(wtime/tg->dt);
     float wt=0,wttime=1.0f;
     if (width > 0) {
+#pragma ivdep
         for (itr=0;itr<width;itr++) {
            wt = costap((width-itr)/float(width));
            (tg->buf)[it+itr*tg->nt]*=wt;
         }
+#pragma ivdep
         for (itr=tg->ntraces-width;itr<tg->ntraces;itr++) {
            wt = costap((itr-tg->ntraces+width+1)/float(width));
            (tg->buf)[it+itr*tg->nt]*=wt;
@@ -2322,6 +2324,7 @@ void tapermutetraces(tracegeom * tg,
 //	fprintf(stderr," tg->dt=%f \n",tg->dt);
 //	fprintf(stderr," it=%d \n",it);
         wttime = costap((it-tg->nt+iet+1)/float(iet));
+#pragma ivdep
         for (itr=0; itr<tg->ntraces; itr++) {
             (tg->buf)[it+itr*tg->nt]*=wttime;
         }

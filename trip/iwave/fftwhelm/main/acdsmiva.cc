@@ -114,7 +114,7 @@ int main(int argc, char ** argv) {
 #endif
 
       /* the Op */
-      IWaveOp iwop(*pars,stream);
+      IWaveOp op(*pars,stream);
         
       SEGYTaperMute tnm(valparse<float>(*pars,"mute_slope",0.0f),
                         valparse<float>(*pars,"mute_zotime",0.0f),
@@ -128,8 +128,8 @@ int main(int argc, char ** argv) {
                         valparse<float>(*pars,"sx_max",numeric_limits<float>::max()),
                         valparse<float>(*pars,"sx_width",0.0f));
  
-      LinearOpFO<float> tnmop(iwop.getRange(),iwop.getRange(),tnm,tnm);
-      OpComp<float> op(iwop,tnmop);
+      LinearOpFO<float> tnmop(op.getRange(),op.getRange(),tnm,tnm);
+      //OpComp<float> op(iwop,tnmop);
     
       /* generate physical model space */
 #ifdef IWAVE_USE_MPI
