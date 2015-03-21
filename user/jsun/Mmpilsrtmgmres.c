@@ -366,6 +366,8 @@ int main(int argc, char* argv[])
     geop->numprocs=numprocs;
     /*switch*/
     geop->mode=mode;
+    /*laplac*/
+    geop->lpl = lpl;
 
     /* psrtm */
     psrtm(record, imgsum, geop);
@@ -658,9 +660,7 @@ void psrtm_op(int nx1, const sf_complex* x, sf_complex* y, void* mat)
   int cpuid,numprocs;
   int nz, nx, nt, gpl, shtnum;
   int it,ix,iz,is;
-  /*temporary solution*/
   bool lpl;
-  lpl = true;
 
   /*converting the pointer to correct type*/
   geop = (geopar) mat;
@@ -672,6 +672,7 @@ void psrtm_op(int nx1, const sf_complex* x, sf_complex* y, void* mat)
   nt = geop->nt;
   gpl = geop->gpl;
   shtnum = geop->shtnum;
+  lpl = geop->lpl;
 
   /*check the dimension*/
   if (nx1 != nx*nz) sf_error("Incompatible dimensions!");

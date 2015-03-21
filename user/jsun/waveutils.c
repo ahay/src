@@ -63,6 +63,8 @@ typedef struct Geopar {
   int cpuid, numprocs;
   /*switch*/
   int mode;
+  /*laplac after imaging*/
+  bool lpl;
 } * geopar; 
 /*^*/
 
