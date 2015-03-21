@@ -33,6 +33,7 @@
 /*automatically generated headers*/
 #include "waveutils.h"
 #include "mpicgmres.h"
+#include "laplac2.h"
 
 int psrtm(sf_complex*** record, sf_complex** imgsum, geopar geop);
 void psrtm_op(int nx1, const sf_complex* x, sf_complex* y, void* mat);
@@ -70,7 +71,7 @@ int main(int argc, char* argv[])
     int cpuid, numprocs;
 
     /*misc*/
-    bool gmres;
+    bool gmres, lpl;
     int mode;
     int nzx, nx2, nz2, n2, nk;
     int ix, iz, it, is;
@@ -79,7 +80,7 @@ int main(int argc, char* argv[])
 
     /*Data/Image*/
     sf_complex ***record, **imgsum;
-    sf_complex *img_mod, *img_dat;
+    sf_complex *img_mod, *img_dat, *img_tmp;
 
     /*GMRES(m)*/
     int niter,mem;
@@ -113,6 +114,7 @@ int main(int argc, char* argv[])
       if (adj) {
 	if (!sf_getint("niter",&niter)) niter=5;
 	if (!sf_getint("mem",&mem)) mem=5;
+        if (!sf_getbool("laplac", &lpl)) lpl=true; /*laplacian filtering*/
 	if (cpuid==0)
 	  sf_warning(">>>>>Using GMRES(%d) LSRTM with %d iterations<<<<<",mem,niter);
       } else { 
@@ -233,9 +235,14 @@ int main(int argc, char* argv[])
     if (adj && gmres) {
       img_dat = sf_complexalloc(nz*nx);
       img_mod = sf_complexalloc(nz*nx);
+      if (lpl) {
+        img_tmp = sf_complexalloc(nz*nx);
+        laplac2_init(nz,nx);
+      } else img_tmp = NULL;
     } else {
       img_dat = NULL;
       img_mod = NULL;
+      img_tmp = NULL;
     }
 
     /*read from files*/
@@ -367,22 +374,47 @@ int main(int argc, char* argv[])
       if (NULL != Fstart) {
 	sf_complexread(img_mod,nx*nz,Fstart);
       } else {
-	/*transform the dimension to 1d*/
+        if (lpl) {
+          /*transform the dimension to 1d*/
 #ifdef _OPENMP
 #pragma omp parallel for private(ix,iz)
 #endif
-	for (ix=0; ix<nx; ix++)
-	  for (iz=0; iz<nz; iz++)
-	    img_mod[iz+ix*nz] = imgsum[ix][iz];
+          for (ix=0; ix<nx; ix++)
+            for (iz=0; iz<nz; iz++)
+              img_tmp[iz+ix*nz] = imgsum[ix][iz];
+
+          laplac2 (nx*nz,nx*nz,img_tmp,img_mod);
+        } else {
+          /*transform the dimension to 1d*/
+#ifdef _OPENMP
+#pragma omp parallel for private(ix,iz)
+#endif
+          for (ix=0; ix<nx; ix++)
+            for (iz=0; iz<nz; iz++)
+              img_mod[iz+ix*nz] = imgsum[ix][iz];
+        }
       }
 
       /*load the data*/
+      if (lpl) {
+        /*transform the dimension to 1d*/
 #ifdef _OPENMP
 #pragma omp parallel for private(ix,iz)
 #endif
-      for (ix=0; ix<nx; ix++)
-	for (iz=0; iz<nz; iz++)
-	  img_dat[iz+ix*nz] = imgsum[ix][iz];
+        for (ix=0; ix<nx; ix++)
+          for (iz=0; iz<nz; iz++)
+            img_tmp[iz+ix*nz] = imgsum[ix][iz];
+
+        laplac2 (nx*nz,nx*nz,img_tmp,img_dat);
+      } else {
+        /*transform the dimension to 1d*/
+#ifdef _OPENMP
+#pragma omp parallel for private(ix,iz)
+#endif
+        for (ix=0; ix<nx; ix++)
+          for (iz=0; iz<nz; iz++)
+            img_dat[iz+ix*nz] = imgsum[ix][iz];
+      }
 
       cgmres_init(nz*nx,mem);
       cgmres(img_dat, img_mod, psrtm_op, geop, niter, 0.01*SF_EPS, true, cpuid);
@@ -451,7 +483,7 @@ int psrtm(sf_complex*** record, sf_complex** imgsum, geopar geop)
     float **sill;
 
     /*misc*/
-    int ix, iz, it, is;
+    int ix, iz, is;
     int wfnt;
     float wfdt;
 
@@ -622,10 +654,13 @@ void psrtm_op(int nx1, const sf_complex* x, sf_complex* y, void* mat)
 /*< lowrank onestep psrtm linear operator (square matrix, img to img) >*/
 {
   geopar geop;
-  sf_complex ***dat, **img;
+  sf_complex ***dat, **img, *tmp;
   int cpuid,numprocs;
   int nz, nx, nt, gpl, shtnum;
   int it,ix,iz,is;
+  /*temporary solution*/
+  bool lpl;
+  lpl = true;
 
   /*converting the pointer to correct type*/
   geop = (geopar) mat;
@@ -643,6 +678,10 @@ void psrtm_op(int nx1, const sf_complex* x, sf_complex* y, void* mat)
 
   /*allocate memory*/
   img = sf_complexalloc2(nz, nx);
+  if (lpl) {
+    tmp = sf_complexalloc(nz*nx);
+    laplac2_init(nz,nx);
+  } else tmp = NULL;
   /*transform the dimension*/
 #ifdef _OPENMP
 #pragma omp parallel for private(ix,iz)
@@ -672,14 +711,26 @@ void psrtm_op(int nx1, const sf_complex* x, sf_complex* y, void* mat)
   psrtm(dat, img, geop);
 
   /*transform the dimension*/
+  if (lpl) {
 #ifdef _OPENMP
 #pragma omp parallel for private(ix,iz)
 #endif
-  for (ix=0; ix<nx; ix++)
-    for (iz=0; iz<nz; iz++)
-      y[iz+ix*nz] = img[ix][iz];
+    for (ix=0; ix<nx; ix++)
+      for (iz=0; iz<nz; iz++)
+        tmp[iz+ix*nz] = img[ix][iz];
+
+    laplac2 (nx*nz,nx*nz,tmp,y);
+  } else {
+#ifdef _OPENMP
+#pragma omp parallel for private(ix,iz)
+#endif
+    for (ix=0; ix<nx; ix++)
+      for (iz=0; iz<nz; iz++)
+        y[iz+ix*nz] = img[ix][iz];
+  }
 
   free(*img); free(img);
+  if (NULL!=tmp) free(tmp);
   if (cpuid==0) {
     free(**dat); free(*dat); free(dat);
   }
