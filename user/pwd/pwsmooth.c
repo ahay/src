@@ -78,6 +78,7 @@ void pwsmooth_close(void)
     free(w);
     free(*w1);
     free(w1);
+    pwspray_close();
 }
 
 void pwsmooth_lop(bool adj, bool add, 

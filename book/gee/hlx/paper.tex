@@ -889,7 +889,6 @@ but complicated, and found near the end of this chapter.
 \par
 \sideplot{3dpef}{width=.76\textwidth}{
         A 3-D causal filter at the starting end of a 3-D helix.
-        \viewit{3dpef}
 	}
 The ``1'' that defines the end of the 1-dimensional filter
 becomes in 3-D a point of central symmetry.
@@ -1044,7 +1043,6 @@ Kolmogoroff spectral-factorization gives this wavelet $\bold h $:
 1.791&-.651&-.044&-.024&\cdots&\cdots&-.044&-.087&-.200&-.558 \\
 \hline
 \end{array}
-\label{eqn:lapfacrow}
 \end{equation}
 In other words,
 the autocorrelation of
@@ -1261,6 +1259,7 @@ Using the 7 coefficients shown,
 the cost is 14 multiplications
 (because we need to run both ways) per mesh point.
 An example is shown in Figure \ref{fig:lapfac}.
+\inputdir{helicon}
 \plot{lapfac}{width=\textwidth,height=.33\textwidth}{
         Deconvolution by a filter with autocorrelation
         being the 2-dimensional Laplacian operator.
@@ -1278,6 +1277,7 @@ whereas, the helix derivative is only slightly directional
 achieving its meagre directionality entirely from its phase spectrum.
 \section{HELIX LOW-CUT FILTER}
 \sx{filter ! helix low-cut}
+\inputdir{helocut}
 Because the autocorrelation of $\bold H$ is
 $\bold H\T \ast \bold H = \bold R =-\nabla^2$
 is a second derivative,
@@ -1381,6 +1381,7 @@ amplitude $|k_x|$ or $|k_y|$.
 
 \subsection{Improving low-frequency behavior}
 \par
+\inputdir{helgal}
 It is nice having the 2-D helix derivative,
 but we can imagine even nicer 2-D low-cut filters.
 In 1-D, we designed a filter with an adjustable parameter,
@@ -1414,6 +1415,7 @@ which explains the whiteness in the middle of the lake.
 I gave up on playing with both $k_0$ and filter length;
 and now, merely play with the sum of the filter coefficients.
 \subsection{Filtering mammograms}
+\inputdir{mam}
 \sx{mammogram filtering}
 \sx{filtering mammograms}
 \sideplot{mam}{width=.8\textwidth,height=1.0\textwidth}{

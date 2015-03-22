@@ -2,5 +2,6 @@ from rsf.tex import *
 
 End(options='short',use='listings,hyperref,jfc,amsmath',
     include='\\newcommand{\\RSF}{../../..}',
-    hires='diamond wrap-four back-four wrap-waves dip lapfac')
+    hires='diamond wrap-four back-four wrap-waves dip lapfac',
+    color='solar')
 
