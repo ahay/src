@@ -116,6 +116,7 @@ random signal, and this would not effect their spectra or auto-correlation
 functions.}
 
 \section{SYNTHETIC DATA}
+\inputdir{synth}
 
 \cite{scthesis} tested this conjecture on both synthetic 
 and real data.  However his field data was very noisy, and he did not draw any 
@@ -140,7 +141,7 @@ r e^{i \omega \Delta t}) \; e^{i \omega p x}$ \\
 
 Having produced synthetics, it was then possible to go ahead and 
 cross-correlate traces to try and create pseudo-reflection seismograms. 
-Figure~\ref{fig:first.pic} is a pseudo-shot gather generated 
+Figure~\ref{fig:first} is a pseudo-shot gather generated 
 by cross-correlating one trace with every other.  The center panel shows how 
 the clarity of the signal 
 was improved by applying a $\sqrt{-i\omega}$ filter. 
@@ -150,7 +151,7 @@ shot gather, offset by 0.05~s so it does not obscure the data.
 Therefore the kinematics in this case appear to be consistent 
 with the conjecture.
 
-\activeplot{first.pic}{width=6in,height=3in}{}{
+\plot{first}{width=6in,height=3in}{
 Pseudo-shot gather over model with single horizontal layer and 200 
 incoming plane waves. The left panel is raw cross-correlations, the center 
 panel has a half differentiation filter applied and the right panel is 
@@ -159,16 +160,16 @@ labeled with the correct kinematics shifted by 0.05~s.
 
 \subsection{Limited angular bandwidth}
 
-Figure~\ref{fig:build.up} shows how the hyperbolas build up 
+Figure~\ref{fig:build} shows how the hyperbolas build up 
 from the individual plane waves. In the left panel there is only
-one plane wave present, instead of 200 as in Figure~\ref{fig:first.pic}.  
+one plane wave present, instead of 200 as in Figure~\ref{fig:first}.  
 The trace at zero spatial offset is the autocorrelation 
 function, and it has two spike as expected: 
 one at zero lag and one corresponding to the reflected event. 
 Other traces, corresponding to cross-correlations, have the two same 
 spikes, but these are offset in time due to the different 
 receiver positions and the apparent velocity of the incident wave.
-In the right panel of Figure~\ref{fig:build.up} there are 5 plane waves incident, 
+In the right panel of Figure~\ref{fig:build} there are 5 plane waves incident, 
 and a hyperbola is beginning to form.
 Only one part of each plane wave adds coherently with the others, the rest 
 of the energy is smeared out. 
@@ -178,7 +179,7 @@ seismograms, we need incident plane waves with the relevant slowness.
 This will become an issue when looking at real data where the direction of
 incoming waves will not be spatially white.
 
-\activesideplot{build.up}{width=4in,height=3in}{}{
+\sideplot{build}{width=4in,height=3in}{
 Pseudo-shot gather over model with single horizontal layer. Left panel 
 has one incoming plane wave and right panel has five.
 }

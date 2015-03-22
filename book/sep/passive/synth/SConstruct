@@ -6,17 +6,51 @@ Plot('over_1',None,
      output="sqrt(x1^2/4+200^2)/1000" |
      add add=.05 | 
      graph min2=0. max2=0.39 wantaxis=0 wanttitle= 
-     yreverse=1 plotfat=20 plotcol=5
+     yreverse=1 plotfat=20 plotcol=5 pad=n
      ''')
 
 Flow('fft',None,
      'spike n1=8192 n2=50 n3=1 o1=0 d1=0.004 o2=0 d2=10 o3=0 d3=10 | fft1')
+Flow('pmod','fft',
+     '''
+     pmod phi=0.05 np=150 rc1=0.5 h1=200. rc2=0.5 h2=100. pmax=0.00045 v1=2000. v2=3000. |
+     fft1 inv=y
+     ''')
+Flow('xcor','pmod','corral nlags=100')
 
+# Grab a common shot gather from the cube
 
-Plot('over_csg_p_150','csg_p_150 over_1','Overlay')
+Flow('raw_csg','xcor',
+     '''
+     window n3=1 f3=29 min1=0. max1=0.39 |
+     put label2=Offset unit2=m o2=-290
+     ''')
+Flow('csg','raw_csg','halfint inv=y')
 
-Result('first','aw_csg_p_150 csg_p_150 over_csg_p_150','SideBySideAniso')
+Plot('raw_csg','grey wanttitle=n')
+Plot('csg',    'grey wanttitle=n')
+Plot('over_csg','csg over_1','Overlay')
 
+Result('first','raw_csg csg over_csg','SideBySideAniso')
 
+for q in (1,5):
+    # Generate the cube of cross-correlated traces
+    xcor = 'xcor%d' % q
+    Flow(xcor,'fft',
+         '''
+         pmod phi=0.05 np=%d rc1=0.5 h1=200. rc2=0.5 h2=100. pmax=0.0003 v1=2000. v2=3000. |
+         fft1 inv=y | 
+         corral nlags=100
+         ''' % q)
+    # Grab a common shot gather from the cube
+    csg = 'csg%d' % q
+    Flow(csg,xcor,
+         '''
+         window n3=1 f3=29 min1=0. max1=0.39 |
+         put label2=Offset unit2=m o2=-290
+         ''')
+    Plot(csg,'grey wanttitle=n')
+     
+Result('build','csg1 csg5','SideBySideAniso')
 
 End()
