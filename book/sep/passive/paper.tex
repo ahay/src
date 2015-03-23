@@ -1,3 +1,5 @@
+\published{SEP report, 92, 83-90 (1996)}
+
 \lefthead{Rickett \& Claerbout}
 \righthead{Passive seismic imaging}
 \footer{SEP--92}
@@ -188,18 +190,18 @@ has one incoming plane wave and right panel has five.
 
 The horizontal bed code shown earlier was easy to adapt to test 
 slightly more complicated models.
-The left panel of Figure~\ref{fig:point.diff} shows a pseudo-shot gather 
+The left panel of Figure~\ref{fig:point} shows a pseudo-shot gather 
 with a point diffractor in the subsurface. Again the kinematics are correct, 
 as they are in the zero-offset section of the same model shown in the 
-right panel of Figure~\ref{fig:point.diff}.  Notice the offset center of the 
+right panel of Figure~\ref{fig:point}.  Notice the offset center of the 
 hyperbola in the pseudo-shot gather.
 
-\activesideplot{point.diff}{width=4in,height=3in}{}{
+\sideplot{point}{width=4in,height=3in}{
 Model with single point diffractor. Left panel shows common-shot gather,
 and right panel shows zero-offset section.
 }
 
-With a model of two horizontal layers, the results (Figure~\ref{fig:csg.two}) 
+With a model of two horizontal layers, the results (Figure~\ref{fig:two}) 
 seem to contain a 
 spurious event at the time of the inter-bed multiple. This is not the multiple 
 itself but comes from the correlation between the first layer and the
@@ -208,7 +210,7 @@ it would arrive at the same time but with opposite amplitude and so
 cancel this event out. Therefore this event is an artifact of the modeling 
 technique and does not contradict the conjecture.
 
-\activesideplot{csg.two}{width=2in,height=3in}{}{
+\sideplot{two}{width=2in,height=3in}{
 Common shot gather for a model with two horizontal layers.
 }
 
@@ -224,7 +226,7 @@ where $n$ is the number of time samples, and by increasing the length
 of the time series used I was able to clearly image reflection coefficients
 of 0.05, as shown in Figure~\ref{fig:many}.
 
-\activeplot{many}{width=6in,height=3in}{}{
+\plot{many}{width=6in,height=3in}{
 Common shot gathers for a model with a single horizontal layer with 
 reflection coefficient 0.05. Left panel used 65,000 points in the time series,
 the center panel about 130,000 and the right panel about 260,000.
@@ -259,7 +261,7 @@ be done in the field in real time.  Implementation of this will be difficult.
 \end{enumerate}
 
 \bibliographystyle{seg}
-\bibliography{passive}
+\bibliography{SEP2,passive}
 
 
 
