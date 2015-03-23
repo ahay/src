@@ -427,7 +427,7 @@ public:
       out << endl;
     }
     for (size_t i=0; i<names.size();i++) {
-      //      if (*(nums[i]) < tols[i]) cerr<<names[i]<<" = "<<*(nums[i])<<" below tol = "<<tols[i]<<endl;
+      if (*(nums[i]) < tols[i]) out<<names[i]<<" = "<<*(nums[i])<<" below tol = "<<tols[i]<<endl;
       stop = stop || (*(nums[i]) < tols[i] );
     }
     return stop;

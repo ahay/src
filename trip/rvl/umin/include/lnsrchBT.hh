@@ -236,17 +236,26 @@ namespace RVLUmin {
 	       bt <= maxsteps) {
 	  // if the new value is bigger than the old (esp. if it's much bigger),
 	  // then a more nuanced estimate is sensible - use quadratic interpolation
-	  if (fx.getValue() > fval && bt<2) {
-	    Scalar tmpstep = -(gfdx*step*step)/(fx.getValue()-fval-step*gfdx);
+	  //	  if (fx.getValue() > fval && bt<2) {
+	  if (bt<2) {
+	    Scalar tmpstep = -(gfdx*step*step)/(2.0*(fx.getValue()-fval-step*gfdx));
 	    str<<"  trial quadr. bt step = "<<tmpstep<<"\n";
 	    if (tmpstep < minstep*dxnorm) {
 	      step = step * gamma1;
 	      if (DispFlag) {
-		str<<"  quadratic bt step    = "<<tmpstep<<" too small, replace with\n";
-		str<<"  linear bt step       = "<<step<<"\n";
+		str<<"  quadratic bt step    = "<<tmpstep<<" smaller than min step\n";
+		str<<"  use linear bt step   = "<<step<<"\n";
 		str.flush();
 	      }
 	    }
+	    else if (tmpstep > step) {
+	      step = step * gamma1;
+	      if (DispFlag) {
+		str<<"  quadratic bt step    = "<<tmpstep<<" larger than current step\n";
+		str<<"  use linear bt step   = "<<step<<"\n";
+		str.flush();
+	      }
+	    }	      
 	    else {
 	      step = tmpstep;
 	      if (DispFlag) {

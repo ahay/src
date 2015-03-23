@@ -34,6 +34,7 @@ copyright holder.
 #define __RVL_FUNC
 
 #include "op.hh"
+#include "blockop.hh"
 
 namespace RVL {
  
@@ -103,7 +104,10 @@ namespace RVL {
 
   protected:
 
-    /** 2-jet at a point, accessible only through FunctionalEvaluation
+    /** 2-jet at a point, accessible only through
+	FunctionalEvaluation. Note the implicit use of duality: the
+	gradient and Hessian, rather than first and second derivative,
+	are provided.
      */
     /** \f$val = F(x)\f$ */
     virtual void apply(const Vector<Scalar> & x, 
@@ -239,6 +243,7 @@ namespace RVL {
   template<class Scalar>
   class FunctionalProductDomain: public Functional<Scalar> {
 
+    friend class FunctionalEvaluation<Scalar>;
     friend class FunctionalProductDomainEvaluation<Scalar>;
 
   protected:
@@ -251,6 +256,19 @@ namespace RVL {
 				      const Vector<Scalar> & x,
 				      Vector<Scalar> & g) const = 0;
 
+    void export_applyPartialGradient(FunctionalProductDomain<Scalar> const & f,
+				     int i,
+				     const Vector<Scalar> & x,
+				     Vector<Scalar> & g) const {
+      try {
+	f.applyPartialGradient(i,x,g);
+      }
+      catch (RVLException & e) {
+	e<<"\ncalled from export_applyPartialGradient\n";
+	throw e;
+      }
+    }
+
     /** applyGradient() computes the gradient of the function. This method is
 	implemented in this (the base) class, using PartialGradient(),
 	and can be (but need not be) re-implemented in a derived class. */
@@ -262,7 +280,7 @@ namespace RVL {
 	Vector<Scalar> tmp(g);
 	for (int i=1;i<cx.getSize();i++) {
 	  applyPartialGradient(i,cx[i],tmp);
-	  g.linComb(1.0,tmp);
+	  g.linComb(ScalarFieldTraits<Scalar>::One(),tmp);
 	}
       }
       catch (RVLException & e) {
@@ -271,28 +289,58 @@ namespace RVL {
       }
     }
 
-    /** applyHessianBlock() computes the image of the (i,j) block of the
-	Hessian on derivative on dxi, giving dxj.  If this method is not
-	implemented, then the default HessianBlock() method can be
-	used; the block of the Hessian will then be an instance of 
-	FunctionalDefaultHessianBlock. */
-    virtual void applyHessianBlock(int i,
-				   int j,
-				   const Vector<Scalar> & x,
-				   const Vector<Scalar> & dxi,
-				   Vector<Scalar> & dxj) const = 0;
+    /** applyPartialHessian() computes the image of the (i,j) block of
+	the Hessian on dxi, giving dxj. Note the implicit use of
+	duality: the action of the (i,j) second partial derivative on
+	(dxj,dxi) is the inner product of dxi with
+	applyPartialHessian(i,j,x,dxj,*).
+
+	Note also that the adjoint of the (i,j) block is the (j,i) block.
+    */
+    virtual void applyPartialHessian(int i,
+				     int j,
+				     const Vector<Scalar> & x,
+				     const Vector<Scalar> & dxj,
+				     Vector<Scalar> & dxi) const = 0;
+
+    void export_applyPartialHessian(FunctionalProductDomain<Scalar> const & f,
+				    int i,
+				    int j,
+				    const Vector<Scalar> & x,
+				    const Vector<Scalar> & dxj,
+				    Vector<Scalar> & dxi) const {
+      try {
+	f.applyPartialHessian(i,j,x,dxj,dxi);
+      }
+      catch (RVLException & e) {
+	e<<"\ncalled from export_applyPartialHessian\n";
+	throw e;
+      }
+    }
 
     /** applyHessian() computes the image of the Hessian of the
 	function. This method is implemented in this (the base) class,
-	using applyHessianBlock, but may be re-implemented in a
-	derived class. NB: as of 15.09.06, NOT IMPLEMENTED.*/ 
+	using applyPartialHessian, but may be re-implemented in a
+	derived class.*/ 
     virtual void applyHessian(const Vector<Scalar> & x,
 			      const Vector<Scalar> & yin,
 			      Vector<Scalar> & yout) const {
-      RVLException e;
-      e<<"Error: FunctionalProductDomain::applyHessian\n";
-      e<<"this method not yet defined - complain to management!\n";
-      throw e;
+      try {
+	Components<Scalar> cyin(yin);
+	Components<Scalar> cyout(yout);
+	for (int i=0; i<cyin.getSize(); i++) {
+	  cyout[i].zero();
+	  Vector<Scalar> tmp(this->getProductDomain()[i]);
+	  for (int j=0; j<cyin.getSize(); j++) {
+	    applyPartialHessian(i,j,x,cyin[j],tmp);
+	    cyout[i].linComb(ScalarFieldTraits<Scalar>::One(),tmp);
+	  }
+	}
+      }
+      catch (RVLException & e) {
+	e<<"\ncalled from FunctionalProductDomain::applyHessian\n";
+	throw e;
+      }
     }
     virtual FunctionalProductDomain<Scalar> * clonePD() const = 0;
     Functional<Scalar> * clone() const { return clonePD(); }
@@ -334,7 +382,7 @@ namespace RVL {
     /** Formerly built-in test for accuracy of block Hessian
 	computation - general case. Now deferred to standalone
 	function.
-    bool checkHessianBlock(const Vector<Scalar> & y,
+    bool checkPartialHessian(const Vector<Scalar> & y,
 			   const Vector<Scalar> & pi,
 			   const Vector<Scalar> & pj,
 			   int i,
@@ -343,20 +391,20 @@ namespace RVL {
 			   int n=10,
 			   Scalar hmin=0.1,
 			   Scalar hmax=1.0) {
-      return HessianBlockTestNonDiag(*this,y,pi,pj,i,j,str,n,hmin,hmax);
+      return PartialHessianTestNonDiag(*this,y,pi,pj,i,j,str,n,hmin,hmax);
     }
  */
     /** Formerly built-in test for accuracy of block Hessian
 	computation - diagonal case. Now deferred to standalone
 	function.
-    bool checkHessianBlock(const Vector<Scalar> & y,
+    bool checkPartialHessian(const Vector<Scalar> & y,
 			   const Vector<Scalar> & pi,
 			   int i,
 			   ostream & str,
 			   int n=10,
 			   Scalar hmin=0.1,
 			   Scalar hmax=1.0) {
-      return HessianBlockTestDiag(*this,y,pi,i,n,hmin,hmax);
+      return PartialHessianTestDiag(*this,y,pi,i,n,hmin,hmax);
     }
  */
   };
@@ -365,7 +413,7 @@ namespace RVL {
   class HessianEvaluation;
 
   template<class Scalar>
-  class HessianBlockEvaluation;
+  class PartialHessianEvaluation;
 
   /** Evaluation is a pair of a (clone of a) Functional and an
       evaluation point Vector, stored by reference. The Functional is
@@ -376,7 +424,7 @@ namespace RVL {
   class FunctionalEvaluation: public Writeable {
 
     friend class HessianEvaluation<Scalar>;
-    friend class HessianBlockEvaluation<Scalar>;
+    friend class PartialHessianEvaluation<Scalar>;
     friend class FcnlOpComp<Scalar>;
     typedef typename ScalarFieldTraits<Scalar>::AbsType NormRetType;
 
@@ -393,9 +441,6 @@ namespace RVL {
     mutable bool gapplied;
     mutable NormRetType gnorm;
     mutable bool gnormapplied;
-
-    Components<Scalar> cg;
-    HessianEvaluation<Scalar> hess;
 
     // disabled
     FunctionalEvaluation();
@@ -416,6 +461,10 @@ namespace RVL {
 
   protected:
 
+    // accessed in product domain subclasses
+    Components<Scalar> cg;
+    HessianEvaluation<Scalar> hess;
+
     // access through HessianEvaluation
     void applyHessian(const Vector<Scalar> & yin,
 		      Vector<Scalar> & yout) const {
@@ -431,12 +480,12 @@ namespace RVL {
     
     /** The next two functions throw exceptions if the 
 	referenced functional is not a FcnlProdDom. They are 
-	accessed only by HessianBlockEval, via FcnlProdDomEval,
+	accessed only by PartialHessianEval, via FcnlProdDomEval,
 	which provides compile time type-safety in addition
 	to the run-time type checking built into these methods. 
     */
     
-    const ProductSpace<Scalar> & getProductDomain() {
+    const ProductSpace<Scalar> & getProductDomain() const {
       
       try {
 	const FunctionalProductDomain<Scalar> & pf =
@@ -455,39 +504,40 @@ namespace RVL {
       }
     }
 
-    const Vector<Scalar> & getGradientBlock(int i) {
+    // this version computes entire gradient
+    Vector<Scalar> const & getPartialGradient(int i) const {
       try {
 	if (wx.update()) reset();
 	if (!gapplied) {
-	  grad.relLock();
+	  //	  grad.relLock();
 	  f->applyGradient(wx.get(),grad);
 	  gapplied=true;
-	  grad.setLock();
+	  //	  grad.setLock();
 	}
 	return cg[i];
       }
       catch (RVLException & e) {
-	e<<"\ncalled from FunctionalEvaluation::getGradientBlock\n";
+	e<<"\ncalled from FunctionalEvaluation::getPartialGradient\n";
 	throw e;
       }
     }
 
-    /** applyHessianBlock() computes the image of the (i,j) block of the
+    /** applyPartialHessian() computes the image of the (i,j) block of the
 	Hessian on derivative on dxi, giving dxj.
     */
-    void applyHessianBlock(int i,
-			   int j,
-			   const Vector<Scalar> & dxi,
-			   Vector<Scalar> & dxj) const {
+    void applyPartialHessian(int i,
+			     int j,
+			     const Vector<Scalar> & dxi,
+			     Vector<Scalar> & dxj) const {
       try {
 	if (wx.update()) reset();
 	FunctionalProductDomain<Scalar> * pf = NULL;
 	if ((pf = dynamic_cast<FunctionalProductDomain<Scalar> *>(f))) {
-	  pf->applyHessianBlock(i,j,wx.get(),dxi,dxj);
+	  pf->applyPartialHessian(i,j,wx.get(),dxi,dxj);
 	}
 	else {
 	  RVLException e;
-	  e<<"Error: FunctionalEvaluation::applyHessianBlock\n";
+	  e<<"Error: FunctionalEvaluation::applyPartialHessian\n";
 	  e<<"referenced Functional does not have ProductSpace domain\n";
 	  e<<"so Hessian block structure not defined\n";
 	  throw e;
@@ -527,7 +577,7 @@ namespace RVL {
 	applied(false), grad(fref.getDomain()), 
 	gapplied(false), gnormapplied(false),
 	cg(grad), hess(*this)
-	 {
+    {
       grad.zero();
       
       if (x.getSpace() != fref.getDomain()) {
@@ -662,13 +712,7 @@ namespace RVL {
 	It is safe to store a reference to the Hessian for the lifetime of
 	the evaluation.
     */
-    LinearOp<Scalar> const & getHessian() const {
-      try { return hess; }
-      catch (RVLException & e) {
-	e<<"\ncalled from FunctionalEvaluation::getHessian\n";
-	throw e;
-      }
-    }
+    LinearOp<Scalar> const & getHessian() const { return hess; }
     
     /** provided to enable extraction of subclass attributes via a cast, 
 	from the current internal copy of the underlying Functional. 
@@ -690,55 +734,107 @@ namespace RVL {
       to implement all methods.
   */
   template<class Scalar>
-  class HessianEvaluation: public LinearOp<Scalar> {
+  class HessianEvaluation: public BlockLinearOp<Scalar> {
 
   private:
     
-    FunctionalEvaluation<Scalar> & fx;
+    FunctionalEvaluation<Scalar> const & fx;
+    StdProductSpace<Scalar> unique_dom;
     
     // disabled
     HessianEvaluation();
     HessianEvaluation(const HessianEvaluation<Scalar> & h)
-      : fx(h.fx) {}
+      : fx(h.fx), unique_dom(h.unique_dom) {}
 
   protected:
     
-    LinearOp<Scalar> * clone() const {
+    BlockLinearOp<Scalar> * cloneBlockLinearOp() const {
       return new HessianEvaluation<Scalar>(*this);
     }
 
-    // image, application, MatVec product, whatever
-    void apply(const Vector<Scalar> & yin, 
-		 Vector<Scalar> & yout) const {
+    LinearOp<Scalar> * clone() const {
+      return cloneBlockLinearOp();
+    }
+
+    void apply(int i, int j,
+	       const Vector<Scalar> & xj, 
+	       Vector<Scalar> & yi) const {
       try {
-	fx.applyHessian(yin,yout);
+	fx.applyPartialHessian(i,j,xj,yi);
       }
       catch (RVLException & e) {
-	e<<"\ncalled from HessianEvaluation::apply()\n";
-	throw e;
+	if (i != 0 || j != 0) {
+	  RVLException e;
+	  e<<"Error: HessianEvaluation::apply(i,j,...)\n";
+	  e<<"  eval not product domain - i="<<i<<" j="<<j<<" not allowed\n";
+	  e<<"  must both be = 0\n";
+	  throw e;
+	}
+	fx.applyHessian(xj,yi);
       }
     }
     
     // image of adjoint (transpose) operator
-    void applyAdj(const Vector<Scalar> & yin,
-		    Vector<Scalar> & yout) const {
+    void applyAdj(int i, int j, 
+		  const Vector<Scalar> & yi,
+		  Vector<Scalar> & xj) const {
       try {
-	fx.applyHessian(yin,yout);
+	fx.applyPartialHessian(j,i,yi,xj);
       }
       catch (RVLException & e) {
-	e<<"\ncalled from HessianEvaluation::applyAdj()\n";
-	throw e;
+	if (i != 0 || j != 0) {
+	  RVLException e;
+	  e<<"Error: HessianEvaluation::applyAdj(i,j,...)\n";
+	  e<<"  eval not product domain - i="<<i<<" j="<<j<<" not allowed\n";
+	  e<<"  must both be = 0\n";
+	  throw e;
+	}
+	fx.applyHessian(yi,xj);
       }
     }
     
   public:
 
-    HessianEvaluation(FunctionalEvaluation<Scalar> & _fx): fx(_fx) {}
+    HessianEvaluation(FunctionalEvaluation<Scalar> const & _fx)
+      : fx(_fx),
+	unique_dom(fx.getDomain())
+    {}
     ~HessianEvaluation() {}
 
     // access to domain and range
     const Space<Scalar> & getDomain() const { return fx.getDomain(); }
+    const ProductSpace<Scalar> & getProductDomain() const {
+      try {
+	return fx.getProductDomain();
+      }
+      catch (RVLException & e) {
+	return unique_dom;
+      }
+    }
+    /*
+      FunctionalProductDomainEvaluation<Scalar> const * fpd = NULL;
+      if ((fpd=dynamic_cast<FunctionalProductDomainEvaluation<Scalar> const *>(&fx))) 
+	return fpd->getProductDomain();
+      else 
+    }
+    */
+
     const Space<Scalar> & getRange() const { return fx.getDomain(); }
+    const ProductSpace<Scalar> & getProductRange() const {
+      try {
+	return fx.getProductDomain();
+      }
+      catch (RVLException & e) {
+	return unique_dom;
+      }
+    }
+    /*
+      FunctionalProductDomainEvaluation<Scalar> const * fpd = NULL;
+      if ((fpd=dynamic_cast<FunctionalProductDomainEvaluation<Scalar> const *>(&fx))) 
+	return fpd->getProductDomain();
+      else return unique_dom;
+    }
+    */
 
     /** report to stream */
     ostream & write(ostream & str) const {
@@ -751,15 +847,12 @@ namespace RVL {
 
   /** A specialization of FunctionalEvaluation which accesses the
       additional partial derivatives of the FunctionalProductDomain
-      class. NOTE 15.09.06: this class is UNDER CONSTRUCTION and
-      should be used WITH CAUTION. */
+      class. Very lightweight wrapper. */
   template<class Scalar>
   class FunctionalProductDomainEvaluation: 
     public FunctionalEvaluation<Scalar> {
 
   private:
-
-    HessianBlockEvaluation<Scalar> deriv;
 
     // disabled
     FunctionalProductDomainEvaluation();
@@ -770,132 +863,33 @@ namespace RVL {
   
     FunctionalProductDomainEvaluation(FunctionalProductDomain<Scalar> & _f, 
 				      const Vector<Scalar> & _x)
-      : FunctionalEvaluation<Scalar>(_f,_x), deriv(*this) {}
+      : FunctionalEvaluation<Scalar>(_f,_x) {}
 
     ~FunctionalProductDomainEvaluation() {}
 
-    const Vector<Scalar> & getGradientBlock(int i) {
+    
+
+    /** Returns ith component of gradient */
+    Vector<Scalar> const & getPartialGradient(int i) const {
       try {
-	return FunctionalEvaluation<Scalar>::getGradientBlock(i);
+	return FunctionalEvaluation<Scalar>::getPartialGradient(i);
       }
       catch (RVLException & e) {
 	e<<"\ncalled from FunctionalProductDomainEvaluation";
-	e<<"::getGradientBlock\n";
+	e<<"::getPartialGradient\n";
 	throw e;
       }
     }
 
-    /** This seems like a bad implementation.  At the moment, only
-	one block may be accessed at a time, and references to previous
-	blocks in fact all point to the same object.  Use with caution.
+    /** Returns Hessian as a BlockLinearOp - which it is, to begin with,
+	here exposed as such.
     */
-    const LinearOp<Scalar> & getHessianBlock(int i, int j) { 
-      try {
-	deriv.setBlock(i,j);
-	return deriv;
-      }
-      catch (RVLException & e) {
-	e<<"\ncalled from FunctionalProductDomainEvaluation";
-	e<<"::getHessianBlock\n";
-	throw e;
-      }
-    }
+    const BlockLinearOp<Scalar> & getPartialHessian() const { 
+      return FunctionalEvaluation<Scalar>::hess; }
 
     ostream & write(ostream & str) const {
       str<<"Functional Evaluation with Product Domain; as"<<"\n";
       return FunctionalEvaluation<Scalar>::write(str);
-    }
-  };
-
-  /** Accesses a single block of the Hessian of a functional over a
-      product domain.  A single object represents every block of the
-      entire Hessian, as the block access indices can be reset by
-      using the setBlock() method.  This object has a lifetime
-      strictly controlled by the functional with which it is
-      associated and cannot survive independently.
-
-      ADP: Is there someway to restrict the use of this to be only
-      available inside the FPDEval?
-  */
-  template<class Scalar>
-  class HessianBlockEvaluation: public LinearOp<Scalar> {
-    
-  private:
-
-    FunctionalProductDomainEvaluation<Scalar> & fx;
-    int i;
-    int j;
-
-    // disabled
-    HessianBlockEvaluation();
-    HessianBlockEvaluation(const HessianBlockEvaluation<Scalar> & h)
-      : fx(h.fx), i(h.i), j(h.j) {}
-
-  protected:
-
-    HessianBlockEvaluation(FunctionalProductDomainEvaluation<Scalar> & _fx)
-      : fx(_fx), i(0), j(0) {}
-    
-    LinearOp<Scalar> * clone() const {
-      return new HessianBlockEvaluation<Scalar>(*this);
-    }
-
-    // image, application, MatVec product, whatever
-    void apply(const Vector<Scalar> & y, 
-	       Vector<Scalar> & z) const {
-      try {
-	fx.applyHessianBlock(i,j,y,z);
-      }
-      catch (RVLException & e) {
-	e<<"\ncalled in HessianBlockEvaluation::apply\n";
-	throw e;
-      }
-    }
-
-    // image of adjoint (transpose) operator
-    void applyAdj(const Vector<Scalar> & y,
-		    Vector<Scalar> & z) const {
-      try {
-	fx.applyHessianBlock(i,j,y,z);
-      }
-      catch (RVLException & e) {
-	e<<"\ncalled in HessianBlockEvaluation::applyAdj\n";
-	throw e;
-      }
-    }
-
-  public:
-
-    ~HessianBlockEvaluation() {}
-
-    const Space<Scalar> & getDomain() const { 
-      try {
-	return (fx.getProductDomain())[i];
-      }
-      catch (RVLException & e) {
-	e<<"\ncalled from HessianBlockEvaluation::getDomain()\n";
-	throw e;
-      }
-    }
-
-    const Space<Scalar> & getRange() const { 
-      try {
-	return (fx.getProductDomain())[j];
-      }
-      catch (RVLException & e) {
-	e<<"\ncalled from HessianBlockEvaluation::getDomain()\n";
-	throw e;
-      }
-    }
-
-    void setBlock(int ii, int jj) { i=ii; j=jj; }
-
-    ostream & write(ostream & str) const {
-      str<<"Hessian block operator"<<"\n";
-      str<<"block ("<<i<<", "<<j<<")\n";
-      str<<"part of functional evaluation"<<"\n";
-      fx.write(str);
-      return str;
     }
   };
 
@@ -1356,7 +1350,7 @@ namespace RVL {
   }
 
   template<class Scalar>
-  bool FunctionalProductDomain<Scalar>::checkHessianBlock
+  bool FunctionalProductDomain<Scalar>::checkPartialHessian
   (const Vector<Scalar> & y,
    const Vector<Scalar> & pi,
    const Vector<Scalar> & pj,
@@ -1368,30 +1362,30 @@ namespace RVL {
    Scalar hmax) {
     try {
       if (i==j)
-	return checkHessianBlock(y,pi,i,str,n,hmin,hmax);
+	return checkPartialHessian(y,pi,i,str,n,hmin,hmax);
       
       if (i < 1 || i > getProductDomain().getSize() || j < 1 ||
 	  j > getProductDomain().getSize()) {
 	RVLException e; e<<"Error in FunctionalProductDomain::";
-	e<<"checkHessianBlock: \n";
+	e<<"checkPartialHessian: \n";
 	e<<"invalid index\n";
 	throw e;
       }
       if (!y.inSpace(getDomain())) {
 	RVLException e; e<<"Error in FunctionalProductDomain::";
-	e<<"checkHessianBlock: \n";
+	e<<"checkPartialHessian: \n";
 	e<<"base vector is not in Domain\n";
 	throw e;
       }
       if (!pi.inSpace(getProductDomain()[i])) {
 	RVLException e; e<<"Error in FunctionalProductDomain::";
-	e<<"checkHessianBlock: \n";
+	e<<"checkPartialHessian: \n";
 	e<<"direction vector pi is not in Domain\n";
 	throw e;
       }
       if (!pj.inSpace(getProductDomain()[j])) {
 	RVLException e; e<<"Error in FunctionalProductDomain::";
-	e<<"checkHessianBlock: \n";
+	e<<"checkPartialHessian: \n";
 	e<<"direction vector pj is not in Domain\n";
 	throw e;
       }
@@ -1432,7 +1426,7 @@ namespace RVL {
       }
       if (hlimit <= 0.0) {
 	RVLException e; e<<"Error in FunctionalProductDomain::";
-	e<<"checkHessianBlock: direction is not feasible\n";
+	e<<"checkPartialHessian: direction is not feasible\n";
 	throw e;
       }
       if (hmax >= hlimit) {
@@ -1446,7 +1440,7 @@ namespace RVL {
 
       FunctionalProductDomainEvaluation<Scalar> Fy(*this,y);
       Vector<Scalar> pi1(getProductDomain()[i]);
-      Fy.getHessianBlock(i,j).applyOp(pj,pi1);
+      Fy.getPartialHessian(i,j).applyOp(pj,pi1);
       dv = pi.inner(pi1);
 
       int nd;
@@ -1458,7 +1452,7 @@ namespace RVL {
       int rflag = 1;
       if (dvmag < numeric_limits<Scalar>::epsilon()) {
 	rflag = 0;
-	str << "FunctionalProductDomain::CheckHessianBlock: norm of "
+	str << "FunctionalProductDomain::CheckPartialHessian: norm of "
 	  "second variation is too "
 	    << endl << "small; displaying absolute error" << endl;
       }
@@ -1536,13 +1530,13 @@ namespace RVL {
       return 0;
     }
     catch (RVLException & e) {
-      e<<"\ncalled from FunctionalProductDomain::checkHessianBlock\n";
+      e<<"\ncalled from FunctionalProductDomain::checkPartialHessian\n";
       throw e;
     }
   }
 
   template<class Scalar>
-  bool FunctionalProductDomain<Scalar>::checkHessianBlock
+  bool FunctionalProductDomain<Scalar>::checkPartialHessian
   (const Vector<Scalar> & y,
    const Vector<Scalar> & pi,
    int i,
@@ -1553,19 +1547,19 @@ namespace RVL {
     try {
       if (i < 1 || i > i > getProductDomain()) {
 	RVLException e; e<<"Error in FunctionalProductDomain::";
-	e<<"checkHessianBlock: \n";
+	e<<"checkPartialHessian: \n";
 	e<<"invalid index\n";
 	throw e;
       }
       if (!y.inSpace(getDomain())) {
 	RVLException e; e<<"Error in FunctionalProductDomain::";
-	e<<"checkHessianBlock: \n";
+	e<<"checkPartialHessian: \n";
 	e<<"base vector is not in Domain\n";
 	throw e;
       }
       if (!pi.inSpace(getProductDomain()[i])) {
 	RVLException e; e<<"Error in FunctionalProductDomain::";
-	e<<"checkHessianBlock: \n";
+	e<<"checkPartialHessian: \n";
 	e<<"direction vector pi is not in Domain\n";
 	throw e;
       }
@@ -1594,7 +1588,7 @@ namespace RVL {
       }
       if (hlimit <= 0.0) {
 	RVLException e; e<<"Error in FunctionalProductDomain::";
-	e<<"checkHessianBlock: direction is not feasible\n";
+	e<<"checkPartialHessian: direction is not feasible\n";
 	throw e;
       }
       if (hmax >= hlimit) {
@@ -1608,7 +1602,7 @@ namespace RVL {
 
       FunctionalEvaluation<Scalar> Fy(*this,y);
       Vector<Scalar> pi1(getProductDomain()[i]);
-      Fy.getHessianBlock(i,i).applyOp(pi,pi1);
+      Fy.getPartialHessian(i,i).applyOp(pi,pi1);
       dv = pi.inner(pi1);
 
       int nd;
@@ -1620,7 +1614,7 @@ namespace RVL {
       int rflag = 1;
       if (dvmag < numeric_limits<Scalar>::epsilon()) {
 	rflag = 0;
-	str << "FunctionalProductDomain_d::CheckHessianBlock: norm of "
+	str << "FunctionalProductDomain_d::CheckPartialHessian: norm of "
 	  "second variation is too "
 	    << endl << "small; displaying absolute error" << endl;
       }
@@ -1668,7 +1662,7 @@ namespace RVL {
       return 0;
     }
     catch (RVLException & e) {
-      e<<"\ncalled from FunctionalProductDomain::checkHessianBlock\n";
+      e<<"\ncalled from FunctionalProductDomain::checkPartialHessian\n";
       throw e;
     }
   }
@@ -1936,6 +1930,126 @@ namespace RVL {
     
   };
 
+  /** Restriction operator - currently only for two-component domains */
+  template<typename Scalar>
+  class RestrictFcnl: public Functional<Scalar> {
+
+  private: 
+    
+    FunctionalProductDomain<Scalar> const & f;
+    Vector<Scalar> & xx;
+
+  protected:
+
+    void apply(Vector<Scalar> const & x,
+	       Scalar & val) const {
+      try {
+	Components<Scalar> cxx(xx);
+	cxx[1].copy(x);
+	export_apply(f, xx, val);
+      }
+      catch (RVLException & e) {
+	e<<"\ncalled from RestrictFcnl::apply\n";
+	throw e;
+      }
+    }
+
+    // note the apparently unavoidable extra storage and copying - would 
+    // need to be able to assemble vector in product space from components 
+    // to avoid some of this.
+    void applyGradient(Vector<Scalar> const & x,
+		       Vector<Scalar> & g) const {
+      try {
+	Components<Scalar> cxx(xx);
+	cxx[1].copy(x);
+	export_applyPartialGradient(f, 1, xx, g);	
+      }
+      catch (RVLException & e) {
+	e<<"\ncalled from RestrictFcnl::applyGradient\n";
+	throw e;
+      }
+    }
+
+    void applyHessian(Vector<Scalar> const & x,
+		      Vector<Scalar> const & dx,
+		      Vector<Scalar> & dy) const {
+      try {
+	Components<Scalar> cxx(xx);
+	cxx[1].copy(x);
+	export_applyPartialHessian(f, 1, 1, xx, dx, dy);	
+      }
+      catch (RVLException & e) {
+	e<<"\ncalled from RestrictFcnl::applyHessian\n";
+	throw e;
+      }
+    }
+
+    Functional<Scalar> * clone() const { 
+      return new RestrictFcnl(*this);
+    }
+    
+  public:
+    
+    RestrictFcnl(FunctionalProductDomain<Scalar> const & _f,
+		 Vector<Scalar> const & _x) 
+      : f(_f), xx(_x) {
+      try {
+	int ncomp = f.getProductDomain().getSize();
+	if (ncomp != 2) {
+	  RVLException e; 
+	  e<<"ERROR: RestrictFcnl constructor\n";
+	  e<<"  input FcnlProdDom has domain with "<<ncomp<<" components\n";
+	  e<<"  current implementation implementation allows only 2, with";
+	  e<<"  first restricted\n";
+	  e<<"  FcnlProdDom:\n";
+	  f.write(e);
+	  throw e;
+	}
+	if (f.getProductDomain()[0] != xx.getSpace()) {
+	  RVLException e; 
+	  e<<"ERROR: RestrictFcnl constructor\n";
+	  e<<"  input vector not in first component of domain product space\n";
+	  e<<"  Vector:\n";
+	  xx.write(e);
+	  e<<"  FcnlProdDom:\n";
+	  f.write(e);
+	  throw e;
+	}
+      }
+      catch (RVLException & e) {
+	e<<"\ncalled from RestrictFcnl constructor\n";
+	throw e;
+      }
+    }
+
+    RestrictFcnl(RestrictFcnl<Scalar> const & g): f(g.f), xx(g.xx) {}
+
+    ~RestrictFcnl() {}
+
+    Space<Scalar> const & getDomain() { return f.getDomain(); }
+
+    Scalar getMaxStep(const Vector<Scalar> & x,
+		      const Vector<Scalar> & dx) const {
+      try {
+	// as usual this doesn't really make sense
+	return f.getMaxStep(x,dx);
+      }
+      catch (RVLException & e) {
+	e<<"\ncalled from RestrictFcnl::getMaxStep\n";
+	throw e;
+      }
+    }
+
+    ostream & write(ostream & str) const {
+      str<<"RestrictFcnl with components\n";
+      str<<"  Vector:\n";
+      xx.write(str);
+      str<<"  FcnlProdDom:\n";
+      f.write(str);
+      return str;
+    }
+  };
+  
 }
 
 #endif

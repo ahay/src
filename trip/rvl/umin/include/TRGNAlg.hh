@@ -67,9 +67,19 @@ namespace RVLUmin {
 	"pessimistic" form would be a mirror-image. The optimal form
 	would involve a deep copy operation on OpEvals, which is
 	certainly possible future mod.
-     */
+
+	the quadratic model is
+	
+	0.5*\|b-F(x)\|^2 + p^Tg(x) + 0.5p^TH(x)p
+
+	where H(x)=DF(x)^TDF(x), and H(x)p = g(x) = DF(x)^T(b-F(x)) (approx)
+
+	The predicted reduction is
+
+	0.5*\|b-F(x)\|^2 - 0.5p^Tg(x)
+    */
     void run() {
-      cerr<<"TRGNStep::run\n";
+      //      cerr<<"TRGNStep::run\n";
       // run then delete solver - first check whether trust region was
       // transgressed
       solver->run();  
@@ -80,9 +90,18 @@ namespace RVLUmin {
       }
       delete solver;	
       solver=NULL;
+
+      // test for nontrivial step - failure is fatal
+      if (p.norm()<minstep*pol.Delta) {
+	nostep=true;
+	return;
+      }
+
       // here rnorm is final residual from TRLS solver
       atype jvalsave = jval;
       predred = jvalsave - 0.5*rnorm*rnorm;
+      str<<"** predicted reduction = "<<predred<<" active = "<<active<<"\n";
+      str<<"** length of step = "<<p.norm()<<"\n";
       //	cerr<<"TRGNStep: predred="<<predred<<endl;
       // provisionally update eval point - save current point in case 
       // need to revert
@@ -90,30 +109,83 @@ namespace RVLUmin {
       xsave.copy(x);
       x.linComb(-ScalarFieldTraits<Scalar>::One(),p);
       // reset (reconstruct) solver
-      cerr<<"TRGNStep::run - main callg before call to pol.build Delta="<<pol.Delta<<endl;
-      solver = pol.build(p,opeval.getDeriv(),opeval.getValue(),rnorm,nrnorm,str);	
+      //      cerr<<"TRGNStep::run - main callg before call to pol.build Delta="<<pol.Delta<<endl;
+      //      solver = pol.build(p,opeval.getDeriv(),opeval.getValue(),rnorm,nrnorm,str);	
       // by convention this should have recalculated the objective
       // function, gradient norm
-      jval = 0.5*rnorm*rnorm;
-      agnrm=nrnorm;
-      rgnrm=nrnorm*gnrmrecip;
+      //      jval = 0.5*rnorm*rnorm;
+      jval = 0.5*opeval.getValue().normsq();
+
       // compute actual reduction
       actred = jvalsave - jval;
       // Case 1: fail to satisfy G-A : rescind eval point update, shrink Delta
+      str<<"** actual reduction: old jval = "<<jvalsave<<" new jval = "<<jval<<" actred = "<<actred<<"\n";
       if (actred < eta1*predred) {
 	pol.Delta *= gamma1;
 	x.copy(xsave);
-	delete solver;
-	cerr<<"TRGNStep::run - case 1 before call to pol.build Delta="<<pol.Delta<<endl;
-	solver = pol.build(p,opeval.getDeriv(),opeval.getValue(),rnorm,nrnorm,str);		  
       }
       // Case 2: otherwise keep update
       // Case 2.1: only grow Delta if step hit TR boundary
-      if ((actred > eta2*predred) && active) { pol.Delta *= gamma2; }
+      if ((actred > eta2*predred) && active) { 
+	int dcount = 0;
+	Vector<Scalar> plast(opeval.getDomain());
+	while (active && dcount<5) {
+	  str<<"active trust region constraint and good step - attempt to increase TR\n";
+	  atype deltalast=pol.Delta;
+	  atype jvallast = jval;
+	  
+	  // save last update vector
+	  plast.copy(p);
+	  // stretch it
+	  p.scale(gamma2);
+	  // stretch TR
+	  pol.Delta *= gamma2; 
+	  str<<"last TR = "<<deltalast<<" new TR = "<<pol.Delta<<"\n";
+	  // restore x
+	  x.copy(xsave);
+	  // compute DF(x)p - x not updated
+	  Vector<Scalar> dp(opeval.getRange());
+	  opeval.getDeriv().applyOp(p,dp);
+	  // create quadratic residual
+	  dp.linComb(-ScalarFieldTraits<Scalar>::One(),opeval.getValue());
+	  // estimate reduction - note jvalsave is resid at x
+	  predred = jvalsave - 0.5*dp.normsq();
+	  str<<"new predred="<<predred<<"\n";
+	  // update x
+	  x.linComb(-ScalarFieldTraits<Scalar>::One(),p);
+	  // create real residual
+	  jval = 0.5*opeval.getValue().normsq();
+	  str<<"last jval = "<<jvallast<<" new jval = "<<jval<<"\n";
+	  // compute actual reduction
+	  actred = jvalsave - jval;
+	  str<<"new actred = "<<actred<<"\n";
+	  // if G-A fails, back off
+	  if (actred < eta1*predred) {
+	    str<<"G-A failed, revert to previous estimate, unset active flag\n";
+	    pol.Delta = deltalast;
+	    jval=jvallast;
+	    p.copy(plast);
+	    x.copy(xsave);
+	    x.linComb(-ScalarFieldTraits<Scalar>::One(),p);
+	    active=false;
+	  }	  
+	  else {
+	    str<<"G-A passed, try it again\n";
+	  }
+	  dcount++;
+	}
+      }
 
-      cerr<<"at end of TRGNStep::run - Delta = "<<pol.Delta<<endl;
+      // rejigger everything for the new point
+      solver = pol.build(p,opeval.getDeriv(),opeval.getValue(),rnorm,nrnorm,str);		  
+      agnrm=nrnorm;
+      rgnrm=nrnorm*gnrmrecip;
+
+      //      cerr<<"at end of TRGNStep::run - Delta = "<<pol.Delta<<endl;
     }
     
+    atype getDelta() { return pol.Delta; }
+
     /** constructor 
 
 	Depends on least-squares solver, chosen by the policy
@@ -132,12 +204,13 @@ namespace RVLUmin {
 	@param _eta2 upper G-A parameter > eta1
 	@param _gamma1 trust region reduction factor < 1
 	@param _gamma2 trust region expansion factor > 1, gamma1*gamma2 < 1 
+	@param _minstep min permitted step as a fraction of trust radius
+	@param _nostep true if step norm was too small rel trust radius
 	@param _predred predicted reduction - updated reference
 	@param _actred actual reduction - updated reference
 	@param _jval objective function value - updated reference
 	@param _agnrm gradient norm - updated reference
 	@param _rgnrm gradient norm scaled by reciprocal of original (on constr) - updated reference
-	@param _Delta trust radius - updated reference
 	@param _str verbose output stream
 
 	Requirements on parameters:
@@ -150,13 +223,15 @@ namespace RVLUmin {
 	<li>pol - TRLS solver policy, as described above</li>
 	</ul>
 
-     */
+    */
     TRGNStep(Policy const & _pol,
 	     OperatorEvaluation<Scalar> & _opeval,
 	     atype _eta1,
 	     atype _eta2,
 	     atype _gamma1,
 	     atype _gamma2,
+	     atype _minstep,
+	     bool & _nostep,
 	     atype & _predred,
 	     atype & _actred,
 	     atype & _jval,
@@ -165,8 +240,8 @@ namespace RVLUmin {
 	     ostream & _str) 
       : pol(_pol),
 	opeval(_opeval), 
-	eta1(_eta1),eta2(_eta2),gamma1(_gamma1),gamma2(_gamma2),
-	predred(_predred), actred(_actred),
+	eta1(_eta1),eta2(_eta2),gamma1(_gamma1),gamma2(_gamma2),minstep(_minstep),
+	nostep(_nostep),predred(_predred), actred(_actred),
 	jval(_jval), agnrm(_agnrm), rgnrm(_rgnrm),
 	p(_opeval.getDomain()), xsave(_opeval.getDomain()), solver(NULL), str(_str) {
       
@@ -228,11 +303,13 @@ namespace RVLUmin {
     atype & jval;
     atype & agnrm;
     atype & rgnrm;
+    bool & nostep;
     atype gnrmrecip;
     atype eta1;
     atype eta2;
     atype gamma1;
     atype gamma2;
+    atype minstep;
     atype rnorm;
     atype nrnorm;
     Vector<Scalar> p;
@@ -376,8 +453,7 @@ namespace RVLUmin {
 
       Typical use case: see <a href="../../testsrc/testtrgn.cc">TRGN
       functional test source</a>
-
-      
+    
   */
   template<typename Scalar, typename Policy>
   class TRGNAlg: public Algorithm, public Policy {
@@ -388,48 +464,76 @@ namespace RVLUmin {
 
     void run() {
       try {
-	TRGNStep<Scalar, Policy> step(*this,opeval,eta1,eta2,gamma1,gamma2,predred,actred,jval,agnrm,rgnrm,str);
-	VectorCountingThresholdIterationTable<atype> stop(maxcount,names,nums,tols,str);
-	stop.init();
+	bool nostep = false;
+	TRGNStep<Scalar, Policy> step(*this,opeval,eta1,eta2,gamma1,gamma2,minstep,
+				      nostep,predred,actred,jval,agnrm,rgnrm,str);
+	BoolTerminator bstop(nostep);
+	VectorCountingThresholdIterationTable<atype> vstop(maxcount,names,nums,tols,str);
+	vstop.init();
+	atype jval0=jval;
+	atype agnrm0=agnrm;
+	atype delta0=step.getDelta();
+	OrTerminator stop(bstop,vstop);
 	LoopAlg doit(step,stop);
 	doit.run();
-	actcount=stop.getCount();
+	actcount=vstop.getCount();
+	str<<"\n******************* TRGN Summary *******************\n";
+	if (nostep && maxcount > 0) { 
+	  str<<"TRGN: no update from GN step at TR step "<<actcount<<"\n";
+	  str<<"  possibly gradient already below threshhold\n";
+	}
+	if (actcount > 0) {
+	  str<<"iteration count            = "<<actcount<<"\n";
+          str<<"initial objective          = "<<jval0<<"\n";
+          str<<"final objective            = "<<jval<<"\n";
+          str<<"objective redn             = "<<jval/jval0<<"\n";
+          str<<"initial gradient norm      = "<<agnrm0<<"\n";
+          str<<"gradient norm              = "<<agnrm<<"\n";
+          str<<"gradient redn              = "<<rgnrm<<"\n";
+	  str<<"initial trust radius       = "<<delta0<<"\n";
+	  str<<"final trust radius         = "<<step.getDelta()<<"\n";
+	}	  
+	else {
+	  if (!nostep) {
+	    str<<"TRGN no initial step due to internal error\n";
+	  }
+	}
       }
       catch (RVLException & e) {
 	e<<"\ncalled from TRGNAlg::run\n";
 	throw e;
       }
     }
-
+    
     /** convenience function for test codes */
     int getCount() const { return actcount; }
-
+    
     /** constructor, first form.
 	
-	Parameters:
-	@param op - operator figuring in least-squares problem
-	@param x - solution Vector - initial guess on call, estimated solution on return
-	@param _maxcount - max permitted TR steps (calls to TRGNStep)
-	@param _jtol - stopping tolerance for least squares residual
-	@param _agtol - absolute stopping tolerance for gradient norm
-	@param _rgtol - relative stopping tolerance for gradient norm
-	@param _eta1 - lower G-A parameter
-	@param _eta2 - upper G-A parameter
-	@param _gamma1 - trust region reduction factor
-	@param _gamma2 - trust region expansion factor
-	@param _initDelta - initial trust radius 
-	@param _str - verbose output stream
+	  Parameters:
+	  @param op - operator figuring in least-squares problem
+	  @param x - solution Vector - initial guess on call, estimated solution on return
+	  @param _maxcount - max permitted TR steps (calls to TRGNStep)
+	  @param _jtol - stopping tolerance for least squares residual
+	  @param _agtol - absolute stopping tolerance for gradient norm
+	  @param _rgtol - relative stopping tolerance for gradient norm
+	  @param _eta1 - lower G-A parameter
+	  @param _eta2 - upper G-A parameter
+	  @param _gamma1 - trust region reduction factor
+	  @param _gamma2 - trust region expansion factor
+	  @param _initDelta - initial trust radius 
+	  @param _str - verbose output stream
 	
-	requirements on parameters:
-	<ul>
-	<li>Delta >= 0</li>
-	<li>0 < gamma1 < 1 < gamma2 </li>
-	<li>gamma1 * gamma2 < 1</li>
-	<li>0 < eta1 < eta2</li>
-	<li>opeval = operator defining nonlinear least squares problem, evaluated at current iterate. used to supply RHS (getValue) and LinearOp (getDeriv) of G-N problem on call, and to evaluate residual and normal residual at G-N solution on return.</li>
-	<li>pol - TRLS solver policy, as described above</li>
-	</ul>
-     */
+	  requirements on parameters:
+	  <ul>
+	  <li>Delta >= 0</li>
+	  <li>0 < gamma1 < 1 < gamma2 </li>
+	  <li>gamma1 * gamma2 < 1</li>
+	  <li>0 < eta1 < eta2</li>
+	  <li>opeval = operator defining nonlinear least squares problem, evaluated at current iterate. used to supply RHS (getValue) and LinearOp (getDeriv) of G-N problem on call, and to evaluate residual and normal residual at G-N solution on return.</li>
+	  <li>pol - TRLS solver policy, as described above</li>
+	  </ul>
+    */
     TRGNAlg(Operator<Scalar> const & op, 
 	    Vector<Scalar> & x,
 	    int _maxcount,
@@ -440,18 +544,19 @@ namespace RVLUmin {
 	    atype _eta2,
 	    atype _gamma1,
 	    atype _gamma2,
+	    atype _minstep,
 	    ostream & _str)
       : Policy(), opeval(op,x),
 	jtol(_jtol),agtol(_agtol),rgtol(_rgtol),
-	eta1(_eta1),eta2(_eta2),gamma1(_gamma1),gamma2(_gamma2),
+	eta1(_eta1),eta2(_eta2),gamma1(_gamma1),gamma2(_gamma2),minstep(_minstep),
         maxcount(_maxcount), 
 	names(6),nums(6),tols(6),actcount(0),
 	str(_str) { this->inittable(); }
-
+    
     /** second form of constructor - passes most argument via a Table
 	- see docs for first form of constructor for items which must
 	be included in the Table and constraints upon them. */
-
+    
     TRGNAlg(Operator<Scalar> const & op, 
 	    Vector<Scalar> & x,
 	    Table & t,
@@ -465,6 +570,7 @@ namespace RVLUmin {
 	gamma1(getValueFromTable<Scalar>(t,"StepDecrFactor")),
 	gamma2(getValueFromTable<Scalar>(t,"StepIncrFactor")),
 	maxcount(getValueFromTable<int>(t,"MaxItn")), 
+	minstep(getValueFromTable<int>(t,"MinStepTol")),
 	names(6),nums(6),tols(6),actcount(0),
 	str(_str) { 
       this->inittable(); }
@@ -488,6 +594,7 @@ namespace RVLUmin {
     atype eta2;
     atype gamma1;
     atype gamma2;
+    atype minstep;
     ostream & str;
 
     void inittable() {

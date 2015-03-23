@@ -97,6 +97,7 @@ namespace RVLUmin {
       : A(_A), x(_x), b(_b), rnorm(_rnorm), nrnorm(_nrnorm), r(A.getRange()), g(A.getDomain()),
 	q(A.getRange()), p(A.getDomain()) { 
       // NOTE: initial x assumed to be zero vector
+      //      cerr<<"cg initialize\n";
       r.copy(b);
       rnorm=r.norm();
       A.applyAdjOp(r,g);
@@ -110,7 +111,7 @@ namespace RVLUmin {
     */
     void run() {
       try {
-	//	cerr<<"CGSTEP::run 0\n";
+	//       	cerr<<"CGSTEP::run 0\n";
 	A.applyOp(p,q);
 	//	cerr<<"CGSTEP::run 1\n";
 	atype qtq = q.normsq();
@@ -122,7 +123,7 @@ namespace RVLUmin {
 	}
 	// can use q for workspace since it is not needed again until
 	// reinitialized
-	//	cerr<<"CGSTEP::run 2\n";
+	//	cerr<<"CGSTEP::update x\n";
 
 	Scalar alpha=absalpha;
 	x.linComb(alpha,p);
@@ -440,8 +441,8 @@ namespace RVLUmin {
       str(_str)
     {
       try {
-	step = new CGNEStep<Scalar>(A,x,rhs,rnorm,nrnorm);
 	x.zero(); 
+	step = new CGNEStep<Scalar>(A,x,rhs,rnorm,nrnorm);
       }
       catch (RVLException & e) {
 	e<<"\ncalled from CGNEAlg constructor (not preconditioned)\n";
@@ -515,8 +516,8 @@ namespace RVLUmin {
       str(_str)
     { 
       try {
-	step = new PCGNEStep<Scalar>(A,M,x,rhs,rnorm,nrnorm);
 	x.zero(); 
+	step = new PCGNEStep<Scalar>(A,M,x,rhs,rnorm,nrnorm);
       }
       catch (RVLException & e) {
 	e<<"\ncalled from CGNEAlg constructor (preconditioned)\n";
@@ -532,6 +533,7 @@ namespace RVLUmin {
 
     void run() { 
       try {
+	//	cerr<<"cg::run\n";
 	// access to internals
 	CGNEStep<Scalar>  * cg  = dynamic_cast<CGNEStep<Scalar> *>(step);
 	PCGNEStep<Scalar> * pcg = dynamic_cast<PCGNEStep<Scalar> *>(step);
@@ -547,11 +549,11 @@ namespace RVLUmin {
 	vector<string> names(2);
 	vector<atype *> nums(2);
 	vector<atype> tols(2);
-    atype rnorm0=rnorm;
-    atype nrnorm0=nrnorm;
+	atype rnorm0=rnorm;
+	atype nrnorm0=nrnorm;
           
-	names[0]="Residual Norm"; nums[0]=&rnorm; tols[0]=rtol;
-	names[1]="Gradient Norm"; nums[1]=&nrnorm; tols[1]=nrtol;
+	names[0]="Residual Norm"; nums[0]=&rnorm; tols[0]=rtol*rnorm0;
+	names[1]="Gradient Norm"; nums[1]=&nrnorm; tols[1]=nrtol*nrnorm0;
 	if (pcg) str<<"========================== BEGIN PCGNE =========================\n";
 	else 	str<<"========================== BEGIN CGNE =========================\n";
 	VectorCountingThresholdIterationTable<atype> stop1(maxcount,names,nums,tols,str);
@@ -568,9 +570,11 @@ namespace RVLUmin {
 	LoopAlg doit(*step,stop);
 	doit.run();
 	// must recompute residual if scaling occured 
+	//	cerr<<"stop1="<<stop1.query()<<" stop2="<<stop2->query()<<" xnorm="<<cg->x.norm()<<" maxstep="<<maxstep<<"\n";
 	proj = stop2->query();
 	if (proj) {
 	  if (cg) {
+	    //	    cerr<<"adjust\n";
 	    Vector<Scalar> temp((cg->A).getRange());
 	    (cg->A).applyOp((cg->x),temp);
 	    temp.linComb(-1.0,(cg->b));
@@ -597,7 +601,7 @@ namespace RVLUmin {
 	if (pcg) str<<"=========================== END PCGNE ==========================\n";
 	else str<<"=========================== END CGNE ==========================\n";
           // display results
-          str<<"\n ******* summary ********  "<<endl;
+          str<<"\n ****************** CGNE summary *****************  "<<endl;
           str<<"initial residual norm      = "<<rnorm0<<endl;
           str<<"residual norm              = "<<rnorm<<endl;
           str<<"residual redn              = "<<rnorm/rnorm0<<endl;

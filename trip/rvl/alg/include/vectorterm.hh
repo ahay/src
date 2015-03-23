@@ -424,10 +424,10 @@ public:
 
   BallProjTerminator(Vector<Scalar> & ty, NormRetType _maxstep,
 		     ostream & _str = cout)
-    : y(ty), maxstep(_maxstep), str(_str) {}
+    : y(ty), maxstep(_maxstep), queryres(false), str(_str) {}
 
   virtual bool query() {
-
+    if (queryres) return true;
     NormRetType tn = y.norm();
     bool res = (tn > maxstep);
     if (res) {
@@ -443,12 +443,14 @@ public:
       str<<"RVLAlg::BallProjTerminator::query: trust region truncation applied\n";
       str<<"  untruncated solution norm = "<<tn<<" trust radius = "<<maxstep<<"\n";      
     }
+    queryres=res;
     return res;
   }
 
 protected:
   Vector<Scalar> & y;
   NormRetType maxstep;
+  mutable bool queryres;
   ostream & str;
 };
 

@@ -121,61 +121,61 @@ namespace RVL {
       }
     }
 
-      /** \f$dy_i = D^2F_i(x)[dx0, dx1]\f$, where \f$dx0, dx1 \in X\f$, \f$dy_i \in Y_i\f$ */
-      virtual void applyComponentDeriv2(int i,
-                                       const Vector<Scalar> & x,
-                                       const Vector<Scalar> & dx0,
-                                       const Vector<Scalar> & dx1,
-                                       Vector<Scalar> & dyi) const = 0;
+    /** \f$dy_i = D^2F_i(x)[dx0, dx1]\f$, where \f$dx0, dx1 \in X\f$, \f$dy_i \in Y_i\f$ */
+    virtual void applyComponentDeriv2(int i,
+				      const Vector<Scalar> & x,
+				      const Vector<Scalar> & dx0,
+				      const Vector<Scalar> & dx1,
+				      Vector<Scalar> & dyi) const = 0;
       
-      /** applyDeriv2() is implemented in terms of
-       applyComponentDeriv(). Default implementation supplied, which
-       may be overridden.
-       */
-      virtual void applyDeriv2(const Vector<Scalar> & x,
-                              const Vector<Scalar> & dx0,
-                              const Vector<Scalar> & dx1,
-                              Vector<Scalar> & dy) const {
-          try {
-              Components<Scalar> dyc(dy);
-              for (int i=0;i<(int)dyc.getSize();i++)
-                  applyComponentDeriv2(i,x,dx0,dx1,dyc[i]);
-          }
-          catch (RVLException & e) {
-              e<<"\ncalled from BlockOperator::applyDeriv2\n";
-              throw e;
-          }
+    /** applyDeriv2() is implemented in terms of
+	applyComponentDeriv(). Default implementation supplied, which
+	may be overridden.
+    */
+    virtual void applyDeriv2(const Vector<Scalar> & x,
+			     const Vector<Scalar> & dx0,
+			     const Vector<Scalar> & dx1,
+			     Vector<Scalar> & dy) const {
+      try {
+	Components<Scalar> dyc(dy);
+	for (int i=0;i<(int)dyc.getSize();i++)
+	  applyComponentDeriv2(i,x,dx0,dx1,dyc[i]);
       }
-      /** \f$dx = \sum_i D^2F_i(x)^*[dx,dy_i]\f$, where \f$dy_i \in Y_i\f$ */
-      virtual void applyComponentAdjDeriv2(int i,
-                                          const Vector<Scalar> & x,
-                                          const Vector<Scalar> & dx0,
-                                          const Vector<Scalar> & dyi,
-                                          Vector<Scalar> & dx1) const = 0;
+      catch (RVLException & e) {
+	e<<"\ncalled from BlockOperator::applyDeriv2\n";
+	throw e;
+      }
+    }
+    /** \f$dx = \sum_i D^2F_i(x)^*[dx,dy_i]\f$, where \f$dy_i \in Y_i\f$ */
+    virtual void applyComponentAdjDeriv2(int i,
+					 const Vector<Scalar> & x,
+					 const Vector<Scalar> & dx0,
+					 const Vector<Scalar> & dyi,
+					 Vector<Scalar> & dx1) const = 0;
       
-      /** applyAdjDeriv() is implemented in terms of
-       applyComponentAdjDeriv(). Default implementation supplied, which
-       may be overridden. */
-      virtual void applyAdjDeriv2(const Vector<Scalar> & x,
-                                  const Vector<Scalar> & dx0,
-                                  const Vector<Scalar> & dy,
-                                  Vector<Scalar> & dx1) const {
-          try {
-              Components<Scalar> dyc(dy);
-              applyComponentAdjDeriv2(0,x,dx0,dyc[0],dx1);
-              if (dyc.getSize()>0) {
-                  Vector<Scalar> tmp(this->getDomain(),true);
-                  for (int i=1; i<(int)dyc.getSize(); i++) {
-                      applyComponentAdjDeriv2(i,x,dx0,dyc[i],tmp);
-                      dx1.linComb(1.0,tmp);
-                  }
-              }
-          }
-          catch (RVLException & e) {
-              e<<"\ncalled from BlockOperator::applyAdjDeriv2\n";
-              throw e;
-          }
+    /** applyAdjDeriv() is implemented in terms of
+	applyComponentAdjDeriv(). Default implementation supplied, which
+	may be overridden. */
+    virtual void applyAdjDeriv2(const Vector<Scalar> & x,
+				const Vector<Scalar> & dx0,
+				const Vector<Scalar> & dy,
+				Vector<Scalar> & dx1) const {
+      try {
+	Components<Scalar> dyc(dy);
+	applyComponentAdjDeriv2(0,x,dx0,dyc[0],dx1);
+	if (dyc.getSize()>0) {
+	  Vector<Scalar> tmp(this->getDomain(),true);
+	  for (int i=1; i<(int)dyc.getSize(); i++) {
+	    applyComponentAdjDeriv2(i,x,dx0,dyc[i],tmp);
+	    dx1.linComb(1.0,tmp);
+	  }
+	}
       }
+      catch (RVLException & e) {
+	e<<"\ncalled from BlockOperator::applyAdjDeriv2\n";
+	throw e;
+      }
+    }
     /** Primary clone method returns object of this type;
 	parent clone method delegates. */
     virtual BlockOperator<Scalar> * cloneBlockOp() const = 0;
@@ -231,9 +231,9 @@ namespace RVL {
     }
 
     void applyComponentDeriv(int i,
-			   const Vector<Scalar> & x, 
-			   const Vector<Scalar> & dx,
-			   Vector<Scalar> & dyi) const {
+			     const Vector<Scalar> & x, 
+			     const Vector<Scalar> & dx,
+			     Vector<Scalar> & dyi) const {
       try {
 	if (i==0) this->export_applyDeriv(op1,x,dx,dyi);
 	else if (i==1) this->export_applyDeriv(op2,x,dx,dyi);
@@ -251,9 +251,9 @@ namespace RVL {
     }
 
     void applyComponentAdjDeriv(int i, 
-			      const Vector<Scalar> & x, 
-			      const Vector<Scalar> & dyi,
-			      Vector<Scalar> & dx) const {
+				const Vector<Scalar> & x, 
+				const Vector<Scalar> & dyi,
+				Vector<Scalar> & dx) const {
       try {
 	if (i==0) this->export_applyAdjDeriv(op1,x,dyi,dx);
 	else if (i==1) this->export_applyAdjDeriv(op2,x,dyi,dx);
@@ -271,45 +271,45 @@ namespace RVL {
     }
   
     void applyComponentDeriv2(int i,
-                            const Vector<Scalar> & x,
-                            const Vector<Scalar> & dx0,
-                            const Vector<Scalar> & dx1,
-                            Vector<Scalar> & dyi) const {
-        try {
-            if (i==0) this->export_applyDeriv2(op1,x,dx0,dx1,dyi);
-            else if (i==1) this->export_applyDeriv2(op2,x,dx0,dx1,dyi);
-            else {
-                RVLException e;
-                e<<"Error: TensorOp::applyComponentDeriv2\n";
-                e<<"index "<<i<<" out of range [0,1]\n";
-                throw e;
-            }
-        }
-        catch (RVLException & e) {
-            e<<"\ncalled from TensorOp::applyComponentDeriv2\n";
-            throw e;
-        }
+			      const Vector<Scalar> & x,
+			      const Vector<Scalar> & dx0,
+			      const Vector<Scalar> & dx1,
+			      Vector<Scalar> & dyi) const {
+      try {
+	if (i==0) this->export_applyDeriv2(op1,x,dx0,dx1,dyi);
+	else if (i==1) this->export_applyDeriv2(op2,x,dx0,dx1,dyi);
+	else {
+	  RVLException e;
+	  e<<"Error: TensorOp::applyComponentDeriv2\n";
+	  e<<"index "<<i<<" out of range [0,1]\n";
+	  throw e;
+	}
+      }
+      catch (RVLException & e) {
+	e<<"\ncalled from TensorOp::applyComponentDeriv2\n";
+	throw e;
+      }
     }
       
     void applyComponentAdjDeriv2(int i,
-                                const Vector<Scalar> & x,
-                                const Vector<Scalar> & dx0,
-                                const Vector<Scalar> & dyi,
-                                Vector<Scalar> & dx1) const{
-        try {
-            if (i==0) this->export_applyAdjDeriv2(op1,x,dx0,dyi,dx1);
-            else if (i==1) this->export_applyAdjDeriv2(op2,x,dx0,dyi,dx1);
-            else {
-                RVLException e;
-                e<<"Error: TensorOp::applyComponentAdjDeriv2\n";
-                e<<"index "<<i<<" out of range [0,1]\n";
-                throw e;
-            }
-        }
-        catch (RVLException & e) {
-            e<<"\ncalled from TensorOp::applyComponentAdjDeriv2\n";
-            throw e;
-        }
+				 const Vector<Scalar> & x,
+				 const Vector<Scalar> & dx0,
+				 const Vector<Scalar> & dyi,
+				 Vector<Scalar> & dx1) const{
+      try {
+	if (i==0) this->export_applyAdjDeriv2(op1,x,dx0,dyi,dx1);
+	else if (i==1) this->export_applyAdjDeriv2(op2,x,dx0,dyi,dx1);
+	else {
+	  RVLException e;
+	  e<<"Error: TensorOp::applyComponentAdjDeriv2\n";
+	  e<<"index "<<i<<" out of range [0,1]\n";
+	  throw e;
+	}
+      }
+      catch (RVLException & e) {
+	e<<"\ncalled from TensorOp::applyComponentAdjDeriv2\n";
+	throw e;
+      }
     }
       
     TensorOp<Scalar> * cloneTensorOp() const { return new TensorOp(*this); }
@@ -351,176 +351,326 @@ namespace RVL {
       return str;
     }
   };
-    
-    /** Linear Operator defined with product domain and range.
-        Y.H. at Oct 22, 2014 
-     */
-    template<class Scalar>
-    class BlockLinearOp: public LinearOp<Scalar> {
+
+  // forward declaration
+  template<typename Scalar>
+  class BlockLinearOpBlock;
+
+  /** Linear Operator defined with product range.
+      Y.H. at Oct 22, 2014 
+      Since there is no LinOpProdDom, need class with 
+      product domain as well - WWS 03.03.15
+  */
+  template<class Scalar>
+  class BlockLinearOp: public LinearOp<Scalar> {
         
-        friend class OperatorEvaluation<Scalar>;
+    friend class BlockLinearOpBlock<Scalar>;
+
+  protected:
         
-    protected:
+    /** apply A_{i,j} */
+    virtual void apply(int i, int j,
+		       const Vector<Scalar> & xj,
+		       Vector<Scalar> & yi) const = 0;
+      
+    virtual void apply(Vector<Scalar> const & x,
+		       Vector<Scalar> & y) const {
+      try {
+	Components<Scalar> yc(y);
+	Components<Scalar> xc(x);
+	for (int i=0;i<(int)yc.getSize();i++)  {
+	  yc[i].zero();
+	  Vector<Scalar> tmp(yc[i].getSpace());
+	  for (int j=0; j< (int)xc.getSize(); j++) {
+	    apply(i,j,xc[j],tmp);
+	    yc[i].linComb(ScalarFieldTraits<Scalar>::One(),tmp);
+	  }
+	}
+      }
+      catch (RVLException & e) {
+	e<<"\ncalled from BlockLinearOp::apply\n";
+	throw e;
+      }
+    }
+   
+    /** apply A_{i,j}^* */
+    virtual void applyAdj(int i, int j,
+			  const Vector<Scalar> & yi,
+			  Vector<Scalar> & xj) const = 0;
         
-        virtual void applyComponent(int i,
-                                    const Vector<Scalar> & x,
-                                    Vector<Scalar> & yi) const = 0;
+    /** applyAdj() is implemented in terms of
+	applyComponentAdj(). Default implementation supplied, which
+	may be overridden. */
+    virtual void applyAdj(const Vector<Scalar> & y,
+			  Vector<Scalar> & x) const {
+      try {
+	Components<Scalar> xc(x);
+	Components<Scalar> yc(y);
+	for (int j=0; j<xc.getSize();j++) {
+	  xc[j].zero();
+	  Vector<Scalar> tmp(xc[j].getSpace());
+	  for (int i=0; i<yc.getSize(); i++) {
+	    applyAdj(i,j,yc[i],tmp);
+	    xc[j].linComb(ScalarFieldTraits<Scalar>::One(),tmp);
+	  }
+	}
+      }
+      catch (RVLException & e) {
+	e<<"\ncalled from BlockLinearOp::applyAdjDeriv\n";
+	throw e;
+      }
+    }
+
+    /** Primary clone method returns object of this type;
+	parent clone method delegates. */
+    virtual BlockLinearOp<Scalar> * cloneBlockLinearOp() const = 0;
+    LinearOp<Scalar> * clone() const { return cloneBlockLinearOp(); }
         
-        virtual void apply(Vector<Scalar> const & x,
-                           Vector<Scalar> & y) const {
-            try {
-                Components<Scalar> yc(y);
-                for (int i=0;i<(int)yc.getSize();i++)
-                    applyComponent(i,x,yc[i]);
-            }
-            catch (RVLException & e) {
-                e<<"\ncalled from BlockLinearOp::apply\n";
-                throw e;
-            }
-        }
+  public:
+        
+    BlockLinearOp() {}
+    BlockLinearOp(const BlockLinearOp<Scalar> &) {}
+    virtual ~BlockLinearOp() {}
+        
+    /** access to domain as ProductSpace */
+    virtual const ProductSpace<Scalar> & getProductDomain() const = 0;
+    /** access to domain as Space - delegates to getProductDomain */
+    const Space<Scalar> & getDomain() const { 
+      return getProductDomain(); 
+    }
+    /** access to range as ProductSpace */
+    virtual const ProductSpace<Scalar> & getProductRange() const = 0;
+    /** access to range as Space - delegates to getProductRange */
+    const Space<Scalar> & getRange() const { 
+      return getProductRange(); 
+    }
+        
+  };
+
+  /** i,j block of BlockLinearOp, as LinearOp
+  */
+  template<class Scalar>
+  class BlockLinearOpBlock: public LinearOp<Scalar> {
+
+  private:
+
+    BlockLinearOp<Scalar> const & blk;
+    int row;
+    int col;
+
+  protected:
+        
+    virtual void apply(const Vector<Scalar> & xj,
+		       Vector<Scalar> & yi) const {
+      try {
+	blk.apply(row, col, xj, yi);
+      }      
+      catch (RVLException & e) {
+	e<<"\ncalled from BlockLinearOpBlock::apply\n";
+	throw e;
+      }
+    }
+      
+    virtual void applyAdj(const Vector<Scalar> & yi,
+			  Vector<Scalar> & xj) const {
+      try {
+	blk.applyAdj(row, col, yi, xj);
+      }
+      catch (RVLException & e) {
+	e<<"\ncalled from BlockLinearOpBlock::applyAdj\n";
+	throw e;
+      }
+    }
+
+    LinearOp<Scalar> * clone() const { return BlockLinearOpBlock(*this); }
+        
+  public:
+        
+    BlockLinearOpBlock(BlockLinearOp<Scalar> const & _blk, int _row, int _col): blk(_blk), row(_row), col(_col) {}
+    BlockLinearOpBlock(const BlockLinearOpBlock<Scalar> & b): blk(b.blk), row(b.row), col(b.col) {}
+    ~BlockLinearOpBlock() {}
+        
+    /** access to domain as Space - delegates to getProductDomain */
+    const Space<Scalar> & getDomain() const { 
+      return blk.getProductDomain()[col]; 
+    }
+    /** access to range as Space - delegates to getProductRange */
+    const Space<Scalar> & getRange() const { 
+      return blk.getProductRange()[row]; 
+    }
+        
+  };
+
+  /** Linear Operator defined with product range.
+      Y.H. at Oct 22, 2014 
+      Renamed - WWS 03.03.15
+  */
+  template<class Scalar>
+  class ColumnLinearOp: public LinearOp<Scalar> {
+        
+    friend class OperatorEvaluation<Scalar>;
+        
+  protected:
+        
+    virtual void apply(int i,
+		       const Vector<Scalar> & x,
+		       Vector<Scalar> & yi) const = 0;
+      
+    virtual void apply(Vector<Scalar> const & x,
+		       Vector<Scalar> & y) const {
+      try {
+	Components<Scalar> yc(y);
+	for (int i=0;i<(int)yc.getSize();i++) 
+	  applyComponent(i,x,yc[i]);
+      }
+      catch (RVLException & e) {
+	e<<"\ncalled from ColumnLinearOp::apply\n";
+	throw e;
+      }
+    }
 
         
-        /** \f$x_j = F_i^*y_i\f$, where \f$x_j \in X_j\f$ */
-        virtual void applyComponentAdj(int i,
-                                       const Vector<Scalar> & yi,
-                                       Vector<Scalar> & x) const = 0;
+    /** \f$x_j = F_i^*y_i\f$, where \f$x_j \in X_j\f$ */
+    virtual void applyComponentAdj(int i,
+				   const Vector<Scalar> & yi,
+				   Vector<Scalar> & x) const = 0;
         
-        /** applyAdj() is implemented in terms of
-         applyComponentAdj(). Default implementation supplied, which
-         may be overridden. */
-        virtual void applyAdj(const Vector<Scalar> & x,
-                                   Vector<Scalar> & y) const {
-            try {
-                Components<Scalar> xc(x);
-                applyComponentAdj(0,xc[0],y);
-                if (xc.getSize()>0) {
-                    Vector<Scalar> tmp(this->getDomain(),true);
-                    for (int i=1; i<(int)xc.getSize(); i++) {
-                        applyComponentAdj(i,xc[i],tmp);
-                        y.linComb(1.0,tmp);
-                    }
-                }
-            }
-            catch (RVLException & e) {
-                e<<"\ncalled from BlockLinearOp::applyAdjDeriv\n";
-                throw e;
-            }
-        }
+    /** applyAdj() is implemented in terms of
+	applyComponentAdj(). Default implementation supplied, which
+	may be overridden. */
+    virtual void applyAdj(const Vector<Scalar> & x,
+			  Vector<Scalar> & y) const {
+      try {
+	Components<Scalar> xc(x);
+	applyComponentAdj(0,xc[0],y);
+	if (xc.getSize()>0) {
+	  Vector<Scalar> tmp(this->getDomain(),true);
+	  for (int i=1; i<(int)xc.getSize(); i++) {
+	    applyComponentAdj(i,xc[i],tmp);
+	    y.linComb(1.0,tmp);
+	  }
+	}
+      }
+      catch (RVLException & e) {
+	e<<"\ncalled from ColumnLinearOp::applyAdjDeriv\n";
+	throw e;
+      }
+    }
 
-        /** Primary clone method returns object of this type;
-         parent clone method delegates. */
-        virtual BlockLinearOp<Scalar> * cloneBlockLinearOp() const = 0;
-        LinearOp<Scalar> * clone() const { return cloneBlockLinearOp(); }
+    /** Primary clone method returns object of this type;
+	parent clone method delegates. */
+    virtual ColumnLinearOp<Scalar> * cloneColumnLinearOp() const = 0;
+    LinearOp<Scalar> * clone() const { return cloneColumnLinearOp(); }
         
-    public:
+  public:
         
-        BlockLinearOp() {}
-        BlockLinearOp(const BlockLinearOp<Scalar> &) {}
-        virtual ~BlockLinearOp() {}
+    ColumnLinearOp() {}
+    ColumnLinearOp(const ColumnLinearOp<Scalar> &) {}
+    virtual ~ColumnLinearOp() {}
         
-        /** access to range as ProductSpace */
-        virtual const ProductSpace<Scalar> & getProductRange() const = 0;
-        /** access to range as Space - delegates to getProductRange */
-        const Space<Scalar> & getRange() const { 
-            return getProductRange(); 
-        }
+    /** access to range as ProductSpace */
+    virtual const ProductSpace<Scalar> & getProductRange() const = 0;
+    /** access to range as Space - delegates to getProductRange */
+    const Space<Scalar> & getRange() const { 
+      return getProductRange(); 
+    }
         
-    };
+  };
     
-    /** Explicit BlockLinearOp construction for two range components
-        Y.H. at Oct 22, 2014
-     */
+  /** Explicit ColumnLinearOp construction for two range components
+      Y.H. at Oct 22, 2014
+  */
     
-    template<typename Scalar>
-    class TensorLinearOp: public BlockLinearOp<Scalar> {
+  template<typename Scalar>
+  class TensorLinearOp: public ColumnLinearOp<Scalar> {
         
-    private:
+  private:
         
-        LinearOp<Scalar> const & op1;
-        LinearOp<Scalar> const & op2;
-        StdProductSpace<Scalar> rng;
+    LinearOp<Scalar> const & op1;
+    LinearOp<Scalar> const & op2;
+    StdProductSpace<Scalar> rng;
         
-        TensorLinearOp();
+    TensorLinearOp();
         
-    protected:
+  protected:
         
-        void applyComponent(int i,
-                            const Vector<Scalar> & x,
-                            Vector<Scalar> & yi) const {
-            try {
-                if (i==0) this->export_apply(op1,x,yi);
-                else if (i==1) this->export_apply(op2,x,yi);
-                else {
-                    RVLException e;
-                    e<<"Error: TensorLinearOp::applyComponent\n";
-                    e<<"index "<<i<<" out of range [0,1]\n";
-                    throw e;
-                }
-            }
-            catch (RVLException & e) {
-                e<<"\ncalled from TensorLinearOp::applyComponent\n";
-                throw e;
-            }
-        }
+    void applyComponent(int i,
+			const Vector<Scalar> & x,
+			Vector<Scalar> & yi) const {
+      try {
+	if (i==0) this->export_apply(op1,x,yi);
+	else if (i==1) this->export_apply(op2,x,yi);
+	else {
+	  RVLException e;
+	  e<<"Error: TensorLinearOp::applyComponent\n";
+	  e<<"index "<<i<<" out of range [0,1]\n";
+	  throw e;
+	}
+      }
+      catch (RVLException & e) {
+	e<<"\ncalled from TensorLinearOp::applyComponent\n";
+	throw e;
+      }
+    }
         
-        void applyComponentAdj(int i,
-                               const Vector<Scalar> & yi,
-                               Vector<Scalar> & x) const {
-            try {
-                if (i==0) op1.applyAdjOp(yi,x); //this->export_applyAdj(op1,yi,x);
-                else if (i==1) op2.applyAdjOp(yi,x); //this->export_applyAdj(op2,yi,x);
-                else {
-                    RVLException e;
-                    e<<"Error: TensorLinearOp::applyComponentAdj\n";
-                    e<<"index "<<i<<" out of range [0,1]\n";
-                    throw e;
-                }
-            }
-            catch (RVLException & e) {
-                e<<"\ncalled from TensorLinearOp::applyComponentAdj\n";
-                throw e;
-            }
-        }
+    void applyComponentAdj(int i,
+			   const Vector<Scalar> & yi,
+			   Vector<Scalar> & x) const {
+      try {
+	if (i==0) op1.applyAdjOp(yi,x); //this->export_applyAdj(op1,yi,x);
+	else if (i==1) op2.applyAdjOp(yi,x); //this->export_applyAdj(op2,yi,x);
+	else {
+	  RVLException e;
+	  e<<"Error: TensorLinearOp::applyComponentAdj\n";
+	  e<<"index "<<i<<" out of range [0,1]\n";
+	  throw e;
+	}
+      }
+      catch (RVLException & e) {
+	e<<"\ncalled from TensorLinearOp::applyComponentAdj\n";
+	throw e;
+      }
+    }
         
-        TensorLinearOp<Scalar> * cloneTensorLinearOp() const { return new TensorLinearOp(*this); }
-        BlockLinearOp<Scalar> * cloneBlockLinearOp() const { return cloneTensorLinearOp(); }
+    TensorLinearOp<Scalar> * cloneTensorLinearOp() const { return new TensorLinearOp(*this); }
+    ColumnLinearOp<Scalar> * cloneColumnLinearOp() const { return cloneTensorLinearOp(); }
         
-    public:
+  public:
         
-        TensorLinearOp(LinearOp<Scalar> const & _op1,
-                 LinearOp<Scalar> const & _op2)
-        : op1(_op1), op2(_op2), rng(op1.getRange(),op2.getRange()) {
-            try {
-                if (op1.getDomain() != op2.getDomain()) {
-                    RVLException e;
-                    e<<"Error: TensorLinearOp constructor\n";
-                    e<<"input operators do not have same domain\n";
-                    throw e;
-                }
-            }
-            catch (RVLException & e) {
-                e<<"\ncalled from TensorLinearOp constructor\n";
-                throw e;
-            }
-        }
+    TensorLinearOp(LinearOp<Scalar> const & _op1,
+		   LinearOp<Scalar> const & _op2)
+      : op1(_op1), op2(_op2), rng(op1.getRange(),op2.getRange()) {
+      try {
+	if (op1.getDomain() != op2.getDomain()) {
+	  RVLException e;
+	  e<<"Error: TensorLinearOp constructor\n";
+	  e<<"input operators do not have same domain\n";
+	  throw e;
+	}
+      }
+      catch (RVLException & e) {
+	e<<"\ncalled from TensorLinearOp constructor\n";
+	throw e;
+      }
+    }
         
-        TensorLinearOp(TensorLinearOp<Scalar> const & op)
-        : op1(op.op1), op2(op.op2), rng(op1.getRange(),op2.getRange()) {}
+    TensorLinearOp(TensorLinearOp<Scalar> const & op)
+      : op1(op.op1), op2(op.op2), rng(op1.getRange(),op2.getRange()) {}
         
-        ~TensorLinearOp() {}
+    ~TensorLinearOp() {}
         
-        Space<Scalar> const & getDomain() const { return op1.getDomain(); }
-        ProductSpace<Scalar> const & getProductRange() const { return rng; }
+    Space<Scalar> const & getDomain() const { return op1.getDomain(); }
+    ProductSpace<Scalar> const & getProductRange() const { return rng; }
         
-        ostream & write(ostream & str) const {
-            str<<"TensorLinearOp: 2x1 block operator\n";
-            str<<"*** LinearOp[0,0]:\n";
-            op1.write(str);
-            str<<"*** LinearOp[1,0]:\n";
-            op2.write(str);
-            return str;
-        }
-    };
+    ostream & write(ostream & str) const {
+      str<<"TensorLinearOp: 2x1 block operator\n";
+      str<<"*** LinearOp[0,0]:\n";
+      op1.write(str);
+      str<<"*** LinearOp[1,0]:\n";
+      op2.write(str);
+      return str;
+    }
+  };
 
   /* FO implementation. 
 
@@ -552,11 +702,11 @@ namespace RVL {
      FOs.
   */
 
-    /*
-  template<typename Scalar>
-  class BlockOpFO: public BlockOperator<Scalar> {
+  /*
+    template<typename Scalar>
+    class BlockOpFO: public BlockOperator<Scalar> {
 
-  private:
+    private:
 
     ProductSpace<Scalar> const & dom;
     ProductSpace<Scalar> const & rng;
@@ -566,173 +716,173 @@ namespace RVL {
     std::vector<RVL::Vector<Scalar> const *> & par; // parameters
     BlockOpFO();
 
-  protected:
+    protected:
 
     virtual void applyComponent(int i, 
-				const Vector<Scalar> & x,
-				Vector<Scalar> & yi) const {
-      try {
-	// standard sanity check
-	if (x.getSpace() != dom) {
-	  RVLException e;
-	  e<<"Error: BlockFO::applyComponent\n";
-	  e<<"input reference arg not in domain\n";
-	  throw e;
-	}
-	if (yi.getSpace() != rng[i]) {
-	  RVLException e;
-	  e<<"Error: BlockFO::applyComponent\n";
-	  e<<"input arg not in component "<<i<<" of range\n";
-	  throw e;
-	}
-	Components<Scalar> xc(x);
-	std::vector< RVL::Vector<Scalar> const * > xv(xc.getSize()+par.size());
-	for (int j=0;j<xc.getSize();j++) xv[j]=&xc[j];
-	for (int j=0;j<par.size();j++) xv[j+xc.getSize()]=par[j];
-	yi.eval(*(f.at(i)),xv);
-      }
-      catch (RVLException & e) {
-	e<<"\ncalled from BlockOpFO::apply\n";
-	throw e;
-      }
-      catch (out_of_range) {
-	RVLException e;
-	e<<"Error: out-of-range exception in BlockOpFO::apply\n";
-	throw e;
-      }
+    const Vector<Scalar> & x,
+    Vector<Scalar> & yi) const {
+    try {
+    // standard sanity check
+    if (x.getSpace() != dom) {
+    RVLException e;
+    e<<"Error: BlockFO::applyComponent\n";
+    e<<"input reference arg not in domain\n";
+    throw e;
+    }
+    if (yi.getSpace() != rng[i]) {
+    RVLException e;
+    e<<"Error: BlockFO::applyComponent\n";
+    e<<"input arg not in component "<<i<<" of range\n";
+    throw e;
+    }
+    Components<Scalar> xc(x);
+    std::vector< RVL::Vector<Scalar> const * > xv(xc.getSize()+par.size());
+    for (int j=0;j<xc.getSize();j++) xv[j]=&xc[j];
+    for (int j=0;j<par.size();j++) xv[j+xc.getSize()]=par[j];
+    yi.eval(*(f.at(i)),xv);
+    }
+    catch (RVLException & e) {
+    e<<"\ncalled from BlockOpFO::apply\n";
+    throw e;
+    }
+    catch (out_of_range) {
+    RVLException e;
+    e<<"Error: out-of-range exception in BlockOpFO::apply\n";
+    throw e;
+    }
     }
 
     virtual void applyPartialDeriv(int i, int j,
-				   const Vector<Scalar> & x, 
-				   const Vector<Scalar> & dxj,
-				   Vector<Scalar> & dyi) const {
-      try {
-	// standard sanity check
-	if (x.getSpace() != dom) {
-	  RVLException e;
-	  e<<"Error: BlockFO::applyPartialDeriv\n";
-	  e<<"input reference arg not in domain\n";
-	  throw e;
-	}
-	if (dyi.getSpace() != rng[i]) {
-	  RVLException e;
-	  e<<"Error: BlockFO::applyPartialDeriv\n";
-	  e<<"output pert arg not in component "<<i<<" of range\n";
-	  throw e;
-	}
-	if (dxj.getSpace() != dom[j]) {
-	  RVLException e;
-	  e<<"Error: BlockFO::applyPartialDeriv\n";
-	  e<<"input pert arg not in component "<<j<<" of domain\n";
-	  throw e;
-	}
+    const Vector<Scalar> & x, 
+    const Vector<Scalar> & dxj,
+    Vector<Scalar> & dyi) const {
+    try {
+    // standard sanity check
+    if (x.getSpace() != dom) {
+    RVLException e;
+    e<<"Error: BlockFO::applyPartialDeriv\n";
+    e<<"input reference arg not in domain\n";
+    throw e;
+    }
+    if (dyi.getSpace() != rng[i]) {
+    RVLException e;
+    e<<"Error: BlockFO::applyPartialDeriv\n";
+    e<<"output pert arg not in component "<<i<<" of range\n";
+    throw e;
+    }
+    if (dxj.getSpace() != dom[j]) {
+    RVLException e;
+    e<<"Error: BlockFO::applyPartialDeriv\n";
+    e<<"input pert arg not in component "<<j<<" of domain\n";
+    throw e;
+    }
 
-	Components<Scalar> xc(x);
-	std::vector<RVL::Vector<Scalar> const * > xv(xc.getSize()+1+par.size());
-	for (int k=0;k<xc.getSize();k++) xv[k]=&xc[k];
-	xv[xc.getSize()]=&dxj;
-	for (int k=0;k<par.size();k++) xv[k+xc.getSize()+1]=par[k];
-	dyi.eval(*((dff.at(i))->at(j)),xv);
-      }
-      catch (RVLException & e) {
-	e<<"\ncalled from BlockOpFO::applyPartialDeriv\n";
-	throw e;
-      }
-      catch (out_of_range) {
-	RVLException e;
-	e<<"Error: out-of-range exception in BlockOpFO::applyPartialDeriv\n";
-	throw e;
-      }
+    Components<Scalar> xc(x);
+    std::vector<RVL::Vector<Scalar> const * > xv(xc.getSize()+1+par.size());
+    for (int k=0;k<xc.getSize();k++) xv[k]=&xc[k];
+    xv[xc.getSize()]=&dxj;
+    for (int k=0;k<par.size();k++) xv[k+xc.getSize()+1]=par[k];
+    dyi.eval(*((dff.at(i))->at(j)),xv);
+    }
+    catch (RVLException & e) {
+    e<<"\ncalled from BlockOpFO::applyPartialDeriv\n";
+    throw e;
+    }
+    catch (out_of_range) {
+    RVLException e;
+    e<<"Error: out-of-range exception in BlockOpFO::applyPartialDeriv\n";
+    throw e;
+    }
     }
 
     virtual void applyAdjPartialDeriv(int i, int j,
-				      const Vector<Scalar> & x, 
-				      const Vector<Scalar> & dyi,
-				      Vector<Scalar> & dxj) const {
-      try {
-	// standard sanity check
-	if (x.getSpace() != dom) {
-	  RVLException e;
-	  e<<"Error: BlockFO::applyAdjPartialDeriv\n";
-	  e<<"input reference arg not in domain\n";
-	  throw e;
-	}
-	if (dyi.getSpace() != rng[i]) {
-	  RVLException e;
-	  e<<"Error: BlockFO::applyAdjPartialDeriv\n";
-	  e<<"input pert arg not in component "<<i<<" of range\n";
-	  throw e;
-	}
-	if (dxj.getSpace() != dom[j]) {
-	  RVLException e;
-	  e<<"Error: BlockFO::applyAdjPartialDeriv\n";
-	  e<<"output pert arg not in component "<<j<<" of domain\n";
-	  throw e;
-	}
+    const Vector<Scalar> & x, 
+    const Vector<Scalar> & dyi,
+    Vector<Scalar> & dxj) const {
+    try {
+    // standard sanity check
+    if (x.getSpace() != dom) {
+    RVLException e;
+    e<<"Error: BlockFO::applyAdjPartialDeriv\n";
+    e<<"input reference arg not in domain\n";
+    throw e;
+    }
+    if (dyi.getSpace() != rng[i]) {
+    RVLException e;
+    e<<"Error: BlockFO::applyAdjPartialDeriv\n";
+    e<<"input pert arg not in component "<<i<<" of range\n";
+    throw e;
+    }
+    if (dxj.getSpace() != dom[j]) {
+    RVLException e;
+    e<<"Error: BlockFO::applyAdjPartialDeriv\n";
+    e<<"output pert arg not in component "<<j<<" of domain\n";
+    throw e;
+    }
 
-	Components<Scalar> xc(x);
-	std::vector<RVL::Vector<Scalar> const * > xv(xc.getSize()+1+par.size());
-	for (int k=0;k<xc.getSize();k++) xv[k]=&xc[k];
-	xv[xc.getSize()]=&dyi;
-	for (int k=0;k<par.size();k++) xv[k+xc.getSize()+1]=par[k];
-	dxj.eval(*((dfa.at(j))->at(i)),xv);
-      }
-      catch (RVLException & e) {
-	e<<"\ncalled from BlockOpFO::applyAdjPartialDeriv\n";
-	throw e;
-      }
-      catch (out_of_range) {
-	RVLException e;
-	e<<"Error: out-of-range exception in BlockOpFO::applyAdjPartialDeriv\n";
-	throw e;
-      }
+    Components<Scalar> xc(x);
+    std::vector<RVL::Vector<Scalar> const * > xv(xc.getSize()+1+par.size());
+    for (int k=0;k<xc.getSize();k++) xv[k]=&xc[k];
+    xv[xc.getSize()]=&dyi;
+    for (int k=0;k<par.size();k++) xv[k+xc.getSize()+1]=par[k];
+    dxj.eval(*((dfa.at(j))->at(i)),xv);
+    }
+    catch (RVLException & e) {
+    e<<"\ncalled from BlockOpFO::applyAdjPartialDeriv\n";
+    throw e;
+    }
+    catch (out_of_range) {
+    RVLException e;
+    e<<"Error: out-of-range exception in BlockOpFO::applyAdjPartialDeriv\n";
+    throw e;
+    }
     }
 
     virtual BlockOperator<Scalar> * cloneBlockOp() const {
-      return new BlockOpFO<Scalar>(*this);
+    return new BlockOpFO<Scalar>(*this);
     }
 
-  public:
+    public:
 
     BlockOpFO(ProductSpace<Scalar> const & _dom,
-	      ProductSpace<Scalar> const & _rng,
-	      std::vector< FunctionObject *> const & _f,
-	      std::vector< std::vector< FunctionObject *> *> const & _dff,
-	      std::vector< std::vector< FunctionObject *> *> const & _dfa,
-	      std::vector< Vector<Scalar> const *> const & _par)
-      : dom(_dom), rng(_rng), f(_f), dff(_dff), dfa(_dfa), par(_par) {
-      // sanity tests
-      int m=dom.getSize();
-      int n=rng.getSize();
+    ProductSpace<Scalar> const & _rng,
+    std::vector< FunctionObject *> const & _f,
+    std::vector< std::vector< FunctionObject *> *> const & _dff,
+    std::vector< std::vector< FunctionObject *> *> const & _dfa,
+    std::vector< Vector<Scalar> const *> const & _par)
+    : dom(_dom), rng(_rng), f(_f), dff(_dff), dfa(_dfa), par(_par) {
+    // sanity tests
+    int m=dom.getSize();
+    int n=rng.getSize();
 
-      bool testdim = true;
-      testdim = testdim && (n == f.size());
-      testdim = testdim && (n == dff.size());
-      for (int i=0;i<n;i++) 
-	testdim = testdim && (m == (dff.at(i))->size());
-      testdim = testdim && (m == dfa.size());
-      for (int j=0;j<m;j++) 
-	testdim = testdim && (n == (dfa.at(j))->size());
+    bool testdim = true;
+    testdim = testdim && (n == f.size());
+    testdim = testdim && (n == dff.size());
+    for (int i=0;i<n;i++) 
+    testdim = testdim && (m == (dff.at(i))->size());
+    testdim = testdim && (m == dfa.size());
+    for (int j=0;j<m;j++) 
+    testdim = testdim && (n == (dfa.at(j))->size());
 
-      if (!testdim) {
-	RVLException e;
-	e<<"Error: BlockOpFO construction failed, rows="<<n<<" cols="<<m<<"\n";
-	e<<"incompatible input FO vectors\n";
-	throw e;
-      }
+    if (!testdim) {
+    RVLException e;
+    e<<"Error: BlockOpFO construction failed, rows="<<n<<" cols="<<m<<"\n";
+    e<<"incompatible input FO vectors\n";
+    throw e;
+    }
     }
 
     BlockOpFO(const BlockOpFO<Scalar> & a)
-      : dom(a.dom), rng(a.rng), f(a.f), dff(a.dff), dfa(a.dfa), par(a.par) {
-      // copy parameter vectors
-      //      for (int i=0;i<a.par.size();i++) par[i]=a.par[i];
+    : dom(a.dom), rng(a.rng), f(a.f), dff(a.dff), dfa(a.dfa), par(a.par) {
+    // copy parameter vectors
+    //      for (int i=0;i<a.par.size();i++) par[i]=a.par[i];
     }
 
     ~BlockOpFO() {}
    
     virtual const ProductSpace<Scalar> & getProductDomain() const { return dom; }
     virtual const ProductSpace<Scalar> & getProductRange() const { return rng; }
-  };
+    };
 
   */
 

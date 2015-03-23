@@ -45,13 +45,11 @@ namespace RVLAlg {
   /** A terminator which simply acts as a container for a boolean */
   class BoolTerminator: public Terminator {
   private:
-    mutable bool ans;
+    bool & ans;
   public:
-    BoolTerminator(bool _ans=false): ans(_ans) {}
+    BoolTerminator(bool & _ans): ans(_ans) {}
     BoolTerminator(BoolTerminator & bt): ans(bt.ans) {}
     ~BoolTerminator() {}
-    void setValue() { ans=false; }
-    void setValue(bool _ans) { ans=_ans; }
     bool query() { return ans; }
   };
 
