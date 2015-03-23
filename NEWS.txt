@@ -36,6 +36,8 @@ To the reproducible documents collection:
   and Lumley)
 * tccs/scan3: A fast algorithm for 3D azimuthally anisotropic velocity
   scan (Hu, Fomel, and Ying)
+* sep/passive: Passive seismic imaging applied to synthetic data
+  (Rickett and Claerbout)
 
 To SCons:
 
