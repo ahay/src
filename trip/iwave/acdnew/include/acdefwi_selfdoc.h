@@ -11,7 +11,6 @@ const char * sdoc[] = {
 #include <segytapermute_pars.h>
 #include <gridmaskop_pars.h>
 #include <umin_pars.h>
-#include <lnsrch_pars.h>
 #include <lbfgs_pars.h>
 #include <trgn_pars.h>
   NULL };

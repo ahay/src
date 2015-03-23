@@ -59,9 +59,7 @@ using TSOpt::MPISEGYSpace;
 using TSOpt::GridSpace;
 using TSOpt::SEGYSpace;
 #endif
-using TSOpt::GridExtendOp;
-using TSOpt::GridDerivOp;
-//using TSOpt::GridHelmOp;
+using TSOpt::GridWindowOp;
 
 int xargc;
 char **xargv;
@@ -112,9 +110,9 @@ int main(int argc, char ** argv) {
 
       /* generate physical model space */
 #ifdef IWAVE_USE_MPI
-      MPIGridSpace sp(valparse<std::string>(*pars,"dom"),"notype",true);
+      MPIGridSpace sp(valparse<std::string>(*pars,"csq_update"),"notype",true);
 #else
-      GridSpace sp(valparse<std::string>(*pars,"dom"),"notype",true);
+      GridSpace sp(valparse<std::string>(*pars,"csq_update"),"notype",true);
 #endif
       // make it a product, so it's compatible with domain of op
       StdProductSpace<ireal> dom(sp); 
@@ -137,7 +135,7 @@ int main(int argc, char ** argv) {
     
       // vel-squared reference model
       Vector<ireal> m0(iwop.getDomain());
-      AssignFilename mf0n(valparse<std::string>(*pars,"csq_bg"));
+      AssignFilename mf0n(valparse<std::string>(*pars,"csq"));
       Components<ireal> cm0(m0);
       cm0[0].eval(mf0n);
 
@@ -176,25 +174,6 @@ int main(int argc, char ** argv) {
       }
       // residual operator - used in TRCG, zero cost so just build it
       ResidualOperator<float> rop(op,mdd);
-
-      // choice of GridDerivOp for semblance op is placeholder - extended axis is dim-th, with id=dim+1
-      // note default weight of zero!!!
-      // Note added 10.03.14: getGrid is not usably implemented for MPIGridSpace at this time, so 
-      // must fish the derivative index out by hand and bcast
-      // THIS SHOULD ALL BE FIXED! (1) getGrid properly implemented in parallel, (2) proper
-      // defn of DSOp to include internal extd axis case (space/time shift)
-      int dsdir = INT_MAX;
-      if (retrieveGlobalRank()==0) dsdir=csqsp.getGrid().dim;
-#ifdef IWAVE_USE_MPI
-      if (MPI_Bcast(&dsdir,1,MPI_INT,0,retrieveGlobalComm())) {
-	RVLException e;
-	e<<"Error: acdiva, rank="<<retrieveGlobalRank()<<"\n";
-	e<<"  failed to bcast dsdir\n";
-	throw e;
-      }
-#endif
-      // does not appear to work properly
-      // assign window widths - default = 0;
       
       //      StdLeastSquaresFcnlGN<float> f(cop,mdd);
       StdLeastSquaresFcnlGN<float> f(op,mdd);
@@ -247,7 +226,7 @@ int main(int argc, char ** argv) {
 	   valparse<float>(*pars,"StepDecrFactor",0.5f), 
 	   valparse<float>(*pars,"StepIncrFactor",1.8f),
 	   valparse<float>(*pars,"MaxFracDistToBdry",1.0), 
-	   valparse<float>(*pars,"LSMinStepFrac",1.e-06),
+	   valparse<float>(*pars,"MinStepTol",1.e-06),     // min step as frac of LS interval
 	   valparse<int>(*pars,"MaxSteps",10), 
 	   valparse<float>(*pars,"AbsGradThresh",0.0), 
 	   valparse<float>(*pars,"RelGradThresh",1.e-2), 
@@ -257,13 +236,14 @@ int main(int argc, char ** argv) {
 	TRGNAlg<float, CGNEPolicy<float> > * tralg = new TRGNAlg<float, CGNEPolicy<float> >
 	  (rop, m,
 	   valparse<int>(*pars,"MaxSteps",10),             // _maxcount,
-	   valparse<float>(*pars,"ResidualTol",0.0f),       // _jtol,
+	   valparse<float>(*pars,"ResidualTol",0.0f),      // _jtol,
 	   valparse<float>(*pars,"AbsGradThresh",0.0f),    // _agtol,
 	   valparse<float>(*pars,"RelGradThresh",1.0e-2),  // _rgtol,
 	   valparse<float>(*pars,"MinDecrease",0.1f),      // _eta1
 	   valparse<float>(*pars,"GoodDecrease",0.9f),     // _eta2
 	   valparse<float>(*pars,"StepDecrFactor",0.5f),   // _gamma1
 	   valparse<float>(*pars,"StepIncrFactor",1.8f),   // _gamma2
+	   valparse<float>(*pars,"MinStepTol",1.e-06),     // min step as frac of TR 
 	   *optr);
 
 	// assign CG params

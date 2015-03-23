@@ -200,7 +200,8 @@ int main(int argc, char ** argv) {
 
       //      GridWindowOp wop(iwop.getDomain(),
       OpComp<float> cop(mop,op);
-      StdLeastSquaresFcnlGN<float> f(cop,mdd);
+      //      StdLeastSquaresFcnlGN<float> f(cop,mdd);
+      StdLeastSquaresFcnlGN<float> f(op,mdd);
 
       // choice of preop is placeholder
       // ScaleOpFwd<float> preop(op.getDomain(),1.0f);
@@ -250,7 +251,7 @@ int main(int argc, char ** argv) {
 	   valparse<float>(*pars,"StepDecrFactor",0.5f), 
 	   valparse<float>(*pars,"StepIncrFactor",1.8f),
 	   valparse<float>(*pars,"MaxFracDistToBdry",1.0), 
-	   valparse<float>(*pars,"LSMinStepFrac",1.e-06),
+	   valparse<float>(*pars,"MinStepTol",1.e-06),     // min step as frac of LS segment
 	   valparse<int>(*pars,"MaxSteps",10), 
 	   valparse<float>(*pars,"AbsGradThresh",0.0), 
 	   valparse<float>(*pars,"RelGradThresh",1.e-2), 
@@ -267,6 +268,7 @@ int main(int argc, char ** argv) {
 	   valparse<float>(*pars,"GoodDecrease",0.9f),     // _eta2
 	   valparse<float>(*pars,"StepDecrFactor",0.5f),   // _gamma1
 	   valparse<float>(*pars,"StepIncrFactor",1.8f),   // _gamma2
+	   valparse<float>(*pars,"MinStepTol",1.e-06),     // min step as frac of TR
 	   *optr);
 
 	// assign CG params
@@ -287,7 +289,7 @@ int main(int argc, char ** argv) {
       }
 
       if (valparse<int>(*pars,"MaxLBFGSIter",3) <= 0) {
-	FunctionalEvaluation<float> feval(f,m);
+	FunctionalEvaluation<float> feval(fbd,m);
 	//	Vector<float> grad(alg.getFunctionalEvaluation().getDomain());
 	Vector<float> grad(feval.getDomain());
 	AssignFilename gfn("grad.rsf");
