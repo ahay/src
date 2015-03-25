@@ -40,6 +40,8 @@ To the reproducible documents collection:
   (Rickett and Claerbout)
 * tccs/ortho: Random noise attenuation using local signal-and-noise
   orthogonalization (Chen and Fomel)
+* tccs/strat: Stratigraphic coordinates, a coordinate system tailored
+  to seismic interpretation (Karimi and Fomel)
 
 To SCons:
 

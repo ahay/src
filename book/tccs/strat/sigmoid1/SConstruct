@@ -1,0 +1,184 @@
+from rsf.proj import *
+
+Flow('sigmoid',None,
+     '''
+     sigmoid n1=200 n2=210 d2=0.008 |
+     put label2=Distance |
+     smooth rect1=3 diff1=1 adj=1 | smooth rect1=3 |
+     costaper nw1=10
+     ''')
+Result('sigmoid','grey wanttitle=n ')
+Plot('sigmoid','grey wanttitle=n clip=0.003')
+
+
+Flow('tftf2','sigmoid',
+      '''
+      window n1=200 min1=0 | window n2=1 f2=71 | window min1=0.55 max1=0.63 |
+      timefreq rect=10 verb=y nw=200 dw=0.25
+      ''')
+Result('tftf22','tftf2',
+       '''
+       smooth rect2=5 | scale axis=2 | 
+       grey color=j allpos=y scalebar=y wanttitle=n 
+       ''')
+
+
+Flow('tftf23','sigmoid',
+      '''
+      window n1=200 min1=0 | window n2=1 f2=112 | window min1=0.4 max1=0.49 |
+      timefreq rect=10 verb=y nw=200 dw=0.25
+      ''')
+Result('tftf23','tftf23',
+       '''
+       smooth rect2=5 | scale axis=2 | 
+       grey color=j allpos=y scalebar=y wanttitle=n 
+       ''')
+#Pad at the top and find Dip
+
+pad=250
+
+Flow('mask','sigmoid','math output=1 | pad beg1=%d end1=%d ' % (pad,pad))
+
+Flow('sdip','sigmoid mask',
+     'pad beg1=%d end1=%d | dip order=2 p0=0 verb=y niter=10 rect1=10 rect2=10 mask=${SOURCES[1]}' % (pad,pad))
+Result('sdip','window min1=0 n1=200 | grey color=j scalebar=y  barlabel=Slope barunit=samples wanttitle=n labelfat=4 font=2 titlefat=4 barlabelfat=4')
+Plot('sdip','grey wanttitle=n ')
+
+#  Predictive painting
+
+Flow('sseed','sdip','window n2=1 | math output=x1')
+def ref(trace):
+    out = 'ref%d' % trace
+    Flow(out+'.asc',None,
+         '''
+         echo %d 0 %d 1 n1=4 in=$TARGET data_format=ascii_float
+         ''' % (trace,trace))
+    Plot(out,out+'.asc',
+         '''
+         dd form=native type=complex | 
+         graph min1=0 max1=210 min2=0 max2=1 wanttitle=n wantaxis=n
+         ''')
+    return out
+
+picks=[]
+refs=[]
+for i0 in (0,49,99,149,199):
+    pick = 'pick%d' % i0
+    picks.append(pick)
+    refs.append(ref(i0))
+
+    Flow(pick,'sdip sseed',
+         'pwpaint order=2 seed=${SOURCES[1]} i0=%d eps=0.1' % i0)
+
+np = len(picks)
+Flow('spicks',picks,
+     'add ${SOURCES[1:%d]} | scale dscale=%g' % (np,1.0/np))
+
+Result('spicks','grey color=j title="t0(t,x)" scalebar=y allpos=y')
+
+#Flow('flat','sigmoid spicks','pad beg1=%d end1=%d | iwarp warp=${SOURCES[1]} eps=1 n1=200 o1=0' % (pad,pad))
+#Result('flat','grey title="Flattened" ')
+
+Plot('spicks','window n1=200 min1=0 | contour wantaxis=n wanttitle=n plotfat=5')
+
+Result('sigmoid-spick','sigmoid spicks','Overlay')
+
+#  Next x0(t,x)
+
+# |grad t0|^2
+Flow('slowsig','spicks','lineiko what=s')
+
+Result('slowsig','grey clip=10 color=j scalebar=y title=Slowness allpos=y')
+
+Flow('t0sig','slowsig','eikonal vel=n plane2=y zshot=-%g | clip clip=2' % (pad*0.004))
+
+Result('t0sig','window n1=200 min1=0 | grey clip=2 color=j wanttitle=n scalebar=y barlabel=Z0 barunit=s allpos=y labelfat=4 font=2 titlefat=4 barlabelfat=4')
+
+Plot('t0sig','window n1=200 min1=0 | contour wantaxis=n wanttitle=n plotfat=5 plotcol=6 nc=200 c0=0 dc=0.02')
+
+Result('sigmoid-t0sig','sigmoid t0sig','Overlay')
+
+Flow('distsig','t0sig','math output=x2')
+Flow('zerosig','t0sig','math output=0')
+
+Flow('x0sig','t0sig distsig zerosig','lineiko what=i time=${SOURCES[1]} slow=${SOURCES[2]}')
+
+Result('x0sig','window n1=200 min1=0 | grey color=j wanttitle=n scalebar=y allpos=y barlabel=X0 barunit=km labelfat=4 font=2 titlefat=4 barlabelfat=4')
+
+Plot('x0sig','window n1=200 min1=0 | contour wantaxis=n wanttitle=n plotfat=5 plotcol=5 nc=100 c0=0 dc=0.02')
+
+Result('sigmoid-t0sigx0sig','sigmoid t0sig x0sig','Overlay')
+
+# Map from (t,x) to (t0,x0)
+
+Flow('warpsig','t0sig x0sig','add add=-%g | cat axis=3 ${SOURCES[1]}' % (pad*0.004))
+
+Flow('sigmoid2','sigmoid warpsig','pad beg1=%d end1=%d | iwarp2 warp=${SOURCES[1]} eps=1' % (pad,pad))
+
+Result('sigmoid2','window n1=200 min1=0 | grey wanttitle=n')
+
+
+
+Flow('tftf','sigmoid2',
+      '''
+      window n1=200 min1=0 | window n2=1 f2=70 | window min1=0.43 max1=0.5 |
+      timefreq rect=10 verb=y nw=200 dw=0.25
+      ''')
+Result('tftf1','tftf',
+       '''
+       smooth rect2=5 | scale axis=2 | 
+       grey color=j allpos=y scalebar=y wanttitle=n 
+       ''')
+
+Flow('tftf12','sigmoid2',
+      '''
+      window n1=200 min1=0 | window n2=1 f2=98 | window min1=0.43 max1=0.5 |
+      timefreq rect=10 verb=y nw=200 dw=0.25
+      ''')
+Result('tftf11','tftf12',
+       '''
+       smooth rect2=5 | scale axis=2 | 
+       grey color=j allpos=y scalebar=y wanttitle=n 
+       ''')
+
+Flow('warpsig','t0sig x0sig','add add=-%g | cat axis=3 ${SOURCES[1]}' % (pad*0.004))
+
+Flow('tinit','t0sig','math output=x1')
+Flow('xinit','x0sig','math output=x2')
+Flow('init','tinit xinit','cmplx ${SOURCES[1]}')
+
+Flow('last','t0sig x0sig','add add=-%g | cmplx ${SOURCES[1]}' % (pad*0.004))
+
+Flow('shift','init last',
+     '''
+     cat axis=3 ${SOURCES[1]} | 
+     window j1=20 j2=10 min1=0 |
+     transp plane=13 
+     ''')
+Plot('shift','put n3=1 n2=%d | graph yreverse=y transp=y wanttitle=n min1=0 max1=0.796 min2=0 max2=1.672 wantaxis=n plotfat=5 plotcol=5' % (21*23))
+
+Plot('last','window j1=20 j2=10 min1=0 | put n2=1 n1=%d | graph symbol=. symbolsz=20 yreverse=y transp=y wanttitle=n min1=0 max1=0.796 min2=0 max2=1.672 wantaxis=n plotfat=5 plotcol=5' % (21*23))
+
+Result('shift','sigmoid shift last','Overlay')
+
+Flow('last0','spicks xinit','cmplx ${SOURCES[1]}')
+
+Flow('shift0','init last0',
+     '''
+     cat axis=3 ${SOURCES[1]} | 
+     window j1=20 j2=10 min1=0 |
+     transp plane=13 
+     ''')
+Plot('shift0','put n3=1 n2=%d | graph yreverse=y transp=y wanttitle=n min1=0 max1=0.796 min2=0 max2=1.672 wantaxis=n plotfat=5 plotcol=5' % (21*23))
+
+Plot('last0','window j1=20 j2=10 min1=0 | put n2=1 n1=%d | graph symbol=. symbolsz=20 yreverse=y transp=y wanttitle=n min1=0 max1=0.796 min2=0 max2=1.672 wantaxis=n plotfat=5 plotcol=5' % (21*23))
+
+Result('shift0','sigmoid shift0 last0','Overlay')
+
+# Mapping back from (t0,x0) to (t,x)
+
+Flow('sigmoid1','sigmoid2 warpsig','iwarp2 warp=${SOURCES[1]} inv=n eps=1')
+
+Result('sigmoid1','window n1=200 min1=0 | grey wanttitle=n ')
+
+End()

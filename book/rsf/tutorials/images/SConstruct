@@ -34,5 +34,26 @@ for case in ('','-med','-gss'):
     Result('m32'+case,'grey allpos=y screenratio=1 wanttitle=n')
 
 # Another image
+
+Fetch('M31_Wide.jpg','a010485',
+      server='http://svs.gsfc.nasa.gov',
+      top='vis/a010000/a010400')
+
+Flow('m31','M31_Wide.jpg',
+     '''
+     jpg2byte | window n1=1 | dd type=float
+     ''')
+
+Result('m31','grey allpos=y screenratio=1 title=M31 transp=n')
+
+Flow('m31-zoom','m31','window f2=5199 n2=800 f1=3699 n1=800')
+
+Result('m31-zoom','grey allpos=y screenratio=1 title=M31 transp=n')
+
+Flow('m31-slice','m31-zoom','window n2=1 f2=399')
+
+Result('m31-slice','graph title="Image Slice" ')
+
+# Quantize image values
     
 End()
