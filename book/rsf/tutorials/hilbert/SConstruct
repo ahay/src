@@ -92,4 +92,25 @@ Plot('peaks2','peaks meaks',
 
 Plot('envpeaks','env peaks peaks2','Overlay')
 
+Flow('xpeaks','peaks','real')
+Flow('phasepeaks','phase xpeaks','inttest1 coord=${SOURCES[1]} interp=spline nw=4')
+Flow('cpeaks','xpeaks','rtoc')
+
+Plot('ppeaks','xpeaks phasepeaks cpeaks',
+     '''
+     cmplx ${SOURCES[1]} | cat axis=2 ${SOURCES[2]} | transp |
+     graph wanttitle=n wantaxis=n plotcol=3 
+     min1=2 max1=2.8 min2=-3 max2=3
+     ''')
+Plot('ppeaks2','xpeaks phasepeaks',
+     '''
+     cmplx ${SOURCES[1]} |
+     graph title=Phase symbol=o plotcol=3 symbolsz=6 grid=y
+     min1=2 max1=2.8 min2=-3 max2=3
+     ''')
+
+Plot('phasepeaks','ppeaks ppeaks2','Overlay')
+
+Result('phasepeaks','envpeaks phasepeaks','OverUnderAniso')
+
 End()
