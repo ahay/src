@@ -45,6 +45,40 @@ Result('nmo','hask nmo','SideBySideAniso')
 Flow('cmp','nmo','window min1=1.5 max1=3.5 n2=30')
 Plot('cmp','grey title="Input CMP" clip=0.62')
 
+# randomization
+Flow('off','cmp','window n1=1 | noise rep=y seed=2015')
+Flow('rand','cmp off','headersort head=${SOURCES[1]}')
 
+Flow('cmp3','cmp','spray axis=3 n=50 o=0 d=1 label=Sample')
+Flow('off3','cmp3','window n1=1 | noise rep=y seed=2015')
+Flow('rand3','cmp3 off3','headersort head=${SOURCES[1]}')
+
+Flow('tx3','rand3','smooth rect2=4 rect3=4')
+
+# Sort back
+Flow('inv3','off3','put d1=1 o1=0 | math output="x1+30*x2" | spray axis=1 n=1 | headersort head=$SOURCE')
+Flow('back','tx3 inv3','headersort head=${SOURCES[1]} | stack axis=3')
+
+Flow('dif','cmp back','add scale=1,-1 ${SOURCES[1]}')
+
+Plot('back','grey title="CMP (3-D)" clip=0.62')
+
+Plot('dif','grey title="Difference (3-D)" clip=0.62')
+
+Result('hm-nmo-tx','cmp back dif','SideBySideAniso')
+
+Fetch('hm_supp.HH','haskell')
+
+Flow('hm','hm_supp.HH','dd form=native | window min1=1.5 max1=3.5 n2=30 | put label1=Time unit1=s')
+
+for case in ('cmp','back','hm'):
+    Plot(case+'-trace',case,
+         '''
+         bandpass fhi=50 |
+         window min1=2 max1=2.6 n2=3 | 
+         wiggle poly=y clip=0.6 labelsz=12 labelfat=1 titlesz=12 titlefat=1 title="%s" label2= unit2=
+         ''' % {'cmp':'Input','back':'PEF (3-D)','hm': 'Velocity Stack'}[case])
+
+Result('hm-near-offset-tx','cmp-trace back-trace hm-trace','SideBySideAniso')
 
 End()
