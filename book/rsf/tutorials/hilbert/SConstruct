@@ -65,4 +65,31 @@ Result('data','data hdata edata pdata','TwoRows')
 
 # Plot envelope peaks
 
+Plot('env','trace envp envm',
+     '''
+     cat ${SOURCES[1:3]} axis=2 |
+     window f1=500 n1=201 | 
+     graph title="Envelope" plotcol=5,4,4 grid=y 
+     min1=2 max1=2.8 min2=-7200 max2=7200
+     ''')
+
+Flow('peaks','envp','max1')
+Flow('meaks','peaks','math output="conj(input)" ')
+
+Plot('peaks','peaks meaks',
+     '''
+     cat axis=1 ${SOURCES[1]} | 
+     graph wanttitle=n wantaxis=n symbol=o plotcol=3 symbolsz=6
+     min1=2 max1=2.8 min2=-7200 max2=7200
+     ''')
+
+Plot('peaks2','peaks meaks',
+     '''
+     cat axis=2 ${SOURCES[1]} | transp | 
+     graph wanttitle=n wantaxis=n plotcol=3 
+     min1=2 max1=2.8 min2=-7200 max2=7200
+     ''')
+
+Plot('envpeaks','env peaks peaks2','Overlay')
+
 End()
