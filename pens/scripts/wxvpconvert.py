@@ -193,6 +193,7 @@ class MainFrame(wx.Frame):
 
         run = wx.Button(self,-1,'Convert')
         self.Bind(wx.EVT_BUTTON,self.convert,run)
+        run.SetBackgroundColour('yellow') 
         sizer.Add(run)
 
         sizer.Add((0, 0), 1, wx.EXPAND)
