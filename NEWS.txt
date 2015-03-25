@@ -38,6 +38,8 @@ To the reproducible documents collection:
   scan (Hu, Fomel, and Ying)
 * sep/passive: Passive seismic imaging applied to synthetic data
   (Rickett and Claerbout)
+* tccs/ortho: Random noise attenuation using local signal-and-noise
+  orthogonalization (Chen and Fomel)
 
 To SCons:
 

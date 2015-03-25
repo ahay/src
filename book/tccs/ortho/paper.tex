@@ -1,0 +1,239 @@
+\published{Geophysics, 80, no. 6, WD1-WD9, (2015)}
+
+\title{Random noise attenuation using local signal-and-noise orthogonalization}
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+\author{Yangkang Chen and Sergey Fomel}
+
+\ms{GEO-2014-0227}
+
+\address{
+Bureau of Economic Geology \\
+John A. and Katherine G. Jackson School of Geosciences \\
+The University of Texas at Austin \\
+University Station, Box X \\
+Austin, TX 78713-8924 \\
+}
+
+\footer{TCCS-9}
+\lefthead{Chen \& Fomel}
+\righthead{Denoising using local orthogonalization}
+\maketitle
+
+\begin{abstract}
+%Attenuation of random noise plays an important role in seismic data processing. Many of the conventional random noise attenuation techniques suffer from a problem of compromising between removing noise and preserving useful signal. 
+We propose a novel approach to attenuate random noise based on local signal-and-noise orthogonalization. In this approach, we first  %preserve the useful signal 
+remove noise using one of the conventional denoising operators, and then apply a weighting operator to the initially denoised section in order to predict the signal-leakage energy and retrieve it from the initial noise section. The weighting operator is obtained by solving a least-squares minimization problem via shaping regularization with a smoothness constraint. Next, the initially denoised section and the retrieved signal are combined to form the final denoised section. The proposed denoising approach corresponds to orthogonalizing the initially denoised signal and noise in a local manner. %The local orthogonalization can orthogonalize signal and noise in the neighborhood of each point instead of across the whole data window. 
+We evaluate denoising performance by using local similarity. In order to test the orthogonalization property of the estimated signal and noise, we calculate the local similarity map between the denoised signal section and removed noise section. Low values of local similarity indicate a good orthogonalization and thus a good denoising performance. Synthetic and field data examples demonstrate the effectiveness of the proposed approach in applications to noise attenuation for both conventional and simultaneous-source seismic data.
+\end{abstract}
+
+\section{Introduction}
+Most random noise attenuation techniques necessitate a control of the trade-off between preservation of useful signal and removal of random noise. $F$-$x$ deconvolution and projection \cite[]{canales,soubaras1995}, also known as $f$-$x$ predictive filtering \cite[]{bekara,yangkang2014}, is a common technique for random noise attenuation thanks to its convenient implementation and high efficiency. Commonly a prediction filter length is modified in order to increase or decrease the ability of $f$-$x$ deconvolution to remove random noise, at the expense of decreasing or increasing the preservation of useful signal. When the data character is complex, the filter length should be long enough to capture certain amounts of useful signal, but at the same time to attenuate a limited amount of noise. Otherwise, a portion of useful signal can be lost because of a large number of dip components in the data \cite[]{yangkang2014}. For certain specific types of random noise, such as blending noise in simultaneous-source seismic data \cite[]{beasleycj1998,berkhout2008,abma2010,yangkang20142}, median filtering (MF) can be particularly effective \cite[]{mediandeblend,yangkang2014svmf,yangkang2014nmo}. However, the ability of MF to remove spike-like blending noise strongly depends on the length of the filtering window. A longer filter leads to a more powerful attenuation for blending noise, but at the same time causes a possible loss of useful energy. In contrast, when the length of the filtering window is small, MF may eliminate less useful energy but also will be less able to remove spiky noise. Removing spiky noise without losing too much useful signal becomes a difficult trade-off. 
+
+Suppose that the seismic data $\mathbf{d}$ is composed of signal $\mathbf{s}_{true}$ and noise $\mathbf{n}_{true}$, a successful random noise attenuation will give accurate signal and noise estimation: $\mathbf{s}_0\approx\mathbf{s}_{true}$ and $\mathbf{n}_0\approx\mathbf{n}_{true}$, where $\mathbf{s}_0$ and $\mathbf{n}_0$ are the estimated signal and noise. However, the ideal situation may not occur in practice for two main possible reasons: incorrect parameter selection or inadequacy  of denoising assumptions. When those assumptions are not met, the conventional denoising approaches may not achieve the optimal performance. For most noise attenuation approaches, the noise section will contain a certain amount of useful signal, which can be called \emph{signal-leakage energy}. Sometimes, the leakage energy is negligible, whereas in other cases, this loss of energy may result in a decrease in resolution. 
+
+Local seismic attributes measure seismic signal characteristics neither instantaneously, at each signal point, nor globally, across a data window, but locally in the neighborhood of each point \cite[]{fomel2007localattr}. One of the most useful local attributes is \emph{local similarity}, which has found numerous successful applications in different areas of seismic data processing: multicomponent image registration \cite[]{fomel20052,fomel2007localattr}, time-lapse registration \cite[]{fomel20094,zhangrui2013}, time-frequency analysis \cite[]{guochang20113}, structure-enhancing filtering \cite[]{liuyang2010}, phase estimation \cite[]{fomel20142}, etc.
+By using a weighted stacking of seismic data according to local similarity to the reference trace, a seismic image with an increased signal-to-noise ratio can be obtained \cite[]{guochang2009,guochang20111}. In this paper, we introduce a new local seismic attribute: \emph{local orthogonalization weight} (LOW) in order to perform local orthogonalization. LOW appeared previously in the definition of local similarity and can be obtained by solving a minimization problem using shaping regularization with a smoothness constraint. 
+   %applied local similarity in multicomponent image registration with high-resolution accuracy. Similarly, \cite{fomel20094} detected an optimal time-lapse registration by stretching and squeezing a monitor image with respect to the base image by utilizing local similarity. 
+%\cite{fomel20102} proposed a phase detector as local similarity with the envelope, which is demonstrated to have a higher dynamic range and staber property than the conventionally used local varimax attribute.
+
+In order to compensate for the loss of useful signal in traditional noise attenuation approaches, because of incorrect parameter selection or inadequacy of denoising assumptions, we employ a weighting operator on the initially denoised section for the retrieval of useful signal from the initial noise section. The new denoising process corresponds to local orthogonalization of signal and noise based on the assumption that final estimated signal and noise should be orthogonal to each other in the time-space domain. The orthogonality assumption is similar as assuming that the signal and noise do not correlate with each other. Thus, the orthogonality assumption is assumed to be valid for all kinds of noise that do not correlate with the useful signal, e.g., random noise. The proposed local-orthogonalization approach can be considered as a specific case of previously proposed nonstationary matching filtering \cite[]{fomel20095} for one-point filter length. %Instead of used for attenuating multiples, it is the first time that the matching filtering strategy is used for attenuating random noise. 
+The proposed approach is not very sensitive to the parameter selection, and thus is robust in practice. 
+We use two synthetic examples and three field data examples to demonstrate successful performance of the proposed approach in applications to both conventional and simultaneous-source seismic data. 
+\section{Method}
+\subsection{Compensating for the signal-leakage energy by weighting}
+
+For many random noise attenuation approaches, the leakage energy is not negligible. We can attempt to retrieve the leaking signal from the noise section by applying a simple nonstationary weighting operator to the initially denoised signal assuming that the leakage energy can be predicted by weighting the useful signal:
+\begin{align}
+\label{eq:retr1}
+\mathbf{s}_1=\mathbf{w}\circ \mathbf{s}_0.
+\end{align}
+Here $\mathbf{s}_1$ is the retrieved signal, $\mathbf{w}\circ\mathbf{s}_0=diag(\mathbf{w})\mathbf{s}_0=diag(\mathbf{s}_0)\mathbf{w}$, which denotes Hadamard (or Schur) product, and $diag(\cdot)$ denotes the diagonal matrix composed of an input vector. The weighting vector $\mathbf{w}$ can be estimated by solving the following minimzation problem:
+\begin{equation}
+\label{eq:simple}
+\min_{\mathbf{w}} \parallel \overbrace{\mathbf{d} - \mathbf{P}[\mathbf{d}]}^{\mathbf{n}_0} - \mathbf{w}\circ \overbrace{\mathbf{P}[\mathbf{d}]}^{\mathbf{s}_0} \parallel_2^2,
+\end{equation}
+where $\mathbf{d}$ denotes the observed noisy data, and $\mathbf{P}$ denotes the initial random noise attenuation operator. %The physical meaning of e
+Equation \ref{eq:simple} uses a weighted (scaled) signal $\mathbf{s}_0$ to match the leakage energy in the initial noise section ($\mathbf{n}_0$) in a least-squares sense. %The philosophy is much similar to the previously proposed nonstationary matching filter for multiple attenuation \cite[]{fomel20095}. However, it is the first time that we apply this matching filtering strategy to random noise attenuation. 
+In the next section, we will introduce an approach to calculate the weighting vector $\mathbf{w}$ using local orthogonalization. 
+
+\subsection{Local orthogonalization}
+Based on the assumption that final estimated signal $\mathbf{s}$ and noise $\mathbf{n}$ should be orthogonal to each other, we can orthogonalize the estimated signal and estimated noise by
+\begin{align}
+\label{eq:ortho1}
+\hat{\mathbf{n}} &= \mathbf{n}_0 - w\mathbf{s}_0, \\
+\label{eq:ortho2}
+\hat{\mathbf{s}} &= \mathbf{s}_0 + w\mathbf{s}_0,
+\end{align}
+where $w$ is the global orthogonalization weight (GOW) defined by
+\begin{equation}
+\label{eq:weight}
+w=\frac{\mathbf{n}_0^T\mathbf{s}_0}{\mathbf{s}_0^T\mathbf{s}_0}.
+\end{equation} 
+Here $[\cdot]^T$ denotes transpose.
+Appendix A provides a demonstration and proof for the global orthogonalization process as denoted by equations \ref{eq:ortho1}, \ref{eq:ortho2} and \ref{eq:weight}. The orthogonality assumption is similar as assuming that the signal and noise do not correlate with each other, which implies the kinds of noise that do not correlate with the useful signal, e.g., random noise. The orthogonality assumption is assumed to be valid in the original time-space domain, but also has the possibility of being applied in other transformed domains.
+Instead of using GOW, we propose to use nonstationary local orthogonalization weight (LOW). One possible definition of LOW is:
+
+      \begin{equation}
+          w_m(t) = \frac{\displaystyle\sum_{i=t-m/2}^{t+m/2} s_0(i) n_0(i)}{\displaystyle\sum_{i=t-m/2}^{t+m/2} s_0^2(i)},
+        \label{eq:eq2}
+      \end{equation}
+where $w_m(t)$ denotes the LOW for each temporal point $t$ with a local window length $m$. $s_0(t)$ and $n_0(t)$ here denotes the initially estimated signal and noise for each point $t$.
+
+
+\subsection{Solving LOW by shaping regularization}
+In order to better control the locality and smoothness of LOW, we follow the local-attribute scheme introduced by \cite{fomel2007localattr}. Simplifing equation \ref{eq:simple}, and adding a local-smooth constraint to the optimization problem, we obtain: %and first turn the orthogonalization problem into an optimization problem:
+\begin{equation}
+\label{eq:localortho}
+\mathbf{w} = \arg\min_{\mathbf{w}} \parallel \mathbf{n}_0 - \mathbf{S}_0\mathbf{w}\parallel_2^2 + \mathbf{R}(\mathbf{w}). %+ \mathbf{R}(\mathbf{w})
+\end{equation}
+Here, $\mathbf{w}$ is the LOW, $\mathbf{S}_0$ is a diagonal matrix composed of the initial estimated signal $\mathbf{s}_0$: $\mathbf{S}_0=diag(\mathbf{s}_0)$. $\mathbf{R}$ denotes a smoothing regularization operator.
+Then we solve the least-squares problem \ref{eq:localortho} with the help of shaping regularization \cite[]{fomel2007shape} using a local-smoothness constraint:
+\begin{equation}
+\label{eq:shape}
+\mathbf{w} = [\lambda^2\mathbf{I} + \mathcal{T}(\mathbf{S}_0^T\mathbf{S}_0-\lambda^2\mathbf{I})]^{-1}\mathcal{T}\mathbf{S}_0^T\mathbf{n}_0,
+\end{equation}
+where $\mathcal{T}$ is a triangle smoothing operator and $\lambda$ is a scaling parameter set as $\lambda  = \Arrowvert\mathbf{S}_0^T\mathbf{S}_0\Arrowvert_2$.
+Inserting $\mathbf{w}$ into equation \ref{eq:retr1}, we can obtain a new denoising approach:
+\begin{align}
+\label{eq:news}
+\mathbf{s}&=\mathbf{s}_0+\mathbf{s}_1=\mathbf{P}[\mathbf{d}]+\mathbf{w}\circ\mathbf{P}[\mathbf{d}]=(\mathbf{I}+diag(\mathbf{w}))\mathbf{P}[\mathbf{d}],\\
+\label{eq:newn}
+\mathbf{n}&=\mathbf{n}_0-\mathbf{s}_1=\mathbf{d}-\mathbf{P}[\mathbf{d}]-\mathbf{w}\circ\mathbf{P}[\mathbf{d}]=\mathbf{d}-(\mathbf{I}+diag(\mathbf{w}))\mathbf{P}[\mathbf{d}].
+\end{align}
+Here, $\mathbf{s}$ and $\mathbf{n}$ are the final estimated signal and noise.
+
+\inputdir{orthocomplex}
+
+\multiplot{4}{low1,low2,low3,low4}{width=0.45\columnwidth}{LOWs using different smoothing radii for the example as shown in Figure \ref{fig:c,n,cn,cfx,cdifffx,csimi-difffx,cfx2,cdifffx2,csimi-difffx2}. (a) Vertical and lateral smoothing radii are 25 samples. (b) Vertical and lateral smoothing radii are 20 samples. (c) Vertical and lateral smoothing radii are 10 samples. (d) Vertical and lateral smoothing radii are 5 samples. }
+
+The controlling parameter for calculating LOW is the width of the triangle smoother, or the smoothing radius (SR). Figure \ref{fig:low1,low2,low3,low4} shows the calculated LOWs that correspond to the second synthetic example (Figure \ref{fig:c,n,cn,cfx,cdifffx,csimi-difffx,cfx2,cdifffx2,csimi-difffx2}) with different smoothing radii. The LOW are calculated by solving the equation \ref{eq:localortho} with the initial denoised signal and initial removed noise set as Figures \ref{fig:cfx} and \ref{fig:cdifffx}, respectively, using the approach shown in equation \ref{eq:shape}. As we can see from the comparison, LOW is robust with respect to the choice of the smoothing radius (e.g., from 25 samples to 20 samples, or from 10 samples to 5 samples), but may differ a lot for significantly different smoothing radii (e.g., from 25 samples to 5 samples). We can also conclude from the comparison that as the smoothing radius increases, the temporal and spatial resolutions decrease, but the anti-noise ability increases. %We generalize the previously proposed adaptive subtraction approach using nonstationary autoregression \cite[]{fomel20095}, and 
+Note that the orthogonalization equations \ref{eq:simple} and \ref{eq:localortho} can also be understood as one-point nonstationary matching filtering \cite[]{fomel20095}.
+
+\section{Synthetic examples}
+We use two synthetic examples to test the performance of the proposed denoising algorithm. For consistency, we use \emph{denoising} to denote random noise attenuation for regular seismic data, and \emph{deblending} to denote blending noise attenuation for simultaneous-source seismic data. The first example is a deblending test, similar to the one used by \cite{mediandeblend}. The second example is a denoising test that contains four crossing linear events. In order to test the improvement in the signal-to-noise ratio of these two synthetic examples, we utilize the following measurement:
+\begin{equation}
+\label{eq:diff}
+SNR=10\log_{10}\frac{\Arrowvert \mathbf{s}_{true} \Arrowvert_2^2}{\Arrowvert \mathbf{s}_{true} -\mathbf{s}\Arrowvert_2^2}.
+\end{equation}
+
+\inputdir{orthocsimul}
+
+\multiplot{9}{huo,huo-noise,huos,huos-mf,huosdiff-mf,huos-simi,huos-ortho,huosdiff-ortho,huos-simi-ortho}{width=0.2900\columnwidth,height=0.3100\columnwidth}{Comparison of using the local-orthogonalization-based random noise attenuation approach for deblending test  before and after. (a) Unblended section. (b) Blending noise section. (c) Blended section. (d) Deblended result using MF. (e) Noise section using MF. (f) Local similarity map between (d) and (e). (g) Deblended result using the proposed method. (h) Noise section using the proposed method. (i) Local similarity map between (g) and (h).}
+
+In addition to SNR, we also propose to use local similarity \cite[]{fomel2007localattr} as a convenient measure to evaluate denoising performance. Appendix B gives a brief review of local similarity. After the local similarity map between the denoised data and removed noise is calculated, we can judge from the local similarity if there is leakage energy in the noise. %Generally, when there is high-similarity anomaly in the similarity map, the denoising performance is poor, and vice versa. 
+When the clean data is unknown for field data denoising tests, the SNR based evaluation becomes unavailable. Besides, the SNR is not always the best measurement for denoising performance because it does not measure the signal leakage. However, the local similarity map can always be used to evaluate the denoising performance.
+
+Figure \ref{fig:huo,huo-noise,huos,huos-mf,huosdiff-mf,huos-simi,huos-ortho,huosdiff-ortho,huos-simi-ortho} shows the deblending performance using a conventional MF and the proposed denoising approach. The original clean, unblended data are shown in Figure \ref{fig:huo}. After blending using a simple random-dithering method \cite[]{yangkang20142}, we obtained the noisy data containing spike-like blending noise (\ref{fig:huos}). Figure \ref{fig:huos-mf} demonstrates a denoised section after using MF. The noise section corresponding to MF is shown in Figure \ref{fig:huosdiff-mf} and contains a certain amount of signal leakage in the form of linear events. Using the proposed denoising approach, we obtained a denoised section with stronger-amplitude linear events. In the corresponding noise section, any coherent linear events are barely noticeable, suggesting a nearly perfect deblending. In this example, because the noise are spike-like blending noise, we did smooth too much during shaping regularization. In this example, the vertical and lateral smoothing radii are both 2 samples. Figures \ref{fig:huos-simi} and \ref{fig:huos-simi-ortho} show local similarity of the noise section to the denoised section before and after using the proposed approach. After applying the proposed method, the noise section exhibits low similarity with the denoised section. Although structure-oriented median filtering can handle the dipping reflector, they can only work well for relative simpler structures where the dip estimation can be precisely obtained, in which case there will be no need to use the proposed approach. However, when the dip estimation is not accurate, or there are conflicting dips in a processing window, the structure-oriented median filtering may not work well, in which case we can use the proposed approach for retrieving the leaked useful energy.
+
+Figure \ref{fig:c,n,cn,cfx,cdifffx,csimi-difffx,cfx2,cdifffx2,csimi-difffx2} shows the denoising performance based on the conventional $f$-$x$ deconvolution \cite[]{canales}. The clean data is shown in Figure \ref{fig:c} and the noise section, corresponding to $f$-$x$ deconvolution, is shown in Figure \ref{fig:csimi-difffx}; it contains some horizontal and low-dip-angle signals. The coherent leakage energy is also visible in the local similarity map (Figure \ref{fig:csimi-difffx}). Applying the proposed denoising approach, we obtained a denoised section with stronger-amplitude horizontal events. The corresponding noise section does not contain any coherent signal. In this example, the vertical and lateral smoothing radii are both 25 samples. Figures \ref{fig:csimi-difffx} and \ref{fig:csimi-difffx2} denote local similarity of the noise section to the denoised section before and after using the proposed approach. The similarity decreases significantly after applying local orthogonalization.
+
+The SNR comparison before and after using local-orthogonalization approach is summarized in Table \ref{tbl:snrcomp}.
+
+\tabl{snrcomp}{Comparison of SNR before and after using the proposed approach.}
+ {
+    \begin{center}
+     \begin{tabular}{|c|c|c|} 
+	  \hline Test & Deblending  &  denoising			       		 \\ 
+	  \hline Original (dB) & 1.173 & -1.72 \\
+      \hline Initially denoised (dB)& 	17.65 & 21.21		       		 \\ 
+      \hline Orthogonalized (dB)  & 20.95  & 25.30  		\\
+      \hline
+    \end{tabular} 
+   \end{center}
+} 
+
+%\subsection{Complex linear events}
+\inputdir{orthocomplex}
+
+\multiplot{9}{c,n,cn,cfx,cdifffx,csimi-difffx,cfx2,cdifffx2,csimi-difffx2}{width=0.2900\columnwidth,height=0.3100\columnwidth}{Comparison of using the local-orthogonalization-based random noise attenuation approach for denoising test before and after. (a) Clean section. (b) Random noise section. (c) Noisy section. (d) Denoised result using $f$-$x$ deconvolution. (e) Noise section using $f$-$x$ deconvolution. (f) Local similarity map between (d) and (e). (g) Denoised result using the proposed method. (h) Noise section using the proposed method. (i) Local similarity map between (g) and (h).}
+
+\section{Field examples}
+In this section, we use three field data sets to evaluate the proposed method. The first example is a simulated deblending test and the latter two examples are common denoising tests.% As we did in the previous section, we present a deblending and a denoising test.
+%The first example is deblending test and the other three examples are all denoising tests. The third and fourth examples are both reproduced from the literature. %In order to compare the published approaches with our proposed approach fairly, we maintained the exactly same parameters selection as used previously.
+
+ Figure \ref{fig:fairunblended2} shows the unblended data for the first test, which is a deep-water common receiver section containing events that are nearly flat. After numerical blending using the same blending approach as in the first synthetic example, the blended data (shown in Figure \ref{fig:fairblended2}) demonstrate strong interference. Figure \ref{fig:fairdeblended2fx2} shows the deblended data after the use of $f$-$x$ deconvolution. When checking the noise section in Figure \ref{fig:fairdeblended2dif-fx2}, we found many coherent signals,  suggesting a significant leakage of useful signal energy. The denoised section after using the proposed approach is shown in Figure \ref{fig:fairdeblended-ortho}. The noise section no longer contains coherent useful signals while the removed blending noise appears nearly unchanged. In this example, we set the vertical and lateral smoothing radii to 25 samples. The similarity maps before and after application of the proposed method are shown in Figure \ref{fig:fairdif-simi} and \ref{fig:fairdeblendeddif-ortho}. The SNR using the previous criteria of the blended data is 0.04. After the initial deblending using $f$-$x$ deconvolution, SNR improves to 7.44. Further, after the proposed retrieving-signal process, SNR improves to 10.08. It is worth to be mentioned that the preservation of useful signal is of significant importance in deblending, and thus the proposed approach is particularly attractive in its application to deblending.
+
+The second field data test is for a land seismic section, which was used previously by \cite{fomel2007localattr} and \cite{liuyang2012}. The input image is shown in Figure \ref{fig:pp}. The shallow part of the section is noisy, which may make interpretation difficult.  After a conventional $f$-$x$ deconvolution, a much cleaner section is obtained (Figure \ref{fig:pp-fx}). Some coherent signal is left in the noise section shown in Figure \ref{fig:ppdiff-ortho0}, especially around 0.75s and the 350th trace. After local signal-and-noise orthogonalization, we obtained a clean denoised section but with strong amplitude in some regions and almost no loss of useful component in the noise section (Figure \ref{fig:ppdiff-ortho0}). In this example, the vertical and lateral smoothing radii are both 2 samples. Unlike the synthetic data test and the previous field data test, for this field data test, the clean signal is unknown, so the SNR measurement cannot be applied in this case. %Because in field data processing, the primary focus is on the preservation of useful signal, in this case, we emphasize only the signal preservation and visual improvement and do not provide a numerical SNR improvement measure. 
+The two corresponding similarity maps are shown in Figure \ref{fig:pp-simi,pp-simi-ortho}. The local similarity after applying the proposed approach is nearly zero along the whole seismic section.
+
+\inputdir{orthofair}
+
+\multiplot{9}{fairunblended2,fair-noise,fairblended2,fairdeblended2fx2,fairdeblended2dif-fx2,fairdif-simi,fairdeblended-ortho,fairdeblendeddif-ortho,fair-simi-ortho}{width=0.2900\columnwidth,height=0.3100\columnwidth}{Comparison of using the local-orthogonalization-based random noise attenuation approach for deblending test before and after. (a) Unblended section (not clean, also containing random noise). (b) Blending noise section. (c) Blended section. (d) Deblended result using $f-x$ deconvolution. (e) Noise section using $f-x$ deconvolution. (f) Local similarity map between (d) and (e). (g) Deblended result using the proposed method. (h) Noise section using the proposed method. (i) Local similarity map between (g) and (h).}
+
+\inputdir{orthonine}
+
+\plot{pp}{width=0.48500\columnwidth,height=0.3900\columnwidth}{Noisy post-stack land field data \cite[]{fomel20132}.}
+
+\multiplot{4}{pp-fx,pp-ortho,ppdiff-fx0,ppdiff-ortho0}{width=0.45\textwidth}{(a) Denoised section using $f-x$ deconvolution. (b) Denoised section using the proposed approach. (c) Noise section using $f-x$ deconvolution.  (d) Noise section using the proposed approach.}
+
+\multiplot{2}{pp-simi,pp-simi-ortho}{width=0.45\textwidth}{Comparison of similarity between noise section and denoised section with and without using the proposed random noise attenuation approach. (a) Similarity map using $f-x$ deconvolution. (b) Similarity map using the proposed method.}
+
+The third field data example is borrowed from \cite{guochang2012}. The noisy data is shown in Figure \ref{fig:data}. The initial signal and noise models are prepared using $f-x$ regularized nonstationary autoregression (RNAR). Following the approach of \cite{guochang2012}, the initially denoised data are shown in Figure \ref{fig:npre}. The corresponding noise section is shown in Figure \ref{fig:nprediff0}. The general denoising approach shows good performance considering the clean denoised image and random removed noise. However, we can find small useful signals from the noise section, as indicated by the frame boxes in Figure \ref{fig:nprediff0}. The denosied image using the proposed approach is shown in Figure \ref{fig:rna-ortho}. After using local orthogonalization to retrieve useful signal, the coherent signal disappears in the final noise section (Figure \ref{fig:rnadiff-ortho0}), as indicated by the frame boxes. The zoomed sections corresponding to frame boxes A and B in Figure \ref{fig:npre,rna-ortho,nprediff0,rnadiff-ortho0} are shown in Figure \ref{fig:zoom-rnadif-a,zoom-orthodif-a,zoom-rnadif-b,zoom-orthodif-b}. In this example, we chose the vertical and lateral smoothing radius as 5 samples. Before using the proposed approach, the local similarity map between the denoised data and removed noise (Figure \ref{fig:rna-simi}) showed  some high-similarity anomalies. After applying the proposed approach, the similarity map is nearly zero everywhere across the whole section.
+
+\inputdir{orthorna}
+
+\plot{data}{width=0.48500\columnwidth,height=0.3900\columnwidth}{Noisy post-stack field data \cite[]{guochang2012}.}
+
+\multiplot{4}{npre,rna-ortho,nprediff0,rnadiff-ortho0}{width=0.45\textwidth}{(a) Denoised section using $f-x$ RNAR. (b) Denoised section using the proposed approach. (c) Noise section using $f-x$ RNAR.  (d) Noise section using the proposed approach.}
+
+\multiplot{4}{zoom-rnadif-a,zoom-orthodif-a,zoom-rnadif-b,zoom-orthodif-b}{width=0.45\textwidth}{(a) Zoomed section using $f$-$x$ RNAR (frame box A shown in Figure \ref{fig:npre,rna-ortho,nprediff0,rnadiff-ortho0}). (b) Zoomed section using the proposed approach (frame box A shown in Figure \ref{fig:npre,rna-ortho,nprediff0,rnadiff-ortho0}). (c) Zoomed section using $f$-$x$ RNAR (frame box B shown in Figure \ref{fig:npre,rna-ortho,nprediff0,rnadiff-ortho0}). (d) Zoomed section using the proposed approach (frame box B shown in Figure \ref{fig:npre,rna-ortho,nprediff0,rnadiff-ortho0}).}
+
+\multiplot{2}{rna-simi,rna-simi-ortho}{width=0.45\textwidth}{Comparison of similarity between noise section and denoised section with and without using the proposed random noise attenuation approach. (a) Similarity map using $f-x$ RNAR. (b) Similarity map using the proposed method.}
+
+\section{Conclusions}
+Conventional methods for noise attenuation may cause some leakage of signal energy in the noise section as a result of incorrect parameter selection or inadequacy of denoising assumptions. %By employing local similarity between the noise section and denoised section, we can successfully detect the useful signal smeared in the noise section. 
+We have shown that it is possible to retrieve the leakage energy by applying a weighting operator to the initial signal and adding the retrieved signal energy to the initially denoised data to obtain the final denoised data. In order to design an optimized weighting operator, we introduce a new local attribute, called local orthogonalization weight (LOW). LOW can be obtained by solving a least-square minimization problem using shaping regularization with a smoothness constraint. The proposed denoising approach corresponds to locally orthogonalizing signal and noise. Once the initial signal and noise models are given, the proposed approach can help retrieve the residual signal in the noise section. The local orthogonalization approach to random noise attenuation is applicable to processing of blended simultaneous-source seismic data, in which the preservation of useful signal is particularly important. Although the examples were 2-D, the method applies equally well in 3-D and in any other number of dimensions.
+
+\section{Acknowledgments}
+We thank FairfieldNodal for the data used in the first field data example. We also thank Luke Decker for helpful discussions, Bill Harlan and two anonymous reviewers for constructive suggestions that made the manuscript better. The paper was prepared in the Madagascar open-source software environment \cite[]{mada2013}. 
+
+\appendix
+\section{Appendix A: Signal-and-noise orthogonalization}
+\inputdir{.}
+
+\plot{demo}{width=0.8\columnwidth}{Demonstration of signal-and-noise orthogonalization.}
+
+As shown schematically in Figure \ref{fig:demo}, the initially estimated signal and noise are denoted by $\mathbf{s}_0$ and $\mathbf{n}_0$, respectively. By projecting $\mathbf{n}_0$ to the direction of $\mathbf{s}_0$, we can get the projection $w\mathbf{s}_0$. The other component of $\mathbf{n}_0$ is the final estimated noise, as shown in equation \ref{eq:ortho1}. The final estimated signal is thus the summation of the initially estimated signal $\mathbf{s}_0$ and the projection component $w\mathbf{s}_0$. 
+
+When $w=\frac{\mathbf{n}_0^T\mathbf{s}_0}{\mathbf{s}_0^T\mathbf{s}_0}$, the following equation holds:
+\begin{equation}
+\label{eq:append-ortho}
+\begin{split}
+\hat{\mathbf{n}}^T\hat{\mathbf{s}} &=(\mathbf{n}_0-w\mathbf{s}_0)^T(\mathbf{s}_0+w\mathbf{s}_0) =\mathbf{n}_0^T\mathbf{s}_0-w\mathbf{s}_0^T\mathbf{s}_0+w\mathbf{n}_0^T\mathbf{s}_0-w^2\mathbf{s}_0^T\mathbf{s}_0\\
+								   &=\mathbf{n}_0^T\mathbf{s}_0-\frac{\mathbf{n}_0^T\mathbf{s}_0}{\mathbf{s}_0^T\mathbf{s}_0}\mathbf{s}_0^T\mathbf{s}_0+\frac{\mathbf{n}_0^T\mathbf{s}_0}{\mathbf{s}_0^T\mathbf{s}_0}\mathbf{n}_0^T\mathbf{s}_0-\left(\frac{\mathbf{n}_0^T\mathbf{s}_0}{\mathbf{s}_0^T\mathbf{s}_0}\right)^2\mathbf{s}_0^T\mathbf{s}_0 =0
+\end{split}
+\end{equation}
+Here, $\hat{\mathbf{s}}$ and $\hat{\mathbf{n}}$ denote the final estimated signal and noise, respectively, and appear orthogonal to each other. This orthogonalization approach is also known as Gram-Schmidt orthogonalization \cite[]{gram}. Note that $w$ defined above can be obtained by solving the least-squares optimization problem: 
+\begin{equation}
+\label{eq:a2}
+\min_{w} \Arrowvert w\mathbf{s}_0-\mathbf{n}_0\Arrowvert^2_2,
+\end{equation}
+which we extend to equation \ref{eq:localortho} in the main text.
+
+\appendix
+\section{Appendix B: Review of local similarity}
+
+\cite{fomel2007localattr} defined local similarity between vectors $\mathbf{a}$ and $\mathbf{b}$ as:
+\begin{equation}
+\label{eq:local}
+\mathbf{c}=\sqrt{\mathbf{c}_1^T\mathbf{c}_2}
+\end{equation}
+where $\mathbf{c}_1$ and $\mathbf{c}_2$ come from two least-squares minimization problems:
+\begin{align}
+\label{eq:local1}
+\mathbf{c}_1 &=\arg\min_{\mathbf{c}_1}\Arrowvert \mathbf{a}-\mathbf{B}\mathbf{c}_1 \Arrowvert_2^2, \\
+\label{eq:local2}
+\mathbf{c}_2 &=\arg\min_{\mathbf{c}_2}\Arrowvert \mathbf{b}-\mathbf{A}\mathbf{c}_2 \Arrowvert_2^2,
+\end{align}
+where $\mathbf{A}$ is a diagonal operator composed from the elements of $\mathbf{a}$: $\mathbf{A}=diag(\mathbf{a})$ and $\mathbf{B}$ is a diagonal operator composed from the elements of $\mathbf{b}$: $\mathbf{B}=diag(\mathbf{b})$.
+Least-squares problems \ref{eq:local1} and \ref{eq:local2} can be solved with the help of shaping regularization with a smoothness constraint:
+\begin{align}
+\label{eq:local3}
+\mathbf{c}_1 &= [\lambda_1^2\mathbf{I} + \mathcal{T}(\mathbf{B}^T\mathbf{B}-\lambda_1^2\mathbf{I})]^{-1}\mathcal{T}\mathbf{B}^T\mathbf{a},\\
+\label{eq:local4}
+\mathbf{c}_2 &= [\lambda_2^2\mathbf{I} + \mathcal{T}(\mathbf{A}^T\mathbf{A}-\lambda_2^2\mathbf{I})]^{-1}\mathcal{T}\mathbf{A}^T\mathbf{b},
+\end{align}
+where $\mathbf{\mathcal{T}}$ is a smoothing operator, and $\lambda_1$ and $\lambda_2$ are two parameters controlling the physical dimensionality and enabling fast convergence when inversion is implemented iteratively. These two parameters can be chosen as $\lambda_1  = \Arrowvert\mathbf{B}^T\mathbf{B}\Arrowvert_2$ and $\lambda_2  = \Arrowvert\mathbf{A}^T\mathbf{A}\Arrowvert_2$ \cite[]{fomel2007localattr}. The definition of $\mathbf{c}_1$ and $\mathbf{c}_2$ are equivalent to definition of LOW in this paper.
+
+\bibliographystyle{seg}
+\bibliography{ortho}
