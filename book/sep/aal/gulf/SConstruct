@@ -2,14 +2,14 @@ from rsf.proj import *
 
 Fetch('Gulfnear.HH','mig')
 
-Flow('gulflowb','Gulfnear.HH',
+Flow('data','Gulfnear.HH',
      '''
      dd form=native |
      window f2=200 n2=480 n1=1000 |
-     bandpass flo=10 fhi=50
+     bandpass flo=10 fhi=50 | put o3=0
      ''')
 
-Plot('Gulfdata','gulflowb',
+Plot('data',
      '''
      window f2=60 n2=360 max1=2.0 |
      pow pow1=0.5 | 
@@ -23,23 +23,34 @@ alpha=460
 beta=0.5
 twater=0.20
 
-Flow('water','gulflowb','window n2=1 | spike | cut max1=%g' % twater)
+Flow('water','data','window n2=1 | spike | cut max1=%g' % twater)
 
 Flow('vel','water',
      '''
      math output="%g+input*(%g * abs(x1 - %g)^%g)" 
      ''' % (vwater,alpha,twater,beta))
 
-Flow('Gulfmigaa4s','gulflowb vel','kirchnew velocity=${SOURCES[1]}')
+Flow('vel2','vel','spray axis=2 n=480 d=25 o=5000')
 
-Plot('Gulfmigaa','Gulfmigaa4s',
-     '''
-     window f2=60 n2=360 max1=2.0 | pow pow1=0.5 |
-     grey label1=Time unt1=s wantaxis2=n
-     labelfat=2 labelsz=4 titlefat=2 titlesz=5 
-     xll=3.0 yll=0.32  xur=11.0 yur=4.81  title="(b)" 
-     ''')
+Flow('migaa','data vel','kirchnew velocity=${SOURCES[1]}')
 
-Result('Gulfaa','Gulfdata Gulfmigaa','Overlay')
+Flow('migaa2','data vel2','mig2 vel=${SOURCES[1]}')
+
+def Imgplot(case,letter):
+    Plot(case,
+         '''
+         window f2=60 n2=360 max1=2.0 | pow pow1=0.5 |
+         grey label1=Time unt1=s wantaxis2=n
+         labelfat=2 labelsz=4 titlefat=2 titlesz=5 
+         xll=3.0 yll=0.32  xur=11.0 yur=4.81  title="(%c)" 
+         ''' % letter)
+
+Imgplot('migaa2','b')
+
+Result('Gulfaa','data migaa2','Overlay')
+
+Flow('mig90','data vel2','mig2 vel=${SOURCES[1]} antialias=0')
+
+Imgplot('mig90','a')
 
 End()

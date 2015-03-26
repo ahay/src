@@ -93,24 +93,86 @@ Plot('peaks2','peaks meaks',
 Plot('envpeaks','env peaks peaks2','Overlay')
 
 Flow('xpeaks','peaks','real')
-Flow('phasepeaks','phase xpeaks','inttest1 coord=${SOURCES[1]} interp=spline nw=4')
+Flow('phasepeaks','phase xpeaks','inttest1 coord=${SOURCES[1]} interp=lag nw=1')
 Flow('cpeaks','xpeaks','rtoc')
 
 Plot('ppeaks','xpeaks phasepeaks cpeaks',
      '''
      cmplx ${SOURCES[1]} | cat axis=2 ${SOURCES[2]} | transp |
      graph wanttitle=n wantaxis=n plotcol=3 
-     min1=2 max1=2.8 min2=-3 max2=3
+     min1=2 max1=2.8 min2=-3.5 max2=3.5
      ''')
 Plot('ppeaks2','xpeaks phasepeaks',
      '''
      cmplx ${SOURCES[1]} |
      graph title=Phase symbol=o plotcol=3 symbolsz=6 grid=y
-     min1=2 max1=2.8 min2=-3 max2=3
+     min1=2 max1=2.8 min2=-3.5 max2=3.5
      ''')
 
-Plot('phasepeaks','ppeaks ppeaks2','Overlay')
+# ideal phase
+
+from math import pi
+
+Flow('iphase0','phasepeaks',
+     '''
+     mask min=%g max=%g | dd type=float | math p=$SOURCE output="(1-input)*p" 
+     ''' % (-pi/2,pi/2))
+Flow('iphase1','iphase0',
+     '''
+     mask min=%g max=%g | dd type=float | math p=$SOURCE output="%g*input+(1-input)*p"
+     ''' % (-3*pi/2,-pi/2,-pi))
+Flow('iphase2','iphase1',
+     '''
+     mask min=%g max=%g | dd type=float | math p=$SOURCE output="%g*input+(1-input)*p"
+     ''' % (pi/2,3*pi/2,pi))
+
+Plot('ipeaks','xpeaks iphase2 cpeaks',
+     '''
+     cmplx ${SOURCES[1]} | cat axis=2 ${SOURCES[2]} | transp |
+     graph wanttitle=n wantaxis=n plotcol=2 plotfat=3
+     min1=2 max1=2.8 min2=-3.5 max2=3.5
+     ''')
+Plot('ipeaks2','xpeaks iphase2',
+     '''
+     cmplx ${SOURCES[1]} |
+     graph title=Phase symbol=o plotcol=2 symbolsz=8 grid=y
+     min1=2 max1=2.8 min2=-3.5 max2=3.5 plotfat=3
+     ''')
+
+Plot('phasepeaks','ipeaks ipeaks2 ppeaks ppeaks2','Overlay')
 
 Result('phasepeaks','envpeaks phasepeaks','OverUnderAniso')
+
+# Compute phase error for seismic section
+
+Flow('dpeaks','edata','max1 | real')
+Flow('ppeaks','pdata dpeaks','inttest1 coord=${SOURCES[1]} interp=lag nw=1')
+
+Flow('ipeaks0','ppeaks',
+     '''
+     mask min=%g max=%g | dd type=float | math p=$SOURCE output="(1-input)*p" 
+     ''' % (-pi/2,pi/2))
+Flow('ipeaks1','ipeaks0',
+     '''
+     mask min=%g max=%g | dd type=float | math p=$SOURCE output="%g*input+(1-input)*p"
+     ''' % (-3*pi/2,-pi/2,-pi))
+Flow('ipeaks2','ipeaks1',
+     '''
+     mask min=%g max=%g | dd type=float | math p=$SOURCE output="%g*input+(1-input)*p"
+     ''' % (pi/2,3*pi/2,pi))
+
+Flow('epeaks bar','ipeaks2 ppeaks',
+     'math p=${SOURCES[1]} output="abs(p-input)" | byte allpos=y bar=${TARGETS[1]} pclip=100')
+
+Result('epeaks','dpeaks epeaks',
+       '''
+       rtoc | math output="input+I*x2" |
+       graph symbol='.' min1=2 max1=3 min2=0 max2=600 
+       title="Absolute Phase Error at Envelope Peaks" 
+       transp=y yreverse=y depth=${SOURCES[1]} 
+       color=j scalebar=y 
+       ''')
+
+# Zero-phase correction?
 
 End()

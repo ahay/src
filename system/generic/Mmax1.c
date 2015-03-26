@@ -1,6 +1,6 @@
 /* Picking local maxima on the first axis. 
 
-Outputs complex numbers (time,amplitude) sorted by amplitude.
+Outputs complex numbers (time,amplitude) 
 
 September 2014 program of the month:
 http://ahay.org/rsflog/index.php?/archives/403-Program-of-the-month-sfmax1.html
@@ -34,6 +34,7 @@ static int pick_compare (const void *p1, const void *p2)
 
 int main(int argc, char* argv[])
 {
+    bool sorted;
     int i1, n1, i2, n2, ip, np;
     float o1, d1, t0, t1, t2, t, a, *trace=NULL;
     float min, max, x;
@@ -58,6 +59,9 @@ int main(int argc, char* argv[])
 
     if (!sf_getint("np",&np)) np=n1;
     /* maximum number of picks */
+
+    if (!sf_getbool("sorted",&sorted)) sorted=true;
+    /* if y, sort by amplitude */
 
     sf_putint(out,"n1",np);
     sf_settype(out,SF_COMPLEX);
@@ -104,7 +108,7 @@ int main(int argc, char* argv[])
 	    ip++;
 	}
 
-	qsort(pick,ip,sizeof(sf_complex),pick_compare);
+	if (sorted) qsort(pick,ip,sizeof(sf_complex),pick_compare);
 	
 	for (i1=ip; i1 < np; i1++) {
 	    pick[i1] = sf_cmplx(crealf(pick[ip-1]),0.);
