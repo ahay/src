@@ -9,7 +9,7 @@ cosftwave1 cpef deblur distance divn dix dpeiko eikonal eikonalvti
 eno2 erf exgr fft2 fftexp0 fftexp1 fftexp3 fftone ffttest fftwave1
 fftwave2 fftwave3 focus fpow freqest gaussmooth gbeamform imray interf
 interp2 interpt iphase kron lfftexp0 localskew locov lpf lsfit median
-mffit mig2 mig3 miss3 nconv nsmooth nsmooth1 ocparcel octentwt odip2
+mffit mig3 miss3 nconv nsmooth nsmooth1 ocparcel octentwt odip2
 ofilp ofsemb opwd2 ortho patch phaserot pick pick3 plane poly polyfit
 regr rdiv rect1 reshape riesz rsin seislet1 semblance shape shapeagc
 shapefill shearer shift1 similarity similarity2 simenv smoothderw
