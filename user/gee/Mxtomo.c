@@ -108,8 +108,6 @@ int main(int argc, char* argv[])
 	       oy,dy,
 	       nt,nz,nx,nh,ny);
 
-    
-
     if (niter < 0 ) {
 	xtomo_lop(adj,false,nm,nd,modl,data);
     } else {

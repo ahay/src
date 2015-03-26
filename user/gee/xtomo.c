@@ -32,7 +32,7 @@ void xtomo_init(float oz1, float dz1,
 {
     oz = oz1; ox = ox1; oh = oh1; oy = oy1; 
     dz = dz1; dx = dx1; dh = dh1; dy = dy1;
-    nz = nz1; nx = nx1; nh = nh1; ny = ny1;
+    nt = nt1; nz = nz1; nx = nx1; nh = nh1; ny = ny1;
 } 
 
 void xtomo_lop(bool adj, bool add, int nm, int nd, float *modl, float *data)

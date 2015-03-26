@@ -17,13 +17,29 @@ Result('kjamp',
 Flow('log0','kjamp',
      '''
      math output="log(abs(input)+1.e-35)/log(10)" 
-     ''') # subtract average?
-
-Plot('log0',
-     '''
-     grey pclip100 mean=y crowd1=.84 crowd2=.80 title="Amp(raw)"
      ''')
 
+# subtract average
+Flow('slog0','log0',
+     '''
+     stack axis=2 | stack axis=1 |
+     spray axis=1 n=48  d=0.05  o=-2.591 |
+     spray axis=2 n=375 d=0.025 o=1.25 |
+     add scale=-1,1 $SOURCE
+     ''')
 
+Plot('slog0',
+     '''
+     grey crowd1=.84 crowd2=.80 title="Amp(raw)"
+     ''')
+
+Flow('myk0','slog0','xtomo niter=10')
+
+Plot('myk0',
+     '''
+     grey crowd1=.84 crowd2=.80 title="Tomo(amp)"
+     ''')
+
+Result('kartom0','slog0 myk0','OverUnderAniso')
 
 End()
