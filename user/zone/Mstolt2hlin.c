@@ -31,6 +31,7 @@ int main(int argc, char* argv[])
     char *intp;
     sf_bands spl;
     sf_file in=NULL, out=NULL;
+    const float tau=0.21;
 
     sf_init (argc,argv);
     in = sf_input("in");
@@ -103,11 +104,11 @@ int main(int argc, char* argv[])
 	    }
 
 	    if (intp[0] == 's') {
-		    sf_int1_init (str, 0., dw, nw, sf_spline_int, nf, nw);	    
-		    if (nf > 2) sf_banded_solve (spl, trace);
+		sf_int1_init (str, 0., dw, nw, sf_spline_int, nf, nw, 0.0);	    
+		if (nf > 2) sf_banded_solve (spl, trace);
 	    } else {
-		    sf_int1sh_init (str, 0., dw, nw, sf_lin_int, nf, nw);
-		    shprefilter(nw,trace); 
+		sf_int1_init (str, 0., dw, nw, sf_lin_int, nf, nw, tau);
+		shprefilter(nw,trace); 
 	    }
 	    sf_int1_lop (false,false,nw,nw,trace,trace2);
 	    sf_cosft_inv (trace2,0,1);

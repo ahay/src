@@ -103,11 +103,11 @@ int main (int argc, char* argv[])
 
     switch (interp) {
 	case 1:
-	    sf_int1_init (offset, x0,dx,nx, sf_bin_int, 1, nd);
+	    sf_int1_init (offset, x0,dx,nx, sf_bin_int, 1, nd, 0.0);
 	    sf_warning("Using nearest-neighbor interpolation");
 	    break;
 	case 2:
-	    sf_int1_init (offset, x0,dx,nx, sf_lin_int, 2, nd);
+	    sf_int1_init (offset, x0,dx,nx, sf_lin_int, 2, nd, 0.0);
 	    sf_warning("Using linear interpolation");
 	    break;
 	default:

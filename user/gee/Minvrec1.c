@@ -121,7 +121,7 @@ int main (int argc, char* argv[])
     /* interpolator size */
 
     /* initialize interpolation */
-    sf_int1_init (offset,x0,dx,nx,spline? sf_spline_int: sf_lg_int,nw,nd);
+    sf_int1_init (offset,x0,dx,nx,spline? sf_spline_int: sf_lg_int,nw,nd,0.0);
 
     /* initialize recursive filtering */
     sf_polydiv_init (nx, aa);

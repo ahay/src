@@ -96,7 +96,7 @@ int main(int argc, char* argv[])
 		}
 	    }
 
-	    sf_int1_init (str, 0., dw, nw, sf_spline_int, nf, nw);	    
+	    sf_int1_init (str, 0., dw, nw, sf_spline_int, nf, nw, 0.0);	    
 	    if (nf > 2) sf_banded_solve (spl, trace);
 	    sf_int1_lop (false,false,nw,nw,trace,trace2);
 	    sf_cosft_inv (trace2,0,1);

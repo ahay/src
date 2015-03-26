@@ -146,10 +146,10 @@ int main(int argc, char* argv[])
 
     for (iter=0; iter < nliter; iter++) {
 	for (i2=0; i2 < m2; i2++) {
-	    sf_int1_init (coord+i2*n2, o1, d1, n1, sf_spline_int, order, n2);
+	    sf_int1_init (coord+i2*n2, o1, d1, n1, sf_spline_int, order, n2, 0.0);
 	    sf_int1_lop (false,false,n1,n2,inp+i2*n1,out+i2*n2);
 	    
-	    sf_int1_init (coord+i2*n2, o1, d1, n1, sf_spline_der, order, n2);
+	    sf_int1_init (coord+i2*n2, o1, d1, n1, sf_spline_der, order, n2, 0.0);
 	    sf_int1_lop (false,false,n1,n2,inp+i2*n1,der+i2*n2);
 	}
 
@@ -217,7 +217,7 @@ int main(int argc, char* argv[])
     }
 
     for (i2=0; i2 < m2; i2++) {
-	sf_int1_init (coord+i2*n2, o1, d1, n1, sf_spline_int, order, n2);
+	sf_int1_init (coord+i2*n2, o1, d1, n1, sf_spline_int, order, n2, 0.0);
 	sf_int1_lop (false,false,n1,n2,inp+i2*n1,out+i2*n2);
 
 	for (i1=0; i1 < n2; i1++) {

@@ -142,7 +142,7 @@ int main(int argc, char* argv[])
 	}
 
 	if (niter > 0) {
-	    sf_int1_init (table[0], o1, d1, n1, sf_lg_int, nw, nd);
+	    sf_int1_init (table[0], o1, d1, n1, sf_lg_int, nw, nd, 0.0);
 
 	    for (i1=0; i1 < n1; i1++) {
 		modl[i1] = trace[i1];

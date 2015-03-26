@@ -36,10 +36,11 @@ static bool *mask, allocated=false;
 static float **w1;
 
 void  sf_int1_init (float* coord               /* cooordinates [nd] */, 
-		 float o1, float d1, int n1 /* axis */, 
-		 sf_interpolator interp     /* interpolation function */, 
-		 int nf_in                  /* interpolator length */, 
-		 int nd_in                  /* number of data points */)
+		    float o1, float d1, int n1 /* axis */, 
+		    sf_interpolator interp     /* interpolation function */, 
+		    int nf_in                  /* interpolator length */, 
+		    int nd_in                  /* number of data points */,
+		    float tau                  /* interpolation shift */)
 /*< initialize >*/
 {
     int id, i1; 
@@ -58,44 +59,7 @@ void  sf_int1_init (float* coord               /* cooordinates [nd] */,
     }
 
     for (id = 0; id < nd; id++) {
-	rx = sx + (coord[id] - o1)/d1;
-	i1 = floorf(rx);
-	rx -= i1;
-	
-	if (i1 > - nf && i1 < n1) {
-	    mask[id] = false; 
-	    interp (rx, nf, w1[id]);
-	    nx[id] = i1;
-	} else {
-	    mask[id] = true;
-	}
-    }
-}
-
-void  sf_int1sh_init (float* coord               /* cooordinates [nd] */, 
-		 float o1, float d1, int n1 /* axis */, 
-		 sf_interpolator interp     /* interpolation function */, 
-		 int nf_in                  /* interpolator length */, 
-		 int nd_in                  /* number of data points */)
-/*< initialize with optimal shift>*/
-{
-    int id, i1; 
-    float rx, sx;
-
-    nf = nf_in;
-    nd = nd_in;
-    m1 = n1;
-    sx = 1.0 - 0.5*nf;
-
-    if (!allocated) {
-	nx = sf_intalloc(nd);
-	mask = sf_boolalloc(nd);
-	w1 = sf_floatalloc2(nf,nd);
-	allocated = true;
-    }
-
-    for (id = 0; id < nd; id++) {
-	rx = sx + (coord[id] - o1)/d1 - 0.21;
+	rx = sx + (coord[id] - o1)/d1 - tau;
 	i1 = floorf(rx);
 	rx -= i1;
 	

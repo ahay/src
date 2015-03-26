@@ -87,7 +87,7 @@ int main(int argc, char* argv[])
 	    }
 
 	    sf_banded_solve (spl,trace);
-	    sf_int1_init (coord, a0, da, na, sf_spline_int, nw, na);
+	    sf_int1_init (coord, a0, da, na, sf_spline_int, nw, na, 0.0);
 	    sf_int1_lop (false,false,na,na,trace,modl);
 
 	    for (ia=0; ia < na; ia++) {

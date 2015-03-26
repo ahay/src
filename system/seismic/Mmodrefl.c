@@ -89,12 +89,12 @@ int main(int argc, char* argv[])
     spline = sf_floatalloc(nt);
     trace = sf_floatalloc(nt);
 
-    sf_int1_init (tpp, 0., dt, nt, sf_spline_int, nw, n1);
+    sf_int1_init (tpp, 0., dt, nt, sf_spline_int, nw, n1, 0.0);
     sf_int1_lop (true,false,nt,n1,spline,app);
     sf_spline_post(nw, 0, 1, nt, spline, trace);
     sf_floatwrite(trace,nt,dat);
 
-    sf_int1_init (tps, 0., dt, nt, sf_spline_int, nw, n1);
+    sf_int1_init (tps, 0., dt, nt, sf_spline_int, nw, n1, 0.0);
     sf_int1_lop (true,false,nt,n1,spline,aps);
     sf_spline_post(nw, 0, 1, nt, spline, trace);
     sf_floatwrite(trace,nt,dat);

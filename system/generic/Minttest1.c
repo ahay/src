@@ -32,8 +32,9 @@ http://ahay.org/rsflog/index.php?/archives/373-Program-of-the-month-sfinttest1.h
 
 int main(int argc, char* argv[])
 {
+    bool same;
     int n, n2, nd, nw, i2;
-    float *mm, *coord, *z, o, d, kai;
+    float *mm, *coord, *z, o, d, kai, tau;
     char *intp;
     sf_interpolator interp=NULL;
     sf_bands spl=NULL;
@@ -65,8 +66,13 @@ int main(int argc, char* argv[])
     if (!sf_getint("nw",&nw)) sf_error("Need nw=");
     /* interpolator size */
 
+    if (!sf_getbool("same",&same)) same=true;
+    /* same or different coordinates for each trace */
+
     coord = sf_floatalloc(nd);
-    sf_floatread(coord,nd,crd);
+    if (same) sf_floatread(coord,nd,crd);
+
+    tau = 0.0f;
 
     switch(intp[0]) {
 	case 'l':
@@ -109,20 +115,24 @@ int main(int argc, char* argv[])
 	    break;
 	case 'h': /*Shifted linear*/
 	    interp = sf_lin_int;
+	    tau = 0.21f;
 	    break;
 	default:
 	    sf_error("%s interpolator is not implemented",intp);
 	    break;
     }
 
-    if (intp[0] == 'h') sf_int1sh_init (coord, o, d, n, interp, nw, nd);
-    else sf_int1_init (coord, o, d, n, interp, nw, nd);
+    if (same) sf_int1_init (coord, o, d, n, interp, nw, nd, tau);
 
     z = sf_floatalloc(nd);
     mm = sf_floatalloc(n);
  
     for (i2=0; i2 < n2; i2++) {
         sf_floatread (mm,n,in);
+	if (!same) {
+	    sf_floatread(coord,nd,crd);
+	    sf_int1_init (coord, o, d, n, interp, nw, nd, tau);
+	}
 
         if ('s' == intp[0]) {
 	    sf_banded_solve(spl,mm);

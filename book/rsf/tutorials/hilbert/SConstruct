@@ -146,7 +146,7 @@ Result('phasepeaks','envpeaks phasepeaks','OverUnderAniso')
 # Compute phase error for seismic section
 
 Flow('dpeaks','edata','max1 | real')
-Flow('ppeaks','pdata dpeaks','inttest1 coord=${SOURCES[1]} interp=lag nw=1')
+Flow('ppeaks','pdata dpeaks','inttest1 coord=${SOURCES[1]} interp=lag nw=1 same=n')
 
 Flow('ipeaks0','ppeaks',
      '''

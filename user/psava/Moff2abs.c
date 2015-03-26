@@ -111,7 +111,8 @@ int main(int argc, char* argv[])
 		  oh, dh, nh, 
 		  sf_spline_int, 
 		  nw, 
-		  nd);
+		  nd, 
+		  0.0);
 
     for(id=0;id<nd;id++) {
 	dwt[id]=1;

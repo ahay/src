@@ -30,6 +30,7 @@ int main(int argc, char* argv[])
     size_t len;
     sf_bands spl=NULL;
     sf_file in, out;
+    const float tau=0.21;
 
     sf_init (argc,argv);
     in = sf_input("in");
@@ -148,19 +149,19 @@ int main(int argc, char* argv[])
 			r[ix] = (x0-xp+ix*dx)/(t-tp);
 		    }
 		    if (intp[0] == 's') {
-			    sf_int1_init (r, vmin, dv, nv, sf_spline_int, nw, nx);
-			} else {
-			    sf_int1sh_init (r, vmin, dv, nv, sf_lin_int, 2, nx);
-			    shprefilter(ntr,trace); 
-			}
+			sf_int1_init (r, vmin, dv, nv, sf_spline_int, nw, nx, 0.0);
+		    } else {
+			sf_int1_init (r, vmin, dv, nv, sf_lin_int, 2, nx, tau);
+			shprefilter(ntr,trace); 
+		    }
 		} else {
 		    for (iv=0; iv < nv; iv++) {
 			r[iv] = xp+(vmin+iv*dv)*(t-tp);
 		    }
 			if (intp[0] == 's') {
-			    sf_int1_init (r, x0,   dx, nx, sf_spline_int, nw, nv);
+			    sf_int1_init (r, x0,   dx, nx, sf_spline_int, nw, nv, 0.0);
 			} else {
-			    sf_int1sh_init (r, x0,   dx, nx, sf_lin_int, 2, nv);
+			    sf_int1_init (r, x0,   dx, nx, sf_lin_int, 2, nv, tau);
 			    shprefilter(ntr,trace); 
 			}
 		}

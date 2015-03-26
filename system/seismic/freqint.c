@@ -40,7 +40,7 @@ void freqint_init (int nd /* irregular data size */,
     nt = n;
     t = sf_complexalloc(nt);
 
-    sf_int1_init (coord,o,d,n,interp,nf,nd);
+    sf_int1_init (coord,o,d,n,interp,nf,nd, 0.0);
     freqlets_init(n,d,inv,unit,type,nw,w,z);
 }
 

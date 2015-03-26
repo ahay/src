@@ -36,7 +36,7 @@ void int1_init (float* coord               /* cooordinates [nd] */,
     nt = n2;
     nd = nd_in;
 
-    sf_int1_init(coord,o1,d1,n1,interp,nf,nd);
+    sf_int1_init(coord,o1,d1,n1,interp,nf,nd,0.0);
 
     mod = sf_floatalloc(nm);
     dat = sf_floatalloc(nd);

@@ -42,7 +42,7 @@ void seisreg_init (float* coord               /* cooordinates [nd] */,
     nd = nd_in;
     ntm = n1*n2;
 
-    sf_int1_init(coord,o1,d1,n1,interp,nf,nd);
+    sf_int1_init(coord,o1,d1,n1,interp,nf,nd,0.0);
     seislet_init(n2,n1,inv,unit,eps,1,type);
     seislet_set(dd);
 

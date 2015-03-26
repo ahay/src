@@ -1,3 +1,5 @@
+\published{SEP report, 80, 467-476 (1994)}
+
 \lefthead{Bevc and Lumley}
 \righthead{Anti-aliasing?}
 \footer{SEP--80}
@@ -37,10 +39,10 @@ generated and applied quickly on-the-fly.
 
 Claerbout's triangular weighting method has been demonstrated to be
 efficient for 2-D \cite[]{Bevc.sep.75.91,Bevc.sep.77.295} and 
-3-D \cite[]{Lumley.sep.77.1,Lumley.sep.80.david2} 
+3-D \cite[]{Lumley.sep.77.1,Lumley.sep.80.447} 
 Kirchhoff time and depth migration.  
 It has also been successfully adapted to DMO and 
-wave-equation datuming operators \cite[]{Blondel.sep.77.49,Bevc.sep75.137}.
+wave-equation datuming operators \cite[]{Blondel.sep.77.49,Bevc.sep.75.137}.
 Even though the triangular weighting method is very efficient, it 
 still involves an extra computational cost.
 %than using no anti-aliasing at all.
@@ -158,7 +160,7 @@ however, the seafloor event still has
 a precursor, the top of the salt dome is still poorly imaged, and there 
 is more coherent noise than in Figure~\ref{fig:Gulfaa}b.
 
-\activeplot{Gulfaper}{height=7in}{.}{(a) Kirchhoff migration
+\plot{Gulfaper}{height=7in}{(a) Kirchhoff migration
 without any aperture limitation or anti-aliasing. The effect of operator
 aliasing is noticeable at the seafloor where migration velocity is slow and
 where there is significant operator dip. At later times, the migration velocity
@@ -168,7 +170,7 @@ aliasing.
 Mexico data with $45^\circ$ aperture limitation.  Limiting the aperture
 reduces some, but not all, of the operator aliasing at the seafloor.}
 
-\activeplot{Zoom2}{height=7.5in,width=6.0in}{.}{ Close up of (a) the
+\plot{Zoom2}{height=7.5in,width=6.0in}{ Close up of (a) the
 anti-aliased migration, and (b) the standard Kirchhoff migration without 
 anti-aliasing. The seafloor operator aliasing artifacts and the
 dipping artifacts are marked.}
@@ -187,7 +189,7 @@ significant dip so that $f_{op} < f_s$ and operator aliasing {\it is} a problem.
 In Figure~\ref{fig:Miglow} the data have been deliberately
 migrated with an unrealistic
 low velocity of 1000 m/s in order to confirm that operator aliasing
-will occur when the criteria of equation~\EQN{crit} are met.
+will occur when the criteria of equation~\ref{eqn:crit} are met.
 In these examples $f_{op} < f_s$ so that the operator is aliased.
 The diffraction from the salt flank is much better imaged in the
 anti-aliased migration (Figure~\ref{fig:Miglow}a) than in the aliased
@@ -199,7 +201,7 @@ than the anti-aliased diffraction in Figure~\ref{fig:Miglow}a.
 Some of the diffractions on the left side of Figure~\ref{fig:Miglow}b are
 completely lost in the aliased migration.
 
-\activeplot{Miglow}{height=7in}{.}{Kirchhoff migration of Gulf of Mexico data
+\plot{Miglow}{height=7in}{Kirchhoff migration of Gulf of Mexico data
 with an unrealistically low velocity: (a) with anti-aliasing, and (b) without
 anti-aliasing.}
 

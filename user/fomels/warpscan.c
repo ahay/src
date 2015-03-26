@@ -88,7 +88,7 @@ void warpscan(float** inp /* input data [ntr][n1] */,
 		coord[i1] = (o2+i1*d2)*g;
 	    }
 
-	    sf_int1_init (coord, o1, d1, n1, sf_spline_int, order, n2);
+	    sf_int1_init (coord, o1, d1, n1, sf_spline_int, order, n2, 0.0);
 
 	    sf_int1_lop (false,false,n1,n2,inp[i2],out[i2][ig]);
 

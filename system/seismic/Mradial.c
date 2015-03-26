@@ -138,13 +138,13 @@ int main(int argc, char* argv[])
 			r[ix] = (x0-xp+ix*dx)/(t-tp);
 		    }
 
-		    sf_int1_init (r, vmin, dv, nv, sf_spline_int, nw, nx);
+		    sf_int1_init (r, vmin, dv, nv, sf_spline_int, nw, nx, 0.0);
 		} else {
 		    for (iv=0; iv < nv; iv++) {
 			r[iv] = xp+(vmin+iv*dv)*(t-tp);
 		    }
 
-		    sf_int1_init (r, x0,   dx, nx, sf_spline_int, nw, nv);
+		    sf_int1_init (r, x0,   dx, nx, sf_spline_int, nw, nv, 0.0);
 		}
 
 		sf_int1_lop (false,false,ntr,ntm,trace,modl);

@@ -42,6 +42,8 @@ To the reproducible documents collection:
   orthogonalization (Chen and Fomel)
 * tccs/strat: Stratigraphic coordinates, a coordinate system tailored
   to seismic interpretation (Karimi and Fomel)
+* sep/aal: When is anti-aliasing needed in Kirchhoff migration? (Bevc
+  and Lumley)
 
 To SCons:
 

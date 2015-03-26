@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
 {
     int nt, nx, nh, nh2, ix, ih, iy, i, nn, it, **fold, apt;
     float *trace, **out, **v, rho, **outd, *pp, *off;
-    float h, x, t, h0, dh, dx, ti, tx, t0, t1, t2, dt, vi, aal;
+    float h, x, t, h0, dh, dx, ti, tx, t0, t1, t2, dt, vi, aal, angle;
     sf_file inp, mig, vel, gather, offset;
     bool half, verb;
 
@@ -86,7 +86,12 @@ int main(int argc, char* argv[])
     /* antialiasing */
 
     if (!sf_getint("apt",&apt)) apt = nx;
-    /* Intergral aperture */
+    /* integral aperture */
+
+    if (!sf_getfloat("angle",&angle)) angle = 90.0;
+    /* angle aperture */
+
+    angle = fabsf(tanf(angle*SF_PI/180.0));
 
     if (!sf_getbool("half",&half)) half = true;
     /* if y, the third axis is half-offset instead of full offset */
@@ -152,11 +157,13 @@ int main(int argc, char* argv[])
 
 	    for (ix=0; ix < nx; ix++) { 
 	        x = (ix-iy)*dx;
-		if (fabs(ix-iy) > apt) continue;
+		if (SF_ABS(ix-iy) > apt) continue;
 
 		for (it=0; it < nt; it++) {
 		    t = t0 + it*dt;  
 		    vi = v[ix][it];
+
+		    if (fabsf(x) > angle*vi*t) continue;
 
 		    /* hypot(a,b) = sqrt(a*a+b*b) */
 		    t1 = hypotf(0.5*t,(x-h)/vi);

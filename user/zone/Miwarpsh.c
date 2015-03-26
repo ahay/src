@@ -31,6 +31,7 @@ int main(int argc, char* argv[])
     float o1, d1, t0, dt, eps;
     float *trace, *str, *trace2;
     sf_file in, out, warp;
+    const float tau=0.21;
 
     sf_init(argc,argv);
     in = sf_input("in");
@@ -95,7 +96,7 @@ int main(int argc, char* argv[])
 	    sf_floatwrite (trace2,n1,out);
 	} else {
 	    sf_floatread(trace2,n1,in);
-	    sf_int1sh_init (str, o1, d1, n1, sf_lin_int, 2, nt);
+	    sf_int1_init (str, o1, d1, n1, sf_lin_int, 2, nt, tau);
 	    shprefilter(n1,trace2);
 	    sf_int1_lop (false,false,n1,nt,trace2,trace);
 	    sf_floatwrite (trace,nt,out);
