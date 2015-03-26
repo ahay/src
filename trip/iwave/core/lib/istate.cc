@@ -68,8 +68,8 @@ namespace TSOpt {
     MPI_Datatype tmpdest_dt, tmpsource_dt;
     int tmpdest_val, tmpsource_val;
     void *tmpdest_buf, *tmpsource_buf;
-    double time;
-    time = 0.0; /* To avoid "unitialized variable" warning */
+    //    double time;
+    // time = 0.0; /* To avoid "unitialized variable" warning */
 
     /* we use the time step internal index for the perturbed field because
        this is the field being updated - on call should be same as index for

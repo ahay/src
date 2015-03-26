@@ -568,6 +568,8 @@ namespace RVLUmin {
 	OrTerminator stop(stop1,*stop2);
 	// loop
 	LoopAlg doit(*step,stop);
+	cerr<<"stop1="<<stop1.query()<<" stop2="<<stop2->query()<<endl;
+	cerr<<"rtol="<<rtol<<" nrtol="<<nrtol<<" maxcount="<<maxcount<<endl;
 	doit.run();
 	// must recompute residual if scaling occured 
 	//	cerr<<"stop1="<<stop1.query()<<" stop2="<<stop2->query()<<" xnorm="<<cg->x.norm()<<" maxstep="<<maxstep<<"\n";
