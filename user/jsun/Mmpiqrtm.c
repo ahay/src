@@ -34,9 +34,9 @@
 #include "waveutils.h"
 
 int psrtm(sf_complex*** record, sf_complex** imgsum, geopar geop);
-int psrtm_mov(sf_complex*** record, sf_complex** imgsum, geopar geop, sf_file Ftmpwf, sf_file Ftmpwfb);
+int psrtm_mov(sf_complex*** record, sf_complex** imgsum, geopar geop, sf_file Ftmpwf, sf_file Ftmpwfb, int shtid);
 int psqrtm_sbs(sf_complex*** record, sf_complex** imgsum, geopar geop, bool sdiv, float eps, int niter, int *rect, float max);
-int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool sdiv, float eps, int niter, int *rect, float max, sf_file Ftmpwf, sf_file Ftmpwfb);
+int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool sdiv, float eps, int niter, int *rect, float max, sf_file Ftmpwf, sf_file Ftmpwfb, int shtid);
 int psqrtm_dec(sf_complex*** record, sf_complex** imgsum, geopar geop);
 
 /*******************************************************/
@@ -81,6 +81,7 @@ int main(int argc, char* argv[])
     bool sdiv;
     float eps, max;
     int niter;
+    int shtid; /*output wavefield corresponding shot id*/
 
     /*Data/Image*/
     sf_complex ***record, **imgsum;
@@ -167,6 +168,8 @@ int main(int argc, char* argv[])
     if (!sf_getint("bot", &bot)) bot=40;
     if (!sf_getint("lft", &lft)) lft=40;
     if (!sf_getint("rht", &rht)) rht=40;
+    /* shot output id */
+    if (!sf_getint("shtid", &shtid)) shtid=0;
 
     /*Set I/O file*/
     if (adj) { /* migration */
@@ -319,7 +322,9 @@ int main(int argc, char* argv[])
 	sf_oaxa(Frcd, as ,3);
 	sf_settype(Frcd,SF_COMPLEX);
       }
+    }
 
+    if (cpuid == shtid%numprocs) {
       if (NULL!=sf_getstring("tmpwf")) {
 	Ftmpwf  = sf_output("tmpwf"); /*wavefield snap*/
 	sf_setn(ax, nx);
@@ -343,7 +348,6 @@ int main(int argc, char* argv[])
 	sf_oaxa(Ftmpwfb, at, 3);
 	sf_settype(Ftmpwfb,SF_COMPLEX);
       } else Ftmpwfb = NULL;
-
     }
     
     /*close RSF files*/
@@ -410,7 +414,7 @@ int main(int argc, char* argv[])
         if (NULL == Ftmpwf && NULL == Ftmpwfb)
           psrtm(record, imgsum, geop);
         else
-          psrtm_mov(record, imgsum, geop, Ftmpwf, Ftmpwfb);
+          psrtm_mov(record, imgsum, geop, Ftmpwf, Ftmpwfb, shtid);
 	break;
 
       case 1:
@@ -470,7 +474,7 @@ int main(int argc, char* argv[])
 
       case 3:
 	/*snapshot-by-snapshot compensation*/
-	psqrtm_com(record, imgsum, geop, sdiv, eps, niter, rect, max, Ftmpwf, Ftmpwfb);
+	psqrtm_com(record, imgsum, geop, sdiv, eps, niter, rect, max, Ftmpwf, Ftmpwfb, shtid);
 	break;
 
       case 4:
@@ -953,7 +957,7 @@ int psqrtm_sbs(sf_complex*** record, sf_complex** imgsum, geopar geop, bool sdiv
     return 0;
 }
 
-int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool sdiv, float eps, int niter, int *rect, float max, sf_file Ftmpwf, sf_file Ftmpwfb)
+int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool sdiv, float eps, int niter, int *rect, float max, sf_file Ftmpwf, sf_file Ftmpwfb, int shtid)
 /*< low-rank one-step pre-stack RTM linear operator >*/
 {
     /*geopar variables*/
@@ -1228,10 +1232,14 @@ int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool sdiv
 	  }
 	}
 
-	if (NULL!=Ftmpwf && shtcur==0)
+	if (NULL!=Ftmpwf && shtcur==shtid) {
+          sf_warning("Writing source wavefield on cpu %d",cpuid);
 	  sf_complexwrite(wvfld[0][0], wfnt*nx*nz, Ftmpwf);
-	if (NULL!=Ftmpwfb && shtcur==0)
+        }
+	if (NULL!=Ftmpwfb && shtcur==shtid) {
+          sf_warning("Writing receiver wavefield on cpu %d",cpuid);
 	  sf_complexwrite(wvfld_b[0][0], wfnt*nx*nz, Ftmpwfb);
+        }
 
       } /*if (shtcur<shtnum0)*/
 
@@ -1447,7 +1455,7 @@ int psqrtm_dec(sf_complex*** record, sf_complex** imgsum, geopar geop)
     return 0;
 }
 
-int psrtm_mov(sf_complex*** record, sf_complex** imgsum, geopar geop, sf_file Ftmpwf, sf_file Ftmpwfb)
+int psrtm_mov(sf_complex*** record, sf_complex** imgsum, geopar geop, sf_file Ftmpwf, sf_file Ftmpwfb, int shtid)
 /*< low-rank one-step pre-stack RTM linear operator that outputs movie >*/
 {
     /*geopar variables*/
@@ -1603,9 +1611,9 @@ int psrtm_mov(sf_complex*** record, sf_complex** imgsum, geopar geop, sf_file Ft
 	  }
 	}
 
-	if (NULL!=Ftmpwf && shtcur==0)
+	if (NULL!=Ftmpwf && shtcur==shtid)
 	  sf_complexwrite(wvfld[0][0], wfnt*nx*nz, Ftmpwf);
-	if (NULL!=Ftmpwfb && shtcur==0)
+	if (NULL!=Ftmpwfb && shtcur==shtid)
 	  sf_complexwrite(wvfld_b[0][0], wfnt*nx*nz, Ftmpwfb);
 
       } /*if (shtcur<shtnum0)*/
