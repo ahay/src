@@ -35,4 +35,19 @@ Plot('dif','grey title="Difference (3-D)" clip=0.3')
 
 Result('mo-nmo-tx','mo back dif','SideBySideAniso')
 
+Fetch('mo_supp.HH','haskell')
+
+Flow('hm','mo_supp.HH','dd form=native | window min1=1.5 max1=3.5 n2=30')
+
+for case in ('mo','back','hm'):
+    Plot(case+'-trace',case,
+         '''
+         bandpass fhi=50 | 
+         window min1=2 max1=3 n2=3 | 
+         wiggle poly=y clip=0.4 labelsz=12 labelfat=1 titlesz=12 titlefat=1 title="%s" label2= unit2=
+         ''' % {'mo':'Input','back':'PEF (3-D)','hm': 'Velocity Stack'}[case])
+
+Result('mo-near-offset-tx','mo-trace back-trace hm-trace','SideBySideAniso')
+
+
 End()

@@ -1,3 +1,4 @@
+\published{SEP report, 94, 205-212 (1997)}
 
 \title{Multiple suppression using prediction-error filter}
 \righthead{Multiple Suppression}
@@ -170,6 +171,7 @@ than the other two figures.
 \plot{hm-near-offset-tx}{width=5in,height=3.2in}{Comparison of the PEF scheme and velocity-stacking scheme in the near offset. Three traces are extracted from the near offset. The left one is the original input, the middle one is the PEF result, and the right one is the result of velocity stacking approach. It is very easy to identify the primary events in the middle one.}
 
 \subsection{A real CMP gather}
+\inputdir{mobil}
 
 This real CMP gather is extracted from Mobil AVO dataset. The multiple energy 
 is very strong in this dataset. It is not very difficult to locate several 
@@ -191,9 +193,9 @@ Even for this, the improvement of signal-to-noise ratio in the near offset
 is still obvious in the near offset, as shown in Figure 
 \ref{fig:mo-near-offset-tx}.
 
-\activeplot{mo-nmo-tx}{width=5in,height=3.2in}{.}{A real CMP gather. This is from Mobil's AVO dataset. The high amplitude events in the input section are primary energy. The middle section is the result of the 3-D PEF scheme. Although most of the multiple events have been removed, the AVO effect is also damaged by the filtering. This shows that the PEF approach has an assumption of constant amplitude along the offset.}
+\plot{mo-nmo-tx}{width=5in,height=3.2in}{A real CMP gather. This is from Mobil's AVO dataset. The high amplitude events in the input section are primary energy. The middle section is the result of the 3-D PEF scheme. Although most of the multiple events have been removed, the AVO effect is also damaged by the filtering. This shows that the PEF approach has an assumption of constant amplitude along the offset.}
 
-\activeplot{mo-near-offset-tx}{width=5in,height=3.2in}{.}{Comparison of the PEF scheme and velocity-stacking scheme in the near offset. Although the AVO effect has been damaged by the filtering, the signal-to-noise ratio is improved in the near offset.}
+\plot{mo-near-offset-tx}{width=5in,height=3.2in}{Comparison of the PEF scheme and velocity-stacking scheme in the near offset. Although the AVO effect has been damaged by the filtering, the signal-to-noise ratio is improved in the near offset.}
 
 \section{CONCLUSION and discussion}
 
@@ -221,5 +223,5 @@ one percent.
 I thank Dr. Ray Abma of Shell and Dr. Jiuying Guo of Tsinghua University for 
 stimulating discussions during the 66th SEG Denver convention.
 
-\bibliographystyle{sep}
-\bibliography{MISC,SEP}
+\bibliographystyle{seg}
+\bibliography{SEP2,pef}

@@ -66,6 +66,7 @@ class Canvas(wx.Window):
     def __init__(self,parent,ID):
         wx.Window.__init__(self,parent,ID,size=(width,height))
         self.SetBackgroundColour('black')
+        self.SetCursor(wx.StockCursor(wx.CURSOR_CROSS))
     
 class MainFrame(wx.Frame):
     def __init__(self):

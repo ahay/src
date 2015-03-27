@@ -44,6 +44,8 @@ To the reproducible documents collection:
   to seismic interpretation (Karimi and Fomel)
 * sep/aal: When is anti-aliasing needed in Kirchhoff migration? (Bevc
   and Lumley)
+* sep/pefmult: Multiple suppression using prediction-error filter
+  (Sun)
 
 To SCons:
 
