@@ -1,4 +1,5 @@
 #include "grid.h"
+#include "except.hh"
 
 void init_default_axis(axis * a) {
   a->n=0;
@@ -75,11 +76,14 @@ void copy_grid(grid * tgt, const grid * src) {
 }
 
 void fprint_grid(FILE * fp, grid a) {
+  fprintf(stderr,"fprint_grid\n");
   int i;
   fprintf(fp,"Grid data structure:\n");
+  fprintf(stderr,"after first fprint\n");
   fprintf(fp,"gdim = %d axes\n",a.gdim);
   fprintf(fp,"dim  = %d physical axes\n",a.dim);
   for (i=0;i<a.gdim;i++) fprint_num_axis(fp,i,a.axes[i]);
+  fprintf(stderr,"fprint_grid - exit\n");
 }
 
 void print_grid(grid a) { fprint_grid(stdout,a); }
@@ -116,12 +120,89 @@ int compatible_grid(const grid g1, const grid g2) {
   return 0;
 }
 
+// dimension includes internal extended axes if any - i.e. not same
+// as spatial dimension, necessarily
+int get_dimension_grid(grid g) {
+  _IPNT _id;
+  get_id(_id,g);
+  int _dim=0;
+  for (int i=0;i<IARR_MAX_NDIM;i++) {
+    // case 1: physical axes
+    if ((-1 < _id[i]) && (_id[i]<g.dim)) _dim++;
+    // case 2: internal extended axes
+    if ((EXTINT-1 < _id[i])) _dim++;
+  }
+  // sanity check
+  if (_dim < g.dim || _dim > g.gdim) {
+    RVL::RVLException e;
+    e<<"ERROR: grid::get_dimension_grid\n";
+    e<<"  nonsense dim calc: obtained = "<<_dim<<"\n";
+    e<<"  grid params:\n";
+    e<<"  dim="<<g.dim<<" gdim="<<g.gdim<<"\n";
+    for (int i=0;i<IARR_MAX_NDIM;i++) 
+      e<<"axis "<<i<<": n="<<g.axes[i].n<<" d="<<g.axes[i].d
+       <<" o="<<g.axes[i].o<<" id="<<g.axes[i].id<<"\n";
+    throw e;
+  }
+  return _dim;
+}
+    
+// modified 19.03.15 to account for internal extended axes
+// and to properly account for axis id in general
 int get_datasize_grid(grid g) {
   _IPNT _n;
+  _IPNT _id;
+  int i;
+  int sz=1;
+  int id_check=0;
+  get_n(_n,g);
+  get_id(_id,g);
+  for (i=0;i<IARR_MAX_NDIM;i++) {
+    // case 1: physical axes
+    if ((-1 < _id[i]) && (_id[i]<g.dim)) { 
+      sz*=_n[i];
+      id_check++;
+    }
+  }
+  // if no ids or not the right number,
+  // recompute using first dim axes
+  if (id_check != g.dim) {
+    sz=1;
+    for (i=0;i<g.dim;i++) sz*=_n[i];
+  }
+  return sz;
+}
+
+// modified 19.03.15 to account for internal extended axes
+// and to properly account for axis id in general
+int get_extended_datasize_grid(grid g) {
+  _IPNT _n;
+  _IPNT _id;
   int i;
   int sz=1;
   get_n(_n,g);
-  for (i=0;i<g.dim;i++) sz*=_n[i];
+  get_id(_id,g);
+  for (i=0;i<IARR_MAX_NDIM;i++) {
+    // case 1: physical axes
+    if ((-1 < _id[i]) && (_id[i]<g.dim)) sz*=_n[i];
+    // case 2: internal extended axes
+    if ((EXTINT-1 < _id[i])) sz*=_n[i];
+  }
+  // sanity check: should be at least as many ext'd axes
+  // as spatial only - if not (i.e. if size is less) then  
+  // proper id info not supplied, and this computation makes
+  // no sense
+  if (sz < get_datasize_grid(g)) {
+    RVL::RVLException e;
+    e<<"ERROR: grid::get_extended_datasize_grid\n";
+    e<<"  axis id info does not support computation of ext'd size\n";
+    e<<"  grid params:\n";
+    e<<"  dim="<<g.dim<<" gdim="<<g.gdim<<"\n";
+    for (int i=0;i<IARR_MAX_NDIM;i++) 
+      e<<"axis "<<i<<": n="<<g.axes[i].n<<" d="<<g.axes[i].d
+       <<" o="<<g.axes[i].o<<" id="<<g.axes[i].id<<"\n";
+    throw e;  
+  }
   return sz;
 }
 
@@ -134,12 +215,69 @@ size_t get_global_datasize_grid(grid g) {
   return sz;
 }
 
+// modified 19.03.15 to account for internal extended axes
+// and to properly account for axis id in general
 ireal get_cellvol_grid(grid g) {
   ireal v = REAL_ONE;
   int i;
   RPNT _d;
+  IPNT _id;
   get_d(_d,g);
-  for (i=0;i<g.dim;i++) v*=_d[i];
+  get_id(_id,g);
+  int id_check = 0;
+  for (i=0;i<IARR_MAX_NDIM;i++) {
+    // case 1: physical axes
+    if ((-1 < _id[i]) && (_id[i]<g.dim)) { 
+      v*=_d[i];
+      id_check++;
+    }
+  }
+  // recompute if not enough axes id'd as spatial
+  // in that case assume that the first dim are the
+  // spatial axes
+  if (id_check < g.dim) {
+    v = REAL_ONE;
+    for (i=0;i<g.dim;i++) v*=_d[i];
+  }
+  return v;
+}
+
+// modified 19.03.15 to account for internal extended axes
+// and to properly account for axis id in general
+ireal get_extended_cellvol_grid(grid g) {
+  ireal v = REAL_ONE;
+  int i;
+  RPNT _d;
+  IPNT _id;
+  get_d(_d,g);
+  get_id(_id,g);
+  int id_check = 0;
+  for (i=0;i<IARR_MAX_NDIM;i++) {
+    // case 1: physical axes
+    if ((-1 < _id[i]) && (_id[i]<g.dim)) {
+      v*=_d[i];
+      id_check++;
+    }
+    // case 2: internal extended axes
+    if ((EXTINT-1 < _id[i])) {
+      v*=_d[i];
+      id_check++;
+    }
+  }
+  // there must be at least as many ext'd axes as spatial axes
+  // if you didn't find that many, then this grid is not
+  // adequately decorated
+  if (id_check < g.dim) {
+    RVL::RVLException e;
+    e<<"ERROR: grid::get_extended_datasize_grid\n";
+    e<<"  axis id info does not support computation of ext'd size\n";
+    e<<"  grid params:\n";
+    e<<"  dim="<<g.dim<<" gdim="<<g.gdim<<"\n";
+    for (int i=0;i<IARR_MAX_NDIM;i++) 
+      e<<"axis "<<i<<": n="<<g.axes[i].n<<" d="<<g.axes[i].d
+       <<" o="<<g.axes[i].o<<" id="<<g.axes[i].id<<"\n";
+    throw e;  
+  }
   return v;
 }
 
@@ -152,12 +290,25 @@ ireal get_global_cellvol_grid(grid g) {
   return v;
 }
 
+// modified 19.03.15 to account for internal extended axes
+// and to properly account for axis id in general
+// NOTE: if id's not assigned, will return 0 - impossible
+// to count without id's!!!
 int get_panelnum_grid(grid g) {
   _IPNT _n;
+  _IPNT _id;
   int i;
   int sz=1;
+  int id_check=0;
   get_n(_n,g);
-  for (i=g.dim;i<g.gdim;i++) sz*=_n[i];
+  get_id(_id,g);
+  for (i=0;i<IARR_MAX_NDIM;i++) {
+    // id=dim - time axis id<EXTINT external extended axis
+    if ((_id[i] > g.dim) && (_id[i] < EXTINT)) {
+      sz*=_n[i];
+      id_check++;
+    }
+  }
   return sz;
 }
 
@@ -167,37 +318,48 @@ void get_n(_IPNT n, grid g) {
     n[i]=g.axes[i].n;
   }
 }
+
 void get_d(_RPNT d, grid g) {
   int i; 
-  for (i=0;i<RARR_MAX_NDIM;i++) {
+  for (i=0;i<IARR_MAX_NDIM;i++) {
     d[i]=g.axes[i].d;
   }
 }
+
 void get_o(_RPNT o, grid g) {
   int i; 
-  for (i=0;i<RARR_MAX_NDIM;i++) {
+  for (i=0;i<IARR_MAX_NDIM;i++) {
     o[i]=g.axes[i].o;
   }
 }
+
 void get_gs(_IPNT gs, grid g) {
   int i;
-  for (i=0;i<RARR_MAX_NDIM;i++) {
+  for (i=0;i<IARR_MAX_NDIM;i++) {
     if (g.axes[i].o<0) gs[i]=(int)((g.axes[i].o-g.axes[i].d*TOL)/(g.axes[i].d));
     else gs[i]=(int)((g.axes[i].o+g.axes[i].d*TOL)/(g.axes[i].d));
   }
 }
+
 void get_ge(_IPNT ge, grid g) {
   int i;
   IPNT gs;
   IPNT nn;
   get_gs(gs, g);
   get_n(nn, g);
-  for (i=0;i<RARR_MAX_NDIM;i++) {
+  for (i=0;i<IARR_MAX_NDIM;i++) {
     /*
     if (g.axes[i].o<0) gs[i]=(int)((g.axes[i].o-g.axes[i].d*TOL)/(g.axes[i].d));
     else gs[i]=(int)((g.axes[i].o+g.axes[i].d*TOL)/(g.axes[i].d));
     */
     ge[i]=gs[i]+nn[i]-1;
+  }
+}
+
+void get_id(_IPNT id, grid g) {
+  int i;
+  for (i=0;i<IARR_MAX_NDIM;i++) {
+    id[i]=g.axes[i].id;
   }
 }
 
@@ -274,13 +436,6 @@ bool grid_union(grid * g, axis const * ax) {
 bool init_step(grid g, IPNT step, bool fwd) {
   // sanity check dim, gdim
   if (!(g.dim<g.gdim) || g.gdim > IARR_MAX_NDIM) {
-    /*
-    RVLException e;
-    e<<"Error: init_step\n";
-    e<<"  funky grid params\n";
-    e<<"  dim="<<g.dim<<" gdim="<<g.gdim<<" max="<<IARR_MAX_NDIM<<"\n";
-    throw e;
-    */
     return false;
   }
   // the global origin is ex def a member of every grid

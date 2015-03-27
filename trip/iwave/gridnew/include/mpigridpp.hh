@@ -35,7 +35,7 @@ namespace TSOpt {
 		 bool _incore=false
 #ifdef IWAVE_USE_MPI 
 		 //      		 , MPI_Comm _comm=MPI_COMM_WORLD
-      		 , MPI_Comm _comm=retrieveGlobalComm()
+       		 , MPI_Comm _comm=retrieveGlobalComm()
 #endif
 		 , ostream & _outfile = cerr)
       : StdSpace<ireal,ireal>(),

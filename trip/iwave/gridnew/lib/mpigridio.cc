@@ -12,6 +12,8 @@
    #define WC_ONLY
 */
 
+//#define VERBOSE
+
 // UPDATE - if set, rsfwrite scales output, rsfread performs saxpy
 // if not set, rsfwrite does not scale, rsfread overwrites
 #define UPDATE
@@ -167,7 +169,7 @@ int mpirsfread(ireal * a,
        */
       
       get_n(n, g);
-      dim = g.dim;
+      dim = get_dimension_grid(g); // WWS 23.03.15: changed from g.dim
       gdim = g.gdim;
       
     }
@@ -218,6 +220,8 @@ int mpirsfread(ireal * a,
 #ifdef VERBOSE
   fprintf(stream,"mpirsfread: initialization\n");
   fprintf(stream,"n[0]=%d n[1]=%d n[2]=%d\n",n[0],n[1],n[2]);
+  fprintf(stream,"rags[0]=%d rags[1]=%d rags[2]=%d\n",rags[0],rags[1],rags[2]);
+  fprintf(stream,"ran[0]=%d ran[1]=%d ran[2]=%d\n",ran[0],ran[1],ran[2]);
   fprintf(stream,"read_gn[0]=%d read_gn[1]=%d read_gn[2]=%d\n", 
 	  read_gn[0],read_gn[1],read_gn[2]);
   fprintf(stream,"recsize=%ld recsize_b=%ld\n",recsize,recsize_b);
@@ -293,7 +297,7 @@ int mpirsfread(ireal * a,
       cur_pos = panelindex * get_datasize_grid(g) * sizeof(float);
       
 #ifdef VERBOSE
-      fprintf(stream, "--- mpirsfread: current file cursor : %lld , moving to cus_pos: %lld \n", ftello(fp), cur_pos);
+      fprintf(stream, "--- mpirsfread: current file cursor : %lld , moving to cur_pos: %lld \n", ftello(fp), cur_pos);
 #endif
       fseeko(fp,cur_pos,SEEK_SET); 
       /*<-- D.S. 01.01.11: extended-model related */
@@ -352,9 +356,17 @@ int mpirsfread(ireal * a,
 	  fprintf(stream,"       length of axis %d = %d\n",dim-1,n[dim-1]);
 	  err=E_FILE;
 	}
+#ifdef VERBOSE
+	fprintf(stream,"Note [mpirsfread]: read from fread at file offset %lld\n", file_goffs);
+	fprintf(stream,"       attempted to read %ld floats\n",recsize);
+	fprintf(stream,"       succeeded in reading %ld floats\n",nbr);
+	fprintf(stream,"       index of %d-diml slice = %d\n",dim-1,read_gs[dim-1]);
+	fprintf(stream,"       length of axis %d = %d\n",dim-1,n[dim-1]);
+	for (int iii=0;iii<recsize;iii++) fprintf(stream,"i=%d f=%e\n",iii,fbuf[iii]);
+#endif
+      
       }
-      
-      
+
 #ifdef SUXDR
       
       else if (!strcmp(type,"xdr_float")) {
@@ -389,7 +401,6 @@ int mpirsfread(ireal * a,
 	err = E_OTHER;
       }
     
-    
 #else
       else {
 	fprintf(stream,"Error [mpirsfread]: read - data format must be native_float\n");
@@ -413,7 +424,11 @@ int mpirsfread(ireal * a,
 	MPI_Abort(wcomm,err);
       }
     }
-    
+
+    IASN(g_gsa,IPNT_0);
+    IASN(l_gsa,IPNT_0);
+    IASN(gl_na,IPNT_0);
+
     /* compute grid intersections */
     for (ii=0; ii < dim; ii++) {
       gsa[ii] = iwave_max(read_gs[ii], rags[ii]);
@@ -438,7 +453,10 @@ int mpirsfread(ireal * a,
     
     if ( (err = get_array_offsets(&read_goffs, &noffs, dim, read_gs, read_gn, g_gsa, gl_na)) ||
 	 (err = get_array_offsets(&loffs, &noffs, dim, rags, ran, l_gsa, gl_na)) ) {
-      fprintf(stream,"Error [mpirsfread]: read from get_array_offsets, err=%d\n",err);
+      if (err == E_OUTOFBOUNDS) 
+	fprintf(stream,"NOTE [mpirsfread]: grid intersection empty\n");
+      else 
+	fprintf(stream,"Error [mpirsfread]: read from get_array_offsets, err=%d\n",err);
       fflush(stream);
       MPI_Abort(wcomm,err);
     }
@@ -471,7 +489,7 @@ int mpirsfread(ireal * a,
       fprintf(stream,"read_gn[%d] updated to %d\n",dim-1,read_gn[dim-1]);
       fprintf(stream,"recsize updated to %ld\n",recsize);
       fprintf(stream,"recsize_b updated to %ld\n",recsize_b);
-      fprintf(stream,"file_goffs updated to %ld\n",file_goffs);
+      fprintf(stream,"file_goffs updated to %lld\n",file_goffs);
     }
 #endif
   }  
@@ -638,7 +656,7 @@ int mpirsfwrite(ireal * a,
        */
       
       get_n(n, g);
-      dim = g.dim;
+      dim = get_dimension_grid(g); // WWS 23.03.15: changed from g.dim
       gdim = g.gdim;
       
     }

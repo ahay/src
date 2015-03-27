@@ -601,10 +601,14 @@ namespace {
 
       // build order zero IWaveTree, check 
       int order=0;
+      // cerr<<"IWaveTree\n";
       IWaveTree * wt = new IWaveTree(*par,stream,ic,order);
+      // cerr<<"getStateArray\n";
       IWAVE & w = *(wt->getStateArray()[0]);
+      // cerr<<"printf\n";
       iwave_printf(&w, par, stream);
       IPNT cgs0, cge0, gs0, ge0;
+      // cerr<<"ra+a\n";
       ra_a_gse(&((w.model).ld_c._s[0]),gs0,ge0);
       ra_gse(&((w.model).ld_c._s[0]),cgs0,cge0);
       EXPECT_EQ(0,gs0[0]);
@@ -721,7 +725,7 @@ namespace {
     }
   }    
 
-  TEST_F(ACDSimTest, iwavetree_2D_serial_order0_ext_after) {
+  TEST_F(ACDSimTest, iwavetree_2D_serial_order0_extend_shotrecord) {
     try {
 
       // fake command line environment
@@ -744,9 +748,12 @@ namespace {
       IWaveTree * wt = new IWaveTree(*par,stream,ic,order);
       IWAVE & w = *(wt->getStateArray()[0]);
       iwave_printf(&w, par, stream);
+      int ndim0;
       IPNT cgs0, cge0, gs0, ge0;
+      ra_ndim(&((w.model).ld_c._s[0]),&ndim0);
       ra_a_gse(&((w.model).ld_c._s[0]),gs0,ge0);
       ra_gse(&((w.model).ld_c._s[0]),cgs0,cge0);
+      EXPECT_EQ(2,ndim0);
       EXPECT_EQ(0,gs0[0]);
       EXPECT_EQ(415,ge0[0]);
       EXPECT_EQ(0,gs0[1]);
@@ -755,9 +762,12 @@ namespace {
       EXPECT_EQ(415,cge0[0]);
       EXPECT_EQ(0,cgs0[1]);
       EXPECT_EQ(799,cge0[1]);
+      int ndim1;
       IPNT cgs1, cge1, gs1, ge1;
+      ra_ndim(&((w.model).ld_c._s[1]),&ndim1);
       ra_a_gse(&((w.model).ld_c._s[1]),gs1,ge1);
       ra_gse(&((w.model).ld_c._s[1]),cgs1,cge1);
+      EXPECT_EQ(2,ndim1);
       EXPECT_EQ(-3,gs1[0]);
       EXPECT_EQ(418,ge1[0]);
       EXPECT_EQ(-3,gs1[1]);
@@ -790,7 +800,7 @@ namespace {
       exit(1);
     }
   }    
-  TEST_F(ACDSimTest, iwavetree_2D_serial_order0_ext_before) {
+  TEST_F(ACDSimTest, iwavetree_2D_serial_order0_extend_internal) {
     try {
 
       // fake command line environment
@@ -813,20 +823,30 @@ namespace {
       IWaveTree * wt = new IWaveTree(*par,stream,ic,order);
       IWAVE & w = *(wt->getStateArray()[0]);
       iwave_printf(&w, par, stream);
+      int ndim0;
       IPNT cgs0, cge0, gs0, ge0;
+      ra_ndim(&((w.model).ld_c._s[0]),&ndim0);
       ra_a_gse(&((w.model).ld_c._s[0]),gs0,ge0);
       ra_gse(&((w.model).ld_c._s[0]),cgs0,cge0);
-      EXPECT_EQ(0,gs0[0]);
-      EXPECT_EQ(415,ge0[0]);
+      EXPECT_EQ(3,ndim0);
+      EXPECT_EQ(-1,gs0[0]);
+      EXPECT_EQ(1,ge0[0]);
       EXPECT_EQ(0,gs0[1]);
-      EXPECT_EQ(799,ge0[1]);
-      EXPECT_EQ(0,cgs0[0]);
-      EXPECT_EQ(415,cge0[0]);
+      EXPECT_EQ(415,ge0[1]);
+      EXPECT_EQ(0,gs0[2]);
+      EXPECT_EQ(799,ge0[2]);
+      EXPECT_EQ(-1,cgs0[0]);
+      EXPECT_EQ(1,cge0[0]);
       EXPECT_EQ(0,cgs0[1]);
-      EXPECT_EQ(799,cge0[1]);
+      EXPECT_EQ(415,cge0[1]);
+      EXPECT_EQ(0,cgs0[2]);
+      EXPECT_EQ(799,cge0[2]);
+      int ndim1;
       IPNT cgs1, cge1, gs1, ge1;
+      ra_ndim(&((w.model).ld_c._s[1]),&ndim1);
       ra_a_gse(&((w.model).ld_c._s[1]),gs1,ge1);
       ra_gse(&((w.model).ld_c._s[1]),cgs1,cge1);
+      EXPECT_EQ(2,ndim1);
       EXPECT_EQ(-3,gs1[0]);
       EXPECT_EQ(418,ge1[0]);
       EXPECT_EQ(-3,gs1[1]);
@@ -1331,7 +1351,7 @@ namespace {
     }
   }
 
-  TEST_F(ACDSimTest, spacetime_grid_build_ext_after) {
+  TEST_F(ACDSimTest, spacetime_grid_build_extend_shotrecord) {
     try {
 
       // fake command line environment
@@ -1417,7 +1437,7 @@ namespace {
     }
   }
 
-  TEST_F(ACDSimTest, spacetime_grid_build_ext_before) {
+  TEST_F(ACDSimTest, spacetime_grid_build_extend_internal) {
     try {
 
       // fake command line environment
@@ -1434,6 +1454,8 @@ namespace {
 
       // modify - set csq=csq3.rsf
       ps_slcstring(*par,"csq","csq3.rsf");
+
+      //      ps_printall(*par,stderr);
 
       // build order zero IWaveTree, check 
       int order=0;
@@ -1458,6 +1480,8 @@ namespace {
 	// note these are internal simulation axes, not archival, 
 	// which will require some re-arranging in traceio
 	for (int i=0;i<tmp->getNumAxes();i++) {
+	  //	  cerr<<"step it="<<it<<" keyword "<<t[it]->keyword<<" testing axis "<<i<<"\n";
+	  //	  fprint_axis(stderr,tmp->getAxis(i));
 	  if (!grid_union(&g,&(tmp->getAxis(i)))) {
 	    RVLException e;
 	    e<<"Error: IWaveSim constructor from grid_union\n";
@@ -1473,11 +1497,11 @@ namespace {
 	// for this test no need to build sampler vector
 	//	s.push_back(tmp);
 	delete tmp;
+	//	cerr<<"after grid build step "<<it<<":\n";
+	//	fprint_grid(stderr,g);
       }
-
-      //      cerr<<"after grid build:\n";
-      //      fprint_grid(stderr,g);
-      EXPECT_EQ(5,g.gdim);
+      
+      EXPECT_EQ(4,g.gdim);
       EXPECT_EQ(416,g.axes[0].n);
       EXPECT_EQ(25.0,g.axes[0].d);
       EXPECT_EQ(0.0,g.axes[0].o);
@@ -1494,10 +1518,6 @@ namespace {
       EXPECT_EQ(1.0,g.axes[3].d);
       EXPECT_EQ(0.0,g.axes[3].o);
       EXPECT_EQ(3,g.axes[3].id);
-      EXPECT_EQ(3,g.axes[4].n);
-      EXPECT_EQ(100.0,g.axes[4].d);
-      EXPECT_EQ(-100.0,g.axes[4].o);
-      EXPECT_EQ(101,g.axes[4].id);
 
       delete wt;
       ps_delete(&par);
@@ -1855,7 +1875,7 @@ namespace {
     }
   }
 
-  TEST_F(ACDSimTest, dryrun_sim_fwd_ord0_ext_sx) {
+  TEST_F(ACDSimTest, dryrun_sim_fwd_ord0_extend_shotrecord) {
     try {
 
       // fake command line environment
@@ -2103,7 +2123,7 @@ namespace {
     }
   }
 
-  TEST_F(ACDSimTest, dryrun_sim_fwd_ord0_ext_hx) {
+  TEST_F(ACDSimTest, dryrun_sim_fwd_ord0_extend_internal) {
     try {
 
       // fake command line environment
@@ -2119,7 +2139,6 @@ namespace {
       delete [] argvv;
 
       ps_slcstring(*par,"csq","csq3.rsf");
-      ps_printall(*par,stdout);
 
       // build order zero IWaveTree, check 
       int order=0;

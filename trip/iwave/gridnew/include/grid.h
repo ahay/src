@@ -11,6 +11,7 @@
 #define EXTINT 100
 
 #include "utils.h"
+#include "except.hh"
 
 /** Axis: Basic Metadata element for regular grids. Defines a uniformly
     sampled axis, after the fashion of SEPlib77 or RSF. Struct part of
@@ -121,10 +122,19 @@ int compare_grid(const grid g1, const grid g2);
 */
 int compatible_grid(const grid g1, const grid g2);
 
+/** return effective (physical plus internal extended)
+    grid dimension */
+int get_dimension_grid(grid g);
+
 /** get number of physical gridpoints (product of n's)
     @return product of physical axis lengths
  */
 int get_datasize_grid(grid g);
+
+/** get number of physical and internal extended gridpoints (product of n's)
+    @return product of physical, internal extended axis lengths
+ */
+int get_extended_datasize_grid(grid g);
 
 /** get total number of gridpoints (product of n's)
     @return product of axis lengths
@@ -134,12 +144,15 @@ size_t get_global_datasize_grid(grid g);
 /** returns (physical, non-extended) cell vol */  
 ireal get_cellvol_grid(grid g);
 
-/** returns extended cell vol */  
+/** returns physical + internal extended cell vol */
+ireal get_extended_cellvol_grid(grid g);
+
+/** returns global (all axes) cell vol */  
 ireal get_global_cellvol_grid(grid g);
 
-/** get total number of records = physical grids within global grid
-    (product of n's)
-    @return product of nonphysical axis lengths
+/** get total number of records = physical (+ internal ext'd) grids
+    within global grid (product of n's) 
+    @return product of external ext'd axis lengths
  */
 int get_panelnum_grid(grid g);
 
@@ -165,6 +178,10 @@ void get_gs(IPNT gs, grid g);
     @param[out] gs (IPNT) - global indices of grid origin
 */
 void get_ge(IPNT ge, grid g);
+
+/** get array of axis ids as function of axis index - next function
+    inverts this relation */
+void get_id(IPNT id, grid g);
 
 /** returns axis order array, i.e. axis index as a function of id,
     rather than id as a function of axis index (which is stored). 

@@ -450,8 +450,10 @@ namespace {
       bool fwd = true;
       int snaps=0;
       int printact=0;
+      ps_slint(*par,"printact",printact);
 
       IWaveSim * sim = new IWaveSim(order,fwd,*par,stream,ic,printact,snaps);
+
       sim->run();
       delete sim;
       ps_delete(&par);

@@ -553,7 +553,6 @@ namespace {
         
       rdfwd = fwd->getRDOMArray();
       rdadj = adj->getRDOMArray();
-    
       for (int i=0; i<rdfwd.size(); i++) {
         //rdom_rand(rdfwd[i]);
         //rdom_rand(rdadj[i]);
@@ -583,7 +582,6 @@ namespace {
 
       acd_timestep(rdfwd, true,  0, w->model.specs);
       acd_timestep(rdadj, false, 0, w->model.specs);
-        
         
       ireal yn = acd_rdom_norm(rdadjcp);
       ireal axn = acd_rdom_norm(rdfwd);
@@ -639,6 +637,9 @@ namespace {
             IWaveTree * fwd = new IWaveTree(*par,stream,ic,order);
             IWaveTree * adj = new IWaveTree(*par,stream,ic,order);
             std::vector<RDOM *> rdfwd, rdadj;
+
+      cerr<<"1\n";
+        
             
             IWAVE * w = (fwd->getStateArray()[0]);
             
@@ -646,32 +647,43 @@ namespace {
             
             rdfwd = fwd->getRDOMArray();
             rdadj = adj->getRDOMArray();
-            
+	    cerr<<"2\n";
+        
+
             for (int i=0; i<rdfwd.size(); i++) {
                 //rdom_rand(rdfwd[i]);
                 //rdom_rand(rdadj[i]);
                 iwave_rdom_rand(fwd->getStateArray()[i]);
                 iwave_rdom_rand(adj->getStateArray()[i]);
             }
+      cerr<<"3\n";
+        
+
             // initialize rdadj[1], D_CSQ to zero for adjoint operator
             //rdom_copy(rdfwd[0],rdadj[0]);
             iwave_rdom_copy(fwd->getStateArray()[0],adj->getStateArray()[0]);
             ra_a_zero(&(rdadj[1]->_s[D_CSQ]));
+      cerr<<"4\n";
+        
 
             int ndim = (w->model).g.dim;
             
             IPNT dgs[RDOM_MAX_NARR], dge[RDOM_MAX_NARR];    /*< computational domain */
             IPNT dgsa[RDOM_MAX_NARR], dgea[RDOM_MAX_NARR];  /*< allocated domain */
             for (int i=0; i<RDOM_MAX_NARR; i++) {
-                rd_a_gse(&((w->model).ld_c),i,dgs[i],dge[i]);
-                rd_gse(&((w->model).ld_c),i,dgsa[i],dgea[i]);
+	      IASN(dgs[i],IPNT_1); IASN(dgsa[i],IPNT_1);
+	      IASN(dge[i],IPNT_0); IASN(dgea[i],IPNT_0);
+	      rd_a_gse(&((w->model).ld_c),i,dgs[i],dge[i]);
+              rd_gse(&((w->model).ld_c),i,dgsa[i],dgea[i]);
             }
+
             std::vector<RDOM > fwdcp(rdfwd.size());
             std::vector<RDOM > adjcp(rdadj.size());
             for (int i=0; i<rdfwd.size();i++) {
                 /*-declare computational domain---------------------------------------------*/
-                err = rd_a_create(&(fwdcp[i]), RDOM_MAX_NARR, ndim, dgs, dge);
-                err = err || rd_a_create(&(adjcp[i]), RDOM_MAX_NARR, ndim, dgs, dge);
+
+                err = rd_a_create(&(fwdcp[i]), RDOM_MAX_NARR, dgs, dge);
+                err = err || rd_a_create(&(adjcp[i]), RDOM_MAX_NARR, dgs, dge);
                 
                 if ( err ){
                     RVLException e;
@@ -781,8 +793,8 @@ namespace {
       std::vector<RDOM > adjcp(rdadj.size());
       for (int i=0; i<rdfwd.size();i++) {
 	/*-declare computational domain---------------------------------------------*/
-	err = rd_a_create(&(fwdcp[i]), RDOM_MAX_NARR, ndim, dgs, dge);
-	err = err || rd_a_create(&(adjcp[i]), RDOM_MAX_NARR, ndim, dgs, dge);
+	err = rd_a_create(&(fwdcp[i]), RDOM_MAX_NARR, dgs, dge);
+	err = err || rd_a_create(&(adjcp[i]), RDOM_MAX_NARR, dgs, dge);
                 
 	if ( err ){
 	  RVLException e;

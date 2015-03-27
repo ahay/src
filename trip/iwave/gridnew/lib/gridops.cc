@@ -266,7 +266,7 @@ namespace TSOpt {
     }
     catch (bad_cast) {
       RVLException e;
-      e<<"Error: GridWindowOp constructor\n";
+      e<<"Error: GridMaskOp constructor\n";
       e<<"  either domain or range is neither product nor a GridSpace,\n";
       e<<"  or some component is not a GridSpace\n";
       throw e;
@@ -491,22 +491,40 @@ namespace TSOpt {
 	}
       }
       else {
-	myGridSpace const & gdom = dynamic_cast<myGridSpace const &> (dom);
-	myGridSpace const & grng = dynamic_cast<myGridSpace const &>(bg.getSpace());
+	myGridSpace const * gdom = dynamic_cast<myGridSpace const *> (&dom);
+	myGridSpace const * grng = dynamic_cast<myGridSpace const *>(&(bg.getSpace()));
+	if (!gdom) {
+	  RVLException e;
+	  e<<"Error: GridWindowOp constructor\n";
+	  e<<"  domain is neither product nor a GridSpace,\n";
+	  e<<"  or some component is not a GridSpace\n";
+	  e<<"  DOMAIN:\n";
+	  dom.write(e);
+	  throw e;
+	}
+	if (!grng) {
+	  RVLException e;
+	  e<<"Error: GridWindowOp constructor\n";
+	  e<<"  range is neither product nor a GridSpace,\n";
+	  e<<"  or some component is not a GridSpace\n";
+	  e<<"  RANGE:\n";
+	  bg.getSpace().write(e);
+	  throw e;
+	}
 	if (retrieveGlobalRank()==0) {
-	  if (compatible_grid(gdom.getGrid(),grng.getGrid())) {
+	  if (compatible_grid(gdom->getGrid(),grng->getGrid())) {
 	    RVLException e;
 	    e<<"Error: GridWindowOp constructor\n";
 	    e<<"  domain, range defined on incompatible grids\n";
 	    e<<"  domain:\n";
-	    for (int i=0;i<gdom.getGrid().gdim;i++) 
-	      e<<"    axis "<<i<<" d="<<gdom.getGrid().axes[i].d<<" o="<<gdom.getGrid().axes[i].o<<"\n";
+	    for (int i=0;i<gdom->getGrid().gdim;i++) 
+	      e<<"    axis "<<i<<" d="<<gdom->getGrid().axes[i].d<<" o="<<gdom->getGrid().axes[i].o<<"\n";
 	    e<<"  range:\n";
-	    for (int i=0;i<grng.getGrid().gdim;i++) 
-	      e<<"    axis "<<i<<" d="<<grng.getGrid().axes[i].d<<" o="<<grng.getGrid().axes[i].o<<"\n";
+	    for (int i=0;i<grng->getGrid().gdim;i++) 
+	      e<<"    axis "<<i<<" d="<<grng->getGrid().axes[i].d<<" o="<<grng->getGrid().axes[i].o<<"\n";
 	    throw e;
 	  }
-	  grid const & g = gdom.getGrid();
+	  grid const & g = gdom->getGrid();
 	  for (int i=0; i< g.dim; i++) {
 	    iw[i]=(int) (w[i]/(g.axes[i].d) + 0.1);
 	    iw[i]=iwave_max(iw[i],0);
@@ -519,6 +537,10 @@ namespace TSOpt {
       e<<"Error: GridWindowOp constructor\n";
       e<<"  either domain or range is neither product nor a GridSpace,\n";
       e<<"  or some component is not a GridSpace\n";
+      e<<"  DOMAIN:\n";
+      dom.write(e);
+      e<<"  RANGE:\n";
+      bg.getSpace().write(e);
       throw e;
     }
     catch (RVLException & e) {

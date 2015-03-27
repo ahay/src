@@ -355,6 +355,7 @@ namespace TSOpt {
 	RVLException e;
 	e<<"Error: GridDC::get (mutable)\n";
 	e<<"  from fread, metafile = "<<this->getFilename()<<" panelindex="<<panelindex<<"\n";
+	e<<"  failed to read "<<ngrid<<" floats at offset "<<(long)cur_pos<<"\n";
 	e<<"  panelnum="<<panelnum<<"\n";
 	throw e;
       }
@@ -574,8 +575,13 @@ namespace TSOpt {
     // compute panelnum
     grid g;
     copy_grid(&g,&protog);
-    if (incore) g.dim=g.gdim;
-    panelnum = get_panelnum_grid(g);
+    if (incore) {
+      g.dim=g.gdim;
+      panelnum = 1;
+    }
+    else {
+      panelnum = get_panelnum_grid(g);
+    }
 
     // how this works: ra_declare assigns the IPNT data members of
     // the RARR workspace tmp. CP::initialize uses operator new and
@@ -591,7 +597,19 @@ namespace TSOpt {
     // buffer (internal RARR _s0) gets allocated in the initialize
     // step - in contrast to segy case, where data buffer has fixed
     // length and is deep-copied.
+    // FINALLY, only the space and internal extended axes generate
+    // memory allocation - all external extended axes are panelized.
+    // so ng must be "groomed". This is only necessary for the 
+    // out-of-core case - for "incore", the entire data structure
+    // is read into the RARR at once.
+    // NOTE all extended axes are in the range [g.dim, g.gdim]
     RARR tmp;
+    IPNT ig;
+    if (!incore) {
+      get_id(ig,protog);
+      for (int i=g.dim;i<g.gdim;i++) 
+	if (ig[i] < EXTINT) ng[i]=1;
+    }
     ra_declare_s(&tmp,sg,ng);
     buf.initialize(tmp);
 

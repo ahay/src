@@ -32,6 +32,9 @@ namespace TSOpt {
     int sampord;
     int tracestart;
     int tracestop;
+    int taperwidth;   // width of taper for each side for one shot in (# of traces)
+    int timewidth;    // width of time to taper at the end of simulation in (ms)
+
     int dump_term;
 
   public:

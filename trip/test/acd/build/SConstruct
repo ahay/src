@@ -10,7 +10,7 @@ suwaveform      = os.path.join(CWPROOT,'bin/suwaveform')
 suspike         = os.path.join(CWPROOT,'bin/suspike')
 sufilter        = os.path.join(CWPROOT,'bin/sufilter')
 RSFSRC          = os.getenv('RSFSRC')
-stdmdl          = os.path.join(RSFSRC,'trip/iwave/grid/main/standardmodel.x')
+stdmdl          = os.path.join(RSFSRC,'trip/iwave/gridnew/main/standardmodel.x')
 towed_array     = os.path.join(RSFSRC,'trip/iwave/trace/main/towed_array.x')
 acd             = os.path.join(RSFSRC,'trip/iwave/acd/main/acd.x')
 

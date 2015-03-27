@@ -4,7 +4,7 @@
 // if not set, rsfwrite does not scale, rsfread overwrites
 #define UPDATE
 // if you want to see what's happening...
-//#define VERBOSE
+#define VERBOSE
 
 int read_grid(grid * g, const char * fname, FILE * fp) {
 
@@ -786,7 +786,7 @@ int rsfread_proto(ireal * a,
 
   err=rsfread_base(a,rags,ran,
 		   ldname,ltype,protodata,
-		   g.dim,get_panelnum_grid(g),get_datasize_grid(g),n,
+		   get_dimension_grid(g),get_panelnum_grid(g),get_extended_datasize_grid(g),n,
 		   scale,extend,stream,panelindex);
   if (err) 
     fprintf(stream,"Error: rsfread_proto from rsfread_base err=%d\n",err);
@@ -946,7 +946,7 @@ int rsfwrite_proto(ireal * a,
   // WWS 03.02.14 - outsource!      
   /* scaling loop note that scale should be inverse of read */
   /*  ntot=1;
-  for (ii=0;ii<g.dim;ii++) ntot*=ran[ii];
+  for (ii=0;ii<get_dimension_grid(g);ii++) ntot*=ran[ii];
   lscale=-lscale;
   if (lscale>0) for (ii=0;ii<lscale;ii++) scfac *= 10.0;
   if (lscale<0) for (ii=0;ii<-lscale;ii++) scfac *= 0.10;
@@ -961,7 +961,7 @@ int rsfwrite_proto(ireal * a,
 
   /* figger out array intersection. special case: if there is no
      intersection, read nearest part of data */
-  for (ii=0; ii < g.dim; ii++) {
+  for (ii=0; ii < get_dimension_grid(g); ii++) {
     gsa[ii] = iwave_max(gs[ii], rags[ii]);
     gea[ii] = iwave_min(gs[ii] + n[ii] - 1, rags[ii] + ran[ii] - 1);
     na[ii]  = iwave_max(gea[ii] - gsa[ii] + 1, 0);
@@ -988,8 +988,8 @@ int rsfwrite_proto(ireal * a,
 
   /* use array data to work out offsets of 1D segments in both
      grid array (global) and rarray (local) */
-  if ( (err = get_array_offsets(&goffs, &noffs, g.dim, gs, n, g_gsa, gl_na)) ||
-       (err = get_array_offsets(&loffs, &noffs, g.dim, rags, ran, l_gsa, gl_na)) ) {
+  if ( (err = get_array_offsets(&goffs, &noffs, get_dimension_grid(g), gs, n, g_gsa, gl_na)) ||
+       (err = get_array_offsets(&loffs, &noffs, get_dimension_grid(g), rags, ran, l_gsa, gl_na)) ) {
     fprintf(stream,"ERROR: rsfwrite from get_array_offsets, err=%d\n",err);
     ps_delete(&par);
     return err;
@@ -1003,8 +1003,8 @@ int rsfwrite_proto(ireal * a,
      added 06.03.12 to make rsfwrite l2-adjoint to rsfwrite WWS
   */
   if (extend) {
-    for (ii=0;ii<g.dim;ii++) {
-      if (adj_extend_array(a,rags,ran,l_gsa,gl_na,g.dim,ii)) {
+    for (ii=0;ii<get_dimension_grid(g);ii++) {
+      if (adj_extend_array(a,rags,ran,l_gsa,gl_na,get_dimension_grid(g),ii)) {
 	fprintf(stream,"Error: rsfwrite - adjoint extension failed at axis %d\n",ii);
 	ps_delete(&par);
 	return E_OTHER;
@@ -1041,7 +1041,7 @@ int rsfwrite_proto(ireal * a,
       
   /* seek to panel at input panelindex modulo number of panels */
   panelindex = panelindex % get_panelnum_grid(g);
-  cur_pos = panelindex * get_datasize_grid(g) * sizeof(float);
+  cur_pos = panelindex * get_extended_datasize_grid(g) * sizeof(float);
 
   if (!strcmp(ltype,"native_float")) {
 
@@ -1075,6 +1075,8 @@ int rsfwrite_proto(ireal * a,
       }
       // added 21.03.14 WWS
       fflush(fp);
+
+      //      fprintf(stderr,"rsfwrite: wrote %d floats at offset %jd\n",na[0],goffs[i]*sizeof(float) + cur_pos);
     }
     userfree_(fbuf);
     

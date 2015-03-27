@@ -576,10 +576,12 @@ namespace TSOpt {
 	  drystr<<"    panel="<<panelindex<<" in range=["<<first<<", "<<last<<"], rank="<<retrieveGlobalRank()<<endl;
 	}
 	else {
-	  if (panelindex==first && retrieveGlobalRank()==0) {
-	    announce<<"\n*** IWaveSim: model="<<ic.iwave_model<<" fwd="<<fwd<<" deriv="<<order<<"\n";
+	  if (printact > -1) {
+	    if (panelindex==first && retrieveGlobalRank()==0) {
+	      fprintf(stream,"\n*** IWaveSim: model=%s  fwd=%d deriv=%d\n",ic.iwave_model.c_str(), fwd, order);
+	    }
+	    fprintf(stream,"    panel=%d in range=[%d, %d], rank=%d\n", panelindex,first,last,retrieveGlobalRank());
 	  }
-	  announce<<"    panel="<<panelindex<<" in range=["<<first<<", "<<last<<"], rank="<<retrieveGlobalRank()<<endl;
 
 #ifdef IWAVE_VERBOSE
 	  announce<<"simulation grid:\n";
@@ -613,19 +615,18 @@ namespace TSOpt {
 
 	  for (int it=start[g.dim]; it<stop[g.dim]; it++) {
 
+	    float dt = g.axes[g.dim].d;
+	    float ot = g.axes[g.dim].o;
+
 #ifdef IWAVE_VERBOSE
-	    cerr<<"IWaveSim::run - it="<<it<<"\n";
+	    cerr<<"IWaveSim::run - it="<<it<<" t="<<ot+it*dt<<endl;
 #endif
+	    if (printact > 0)
+	      fprintf(stream,"    it=%d t=%12.4e\n",it,ot+it*dt);
+	  
 	    if (dryrun) drystr<<"\n";
 	    step[g.dim]=it;
-
-	    if (!dryrun && (printact > 0)) {
-	      float dt = g.axes[g.dim].d;
-	      float ot = g.axes[g.dim].o;
-	      cerr<<"it="<<it<<" t="<<ot+it*dt<<endl;
-	    }
-
-	    
+  
 	    for (size_t i=0; i<t.size(); i++) {
 	      if (s[i]) {
 #ifdef IWAVE_VERBOSE
