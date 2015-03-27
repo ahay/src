@@ -46,6 +46,8 @@ To the reproducible documents collection:
   and Lumley)
 * sep/pefmult: Multiple suppression using prediction-error filter
   (Sun)
+* xjtu/gpufwi: A graphics processing unit implementation of
+  time-domain full-waveform inversion (Yang, Gao, and Wang)
 
 To SCons:
 
