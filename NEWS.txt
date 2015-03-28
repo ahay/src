@@ -98,6 +98,7 @@ In APIs:
 
 * Fixed __array_wrap__ bug in Python API
 * Fixed bug in framenum with no label1 in stdplot
+* Fixed occassional nan generated in sf_randn_one_bm
 
 In the Python package:
 

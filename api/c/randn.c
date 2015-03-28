@@ -19,6 +19,7 @@
 #include <math.h>
 
 #include "randn.h"
+#include "error.h"
 #include "_defs.h"
 #include "_bool.h"
 #include "mt19937ar.h"
@@ -32,7 +33,9 @@ float sf_randn_one_bm (void)
     double x1, x2, y1, y2, z1, z2;
     
     if (iset) {
-        x1 = genrand_real1 ();
+	do {
+	    x1 = genrand_real1 ();
+	} while (x1 == 0.0);
         x2 = genrand_real1 ();
         
         z1 = sqrt(-2.0*log(x1));
@@ -40,7 +43,7 @@ float sf_randn_one_bm (void)
         
         y1 = z1*cos(z2);
         y2 = z1*sin(z2);
-        
+
         iset = false;
         vset = y1;
         return ((float) y2);
