@@ -348,6 +348,9 @@ int main(int argc, char* argv[])
 	sf_oaxa(Ftmpwfb, at, 3);
 	sf_settype(Ftmpwfb,SF_COMPLEX);
       } else Ftmpwfb = NULL;
+    } else {
+      Ftmpwf = NULL;
+      Ftmpwfb = NULL;
     }
     
     /*close RSF files*/
