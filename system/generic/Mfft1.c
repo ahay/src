@@ -34,7 +34,7 @@ int main (int argc, char *argv[])
   float o1;
   float d1, dw;
   float shift;
-  double wght;
+  float wght;
   char *label;
   sf_file Fin=NULL, Fou=NULL;
 
@@ -59,9 +59,7 @@ int main (int argc, char *argv[])
 
   /*------------------------------------------------------------*/
   sf_init(argc, argv);
-#ifdef _OPENMP
   ompnth=omp_init();
-#endif
 
   Fin  = sf_input ("in");
   Fou = sf_output("out");
@@ -127,7 +125,7 @@ int main (int argc, char *argv[])
 
   /*------------------------------------------------------------*/
   /* Hermitian weight */
-  wght = sym ? 1.0/sqrt((double) nt): 1.0/nt;
+  wght = sym ? 1.0f/sqrtf((float) nt): 1.0f/nt;
 
   /*------------------------------------------------------------*/
   /* usable memory (Mb) */
