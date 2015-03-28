@@ -1,8 +1,0 @@
-Grid data structure:
-gdim = 3 axes
-dim  = 2 physical axes
-axis: n1=10 d1=1.000000e+00 o1=0.000000e+00 id1=0
-axis: n2=20 d2=2.000000e+00 o2=1.000000e+01 id2=1
-axis: n3=30 d3=3.000000e+00 o3=1.000000e+02 id3=3
-data_format=native_float
-in=test1.rsf@

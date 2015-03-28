@@ -32,7 +32,7 @@ namespace {
   using RVL::RVLRandomize;
 
   void create_hfile(string hfile, grid g) {
-    cerr<<"begin create_hfile hfile="<<hfile<<"\n";
+
     if (hfile.size()>120) {
       RVLException e;
       e<<"Error: create_hfile\n";
@@ -40,22 +40,17 @@ namespace {
       throw e;
     }
     
-    cerr<<"-3\n";
     char * fname=(char *)malloc(128*sizeof(char));
     FILE * fp1 = NULL;
     FILE * fp2 = NULL;
     string dfile = hfile+"@";
 
-    cerr<<"-2\n";
     // if either header or data file not present, create both
     
     strcpy(fname,hfile.c_str());
     
-    cerr<<"-1 fname="<<fname<<"\n";
+    fp1 = iwave_fopen(&fname,"w",NULL,stderr);
 
-    //    fp = iwave_fopen(&fname,"w",NULL,stderr);
-    fp1 = fopen(fname,"w");
-    cerr<<"0\n";
     if (!fp1) {
       RVLException e;
       e<<"Error: create_hfile\n";
@@ -63,24 +58,18 @@ namespace {
       throw e;
     }
     
-    cerr<<"1 fp1="<<fp1<<"\n";
     fprint_grid(fp1,g);
-    cerr<<"1.5\n";
     fprintf(fp1,"data_format=native_float\n");
-    
     fprintf(fp1,"in=%s\n",dfile.c_str());
-    cerr<<"2\n";   
     fflush(fp1);
-    fclose(fp1);   
-    //    iwave_fclose(fp);
+    iwave_fclose(fp1);   
     
     strcpy(fname,dfile.c_str());
     float * buf = (float *)malloc(get_extended_datasize_grid(g)*sizeof(float));
     for (int i=0;i<get_extended_datasize_grid(g);i++) buf[i]=0.0;
-    cerr<<"3\n";      
-    //      FILE * 
-    //    fp = iwave_fopen(&fname,"w",NULL,stderr);
-    fp2 = fopen(fname,"w");
+
+    fp2 = iwave_fopen(&fname,"w",NULL,stderr);
+
     if (!fp2) {
       RVLException e;
       e<<"Error: create_hfile\n";
@@ -91,21 +80,16 @@ namespace {
       fwrite(buf,sizeof(float),get_extended_datasize_grid(g),fp2);
     
     free(buf);
-    cerr<<"4\n";
-    //    iwave_fclose(fp);
+
     fflush(fp2);
-    fclose(fp2);
-    
-    
-    cerr<<"5\n";
-    /*
+    iwave_fclose(fp2);
+
     // reopen prototype files for read
     strcpy(fname,hfile.c_str());
-    fp = iwave_fopen(&fname,"r",NULL,stderr);
+    fp1 = iwave_fopen(&fname,"r",NULL,stderr);
     strcpy(fname,dfile.c_str());
-    fp = iwave_fopen(&fname,"r",NULL,stderr);
-    */
-    fprintf(stderr,"end create_hfil\n");
+    fp1 = iwave_fopen(&fname,"r",NULL,stderr);
+
     free(fname);    
   }
     
@@ -973,6 +957,66 @@ namespace {
     }
   }
 
+  TEST_F(GridTest, gridio_spatial) {
+    try {
+      std::string file_in="test_in.rsf";
+      create_hfile(file_in,g1);
+
+      myGridSpace sp(file_in);
+      AssignFilename afin(file_in);
+      Vector<float> x(sp);
+      x.eval(afin);
+      RVLAssignConst<float> ac(1.0);
+      x.eval(ac);
+      //      cerr<<"normsq of x = "<<x.normsq()<<endl;
+      std::string file_out="test_out.rsf";
+      create_hfile(file_out,g1);
+      Vector<float> y(sp);
+      AssignFilename afout(file_out);
+      y.eval(afout);
+
+      size_t ntotal = get_panelnum_grid(g1)*get_extended_datasize_grid(g1);
+
+      float * a = (float *)usermalloc_(ntotal*sizeof(float));
+      for (int i=0;i<ntotal;i++) a[i]=0.0f;
+      IPNT ran;  get_n(ran,g1);
+      IPNT rags; IASN(rags,IPNT_0);
+      float scale=1.0f;
+      //      cerr<<"panelnum="<<get_panelnum_grid(g1)<<endl;
+      //      cerr<<"ntotal="<<ntotal<<endl;
+      //      cerr<<"scale="<<scale<<endl;
+      //      cerr<<"test: a[0]="<<a[0]<<endl;
+      for (int panelindex=0; panelindex<get_panelnum_grid(g1); panelindex++) {
+	size_t offs = panelindex*get_extended_datasize_grid(g1);
+	EXPECT_EQ(0, rsfread(&(a[offs]), rags, ran, file_in.c_str(), scale, stderr, panelindex));
+      }
+      float ck = 0;
+      //      cerr<<"test: a[0]="<<a[0]<<endl;
+      for (int i=0;i<ntotal;i++) {
+	//	cerr<<"i="<<i<<" a="<<a[i]<<" ck="<<ck<<endl;
+	ck += a[i];
+        a[i] *= 2.0f;
+      }
+      //      cerr<<"ck="<<ck<<endl;
+      EXPECT_GT(1.e-6,ck-(float)ntotal);
+      //      cerr<<"test: a[0]="<<a[0]<<endl;
+      for (int panelindex=0; panelindex<get_panelnum_grid(g1); panelindex++) {
+	size_t offs = panelindex*get_extended_datasize_grid(g1);
+	EXPECT_EQ(0, rsfwrite(&(a[offs]), rags, ran, file_out.c_str(), scale, stderr, panelindex));
+      }
+      userfree_(a);
+
+      //      cerr<<"normsq of y = "<<y.normsq()<<endl;
+      y.linComb(-2.0f,x);
+      //      cerr<<"normsq of x = "<<x.normsq()<<endl;
+      //      cerr<<"normsq of y = "<<y.normsq()<<endl;
+      EXPECT_GT(1.e-6,y.norm());
+    }
+    catch (RVLException & e) {
+      e.write(cerr);
+    }
+  }
+
   TEST_F(GridTest, gridio_extd) {
     try {
       std::string file_in="etest_in.rsf";
@@ -984,49 +1028,39 @@ namespace {
       x.eval(afin);
       RVLAssignConst<float> ac(1.0);
       x.eval(ac);
-      cerr<<"norm of x = "<<x.norm()<<endl;
+      //      cerr<<"normsq of x = "<<x.normsq()<<endl;
+      std::string file_out="etest_out.rsf";
+      create_hfile(file_out,eg0);
+      Vector<float> y(sp);
+      AssignFilename afout(file_out);
+      y.eval(afout);
 
-      float * a = (float *)usermalloc_(get_extended_datasize_grid(eg0));
+      float * a = (float *)usermalloc_(get_extended_datasize_grid(eg0)*sizeof(float));
       for (int i=0;i<get_extended_datasize_grid(eg0);i++) a[i]=0.0f;
       IPNT ran;  get_n(ran,eg0);
       IPNT rags; IASN(rags,IPNT_0);
-      //      IPNT rags; get_gs(rags,eg0);
       float scale=1.0f;
       int panelindex=0;
-      //      EXPECT_EQ(0, rsfread(a, rags, ran, file_in.c_str(), scale, stderr, panelindex));
+      EXPECT_EQ(0, rsfread(a, rags, ran, file_in.c_str(), scale, stderr, panelindex));
       float ck = 0;
-      cerr<<"size="<<get_extended_datasize_grid(eg0)<<endl;
-      //      for (int i=0;i<get_extended_datasize_grid(eg0);i++) { 
-      //	ck += a[i];
-	//	fprintf(stderr,"i=%d a=%e ck=%e\n",i,a[i],ck);
-      //      }
 
-      //      fprintf(stderr,"ck=%e\n",ck);
-      //      EXPECT_GT(1.e-6,ck-(float)get_extended_datasize_grid(eg0));
-      //      fprintf(stderr,"output\n");
-
-      std::string file_out="etest_out.rsf";
-      create_hfile(file_out,eg0);
-      fprintf(stderr,"before output vector\n");
-      Vector<float> y(sp);
-      AssignFilename afout(file_out);
-      fprintf(stderr,"eval\n");
-      y.eval(afout);
-
-      /*
+      for (int i=0;i<get_extended_datasize_grid(eg0);i++) {
+	ck += a[i];
+	a[i] *= 2.0f;
+      }
 
 
-      fprintf(stderr,"rsfwrite\n");
+      EXPECT_GT(1.e-6,ck-(float)get_extended_datasize_grid(eg0));
+
       panelindex=0;
-      //      EXPECT_EQ(0, rsfwrite(a, rags, ran, file_out.c_str(), scale, stderr, panelindex));
-      fprintf(stderr,"after rsfwrite\n");      
+      EXPECT_EQ(0, rsfwrite(a, rags, ran, file_out.c_str(), scale, stderr, panelindex));
       userfree_(a);
 
-      fprintf(stderr,"exit\n");
-      */
-      //      y.linComb(-1.0f,x);
-
-      //      EXPECT_GT(1.e-6,y.norm());
+      //      cerr<<"normsq of y = "<<y.normsq()<<endl;
+      y.linComb(-2.0f,x);
+      //      cerr<<"normsq of x = "<<x.normsq()<<endl;
+      //      cerr<<"normsq of y = "<<y.normsq()<<endl;
+      EXPECT_GT(1.e-6,y.norm());
     }
     catch (RVLException & e) {
       e.write(cerr);
@@ -1045,6 +1079,7 @@ int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
 #ifdef IWAVE_USE_MPI
     storeGlobalComm(MPI_COMM_WORLD);
+    storeComm(MPI_COMM_WORLD);
 #endif
     int res = RUN_ALL_TESTS();
 #ifdef IWAVE_USE_MPI
