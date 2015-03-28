@@ -113,9 +113,13 @@ Result('NMOsemb-1','byte gainpanel=all allpos=y | grey3 title=" " maxval=1 minva
 
 
 # pick Vcos-2 and Vsin-2
-Flow('NMOpik','NMOsemb-1','scale axis=3 | pick3 vel0=0.0 smooth=y rect1=20')
-Flow('pik1','NMOpik','window f4=0 n4=1')
-Flow('pik2','NMOpik','window f4=1 n4=1')
+#Flow('NMOpik','NMOsemb-1','scale axis=3 | pick3 vel0=0.0 smooth=y rect1=20')
+#Flow('pik1','NMOpik','window f4=0 n4=1')
+#Flow('pik2','NMOpik','window f4=1 n4=1')
+
+Flow('pik1','NMOsemb-1','stack axis=3 | scale axis=2 | pick vel0=0.0 rect1=20')
+Flow('pik2','NMOsemb-1','stack axis=2 | scale axis=2 | pick vel0=0.0 rect1=20')
+
 Result('pik1','graph transp=y yreverse=y min2=-0.04 max2=0.04 plotfat=7 plotcol=3 pad=n title="Wcos (s\^2\_/km\^2\_)" label1=Time unit1=s wantaxis=n wanttitle=n')
 Result('pik2','graph transp=y yreverse=y min2=-0.04 max2=0.04 plotfat=7 plotcol=3 pad=n title="Wsin (s\^2\_/km\^2\_)" label1=Time unit1=s wantaxis=n wanttitle=n')
 Plot('pik1','graph transp=y yreverse=y min2=-0.04 max2=0.04 plotfat=5 plotcol=3 pad=n title="Wcos (s\^2\_/km\^2\_)" label1=Time unit1=s wantaxis=y wanttitle=y')
