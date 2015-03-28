@@ -76,14 +76,11 @@ void copy_grid(grid * tgt, const grid * src) {
 }
 
 void fprint_grid(FILE * fp, grid a) {
-  fprintf(stderr,"fprint_grid\n");
   int i;
   fprintf(fp,"Grid data structure:\n");
-  fprintf(stderr,"after first fprint\n");
   fprintf(fp,"gdim = %d axes\n",a.gdim);
   fprintf(fp,"dim  = %d physical axes\n",a.dim);
   for (i=0;i<a.gdim;i++) fprint_num_axis(fp,i,a.axes[i]);
-  fprintf(stderr,"fprint_grid - exit\n");
 }
 
 void print_grid(grid a) { fprint_grid(stdout,a); }

@@ -4,7 +4,7 @@
 // if not set, rsfwrite does not scale, rsfread overwrites
 #define UPDATE
 // if you want to see what's happening...
-#define VERBOSE
+//#define VERBOSE
 
 int read_grid(grid * g, const char * fname, FILE * fp) {
 
@@ -932,8 +932,10 @@ int rsfwrite_proto(ireal * a,
     strcpy(ltype,type);
     //    lscale=scale;
     copy_grid(&g,protogrid);
+#ifdef VERBOSE
     fprintf(stderr,"IN RSFWRITE: hdr=%s data=%s\n",fname,dname);
     iwave_fprintall(stderr);
+#endif
   }
   else {
     fprintf(stream,"Error: rsfwrite_proto - inconsistent values of\n");
@@ -1044,7 +1046,9 @@ int rsfwrite_proto(ireal * a,
   cur_pos = panelindex * get_extended_datasize_grid(g) * sizeof(float);
 
   if (!strcmp(ltype,"native_float")) {
-
+#ifdef VERBOSE
+    fprintf(stderr,"rsfwrite: panelindex=%d write noffs=%ld segments\n",panelindex,noffs);
+#endif
     /* allocate float buffer */
     fbuf=(float *)usermalloc_(recsize_b);
 
@@ -1061,6 +1065,9 @@ int rsfwrite_proto(ireal * a,
       }
       /* convert from ireal */
       if (!err) {
+#ifdef VERBOSE
+	for (j=0;j<na[0];j++) { fprintf(stderr,"a[%lld]=%e\n",j,*(a+loffs[i]+j)); }
+#endif
 #ifdef UPDATE
 	for (j=0;j<na[0];j++) { *(fbuf+j)=scale * (*(a+loffs[i]+j)); }
 #else
@@ -1075,8 +1082,9 @@ int rsfwrite_proto(ireal * a,
       }
       // added 21.03.14 WWS
       fflush(fp);
-
-      //      fprintf(stderr,"rsfwrite: wrote %d floats at offset %jd\n",na[0],goffs[i]*sizeof(float) + cur_pos);
+#ifdef VERBOSE
+      fprintf(stderr,"rsfwrite: wrote %d floats at offset %lld\n",na[0],goffs[i]*sizeof(float) + cur_pos);
+#endif
     }
     userfree_(fbuf);
     
