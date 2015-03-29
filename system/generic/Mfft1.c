@@ -176,7 +176,6 @@ int main (int argc, char *argv[])
 #endif
 
     /*------------------------------------------------------------*/
-    ompith=0;
     nbuf = n2buf;
     for (left=sf_leftsize(Fin,1); left>0; left -= nbuf) {
 	if(verb) sf_warning("%ld %ld;",left,nbuf);
@@ -227,10 +226,10 @@ int main (int argc, char *argv[])
 	    }
 
 	    for(ibuf=0; ibuf<nbuf; ibuf++)
-		sf_floatwrite((float*) ompQ[ibuf],2*nw,Fou);
+		sf_complexwrite((sf_complex*) ompQ[ibuf],nw,Fou);
 	} else {
 	    for(ibuf=0; ibuf<nbuf; ibuf++)
-		sf_floatread( (float*) ompQ[ibuf],2*nw,Fin);
+		sf_complexread( (sf_complex*) ompQ[ibuf],nw,Fin);
 
 #ifdef SF_HAS_FFTW_OMP
 	    for(ibuf=0; ibuf<nbuf; ibuf++) {
