@@ -25,13 +25,14 @@ int omp_init()
 	    ompath=omp_get_num_threads();
 	    if(ompnth!=0) {
 		ompnth=SF_MIN(ompnth,ompath);
-		omp_set_num_threads(ompnth);
 	    } else {
 		ompnth=ompath;
 	    }
 	    sf_warning("using %d of %d threads",ompnth,ompath);
 	}
     }
+
+    omp_set_num_threads(ompnth);
 #endif 
 
     return ompnth;
