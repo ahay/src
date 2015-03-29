@@ -85,6 +85,7 @@ skiplist =  [
                 'book/tccs/timelapse/duri',
                 'book/tccs/timelapse/long1',
 		'book/tongji/lrmode/twolayer3dvti',
+		'book/tongji/lrmode/twolayer3dtti',
                 'book/rsf/bash/gpu',
                 'book/rsf/school/sigsbee',
                 'book/sep/angle/agmig',
