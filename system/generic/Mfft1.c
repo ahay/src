@@ -138,7 +138,7 @@ int main (int argc, char *argv[])
     /* sf_warning("n2buf=%ld",n2buf); */
 
     /*------------------------------------------------------------*/
-    if(verb) sf_warning("allocate arrays");
+    if(verb) sf_warning("allocate arrays %d %d",n2buf,ompnth);
 
     ompP =                  sf_floatalloc2  (nt,n2buf);
     ompQ = (kiss_fft_cpx**) sf_complexalloc2(nw,n2buf);
@@ -178,8 +178,8 @@ int main (int argc, char *argv[])
     /*------------------------------------------------------------*/
     ompith=0;
     nbuf = n2buf;
-    for (left=sf_leftsize(Fin,1); left>0; left -= nbuf) {
-	if(verb) sf_warning("%6ld;",left);
+    for (left=sf_leftsize(Fin,1); left>=0; left -= nbuf) {
+	if(verb) sf_warning("%ld %ld;",left,nbuf);
 
 	/* buffer size */
 	nbuf=SF_MIN(left,nbuf);
@@ -281,7 +281,7 @@ int main (int argc, char *argv[])
 
     /*------------------------------------------------------------*/
 
-    if(verb) sf_warning("deallocate arrays");
+    if(verb) sf_warning("deallocate arrays %d %d",n2buf,ompnth);
 
     free(*ompP); free(ompP);
     free(*ompQ); free(ompQ);
