@@ -76,6 +76,7 @@ skiplist =  [
 		'book/tccs/diffr/chan3d',
                 'book/tccs/lpf/plut',
                 'book/tccs/medianfilter/dragon',
+		'book/tccs/optapert/theo',
                 'book/tccs/pmig/mig',
                 'book/tccs/seislet/seis',
                 'book/tccs/shape/beivc',
