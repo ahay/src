@@ -178,7 +178,7 @@ int main (int argc, char *argv[])
     /*------------------------------------------------------------*/
     ompith=0;
     nbuf = n2buf;
-    for (left=sf_leftsize(Fin,1); left>=0; left -= nbuf) {
+    for (left=sf_leftsize(Fin,1); left>0; left -= nbuf) {
 	if(verb) sf_warning("%ld %ld;",left,nbuf);
 
 	/* buffer size */
