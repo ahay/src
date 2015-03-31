@@ -23,7 +23,7 @@
 int main (int argc, char* argv[])
 {
     bool half, slow;
-    int ix,ih, nd, nt,nx, nh, CDPtype, jump, niter, restart;
+    int ix,ih, nd, it,nt,nx, nh, CDPtype, jump, niter, restart;
     float dt, t0, h0, dh, eps, dy, tol;
     float *trace, *trace2, *vel, *off, **gather, **dense;
     sf_file cmp, stack, velocity, offset;
@@ -91,7 +91,7 @@ int main (int argc, char* argv[])
     if (!sf_getint("restart",&restart)) restart=niter;
     /* GMRES memory */
 
-    if (!sf_getfloat("tol",&tol)) tol=0.0;
+    if (!sf_getfloat("tol",&tol)) tol=1e-5;
     /* GMRES tolerance */
 
     nd = (nt-1)*jump+1;
@@ -120,17 +120,19 @@ int main (int argc, char* argv[])
 	/* apply backward operator */
 	interpolate(gather, dense);
 	nmostack(dense,trace);
-
-#ifdef sdfsdfg
+	
 	sf_gmres_init(nd,restart);
+
+	for (it=0; it < nd; it++) {
+	    trace2[it] = 0.0f;
+	}
 
 	/* run GMRES */
 	sf_gmres(trace,trace2,inmo_oper,NULL,niter,tol,true);
 
-	sf_gmres_close();
-#endif
-
 	sf_floatwrite (trace2,nd,stack);
+
+	sf_gmres_close();
 
 	inmo_close();
     }

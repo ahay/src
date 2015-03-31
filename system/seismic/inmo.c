@@ -24,7 +24,7 @@
 #include "stretch4.h"
 
 static int nh, nt, ns, jump;
-static float *stretch; /* **dense2, **sparse2; */
+static float *stretch, **dense2, **sparse2; 
 static map4* nmo;
 static sf_bands spl;
 
@@ -83,10 +83,8 @@ void inmo_init(const float* vel /* velocity */,
     sf_int1_init (coord, 0.0, jump, ns, sf_spline_int, nw, nt, 0.0);
     free(coord);
     
-/*
     dense2  = sf_floatalloc2(nt,nh);
     sparse2 = sf_floatalloc2(ns,nh);
-*/
 }
 
 void inmo_close(void)
@@ -102,12 +100,11 @@ void inmo_close(void)
      
     sf_int1_close();
     sf_banded_close(spl);
-/*
+
     free(*dense2);
     free(dense2);
     free(*sparse2);
     free(sparse2);
-*/
 }
 
 void inmo(const float *trace /* input trace [nt] */,
@@ -171,14 +168,13 @@ void interpolate(float **sparse, float **dense)
 
 }
 
-/*
+
 void inmo_oper(int nx, const float *trace, float *trace2, void* user_data)
-/< operator to invert by GMRES >/
+/*< operator to invert by GMRES >*/
 {
     inmo(trace,dense2);
     subsample(dense2,sparse2);
     interpolate(sparse2,dense2);
     nmostack(dense2,trace2);
 }
-*/
 	      
