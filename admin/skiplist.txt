@@ -15,9 +15,11 @@ skiplist =  [
 		'book/icp/sam2013gpushortestpath/test',         # requires CUDA
                 'book/rsf/bash/mpi',
 								# Examples with movies
+		'book/xjtu/gpufwi/fbrec',
+		'book/xjtu/primer/testspml',
 		'book/xjtu/primer/testfd2d',	
 		'book/xjtu/primer/testeb',
-		'book/xjtu/test/modeling2d',
+		'book/xjtu/primer/modeling2d',
                 'book/osu/shalek/elastic2d',
                 'book/osu/shalek/elastic3d',
 		'book/osu/shalek/mod2d',

@@ -17,4 +17,8 @@ Flow('rtrend','trend rms','div ${SOURCES[1]}')
 
 Result('amplitude','rtrend','grey mean=y wanttitle=n')
 
+Flow('model','rtrend','stripes mo=30 ms=100 my=120 mr=60')
+
+Result('model','grey allpos=y wanttitle=n')
+
 End()
