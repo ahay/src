@@ -55,7 +55,8 @@ int main(int argc, char* argv[])
     /* For newton-------------*/
     int niter, vstatus, order, count, count1, count2, count3;
     double tolerance;
-    float **rr, **rd, *updown;
+    float **rr, **rd;
+    int *updown;
     bool newton, debug, fwdxini;
     velocity2 vn; 
     /*------------------------*/
@@ -258,7 +259,7 @@ int main(int argc, char* argv[])
 	    }
 	}
 		
-	updown = sf_floatalloc(nc); /* Fix this if need any other multiple*/
+	updown = sf_intalloc(nc); /* Fix this if need any other multiple*/
 		
 	for (count3=0; count3<nc; count3++) {
 	    updown[count3] = count3+1;
@@ -566,7 +567,7 @@ if(rank == 0){ /* Execute serially using the master only*/
 
     /*For MPI*/
     tstop = MPI_Wtime();
-    sf_warning("Total time %d \n",tstop-tstart);
+    sf_warning("Total computational time %d \n",tstop-tstart);
     MPI_Finalize();
 }
 else if (rank != 0)  MPI_Finalize();

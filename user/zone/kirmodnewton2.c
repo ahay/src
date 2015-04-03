@@ -91,7 +91,7 @@ static float zder2(int k,float x)
 
 void kirmodnewton_init(float **temp_rr /* Reflectors data of dimension N2xN1 */,
 					   float **temp_rd /* Dip data*/,
-					   float *updown /* Direction of the ray */,
+					   int *updown /* Direction of the ray */,
 					   float r01 /* Origin of reflectors */,
 					   float dr1 /* Increment between elements in reflectors */,
 					   int N1 /* Number of elements in each reflector */,
@@ -110,24 +110,24 @@ void kirmodnewton_init(float **temp_rr /* Reflectors data of dimension N2xN1 */,
 {
 	float **rr, **rd;
 	int ir2;
-	int d1,d2,d3,d4,d5,d6,p3; /*counter*/
+	int d1,d2,d2n,d3,d4,d5,d6,p3; /*counter*/
 	/*int p1,p2; Temp value*/
 	float p4=0; /*Temp value*/
 	int ithick;
 	
-		
 	rr = sf_floatalloc2(N1,n+2); /* Reflector values according to updown*/
 	rd = sf_floatalloc2(N1,n+2); /* Slope values according to updown*/
 	
-	v.v = sf_floatalloc(n+2);  /* Velocity array used in calculation generated according to where the ray travels*/
-	v.gx = sf_floatalloc(n+2); /* Velocity gradient in x-direction used in calculation generated according to where the ray travels*/
-	v.gz = sf_floatalloc(n+2); /* Velocity gradient in z-direction used in calculation generated according to where the ray travels*/
-	v.xref = sf_floatalloc(n+2); /* Reference point x-coordinate used in calculation generated according to where the ray travels*/
-	v.zref = sf_floatalloc(n+2); /* Reference point z-coordinate used in calculation generated according to where the ray travels*/
+	/*At each point*/
+	v.v = sf_floatalloc(n+1);  /* Velocity array used in calculation generated according to where the ray travels*/
+	v.gx = sf_floatalloc(n+1); /* Velocity gradient in x-direction used in calculation generated according to where the ray travels*/
+	v.gz = sf_floatalloc(n+1); /* Velocity gradient in z-direction used in calculation generated according to where the ray travels*/
+	v.xref = sf_floatalloc(n+1); /* Reference point x-coordinate used in calculation generated according to where the ray travels*/
+	v.zref = sf_floatalloc(n+1); /* Reference point z-coordinate used in calculation generated according to where the ray travels*/
 	v.thick = sf_floatalloc(n+1); /*Avg thickness of each layer for xintial*/
 	v.sumthick = sf_floatalloc(n+1); /*Avg thickness of each layer for xintial*/
-	v.aniso = sf_floatalloc2(4,n+2); /* Anisotropy parameters*/
-	
+	v.aniso = sf_floatalloc2(4,n+1); /* Anisotropy parameters*/
+
 	r0 = r01;
 	dr = dr1;
 	vstatus = vstatus1;
@@ -164,11 +164,11 @@ void kirmodnewton_init(float **temp_rr /* Reflectors data of dimension N2xN1 */,
 			}
 		}
 	}
-	/* Generate input according to the reflection sequence-----------------------------------------------*/
-	for (d2=0; d2<n+2; d2++) {
+	/* Generate layer input according to the reflection sequence-----------------------------------------------*/
+	for (d2=0; d2<n+1; d2++) {
 		
 		/* Set velocity, gradient, and reference points arrays-------------------------------------------*/
-		if (d2<1) {
+		if (d2<1) { 
 			v.v[d2] = v_inp[0];
 			v.gx[d2] = gx_inp[0];
 			v.gz[d2] = gz_inp[0];
@@ -203,23 +203,23 @@ void kirmodnewton_init(float **temp_rr /* Reflectors data of dimension N2xN1 */,
 				}
 			}
 		}
-		
-		
-		
+	}
+	/* Generate point input according to the reflection sequence-----------------------------------------------*/
+	for (d2n=0; d2n<n+2; d2n++) {	
 		for (d1=0; d1<N1; d1++) { /* Set layers according to updown*/
 			
-			if (d2 == 0) {
-				rr[d2][d1] = temp_rr[0][d1];
-				rd[d2][d1] = temp_rd[0][d1];
+			if (d2n == 0) {
+				rr[d2n][d1] = temp_rr[0][d1];
+				rd[d2n][d1] = temp_rd[0][d1];
 			}
 			else {
-			d5 = updown[d2-1];
-			rr[d2][d1] = temp_rr[d5][d1];
-			rd[d2][d1] = temp_rd[d5][d1];
+			d5 = updown[d2n-1];
+			rr[d2n][d1] = temp_rr[d5][d1];
+			rd[d2n][d1] = temp_rd[d5][d1];
 			}	
 		}
+		
 	}
-	
 	for(ithick = 0; ithick < n+1; ithick++){ /*To calculate the average thickness of each layer measured from both ends for xinitial*/
 		v.thick[ithick] = ((rr[ithick+1][0] - rr[ithick][0]) + (rr[ithick+1][N1-1] - rr[ithick][N1-1]))/2;
 		if (ithick==0){

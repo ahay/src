@@ -134,6 +134,12 @@ void initialize(int i /* Indicator of layer*/,
 		y_1k.gx1 = 0;
 		y_1k.gz1 = 0;
 		y_1k.v1 = 0;
+		y_1k.c111 = 0;
+		y_1k.c331 = 0;
+		y_1k.Q11 = 0;
+		y_1k.Q31 = 0;
+		y_1k.S11 = 0;
+		y_1k.S31 = 0;
 		y_1k.gx2 = gx[i-1];
 		y_1k.gz2 = gz[i-1];
 		y_1k.c112 = aniso[i-1][0];
@@ -224,6 +230,13 @@ void initialize(int i /* Indicator of layer*/,
 		y_k1.gx2 = 0;
 		y_k1.gz2 = 0;
 		y_k1.v2 = 0;
+		y_k1.c112 = 0;
+		y_k1.c332 = 0;
+		y_k1.Q12 = 0;
+		y_k1.Q32 = 0;
+		y_k1.S12 = 0;
+		y_k1.S32 = 0;
+
 	}
 
 }
@@ -253,6 +266,13 @@ void half_initialize(int i /* Indicator of layer*/,
 	y_k.gx1 = 0;
 	y_k.gz1 = 0;
 	y_k.v1 = 0;
+	y_k.c111 = 0;
+	y_k.c331 = 0;
+	y_k.Q11 = 0;
+	y_k.Q31 = 0;
+	y_k.S11 = 0;
+	y_k.S31 = 0;
+
 	y_k.gx2 = gx[i];
 	y_k.gz2 = gz[i];
 	y_k.v2 = v[i]+y_k.gx2*(y_k.x-xref[i])+y_k.gz2*(y_k.z-zref[i]);
@@ -283,6 +303,12 @@ void half_initialize(int i /* Indicator of layer*/,
 	y_k1.gx2 = 0;
 	y_k1.gz2 = 0;
 	y_k1.v2 = 0;
+	y_k1.c112 = 0;
+	y_k1.c332 = 0;
+	y_k1.Q12 = 0;
+	y_k1.Q32 = 0;
+	y_k1.S12 = 0;
+	y_k1.S32 = 0;
 	
 }
 

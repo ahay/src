@@ -38,7 +38,8 @@ int main(int argc, char* argv[])
     /* For newton-------------*/
     int niter, vstatus, order, count, count1, count2, count3;
     double tolerance;
-    float **rr=NULL, **rd=NULL, *updown=NULL;
+    float **rr=NULL, **rd=NULL;
+    int *updown=NULL;
     bool newton, debug, fwdxini;
     velocity2 vn; 
     /*------------------------*/
@@ -289,7 +290,7 @@ int main(int argc, char* argv[])
 	    }
 	}
 		
-	updown = sf_floatalloc(nc); /* Fix this if need any other multiple*/
+	updown = sf_intalloc(nc); /* Fix this if need any other multiple*/
 		
 	for (count3=0; count3<nc; count3++) {
 	    updown[count3] = count3+1;
@@ -448,7 +449,6 @@ if (!sf_getdouble("tol",&tolerance)) tolerance=0.00001;
 	    ref = inc;
 	}
     }
-    
     /*** Initialize stretch ***/
     sf_aastretch_init (false, nt, t0, dt, nxc);
 	
@@ -460,11 +460,9 @@ if (!sf_getdouble("tol",&tolerance)) tolerance=0.00001;
     /* peak frequency for Ricker wavelet */
     ricker_init(nt*2,freq*dt,2);
 	
-	
     if (newton) {
 	/* Initialize parameters for newton*/
 	kirmodnewton_init(rr, rd, updown, x0, dx, nx, nc-1, order, nc+1, vstatus, vn.xref, vn.zref, vn.v, vn.gx, vn.gz, vn.aniso);
-		
 	/*** Compute traveltime table ***/
 	kirmodnewton2_table(inc, debug /* Debug Newton */, fwdxini,  niter, tolerance);
     }
@@ -475,7 +473,6 @@ if (!sf_getdouble("tol",&tolerance)) tolerance=0.00001;
 	if (ref != inc) kirmod2_table (ref, vel2, type2[0], twod, crv, dip);
     }
 
-	
     if (lin) {
 	if (adj) {
 	    for (ic=0; ic < nc; ic++) {
@@ -494,7 +491,7 @@ if (!sf_getdouble("tol",&tolerance)) tolerance=0.00001;
 	tss[ic] = (ktable*) sf_alloc(nx,sizeof(ktable));
 	tgs[ic] = (ktable*) sf_alloc(nx,sizeof(ktable));
     }
-	
+
     /*** Main loop ***/
     for (is=0; is < ns; is++) {
 	if (verb) sf_warning("%s %d of %d;",cmp?"cmp":"shot",is+1,ns);
@@ -612,7 +609,7 @@ if (!sf_getdouble("tol",&tolerance)) tolerance=0.00001;
 	tstop = clock();
 	timespend = (double)(tstop-tstart)/CLOCKS_PER_SEC;
 	
-	sf_warning("Total time %g",timespend);
+	sf_warning("Total computational time %g",timespend);
 	
     exit(0);
 }
