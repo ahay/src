@@ -106,7 +106,7 @@ In programs:
 
 * Fixed output size bug in sfinttest1
 * Fixed memsize definition bug in sfrotate and sfreverse
-* Fixed handling of mask in sfnmo
+* Fixed handling of mask and offset files in sfnmo
 
 In the build system:
 
