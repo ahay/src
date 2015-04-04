@@ -548,8 +548,8 @@ namespace RVLUmin {
 	    ostream & _str)
       : Policy(), opeval(op,x),
 	jtol(_jtol),agtol(_agtol),rgtol(_rgtol),
-	eta1(_eta1),eta2(_eta2),gamma1(_gamma1),gamma2(_gamma2),minstep(_minstep),
-        maxcount(_maxcount), 
+	eta1(_eta1),eta2(_eta2),gamma1(_gamma1),gamma2(_gamma2),
+        maxcount(_maxcount),minstep(_minstep),
 	names(6),nums(6),tols(6),actcount(0),
 	str(_str) { this->inittable(); }
     
@@ -577,11 +577,6 @@ namespace RVLUmin {
 
   private:
     OperatorEvaluation<Scalar> opeval;
-    vector<string> names;
-    vector<atype *> nums;
-    int maxcount;
-    mutable int actcount;
-    vector<atype> tols;
     mutable atype predred;
     mutable atype actred;
     mutable atype jval;
@@ -594,7 +589,12 @@ namespace RVLUmin {
     atype eta2;
     atype gamma1;
     atype gamma2;
+    int maxcount;
     atype minstep;
+    vector<string> names;
+    vector<atype *> nums;
+    vector<atype> tols;
+    mutable int actcount;
     ostream & str;
 
     void inittable() {

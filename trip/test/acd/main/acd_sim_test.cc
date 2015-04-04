@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 #include "acd_defn.hh"
 #include "grid.h"
-#include "istate.hh"
+#include "iwsim.hh"
 
 //#define GTEST_VERBOSE
 IOKEY IWaveInfo::iwave_iokeys[]

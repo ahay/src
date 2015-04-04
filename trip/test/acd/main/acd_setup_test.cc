@@ -2,7 +2,7 @@
 #include "acd_defn.hh"
 #include "grid.h"
 #include "traceio.h"
-#include "istate.hh"
+#include "iwsim.hh"
 
 //#define GTEST_VERBOSE
 
@@ -113,6 +113,7 @@ namespace {
       e<<"file "<<fname<<" not opened\n";
       throw e;
     }
+    // cerr<<"create_hfile: fname="<<fname<<" panelnum="<<get_panelnum_grid(g)<<" datasize="<<get_datasize_grid(g)<<endl;
     for (int i=0;i<get_panelnum_grid(g);i++) 
       fwrite(buf,sizeof(float),get_datasize_grid(g),fp);
     
@@ -479,18 +480,18 @@ namespace {
       g.axes[2].id = 3;
       create_hfile(hfile2, dfile2, g, val);
 
-      g.axes[0].n=3;
-      g.axes[0].d=100.0;
-      g.axes[0].o=-100.0;
-      g.axes[1].n=416;
+      g.axes[0].n=416;
+      g.axes[0].d=25.0;
+      g.axes[0].o=0.0;
+      g.axes[0].id = 0;
+      g.axes[1].n=800;
       g.axes[1].d=25.0;
       g.axes[1].o=0.0;
-      g.axes[2].n=800;
-      g.axes[2].d=25.0;
-      g.axes[2].o=0.0;
-      g.axes[0].id = 101;
-      g.axes[1].id = 0;
-      g.axes[2].id = 1;
+      g.axes[1].id = 1;
+      g.axes[2].n=3;
+      g.axes[2].d=100.0;
+      g.axes[2].o=-100.0;
+      g.axes[2].id = 101;
       create_hfile(hfile3, dfile3, g, val);
 
       g.dim=2;
@@ -829,18 +830,18 @@ namespace {
       ra_a_gse(&((w.model).ld_c._s[0]),gs0,ge0);
       ra_gse(&((w.model).ld_c._s[0]),cgs0,cge0);
       EXPECT_EQ(3,ndim0);
-      EXPECT_EQ(-1,gs0[0]);
-      EXPECT_EQ(1,ge0[0]);
+      EXPECT_EQ(-1,gs0[2]);
+      EXPECT_EQ(1,ge0[2]);
+      EXPECT_EQ(0,gs0[0]);
+      EXPECT_EQ(415,ge0[0]);
       EXPECT_EQ(0,gs0[1]);
-      EXPECT_EQ(415,ge0[1]);
-      EXPECT_EQ(0,gs0[2]);
-      EXPECT_EQ(799,ge0[2]);
-      EXPECT_EQ(-1,cgs0[0]);
-      EXPECT_EQ(1,cge0[0]);
+      EXPECT_EQ(799,ge0[1]);
+      EXPECT_EQ(-1,cgs0[2]);
+      EXPECT_EQ(1,cge0[2]);
+      EXPECT_EQ(0,cgs0[0]);
+      EXPECT_EQ(415,cge0[0]);
       EXPECT_EQ(0,cgs0[1]);
-      EXPECT_EQ(415,cge0[1]);
-      EXPECT_EQ(0,cgs0[2]);
-      EXPECT_EQ(799,cge0[2]);
+      EXPECT_EQ(799,cge0[1]);
       int ndim1;
       IPNT cgs1, cge1, gs1, ge1;
       ra_ndim(&((w.model).ld_c._s[1]),&ndim1);
@@ -1951,6 +1952,7 @@ namespace {
   TEST_F(ACDSimTest, dryrun_sim_fwd_ord0_init) {
     try {
 
+      //      cerr<<"dryrun_sim_fwd_ord0_init"<<endl;
       // fake command line environment
       int argc = 2;
       char * argvv = new char[128];
@@ -1959,6 +1961,7 @@ namespace {
       strcpy(argv[1],"par=initfile");
       PARARRAY * par = NULL;
       FILE * stream = NULL;
+      //      cerr<<"dryrun_sim_fwd_ord0_init->IWaveEnv"<<endl;
       IWaveEnvironment(argc, argv, 0, &par, &stream);
       delete [] argv;
       delete [] argvv;
@@ -1971,6 +1974,9 @@ namespace {
       bool dryrun=true;
       ofstream drystr("dryrun_sim_fwd_ord0_init");
       IWaveSim * sim = new IWaveSim(order,fwd,*par,stream,ic,printact,snaps,dryrun,drystr);
+      //      cerr<<"dryrun_sim_fwd_ord0_init->IWaveSim constr"<<endl;
+      //      IWaveSim * sim = new IWaveSim(order,fwd,*par,stream,ic,printact,snaps,dryrun,cerr);
+      //      cerr<<"dryrun_sim_fwd_ord0_init->IWaveSim run"<<endl;
       sim->run();
       drystr.close();
       delete sim;

@@ -2295,7 +2295,7 @@ void tapermutetraces(tracegeom * tg,
                      ) {
     
     int itr;    /* trace counter */
-    int ioff=0;   /* offset into sampled array */
+    //    int ioff=0;   /* offset into sampled array */
     /*  int moff;   offset into multiplier array */
     int ndim;   /* problem dimension */
     IPNT ind;   /* integer part of sample coords */

@@ -2,7 +2,7 @@
 #include "acd_defn.hh"
 #include "grid.h"
 #include "traceio.h"
-#include "istate.hh"
+#include "iwsim.hh"
 
 //#define GTEST_VERBOSE
 

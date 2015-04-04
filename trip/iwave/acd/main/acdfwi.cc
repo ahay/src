@@ -268,6 +268,7 @@ int main(int argc, char ** argv) {
 	   valparse<float>(*pars,"GoodDecrease",0.9f),     // _eta2
 	   valparse<float>(*pars,"StepDecrFactor",0.5f),   // _gamma1
 	   valparse<float>(*pars,"StepIncrFactor",1.8f),   // _gamma2
+	   valparse<float>(*pars,"MinStepTol",1.e-06),     // min step as frac of TR
 	   *optr);
 
 	// assign CG params
