@@ -1,7 +1,7 @@
 from rsf.proj import *
 import os, sys
 
-# SConscript('../fetch/SConstruct')
+SConscript('../fetch/SConstruct')
 
 # Xline/Inline coordinates
 Flow('ixc','../fetch/npr3_field_hdr.rsf',

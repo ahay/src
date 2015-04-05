@@ -1,6 +1,6 @@
 from rsf.proj import *
 
-#SConscript('../segy/SConstruct')
+SConscript('../segy/SConstruct')
 
 #Result('shots2','../segy/DeconShots3.rsf',
 #      '''
