@@ -67,7 +67,28 @@ class Canvas(wx.Window):
         wx.Window.__init__(self,parent,ID,size=(width,height))
         self.SetBackgroundColour('black')
         self.SetCursor(wx.StockCursor(wx.CURSOR_CROSS))
-    
+
+        image = self.rsf2image(inp)
+        self.image = image.ConvertToBitmap()
+        self.Bind(wx.EVT_PAINT,self.OnPaint)
+    def rsf2image(self,rsf):
+        global ppmfiles
+        ppm = os.path.splitext(rsf)[0]+'.ppm'
+        command = '< %s %s %s | %s > %s' % (rsf,sfgrey,' '.join(sys.argv[2:]),ppmpen,ppm)
+        if os.system(command) or not os.path.isfile(ppm):
+            sys.stderr.write('Failed to execute "%s"\n\n' % command)
+            sys.exit(3)
+        if not ppm in ppmfiles:
+            ppmfiles.append(ppm)
+        img = wx.Image(ppm)
+        return img
+    def OnPaint(self,evt):
+        dc = wx.PaintDC(self)
+        brush = wx.Brush('black')
+        dc.SetBackground(brush)
+        dc.Clear() # clear with background brush
+        dc.DrawBitmap(self.image,0,0,True)
+        
 class MainFrame(wx.Frame):
     def __init__(self):
         wx.Frame.__init__(self,None,title=inp,size=(width+1,height+26))

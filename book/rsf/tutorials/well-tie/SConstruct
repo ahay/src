@@ -56,8 +56,37 @@ for case in ('DT','RHOB','DEPT'):
 
 log_start_time = 0.410553230106 # (s)
 
-Flow('tdr','dt','causint | math output="%g+(%g)*input" ' % (log_start_time,0.1524/1e6))
+Flow('tdr','DT-despike','causint | math output="%g+(%g)*input" ' % (log_start_time,2*0.1524/1e6))
 
 Result('tdr','graph title=Time yreverse=y transp=y')
+
+# Compute acoustic impedance
+
+Flow('z','RHOB DT-despike','math rho=${SOURCES[0]} dt=${SOURCES[1]} output="1e6*rho/dt" ')
+
+# Compute reflection coefficient series
+
+Flow('rc','z','ai2refl')
+
+# Plots
+
+Flow('dz','DEPT','igrad')
+Flow('slowness','DT-despike dz','div ${SOURCES[1]} | clip2 lower=1000')
+
+Plot('slowness','DEPT slowness',
+     '''
+     cmplx ${SOURCES[1]} | 
+     graph transp=y yreverse=y min1=0 max1=4500 grid=y
+     title=function unit1=m label2="P-wave slowness" unit2="\F10 m\F3 m/s"
+     ''')
+
+Plot('twt','DEPT tdr',
+     '''
+     cmplx ${SOURCES[1]} | 
+     graph transp=y yreverse=y min1=0 max1=4500 grid=y
+     title=integral unit1=m label2="two-way time" unit2="s"
+     ''')
+
+Result('four','slowness twt','SideBySideAniso')
 
 End()
