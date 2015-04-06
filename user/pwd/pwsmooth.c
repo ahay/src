@@ -89,7 +89,7 @@ void pwsmooth_lop(bool adj, bool add,
     float ws;
 
     if (nin != nout || nin != n1*n2) 
-	sf_error("%s: wrong size %d != %d",__FILE__,n1,n2);
+	sf_error("%s: wrong size %d != %d",__FILE__,nin,nout);
     
     sf_adjnull(adj,add,nin,nout,trace,smooth);
 

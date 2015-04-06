@@ -86,7 +86,7 @@ for prog in mains:
 
 for prog in Split(
     '''
-    allp3 gauss2 matmult predict predict2 pwdsl pwsmooth pwsmooth3 pwspray trisl
+    allp3 gauss2 matmult predict predict2 pwdsl pwsmooth pwsmooth2 pwsmooth3 pwspray trisl
     '''):
     sources = ['Test' + prog,prog]
     bldutil.depends(env,sources,prog)
