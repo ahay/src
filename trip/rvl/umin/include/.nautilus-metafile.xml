@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<directory>
+  <file name="conoptstep.H" icon_position="26,48"/>
+  <file name="gps.H" icon_position="167,0"/>
+  <file name="identity.H" icon_position="284,2"/>
+  <file name="lbfgsalg.H" icon_position="450,12"/>
+  <file name="lnsrchBT.H" icon_position="50,89"/>
+  <file name="lnsrchDS.H" icon_position="168,92"/>
+  <file name="lnsrch.H" icon_position="313,95"/>
+  <file name="lnsrchMT.H" icon_position="432,90"/>
+  <file name="logbarrier.H" icon_position="576,48"/>
+  <file name="newtonalg.H" icon_position="173,187"/>
+</directory>
