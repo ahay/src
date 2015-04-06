@@ -62,7 +62,7 @@ Result('tdr','graph title=Time yreverse=y transp=y')
 
 # Compute acoustic impedance
 
-Flow('z','RHOB DT-despike','math rho=${SOURCES[0]} dt=${SOURCES[1]} output="1e6*rho/dt" ')
+Flow('z','RHOB slowness','math rho=${SOURCES[0]} slow=${SOURCES[1]} output="1e6*rho/slow" ')
 
 # Compute reflection coefficient series
 
@@ -75,18 +75,34 @@ Flow('slowness','DT-despike dz','div ${SOURCES[1]} | clip2 lower=1000')
 
 Plot('slowness','DEPT slowness',
      '''
-     cmplx ${SOURCES[1]} | 
-     graph transp=y yreverse=y min1=0 max1=4500 grid=y
-     title=function unit1=m label2="P-wave slowness" unit2="\F10 m\F3 m/s"
+     cmplx ${SOURCES[1]} | window n1=21692 |
+     graph transp=y yreverse=y min1=500 max1=4500 grid=y plotfat=3
+     title=function unit1=m label2="P-wave slowness" unit2="\F10 m\F3 m/s" labelsz=12 titlesz=15
      ''')
 
 Plot('twt','DEPT tdr',
      '''
-     cmplx ${SOURCES[1]} | 
-     graph transp=y yreverse=y min1=0 max1=4500 grid=y
-     title=integral unit1=m label2="two-way time" unit2="s"
+     cmplx ${SOURCES[1]} | window n1=21692 |
+     graph transp=y yreverse=y min1=500 max1=4500 grid=y plotfat=3
+     title=integral unit1=m label2="two-way time" unit2="s" labelsz=12 titlesz=15
      ''')
 
-Result('four','slowness twt','SideBySideAniso')
+Plot('impedance','DEPT z',
+     '''
+     cmplx ${SOURCES[1]} | window n1=21692 |
+     graph transp=y yreverse=y min1=500 max1=4500 grid=y plotfat=3
+     title=impedance unit1=m label2= unit2="kg/(m\^2\_s)" labelsz=12 titlesz=15
+     ''')
+
+Plot('reflectivity','DEPT rc',
+     '''
+     cmplx ${SOURCES[1]} | window n1=21692 |
+     graph transp=y yreverse=y min1=500 max1=4500 grid=y plotfat=3
+     title=reflectivity unit1=m label2= unit2= labelsz=12 titlesz=15
+     ''')
+
+Result('four','slowness twt impedance reflectivity','SideBySideAniso')
+
+# add labels for well tops
 
 End()
