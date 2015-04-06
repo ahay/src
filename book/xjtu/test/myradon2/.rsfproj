@@ -1,0 +1,3 @@
+uses=['sfspike', 'sfbandpass', 'sfradon', 'sfgrey', 'sfdd', 'sfwindow', 'sfmyradon2', 'sfpad']
+data=['data/rad/data.hh', 'data/rad/gulf.hh']
+size=    1632000

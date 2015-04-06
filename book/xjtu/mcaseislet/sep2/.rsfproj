@@ -1,0 +1,3 @@
+uses=['sfdd', 'sftpow', 'sfmutter', 'sfgrey', 'sfwindow', 'sfpad', 'sfreverse', 'sfcat', 'sfmath', 'sftwodip2', 'sfplanemis2', 'sffft1', 'sffft3', 'sfadd', 'sfsmooth', 'sfdip', 'sfmask', 'sfvscan', 'sfseisigk', 'sfmcaseislet', 'sfbox']
+data=['PRIVATE']
+size=   10235000
