@@ -8,7 +8,7 @@ try:
     import rsf.api as rsf
     import numpy
     import scipy
-    from enthought.mayavi import mlab
+    from mayavi import mlab
 except Exception, e:
     import sys
     print '\nERROR: NEED NUMPY, SCIPY, and MAyaVi2\n', e
