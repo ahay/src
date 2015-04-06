@@ -15,10 +15,29 @@ Flow('rms','trend',
 
 Flow('rtrend','trend rms','div ${SOURCES[1]}')
 
-Result('amplitude','rtrend','grey mean=y wanttitle=n')
+Result('amplitude','rtrend','grey bias=0.132783 clip=0.0258115 wanttitle=n')
 
 Flow('model','rtrend','stripes mo=30 ms=100 my=120 mr=60')
 
 Result('model','grey allpos=y wanttitle=n')
+
+# Convert a source vs. offset input plane into the source vs. receiver space
+
+Flow('source','rtrend','math output="x2/0.025" ')
+Flow('receiver','rtrend','math output="(x1+x2)/0.0125" ')
+
+Flow('head','receiver source',
+     'cat axis=3 ${SOURCES[1]} | dd type=int | transp plane=23 | transp')
+
+Flow('sr-rtrend','rtrend head',
+     '''
+     spray axis=1 n=1 | intbin head=${SOURCES[1]} xkey=0 ykey=1 | window j2=2 |
+     put label1=Receiver d1=0.0125 o1=-3.2375 d2=0.025 o2=0 | 
+     window n1=300 f1=405 n2=200 f2=385
+     ''')
+
+Result('sramplitude','sr-rtrend','grey bias=0.132783 clip=0.0258115 wanttitle=n')
+
+
 
 End()

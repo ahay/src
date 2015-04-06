@@ -2,7 +2,8 @@ skiplist =  [
                 'book/slim/geo2008NewInsightsPareto/pareto',    # Matlab not installed
 		'book/slim/geo2008NewInsightsPareto/geop',      # Matlab not installed
                 'book/slim/slimUserManual/sffdct',              # PyCurvelab not installed
-                'book/rsf/programming/svd',                     # SciPy not installed
+                'book/rsf/programming/svd',                     #SciPy not installed
+		'book/rsf/programming/cube',                   #SciPy not installed
                 'book/rsf/rsf/sfenvelope',                      # SU not installed
                 'book/rsf/bash/plot',                           # plplot not installed
 		'book/chen/test/fpca',                          # sfpca not installed
