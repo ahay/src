@@ -802,12 +802,22 @@ def wdfic(cii,
 # ------------------------------------------------------------
 def igrey(custom,par):
     return '''
-    window n1=%d min1=7.25 n2=%d min2=12.9 |
     grey3 flat=n frame1=%d frame2=%d frame3=%d title=""
     label1=z label2=x label3=t
     unit1=km unit2=km unit3=s
     point1=0.75 point2=0.75 screenratio=1
     labelsz=6 labelfat=2 wantaxis=y framelabel=n
     %s
-    ''' % (par['nqz'],par['nqx'],par['nqz']/2,par['nqx']/2,par['tcut'],par['labelattr']+custom)
+    ''' % (par['nqz']/2,par['nqx']/2,par['tcut'],par['labelattr']+custom)
+
+#def igreyOLD(custom,par):
+#    return '''
+#    window n1=%d min1=7.25 n2=%d min2=12.9 |
+#    grey3 flat=n frame1=%d frame2=%d frame3=%d title=""
+#    label1=z label2=x label3=t
+#    unit1=km unit2=km unit3=s
+#    point1=0.75 point2=0.75 screenratio=1
+#    labelsz=6 labelfat=2 wantaxis=y framelabel=n
+#    %s
+#    ''' % (par['nqz'],par['nqx'],par['nqz']/2,par['nqx']/2,par['tcut'],par['labelattr']+custom)
 
