@@ -71,7 +71,8 @@ int main(int argc, char *argv[])
 
     prog = sf_getprog();
     if (NULL != strstr(prog,"tpow")) {
-	if (!sf_getfloat("tpow",&p)) p = 0.;
+	
+        if (!sf_getfloat("tpow",&p))  sf_error("Need tpow= ");;
 	/* power on the first axis */
 
 	if (p != 0. && NULL == gain[0]) {
