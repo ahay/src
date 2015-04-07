@@ -41,13 +41,16 @@ void sf_weight_lop (bool adj, bool add, int nx, int ny, float* xx, float* yy)
 
     sf_adjnull (adj, add, nx, ny, xx, yy);
   
-    for (i=0; i < nx; i++) {
-		if (adj) {
-			xx[i] += yy[i] * w[i];
-		} else {
-			yy[i] += xx[i] * w[i];
-		}
+    if (adj) {
+        for (i=0; i < nx; i++) {
+	    xx[i] += yy[i] * w[i];
+	}
+    } else {
+        for (i=0; i < nx; i++) {
+            yy[i] += xx[i] * w[i];
+	}
     }
+
 }
 
 void sf_cweight_lop (bool adj, bool add, int nx, int ny, 
@@ -60,21 +63,24 @@ void sf_cweight_lop (bool adj, bool add, int nx, int ny,
 
     sf_cadjnull (adj, add, nx, ny, xx, yy);
   
-    for (i=0; i < nx; i++) {
+    if (adj) {
+        for (i=0; i < nx; i++) {
 #ifdef SF_HAS_COMPLEX_H
-	if (adj) {
 	    xx[i] += yy[i] * w[i];
-	} else {
-	    yy[i] += xx[i] * w[i];
-	}
 #else
-	if (adj) {
 	    xx[i] = sf_cadd(xx[i],sf_crmul(yy[i],w[i]));
-	} else {
-	    yy[i] = sf_cadd(yy[i],sf_crmul(xx[i],w[i]));
-	}
 #endif
+        }
+    } else {
+        for (i=0; i < nx; i++) {
+#ifdef SF_HAS_COMPLEX_H
+	    yy[i] += xx[i] * w[i];
+#else
+	    yy[i] = sf_cadd(yy[i],sf_crmul(xx[i],w[i]));
+#endif
+        }
     }
+
 }
 
 void sf_weight_apply(int nx, float *xx)

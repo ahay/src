@@ -40,14 +40,20 @@ void sf_helicon_lop( bool adj, bool add,
     
     sf_copy_lop(adj, add, nx, nx, xx, yy);
 
-    for (ia = 0; ia < aa->nh; ia++) {
-	for (iy = aa->lag[ia]; iy < nx; iy++) {
-	    if( aa->mis != NULL && aa->mis[iy]) continue;
-	    ix = iy - aa->lag[ia];
-	    if(adj) {
-		xx[ix] += yy[iy] * aa->flt[ia];
-	    } else {
-		yy[iy] += xx[ix] * aa->flt[ia];
+    if(adj) {
+        for (ia = 0; ia < aa->nh; ia++) {
+	    for (iy = aa->lag[ia]; iy < nx; iy++) {
+	        if( aa->mis != NULL && aa->mis[iy]) continue;
+	        ix = iy - aa->lag[ia];
+	        xx[ix] += yy[iy] * aa->flt[ia];
+	    }
+	}
+    } else {
+        for (ia = 0; ia < aa->nh; ia++) {
+	    for (iy = aa->lag[ia]; iy < nx; iy++) {
+	        if( aa->mis != NULL && aa->mis[iy]) continue;
+	        ix = iy - aa->lag[ia];
+	        yy[iy] += xx[ix] * aa->flt[ia];
 	    }
 	}
     }
