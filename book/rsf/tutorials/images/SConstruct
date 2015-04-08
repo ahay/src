@@ -55,5 +55,19 @@ Flow('m31-slice','m31-zoom','window n2=1 f2=399')
 Result('m31-slice','graph title="Image Slice" ')
 
 # Quantize image values
+
+Flow('m31-8','m31-zoom','math output="0.5+input/32" | dd type=int | dd type=float')
+
+Plot('m31-8','grey allpos=y screenratio=1 wanttitle=n transp=n')
+
+Flow('m31-8-slice','m31-8','window n2=1 f2=399')
+
+Plot('m31-8-slice','graph wanttitle=n')
+
+Result('m31-8','m31-8 m31-8-slice','SideBySideIso')
+
+# Add noise
+
+
     
 End()

@@ -1,9 +1,11 @@
 from rsf.proj import *
 
-data3='../Zomig/final_stack.rsf'
+SConscript('../zomig/SConstruct')
+
+data3='../zomig/final_stack.rsf'
 Flow ('data', data3,'put o2=0 d2=33.55 unit2=m o3=0 d3=33.55 unit3=m n4=1 o4=0 d4=100 unit4=m')
 
-Flow('vrms3d','../Zomig/Vrms_interp.rsf',
+Flow('vrms3d','../zomig/Vrms_interp.rsf',
     '''
     math output="input*0.305" |
     spray axis=2 n=2 d=1 o=1

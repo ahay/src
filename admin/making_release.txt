@@ -1,0 +1,32 @@
+1. Creating a branch
+
+ svn copy  https://svn.code.sf.net/p/rsf/code/trunk  https://svn.code.sf.net/p/rsf/code/branches/madagascar-1.7 -m 'new release'
+
+2. Check out the branch
+
+svn co https://svn.code.sf.net/p/rsf/code/branches/madagascar-1.7
+
+3. cd madagascar-1.7
+
+4. Edit VERSION.txt to remove -svn
+
+5. Remove junk
+
+svn delete book/Grave and user/nobody
+
+6. Make sure the book directory structure is consistent 
+
+cd book
+ls */*/*/*/SConstruct
+
+should not return anything
+
+7. Remove book directories without reproducible examples
+
+import os, glob
+
+for dir in glob.glob('*/*/[a-z]*/'):
+    if os.path.isdir(dir):
+       proj = os.path.join(dir,'.rsfproj')
+       if not os.path.isfile(proj):
+          print 'no project in ',dir

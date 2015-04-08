@@ -12,23 +12,30 @@
 
 
 \par
-Let us review the big picture.
-In Chapter \ref{paper:ajt} we developed adjoints and
-in Chapter \ref{paper:lsq} we developed inverse operators.
+In Chapter \ref{paper:ajt}, we developed adjoints and
+in Chapter \ref{paper:lsq}, we developed inverse operators.
 Logically, correct solutions come only through inversion.
 Real life, however, seems nearly the opposite.
-This is puzzling but intriguing.
+This situation is puzzling but intriguing.
+It seems an easy path to fame and profit would
+be to go beyond adjoints by introducing
+some steps of inversion.
+It is not that easy.
+Images contain so many unknowns.
+Mostly, we cannot iterate to completion
+and need concern ourselves with the rate of convergence.
+Often, necessity limits us to a handful
+of iterations whereby in principle,
+millions or billions are required.
+
 \par
-Every time you fill your car with gasoline,
-it derives much more from the adjoint than from inversion.
-I refer to the fact that ``practical seismic data processing''
-relates much more to the use of adjoints than of inverses.
-It has been widely known for about the last 15 years
-that medical imaging and all basic image creation methods are like this.
-It might seem that an easy path to fame and profit would
-be to introduce the notion of inversion,
-but it is not that easy.
-Both cost and result quality enter the picture.
+When you fill your car with gasoline,
+it derives more from an adjoint than an inverse.
+Industrial seismic data processing relates more to
+\sx{seismology}
+adjoints than to inverses
+though there is a place for both, of course.
+It cannot be much different with medical imaging.
 \par
 First consider cost.
 For simplicity, consider a data space with $N$ values
@@ -36,21 +43,21 @@ and a model (or image) space of the same size.
 The computational cost of applying a dense adjoint
 operator increases in direct proportion to the number
 of elements in the matrix, in this case $N^2$.
-To achieve the minimum discrepancy between theoretical data
+To achieve the minimum discrepancy between modeled data
 and observed data (inversion) theoretically requires $N$ iterations
 raising the cost to $N^3$.
 \par
 Consider an image of size $m\times m=N$.
 Continuing, for simplicity, to assume a dense matrix of relations between
 model and data,
-the cost for the adjoint is $m^4$ whereas the cost for inversion is $m^6$.
-We'll consider computational costs for the year 2000, but
+the cost for the adjoint is $m^4$, whereas, the cost for inversion is $m^6$.
+We consider computational costs for the year 2000, but
 noticing that costs go as the sixth power of the mesh size,
 the overall situation will not change much in the foreseeable future.
 Suppose you give a stiff workout to a powerful machine;
-you take an hour to invert a $4096\times 4096$ matrix.
+you take an hour to invert a 4,096$\times$ 4,096 matrix.
 The solution, a vector of $4096$ components could
-be laid into an image of size $64\times 64= 2^6\times 2^6 = 4096$.
+be laid into an image of size 64 $\times$ 64= $2^6\times 2^6$ = 4,096.
 Here is what we are looking at for costs:
 \par
 \begin{center}
@@ -64,36 +71,39 @@ inverse cost &$(m\times m )^3$ & $  (64\times 64)^3$ & $(2^6 2^6)^3$ & $2^{36}$
 \par\noindent
 These numbers tell us that for applications with dense operators,
 the biggest images that we are likely to see coming from inversion methods
-are $64\times 64$ whereas those from adjoint methods are $512\times 512$.
-For comparison, the retina of your eye is comparable to your computer
-screen at $1000\times 1000$.
-We might summarize by saying that while adjoint methods are less than perfect,
-inverse methods are ``legally blind'' :-)
-\sideplot{512x512}{height=3.5in,width=3.5in}{
+are $64\times 64$, whereas, those from adjoint methods are $512\times 512$.
+For comparison, your vision is comparable
+to your computer screen at 1,000 $\times$ 1,000.
+%We might summarize by saying that while adjoint methods are less than perfect, inverse methods are ``legally blind'' :-)
+\sideplot{512x512}{width=.8\textwidth,height=.8\textwidth}{
 	Jos greets Andrew, ``Welcome back Andrew''
 	from the Peace Corps.
 	At a resolution of $512\times 512$, this picture
-	is about the same as the resolution
-	as the paper it is printed on,
+	is approximately the same as the resolution
+	as the paper on which it is printed,
 	or the same as your viewing screen,
-	if you have scaled it to 50\%\ of screen size.}
+	if you have scaled it up to 50\%\ of screen size.}
 %\newslide
 
 \par\noindent
-http://sepwww.stanford.edu/sep/jon/family/jos/gifmovie.html holds a movie
+\url{http://sepwww.stanford.edu/sep/jon/family/jos/gifmovie.html} holds a movie
 blinking between Figures \ref{fig:512x512} and \ref{fig:64x64}.
 \par
 This cost analysis is oversimplified in that most applications
 do not require dense operators.
 With sparse operators, the cost advantage of adjoints is even more
-pronounced since for adjoints,
+pronounced because for adjoints,
 the cost savings of operator sparseness translate directly to
 real cost savings.
-The situation is less favorable and much more muddy for inversion.
+The situation is less favorable and more muddy for inversion.
 The reason that Chapter 2 covers iterative methods
 and neglects exact methods is that in practice
-iterative methods are not run to their theoretical completion
-but they run until we run out of patience.
+iterative methods are not run to theoretical completion,
+but until we run out of patience.
+But that leaves hanging the question of what percent
+of theoretically dictated work is actually necessary.
+If we struggle to accomplish merely one percent of the theoretically required work,
+can we hope to achieve anything of value?
 
 \par
 Cost is a big part of the story, but the story has many other parts.
@@ -101,54 +111,61 @@ Inversion, while being the only logical path to the best answer,
 is a path littered with pitfalls.
 The first pitfall is that the data is rarely able to 
 determine a complete solution reliably.
-Generally there are aspects of the image that are not learnable
+Generally, there are aspects of the image that are not learnable
 from the data.
 
-\sideplot{64x64}{height=3.5in,width=3.5in}{
+\sideplot{64x64}{width=.8\textwidth,height=.8\textwidth}{
 	Jos greets Andrew, ``Welcome back Andrew'' again.
-	At a resolution of $64\times 64$
+	At a resolution of $64\times 64$,
 	the pixels are clearly visible.
 	From far the pictures are the same.
 	From near, examine their glasses.}
 %\newslide
 
 
-When I first realized that practical imaging methods in widespread
+When I first realized that practical imaging methods with wide
 industrial use amounted merely to the adjoint of forward modeling,
 I (and others) thought an easy way to achieve fame and fortune
-would be to introduce the first steps towards inversion
+would be to introduce the first steps toward inversion
 along the lines of Chapter \ref{paper:lsq}.
 Although inversion generally requires a prohibitive number
 of steps, I felt that moving in the gradient direction,
 the direction of steepest descent, would move us rapidly
 in the direction of practical improvements.
-This turned out to be optimistic.
-It was too slow.
-But then I learned about the conjugate gradient method that
+This optimism was soon exposed.
+Improvements came too slowly.
+But then, I learned about the conjugate gradient method that
 spectacularly overcomes a well-known speed problem with the
-method of steepest descents.
-I came to realize that it was still too slow.
-I learned this by watching the convergence in Figure
-\ref{fig:conv}.
-This led me to the helix method in Chapter \ref{paper:hlx}.
-Here we'll see how it speeds many applications.
+method of steepest descent.
+I came to realize it was still too slow.
+I learned by watching the convergence in Figure
+\ref{fig:conv},
+which led me to the helix method in Chapter 4.
+Here we see how it speeds many applications.
 
 \par
-We'll also come to understand why the gradient is such a poor direction
-both for steepest descent and for conjugate gradients.
+We also come to understand why the gradient is such a poor direction
+both for steepest descent and conjugate gradients.
 An indication of our path is found in the contrast between
-an exact solution
-$\bold m = (\bold A\T\bold A)^{-1}\bold A\T\bold d$ and the
-gradient
-$\Delta \bold m = \bold A\T\bold d$
-(which is the first step starting from $\bold m =\bold 0$).
-Notice that $\Delta \bold m$ differs from $\bold m$
-by the factor $(\bold A\T\bold A)^{-1}$.
-This factor is sometimes called a spectrum
-and in some situations it literally is a frequency spectrum.
-In these cases, $\Delta \bold m$ simply gets a different
-spectrum from $\bold m$ and many iterations are required to fix it.
-Here we'll find that for many applications,
+an exact solution and the gradient.
+\begin{eqnarray}
+\label{eqn:herestart}
+\bold m &=& (\bold A\T\bold A)^{-1}\bold A\T\bold d
+\\
+\label{eqn:herego}
+\Delta \bold m &=& \quad\quad\quad \bold A\T\bold d
+\end{eqnarray}
+Equations
+(\ref{eqn:herestart}) and
+(\ref{eqn:herego})
+differ by the factor $(\bold A\T\bold A)^{-1}$.
+This factor is sometimes called a spectrum,
+and in some situations,
+it literally is a frequency spectrum.
+Our updates do not have the spectrum
+of the thing we are trying to build.
+No wonder it's slow!
+Here we find for many applications that
 ``preconditioning'' with the helix is a better way.
 
 
@@ -157,27 +174,26 @@ Here we'll find that for many applications,
 \par
 Iterative methods (like conjugate-directions) can sometimes be accelerated
 by a \bx{change of variables}.
-The simplest change of variable is called a ``trial solution''.
-Formally, we write the solution as
+The simplest change of variable is called a ``trial solution.''
+Formally, we write the solution as:
 \begin{equation}
 \bold m \eq \bold S \bold p
 \end{equation}
 where $\bold m$ is the map we seek,
-columns of the matrix $\bold S$ are ``shapes'' that we like,
+columns of the matrix $\bold S$ are ``shapes'' we like
 and coefficients in $\bold p$ are unknown coefficients
 to select amounts of the favored shapes.
-The variables $\bold p$  are often called the ``preconditioned variables''.
+The variables $\bold p$  are often called the ``preconditioned variables.''
 It is not necessary that $\bold S$ be an invertible matrix,
-but we'll see later that invert-ability is helpful.
-Take this trial solution and insert it into
-a typical fitting goal
-\begin{equation}
-\bold 0 \quad\approx\quad  \bold F \bold m \ -\  \bold d
-\end{equation}
-and get
-\begin{equation}
-\bold 0 \quad\approx\quad  \bold F \bold S \bold p \ -\  \bold d
-\end{equation}
+but we see later that invert-ability  is helpful.
+Inserting the trial solution $\bold m = \bold S\bold p$
+into $\bold 0\approx\bold F\bold m -\bold d$
+gives:
+\begin{eqnarray}
+\bold 0 \quad & \approx & \quad  \bold F \bold m \ -\  \bold d
+\\
+\bold 0 \quad & \approx & \quad  \bold F \bold S \bold p \ -\  \bold d
+\end{eqnarray}
 We pass the operator $\bold F \bold S$ to our iterative solver.
 After finding the best fitting                                      $\bold p$,
 we merely evaluate
@@ -188,11 +204,11 @@ to get the solution to the original problem.
 We hope this change of variables has saved effort.
 For each iteration, there is a little more work:
 Instead of the iterative application of
-                                                $\bold F$ and $\bold F\T$
+                                                $\bold F$ and $\bold F\T$,
 we have iterative application of
                                         $\bold F\bold S$ and $\bold S\T\bold F\T$.
 
-Our hope is that the number of iterations decreases because we are clever,
+Our hope is that the number of iterations decreases, because we are clever
 or because we have been lucky in our choice of $\bold S$.
 Hopefully,
 the extra work of the preconditioner operator $\bold S$
@@ -205,8 +221,8 @@ $\bold S\approx \bold F^{-1}$.
 Where I have known such $\bold S$ matrices,
 I have often found that convergence is accelerated,
 but not by much.
-Sometimes it is worth using $\bold F\bold S$ for a while in the beginning,
-but later it is cheaper and faster to use only $\bold F$.
+Sometimes, it is worth using $\bold F\bold S$ for a while in the beginning;
+but later, it is cheaper and faster to use only $\bold F$.
 A practitioner might regard the guess of $\bold S$
 as prior information,
 like the guess of the initial model $\bold m_0$.
@@ -214,93 +230,109 @@ like the guess of the initial model $\bold m_0$.
 \par
 For a square matrix $\bold S$,
 the use of a preconditioner should not change the ultimate solution.
-Taking $\bold S$ to be a tall rectangular matrix,
+Taking $\bold S$ to be a tall rectangular matrix
 reduces the number of adjustable parameters,
 changes the solution,
-gets it quicker, but lower resolution.
+gets it quicker, but lowers resolution.
 
 \subsection{Preconditioner with a starting guess}
-
-In many applications, for many reasons,
-we have a starting guess $\bold m_0$ of the solution.
+We often have a starting solution
+$\bold m_0$.
 You might worry that
 you could not find the starting preconditioned variable 
-$\bold p_0= \bold S^{-1}\bold m_0$
+$\bold p_0= \bold S^{-1}\bold m_0$,
 because you did not know the inverse of $\bold S$.
-The way to avoid this problem is to
-reformulate the problem
-in terms of a new variable $\tilde {\bold m}$
-where
-$ \bold m = \tilde {\bold m} + \bold m_0$.
-Then 
-$\bold 0\approx \bold F \bold m - \bold d$
-becomes
-$\bold 0\approx \bold F \tilde {\bold m} - (\bold d - \bold F \bold m_0)$
-or
-$\bold 0\approx \bold F \tilde {\bold m} - \tilde {\bold d}.$
-Thus we have accomplished the goal of taking
-a problem with a nonzero starting model
-and converting it a problem of the same type
-with a zero starting model.
-Thus we do not need the inverse of $\bold S$
-because the iteration starts from $\tilde {\bold m}=\bold 0$
-so $\bold {\tilde p_0} = \bold 0$.
 \par
-Unfortunately, as we will see later,
+We solve this problem using a shifted unknown $\tilde {\bold m}$.
+\par
+\begin{center}
+\begin{tabular}{rllr}
+$\bold 0 $&$\approx$ & $\bold F\bold m -\bold d $     & typical regression
+\\
+$\bold 0 $&$\approx$ & $\bold F(\tilde{\bold m}+\bold m_0) -\bold d $  &
+                                                        Define $\bold m =\tilde{\bold m}+\bold m_0$
+\\
+$\bold 0 $&$\approx$ & $\bold F\tilde{\bold m}+\bold F \bold m_0 -\bold d $  &
+\\
+$\bold 0 $&$\approx$ & $\bold F\tilde{\bold m}-\tilde {\bold d} $  & Defines $\tilde{\bold d}$
+\\
+        &          &               & Implicitly define $\bold p$ by $\tilde{\bold m}=\bold S\bold p$.
+\\
+$\bold 0 $&$\approx$ & $\bold F\bold S \bold p-\tilde {\bold d} $  & You iterate for $\bold p$.
+\\
+$\tilde{\bold m}$&=&$\bold S\bold p$  & from your definition
+\\
+$\bold m$ &=&$ \tilde{\bold m} + \bold m_0 $& Got the answer.
+\end{tabular}
+\end{center}
+\par\noindent
+which solves the problem never needing $\bold S^{-1}$.
+Unfortunately, as we see later,
 this conclusion is only valid while there is no regularization.
 
-\subsection{ Monkeying with the gradient }
-An essential part of any model update is the gradient
-\begin{equation}
-\Delta \bold m = \partial \bold r / \partial \bold m\T = \bold F\T \bold r 
-\end{equation}
-which vanishes $\bold 0=\bold F\T \bold r$ at the ultimate solution.
+\subsection{Guessing the preconditioner}
+We are tasked with coming up with ``trial solution''---a pretty vague assignment.
+Some kind of a scaling, smoothing, or shaping transformation $\bold S$
+of some mysterious ``preconditioned space'' $\bold p$
+should represent the model $\bold m$ we seek.
+We begin by investigating how the shaper $\bold S$ alters the gradient.
 \par
-With the change of variables $\bold m = \bold S \bold p$ the gradient changes as
-$\Delta \bold m = \bold S \Delta \bold p$.
-In terms of $\bold p$ the regression
-$\bold 0 \approx \bold r = \bold F \bold m - \bold d$
-becomes
-$\bold 0 \approx \bold r = \bold F \bold S \bold p - \bold d$.
-As always, the gradient is simply the adjoint operator upon the residual.
-$\Delta \bold p = \bold S\T \bold F\T \bold r$.
-Changing variables back to $\bold m$ gives
-\begin{equation}
-\Delta \bold m = \bold S \Delta \bold p = \bold S \bold S\T \bold F\T \bold r
-\end{equation}
-The ultimate solution is when the gradient vanishes $\bold 0 = (\bold S\bold S\T) \bold F\T \bold r$.
-Most often the ultimate solution is the same with or without the change of variables
-because most often the transformation matrix $\bold S$
-is chosen invertible so $ (\bold S\bold S\T)$ has an inverse which will cancel it.
+\begin{center}
+\begin{tabular}{rllr}
+$\bold m $&=&$ \bold S \bold p$		& introduces $\bold S$, implicitly defines $\bold p$
+\\
+$\Delta\bold m $&=&$ \bold S \Delta\bold p$	& consequence of the above
+\\
+$\Delta\bold m $&=&$ \bold F\T \bold r$ 	& gradient is adjoint upon residual
+\\
+$\bold 0\approx \bold r $&=&$ \bold F\bold m-\bold d$	         & residual in terms of $\bold m$
+\\
+$\bold r $&=&$ \bold F(\bold S\bold p) -\bold d $ 		& residual in terms of $\bold p$
+\\
+$\bold 0\approx \bold r $&=&$  (\bold F\bold S)\bold p-\bold d$ 		& reordering calculation
+\\
+$\Delta\bold p $&=&$ (\bold F\bold S)\T \bold r 	$& gradient is adjoint upon residual
+\\
+$\Delta\bold p $&=&$  \bold S\T\bold F\T\bold r	$&          reordering
+\\
+$\Delta\bold m $&=&$ (\bold S\bold S\T) \bold F\T\bold r$   & recalling $\Delta\bold m=\bold S\Delta\bold p$
+\end{tabular}
+\end{center}
 \par
-We conclude that when a gradient is multiplied by any
-positive definite matrix $\bold S\bold S\T$
-we are simply solving the original problem in a new coordinate system.
-%In linear problems,
-%we'd be doing the preconditioning (choosing the coordinate system)
-%to maximize the speed of convergence.
-%In nonlinear problems,
-%as described in a later chapter,
-%we are chosing a descent path that honors prior information
-%hence is less likely to fall into a local minimum.
-%\par
-Choosing $\bold S\bold S\T$
-really matters only when the problem is big so it converges slowly,
-or when the physics or statistical approach is non-linear (later chapter).
-The choice of $\bold S$ is a subjective matter.
-It's an area where prior information or your physical intuition is relevant.
-Since both $\bold m$ and $\bold p$ are in model space,
-obvious choices for $\bold S$ are weighting functions
-and filtering functions in model space.
-You would weight the model space smaller where your intuition
-tells you your ultimate model will be small or where it might not be
-learnable from the data.
+We may compare the gradient $\Delta\bold m$ with and without preconditioning.
 \par
-In nonlinear problems, monkeying with the gradient modifies the descent path
-in a way that honors prior information
-hence this modification may be less likely to fall into a local minimum.
-
-
+\begin{center}
+\begin{tabular}{rllr}
+$\Delta\bold m $&=&$ \ \quad \quad \bold F\T \bold r$ 	    & original
+\\
+$\Delta\bold m $&=&$ (\bold S\bold S\T) \bold F\T\bold r$   & with preconditioning transformation
+\end{tabular}
+\end{center}
+When the first vanishes, the second also vanishes.
+When the second vanishes, the first vanishes provided $ (\bold S\bold S\T)$ is a nonsingular matrix.
+As our choice of $\bold S$ is quite arbitrary,
+it is marvelous the freedom we have to monkey with the gradient.
+\par
+Remember that $\bold r$ starts off being $-\bold d$.
+Compare the $(\bold S\bold S\T)$ scaled gradient to the analytic solution.
+\par
+\begin{center}
+\begin{tabular}{rllr}
+$\Delta\bold m $&=&$ (\bold S\bold S\T)\ \ \  \bold F\T\bold r	$& modified gradient
+\\
+$\bold m $&=&$ (\bold F\T\bold F)^{-1} \bold F\T\bold d		$& analytic solution
+\end{tabular}
+\end{center}
+Mathematically,
+we see it would be delightful if
+$ (\bold S\bold S\T)$ were something like $(\bold F\T\bold F)^{-1}$,
+but we rarely have ideas how to arrange it.
+We do,
+however, have some understanding of the world of images,
+and understand where on the image we would like iterations to concentrate first,
+and what spatial frequencies are more relevant than others.
+If we cannot go all the way, as we cannot in giant imaging problems,
+it is important to make the important steps early.
 
 
 \section{PRECONDITIONING THE REGULARIZATION}
@@ -312,7 +344,7 @@ The basic formulation of a geophysical estimation problem
 consists of setting up
 {\em  two}
 goals,
-one for data fitting,
+one for data fitting
 and the other for model shaping.
 With two goals, preconditioning is somewhat different.
 The two goals may be written as:
@@ -321,56 +353,57 @@ The two goals may be written as:
 \bold 0 &\approx& \bold A \bold m
 \end{eqnarray}
 which defines two residuals,
-a so-called ``data residual'' and a ``model residual'' that
-are usually minimized by conjugate-gradient, least-squares methods.
+a so-called ``data residual'' and ``model residual'' that
+are usually minimized by conjugate-direction, least-squares methods.
 \par
 To fix ideas, let us examine a toy example.
-The data and the first three rows of the matrix below
+The data and the first three rows of the following matrix 
 are random numbers truncated to integers.
-The model roughening operator $\bold A$
-is a first differencing operator times 100.
+The model-roughening operator $\bold A$
+is a first-differencing operator times 100.
 
 %\newslide
 {\samepage
 \par\noindent
 \footnotesize
 \begin{verbatim}
-d(m)     F(m,n)                                            iter  Norm
----     ------------------------------------------------   ---- -----------
- 41.    -55. -90. -24. -13. -73.  61. -27. -19.  23. -55.     1 20.00396538
- 33.      8. -86.  72.  87. -41.  -3. -29.  29. -66.  50.     2 12.14780140
--58.     84. -49.  80.  44. -52. -51.   8.  86.  77.  50.     3  8.94393635
-  0.    100.   0.   0.   0.   0.   0.   0.   0.   0.   0.     4  6.04517126
-  0.   -100. 100.   0.   0.   0.   0.   0.   0.   0.   0.     5  2.64737511
-  0.      0.-100. 100.   0.   0.   0.   0.   0.   0.   0.     6  0.79238468
-  0.      0.   0.-100. 100.   0.   0.   0.   0.   0.   0.     7  0.46083349
-  0.      0.   0.   0.-100. 100.   0.   0.   0.   0.   0.     8  0.08301232
-  0.      0.   0.   0.   0.-100. 100.   0.   0.   0.   0.     9  0.00542009
-  0.      0.   0.   0.   0.   0.-100. 100.   0.   0.   0.    10  0.00000565
-  0.      0.   0.   0.   0.   0.   0.-100. 100.   0.   0.    11  0.00000026
-  0.      0.   0.   0.   0.   0.   0.   0.-100. 100.   0.    12  0.00000012
-  0.      0.   0.   0.   0.   0.   0.   0.   0.-100. 100.    13  0.00000000
+ d(m)     F(m,n)                                            iter   Sum(|grad|)
+
+-100.     62.  18.   2.  75.  99.  45.  93. -41. -15.  80.     1    69262.0000
+ -83.     31.  80.  92. -67.  72.  81. -41.  87. -17. -38.     2    19012.8203
+  20.      3. -21.  58.  38.   9.  18. -81.  22. -14.  20.     3    10639.0791
+   0.    100.-100.   0.   0.   0.   0.   0.   0.   0.   0.     4     4578.7988
+   0.      0. 100.-100.   0.   0.   0.   0.   0.   0.   0.     5     2332.3352
+   0.      0.   0. 100.-100.   0.   0.   0.   0.   0.   0.     6     1676.6978
+   0.      0.   0.   0. 100.-100.   0.   0.   0.   0.   0.     7      622.7415
+   0.      0.   0.   0.   0. 100.-100.   0.   0.   0.   0.     8      454.1242
+   0.      0.   0.   0.   0.   0. 100.-100.   0.   0.   0.     9      290.6053
+   0.      0.   0.   0.   0.   0.   0. 100.-100.   0.   0.    10      216.0749
+   0.      0.   0.   0.   0.   0.   0.   0. 100.-100.   0.    11        1.0488
+   0.      0.   0.   0.   0.   0.   0.   0.   0. 100.-100.    12        0.0061
+   0.      0.   0.   0.   0.   0.   0.   0.   0.   0. 100.    13        0.0000
 \end{verbatim}
 }
 \normalsize
 
 \par
-Notice at the tenth iteration,
-the residual suddenly plunges 4 significant digits.
-Since there are ten unknowns and the matrix is obviously full-rank,
+The right-most column shows the sum of the absolute values of the gradient.
+Notice at the 11th iteration,
+the gradient suddenly plunges.
+Because there are ten unknowns and the matrix is obviously full-rank,
 conjugate-gradient theory tells us to expect
-the exact solution at the tenth iteration.
-This is the first miracle of conjugate gradients.
-(The residual actually does not drop to zero.
-What is printed in the \texttt{Norm} column
-is the square root of the sum of the squares
-of the residual components at the \texttt{iter}-th
-iteration minus that at the last interation.)
+the exact solution at the 11th iteration.
+This sudden convergence is the first miracle of conjugate gradients.
+Failure to achieve a precisely zero gradient at the 11th step
+is a precision issue that could be addressed
+with double precision arithmetic.
+The residual magnitude (not shown) does not approach zero,
+because 13 linear equations defeat the ten adjustable coefficients.
 
 
 \subsection{The second miracle of conjugate gradients}
 
-The second miracle of conjugate gradients is exhibited below.
+The second miracle of conjugate gradients is exhibited in the following.
 The data and data fitting matrix are the same,
 but the model damping is simplified.
 
@@ -378,71 +411,65 @@ but the model damping is simplified.
 \par\noindent
 \footnotesize
 \begin{verbatim}
-d(m)    F(m,n)                                            iter  Norm
----    ------------------------------------------------   ----  ----------
- 41.   -55. -90. -24. -13. -73.  61. -27. -19.  23. -55.     1  3.64410686
- 33.     8. -86.  72.  87. -41.  -3. -29.  29. -66.  50.     2  0.31269890
--58.    84. -49.  80.  44. -52. -51.   8.  86.  77.  50.     3 -0.00000021
-  0.   100.   0.   0.   0.   0.   0.   0.   0.   0.   0.     4 -0.00000066
-  0.     0. 100.   0.   0.   0.   0.   0.   0.   0.   0.     5 -0.00000080
-  0.     0.   0. 100.   0.   0.   0.   0.   0.   0.   0.     6 -0.00000065
-  0.     0.   0.   0. 100.   0.   0.   0.   0.   0.   0.     7 -0.00000088
-  0.     0.   0.   0.   0. 100.   0.   0.   0.   0.   0.     8 -0.00000074
-  0.     0.   0.   0.   0.   0. 100.   0.   0.   0.   0.     9 -0.00000035
-  0.     0.   0.   0.   0.   0.   0. 100.   0.   0.   0.    10 -0.00000037
-  0.     0.   0.   0.   0.   0.   0.   0. 100.   0.   0.    11 -0.00000018
-  0.     0.   0.   0.   0.   0.   0.   0.   0. 100.   0.    12  0.00000000
-  0.     0.   0.   0.   0.   0.   0.   0.   0.   0. 100.    13  0.00000000
+ d(m)     F(m,n)                                            iter   Sum(|grad|)
+
+-100.     62.  18.   2.  75.  99.  45.  93. -41. -15.  80.     1  69262.0000
+ -83.     31.  80.  92. -67.  72.  81. -41.  87. -17. -38.     2   5486.2095
+  20.      3. -21.  58.  38.   9.  18. -81.  22. -14.  20.     3   2755.6702
+   0.    100.   0.   0.   0.   0.   0.   0.   0.   0.   0.     4      0.0012
+   0.      0. 100.   0.   0.   0.   0.   0.   0.   0.   0.     5      0.0011
+   0.      0.   0. 100.   0.   0.   0.   0.   0.   0.   0.     6      0.0006
+   0.      0.   0.   0. 100.   0.   0.   0.   0.   0.   0.     7      0.0006
+   0.      0.   0.   0.   0. 100.   0.   0.   0.   0.   0.     8      0.0005
+   0.      0.   0.   0.   0.   0. 100.   0.   0.   0.   0.     9      0.0005
+   0.      0.   0.   0.   0.   0.   0. 100.   0.   0.   0.    10      0.0012
+   0.      0.   0.   0.   0.   0.   0.   0. 100.   0.   0.    11      0.0033
+   0.      0.   0.   0.   0.   0.   0.   0.   0. 100.   0.    12      0.0033
+   0.      0.   0.   0.   0.   0.   0.   0.   0.   0. 100.    13      0.0000
 \end{verbatim}
 \normalsize
 \par\noindent
 Even though the matrix is full-rank,
-we see the residual drop about 6 decimal places after the third iteration!
+we see the residual drop about six decimal places after the third iteration!
 This convergence behavior is well known
 in the computational mathematics literature.
 Despite its practical importance,
-it doesn't seem to have a name or identified discoverer.
-So I call it the ``second miracle.''
+it does not seem to have a name or identified discoverer.
+So, I call it the ``second miracle.''
 
 \par
-Practitioners usually don't like
-the identity operator for model-shaping.
-Generally they prefer to penalize wiggliness.
+Practitioners usually do not like
+the identity operator for model-space shaping.
+Generally, they prefer to penalize wiggliness.
 For practitioners,
 the lesson of the second miracle of conjugate gradients
-is that we have a choice of many iterations,
+is that we have a choice of many iterations
 or learning to transform
-independent variables so that
+independent variables so
 the regularization operator becomes an identity matrix.
 Basically, such a transformation reduces the iteration count
-from    something about the size of the model space
-to      something about the size of the data space.
-Such a transformation is called preconditioning.
-In practice, data is often accumulated in bins.
-Then the iteration count is reduced (in principle)
-to the count of full bins
-and should be independent of the count of the empty bins.
-This allows refining the bins, enhancing the resolution.
-
+from    something the size of the model space
+to      something the size of the data space.
+Such a transformation is called ``preconditioning.''
 
 \par
 More generally,
 the model goal $\bold 0 \approx \bold A \bold m$
 introduces a roughening operator like a gradient,
-Laplacian
-(and in chapter \ref{paper:mda}
-a Prediction-Error Filter (PEF)).
-Thus the model goal is usually a filter,
+a Laplacian, or
+in Chapter \ref{paper:mda},
+a Prediction-Error Filter (PEF).
+Thus, the model goal is usually a filter,
 unlike the data-fitting goal
-which involves all manner of geometry and physics.
-When the model goal is a filter its inverse is also a filter.
-Of course this includes multidimensional filters with a helix.
+that involves all manner of geometry and physics.
+When the model goal is a filter, its inverse is also a filter.
+Of course, this includes multidimensional filters with a helix.
 
 
 \par
 The preconditioning transformation
 $\bold m = \bold S \bold p$
-gives us
+gives us:
 \begin{equation}
         \begin{array}{lll}
         \bold 0 &\approx & \bold F \bold S \bold p - \bold d \\
@@ -450,12 +477,12 @@ gives us
         \label{eqn:invintprecond}
         \end{array}
 \end{equation}
-The operator $\bold A$ is a roughener while $\bold S$ is a smoother.
+The operator $\bold A$ is a roughener, while $\bold S$ is a smoother.
 The choices of both $\bold A$ and $\bold S$ are somewhat subjective.
-This suggests that we eliminate $\bold A$ altogether
+This freedom of choice suggests we eliminate $\bold A$ altogether
 by {\em  defining} it to be proportional to the inverse of $\bold S$,
 thus $\bold A\bold S=\bold I$.
-The fitting goals become
+The fitting goals become:
 \begin{equation}
         \label{eqn:whitevar1}
         \begin{array}{lll}
@@ -463,274 +490,279 @@ The fitting goals become
         \bold 0 &\approx & \epsilon\ \bold p
         \end{array}
 \end{equation}
-which enables us to benefit from the ``second miracle''.
+which enables us to benefit from the ``second miracle.''
 After finding $\bold p$,
 we obtain the final model with $\bold m = \bold S \bold p$.
 \par
-Please notice that the solution $\bold m$ is likely to come out smooth.
-The solution for $\bold p$ will be more rough, because the
-derivative of $m_t$ with respect to $t$ is $p_t$.
-Because it is smooth, each $m_t$ is statistically correlated with its neighbors $m_{t+1}$ and $m_{t-1}$,
-but the $p_t$ are less correlated with their neighbors.
-That's a good thing, we soon see.
+The solution $\bold m$ is likely to come out smooth,
+because we typically over-sample axes of physical quantities.
+We typically penalize roughness in it by our choice of a regularization operator
+which means the preconditioning variable $\bold p$ typically
+has a wider frequency bandwidth than $\bold m$.
+In Chapter \ref{paper:mda}, we see
+how to make the spectrum of $\bold p$
+come out white (tending to flat spectrum).
+\sx{flattening ! spectrum}
 
-
-%Because model shaping is generally a filtering operation,
-%and because preconditioning operators are best when
-%they are invertible,
-
-%\par
-%As before (without regularization) we need a pair of
-%roughening and smoothing operators that are mutually inverse
-%$ \bold A\bold S=\bold I$.
-%We need the roughener $\bold A$
-%to get started with
-%$\bold p_0=\bold A\bold m_0$,
-%and we need the smoother $\bold S$ at each iteration.
-%Besides Fourier transforms,
-%the only known multidimensional roughening-smoothing operator pairs
-%are the family of filters on a helix.
-%Thus    deconvolution on a helix is an all-purpose
-%        preconditioning strategy for multidimensional model regularization.
-
-
-%\begin{notforlecture}
 \subsection{Importance of scaling}
 
 Another simple toy example shows us the importance of scaling.
-We use the same example as above
-except that the $i$-th column is multiplied by $i/10$
-which means the $i$-th model variable has been divided by $i/10$.
+We use the same example as the previous one,
+except we make the diagonal penalty function
+vary slowly with location.
 
 %\newslide
 \par\noindent
 \footnotesize
 \begin{verbatim}
-d(m)    F(m,n)                                            iter  Norm
----    ------------------------------------------------   ---- -----------
- 41.    -6. -18.  -7.  -5. -36.  37. -19. -15.  21. -55.     1 11.59544849
- 33.     1. -17.  22.  35. -20.  -2. -20.  23. -59.  50.     2  6.97337770
--58.     8. -10.  24.  18. -26. -31.   6.  69.  69.  50.     3  5.64414406
-  0.    10.   0.   0.   0.   0.   0.   0.   0.   0.   0.     4  4.32118177
-  0.     0.  20.   0.   0.   0.   0.   0.   0.   0.   0.     5  2.64755201
-  0.     0.   0.  30.   0.   0.   0.   0.   0.   0.   0.     6  2.01631355
-  0.     0.   0.   0.  40.   0.   0.   0.   0.   0.   0.     7  1.23219979
-  0.     0.   0.   0.   0.  50.   0.   0.   0.   0.   0.     8  0.36649203
-  0.     0.   0.   0.   0.   0.  60.   0.   0.   0.   0.     9  0.28528941
-  0.     0.   0.   0.   0.   0.   0.  70.   0.   0.   0.    10  0.06712411
-  0.     0.   0.   0.   0.   0.   0.   0.  80.   0.   0.    11  0.00374284
-  0.     0.   0.   0.   0.   0.   0.   0.   0.  90.   0.    12 -0.00000040
-  0.     0.   0.   0.   0.   0.   0.   0.   0.   0. 100.    13  0.00000000
+ d(m)     F(m,n)                                            iter   Sum(|grad|)
+
+-100.     62.  16.   2.  53.  59.  22.  37. -12.  -3.   8.     1  42484.1016
+ -83.     31.  72.  74. -47.  43.  40. -16.  26.  -3.  -4.     2   8388.0635
+  20.      3. -19.  46.  27.   5.   9. -32.   7.  -3.   2.     3   4379.3032
+   0.    100.   0.   0.   0.   0.   0.   0.   0.   0.   0.     4   1764.9844
+   0.      0.  90.   0.   0.   0.   0.   0.   0.   0.   0.     5    868.9418
+   0.      0.   0.  80.   0.   0.   0.   0.   0.   0.   0.     6    502.5179
+   0.      0.   0.   0.  70.   0.   0.   0.   0.   0.   0.     7    450.0512
+   0.      0.   0.   0.   0.  60.   0.   0.   0.   0.   0.     8    185.2923
+   0.      0.   0.   0.   0.   0.  50.   0.   0.   0.   0.     9    247.1021
+   0.      0.   0.   0.   0.   0.   0.  40.   0.   0.   0.    10    338.7060
+   0.      0.   0.   0.   0.   0.   0.   0.  30.   0.   0.    11    119.5686
+   0.      0.   0.   0.   0.   0.   0.   0.   0.  20.   0.    12     34.3372
+   0.      0.   0.   0.   0.   0.   0.   0.   0.   0.  10.    13      0.0000
 \end{verbatim}
 \normalsize
 We observe that solving the same problem for the scaled variables
 has required a severe increase
 in the number of iterations required to get the solution.
 We lost the benefit of the second CG miracle.
-Even the rapid convergence predicted for the 10-th iteration
-is delayed until the 12-th.
-%\end{notforlecture}
-
-\begin{comment}
-
-\subsection{Statistical interpretation}
-This book is not a statistics book.
-Never-the-less, many of you have some statistical knowledge
-that allows you a statistical interpretation
-of these views of preconditioning.
+Even the rapid convergence predicted for the 11th iteration
+is delayed until the 13th.
 \par
-A statistical concept is that we can combine many streams
-of random numbers into a composite model.
-Each stream of random numbers is generally taken
-to be uncorrelated with the others,
-to have zero mean, and to have the same variance
-as all the others.
-This is often abbreviated as IID, denoting
-Independent, Identically Distributed.
-Linear combinations
-like filtering and weighting operations
-of these IID random streams
-can build correlated random functions much like those
-observed in geophysics.
-A geophysical practitioner seeks to do the inverse,
-to operate on the correlated unequal random variables
-and create the statistical ideal random streams.
-The identity matrix required for the ``second miracle'',
-and our search for a good preconditioning transformation
-are related ideas.
-The relationship will become more clear in chapter \ref{paper:mda}
-when we learn how to estimate the best roughening operator $\bold A$
-as a prediction-error filter.
+Another curious fact may be noted here.
+The gradient does not decrease monotonically.
+It is known theoretically that the residual does decrease monotonically,
+but the gradient need not.
+I did not show the norm of the residual,
+because I wanted to display a function that vanishes at convergence,
+and the residual does not.
 
-\par
-\boxit{
-        Two philosophies to find a preconditioner:
-        \begin{enumerate}
-        \item
-        Dream up a smoothing operator $\bold S$.
-        \item
-        Estimate a prediction-error filter $\bold A$,
-        and then use its inverse $\bold S = \bold A^{-1}$.
-        \end{enumerate}
-        }
-
-
-\par
-\boxit{
-        Deconvolution on a helix is an all-purpose
-        preconditioning strategy for multidimensional model regularization.
-        }
-
-
-\par
-The outstanding acceleration of convergence by preconditioning
-suggests that the philosophy of image creation by optimization
-has a dual orthonormality:
-First, Gauss (and common sense) tells us that the data residuals
-should be roughly equal in size.  Likewise in Fourier space
-they should be roughly equal in size, which means they should
-be roughly white, i.e. orthonormal.
-(I use the word ``orthonormal''
-because white means the autocorrelation is an impulse,
-which means the signal is statistically orthogonal
-to shifted versions of itself.)
-Second,
-to speed convergence of iterative methods,
-we need a whiteness, another orthonormality, in the solution.
-The map image, the physical function that we seek, might
-not be itself white, so we should solve first for another variable,
-the whitened map image, and as a final step,
-transform it to the ``natural colored'' map.
-
-\end{comment}
+%COMMENTED OUT BECAUSE THEY HAVEN'T YET HAD PEF'S.
+%%\subsection{Statistical interpretation}
+%%This book is not a statistics book.
+%%Never-the-less, many of you have some statistical knowledge
+%%that allows you a statistical interpretation
+%%of these views of preconditioning.
+%%\par
+%%A statistical concept is that we can combine many streams
+%%of random numbers into a composite model.
+%%Each stream of random numbers is generally taken
+%%to be uncorrelated with the others,
+%%to have zero mean, and to have the same variance
+%%as all the others.
+%%This is often abbreviated as IID, denoting
+%%Independent, Identically Distributed.
+%%Linear combinations
+%%like filtering and weighting operations
+%%of these IID random streams
+%%can build correlated random functions much like those
+%%observed in geophysics.
+%%A geophysical practitioner seeks to do the inverse,
+%%to operate on the correlated unequal random variables
+%%and create the statistical ideal random streams.
+%%The identity matrix required for the ``second miracle'',
+%%and our search for a good preconditioning transformation
+%%are related ideas.
+%%The relationship will become more clear in chapter \ref{paper:mda}
+%%when we learn how to estimate the best roughening operator $\bold A$
+%%as a prediction-error filter.
+%%\par
+%%\boxit{
+%%        Two philosophies to find a preconditioner:
+%%        \begin{enumerate}
+%%        \item
+%%        Dream up a smoothing operator $\bold S$.
+%%        \item
+%%        Estimate a prediction-error filter $\bold A$,
+%%        and then use its inverse $\bold S = \bold A^{-1}$.
+%%        \end{enumerate}
+%%        }
+%%\par
+%%\boxit{
+%%        Deconvolution on a helix is an all-purpose
+%%        preconditioning strategy for multidimensional model regularization.
+%%        }
+%%\par
+%%The outstanding acceleration of convergence by preconditioning
+%%suggests that the philosophy of image creation by optimization
+%%has a dual orthonormality:
+%%First, Gauss (and common sense) tells us that the data residuals
+%%should be roughly equal in size.  Likewise in Fourier space
+%%they should be roughly equal in size, which means they should
+%%be roughly white, i.e. orthonormal.
+%%(I use the word ``orthonormal''
+%%because white means the autocorrelation is an impulse,
+%%which means the signal is statistically orthogonal
+%%to shifted versions of itself.)
+%%Second,
+%%to speed convergence of iterative methods,
+%%we need a whiteness, another orthonormality, in the solution.
+%%The map image, the physical function that we seek, might
+%%not be itself white, so we should solve first for another variable,
+%%the whitened map image, and as a final step,
+%%transform it to the ``natural colored'' map.
+%
 
 \subsection{You better make your residuals IID!}
 In the statistical literature is a concept that repeatedly arises,
 the idea that some statistical variables are IID, namely Independent, Identically Distributed.
-In practice we'll see many random looking variables,
+In practice, we see many random-looking variables,
 some much closer than others to IID.
 Theoretically, the ID part of IID means the random variables come from Identical
 probability Density functions.
 In practice, the ID part mostly means the variables have the same variance.
-The ``I'' before the ID means that the variables are statistically Independent of one another.
-In the subject area of this book, signals, images, and earth volumes,
-the ``I'' before the ID means that our residual spaces are white --
-have all frequencies present in roughly equal amounts.
+The ``I'' before the ID means the variables are statistically Independent of one another.
+Neighboring values should not be positively correlated, meaning low frequencies are present.
+In the subject area of this book, signals, images, and Earth volumes,
+the ``I'' before the ID means our residual spaces are white---have
+all frequencies present in roughly equal amounts.
 In other words the ``I'' means the statistical variables
 have no significant correlation in time or space.
+Chapter~\ref{paper:mda} gives a method of finding a
+filter as a model styler (regularizer) that accomplishes this goal.
 IID random variables have fairly uniform variance in both physical space and in Fourier space.
+\par
 \boxit{
 IID random variables have uniform variance in both physical space and Fourier space.
 }
 
 \par
-In a geophysical project
-it is important the residual between observed data and theoretical data is not far from IID.
-We fit the data difference by minimizing the sum of the squared residuals,
-so if any collection of residuals is small,
-their squares are really small,
+In a geophysical project,
+it is important the residual between observed data and modeled data is not far from IID.
+To raw residuals,
+we should apply weights and filters to get IID residuals.
+We minimize sums of squares of residuals.
+If any residuals are small, the squares are tiny,
 so such regression equations are effectively ignored.
-We would hardly ever want that.
-Consider reflection seismograms.   They get weak at late time.
-So even with a bad fit the difference between real and theoretical seismograms
-is necessarly weak at late times.
-We don't want the data at late times to be ignored.
-So we boost up the residual there.
+We would hardly ever want residuals ignored.
+Echo seismograms  get weak at late time.
+\sx{seismology}
+So,
+even with a bad fit,
+the difference between real and theoretical seismograms
+is necessarily weak at late times.
+We do not want the data at late times to be ignored.
+So,
+we boost up the residual there.
 We choose $\bold W$ to be a diagonal matrix that boosts late times
-in the regression $\bold 0 \approx \bold r = \bold W(\bold F\bold m-\bold d)$
+in the regression $\bold 0 \approx \bold r = \bold W(\bold F\bold m-\bold d)$.
 \par
 An example with too much low (spatial) frequency in a residual might arise in a topographic study.
 It is not unusual for the topographic wavelength to exceed the survey size.
-Here we should choose $\bold W$ to be a filter to boost up the higher frequencies.
-Perhaps $\bold W$ should contain a derivative or a Laplacian.
-If you set up and solve a data modeling problem
+Here, we should choose $\bold W$ to be a filter to boost up the higher frequencies.
+Perhaps, $\bold W$ should contain a derivative or a Laplacian.
+If you set up and solve a data-modeling problem
 and then find $\bold r$ is not IID,
 you should consider changing your $\bold W$.
+Chapter~\ref{paper:mda} provides a systematic
+approach to whitening residuals.
 \par
-Now let us include regularization $\bold 0 \approx\bold A\bold m$
+Now, let us include regularization $\bold 0 \approx\bold A\bold m$
 and a preconditioning variable $\bold p$.
-We have our data fitting goal and our model styling goal,
+We have our data-fitting goal and our model-styling goal;
 the first with a residual $\bold r_d$
 in data space, the second with a residual $\bold r_m$
 in model space.
-We have had to choose a regularization operator $\bold A$ and a scaling factor $\epsilon$.
+We have had to choose a regularization operator $\bold A = \bold S^{-1}$ and a scaling factor $\epsilon$.
 \begin{eqnarray}
-0 & \approx& \bold r_d  \ = \ \bold F \bold A^{-1}\bold p -\bold d 
+\label{eqn:tworegressions}
+0 & \approx & \bold r_d
+\ = \ \bold W (\bold F  \bold S \bold p -       \bold d) 
+\ = \ \tilde{  \bold F} \bold S \bold p -\tilde{\bold d} 
 \\
-0 & \approx& \bold r_m  \ = \ \epsilon \bold p
+0 & \approx& \bold r_m  \ = \ \epsilon \ \bold p
 \end{eqnarray}
 This system of two regressions could be packed into one;
 the two residual vectors stacked on top of each other,
 likewise the operators $\bold F$ and $\epsilon \bold I$.
-The IID notion seems to apply to this unified system.
-That gives us a clue
+The IID notion seems to apply to this unified system
+which gives us a clue as to
 how we should have chosen the regularization operator $\bold A$.
-Not only should $\bold r_d$ be IID, but also should $\bold r_m$.
-But within a scale $\epsilon$, $\bold r_m=\bold p$.
-Thus the preconditioning variable is not simply something to speed computational convergence.
+Not only should $\bold r_d$ be IID, but also should $\bold r_m$---within a scale $\epsilon$, $\bold r_m=\bold p$.
+Thus, the preconditioning variable is not simply something to speed computational convergence.
 It is a variable that should be IID.
 If it is not coming out that way, we should consider changing $\bold A$.
-Chapter \ref{paper:mda} addresses the task of choosing an $\bold A$
-so that $\bold r_m$ comes out IID.
+Chapter \ref{paper:mda} addresses the task of choosing an $\bold A$,
+so $\bold r_m$ comes out IID.
 \par
-\boxit{We should choose a weighting function (and/or operator) $\bold W$
+\boxit{We should choose a weighting function (and/or operator) $\bold W$,
 so data residuals are IID.
-We should also choose our regularization operator $\bold A$
-so the precondioning variable $\bold p$ comes out IID.}
+We should also choose our regularization operator $\bold A= \bold S^{-1}$
+so the preconditioning variable $\bold p$ comes out IID.}
 
-\subsection{Philosophical speculation}
-\par
-Finally, the $\epsilon$.  How should we choose this number?
-Let ${\rm E}(|r_d|)$ be read as the Expected average value of $|r_d|$.
-The concept that each component in the vector $\bold r = (\bold r_d,\bold r_m)\T$
-should have the same expected absolute value leads to the notion that
-the value of epsilon should be
-$\epsilon={\rm E}(|r_d|)/{\rm E}(|p|)$.
-(I vaguely remember trying this once and discovering that epsilon
-could not be bootstrapped.  It either diverged to infinity
-or converged to zero depending on its starting value.
-Perhaps the epsilon we should use is the starting value poised between each divergence!
-I don't trust my memory for an important issue like this.
-Somebody else should try this again.)
 
-\par
-There is another strange idea here which is a consequence
-of the notion that elements in  $\bold r = (\bold r_d,\bold r_m)\T$
-should be IID.
-It means elements of $\bold r_d$ and $\bold r_m$ should not be correlated.
-``But wait'', you say, ``it makes no sense to correlate spaces of different dimension.''
-That is where the formal statistical notion of ``ensemble'' arises.
-If there are many worlds, and if we may speak of an average over worlds,
-then we can have an array of averages,
-the array being of dimension the number of components of $r_d$ by that of $r_m$
-each an average over the many "worlds".
-How can a practitioner absorb this notion?
-Perhaps in some cases the model and data space have a natural alignment
-such that a product of the two spaces can be locally averaged.
-Post stack migration suggests the example
-that a hyperbola in data space hitting its top in model space.
-This suggests we use a $2\times 2$ weight matrix
+\subsection{Choice of a unitless epsilon}
+\sx{epsilon, unitless}
+\sx{unitless epsilon}
+The parameter epsilon $\epsilon$ strikes the balance between
+our data-fitting goal and our model-styling goal.
+These two regression systems typically have differing physical units;
+therefore, the numerical value of $\epsilon$ is accidental,
+for example comparing milliseconds to meters.
+%\begin{eqnarray}
 \begin{equation}
-\left[
-\begin{array}{cc}
-	W_{dd}  &  W_{dm}
-	\\
-	W_{dm}  &  W_{mm}
-\end{array}
-\right]
-\end{equation}
-The closest I have come to seeing something like this in practice is in
-Chapter \ref{paper:noiz}
-where two parts of model space,
-the water bottom and the water top
-came out correlated.
-They should not have been so,
-because their fluctuations had different mechanisms.
+\label{eqn:epsilonstory}
+\begin{array}{rcl}
+\bold 0 \ &\approx&\   \bold r_d = \bold W (\bold F\bold S \bold p -\bold d)
+\\
+\bold 0 \ &\approx&\   \bold r_m = \epsilon \  \bold p
+\end{array}\end{equation}
+%\end{eqnarray}
+The numerical value of $\epsilon$ is meaningless before
+we learn to express the idea in a unitless (dimensionless) manner.
+Without pretending we are doing physics,
+let us use some of the language of thermodynamics,
+a physical field that does deal with equilibria and random fluctuations.
+Define an energy ratio $u$ and a volume ratio $v$ that can
+be used to bring $\epsilon$ to unitless form.
+Naturally, the square roots arise,
+because we are minimizing quadratic functions of residuals.
+$$
+u = {\rm energy\ ratio} \quad=\quad \ \sqrt{
+                           \frac{\bold r_d\cdot \bold r_d}
+			        {\bold p\cdot\bold p}
+			   }
+$$
+
+$$
+v = {\rm volume\ ratio} \quad=\quad \ \sqrt{
+			    \frac{n_{r_d}}{n_p}
+			   }
+$$
+Can we really think of ``volume'' as related to
+the number $n_p$ of components in the model space?  Perhaps.
+Likewise the data space?  Less likely.
+And, is the energy measure really an appropriate one?
+Maybe.
+What is the goal of these speculative thoughts?
+The goal is to give you a starting numerical value for $\epsilon$,
+say $\epsilon=1$.
+Your final guide is your own experimental experience.
+Try either one of these next two regressions:
+
+\begin{eqnarray}
+\bold 0 \ \approx \ 
+\bold r_m &=& \epsilon_{\rm extrinsic} \ u \ \bold p
+\\
+\bold 0 \ \approx \ 
+\bold r_m &=& \epsilon_{\rm intrinsic}\ (u/v) \ \bold p
+\end{eqnarray}
 
 
-\subsection{The preconditioned solver}
-Summing up the ideas above,
-we start from fitting goals
+
+\section{THE PRECONDITIONED SOLVER}
+Summing up the previous ideas,
+we start from fitting goals:
 \begin{equation}
 \begin{array}{lll}
 \label{eq:main}
@@ -740,7 +772,7 @@ we start from fitting goals
 \end{equation}
 and we change variables from
 $\bold m$ to $\bold p$ using
-$\bold m = \bold A^{-1} \bold p$
+$\bold m = \bold A^{-1} \bold p$.
 \begin{equation}
 \begin{array}{llllcl}
 \bold 0 &\approx &  \bold F \bold m \ -\  \bold d   &=&
@@ -756,6 +788,12 @@ and then finding the model by using
 $\bold m = \bold A^{-1} \bold p$.
 
 \begin{comment}
+You notice the following code allows for common additional features,
+a weighting function on the data residuals,
+starting $\bold p_0$,
+masking constraints $\bold J$ on $\bold p$,
+and scaling the regularization by an $\epsilon$.
+\par
 A new reusable
 preconditioned solver is
 the module \texttt{solver_prc} \vpageref{lst:solver_prc}.
@@ -773,65 +811,11 @@ the regularized solver
 \end{comment}
 
 
-\subsection{Need for an invertible preconditioner}
-It is important to use regularization to solve many examples.
-It is important to precondition because in practice computer power
-is often a limiting factor.
-It is important to be able to begin from a nonzero starting solution
-because in nonlinear problems then we must restart from 
-the result of an earlier solution.
-Putting all three requirements together leads to a little problem.
-It turns out the three together lead us to needing 
-a preconditioning transformation that is invertible.
-Let us see why this is so.
-
-\begin{equation}
-\begin{array}{lll}
-\label{eq:main}
-\bold 0 &\approx& \bold F \bold m \ -\  \bold d \\
-\bold 0 &\approx& \bold A \bold m
-\end{array}
-\end{equation}
-First we change variables from $\bold m$ to $\bold u = \bold m - \bold m_0$.
-Clearly $\bold u$ starts from $\bold u_0=0$, and $\bold m = \bold u + \bold m_0$.
-Then our regression pair becomes
-
-\begin{equation}
-\begin{array}{lll}
-\label{eq:main}
-\bold 0 &\approx& \bold F \bold u \ +\  (\bold F\bold m_0 -\bold d) \\
-\bold 0 &\approx& \bold A \bold u \ +\  \bold A \bold m_0
-\end{array}
-\end{equation}
-This result differs from the original regression in only two minor ways,
-(1) revised data, and (2) a little more general form of the regularization,
-the extra term $\bold A \bold m_0$.
-
-Now let us introduce preconditioning.  From the regularization
-we see this introduces the preconditioning variable $\bold p = \bold A\bold u$.
-Our regression pair becomes:
-
-\begin{equation}
-\begin{array}{lll}
-\label{eq:main}
-\bold 0 &\approx& \bold F \bold A^{-1} \bold p \ +\  (\bold F\bold m_0 -\bold d) \\
-\bold 0 &\approx&                      \bold p \ +\  \bold A \bold m_0
-\end{array}
-\end{equation}
-Here is the problem:
-Now we require both $\bold A$ and $\bold A^{-1}$ operators.
-In 2- and 3-dimensional spaces we don't know very many operators
-with an easy inverse.
-Indeed, that is why I found myself pushed to come up with the helix methodology 
-of the previous chapter -- because it provides invertible operators for
-smoothing and roughening.
-
-
-
-
 
 \section{OPPORTUNITIES FOR SMART DIRECTIONS}
-Recall the fitting goals (\ref{eqn:precsummary})
+Recall the fitting goals (\ref{eqn:tworegressions})
+with weights $\bold W$
+being absorbed into the operator $\bold F$ and the data $\bold d$.
 \begin{equation}
 \begin{array}{llllllcl}
 \bold 0 &\approx& \bold r_d &=&  \bold F \bold m \ -\  \bold d   &=&
@@ -840,9 +824,9 @@ Recall the fitting goals (\ref{eqn:precsummary})
 \bold 0 &\approx& \bold r_m &=&  \bold A \bold m       &=&
     \bold I        & \bold p
 \end{array}
-\label{eqn:precsummary}
+\label{eqn:precsummary2}
 \end{equation}
-Without preconditioning we have the search direction
+Without preconditioning, we have the search direction:
 \begin{equation}
 \Delta \bold m_{\rm bad} \eq
 \left[
@@ -857,7 +841,7 @@ Without preconditioning we have the search direction
 	\end{array}
 \right]
 \end{equation}
-and with preconditioning we have the search direction
+and with preconditioning, we have the search direction:
 \begin{equation}
 \Delta \bold p_{\rm good} \eq
 \left[
@@ -877,16 +861,16 @@ The essential feature of preconditioning is not that we perform
 the iterative optimization in terms of the variable $\bold p$.
 The essential feature is that we use a search direction
 that is a gradient with respect to $\bold p\T$ not $\bold m\T$.
-Using $\bold A\bold m=\bold p$ we have
-$\bold A\Delta \bold m=\Delta \bold p$.
-This enables us to define a good search direction in model space.
+Using $\bold A\bold m=\bold p$, we have
+$\bold A\Delta \bold m=\Delta \bold p$,
+which enables us to define a good search direction in $\bold m$ space.
 \begin{equation}
 \Delta \bold m_{\rm good} \eq \bold A^{-1}
 \Delta \bold p_{\rm good} \eq
 	\bold A^{-1} (\bold A^{-1})\T
 	\bold F\T \bold r_d + \bold  A^{-1} \bold r_m
 \end{equation}
-Define the gradient by $\bold g=\bold F\T\bold r_d$ and
+Define the gradient by $\bold g=\bold F\T\bold r_d$, and
 notice that $\bold r_m=\bold p$.
 \begin{equation}
 \Delta \bold m_{\rm good} \eq
@@ -900,15 +884,20 @@ notice that $\bold r_m=\bold p$.
 The search direction (\ref{eqn:newdirection}) 
 shows a positive-definite operator scaling the gradient.
 Each component of any gradient vector is independent of each other.
-All independently point a direction for descent.
+All independently point (negatively) to a direction for descent.
 Obviously, each can be scaled by any positive number.
-Now we have found that we can also scale a gradient vector by
-a positive definite matrix and we can still expect
+Now, we have found that we can also scale a gradient vector by
+a positive definite matrix, and we can still expect
 the conjugate-direction algorithm to descend, as always,
 to the ``exact'' answer in a finite number of steps.
-This is because modifying the search direction with
+The reason is that modifying the search direction with
 $ \bold A^{-1} (\bold A^{-1})\T$ is equivalent to solving
 a conjugate-gradient problem in $\bold p$.
+We'll see in Chapter~\ref{paper:mda}, that
+our specifying $ \bold A^{-1} (\bold A^{-1})\T$
+amounts to us specifying
+a prior expectation
+of the spectrum of the model $\bold m$.
 
 %\subsubsection{Implications for better preconditioning}
 %\par
@@ -945,26 +934,26 @@ a conjugate-gradient problem in $\bold p$.
 
 \subsection{The meaning of the preconditioning variable $\bold p$}
 
-To accelerate convergence of iterative methods we often change variables.
+To accelerate convergence of iterative methods, we often change variables.
 The model-styling regression $\bold 0 \approx \epsilon \bold A \bold m$
 is changed to $\bold 0 \approx \epsilon \bold p$.
 Experience shows, however, that the variable $\bold p$ is often more interesting
 to look at than the model $\bold m$.
 Why should a new variable introduced for computational convenience
 turn out to have more interpretive value?
-There is a little theory underlying this.  Begin from
+There is a little theory explaining why.  Begin from
 \begin{eqnarray}
 \bold 0 &\approx& \bold W (\bold F \bold m -\bold d)
 \\
-\bold 0 &\approx& \epsilon \bold A \bold m
+\bold 0 &\approx& \epsilon\, \bold A \bold m
 \end{eqnarray}
 Introduce the preconditioning variable $\bold p$.
 \begin{eqnarray}
 \bold 0 &\approx& \bold W (\bold F \bold A^{-1}\bold p -\bold d)
 \\
-\bold 0 &\approx& \epsilon \bold p
+\bold 0 &\approx& \epsilon\, \bold p
 \end{eqnarray}
-Rewrite this as a single regression
+Rewriting as a single regression:
 \begin{equation}
 \label{eqn:singlereg}
 \bold 0 
@@ -979,116 +968,190 @@ Rewrite this as a single regression
 \left[
 \begin{array}{c}
 \bold W\bold F\bold A^{-1} \\
-\epsilon \bold I
+\epsilon\, \bold I
 \end{array}
 \right]
 \bold p
 \quad - \quad
 \left[
 \begin{array}{c}
-\bold d \\
+\bold W \bold d \\
 \bold 0
 \end{array}
 \right]
 \end{equation}
-In Chapter \ref{paper:lsq} we learned the least squares solution
-is when the residual is orthogonal to the fitting functions.
-The fitting functions are the columns of the matrix or the rows of its transpose.
-Thus we simply multiply the regression
+The gradient vanishes at the best solution.
+To get the gradient,
+we put the residual into the adjoint operator.
+Thus,
+we put the residuals (column vector) in
 (\ref{eqn:singlereg})
-by the adjoint operator and replace the $\approx$ by $=$.
-Thus
-\begin{equation}
+into the transpose of the operator in
+(\ref{eqn:singlereg}),
+the row $( (\bold W\bold F\bold A^{-1})\T, \epsilon \bold I$).
+Finally,
+replace the $\approx$ by $=$.
+Thus,
+\begin{eqnarray}
+\nonumber
+\bold 0 &=& (\bold W\bold F\bold A^{-1})\T\,\bold r_d + \epsilon \, \bold r_m 
+\\
 \label{eqn:fight}
-\bold 0 \quad=\quad (\bold W\bold F\bold A^{-1})\T\bold r_d + \epsilon \bold r_m 
-\end{equation}
-Equation (\ref{eqn:fight}) tells us at the best solution to the regression
-there is a fight between the data space residual and the model space residual.
-It's a battle between our preconceived statistical model
-expressed in our model styling
-and the model wanted by the data.
-Except for the scale factor $\epsilon$,
-the model space residual $\bold r_m$ is the preconditioning variable $\bold p$.
-That's why the variable $\bold p$ is interesting to inspect and interpret.
-The variable $\bold p$ is not simply a computational convenience.
-Its size measures (in model space)
-the conflict of our acquired data with our preconceived theory.
-It points to locations of interest.
+\bold 0 &=& (\bold W\bold F\bold A^{-1})\T\,\bold r_d + \epsilon^2 \, \bold p
+\end{eqnarray}
+The two terms in Equation (\ref{eqn:fight})
+are identical but oppositely signed.
+These terms represent images in model space.
+This image represents the fight between
+the data space residual and the model space residual.
+You really do want to plot this image.
+It shows the battle of
+the model wanted by the data
+against
+our preconceived statistical model expressed by our model styling goal.
+That is why the preconditioned variable $\bold p$ is interesting to inspect and interpret.
+It is not simply a computational convenience.
+It is telling you what you have learned from data
+(that someone has recorded at great expense!).
 \par
 \boxit{
 The preconditioning variable $\bold p$ is not simply a computational convenience.
-Its size measures (in model space)
-the conflict of our acquired data with our preconceived theory
-expressed by our model styling.
-It points to locations of interest.
+This model-space image $\bold p$ tells us where our data contradicts our prior model.
+Admire it!
+Make a movie of it evolving with iteration.
 }
 
 \par
-If I were young and energetic like you
+If I were young and energetic like you,
 I would write a new basic tool for optimization.
 Instead of scanning only the space of the gradient and previous step,
 it would scan also over the ``smart'' direction.  
-This should offer the benefit of preconditioning
+Using both directions should offer the benefit of preconditioning
 the regularization at early iterations
 while offering more assured fitting data at late iterations.
 The improved 
 module for \texttt{cgstep}
 %\vpageref{/prog:cgstep}
 would need to solve a $3\times 3$ matrix.
-%XXX
+I would also be looking for ways to
+assure all $\Delta\bold m$ directions
+were scaled to have the prior model spectrum and prior energy function of space.
+
+
+\subsection{Need for an invertible preconditioner}
+It is important to use regularization to solve many examples.
+It is important to precondition,
+because in practice,
+computer power is often a limiting factor.
+It is important to be able to begin from a nonzero starting solution,
+because in nonlinear problems we must restart from an earlier solution.
+Putting all three requirements together leads to a little problem.
+It turns out the three together lead us to needing 
+a preconditioning transformation that is invertible.
+Let us see why this is so.
+\begin{equation}
+\begin{array}{lll}
+\label{eq:main2}
+\bold 0 &\approx & \bold F \bold m \ -\  \bold d \\
+\bold 0 &\approx & \bold A \bold m
+\end{array}
+\end{equation}
+First,
+we change variables from $\bold m$ to $\bold u = \bold m - \bold m_0$.
+Clearly,
+$\bold u$ starts from $\bold u_0=0$, and $\bold m = \bold u + \bold m_0$.
+Then,
+our regression pair becomes:
+\begin{equation}
+\begin{array}{lll}
+\label{eq:main3}
+\bold 0 &\approx & \bold F \bold u \ +\  (\bold F\bold m_0 -\bold d) \\
+\bold 0 &\approx & \bold A \bold u \ +\  \bold A \bold m_0
+\end{array}
+\end{equation}
+This result differs from the original regression in only two minor ways,
+(1) revised data, and (2) a little more general form of the regularization,
+the extra term $\bold A \bold m_0$.
+\par
+Now,
+let us introduce preconditioning.
+From the regularization,
+we see preconditioning introduces the preconditioning variable $\bold p = \bold A\bold u$.
+Our regression pair becomes:
+\begin{equation}
+\begin{array}{lll}
+\label{eq:main4}
+\bold 0 &\approx & \bold F \bold A^{-1} \bold p \ +\  (\bold F\bold m_0 -\bold d) \\
+\bold 0 &\approx &                      \bold p \ +\  \bold A \bold m_0
+\end{array}
+\end{equation}
+Here is the problem:
+We now require both $\bold A$ and $\bold A^{-1}$ operators.
+In 2- and 3-dimensional spaces, we do not know very many operators
+with an easy inverse.
+That reason is why I found myself pushed to come up with the helix methodology 
+of Chapter \ref{paper:hlx}---because it provides invertible operators for
+smoothing and roughening.
 
 
 
-\section{NULL SPACE AND INTERVAL VELOCITY}
+\section{INTERVAL VELOCITY}
+\sx{interval velocity}\sx{velocity, interval}
 A bread-and-butter problem in seismology is building the velocity
 as a function of depth (or vertical travel time)
 starting from certain measurements.
-The measurements are described elsewhere (BEI for example).
+The measurements are described in many books, for example
+my book
+{\em BEI} (Basic Earth Imaging).
 They amount to measuring the integral of the velocity squared
-from the surface down to the reflector.
-It is known as the RMS (root-mean-square) velocity.
+from the surface down to the reflector,
+known as the root-mean-square (RMS) velocity.
 Although good quality echoes may arrive often,
 they rarely arrive continuously for all depths.
 Good information is interspersed unpredictably with poor information.
-Luckily we can
+Luckily, we can
 also estimate
 the data quality by the ``coherency'' or the
-``stack energy''.
+``stack energy.''
 In summary, what we get from observations and preprocessing
-are two functions of travel-time depth,
+are two functions of travel-time depth:
 (1) the integrated (from the surface) squared velocity, and
 (2) a measure of the quality of the integrated velocity measurement.
-Some definitions:
+Needed definitions are as follows:
 \begin{description}
 \item  [$\bold d$]
-is a data vector whose components range over the vertical
-traveltime depth $\tau$,
-and whose component values contain the scaled RMS velocity squared
-$\tau v_{\rm RMS}^2/\Delta \tau $
+is a data vector in which components range over the vertical
+traveltime depth $\tau$.
+Its component values contain the scaled RMS velocity squared
+$\tau v_{\rm RMS}^2/\Delta \tau $,
 where
 $\tau /\Delta \tau $ is the index on the time axis.
 \item [$\bold W$]
 is a diagonal matrix along which we lay the given measure
-of data quality.  We will use it as a weighting function.
+of data quality.  We use it as a weighting function.
 \item  [$\bold C$]
 is the matrix of causal integration, a lower triangular matrix of ones.
 \item  [$\bold D$]
 is the matrix of causal differentiation, namely, $\bold D=\bold C^{-1}$.
 \item [$\bold u$]
-is a vector whose components range over the vertical
-traveltime depth $\tau$,
-and whose component values contain the interval velocity squared
-$v_{\rm interval}^2 $.
+is a vector containing the interval velocity squared $v_{\rm interval}^2 $
+ranging over the vertical traveltime depth $\tau$.
 \end{description}
 From these definitions,
-under the assumption of a stratified earth with horizontal reflectors
-(and no multiple reflections)
+under the assumption of a stratified Earth with horizontal reflectors
+(and no multiple reflections),
 the theoretical (squared) interval velocities
-enable us to define the theoretical (squared) RMS velocities by
+enable us to define the theoretical (squared) RMS velocities by:
 \begin{equation}
 \bold C\bold u \eq \bold d 
 \end{equation}
-With imperfect data, our data fitting goal is to minimize the residual
+In other words, any component of $\bold d_i$ measures
+the integral of a material property from the Earth surface to the depth of $i$.
+We wish to find the material property everywhere, which is $\bold u$.
+If we integrate it from the surface downward with causal integration $\bold C$,
+we should get the measurements $\bold d$.
+\par
+With imperfect data, our data fitting goal is to minimize the residual:
 \begin{equation}
 \bold 0
 \quad\approx\quad
@@ -1099,9 +1162,10 @@ With imperfect data, our data fitting goal is to minimize the residual
 \bold d
 \right]
 \end{equation}
-\par
+where $\bold W$ is some weighting function,
+we need to choose.
 To find the interval velocity
-where there is no data (where the stack power theoretically vanishes)
+where there is no data (where the stack power theoretically vanishes),
 we have the ``model damping'' goal to minimize
 the wiggliness $\bold p$
 of the squared interval velocity $\bold u$.
@@ -1130,34 +1194,37 @@ expressed as a function of wiggliness $\bold p$.
 \\
 \bold 0
 &\approx&
-\epsilon \; \bold p
+\epsilon \, \bold p
 \end{eqnarray}
 \subsection{Balancing good data with bad}
 \inputdir{bob}
 Choosing the size of $\bold \epsilon$ chooses
 the stiffness of the curve that connects regions of good data.
 Our first test cases gave solutions
-that we interpreted to be
-too stiff at early times and too flexible at later times.
-This leads to two possible ways to deal with the problem.
-One way modifies the model shaping
-and the other modifies the data fitting.
-The program below weakens the data fitting weight with time.
-This has the same effect as stiffening the model shaping with time.
+we interpreted to be
+too stiff at early times and too flexible at later times,
+which suggests we weaken $\epsilon$ at early times and strengthen it later.
+Because we wanted to keep $\epsilon$ constant with time,
+we strengthened $\bold W$ at early times
+and weakened it at later times
+as you see in the following program:
 
-\plot{clapp}{width=6in,height=3in}{
-  Raw CMP gather (left),
-  Semblance scan (middle),
-  and semblance value used for weighting function (right).
-}
+\plot{clapp}{width=\textwidth,height=.5\textwidth}{
+        Raw CMP gather (left),
+        semblance scan (middle),
+        and semblance value used for weighting function (right).
+        %\viewit{clapp}
+	}
 
-\plot{stiff}{width=6in,height=3in}{
+
+\plot{stiff}{width=\textwidth,height=.5\textwidth}{
   Observed RMS velocity
   and that predicted by a stiff model with
   $\epsilon=4$.
+  (Clapp)
 }
 
-\plot{flex}{width=6in,height=3in}{
+\plot{flex}{width=\textwidth,height=.5\textwidth}{
   Observed RMS velocity
   and that predicted by a flexible model with
   $\epsilon=.25$
@@ -1187,16 +1254,16 @@ This has the same effect as stiffening the model shaping with time.
 \end{comment}
 
 \subsection{Lateral variations}
-The analysis above appears one dimensional in depth.
+The previous analysis appears 1-dimensional in depth.
 Conventional interval velocity estimation builds a velocity-depth model
 independently at each lateral location.
-Here we have a logical path for combining measurements
+Here, we have a logical path for combining measurements
 from various lateral locations.
 We can change the regularization
 to something like $\bold 0\approx \nabla\bold u$.
-Instead of merely minimizing the vertical gradient of velocity
+Instead of merely minimizing the vertical gradient of velocity,
 we minimize its spatial gradient.
-Luckily we have preconditioning and the helix to speed the solution.
+Luckily, we have preconditioning and the helix to speed the solution.
 \par
 %Likewise the construction of the data quality screen $\bold G$
 %would naturally involve the full three-dimensional setting.
@@ -1204,38 +1271,38 @@ Luckily we have preconditioning and the helix to speed the solution.
 \subsection{Blocky models}
 \inputdir{.}
 
-Sometimes we seek a velocity model that increases smoothly
+Sometimes, we seek a velocity model that increases smoothly
 with depth through our scattered
 measurements of good-quality RMS velocities.
 Other times, we seek a blocky model.
 (Where seismic data is poor,
-a well log could tell us whether to choose smooth or blocky.)
-Here we see an estimation method that can choose the blocky alternative,
+a well log could tell us whether or not to choose smooth or blocky.)
+Here, we see an estimation method that can choose the blocky alternative,
 or some combination of smooth and blocky.
 
 \par
-Consider the five layer model in Figure \ref{fig:rosales}.
+Consider the five-layer model in Figure \ref{fig:rosales}.
 Each layer has unit traveltime thickness
 (so integration is simply summation).
 Let the squared interval velocities be $(a,b,c,d,e)$
 with strong reliable reflections at the base of layer $c$ and layer $e$,
 and weak, incoherent, ``bad'' reflections at bases of $(a,b,d)$.
-Thus we measure $V_c^2$ the RMS velocity squared of the top three layers
-and $V_e^2$ that for all five layers.
-Since we have no reflection from at the base of the fourth layer,
+Thus, we measure $V_c^2$ the RMS velocity squared of the top three layers
+and $V_e^2$ for all five layers.
+Because we have no reflection from at the base of the fourth layer,
 the velocity in the fourth layer is not measured but a matter for choice.
-In a smooth linear fit we would want $d=(c+e)/2$.
-In a blocky fit we would want $d=e$.
+In a smooth linear fit, we would want $d=(c+e)/2$.
+In a blocky fit, we would want $d=e$.
 
-\sideplot{rosales}{width=1.5in}{
-  A layered earth model.
+\sideplot{rosales}{width=0.5\textwidth}{
+  A layered Earth model.
   The layer interfaces cause reflections.
   Each layer has a constant velocity in its interior.
 }
 
 
 \par
-Our screen for good reflections looks like $(0,0,1,0,1)$
+Our screen for good reflections looks like $(0,0,1,0,1)$,
 and our screen for bad ones looks like the complement $(1,1,0,1,0)$.
 We put these screens on the diagonals of diagonal matrices
 $\bold G$ and $\bold B$.
@@ -1334,7 +1401,7 @@ Further explanations await completion of examples.
 
 \section{INVERSE LINEAR INTERPOLATION}
 \inputdir{sep94}
-\sideplot{data}{width=3in,height=1.5in}{
+\sideplot{data}{width=.8\textwidth,height=.3\textwidth}{
   The input data are irregularly sampled.
 }
 The first example is a simple synthetic test for 1-D inverse
@@ -1367,7 +1434,8 @@ case is recursive causal integration.
 %  function by preconditioning model regularization. The
 %  preconditioning operator $\bold P$ is causal integration.}
 
-\plot{conv}{width=6in,height=7in}{Convergence history of inverse
+\plot{conv}{width=\textwidth,height=1.16\textwidth}{
+  Convergence history of inverse
   linear interpolation. Left: regularization, right: preconditioning.
   The regularization operator $\bold A$ is
   the derivative operator (convolution with $(1,-1)$. The
@@ -1381,24 +1449,24 @@ case is recursive causal integration.
 
 As expected,
 preconditioning provides a much faster rate of convergence.
-Since iteration to the exact solution
+Because iteration to the exact solution
 is never achieved in large-scale problems,
 the results of iterative optimization may turn out quite differently.
 Bill Harlan points out that the two goals
 in (\ref{eq:main}) conflict with each other:
 the first one enforces ``details'' in the model,
-while the second one tries to smooth them out.
+while the second one tries to smooth away the details.
 Typically, regularized optimization creates
 a complicated model at early iterations.
-At first, the data fitting goal (\ref{eq:main}) plays a more important role.
-Later, the regularization goal (\ref{eq:main}) comes into play
+At first, the data-fitting goal (\ref{eq:main}) plays a more important role.
+Later, the styling goal (\ref{eq:main}) comes into play
 and simplifies (smooths) the model as much as needed.
 Preconditioning acts differently.
 The very first iterations create a simplified (smooth) model.
-Later, the data fitting goal adds more details into the model.
+Later, the data-fitting goal adds more details into the model.
 If we stop the iterative process early,
 we end up with an insufficiently complex model,
-not in an insufficiently simplified one.
+not an insufficiently simplified one.
 Figure \ref{fig:conv} provides a clear illustration of Harlan's observation.
 
 \par
@@ -1406,9 +1474,9 @@ Figure \ref{fig:schwab1}
 measures the rate of convergence by the model residual,
 which is a distance from the current model to the final solution.
 It shows that preconditioning saves many iterations.
-Since the cost of each iteration for each method is roughly equal,
+Because the cost of each iteration for each method is roughly equal,
 the efficiency of preconditioning is evident.
-\sideplot{schwab1}{width=2.4in}{
+\sideplot{schwab1}{width=.8\textwidth}{
   Convergence of the iterative optimization,
   measured in terms of the model residual.
   The ``p'' points stand for preconditioning;
@@ -1469,7 +1537,7 @@ the oxymoron
 \section{EMPTY BINS AND PRECONDITIONING}
 There are at least three ways to fill empty bins.
 Two require a roughening operator $\bold A$ while
-the third requires a smoothing operator which
+the third requires a smoothing operator, which
 (for comparison purposes) we denote $\bold A^{-1}$.
 The three methods are generally equivalent
 though they differ in significant details.
@@ -1478,7 +1546,7 @@ though they differ in significant details.
 The original way in
 Chapter \ref{paper:iin} is to
 restore missing data
-by ensuring that the restored data,
+by ensuring the restored data,
 after specified filtering,
 has minimum energy, say
 $\bold A\bold m\approx \bold 0$.
@@ -1486,8 +1554,8 @@ Introduce the selection mask operator $\bold K$,
 a diagonal matrix with
 ones on the known data and zeros elsewhere
 (on the missing data).
-Thus
-$ \bold 0 \approx \bold A(\bold I-\bold K+\bold K)\bold m $ or
+Thus,
+$ \bold 0 \approx \bold A(\bold I-\bold K+\bold K)\bold m $ or:
 \begin{equation}
 \bold 0 \quad\approx\quad
 \bold A (\bold I-\bold K) \bold m
@@ -1500,7 +1568,7 @@ with missing values set to zero by
 $\bold m_k=\bold K\bold m$.
 
 \par
-A second way to find missing data is with the set of goals
+A second way to find missing data is with the set of goals:
 \begin{equation}
 \begin{array}{rrrrr}
 \bold 0 & \approx &          \bold K \bold m  & - & \bold m_k \\
@@ -1517,7 +1585,7 @@ There is an important philosophical difference between
 the first method and the second.
 The first method strictly honors the known data.
 The second method acknowledges that when data misfits
-the regularization theory, it might be the fault of the data
+the regularization theory, it might be the fault of the data,
 so the data need not be strictly honored.
 Just what balance is proper falls to the numerical choice of $\epsilon$,
 a nontrivial topic.
@@ -1537,332 +1605,397 @@ $\bold m = \bold A^{-1} \bold p $.
 There is no simple way of knowing beforehand
 what is the best value of $\epsilon$.
 Practitioners like to see solutions for various values of $\epsilon$.
-Of course that can cost a lot of computational effort.
+Of course, that can cost a lot of computational effort.
 Practical exploratory data analysis is more pragmatic.
 Without a simple clear theoretical basis,
 analysts generally begin from $\bold p=0$
 and abandon the fitting goal $\epsilon \bold I \bold p\approx 0$.
 Implicitly, they take $\epsilon=0$.
-Then they examine the solution as a function of iteration,
+Then, they examine the solution as a function of iteration,
 imagining that the solution at larger iterations
 corresponds to smaller $\epsilon$.
 There is an eigenvector analysis
 indicating some kind of basis for this approach,
 but I believe there is no firm guidance.
 
-\par
-Before we look at coding details for the three methods
-of filling the empty bins,
-we'll compare results of trying all three methods.
-For the roughening operator $\bold A$,
-we'll take the helix derivative $\bold H$.
-This is logically equivalent to roughening with the gradient $\bold \nabla$
-because the (negative) laplacian operator is
-$\bold\nabla\T\bold\nabla = \bold H\T\bold H $.
+\subsection{SeaBeam}
+Figure \ref{fig:seaprc} shows an image of deep seawater bottom
+in the Pacific of a sea-floor spreading center produced acoustically
+by a device called SeaBeam.
+Students here tried all three methods of filling empty bins on the this data
+using the Laplacian as a regularizer.
+From an interpretive point of view,
+differences among the three methods were minor and as expected,
+therefore, only one is shown
+in Figure \ref{fig:seaprc}.
+\plot{seaprc}{width=\textwidth,height=.5\textwidth}{
+	Seabeam data
+	before and after
+	empty bin filling with a laplacian.
+	}
 
-%Later, in Chapter
-%\ref{mda/paper:mda}
-%we'll find a smarter roughening operator $\bold A$ that gives better results.
 
-\subsection{Faking the epsilon}
+\section{GIANT PROBLEMS}
+This book does not solve giant problems,
+but it does solve personal-computer-sized problems
+in the manner of giant problems.
+There is big money in solving giant problems.
+Big money brings specialist solutions beyond the scope of this book.
+But let us take a look.
+Closest to me is the seismic survey industry.
+\sx{seismology}
+Model space is 3-D, a cube, roughly a thousand 2-D screen fulls,
+a screen full being roughly 1,000$\times$1,000,
+a gigabyte in total.
+Data space is 5-dimensional.
+A seismogram is a thousand time points.
+Our energy source lies in two dimensions on the Earth surface plane,
+as do our receivers.
+1+2+2=5.
+All this compounds roughly to 1,000 to the $5^{\rm th}$ power,
+a thousand terabytes, a petabyte.
+Fully convergent solutions needing $10^{15}$ iterations
+of operators is ridiculous, while more than a handful are nearly so.
+We think mainly of using only the adjoint.
+Theory and experimentation offer some guidance.
+Remember that adjoints are great when unitary (already an inverse).
+Adjoints are improved if they can be made more unitary.
+The basic strategy for improving an adjoint is
+finding one good diagonal-weighting function before the adjoint and another after it.
+Recalling ``IID,'' adjoints are also made more unitary
+by filter matrices that have the effect of whitening output.
+Simple filter matrices are the gradient and the Laplacian.
+More generally,
+a compact way to whiten spectra
+is multidimensional \bx{autoregression},
+expounded in Chapter \ref{paper:mda}.
 
-I'll tell a common story that should horrify those interested in theory
-(under 23 years old), and delight those wanting to get real work done
-(over 23 years old).
-Suppose you have a problem where
-model space is an image, maybe $1000\times 1000$,
-while application of the operator $\bold F$ takes about an hour.
-A common example in petroleum prospecting is ``wave equation migration''.
-The older generation of workers thus did a migration
-(single application of an adjoint operator)
-and finished their task in an hour.
-You, however, have read this book or otherwise learned about inversion
-(iteratively modeling for an increasingly better fitting model).
-Twelve iterations (12 applications of both $\bold F\T$ and $\bold F$)
-requires 24 hours.
-Theoretically you should be doing a million iterations
-($10^6$, one for each point in model space),
-but you are hoping 12 will be enough. (Good luck!)
+\subsection{A hundred iterations}
+Lurking in every giant problem are many problems of smaller size.
+In the large-scale seismic imaging problem
+lie problems of velocity estimation, multiple-reflection elimination, and many more.
 \par
-Oops! You also need to choose a numerical value for $\epsilon$.
-Since we have no theory for that choice, perhaps we should scan over 7 possible values,
-or maybe 30.  Now the job takes a week or a month.
-That's really bad news because
-there typically are other more important and more difficult problems
-we also need to be working out
-(such as updating the seismic velocity model).
-Any trick, honest or sly, would be nice to know.
-I'll tell you a trick that is very widely used.
+Envision a large problem feasible in a hundred iterations.
+Many of my colleagues work on such problems.
+Maybe half would also use exotic parallel computer architectures.
+Those with ample energy and intellectual capacity to tackle such machines
+are rewarded by speed-up factors of 10 to a 100,
+rewarded also by a diverse population of industries hiring.
+This skill stays in demand because new architectures
+rapidly obsolete earlier generations.
+The other half, people like me, have the luxury
+of software (like in this book) decaying at a slower pace,
+leaving us needed time to tune our imaginations
+to extracting the structure of more complex problems.
 \par
-Imagine we had plenty of computer time.
-For small $\epsilon$ we have a smaller residual of data fitting but
-a larger residual in the model styling goal.
-Conversely, for large $\epsilon$, we may fit the data poorly,
-but the model styling goal is well honored.
-Now please carefully examine the preconditioned steps in Figure \ref{fig:conv}.
-At early iterations we see the solution is piece-wise lines (good)
-but many data points are poorly fit (bad).
-This is like large $\epsilon$.
-After more iterations the solution fits the data increasingly well.
-This is like small $\epsilon$.
-Are you ready to guess what pragmatic people do when they are pressured to get results?
+It is a giant leap of faith that we can accomplish something of value
+with a mere hundred iterations in a task
+that theoretically demands quadrillions.
+Experience shows that we often do,
+and we do so by experimenting with ``intuitive'' methods.
+The first,
+I shall call ``faking the epsilon.''
 
-\par
-Many (most?) practical studies are done ignoring (abandoning)
-the model styling regression (second fitting regression below):
-$$
+
+
+\subsection{Faking the epsilon}\sx{epsilon, faking}
+
+Burdened by a problem of oppressive size,
+any trick, honest or sly, is nice to know.
+I will tell you a trick that is widely used.
+Many studies are done ignoring (abandoning)
+the model styling regression (second fitting regression as follows):
+\begin{equation}
 \begin{array}{lll}
-\label{eq:main}
+\label{eq:main5}
 \bold 0 &\approx & \bold F \bold A^{-1} \bold p \ -\   \bold d \\
-\bold 0 &\approx &           \epsilon   \bold p 
+\bold 0 &\approx &           \epsilon \   \bold p 
 \end{array}
-$$
-Nice to be rid of $\epsilon$!
-The pragmatic person iterates the data fitting regression only,
+\end{equation}
+Because we have a numerically poor idea of what epsilon should be,
+it is nice to be rid of it.
+The pragmatic person iterates the data-fitting regression only,
 watches the solution as a function of iteration,
-and stops when tired,
+and stops when tired
 or (more hopefully) stops at the iteration that is subjectively most pleasing.
-
-
-\subsection{SEABEAM: Filling the empty bins with a laplacian}
-\sx{seabeam}
-\inputdir{seab}
-
-Figure~\ref{fig:seabin} shows a day's worth of data\footnote{
-        I'd like to thank Alistair Harding
-        for this interesting data set
-        named April 18.
-        \sx{Harding, Alistair}
-        }
-collected at sea by \bx{SeaBeam},
-an apparatus for measuring water depth both
-directly under a ship, and somewhat off to the sides of the ship's track.
-The data is measurements of depth $h(x,y)$ at miscellaneous locations
-in the $(x,y)$-plane.
-\sideplot{seabin}{width=3.0in,height=3.0in}{
-  Depth of the ocean under ship tracks.
-  Empty bins are displayed with an average depth $\bar h$.
-}
-The locations are scattered about,
-according to various aspects
-of the ship's navigation and the geometry of the SeaBeam sonic antenna.
-Figure \ref{fig:seabin} was made by binning with
-\texttt{bin2()} \vpageref{lst:bin2}
-and equation (\ref{eqn:dpbin}).
-The spatial spectra of the noise in the data
-could be estimated where tracks cross over themselves.
-This might be worth while, but we do not pursue it now.
-
-\inputdir{seabeam}
-
+The epsilon-faking trick does not really speed things.
+But,
+it eliminates the need for scan over epsilon.
+It also simplifies the coding  (insert smiley emoticon).
 \par
-Here we focus on the empty mesh locations where no data is recorded
-(displayed with the value of the mean depth $\bar h$).
-These empty bins were filled with
-module \texttt{mis2} \vpageref{lst:mis2}.
-Results are in Figure \ref{fig:prcfill}.
-\plot{prcfill}{width=6in,height=8in}{
-  The ocean bottom restoring missing data with a helix derivative.
-}
-In Figure \ref{fig:prcfill} the left column results from 20 iterations
-while the right column results from 100 iterations.
+Why does this crude approximation seem to work?
+The preconditioner is based on an analytic solution
+($\bold A^{-1}$ is an inverse)
+to the regularization,
+so naturally, early iterations tend to already fit the regularization,
+so early iterations are struggling instead to fit the data.
+The longer you run though, the better the data fit,
+and the more the actual regularization should be coming into play.
+But ongoing research often fails to run that far.
 \par
-The top row in Figure \ref{fig:prcfill} shows that more iterations
-spreads information further into the region of missing data.
-\par
-It turned out that the original method strictly honoring known data
-gave results so similar to the second method (regularizing)
-that the plots could not be visually distinguished.
-The middle row in Figure \ref{fig:prcfill} therefore shows
-the difference in the result of the two methods.
-We see an outline of the transition between known and unknown regions.
-Obviously, the missing data is pulling known data towards zero.
+Figure \ref{fig:conv} shows the idea
+that early iterations fit the straight lines.
+Straight lines honor the preconditioner.
+At later iterations the data fits better.
+Why do straight-line solutions honor the regularization?
+Refer to the discussion near Figure \ref{fig:im1-1a90}.
 
-\par
-The bottom row in Figure \ref{fig:prcfill} shows that preconditioning
-spreads information to great distances much quicker
-but early iterations make little effort to honor the data.
-(Even though these results are for $\epsilon=0$.)
-Later iterations make little change at long distance
-but begin to restore sharp details on the small features
-of the known topography.
-
-\par
-What if we can only afford 100 iterations?
-Perhaps we should first do 50 iterations with
-preconditioning to develop the remote part of the solution and
-then do 50 iterations by one of the other two methods to be sure
-we attended to the details near the known data.
-A more unified approach (not yet tried, as far as I know)
-would be to unify the techniques.
-The conjugate direction method searches two directions,
-the gradient and the previous step.
-We could add a third direction,
-the smart direction of equation (\ref{eqn:newdirection}).
-Instead of having a $2\times 2$ matrix
-solution like equation (\ref{eqn:twobytwosln}) for two distances,
-we would need to solve a $3\times 3$ matrix for three.
-
-\par
-Figure \ref{fig:prcfill} has a few artifacts connected with the
-use of the helix derivative.
-Examine equation (\ref{eqn:lapfac}) to notice the shape of the helix derivative.
-In principle, it is infinitely long in the horizontal axis
-in both equation (\ref{eqn:lapfac}) and Figure \ref{fig:prcfill}.
-In practice, it is truncated.  The truncation is visible as bands
-along the sides of Figure \ref{fig:prcfill}.
-
-\par
-As a practical matter, no one would use the first two bin filling methods
-with helix derivative for the roughener
-because it is theoretically equivalent to the gradient operator
-$\bold \nabla$ which has many fewer coefficients.
-Later, in Chapter
-\ref{paper:mda}
-we'll find a much smarter roughening operator $\bold A$
-called the Prediction Error Filter (PEF)
-which gives better results.
+\subsection{When preconditioning becomes a liability}
+Theoretically, preconditioning does not reduce the number of iterations
+required for an exact solution,
+but it gets us closer quicker;
+so,
+we may hope to omit all the work of the later iterations.
+Surprisingly and unfortunately,
+several of my colleagues have observed
+later iterations in which preconditioning actually slows convergence.
+Then,
+we are better off reverting to
+the nonpreconditioned initial form.
+Sorry, but I am unable to offer guidance
+or any method to cope with this issue
+other than your own application-dependent experimentation.
 
 
 
+\subsection{Earthquake depth illustrates a null space}\sx{earthquake}\sx{null space}\sx{starting guess}
+ 
+In the dawn of the era of computerized earthquake seismology,
+\sx{seismology, earthquake}
+someone decided to add earthquake depth to their catalog.
+Traditionally, they had solved for only three unknowns,
+latitude, longitude, and time of source at the source, i.e., origin time.
+Now,
+they would add a fourth, the depth.
+They wrote down the $4\times 4$ system of equations and solved it.
+Erratic results.
+So then,
+they froze the depth at zero,
+solved for the old three variables;
+only then introducing the depth.
+Problem solved.
+(Compared to seismograph station separation, zero depth is an excellent approximation.)
+
+I first understood the earthquake experience
+as an issue with nonlinear problems.
+True that earthquake travel time is not a linear function of distance,
+so the nonlinearity could lead to difficulty.
+But,
+something more is going on.
+When all seismometers are far from the earthquake,
+the waves arrive propagating nearly vertically (Earth curvature and $v(z)$ ray bending).
+Source depth affects such data in much the same way as time origin shift,
+so they are near a null space.
+Whenever near a null space,
+especially with a nonlinear problem,
+a good starting solution is needed.
 
 
-%The top row in Figure \ref{fig:prcfill} shows that more iterations
-%The second 
-%After many iterations, both regularization and preconditioning
-%lead us to the same result.
-%After a small number of iterations, we see that
-%regularization has filled the small holes
-%but it has not reached out far away from the known data.
-%With preconditioning, it is the opposite.
-
-
-\subsection{Three codes for inverse masking}
-The selection (or masking) operator $\bold K$ is
-implemented in
-\texttt{mask()} \vpageref{lst:mask}.
-\opdex{mask}{copy under mask}{47}{52}{api/c}
-%The inverting of the mask operator proceeds much as
-%we inverted the linear interpolation operator with
-%module \texttt{invint2} \vpageref{lst:invint2}.
-%The main difference is we swap the selection operator
-%for the linear interpolation operator.
-%(Philosophically, selection is like binning which is
-%like nearest-neighbor interpolation.)
-
-All the results shown in Figure \ref{fig:prcfill}
-were created with the module
-\texttt{mis2} \vpageref{lst:mis2}.
-Code locations with \texttt{style=0,1,2}
-correspond to the fitting goals
-(\ref{eqn:style0}), (\ref{eqn:style1}), (\ref{eqn:style2}).
-\moddex{mis2}{Missing data interpolation with and without preconditioning}{24}{54}{user/gee} %XX
+\subsection{The starting solution matters!}
+\sx{starting solution matters}\sx{null space}
+In principle, regularization solves the null-space problem,
+but that is only for those people lucky enough to have applications
+so small they can afford to iterate to completion.
+Think of this trivial 2-D null-space situation:
+A parabolic penalty on one spatial axis
+with no penalty on the other axis.
+Imagine a house facing northeast with a parabolic rain gutter mounted perfectly
+horizontally on one edge of the house roof.
+The null space is anywhere on the center line along the bottom of the gutter.
+Anywhere you begin, steepest descent brings you immediately to the gutter bottom
+in a location that depends on where you began.
+Now tilt the gutter a little bit so the water drips off one end of the rain drain.
+Steepest descent now overshoots a little so,
+as we saw in Chapter \ref{paper:lsq},
+a tortuous path of right-angle turning ensues.
+(Recall Figure \ref{fig:yunyue}.)
+The conjugate direction method quickly solves this trivial 2-D problem,
+but in a 150,000 dimensional lake bottom problem,
+conjugate directions taken only a few dozen iterations do not do as well.
+When the data-modeling operator contains a null space,
+only the regularization can pull us away from it,
+and a small number of iterations may be unable to do the job.
+So,
+we need a good starting location.
 \par
 
-%It is instructive to compare
-%\texttt{mis2} \vpageref{lst:mis2} with
-%\texttt{invint2} \vpageref{lst:invint2}.
-%Both are essentially filling empty regions
-%consistant with prior knowledge at particular locations
-%and minimizing energy of the filtered field.
-%Both use the helix and can be used in $N$-dimensional space.
+\boxit{
+	Textbook theory may tell us final solutions are independent of the starting location,
+	but we learn otherwise from nonlinear problems,
+	and we learn otherwise from linear but large problems.
+	}
 
 
-\section{THEORY OF UNDERDETERMINED LEAST-SQUARES}
-Construct theoretical data with
+\subsection{Null space versus starting solution}
+\sx{null space}
+The simplest null-space problem has one data point $d$ emerging from two model points.
 \begin{equation}
-         \bold d \eq \bold F \bold m
-        \label{eqn:theordata}
+\label{eqn:fullblown}
+d \quad \approx \quad
+\left[
+	\begin{array}{cc}
+		a & b
+	\end{array}
+\right]
+\
+\left[
+	\begin{array}{c}
+		x\\y
+	\end{array}
+\right]
 \end{equation}
-Assume there are fewer data points than model points
-and that the matrix $\bold F \bold F\T$ is invertible.
-From the theoretical data we estimate a model $\bold m_0$ with
+
+\par\noindent
+The null space is any solution that produces no data.
+You can add an arbitrary amount $\beta$ of the null space
+getting another solution as good as the first.
+Here is the full solution.
 \begin{equation}
-         \bold m_0 \eq \bold F\T (\bold F \bold F\T)^{-1} \bold d
-        \label{eqn:underdetest}
+\left[
+	\begin{array}{r}
+		x\\y
+	\end{array}
+\right]
+\quad \approx  \quad
+\frac{d}{2ab}
+\left[
+	\begin{array}{r}
+		b\\ a
+	\end{array}
+\right]
+\ + \
+\beta\,
+\left[
+	\begin{array}{r}
+		-b\\a
+	\end{array}
+\right]
 \end{equation}
-To verify the validity of the estimate,
-insert the estimate (\ref{eqn:underdetest}) into the
-data modeling equation (\ref{eqn:theordata}) and notice
-that the estimate $\bold m_0$ predicts the correct data.
-Notice that equation
-(\ref{eqn:underdetest}) is not the same
-as equation (\ref{eqn:sln}) which we derived much earlier.
-What's the difference?
-The central issue is which matrix of
-$\bold F \bold F\T$ and
-$\bold F\T \bold F$ actually has an inverse.
-If $\bold F$ is a rectangular matrix,
-then it is certain that one of the two is not invertible.
-(There are plenty of real cases where neither matrix is invertible.
-That's one reason we use iterative solvers.)
-Here we are dealing with the case with more model points than data points.
+
+Iterative methods can neither subtract nor add any null space
+to your initial solution.
+It is obvious in this simple case,
+because the gradient
+(here the matrix adjoint)
+dotted into the null-space vector vanishes.
+Suppose $a$ and $b$ are matrices,
+while $d$, $x$, and $y$ are vectors.
+Although more complicated, something similar happens.
+You can test if an application involves a null space
+by comparing the results of various starting solutions.
 
 \par
-Now we will show that of all possible models $\bold m$ that
-predict the correct data, $\bold m_0$ has the least energy.
-(I'd like to thank Sergey Fomel for this clear and simple proof
-that does {\em  not} use Lagrange multipliers.)
-First split (\ref{eqn:underdetest}) into an intermediate
-result $\bold d_0$ and final result:
+Other traps arise in the world of images.
+Rarely are we able to iterate to full completion,
+so we might say, ``practically speaking, this application has null spaces.''
+For example, if we know that zero frequency is theoretically
+a null space, we would say,
+``The null space contains low frequencies.''
+We cannot avoid such issues.
+
+\par
+The textbook way of dealing with null spaces is to require
+the researcher to set up model styling goals (regularizations).
+Finding such goals demands assumptions from the researcher,
+assumptions that are often hard to specify.
+Luckily,
+there is another path to consider.
+%We could choose the initial solution more carefully.
+Thinking more like a physicist, we could choose the initial solution more carefully.
+
+In regression
+(\ref{eqn:fullblown})
+extended to images,
+we might hope not to have a null-space problem
+when we begin iterating from
+$(\bold x,\bold y) =(\bold 0,\bold 0)$,
+but this is not true.
+It is a pitfall,
+which in an application context,
+took me some years to recognize.
+Notice what happens the first step you move away from
+$(\bold x,\bold y) =(\bold 0,\bold 0)$.
+Your solution becomes a constant $\beta$ times the gradient.
+The image extension of (\ref{eqn:fullblown})
+being:
+\begin{equation}
+\label{eqn:firststep}
+\left[
+	\begin{array}{c}
+		\bold x \\ \bold y
+	\end{array}
+\right]
+\quad=\quad
+\beta\ 
+\left[
+	\begin{array}{c}
+		\bold A\T \bold d
+		\\
+		\bold B\T \bold d
+	\end{array}
+\right]
+\end{equation}
+If the operators
+$\bold A$ and
+$\bold B$ resemble filters,
+it is pretty clear that
+$\bold x$ and $\bold y$ are correlated,
+which physically could be nonsense.
+We might be trying to discover if and how
+$\bold x$ and $\bold y$ are correlated.
+Or we might wish to demand they be uncorrelated.
+
+\par
+I have no general method for you,
+but offer a suggestion that works for one family of applications
+and may be suggestive for others.
+Traditionally, it might happen
+that $\bold y$ is ignored,
+effectively taking $\bold y=\bold 0$
+which happens when the data is better explained by $\bold A$ alone than by  $\bold B$ alone.
+Solve first for $\bold x$ without $\bold y$.
+Call it $\bold x_0$.
+Now define a new variable
+$\tilde {\bold x}$ such that
+$\bold x = \bold x_0 +\tilde {\bold x}$.
+Introducing your innovative concept (estimating $\bold y$) your regression becomes:
 \begin{eqnarray}
-        \bold d_0 &=& (\bold F \bold F\T)^{-1} \bold d
-	\\
-        \bold m_0 &=& \bold F\T \bold d_0
+\bold 0 &\approx & \bold r 
+\quad = \quad
+\bold A ( \bold x_0 +\tilde {\bold x}) + \bold B \bold y \ -\ \bold d
+\\
+\bold 0 &\approx & \bold r 
+\quad = \quad
+\bold A \tilde {\bold x} + \bold B \bold y - (\bold d -\bold A\bold x_0)
 \end{eqnarray}
-Consider another model ($\bold x$ not equal to zero)
+Start off from
+$(\tilde{\bold x},\bold y)=(\bold 0,\bold 0)$.
+Like Equation (\ref{eqn:firststep}),
+the first step leads to:
 \begin{equation}
-        \bold m \eq \bold m_0 + \bold x
+\left[
+        \begin{array}{c}
+                \bold {\tilde x} \\ \bold y
+        \end{array}
+\right]
+\quad=\quad
+\beta\ 
+\left[
+        \begin{array}{c}
+                \bold A\T \bold r
+                \\
+                \bold B\T \bold r
+        \end{array}
+\right]
 \end{equation}
-which fits the theoretical data
-$\bold d = \bold F(\bold m_0+\bold x)$.
-Since
-$\bold d=\bold F\bold m_0$,
-we see
-that $\bold x$ is a null space vector.
-\begin{equation}
-        \bold F \bold x \eq \bold 0
-\end{equation}
-First we see that $\bold m_0$ is orthogonal to $\bold x$ because
-\begin{equation}
-         \bold m_0' \bold x \eq
-         (\bold F\T \bold d_0)\T \bold x \eq
-         \bold d_0' \bold F \bold x \eq
-         \bold d_0' \bold 0 \eq 0
-	\label{eqn:dzero}
-\end{equation}
-Therefore,
-\begin{equation}
-\bold m\T \bold m \eq
-\bold m_0' \bold m_0 + \bold x\T\bold x + 2 \bold x\T \bold m_0 \eq
-\bold m_0' \bold m_0 + \bold x\T\bold x \quad\ge\quad \bold m_0' \bold m_0 
-\end{equation}
-so adding null space to $\bold m_0$ can only increase its energy.
-In summary,
-the solution
-$\bold m_0 = \bold F\T (\bold F \bold F\T)^{-1} \bold d$
-has less energy than any other model that satisfies the data.
+which is very different
+from Equation (\ref{eqn:firststep}),
+because $\bold r$ is very different from $\bold d$.
+Although we may still have an annoying or inappropriate
+correlation between $\tilde{\bold x}$ and $\bold y$,
+it is a lot less annoying than a correlation between
+$\bold x$ and $\bold y$.
 
-\par
-Not only does the theoretical solution
-$\bold m_0 = \bold F\T (\bold F \bold F\T)^{-1} \bold d$
-have minimum energy,
-but the result of iterative descent will too,
-provided that we begin iterations from $\bold m_0=0$ or any $\bold m_0$
-with no null-space component.
-In (\ref{eqn:dzero}) we see that the 
-orthogonality $\bold m_0'\bold x=0$
-does not arise because $\bold d_0$ has any particular value.
-It arises because $\bold m_0$ is of the form $\bold F\T\bold d_0$.
-Gradient methods contribute $\Delta\bold m =\bold F\T \bold r$
-which is of the required form.
-
-%\section{VIRTUAL-RESIDUAL PRECONDITIONING}
-%Sergey Fomel has developed a wholly different
-%approach to preconditioning to that described above.
-%He calls his method the ``model-extension'' method.
-%I call it the ``virtual-residual'' method.
-%Both names are suggestive of the method.
 %\par
 %We begin with the usual definition
 %of preconditioned variables $\bold m =\bold S\bold p$ and
@@ -1950,279 +2083,7 @@ which is of the required form.
 %\texttt{prec\_solver} \vpageref{lst:precsolver}.
 %%\moddex{vrsolver}{Virtual-residual solver}
 
-\section{SCALING THE ADJOINT}
 
-First I remind you of a rarely used little bit of mathematical notation.
-Given a vector $\bold m$ with components $(m_1,m_2,m_3)$,
-the notation $ {\bf diag\ }\bold m$ means
-\begin{equation}
- {\bf diag\ }\bold m \eq
-	\left[
- 	\begin{array}{ccc}
-		m_1 &  0 & 0 
-		\\
-		0   &m_2 & 0
-		\\
-		0   &  0 & m_3
-	\end{array}
-	\right]
-\end{equation}
-\par
-Given the usual linearized fitting goal between
-data space and model space, $ \bold d \approx \bold F \bold m$,
-the simplest image of the model space results from
-application of the adjoint operator $ \hat{\bold m} = \bold F\T \bold d$.
-Unless $\bold F$ has no physical units, however,
-the physical units of $\hat{\bold m}$ do not match those of $\bold m$,
-so we need a scaling factor.
-The theoretical solution
-$\bold m_{\rm theor} = (\bold F\T\bold F)^{-1}\bold F\T\bold d$
-tells us that the scaling units should be those of $(\bold F\T\bold F)^{-1}$.
-We are going to approximate $(\bold F\T\bold F)^{-1}$ by a diagonal matrix
-$\bold W^2$ with the correct units so
-$\hat{\bold m} = \bold W^2 \bold F\T\bold d$.
-
-\par
-What we use for $\bold W$ will be a guess, simply a guess.
-If it works better than nothing, we'll be happy,
-and if it doesn't we'll forget about it.
-Experience shows it is a good idea to try.
-Common sense tells us to insist that all elements of $\bold W^2$ are positive.
-$\bold W^2$ is a square matrix of size of model space.
-From any vector $\tilde {\bold m}$ in model space with all positive components,
-we could guess that $\bold W^2$ be
-${\bf diag\ } \tilde {\bold m}$ to any power.
-To get the right physical dimensions we choose
-$\tilde {\bold m}=\bold 1$, a vector of all ones and choose
-\begin{equation}
-\bold W^2 \eq
-	\frac{ 1 }{ {\bf diag\ } {\bold F\T\bold F\bold 1} }
-\label{eqn:adjointwt}
-\end{equation}
-A problem with the choice
-(\ref{eqn:adjointwt}) is that some components might be zero or negative.
-Well, we can take the square root of the squares of components
-and/or smooth the result.
-
-\par
-To go beyond the scaled adjoint we can use $\bold W$ as a \bx{precondition}er.
-To use $\bold W$ as a preconditioner
-we define implicitly a new set of variables $\bold p$
-by the substitution $\bold m=\bold W\bold p$.
-Then $\bold d \approx \bold F\bold m=\bold F\bold W\bold p$.
-To find $\bold p$ instead of $\bold m$,
-we iterate
-with the operator $\bold  F\bold W$ instead of with $\bold F$.
-As usual, the first step of the iteration is to use the adjoint
-of $\bold d\approx \bold F\bold W\bold p$ to form the image
-$\hat{\bold p}=(\bold F\bold W)\T\bold d$.
-At the end of the iterations,
-we convert from  $\bold p$ back to  $\bold m$
-with $\bold m=\bold W\bold p$.
-The result after the first iteration
-$\hat{\bold m}=\bold W\hat{\bold p}=\bold W(\bold F\bold W)\T\bold d=\bold W^2\bold F\T\bold d$
-turns out to be the same as scaling.
-\par
-By (\ref{eqn:adjointwt}), $\bold W$ has physical units inverse to $\bold F$.
-Thus the transformation $\bold F\bold W$ has no units
-so the $\bold p$ variables have physical units of data space.
-Experimentalists might enjoy seeing the 
-solution $\bold p$
-with its data units more than viewing the solution $\bold m$
-with its more theoretical model units.
-
-\par
-The theoretical solution for underdetermined systems
-         $\bold m =\bold F\T (\bold F \bold F\T)^{-1} \bold d$
-suggests
-an alternate approach using instead
-         $\hat{\bold m} =\bold F\T \bold W_d^2 \bold d$.
-This diagonal weighting matrix $\bold W_d^2$ must be drawn
-from vectors in data space.
-Again I chose a vector of all 1's getting the weight
-\begin{equation}
-\bold W_d^2 \eq
-	\frac{ 1 }{ {\bf diag\ } {\bold F\bold F\T\bold 1}
-	}
-\label{eqn:datawtadjoint}
-\end{equation}
-
-\par
-My choice of a vector of 1's is quite arbitrary.
-I might as well have chosen a vector of random numbers.
-Bill Symes, who suggested this approach to me,
-suggests using an observed data vector $\bold d$ for the data space weight,
-and $\bold F\T \bold d$ for the model space weight.
-This requires an additional step, dividing out the units of the data $\bold d$.
-
-\par
-Experience tells me that a broader methodology than all above is needed.
-Appropriate scaling is required in both data space and model space.
-We need two other weights
-$\bold W_m$ and
-$\bold W_d$ where
-$\hat{\bold m} = \bold W_m \bold F\T\bold W_d \bold d$.
-
-%\par
-%I have a useful practical example (stacking in $v(z)$ media)
-%in another of my electronic books (BEI),
-%where I found both
-%$\bold W_m$ and
-%$\bold W_d$ by iterative guessing.
-%First assume $\bold W_d =\bold I$ and estimate $\bold W_m$ as above.
-%Then assume you have the correct $\bold W_m$ and estimate $\bold W_d$ as above.
-%Iterate.
-%Perhaps some theorist can find a noniterative solution.
-
-\par
-I have a useful practical example (stacking in $v(z)$ media)
-in another of my electronic books (BEI),
-where I found both
-$\bold W_m$ and
-$\bold W_d$ by iterative guessing.
-First assume $\bold W_d =\bold I$ and estimate $\bold W_m$ as above.
-Then assume you have the correct $\bold W_m$ and estimate $\bold W_d$ as above.
-Iterate.
-(Perhaps some theorist can find a noniterative solution.)
-I believe this iterative procedure leads us to the best diagonal
-pre- and post- multipliers for any operator $\bold F$.  
-By this I mean that the modified operator 
-$(\bold W_d \bold F \bold W_m)$
-is as close to being unitary as we will be able to obtain
-with diagonal transformation.
-Unitary means it is energy conserving and that the inverse
-is simply the conjugate transpose.
-\par
-What good is it that
-$(\bold W_d \bold F \bold W_m)\T
-(\bold W_d \bold F \bold W_m) \approx \bold I$?
-It gives us the most rapid convergence of least squares problems of the form
-\begin{equation}
-\label{eqn:genform}
-\bold 0 \quad\approx\quad \bold W_d ( \bold F\bold m - \bold d)
-\eq               \bold W_d ( \bold F\bold W_m \bold p - \bold d)
-\end{equation}
-Thus it defines for us the best
-diagonal transform to a
-preconditioning variable
-$\bold p=\bold W_m^{-1}\bold m$ to use during iteration,
-and suggests to us what residual weighting function we need to use if
-rapid convergence is a high priority.
-Suppose we are not satisfied with $\bold W_d$ being the weighting function
-for residuals.  Equation~(\ref{eqn:genform}) could still help us speed iteration.
-Instead of beginning iteration with $\bold p=\bold 0$,
-we could begin from the solution $\bold p$
-to the regression~(\ref{eqn:genform}).
-
-\par
-The PhD thesis of James Rickett experiments extensively
-with data space and model space weighting functions
-in the context of seismic velocity estimation.
-
-
-\section{A FORMAL DEFINITION FOR ADJOINTS}
-
-In mathematics, adjoints are defined a little differently than
-we have defined them here
-(as matrix transposes).\footnote{
-	I would like to thank Albert Tarantola for suggesting this topic.
-	}
-The mathematician begins by telling us that we cannot simply
-form any dot product we want.
-We are not allowed to take the dot product of any two vectors
-in model space
-$\bold m_1 \cdot \bold m_2$ or data space
-$\bold d_1 \cdot \bold d_2$.
-Instead, we must first transform them to a preferred coordinate system.
-Say
-$\tilde{\bold m}_1 = \bold M {\bold m}_1$ and
-$\tilde{\bold d}_1 = \bold D {\bold d}_1$, etc for other vectors.
-We complain we do not know $\bold M$ and $\bold D$.
-They reply that we do not really need to know them
-but we do need to have the inverses (aack!) of
-$\bold M\T\bold M$ and
-$\bold D\T\bold D$.
-A pre-existing common notation is
-$\bold\sigma_m^{-2} = \bold M\T\bold M$ and
-$\bold\sigma_d^{-2} = \bold D\T\bold D$.
-Now the mathematician buries the mysterious new positive-definite
-matrix inverses in the definition of dot product
-$<\bold m_1,\bold m_2> = \bold m\T_1 \bold M\T\bold M \bold m_2 = \bold m_1\T \bold \sigma_m^{-2} \bold m_2$
-and likewise with
-$<\bold d_1,\bold d_2>$.
-This suggests a total reorganization of our programs.
-Instead of computing
-$(\bold m_1\T \bold M\T) (\bold M \bold m_2)$
-we could compute $\bold m_1\T (\bold\sigma_m^{-2} \bold m_2)$.
-Indeed, this is the ``conventional'' approach.
-This definition of dot product would be buried in the solver code.
-The other thing that would change would be the search direction
-$\Delta \bold m$.
-Instead of being the gradient as we have defined it
-$\Delta \bold m=\bold L\T\bold r$,
-it would be
-$\Delta \bold m=\bold\sigma_m^{-2} \bold L\T\bold\sigma_d^{-2}\bold r$.
-A mathematician would
-{\em define} the adjoint of $\bold L$ to be
-$\bold\sigma_m^{-2} \bold L\T\bold\sigma_d^{-2}$.
-(Here $\bold L\T$ remains matrix transpose.)
-You might notice this approach nicely incorporates
-both residual weighting and preconditioning
-while yet evading the issue of where we get the matrices
-$\sigma_m^2$ and $\sigma_d^2$ or how we invert them.
-Fortunately, upcoming chapter \ref{paper:mda}
-suggests how,
-in image estimation problems,
-to obtain sensible estimates of the elusive operators $\bold M$ and $\bold D$.
-Parenthetically, modeling calculations in physics and engineering
-often use similar mathematics
-in which the role of $\bold M\T\bold M$ is not so mysterious.
-Kinetic energy is mass times velocity squared.
-Mass can play the role of $\bold M\T\bold M$.
-
-\par
-So, should we continue to use
-$(\bold m_1\T \bold M\T) (\bold M \bold m_2)$
-or should we take the conventional route and go with
-$\bold m_1\T (\bold\sigma_m^{-2} \bold m_2)$?
-One day while benchmarking a wide variety of computers I was shocked
-to see some widely differing numerical results.  Now I know why.
-Consider adding $10^7$ identical positive floating point numbers, say 1.0's,
-in an arithmetic with precision of $10^{-6}$.
-After you have added in the first $10^6$ numbers,
-the rest will all truncate in the roundoff
-and your sum will be wrong by a factor of ten.
-If the numbers were added in pairs,
-and then the pairs added, etc, there would be no difficulty.
-Precision is scary stuff!
-
-\par
-It is my understanding and belief that there is nothing wrong
-with the approach of this book, in fact,
-it seems to have some definite advantages.
-While the conventional approach requires one
-to compute the adjoint correctly, we do not.
-The method of this book
-(which I believe is properly called conjugate directions)
-has a robustness that, I'm told,
-has been superior in some important geophysical applications.
-The conventional approach seems to get in trouble when
-transpose operators are computed with insufficient precision.
-
-
-
-%On the other hand, I can envision applications where
-%the conventional approach would be preferable.
-%The matrix $\bold M$ is the size of model space times the size of data space
-%while the matrix $\bold\sigma_m^{-2}$ is the size of model space squared.
-%Clearly, there is the potential for some applications to speed up
-%by switching from our approach to the conventional approach.
-
-
-
-%\section{ACKNOWLEDGEMENTS}
-%Nearly everything I know about null spaces
-%I learned from Dave Nichols, Bill Symes, Bill Harlan, and Sergey Fomel.
 
 %\unboldmath
 

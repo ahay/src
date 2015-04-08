@@ -429,10 +429,9 @@ hfile=hfile bfile=bfile < plane.rsf
 \end{verbatim}
 
 If \texttt{hfile=} and \texttt{bfile=} are not supplied to
-\texttt{sfsegywrite}, the corresponding headers will be either picked
-from the default locations (files named \texttt{header} and
-\texttt{binary}) or generated on the fly. The trace header file can be
-generated with \texttt{sfsegyheader}. Here is an example:
+\texttt{sfsegywrite}, the corresponding headers will be generated on
+the fly. The trace header file can be generated with
+\texttt{sfsegyheader}. Here is an example:
 \begin{verbatim}
 bash$ sfheadermath < plane.rsf output=N+1 | sfdd type=int > tracl.rsf
 bash$ sfsegyheader < plane.rsf tracl=tracl.rsf > tfile.rsf
