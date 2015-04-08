@@ -22,6 +22,7 @@ Austin, TX, USA, 78713-8924}
 
 \maketitle
 
+
 \begin{abstract}
 Morphological component analysis (MCA) is a powerful tool used in image processing to separate different geometrical components (cartoons and textures, curves and points etc). MCA is based on the observation that many complex signals may not be sparsely represented using only one dictionary/transform, however can have sparse representation by combining several over-complete dictionaries/transforms. In this paper we propose seislet-based MCA for seismic data processing. MCA algorithm is reformulated in the shaping-regularization framework. Successful seislet-based MCA depends on reliable slope estimation of seismic events, which is done by plane-wave destruction (PWD) filters. An exponential shrinkage operator unifies many existing thresholding operators and is adopted in scale-dependent shaping regularization to promote sparsity. Numerical examples demonstrate a superior performance of the proposed exponential shrinkage operator and the potential of seislet-based MCA in application to trace interpolation and multiple removal.
 \end{abstract}
@@ -36,6 +37,7 @@ In the seislet transform, the locally dominant event slopes are found by plane-w
 
 
 In this paper, we propose seislet-based MCA for seismic data processing. We reformulate MCA algorithm in the shaping-regularization framework \citep{fomel2007shaping,fomel2008nonlinear}. Successful seislet-based MCA depends on reliable slope estimation of seismic events, which can be done by plane-wave destruction (PWD) filtering. Due to the special importance of an effective shrinkage or thresholding function in sparsity-promoting shaping optimization, we propose a scale-dependent exponential shrinkage operator, which can flexibly  approximate many well-known existing thresholding functions. Synthetic and field data examples demonstrate the potential of seislet-based MCA in the application to trace interpolation and multiple removal.
+
 
 \section{MCA with scale-dependent shaping regularization}
 
@@ -66,7 +68,7 @@ Allowing for the missing elements in the data, the observations are connected to
 \begin{equation}
  d_{obs}=Md=M\Phi x=Fx, F=M\Phi.
  \end{equation}
-where $M$ is a acquisition mask indicating the observed and missing values. Assume $\Phi$ is a tight frame such that $\Phi^*\Phi=\mathrm{Id}$, $x=\Phi^*\Phi x=\Phi^*d$. It leads to
+where $M$ is an acquisition mask indicating the observed and missing values. Assume $\Phi$ is a tight frame such that $\Phi^*\Phi=\mathrm{Id}$, $x=\Phi^*\Phi x=\Phi^*d$. It leads to
 \begin{equation}\label{eq:ist3}
   \begin{array}{ll}
     d^{k+1} & =\Phi x^{k+1} \\
@@ -93,12 +95,12 @@ Note that \eqref{eq:ist5} analyzes the target unknown $d$ directly, without reso
 
 \subsection{Understanding iterative thresholding as shaping regularization}
 
-Note that at each iteration soft thresholding is the only nonlinear operation which corresponds to the $\ell_1$ constraint for the model $x$, i.e., $R(x)=\|x\|_1$.
- Shaping regularization \citep{fomel2007shaping,fomel2008nonlinear} provides us a general and flexible framework for inversion without the need for a specific penalty function $R(x)$ when a particular kind of shaping operator is used. The iterative shaping process can be expressed as
+Note that at each iteration soft thresholding is the only nonlinear operation corresponding to the $\ell_1$ constraint for the model $x$, i.e., $R(x)=\|x\|_1$.
+ Shaping regularization \citep{fomel2007shaping,fomel2008nonlinear} provides a general and flexible framework for inversion without the need for a specific penalty function $R(x)$ when a particular kind of shaping operator is used. The iterative shaping process can be expressed as
  \begin{equation}\label{eq:shaping1}
    x^{k+1}=S(x^{k}+B(d_{obs}-Fx^{k})),
  \end{equation}
-where the shaping operator $S$ can be a smoothing operator \citep{fomel2007shaping}, or a more general operator even  a nonlinear sparsity-promoting shrinkage/thresholding operator \citep{fomel2008nonlinear}. The backward operator $B$ does not need to be the adjoint of the forward mapping $F$. It gives us more freedom to chose a form of $B$ to approximate the inverse of $F$ so that shaping regularization enjoys faster convergence rate in practice. In the language of shaping regularization, the updating rule in Eq. \eqref{eq:ist4} becomes
+where the shaping operator $S$ can be a smoothing operator \citep{fomel2007shaping}, or a more general operator even  a nonlinear sparsity-promoting shrinkage/thresholding operator \citep{fomel2008nonlinear}. It can be thought of a type of Landweber iteration followed by projection, which is conducted via the shaping operator $S$. Instead of finding the formula of gradient with a known  regularization penalty, we have to focus on the design of shaping operator in shaping regularization. In gradient-based Landweber iteration the backward operator $B$ is required to be the adjoint of the forward mapping $F$, i.e., $B=F^*$; in shaping regularization however, it is not necessarily required. Shaping regularization gives us more freedom to chose a form of $B$ to approximate the inverse of $F$ so that shaping regularization enjoys faster convergence rate in practice. In the language of shaping regularization, the updating rule in Eq. \eqref{eq:ist4} becomes
 \begin{equation}\label{eq:shaping2}
   \left\{
   \begin{array}{l}
@@ -114,18 +116,18 @@ where the backward operator is chosen to be the inverse of the forward mapping.
 
 MCA considers the complete data $d$ to be the superposition of several morphologically distinct components: $d=\sum_{i=1}^Nd_i$. For each component $d_i$, MCA assumes there exists a transform $\Phi_i$ which can sparsely represent component $d_i$ by its coefficients $\alpha_i$ ($\alpha_i=\Phi_i^{*}d_i$ should be sparse), and can not do so for the others. Mathematically,
 \begin{equation}\label{eq:mca_un}
-  \min_{\{d_i\}}\sum_{i=1}^{N}R(\Phi^{*}d_i), s.t.\quad  d_{obs}=M\sum_{i=1}^{N}d_i.
+  \min_{\{d_i\}}\sum_{i=1}^{N}R(\Phi_i^{*}d_i), \mathrm{subject\; to}\;  d_{obs}=M\sum_{i=1}^{N}d_i.
 \end{equation}
 The above problem can be rewritten as
 \begin{equation}\label{eq:mca1}
-  \min_{\{d_i\}}\frac{1}{2}\left\|d_{obs}-M\sum_{i=1}^Nd_i\right\|_2^2+\lambda \sum_{i=1}^NR(\Phi^{*}d_i).
+  \min_{\{d_i\}}\frac{1}{2}\left\|d_{obs}-M\sum_{i=1}^Nd_i\right\|_2^2+\lambda \sum_{i=1}^NR(\Phi_i^{*}d_i).
 \end{equation}
 We prefer to rewrite \eqref{eq:mca1} as
 \begin{eqnarray}
   \min_{\{d_i\}}\frac{1}{2}\left\|\left(d_{obs}-M\sum_{j\neq i}d_j\right)-Md_i\right\|_2^2 \nonumber\\
    +\lambda R(\Phi_i^{*}d_i)+\lambda \sum_{j\neq i}R(\Phi_j^{*}d_j).
 \end{eqnarray}
-Thus, optimizing w.r.t. $d_i$ leads to the analysis IST shaping as \eqref{eq:shaping1}. At the \emph{k}th iteration, optimization is performed alternatively for many components using block coordinate relaxation (BCR) technique \citep{bruce1998block}: for the \emph{i}th component $d_i^{k}$, $i=1,\ldots,N$: $\Phi\leftarrow \Phi_i$, $d^{k}\leftarrow d_i^{k}$, $d^{k+1}\leftarrow d_i^{k+1}$, $d_{obs}\leftarrow d_{obs}-M\sum_{j\neq i}d_j^{k}$, yields the residual term $r^{k}=d_{obs}-M\sum_{i=1}^N d_i^{k}$ and the updating rule
+Thus, optimizing with respect to $d_i$ leads to the analysis IST shaping as \eqref{eq:shaping1}. At the \emph{k}th iteration, optimization is performed alternatively for many components using block coordinate relaxation (BCR) technique \citep{bruce1998block}: for the \emph{i}th component $d_i^{k}$, $i=1,\ldots,N$: $\Phi\leftarrow \Phi_i$, $d^{k}\leftarrow d_i^{k}$, $d^{k+1}\leftarrow d_i^{k+1}$, $d_{obs}\leftarrow d_{obs}-M\sum_{j\neq i}d_j^{k}$, yields the residual term $r^{k}=d_{obs}-M\sum_{i=1}^N d_i^{k}$ and the updating rule
 \begin{equation}\label{eq:mca2}
   \left\{
   \begin{array}{l}
@@ -154,11 +156,7 @@ and the linear interpolation prediction filter is
 \begin{equation}
  P(Z)=(Z+1/Z)/2.
 \end{equation}
-% To predict a particular frequency component $\omega_0$, we can use
-% \begin{equation}
-%  P(Z)=Z/Z_0, P(Z)=(Z/Z_0+Z_0/Z)/2,
-% \end{equation}
-% where $Z_0=e^{i\omega_0\Delta t}$.
+
 
 Successful prediction and update plays a key role for local slope estimation. By modifying the biorthogonal wavelet construction, the prediction and update operators for a simple seislet transform are defined as
 \begin{equation}
@@ -167,7 +165,7 @@ Successful prediction and update plays a key role for local slope estimation. By
  U[\mathbf{r}]_k=(S_k^{+}[\mathbf{r}_{k-1}] + S_{k}^{-} [\mathbf{r}_k]) /4,
 \end{split}
 \end{equation}
-where $S_k^{+}$ and $S_k^{-}$ are operators that predict a trace from its left and right neighbors, corresponding to shifting seismic events in terms of their local slopes. The job of local slopes estimation can be done by PWD filters. Particularly, it is possible to obtain two or more dips with the help of PWD filters to capture different geometrical components of seismic data. It is important to point out that besides PWD, there are other approaches to estimating dips of seismic data, i.e., local slant stack \citep{ottolini1983signal}, volumetric scan \citep{marfurt2006robust}. However, PWD implements slope estimation through prediction and therefore is appropriate for use with the seislet transform.
+where $S_k^{+}$ and $S_k^{-}$ are operators that predict a trace from its left and right neighbors, corresponding to shifting seismic events in terms of their local slopes. The job of local slopes estimation can be done by PWD filters. Particularly, it is possible to obtain two or more dips with the help of PWD filters to capture different geometrical components of seismic data. The estimation of slopes involves a least-square optimization problem to be solved \citep{fomel2002applications}, leading to extra computation. It is important to point out that besides PWD, there are other approaches to estimating dips of seismic data, i.e., local slant stack \citep{ottolini1983signal}, volumetric scan \citep{marfurt2006robust}. However, PWD implements slope estimation through prediction and therefore is appropriate for use with the seislet transform. 
 
 
 \subsection{Sparsifying MCA with exponential shrinkage shaping}
@@ -176,7 +174,9 @@ The IST algorithm used by MCA requires soft thresholding function to filter out 
 \begin{equation}
 t_{\lambda}(u)=\mathrm{Hard}_{\lambda}(u)=u.*(|u|>\lambda?1:0).
 \end{equation}
-Another choice is Stein thresholding \citep{peyre2010advanced}:
+where $(\cdot)?A:B$ frequency used hereafter is an if-else judgment in C-code style:  The expression equals $A$ if the statement $(\cdot)$ is true, and $B$ otherwise.
+
+Another choice is Stein thresholding \citep{peyre2010advanced,mallat2009}:
 \begin{equation}\label{eq:stein}
 t_{\lambda}(u)=\mathrm{Stein}_{\lambda}(u)=u.*\max\left(1-(\frac{\lambda}{|u|})^{2},0\right).
 \end{equation}
@@ -199,7 +199,8 @@ t_{\lambda}(u)=u.*\mathrm{exp}(-(\frac{\lambda}{|u|})^{2-p}).
 \end{equation}
 Based on Taylor series, this operator in \eqref{eq:gen_op} enjoys some useful properties:
 \begin{itemize}
- \item For $|u|>>\lambda$, it is a good approximation of the p-thresholding operator in \eqref{eq:pthresh}, and does not suffer the bias when $p\neq 1$. It reduces to Stein thresholding operator for $p=0$ and soft thresholding for $p=1$. 
+ \item It is valuable to point out that the exponential shrinkage can be considered as a smooth $\ell_0$ constraint \citep{mohimani2009fast,gholami2011}.
+For $|u|>>\lambda$, it is a good approximation of the p-thresholding operator in \eqref{eq:pthresh}, and does not suffer the bias when $p\neq 1$. It reduces to Stein thresholding operator for $p=0$ and soft thresholding for $p=1$. 
   \begin{equation}\label{eq:exp_sergey} 
   \begin{split}   
   t_{\lambda,0}(u)=u.*\mathrm{exp}(-(\frac{\lambda}{|u|})^{2})\approx u.*(1-(\frac{\lambda}{|u|})^{2}),\\
@@ -216,7 +217,7 @@ Based on Taylor series, this operator in \eqref{eq:gen_op} enjoys some useful pr
 \end{equation}
 where 
 \begin{equation}
- \mathrm{diag}(W_{ii})x_i=
+ \mathrm{diag}(W_{ii})=
  \begin{cases}
  1-\frac{\lambda}{|x_i|}>0?1:0, & \mathrm{Hard}\\
  \max(1-\frac{\lambda}{|x_i|},0), & \mathrm{Soft}\\
@@ -225,21 +226,25 @@ where
  \mathrm{exp}(-(\frac{\lambda}{|x_i|})^{2-p}),& \mathrm{Exponential}
  \end{cases}
 \end{equation}
-It is obvious that the spectral radius of the diagonal weighting matrix is no larger than 1. This property guarantees convergence of the shrinkage-based shaping optimization, of which the case of iterative soft thresholding algorithm has been established by  \cite{daubechies2004iterative}. For the convenience of comparison, we plot these thresholding operators in Figure \ref{fig:thresh}. 
+For the convenience of comparison, we plot these thresholding operators in Figure~\ref{fig:thresh}. 
 
 
 Note that we are using seislet transform which has different scales for signal representation. Usually, large scales of seislet coefficients corresponds to unpredictable noise, while most of the important information gets transformed into smaller scales. We design a scale-dependent diagonal weighting operator:
 \begin{equation}
- \mathrm{diag}(W_{ii})x_i= s(x_i)<s_0?1:0,
+ \mathrm{diag}(W_{ii})= s(x_i)<s_0?1:0,
 \end{equation}
 where $s_0$ is user-defined scale, while $s(x_i)$ is the scale that the coefficient $x_i$ corresponds to.  Put all things together, in the MCA shaping regularization we are using a scale-dependent exponential shrinkage operator which is composite operator cascaded with a scale-muting operator $W_{s}$ and an exponential weighting operator $W_{exp}$:
 \begin{equation}
  S(x)=W_{exp} W_s x.
 \end{equation}
-The use of scale-dependent exponential shrinkage offers easy control on the separation of the signal components we would like to capture. It has some connections to the $\ell_p$ norm constrain, however, does not exactly match $\ell_p$ minimization. It is interesting to mention that under the Fourier basis, the scale-muting operator $W_s$ becomes a frequency mask (it behaves like a selective hard thresholding), which can be employed to remove the groundroll in application to seismic interpolation \citep{gholami2014non}.
+The use of scale-dependent exponential shrinkage offers easy control on the separation of the signal components we would like to capture. It is interesting to mention that under the Fourier basis, the scale-muting operator $W_s$ becomes a frequency mask (it behaves like a selective hard thresholding), which can be employed to remove the groundroll in application to seismic interpolation \citep{gholami2014non}.
 
 
-By incorporating PWD dip estimation and scale-dependent exponential shrinkage shaping, we summarize the proposed seislet-based MCA algorithm as Algorithm MCA. Seislet transforms associated with different dips forms a combined seislet frame \citep{fomel2010seislet}. Shrinkage operator plays the role of crosstalk removal in MCA algorithm, as explained in more detail in Appendix A.
+By incorporating PWD dip estimation and scale-dependent exponential shrinkage shaping, we summarize the proposed seislet-based MCA algorithm as Algorithm MCA. Seislet transforms associated with different dips forms a combined seislet frame \citep{fomel2010seislet}. The threshold in each iteration can be determined with a predefined percentile according to Hoare's algorithm. Shrinkage operator plays the role of crosstalk removal in MCA algorithm, as explained in more detail in Appendix A.
+
+
+
+
 %\begin{figure}
 %\centering
 %  \includegraphics[width=\linewidth]{thresh}\\
@@ -267,12 +272,14 @@ By incorporating PWD dip estimation and scale-dependent exponential shrinkage sh
     \end{algorithmic}
 \end{algorithm}
 
-
 \section{Numerical examples}
 
 \subsection{Trace interpolation}
 
-Interpolation of random missing traces is an important task in seismic data processing. Unlike most studies using only one transform, we consider the seismic data having two different components, which can be characterized by a seislet frame composed of seislet transforms associated with two different slopes. PWD filter is utilized to estimate the two dip fields \citep{fomel2002applications}. As shown in Figure~\ref{fig:data}, the complete data is decimated with a random eliminating rate 25\%. 10 iterations are carried out to separate these components. The estimated dips (Figure~\ref{fig:dips}) by PWD  indicate that the two separated components exhibit different modes: component 2 has positive and negative dips, corresponding to seismic diffractions, while the events of component 1 are more consistent (most values of the dip are positive). The summation of the two components gives a reasonable interpolation result (right panel of Figure~\ref{fig:interp}.) For comparison, we define the signal-to-noise ratio as $\mathrm{SNR}=10\log_{10}(\frac{|s|^2}{|s-\hat{s}|^2})$ to quantify the reconstruction performance. The resulting SNRs using exponential shrinkage, soft, hard, and generalized p-thresholding are 11.98 dB, 11.29 dB, 5.37 dB and 8.94 dB, respectively. It shows that the proposed exponential shrinkage outperforms the existing methods in MCA interpolation. It is important to point out that approximating the $\ell_0$ and $\ell_1$ minimization in a smooth constraint has already been validated in seismic interpolation applications by \cite{cao2011review}. The use of exponential shrinkage enriches the sparsity-promoting shaping operator and extends the smooth constraint to MCA approach.
+
+Interpolation of random missing traces is an important task in seismic data processing. Unlike most studies using only one transform, we consider the seismic data having two different components, which can be characterized by a seislet frame composed of seislet transforms associated with two different slopes. PWD filter is utilized to estimate the two dip fields \citep{fomel2002applications}. As shown in Figure~\ref{fig:data}, the complete data is decimated with a random eliminating rate 25\%. 10 iterations are carried out to separate these components. The estimated dips (Figure~\ref{fig:dips}) by PWD  indicate that the two separated components exhibit different modes: component 2 has positive and negative dips, corresponding to seismic diffractions, while the events of component 1 are more consistent (most values of the dip are positive). The summation of the two components gives a reasonable interpolation result (right panel of Figure~\ref{fig:interp}.) For comparison, we define the signal-to-noise ratio as $\mathrm{SNR}=10\log_{10}(\frac{|s|^2}{|s-\hat{s}|^2})$ to quantify the reconstruction performance. The resulting SNRs using exponential shrinkage, soft, hard, and generalized p-thresholding are 11.98 dB, 11.29 dB, 5.37 dB and 8.94 dB, respectively. It shows that the proposed exponential shrinkage outperforms the existing methods in MCA interpolation. It is important to point out that approximating the $\ell_0$ and $\ell_1$ minimization in a smooth constraint has already been validated in seismic interpolation applications by \cite{cao2011review}. The use of exponential shrinkage enriches the sparsity-promoting shaping operator and extends the smooth constraint to MCA approach. 
+
+
 
 %\begin{figure}
 %\centering
@@ -329,8 +336,9 @@ Interpolation of random missing traces is an important task in seismic data proc
 
 \subsection{Multiple removal}
 
-Our second example is the separation of primaries and multiples for the field CMP gather shown in Figure~\ref{fig:srme} \citep{fomel2006regularizing}. The multiples are predicted using surface-related multiple elimination (SRME). Even though SRME fails to predict the correct amplitudes, however, the resulting prediction helps PWD to extract the dominant slopes of multiple events. 
-Before applying the seislet-based MCA method, it is important to point out that the iteratively reweighted least-squares (IRLS) method using the model precondition is another way for sparsity-enforced separation. Thus, we compared multiple removal by two different methods: seislet-based IRLS method and the proposed seislet-based MCA method. For comparison, the separated primaries and multiples using different methods are plotted in Figures~\ref{fig:signal} and \ref{fig:nois}. Visually, the seislet-based IRLS method and the seislet-based MCA method output similar primaries, which can also be seen clearly from the velocity scans of the primaries shown in Figure~\ref{fig:vsignal}. To further confirm our conclusion, we draw the velocity scans of predicted multiples in Figure~\ref{fig:vnois}. The panels of velocity scan in Figures~\ref{fig:vsignal} and \ref{fig:vnois} demonstrate that using MCA, the primaries correctly correspond to high velocity part while the multiples are associated with low velocity part. Figure~\ref{fig:vnois} shows that seislet-based MCA outperforms seislet-based IRLS method in the locations A and B in the velocity scan panel due to the nice match of the corresponding semblance scan of the original data; at locations C and D, the energy of multiples obtained by seislet-MCA has less leakage, compared to seislet-IRLS method. Note that the seislet-based MCA algorithm only uses 15 iterations to obtain the best separation effect, while the number of iterations for seislet-IRLS method is 1000. Therefore, seislet-based MCA is very efficient to demultiple.
+Our second example is the separation of primaries and multiples for the field CMP gather shown in Figure~\ref{fig:srme} \citep{fomel2006regularizing}. In the case of signal separation, the mask operator $M$ becomes an identity.
+The multiples are predicted using surface-related multiple elimination (SRME). Even though SRME fails to predict the correct amplitudes, however, the resulting prediction helps PWD to extract the dominant slopes of multiple events. 
+Before applying the seislet-based MCA method, it is important to point out that the iteratively reweighted least-squares (IRLS) method using the model precondition is another way for sparsity-enforced separation \citep{daubechies2010}. Thus, we compared multiple removal by two different methods: seislet-based IRLS method and the proposed seislet-based MCA method. For comparison, the separated primaries and multiples using different methods are plotted in Figures~\ref{fig:signal} and  \ref{fig:nois}. Visually, the seislet-based IRLS method and the seislet-based MCA method output similar primaries, which can also be seen clearly from the velocity scans of the primaries shown in Figure~\ref{fig:vsignal}. To further confirm our conclusion, we draw the velocity scans of predicted multiples in Figure~\ref{fig:vnois}. The panels of velocity scan in Figures~\ref{fig:vsignal} and \ref{fig:vnois} demonstrate that using MCA, the primaries correctly correspond to high velocity part while the multiples are associated with low velocity part. Figure~\ref{fig:vnois} shows that seislet-based MCA outperforms seislet-based IRLS method in the locations A and B in the velocity scan panel due to the nice match of the corresponding semblance scan of the original data; at locations C and D, the energy of multiples obtained by seislet-MCA has less leakage, compared to seislet-IRLS method. Note that the seislet-based MCA algorithm only uses 15 iterations to obtain the best separation effect, while the number of iterations for seislet-IRLS method is 1000. Therefore, seislet-based MCA is very efficient to demultiple.
 
 
 % \begin{figure}
@@ -380,18 +388,19 @@ Before applying the seislet-based MCA method, it is important to point out that 
 
   \plot{vnois}{width=\linewidth}{Velocity scan for multiples obtained by seislet-IRLS and seislet-based MCA (first two panels, from left to right). The velocity scan of original data is shown in the last panel for comparison. Seislet-based MCA outperforms seislet-based IRLS method in the locations A and B in the velocity scan panel due to the nice match of the corresponding semblance scan of the original data; at locations C and D, the energy of multiples obtained by seislet-MCA has less leakage, compared to seislet-IRLS method. }
   
+
 \section{Conclusion and discussion}
 
 We have developed a seislet-based MCA method for seismic data processing. PWD filter can be utilized to estimate the slopes of seismic data. An exponential shrinkage function is introduced to diversify the capability of sparsity-promoting shaping operator. The proposed seislet-based MCA using scaled-dependent shaping regularization is promising in the application to seismic trace interpolation, and multiple removal. The numerical results reveal that the exponential shrinkage operator in sparsity-promoting shaping regularization plays an extremely important role in successful seislet-based MCA separation, superior to many existing thresholding operators. The additional parameter $p$ provides us more flexibility for approximating many existing shrinkage operators to achieve better separation performance. Meanwhile, it is free of non-differential singularity and unifies many existing shrinkage operators. 
 
-
+Seislet-MCA using PWD-based dip estimation is of special physical meaning for geophysical data in seismic processing, while the sparse dictionaries reported in \cite{starck2004redundant}  are useful in image processing but lacking seismic attributes. However, a computational expensive optimization problem using least-squares minimization, which is not involved in the method of \cite{starck2004redundant}, has to be solved to estimate the slope fields before applying our seislet-based method. Beside the computational expensive slope estimation, the proposed method is very efficient for interpolation and separation. The method fails to interpolate the missing traces when the random decimating rate larger than 70\% for 2D seismic data, which honors the necessity of high dimensional data reconstruction using 3D seislet transform. Although numerically working well, up to now we have no theoretical convergence proof of the nonlinear shaping algorithm, and it remains an open problem for future works.
 
 \section*{Acknowledgments}
 
 The work of the first author was supported by the China Scholarship Council during his visit to the Bureau of Economic Geology and the University of Texas at Austin. We would like to thank Wenchao Chen and Jianwei Ma for valuable suggestions. Reproducible examples are created using the  Madagascar software package \citep{m8r}.
 
 \appendix
-\section{Appendix: Connections between seislet frame and seislet-MCA algorithm}
+\section{Connections between seislet frame and seislet-MCA algorithm}
 \label{app:seisletframe}
 
 The complete data $d$ is regarded to be superposition of several different geometrical components, and each component can be sparely represented using a seislet dictionary $\Phi_i$, i.e.,
@@ -420,12 +429,11 @@ in the sense that
 \begin{equation}
  FB=\displaystyle \frac{1}{N}\,\sum_{i=1}^N\Phi_i\Phi_i^{*}=\mathrm{Id}.
 \end{equation}
-The difference between seislet-MCA algorithm and seislet frame minimization is the use of BCR technique: we sparsify one component while keeping all others fixed.  At the $k+1$-th iteration applying the backward operator on the $i$-th component leads to
+The difference between seislet-MCA algorithm and seislet frame minimization is the use of BCR technique \citep{bruce1998block}: We sparsify one component while keeping all others fixed.  At the $k+1$-th iteration applying the backward operator on the $i$-th component leads to
 \begin{equation}
 \tilde{\alpha}_i^{k+1}=\alpha_i^k+\sum_{i=1}^N\Phi_i^{*} r^k=\alpha_i^k+r_i^j+\sum_{j\neq i}\Phi_i^{*} r_j^k
 \end{equation}
 where the terms $\sum_{j\neq i}\Phi_i^{*}r_j^k$ are the crosstalk between the $i$-th component and the others. An intuitive approach to filter out the undesired crosstalk is shrinkage/thresholding. The proposed exponential shrinkage provides us a flexible control on the performance of the shrinkage/thresholding operator.
 
-\bibliographystyle{seg}  % style file is seg.bst
+\bibliographystyle{seg}
 \bibliography{mcaseislet}
-
