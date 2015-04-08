@@ -30,3 +30,9 @@ for dir in glob.glob('*/*/[a-z]*/'):
        proj = os.path.join(dir,'.rsfproj')
        if not os.path.isfile(proj):
           print 'no project in ',dir
+
+
+8. Remove programs without examples in system/generic system/seismic and
+user/*
+
+
