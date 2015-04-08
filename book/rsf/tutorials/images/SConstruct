@@ -30,7 +30,7 @@ Flow('m32-med','m32','despike2 wide1=5 wide2=5')
 
 Flow('m32-gss','m32','gaussmooth rect=5 | transp | gaussmooth rect=5 | transp')
 
-for case in ('','-med','-gss'):
+for case in ('','-med','-gss','-noise'):
     Result('m32'+case,'grey allpos=y screenratio=1 wanttitle=n')
 
 # Another image
@@ -68,6 +68,13 @@ Result('m31-8','m31-8 m31-8-slice','SideBySideIso')
 
 # Add noise
 
+Flow('m32-noise','m32','noise seed=2015 type=n range=127.5 mean=127.5 | dd type=int | dd type=float')
 
+for image in ('bricks','photomic','clouds'):
+    jpg = image+'.jpg'
+    Fetch(jpg,'master',
+      server='https://raw.githubusercontent.com',
+      top='kwinkunks/timefreak')
+    Flow(image,jpg,'jpg2byte | window n1=1 | dd type=float')
     
 End()
