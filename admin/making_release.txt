@@ -85,3 +85,8 @@ import rsf.use
 
 Try running sfdoc
 
+13. Announce at RSF-devel
+
+14. Test compilation
+
+
