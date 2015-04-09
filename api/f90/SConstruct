@@ -19,12 +19,14 @@ if 'f90' in env.get('API',[]) and env.has_key('F90'):
     F90base =  os.path.basename(F90)
     env.Append(CPPDEFINES=['$CFORTRAN90'])
 
-    if F90base[:8] == 'gfortran' \
-        or F90base[:3] == 'gfc' \
-        or F90base[:5] == 'pgf90':
+    if F90base[:8] == 'gfortran' or F90base[:3] == 'gfc':
         env.Append(CPPDEFINES=['GFORTRAN'],
                    CFLAGS=' -I${SOURCE.dir}',
                    F90FLAGS=' -J${SOURCE.dir} -I${SOURCE.dir}')
+    elif F90base[:5] == 'pgf90':
+        env.Append(CPPDEFINES=['GFORTRAN'],
+                   CFLAGS=' -I${SOURCE.dir}',
+                   F90FLAGS=' -module ${SOURCE.dir} -I${SOURCE.dir}')
     elif F90base == 'ifort':
         env.Append(CPPDEFINES=['INTEL_COMPILER'],
                    F90FLAGS=' -module ${SOURCE.dir}')
