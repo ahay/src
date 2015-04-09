@@ -15,7 +15,8 @@ viscoa2d viscoe2d
 
 ######################################################################
 # 2. C++ main programs
-ccprogs = '''clip_test
+ccprogs = '''
+clip_test
 '''
 
 ######################################################################
@@ -119,7 +120,6 @@ if lapack:
         libsxx.extend(lapack)
     env.Prepend(LIBS=libsxx)
 
-ccprogs = 'clip_test'
 ccmains = Split(ccprogs)
 for prog in ccmains:
     sources = ['M' + prog]

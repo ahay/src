@@ -53,6 +53,9 @@ svn remove `cat list.txt`
 
 cd system/generic
 
+python ../../admin/nomain.py > list.txt
+svn remove `cat list.txt`
+
 import glob
 for main in glob.glob('M*.c'):
     print main[1:-2]
