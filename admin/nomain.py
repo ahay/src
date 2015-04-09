@@ -17,6 +17,11 @@ for main in glob.glob('M*.cc'):
     if not sfmain in progs.keys():
         print main
 
+for main in glob.glob('M*.cu'):
+    sfmain = 'sf'+main[1:-3]
+    if not sfmain in progs.keys():
+        print main
+
 for main in glob.glob('M*.f90'):
     sfmain = 'sf'+main[1:-4]
     if not sfmain in progs.keys():

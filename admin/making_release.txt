@@ -67,3 +67,21 @@ svn remove `cat list.txt`
 
 scons
 
+11. Compile again from the top directory
+
+12. Edit $PYTHONPATH/rsf/prog.py
+
+replace
+
+try:
+    import rsf.use
+except:
+    pass
+
+#try:
+import rsf.use
+#except:
+#    pass
+
+Try running sfdoc
+
