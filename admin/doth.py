@@ -13,7 +13,7 @@ for cfile in cfiles:
         gotit = re.search(r'#include\s+\"([^\.]+)\.h\"',line)
         if gotit:
             include = gotit.group(1)+'.c'
-            if not includes.get(include):
+            if include != cfile and not includes.get(include):
                 includes[include] = 1
     copen.close()
 

@@ -19,6 +19,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+
+#include <rsf.h>
+
 #include "general_traveltime_3D.h"
 
 #ifndef _general_traveltime_3D_h

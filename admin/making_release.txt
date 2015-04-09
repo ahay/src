@@ -31,8 +31,36 @@ for dir in glob.glob('*/*/[a-z]*/'):
        if not os.path.isfile(proj):
           print 'no project in ',dir
 
+8. Compile
 
-8. Remove programs without examples in system/generic system/seismic and
-user/*
+cd madagascar-1.7
+export RSFROOT=$HOME/mad17
 
+remove instances of previous RSFROOT from PATH and PYTHONPATH
+
+./configure
+make install
+
+9. Remove programs without examples 
+
+python admin/cleanup.py > list.txt
+
+edit list.txt
+
+svn remove `cat list.txt`
+
+10. Clean individual directories
+
+cd system/generic
+
+import glob
+for main in glob.glob('M*.c'):
+    print main[1:-2]
+
+edit SConstruct
+
+python ../../admin/doth.py > list.txt
+svn remove `cat list.txt`
+
+scons
 

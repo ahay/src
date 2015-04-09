@@ -308,39 +308,39 @@ int main(int argc, char* argv[])
 	/* Velocity status (0 for constant v,1 for gradient v, and 2 for vti)*/
 	
 	if (vstatus != 2) {
-		if (!sf_getfloats("velocity",vn.v,nc)) sf_error("Please enter the velocity array [nc]");
-		/* Assign velocity km/s*/
-		if (vstatus == 1) {
-			if (!sf_getfloats("xgradient",vn.gx,nc)) {
-			    for (count=0; count<nc; count++) {
-				vn.gx[count] = 0;
-			    }
-			}
-			/* Assign x-gradient*/
-				
-			if (!sf_getfloats("zgradient",vn.gz,nc)) { 
-			    for (count=0; count<nc; count++) {
-				vn.gz[count] = 0;
-			    }
-			}
-			/* Assign z-gradient */
-				
-			if (!sf_getfloats("xref",vn.xref,nc))  sf_error("Please enter the x-reference points array [nc]");
-			/* Assign x-reference point*/
-				
-			if (!sf_getfloats("zref",vn.zref,nc)) sf_error("Please enter the z-reference points array [nc]");
-			/* Assign z-reference point*/
+	    if (!sf_getfloats("velocity",vn.v,nc)) sf_error("Please enter the velocity array [nc]");
+	    /* Assign velocity km/s*/
+	    if (vstatus == 1) {
+		if (!sf_getfloats("xgradient",vn.gx,nc)) {
+		    for (count=0; count<nc; count++) {
+			vn.gx[count] = 0;
+		    }
 		}
+		/* Assign x-gradient*/
+				
+		if (!sf_getfloats("zgradient",vn.gz,nc)) { 
+		    for (count=0; count<nc; count++) {
+			vn.gz[count] = 0;
+		    }
+		}
+		/* Assign z-gradient */
+				
+		if (!sf_getfloats("xref",vn.xref,nc))  sf_error("Please enter the x-reference points array [nc]");
+		/* Assign x-reference point*/
+				
+		if (!sf_getfloats("zref",vn.zref,nc)) sf_error("Please enter the z-reference points array [nc]");
+		/* Assign z-reference point*/
+	    }
 	}
 	else {
-		vti = sf_input("aniso"); /* anisotropy*/
-		sf_floatread(vn.aniso[0],4*(nc),vti);
+	    vti = sf_input("aniso"); /* anisotropy*/
+	    sf_floatread(vn.aniso[0],4*(nc),vti);
 	}
 	
 	if (!sf_getint("niter",&niter)) niter=500;
 	/* The number of iterations*/
 		
-if (!sf_getdouble("tol",&tolerance)) tolerance=0.00001;
+	if (!sf_getdouble("tol",&tolerance)) tolerance=0.00001;
 	/* Assign a default value for tolerance*/
 		
 	if (!sf_getint("order",&order)) order=3;/* Interpolation order*/
@@ -606,10 +606,10 @@ if (!sf_getdouble("tol",&tolerance)) tolerance=0.00001;
 	
     if (lin && adj) sf_floatwrite(rfl[0],nxc,data);
 	
-	tstop = clock();
-	timespend = (double)(tstop-tstart)/CLOCKS_PER_SEC;
+    tstop = clock();
+    timespend = (double)(tstop-tstart)/CLOCKS_PER_SEC;
 	
-	sf_warning("Total computational time %g",timespend);
+    sf_warning("Total computational time %g",timespend);
 	
     exit(0);
 }
