@@ -14,7 +14,8 @@ VSPTimeMigrator2D::VSPTimeMigrator2D () {
 VSPTimeMigrator2D::~VSPTimeMigrator2D () {
 }
 
-void VSPTimeMigrator2D::processGather (Point2D& curGatherCoords, const float* const data, float* image, float* dag, float* cig) {
+void VSPTimeMigrator2D::processGather (Point2D& curGatherCoords, const float* const data, float* image, float* dag, float* cig, float* mCig, 
+			 float* xEsc, float* tEsc) {
    
     const int   tNum     = ip_->zNum;
     const float tStart   = ip_->zStart;

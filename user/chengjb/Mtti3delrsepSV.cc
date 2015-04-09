@@ -66,7 +66,7 @@ int main(int argc, char* argv[])
 {
    sf_init(argc,argv);
 
-   clock_t t1, t2, t3, t4, t5, t44;
+   clock_t t1, t2, t3, t4;
    float   timespent;
 
    t1=clock();
@@ -202,7 +202,7 @@ int main(int argc, char* argv[])
    rkz.resize(nk);
 
    double kx, ky, kz, k2, rk;
-   int    i=0, j=0, k=0, ix, iy, iz;
+   int    i=0, k=0, ix, iy, iz;
    
    for(iy=0; iy < nky; iy++)
    {

@@ -89,7 +89,7 @@ int main(int argc, char* argv[])
     v1 = sf_floatalloc(nt2);
     v2 = (kiss_fft_cpx *) sf_complexalloc(nw);
 
-    u1 = (kiss_fft_cpx *) sf_complexalloc2(nx,nw);	/* U_z(x,w) */
+    u1 = (kiss_fft_cpx **) sf_complexalloc2(nx,nw);	/* U_z(x,w) */
     u2 = sf_floatalloc2(njt,nx);	/* u_z(x,t) */
     u3 = sf_floatalloc2(nz,nx);		/* u(x,z,0) */
 

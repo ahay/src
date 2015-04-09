@@ -1,4 +1,4 @@
-/* Trace-by-trace or data-by-trace convolution using Fourier transform. 
+/* Trace-by-trace or data-by-trace convolution using Fourier transform. */
 /* other can be a dataset with the same dimensions as in (except for axis) or a single trace.*/
 /*
   Copyright (C) 2012 King Abdullah University of Science and Technology,

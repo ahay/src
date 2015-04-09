@@ -411,7 +411,8 @@ int main (int argc, char* argv[]) {
 			memset (image, 0, gp.zNum  * sizeof (float));
 
 			// the main migration function
-			migrator->processGather (curGatherPos, data, image, dag, acig);
+			migrator->processGather (curGatherPos, data, image, dag, acig, 
+						 NULL, NULL, NULL);
 
 			// output the image trace
 			size_t startPos = startInd * gp.zNum * sizeof(float);

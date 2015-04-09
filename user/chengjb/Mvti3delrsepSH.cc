@@ -45,19 +45,8 @@ static std::valarray<float> vp, vs, ep, de, ga;
 
 static std::valarray<double> rkx, rky, rkz;
 
-/* for low-rank decomp. */
-static int samplexp3(vector<int>& rs, vector<int>& cs, DblNumMat& resx);
-static int sampleyp3(vector<int>& rs, vector<int>& cs, DblNumMat& resy);
-static int samplezp3(vector<int>& rs, vector<int>& cs, DblNumMat& resz);
-
 static int samplexsh3(vector<int>& rs, vector<int>& cs, DblNumMat& resx);
 static int sampleysh3(vector<int>& rs, vector<int>& cs, DblNumMat& resy);
-static int samplezsh3(vector<int>& rs, vector<int>& cs, DblNumMat& resz);
-
-static int samplexsv3(vector<int>& rs, vector<int>& cs, DblNumMat& resx);
-static int sampleysv3(vector<int>& rs, vector<int>& cs, DblNumMat& resy);
-static int samplezsv3(vector<int>& rs, vector<int>& cs, DblNumMat& resz);
-
 static void map2d1d(float *d, DblNumMat mat, int m, int n);
 
 /* definition for LAPACK SVD ROUTINEs */
@@ -197,7 +186,7 @@ int main(int argc, char* argv[])
    rkz.resize(nk);
 
    double kx, ky, kz, k2, rk;
-   int    i=0, j=0, k=0, ix, iy, iz;
+   int    i=0, k=0, ix, iy, iz;
    
    for(iy=0; iy < nky; iy++)
    {
@@ -342,7 +331,7 @@ static int sampleysh3(vector<int>& rs, vector<int>& cs, DblNumMat& resy)
 
     setvalue(resy,0.0);
 
-    double usx, usy, usz;
+    double usx, usy;
 
     for(int a=0; a<nr; a++) 
     {
@@ -387,7 +376,7 @@ static int samplexsh3(vector<int>& rs, vector<int>& cs, DblNumMat& resx)
 
     setvalue(resx,0.0);
 
-    double usx, usy, usz;
+    double usx, usy;
 
     for(int a=0; a<nr; a++) 
     {

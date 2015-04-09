@@ -106,7 +106,7 @@ bool ITracer2D::isPointInsideTriangle (float x0, float y0, float x1, float y1, f
 void ITracer2D::traceImage (float* xVol, float* tVol, float x0, float z0, float p0, float sa, list<float>* xRes, list<float>* zRes) {
 
 	const int zInd = (z0 - zStart_) / zStep_;
-	const int pInd = (p0 - pStart_) / pStep_;
+	// const int pInd = (p0 - pStart_) / pStep_;
 	const int xInd = (x0 - xStart_) / xStep_;
 
 	const int xRed = xNum_ - 1;

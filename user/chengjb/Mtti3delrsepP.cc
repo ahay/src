@@ -66,7 +66,7 @@ int main(int argc, char* argv[])
 {
    sf_init(argc,argv);
 
-   clock_t t1, t2, t3, t4, t5, t44;
+   clock_t t1, t2, t3, t4;
    float   timespent;
 
    t1=clock();
@@ -204,7 +204,7 @@ int main(int argc, char* argv[])
    rkz.resize(nk);
 
    double kx, ky, kz, k2, rk;
-   int    i=0, j=0, k=0, ix, iy, iz;
+   int    i=0, k=0, ix, iy, iz;
    
    for(iy=0; iy < nky; iy++)
    {
@@ -386,7 +386,6 @@ static int sampleyp3(vector<int>& rs, vector<int>& cs, DblNumMat& resy)
 
     double kx, ky, kz;
     double upx, upy, upz;
-	double cos_ph, sin_ph, cos_th, sin_th;
 
     for(int a=0; a<nr; a++) 
     {

@@ -164,27 +164,24 @@ int main(int argc, char* argv[])
     if (!sf_histint(fGz,"n2", &lenz)) sf_error("No n2= in input");
 
     /*source loaction parameters*/
-    slx = -1.0; spx = -1;
-    slz = -1.0; spz = -1;
-    gdep = -1.0; gp = 0;
-    
-    if (!sf_getfloat("slx", &slx)) ; 
+ 
+    if (!sf_getfloat("slx", &slx)) slx=-1.0; 
     /*source location x */
-    if (!sf_getint("spx", &spx));
+    if (!sf_getint("spx", &spx)) spx=-1;
     /*source location x (index)*/
     if((slx<0 && spx <0) || (slx>=0 && spx >=0 ))  sf_error("Need src location");
     if (slx >= 0 )    spx = (int)((slx-ox)/dx+0.5);
     
-    if (!sf_getfloat("slz", &slz)) ;
+    if (!sf_getfloat("slz", &slz)) slz=-1.0;
     /* source location z */
-    if (!sf_getint("spz", &spz)) ;
+    if (!sf_getint("spz", &spz)) spz=-1;
     /*source location z (index)*/
     if((slz<0 && spz <0) || (slz>=0 && spz >=0 ))  sf_error("Need src location");
     if (slz >= 0 )    spz = (int)((slz-ox)/dz+0.5);
     
-    if (!sf_getfloat("gdep", &gdep)) ;
+    if (!sf_getfloat("gdep", &gdep)) gdep=-1.0;
     /* recorder depth on grid*/
-    if (!sf_getint("gp", &gp)) ;
+    if (!sf_getint("gp", &gp)) gp=0;
     /* recorder depth on index*/
     if ( gdep>=oz) { gp = (int)((gdep-oz)/dz+0.5);}
     if (gp < 0.0) sf_error("gdep need to be >=oz");

@@ -10,7 +10,8 @@ public:
 	    VSPTimeMigrator2D ();
 	   ~VSPTimeMigrator2D ();
 
-	void  processGather (Point2D& curGatherCoords, const float* const data, float* image, float* dag, float* aCig);
+    void  processGather (Point2D& curGatherCoords, const float* const data, float* image, float* dag, float* aCig, float* mCig, 
+			 float* xEsc, float* tEsc);
 
 	void   setVelModel (float** velField) { velField_ = velField; } 	
 
