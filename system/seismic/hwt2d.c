@@ -225,6 +225,7 @@ pt2d hwt2d_orth(pt2d P, pt2d O, pt2d M)
 
     R.x = O.x + sMOP * OR.dx * lo;
     R.z = O.z + sMOP * OR.dz * lo;
+    R.v = 0.0;
     R.v = hwt2d_getv(R);
     
     return(R);

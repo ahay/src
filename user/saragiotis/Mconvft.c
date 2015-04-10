@@ -64,6 +64,7 @@ int main(int argc, char* argv[])
 	} else if (mdim!=dim) {
 		sf_error("dimensions mismatch: dim of 'in' is %d but dim of 'other' is %d.",
 				 dim,mdim);
+		m2 = 0;
 	} else {
 		m2 = m[axis-1];
 		for (i1=1; i1<=dim; i1++) {

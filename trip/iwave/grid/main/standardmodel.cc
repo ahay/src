@@ -472,7 +472,7 @@ int writemodel(
 	  v[j1] = get_zvalue(x1c, x2c, x3c, x1, x2, x3, j1, j2, j3, 
 			     n1, n2, n3, model, choose, valuea, valueb, valuec);
       }
-      if (fwrite(v, sizeof(float), n1, fp) != n1){
+      if (fwrite(v, sizeof(float), n1, fp) != (size_t) n1){
 	fprintf(stderr, "write error\n");
 	free(v);
 	return 1;

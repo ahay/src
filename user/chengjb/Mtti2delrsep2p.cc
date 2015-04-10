@@ -355,7 +355,10 @@ int main(int argc, char* argv[])
 
       Polxp2 << w1;
 
-   }//ireconstruct==1
+   } else {
+       w = NULL;
+       ap = NULL;
+   }
 
    /********* low rank decomposition p-wave, z-component **********/
    iC( ddlowrank(nxz,nk,samplezp,eps,npk,lid,rid,mid) );

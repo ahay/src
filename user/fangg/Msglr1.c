@@ -209,6 +209,8 @@ int main(int argc, char* argv[])
 	if (nx != icnx) sf_error("I.C. and velocity should be the same size.");
 	ic = sf_floatalloc(nx);
 	sf_floatread(ic, nx, Fic);	
+    } else {
+	ic = NULL;
     }
 
     /* Method of Manufactured Solution*/
@@ -232,6 +234,11 @@ int main(int argc, char* argv[])
 	sf_floatread(vsrc[0], nx*nt, Fvsrc);
 	sf_floatread(pint, nx, Fpint);
 	sf_floatread(vint, nx, Fvint);
+    } else {
+	psrc = NULL;
+	vsrc = NULL;
+	pint = NULL;
+	vint = NULL;
     }
 	
     curtxx  = sf_floatalloc(nx2);

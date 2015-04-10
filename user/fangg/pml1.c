@@ -27,7 +27,7 @@
 #define GAMMA  0.1
 /*^*/
 /*variables from main function*/
-static int pmlout, marg, nz, nx;
+static int pmlout, marg, nx;
 static float dt;
 static int pmld0, decay, decaybegin;
 static float pmlgamma;

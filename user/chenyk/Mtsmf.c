@@ -1,5 +1,5 @@
 /* Two-step space varying median filtering. 
-In default case, sftsmf is equal to sftvmf.
+   In default case, sftsmf is equal to sftvmf.
 */
 /*
   Copyright (C) 2013 University of Texas at Austin
@@ -48,7 +48,7 @@ int main (int argc, char* argv[])
     sf_init (argc, argv); 
     in = sf_input("in");
     out = sf_output("out");
-	lengthout=sf_output("L");		
+    lengthout=sf_output("L");		
 
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
     if (!sf_histint(in,"n2",&n2)) sf_error("No n2= in input");
@@ -88,15 +88,15 @@ int main (int argc, char* argv[])
     if (!sf_getint("l4",&l4)) l4=4;
     /* space-varying window parameter "l4" (default=4)*/
 
-	if(NULL!=sf_getstring("L"))
-		{
-			length=sf_floatalloc(n1*n2);
-		for(i=0;i<n2;i++)
-			for(j=0;j<n1;j++)
-				length[i*n1+j]=0;
-		}
+    if(NULL!=sf_getstring("L")) {
+	length=sf_floatalloc(n1*n2);
+	for(i=0;i<n2;i++)
+	    for(j=0;j<n1;j++)
+		length[i*n1+j]=0;
+    } else {
+	length=NULL;
+    }
 
-   
     if (l1<l2 || l4<l3) sf_error("Need l1>=l2 && l4>=l3"); 
     if ((l1%2)!=0) l1 = l1+1;
     if ((l2%2)!=0) l2 = l2+1;
@@ -130,20 +130,20 @@ int main (int argc, char* argv[])
 	if(ael==0.0)
 	{/************1D reference median filtering****************/
 	
-	for(i=f1;i<f2+1;i++){
-	    for(j=0;j<n1;j++){
-		for(k=0;k<nfw;k++){
-		    temp1[k]=extendt[(n1+2*m)*i+j+k];
+	    for(i=f1;i<f2+1;i++){
+		for(j=0;j<n1;j++){
+		    for(k=0;k<nfw;k++){
+			temp1[k]=extendt[(n1+2*m)*i+j+k];
+		    }
+		    medianarray[n1*i+j]=medianfilter(temp1,nfw);
 		}
-		medianarray[n1*i+j]=medianfilter(temp1,nfw);
 	    }
-	}
-	medianv=0.0;
-	for(i=f1;i<f2+1;i++)
-	    for(j=0;j<n1;j++)
-	     medianv=medianv+fabs(medianarray[n1*i+j]);
+	    medianv=0.0;
+	    for(i=f1;i<f2+1;i++)
+		for(j=0;j<n1;j++)
+		    medianv=medianv+fabs(medianarray[n1*i+j]);
 	    
-	medianv=medianv/(1.0*N);}
+	    medianv=medianv/(1.0*N);}
 	else
 	{medianv=ael;}
 	

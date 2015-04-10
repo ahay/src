@@ -216,9 +216,12 @@ int main(int argc, char* argv[])
 
     	if(!sf_getbool("verb",&verb)) verb=false;    /* verbosity, if y, output px and pz */
 	if(verb){
-		Fpz = sf_output("pz");/* wavefield component px */
-		Fpx = sf_output("px");/* wavefield component px */
-    		if (!sf_getint("kt",&kt)) sf_error("kt required"); /* output px and pz component at kt */
+	    Fpz = sf_output("pz");/* wavefield component px */
+	    Fpx = sf_output("px");/* wavefield component px */
+	    if (!sf_getint("kt",&kt)) sf_error("kt required"); /* output px and pz component at kt */
+	} else {
+	    Fpz = NULL;
+	    Fpx = NULL;
 	}
 
 	sf_putint(Fw,"n1",nz);

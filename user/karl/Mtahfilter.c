@@ -120,7 +120,6 @@ int main(int argc, char* argv[])
   float* fheader=NULL;
   float* intrace=NULL;
   float* outtrace=NULL;
-  int indx_time;
   int itrace=0;
   char **list_of_floats;
   float d1;

@@ -43,7 +43,6 @@ int main(int  argc,char **argv)
     int   isx,isy,isz,bd;
 
     int   i,j,k,im,jm,it;
-	int   nth, rank;
     float t;
     float fx,fy,fz,dt2;
 

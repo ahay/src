@@ -249,8 +249,11 @@ int main(int argc, char* argv[])
     if(!sf_getfloats("tmute",tmute,numtmute))sf_error("unable to read tmute");
   }
   if(numxmute!=numtmute)sf_error("bad mute parameters: numxmute!=numtmute");
-  if(numxmute<=0)ntaper=0;
-  else {
+  if(numxmute<=0) {
+      ntaper=0;
+      indx_of_offset=0;
+      taper=NULL;
+  } else {
     if(!sf_getint("ntaper",&ntaper))ntaper=12;
     /* \n
        length of the taper on the stack mute

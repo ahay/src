@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
     float *dat=NULL, *adat=NULL, *diff, t, thr, d;
     char *type, *thre;
     sf_complex *cdat=NULL, *cdiff;
-    sf_file in=NULL, out=NULL, other=NULL;
+    sf_file in, out, other;
 
     sf_init(argc,argv);
     in = sf_input("in");
@@ -47,9 +47,13 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("thr",&thr)) sf_error("Need thr=");
     /* thresholding level */ 
 
-    if (NULL != (thre=sf_getstring("other"))){other = sf_output("other");}
-    /* If output the difference between the thresholded part and the original one */
-
+    if (NULL != (thre=sf_getstring("other"))){
+	/* If output the difference between the thresholded part and the original one */
+	other = sf_output("other");
+    } else {
+	other = NULL;
+    }
+ 
     if(ifperc==1)
     {
     	n1 = 0.5+n*(1.-0.01*thr);
@@ -96,7 +100,11 @@ int main(int argc, char* argv[])
     if(ifverb==1) sf_warning("Threshold=%g",t);   	
 
     if (NULL != dat) {
-	if(thre !=NULL ) {diff=sf_floatalloc(n);}
+	if(thre !=NULL ) {
+	    diff=sf_floatalloc(n);
+	} else {
+	    diff=NULL;
+	}
 	for (i=0; i < n; i++) {
 	    d = dat[i];
 	    if (d < -t) {
@@ -114,7 +122,11 @@ int main(int argc, char* argv[])
 		sf_floatwrite(diff,n,other); /* write the difference */		
 	sf_floatwrite(dat,n,out);
     } else {
-	if(thre !=NULL ){ cdiff=sf_complexalloc(n);}
+	if(thre !=NULL ){ 
+	    cdiff=sf_complexalloc(n);
+	} else {
+	    cdiff=NULL;
+	}
 	for (i=0; i < n; i++) {
 	    d = cabsf(cdat[i]);
 	    if (d < -t) {

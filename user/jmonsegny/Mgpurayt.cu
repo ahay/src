@@ -80,37 +80,37 @@ __device__ float calctime(float* s_vels,int smemsize,int ecol1,int erow1,int eco
     float distx = ecol2 - ecol1;
     float distz = erow2 - erow1;
     float dist = sqrt(distx*distx + distz*distz);
-    float frac = 1.0/npts;
+    float frac = 1.0f/npts;
     //First velocity
     float v1 = s_vels[smemsize*erow1 + ecol1];
-    float acumslo = 0.0;
+    float acumslo = 0.0f;
     //Integrate time
     for(int i=1; i<=npts; i++){        
         //interpolate
         float rat = frac*i;
-        float x = (1.0-rat)*ecol1 + rat*ecol2;
-        float z = (1.0-rat)*erow1 + rat*erow2;
+        float x = (1.0f-rat)*ecol1 + rat*ecol2;
+        float z = (1.0f-rat)*erow1 + rat*erow2;
         //Horizontal index and residual
         int indx = x;
         float resx = x - indx;
         if(indx == smemsize - 1){
             indx--;
-            resx = 1.0;
+            resx = 1.0f;
         }
         //Vertical index and residual
         int indz = z;
         float resz = z - indz;
         if(indz == smemsize - 1){
             indz--;
-            resz = 1.0;
+            resz = 1.0f;
         }
         //Velocity interpolation
-        float velabove = (1.0-resx)*s_vels[indx + indz*smemsize]     + resx*s_vels[(indx+1) + indz*smemsize];
-        float velbelow = (1.0-resx)*s_vels[indx + (indz+1)*smemsize] + resx*s_vels[(indx+1) + (indz+1)*smemsize];
-        float v2 = (1.0-resz)*velabove + resz*velbelow;
+        float velabove = (1.0f-resx)*s_vels[indx + indz*smemsize]     + resx*s_vels[(indx+1) + indz*smemsize];
+        float velbelow = (1.0f-resx)*s_vels[indx + (indz+1)*smemsize] + resx*s_vels[(indx+1) + (indz+1)*smemsize];
+        float v2 = (1.0f-resz)*velabove + resz*velbelow;
         float midvel = 0.5*(v1+v2);
-        if(midvel > 0.0)
-            acumslo += 1.0/midvel;
+        if(midvel > 0.0f)
+            acumslo += 1.0f/midvel;
         v1 = v2;
     }
     return dx*acumslo*dist*frac;
@@ -284,8 +284,8 @@ int main(int argc, char* argv[])
 
     //dx
     float dx;
-    par.get("dx", dx, 1.0);//Horizontal and vertical separation between nodes, dx > 0.0 (float)
-    if(dx <= 0.0)
+    par.get("dx", dx, 1.0f);//Horizontal and vertical separation between nodes, dx > 0.0 (float)
+    if(dx <= 0.0f)
         sf_error("Grid  spacing %f is too small",dx);
 
     //Ray output

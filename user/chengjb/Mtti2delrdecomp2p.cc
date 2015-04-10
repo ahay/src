@@ -357,7 +357,11 @@ int main(int argc, char* argv[])
 
       Decompxp2 << w1;
 
-   }//ireconstruct==1
+   } else {
+       w = NULL;
+       apx = NULL;
+       apz = NULL;
+   }
 
    /** ApxApz ****/
    iC( ddlowrank(nxz,nk,samplexz,eps,npk,lid,rid,mid) );

@@ -22,8 +22,6 @@
 #include <rsf.h>
 #include <time.h>
 
-#include "kirmod.h"
-#include "kirmod2.h"
 #include "kirmodnewton.h"
 #include "kirmodnewton2.h"
 
@@ -40,28 +38,22 @@ int main(int argc, char* argv[])
     double tolerance;
     float **rr=NULL, **rd=NULL;
     int *updown=NULL;
-    bool newton, debug, fwdxini;
+    bool debug, fwdxini;
     velocity2 vn; 
     /*------------------------*/
 
     int nx, nt, ns, nh, nc, nxc, is, ih, ix, ic, minix;
     float **rfl, **rgd, **crv, **dip, *trace, *trace2;
     float **time, **ampl, **delt, freq, theta, ava, amp, obl;
-    float slow, dx, x0, dt, t0, ds, s0, dh, h0, r0, mint;
-    char *type=NULL, *type2=NULL;
-    bool twod, verb, adj, lin, cmp, absoff;
+    float dx, x0, dt, t0, ds, s0, dh, h0, r0, mint;
+    bool verb, adj, lin, cmp, absoff;
     surface inc, ref;
-    velocity vel=NULL, vel2=NULL;
     ktable ts, tg, **tss, **tgs;
     sf_file data, refl, curv, modl, vti, picks = NULL, slopes = NULL;
 
     tstart = clock();
 	
-    sf_init(argc,argv);
-	
-    if (!sf_getbool("newton",&newton)) newton=true;
-    /* To switch between analytical and newton kirmod*/
-	
+    sf_init(argc,argv);	
 	
     if (!sf_getbool("lin",&lin)) lin=false;
     /* if linear operator */
@@ -266,189 +258,92 @@ int main(int argc, char* argv[])
 	}
     }
 	
-    if (newton) {
-	
-	if (!sf_getbool("debug",&debug)) debug=false;
-	/* debug flag */
+    if (!sf_getbool("debug",&debug)) debug=false;
+    /* debug flag */
 		
-	if (!sf_getbool("fwdxini",&fwdxini)) fwdxini=false;
-	/* use the result of previous iteration to be the xinitial of the next one */
+    if (!sf_getbool("fwdxini",&fwdxini)) fwdxini=false;
+    /* use the result of previous iteration to be the xinitial of the next one */
 		
-	rr = sf_floatalloc2(nx,nc+1);
-	rd = sf_floatalloc2(nx,nc+1);
+    rr = sf_floatalloc2(nx,nc+1);
+    rd = sf_floatalloc2(nx,nc+1);
 		
-	for (count2=0; count2<nc+1; count2++) { /* Generate the reflector input for newton*/
-	    for (count1=0; count1<nx; count1++) {
-		if (count2==0) {
-		    rr[count2][count1] = 0; /* For generating the surface*/
-		    rd[count2][count1] = 0;
-		}
-		else {
-		    rr[count2][count1] = crv[count2-1][count1]; 
-		    rd[count2][count1] = dip[count2-1][count1]; 
-		}
+    for (count2=0; count2<nc+1; count2++) { /* Generate the reflector input for newton*/
+	for (count1=0; count1<nx; count1++) {
+	    if (count2==0) {
+		rr[count2][count1] = 0; /* For generating the surface*/
+		rd[count2][count1] = 0;
+	    }
+	    else {
+		rr[count2][count1] = crv[count2-1][count1]; 
+		rd[count2][count1] = dip[count2-1][count1]; 
 	    }
 	}
+    }
 		
-	updown = sf_intalloc(nc); /* Fix this if need any other multiple*/
+    updown = sf_intalloc(nc); /* Fix this if need any other multiple*/
 		
-	for (count3=0; count3<nc; count3++) {
-	    updown[count3] = count3+1;
-	}
+    for (count3=0; count3<nc; count3++) {
+	updown[count3] = count3+1;
+    }
 		
-	vn.v = sf_floatalloc(nc);
-	vn.xref = sf_floatalloc(nc);
-	vn.zref = sf_floatalloc(nc);
-	vn.gx = sf_floatalloc(nc);
-	vn.gz = sf_floatalloc(nc);
-	vn.aniso = sf_floatalloc2(4,nc);
+    vn.v = sf_floatalloc(nc);
+    vn.xref = sf_floatalloc(nc);
+    vn.zref = sf_floatalloc(nc);
+    vn.gx = sf_floatalloc(nc);
+    vn.gz = sf_floatalloc(nc);
+    vn.aniso = sf_floatalloc2(4,nc);
 	
 	
-	if (!sf_getint("vstatus",&vstatus)) sf_error("Please enter the status of velocity (0 for constant v,1 for gradient v, and 2 for VTI)");
-	/* Velocity status (0 for constant v,1 for gradient v, and 2 for vti)*/
+    if (!sf_getint("vstatus",&vstatus)) sf_error("Please enter the status of velocity (0 for constant v,1 for gradient v, and 2 for VTI)");
+    /* Velocity status (0 for constant v,1 for gradient v, and 2 for vti)*/
 	
-	if (vstatus != 2) {
-	    if (!sf_getfloats("velocity",vn.v,nc)) sf_error("Please enter the velocity array [nc]");
-	    /* Assign velocity km/s*/
-	    if (vstatus == 1) {
-		if (!sf_getfloats("xgradient",vn.gx,nc)) {
-		    for (count=0; count<nc; count++) {
-			vn.gx[count] = 0;
-		    }
+    if (vstatus != 2) {
+	if (!sf_getfloats("velocity",vn.v,nc)) sf_error("Please enter the velocity array [nc]");
+	/* Assign velocity km/s*/
+	if (vstatus == 1) {
+	    if (!sf_getfloats("xgradient",vn.gx,nc)) {
+		for (count=0; count<nc; count++) {
+		    vn.gx[count] = 0;
 		}
-		/* Assign x-gradient*/
-				
-		if (!sf_getfloats("zgradient",vn.gz,nc)) { 
-		    for (count=0; count<nc; count++) {
-			vn.gz[count] = 0;
-		    }
-		}
-		/* Assign z-gradient */
-				
-		if (!sf_getfloats("xref",vn.xref,nc))  sf_error("Please enter the x-reference points array [nc]");
-		/* Assign x-reference point*/
-				
-		if (!sf_getfloats("zref",vn.zref,nc)) sf_error("Please enter the z-reference points array [nc]");
-		/* Assign z-reference point*/
 	    }
+	    /* Assign x-gradient*/
+				
+	    if (!sf_getfloats("zgradient",vn.gz,nc)) { 
+		for (count=0; count<nc; count++) {
+		    vn.gz[count] = 0;
+		}
+	    }
+	    /* Assign z-gradient */
+				
+	    if (!sf_getfloats("xref",vn.xref,nc))  sf_error("Please enter the x-reference points array [nc]");
+	    /* Assign x-reference point*/
+				
+	    if (!sf_getfloats("zref",vn.zref,nc)) sf_error("Please enter the z-reference points array [nc]");
+	    /* Assign z-reference point*/
 	}
-	else {
-	    vti = sf_input("aniso"); /* anisotropy*/
-	    sf_floatread(vn.aniso[0],4*(nc),vti);
-	}
-	
-	if (!sf_getint("niter",&niter)) niter=500;
-	/* The number of iterations*/
-		
-	if (!sf_getdouble("tol",&tolerance)) tolerance=0.00001;
-	/* Assign a default value for tolerance*/
-		
-	if (!sf_getint("order",&order)) order=3;/* Interpolation order*/
-
-		
     }
     else {
-	/*** Initialize velocity ***/
-	vel  = (velocity) sf_alloc(1,sizeof(*vel));
-	vel2 = (velocity) sf_alloc(1,sizeof(*vel2));
-		
-	if (!sf_getfloat("vel",&(vel->v0))) sf_error("Need vel=");
-	/*( vel velocity )*/
-		
-	if (!sf_getfloat("gradx",&(vel->gx))) (vel->gx)=0.;
-	/*( gradx horizontal velocity gradient )*/
-		
-	if (!sf_getfloat("gradz",&(vel->gz))) (vel->gz)=0.;
-	/*( gradz vertical velocity gradient )*/
-		
-	if (!sf_getfloat("velz",&(vel->vz))) (vel->vz)=vel->v0;
-	/*( velz vertical velocity for VTI anisotropy )*/
-	if (!sf_getfloat("eta",&(vel->n))) (vel->n)=0.;
-	/*( eta parameter for VTI anisotropy )*/
-		
-	type = sf_getstring("type");
-	/* type of velocity, 'c': constant, 's': linear sloth, 'v': linear velocity, 'a': VTI anisotropy */
-	if (NULL==type) {
-	    type= ((vel->gx)==0. && (vel->gz)==0.)?"const":"veloc";
-	} else if ((vel->gx)==0. && (vel->gz)==0. && (vel->n)==0.) {
-	    type = "const"; 
-	} else if ('s'==type[0]) {
-	    /* linear slowness squared */
-			
-	    slow = 1./((vel->v0)*(vel->v0));
-	    /* slowness squared */
-	    (vel->gx) *= -2.*slow/(vel->v0);
-	    (vel->gz) *= -2.*slow/(vel->v0);
-	    (vel->v0) = slow;     
-	} else if ('v' != type[0] && 'a' != type[0]) {
-	    sf_error("Unknown type=%s",type);
-	}
-		
-	if (!sf_getbool("twod",&twod)) twod=false;
-	/* 2-D or 2.5-D */
-		
-	if (!sf_getfloat("refx",&(vel->x0))) (vel->x0)=x0;
-	/*( refx reference x-coordinate for velocity )*/
-	if (!sf_getfloat("refz",&(vel->z0))) (vel->z0)=0.;
-	/*( refz reference z-coordinate for velocity )*/
-		
-	if (!sf_getfloat("vel2",&(vel2->v0))) (vel2->v0)=(vel->v0);
-	/*( vel2 converted velocity )*/
-		
-	if (!sf_getfloat("gradx2",&(vel2->gx))) (vel2->gx)=(vel->gx);
-	/*( gradx2 converted velocity, horizontal gradient )*/
-	if (!sf_getfloat("gradz2",&(vel2->gz))) (vel2->gz)=(vel->gz);
-	/*( gradz2 converted velocity, vertical gradient )*/
-		
-		
-	type2 = sf_getstring("type2");
-	/* type of velocity for the converted (receiver side) branch */
-	if (NULL==type2) {	
-	    type2=type;
-	} else if ((vel2->gx)==0. && (vel2->gz)==0. && (vel2->n)==0.) {
-	    type2 = "const"; 
-	} else if ('s'==type2[0]) {
-	    /* linear slowness squared */
-			
-	    slow = 1./((vel2->v0)*(vel2->v0));
-	    /* slowness squared */
-	    (vel2->gx) *= -slow/(vel2->v0);
-	    (vel2->gz) *= -slow/(vel2->v0);
-	    (vel2->v0) = slow;     
-	} else if ('v' != type2[0] && 'a' != type2[0]) {
-	    sf_error("Unknown type=%s",type2);
-	}
-		
-	if (!sf_getfloat("refx2",&(vel2->x0))) (vel2->x0)=(vel->x0);
-	if (!sf_getfloat("refz2",&(vel2->z0))) (vel2->z0)=(vel->z0);
-	/* reference coordinates for converted velocity */
+	vti = sf_input("aniso"); /* anisotropy*/
+	sf_floatread(vn.aniso[0],4*(nc),vti);
     }
+	
+    if (!sf_getint("niter",&niter)) niter=500;
+    /* The number of iterations*/
+		
+    if (!sf_getdouble("tol",&tolerance)) tolerance=0.00001;
+    /* Assign a default value for tolerance*/
+		
+    if (!sf_getint("order",&order)) order=3;/* Interpolation order*/
 
+		
     /*** Allocate space ***/
 	
     if (!sf_getbool("cmp",&cmp)) cmp=false;
     /* compute CMP instead of shot gathers */
     
-	
-    if (newton) {
-	inc = kirmodnewton2_init(ns, s0, ds, nh, h0, dh, nx, x0, dx, nc, cmp, absoff);
-	ref = inc;
-    }
-    else {
-	if (cmp && !adj) sf_putint(modl,"CDPtype",1);
-		
-	inc = kirmod2_init(ns, s0, ds, nh, h0, dh, nx, x0, dx, nc, cmp, absoff);
-	if (strcmp(type,type2) ||
-	    (vel2->v0) != (vel->v0) || 
-	    (vel2->gz) != (vel->gz) ||
-	    (vel2->gx) != (vel->gx) ||
-	    (vel2->z0) != (vel->z0) ||
-	    (vel2->x0) != (vel->x0) ) {
-	    ref = kirmod2_init(ns, s0, ds, nh, h0, dh, nx, x0, dx, nc, cmp, absoff);
-	} else {
-	    ref = inc;
-	}
-    }
+    inc = kirmodnewton2_init(ns, s0, ds, nh, h0, dh, nx, x0, dx, nc, cmp, absoff);
+    ref = inc;
+ 
     /*** Initialize stretch ***/
     sf_aastretch_init (false, nt, t0, dt, nxc);
 	
@@ -459,19 +354,11 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("freq",&freq)) freq=0.2/dt;
     /* peak frequency for Ricker wavelet */
     ricker_init(nt*2,freq*dt,2);
-	
-    if (newton) {
-	/* Initialize parameters for newton*/
-	kirmodnewton_init(rr, rd, updown, x0, dx, nx, nc-1, order, nc+1, vstatus, vn.xref, vn.zref, vn.v, vn.gx, vn.gz, vn.aniso);
-	/*** Compute traveltime table ***/
-	kirmodnewton2_table(inc, debug /* Debug Newton */, fwdxini,  niter, tolerance);
-    }
-    else {
-	/*** Compute traveltime table ***/
-		
-	kirmod2_table (inc, vel, type[0], twod, crv, dip);
-	if (ref != inc) kirmod2_table (ref, vel2, type2[0], twod, crv, dip);
-    }
+
+    /* Initialize parameters for newton*/
+    kirmodnewton_init(rr, rd, updown, x0, dx, nx, nc-1, order, nc+1, vstatus, vn.xref, vn.zref, vn.v, vn.gx, vn.gz, vn.aniso);
+    /*** Compute traveltime table ***/
+    kirmodnewton2_table(inc, debug /* Debug Newton */, fwdxini,  niter, tolerance);
 
     if (lin) {
 	if (adj) {
@@ -501,26 +388,11 @@ int main(int argc, char* argv[])
 	    for (ic=0; ic < nc; ic++) {
 		for (ix=0; ix < nx; ix++) {
 		    if (cmp) {
-						
-			if (newton) {
-			    ts = kirmodnewton2_map(inc,is,2*ih,  ix,ic);
-			    tg = kirmodnewton2_map(ref,is,2*ih+1,ix,ic);
-			}
-			else {
-			    ts = kirmod2_map(inc,is,2*ih,  ix,ic);
-			    tg = kirmod2_map(ref,is,2*ih+1,ix,ic);
-			}
-						
+			ts = kirmodnewton2_map(inc,is,2*ih,  ix,ic);
+			tg = kirmodnewton2_map(ref,is,2*ih+1,ix,ic);
 		    } else {
-						
-			if (newton) {
-			    ts = kirmodnewton2_map(inc,is,nh,ix,ic);
-			    tg = kirmodnewton2_map(ref,is,ih,ix,ic);
-			}
-			else {
-			    ts = kirmod2_map(inc,is,nh,ix,ic);
-			    tg = kirmod2_map(ref,is,ih,ix,ic);
-			}
+			ts = kirmodnewton2_map(inc,is,nh,ix,ic);
+			tg = kirmodnewton2_map(ref,is,ih,ix,ic);
 		    }
 					
 		    time[ic][ix] = ts->t + tg->t;

@@ -97,10 +97,14 @@ int main (int argc, char* argv[])
 	if (1==type || 2 == type) {
 	    z1 = h1 / (v1 * sqrtf(1. - p*p * v1*v1));
 	    delay1 = 2. * z1 - 2. * p*p * (z1 * v1*v1);
+	} else {
+	    delay1 = 0.0;
 	}
 	if (2==type) {
 	    z2 = h2 / (v2 * sqrtf(1. - p*p * v2*v2));
 	    delay2 = 2. * (z1 + z2) - 2. * p*p * (z1 * v1*v1 + z2 * v2*v2);
+	} else {
+	    delay2 = 0.0;
 	}
 
         /***********************************
@@ -122,10 +126,10 @@ int main (int argc, char* argv[])
 
 	    if (1==type) {
 		refl =  amp * (1. - rc1 * cexpf(sf_cmplx(0.,w*delay1)));
-	    }
-
-	    if (2==type) {
+	    } else if (2==type) {
 		refl =  amp * (1. - rc1 * cexpf(sf_cmplx(0.,w*delay1)) - rc2 * cexpf(sf_cmplx(0.,w*delay2)));
+	    } else {
+		refl = sf_cmplx(0.,0.);
 	    }
 
 	    theta = asinf(v1*p);

@@ -24,8 +24,7 @@ if 'f90' in env.get('API',[]) and env.has_key('F90'):
                    CFLAGS=' -I${SOURCE.dir}',
                    F90FLAGS=' -J${SOURCE.dir} -I${SOURCE.dir}')
     elif F90base[:5] == 'pgf90':
-        env.Append(CPPDEFINES=['GFORTRAN'],
-                   CFLAGS=' -I${SOURCE.dir}',
+        env.Append(CFLAGS=' -I${SOURCE.dir}',
                    F90FLAGS=' -module ${SOURCE.dir} -I${SOURCE.dir}')
     elif F90base == 'ifort':
         env.Append(CPPDEFINES=['INTEL_COMPILER'],

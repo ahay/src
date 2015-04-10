@@ -50,85 +50,84 @@ static int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 	
 	for(int b=0; b<nc; b++) {
 	    int j = cs[b];
-	    double r;
 	    double x0 = kx[j];
 	    double z0 = kz[j];
 	    // rotation of coordinates
 	    double x = x0*c+z0*s;
 	    double z = z0*c-x0*s;
+	    double r;
 
 	    switch (approx) {
 		case 0: // Exact
-		{
-			double second = pow((c11[i]-c55[i])*x*x - (c33[i]-c55[i])*z*z,2) + 4*pow(c13[i]+c55[i],2)*x*x*z*z;
-			second = 0.5*sqrt(second);
-			r = sqrt(0.5*((c11[i]+c55[i])*x*x + (c33[i]+c55[i])*z*z) + second);
-		break;
-		}
+		{ double second = pow((c11[i]-c55[i])*x*x - (c33[i]-c55[i])*z*z,2) + 4*pow(c13[i]+c55[i],2)*x*x*z*z;
+		    second = 0.5*sqrt(second);
+		    r = sqrt(0.5*((c11[i]+c55[i])*x*x + (c33[i]+c55[i])*z*z) + second);
+		    break; }
 		case 1: // Zone's approximation
-		{
-			int lrst = 0;
-			double qv = (pow((c13[i]+c55[i]),2) + c55[i]*(c33[i]-c55[i]))/(c11[i]*(c33[i]-c55[i]));
-			double qh = (pow((c13[i]+c55[i]),2) + c55[i]*(c11[i]-c55[i]))/(c33[i]*(c11[i]-c55[i]));
-			double qm = 0.0, sm = 0.0, sv = 0.0, sh = 0.0 ;
-
-			switch(relat) {
-				case 0: lrst = 0;
-					break;
-				case 1: lrst = 1;
-					break;
-				case 2: lrst = 2;
-					break;
-				default: { 
-					double err[] = {fabs(qh/qv-0.83734),fabs(qh/qv-0.95581),fabs(qh/qv-0.97497)};
-					int l1; // sorting the rr 
-					for (l1=0;l1<2;l1++) {
-						if (err[lrst] > err[l1+1]) lrst = l1+1;
-					}
-					break;
-				}
+		{ int lrst = 0;
+		    double qv = (pow((c13[i]+c55[i]),2) + c55[i]*(c33[i]-c55[i]))/(c11[i]*(c33[i]-c55[i]));
+		    double qh = (pow((c13[i]+c55[i]),2) + c55[i]*(c11[i]-c55[i]))/(c33[i]*(c11[i]-c55[i]));
+		    double qm = 0.0, sm = 0.0, sv = 0.0, sh = 0.0 ;
+		    
+		    switch(relat) {
+			case 0: lrst = 0;
+			    break;
+			case 1: lrst = 1;
+			    break;
+			case 2: lrst = 2;
+			    break;
+			default: { 
+			    double err[] = {fabs(qh/qv-0.83734),fabs(qh/qv-0.95581),fabs(qh/qv-0.97497)};
+			    int l1; // sorting the rr 
+			    for (l1=0;l1<2;l1++) {
+				if (err[lrst] > err[l1+1]) lrst = l1+1;
+			    }
+			    break;
 			}
-			/* q horizontal vs q vertical*/
-			double rela[] = {0.83734,0.95581,0.97497};
-			double rela2[] = {0.15810,0.04414,0.02484};
-			
-			/* reduce from four to three */
-			qh = rela[lrst]*qv + rela2[lrst];
-			
-			if ( fabs(qv-1.0) > 1e-4 && fabs(qh-1.0) > 1e-4)  { /*Avoid isotropic or elliptical anisotropy*/
+		    }
+		    /* q horizontal vs q vertical*/
+		    double rela[] = {0.83734,0.95581,0.97497};
+		    double rela2[] = {0.15810,0.04414,0.02484};
+		    
+		    /* reduce from four to three */
+		    qh = rela[lrst]*qv + rela2[lrst];
+		    
+		    if ( fabs(qv-1.0) > 1e-4 && fabs(qh-1.0) > 1e-4)  { /*Avoid isotropic or elliptical anisotropy*/
 				//sv = (c11[i]*(c33[i]-c11[i])*(qh-1)*(qv-1)*(qv-1))/(2*(c33[i]*(1-qh)+c11[i]*(qv-1))*(c33[i]*(qv-qh)+c11[i]*(qh+qv-qv*qv-1)));
-				sv = ((c11[i] - c33[i])*(-1 + qh)*(-1 + qv)*(-1 + qv))/(2*((-c33[i])*(-1 + 2*qv + qh*(1 + qh + (-4 + qv)*qv)) + c11[i]*(-1 + qh*qh - 2*qh*qv + qv*(3 + (-2 + qv)*qv))));
+			sv = ((c11[i] - c33[i])*(-1 + qh)*(-1 + qv)*(-1 + qv))/(2*((-c33[i])*(-1 + 2*qv + qh*(1 + qh + (-4 + qv)*qv)) + c11[i]*(-1 + qh*qh - 2*qh*qv + qv*(3 + (-2 + qv)*qv))));
 			  	//sh = (c33[i]*(c11[i]-c33[i])*(qh-1)*(qh-1)*(qv-1))/(2*(c33[i]*(qh-1)+c11[i]*(1-qv))*(c11[i]*(qh-qv)+c33[i]*(qh+qv-qh*qh-1)));
-				sh = ((c11[i] - c33[i])*(-1 + qh)*(-1 + qh)*(-1 + qv))/(2*(c33[i] - c33[i]*(qh*(3 + (-2 + qh)*qh) - 2*qh*qv + qv*qv) + c11[i]*(-1 + 2*qh + qv + (-4 + qh)*qh*qv + qv*qv)));
-			}
-			else  {
-				qv = 1.0;
-				qh = 1.0;
-				sv = 0.5;
-				sh = 0.5;			
-			}
+			sh = ((c11[i] - c33[i])*(-1 + qh)*(-1 + qh)*(-1 + qv))/(2*(c33[i] - c33[i]*(qh*(3 + (-2 + qh)*qh) - 2*qh*qv + qv*qv) + c11[i]*(-1 + 2*qh + qv + (-4 + qh)*qh*qv + qv*qv)));
+		    } else  {
+			qv = 1.0;
+			qh = 1.0;
+			sv = 0.5;
+			sh = 0.5;			
+		    }
 			
-			if(x==0 && z==0) qm=qv;
-			else qm = qh*wx*(x/hypotf(vx[i]*x,vz[i]*z))*(x/hypotf(vx[i]*x,vz[i]*z)) + qv*wz*(z/hypotf(vx[i]*x,vz[i]*z))*(z/hypotf(vx[i]*x,vz[i]*z));
-			if(x==0 && z==0) sm=0.5;
-			else sm=sh*wx*(x/hypotf(vx[i]*x,vz[i]*z))*(x/hypotf(vx[i]*x,vz[i]*z)) + sv*wz*(z/hypotf(vx[i]*x,vz[i]*z))*(z/hypotf(vx[i]*x,vz[i]*z));
-			x = wx*x*x;
-			z = wz*z*z;
-			r = x+z;			
-			r = sqrt(r*(1-sm) + sm*sqrt(r*r + 2*(qm-1)*x*z/sm));
-			if (r != r) sf_warning("qm %f qv %f qh %f sm %f sv %f sh %f ",qm,qv,qh,sv,sh);
-		break;
-		}
+		    if(x==0 && z==0) qm=qv;
+		    else qm = qh*wx*(x/hypotf(vx[i]*x,vz[i]*z))*(x/hypotf(vx[i]*x,vz[i]*z)) + qv*wz*(z/hypotf(vx[i]*x,vz[i]*z))*(z/hypotf(vx[i]*x,vz[i]*z));
+		
+		    if(x==0 && z==0) sm=0.5;
+		    else sm=sh*wx*(x/hypotf(vx[i]*x,vz[i]*z))*(x/hypotf(vx[i]*x,vz[i]*z)) + sv*wz*(z/hypotf(vx[i]*x,vz[i]*z))*(z/hypotf(vx[i]*x,vz[i]*z));
+		
+		    x = wx*x*x;
+		    z = wz*z*z;
+		    r = x+z;			
+		    r = sqrt(r*(1-sm) + sm*sqrt(r*r + 2*(qm-1)*x*z/sm));
+		    break; }
 		case 2: // Acoustic approximation
-		{
-			z = wz*z*z;
-			x = wx*x*x;
-			r = x+z;
-			r = r+sqrt(r*r-qq*x*z);
-			r = sqrt(0.5*r);
-		break;
-		}
+		{z = wz*z*z;
+		    x = wx*x*x;
+		    r = x+z;
+		    r = r+sqrt(r*r-qq*x*z);
+		    r = sqrt(0.5*r);
+		    break; }
+		default:
+		{sf_error("unknown case %d", approx);
+		    r = 0.0;
+		    break;}
 	    }
+
 	    r = 2*(cos(r*dt)-1);
 	    if (xtaper) r *= xtap[i];
 	    if (ktaper) r *= ktap[j];

@@ -101,6 +101,8 @@ int main(int argc, char* argv[])
 			/* number of CGLS iterations */
 			if (!sf_getfloat("eps",&eps)) eps=0.01;
 			/* regularization parameter */
+		} else {
+		    invmode=NULL;
 		}
 
 		sf_putint(  out,"n2",np);

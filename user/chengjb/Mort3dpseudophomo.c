@@ -49,8 +49,7 @@
 /* wavefield propagators */
 #include "fwportpseudop.h"
 
-static int   ny,nx,nz,ns;
-static float dx,dy,dz,dt;
+static int   ny,nx,nz;
 
 int main(int  argc,char **argv)
 {
