@@ -130,7 +130,7 @@ int main (int argc, char* argv[])
 #else
 		refl =  sf_crmul(
 		    sf_cadd(sf_cmplx(1.,0.),
-			    sf_crmul(cexpf(sf_cmplx(0.,w*delay1)),-rc1)),ampl);
+			    sf_crmul(cexpf(sf_cmplx(0.,w*delay1)),-rc1)),amp);
 #endif
 	    } else if (2==type) {
 #ifdef SF_HAS_COMPLEX_H
@@ -179,7 +179,7 @@ int main (int argc, char* argv[])
 #else
 		    refl =  sf_crmul(
 			sf_cadd(sf_cmplx(1.,0.),
-				sf_crmul(cexpf(sf_cmplx(0.,w*delay1)),-rc1)),ampl);
+				sf_crmul(cexpf(sf_cmplx(0.,w*delay1)),-rc1)),amp);
 #endif
 		}
 
