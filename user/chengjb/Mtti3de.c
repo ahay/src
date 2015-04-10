@@ -46,7 +46,9 @@ int main(int  argc,char **argv)
     int   isx,isy,isz,bd;
 
     int   i,j,k,im,jm,it;
-	int   nth, rank;
+#ifdef _OPENMP
+    int   nth, rank;
+#endif
     float t;
     float fx,fy,fz,dt2;
 

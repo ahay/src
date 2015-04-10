@@ -26,9 +26,11 @@ if 'f90' in env.get('API',[]) and env.has_key('F90'):
     elif F90base[:5] == 'pgf90':
         env.Append(CFLAGS=' -I${SOURCE.dir}',
                    F90FLAGS=' -module ${SOURCE.dir} -I${SOURCE.dir}')
-    elif F90base == 'ifort':
+    elif F90base[:5] == 'ifort':
         env.Append(CPPDEFINES=['INTEL_COMPILER'],
                    F90FLAGS=' -module ${SOURCE.dir}')
+    elif F90base[:3] == 'f90' and env['PLATFORM'] == 'sunos':
+        env.Append(F90FLAGS=' -M${SOURCE.dir}')
 
     obj = env.Object('fortran.o','fortran.c')
     f90obj = env.Object('rsf.f90')

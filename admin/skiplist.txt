@@ -41,7 +41,8 @@ skiplist =  [
                 'book/cwp/geo2009VTIModeSeparation/separate2',
                 'book/cwp/geo2006TimeShiftImagingCondition/icomp',
                 'book/cwp/geo2008InterferometricImagingCondition/circle',
-                                             # Examples that run more than 2 minutes
+		# Examples that run more than 2 minutes
+		'book/data/seam-phase1-2d/sfmshots',
 		'book/rsf/reprobook/exam5',
 		'book/tccs/butterfly/synth2D-1-timer',
                 'book/trip/iwave/data',

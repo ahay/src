@@ -1948,7 +1948,7 @@ def f90(context):
     context.env['CFORTRAN90'] = cfortran
     context.Result(cfortran)
     context.Message("checking F90 module extension ... ")
-    f90module = re.compile(r'(?:testf90|TESTF90)(\.\w+)$')
+    f90module = re.compile(r'(?:testf90|TESTF90|conftest[^\.]+)(\.\w+)$')
     suffix = ''
     here = os.getcwd()
     for file in os.listdir(here):
