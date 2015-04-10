@@ -208,55 +208,55 @@ static int    nbell;
 /* 2D STENCILS */
 /***************/
 /*  2D forward FD derivative stencils */
-#define Fz(a,ix,iz,s) (2*C4*(a[ix  ][iz+4] - a[ix  ][iz-3]) +     \
-2*C3*(a[ix  ][iz+3] - a[ix  ][iz-2]) +     \
-2*C2*(a[ix  ][iz+2] - a[ix  ][iz-1]) +     \
-2*C1*(a[ix  ][iz+1] - a[ix  ][iz  ])  )*s
-#define Fx(a,ix,iz,s) (2*C4*(a[ix+4][iz  ] - a[ix-3][iz  ]) +     \
-2*C3*(a[ix+3][iz  ] - a[ix-2][iz  ]) +     \
-2*C2*(a[ix+2][iz  ] - a[ix-1][iz  ]) +     \
-2*C1*(a[ix+1][iz  ] - a[ix  ][iz  ])  )*s
+#define Fz(a,ix,iz,s) (2*C4*(a[ix  ][iz+4] - a[ix  ][iz-3]) +		\
+		       2*C3*(a[ix  ][iz+3] - a[ix  ][iz-2]) +		\
+		       2*C2*(a[ix  ][iz+2] - a[ix  ][iz-1]) +		\
+		       2*C1*(a[ix  ][iz+1] - a[ix  ][iz  ])  )*s
+#define Fx(a,ix,iz,s) (2*C4*(a[ix+4][iz  ] - a[ix-3][iz  ]) +		\
+		       2*C3*(a[ix+3][iz  ] - a[ix-2][iz  ]) +		\
+		       2*C2*(a[ix+2][iz  ] - a[ix-1][iz  ]) +		\
+		       2*C1*(a[ix+1][iz  ] - a[ix  ][iz  ])  )*s
 
 /* 2D backward FD derivative stencils */
-#define Bz(a,ix,iz,s) (2*C4*(a[ix  ][iz+3] - a[ix  ][iz-4]) +     \
-2*C3*(a[ix  ][iz+2] - a[ix  ][iz-3]) +     \
-2*C2*(a[ix  ][iz+1] - a[ix  ][iz-2]) +     \
-2*C1*(a[ix  ][iz  ] - a[ix  ][iz-1])  )*s
-#define Bx(a,ix,iz,s) (2*C4*(a[ix+3][iz  ] - a[ix-4][iz  ]) +     \
-2*C3*(a[ix+2][iz  ] - a[ix-3][iz  ]) +     \
-2*C2*(a[ix+1][iz  ] - a[ix-2][iz  ]) +     \
-2*C1*(a[ix  ][iz  ] - a[ix-1][iz  ])  )*s
+#define Bz(a,ix,iz,s) (2*C4*(a[ix  ][iz+3] - a[ix  ][iz-4]) +		\
+		       2*C3*(a[ix  ][iz+2] - a[ix  ][iz-3]) +		\
+		       2*C2*(a[ix  ][iz+1] - a[ix  ][iz-2]) +		\
+		       2*C1*(a[ix  ][iz  ] - a[ix  ][iz-1])  )*s
+#define Bx(a,ix,iz,s) (2*C4*(a[ix+3][iz  ] - a[ix-4][iz  ]) +		\
+		       2*C3*(a[ix+2][iz  ] - a[ix-3][iz  ]) +		\
+		       2*C2*(a[ix+1][iz  ] - a[ix-2][iz  ]) +		\
+		       2*C1*(a[ix  ][iz  ] - a[ix-1][iz  ])  )*s
 
 /***************/
 /* 3D STENCILS */
 /***************/
 /*  3D forward FD derivative stencils */
-#define Fz3(a,iy,ix,iz,s) (2*C4*(a[iy][ix  ][iz+4] - a[iy ][ix  ][iz-3]) +     \
-2*C3*( a[iy][ix  ][iz+3] - a[iy ][ix  ][iz-2]) +     \
-2*C2*( a[iy][ix  ][iz+2] - a[iy ][ix  ][iz-1]) +     \
-2*C1*( a[iy][ix  ][iz+1] - a[iy ][ix  ][iz  ])  )*s
-#define Fx3(a,iy,ix,iz,s) (2*C4*(a[iy][ix+4][iz  ] - a[iy ][ix-3][iz  ]) +     \
-2*C3*( a[iy][ix+3][iz  ] - a[iy ][ix-2][iz  ]) +     \
-2*C2*( a[iy][ix+2][iz  ] - a[iy ][ix-1][iz  ]) +     \
-2*C1*( a[iy][ix+1][iz  ] - a[iy ][ix  ][iz  ])  )*s
-#define Fy3(a,iy,ix,iz,s) (2*C4*(a[iy+4][ix][iz  ] - a[iy-3][ix ][iz  ]) +     \
-2*C3*( a[iy+3][ix][iz  ] - a[iy-2][ix ][iz  ]) +     \
-2*C2*( a[iy+2][ix][iz  ] - a[iy-1][ix ][iz  ]) +     \
-2*C1*( a[iy+1][ix][iz  ] - a[iy  ][ix ][iz  ])  )*s
+#define Fz3(a,iy,ix,iz,s) (2*C4*(a[iy][ix  ][iz+4] - a[iy ][ix  ][iz-3]) + \
+			   2*C3*( a[iy][ix  ][iz+3] - a[iy ][ix  ][iz-2]) + \
+			   2*C2*( a[iy][ix  ][iz+2] - a[iy ][ix  ][iz-1]) + \
+			   2*C1*( a[iy][ix  ][iz+1] - a[iy ][ix  ][iz  ])  )*s
+#define Fx3(a,iy,ix,iz,s) (2*C4*(a[iy][ix+4][iz  ] - a[iy ][ix-3][iz  ]) + \
+			   2*C3*( a[iy][ix+3][iz  ] - a[iy ][ix-2][iz  ]) + \
+			   2*C2*( a[iy][ix+2][iz  ] - a[iy ][ix-1][iz  ]) + \
+			   2*C1*( a[iy][ix+1][iz  ] - a[iy ][ix  ][iz  ])  )*s
+#define Fy3(a,iy,ix,iz,s) (2*C4*(a[iy+4][ix][iz  ] - a[iy-3][ix ][iz  ]) + \
+			   2*C3*( a[iy+3][ix][iz  ] - a[iy-2][ix ][iz  ]) + \
+			   2*C2*( a[iy+2][ix][iz  ] - a[iy-1][ix ][iz  ]) + \
+			   2*C1*( a[iy+1][ix][iz  ] - a[iy  ][ix ][iz  ])  )*s
 
 /* 3D backward FD derivative stencils */
-#define Bz3(a,iy,ix,iz,s) (2*C4*(a[iy][ix  ][iz+3] - a[iy ][ix  ][iz-4]) +     \
-2*C3*( a[iy][ix  ][iz+2] - a[iy ][ix  ][iz-3]) +     \
-2*C2*( a[iy][ix  ][iz+1] - a[iy ][ix  ][iz-2]) +     \
-2*C1*( a[iy][ix  ][iz  ] - a[iy ][ix  ][iz-1])  )*s
-#define Bx3(a,iy,ix,iz,s) (2*C4*(a[iy][ix+3][iz  ] - a[iy ][ix-4][iz  ]) +     \
-2*C3*( a[iy][ix+2][iz  ] - a[iy ][ix-3][iz  ]) +     \
-2*C2*( a[iy][ix+1][iz  ] - a[iy ][ix-2][iz  ]) +     \
-2*C1*( a[iy][ix  ][iz  ] - a[iy ][ix-1][iz  ])  )*s
-#define By3(a,iy,ix,iz,s) (2*C4*(a[iy+3][ix][iz  ] - a[iy-4][ix ][iz  ]) +     \
-2*C3*( a[iy+2][ix][iz  ] - a[iy-3][ix ][iz  ]) +     \
-2*C2*( a[iy+1][ix][iz  ] - a[iy-2][ix ][iz  ]) +     \
-2*C1*( a[iy  ][ix][iz  ] - a[iy-1][ix ][iz  ])  )*s
+#define Bz3(a,iy,ix,iz,s) (2*C4*(a[iy][ix  ][iz+3] - a[iy ][ix  ][iz-4]) + \
+			   2*C3*( a[iy][ix  ][iz+2] - a[iy ][ix  ][iz-3]) + \
+			   2*C2*( a[iy][ix  ][iz+1] - a[iy ][ix  ][iz-2]) + \
+			   2*C1*( a[iy][ix  ][iz  ] - a[iy ][ix  ][iz-1])  )*s
+#define Bx3(a,iy,ix,iz,s) (2*C4*(a[iy][ix+3][iz  ] - a[iy ][ix-4][iz  ]) + \
+			   2*C3*( a[iy][ix+2][iz  ] - a[iy ][ix-3][iz  ]) + \
+			   2*C2*( a[iy][ix+1][iz  ] - a[iy ][ix-2][iz  ]) + \
+			   2*C1*( a[iy][ix  ][iz  ] - a[iy ][ix-1][iz  ])  )*s
+#define By3(a,iy,ix,iz,s) (2*C4*(a[iy+3][ix][iz  ] - a[iy-4][ix ][iz  ]) + \
+			   2*C3*( a[iy+2][ix][iz  ] - a[iy-3][ix ][iz  ]) + \
+			   2*C2*( a[iy+1][ix][iz  ] - a[iy-2][ix ][iz  ]) + \
+			   2*C1*( a[iy  ][ix][iz  ] - a[iy-1][ix ][iz  ])  )*s
 /*------------------------------------------------------------*/
 
 
@@ -649,9 +649,9 @@ void cut3d_slice(float** a,
     
 #ifdef _OPENMP
 #pragma omp parallel for			\
-schedule(dynamic,fdm->ompchunk)		\
-private(ix,iz)				\
-shared(a,b,nx,nz,fx,fz,jx,jz)
+    schedule(dynamic,fdm->ompchunk)		\
+    private(ix,iz)				\
+    shared(a,b,nx,nz,fx,fz,jx,jz)
 #endif
     for     (ix=0;ix<nx;ix++) {
         for (iz=0;iz<nz;iz++) {
@@ -685,59 +685,60 @@ void bfill(float** b,
 
 /*------------------------------------------------------------*/
 scoef3d sinc3d_make(int nc,
-                 pt3d* aa,
-                 fdm3d fdm)
+		    pt3d* aa,
+		    fdm3d fdm)
 /*< init the sinc3d interpolation for injection/extraction >*/
 {
-  scoef3d swout = (scoef3d) sf_alloc(nc,sizeof(*swout));
-  float inp[9]; 
-  float xo[9];
-  for (int i=0; i<9; i++)
-    inp[i] = 0.0f;
-  inp[4] = 1.0f;
-  // allocate and set loop
-  for (int ic=0; ic<nc; ++ic){
-    swout[ic].n = nc;
-    int iy = (int)((aa[ic].y -fdm->oypad)/fdm->dy+0.499f); 
-    swout[ic].iy = iy;
-    swout[ic].fy = 0;
-    swout[ic].ny = 9;
-    float dy = iy*fdm->dy+fdm->oypad-aa[ic].y; 
-    for (int i=0; i<9; ++i)
-      xo[i] = -4.0f+dy/fdm->dy+i*1.0f;
+    int i, ic;
+    scoef3d swout = (scoef3d) sf_alloc(nc,sizeof(*swout));
+    float inp[9]; 
+    float xo[9];
+    for (i=0; i<9; i++)
+	inp[i] = 0.0f;
+    inp[4] = 1.0f;
+    // allocate and set loop
+    for (ic=0; ic<nc; ++ic){
+	swout[ic].n = nc;
+	int iy = (int)((aa[ic].y -fdm->oypad)/fdm->dy+0.499f); 
+	swout[ic].iy = iy;
+	swout[ic].fy = 0;
+	swout[ic].ny = 9;
+	float dy = iy*fdm->dy+fdm->oypad-aa[ic].y; 
+	for (i=0; i<9; ++i)
+	    xo[i] = -4.0f+dy/fdm->dy+i*1.0f;
    	ints8r (9, 1.0f, -4.0, inp, 0.0f, 0.0f, 9, xo, swout[ic].sincy);
-    if(swout[ic].sincy[4]==1.0f){
-      swout[ic].ny = 1;
-      swout[ic].fy = 4;
-    }
+	if(swout[ic].sincy[4]==1.0f){
+	    swout[ic].ny = 1;
+	    swout[ic].fy = 4;
+	}
 
-    int ix = (int)((aa[ic].x -fdm->oxpad)/fdm->dx+0.499f); 
-    swout[ic].ix = ix;
-    swout[ic].fx = 0;
-    swout[ic].nx = 9;
-    float dx = ix*fdm->dx+fdm->oxpad-aa[ic].x; 
-    for (int i=0; i<9; ++i)
-      xo[i] = -4.0f+dx/fdm->dx+i*1.0f;
+	int ix = (int)((aa[ic].x -fdm->oxpad)/fdm->dx+0.499f); 
+	swout[ic].ix = ix;
+	swout[ic].fx = 0;
+	swout[ic].nx = 9;
+	float dx = ix*fdm->dx+fdm->oxpad-aa[ic].x; 
+	for (i=0; i<9; ++i)
+	    xo[i] = -4.0f+dx/fdm->dx+i*1.0f;
    	ints8r (9, 1.0f, -4.0, inp, 0.0f, 0.0f, 9, xo, swout[ic].sincx);
-    if(swout[ic].sincx[4]==1.0f){
-      swout[ic].nx = 1;
-      swout[ic].fx = 4;
-    }
+	if(swout[ic].sincx[4]==1.0f){
+	    swout[ic].nx = 1;
+	    swout[ic].fx = 4;
+	}
 
-    int iz = (int)((aa[ic].z -fdm->ozpad)/fdm->dz+0.499f);
-    swout[ic].iz = iz;
-    swout[ic].fz = 0;
-    swout[ic].nz = 9;
-    float dz = iz*fdm->dz+fdm->ozpad-aa[ic].z;
-    for (int i=0; i<9; ++i)
-      xo[i] = -4.0+dz/fdm->dz+i*1.0f;
+	int iz = (int)((aa[ic].z -fdm->ozpad)/fdm->dz+0.499f);
+	swout[ic].iz = iz;
+	swout[ic].fz = 0;
+	swout[ic].nz = 9;
+	float dz = iz*fdm->dz+fdm->ozpad-aa[ic].z;
+	for (i=0; i<9; ++i)
+	    xo[i] = -4.0+dz/fdm->dz+i*1.0f;
    	ints8r (9, 1.0f, -4.0, inp, 0.0f, 0.0f, 9, xo, swout[ic].sincz);
-    if(swout[ic].sincz[4]==1.0f){
-      swout[ic].nz = 1;
-      swout[ic].fz = 4;
-    }
-  }  
-  return swout;
+	if(swout[ic].sincz[4]==1.0f){
+	    swout[ic].nz = 1;
+	    swout[ic].fz = 4;
+	}
+    }  
+    return swout;
 }
 
 
@@ -747,205 +748,206 @@ void sinc3d_inject(float***uu,
 		   scoef3d ca)
 /*< inject into wavefield >*/
 {
-  int   ia, iy, ix, iz, sy, sx, sz;
-  float w, wy, wx, wz;
+    int   ia, iy, ix, iz, sy, sx, sz, ixx, iyy, izz;
+    float w, wy, wx, wz;
 
-  int na = ca[0].n;
+    int na = ca[0].n;
 #ifdef _OPENMP
-#pragma omp parallel for    \
-schedule(dynamic)          \
-private(ia,ix,iy,iz,sx,sy,sz,w,wy,wx,wz)  \
-shared(na,ca,dd,uu)
+#pragma omp parallel for			\
+    schedule(dynamic)				\
+    private(ia,ix,iy,iz,sx,sy,sz,w,wy,wx,wz)	\
+    shared(na,ca,dd,uu)
 #endif
-  for(ia=0;ia<na;ia++) {	
-    w = dd[ia];
-    iy = ca[ia].iy;
-    ix = ca[ia].ix;
-    iz = ca[ia].iz;
-    for (int iyy=ca[ia].fy; iyy<ca[ia].fy+ca[ia].ny;iyy++){
-      sy = -4 +iyy;
-      wy = ca[ia].sincy[iyy];
-      for (int ixx=ca[ia].fx; ixx<ca[ia].fx+ca[ia].nx;ixx++){
-        sx = -4 +ixx;
-        wx = ca[ia].sincx[ixx];
-        for(int izz=ca[ia].fz; izz<ca[ia].fz+ca[ia].nz; izz++){
-          sz = -4 +izz;
-          wz = ca[ia].sincz[izz];
-          float value = w*wy*wx*wz;
+    for(ia=0;ia<na;ia++) {	
+	w = dd[ia];
+	iy = ca[ia].iy;
+	ix = ca[ia].ix;
+	iz = ca[ia].iz;
+	for (iyy=ca[ia].fy; iyy<ca[ia].fy+ca[ia].ny;iyy++){
+	    sy = -4 +iyy;
+	    wy = ca[ia].sincy[iyy];
+	    for (ixx=ca[ia].fx; ixx<ca[ia].fx+ca[ia].nx;ixx++){
+		sx = -4 +ixx;
+		wx = ca[ia].sincx[ixx];
+		for(izz=ca[ia].fz; izz<ca[ia].fz+ca[ia].nz; izz++){
+		    sz = -4 +izz;
+		    wz = ca[ia].sincz[izz];
+		    float value = w*wy*wx*wz;
 #ifdef _OPENMP
 #pragma omp atomic
 #endif
-          uu[iy+sy][ix+sx][iz+sz] += value; // scatter
-        }
-      }  
+		    uu[iy+sy][ix+sx][iz+sz] += value; // scatter
+		}
+	    }  
+	}
     }
-  }
 }
 
 
 /*------------------------------------------------------------*/
 void sinc3d_inject1(float***uu,
-		   float dd,
-		   scoef3d ca)
+		    float dd,
+		    scoef3d ca)
 /*< inject into wavefield >*/
 {
-  int   ia, iy, ix, iz, sy, sx, sz;
-  float w, wy, wx, wz;
+    int   ia, iy, ix, iz, sy, sx, sz, ixx, iyy, izz;
+    float w, wy, wx, wz;
 
-  int na = ca[0].n;
+    int na = ca[0].n;
 #ifdef _OPENMP
-#pragma omp parallel for    \
-schedule(dynamic)          \
-private(ia,ix,iy,iz,sx,sy,sz,w,wy,wx,wz)  \
-shared(na,ca,dd,uu)
+#pragma omp parallel for			\
+    schedule(dynamic)				\
+    private(ia,ix,iy,iz,sx,sy,sz,w,wy,wx,wz)	\
+    shared(na,ca,dd,uu)
 #endif
-  for(ia=0;ia<na;ia++) {	
-    w = dd;
-    iy = ca[ia].iy;
-    ix = ca[ia].ix;
-    iz = ca[ia].iz;
-    for (int iyy=ca[ia].fy; iyy<ca[ia].fy+ca[ia].ny;iyy++){
-      sy = -4 +iyy;
-      wy = ca[ia].sincy[iyy];
-      for (int ixx=ca[ia].fx; ixx<ca[ia].fx+ca[ia].nx;ixx++){
-        sx = -4 +ixx;
-        wx = ca[ia].sincx[ixx];
-        for(int izz=ca[ia].fz; izz<ca[ia].fz+ca[ia].nz; izz++){
-          sz = -4 +izz;
-          wz = ca[ia].sincz[izz];
-          float value = w*wy*wx*wz;
+    for(ia=0;ia<na;ia++) {	
+	w = dd;
+	iy = ca[ia].iy;
+	ix = ca[ia].ix;
+	iz = ca[ia].iz;
+	for (iyy=ca[ia].fy; iyy<ca[ia].fy+ca[ia].ny;iyy++){
+	    sy = -4 +iyy;
+	    wy = ca[ia].sincy[iyy];
+	    for (ixx=ca[ia].fx; ixx<ca[ia].fx+ca[ia].nx;ixx++){
+		sx = -4 +ixx;
+		wx = ca[ia].sincx[ixx];
+		for(izz=ca[ia].fz; izz<ca[ia].fz+ca[ia].nz; izz++){
+		    sz = -4 +izz;
+		    wz = ca[ia].sincz[izz];
+		    float value = w*wy*wx*wz;
 #ifdef _OPENMP
 #pragma omp atomic
 #endif
-          uu[iy+sy][ix+sx][iz+sz] += value; // scatter
-        }
-      }  
+		    uu[iy+sy][ix+sx][iz+sz] += value; // scatter
+		}
+	    }  
+	}
     }
-  }
 }
 
 
 /*------------------------------------------------------------*/
 void sinc3d_extract(float***uu,
-		   float *dd,
-		   scoef3d ca)
+		    float *dd,
+		    scoef3d ca)
 /*< inject into wavefield >*/
 {
-  int   ia, iy, ix, iz, sy, sx, sz;
-  float wy, wx, wz;
-  int na = ca[0].n;
+    int   ia, iy, ix, iz, sy, sx, sz, ixx, iyy, izz;
+    float wy, wx, wz;
+    int na = ca[0].n;
 
 #ifdef _OPENMP
-#pragma omp parallel for \
-schedule(dynamic)          \
-private(ia,ix,iy,iz,sx,sy,sz,wy,wx,wz)  \
-shared(na,ca,dd,uu)
+#pragma omp parallel for			\
+    schedule(dynamic)				\
+    private(ia,ix,iy,iz,sx,sy,sz,wy,wx,wz)	\
+    shared(na,ca,dd,uu)
 #endif
-  for(ia=0;ia<na;ia++) {
-    iy = ca[ia].iy;
-    ix = ca[ia].ix;
-    iz = ca[ia].iz;
-    float gather = 0.0f;
-    for (int iyy=ca[ia].fy; iyy<ca[ia].fy+ca[ia].ny;iyy++){
-      sy = -4 +iyy;
-      wy = ca[ia].sincy[iyy];
-      for (int ixx=ca[ia].fx; ixx<ca[ia].fx+ca[ia].nx;ixx++){
-        sx = -4 +ixx;
-        wx = ca[ia].sincx[ixx];
-        for(int izz=ca[ia].fz; izz<ca[ia].fz+ca[ia].nz; izz++){
-          sz = -4 +izz;
-          wz = ca[ia].sincz[izz];
-          gather += uu[iy+sy][ix+sx][iz+sz]*wy*wx*wz; // gather
-        }
-      }  
+    for(ia=0;ia<na;ia++) {
+	iy = ca[ia].iy;
+	ix = ca[ia].ix;
+	iz = ca[ia].iz;
+	float gather = 0.0f;
+	for (iyy=ca[ia].fy; iyy<ca[ia].fy+ca[ia].ny;iyy++){
+	    sy = -4 +iyy;
+	    wy = ca[ia].sincy[iyy];
+	    for (ixx=ca[ia].fx; ixx<ca[ia].fx+ca[ia].nx;ixx++){
+		sx = -4 +ixx;
+		wx = ca[ia].sincx[ixx];
+		for(izz=ca[ia].fz; izz<ca[ia].fz+ca[ia].nz; izz++){
+		    sz = -4 +izz;
+		    wz = ca[ia].sincz[izz];
+		    gather += uu[iy+sy][ix+sx][iz+sz]*wy*wx*wz; // gather
+		}
+	    }  
+	}
+	dd[ia] = gather;
     }
-    dd[ia] = gather;
-  }
 }
 
 
 /*------------------------------------------------------------*/
 void sinc3d_extract1(float***uu,
-		   float *dd,
-		   scoef3d ca)
+		     float *dd,
+		     scoef3d ca)
 /*< inject into wavefield >*/
 {
-  int   ia, iy, ix, iz, sy, sx, sz;
-  float wy, wx, wz;
-  int na = ca[0].n;
+    int   ia, iy, ix, iz, sy, sx, sz, ixx, iyy, izz;
+    float wy, wx, wz;
+    int na = ca[0].n;
 
-  float gather = 0.f;
-  for(ia=0;ia<na;ia++) {	
-    iy = ca[ia].iy;
-    ix = ca[ia].ix;
-    iz = ca[ia].iz;
-    for (int iyy=ca[ia].fy; iyy<ca[ia].fy+ca[ia].ny;iyy++){
-      sy = -4 +iyy;
-      wy = ca[ia].sincy[iyy];
-      for (int ixx=ca[ia].fx; ixx<ca[ia].fx+ca[ia].nx;ixx++){
-        sx = -4 +ixx;
-        wx = ca[ia].sincx[ixx];
-        for(int izz=ca[ia].fz; izz<ca[ia].fz+ca[ia].nz; izz++){
-          sz = -4 +izz;
-          wz = ca[ia].sincz[izz];
-          gather += uu[iy+sy][ix+sx][iz+sz]*wy*wx*wz; // gather 
-        }
-      }  
+    float gather = 0.f;
+    for(ia=0;ia<na;ia++) {	
+	iy = ca[ia].iy;
+	ix = ca[ia].ix;
+	iz = ca[ia].iz;
+	for (iyy=ca[ia].fy; iyy<ca[ia].fy+ca[ia].ny;iyy++){
+	    sy = -4 +iyy;
+	    wy = ca[ia].sincy[iyy];
+	    for (ixx=ca[ia].fx; ixx<ca[ia].fx+ca[ia].nx;ixx++){
+		sx = -4 +ixx;
+		wx = ca[ia].sincx[ixx];
+		for(izz=ca[ia].fz; izz<ca[ia].fz+ca[ia].nz; izz++){
+		    sz = -4 +izz;
+		    wz = ca[ia].sincz[izz];
+		    gather += uu[iy+sy][ix+sx][iz+sz]*wy*wx*wz; // gather 
+		}
+	    }  
+	}
     }
-  }
-  dd[0] = gather;
+    dd[0] = gather;
 }
 
 
 /*------------------------------------------------------------*/
 scoef2d sinc2d_make(int nc,
-                 pt2d* aa,
-                 fdm2d fdm)
+		    pt2d* aa,
+		    fdm2d fdm)
 /*< init the sinc2d interpolation for injection/extraction >*/
 {
-  scoef2d swout;
-  swout = (scoef2d) sf_alloc(nc,sizeof(*swout));
+    int i, ic;
+    scoef2d swout;
+    swout = (scoef2d) sf_alloc(nc,sizeof(*swout));
 
-  float inp[9]; 
-  float xo[9];
-  for (int i=0; i<9; i++)
-    inp[i] = 0.0f;
-  inp[4] = 1.0f;
-  // allocate and set loop
-  for (int ic=0; ic<nc; ++ic){
-    int ix = (int)((aa[ic].x -fdm->oxpad)/fdm->dx+0.499f); 
-    int iz = (int)((aa[ic].z -fdm->ozpad)/fdm->dz+0.499f);
-    swout[ic].fx = 0;
-    swout[ic].nx = 9;
-    swout[ic].fz = 0;
-    swout[ic].nz = 9;
-    swout[ic].n = nc;
+    float inp[9]; 
+    float xo[9];
+    for (i=0; i<9; i++)
+	inp[i] = 0.0f;
+    inp[4] = 1.0f;
+    // allocate and set loop
+    for (ic=0; ic<nc; ++ic){
+	int ix = (int)((aa[ic].x -fdm->oxpad)/fdm->dx+0.499f); 
+	int iz = (int)((aa[ic].z -fdm->ozpad)/fdm->dz+0.499f);
+	swout[ic].fx = 0;
+	swout[ic].nx = 9;
+	swout[ic].fz = 0;
+	swout[ic].nz = 9;
+	swout[ic].n = nc;
   
-    swout[ic].ix = ix;
-    swout[ic].iz = iz;
+	swout[ic].ix = ix;
+	swout[ic].iz = iz;
     
-    float dx = ix*fdm->dx+fdm->oxpad-aa[ic].x; 
-    float dz = iz*fdm->dz+fdm->ozpad-aa[ic].z;
+	float dx = ix*fdm->dx+fdm->oxpad-aa[ic].x; 
+	float dz = iz*fdm->dz+fdm->ozpad-aa[ic].z;
 
-    for (int i=0; i<9; ++i)
-      xo[i] = -4.0f+dx/fdm->dx+i*1.0f;
+	for (i=0; i<9; ++i)
+	    xo[i] = -4.0f+dx/fdm->dx+i*1.0f;
    	ints8r (9, 1.0f, -4.0, inp, 0.0f, 0.0f, 9, xo, swout[ic].sincx);
 
-    if(swout[ic].sincx[4]==1.0f){
-      swout[ic].nx = 1;
-      swout[ic].fx = 4;
-    }
+	if(swout[ic].sincx[4]==1.0f){
+	    swout[ic].nx = 1;
+	    swout[ic].fx = 4;
+	}
 
-    for (int i=0; i<9; ++i)
-      xo[i] = -4.0+dz/fdm->dz+i*1.0f;
+	for (i=0; i<9; ++i)
+	    xo[i] = -4.0+dz/fdm->dz+i*1.0f;
    	ints8r (9, 1.0f, -4.0, inp, 0.0f, 0.0f, 9, xo, swout[ic].sincz);
 
-    if(swout[ic].sincz[4]==1.0f){
-      swout[ic].nz = 1;
-      swout[ic].fz = 4;
-    }
-  }  
-  return swout;
+	if(swout[ic].sincz[4]==1.0f){
+	    swout[ic].nz = 1;
+	    swout[ic].fz = 4;
+	}
+    }  
+    return swout;
 }
 
 
@@ -956,62 +958,62 @@ void sinc2d_inject(float**uu,
 /*< inject into wavefield >*/
 {
 
-  int   ia, ix, iz, sx, sz;
-  float w, wx, wz;
+    int   ia, ix, iz, sx, sz, ixx, izz;
+    float w, wx, wz;
 
-  int na = ca[0].n;
+    int na = ca[0].n;
 #ifdef _OPENMP
-#pragma omp parallel for    \
-schedule(dynamic)       \
-private(ia,ix,iz,sx,sz,w,wx,wz) \
-shared(na,ca,dd,uu)
+#pragma omp parallel for			\
+    schedule(dynamic)				\
+    private(ia,ix,iz,sx,sz,w,wx,wz)		\
+    shared(na,ca,dd,uu)
 #endif
-  for(ia=0;ia<na;ia++) {	
-    w = dd[ia];
-    ix = ca[ia].ix;
-    iz = ca[ia].iz;
-    for (int ixx=ca[ia].fx; ixx<ca[ia].fx+ca[ia].nx;ixx++){
-      sx = -4 +ixx;
-      wx = ca[ia].sincx[ixx];
-      for(int izz=ca[ia].fz; izz<ca[ia].fz+ca[ia].nz; izz++){
-        sz = -4 +izz;
-        wz = ca[ia].sincz[izz];
-        float value = w*wx*wz;
+    for(ia=0;ia<na;ia++) {	
+	w = dd[ia];
+	ix = ca[ia].ix;
+	iz = ca[ia].iz;
+	for (ixx=ca[ia].fx; ixx<ca[ia].fx+ca[ia].nx;ixx++){
+	    sx = -4 +ixx;
+	    wx = ca[ia].sincx[ixx];
+	    for(izz=ca[ia].fz; izz<ca[ia].fz+ca[ia].nz; izz++){
+		sz = -4 +izz;
+		wz = ca[ia].sincz[izz];
+		float value = w*wx*wz;
 #ifdef _OPENMP
 #pragma omp atomic
 #endif
-        uu[ix+sx][iz+sz] += value; // scatter
-      }
-    }  
-  }
+		uu[ix+sx][iz+sz] += value; // scatter
+	    }
+	}  
+    }
 }
 
 /*------------------------------------------------------------*/
 void sinc2d_inject1(float**uu,
-                   float dd,
-                   scoef2d ca)
+		    float dd,
+		    scoef2d ca)
 /*< inject into wavefield >*/
 {
     
-    int   ia, ix, iz, sx, sz;
+    int   ia, ix, iz, sx, sz, ixx, izz;
     float w, wx, wz;
 
     int na = ca[0].n;
     
 #ifdef _OPENMP
-#pragma omp parallel for    \
-schedule(dynamic)       \
-private(ia,ix,iz,sx,sz,w,wx,wz) \
-shared(na,ca,dd,uu)
+#pragma omp parallel for			\
+    schedule(dynamic)				\
+    private(ia,ix,iz,sx,sz,w,wx,wz)		\
+    shared(na,ca,dd,uu)
 #endif
     for(ia=0;ia<na;ia++) {
         w = dd;
         ix = ca[ia].ix;
         iz = ca[ia].iz;
-        for (int ixx=ca[ia].fx; ixx<ca[ia].fx+ca[ia].nx;ixx++){
+        for (ixx=ca[ia].fx; ixx<ca[ia].fx+ca[ia].nx;ixx++){
             sx = -4 +ixx;
             wx = ca[ia].sincx[ixx];
-            for(int izz=ca[ia].fz; izz<ca[ia].fz+ca[ia].nz; izz++){
+            for(izz=ca[ia].fz; izz<ca[ia].fz+ca[ia].nz; izz++){
                 sz = -4 +izz;
                 wz = ca[ia].sincz[izz];
                 float value = w*wx*wz;
@@ -1030,25 +1032,25 @@ void sinc2d_extract(float**uu,
                     scoef2d ca)
 /*< inject into wavefield >*/
 {
-    int   ia, ix, iz, sx, sz;
+    int   ia, ix, iz, sx, sz, ixx, izz;
     float wx, wz;
 
     int na = ca[0].n;
     
 #ifdef _OPENMP
-#pragma omp parallel for    \
-schedule(dynamic)       \
-private(ia,ix,iz,sx,sz,wx,wz) \
-shared(na,ca,dd,uu)
+#pragma omp parallel for			\
+    schedule(dynamic)				\
+    private(ia,ix,iz,sx,sz,wx,wz)		\
+    shared(na,ca,dd,uu)
 #endif
     for(ia=0;ia<na;ia++) {
         ix = ca[ia].ix;
         iz = ca[ia].iz;
         float gather = 0.f;
-        for (int ixx=ca[ia].fx; ixx<ca[ia].fx+ca[ia].nx; ixx++){
+        for (ixx=ca[ia].fx; ixx<ca[ia].fx+ca[ia].nx; ixx++){
             sx = -4 +ixx;
             wx = ca[ia].sincx[ixx];
-            for(int izz=ca[ia].fz; izz<ca[ia].fz+ca[ia].nz; izz++){
+            for(izz=ca[ia].fz; izz<ca[ia].fz+ca[ia].nz; izz++){
                 sz = -4 +izz;
                 wz = ca[ia].sincz[izz];
                 gather += uu[ix+sx][iz+sz]*wx*wz; // gather
@@ -1060,11 +1062,11 @@ shared(na,ca,dd,uu)
 
 /*------------------------------------------------------------*/
 void sinc2d_extract1(float**uu,
-                    float *dd,
-                    scoef2d ca)
+		     float *dd,
+		     scoef2d ca)
 /*< extract from wavefield >*/
 {
-    int   ia, ix, iz, sx, sz;
+    int   ia, ix, iz, sx, sz, izz, ixx;
     float wx, wz;
 
     int na = ca[0].n;
@@ -1073,10 +1075,10 @@ void sinc2d_extract1(float**uu,
     for(ia=0;ia<na;ia++) {
         ix = ca[ia].ix;
         iz = ca[ia].iz;
-        for (int ixx=ca[ia].fx; ixx<ca[ia].fx+ca[ia].nx; ixx++){
+        for (ixx=ca[ia].fx; ixx<ca[ia].fx+ca[ia].nx; ixx++){
             sx = -4 +ixx;
             wx = ca[ia].sincx[ixx];
-            for(int izz=ca[ia].fz; izz<ca[ia].fz+ca[ia].nz; izz++){
+            for(izz=ca[ia].fz; izz<ca[ia].fz+ca[ia].nz; izz++){
                 sz = -4 +izz;
                 wz = ca[ia].sincz[izz];
                 gather += uu[ix+sx][iz+sz]*wx*wz; // gather
@@ -1430,8 +1432,8 @@ void lint3d_bell(float***uu,
 
 /*------------------------------------------------------------*/
 void lint2d_bell1(float**uu,
-		 float ww,
-		 lint2d ca)
+		  float ww,
+		  lint2d ca)
 /*< apply bell taper >*/
 {
     int   ia,iz,ix;
@@ -1455,8 +1457,8 @@ void lint2d_bell1(float**uu,
 
 /*------------------------------------------------------------*/
 void lint3d_bell1(float***uu,
-		 float  ww,
-		 lint3d  ca)
+		  float  ww,
+		  lint3d  ca)
 /*< apply bell taper >*/
 {
     int   ia,iz,ix,iy;
@@ -1492,11 +1494,11 @@ abcone2d abcone2d_make(int     nop,
 /*< init 2D ABC >*/
 
 /*This absorbing boundary condition follows the work done in
-Absorbing Boundary Conditions , by Robert Clayton and Bjorn Engquist
+  Absorbing Boundary Conditions , by Robert Clayton and Bjorn Engquist
 
-Which can be found at:
+  Which can be found at:
 
-http://sepwww.stanford.edu/public/docs/sep11/11_12_abs.html
+  http://sepwww.stanford.edu/public/docs/sep11/11_12_abs.html
 */
 {
     abcone2d abc;
@@ -1533,11 +1535,11 @@ abcone3d abcone3d_make(int     nop,
 /*< init 3D ABC >*/
 
 /*This absorbing boundary condition follows the work done in
-Absorbing Boundary Conditions , by Robert Clayton and Bjorn Engquist
+  Absorbing Boundary Conditions , by Robert Clayton and Bjorn Engquist
 
-Which can be found at:
+  Which can be found at:
 
-http://sepwww.stanford.edu/public/docs/sep11/11_12_abs.html
+  http://sepwww.stanford.edu/public/docs/sep11/11_12_abs.html
 */
 
 {
@@ -1602,26 +1604,26 @@ void abcone2d_apply(float**   uo,
 /*    private(iz,ix,iop)			\*/
 /*    shared(fdm,abc,nop,uo,um)*/
 /*#endif*/
-    for(ix=0;ix<fdm->nxpad;ix++) {
-	for(iop=0;iop<nop;iop++) {
+	for(ix=0;ix<fdm->nxpad;ix++) {
+	    for(iop=0;iop<nop;iop++) {
 
-	    /* top BC */
-	    if(!abc->free) { /* not free surface, apply ABC */
-		iz = nop-iop;
+		/* top BC */
+		if(!abc->free) { /* not free surface, apply ABC */
+		    iz = nop-iop;
+		    uo      [ix][iz  ] 
+			= um[ix][iz+1] 
+			+(um[ix][iz  ]
+			  - uo[ix][iz+1]) * abc->bzl[ix];
+		}
+
+		/* bottom BC */
+		iz = fdm->nzpad-nop+iop-1;
 		uo      [ix][iz  ] 
-		    = um[ix][iz+1] 
+		    = um[ix][iz-1]
 		    +(um[ix][iz  ]
-		    - uo[ix][iz+1]) * abc->bzl[ix];
+		      - uo[ix][iz-1]) * abc->bzh[ix];
 	    }
-
-	    /* bottom BC */
-	    iz = fdm->nzpad-nop+iop-1;
-	    uo      [ix][iz  ] 
-		= um[ix][iz-1]
-		+(um[ix][iz  ]
-		- uo[ix][iz-1]) * abc->bzh[ix];
 	}
-    }
 
 /*#ifdef _OPENMP*/
 /*#pragma omp parallel for		\*/
@@ -1629,24 +1631,24 @@ void abcone2d_apply(float**   uo,
 /*    private(iz,ix,iop)			\*/
 /*    shared(fdm,nop,uo,um,abc)*/
 /*#endif*/
-    for(iz=0;iz<fdm->nzpad;iz++) {
-	for(iop=0;iop<nop;iop++) {
+	    for(iz=0;iz<fdm->nzpad;iz++) {
+		for(iop=0;iop<nop;iop++) {
 
-	    /* left BC */
-	    ix = nop-iop;
-	    uo      [ix  ][iz] 
-		= um[ix+1][iz] 
-		+(um[ix  ][iz]
-		- uo[ix+1][iz]) * abc->bxl[iz];
+		    /* left BC */
+		    ix = nop-iop;
+		    uo      [ix  ][iz] 
+			= um[ix+1][iz] 
+			+(um[ix  ][iz]
+			  - uo[ix+1][iz]) * abc->bxl[iz];
 
-	    /* right BC */
-	    ix = fdm->nxpad-nop+iop-1;
-	    uo      [ix  ][iz] 
-		= um[ix-1][iz]
-		+(um[ix  ][iz]
-		- uo[ix-1][iz]) * abc->bxh[iz];
-	}
-    }
+		    /* right BC */
+		    ix = fdm->nxpad-nop+iop-1;
+		    uo      [ix  ][iz] 
+			= um[ix-1][iz]
+			+(um[ix  ][iz]
+			  - uo[ix-1][iz]) * abc->bxh[iz];
+		}
+	    }
 }
 
 /*------------------------------------------------------------*/
@@ -1665,28 +1667,28 @@ void abcone3d_apply(float  ***uo,
 /*    private(iz,ix,iy,iop)			\*/
 /*    shared(fdm,abc,nop,uo,um)*/
 /*#endif*/
-    for    (iy=0;iy<fdm->nypad;iy++) {
-	for(ix=0;ix<fdm->nxpad;ix++) {
-	    for(iop=0;iop<nop;iop++) {
+	for    (iy=0;iy<fdm->nypad;iy++) {
+	    for(ix=0;ix<fdm->nxpad;ix++) {
+		for(iop=0;iop<nop;iop++) {
 		
-		/* z min */
-		if(!abc->free) { /* not free surface, apply ABC */
-		    iz = nop-iop;
+		    /* z min */
+		    if(!abc->free) { /* not free surface, apply ABC */
+			iz = nop-iop;
+			uo      [iy][ix][iz  ] 
+			    = um[iy][ix][iz+1] 
+			    +(um[iy][ix][iz  ]
+			      - uo[iy][ix][iz+1]) * abc->bzl[iy][ix];
+		    }
+		
+		    /* z max */
+		    iz = fdm->nzpad-nop+iop-1;
 		    uo      [iy][ix][iz  ] 
-			= um[iy][ix][iz+1] 
+			= um[iy][ix][iz-1]
 			+(um[iy][ix][iz  ]
-			- uo[iy][ix][iz+1]) * abc->bzl[iy][ix];
+			  - uo[iy][ix][iz-1]) * abc->bzh[iy][ix];
 		}
-		
-		/* z max */
-		iz = fdm->nzpad-nop+iop-1;
-		uo      [iy][ix][iz  ] 
-		    = um[iy][ix][iz-1]
-		    +(um[iy][ix][iz  ]
-		    - uo[iy][ix][iz-1]) * abc->bzh[iy][ix];
 	    }
 	}
-    }
     
 /*#ifdef _OPENMP*/
 /*#pragma omp parallel for			\*/
@@ -1694,26 +1696,26 @@ void abcone3d_apply(float  ***uo,
 /*    private(iz,ix,iy,iop)			\*/
 /*    shared(fdm,abc,nop,uo,um)*/
 /*#endif*/
-    for    (iy=0;iy<fdm->nypad;iy++) {
-	for(iz=0;iz<fdm->nzpad;iz++) {
-	    for(iop=0;iop<nop;iop++) {
+	    for    (iy=0;iy<fdm->nypad;iy++) {
+		for(iz=0;iz<fdm->nzpad;iz++) {
+		    for(iop=0;iop<nop;iop++) {
 		
-		/* x min */
-		ix = nop-iop;
-		uo      [iy][ix  ][iz] 
-		    = um[iy][ix+1][iz] 
-		    +(um[iy][ix  ][iz]
-		    - uo[iy][ix+1][iz]) * abc->bxl[iy][iz];
+			/* x min */
+			ix = nop-iop;
+			uo      [iy][ix  ][iz] 
+			    = um[iy][ix+1][iz] 
+			    +(um[iy][ix  ][iz]
+			      - uo[iy][ix+1][iz]) * abc->bxl[iy][iz];
 		
-		/* x max */
-		ix = fdm->nxpad-nop+iop-1;
-		uo      [iy][ix  ][iz] 
-		    = um[iy][ix-1][iz]
-		    +(um[iy][ix  ][iz]
-		    - uo[iy][ix-1][iz]) * abc->bxh[iy][iz];
+			/* x max */
+			ix = fdm->nxpad-nop+iop-1;
+			uo      [iy][ix  ][iz] 
+			    = um[iy][ix-1][iz]
+			    +(um[iy][ix  ][iz]
+			      - uo[iy][ix-1][iz]) * abc->bxh[iy][iz];
+		    }
+		}
 	    }
-	}
-    }
 
 /*#ifdef _OPENMP*/
 /*#pragma omp parallel for			\*/
@@ -1721,26 +1723,26 @@ void abcone3d_apply(float  ***uo,
 /*    private(iz,ix,iy,iop)			\*/
 /*    shared(fdm,abc,nop,uo,um)*/
 /*#endif*/
-    for    (ix=0;ix<fdm->nxpad;ix++) {
-	for(iz=0;iz<fdm->nzpad;iz++) {
-	    for(iop=0;iop<nop;iop++) {
+		for    (ix=0;ix<fdm->nxpad;ix++) {
+		    for(iz=0;iz<fdm->nzpad;iz++) {
+			for(iop=0;iop<nop;iop++) {
 		
-		/* y min */
-		iy = nop-iop;
-		uo      [iy  ][ix][iz] 
-		    = um[iy+1][ix][iz] 
-		    +(um[iy  ][ix][iz]
-		    - uo[iy+1][ix][iz]) * abc->byl[ix][iz];
+			    /* y min */
+			    iy = nop-iop;
+			    uo      [iy  ][ix][iz] 
+				= um[iy+1][ix][iz] 
+				+(um[iy  ][ix][iz]
+				  - uo[iy+1][ix][iz]) * abc->byl[ix][iz];
 		
-		/* y max */
-		iy = fdm->nypad-nop+iop-1;
-		uo      [iy  ][ix][iz] 
-		    = um[iy-1][ix][iz]
-		    +(um[iy  ][ix][iz]
-		    - uo[iy-1][ix][iz]) * abc->byh[ix][iz];
-	    }
-	}
-    }
+			    /* y max */
+			    iy = fdm->nypad-nop+iop-1;
+			    uo      [iy  ][ix][iz] 
+				= um[iy-1][ix][iz]
+				+(um[iy  ][ix][iz]
+				  - uo[iy-1][ix][iz]) * abc->byh[ix][iz];
+			}
+		    }
+		}
 
 }
 
@@ -1750,11 +1752,11 @@ sponge sponge_make(int nb)
 /*< init boundary sponge >*/
     
 /* Sponge boundary conditions multiply incoming wavefields
-by smaller coefficients to attenuate the wavefield over time and space.
+   by smaller coefficients to attenuate the wavefield over time and space.
 
-The sponge coefficients need to deviate from 1 very gradually to ensure
-that there are no induced reflections caused by large impedance 
-contrasts */
+   The sponge coefficients need to deviate from 1 very gradually to ensure
+   that there are no induced reflections caused by large impedance 
+   contrasts */
 {
     sponge spo;
     int   ib;
@@ -1780,9 +1782,9 @@ void sponge2d_apply(float**   uu,
     float w;
 
 #ifdef _OPENMP
-#pragma omp parallel for		\
-    schedule(dynamic)			\
-    private(ib,ix,ibz,w)		\
+#pragma omp parallel for			\
+    schedule(dynamic)				\
+    private(ib,ix,ibz,w)			\
     shared(fdm,spo,uu)
 #endif
     for(ib=0; ib<fdm->nb; ib++) {
@@ -1796,9 +1798,9 @@ void sponge2d_apply(float**   uu,
     }
 
 #ifdef _OPENMP
-#pragma omp parallel for		\
-    schedule(dynamic)			\
-    private(ib,iz,ibx,w)		\
+#pragma omp parallel for			\
+    schedule(dynamic)				\
+    private(ib,iz,ibx,w)			\
     shared(fdm,spo,uu)
 #endif
     for(ib=0; ib<fdm->nb; ib++) {
@@ -1884,10 +1886,10 @@ float min(float x, float y){
 }
 
 bool cfl_generic(
-                 float vpmin, float vpmax,
-                 float dx, float dy, float dz,
-                 float dt, float fmax, float safety,
-                 int intervals, char *wave)
+    float vpmin, float vpmax,
+    float dx, float dy, float dz,
+    float dt, float fmax, float safety,
+    int intervals, char *wave)
 /*< cfl check for both 2d and 3d acoustic fdcode >*/
 {
     int dim = 3;
@@ -1927,11 +1929,11 @@ bool cfl_generic(
 }
 
 bool cfl_elastic(
-                 float vpmin, float vpmax,
-                 float vsmin, float vsmax,
-                 float dx, float dy, float dz,
-                 float dt, float fmax, float safety,
-                 int intervals)
+    float vpmin, float vpmax,
+    float vsmin, float vsmax,
+    float dx, float dy, float dz,
+    float dt, float fmax, float safety,
+    int intervals)
 /*< cfl check for both 2d and 3d elastic fdcode >*/
 {
     bool ppass = cfl_generic(vpmin,vpmax,
@@ -1945,10 +1947,10 @@ bool cfl_elastic(
 }
 
 bool cfl_acoustic(
-                  float vpmin, float vpmax,
-                  float dx, float dy, float dz,
-                  float dt, float fmax, float safety,
-                  int intervals)
+    float vpmin, float vpmax,
+    float dx, float dy, float dz,
+    float dt, float fmax, float safety,
+    int intervals)
 /*< cfl check for acoustic wave equation >*/
 {
     bool ppass = cfl_generic(vpmin,vpmax,
@@ -1998,8 +2000,8 @@ PML2D pml2d_init(fdm2d fdm)
 #endif
     {
 #ifdef _OPENMP
-#pragma omp for \
-schedule(dynamic,fdm->ompchunk)
+#pragma omp for					\
+    schedule(dynamic,fdm->ompchunk)
 #endif
         for (ix=0; ix<fdm->nxpad; ix++){
             for (iz=0; iz<fdm->nb; iz++){
@@ -2009,8 +2011,8 @@ schedule(dynamic,fdm->ompchunk)
         }
         
 #ifdef _OPENMP
-#pragma omp for \
-schedule(dynamic,fdm->ompchunk)
+#pragma omp for					\
+    schedule(dynamic,fdm->ompchunk)
 #endif
         for (ix=0; ix<fdm->nb; ix++){
             for (iz=0; iz<fdm->nzpad; iz++){
@@ -2020,8 +2022,8 @@ schedule(dynamic,fdm->ompchunk)
         }
         
 #ifdef _OPENMP
-#pragma omp for \
-schedule(dynamic,fdm->ompchunk)
+#pragma omp for					\
+    schedule(dynamic,fdm->ompchunk)
 #endif
         for (ix=0; ix<fdm->nb; ix++){
             for (iz=0; iz<fdm->nb; iz++){
@@ -2128,7 +2130,7 @@ void pml2d_velApply(float **vz,
 /*< Application of the 2D PML to the velocity field >*/
 {
     /* it's a simple damping of the velocity field:
-     it DOES NOT require auxiliary variables */
+       it DOES NOT require auxiliary variables */
     int ix, iz;
     int nx,nz,nb;
     
@@ -2170,7 +2172,7 @@ void pml3d_velApply(float ***vx,
 /*< Application of the 3D PML to the velocity field >*/
 {
     /* it's a simple damping of the velocity fiel:
-     it DOES NOT require auxiliary variables */
+       it DOES NOT require auxiliary variables */
     
     int ix, iy, iz;
     int nx, ny, nz, nb;
@@ -2184,46 +2186,46 @@ void pml3d_velApply(float ***vx,
     /* now we have 6 sides of the cube!*/
     /****************************/
 #ifdef _OPENMP
-#pragma omp parallel for \
-schedule(dynamic,fdm->ompchunk) \
-private(ix,iy,iz) \
-shared(vx, dt, nb, nx, ny, nz,sigma)
+#pragma omp parallel for			\
+    schedule(dynamic,fdm->ompchunk)		\
+    private(ix,iy,iz)				\
+    shared(vx, dt, nb, nx, ny, nz,sigma)
 #endif
     /****************************/
     /* LEFT SIDE AND RIGHT SIDE */
-	   for    (iy=0; iy<ny; iy++) {
-           for  (ix=0; ix<nb; ix++) {
-               for(iz=0; iz<nz; iz++) {
-                   vx[iy][ix][iz] +=  -sigma[ix]*vx[iy][ix][iz]*dt;
-                   vx[iy][nx-ix-1][iz] +=  -sigma[ix]*vx[iy][nx-ix-1][iz]*dt;
-               }
-           }
-       }
+    for    (iy=0; iy<ny; iy++) {
+	for  (ix=0; ix<nb; ix++) {
+	    for(iz=0; iz<nz; iz++) {
+		vx[iy][ix][iz] +=  -sigma[ix]*vx[iy][ix][iz]*dt;
+		vx[iy][nx-ix-1][iz] +=  -sigma[ix]*vx[iy][nx-ix-1][iz]*dt;
+	    }
+	}
+    }
     
     /****************************/
 #ifdef _OPENMP
-#pragma omp parallel for \
-schedule(dynamic,fdm->ompchunk) \
-private(ix,iy,iz) \
-shared(vz, dt, nb, nx, ny, nz,sigma)
+#pragma omp parallel for			\
+    schedule(dynamic,fdm->ompchunk)		\
+    private(ix,iy,iz)				\
+    shared(vz, dt, nb, nx, ny, nz,sigma)
 #endif
     /****************************/
     /* UP SIDE AND BOTTOM SIDE */
-	   for    (iy=0; iy<ny; iy++) {
-           for  (ix=0; ix<nx; ix++) {
-               for(iz=0; iz<nb; iz++) {
-                   vz[iy][ix][iz] +=  -sigma[iz]*vz[iy][ix][iz]*dt;
-                   vz[iy][ix][nz-iz-1] +=  -sigma[iz]*vz[iy][ix][nz-iz-1]*dt;
-               }
-           }
-       }
+    for    (iy=0; iy<ny; iy++) {
+	for  (ix=0; ix<nx; ix++) {
+	    for(iz=0; iz<nb; iz++) {
+		vz[iy][ix][iz] +=  -sigma[iz]*vz[iy][ix][iz]*dt;
+		vz[iy][ix][nz-iz-1] +=  -sigma[iz]*vz[iy][ix][nz-iz-1]*dt;
+	    }
+	}
+    }
     
     /****************************/
 #ifdef _OPENMP
-#pragma omp parallel for \
-schedule(dynamic,fdm->ompchunk) \
-private(ix,iy,iz) \
-shared(vy, dt, nb, nx, ny, nz,sigma)
+#pragma omp parallel for			\
+    schedule(dynamic,fdm->ompchunk)		\
+    private(ix,iy,iz)				\
+    shared(vy, dt, nb, nx, ny, nz,sigma)
 #endif
     /****************************/
     /* FRONT SIDE AND BACK SIDE */
@@ -2234,7 +2236,7 @@ shared(vy, dt, nb, nx, ny, nz,sigma)
                 vy[ny-iy-1][ix][iz] +=  -sigma[iy]*vy[ny-iy-1][ix][iz]*dt;
             }
         }
-	   }
+    }
     
     
 }
@@ -2292,7 +2294,7 @@ void pml2d_presApply(float   **u,
             sigmaz=sigma[iz];
             
             pml->up[ix][iz] += Fx(vx,ix,iz,idx)*dt;
-       		   //u[ix][iz] += - sigmaz*u[ix][iz]*dt;
+	    //u[ix][iz] += - sigmaz*u[ix][iz]*dt;
         }
     }
     
@@ -2352,7 +2354,7 @@ void pml2d_presApply(float   **u,
         for(iz=nz-nb+1; iz<nz-NOP; iz++) {
             sigmaz=sigma[nz-iz];
             
-	           pml->downleft[ix][iz-shiftz] += u[ix][iz]*dt;
+	    pml->downleft[ix][iz-shiftz] += u[ix][iz]*dt;
             u[ix][iz] += -sigmax*sigmaz*pml->downleft[ix][iz-shiftz]*dt;
         }
     }
@@ -2385,7 +2387,7 @@ void pml2d_presApply(float   **u,
     
     /* RIGHT SIDE*/
     for    (ix=nx-nb+1; ix<nx-NOP; ix++) {
- 	    		sigmax=sigma[nx-ix];
+	sigmax=sigma[nx-ix];
         for(iz=NOP; iz<nz-NOP; iz++) {
             
             //pml->right[ix-shiftx][iz] += com[ix][iz]*sigmax*Fz(vz,ix,iz,idz)*dt;
@@ -2443,10 +2445,10 @@ void pml3d_presApply(float   ***u,
     /*******************************************************************************/
     /****************************/
 #ifdef _OPENMP
-#pragma omp parallel for \
-schedule(dynamic,fdm->ompchunk) \
-private(ix,iy,iz,sigmax,sigmay,sigmaz) \
-shared(u, dt, nb, fdm, pml)
+#pragma omp parallel for			\
+    schedule(dynamic,fdm->ompchunk)		\
+    private(ix,iy,iz,sigmax,sigmay,sigmaz)	\
+    shared(u, dt, nb, fdm, pml)
 #endif
     /****************************/
     // UP-LEFT-FRONT + UP-RIGHT-FRONT + DOWN-RIGHT-FRONT
@@ -2464,8 +2466,8 @@ shared(u, dt, nb, fdm, pml)
                 pml->UFPSIyzx[iy][ix][iz] += sigmay*pml->Upsizx[iy][ix][iz]*dt;
                 
                 u[iy][ix][iz] +=  -( sigmax*sigmay*sigmaz*pml->ULFW[iy][ix][iz] +
-                                    (sigmax*sigmay + sigmax*sigmaz + sigmay*sigmaz)*pml->ULU[iy][ix][iz])*dt
-                + com[iy][ix][iz]*pml->UFPSIyzx[iy][ix][iz]*dt;
+				     (sigmax*sigmay + sigmax*sigmaz + sigmay*sigmaz)*pml->ULU[iy][ix][iz])*dt
+		    + com[iy][ix][iz]*pml->UFPSIyzx[iy][ix][iz]*dt;
                 
                 //UPRF
                 pml->URFW[iy][ix][iz] += pml->URU[iy][ix][iz]*dt;
@@ -2475,7 +2477,7 @@ shared(u, dt, nb, fdm, pml)
                 
                 u[iy][nx-ix-1][iz] += -(sigmax*sigmay*sigmaz*pml->URFW[iy][ix][iz] +
                                         (sigmax*sigmay + sigmax*sigmaz + sigmay*sigmaz)*pml->URU[iy][ix][iz])*dt
-                + com[iy][nx-ix-1][iz]*pml->UFPSIyzx[iy][nx-ix-1][iz]*dt;
+		    + com[iy][nx-ix-1][iz]*pml->UFPSIyzx[iy][nx-ix-1][iz]*dt;
                 
                 //DRF
                 pml->DRFW[iy][ix][iz] += pml->DRU[iy][ix][iz]*dt;
@@ -2485,7 +2487,7 @@ shared(u, dt, nb, fdm, pml)
                 
                 u[iy][nx-ix-1][nz-iz-1] += -(sigmax*sigmay*sigmaz*pml->DRFW[iy][ix][iz] +
                                              (sigmax*sigmay + sigmax*sigmaz + sigmay*sigmaz)*pml->DRU[iy][ix][iz])*dt
-                + com[iy][nx-ix-1][nz-iz-1]*pml->DFPSIyzx[iy][nx-ix-1][iz]*dt;
+		    + com[iy][nx-ix-1][nz-iz-1]*pml->DFPSIyzx[iy][nx-ix-1][iz]*dt;
                 
                 //DLF
                 pml->DLFW[iy][ix][iz] += pml->DLU[iy][ix][iz]*dt;
@@ -2495,7 +2497,7 @@ shared(u, dt, nb, fdm, pml)
                 
                 u[iy][ix][nz-iz-1] += -(sigmax*sigmay*sigmaz*pml->DLFW[iy][ix][iz] +
                                         (sigmax*sigmay + sigmax*sigmaz + sigmay*sigmaz)*pml->DLU[iy][ix][iz])*dt
-                + com[iy][ix][nz-iz-1]*pml->DFPSIyzx[iy][ix][iz]*dt;
+		    + com[iy][ix][nz-iz-1]*pml->DFPSIyzx[iy][ix][iz]*dt;
                 
                 /************************************************************************/
                 //ULB
@@ -2506,7 +2508,7 @@ shared(u, dt, nb, fdm, pml)
                 
                 u[ny-iy-1][ix][iz] += -(sigmax*sigmay*sigmaz*pml->ULBW[iy][ix][iz] +
                                         (sigmax*sigmay + sigmax*sigmaz + sigmay*sigmaz)*pml->ULU[ny-iy-1][ix][iz])*dt
-                + com[ny-iy-1][ix][iz]*pml->UBPSIyzx[iy][ix][iz]*dt;
+		    + com[ny-iy-1][ix][iz]*pml->UBPSIyzx[iy][ix][iz]*dt;
                 
                 //URB
                 pml->URBW[iy][ix][iz] += pml->URU[ny-iy-1][ix][iz]*dt;
@@ -2516,7 +2518,7 @@ shared(u, dt, nb, fdm, pml)
                 
                 u[ny-iy-1][nx-ix-1][iz] += -(sigmax*sigmay*sigmaz*pml->URBW[iy][ix][iz] +
                                              (sigmax*sigmay + sigmax*sigmaz + sigmay*sigmaz)*pml->URU[ny-iy-1][ix][iz])*dt
-                + com[ny-iy-1][nx-ix-1][iz]*pml->UBPSIyzx[iy][nx-ix-1][iz]*dt;
+		    + com[ny-iy-1][nx-ix-1][iz]*pml->UBPSIyzx[iy][nx-ix-1][iz]*dt;
                 
                 //DRB
                 pml->DRBW[iy][ix][iz] += pml->DRU[ny-iy-1][ix][iz]*dt;
@@ -2526,7 +2528,7 @@ shared(u, dt, nb, fdm, pml)
                 
                 u[ny-iy-1][nx-ix-1][nz-iz-1] += -(sigmax*sigmay*sigmaz*pml->DRBW[iy][ix][iz] +
                                                   (sigmax*sigmay + sigmax*sigmaz + sigmay*sigmaz)*pml->DRU[ny-iy-1][ix][iz])*dt
-                + com[ny-iy-1][nx-ix-1][nz-iz-1]*pml->DBPSIyzx[iy][nx-ix-1][iz]*dt;
+		    + com[ny-iy-1][nx-ix-1][nz-iz-1]*pml->DBPSIyzx[iy][nx-ix-1][iz]*dt;
                 
                 // DBL
                 pml->DLBW[iy][ix][iz] += pml->DLU[ny-iy-1][ix][iz]*dt;
@@ -2536,7 +2538,7 @@ shared(u, dt, nb, fdm, pml)
                 
                 u[ny-iy-1][ix][nz-iz-1] += -(sigmax*sigmay*sigmaz*pml->DLBW[iy][ix][iz] +
                                              (sigmax*sigmay + sigmax*sigmaz + sigmay*sigmaz)*pml->DLU[ny-iy-1][ix][iz])*dt
-                +com[ny-iy-1][ix][nz-iz-1]*pml->DBPSIyzx[iy][ix][iz]*dt;
+		    +com[ny-iy-1][ix][nz-iz-1]*pml->DBPSIyzx[iy][ix][iz]*dt;
             }
         }
     }
@@ -2547,10 +2549,10 @@ shared(u, dt, nb, fdm, pml)
     
     /****************************/
 #ifdef _OPENMP
-#pragma omp parallel for \
-schedule(dynamic,fdm->ompchunk) \
-private(ix,iy,iz,sigmax,sigmay,sigmaz) \
-shared(u, dt, nb, fdm, pml)
+#pragma omp parallel for			\
+    schedule(dynamic,fdm->ompchunk)		\
+    private(ix,iy,iz,sigmax,sigmay,sigmaz)	\
+    shared(u, dt, nb, fdm, pml)
 #endif
     /****************************/
     for     (iy=NOP; iy<nb; iy++){
@@ -2580,10 +2582,10 @@ shared(u, dt, nb, fdm, pml)
     
     /****************************/
 #ifdef _OPENMP
-#pragma omp parallel for \
-schedule(dynamic,fdm->ompchunk) \
-private(ix,iy,iz,sigmax,sigmay,sigmaz) \
-shared(u, dt, nb, fdm, pml)
+#pragma omp parallel for			\
+    schedule(dynamic,fdm->ompchunk)		\
+    private(ix,iy,iz,sigmax,sigmay,sigmaz)	\
+    shared(u, dt, nb, fdm, pml)
 #endif
     /****************************/
     for     (iy=NOP; iy<nb; iy++){
@@ -2612,10 +2614,10 @@ shared(u, dt, nb, fdm, pml)
     
     /****************************/
 #ifdef _OPENMP
-#pragma omp parallel for \
-schedule(dynamic,fdm->ompchunk) \
-private(ix,iy,iz,sigmax,sigmay,sigmaz) \
-shared(u, dt, nb, fdm, pml)
+#pragma omp parallel for			\
+    schedule(dynamic,fdm->ompchunk)		\
+    private(ix,iy,iz,sigmax,sigmay,sigmaz)	\
+    shared(u, dt, nb, fdm, pml)
 #endif
     /****************************/
     for     (iy=nb; iy<ny-nb; iy++){
@@ -2643,10 +2645,10 @@ shared(u, dt, nb, fdm, pml)
     
     /****************************/
 #ifdef _OPENMP
-#pragma omp parallel for \
-schedule(dynamic,fdm->ompchunk) \
-private(ix,iy,iz,sigmax,sigmay,sigmaz) \
-shared(u, dt, nb, fdm, pml)
+#pragma omp parallel for			\
+    schedule(dynamic,fdm->ompchunk)		\
+    private(ix,iy,iz,sigmax,sigmay,sigmaz)	\
+    shared(u, dt, nb, fdm, pml)
 #endif
     /****************************/
     // down left
@@ -2675,10 +2677,10 @@ shared(u, dt, nb, fdm, pml)
     
     /****************************/
 #ifdef _OPENMP
-#pragma omp parallel for \
-schedule(dynamic,fdm->ompchunk) \
-private(ix,iy,iz,sigmax,sigmay,sigmaz) \
-shared(u, dt, nb, fdm, pml)
+#pragma omp parallel for			\
+    schedule(dynamic,fdm->ompchunk)		\
+    private(ix,iy,iz,sigmax,sigmay,sigmaz)	\
+    shared(u, dt, nb, fdm, pml)
 #endif
     /****************************/
     for     (iy=ny-nb; iy<ny-NOP; iy++){
@@ -2706,10 +2708,10 @@ shared(u, dt, nb, fdm, pml)
     
     /****************************/
 #ifdef _OPENMP
-#pragma omp parallel for \
-schedule(dynamic,fdm->ompchunk) \
-private(ix,iy,iz,sigmax,sigmay,sigmaz) \
-shared(u, dt, nb, fdm, pml)
+#pragma omp parallel for			\
+    schedule(dynamic,fdm->ompchunk)		\
+    private(ix,iy,iz,sigmax,sigmay,sigmaz)	\
+    shared(u, dt, nb, fdm, pml)
 #endif
     /****************************/
     
@@ -2742,10 +2744,10 @@ shared(u, dt, nb, fdm, pml)
     
     /****************************/
 #ifdef _OPENMP
-#pragma omp parallel for \
-schedule(dynamic,fdm->ompchunk) \
-private(ix,iy,iz) \
-shared(pml, u, vy, vz, com, dt, nb, nx, ny, nz, idy, idz,sigma)
+#pragma omp parallel for						\
+    schedule(dynamic,fdm->ompchunk)					\
+    private(ix,iy,iz)							\
+    shared(pml, u, vy, vz, com, dt, nb, nx, ny, nz, idy, idz,sigma)
 #endif
     /****************************/
     for     (iy=NOP; iy<ny-NOP; iy++){
@@ -2771,10 +2773,10 @@ shared(pml, u, vy, vz, com, dt, nb, nx, ny, nz, idy, idz,sigma)
     
     /****************************/
 #ifdef _OPENMP
-#pragma omp parallel for \
-schedule(dynamic,fdm->ompchunk) \
-private(ix,iy,iz) \
-shared(pml, u, vx, vy, com, dt, nb, nx, ny, nz, idx, idy,sigma)
+#pragma omp parallel for						\
+    schedule(dynamic,fdm->ompchunk)					\
+    private(ix,iy,iz)							\
+    shared(pml, u, vx, vy, com, dt, nb, nx, ny, nz, idx, idy,sigma)
 #endif
     /****************************/
     for     (iy=NOP; iy<ny-NOP; iy++){
@@ -2798,10 +2800,10 @@ shared(pml, u, vx, vy, com, dt, nb, nx, ny, nz, idx, idy,sigma)
     
     /****************************/
 #ifdef _OPENMP
-#pragma omp parallel for \
-schedule(dynamic,fdm->ompchunk) \
-private(ix,iy,iz) \
-shared(pml, u, vx, vz, com, dt, nb, nx, ny, nz, idx, idz,sigma)
+#pragma omp parallel for						\
+    schedule(dynamic,fdm->ompchunk)					\
+    private(ix,iy,iz)							\
+    shared(pml, u, vx, vz, com, dt, nb, nx, ny, nz, idx, idz,sigma)
 #endif
     /****************************/
     for     (iy=NOP; iy<nb; iy++){

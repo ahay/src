@@ -292,8 +292,8 @@ void bfill(float** b,
 
 /*------------------------------------------------------------*/
 scoef3d sinc3d_make(int nc,
-                 pt3d* aa,
-                 fdm3d fdm);
+		    pt3d* aa,
+		    fdm3d fdm);
 /*< init the sinc3d interpolation for injection/extraction >*/
 
 
@@ -306,29 +306,29 @@ void sinc3d_inject(float***uu,
 
 /*------------------------------------------------------------*/
 void sinc3d_inject1(float***uu,
-		   float dd,
-		   scoef3d ca);
+		    float dd,
+		    scoef3d ca);
 /*< inject into wavefield >*/
 
 
 /*------------------------------------------------------------*/
 void sinc3d_extract(float***uu,
-		   float *dd,
-		   scoef3d ca);
+		    float *dd,
+		    scoef3d ca);
 /*< inject into wavefield >*/
 
 
 /*------------------------------------------------------------*/
 void sinc3d_extract1(float***uu,
-		   float *dd,
-		   scoef3d ca);
+		     float *dd,
+		     scoef3d ca);
 /*< inject into wavefield >*/
 
 
 /*------------------------------------------------------------*/
 scoef2d sinc2d_make(int nc,
-                 pt2d* aa,
-                 fdm2d fdm);
+		    pt2d* aa,
+		    fdm2d fdm);
 /*< init the sinc2d interpolation for injection/extraction >*/
 
 
@@ -341,8 +341,8 @@ void sinc2d_inject(float**uu,
 
 /*------------------------------------------------------------*/
 void sinc2d_inject1(float**uu,
-                   float dd,
-                   scoef2d ca);
+		    float dd,
+		    scoef2d ca);
 /*< inject into wavefield >*/
 
 
@@ -355,8 +355,8 @@ void sinc2d_extract(float**uu,
 
 /*------------------------------------------------------------*/
 void sinc2d_extract1(float**uu,
-                    float *dd,
-                    scoef2d ca);
+		     float *dd,
+		     scoef2d ca);
 /*< extract from wavefield >*/
 
 
@@ -447,15 +447,15 @@ void lint3d_bell(float***uu,
 
 /*------------------------------------------------------------*/
 void lint2d_bell1(float**uu,
-		 float ww,
-		 lint2d ca);
+		  float ww,
+		  lint2d ca);
 /*< apply bell taper >*/
 
 
 /*------------------------------------------------------------*/
 void lint3d_bell1(float***uu,
-		 float  ww,
-		 lint3d  ca);
+		  float  ww,
+		  lint3d  ca);
 /*< apply bell taper >*/
 
 
@@ -515,27 +515,27 @@ void sponge3d_apply(float  ***uu,
 
 
 bool cfl_generic(
-                 float vpmin, float vpmax,
-                 float dx, float dy, float dz,
-                 float dt, float fmax, float safety,
-                 int intervals, char *wave);
+    float vpmin, float vpmax,
+    float dx, float dy, float dz,
+    float dt, float fmax, float safety,
+    int intervals, char *wave);
 /*< cfl check for both 2d and 3d acoustic fdcode >*/
 
 
 bool cfl_elastic(
-                 float vpmin, float vpmax,
-                 float vsmin, float vsmax,
-                 float dx, float dy, float dz,
-                 float dt, float fmax, float safety,
-                 int intervals);
+    float vpmin, float vpmax,
+    float vsmin, float vsmax,
+    float dx, float dy, float dz,
+    float dt, float fmax, float safety,
+    int intervals);
 /*< cfl check for both 2d and 3d elastic fdcode >*/
 
 
 bool cfl_acoustic(
-                  float vpmin, float vpmax,
-                  float dx, float dy, float dz,
-                  float dt, float fmax, float safety,
-                  int intervals);
+    float vpmin, float vpmax,
+    float dx, float dy, float dz,
+    float dt, float fmax, float safety,
+    int intervals);
 /*< cfl check for acoustic wave equation >*/
 
 
