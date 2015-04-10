@@ -33,7 +33,6 @@ float gauss(int ix, float xx, float tt, bool hf)
     } else {
 	tmp = xx-slx-vel[ix]*tt;
     }
-    //tmp = slx-vel[ix]*tt;
     return expf(-1*alpha*tmp*tmp);
 }
 

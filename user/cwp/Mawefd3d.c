@@ -34,6 +34,10 @@
 #undef __AVX__
 #endif
 
+#ifdef sun
+#define restrict
+#endif
+
 #if defined __SSE__ || defined __AVX__
 #include <immintrin.h>
 #endif
@@ -98,14 +102,36 @@ main(int argc, char** argv)
 
     int nbell;
 
+    float* fdcoef_d2;
+    float* fdcoef_d1;
+
+    sf_axis acz = NULL, acx = NULL, acy = NULL;
+    int nqz, nqx, nqy;
+    float oqz, oqx, oqy, dqz, dqx, dqy;
+
+    float** oslice = NULL; /* output 3D wavefield slice-by-slice */
+    float*** tmp_array;
+
+    double wall_clock_time_s, wall_clock_time_e;
+
+    const int SECOND_DERIV = 2;
+    const int FIRST_DERIV = 1;
+
+    int nop;
+
+#if defined _OPENMP && _DEBUG
+    double tic;
+    double toc;
+#endif
+
     /* init RSF */
     sf_init(argc,argv);
 
 #ifdef _OPENMP
     omp_init();
-    double wall_clock_time_s = omp_get_wtime();
+    wall_clock_time_s = omp_get_wtime();
 #else
-    double wall_clock_time_s = (double) clock() / CLOCKS_PER_SEC;
+    wall_clock_time_s = (double) clock() / CLOCKS_PER_SEC;
 #endif
 
     if (!sf_getbool("verb",&verb))  verb=false; /* Verbosity flag */
@@ -149,10 +175,10 @@ main(int argc, char** argv)
     as = sf_iaxa(file_src,2); sf_setlabel(as,"s"); if(verb) sf_raxa(as); /* sources */
     ar = sf_iaxa(file_rec,2); sf_setlabel(ar,"r"); if(verb) sf_raxa(ar); /* receivers */
 
-    nt = sf_n(at); dt = sf_d(at); //t0 = sf_o(at);
-    nz = sf_n(az); dz = sf_d(az); //z0 = sf_o(az);
-    nx = sf_n(ax); dx = sf_d(ax); //x0 = sf_o(ax);
-    ny = sf_n(ay); dy = sf_d(ay); //y0 = sf_o(ay);
+    nt = sf_n(at); dt = sf_d(at); 
+    nz = sf_n(az); dz = sf_d(az); 
+    nx = sf_n(ax); dx = sf_d(ax); 
+    ny = sf_n(ay); dy = sf_d(ay); 
     ns = sf_n(as);
     nr = sf_n(ar);
 
@@ -171,9 +197,6 @@ main(int argc, char** argv)
     sf_oaxa(file_dat,at,2);
 
     /* wavefield cut params */
-    sf_axis acz = NULL, acx = NULL, acy = NULL;
-    int nqz, nqx, nqy;
-    float oqz, oqx, oqy, dqz, dqx, dqy;
     /* setup output wavefield header */
     if (snap) {
 	if (!sf_getint  ("nqz",&nqz)) nqz=sf_n(az); /* Saved wfld window nz */
@@ -203,7 +226,7 @@ main(int argc, char** argv)
     }
 
     /* 2-2N finite difference coefficient */
-    int nop = fdorder/2; /* fd half-length stencil */
+    nop = fdorder/2; /* fd half-length stencil */
     if (!sf_getint("nb",&nbd) || nbd<nop)  nbd=nop;
     if (dabc && hybrid && nbd<=nop) nbd = 2*nop;
 
@@ -218,10 +241,8 @@ main(int argc, char** argv)
     dt2 = dt*dt;
     nzpad = nz+2*nbd;  nxpad = nx+2*nbd;  nypad = ny+2*nbd;
 
-    const int SECOND_DERIV = 2;
-    const int FIRST_DERIV = 1;
-    float* fdcoef_d2 = compute_fdcoef(nop,dz,dx,dy,optfd,SECOND_DERIV);
-    float* fdcoef_d1 = compute_fdcoef(nop,dz,dx,dy,optfd,FIRST_DERIV);
+    fdcoef_d2 = compute_fdcoef(nop,dz,dx,dy,optfd,SECOND_DERIV);
+    fdcoef_d1 = compute_fdcoef(nop,dz,dx,dy,optfd,FIRST_DERIV);
 
     /* Allocate memories */
     if (expl) ws = sf_floatalloc(1);
@@ -231,7 +252,6 @@ main(int argc, char** argv)
     u_dat = sf_floatalloc(nr);
     src3d = pt3dalloc1(ns);
     rec3d = pt3dalloc1(nr);
-    float** oslice = NULL; /* output 3D wavefield slice-by-slice */
     if (snap) oslice = sf_floatalloc2(sf_n(acz),sf_n(acx));
 
     /* source and receiver position */
@@ -246,7 +266,6 @@ main(int argc, char** argv)
     if (!sinc) fdbell3d_init(nbell);
 
     /* temperary array */
-    float*** tmp_array;
     tmp_array = sf_floatalloc3(nz,nx,ny);
 
     /* read velocity and pad */
@@ -286,11 +305,6 @@ main(int argc, char** argv)
 	    for (ix=0; ix<nxpad; ix++)
 		memset(vel[iy][ix],0,sizeof(float)*fdm->nb);
     }
-
-#if defined _OPENMP && _DEBUG
-    double tic;
-    double toc;
-#endif
 
     for (it=0; it<nt; it++) {
 	if (verb)  sf_warning("it=%d;",it+1);
@@ -365,9 +379,9 @@ main(int argc, char** argv)
 #endif
     }
 #ifdef _OPENMP
-    double wall_clock_time_e = omp_get_wtime();
+    wall_clock_time_e = omp_get_wtime();
 #else
-    double wall_clock_time_e = (double) clock() / CLOCKS_PER_SEC;
+    wall_clock_time_e = (double) clock() / CLOCKS_PER_SEC;
 #endif
     if (verb)
 	fprintf(stderr,"\nElapsed time: %lf s\n",wall_clock_time_e-wall_clock_time_s);
@@ -399,6 +413,11 @@ step_forward(float*** restrict u0, float*** restrict u1,
     float *cx = &fdcoef_d2[nop];
     float *cy = &fdcoef_d2[nop+nop];
     float *bz, *bx, *by;
+    float drho_dot_du;
+    float du_z = 0.f, du_x = 0.f, du_y = 0.f;
+    float drho_z = 0.f, drho_x = 0.f, drho_y = 0.f;
+    float lap;
+
     if (rho != NULL) { /* variable density */
 	bz = &fdcoef_d1[0];
 	bx = &fdcoef_d1[nop];
@@ -571,15 +590,13 @@ step_forward(float*** restrict u0, float*** restrict u1,
 	for (iy=nop; iy<nypad-nop; iy++) {
 	    for (ix=nop; ix<nxpad-nop; ix++) {
 		for (iz=nop; iz<nzpad-nop; iz++) {
-		    float lap = u1[iy][ix][iz]*c0;
+		    lap = u1[iy][ix][iz]*c0;
 		    for (iop=1; iop<=nop; iop++) {
 			lap += (u1[iy][ix][iz-iop] + u1[iy][ix][iz+iop]) * cz[iop]
 			    + (u1[iy][ix-iop][iz] + u1[iy][ix+iop][iz]) * cx[iop]
 			    + (u1[iy-iop][ix][iz] + u1[iy+iop][ix][iz]) * cy[iop];
 		    }
 		    if (rho != NULL) { /* variable density term */
-			float du_z = 0.f, du_x = 0.f, du_y = 0.f;
-			float drho_z = 0.f, drho_x = 0.f, drho_y = 0.f;
 			for (iop=1; iop<=nop; iop++) {
 			    du_z += (u1[iy][ix][iz+iop] - u1[iy][ix][iz-iop]) * bz[iop];
 			    du_x += (u1[iy][ix+iop][iz] - u1[iy][ix-iop][iz]) * bx[iop];
@@ -588,7 +605,7 @@ step_forward(float*** restrict u0, float*** restrict u1,
 			    drho_x += (rho[iy][ix+iop][iz] - rho[iy][ix-iop][iz]) * bx[iop];
 			    drho_y += (rho[iy+iop][ix][iz] - rho[iy-iop][ix][iz]) * by[iop];
 			}
-			float drho_dot_du = (du_z*drho_z + du_x*drho_x + du_y*drho_y)/rho[iy][ix][iz];
+			drho_dot_du = (du_z*drho_z + du_x*drho_x + du_y*drho_y)/rho[iy][ix][iz];
 			lap -= drho_dot_du;
 		    }
 		    u0[iy][ix][iz] = 2.*u1[iy][ix][iz] - u0[iy][ix][iz] + vel[iy][ix][iz]*lap;
@@ -599,22 +616,23 @@ step_forward(float*** restrict u0, float*** restrict u1,
 	return;
     }
 
-    static float*
-	damp_make(int ntransit)
-    {
-	int ib;
-	float* damp = NULL;
-	if (ntransit>0) damp = sf_floatalloc(ntransit);
-	float sb = 4.0*ntransit;
-	for(ib=0; ib<ntransit; ib++) {
-	    float fb = ib/(sqrt(2.0)*sb);
-	    damp[ib] = exp(-fb*fb);
-	}
-	return damp;
+static float*
+    damp_make(int ntransit)
+{
+    int ib;
+    float* damp = NULL;
+    float sb, fb;
+    if (ntransit>0) damp = sf_floatalloc(ntransit);
+    sb = 4.0*ntransit;
+    for(ib=0; ib<ntransit; ib++) {
+	fb = ib/(sqrt(2.0)*sb);
+	damp[ib] = exp(-fb*fb);
     }
+    return damp;
+}
 
-    static float*
-	compute_fdcoef(int nop, float dz, float dx, float dy, bool is_optimized, const int d_order)
+static float*
+    compute_fdcoef(int nop, float dz, float dx, float dy, bool is_optimized, const int d_order)
     /*
       Optimized fd coeffifients from:
       1. Yang Liu. "Globally optimal finite-difference schemes based on least squares" Geophysics 78.4 (2013)
@@ -623,214 +641,222 @@ step_forward(float*** restrict u0, float*** restrict u1,
       Conventional fd coefficients formula from:
       3. Chunlei Chu, Paul Stoffa. "Determination of finite-difference weights using scaled binomial windows" Geophysics 77.3 (2012)
     */
-    {
-	int idim, ii;
-	int ndim = 3;
-	float d2[ndim];
-	float d1[ndim];
-	d2[0] = dz*dz; d2[1] = dx*dx; d2[2] = dy*dy;
-	d1[0] = dz; d1[1] = dx; d1[2] = dy;
+{
+    int idim, ii;
+#define ndim 3
+    float d2[ndim];
+    float d1[ndim];
+    float *d2_fdcoef;
+    float *ccc;
+    float *d1_fdcoef;
+    float *bbb;
 
-	if (d_order == 2) {
-	    float *d2_fdcoef = sf_floatalloc(ndim*nop+1);
-	    float *ccc;
-	    if (is_optimized) ccc= optimal_fdcoef(nop,2);
-	    else ccc = normal_fdcoef(nop,d_order);
+    d2[0] = dz*dz; d2[1] = dx*dx; d2[2] = dy*dy;
+    d1[0] = dz; d1[1] = dx; d1[2] = dy;
 
-	    d2_fdcoef[0] = 0.f;
-	    for (idim=0; idim<ndim; idim++) {
-		for (ii=1; ii<=nop; ii++) {
-		    d2_fdcoef[idim*nop+ii] = ccc[ii]/d2[idim];
-		    d2_fdcoef[0] += d2_fdcoef[idim*nop+ii];
-		}
+    if (d_order == 2) {
+	d2_fdcoef = sf_floatalloc(ndim*nop+1);
+	if (is_optimized) ccc= optimal_fdcoef(nop,2);
+	else ccc = normal_fdcoef(nop,d_order);
+	
+	d2_fdcoef[0] = 0.f;
+	for (idim=0; idim<ndim; idim++) {
+	    for (ii=1; ii<=nop; ii++) {
+		d2_fdcoef[idim*nop+ii] = ccc[ii]/d2[idim];
+		d2_fdcoef[0] += d2_fdcoef[idim*nop+ii];
 	    }
-	    d2_fdcoef[0] *= - 2.0f;
-	    return d2_fdcoef;
-	} else {
-	    float *d1_fdcoef = sf_floatalloc(ndim*nop+1);
-	    float *bbb;
-	    if (is_optimized && nop<=6) bbb = optimal_fdcoef(nop,1);
-	    else bbb = normal_fdcoef(nop,d_order);
-	    d1_fdcoef[0] = 0.0f;
-	    for (idim=0; idim<ndim; idim++) {
-		for (ii=1; ii<=nop; ii++) {
-		    d1_fdcoef[idim*nop+ii] = bbb[ii]/d1[idim];
-		}
+	}
+	d2_fdcoef[0] *= - 2.0f;
+	return d2_fdcoef;
+    } else {
+	d1_fdcoef = sf_floatalloc(ndim*nop+1);
+	
+	if (is_optimized && nop<=6) bbb = optimal_fdcoef(nop,1);
+	else bbb = normal_fdcoef(nop,d_order);
+	d1_fdcoef[0] = 0.0f;
+	for (idim=0; idim<ndim; idim++) {
+	    for (ii=1; ii<=nop; ii++) {
+		d1_fdcoef[idim*nop+ii] = bbb[ii]/d1[idim];
 	    }
-	    return d1_fdcoef;
 	}
+	return d1_fdcoef;
     }
+}
 
-    static int
-	factorial(int n)
-    {
-	int i;
-	int result = 1;
-	for (i=1; i<=n; ++i)
-	    result *= i;
-	return result;
-    }
+static int
+    factorial(int n)
+{
+    int i;
+    int result = 1;
+    for (i=1; i<=n; ++i)
+	result *= i;
+    return result;
+}
 
-    static float*
-	normal_fdcoef(int nop, const int d_order)
-    {
-	int n;
-	float *cc = calloc(nop+1,sizeof(float));
-	float *bb = calloc(nop+1,sizeof(float));
-	int halfN_fact = factorial(nop);
-	halfN_fact *= halfN_fact;
-	for (n=1; n<=nop; n++) {
-	    cc[n] = - 2.f / (n*n) * cos(n*SF_PI) * halfN_fact/factorial(nop+n)/factorial(nop-n); 
-	    bb[n] = cc[n]*n/2.f;
+static float*
+    normal_fdcoef(int nop, const int d_order)
+{
+    int n;
+    float *cc = calloc(nop+1,sizeof(float));
+    float *bb = calloc(nop+1,sizeof(float));
+    int halfN_fact = factorial(nop);
+    halfN_fact *= halfN_fact;
+    for (n=1; n<=nop; n++) {
+	cc[n] = - 2.f / (n*n) * cos(n*SF_PI) * halfN_fact/factorial(nop+n)/factorial(nop-n); 
+	bb[n] = cc[n]*n/2.f;
 	}
-	if (d_order == 1) return bb;
-	else return cc;
+    if (d_order == 1) return bb;
+    else return cc;
+}
+
+static float*
+    optimal_fdcoef(int nop, const int d_order)
+{
+    float *cc;
+    float *bb;
+
+    if (d_order == 2)  {
+	float *opt_c[11];
+	float opt_c1[2] = {0.f, 1.f}; 
+	float opt_c2[3] = {0.f, 1.369074f, - 0.09266816}; 
+	float opt_c3[4] = {0.f, 1.573661f, - 0.1820268f, 0.01728053f}; 
+	float opt_c4[5] = {0.f, 1.700010f, - 0.2554615f, 0.04445392f, - 0.004946851f}; 
+	float opt_c5[6] = {0.f, 1.782836f, - 0.3124513f, 0.07379487f, - 0.01532122f,
+			   0.001954439f}; 
+	float opt_c6[7] = {0.f, 1.837023f, - 0.3538895f, 0.09978343f, - 0.02815486f,
+			   0.006556587f, - 0.0009405699f}; 
+	float opt_c7[8] = {0.f, 1.874503f, - 0.3845794f, 0.1215162f, - 0.04121749f,
+			   0.01295522f, - 0.003313813f, 0.0005310053f}; 
+	float opt_c8[9] = {0.f, 1.901160f, - 0.4074304f, 0.1390909f, - 0.05318775f,
+			   0.02004823f, - 0.006828249f, 0.001895771f, - 0.0003369052f}; 
+	float opt_c9[10] = {0.f, 1.919909f, - 0.4240446f, 0.1526043f, - 0.06322328f,
+			    0.02676005f, - 0.01080739f, 0.003907747f, - 0.001158024f,
+				0.0002240247f}; 
+	float opt_c10[11] = {0.f, 1.918204f, - 0.4225858f, 0.1514992f, - 0.06249474f,
+			     0.02637196f, - 0.01066631f, 0.003915625f, - 0.001219872f,
+			     0.0002863976f, - 0.00003744830f}; 
+	opt_c[1] = opt_c1;  opt_c[2] = opt_c2;  opt_c[3] = opt_c3;  opt_c[4] = opt_c4;
+	opt_c[5] = opt_c5;  opt_c[6] = opt_c6;  opt_c[7] = opt_c7;  opt_c[8] = opt_c8;
+	opt_c[9] = opt_c9;  opt_c[10] = opt_c10;
+	cc = sf_floatalloc(nop+1);
+	memcpy(cc,opt_c[nop],sizeof(float)*(nop+1));
+	return cc;
+    } else {
+	float *opt_b[7];
+	float opt_b1[2] = {0.0f, 0.5f}; 
+	float opt_b2[3] = {0.0f, 0.67880327, - 0.08962729}; 
+	float opt_b3[4] = {0.0f, 0.77793115, - 0.17388691, 0.02338713}; 
+	float opt_b4[5] = {0.0f, 0.84149635, - 0.24532989, 0.06081891, - 0.00839807}; 
+	float opt_b5[6] = {0.0f, 0.88414717, - 0.30233648, 0.10275057, - 0.02681517,
+			   0.00398089}; 
+	float opt_b6[7] = {0.0f, 0.91067892, - 0.34187892, 0.13833962, - 0.04880710,
+			   0.01302148, - 0.00199047}; 
+	
+	opt_b[1] = opt_b1;  opt_b[2] = opt_b2;  opt_b[3] = opt_b3;
+	opt_b[4] = opt_b4;  opt_b[5] = opt_b5;  opt_b[6] = opt_b6;
+	bb = sf_floatalloc(nop+1);
+	memcpy(bb,opt_b[nop],sizeof(float)*(nop+1));
+	return bb;
     }
+}
 
-    static float*
-	optimal_fdcoef(int nop, const int d_order)
-    {
-	if (d_order == 2)  {
-	    float *opt_c[11];
-	    float opt_c1[2] = {0.f, 1.f}; // nop=1
-	    float opt_c2[3] = {0.f, 1.369074f, - 0.09266816}; // nop=2
-	    float opt_c3[4] = {0.f, 1.573661f, - 0.1820268f, 0.01728053f}; // nop=3
-	    float opt_c4[5] = {0.f, 1.700010f, - 0.2554615f, 0.04445392f, - 0.004946851f}; // nop=4
-	    float opt_c5[6] = {0.f, 1.782836f, - 0.3124513f, 0.07379487f, - 0.01532122f,
-			       0.001954439f}; // nop=5
-	    float opt_c6[7] = {0.f, 1.837023f, - 0.3538895f, 0.09978343f, - 0.02815486f,
-			       0.006556587f, - 0.0009405699f}; // nop=6
-	    float opt_c7[8] = {0.f, 1.874503f, - 0.3845794f, 0.1215162f, - 0.04121749f,
-			       0.01295522f, - 0.003313813f, 0.0005310053f}; // nop=7
-	    float opt_c8[9] = {0.f, 1.901160f, - 0.4074304f, 0.1390909f, - 0.05318775f,
-			       0.02004823f, - 0.006828249f, 0.001895771f, - 0.0003369052f}; // nop=8
-	    float opt_c9[10] = {0.f, 1.919909f, - 0.4240446f, 0.1526043f, - 0.06322328f,
-				0.02676005f, - 0.01080739f, 0.003907747f, - 0.001158024f,
-				0.0002240247f}; // nop=9
-	    float opt_c10[11] = {0.f, 1.918204f, - 0.4225858f, 0.1514992f, - 0.06249474f,
-				 0.02637196f, - 0.01066631f, 0.003915625f, - 0.001219872f,
-				 0.0002863976f, - 0.00003744830f}; // nop=10
-	    opt_c[1] = opt_c1;  opt_c[2] = opt_c2;  opt_c[3] = opt_c3;  opt_c[4] = opt_c4;
-	    opt_c[5] = opt_c5;  opt_c[6] = opt_c6;  opt_c[7] = opt_c7;  opt_c[8] = opt_c8;
-	    opt_c[9] = opt_c9;  opt_c[10] = opt_c10;
-	    float *cc =  malloc((nop+1)*sizeof(float));
-	    memcpy(cc,opt_c[nop],sizeof(float)*(nop+1));
-	    return cc;
-	} else {
-	    float *opt_b[7];
-	    float opt_b1[2] = {0.0f, 0.5f}; // nop=1
-	    float opt_b2[3] = {0.0f, 0.67880327, - 0.08962729}; // nop=2
-	    float opt_b3[4] = {0.0f, 0.77793115, - 0.17388691, 0.02338713}; // nop=3
-	    float opt_b4[5] = {0.0f, 0.84149635, - 0.24532989, 0.06081891, - 0.00839807}; // nop=4
-	    float opt_b5[6] = {0.0f, 0.88414717, - 0.30233648, 0.10275057, - 0.02681517,
-			       0.00398089}; // nop=5
-	    float opt_b6[7] = {0.0f, 0.91067892, - 0.34187892, 0.13833962, - 0.04880710,
-			       0.01302148, - 0.00199047}; // nop=6
-
-	    opt_b[1] = opt_b1;  opt_b[2] = opt_b2;  opt_b[3] = opt_b3;
-	    opt_b[4] = opt_b4;  opt_b[5] = opt_b5;  opt_b[6] = opt_b6;
-	    float *bb = malloc((nop+1)*sizeof(float));
-	    memcpy(bb,opt_b[nop],sizeof(float)*(nop+1));
-	    return bb;
-	}
-    }
-
-    static void
-	apply_abc(float*** restrict uu2, float*** restrict uu1, int nz, int nx, int ny, int nbd,
-		  abcone3d abc, int nop, float* restrict damp)
-    {
-	int ix, iy, iz, ib;
-	int nxpad = nx + 2*nbd;
-	int nypad = ny + 2*nbd;
-	int nzpad = nz + 2*nbd;
+static void
+apply_abc(float*** restrict uu2, float*** restrict uu1, int nz, int nx, int ny, int nbd,
+	  abcone3d abc, int nop, float* restrict damp)
+{
+    int ix, iy, iz, ib;
+    float damp_ib;
+    float uu2_bc;
+    int nxpad = nx + 2*nbd;
+    int nypad = ny + 2*nbd;
+    int nzpad = nz + 2*nbd;
 #ifdef _OPENMP
 #pragma omp parallel for schedule(static)
 #endif
-	for (iy=0; iy<nypad; iy++) {
-	    for (ix=0; ix<nxpad; ix++) {
-		for (ib=nbd-nop; ib<nbd; ib++) {
+    for (iy=0; iy<nypad; iy++) {
+	for (ix=0; ix<nxpad; ix++) {
+	    for (ib=nbd-nop; ib<nbd; ib++) {
+		iz = nbd-ib-1;
+		if (abc->free) {
+		    uu2[iy][ix][iz] = 0.0f;
+		} else {
+		    uu2[iy][ix][iz] = uu1[iy][ix][iz+1] 
+			+ (uu1[iy][ix][iz] - uu2[iy][ix][iz+1])*abc->bzl[iy][ix];
+		}
+		    iz = nzpad-nbd+ib;
+		    uu2[iy][ix][iz] = uu1[iy][ix][iz-1] 
+                        + (uu1[iy][ix][iz] - uu2[iy][ix][iz-1])*abc->bzh[iy][ix];
+	    }
+	    if (damp != NULL) {
+		for (ib=0; ib<nbd-nop; ib++) {
+		    damp_ib = damp[ib];
 		    iz = nbd-ib-1;
 		    if (abc->free) {
 			uu2[iy][ix][iz] = 0.0f;
 		    } else {
-			uu2[iy][ix][iz] = uu1[iy][ix][iz+1] 
-			    + (uu1[iy][ix][iz] - uu2[iy][ix][iz+1])*abc->bzl[iy][ix];
+			uu2_bc = uu1[iy][ix][iz+1] + (uu1[iy][ix][iz] - uu2[iy][ix][iz+1])*abc->bzl[iy][ix];
+			uu2[iy][ix][iz] = uu2_bc*(1.f - damp_ib) + uu2[iy][ix][iz]*damp_ib;
 		    }
 		    iz = nzpad-nbd+ib;
-		    uu2[iy][ix][iz] = uu1[iy][ix][iz-1] 
-                        + (uu1[iy][ix][iz] - uu2[iy][ix][iz-1])*abc->bzh[iy][ix];
-		}
-		if (damp != NULL) {
-		    for (ib=0; ib<nbd-nop; ib++) {
-			float damp_ib = damp[ib];
-			float uu2_bc;
-			iz = nbd-ib-1;
-			if (abc->free) {
-			    uu2[iy][ix][iz] = 0.0f;
-			} else {
-			    uu2_bc = uu1[iy][ix][iz+1] + (uu1[iy][ix][iz] - uu2[iy][ix][iz+1])*abc->bzl[iy][ix];
-			    uu2[iy][ix][iz] = uu2_bc*(1.f - damp_ib) + uu2[iy][ix][iz]*damp_ib;
-			}
-			iz = nzpad-nbd+ib;
-			uu2_bc = uu1[iy][ix][iz-1] + (uu1[iy][ix][iz] - uu2[iy][ix][iz-1])*abc->bzh[iy][ix];
-			uu2[iy][ix][iz] = uu2_bc*(1.f - damp_ib) + uu2[iy][ix][iz]*damp_ib;
-		    }
+		    uu2_bc = uu1[iy][ix][iz-1] + (uu1[iy][ix][iz] - uu2[iy][ix][iz-1])*abc->bzh[iy][ix];
+		    uu2[iy][ix][iz] = uu2_bc*(1.f - damp_ib) + uu2[iy][ix][iz]*damp_ib;
 		}
 	    }
 	}
-
-#ifdef _OPENMP
-#pragma omp parallel for schedule(static)
-#endif
-	for (iy=0; iy<nypad; iy++) {
-	    for (iz=0;iz<nzpad; iz++) {
-		for (ib=nbd-nop; ib<nbd; ib++) {
-		    ix = nbd-ib-1;
-		    uu2[iy][ix][iz] = uu1[iy][ix+1][iz] 
-                        + (uu1[iy][ix][iz] - uu2[iy][ix+1][iz])*abc->bxl[iy][iz];
-		    ix = nxpad-nbd+ib;
-		    uu2[iy][ix][iz] = uu1[iy][ix-1][iz] 
-                        + (uu1[iy][ix][iz] - uu2[iy][ix-1][iz])*abc->bxh[iy][iz];
-		}
-		if (damp != NULL) {
-		    for (ib=0; ib<nbd-nop; ib++) {
-			float damp_ib = damp[ib];
-			ix = nbd-ib-1;
-			float uu2_bc = uu1[iy][ix+1][iz] + (uu1[iy][ix][iz] - uu2[iy][ix+1][iz])*abc->bxl[iy][iz];
-			uu2[iy][ix][iz] = uu2_bc*(1.f - damp_ib) + uu2[iy][ix][iz]*damp_ib;
-			ix = nxpad-nbd+ib;
-			uu2_bc = uu1[iy][ix-1][iz] + (uu1[iy][ix][iz] - uu2[iy][ix-1][iz])*abc->bxh[iy][iz];
-			uu2[iy][ix][iz] = uu2_bc*(1.f - damp_ib) + uu2[iy][ix][iz]*damp_ib;
-		    }
-		}
-	    }
-	}
-
-#ifdef _OPENMP
-#pragma omp parallel for schedule(static)
-#endif
-	for (ix=0; ix<nxpad; ix++) {
-	    for (iz=0;iz<nzpad; iz++) {
-		for (ib=nbd-nop; ib<nbd; ib++) {
-		    iy = nbd-ib-1;
-		    uu2[iy][ix][iz] = uu1[iy+1][ix][iz] 
-                        + (uu1[iy][ix][iz] - uu2[iy+1][ix][iz])*abc->byl[ix][iz];
-		    iy = nypad-nbd+ib;
-		    uu2[iy][ix][iz] = uu1[iy-1][ix][iz] 
-                        + (uu1[iy][ix][iz] - uu2[iy-1][ix][iz])*abc->byh[ix][iz];
-		}
-		if (damp != NULL) {
-		    for (ib=0; ib<nbd-nop; ib++) {
-			float damp_ib = damp[ib];
-			iy = nbd-ib-1;
-			float uu2_bc = uu1[iy+1][ix][iz] + (uu1[iy][ix][iz] - uu2[iy+1][ix][iz])*abc->byl[ix][iz];
-			uu2[iy][ix][iz] = uu2_bc*(1.f - damp_ib) + uu2[iy][ix][iz]*damp_ib;
-			iy = nypad-nbd+ib;
-			uu2_bc = uu1[iy-1][ix][iz] + (uu1[iy][ix][iz] - uu2[iy-1][ix][iz])*abc->byh[ix][iz];
-			uu2[iy][ix][iz] = uu2_bc*(1.f - damp_ib) + uu2[iy][ix][iz]*damp_ib;
-		    }
-		}
-	    }
-	}
-	return;
     }
+    
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static)
+#endif
+    for (iy=0; iy<nypad; iy++) {
+	for (iz=0;iz<nzpad; iz++) {
+	    for (ib=nbd-nop; ib<nbd; ib++) {
+		ix = nbd-ib-1;
+		uu2[iy][ix][iz] = uu1[iy][ix+1][iz] 
+		    + (uu1[iy][ix][iz] - uu2[iy][ix+1][iz])*abc->bxl[iy][iz];
+		ix = nxpad-nbd+ib;
+		uu2[iy][ix][iz] = uu1[iy][ix-1][iz] 
+		    + (uu1[iy][ix][iz] - uu2[iy][ix-1][iz])*abc->bxh[iy][iz];
+	    }
+	    if (damp != NULL) {
+		for (ib=0; ib<nbd-nop; ib++) {
+		    damp_ib = damp[ib];
+		    ix = nbd-ib-1;
+		    uu2_bc = uu1[iy][ix+1][iz] + (uu1[iy][ix][iz] - uu2[iy][ix+1][iz])*abc->bxl[iy][iz];
+		    uu2[iy][ix][iz] = uu2_bc*(1.f - damp_ib) + uu2[iy][ix][iz]*damp_ib;
+		    ix = nxpad-nbd+ib;
+		    uu2_bc = uu1[iy][ix-1][iz] + (uu1[iy][ix][iz] - uu2[iy][ix-1][iz])*abc->bxh[iy][iz];
+		    uu2[iy][ix][iz] = uu2_bc*(1.f - damp_ib) + uu2[iy][ix][iz]*damp_ib;
+		}
+	    }
+	}
+    }
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static)
+#endif
+    for (ix=0; ix<nxpad; ix++) {
+	for (iz=0;iz<nzpad; iz++) {
+	    for (ib=nbd-nop; ib<nbd; ib++) {
+		iy = nbd-ib-1;
+		uu2[iy][ix][iz] = uu1[iy+1][ix][iz] 
+		    + (uu1[iy][ix][iz] - uu2[iy+1][ix][iz])*abc->byl[ix][iz];
+		iy = nypad-nbd+ib;
+		uu2[iy][ix][iz] = uu1[iy-1][ix][iz] 
+		    + (uu1[iy][ix][iz] - uu2[iy-1][ix][iz])*abc->byh[ix][iz];
+	    }
+	    if (damp != NULL) {
+		for (ib=0; ib<nbd-nop; ib++) {
+		    damp_ib = damp[ib];
+		    iy = nbd-ib-1;
+		    uu2_bc = uu1[iy+1][ix][iz] + (uu1[iy][ix][iz] - uu2[iy+1][ix][iz])*abc->byl[ix][iz];
+		    uu2[iy][ix][iz] = uu2_bc*(1.f - damp_ib) + uu2[iy][ix][iz]*damp_ib;
+		    iy = nypad-nbd+ib;
+		    uu2_bc = uu1[iy-1][ix][iz] + (uu1[iy][ix][iz] - uu2[iy-1][ix][iz])*abc->byh[ix][iz];
+		    uu2[iy][ix][iz] = uu2_bc*(1.f - damp_ib) + uu2[iy][ix][iz]*damp_ib;
+		}
+	    }
+	}
+    }
+    return;
+}

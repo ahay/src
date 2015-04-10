@@ -233,7 +233,6 @@ int main(int argc, char* argv[])
     gp  = (int)(gdep/dz+0.5);*/
     
     /*set axis for record file*/
-    //sf_setn(at, nt);
     sf_setn(ax, nx);
     sf_oaxa(frec, at, 1);
     sf_oaxa(frec, ax, 2);

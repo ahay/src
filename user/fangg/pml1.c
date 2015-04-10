@@ -190,15 +190,9 @@ void time_step_exch1(float *dn0, float *dn1, int it)
 /*<exchange >*/
 {
     int ix;
-    //if ( DECAY_FLAG == 1 && DECAY_BEGIN >= it){
-    //for (ix = marg; ix<nx+pmlout*2+marg; ix++) {
-    //dn0[ix]  = dn1[ix]*decdx[ix];
-	    //}
-    //} else {
-	for (ix = marg; ix<nx+pmlout*2+marg; ix++) {
-	    dn0[ix]  = dn1[ix];
-	}
-//    }
+    for (ix = marg; ix<nx+pmlout*2+marg; ix++) {
+	dn0[ix]  = dn1[ix];
+    }
 }
     
 
@@ -212,16 +206,8 @@ void pml1_close(void)
 /*<free memory allocation>*/
 {
     free(pmldx);
-//    free(pmldz);
     free(decdx);
-//    free(decdz);
-//    free(*txxn1z);
-//    free(txxn1z);
-//    free(*txxn0z);
-//    free(txxn0z);
-//    free(*txxn1x);
     free(txxn1x);
-//    free(*txxn0x);
     free(txxn1x);
 }
 

@@ -90,7 +90,7 @@ int main(int argc, char* argv[])
 	    interp = mom_int;
 	    break;
 	case 'h':
-	    x-=0.21; // optimal shift
+	    x-=0.21; /* optimal shift */
 	    interp = sf_lin_int;
 	    break;
 	default:

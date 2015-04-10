@@ -279,7 +279,7 @@ int main(int argc, char* argv[])
 	sf_warning("nx2=%d", nx2);
 	sf_warning("slx=%f, spx=%d, gdep=%f gp=%d",slx,spx,gdep,gp);
 	sf_warning("======================================");
-    } //End if
+    } 
 
     /*set source*/
     sp.trunc=srctrunc;
@@ -325,9 +325,9 @@ int main(int argc, char* argv[])
 		cwavemx[ik] = sf_cmul(fplus(kx,dx), cwavex[ik]);
 #endif
 		
-	    } // ik
+	    } /* ik */
 	    ifft1(wavex[im], cwavemx); /* dp/dx  */
-	} // im
+	} /* im */
 	
 	for (ix = 0; ix < nx; ix++) {
 	    cx = 0.0;
@@ -335,7 +335,7 @@ int main(int argc, char* argv[])
 		cx += lt[im][ix]*wavex[im][ix];
 	    } 
 	    curvx[ix] = -1*dt/den[ix]*cx + prevx[ix];  /*vx(t+dt/2) = -dt/rho*dp/dx(t) + vx(t-dt/2) */
-	} //ix
+	} /* ix */
 
 	/* MMS */
 	if (inject && srcmms) 
@@ -375,8 +375,6 @@ int main(int argc, char* argv[])
 	if (inject) {
 	    if (!srcmms && (it*dt)<=sp.trunc ) {
 		curtxx[spx] += src[it]*dt;
-		//curtxx[spx] += 0.5*(srcp[it]+srcp[it+1])*dt;
-		/*dp/dt(t+dt/2) = -rho*v^2*du/dx(t+dt/2) + s(t+dt)*/
 	    }
 	    if (srcmms)
 		for (ix = 0; ix < nx; ix++) 

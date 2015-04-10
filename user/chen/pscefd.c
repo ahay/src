@@ -47,15 +47,11 @@ static void pscefd_step3(int iz,float **io)
 {
 	int iw,ix;
 	float t1,a0i,a1i,a2i, br,bi,cr,ci;
-	//	0	a0i		1	a1i		0	a2i
-//	a0r=0.0;
-//	a1r=1.0;
-//	a2r=0.0;
 
-	for(iw=1;iw<nw;iw++)  // frequency slice
+	for(iw=1;iw<nw;iw++)  /* frequency slice */
 	{
 		t1=dz/(iw*dx2*f0);
-		// ix=0 boundary
+		/* ix=0 boundary */
 		ix=0;
 		a1i=-t1*vel[ix][iz];
 		a2i=0.5*t1*vel[ix+1][iz];
@@ -91,7 +87,7 @@ static void pscefd_step3(int iz,float **io)
 			buf[ix*2+1] = cr*bi + ci*br;	
 		}
 
-		//ix=nx-1 boundary
+		/* ix=nx-1 boundary */
 		a0i=0.5*t1*vel[ix-1][iz];
 		a1i=-t1*vel[ix][iz];
 		br=f0*dz*iw/vel[ix][iz];

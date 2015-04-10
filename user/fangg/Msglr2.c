@@ -228,8 +228,8 @@ int main(int argc, char* argv[])
 
     record = sf_floatalloc2(nt,nx);
 
-    ifft2_allocate(cwavemx); //
-    ifft2_allocate(cwavemz); //
+    ifft2_allocate(cwavemx); 
+    ifft2_allocate(cwavemz); 
 
     for (iz=0; iz < nzx; iz++) {
 	pretxx[iz]=0.;
@@ -256,7 +256,7 @@ int main(int argc, char* argv[])
 	sf_warning("nkx=%d nkz=%d dkx=%f dkz=%f nk=%d", nkx, nkz, dkx, dkz, nk);
 	sf_warning("nx2=%d nz2=%d nzx2=%d", nx2, nz2, nzx2);
 	sf_warning("======================================");
-    } //End if
+    } 
 
     /*set source*/
     sp.trunc=srctrunc;
@@ -351,24 +351,20 @@ int main(int argc, char* argv[])
 		}	
 		
 		curtxx[j] = -1*dt*c11[ix][iz]*(cx+cz) + pretxx[i];
-		//pretxx[i] = curtxx[j];
 	    }
 	}
 	
 	if ((it*dt)<=sp.trunc ) {
 	    curtxx[spz+spx*nz2] += src[it]*dt;
-	    //pretxx[spz+spx*nz] = curtxx[spz+spx*nz2];
 	}
 
 	for (ix = 0; ix < nx; ix++) {
 	    /* write wavefield to output */
-	    //sf_floatwrite(curtxx+ix*nz2,nz,Fo); 
 	    sf_floatwrite(pretxx+ix*nz,nz,Fo); 
 	}
 	
 	/*record*/
 	for (ix = 0; ix < nx; ix++){
-	    //record[ix][it] = curtxx[ix*nz2+gdep];
 	    record[ix][it] = pretxx[ix*nz+gp];
 	}
 	
