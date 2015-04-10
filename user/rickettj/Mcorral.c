@@ -93,7 +93,11 @@ int main (int argc, char* argv[])
     for (i=0; i < n2; i++) {
 	for (j=0; j < n2; j++) {
 	    for (k=0; k < nk; k++) {
+#ifdef SF_HAS_COMPLEX_H
 		dataf[k] = fft[i][k] * conjf(fft[j][k]);
+#else
+		dataf[k] = sf_cmul(fft[i][k],conjf(fft[j][k]));
+#endif
 	    }
 
 #ifdef SF_HAS_FFTW

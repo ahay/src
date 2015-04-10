@@ -13,6 +13,7 @@ except:
     import bldutil
     env = bldutil.Debug() # Debugging flags for compilers
     bindir = libdir = pkgdir = None
+    SConscript(os.path.join(srcroot,'su/lib/SConstruct'))
 
 targets = bldutil.UserSconsTargets()
 

@@ -23,8 +23,9 @@ void VSPTimeMigrator2D::processGather (Point2D& curGatherCoords, const float* co
 
     const int   curX     = (int) curGatherCoords.getX ();    
     const float xCIG     = ip_->xStart + curX * ip_->xStep;
-
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int it = 0; it < tNum; ++it) {	  
 	const float curT = tStart + it * tStep;		
 	this->processTimeSample (xCIG, curT, data, image + it, dag + it, cig + it);

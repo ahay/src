@@ -125,9 +125,23 @@ int main (int argc, char* argv[])
 	    amp = rnd1  *  ampmax;
 
 	    if (1==type) {
+#ifdef SF_HAS_COMPLEX_H
 		refl =  amp * (1. - rc1 * cexpf(sf_cmplx(0.,w*delay1)));
+#else
+		refl =  sf_crmul(
+		    sf_cadd(sf_cmplx(1.,0.),
+			    sf_crmul(cexpf(sf_cmplx(0.,w*delay1)),-rc1)),ampl);
+#endif
 	    } else if (2==type) {
+#ifdef SF_HAS_COMPLEX_H
 		refl =  amp * (1. - rc1 * cexpf(sf_cmplx(0.,w*delay1)) - rc2 * cexpf(sf_cmplx(0.,w*delay2)));
+#else
+		refl = sf_crmul(
+		    sf_cadd(sf_cmplx(1.,0.),
+			    sf_cadd(
+				sf_crmul(cexpf(sf_cmplx(0.,w*delay1)),-rc1),
+				sf_crmul(cexpf(sf_cmplx(0.,w*delay2)),-rc2))),amp);
+#endif
 	    } else {
 		refl = sf_cmplx(0.,0.);
 	    }
@@ -160,7 +174,13 @@ int main (int argc, char* argv[])
 		     ****************/
 
 		    delay1 = delay1 / v1;
+#ifdef SF_HAS_COMPLEX_H
 		    refl =  amp * (1. - rc1 * cexpf(sf_cmplx(0.,w*delay1)));
+#else
+		    refl =  sf_crmul(
+			sf_cadd(sf_cmplx(1.,0.),
+				sf_crmul(cexpf(sf_cmplx(0.,w*delay1)),-rc1)),ampl);
+#endif
 		}
 
 		/*******************
@@ -168,7 +188,12 @@ int main (int argc, char* argv[])
 		 *  Write out data  *
 		 *                  *
 		 *******************/
+#ifdef SF_HAS_COMPLEX_H
 		data[i2][i1] += cexpf(sf_cmplx(0.,w*p*x))*refl;
+#else
+		data[i2][i1] = sf_cadd(data[i2][i1],
+				       sf_cmul(cexpf(sf_cmplx(0.,w*p*x)),refl));
+#endif
 	    } 
 	} 
     }

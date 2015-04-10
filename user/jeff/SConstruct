@@ -20,41 +20,15 @@ targets = bldutil.UserSconsTargets()
 F90 = env.get('F90')
 api = env.get('API',[])
 
-if 'f90' in api and F90:
-	F90base= os.path.basename(F90)
- 	if F90base[:8]== 'gfortran' or F90base[:3]=='gfc':
-		env.Append(F90FLAGS=' -fopenmp -fbackslash ',LINKFLAGS=['-fopenmp'])
-        elif F90base == 'ifort':
-    		env.Append(F90FLAGS=' -module -fbackslash -fopenmp ${SOURCE.dir}')
-
 # C mains
 targets.c = '''
-norm2
-reciprocity
-axplusy
-adjgradient2d
-adjgradient2d_coupled
-wem2d_iso
-modelcreate
 ewefd2d_omp
 ewefd3d_omp
+modelcreate
 '''
-
-#wexmig
-#wexwfl
-#wexmva
 
 # F90 mains
 targets.f90 = '''
-stf2telewfld
-rfspecdiv
-tracealign
-rfccp
-MCCCnew
-rwe2d
-telemig2d
-rec2ps
-backus
 '''
 
 targets.build_all(env, glob_build, srcroot, bindir, libdir, pkgdir)

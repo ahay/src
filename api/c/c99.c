@@ -305,6 +305,7 @@ strtoull(const char *ptr, const char **endptr, int base)
 extern int finite(double);
 #define isfinite(x) finite(x)
 #endif
+/*^*/
 
 #endif
 /*^*/

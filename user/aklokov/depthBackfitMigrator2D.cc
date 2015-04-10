@@ -244,7 +244,9 @@ void DepthBackfitMigrator2D::processPartialImage (float* piData, float curP, flo
 	this->processData (piData); 
 
     const int pNum = ixn_ * izn_;
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int ip = 0; ip < pNum; ++ip) {
 	const int ix = ip / izn_;
 	const int iz = ip % izn_;

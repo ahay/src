@@ -20,7 +20,6 @@
 */
 #include <rsf.h>
 #include <math.h>
-#include <complex.h>
 
 #ifdef SF_HAS_FFTW
 #include <fftw3.h>

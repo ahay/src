@@ -20,7 +20,6 @@ Note: Acquistion geometry specified by mask operator.
 */
 #include <rsf.h>
 #include <math.h>
-#include <complex.h>
 
 #ifdef _OPENMP
 #include <omp.h>

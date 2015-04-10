@@ -5,24 +5,20 @@ import bldutil
 
 ######################################################################
 # 1. C main programs
-progs = '''cohn dlct fpocs2d fpocs3d fwi2d fbrec2d 
-istinterp istpad istseislet lsrtm2d lsprtm2d lsinterp2d 
-mwni2d myradon1 myradon2 mythresh mshots mcaseislet matflip modeling2d
-pocs3d pocs pocsseislet rtm2d rtmadcig mysnr
-Testfd2d Testfd3d Testeb Testelastic2d Testaniso Testspml
-viscoa2d viscoe2d 
+progs = '''
+dlct fpocs2d fpocs3d istseislet lsinterp2d lsprtm2d lsrtm2d mcaseislet
+modeling2d mshots mwni2d myradon2 mysnr pocs rtm2d rtmadcig Testaniso
+Testeb Testelastic2d Testfd2d Testfd3d Testspml viscoa2d viscoe2d
 '''
 
 ######################################################################
 # 2. C++ main programs
 ccprogs = '''
-clip_test
 '''
 
 ######################################################################
 # 3. MPI main programs
 mpi_cprogs = '''
-mpifwi
 '''
 
 ######################################################################
@@ -40,7 +36,6 @@ mpigpufwi
 ######################################################################
 # 6. F90 main programs
 f90_progs = '''
-fd2d_test
 '''
 
 ######################################################################
@@ -217,17 +212,14 @@ if 'f90' in api and F90:
     F90base =  os.path.basename(F90)
     if F90base[:8] == 'gfortran' or F90base[:3] == 'gfc':
         env.Append(F90FLAGS=' -J${SOURCE.dir}')
-    elif F90base == 'ifort':
+    elif F90base[:5] == 'ifort':
         env.Append(F90FLAGS=' -module ${SOURCE.dir}')
 
 for prog in f90_mains:
     sources = ['M' + prog]
     if 'f90' in api and F90:
         bldutil.depends90(env,sources,'M'+prog)
-        prog = env.Program(prog,map(lambda x: x + '.f90',sources),
-                           LINK=env.get('F90'),
-                           F90PATH=env.get('CPPPATH'),
-                           LINKFLAGS=env.get('F90FLAGS'))
+        prog = env.Program(prog,map(lambda x: x + '.f90',sources))
     else:
         prog = env.RSF_Place('sf'+prog,None,var='F90')        
     if root:

@@ -144,8 +144,8 @@ void put_tah(float* trace, float* header,
   sf_floatwrite(header,n1_headers,file);
 }
 
-int get_tah(float* trace, float* header, 
-	    int n1_traces, int n1_headers, sf_file file)
+bool get_tah(float* trace, float* header, 
+	     int n1_traces, int n1_headers, sf_file file)
 /*< get tah.  return 1 if eof encountered, 0 otherwise >*/
 {
   int input_record_length;
@@ -158,7 +158,7 @@ int get_tah(float* trace, float* header,
   
   if(4!=sf_try_charread2(type_input_record,4,file)){
     /* must have encounterred eof. */
-    return 1;
+    return true;
   }
   type_input_record[4]='\0';
   sf_intread(&input_record_length,1,file);
@@ -192,7 +192,7 @@ int get_tah(float* trace, float* header,
 
   sf_floatread(header,n1_headers,file);
 
-  return 0;
+  return false;
 }
 
 
