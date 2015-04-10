@@ -66,7 +66,9 @@ main( int argc, char* argv[] )
 	    src.get("n1",ncomp);
 	    src.get("n2",nsrc);
 
-	    float srcx[nsrc],srcy[nsrc],srcz[nsrc];
+	    float *srcx = sf_floatalloc(nsrc);
+	    float *srcy = sf_floatalloc(nsrc);
+	    float *srcz = sf_floatalloc(nsrc);
 	    for (int i=0; i<nsrc; i++ ){
 		    src >> srcx[i];
 		    src >> srcy[i];

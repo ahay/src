@@ -274,7 +274,7 @@ subroutine velinvbbls( nt,dt,t0, x2,nx,data, s,ns,mm, z2,mask,niter,step0,alpha,
      if (iter>1) then
         y_diff = y - yp
         step = sum(y_diff*y_diff)/sum(y_diff*(resp-res))
-        if(isnan(step)) step=step0
+        if(step .ne. step) step=step0 ! check for isnan
      else
         call velxf(1,0,nt,dt,t0, x2,nx,data,mask, s,ns,atb,z2)
         step = step0+1./maxval(abs(atb))
