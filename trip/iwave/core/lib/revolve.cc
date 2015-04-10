@@ -103,11 +103,11 @@ Online::Online(Online &o) : Schedule(o.get_snaps())
 
 }
 
-Online::~Online()
-{
+//Online::~Online()
+//{
 	//delete [] ord_ch;
 	//delete [] num_rep;
-}
+//}
 
 /*************************************************************************************************************************************
 All routines of class Online_r2

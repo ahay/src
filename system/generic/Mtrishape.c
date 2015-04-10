@@ -90,15 +90,15 @@ int main(int argc, char* argv[])
 	if (!sf_getint("nw",&nw)) nw=2;
 	/* interpolator size */
 
-	trishape_init(sym,nd, n1,n2, o1,o2, d1,d2, 
-		      rect1,rect2, nw, xyz);
-
 	if (!sf_getbool("fast",&fast)) fast=false;
 	/* if y, use GMRES inversion */
 	if (!sf_getbool("sym",&sym)) sym=false;
 	/* if y, use symmetric shaping */
 	if (!sf_getfloat("tol",&tol)) tol=1e-3;
 	/* tolerance for stopping iteration */
+
+	trishape_init(sym,nd, n1,n2, o1,o2, d1,d2, 
+		      rect1,rect2, nw, xyz);
     }
 
     xmax = xmin = xyz[0][0]; 

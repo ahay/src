@@ -14,6 +14,9 @@ except:
     bindir = libdir = pkgdir = None
     SConscript(os.path.join(srcroot,'su/lib/SConstruct'))
 
+if env.get('CC').rfind('icc') >= 0:
+    env.Append(CCFLAGS=['-restrict','-wd188'])
+
 targets = bldutil.UserSconsTargets()
 
 # C mains

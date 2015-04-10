@@ -125,7 +125,7 @@ class Schedule
 	virtual int get_info(){ return info;}	
 	
 	
-	~Schedule() { /*delete[] ch;*/ }
+//	~Schedule() { /*delete[] ch;*/ }
 
 	protected:
 	Checkpoint *checkpoint;   
@@ -163,7 +163,7 @@ class Online : public Schedule
 	bool get_output()      { return output; }
 	void set_capo(int c) { capo=c; }
 
-	~Online();
+//	~Online();
 
 	protected:
 
@@ -201,7 +201,7 @@ class Online_r2 : public Online
 	bool get_output()      { return output; }
 	void set_fine(int) {}
 
-	~Online_r2();
+//	~Online_r2();
 
 	private:
 
