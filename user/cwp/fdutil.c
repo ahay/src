@@ -689,17 +689,20 @@ scoef3d sinc3d_make(int nc,
     scoef3d swout = (scoef3d) sf_alloc(nc,sizeof(*swout));
     float inp[9]; 
     float xo[9];
+    int ix, iy, iz;
+    float dx, dy, dz;
+
     for (i=0; i<9; i++)
 	inp[i] = 0.0f;
     inp[4] = 1.0f;
     /* allocate and set loop */
     for (ic=0; ic<nc; ++ic){
 	swout[ic].n = nc;
-	int iy = (int)((aa[ic].y -fdm->oypad)/fdm->dy+0.499f); 
+	iy = (int)((aa[ic].y -fdm->oypad)/fdm->dy+0.499f); 
 	swout[ic].iy = iy;
 	swout[ic].fy = 0;
 	swout[ic].ny = 9;
-	float dy = iy*fdm->dy+fdm->oypad-aa[ic].y; 
+	dy = iy*fdm->dy+fdm->oypad-aa[ic].y; 
 	for (i=0; i<9; ++i)
 	    xo[i] = -4.0f+dy/fdm->dy+i*1.0f;
    	ints8r (9, 1.0f, -4.0, inp, 0.0f, 0.0f, 9, xo, swout[ic].sincy);
@@ -708,11 +711,11 @@ scoef3d sinc3d_make(int nc,
 	    swout[ic].fy = 4;
 	}
 
-	int ix = (int)((aa[ic].x -fdm->oxpad)/fdm->dx+0.499f); 
+	ix = (int)((aa[ic].x -fdm->oxpad)/fdm->dx+0.499f); 
 	swout[ic].ix = ix;
 	swout[ic].fx = 0;
 	swout[ic].nx = 9;
-	float dx = ix*fdm->dx+fdm->oxpad-aa[ic].x; 
+	dx = ix*fdm->dx+fdm->oxpad-aa[ic].x; 
 	for (i=0; i<9; ++i)
 	    xo[i] = -4.0f+dx/fdm->dx+i*1.0f;
    	ints8r (9, 1.0f, -4.0, inp, 0.0f, 0.0f, 9, xo, swout[ic].sincx);
@@ -721,11 +724,11 @@ scoef3d sinc3d_make(int nc,
 	    swout[ic].fx = 4;
 	}
 
-	int iz = (int)((aa[ic].z -fdm->ozpad)/fdm->dz+0.499f);
+	iz = (int)((aa[ic].z -fdm->ozpad)/fdm->dz+0.499f);
 	swout[ic].iz = iz;
 	swout[ic].fz = 0;
 	swout[ic].nz = 9;
-	float dz = iz*fdm->dz+fdm->ozpad-aa[ic].z;
+	dz = iz*fdm->dz+fdm->ozpad-aa[ic].z;
 	for (i=0; i<9; ++i)
 	    xo[i] = -4.0+dz/fdm->dz+i*1.0f;
    	ints8r (9, 1.0f, -4.0, inp, 0.0f, 0.0f, 9, xo, swout[ic].sincz);
@@ -746,6 +749,7 @@ void sinc3d_inject(float***uu,
 {
     int   ia, iy, ix, iz, sy, sx, sz, ixx, iyy, izz;
     float w, wy, wx, wz;
+    float value;
 
     int na = ca[0].n;
 #ifdef _OPENMP
@@ -768,7 +772,7 @@ void sinc3d_inject(float***uu,
 		for(izz=ca[ia].fz; izz<ca[ia].fz+ca[ia].nz; izz++){
 		    sz = -4 +izz;
 		    wz = ca[ia].sincz[izz];
-		    float value = w*wy*wx*wz;
+		    value = w*wy*wx*wz;
 #ifdef _OPENMP
 #pragma omp atomic
 #endif
@@ -788,6 +792,7 @@ void sinc3d_inject1(float***uu,
 {
     int   ia, iy, ix, iz, sy, sx, sz, ixx, iyy, izz;
     float w, wy, wx, wz;
+    float value;
 
     int na = ca[0].n;
 #ifdef _OPENMP
@@ -810,7 +815,7 @@ void sinc3d_inject1(float***uu,
 		for(izz=ca[ia].fz; izz<ca[ia].fz+ca[ia].nz; izz++){
 		    sz = -4 +izz;
 		    wz = ca[ia].sincz[izz];
-		    float value = w*wy*wx*wz;
+		    value = w*wy*wx*wz;
 #ifdef _OPENMP
 #pragma omp atomic
 #endif
@@ -831,6 +836,7 @@ void sinc3d_extract(float***uu,
     int   ia, iy, ix, iz, sy, sx, sz, ixx, iyy, izz;
     float wy, wx, wz;
     int na = ca[0].n;
+    float gather;
 
 #ifdef _OPENMP
 #pragma omp parallel for			\
@@ -842,7 +848,7 @@ void sinc3d_extract(float***uu,
 	iy = ca[ia].iy;
 	ix = ca[ia].ix;
 	iz = ca[ia].iz;
-	float gather = 0.0f;
+	gather = 0.0f;
 	for (iyy=ca[ia].fy; iyy<ca[ia].fy+ca[ia].ny;iyy++){
 	    sy = -4 +iyy;
 	    wy = ca[ia].sincy[iyy];
@@ -902,17 +908,22 @@ scoef2d sinc2d_make(int nc,
 {
     int i, ic;
     scoef2d swout;
-    swout = (scoef2d) sf_alloc(nc,sizeof(*swout));
 
     float inp[9]; 
     float xo[9];
+
+    int ix, iz;
+    float dx, dz;
+
+    swout = (scoef2d) sf_alloc(nc,sizeof(*swout));
+    
     for (i=0; i<9; i++)
 	inp[i] = 0.0f;
     inp[4] = 1.0f;
     /* allocate and set loop */
     for (ic=0; ic<nc; ++ic){
-	int ix = (int)((aa[ic].x -fdm->oxpad)/fdm->dx+0.499f); 
-	int iz = (int)((aa[ic].z -fdm->ozpad)/fdm->dz+0.499f);
+	ix = (int)((aa[ic].x -fdm->oxpad)/fdm->dx+0.499f); 
+	iz = (int)((aa[ic].z -fdm->ozpad)/fdm->dz+0.499f);
 	swout[ic].fx = 0;
 	swout[ic].nx = 9;
 	swout[ic].fz = 0;
@@ -922,8 +933,8 @@ scoef2d sinc2d_make(int nc,
 	swout[ic].ix = ix;
 	swout[ic].iz = iz;
     
-	float dx = ix*fdm->dx+fdm->oxpad-aa[ic].x; 
-	float dz = iz*fdm->dz+fdm->ozpad-aa[ic].z;
+	dx = ix*fdm->dx+fdm->oxpad-aa[ic].x; 
+	dz = iz*fdm->dz+fdm->ozpad-aa[ic].z;
 
 	for (i=0; i<9; ++i)
 	    xo[i] = -4.0f+dx/fdm->dx+i*1.0f;
@@ -956,6 +967,7 @@ void sinc2d_inject(float**uu,
 
     int   ia, ix, iz, sx, sz, ixx, izz;
     float w, wx, wz;
+    float value;
 
     int na = ca[0].n;
 #ifdef _OPENMP
@@ -974,7 +986,7 @@ void sinc2d_inject(float**uu,
 	    for(izz=ca[ia].fz; izz<ca[ia].fz+ca[ia].nz; izz++){
 		sz = -4 +izz;
 		wz = ca[ia].sincz[izz];
-		float value = w*wx*wz;
+		value = w*wx*wz;
 #ifdef _OPENMP
 #pragma omp atomic
 #endif
@@ -993,7 +1005,7 @@ void sinc2d_inject1(float**uu,
     
     int   ia, ix, iz, sx, sz, ixx, izz;
     float w, wx, wz;
-
+    float value;
     int na = ca[0].n;
     
 #ifdef _OPENMP
@@ -1012,7 +1024,7 @@ void sinc2d_inject1(float**uu,
             for(izz=ca[ia].fz; izz<ca[ia].fz+ca[ia].nz; izz++){
                 sz = -4 +izz;
                 wz = ca[ia].sincz[izz];
-                float value = w*wx*wz;
+                value = w*wx*wz;
 #ifdef _OPENMP
 #pragma omp atomic
 #endif
@@ -1030,7 +1042,7 @@ void sinc2d_extract(float**uu,
 {
     int   ia, ix, iz, sx, sz, ixx, izz;
     float wx, wz;
-
+    float gather;
     int na = ca[0].n;
     
 #ifdef _OPENMP
@@ -1042,7 +1054,7 @@ void sinc2d_extract(float**uu,
     for(ia=0;ia<na;ia++) {
         ix = ca[ia].ix;
         iz = ca[ia].iz;
-        float gather = 0.f;
+        gather = 0.f;
         for (ixx=ca[ia].fx; ixx<ca[ia].fx+ca[ia].nx; ixx++){
             sx = -4 +ixx;
             wx = ca[ia].sincx[ixx];
@@ -1875,12 +1887,6 @@ void sponge3d_apply(float  ***uu,
     }
 }
 
-/* ------------------------------------------------------------------ */
-float min(float x, float y){
-    if (x < y) return x;
-    else return y;
-}
-
 bool cfl_generic(
     float vpmin, float vpmax,
     float dx, float dy, float dz,
@@ -1890,20 +1896,22 @@ bool cfl_generic(
 {
     int dim = 3;
     float dmin;
-    
+    float tdp;
+    float wplength;
+    bool passed;
+
     if (dy < 0)dim = 2;
     
-    if (dim == 2) dmin = min(dx,dz);
-    else dmin = min(dx,min(dy,dz));
+    if (dim == 2) dmin = SF_MIN(dx,dz);
+    else dmin = SF_MIN(dx,SF_MIN(dy,dz));
     
-    float tdp = dt * vpmax *sqrt(2); /* maximum distance */
+    tdp = dt * vpmax *sqrt(2); /* maximum distance */
     if (dmin > tdp) sf_warning("CFL: Stability check ... %s-wave... PASSED", wave);
     else {
         sf_error("CFL: Stability check ... FAILED ... minimum grid sampling: %f !> %f", dmin, tdp);
     }
-    float wplength = safety*vpmin / fmax;
+    wplength = safety*vpmin / fmax;
     
-    bool passed;
     if (dim == 2) passed = wplength > intervals*sqrt(dx*dx+dz*dz);
     else passed = wplength > intervals*sqrt(dx*dx+dy*dy+dz*dz);
     

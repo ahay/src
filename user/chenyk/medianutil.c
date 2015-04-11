@@ -54,7 +54,7 @@ void vecmedianfilter(float *temp1,/* input vector set */
 	   t+=sqrtf(d);
 	}
 	s[i]+=t;
-	}/*loop over spatial direction i*/ // D_i=\sum_{k}^{N_k} \sum_{t}^{N_t} | x_i(t)-x_k(t) |^2 )^{1/2}
+	}/*loop over spatial direction i*/ 
 	j=nfw/2;
 	min=s[nfw/2];
 	for(i=1;i<nfw/2;i++)

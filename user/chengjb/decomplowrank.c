@@ -34,7 +34,7 @@ void decomplowrank2d(float *ldataxx,float *rdataxx,float *fmidxx,
        int   i, im, im2, jn2, ikx, ikz;
        float sum1, sum2, *wp;
 
-#ifdef SF_HAS_FFTW  // using FFTW in Madagascar
+#ifdef SF_HAS_FFTW  /* using FFTW in Madagascar */
  
        sf_warning("============= using SF_HAS_FFTW ====");
 
@@ -70,7 +70,6 @@ void decomplowrank2d(float *ldataxx,float *rdataxx,float *fmidxx,
        fftwf_execute(xp);
        for(i=0;i<n;i++) pzz[i] = xout[i];
 
-       ///////////////////////////////////////////////////////// P-wave's x-component
        /* n2 IFFT from (kx, kz) to (x, z) domain*/
        wp = sf_floatalloc(m*n2xx);
        for(jn2=0;jn2<n2xx;jn2++)
@@ -79,7 +78,7 @@ void decomplowrank2d(float *ldataxx,float *rdataxx,float *fmidxx,
            int jn2n=jn2*n;
            for(ikx=0;ikx<nx;ikx++)
            {
-              // Note: Spectrum of the operator is differently orderred as the spectrum after FFT
+	       /* Note: Spectrum of the operator is differently orderred as the spectrum after FFT */
               int ixnz=ijkx[ikx]*nz;
               int ii=jn2n+ixnz;
               for(ikz=0;ikz<nz;ikz++)
@@ -88,14 +87,14 @@ void decomplowrank2d(float *ldataxx,float *rdataxx,float *fmidxx,
                 i++;
               }
             }
-            // (kx,kz) to (x, z) domain
+	   /* (kx,kz) to (x, z) domain */
             fftwf_execute(xpi);
 
             for(im=0;im<m;im++)
                 wp[jn2*m+im] = creal(xout[im])/n;
        }
 
-       // Matrix multiplication in space-domain 
+       /* Matrix multiplication in space-domain */
        for(im=0;im<m;im++)
        {
          sum1=0.0;
@@ -106,7 +105,7 @@ void decomplowrank2d(float *ldataxx,float *rdataxx,float *fmidxx,
               sum2 += fmidxx[im2*n2xx+jn2]*wp[jn2*m+im];
 
            sum1 += ldataxx[im*m2xx+im2]*sum2;
-         }//im2 loop
+         }/*im2 loop */
          px[im] = sum1;
        } 
        free(wp);
@@ -119,7 +118,7 @@ void decomplowrank2d(float *ldataxx,float *rdataxx,float *fmidxx,
            int jn2n=jn2*n;
            for(ikx=0;ikx<nx;ikx++)
            {
-              // Note: Spectrum of the operator is differently orderred as the spectrum after FFT
+	       /* Note: Spectrum of the operator is differently orderred as the spectrum after FFT */
               int ixnz=ijkx[ikx]*nz;
               int ii=jn2n+ixnz;
               for(ikz=0;ikz<nz;ikz++)
@@ -128,14 +127,14 @@ void decomplowrank2d(float *ldataxx,float *rdataxx,float *fmidxx,
                 i++;
               }
             }
-            // (kx,kz) to (x, z) domain
+	   /* (kx,kz) to (x, z) domain */
             fftwf_execute(xpi);
 
             for(im=0;im<m;im++)
                 wp[jn2*m+im] = creal(xout[im])/n;
        }
 
-       // Matrix multiplication in space-domain 
+       /* Matrix multiplication in space-domain */
        for(im=0;im<m;im++)
        {
          sum1=0.0;
@@ -146,11 +145,11 @@ void decomplowrank2d(float *ldataxx,float *rdataxx,float *fmidxx,
               sum2 += fmidxz[im2*n2xz+jn2]*wp[jn2*m+im];
 
            sum1 += ldataxz[im*m2xz+im2]*sum2;
-         }//im2 loop
+         }/*im2 loop*/
          px[im] += sum1;
        } 
        free(wp);
-       ///////////////////////////////////////////////////////// P-wave's z-component
+
        /* n2 IFFT from (kx, kz) to (x, z) domain*/
        wp = sf_floatalloc(m*n2zz);
        for(jn2=0;jn2<n2zz;jn2++)
@@ -159,7 +158,7 @@ void decomplowrank2d(float *ldataxx,float *rdataxx,float *fmidxx,
            int jn2n=jn2*n;
            for(ikx=0;ikx<nx;ikx++)
            {
-              // Note: Spectrum of the operator is differently orderred as the spectrum after FFT
+	       /* Note: Spectrum of the operator is differently orderred as the spectrum after FFT */
               int ixnz=ijkx[ikx]*nz;
               int ii=jn2n+ixnz;
               for(ikz=0;ikz<nz;ikz++)
@@ -168,14 +167,14 @@ void decomplowrank2d(float *ldataxx,float *rdataxx,float *fmidxx,
                 i++;
               }
             }
-            // (kx,kz) to (x, z) domain
+	   /* (kx,kz) to (x, z) domain */
             fftwf_execute(xpi);
 
             for(im=0;im<m;im++)
                 wp[jn2*m+im] = creal(xout[im])/n;
        }
 
-       // Matrix multiplication in space-domain 
+       /* Matrix multiplication in space-domain */
        for(im=0;im<m;im++)
        {
          sum1=0.0;
@@ -186,7 +185,7 @@ void decomplowrank2d(float *ldataxx,float *rdataxx,float *fmidxx,
               sum2 += fmidzz[im2*n2zz+jn2]*wp[jn2*m+im];
 
            sum1 += ldatazz[im*m2zz+im2]*sum2;
-         }//im2 loop
+         }/*im2 loop*/
          pz[im] = sum1;
        } 
        free(wp);
@@ -199,7 +198,7 @@ void decomplowrank2d(float *ldataxx,float *rdataxx,float *fmidxx,
            int jn2n=jn2*n;
            for(ikx=0;ikx<nx;ikx++)
            {
-              // Note: Spectrum of the operator is differently orderred as the spectrum after FFT
+	       /* Note: Spectrum of the operator is differently orderred as the spectrum after FFT */
               int ixnz=ijkx[ikx]*nz;
               int ii=jn2n+ixnz;
               for(ikz=0;ikz<nz;ikz++)
@@ -208,14 +207,14 @@ void decomplowrank2d(float *ldataxx,float *rdataxx,float *fmidxx,
                 i++;
               }
             }
-            // (kx,kz) to (x, z) domain
+	   /* (kx,kz) to (x, z) domain */
             fftwf_execute(xpi);
 
             for(im=0;im<m;im++)
                 wp[jn2*m+im] = creal(xout[im])/n;
        }
 
-       // Matrix multiplication in space-domain 
+       /* Matrix multiplication in space-domain */
        for(im=0;im<m;im++)
        {
          sum1=0.0;
@@ -226,7 +225,7 @@ void decomplowrank2d(float *ldataxx,float *rdataxx,float *fmidxx,
               sum2 += fmidxz[im2*n2xz+jn2]*wp[jn2*m+im];
 
            sum1 += ldataxz[im*m2xz+im2]*sum2;
-         }//im2 loop
+         }/*im2 loop*/
          pz[im] += sum1;
        } 
        free(wp);
@@ -238,7 +237,7 @@ void decomplowrank2d(float *ldataxx,float *rdataxx,float *fmidxx,
        free(pzz);
        free(xin);
        free(xout);
-#else  // using FFTW in user's own computer
+#else  /* using FFTW in user's own computer */
        sf_warning("============= using user installed FFTW ====");
 #endif
 }
@@ -255,7 +254,7 @@ void decomplowrank2ds(float *ldataxx,float *rdataxx,float *fmidxx,
        int   i, im, im2, jn2, ikx, ikz;
        float sum1, sum2, *wp;
 
-#ifdef SF_HAS_FFTW  // using FFTW in Madagascar
+#ifdef SF_HAS_FFTW  /* using FFTW in Madagascar */
  
        sf_warning("============= using SF_HAS_FFTW ====");
 
@@ -291,7 +290,6 @@ void decomplowrank2ds(float *ldataxx,float *rdataxx,float *fmidxx,
        fftwf_execute(xp);
        for(i=0;i<n;i++) pzz[i] = xout[i];
 
-       ///////////////////////////////////////////////////////// SV-wave's x-component
        /* n2 IFFT from (kx, kz) to (x, z) domain*/
        wp = sf_floatalloc(m*n2zz);
        for(jn2=0;jn2<n2zz;jn2++)
@@ -300,7 +298,7 @@ void decomplowrank2ds(float *ldataxx,float *rdataxx,float *fmidxx,
            int jn2n=jn2*n;
            for(ikx=0;ikx<nx;ikx++)
            {
-              // Note: Spectrum of the operator is differently orderred as the spectrum after FFT
+	       /* Note: Spectrum of the operator is differently orderred as the spectrum after FFT */
               int ixnz=ijkx[ikx]*nz;
               int ii=jn2n+ixnz;
               for(ikz=0;ikz<nz;ikz++)
@@ -309,14 +307,14 @@ void decomplowrank2ds(float *ldataxx,float *rdataxx,float *fmidxx,
                 i++;
               }
             }
-            // (kx,kz) to (x, z) domain
+	   /* (kx,kz) to (x, z) domain */
             fftwf_execute(xpi);
 
             for(im=0;im<m;im++)
                 wp[jn2*m+im] = creal(xout[im])/n;
        }
 
-       // Matrix multiplication in space-domain 
+       /* Matrix multiplication in space-domain */
        for(im=0;im<m;im++)
        {
          sum1=0.0;
@@ -327,7 +325,7 @@ void decomplowrank2ds(float *ldataxx,float *rdataxx,float *fmidxx,
               sum2 += fmidzz[im2*n2zz+jn2]*wp[jn2*m+im];
 
            sum1 += ldatazz[im*m2zz+im2]*sum2;
-         }//im2 loop
+         }/*im2 loop*/
          px[im] = sum1;
        } 
        free(wp);
@@ -340,7 +338,7 @@ void decomplowrank2ds(float *ldataxx,float *rdataxx,float *fmidxx,
            int jn2n=jn2*n;
            for(ikx=0;ikx<nx;ikx++)
            {
-              // Note: Spectrum of the operator is differently orderred as the spectrum after FFT
+	       /* Note: Spectrum of the operator is differently orderred as the spectrum after FFT */
               int ixnz=ijkx[ikx]*nz;
               int ii=jn2n+ixnz;
               for(ikz=0;ikz<nz;ikz++)
@@ -349,14 +347,14 @@ void decomplowrank2ds(float *ldataxx,float *rdataxx,float *fmidxx,
                 i++;
               }
             }
-            // (kx,kz) to (x, z) domain
+	   /* (kx,kz) to (x, z) domain */
             fftwf_execute(xpi);
 
             for(im=0;im<m;im++)
                 wp[jn2*m+im] = creal(xout[im])/n;
        }
 
-       // Matrix multiplication in space-domain 
+       /* Matrix multiplication in space-domain */
        for(im=0;im<m;im++)
        {
          sum1=0.0;
@@ -367,11 +365,11 @@ void decomplowrank2ds(float *ldataxx,float *rdataxx,float *fmidxx,
               sum2 += fmidxz[im2*n2xz+jn2]*wp[jn2*m+im];
 
            sum1 += ldataxz[im*m2xz+im2]*sum2;
-         }//im2 loop
+         }/*im2 loop*/
          px[im] -= sum1;
        } 
        free(wp);
-       ///////////////////////////////////////////////////////// SV-wave's z-component
+
        /* n2 IFFT from (kx, kz) to (x, z) domain*/
        wp = sf_floatalloc(m*n2xx);
        for(jn2=0;jn2<n2xx;jn2++)
@@ -380,7 +378,7 @@ void decomplowrank2ds(float *ldataxx,float *rdataxx,float *fmidxx,
            int jn2n=jn2*n;
            for(ikx=0;ikx<nx;ikx++)
            {
-              // Note: Spectrum of the operator is differently orderred as the spectrum after FFT
+	       /* Note: Spectrum of the operator is differently orderred as the spectrum after FFT */
               int ixnz=ijkx[ikx]*nz;
               int ii=jn2n+ixnz;
               for(ikz=0;ikz<nz;ikz++)
@@ -389,14 +387,14 @@ void decomplowrank2ds(float *ldataxx,float *rdataxx,float *fmidxx,
                 i++;
               }
             }
-            // (kx,kz) to (x, z) domain
+	   /* (kx,kz) to (x, z) domain */
             fftwf_execute(xpi);
 
             for(im=0;im<m;im++)
                 wp[jn2*m+im] = creal(xout[im])/n;
        }
 
-       // Matrix multiplication in space-domain 
+       /* Matrix multiplication in space-domain */
        for(im=0;im<m;im++)
        {
          sum1=0.0;
@@ -407,7 +405,7 @@ void decomplowrank2ds(float *ldataxx,float *rdataxx,float *fmidxx,
               sum2 += fmidxx[im2*n2xx+jn2]*wp[jn2*m+im];
 
            sum1 += ldataxx[im*m2xx+im2]*sum2;
-         }//im2 loop
+         }/*im2 loop*/
          pz[im] = sum1;
        } 
        free(wp);
@@ -420,7 +418,7 @@ void decomplowrank2ds(float *ldataxx,float *rdataxx,float *fmidxx,
            int jn2n=jn2*n;
            for(ikx=0;ikx<nx;ikx++)
            {
-              // Note: Spectrum of the operator is differently orderred as the spectrum after FFT
+	       /* Note: Spectrum of the operator is differently orderred as the spectrum after FFT */
               int ixnz=ijkx[ikx]*nz;
               int ii=jn2n+ixnz;
               for(ikz=0;ikz<nz;ikz++)
@@ -429,14 +427,14 @@ void decomplowrank2ds(float *ldataxx,float *rdataxx,float *fmidxx,
                 i++;
               }
             }
-            // (kx,kz) to (x, z) domain
+	   /* (kx,kz) to (x, z) domain */
             fftwf_execute(xpi);
 
             for(im=0;im<m;im++)
                 wp[jn2*m+im] = creal(xout[im])/n;
        }
 
-       // Matrix multiplication in space-domain 
+       /* Matrix multiplication in space-domain */
        for(im=0;im<m;im++)
        {
          sum1=0.0;
@@ -447,7 +445,7 @@ void decomplowrank2ds(float *ldataxx,float *rdataxx,float *fmidxx,
               sum2 += fmidxz[im2*n2xz+jn2]*wp[jn2*m+im];
 
            sum1 += ldataxz[im*m2xz+im2]*sum2;
-         }//im2 loop
+         }/*im2 loop*/
          pz[im] -= sum1;
        } 
        free(wp);
@@ -459,7 +457,7 @@ void decomplowrank2ds(float *ldataxx,float *rdataxx,float *fmidxx,
        free(pzz);
        free(xin);
        free(xout);
-#else  // using FFTW in user's own computer
+#else  /* using FFTW in user's own computer */
        sf_warning("============= using user installed FFTW ====");
 #endif
 }
@@ -482,7 +480,7 @@ void decomplowrank3dp(float *ldataxx,float *rdataxx,float *fmidxx,
 
        nxz=nx*nz;
 
-#ifdef SF_HAS_FFTW  // using FFTW in Madagascar
+#ifdef SF_HAS_FFTW  /* using FFTW in Madagascar */
  
        sf_warning("============= using SF_HAS_FFTW ====");
 
@@ -526,7 +524,6 @@ void decomplowrank3dp(float *ldataxx,float *rdataxx,float *fmidxx,
        fftwf_execute(xp);
        for(i=0;i<n;i++) pzz[i] = xout[i];
 
-       ///////////////////////////////////////////////////////// P-wave's x-component
        /* n2 IFFT from (ky, kx, kz) to (y, x, z) domain*/
        wp = sf_floatalloc(m*n2xx);
        for(jn2=0;jn2<n2xx;jn2++)
@@ -548,14 +545,14 @@ void decomplowrank3dp(float *ldataxx,float *rdataxx,float *fmidxx,
                  }
                }
             }
-            // (kx,kz) to (x, z) domain
+	   /* (kx,kz) to (x, z) domain */
             fftwf_execute(xpi);
 
             for(im=0;im<m;im++)
                 wp[jn2*m+im] = creal(xout[im])/n;
        }
 
-       // Matrix multiplication in space-domain 
+       /* Matrix multiplication in space-domain */
        for(im=0;im<m;im++)
        {
          sum1=0.0;
@@ -566,7 +563,7 @@ void decomplowrank3dp(float *ldataxx,float *rdataxx,float *fmidxx,
               sum2 += fmidxx[im2*n2xx+jn2]*wp[jn2*m+im];
 
            sum1 += ldataxx[im*m2xx+im2]*sum2;
-         }//im2 loop
+         }/*im2 loop */
          px[im] = sum1;
        } 
        free(wp);
@@ -592,14 +589,14 @@ void decomplowrank3dp(float *ldataxx,float *rdataxx,float *fmidxx,
                  }
                }
             }
-            // (kx,kz) to (x, z) domain
+	   /* (kx,kz) to (x, z) domain */
             fftwf_execute(xpi);
 
             for(im=0;im<m;im++)
                 wp[jn2*m+im] = creal(xout[im])/n;
        }
 
-       // Matrix multiplication in space-domain 
+       /* Matrix multiplication in space-domain */ 
        for(im=0;im<m;im++)
        {
          sum1=0.0;
@@ -610,7 +607,7 @@ void decomplowrank3dp(float *ldataxx,float *rdataxx,float *fmidxx,
               sum2 += fmidxy[im2*n2xy+jn2]*wp[jn2*m+im];
 
            sum1 += ldataxy[im*m2xy+im2]*sum2;
-         }//im2 loop
+         }/*im2 loop*/
          px[im] += sum1;
        } 
        free(wp);
@@ -636,14 +633,14 @@ void decomplowrank3dp(float *ldataxx,float *rdataxx,float *fmidxx,
                  }
                }
             }
-            // (kx,kz) to (x, z) domain
+            /* (kx,kz) to (x, z) domain */
             fftwf_execute(xpi);
 
             for(im=0;im<m;im++)
                 wp[jn2*m+im] = creal(xout[im])/n;
        }
 
-       // Matrix multiplication in space-domain 
+       /* Matrix multiplication in space-domain */ 
        for(im=0;im<m;im++)
        {
          sum1=0.0;
@@ -654,12 +651,11 @@ void decomplowrank3dp(float *ldataxx,float *rdataxx,float *fmidxx,
               sum2 += fmidxz[im2*n2xz+jn2]*wp[jn2*m+im];
 
            sum1 += ldataxz[im*m2xz+im2]*sum2;
-         }//im2 loop
+         }/*im2 loop*/
          px[im] += sum1;
        } 
        free(wp);
 
-       ///////////////////////////////////////////////////////// P-wave's y-component
        /* n2 IFFT from (kx, kz) to (x, z) domain*/
        wp = sf_floatalloc(m*n2yy);
        for(jn2=0;jn2<n2yy;jn2++)
@@ -681,14 +677,14 @@ void decomplowrank3dp(float *ldataxx,float *rdataxx,float *fmidxx,
                  }
                }
             }
-            // (kx,kz) to (x, z) domain
+            /* (kx,kz) to (x, z) domain */
             fftwf_execute(xpi);
 
             for(im=0;im<m;im++)
                 wp[jn2*m+im] = creal(xout[im])/n;
        }
 
-       // Matrix multiplication in space-domain 
+       /* Matrix multiplication in space-domain */ 
        for(im=0;im<m;im++)
        {
          sum1=0.0;
@@ -699,7 +695,7 @@ void decomplowrank3dp(float *ldataxx,float *rdataxx,float *fmidxx,
               sum2 += fmidyy[im2*n2yy+jn2]*wp[jn2*m+im];
 
            sum1 += ldatayy[im*m2yy+im2]*sum2;
-         }//im2 loop
+         }/*im2 loop*/
          py[im] = sum1;
        } 
        free(wp);
@@ -725,14 +721,14 @@ void decomplowrank3dp(float *ldataxx,float *rdataxx,float *fmidxx,
                  }
                }
             }
-            // (kx,kz) to (x, z) domain
+            /* (kx,kz) to (x, z) domain */
             fftwf_execute(xpi);
 
             for(im=0;im<m;im++)
                 wp[jn2*m+im] = creal(xout[im])/n;
        }
 
-       // Matrix multiplication in space-domain 
+       /* Matrix multiplication in space-domain */ 
        for(im=0;im<m;im++)
        {
          sum1=0.0;
@@ -743,7 +739,7 @@ void decomplowrank3dp(float *ldataxx,float *rdataxx,float *fmidxx,
               sum2 += fmidyz[im2*n2yz+jn2]*wp[jn2*m+im];
 
            sum1 += ldatayz[im*m2yz+im2]*sum2;
-         }//im2 loop
+         }/*im2 loop*/
          py[im] += sum1;
        } 
        free(wp);
@@ -769,14 +765,14 @@ void decomplowrank3dp(float *ldataxx,float *rdataxx,float *fmidxx,
                  }
                }
             }
-            // (kx,kz) to (x, z) domain
+            /* (kx,kz) to (x, z) domain */
             fftwf_execute(xpi);
 
             for(im=0;im<m;im++)
                 wp[jn2*m+im] = creal(xout[im])/n;
        }
 
-       // Matrix multiplication in space-domain 
+       /* Matrix multiplication in space-domain */ 
        for(im=0;im<m;im++)
        {
          sum1=0.0;
@@ -787,11 +783,11 @@ void decomplowrank3dp(float *ldataxx,float *rdataxx,float *fmidxx,
               sum2 += fmidxy[im2*n2xy+jn2]*wp[jn2*m+im];
 
            sum1 += ldataxy[im*m2xy+im2]*sum2;
-         }//im2 loop
+         }/*im2 loop*/
          py[im] += sum1;
        } 
        free(wp);
-       ///////////////////////////////////////////////////////// P-wave's z-component
+
        /* n2 IFFT from (kx, kz) to (x, z) domain*/
        wp = sf_floatalloc(m*n2zz);
        for(jn2=0;jn2<n2zz;jn2++)
@@ -813,14 +809,14 @@ void decomplowrank3dp(float *ldataxx,float *rdataxx,float *fmidxx,
                  }
                }
             }
-            // (kx,kz) to (x, z) domain
+            /* (kx,kz) to (x, z) domain */
             fftwf_execute(xpi);
 
             for(im=0;im<m;im++)
                 wp[jn2*m+im] = creal(xout[im])/n;
        }
 
-       // Matrix multiplication in space-domain 
+       /* Matrix multiplication in space-domain */ 
        for(im=0;im<m;im++)
        {
          sum1=0.0;
@@ -831,7 +827,7 @@ void decomplowrank3dp(float *ldataxx,float *rdataxx,float *fmidxx,
               sum2 += fmidzz[im2*n2zz+jn2]*wp[jn2*m+im];
 
            sum1 += ldatazz[im*m2zz+im2]*sum2;
-         }//im2 loop
+         }/*im2 loop*/
          pz[im] = sum1;
        } 
        free(wp);
@@ -857,14 +853,14 @@ void decomplowrank3dp(float *ldataxx,float *rdataxx,float *fmidxx,
                  }
                }
             }
-            // (kx,kz) to (x, z) domain
+            /* (kx,kz) to (x, z) domain */
             fftwf_execute(xpi);
 
             for(im=0;im<m;im++)
                 wp[jn2*m+im] = creal(xout[im])/n;
        }
 
-       // Matrix multiplication in space-domain 
+       /* Matrix multiplication in space-domain */ 
        for(im=0;im<m;im++)
        {
          sum1=0.0;
@@ -875,7 +871,7 @@ void decomplowrank3dp(float *ldataxx,float *rdataxx,float *fmidxx,
               sum2 += fmidyz[im2*n2yz+jn2]*wp[jn2*m+im];
 
            sum1 += ldatayz[im*m2yz+im2]*sum2;
-         }//im2 loop
+         }/*im2 loop*/
          pz[im] += sum1;
        } 
        free(wp);
@@ -901,14 +897,14 @@ void decomplowrank3dp(float *ldataxx,float *rdataxx,float *fmidxx,
                  }
                }
             }
-            // (kx,kz) to (x, z) domain
+            /* (kx,kz) to (x, z) domain */
             fftwf_execute(xpi);
 
             for(im=0;im<m;im++)
                 wp[jn2*m+im] = creal(xout[im])/n;
        }
 
-       // Matrix multiplication in space-domain 
+       /* Matrix multiplication in space-domain */ 
        for(im=0;im<m;im++)
        {
          sum1=0.0;
@@ -919,7 +915,7 @@ void decomplowrank3dp(float *ldataxx,float *rdataxx,float *fmidxx,
               sum2 += fmidxz[im2*n2xz+jn2]*wp[jn2*m+im];
 
            sum1 += ldataxz[im*m2xz+im2]*sum2;
-         }//im2 loop
+         }/*im2 loop*/
          pz[im] += sum1;
        } 
        free(wp);
@@ -932,7 +928,7 @@ void decomplowrank3dp(float *ldataxx,float *rdataxx,float *fmidxx,
        free(pzz);
        free(xin);
        free(xout);
-#else  // using FFTW in user's own computer
+#else  /* using FFTW in user's own computer */
        sf_warning("============= using user installed FFTW ====");
 #endif
 }
@@ -955,7 +951,7 @@ void decomplowrank3ds(float *ldataxx,float *rdataxx,float *fmidxx,
 
        nxz=nx*nz;
 
-#ifdef SF_HAS_FFTW  // using FFTW in Madagascar
+#ifdef SF_HAS_FFTW  /* using FFTW in Madagascar */
  
        sf_warning("============= using SF_HAS_FFTW ====");
 
@@ -999,7 +995,6 @@ void decomplowrank3ds(float *ldataxx,float *rdataxx,float *fmidxx,
        fftwf_execute(xp);
        for(i=0;i<n;i++) pzz[i] = xout[i];
 
-       ///////////////////////////////////////////////////////// S-wave's x-component
        /* n2 IFFT from (ky, kx, kz) to (y, x, z) domain*/
        wp = sf_floatalloc(m*n2xx);
        for(jn2=0;jn2<n2xx;jn2++)
@@ -1021,14 +1016,14 @@ void decomplowrank3ds(float *ldataxx,float *rdataxx,float *fmidxx,
                  }
                }
             }
-            // (kx,kz) to (x, z) domain
+            /* (kx,kz) to (x, z) domain */
             fftwf_execute(xpi);
 
             for(im=0;im<m;im++)
                 wp[jn2*m+im] = creal(xout[im])/n;
        }
 
-       // Matrix multiplication in space-domain 
+       /* Matrix multiplication in space-domain */ 
        for(im=0;im<m;im++)
        {
          sum1=0.0;
@@ -1039,7 +1034,7 @@ void decomplowrank3ds(float *ldataxx,float *rdataxx,float *fmidxx,
               sum2 += fmidxx[im2*n2xx+jn2]*wp[jn2*m+im];
 
            sum1 += ldataxx[im*m2xx+im2]*sum2;
-         }//im2 loop
+         }/*im2 loop*/
          px[im] = sum1;
        } 
        free(wp);
@@ -1065,14 +1060,14 @@ void decomplowrank3ds(float *ldataxx,float *rdataxx,float *fmidxx,
                  }
                }
             }
-            // (kx,kz) to (x, z) domain
+            /* (kx,kz) to (x, z) domain */
             fftwf_execute(xpi);
 
             for(im=0;im<m;im++)
                 wp[jn2*m+im] = creal(xout[im])/n;
        }
 
-       // Matrix multiplication in space-domain 
+       /* Matrix multiplication in space-domain */ 
        for(im=0;im<m;im++)
        {
          sum1=0.0;
@@ -1083,7 +1078,7 @@ void decomplowrank3ds(float *ldataxx,float *rdataxx,float *fmidxx,
               sum2 += fmidxy[im2*n2xy+jn2]*wp[jn2*m+im];
 
            sum1 += ldataxy[im*m2xy+im2]*sum2;
-         }//im2 loop
+         }/*im2 loop*/
          px[im] -= sum1;  /* Bxy of qS-wave is negative of Bxy of qP-wave*/
        } 
        free(wp);
@@ -1109,14 +1104,14 @@ void decomplowrank3ds(float *ldataxx,float *rdataxx,float *fmidxx,
                  }
                }
             }
-            // (kx,kz) to (x, z) domain
+            /* (kx,kz) to (x, z) domain */
             fftwf_execute(xpi);
 
             for(im=0;im<m;im++)
                 wp[jn2*m+im] = creal(xout[im])/n;
        }
 
-       // Matrix multiplication in space-domain 
+       /* Matrix multiplication in space-domain */ 
        for(im=0;im<m;im++)
        {
          sum1=0.0;
@@ -1127,12 +1122,11 @@ void decomplowrank3ds(float *ldataxx,float *rdataxx,float *fmidxx,
               sum2 += fmidxz[im2*n2xz+jn2]*wp[jn2*m+im];
 
            sum1 += ldataxz[im*m2xz+im2]*sum2;
-         }//im2 loop
+         }/*im2 loop*/
          px[im] -= sum1;
        } 
        free(wp);
 
-       ///////////////////////////////////////////////////////// S-wave's y-component
        /* n2 IFFT from (kx, kz) to (x, z) domain*/
        wp = sf_floatalloc(m*n2yy);
        for(jn2=0;jn2<n2yy;jn2++)
@@ -1154,14 +1148,14 @@ void decomplowrank3ds(float *ldataxx,float *rdataxx,float *fmidxx,
                  }
                }
             }
-            // (kx,kz) to (x, z) domain
+            /* (kx,kz) to (x, z) domain */
             fftwf_execute(xpi);
 
             for(im=0;im<m;im++)
                 wp[jn2*m+im] = creal(xout[im])/n;
        }
 
-       // Matrix multiplication in space-domain 
+       /* Matrix multiplication in space-domain */ 
        for(im=0;im<m;im++)
        {
          sum1=0.0;
@@ -1172,7 +1166,7 @@ void decomplowrank3ds(float *ldataxx,float *rdataxx,float *fmidxx,
               sum2 += fmidyy[im2*n2yy+jn2]*wp[jn2*m+im];
 
            sum1 += ldatayy[im*m2yy+im2]*sum2;
-         }//im2 loop
+         }/*im2 loop*/
          py[im] = sum1;
        } 
        free(wp);
@@ -1198,14 +1192,14 @@ void decomplowrank3ds(float *ldataxx,float *rdataxx,float *fmidxx,
                  }
                }
             }
-            // (kx,kz) to (x, z) domain
+            /* (kx,kz) to (x, z) domain */
             fftwf_execute(xpi);
 
             for(im=0;im<m;im++)
                 wp[jn2*m+im] = creal(xout[im])/n;
        }
 
-       // Matrix multiplication in space-domain 
+       /* Matrix multiplication in space-domain */ 
        for(im=0;im<m;im++)
        {
          sum1=0.0;
@@ -1216,7 +1210,7 @@ void decomplowrank3ds(float *ldataxx,float *rdataxx,float *fmidxx,
               sum2 += fmidyz[im2*n2yz+jn2]*wp[jn2*m+im];
 
            sum1 += ldatayz[im*m2yz+im2]*sum2;
-         }//im2 loop
+         }/*im2 loop*/
          py[im] -= sum1;
        } 
        free(wp);
@@ -1242,14 +1236,14 @@ void decomplowrank3ds(float *ldataxx,float *rdataxx,float *fmidxx,
                  }
                }
             }
-            // (kx,kz) to (x, z) domain
+            /* (kx,kz) to (x, z) domain */
             fftwf_execute(xpi);
 
             for(im=0;im<m;im++)
                 wp[jn2*m+im] = creal(xout[im])/n;
        }
 
-       // Matrix multiplication in space-domain 
+       /* Matrix multiplication in space-domain */ 
        for(im=0;im<m;im++)
        {
          sum1=0.0;
@@ -1260,11 +1254,11 @@ void decomplowrank3ds(float *ldataxx,float *rdataxx,float *fmidxx,
               sum2 += fmidxy[im2*n2xy+jn2]*wp[jn2*m+im];
 
            sum1 += ldataxy[im*m2xy+im2]*sum2;
-         }//im2 loop
+         }/*im2 loop*/
          py[im] -= sum1;
        } 
        free(wp);
-       ///////////////////////////////////////////////////////// S-wave's z-component
+
        /* n2 IFFT from (kx, kz) to (x, z) domain*/
        wp = sf_floatalloc(m*n2zz);
        for(jn2=0;jn2<n2zz;jn2++)
@@ -1286,14 +1280,14 @@ void decomplowrank3ds(float *ldataxx,float *rdataxx,float *fmidxx,
                  }
                }
             }
-            // (kx,kz) to (x, z) domain
+            /* (kx,kz) to (x, z) domain */
             fftwf_execute(xpi);
 
             for(im=0;im<m;im++)
                 wp[jn2*m+im] = creal(xout[im])/n;
        }
 
-       // Matrix multiplication in space-domain 
+       /* Matrix multiplication in space-domain */ 
        for(im=0;im<m;im++)
        {
          sum1=0.0;
@@ -1304,7 +1298,7 @@ void decomplowrank3ds(float *ldataxx,float *rdataxx,float *fmidxx,
               sum2 += fmidzz[im2*n2zz+jn2]*wp[jn2*m+im];
 
            sum1 += ldatazz[im*m2zz+im2]*sum2;
-         }//im2 loop
+         }/*im2 loop*/
          pz[im] = sum1;
        } 
        free(wp);
@@ -1330,14 +1324,14 @@ void decomplowrank3ds(float *ldataxx,float *rdataxx,float *fmidxx,
                  }
                }
             }
-            // (kx,kz) to (x, z) domain
+            /* (kx,kz) to (x, z) domain */
             fftwf_execute(xpi);
 
             for(im=0;im<m;im++)
                 wp[jn2*m+im] = creal(xout[im])/n;
        }
 
-       // Matrix multiplication in space-domain 
+       /* Matrix multiplication in space-domain */ 
        for(im=0;im<m;im++)
        {
          sum1=0.0;
@@ -1348,7 +1342,7 @@ void decomplowrank3ds(float *ldataxx,float *rdataxx,float *fmidxx,
               sum2 += fmidyz[im2*n2yz+jn2]*wp[jn2*m+im];
 
            sum1 += ldatayz[im*m2yz+im2]*sum2;
-         }//im2 loop
+         }/*im2 loop*/
          pz[im] -= sum1;
        } 
        free(wp);
@@ -1374,14 +1368,14 @@ void decomplowrank3ds(float *ldataxx,float *rdataxx,float *fmidxx,
                  }
                }
             }
-            // (kx,kz) to (x, z) domain
+            /* (kx,kz) to (x, z) domain */
             fftwf_execute(xpi);
 
             for(im=0;im<m;im++)
                 wp[jn2*m+im] = creal(xout[im])/n;
        }
 
-       // Matrix multiplication in space-domain 
+       /* Matrix multiplication in space-domain */ 
        for(im=0;im<m;im++)
        {
          sum1=0.0;
@@ -1392,7 +1386,7 @@ void decomplowrank3ds(float *ldataxx,float *rdataxx,float *fmidxx,
               sum2 += fmidxz[im2*n2xz+jn2]*wp[jn2*m+im];
 
            sum1 += ldataxz[im*m2xz+im2]*sum2;
-         }//im2 loop
+         }/*im2 loop*/
          pz[im] -= sum1;
        } 
        free(wp);
@@ -1405,7 +1399,7 @@ void decomplowrank3ds(float *ldataxx,float *rdataxx,float *fmidxx,
        free(pzz);
        free(xin);
        free(xout);
-#else  // using FFTW in user's own computer
+#else  /* using FFTW in user's own computer */
        sf_warning("============= using user installed FFTW ====");
 #endif
 }
@@ -1425,7 +1419,7 @@ void decomplowrank3dshvti(float *ldataxx,float *rdataxx,float *fmidxx,
 
        nxz=nx*nz;
 
-#ifdef SF_HAS_FFTW  // using FFTW in Madagascar
+#ifdef SF_HAS_FFTW  /* using FFTW in Madagascar */
  
        sf_warning("============= using SF_HAS_FFTW ====");
 
@@ -1461,7 +1455,6 @@ void decomplowrank3dshvti(float *ldataxx,float *rdataxx,float *fmidxx,
        fftwf_execute(xp);
        for(i=0;i<n;i++) pyy[i] = xout[i];
 
-       ///////////////////////////////////////////////////////// P-wave's x-component
        /* n2 IFFT from (ky, kx, kz) to (y, x, z) domain*/
        wp = sf_floatalloc(m*n2xx);
        for(jn2=0;jn2<n2xx;jn2++)
@@ -1483,14 +1476,14 @@ void decomplowrank3dshvti(float *ldataxx,float *rdataxx,float *fmidxx,
                  }
                }
             }
-            // (kx,kz) to (x, z) domain
+            /* (kx,kz) to (x, z) domain */
             fftwf_execute(xpi);
 
             for(im=0;im<m;im++)
                 wp[jn2*m+im] = creal(xout[im])/n;
        }
 
-       // Matrix multiplication in space-domain 
+       /* Matrix multiplication in space-domain */ 
        for(im=0;im<m;im++)
        {
          sum1=0.0;
@@ -1501,7 +1494,7 @@ void decomplowrank3dshvti(float *ldataxx,float *rdataxx,float *fmidxx,
               sum2 += fmidxx[im2*n2xx+jn2]*wp[jn2*m+im];
 
            sum1 += ldataxx[im*m2xx+im2]*sum2;
-         }//im2 loop
+         }/*im2 loop*/
          px[im] = sum1;
        } 
        free(wp);
@@ -1527,14 +1520,14 @@ void decomplowrank3dshvti(float *ldataxx,float *rdataxx,float *fmidxx,
                  }
                }
             }
-            // (kx,kz) to (x, z) domain
+            /* (kx,kz) to (x, z) domain */
             fftwf_execute(xpi);
 
             for(im=0;im<m;im++)
                 wp[jn2*m+im] = creal(xout[im])/n;
        }
 
-       // Matrix multiplication in space-domain 
+       /* Matrix multiplication in space-domain */ 
        for(im=0;im<m;im++)
        {
          sum1=0.0;
@@ -1545,12 +1538,11 @@ void decomplowrank3dshvti(float *ldataxx,float *rdataxx,float *fmidxx,
               sum2 += fmidxy[im2*n2xy+jn2]*wp[jn2*m+im];
 
            sum1 += ldataxy[im*m2xy+im2]*sum2;
-         }//im2 loop
+         }/*im2 loop*/
          px[im] += sum1;
        } 
        free(wp);
 
-       ///////////////////////////////////////////////////////// P-wave's y-component
        /* n2 IFFT from (kx, kz) to (x, z) domain*/
        wp = sf_floatalloc(m*n2yy);
        for(jn2=0;jn2<n2yy;jn2++)
@@ -1572,14 +1564,14 @@ void decomplowrank3dshvti(float *ldataxx,float *rdataxx,float *fmidxx,
                  }
                }
             }
-            // (kx,kz) to (x, z) domain
+            /* (kx,kz) to (x, z) domain */
             fftwf_execute(xpi);
 
             for(im=0;im<m;im++)
                 wp[jn2*m+im] = creal(xout[im])/n;
        }
 
-       // Matrix multiplication in space-domain 
+       /* Matrix multiplication in space-domain */ 
        for(im=0;im<m;im++)
        {
          sum1=0.0;
@@ -1590,7 +1582,7 @@ void decomplowrank3dshvti(float *ldataxx,float *rdataxx,float *fmidxx,
               sum2 += fmidyy[im2*n2yy+jn2]*wp[jn2*m+im];
 
            sum1 += ldatayy[im*m2yy+im2]*sum2;
-         }//im2 loop
+         }/*im2 loop*/
          py[im] = sum1;
        } 
        free(wp);
@@ -1616,14 +1608,14 @@ void decomplowrank3dshvti(float *ldataxx,float *rdataxx,float *fmidxx,
                  }
                }
             }
-            // (kx,kz) to (x, z) domain
+            /* (kx,kz) to (x, z) domain */
             fftwf_execute(xpi);
 
             for(im=0;im<m;im++)
                 wp[jn2*m+im] = creal(xout[im])/n;
        }
 
-       // Matrix multiplication in space-domain 
+       /* Matrix multiplication in space-domain */  
        for(im=0;im<m;im++)
        {
          sum1=0.0;
@@ -1634,7 +1626,7 @@ void decomplowrank3dshvti(float *ldataxx,float *rdataxx,float *fmidxx,
               sum2 += fmidxy[im2*n2xy+jn2]*wp[jn2*m+im];
 
            sum1 += ldataxy[im*m2xy+im2]*sum2;
-         }//im2 loop
+         }/*im2 loop*/
          py[im] += sum1;
        } 
        free(wp);
@@ -1646,7 +1638,7 @@ void decomplowrank3dshvti(float *ldataxx,float *rdataxx,float *fmidxx,
        free(pyy);
        free(xin);
        free(xout);
-#else  // using FFTW in user's own computer
+#else  /* using FFTW in user's own computer */
        sf_warning("============= using user installed FFTW ====");
 #endif
 }

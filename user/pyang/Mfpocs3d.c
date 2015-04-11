@@ -110,14 +110,13 @@ int main(int argc, char* argv[])
 
 	fftn_lop(true, false, num, num, dcurr, dtmp);
 
-	// perform hard thresholding
+	/* perform hard thresholding */
 	for(i1=0; i1<num; i1++)	dout[i1]=cabsf(dcurr[i1]);
 
    	nthr = 0.5+num*(1.-0.01*pclip); 
     	if (nthr < 0) nthr=0;
     	if (nthr >= num) nthr=num-1;
 	thr=sf_quantile(nthr,num,dout);
-	//thr*=powf(0.01, iter/(niter-1));
 	sf_cpthresh(dcurr, num,thr, p,mode);
 
 	fftn_lop(false, false, num, num, dcurr, dtmp);

@@ -27,8 +27,6 @@ void asg_vstep2d(float ** restrict buoy,
     for (i0=gsc_v0[0]; i0 <= gec_v0[0]; i0++ ) 
       v0[i1][i0] = evp[0][i0]*
 	(v0[i1][i0]*ev[0][i0] - 0.5*(buoy[i1][i0]+buoy[i1][i0+1])*gradp[0][i0]);
-    //      v0[i1][i0] = v0[i1][i0] 
-    //	- 0.5*(buoy[i1][i0]+buoy[i1][i0+1])*gradp[0][i0];
   }
 
   for (i1=gsc_v1[1]; i1 <= gec_v1[1]; i1++ ) {
@@ -40,8 +38,6 @@ void asg_vstep2d(float ** restrict buoy,
     for (i0=gsc_v1[0]; i0 <= gec_v1[0]; i0++ ) 
       v1[i1][i0] = evp[1][i1]*
 	(v1[i1][i0]*ev[1][i1] - 0.5*(buoy[i1][i0]+buoy[i1+1][i0])*gradp[1][i0]);
-    //      v1[i1][i0] = v1[i1][i0] 
-    //	- 0.5*(buoy[i1][i0]+buoy[i1+1][i0])*gradp[1][i0];
   }
 
   if (lbc[0]) {

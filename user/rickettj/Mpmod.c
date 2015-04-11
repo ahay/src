@@ -98,6 +98,7 @@ int main (int argc, char* argv[])
 	    z1 = h1 / (v1 * sqrtf(1. - p*p * v1*v1));
 	    delay1 = 2. * z1 - 2. * p*p * (z1 * v1*v1);
 	} else {
+	    z1 = 0.0;
 	    delay1 = 0.0;
 	}
 	if (2==type) {

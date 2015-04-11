@@ -66,9 +66,9 @@ int n2, int nt, float **vv, float *mod, float *dat, int niter)
 	res0=cblas_dsdot(nd, rr, 1, rr, 1);
 	for(iter=0;iter<niter;iter++)
 	{
-		rtm2d_lop(true,  false, nm, nd, gm, rr);// gm=Ft[rr]
-		rtm2d_lop(false, false, nm, nd, gm, gr);// gr=F [gm]		
-	    	forget = (bool) (0 == (iter+1)%10); // restart every 10 iterations
+	    rtm2d_lop(true,  false, nm, nd, gm, rr);/* gm=Ft[rr] */
+	    rtm2d_lop(false, false, nm, nd, gm, gr);/* gr=F [gm] */		
+	    forget = (bool) (0 == (iter+1)%10); /* restart every 10 iterations */
 		/* Claerbout's CG: (mm, rr)=cgstep(mm, rr, gm, gr); */	
 		sf_cgstep(forget, nm, nd, mm, gm, rr, gr); 	
 		res=cblas_dsdot(nd, rr, 1, rr, 1);

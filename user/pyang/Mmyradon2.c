@@ -82,7 +82,7 @@ int main(int argc, char* argv[])
 	/* origin of time axis */
 
 
-    	if (adj||inv) { // m(tau,p)=sum_{i=0}^{nx} d(t=tau+p*x_i,x_i)
+    	if (adj||inv) { /* m(tau,p)=sum_{i=0}^{nx} d(t=tau+p*x_i,x_i) */
 		if (!sf_histint(in,"n2",&nx)) sf_error("No n2= in input");
 		/* number of offset if the input in the data domain */
 
@@ -107,7 +107,7 @@ int main(int argc, char* argv[])
 		sf_putint(  out,"n2",np);
 		sf_putfloat(out,"d2",dp);
 		sf_putfloat(out,"o2",p0);
-    	} else { // d(t,h)=sum_{i=0}^{np} m(tau=t-p_i*h,p_i)
+    	} else { /* d(t,h)=sum_{i=0}^{np} m(tau=t-p_i*h,p_i) */
 		if (!sf_histint  (in,"n2",&np)) sf_error("No n2= in input");
 		/* number of ray parameter if input in radon domain */
 		if (!sf_histfloat(in,"d2",&dp)) sf_error("No d2= in input");
@@ -134,14 +134,14 @@ int main(int argc, char* argv[])
    	ifft1=fftwf_plan_dft_c2r_1d(nfft,tmpc,tmpr,FFTW_MEASURE);
 
 	for(ip=0; ip<np; ip++) p[ip]=p0+ip*dp;	
-	if (adj||inv) {// m(tau,p)=sum_{i=0}^{nx} d(t=tau+p*x_i,x_i)
+	if (adj||inv) {/* m(tau,p)=sum_{i=0}^{nx} d(t=tau+p*x_i,x_i) */
 		sf_floatread(dd[0], nt*nx, in);
 
 	    	if (!sf_histfloat(in,"o2",&ox)) sf_error("No o2= in input");
 		/* data origin in x */
 	    	if (!sf_histfloat(in,"d2",&dx)) sf_error("No d2= in input");
 		/* sampling interval in x */
-	} else {// d(t,h)=sum_{i=0}^{np} m(tau=t-p_i*h,p_i)
+	} else {/* d(t,h)=sum_{i=0}^{np} m(tau=t-p_i*h,p_i) */
 		sf_floatread(mm[0], nt*np, in);
 	    	if (!sf_getfloat("ox",&ox)) sf_error("Need ox=");
 		/* x origin */
@@ -169,21 +169,21 @@ int main(int argc, char* argv[])
 		else if (x0!=1.) xx[ix] /= x0;
 	}
 
-	if(adj||inv){// m(tau,p)=sum_{i=0}^{nx} d(t=tau+p*x_i,x_i)
-		for(ix=0; ix<nx; ix++) // loop over offsets
+	if(adj||inv){/* m(tau,p)=sum_{i=0}^{nx} d(t=tau+p*x_i,x_i) */
+	    for(ix=0; ix<nx; ix++) /* loop over offsets */
 		{
 			memset(tmpr, 0, nfft*sizeof(float));
 			memcpy(tmpr, dd[ix], nt*sizeof(float));
-		 	fftwf_execute(fft1);// FFT: dd-->cdd
+		 	fftwf_execute(fft1);/* FFT: dd-->cdd */
 			memcpy(&cdd[ix*nw], tmpc, nw*sizeof(sf_complex));
 		}
 		matrix_transpose(cdd, nw, nx);
-	}else{	// d(t,h)=sum_{i=0}^{np} m(tau=t-p_i*h,p_i)
-		for(ip=0; ip<np; ip++) // loop over slopes
+	}else{	/* d(t,h)=sum_{i=0}^{np} m(tau=t-p_i*h,p_i) */
+	    for(ip=0; ip<np; ip++) /* loop over slopes */
 		{
 			memset(tmpr, 0, nfft*sizeof(float));
 			memcpy(tmpr, mm[ip], nt*sizeof(float));
-		 	fftwf_execute(fft1);// FFT: mm-->cmm
+		 	fftwf_execute(fft1);/* FFT: mm-->cmm */
 			memcpy(&cmm[ip*nw], tmpc, nw*sizeof(float));			
 		}
 		matrix_transpose(cmm, nw, np);
@@ -206,22 +206,22 @@ int main(int argc, char* argv[])
 	}
 
 
-	if(adj||inv){// m(tau,p)=sum_{i=0}^{nx} d(t=tau+p*x_i,x_i)
+	if(adj||inv){/* m(tau,p)=sum_{i=0}^{nx} d(t=tau+p*x_i,x_i) */
 		matrix_transpose(cmm, np, nw);
-		for(ip=0; ip<np; ip++) // loop over slopes
+		for(ip=0; ip<np; ip++) /* loop over slopes */
 		{			
 			memcpy(tmpc, &cmm[ip*nw], nw*sizeof(sf_complex));
-		 	fftwf_execute(ifft1); // IFFT: cmm-->mm
+		 	fftwf_execute(ifft1); /* IFFT: cmm-->mm */
 			for(iw=0; iw<nt; iw++) mm[ip][iw]=tmpr[iw]/nfft;
 		}
 
 		sf_floatwrite(mm[0], nt*np, out);
-	}else{// d(t,h)=sum_{i=0}^{np} m(tau=t-p_i*h,p_i)
+	}else{/* d(t,h)=sum_{i=0}^{np} m(tau=t-p_i*h,p_i) */
 		matrix_transpose(cdd, nx, nw);
-		for(ix=0; ix<nx; ix++) // loop over offsets
+		for(ix=0; ix<nx; ix++) /* loop over offsets */
 		{
 			memcpy(tmpc, &cdd[ix*nw], nw*sizeof(sf_complex));
-		 	fftwf_execute(ifft1);// IFFT: cmm-->mm
+		 	fftwf_execute(ifft1);/* IFFT: cmm-->mm */
 			for(iw=0; iw<nt; iw++) dd[ix][iw]=tmpr[iw]/nfft;
 		}
 

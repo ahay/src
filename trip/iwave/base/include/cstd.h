@@ -12,6 +12,7 @@
 
 #if defined(__sun) || defined(__sun__)
 #include <sys/inttypes.h>
+#define restrict
 #else
 #include <stdint.h>
 #endif

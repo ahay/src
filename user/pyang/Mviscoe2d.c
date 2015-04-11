@@ -114,8 +114,6 @@ void average_variable(float **rho, float **taup, float **taus, float **aver)
 	for(i1=0; i1<nzpad-1; i1++)
 		aver[i2][i1]=(rho[i2][i1]+rho[i2][i1+1]+rho[i2+1][i1]+rho[i2+1][i1+1])/4.;
 	memcpy(rho[0],aver[0],nzpad*nxpad*sizeof(float));
-
-	//......
 }
 
 
@@ -148,7 +146,7 @@ void forward_Txx_Tzz_Txz(float **Txx, float **Tzz, float **Txz,
 		DiffVz_x = c1*(Vz[i2+1][i1]-Vz[i2][i1])+c2*(Vz[i2+2][i1]-Vz[i2-1][i1]);
 		DiffVx_x = c1*(Vx[i2+1][i1]-Vx[i2][i1])+c2*(Vx[i2+2][i1]-Vx[i2-1][i1]);
 
-		// Here, mu=rho*vs^2-->vs; pci=lambda+2mu=rho*vp^2-->vp; lambda=rho*(vp^2-vs^2)-->vp-2vs
+		/* Here, mu=rho*vs^2-->vs; pci=lambda+2mu=rho*vp^2-->vp; lambda=rho*(vp^2-vs^2)-->vp-2vs */
 		tmpxz=(_dz*DiffVx_z+_dx*DiffVz_x);
 		tmpxx=(_dx*DiffVx_x+_dz*DiffVz_z);
 		tmpzz=(_dx*DiffVx_x+_dz*DiffVz_z);
@@ -183,8 +181,8 @@ void forward_Vx_Vz(float **Vx, float **Vz,
 		DiffTzx_x = c1*(Txz[i2][i1]-Txz[i2-1][i1])+c2*(Txz[i2+1][i1]-Txz[i2-2][i1]);
 		DiffTxx_x = c1*(Txx[i2][i1]-Txx[i2-1][i1])+c2*(Txx[i2+1][i1]-Txx[i2-2][i1]);
 		DiffTzx_z = c1*(Txz[i2][i1]-Txz[i2][i1-1])+c2*(Txz[i2][i1+1]-Txz[i2][i1-2]);
-		Vz[i2][i1]+=dt*rho[i2][i1]*(_dz*DiffTzz_z+_dx*DiffTzx_x);//here, rho refers to 1/rho
-		Vx[i2][i1]+=dt*rho[i2][i1]*(_dz*DiffTzx_z+_dx*DiffTxx_x);//here, rho refers to 1/rho
+		Vz[i2][i1]+=dt*rho[i2][i1]*(_dz*DiffTzz_z+_dx*DiffTzx_x);/*here, rho refers to 1/rho */
+		Vx[i2][i1]+=dt*rho[i2][i1]*(_dz*DiffTzx_z+_dx*DiffTxx_x);/*here, rho refers to 1/rho */
 	}
 }
 
@@ -202,10 +200,10 @@ void apply_sponge(float **u, float *bndr)
 #endif
 	for(ix=0; ix<nxpad; ix++)
 	{
-		for(iz=0;iz<nb;iz++){	// top ABC			
+	    for(iz=0;iz<nb;iz++){	/* top ABC	 */		
 			u[ix][iz]=bndr[iz]*u[ix][iz];
 		}
-		for(iz=nz+nb;iz<nzpad;iz++){// bottom ABC			
+	    for(iz=nz+nb;iz<nzpad;iz++){/* bottom ABC */			
 			u[ix][iz]=bndr[nzpad-iz-1]*u[ix][iz];
 		}
 	}
@@ -217,10 +215,10 @@ void apply_sponge(float **u, float *bndr)
 #endif
 	for(iz=0; iz<nzpad; iz++)
 	{
-		for(ix=0;ix<nb;ix++){	// left ABC			
+	    for(ix=0;ix<nb;ix++){	/* left ABC	*/		
 			u[ix][iz]=bndr[ix]*u[ix][iz];
 		}	
-		for(ix=nx+nb;ix<nxpad;ix++){// right ABC			
+	    for(ix=nx+nb;ix<nxpad;ix++){/* right ABC	*/		
 			u[ix][iz]=bndr[nxpad-ix-1]*u[ix][iz];
 		}	
 	}

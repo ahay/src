@@ -41,7 +41,7 @@ void asg_pstep3d(float *** restrict bulk,
     }
   }
 
-  // boundary conditions - p is odd about index just before/after comp domain
+  /* boundary conditions - p is odd about index just before/after comp domain */
   if (lbc[0]) {
     for (i2=gsc[2];i2<=gec[2];i2++) {
       for (i1=gsc[1];i1<=gec[1];i1++) {

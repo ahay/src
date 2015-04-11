@@ -49,6 +49,24 @@ int main(int  argc,char **argv)
     clock_t t1, t2;
     float   timespent;
 
+    int      iz;
+    float    rkx, rky, rkz;
+
+    sf_file Fo1, Fo2, Fo3, Fo4;
+    
+    char    jobz='V';  /* for SVD */
+    char    uplo='U';  /* for SVD */
+    int     M=3;  /* for SVD */
+    int     LDA=M;  /* for SVD */
+    int     LWORK=8*M;  /* for SVD */
+    int     INFO;  /* for SVD */
+    double  *Chr, *ww, *work;  /* Lapack SVD array */
+    float ***apvx, ***apvy, ***apvz;
+    int jhny, ihnx, khnz;
+    double a11, a22, a33, a44, a55, a66, a12a66, a23a44, a13a55;
+
+    double upy, upx, upz;
+
     t1=clock();
 
     /* time samping paramter */
@@ -112,28 +130,14 @@ int main(int  argc,char **argv)
     alpha *= SF_PI/180.0;
     the *= SF_PI/180.0;
     phi *= SF_PI/180.0;
-    
-    char    jobz='V';  /* for SVD */
-    char    uplo='U';  /* for SVD */
-    int     M=3;  /* for SVD */
-    int     LDA=M;  /* for SVD */
-    int     LWORK=8*M;  /* for SVD */
-    int     INFO;  /* for SVD */
-    double  *Chr, *ww, *work;  /* Lapack SVD array */
 
-    //Chr=sf_doublealloc(M*M);    // no code in Madagascar
-    //ww=sf_doublealloc(M*M);    // no code in Madagascar
-    //work=sf_doublealloc(LWORK);    // no code in Madagascar
+    Chr=(double*)calloc(sizeof(double),M*M);
+    ww=(double*)calloc(sizeof(double),M*M);
+    work=(double*)calloc(sizeof(double),LWORK);
 
-    Chr=calloc(sizeof(double),M*M);
-    ww=calloc(sizeof(double),M*M);
-    work=calloc(sizeof(double),LWORK);
-    
-    //double A[3][3],w[3],Q[3][3];
-
-    float*** apvx=sf_floatalloc3(nz,nx,ny);
-    float*** apvy=sf_floatalloc3(nz,nx,ny);
-    float*** apvz=sf_floatalloc3(nz,nx,ny);
+    apvx=sf_floatalloc3(nz,nx,ny);
+    apvy=sf_floatalloc3(nz,nx,ny);
+    apvz=sf_floatalloc3(nz,nx,ny);
 
     vp2=vp0*vp0;
     vs2=vs0*vs0;
@@ -145,26 +149,19 @@ int main(int  argc,char **argv)
     ga2=1+2*ga2;
     de3=1+2*de3;
 
-    double a11, a22, a33, a44, a55, a66, a12a66, a23a44, a13a55;
-
     a11 = ep2*vp2;
     a22 = ep1*vp2;
     a33 = vp2;
     a44 = ga1/ga2*vs2;
     a55 = vs2;
     a66 = ga1*vs2;
-    a12a66 = sqrt((a11-a66)*(de3*a11-a66));//a12+a66
-    a13a55 = sqrt((a33-a55)*(de2*a33-a55));//a13+a55
-    a23a44 = sqrt((a33-a44)*(de1*a33-a44));//a23+a44
-
-    int jhny, ihnx, khnz;
+    a12a66 = sqrt((a11-a66)*(de3*a11-a66));/*a12+a66*/
+    a13a55 = sqrt((a33-a55)*(de2*a33-a55));/*a13+a55*/
+    a23a44 = sqrt((a33-a44)*(de1*a33-a44));/*a23+a44*/
 
     zero3float(apvy, nz, nx, ny);
     zero3float(apvx, nz, nx, ny);
     zero3float(apvz, nz, nx, ny);
-
-    int      iz;
-    float    rkx, rky, rkz;
 
     float*** taper=sf_floatalloc3(nz,nx,ny);
     
@@ -172,8 +169,7 @@ int main(int  argc,char **argv)
           jhny=j+hny;
 	  ky=j*dky;
           rky=2*SF_PI*j/ny;
-         //sf_warning("j=%d jhny=%d ky=%f ",j,jhny,ky);
-	  for( i=-hnx; i<=hnx; i++ ){
+ 	  for( i=-hnx; i<=hnx; i++ ){
                 ihnx=i+hnx;
 		kx=i*dkx;
                 rkx=2*SF_PI*i/nx;
@@ -193,13 +189,11 @@ int main(int  argc,char **argv)
 			   continue;
                         }
 
-                        //sf_warning("j= %d i= %d  k=%d ",j,i,k);
-
-                         if(kx==0.0)   //move this sample from zero for cintinuous spectrum
+			if(kx==0.0)   /*move this sample from zero for cintinuous spectrum */
                              kx = 0.0000000001*dkx;
-                         if(ky==0.0)   //move this sample from zero for cintinuous spectrum
+			if(ky==0.0)   /*move this sample from zero for cintinuous spectrum */
                              ky = 0.0000000001*dky;
-                         if(kz==0.0)   //move this sample from zero for cintinuous spectrum
+			if(kz==0.0)   /*move this sample from zero for cintinuous spectrum */
                              kz = 0.0000000001*dkz;
 
 			k2=sqrt(kx*kx+ky*ky+kz*kz);
@@ -211,38 +205,6 @@ int main(int  argc,char **argv)
 			siny2=siny*siny;
 			sinz2=sinz*sinz;
 
-                        double upy, upx, upz;
-/*
-			A[0][0] = a11*sinx2 + a66*siny2 + a55*sinz2;
-			A[0][1] = A[0][1] = a12a66*sinx*siny;
-			A[0][2] = A[2][0] = a13a55*sinx*sinz;
-			A[1][1] = a66*sinx2 + a22*siny2 + a44*sinz2;
-			A[1][2] = A[2][1] = a23a44*siny*sinz;
-			A[2][2] = a55*sinx2 + a44*siny2 + a33*sinz2;
-
-                        // Hybrid algorithm of eigeinvalue solution for hermitian 3X3 matrices
-                        // Faster than LAPACK's ssyev routine about 7 times
-                        // But less accurate !!!
-                        if( dsyevh3(A, Q, w) != 0) {
-                          sf_warning("dsyevh3 error !!!");
-                          exit(0);
-                        }
-
-                        upx=Q[0][0];
-                        upy=Q[1][0];
-                        upz=Q[2][0];
-
-                        // get the closest direction to k 
-                        if(upx*sinx + upy*siny+ upz*sinz < 0.) {
-                            upx=-Q[0][0];
-                            upy=-Q[1][0];
-                            upz=-Q[2][0];
-                        }
-                        sf_warning("v1=%f v2=%f v3=%f ",sqrt(w[0]), sqrt(w[1]),sqrt(w[2]));
-                        sf_warning("eigeinvector1: %f %f %f",(float)Q[0][0],(float)Q[1][0],(float)Q[2][0]);
-                        sf_warning("eigeinvector2: %f %f %f",(float)Q[0][1],(float)Q[1][1],(float)Q[2][1]);
-                        sf_warning("eigeinvector3: %f %f %f",(float)Q[0][2],(float)Q[1][2],(float)Q[2][2]);
-*/
 			Chr[0] = a11*sinx2 + a66*siny2 + a55*sinz2;
 			Chr[1] = a12a66*sinx*siny;
 			Chr[2] = a13a55*sinx*sinz;
@@ -253,8 +215,8 @@ int main(int  argc,char **argv)
 			Chr[7] = Chr[5];
 			Chr[8] = a55*sinx2 + a44*siny2 + a33*sinz2;
 
-                        // LAPACK's ssyev routine (slow but accurate)
-                        // double type is more accurate than single type
+                        /* LAPACK's ssyev routine (slow but accurate) */
+                        /* double type is more accurate than single type */
 			dsyev_(&jobz, &uplo, &M, Chr, &LDA, ww, work, &LWORK, &INFO);
 
                         upx=Chr[6];
@@ -279,9 +241,9 @@ int main(int  argc,char **argv)
 			apvx[jhny][ihnx][khnz]=(float)(upx/sinx);
 			apvz[jhny][ihnx][khnz]=(float)(upz/sinz);
 
-		}// k loop
-           } // i loop
-      } // j loop
+		}/* k loop */
+	  } /* i loop */
+    } /* j loop */
 
 /* Wang Tengfei
  */
@@ -318,7 +280,7 @@ int main(int  argc,char **argv)
                 }
             }
 
-//  Cheng Jiubing
+/*  Cheng Jiubing */
     for( j=0; j<ny ; j++)
          for( i=0; i<nx; i++ )
          {
@@ -340,8 +302,6 @@ int main(int  argc,char **argv)
              apvx[hny][i][k]=(apvx[hny+1][i][k] + apvx[hny-1][i][k])/2.0;
              apvz[hny][i][k]=(apvz[hny+1][i][k] + apvz[hny-1][i][k])/2.0;
          }
-//
-    sf_file Fo1, Fo2, Fo3, Fo4;
 
     Fo1 = sf_output("out");    /* deviation operator's x-component in (ky,kx,kz) domain */
     Fo2 = sf_output("apvy");   /* deviation operator's y-component in (ky,kx,kz) domain */

@@ -52,19 +52,36 @@ int main(int  argc,char **argv)
     float t;
     float fx,fy,fz,dt2;
 
+    int nxpad, nypad, nzpad, mm, mmix;
+
     float ***vp0, ***vs0, ***epsi, ***delta, ***gama;
     float ***theta, ***phai;
 
-    sf_init(argc,argv);
+    float ***p1, ***p2, ***p3;
+    float ***q1, ***q2, ***q3;
+    float ***r1, ***r2, ***r3;
+
+    float ***px_tmp, ***pz_tmp;
+    float ***qx_tmp, ***qz_tmp;
+    float ***rx_tmp, ***rz_tmp;
 
     sf_file Fo1, Fo2, Fo3;
 
-    float f0=40;         // main frequency of the wavelet(usually 30Hz)
-    float t0=0.04;       // time delay of the wavelet(if f0=30Hz, t0=0.04s)*/
-    float A=1.0;           // the amplitude of wavelet 
+    float f0=40;         /* main frequency of the wavelet(usually 30Hz) */
+    float t0=0.04;       /* time delay of the wavelet(if f0=30Hz, t0=0.04s)*/
+    float A=1.0;           /* the amplitude of wavelet */
 
     clock_t t1, t2, t3;
     float   timespent;
+
+    float *coeff_2dx,*coeff_2dy,*coeff_2dz,*coeff_1dx,*coeff_1dy,*coeff_1dz;
+
+    /* setup I/O files */
+    sf_file Fvp0, Fvs0, Fep, Fde, Fga;
+    sf_file Fthe, Fphi;
+    sf_axis az, ax, ay;
+
+    sf_init(argc,argv);
 
     t1=clock();
 
@@ -74,11 +91,7 @@ int main(int  argc,char **argv)
     if (!sf_getint("bd",&bd)) bd=20;
 
     sf_warning("ns=%d dt=%f",ns,dt);
-
-    /* setup I/O files */
-    sf_file Fvp0, Fvs0, Fep, Fde, Fga;
-    sf_file Fthe, Fphi;
-
+ 
     Fvp0 = sf_input ("in");  /* vp0 using standard input */
     Fvs0 = sf_input ("vs0");  /* vs0 */
     Fep = sf_input ("epsi");  /* epsi */
@@ -88,15 +101,12 @@ int main(int  argc,char **argv)
     Fphi = sf_input ("phi");  /* phi */
 
     /* Read/Write axes */
-    sf_axis az, ax, ay;
     az = sf_iaxa(Fvp0,1); nz = sf_n(az); dz = sf_d(az)*1000.0;
     ax = sf_iaxa(Fvp0,2); nx = sf_n(ax); dx = sf_d(ax)*1000.0;
     ay = sf_iaxa(Fvp0,3); ny = sf_n(ay); dy = sf_d(ay)*1000.0;
     fy=sf_o(ay)*1000.0;
     fx=sf_o(ax)*1000.0;
     fz=sf_o(az)*1000.0;
-
-    int nxpad, nypad, nzpad;
 
     nxpad=nx+2*bd;
     nypad=ny+2*bd;
@@ -116,14 +126,14 @@ int main(int  argc,char **argv)
     /* read velocity model */
     for(i=bd;i<nypad-bd;i++)
         for(j=bd;j<nxpad-bd;j++){
-          sf_floatread(&vp0[i][j][bd],nz,Fvp0);
-          sf_floatread(&vs0[i][j][bd],nz,Fvs0);
-          sf_floatread(&epsi[i][j][bd],nz,Fep);
-          sf_floatread(&delta[i][j][bd],nz,Fde);
-          sf_floatread(&gama[i][j][bd],nz,Fga);
-          sf_floatread(&theta[i][j][bd],nz,Fthe);
-          sf_floatread(&phai[i][j][bd],nz,Fphi);
-       }
+	    sf_floatread(&vp0[i][j][bd],nz,Fvp0);
+	    sf_floatread(&vs0[i][j][bd],nz,Fvs0);
+	    sf_floatread(&epsi[i][j][bd],nz,Fep);
+	    sf_floatread(&delta[i][j][bd],nz,Fde);
+	    sf_floatread(&gama[i][j][bd],nz,Fga);
+	    sf_floatread(&theta[i][j][bd],nz,Fthe);
+	    sf_floatread(&phai[i][j][bd],nz,Fphi);
+	}
 
     vmodelboundary3d(vp0, nx, ny, nz, nxpad, nypad, nzpad, bd);
     vmodelboundary3d(vs0, nx, ny, nz, nxpad, nypad, nzpad, bd);
@@ -135,18 +145,16 @@ int main(int  argc,char **argv)
 
     for(i=0;i<nypad;i++)
         for(j=0;j<nxpad;j++)
-          for(k=0;k<nzpad;k++){
-             theta[i][j][k] *= SF_PI/180.0;
-             phai[i][j][k] *= SF_PI/180.0;
-          }
+	    for(k=0;k<nzpad;k++){
+		theta[i][j][k] *= SF_PI/180.0;
+		phai[i][j][k] *= SF_PI/180.0;
+	    }
     sf_warning("read velocity model parameters ok");
 
-    int mm=2*_m+1;
-    int mmix=2*_mix+1;
+    mm=2*_m+1;
+    mmix=2*_mix+1;
  
     sf_warning("m=%d mix=%d",_m,_mix);
-
-    float *coeff_2dx,*coeff_2dy,*coeff_2dz,*coeff_1dx,*coeff_1dy,*coeff_1dz;
 
     coeff_2dy=sf_floatalloc(mm);
     coeff_2dx=sf_floatalloc(mm);
@@ -163,25 +171,25 @@ int main(int  argc,char **argv)
     coeff1dmix(coeff_1dy, dy);
     coeff1dmix(coeff_1dz, dz);
 
-	float*** p1=sf_floatalloc3(nzpad,nxpad,nypad);
-    float*** p2=sf_floatalloc3(nzpad,nxpad,nypad);
-    float*** p3=sf_floatalloc3(nzpad,nxpad,nypad);
+    p1=sf_floatalloc3(nzpad,nxpad,nypad);
+    p2=sf_floatalloc3(nzpad,nxpad,nypad);
+    p3=sf_floatalloc3(nzpad,nxpad,nypad);
 
     zero3float(p1,nzpad,nxpad,nypad);
     zero3float(p2,nzpad,nxpad,nypad);
     zero3float(p3,nzpad,nxpad,nypad);
     
-    float*** q1=sf_floatalloc3(nzpad,nxpad,nypad);
-    float*** q2=sf_floatalloc3(nzpad,nxpad,nypad);
-    float*** q3=sf_floatalloc3(nzpad,nxpad,nypad);
+    q1=sf_floatalloc3(nzpad,nxpad,nypad);
+    q2=sf_floatalloc3(nzpad,nxpad,nypad);
+    q3=sf_floatalloc3(nzpad,nxpad,nypad);
 
     zero3float(q1,nzpad,nxpad,nypad);
     zero3float(q2,nzpad,nxpad,nypad);
     zero3float(q3,nzpad,nxpad,nypad);
 
-    float*** r1=sf_floatalloc3(nzpad,nxpad,nypad);
-    float*** r2=sf_floatalloc3(nzpad,nxpad,nypad);
-    float*** r3=sf_floatalloc3(nzpad,nxpad,nypad);
+    r1=sf_floatalloc3(nzpad,nxpad,nypad);
+    r2=sf_floatalloc3(nzpad,nxpad,nypad);
+    r3=sf_floatalloc3(nzpad,nxpad,nypad);
 
     zero3float(r1,nzpad,nxpad,nypad);
     zero3float(r2,nzpad,nxpad,nypad);
@@ -206,73 +214,59 @@ int main(int  argc,char **argv)
     dt2=dt*dt;
 
 #ifdef _OPENMP
-    #pragma omp parallel
-	{
-	  nth = omp_get_num_threads();
-	  rank = omp_get_thread_num();
-	  sf_warning("Using %d threads, this is %dth thread",nth, rank);
-	}
+#pragma omp parallel
+    {
+	nth = omp_get_num_threads();
+	rank = omp_get_thread_num();
+	sf_warning("Using %d threads, this is %dth thread",nth, rank);
+    }
 #endif
 
-    float*** px_tmp=sf_floatalloc3(nzpad,nxpad,nypad);
-    float*** pz_tmp=sf_floatalloc3(nzpad,nxpad,nypad);
-    float*** qx_tmp=sf_floatalloc3(nzpad,nxpad,nypad);
-    float*** qz_tmp=sf_floatalloc3(nzpad,nxpad,nypad);
-    float*** rx_tmp=sf_floatalloc3(nzpad,nxpad,nypad);
-    float*** rz_tmp=sf_floatalloc3(nzpad,nxpad,nypad);
+    px_tmp=sf_floatalloc3(nzpad,nxpad,nypad);
+    pz_tmp=sf_floatalloc3(nzpad,nxpad,nypad);
+    qx_tmp=sf_floatalloc3(nzpad,nxpad,nypad);
+    qz_tmp=sf_floatalloc3(nzpad,nxpad,nypad);
+    rx_tmp=sf_floatalloc3(nzpad,nxpad,nypad);
+    rz_tmp=sf_floatalloc3(nzpad,nxpad,nypad);
 
-	/*********the kernel calculation ************/
-	for(it=0;it<ns;it++)
-	{
-	     t=it*dt;
+    /*********the kernel calculation ************/
+    for(it=0;it<ns;it++)
+    {
+	t=it*dt;
              
-         /* source Type 0: oriented 45 degree to vertical and 45 degree azimuth: Yan & Sava (2012) */
-         p2[isy][isx][isz]+=Ricker(t, f0, t0, A);  // x-component
-         q2[isy][isx][isz]+=Ricker(t, f0, t0, A);  // y-component
-         r2[isy][isx][isz]+=Ricker(t, f0, t0, A);  // z-component
+	/* source Type 0: oriented 45 degree to vertical and 45 degree azimuth: Yan & Sava (2012) */
+	p2[isy][isx][isz]+=Ricker(t, f0, t0, A);  /* x-component */
+	q2[isy][isx][isz]+=Ricker(t, f0, t0, A);  /* y-component */
+	r2[isy][isx][isz]+=Ricker(t, f0, t0, A);  /* z-component */
 
-             // 3D exploding force source (e.g., Wu's PhD
-/*
-               for(k=-1;k<=1;k++)
-               for(i=-1;i<=1;i++)
-               for(j=-1;j<=1;j++)
-               {
-                if(fabs(i)+fabs(j)+fabs(k)==3)
-                {
-                     p2[isy+k][isx+i][isz+j]+=i*Ricker(t, f0, t0, A);  // x-component
-                     q2[isy+k][isx+i][isz+j]+=k*Ricker(t, f0, t0, A);  // y-component
-                     r2[isy+k][isx+i][isz+j]+=j*Ricker(t, f0, t0, A);  // z-component
-                }
-               }
-*/
-  	     fwpttielastic3d(dt2,p1,p2,p3,q1,q2,q3,r1,r2,r3,
-				         px_tmp,pz_tmp,
-				         qx_tmp,qz_tmp,
-				         rx_tmp,rz_tmp,
-                         coeff_2dx,coeff_2dy,coeff_2dz,
-                         coeff_1dx,coeff_1dy,coeff_1dz,
-                         dx,dy,dz,nxpad,nypad,nzpad,
-	                     vp0,vs0,epsi,delta,gama,theta,phai);
+	fwpttielastic3d(dt2,p1,p2,p3,q1,q2,q3,r1,r2,r3,
+			px_tmp,pz_tmp,
+			qx_tmp,qz_tmp,
+			rx_tmp,rz_tmp,
+			coeff_2dx,coeff_2dy,coeff_2dz,
+			coeff_1dx,coeff_1dy,coeff_1dz,
+			dx,dy,dz,nxpad,nypad,nzpad,
+			vp0,vs0,epsi,delta,gama,theta,phai);
 
-         if(it==ns-1) // output snapshot
-         {
-            // output iLine 
-	     	for(i=0;i<ny;i++)
-                {
-                    im=i+bd;
-		            for(j=0;j<nx;j++)
-                    {
-                        jm=j+bd;
-                        sf_floatwrite(&p3[im][jm][bd],nz,Fo1);
-                        sf_floatwrite(&q3[im][jm][bd],nz,Fo2);
-                        sf_floatwrite(&r3[im][jm][bd],nz,Fo3);
-                    }
-                }
-             }
-            for(i=0;i<nypad;i++)
+	if(it==ns-1) /* output snapshot */
+	{
+            /* output iLine */ 
+	    for(i=0;i<ny;i++)
+	    {
+		im=i+bd;
+		for(j=0;j<nx;j++)
+		{
+		    jm=j+bd;
+		    sf_floatwrite(&p3[im][jm][bd],nz,Fo1);
+		    sf_floatwrite(&q3[im][jm][bd],nz,Fo2);
+		    sf_floatwrite(&r3[im][jm][bd],nz,Fo3);
+		}
+	    }
+	}
+	for(i=0;i<nypad;i++)
             for(j=0;j<nxpad;j++)
-            for(k=0;k<nzpad;k++)
-            {
+		for(k=0;k<nzpad;k++)
+		{
                     p1[i][j][k]=p2[i][j][k];
                     p2[i][j][k]=p3[i][j][k];
 
@@ -281,12 +275,10 @@ int main(int  argc,char **argv)
 
                     r1[i][j][k]=r2[i][j][k];
                     r2[i][j][k]=r3[i][j][k];
-           }
+		}
 
-           sf_warning("forward propagation...  it= %d   t=%f",it,t);
-     }
-
-    printf("ok3\n");
+	sf_warning("forward propagation...  it= %d   t=%f",it,t);
+    }
 
     t3=clock();
     timespent=(float)(t3-t2)/CLOCKS_PER_SEC;
@@ -316,5 +308,5 @@ int main(int  argc,char **argv)
     free(**theta);
     free(**phai);
 		
-    return 0;
+    exit(0);
 }

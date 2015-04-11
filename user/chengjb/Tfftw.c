@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
        sf_warning("========================================");
 
 
-#ifdef SF_HAS_FFTW  // using FFTW in Madagascar
+#ifdef SF_HAS_FFTW  /* using FFTW in Madagascar */
  
        sf_complex *xin, *xout;
 
@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
        xpi=fftwf_plan_dft_1d(m,(fftwf_complex *) xin, (fftwf_complex *) xout,
 			    FFTW_BACKWARD,FFTW_ESTIMATE);
 
-       // FFT: forward 
+       /* FFT: forward */
        for(i=0;i<m;i++) 
        {
           xin[i]=sf_cmplx(sin(i*1.0), 0.);
@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
        fftwf_destroy_plan(xpi);
        free(xin);
        free(xout);
-#else  // using FFTW in user's own computer
+#else  /* using FFTW in user's own computer */
 
 
        fftw_complex *xin, *xout;
@@ -96,8 +96,7 @@ int main(int argc, char* argv[])
        fftw_execute(xp);
            
        for(i=0;i<m;i++) 
-         //sf_warning("i=%d xout=(%f,%f)",i,xout[i][0],xout[i][1]);
-         sf_warning("i=%d xout=(%f,%f)",i,creal(xout[i]),cimag(xout[i]));
+          sf_warning("i=%d xout=(%f,%f)",i,creal(xout[i]),cimag(xout[i]));
 
        for(i=0;i<m;i++) 
           xin[i]=xout[i];
@@ -105,7 +104,6 @@ int main(int argc, char* argv[])
        fftw_execute(xpi);
            
        for(i=0;i<m;i++) 
-         //sf_warning("i=%d xout=(%f,%f)",i,xout[i][0]/m,xout[i][1]/m);
          sf_warning("i=%d xout=(%f,%f)",i,creal(xout[i])/m,cimag(xout[i])/m);
 
        fftw_destroy_plan(xp);

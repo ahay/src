@@ -199,10 +199,10 @@ static int    nbell;
 #define alfa 1e-3 /*PML sigmoid std dev*/
 #define mPML 200 /* max value of the PML*/
 /* Muir's derivative operator */
-#define C1 +0.598144  //  1225/ 1024      /2
-#define C2 -0.039876  // -1225/(1024*  15)/2
-#define C3 +0.004785  //  1225/(1024* 125)/2
-#define C4 -0.000348  // -1225/(1024*1715)/2
+#define C1 +0.598144  /*  1225/ 1024      /2 */
+#define C2 -0.039876  /* -1225/(1024*  15)/2 */
+#define C3 +0.004785  /*  1225/(1024* 125)/2 */
+#define C4 -0.000348  /* -1225/(1024*1715)/2 */
 
 /***************/
 /* 2D STENCILS */
@@ -570,9 +570,7 @@ void cut2d(float**  a,
 
     jz = floor(sf_d(cz)/fdm->dz);
     jx = floor(sf_d(cx)/fdm->dx);
-    
-    //sf_warning("fx=%d fz=%d jx=%d jz=%d",fx,fy,fx,jx,jy,jz);
-
+ 
 #ifdef _OPENMP
 #pragma omp parallel for			\
     schedule(dynamic,fdm->ompchunk)		\
@@ -609,8 +607,6 @@ void cut3d(float*** a,
     jz = floor(sf_d(cz)/fdm->dz);
     jx = floor(sf_d(cx)/fdm->dx);
     jy = floor(sf_d(cy)/fdm->dy);
-
-    //sf_warning("fx=%d fy=%d fz=%d jx=%d jy=%d jz=%d",fx,fy,fx,jx,jy,jz);
     
 #ifdef _OPENMP
 #pragma omp parallel for			\
@@ -693,17 +689,20 @@ scoef3d sinc3d_make(int nc,
     scoef3d swout = (scoef3d) sf_alloc(nc,sizeof(*swout));
     float inp[9]; 
     float xo[9];
+    int ix, iy, iz;
+    float dx, dy, dz;
+
     for (i=0; i<9; i++)
 	inp[i] = 0.0f;
     inp[4] = 1.0f;
-    // allocate and set loop
+    /* allocate and set loop */
     for (ic=0; ic<nc; ++ic){
 	swout[ic].n = nc;
-	int iy = (int)((aa[ic].y -fdm->oypad)/fdm->dy+0.499f); 
+	iy = (int)((aa[ic].y -fdm->oypad)/fdm->dy+0.499f); 
 	swout[ic].iy = iy;
 	swout[ic].fy = 0;
 	swout[ic].ny = 9;
-	float dy = iy*fdm->dy+fdm->oypad-aa[ic].y; 
+	dy = iy*fdm->dy+fdm->oypad-aa[ic].y; 
 	for (i=0; i<9; ++i)
 	    xo[i] = -4.0f+dy/fdm->dy+i*1.0f;
    	ints8r (9, 1.0f, -4.0, inp, 0.0f, 0.0f, 9, xo, swout[ic].sincy);
@@ -712,11 +711,11 @@ scoef3d sinc3d_make(int nc,
 	    swout[ic].fy = 4;
 	}
 
-	int ix = (int)((aa[ic].x -fdm->oxpad)/fdm->dx+0.499f); 
+	ix = (int)((aa[ic].x -fdm->oxpad)/fdm->dx+0.499f); 
 	swout[ic].ix = ix;
 	swout[ic].fx = 0;
 	swout[ic].nx = 9;
-	float dx = ix*fdm->dx+fdm->oxpad-aa[ic].x; 
+	dx = ix*fdm->dx+fdm->oxpad-aa[ic].x; 
 	for (i=0; i<9; ++i)
 	    xo[i] = -4.0f+dx/fdm->dx+i*1.0f;
    	ints8r (9, 1.0f, -4.0, inp, 0.0f, 0.0f, 9, xo, swout[ic].sincx);
@@ -725,11 +724,11 @@ scoef3d sinc3d_make(int nc,
 	    swout[ic].fx = 4;
 	}
 
-	int iz = (int)((aa[ic].z -fdm->ozpad)/fdm->dz+0.499f);
+	iz = (int)((aa[ic].z -fdm->ozpad)/fdm->dz+0.499f);
 	swout[ic].iz = iz;
 	swout[ic].fz = 0;
 	swout[ic].nz = 9;
-	float dz = iz*fdm->dz+fdm->ozpad-aa[ic].z;
+	dz = iz*fdm->dz+fdm->ozpad-aa[ic].z;
 	for (i=0; i<9; ++i)
 	    xo[i] = -4.0+dz/fdm->dz+i*1.0f;
    	ints8r (9, 1.0f, -4.0, inp, 0.0f, 0.0f, 9, xo, swout[ic].sincz);
@@ -750,6 +749,7 @@ void sinc3d_inject(float***uu,
 {
     int   ia, iy, ix, iz, sy, sx, sz, ixx, iyy, izz;
     float w, wy, wx, wz;
+    float value;
 
     int na = ca[0].n;
 #ifdef _OPENMP
@@ -772,11 +772,11 @@ void sinc3d_inject(float***uu,
 		for(izz=ca[ia].fz; izz<ca[ia].fz+ca[ia].nz; izz++){
 		    sz = -4 +izz;
 		    wz = ca[ia].sincz[izz];
-		    float value = w*wy*wx*wz;
+		    value = w*wy*wx*wz;
 #ifdef _OPENMP
 #pragma omp atomic
 #endif
-		    uu[iy+sy][ix+sx][iz+sz] += value; // scatter
+		    uu[iy+sy][ix+sx][iz+sz] += value; /* scatter */
 		}
 	    }  
 	}
@@ -792,6 +792,7 @@ void sinc3d_inject1(float***uu,
 {
     int   ia, iy, ix, iz, sy, sx, sz, ixx, iyy, izz;
     float w, wy, wx, wz;
+    float value;
 
     int na = ca[0].n;
 #ifdef _OPENMP
@@ -814,11 +815,11 @@ void sinc3d_inject1(float***uu,
 		for(izz=ca[ia].fz; izz<ca[ia].fz+ca[ia].nz; izz++){
 		    sz = -4 +izz;
 		    wz = ca[ia].sincz[izz];
-		    float value = w*wy*wx*wz;
+		    value = w*wy*wx*wz;
 #ifdef _OPENMP
 #pragma omp atomic
 #endif
-		    uu[iy+sy][ix+sx][iz+sz] += value; // scatter
+		    uu[iy+sy][ix+sx][iz+sz] += value; /* scatter */
 		}
 	    }  
 	}
@@ -835,6 +836,7 @@ void sinc3d_extract(float***uu,
     int   ia, iy, ix, iz, sy, sx, sz, ixx, iyy, izz;
     float wy, wx, wz;
     int na = ca[0].n;
+    float gather;
 
 #ifdef _OPENMP
 #pragma omp parallel for			\
@@ -846,7 +848,7 @@ void sinc3d_extract(float***uu,
 	iy = ca[ia].iy;
 	ix = ca[ia].ix;
 	iz = ca[ia].iz;
-	float gather = 0.0f;
+	gather = 0.0f;
 	for (iyy=ca[ia].fy; iyy<ca[ia].fy+ca[ia].ny;iyy++){
 	    sy = -4 +iyy;
 	    wy = ca[ia].sincy[iyy];
@@ -856,7 +858,7 @@ void sinc3d_extract(float***uu,
 		for(izz=ca[ia].fz; izz<ca[ia].fz+ca[ia].nz; izz++){
 		    sz = -4 +izz;
 		    wz = ca[ia].sincz[izz];
-		    gather += uu[iy+sy][ix+sx][iz+sz]*wy*wx*wz; // gather
+		    gather += uu[iy+sy][ix+sx][iz+sz]*wy*wx*wz; /* gather */
 		}
 	    }  
 	}
@@ -889,7 +891,7 @@ void sinc3d_extract1(float***uu,
 		for(izz=ca[ia].fz; izz<ca[ia].fz+ca[ia].nz; izz++){
 		    sz = -4 +izz;
 		    wz = ca[ia].sincz[izz];
-		    gather += uu[iy+sy][ix+sx][iz+sz]*wy*wx*wz; // gather 
+		    gather += uu[iy+sy][ix+sx][iz+sz]*wy*wx*wz; /* gather */
 		}
 	    }  
 	}
@@ -906,17 +908,22 @@ scoef2d sinc2d_make(int nc,
 {
     int i, ic;
     scoef2d swout;
-    swout = (scoef2d) sf_alloc(nc,sizeof(*swout));
 
     float inp[9]; 
     float xo[9];
+
+    int ix, iz;
+    float dx, dz;
+
+    swout = (scoef2d) sf_alloc(nc,sizeof(*swout));
+    
     for (i=0; i<9; i++)
 	inp[i] = 0.0f;
     inp[4] = 1.0f;
-    // allocate and set loop
+    /* allocate and set loop */
     for (ic=0; ic<nc; ++ic){
-	int ix = (int)((aa[ic].x -fdm->oxpad)/fdm->dx+0.499f); 
-	int iz = (int)((aa[ic].z -fdm->ozpad)/fdm->dz+0.499f);
+	ix = (int)((aa[ic].x -fdm->oxpad)/fdm->dx+0.499f); 
+	iz = (int)((aa[ic].z -fdm->ozpad)/fdm->dz+0.499f);
 	swout[ic].fx = 0;
 	swout[ic].nx = 9;
 	swout[ic].fz = 0;
@@ -926,8 +933,8 @@ scoef2d sinc2d_make(int nc,
 	swout[ic].ix = ix;
 	swout[ic].iz = iz;
     
-	float dx = ix*fdm->dx+fdm->oxpad-aa[ic].x; 
-	float dz = iz*fdm->dz+fdm->ozpad-aa[ic].z;
+	dx = ix*fdm->dx+fdm->oxpad-aa[ic].x; 
+	dz = iz*fdm->dz+fdm->ozpad-aa[ic].z;
 
 	for (i=0; i<9; ++i)
 	    xo[i] = -4.0f+dx/fdm->dx+i*1.0f;
@@ -960,6 +967,7 @@ void sinc2d_inject(float**uu,
 
     int   ia, ix, iz, sx, sz, ixx, izz;
     float w, wx, wz;
+    float value;
 
     int na = ca[0].n;
 #ifdef _OPENMP
@@ -978,11 +986,11 @@ void sinc2d_inject(float**uu,
 	    for(izz=ca[ia].fz; izz<ca[ia].fz+ca[ia].nz; izz++){
 		sz = -4 +izz;
 		wz = ca[ia].sincz[izz];
-		float value = w*wx*wz;
+		value = w*wx*wz;
 #ifdef _OPENMP
 #pragma omp atomic
 #endif
-		uu[ix+sx][iz+sz] += value; // scatter
+		uu[ix+sx][iz+sz] += value; /* scatter */
 	    }
 	}  
     }
@@ -997,7 +1005,7 @@ void sinc2d_inject1(float**uu,
     
     int   ia, ix, iz, sx, sz, ixx, izz;
     float w, wx, wz;
-
+    float value;
     int na = ca[0].n;
     
 #ifdef _OPENMP
@@ -1016,11 +1024,11 @@ void sinc2d_inject1(float**uu,
             for(izz=ca[ia].fz; izz<ca[ia].fz+ca[ia].nz; izz++){
                 sz = -4 +izz;
                 wz = ca[ia].sincz[izz];
-                float value = w*wx*wz;
+                value = w*wx*wz;
 #ifdef _OPENMP
 #pragma omp atomic
 #endif
-                uu[ix+sx][iz+sz] += value; // scatter
+                uu[ix+sx][iz+sz] += value; /* scatter */
             }
         }  
     }
@@ -1034,7 +1042,7 @@ void sinc2d_extract(float**uu,
 {
     int   ia, ix, iz, sx, sz, ixx, izz;
     float wx, wz;
-
+    float gather;
     int na = ca[0].n;
     
 #ifdef _OPENMP
@@ -1046,14 +1054,14 @@ void sinc2d_extract(float**uu,
     for(ia=0;ia<na;ia++) {
         ix = ca[ia].ix;
         iz = ca[ia].iz;
-        float gather = 0.f;
+        gather = 0.f;
         for (ixx=ca[ia].fx; ixx<ca[ia].fx+ca[ia].nx; ixx++){
             sx = -4 +ixx;
             wx = ca[ia].sincx[ixx];
             for(izz=ca[ia].fz; izz<ca[ia].fz+ca[ia].nz; izz++){
                 sz = -4 +izz;
                 wz = ca[ia].sincz[izz];
-                gather += uu[ix+sx][iz+sz]*wx*wz; // gather
+                gather += uu[ix+sx][iz+sz]*wx*wz; /* gather */
             }
         }  
         dd[ia] = gather;
@@ -1081,7 +1089,7 @@ void sinc2d_extract1(float**uu,
             for(izz=ca[ia].fz; izz<ca[ia].fz+ca[ia].nz; izz++){
                 sz = -4 +izz;
                 wz = ca[ia].sincz[izz];
-                gather += uu[ix+sx][iz+sz]*wx*wz; // gather
+                gather += uu[ix+sx][iz+sz]*wx*wz; /* gather */
             }
         }
     }
@@ -1879,12 +1887,6 @@ void sponge3d_apply(float  ***uu,
     }
 }
 
-/* ------------------------------------------------------------------ */
-float min(float x, float y){
-    if (x < y) return x;
-    else return y;
-}
-
 bool cfl_generic(
     float vpmin, float vpmax,
     float dx, float dy, float dz,
@@ -1894,20 +1896,22 @@ bool cfl_generic(
 {
     int dim = 3;
     float dmin;
-    
+    float tdp;
+    float wplength;
+    bool passed;
+
     if (dy < 0)dim = 2;
     
-    if (dim == 2) dmin = min(dx,dz);
-    else dmin = min(dx,min(dy,dz));
+    if (dim == 2) dmin = SF_MIN(dx,dz);
+    else dmin = SF_MIN(dx,SF_MIN(dy,dz));
     
-    float tdp = dt * vpmax *sqrt(2); // maximum distance
+    tdp = dt * vpmax *sqrt(2); /* maximum distance */
     if (dmin > tdp) sf_warning("CFL: Stability check ... %s-wave... PASSED", wave);
     else {
         sf_error("CFL: Stability check ... FAILED ... minimum grid sampling: %f !> %f", dmin, tdp);
     }
-    float wplength = safety*vpmin / fmax;
+    wplength = safety*vpmin / fmax;
     
-    bool passed;
     if (dim == 2) passed = wplength > intervals*sqrt(dx*dx+dz*dz);
     else passed = wplength > intervals*sqrt(dx*dx+dy*dy+dz*dz);
     
@@ -1970,16 +1974,6 @@ PML2D pml2d_init(fdm2d fdm)
 {
     int ix, iz;
     PML2D pml;
-    /* sides of the computational domain */
-    //float **up;
-    //float **down;
-    //float **right;
-    //float **left;
-    /* corners of the computational domain */
-    //float **upright;
-    //float **downright;
-    //float **downleft;
-    //float **upleft;
     
     pml = (PML2D) sf_alloc(1,sizeof(*pml));
     
@@ -2035,7 +2029,7 @@ PML2D pml2d_init(fdm2d fdm)
         }
         
         
-    } // end parallel section
+    } /* end parallel section */
     return pml;
 }
 
@@ -2045,7 +2039,7 @@ PML3D pml3d_init(fdm3d fdm)
 /*< initialize the 3D PML >*/
 {
     
-    // INITIALIZATION to zeros is still missing!
+    /* INITIALIZATION to zeros is still missing! */
     
     PML3D pml;
     
@@ -2272,8 +2266,7 @@ void pml2d_presApply(float   **u,
         for(iz=NOP; iz<nz-NOP; iz++) {
             
             pml->left[ix][iz] += Fz(vz,ix,iz,idz)*dt;
-            //u[ix][iz] += - sigmax*u[ix][iz]*dt;
-        }
+	}
     }
     
     /* Up-Left CORNER*/
@@ -2294,8 +2287,7 @@ void pml2d_presApply(float   **u,
             sigmaz=sigma[iz];
             
             pml->up[ix][iz] += Fx(vx,ix,iz,idx)*dt;
-	    //u[ix][iz] += - sigmaz*u[ix][iz]*dt;
-        }
+	}
     }
     
     
@@ -2317,8 +2309,7 @@ void pml2d_presApply(float   **u,
         for(iz=NOP; iz<nz-NOP; iz++) {
             
             pml->right[ix-shiftx][iz] += Fz(vz,ix,iz,idz)*dt;
-            //u[ix][iz] += - sigmax*u[ix][iz]*dt;
-        }
+	}
     }
     
     
@@ -2342,8 +2333,7 @@ void pml2d_presApply(float   **u,
             sigmaz=sigma[nz-iz];
             
             pml->down[ix][iz-shiftz] += Fx(vx,ix,iz,idx)*dt;
-            //u[ix][iz] += - sigmaz*u[ix][iz]*dt;
-        }
+	}
     }
     
     
@@ -2369,8 +2359,7 @@ void pml2d_presApply(float   **u,
         sigmax=sigma[ix];
         for (iz=NOP; iz<nz-NOP; iz++){
             
-            //pml->left[ix][iz] += com[ix][iz]*sigmax*Fz(vz,ix,iz,idz)*dt;
-            u[ix][iz] += - sigmax*u[ix][iz]*dt + com[ix][iz]*sigmax*pml->left[ix][iz]*dt;
+	    u[ix][iz] += - sigmax*u[ix][iz]*dt + com[ix][iz]*sigmax*pml->left[ix][iz]*dt;
         }
     }
     
@@ -2380,8 +2369,7 @@ void pml2d_presApply(float   **u,
         for(iz=NOP; iz<nb; iz++) {
             sigmaz=sigma[iz];
             
-            //pml->up[ix][iz] += com[ix][iz]*sigmaz*Fx(vx,ix,iz,idx)*dt;
-            u[ix][iz] += - sigmaz*u[ix][iz]*dt + com[ix][iz]*sigmaz*pml->up[ix][iz]*dt;
+	    u[ix][iz] += - sigmaz*u[ix][iz]*dt + com[ix][iz]*sigmaz*pml->up[ix][iz]*dt;
         }
     }
     
@@ -2390,8 +2378,7 @@ void pml2d_presApply(float   **u,
 	sigmax=sigma[nx-ix];
         for(iz=NOP; iz<nz-NOP; iz++) {
             
-            //pml->right[ix-shiftx][iz] += com[ix][iz]*sigmax*Fz(vz,ix,iz,idz)*dt;
-            u[ix][iz] += - sigmax*u[ix][iz]*dt + com[ix][iz]*sigmax*pml->right[ix-shiftx][iz]*dt;
+	    u[ix][iz] += - sigmax*u[ix][iz]*dt + com[ix][iz]*sigmax*pml->right[ix-shiftx][iz]*dt;
         }
     }
     
@@ -2401,8 +2388,7 @@ void pml2d_presApply(float   **u,
         for(iz=nz-nb+1; iz<nz-NOP; iz++) {
             sigmaz=sigma[nz-iz];
             
-            //pml->down[ix][iz-shiftz] += com[ix][iz]*sigmaz*Fx(vx,ix,iz,idx)*dt;
-            u[ix][iz] += - sigmaz*u[ix][iz]*dt + com[ix][iz]*sigmaz*pml->down[ix][iz-shiftz]*dt;
+	    u[ix][iz] += - sigmaz*u[ix][iz]*dt + com[ix][iz]*sigmaz*pml->down[ix][iz-shiftz]*dt;
         }
     }
     
@@ -2451,7 +2437,7 @@ void pml3d_presApply(float   ***u,
     shared(u, dt, nb, fdm, pml)
 #endif
     /****************************/
-    // UP-LEFT-FRONT + UP-RIGHT-FRONT + DOWN-RIGHT-FRONT
+    /* UP-LEFT-FRONT + UP-RIGHT-FRONT + DOWN-RIGHT-FRONT */
     for     (iy=NOP; iy<nb; iy++){
         sigmay=sigma[iy];
         for   (ix=NOP; ix<nb; ix++){
@@ -2459,7 +2445,7 @@ void pml3d_presApply(float   ***u,
             for (iz=NOP; iz<nb; iz++){
                 sigmaz=sigma[iz];
                 
-                //ULF
+                /* ULF */
                 pml->ULFW[iy][ix][iz] += pml->ULU[iy][ix][iz]*dt;
                 pml->ULU[iy][ix][iz]  += u[iy][ix][iz]*dt;
                 
@@ -2469,7 +2455,7 @@ void pml3d_presApply(float   ***u,
 				     (sigmax*sigmay + sigmax*sigmaz + sigmay*sigmaz)*pml->ULU[iy][ix][iz])*dt
 		    + com[iy][ix][iz]*pml->UFPSIyzx[iy][ix][iz]*dt;
                 
-                //UPRF
+                /* UPRF */
                 pml->URFW[iy][ix][iz] += pml->URU[iy][ix][iz]*dt;
                 pml->URU[iy][ix][iz] += u[iy][nx-ix-1][iz]*dt;
                 
@@ -2479,7 +2465,7 @@ void pml3d_presApply(float   ***u,
                                         (sigmax*sigmay + sigmax*sigmaz + sigmay*sigmaz)*pml->URU[iy][ix][iz])*dt
 		    + com[iy][nx-ix-1][iz]*pml->UFPSIyzx[iy][nx-ix-1][iz]*dt;
                 
-                //DRF
+                /* DRF */
                 pml->DRFW[iy][ix][iz] += pml->DRU[iy][ix][iz]*dt;
                 pml->DRU[iy][ix][iz] += u[iy][nx-ix-1][nz-iz-1]*dt;
                 
@@ -2489,7 +2475,7 @@ void pml3d_presApply(float   ***u,
                                              (sigmax*sigmay + sigmax*sigmaz + sigmay*sigmaz)*pml->DRU[iy][ix][iz])*dt
 		    + com[iy][nx-ix-1][nz-iz-1]*pml->DFPSIyzx[iy][nx-ix-1][iz]*dt;
                 
-                //DLF
+                /* DLF */
                 pml->DLFW[iy][ix][iz] += pml->DLU[iy][ix][iz]*dt;
                 pml->DLU[iy][ix][iz] += u[iy][ix][nz-iz-1]*dt;
                 
@@ -2500,7 +2486,7 @@ void pml3d_presApply(float   ***u,
 		    + com[iy][ix][nz-iz-1]*pml->DFPSIyzx[iy][ix][iz]*dt;
                 
                 /************************************************************************/
-                //ULB
+                /* ULB */
                 pml->ULBW[iy][ix][iz] += pml->ULU[ny-iy-1][ix][iz]*dt;
                 pml->ULU[ny-iy-1][ix][iz] += u[ny-iy-1][ix][iz]*dt;
                 
@@ -2510,7 +2496,7 @@ void pml3d_presApply(float   ***u,
                                         (sigmax*sigmay + sigmax*sigmaz + sigmay*sigmaz)*pml->ULU[ny-iy-1][ix][iz])*dt
 		    + com[ny-iy-1][ix][iz]*pml->UBPSIyzx[iy][ix][iz]*dt;
                 
-                //URB
+                /* URB */
                 pml->URBW[iy][ix][iz] += pml->URU[ny-iy-1][ix][iz]*dt;
                 pml->URU[ny-iy-1][ix][iz] += u[ny-iy-1][nx-ix-1][iz]*dt;
                 
@@ -2520,7 +2506,7 @@ void pml3d_presApply(float   ***u,
                                              (sigmax*sigmay + sigmax*sigmaz + sigmay*sigmaz)*pml->URU[ny-iy-1][ix][iz])*dt
 		    + com[ny-iy-1][nx-ix-1][iz]*pml->UBPSIyzx[iy][nx-ix-1][iz]*dt;
                 
-                //DRB
+                /* DRB */
                 pml->DRBW[iy][ix][iz] += pml->DRU[ny-iy-1][ix][iz]*dt;
                 pml->DRU[ny-iy-1][ix][iz] += u[ny-iy-1][nx-ix-1][nz-iz-1]*dt;
                 
@@ -2530,7 +2516,7 @@ void pml3d_presApply(float   ***u,
                                                   (sigmax*sigmay + sigmax*sigmaz + sigmay*sigmaz)*pml->DRU[ny-iy-1][ix][iz])*dt
 		    + com[ny-iy-1][nx-ix-1][nz-iz-1]*pml->DBPSIyzx[iy][nx-ix-1][iz]*dt;
                 
-                // DBL
+                /* DBL */
                 pml->DLBW[iy][ix][iz] += pml->DLU[ny-iy-1][ix][iz]*dt;
                 pml->DLU[ny-iy-1][ix][iz] += u[ny-iy-1][ix][nz-iz-1]*dt;
                 
@@ -2563,13 +2549,13 @@ void pml3d_presApply(float   ***u,
             
             for (iz=nb; iz<nz-nb; iz++){
                 
-                // LEFT FRONT
+                /* LEFT FRONT */
                 pml->LFPSIxyz[iy][ix][iz] += sigmax*pml->Fpsiyz[iy][ix][iz]*dt;
                 pml->LFU[iy][ix][iz]  += u[iy][ix][iz]*dt;
                 
                 u[iy][ix][iz] += (com[iy][ix][iz]*pml->LFPSIxyz[iy][ix][iz] - sigmax*sigmay*pml->LFU[iy][ix][iz])*dt;
                 
-                // RIGHT FRONT
+                /* RIGHT FRONT */
                 pml->RFPSIxyz[iy][ix][iz] += sigmax*pml->Fpsiyz[iy][nx-ix-1][iz]*dt;
                 pml->RFU[iy][ix][iz] += u[iy][nx-ix-1][iz]*dt;
                 
@@ -2596,13 +2582,13 @@ void pml3d_presApply(float   ***u,
                 sigmaz=sigma[iz];
                 
                 
-                // UP FRONT
+                /* UP FRONT */
                 pml->UFPSIyzx[iy][ix][iz] += sigmay*pml->Upsizx[iy][ix][iz]*dt;
                 pml->UFU[iy][ix][iz] += u[iy][ix][iz]*dt;
                 
                 u[iy][ix][iz] += (1*com[iy][ix][iz]*pml->UFPSIyzx[iy][ix][iz] - sigmay*sigmaz*pml->UFU[iy][ix][iz])*dt;
                 
-                // DOWN FRONT
+                /* DOWN FRONT */
                 pml->DFPSIyzx[iy][ix][iz] += sigmay*pml->Dpsizx[iy][ix][iz]*dt;
                 pml->DFU[iy][ix][iz] += u[iy][ix][nz-iz-1]*dt;
                 
@@ -2627,13 +2613,13 @@ void pml3d_presApply(float   ***u,
                 sigmaz=sigma[iz];
                 
                 
-                // UP LEFT
+                /* UP LEFT */
                 pml->ULPSIzxy[iy][ix][iz] += sigmaz*pml->Lpsixz[iy][ix][iz]*dt;
                 pml->ULU[iy][ix][iz] += u[iy][ix][iz]*dt;
                 
                 u[iy][ix][iz] += (1*com[iy][ix][iz]*pml->ULPSIzxy[iy][ix][iz] - sigmax*sigmaz*pml->ULU[iy][ix][iz])*dt;
                 
-                // UP RIGHT
+                /* UP RIGHT */
                 pml->URPSIzxy[iy][ix][iz] += sigmaz*pml->Rpsixz[iy][ix][iz]*dt;
                 pml->URU[iy][ix][iz] += u[iy][nx-ix-1][iz]*dt;
                 
@@ -2651,20 +2637,20 @@ void pml3d_presApply(float   ***u,
     shared(u, dt, nb, fdm, pml)
 #endif
     /****************************/
-    // down left
+    /* down left */
     for     (iy=nb; iy<ny-nb; iy++){
         for   (ix=NOP; ix<nb; ix++){
             sigmax=sigma[ix];
             for (iz=nz-nb; iz<nz-NOP; iz++){
                 sigmaz=sigma[nz - iz];
                 
-                // DOWN LEFT
+                /* DOWN LEFT */
                 pml->DLPSIzxy[iy][ix][iz-shiftz] += sigmaz*pml->Lpsixz[iy][ix][iz]*dt;
                 pml->DLU[iy][ix][iz-shiftz] += u[iy][ix][iz]*dt;
                 
                 u[iy][ix][iz] += (1*com[iy][ix][iz]*pml->DLPSIzxy[iy][ix][iz-shiftz] - sigmax*sigmaz*pml->DLU[iy][ix][iz-shiftz])*dt;
                 
-                // DOWN RIGHT
+                /* DOWN RIGHT */
                 pml->DRPSIzxy[iy][ix][iz-shiftz] += sigmaz*pml->Rpsixz[iy][ix][iz]*dt;
                 pml->DRU[iy][ix][iz-shiftz] += u[iy][nx-ix-1][iz]*dt;
                 
@@ -2689,13 +2675,13 @@ void pml3d_presApply(float   ***u,
             sigmax=sigma[ix];
             for (iz=nb; iz<nz-nb; iz++){
                 
-                // LEFT BACK
+                /* LEFT BACK */
                 pml->LBPSIxyz[iy-shifty][ix][iz] += sigmax*pml->Bpsiyz[iy-shifty][ix][iz]*dt;
                 pml->LBU[iy-shifty][ix][iz] += u[iy][ix][iz]*dt;
                 
                 u[iy][ix][iz] += (1*com[iy][ix][iz]*pml->LBPSIxyz[iy-shifty][ix][iz] - sigmax*sigmay*pml->LBU[iy-shifty][ix][iz])*dt;
                 
-                // RIGHT BACK
+                /* RIGHT BACK */
                 pml->RBPSIxyz[iy-shifty][ix][iz] += sigmax*pml->Bpsiyz[iy-shifty][nx-ix-1][iz]*dt;
                 pml->RBU[iy-shifty][ix][iz] += u[iy][nx-ix-1][iz]*dt;
                 
@@ -2721,13 +2707,13 @@ void pml3d_presApply(float   ***u,
             for (iz=NOP; iz<nb; iz++){
                 sigmaz=sigma[iz];
                 
-                // UP BACK
+                /* UP BACK */
                 pml->UBPSIyzx[iy-shifty][ix][iz] += sigmay*pml->Upsizx[iy][ix][iz]*dt;
                 pml->UBU[iy-shifty][ix][iz] += u[iy][ix][iz]*dt;
                 
                 u[iy][ix][iz] += (com[iy][ix][iz]*pml->UBPSIyzx[iy-shifty][ix][iz] - sigmay*sigmaz*pml->UBU[iy-shifty][ix][iz])*dt;
                 
-                // DOWN BACK
+                /* DOWN BACK */
                 pml->DBPSIyzx[iy-shifty][ix][iz] += sigmay*pml->Dpsizx[iy][ix][iz]*dt;
                 pml->DBU[iy-shifty][ix][iz-shiftz] += u[iy][ix][nz-iz-1]*dt;
                 
@@ -2754,14 +2740,14 @@ void pml3d_presApply(float   ***u,
         for   (ix=NOP; ix<nb; ix++){
             for (iz=NOP; iz<nz-NOP; iz++){
                 
-                // LEFT
+                /* LEFT */
                 pml->Lpsixy[iy][ix][iz] += sigma[ix]*Fy3(vy, iy, ix, iz, idy)*dt;
                 pml->Lpsixz[iy][ix][iz] += sigma[ix]*Fz3(vz, iy, ix, iz, idz)*dt;
                 
                 u[iy][ix][iz] += com[iy][ix][iz]*(pml->Lpsixy[iy][ix][iz] + pml->Lpsixz[iy][ix][iz])*dt - sigma[ix]*u[iy][ix][iz]*dt;
                 
                 
-                // RIGHT
+                /* RIGHT */
                 pml->Rpsixy[iy][ix][iz] += sigma[ix]*Fy3(vy, iy, nx-ix-1, iz, idy)*dt;
                 pml->Rpsixz[iy][ix][iz] += sigma[ix]*Fz3(vz, iy, nx-ix-1, iz, idz)*dt;
                 
@@ -2783,13 +2769,13 @@ void pml3d_presApply(float   ***u,
         for   (ix=NOP; ix<nx-NOP; ix++){
             for (iz=NOP; iz<nb; iz++){
                 
-                // UP
+                /* UP */
                 pml->Upsizx[iy][ix][iz] += sigma[iz]*Fx3(vx, iy, ix, iz, idx)*dt;
                 pml->Upsizy[iy][ix][iz] += sigma[iz]*Fy3(vy, iy, ix, iz, idy)*dt;
                 
                 u[iy][ix][iz] += com[iy][ix][iz]*(pml->Upsizx[iy][ix][iz] +  pml->Upsizy[iy][ix][iz])*dt - sigma[iz]*u[iy][ix][iz]*dt;
                 
-                // DOWN
+                /* DOWN */
                 pml->Dpsizx[iy][ix][iz] += sigma[iz]*Fx3(vx, iy, ix, nz-iz-1, idx)*dt;
                 pml->Dpsizy[iy][ix][iz] += sigma[iz]*Fy3(vy, iy, ix, nz-iz-1, idy)*dt;
                 
@@ -2810,13 +2796,13 @@ void pml3d_presApply(float   ***u,
         for   (ix=NOP; ix<nx-NOP; ix++){
             for (iz=NOP; iz<nz-NOP; iz++){
                 
-                // FRONT
+                /* FRONT */
                 pml->Fpsiyx[iy][ix][iz] += sigma[iy]*Fx3(vx, iy, ix, iz, idx)*dt;
                 pml->Fpsiyz[iy][ix][iz] += sigma[iy]*Fz3(vz, iy, ix, iz, idz)*dt;
                 
                 u[iy][ix][iz] += com[iy][ix][iz]*(pml->Fpsiyx[iy][ix][iz] + pml->Fpsiyz[iy][ix][iz])*dt - sigma[iy]*u[iy][ix][iz]*dt;
                 
-                // BACK
+                /* BACK */
                 pml->Bpsiyx[iy][ix][iz] += sigma[iy]*Fx3(vx, ny-iy-1, ix, iz, idx)*dt;
                 pml->Bpsiyz[iy][ix][iz] += sigma[iy]*Fz3(vz, ny-iy-1, ix, iz, idz)*dt;
                 
@@ -2854,7 +2840,7 @@ void pml3d_free(PML3D pml)
 /*< free the memory allocated for the 3D PML >*/
 {
     
-    // sides
+    /* sides */
     free(pml->Upsizx[0][0]); free(pml->Upsizx[0]); free(pml->Upsizx);
     free(pml->Upsizy[0][0]); free(pml->Upsizy[0]); free(pml->Upsizy);
     free(pml->Dpsizx[0][0]); free(pml->Dpsizx[0]); free(pml->Dpsizx);

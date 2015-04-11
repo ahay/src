@@ -32,10 +32,6 @@ void seplowrank2d(float *ldata,float *rdata,float *fmid, float *x, int *ijkx, in
 
        wp = sf_floatalloc(m*n2);
 
-       //sf_warning("m2= %d n2=%d",m2,n2);
-
-       //for(i=0;i<m2*n2;i++)
-       //    sf_warning("fmid[%d,%d] = %f",i/n2,i%n2,fmid[i]);
 /*
  * Note:  m=nx*nz; n=nkx*nkz;
  *        
@@ -45,9 +41,7 @@ void seplowrank2d(float *ldata,float *rdata,float *fmid, float *x, int *ijkx, in
  *        fmid[m2*n2]:   1D array for mid matrix from low-rank decomposition
  */
 
-#ifdef SF_HAS_FFTW  // using FFTW in Madagascar
- 
-       //sf_warning("============= using SF_HAS_FFTW ====");
+#ifdef SF_HAS_FFTW  /* using FFTW in Madagascar */
 
        sf_complex *xx, *xin, *xout;
 
@@ -82,7 +76,7 @@ void seplowrank2d(float *ldata,float *rdata,float *fmid, float *x, int *ijkx, in
            int jn2n=jn2*n;
            for(ikx=0;ikx<nx;ikx++)
            {
-              // Note: Spectrum of the operator is differently orderred as the spectrum after FFT
+	       /* Note: Spectrum of the operator is differently orderred as the spectrum after FFT */
               int ixnz=ijkx[ikx]*nz;
               int ii=jn2n+ixnz;
               for(ikz=0;ikz<nz;ikz++)
@@ -91,7 +85,7 @@ void seplowrank2d(float *ldata,float *rdata,float *fmid, float *x, int *ijkx, in
                 i++;
               }
             }
-            // (kx,kz) to (x, z) domain
+            /* (kx,kz) to (x, z) domain */
             fftwf_execute(xpi);
 
             for(im=0;im<m;im++)
@@ -103,7 +97,7 @@ void seplowrank2d(float *ldata,float *rdata,float *fmid, float *x, int *ijkx, in
        free(xin);
        free(xout);
 
-       // Matrix multiplication in space-domain 
+       /* Matrix multiplication in space-domain */
        for(im=0;im<m;im++)
        {
          sum1=0.0;
@@ -114,12 +108,11 @@ void seplowrank2d(float *ldata,float *rdata,float *fmid, float *x, int *ijkx, in
               sum2 += fmid[im2*n2+jn2]*wp[jn2*m+im];
 
            sum1 += ldata[im*m2+im2]*sum2;
-         }//im2 loop
+         }/*im2 loop*/
          x[im] = sum1;
        } 
 
-#else  // using FFTW in user's own computer
-       //sf_warning("============= using user installed FFTW ====");
+#else  /* using FFTW in user's own computer */
 
        fftw_complex *xx, *xin, *xout;
 
@@ -188,7 +181,7 @@ void seplowrank2d(float *ldata,float *rdata,float *fmid, float *x, int *ijkx, in
               sum2 += fmid[im2*n2+jn2]*wp[jn2*m+im];
            
            sum1 += ldata[im*m2+im2]*sum2;
-         }//im2 loop
+         }/*im2 loop*/
          x[im] = sum1;
        } 
 #endif
@@ -201,11 +194,8 @@ void sep(float *w, float *x, int *ijkx, int *ijkz, int nx,int nz,int m,int n, in
 {
        int i, ikx, ikz, im;
 
-#ifdef SF_HAS_FFTW  // using FFTW in Madagascar
- 
-       //sf_warning("============= using SF_HAS_FFTW ====");
+#ifdef SF_HAS_FFTW  /* using FFTW in Madagascar */
 
-// test FFT
 /*
        int ntest=30;
        sf_complex *xi, *xo;
@@ -258,7 +248,6 @@ void sep(float *w, float *x, int *ijkx, int *ijkz, int nx,int nz,int m,int n, in
           int ixnz=ijkx[ikx]*nz;
           for(ikz=0;ikz<nz;ikz++)
           {
-             //sf_warning("xout[%d,%d]= (%f,%f)",ikx,ikz,creal(xout[i]),cimag(xout[i]));             
              xin[i]=w[ixnz+ijkz[ikz]]*xout[i];          
              i++;
           }
@@ -275,8 +264,7 @@ void sep(float *w, float *x, int *ijkx, int *ijkz, int nx,int nz,int m,int n, in
        free(xin);
        free(xout);
 
-#else  // using FFTW in user's own computer
-       //sf_warning("============= using user installed FFTW ====");
+#else  /* using FFTW in user's own computer */
 
        fftw_complex *xin, *xout;
 
@@ -382,12 +370,8 @@ void seplowrank3d(float *ldata,float *rdata,float *fmid, float *p, int *ijkx, in
 
        nxz=nx*nz;
 
-       //sf_warning("m2= %d n2=%d",m2,n2);
-
-#ifdef SF_HAS_FFTW  // using FFTW in Madagascar
+#ifdef SF_HAS_FFTW  /* using FFTW in Madagascar */
  
-       //sf_warning("============= using SF_HAS_FFTW ====");
-
        sf_complex *xx, *xin, *xout;
 
        fftwf_plan xp;
@@ -403,7 +387,7 @@ void seplowrank3d(float *ldata,float *rdata,float *fmid, float *p, int *ijkx, in
        xpi=fftwf_plan_dft_3d(ny,nx,nz,(fftwf_complex *) xin, (fftwf_complex *) xout,
 			    FFTW_BACKWARD,FFTW_ESTIMATE);
 
-       // FFT: from (x,z) to (kx, kz) domain 
+       /* FFT: from (x,z) to (kx, kz) domain */
 
        if(iflag==1)
            for(i=0;i<m;i++) xin[i]=sf_cmplx(p[i], 0.);
@@ -414,7 +398,7 @@ void seplowrank3d(float *ldata,float *rdata,float *fmid, float *p, int *ijkx, in
            
        for(i=0;i<n;i++) xx[i] = xout[i];
 
-       // n2 IFFT from (kx, kz) to (x, z) domain
+       /* n2 IFFT from (kx, kz) to (x, z) domain */
        for(jn2=0;jn2<n2;jn2++)
        {
            i=0;
@@ -435,7 +419,7 @@ void seplowrank3d(float *ldata,float *rdata,float *fmid, float *p, int *ijkx, in
              }
         }
 
-       // (kx,kz) to (x, z) domain
+       /* (kx,kz) to (x, z) domain */
        fftwf_execute(xpi);
 
        for(im=0;im<m;im++)
@@ -449,7 +433,7 @@ void seplowrank3d(float *ldata,float *rdata,float *fmid, float *p, int *ijkx, in
    free(xin);
    free(xout);
 
-   // Matrix multiplication in space-domain 
+   /* Matrix multiplication in space-domain */
    for(im=0;im<m;im++)
    {
          sum1=0.0;
@@ -460,7 +444,7 @@ void seplowrank3d(float *ldata,float *rdata,float *fmid, float *p, int *ijkx, in
               sum2 += fmid[im2*n2+jn2]*wp[jn2*m+im];
 
            sum1 += ldata[im*m2+im2]*sum2;
-        }//im2 loop
+        }/*im2 loop*/
         p[im] = sum1;
   } 
 

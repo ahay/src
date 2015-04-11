@@ -73,20 +73,14 @@ void spec3dmultiply(float ***d, float ***f, int nx, int ny, int nz,
             for(iz=0;iz<nz;iz++){
 		izf=ijkz[iz];
 		kk = ii + jj + iz;
-		//if(iy!=ny/2&&ix!=nx/2&&iz!=nz/2){
 		if(iflag==1)
 		    xin[kk] = xout[kk]*sf_cmplx(f[iyf][ixf][izf], 0.0);    
 		else
 		    xin[kk] = xout[kk]*sf_cmplx(0.0, f[iyf][ixf][izf]);    
-		//}else
-		//   xin[kk] = xout[kk];    
-/*
-  xin[i] = xout[i];    
-  i++;
-*/
-            }// iz loop
-	}// ix loop
-    }//iy loop
+
+            }/* iz loop */
+	}/* ix loop */
+    }/* iy loop */
 
     fftwf_execute(yr);
 
