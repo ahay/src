@@ -27,7 +27,7 @@ int main (int argc, char *argv[])
     sf_axis at,ay,ax;
     int it,iy,ix;
     int nt,ny,nx;
-    float idt,idx,dx,dt,dy;
+    float idt,idx,dx,dt;
     
     float ***tz,***dip,***tzt,***tzx;
     
@@ -38,7 +38,7 @@ int main (int argc, char *argv[])
     Zo=sf_output("out");
     
     at=sf_iaxa(Zz,1); nt=sf_n(at); dt=sf_d(at);
-    ay=sf_iaxa(Zz,2); ny=sf_n(ay); dy=sf_d(ay);
+    ay=sf_iaxa(Zz,2); ny=sf_n(ay); /* dy=sf_d(ay); */
     ax=sf_iaxa(Zz,3); nx=sf_n(ax); dx=sf_d(ax);
 
     sf_oaxa(Zo,at,1);

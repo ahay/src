@@ -114,8 +114,8 @@ int main(int argc, char* argv[])
   sf_file filter_file=NULL;
   int filt_indx_t0;
 
-  char* header_format=NULL;
-  sf_datatype typehead;
+/*  char* header_format=NULL;
+    sf_datatype typehead; */
   /* kls do I need to add this?  sf_datatype typein; */
   float* fheader=NULL;
   float* intrace=NULL;
@@ -153,9 +153,9 @@ int main(int argc, char* argv[])
   if (!sf_histint(in,"n1_headers",&n1_headers)) 
     sf_error("input data does not define n1_headers");
 
-  header_format=sf_histstring(in,"header_format");
-  if(strcmp (header_format,"native_int")==0) typehead=SF_INT;
-  else                                       typehead=SF_FLOAT;
+/*  header_format=sf_histstring(in,"header_format");
+    if(strcmp (header_format,"native_int")==0) typehead=SF_INT;
+    else                                       typehead=SF_FLOAT; */
 
   if(verbose>0)fprintf(stderr,"allocate headers.  n1_headers=%d\n",n1_headers);
   fheader = sf_floatalloc(n1_headers);

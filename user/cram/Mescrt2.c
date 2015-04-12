@@ -102,7 +102,7 @@ static char* sf_escrt3_warnext (sf_file input) {
 }
 
 int main (int argc, char* argv[]) {
-    int nz, nx, na, ia, ix, iz, i, it, nt, ic, nc = 1, fz, lz, itr = 0;
+    int nz, nx, na, ia, ix, iz, i, it, nt, ic, nc = 1, fz, lz, itr;
     float dz, oz, dx, ox, da, oa, z, x, dt, df, md, aper;
     float ***e;
     sf_file spdom, vspline = NULL, out, traj = NULL;
@@ -325,6 +325,7 @@ int main (int argc, char* argv[]) {
                         e[iz - fz][ia][i] = sf_esc_point2_get_esc_var (esc_points[iz - fz], i);
                     if (traj) {
                         /* Fill the rest of the trajectory with the last point */
+			itr = (iz - fz)*na + ia;
                         for (it = tdata[itr].it + 1; it < tdata[itr].nt; it++) {
                             for (i = 0; i < TRAJ2_COMPS - 1; i++)
                                 tdata[itr].pnts[it][i] = tdata[itr].pnts[tdata[itr].it][i];

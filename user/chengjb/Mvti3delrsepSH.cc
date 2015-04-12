@@ -109,12 +109,12 @@ int main(int argc, char* argv[])
    dyv = a3*1000.0;
 
    /* Read/Write axes from Wavefields*/
-   sf_file Fx, Fy, Fz;
+   sf_file Fx, Fy;
    sf_axis az, ax, ay;
 
    Fx = sf_input("Elasticx");
    Fy = sf_input("Elasticy");
-   Fz = sf_input("Elasticz");
+   /* Fz = sf_input("Elasticz"); */
 
    int   nx, ny, nz;
    float fx, fy, fz;

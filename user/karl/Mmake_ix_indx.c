@@ -105,7 +105,7 @@ int main(int argc, char* argv[])
   int n_traces, n_headers; 
   sf_datatype typehead;
   sf_datatype typein;
-  float* header=NULL;
+/*  float* header=NULL; */
   char* infile_filename=NULL;
   char* headers_filename=NULL;
   /*
@@ -127,10 +127,10 @@ int main(int argc, char* argv[])
   bool passrangetest;
   */
   char* ilinekey;
-  char* xlinekey;
+/*  char* xlinekey; */
   int ilineinc;
   int indx_ilinekey;
-  int indx_xlinekey;
+/*  int indx_xlinekey; */
   float ilinemin;
   float ilinemax;
   float xlinemin;
@@ -235,7 +235,7 @@ int main(int argc, char* argv[])
   
   /* must be float or int */
   if(verbose>1)fprintf(stderr,"allocate headers.  n1_headers=%d\n",n1_headers);
-  header = sf_floatalloc(n1_headers);
+  /* header = sf_floatalloc(n1_headers); */
  
   /* I make stdout just trace header and one trace amplitude for now.
      I do not think it will have a use and will delete it later */
@@ -269,7 +269,7 @@ int main(int argc, char* argv[])
      header key for the main index key.  This should be iline, but you 
      may have non-standard trace headers or a wierd use of this program 
   */
-  if(!(xlinekey=sf_getstring("xline")))xlinekey="xline";
+/*  if(!(xlinekey=sf_getstring("xline")))xlinekey="xline"; */
   /* \n
      header key for the secondary index key.  This should be xline, but you
      may have non-standard trace headers or a wierd use of this program 
@@ -318,7 +318,7 @@ int main(int argc, char* argv[])
   */
 
   indx_ilinekey=segykey(ilinekey);
-  indx_xlinekey=segykey(xlinekey);
+/*  indx_xlinekey=segykey(xlinekey); */
 
   fprintf(stderr,"process the filenames file\n");  
   /* kls process the file, "filenames"

@@ -1,65 +1,65 @@
 /* read Trace and Header (tah), compute header values
 
-Known functions for float data: 
-cos,  sin,  tan,  acos,  asin,  atan, 
-cosh, sinh, tanh, acosh, asinh, atanh,
-exp,  log,  sqrt, abs, erf, erfc, sign
+   Known functions for float data: 
+   cos,  sin,  tan,  acos,  asin,  atan, 
+   cosh, sinh, tanh, acosh, asinh, atanh,
+   exp,  log,  sqrt, abs, erf, erfc, sign
 
-Known functions for int data: sign, abs
+   Known functions for int data: sign, abs
 
-modeled on sfheademath.  This program outputs the whole header.  It was
-a building block for sftahheadermath.
+   modeled on sfheademath.  This program outputs the whole header.  It was
+   a building block for sftahheadermath.
 
-tah is the abbreviation of Trace And Header.  Madagascar programs 
-that begin with sftah are a designed to:
-1- read trace and headers from separate rsf files and write them to 
+   tah is the abbreviation of Trace And Header.  Madagascar programs 
+   that begin with sftah are a designed to:
+   1- read trace and headers from separate rsf files and write them to 
    standard output (ie sftahread)
-2- filter programs that read and write standard input/output and 
+   2- filter programs that read and write standard input/output and 
    process the tah data (eg sftahnmo, sftahstack)
-3- read tah data from standard input and write separate rsf files for 
+   3- read tah data from standard input and write separate rsf files for 
    the trace and headers data (ie sftahwrite)
 
-These programs allow Seismic Unix (su) like processing in Madagascar.  
-Some programs have su like names.
+   These programs allow Seismic Unix (su) like processing in Madagascar.  
+   Some programs have su like names.
 
-Some programs in this suite are sftahread, sftahgethw, ftahhdrmath, 
-and sftahwrite.
+   Some programs in this suite are sftahread, sftahgethw, ftahhdrmath, 
+   and sftahwrite.
 
-The sftahheadermath updates a trace header with a new value computed from
-input trace headers.  
+   The sftahheadermath updates a trace header with a new value computed from
+   input trace headers.  
 
-See also sftahmakeskey.
+   See also sftahmakeskey.
 
-EXAMPLE:
+   EXAMPLE:
 
-sftahread \\
+   sftahread \\
    verbose=1 \\
    input=npr3_gathers.rsf \\
-| sftahgethw \\
+   | sftahgethw \\
    verbose=0  \\
    key=sx,sy,gx,gy,offset  \\
->/dev/null
+   >/dev/null
 
-The headers are in the file npr3_gathers_hdr.rsf, 
-the headers parameter default.  The headers are merged with the trace 
-amplitudes and the tah data sent down the pipe for sftahgethw.  The 
-source and group coordinates and offset (sx,sy,gx,gy,offset) are 
-printed to STDERR.  Traces are sent to STDOUT, which is directed to
-/dev/null (the bit bucket).
+   The headers are in the file npr3_gathers_hdr.rsf, 
+   the headers parameter default.  The headers are merged with the trace 
+   amplitudes and the tah data sent down the pipe for sftahgethw.  The 
+   source and group coordinates and offset (sx,sy,gx,gy,offset) are 
+   printed to STDERR.  Traces are sent to STDOUT, which is directed to
+   /dev/null (the bit bucket).
 
-PARAMETERS
+   PARAMETERS
    string output= no default
 
-        An equation to compute using the header keys.  Equations should
-	problable be enclosed in quotes, ie ", to the equation can include
-	multiplication, *, or blanks.  
-	For example, to compute the midpoint x input:
-	output="(sx+gx)/2.0)"
+   An equation to compute using the header keys.  Equations should
+   problable be enclosed in quotes, ie ", to the equation can include
+   multiplication, *, or blanks.  
+   For example, to compute the midpoint x input:
+   output="(sx+gx)/2.0)"
 
    string outputkey= no default
-        the name of the output trace header key to put the evaluation of
-	output.  For example to put the average of sx and gx into cdpx input:
-	outputkey=cdpx
+   the name of the output trace header key to put the evaluation of
+   output.  For example to put the average of sx and gx into cdpx input:
+   outputkey=cdpx
 
 */
 /*
@@ -88,12 +88,12 @@ PARAMETERS
 
 int main(int argc, char* argv[])
 {
-  int verbose;
-  int i, i1, n1_headers, n1_traces, len, tempint, outkeyindx;
+    int verbose;
+    int i, i1, n1_headers, n1_traces, len, tempint, outkeyindx;
     sf_file in, out;
     char *output=NULL, *outputkey=NULL;
-    float *ftra=NULL, **fbuf=NULL, **fst=NULL;
-    int *itra=NULL, **ibuf=NULL, **ist=NULL;
+    float /* *ftra=NULL, */ **fbuf=NULL, **fst=NULL;
+    int /* *itra=NULL, */ **ibuf=NULL, **ist=NULL;
     char* header_format;  
     sf_datatype typehead;
 
@@ -122,9 +122,9 @@ int main(int argc, char* argv[])
     out = sf_output ("out");
 
     if (!sf_histint(in,"n1_traces",&n1_traces))
-      sf_error("input data not define n1_traces");
+	sf_error("input data not define n1_traces");
     if (!sf_histint(in,"n1_headers",&n1_headers)) 
-      sf_error("input data does not define n1_headers");
+	sf_error("input data does not define n1_headers");
 
     /* kls change type to header_format and read from history */
     header_format=sf_histstring(in,"header_format");
@@ -141,14 +141,14 @@ int main(int argc, char* argv[])
     segy_init(n1_headers,in);
  
     for (i=0; i < n1_headers; i++) {
-      /* see if the segy keywords are in the input history file.  If they
-	 are missing or different than I think they should be add them to
-	 the output file history */
-      /* no idea why this always has to be added to history, but I get 
-	 errors it I remove 1 || */
-      if(1 || !sf_histint(in,segykeyword(i),&tempint) || tempint!=i){
-	sf_putint(out,segykeyword(i),i);
-      }
+	/* see if the segy keywords are in the input history file.  If they
+	   are missing or different than I think they should be add them to
+	   the output file history */
+	/* no idea why this always has to be added to history, but I get 
+	   errors it I remove 1 || */
+	if(1 || !sf_histint(in,segykeyword(i),&tempint) || tempint!=i){
+	    sf_putint(out,segykeyword(i),i);
+	}
     }
 
 
@@ -160,7 +160,7 @@ int main(int argc, char* argv[])
     if (NULL==(outputkey=sf_getstring("outputkey")))sf_error("Need outputkey=");
     /* name of the header key to put the results of the output equation */
     if(!sf_histint(out,outputkey,&outkeyindx)){
-      sf_error("need outkey is not a header key in the input data=");
+	sf_error("need outkey is not a header key in the input data=");
     }
     if(verbose>0)fprintf(stderr,"outkeyindx=%d\n",outkeyindx);
 
@@ -169,11 +169,11 @@ int main(int argc, char* argv[])
        sf_math_evaluate.  Perhaps someday these can be refactored and the 
        alloc2 below can become sf_floatalloc (without the 2). Karl S */ 
     if (SF_FLOAT == typehead) { /* float typehead */
-	ftra = sf_floatalloc(n1_headers);
+	/* ftra = sf_floatalloc(n1_headers); */
 	fbuf = sf_floatalloc2(1,n1_headers);
 	fst  = sf_floatalloc2(1,len+3);
     } else {               /* int typehead */
-	itra = sf_intalloc(n1_headers);
+	/* itra = sf_intalloc(n1_headers); */
 	ibuf = sf_intalloc2(1,n1_headers);
 	ist  = sf_intalloc2(1,len+3);
     }
@@ -186,39 +186,39 @@ int main(int argc, char* argv[])
     /***************************/
     if(verbose>0)fprintf(stderr,"start trace loop\n");
     while (0==get_tah(intrace, fheader, n1_traces, n1_headers, in)){
-      if(verbose>1)fprintf(stderr,"process the tah in sftahgethw\n");
+	if(verbose>1)fprintf(stderr,"process the tah in sftahgethw\n");
 
-      /********************/
-      /* process the tah. */
-      /********************/
+	/********************/
+	/* process the tah. */
+	/********************/
  
-      if (SF_FLOAT == typehead) { 
-	for (i1=0; i1 < n1_headers; i1++) {
-	  fbuf[i1][0]=fheader[i1];
+	if (SF_FLOAT == typehead) { 
+	    for (i1=0; i1 < n1_headers; i1++) {
+		fbuf[i1][0]=fheader[i1];
+	    }
+	    sf_math_evaluate (len, 1, fbuf, fst);
+	    if(verbose>2){
+		fprintf(stderr,"after math_evaluate fst[1][0]=%f\n",fst[1][0]);
+	    }
+	    fheader[outkeyindx]=fst[1][0];	
+	} else {
+	    for (i1=0; i1 < n1_headers; i1++) {
+		/* iheader point to same place as fheader */
+		ibuf[i1][0]=iheader[i1];
+		if(verbose>2)fprintf(stderr,"iheader[i1]=%d\n",iheader[i1]);
+	    }
+	    sf_int_math_evaluate (len, 1, ibuf, ist);
+	    if(verbose>2){
+		fprintf(stderr,"after int_math_evaluate ist[1][0]=%d\n",ist[1][0]);
+	    }
+	    iheader[outkeyindx]=ist[1][0];
 	}
-	sf_math_evaluate (len, 1, fbuf, fst);
-        if(verbose>2){
-	  fprintf(stderr,"after math_evaluate fst[1][0]=%f\n",fst[1][0]);
-	}
-	fheader[outkeyindx]=fst[1][0];	
-      } else {
-	for (i1=0; i1 < n1_headers; i1++) {
-	  /* iheader point to same place as fheader */
-	  ibuf[i1][0]=iheader[i1];
-	  if(verbose>2)fprintf(stderr,"iheader[i1]=%d\n",iheader[i1]);
-	}
-	sf_int_math_evaluate (len, 1, ibuf, ist);
-        if(verbose>2){
-	  fprintf(stderr,"after int_math_evaluate ist[1][0]=%d\n",ist[1][0]);
-	}
-	iheader[outkeyindx]=ist[1][0];
-      }
       
-      /***************************/
-      /* write trace and headers */
-      /***************************/
-      put_tah(intrace, fheader, n1_traces, n1_headers, out);
-      if(verbose>1)fprintf(stderr,"returned from writing the tah\n");
+	/***************************/
+	/* write trace and headers */
+	/***************************/
+	put_tah(intrace, fheader, n1_traces, n1_headers, out);
+	if(verbose>1)fprintf(stderr,"returned from writing the tah\n");
 	
     }
 

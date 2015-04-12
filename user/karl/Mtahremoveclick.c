@@ -107,9 +107,9 @@ int main(int argc, char* argv[])
   bool end_of_gather;
   int fold;
   int superbin_maxfold;
-  float* outtrace=NULL;
-  float* outheader=NULL;  
-  int* ioutheader=NULL;  
+/*  float* outtrace=NULL; 
+    float* outheader=NULL;  
+    int* ioutheader=NULL;  */
   float* stktrace=NULL;
   float* stkheader=NULL;
   /*****************************/
@@ -209,9 +209,9 @@ int main(int argc, char* argv[])
   superbin_headers=sf_floatalloc2(n1_headers, superbin_maxfold);
   
   /* allocate output trace arrays */
-  outtrace  = sf_floatalloc(n1_traces);
-  outheader = sf_floatalloc(n1_headers);
-  ioutheader=(int*)outheader;
+  /* outtrace  = sf_floatalloc(n1_traces); 
+     outheader = sf_floatalloc(n1_headers);
+     ioutheader=(int*)outheader; */
 
    /***************************/
   /* start trace loop        */

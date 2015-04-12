@@ -2408,7 +2408,7 @@ void pml3d_presApply(float   ***u,
 /*< Application of the 3D PML to the pressure field >*/
 {
     
-    int ix,iy,iz,nb,shiftx,shifty,shiftz;
+    int ix,iy,iz,nb,shifty,shiftz;
     int nx,ny,nz;
     float idx,idy,idz;
     float sigmax, sigmay, sigmaz;
@@ -2423,7 +2423,6 @@ void pml3d_presApply(float   ***u,
     ny=fdm->nypad;
     nz=fdm->nzpad;
     
-    shiftx=nx-nb;
     shifty=ny-nb;
     shiftz=nz-nb;
     

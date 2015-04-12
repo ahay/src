@@ -50,7 +50,7 @@ int main(int  argc,char **argv)
     int   nth, rank;
 #endif
     float t;
-    float fx,fy,fz,dt2;
+    float dt2;
 
     int nxpad, nypad, nzpad, mm, mmix;
 
@@ -71,7 +71,7 @@ int main(int  argc,char **argv)
     float t0=0.04;       /* time delay of the wavelet(if f0=30Hz, t0=0.04s)*/
     float A=1.0;           /* the amplitude of wavelet */
 
-    clock_t t1, t2, t3;
+    clock_t t2, t3;
     float   timespent;
 
     float *coeff_2dx,*coeff_2dy,*coeff_2dz,*coeff_1dx,*coeff_1dy,*coeff_1dz;
@@ -82,8 +82,6 @@ int main(int  argc,char **argv)
     sf_axis az, ax, ay;
 
     sf_init(argc,argv);
-
-    t1=clock();
 
     /* time samping paramter */
     if (!sf_getint("ns",&ns))   ns=301;
@@ -104,9 +102,9 @@ int main(int  argc,char **argv)
     az = sf_iaxa(Fvp0,1); nz = sf_n(az); dz = sf_d(az)*1000.0;
     ax = sf_iaxa(Fvp0,2); nx = sf_n(ax); dx = sf_d(ax)*1000.0;
     ay = sf_iaxa(Fvp0,3); ny = sf_n(ay); dy = sf_d(ay)*1000.0;
-    fy=sf_o(ay)*1000.0;
-    fx=sf_o(ax)*1000.0;
-    fz=sf_o(az)*1000.0;
+/*    fy=sf_o(ay)*1000.0; 
+      fx=sf_o(ax)*1000.0;
+      fz=sf_o(az)*1000.0; */
 
     nxpad=nx+2*bd;
     nypad=ny+2*bd;

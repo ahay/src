@@ -118,6 +118,7 @@ int main(int argc, char* argv[])
 		/* number of offsets (if adj=n) */
 	
 		sf_putint(out,"n2",nx);
+		invmode = NULL;
     	}
 
 	nfft=2*kiss_fft_next_fast_size(nt);
