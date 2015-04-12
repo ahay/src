@@ -68,7 +68,11 @@ Result('m31-8','m31-8 m31-8-slice','SideBySideIso')
 
 # Add noise
 
-Flow('m32-noise','m32','noise seed=2015 type=n range=127.5 mean=127.5 | dd type=int | dd type=float')
+Flow('m32-noise','m32',
+     '''
+     noise seed=2015 type=n range=127.5 mean=127.5 |
+     dd type=int | dd type=float
+     ''')
 
 for image in ('bricks','photomic','clouds'):
     jpg = image+'.jpg'
@@ -76,5 +80,70 @@ for image in ('bricks','photomic','clouds'):
       server='https://raw.githubusercontent.com',
       top='kwinkunks/timefreak')
     Flow(image,jpg,'jpg2byte | window n1=1 | dd type=float')
+
+Plot('line',None,
+     '''
+     spike n1=2 |
+     graph min2=0 max2=2 plotfat=3 wanttitle=n wantaxis=n pad=n 
+     ''')
+
+def Impair(image,lines=False,plots=False,rect=6):
+    low = image+'-low'
+    Flow(low,image,'window j1=4 j2=4')
+    gss = image+'-gss'
+    Flow(gss,image,'smooth rect1=%d rect2=%d' % (rect,rect))
+    bit = image+'-bit'
+    Flow(bit,image,'math output="0.5+input*4/256" | dd type=int | dd type=float')
+    nse = image+'-nse'
+    Flow(nse,image,'noise seed=2015 rep=y type=n mean=1 | mul $SOURCE')
+    crp = image+'-crp'
+    Flow(crp,image,'window f1=66 n1=68 f2=66 n2=68')
+
+    images = [image,low,gss,bit,nse,crp]
+    for case in images:
+        if plots:
+            if case==low:
+                f2=25
+            elif case==crp:
+                f2=34
+            else:
+                f2=100
+            Plot(case,
+                 '''
+                 window n2=1 f2=%d | graph wanttitle=n labelsz=15
+                 ''' % f2)
+        elif lines:
+            Plot(case+'0',case,'grey wantaxis=n wanttitle=n transp=n mean=y')
+            Plot(case,[case+'0','line'],'Overlay')
+        else:
+            Plot(case,'grey wantaxis=n wanttitle=n transp=n mean=y')
+    Result(image,images,'SideBySideAniso',vppen='yscale=%g' % (10.24/7.5))
+
+Flow('bricks2','bricks','window n1=200 n2=200 j1=2 j2=2')
+Impair('bricks2')
+
+Flow('photomic2','photomic',
+     '''
+     window n1=1738 |
+     spline n1=200 o1=0 d1=%g | transp |
+     spline n1=200 o1=0 d1=%g | transp
+     ''' % (1738.0/200,1738.0/200))
+Impair('photomic2')
+
+Flow('m32-zoom','m32',
+     '''
+     spline n1=200 o1=0 d1=%g | transp |
+     spline n1=200 o1=0 d1=%g | transp
+     ''' % (866.0/200,866.0/200))
+
+Impair('m32-zoom',lines=True,rect=3)
+
+Flow('m32-zoom2','m32-zoom','cp')
+
+Impair('m32-zoom2',plots=True,rect=3)
+
+Flow('clouds2','clouds','window j1=4 j2=4')
+
+Impair('clouds2')
     
 End()
