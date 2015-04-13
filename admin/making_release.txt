@@ -101,7 +101,19 @@ cd madagascar-core-1.7
 
 svn delete system/seismic trip
 
-svn delete book/bei book/geo384w (and everything else seismic-related in book)
+svn delete book/bei book/geo384w (and everything else seismic-related
+in book)
 
+python admin/cleanup.py > list.txt
+
+
+17. tar and upload to sourceforge.net
+
+18. Announce on the blog
+
+19. Edit $RSFSRC/VERSION.txt to 1.8-svn
+
+20. Edit $RSFSRC/NEWS.txt to record the time of the release. Add
+release notes to http://www.ahay.org/wiki/Release_Notes
 
 
