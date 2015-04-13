@@ -1,0 +1,48 @@
+import os, sys, re, string
+sys.path.append('../../framework')
+
+try:
+    import bldutil
+    glob_build = True # scons command launched in RSFSRC
+    srcroot = '../..' # cwd is RSFSRC/build/user/*
+    Import('env bindir libdir pkgdir')
+    env = env.Clone()
+except:
+    glob_build = False # scons command launched in the local directory
+    srcroot = os.environ.get('RSFSRC', '../..')
+    sys.path.append(os.path.join(srcroot,'framework'))
+    import bldutil
+    env = bldutil.Debug() # Debugging flags for compilers
+    bindir = libdir = pkgdir = None
+    
+targets = bldutil.UserSconsTargets()
+
+F90 = env.get('F90')
+api = env.get('API',[])
+
+
+if 'f90' in api and F90:
+	F90base= os.path.basename(F90)
+ 	if F90base[:8]== 'gfortran' or F90base[:3]=='gfc':
+		env.Append(F90FLAGS=' -fopenmp -fcheck=bounds -fbackslash ',LINKFLAGS=['-fopenmp'])
+        elif F90base[:5] == 'pgf90':
+            env.Append(CFLAGS=' -I${SOURCE.dir}',F90FLAGS=' -O2 -lm -module ${SOURCE.dir} -I${SOURCE.dir}',LINKFLAGS=['-O2','-lm'])        
+        elif F90base == 'ifort':
+    		env.Append(F90FLAGS=' -module -fbackslash -fopenmp ${SOURCE.dir}')
+
+# C mains
+targets.c = '''
+
+'''
+
+#wexmig
+#wexwfl
+#wexmva
+
+# F90 mains
+targets.f90 = '''
+helloworld intv2rms intv2avg findmaximum fdac2d
+'''
+
+targets.build_all(env, glob_build, srcroot, bindir, libdir, pkgdir)
+
