@@ -65,11 +65,10 @@ int fdx16(vector<int>& rs, vector<int>& cs, DblNumMat& res)
     float c6 = -0.0023589/dx;
     float c7 = 0.0007711/dx;
     float c8 = -0.0001545/dx;
-    float v, k;
+    float k;
     for(int a=0; a<nr; a++) {
 	for(int b=0; b<nc; b++) {
-           v = vs[rs[a]];
-           k = ks[cs[b]]*2*SF_PI*v; 
+           k = ks[cs[b]]*2*SF_PI; 
 	   res(a,b) = c1*sin(k*dx/2.0)+c2*sin(k*dx*3.0/2.0)+c3*sin(k*dx*5.0/2.0)+c4*sin(k*dx*7.0/2.0)+c5*sin(k*dx*9.0/2.0)+
 	              c6*sin(k*dx*11.0/2.0)+c7*sin(k*dx*13.0/2.0)+c8*sin(k*dx*15.0/2.0);
 	   res(a,b) = res(a,b)*2.0;// exp(ikx)-exp(-ikx) = 2*sin(kx)
