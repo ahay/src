@@ -378,6 +378,8 @@ int main(int argc, char* argv[])
 {
     nth = omp_get_num_threads();
 }
+#else 
+    nth = 1;
 #endif
 
     if (verb) {

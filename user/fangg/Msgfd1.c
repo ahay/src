@@ -104,7 +104,7 @@ int main(int argc, char* argv[])
     spara sp={0};
     bool  srcdecay, srcmms, inject;
     float srctrunc;
-    float slx;
+    float slx=-1.0;
     int   spx;
 
     /*PML*/
