@@ -70,7 +70,7 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 /*< Compute traveltime attributes >*/
 {
     float  *xx, *xxnew, *F, *dk, *xxtem, *zk,*ck_inv, **ans;
-    float tt, tx_s=0.0f, tx_r=0.0f, ty, tz_s=0.0f, tz_r=0.0f, tn=0.0f, at, an, v_1r=0.0f, v_r=0.0f, alpha, theta, dip=0.0f;
+    float tt, tx_r=0.0f, ty, tz_s=0.0f, tz_r=0.0f, tn=0.0f, at, an, v_1r=0.0f, v_r=0.0f, alpha, theta, dip=0.0f;
     int q=0; /* Counter for big loop*/
     int b3=0; /* To check whether the ray is tracable*/
 	
@@ -371,7 +371,7 @@ mark: /* Mark point for goto*/
 			
 	    if (c==0) {
 		at = fabsf(T_hat_k_k_k1(f.T_k_k_k1,f.T_k_k1_zk,f.T_k_k_zk1, f.T_k_zk_zk1)); 
-		tx_s = T_hat_k_k(f.T_k_k,f.T_k_zk); /* x-direction on the surface*/
+		/* tx_s = T_hat_k_k(f.T_k_k,f.T_k_zk); */ /* x-direction on the surface*/
 		tz_s = T_hat_k(f.T_k_zk);
 	    }
 			
@@ -422,7 +422,7 @@ mark: /* Mark point for goto*/
 		
 	table->t = tt; /* output the data to table */
 /*	sf_warning("Traveltime=%g s=%g r=%g refl=%d\n",tt,xx[0],xx[n+1],n+1);*/
-	table->tx = 0.5*(tx_s+tx_r);
+	table->tx = tx_r;
 	table->ty = ty;
 	table->tn = sqrt(fabsf(1/(v_r*v_r)-tx_r*tx_r)); /* To make it compatible with the convention of the old kirmod (Actually in z-direction)*/
 		
