@@ -406,10 +406,10 @@ namespace RVL {
       try {
 	Components<Scalar> xc(x);
 	Components<Scalar> yc(y);
-	for (int j=0; j<xc.getSize();j++) {
+	for (int j=0; j<(int)xc.getSize();j++) {
 	  xc[j].zero();
 	  Vector<Scalar> tmp(xc[j].getSpace());
-	  for (int i=0; i<yc.getSize(); i++) {
+	  for (int i=0; i<(int)yc.getSize(); i++) {
 	    applyAdj(i,j,yc[i],tmp);
 	    xc[j].linComb(ScalarFieldTraits<Scalar>::One(),tmp);
 	  }

@@ -1,3 +1,4 @@
+
 #include "traceio.h"
 //#define IWAVE_VERBOSE
 /* axis indices throughout: 0=z, 1=x, 2=y */
@@ -2297,12 +2298,12 @@ void tapermutetraces(tracegeom * tg,
     int itr;    /* trace counter */
     //    int ioff=0;   /* offset into sampled array */
     /*  int moff;   offset into multiplier array */
-    int ndim;   /* problem dimension */
+    //    int ndim;   /* problem dimension */
     IPNT ind;   /* integer part of sample coords */
     
     if (it<0 || it>tg->nt-1) return;
     
-    ndim=tg->ndim;
+    // ndim=tg->ndim;
     IASN(ind,IPNT_0);
     
     int iet = (int)(wtime/tg->dt);
