@@ -27,6 +27,7 @@ skiplist =  [
                 'book/data/teapotdome/geom',
                 'book/data/teapotdome/tahnmostack',
 		'book/data/teapotdome/tahsubset',
+		'book/data/p-cable/geom',
 		'book/geo384w/hw6/hyper',						
 		'book/trip/test/flat',
                 'book/geo391/hw2/sorting',						

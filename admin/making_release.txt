@@ -89,4 +89,19 @@ Try running sfdoc
 
 14. Test compilation
 
+15. Create a branch of the core
+
+svn copy  https://svn.code.sf.net/p/rsf/code/branches/madagascar-1.7 https://svn.code.sf.net/p/rsf/code/branches/madagascar-core-1.7 -m 'new release'
+
+svn co https://svn.code.sf.net/p/rsf/code/branches/madagascar-core-1.7
+
+cd madagascar-core-1.7
+
+16. Clean core
+
+svn delete system/seismic trip
+
+svn delete book/bei book/geo384w (and everything else seismic-related in book)
+
+
 
