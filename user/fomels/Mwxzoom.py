@@ -70,7 +70,14 @@ class Canvas(wx.Window):
 
         image = self.rsf2image(inp)
         self.image = image.ConvertToBitmap()
+        self.color = 'Yellow'
+        self.thickness = 1
+        self.pen = wx.Pen(self.color,self.thickness,wx.SOLID)
+        self.brush = wx.Brush(self.color,wx.TRANSPARENT)
         self.Bind(wx.EVT_PAINT,self.OnPaint)
+        self.Bind(wx.EVT_LEFT_DOWN,self.OnLeftDown)
+        self.Bind(wx.EVT_LEFT_UP,self.OnLeftUp)
+        self.Bind(wx.EVT_MOTION,self.OnMotion)
     def rsf2image(self,rsf):
         global ppmfiles
         ppm = os.path.splitext(rsf)[0]+'.ppm'
@@ -82,13 +89,34 @@ class Canvas(wx.Window):
             ppmfiles.append(ppm)
         img = wx.Image(ppm)
         return img
-    def OnPaint(self,evt):
-        dc = wx.PaintDC(self)
+    def OnPaint(self,event):
+        self.dc = wx.PaintDC(self)
         brush = wx.Brush('black')
-        dc.SetBackground(brush)
-        dc.Clear() # clear with background brush
-        dc.DrawBitmap(self.image,0,0,True)
-        
+        self.dc.SetBackground(brush)
+        self.dc.Clear() # clear with background brush
+        self.dc.DrawBitmap(self.image,0,0,True)
+    def OnLeftDown(self,event):
+        self.start = event.GetPositionTuple()
+        self.width = 0
+        self.height = 0
+        self.CaptureMouse()
+    def OnLeftUp(self,event):
+        if self.HasCapture():
+            self.ReleaseMouse()
+    def OnMotion(self,event):
+        if event.Dragging() and event.LeftIsDown():
+            self.drawSquare(event)
+        event.Skip()
+    def drawSquare(self,event):
+        pos = event.GetPositionTuple()
+        self.width = pos[0]-self.start[0]
+        self.height = pos[1]-self.start[1]
+        self.OnPaint(event)
+        self.dc.SetBrush(self.brush)
+        self.dc.SetPen(self.pen)
+        self.dc.DrawRectangle(self.start[0], self.start[1], 
+                              self.width, self.height)
+
 class MainFrame(wx.Frame):
     def __init__(self):
         wx.Frame.__init__(self,None,title=inp,size=(width+1,height+26))
