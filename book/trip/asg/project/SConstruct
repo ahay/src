@@ -7,7 +7,7 @@ stdmdl='standardmodel'
 ################################# OR ##################################
 RSFSRC          = os.getenv('RSFSRC')
 #asg             = os.path.join(RSFSRC,'trip/iwave/asg/main/asg.x')
-#stdmdl          = os.path.join(RSFSRC,'trip/iwave/demo/main/standardmodel.x')
+#stdmdl          = os.path.join(RSFSRC,'trip/iwave/grid/main/standardmodel.x')
 #######################################################################
 
 # dummy target
@@ -243,8 +243,8 @@ for r in range(4):
          asg + 
          ''' 
          bulkmod=${SOURCES[2]} buoyancy=${SOURCES[3]} 
-	 source_p=${SOURCES[4]} + data_p=${TARGETS[0]} 
-	 deriv=0 adjoint=0 order=2 cfl=0.75 cmin=1.0 
+	 source_p=${SOURCES[4]} data_p=${TARGETS[0]} 
+	 deriv=0 adjoint=0 order=4 cfl=0.75 cmin=1.0 
 	 cmax=4.5 dmin=0.8 dmax=3.0
 	 nr1=500 nl2=500 nr2=500 pmlampl=0.1
 	 ''',
