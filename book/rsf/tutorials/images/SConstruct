@@ -81,13 +81,7 @@ for image in ('bricks','photomic','clouds'):
       top='kwinkunks/timefreak')
     Flow(image,jpg,'jpg2byte | window n1=1 | dd type=float')
 
-Plot('line',None,
-     '''
-     spike n1=2 |
-     graph min2=0 max2=2 plotfat=3 wanttitle=n wantaxis=n pad=n 
-     ''')
-
-def Impair(image,lines=False,plots=False,rect=6):
+def Impair(image,lines=False,plots=False,rect=6,offset=0):
     low = image+'-low'
     Flow(low,image,'window j1=4 j2=4')
     gss = image+'-gss'
@@ -100,21 +94,28 @@ def Impair(image,lines=False,plots=False,rect=6):
     Flow(crp,image,'window f1=66 n1=68 f2=66 n2=68')
 
     images = [image,low,gss,bit,nse,crp]
+    line = image+'-line'
+    Plot(line,None,
+         '''
+         spike n1=2 mag=%d |
+         graph min2=0 max2=200 yreverse=y
+         plotfat=3 wanttitle=n wantaxis=n pad=n 
+         ''' % (100+offset))
     for case in images:
         if plots:
             if case==low:
-                f2=25
+                f2=25+offset
             elif case==crp:
-                f2=34
+                f2=34+offset
             else:
-                f2=100
+                f2=100+offset
             Plot(case,
                  '''
                  window n2=1 f2=%d | graph wanttitle=n labelsz=15
                  ''' % f2)
         elif lines:
             Plot(case+'0',case,'grey wantaxis=n wanttitle=n transp=n mean=y')
-            Plot(case,[case+'0','line'],'Overlay')
+            Plot(case,[case+'0',line],'Overlay')
         else:
             Plot(case,'grey wantaxis=n wanttitle=n transp=n mean=y')
     Result(image,images,'SideBySideAniso',vppen='yscale=%g' % (10.24/7.5))
@@ -136,11 +137,11 @@ Flow('m32-zoom','m32',
      spline n1=200 o1=0 d1=%g | transp
      ''' % (866.0/200,866.0/200))
 
-Impair('m32-zoom',lines=True,rect=3)
+Impair('m32-zoom',lines=True,rect=3,offset=5)
 
 Flow('m32-zoom2','m32-zoom','cp')
 
-Impair('m32-zoom2',plots=True,rect=3)
+Impair('m32-zoom2',plots=True,rect=3,offset=5)
 
 Flow('clouds2','clouds','window j1=4 j2=4')
 
