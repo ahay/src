@@ -106,14 +106,23 @@ in book)
 
 python admin/cleanup.py > list.txt
 
+17. Make framework
 
-17. tar and upload to sourceforge.net
+cd madagascar-1.7/build/framework
 
-18. Announce on the blog
+cp ../../framework/setup.py .
 
-19. Edit $RSFSRC/VERSION.txt to 1.8-svn
+python setup.py sdist
 
-20. Edit $RSFSRC/NEWS.txt to record the time of the release. Add
+cp dist/dist/madagascar-framework-1.7-1.tar.gz ~
+
+18. tar and upload to sourceforge.net
+
+19. Announce on the blog
+
+20. Edit $RSFSRC/VERSION.txt to 1.8-svn
+
+21. Edit $RSFSRC/NEWS.txt to record the time of the release. Add
 release notes to http://www.ahay.org/wiki/Release_Notes
 
 
