@@ -64,8 +64,8 @@ Jia Yan <jyan@mines.edu>
 Jun Yan <junyan@mail.iggcas.ac.cn>
 Pengliang Yang <ypl.2100@gmail.com>
 Lexing Ying <lexing@math.utexas.edu>
+Zhendong Zhang <zhendong.zhang@kaust.edu.sa>
 Hejun Zhu <hzhu@jsg.utexas.edu>
-
 
 Vplot authors:
 

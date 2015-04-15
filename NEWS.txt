@@ -14,6 +14,8 @@ To the Python package:
 
 To programs:
 
+* user/zdzhang: New contributor (Zhendong Zhang)
+
 ===Bug fixes===
 
 In the reproducible documents collection:

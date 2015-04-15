@@ -125,4 +125,6 @@ cp dist/dist/madagascar-framework-1.7-1.tar.gz ~
 21. Edit $RSFSRC/NEWS.txt to record the time of the release. Add
 release notes to http://www.ahay.org/wiki/Release_Notes
 
+22. Edit  https://en.wikipedia.org/wiki/Madagascar_%28software%29 to update release information
+
 
