@@ -1,0 +1,3 @@
+uses=['sfspike', 'sfsmooth', 'sfreverse', 'sfcat', 'sfmax', 'sftransp', 'sfmin', 'sfnoise', 'sfdespike2', 'sfgrey', 'sfjpg2byte', 'sfwindow', 'sfdd', 'sfgaussmooth', 'sfgraph', 'sfmath', 'sfmul', 'sfspline', 'sfcp']
+data=['kwinkunks/timefreak/master/m32.jpg', 'vis/a010000/a010400/a010485/M31_Wide.jpg', 'kwinkunks/timefreak/master/bricks.jpg', 'kwinkunks/timefreak/master/photomic.jpg', 'kwinkunks/timefreak/master/clouds.jpg']
+size=  316887832

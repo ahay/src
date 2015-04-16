@@ -82,15 +82,22 @@ for image in ('bricks','photomic','clouds'):
     Flow(image,jpg,'jpg2byte | window n1=1 | dd type=float')
 
 def Impair(image,lines=False,plots=False,rect=6,offset=0):
+    titles={}
+    titles[image] = 'Original'
     low = image+'-low'
+    titles[low] = 'Subsampled'
     Flow(low,image,'window j1=4 j2=4')
     gss = image+'-gss'
+    titles[gss] = 'Smoothed'
     Flow(gss,image,'smooth rect1=%d rect2=%d' % (rect,rect))
     bit = image+'-bit'
+    titles[bit] = 'Bit reduced'
     Flow(bit,image,'math output="0.5+input*4/256" | dd type=int | dd type=float')
     nse = image+'-nse'
+    titles[nse] = 'Noisified'
     Flow(nse,image,'noise seed=2015 rep=y type=n mean=1 | mul $SOURCE')
     crp = image+'-crp'
+    titles[crp] = 'Cropped'
     Flow(crp,image,'window f1=66 n1=68 f2=66 n2=68')
 
     images = [image,low,gss,bit,nse,crp]
@@ -99,7 +106,7 @@ def Impair(image,lines=False,plots=False,rect=6,offset=0):
          '''
          spike n1=2 mag=%d |
          graph min2=0 max2=200 yreverse=y
-         plotfat=3 wanttitle=n wantaxis=n pad=n 
+         plotcol=3 plotfat=3 wanttitle=n wantaxis=n pad=n 
          ''' % (100+offset))
     for case in images:
         if plots:
@@ -111,13 +118,19 @@ def Impair(image,lines=False,plots=False,rect=6,offset=0):
                 f2=100+offset
             Plot(case,
                  '''
-                 window n2=1 f2=%d | graph wanttitle=n labelsz=15
+                 window n2=1 f2=%d | graph wanttitle=n labelsz=15 plotcol=3 plotfat=3
                  ''' % f2)
         elif lines:
-            Plot(case+'0',case,'grey wantaxis=n wanttitle=n transp=n mean=y')
+            Plot(case+'0',case,
+                 '''
+                 grey wantaxis=n title="%s" transp=n mean=y wheretitle=t titlesz=30
+                 ''' % titles[case])
             Plot(case,[case+'0',line],'Overlay')
         else:
-            Plot(case,'grey wantaxis=n wanttitle=n transp=n mean=y')
+            Plot(case,
+                 '''
+                 grey wantaxis=n title="%s" transp=n mean=y wheretitle=t titlesz=30
+                 ''' % titles[case])
     Result(image,images,'SideBySideAniso',vppen='yscale=%g' % (10.24/7.5))
 
 Flow('bricks2','bricks','window n1=200 n2=200 j1=2 j2=2')
