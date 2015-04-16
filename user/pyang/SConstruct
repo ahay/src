@@ -227,7 +227,7 @@ for prog in f90_mains:
     if 'f90' in api and F90:
         bldutil.depends90(env,sources,'M'+prog)
         prog = env.Program(prog,map(lambda x: x + '.f90',sources),
-                           LINK=proj.get('F90'))
+                           LINK=env.get('F90'))
     else:
         prog = env.RSF_Place('sf'+prog,None,var='F90')        
     if root:
