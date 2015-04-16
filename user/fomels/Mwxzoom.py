@@ -62,6 +62,16 @@ def rsf2image(rsf):
         ppmfiles.append(ppm)
     return img
 
+def hist(inp,func,var,default=None):
+    command = '< %s %s %s parform=n' % (inp,sfget,var)
+    devnull = open(os.devnull,"w")
+    pipe = subprocess.Popen(command,stdout=subprocess.PIPE,stderr=devnull,shell=True)
+    val = pipe.stdout.read().rstrip()
+    if val:
+        return func(val)
+    else:
+        return default
+
 class Canvas(wx.Window):
     def __init__(self,parent,ID):
         wx.Window.__init__(self,parent,ID,size=(width,height))
@@ -78,6 +88,25 @@ class Canvas(wx.Window):
         self.Bind(wx.EVT_LEFT_DOWN,self.OnLeftDown)
         self.Bind(wx.EVT_LEFT_UP,self.OnLeftUp)
         self.Bind(wx.EVT_MOTION,self.OnMotion)
+
+        self.SetFrame(inp)
+
+        self.label1 = hist(inp,str,'label1','Y')
+        self.unit1  = hist(inp,str,'unit1','')
+
+        self.label2 = hist(inp,str,'label2','X')
+        self.unit2  = hist(inp,str,'unit2','')
+
+    def SetFrame(self,inp):
+        n1 = hist(inp,int,'n1',1)
+        d1 = hist(inp,float,'d1',1.0)
+        self.o1 = hist(inp,float,'o1',0.0)
+        self.yscale = (n1-1)*d1/(y1-y0)
+        
+        n2 = hist(inp,int,'n2',1)
+        d2 = hist(inp,float,'d2',1.0)
+        self.o2 = hist(inp,float,'o2',0.0)
+        self.xscale = (n2-1)*d2/(x1-x0)
     def rsf2image(self,rsf):
         global ppmfiles
         ppm = os.path.splitext(rsf)[0]+'.ppm'
@@ -96,39 +125,69 @@ class Canvas(wx.Window):
         self.dc.Clear() # clear with background brush
         self.dc.DrawBitmap(self.image,0,0,True)
     def OnLeftDown(self,event):
-        self.start = event.GetPositionTuple()
+        x,y = event.GetPositionTuple()
+        self.x = min(max(x,x0),x1)
+        self.y = min(max(y,y0),y1)
         self.width = 0
         self.height = 0
         self.CaptureMouse()
     def OnLeftUp(self,event):
         if self.HasCapture():
             self.ReleaseMouse()
+            x,y = event.GetPositionTuple()
+            x = min(max(x,x0),x1)
+            y = min(max(y,y0),y1)
+            self.Redraw(x,y)
+    def Redraw(self,x,y):
+        pass
     def OnMotion(self,event):
         if event.Dragging() and event.LeftIsDown():
             self.drawSquare(event)
         event.Skip()
     def drawSquare(self,event):
-        pos = event.GetPositionTuple()
-        self.width = pos[0]-self.start[0]
-        self.height = pos[1]-self.start[1]
+        x,y = event.GetPositionTuple()
+        x = min(max(x,x0),x1)
+        y = min(max(y,y0),y1)
+        self.width  = x-self.x
+        self.height = y-self.y
         self.OnPaint(event)
         self.dc.SetBrush(self.brush)
         self.dc.SetPen(self.pen)
-        self.dc.DrawRectangle(self.start[0], self.start[1], 
+        self.dc.DrawRectangle(self.x, self.y, 
                               self.width, self.height)
-
+    def Position(self,x,y):
+        if x >= x0 and y >= y0 and x <= x1 and y <= y1:
+            x = self.o2+(x-x0)*self.xscale
+            y = self.o1+(y-y0)*self.yscale
+            return '(%s = %g %s, %s = %g %s)' % (self.label1,y,self.unit1,
+                                                 self.label2,x,self.unit2)
+        else:
+            return ''
+        
 class MainFrame(wx.Frame):
     def __init__(self):
         wx.Frame.__init__(self,None,title=inp,size=(width+1,height+26))
 
-        self.sketch = Canvas(self,-1)
+        panel = wx.Panel(self, wx.ID_ANY)
+        panel.Bind(wx.EVT_CHAR, self.OnKeyDown)
+        panel.SetFocus()
+
+        self.sketch = Canvas(panel,-1)
         self.sketch.Bind(wx.EVT_MOTION,self.OnSketchMotion)
 
         self.status = self.CreateStatusBar()
         self.status.SetFieldsCount(1)
-
     def OnSketchMotion(self,event):
-        self.status.SetStatusText('Pos: ' + str(event.GetPositionTuple()),0)
+        x,y = event.GetPositionTuple()
+        position = self.sketch.Position(x,y)
+        self.status.SetStatusText(position,0)
+        event.Skip()
+    def OnKeyDown(self,event):
+        keycode = event.GetKeyCode()
+        if keycode == wx.WXK_ESCAPE:
+            print 'Escape'
+        elif chr(keycode) == 'q':
+            sys.exit(0)
         event.Skip()
 
 @atexit.register
