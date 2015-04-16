@@ -20,6 +20,7 @@ Note: Acquistion geometry specified by mask operator.
 */
 #include <rsf.h>
 #include <math.h>
+#include <complex.h>
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -86,11 +87,9 @@ int main(int argc, char* argv[])
 	/* initialization */
     	sf_floatread(dobs_t, n1*n2, in);
     	if (NULL != sf_getstring("mask")){
-	    mask=sf_floatalloc(n2);
-	    sf_floatread(mask,n2,Fmask);
-    	} else {
-	    mask=NULL;
-	}
+		mask=sf_floatalloc(n2);
+		sf_floatread(mask,n2,Fmask);
+    	}
 
 	/*transform the data from time domain to frequency domain: tdat-->wdat*/
 	fftwf_execute(fft1);

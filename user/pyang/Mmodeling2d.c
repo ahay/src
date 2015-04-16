@@ -181,12 +181,9 @@ int main(int argc, char* argv[])
    	if (!sf_histfloat(vinit,"d2",&dx)) sf_error("no d2");
 
    	if(sf_getbool("chk",&chk)) {
-	    check=sf_output("check");/* output shotsnap for correctness checking*/
-	    if (!sf_getint("kt",&kt))  kt=100;/* check it at it=100 */
-	} else {
-	    chk=false;
-	    check = NULL;
-	}
+		check=sf_output("check");/* output shotsnap for correctness checking*/
+		if (!sf_getint("kt",&kt))  kt=100;/* check it at it=100 */
+	} else chk=false;
     	/*check whether GPU-CPU implementation coincide with each other or not */
 	if (!sf_getfloat("amp",&amp)) amp=1000;
 	/* maximum amplitude of ricker */

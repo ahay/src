@@ -301,7 +301,7 @@ int main(int argc, char* argv[])
 	for(ix=0;ix<nxpad;ix++){
 	    for(iz=0;iz<nzpad;iz++){
 		tmp=vv[ix][iz]*dt;
-		vv[ix][iz]=tmp*tmp;/* vv=vv^2*dt^2 */
+		vv[ix][iz]=tmp*tmp;// vv=vv^2*dt^2
 	    }
 	}
 

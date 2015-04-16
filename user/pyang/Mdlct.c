@@ -23,6 +23,7 @@
 	11th International Conference on. IEEE, 2012.
 */
 #include <rsf.h>
+#include <complex.h>
 
 #include "dlct.h"
 

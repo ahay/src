@@ -354,7 +354,7 @@ void muting(float *seis_kt, int gzbeg, int szbeg, int gxbeg, int sxc, int jgx, i
 		a=dx*abs(gxbeg+id*jgx-sxc);
 		b=dz*(gzbeg-szbeg);
 		t0=sqrtf(a*a+b*b)/vmute;
-		kt=t0/dt+tdmute;/* tdmute manually added to obtain the best muting effect. */
+		kt=t0/dt+tdmute;// tdmute manually added to obtain the best muting effect.
     		if (it<kt) seis_kt[id]=0.;
 	}
 }
@@ -374,16 +374,16 @@ void cross_correlation(float ***num, float **den, float **sp, float **gp, float 
 		Ssx=sp[i2+nb][i1+nb]*svx[i2+nb][i1+nb];
 		Sgz=gp[i2+nb][i1+nb]*gvz[i2+nb][i1+nb];
 		Sgx=gp[i2+nb][i1+nb]*gvx[i2+nb][i1+nb];
-		b1=Ssz*Ssz+Ssx*Ssx;/*|Ss|^2 */
-		b2=Sgz*Sgz+Sgx*Sgx;/*|Sg|^2 */
-		a=Ssx*Sgx+Ssz*Sgz; /* <Ss,Sg> */
+		b1=Ssz*Ssz+Ssx*Ssx;//|Ss|^2
+		b2=Sgz*Sgz+Sgx*Sgx;//|Sg|^2
+		a=Ssx*Sgx+Ssz*Sgz; //<Ss,Sg>
 		a=a/sqrtf(b1*b2+SF_EPS);	
 	
 		a=0.5*acosf(a);
 		ia=(int)(a/da);
 		if(ia==na) ia=ia-1;
-		num[ia][i2][i1]+=sp[i2+nb][i1+nb]*gp[i2+nb][i1+nb]*expf(-(a-ia*da)*(a-ia*da)/var); /* numerator */
-		den[i2][i1]+=sp[i2+nb][i1+nb]*sp[i2+nb][i1+nb];/* denominator */
+		num[ia][i2][i1]+=sp[i2+nb][i1+nb]*gp[i2+nb][i1+nb]*expf(-(a-ia*da)*(a-ia*da)/var); //numerator
+		den[i2][i1]+=sp[i2+nb][i1+nb]*sp[i2+nb][i1+nb];//denominator
 	}
 }
 
