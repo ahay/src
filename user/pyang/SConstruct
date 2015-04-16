@@ -15,8 +15,9 @@ viscoa2d viscoe2d checkptdemo
 
 ######################################################################
 # 2. C++ main programs
-ccprogs = '''clip_test
+ccprogs = '''
 '''
+#clip_test
 
 ######################################################################
 # 3. MPI main programs
@@ -44,9 +45,9 @@ fd2d_test
 
 ######################################################################
 # 7. python mains programs
-pyprogs='''
-shuffle_test
+pyprogs='''shuffle_test
 '''
+
 pymods='''
 '''
 
