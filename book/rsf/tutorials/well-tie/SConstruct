@@ -76,33 +76,61 @@ Flow('slowness','DT-despike dz','div ${SOURCES[1]} | clip2 lower=1000')
 Plot('slowness','DEPT slowness',
      '''
      cmplx ${SOURCES[1]} | window n1=21692 |
-     graph transp=y yreverse=y min1=500 max1=4500 grid=y plotfat=3
+     graph transp=y yreverse=y min1=750 max1=4250 grid=y plotfat=3
      title=function unit1=m label2="P-wave slowness" unit2="\F10 m\F3 m/s" labelsz=12 titlesz=15
      ''')
 
 Plot('twt','DEPT tdr',
      '''
      cmplx ${SOURCES[1]} | window n1=21692 |
-     graph transp=y yreverse=y min1=500 max1=4500 grid=y plotfat=3
+     graph transp=y yreverse=y min1=750 max1=4250 grid=y plotfat=3
      title=integral unit1=m label2="two-way time" unit2="s" labelsz=12 titlesz=15
      ''')
 
 Plot('impedance','DEPT z',
      '''
      cmplx ${SOURCES[1]} | window n1=21692 |
-     graph transp=y yreverse=y min1=500 max1=4500 grid=y plotfat=3
+     graph transp=y yreverse=y min1=750 max1=4250 grid=y plotfat=3
      title=impedance unit1=m label2= unit2="kg/(m\^2\_s)" labelsz=12 titlesz=15
      ''')
 
 Plot('reflectivity','DEPT rc',
      '''
      cmplx ${SOURCES[1]} | window n1=21692 |
-     graph transp=y yreverse=y min1=500 max1=4500 grid=y plotfat=3
+     graph transp=y yreverse=y min1=750 max1=4250 grid=y plotfat=3
      title=reflectivity unit1=m label2= unit2= labelsz=12 titlesz=15
      ''')
 
-Result('four','slowness twt impedance reflectivity','SideBySideAniso')
+Plot('four','slowness twt impedance reflectivity','SideBySideAniso')
 
 # add labels for well tops
+
+welltops = {
+    'Abenaki': 3404.311,
+    'Base O-Marker': 2469.207,
+    'Dawson Canyon': 984.504,
+    'L Baccaro': 3964.534,
+    'L Missisauga': 3190.646,
+    'Logan Canyon': 1136.904,
+    'Mid Baccaro': 3485.083,
+    'U Missisauga': 2251.253,
+    'Wyandot': 867.156
+    }
+
+plots = ['four']
+a = (8.95-1.3)/(750-4250)
+b = 1.3-4250*a 
+for top in welltops.keys():
+    name = top.replace(' ','-').lower()
+    Plot(name,None,'box font=2 x0=12.5 y0=%g label="%s" size=0.15 xt=0 yt=0' % (a*welltops[top]+b,top))
+    plots.append(name)
+
+Result('four',plots,'Overlay')
+
+# Convert to two-way-traveltime
+
+# Create synthetic
+
+
 
 End()
