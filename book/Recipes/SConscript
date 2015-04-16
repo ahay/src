@@ -1,4 +1,4 @@
-Import('env pkgdir')
+Import('env srcdir pkgdir')
 
 import os
 

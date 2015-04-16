@@ -128,7 +128,7 @@ for dir in map(lambda x: os.path.join('book',x),Split('Recipes gallery')):
         VariantDir(build,dir)
     else:
         BuildDir(build,dir)
-    SConscript(dirs=build,name='SConscript',exports='env pkgdir')
+    SConscript(dirs=build,name='SConscript',exports='env srcdir pkgdir')
     Default(build)
     
 ##########################################################################
