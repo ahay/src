@@ -1684,7 +1684,7 @@ def omp(context):
     f90flags = context.env.get('F90FLAGS','')
     pgf90 = (string.rfind(F90,'pgf90') >= 0)
     gfortran = (string.rfind(F90,'gfortran') >= 0) or (string.rfind(F90,'gfc') >= 0)
-    ifott = (string.rfind(F90,'ifort') >= 0)
+    ifort = (string.rfind(F90,'ifort') >= 0)
     if pgf90:
         F90FLAGS = f90flags + ' -mp'
     elif gfortran:
