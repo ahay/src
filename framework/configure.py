@@ -1710,7 +1710,7 @@ end
     res = context.TryLink(text,'.f90')
     if not res:
         context.env['F90FLAGS'] = f90flags
-    conext.env['LINK'] = linker
+    context.env['LINK'] = linker
 
 def pthreads(context):
     context.Message("checking for Posix threads ... ")
