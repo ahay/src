@@ -34,6 +34,7 @@ In programs:
 In the build system:
 
 * Fixed installation of the gallery scripts
+* Improved configuration for Fortran-90 programs
 
 ===Changes in defaults and interfaces===
 
