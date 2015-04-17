@@ -8,8 +8,8 @@ import bldutil
 progs = '''
 cohn dlct fpocs2d fpocs3d fwi2d fbrec2d 
 istinterp istpad istseislet lsrtm2d lsprtm2d lsinterp2d 
-mwni2d myradon1 myradon2 mythresh mshots mcaseislet matflip modeling2d
-pocs3d pocs pocsseislet rtm2d rtmadcig mysnr
+mwni2d myradon1 myradon2 mythresh mshots mcaseislet modeling2d mysnr
+pocs3d pocs pocsseislet rtm2d rtmadcig 
 Testfd2d Testfd3d Testeb Testelastic2d Testaniso Testspml
 viscoa2d viscoe2d checkptdemo rtmva2d
 '''
@@ -17,8 +17,8 @@ viscoa2d viscoe2d checkptdemo rtmva2d
 ######################################################################
 # 2. C++ main programs
 ccprogs = '''
-clip_test
 '''
+#clip_test
 
 ######################################################################
 # 3. MPI main programs
@@ -41,14 +41,14 @@ mpigpufwi
 ######################################################################
 # 6. F90 main programs
 f90_progs = '''
-fd2d_test
 '''
+#fd2d_test
 
 ######################################################################
 # 7. python mains programs
 pyprogs='''
-shuffle_test
 '''
+#shuffle_test
 
 pymods='''
 '''
@@ -62,13 +62,14 @@ except: # local version
     root = None
     SConscript('../pwd/SConstruct')
     SConscript('../../api/c++/SConstruct')
-    SConscript('../../api/f90/SConstruct')
+#    SConscript('../../api/f90/SConstruct')
 
 src = Glob('[a-z]*.c')
 
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
             LIBS=[env.get('DYNLIB','')+'rsfpwd',
+		  env.get('DYNLIB','')+'rsf++',
                   env.get('DYNLIB','')+'rsf'])
 
 # fftw settings
