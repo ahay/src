@@ -323,7 +323,8 @@ int main(int argc, char* argv[])
   sf_putfloat(Fw,"d3",jt*dt);
   sf_putfloat(Fw,"o3",ft*dt);
 
-  noc=10*nob;//number of checkpoints, make sure: nob << noc << nt
+  noc=10*nob;//number of checkpoints
+  if (noc>=nt) sf_error("make sure: nob << noc << nt");
   _dx=1./dx;
   _dz=1./dz;
   nzpad=nz+2*nb;
