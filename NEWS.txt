@@ -4,6 +4,9 @@
 
 To the reproducible documents collection:
 
+* xjtu/mcaseislet: Seislet-based morphological component analysis
+  using scale-dependent exponential shrinkage (Yang and Fomel)
+
 To SCons:
 
 To documentation:
@@ -29,6 +32,8 @@ In the Python package:
 In programs:
 
 In the build system:
+
+* Fixed installation of the gallery scripts
 
 ===Changes in defaults and interfaces===
 
