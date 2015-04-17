@@ -31,7 +31,7 @@ if 'f90' in api and F90:
     if F90base[:8] == 'gfortran' or F90base[:3] == 'gfc':
         env.Append(F90FLAGS=' -J${SOURCE.dir}')
     elif F90base == 'ifort':
-        env.Append(F90FLAGS=' -module ${SOURCE.dir}')
+        env.Append(F90FLAGS=' -module ${SOURCE.dir}/../../include')
 
 for prog in mains:
     sources = ['M' + prog]

@@ -6,6 +6,7 @@ try:
     glob_build = True # scons command launched in RSFSRC
     srcroot = '../..' # cwd is RSFSRC/build/user/jeff
     Import('env bindir libdir pkgdir')
+    env = env.Clone()
 except:
     glob_build = False # scons command launched in the local directory
     srcroot = os.environ.get('RSFSRC', '../..')
@@ -15,16 +16,6 @@ except:
     bindir = libdir = pkgdir = None
     
 targets = bldutil.UserSconsTargets()
-
-F90 = env.get('F90')
-api = env.get('API',[])
-
-if 'f90' in api and F90:
-	F90base= os.path.basename(F90)
- 	if F90base[:8]== 'gfortran' or F90base[:3]=='gfc':
-		env.Append(F90FLAGS=' -fopenmp -fbackslash ')
-        elif F90base == 'ifort':
-    		env.Append(F90FLAGS=' -module -fbackslash -fopenmp ${SOURCE.dir}')
 
 # C mains
 targets.c = '''

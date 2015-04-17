@@ -17,18 +17,30 @@ except:
     
 targets = bldutil.UserSconsTargets()
 
-F90 = env.get('F90')
-api = env.get('API',[])
-
 # C mains
 targets.c = '''
-ewefd2d_omp
-ewefd3d_omp
+norm2
+reciprocity
+axplusy
+adjgradient2d
+adjgradient2d_coupled
+wem2d_iso
 modelcreate
+ewefd2d_omp
+ewefd3d_omp 
 '''
 
 # F90 mains
 targets.f90 = '''
+stf2telewfld
+rfspecdiv
+tracealign
+rfccp
+MCCCnew
+rwe2d
+telemig2d
+rec2ps
+backus 
 '''
 
 targets.build_all(env, glob_build, srcroot, bindir, libdir, pkgdir)
