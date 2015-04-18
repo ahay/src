@@ -8,6 +8,9 @@ If called "byte", outputs char values.
 If called "bar", outputs scalebar data.
 
 Run "sfdoc stdplot" for more parameters.
+
+March 2015 program of the month:
+http://www.ahay.org/rsflog/index.php?/archives/429-Program-of-the-month-sfgrey.html
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
