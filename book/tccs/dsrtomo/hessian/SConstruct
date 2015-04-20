@@ -30,10 +30,9 @@ Flow('dsr fdsr','modl','dsreiko flag=${TARGETS[1]}')
 # DSR gradient
 Flow('dsrg','dsr fdsr modl',
      '''
-     math output=1. | cut n1=%d f1=1 | cut n2=%d | cut n3=%d f3=1 |
-     dsrtomo what=l adj=y reco=${SOURCES[0]} flag=${SOURCES[1]} grad=${SOURCES[2]}
-     ''' % (n1-1,n2-1,n2-1))
-
+     math output=1. | window n1=1 | cut n1=%d | cut n2=%d f2=1 |
+     dsrtomo what=l adj=y time=${SOURCES[0]} flag=${SOURCES[1]} grad=${SOURCES[2]}
+     ''' % (n2-1,n2-1))
 Plot('dsrg',
      '''
      grey color=j scalebar=y allpos=y screenratio=0.455
