@@ -314,7 +314,7 @@ void sf_conjgrad_adj(bool adj /* adjoint flag */,
     }
 
     if (adj) { /* dat -> x */
-	for (i=0; i < nr; i++) {
+	for (i=0; i < nx; i++) {
 	    x[i] = y[i];
 	}
     } else { /* x -> dat */
