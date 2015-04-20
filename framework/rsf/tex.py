@@ -505,7 +505,10 @@ dataserver = os.environ.get('RSF_DATASERVER','http://www.ahay.org')
 
 def _datalink(name):
     global dataserver
-    link = '<a href="%s/%s">%s</a>' % (dataserver,name,name)
+    if name[:4] == 'http' or name[:3] == 'ftp':
+        link = '<a href="%s">%s</a>' % (name,name)
+    else:
+        link = '<a href="%s/%s">%s</a>' % (dataserver,name,name)
     return link
  
 def colorize(target=None,source=None,env=None):

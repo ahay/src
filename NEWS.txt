@@ -23,6 +23,8 @@ To programs:
 
 In the reproducible documents collection:
 
+* Fixed links to the data files in the case of a non-default data server
+
 In documentation:
 
 In APIs:

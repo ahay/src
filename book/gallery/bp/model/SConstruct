@@ -1,7 +1,5 @@
 from rsf.proj import *
-
-sys.path.append('..')
-import bp
+from rsf.gallery import bp
 
 bp.getvel('bpvel')
 

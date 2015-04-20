@@ -1,6 +1,8 @@
-import copy
 from rsf.proj import *
+from rsf.gallery import bp
 from rsf.recipes.sglfdrtm import *
+
+import copy
 
 zcat = WhereIs('gzcat') or WhereIs('zcat')
 

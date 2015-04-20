@@ -655,7 +655,9 @@ class Project(Environment):
             if not type(files) is types.ListType:
                 files = string.split(files)
             for fil in files:
-                if top:
+                if server != dataserver:
+                    self.data.append(os.path.join(server,top,dir,fil))
+                elif top:
                     self.data.append(os.path.join(top,dir,fil))
                 else:
                     self.data.append(os.path.join(dir,fil))
