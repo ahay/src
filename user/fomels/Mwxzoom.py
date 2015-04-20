@@ -50,18 +50,6 @@ x1 = 937
 y0 = 96
 y1 = 671
 
-def rsf2image(rsf):
-    global ppmfiles
-    ppm = os.path.splitext(rsf)[0]+'.ppm'
-    command = '< %s %s %s | %s > %s' % (rsf,sfgrey,' '.join(sys.argv[2:]),ppmpen,ppm)
-    if os.system(command) or not os.path.isfile(ppm):
-        sys.stderr.write('Failed to execute "%s"\n\n' % command)
-        sys.exit(3)
-    img = PhotoImage(file=ppm)
-    if not ppm in ppmfiles:
-        ppmfiles.append(ppm)
-    return img
-
 def hist(inp,func,var,default=None):
     command = '< %s %s %s parform=n' % (inp,sfget,var)
     devnull = open(os.devnull,"w")
@@ -138,8 +126,25 @@ class Canvas(wx.Window):
             x = min(max(x,x0),x1)
             y = min(max(y,y0),y1)
             self.Redraw(x,y)
+            self.OnPaint(event)
     def Redraw(self,x,y):
-        pass
+        x1 = self.o2+(self.x-x0)*self.xscale
+        x2 = self.o2+(     x-x0)*self.xscale
+        xmin = min(x1,x2)
+        xmax = max(x1,x2)
+        y1 = self.o1+(self.y-y0)*self.yscale
+        y2 = self.o1+(     y-y0)*self.yscale
+        ymin = min(y1,y2)
+        ymax = max(y1,y2)
+        inp2 = tempfile.mktemp(suffix='.rsf')
+        command = '< %s %s min1=%g max1=%g min2=%g max2=%g > %s' % (inp,sfwindow,ymin,ymax,xmin,xmax,inp2)
+        if os.system(command) or not os.path.isfile(inp2):
+            sys.stderr.write('Failed to execute "%s"\n\n' % command)
+            sys.exit(4)
+        rsffiles.append(inp2)
+        self.SetFrame(inp2)
+        image = self.rsf2image(inp)
+        self.image = image.ConvertToBitmap()
     def OnMotion(self,event):
         if event.Dragging() and event.LeftIsDown():
             self.drawSquare(event)
