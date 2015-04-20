@@ -656,7 +656,10 @@ class Project(Environment):
                 files = string.split(files)
             for fil in files:
                 if server != dataserver:
-                    self.data.append(os.path.join(server,top,dir,fil))
+                    if top:
+                        self.data.append(os.path.join(server,top,dir,fil))
+                    else:
+                        self.data.append(os.path.join(server,dir,fil))
                 elif top:
                     self.data.append(os.path.join(top,dir,fil))
                 else:
