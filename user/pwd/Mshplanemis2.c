@@ -18,12 +18,14 @@
 */
 
 #include <rsf.h>
+
 #include "pwsmooth.h"
+#include "pwsmooth2.h"
 
 int main(int argc, char* argv[])
 {
-    int i, niter, n1, n2, n12, i3, n3, ns, order;
-    float *mm, *dd, *xx, **pp, lam, eps;
+    int i, niter, n1, n2, n12, i3, n3, ns, order, np;
+    float *mm, *dd, *xx, **pp, **qq, lam, eps;
     bool *known;
     sf_file in, out, dip, mask;
 
@@ -47,7 +49,15 @@ int main(int argc, char* argv[])
     mm = sf_floatalloc(n12);
     xx = sf_floatalloc(n12);
     known = sf_boolalloc(n12);
-    
+
+    np = sf_leftsize(dip,2);
+
+    if (np > n3) {
+	qq = sf_floatalloc2(n1,n2);
+    } else {
+	qq = NULL;
+    }
+
     if (NULL != sf_getstring ("mask")) {
 	mask = sf_input("mask");
 	dd = sf_floatalloc(n12);
@@ -62,7 +72,7 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("eps",&eps)) eps=0.01;
     /* regularization */
 
-     sf_mask_init(known);
+    sf_mask_init(known);
     
     for (i3=0; i3 < n3; i3++) {
 	sf_warning("slice %d of %d",i3+1,n3);
@@ -92,14 +102,19 @@ int main(int argc, char* argv[])
 
 	/* read dip */
 	sf_floatread(pp[0],n12,dip);
-
-	pwsmooth_init(ns, n1, n2, order, eps, pp);
-
 	sf_conjgrad_init(n12, n12, n12, n12, lam, 10*FLT_EPSILON, true, true); 
-	sf_conjgrad(NULL,sf_mask_lop,pwsmooth_lop,xx,mm,mm,niter);
-	sf_conjgrad_close();
 
-	pwsmooth_close();
+	if (NULL != qq) {
+	    sf_floatread(qq[0],n12,dip);
+	    pwsmooth2_init(ns, n1, n2, order, eps, pp, qq);
+	    sf_conjgrad(NULL,sf_mask_lop,pwsmooth2_lop,xx,mm,mm,niter);
+	    pwsmooth2_close();
+	} else {
+	    pwsmooth_init(ns, n1, n2, order, eps, pp);
+	    sf_conjgrad(NULL,sf_mask_lop,pwsmooth_lop,xx,mm,mm,niter);
+	    pwsmooth_close();
+	}
+	sf_conjgrad_close();
 
 	sf_floatwrite (mm,n12,out);
     }
