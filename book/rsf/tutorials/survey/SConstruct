@@ -38,10 +38,10 @@ Flow('src',None,
 
 minmax = ' min1=574.5 max1=578.5 min2=4709.75 max2=4712.1'
 
-Plot('rcv','graph symbol=* symbolsz=8 wanttitle=n plotcol=4' + minmax)
-Plot('src','graph symbol=* symbolsz=8 wanttitle=n plotcol=5 wantaxis=n' + minmax)
+Plot('rcv','graph symbol=* symbolsz=8 wanttitle=n plotcol=5' + minmax)
+Plot('src','graph symbol=* symbolsz=8 wanttitle=n plotcol=2 wantaxis=n' + minmax)
 
-Result('survey','rcv src','Overlay')
+Plot('survey','rcv src','Overlay')
 
 Flow('cmp',None,
      '''
@@ -55,6 +55,8 @@ Flow('cmp',None,
             sperline,ymi,si,slines,xmi,SL,
             rperline*rlines,sperline*slines))
 
-Result('cmp','graph symbol=* symbolsz=6 title="Midpoints" plotcol=2' + minmax)
+Plot('cmp','graph symbol=. symbolsz=5 wanttitle=n plotcol=4' + minmax)
+
+Result('survey','cmp survey','Overlay')
 
 End()
