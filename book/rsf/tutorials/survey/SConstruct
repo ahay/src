@@ -1,0 +1,60 @@
+from rsf.proj import *
+
+xmi = 575        # Easting of bottom-left corner of grid (km)
+ymi = 4710       # Northing of bottom-left corner (km)
+SL = 0.6         # Source line interval (km)
+RL = 0.6         # Receiver line interval (km)
+si = 0.1         # Source point interval (km)
+ri = 0.1         # Receiver point interval (km)
+x = 3            # x extent of survey (km)
+y = 1.8          # y extent of survey (km)
+
+# Calculate the number of receiver and source lines.
+rlines = int(y/RL) + 1
+slines = int(x/SL) + 1
+
+# Calculate the number of points per line (add 2 to straddle the edges). 
+rperline = int(x/ri) + 2 
+sperline = int(y/si) + 2
+
+# Offset the receiver points.
+shiftx = -si/2.
+shifty = -ri/2.
+
+# Find x and y coordinates of receivers and sources.
+Flow('rcv',None,
+     '''
+     math type=complex output="x1+I*x2"
+     n1=%d o1=%g d1=%g label1=X unit1=km
+     n2=%d o2=%g d2=%g label2=Y unit2=km
+     ''' % (rperline,xmi+shiftx,ri,rlines,ymi-shifty,RL))
+
+Flow('src',None,
+     '''
+     math type=complex output="x2+I*x1"
+     n1=%d o1=%g d1=%g label1=X unit1=km
+     n2=%d o2=%g d2=%g label2=Y unit2=km
+     ''' % (sperline,ymi,si,slines,xmi,SL))
+
+minmax = ' min1=574.5 max1=578.5 min2=4709.75 max2=4712.1'
+
+Plot('rcv','graph symbol=* symbolsz=8 wanttitle=n plotcol=4' + minmax)
+Plot('src','graph symbol=* symbolsz=8 wanttitle=n plotcol=5 wantaxis=n' + minmax)
+
+Result('survey','rcv src','Overlay')
+
+Flow('cmp',None,
+     '''
+     math type=complex output="(x1+x4)/2+I*(x2+x3)/2"
+     n1=%d o1=%g d1=%g 
+     n2=%d o2=%g d2=%g 
+     n3=%d o3=%g d3=%g 
+     n4=%d o4=%g d4=%g |
+     put n1=%d n2=%d n3=1 n4=1 label1=X unit1=km label2=Y unit2=km
+     ''' % (rperline,xmi+shiftx,ri,rlines,ymi-shifty,RL,
+            sperline,ymi,si,slines,xmi,SL,
+            rperline*rlines,sperline*slines))
+
+Result('cmp','graph symbol=* symbolsz=6 title="Midpoints" plotcol=2' + minmax)
+
+End()
