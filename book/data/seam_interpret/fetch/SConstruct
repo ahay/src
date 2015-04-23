@@ -1,0 +1,91 @@
+from rsf.proj import *
+# files have names like:
+#https://drive.google.com/file/d/0B2YKn_VsUkhNZWRiVFhnNkVjTDg/view?usp=sharing
+#https://s3.amazonaws.com/open.source.geoscience/open_data/seam_ph1_interpret/SEAM-Interpretation-Challenge-1-Description-12.31.14.pdf
+
+#https://s3.amazonaws.com/open.source.geoscience/open_data/seam_ph1_interpret/LICENSE-TO-SEAM-OPEN-DATA.pdf
+
+# first, look for a viewer to display the pdf files
+# kls open is used on my mac, but fails on my linux laptop.  The next line is
+#     not portable
+pdfread = WhereIs('acroread') or WhereIs('kpdf') or WhereIs('evince') or \
+          WhereIs('xpdf') or WhereIs('gv') or WhereIs('open')
+
+pdfs = Split('''
+SEAM-Interpretation-Challenge-1-Description-12.31.14
+LICENSE-TO-SEAM-OPEN-DATA
+''')
+
+if pdfread:
+    for pdf in pdfs:
+        Fetch(pdf+'.pdf',
+		dir='open_data/seam_ph1_interpret',
+        	server='https://s3.amazonaws.com/',
+        	top='open.source.geoscience', usedatapath=1)
+        Flow(pdf,pdf+'.pdf',pdfread + ' $SOURCE',stdin=0,stdout=0)
+
+segys=Split('''
+SEAM_Interpretation_Challenge_1_2DGathers_Depth
+SEAM_Interpretation_Challenge_1_2DGathers_Time
+SEAM_Interpretation_Challenge_1_2DSparseGathers_Depth
+SEAM_Interpretation_Challenge_1_2DSparseGathers_Time
+SEAM_Interpretation_Challenge_1_Depth
+SEAM_Interpretation_Challenge_1_Time
+''')
+
+for segy in segys:
+    Fetch(segy+'.sgy',
+		dir='open_data/seam_ph1_interpret',
+        	server='https://s3.amazonaws.com/',
+        	top='open.source.geoscience', usedatapath=1)
+    Flow([segy+'.rsf',segy+'_hdr.rsf',
+          segy+'.thdr',segy+'.bhdr'],
+         segy+'.sgy',
+         '''
+            sfsegyread tfile=${TARGETS[1]} 
+     	    hfile=${TARGETS[2]}  bfile=${TARGETS[3]} 
+         ''')
+    Flow(segy+'_headerattr.txt',segy+'_hdr.rsf',
+     'sfheaderattr > $TARGET && /bin/cat $TARGET',stdout=-1)
+
+images=Split(
+'''
+SEAM_Interpretation_Challenge_1_Depth
+SEAM_Interpretation_Challenge_1_Time
+''')
+# sftahread input=SEAM_Interpretation_Challenge_1_Depth.rsf | sftahgethw key=iline,xline >/dev/null
+
+for image in images:
+    Flow('mapped_'+image+'.rsf'+' '+'mapped_'+image+'_hdr.rsf',
+         image+'.rsf'+' '+image+'_hdr.rsf',
+        '''
+	sftahread \
+           input=${SOURCES[0]} \
+           verbose=1 \
+        | sftahwrite \
+           output=${TARGETS[0]} \
+           label2="iline" o2=1499 n2=1002 d2=6 \
+           label3="xline" o3=1499 n3=1169 d3=6 \
+           verbose=1 
+        ''',stdout=0, stdin=0)
+
+    Result('mapped_'+image,'sfwindow j3=100 |  sfgrey')
+    Result('xl5801'+image,'mapped_'+image,
+           'sfwindow min3=5801 max3=5801 |  sfgrey')
+
+    Result('mapped_'+image+'3d','mapped_'+image,
+          '''
+          byte 
+          | grey3 
+            frame1=300 frame2=500 frame3=580 
+            title='SEAM_Interpretation_Challenge_1' flat=n
+          ''')
+   
+
+
+
+End()
+
+
+
+
