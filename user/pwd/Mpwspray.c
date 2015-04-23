@@ -36,7 +36,7 @@ int main (int argc, char *argv[])
 
     if (!sf_histint(dip,"n1",&n1)) sf_error("No n1= in input");
     if (!sf_histint(dip,"n2",&n2)) sf_error("No n2= in input");
-    n3 = sf_leftsize(dip,2);
+    n3 = sf_leftsize(inp,2);
 
     if (!sf_getbool("verb",&verb)) verb=false;
     /* verbosity */
