@@ -51,13 +51,14 @@ int main(int argc, char* argv[])
     float *tabsrc, *taboff, *tabmid, *tabrcv ;
     float *numo, *nums, *numy, *numr         ;
     float *deno, *dens, *deny, *denr         ;
+    float *synthso, *synthrv                 ;
     float  o, s, y, r, d                     ;
     float  oh, os, oy, or, dh, ds, dy, dr    ;
     float  sloc, hloc, yloc, rloc            ;
-    int    nh, ns, ny, nr                    ;
+    int    nh, ns, ny, nr, nhs               ;
     int    N = 1, niter                      ;
     int    i, j, k, l                        ;
-    sf_file in, off, src, mid, rcv;
+    sf_file in, off, src, mid, rcv, so, rv;
 
     sf_init(argc, argv);
     in = sf_input("in");
@@ -120,7 +121,12 @@ int main(int argc, char* argv[])
     sf_putstring(rcv,"label1", "Receiver" );
     sf_putstring(rcv,"label2", "Amplitude");
 
-    sf_floatread(tabamp, nh * ns,in);
+    so = sf_output("so");
+    rv = sf_output("rv");
+
+    nhs = nh * ns;
+
+    sf_floatread(tabamp, nhs,in);
 
     numo = sf_floatalloc( nh);
     deno = sf_floatalloc( nh);
@@ -133,6 +139,9 @@ int main(int argc, char* argv[])
 
     numr = sf_floatalloc( nr);
     denr = sf_floatalloc( nr);
+
+    synthso = sf_floatalloc(nhs);
+    synthrv = sf_floatalloc(nhs);
 
     for ( i = 0 ; i < nh ; i ++ )
     {
@@ -201,6 +210,26 @@ int main(int argc, char* argv[])
     sf_floatwrite(tabsrc, ns,src);
     sf_floatwrite(tabmid, ny,mid);
     sf_floatwrite(tabrcv, nr,rcv);
+
+    for ( i = 0 ; i < nh ; i ++ )
+    {
+	for ( j = 0 ; j < ns ; j ++ )
+	{
+	    hloc = oh + i * dh;
+	    sloc = os + j * ds;
+	    rloc = sloc + hloc;
+
+	    l = (int) floorf( (rloc - or)/dr + 0.5 );
+
+	    assert( l >= 0 && l < nr );
+
+	    synthso[nh * j + i] = taboff[i] * tabsrc[j];
+	    synthrv[nh * j + i] = tabrcv[l]            ;
+	}
+    }
+
+    sf_floatwrite(synthso, nhs, so) ;
+    sf_floatwrite(synthrv, nhs, rv) ;
 
     exit(0);
 }

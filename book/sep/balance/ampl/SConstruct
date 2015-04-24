@@ -38,6 +38,17 @@ Flow('sr-rtrend','rtrend head',
 
 Result('sramplitude','sr-rtrend','grey bias=0.132783 clip=0.0258115 wanttitle=n')
 
+Flow('off src mid rcv so-stp rv-stp','rtrend',
+     '''
+     srseidel niter=10 
+     src=${TARGETS[1]} mid=${TARGETS[2]} rcv=${TARGETS[3]} so=${TARGETS[4]} rv=${TARGETS[5]}
+     ''')
 
+comps = dict(src='source',off='offset',mid='midpoint',rcv='receiver')
+
+for comp in comps.keys():
+    Result(comps[comp],comp,'graph wanttitle=n unit2= min2=0.11 max2=0.16')
+
+Result('sostripes','so-stp','grey mean=y wanttitle=n')
 
 End()
