@@ -29,12 +29,13 @@ Flow('receiver','rtrend','math output="(x1+x2)/0.0125" ')
 Flow('head','receiver source',
      'cat axis=3 ${SOURCES[1]} | dd type=int | transp plane=23 | transp')
 
-Flow('sr-rtrend','rtrend head',
-     '''
-     spray axis=1 n=1 | intbin head=${SOURCES[1]} xkey=0 ykey=1 | window j2=2 |
-     put label1=Receiver d1=0.0125 o1=-3.2375 d2=0.025 o2=0 | 
-     window n1=300 f1=405 n2=200 f2=385
-     ''')
+for case in ('rtrend','sobalcd'):
+    Flow('sr-'+case,[case,'head'],
+         '''
+         spray axis=1 n=1 | intbin head=${SOURCES[1]} xkey=0 ykey=1 | window j2=2 |
+         put label1=Receiver d1=0.0125 o1=-3.2375 d2=0.025 o2=0 | 
+         window n1=300 f1=405 n2=200 f2=385
+         ''')
 
 Result('sramplitude','sr-rtrend','grey bias=0.132783 clip=0.0258115 wanttitle=n')
 
@@ -50,5 +51,17 @@ for comp in comps.keys():
     Result(comps[comp],comp,'graph wanttitle=n unit2= min2=0.11 max2=0.16')
 
 Result('sostripes','so-stp','grey mean=y wanttitle=n')
+Result('rvstripes','rv-stp','grey mean=y wanttitle=n')
+
+Flow('off2','off','spray axis=2 n=994 d=0.025 o=0')
+Flow('src2','src','spray axis=1 n=120 d=0.025 o=-3.2375')
+Flow('offsrc','off2 src2','mul ${SOURCES[1]}')
+
+Flow('sobalcd','rtrend offsrc','div ${SOURCES[1]}')
+
+Result('sobalcd','grey mean=y wanttitle=n bias=7.21426 clip=0.750707')
+
+Result('srsobalcd','sr-sobalcd','grey mean=y wanttitle=n bias=7.21426 clip=0.750707')
+
 
 End()
