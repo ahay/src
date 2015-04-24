@@ -148,14 +148,16 @@ class Temp(str):
 
 class File(object):
     attrs = ['rms','mean','norm','var','std','max','min','nonzero','samples']
-    def __init__(self,tag,temp=False):
+    def __init__(self,tag,temp=False,name=''):
         'Constructor'
         if isinstance(tag,File):
-            # copy file
+            # copy file (name is ignored)
             self.__init__(tag.tag)
         elif _swig_ and isinstance(tag,numpy.ndarray):
             # numpy array
-            out = Output(Temp())
+            if not name:
+                name = Temp()
+            out = Output(name)
             shape = tag.shape
             dims = len(shape)
             for axis in range(1,dims+1):
@@ -164,7 +166,7 @@ class File(object):
             out.close()
             self.__init__(out,temp=True)
         elif _swig_ and isinstance(tag,list):
-            self.__init__(numpy.array(tag,'f'))
+            self.__init__(numpy.array(tag,'f'),name)
         else:
             self.tag = tag
         self.temp = temp

@@ -103,6 +103,10 @@ int main(int argc, char* argv[])
 		    /* percentage for thresholding (used when oper=t and niter > 0) */
 
 		    sf_sharpen_init(n1,perc);
+
+		    for (i1=0; i1 < n1; i1++) {
+			x[i1] = sf_cmplx(0.,0.);
+		    }
 		    break;
 		case 'd':
 		    for (i1=0; i1 < n1; i1++) {
