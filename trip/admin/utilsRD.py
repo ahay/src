@@ -203,7 +203,7 @@ def ModelingBorn_acd (fileOut='bornSG.su', fileIn1='waveletSG.su', fileIn2='csqM
 	  	/bin/cp ${SOURCES[3]} $TARGET &&
 		acd deriv=%(deriv)d adjoint=%(adj)d order=%(ord)d cmin=%(cmin)f cmax=%(cmax)f
 		source=${SOURCES[0]} csq=${SOURCES[1]} csq_d1=${SOURCES[2]} data=$TARGET
-		''' % params, 
+		dump_lda=%(dump_lda)d dump_term=%(dump_term)d''' % params, 
 		stdin=0,stdout=-1,workdir='bornSG.work')
 
 
@@ -212,11 +212,11 @@ def ModelingBorn_acd (fileOut='bornSG.su', fileIn1='waveletSG.su', fileIn2='csqM
 #*************************************************************************************************#
 
 # RTM
-def RTM_acd (fileOut='Mig', fileIn1='bornSG.su', fileIn2='csqModelSm', fileIn3='waveletSG.su', **params) :
+def RTM_acd (fileOut='Mig', fileIn1='bornSG.su', fileIn2='csqModelSm', fileIn3='waveletSG.su' , fileIn4='csqPerturbExtTransp', **params) :
 
-	Flow(fileOut,[fileIn1, fileIn2, fileIn3],
+	Flow(fileOut,[fileIn1, fileIn2, fileIn3, fileIn4],
      		'''
-     		scale < ${SOURCES[1]} > $TARGET dscale=0.0 &&
+     		scale < ${SOURCES[3]} > $TARGET dscale=0.0 &&
      		acd deriv=%(deriv)d adjoint=%(adj)d nsnaps=%(nsnaps)d order=%(ord)d cmin=%(cmin)f cmax=%(cmax)f 
      		data=${SOURCES[0]} csq=${SOURCES[1]} source=${SOURCES[2]} csq_b1=$TARGET sampord=1
      		''' % params,
