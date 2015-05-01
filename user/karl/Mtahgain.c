@@ -214,7 +214,7 @@ int main(int argc, char* argv[])
     /**********************************************************/
 
     /* put the history from the input file to the output */
-    sf_fileflush(out,in);
+    sf_fileflush(out,in); 
 
     /********************************************************/
     /* continue initialization specific to this tah program */
@@ -236,31 +236,31 @@ int main(int argc, char* argv[])
        ]
        }
     */
-    tpow_epow=sf_floatalloc(n1_headers);
+    tpow_epow=sf_floatalloc(n1_traces);
     if(tpow==0){
 	for (indx_time=0; indx_time<n1_traces; indx_time++){
 	    tpow_epow[indx_time]=1.0;
 	}
     } else {
 	for (indx_time=0; indx_time<n1_traces; indx_time++){
-	    tpow_epow[indx_time]=pow(o1+indx_time*d1,tpow);
+	    tpow_epow[indx_time]=powf(o1+indx_time*d1,tpow);
 	}
     }
     if(epow!=0){
 	for (indx_time=0; indx_time<n1_traces; indx_time++){
-	    tpow_epow[indx_time]*=exp(epow*(o1+indx_time*d1));
+	    tpow_epow[indx_time]*=expf(epow*(o1+indx_time*d1));
 	}
     }
 
     /***************************/
     /* start trace loop        */
     /***************************/
-    if(verbose>0)fprintf(stderr,"start trace loop\n");
- 
+    if(verbose>0)sf_warning("start trace loop");
+    
     itrace=0;
     while (!(get_tah(intrace, fheader, n1_traces, n1_headers, in))){
 	if(verbose>1 || (verbose==1 && itrace<5)){
-	    fprintf(stderr,"process tah %d in sftahmute\n",itrace);
+	    sf_warning("process tah %d in sftahgain;",itrace);
 	}
 	/********************/
 	/* process the tah. */
@@ -295,6 +295,7 @@ int main(int argc, char* argv[])
 	put_tah(intrace, fheader, n1_traces, n1_headers, out);
 	itrace++;
     }
+    if(verbose>=1) sf_warning(".");
 
     exit(0);
 }

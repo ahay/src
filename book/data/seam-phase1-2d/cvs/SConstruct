@@ -1,6 +1,8 @@
 from rsf.proj import *
 import math
 
+SConscript('../ntg/SConstruct')
+
 Flow(['stk.rsf' , 'stk_hdr.rsf'],
      ['../ntg/shots-receivers-23900_headfix.rsf',
       '../ntg/shots-receivers-23900_headfix_hdr.rsf'],
