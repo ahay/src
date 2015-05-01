@@ -1,4 +1,4 @@
-/* Multicomponent data registration analysis. */
+/* Data registration analysis. */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
     int wi;
     float *coord, **inp, *out, **oth, o1, d1, o2, d2, g0, dg, g;
     float *corr, *win1, *win2, a, b, a2, b2, ab, h, dw;
-    bool taper, diff, verb;
+    bool taper, diff, verb, shift;
     sf_file in, warped, other;
 
     sf_init (argc, argv);
@@ -52,6 +52,9 @@ int main(int argc, char* argv[])
     /* gamma origin */
     if (!sf_getfloat("dg",&dg)) dg=g0;
     /* gamma sampling */
+
+    if (!sf_getbool("shift",&shift)) shift=false;
+    /* use shift instead of stretch */
 
     other = sf_input("other");
 
@@ -136,7 +139,7 @@ int main(int argc, char* argv[])
 	g = g0 + ig*dg;
 
 	for (i1=0; i1 < n2; i1++) {
-	    coord[i1] = (o2+i1*d2)*g;
+	    coord[i1] = shift? o2+i1*d2+g: (o2+i1*d2)*g;
 	}
 
 	sf_int1_init (coord, o1, d1, n1, sf_spline_int, order, n2);

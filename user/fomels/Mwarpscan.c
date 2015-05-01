@@ -27,7 +27,7 @@
 
 int main(int argc, char* argv[])
 { 
-    bool verb;
+    bool shift, verb;
     int n1, m[4], ntr, n2, order, ng, rect[4], niter, n2g, dim;
     float **inp, **oth, o1, d1, o2, d2, g0, dg, o, d, *rat1;
     sf_file in, warped, other;
@@ -71,6 +71,8 @@ int main(int argc, char* argv[])
     /* cross-line smoothing */
     if (!sf_getint("niter",&niter)) niter=10;
     /* number of iterations */
+    if (!sf_getbool("shift",&shift)) shift=false;
+    /* use shift instead of stretch */
 
     other = sf_input("other");
 
@@ -120,7 +122,7 @@ int main(int argc, char* argv[])
     oth = sf_floatalloc2 (n2,ntr);
     rat1 = sf_floatalloc (n2g);
 
-    warpscan_init(n1,o1,d1,n2,o2,d2,ng,g0,dg,ntr,order,dim,m,rect,niter,verb);
+    warpscan_init(n1,o1,d1,n2,o2,d2,ng,g0,dg,ntr,order,dim,m,rect,niter,shift,verb);
     
     sf_floatread(inp[0],n1*ntr,in);
     sf_floatread(oth[0],n2*ntr,other);

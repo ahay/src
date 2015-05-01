@@ -20,6 +20,7 @@
 
 static float *coord, ***out, *rat2, *num, *den, g0, dg, o1, d1, o2, d2;
 static int n2g, ntr, n1, n2, ng, order;
+static bool shift;
 static sf_bands spl;
 
 void warpscan_init(int m1     /* input trace length */, 
@@ -37,6 +38,7 @@ void warpscan_init(int m1     /* input trace length */,
 		   int *m     /* data dimensions [dim] */, 
 		   int *rect  /* smoothing radius [dim] */, 
 		   int niter  /* number of iterations */,
+		   bool shift1 /* shift instead of strech */,
 		   bool verb  /* verbosity */)
 /*< initialize >*/
 {
@@ -52,6 +54,7 @@ void warpscan_init(int m1     /* input trace length */,
     dg = dg1;
     n2g = n2*ng*ntr;
     order = order1;
+    shift = shift1;
 
     coord = sf_floatalloc (n2); 
     out =   sf_floatalloc3 (n2,ng,ntr);
@@ -85,7 +88,7 @@ void warpscan(float** inp /* input data [ntr][n1] */,
 	    g = g0 + ig*dg;
 
 	    for (i1=0; i1 < n2; i1++) {
-		coord[i1] = (o2+i1*d2)*g;
+		coord[i1] = shift? o2+i1*d2+g: (o2+i1*d2)*g;
 	    }
 
 	    sf_int1_init (coord, o1, d1, n1, sf_spline_int, order, n2, 0.0);
