@@ -1,19 +1,30 @@
 from rsf.proj import *
 
 velsegy = 'vel_z6.25m_x12.5m_exact.segy'
+densegy = 'density_z6.25m_x12.5m.segy'
 
 Fetch(velsegy+'.gz',dir='2004_BP_Vel_Benchmark',
       server='ftp://software.seg.org',top='pub/datasets/2D')
 Flow(velsegy,velsegy+'.gz','zcat $SOURCE',stdin=0)
 
-def getvel(vel):
-    Flow(vel,velsegy,
+Fetch(densegy+'.gz',dir='2004_BP_Vel_Benchmark',
+      server='ftp://software.seg.org',top='pub/datasets/2D')
+Flow(densegy,densegy+'.gz','zcat $SOURCE',stdin=0)
+
+def getdata(dat,segy,label,unit):
+    Flow(dat,segy,
          '''
          segyread read=data |
-         put label=Velocity unit=m/s
+         put label=%s unit=%s
          o1=0 d1=6.25 label1=Depth    unit1=m
          o2=0 d2=12.5 label2=Distance unit2=m
-         ''')
+         ''' % (label,unit))
+
+def getvel(vel):
+    getdata(vel,velsegy,'Velocity','m/s')
+
+def getden(den):
+    getdata(den,densegy,'Density','')
 
 shots = [
     'shots0001_0200',

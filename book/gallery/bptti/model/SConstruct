@@ -1,28 +1,16 @@
-
 from rsf.proj import *
+from rsf.gallery import bptti
 
-# Download from http://www.freeusp.org/2007_BP_Ani_Vel_Benchmark/
-tgz = 'ModelParams.tar.gz'
-
-Fetch(tgz,'BP',top=os.environ.get('DATAPATH'),server='local')
-
-pars = Split('epsilon delta vp theta')
-
-sgy = {}
-for par in pars:
-    sgy[par] = os.path.join('ModelParams',par.capitalize() + '_Model.sgy')
-
-zcat = WhereIs('gzcat') or WhereIs('zcat')
-
-Flow(sgy.values(),tgz,
-     zcat + ' $SOURCE | tar -xvf -',stdin=0,stdout=-1)
+pars = Split('vp vx epsilon delta eta theta')
 
 units = {
 	'epsilon':'',
 	'delta':'',
+        'eta':'',
 	'vp':'km/s',
-	'theta':'\^o\_'
-}
+        'vx':'km/s',
+	'theta':'degrees'
+        }
 
 name = dict(vp='V\_z\^',
             vx='V\_x\^',
@@ -33,14 +21,7 @@ name = dict(vp='V\_z\^',
             delta='\F10 d\F3 ')
 
 for par in pars:
-    Flow([par,par+'.asc',par+'.bin'],sgy[par],
-         '''
-         segyread hfile=${TARGETS[1]} bfile=${TARGETS[2]} read=d |
-         put
-         o2=0 d2=0.00625 label2=Distance unit2=km
-         o1=0 d1=0.00625 label1=Depth unit1=km %s |
-          transp plane=12 
-         ''' % ('','| scale dscale=0.001')[par=='vp'])
+    bptti.getmod(par)
     Result(par,
            '''
            window j1=8 j2=2 |
@@ -50,33 +31,11 @@ for par in pars:
            wanttitle=n allpos=%d bias=%g barunit="%s"           
            ''' % (name[par],
                   par != 'theta',
-                  (0,1.5)[par=='vp'],
+                  (0,1.5)[par=='vp' or par=='vx'],
                   units[par]))
-Flow('vx','vp epsilon',
-     '''
-     math e=${SOURCES[1]} output="input*sqrt(1+2*e)"
-     ''')
-Flow('eta','epsilon delta',
-     '''
-     math e=${SOURCES[0]} d=${SOURCES[1]} output="(e-d)/(1+2*d)"
-     ''')
-for par in ('vx','eta'):
-    Result(par,
-           '''
-           window j1=8 j2=2 |
-           grey color=j barlabel="%s" scalebar=y
-           screenwd=12.595 screenht=1.8 parallel2=n
-           labelsz=5 titlesz=6 barreverse=y
-           wanttitle=y allpos=%d bias=%g barunit="%s"
-           transp=n title=%s
-           ''' % (name[par],
-                  par != 'theta',
-                  (0,1.5)[par=='vx'],
-                  ('','km/s')[par=='vx'],
-                  par.capitalize()))
 
 
-# http://www.freeusp.org/2007_BP_Ani_Vel_Benchmark/Anisotropic_FD_Model_Shots_part1.sgy.gz
+zcat = WhereIs('gzcat') or WhereIs('zcat')
 
 shots =[]
 tshots = []

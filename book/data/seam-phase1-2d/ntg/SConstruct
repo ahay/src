@@ -129,8 +129,7 @@ Flow(['every10shot.rsf','every10shot_hdr.rsf'],
 	  verbose=1
      ''',stdout=0,stdin=0)
 
-Result('every10shot',
-       'sfgrey title="every10shot"')
+Plot('every10shot','sfgrey title="every10shot"',view=1)
 
 Result('vp','../fetch/vp.rsf',"sfgrey title='Vp' scalebar=y color=j")
 

@@ -76,23 +76,24 @@ Flow("velscan",stkfiles,
      | sfput label3="vel" d3=50 o3=1400     
      ''',stdin=0)
 
-Result('velscan','sfpow pow1=1.5 | sfgrey title="velocity scan"')
+Plot('velscan','sfpow pow1=1.5 | sfgrey title="velocity scan"',view=1)
 #Result('velscan1','velscan','sfwindow max1=1 n2=600 |sfgrey title="velocity scan"')
-Result('velscan1','velscan','sfpow pow1=1.5 | sfwindow j2=4 max1=8 | sftransp plane=23 | sfgrey title="velocity scan"')
-Result('velscan2','velscan',
-       '''
-          sfpow pow1=2 
-          | sfwindow min2=600 max2=602 
-          | sftransp plane=23 
-          | sfwiggle title="velocity scan"
-       ''')
-Result('velscan3','velscan',
-       '''
-          sfpow pow1=1.5 
-          | sfwindow min2=600 max2=602 
-          | sftransp plane=23 
-          | sfwiggle title="velocity scan"
-       ''')
+Plot('velscan1','velscan',
+     'sfpow pow1=1.5 | sfwindow j2=4 max1=8 | sftransp plane=23 | sfgrey title="velocity scan"',view=1)
+Plot('velscan2','velscan',
+     '''
+     sfpow pow1=2 
+     | sfwindow min2=600 max2=602 
+     | sftransp plane=23 
+     | sfwiggle title="velocity scan"
+     ''',view=1)
+Plot('velscan3','velscan',
+     '''
+     sfpow pow1=1.5 
+     | sfwindow min2=600 max2=602 
+     | sftransp plane=23 
+     | sfwiggle title="velocity scan"
+     ''',view=1)
 
 #Result('stk1300',
 #        '''

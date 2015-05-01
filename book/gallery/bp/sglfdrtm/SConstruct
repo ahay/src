@@ -1,45 +1,21 @@
 from rsf.proj import *
 from rsf.gallery import bp
-from rsf.recipes.sglfdrtm import *
+from rsf.recipes import sglfdrtm 
 
 import copy
 
-zcat = WhereIs('gzcat') or WhereIs('zcat')
+bp.getden('bpden')
+bp.getvel('bpvel')
 
-Fetch('bpaitvel.hh','bpait')
-
-Fetch('density_z6.25m_x12.5m.segy.gz',dir='2004_BP_Vel_Benchmark', 
-          server='ftp://software.seg.org',top='pub/datasets/2D')
-
-Flow('density_z6.25m_x12.5m.segy','density_z6.25m_x12.5m.segy.gz',
-          zcat + ' $SOURCE',stdin=0)
-
-Flow('bpvel','bpaitvel.hh', 
-     '''
-     dd     form=native |
-     window j1=2 j2=1   | 
-     put    label1=Depth\ Z label2=Distance\ X unit1=m unit2=m
-            o1=0 o2=0 
-     ''')
-
-Flow('bpden','density_z6.25m_x12.5m.segy',
-     '''
-     segyread | scale dscale=1000 |
-     window   j1=2 j2=1 | 
-     put      label1=Depth\ Z label2=Distance\ X unit1=m unit2=m 
-              o1=0 o2=0 d1=12.5 d2=12.5
-     ''')
-
-Result('bpvel', igrey('''gainpanel=a title=BPait\ Velocity\ Model
+Result('bpvel', sglfdrtm.igrey('''gainpanel=a title=BPait\ Velocity\ Model
        scalebar=y barreverse=y allpos=y 
        screenratio=%g screenht=8 
        ''' % (12.0/32.0)))
 
-Result('bpden', igrey('''gainpanel=a title=BPait\ Density\ Model
+Result('bpden', sglfdrtm.igrey('''gainpanel=a title=BPait\ Density\ Model
        scalebar=y barreverse=y allpos=y 
        screenratio=%g screenht=8 
        ''' % (12.0/32.0)))
-
 
 Flow('vel', 'bpvel', 
      'expand left=1600 right=1600')
@@ -75,7 +51,7 @@ rtmpar = {
 
 # -------------------------------
 
-par0 = getpar(rtmpar, 0)
+par0 = sglfdrtm.getpar(rtmpar, 0)
 
 Fsrc  = 'srcp'
 
@@ -100,7 +76,7 @@ img2list = []
 srclist = ''
 
 for ii in range(0,par['shtnum']):
-    par = getpar(par, ii)
+    par = sglfdrtm.getpar(par, ii)
     Fvel  = '%s-%d'  %('vel', ii)
     Fden  = '%s-%d'  %('den', ii)
     Fimg1 = '%s-%d'  %(Flimg1, ii)
@@ -108,12 +84,12 @@ for ii in range(0,par['shtnum']):
     _sfix = str(ii)
 
 # ---------------------------------------------------------------    
-    splitmodel(Fvel, Flvel, par)
-    splitmodel(Fden, Flden, par)
+    sglfdrtm.splitmodel(Fvel, Flvel, par)
+    sglfdrtm.splitmodel(Fden, Flden, par)
 # ---------------------------------------------------------------
 
     # use remodeled data with sglfd 
-    sglfdrtm(Fimg1, Fimg2, Fsrc, Fvel, Fden, Fvel, Fden,par, _sfix)
+    sglfdrtm.sglfdrtm(Fimg1, Fimg2, Fsrc, Fvel, Fden, Fvel, Fden,par, _sfix)
     #sglfdrtm_test(Fimg1, Fimg2, Fsrc, Fvel, Fden, par, _sfix)
     img1list = img1list + [Fimg1]
     img2list = img2list + [Fimg2]
@@ -123,7 +99,7 @@ for ii in range(0,par['shtnum']):
 Flow(Flimg1, [Flvel]+img1list, 'sfstackimg %s' %srclist)
 Flow(Flimg2, [Flvel]+img2list, 'sfstackimg %s' %srclist)
 
-Result('stimg1', Flimg1, 'sfwindow f2=1599 n2=5395 |put  o2=0 |laplace |'+ grey(''' wanttitle=n pclip=99 screenht=8 screenratio=%g'''%(12.0/32.0)))
-Result('stimg2', Flimg2, 'sfwindow f2=1599 n2=5395 |put  o2=0 d1=0.0125 d2=0.0125 unit1="km" unit2="km"|laplace |'+ grey(''' wanttitle=n pclip=97 screenht=7 labelsz=6 screenratio=%g'''%(12.0/32.0)))
+Result('stimg1', Flimg1, 'sfwindow f2=1599 n2=5395 |put  o2=0 |laplace |'+ sglfdrtm.grey(''' wanttitle=n pclip=99 screenht=8 screenratio=%g'''%(12.0/32.0)))
+Result('stimg2', Flimg2, 'sfwindow f2=1599 n2=5395 |put  o2=0 d1=0.0125 d2=0.0125 unit1="km" unit2="km"|laplace |'+ sglfdrtm.grey(''' wanttitle=n pclip=97 screenht=7 labelsz=6 screenratio=%g'''%(12.0/32.0)))
 # ---------------------------------------------------------------
 End()
