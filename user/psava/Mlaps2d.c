@@ -224,7 +224,6 @@ int main(int argc, char* argv[])
 			    
 			    imag[ic][iht][ihx][ihz] += rCOR(r_us[mct][mcx][mcz],
 							    r_ur[pct][pcx][pcz]);
-			    
 			} /* ihz */
 		    }     /* ihx */
 		}         /* iht */
