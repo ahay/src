@@ -295,6 +295,11 @@ int main(int argc, char* argv[])
 		else             sf_seek(Fopr,(off_t)      itO *nslice,SEEK_SET);
 		sf_floatread(opr[ lht ][0][0],nz*nx*ny,Fopr);
 	    }
+            for(iht=0;iht<sf_n(aht);iht++) {
+                mctall[iht] = (mctall[iht]+1) % sf_n(aht); /* cycle iht index */
+                pctall[iht] = (pctall[iht]+1) % sf_n(aht);
+            }
+
 
 	    if(it>=0+nht && 
 	       it<nt-nht) { 
@@ -320,10 +325,6 @@ int main(int argc, char* argv[])
 		    }
 		}
 	    }
-            for(iht=0;iht<sf_n(aht);iht++) {
-                mctall[iht] = (mctall[iht]+1) % sf_n(aht); /* cycle iht index */
-                pctall[iht] = (pctall[iht]+1) % sf_n(aht);
-            }
 
 	    if(it>=0+nht) {
 		itW = it - nht;
@@ -359,6 +360,11 @@ int main(int argc, char* argv[])
 		sf_floatread(wfl[ lht ][0][0],nz*nx*ny,Fwfl);
 	    }
 
+            for(iht=0;iht<sf_n(aht);iht++) {
+                mctall[iht] = (mctall[iht]+1) % sf_n(aht); /* cycle iht index */
+                pctall[iht] = (pctall[iht]+1) % sf_n(aht);
+            }
+
 	    if(it>=0+nht && 
 	       it<nt-nht) { 
 
@@ -382,10 +388,7 @@ int main(int argc, char* argv[])
 		    }
 		}
 	    }
-            for(iht=0;iht<sf_n(aht);iht++) {
-                mctall[iht] = (mctall[iht]+1) % sf_n(aht); /* cycle iht index */
-                pctall[iht] = (pctall[iht]+1) % sf_n(aht);
-            }
+
 
 	    lht=(lht+1) % sf_n(aht);
 	}
