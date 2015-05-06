@@ -1,0 +1,158 @@
+\published{Geophysics, 80, no. 3, A63-A67 (2015)}
+
+\title{Structure-constrained relative acoustic impedance using stratigraphic coordinates}
+
+\lefthead{Karimi}
+\righthead{Structure-constrained acoustic impedance}
+\footer{TCCS-9}
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}} 
+
+\author{Parvaneh Karimi}
+
+\maketitle
+
+\begin{abstract}
+\old{Relative acoustic}\new{Acoustic} impedance \old{is the result of}\new{inversion involves} conversion of seismic traces to a \old{pseudo-reflection}\new{reflection} coefficient time series, and then into \old{pseudo-acoustic}\new{acoustic} impedance. \new{The usual assumption}\old{Different methods exist} for the transformation of post-stack seismic data into \old{relative }impedance , \old{but the assumption behind all these methods }is that seismic traces can be modeled using the simple convolutional model. According to the convolutional model, a seismic trace is a normal-incidence record, which is an assumption that is strictly true only if the earth structure is composed of horizontal layers. In the presence of dipping layers, such an assumption is violated, which introduces bias in the result of impedance inversion.  I propose to implement impedance inversion in the stratigraphic coordinate system, where the vertical direction is normal to reflectors and seismic traces represent normal-incidence seismograms. Tests on field data produce more accurate and detailed impedance results from inversion in the stratigraphic coordinate system, compared to impedance results using the conventional Cartesian coordinate system.
+\end{abstract}
+\section{Introduction}
+\old{Relative acoustic}\new{Acoustic} impedance \new{inversion involves}\old{is the result of} conversion of seismic traces to a \old{pseudo-reflection}\new{reflection} coefficient time series, and then into \old{pseudo-acoustic}\new{acoustic} impedance \cite[]{lavergne1977,lindseth1979}.  These impedance traces can enhance accuracy of interpretation and correlation with properties measured in well logs. \cite{duboz1998} and \cite{latimer2000}, among others, point out the advantages of impedance data over conventional seismic: acoustic impedance is a rock property and a product of velocity and density, both of which can be measured at well locations. Seismic reflection, in contrast, is an interface property and a relative measurement of changes in acoustic impedance between layers. Therefore having the data in layers, rather than at interfaces, improves visualization, including both layering and vertical resolution. In addition, the elimination of wavelet side-lobes and false stratigraphic-like effects makes sequence-stratigraphic analysis easier. \old{Relative acoustic}\new{Acoustic} impedance has been shown to be \old{closely associated}\new{correlated} with lithology \cite[]{pendrel1997}, porosity \cite[]{brown1996,burge1998}, and other fundamental rock properties. 
+
+Although seismic-derived acoustic impedance is a powerful tool in many aspects mentioned above, it is trace-based, which can cause errors in the presence of dipping layers. According to the convolutional model, seismic traces are considered normal-incidence 1D seismograms, which is strictly true only in the case of horizontal layers. When the subsurface exhibits dipping layers, the convolutional model will no longer hold true, because the seismic waveform will be sampled vertically instead of normally to the reflector \cite[]{guomarfurt}, introducing a possible bias in the acoustic-impedance result.
+
+In this paper, I propose to approach this problem and improve the accuracy of impedance \old{cubes}\new{estimates} by employing the stratigraphic coordinate system \cite[]{karimi2011,karimi2014} for impedance inversion. In stratigraphic coordinates, the vertical direction stays normal to reflectors \new{\cite[]{mallet2014}}, conforming to the assumption of the convolutional model\old{ \mbox{\cite[]{mallet2014}}}.
+
+In the following sections, I start by briefly reviewing the algorithm used to generate stratigraphic coordinates. Then, I explain \old{my}\new{the proposed} methodology for impedance inversion. I use a field-data example to test the proposed approach and to verify that, in the presence of dipping layers, seismic-derived impedance becomes biased and can be improved significantly by the use of stratigraphic coordinates. 
+
+\section{Method}
+Inversion of post-stack seismic data into acoustic impedance is a classic trace-based \old{analysis}\new{process} \cite[]{russel1991}. The \new{usual} assumption behind \old{all }post-stack inversion methods is that a seismic trace in a stacked section satisfies the convolutional equation, which can be written as 
+\begin{equation}
+\label{eq:convolutional}
+s_t = r_t \ast w_t,
+\end{equation}
+where $s_t$ is the seismic trace, $r_t$ is the earth's normal incidence reflectivity, and $w_t$ is the seismic wavelet. According to equation \ref{eq:convolutional}, by deconvolving the seismic wavelet, \old{we}\new{one} can acquire the earth's normal incidence reflectivity, which, in turn, is related to acoustic impedance through the recursive equation \cite[]{lindseth1979}
+\begin{equation}
+\label{eq:reflectioncoefficient}
+Z_{t+1} = Z_t \left[\frac{1+r_t}{1-r_t}\right]. 
+\end{equation}
+In practice, when the subsurface shows dipping layers, the convolutional model no longer holds true. Neither will the equation that relates earth's normal-incidence reflectivity to acoustic impedance (equation \ref{eq:reflectioncoefficient}), because seismic traces in this case cannot be considered as simple 1D normal-incidence seismograms. 
+In order to improve the accuracy of seismic-derived acoustic impedance, I propose to employ the stratigraphic coordinate system \cite[]{karimi2011,karimi2014}, in which the convolutional model assumption \old{does hold true}\new{is more accurate}.
+%and according to the convolutional model, seismic traces are considered as normal incidence 1D seismograms, which is true in the case of horizontal layers and allows for capturing true signal wavelet while performing impedance inversion along the seismic trace. However, when the subsurface exhibits dipping layers, the convolutional model no longer will hold true, because of sampling the seismic waveform vertically instead of normal to the reflector, which introduces a bias in spectral decomposition. In order to improve the accuracy of seismic-derive acoustic impedance, we use stratigraphic coordinate system in which the convolutional model assumption is more accurate and one can capture and analyze seismic waveforms perpendicularly to seismic reflectors.
+
+\subsection{Stratigraphic coordinates}
+
+In order to define the first step for transformation to stratigraphic coordinates, I follow the predictive-painting algorithm \cite[]{sergeyfomel2010}, which is based on the method of plane-wave destruction for measuring local slopes of seismic events \cite[]{claerbout1992,  sergeyfomel2002}. 
+By writing plane-wave destruction in the linear operator notation as:
+\begin{equation}
+\label{eq:pw destruction operation}
+ \mathbf{r} = \mathbf{D\,s}\;,
+\end{equation}
+where, $\mathbf{s}$ is a seismic section $\left(\mathbf{s} =\left[\mathbf{s}_1 \; \mathbf{s}_2 \; \ldots \;\mathbf{s}_N\right]^T\right)$, $\mathbf{r}$ is the destruction residual, and $\mathbf{D}$, the non-stationary plane-wave destruction operator, is
+\begin{equation}
+ \label{eq:destruction operator}
+ \mathbf{D} = 
+ \left[\begin{array}{ccccc}
+     \mathbf{I} & 0 & 0 & \cdots & 0 \\
+      - \mathbf{P}_{1,2} & \mathbf{I} & 0 & \cdots & 0 \\
+      0 & - \mathbf{P}_{2,3} & \mathbf{I} & \cdots & 0 \\
+      \cdots & \cdots & \cdots & \cdots & \cdots \\
+      0 & 0 & \cdots & - \mathbf{P}_{N-1,N} & \mathbf{I} \\
+    \end{array}\right]\;,
+\end{equation}
+where $\mathbf{I}$ is the identity operator and $\mathbf{P}_{i,j}$ is the prediction of trace $j$ from trace $i$ determined by %plane wave destruction.
+ being shifted along the local slopes of seismic events. Local slopes are estimated by minimizing the destruction residual using a regularized least-squares optimization%The smoothness of measured slope fields is controlled by shaping regularization  \cite[]{sergey2007a}
+. The prediction of trace $\mathbf{s}_k$ from a distant reference trace $\mathbf{s}_r$ is $\mathbf{P}_{r,k}\,\mathbf{s}_r$, where
+\begin{equation}
+\label{eq:predictive}
+\mathbf{P}_{r,k} = \mathbf{P}_{k-1,k}\,  \cdots\,  \mathbf{P}_{r+1,r+2}\,  \mathbf{P}_{r,r+1}\;.
+\end{equation}
+This is a simple recursion, and $\mathbf{P}_{r,k}$ is called the predictive painting operator \cite[]{sergeyfomel2010}. Predictive painting spreads the time values along a reference trace in order to output the \emph{relative geologic age} attribute $\left(Z_0(x,y,z)\right)$. These painted horizons outputted by predictive painting are used as the first axis of the stratigraphic coordinate system. In the next step, following \cite{karimi2011,karimi2014}, I find the two other axes, $X_0\left(x,y,z\right)$ and $Y_0\left(x,y,z\right)$, orthogonal to the first axis, $Z_0\left(x,y,z\right)$, by numerically solving the following gradient equations:
+\begin{equation}
+\label{eq:gradients}
+\mathbf{\nabla} Z_0 \cdot \mathbf{\nabla }X_0 = 0
+\end{equation}
+and
+\begin{equation}
+\label{eq:gradients1}
+\mathbf{\nabla} Z_0 \cdot \mathbf{\nabla} Y_0 = 0.
+\end{equation}
+Equations \ref{eq:gradients}  and \ref{eq:gradients1} simply state that the $X_0$ and $Y_0$ axes should be perpendicular to $Z_0$.  The boundary condition for the first gradient equation (equation \ref{eq:gradients}) is
+\begin{equation}
+\label{boundary condition}
+X_0\left(x,y,0\right)=x                                                                         
+\end{equation}
+and the boundary condition for equation \ref{eq:gradients1} is
+\begin{equation}
+\label{boundary condition1}
+Y_0\left(x,y,0\right)=y.                                                                         
+\end{equation} 
+These two boundary conditions mean that the stratigraphic coordinate system and the regular coordinate system $\left(x,y,z\right)$ meet at the surface $\left(z = 0\right)$. \new{Note that} \old{The}\new{the} stratigraphic coordinates are designed for depth images \old{\mbox{\cite[]{mallet2004}}}\new{\cite[]{mallet2004,mallet2014}}. When applied to time-domain images, a scaling factor with dimensions of velocity-squared is added to equations \ref{eq:gradients} and \ref{eq:gradients1}\new{,} \old{.}\new{because the definition of the gradient operator becomes
+\begin{equation}
+\label{eq:timegradient}
+\mathbf{\nabla} = \left(\frac{\partial}{\partial x},\frac{\partial}{\partial y},\frac{\partial}{\partial z}\frac{\partial z}{\partial t}\right).
+\end{equation}}
+
+\section{\old{Field-data }example}
+
+%We use model-based inversion to extract acoustic impedance information from our seismic image which initial model of the image geology and perturb this model until the derived synthetic seismic section best fits the observed seismic data. Due to the band limited nature of seismic data low-frequency variations should be added from the well data to obtain a broad band result. 
+I use a 3D field data volume from Heidrun Field in the Halten Terrace area, offshore Mid-Norway \cite[]{moscardelli} to test the proposed approach (Figure \ref{fig:stack}). I begin by estimating local slopes of seismic events through the data volume using plane-wave destruction. After that, I apply the predictive painting algorithm to obtain the first axis of the stratigraphic coordinates. The two other axes are found by solving gradient equations \ref{eq:gradients} and \ref{eq:gradients1}. Figure \ref{fig:coord} shows the image in the Cartesian coordinate system, overlain by its stratigraphic coordinates grid. Figure \ref{fig:hcubee} shows the image in the stratigraphic coordinate system, \new{where major reflectors appear nearly flat, }and Figure \ref{fig:hcubeee} displays the image reconstruction by returning from stratigraphic coordinates to Cartesian coordinates. I use model-based inversion \cite[]{russel1991,cooke1983} to extract acoustic impedance information from the seismic image. Because of the band-limited nature of seismic data, low-frequency variations are extracted from the well data, and then added back to the seismic data in order to obtain a proper broad-band result. Model-based inversion starts with a low-frequency model of \emph{P}-impedance and perturbs this model until the derived synthetic section from the application of equations \ref{eq:convolutional} and \ref{eq:reflectioncoefficient} best fits the actual seismic data. In the model-based inversion, extraction of the seismic wavelet is necessary. Figure \ref{fig:t-car-full,f-car-full} shows the extracted wavelet from the seismic image in the Cartesian coordinates, Figure \ref{fig:t-car-full} is the time response, and Figure \ref{fig:f-car-full} is the frequency response of the seismic wavelet. Figure \ref{fig:t-st-full,f-st-full} shows the extracted wavelet from the seismic image in the stratigraphic coordinate system. 
+%\new{Figure \ref{fig:spec} shows the average frequency spectrum of the data set in the Cartesian coordinates (solid blue curve) and in the stratigraphic coordinates (dashed red curve).
+
+\new{Figure \ref{fig:inline-331-sei-mod-1} is a zoomed-in part of the image, and Figure \ref{fig:inline-331-car-mod-1} is the impedance results obtained from inversion in the Cartesian coordinates.} Figure \ref{fig:inline-331-st-mod-1} shows the impedance inversion result acquired in the stratigraphic coordinate system and transferred back to Cartesian coordinate system to provide a better comparison.  \old{Figure \ref{fig:inline-379-sei-mod-1} shows another part of the data\old{,}\new{.} \old{and its}\new{Its} corresponding impedance results from inversion in the Cartesian coordinate system and in the stratigraphic coordinate system, which is \old{plotted in}\new{converted back to} the Cartesian coordinates, are shown in Figures \ref{fig:inline-379-car-mod-1} and \ref{fig:inline-379-st-mod-1} ,respectively. }Comparing the impedance acquired from inversion in the conventional Cartesian coordinates (Figures \ref{fig:inline-331-car-mod-1}\old{ and \ref{fig:inline-379-car-mod-1}}) with the \old{results}\new{result} obtained from inversion in the stratigraphic coordinates (Figures \ref{fig:inline-331-st-mod-1}\old{ and \ref{fig:inline-379-st-mod-1}}) shows that \old{results}\new{result} from inversion in stratigraphic coordinates (Figures \ref{fig:inline-331-st-mod-1}\old{ and \ref{fig:inline-379-st-mod-1}}) \old{appear}\new{appears} to be more consistent with the geological structure and \new{also} more detailed. Interfaces are noticeably better defined and laterally more continuous. This improved accuracy \old{results}\new{result} because, in the stratigraphic coordinates, layers get flattened and the vertical direction corresponds to the normal direction to reflectors, and therefore allows for a  more \old{precise}\new{accurate} analysis of the earth's normal incidence reflectivity and its impedance. 
+%Comparing the impedance results in the Cartesian coordinates with impedance obtained in the stratigraphic coordinates shows show that results obtained from inversion in the stratigraphic coordinates appears to be more consistent with the gelogy and they can better reveal structures in the image. Inversion in stratigraphic coordinates can improve the continuity of interfaces between impedance layers and .....That is because, in the stratigraphic coordinates layers are flatten and the vertical direction corresponds to the normal direction to reflectors, so we can analyze the earth's normal incidence reflectivity and the impedance result will be more accurate...
+
+\inputdir{heidrun}
+\multiplot{4}{stack,coord,hcubee,hcubeee}{width=0.46\textwidth}
+{(a) 3D field data from Heidrun. (b) Three axes of stratigraphic coordinates of Figure \ref{fig:stack} plotted as grid in their Cartesian coordinates. (c) Heidrun image after flattening by transferring the image to stratigraphic coordinates. (d) Heidrun image reconstruction by returning from stratigraphic coordinates to Cartesian coordinates.}
+\inputdir{.}
+\multiplot{2}{t-car-full,f-car-full}{width=0.46\textwidth}
+{Extracted wavelet from the seismic data in Figure \ref{fig:stack} in the Cartesian coordinates, (a) is the time response and (b) is the frequency response.}
+
+\multiplot{2}{t-st-full,f-st-full}{width=0.46\textwidth}
+{Extracted wavelet from the seismic data in Figure \ref{fig:hcubee} in the stratigraphic coordinates, (a) is the time response and (b) is the frequency response.}
+
+\inputdir{heidrun}
+%\plot{spec}{width=0.46\textwidth}
+%{Average data frequency spectrum in the Cartesian coordinate system (solid blue curve) and in the stratigraphic coordinate system (dashed red curve).}
+
+%\multiplot{3}{inline-300-car-final-4,c-379,st-379}{width=0.46\textwidth}
+%{(a) Zoomed-in part of the Figure \ref{fig:stack} and the impedance result obtained from inversion in the Cartesian coordinates (b), and in the stratigraphic coordinates (c).}
+
+%\multiplot{3}{seis-340,car-340,strat-340}{width=0.46\textwidth}
+%{(a) A zoomed-in part of the Figure \ref{fig:stack} and the impedance result obtained from inversion in the Cartesian coordinates (b), and in the stratigraphic coordinates (c).}
+
+%\multiplot{3}{inline-300-sei-mod-1,inline-300-car-mod-1,inline-300-st-mod-1}{width=0.46\textwidth}
+%{(a) A zoomed-in part of the Figure \ref{fig:stack} and the impedance result obtained from inversion in the Cartesian coordinates (b), and in the stratigraphic coordinates (c).}
+\inputdir{.}
+\multiplot{3}{inline-331-sei-mod-1,inline-331-car-mod-1,inline-331-st-mod-1}{width=0.46\textwidth}
+{(a) A zoomed-in part of the Figure \ref{fig:stack} and the impedance result obtained from inversion in the Cartesian coordinates (b), and in the stratigraphic coordinates (the result is transferred back to Cartesian coordinates to provide a better comparison) (c).}
+
+%\multiplot{3}{inline-344-sei-mod-1,inline-344-car-mod-1,inline-344-st-mod-1}{width=0.46\textwidth}
+%{(a) A zoomed-in part of the Figure \ref{fig:stack} and the impedance result obtained from inversion in the Cartesian coordinates (b), and in the stratigraphic coordinates (c).}
+
+%\multiplot{3}{inline-379-sei-mod-1,inline-379-car-mod-1,inline-379-st-mod-1}{width=0.46\textwidth}
+%{(a) A zoomed-in part of the Figure \ref{fig:stack} and the impedance result obtained from inversion in the Cartesian coordinates (b), and in the stratigraphic coordinates (the result is transferred back t%o Cartesian coordinates to provide a better comparison) (c).}
+
+%\multiplot{3}{inline-388-sei-mod-1,inline-388-car-mod-1,inline-388-st-mod-1}{width=0.46\textwidth}
+%{(a) A zoomed-in part of the Figure \ref{fig:stack} and the impedance result obtained from inversion in the Cartesian coordinates (b), and in the stratigraphic coordinates (c).}
+
+%\multiplot{3}{inline-413-sei-mod-1,inline-413-car-mod-1,inline-413-st-mod-1}{width=0.46\textwidth}
+%{(a) A zoomed-in part of the Figure \ref{fig:stack} and the impedance result obtained from inversion in the Cartesian coordinates (b), and in the stratigraphic coordinates (c).}
+
+%\multiplot{3}{xline-1408-sei-mod-1,xline-1408-car-mod-1,xline-1408-st-mod-1}{width=0.46\textwidth}
+%{(a) A zoomed-in part of the Figure \ref{fig:stack} and the impedance result obtained from inversion in the Cartesian coordinates (b), and in the stratigraphic coordinates (c).}
+
+%\multiplot{3}{xline-1413-sei-mod-1,xline-1413-car-mod-1,xline-1413-st-mod-1}{width=0.46\textwidth}
+%{(a) A zoomed-in part of the Figure \ref{fig:stack} and the impedance result obtained from inversion in the Cartesian coordinates (b), and in the stratigraphic coordinates (c).}
+
+\section{Discussion and Conclusions}
+
+ Post-stack impedance inversion involves the assumption that seismic traces can be modeled using the convolutional and vertical-incidence reflection-coefficient equations. In \old{all but flat layercake geology}\new{the presence of dipping layers}, these assumptions are \old{generally }false, and therefore seismic-derived \old{relative }acoustic impedance can be biased\old{ in the presence of dipping layers}. To solve this problem, I have employed the stratigraphic coordinate system, which offers a local reference frame extracted from the seismic image and naturally designed to sample the unbiased normal incidence seismic traces, and hence \old{promises to }yield more accurate impedance estimates.
+
+\new{Performance of the stratigraphic coordinate system is based on the predictive-painting algorithm, which produces the best results when \new{seismic} traces can be predicted \old{by}\new{from} neighboring traces. Note that the predictive painting \new{approach} may require further improvements to deal with areas where either structural or stratigraphic discontinuities are present. Future research should \old{be }concentrate on using a small number of control points especially near discontinuities interactively in the predictive painting algorithm to make sure \old{all}\new{that} the events across structural or stratigraphic discontinuities are \new{accurately} captured.}
+\section{Acknowledgments}
+I thank ConocoPhillips, the Norwegian Petroleum Directorate, the Quantitative Clastics Laboratory (QCL) Industrial Associates Program, and personally Lorena Moscardelli for facilitating access to data \new{used in this study}. I would \old{also }like to thank Sergey Fomel and Mehdi Far for helpful discussions. \new{I also thank reviewers for their constructive suggestions, which helped improve this paper.}
+%\newpage
+
+\bibliographystyle{seg}
+\bibliography{sources}

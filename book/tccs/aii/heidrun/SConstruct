@@ -1,0 +1,297 @@
+from rsf.proj import *
+from rsf.recipes.beg import server
+
+Fetch('HeidrunFull.sgy','heidrun',server)
+
+Flow('heidrun theidrun heidrun.asc heidrun.bin',
+     'HeidrunFull.sgy',
+     'segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]}')
+
+Flow('hcube','heidrun',
+     '''
+     intbin xk=xline yk=iline | 
+     put label2=Crossline label3=Inline 
+     ''')
+#window n1=631 f1=120
+point2 = 813.00/(813+423)
+pad=500
+def grey3(title,clip='',extra=''):
+    return '''
+    window n1=631 f1=120 |
+    byte gainpanel=all %s | 
+    grey3 frame1=500 frame2=400 frame3=200 title="%s" 
+    point2=%g %s grid2=n gridcol=6 labelfat=4 font=2 titlefat=4
+    ''' % (clip,title,point2,extra)
+
+Plot('hcube',grey3(''))
+Result('hcube',grey3(''))
+#Result('hcube','Overlay')
+Flow('spec_car','stack','spectra all=y | smooth rect1=5')
+Flow('spec_strat','hcubee','spectra all=y | smooth rect1=5 ')
+Result('spec','spec_car spec_strat','cat axis=2 ${SOURCES[1:2]} | scale axis=1 | graph dash=0,1 plotfat=2 title=Spectrum label2=Amplitude unit2=  labelfat=4 font=2 titlefat=4')
+Flow('mask','hcube','mul $SOURCE | stack axis=1 | mask min=0.001')
+Flow('dedmask','hcube',
+     '''
+     math output="input*input" |
+     smooth rect1=100 |
+     mask min=0.0001 |
+     dd type=float
+     ''')
+
+Flow('dedmaskk','hcube',
+     '''
+     window n1=631 f1=120 |
+     math output="input*input" |
+     smooth rect1=100 |
+     mask min=0.0001 |
+     dd type=float
+     ''')
+Flow('mcube','mask',
+     '''
+     spray axis=1 n=1001 d=0.004 o=0 label=Time unit=s | 
+     dd type=float |
+     put label2=Inline unit2= label3=Crossline unit3=
+     ''')
+
+Result('mask','mcube','window n1=1 | grey title=Mask allpos=y')
+
+Flow('dip','hcube mcube','fdip mask=${SOURCES[1]} rect1=10 rect2=25 rect3=25')
+Flow('dip-s','hcube mcube','fdip mask=${SOURCES[1]} rect1=10 rect2=15 rect3=15')
+Flow('dip-s1','hcube mcube','fdip mask=${SOURCES[1]} rect1=10 rect2=10 rect3=10')
+
+Flow('dips11','dip-s1 dedmask','window n4=1 | math s1=${SOURCES[1]} output="input*s1"')
+Flow('dips12','dip-s1','window f4=1')
+
+Result('dips11',grey3('Dip 1','','color=j'))
+Result('dips12',grey3('Dip 2','','color=j'))
+Flow('dips1','dip-s','window n4=1')
+Flow('dips2','dip-s','window f4=1')
+
+Result('dips1',grey3('Dip 1','','color=j'))
+Result('dips2',grey3('Dip 2','','color=j'))
+Flow('dip1','dip','window n4=1')
+Flow('dip2','dip','window f4=1')
+
+Result('dip1',grey3('Dip 1','','color=j'))
+Result('dip2',grey3('Dip 2','','color=j'))
+
+###########################################################
+################Structure enhancing filter#################
+###########################################################
+ns2=3
+ns3=3
+Flow('spray','hcube dip-s1',
+     'pwspray2 ns2=%d ns3=%d dip=${SOURCES[1]}'% (ns2,ns3))
+
+Flow('stacks','hcube','spray axis=2 n=%d ' % ((2*ns2+1)*(2*ns3+1)))
+
+Flow('sim','stacks spray','similarity other=${SOURCES[1]} rect1=10 rect4=1 verb=n',split=[4,423])
+Flow('weight','sim','thr thr=0.0625',split=[4,423])
+Flow('gausweight','spray',
+     '''
+     window n1=1 n3=1 n4=1 squeeze=n |
+     put n2=7 n3=7 o2=-0.024 o3=-0.024 d2=0.008 d3=0.008 | 
+     sfmath output="exp(-(x2*x2+x3*x3)/((0.02)*(0.02)))" |
+     put n2=49 d2=1 o2=840 n3=1 o3=1 d3=1 | window |
+     spray axis=1 n=1001 |spray axis=3 n=813 | spray axis=4 n=423 |
+     put d1=0.004 o1=0 d3=1 o3=840 d4=1 o4=153
+    ''')
+
+Flow('weight1','gausweight weight',
+     '''
+     add mode=p ${SOURCES[1]}
+     ''')
+
+
+Flow('normr','weight1','stack')
+#structural enhanced image
+Flow('stack','spray weight1 normr',
+     'add mode=p ${SOURCES[1]} | stack | add mode=d ${SOURCES[2]}')
+
+Result('stack',grey3(''))
+Plot('stack',grey3(''))
+#Plot('stack','pad-stack',grey3('Heidrun'))
+
+
+###########################################################
+
+
+xref=400 
+yref=200
+
+Flow('time2','dips11',
+     '''
+     window n1=1 | spike | put o1=0 d1=1 o2=0 d2=1 o3=0 d3=1 |
+     eikonal vel=n zshot=%d yshot=%d
+     ''' % (xref,yref))
+
+picks = []
+for ref in ((235,200),(420,200)):
+        pick = 'pick%d-%d' % ref
+        time = 'time%d-%d' % ref
+        picks.append(pick)
+        Flow(time,'dips11',
+             '''
+             window n1=1 | spike | put o1=0 d1=1 o2=0 d2=1 o3=0 d3=1 |
+             eikonal vel=n zshot=%d yshot=%d
+             ''' % ref)
+        Flow(pick,['dip',time,'dedmask'],'pwpaint2 cost=${SOURCES[1]}')        
+        Result(pick,grey3('Relative Age','allpos=y clip=4','color=j'))
+np = len(picks)
+Flow('picks',picks,
+     'add ${SOURCES[1:%d]} | scale dscale=%g' % (np,1.0/np))
+Result('time2','grey allpos=y color=j scalebar=y title=Cost')
+
+Flow('pick2','dip-s1 time2 dedmask','pwpaint2 cost=${SOURCES[1]} | math s1=${SOURCES[2]} output="input*s1"')
+Result('pick2',grey3('Relative Age','allpos=y clip=4','color=j'))
+Result('picks',grey3('Relative Age','allpos=y clip=4','color=j'))
+
+Flow('wcont','hcube',
+     '''
+     window n2=1 n3=1 f2=400 f3=200 | 
+     max1 | window n1=25 | real
+     ''')
+Plot('wcont','pick2 wcont',
+     '''  
+     window n1=631 f1=120 |   
+     contour3 frame1=500 frame2=400 frame3=200 flat=y point2=%g  
+     wanttitle=n wantaxis=n  plotfat=5 cfile=${SOURCES[1]}
+     ''' % point2)
+
+Plot('wcont-1','pick235-200 wcont',
+     '''    
+     contour3 frame1=500 frame2=400 frame3=200 flat=y point2=%g  
+     wanttitle=n wantaxis=n  plotfat=5 cfile=${SOURCES[1]}
+     ''' % point2)
+Result('wcont','hcube wcont','Overlay')
+Result('wcont-1','hcube wcont-1','Overlay')
+
+Flow('wpick','pick2','pad beg1=250 end1=250')
+Flow('flat','hcube pick2','iwarp warp=${SOURCES[1]} eps=0.1')
+Result('flat',grey3('Blind Flattening'))
+
+##########################################################################
+################Stratigraphic coordinate transformation###################
+##########################################################################
+
+# The first axis of the stratigraphic coordinate system (t0)
+dt=0.004
+t0=0
+dz=0.65
+#dz=1
+dzdt = dz/dt
+dtdz=dt/dz
+z0 = t0*dzdt
+
+
+
+#Flow('pickz','pick','put d1=%g o1=%g | scale dscale=%g | pad beg1=100' % (dz,z0,dzdt))
+Flow('pickz','pick235-200','put d1=%g o1=%g | scale dscale=%g' % (dz,z0,dzdt))
+#Flow('slowreal1','pickz','lineiko what=s | window n1=84 min1=%g' % z0)
+Flow('slowreal1','pickz','lineiko what=s')
+Result('slowreal1','put d1=%g o1=%g | ' % (dt,t0) + grey3('','allpos=y','color=j')) 
+    
+Flow('wcont-z','stack',
+     '''
+     put d1=%g o1=%g | scale dscale=%g |
+     window n2=1 n3=1 f2=400 f3=200 | 
+     max1 | window n1=25 | real
+     ''' % (dz,z0,dzdt))  
+
+Flow('t0real1','slowreal1','eikonal vel=n plane3=y plane2=y zshot=%g ' % z0)
+
+Result('t0real1','put d1=%g o1=%g | ' % (dt,t0) + grey3('','allpos=y pclip=90','color=j'))
+     
+Plot('t0real1','t0real1 wcont-z dedmaskk',
+      '''
+      put d1=%g o1=%g | 
+      window n1=631 f1=120 | 
+      math s1=${SOURCES[2 ]} output="input*s1" |
+      contour3 frame1=500 frame2=400 frame3=200 flat=y point2=%g 
+      wanttitle=n wantaxis=n plotfat=5 plotcol=5 cfile=${SOURCES[1]}
+      ''' % (dt,t0,point2))     
+Result('stack-t0real1','stack t0real1','Overlay') 
+
+############################################################################################################ x0
+
+# Inline direction
+Flow('t0real','t0real1','put d1=%g o1=%g | scale dscale=%g' % (dt,t0,dtdz))
+Result('t0real',grey3('','allpos=y','color=j'))
+
+Flow('distreal1','t0real1','math output=x2')
+
+Flow('zeroreal1','t0real1','math output=0')
+
+Flow('x0real1','t0real1 distreal1 zeroreal1','lineiko what=i time=${SOURCES[1]} slow=${SOURCES[2]}')
+
+Result('x0real1',grey3('','allpos=y pclip=98','color=j'))
+    
+Flow('wcont-x','stack',
+     '''
+     put d1=%g o1=%g | scale dscale=%g |
+     window n1=1 n3=1 f1=600 f3=200 | 
+     max1 | window n1=25 | real
+     ''' % (dz,z0,dzdt))
+Plot('x0real1','x0real1 wcont-x dedmaskk',
+      '''
+      put d1=%g o1=%g | 
+      window n1=631 f1=120 |
+      math s1=${SOURCES[2]} output="input*s1" |
+      contour3 frame1=600 frame2=400 frame3=200 flat=y point2=%g 
+      wanttitle=n wantaxis=n plotfat=5 plotcol=4 cfile=${SOURCES[1]}
+      ''' % (dt,t0,point2))      
+
+Result('x0t01','hcube t0real1 x0real1','Overlay') 
+
+############################################################################################################# y0
+
+# Crossline direction
+
+Flow('distreal2','t0real1','math output=x3')
+
+Flow('y0real2','t0real1 distreal2 zeroreal1','lineiko what=i time=${SOURCES[1]} slow=${SOURCES[2]}')
+
+Result('y0real2','put d1=%g o1=%g | ' % (dt,t0) + grey3('','allpos=n mean=y','color=j'))
+Plot('y0real2','y0real2 wcont-y dedmaskk',
+      '''
+      put d1=%g o1=%g | 
+      window n1=631 f1=120 |   
+      math s1=${SOURCES[2]} output="input*s1" |
+      contour3 frame1=600 frame2=400 frame3=200 flat=y point2=%g 
+      wanttitle=n wantaxis=n plotfat=5 plotcol=6 cfile=${SOURCES[1]}
+      ''' % (dt,t0,point2))
+
+Flow('wcont-y','stack',
+     '''
+     put d1=%g o1=%g | scale dscale=%g |
+     window n1=1 n2=1 f1=600 f2=400 | 
+     max1 | window n1=25 | real
+     ''' % (dz,z0,dzdt))
+Result('coord','hcube t0real1 x0real1 y0real2','Overlay')
+   
+################################################################################mapping from (t,x,y) to (t0,x0,y0)
+Flow('x0real','x0real1','put d1=%g o1=%g | scale dscale=%g' % (dt,t0,dtdz))
+Flow('y0real','y0real2','put d1=%g o1=%g | scale dscale=%g' % (dt,t0,dtdz))
+Result('x0real',grey3('','allpos=y','color=j'))
+Result('y0real',grey3('','allpos=y','color=j'))
+Flow('warpreal1','t0real1 x0real1 y0real2',
+      '''
+      add add=%g |
+      cat axis=4 ${SOURCES[1:3]} 
+      ''' % z0)
+
+Flow('warpreal','warpreal1','put d1=%g o1=%g | scale dscale=%g' % (dt,t0,dtdz))
+Flow('hcubez','hcube',' put d1=%g o1=%g | scale dscale=%g ' % (dz,z0,dzdt))
+
+Flow('hcubeez','hcubez warpreal1','iwarp3 warp=${SOURCES[1]} eps=1')
+
+Flow('hcubee','hcubeez','put d1=%g o1=%g | scale dscale=%g' % (dt,t0,dtdz))
+Plot('hcubee',grey3(''))
+Result('hcubee',grey3(''))
+
+Flow ('hcubeeez','hcubeez warpreal1','iwarp3 warp=${SOURCES[1]} inv=n')
+Flow('hcubeee','hcubeeez','put d1=%g o1=%g | scale dscale=%g' % (dt,t0,dtdz))
+Result('hcubeee',grey3(''))
+
+
+End()

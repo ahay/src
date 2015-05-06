@@ -6,6 +6,8 @@ To the reproducible documents collection:
 
 * xjtu/mcaseislet: Seislet-based morphological component analysis
   using scale-dependent exponential shrinkage (Yang and Fomel)
+* tccs/aii: Structure-constrained relative acoustic impedance using
+  stratigraphic coordinates (Karimi)
 
 To SCons:
 

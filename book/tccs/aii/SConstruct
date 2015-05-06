@@ -1,0 +1,5 @@
+from rsf.tex import *
+
+End(color='coord stack hcubee hcubeee spec',
+    hires='w-t-h-c w-f-h-s w-h-f-t w-h-f-f se-379 c-379 st-379 seis-340 car-340 strat-340')
+
