@@ -1,0 +1,559 @@
+\published{Applied Geophysics, 12, 55-63 (March 2015)}
+
+\title{Seismic dip estimation based on the two-dimensional Hilbert transform and its application in random noise attenuation}
+%\keywords{Two-dimensional Hilbert transform, random noise attenuation, structure protection, nonstationary polynomial fitting, local seismic dip }
+
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+
+\author{Cai Liu\/\footnotemark[1], Changle Chen\/\footnotemark[1], Dian Wang\/\footnotemark[3]\/\footnotemark[1], Yang Liu\/\footnotemark[1], Shiyu Wang\/\footnotemark[1], and Liang Zhang\/\footnotemark[2]}
+
+\footnotetext[1]{\emph{College of Geo-exploration Science and Technology, Jilin University, Changchun 130026, China.}}
+\footnotetext[2]{\emph{Qian An Oil Factory, Jilin Oilfield, CNPC, Songyuan 138000, China.}}
+\footnotetext[3]{\emph{Corresponding Author: Dian Wang (Email: dianwang@jlu.edu.cn)}}
+
+\lefthead{Liu et al.}
+\righthead{Dip estimation using Riesz transform}
+\maketitle
+
+
+\begin{abstract}
+In seismic data processing, random noise seriously affects the seismic
+data quality and subsequently the interpretation.  This study aims to
+increase the signal-to-noise ratio by suppressing random noise and
+improve the accuracy of seismic data interpretation without losing
+useful information. Hence, we propose a structure-oriented polynomial
+fitting filter. At the core of structure-oriented filtering is the
+characterization of the structural trend and the realization of
+nonstationary filtering. First, we analyze the relation of the
+frequency response between two-dimensional (2D) derivatives and the 2D
+Hilbert transform (Riesz transform). Then, we derive the noniterative
+seismic local dip operator using the 2D Hilbert transform to obtain
+the structural trend. Second, we select polynomial fitting as the
+nonstationary filtering method and expand the application range of the
+nonstationary polynomial fitting. Finally, we apply variableamplitude
+polynomial fitting along the direction of the dip to improve the
+adaptive structureoriented filtering. Model and field seismic data
+show that the proposed method suppresses the seismic noise while
+protecting structural information.
+\end{abstract}
+
+\section{introduction}
+
+Random noise, which refers to any unwanted features in data, commonly
+contaminates seismic data. Random noise sources in seismic exploration
+are roughly divided into three categories. First, there are external
+disturbances such as wind and human activities. Second, there is
+electronic instrument noise. Third, there is the irregular
+interference owing to seismic explosions.  Random noise attenuation is
+a significant step in seismic data processing. In particular, the
+extent of noise suppression in poststack data directly affects the
+accuracy of subsequent processing and interpretation.  Presently,
+several different random noise attenuation methods are
+available. \cite{Liu06} presented a 2D multilevel median filter for
+random noise attenuation, whereas \cite{liu091} used a 1D time-varying
+window median filter. \cite{Bekara09} used the empirical mode
+decomposition (EMD) method and proposed a filtering technique for
+random noise attenuation in seismic data. \cite{Liu09} proposed a
+high-order seislet transform for random noise attenuation. \cite{Li12}
+applied morphological component analysis to suppress random noise and
+\cite{Liu12} proposed a novel method of random noise attenuation based
+on local frequency-domain singular value decomposition
+(SVD). \cite{Maraschini13} assessed the effect of nonlocal means
+random noise attenuator on coherency. \cite{Li13} used time-frequency
+peak filtering to suppress strong noise in seismic data. \cite{Liu13}
+used f-x regularized nonstationary autoregression to suppress random
+noise in 3D seismic data. The abovementioned random noise attenuation
+methods are limited by their lack of protection of structural
+information. For example, improper filtering may blur small faults,
+which may also make the displacement of larger fault continuous and
+consequently make layers appear continuous instead of
+faulted. Obviously, this hinders fault interpretation, and makes
+denoising and protecting structural information
+important. \cite{Fehmers03} applied structureoriented filtering to
+fast structural interpretation. \cite{Hoeber06} applied nonlinear
+filters, such as median, trimmed mean, and adaptive Gaussian, over
+planar surfaces parallel to the structural dip. \cite{Fomel06}
+suggested the method of plane-wave construction by using model
+reparameterization. \cite{Liu10} applied nonlinear structure-enhancing
+filtering by using plane-wave prediction to preserve structural
+information. \cite{Liu11} proposed a poststack random noise
+attenuation method by using weighted median filter based on local
+correlation and tried to balance the protection of fault information
+and noise attenuation.
+
+Structure-oriented filtering includes structure prediction and
+filtering. Seismic dip is at the core of structure prediction; for, we
+can use seismic dip to determine structural trends and achieve
+structure protection. \cite{Ottolini82} used local slant stack to
+formulate a local seismic dip estimation method. \cite{Fomel02}
+proposed a seismic dip estimation method based on the plane-wave
+destruction (PWD) filter. \cite{Schleicher09} compared different
+methods of local dip computations. The selection of filtering methods
+in structure-oriented filters is critical and polynomial fitting has
+been successfully applied to seismic data denoising.
+\cite{Lu09} used edge-preserving polynomial fitting
+to suppress random seismic noise. This method achieves
+better results when the trajectories of seismic events are
+linear or the amplitudes along the trajectories are not
+constant. \cite{Liu111} proposed a novel seismic noise
+attenuation method by using nonstationary polynomial
+fitting \cite[]{Fomel09} and shaping regularization \cite[]{Fomel07}
+for constraining the smoothness of the polynomial coefficients.
+
+In this paper, we discuss the two-dimensional (2D) Hilbert transform
+and use it to derive the formula for the dip in the plane wave,
+construct a stable algorithm for estimating the dip, and improve the
+computational efficiency of Fomel's method \cite[]{Fomel02} without
+minimizing the precision of the dip estimation.  Finally, we use
+synthetic model and field seismic data to demonstrate the
+applicability of the proposed method.
+
+\section{theory}
+The extraction of structural information and the selection of
+effective filtering methods are critical to structure-oriented
+filters. Because of the time-space relation in seismic data,
+structural information must satisfy kinematics and kinetics
+equations. The dip of seismic events reveals structural features. This
+study is the first to discuss a calculation method for the local
+seismic dip.
+
+\subsection{Noniterative local dip calculation}
+Following the local plane-wave equation \cite[]{Fomel02}
+\begin{equation}
+  \label{eq:1}
+  \frac{\partial{P(x,t})}{\partial{x}}+{\sigma}(x,t)
+       \frac{\partial{P(x,t})}{\partial{t}}=0,
+\end{equation}
+we define the local dip of seismic data
+\begin{equation}
+  \label{eq:2}
+  {\sigma}(x,t)=-\frac{\partial{P(x,t})}{\partial{x}}{\slash}
+    \frac{\partial{P(x,t})}{\partial{t}},
+\end{equation}
+where $P(x,t)$ is the seismic wave field and ${\sigma}(x, t)$ is the
+local seismic dip as a function of time $t$ and distance $x$.
+However, in actual computations, because the local dip is used to
+determine the direction of a seismic event, we ignore the dimensions
+and sampling interval; thus, ${\sigma}$ only depends on the sampling
+data and the local dimensionless dip is defined as
+\begin{equation}
+  \label{eq:3}
+  {\sigma}=-(\frac{\partial{P(x,t})}{\partial{x}}{\slash}
+    \frac{\partial{P(x,t})}{\partial{t}})\cdot
+      \frac{{\Delta}x}{{\Delta}t}=
+     -\frac{\partial{P}}{\partial{x}}{\slash}\frac{\partial{P}}{\partial{y}},
+\end{equation}
+where $\partial{P}{\slash}\partial{x}$ and
+$\partial{P}{\slash}\partial{y}$ are the partial derivatives of the
+seismic wave field in the $x-$ and $y-$direction, respectively, and
+${\Delta}x$ and ${\Delta}t$ are the respective sampling intervals in
+the $x-$ and $y-$direction.
+
+Using equation~\ref{eq:3}, we compute the local dip by using the
+specific values of the space- and time-directional derivatives. Hence,
+we first discuss the derivative operator.
+
+The ideal differentiator frequency response is
+\begin{equation}
+  \label{eq:4}
+  F_{IDD}({\omega})=i{\omega},-{\pi}\leq\omega\leq\pi.
+\end{equation}
+The ideal differentiator frequency response is multiplied by a
+frequency-dependent linear function in the frequency domain. The
+direct calculation of the derivative of the signal in the time domain
+enhances the high-frequency random noise and reduces the dip
+accuracy. Thus, we analyze the frequency response of the derivative
+operator and the frequency response of the Hilbert transform. We
+derive the Hilbert transform (Appendix A) and the approximate partial
+derivative by using the finite impulse response (FIR) filter
+\cite[]{Pei01}.  We use a 2D Hilbert transform to approximate the
+partial derivatives of the wave field, which reduces the side effect
+of strong high-frequency random noise owing to the derivative
+algorithm.
+
+The redefined noniterative local dip of the seismic data is
+\begin{equation}
+  \label{eq:5}
+  {\sigma} =-(\frac{\partial{P}}{\partial{x}}{\slash}
+       \frac{\partial{P}}{\partial{y}})=
+       -\frac{{FFT^{-1}}{[\tilde{P}(x)]}}{{FFT^{-1}}{[\tilde{P}(y)]}}
+       =-\frac{FFT^{-1}[\frac{1}{\sqrt{c_{x}}}\tilde{P}(x)]}{FFT^{-1}
+         [\frac{1}{\sqrt{c_{y}}}\tilde{P}(y)]}{\approx}-\frac{FFT^{-1}
+         [H_{HT}(x)]}{FFT^{-1}[H_{HT}(y)]}{\approx}-\frac{H_{HTx}}{H_{HTy}},
+\end{equation}
+where $\tilde{P}(x)$ is the frequency response function of the partial
+derivative in the $x-$direction and $\tilde{P}(y)$ is the frequency
+response function of the partial derivative in the $y-$direction. The
+dimensions are ignored in the derivation and $c$ does not depend on
+the time and space sampling intervals; thus, we take
+$c_x=c_y$. $H_{HT}(x)$ is the frequency response function of the
+Hilbert transform in the $x-$direction and $H_{HT}(y)$ is the
+frequency response function of the Hilbert transform in the
+$y-$direction. $H_{HTx}$ and $H_{HTy}$ are the components of the 2D
+Hilbert transform in the $x-$ and $y-$direction, respectively. Using
+equation~\ref{eq:5}, we calculate the local seismic dip attribute by
+using the 2D Hilbert transform instead of the derivative operation.
+Because division is required in equation~\ref{eq:5} and the
+denominator might become zero, we add the nonzero constant
+$\varepsilon$ in the denominator
+\begin{equation}
+  \label{eq:6}
+  \sigma{\approx}-\frac{H_{HTx}}{H_{HTy}+\varepsilon}.
+\end{equation}
+\cite{Fomel07} proposed the shaping regularization
+for imposing regularization constraints in estimation problems and
+defined the local seismic attributes. In this paper, we use the same
+method to constrain the division and smooth the local dip by using the
+Gaussian smooth operator as the regularization operator.
+
+\inputdir{sigmoid}
+ \multiplot{4}{noise,nrt,nrx,rizdip}{width=0.47\columnwidth}{Local
+              seismic dip based on the 2D Hilbert transform. Synthetic
+              seismic data (a), time component of the 2D Hilbert
+              transform (b), space component of the 2D Hilbert
+              transform (c), and local seismic dip (d).}
+
+To show the validity of the proposed dip calculation method, we
+construct a synthetic seismic model and add white Gaussian random
+noise, as shown in Figure~\ref{fig:noise,nrt,nrx,rizdip}a.  The
+components of the 2D Hilbert transform in the $x-$ and $y-$direction
+are shown in Figures~\ref{fig:noise,nrt,nrx,rizdip}b and
+\ref{fig:noise,nrt,nrx,rizdip}c, respectively. We obtain the dip of
+the seismic data by using the ratio of the two components and
+calculate the smoothing constraints, as shown in
+Figure~\ref{fig:noise,nrt,nrx,rizdip}d. We see that the calculation
+results can accurately reflect the dip value of the original data at
+different locations, such as the tilted layers at the top the
+underlying strata with the sinusoidal fluctuations, and the fault
+location. Using the 2D Hilbert transform and shaping regularization,
+we obtain the smooth local dip attribute.
+
+Another effective calculation method of the time-varying and
+space-variant seismic local dip is based on the plan-wave destruction
+(PWD) filter proposed by \cite{Fomel02}. The PWD filter realizes the
+plane-wave propagation across different traces, while the total energy
+of the propagating wave stays invariant, by using an all-pass digital
+filter in the time domain and a Taylor expansion of the all-pass
+filter frequency. We obtain the relation of the PWD and
+space-time-varying local seismic dip by using the Gauss-Newton
+algorithm to solve the nonlinear problem of local seismic dip.  This
+method can be essentially understood as solving an implicit
+finite-difference scheme for the local planewave equation. The
+disadvantage of the PWD-based calculation method is its slow
+computation speed, which is especially worse at higher order
+conditions.  The computational cost of the proposed method is
+proportional to $2N_{x}\times N_{t}$, where $N_{x}\times N_{t}$ is the
+data size, whereas the computational efficiency of the PWD-based dip
+estimation method is proportional to $N_{iter}\times N_{x} \times
+N_{t}$, where $N_{iter}$ is the number of iterations. Hence, to
+achieve similar accuracy, the dip estimation method based on the 2D
+Hilbert transform requires a smaller number of iterations than the
+PWD-based method.  
+
+The dip of seismic events controls the trend of the
+constructed seismic model; thus, next, we need to apply filtering
+along the trend. The selected filtering method must simultaneously
+suppress the seismic noise and protect structural information.
+
+\subsection{Nonstationary polynomial fitting}
+Traditional stationary regression is used to estimate the coefficients
+$a_{i}, i=1,2,\dots,N$ by minimizing the prediction error between a
+``master'' signal s($\mathbf{x}$) (where $\mathbf{x}$ represents the
+coordinates of a multidimensional space) and a collection of slave
+signals $L_{i}(\mathbf{x}), i = 1, 2,\dots ,N$
+\cite[]{Fomel09}
+\begin{equation}
+  \label{eq:7}
+  E(\mathbf{x})=s(\mathbf{x})-\sum_{i=1}^{N}a_{i}L_{i}(\mathbf{x}).
+\end{equation}
+When $\mathbf{x}$ is 1D and $N= 2$, $L_{1}(\mathbf{x})=1$ and
+$L_{2}(\mathbf{x})=x$ , the problem of minimizing $E(\mathbf{x})$
+amounts to fitting a straight line $a_{1}+a_{1}x$ to the master
+signal.  Nonstationary regression is similar to equation~\ref{eq:7}
+but allows the coefficients $a_{i}(\mathbf{x})$ to vary with
+$\mathbf{x}$, and the error
+\cite[]{Fomel09}
+\begin{equation}
+  \label{eq:8}
+  E(\mathbf{x})=s(\mathbf{x})-\sum_{i=1}^{N}a_{i}(\mathbf{x})L_{i}(\mathbf{x})
+\end{equation}
+is minimized to solve for the multinomial coefficients $a_{i}(\mathbf{x})$. The
+minimization becomes an ill-posed problem because $a_{i}(\mathbf{x})$ rely on
+the independent variables $\mathbf{x}$. To solve the ill-posed problem, we
+constrain the coefficients $a_{i}(\mathbf{x})$. Tikhonov's regularization
+\cite[]{Tikhonov63} is a classical regularization method that amounts
+to the minimization of the following functional \cite[]{Fomel09}
+\begin{equation}
+  \label{eq:9}
+  F(a)=\|E(\mathbf{x})\|^{2}+
+    \varepsilon^{2}\sum_{i=1}^{N}\|\mathbf{D}[a_{i}(\mathbf{x})]\|^2 ,
+\end{equation}
+where $\mathbf{D}$ is the regularization operator and $\varepsilon$ is
+a scalar regularization parameter. When $\mathbf{D}$ is a linear
+operator, the least-squares estimation reduces to linear inversion
+\cite[]{Fomel09}
+\begin{equation}
+  \label{eq:10}
+  \mathbf{a}=\mathbf{A}^{-1}\mathbf{d} ,
+\end{equation}
+where
+\begin{equation}
+\begin{split}
+  \nonumber
+  \mathbf{a} & =[a_1(x)a_2(x)\cdots a_N(x)]^T ,\\
+  \nonumber
+  \mathbf{d} & =[L_1(x)s(x)L_2(x)s(x)\cdots L_N(x)s(x)]^T,
+\end{split}
+\end{equation}
+and the elements of matrix $\mathbf{A}$ are
+\begin{equation}
+  \nonumber 
+  A_{ij}({\mathbf{x}})=L_i({\mathbf{x}})L_j({\mathbf{x}})+\varepsilon^2
+         \delta_{ij}\mathbf{D}^T\mathbf{D} \;.
+\end{equation}
+
+\inputdir{linefit}
+\plot{compare}{width=0.9\columnwidth}{Least-squares linear fitting 
+              compared with nonstationary polynomial fitting.}
+
+Next, we use a simple signal to simulate the variation of the
+amplitude of a nonstationary event with random noise (dashed line in
+Figure~\ref{fig:compare}). In Figure~\ref{fig:compare}, the dot dashed
+line denotes the results of the least-squares linear fitting and the
+solid line denotes the results of the nonstationary polynomial
+fitting. We compare the least-squares linear fitting and nonstationary
+polynomial fitting results, and we find that the nonstationary
+polynomial fitting models the curve variations more accurately for
+events with variable amplitude, particularly for $40<x<60$.
+
+\section{Synthetic data tests}
+
+\inputdir{sigmdenoi}
+\multiplot{5}{elpf,delpf,sdip,median,dmedian}{width=0.47\columnwidth}{Analysis 
+             of results using different structure-oriented
+             filtering. Nonstationary polynomial fitting (a),
+             difference profile of nonstationary polynomial fitting
+             (b), local PWD-based dip (c), median filter (d), and
+             difference profile of median filter (e).}
+
+We construct a new structure-oriented filtering method based on the 2D
+Hilbert transform with nonstationary polynomial fitting and apply it
+to synthetic data (Figure~\ref{fig:noise,nrt,nrx,rizdip}a).  The local
+seismic dip (Figure~\ref{fig:noise,nrt,nrx,rizdip}d) controls the
+trend of the event, and we apply nonstationary polynomial fitting
+along the direction of the dip for fast structural interpretation
+using structure-oriented filtering. We achieve continuous model
+protection in the direction of dip, and noise attenuation and fault
+protection because of the use of nonstationary polynomial
+fitting. Nine sampling points are used in the structure-oriented
+filtering and five sampling points in the nonstationary polynomial
+fitting. The filtering results are shown in
+Figure~\ref{fig:elpf,delpf,sdip,median,dmedian}a and the difference
+profile is shown in Figure~\ref{fig:elpf,delpf,sdip,median,dmedian}b.
+Figure~\ref{fig:elpf,delpf,sdip,median,dmedian}a shows that the upper
+tilted layer, the lower sinusoidal layer, and the fault information
+are preserved, while the noise is clearly suppressed. Random noise
+constitutes most of the difference profile without any tilted layer
+and fault information left because the local seismic dip cannot
+reflect the trend of the layers and owing to the attenuation of the
+limited effective information. To compare the proposed method with the
+PWD-based local dip estimation method
+(Figure~\ref{fig:elpf,delpf,sdip,median,dmedian}c) with similar dip
+accuracy (Figure~\ref{fig:noise,nrt,nrx,rizdip}d), we choose the
+median filter and show the results in
+Figure~\ref{fig:elpf,delpf,sdip,median,dmedian}d and the difference
+profile in Figure~\ref{fig:elpf,delpf,sdip,median,dmedian}e. We
+compare the two profiles after the application of the median
+filter. We find more useful structural information than the method we
+proposed.  That means the method we proposed has better effect.
+
+\section{Field data tests}
+\inputdir{fieldata}
+\multiplot{4}{slice,dipr,elpfr,delpfr}{width=0.47\columnwidth}{Comparison 
+              of processing results. Field data (a), Local dip (b),
+              After filtering (c), Difference profile (d).}
+
+For field data processing, we chose the 2D profile of 3D poststack
+data \cite[]{Liu13}. The shallow structures are simple planar layers
+and the deep structures are complex curved layers. First, we use the
+proposed method, which is based on the 2D Hilbert transform, to
+compute the corresponding local seismic dip attribute
+(Figure~\ref{fig:slice,dipr,elpfr,delpfr}b). From
+Figure~\ref{fig:slice,dipr,elpfr,delpfr}b, we see that the dip changes
+smoothly and steadily in the midshallow layer corresponding to the
+continuous event in the profile, whereas the variation of the dip in
+the deep layer is relatively larger, which characterizes the bending
+event in the mid-deep layer.  
+
+The trend of the local seismic events
+can be determined by using the dip attribute; thus, we select the
+filtering window, which is determined by the dip, and use
+nonstationary polynomial fitting for filter processing. The window
+size of the structure-oriented data consists of 11 sampling points and
+the window size of the nonstationary polynomial fitting comprises
+seven sampling points. 
+
+Figure~\ref{fig:slice,dipr,elpfr,delpfr}c
+shows the denoising results. We see that the random noise in the raw
+profile is suppressed, the whole section is clearer, and the
+continuity of the plane event (0.1s-0.3s) in the shallow layer and the
+curved event (below 0.3s) in the deep layer has improved.  The
+difference profile (Figure~\ref{fig:slice,dipr,elpfr,delpfr}d) shows
+that the removed noise is mainly irrelevant random noise and the
+information is well preserved.
+
+\section{Conclusions}
+
+We propose a seismic dip estimate method based on the 2D Hilbert
+transform. We compute the stable dip by using the noniterative
+approximation relation within the middle frequency band, and improve
+the computational efficiency relative to the iterative dip algorithm
+based on the PWD filter. We combine the proposed method with
+nonstationary polynomial fitting to suppress the seismic random noise
+using the computed local seismic dip. We predict the seismic structure
+trend using the structure-oriented window based on the seismic dip,
+while balancing the random noise attenuation and signal preservation
+via filtering with the nonstationary polynomial fitting. The proposed
+method suppresses the seismic noise and strongly depend on the of dip
+trend prediction. The accuracy of computed dip is directly affected by
+filtering. The method is not applicable at strong noise conditions. We
+use synthetic model and field data processing, to demonstrate the
+applicability of the proposed method.
+
+\appendix
+\section{Appendix A: Hilbert transform derivation for approximating the partial derivative}
+\subsection{Derivation of the FIR transfer function for the frequency response of digital differentiators}
+
+First, to characterize the FIR for signal differentiators, we
+transform the Leibniz series
+$\displaystyle\frac{2{\rm{arcsin}}x}{\sqrt{1-x^2}}$ to power series
+\cite[]{Lehmer85}
+\begin{equation}
+  \label{eq:1a}
+  \frac{2{\rm{arcsin}}x}{\sqrt{1-x^2}}=2x
+       \left[1+\sum_{m=1}^{\infty}\frac{(2{\rm{m}})!!}
+        {(2{\rm{m}}+1)!!}x^{2m}\right].
+\end{equation}
+We substitute sin$\displaystyle(\frac{\omega}{2})$ for $x$, and after
+rearrangement and truncation of the first $M$ terms, we obtain
+\begin{equation}
+\begin{split}
+  \label{eq:2a}
+  & \frac{\omega}{\sqrt{1-{\rm{sin}}^{2}\displaystyle\frac{\omega}{2}}}\\
+  & =2{\rm{sin}}\frac{\omega}{2}\left[1+\sum_{m=1}^{M}\frac{(2{\rm{m}})!!}
+   {(2{\rm{m}}+1)!!}
+ \left(\frac{1-{\rm{cos}}\omega}{2}\right)^{m}+
+    o((\frac{1-{\rm{cos}}\omega}{2})^{M+1})\right]
+\end{split}
+\end{equation}
+and after manipulation
+\begin{equation}
+\begin{split}
+  \label{eq:3a}
+  \omega & =2{\rm{sin}}\frac{\omega}{2}{\rm{cos}}\frac{\omega}
+    {2}\left[1+\sum_{m=1}^{M}\frac{(2{\rm{m}})!!}{(2{\rm{m}}+1)!!}
+ \left(\frac{1-{\rm{cos}}\omega}{2}\right)^{m}+
+    o((\frac{1-{\rm{cos}}\omega}{2})^{M+1})\right]\\
+         & ={\rm{sin}}\omega\left[1+\sum_{m=1}^{M}
+       \frac{(2{\rm{m}})!!}{(2{\rm{m}}+1)!!}
+\left(\frac{1-{\rm{cos}}\omega}{2}\right)^{m}+
+       o((\frac{1-{\rm{cos}}\omega}{2})^{M+1})\right].
+\end{split}
+\end{equation}
+We ignore the higher order terms and we obtain the $(2M+2)$th-order
+causal transfer function of the derivative operator as
+\begin{equation}
+  \label{eq:4a}
+  \hat{F}_{DD}(z)\approx-\frac{1-z^{-2}}{2}\left\{z^{-M}+
+     \sum_{m=1}^{M}\frac{(2{\rm{m}})!!}{(2{\rm{m}}+
+       1)!!}{\cdot}z^{-(M-m)}\left[-\frac{(1-z^{-1})^2}{4}\right]^m\right\}.
+\end{equation}
+
+\subsection{Derivation of the FIR transfer function for the frequency response of the Hilbert transform}
+The ideal frequency response of the Hilbert transform is expressed as
+\begin{equation}
+  \label{eq:5a}
+  H_{IHT}(\omega)=-i\,{\rm{sgn}}\,\omega=
+-i\frac{\omega}{\left|\omega\right|}=\left\{ \begin{array}{ll}
+i, & \textrm{$-\pi<\omega<0$}\\
+-i, & \textrm{$0<\omega<\pi$}
+\end{array} \right.
+.
+\end{equation}
+From equations~\ref{eq:4} and \ref{eq:5a}, we obtain the difference as
+$–1/\left|\omega\right|$.  For
+\begin{equation}
+  \label{eq:6a}
+  {\rm{sgn}}\,x=\frac{x}{\sqrt{x^2}}=xf(x^2),x\neq0
+\end{equation}
+and $f(u)=\displaystyle\frac{1}{\sqrt{u}},u>0$, the Taylor series 
+of $f(u)$ at center c is expressed
+\begin{equation}
+  \label{eq:7a}
+  f(u)=\frac{1}{\sqrt{c}}\left[1+\sum_{m=1}^{\infty}
+  \frac{(2{\rm{m}}-1)!!}{(2{\rm{m}})!!}\left(1-\frac{u}{c}\right)^m\right],
+\end{equation}
+where $(2{\rm{m}}-1)!!=1 \cdot 3 \cdot 5 \dots (2 {\rm{m}}- 1)$, $(2{\rm{m}})!!=1\cdot 3\cdot 5\dots(2{\rm{m}})$.
+Consequently, the signum function sgn$x$ is expressed
+\begin{equation}
+  \label{eq:8a}
+  {\rm{sgn}}\,x=\frac{x}{\sqrt{c}}\left[1+\sum_{m=1}^{\infty}
+  \frac{(2{\rm{m}}-1)!!}{(2{\rm{m}})!!}\left(1-\frac{x^2}{c}\right)^m\right].
+\end{equation}
+We substitute sin$\omega$ for $x$, based on
+sgn$\omega$=sgn(sin$\omega$) for $–\pi<\omega<\pi$, truncate the
+series at the first M terms, and obtain the sinusoidal power series of
+the signum function as
+\begin{equation}
+\label{eq:9a}
+\rm{sgn}\,\omega=\frac{\rm{sin}\omega}{\sqrt{c}} \left[1+
+   \sum_{m=1}^{M}\frac{(2m-1)!!}{(2m)!!}\left(1-\frac{\rm{sin}^2
+   \omega}{c}\right)^m+\circ((1-\frac{\rm{sin^2\omega}}{c})^{M+1})\right]
+\end{equation}
+
+The series in \ref{eq:9a} converges for $\displaystyle
+-1<1-\frac{{\rm{sin}}\omega}{c}<1$; that is, $c$ has to be larger than
+1/2. On the other hand, the expansion center $c$ in the $x$-domain is
+associated to the frequency center in the $\omega$-domain via the
+relation $c={\rm{sin}}^2\omega_c$. Therefore, $c={\rm{sin}}^2\omega_c$
+must be less than or equal to 1. Accordingly, $c$ is constrained by
+$1/2<c\;{\leq}\;1$ and the corresponding $\omega_c$ is within the
+range $[\pi/4,\pi/2]$. Clearly, the ideal frequency response is well
+approximated within the middle frequency band. Multiplying \ref{eq:9a}
+by $- i$ and substituting $\displaystyle\frac{z-z^{-1}}{2i}$ for
+sin$\omega$, the transfer function for the zero phase FIR of the
+Hilbert transform is expressed as
+\begin{equation}
+\label{eq:10a}
+H_{HT}\rm{(z,c)}\approx-\frac{z-z^{-1}}{2\sqrt{c}}
+    \left\{1+\sum_{m=1}^{M}\frac{(2m-1)!!}{(2m)!!}\left[1+\frac{1}{c} 
+    \left( \frac{z-z^{-1}}{2} \right)^2\right]^m \right\}
+\end{equation}
+To obtain the causal transfer function, $H_{HT}(z,c)$ is
+multiplied by $z^{-2M-1}$ and the resultant transfer function of
+the FIR Hilbert transform of the (2$M$+2)th-order is
+\begin{equation}
+\label{eq:11a}
+\hat{H}_{HT}\rm{(z,c)}\approx-\frac{1-z^{-2}}{2\sqrt{c}}
+   \left\{z^{-2M}+\sum_{m=1}^{M}\frac{(2m-1)!!}{(2m)!!}z^{-2(M-m)}
+    \left[z^{-2}+\frac{1}{c} \left( \frac{1-z^{-2}}{2} 
+     \right)^2\right]^m \right\}
+\end{equation}
+For $M$=0, the transfer functions of equations~\ref{eq:4a}
+and \ref{eq:11a} are approximated as
+\begin{equation}
+\label{eq:12a}
+\hat{H}_{HT}\rm{(z,c)}\approx-\frac{1-z^{-2}}{2\sqrt{c}}
+\end{equation}
+\begin{equation}
+\label{eq:13a}
+\hat{F}_{DD}\rm{(z)}\approx-\frac{1-z^{-2}}{2}
+\end{equation}
+We compare equations~\ref{eq:12a} and \ref{eq:13a}, and we conclude
+that these two transfer functions in middle frequency band of the
+frequency domain differ by the constant coefficient
+$\displaystyle\frac{1}{\sqrt{c}}$.
+
+\bibliographystyle{seg}
+\bibliography{dipest}

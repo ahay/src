@@ -3,9 +3,10 @@ from rsf.book import *
 Papers(copyr='Jilin University',
        group='CLEG',
        papers=Split('''
-       txyapf
+       txyapf riesz
        '''),
-       authors = {'txyapf':'Yang Liu, Ning Liu, and Cai Liu'}
+       authors = {'txyapf':'Yang Liu, Ning Liu, and Cai Liu',
+                  'riesz':'Cai Liu, Changle Chen, Dian Wang, Yang Liu, Shiyu Wang, and Liang Zhang'}
        )
        
 End(use='amsmath')
