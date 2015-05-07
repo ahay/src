@@ -50,5 +50,9 @@ for niter in [20,100]:
 
 Result('prcfill',fills,'TwoRows')
 
+Plot('mesh','grey transp=n yreverse=n title="April 18 Binned" ')
+
+Result('seaprc','mesh fill1-100','SideBySideAniso')
+
 ###########################################################################
 End()
