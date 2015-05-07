@@ -160,7 +160,7 @@ int main(int argc, char* argv[])
 	
 	/* step forward in offset */
 	ih1 = 0;
-	ih2 = nt;
+	ih2 = nh;
 	ihs = +1;
     }
 
