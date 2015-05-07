@@ -40,5 +40,17 @@ Plot('smstack','smstack',
      sfwindow n1=3000 |  sfgrey title="stack"
      ''',view=1)
 
- 	
+### Without tah
+
+Flow('imask','../segy/DeconShots3_hdr.rsf',
+     'window n1=1 f1=73 | mask min=5100 max=5400')
+Flow('xmask','../segy/DeconShots3_hdr.rsf',
+     'window n1=1 f1=74 | mask min=1001 max=2943')
+Flow('mask','imask xmask','mul ${SOURCES[1]}')
+
+Flow('head','../segy/DeconShots3_hdr.rsf mask','headerwindow mask=${SOURCES[1]}')
+Flow('data','../segy/DeconShots3.rsf     mask','headerwindow mask=${SOURCES[1]}')
+
+Flow('cdps','data head','intbin3 head=${SOURCES[1]} xkey=-1 yk=iline zk=xline')
+
 End()
