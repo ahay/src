@@ -8,6 +8,9 @@ To the reproducible documents collection:
   using scale-dependent exponential shrinkage (Yang and Fomel)
 * tccs/aii: Structure-constrained relative acoustic impedance using
   stratigraphic coordinates (Karimi)
+* jlu/riesz: Seismic dip estimation based on the two-dimensional
+  Hilbert transform and its application in random noise attenuation
+  (Liu, Chen, Wang, Liu, Wang, and Zhang)
 
 To SCons:
 
