@@ -234,11 +234,11 @@ Result('cdp250-251','velfiltcdpsmute',
 
 # run velocity analysis at one location, near the center of the line.
 # starting velocity is the one I picked, which is pretty good.
-Flow('vbrute.txt','vbruteorig.txt velfiltcdpsmute',
+Flow('vbrute.txt','iva.sh vbruteorig.txt velfiltcdpsmute',
      '''
      ./iva.sh
      "cmp1=373 numCMPs=1" 
-     ${SOURCES[1]} ${TARGETS[0]} ${SOURCES[0]} 7000 100
+     ${SOURCES[2]} ${TARGETS[0]} ${SOURCES[1]} 7000 100
      ''',stdout=0,stdin=0)
 
 # apply decon and moveout the cdp gathers using the brute velocity function.
@@ -366,7 +366,7 @@ Flow('vpick.txt','iva.sh vpickorig.txt velfiltcdpsmuterstat',
      ./iva.sh
      "cmp1=181 cmp2=229 cmp3=277 cmp4=325 cmp5=373 
       cmp6=421 cmp7=469 cmp8=517 cmp9=565 numCMPs=9" 
-     ${SOURCES[1]} ${TARGETS[0]} ${SOURCES[0]} 7000 100
+     ${SOURCES[2]} ${TARGETS[0]} ${SOURCES[1]} 7000 100
      ''',stdout=0,stdin=0)
 
 # stack, display, and zoom display with residual statics and final velocity field
