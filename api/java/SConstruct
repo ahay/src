@@ -44,7 +44,7 @@ include_dirs = [jdk_inc,include]
 
 if sys.platform == 'darwin':
   include_dirs.append(jdk_inc+'/darwin')
-elif sys.platform == 'linux':
+elif sys.platform[:5] == 'linux':
   include_dirs.append(jdk_inc+'/linux')
 
 if 'java' in env.get('API',[]) and jdk:
