@@ -29,7 +29,7 @@ Flow('receiver','rtrend','math output="(x1+x2)/0.0125" ')
 Flow('head','receiver source',
      'cat axis=3 ${SOURCES[1]} | dd type=int | transp plane=23 | transp')
 
-for case in ('rtrend','sobalcd'):
+for case in ('rtrend','sobalcd','balanced'):
     Flow('sr-'+case,[case,'head'],
          '''
          spray axis=1 n=1 | intbin head=${SOURCES[1]} xkey=0 ykey=1 | window j2=2 |
@@ -63,5 +63,15 @@ Result('sobalcd','grey mean=y wanttitle=n bias=7.21426 clip=0.750707')
 
 Result('srsobalcd','sr-sobalcd','grey mean=y wanttitle=n bias=7.21426 clip=0.750707')
 
+Flow('rmap','off2','math output=x1+x2 | put n2=1 n1=%d' % (994*120))
+Flow('rcv2','rcv rmap','iwarp warp=${SOURCES[1]} inv=n | put n1=120 n2=994')
+
+Flow('offsrcrcv','offsrc rcv2','mul ${SOURCES[1]}')
+
+Flow('balanced','rtrend offsrcrcv','div ${SOURCES[1]}')
+
+Result('balanced','grey mean=y wanttitle=n bias=53.191 clip=5.57576')
+
+Result('srbalanced','sr-balanced','grey mean=y wanttitle=n bias=53.191 clip=5.57576')
 
 End()

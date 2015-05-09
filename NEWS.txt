@@ -11,6 +11,8 @@ To the reproducible documents collection:
 * jlu/riesz: Seismic dip estimation based on the two-dimensional
   Hilbert transform and its application in random noise attenuation
   (Liu, Chen, Wang, Liu, Wang, and Zhang)
+* sep/balance: Iterative least-square inversion for amplitude
+  balancing (Berlioux and Harlan)
 
 To SCons:
 

@@ -133,6 +133,13 @@ Result('four','four welltops','Overlay')
 Flow('zt','z tdr','cut f1=-20 | iwarp warp=${SOURCES[1]} o1=0 d1=0.004 n1=750')
 Flow('rt','rc tdr','cut f1=-20 | iwarp warp=${SOURCES[1]} o1=0 d1=0.004 n1=750')
 
+Plot('z','DEPT z',
+     '''
+     cmplx ${SOURCES[1]} | window n1=21692 |
+     graph transp=y yreverse=y min1=750 max1=4250 plotfat=3
+     title=impedance unit1=m label2= unit2="kg/(m\^2\_s)" labelsz=12 titlesz=15
+     ''')
+
 Plot('zt',
      '''
      window min1=0.28 max1=2.28 |
@@ -159,7 +166,7 @@ Plot('synth',
      label1=Time unit1=s labelsz=12 titlesz=15 clip=0.002 grid=n
      ''')
 
-Result('synth','impedance zt rt synth','SideBySideAniso')
+Result('synth','z zt rt synth','SideBySideAniso')
 
 # label well tops in depth and time
 
