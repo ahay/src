@@ -164,7 +164,7 @@ int main(int argc, char* argv[])
     /*MPI related*/
     int cpuid,numprocs;
     int provided;
-    int n_local, o_local;
+    int n_local, o_local, nz_local;
     int ozx2;
     float *sendbuf, *recvbuf, *wave_all;
     int *rcounts, *displs;
@@ -276,7 +276,8 @@ int main(int argc, char* argv[])
     }
 
     nk = mcfft3_init(1,nh,nx,nz,&nh2,&nx2,&nz2,&n_local,&o_local);
-    sf_warning("Cpuid=%d,n2=%d,n1=%d,n0=%d,local_n0=%d,local_0_start=%d",cpuid,nh2,nx2,nz2,n_local,o_local);
+    nz_local = (n_local < nz-o_local)? n_local:nz-o_local;
+    sf_warning("Cpuid=%d,n2=%d,n1=%d,n0=%d,local_n0=%d,local_0_start=%d,nz_local=%d",cpuid,nh2,nx2,nz2,n_local,o_local,nz_local);
     if (cpuid==0)
       if (o_local!=0) sf_error("Cpuid and o_local inconsistant!");
 
@@ -314,6 +315,9 @@ int main(int argc, char* argv[])
     cwavem = sf_complexalloc(nk);
     wave = sf_floatalloc2(nzx2,m2);
 
+#ifdef _OPENMP
+#pragma omp parallel for default(shared) private(iz)
+#endif
     for (iz=0; iz < nzx2; iz++) {
 	curr[iz]=0.;
 	prev[iz]=0.;
@@ -344,7 +348,10 @@ int main(int argc, char* argv[])
 	sf_floatread(img[0],nz*nx,image);
 
 	/* transpose and initialize at zero offset */
-	for (iz=0; iz < n_local && (iz+o_local)<nz; iz++) {
+#ifdef _OPENMP
+#pragma omp parallel for default(shared) private(iz,ix)
+#endif
+	for (iz=0; iz < nz_local; iz++) {
 	    for (ix=0; ix < nx; ix++) {
 		curr[nh2*(ix+iz*nx2)]=img[ix][iz+o_local];
 	    }
@@ -363,6 +370,9 @@ int main(int argc, char* argv[])
 	if (mig) { /* migration <- read data */
 	    sf_floatread(dat[0],nx*nh,data);
 	} else {
+#ifdef _OPENMP
+#pragma omp parallel for default(shared) private(ix,ih)
+#endif
 	    for (ix=0; ix < nx; ix++) {
 		for (ih=0; ih < nh; ih++) {
 		    dat[ix][ih] = 0.;
@@ -381,6 +391,9 @@ int main(int argc, char* argv[])
 
 	/* at z=0 */
         if (cpuid==0) {
+#ifdef _OPENMP
+#pragma omp parallel for default(shared) private(ix,ih)
+#endif
 	for (ix=0; ix < nx; ix++) {
 	    for (ih=0; ih < nh; ih++) {
 		if (mig) {
@@ -397,6 +410,9 @@ int main(int argc, char* argv[])
 
 	for (im = 0; im < m2; im++) {
           //for (ik = 0; ik < nk; ik++) {
+#ifdef _OPENMP
+#pragma omp parallel for default(shared) private(ikz,ikx,ikh,i,j)
+#endif
           for (ikz = 0; ikz < n_local; ikz++) {
             for (ikx = 0; ikx < nx2; ikx++) {
               for (ikh = 0; ikh < nh2; ikh++) {
@@ -413,10 +429,10 @@ int main(int argc, char* argv[])
           imcfft3(wave[im],cwavem);
 	}
 
-        //#ifdef _OPENMP
-        //#pragma omp parallel for private(ix,iz,ih,i,j,im,old,c) shared(curr,prev,lft,wave)
-        //#endif
-        for (iz=0; iz < n_local && (iz+o_local)<nz; iz++) {
+#ifdef _OPENMP
+#pragma omp parallel for default(shared) private(ix,iz,ih,i,j,im,old,c)
+#endif
+        for (iz=0; iz < nz_local; iz++) {
 	    for (ix = 0; ix < nx; ix++) {
 		for (ih=0; ih < nh; ih++) {	
                     i = ih + ix*nh + (o_local+iz)*nx*nh;  /* original grid */
@@ -452,6 +468,9 @@ int main(int argc, char* argv[])
 
       if (cpuid==0) {
         /* transpose */
+#ifdef _OPENMP
+#pragma omp parallel for default(shared) private(iz,ix)
+#endif
         for (iz=0; iz < nz; iz++) {
           for (ix=0; ix < nx; ix++) {
             img[ix][iz] = wave_all[nh2*(ix+iz*nx2)];
