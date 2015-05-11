@@ -19,6 +19,8 @@
 #include <rsf.h>
 #include <omp.h>
 #include <fftw3-mpi.h>
+/* wall clock */
+#include <sys/time.h>
 
 int threads_ok;
 
@@ -279,6 +281,28 @@ void mcfft3_finalize()
   free(*ctrace3); free(ctrace3);
 }
 
+double walltime( double *t0 )
+{
+  double mic, time;
+  double mega = 0.000001;
+  struct timeval tp;
+  struct timezone tzp;
+  static long base_sec = 0;
+  static long base_usec = 0;
+
+  (void) gettimeofday(&tp,&tzp);
+  if (base_sec == 0)
+    {
+      base_sec = tp.tv_sec;
+      base_usec = tp.tv_usec;
+    }
+
+  time = (double) (tp.tv_sec - base_sec);
+  mic = (double) (tp.tv_usec - base_usec);
+  time = (time + mic * mega) - *t0;
+  return(time);
+}
+
 int main(int argc, char* argv[])
 {
     bool mig, sub;
@@ -296,6 +320,10 @@ int main(int argc, char* argv[])
     int ozx2;
     float *sendbuf, *recvbuf, *wave_all;
     int *rcounts, *displs;
+
+    /*wall time*/
+    double startTime, elapsedTime;
+    double clockZero = 0.0;
 
     MPI_Init_thread(&argc,&argv,MPI_THREAD_FUNNELED,&provided);
     threads_ok = provided >= MPI_THREAD_FUNNELED;
@@ -402,6 +430,9 @@ int main(int argc, char* argv[])
       sf_putstring(snaps,"label4","Time");
     }
     }
+
+    /* Mark the starting time. */
+    startTime = walltime( &clockZero );
 
     nk = mcfft3_init(1,nh,nx,nz,&nh2,&nx2,&nz2,&n_local,&o_local);
     nz_local = (n_local < nz-o_local)? n_local:nz-o_local;
@@ -610,6 +641,12 @@ int main(int argc, char* argv[])
     }
 
     mcfft3_finalize();
+
+    /* Work's done. Get the elapsed wall time. */
+    elapsedTime = walltime( &startTime );
+    /* Print the wall time and terminate. */
+    if (cpuid==0)
+      printf("\nwall time = %.5fs\n", elapsedTime);
 
     MPI_Finalize();
 
