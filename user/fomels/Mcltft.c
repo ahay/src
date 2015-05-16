@@ -24,7 +24,7 @@
 
 int main(int argc, char* argv[])
 {
-    bool inv, dip, verb;
+    bool inv, dip, verb, decomp;
     int i, i1, n1, iw, nw, i2, n2, rect, niter, n12, nt, ip, np;
     char *label;
     float t, d1, w, w0, dw, p0, dp, p;
@@ -49,6 +49,9 @@ int main(int argc, char* argv[])
 	
     if (!sf_getbool("dip",&dip)) dip = false;
     /* if y, do dip decomposition */
+
+    if (!sf_getbool("decompose",&decomp)) decomp = false;
+    /* if y, output decomposition */
 	
     if (NULL != sf_getstring("basis")) {
 	basis = sf_output("basis");
@@ -192,6 +195,21 @@ int main(int argc, char* argv[])
 	if (!inv) {
 	    sf_complexread(trace,n1,in);
 	    cmultidivn (trace,sscc,niter);
+
+	    if (decomp) {
+		for (iw=0; iw < nt; iw++) {
+		    for (i1=0; i1 < n1; i1++) {
+			i = iw*n1+i1;
+					
+#ifdef SF_HAS_COMPLEX_H
+			sscc[i] *= kbsc[i];
+#else
+			sscc[i1] = sf_cmul(sscc[i],kbsc[i]);
+#endif
+		    }
+		}
+	    }
+
 	    sf_complexwrite(sscc,n12,out);
 	} else {
 	    for (i1=0; i1 < n1; i1++) {

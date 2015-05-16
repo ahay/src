@@ -13,10 +13,36 @@ Flow(['stk.rsf' , 'stk_hdr.rsf'],
      | sftahstack key=xline \
      | sftahwrite \
        verbose=1
-       label2=xline o2=148 n2=1501 d2=1 
+       label2=xline o2=148 n2=53 d2=1 
        output=${TARGETS[0]}
      ''',stdout=0,stdin=0)
 Result('stk','sfpow pow1=1.5 | sfgrey title="stack v=1500"')
+
+### without tah ################
+
+Flow('cdpmask','../ntg/shots-receivers-23900_headfix_hdr.rsf',
+     'window n1=1 f1=74 | mask min=148 max=200')
+Flow('head','../ntg/shots-receivers-23900_headfix_hdr.rsf cdpmask',
+     'headerwindow mask=${SOURCES[1]}')
+
+Flow('cdps','../ntg/shots-receivers-23900_headfix.rsf cdpmask head',
+     '''
+     headerwindow mask=${SOURCES[1]} | 
+     intbin head=${SOURCES[2]} xkey=-1 yk=cdp
+     ''')
+Flow('offset mask','head',
+     '''
+     window f1=11 n1=1 squeeze=n | 
+     intbin head=$SOURCE mask=${TARGETS[1]} xkey=-1 yk=cdp |
+     dd type=float
+     ''')
+Flow('v1500','cdps','window n2=1 | math output=1500')
+Flow('stk2','cdps offset mask v1500',
+     'nmo offset=${SOURCES[1]} mask=${SOURCES[2]} velocity=${SOURCES[3]} half=n | stack')
+
+Result('stk2','sfpow pow1=1.5 | sfgrey title="stack v=1500" label2=xline')
+
+################################
 
 Flow(['xline1500.rsf' , 'xline1500_hdr.rsf'],
      ['../ntg/shots-receivers-23900_headfix.rsf',
@@ -32,6 +58,33 @@ Flow(['xline1500.rsf' , 'xline1500_hdr.rsf'],
      ''',stdout=0,stdin=0)
 Result('xline1500','sfpow pow1=1.5 | sfgrey title="nmo gather v=1500"')
 
+### without tah ################
+
+Flow('cdpmask600','../ntg/shots-receivers-23900_headfix_hdr.rsf',
+     'window n1=1 f1=74 | mask min=600 max=600')
+Flow('head600','../ntg/shots-receivers-23900_headfix_hdr.rsf cdpmask600',
+     'headerwindow mask=${SOURCES[1]}')
+
+Flow('offset600 mask600','head600',
+     '''
+     window f1=11 n1=1 squeeze=n | 
+     intbin head=$SOURCE mask=${TARGETS[1]} xkey=-1 yk=xline |
+     dd type=float
+     ''')
+Flow('cdps600','../ntg/shots-receivers-23900_headfix.rsf cdpmask600 head600',
+     '''
+     headerwindow mask=${SOURCES[1]} | 
+     intbin head=${SOURCES[2]} xkey=-1 yk=xline
+     ''')
+Flow('v600','cdps600','window n2=1 | math output=1500')
+Flow('stk600','cdps600 offset600 mask600 v600',
+     'nmo offset=${SOURCES[1]} mask=${SOURCES[2]} velocity=${SOURCES[3]} half=n')
+
+Result('xline600','stk600','sfpow pow1=1.5 | sfgrey title="nmo gather v=1500" label2=cdpt')
+
+# sort in offset?
+
+################################
 
 Flow(['xline3300.rsf' , 'xline3300_hdr.rsf'],
      ['../ntg/shots-receivers-23900_headfix.rsf',
