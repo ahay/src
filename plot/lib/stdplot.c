@@ -445,6 +445,15 @@ static void make_labels (sf_file in, char where1, char where2)
     }
 
     if (!sf_getfloat ("labelsz",&labelsz)) labelsz=8.;
+
+    float larnersz =0.0f;
+    if (!sf_getfloat ("larnersz",&larnersz)) larnersz=0.0;
+    /* give the font size as a fraction of the total screen height, 
+       this is based on Ken Larner's 1/20 rule.
+       Any positive larnersz value will overwrite labelsz with 
+       the appropiate rule*/
+
+    if(larnersz >0.0f) labelsz = (72.0f)*orig2/larnersz; // inches to pt conversion
     /* label size */
     if (cube) {
 	labelsz *= 0.03; /* slightly smaller */
