@@ -143,7 +143,7 @@ class Canvas(wx.Window):
             sys.exit(4)
         rsffiles.append(inp2)
         self.SetFrame(inp2)
-        image = self.rsf2image(inp)
+        image = self.rsf2image(inp2)
         self.image = image.ConvertToBitmap()
     def OnMotion(self,event):
         if event.Dragging() and event.LeftIsDown():
