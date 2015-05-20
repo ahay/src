@@ -20,7 +20,7 @@ warpadd warpscan zero zmarch ztrace
 
 ccprogs = 'anisolr2 isolr2 isolr3 permlr1 permlr2 permlr3'
 
-pyprogs = 'cgi fft ipick las2rsf results wxresults zoom'
+pyprogs = 'cgi fft ipick las2rsf results wxresults zoom wxzoom'
 pymods = 'conjdir conjgrad dottest steepd'
 
 try:  # distributed version

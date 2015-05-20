@@ -145,6 +145,12 @@ class Canvas(wx.Window):
         self.SetFrame(inp2)
         image = self.rsf2image(inp2)
         self.image = image.ConvertToBitmap()
+    def Restore(self,event):
+        print 'in restore'
+        self.SetFrame(inp)
+        image = self.rsf2image(inp)
+        self.image = image.ConvertToBitmap()
+        self.OnPaint(event)
     def OnMotion(self,event):
         if event.Dragging() and event.LeftIsDown():
             self.drawSquare(event)
@@ -190,7 +196,7 @@ class MainFrame(wx.Frame):
     def OnKeyDown(self,event):
         keycode = event.GetKeyCode()
         if keycode == wx.WXK_ESCAPE:
-            print 'Escape'
+            self.sketch.Restore(event)
         elif chr(keycode) == 'q':
             sys.exit(0)
         event.Skip()

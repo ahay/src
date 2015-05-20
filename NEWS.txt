@@ -46,6 +46,7 @@ In the build system:
 
 * Fixed installation of the gallery scripts
 * Improved configuration for Fortran-90 programs
+* Fixed Java API installation on Linux
 
 ===Changes in defaults and interfaces===
 
