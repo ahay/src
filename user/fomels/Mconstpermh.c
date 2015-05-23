@@ -186,7 +186,7 @@ int main(int argc, char* argv[])
 	for (iz=0; iz < nz; iz++) {
 	    kz = iz*dz;
 	    for (ix=0; ix < nx; ix++) {
-		kx = (iz==0)? dx: ix*dx;
+		kx = (iz==0 && ix==0)? dx: ix*dx;
 		x = 4.0f/((kz*kz+kx*kx)*v*v);
 		for (it=1; it < nt; it++) {
 		    w = it*dt;
@@ -195,13 +195,15 @@ int main(int argc, char* argv[])
 		    c = curr[iz][ix][it];
 
 		    if (mig) {
-			c += dat[ix][it];
+			c += (iz==nz-1)? dat[ix][it]*0.5: dat[ix][it];
 		    } else {
-			dat[ix][it] += c;
+			dat[ix][it] += (iz==nz-1)? c*0.5: c;
 		    }
 
 		    if (w < x) {
-			curr[iz][ix][it] = 2*cosf(kz*sqrtf(x-w))*c - prev[iz][ix][ih];
+			curr[iz][ix][it] = 2*cosf(SF_PI*kz*sqrtf(x-w))*c - prev[iz][ix][ih];
+		    } else {
+			curr[iz][ix][it] = 0.0f;
 		    }
 		    prev[iz][ix][it] = c;
 		}
@@ -220,7 +222,7 @@ int main(int argc, char* argv[])
 	    for (ix=0; ix < nx; ix++) {
 		for (it=0; it < nt; it++) {
 		    c = curr[iz][ix][it];
-		    img[ix][iz] += c;
+		    img[ix][iz] += (iz==nz-1)? c*0.5: c;
 		}
 	    }
 	}

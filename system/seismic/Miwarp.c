@@ -28,8 +28,9 @@ int main(int argc, char* argv[])
 {
     map4 mo;
     bool inv, each=true;
-    int nt, n1, i2, n2, nw;
+    int i, nt, n1, i2, n2, nw;
     float o1, d1, t0, dt, eps;
+    sf_complex *ctrace, *ctrace2;
     float *trace, *str, *trace2;
     sf_file in, out, warp;
 
@@ -84,6 +85,13 @@ int main(int argc, char* argv[])
 
     mo = stretch4_init (n1, o1, d1, nt, eps);
 
+    if (SF_COMPLEX == sf_gettype(in)) {
+	ctrace = sf_complexalloc(nt);
+	ctrace2 = sf_complexalloc(n1);
+    } else {
+	ctrace = ctrace2 = NULL;
+    }
+
     for (i2=0; i2 < n2; i2++) {
 	if (each || 0==i2) {
 	    sf_floatread(str,nt,warp);
@@ -91,13 +99,59 @@ int main(int argc, char* argv[])
 	}
 
 	if (inv) {
-	    sf_floatread(trace,nt,in);
-	    stretch4_apply (mo,trace,trace2);
-	    sf_floatwrite (trace2,n1,out);
+	    if (SF_COMPLEX == sf_gettype(in)) {
+		sf_complexread(ctrace,nt,in);
+		for (i=0; i < nt; i++) {
+		    trace[i] = crealf(ctrace[i]);
+		}
+		stretch4_apply (mo,trace,trace2);
+		for (i=0; i < n1; i++) {
+		    ctrace2[i] = sf_cmplx(trace2[i],0.0f);
+		}
+		for (i=0; i < nt; i++) {
+		    trace[i] = cimagf(ctrace[i]);
+		}
+		stretch4_apply (mo,trace,trace2);
+		for (i=0; i < n1; i++) {
+#ifdef SF_HAS_COMPLEX_H
+		    ctrace2[i] += sf_cmplx(0.0f,trace2[i]);
+#else
+		    ctrace2[i] = sf_cadd(ctrace2[i],sf_cmplx(0.0f,trace2[i]));
+#endif
+		}
+		sf_complexwrite (ctrace2,n1,out);
+	    } else {
+		sf_floatread(trace,nt,in);
+		stretch4_apply (mo,trace,trace2);
+		sf_floatwrite (trace2,n1,out);
+	    }
 	} else {
-	    sf_floatread(trace2,n1,in);
-	    stretch4_invert (mo,trace,trace2);
-	    sf_floatwrite (trace,nt,out);
+	    if (SF_COMPLEX == sf_gettype(in)) {
+		sf_complexread (ctrace2,n1,out);
+		for (i=0; i < n1; i++) {
+		    trace2[i] = crealf(ctrace2[i]);
+		}
+		stretch4_invert (mo,trace,trace2);
+		for (i=0; i < nt; i++) {
+		    ctrace[i] = sf_cmplx(trace[i],0.0f);
+		}
+		for (i=0; i < n1; i++) {
+		    trace2[i] = cimagf(ctrace2[i]);
+		}
+		stretch4_invert (mo,trace,trace2);
+		for (i=0; i < nt; i++) {
+#ifdef SF_HAS_COMPLEX_H
+		    ctrace[i] += sf_cmplx(0.0f,trace[i]);
+#else
+		    ctrace[i] = sf_cadd(ctrace[i],sf_cmplx(0.0f,trace[i]));
+#endif
+		}
+		sf_complexwrite(ctrace,nt,in);
+	    } else {
+		sf_floatread(trace2,n1,in);
+		stretch4_invert (mo,trace,trace2);
+		sf_floatwrite (trace,nt,out);
+	    }
 	}
     }
 
