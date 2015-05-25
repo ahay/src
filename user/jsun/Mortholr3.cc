@@ -252,10 +252,10 @@ int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
             			r = sqrt(abs(r))-9*cc;
             			double mm = -2*aa*aa*aa+3*r-9*aa*bb;
             			if (mm<0) {
-					r = -pow(-mm,float(1.0/3.0));
+					r = -pow(-mm,1.0/3.0);
 				}
             			else {
-					r = pow(mm,float(1.0/3.0));
+					r = pow(mm,1.0/3.0);
 				}
 
             			if (abs(r) < 0.0001) {	

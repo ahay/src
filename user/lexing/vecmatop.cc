@@ -631,6 +631,7 @@ int lowrank(int m, int n, int (*sample)(vector<int>&, vector<int>&, CpxNumMat&),
     for(int k=0; k<min(m,n); k++)	if(abs(M1(k,k))>cutoff)	  cnt++;
     cidx.resize(cnt);
     for(int k=0; k<cnt; k++)	cidx[k] = (jpvt(k)-1);
+    cerr<<"HERE I AM "; cerr<<cnt;
     cerr<<"COLS "; for(int k=0; k<cnt; k++)      cerr<<cidx[k]<<" ";    cerr<<endl;
   }
   {

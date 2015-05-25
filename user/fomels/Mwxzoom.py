@@ -146,7 +146,6 @@ class Canvas(wx.Window):
         image = self.rsf2image(inp2)
         self.image = image.ConvertToBitmap()
     def Restore(self,event):
-        print 'in restore'
         self.SetFrame(inp)
         image = self.rsf2image(inp)
         self.image = image.ConvertToBitmap()
