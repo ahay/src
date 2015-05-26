@@ -38,7 +38,7 @@ def las2rsf(lasf,rsff):
         rsf.put(key,name)
         item = las.curves.items[name]
         rsf.put(key+'_units',item.units)
-        desc = ' '.join(item.descr.split()[1:])
+        desc = ' '.join(item.descr.translate(None,'"').split()[1:])
         rsf.put(name,desc)
     rsf.write(data)
     rsf.close()
