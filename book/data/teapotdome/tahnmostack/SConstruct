@@ -1,6 +1,6 @@
 from rsf.proj import *
 
-SConscript('../fetch/SConstruct')
+#SConscript('../fetch/SConstruct')
 
 # get the stack created using seismic unix
 Plot('sustack','../fetch/final_stack.rsf','grey title="su stack"',view=1)
@@ -10,6 +10,17 @@ Result('sustack3d','../fetch/final_stack.rsf',
        | byte gainpanel=all 
        | grey3 title="su stack" frame1=500 frame2=120 frame3=140
         ''')
+Flow('sustack141','../fetch/final_stack.rsf','window n1=1000 n3=1 f3=141')
+Result('sustack141',
+       '''
+       grey title='sustack line 141'
+       ''')
+Flow('sustackx121','../fetch/final_stack.rsf','window n1=1000 n2=1 f2=121')
+Result('sustackx121',
+       '''
+       grey title='sustack xline 121'
+       ''')
+
 Flow(['mappedstack.rsf','mappedstack_hdr.rsf'],
      ['../fetch/npr3_gathers.rsf','../fetch/npr3_gathers_hdr.rsf'],
      '''
@@ -18,7 +29,7 @@ Flow(['mappedstack.rsf','mappedstack_hdr.rsf'],
        verbose=1  
        tnmo=0.000,0.373,0.619,0.826,0.909,1.017,1.132,1.222,1.716,3.010 
        vnmo=9086.27,10244.26,11085.81,10803.11,10969.02,11578.66,12252.14,12669.89,14590.08,17116.54 
-     | sftahstack key=iline,xline verbose=1 
+     | sftahstack key=iline,xline verbose=1 ntaper=12
      | sftahwrite 
         verbose=1                           
         label2="xline" o2=1 n2=188 d2=1   
@@ -34,11 +45,29 @@ Result('mappedstack3d','mappedstack',
        | byte gainpanel=all 
        | grey3 title="tah stack" frame1=500 frame2=120 frame3=140
         ''')
-Result('mappedstack141','mappedstack',
+Flow('mappedstack141','mappedstack','window n1=1000 n3=1 f3=141')
+Result('mappedstack141',
        '''
-       window n1=1000 n2=1 f2=141 | grey title='tahstack line 141'
+       grey title='tahstack line 141'
        ''')
-
+Flow('mappedstackx121','mappedstack','window n1=1000 n2=1 f2=121')
+Result('mappedstackx121',
+       '''
+       grey title='tahstack xline 121'
+       ''')
+Flow('diff-su-tahstack','mappedstack141 sustack141',
+      '''
+      sfadd scale=1,-1 ${SOURCES[1]}
+      ''')
+Result('diff-su-tahstack',
+       '''
+       sfgrey title='mappedstack-sustack'
+       ''')
+Result('cat-diff-su-tahstack','diff-su-tahstack mappedstack141 sustack141',
+       '''
+       sfcat ${SOURCES[1:3]} | sfgrey title='mappedstack-sustack'
+       ''')
+ 
 # make the mapped gather in the middle data.
 # sftahmakeskey hangs if you say key= instead of pkey=
 
