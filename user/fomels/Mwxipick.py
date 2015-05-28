@@ -144,12 +144,28 @@ class MainFrame(wx.Frame):
     def __init__(self):
         wx.Frame.__init__(self,None,title='Interactive Picking',size=(width+1,height+26))
 
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        buttons = wx.BoxSizer(wx.HORIZONTAL)
+        colorpick = wx.Button(self,-1,'Change Color')
+        colorpick.SetBackgroundColour('light yellow') 
+        self.Bind(wx.EVT_BUTTON,self.PickColor,colorpick)
+        buttons.Add(colorpick,0,wx.ALL,5)
+        bquit = wx.Button(self,-1,'Quit')
+        bquit.SetBackgroundColour('pink') 
+        self.Bind(wx.EVT_BUTTON,self.Quit,bquit)
+        buttons.Add(bquit,0,wx.ALL,5)
+        sizer.Add(buttons)
+
         panel = wx.Panel(self, wx.ID_ANY)
         panel.Bind(wx.EVT_CHAR, self.OnKeyDown)
         panel.SetFocus()
 
         self.sketch = Canvas(panel,-1)
         self.sketch.Bind(wx.EVT_MOTION,self.OnSketchMotion)
+
+        sizer.Add(panel,wx.EXPAND)
+        self.SetSizer(sizer)
 
         self.status = self.CreateStatusBar()
         self.status.SetFieldsCount(1)
@@ -161,8 +177,18 @@ class MainFrame(wx.Frame):
     def OnKeyDown(self,event):
         keycode = event.GetKeyCode()
         if chr(keycode) == 'q':
-            sys.exit(0)
+            self.Quit(event)
         event.Skip()
+    def PickColor(self,event):
+        dlg = wx.ColourDialog(self)
+        dlg.GetColourData().SetChooseFull(True)
+        if dlg.ShowModal() == wx.ID_OK:
+            color = dlg.GetColourData().GetColour()
+            print color
+#            self.sketch.SetColor(color)
+        dlg.Destroy()
+    def Quit(self,event):
+        sys.exit(0)
 
 @atexit.register
 def cleanup():
