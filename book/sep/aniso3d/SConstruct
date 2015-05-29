@@ -1,0 +1,6 @@
+from rsf.tex import *
+
+End(include=r'''
+\def\qSV{{\sl q}SV}
+\def\qSH{{\sl q}SH}
+''')

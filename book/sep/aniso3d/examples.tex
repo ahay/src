@@ -1,0 +1,953 @@
+In this section I use elastic finite-difference-modeled wavefields
+to illustrate some of the more interesting possible properties of
+wave propagation in three-dimensional anisotropic media.
+
+\subsection{Perturbing TI}
+\label{Exam3-PertTI}
+In section~\ref{Sec-Sing} we saw that relatively small changes to the
+elastic constants could cause fairly dramatic topological changes in
+the singularities.
+Intuitively we expect that small perturbations in the material properties
+of a medium should only be able to cause small changes in the associated
+wavefield.
+Is it possible for topological changes in the singularities to cause
+noticeable effects in the resulting wavefield,
+even when the change in the elastic constants is small?
+
+\Tactiveplot{Exam3-Green}{width=5.75in}{\figdir}
+{A Greenhorn Shale snapshot in three dimensions.}
+{
+\small
+Four slices through a three-dimensional Greenhorn Shale
+\refer{Jones and Wang}
+{Ultrasonic velocities in Cretaceous shales from the Williston basin}
+{1981} snapshot, corresponding to the medium shown in the top left plot
+in Figure~\protect\ref{Sing-Crack}.
+The {\qP} wave has been nulled to allow the maximum
+resolution on the shear waves. (The original model had $128^3$ gridpoints;
+the slices are through one octant.)
+The source is a $z$ point force at the lower left corner.
+The top row shows slices through the $x$-$z$ plane,
+the bottom row shows slices rotated $30^\circ$ about the $z$ axis
+out of the $x$-$z$ plane. (This slice is wider because the snapshot
+cube is being cut at an oblique angle.)
+The left column shows the component of displacement in the SV direction
+(i.e. in the plane of the slice and
+perpendicular to a vector pointing away from the source).
+The right column shows the component of displacement in the SH direction
+(i.e. perpendicular to the plane of the slice).
+Theoretical impulse-response curves for the {\qSV} (finer dashes)
+and SH (coarser dashes) modes for this medium are overlayed on the plots.
+Since the medium is transversely isotropic and the source is aligned
+with the symmetry axis, the $0^\circ$ and $30^\circ$ slices are equivalent.
+\index{impulse response | 3D example}
+\index{transverse isotropy | 3D example}
+}
+
+\Tactiveplot{Exam3-CGreen}{width=5.75in}{\figdir}
+{How Figure~\protect\ref{Exam3-Green} changes
+if the elastic constants are perturbed.}
+{
+\small
+Four slices through a three-dimensional Cracked Greenhorn Shale
+snapshot, corresponding to the medium shown in the middle left plot
+in Figure~\protect\ref{Sing-Crack}. (The elastic constants are listed
+in Table~\ref{Const-3D}.)
+The parameters of the four plots are the same as for the corresponding
+plots in Figure~\protect\ref{Exam3-Green}; the only difference is
+the underlying elastic constants have been perturbed to break the
+axisymmetry.
+The same Greenhorn Shale theoretical impulse-response curves
+used in the previous figure are overlayed again here. This time
+the elastic constants are somewhat different, so there's no guarantee
+they'll fit as well as they did in the previous figure.
+For the $0^\circ$ ($x$-$z$) slice the overlayed curves fit exactly anyway,
+and for the $30^\circ$ SV-component plot they are only slightly off.
+For the $30^\circ$ SH-component plot, though, something unexpected happens.
+Instead of some sorts of ``{\qSV}'' or ``{\qSH}'' waves as we might expect,
+mostly we see a short nearly planar wavefront.
+(Its amplitude is about $15\%$ of that of the primary ``{\qSV}'' wave.)
+\index{impulse response | 3D example}
+\index{connections | impulse-response example}
+}
+
+Figure~\ref{Exam3-Green} shows two slices through a three-dimensional
+wavefield snapshot. (The {\qP} mode has been nulled so I can squeeze
+as much resolution out of the $128^3$ finite-difference model as possible.)
+One slice is oriented lies in the $x$-$z$ plane, the other is
+oriented at $30^\circ$ to the $x$-$z$ plane.
+For each orientation two plots are shown;
+one shows displacement in the SV direction,
+the other in the SH direction.
+(Note I am using ``SV'' and ``SH'' here as directions,
+not as labels for modes.)
+The source is a pure $z$ point force.
+
+There are two things to note in Figure~\ref{Exam3-Green}.
+First, the two sets of plots appear to be identical.
+This is because the medium is
+transversely isotropic, and so the two orientations
+are in fact symmetrically equivalent.
+Second, there appears to be no SH motion at all.
+Since the medium is transversely isotropic there is a pure
+SH mode; this mode is orthogonal to the $z$ source and so is not excited.
+
+We now take Figure~\ref{Exam3-Green} and perturb the elastic constants
+by adding cracks in the $x$-$z$ plane. (The cracking is not severe,
+only enough to slow the {\qSV} wave propagating
+perpendicular to the plane of the cracks by about $5\%$.)
+Given the {\qSV} and SH modes of the
+original transversely isotropic medium shown in Figure~\ref{Exam3-Green}
+and the relatively small perturbation to the elastic constants,
+we would expect to see something like {\qSV} and {\qSH} modes
+in the cracked medium.
+Figure~\ref{Exam3-CGreen} shows the actual results.
+As expected, the SV plots look much the same as before.
+The SH plot in the $x$-$z$ symmetry plane is again zero.
+The SH plot at $30^\circ$ appears quite strange, though.
+There is a ``{\qSH}'' wavefront dimly perceptible (maybe not,
+depending on the reproduction quality of your copy!),
+but far stronger is a perplexing nearly planar event
+that connects the expected ``{\qSV}'' and ``{\qSH}'' wavefronts,
+but corresponds to nothing in transverse isotropy.
+What is going on?
+
+\Tactiveplot{Exam3-SlowGreen}{width=5.75in}{\figdir}
+{The three-dimensional slowness surface for ``Cracked Greenhorn Shale''.}
+{
+The three-dimensional shear slowness surfaces for ``Cracked Greenhorn Shale'',
+which is just Greenhorn Shale perturbed by adding fractures
+in the $x$-$z$ plane.
+Compare this figure with the unperturbed version, the top plot
+in Figure~\protect\ref{Separ3-Wavedef}
+on page~\protect\pageref{Separ3-Wavedef}.
+This time I have rotated the medium $60^\circ$ so that the edges of
+the cut-out octant do not line up with the symmetry axes of the medium.
+At first glance, the topology appears the same as before.
+Figure~\protect\ref{Exam3-SlowGreenclose} shows
+a high-resolution view of the region inside the rectangle,
+which shows the true topology.
+(The middle left plot in Figure~\protect\ref{Sing-Crack} shows yet
+another view of this same three-dimensional surface.)
+\index{shear singularities | example}
+\index{wave modes | perturbed transversely isotropic}
+\index{slowness surface | 3D example}
+\index{connections}
+}
+
+\Tactiveplot{Exam3-SlowGreenclose}{width=5.75in}{\figdir}
+{A close-up view of a perturbed TI three-dimensional slowness surface.}
+{
+A close-up view of Figure~\protect\ref{Exam3-SlowGreen} showing the
+true topology. (Remember, I use the darkness of the surfaces
+to show the associated particle-motion direction,
+SV motion being darker and SH motion lighter.)
+Like the orthorhombic medium in Figure~\protect\ref{Separ3-Mobius},
+this orthorhombic medium displays inner {\qS2} and outer {\qS1}
+surfaces that touch at a small number of discrete points (singularities).
+One such point, a singularity of order $-1$, is visible as the black dot
+a little to the right and below top center.
+\index{shear singularities | example}
+\index{shear singularities | mode-mode coupling}
+\index{wave modes | coupling}
+\index{wave modes | perturbed transversely isotropic}
+\index{slowness surface | 3D example}
+\index{connections}
+}
+
+The problem is that our intuition has been learned from
+studying highly symmetric two-dimensional examples
+(or, even worse, isotropy).
+In Chapter~\ref{Chap-2D} we encountered several examples
+where events would disappear just at certain exceptional values
+of the elastic constants.
+(For example, compare cases 1 and~10 in Figure~\ref{TI-disp} on
+page~\pageref{TI-disp} with the corresponding finite-difference
+results in Figures \ref{TI-Exam1} and~\ref{TI-Exam2}
+on pages \pageref{TI-Exam1} and~\pageref{TI-Exam2}.)
+One could not understand transverse isotropy by studying only such
+special cases.
+\index{transverse isotropy | pitfalls}
+Unfortunately two-dimensional anisotropy itself,
+with many elastic constants held equal,
+is just such a special case.\footnote{
+Thus we find that
+{\em all\/} two-dimensional anisotropy is inherently dishonorable!
+(Recall the epigraph on page~\pageref{Quote-Helbig}.)
+\index{Helbig, Klaus | quote}
+[And no, I don't know why {\TeX} likes chopping this footnote into two
+pieces 5 pages apart, either. In the hardcopy version I could get around
+it with a brute-force {\tt {$\backslash$}clearpage},
+but no such Potemkin-village hack is possible in an e-document!]
+}
+
+\subsubsection{``Connections''}
+\index{connections}
+So where does the mysterious event come from?
+
+Figure~\ref{Exam3-SlowGreen} shows the three-dimensional slowness
+surfaces for the cracked medium. It appears very much like the unperturbed
+TI medium shown in the top plot in Figure~\ref{Separ3-Wavedef},
+but there is a crucial difference, as can be seen clearly
+in Figure~\ref{Exam3-SlowGreenclose}. The formerly distinct
+{\qSV} and SH modes have crossed over and recombined to form
+\label{Exam3-Chimera}
+new {\qS1} and {\qS2} modes.
+For the most part, these new shear surfaces can be thought of as
+virtually unchanged patched-together fragments
+of the old {\qSV} and SH surfaces, and hence I like to call them
+``chimeras''\footnote{I'm using a biological analogy here;
+the operative definition of ``chimera'' from Webster's
+\refer{Woolf}
+{Webster's new collegiate dictionary}
+{1975}
+is
+``an individual, organ, or part consisting of tissues of diverse genetic
+constitution and occurring esp. in plants at a graft union''.
+(Although one of the other listed definitions,
+``an imaginary monster compounded of incongruous parts'',
+might be more appropriate here!)
+}.
+
+This ``exchanging identity without quite touching'' phenomenon is
+quite common in physics. Spheroidal normal modes of the Earth are
+another good geophysical example. A plot of frequency versus angular
+order for these modes seems to show distinct sets of crisscrossing parallel
+lines. Upon close examination, however, the parallel lines prove to
+be an optical illusion formed by a series of noncrossing curves each shaped
+like a set of staircase steps. (See for example
+Figure~17 in
+Gilbert and Dziewonski~\referna{Gilbert and Dziewonski}
+{An application of normal mode theory to the retrieval of structural
+parameters and source mechanisms from seismic spectra}
+{1975}.)
+
+This sort of behavior can be modeled using extremely simple mathematics;
+take for example the equation
+$y^2 = x^2$.
+We would probably write the solutions to this equation as
+\begin{equation}
+y = \cases{x & \cr -x & \cr}
+.
+\end{equation}
+However, if we used instead the perturbed equation
+$y^2 = x^2 + \epsilon$,
+we would write the solutions as
+\begin{equation}
+y = \cases{\sqrt{x^2 + \epsilon} & \cr -\sqrt{x^2 + \epsilon} & \cr}
+.
+\end{equation}
+By letting $\epsilon \rightarrow 0$ we find
+an alternate solution set for the original equation,
+\begin{equation}
+y = \cases{\vert x \vert & \cr -\vert x \vert & \cr}
+.
+\end{equation}
+For our cracked Greenhorn Shale example, ``$\epsilon$'' is
+the perturbation of the Christoffel matrix $\C$ away from
+transverse isotropy. This ``$\epsilon$'' effectively vanishes
+in the orthorhombic symmetry planes.
+
+These topological details of solution sets are usually a mere curiosity,
+but for our perturbed transversely isotropic example
+they turn out to be significant.
+It is the novel parts of the {\qS1} and {\qS2} surfaces in
+Figure~\ref{Exam3-SlowGreenclose}
+where they approach but don't quite touch
+that create the new event seen in Figure~\ref{Exam3-CGreen}.
+(Kawasaki~\referna{Kawasaki}
+{Mode-mode coupling of surface waves in an anisotropic medium}
+{in preparation}
+similarly finds that for an azimuthally anisotropic earth such ``chimeric''
+effects need to be taken into account
+when inverting earthquake surface-wave data.)
+To see how this relatively small change in the slowness surfaces
+can be significant, we will now examine the relevant
+three-dimensional {\em impulse-response surfaces\/}.
+
+We begin with Figure~\ref{Exam3-Greenboth}, which shows
+the three-dimensional shear impulse-response surfaces for unperturbed
+Greenhorn Shale.
+The elliptical SH mode in three dimensions becomes a prolate ellipsoid,
+while the cusped {\qSV} mode becomes a sort of flanged barrel.
+Figures \ref{Exam3-CGreeninner} and~\ref{Exam3-CGreenouter} show the
+corresponding {\qS1} and {\qS2} modes for Cracked Greenhorn Shale.
+The thick lines correspond to the thick lines in Figure~\ref{Exam3-SlowGreen}.
+Note that although they lie in a plane in the slowness domain,
+they definitely do not in the group domain.
+(I would have shown both surfaces together,
+but found the resulting tangle of
+intersecting surfaces too complex to visualize easily.
+To give some idea of the relative positions of the {\qS1} and {\qS2}
+surfaces, I have shown the thick lines for both surfaces
+in both sets of plots.)
+
+The impulse-response surfaces shown in Figures
+\ref{Exam3-CGreeninner} and~\ref{Exam3-CGreenouter}
+combine gross elements of the surfaces visible
+in Figure~\ref{Exam3-Greenboth}, but some new features are also visible.
+The surface shown in Figure~\ref{Exam3-CGreeninner} is adorned with
+thin disks hovering just above the remainder of the top surface,
+and attached only at a relatively small region at the center.
+The disks fit into the holes visible in Figure~\ref{Exam3-CGreenouter}.
+The outer rims of the disks (and the inner edges of the holes)
+correspond to the point
+singularities visible in Figure~\ref{Exam3-SlowGreen}.
+(The outer surface of the disks are usually called ``lids'' in the literature
+(Crampin~\referna{Crampin}
+{A review of wave motion in anisotropic and cracked elastic media}
+{1981}, but there seems to be some confusion about what the term ``lid''
+precisely means. I will avoid using the term until after I have
+given better examples of the topology of the singularities, notably in
+Figures~\ref{Exam3-HelbigSlice}, \ref{Exam3-FrancisAxis},
+and~\ref{Exam3-FrancisBlowup}.)
+
+\Tactiveplot{Exam3-Greenboth}{width=5.80in}{\figdir}
+{
+The three-dimensional shear impulse-response surfaces for Greenhorn Shale.
+}
+{
+The three-dimensional shear impulse-response surfaces for Greenhorn Shale
+\refer{Jones and Wang}
+{Ultrasonic velocities in Cretaceous shales from the Williston basin}
+{1981}.
+The figure shows a light-colored prolate-ellipsoid pure SH mode
+intersecting a flanged barrel-shaped {\qSV} mode.
+\index{impulse-response surface | 3D example}
+\index{transverse isotropy | 3D example}
+}
+\Tactiveplot{Exam3-CGreenouter}{height=6.08in}{\figdir}
+{
+The three-dimensional {\qS1} impulse-response surface for Cracked Greenhorn Shale
+(Left view).
+}
+{
+The three-dimensional {\qS1} impulse-response surface
+for Cracked Greenhorn Shale
+corresponding to the slowness surfaces shown
+in Figure~\protect\ref{Exam3-SlowGreen}.
+This figure is the left element in a stereo pair;
+Figure~\protect\ref{Exam3-CGreenouter2} is the corresponding right element.
+The isolated thick lines show the position of the omitted {\qS2} surface.
+\index{impulse-response surface | 3D example}
+}
+\Tactiveplot{Exam3-CGreenouter2}{height=6.08in}{\figdir}
+{
+The three-dimensional {\qS1} impulse-response surface for
+Cracked Greenhorn Shale (Right view).
+}
+{
+The three-dimensional {\qS1} impulse-response
+surface for Cracked Greenhorn Shale
+corresponding to the slowness surfaces shown
+in Figure~\protect\ref{Exam3-SlowGreen}.
+This figure is the right element in a stereo pair;
+Figure~\protect\ref{Exam3-CGreenouter} is the corresponding left element.
+The isolated thick lines show the position of the omitted {\qS2} surface.
+\index{impulse-response surface | 3D example}
+}
+\Tactiveplot{Exam3-CGreeninner}{height=6.08in}{\figdir}
+{
+The three-dimensional {\qS2} impulse-response
+surface for Cracked Greenhorn Shale
+(Left view).
+}
+{
+The three-dimensional {\qS2} impulse-response
+surface for Cracked Greenhorn Shale
+corresponding to the slowness surfaces shown
+in Figure~\protect\ref{Exam3-SlowGreen}.
+This figure is the left element in a stereo pair;
+Figure~\protect\ref{Exam3-CGreeninner2} is the corresponding right element.
+The isolated thick lines show the position of the omitted {\qS1} surface.
+\index{impulse-response surface | 3D example}
+}
+\Tactiveplot{Exam3-CGreeninner2}{height=6.08in}{\figdir}
+{
+The three-dimensional {\qS2} impulse-response surface
+for Cracked Greenhorn Shale
+(Right view).
+}
+{
+The three-dimensional {\qS2} impulse-response surface
+for Cracked Greenhorn Shale
+corresponding to the slowness surfaces shown
+in Figure~\protect\ref{Exam3-SlowGreen}.
+This figure is the right element in a stereo pair;
+Figure~\protect\ref{Exam3-CGreeninner} is the corresponding left element.
+The isolated thick lines show the position of the omitted {\qS1} surface.
+\index{impulse-response surface | 3D example}
+}
+
+Another apparent difference is the larger cusps in
+Figure~\ref{Exam3-CGreeninner}.
+The topology of the two intersecting shear surfaces is complex;
+Figure~\ref{Exam3-CGreenImp} shows where the extended cusp comes
+from more clearly.
+The concavity visible on the {\qS2} surface
+in Figure~\ref{Exam3-SlowGreenclose} corresponds to a cusp on
+the associated impulse response,
+just like the one on the {\qSV} surface of Greenhorn Shale did in
+Chapter~\ref{Chap-2D}.
+This cusp comes from a small region of the slowness
+surface, and so should not be too significant energetically.
+However,
+this cusp is exactly what we were seeing back in Figure~\ref{Exam3-CGreen}.
+%
+% I deleted this figure as it was too slow to appear and wasn't worth it.
+% 
+%(Figure~\ref{Exam3-Slices} shows this more clearly.)
+How is this possible?
+
+\Tactiveplot{Exam3-CGreenImp}{width=5.75in}{\figdir}
+{An off-axis slice through the 3D impulse-response surfaces
+of Cracked Greenhorn Shale.}
+{
+A slice through the 3D impulse response surface for
+Cracked Greenhorn Shale, oriented to correspond to
+the $30^\circ$ slices in Figure~\protect\ref{Exam3-CGreen}.
+Topologically there are distinct {\qS1} and {\qS2} surfaces,
+but the effect is very much like that of {\qSV} and {\qSH} surfaces
+with a ``connection'' spanning the tangents to those surfaces.
+This figure also illustrates a couple of other interesting counterexamples.
+Note that the {\qS2} wave arrives {\em first} for a small range
+of angles near the upper edge of the old {\qSV} cusp, even though
+by definition the {\qS2} mode has {\em slower} phase velocity
+for all phase directions.
+The connection itself consists of two closely spaced linear events;
+the two parts are portions of the {\qS1} and {\qS2} modes.
+\index{connections}
+Particle-motion directions for a given phase direction are guaranteed
+to be perpendicular for distinct modes. This is usually almost true
+in the group domain as well. For this example, however,
+at the top of the connection, where it roots into the former {\qSV}
+mode, both modes have nearly pure SV polarization. At the bottom
+of the connection, where it roots into the former SH mode,
+both modes have nearly pure SH polarization. (In between, the particle
+motions perform the transition by rotating in opposite directions.)
+\index{particle motion | orthogonality}
+\index{impulse-response surface | 3D slice example}
+}
+
+%
+% This figure just isn't worth the excessive length of time it takes
+% to appear on the screen! So deleted for the interactive version.
+% -Joe Oct 21 1991
+%
+%\Tactiveplot{Exam3-Slices}{width=5.75in}{\figdir}
+%{A reprise of Figure~\protect\ref{Exam3-CGreen}, showing the correct
+%impulse-response surfaces for Cracked Greenhorn Shale.}
+%{
+%A reprise of Figure~\protect\ref{Exam3-CGreen}, this time showing
+%the correct impulse-response surfaces for Cracked Greenhorn Shale
+%(on the right).
+%A gpow of $.7$ on the snapshots (left) has been applied to make weaker
+%events more visible.
+%An attempt has been made to show the proportion
+%of the theoretical modes' particle-motion direction
+%aligned with the pure SV and SH directions by shading the curves
+%appropriately (although the shading has somewhat run afoul
+%of the halftone dithering pattern).
+%\index{impulse response | 3D example}
+%\index{impulse-response surface | 3D slice example}
+%}
+
+Figure~\ref{Exam3-CGreenImp} very much appears like the unperturbed
+{\qSV} and {SH} surfaces of Greenhorn Shale, plus a new event I
+will call a ``connection''.
+\index{definition | connection}
+\index{connections | definition}
+The connection comes from the ring along which the original {\qSV} and SH
+surfaces intersected, but where the new {\qS1} and {\qS2} surfaces
+merely appulse in a ``ring pinch'' (except at the few point singularities)
+\refer{Crampin and Yedlin}
+{Shear-wave singularities of wave propagation in anisotropic media}
+{1981}.
+\index{ring pinch}
+\index{definition | ring pinch}
+Points in the phase-slowness domain correspond to plane-wave components
+in the impulse-response domain, so the connection lies where there
+was a common plane-wave component of the original {\qSV} and SH modes
+(i.e. it is tangent to both).
+
+A connection can have a significant effect by providing a channel
+for coupling the ersatz ``{\qSV}'' and ``{\qSH}'' modes.
+\index{wave modes | coupling}
+\index{connections | wave mode coupling}
+In the Cracked Greenhorn Shale example used here, the connection roots
+into the {\qSV} mode in the middle of the high-amplitude cusp,
+and acts to provide a channel along which some of this energy can
+drain away into the ``{\qSH}'' mode.
+Since at the same time the particle-motion direction also slowly rotates
+to include more and more SH motion, it manages to show up strongly
+on the SH snapshot slice.
+This sort of anisotropic behavior provides an ideal vehicle for
+coupling a vertical P source into a horizontal SH receiver, even
+for media that otherwise are virtually transversely isotropic.
+Note that connections should only be significant well off of the
+symmetry planes. To me this suggests that deliberately trying
+to record seismic data
+only along suspected symmetry planes is a questionable practice.
+
+Ray tracers should note that while
+the SH component in the $0^\circ$ symmetry plane
+in Figure~\ref{Exam3-CGreen} is exactly zero for all wavetypes,
+as it must be by symmetry, the SV component of the connection
+in the symmetry plane is nonzero (although quite weak).
+This event is in fact a non-ray wave.
+Unfortunately the connection on the $0^\circ$ SV plot
+in Figure~\ref{Exam3-CGreen} is not visible on the hardcopy,
+although it is dimly visible on a good screen.
+
+\subsection{Anatomy of a singularity}
+We have seen that singularities are important topologically,
+and that in certain cases the topology of the wave modes
+case create significant events such as ``connections''.
+But can the singularities themselves cause
+any significant propagation effects?
+I begin by examining the topology of point singularities
+in the impulse-response domain.
+
+\subsubsection{A canonical orthorhombic example}
+\label{Exam3-HelbigSec}
+Figure~\ref{Exam3-Helbig} shows the {\qS} slowness surfaces
+for a simple orthorhombic medium.
+This medium has four widely spaced singularities of order $+1$,
+all lying in the $k_y$-$k_z$ plane. For the example here I have rotated
+the medium about the $k_x$ axis to line up one of the singularities
+with the $+k_z$ axis.
+Figure~\ref{Exam3-Helbig2} shows the corresponding impulse-response
+surfaces.
+The geometries of the slowness and impulse-response surfaces seen here
+seem to be much the same:
+two surfaces intersecting at a point forming a shallow double cone.
+In one case the center of the cone is on the $k_z$ axis; in the other
+the center is off to one side.
+
+\Tactiveplot{Exam3-Helbig}{width=5.75in}{\figdir}
+{Anatomy of a canonical singularity in the slowness domain.}
+{
+The {\qS} slowness surfaces for a particularly symmetric orthorhombic
+medium. This medium has a global pure P mode and pure SH and SV modes
+in each symmetry plane. In each symmetry plane one of
+the shear modes is elliptical and the other is circular.
+The medium has been rotated about the $x$ axis to position one
+of the singularities on the $+k_z$ axis; thus, only the $k_y$-$k_z$
+axial plane is still one of the three planes of symmetry.
+In order to show the topology of the singularity more clearly,
+only alternate latitude bands are shown, and those only
+from latitudes $45^\circ$ to $90^\circ$.
+One $90^\circ$ sector has been omitted to allow a view of the singularity.
+\index{slowness surface | 3D example}
+\index{shear singularities | example}
+}
+\Tactiveplot{Exam3-Helbig2}{width=5.75in}{\figdir}
+{Anatomy of a canonical singularity in the group domain.}
+{
+The {\qS} impulse-response surfaces corresponding to the slowness surfaces
+in Figure~\protect\ref{Exam3-Helbig}. The point singularity in the
+previous figure corresponds to the annular gap containing the $+z$ axis.
+(The line leaving the figure to the left is the $-y$ axis.)
+Note that the dark axial lines marking the $k_x$-$k_z$ plane abruptly bend
+as they approach the annulus marking the location of the singularity.
+This is because the singularity in the slowness domain was a fraction
+of a degree out of the $k_x$-$k_z$ plane. The axial lines
+do not cross the ring of the singularity in the group domain
+but detour around it instead.
+\index{impulse-response surface | 3D example}
+\index{shear singularities | example}
+}
+
+In either domain one could imagine cutting the inner and outer
+surfaces apart at the intersection point and labeling
+those as the two {\qS} pure modes.
+Unfortunately the resulting classification would not be consistent
+between the two domains, because the intersection point in
+the group domain does not correspond to the singularity.
+What on the impulse-response surfaces does correspond to the singularity?
+
+As is shown in Appendix~\ref{Chap-Group},
+the group direction is perpendicular to the tangent to the slowness surface
+at each point. As can be seen in Figure~\ref{Exam3-Helbig},
+at the singularity the tangent becomes discontinuous.
+In fact the point singularity in the slowness domain maps
+to a cone of directions in the impulse reponse.
+\index{shear singularities | internal conical refraction}
+(This phenomenon is well known in crystals,
+where it can be directly observed
+as the phenomenon of internal conical refraction
+\refer{de Klerk and Musgrave}
+{Internal conical refraction of transverse elastic waves in a cubic crystal}
+{1955}.
+For our example in Figure~\ref{Exam3-Helbig},
+one of the possible tangents at the singularity
+is for a constant-velocity surface
+(circular in two-dimensional cross section).
+Since for that case the group and phase directions are the same,
+the $+z$ axis in the impulse-response domain in our example
+must mark one point along the cone of singular directions.
+The singularity in Figure~\ref{Exam3-Helbig2}
+is the annular gap containing the $+z$ axis.
+
+%
+% I really want these next two to appear togehter on the same page,
+% but TeX has a mind of its own and with the \psfigs stuff there
+% is no provision for lying to TeX about figure sizes to fool it
+% into doing what you want! -Joe
+%
+\Tactiveplotpage{Exam3-HelbigSlice}{width=5.75in}{\figdir}
+{The plane lid of a canonical singularity.}
+{
+A cross section through the $y$-$z$ plane of the surface shown in
+Figure~\protect\ref{Exam3-Helbig2}.
+The {\qS1} wave mode is shown by a black line,
+the {\qS2} wave mode is shown by a dark stippled line,
+and the plane lid by a thin dotted line.
+\index{shear singularities | plane lid example}
+\index{shear singularities | example}
+\index{impulse-response surface | 3D slice example}
+}
+\Tactiveplotpage{Exam3-HelbigSlice2}{width=5.75in}{\figdir}
+{The finite-difference model corresponding to the previous figure.}
+{
+The finite-difference model result corresponding
+to Figure~\protect\ref{Exam3-HelbigSlice}.
+The modeled wavefield was generated by a $y$ point source,
+but the $x$ component of particle motion is shown.
+This emphasizes wave components with intermediate polarization
+directions, such as occur around the singularity.
+The slice is displaced slightly out of the plane
+containing the source (in the symmetry plane the $x$ component
+is zero).
+\index{shear singularities | impulse response example}
+\index{impulse response | 3D slice example}
+}
+
+In fact there is more to the singularity than that.
+As shown by Burridge~\referna{Burridge}
+{The singularity of the plane lids of the wave surface of elastic media with cubic symmetry}
+{1967},
+the ``dimple'' on the impulse-response surface
+is made convex by the additional presence of a planar event
+stretching across the concavity.
+\index{shear singularities | plane lids}
+This event, called a ``plane lid'' by Burridge, 
+is the plane-wave component of the impulse response
+corresponding to the singularity.
+The cone of singular directions previously described marks the edges
+of the plane lid, in this case shaped like a circular disk.
+Figure~\ref{Exam3-HelbigSlice} shows the position of the plane lid
+on a cross section through the $y$-$z$ symmetry plane
+of the impulse-response surface.
+(The plane lid is omitted in Figure~\ref{Exam3-Helbig2}.)
+Figure~\ref{Exam3-HelbigSlice2} shows a corresponding
+cross section through a finite-difference model snapshot.
+
+\subsubsection{A triply connected example}
+
+Burridge~\referna{Burridge}
+{The singularity of the plane lids of the wave surface of elastic media with cubic symmetry}
+{1967} found that the singularities of cubic nickel had ``plane lids'',
+and derived their amplitudes.
+Later Crampin~\referna{Crampin}
+{A review of wave motion in anisotropic and cracked elastic media}
+{1981} pointed out that the ``lids'' of orthopyroxene are shallow cones,
+not planar.
+Are they both right?
+
+\Tactiveplot{Exam3-FrancisImp}{width=5.85in}{\figdir}
+{Impulse-response surfaces for a ``triply connected'' orthorhombic medium.}
+{
+Impulse-response surfaces for a ``triply connected'' anomalously polarized
+orthorhombic medium. All three surfaces have singularities,
+even the first-arriving one.
+Since the surfaces are anomalously polarized, the standard anisotropic
+notation ``\{{\qP}, {\qS1}, {\qS2}\}'' does not apply.
+A general notation proposed by Muir~\referna{Muir}
+{pers. comm.}{1989}
+extends the original
+meaning of ``P'' and ``S'' to sort
+the three wavetypes noncommittally by phase velocity as
+``\{{\sl P, S, T}\}'', for {\it primero}, {\it secundo}, and {\it tertio}.
+\index{wavetype separation | 3D inseparable example}
+\index{wave modes | ordering}
+\index{wave modes | general}
+\index{shear singularities | example}
+\index{impulse-response surface | 3D example}
+}
+
+Figure~\ref{Exam3-FrancisImp} shows all three impulse-response surfaces for
+a complex orthorhombic medium.
+This medium is interesting in several ways.
+All three wave modes are anomalously polarized.
+All three wave modes are connected by singularities;
+there is no separable {\qP} mode.
+\index{wavetype separation | 3D inseparable example}
+In the next few figures I will examine the properties of
+the singularity in the $y$-$z$ symmetry plane
+on the {\em fastest\/} wavetype; it is particularly amenable
+to study since it is part of the first-arriving wavefront.
+
+\Tactiveplot{Exam3-FrancisAxis}{width=5.75in}{\figdir}
+{A slice through the $y$-$z$ plane of the previous figure.}
+{
+An annotated slice through the $y$-$z$ plane of the surfaces
+in Figure~\protect\ref{Exam3-FrancisImp}.
+The three surfaces are labeled following Muir's \{{\sl P, S, T}\} convention.
+The {\sl P} and {\sl T} surfaces are drawn thick and stippled,
+while the intermediate {\sl S} surface is drawn thin and black.
+The lid is part of the {\sl S} wavefront.
+(The plane lid is omitted in Figure~\protect\ref{Exam3-FrancisImp},
+and is shown here with a thin dotted line.)
+Note the two points marked ``Singularity'' correspond to the same point
+singularity in the slowness domain.
+\index{shear singularities | plane lid example}
+\index{shear singularities | lid example}
+\index{shear singularities | example}
+\index{impulse-response surface | 3D slice example}
+}
+\Tactiveplot{Exam3-FrancisBlowup}{width=5.75in}{\figdir}
+{As Figure~\protect\ref{Exam3-FrancisAxis}, but rotated $5^\circ$ out
+of the $y$-$z$ symmetry plane.}
+{
+As Figure~\protect\ref{Exam3-FrancisAxis}, but rotated $5^\circ$ out
+of the $y$-$z$ symmetry plane to better show the true topology.
+The intermediate-velocity {\sl S} surface appears as two disjoint
+pieces in this slice, although in three dimensions the parts form
+one continuous surface that intersects itself in the $y$-$z$ plane.
+\index{shear singularities | plane lid example}
+\index{shear singularities | lid example}
+\index{shear singularities | example}
+\index{impulse-response surface | 3D slice example}
+}
+
+Figure~\ref{Exam3-FrancisAxis} shows an annotated slice of the impulse-response
+surface in Figure~\ref{Exam3-FrancisImp} along the $y$-$z$ symmetry plane.
+Note this example shows two distinct kinds of ``lids'':
+Burridge and Crampin were both right, but were talking about different
+things. I will follow their lead by calling one kind a ``plane lid''
+versus just plain ``lid'' for the other.
+
+I define a {\em plane lid\/} as the portion of the impulse-response
+surface corresponding to the point singularity in the slowness domain.
+\index{definition | plane lid}
+\index{shear singularities | plane lids}
+It is a planar surface that stretches across what otherwise would be a
+concavity in the impulse-response surface, and is bounded by the cone
+of singular directions associated with the singularity.
+Its presence keeps the surface convex.
+I define a {\em lid\/} as the outermost part of the impulse-response
+surface within the region bounded by the cone of singular directions
+associated with the point singularity not counting the ``plane lid''
+generated by the singularity itself.
+\index{definition | lid}
+\index{shear singularities | lids}
+This part of the impulse-response surface will be concave,
+and although faster in the group domain
+will be part of the slower of the two wavetypes
+in the phase-slowness domain.
+Some highly symmetric media, such as Burridge's cubic nickel example
+and the example in Figure~\ref{Exam3-Helbig} do not exhibit a lid
+because it has contracted to a point in the slowness domain and merged
+with the plane lid.
+
+\Tactiveplot{Exam3-FrancisCartoon}{height=7.36in}{\figdir}
+{Various non-symmetry-plane slices with corresponding
+finite-difference results.}
+{
+Various non-symmetry-plane slices through the impulse-response surface
+in Figure~\protect\ref{Exam3-FrancisImp} with corresponding
+finite-difference results. The source for the finite-difference model
+is a $y$ point force. The SV component of the particle-motion
+direction is shown.
+The plane lid also shows exists in
+the longitude~$75^\circ$ slice, but is too close to the lid to be
+visible in either representation.
+\index{shear singularities | plane lid example}
+\index{impulse-response surface | 3D slice example}
+\index{impulse response | 3D slice example}
+}
+\Tactiveplot{Exam3-FrancisSlice}{height=7.36in}{\figdir}
+{More finite-difference examples
+corresponding to those in Figure~\protect\ref{Exam3-FrancisCartoon}.}
+{
+Finite-difference results corresponding to three non-symmetry-plane
+slices through the impulse-response surface
+in Figure~\protect\ref{Exam3-FrancisImp}.
+The slices are the same ones
+used in Figure~\protect\ref{Exam3-FrancisCartoon},
+but for this plot the P and SH components of the particle-motion
+direction are shown.
+\index{impulse response | 3D slice example}
+}
+
+What about the three-dimensional topology of the singularity shown
+in Figure~\ref{Exam3-FrancisAxis}?
+In the example in the previous section (Figure~\ref{Exam3-Helbig2}),
+we saw that there was a point where the impulse-response surfaces
+crossed through themselves forming a shallow double cone.
+This was an accident of the high
+symmetry of that example; Figure~\ref{Exam3-FrancisBlowup} shows
+the true topology of the surfaces in Figure~\ref{Exam3-FrancisImp}
+revealed by cutting on a non-symmetry plane. The intermediate {\sl S}
+surface in this example intersects itself in a line, not a point.
+
+\subsubsubsection{Finite-difference model results}
+The lid and plane lid are distinguishable in Figure~\ref{Exam3-FrancisBlowup},
+but can they also be distinguished in a finite-difference model result?
+Figure~\ref{Exam3-FrancisCartoon} shows several non-symmetry-plane slices
+of the impulse-response surfaces in Figure~\ref{Exam3-FrancisImp}
+along with the corresponding finite-difference snapshot slices.
+The top right plot shows a dark ($-$) event preceding
+the main lid (which appears white ($+$) here)
+and filling in the concavity in it.
+This should be the plane lid, since it occurs in the right place
+and seems to exhibit the necessary properties, but the result needs
+to be backed up by further analytical calculations to be sure.
+Figure~\ref{Exam3-FrancisSlice} shows the other two particle-motion
+components of the finite-difference model results
+at the same clip levels as in Figure~\ref{Exam3-FrancisCartoon}.
+The plane lid exists in these plots as well, but is too weak to show
+up on these plots.
+
+\subsubsection{Can singularities cause visible effects?}
+I still have not answered the original question of this section:
+can the singularities themselves cause significant propagation effects?
+
+In Figures \ref{Exam3-FrancisCartoon} and~\ref{Exam3-FrancisSlice}
+the direct effect of the singularity, the plane lid, was a subtle
+feature of the wavefront.
+On the other hand,
+the singularity showed up very strongly in Figure~\ref{Exam3-HelbigSlice2}.
+In that example the $y$ source and $x$ receiver are at right angles;
+the swirl of particle-motion directions around the singularity
+provides a good coupling mechanism and makes the singularity stand out.
+
+\index{shear singularities}
+These examples indicate that direct effects such as plane lids are
+not very significant, but that the local disturbance to the particle-motion
+direction field caused by a singularity can be.
+This latter effect will show up again in the next section.
+
+\subsection{What should 3D anisotropy look like?}
+So far in this chapter I have shown only model snapshots.
+In this section I will show some seismograms to go with two of the
+models examined in the previous section. This is meant to give some
+idea how the effects previously noted might appear on surface data.
+
+\subsubsection{What should a connection look like?}
+Figure~\ref{Exam3-CGreenHyp} shows model sections recorded over
+a homogeneous half-space of ``Cracked Greenhorn Shale''
+(described in section~\ref{Exam3-PertTI})
+at two different azimuths, along the cracks (azimuth~$0^\circ$)
+and at an acute angle to the cracks (azimuth~$30^\circ$).
+The model and plot parameters of this plot are the same as those for
+Figure~\ref{TI-Green3NMO} on page~\pageref{TI-Green3NMO},
+although the example in Chapter~\ref{Chap-2D} is not directly
+comparable. That model medium had a different value
+of {\cac} and so does not triplicate as strongly as the example here.
+
+\Tactiveplot{Exam3-CGreenHyp}{height=7.52in}{\figdir}
+{Model sections for ``cracked Greenhorn Shale'' showing ``connections''.}
+{
+Model sections for ``cracked Greenhorn Shale'' recorded along two
+different lines of azimuth.
+The cracks run along azimuth~$0^\circ$ (the $x$-$z$ plane).
+The source is a vertical point force buried at a depth of 500~meters.
+The {\qP} wave has been removed (leaving a slight artifact near the top left
+of each plot).
+Only the ``SH,~$30^\circ$'' plot shows any distinctive orthorhombic effects.
+\index{connections | section example}
+\index{impulse response | 3D slice example}
+}
+
+The diagnostic orthorhombic effect, the ``connection'', shows up strongly
+on the ``SH, $30^\circ$'' plot. The other three plots, however,
+reveal very little evidence
+that the model medium is not transversely isotropic Greenhorn Shale.
+The connection event also nearly disappears for sections oriented
+along azimuths $90^\circ$ and~$45^\circ$.
+\index{connections | observing}
+This suggests that to observe orthorhombic effects in the field
+it is necessary to record both along suspected symmetry directions
+as inferred from the regional crack directions
+and at other arbitrary angles unlikely to correspond to any special symmetry.
+It is also beneficial to record the ``null'' sections such as Z source into
+SH receiver.
+\index{shear singularities | mode-mode coupling}
+These ``off diagonal'' sections are most likely to show energy
+coupling from one mode into another via the particle-motion direction
+disturbance associated with singularities.
+
+\subsubsection{What should a singularity look like?}
+Figures \ref{Exam3-HelbigSeis} and~\ref{Exam3-HelbigSeis2}
+show model sections recorded over
+a homogeneous half-space of the medium from
+Figure~\ref{Exam3-Helbig2}
+(described in section~\ref{Exam3-HelbigSec}).
+This time instead of showing sections
+recorded along lines passing over the source at differing azimuths,
+a series of sections recorded along parallel lines are shown.
+Instead of showing off-diagonal sections,
+for all plots both the source and receiver are oriented along the
+$y$ axis.
+
+Figure~\ref{Exam3-HelbigSeis} shows lines parallel to the $x$ axis.
+(Since the source and receiver are oriented along the $y$ axis,
+these could be called ``SH'' lines.)
+Four different lines are shown. They were selected to cut through
+different parts of the cone of singular directions.
+In terms of Figure~\ref{Exam3-Helbig2} on page~\pageref{Exam3-Helbig2},
+the $y=.25$ plot completely misses the singularity to the right.
+The $y=0.$ plot was recorded along the $x$ axis and passes tangentially
+through one edge of the cone of singular directions at $x=0$, directly
+over the source.
+The $y=.125$ plot passes through the center of the cone of singular
+directions, and the $y=-.25$ plot passes tangentially through the
+left edge of the cone.
+The singularity mostly shows up in the strange flatness of the top
+of the hyperbola, especially on the $y=-.125$ plot.
+
+Figure~\ref{Exam3-HelbigSeis2} shows lines parallel to the $y$ axis.
+(Since the source and receiver are oriented along the $y$ axis,
+these could be called ``SV'' lines.)
+In terms of Figure~\ref{Exam3-Helbig2},
+the $x=0.$ plot passes over the source and
+through the center of the cone of singular directions.
+The $x=.125$ plot passes tangentially through the near edge of the
+cone of singular directions.
+The $x=.313$ and $x=.656$ plots completely miss the singularity.
+Here the singularity shows up in the strange breaks in the events
+as the {\qS1} and {\qS2} modes reassert their separate identities after
+we move past the singularity, especially on the $x=.313$ plot.
+
+\Tactiveplot{Exam3-HelbigSeis}{width=5.80in}{\figdir}
+{Modeled $x$ sections of the medium
+from Figure~\protect\ref{Exam3-HelbigSlice}.}
+{
+Modeled $x$ sections of the medium
+from Figure~\protect\ref{Exam3-HelbigSlice}.
+The source is a Y point force buried at a depth of $1$~unit;
+the $y$ component of particle-motion direction is shown.
+\index{impulse response | 3D slice example}
+\index{shear singularities | impulse response example}
+}
+\Tactiveplot{Exam3-HelbigSeis2}{width=5.80in}{\figdir}
+{Modeled $y$ sections of the medium
+from Figure~\protect\ref{Exam3-HelbigSlice}.}
+{
+Modeled $y$ sections of the medium
+from Figure~\protect\ref{Exam3-HelbigSlice}.
+The source is a Y point force buried at a depth of $1$~unit;
+the $y$ component of particle-motion direction is shown.
+\index{impulse response | 3D slice example}
+\index{shear singularities | impulse response example}
+}
+
+\index{shear singularities | observing}
+Unfortunately from these examples it appears the direct effects
+of a singularity likely to show up on standard SV and SH sections
+are not very clear cut. Stacking such mangled events along hyperbolas
+is likely to produce something that looks like merely poor-quality or
+noisy data, even as the corresponding {\qP} events
+stack consistently and well.

@@ -1,0 +1,351 @@
+Is it possible there is some other way of separating the
+degenerate isotropic shear mode into two well-defined orthonormal shear
+wavetypes, one that avoids the artificial singularity the standard ``SV, SH''
+definition creates for vertically traveling waves?
+\label{Separ3-Question}
+The answer is no, as we will discover in the next two sections
+in the course of attempting to extend the two-dimensional
+wavetype-separation algorithm
+from section~\ref{Wavsep2-sec} to three dimensions.
+
+\subsection{Extending 2D to 3D}
+
+The two-dimensional algorithm in section~\ref{W2-algorithm}
+seems to extend to three dimensions in a natural way.
+As in two dimensions,
+we use the solutions of the Christoffel equation
+(already presented as equation~(\ref{TI-chris})
+on page~\pageref{TI-chris})
+to find
+the propagation velocity and particle-motion direction
+for each plane-wave component in the Fourier domain.
+The problem is still a well behaved symmetric eigenvalue-eigenvector
+problem; we are still always guaranteed three orthogonal wavetypes
+for each $\mbox{\bf k}$.
+The only difference should be that there are three solutions now instead
+of two.
+Following this recipe, we should quickly be able to sketch out
+a three-dimensional wavefield-separation algorithm
+modeled after the two-dimensional version previously presented
+on page~\pageref{W2-algorithm}.
+
+Remember back on page~\pageref{TI-OminousForeboding}
+I warned that things would get interesting later?
+This time around I will be a little more careful about how I describe
+the wavefield-separation algorithm;
+the whole point of this section is to show where it goes wrong
+in three dimensions.
+
+%\vbox{
+First, construct the operator (I'll go over each step in more detail
+later):
+\begin{list}{}{}
+\item[(1.)] Decide which mode this operator will pass.
+\item[(2.)] For all $(k_x,k_y,k_z)$:
+\item[] \{
+\begin{list}{}{}
+\item[(A.)] Substitute $(k_x, k_y, k_z)$ into equation~(\ref{TI-chris})
+(on page~\pageref{TI-chris}) and find the eigenvector solutions
+${\vv}_1$,
+${\vv}_2$, and
+${\vv}_3$.
+\item[(B.)] Decide which solution corresponds to
+the desired mode chosen in step (1). Call this solution $\vv$.
+\item[(C.)]
+Both ${\vv}$ and $-{\vv}$ are equally valid normalized eigenvectors.
+Choose the one that is consistent with particle-motion
+directions already determined at adjacent $(k_x,k_y,k_z)$ points.
+\item[(D.)] Store the result for this $(k_x,k_y,k_z)$ in $\L(k_x,k_y,k_z)$.
+\end{list}
+\item[] \}
+\end{list}
+%}
+
+%\vbox{
+The vector field $\L$ is then used to calculate the scalar pure-mode
+component $M$ of an input elastic wavefield $\U$ by the following:
+\begin{list}{}{}
+\item[(3.)] Fourier transform $\U(x,y,z;t)$ over $x$, $y$, and $z$,
+obtaining $\hat \U(k_x,k_y,k_z;t)$.
+\item[(4.)] For all $(k_x,k_y,k_z)$:
+\item[] \{
+$$ \hat M(k_x,k_y,k_z;t) = \L(k_x,k_y,k_z) \joecdot \hat \U(k_x,k_y,k_z;t) $$
+\item[] \}
+\item[(5.)] Inverse Fourier transform $\hat M(k_x,k_y,k_z;t)$
+over $k_x$, $k_y$, and $k_z$, obtaining $M(x,y,z;t)$.
+\end{list}
+%}
+
+We will collectively refer to this algorithm
+as a ``wavetype-separation operator'':
+this operator accepts as input
+a vector field $\U$ and outputs a pure-mode scalar component $M$.
+
+\subsection{Possible pitfalls}
+Where can things go wrong?
+The algorithm attempts to treat each plane-wave component
+$(k_x, k_y, k_z)$ separately.
+This is misleading.
+The values of $\L$ chosen at each vector wavenumber $(k_x,k_y,k_z)$
+do not exist in isolation, but must 
+together describe a single global wavetype.
+Furthermore,
+the global wavetype described must agree with the way waves
+actually propagate in the given medium.
+
+Mathematically, given that the matrix of elastic constants
+$\C$ really does correspond to the medium under consideration,
+these requirements boil down to two kinds of Fourier-domain continuity:
+First, the vector field $\L$
+must be a continuous function of
+plane-wave direction $(k_x,k_y,k_z)$; a true Fourier-domain discontinuity
+in particle-motion direction would imply there existed an
+infinite plane wave in the space domain.
+This would violate causality, among other things.\footnote{
+Later on in Figure~\protect\ref{Exam3-FrancisAxis} we will see how
+the limited sort of Fourier-domain discontinuity that occurs at a singularity
+can cause a {\em finite\/} plane wave that is actually physical.
+}
+Second,
+the phase velocity $(\omega / k )$ must also be a
+continuous function of plane-wave direction $(k_x,k_y,k_z)$,
+since a discontinuous phase velocity would represent
+a non-physical discontinuous wavefront.
+
+Our naive algorithm can fail at several steps:
+At step~(2A) there is no guarantee of three {\it unique} solutions.
+Steps (1)~and~(2B) presuppose we know
+what ``the global pure modes'' look like, and that they are
+well-defined and continuous.
+At step~(2C) there is no guarantee that it is possible
+to choose a sign that is continuous with all the
+previous adjacent choices.
+
+In section~\ref{W2-example} I showed several
+successful applications of the two-dimensional version of this
+wavetype-separation algorithm.
+No special care was taken to avoid the possible difficulties outlined
+above; they simply didn't occur.
+Is there any reason to expect the same algorithm that worked in
+two dimensions should fail in three?
+
+\subsection{Why two dimensions worked}
+\label{Separ3-2DOK}
+In two dimensions there are two in-plane wave modes.
+(There is also a single uncoupled out of the plane mode,
+if ``2 dimensions'' is construed to include particle
+motion out of the plane. Here I will use ``2 dimensions'' in the
+strict mathematical sense, in which case there is no such thing
+as ``out of the plane''.)
+
+Except for certain anomalous cases
+(see section~\ref{TI-Anomalous} page~\pageref{TI-Anomalous},
+or Helbig and Schoenberg
+\referna{Helbig and Schoenberg}
+{Anomalous polarization of elastic waves in transversely isotropic media}
+{1987}),
+the two in-plane modes are clearly analogous to the P and SV modes
+in isotropic media.
+If this is the case, there are no problems;
+the {\qP} wave is faster than
+the {\qSV} wave for all propagation directions.
+Mathematically, since the two modes never have the same velocity
+($\omega / k$),
+they must have distinct eigenvalues
+($\rho \omega^2$).
+Distinct eigenvalues have unique orthogonal eigenvectors,
+so there is no difficulty finding the particle-motion directions
+in step~(2A).
+The phase-velocity inequality also trivially solves the
+problem of identifying which mode is which in step~(2B);
+the faster one is {\qP}, the slower one is {\qS}.
+Finally, in step~(2C), as long as the ``{\qP}'' mode does not have
+pure S particle motion for any propagation direction,
+defining the ``outward'' particle-motion direction
+on the {\qP} mode to be positive will not lead to
+an inconsistency.
+The right hand rule then
+gives a consistent sign convention for the {\qSV} mode.
+
+\Tactiveplot{Separ3-Arrow1}{width=5.75in}{\figdir}
+{Choosing signs for particle-motion direction for normal 2D media.}
+{
+Polar plots of particle-motion direction versus plane wave propagation
+direction for ``normal'' two-dimensional media.
+The shafts of the arrows indicate particle-motion direction.
+Each shaft has an arrowhead on one end,
+thus labeling that direction as the ``positive'' one.
+This choice is arbitrary, but must be done so that the choice
+at each arrow is consistent with the choice at its neighbors.
+Left: A {\qP} mode.
+Right: A {\qS} mode.
+}
+
+This is demonstrated graphically in Figure~\ref{Separ3-Arrow1}.
+On the left
+is a {\qP} mode with the ``outward'' direction everywhere chosen
+to be ``positive''.
+On the right is a {\qS} mode with the sign chosen
+by a $90^\circ$ clockwise rotation from the {\qP} one.
+
+What if the modes are anomalous, neither {\qP} nor {\qS}?
+In section~\ref{TI-Behavior}, we saw that the fast and slow solutions
+for transversely isotropic media in general never touched, except for
+special values of {\cac} and {\cee} when they could just touch at isolated
+points.
+So the arguments from the previous paragraphs about
+steps 1, 2A, and~2B
+still go through (although
+we might have to perturb {\cac} or {\cee} to resolve the point degeneracies
+if we happen to have elastic constants corresponding to one of the
+special cases).
+
+\Tactiveplot{Separ3-Arrow2}{width=5.75in}{\figdir}
+{Choosing signs for particle-motion direction for ``exotic'' 2D media.}
+{
+Polar plots of particle-motion direction versus plane-wave propagation
+direction for exotic two-dimensional media.
+Left: An ``anomalous'' mode, neither {\qP} nor {\qS}.
+Right: An ``impossible'' mode. No consistent choice of sign
+for the particle-motion direction is possible.
+}
+
+What about the choice of positive particle-motion direction in step~2C?
+Figure~\ref{Separ3-Arrow2} demonstrates why this also always works.
+On the left is a typical ``anomalous'' mode. The ``outward = positive''
+method used in Figure~\protect\ref{Separ3-Arrow1} does not work for this
+medium. However, if we simply work around the loop keeping consistent at
+each step of the way, the loop still closes properly.
+On the right is a mode where this method fails.
+If we attempt to proceed as before,
+we find the vector has performed a ``half flip''
+and the loop will not close.
+However, the example on the right is impossible:
+The solutions to equation~(\protect\ref{TI-chris})
+are unchanged when $\kk$ is replaced by $-\kk$, and so
+slowness surfaces for physically realizable media must have
+point symmetry about the origin.
+For any physically possible medium,
+only an even number of ``half flips'' can be performed in one loop
+about the origin, and so the loop always closes
+consistently.\footnote{
+Later in this chapter in Figure~\protect\ref{Separ3-Blowup}
+we encounter another kind of loop
+where half-flips are the usual case.
+}
+This ``impossible'' slowness surface lacks
+this symmetry.
+
+\Tactiveplot{Separ3-Wavedef}{height=7.55in}{\figdir}
+{Typical slowness surfaces for normal and anomalous TI media.}
+{
+Slowness surfaces for two different transversely isotropic (TI) media.
+On the left is ``Greenhorn Shale''
+\refer{Jones and Wang}
+{Ultrasonic velocities in Cretaceous shales from the Williston basin}
+{1981};
+this medium displays the standard TI ``\{{\qP},{\qSV},SH\}'' modes.
+On the right is an ``anomalous'' transversely isotropic media.
+There is still an ``SH'' mode, but the other two modes (both labeled
+``A'' for Anomalous) are
+{\qP}-like for some propagation directions and {\qSV}-like for others.
+\index{wave modes | general}
+\index{wave modes | transversely isotropic}
+\index{slowness surface | 3D example}
+}
+
+\subsection{{\qP} works in 3D}
+In two dimensions we found we could always produce two global pure modes;
+in three dimensions we intuitively expect there should be three.
+The good news is that three-dimensional {\qP} modes are just as
+well behaved as two-dimensional ones.
+
+Figure~\ref{Problem-Slowsurf} shows the slowness surfaces
+for the familiar isotropic P, SV, and SH wave modes.
+Note that as in the two-dimensional isotropic case, the P mode is
+faster than the shear modes for all propagation directions.
+For media not too far removed from isotropy, there
+still ought to be a distinct
+``{\qP}'' mode that never intersects the others, and
+so as in two dimensions there should be no trouble with the
+{\qP} mode at steps (2A) or~(2B).
+
+What about the choice of sign on the particle-motion direction?
+First I must precisely define ``{\qP} mode''.
+\index{definition | {\qP} mode}
+\index{wave modes | general}
+A global wave mode is a {\qP} mode if the particle-motion direction
+$\L(k_x,k_y,k_z)$ is {\em not perpendicular\/}
+to the plane-wave propagation direction
+$\kk = (k_x,k_y,k_z)$ {\em for any\/} $(k_x,k_y,k_z) \neq \veczero$.
+\index{definition | {\qS} mode}
+Similarly,
+a global wave mode is a {\qS} mode if the particle-motion direction
+$\L(k_x,k_y,k_z)$ is {\em not parallel\/} to the
+plane-wave propagation direction
+$\kk = (k_x,k_y,k_z)$ {\em for any\/} $(k_x,k_y,k_z) \neq \veczero$.
+\index{definition | Anomalous mode}
+Modes that are neither {\qP} nor {\qS} are called ``anomalous''.
+See Figure~\ref{Separ3-Wavedef} for examples of ``{\qP}'',
+``{\qS}'', and ``anomalous'' modes.
+(Note my definitions define the various mode types by what they are
+{\em not\/}: {\qP} modes are nowhere pure S; {\qS} modes are nowhere pure P;
+anomalous modes are neither {\qP} nor {\qS} modes.)
+
+\Tactivesideplot{Separ3-Steve}{height=3.08in}{\figdir}
+{Modes with no consistent sign choice possible aren't {\qP} modes.}
+{
+A slice out of a 3-D slowness surface for an anomalously polarized mode.
+Each particle-motion direction vector (the ``sticks''
+projecting through the surface) has one end drawn thick to indicate
+that direction has been chosen as ``positive''.
+At the top and bottom the mode is {\qP}-like, but the ``positive''
+direction points away from the origin at the top and towards the origin
+at the bottom.
+}
+
+For trouble to occur at step~(2C) of our algorithm
+there would have to be some closed path on the slowness surface
+along which the signed particle-motion direction vector performed
+a $180^\circ$ rotation.
+However,
+the defining property of a {\qP} mode is that
+it does not have pure S-direction particle motion anywhere.
+Given a {\qP} mode, then, such a flip in direction cannot occur:
+somewhere halfway through the P-direction component
+of the particle motion would have to pass through zero as it changed
+sign. See Figure~\ref{Separ3-Steve} for a graphical demonstration.
+(Remember that the particle-motion direction vector $\vv$
+always has unit magnitude.)
+Thus there should also not be any difficulty at step~(2C) for
+{\qP} modes.
+
+We conclude that three-dimensional {\qP} modes present
+no new problems over the two-dimensional case.
+(Of course there is no guarantee that a {\qP} mode exists;
+Figure~\ref{Exam3-FrancisImp} shows an example of a medium for
+which all three wave modes are anomalous, neither {\qP} nor {\qS}.)
+
+\subsubsection{3D {\qP} mode-separation example}
+Figure~\ref{Separ3-Pfig} shows a three-dimensional {\qP}
+mode-separation example. The algorithm works as advertised,
+even though the medium is orthorhombic.
+
+\Tactiveplot{Separ3-Pfig}{width=5.75in}{\figdir}
+{Wavetype separation works for 3D {\qP} modes.}
+{A three-dimensional {\qP} mode-separation example.
+The medium is orthorhombic, ``Cracked Greenhorn Shale''
+(see Table~\ref{Const-3D}).
+The $x$-$z$ symmetry plane containing
+the source is shown. (As we might expect from the discussion at the
+beginning of this chapter, the symmetry plane slices don't show much
+evidence of the cracks.)
+The source is a $z$ point force; the $z$
+component of displacement is shown.
+The model is periodic.
+Wavetype separation works for 3D {\qP} modes.
+(There is no problem calculating a scalar mode for this example.
+It was just convenient to use the same vector algorithm described on
+page~\pageref{Separ3-ModAlg} for all the examples in this chapter.)
+\index{wavetype separation | example}
+}

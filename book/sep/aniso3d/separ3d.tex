@@ -1,0 +1,418 @@
+In the previous sections I have shown why mode separation
+in two dimensions should always work,
+and that mode separation in three dimensions should
+always work for {\qP} modes.
+Is there any reason to expect mode separation in three dimensions
+to fail for {\qS} modes?
+
+\subsection{Defining ``the'' isotropic shear modes}
+
+In isotropic media, it is customary to consider the degenerate
+shear wave as a single vector pure mode.
+We typically resolve this globally degenerate mode into
+``SV'' and ``SH'' scalar modes, but this choice is arbitrary.
+Isotropy, with its infinite symmetry,
+lies at the intersection of all the various anisotropic
+symmetry systems.
+Perturb the elastic constants away from isotropy
+and the perfect global symmetry is broken; the shear
+waves become nondegenerate.
+
+The standard ``\{SV,SH\}'' labels result
+if we perturb in the direction of transverse isotropy
+with a vertical symmetry axis.
+There are many other possibilities,
+resulting in other equally valid
+definitions of ``the isotropic shear modes''.
+If the SV and SH modes as shown in Figure~\ref{Problem-Slowsurf}
+are arbitrary, why are they so widely used?
+SV and SH are popular because they are easy to
+understand in terms of vertical two-dimensional slices,
+which is how we usually look at the Earth.
+Figure~\ref{Separ3-Funnyshear}
+shows an example of the bizarre sorts of modes that usually
+result if the elastic constants are perturbed randomly.
+
+\Tactiveplot{Separ3-Funnyshear}{width=5.75in}{\figdir}
+{Shear modes resulting from a random perturbation to isotropy.}
+{
+Shear slowness surfaces for arbitrary isotropic shear modes.
+Mathematically these modes are just as valid a decomposition
+of the degenerate isotropic shear modes as the
+standard method shown in Figure~\protect\ref{Problem-Slowsurf}.
+One singularity is labeled, although several are visible.
+(The top plot is the slow ({\qS2}) split shear wave;
+Figure~\protect\ref{Sing-Funny} shows another view.)
+\index{shear singularities | example}
+\index{slowness surface | 3D example}
+}
+
+Previously we saw that the standard SV and SH modes shown in
+Figure~\ref{Problem-Slowsurf} have an artificial
+discontinuity for vertically traveling waves.
+Such a point on the slowness surface where
+the particle-motion direction becomes a discontinuous
+function of phase direction is called a ``singularity''.
+\index{definition | singularity}
+\index{particle motion | singularities in}
+They are usually associated with S or {\qS} waves, and so are
+often called ``shear singularities''.
+\index{shear singularities}
+The arbitrary modes shown in Figure~\ref{Separ3-Funnyshear}
+likewise display shear singularities in the particle-motion direction
+field for waves traveling in several apparently random directions.
+Singularities are annoying, because they cause discontinuities
+in the vector field $\L$ at the core of our wavetype-separation algorithm.
+
+\subsection{Furry ball theorem}
+
+Finally we are back to our original question
+from page~\pageref{Separ3-Question}:
+Are singularities avoidable?
+Pure S-type motion requires that the particle-motion direction
+be perpendicular to the direction of plane-wave propagation.
+In Figure~\ref{Problem-Slowsurf}, the particle-motion direction
+is represented by ``hairs'' attached to the slowness surface.
+For a pure shear wave, each hair must lie flat against
+the ball's surface.
+Imagine what happens if you try to comb the hairs
+on a furry ball flat and regular everywhere.
+No matter how you proceed, there must always be
+a ``whorl'' or ``cowlick'' somewhere,
+where adjacent hairs point in different directions.\footnote{
+This is a special case of a well known result from
+differentiable manifold theory:
+no even-dimensional sphere has any continuous nonvanishing field of
+tangent vectors
+\refer{Boothby}
+{An introduction to differentiable manifolds and Riemannian geometry}
+{1975}.
+}
+We now have the answer: these discontinuous points
+are shear singularities, and they cannot be eradicated.
+There is no way to define two globally continuous
+isotropic shear modes.
+
+Shear-wave singularities must always occur for pure S modes,
+but what about {\qS} modes?
+Simply apply the previous argument for pure S modes
+to the pure S component
+of the particle-motion direction at each point (i.e., 
+the component of the particle motion perpendicular
+to the plane-wave propagation direction).
+The only way to escape the singularity is by letting the
+pure S component of the particle-motion direction go to zero
+where we would have had trouble
+(i.e. the ``{\qS} mode'' has a pure P-mode direction there:
+the ``hair'' at the center of the whorl sticks straight up).
+Since the defining property of a {\qS} mode is that
+it does not have pure P-direction particle motion anywhere,
+this cannot happen.
+
+\subsection{What do shear singularities represent?}
+We know that physical
+wavefronts do not support discontinuous particle-motion directions.
+How can we reconcile this observation with the ubiquity of singularities?
+
+For any phase direction there are three {\em orthogonal} modes,
+so it is impossible for one wavetype to have a discontinuous
+particle-motion direction in isolation;
+at least one of the other wavetypes
+must share in the discontinuous particle-motion directions
+at the singular point (although rotated by $90^\circ$).
+Precisely at the singular point the particle-motion directions
+of these two modes must become indeterminate.
+This can only happen if the two modes are degenerate there.
+
+A singularity, then, must correspond to a point where two
+otherwise continuous and distinct modes touch and temporarily
+lose their unique identities
+\refer{Crampin and Yedlin}
+{Shear-wave singularities of wave propagation in anisotropic media}
+{1981}.
+\label{Separ3-Touch}
+We can see this illustrated in Figure~\ref{Separ3-Wavedef};
+the singularity for vertically traveling S waves (along the $k_z$ axis)
+always occurs on two intersecting surfaces. On the axis particle
+motions in the $x$ and $y$ directions are symmetrically equivalent.
+Figure~\ref{Separ3-Mobius} shows the nature of singular points
+even more clearly.
+In this orthorhombic example the {\qS} modes are clearly
+two separate shells that pinch together at a finite number
+of singular points.
+
+\Tactiveplot{Separ3-Mobius}{width=5.75in}{\figdir}
+{A canonical orthorhombic slowness surface.}
+{
+The three-dimensional slowness surfaces
+of the same orthorhombic medium shown
+in Figure~\protect\ref{Problem-Anisotrick2}.
+One octant has been removed to show the true topology:
+two nested {\qS} surfaces that just touch at the singularities.
+(There are four singularities in all; the other three are symmetrically
+equivalent to the labeled one.)
+Neither of the surfaces can be adequately
+described as ``{\qSV}'' or ``{\qSH}''.
+\index{shear singularities | example}
+\index{slowness surface | 3D example}
+}
+
+A shear singularity does not cause a discontinuous particle motion
+in reality because for some range of angles around the
+singular phase direction two orthogonal wavetypes
+are strongly coupled together.
+While individually their particle-motion vectors rapidly twist around,
+for any finite frequency their sum remains smooth.
+(Singularities can produce other visible effects, however, as
+will be demonstrated in section~\ref{Exam3-Chimera}.)
+
+\subsection{{\qS} modes are inseparable}
+I have now shown that any {\qS} mode has singularities on it,
+and that singularities are places where two modes touch.
+If there are two {\qS} modes that are both everywhere slower
+than a single {\qP} mode, then the two {\qS} modes must be
+touching each other.
+Does this automatically mean mode separation of
+{\qS} waves is impossible? How does trouble occur?
+
+At step~(2A),
+we must expect occasional trouble with nonunique {\qS} solutions
+in three dimensions,
+because shear-wave singularities represent
+degenerate directions.
+A typical way around such problems in ray tracing is to perturb
+the elastic constants so that the singularity moves off
+our current ray direction
+\refer{Jech and P\v{s}en\v{c}\'{\i}k}
+{First order perturbation method for anisotropic media}
+{1989}.
+This procedure shouldn't create significant errors since
+a tiny perturbation in the elastic constants should only cause a
+tiny change in the global wavefield.
+(We are still left with the problem of figuring out which
+of the barely split modes is the one we want.)
+
+Steps (1)~and~(2B) of our algorithm presuppose we know what the
+global {\qS} modes look like. (I haven't even yet proven that there
+is such a thing as a global {\qS} mode for general anisotropy!)
+The isotropic modes are usually separated into
+\{P,SV,SH\}, and the transversely isotropic modes into
+\{\qP,\qSV,SH\}, but we have seen these designations are arbitrary
+at best.  Is there any sensible way to
+separate the connecting {\qS} surfaces into two {\qS} pure modes
+for completely general anisotropic media?
+
+The example in Figure~\ref{Separ3-Mobius} suggests one possibility.
+We wish to cut the two-sheeted {\qS} surface in this figure
+into two pure modes.
+We cannot do this arbitrarily.
+\index{definition | pure mode}
+\index{wave modes | definition}
+\index{wave modes | general}
+Step~(2B) of our algorithm requires that the three
+plane wavetypes at each $(k_x,k_y,k_z)$,
+$ \{ {\vv}_1, {\vv}_2, {\vv}_3 \} $,
+must be identified as a permutation of
+the three global wave modes
+(usually \{{\qP},{\qS1},{\qS2}\})
+evaluated for that phase direction.
+The three resulting pure modes must be
+unique single-valued {\em continuous} functions of phase velocity versus
+plane-wave propagation direction.
+(In fact I would say this must be the definition of a global pure mode.)
+As should be clear from Figure~\ref{Separ3-Mobius},
+the only possible place to cut is at the shear singularities.
+
+This definition makes the modes very easy to identify
+computationally; the modes are simply sorted on their phase velocity
+% Reference from chapter 2 where we talk about ordering wavetypes
+% by phase velocities.
+\label{Separ3-speedorder}
+\index{wave modes | ordering}
+$(\omega / k )$ into an inner (fastest) {\qP},
+\index{definition | {\qS1} and {\qS2} modes}
+a middle {\qS1}, and an outer (slowest) {\qS2} mode
+\refer{Crampin}
+{A review of wave motion in anisotropic and cracked elastic media}
+{1981}.
+(Of course while this method is the most general, it still may make
+sense to use notations such as \{\qP,\qSV,SH\} when appropriate ---
+although these symmetric notations are misleading, as will be shown
+in section~\ref{Exam3-Chimera}.)
+
+Unfortunately, as can be seen in Figure~\ref{Separ3-Blowup},
+sorting the modes by phase velocity
+does nothing to ameliorate the particle-motion discontinuity
+at the shear singularities. As I will demonstrate in the next section,
+this local discontinuity in the Fourier
+domain produces a large planar artifact in the space-domain version
+of the corresponding wavetype-separation operator, although
+it can be suppressed in certain special cases.
+
+We have seen there are troublesome problems at step~(2B).
+What about step~(2C)? Figure~\ref{Separ3-Blowup} shows most of the particle-motion
+direction vectors as two-sided, since mathematically there is nothing
+in equation~(\ref{TI-chris}) to distinguish any eigenvector $\vv$
+from its opposite $-\vv$. I have attempted to pick one sign
+as ``positive'' for each particle-motion vector along a path
+(shown as a dotted line) around the singularity;
+these vectors are shown as one-sided rays.
+Unfortunately if we pick the vectors to preserve
+continuity as we move along the path, we find the signs don't match
+when we complete the loop. There is an inescapable branch cut in
+step~(2C).\footnote{This is an example of a phenomenon of much
+current interest in quantum physics, anholonomy
+\refer{Berry}
+{Anticipations of the geometric phase}
+{1990}.
+\index{anholonomy}
+The basic idea is that after some parameters of a system have been
+perturbed around a closed loop in a continuous way, some other
+seemingly unrelated parameters are found to have changed sign or
+otherwise shifted in phase.}
+
+\Tactiveplot{Separ3-Blowup}{width=5.75in}{\figdir}
+{A close-up view of a slowness surface showing a canonical shear singularity.}
+{
+A close-up view of the outer surface in Figure~\protect\ref{Separ3-Mobius},
+centered on the shear singularity (here indicated by an ``{\bf $S$}'').
+Note that the particle-motion directions become discontinuous at
+the singularity.
+There is a more subtle disturbance at the singularity as well.
+Most of the particle-motion direction vectors are drawn two-sided.
+For the vectors along the dotted path looping around the singularity,
+however, we have attempted to pick a preferred ``positive'' direction and so
+these are drawn one-sided.
+Once we make a choice of sign at the beginning, we are constrained at each
+step to choose the direction consistent with the previous choice.
+Unfortunately, the continuity we have carefully maintained going around
+the loop is lost at the end; the choices at the beginning and end of
+the loop do not agree.
+Contrast this situation with the one in two dimensions shown in
+Figure~\protect\ref{Separ3-Arrow2}.
+\index{shear singularities | example}
+\index{slowness surface | 3D example}
+}
+
+This branch cut
+makes a mess of any attempt to construct a pure-mode scalar field.
+If we are satisfied merely to separate the wavetypes, however, we
+can avoid the sign-choice problem by using a slightly modified algorithm:
+\label{Separ3-ModAlg}
+\begin{list}{}{}
+\item[($\hbox{\rm 3.}^\prime$)] Fourier transform $\U(x,y,z;t)$ over $x$, $y$, and $z$,
+obtaining $\hat \U(k_x,k_y,k_z;t)$.
+\item[($\hbox{\rm 4.}^\prime$)] For all $(k_x,k_y,k_z)$:
+\item[] \{
+$$ \hat \Mode(k_x,k_y,k_z;t) = \L(k_x,k_y,k_z) \Bigl( \L(k_x,k_y,k_z) \joecdot \hat \U(k_x,k_y,k_z;t) \Bigr) $$
+\item[] \}
+\item[($\hbox{\rm 5.}^\prime$)] Inverse Fourier transform $\hat \Mode(k_x,k_y,k_z;t)$
+over $k_x$, $k_y$, and $k_z$, obtaining $\Mode(x,y,z;t)$.
+\end{list}
+The branch cut does not adversely affect this operator because the
+sign of $\vv$ enters the equation twice, and so cancels out.
+
+\Tactiveplot{Separ3-Sfig}{width=5.75in}{\figdir}
+{Wavetype separation has trouble for 3D {\qS} modes.}
+{Three-dimensional {\qS} mode-separation examples.
+The plot and parameters are like those in Figure~\protect\ref{Separ3-Pfig},
+except this time the $x$ component of displacement is shown and
+a gpow of .8 has been applied to make weak events more easily visible.
+Upper left: The original wavefield.
+Upper right: The {\qP} mode has been successfully nulled.
+Lower left: Trying to pass only the {\qS1} wave causes artifacts.
+Lower right: The {\qS2} wave likewise doesn't work by itself.
+The sum of the two lower plots gives the upper right plot.
+\index{wavetype separation | example}
+}
+\Tactiveplottop{Separ3-SVfig}{width=5.75in}{\figdir}
+{Trying to define and separate a 3D {\qSV} pseudo-mode.}
+{Two attempts at defining and separating a three-dimensional {\qSV} mode.
+The plot and parameters are like those in Figure~\protect\ref{Separ3-Sfig}.
+Left: For each $(k_x,k_y,k_z)$ the {\qS} plane-wave mode with
+particle motion more nearly ``SV'' was chosen. This pseudo-mode does
+not have a continuous phase-velocity function.
+Right: The orthorhombic elastic constants were perturbed to become
+transversely isotropic, and the wavetype-separation operator appropriate for
+the {\qSV} mode for the perturbed TI medium was applied to the original
+orthorhombically anisotropic wavefield. As a result the {\qP} mode is
+not completely nulled.
+\index{wavetype separation | example}
+}
+
+This new wavetype-separation operator does not attempt to
+collapse the vector wavefield onto a scalar pure mode $M$. Instead
+it nulls the two unwanted wave types while passing the desired
+pure-mode component through unchanged.
+Since $\Mode$ is a vector wavefield like $\U$, some important
+manipulations become easier than they would be with a scalar mode like $M$.
+For example, we can construct the difference $\U - \Mode$;
+this {\it nulls}\/ a single wavetype instead of passing a single wavetype.
+
+Unfortunately, the fundamental problem of particle-motion discontinuities
+at shear singularities remains. There is no solution to this problem;
+it is a consequence of the basic inconsistency between
+the ``furry ball'' theorem and
+the definition of a {\qS} ``pure mode''.
+
+I conclude that in general anisotropic media it is not possible
+to cleanly separate the ``{\qS1} and {\qS2} modes''. The particle-motion
+discontinuity at the singularities will always cause the two
+modes to leak energy into each other.
+\index{shear singularities | mode-mode coupling}
+\index{wave modes | coupling}
+This mode-mode coupling is especially bothersome for elastic ray tracing in
+three dimensions.
+It is possible to handle the coupling,
+but only by propagating the two not-quite-distinct shear modes together
+\refer{Chapman and Shearer}
+{Ray tracing in azimuthally anisotropic media}{1989}.
+While it may often prove useful to differentiate two {\qS} waves
+for some set of propagation angles,
+globally they are inextricably linked and cannot be cleanly
+separated.
+
+\subsection{Examples}
+Figure~\ref{Separ3-Sfig} shows how this works in practice.
+The upper left plot shows the trial input wavefield.
+In the upper right plot the {\qP} wave has been successfully removed.
+In the lower two plots I have attempted to pass only the {\qS1} or
+{\qS2} pure modes. The Fourier-domain particle-motion discontinuities
+at the shear singularities create strong planar artifacts that can
+be seen to wrap around several times. The artifacts have opposite
+signs on the {\qS1} and {\qS2} plots; when the two {\qS} modes are summed
+the artifacts cancel and the ``{\qP} removed'' plot results.
+
+For these models a $z$ source was used.
+Since the only particle-motion discontinuity for SV modes is for
+vertically traveling shear waves, which are unexcited by a $z$ source,
+we might expect an SV mode-separation operator to be more tractable.
+There are two possible approaches to use; Figure~\ref{Separ3-SVfig}
+shows both of them.
+
+In the left example in Figure~\ref{Separ3-SVfig}
+for each $(k_x,k_y,k_z)$ plane-wave direction
+I have chosen the mode that most nearly fits the designation ``SV''.
+Sure enough, this operator picks out something resembling an SV mode,
+but the resulting wavefield is cluttered by the artifacts caused by
+both the particle-motion direction {\em and} phase-velocity
+discontinuities.
+
+In the right example in Figure~\ref{Separ3-SVfig}
+I have perturbed the elastic constants of the
+wavetype-separation operator to become transversely isotropic.
+(This was easy to do, since the original orthorhombic elastic constants
+were generated by numerically ``cracking''
+\refer{Schoenberg and Muir}
+{A calculus for finely layered anisotropic media}
+{1989}
+transversely isotropic
+Greenhorn Shale
+\refer{Jones and Wang}
+{Ultrasonic velocities in Cretaceous shales from the Williston basin}
+{1981}
+in the first place.)
+For the perturbed medium there is a true {\qSV} mode, and
+so the separation works (given the $z$ source used in this example).
+The {\qP} mode does slightly leak through because the elastic constants
+don't quite fit the medium, however.

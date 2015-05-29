@@ -125,6 +125,8 @@ int main(int argc, char* argv[])
 	sf_putstring(snaps,"label4","Half-Offset");
     }
 
+   dh *= 2*SF_PI;
+
     for (iz=0; iz < nz; iz++) {
 	for (ix=0; ix < nx; ix++) {
 	    for (it=0; it < nt; it++) {
@@ -190,7 +192,7 @@ int main(int argc, char* argv[])
 		x = 4.0f/((kz*kz+kx*kx)*v*v);
 		for (it=1; it < nt; it++) {
 		    w = it*dt;
-		    w = 1.0f/(w*w);
+		    w = w*w*x-1.0f;
 
 		    c = curr[iz][ix][it];
 
@@ -200,8 +202,8 @@ int main(int argc, char* argv[])
 			dat[ix][it] += (iz==nz-1)? c*0.5: c;
 		    }
 
-		    if (w < x) {
-			curr[iz][ix][it] = 2*cosf(SF_PI*kz*sqrtf(x-w))*c - prev[iz][ix][ih];
+		    if (w >= 0.0f) {
+			curr[iz][ix][it] = 2*cosf(kz*dh*sqrtf(w))*c - prev[iz][ix][it];
 		    } else {
 			curr[iz][ix][it] = 0.0f;
 		    }

@@ -1,0 +1,93 @@
+We begin with a simple example of how two-dimensional intuition can
+be misleading.
+Refer to Figure~\ref{Problem-Anisotrick1},
+which shows three symmetry-plane slices through a simple
+orthorhombic anisotropic slowness surface.
+Each slice shows what seem to be pure
+P, SV, and SH modes; furthermore, on each slice the P mode and one
+of the S modes are circular, while the other S mode is
+elliptical. Does this mean this medium supports pure P,
+SV, and SH modes?
+
+\inputdir{.}
+\plot{problem0}{width=5.75in}{
+Symmetry-plane slices through the three-dimensional slowness surfaces
+of a simple orthorhombic medium.
+The fat bars and dots show particle-motion direction. (Dots represent
+motion in and out of the plane.)
+Following the numbers from $1$ through
+$3$ seems to show the shear surfaces have a mobius-like topology.
+To see what's really happening,
+look at Figure~\protect\ref{Problem-Anisotrick2}.
+\index{Symmetry plane | slices}
+\index{slowness surface | 3D slice example}
+}
+
+No, as we can see by attempting to follow one shear surface around
+through all three plots. Start at ``1'' on the left plot where
+the ``SV surface'' intersects the $(k_x / \omega)$ axis. Trace from
+there up to ``2''. Now jump to ``2'' on the center plot (remembering
+that in three dimensions both ``2''s mark the same point).
+Continuing on in the same way, we get to ``3'' and jump to the right plot.
+Here there is a surprise:
+we are now on the ``SH surface'', and the ``SH surface'' appears not
+to reconnect back to ``1'' where we started.
+What is going on?
+
+Figure~\ref{Problem-Anisotrick2} shows a more accurate three-dimensional view.
+(\cite{musgrave1981elastodynamic}
+shows similar pictures for several physical media.)
+At ``3'', the outer surface
+is ``SV'' in the $k_y$--$k_z$ plane, but ``SH'' in the $k_x$--$k_z$
+plane.
+This is possible because the designations
+``SH'' and ``SV'' are relative concepts that
+depend on the orientation of the slice under consideration.
+Is the labeled ``crossing'' really a point where a ``{\qSH}'' and
+``{\qSV}'' surface intersect? No, as we can see by
+closely examining the slices cut
+at $10^\circ$ and $45^\circ$ angles to the $k_x$--$k_z$ plane.
+Clearly trying to shoehorn shear modes like these into ``{\qSV} and {\qSH}''
+designations is not going to work in three dimensions.
+(\cite{crampin1981review} also remarks on many of these points.)
+
+\plot{problem1}{width=5.75in}
+{
+Slices through the three-dimensional slowness surfaces
+of a simple orthorhombic medium.
+The fat bars show particle-motion direction.
+The ``crossing'' is not what it appeared to be in
+Figure~\protect\ref{Problem-Anisotrick1}.
+For another view of the same surface,
+look ahead to Figure~\protect\ref{Separ3-Mobius}.
+\index{Symmetry plane | slices}
+\index{slowness surface | 3D slice example}
+\index{wave modes | orthorhombic}
+}
+
+\Tactiveplot{Problem-Slowsurf}{width=5.75in}{\figdir}
+{The canonical isotropic ``P, SV, and SH'' slowness surfaces in 3D.}
+{
+Three-dimensional slowness surfaces for the standard \{P,SV,SH\}
+isotropic wave modes. Slowness surfaces are plots of phase slowness
+versus plane-wave propagation direction; they can also be considered as
+dispersion relation plots.
+We show particle-motion direction by the ``sticks'' attached to
+the surfaces.
+All three surfaces could not be plotted together because the two
+shear surfaces are everywhere coincident.
+\index{wave modes | isotropic P SV SH}
+\index{slowness surface | 3D example}
+}
+
+Perhaps this example is atypically perverse.
+Do the standard isotropic shear modes harbor any similar misbehaviors?
+In Figure~\ref{Problem-Slowsurf},
+note that by defining the shear surfaces as SH and SV
+we have introduced a nonphysical particle-motion direction
+discontinuity for vertically propagating waves.
+This is a consequence of the basic ``in-plane'' and ``cross-plane''
+definitions of SV and SH;
+the same vertically traveling wave with North-South particle motion
+is called ``SH'' on an East-West section
+but ``SV'' on a North-South one.
