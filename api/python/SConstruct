@@ -5,7 +5,7 @@ import bldutil
 modules = Split('m8r vplot las')
 
 try: # distribution version
-    Import('env root libdir pkgdir bindir')
+    Import('env root libdir incdir pkgdir bindir')
     env = env.Clone()
 except: # local version
     env = bldutil.Debug()
@@ -16,6 +16,8 @@ env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'])
 
 if root:
+    env.Install(incdir,'Makefile')
+    
     pydir = os.path.dirname(pkgdir)
     try:
         EnsurePythonVersion(2,4)

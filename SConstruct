@@ -148,11 +148,9 @@ for dir in map(lambda x: os.path.join('api',x), api):
         VariantDir(build,dir)
     else:
         BuildDir(build,dir)
-    api_exports = 'env root libdir '
+    api_exports = 'env root libdir incdir'
     if dir == 'api/python':
         api_exports += 'pkgdir bindir'
-    else:
-        api_exports += 'incdir'
         
     SConscript(dirs=build,name='SConstruct',exports=api_exports)
     Default(build)

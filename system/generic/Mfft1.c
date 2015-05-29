@@ -49,8 +49,8 @@ int main (int argc, char *argv[])
 #endif
 
     long int nbuf, ibuf, left, n2buf;
-    int            ompnth=1; /* number of threads */
-    int            ompith=0; /* thread index */
+    int            ompnth; /* number of threads */
+    int            ompith; /* thread index */
     float        **ompP;
     kiss_fft_cpx **ompQ;
     kiss_fft_cpx  *ompE;
@@ -173,6 +173,7 @@ int main (int argc, char *argv[])
     ompcfg  = (kiss_fftr_cfg*) sf_alloc(ompnth,sizeof(kiss_fftr_cfg));
     for(ompith=0; ompith<ompnth; ompith++)
 	ompcfg[ompith] = kiss_fftr_alloc(nt,inv?1:0,NULL,NULL);
+    ompith=0;
 #endif
 
     /*------------------------------------------------------------*/
