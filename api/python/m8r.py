@@ -28,6 +28,17 @@ import rsf.path
 
 ###
 
+def view(name):
+    try:
+        from IPython.display import Image
+        png = name+'.png'
+        makefile = os.path.join(rsf.prog.RSFROOT,'include','Makefile')
+        os.system('make -f %s %s' % (makefile,png))
+        return Image(filename=png)
+    except:
+        print 'No IPython Image support'
+        return None
+
 if _swig_:
     class Par(object):
         '''parameter table'''
