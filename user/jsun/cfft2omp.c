@@ -126,6 +126,12 @@ void cfft2(sf_complex *inp /* [n1*n2] */,
 
 }
 
+void icfft2_allocate(sf_complex *inp /* [nk*n2] */)
+/*< allocate inverse transform >*/
+{
+  /*kept for backward compatibility*/
+}
+
 void icfft2(sf_complex *out /* [n1*n2] */, 
 	    sf_complex *inp /* [nk*n2] */)
 /*< 2-D inverse FFT >*/
