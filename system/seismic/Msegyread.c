@@ -246,6 +246,17 @@ smeasu:  source measurement unit 230
 unass1:  unassigned 232
 
 unass2:  unassigned 236
+
+additional keys can be created in the output trace headers
+    The parameters key1, key2, ... key# are used to additional keys.   
+    The keys must be unique and different from the SEGY key names above.
+    The input header byte location and lengths must also be defined.  
+    This capability is described in an example that defines a new keys 
+    iline1 from byte 220 and xline1 from byte 224:
+	  key1=iline1 iline1=220 key1_len=4 \\ 
+          key2=xline1 xline1=224 key2_len=4 \\
+
+    key#_len defaults to 4
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
