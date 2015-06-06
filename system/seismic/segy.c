@@ -340,6 +340,19 @@ void segy_init(int nkeys, sf_file hdr)
     if (nkeys > SF_MAXKEYS) 
 	sf_error("%s: The header is too long: %d > %d",
 		 __FILE__,nkeys,SF_MAXKEYS);
+
+    /* initialize  the keys to something to avoid encountering
+       in segykey function */
+    for (ik=0; ik < SF_MAXKEYS; ik++) {
+      namelen = strlen("x") + 1;
+      segy_key[ik].name = sf_charalloc(namelen);
+      strncpy((char*) segy_key[ik].name,"x",namelen);
+      segy_key[ik].size=4;
+      desc = "?";
+      namelen = strlen(desc) + 1;
+      segy_key[ik].desc = sf_charalloc(namelen);
+      strncpy((char*) segy_key[ik].desc,desc,namelen);
+    }
  
     for (ik=0; ik < nkeys; ik++) {
 	if (ik < SF_NKEYS) {
@@ -803,8 +816,8 @@ int segykey (const char* key)
     for (i=0; i < SF_MAXKEYS; i++) {
 	if (0==strcmp(key,segy_key[i].name)) return i;
     }
-    sf_error("no such key %s",key);
-    return 0;
+    sf_warning("segykey function found no key=%s",key);
+    return -1;
 }
 
 const char* segykeyword (int k) 
