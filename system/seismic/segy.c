@@ -816,7 +816,7 @@ int segykey (const char* key)
     for (i=0; i < SF_MAXKEYS; i++) {
 	if (0==strcmp(key,segy_key[i].name)) return i;
     }
-    sf_warning("segykey function found no key=%s",key);
+    sf_warning("segykey function found no segy header key=%s",key);
     return -1;
 }
 
