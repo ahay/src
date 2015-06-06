@@ -82,7 +82,7 @@ PARAMETERS
 	always increased to the first non-zero sample.  The default mutes 
 	at the first non-zero sample.
 
-   float ntaper=12
+   int ntaper=12
         the length of the taper to use at the start of the trace.
 	
 */
