@@ -48,7 +48,8 @@ displayed using sfgrey.
    Program change history:
    date       Who             What
    04/26/2013 Karl Schleicher Original program
-   01/10/2014 Karl Schleicher Provide headers default, documentation 
+   01/10/2014 Karl Schleicher Provide headers default, documentation
+   06/05/2015 Karl Schleicher add makeheader=y to load axis coords to hdrs
 */
 
 #include <string.h>
@@ -75,7 +76,18 @@ int main(int argc, char* argv[])
   int i_trace;
   char* infile_filename=NULL;
   char* headers_filename=NULL;
-
+  bool makeheader;
+  int iaxis;
+  char parameter[13];
+  char* label_in[SF_MAX_DIM+1];
+  int n_in[SF_MAX_DIM+1];
+  float o_in[SF_MAX_DIM+1];
+  float d_in[SF_MAX_DIM+1];
+  int indx_of_keys[SF_MAX_DIM+1];
+  int traceindx[SF_MAX_DIM+1];
+  float tracecoord[SF_MAX_DIM+1];
+  int indxleft;
+  
   sf_init (argc,argv);
 
   /*****************************/
@@ -100,6 +112,43 @@ int main(int argc, char* argv[])
   if(infile_filename==NULL) infile = sf_input ("in");
   else infile = sf_input (infile_filename);
 
+  /* get the axis labels on the input file */
+  /* these will be used if users requests makeheaders */
+  for (iaxis=2; iaxis<SF_MAX_DIM+1; iaxis++){
+    sprintf(parameter,"label%d",iaxis);
+    if(verbose>1)fprintf(stderr,"first try to read %s\n",parameter);
+    /* get label, o, n, and i for each axis.  These will be used to 
+       make headers from axis (if that option is requested) */
+    if (!(label_in[iaxis]=sf_histstring(infile,parameter))) {
+      label_in[iaxis]="none";
+    }
+    sprintf(parameter,"o%d",iaxis);
+    if(verbose>1)fprintf(stderr,"first try to read %s\n",parameter);
+    if (!sf_histfloat(infile,parameter,&o_in[iaxis])){
+      label_in[iaxis]="none";
+    }
+    sprintf(parameter,"d%d",iaxis);
+    if(verbose>1)fprintf(stderr,"first try to read %s\n",parameter);
+    if (!sf_histfloat(infile,parameter,&d_in[iaxis])){
+      label_in[iaxis]="none";
+    }
+    sprintf(parameter,"n%d",iaxis);
+    if(verbose>1)fprintf(stderr,"first try to read %s\n",parameter);
+    if (!sf_histint(infile,parameter,&n_in[iaxis])){
+      n_in[iaxis]=1;
+    }
+    if(verbose>1){
+      fprintf(stderr,"on axis=%d got label,o,d,n=%s,%f,%f,%d \n",iaxis,
+	      label_in[iaxis],o_in[iaxis],d_in[iaxis],n_in[iaxis]);
+    }
+  }
+  /* compute index_of_keys after calling segy_init */ 
+
+
+
+
+
+
   if(verbose>0)
     fprintf(stderr,"set up output file for tah - should be stdout\n");
   out = sf_output ("out");
@@ -123,19 +172,27 @@ int main(int argc, char* argv[])
     headers_filename=malloc(strlen(infile_filename)+60);
     strcpy(headers_filename,infile_filename);
     strcpy(headers_filename+strlen(infile_filename)-4,"_hdr.rsf\0");
-    if(verbose>2)fprintf(stderr,"parameter header defaulted.  Computed to be #%s#\n",
-			 headers_filename);
+    if(verbose>2){
+      fprintf(stderr,"parameter header defaulted.  Computed to be #%s#\n",
+	      headers_filename);
+    }
   }
   if(verbose>2)fprintf(stderr,"parameter header input or computed  #%s#\n",
 		       headers_filename);
+  if(!sf_getbool("makeheader",&makeheader))makeheader=false;
 
-
+  
   inheaders = sf_input(headers_filename);
 
   if (!sf_histint(infile,"n1",&n1_traces))
     sf_error("input file does not define n1");
   if (!sf_histint(inheaders,"n1",&n1_headers)) 
     sf_error("input headers file does not define n1");
+
+
+
+
+
 
   n_traces=sf_leftsize(infile,1);
   n_headers=sf_leftsize(inheaders,1);
@@ -184,8 +241,21 @@ int main(int argc, char* argv[])
   if(0)  {
     int tempint;
     tempint=segykey("ep");
-    fprintf(stderr,"tempint=%d\n",tempint);
+    fprintf(stderr,"ep tempint=%d\n",tempint);
+    tempint=segykey("epx");
+    fprintf(stderr,"epx tempint=%d\n",tempint);
   }
+  for (iaxis=2; iaxis<SF_MAX_DIM+1; iaxis++){
+    if(0==strcmp("none",label_in[iaxis])){
+      indx_of_keys[iaxis]=-1;
+    } else {
+      indx_of_keys[iaxis]=segykey(label_in[iaxis]);
+    }
+    if(verbose>1){
+      fprintf(stderr,"indx_of_keys[%d]=%d\n",iaxis,indx_of_keys[iaxis]);
+    }
+  }
+  
   /* put the history from the input file to the output */
   if(verbose>1)fprintf(stderr,"fileflush out\n");
   sf_fileflush(out,infile);
@@ -201,6 +271,22 @@ int main(int argc, char* argv[])
     sf_floatread(header,n1_headers,inheaders);
     sf_floatread(intrace,n1_traces,infile);
 
+    if(makeheader){
+      indxleft=i_trace;
+      for (iaxis=2; iaxis<SF_MAX_DIM+1; iaxis++){
+	traceindx[iaxis]=indxleft%n_in[iaxis];
+	indxleft/=n_in[iaxis];
+	tracecoord[iaxis]=o_in[iaxis]+traceindx[iaxis]*d_in[iaxis];
+	if(verbose>1){
+	  fprintf(stderr,"i_trace=%d,iaxis=%d,tracecoord[iaxis]=%f\n",
+		  i_trace,   iaxis,   tracecoord[iaxis]);
+	}
+	if(indx_of_keys[iaxis]>=0){
+	  /* kls what's needed to add to make this work with integer headers?*/
+	  header[indx_of_keys[iaxis]]=tracecoord[iaxis];
+	}
+      }
+    }
     /***************************/
     /* write trace and headers */
     /***************************/
