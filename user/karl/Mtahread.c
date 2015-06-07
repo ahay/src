@@ -245,17 +245,26 @@ int main(int argc, char* argv[])
     tempint=segykey("epx");
     fprintf(stderr,"epx tempint=%d\n",tempint);
   }
-  for (iaxis=2; iaxis<SF_MAX_DIM+1; iaxis++){
-    if(0==strcmp("none",label_in[iaxis])){
-      indx_of_keys[iaxis]=-1;
-    } else {
-      indx_of_keys[iaxis]=segykey(label_in[iaxis]);
-    }
-    if(verbose>1){
-      fprintf(stderr,"indx_of_keys[%d]=%d\n",iaxis,indx_of_keys[iaxis]);
+  if(makeheader){
+    for (iaxis=2; iaxis<SF_MAX_DIM+1; iaxis++){
+      if(0==strcmp("none",label_in[iaxis])){
+	indx_of_keys[iaxis]=-1;
+      } else {
+	indx_of_keys[iaxis]=segykey(label_in[iaxis]);
+	if(indx_of_keys[iaxis]<0){
+	  sf_warning("************************************************");
+	  sf_warning("************************************************");
+	  sf_warning("axis %d has label that is not a header key",iaxis);
+	  sf_warning("This axis label will not be loaded");
+	  sf_warning("************************************************");
+	  sf_warning("************************************************");
+	}
+      }
+      if(verbose>1){
+	fprintf(stderr,"indx_of_keys[%d]=%d\n",iaxis,indx_of_keys[iaxis]);
+      }
     }
   }
-  
   /* put the history from the input file to the output */
   if(verbose>1)fprintf(stderr,"fileflush out\n");
   sf_fileflush(out,infile);
