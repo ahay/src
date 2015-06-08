@@ -13,4 +13,9 @@ Flow('bin','data',
 
 Result('init','bin','grey transp=n yreverse=n label1=longitude label2=latitude wanttitle=n')
 
+Flow('pef lag','bin','hpef lag=${TARGETS[1]} a=5,3 niter=50')
+Flow('interp','bin pef','miss filt=${SOURCES[1]} niter=100')
+
+Result('pef','interp','grey transp=n yreverse=n label1=longitude label2=latitude wanttitle=n')
+
 End()

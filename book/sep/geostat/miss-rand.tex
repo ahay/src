@@ -19,7 +19,7 @@ Note how the solution has a lower spatial frequency as we move away from
 the recorded data. In addition, the original tracks of the ship are still
 clearly visible.  
 
-\sideplot{sea.pef}{width=3.0in,height=3.0in}{Result of using a PEF to
+\sideplot{pef}{width=3.0in,height=3.0in}{Result of using a PEF to
 interpolate Figure~\ref{fig:sea.init}, taken from GEE \cite{gee}.}
 
 \par
@@ -42,14 +42,14 @@ points. For simplicity lets assume that the data has a standard
 normal distribution.
 The geostatistician find all of the points $m_1 .... m_n$ around the point they
 are trying to estimate $m_0$. The vector distance between all data points
-$\bf d_{ij}$
-and each data point and the estimation point $\bf d_{i0}$ are then computed.
+$\mathbf{d}_{ij}$
+and each data point and the estimation point $\mathbf{d}_{i0}$ are then computed.
 Using the predefined covariance function estimate $C$, a covariance
 value is then extracted
 between all known point pairs $C_{ij}$ and
 between known points and
-estimation point $C_{i0}$ at the given distances $\bf d_{ij}$  and
-$\bf d_{i0}$   (Figure~\ref{fig:covar-def}).
+estimation point $C_{i0}$ at the given distances $\mathbf{d}_{ij}$  and
+$\mathbf{d}_{i0}$   (Figure~\ref{fig:covar-def}).
 They compute the weights   ($w_1 ... w_n$) by solving the set
 of equations implied by
 \begin{equation}
@@ -156,7 +156,7 @@ The difference between kriging and simulation has a corollary in our
 least squares estimation problem. To see how let's write
 our fitting goals in a slightly different format,
 \beqa
-\bf r_d \pox \bf d  - \bf J  \bf m  \nonumber \\ 
+\bf r_d \pox \mathbf{d}  - \bf J  \bf m  \nonumber \\ 
 \bf r_m \pox \epsilon \reg \bf m\label{eq:rbar},
 \eeqa
 where $\bf r_d$ is our data residual and $\bf r_m$ is our model
@@ -169,7 +169,7 @@ It follows that we might be able to obtain something similar
 to the geostatistician's simulations by rewriting our fitting
 goals as 
 \beqa
-\bf d \pox  \bf J  \bf m  \nonumber \\ 
+\mathbf{d} \pox  \bf J  \bf m  \nonumber \\ 
 \sigma \bf  v \pox \epsilon \reg \bf m\label{eq:rand},
 \eeqa
 where $\bf v$ is a vector of random normal numbers and $\sigma$ is 
@@ -191,9 +191,9 @@ distribution is somewhere between our second and third realization.
 We can get an estimate of $\sigma$, or in the case of the missing
 data problem $\frac{\sigma}{\epsilon}$, by applying fitting goals 
 (\ref{eq:rbar}). If we look at the variance of the model residual $\sigma(\bf m_r)$  and 
-$\sigma(\bf d)$ we can get a good estimate of $\sigma$,
+$\sigma(\mathbf{d})$ we can get a good estimate of $\sigma$,
 \beq
-\sigma = \frac{ \sigma(\bf r_m) }{ \sigma(\bf d)} \label{eq:sigma.calc} .
+\sigma = \frac{ \sigma(\bf r_m) }{ \sigma(\mathbf{d})} \label{eq:sigma.calc} .
 \eeq
 
 %At this stage my method for choosing

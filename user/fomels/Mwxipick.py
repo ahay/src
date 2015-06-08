@@ -93,9 +93,11 @@ class Canvas(wx.Window):
         self.image = image.ConvertToBitmap()
         self.color = 'Yellow'
         self.thickness = 1
-        self.brush = wx.Brush(self.color,wx.TRANSPARENT)
+        self.pen = wx.Pen(self.color,self.thickness,wx.SOLID)
+        self.brush = wx.Brush(self.color)
         self.Bind(wx.EVT_PAINT,self.OnPaint)
-
+        self.Bind(wx.EVT_LEFT_DOWN,self.OnClick)
+        
         self.SetFrame()
 
         self.label1 = hist(str,'label1','Y')
@@ -139,6 +141,26 @@ class Canvas(wx.Window):
                                                  self.label2,x,self.unit2)
         else:
             return ''
+    def ScalePick(self,x,y):
+        xs = self.o2+(x-x0)*self.xscale
+        ys = self.o1+(y-y0)*self.yscale
+        return (ys,xs,i3)
+    def OnClick(self,event):
+        global npick, r
+        self.dc.SetPen(self.pen)
+        self.dc.SetBrush(self.brush)
+        x,y = event.GetPositionTuple()
+        if x >= x0 and y >= y0 and x <= x1 and y <= y1:
+            npick += 1
+            tag = 'pick%d' % npick
+            self.dc.DrawCircle(x,y,r)
+            #canvas.tag_bind(tag,'<ButtonPress-2>',selectpick)
+            #canvas.tag_bind(tag,'<B2-Motion>',movepick)
+            #canvas.tag_bind(tag,'<ButtonRelease-2>',movedpick)
+            #canvas.tag_bind(tag,'<Button-3>',deletepick)
+            picks[0][tag]=self.ScalePick(x,y)
+            print picks[0][tag]
+        event.Skip()
         
 class MainFrame(wx.Frame):
     def __init__(self):
