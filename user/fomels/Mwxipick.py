@@ -91,10 +91,11 @@ class Canvas(wx.Window):
 
         image = self.rsf2image(0)
         self.image = image.ConvertToBitmap()
-        self.color = 'Yellow'
         self.thickness = 1
-        self.pen = wx.Pen(self.color,self.thickness,wx.SOLID)
-        self.brush = wx.Brush(self.color)
+        pencolor='White'
+        color='Yellow'
+        self.pen = wx.Pen(pencolor,self.thickness,wx.SOLID)
+        self.brush = wx.Brush(color)
         self.Bind(wx.EVT_PAINT,self.OnPaint)
         self.Bind(wx.EVT_LEFT_DOWN,self.OnClick)
         
@@ -145,6 +146,8 @@ class Canvas(wx.Window):
         xs = self.o2+(x-x0)*self.xscale
         ys = self.o1+(y-y0)*self.yscale
         return (ys,xs,i3)
+    def SetColor(self,color):
+        self.brush = wx.Brush(color)
     def OnClick(self,event):
         global npick, r
         self.dc.SetPen(self.pen)
@@ -159,7 +162,6 @@ class Canvas(wx.Window):
             #canvas.tag_bind(tag,'<ButtonRelease-2>',movedpick)
             #canvas.tag_bind(tag,'<Button-3>',deletepick)
             picks[0][tag]=self.ScalePick(x,y)
-            print picks[0][tag]
         event.Skip()
         
 class MainFrame(wx.Frame):
@@ -206,8 +208,7 @@ class MainFrame(wx.Frame):
         dlg.GetColourData().SetChooseFull(True)
         if dlg.ShowModal() == wx.ID_OK:
             color = dlg.GetColourData().GetColour()
-            print color
-#            self.sketch.SetColor(color)
+            self.sketch.SetColor(color)
         dlg.Destroy()
     def Quit(self,event):
         sys.exit(0)
