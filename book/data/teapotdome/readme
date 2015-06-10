@@ -14,7 +14,7 @@ $RSFSRC/book/data/teapotdome/vels
 
 $RSFSRC/book/data/teapotdome/tahnmostack
 	apply nmo and stack of the preprocessed gathers downloaded in the 
-	../fetch directory.  This stack is dompared to the stack created 
+	../fetch directory.  This stack is compared to the stack created 
 	using seismic unix, SU.  This directory also displays some of the 
 	midpoint gathers from the processed gathers with and without nmo.
 	A few of the unprocessed shot records dowloaded in the fetch 

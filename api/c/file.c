@@ -931,6 +931,24 @@ void sf_putfloat (sf_file file, const char* key,float par)
     sf_simtab_enter (file->pars,key,val);
 }
 
+void sf_putfloats (sf_file file, const char* key, const float* par, size_t n)
+/*< put a float array of size n parameter to a file >*/
+{
+    int i;
+    char val[1024], *v;
+	
+    if (NULL == file->dataname) 
+	sf_warning("%s: putfloats to a closed file",__FILE__);
+    v = val;
+    for (i=0; i < (int) n-1; i++) {
+	v += snprintf(v,1024,"%g,",par[i]);
+    }
+    snprintf(v,1024,"%g",par[n-1]);
+	
+    sf_simtab_enter (file->pars,key,val);
+}
+
+
 void sf_putstring (sf_file file, const char* key,const char* par)
 /*< put a string parameter to a file >*/
 {

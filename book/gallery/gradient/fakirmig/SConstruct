@@ -59,4 +59,14 @@ gradient.impulse_response('kimpres','veloc')
 #     nt=2001 dt=0.002 ns=351 ds=0.02 s0=1.5
 #     ''')
 
+gradient.shots('data')
+
+Flow('hdmig','data time tds',
+     '''
+     put d2=0.04 | halfint inv=y adj=y |
+     kirmigsr stable=${SOURCES[1]} sderiv=${SOURCES[2]} rtable=${SOURCES[1]} rderiv=${SOURCES[2]}
+     ''')
+
+gradient.sh_image('hdmig')
+
 End()

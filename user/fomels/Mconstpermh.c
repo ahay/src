@@ -190,22 +190,22 @@ int main(int argc, char* argv[])
 	    for (ix=0; ix < nx; ix++) {
 		kx = (iz==0 && ix==0)? dx: ix*dx;
 		x = 4.0f/((kz*kz+kx*kx)*v*v);
-		for (it=1; it < nt; it++) {
+		for (it=0; it < nt; it++) {
 		    w = it*dt;
 		    w = w*w*x-1.0f;
 
 		    c = curr[iz][ix][it];
 
 		    if (mig) {
-			c += (iz==nz-1)? dat[ix][it]*0.5: dat[ix][it];
+			c += dat[ix][it];
 		    } else {
-			dat[ix][it] += (iz==nz-1)? c*0.5: c;
+			dat[ix][it] += c;
 		    }
 
 		    if (w >= 0.0f) {
 			curr[iz][ix][it] = 2*cosf(kz*dh*sqrtf(w))*c - prev[iz][ix][it];
 		    } else {
-			curr[iz][ix][it] = 0.0f;
+			curr[iz][ix][it] = c;
 		    }
 		    prev[iz][ix][it] = c;
 		}
@@ -224,7 +224,7 @@ int main(int argc, char* argv[])
 	    for (ix=0; ix < nx; ix++) {
 		for (it=0; it < nt; it++) {
 		    c = curr[iz][ix][it];
-		    img[ix][iz] += (iz==nz-1)? c*0.5: c;
+		    img[ix][iz] += c;
 		}
 	    }
 	}

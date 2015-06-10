@@ -21,6 +21,9 @@ def igrey(custom='',title=''):
 def zo_image(image):
     Result(image,igrey('gridcol=5','Zero-Offset %s' % method))
 
+def sh_image(image):
+    Result(image,igrey('gridcol=5',method))
+
 layers = (
     ((0,2),(3.5,2),(4.5,2.5),(5.,2.25),(5.5,2),(6.5,2.5),(10,2.5)),
     ((0,2.5),(10,3.5)),

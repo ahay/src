@@ -170,4 +170,10 @@ Flow(['stack.rsf' , 'stack.rsf'],
        
 Result('stack','sfpow pow1=2 | sfgrey title="v(t) stack"')
 
+### without tah ################
+
+#Flow('cmps',['../ntg/shots-receivers-23900_headfix.rsf',
+#             '../ntg/shots-receivers-23900_headfix_hdr.rsf'],
+#     'intbin head=${SOURCES[1]} xkey=-1 yk=cdp')
+
 End()
