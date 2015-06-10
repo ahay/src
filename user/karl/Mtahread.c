@@ -107,7 +107,14 @@ int main(int argc, char* argv[])
   
   infile_filename=sf_getstring("input");
   /* \n
-     Input file for traces amplitudes
+     Input file for traces amplitudes.  You can list a file here, has the 
+     input file name will be used to compute the name of the header files.
+
+     The input trace amplitudes can also be read from standard input by
+     just supplying standard input and omitting this paramater,  This 
+     is useful it you wish to do sopme initial processing of the input
+     rsf file containing the trace amplitudes.  This is useful if you need 
+     to change input axis labels to use the makeheader=yes.
   */
   if(infile_filename==NULL) infile = sf_input ("in");
   else infile = sf_input (infile_filename);
@@ -179,8 +186,20 @@ int main(int argc, char* argv[])
   }
   if(verbose>2)fprintf(stderr,"parameter header input or computed  #%s#\n",
 		       headers_filename);
-  if(!sf_getbool("makeheader",&makeheader))makeheader=false;
 
+  if(!sf_getbool("makeheader",&makeheader))makeheader=false;
+  /* \n
+     Option to load headers using the input file axis labels.  If axis 
+     label2 through label9 match a header key then that coordinate is
+     loaded to the traces header.  This can be used to load the source
+     coordinate to the sx header location.  This may require changing
+     the axis label because Madagascar axis labels are not the same as
+     segy trace headers.  for example axis 2 coordiante can be loaded in
+     sx trace header by:
+        <spike.rsf sfput label2=sx \\
+           | sftahread headers=spike_hdr.rsf makeheader=y \\ 
+           | sftahgethw key=sx >/dev/null
+ */
   
   inheaders = sf_input(headers_filename);
 
