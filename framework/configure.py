@@ -1631,12 +1631,17 @@ def omp(context):
     pgcc =  (string.rfind(CC,'pgcc') >= 0)
     gcc = (string.rfind(CC,'gcc') >= 0)
     icc = (string.rfind(CC,'icc') >= 0)
+    clang = (string.rfind(CC,'clang') >= 0)
     if pgcc:
         CFLAGS = flags + ' -mp'
         CXXFLAGS = ccflags + ' -mp'
         LINKFLAGS = lflags + ' -mp'
     elif gcc:
         LIBS.append('gomp')
+        CFLAGS = flags + ' -fopenmp'
+        CXXFLAGS = ccflags  + ' -fopenmp'      
+        LINKFLAGS = lflags + ' -fopenmp'
+    elif clang:
         CFLAGS = flags + ' -fopenmp'
         CXXFLAGS = ccflags  + ' -fopenmp'      
         LINKFLAGS = lflags + ' -fopenmp'
