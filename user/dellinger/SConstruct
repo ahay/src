@@ -3,6 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
+vr vrtest
 '''
 # vr3d
 
@@ -19,7 +20,9 @@ src = Glob('[a-z]*.c')
 
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
-            LIBS=[env.get('DYNLIB','')+'rsf'])
+            LIBS=[env.get('DYNLIB','')+'rsfplot',
+                  env.get('DYNLIB','')+'rsf'])
+env['PROGPREFIX'] = 'vp'
 
 for source in src:
     inc = env.RSF_Include(source,prefix='')
@@ -41,7 +44,7 @@ if root:
     user = os.path.basename(os.getcwd())
     main = 'sf%s.py' % user
     
-    docs = map(lambda prog: env.Doc(prog,'M' + prog),mains)
+    docs = map(lambda prog: env.Doc(prog,'M' + prog,rsfprefix='vp'),mains)
     env.Depends(docs,'#/framework/rsf/doc.py')	
 
     doc = env.RSF_Docmerge(main,docs)

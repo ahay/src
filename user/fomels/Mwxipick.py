@@ -157,11 +157,15 @@ class Canvas(wx.Window):
             npick += 1
             tag = 'pick%d' % npick
             self.dc.DrawCircle(x,y,r)
+            pick.Bind(wx.EVT_LEFT_DOWN,self.SelectPick)
             #canvas.tag_bind(tag,'<ButtonPress-2>',selectpick)
             #canvas.tag_bind(tag,'<B2-Motion>',movepick)
             #canvas.tag_bind(tag,'<ButtonRelease-2>',movedpick)
             #canvas.tag_bind(tag,'<Button-3>',deletepick)
             picks[0][tag]=self.ScalePick(x,y)
+        event.Skip()
+    def SelectPick(self,event):
+        print event.GetPositionTuple()
         event.Skip()
         
 class MainFrame(wx.Frame):

@@ -1,4 +1,4 @@
-/* Plot Impulse responses in 3 dimensions */
+/* Plot impulse responses in 3 dimensions */
 /*
   Copyright (C) 1991 The Board of Trustees of Stanford University
   
