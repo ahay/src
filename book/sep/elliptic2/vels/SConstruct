@@ -1,0 +1,73 @@
+from rsf.proj import *
+
+Plot('notate3','notate3.txt','plas -i')
+
+greenR = '''n
+c11=227.
+c22=227.
+
+c12=129.
+
+c13=107.
+c23=107.
+
+c33=341.
+
+c44=54.
+c55=54.
+
+c66=106.
+'''
+
+green = '''
+c11=341.
+c22=341.
+
+c12=129.
+
+c13=107.
+c23=107.
+
+c33=227.
+
+c44=54.
+c55=54.
+
+c66=106.
+'''
+
+Plot('file1',None,'vr %s norm=250 only=SV vrscale=2.' % greenR,prefix=plprefix)
+Plot('plot1','file1 notate3','Overlay',vppen='scale=1')
+
+Plot('file2',None,'vr %s norm=250 only=SV vrscale=2.' % green,prefix=plprefix)
+Plot('plot2','file2 notate3','Overlay',vppen='rotate=90 scale=1')
+
+Plot('tfile',None,'vrtest %s norm=250 groupscale=2. inc=.05 m=-1 which=1 francis=n invert=n' % green,
+     prefix=plprefix)
+Plot('tfile1','tfile','Overlay',vppen='scale=1 fat=3')
+Plot('tfile2',None,
+     'vrtest %s norm=250 dash=.1 phasescale=2. inc=.05 m=-1 which=0 francis=y flip=y invert=n' % green,
+     prefix=plprefix)
+Plot('plot3','tfile1 tfile2 notate3','Overlay',vppen='scale=1')
+
+Result('verthoriz','plot1 plot2 plot3','SideBySideIso',
+       vppen='scale=1 size=a gridnum=3,1 gridsize=3.7,3.7 xcenter=0 ycenter=0')
+
+Plot('pfile1',None,'vr %s norm=250 only=SVdisp vrscale=1.' % greenR,prefix=plprefix)
+Plot('pplot1','pfile1 notate3','Overlay',vppen='scale=1')
+
+Plot('pfile2',None,'vr %s norm=250 only=SVdisp vrscale=1.' % green,prefix=plprefix)
+Plot('pplot2','pfile2 notate3','Overlay',vppen='rotate=90 scale=1')
+
+Plot('ptfile',None,'vrtest %s norm=250 phasescale=.5 inc=.05 m=-1 which=0 francis=n invert=n' % green,
+     prefix=plprefix)
+Plot('ptfile1','ptfile','Overlay',vppen='scale=1 fat=2')
+Plot('ptfile2',None,
+     'vrtest %s norm=250 phasescale=.5 dash=.1 inc=.05 m=-1 which=0 francis=y invert=n' % green,
+     prefix=plprefix)
+Plot('pplot3','ptfile1 ptfile2 notate3','Overlay',vppen='scale=1')
+
+Result('verthoriz2','pplot1 pplot2 pplot3','SideBySideIso',
+       vppen='scale=1 size=a gridnum=3,1 gridsize=2.7,2.7 xcenter=0 ycenter=0')
+
+End()
