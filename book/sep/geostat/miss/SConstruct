@@ -18,4 +18,22 @@ Flow('interp','bin pef','miss filt=${SOURCES[1]} niter=100')
 
 Result('pef','interp','grey transp=n yreverse=n label1=longitude label2=latitude wanttitle=n')
 
+Flow('a','interp','histogram o1=-1 n1=251 d1=.008 | dd type=float | scale dscale=.0000597407')
+Plot('a',
+     '''
+     window j1=2 | 
+     graph label1="Value" label2="Frequency" wanttitle=n max2=.05 min2=0 symbol="*" plotcol=5 symbolsz=10
+     ''')
+
+Flow('mask','bin','scale dscale=1e16 | dd type=int')
+Flow('b','bin mask',
+     '''
+     spray axis=1 n=1 | headerwindow mask=${SOURCES[1]} | 
+     histogram o1=-1 n1=251 d1=.008 | 
+     dd type=float | scale dscale=.0001128541
+     ''')
+Plot('b','graph label1="Value" label2="Frequency" wanttitle=n max2=.05 min2=0')
+
+Result('histo','a b','Overlay')
+
 End()

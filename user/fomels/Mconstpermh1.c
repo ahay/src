@@ -103,10 +103,6 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("v",&v)) sf_error("Need v=");
     /* velocity */
 
-    dx = cosft_dk(nx,dx);
-    dz = cosft_dk(nz,dz);
-    dt = cosft_dk(nt,dt);
-
    if (NULL != snaps) {
 	sf_putint(snaps,"n1",nt);
 	sf_putfloat(snaps,"d1",dt);
@@ -126,7 +122,9 @@ int main(int argc, char* argv[])
 	sf_putstring(snaps,"label4","Half-Offset");
     }
 
-   dh *= 2*SF_PI;
+    dx = cosft_dk(nx,dx);
+    dz = cosft_dk(nz,dz);
+    dt = cosft_dk(nt,dt);
 
     for (iz=0; iz < nz; iz++) {
 	for (ix=0; ix < nx; ix++) {
@@ -175,6 +173,8 @@ int main(int argc, char* argv[])
     }
 
 
+    dh *= 2*ihs*SF_PI;
+
     /* offset stepping */
     for (ih=ih1; ih != ih2; ih += ihs) {
 	sf_warning("ih=%d;",ih);
@@ -198,6 +198,7 @@ int main(int argc, char* argv[])
 		    }
 		}
 	    }
+	    cosft3(true,nt,nx,nz,fcurr);
 	    sf_floatwrite(fcurr[0][0],nt*nx*nz,snaps);
 	}
 
@@ -221,7 +222,7 @@ int main(int argc, char* argv[])
 		    if (w >= 0.0f) {
 			curr[iz][ix][it] = cexpf(sf_cmplx(0.,kz*dh*sqrtf(w)))*c;
 		    } else {
-			curr[iz][ix][it] = expf(-kz*dh*sqrtf(fabsf(w)))*c;
+			curr[iz][ix][it] = expf(-kz*fabsf(dh)*sqrtf(fabsf(w)))*c;
 		    }
 		}
 	    }

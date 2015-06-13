@@ -172,8 +172,16 @@ Result('stack','sfpow pow1=2 | sfgrey title="v(t) stack"')
 
 ### without tah ################
 
-#Flow('cmps',['../ntg/shots-receivers-23900_headfix.rsf',
-#             '../ntg/shots-receivers-23900_headfix_hdr.rsf'],
-#     'intbin head=${SOURCES[1]} xkey=-1 yk=cdp')
+Flow('shots','../ntg/shots-receivers-23900_headfix.rsf',    'window n3=151')
+Flow('heads','../ntg/shots-receivers-23900_headfix_hdr.rsf','window n3=151')
+
+Flow('cdp','heads','window n1=1 f1=5 | dd type=float')
+Flow('headcdp','heads cdp','headersort head=${SOURCES[1]}')
+
+Flow('cmps','shots cdp headcdp',
+     'headersort head=${SOURCES[1]} | intbin head=${SOURCES[2]} xkey=-1 yk=xline')
+
+Flow('offsets masks','headcdp',
+     'window n1=1 f1=11 squeeze=n | intbin head=$SOURCE xkey=-1 yk=xline mask=${TARGETS[1]}')
 
 End()

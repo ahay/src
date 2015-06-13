@@ -96,17 +96,25 @@ int main (int argc, char* argv[])
     x = sf_intalloc(nd);
     y = sf_intalloc(nd);
 
+    ymin = xmin = +INT_MAX;
+    ymax = xmax = -INT_MAX;
     for (i=id=0; id<nd; id++) {	
 	sf_intread (hdr,nk,head);
 	j = hdr[ykey];
+	if (j < ymin) ymin=j;
+	if (j > ymax) ymax=j;	
 	y[id] = j; 
 	if (xkey < 0) { /* index traces in a gather */
 	    if (i > 0 && j != jp) i=0;
+	    if (i < xmin) xmin=i;
+	    if (i > xmax) xmax=i;
 	    x[id] = i;
 	    i++;
 	    jp = j;
 	} else {
 	    i = hdr[xkey];
+	    if (i < xmin) xmin=i;
+	    if (i > xmax) xmax=i;
 	    x[id] = i;
 	}
     }
@@ -125,17 +133,6 @@ int main (int argc, char* argv[])
 	sf_putint (out,"n2",nd);
 	sf_putint (out,"n3",1);
     } else {
-	ymin = xmin = +INT_MAX;
-	ymax = xmax = -INT_MAX;
-	for (id=0; id<nd; id++) {	
-	    i = x[id]; 
-	    if (i < xmin) xmin=i;
-	    if (i > xmax) xmax=i;
-	    i = y[id];
-	    if (i < ymin) ymin=i;
-	    if (i > ymax) ymax=i;
-	}
-	
 	/* let user overwrite */
 	sf_getint ("xmin",&xmin); /* x minimum */
 	sf_getint ("xmax",&xmax); /* x maximum */
