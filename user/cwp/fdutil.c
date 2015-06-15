@@ -755,7 +755,7 @@ void sinc3d_inject(float***uu,
 #ifdef _OPENMP
 #pragma omp parallel for			\
     schedule(dynamic)				\
-    private(ia,ix,iy,iz,sx,sy,sz,w,wy,wx,wz)	\
+    private(ia,ix,iy,iz,sx,sy,sz,w,wy,wx,wz,ixx,iyy,izz,value)	\
     shared(na,ca,dd,uu)
 #endif
     for(ia=0;ia<na;ia++) {	
@@ -798,7 +798,7 @@ void sinc3d_inject1(float***uu,
 #ifdef _OPENMP
 #pragma omp parallel for			\
     schedule(dynamic)				\
-    private(ia,ix,iy,iz,sx,sy,sz,w,wy,wx,wz)	\
+    private(ia,ix,iy,iz,sx,sy,sz,w,wy,wx,wz,ixx,iyy,izz,value)	\
     shared(na,ca,dd,uu)
 #endif
     for(ia=0;ia<na;ia++) {	
@@ -841,7 +841,7 @@ void sinc3d_extract(float***uu,
 #ifdef _OPENMP
 #pragma omp parallel for			\
     schedule(dynamic)				\
-    private(ia,ix,iy,iz,sx,sy,sz,wy,wx,wz)	\
+    private(ia,ix,iy,iz,sx,sy,sz,wy,wx,wz,ixx,iyy,izz,gather)	\
     shared(na,ca,dd,uu)
 #endif
     for(ia=0;ia<na;ia++) {
@@ -973,7 +973,7 @@ void sinc2d_inject(float**uu,
 #ifdef _OPENMP
 #pragma omp parallel for			\
     schedule(dynamic)				\
-    private(ia,ix,iz,sx,sz,w,wx,wz)		\
+    private(ia,ix,iz,sx,sz,w,wx,wz,ixx,izz,value)		\
     shared(na,ca,dd,uu)
 #endif
     for(ia=0;ia<na;ia++) {	
@@ -1011,7 +1011,7 @@ void sinc2d_inject1(float**uu,
 #ifdef _OPENMP
 #pragma omp parallel for			\
     schedule(dynamic)				\
-    private(ia,ix,iz,sx,sz,w,wx,wz)		\
+    private(ia,ix,iz,sx,sz,w,wx,wz,ixx,izz,value)		\
     shared(na,ca,dd,uu)
 #endif
     for(ia=0;ia<na;ia++) {
@@ -1048,7 +1048,7 @@ void sinc2d_extract(float**uu,
 #ifdef _OPENMP
 #pragma omp parallel for			\
     schedule(dynamic)				\
-    private(ia,ix,iz,sx,sz,wx,wz)		\
+    private(ia,ix,iz,sx,sz,wx,wz,ixx,izz,gather)		\
     shared(na,ca,dd,uu)
 #endif
     for(ia=0;ia<na;ia++) {

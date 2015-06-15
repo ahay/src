@@ -447,7 +447,8 @@ step_forward(float*** restrict u0, float*** restrict u1,
 #ifdef _OPENMP
 #pragma omp parallel for				\
     schedule(static,1)					\
-    shared(nxpad,nypad,nzpad,u0,u1,vel,c0,cx,cy,cz)
+    shared(nxpad,nypad,nzpad,u0,u1,vel,c0,cx,cy,cz) \
+    private(ix,iy,iz,iop,drho_dot_du,du_z,du_x,du_y,drho_z,drho_x,drho_y,lap)
 #endif
 #if defined (__SSE__) || defined (__AVX__)
     for (iy=nop; iy<nypad-nop; iy++) {
@@ -597,6 +598,7 @@ step_forward(float*** restrict u0, float*** restrict u1,
 			    + (u1[iy-iop][ix][iz] + u1[iy+iop][ix][iz]) * cy[iop];
 		    }
 		    if (rho != NULL) { /* variable density term */
+        du_z = du_x = du_y = drho_z = drho_x = drho_y = 0.f;
 			for (iop=1; iop<=nop; iop++) {
 			    du_z += (u1[iy][ix][iz+iop] - u1[iy][ix][iz-iop]) * bz[iop];
 			    du_x += (u1[iy][ix+iop][iz] - u1[iy][ix-iop][iz]) * bx[iop];
@@ -771,7 +773,7 @@ apply_abc(float*** restrict uu2, float*** restrict uu1, int nz, int nx, int ny, 
     int nypad = ny + 2*nbd;
     int nzpad = nz + 2*nbd;
 #ifdef _OPENMP
-#pragma omp parallel for schedule(static)
+#pragma omp parallel for schedule(static) private(ix,iy,iz,ib,damp_ib,uu2_bc)
 #endif
     for (iy=0; iy<nypad; iy++) {
 	for (ix=0; ix<nxpad; ix++) {
@@ -806,7 +808,7 @@ apply_abc(float*** restrict uu2, float*** restrict uu1, int nz, int nx, int ny, 
     }
     
 #ifdef _OPENMP
-#pragma omp parallel for schedule(static)
+#pragma omp parallel for schedule(static) private(ix,iy,iz,ib,damp_ib,uu2_bc)
 #endif
     for (iy=0; iy<nypad; iy++) {
 	for (iz=0;iz<nzpad; iz++) {
@@ -833,7 +835,7 @@ apply_abc(float*** restrict uu2, float*** restrict uu1, int nz, int nx, int ny, 
     }
 
 #ifdef _OPENMP
-#pragma omp parallel for schedule(static)
+#pragma omp parallel for schedule(static) private(ix,iy,iz,ib,damp_ib,uu2_bc)
 #endif
     for (ix=0; ix<nxpad; ix++) {
 	for (iz=0;iz<nzpad; iz++) {
