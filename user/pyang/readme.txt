@@ -29,8 +29,7 @@ Note: fpocs is a two-step version of POCS. You are able to test
 For more information on FPOCS, check the paper:
  Yang Pengliang, Gao Jinghuai, Chen Wenchao, "On analysis-based 
  two-step interpolation methods for randomly sampled seismic data"
- Computers & Geosciences 51 449-461 2013
-
+ Computers & Geosciences (2013) 51: 449-461 
 
 2) DLCT (discrete linear chirp transform), FFTW required
 Main:		Mdlct.c, Mdlct2.c
@@ -53,7 +52,7 @@ Depends on:	rtm2d.c, prtm2d.c
 Test file:	/book/xjtu/test/zortm2d/marmousi/SConstruct
 		/book/xjtu/test/zortm2d/sigsbee/SConstruct
 		(zero-offset RTM)
-Test file: 	/book/xjtu/test/lsprtm2d/SConstruct (under construction)
+Test file: 	/book/xjtu/test/lsprtm2d/SConstruct(under construction)
 		(prestack RTM)
 
 5) Prestack RTM using GPU with staggered grid
@@ -62,7 +61,7 @@ Depends on:	cuda_kernels.cu
 Test file: 	/book/xjtu/gpurtm/marmousi/SConstruct
 		/book/xjtu/gpurtm/sigsbee/SConstruct
 		/book/xjtu/test/Testeb/SConstruct
-Note: 	(a)staggered_fdcoeff.m is a matlab script to find the finite 
+Note: 	(a) staggered_fdcoeff.m is a matlab script to find the finite 
 	difference coefficients with order-NJ (NJ=2N);
 	(b) MTesteb.c is a file to test the validity of the proposed
 	effective boundary saving strategy! 
@@ -73,14 +72,15 @@ For more information, check the paper:
  boundary saving: A staggered grid GPU implementation." Computers & 
  Geosciences (2014).
 
-
 6) Seislet-based POCS, IST and MCA algorithm (for 2D validation)
 Main:		Mpocsseislet.c, Mistseislet.c, Mmcaseislet
-Test file:	/book/xjtu/mcaseislet/deblend/SConstruct
-		/book/xjtu/mcaseislet/interp/SConstruct
-		/book/xjtu/mcaseislet/sep1/SConstruct
+Test file:	/book/xjtu/mcaseislet/interp/SConstruct
 		/book/xjtu/mcaseislet/sep2/SConstruct
 		/book/xjtu/test/interpseislet/SConstruct
+For more information, check the paper:
+  Yang, Pengliang, and Sergey Fomel. "Seislet-based morphological 
+  component analysis using scale-dependent exponential shrinkage." 
+  Journal of Applied Geophysics 118 (2015): 66-74.
 
 7) 2-D forward modeling to generate shot records
 Main: 		Mmodeling2d.c
@@ -123,7 +123,6 @@ applied here!).
 Main: 		Mcohn.c
 Test file:	/book/xjtu/test/coherence/SConstruct
 
-
 13) MWNI (minimum weighted norm interpolation), FFTW requred
 Main:		Mmwni2d.c 
 Test file: 	/book/xjtu/test/mwni2d/SConstruct
@@ -148,8 +147,28 @@ visco-acoustic and visco-elastic wave equation due to the dissipation.
 The solution of computation without disk I/O is the use of checkpointing 
 technique.
 
+16) Forward modeling based upon Mexwell attenuation model
+Main:		Mmaxwell_cpml1.c, Mmaxwell_cpml2.f90,
+		Mmaxwell_sponge1.c, Mmaxwell_sponge2.f90
+Test file:	/book/xjtu/test/maxwell/SConstruct
 
 ===================================================================
+Postscript:
+
+I was pursuing my PhD degree in Xi'an Jiaotong University, China. During 
+the PhD program, I was sponsored by China Scholarship Council (SCC) to 
+do one year visiting research at The University of Texas at Austin, US.
+I coded a lot of matlab to validate my algorithms and begin my C/C++ and 
+CUDA. In UT Austin, I learned MPI and OpenMP to do parallel programming.
+Since June 1, 2015, I moved to University Joseph Fourier-Grenoble, where
+I was requested to do all programming with Fortran. Thus, to compile my codes,
+you need:
+ 1) check with ./configure to make sure all programming environments have 
+been well installed, especiall for FFTW, gcc, gfortran and CUDA;
+ 2) then, use 
+	./configure API=c,fortran-90 --prefix=$RSFROOT
+to install Madagascar.
+
 I try my best to make my code self-contained. I believe it brings 
 convenience and readability, because for readers much effort will
 be saved on understanding how to invoke complicated functions which may 

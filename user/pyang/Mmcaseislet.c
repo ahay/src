@@ -28,12 +28,9 @@ Note:  Here, nc components with nc seislet transforms build a seislet
     [2] Elad, Michael, et al. "Simultaneous cartoon and texture image 
 	inpainting using morphological component analysis (MCA)." Applied 
 	and Computational Harmonic Analysis 19.3 (2005): 340-358.
-
-To know why MCA algorithm work like this, it will be much easier if you see 
-' Yang, Pengliang, Jinghuai Gao, and Wenchao Chen. "L1/2-constrained 
-morphological component analysis." 2013 IEEE China Summit & International 
-Conference on Signal and Information Processing (ChinaSIP), 2013. '. The
-only difference lies in the thresholding function and the transform used. 
+    [3] Yang, Pengliang, and Sergey Fomel. "Seislet-based morphological 
+	component analysis using scale-dependent exponential shrinkage." 
+	Journal of Applied Geophysics 118 (2015): 66-74. 
 */
 
 #include <rsf.h>

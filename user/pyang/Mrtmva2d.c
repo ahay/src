@@ -599,6 +599,9 @@ int main(int argc, char* argv[])
     memset(gvz[0],0,nzpad*nxpad*sizeof(float));
     for(ib=nob-1,ic=noc-1,it=nt-1; it>-1; it--){
       buffer_remodeling(sp, sr, svz, svx, vv, rho, tau, tauo, bndr, wlt, buffer, checkpt, &ib, &ic, sxz, is, it);
+
+	//the backpropagation operator should be the adjoint of forward modeling!
+	//here we just use forward modeling operator for the time being
       add_source(gxz, gp, ng, dcal[it], true);
       step_forward(gp, gr, gvz, gvx, vv, rho, tau, tauo);
       apply_sponge(gp, bndr);

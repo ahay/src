@@ -16,6 +16,13 @@
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+  References：
+  [1] Carcione, José M., Dan Kosloff, and Ronnie Kosloff. "Wave propagation
+   simulation in a linear viscoacoustic medium." Geophysical Journal
+   International 93.2 (1988): 393-401.
+  [2] Carcione, Jose M., Dan Kosloff, and Ronnie Kosloff. "Viscoacoustic 
+   wave propagation simulation in the earth." Geophysics 53.6 (1988): 769-777.
 */
 #include <rsf.h>
 
