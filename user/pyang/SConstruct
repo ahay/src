@@ -8,7 +8,7 @@ import bldutil
 progs = '''
 cohn checkptdemo dlct fpocs2d fpocs3d fwi2d fbrec2d 
 istinterp istpad istseislet lsrtm2d lsprtm2d lsinterp2d 
-mwni2d myradon1 myradon2 mythresh mshots mcaseislet modeling2d mysnr
+mwni2d myradon2 mythresh mshots mcaseislet modeling2d mysnr
 pocs3d pocs pocsseislet rtm2d rtmadcig rtmva2d
 Testfd2d Testfd3d Testeb Testelastic2d Testaniso Testspml
 viscoa2d viscoe2d maxwell_sponge1 maxwell_cpml1 
