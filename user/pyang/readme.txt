@@ -1,5 +1,5 @@
-Author: Pengliang Yang, Xi'an Jiatong Universtiy, UT Austin
-Email: 	ypl.2100@gmail.com
+Author: Pengliang Yang, Univeristy Joseph Fourier, Grenoble
+Email: 	ypl.2100@gmail.com; pengliang.yang@ujf-grenoble.fr
 
 =================================================================
 Preamble: This readme files is committed to explain my programs. 
@@ -158,7 +158,7 @@ Postscript:
 I was pursuing my PhD degree in Xi'an Jiaotong University, China. During 
 the PhD program, I was sponsored by China Scholarship Council (SCC) to 
 do one year visiting research at The University of Texas at Austin, US.
-I coded a lot of matlab to validate my algorithms and begin my C/C++ and 
+I coded a lot of matlab to validate my algorithms and began my C/C++ and 
 CUDA. In UT Austin, I learned MPI and OpenMP to do parallel programming.
 Since June 1, 2015, I moved to University Joseph Fourier-Grenoble, where
 I was requested to do all programming with Fortran. Thus, to compile my codes,
