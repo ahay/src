@@ -1,5 +1,13 @@
 /* Plot impulse responses in 2 dimensions */
 /*
+ *  This routine getpars for c11, c13, c33, c55, c66, and title
+ *   and outputs vplot for a Graph of group velocity and the
+ *   dispersion relation for P, Sh, and Sv.
+ *  Each of these graphs also have plotted in a dotted line their elliptic
+ *   approximation. The graphs are normalized by vertical P elastic constant,
+ *   unless norm is specified, in which case they are normalized by that.
+ */
+/*
   Copyright (C) 1991 The Board of Trustees of Stanford University
   
   This program is free software; you can redistribute it and/or modify
@@ -16,14 +24,6 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-/*
- *  This routine getpars for c11, c13, c33, c55, c66, and title
- *   and outputs vplot for a Graph of group velocity and the
- *   dispersion relation for P, Sh, and Sv.
- *  Each of these graphs also have plotted in a dotted line their elliptic
- *   approximation. The graphs are normalized by vertical P elastic constant,
- *   unless norm is specified, in which case they are normalized by that.
- */
 #include <rsf.h>
 #include <rsfplot.h>
 

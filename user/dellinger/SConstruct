@@ -3,9 +3,9 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-vr vrtest
+vr vrtest vr3d
 '''
-# vr3d
+
 
 
 try:  # distributed version
@@ -24,6 +24,8 @@ env.Prepend(CPPPATH=['../../include'],
                   env.get('DYNLIB','')+'rsf'])
 env['PROGPREFIX'] = 'vp'
 
+lapack = env.get('LAPACK')
+
 for source in src:
     inc = env.RSF_Include(source,prefix='')
     obj = env.StaticObject(source)
@@ -33,7 +35,10 @@ mains = Split(progs)
 for prog in mains:
     sources = ['M' + prog]
     bldutil.depends(env,sources,'M'+prog)
-    prog = env.Program(prog,map(lambda x: x + '.c',sources))
+    if lapack or not prog in Split('vr3d'):
+        prog = env.Program(prog,map(lambda x: x + '.c',sources))
+    else:
+        prog = env.RSF_Place('sf'+prog,None,var='LAPACK',package='lapack')
     if root:
         env.Install(bindir,prog)
 

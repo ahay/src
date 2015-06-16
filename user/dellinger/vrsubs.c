@@ -22,6 +22,7 @@
 
 #include "vrsubs.h"
 #include "rot.h"
+#include "christof.h"
 
 /*
  * How much to perturb when taking numerical derivatives.
@@ -135,9 +136,7 @@ void phaseslo (const double *cc, double xx, double yy, double zz, double *pslo)
 #define	CHRIS(A,B)  chris[3*(A)+(B)]
     double          chris[3 * 3];
 
-
-    error = 0;
-    impulse_ (cc, &xx, &yy, &zz, pvelret, chris, part, &error);
+    error = impulse (cc, xx, yy, zz, pvelret, chris, part);
 
     if (error)
     {
