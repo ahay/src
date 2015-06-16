@@ -110,16 +110,16 @@ program mexwell_direct_backward
      call window2d(v0, p, nz, nx, nb)
      call rsf_write(Fw1,v0)
 
-     call step_forward(p, vz, vx, vv, rho, eta, dt, idz, idx, nzpad, nxpad)
+     call step_forward(.true.,p, vz, vx, vv, rho, eta, dt, idz, idx, nzpad, nxpad)
      call add_sources(p, eta, rho, vv, dt, wlt(it), sz, sx, nzpad, nxpad)
 
      ! apply sponge ABC
      call apply_sponge(p,bndr,nz,nx,nb)
      call apply_sponge(vz,bndr,nz,nx,nb)
      call apply_sponge(vx,bndr,nz,nx,nb)
-     ! save the boundaries
-     call boundary_rw(.true.,p,bndrtb(:,:,:,it),bndrlr(:,:,:,it),nz,nx,nb)
 
+     ! save the boundaries
+     !call boundary_rw(.true.,p,bndrtb(:,:,:,it),bndrlr(:,:,:,it),nz,nx,nb)
   enddo
 
   !backward reconstruction
@@ -129,10 +129,10 @@ program mexwell_direct_backward
      call rsf_write(Fw2,v0)
 
      !read the saved boundaries into p
-     call boundary_rw(.false.,p,bndrtb(:,:,:,it),bndrlr(:,:,:,it),nz,nx,nb)
+     !call boundary_rw(.false.,p,bndrtb(:,:,:,it),bndrlr(:,:,:,it),nz,nx,nb)
      
      call add_sources(p, eta, rho, vv, -dt, wlt(it), sz, sx, nzpad, nxpad)
-     call step_forward(p, vz, vx, vv, rho, eta, -dt, idz, idx, nzpad, nxpad)
+     call step_forward(.false.,p, vz, vx, vv, rho, eta, -dt, idz, idx, nzpad, nxpad)
   enddo
 
   deallocate(wlt)
@@ -202,12 +202,13 @@ subroutine window2d(tgt, src, nz, nx, nb)
 end subroutine window2d
 
 !-------------------------------------------------------------------------------
-subroutine step_forward(p, vz, vx, vv, rho, eta, dt, idz, idx, nzpad, nxpad)
+subroutine step_forward(forw, p, vz, vx, vv, rho, eta, dt, idz, idx, nzpad, nxpad)
   implicit none
 
   integer::i1, i2
   real::tmp,diff1,diff2,tau
 
+  logical::forw
   integer:: nzpad, nxpad
   real::idz,idx,dt
   real,dimension(nzpad,nxpad)::p, vz, vx, vv, rho, eta
@@ -216,30 +217,54 @@ subroutine step_forward(p, vz, vx, vv, rho, eta, dt, idz, idx, nzpad, nxpad)
   real,parameter::c2=-0.079752604166667
   real,parameter::c3=+0.009570312500000
   real,parameter::c4=-0.000697544642857
-
-  do i2=4,nxpad-4
-     do i1=4,nzpad-4
-        diff1=c1*(p(i1+1,i2)-p(i1,i2))+c2*(p(i1+2,i2)-p(i1-1,i2)) &
-             +c3*(p(i1+3,i2)-p(i1-2,i2))+c4*(p(i1+4,i2)-p(i1-3,i2))
-        diff2=c1*(p(i1,i2+1)-p(i1,i2))+c2*(p(i1,i2+2)-p(i1,i2-1)) &
-             +c3*(p(i1,i2+3)-p(i1,i2-2))+c4*(p(i1,i2+4)-p(i1,i2-3))
-        vz(i1,i2)=vz(i1,i2)-dt*idz*diff1/rho(i1,i2)
-        vx(i1,i2)=vx(i1,i2)-dt*idx*diff2/rho(i1,i2)
+  if(forw) then
+     do i2=4,nxpad-4
+        do i1=4,nzpad-4
+           diff1=c1*(p(i1+1,i2)-p(i1,i2))+c2*(p(i1+2,i2)-p(i1-1,i2)) &
+                +c3*(p(i1+3,i2)-p(i1-2,i2))+c4*(p(i1+4,i2)-p(i1-3,i2))
+           diff2=c1*(p(i1,i2+1)-p(i1,i2))+c2*(p(i1,i2+2)-p(i1,i2-1)) &
+                +c3*(p(i1,i2+3)-p(i1,i2-2))+c4*(p(i1,i2+4)-p(i1,i2-3))
+           vz(i1,i2)=vz(i1,i2)-dt*idz*diff1/rho(i1,i2)
+           vx(i1,i2)=vx(i1,i2)-dt*idx*diff2/rho(i1,i2)
+        enddo
      enddo
-  enddo
 
-  do i2=5,nxpad-3
-     do i1=5,nzpad-3
-        tmp=vv(i1,i2)
-        tmp=rho(i1,i2)*tmp*tmp
-	tau=eta(i1,i2)/tmp
-        diff1=c1*(vz(i1,i2)-vz(i1-1,i2))+c2*(vz(i1+1,i2)-vz(i1-2,i2)) &
-             +c3*(vz(i1+2,i2)-vz(i1-1,i2))+c4*(vz(i1+3,i2)-vz(i1-2,i2))
-        diff2=c1*(vx(i1,i2)-vx(i1,i2-1))+c2*(vx(i1,i2+1)-vx(i1,i2-2)) &
-             +c3*(vx(i1,i2+2)-vx(i1,i2-3))+c4*(vx(i1,i2+3)-vx(i1,i2-4))
-        p(i1,i2)=((1-0.5*dt/tau)*p(i1,i2)-dt*tmp*(idz*diff1+idx*diff2))/(1.+0.5*dt/tau)
+     do i2=5,nxpad-3
+        do i1=5,nzpad-3
+           tmp=vv(i1,i2)
+           tmp=rho(i1,i2)*tmp*tmp
+           tau=eta(i1,i2)/tmp
+           diff1=c1*(vz(i1,i2)-vz(i1-1,i2))+c2*(vz(i1+1,i2)-vz(i1-2,i2)) &
+                +c3*(vz(i1+2,i2)-vz(i1-1,i2))+c4*(vz(i1+3,i2)-vz(i1-2,i2))
+           diff2=c1*(vx(i1,i2)-vx(i1,i2-1))+c2*(vx(i1,i2+1)-vx(i1,i2-2)) &
+                +c3*(vx(i1,i2+2)-vx(i1,i2-3))+c4*(vx(i1,i2+3)-vx(i1,i2-4))
+           p(i1,i2)=((1-0.5*dt/tau)*p(i1,i2)-dt*tmp*(idz*diff1+idx*diff2))/(1.+0.5*dt/tau)
+        enddo
      enddo
-  enddo
+  else
+     do i2=5,nxpad-3
+        do i1=5,nzpad-3
+           tmp=vv(i1,i2)
+           tmp=rho(i1,i2)*tmp*tmp
+           tau=eta(i1,i2)/tmp
+           diff1=c1*(vz(i1,i2)-vz(i1-1,i2))+c2*(vz(i1+1,i2)-vz(i1-2,i2)) &
+                +c3*(vz(i1+2,i2)-vz(i1-1,i2))+c4*(vz(i1+3,i2)-vz(i1-2,i2))
+           diff2=c1*(vx(i1,i2)-vx(i1,i2-1))+c2*(vx(i1,i2+1)-vx(i1,i2-2)) &
+                +c3*(vx(i1,i2+2)-vx(i1,i2-3))+c4*(vx(i1,i2+3)-vx(i1,i2-4))
+           p(i1,i2)=((1-0.5*dt/tau)*p(i1,i2)-dt*tmp*(idz*diff1+idx*diff2))/(1.+0.5*dt/tau)
+        enddo
+     enddo
+     do i2=4,nxpad-4
+        do i1=4,nzpad-4
+           diff1=c1*(p(i1+1,i2)-p(i1,i2))+c2*(p(i1+2,i2)-p(i1-1,i2)) &
+                +c3*(p(i1+3,i2)-p(i1-2,i2))+c4*(p(i1+4,i2)-p(i1-3,i2))
+           diff2=c1*(p(i1,i2+1)-p(i1,i2))+c2*(p(i1,i2+2)-p(i1,i2-1)) &
+                +c3*(p(i1,i2+3)-p(i1,i2-2))+c4*(p(i1,i2+4)-p(i1,i2-3))
+           vz(i1,i2)=vz(i1,i2)-dt*idz*diff1/rho(i1,i2)
+           vx(i1,i2)=vx(i1,i2)-dt*idx*diff2/rho(i1,i2)
+        enddo
+     enddo
+  endif
   return
 end subroutine step_forward
 

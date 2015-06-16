@@ -19,14 +19,14 @@ program mexwell_sponge2_backward
   use rsf
   implicit none
 
-  logical :: order1
+  logical :: order1,attenuating
   integer :: ib, it, nt, nz, nx, nb, sx, sz, nxpad, nzpad
   real    :: dt, dz, dx, fm, tmp, idx, idz
   real, parameter::PI=3.14159265
   real, dimension (:),   allocatable :: wlt,bndr
   real, dimension (:,:), allocatable :: v0, vv, rho, eta
   real, dimension (:,:), allocatable :: p, vz, vx
-  real,dimension(:,:,:,:),allocatable::bndrtbp,bndrlrp,bndrtbvz,bndrlrvx
+  real,dimension(:,:,:,:),allocatable:: bndrtb,bndrlr
   type(file) :: Fv, Fw1, Fw2, Frho, Feta  ! I/O files 
 
   call sf_init() ! initialize Madagascar
@@ -49,6 +49,7 @@ program mexwell_sponge2_backward
   call from_par("dt", dt, 0.001) ! time sampling interval
   call from_par("fm", fm, 20.) ! domainant frequency for ricker wavelet
   call from_par("order1",order1,.true.) ! 1st order or 2nd order accuracy
+  call from_par("attenuating",attenuating,.true.) ! add attenuation or not
 
   call to_par(Fw1,"n1",nz)
   call to_par(Fw1,"n2",nx)
@@ -82,10 +83,8 @@ program mexwell_sponge2_backward
   allocate(p(nzpad,nxpad))
   allocate(vz(nzpad,nxpad))
   allocate(vx(nzpad,nxpad))
-  allocate(bndrtbp(4,nx,2,nt))
-  allocate(bndrlrp(nz,4,2,nt))
-  allocate(bndrtbvz(4,nx,2,nt))
-  allocate(bndrlrvx(nz,4,2,nt))
+  allocate(bndrtb(8,nx,2,nt))
+  allocate(bndrlr(nz,8,2,nt))
 
   !generate ricker wavelet with a delay
   do it=1,nt  
@@ -114,15 +113,20 @@ program mexwell_sponge2_backward
      call rsf_write(Fw1,v0)
 
      if (order1) then ! scheme 1, 1st order accuracy, default
-        call step_forward(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
-        call add_attenuation(p, eta, rho, vv, dt, nzpad, nxpad)
+        call step_forward(.true.,p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
+        if(attenuating) then
+           call add_attenuation(p, eta, rho, vv, dt, nzpad, nxpad)
+        endif
      else
-        call add_attenuation(p, eta, rho, vv, 0.5*dt, nzpad, nxpad)
-        call step_forward(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
-        call add_attenuation(p, eta, rho, vv, 0.5*dt, nzpad, nxpad)
+        if(attenuating) then
+           call add_attenuation(p, eta, rho, vv, 0.5*dt, nzpad, nxpad)
+        endif
+        call step_forward(.true.,p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
+        if(attenuating) then
+           call add_attenuation(p, eta, rho, vv, 0.5*dt, nzpad, nxpad)
+        endif
      endif
-
-     call add_sources(p, eta, rho, vv, dt, wlt(it), sz, sx, nzpad, nxpad)
+     call add_sources(attenuating,p, eta, rho, vv, dt, wlt(it), sz, sx, nzpad, nxpad)
 
      ! apply sponge ABC
      call apply_sponge(p,bndr,nz,nx,nb)
@@ -130,21 +134,31 @@ program mexwell_sponge2_backward
      call apply_sponge(vx,bndr,nz,nx,nb)
 
      !save the boundaries
-     call boundary_rw_p(.true.,p,bndrtbp,bndrlrp,nz,nx,nb)
-     call boundary_rw_v(.true.,vz,vx,bndrtbvz,bndrlrvx,nz,nx,nb)
+     !call boundary_rw(.true.,bndrtb,bndrlr,p,nz,nx,nb)
   enddo
 
   !backward reconstruction
   do it=nt,1,-1
-     call boundary_rw_p(.false.,p,bndrtbp,bndrlrp,nz,nx,nb)
-     call boundary_rw_v(.false.,vz,vx,bndrtbvz,bndrlrvx,nz,nx,nb)
+     !call boundary_rw(.false.,bndrtb,bndrlr,p,nz,nx,nb)
 
      call window2d(v0, p, nz, nx, nb)
      call rsf_write(Fw2,v0)
 
-     call add_sources(p, eta, rho, vv, -dt, wlt(it), sz, sx, nzpad, nxpad)
-     call add_attenuation(p, eta, rho, vv, -dt, nzpad, nxpad)
-     call step_forward(p, vz, vx, vv, rho, -dt, idz, idx, nzpad, nxpad)
+     call add_sources(attenuating,p, eta, rho, vv, dt, -wlt(it), sz, sx, nzpad, nxpad)
+     if (order1) then ! scheme 1, 1st order accuracy, default
+        if(attenuating) then
+           call add_attenuation(p, eta, rho, vv, -dt, nzpad, nxpad)
+        endif
+        call step_forward(.false.,p, vz, vx, vv, rho, -dt, idz, idx, nzpad, nxpad)
+     else
+        if (attenuating) then 
+           call add_attenuation(p, eta, rho, vv, -0.5*dt, nzpad, nxpad)
+        endif
+        call step_forward(.false.,p, vz, vx, vv, rho, -dt, idz, idx, nzpad, nxpad)
+        if (attenuating) then
+           call add_attenuation(p, eta, rho, vv, -0.5*dt, nzpad, nxpad)
+        endif
+     endif
   enddo
 
   deallocate(wlt)
@@ -156,10 +170,8 @@ program mexwell_sponge2_backward
   deallocate(p)
   deallocate(vz)
   deallocate(vx)  
-  deallocate(bndrtbp)
-  deallocate(bndrlrp)
-  deallocate(bndrtbvz)
-  deallocate(bndrlrvx)
+  deallocate(bndrtb)
+  deallocate(bndrlr)
 
   call exit(0)
 end program mexwell_sponge2_backward
@@ -216,9 +228,10 @@ subroutine window2d(tgt, src, nz, nx, nb)
 end subroutine window2d
 
 !-------------------------------------------------------------------------------
-subroutine step_forward(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
+subroutine step_forward(forw,p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
   implicit none
 
+  logical::forw
   integer::i1, i2
   real::tmp,diff1,diff2
 
@@ -230,29 +243,53 @@ subroutine step_forward(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
   real,parameter::c2=-0.079752604166667
   real,parameter::c3=+0.009570312500000
   real,parameter::c4=-0.000697544642857
-
-  do i2=4,nxpad-4
-     do i1=4,nzpad-4
-        diff1=c1*(p(i1+1,i2)-p(i1,i2))+c2*(p(i1+2,i2)-p(i1-1,i2)) &
-             +c3*(p(i1+3,i2)-p(i1-2,i2))+c4*(p(i1+4,i2)-p(i1-3,i2))
-        diff2=c1*(p(i1,i2+1)-p(i1,i2))+c2*(p(i1,i2+2)-p(i1,i2-1)) &
-             +c3*(p(i1,i2+3)-p(i1,i2-2))+c4*(p(i1,i2+4)-p(i1,i2-3))
-        vz(i1,i2)=vz(i1,i2)-dt*idz*diff1/rho(i1,i2)
-        vx(i1,i2)=vx(i1,i2)-dt*idx*diff2/rho(i1,i2)
+  
+  if(forw) then
+     do i2=4,nxpad-4
+        do i1=4,nzpad-4
+           diff1=c1*(p(i1+1,i2)-p(i1,i2))+c2*(p(i1+2,i2)-p(i1-1,i2)) &
+                +c3*(p(i1+3,i2)-p(i1-2,i2))+c4*(p(i1+4,i2)-p(i1-3,i2))
+           diff2=c1*(p(i1,i2+1)-p(i1,i2))+c2*(p(i1,i2+2)-p(i1,i2-1)) &
+                +c3*(p(i1,i2+3)-p(i1,i2-2))+c4*(p(i1,i2+4)-p(i1,i2-3))
+           vz(i1,i2)=vz(i1,i2)-dt*idz*diff1/rho(i1,i2)
+           vx(i1,i2)=vx(i1,i2)-dt*idx*diff2/rho(i1,i2)
+        enddo
      enddo
-  enddo
 
-  do i2=5,nxpad-3
-     do i1=5,nzpad-3
-        tmp=vv(i1,i2)
-        tmp=rho(i1,i2)*tmp*tmp
-        diff1=c1*(vz(i1,i2)-vz(i1-1,i2))+c2*(vz(i1+1,i2)-vz(i1-2,i2)) &
-             +c3*(vz(i1+2,i2)-vz(i1-1,i2))+c4*(vz(i1+3,i2)-vz(i1-2,i2))
-        diff2=c1*(vx(i1,i2)-vx(i1,i2-1))+c2*(vx(i1,i2+1)-vx(i1,i2-2)) &
-             +c3*(vx(i1,i2+2)-vx(i1,i2-3))+c4*(vx(i1,i2+3)-vx(i1,i2-4))
-        p(i1,i2)=p(i1,i2)-dt*tmp*(idz*diff1+idx*diff2)
+     do i2=5,nxpad-3
+        do i1=5,nzpad-3
+           tmp=vv(i1,i2)
+           tmp=rho(i1,i2)*tmp*tmp
+           diff1=c1*(vz(i1,i2)-vz(i1-1,i2))+c2*(vz(i1+1,i2)-vz(i1-2,i2)) &
+                +c3*(vz(i1+2,i2)-vz(i1-1,i2))+c4*(vz(i1+3,i2)-vz(i1-2,i2))
+           diff2=c1*(vx(i1,i2)-vx(i1,i2-1))+c2*(vx(i1,i2+1)-vx(i1,i2-2)) &
+                +c3*(vx(i1,i2+2)-vx(i1,i2-3))+c4*(vx(i1,i2+3)-vx(i1,i2-4))
+           p(i1,i2)=p(i1,i2)-dt*tmp*(idz*diff1+idx*diff2)
+        enddo
      enddo
-  enddo
+  else
+     do i2=5,nxpad-3
+        do i1=5,nzpad-3
+           tmp=vv(i1,i2)
+           tmp=rho(i1,i2)*tmp*tmp
+           diff1=c1*(vz(i1,i2)-vz(i1-1,i2))+c2*(vz(i1+1,i2)-vz(i1-2,i2)) &
+                +c3*(vz(i1+2,i2)-vz(i1-1,i2))+c4*(vz(i1+3,i2)-vz(i1-2,i2))
+           diff2=c1*(vx(i1,i2)-vx(i1,i2-1))+c2*(vx(i1,i2+1)-vx(i1,i2-2)) &
+                +c3*(vx(i1,i2+2)-vx(i1,i2-3))+c4*(vx(i1,i2+3)-vx(i1,i2-4))
+           p(i1,i2)=p(i1,i2)-dt*tmp*(idz*diff1+idx*diff2)
+        enddo
+     enddo
+     do i2=4,nxpad-4
+        do i1=4,nzpad-4
+           diff1=c1*(p(i1+1,i2)-p(i1,i2))+c2*(p(i1+2,i2)-p(i1-1,i2)) &
+                +c3*(p(i1+3,i2)-p(i1-2,i2))+c4*(p(i1+4,i2)-p(i1-3,i2))
+           diff2=c1*(p(i1,i2+1)-p(i1,i2))+c2*(p(i1,i2+2)-p(i1,i2-1)) &
+                +c3*(p(i1,i2+3)-p(i1,i2-2))+c4*(p(i1,i2+4)-p(i1,i2-3))
+           vz(i1,i2)=vz(i1,i2)-dt*idz*diff1/rho(i1,i2)
+           vx(i1,i2)=vx(i1,i2)-dt*idx*diff2/rho(i1,i2)
+        enddo
+     enddo
+  endif
   return
 end subroutine step_forward
 
@@ -280,19 +317,25 @@ subroutine add_attenuation(p, eta, rho, vv, dt, nzpad, nxpad)
 end subroutine add_attenuation
 
 !-------------------------------------------------------------------------------
-subroutine add_sources(p, eta, rho, vv, dt, wlt, sz, sx, nzpad, nxpad)
+subroutine add_sources(attenuating, p, eta, rho, vv, dt, wlt, sz, sx, nzpad, nxpad)
   implicit none
 
+  logical::attenuating
   integer::sz,sx,nzpad, nxpad
   real::dt,wlt
   real,dimension(nzpad, nxpad)::p, eta, rho, vv
 
   real::a, tau
 
-  a=rho(sz,sx)*vv(sz,sx)*vv(sz,sx)
-  tau=eta(sz,sx)/a
-  a=exp(-dt/tau)
-  p(sz,sx)=p(sz,sx)+tau*(1.-a)*wlt
+  if(attenuating) then
+     a=rho(sz,sx)*vv(sz,sx)*vv(sz,sx)
+     tau=eta(sz,sx)/a
+     a=exp(-dt/tau)
+     p(sz,sx)=p(sz,sx)+tau*(1.-a)*wlt
+  else
+     p(sz,sx)=p(sz,sx)+wlt
+  endif
+  
 
   return
 end subroutine add_sources
@@ -331,83 +374,43 @@ end subroutine apply_sponge
 
 
 !-------------------------------------------------------------------------------
-subroutine boundary_rw_p(p2b, p,bndrtb,bndrlr,nz,nx,nb)
+subroutine boundary_rw(v2b,bndrtb,bndrlr,p,nz,nx,nb)
   implicit none
   
-  logical::p2b !p to bourndary or reverse
+  logical::v2b !p to bourndary or reverse
   integer::nz,nx,nb
-  real::p(nz+2*nb,nx+2*nb),bndrtb(4,nx,2),bndrlr(nz,4,2)
-
-  integer::i1,i2
-  
-  if(p2b) then !p to bourndary
-     do i2=1,nx
-        do i1=1,4
-           bndrtb(i1,i2,1)=p(nb-i1+1,i2+nb) !top
-           bndrtb(i1,i2,2)=p(nb+nz+i1,i2+nb) !bottom
-        enddo
-     enddo
-
-     do i2=1,4
-        do i1=1,nz
-           bndrlr(i1,i2,1)=p(i1+nb,nb-i2+1) !left
-           bndrlr(i1,i2,2)=p(i1+nb,nb+nz+i2) !right
-        enddo
-     enddo
-  else !boundary to p
-     do i2=1,nx
-        do i1=1,4
-           p(nb-i1+1,i2+nb)=bndrtb(i1,i2,1) !top
-           p(nb+nz+i1,i2+nb)=bndrtb(i1,i2,2)!bottom
-        enddo
-     enddo
-
-     do i2=1,4
-        do i1=1,nz
-           p(i1+nb,nb-i2+1)=bndrlr(i1,i2,1) !left
-           p(i1+nb,nb+nz+i2)=bndrlr(i1,i2,2) !right
-        enddo
-     enddo
-  endif
-end subroutine boundary_rw_p
-
-!-------------------------------------------------------------------------------
-subroutine boundary_rw_v(v2b,vz,vx,bndrtb,bndrlr,nz,nx,nb)
-  implicit none
-  
-  logical::v2b !v to bourndary or reverse
-  integer::nz,nx,nb
-  real::vz(nz+2*nb,nx+2*nb),vx(nz+2*nb,nx+2*nb),bndrtb(4,nx,2),bndrlr(nz,4,2)
+  real::p(nz+2*nb,nx+2*nb)
+  real::bndrtb(8,nx,2),bndrlr(nz,8,2)
 
   integer::i1,i2
   
   if(v2b) then !v to bourndary
      do i2=1,nx
-        do i1=1,4
-           bndrtb(i1,i2,1)=vz(nb-i1+1,i2+nb) !top
-           bndrtb(i1,i2,2)=vz(nb+nz+i1,i2+nb) !bottom
+        do i1=1,8
+           bndrtb(i1,i2,1)=p(nb+i1-4,i2+nb) !top
+           bndrtb(i1,i2,2)=p(nb+nz+i1-4,i2+nb) !bottom
         enddo
      enddo
 
-     do i2=1,4
+     do i2=1,8
         do i1=1,nz
-           bndrlr(i1,i2,1)=vx(i1+nb,nb-i2+1) !left
-           bndrlr(i1,i2,2)=vx(i1+nb,nb+nz+i2) !right
+           bndrlr(i1,i2,1)=p(i1+nb,nb+i2+4) !left
+           bndrlr(i1,i2,2)=p(i1+nb,nb+nz+i2-4) !right
         enddo
      enddo
   else !boundary to v
      do i2=1,nx
-        do i1=1,4
-           vz(nb-i1+1,i2+nb)=bndrtb(i1,i2,1) !top
-           vz(nb+nz+i1,i2+nb)=bndrtb(i1,i2,2)!bottom
+        do i1=1,8
+           p(nb+i1-4,i2+nb)=bndrtb(i1,i2,1) !top
+           p(nb+nz+i1-4,i2+nb)=bndrtb(i1,i2,2)!bottom
         enddo
      enddo
 
-     do i2=1,4
+     do i2=1,8
         do i1=1,nz
-           vx(i1+nb,nb-i2+1)=bndrlr(i1,i2,1) !left
-           vx(i1+nb,nb+nz+i2)=bndrlr(i1,i2,2) !right
+           p(i1+nb,nb+i2-4)=bndrlr(i1,i2,1) !left
+           p(i1+nb,nb+nz+i2-4)=bndrlr(i1,i2,2) !right
         enddo
      enddo
   endif
-end subroutine boundary_rw_v
+end subroutine boundary_rw
