@@ -25,7 +25,7 @@ program mexwell_direct_backward
   real, dimension (:),   allocatable :: wlt,bndr
   real, dimension (:,:), allocatable :: v0, vv, rho, eta
   real, dimension (:,:), allocatable :: p, vz, vx
-  real, dimension(:,:,:,:),allocatable :: bndrtb,bndrlr
+  real, dimension(:,:,:,:),allocatable :: bvz,bvx
   
   type(file) :: Fv, Frho, Feta, Fw1, Fw2  ! I/O files 
 
@@ -81,8 +81,8 @@ program mexwell_direct_backward
   allocate(p(nzpad,nxpad))
   allocate(vz(nzpad,nxpad))
   allocate(vx(nzpad,nxpad))
-  allocate(bndrtb(7,nx,2,nt))
-  allocate(bndrlr(nz,7,2,nt))
+  allocate(bvz(8,nx,2,nt))
+  allocate(bvx(nz,8,2,nt))
 
   !generate ricker wavelet with a delay
   do it=1,nt  
@@ -119,17 +119,16 @@ program mexwell_direct_backward
      call apply_sponge(vx,bndr,nz,nx,nb)
 
      ! save the boundaries
-     !call boundary_rw(.true.,p,bndrtb(:,:,:,it),bndrlr(:,:,:,it),nz,nx,nb)
+     call boundary_rw(.true.,bvz(:,:,:,it),bvx(:,:,:,it),vz,vx,nz,nx,nb)
   enddo
 
   !backward reconstruction
   do it=nt,1,-1
-
      call window2d(v0, p, nz, nx, nb)
      call rsf_write(Fw2,v0)
 
      !read the saved boundaries into p
-     !call boundary_rw(.false.,p,bndrtb(:,:,:,it),bndrlr(:,:,:,it),nz,nx,nb)
+     call boundary_rw(.false.,bvz(:,:,:,it),bvx(:,:,:,it),vz,vx,nz,nx,nb)
      
      call add_sources(p, eta, rho, vv, -dt, wlt(it), sz, sx, nzpad, nxpad)
      call step_forward(.false.,p, vz, vx, vv, rho, eta, -dt, idz, idx, nzpad, nxpad)
@@ -144,8 +143,8 @@ program mexwell_direct_backward
   deallocate(p)
   deallocate(vz)
   deallocate(vx)  
-  deallocate(bndrtb)
-  deallocate(bndrlr)
+  deallocate(bvz)
+  deallocate(bvx)
 
   call exit(0)
 end program mexwell_direct_backward
@@ -318,42 +317,42 @@ subroutine apply_sponge(p,bndr,nz,nx,nb)
   return
 end subroutine apply_sponge
 
+
 !-------------------------------------------------------------------------------
-subroutine boundary_rw(p2b, p,bndrtb,bndrlr,nz,nx,nb)
+subroutine boundary_rw(v2b,bvz,bvx,vz,vx,nz,nx,nb)
   implicit none
   
-  logical::p2b !p to bourndary or reverse
+  logical::v2b !v to bourndary or reverse
   integer::nz,nx,nb
-  real::p(nz+2*nb,nx+2*nb),bndrtb(7,nx,2),bndrlr(nz,7,2)
+  real,dimension(nz+2*nb,nx+2*nb)::vz,vx
+  real::bvz(8,nx,2),bvx(nz,8,2)
 
   integer::i1,i2
   
-  if(p2b) then !p to bourndary
+  if(v2b) then !v to bourndary
      do i2=1,nx
-        do i1=1,7
-           bndrtb(i1,i2,1)=p(nb-i1+1,i2+nb) !top
-           bndrtb(i1,i2,2)=p(nb+nz+i1,i2+nb) !bottom
+        do i1=1,8
+           bvz(i1,i2,1)=vz(i1+nb-4,i2+nb)
+           bvz(i1,i2,2)=vz(i1+nz+nb-4,i2+nb)
         enddo
      enddo
-
-     do i2=1,7
-        do i1=1,nz
-           bndrlr(i1,i2,1)=p(i1+nb,nb-i2+1) !left
-           bndrlr(i1,i2,2)=p(i1+nb,nb+nz+i2) !right
+     do i1=1,nz
+        do i2=1,8
+           bvx(i1,i2,1)=vx(i1+nb,i2+nb-4)
+           bvx(i1,i2,2)=vx(i1+nb,i2+nz+nb-4)
         enddo
      enddo
-  else !boundary to p
+  else !boundary to v
      do i2=1,nx
-        do i1=1,7
-           p(nb-i1+1,i2+nb)=bndrtb(i1,i2,1) !top
-           p(nb+nz+i1,i2+nb)=bndrtb(i1,i2,2)!bottom
+        do i1=1,8
+           vz(i1+nb-4,i2+nb)=bvz(i1,i2,1)
+           vz(i1+nz+nb-4,i2+nb)=bvz(i1,i2,2)
         enddo
      enddo
-
-     do i2=1,7
-        do i1=1,nz
-           p(i1+nb,nb-i2+1)=bndrlr(i1,i2,1) !left
-           p(i1+nb,nb+nz+i2)=bndrlr(i1,i2,2) !right
+     do i1=1,nz
+        do i2=1,8
+           vx(i1+nb,i2+nb-4)=bvx(i1,i2,1)
+           vx(i1+nb,i2+nz+nb-4)=bvx(i1,i2,2)
         enddo
      enddo
   endif
