@@ -1822,6 +1822,9 @@ pkg['c++'] = {'fedora':'gcc-c++',
 def cxx(context):
     context.Message("checking for C++ compiler ... ")
     CXX = context.env.get('CXX')
+    if plat['OS'] == 'darwin' and CXX == 'CC':
+        CXX = 'c++'
+        context.env['CXX'] = CXX
     api = context.env['API']
     if not CXX:
         context.Result(context_failure)
