@@ -1,3 +1,3 @@
-uses=['sfdd', 'sffold', 'sfgrey', 'sfbyte', 'sfgrey3', 'sfintbin3', 'sfstack', 'sfwindow', 'sflinear', 'sfgraph', 'sfspray', 'sfnmo', 'sfcat']
+uses=['sfintbin3', 'sfwindow', 'sfdd', 'sfstack', 'sfgrey', 'sflinear', 'sfgraph', 'sfspray', 'sfnmo', 'sfcat', 'sfbyte', 'sfgrey3', 'sfwiggle', 'sfvscan']
 data=[]
-size= 93201760872
+size= 93104209656

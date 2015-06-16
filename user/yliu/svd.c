@@ -46,7 +46,7 @@ void svdclose( void )
     free(w);
 }
 
-void brmul(float *a,float *b,int m,int n,int k,float *c) 
+void brmul(const float *a, const float *b,int m,int n,int k,float *c) 
 /*<SVD reconstruction>*/
 {
     int i,j,l,u;

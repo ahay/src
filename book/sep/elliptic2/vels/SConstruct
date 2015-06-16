@@ -37,37 +37,73 @@ c66=106.
 '''
 
 Plot('file1',None,'vr %s norm=250 only=SV vrscale=2.' % greenR,prefix=plprefix)
-Plot('plot1','file1 notate3','Overlay',vppen='scale=1')
+Plot('plot1','file1 notate3','Overlay')
 
 Plot('file2',None,'vr %s norm=250 only=SV vrscale=2.' % green,prefix=plprefix)
-Plot('plot2','file2 notate3','Overlay',vppen='rotate=90 scale=1')
+Plot('plot2','file2 notate3','Overlay',vppen='rotate=90')
 
 Plot('tfile',None,'vrtest %s norm=250 groupscale=2. inc=.05 m=-1 which=1 francis=n invert=n' % green,
      prefix=plprefix)
-Plot('tfile1','tfile','Overlay',vppen='scale=1 fat=3')
+Plot('tfile1','tfile','Overlay',vppen='fat=3')
 Plot('tfile2',None,
      'vrtest %s norm=250 dash=.1 phasescale=2. inc=.05 m=-1 which=0 francis=y flip=y invert=n' % green,
      prefix=plprefix)
-Plot('plot3','tfile1 tfile2 notate3','Overlay',vppen='scale=1')
+Plot('plot3','tfile1 tfile2 notate3','Overlay')
 
 Result('verthoriz','plot1 plot2 plot3','SideBySideIso',
-       vppen='scale=1 size=a gridnum=3,1 gridsize=3.7,3.7 xcenter=0 ycenter=0')
+       vppen='size=a gridnum=3,1 gridsize=3.7,3.7 xcenter=0 ycenter=0')
 
-Plot('pfile1',None,'vr %s norm=250 only=SVdisp vrscale=1.' % greenR,prefix=plprefix)
-Plot('pplot1','pfile1 notate3','Overlay',vppen='scale=1')
+Plot('phfile1',None,'vr %s norm=250 only=SVdisp vrscale=1.' % greenR,prefix=plprefix)
+Plot('phplot1','phfile1 notate3','Overlay')
 
-Plot('pfile2',None,'vr %s norm=250 only=SVdisp vrscale=1.' % green,prefix=plprefix)
-Plot('pplot2','pfile2 notate3','Overlay',vppen='rotate=90 scale=1')
+Plot('phfile2',None,'vr %s norm=250 only=SVdisp vrscale=1.' % green,prefix=plprefix)
+Plot('phplot2','phfile2 notate3','Overlay',vppen='rotate=90')
 
 Plot('ptfile',None,'vrtest %s norm=250 phasescale=.5 inc=.05 m=-1 which=0 francis=n invert=n' % green,
      prefix=plprefix)
-Plot('ptfile1','ptfile','Overlay',vppen='scale=1 fat=2')
+Plot('ptfile1','ptfile','Overlay',vppen='fat=2')
 Plot('ptfile2',None,
      'vrtest %s norm=250 phasescale=.5 dash=.1 inc=.05 m=-1 which=0 francis=y invert=n' % green,
      prefix=plprefix)
-Plot('pplot3','ptfile1 ptfile2 notate3','Overlay',vppen='scale=1')
+Plot('phplot3','ptfile1 ptfile2 notate3','Overlay')
 
-Result('verthoriz2','pplot1 pplot2 pplot3','SideBySideIso',
-       vppen='scale=1 size=a gridnum=3,1 gridsize=2.7,2.7 xcenter=0 ycenter=0')
+Result('verthoriz2','phplot1 phplot2 phplot3','SideBySideIso',
+       vppen='size=a gridnum=3,1 gridsize=2.7,2.7 xcenter=0 ycenter=0')
+
+Plot('gfile',None,'vrtest %s norm=250 groupscale=2. inc=.05 m=-1 which=1 francis=n invert=n' % green,
+     prefix=plprefix)
+Plot('gfile1','gfile','Overlay',vppen='fat=2')
+Plot('gfile2',None,
+     'vrtest %s norm=250 dash=.06 phasescale=2. inc=.05 m=-1 which=0 francis=y flip=y invert=n' % green,
+     prefix=plprefix)
+Plot('gplot1','gfile1 gfile2 notate3','Overlay')
+
+Plot('gfile3',None,
+     'vrtest %s norm=250 groupscale=2. dash=.06 inc=.05 m=-1 which=1 francis=y invert=n' % green,
+     prefix=plprefix)
+Plot('gplot2','gfile1 gfile3 notate3','Overlay')
+
+Result('compare','gplot1 gplot2','SideBySideIso',
+       vppen='size=a gridnum=3,1 gridsize=2.7,2.7 xcenter=0 ycenter=0')
+
+Plot('pfile',None,'vrtest %s norm=250 groupscale=2. inc=.05 m=1 which=1 francis=n invert=n' % green,
+     prefix=plprefix)
+Plot('pfile1','pfile','Overlay',vppen='fat=1')
+Plot('pfile2',None,
+     'vrtest %s norm=250 dash=.06 phasescale=2. inc=.05 m=1 which=0 francis=y flip=y invert=n' % green,
+     prefix=plprefix)
+Plot('pplot1','pfile1 pfile2 notate3','Overlay',vppen='scale=0.5')
+
+Plot('ppfile',None,
+     'vrtest %s norm=250 groupscale=2. inc=.05 m=1 which=1 francis=n invert=n' % green,
+     prefix=plprefix)
+Plot('ppfile1','ppfile','Overlay',vppen='fat=1')
+Plot('ppfile2',None,
+     'vrtest %s norm=250 groupscale=2. dash=.06 inc=.05 m=1 which=1 francis=y invert=n' % green,
+     prefix=plprefix)
+Plot('pplot2','ppfile1 ppfile2 notate3','Overlay',vppen='scale=0.5')
+
+Result('compare2','pplot1 pplot2','SideBySideIso',
+       vppen='size=a gridnum=3,1 gridsize=2.7,2.7 xcenter=0 ycenter=0')
 
 End()

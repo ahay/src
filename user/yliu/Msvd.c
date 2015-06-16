@@ -1,4 +1,4 @@
-/* Singular value decomposition 
+/* Singular value decomposition (SVD)
    Compute [U,O,V]=SVD(A), A=UOV, a little bit different from A=UoV' */
 /*
   Copyright (C) 2013 University of Texas at Austin

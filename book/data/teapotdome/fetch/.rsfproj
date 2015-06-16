@@ -1,3 +1,3 @@
-uses=['sfgrey', 'sfbyte', 'sfgrey3', 'sfsegyread', 'sfheaderattr', 'sfdd', 'sfheadermath', 'sfcmplx', 'sfdisfil', 'sfwindow', 'sfclip2']
-data=['teapot/final_stack.rsf', 'teapot/npr3_gathers.sgy', 'teapot/npr3_field.sgy', 'teapot/3dload_Teapot_Dome_3D.pdf', 'teapot/teapot_processing.pdf']
-size=  401094376
+uses=['sfgrey', 'sfbyte', 'sfgrey3', 'sfsegyread', 'sfheaderattr', 'sfwindow', 'sftahread', 'sftahnmo', 'sftahstack', 'sftahwrite', 'sfadd', 'sfcat', 'sftahmakeskey', 'sftahsort']
+data=['http://s3.amazonaws.com/teapot/final_stack.rsf', 'http://s3.amazonaws.com/teapot/npr3_gathers.sgy', 'http://s3.amazonaws.com/teapot/npr3_field.sgy', 'http://s3.amazonaws.com/teapot/3dload_Teapot_Dome_3D.pdf', 'http://s3.amazonaws.com/teapot/teapot_processing.pdf']
+size=  560217600

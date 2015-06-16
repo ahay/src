@@ -21,20 +21,19 @@
 #include "svd.h"
 #include "svddenoise.h"
 
-static float *a, *u, *v, *mid, *pxt;
 
-void svddenoise_lop(int m, int n, float pclip, float *x, float *y)
+void svd_denoise(int m, int n, float pclip, const float *x, float *y)
 /*< SVD denoise operator >*/
 {
     int i, j, max, ka;
     int nclip;
+    float *a, *u, *v, *mid;
     const double eps = 1.0e-5;
 
     a = sf_floatalloc(m*n);
     u = sf_floatalloc(m*m);
     v = sf_floatalloc(n*n);
     mid = sf_floatalloc(m*n);
-    pxt = sf_floatalloc(m*n);
 
     max = m > n ? m : n;
     ka = max +1;
@@ -54,17 +53,12 @@ void svddenoise_lop(int m, int n, float pclip, float *x, float *y)
 	} 
     }
     brmul(u,a,m,m,n,mid);                     
-    brmul(mid,v,m,n,n,pxt);   
-
-    for (i=0;i<(m*n);i++) {
-	y[i] = pxt[i];
-    }
+    brmul(mid,v,m,n,n,y);   
 
     free(a);
     free(u);
     free(v);
     free(mid);
-    free(pxt);
 }
 
 /* 	$Id$	 */

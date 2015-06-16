@@ -13,6 +13,8 @@ To the reproducible documents collection:
   (Liu, Chen, Wang, Liu, Wang, and Zhang)
 * sep/balance: Iterative least-square inversion for amplitude
   balancing (Berlioux and Harlan)
+* sep/elliptic2: The double-elliptic approximation in the group and
+  phase domains (Dellinger and Muir)
 
 To SCons:
 

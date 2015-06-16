@@ -2,8 +2,11 @@ from rsf.proj import *
 
 # SConscript('../fetch/SConstruct')
 
-Flow('gathers mask','../fetch/npr3_gathers.rsf ../fetch/npr3_gathers_hdr.rsf',
-     'intbin3 head=${SOURCES[1]} xkey=-1 mask=${TARGETS[1]}')
+Flow('gathers','../fetch/npr3_gathers.rsf ../fetch/npr3_gathers_hdr.rsf',
+     'intbin3 head=${SOURCES[1]} xkey=-1')
+
+Flow('offset mask','../fetch/npr3_gathers_hdr.rsf',
+     'window n1=1 f1=11 squeeze=n | intbin3 head=$SOURCE xkey=-1 mask=${TARGETS[1]} | dd type=float')
 
 Flow('fold','mask','dd type=float | stack axis=1 norm=n')
 
@@ -13,9 +16,6 @@ Result('fold',
        label1=Inline unit1= label2=Crossline
        ''')
 
-Flow('offset','../fetch/npr3_gathers_hdr.rsf',
-     'window n1=1 f1=11 squeeze=n | intbin3 head=$SOURCE xkey=-1 | dd type=float')
-
 tnmo=(0.000,0.373,0.619,0.826,0.909,1.017,1.132,1.222,1.716,3.010)
 vnmo=(9086.27,10244.26,11085.81,10803.11,10969.02,11578.66,12252.14,12669.89,14590.08,17116.54)
 
@@ -24,7 +24,7 @@ Flow('vnmo.asc',None,
      echo %s n1=%d n2=2 data_format=ascii_float in=$TARGET
      ''' % (' '.join(map(str,tnmo)+map(str,vnmo)),len(tnmo)))
 Flow('vnmo','vnmo.asc gathers',
-     'dd form=native | linear pattern=${SOURCES[1]} rect=5 niter=100')
+     'dd form=native | linear pattern=${SOURCES[1]}') # rect=5 niter=100')
  
 Result('vnmo','graph title="NMO Velocity" label1=Time unit1=s label2=Velocity unit2=ft/s')
 
@@ -46,8 +46,13 @@ Result('stack',
         ''')
 Result('stack141','stack',
        '''
-       window n1=1000 n2=1 f2=141 | grey title='stack line 141'
+       window n1=1000 n3=1 f3=141 | grey title='stack line 141'
        ''')
+Result('stackx121','stack',
+       '''
+       window n1=1000 n2=1 f2=121 | grey title='stack xline 121'
+       ''')
+
 
 # Velocity analysis at one CMP
 Flow('gather1','gathers','window n3=1 n4=1 f3=120 f4=140')

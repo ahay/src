@@ -1,9 +1,13 @@
+\published{SEP report, 70, 361-366 (1991)}
+
 \footer{SEP--70}
 \lefthead{Dellinger \& Muir}
 \righthead{double-elliptic approximation}
 \title{The double-elliptic approximation \\ in the group and phase domains}
-\keywords{approximation, velocity, dispersion }
+%\keywords{approximation, velocity, dispersion }
 \author{Joe Dellinger and Francis Muir}
+
+\maketitle
 
 \section{Introduction}
 Elliptical anisotropy has found wide use as a simple approximation
@@ -23,12 +27,12 @@ needed to define an ellipse: the horizontal and vertical velocities.
 free parameter, but usually not.)
 % get Levin reference from Pat Berge
 
-In a previous SEP report Muir (1990) showed how to extend the standard
+In a previous SEP report \cite{Muir.sep.67.41} showed how to extend the standard
 elliptical approximation to a so-called {\em double\/}-elliptic form. (The 
 relation between the elastic constants of a TI medium 
 and the coefficients of the corresponding
 double-elliptic approximation is
-developed in a companion paper, (Muir, 1991).)
+developed in a companion paper, \cite[]{Muir.sep.70.367}.)
 The aim of this new approximation is to preserve the useful properties
 of elliptical anisotropy while doubling the number of free parameters,
 thus allowing a much wider range of transversely isotropic media to
@@ -54,7 +58,7 @@ The results indicate that the method should work well in practice.
 
 \section{REVIEW OF SYMMETRIC PROPERTIES OF ELLIPSES}
 \inputdir{XFig}
-Figure~\ref{Group-four} shows a transversely isotropic medium
+Figure~\ref{fig:group-four} shows a transversely isotropic medium
 and its vertical paraxial elliptic approximation represented
 four different ways. Note that the dashed elliptical-approximation curve
 plots as an ellipse in both the group-velocity and phase-slowness domains.
@@ -68,6 +72,8 @@ mode of Greenhorn Shale (thick solid line) and an elliptically anisotropic
 paraxial approximation to it (thin dashed line). The ``$\hbox{\rm R}$''
 and ``$1 / \hbox{\rm r}$'' symbols indicate the recurring transformations
 linking the four representations.}
+
+\inputdir{vels}
 
 These vertical and horizontal velocities have simple geophysical
 interpretations. The vertical velocity
@@ -89,7 +95,7 @@ horizontal velocity, because we're only considering NMO for near-vertical
 propagation. It is the horizontal velocity of the vertical paraxial
 elliptic approximation.)
 
-\plot{verthoriz}{width=5.9in}{verthoriz}
+\plot{verthoriz}{width=5.9in}
 {
 Three different approximations (dashed curves) to the
 {\sl q}SV impulse-response surface of Greenhorn Shale (bold curves).
@@ -97,7 +103,7 @@ On the left is the standard vertical paraxial elliptic approximation. In the
 center is the horizontal paraxial elliptic approximation.
 On the right is Muir's double-elliptic approximation.
 }
-\plot{verthoriz2}{width=5.9in}{verthoriz2}
+\plot{verthoriz2}{width=5.9in}
 {
 Three different approximations (dashed curves) to the
 {\sl q}SV dispersion-relation surface of Greenhorn Shale (bold curves).
@@ -114,7 +120,7 @@ Muir's trick is to turn the problem on its side and also look at the
 useful properties of the vertical ellipse, with the difference
 that it fits the true horizontal velocity and the vertical NMO velocity
 (not the same thing as the true vertical velocity).
-Figure~\ref{verthoriz} shows the vertical and horizontal
+Figure~\ref{fig:verthoriz} shows the vertical and horizontal
 paraxial approximating ellipses, along with
 Muir's double-elliptic approximation. Muir's approximation fits
 four parameters, the vertical and horizontal true and NMO velocities.
@@ -124,14 +130,14 @@ but fits well elsewhere.
 \subsection{in the dispersion-relation domain}
 There is no such problem in the dispersion-relation domain, since
 triplications are impossible there.
-Figure~\ref{verthoriz2} shows how the three approximations shown
-in Figure~\ref{verthoriz} work in the dispersion-relation domain.
+Figure~\ref{fig:verthoriz2} shows how the three approximations shown
+in Figure~\ref{fig:verthoriz} work in the dispersion-relation domain.
 Just like elliptical anisotropy,
 Muir's four-parameter approximation is calculated
 in the dispersion-relation domain
 by simply using slownesses instead of velocities
 in the same approximation formula.
-Note in Figure~\ref{verthoriz2} that the
+Note in Figure~\ref{fig:verthoriz2} that the
 double-elliptic approximation in the dispersion-relation domain
 is nearly exact for this example.
 
@@ -140,29 +146,29 @@ Of course there is one technicality: the elliptical approximations in
 the previous two figures were perfectly consistent, but the double-elliptic
 approximations were not. Muir's approximation did a much better job
 in the dispersion-relation domain than it did in the impulse-response domain.
-Figure~\ref{Compare} shows how the double-elliptic approximations
+Figure~\ref{fig:compare} shows how the double-elliptic approximations
 fit in the two different domains compare in the impulse-response domain.
 Should we be concerned by this discrepancy?
 Probably not, because this is a rather extreme example.
 If there are no triplications the
 approximations as fit in the two domains are much more nearly consistent,
-as is demonstrated in Figure~\ref{Compare2}.
+as is demonstrated in Figure~\ref{fig:compare2}.
 
 \section{Conclusions}
-The double-elliptic approximation introduced by Muir (1990) can approximate 
-the kinematics of TI media quite accurately, although it is forced
-to cut off triplications when fit in the impulse-response domain.
-In the dispersion-relation domain it remains accurate even for
-triplicating media.
+The double-elliptic approximation introduced by \cite{Muir.sep.67.41}
+can approximate the kinematics of TI media quite accurately, although
+it is forced to cut off triplications when fit in the impulse-response
+domain.  In the dispersion-relation domain it remains accurate even
+for triplicating media.
 
 Our analysis in this paper was limited to simple kinematics.
 Before pronouncing the double-elliptic approximation
 a success, we need to also demonstrate how it
 works when used as the basis for an imaging technique;
 i.e, how accurately does it model the {\em dynamics\/} of the wave 
-equation? Karrenbach (1991) examines this question in a companion paper.
+equation? \cite{Karrenbach.sep.70.123} examines this question in a companion paper.
 
-\plot{Compare}{width=5.6in}{Compare}
+\plot{compare}{width=5.6in}
 {
 Two different double-elliptic approximations (dashed curves) fit
 to the {\sl q}SV mode of Greenhorn Shale (solid curves).
@@ -172,18 +178,15 @@ Right: the approximation is fit in the dispersion-relation domain, and
 so is able to closely follow the triplication. This approximating
 curve can only be calculated parametrically, however, and so is less useful.
 }
-\plot{Compare2}{width=5.6in}{Compare2}
+\plot{compare2}{width=5.6in}
 {
 Two different double-elliptic approximations (dashed curves) corresponding
-to those in Figure~\protect\ref{Compare}, but this time fit
+to those in Figure~\protect\ref{fig:compare}, but this time fit
 to the {\sl q}P mode of Greenhorn Shale (solid curves). (The size of the
 ``$*$'' in the middle shows the relative scales.)
 The discrepancy is much less since there are no troublesome triplications.
 }
 
-\section{References}
-\reference{Karrenbach, M., 1991, Anisotropic scalar imaging using the double
-elliptic approximation: SEP--{\bf 70}.}
-\reference{Muir, F., 1990, A modified anisotropic system:
-SEP--{\bf 67}, 41--42.}
-\reference{Muir, F., 1991, Various equations for TI media: SEP--{\bf 70}.}
+\bibliographystyle{seg}
+\bibliography{SEP2}
+

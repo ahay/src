@@ -121,7 +121,7 @@ class TestFrame(wx.Frame):
         self.pid = os.fork()
         if not self.pid:
             for fig in self.results:
-                os.system ("scons %s.view" % fig)
+                os.system ("pscons %s.view" % fig)
         sys.exit()
 
     def flipit(self,event):
@@ -137,7 +137,7 @@ class TestFrame(wx.Frame):
 
     def show(self,fig):
         def showfig(event):
-            os.system("scons %s.view" % fig)
+            os.system("pscons %s.view" % fig)
         return showfig
 
     def get_title(self,fig):

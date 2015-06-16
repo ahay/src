@@ -1,4 +1,4 @@
-/* 2-D shot gather multiple prediction 
+/* 2-D shot gather multiple prediction (SRME)
 The axes in the input are {offset,shot,frequency}
 The axes in the output are {prediction(if stack=n),offset,shot,frequency}
 */

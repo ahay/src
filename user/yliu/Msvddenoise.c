@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
 
     for(i=0;i<n3;i++)  {
 	sf_floatread(pp,n1*n2,in);
-	svddenoise_lop(n2,n1,pclip,pp,qq);
+	svd_denoise(n2,n1,pclip,pp,qq);
 	sf_floatwrite(qq,n1*n2,out);
     }
 

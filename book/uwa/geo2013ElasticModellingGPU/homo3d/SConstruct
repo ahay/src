@@ -171,8 +171,8 @@ for m in ['ISO','VTI','ORT','HTI']:
 
     for i in range(3):
         tag = "%d"%i
-        Result(m+'w-3d-GPU'+tag,m+'w-3d-GPU',
-		'window n5=1 f5=4 n4=1 f4=%d min1=0 min2=0 min3=0 n1=%d n2=%d n3=%d | byte pclip=99.5 gainpanel=a |'%(i,par['nz'],par['nx'],par['ny']) + fdmod.cgrey3d('pclip=99.9 screenht=11 '+center+' movie=1 frame1=1',par))
+        Plot(m+'w-3d-GPU'+tag,m+'w-3d-GPU',
+	     'window n5=1 f5=4 n4=1 f4=%d min1=0 min2=0 min3=0 n1=%d n2=%d n3=%d | byte pclip=99.5 gainpanel=a |'%(i,par['nz'],par['nx'],par['ny']) + fdmod.cgrey3d('pclip=99.9 screenht=11 '+center+' movie=1 frame1=1',par),view=1)
 
 # . . CPU SECTION
 for m in ['ISO','VTI','ORT','HTI']:
@@ -198,6 +198,6 @@ for m in ['ISO','VTI','ORT','HTI']:
 
     for i in range(3):
         tag = "%d"%i
-        Result(m+'w-3d-CPU'+tag,m+'w-3d-CPU',' window n5=1 f5=4 n4=1 f4=%d min1=0 min2=0 min3=0 n1=%d n2=%d n3=%d | byte pclip=99.5 gainpanel=a |'%(i,par['nz'],par['nx'],par['ny'])+ fdmod.cgrey3d('pclip=99.9 screenht=11 '+center+' movie=1 frame1=1',par))
+        Plot(m+'w-3d-CPU'+tag,m+'w-3d-CPU',' window n5=1 f5=4 n4=1 f4=%d min1=0 min2=0 min3=0 n1=%d n2=%d n3=%d | byte pclip=99.5 gainpanel=a |'%(i,par['nz'],par['nx'],par['ny'])+ fdmod.cgrey3d('pclip=99.9 screenht=11 '+center+' movie=1 frame1=1',par),view=1)
 
 End()
