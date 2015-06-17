@@ -15,7 +15,7 @@
 !!$  You should have received a copy of the GNU General Public License
 !!$  along with this program; if not, write to the Free Software
 !!$  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-program mexwell_cpml2
+program mexwell_cpml2_backward
   use rsf
   implicit none
 
@@ -23,12 +23,12 @@ program mexwell_cpml2
   integer :: ib, it, nt, nz, nx, nb, sx, sz, nxpad, nzpad
   real    :: dt, dz, dx, fm, tmp, idx, idz
   real, parameter::PI=3.14159265
-  real, dimension (:),   allocatable :: wlt,bndr
+  real, dimension (:),   allocatable :: wlt,bndr,ef,eb
   real, dimension (:,:), allocatable :: v0, vv, rho, eta
   real, dimension (:,:), allocatable :: p, vz, vx
   real, dimension(:,:,:),allocatable :: conv_pz,conv_px,conv_vz,conv_vx
   real, dimension(:,:,:,:),allocatable::bvz, bvx
-  type(file) :: Fv, Fw1, Fw2, Frho, Feta  ! I/O files 
+  type(file) :: Fv, Fw1, Fw2, Frho, Feta, Fef,Feb  ! I/O files 
 
   call sf_init() ! initialize Madagascar
 
@@ -38,6 +38,8 @@ program mexwell_cpml2
   Fw2 =rsf_output("back") ! output backward reconstructed wavefield
   Frho=rsf_input("rho")   ! density
   Feta=rsf_input("eta")   ! Pascal
+  Fef=rsf_output("ef") ! energy (kinematic+deformation) when forward modeling
+  Feb=rsf_output("eb") ! energy (kinematic+deformation) when back-reconstruction
 
   ! Read/Write axes
   call from_par(Fv,"n1",nz) ! velocity model: nz
@@ -68,6 +70,16 @@ program mexwell_cpml2
   call to_par(Fw2,"o3",(nt-1)*dt)
   call to_par(Fw2,"d3",-dt)
 
+  call to_par(Fef,"n1",nt)
+  call to_par(Fef,"o1",0)
+  call to_par(Fef,"d1",dt)
+  call to_par(Fef,"n2",1)
+
+  call to_par(Feb,"n1",nt)
+  call to_par(Feb,"o1",0)
+  call to_par(Feb,"d1",dt)
+  call to_par(Feb,"n2",1)
+
   idx=1./dx
   idz=1./dz
   nzpad=nz+2*nb
@@ -77,6 +89,8 @@ program mexwell_cpml2
 
   allocate(wlt(nt))
   allocate(bndr(nb))
+  allocate(ef(nt))
+  allocate(eb(nt))
   allocate(v0(nz,nx))
   allocate(vv(nzpad,nxpad))
   allocate(rho(nzpad,nxpad))
@@ -141,14 +155,18 @@ program mexwell_cpml2
      endif
 
      call add_sources(attenuating,p, eta, rho, vv, dt, wlt(it), sz, sx, nzpad, nxpad)
+     call compute_energy(ef(it),vz,vx,p,rho,vv,nzpad,nxpad)
 
      !save the boundaries
      call boundary_rw(.true.,bvz(:,:,:,it),bvx(:,:,:,it),vz,vx,nz,nx,nb)
   enddo
+  call rsf_write(Fef,ef) ! store forward energy history
 
   !backward reconstruction
   do it=nt,1,-1
      call boundary_rw(.false.,bvz(:,:,:,it),bvx(:,:,:,it),vz,vx,nz,nx,nb)
+
+     call compute_energy(eb(it),vz,vx,p,rho,vv,nzpad,nxpad)
 
      call window2d(v0, p, nz, nx, nb)
      call rsf_write(Fw2,v0)
@@ -176,10 +194,12 @@ program mexwell_cpml2
         endif
      endif
   enddo
-
+  call rsf_write(Feb,eb) !store backward energy history
 
   deallocate(wlt)
   deallocate(bndr)
+  deallocate(ef)
+  deallocate(eb)
   deallocate(v0)
   deallocate(vv)
   deallocate(rho)
@@ -195,7 +215,7 @@ program mexwell_cpml2
   deallocate(bvx)
 
   call exit(0)
-end program mexwell_cpml2
+end program mexwell_cpml2_backward
 
 !------------------------------------------------------------------------------
 ! expand the model with artificial boundaries
@@ -574,4 +594,17 @@ subroutine boundary_rw(v2b,bvz,bvx,vz,vx,nz,nx,nb)
         enddo
      enddo
   endif
+
+  return
 end subroutine boundary_rw
+
+!-------------------------------------------------------------------------------
+subroutine compute_energy(e,vz,vx,p,rho,vv,nzpad,nxpad)
+  implicit none
+
+  integer::nzpad,nxpad
+  real::e
+  real,dimension(nzpad,nxpad)::rho,vv,p,vz,vx
+
+  e=0.5*sum((vz*vz+vx*vx)*rho+p*p/(rho*vv*vv))
+end subroutine compute_energy
