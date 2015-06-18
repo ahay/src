@@ -21,8 +21,8 @@ program mexwell_cpml2_backward
 
   logical :: order1,attenuating
   integer :: ib, it, nt, nz, nx, nb, sx, sz, nxpad, nzpad
-  real    :: dt, dz, dx, fm, tmp, idx, idz
-  real, parameter::PI=3.14159265
+  real  :: dt, dz, dx, fm, tmp, idx, idz
+  real*8, parameter::PI=4.*atan(1.)
   real, dimension (:),   allocatable :: wlt,bndr,ef,eb
   real, dimension (:,:), allocatable :: v0, vv, rho, eta
   real, dimension (:,:), allocatable :: p, vz, vx
@@ -156,7 +156,9 @@ program mexwell_cpml2_backward
      endif
 
      call add_sources(attenuating,p, eta, rho, vv, dt, wlt(it), sz, sx, nzpad, nxpad)
-     call compute_energy(ef(it),vz,vx,p,rho,vv,nzpad,nxpad)
+     call compute_energy(ef(it),vz(nb+1:nb+nz,nb+1:nb+nx),&
+          vx(nb+1:nb+nz,nb+1:nb+nx),p(nb+1:nb+nz,nb+1:nb+nx),&
+          rho(nb+1:nb+nz,nb+1:nb+nx),vv(nb+1:nb+nz,nb+1:nb+nx),nz,nx)
 
      !save the boundaries
      call boundary_rw(.true.,bvz(:,:,:,it),bvx(:,:,:,it),vz,vx,nz,nx,nb)
@@ -166,8 +168,9 @@ program mexwell_cpml2_backward
   !backward reconstruction
   do it=nt,1,-1
      call boundary_rw(.false.,bvz(:,:,:,it),bvx(:,:,:,it),vz,vx,nz,nx,nb)
-
-     call compute_energy(eb(it),vz,vx,p,rho,vv,nzpad,nxpad)
+     call compute_energy(eb(it),vz(nb+1:nb+nz,nb+1:nb+nx),&
+          vx(nb+1:nb+nz,nb+1:nb+nx),p(nb+1:nb+nz,nb+1:nb+nx),&
+          rho(nb+1:nb+nz,nb+1:nb+nx),vv(nb+1:nb+nz,nb+1:nb+nx),nz,nx)
 
      call window2d(v0, p, nz, nx, nb)
      call rsf_write(Fw2,v0)
@@ -600,12 +603,12 @@ subroutine boundary_rw(v2b,bvz,bvx,vz,vx,nz,nx,nb)
 end subroutine boundary_rw
 
 !-------------------------------------------------------------------------------
-subroutine compute_energy(e,vz,vx,p,rho,vv,nzpad,nxpad)
+subroutine compute_energy(e,vz,vx,p,rho,vv,nz,nx)
   implicit none
 
-  integer::nzpad,nxpad
+  integer::nz,nx
   real::e
-  real,dimension(nzpad,nxpad)::rho,vv,p,vz,vx
+  real,dimension(nz,nx)::rho,vv,p,vz,vx
 
   e=0.5*sum((vz*vz+vx*vx)*rho+p*p/(rho*vv*vv))
 end subroutine compute_energy
