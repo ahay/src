@@ -60,11 +60,11 @@ char** sf_split(sf_file inp          /* input file */,
 /*< split the input file along the specified axis
   and generate parallel system commands >*/
 {
-    char **commands, **splitkey, okey[5], dkey[5];
+    char **commands, **splitkey, okey[5], dkey[5], splitcmd[SF_CMDLEN];
     char *arg, *eq, *cmdline, *iname=NULL, *oname=NULL, *splitname;
     off_t i2, *splitsize1=NULL, *splitsize2=NULL, left, nbuf;
     float d, o, di, oi;
-    int job, jobs, bigjobs, w, split, i, j, len, chunk, skip;
+    int job, jobs, bigjobs, w, split, i, j, k, len, chunk, skip;
     sf_file *splitfile=NULL, in=NULL;
     FILE *ifile=NULL, *ofile=NULL;
 
@@ -93,13 +93,15 @@ char** sf_split(sf_file inp          /* input file */,
     splitkey = (char**) sf_alloc(argc,sizeof(char*));
     splitargc = 0;
 
-    j=0;
+    k=j=0;
     for (i=1; i < argc; i++) {
 	arg = argv[i];
-	if (strncmp(arg,"input=",6) &&
-	    strncmp(arg,"output=",7) &&
+	if (strncmp(arg,"--input=",8) &&
+	    strncmp(arg,"--output=",9) &&
 	    strncmp(arg,"split=",6) &&
 	    strncmp(arg,"join=",5)) {
+	    /* starting a parameter with underscore signifies an input
+	     * file to split */
 	    if ('_'==arg[0]) {
 		eq  = strchr(arg,'=');
 		if (NULL == eq) sf_error("Wrong parameter \"%s\"",arg);
@@ -110,6 +112,12 @@ char** sf_split(sf_file inp          /* input file */,
 		splitkey[splitargc][len]='\0';
 
 		splitargc++;
+
+		len = strlen(arg)-1;
+		if (k+len > SF_CMDLEN-2) sf_error("command line is too long");
+		strncpy(splitcommand+k,arg+1,len);
+		splitcommand[k+len]=' ';
+		k += len+1;
 	    } else {
 		len = strlen(arg);
 		if (j+len > SF_CMDLEN-2) sf_error("command line is too long");
@@ -121,6 +129,7 @@ char** sf_split(sf_file inp          /* input file */,
 	}
     }
     command[j]='\0';
+    splitcommand[k]='\0';
 
     if (0 < splitargc) { /* files to split other than input */
 	splitsize1 = sf_largeintalloc(splitargc);
@@ -188,7 +197,7 @@ char** sf_split(sf_file inp          /* input file */,
 
 	sf_fileclose(in);
 
-	splitcommand[0]='\0';
+	splitcmd[0]='\0';
 	for (i=0; i < splitargc; i++) {
 	    ifile = sf_tempfile(&splitname,"w+b");
 
@@ -220,13 +229,11 @@ char** sf_split(sf_file inp          /* input file */,
 
 	    sf_fileclose(in);
 
-	    snprintf(cmdline,SF_CMDLEN,"%s %s=%s",
-		     splitcommand,splitkey[i]+1,splitname);
-	    strncpy(splitcommand,cmdline,SF_CMDLEN);
+	    snprintf(cmdline,SF_CMDLEN,"%s %s=%s",splitcmd,splitkey[i]+1,splitname);
+	    strncpy(splitcmd,cmdline,SF_CMDLEN);
 	}	
 
-	snprintf(cmdline,SF_CMDLEN,"%s %s < %s > %s",
-		 command,splitcommand,iname,oname);
+	snprintf(cmdline,SF_CMDLEN,"%s %s < %s > %s",command,splitcmd,iname,oname);
     }
 
     return commands;
@@ -245,7 +252,7 @@ void sf_out(sf_file out        /* output file */,
 
     ofile = sf_tempfile(&oname,"w+b");
     fclose(ofile);
-    
+
     snprintf(cmdline,SF_CMDLEN,"%s %s --dryrun=y < %s > %s",
 	     command,splitcommand,iname,oname);
     sf_system(cmdline);

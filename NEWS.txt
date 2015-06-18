@@ -29,6 +29,7 @@ To the Python package:
 To programs:
 
 * user/zdzhang: New contributor (Zhendong Zhang)
+* splitting auxiliary inputs in sfomp and sfmpi
 
 ===Bug fixes===
 

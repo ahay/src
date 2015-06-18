@@ -41,8 +41,8 @@ int main(int argc, char* argv[])
     if (!rank) { /* master node */
 	sf_init(argc,argv);
 
-	inp = sf_input("input");
-	out = sf_output("output");
+	inp = sf_input("--input");
+	out = sf_output("--output");
 
 	ndim = sf_largefiledims (inp,n);
 
@@ -53,10 +53,10 @@ int main(int argc, char* argv[])
 
 	for (job=0; job < jobs; job++) {
 	    strncpy(cmdline,commands[job],SF_CMDLEN);
-	    MPI_Send(cmdline, SF_CMDLEN, MPI_CHAR, job, 0, MPI_COMM_WORLD);
+	    MPI_Send(cmdline, SF_CMDLEN, MPI_CHAR, job+1, 0, MPI_COMM_WORLD);
 	}
 
-	iname = sf_getstring("input");
+	iname = sf_getstring("--input");
 
 	if (!sf_getint("join",&axis2)) axis2=axis;
 	/* axis to join (0 means add) */
@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
 	sf_out(out,axis2,iname);
 	
 	for (job=0; job < jobs; job++) {
-	    MPI_Recv(&rank,1, MPI_INT, job, 1, MPI_COMM_WORLD,&stat);
+	    MPI_Recv(&rank,1, MPI_INT, job+1, 1, MPI_COMM_WORLD,&stat);
 	    if (axis2 > 0) sf_join(out,job);
 	}
 	if (0==axis2) sf_add(out,jobs);
