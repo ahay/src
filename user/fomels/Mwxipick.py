@@ -175,6 +175,14 @@ class MainFrame(wx.Frame):
         sizer = wx.BoxSizer(wx.VERTICAL)
 
         buttons = wx.BoxSizer(wx.HORIZONTAL)
+        bnext = wx.Button(self,-1,'Next >')
+        buttons.Add(bnext,0,wx.ALL,5)
+        bprev = wx.Button(self,-1,'< Prev')
+        bprev.Disable()
+        buttons.Add(bprev,0,wx.ALL,5)
+        label = wx.StaticText(self,-1,'%d of %d' % (i3+1,n3))
+        buttons.Add(label,0,wx.CENTER,5)
+        buttons.AddStretchSpacer()
         colorpick = wx.Button(self,-1,'Change Color')
         colorpick.SetBackgroundColour('light yellow') 
         self.Bind(wx.EVT_BUTTON,self.PickColor,colorpick)
@@ -183,7 +191,7 @@ class MainFrame(wx.Frame):
         bquit.SetBackgroundColour('pink') 
         self.Bind(wx.EVT_BUTTON,self.Quit,bquit)
         buttons.Add(bquit,0,wx.ALL,5)
-        sizer.Add(buttons)
+        sizer.Add(buttons,flag=wx.EXPAND)
 
         panel = wx.Panel(self, wx.ID_ANY)
         panel.Bind(wx.EVT_CHAR, self.OnKeyDown)

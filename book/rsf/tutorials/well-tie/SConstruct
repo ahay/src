@@ -15,10 +15,10 @@ Flow('mask1','L-30','headermath segy=n output=RHOB | mask min=0')
 Flow('mask2','L-30','headermath segy=n output=DT   | mask min=0')
 Flow('mask','mask1 mask2','mul ${SOURCES[1]}')
 
-scale = dict(RHOB=1000,DT=3.28084,DEPT=1/3.28084) # convert to SI units
+scale = dict(RHOB=1000,DT=3.28084,DEPTH=1/3.28084) # convert to SI units
 threshold = dict(RHOB=100,DT=10)
 
-for case in ('DT','RHOB','DEPT'):
+for case in ('DT','RHOB','DEPTH'):
      # Extract values
      Flow(case,'L-30 mask',
           '''
@@ -29,7 +29,7 @@ for case in ('DT','RHOB','DEPT'):
           ''' % (case,scale[case]))
 
      # Clip spikes
-     if case != 'DEPT':
+     if case != 'DEPTH':
           despike = case+'-despike'
           Flow(despike,case,'despike wide=13')
           
@@ -58,7 +58,7 @@ log_start_time = 0.410553230106 # (s)
 
 Flow('tdr','DT-despike','causint | math output="%g+(%g)*input" ' % (log_start_time,2*0.1524/1e6))
 
-Result('tdr','graph title=Time yreverse=y transp=y')
+Result('tdr','graph title="Twoway Time" yreverse=y transp=y label2=Time unit2=s')
 
 # Compute acoustic impedance
 
@@ -70,31 +70,31 @@ Flow('rc','z','ai2refl')
 
 # Plots
 
-Flow('dz','DEPT','igrad')
-Flow('slowness','DT-despike dz','div ${SOURCES[1]} | clip2 lower=1000')
+Flow('dz','DEPTH','igrad')
+Flow('slowness','DT-despike dz','div ${SOURCES[1]} | clip2 lower=300')
 
-Plot('slowness','DEPT slowness',
+Plot('slowness','DEPTH slowness',
      '''
      cmplx ${SOURCES[1]} | window n1=21692 |
      graph transp=y yreverse=y min1=750 max1=4250 grid=y plotfat=3
      title=function unit1=m label2="P-wave slowness" unit2="\F10 m\F3 m/s" labelsz=12 titlesz=15
      ''')
 
-Plot('twt','DEPT tdr',
+Plot('twt','DEPTH tdr',
      '''
      cmplx ${SOURCES[1]} | window n1=21692 |
      graph transp=y yreverse=y min1=750 max1=4250 grid=y plotfat=3
      title=integral unit1=m label2="two-way time" unit2="s" labelsz=12 titlesz=15
      ''')
 
-Plot('impedance','DEPT z',
+Plot('impedance','DEPTH z',
      '''
      cmplx ${SOURCES[1]} | window n1=21692 |
      graph transp=y yreverse=y min1=750 max1=4250 grid=y plotfat=3
      title=impedance unit1=m label2= unit2="kg/(m\^2\_s)" labelsz=12 titlesz=15
      ''')
 
-Plot('reflectivity','DEPT rc',
+Plot('reflectivity','DEPTH rc',
      '''
      cmplx ${SOURCES[1]} | window n1=21692 |
      graph transp=y yreverse=y min1=750 max1=4250 grid=y plotfat=3
@@ -133,7 +133,7 @@ Flow('tops.txt',None,
 Flow('tops','tops.txt','dd form=native | sort')
 Plot('tops','spray axis=1 n=2 o=0 d=1 | graph min2=750 max2=4250 pad=n yreverse=y wantaxis=n wanttitle=n')
 
-Flow('ttops','tdr DEPT tops',
+Flow('ttops','tdr DEPTH tops',
      'iwarp warp=${SOURCES[1]} o1=932 d1=1 n1=3307 | inttest1 nw=4 interp=spline coord=${SOURCES[2]}')
 Plot('ttops','spray axis=1 n=2 o=0 d=1 | graph min2=0.28 max2=2.28 pad=n yreverse=y wantaxis=n wanttitle=n')
 
@@ -142,7 +142,7 @@ Plot('ttops','spray axis=1 n=2 o=0 d=1 | graph min2=0.28 max2=2.28 pad=n yrevers
 Flow('zt','z tdr','cut f1=-20 | iwarp warp=${SOURCES[1]} o1=0 d1=0.004 n1=750')
 Flow('rt','rc tdr','cut f1=-20 | iwarp warp=${SOURCES[1]} o1=0 d1=0.004 n1=750')
 
-Plot('z','DEPT z',
+Plot('z','DEPTH z',
      '''
      cmplx ${SOURCES[1]} | window n1=21692 |
      graph transp=y yreverse=y min1=750 max1=4250 plotfat=3 plotcol=7
@@ -189,11 +189,19 @@ Fetch('PenobXL_1155.txt','1406_Make_a_synthetic',
 
 Flow('seismic','PenobXL_1155.txt',
      '''
-     echo in=$SOURCE data_format=ascii_float n1=1003 n2=401 |
-     dd form=native | reverse which=2
+     echo in=$SOURCE data_format=ascii_float n1=1003 n2=401 
+     label2=Trace label1=Time unit1=s o1=0 d1=0.004 |
+     dd form=native | reverse which=2 | window n1=750
      ''',stdin=0)
 
-# plot seismic + synthetic
+Plot('seismic','grey title=Seismic')
+Flow('xpos',None,'spike n1=1 mag=77')
+Plot('trace','synth xpos',
+     '''
+     wiggle transp=y yreverse=y wanttitle=n wantaxis=n plotcol=4
+     xpos=${SOURCES[1]} xmin=400 xmax=0 poly=y zplot=5
+     ''')
+Result('seismic','seismic trace','Overlay')
 
 # improve registration
 

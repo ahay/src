@@ -1,0 +1,25 @@
+from rsf.proj import *
+
+# 8-point tapered sinc
+Flow('filt.asc',None,
+     '''
+     echo 
+     .01755442098 -.06075384095 0.165212482 -0.619616151
+     -0.619616151  0.165212482 -.06075384095 .01755442098
+     n1=8 data_format=ascii_float in=$TARGET 
+     ''')
+Flow('filt','filt.asc','dd form=native')
+Flow('lag',None,'math n1=8 output="46+x1" | dd type=int | put n=50,50') 
+
+Flow('logdata','filt lag',
+     '''
+     math n1=64 n2=64 output=1 | 
+     noise seed=2015 var=2 rep=y |
+     helicon filt=${SOURCES[0]} lag=${SOURCES[1]} div=1 |
+     window n1=40 f1=12 n2=32 f2=16 
+     ''',stdin=0)
+
+Result('model','logdata','grey crowd=0.8 wanttitle=n')
+
+
+End()
