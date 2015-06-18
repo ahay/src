@@ -127,6 +127,7 @@ program mexwell_cpml2_backward
   conv_vz=0.
   conv_vx=0.
 
+  !forward modeling
   do it=1,nt
      call window2d(v0, p, nz, nx, nb)
      call rsf_write(Fw1,v0)
@@ -175,7 +176,7 @@ program mexwell_cpml2_backward
 
      if (order1) then ! scheme 1, 1st order accuracy, default
         if(attenuating) then
-           call add_attenuation(p, eta, rho, vv, dt, nzpad, nxpad)
+           call add_attenuation(p, eta, rho, vv, -dt, nzpad, nxpad)
         endif
         call update_cpml_pzpx(p,vz,vx,conv_pz,conv_px,rho,vv,bndr,idz,idx,-dt,nz,nx,nb)
         call step_forward_p(p, vz, vx, vv, rho, -dt, idz, idx, nzpad, nxpad)
