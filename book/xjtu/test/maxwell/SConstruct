@@ -20,6 +20,8 @@ Result('wav',
 	''')
 
 
+
+# 1st order without attenuation
 #sfmaxwell_direct_backward,sfmaxwell_sponge2_backward
 Flow('wf1 wb1 ef1 eb1','vel rho eta',
 	'''
@@ -46,7 +48,7 @@ Plot('energy1','ef1 eb1',
 	unit2= title="Forward-solid;Backward-dash"
 	color=i screenratio=1 labelfat=2 titlefat=3
 	''')
-
+#1st order with attenuation
 #sfmaxwell_direct_backward,sfmaxwell_sponge2_backward
 Flow('wf2 wb2 ef2 eb2','vel rho eta',
 	'''
@@ -61,7 +63,7 @@ Result('wf2',
 	''')
 Result('wb2',
 	'''	
-	grey  title="backward: 1st order, attenuation" gainpanel=all
+	grey  title="backward:1st order, attenuation" gainpanel=all
 	color=i screenratio=1 labelfat=2 titlefat=3
 	''')
 
@@ -74,7 +76,7 @@ Plot('energy2','ef2 eb2',
 	color=i screenratio=1 labelfat=2 titlefat=3
 	''')
 
-
+#2nd order without attenuation
 #sfmaxwell_direct_backward,sfmaxwell_sponge2_backward
 Flow('wf3 wb3 ef3 eb3','vel rho eta',
 	'''
@@ -102,6 +104,7 @@ Plot('energy3','ef3 eb3',
 	color=i screenratio=1 labelfat=2 titlefat=3
 	''')
 
+#2nd order with attenuation
 #sfmaxwell_direct_backward,sfmaxwell_sponge2_backward
 Flow('wf4 wb4 ef4 eb4','vel rho eta',
 	'''
@@ -111,12 +114,12 @@ Flow('wf4 wb4 ef4 eb4','vel rho eta',
 	''')
 Result('wf4',
 	'''	
-	grey  title=" forward:1st order, attenuation" gainpanel=all
+	grey  title=" forward:2nd order, attenuation" gainpanel=all
 	color=i screenratio=1 labelfat=2 titlefat=3
 	''')
 Result('wb4',
 	'''	
-	grey  title="backward: 1st order, attenuation" gainpanel=all
+	grey  title="backward:2nd order, attenuation" gainpanel=all
 	color=i screenratio=1 labelfat=2 titlefat=3
 	''')
 
@@ -129,6 +132,5 @@ Plot('energy4','ef4 eb4',
 	color=i screenratio=1 labelfat=2 titlefat=3
 	''')
 Result('energy','energy1 energy2 energy3 energy4','TwoColumns')
-
 
 End()
