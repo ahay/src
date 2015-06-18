@@ -8,7 +8,7 @@ Flow('vel',None,
 Flow('rho','vel','math output=1000')
 
 nb=30
-nt=200
+nt=400
 dt=0.0005
 fm=30
 
@@ -24,7 +24,7 @@ Result('wav',
 	''')
 
 ###################################################################
-# 
+#1st order without attenuation
 #sfmaxwell_direct_backward,sfmaxwell_sponge2_backward
 Flow('wf1 wb1 ef1 eb1','vel rho eta',
 	'''
@@ -86,6 +86,7 @@ Result('energy-without','energy1 energy2','TwoColumns')
 ###################################################################
 Flow('eta1','vel','math output=100000000') #moderate attenuation
 Flow('eta2','vel','math output=10000000')  #strong attenuation
+
 #1st order with moderate attenuation: 
 #sfmaxwell_direct_backward,sfmaxwell_sponge2_backward
 Flow('wf3 wb3 ef3 eb3','vel rho eta1',
@@ -170,7 +171,6 @@ Plot('energy33','ef33 eb33',
 	label2=	unit2= title="1st order, strong attenuation"
 	color=i screenratio=1 labelfat=2 titlefat=3
 	''')
-
 
 ###################################################################
 #2nd order with strong attenuation
