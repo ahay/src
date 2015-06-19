@@ -102,8 +102,8 @@ program mexwell_cpml2_backward
   allocate(conv_px(nzpad,nb,2))
   allocate(conv_vz(nb,nxpad,2))
   allocate(conv_vx(nzpad,nb,2))
-  allocate(bvz(8,nx,2,nt))
-  allocate(bvx(nz,8,2,nt))
+  allocate(bvz(7,nx,2,nt))
+  allocate(bvx(nz,7,2,nt))
 
   !generate ricker wavelet with a delay
   do it=1,nt  
@@ -137,22 +137,15 @@ program mexwell_cpml2_backward
         call update_cpml_vzvx(p,vz,vx,conv_pz,conv_px,rho,vv,bndr,idz,idx,dt,nz,nx,nb)
         call step_forward_p(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
         call update_cpml_pzpx(p,vz,vx,conv_pz,conv_px,rho,vv,bndr,idz,idx,dt,nz,nx,nb)
-        if(attenuating) then
-           call add_attenuation(p, eta, rho, vv, dt, nzpad, nxpad)
-        endif
+        if(attenuating) call add_attenuation(p, eta, rho, vv, dt, nzpad, nxpad)
      else 
-        if(attenuating) then
-           call add_attenuation(p, eta, rho, vv, 0.5*dt, nzpad, nxpad)
-        endif
+        if(attenuating) call add_attenuation(p, eta, rho, vv, 0.5*dt, nzpad, nxpad)
 
         call step_forward_v(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
         call update_cpml_vzvx(p,vz,vx,conv_pz,conv_px,rho,vv,bndr,idz,idx,dt,nz,nx,nb)
         call step_forward_p(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
         call update_cpml_pzpx(p,vz,vx,conv_pz,conv_px,rho,vv,bndr,idz,idx,dt,nz,nx,nb)
-
-        if(attenuating) then
-           call add_attenuation(p, eta, rho, vv, 0.5*dt, nzpad, nxpad)
-        endif
+        if(attenuating) call add_attenuation(p, eta, rho, vv, 0.5*dt, nzpad, nxpad)
      endif
 
      call add_sources(attenuating,p, eta, rho, vv, dt, wlt(it), sz, sx, nzpad, nxpad)
@@ -178,24 +171,18 @@ program mexwell_cpml2_backward
      call add_sources(attenuating,p, eta, rho, vv, -dt, wlt(it), sz, sx, nzpad, nxpad)
 
      if (order1) then ! scheme 1, 1st order accuracy, default
-        if(attenuating) then
-           call add_attenuation(p, eta, rho, vv, -dt, nzpad, nxpad)
-        endif
+        if(attenuating) call add_attenuation(p, eta, rho, vv, -dt, nzpad, nxpad)
         call update_cpml_pzpx(p,vz,vx,conv_pz,conv_px,rho,vv,bndr,idz,idx,-dt,nz,nx,nb)
         call step_forward_p(p, vz, vx, vv, rho, -dt, idz, idx, nzpad, nxpad)
         call update_cpml_vzvx(p,vz,vx,conv_pz,conv_px,rho,vv,bndr,idz,idx,-dt,nz,nx,nb)
         call step_forward_v(p, vz, vx, vv, rho, -dt, idz, idx, nzpad, nxpad)
      else 
-        if(attenuating) then
-           call add_attenuation(p, eta, rho, vv, -0.5*dt, nzpad, nxpad)
-        endif
+        if(attenuating) call add_attenuation(p, eta, rho, vv, -0.5*dt, nzpad, nxpad)
         call update_cpml_pzpx(p,vz,vx,conv_pz,conv_px,rho,vv,bndr,idz,idx,-dt,nz,nx,nb)
         call step_forward_p(p, vz, vx, vv, rho, -dt, idz, idx, nzpad, nxpad)
         call update_cpml_vzvx(p,vz,vx,conv_pz,conv_px,rho,vv,bndr,idz,idx,-dt,nz,nx,nb)
         call step_forward_v(p, vz, vx, vv, rho, -dt, idz, idx, nzpad, nxpad)
-        if(attenuating) then
-           call add_attenuation(p, eta, rho, vv,-0.5*dt, nzpad, nxpad)
-        endif
+        if(attenuating) call add_attenuation(p, eta, rho, vv,-0.5*dt, nzpad, nxpad)
      endif
   enddo
   call rsf_write(Feb,eb) !store backward energy history
@@ -268,8 +255,6 @@ subroutine window2d(tgt, src, nz, nx, nb)
         tgt(i1,i2)=src(i1+nb,i2+nb)
      enddo
   enddo
-
-  return
 end subroutine window2d
 
 !-------------------------------------------------------------------------------
@@ -298,7 +283,6 @@ subroutine step_forward_v(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
         vx(i1,i2)=vx(i1,i2)-dt*idx*diff2/rho(i1,i2)
      enddo
   enddo
-  return
 end subroutine step_forward_v
 
 !------------------------------------------------------------------------------
@@ -328,7 +312,6 @@ subroutine step_forward_p(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
         p(i1,i2)=p(i1,i2)-dt*tmp*(idz*diff1+idx*diff2)
      enddo
   enddo
-  return
 end subroutine step_forward_p
 
 subroutine cpmlcoeff_init(bndr,dx,nb)
@@ -425,8 +408,6 @@ subroutine update_cpml_vzvx(p,vz,vx,conv_pz,conv_px,rho,vv,bndr,idz,idx,dt,nz,nx
         vx(i1,i2)=vx(i1,i2)-dt*conv_px(i1,i2,2)/rho(i1,i2)
      enddo
   enddo
-
-  return
 end subroutine update_cpml_vzvx
 
 !------------------------------------------------------------------------------
@@ -509,8 +490,6 @@ subroutine update_cpml_pzpx(p,vz,vx,conv_vz,conv_vx,rho,vv,bndr,idz,idx,dt,nz,nx
         p(i1,i2)=p(i1,i2)-dt*tmp*conv_vx(i1,ib,2)
      enddo
   enddo
-
-  return
 end subroutine update_cpml_pzpx
 
 !------------------------------------------------------------------------------
@@ -532,8 +511,6 @@ subroutine add_attenuation(p, eta, rho, vv, dt, nzpad, nxpad)
         p(i1,i2)=a*p(i1,i2)
      enddo
   enddo
-
-  return
 end subroutine add_attenuation
 
 !-------------------------------------------------------------------------------
@@ -555,8 +532,6 @@ subroutine add_sources(attenuating,p, eta, rho, vv, dt, wlt, sz, sx, nzpad, nxpa
   else 
      p(sz,sx)=p(sz,sx)+dt*wlt
   endif
-
-  return
 end subroutine add_sources
 
 
@@ -567,39 +542,37 @@ subroutine boundary_rw(v2b,bvz,bvx,vz,vx,nz,nx,nb)
   logical::v2b !v to bourndary or reverse
   integer::nz,nx,nb
   real,dimension(nz+2*nb,nx+2*nb)::vz,vx
-  real::bvz(8,nx,2),bvx(nz,8,2)
+  real::bvz(7,nx,2),bvx(nz,7,2)
 
   integer::i1,i2
   
   if(v2b) then !v to bourndary
      do i2=1,nx
-        do i1=1,8
+        do i1=1,7
            bvz(i1,i2,1)=vz(i1+nb-4,i2+nb)
            bvz(i1,i2,2)=vz(i1+nz+nb-4,i2+nb)
         enddo
      enddo
      do i1=1,nz
-        do i2=1,8
+        do i2=1,7
            bvx(i1,i2,1)=vx(i1+nb,i2+nb-4)
            bvx(i1,i2,2)=vx(i1+nb,i2+nz+nb-4)
         enddo
      enddo
   else !boundary to v
      do i2=1,nx
-        do i1=1,8
+        do i1=1,7
            vz(i1+nb-4,i2+nb)=bvz(i1,i2,1)
            vz(i1+nz+nb-4,i2+nb)=bvz(i1,i2,2)
         enddo
      enddo
      do i1=1,nz
-        do i2=1,8
+        do i2=1,7
            vx(i1+nb,i2+nb-4)=bvx(i1,i2,1)
            vx(i1+nb,i2+nz+nb-4)=bvx(i1,i2,2)
         enddo
      enddo
   endif
-
-  return
 end subroutine boundary_rw
 
 !-------------------------------------------------------------------------------
