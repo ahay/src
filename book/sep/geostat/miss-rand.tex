@@ -104,7 +104,7 @@ positive-definite and therefore invertible.
 \plot{covar-def}{width=6.0in,height=3.0in}{Definition of the terms
 in equation (\ref{eq:krig}). A vector is drawn between two points.  The covariance
 at the angle and distance describing the vector is then selected.}
-
+\inputdir{miss}
 
 The smooth models provided by kriging  often prove
 to be poor representations of earth properties.
@@ -157,23 +157,23 @@ The difference between kriging and simulation has a corollary in our
 least squares estimation problem. To see how let's write
 our fitting goals in a slightly different format,
 \beqa
-\bf r_d \pox \mathbf{d}  - \bf J  \bf m  \nonumber \\ 
-\bf r_m \pox \epsilon \reg \bf m\label{eq:rbar},
+\bf r_d \pox \mathbf{d}  - \mathbf{J}  \mathbf{m}  \nonumber \\ 
+\bf r_m \pox \epsilon \reg \mathbf{m}\label{eq:rbar},
 \eeqa
-where $\bf r_d$ is our data residual and $\bf r_m$ is our model
+where $\mathbf{r}_d$ is our data residual and $\mathbf{r}_m$ is our model
 residual.  The model residual is the result of applying our
 covariance estimate $\reg$ to our model estimate.  The larger
-the value of a given $\bf r_m$, the less that model point makes
+the value of a given $\mathbf{r}_m$, the less that model point makes
 sense with its surrounding points, given our idea of covariance.
 This is similar to kriging variance.
 It follows that we might be able to obtain something similar
 to the geostatistician's simulations by rewriting our fitting
 goals as 
 \beqa
-\mathbf{d} \pox  \bf J  \bf m  \nonumber \\ 
-\sigma \bf  v \pox \epsilon \reg \bf m\label{eq:rand},
+\mathbf{d} \pox  \mathbf{J}  \mathbf{m}  \nonumber \\ 
+\sigma \mathbf{v} \pox \epsilon \reg \mathbf{m}\label{eq:rand},
 \eeqa
-where $\bf v$ is a vector of random normal numbers and $\sigma$ is 
+where $\mathbf{v}$ is a vector of random normal numbers and $\sigma$ is 
 a measure of our estimation uncertainty\footnote{For the missing
 data problem $\epsilon$ could be used exclusively.
 As  our data fitting goal becomes more complex,
@@ -181,20 +181,20 @@ having a separate  $\sigma$ and $\epsilon$ becomes useful.}.
 
 By adjusting $\sigma$
 we can change the distribution of
-$\bf m$. For example, let's return to the SeaBeam example.
+$\mathbf{m}$. For example, let's return to the SeaBeam example.
 Figure~\ref{fig:distrib} shows four different model estimations
 using a normal distribution and various values for the variance.
 Note how the texture of the model changes significantly. If we look
-at a histogram of the various realizations (Figure~\ref{fig:movie.distir}),
+at a histogram of the various realizations (Figure~\ref{fig:distir}),
 we see that the correct
 distribution is somewhere between our second and third realization.
 \par 
 We can get an estimate of $\sigma$, or in the case of the missing
 data problem $\frac{\sigma}{\epsilon}$, by applying fitting goals 
-(\ref{eq:rbar}). If we look at the variance of the model residual $\sigma(\bf m_r)$  and 
+(\ref{eq:rbar}). If we look at the variance of the model residual $\sigma(\mathbf{m}_r)$  and 
 $\sigma(\mathbf{d})$ we can get a good estimate of $\sigma$,
 \beq
-\sigma = \frac{ \sigma(\bf r_m) }{ \sigma(\mathbf{d})} \label{eq:sigma.calc} .
+\sigma = \frac{ \sigma(\mathbf{r}_m) }{ \sigma(\mathbf{d})} \label{eq:sigma.calc} .
 \eeq
 
 %At this stage my method for choosing
@@ -211,7 +211,7 @@ $\sigma(\mathbf{d})$ we can get a good estimate of $\sigma$,
 \plot{distrib}{width=6in,height=4.5in}{Four different realizations
 with increasing $\sigma$  in fitting goals (\ref{eq:rand}).}
 
-\sideplot{movie.distir}{width=3.0in,height=3.0in}{Histogram of
+\sideplot{distir}{width=3.0in,height=3.0in}{Histogram of
 the known data (solid line) and the four different realizations of
 Figure~\ref{fig:distrib}.}
 \par 

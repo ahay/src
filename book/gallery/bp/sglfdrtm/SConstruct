@@ -68,8 +68,8 @@ par = copy.deepcopy(par0)
 
 Flvel = 'vel'
 Flden = 'den'
-Flimg1 = 'IMAGE/img1'
-Flimg2 = 'IMAGE/img2'
+Flimg1 = 'img1'
+Flimg2 = 'img2'
 
 img1list = []
 img2list = []

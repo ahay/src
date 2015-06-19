@@ -1,0 +1,25 @@
+from rsf.proj import *
+from rsf.recipes.beg import server
+
+Fetch('chev230.HH','chevron',server)
+
+Flow('chev','chev230.HH',
+     '''
+     dd form=native |
+     put d2=0.04101 o2=25.9954 d3=0.04101 o3=-33.7882 
+     label1=Time unit1=s label2=Inline unit2=kft label3=Crossline unit3=kft
+     ''')
+
+Flow('win386','chev','window n1=1 f1=231 f3=210')
+Flow('mean.p','win386','attr want=mean | awk "{print \$3}" | sed s/-/add=/')
+Flow('bin','win386 mean.p','add par=${SOURCES[1]}')
+
+Plot('bin','grey transp=n yreverse=n crowd=.80 title=Original')
+
+Flow('hole','bin','hole')
+
+Plot('hole','grey transp=n yreverse=n crowd=.80  title=Gapped')
+
+Result('channel-elita','bin hole','SideBySideIso')
+
+End()

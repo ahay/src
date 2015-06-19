@@ -18,11 +18,11 @@ Flow('interp','bin pef','miss filt=${SOURCES[1]} niter=100')
 
 Result('pef','interp','grey transp=n yreverse=n label1=longitude label2=latitude wanttitle=n')
 
-Flow('a','interp','histogram o1=-1 n1=251 d1=.008 | dd type=float | scale dscale=.0000597407')
+Flow('a','interp','histogram o1=-1 n1=251 d1=.008 | dd type=float | scale dscale=3.9e-05')
 Plot('a',
      '''
      window j1=2 | 
-     graph label1="Value" label2="Frequency" wanttitle=n max2=.05 min2=0 symbol="*" plotcol=5 symbolsz=10
+     graph label1="Value" label2="Frequency" wanttitle=n max2=.04 min2=0 symbol="*" plotcol=5 symbolsz=10
      ''')
 
 Flow('mask','bin','scale dscale=1e16 | dd type=int')
@@ -32,8 +32,50 @@ Flow('b','bin mask',
      histogram o1=-1 n1=251 d1=.008 | 
      dd type=float | scale dscale=.0001128541
      ''')
-Plot('b','graph label1="Value" label2="Frequency" wanttitle=n max2=.05 min2=0')
-
+Plot('b','graph label1="Value" label2="Frequency" wanttitle=n max2=.04 min2=0')
 Result('histo','a b','Overlay')
+
+Flow('histo','bin mask',
+     '''
+     spray axis=1 n=1 | headerwindow mask=${SOURCES[1]} | 
+     histogram o1=-1.5 n1=251 d1=.012 | dd type=float | scale dscale=2.889
+     ''')
+
+var = 0.0008
+interps=[]
+histos=['histo']
+for scale in range(4):
+    prior = 'prior%d' % scale
+    var = var*2
+    Flow(prior,'bin pef','noise seed=2015 rep=y var=%g | helicon div=y filt=${SOURCES[1]}' % var)
+    
+    interp = 'interp%d' % scale
+    Flow(interp,['bin','pef',prior],
+         'add scale=1,-1 ${SOURCES[2]} | miss filt=${SOURCES[1]} mask=${SOURCES[0]} niter=100 | add ${SOURCES[2]}')
+    Plot(interp,'grey transp=n yreverse=n label1=longitude label2=latitude wanttitle=n')
+    interps.append(interp)
+
+    histo = 'histo%d' % scale
+    Flow(histo,interp,'histogram o1=-1.5 n1=251 d1=.012 | dd type=float')
+    histos.append(histo)
+
+Result('distrib',interps,'TwoRows')
+
+Flow('histos',histos,'cat axis=2 ${SOURCES[1:5]} | scale dscale=3.9e-05')
+
+Plot('histos1','histos',
+     '''
+     graph dash=0,1 label1="Value" label2="Frequency" wanttitle=n 
+     min1=-1.5 max1=1.5 min2=-0.002 max2=0.027 plotfat=5,1
+     ''')
+Plot('histos2','histos',
+     '''
+     rtoc | math output="x1+I*input" | window j1=10 | 
+     graph symbol=.1234 wantaxis=n wanttitle=n 
+     min1=-1.5 max1=1.5 min2=-0.002 max2=0.027 symbolsz=8
+     ''')
+
+Result('distir','histos1 histos2','Overlay')
+
 
 End()

@@ -18,6 +18,8 @@ To the reproducible documents collection:
 
 To SCons:
 
+* splitting auxiliary inputs when split= involves 'omp' or 'mpi'
+
 To documentation:
 
 To APIs:

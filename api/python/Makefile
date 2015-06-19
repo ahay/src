@@ -1,7 +1,8 @@
 SConstruct: *.scons
 	echo "from rsf.proj import *" > $@
 	cat $^ >> $@
-	echo "\nEnd()" >> $@
+	echo "" >> $@
+	echo "End()" >> $@
 
 %.png: SConstruct
 	scons Fig/$*.vpl
