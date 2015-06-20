@@ -498,10 +498,9 @@ class Project(Environment):
                         splitpar += ' join=%s' % join.group(1)
                 flow = '|'.join(map(lambda x: ' '.join([split[1],splitpar,x]),flow.split('|')))
                 for k in split[2]:
-                    print 'k', k
                     # par=${SOURCES[k]} -> _par=${SOURCES[k]}
                     flow = re.sub(r'(\S+=\${SOURCES\[%d\]})' % k,'_\\1',flow)
-             elif self.jobs > 1 and rsfflow and sfiles:
+            elif self.jobs > 1 and rsfflow and sfiles:
                 # Split the flow into parallel flows
                 self.__Split(split,reduction,
                              sfiles,tfiles,flow,stdout,stdin,
