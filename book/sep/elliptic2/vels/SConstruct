@@ -2,7 +2,7 @@ from rsf.proj import *
 
 Plot('notate3','notate3.txt','plas -i')
 
-greenR = '''n
+greenR = '''
 c11=227.
 c22=227.
 
