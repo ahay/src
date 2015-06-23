@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
     size_t nsegy;
     int format=1, i, ns, nk, itr, ntr, *itrace=NULL;
     FILE *head=NULL, *file=NULL;
-    float *ftrace=NULL, dt;
+    float *ftrace=NULL, dt, t0;
 
     sf_init(argc, argv);
     in = sf_input("in");
@@ -122,7 +122,7 @@ int main(int argc, char *argv[])
 	    if (verbose) sf_warning("Binary header created on the fly");
 	}
 
-	if (sf_histint(in,"n1",&ns)) set_segyns(bhead,ns);
+	if (sf_histint(in,"n1",&ns))   set_segyns(bhead,ns);
 	if (sf_histfloat(in,"d1",&dt)) set_segydt(bhead,dt);
 	
 	binary_head(bhead);
@@ -183,6 +183,8 @@ int main(int argc, char *argv[])
 
     for (itr=0; itr < ntr; itr++) {
 	sf_intread(itrace,nk,hdr);	
+	if (sf_histfloat(in,"o1",&t0)) itrace[ segykey("delrt")] = 1000.*t0;
+
 	head2segy(trace, itrace, SF_NKEYS);
 	
 	if (suxdr) {

@@ -32,10 +32,10 @@ static float t0,dt, **w, *a, *tmp, *tmp2;
 static bool *m;
 
 void sf_aastretch_init (bool box /* if box instead of triangle */,
-		     int n1   /* trace length */, 
-		     float o1 /* trace origin */, 
-		     float d1 /* trace sampling */, 
-		     int n2   /* number of data samples */)
+			int n1   /* trace length */, 
+			float o1 /* trace origin */, 
+			float d1 /* trace sampling */, 
+			int n2   /* number of data samples */)
 /*< initialization >*/
 {
     nt = n1; 
@@ -55,8 +55,8 @@ void sf_aastretch_init (bool box /* if box instead of triangle */,
 }
 
 void sf_aastretch_define (const float *coord /* data coordinates [nd] */, 
-		       const float *delt  /* antialiasing length [nd] */, 
-		       const float *amp   /* amplitude [nd] */)
+			  const float *delt  /* antialiasing length [nd] */, 
+			  const float *amp   /* amplitude [nd] */)
 /*< Set up interpolation >*/
 {
     int id, ix[3], j;
