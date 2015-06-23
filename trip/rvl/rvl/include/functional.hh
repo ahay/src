@@ -2022,10 +2022,10 @@ namespace RVL {
       try {
 	// as usual this doesn't really make sense
 	cxx[1].copy(x);
-	Vector<Scalar> dxx(ff.getDomain(),true);
+	Vector<Scalar> dxx(f.getDomain(),true);
 	Components<Scalar> cdxx(dxx);
-	dxx[1].copy(dx)
-	return ff.getMaxStep(xx,dxx);
+	dxx[1].copy(dx);
+	return f.getMaxStep(xx,dxx);
       }
       catch (RVLException & e) {
 	e<<"\ncalled from RestrictFcnl::getMaxStep\n";

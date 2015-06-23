@@ -1502,9 +1502,9 @@ int init_tracegeom(tracegeom * tg,
     iinit=0;
 
     /* set length of work buffer appropriately */
-    //if (initbuf < 0) 
+    if (initbuf < 0) 
     wlen=cubicadj_getworksize(tg->nt,tmpnt);
-    //else wlen=cubic_getworksize(tg->nt);
+    else wlen=cubic_getworksize(iwave_max(tg->nt,tmpnt));
 
     work=(float *)usermalloc_(wlen*sizeof(float));
     if (!work) {
@@ -1540,26 +1540,35 @@ int init_tracegeom(tracegeom * tg,
 	 in particular if ntraces=0 for this domain then cubicadj is 
 	 never called */
       if (init[i]) {
-	//	if (initbuf < 0)
-	if (initbuf) 
+	if (initbuf < 0) {
 	  err=cubicadj_(&tmpt0,   &tmpdt,   (otr.tr).data,             &tmpnt,
 			&(tg->t0),&(tg->dt),&((tg->buf)[iinit*tg->nt]),&(tg->nt),
 			&iend,    work,     &wlen);
-	/*
-	  else 
+	  if (err) {
+	    fprintf(stream,"Error: tracegeom_init from cubicadj, err=%d\n",
+		    err);
+	    fflush(stream);
+#ifdef IWAVE_USE_MPI
+	    MPI_Abort(wcomm,err);
+#else
+	    return err;
+#endif
+	  }
+	}
+	else {
 	  err=cubic_(&tmpt0,   &tmpdt,   (otr.tr).data,             &tmpnt,
 		     &(tg->t0),&(tg->dt),&((tg->buf)[iinit*tg->nt]),&(tg->nt),
 		     &iend,    work,     &wlen);
-	*/
-	if (err) {
-	  fprintf(stream,"Error: tracegeom_init from cubicadj, err=%d\n",
-		  err);
-	  fflush(stream);
+	  if (err) {
+	    fprintf(stream,"Error: tracegeom_init from cubic, err=%d\n",
+		    err);
+	    fflush(stream);
 #ifdef IWAVE_USE_MPI
-	  MPI_Abort(wcomm,err);
+	    MPI_Abort(wcomm,err);
 #else
-	  return err;
+	    return err;
 #endif
+	  }
 	}
 	iinit++;
       }

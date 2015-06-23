@@ -278,6 +278,9 @@ namespace RVL {
   template<class Scalar>
   class PartialDerivEvaluation;
 
+  template<class Scalar>
+  class RestrictOp;
+
   /** Operator defined on product space. Partial derivatives are
       defined, as is access to the domain as a ProductSpace.  As for
       the parent class, all functions which may change the internal
@@ -484,7 +487,7 @@ namespace RVL {
 	cxx[1].copy(x);
 	Vector<Scalar> dxx(ff.getDomain(),true);
 	Components<Scalar> cdxx(dxx);
-	dxx[1].copy(dx)
+	dxx[1].copy(dx);
 	return ff.getMaxStep(xx,dxx);
       }
       catch (RVLException & e) {
