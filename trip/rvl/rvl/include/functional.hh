@@ -1937,14 +1937,14 @@ namespace RVL {
   private: 
     
     FunctionalProductDomain<Scalar> const & f;
-    Vector<Scalar> & xx;
+    mutable Vector<Scalar> xx;
+    mutable Components<Scalar> cxx;
 
   protected:
 
     void apply(Vector<Scalar> const & x,
 	       Scalar & val) const {
       try {
-	Components<Scalar> cxx(xx);
 	cxx[1].copy(x);
 	export_apply(f, xx, val);
       }
@@ -1960,7 +1960,6 @@ namespace RVL {
     void applyGradient(Vector<Scalar> const & x,
 		       Vector<Scalar> & g) const {
       try {
-	Components<Scalar> cxx(xx);
 	cxx[1].copy(x);
 	export_applyPartialGradient(f, 1, xx, g);	
       }
@@ -1974,7 +1973,6 @@ namespace RVL {
 		      Vector<Scalar> const & dx,
 		      Vector<Scalar> & dy) const {
       try {
-	Components<Scalar> cxx(xx);
 	cxx[1].copy(x);
 	export_applyPartialHessian(f, 1, 1, xx, dx, dy);	
       }
@@ -1991,8 +1989,8 @@ namespace RVL {
   public:
     
     RestrictFcnl(FunctionalProductDomain<Scalar> const & _f,
-		 Vector<Scalar> const & _x) 
-      : f(_f), xx(_x) {
+		 Vector<Scalar> const & x0) 
+      : f(_f), xx(_f.getDomain()), cxx(xx) {
       try {
 	int ncomp = f.getProductDomain().getSize();
 	if (ncomp != 2) {
@@ -2005,16 +2003,7 @@ namespace RVL {
 	  f.write(e);
 	  throw e;
 	}
-	if (f.getProductDomain()[0] != xx.getSpace()) {
-	  RVLException e; 
-	  e<<"ERROR: RestrictFcnl constructor\n";
-	  e<<"  input vector not in first component of domain product space\n";
-	  e<<"  Vector:\n";
-	  xx.write(e);
-	  e<<"  FcnlProdDom:\n";
-	  f.write(e);
-	  throw e;
-	}
+	cxx[1].copy(x0);
       }
       catch (RVLException & e) {
 	e<<"\ncalled from RestrictFcnl constructor\n";
@@ -2032,7 +2021,11 @@ namespace RVL {
 		      const Vector<Scalar> & dx) const {
       try {
 	// as usual this doesn't really make sense
-	return f.getMaxStep(x,dx);
+	cxx[1].copy(x);
+	Vector<Scalar> dxx(ff.getDomain(),true);
+	Components<Scalar> cdxx(dxx);
+	dxx[1].copy(dx)
+	return ff.getMaxStep(xx,dxx);
       }
       catch (RVLException & e) {
 	e<<"\ncalled from RestrictFcnl::getMaxStep\n";

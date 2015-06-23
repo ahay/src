@@ -240,8 +240,8 @@ namespace RVL {
     }
 
     /** Virtual 2nd derivative constructor.  Permits subclasses to implement the 
-	derivative linear op with additional functionality using a subclass of
-	DerivEvaluation instead of the simplest form.
+	2nd derivative bilinear op with additional functionality using a subclass of
+	Deriv2Evaluation instead of the simplest form.
     */
     Deriv2Evaluation<Scalar> * 
     createDeriv2Evaluation(OperatorEvaluation<Scalar> & opeval) const {
@@ -289,7 +289,8 @@ namespace RVL {
   class OperatorProductDomain: public Operator<Scalar> {
 
     friend class OperatorEvaluation<Scalar>;
-
+    friend class RestrictOp<Scalar>; // in effect another (partial)
+				     // evaluation class
   protected:
 
     /** \f$dy = \partial_iF(x)dx_i\f$, where \f$dx_i \in X_i\f$ */
@@ -344,6 +345,22 @@ namespace RVL {
       }
     }
 
+    void export_applyPartialDeriv(OperatorProductDomain<Scalar> const & f,
+				  int i,
+				  const Vector<Scalar> & x,
+				  const Vector<Scalar> & dxi,
+				  Vector<Scalar> & dy) const {
+      f.applyPartialDeriv(i,x,dxi,dy);
+    }
+
+    void export_applyAdjPartialDeriv(OperatorProductDomain<Scalar> const & f,
+				     int i,
+				     const Vector<Scalar> & x,
+				     const Vector<Scalar> & dy,
+				     Vector<Scalar> & dxi) const {
+      f.applyPartialDeriv(i,x,dy,dxi);
+    }
+
     /** Primary clone method returns object of this type;
 	parent clone method delegates. */
     virtual OperatorProductDomain<Scalar> * clonePD() const = 0;
@@ -363,6 +380,127 @@ namespace RVL {
       return getProductDomain(); 
     }
   
+  };
+
+  /** restriction, or partial evaluation, of an operator on a product
+      space. At the moment limited to domains with two factors, and to
+      fixing the first factor. Similar to RestrictFcnl (see
+      functional.hh) */
+
+  template<typename Scalar>
+  class RestrictOp: public Operator<Scalar> {
+
+  private: 
+    
+    OperatorProductDomain<Scalar> const & ff;
+    mutable Vector<Scalar> xx;
+    mutable Components<Scalar> cxx;
+
+    RestrictOp();
+
+  protected:
+
+    void apply(Vector<Scalar> const & x,
+	       Vector<Scalar> & y) const {
+      try {
+	cxx[1].copy(x);
+	export_apply(ff, xx, y);
+      }
+      catch (RVLException & e) {
+	e<<"\ncalled from RestrictOp::apply\n";
+	throw e;
+      }
+    }
+
+    void applyDeriv(Vector<Scalar> const & x,
+		    Vector<Scalar> const & dx,
+		    Vector<Scalar> & dy) const {
+      try {
+	cxx[1].copy(x);
+	int i=1;
+	export_applyPartialDeriv(ff, i, xx, dx, dy);
+      }
+      catch (RVLException & e) {
+	e<<"\ncalled from RestrictOp::applyDeriv\n";
+	throw e;
+      }
+    }
+
+    void applyAdjDeriv(Vector<Scalar> const & x,
+		       Vector<Scalar> const & dy,
+		       Vector<Scalar> & dx) const {
+      try {
+	cxx[1].copy(x);
+	int i=1;
+	export_applyAdjPartialDeriv(ff, i, xx, dy, dx);
+      }
+      catch (RVLException & e) {
+	e<<"\ncalled from RestrictOp::applyAdjDeriv\n";
+	throw e;
+      }
+    }
+
+    Operator<Scalar> * clone() const { 
+      return new RestrictOp(*this);
+    }
+    
+  public:
+    
+    RestrictOp(OperatorProductDomain<Scalar> const & _f,
+	       Vector<Scalar> const & x0) 
+      : ff(_f), xx(_f.getDomain()), cxx(xx) {
+      try {
+	int ncomp = ff.getProductDomain().getSize();
+	if (ncomp != 2) {
+	  RVLException e; 
+	  e<<"ERROR: RestrictFcnl constructor\n";
+	  e<<"  input FcnlProdDom has domain with "<<ncomp<<" components\n";
+	  e<<"  current implementation implementation allows only 2, with";
+	  e<<"  first restricted\n";
+	  e<<"  FcnlProdDom:\n";
+	  ff.write(e);
+	  throw e;
+	}
+	// will throw exception if x0 is not in 0th component of dom
+	cxx[0].copy(x0);
+      }
+      catch (RVLException & e) {
+	e<<"\ncalled from RestrictFcnl constructor\n";
+	throw e;
+      }
+    }
+
+    RestrictOp(RestrictOp<Scalar> const & g): ff(g.ff), xx(g.xx), cxx(xx) {}
+
+    ~RestrictOp() {}
+
+    Space<Scalar> const & getDomain() { return ff.getProductDomain()[1]; }
+    Space<Scalar> const & getRange() { return ff.getRange(); }
+
+    Scalar getMaxStep(const Vector<Scalar> & x,
+		      const Vector<Scalar> & dx) const {
+      try {
+	// as usual this doesn't really make sense
+	cxx[1].copy(x);
+	Vector<Scalar> dxx(ff.getDomain(),true);
+	Components<Scalar> cdxx(dxx);
+	dxx[1].copy(dx)
+	return ff.getMaxStep(xx,dxx);
+      }
+      catch (RVLException & e) {
+	e<<"\ncalled from RestrictOp::getMaxStep\n";
+	throw e;
+      }
+    }
+
+    ostream & write(ostream & str) const {
+      str<<"RestrictOp with components\n";
+      str<<"  Vector:\n";
+      xx.write(str);
+      str<<"  OpProdDom:\n";
+      ff.write(str);
+      return str;
+    }
   };
 
   template<class Scalar>

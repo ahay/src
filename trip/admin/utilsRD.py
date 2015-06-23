@@ -83,7 +83,7 @@ def ExtVel (fileOut1='ExtModel', fileOut2='zeroModel', fileIn='Model', **params)
 	Flow (fileOut2, None,
 	    	'''
 		math n1=%(nx)d o1=0 d1=%(dx)f n2=%(nh)d d2=%(dh)f o2=0 output="%(Z0)f+%(dzdx)f*x1" |
-		unif3 n1=%(nz)d d1=%(dz)f n2=%(nx)d d2=%(dx)f n3=%(nh)d d3=%(dh)f o3=0
+		unif3 n1=%(nz)d d1=%(dz)f n2=%(nx)d d2=%(dx)f n3=%(nh)d d3=%(dh)f o3=%(oh)f
 		v00=%(V1)f,%(V2)f
 		''' % params)
 	Flow (fileOut1, [fileIn, fileOut2],
