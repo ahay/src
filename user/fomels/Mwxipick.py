@@ -96,6 +96,7 @@ class Canvas(wx.Window):
         color='Yellow'
         self.pen = wx.Pen(pencolor,self.thickness,wx.SOLID)
         self.brush = wx.Brush(color)
+        self.black = wx.Brush('black')
         self.Bind(wx.EVT_PAINT,self.OnPaint)
         self.Bind(wx.EVT_LEFT_DOWN,self.OnClick)
         
@@ -120,9 +121,13 @@ class Canvas(wx.Window):
         return img
     def OnPaint(self,event):
         self.dc = wx.PaintDC(self)
-        brush = wx.Brush('black')
-        self.dc.SetBackground(brush)
+        self.dc.SetBackground(self.black)
         self.dc.Clear() # clear with background brush
+        self.dc.DrawBitmap(self.image,0,0,True)
+    def Redraw(self,i3):
+        image = self.rsf2image(i3)
+        self.image = image.ConvertToBitmap()
+        self.dc.SetBackground(self.black)
         self.dc.DrawBitmap(self.image,0,0,True)
     def SetFrame(self):
         n1 = hist(int,'n1',1)
@@ -157,12 +162,12 @@ class Canvas(wx.Window):
             npick += 1
             tag = 'pick%d' % npick
             self.dc.DrawCircle(x,y,r)
-            pick.Bind(wx.EVT_LEFT_DOWN,self.SelectPick)
+            #pick.Bind(wx.EVT_LEFT_DOWN,self.SelectPick)
             #canvas.tag_bind(tag,'<ButtonPress-2>',selectpick)
             #canvas.tag_bind(tag,'<B2-Motion>',movepick)
             #canvas.tag_bind(tag,'<ButtonRelease-2>',movedpick)
             #canvas.tag_bind(tag,'<Button-3>',deletepick)
-            picks[0][tag]=self.ScalePick(x,y)
+            picks[i3][tag]=self.ScalePick(x,y)
         event.Skip()
     def SelectPick(self,event):
         print event.GetPositionTuple()
@@ -170,18 +175,23 @@ class Canvas(wx.Window):
         
 class MainFrame(wx.Frame):
     def __init__(self):
+        global n3
+        
         wx.Frame.__init__(self,None,title='Interactive Picking',size=(width+1,height+26))
 
         sizer = wx.BoxSizer(wx.VERTICAL)
 
         buttons = wx.BoxSizer(wx.HORIZONTAL)
-        bnext = wx.Button(self,-1,'Next >')
-        buttons.Add(bnext,0,wx.ALL,5)
-        bprev = wx.Button(self,-1,'< Prev')
-        bprev.Disable()
-        buttons.Add(bprev,0,wx.ALL,5)
-        label = wx.StaticText(self,-1,'%d of %d' % (i3+1,n3))
-        buttons.Add(label,0,wx.CENTER,5)
+        if n3 > 1:
+            self.bnext = wx.Button(self,-1,'Next >')
+            self.Bind(wx.EVT_BUTTON,self.NextFrame,self.bnext)
+            buttons.Add(self.bnext,0,wx.ALL,5)
+            self.bprev = wx.Button(self,-1,'< Prev')
+            self.bprev.Disable()
+            self.Bind(wx.EVT_BUTTON,self.PrevFrame,self.bprev)
+            buttons.Add(self.bprev,0,wx.ALL,5)
+            self.label = wx.StaticText(self,-1,'%d of %d' % (i3+1,n3))
+            buttons.Add(self.label,0,wx.CENTER,5)
         buttons.AddStretchSpacer()
         colorpick = wx.Button(self,-1,'Change Color')
         colorpick.SetBackgroundColour('light yellow') 
@@ -205,6 +215,30 @@ class MainFrame(wx.Frame):
 
         self.status = self.CreateStatusBar()
         self.status.SetFieldsCount(1)
+    def NextFrame(self,event):
+        global i3,n3,canvas,next,prev,picks
+#        for pick in picks[i3].keys():
+#            canvas.itemconfigure(pick,state=HIDDEN)
+        i3 += 1
+        if i3 == n3-1:
+            self.bnext.Disable()
+        self.bprev.Enable()
+#        for pick in picks[i3].keys():
+#            canvas.itemconfigure(pick,state=NORMAL)         
+        self.label.SetLabel('%d of %d' % (i3+1,n3))
+        self.sketch.Redraw(i3)
+    def PrevFrame(self,event):
+        global i3,n3,canvas,next,prev,picks
+#        for pick in picks[i3].keys():
+#            canvas.itemconfigure(pick,state=HIDDEN)
+        i3 -= 1
+        if i3 == 0:
+            self.bprev.Disable()
+        self.bnext.Enable()
+#        for pick in picks[i3].keys():
+#            canvas.itemconfigure(pick,state=NORMAL)   
+        self.label.SetLabel('%d of %d' % (i3+1,n3))
+        self.sketch.Redraw(i3)
     def OnSketchMotion(self,event):
         x,y = event.GetPositionTuple()
         position = self.sketch.Position(x,y)

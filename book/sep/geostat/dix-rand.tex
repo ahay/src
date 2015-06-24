@@ -1,0 +1,80 @@
+\inputdir{dix}
+
+In general the operator $\mathbf{L}$ in fitting goals (\ref{eq:rand}) is much more
+complex than the simple masking operator used in the missing
+data problem.  One of the most attractive potential uses for a 
+range of equiprobable models is in velocity estimation.  
+As a result I decided to next test the methodology on one of the simplest
+velocity estimation operators, the Dix equation \cite{GEO20.01.00680086}.
+\par 
+Following the methodology of \longcite{Clapp.sep.97.bob1},  I
+start from a CMP gather $q(t,i)$ moveout corrected with velocity $v$.
+A good starting guess for our RMS velocity function
+is the maximum ``instantaneous stack energy'',
+\begin{equation}
+{\rm stack}(t,v) = \sum_{i=0}^n {\rm NMO_v}(q(t,i))  .
+\end{equation}
+
+Not all times have reflections so we don't  weight each $v_{\rm rms}(t)$ 
+equivalently. 
+Instead we introduce 
+a diagonal weighting matrix, $\bold W$,
+found from stack energy at each selected $v_{\rm rms}(t)$.
+
+Our data fitting goal becomes
+\begin{equation}
+\bold 0
+\quad\approx\quad
+\bold W
+\left[
+\bold C\bold u
+-
+\bold d
+\right] .
+\end{equation}
+We are multiplying our RMS function by our time $\tau$ so
+must make a slight change in our weighting function.
+To give early
+times approximately the same priority as later times,
+we need to multiply our weighting function by the inverse,
+\beq
+{\mathbf{W}'} =\frac{{\mathbf{W}}}{\tau} .
+\eeq
+Next we need to add in regularization. I define
+a steering filter operator  ${\bf A}$ that influences
+the model to introduce velocity changes that follow structural
+dip.
+I replace
+the zero vector with a random vector and  precondition the problem 
+\cite{Fomel.sep.95.sergey1}  to get
+\beqa
+\zero &\approx& {\bold W'} ( \bold C \prec \pvar - \data )  \nonumber \\
+\sigma \bf v &\approx& \epsilon \pvar \label{eq:mydix} .
+\eeqa
+\par
+To test the methodology I took a 2-D line from a 3-D
+North Sea dataset provided by Unocal. 	
+Figure~\ref{fig:scale.10.x2} shows four different realizations
+with varying levels of $\sigma$.
+\plot{scale.10.x2}{width=6.0in,height=5.5in}{Four different realization
+of fitting goals
+(\ref{eq:mydix}) with increasing levels of Gaussian noise in $\bf v$.}
+
+I then chose what I considered a reasonable variability level,
+and constructed ten equiprobable models (Figure~\ref{fig:dix-real}).  
+Note that the general
+shapes of the models are very similar.  What we  see are smaller structural
+changes.  For example, look at the range between $.7$s and $1.1$s.
+Generally each realization tries to put a high velocity layer in
+this region, but
+thickness and magnitude varies in the different realizations. 
+%Figure~\ref{fig:compare-small} shows the two extremes of the realizations
+%for this window of the data. The  average velocity in the two panels varies by
+%nearly $100m/s$.
+%
+\plot{dix-real}{width=6.0in,height=5.5in}{Four of the ten
+different realization
+of fitting goals
+(\ref{eq:mydix}) with constant Gaussian noise in $\bf v$.}
+%\plot{compare-small}{width=6.0in,height=3.5in}{The left and center panel
+%%represent to extremes of ten realization applying fitting goals (\ref{eq:mydix}). The right panel is the difference between these two realizations.}

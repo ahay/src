@@ -77,5 +77,65 @@ Plot('histos2','histos',
 
 Result('distir','histos1 histos2','Overlay')
 
+Flow('var.p','bin pef mask',
+     '''
+     helicon filt=${SOURCES[1]} | spray axis=1 n=1 | headerwindow mask=${SOURCES[2]} |
+     attr want=var | sed s/variance/var/ | sed s/[[:blank:]]*//g
+     ''')
+
+Flow('thisto','bin mask',
+     '''
+     spray axis=1 n=1 | headerwindow mask=${SOURCES[1]} | 
+     histogram o1=-1 n1=251 d1=.008 | dd type=float | scale dscale=2.889
+     ''')
+
+interps=[]
+histos=['thisto']
+for toss in range(2015,2015+8):
+    prior = 'prior%d' % toss
+    Flow(prior,'bin pef var.p',
+         '''
+         noise seed=%d rep=y par=${SOURCES[2]} | helicon div=y filt=${SOURCES[1]}
+         ''' % toss)
+    
+    interp = 'interp%d' % toss
+    Flow(interp,['bin','pef',prior],
+         '''
+         add scale=1,-1 ${SOURCES[2]} | 
+         miss filt=${SOURCES[1]} mask=${SOURCES[0]} niter=100 | 
+         add ${SOURCES[2]}
+         ''')
+    Plot(interp,'grey transp=n yreverse=n crowd=1 wanttitle=n')
+    interps.append(interp)
+
+    histo = 'histo%d' % toss
+    Flow(histo,interp,'histogram o1=-1 n1=251 d1=.008 | dd type=float')
+    histos.append(histo)
+
+Flow('rhistos',histos,'cat axis=2 ${SOURCES[1:%d]} | scale dscale=3.9e-05' % len(histos))
+
+Plot('rhistos',
+     '''
+     graph dash=0,1 label1="Value" label2="Frequency" wanttitle=n 
+     min1=-1 max1=1 min2=-0.001 max2=0.015 plotfat=5,1
+     ''')
+interps.append('rhistos')
+
+Result('movie',interps,'TwoRows',vppen='gridnum=3,3 vpstyle=n')
+
+Flow('nsscale','bin','put o2=1 d2=1 o1=1 d1=1 | math output="2*(x1+160*x2)/(160*160)" ')
+
+Flow('nsprior','bin pef var.p nsscale',
+     '''
+     noise seed=2015 rep=y par=${SOURCES[2]} | mul ${SOURCES[3]} | helicon div=y filt=${SOURCES[1]}
+     ''')
+    
+Flow('non-stat','bin pef nsprior',
+     '''
+     add scale=1,-1 ${SOURCES[2]} | 
+     miss filt=${SOURCES[1]} mask=${SOURCES[0]} niter=100 | 
+     add ${SOURCES[2]}
+     ''')
+Result('non-stat','grey transp=n yreverse=n label1=longitude label2=latitude wanttitle=n')
 
 End()

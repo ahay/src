@@ -15,6 +15,8 @@ To the reproducible documents collection:
   balancing (Berlioux and Harlan)
 * sep/elliptic2: The double-elliptic approximation in the group and
   phase domains (Dellinger and Muir)
+* sep/sparse2: Test case for PEF estimation with sparse data II
+  (Brown, Claerbout, and Fomel)
 
 To SCons:
 
