@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfput', 'sfwindow', 'sfbyte', 'sftransp', 'sfgrey3', 'sfvscan', 'sfpick', 'sfgrey', 'sfnmo', 'sfstack', 'sflogstretch', 'sffft1', 'sffinstack', 'sfpad', 'sfslice', 'sfdix', 'sftime2depth', 'sfspray', 'sfsimivscan', 'sfgraph']
+data=['data/midpts/beinew.HH']
+size=  440066360

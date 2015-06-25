@@ -1,0 +1,146 @@
+from rsf.proj import *
+
+Flow('vrms',None,
+     'math d1=0.004 n1=1001 o1=0 output="x1*125+2000+50*sin(9*x1)" ')
+
+Flow('synt',None,
+     '''
+     spike d1=0.004 n1=1001 |
+     noise rep=y seed=2006 |
+     cut n1=100 | 
+     bandpass flo=4 fhi=20 |
+     spray axis=2 n=141 d=25 o=0 label=Offset unit=m 
+     ''')
+
+Flow('cmpa','synt vrms',
+     'inmo velocity=${SOURCES[1]} half=n | noise seed=2007 var=1e-10 | put d2=0.025 label2="Offset" unit2="km" ')
+
+Flow('top','synt','window n1=400')
+Flow('mid','synt',
+     'window f1=400 n1=300 | math output="input*(1-x2*%g)" ' % (2.0/3500))
+Flow('bot','synt','window f1=700')
+
+Flow('cmpb','top mid bot vrms',
+     '''
+     cat axis=1 ${SOURCES[1:3]} |
+     inmo velocity=${SOURCES[3]} half=n |
+     noise seed=2007 var=1e-10 | put d2=0.025 label2="Offset" unit2="km"
+     ''')
+
+Result('cmpa','grey title="CMP" clip=0.74 labelsz=14 labelfat=2 font=4 titlesz=20 titlefat=2')
+Result('cmpb','grey title="CMP with AVO" clip=0.74 labelsz=14 labelfat=2 font=4 titlesz=20 titlefat=2')
+
+#Flow('ref','cmpa','window n2=1')
+#Flow('ref','abnmo','stack')
+Flow('ref','synt','window n2=1')
+
+dat='cmpa'
+for typ in ('semblance','ab','weighted','similarity-weighted'):
+	scn=typ+'scn'
+	if typ == 'similarity-weighted':
+		Flow(scn,[dat,'ref'],'simivscan thr=0.4 half=n v0=2 dv=0.01 nv=101 type=semblance weight=y nb=5 ref=${SOURCES[1]} | clip2 lower=0')
+	else:
+		Flow(scn,dat,'vscan half=n v0=2 dv=0.01 nv=101 weight=y type=%s nb=5 | clip2 lower=0'%typ)
+	Plot(scn+'0',scn,
+		'''
+		grey color=j allpos=y title="%s" pclip=100 labelsz=14 labelfat=2 font=4 titlesz=20 titlefat=2
+		'''%typ)
+	pik=typ+'pik'
+	Flow(pik,scn,'scale axis=2 | pick rect1=50')
+	Plot(pik,
+             '''
+             graph yreverse=y transp=y min2=2 max2=3 pad=n
+             plotcol=7 plotfat=15 wanttitle=n wantaxis=n
+             ''')
+	Result(scn,[scn+'0',pik],'Overlay')
+	nmo = typ + 'nmo'
+	Flow(nmo,[dat,pik],'nmo half=n velocity=${SOURCES[1]} str=0.1 ')
+	Result(nmo,
+			'''
+			grey title="%s"
+			grid2=y gridcol=6 gridfat=7 g2num=0.5 clip=0.74 labelsz=14 labelfat=2 font=4 titlesz=20 titlefat=2
+			''' % typ)
+
+	inmo = typ + 'inmo'
+	Flow(inmo,[nmo,pik],'inmo half=n velocity=${SOURCES[1]} str=0.4')
+	Result(inmo,
+			'''
+			grey title="%s" clip=0.74 labelsz=14 labelfat=2 font=4 titlesz=20 titlefat=2
+			''' % typ)
+
+#Flow('ref','cmpa','window n2=1')
+Flow('ref2','avo-abnmo','stack')
+#Flow('ref','synt','window n2=1')
+
+dat='cmpb'
+for typ1 in ('semblance','ab','weighted','similarity-weighted'):
+	typ='avo-'+typ1
+	scn=typ+'scn'
+
+	if typ == 'avo-similarity-weighted':
+		Flow(scn,[dat,'ref2'],'simivscan thr=0.1 half=n v0=2 dv=0.01 nv=101 weight=y type=avo nb=10 ref=${SOURCES[1]}  | clip2 lower=0')
+	elif typ=='avo-semblance':
+		Flow(scn,dat,'vscan half=n v0=2 dv=0.01 nv=101 weight=y type=semb nb=10 | clip2 lower=0')
+	elif typ == 'avo-weighted':
+		Flow(scn,dat,'vscan half=n v0=2 dv=0.01 nv=101 weight=y type=weighted nb=10   nb=10| clip2 lower=0')
+	else:
+		Flow(scn,dat,'vscan half=n v0=2 dv=0.01 nv=101 weight=y type=avo nb=5  nb=10 | clip2 lower=0')		
+
+	Plot(scn+'0',scn,
+		'''
+		grey color=j allpos=y title="%s" pclip=100 labelsz=14 labelfat=2 font=4 titlesz=20 titlefat=2
+		'''%typ)
+	pik=typ+'pik'
+	Flow(pik,scn,'scale axis=2 | pick rect1=50')
+	Plot(pik,
+             '''
+             graph yreverse=y transp=y min2=2 max2=3 pad=n
+             plotcol=7 plotfat=15 wanttitle=n wantaxis=n
+             ''')
+	Result(scn,[scn+'0',pik],'Overlay')
+	nmo = typ + 'nmo'
+	Flow(nmo,[dat,pik],'nmo half=n velocity=${SOURCES[1]} str=0.1 ')
+	Result(nmo,
+			'''
+			grey title="%s"
+			grid2=y gridcol=6 gridfat=7 g2num=0.5 clip=0.74 labelsz=14 labelfat=2 font=4 titlesz=20 titlefat=2
+			''' % typ)
+
+	inmo = typ + 'inmo'
+	Flow(inmo,[nmo,pik],'inmo half=n velocity=${SOURCES[1]} str=0.4')
+	Result(inmo,
+			'''
+			grey title="%s" clip=0.74 labelsz=14 labelfat=2 font=4 titlesz=20 titlefat=2
+			''' % typ)
+
+
+Result('synth-comp1','./Fig/cmpa.vpl ./Fig/semblancescn.vpl ./Fig/abscn.vpl ./Fig/similarity-weightedscn.vpl','SideBySideAniso')
+Result('synth-comp2','./Fig/cmpb.vpl ./Fig/avo-semblancescn.vpl ./Fig/avo-abscn.vpl ./Fig/avo-similarity-weightedscn.vpl','SideBySideAniso')
+
+
+
+#Result('comp2','./Fig/cmpa.vpl ./Fig/semblancenmo.vpl ./Fig/abnmo.vpl ./Fig/weightednmo.vpl','SideBySideAniso')
+#Result('comp3','./Fig/cmpa.vpl ./Fig/semblanceinmo.vpl ./Fig/abinmo.vpl ./Fig/weightedinmo.vpl','SideBySideAniso')
+
+#Result('comp4','./Fig/cmpb.vpl ./Fig/avo-semblancescn.vpl ./Fig/avo-abscn.vpl ./Fig/avo-weightedscn.vpl','SideBySideAniso')
+#Result('comp5','./Fig/cmpb.vpl ./Fig/avo-semblancenmo.vpl ./Fig/avo-abnmo.vpl ./Fig/avo-weightednmo.vpl','SideBySideAniso')
+#Result('comp6','./Fig/cmpb.vpl ./Fig/avo-semblanceinmo.vpl ./Fig/avo-abinmo.vpl ./Fig/avo-weightedinmo.vpl','SideBySideAniso')
+
+
+#Flow('test1','cmpa','vscan half=n avosemblance=n semblance=y v0=2 dv=0.01 nv=101 type=s | clip2 lower=0')
+#Flow('test2','cmpa','vscan half=n avosemblance=y semblance=y v0=2 dv=0.01 nv=101 type=a | clip2 lower=0')
+
+#Plot('test1',
+#		'''
+#		grey color=j allpos=y title="%s" pclip=100 labelsz=14 labelfat=2 font=4 titlesz=20 titlefat=2
+#		''')
+#Plot('test2',
+#		'''
+#		grey color=j allpos=y title="%s" pclip=100 labelsz=14 labelfat=2 font=4 titlesz=20 titlefat=2
+#		''')
+#Result('test','test1 test2','SideBySideAniso')
+
+Flow('vcomp','vrms avo-semblancepik avo-abpik avo-similarity-weightedpik','math output="input/1000" | cat axis=2 ${SOURCES[1:4]}')
+Result('vcomp','graph screenratio=0.6 dash=0,3,5,1 plotcol="7,3,5,2" title="Velocity comparison" label2=Velocity unit2="km/s" label1=Time unit1=s')
+
+End()
