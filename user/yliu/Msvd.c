@@ -25,7 +25,8 @@
 
 int main(int argc, char *argv[])
 {
-    int i, j, n1, n2, n3, ka; /*n1 is trace length, n2 is the number of traces, n3 is the number of 3th axis*/
+    int i, j, n1, n2, n3, ka, nd; 
+    /*n1 is trace length, n2 is the number of traces, n3 is the number of 3th axis*/
     sf_file in, out, outu=NULL, outv=NULL;
     const double eps = 1.0e-5;
     float *u, *v, *a, *d;
@@ -43,6 +44,9 @@ int main(int argc, char *argv[])
     /* get the trace length (n1) and the number of traces (n2) and n3*/
     ka = SF_MAX(n1,n2)+1;
 
+    nd = SF_MIN(n1,n2);
+
+    sf_putint(out, "n1", nd);
     sf_putint(out, "n2", 1);
 
     ifoutu = (NULL!=sf_getstring("left"));
@@ -68,15 +72,15 @@ int main(int argc, char *argv[])
     a = sf_floatalloc(n1*n2);
     u = sf_floatalloc(n2*n2);
     v = sf_floatalloc(n1*n1);
-    d = sf_floatalloc(n1);
+    d = sf_floatalloc(nd);
 
     for(i=0;i<n3;i++)  {
 	sf_floatread(a, n1*n2, in);
         svduav(a, u, v); /* implement svd */
-	for (j=0; j < n1; j++) {
+	for (j=0; j < nd; j++) {
 	    d[j] = a[j*n1+j];
 	}
-	sf_floatwrite(d, n1, out);   /* output singular values */ 
+	sf_floatwrite(d, nd, out);   /* output singular values */ 
 	if(ifoutu)sf_floatwrite(u, n2*n2, outu);  /* output u */ 
         if(ifoutv)sf_floatwrite(v, n1*n1, outv);  /* output v */
     }

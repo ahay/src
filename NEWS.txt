@@ -54,6 +54,7 @@ In the Python package:
 In programs:
 
 * Fixed segmentation fault for sffft1 with no FFTW and no OMP
+* Fixed case n1 > n2 in sfsvd
 
 In the build system:
 
