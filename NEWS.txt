@@ -17,6 +17,8 @@ To the reproducible documents collection:
   phase domains (Dellinger and Muir)
 * sep/sparse2: Test case for PEF estimation with sparse data II
   (Brown, Claerbout, and Fomel)
+* tccs/vscan: Velocity analysis using similarity-weighted semblance
+  (Chen, Liu, and Chen)
 
 To SCons:
 
