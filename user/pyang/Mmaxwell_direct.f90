@@ -190,10 +190,14 @@ subroutine step_forward(p, vz, vx, vv, rho, eta, dt, idz, idx, nzpad, nxpad)
 
   do i2=4,nxpad-4
      do i1=4,nzpad-4
-        diff1=c1*(p(i1+1,i2)-p(i1,i2))+c2*(p(i1+2,i2)-p(i1-1,i2)) &
-             +c3*(p(i1+3,i2)-p(i1-2,i2))+c4*(p(i1+4,i2)-p(i1-3,i2))
-        diff2=c1*(p(i1,i2+1)-p(i1,i2))+c2*(p(i1,i2+2)-p(i1,i2-1)) &
-             +c3*(p(i1,i2+3)-p(i1,i2-2))+c4*(p(i1,i2+4)-p(i1,i2-3))
+        diff1=c1*(p(i1+1,i2)-p(i1,i2))&
+             +c2*(p(i1+2,i2)-p(i1-1,i2))&
+             +c3*(p(i1+3,i2)-p(i1-2,i2))&
+             +c4*(p(i1+4,i2)-p(i1-3,i2))
+        diff2=c1*(p(i1,i2+1)-p(i1,i2))&
+             +c2*(p(i1,i2+2)-p(i1,i2-1))&
+             +c3*(p(i1,i2+3)-p(i1,i2-2))&
+             +c4*(p(i1,i2+4)-p(i1,i2-3))
         vz(i1,i2)=vz(i1,i2)-dt*idz*diff1/rho(i1,i2)
         vx(i1,i2)=vx(i1,i2)-dt*idx*diff2/rho(i1,i2)
      enddo
@@ -204,10 +208,14 @@ subroutine step_forward(p, vz, vx, vv, rho, eta, dt, idz, idx, nzpad, nxpad)
         tmp=vv(i1,i2)
         tmp=rho(i1,i2)*tmp*tmp
 	tau=eta(i1,i2)/tmp
-        diff1=c1*(vz(i1,i2)-vz(i1-1,i2))+c2*(vz(i1+1,i2)-vz(i1-2,i2)) &
-             +c3*(vz(i1+2,i2)-vz(i1-1,i2))+c4*(vz(i1+3,i2)-vz(i1-2,i2))
-        diff2=c1*(vx(i1,i2)-vx(i1,i2-1))+c2*(vx(i1,i2+1)-vx(i1,i2-2)) &
-             +c3*(vx(i1,i2+2)-vx(i1,i2-3))+c4*(vx(i1,i2+3)-vx(i1,i2-4))
+        diff1=c1*(vz(i1,i2)-vz(i1-1,i2))&
+             +c2*(vz(i1+1,i2)-vz(i1-2,i2))&
+             +c3*(vz(i1+2,i2)-vz(i1-3,i2))&
+             +c4*(vz(i1+3,i2)-vz(i1-4,i2))
+        diff2=c1*(vx(i1,i2)-vx(i1,i2-1))&
+             +c2*(vx(i1,i2+1)-vx(i1,i2-2))&
+             +c3*(vx(i1,i2+2)-vx(i1,i2-3))&
+             +c4*(vx(i1,i2+3)-vx(i1,i2-4))
         p(i1,i2)=((1-0.5*dt/tau)*p(i1,i2)-dt*tmp*(idz*diff1+idx*diff2))/(1.+0.5*dt/tau)
      enddo
   enddo

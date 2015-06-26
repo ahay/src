@@ -42,6 +42,7 @@ mpigpufwi
 f90_progs = '''
 maxwell_sponge2 maxwell_cpml2 maxwell_direct 
 maxwell_direct_backward maxwell_sponge2_backward maxwell_cpml2_backward
+maxwell_sponge2_adjtest
 '''
 
 
