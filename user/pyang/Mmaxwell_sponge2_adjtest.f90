@@ -24,9 +24,9 @@ program mexwell_sponge2_adjtest
   real    :: dt, dz, dx, fm, tmp, idx, idz
   real, parameter::PI=3.14159265
   real, dimension (:),   allocatable :: wlt,bndr
-  real, dimension (:,:), allocatable :: v0, vv, rho, eta
+  real, dimension (:,:), allocatable :: v0, K, rho, eta
   real, dimension (:,:), allocatable :: p, vz, vx
-  real,dimension(:,:,:,:),allocatable:: bvz,bvx
+  real,dimension(:,:,:,:),allocatable:: bvz, bvx
   type(file) :: Fv, Fw1, Fw2, Frho, Feta  ! I/O files 
 
   call sf_init() ! initialize Madagascar
@@ -78,7 +78,7 @@ program mexwell_sponge2_adjtest
   allocate(wlt(nt))
   allocate(bndr(nb))
   allocate(v0(nz,nx))
-  allocate(vv(nzpad,nxpad))
+  allocate(K(nzpad,nxpad))
   allocate(rho(nzpad,nxpad))
   allocate(eta(nzpad,nxpad))
   allocate(p(nzpad,nxpad))
@@ -98,10 +98,11 @@ program mexwell_sponge2_adjtest
      tmp=0.015*(nb-ib)
      bndr(ib)=exp(-tmp*tmp)
   enddo
-  call rsf_read(Fv,v0)
-  call expand2d(vv, v0, nz, nx, nb)
   call rsf_read(Frho,v0)
   call expand2d(rho, v0, nz, nx, nb)
+  call rsf_read(Fv,v0)
+  v0=rho*v0*v0 !compute K=rho*v^2
+  call expand2d(K, v0, nz, nx, nb)
   call rsf_read(Feta, v0)
   call expand2d(eta, v0, nz, nx, nb)
   p=0.
@@ -116,14 +117,14 @@ program mexwell_sponge2_adjtest
      call rsf_write(Fw1,v0)
 
      if (order1) then ! scheme 1, 1st order accuracy, default
-        call step_forward(.true.,p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
-        if(attenuating) call add_attenuation(p, eta, rho, vv, dt, nzpad, nxpad)
+        call step_forward(.false.,p, vz, vx, K, rho, dt, idz, idx, nzpad, nxpad)
+        if(attenuating) call add_attenuation(p, eta, rho, K, dt, nzpad, nxpad)
      else
-        if(attenuating) call add_attenuation(p, eta, rho, vv, 0.5*dt, nzpad, nxpad)
-        call step_forward(.true.,p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
-        if(attenuating) call add_attenuation(p, eta, rho, vv, 0.5*dt, nzpad, nxpad)
+        if(attenuating) call add_attenuation(p, eta, rho, K, 0.5*dt, nzpad, nxpad)
+        call step_forward(.false.,p, vz, vx, K, rho, dt, idz, idx, nzpad, nxpad)
+        if(attenuating) call add_attenuation(p, eta, rho, K, 0.5*dt, nzpad, nxpad)
      endif
-     call add_sources(attenuating,p, eta, rho, vv, dt, wlt(it), sz, sx, nzpad, nxpad)
+     call add_sources(attenuating,p, eta, rho, K, dt, wlt(it), sz, sx, nzpad, nxpad)
 
      ! apply sponge ABC
      call apply_sponge(p,bndr,nz,nx,nb)
@@ -141,21 +142,23 @@ program mexwell_sponge2_adjtest
      call window2d(v0, p, nz, nx, nb)
      call rsf_write(Fw2,v0)
 
-     call add_sources(attenuating,p, eta, rho, vv, -dt, wlt(it), sz, sx, nzpad, nxpad)
+     call add_sources(attenuating,p, eta, rho, K, -dt, wlt(it), sz, sx, nzpad, nxpad)
      if (order1) then ! scheme 1, 1st order accuracy, default
-        if(attenuating) call add_attenuation(p, eta, rho, vv, -dt, nzpad, nxpad)
-        call step_forward(.false.,p, vz, vx, vv, rho, -dt, idz, idx, nzpad, nxpad)
+        if(attenuating) call add_attenuation(p, eta, rho, K, -dt, nzpad, nxpad)
+        call step_forward(.true., p, vz, vx, K, rho, -dt, idz, idx, nzpad, nxpad)
      else
-        if (attenuating) call add_attenuation(p, eta, rho, vv, -0.5*dt, nzpad, nxpad)
-        call step_forward(.false.,p, vz, vx, vv, rho, -dt, idz, idx, nzpad, nxpad)
-        if (attenuating) call add_attenuation(p, eta, rho, vv, -0.5*dt, nzpad, nxpad)
+        if (attenuating) call add_attenuation(p, eta, rho, K, -0.5*dt, nzpad, nxpad)
+        call step_forward(.true., p, vz, vx, K, rho, -dt, idz, idx, nzpad, nxpad)
+        if (attenuating) call add_attenuation(p, eta, rho, K, -0.5*dt, nzpad, nxpad)
      endif
   enddo
+
+
 
   deallocate(wlt)
   deallocate(bndr)
   deallocate(v0)
-  deallocate(vv)
+  deallocate(K)
   deallocate(rho)
   deallocate(eta)
   deallocate(p)
@@ -218,136 +221,82 @@ subroutine window2d(tgt, src, nz, nx, nb)
   return
 end subroutine window2d
 
-!-------------------------------------------------------------------------------
-subroutine step_forward(forw,p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
-  implicit none
-
-  logical::forw
-  integer::i1, i2
-  real::tmp,diff1,diff2
-
-  integer:: nzpad, nxpad
-  real::idz,idx,dt
-  real,dimension(nzpad,nxpad)::p, vz, vx, vv, rho
-
-  real,parameter::c1=+1.196289062500000
-  real,parameter::c2=-0.079752604166667
-  real,parameter::c3=+0.009570312500000
-  real,parameter::c4=-0.000697544642857
-  
-  if(forw) then
-     do i2=4,nxpad-4
-        do i1=4,nzpad-4
-           diff1=c1*(p(i1+1,i2)-p(i1,i2))&
-                +c2*(p(i1+2,i2)-p(i1-1,i2))&
-                +c3*(p(i1+3,i2)-p(i1-2,i2))&
-                +c4*(p(i1+4,i2)-p(i1-3,i2))
-           diff2=c1*(p(i1,i2+1)-p(i1,i2))&
-                +c2*(p(i1,i2+2)-p(i1,i2-1))&
-                +c3*(p(i1,i2+3)-p(i1,i2-2))&
-                +c4*(p(i1,i2+4)-p(i1,i2-3))
-           vz(i1,i2)=vz(i1,i2)-dt*idz*diff1/rho(i1,i2)
-           vx(i1,i2)=vx(i1,i2)-dt*idx*diff2/rho(i1,i2)
-        enddo
-     enddo
-
-     do i2=5,nxpad-3
-        do i1=5,nzpad-3
-           tmp=vv(i1,i2)
-           tmp=rho(i1,i2)*tmp*tmp
-           diff1=c1*(vz(i1,i2)-vz(i1-1,i2))&
-                +c2*(vz(i1+1,i2)-vz(i1-2,i2))&
-                +c3*(vz(i1+2,i2)-vz(i1-3,i2))&
-                +c4*(vz(i1+3,i2)-vz(i1-4,i2))
-           diff2=c1*(vx(i1,i2)-vx(i1,i2-1))&
-                +c2*(vx(i1,i2+1)-vx(i1,i2-2))&
-                +c3*(vx(i1,i2+2)-vx(i1,i2-3))&
-                +c4*(vx(i1,i2+3)-vx(i1,i2-4))
-           p(i1,i2)=p(i1,i2)-dt*tmp*(idz*diff1+idx*diff2)
-        enddo
-     enddo
-  else
-     do i2=5,nxpad-3
-        do i1=5,nzpad-3
-           tmp=vv(i1,i2)
-           tmp=rho(i1,i2)*tmp*tmp
-           diff1=c1*(vz(i1,i2)-vz(i1-1,i2))&
-                +c2*(vz(i1+1,i2)-vz(i1-2,i2))&
-                +c3*(vz(i1+2,i2)-vz(i1-3,i2))&
-                +c4*(vz(i1+3,i2)-vz(i1-4,i2))
-           diff2=c1*(vx(i1,i2)-vx(i1,i2-1))&
-                +c2*(vx(i1,i2+1)-vx(i1,i2-2))&
-                +c3*(vx(i1,i2+2)-vx(i1,i2-3))&
-                +c4*(vx(i1,i2+3)-vx(i1,i2-4))
-           p(i1,i2)=p(i1,i2)-dt*tmp*(idz*diff1+idx*diff2)
-        enddo
-     enddo
-     do i2=4,nxpad-4
-        do i1=4,nzpad-4
-           diff1=c1*(p(i1+1,i2)-p(i1,i2))&
-                +c2*(p(i1+2,i2)-p(i1-1,i2))&
-                +c3*(p(i1+3,i2)-p(i1-2,i2))&
-                +c4*(p(i1+4,i2)-p(i1-3,i2))
-           diff2=c1*(p(i1,i2+1)-p(i1,i2))&
-                +c2*(p(i1,i2+2)-p(i1,i2-1))&
-                +c3*(p(i1,i2+3)-p(i1,i2-2))&
-                +c4*(p(i1,i2+4)-p(i1,i2-3))
-           vz(i1,i2)=vz(i1,i2)-dt*idz*diff1/rho(i1,i2)
-           vx(i1,i2)=vx(i1,i2)-dt*idx*diff2/rho(i1,i2)
-        enddo
-     enddo
-  endif
-  return
-end subroutine step_forward
-
 !------------------------------------------------------------------------------
-subroutine step_adjoint(vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
+subroutine step_forward(adj,vz, vx, K, rho, dt, idz, idx, nzpad, nxpad)
   implicit none
 
-  logical::forw
+  logical::adj
   integer::i1, i2
-  real::tmp,diff1,diff2
+  real::diff1,diff2
 
   integer:: nzpad, nxpad
   real::idz,idx,dt
-  real,dimension(nzpad,nxpad)::p, vz, vx, vv, rho
+  real,dimension(nzpad,nxpad)::p, vz, vx, K, rho
 
   real,parameter::c1=+1.196289062500000
   real,parameter::c2=-0.079752604166667
   real,parameter::c3=+0.009570312500000
   real,parameter::c4=-0.000697544642857
   
-     do i2=4,nxpad-4
-        do i1=4,nzpad-4
-           diff1=c1*(p(i1+1,i2)-p(i1,i2))&
-                +c2*(p(i1+2,i2)-p(i1-1,i2))&
-                +c3*(p(i1+3,i2)-p(i1-2,i2))&
-                +c4*(p(i1+4,i2)-p(i1-3,i2))
-           diff2=c1*(p(i1,i2+1)-p(i1,i2))&
-                +c2*(p(i1,i2+2)-p(i1,i2-1))&
-                +c3*(p(i1,i2+3)-p(i1,i2-2))&
-                +c4*(p(i1,i2+4)-p(i1,i2-3))
-           vz(i1,i2)=vz(i1,i2)-dt*idz*diff1/rho(i1,i2)
-           vx(i1,i2)=vx(i1,i2)-dt*idx*diff2/rho(i1,i2)
+  if(.not.adj) then
+     if(dt>0) then !do forward modeling
+        do i2=4,nxpad-4
+           do i1=4,nzpad-4
+              diff1=c1*(p(i1+1,i2)-p(i1,i2))&
+                   +c2*(p(i1+2,i2)-p(i1-1,i2))&
+                   +c3*(p(i1+3,i2)-p(i1-2,i2))&
+                   +c4*(p(i1+4,i2)-p(i1-3,i2))
+              diff2=c1*(p(i1,i2+1)-p(i1,i2))&
+                   +c2*(p(i1,i2+2)-p(i1,i2-1))&
+                   +c3*(p(i1,i2+3)-p(i1,i2-2))&
+                   +c4*(p(i1,i2+4)-p(i1,i2-3))
+              vz(i1,i2)=vz(i1,i2)-dt*idz*diff1/rho(i1,i2)
+              vx(i1,i2)=vx(i1,i2)-dt*idx*diff2/rho(i1,i2)
+           enddo
         enddo
-     enddo
-
-     do i2=5,nxpad-3
-        do i1=5,nzpad-3
-           tmp=vv(i1,i2)
-           tmp=rho(i1,i2)*tmp*tmp
-           diff1=c1*(vz(i1,i2)-vz(i1-1,i2))&
-                +c2*(vz(i1+1,i2)-vz(i1-2,i2))&
-                +c3*(vz(i1+2,i2)-vz(i1-3,i2))&
-                +c4*(vz(i1+3,i2)-vz(i1-4,i2))
-           diff2=c1*(vx(i1,i2)-vx(i1,i2-1))&
-                +c2*(vx(i1,i2+1)-vx(i1,i2-2))&
-                +c3*(vx(i1,i2+2)-vx(i1,i2-3))&
-                +c4*(vx(i1,i2+3)-vx(i1,i2-4))
-           p(i1,i2)=p(i1,i2)-dt*tmp*(idz*diff1+idx*diff2)
-         enddo
-     enddo
-!-----------------------------------------------------------------------------
+        do i2=5,nxpad-3
+           do i1=5,nzpad-3
+              diff1=c1*(vz(i1,i2)-vz(i1-1,i2))&
+                   +c2*(vz(i1+1,i2)-vz(i1-2,i2))&
+                   +c3*(vz(i1+2,i2)-vz(i1-3,i2))&
+                   +c4*(vz(i1+3,i2)-vz(i1-4,i2))
+              diff2=c1*(vx(i1,i2)-vx(i1,i2-1))&
+                   +c2*(vx(i1,i2+1)-vx(i1,i2-2))&
+                   +c3*(vx(i1,i2+2)-vx(i1,i2-3))&
+                   +c4*(vx(i1,i2+3)-vx(i1,i2-4))
+              p(i1,i2)=p(i1,i2)-dt*K(i1,i2)*(idz*diff1+idx*diff2)
+           enddo
+        enddo
+     else ! dt<0, backward reconstruction in opposite order
+        do i2=5,nxpad-3
+           do i1=5,nzpad-3
+              diff1=c1*(vz(i1,i2)-vz(i1-1,i2))&
+                   +c2*(vz(i1+1,i2)-vz(i1-2,i2))&
+                   +c3*(vz(i1+2,i2)-vz(i1-3,i2))&
+                   +c4*(vz(i1+3,i2)-vz(i1-4,i2))
+              diff2=c1*(vx(i1,i2)-vx(i1,i2-1))&
+                   +c2*(vx(i1,i2+1)-vx(i1,i2-2))&
+                   +c3*(vx(i1,i2+2)-vx(i1,i2-3))&
+                   +c4*(vx(i1,i2+3)-vx(i1,i2-4))
+              p(i1,i2)=p(i1,i2)-dt*K(i1,i2)*(idz*diff1+idx*diff2)
+           enddo
+        enddo
+        do i2=4,nxpad-4
+           do i1=4,nzpad-4
+              diff1=c1*(p(i1+1,i2)-p(i1,i2))&
+                   +c2*(p(i1+2,i2)-p(i1-1,i2))&
+                   +c3*(p(i1+3,i2)-p(i1-2,i2))&
+                   +c4*(p(i1+4,i2)-p(i1-3,i2))
+              diff2=c1*(p(i1,i2+1)-p(i1,i2))&
+                   +c2*(p(i1,i2+2)-p(i1,i2-1))&
+                   +c3*(p(i1,i2+3)-p(i1,i2-2))&
+                   +c4*(p(i1,i2+4)-p(i1,i2-3))
+              vz(i1,i2)=vz(i1,i2)-dt*idz*diff1/rho(i1,i2)
+              vx(i1,i2)=vx(i1,i2)-dt*idx*diff2/rho(i1,i2)
+           enddo
+        enddo
+     endif
+  else
      do i2=5,nxpad-3
         do i1=5,nzpad-3
            diff1=c1*(vz(i1,i2)/rho(i1,i2)-vz(i1-1,i2)/rho(i1-1,i2))&
@@ -363,20 +312,23 @@ subroutine step_adjoint(vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
      enddo
      do i2=4,nxpad-4
         do i1=4,nzpad-4
-           tmp=vv(i1,i2)
-           tmp=rho(i1,i2)*tmp*tmp
-           diff1=c1*(p(i1+1,i2)-p(i1,i2))+c2*(p(i1+2,i2)-p(i1-1,i2)) &
-                +c3*(p(i1+3,i2)-p(i1-2,i2))+c4*(p(i1+4,i2)-p(i1-3,i2))
-           diff2=c1*(p(i1,i2+1)-p(i1,i2))+c2*(p(i1,i2+2)-p(i1,i2-1)) &
-                +c3*(p(i1,i2+3)-p(i1,i2-2))+c4*(p(i1,i2+4)-p(i1,i2-3))
-           vz(i1,i2)=vz(i1,i2)-dt*tmp*idz*diff1
-           vx(i1,i2)=vx(i1,i2)-dt*tmp*idx*diff2
+           diff1=c1*(p(i1+1,i2)*K(i1+1,i2)-p(i1,i2)*K(i1,i2))&
+                +c2*(p(i1+2,i2)*K(i1+2,i2)-p(i1-1,i2)*K(i1-1,i2))&
+                +c3*(p(i1+3,i2)*K(i1+3,i2)-p(i1-2,i2)*K(i1-2,i2))&
+                +c4*(p(i1+4,i2)*K(i1+4,i2)-p(i1-3,i2)*K(i1-3,i2))
+           diff2=c1*(p(i1,i2+1)*K(i1,i2+1)-p(i1,i2)*K(i1,i2))&
+                +c2*(p(i1,i2+2)*K(i1,i2+2)-p(i1,i2-1)*K(i1,i2-1))&
+                +c3*(p(i1,i2+3)*K(i1,i2+3)-p(i1,i2-2)*K(i1,i2-2))&
+                +c4*(p(i1,i2+4)*K(i1,i2+4)-p(i1,i2-3)*K(i1,i2-3))
+           vz(i1,i2)=vz(i1,i2)-dt*idz*diff1
+           vx(i1,i2)=vx(i1,i2)-dt*idx*diff2
         enddo
-     enddo  
-end subroutine step_adjoint
+     enddo
+  endif
+end subroutine step_forward
 
 !------------------------------------------------------------------------------
-subroutine add_attenuation(p, eta, rho, vv, dt, nzpad, nxpad)
+subroutine add_attenuation(p, eta, rho, K, dt, nzpad, nxpad)
   implicit none
 
   integer::i1,i2
@@ -384,41 +336,35 @@ subroutine add_attenuation(p, eta, rho, vv, dt, nzpad, nxpad)
 
   integer::nzpad,nxpad
   real::dt
-  real, dimension(nzpad,nxpad)::p, eta, rho, vv
+  real, dimension(nzpad,nxpad)::p, eta, rho, K
 
   do i2=1,nxpad
      do i1=1,nzpad
-        a=rho(i1,i2)*vv(i1,i2)*vv(i1,i2)
-        tau=eta(i1,i2)/a
+        tau=eta(i1,i2)/K(i1,i2)
         a=exp(-dt/tau)
         p(i1,i2)=a*p(i1,i2)
      enddo
   enddo
-
-  return
 end subroutine add_attenuation
 
 !-------------------------------------------------------------------------------
-subroutine add_sources(attenuating, p, eta, rho, vv, dt, wlt, sz, sx, nzpad, nxpad)
+subroutine add_sources(attenuating, p, eta, rho, K, dt, wlt, sz, sx, nzpad, nxpad)
   implicit none
 
   logical::attenuating
   integer::sz,sx,nzpad, nxpad
   real::dt,wlt
-  real,dimension(nzpad, nxpad)::p, eta, rho, vv
+  real,dimension(nzpad, nxpad)::p, eta, rho, K
 
   real::a, tau
 
   if(attenuating) then
-     a=rho(sz,sx)*vv(sz,sx)*vv(sz,sx)
-     tau=eta(sz,sx)/a
+     tau=eta(sz,sx)/K(sz,sx)
      a=exp(-dt/tau)
      p(sz,sx)=p(sz,sx)+tau*(1.-a)*wlt
   else
      p(sz,sx)=p(sz,sx)+dt*wlt
   endif
-
-  return
 end subroutine add_sources
 
 !-------------------------------------------------------------------------------
@@ -449,8 +395,6 @@ subroutine apply_sponge(p,bndr,nz,nx,nb)
         p(i1,i2)=bndr(nxpad-i2+1)*p(i1,i2)
      enddo
   enddo
-
-  return
 end subroutine apply_sponge
 
 

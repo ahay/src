@@ -216,7 +216,7 @@ subroutine step_forward(p, vz, vx, vv, rho, eta, dt, idz, idx, nzpad, nxpad)
              +c2*(vx(i1,i2+1)-vx(i1,i2-2))&
              +c3*(vx(i1,i2+2)-vx(i1,i2-3))&
              +c4*(vx(i1,i2+3)-vx(i1,i2-4))
-        p(i1,i2)=((1-0.5*dt/tau)*p(i1,i2)-dt*tmp*(idz*diff1+idx*diff2))/(1.+0.5*dt/tau)
+        p(i1,i2)=((1.-0.5*dt/tau)*p(i1,i2)-dt*tmp*(idz*diff1+idx*diff2))/(1.+0.5*dt/tau)
      enddo
   enddo
   return
