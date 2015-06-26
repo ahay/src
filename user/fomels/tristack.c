@@ -35,7 +35,7 @@ void tristack_init (bool gauss1 /* pseudo-gaussian */,
     gauss = gauss1;
 
     t = sf_floatalloc(nx);
-    tr = sf_triangle_init (nbox,ndat);
+    tr = sf_triangle_init (nbox,ndat,false);
 }
 
 void  tristack_close(void)
@@ -59,10 +59,10 @@ void tristack (bool adj, bool add, int nc, int nd, float *c, float *d)
 	    t[id] = d[id];
 	}
 	if (gauss) {
-	    sf_smooth2 (tr, 0, 1, false, false, t);
-	    sf_smooth2 (tr, 0, 1, false, false, t);
+	    sf_smooth2 (tr, 0, 1, false, t);
+	    sf_smooth2 (tr, 0, 1, false, t);
 	} else {
-	    sf_smooth2 (tr, 0, 1, false, false, t);
+	    sf_smooth2 (tr, 0, 1, false, t);
 	}
 	for (ic=id=0; id < nd; id++) {
 	    if (0==id%rect) {
@@ -80,10 +80,10 @@ void tristack (bool adj, bool add, int nc, int nd, float *c, float *d)
 	    }
 	}
 	if (gauss) {
-	    sf_smooth2 (tr, 0, 1, false, false, t);
-	    sf_smooth2 (tr, 0, 1, false, false, t);
+	    sf_smooth2 (tr, 0, 1, false, t);
+	    sf_smooth2 (tr, 0, 1, false, t);
 	} else {
-	    sf_smooth2 (tr, 0, 1, false, false, t);
+	    sf_smooth2 (tr, 0, 1, false, t);
 	}
 	for (id=0; id < nd; id++) {
 	    d[id] += t[id];

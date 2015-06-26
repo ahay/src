@@ -74,11 +74,11 @@ int main(int argc, char* argv[])
 	s1[i1] = random0();
     }
 
-    t1 = sf_triangle_init(2,nm);
-    sf_smooth2(t1,0,1,false,false,m1);
+    t1 = sf_triangle_init(2,nm,false);
+    sf_smooth2(t1,0,1,false,m1);
 
-    t2 = sf_triangle_init(50,nm);
-    sf_smooth2(t2,0,1,false,false,m2);
+    t2 = sf_triangle_init(50,nm,false);
+    sf_smooth2(t2,0,1,false,m2);
 
     for (i2=0; i2 < n2; i2++) {
 	for (i1=0; i1 < n1; i1++) {

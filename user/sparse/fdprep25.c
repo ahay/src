@@ -47,7 +47,7 @@ void fdprep25(const double omega,
     int i, j, index;
     double eta1, eta2, c1, c2;
     double *g1, *g2, **pad;
-    double complex **s1, **s2, neib, cent;
+    sf_double_complex **s1, **s2, neib, cent;
     SuiteSparse_long count;
     
     /* prepare PML */
@@ -68,8 +68,8 @@ void fdprep25(const double omega,
 	}
     }
 
-    s1 = (double complex**) sf_alloc(pad2,sizeof(double complex));
-    s1[0] = (double complex**) sf_alloc(pad1*pad2,sizeof(double complex));
+    s1 = (sf_double_complex**) sf_alloc(pad2,sizeof(s1[0]));
+    s1[0] = (sf_double_complex*) sf_alloc(pad1*pad2,sizeof(sf_double_complex));
     for (j=1; j < pad2; j++) {
 	s1[j] = s1[0]+j*pad1;
     }
@@ -85,8 +85,8 @@ void fdprep25(const double omega,
 	}
     }
 
-    s2 = (double complex**) sf_alloc(pad2,sizeof(double complex));
-    s2[0] = (double complex**) sf_alloc(pad1*pad2,sizeof(double complex));
+    s2 = (sf_double_complex**) sf_alloc(pad2,sizeof(s2[0]));
+    s2[0] = (sf_double_complex*) sf_alloc(pad1*pad2,sizeof(sf_double_complex));
     for (j=1; j < pad2; j++) {
 	s2[j] = s2[0]+j*pad1;
     }

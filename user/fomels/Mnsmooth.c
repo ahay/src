@@ -23,10 +23,10 @@
 
 int main (int argc, char* argv[]) 
 {
-    int *rct[SF_MAX_DIM], *sft[SF_MAX_DIM];
+    int *sft[SF_MAX_DIM];
     int box[SF_MAX_DIM], n[SF_MAX_DIM];
     int dim, dim1, i, n1, n2, i1, i2, b, nrep;
-    float *data, *smoo;
+    float *data, *smoo, *rct[SF_MAX_DIM];
     char key[8];
     sf_file in, out, rect[SF_MAX_DIM], shift[SF_MAX_DIM];
 
@@ -47,7 +47,7 @@ int main (int argc, char* argv[])
 	if (NULL != sf_getstring(key)) {
 	    /*( rect# size of the smoothing stencil in #-th dimension /auxiliary input file/ )*/
 	    rect[i] = sf_input(key);
-	    if (SF_INT != sf_gettype(rect[i])) sf_error("Need int %s",key);
+	    if (SF_FLOAT != sf_gettype(rect[i])) sf_error("Need float %s",key);
 	    dim1 = i;
 	    snprintf(key,8,"shift%d",i+1);
 	    if (NULL != sf_getstring(key)) {
@@ -78,10 +78,10 @@ int main (int argc, char* argv[])
     for (i=0; i <= dim1; i++) {
 	box[i] = 1;
 	if (NULL != rect[i]) {
-	    rct[i] = sf_intalloc (n1);
+	    rct[i] = sf_floatalloc (n1);
 	    sft[i] = sf_intalloc (n1);
 
-	    sf_intread(rct[i],n1,rect[i]);
+	    sf_floatread(rct[i],n1,rect[i]);
 	    sf_fileclose(rect[i]);
 
 	    if (NULL != shift[i]) {
@@ -95,7 +95,7 @@ int main (int argc, char* argv[])
 
 		
 	    for (i1=0; i1 < n1; i1++) {
-		b = rct[i][i1]+SF_ABS(sft[i][i1]);
+		b = ceilf(rct[i][i1])+SF_ABS(sft[i][i1]);
 		if (b > box[i]) box[i] = b;
 	    }	    
 	} else {

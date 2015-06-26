@@ -12,13 +12,13 @@ getmask = 'add scale=1,-1 ${SOURCES[1]} | mask min=0 | dd type=float'
 def psrect(rect):
     return '''
     math min=${SOURCES[2]} max=${SOURCES[1]}
-    output="sqrt(1+%d*(1/min^2-1/max^2)*input)" | dd type=int
+    output="sqrt(1+%d*(1/min^2-1/max^2)*input)" 
     ''' % rect
 
 def pprect(rect):
     return '''
     math min=${SOURCES[2]} max=${SOURCES[1]}
-    output="sqrt(1+%d*(1/max^2-1/min^2)*(1-input))" | dd type=int
+    output="sqrt(1+%d*(1/max^2-1/min^2)*(1-input))" 
     ''' % rect
 
 balance = '''
@@ -561,7 +561,7 @@ def warp2(name,       # name prefix
 
             rt = n('rt')
             Flow(psw+'i',psw+'1',ifreq)            
-            Flow(rt,psw+'i','math output="sqrt(1+12*(1/input^2-1/%g^2))" | dd type=int' % (fmax*2*math.pi*dt))
+            Flow(rt,psw+'i','math output="sqrt(1+12*(1/input^2-1/%g^2))" ' % (fmax*2*math.pi*dt))
 
             dl = n('dl')
             Flow(dl,[psw+'1',rt],'deblur rect=${SOURCES[1]} verb=y niter=100 eps=0.04 nliter=1')

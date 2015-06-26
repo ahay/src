@@ -228,11 +228,14 @@ int main (int argc, char *argv[])
 
 	    for(ibuf=0; ibuf<nbuf; ibuf++)
 		sf_complexwrite((sf_complex*) ompQ[ibuf],nw,Fou);
-	} else {
+	} else { /* INVERSE TRANSFORM */
+
 	    for(ibuf=0; ibuf<nbuf; ibuf++)
 		sf_complexread( (sf_complex*) ompQ[ibuf],nw,Fin);
 
 #ifdef SF_HAS_FFTW_OMP
+	    ompith=0;
+
 	    for(ibuf=0; ibuf<nbuf; ibuf++) {
 		if (0. != o1) { shift = +2.0*SF_PI*dw*o1;
 		    for(i1=0; i1<nw; i1++) {

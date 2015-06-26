@@ -43,8 +43,8 @@ void tristack2_init (bool gauss1 /* pseudo-gaussian */,
     t1 = sf_floatalloc(n1*n2);
     t2 = sf_floatalloc(nc1*n2);
 
-    tr1 = sf_triangle_init (rect1,n1);
-    tr2 = sf_triangle_init (rect2,n2);
+    tr1 = sf_triangle_init (rect1,n1,false);
+    tr2 = sf_triangle_init (rect2,n2,false);
 }
 
 void  tristack2_close(void)
@@ -71,10 +71,10 @@ void tristack2 (bool adj, bool add, int nc, int nd, float *c, float *d)
 	}
 	for (i2=0; i2 < n2; i2++) {
 	    if (gauss) {
-		sf_smooth2 (tr1, i2*n1, 1, false, false, t1);
-		sf_smooth2 (tr1, i2*n1, 1, false, false, t1);
+		sf_smooth2 (tr1, i2*n1, 1, false, t1);
+		sf_smooth2 (tr1, i2*n1, 1, false, t1);
 	    } else {
-		sf_smooth2 (tr1, i2*n1, 1, false, false, t1);
+		sf_smooth2 (tr1, i2*n1, 1, false, t1);
 	    }
 
 	    for (i1=0; i1 < n1; i1+= rect1) {
@@ -83,10 +83,10 @@ void tristack2 (bool adj, bool add, int nc, int nd, float *c, float *d)
 	}
 	for (i1=0; i1 < nc1; i1++) {
 	    if (gauss) {
-		sf_smooth2 (tr2, i1, nc1, false, false, t2);
-		sf_smooth2 (tr2, i1, nc1, false, false, t2);
+		sf_smooth2 (tr2, i1, nc1, false, t2);
+		sf_smooth2 (tr2, i1, nc1, false, t2);
 	    } else {
-		sf_smooth2 (tr2, i1, nc1, false, false, t2);
+		sf_smooth2 (tr2, i1, nc1, false, t2);
 	    }
 	    
 	    for (i2=0; i2 < n2; i2+= rect2) {
@@ -105,10 +105,10 @@ void tristack2 (bool adj, bool add, int nc, int nd, float *c, float *d)
 	    } 
 
 	    if (gauss) {
-		sf_smooth2 (tr2, i1, nc1, false, false, t2);
-		sf_smooth2 (tr2, i1, nc1, false, false, t2);
+		sf_smooth2 (tr2, i1, nc1, false, t2);
+		sf_smooth2 (tr2, i1, nc1, false, t2);
 	    } else {
-		sf_smooth2 (tr2, i1, nc1, false, false, t2);
+		sf_smooth2 (tr2, i1, nc1, false, t2);
 	    }
 	}
 	for (i2=0; i2 < n2; i2++) {
@@ -121,10 +121,10 @@ void tristack2 (bool adj, bool add, int nc, int nd, float *c, float *d)
 		}
 	    }
 	    if (gauss) {
-		sf_smooth2 (tr1, i2*n1, 1, false, false, t1);
-		sf_smooth2 (tr1, i2*n1, 1, false, false, t1);
+		sf_smooth2 (tr1, i2*n1, 1, false, t1);
+		sf_smooth2 (tr1, i2*n1, 1, false, t1);
 	    } else {
-		sf_smooth2 (tr1, i2*n1, 1, false, false, t1);
+		sf_smooth2 (tr1, i2*n1, 1, false, t1);
 	    }
 	}
 	for (id=0; id < nd; id++) {

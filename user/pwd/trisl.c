@@ -44,7 +44,7 @@ void trisl_init(int m1, int m2       /* data dimensions */,
     trace1 = sf_floatalloc(n1);
     trace2 = sf_floatalloc(n1);
 
-    tr = sf_triangle_init (rect1,n1);
+    tr = sf_triangle_init (rect1,n1,false);
     amp = 1./rect;
 }
 
@@ -200,7 +200,7 @@ void trisl_lop(bool adj, bool add, int nx, int ny, float* x, float* y)
 	for (i1=0; i1 < n1; i1++) {
 	    trace[i1] = adj? y[i2*n1+i1]: x[i2*n1+i1];
 	}
-	if (!adj) sf_smooth (tr,0,1,false,false,trace);
+	if (!adj) sf_smooth (tr,0,1,false,trace);
     }
 
     if (adj) {
@@ -247,7 +247,7 @@ void trisl_lop(bool adj, bool add, int nx, int ny, float* x, float* y)
 
     for (i2=0; i2 < n2; i2++) {
 	trace = tmp[i2+rect];
-	if (adj) sf_smooth2 (tr,0,1,false,false,trace);
+	if (adj) sf_smooth2 (tr,0,1,false,trace);
 	for (i1=0; i1 < n1; i1++) {
 	    if (adj) {
 		x[i2*n1+i1] += trace[i1];

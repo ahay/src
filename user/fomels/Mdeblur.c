@@ -23,8 +23,8 @@
 
 int main(int argc, char* argv[])
 {
-    int i1, i2, n1, n2, n12, **nr, **ns, nbox, niter, iter, nliter;
-    float *data, *modl, *wght, eps;
+    int i1, i2, n1, n2, n12, **ns, nbox, niter, iter, nliter;
+    float *data, *modl, *wght, eps, **nr;
     bool verb;
     sf_file in, out, rect;
 
@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
     rect = sf_input("rect");
     
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
-    if (SF_INT != sf_gettype(rect)) sf_error("Need int rect");
+    if (SF_FLOAT != sf_gettype(rect)) sf_error("Need float rect");
 
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
     n2 = sf_leftsize(in,1);
@@ -43,16 +43,16 @@ int main(int argc, char* argv[])
     data = sf_floatalloc(n12);
     modl = sf_floatalloc(n12);
     wght = sf_floatalloc(n12);
-    nr = sf_intalloc2(n1,n2);
+    nr = sf_floatalloc2(n1,n2);
     ns = sf_intalloc2(n1,n2);
 
     sf_floatread(data,n12,in);
-    sf_intread(nr[0],n12,rect);
+    sf_floatread(nr[0],n12,rect);
 
     nbox=1;
     for (i2=0; i2 < n2; i2++) {
 	for (i1=0; i1 < n1; i1++) {
-	    if (nbox < nr[i2][i1]) nbox = nr[i2][i1];
+	    if (nbox < nr[i2][i1]) nbox = ceilf(nr[i2][i1]);
 	    ns[i2][i1]=0;
 	}
     }

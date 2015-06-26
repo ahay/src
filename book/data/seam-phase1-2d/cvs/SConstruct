@@ -24,13 +24,16 @@ Flow('cdpmask','../ntg/shots-receivers-23900_headfix_hdr.rsf',
      'window n1=1 f1=74 | mask min=148 max=200')
 Flow('head','../ntg/shots-receivers-23900_headfix_hdr.rsf cdpmask',
      'headerwindow mask=${SOURCES[1]}')
+Flow('xline','head','window n1=1 f1=74 | dd type=float')
+Flow('headsort','head xline','headersort head=${SOURCES[1]}')
 
-Flow('cdps','../ntg/shots-receivers-23900_headfix.rsf cdpmask head',
+Flow('cdps','../ntg/shots-receivers-23900_headfix.rsf cdpmask xline headsort',
      '''
      headerwindow mask=${SOURCES[1]} | 
-     intbin head=${SOURCES[2]} xkey=-1 yk=cdp
+     headersort head=${SOURCES[2]}   |
+     intbin head=${SOURCES[3]} xkey=-1 yk=cdp
      ''')
-Flow('offset mask','head',
+Flow('offset mask','headsort',
      '''
      window f1=11 n1=1 squeeze=n | 
      intbin head=$SOURCE mask=${TARGETS[1]} xkey=-1 yk=cdp |
@@ -82,7 +85,7 @@ Flow('stk600','cdps600 offset600 mask600 v600',
 
 Result('xline600','stk600','sfpow pow1=1.5 | sfgrey title="nmo gather v=1500" label2=cdpt')
 
-# sort in offset?
+# add sort in xline
 
 ################################
 

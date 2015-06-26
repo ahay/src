@@ -16,12 +16,9 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
+#include <rsf.h>
 
 #include "triangleh.h"
-
-#include "triangle.h"
-/*^*/
 
 static int n1,n2,n3;
 static sf_triangle tr;
@@ -36,7 +33,7 @@ void sf_triangleh_init(int nbox /* triangle size */,
     n3 = nh;
     n2 = nm;
     n1 = nt;
-    tr = sf_triangle_init (nbox,n3);
+    tr = sf_triangle_init (nbox,n3,false);
     tmp = sf_floatalloc (n3);
 }
 
@@ -54,7 +51,7 @@ void sf_triangleh_lop(bool adj, bool add, int nx, int ny, float* x, float* y)
                 for (i3=0; i3 < n3; i3++) {
                     tmp[i3] = y[i3*n2*n1+i2*n1+i1];
                 }
-	        sf_smooth2 (tr, 0, 1, false, false, tmp);
+	        sf_smooth2 (tr, 0, 1, false, tmp);
                 for (i3=0; i3 < n3; i3++) {
                     x[i3*n2*n1+i2*n1+i1] += tmp[i3];
                 }
@@ -66,7 +63,7 @@ void sf_triangleh_lop(bool adj, bool add, int nx, int ny, float* x, float* y)
                 for (i3=0; i3 < n3; i3++) {
 	            tmp[i3] = x[i3*n2*n1+i2*n1+i1];
                 }
-	        sf_smooth2 (tr, 0, 1, false, false, tmp);
+	        sf_smooth2 (tr, 0, 1, false, tmp);
                 for (i3=0; i3 < n3; i3++) {
                     y[i3*n2*n1+i2*n1+i1] += tmp[i3];
                 }

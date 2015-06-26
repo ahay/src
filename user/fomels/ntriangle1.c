@@ -23,13 +23,13 @@
 #include <rsf.h>
 /*^*/
 
-static int n1, n2, nd, **nr, **ns;
+static int n1, n2, nd, **ns;
 static ntriangle tr;
-static float *tmp;
+static float *tmp, **nr;
 
 void ntriangle1_init (int nbox1            /* maximum triangle size */, 
 		      int ndat1, int ndat2 /* data size */,
-		      int **rect           /* triangle sizes */,
+		      float **rect           /* triangle sizes */,
                       int **shift          /* triangle shifts */)
 /*< initialize >*/
 {

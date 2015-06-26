@@ -6,14 +6,15 @@
 
 int main(void) {
     double dot1[2], dot2[2];
-    int nbox=5, ndat1=50, ndat2=10, ndat, **rect, **shift, i1, i2;
+    int nbox=5, ndat1=50, ndat2=10, ndat, **shift, i1, i2;
+    float **rect;
 
-    rect = sf_intalloc2(ndat1,ndat2);
+    rect = sf_floatalloc2(ndat1,ndat2);
     shift = sf_intalloc2(ndat1,ndat2);
 
     for (i2=0; i2 < ndat2; i2++) {
 	for (i1=0; i1 < ndat1; i1++) {
-	    rect[i2][i1] = 1+(i1+i2)%(nbox-1);
+	    rect[i2][i1] = 1+0.3*((i1+i2)%(nbox-1));
 	    shift[i2][i1] = i1%2;
 	}
     }

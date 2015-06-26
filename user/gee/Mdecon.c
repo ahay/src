@@ -134,9 +134,9 @@ int main(int argc, char* argv[])
 	}
 	sf_floatwrite(sign,n123,out);
     } else if (r1 > 0) {
-	tr = sf_triangle_init(r1,n[0]);
+	tr = sf_triangle_init(r1,n[0],false);
 	for (i=0; i < n123-n[0]+1; i += n[0]) {
-	    sf_smooth2(tr,0,1,false,false,resi+i);
+	    sf_smooth2(tr,0,1,false,resi+i);
 	}
 	sf_floatwrite(resi,n123,out);
     } else {

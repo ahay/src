@@ -69,8 +69,8 @@ int main (int argc, char* argv[])
     if (!sf_getint("long",&lng)) lng=10;
     /* long smoothing radius */
 
-    ts = sf_triangle_init(shrt,n1);
-    tl = sf_triangle_init(lng,n1);
+    ts = sf_triangle_init(shrt,n1,false);
+    tl = sf_triangle_init(lng,n1,false);
 
     mean=0.;
     for (i2=0; i2 < n2; i2++) {
@@ -85,8 +85,8 @@ int main (int argc, char* argv[])
 	    hilb[i1] = trace[i1];
 	}
 
-	sf_smooth2 (ts, 0, 1, false, false, trace);
-	sf_smooth2 (tl, 0, 1, false, false, hilb);
+	sf_smooth2 (ts, 0, 1, false, trace);
+	sf_smooth2 (tl, 0, 1, false, hilb);
 	
 	for (i1=0; i1 < nh; i1++) {
 	    trace[i1] = 0.;

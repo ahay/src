@@ -106,7 +106,7 @@ int main(int argc, char* argv[])
     linear_init(nd);
 
     if (niter > 0) {
-	tr = sf_triangle_init (rect,n1);
+	tr = sf_triangle_init (rect,n1,false);
 	modl = sf_floatalloc(n1);
 	datr = sf_floatalloc(nd);
     } else {
@@ -158,7 +158,7 @@ int main(int argc, char* argv[])
 		    modl[i1] += trace[i1] - linear_eval(x);
 		}
 		
-		sf_smooth2 (tr, 0, 1, false, false, modl);
+		sf_smooth2 (tr, 0, 1, false, modl);
 	    }
 
 	    sf_floatwrite(modl,n1,out);

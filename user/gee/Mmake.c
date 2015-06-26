@@ -65,14 +65,14 @@ int main(int argc, char* argv[])
 
     if (!sf_getint("t1",&t1)) t1=4;
     /* triangle smoother for first wave */
-    tr1 = sf_triangle_init (t1, ns);
-    sf_smooth2(tr1,0,1,false,false,s1);
+    tr1 = sf_triangle_init (t1, ns,false);
+    sf_smooth2(tr1,0,1,false,s1);
 
     if (second) {
 	if (!sf_getint("t2",&t2)) t2=4;
 	/* triangle smoother for second wave */
-	tr2 = sf_triangle_init (t2, ns);
-	sf_smooth2(tr2,0,1,false,false,s2);
+	tr2 = sf_triangle_init (t2, ns,false);
+	sf_smooth2(tr2,0,1,false,s2);
     }	
 
     for (i2=0; i2 < n2; i2++) {

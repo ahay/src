@@ -41,7 +41,7 @@ void ntrianglen2_init(int nw      /* number of components */,
     tr = (sf_triangle *) sf_alloc(nw,sizeof(*tr));
 
     for (i2=0; i2 < n2; i2++) {
-		tr[i2] = sf_triangle_init (nbox[i2],n0);
+	tr[i2] = sf_triangle_init (nbox[i2],n0,false);
     }
 }
 
@@ -81,7 +81,7 @@ void ntriangle2_lop (bool adj, bool add, int nx, int ny, float *x, float *y)
 
     for (i2=0; i2 < n2; i2++) {
 		for (j=0; j < n1/n0; j++) {
-			sf_smooth2 (tr[i2],j*n0,1,false,false,tmp+i2*n1);
+			sf_smooth2 (tr[i2],j*n0,1,false,tmp+i2*n1);
 		}
     }
 

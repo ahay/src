@@ -43,8 +43,8 @@ void trishape_init(bool sym1, int nd1, int n11, int n21,
     o1 = o11; d1=d11;
     o2 = o21; d2=d21;
 
-    tr1 = (rect1 > 1)? sf_triangle_init (rect1,n1): NULL;
-    tr2 = (rect2 > 1)? sf_triangle_init (rect2,n2): NULL;
+    tr1 = (rect1 > 1)? sf_triangle_init (rect1,n1,false): NULL;
+    tr2 = (rect2 > 1)? sf_triangle_init (rect2,n2,false): NULL;
 
     sf_int2_init (xy, o1, o2, d1, d2, n1, n2, sf_lg_int, nw, nd);
 
@@ -70,12 +70,12 @@ void trishape_smooth(float *modl)
     
     if (NULL != tr1) {
 	for (i2=0; i2 < n2; i2++) {
-	    sf_smooth2 (tr1, 0, 1, false, false, modl+i2*n1);
+	    sf_smooth2 (tr1, 0, 1, false, modl+i2*n1);
 	}
     }
     if (NULL != tr2) {
 	for (i1=0; i1 < n1; i1++) {
-	    sf_smooth2 (tr2, i1, n1, false, false, modl);
+	    sf_smooth2 (tr2, i1, n1, false, modl);
 	}
     }   
 }    

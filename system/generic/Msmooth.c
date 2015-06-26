@@ -77,14 +77,14 @@ int main (int argc, char* argv[])
 
 	for (i=0; i <= dim1; i++) {
 	    if (rect[i] <= 1) continue;
-	    tr = sf_triangle_init (rect[i],n[i]);
+	    tr = sf_triangle_init (rect[i],n[i],box[i]);
 	    for (j=0; j < n1/n[i]; j++) {
 		i0 = sf_first_index (i,j,dim1+1,n,s);
 		for (irep=0; irep < nrep; irep++) {
 		    if (adj) {
-			sf_smooth (tr,i0,s[i],diff[i],box[i],data);
+			sf_smooth (tr,i0,s[i],diff[i],data);
 		    } else {
-			sf_smooth2 (tr,i0,s[i],diff[i],box[i],data);
+			sf_smooth2 (tr,i0,s[i],diff[i],data);
 		    }
 		}
 	    }

@@ -24,14 +24,14 @@
 
 #include "ntriangle.h"
 
-static int *n, s[SF_MAX_DIM], nd, dim, **tlen, **tsft, nrep;
+static int *n, s[SF_MAX_DIM], nd, dim, **tsft, nrep;
 static ntriangle *tr;
-static float *tmp;
+static float *tmp, **tlen;
 
 void ntrianglen_init (int ndim  /* number of dimensions */, 
 		      int *nbox /* triangle radius [ndim] */, 
 		      int *ndat /* data dimensions [ndim] */,
-		      int **len /* triangle lengths [ndim][nd] */,
+		      float **len /* triangle lengths [ndim][nd] */,
                       int **sft /* triangle shifts [ndim][nd] */,
 		      int repeat /* repeated smoothing */)
 /*< initialize >*/
@@ -113,7 +113,6 @@ void ntrianglen_close(void)
     }
 
     free(tr);
-    free(tlen);
 }
 
 /* 	$Id: ntrianglen.c 839 2004-10-25 11:54:43Z fomels $	 */

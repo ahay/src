@@ -34,8 +34,9 @@ typedef struct sf_Triangle *sf_triangle;
 #endif
 
 struct sf_Triangle {
-    float *tmp;
+    float *tmp, wt;
     int np, nb, nx;
+    bool box;
 };
 
 static void fold (int o, int d, int nx, int nb, int np, 
@@ -44,11 +45,13 @@ static void fold2 (int o, int d, int nx, int nb, int np,
 		   float *x, const float* tmp);
 static void doubint (int nx, float *x, bool der);
 static void triple (int o, int d, int nx, int nb, 
-		    float* x, const float* tmp, bool box);
-static void triple2 (int o, int d, int nx, int nb, const float* x, float* tmp, bool box);
+		    float* x, const float* tmp, bool box, float wt);
+static void triple2 (int o, int d, int nx, int nb, 
+		     const float* x, float* tmp, bool box, float wt);
 
-sf_triangle sf_triangle_init (int nbox /* triangle length */, 
-			      int ndat /* data length */)
+sf_triangle sf_triangle_init (int  nbox /* triangle length */, 
+			      int  ndat /* data length */,
+                              bool box  /* if box instead of triangle */)
 /*< initialize >*/
 {
     sf_triangle tr;
@@ -57,7 +60,14 @@ sf_triangle sf_triangle_init (int nbox /* triangle length */,
 
     tr->nx = ndat;
     tr->nb = nbox;
+    tr->box = box;
     tr->np = ndat + 2*nbox;
+    
+    if (box) {
+	tr->wt = 1.0/(2*nbox-1);
+    } else {
+	tr->wt = 1.0/(nbox*nbox);
+    }
     
     tr->tmp = sf_floatalloc(tr->np);
 
@@ -165,16 +175,14 @@ static void doubint2 (int nx, float *xx, bool der)
     }
 }
 
-static void triple (int o, int d, int nx, int nb, float* x, const float* tmp, bool box)
+static void triple (int o, int d, int nx, int nb, float* x, const float* tmp, bool box, float wt)
 {
     int i;
     const float *tmp1, *tmp2;
-    float wt;
     
     if (box) {
 	tmp2 = tmp + 2*nb;
 
-	wt = 1.0/(2*nb-1);
 	for (i=0; i < nx; i++) {
 	    x[o+i*d] = (tmp[i+1] - tmp2[i])*wt;
 	}
@@ -182,30 +190,24 @@ static void triple (int o, int d, int nx, int nb, float* x, const float* tmp, bo
 	tmp1 = tmp + nb;
 	tmp2 = tmp + 2*nb;
 
-	wt = 1.0/(nb*nb);
 	for (i=0; i < nx; i++) {
 	    x[o+i*d] = (2.*tmp1[i] - tmp[i] - tmp2[i])*wt;
 	}
     }
 }
 
-static void triple2 (int o, int d, int nx, int nb, const float* x, float* tmp, bool box)
+static void triple2 (int o, int d, int nx, int nb, const float* x, float* tmp, bool box, float wt)
 {
     int i;
-    float wt;
 
     for (i=0; i < nx + 2*nb; i++) {
 	tmp[i] = 0;
     }
 
     if (box) {
-	wt = 1.0/(2*nb-1);
-
 	cblas_saxpy(nx,  +wt,x+o,d,tmp+1   ,1);
 	cblas_saxpy(nx,  -wt,x+o,d,tmp+2*nb,1);
     } else {
-	wt = 1.0/(nb*nb);
-    
 	cblas_saxpy(nx,  -wt,x+o,d,tmp     ,1);
 	cblas_saxpy(nx,2.*wt,x+o,d,tmp+nb  ,1);
 	cblas_saxpy(nx,  -wt,x+o,d,tmp+2*nb,1);
@@ -215,24 +217,22 @@ static void triple2 (int o, int d, int nx, int nb, const float* x, float* tmp, b
 void sf_smooth (sf_triangle tr  /* smoothing object */, 
 		int o, int d    /* trace sampling */, 
 		bool der        /* if derivative */, 
-		bool box        /* if box filter */,
 		float *x        /* data (smoothed in place) */)
 /*< apply triangle smoothing >*/
 {
     fold (o,d,tr->nx,tr->nb,tr->np,x,tr->tmp);
-    doubint (tr->np,tr->tmp,(bool) (box || der));
-    triple (o,d,tr->nx,tr->nb,x,tr->tmp,box);
+    doubint (tr->np,tr->tmp,(bool) (tr->box || der));
+    triple (o,d,tr->nx,tr->nb,x,tr->tmp, tr->box, tr->wt);
 }
 
 void sf_smooth2 (sf_triangle tr  /* smoothing object */, 
 		 int o, int d    /* trace sampling */, 
 		 bool der        /* if derivative */,
-		 bool box        /* if box filter */,
 		 float *x        /* data (smoothed in place) */)
 /*< apply adjoint triangle smoothing >*/
 {
-    triple2 (o,d,tr->nx,tr->nb,x,tr->tmp,box);
-    doubint2 (tr->np,tr->tmp,(bool) (box || der));
+    triple2 (o,d,tr->nx,tr->nb,x,tr->tmp, tr->box, tr->wt);
+    doubint2 (tr->np,tr->tmp,(bool) (tr->box || der));
     fold2 (o,d,tr->nx,tr->nb,tr->np,x,tr->tmp);
 }
 

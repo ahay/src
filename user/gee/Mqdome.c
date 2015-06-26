@@ -211,10 +211,10 @@ int main (int argc, char* argv[])
 
     /* temporal smoothing */
     for (i = 2; i <= 4; i++) {
-	tr = sf_triangle_init (i, n1);
+	tr = sf_triangle_init (i, n1,false);
 	for (i3=0; i3 < n3; i3++) {
 	    for (i2=0; i2 < n2; i2++) {
-		sf_smooth2(tr,0,1,impedance,false,earth[i3][i2]);
+		sf_smooth2(tr,0,1,impedance,earth[i3][i2]);
 	    }
 	}
 	sf_triangle_close (tr);

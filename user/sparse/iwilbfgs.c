@@ -261,21 +261,21 @@ void iwilbfgs_grad(const lbfgsfloatval_t *x,
     iwigrad_oper(true,false, nn[0]*nn[1],nn[0]*nn[1]*nn[2], image,pimage);
 
     /* smooth gradient */
-    tr = sf_triangle_init(grect[0],nn[0]);
+    tr = sf_triangle_init(grect[0],nn[0],false);
     for (i2=0; i2 < nn[1]; i2++) {
 	i1 = sf_first_index(0,i2,2,nn,ss);
 	
-	sf_smooth (tr,i1,ss[0],false,false,image);
-	sf_smooth2(tr,i1,ss[0],false,false,image);
+	sf_smooth (tr,i1,ss[0],false,image);
+	sf_smooth2(tr,i1,ss[0],false,image);
     }
     sf_triangle_close(tr);
     
-    tr = sf_triangle_init(grect[1],nn[1]);
+    tr = sf_triangle_init(grect[1],nn[1],false);
     for (i1=0; i1 < nn[0]; i1++) {
 	i2 = sf_first_index(1,i1,2,nn,ss);
 	
-	sf_smooth (tr,i2,ss[1],false,false,image);
-	sf_smooth2(tr,i2,ss[1],false,false,image);
+	sf_smooth (tr,i2,ss[1],false,image);
+	sf_smooth2(tr,i2,ss[1],false,image);
     }
     sf_triangle_close(tr);    
 

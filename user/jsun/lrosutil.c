@@ -162,11 +162,11 @@ void reflgen(int nzb, int nxb, int spz, int spx,
     /* 2-d triangle smoothing */
     for (i=0;i<2;i++) {
       if (rect[i] <= 1) continue;
-      tr = sf_triangle_init (rect[i],n[i]);
+      tr = sf_triangle_init (rect[i],n[i],box[i]);
       for (j=0; j < nzx/n[i]; j++) {
 	i0 = sf_first_index (i,j,2,n,s);
 	for (irep=0; irep < nrep; irep++) {
-	  sf_smooth2 (tr,i0,s[i],diff[i],box[i],refl); // why adjoint?
+	  sf_smooth2 (tr,i0,s[i],diff[i],refl); // why adjoint?
 	}
       }
       sf_triangle_close(tr);

@@ -23,13 +23,13 @@
 
 #ifndef _ntriangle_h
 
-typedef struct NTriangle *ntriangle;
+typedef struct Ntriangle *ntriangle;
 /* abstract data type */
 /*^*/
 
 #endif
 
-struct NTriangle {
+struct Ntriangle {
     float *tmp;
     int np, nb, nx;
 };
@@ -40,9 +40,9 @@ static void fold2 (int o, int d, int nx, int nb, int np,
 		   float *x, const float* tmp);
 static void doubint (int nx, float *x, bool der);
 static void triple (int o, int d, int nx, int nb, 
-		    const int* t, const int* s, float* x, const float* tmp);
+		    const float* t, const int* s, float* x, const float* tmp);
 static void triple2 (int o, int d, int nx, int nb, 
-		     const int* t, const int* s, const float* x, float* tmp);
+		     const float* t, const int* s, const float* x, float* tmp);
 
 ntriangle ntriangle_init (int nbox /* maximum triangle length */, 
 			  int ndat /* data length */)
@@ -140,47 +140,57 @@ static void doubint (int nx, float *xx, bool der)
 }
 
 static void triple (int o, int d, int nx, int nb, 
-		    const int* t,
+		    const float* t,
 		    const int* s,
 		    float* x, const float* tmp)
 {
-    int i, nt, ns;
-    float wt;
+    int i, nt, nt1, ns;
+    float tt, wt, wt1;
 
     for (i=0; i < nx; i++) {
-	nt = t[i];
+	tt = t[i];
+	nt = floorf(tt);
+	nt1 = nt+1;
 	ns = nb + s[i];
-	wt = 1./(nt*nt);
-	x[o+i*d] = (2.*tmp[i+ns] - tmp[i+ns-nt] - tmp[i+ns+nt])*wt;
+	wt  = (nt1*nt1-tt*tt)/(nt*nt*(nt+nt1));
+	wt1 = (tt*tt-nt*nt)/(nt1*nt1*(nt+nt1));
+	x[o+i*d] = 2*(wt+wt1)*tmp[i+ns] - 
+	    (tmp[i+ns-nt1] + tmp[i+ns+nt1])*wt1 - 
+	    (tmp[i+ns-nt]  + tmp[i+ns+nt ])*wt;
     }
 }
 
 static void triple2 (int o, int d, int nx, int nb, 
-		     const int* t,
+		     const float* t,
 		     const int* s,
 		     const float* x, float* tmp)
 {
-    int i, nt, ns;
-    float wt;
+    int i, nt, nt1, ns;
+    float tt, wt, wt1;
 
     for (i=0; i < nx + 2*nb; i++) {
 	tmp[i] = 0;
     }
 
     for (i=0; i < nx; i++) {
-	nt = t[i];
+	tt = t[i];
+	nt = floorf(tt);
+	nt1 = nt+1;
 	ns = nb + s[i];
-	wt = x[o+i*d]/(nt*nt);
-	tmp[i+ns-nt] -= wt; 
-	tmp[i+ns]     += 2.*wt;
-	tmp[i+ns+nt] -= wt;
+	wt  = x[o+i*d]*(nt1*nt1-tt*tt)/(nt*nt*(nt+nt1));
+	wt1 = x[o+i*d]*(tt*tt-nt*nt)/(nt1*nt1*(nt+nt1));
+	tmp[i+ns-nt1] -= wt1; 
+	tmp[i+ns-nt]  -= wt; 
+	tmp[i+ns]     += 2*(wt+wt1);
+	tmp[i+ns+nt]  -= wt;
+	tmp[i+ns+nt1] -= wt1;
     }
 }
 
 void nsmooth (ntriangle tr /* smoothing object */, 
 	      int o, int d /* sampling */, 
 	      bool der     /* derivative flag */, 
-	      const int *t /* triangle lengths */, 
+	      const float *t /* triangle lengths */, 
 	      const int *s /* triangle shifts */,
 	      float *x     /* data (smoothed in place) */)
 /*< smooth >*/
@@ -193,7 +203,7 @@ void nsmooth (ntriangle tr /* smoothing object */,
 void nsmooth2 (ntriangle tr /* smoothing object */, 
 	       int o, int d /* sampling */, 
 	       bool der     /* derivative flag */, 
-	       const int *t /* triangle lengths */,
+	       const float *t /* triangle lengths */,
 	       const int *s /* triangle shifts */,
 	       float *x     /* data (smoothed in place) */)
 /*< alternative smooth >*/
@@ -210,4 +220,3 @@ void  ntriangle_close(ntriangle tr)
     free (tr);
 }
 
-/* 	$Id: ntriangle.c 691 2004-07-04 19:28:08Z fomels $	 */

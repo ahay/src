@@ -73,13 +73,13 @@ int main (int argc, char* argv[])
     sf_random (n,t1);
     sf_random (3*n,t2);
   
-    tr = sf_triangle_init(2,n);
-    sf_smooth2 (tr,0,1,false,false,t1);
+    tr = sf_triangle_init(2,n,false);
+    sf_smooth2 (tr,0,1,false,t1);
     sf_triangle_close(tr);
     remove_mean(n,t1);
 
-    tr = sf_triangle_init(2,3*n);
-    sf_smooth2 (tr,0,1,false,false,t2);
+    tr = sf_triangle_init(2,3*n,false);
+    sf_smooth2 (tr,0,1,false,t2);
     sf_triangle_close(tr);
     remove_mean(3*n,t2);
     
