@@ -212,7 +212,7 @@ Flow('xpos',None,'spike n1=1 mag=77')
 Plot('trace','synth xpos',
      '''
      wiggle transp=y yreverse=y wanttitle=n wantaxis=n plotcol=4
-     xpos=${SOURCES[1]} xmin=400 xmax=0 poly=y zplot=5
+     xpos=${SOURCES[1]} xmin=400 xmax=0 poly=y zplot=10
      ''')
 Result('seismic','seismic trace','Overlay')
 
