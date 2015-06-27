@@ -89,28 +89,28 @@ Flow('slowness','DT-despike dz','div ${SOURCES[1]} | clip2 lower=300')
 Plot('slowness','DEPTH slowness',
      '''
      cmplx ${SOURCES[1]} | window n1=21692 |
-     graph transp=y yreverse=y min1=750 max1=4250 grid=y plotfat=3
+     graph transp=y yreverse=y min1=750 max1=4250 grid=y plotfat=3 plotcol=1
      title=function unit1=m label2="P-wave slowness" unit2="\F10 m\F3 m/s" labelsz=12 titlesz=15
      ''')
 
 Plot('twt','DEPTH tdr',
      '''
      cmplx ${SOURCES[1]} | window n1=21692 |
-     graph transp=y yreverse=y min1=750 max1=4250 grid=y plotfat=3
+     graph transp=y yreverse=y min1=750 max1=4250 grid=y plotfat=3 plotcol=1
      title=integral unit1=m label2="two-way time" unit2="s" labelsz=12 titlesz=15
      ''')
 
 Plot('impedance','DEPTH z',
      '''
      cmplx ${SOURCES[1]} | window n1=21692 |
-     graph transp=y yreverse=y min1=750 max1=4250 grid=y plotfat=3
+     graph transp=y yreverse=y min1=750 max1=4250 grid=y plotfat=3 plotcol=1
      title=impedance unit1=m label2= unit2="kg/(m\^2\_s)" labelsz=12 titlesz=15
      ''')
 
 Plot('reflectivity','DEPTH rc',
      '''
      cmplx ${SOURCES[1]} | window n1=21692 |
-     graph transp=y yreverse=y min1=750 max1=4250 grid=y plotfat=3
+     graph transp=y yreverse=y min1=750 max1=4250 grid=y plotfat=3 plotcol=1
      title=reflectivity unit1=m label2= unit2= labelsz=12 titlesz=15
      ''')
 
