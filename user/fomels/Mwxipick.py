@@ -129,6 +129,7 @@ class Canvas(wx.Window):
         self.image = image.ConvertToBitmap()
         self.dc.SetBackground(self.black)
         self.dc.DrawBitmap(self.image,0,0,True)
+        self.DrawPicks(i3)
     def SetFrame(self):
         n1 = hist(int,'n1',1)
         d1 = hist(float,'d1',1.0)
@@ -151,6 +152,16 @@ class Canvas(wx.Window):
         xs = self.o2+(x-x0)*self.xscale
         ys = self.o1+(y-y0)*self.yscale
         return (ys,xs,i3)
+    def UnscalePick(self,pick):
+        ys = pick[0]
+        xs = pick[1]
+        x = x0+(xs-self.o2)/self.xscale
+        y = y0+(ys-self.o1)/self.yscale
+        return (x,y)
+    def DrawPicks(self,i3):
+        for pick in picks[i3].values():
+            (x,y) = self.UnscalePick(pick)
+            self.dc.DrawCircle(x,y,r)
     def SetColor(self,color):
         self.brush = wx.Brush(color)
     def OnClick(self,event):
@@ -217,26 +228,18 @@ class MainFrame(wx.Frame):
         self.status.SetFieldsCount(1)
     def NextFrame(self,event):
         global i3,n3,canvas,next,prev,picks
-#        for pick in picks[i3].keys():
-#            canvas.itemconfigure(pick,state=HIDDEN)
         i3 += 1
         if i3 == n3-1:
             self.bnext.Disable()
         self.bprev.Enable()
-#        for pick in picks[i3].keys():
-#            canvas.itemconfigure(pick,state=NORMAL)         
         self.label.SetLabel('%d of %d' % (i3+1,n3))
         self.sketch.Redraw(i3)
     def PrevFrame(self,event):
         global i3,n3,canvas,next,prev,picks
-#        for pick in picks[i3].keys():
-#            canvas.itemconfigure(pick,state=HIDDEN)
         i3 -= 1
         if i3 == 0:
             self.bprev.Disable()
         self.bnext.Enable()
-#        for pick in picks[i3].keys():
-#            canvas.itemconfigure(pick,state=NORMAL)   
         self.label.SetLabel('%d of %d' % (i3+1,n3))
         self.sketch.Redraw(i3)
     def OnSketchMotion(self,event):

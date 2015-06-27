@@ -56,7 +56,20 @@ for case in ('DT','RHOB','DEPTH'):
 
 log_start_time = 0.410553230106 # (s)
 
-Flow('tdr','DT-despike','causint | math output="%g+(%g)*input" ' % (log_start_time,2*0.1524/1e6))
+# windowed samples - 3837
+
+Flow('dt1','L-30',
+     '''
+     headermath segy=n output=DT | 
+     window n2=3837 | scale dscale=%g 
+     ''' % scale['DT'])
+Flow('dt2','dt1','window f1=21')
+Flow('dt0','dt1 dt2','window n1=21 | math output=507.2 | cat axis=1 ${SOURCES[1]}')
+Flow('deltat','dt0','stack axis=1 norm=n | scale dscale=%g' % (2*0.1524/1e6))
+
+delta_time = 0.5596 # (s)
+
+Flow('tdr','DT-despike','causint | math output="%g+(%g)*input" ' % (log_start_time+delta_time,2*0.1524/1e6))
 
 Result('tdr','graph title="Twoway Time" yreverse=y transp=y label2=Time unit2=s')
 
@@ -135,7 +148,7 @@ Plot('tops','spray axis=1 n=2 o=0 d=1 | graph min2=750 max2=4250 pad=n yreverse=
 
 Flow('ttops','tdr DEPTH tops',
      'iwarp warp=${SOURCES[1]} o1=932 d1=1 n1=3307 | inttest1 nw=4 interp=spline coord=${SOURCES[2]}')
-Plot('ttops','spray axis=1 n=2 o=0 d=1 | graph min2=0.28 max2=2.28 pad=n yreverse=y wantaxis=n wanttitle=n')
+Plot('ttops','spray axis=1 n=2 o=0 d=1 | graph min2=0.9 max2=2.9 pad=n yreverse=y wantaxis=n wanttitle=n')
 
 # Convert to two-way-traveltime
 
@@ -152,7 +165,7 @@ Plot('zw','z tops','Overlay')
 
 Plot('zt',
      '''
-     window min1=0.28 max1=2.28 |
+     window min1=0.9 max1=2.9 |
      graph transp=y yreverse=y plotfat=3 plotcol=7
      title=impedance label1=Time unit1=s pad=n 
      label2= unit2="kg/(m\^2\_s)" labelsz=12 titlesz=15
@@ -161,7 +174,7 @@ Plot('ztw','zt ttops','Overlay')
 
 Plot('rt',
      '''
-     window min1=0.28 max1=2.28 |
+     window min1=0.9 max1=2.9 |
      graph transp=y yreverse=y plotfat=3 plotcol=7
      title=reflectivity label1=Time unit1=s pad=n 
      label2= unit2= labelsz=12 titlesz=15
@@ -173,7 +186,7 @@ Plot('rtw','rt ttops','Overlay')
 Flow('synth','rt','ricker1 frequency=25')
 Plot('synth',
      '''
-     window min1=0.28 max1=2.28 | 
+     window min1=0.9 max1=2.9 | 
      wiggle poly=y yreverse=y title=synthetic transp=y yreverse=y
      label1=Time unit1=s labelsz=12 titlesz=15 clip=0.002 grid=n plotcol=7
      ''')
