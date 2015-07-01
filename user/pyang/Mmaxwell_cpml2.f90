@@ -275,9 +275,12 @@ subroutine cpmlcoeff_init(bndr,dx,nb)
   d0=-3.*log(Rc)/(2.*L*L*L)
 
   do ib=1,nb
-     x=(ib-nb)*dx
-     bndr(ib)=d0*x*x
+     x=(ib-nb)*dx     !x=1.-cos(0.5*(nb-ib)*PI/nb)
+     bndr(ib)=d0*x*x 
   enddo
+
+
+ 
   return
 end subroutine cpmlcoeff_init
 
