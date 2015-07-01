@@ -7,11 +7,12 @@ Flow('vel',None,
      	''')
 Flow('rho','vel','math output=1000')
 
-nb=30
-nt=400
-dt=0.0005
+nb=20
+nt=500
+dt=0.0004
 fm=30
 
+Flow('eta','vel','math output=100000000') #moderate attenuation
 Flow('wav','vel rho eta',
 	'''
 	sfmaxwell_cpml2 rho=${SOURCES[1]} eta=${SOURCES[2]} order1=y
@@ -85,7 +86,7 @@ Result('energy-without','energy1 energy2','TwoColumns')
 
 ###################################################################
 Flow('eta1','vel','math output=100000000') #moderate attenuation
-Flow('eta2','vel','math output=10000000')  #strong attenuation
+Flow('eta2','vel','math output=1000000')  #strong attenuation
 
 #1st order with moderate attenuation: 
 #sfmaxwell_direct_backward,sfmaxwell_sponge2_backward
@@ -98,12 +99,12 @@ Flow('wf3 wb3 ef3 eb3','vel rho eta1',
 Result('wf3',
 	'''	
 	grey  title=" forward:1st order, attenuation" gainpanel=all
-	color=i screenratio=1 labelfat=2 titlefat=3
+	color=i screenratio=1 labelfat=2 titlefat=3 scalebar=y
 	''')
 Result('wb3',
 	'''	
 	grey  title="backward:1st order, attenuation" gainpanel=all
-	color=i screenratio=1 labelfat=2 titlefat=3
+	color=i screenratio=1 labelfat=2 titlefat=3 scalebar=y
 	''')
 
 Plot('energy3','ef3 eb3',
@@ -127,12 +128,12 @@ Flow('wf4 wb4 ef4 eb4','vel rho eta1',
 Result('wf4',
 	'''	
 	grey  title=" forward:2nd order, attenuation" gainpanel=all
-	color=i screenratio=1 labelfat=2 titlefat=3
+	color=i screenratio=1 labelfat=2 titlefat=3 scalebar=y
 	''')
 Result('wb4',
 	'''	
 	grey  title="backward:2nd order, attenuation" gainpanel=all
-	color=i screenratio=1 labelfat=2 titlefat=3
+	color=i screenratio=1 labelfat=2 titlefat=3 scalebar=y
 	''')
 
 Plot('energy4','ef4 eb4',
@@ -156,12 +157,12 @@ Flow('wf33 wb33 ef33 eb33','vel rho eta2',
 Result('wf33',
 	'''	
 	grey  title=" forward:1st order, attenuation" gainpanel=all
-	color=i screenratio=1 labelfat=2 titlefat=3
+	color=i screenratio=1 labelfat=2 titlefat=3 scalebar=y
 	''')
 Result('wb33',
 	'''	
 	grey  title="backward:1st order, attenuation" gainpanel=all
-	color=i screenratio=1 labelfat=2 titlefat=3
+	color=i screenratio=1 labelfat=2 titlefat=3 scalebar=y
 	''')
 
 Plot('energy33','ef33 eb33',
@@ -184,12 +185,12 @@ Flow('wf44 wb44 ef44 eb44','vel rho eta2',
 Result('wf44',
 	'''	
 	grey  title=" forward:2nd order, attenuation" gainpanel=all
-	color=i screenratio=1 labelfat=2 titlefat=3
+	color=i screenratio=1 labelfat=2 titlefat=3 scalebar=y
 	''')
 Result('wb44',
 	'''	
 	grey  title="backward:2nd order, attenuation" gainpanel=all
-	color=i screenratio=1 labelfat=2 titlefat=3
+	color=i screenratio=1 labelfat=2 titlefat=3 scalebar=y
 	''')
 
 Plot('energy44','ef44 eb44',
