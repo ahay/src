@@ -23,12 +23,12 @@ program mexwell_cpml2_backward
   integer :: ib, it, nt, nz, nx, nb, sx, sz, nxpad, nzpad
   real  :: dt, dz, dx, fm, tmp, idx, idz
   real*8, parameter::PI=4.*atan(1.)
-  real, dimension (:),   allocatable :: wlt,bndr,ef,eb
+  real, dimension (:),   allocatable :: wlt,bndr,ef,eb, wltf,wltb
   real, dimension (:,:), allocatable :: v0, vv, rho, eta
   real, dimension (:,:), allocatable :: p, vz, vx
   real, dimension(:,:,:),allocatable :: conv_pz,conv_px,conv_vz,conv_vx
   real, dimension(:,:,:,:),allocatable::bvz, bvx
-  type(file) :: Fv, Fw1, Fw2, Frho, Feta, Fef,Feb  ! I/O files 
+  type(file) :: Fv, Fw1, Fw2, Frho, Feta, Fef,Feb, Fwltf,Fwltb  ! I/O files 
 
   call sf_init() ! initialize Madagascar
 
@@ -38,8 +38,10 @@ program mexwell_cpml2_backward
   Fw2 =rsf_output("back") ! output backward reconstructed wavefield
   Frho=rsf_input("rho")   ! density
   Feta=rsf_input("eta")   ! Pascal
-  Fef=rsf_output("ef") ! energy (kinematic+deformation) when forward modeling
-  Feb=rsf_output("eb") ! energy (kinematic+deformation) when back-reconstruction
+  Fef=rsf_output("ef")    ! energy (kinematic+deformation) when forward modeling
+  Feb=rsf_output("eb")    ! energy (kinematic+deformation) when back-reconstruction
+  Fwltf=rsf_output("wltf") ! wavelet in forward modeling
+  Fwltb=rsf_output("wltb") ! wavelet in backward reconstruction
 
   ! Read/Write axes
   call from_par(Fv,"n1",nz) ! velocity model: nz
@@ -80,6 +82,16 @@ program mexwell_cpml2_backward
   call to_par(Feb,"d1",dt)
   call to_par(Feb,"n2",1)
 
+  call to_par(Fwltf,"n1",nt)
+  call to_par(Fwltf,"o1",0)
+  call to_par(Fwltf,"d1",dt)
+  call to_par(Fwltf,"n2",1)
+
+  call to_par(Fwltb,"n1",nt)
+  call to_par(Fwltb,"o1",0)
+  call to_par(Fwltb,"d1",dt)
+  call to_par(Fwltb,"n2",1)
+
   idx=1./dx
   idz=1./dz
   nzpad=nz+2*nb
@@ -104,6 +116,9 @@ program mexwell_cpml2_backward
   allocate(conv_vx(nzpad,nb,2))
   allocate(bvz(7,nx,2,nt))
   allocate(bvx(nz,7,2,nt))
+
+  allocate(wltf(nt))
+  allocate(wltb(nt))
 
   !generate ricker wavelet with a delay
   do it=1,nt  
@@ -133,7 +148,6 @@ program mexwell_cpml2_backward
      call window2d(v0, p, nz, nx, nb)
      call rsf_write(Fw1,v0)
 
-
      if (order1) then ! scheme 1, 1st order accuracy, default
         call step_forward_v(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
         call update_cpml_vzvx(p,vz,vx,conv_pz,conv_px,rho,vv,bndr,idz,idx,dt,nz,nx,nb)
@@ -151,8 +165,7 @@ program mexwell_cpml2_backward
         if(attenuating) call add_attenuation(p, eta, rho, vv, 0.5*dt, nzpad, nxpad)
      endif
 
-     !call add_sources(p, eta, rho, vv, dt, wlt(it), sz, sx, nzpad, nxpad)
-     call add_sources(attenuating,p, eta, rho, vv, dt, wlt(it), sz, sx, nzpad, nxpad)
+     call add_sources(attenuating,p, eta, rho, vv, dt, wlt(it), sz, sx, nzpad, nxpad,wltf(it))
 
      call compute_energy(ef(it),vz(nb+1:nb+nz,nb+1:nb+nx),&
           vx(nb+1:nb+nz,nb+1:nb+nx),p(nb+1:nb+nz,nb+1:nb+nx),&
@@ -162,6 +175,8 @@ program mexwell_cpml2_backward
      call boundary_rw(.true.,bvz(:,:,:,it),bvx(:,:,:,it),vz,vx,nz,nx,nb)
   enddo
   call rsf_write(Fef,ef) ! store forward energy history
+  call rsf_write(Fwltf,wltf) ! store wavelet series during forward modeling
+
 
   !backward reconstruction
   do it=nt,1,-1
@@ -173,7 +188,7 @@ program mexwell_cpml2_backward
      call window2d(v0, p, nz, nx, nb)
      call rsf_write(Fw2,v0)
 
-     call add_sources(attenuating,p, eta, rho, vv, -dt, wlt(it), sz, sx, nzpad, nxpad)
+     call add_sources(attenuating,p, eta, rho, vv, dt, -wlt(it), sz, sx, nzpad, nxpad,wltb(it))
 
      if (order1) then ! scheme 1, 1st order accuracy, default
         if(attenuating) call add_attenuation(p, eta, rho, vv, -dt, nzpad, nxpad)
@@ -191,6 +206,7 @@ program mexwell_cpml2_backward
      endif
   enddo
   call rsf_write(Feb,eb) !store backward energy history
+  call rsf_write(Fwltb,wltb) ! store wavelet series during backward reconstruction  
 
   deallocate(wlt)
   deallocate(bndr)
@@ -209,6 +225,8 @@ program mexwell_cpml2_backward
   deallocate(conv_vx)
   deallocate(bvz)
   deallocate(bvx)
+  deallocate(wltf)
+  deallocate(wltb)
 
   call exit(0)
 end program mexwell_cpml2_backward
@@ -569,26 +587,26 @@ subroutine add_attenuation(p, eta, rho, vv, dt, nzpad, nxpad)
 end subroutine add_attenuation
 
 !-------------------------------------------------------------------------------
-subroutine add_sources(attenuating,p, eta, rho, vv, dt, wlt, sz, sx, nzpad, nxpad)
+subroutine add_sources(attenuating,p, eta, rho, vv, dt, wlt, sz, sx, nzpad, nxpad,wlt_actual)
   implicit none
 
   logical::attenuating
   integer::sz,sx,nzpad, nxpad
-  real::dt,wlt
+  real::dt,wlt,wlt_actual
   real,dimension(nzpad, nxpad)::p, eta, rho, vv
 
-  real::a, tau
+  real*8::a, tau
 
   if(attenuating) then
      a=rho(sz,sx)*vv(sz,sx)*vv(sz,sx)
      tau=eta(sz,sx)/a
      a=exp(-dt/tau)
-     p(sz,sx)=p(sz,sx)+tau*(1.-a)*wlt
+     wlt_actual=tau*(1.-a)*wlt
   else 
-     p(sz,sx)=p(sz,sx)+dt*wlt
+     wlt_actual=dt*wlt
   endif
+  p(sz,sx)=p(sz,sx)+wlt_actual
 end subroutine add_sources
-
 
 !-------------------------------------------------------------------------------
 subroutine boundary_rw(v2b,bvz,bvx,vz,vx,nz,nx,nb)

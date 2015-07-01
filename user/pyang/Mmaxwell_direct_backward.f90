@@ -130,7 +130,7 @@ program mexwell_direct_backward
      !read the saved boundaries into p
      call boundary_rw(.false.,bvz(:,:,:,it),bvx(:,:,:,it),vz,vx,nz,nx,nb)
      
-     call add_sources(p, eta, rho, vv, -dt, wlt(it), sz, sx, nzpad, nxpad)
+     call add_sources(p, eta, rho, vv, dt, -wlt(it), sz, sx, nzpad, nxpad)
      call step_forward(.false.,p, vz, vx, vv, rho, eta, -dt, idz, idx, nzpad, nxpad)
   enddo
 

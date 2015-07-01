@@ -146,7 +146,7 @@ program mexwell_sponge2_backward
      call window2d(v0, p, nz, nx, nb)
      call rsf_write(Fw2,v0)
 
-     call add_sources(attenuating,p, eta, rho, vv, -dt, wlt(it), sz, sx, nzpad, nxpad)
+     call add_sources(attenuating,p, eta, rho, vv, dt,-wlt(it), sz, sx, nzpad, nxpad)
      if (order1) then ! scheme 1, 1st order accuracy, default
         if(attenuating) then
            call add_attenuation(p, eta, rho, vv, -dt, nzpad, nxpad)
@@ -343,17 +343,17 @@ subroutine add_sources(attenuating, p, eta, rho, vv, dt, wlt, sz, sx, nzpad, nxp
   real::dt,wlt
   real,dimension(nzpad, nxpad)::p, eta, rho, vv
 
-  real::a, tau
+  real::a, tau, wlt_actual
 
   if(attenuating) then
      a=rho(sz,sx)*vv(sz,sx)*vv(sz,sx)
      tau=eta(sz,sx)/a
      a=exp(-dt/tau)
-     p(sz,sx)=p(sz,sx)+tau*(1.-a)*wlt
+     wlt_actual=tau*(1.-a)*wlt
   else
-     p(sz,sx)=p(sz,sx)+dt*wlt
+     wlt_actual=dt*wlt
   endif
-
+  p(sz,sx)=p(sz,sx)+wlt_actual
   return
 end subroutine add_sources
 

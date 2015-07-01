@@ -278,9 +278,6 @@ subroutine cpmlcoeff_init(bndr,dx,nb)
      x=(ib-nb)*dx     !x=1.-cos(0.5*(nb-ib)*PI/nb)
      bndr(ib)=d0*x*x 
   enddo
-
-
- 
   return
 end subroutine cpmlcoeff_init
 
