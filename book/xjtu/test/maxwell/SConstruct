@@ -12,7 +12,8 @@ nt=500
 dt=0.0004
 fm=30
 
-Flow('eta','vel','math output=100000000') #moderate attenuation
+###################################################################
+Flow('eta','vel','math output=100000000') # moderate attenuation
 Flow('wav','vel rho eta',
 	'''
 	sfmaxwell_cpml2 rho=${SOURCES[1]} eta=${SOURCES[2]} order1=y
@@ -25,11 +26,39 @@ Result('wav',
 	''')
 
 ###################################################################
+Flow('wf2d wb2d ef2d eb2d','vel rho eta',
+	'''
+	sfmaxwell_cpml24_backward rho=${SOURCES[1]} eta=${SOURCES[2]}
+	back=${TARGETS[1]} ef=${TARGETS[2]} eb=${TARGETS[3]} 
+	attenuating=n order1=n	nb=%d nt=%d dt=%g verb=y fm=%g
+	'''%(nb,nt,dt,fm))
+Result('wf2d',
+	'''	
+	grey  title="forward:2nd order, no attenuation" gainpanel=all
+	color=i screenratio=1 labelfat=2 titlefat=3
+	''')
+Result('wb2d',
+	'''	
+	grey  title="backward:2nd order, no attenuation" gainpanel=all
+	color=i screenratio=1 labelfat=2 titlefat=3
+	''')
+
+Result('energy2d','ef2d eb2d',
+	'''
+	cat axis=2 ${SOURCES[1]}|
+	graph dash=0,1 grid=y plotfat=3 label1=Time unit1=s label2=
+	unit2= title="No attenuation,1st order"  
+	color=i screenratio=1 labelfat=2 titlefat=3
+	''')
+
+
+
+###################################################################
 #1st order without attenuation
 #sfmaxwell_direct_backward,sfmaxwell_sponge2_backward
 Flow('wf1 wb1 ef1 eb1','vel rho eta',
 	'''
-	sfmaxwell_cpml2_backward rho=${SOURCES[1]} eta=${SOURCES[2]}
+	sfmaxwell_cpml24_backward rho=${SOURCES[1]} eta=${SOURCES[2]}
 	back=${TARGETS[1]} ef=${TARGETS[2]} eb=${TARGETS[3]} 
 	attenuating=n order1=y	nb=%d nt=%d dt=%g verb=y fm=%g
 	'''%(nb,nt,dt,fm))
@@ -58,7 +87,7 @@ Plot('energy1','ef1 eb1',
 #sfmaxwell_direct_backward,sfmaxwell_sponge2_backward
 Flow('wf2 wb2 ef2 eb2','vel rho eta',
 	'''
-	sfmaxwell_cpml2_backward rho=${SOURCES[1]} eta=${SOURCES[2]}
+	sfmaxwell_cpml24_backward rho=${SOURCES[1]} eta=${SOURCES[2]}
 	back=${TARGETS[1]} ef=${TARGETS[2]} eb=${TARGETS[3]} 
 	attenuating=n order1=n	nb=%d nt=%d dt=%g verb=y fm=%g
 	'''%(nb,nt,dt,fm))
@@ -86,13 +115,13 @@ Result('energy-without','energy1 energy2','TwoColumns')
 
 ###################################################################
 Flow('eta1','vel','math output=100000000') #moderate attenuation
-Flow('eta2','vel','math output=1000000')  #strong attenuation
+Flow('eta2','vel','math output=10000000')  #strong attenuation
 
 #1st order with moderate attenuation: 
 #sfmaxwell_direct_backward,sfmaxwell_sponge2_backward
 Flow('wf3 wb3 ef3 eb3','vel rho eta1',
 	'''
-	sfmaxwell_cpml2_backward rho=${SOURCES[1]} eta=${SOURCES[2]}
+	sfmaxwell_cpml24_backward rho=${SOURCES[1]} eta=${SOURCES[2]}
 	back=${TARGETS[1]} ef=${TARGETS[2]} eb=${TARGETS[3]} 
 	attenuating=y order1=y	nb=%d nt=%d dt=%g verb=y fm=%g
 	'''%(nb,nt,dt,fm))
@@ -121,7 +150,7 @@ Plot('energy3','ef3 eb3',
 #sfmaxwell_direct_backward,sfmaxwell_sponge2_backward
 Flow('wf4 wb4 ef4 eb4','vel rho eta1',
 	'''
-	sfmaxwell_cpml2_backward rho=${SOURCES[1]} eta=${SOURCES[2]}
+	sfmaxwell_cpml24_backward rho=${SOURCES[1]} eta=${SOURCES[2]}
 	back=${TARGETS[1]} ef=${TARGETS[2]} eb=${TARGETS[3]} 
 	attenuating=y order1=n	nb=%d nt=%d dt=%g verb=y fm=%g
 	'''%(nb,nt,dt,fm))
@@ -150,7 +179,7 @@ Plot('energy4','ef4 eb4',
 #sfmaxwell_direct_backward,sfmaxwell_sponge2_backward
 Flow('wf33 wb33 ef33 eb33','vel rho eta2',
 	'''
-	sfmaxwell_cpml2_backward rho=${SOURCES[1]} eta=${SOURCES[2]}
+	sfmaxwell_cpml24_backward rho=${SOURCES[1]} eta=${SOURCES[2]}
 	back=${TARGETS[1]} ef=${TARGETS[2]} eb=${TARGETS[3]} 
 	attenuating=y order1=y	nb=%d nt=%d dt=%g verb=y fm=%g
 	'''%(nb,nt,dt,fm))
@@ -178,7 +207,7 @@ Plot('energy33','ef33 eb33',
 #sfmaxwell_direct_backward,sfmaxwell_sponge2_backward
 Flow('wf44 wb44 ef44 eb44','vel rho eta2',
 	'''
-	sfmaxwell_cpml2_backward rho=${SOURCES[1]} eta=${SOURCES[2]}
+	sfmaxwell_cpml24_backward rho=${SOURCES[1]} eta=${SOURCES[2]}
 	back=${TARGETS[1]} ef=${TARGETS[2]} eb=${TARGETS[3]} 
 	attenuating=y order1=n	nb=%d nt=%d dt=%g verb=y fm=%g
 	'''%(nb,nt,dt,fm))
