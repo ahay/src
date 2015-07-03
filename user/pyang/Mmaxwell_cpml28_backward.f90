@@ -397,7 +397,7 @@ subroutine update_cpml_vzvx(p,vz,vx,conv_pz,conv_px,rho,vv,bndr,idz,idx,dt,nz,nx
   real::conv_pz(nb,nx+2*nb,2),conv_px(nz+2*nb,nb,2)
 
   integer::nzpad,nxpad,i1,i2,ib
-  real::b,diff1,diff2
+  real*8::b,diff1,diff2
 
   real,parameter::c1=+1.196289062500000
   real,parameter::c2=-0.079752604166667
@@ -482,7 +482,7 @@ subroutine update_cpml_pzpx(p,vz,vx,conv_vz,conv_vx,rho,vv,bndr,idz,idx,dt,nz,nx
   real::conv_vz(nb,nx+2*nb,2),conv_vx(nz+2*nb,nb,2)
 
   integer::i1,i2,ib,nzpad,nxpad
-  real::diff1,diff2,b,tmp
+  real*8::diff1,diff2,b,tmp
 
   real,parameter::c1=+1.196289062500000
   real,parameter::c2=-0.079752604166667
@@ -568,7 +568,7 @@ subroutine add_attenuation(p, eta, rho, vv, dt, nzpad, nxpad)
   implicit none
 
   integer::i1,i2
-  real::a,tau
+  real*8::a,tau
 
   integer::nzpad,nxpad
   real::dt

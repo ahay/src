@@ -377,7 +377,7 @@ subroutine update_cpml_vzvxvy(p, vz, vx, vy, conv_pz, conv_px, conv_py, rho, vv,
   real::conv_pz(nb,nx+2*nb,ny+2*nb,2),conv_px(nz+2*nb,nb,ny+2*nb,2),conv_py(nz+2*nb,nx+2*nb,nb,2)
 
   integer::nzpad,nxpad,nypad,i1,i2,i3,ib
-  real::b,diff1,diff2,diff3
+  real*8::b,diff1,diff2,diff3
 
   real,parameter::c1=1.125
   real,parameter::c2=-1./24.
@@ -490,7 +490,7 @@ subroutine update_cpml_pzpxpy(p, vz, vx, vy, conv_vz, conv_vx, conv_vy, rho, vv,
   real::conv_vz(nb,nx+2*nb,ny+2*nb,2),conv_vx(nz+2*nb,nb,ny+2*nb,2),conv_vy(nz+2*nb,nx+2*nb,nb,2)
 
   integer::i1,i2,i3,ib,nzpad,nxpad,nypad
-  real::diff1,diff2,diff3,b,tmp
+  real*8::diff1,diff2,diff3,b,tmp
 
   real,parameter::c1=1.125
   real,parameter::c2=-1./24.
