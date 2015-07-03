@@ -311,7 +311,7 @@ subroutine update_cpml_vzvx(p,vz,vx,conv_pz,conv_px,rho,vv,bndr,idz,idx,dt,nz,nx
         conv_px(i1,i2,1)=b*conv_px(i1,i2,1)+(b-1.)*diff2*idx
      enddo
      do i2=nx+nb+1,nxpad-2 !right
-        ib=nxpad-i1+1
+        ib=nxpad-i2+1
         b=exp(-bndr(ib)*vv(i1,i2)*dt)
         diff2=c1*(p(i1,i2+1)-p(i1,i2)) &
              +c2*(p(i1,i2+2)-p(i1,i2-1))

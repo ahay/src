@@ -58,7 +58,7 @@ program mexwell_cpml2_backward
   call from_par("fm", fm, 20.) ! domainant frequency for ricker wavelet
   call from_par("order1",order1,.true.) ! 1st order or 2nd order accuracy
   call from_par("attenuating",attenuating,.true.) ! add attenuation or not
-  call from_par("kt", kt, 100) ! recording time of snapshot
+  call from_par("kt", kt, 500) ! recording time of snapshot
 
   idz=1./dz
   idx=1./dx
@@ -116,6 +116,7 @@ program mexwell_cpml2_backward
   conv_vx=0.
   conv_vy=0.
 
+
   !forward modeling
   do it=1,nt
      write(0,*) it
@@ -123,11 +124,16 @@ program mexwell_cpml2_backward
         call window3d(v0, p, nz, nx, ny, nb)
         call rsf_write(Fw1,v0)
      endif
+
+     write(0,*) "sum(conv_pz)",sum(abs(conv_pz))
+     write(0,*) "sum(conv_px)",sum(abs(conv_px))
+     write(0,*) "sum(conv_py)",sum(abs(conv_py))
+
      if (order1) then ! scheme 1, 1st order accuracy, default
         call step_forward_v(p, vz, vx, vy, vv, rho, dt, idz, idx, idy, nzpad, nxpad, nypad)
-!        call update_cpml_vzvxvy(p, vz, vx, vy, conv_pz, conv_px, conv_py, rho, vv, bndr, idz, idx, idy, dt, nz, nx, ny, nb)
+        call update_cpml_vzvxvy(p, vz, vx, vy, conv_pz, conv_px, conv_py, rho, vv, bndr, idz, idx, idy, dt, nz, nx, ny, nb)
         call step_forward_p(p, vz, vx, vy, vv, rho, dt, idz, idx, idy, nzpad, nxpad, nypad)
-!        call update_cpml_pzpxpy(p, vz, vx, vy, conv_pz, conv_px, conv_py, rho, vv, bndr, idz, idx, idy, dt, nz, nx, ny, nb)
+        call update_cpml_pzpxpy(p, vz, vx, vy, conv_pz, conv_px, conv_py, rho, vv, bndr, idz, idx, idy, dt, nz, nx, ny, nb)
         if(attenuating) call add_attenuation(p, eta, rho, vv, dt, nzpad, nxpad, nypad)
      else !2nd order scheme
         if(attenuating) call add_attenuation(p, eta, rho, vv, 0.5*dt, nzpad, nxpad, nypad)
@@ -149,12 +155,12 @@ program mexwell_cpml2_backward
         call window3d(v0, p, nz, nx, ny, nb)
         call rsf_write(Fw2,v0)
      endif
-     call add_sources(attenuating, p, eta, rho, vv, dt, -wlt(it), sz, sx, sy, nzpad, nxpad, nypad)
+     call add_sources(attenuating,p, eta, rho, vv, dt, -wlt(it), sz, sx, sy, nzpad, nxpad, nypad)
      if (order1) then ! scheme 1, 1st order accuracy, default
         if(attenuating) call add_attenuation(p, eta, rho, vv, -dt, nzpad, nxpad, nypad)
-!       call update_cpml_pzpxpy(p, vz, vx, vy, conv_pz, conv_px, conv_py, rho, vv, bndr, idz, idx, idy, -dt, nz, nx, ny, nb)
+        call update_cpml_pzpxpy(p, vz, vx, vy, conv_pz, conv_px, conv_py, rho, vv, bndr, idz, idx, idy, -dt, nz, nx, ny, nb)
         call step_forward_p(p, vz, vx, vy, vv, rho, -dt, idz, idx, idy, nzpad, nxpad, nypad)
-!       call update_cpml_vzvxvy(p, vz, vx, vy, conv_pz, conv_px, conv_py, rho, vv, bndr, idz, idx, idy, -dt, nz, nx, ny, nb)
+        call update_cpml_vzvxvy(p, vz, vx, vy, conv_pz, conv_px, conv_py, rho, vv, bndr, idz, idx, idy, -dt, nz, nx, ny, nb)
         call step_forward_v(p, vz, vx, vy, vv, rho, -dt, idz, idx, idy, nzpad, nxpad, nypad)
      else !2nd order scheme
         if(attenuating) call add_attenuation(p, eta, rho, vv, -0.5*dt, nzpad, nxpad,nypad)
@@ -408,11 +414,29 @@ subroutine update_cpml_vzvxvy(p, vz, vx, vy, conv_pz, conv_px, conv_py, rho, vv,
            conv_px(i1,i2,i3,1)=b*conv_px(i1,i2,i3,1)+(b-1.)*diff2*idx
         enddo
         do i2=nx+nb+1,nxpad-2 !right
-           ib=nxpad-i1+1
+           ib=nxpad-i2+1
            b=exp(-bndr(ib)*vv(i1,i2,i3)*dt)
            diff2=c1*(p(i1,i2+1,i3)-p(i1,i2,i3)) &
                 +c2*(p(i1,i2+2,i3)-p(i1,i2-1,i3))
            conv_px(i1,ib,i3,2)=b*conv_px(i1,ib,i3,2)+(b-1.)*diff2*idx
+        enddo
+     enddo
+  enddo
+  !update conv_py
+  do i2=1,nxpad
+     do i1=1,nzpad
+        do i3=2,nb
+           b=exp(-bndr(i3)*vv(i1,i2,i3)*dt)
+           diff3=c1*(p(i1,i2,i3+1)-p(i1,i2,i3))&
+                +c2*(p(i1,i2,i3+2)-p(i1,i2,i3-1))
+           conv_py(i1,i2,i3,1)=b*conv_py(i1,i2,i3,1)+(b-1.)*diff3*idy
+        enddo
+        do i3=ny+nb+1,nypad-2
+           ib=nypad-i3+1
+           b=exp(-bndr(ib)*vv(i1,i2,i3)*dt)
+           diff3=c1*(p(i1,i2,i3+1)-p(i1,i2,i3))&
+                +c2*(p(i1,i2,i3+2)-p(i1,i2,i3-1))
+           conv_py(i1,i2,ib,2)=b*conv_py(i1,i2,ib,2)+(b-1.)*diff3*idy
         enddo
      enddo
   enddo
@@ -441,8 +465,18 @@ subroutine update_cpml_vzvxvy(p, vz, vx, vy, conv_pz, conv_px, conv_py, rho, vv,
         enddo
      enddo
   enddo
-
-
+  !update vy
+  do i2=1,nxpad
+     do i1=1,nzpad
+        do i3=1,nb
+           vy(i1,i2,i3)=vy(i1,i2,i3)-dt*conv_py(i1,i2,i3,1)/rho(i1,i2,i3)
+        enddo
+        do i3=ny+nb+1,nypad
+           ib=nypad-i3+1
+           vy(i1,i2,i3)=vy(i1,i2,i3)-dt*conv_py(i1,i2,ib,2)/rho(i1,i2,i3)
+        enddo
+     enddo
+  enddo
 end subroutine update_cpml_vzvxvy
 
 !------------------------------------------------------------------------------
@@ -464,7 +498,7 @@ subroutine update_cpml_pzpxpy(p, vz, vx, vy, conv_vz, conv_vx, conv_vy, rho, vv,
   nzpad=nz+2*nb
   nxpad=nx+2*nb
   nypad=ny+2*nb
-
+  
   !update conv_vz
   do i3=1,nypad
      do i2=1,nxpad
@@ -501,6 +535,24 @@ subroutine update_cpml_pzpxpy(p, vz, vx, vy, conv_vz, conv_vx, conv_vy, rho, vv,
         enddo
      enddo
   enddo
+  !update conv_vy
+  do i2=1,nxpad
+     do i1=1,nzpad
+        do i3=3,nb
+           b=exp(-bndr(i3)*vv(i1,i2,i3)*dt)
+           diff3=c1*(vy(i1,i2,i3)-vy(i1,i2,i3-1))&
+                +c2*(vy(i1,i2,i3+1)-vy(i1,i2,i3-2))
+           conv_vy(i1,i2,i3,1)=b*conv_vy(i1,i2,i3,1)+(b-1.)*diff3*idy
+        enddo
+        do i3=ny+nb+1,nypad-1
+           ib=nypad-i3+1
+           b=exp(-bndr(ib)*vv(i1,i2,i3)*dt)
+           diff3=c1*(vy(i1,i2,i3)-vy(i1,i2,i3-1))&
+                +c2*(vy(i1,i2,i3+1)-vy(i1,i2,i3-2))
+           conv_vy(i1,i2,ib,2)=b*conv_vy(i1,i2,ib,2)+(b-1.)*diff3*idy
+        enddo
+     enddo
+  enddo
 
   !update pz
   do i3=1,nypad
@@ -517,15 +569,31 @@ subroutine update_cpml_pzpxpy(p, vz, vx, vy, conv_vz, conv_vx, conv_vy, rho, vv,
      enddo
   enddo
   !update px
-  do i1=1,nzpad
-     do i2=1,nb !left
-        tmp=vv(i1,i2,i3);        tmp=rho(i1,i2,i3)*tmp*tmp
-        p(i1,i2,i3)=p(i1,i2,i3)-dt*tmp*conv_vx(i1,i2,i3,1)
+  do i3=1,nypad
+     do i1=1,nzpad
+        do i2=1,nb !left
+           tmp=vv(i1,i2,i3);        tmp=rho(i1,i2,i3)*tmp*tmp
+           p(i1,i2,i3)=p(i1,i2,i3)-dt*tmp*conv_vx(i1,i2,i3,1)
+        enddo
+        do i2=nx+nb+1,nxpad !right
+           ib=nxpad-i2+1
+           tmp=vv(i1,i2,i3);        tmp=rho(i1,i2,i3)*tmp*tmp
+           p(i1,i2,i3)=p(i1,i2,i3)-dt*tmp*conv_vx(i1,ib,i3,2)
+        enddo
      enddo
-     do i2=nx+nb+1,nxpad !right
-        ib=nxpad-i2+1
-        tmp=vv(i1,i2,i3);        tmp=rho(i1,i2,i3)*tmp*tmp
-        p(i1,i2,i3)=p(i1,i2,i3)-dt*tmp*conv_vx(i1,ib,i3,2)
+  enddo
+  !update py
+  do i2=1,nxpad
+     do i1=1,nzpad
+        do i3=1,nb
+           tmp=vv(i1,i2,i3);        tmp=rho(i1,i2,i3)*tmp*tmp
+           p(i1,i2,i3)=p(i1,i2,i3)-dt*tmp*conv_vy(i1,i2,i3,1)
+        enddo
+        do i3=ny+nb+1,nypad
+           ib=nypad-i3+1
+           tmp=vv(i1,i2,i3);        tmp=rho(i1,i2,i3)*tmp*tmp
+           p(i1,i2,i3)=p(i1,i2,i3)-dt*tmp*conv_vy(i1,i2,ib,2)
+        enddo
      enddo
   enddo
 end subroutine update_cpml_pzpxpy
