@@ -1650,7 +1650,7 @@ void opendev (int argc, char* argv[])
     dev.txprec = DEFAULT_HARDCOPY_PREC;
 
     if (NULL == (label = sf_getstring ("label")))
-	/*( label for pages (default is user name and date) )*/
+	/*(label label for pages, default is user name and date )*/
     {
 	if ((user_name = getlogin ()) == NULL)
 	    user_name = getpwuid (getuid ())->pw_name;

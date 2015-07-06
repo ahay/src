@@ -1,0 +1,77 @@
+from rsf.proj import *
+
+Flow('fig3',None,
+     '''
+     vr3d 
+lat=30.45843
+long=32.24839
+
+sweep=0
+
+what=0,2,2
+
+xmax=0
+ymax=0
+zmax=0
+or=y
+
+axeslength=3.0
+text=.25
+
+particle=3
+
+which=n
+seamless=y
+
+inc=16
+inc2=16
+maxlevel=10
+
+light=0.,0.,.8
+
+nocol=7,13,4
+
+shading=.95
+
+c11=1.
+c22=1.
+c33=1.
+
+c44=.342705
+c55=.25
+c66=.45
+
+c23=.3145898
+c13=.5
+c12=.1
+
+norm=.3
+
+degx=43 degy=0 degz=0
+
+ delz=1.00000    
+ rho=1.00000    
+  c11=1.00000    
+  c12=0.286049    
+  c13=0.313951    
+  c14=0.199513    
+  c15=0.    
+  c16=0.    
+  c22=1.000000    
+  c23=0.314590    
+  c24=0.    
+  c25=0.    
+  c26=0.    
+  c33=1.000000    
+  c34=0.    
+  c35=0.    
+  c36=0.    
+  c44=0.342705    
+  c45=0.    
+  c46=0.    
+  c55=0.343024    
+  c56=-.997564E-01
+  c66=0.356976    
+   ''',prefix=plprefix)
+
+End()
