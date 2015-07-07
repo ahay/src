@@ -25,7 +25,8 @@
 using namespace std;
 
 static std::valarray<float>  v;
-static float w, k;
+static std::valarray<sf_complex>  d;
+static float w, k, v0;
 static int nt,nx;
 static int nw,nk;
 static float w0,k0,wmin;
@@ -39,22 +40,18 @@ static int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
     setvalue(res,cpx(0.0f,0.0f));
     for(int a=0; a<nr; a++) { /* space index */
 	int i = rs[a];
-
-	int it = i%nt; i /= nt; 
-	int ix = i%nx; 
- 
-	float v2 = v[it+ix*nt]; 
-	v2 *= v2;
+	float v2 = v[i]; 
+	v2 = v2*v2-v0*v0;
 
 	for(int b=0; b<nc; b++) { /* wavenumber index */
-	    int i = cs[b];
+	    int j = cs[b];
 
-	    int iw = i%nw; i /= nw; w = w0+iw*dw; 	    
-	    int ik = i%nk;          k = k0+ik*dk; 
+	    int iw = j%nw; j /= nw; w = w0+iw*dw; 	    
+	    int ik = j%nk;          k = k0+ik*dk; 
 	    
 	    float phi = k * k * v2 * SF_PI * 0.125 / SF_MAX(w,wmin);
 
-	    res(a,b) = cpx(cos(phi),-sin(phi));
+	    res(a,b) = cpx(cos(phi),-sin(phi)) * cpx(crealf(d[j]),cimagf(d[j]));
 	}
     }
     return 0;
@@ -76,7 +73,7 @@ int main(int argc, char** argv)
     int npk;
     par.get("npk",npk,20); // maximum rank
 
-    iRSF vel;
+    iRSF vel("vel");
     vel.get("n1",nt);
     vel.get("n2",nx);
 
@@ -86,13 +83,20 @@ int main(int argc, char** argv)
     vel >> vels;    
     v.resize(m);
     v = vels;
+
+    par.get("v0",v0,0.0); // minimum velocity
     
-    iRSF fft("fft");
+    iRSF fft;
 
     fft.get("n1",nw);
     fft.get("n2",nk);
 
     int n = nw*nk;
+
+    std::valarray<sf_complex> dats(n);
+    fft >> dats;    
+    d.resize(n);
+    d = dats;
 
     fft.get("d1",dw);
     fft.get("d2",dk);
@@ -100,7 +104,7 @@ int main(int argc, char** argv)
     fft.get("o1",w0); 
     fft.get("o2",k0);
 
-    par.get("fmin",wmin,w0); // minimum frequency
+    par.get("fmin",wmin,dw); // minimum frequency
 
     vector<int> lidx, ridx;
     CpxNumMat mid;

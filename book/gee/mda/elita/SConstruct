@@ -14,12 +14,42 @@ Flow('win386','chev','window n1=1 f1=231 f3=210')
 Flow('mean.p','win386','attr want=mean | awk "{print \$3}" | sed s/-/add=/')
 Flow('bin','win386 mean.p','add par=${SOURCES[1]}')
 
-Plot('bin','grey transp=n yreverse=n crowd=.80 title=Original')
+def plot(title):
+    return '''
+    grey transp=n yreverse=n crowd=.80 title="%s" 
+    ''' % title
+
+Plot('bin',plot('Original'))
 
 Flow('hole','bin','hole')
+Flow('mask','bin','spike | hole')
+Flow('imask','mask','dd type=int')
 
-Plot('hole','grey transp=n yreverse=n crowd=.80  title=Gapped')
+Plot('hole',plot('Gapped'))
 
-Result('channel-elita','bin hole','SideBySideIso')
+Flow('pef lag','hole mask','hpef lag=${TARGETS[1]} maskin=${SOURCES[1]} a=5,3 niter=50')
+Flow('interp','hole pef mask','miss filt=${SOURCES[1]} mask=${SOURCES[2]} niter=200')
+
+Plot('interp',plot('PEF Interpolation'))
+
+Flow('var.p','hole pef imask',
+     '''
+     helicon filt=${SOURCES[1]} | spray axis=1 n=1 | headerwindow mask=${SOURCES[2]} |
+     attr want=var | sed s/variance/var/ | sed s/[[:blank:]]*//g
+     ''')
+
+Flow('prior','hole pef var.p',
+     'noise seed=2015 rep=y par=${SOURCES[2]} | helicon div=y filt=${SOURCES[1]}')
+
+Flow('real','hole pef mask prior',
+     '''
+     add scale=1,-1 ${SOURCES[3]} | 
+     miss filt=${SOURCES[1]} mask=${SOURCES[2]} niter=200 | 
+     add ${SOURCES[3]}
+     ''')
+
+Plot('real',plot('Realization'))
+
+Result('channel-elita','bin hole interp real','TwoRows')
 
 End()
