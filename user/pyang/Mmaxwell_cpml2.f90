@@ -22,8 +22,8 @@ program mexwell_cpml2
   logical :: order1
   integer :: ib, it, nt, nz, nx, nb, sx, sz, nxpad, nzpad
   real    :: dt, dz, dx, fm, tmp, idx, idz
-  real, parameter::PI=3.14159265
-  real, dimension (:),   allocatable :: wlt,bndr
+  real, parameter::PI=4.*atan(1.)
+  real, dimension (:),   allocatable :: wlt,bndr,alpha
   real, dimension (:,:), allocatable :: v0, vv, rho, eta
   real, dimension (:,:), allocatable :: p, vz, vx
   real, dimension(:,:,:),allocatable :: conv_pz,conv_px,conv_vz,conv_vx
@@ -67,6 +67,7 @@ program mexwell_cpml2
 
   allocate(wlt(nt))
   allocate(bndr(nb))
+  allocate(alpha(nb))
   allocate(v0(nz,nx))
   allocate(vv(nzpad,nxpad))
   allocate(rho(nzpad,nxpad))
@@ -86,7 +87,7 @@ program mexwell_cpml2
      wlt(it)=1000.*(1.0-2.0*tmp)*exp(-tmp)
   enddo
   !generate coefficients for the absorbing boundary
-  call cpmlcoeff_init(bndr,dx,nb)
+  call cpmlcoeff_init(bndr,alpha,fm,dx,nb)
   call rsf_read(Fv,v0)
   call expand2d(vv, v0, nz, nx, nb)
   call rsf_read(Frho,v0)
@@ -109,7 +110,7 @@ program mexwell_cpml2
         call step_forward_v(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
         call update_cpml_vzvx(p,vz,vx,conv_pz,conv_px,rho,vv,bndr,idz,idx,fm,dt,nz,nx,nb)
         call step_forward_p(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
-        call update_cpml_pzpx(p,vz,vx,conv_pz,conv_px,rho,vv,bndr,idz,idx,fm,dt,nz,nx,nb)
+        call update_cpml_pzpx(p,vz,vx,conv_pz,conv_px,rho,vv,bndr,idz,idx,dt,nz,nx,nb)
         call apply_attenuation(p, eta, rho, vv, dt, nzpad, nxpad)
      else 
         call apply_attenuation(p, eta, rho, vv, 0.5*dt, nzpad, nxpad)
@@ -127,6 +128,7 @@ program mexwell_cpml2
 
   deallocate(wlt)
   deallocate(bndr)
+  deallocate(alpha)
   deallocate(v0)
   deallocate(vv)
   deallocate(rho)
@@ -244,25 +246,29 @@ subroutine step_forward_p(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
   enddo
 end subroutine step_forward_p
 
-subroutine cpmlcoeff_init(bndr,dx,nb)
+!------------------------------------------------------------------------------
+subroutine cpmlcoeff_init(bndr,alpha,fm,dx,nb)
   implicit none
   
   integer::nb
-  real::dx
-  real,dimension(nb)::bndr
+  real::dx,fm
+  real,dimension(nb)::bndr,alpha
 
   integer::ib
-  real::x,L,d0
+  real::x,L,d0,alpha_max
   real,parameter::Rc=1.e-4
   
+  alpha_max=4.*atan(1.)*fm  
   L=nb*dx
   d0=-3.*log(Rc)/(2.*L*L*L)
 
   do ib=1,nb
-     x=(ib-nb)*dx     !x=1.-cos(0.5*(nb-ib)*PI/nb)
+     x=(nb-ib)*dx     !x=1.-cos(0.5*(nb-ib)*PI/nb)
      bndr(ib)=d0*x*x 
+     alpha(ib)=0.
   enddo
 end subroutine cpmlcoeff_init
+
 
 !------------------------------------------------------------------------------
 subroutine update_cpml_vzvx(p,vz,vx,conv_pz,conv_px,rho,vv,bndr,idz,idx,fm,dt,nz,nx,nb)
@@ -460,6 +466,9 @@ subroutine apply_attenuation(p, eta, rho, vv, dt, nzpad, nxpad)
   enddo
 end subroutine apply_attenuation
 
+  return
+end subroutine apply_attenuation
+
 !-------------------------------------------------------------------------------
 subroutine add_sources(p, dt, wlt, sz, sx, nzpad, nxpad)
   implicit none
@@ -469,5 +478,7 @@ subroutine add_sources(p, dt, wlt, sz, sx, nzpad, nxpad)
   real,dimension(nzpad, nxpad)::p
 
   p(sz,sx)=p(sz,sx)+dt*wlt
+
+  return
 end subroutine add_sources
 
