@@ -466,9 +466,6 @@ subroutine apply_attenuation(p, eta, rho, vv, dt, nzpad, nxpad)
   enddo
 end subroutine apply_attenuation
 
-  return
-end subroutine apply_attenuation
-
 !-------------------------------------------------------------------------------
 subroutine add_sources(p, dt, wlt, sz, sx, nzpad, nxpad)
   implicit none
