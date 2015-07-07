@@ -108,17 +108,17 @@ program mexwell_cpml2
 
      if (order1) then ! scheme 1, 1st order accuracy, default
         call step_forward_v(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
-        call update_cpml_vzvx(p,vz,vx,conv_pz,conv_px,rho,vv,bndr,idz,idx,fm,dt,nz,nx,nb)
+        call update_cpml_vzvx(p,vz,vx,conv_pz,conv_px,rho,vv,bndr,alpha,idz,idx,dt,nz,nx,nb)
         call step_forward_p(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
-        call update_cpml_pzpx(p,vz,vx,conv_pz,conv_px,rho,vv,bndr,idz,idx,dt,nz,nx,nb)
+        call update_cpml_pzpx(p,vz,vx,conv_pz,conv_px,rho,vv,bndr,alpha,idz,idx,dt,nz,nx,nb)
         call apply_attenuation(p, eta, rho, vv, dt, nzpad, nxpad)
      else 
         call apply_attenuation(p, eta, rho, vv, 0.5*dt, nzpad, nxpad)
 
         call step_forward_v(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
-        call update_cpml_vzvx(p,vz,vx,conv_pz,conv_px,rho,vv,bndr,idz,idx,fm,dt,nz,nx,nb)
+        call update_cpml_vzvx(p,vz,vx,conv_pz,conv_px,rho,vv,bndr,alpha,idz,idx,dt,nz,nx,nb)
         call step_forward_p(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
-        call update_cpml_pzpx(p,vz,vx,conv_pz,conv_px,rho,vv,bndr,idz,idx,fm,dt,nz,nx,nb)
+        call update_cpml_pzpx(p,vz,vx,conv_pz,conv_px,rho,vv,bndr,alpha,idz,idx,dt,nz,nx,nb)
 
         call apply_attenuation(p, eta, rho, vv, 0.5*dt, nzpad, nxpad)
      endif
@@ -246,6 +246,7 @@ subroutine step_forward_p(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
   enddo
 end subroutine step_forward_p
 
+
 !------------------------------------------------------------------------------
 subroutine cpmlcoeff_init(bndr,alpha,fm,dx,nb)
   implicit none
@@ -258,43 +259,39 @@ subroutine cpmlcoeff_init(bndr,alpha,fm,dx,nb)
   real::x,L,d0,alpha_max
   real,parameter::Rc=1.e-4
   
-  alpha_max=4.*atan(1.)*fm  
   L=nb*dx
   d0=-3.*log(Rc)/(2.*L*L*L)
+  alpha_max=4.*atan(1.)*fm  !PI=4.*atan(1.)
 
   do ib=1,nb
-     x=(nb-ib)*dx     !x=1.-cos(0.5*(nb-ib)*PI/nb)
+     x=(nb-ib)*dx     !x=1.-cos(0.5*(nb-ib)*PI/nb), Virieux
      bndr(ib)=d0*x*x 
-     alpha(ib)=0.
+     alpha(ib)=alpha_max*(1.1-x/L)
   enddo
 end subroutine cpmlcoeff_init
 
 
 !------------------------------------------------------------------------------
-subroutine update_cpml_vzvx(p,vz,vx,conv_pz,conv_px,rho,vv,bndr,idz,idx,fm,dt,nz,nx,nb)
+subroutine update_cpml_vzvx(p,vz,vx,conv_pz,conv_px,rho,vv,bndr,alpha,idz,idx,dt,nz,nx,nb)
   implicit none
 
   integer::nz,nx,nb
-  real::idz,idx,dt,fm
-  real::bndr(nb)
+  real::idz,idx,dt
+  real,dimension(nb)::bndr,alpha
   real,dimension(nz+2*nb,nx+2*nb)::p,vz,vx,rho,vv
   real::conv_pz(nb,nx+2*nb,2),conv_px(nz+2*nb,nb,2)
 
   integer::nzpad,nxpad,i1,i2,ib
-  real*8::a,b,c,d,diff1,diff2
+  real*8::a,b,d,diff1,diff2
 
-  real*8,parameter::PI=4.*atan(1.)
   real,parameter::c1=1.125
   real,parameter::c2=-1./24.
-
-  c=PI*fm
 
   !update conv_pz
   do i2=1,nxpad
      do i1=2,nb !top
 	d=bndr(i1)*vv(i1,i2)
-        b=exp(-(c+d)*dt)
-	a=d*(b-1.)/(d+c)
+        b=exp(-(d+alpha(i1))*dt);a=d*(b-1.)/(d+alpha(i1))
         diff1=c1*(p(i1+1,i2)-p(i1,i2)) &
              +c2*(p(i1+2,i2)-p(i1-1,i2))
         conv_pz(i1,i2,1)=b*conv_pz(i1,i2,1)+a*diff1*idz
@@ -302,8 +299,7 @@ subroutine update_cpml_vzvx(p,vz,vx,conv_pz,conv_px,rho,vv,bndr,idz,idx,fm,dt,nz
      do i1=nz+nb+1,nzpad-2 !bottom
         ib=nzpad-i1+1
 	d=bndr(ib)*vv(i1,i2)
-        b=exp(-(c+d)*dt)
-	a=d*(b-1.)/(d+c)
+        b=exp(-(d+alpha(ib))*dt);a=d*(b-1.)/(d+alpha(ib))
         diff1=c1*(p(i1+1,i2)-p(i1,i2)) &
              +c2*(p(i1+2,i2)-p(i1-1,i2))
         conv_pz(ib,i2,2)=b*conv_pz(ib,i2,2)+a*diff1*idz
@@ -314,8 +310,7 @@ subroutine update_cpml_vzvx(p,vz,vx,conv_pz,conv_px,rho,vv,bndr,idz,idx,fm,dt,nz
   do i1=1,nzpad
      do i2=2,nb !left
 	d=bndr(i2)*vv(i1,i2)
-        b=exp(-(c+d)*dt)
-	a=d*(b-1.)/(d+c)
+        b=exp(-(b+alpha(i2))*dt); a=d*(b-1.)/(d+alpha(i2))
         diff2=c1*(p(i1,i2+1)-p(i1,i2))&
              +c2*(p(i1,i2+2)-p(i1,i2-1)) 
         conv_px(i1,i2,1)=b*conv_px(i1,i2,1)+a*diff2*idx
@@ -323,8 +318,7 @@ subroutine update_cpml_vzvx(p,vz,vx,conv_pz,conv_px,rho,vv,bndr,idz,idx,fm,dt,nz
      do i2=nx+nb+1,nxpad-2 !right
         ib=nxpad-i2+1
 	d=bndr(ib)*vv(i1,i2)
-        b=exp(-(c+d)*dt)
-	a=d*(b-1.)/(d+c)
+        b=exp(-(d+alpha(ib))*dt); a=d*(b-1.)/(d+alpha(ib))
         diff2=c1*(p(i1,i2+1)-p(i1,i2)) &
              +c2*(p(i1,i2+2)-p(i1,i2-1))
         conv_px(i1,ib,2)=b*conv_px(i1,ib,2)+a*diff2*idx
@@ -355,23 +349,20 @@ subroutine update_cpml_vzvx(p,vz,vx,conv_pz,conv_px,rho,vv,bndr,idz,idx,fm,dt,nz
 end subroutine update_cpml_vzvx
 
 !------------------------------------------------------------------------------
-subroutine update_cpml_pzpx(p,vz,vx,conv_vz,conv_vx,rho,vv,bndr,idz,idx,fm,dt,nz,nx,nb)
+subroutine update_cpml_pzpx(p,vz,vx,conv_vz,conv_vx,rho,vv,bndr,alpha,idz,idx,dt,nz,nx,nb)
   implicit none
   
   integer::nz,nx,nb
-  real::idz,idx,dt,fm
-  real,dimension(nb)::bndr
+  real::idz,idx,dt
+  real,dimension(nb)::bndr,alpha
   real,dimension(nz+2*nb,nx+2*nb)::p,vz,vx,rho,vv
   real::conv_vz(nb,nx+2*nb,2),conv_vx(nz+2*nb,nb,2)
 
   integer::i1,i2,ib,nzpad,nxpad
-  real*8::diff1,diff2,a,b,c,d,tmp
+  real*8::diff1,diff2,a,b,d,tmp
 
-  real*8,parameter::PI=4.*atan(1.)
   real,parameter::c1=1.125
   real,parameter::c2=-1./24.
-
-  c=PI*fm
 
   nzpad=nz+2*nb
   nxpad=nx+2*nb
@@ -380,8 +371,7 @@ subroutine update_cpml_pzpx(p,vz,vx,conv_vz,conv_vx,rho,vv,bndr,idz,idx,fm,dt,nz
   do i2=1,nxpad
      do i1=3,nb !top
 	d=bndr(i1)*vv(i1,i2)
-        b=exp(-(c+d)*dt)
-	a=d*(b-1.)/(d+c)
+        b=exp(-(d+alpha(i1))*dt); a=d*(b-1.)/(d+alpha(i1))
         diff1=c1*(vz(i1,i2)-vz(i1-1,i2))&
              +c2*(vz(i1+1,i2)-vz(i1-2,i2))
         conv_vz(i1,i2,1)=b*conv_vz(i1,i2,1)+a*diff1*idz
@@ -389,8 +379,7 @@ subroutine update_cpml_pzpx(p,vz,vx,conv_vz,conv_vx,rho,vv,bndr,idz,idx,fm,dt,nz
      do i1=nz+nb+1,nzpad-1 !bottom
         ib=nzpad-i1+1
 	d=bndr(ib)*vv(i1,i2)
-        b=exp(-(d+c)*dt)
-	a=d*(b-1.)/(d+c)
+        b=exp(-(d+alpha(ib))*dt); a=d*(b-1.)/(d+alpha(ib))
         diff1=c1*(vz(i1,i2)-vz(i1-1,i2))&
              +c2*(vz(i1+1,i2)-vz(i1-2,i2))
         conv_vz(ib,i2,2)=b*conv_vz(ib,i2,2)+a*diff1*idz
@@ -401,17 +390,15 @@ subroutine update_cpml_pzpx(p,vz,vx,conv_vz,conv_vx,rho,vv,bndr,idz,idx,fm,dt,nz
   do i1=1,nzpad
      do i2=3,nb !left
 	d=bndr(i2)*vv(i1,i2)
-        b=exp(-(d+c)*dt)
-	a=d*(b-1.)/(d+c)
+        b=exp(-(d+alpha(i2))*dt); a=d*(b-1.)/(d+alpha(i2))
         diff2=c1*(vx(i1,i2)-vx(i1,i2-1))&
              +c2*(vx(i1,i2+1)-vx(i1,i2-2))
         conv_vx(i1,i2,1)=b*conv_vx(i1,i2,1)+a*diff2*idx
      enddo
      do i2=nx+nb+1,nxpad-1 !right
         ib=nxpad-i2+1
-	d=bndr(ib)*vv(i1,i2)
-        b=exp(-(d+c)*dt)
-	a=d*(b-1.)/(d+c)	
+        d=bndr(ib)*vv(i1,i2)
+        b=exp(-(d+alpha(ib))*dt); a=d*(b-1.)/(d+alpha(ib))
         diff2=c1*(vx(i1,i2)-vx(i1,i2-1))&
              +c2*(vx(i1,i2+1)-vx(i1,i2-2))
         conv_vx(i1,ib,2)=b*conv_vx(i1,ib,2)+a*diff2*idx
@@ -475,7 +462,5 @@ subroutine add_sources(p, dt, wlt, sz, sx, nzpad, nxpad)
   real,dimension(nzpad, nxpad)::p
 
   p(sz,sx)=p(sz,sx)+dt*wlt
-
-  return
 end subroutine add_sources
 
