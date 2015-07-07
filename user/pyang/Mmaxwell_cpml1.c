@@ -275,7 +275,7 @@ void update_cpml_pzpx(float **vz, float **vx, float **p, float ***conv_vz, float
 }
 
 
-void add_attenuation(float **p, float **eta, float **rho, float **vv, float dt)
+void apply_attenuation(float **p, float **eta, float **rho, float **vv, float dt)
 {
 	int i1, i2;
 	float a,tau;
@@ -290,14 +290,9 @@ void add_attenuation(float **p, float **eta, float **rho, float **vv, float dt)
 	}
 }
 
-void add_sources(float **p, float **eta, float **rho, float **vv, float dt, float wlt, int sx, int sz)
+void add_sources(float **p, float dt, float wlt, int sx, int sz)
 {
-	float a,tau;
-
-	a=rho[sx][sz]*vv[sx][sz]*vv[sx][sz];
-	tau=eta[sx][sz]/a; 
-	a=expf(-dt/tau);
-	p[sx][sz]+=tau*(1.-a)*wlt;
+	p[sx][sz]+=dt*wlt;
 }
 
 
@@ -394,17 +389,17 @@ int main(int argc, char* argv[])
 			step_forward_p(p, vz, vx, vv, rho);
 			update_cpml_pzpx(vz, vx, p, conv_vz, conv_vx, rho, vv, bndr);
 
-			add_attenuation(p, eta, rho, vv, dt);	
+			apply_attenuation(p, eta, rho, vv, dt);	
 		}else{// scheme 2, 2nd order accuracy
-			add_attenuation(p, eta, rho, vv, 0.5*dt);	
+			apply_attenuation(p, eta, rho, vv, 0.5*dt);	
 			step_forward_v(p, vz, vx, rho);
 			update_cmpl_vzvx(vz, vx, p, conv_pz, conv_px, rho, vv, bndr);
 			step_forward_p(p, vz, vx, vv, rho);
 			update_cpml_pzpx(vz, vx, p, conv_vz, conv_vx, rho, vv, bndr);
 
-			add_attenuation(p, eta, rho, vv, 0.5*dt);	
+			apply_attenuation(p, eta, rho, vv, 0.5*dt);	
 		}
-		add_sources(p, eta, rho, vv, dt, wlt[it], sx, sz);
+		add_sources(p, dt, wlt[it], sx, sz);
 	}
 
 	free(wlt);

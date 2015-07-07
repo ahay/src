@@ -100,7 +100,7 @@ program mexwell_direct
      call rsf_write(Fw,v0)
 
      call step_forward(p, vz, vx, vv, rho, eta, dt, idz, idx, nzpad, nxpad)
-     call add_sources(p, eta, rho, vv, dt, wlt(it), sz, sx, nzpad, nxpad)
+     call add_sources(p, dt, wlt(it), sz, sx, nzpad, nxpad)
 
      ! apply sponge ABC
      call apply_sponge(p,bndr,nz,nx,nb)
@@ -223,21 +223,14 @@ subroutine step_forward(p, vz, vx, vv, rho, eta, dt, idz, idx, nzpad, nxpad)
 end subroutine step_forward
 
 !-------------------------------------------------------------------------------
-subroutine add_sources(p, eta, rho, vv, dt, wlt, sz, sx, nzpad, nxpad)
+subroutine add_sources(p, dt, wlt, sz, sx, nzpad, nxpad)
   implicit none
 
   integer::sz,sx,nzpad, nxpad
   real::dt,wlt
-  real,dimension(nzpad, nxpad)::p, eta, rho, vv
+  real,dimension(nzpad, nxpad)::p
 
-  real::a, tau
-
-  a=rho(sz,sx)*vv(sz,sx)*vv(sz,sx)
-  tau=eta(sz,sx)/a
-  a=dt/(1.+0.5*dt/tau)
-  p(sz,sx)=p(sz,sx)+a*wlt
-
-  return
+  p(sz,sx)=p(sz,sx)+dt*wlt
 end subroutine add_sources
 
 !-------------------------------------------------------------------------------

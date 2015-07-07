@@ -152,16 +152,16 @@ program mexwell_cpml2_backward
         call update_cpml_vzvx(p,vz,vx,conv_pz,conv_px,rho,vv,bndr,idz,idx,dt,nz,nx,nb)
         call step_forward_p(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
         call update_cpml_pzpx(p,vz,vx,conv_pz,conv_px,rho,vv,bndr,idz,idx,dt,nz,nx,nb)
-        if(attenuating) call add_attenuation(p, eta, rho, vv, dt, nzpad, nxpad)
+        if(attenuating) call apply_attenuation(p, eta, rho, vv, dt, nzpad, nxpad)
      else 
-        if(attenuating) call add_attenuation(p, eta, rho, vv, 0.5*dt, nzpad, nxpad)
+        if(attenuating) call apply_attenuation(p, eta, rho, vv, 0.5*dt, nzpad, nxpad)
         call step_forward_v(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
         call update_cpml_vzvx(p,vz,vx,conv_pz,conv_px,rho,vv,bndr,idz,idx,dt,nz,nx,nb)
         call step_forward_p(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
         call update_cpml_pzpx(p,vz,vx,conv_pz,conv_px,rho,vv,bndr,idz,idx,dt,nz,nx,nb)
-        if(attenuating) call add_attenuation(p, eta, rho, vv, 0.5*dt, nzpad, nxpad)
+        if(attenuating) call apply_attenuation(p, eta, rho, vv, 0.5*dt, nzpad, nxpad)
      endif
-     call add_sources(attenuating,p, eta, rho, vv, dt, wlt(it), sz, sx, nzpad, nxpad,wltf(it))
+     call add_sources(p, dt, wlt(it), sz, sx, nzpad, nxpad, wltf(it))
 
      call compute_energy(ef(it),vz(nb+1:nb+nz,nb+1:nb+nx),&
           vx(nb+1:nb+nz,nb+1:nb+nx),p(nb+1:nb+nz,nb+1:nb+nx),&
@@ -182,21 +182,21 @@ program mexwell_cpml2_backward
      call window2d(v0, p, nz, nx, nb)
      call rsf_write(Fw2,v0)
 
-     call add_sources(attenuating,p, eta, rho, vv, dt, -wlt(it), sz, sx, nzpad, nxpad,wltb(it))
+     call add_sources(p, -dt, wlt(it), sz, sx, nzpad, nxpad, wltb(it))
 
      if (order1) then ! scheme 1, 1st order accuracy, default
-        if(attenuating) call add_attenuation(p, eta, rho, vv, -dt, nzpad, nxpad)
+        if(attenuating) call apply_attenuation(p, eta, rho, vv, -dt, nzpad, nxpad)
         call update_cpml_pzpx(p,vz,vx,conv_pz,conv_px,rho,vv,bndr,idz,idx,-dt,nz,nx,nb)
         call step_forward_p(p, vz, vx, vv, rho, -dt, idz, idx, nzpad, nxpad)
         call update_cpml_vzvx(p,vz,vx,conv_pz,conv_px,rho,vv,bndr,idz,idx,-dt,nz,nx,nb)
         call step_forward_v(p, vz, vx, vv, rho, -dt, idz, idx, nzpad, nxpad)
      else 
-        if(attenuating) call add_attenuation(p, eta, rho, vv, -0.5*dt, nzpad, nxpad)
+        if(attenuating) call apply_attenuation(p, eta, rho, vv, -0.5*dt, nzpad, nxpad)
         call update_cpml_pzpx(p,vz,vx,conv_pz,conv_px,rho,vv,bndr,idz,idx,-dt,nz,nx,nb)
         call step_forward_p(p, vz, vx, vv, rho, -dt, idz, idx, nzpad, nxpad)
         call update_cpml_vzvx(p,vz,vx,conv_pz,conv_px,rho,vv,bndr,idz,idx,-dt,nz,nx,nb)
         call step_forward_v(p, vz, vx, vv, rho, -dt, idz, idx, nzpad, nxpad)
-        if(attenuating) call add_attenuation(p, eta, rho, vv,-0.5*dt, nzpad, nxpad)
+        if(attenuating) call apply_attenuation(p, eta, rho, vv,-0.5*dt, nzpad, nxpad)
      endif
   enddo
   call rsf_write(Feb,eb) !store backward energy history
@@ -564,7 +564,7 @@ subroutine update_cpml_pzpx(p,vz,vx,conv_vz,conv_vx,rho,vv,bndr,idz,idx,dt,nz,nx
 end subroutine update_cpml_pzpx
 
 !------------------------------------------------------------------------------
-subroutine add_attenuation(p, eta, rho, vv, dt, nzpad, nxpad)
+subroutine apply_attenuation(p, eta, rho, vv, dt, nzpad, nxpad)
   implicit none
 
   integer::i1,i2
@@ -582,27 +582,17 @@ subroutine add_attenuation(p, eta, rho, vv, dt, nzpad, nxpad)
         p(i1,i2)=a*p(i1,i2)
      enddo
   enddo
-end subroutine add_attenuation
+end subroutine apply_attenuation
 
 !-------------------------------------------------------------------------------
-subroutine add_sources(attenuating,p, eta, rho, vv, dt, wlt, sz, sx, nzpad, nxpad,wlt_actual)
+subroutine add_sources(p, dt, wlt, sz, sx, nzpad, nxpad, wlt_actual)
   implicit none
 
-  logical::attenuating
   integer::sz,sx,nzpad, nxpad
   real::dt,wlt,wlt_actual
-  real,dimension(nzpad, nxpad)::p, eta, rho, vv
+  real,dimension(nzpad, nxpad)::p
 
-  real*8::a, tau
-
-  if(attenuating) then
-     a=rho(sz,sx)*vv(sz,sx)*vv(sz,sx)
-     tau=eta(sz,sx)/a
-     a=exp(-dt/tau)
-     wlt_actual=tau*(1.-a)*wlt
-  else 
-     wlt_actual=dt*wlt
-  endif
+  wlt_actual=dt*wlt
   p(sz,sx)=p(sz,sx)+wlt_actual
 end subroutine add_sources
 

@@ -101,17 +101,17 @@ program mexwell_sponge2
 
      if (order1) then ! scheme 1, 1st order accuracy, default
         call step_forward(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
-        call add_attenuation(p, eta, rho, vv, dt, nzpad, nxpad)
+        call apply_attenuation(p, eta, rho, vv, dt, nzpad, nxpad)
      else
-        call add_attenuation(p, eta, rho, vv, 0.5*dt, nzpad, nxpad)
+        call apply_attenuation(p, eta, rho, vv, 0.5*dt, nzpad, nxpad)
         call step_forward(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
-        call add_attenuation(p, eta, rho, vv, 0.5*dt, nzpad, nxpad)
+        call apply_attenuation(p, eta, rho, vv, 0.5*dt, nzpad, nxpad)
      endif
 
-     call add_sources(p, eta, rho, vv, dt, wlt(it), sz, sx, nzpad, nxpad)
+     call add_sources(p, dt, wlt(it), sz, sx, nzpad, nxpad)
 
      ! apply sponge ABC
-     call apply_sponge(p,bndr,nz,nx,nb)
+     call apply_sponge(p, bndr,nz,nx,nb)
      call apply_sponge(vz,bndr,nz,nx,nb)
      call apply_sponge(vx,bndr,nz,nx,nb)
   enddo
@@ -230,7 +230,7 @@ subroutine step_forward(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
 end subroutine step_forward
 
 !------------------------------------------------------------------------------
-subroutine add_attenuation(p, eta, rho, vv, dt, nzpad, nxpad)
+subroutine apply_attenuation(p, eta, rho, vv, dt, nzpad, nxpad)
   implicit none
 
   integer::i1,i2
@@ -250,24 +250,17 @@ subroutine add_attenuation(p, eta, rho, vv, dt, nzpad, nxpad)
   enddo
 
   return
-end subroutine add_attenuation
+end subroutine apply_attenuation
 
 !-------------------------------------------------------------------------------
-subroutine add_sources(p, eta, rho, vv, dt, wlt, sz, sx, nzpad, nxpad)
+subroutine add_sources(p, dt, wlt, sz, sx, nzpad, nxpad)
   implicit none
 
   integer::sz,sx,nzpad, nxpad
   real::dt,wlt
-  real,dimension(nzpad, nxpad)::p, eta, rho, vv
+  real,dimension(nzpad, nxpad)::p
 
-  real::a, tau
-
-  a=rho(sz,sx)*vv(sz,sx)*vv(sz,sx)
-  tau=eta(sz,sx)/a
-  a=exp(-dt/tau)
-  p(sz,sx)=p(sz,sx)+tau*(1.-a)*wlt
-
-  return
+  p(sz,sx)=p(sz,sx)+dt*wlt
 end subroutine add_sources
 
 !-------------------------------------------------------------------------------

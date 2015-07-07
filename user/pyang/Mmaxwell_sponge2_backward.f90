@@ -117,18 +117,18 @@ program mexwell_sponge2_backward
      if (order1) then ! scheme 1, 1st order accuracy, default
         call step_forward(.true.,p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
         if(attenuating) then
-           call add_attenuation(p, eta, rho, vv, dt, nzpad, nxpad)
+           call apply_attenuation(p, eta, rho, vv, dt, nzpad, nxpad)
         endif
      else
         if(attenuating) then
-           call add_attenuation(p, eta, rho, vv, 0.5*dt, nzpad, nxpad)
+           call apply_attenuation(p, eta, rho, vv, 0.5*dt, nzpad, nxpad)
         endif
         call step_forward(.true.,p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
         if(attenuating) then
-           call add_attenuation(p, eta, rho, vv, 0.5*dt, nzpad, nxpad)
+           call apply_attenuation(p, eta, rho, vv, 0.5*dt, nzpad, nxpad)
         endif
      endif
-     call add_sources(attenuating,p, eta, rho, vv, dt, wlt(it), sz, sx, nzpad, nxpad)
+     call add_sources(p, dt, wlt(it), sz, sx, nzpad, nxpad)
 
      ! apply sponge ABC
      call apply_sponge(p,bndr,nz,nx,nb)
@@ -146,19 +146,19 @@ program mexwell_sponge2_backward
      call window2d(v0, p, nz, nx, nb)
      call rsf_write(Fw2,v0)
 
-     call add_sources(attenuating,p, eta, rho, vv, dt,-wlt(it), sz, sx, nzpad, nxpad)
+     call add_sources(p, -dt, wlt(it), sz, sx, nzpad, nxpad)
      if (order1) then ! scheme 1, 1st order accuracy, default
         if(attenuating) then
-           call add_attenuation(p, eta, rho, vv, -dt, nzpad, nxpad)
+           call apply_attenuation(p, eta, rho, vv, -dt, nzpad, nxpad)
         endif
         call step_forward(.false.,p, vz, vx, vv, rho, -dt, idz, idx, nzpad, nxpad)
      else
         if (attenuating) then 
-           call add_attenuation(p, eta, rho, vv, -0.5*dt, nzpad, nxpad)
+           call apply_attenuation(p, eta, rho, vv, -0.5*dt, nzpad, nxpad)
         endif
         call step_forward(.false.,p, vz, vx, vv, rho, -dt, idz, idx, nzpad, nxpad)
         if (attenuating) then
-           call add_attenuation(p, eta, rho, vv, -0.5*dt, nzpad, nxpad)
+           call apply_attenuation(p, eta, rho, vv, -0.5*dt, nzpad, nxpad)
         endif
      endif
   enddo
@@ -312,7 +312,7 @@ subroutine step_forward(forw,p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
 end subroutine step_forward
 
 !------------------------------------------------------------------------------
-subroutine add_attenuation(p, eta, rho, vv, dt, nzpad, nxpad)
+subroutine apply_attenuation(p, eta, rho, vv, dt, nzpad, nxpad)
   implicit none
 
   integer::i1,i2
@@ -332,29 +332,18 @@ subroutine add_attenuation(p, eta, rho, vv, dt, nzpad, nxpad)
   enddo
 
   return
-end subroutine add_attenuation
+end subroutine apply_attenuation
 
 !-------------------------------------------------------------------------------
-subroutine add_sources(attenuating, p, eta, rho, vv, dt, wlt, sz, sx, nzpad, nxpad)
+subroutine add_sources(p, dt, wlt, sz, sx, nzpad, nxpad)
   implicit none
 
-  logical::attenuating
   integer::sz,sx,nzpad, nxpad
-  real::dt,wlt
-  real,dimension(nzpad, nxpad)::p, eta, rho, vv
+  real::dt,wlt,wlt_actual
+  real,dimension(nzpad, nxpad)::p
 
-  real::a, tau, wlt_actual
-
-  if(attenuating) then
-     a=rho(sz,sx)*vv(sz,sx)*vv(sz,sx)
-     tau=eta(sz,sx)/a
-     a=exp(-dt/tau)
-     wlt_actual=tau*(1.-a)*wlt
-  else
-     wlt_actual=dt*wlt
-  endif
+  wlt_actual=dt*wlt
   p(sz,sx)=p(sz,sx)+wlt_actual
-  return
 end subroutine add_sources
 
 !-------------------------------------------------------------------------------

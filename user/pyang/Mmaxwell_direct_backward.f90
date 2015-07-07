@@ -138,10 +138,10 @@ program mexwell_direct_backward
   !forward modeling
   do it=1,nt
      call step_forward(p, vz, vx, vv, rho, eta, dt, idz, idx, nzpad, nxpad)
-     call add_sources(p, eta, rho, vv, dt, wlt(it), sz, sx, nzpad, nxpad,wltf(it))
+     call add_sources(p, dt, wlt(it), sz, sx, nzpad, nxpad,wltf(it))
 
      ! apply sponge ABC
-     call apply_sponge(p,bndr,nz,nx,nb)
+     call apply_sponge(p, bndr,nz,nx,nb)
      call apply_sponge(vz,bndr,nz,nx,nb)
      call apply_sponge(vx,bndr,nz,nx,nb)
 
@@ -166,7 +166,7 @@ program mexwell_direct_backward
      call window2d(v0, p, nz, nx, nb)
      call rsf_write(Fw2,v0)
      
-     call add_sources(p, eta, rho, vv, dt, -wlt(it), sz, sx, nzpad, nxpad,wltb(it))
+     call add_sources(p, -dt, wlt(it), sz, sx, nzpad, nxpad,wltb(it))
      call step_forward(p, vz, vx, vv, rho, eta, -dt, idz, idx, nzpad, nxpad)
   enddo
   call rsf_write(Feb,eb) !store backward energy history
@@ -349,23 +349,19 @@ subroutine step_forward(p, vz, vx, vv, rho, eta, dt, idz, idx, nzpad, nxpad)
 end subroutine step_forward
 
 !-------------------------------------------------------------------------------
-subroutine add_sources(p, eta, rho, vv, dt, wlt, sz, sx, nzpad, nxpad,wlt_actual)
+subroutine add_sources(p, dt, wlt, sz, sx, nzpad, nxpad, wlt_actual)
   implicit none
 
   integer::sz,sx,nzpad, nxpad
   real::dt,wlt,wlt_actual
-  real,dimension(nzpad, nxpad)::p, eta, rho, vv
+  real,dimension(nzpad, nxpad)::p
 
-  real*8::a, tau
-
-  a=rho(sz,sx)*vv(sz,sx)*vv(sz,sx)
-  tau=eta(sz,sx)/a
-  wlt_actual=dt/(1.+0.5*dt/tau)*wlt
+  wlt_actual=dt*wlt
   p(sz,sx)=p(sz,sx)+wlt_actual
 end subroutine add_sources
 
 !-------------------------------------------------------------------------------
-subroutine apply_sponge(p,bndr,nz,nx,nb)
+subroutine apply_sponge(p, bndr, nz, nx, nb)
   implicit none
 
   integer::nb,nz,nx
