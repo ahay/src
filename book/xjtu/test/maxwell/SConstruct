@@ -2,30 +2,59 @@ from rsf.proj import *
 
 Flow('vel',None,
      	'''
-     	math output=1000 n1=301 n2=301 d1=1 d2=1
+     	math output=1000 n1=201 n2=201 d1=1 d2=1
      	label1=x1 unit1=m label2=x2 unit2=m 
      	''')
 Flow('rho','vel','math output=1000')
+Flow('eta','vel','math output=100000000')
 
 nb=20
 nt=500
 dt=0.0004
-fm=30
+fm=20
 
-###################################################################
-Flow('eta','vel','math output=100000000') # moderate attenuation
-Flow('wav','vel rho eta',
+#########################################################################
+#Task 1: check the wavelet in back reconstruction is the same as forward
+#########################################################################
+
+Flow('wfc wbc efc ebc wltf wltb','vel rho eta',
 	'''
-	sfmaxwell_cpml2 rho=${SOURCES[1]} eta=${SOURCES[2]} order1=y
-	nb=%d nt=%d dt=%g verb=y fm=%g
+	sfmaxwell_cpml24_backward rho=${SOURCES[1]} eta=${SOURCES[2]}
+	back=${TARGETS[1]} ef=${TARGETS[2]} eb=${TARGETS[3]} 
+	wltf=${TARGETS[4]} wltb=${TARGETS[5]}
+	attenuating=n order1=y	nb=%d nt=%d dt=%g verb=y fm=%g
 	'''%(nb,nt,dt,fm))
-Result('wav',
+Result('wfc',
 	'''	
-	grey  title="Mexwell Attenuation Model" gainpanel=all
-	color=i screenratio=1
+	grey  title=" forward:1st order, attenuation" gainpanel=all
+	color=i screenratio=1 labelfat=2 titlefat=3 scalebar=y
+	''')
+Result('wbc',
+	'''	
+	grey  title="backward:1st order, attenuation" gainpanel=all
+	color=i screenratio=1 labelfat=2 titlefat=3 scalebar=y
 	''')
 
-###################################################################
+Result('wavelets','wltf wltb',
+	'''
+	cat axis=2 ${SOURCES[1]}|
+	graph dash=0,1 grid=y plotfat=3 label1=Time unit1=s
+	label2= unit2= title="wavelets: solid-forw;dash-back" 
+	color=i screenratio=1 labelfat=2 titlefat=3
+	''')
+Result('wlterr','wltf wltb',
+	'''
+	add ${SOURCES[1]} scale=1,1|
+	graph grid=y plotfat=3 label1=Time unit1=s
+	label2= unit2= title="wavelet error" 
+	color=i screenratio=1 labelfat=2 titlefat=3
+	''')
+
+#######################################################################
+#Task 2: verify the correct implementation for both 1st and 2nd order
+#in the existence of attenuation (moderate and strong)
+#######################################################################
+
 Flow('wf2d wb2d ef2d eb2d','vel rho eta',
 	'''
 	sfmaxwell_cpml24_backward rho=${SOURCES[1]} eta=${SOURCES[2]}
@@ -230,6 +259,39 @@ Plot('energy44','ef44 eb44',
 	color=i screenratio=1 labelfat=2 titlefat=3
 	''')
 Result('energy-with','energy3 energy33 energy4 energy44','TwoColumns')
+
+#########################################################################
+#Task 3: verify it is valid in 3-D implementation
+#########################################################################
+Flow('vel3d',None,
+     	'''
+     	math output=2000 n1=101 n2=101 n3=101 d1=4 d2=4 d3=4
+     	label1=x1 unit1=m label2=x2 unit2=m label3=x3 unit3=m
+     	''')
+Flow('rho3d','vel3d','math output=1000')
+Flow('eta3d','vel3d','math output=100000000')
+
+nt3d=350
+kt=300
+Flow('wf3d wb3d','vel3d rho3d eta3d',
+	'''
+	sfmaxwell_cpml3d rho=${SOURCES[1]} eta=${SOURCES[2]}
+	back=${TARGETS[1]} attenuating=n order1=y	
+	nb=%d nt=%d kt=%d dt=%g verb=y fm=%g
+	'''%(nb,nt3d,kt, dt,fm))
+Result('wf3d',
+	'''	
+       byte allpos=n gainpanel=all |
+       grey3 flat=n frame1=50 frame2=50 frame3=50 color=j 
+       title="forward" point1=0.8 point2=0.8
+	''')
+Result('wb3d',
+	'''	
+       byte allpos=n gainpanel=all |
+       grey3 flat=n frame1=50 frame2=50 frame3=50 color=j 
+       title="backward" point1=0.8 point2=0.8
+	''')
+
 
 
 
