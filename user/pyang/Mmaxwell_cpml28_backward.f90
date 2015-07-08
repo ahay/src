@@ -15,7 +15,7 @@
 !!$  You should have received a copy of the GNU General Public License
 !!$  along with this program; if not, write to the Free Software
 !!$  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-program mexwell_cpml2_backward
+program mexwell_cpml24_backward
   use rsf
   implicit none
 
@@ -223,7 +223,7 @@ program mexwell_cpml2_backward
   deallocate(wltb)
 
   call exit(0)
-end program mexwell_cpml2_backward
+end program mexwell_cpml24_backward
 
 !--------------------------------------------------------------------------------
 ! check the CFL/stability condition is satisfied or not
