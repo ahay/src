@@ -38,6 +38,7 @@ To programs:
 * user/zdzhang: New contributor (Zhendong Zhang)
 * splitting auxiliary inputs in sfomp and sfmpi
 * set delrt in trace headers in sfsegywrite
+* header= parameter in sfcsv2rsf
 
 ===Bug fixes===
 

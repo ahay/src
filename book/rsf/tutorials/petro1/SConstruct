@@ -1,0 +1,45 @@
+from rsf.proj import *
+import string
+
+csv = 'qsiwell2.csv'
+
+Fetch(csv,'1504_Seismic_petrophysics_1',
+      server='https://raw.githubusercontent.com',
+      top='seg/tutorials/master')
+
+Flow('well',csv,'csv2rsf header=y')
+
+# Examine with < well.rsf sfheaderattr segy=n
+
+# Limit depth
+
+Flow('depthmask','well','window n1=1 | mask min=2100 max=2400')
+Flow('logs','well depthmask','headerwindow mask=${SOURCES[1]}')
+
+# Calculate litho-facies log
+
+Flow('VSH','logs','window n1=1 f1=12')
+Flow('SW', 'logs','window n1=1 f1=7')
+
+Flow('bsmask1','VSH','mask max=0.2')
+Flow('bsmask2','SW', 'mask min=0.9')
+Flow('brine-sand-mask','bsmask1 bsmask2','mul ${SOURCES[1]}')
+
+Flow('oil-sand-mask','bsmask2 bsmask1','add add=-1 scale=-1 | mul ${SOURCES[1]}')
+
+Flow('shale-mask','brine-sand-mask oil-sand-mask','add ${SOURCES[1]} | add add=-1 scale=-1')
+
+hists = []
+for case in ('brine-sand','oil-sand','shale'):
+    Flow(case,['logs',case+'-mask'],'headerwindow mask=${SOURCES[1]}')
+    hist = case+'-hist'
+    Plot(hist,case,
+         '''
+         window n1=1 f1=10 | histogram n1=51 o1=4200 d1=80 | dd type=float | 
+         graph plotcol=1 title="%s" label1=IP unit1= label2=Occurence unit2=
+         ''' % ' '.join(map(string.capitalize,case.split('-'))))
+    hists.append(hist)
+
+Result('histogram',hists,'SideBySideIso')
+
+End()

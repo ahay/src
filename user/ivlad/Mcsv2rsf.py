@@ -48,6 +48,8 @@ def main(par):
     truncate = par.bool('trunc', False) 
     # Truncate or add zeros if nr elems in rows differs
 
+    header = par.bool('header',False) # If the first line is a header
+
     # Output parameters
     
     o = [
@@ -75,11 +77,18 @@ def main(par):
     i = 0
     nr_cols_cst = True # Whether the nr of values in rows is constant
 
+    if header: # the first line contains header keys
+        line = stdin.next()
+        k = 0
+        for name in line:
+            k += 1
+            print 'key%d=%s' % (k,name)
+        
     # Find max nr of elements in a row
     for line in stdin:
         if line == []: # throw away blank lines
             continue
-        curline = [float(x) for x in line]
+        curline = [float(x) for x in map(lambda x: x or '0', line)]
         if numtype == 'int':
             curline = [int(x) for x in curline]
         lines.append(curline)
