@@ -19,7 +19,7 @@ program mexwell_sponge2
   use rsf
   implicit none
 
-  logical :: order1
+  logical :: order1, attenuating
   integer :: ib, it, nt, nz, nx, nb, sx, sz, nxpad, nzpad
   real    :: dt, dz, dx, fm, tmp, idx, idz
   real, parameter::PI=3.14159265
@@ -48,9 +48,10 @@ program mexwell_sponge2
   call from_par("dt", dt, 0.001) ! time sampling interval
   call from_par("fm", fm, 20.) ! domainant frequency for ricker wavelet
   call from_par("order1",order1,.true.) ! 1st order or 2nd order accuracy
+  call from_par("attenuating",attenuating,.true.) ! attenuation or not
 
-  call to_par(Fw,"n1",nz)
-  call to_par(Fw,"n2",nx)
+  call to_par(Fw,"n1",nz+2*nb)
+  call to_par(Fw,"n2",nx+2*nb)
   call to_par(Fw,"d1",dz)
   call to_par(Fw,"d2",dx)
   call to_par(Fw,"n3",nt)
@@ -96,16 +97,16 @@ program mexwell_sponge2
   vz=0.
 
   do it=1,nt
-     call window2d(v0, p, nz, nx, nb)
-     call rsf_write(Fw,v0)
+    ! call window2d(v0, p, nz, nx, nb)
+     call rsf_write(Fw,p)
 
      if (order1) then ! scheme 1, 1st order accuracy, default
         call step_forward(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
-        call apply_attenuation(p, eta, rho, vv, dt, nzpad, nxpad)
+        if(attenuating) call apply_attenuation(p, eta, rho, vv, dt, nzpad, nxpad)
      else
-        call apply_attenuation(p, eta, rho, vv, 0.5*dt, nzpad, nxpad)
+        if(attenuating) call apply_attenuation(p, eta, rho, vv, 0.5*dt, nzpad, nxpad)
         call step_forward(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
-        call apply_attenuation(p, eta, rho, vv, 0.5*dt, nzpad, nxpad)
+        if(attenuating) call apply_attenuation(p, eta, rho, vv, 0.5*dt, nzpad, nxpad)
      endif
 
      call add_sources(p, dt, wlt(it), sz, sx, nzpad, nxpad)

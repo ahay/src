@@ -56,8 +56,8 @@ program mexwell_cpml2_backward
   call from_par("order1",order1,.true.) ! 1st order or 2nd order accuracy
   call from_par("attenuating",attenuating,.true.) ! add attenuation or not
 
-  call to_par(Fw1,"n1",nz)
-  call to_par(Fw1,"n2",nx)
+  call to_par(Fw1,"n1",nz+2*nb)
+  call to_par(Fw1,"n2",nx+2*nb)
   call to_par(Fw1,"d1",dz)
   call to_par(Fw1,"d2",dx)
   call to_par(Fw1,"n3",nt)
@@ -101,8 +101,6 @@ program mexwell_cpml2_backward
 
   allocate(wlt(nt))
   allocate(bndr(nb))
-  allocate(ef(nt))
-  allocate(eb(nt))
   allocate(v0(nz,nx))
   allocate(vv(nzpad,nxpad))
   allocate(rho(nzpad,nxpad))
@@ -116,6 +114,8 @@ program mexwell_cpml2_backward
   allocate(conv_vx(nzpad,nb,2))
   allocate(bvz(7,nx,2,nt))
   allocate(bvx(nz,7,2,nt))
+  allocate(ef(nt))
+  allocate(eb(nt))
   allocate(wltf(nt))
   allocate(wltb(nt))
 
@@ -144,8 +144,8 @@ program mexwell_cpml2_backward
 
   !forward modeling
   do it=1,nt
-     call window2d(v0, p, nz, nx, nb)
-     call rsf_write(Fw1,v0)
+     !call window2d(v0, p, nz, nx, nb);     call rsf_write(Fw1,v0)
+     call rsf_write(Fw1,p)
 
      if (order1) then ! scheme 1, 1st order accuracy, default
         call step_forward_v(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
@@ -328,7 +328,6 @@ subroutine step_forward_v(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
         vx(i1,i2)=vx(i1,i2)-dt*idx*diff2/rho(i1,i2)
      enddo
   enddo
-  return
 end subroutine step_forward_v
 
 !------------------------------------------------------------------------------
@@ -362,7 +361,6 @@ subroutine step_forward_p(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
         p(i1,i2)=p(i1,i2)-dt*tmp*(idz*diff1+idx*diff2)
      enddo
   enddo
-  return
 end subroutine step_forward_p
 
 subroutine cpmlcoeff_init(bndr,dx,nb)
@@ -380,10 +378,9 @@ subroutine cpmlcoeff_init(bndr,dx,nb)
   d0=-3.*log(Rc)/(2.*L*L*L)
 
   do ib=1,nb
-     x=(ib-nb)*dx
+     x=(nb-ib+1)*dx
      bndr(ib)=d0*x*x
   enddo
-  return
 end subroutine cpmlcoeff_init
 
 !------------------------------------------------------------------------------
@@ -467,8 +464,6 @@ subroutine update_cpml_vzvx(p,vz,vx,conv_pz,conv_px,rho,vv,bndr,idz,idx,dt,nz,nx
         vx(i1,i2)=vx(i1,i2)-dt*conv_px(i1,ib,2)/rho(i1,i2)
      enddo
   enddo
-
-  return
 end subroutine update_cpml_vzvx
 
 !------------------------------------------------------------------------------
@@ -559,8 +554,6 @@ subroutine update_cpml_pzpx(p,vz,vx,conv_vz,conv_vx,rho,vv,bndr,idz,idx,dt,nz,nx
         p(i1,i2)=p(i1,i2)-dt*tmp*conv_vx(i1,ib,2)
      enddo
   enddo
-
-  return
 end subroutine update_cpml_pzpx
 
 !------------------------------------------------------------------------------
