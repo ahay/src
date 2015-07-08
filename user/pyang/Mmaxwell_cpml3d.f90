@@ -54,11 +54,12 @@ program mexwell_cpml2_backward
 
   call from_par("nb", nb, 30) ! thinkness of sponge ABC
   call from_par("nt", nt, 1000) !number of time steps
+  call from_par("kt", kt, 500) ! recording time of snapshot
   call from_par("dt", dt, 0.001) ! time sampling interval
   call from_par("fm", fm, 20.) ! domainant frequency for ricker wavelet
+
   call from_par("order1",order1,.true.) ! 1st order or 2nd order accuracy
   call from_par("attenuating",attenuating,.true.) ! add attenuation or not
-  call from_par("kt", kt, 500) ! recording time of snapshot
 
   idz=1./dz
   idx=1./dx
@@ -116,31 +117,25 @@ program mexwell_cpml2_backward
   conv_vx=0.
   conv_vy=0.
 
-
   !forward modeling
   do it=1,nt
-     write(0,*) it
      if(it==kt) then ! record snapshot at it=kt
         call window3d(v0, p, nz, nx, ny, nb)
         call rsf_write(Fw1,v0)
      endif
 
-     write(0,*) "sum(conv_pz)",sum(abs(conv_pz))
-     write(0,*) "sum(conv_px)",sum(abs(conv_px))
-     write(0,*) "sum(conv_py)",sum(abs(conv_py))
-
      if (order1) then ! scheme 1, 1st order accuracy, default
         call step_forward_v(p, vz, vx, vy, vv, rho, dt, idz, idx, idy, nzpad, nxpad, nypad)
         call update_cpml_vzvxvy(p, vz, vx, vy, conv_pz, conv_px, conv_py, rho, vv, bndr, idz, idx, idy, dt, nz, nx, ny, nb)
         call step_forward_p(p, vz, vx, vy, vv, rho, dt, idz, idx, idy, nzpad, nxpad, nypad)
-        call update_cpml_pzpxpy(p, vz, vx, vy, conv_pz, conv_px, conv_py, rho, vv, bndr, idz, idx, idy, dt, nz, nx, ny, nb)
+        call update_cpml_pzpxpy(p, vz, vx, vy, conv_vz, conv_vx, conv_vy, rho, vv, bndr, idz, idx, idy, dt, nz, nx, ny, nb)
         if(attenuating) call apply_attenuation(p, eta, rho, vv, dt, nzpad, nxpad, nypad)
      else !2nd order scheme
         if(attenuating) call apply_attenuation(p, eta, rho, vv, 0.5*dt, nzpad, nxpad, nypad)
         call step_forward_v(p, vz, vx, vy, vv, rho, dt, idz, idx, idy, nzpad, nxpad, nypad)
         call update_cpml_vzvxvy(p, vz, vx, vy, conv_pz, conv_px, conv_py, rho, vv, bndr, idz, idx, idy, dt, nz, nx, ny, nb)
         call step_forward_p(p, vz, vx, vy, vv, rho, dt, idz, idx, idy, nzpad, nxpad, nypad)
-        call update_cpml_pzpxpy(p, vz, vx, vy, conv_pz, conv_px, conv_py, rho, vv, bndr, idz, idx, idy, dt, nz, nx, ny, nb)
+        call update_cpml_pzpxpy(p, vz, vx, vy, conv_vz, conv_vx, conv_vy, rho, vv, bndr, idz, idx, idy, dt, nz, nx, ny, nb)
         if(attenuating) call apply_attenuation(p, eta, rho, vv, 0.5*dt, nzpad, nxpad, nypad)
      endif
      call add_sources(p, dt, wlt(it), sz, sx, sy, nzpad, nxpad, nypad)
@@ -149,7 +144,6 @@ program mexwell_cpml2_backward
 
   !backward reconstruction
   do it=nt,1,-1     
-     write(0,*) it
      call boundary_rw(.false.,bvz(:,:,:,:,it),bvx(:,:,:,:,it),bvy(:,:,:,:,it),vz,vx,vy,nz,nx,ny,nb)
      if(it==kt) then ! record snapshot at it=kt
         call window3d(v0, p, nz, nx, ny, nb)
@@ -158,13 +152,13 @@ program mexwell_cpml2_backward
      call add_sources(p, -dt, wlt(it), sz, sx, sy, nzpad, nxpad, nypad)
      if (order1) then ! scheme 1, 1st order accuracy, default
         if(attenuating) call apply_attenuation(p, eta, rho, vv, -dt, nzpad, nxpad, nypad)
-        call update_cpml_pzpxpy(p, vz, vx, vy, conv_pz, conv_px, conv_py, rho, vv, bndr, idz, idx, idy, -dt, nz, nx, ny, nb)
+        call update_cpml_pzpxpy(p, vz, vx, vy, conv_vz, conv_vx, conv_vy, rho, vv, bndr, idz, idx, idy, -dt, nz, nx, ny, nb)
         call step_forward_p(p, vz, vx, vy, vv, rho, -dt, idz, idx, idy, nzpad, nxpad, nypad)
         call update_cpml_vzvxvy(p, vz, vx, vy, conv_pz, conv_px, conv_py, rho, vv, bndr, idz, idx, idy, -dt, nz, nx, ny, nb)
         call step_forward_v(p, vz, vx, vy, vv, rho, -dt, idz, idx, idy, nzpad, nxpad, nypad)
      else !2nd order scheme
         if(attenuating) call apply_attenuation(p, eta, rho, vv, -0.5*dt, nzpad, nxpad,nypad)
-        call update_cpml_pzpxpy(p, vz, vx, vy, conv_pz, conv_px, conv_py, rho, vv, bndr, idz, idx, idy, -dt, nz, nx, ny, nb)
+        call update_cpml_pzpxpy(p, vz, vx, vy, conv_vz, conv_vx, conv_vy, rho, vv, bndr, idz, idx, idy, -dt, nz, nx, ny, nb)
         call step_forward_p(p, vz, vx, vy, vv, rho, -dt, idz, idx, idy, nzpad, nxpad, nypad)
         call update_cpml_vzvxvy(p, vz, vx, vy, conv_pz, conv_px, conv_py, rho, vv, bndr, idz, idx, idy, -dt, nz, nx, ny, nb)
         call step_forward_v(p, vz, vx, vy, vv, rho, -dt, idz, idx, idy, nzpad, nxpad, nypad)
@@ -441,7 +435,7 @@ subroutine update_cpml_vzvxvy(p, vz, vx, vy, conv_pz, conv_px, conv_py, rho, vv,
      enddo
   enddo
 
-  !update vz
+  !update vz         
   do i3=1,nypad
      do i2=1,nxpad
         do i1=1,nb !top
