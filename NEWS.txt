@@ -52,6 +52,8 @@ In APIs:
 
 In the Python package:
 
+* Fixed parsing of comments in Fortran-90 programs
+
 In programs:
 
 * Fixed segmentation fault for sffft1 with no FFTW and no OMP

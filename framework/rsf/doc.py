@@ -783,6 +783,7 @@ stringpar = {}
 synopsis = {}
 inpout = {}
 version = {}
+chars = {}
 
 comment['python'] = re.compile(r'[^\'\"]*([\'\"]+)(?P<comment>[^\'\"].+?)\1',
                                re.DOTALL)
@@ -797,6 +798,7 @@ inpout['python'] = re.compile(r'\s*(?P<name>\w+)\s*=\s*'
                                 'rsf\.(?P<io>Input|Output)'
                                 '\s*\(\s*(?:[\"\'](?P<tag>\w+)[\"\'])?')
 version['python'] = re.compile(r'\#\s*\$Id\:\s*(.+\S)\s*\$/')
+chars['python'] = r'# '
 
 comment['c++'] = re.compile(r'\/\/(?P<comment>[^\n]+)\n')
 inpout['c++'] = re.compile(r'(?P<io>iRSF|oRSF)\s*(?P<name>\w+)'
@@ -807,8 +809,9 @@ param['c++'] = re.compile(r'par.get\s*\(\s*[\"\'](?P<name>\w+)[\"\']\s*'
                           '(?:\s*\;\s*\/\/\s*(?P<range>[\[][^\]]+[\]])?\s*'
                           '(?P<desc>[^\n]+\S))?')
 version['c++'] = re.compile(r'\/\/\s*\$Id\:\s*(.+\S)\s*\$/')
+chars['c++'] = r'/ '
 
-comment['f90'] = re.compile(r'(?:\!(?P<comment>[^!\n]+)\n)+')
+comment['f90'] = re.compile(r'\!(?P<comment>[^\n]+(?:\n\![^\n]+)+)\n')
 param['f90'] = re.compile(r'from_par\s*\(\s*\"(?P<name>\w+)\"\s*\,'
                           '\s*(?P<var>[\w\_]+)\s*'
                           '(?:\,\s*(?P<default>[^\)]+))?\)'
@@ -820,6 +823,7 @@ inpout['f90'] = re.compile(r'\s*(?P<name>\w+)\s*=\s*'
                     'rsf_(?P<io>input|output)'
                     '\s*\(\s*(?:\"(?P<tag>\w+)\")?')
 version['f90'] = re.compile(r'\!\s*\$Id\:\s*(.+\S)\s*\$/')
+chars['f90'] = r'! '
 
 comment['c'] = re.compile(r'\/\*(?P<comment>(?:[^*]+|\*[^/])+)\*\/')
 param['c'] = re.compile(r'(?:if\s*\(\!)?\s*sf_get'
@@ -858,6 +862,7 @@ inpout['c'] = re.compile(r'\s*(?P<name>\w+)\s*=\s*'
                     'sf_(?P<io>input|output)'
                     '\s*\(\s*\"(?P<tag>\w+)\"')
 version['c'] = re.compile(r'\/\*\s*\$Id\:\s*(.+\S)\s*\$\s*\*\/')
+chars['c'] = ' '
 
 
 def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
@@ -879,7 +884,7 @@ def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
     if first:
         tops = first.group('comment').split("\n")
         desc = tops.pop(0).lstrip()
-        first = '\n'.join(tops)
+        first = '\n'.join(map(lambda x: x.lstrip(chars[lang]),tops))
     else:
         desc = None
     prog = rsfprog(name,file,desc)
