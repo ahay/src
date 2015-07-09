@@ -147,7 +147,7 @@ program mexwell_cpml24_snapshot
   call rsf_read(Feta, v0)
   call expand2d(eta, v0, nz, nx, nb)
   !generate coefficients for the absorbing boundary
-  call cpmlcoeff_init(bb,aa,maxval(vv),dx,dt,nb)
+  call cpmlcoeff_init(bb,aa,maxval(vv),dx,dt,fm,nb)
   p=0.
   vx=0.
   vz=0.
@@ -386,25 +386,27 @@ end subroutine step_forward_p
 
 !------------------------------------------------------------------------------
 ! initialize PML damping profile
-subroutine cpmlcoeff_init(bb,aa,vpmax,dx,dt,nb)
+subroutine cpmlcoeff_init(bb,aa,vpmax,dx,dt,fm,nb)
   implicit none
   
   integer::nb
-  real::dt, dx,vpmax
+  real::dt,fm,dx,vpmax
   real,dimension(nb)::bb,aa
 
   integer::ib
-  real::x,L,d0,d
+  real::x,L,d0,d,alpha_max,alpha,r
   real,parameter::Rc=1.e-4
   
   L=nb*dx
-  d0=-3.*log(Rc)*vpmax/(2.*L*L*L)
+  d0=-3.*log(Rc)*vpmax/(2.*L)
+  alpha_max=4.*atan(1.)*fm
 
   do ib=1,nb
      x=(nb-ib+1)*dx     !x=1.-cos(0.5*(nb-ib)*PI/nb)
-     d=d0*x*x 
-     bb(ib)=exp(-d*dt)
-     aa(ib)=bb(ib)-1.
+     r=x/L ! ratio of x over L
+     d=d0*r**2; alpha=alpha_max*r
+     bb(ib)=exp(-(d+alpha)*dt)
+     aa(ib)=d*(bb(ib)-1.)/(d+alpha)
   enddo
 end subroutine cpmlcoeff_init
 
