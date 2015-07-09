@@ -148,9 +148,12 @@ The solution of computation without disk I/O is the use of checkpointing
 technique.
 
 16) Forward modeling based upon Mexwell attenuation model
-Main:		Mmaxwell_cpml1.c, Mmaxwell_cpml2.f90,
-		Mmaxwell_sponge1.c, Mmaxwell_sponge2.f90
+Main:		Mmaxwell_cpml1.c, 
+		Mmaxwell_cpml24_backward.f90, Mmaxwell_cpml28_backward.f90
+		Mmaxwell_sponge1.c, Mmaxwell_sponge2_backward.f90
+		Mmaxwell_direct_backward.f90, Mmaxwell_cpml3d.f90
 Test file:	/book/xjtu/test/maxwell/SConstruct
+Note: We are using Maxwell body to incorporate attenuation.
 
 ===================================================================
 Postscript:

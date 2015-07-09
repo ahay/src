@@ -19,12 +19,13 @@
 !!$  You should have received a copy of the GNU General Public License
 !!$  along with this program; if not, write to the Free Software
 !!$  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-program mexwell_cpml24_backward
+program mexwell_cpml24_snapshot
   use rsf
   implicit none
 
   logical :: order1,attenuating
   integer :: ib, it, nt, nz, nx, nb, sx, sz, nxpad, nzpad
+  integer :: nsnap, isnap, snap_interval
   real  :: dt, dz, dx, fm, tmp, idx, idz
   real*8, parameter::PI=4.*atan(1.)
   real, dimension (:),   allocatable :: wlt,bndr,ef,eb, wltf,wltb
@@ -32,6 +33,7 @@ program mexwell_cpml24_backward
   real, dimension (:,:), allocatable :: p, vz, vx
   real, dimension(:,:,:),allocatable :: conv_pz,conv_px,conv_vz,conv_vx
   real, dimension(:,:,:,:),allocatable::bvz, bvx
+  real, dimension(:,:,:),allocatable:: psnap, vzsnap, vxsnap
   type(file) :: Fv, Fw1, Fw2, Frho, Feta, Fef,Feb, Fwltf,Fwltb  ! I/O files 
 
   call sf_init() ! initialize Madagascar
@@ -57,6 +59,7 @@ program mexwell_cpml24_backward
   call from_par("nt", nt, 1000) !number of time steps
   call from_par("dt", dt, 0.001) ! time sampling interval
   call from_par("fm", fm, 20.) ! domainant frequency for ricker wavelet
+  call from_par("nsnap", nsnap, 0) ! number of snapshots for re-initialization
   call from_par("order1",order1,.true.) ! 1st order or 2nd order accuracy
   call from_par("attenuating",attenuating,.true.) ! add attenuation or not
 
@@ -122,6 +125,12 @@ program mexwell_cpml24_backward
   allocate(eb(nt))
   allocate(wltf(nt))
   allocate(wltb(nt))
+  if(nsnap>0) then !using snapshot strategy
+     allocate(psnap(nzpad,nxpad,nsnap))
+     allocate(vzsnap(nzpad,nxpad,nsnap))
+     allocate(vxsnap(nzpad,nxpad,nsnap))
+     snap_interval=int(nt/(nsnap+1))
+  endif
 
   !generate ricker wavelet with a delay
   do it=1,nt  
@@ -147,6 +156,7 @@ program mexwell_cpml24_backward
   conv_vx=0.
 
   !forward modeling
+  if(nsnap>0) isnap=0
   do it=1,nt
      call window2d(v0, p, nz, nx, nb);
      call rsf_write(Fw1,v0)
@@ -166,13 +176,19 @@ program mexwell_cpml24_backward
         if(attenuating) call apply_attenuation(p, eta, rho, vv, 0.5*dt, nzpad, nxpad)
      endif
      call add_sources(p, dt, wlt(it), sz, sx, nzpad, nxpad, wltf(it))
-
+     call boundary_rw(.true.,bvz(:,:,:,it),bvx(:,:,:,it),vz,vx,nz,nx,nb)
+     if(nsnap>0) then !save snapshots for re-initialization in backward reconstruction
+        if ((isnap<nsnap).and.(it==(isnap+1)*snap_interval)) then
+           isnap=isnap+1
+           !write(0,*)"isnap=",isnap
+           psnap(:,:,isnap)=p
+           vzsnap(:,:,isnap)=vz
+           vxsnap(:,:,isnap)=vx       
+        endif
+     endif
      call compute_energy(ef(it),vz(nb+1:nb+nz,nb+1:nb+nx),&
           vx(nb+1:nb+nz,nb+1:nb+nx),p(nb+1:nb+nz,nb+1:nb+nx),&
           rho(nb+1:nb+nz,nb+1:nb+nx),vv(nb+1:nb+nz,nb+1:nb+nx),nz,nx)
-
-     !save the boundaries
-     call boundary_rw(.true.,bvz(:,:,:,it),bvx(:,:,:,it),vz,vx,nz,nx,nb)
   enddo
   call rsf_write(Fef,ef) ! store forward energy history
   call rsf_write(Fwltf,wltf) ! store wavelet series during forward modeling
@@ -186,7 +202,15 @@ program mexwell_cpml24_backward
 
      call window2d(v0, p, nz, nx, nb)
      call rsf_write(Fw2,v0)
-
+     if(nsnap>0) then !save snapshots for re-initialization in backward reconstruction
+        if((isnap>0).and.(it==isnap*snap_interval)) then
+           p=psnap(:,:,isnap)
+           vz=vzsnap(:,:,isnap)
+           vx=vxsnap(:,:,isnap)
+           !write(0,*)"isnap=",isnap
+           isnap=isnap-1
+        endif
+     endif
      call add_sources(p, -dt, wlt(it), sz, sx, nzpad, nxpad, wltb(it))
      if (order1) then ! scheme 1, 1st order accuracy, default
         if(attenuating) call apply_attenuation(p, eta, rho, vv, -dt, nzpad, nxpad)
@@ -225,9 +249,14 @@ program mexwell_cpml24_backward
   deallocate(bvx)
   deallocate(wltf)
   deallocate(wltb)
+  if(nsnap>0) then
+     deallocate(psnap)
+     deallocate(vzsnap)
+     deallocate(vxsnap)
+  endif
 
   call exit(0)
-end program mexwell_cpml24_backward
+end program mexwell_cpml24_snapshot
 
 !------------------------------------------------------------------------------
 ! check the CFL/stability condition is satisfied or not
