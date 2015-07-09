@@ -34,9 +34,9 @@
 /*^*/
 
 static char command[SF_CMDLEN], splitcommand[SF_CMDLEN], **inames=NULL, **onames=NULL;
-static char ***spnames=NULL, buffer[BUFSIZ], nkey[5];
+static char ***inpnames=NULL, ***outnames=NULL, buffer[BUFSIZ], nkey[5];
 static off_t size1, size2;
-static int splitargc;
+static int inpargc, outargc;
 
 static void sizes(sf_file file, int axis, int ndim, 
 		  const off_t *n, off_t *size1, off_t *size2)
@@ -60,7 +60,7 @@ char** sf_split(sf_file inp          /* input file */,
 /*< split the input file along the specified axis
   and generate parallel system commands >*/
 {
-    char **commands, **splitkey, okey[5], dkey[5], splitcmd[SF_CMDLEN];
+    char **commands, **splitinp, **splitout, okey[5], dkey[5], splitcmd[SF_CMDLEN];
     char *arg, *eq, *cmdline, *iname=NULL, *oname=NULL, *splitname;
     off_t i2, *splitsize1=NULL, *splitsize2=NULL, left, nbuf;
     float d, o, di, oi;
@@ -90,8 +90,10 @@ char** sf_split(sf_file inp          /* input file */,
     bigjobs = split - jobs*(w-1);
     *tasks = jobs;
     
-    splitkey = (char**) sf_alloc(argc,sizeof(char*));
-    splitargc = 0;
+    splitinp = (char**) sf_alloc(argc,sizeof(char*));
+    splitout = (char**) sf_alloc(argc,sizeof(char*));
+    outargc = 0;
+    inpargc = 0;
 
     k=j=0;
     for (i=1; i < argc; i++) {
@@ -100,18 +102,42 @@ char** sf_split(sf_file inp          /* input file */,
 	    strncmp(arg,"--output=",9) &&
 	    strncmp(arg,"split=",6) &&
 	    strncmp(arg,"join=",5)) {
-	    /* starting a parameter with underscore signifies an input
-	     * file to split */
-	    if ('_'==arg[0]) {
+
+	    len = strlen(arg);
+	    if (j+len > SF_CMDLEN-2) sf_error("command line is too long");
+
+	    if (len > 2 && '_'==arg[0] && '_'==arg[1]) {
+		/* starting a parameter with two underscores signifies an output
+		 * file to split */
+
 		eq  = strchr(arg,'=');
 		if (NULL == eq) sf_error("Wrong parameter \"%s\"",arg);
 
 		len = eq-arg;
-		splitkey[splitargc] = sf_charalloc(len+1);
-		strncpy(splitkey[splitargc],arg,len);
-		splitkey[splitargc][len]='\0';
+		splitout[outargc] = sf_charalloc(len+1);
+		strncpy(splitout[outargc],arg,len);
+		splitout[outargc][len]='\0';
 
-		splitargc++;
+		outargc++;
+
+		len = strlen(arg)-2;
+		if (k+len > SF_CMDLEN-2) sf_error("command line is too long");
+		strncpy(splitcommand+k,arg+2,len);
+		splitcommand[k+len]=' ';
+		k += len+1;
+	    } else if ('_'==arg[0]) {
+		/* starting a parameter with one underscore signifies an input
+		 * file to split */
+
+		eq  = strchr(arg,'=');
+		if (NULL == eq) sf_error("Wrong parameter \"%s\"",arg);
+
+		len = eq-arg;
+		splitinp[inpargc] = sf_charalloc(len+1);
+		strncpy(splitinp[inpargc],arg,len);
+		splitinp[inpargc][len]='\0';
+
+		inpargc++;
 
 		len = strlen(arg)-1;
 		if (k+len > SF_CMDLEN-2) sf_error("command line is too long");
@@ -119,9 +145,6 @@ char** sf_split(sf_file inp          /* input file */,
 		splitcommand[k+len]=' ';
 		k += len+1;
 	    } else {
-		len = strlen(arg);
-		if (j+len > SF_CMDLEN-2) sf_error("command line is too long");
-
 		strncpy(command+j,arg,len);
 		command[j+len]=' ';
 		j += len+1;
@@ -131,23 +154,23 @@ char** sf_split(sf_file inp          /* input file */,
     command[j]='\0';
     splitcommand[k]='\0';
 
-    if (0 < splitargc) { /* files to split other than input */
-	splitsize1 = sf_largeintalloc(splitargc);
-	splitsize2 = sf_largeintalloc(splitargc);
-	splitfile = (sf_file*) sf_alloc(splitargc,sizeof(sf_file));
+    if (0 < inpargc) { /* files to split other than input */
+	splitsize1 = sf_largeintalloc(inpargc);
+	splitsize2 = sf_largeintalloc(inpargc);
+	splitfile = (sf_file*) sf_alloc(inpargc,sizeof(sf_file));
 
-	for (i=0; i < splitargc; i++) {
-	    splitfile[i] = sf_input(splitkey[i]);
+	for (i=0; i < inpargc; i++) {
+	    splitfile[i] = sf_input(splitinp[i]);
 	    ndim = sf_largefiledims (splitfile[i],n);
 	    sizes(splitfile[i],axis,ndim,n,splitsize1+i,splitsize2+i);
 	    
 	    if (n[axis] != split) 
-		sf_error("Wrong dimensions in file %s",splitkey[i]);
+		sf_error("Wrong dimensions in file %s",splitinp[i]);
 	}
 	    
-	spnames = (char***) sf_alloc(jobs,sizeof(char**));
+	inpnames = (char***) sf_alloc(jobs,sizeof(char**));
 	for (job=0; job < jobs; job++) {
-	    spnames[job] = (char**) sf_alloc(splitargc,sizeof(char*));
+	    inpnames[job] = (char**) sf_alloc(inpargc,sizeof(char*));
 	}
     }
 
@@ -198,10 +221,10 @@ char** sf_split(sf_file inp          /* input file */,
 	sf_fileclose(in);
 
 	splitcmd[0]='\0';
-	for (i=0; i < splitargc; i++) {
+	for (i=0; i < inpargc; i++) {
 	    ifile = sf_tempfile(&splitname,"w+b");
 
-	    spnames[job][i] = splitname;
+	    inpnames[job][i] = splitname;
 
 	    in = sf_output(splitname);
 	    fclose(ifile);
@@ -229,7 +252,7 @@ char** sf_split(sf_file inp          /* input file */,
 
 	    sf_fileclose(in);
 
-	    snprintf(cmdline,SF_CMDLEN,"%s %s=%s",splitcmd,splitkey[i]+1,splitname);
+	    snprintf(cmdline,SF_CMDLEN,"%s %s=%s",splitcmd,splitinp[i]+1,splitname);
 	    strncpy(splitcmd,cmdline,SF_CMDLEN);
 	}	
 
@@ -304,8 +327,8 @@ void sf_join(sf_file out /* output file */,
     sf_rm(iname,true,false,false);
     sf_rm(oname,true,false,false);
 
-    for (i=0; i < splitargc; i++) {
-	iname = spnames[job][i];
+    for (i=0; i < inpargc; i++) {
+	iname = inpnames[job][i];
 	sf_rm(iname,true,false,false);
     }
 }
@@ -386,8 +409,8 @@ void sf_add(sf_file out, int jobs)
 	sf_fileclose(ins[job]);
 	sf_rm(inames[job],true,false,false);
 	sf_rm(onames[job],true,false,false);
-	for (i=0; i < splitargc; i++) {
-	    oname = spnames[job][i];
+	for (i=0; i < inpargc; i++) {
+	    oname = inpnames[job][i];
 	    sf_rm(oname,true,false,false);
 	}
     }

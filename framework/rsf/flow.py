@@ -97,14 +97,14 @@ def Flow(sources,flow,bindir,rsfflow=1,
     command = string.join(steps," && ")
     if stdout==1:
         if rsfprog == prefix+'mpi':
-            command = command + " output=$TARGET"
+            command = command + " --output=$TARGET"
         else:
             command = command + " > $TARGET"
     elif stdout==0:
         command = command + " >/dev/null"
     if stdin:
         if rsfprog == prefix+'mpi':
-            command = command + " input=$SOURCE"
+            command = command + " --input=$SOURCE"
         else:
             command = "< $SOURCE " + command
     if workdir:
