@@ -62,6 +62,7 @@ if root:
 
     for color in Split('''
         cubeyf1 gist_earth izoaz linearlfb lb montag owb rwb seismic spectral
+        viridis
         '''):
         env.Install(incdir,color+'.csv')
 

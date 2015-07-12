@@ -71,7 +71,8 @@ colors = {
     'lb': 'Light Bartlein',
     'seismic': 'Seismic-OpendTect',
     'izoaz': 'Isoluminant Azimuth',
-    'montag': 'Spectral Lightness'
+    'montag': 'Spectral Lightness',
+    'viridis': 'Default Matplotlib'
 }
 
 for col in colors.keys():
