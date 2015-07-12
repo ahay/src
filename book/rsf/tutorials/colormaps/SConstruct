@@ -2,6 +2,12 @@ from rsf.proj import *
 from rsf.prog import RSFROOT
 import os
 
+colormaps = Split('''
+spectral
+linearlfb
+viridis
+''')
+
 Flow('random',None,'math n1=8 n2=8 output=1 | noise rep=y seed=2014 type=n mean=0.5')
 
 Result('spectral','random',
@@ -20,7 +26,7 @@ Result('bar',
 
 # Get color pallette
 
-for case in ('spectral','linearlfb'):
+for case in colormaps:
        csv = os.path.join(RSFROOT,'include',case+'.csv')
        Flow(case,csv,'csv2rsf')
 
@@ -95,7 +101,7 @@ Flow('pyramid',None,
 
 Flow('depth',None,'math n1=256 output=x1 | byte allpos=y pclip=100')
 
-for case in ('spectral','linearlfb'):
+for case in colormaps:
        Result('pyramid-'+case,'pyramid',
             'grey screenratio=1 scalebar=y allpos=y pclip=100 color=%s wanttitle=n' % case)
        Result('pyramid3d-'+case,'pyramid',
@@ -152,7 +158,7 @@ Flow('horizon','xyz xy',
      put label=Time unit=ms label1=Inline label2=Crossline
      ''')
 
-for case in ('spectral','linearlfb'):
+for case in colormaps:
        Result('horizon-'+case,'horizon',
               'grey color=%s bias=950 clip=133 scalebar=y title=Horizon yreverse=n transp=n' % case)
  
