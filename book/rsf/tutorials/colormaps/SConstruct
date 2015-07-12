@@ -8,93 +8,102 @@ linearlfb
 viridis
 ''')
 
-Flow('random',None,'math n1=8 n2=8 output=1 | noise rep=y seed=2014 type=n mean=0.5')
+# Plot random numbers
 
-Result('spectral','random',
-       '''
-       grey pclip=100 mean=y color=spectral screenratio=0.9 scalebar=y 
-       title=spectral
-       ''')
+Flow('random',None,
+     'math n1=8 n2=8 output=1 | noise rep=y seed=2014 type=n mean=0.5')
+
+for case in colormaps:
+       Result(case,'random',
+              '''
+              grey pclip=100 mean=y color=%s screenratio=0.9 scalebar=y 
+              title=%s
+              ''' % (case,case))
+
+# Plot colorbar
 
 Flow('bar',None,'math n1=16 output=x1')
 
-Result('bar',
-       '''
-       grey allpos=y pclip=100 color=spectral title=Colors wantaxis=n 
-       screenht=2 screenwd=14 transp=n wheretitle=t
-       ''')
-
-# Get color pallette
-
 for case in colormaps:
+       Result(case+'-bar','bar',
+              '''
+              grey allpos=y pclip=100 color=%s title=Colors wantaxis=n 
+              screenht=2 screenwd=14 transp=n wheretitle=t
+              ''' % case)
+
+       # Get color pallette
+
        csv = os.path.join(RSFROOT,'include',case+'.csv')
        Flow(case,csv,'csv2rsf')
 
-# Interpolate 16 numbers
+       # Interpolate 16 numbers
 
-Flow('num16','spectral','transp | remap1 o1=0 n1=16 d1=%g | scale dscale=255' % (255.0/15))
+       num16 = case+'16'
 
-# Compute intensity
+       Flow(num16,case,
+            'transp | remap1 o1=0 n1=16 d1=%g | scale dscale=255' % (255.0/15))
 
-Flow('intensity','num16','stack scale=0.2989,0.5870,0.1140 norm=n')
+       # Compute intensity
 
-Plot('intensity',
-     '''
-     grey allpos=y pclip=100 title=Intensity wantaxis=n 
-     screenht=2 screenwd=14 transp=n wheretitle=t
-     ''')
+       intensity = case+'-intensity'
 
-Result('intensity','Overlay')
+       Flow(intensity,num16,'stack scale=0.2989,0.5870,0.1140 norm=n')
 
-Plot('intensity2','intensity',
-     '''
-     graph symbol=o min2=0 max2=255 wanttitle=n label2= unit2= parallel2=n
-     screenht=2 screenwd=14 wantaxis1=n labelsz=5 symbolsz=5 plotcol=2
-     ''')
+       Plot(intensity,
+            '''
+            grey allpos=y pclip=100 title=Intensity wantaxis=n 
+            screenht=2 screenwd=14 transp=n wheretitle=t
+            ''')
 
-Result('intensity2','intensity intensity2','Overlay')
+       Result(intensity,'Overlay')
 
-# Sort by intensity
+       Plot(intensity+'2',intensity,
+            '''
+            graph symbol=o min2=0 max2=255 wanttitle=n
+            label2= unit2= parallel2=n labelsz=5 symbolsz=5 plotcol=2
+            screenht=2 screenwd=14 wantaxis1=n 
+            ''')
 
-Result('isorted','intensity',
-       '''
-       transp | headersort head=$SOURCE | window |
-       grey allpos=y pclip=100
-       title="Sorted color intensity" wantaxis=n 
-       screenht=2 screenwd=14 transp=n wheretitle=t
-       ''')
+       Result(intensity+'2',[intensity,intensity+'2'],'Overlay')
 
-Flow('sorted','intensity',
-     '''
-     math output=x1 |
-     transp | headersort head=$SOURCE | window
-     ''')
+       # Sort by intensity
 
-Result('sorted',
-       '''
-       grey allpos=y pclip=100 color=spectral
-       title="Colors sorted by intensity" wantaxis=n 
-       screenht=2 screenwd=14 transp=n wheretitle=t
-       ''')
+       sort = case+'-sort'
+       Result(sort+'2',intensity,
+              '''
+              transp | headersort head=$SOURCE | window |
+              grey allpos=y pclip=100
+              title="Sorted color intensity" wantaxis=n 
+              screenht=2 screenwd=14 transp=n wheretitle=t
+              ''')
 
-# Plotted as Euclidean distance
+       Flow(sort,intensity,
+            '''
+            math output=x1 |
+            transp | headersort head=$SOURCE | window
+            ''')
 
-Flow('euclid','intensity','bin1 x0=0 dx=1 nx=256 head=$SOURCE')
+       Result(sort,
+            '''
+            grey allpos=y pclip=100 color=spectral
+            title="Colors sorted by intensity" wantaxis=n 
+            screenht=2 screenwd=14 transp=n wheretitle=t
+            ''')
 
-Result('euclid',
-       '''
-       grey allpos=y pclip=100 
-       title="Color intensity, Euclidean distance" wantaxis=n 
-       screenht=2 screenwd=14 transp=n wheretitle=t
-       ''')
+       # Plot as Euclidean distance
+
+       euclid = case+'-euclid'
+
+       Flow(euclid,intensity,'bin1 x0=0 dx=1 nx=256 head=$SOURCE')
+
+       Result(euclid,
+              '''
+              grey allpos=y pclip=100 
+              title="Color intensity, Euclidean distance" wantaxis=n 
+              screenht=2 screenwd=14 transp=n wheretitle=t
+              ''')
 
 # Great Pyramid of Giza
-
-Result('linear','random',
-       '''
-       grey pclip=100 mean=y color=linearlfb screenratio=0.9 scalebar=y 
-       title=linearlfb
-       ''')
 
 Flow('pyramid',None,
      'math n1=101 n2=101 o1=-50 o2=-50 output="100-abs(x1+x2)-abs(x1-x2)"')
@@ -103,7 +112,10 @@ Flow('depth',None,'math n1=256 output=x1 | byte allpos=y pclip=100')
 
 for case in colormaps:
        Result('pyramid-'+case,'pyramid',
-            'grey screenratio=1 scalebar=y allpos=y pclip=100 color=%s wanttitle=n' % case)
+              '''
+              grey screenratio=1 scalebar=y
+              allpos=y pclip=100 color=%s wanttitle=n
+              ''' % case)
        Result('pyramid3d-'+case,'pyramid',
               'plsurf allpos=y pclip=100 color=%s mesh=n' % case)
 
@@ -160,6 +172,9 @@ Flow('horizon','xyz xy',
 
 for case in colormaps:
        Result('horizon-'+case,'horizon',
-              'grey color=%s bias=950 clip=133 scalebar=y title=Horizon yreverse=n transp=n' % case)
+              '''
+              grey color=%s bias=950 clip=133 scalebar=y
+              title="Horizon (color=%s)" yreverse=n transp=n
+              ''' % (case,case))
  
 End()
