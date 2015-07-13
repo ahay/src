@@ -19,7 +19,7 @@
 !!$  You should have received a copy of the GNU General Public License
 !!$  along with this program; if not, write to the Free Software
 !!$  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-program mexwell_cpml24_backward
+program mexwell_boundary
   use rsf
   implicit none
 
@@ -32,7 +32,7 @@ program mexwell_cpml24_backward
   real, dimension (:,:), allocatable :: v0, vv, rho, eta
   real, dimension (:,:), allocatable :: p, vz, vx
   real, dimension(:,:,:),allocatable :: conv_pz,conv_px,conv_vz,conv_vx
-  real, dimension(:,:,:,:),allocatable::bvz, bvx
+  real, dimension(:,:,:,:),allocatable::bvz, bvx, bpz, bpx
   real, dimension(:,:,:),allocatable:: psnap, vzsnap, vxsnap
   type(file) :: Fv, Fw1, Fw2, Frho, Feta, Fef,Feb, Fwltf,Fwltb  ! I/O files 
 
@@ -120,8 +120,10 @@ program mexwell_cpml24_backward
   allocate(conv_px(nzpad,nb,2))
   allocate(conv_vz(nb,nxpad,2))
   allocate(conv_vx(nzpad,nb,2))
-  allocate(bvz(3,nx,2,nt))
-  allocate(bvx(nz,3,2,nt))
+  allocate(bvz(2,nx,2,nt))
+  allocate(bvx(nz,2,2,nt))
+  allocate(bpz(2,nx,2,nt))
+  allocate(bpx(nz,2,2,nt))
   allocate(ef(nt))
   allocate(eb(nt))
   allocate(wltf(nt))
@@ -161,20 +163,23 @@ program mexwell_cpml24_backward
   do it=1,nt
      if (order1) then ! scheme 1, 1st order accuracy, default
         call step_forward_v(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
+        call boundary_rw_v(.true.,bvz(:,:,:,it),bvx(:,:,:,it),vz,vx,nz,nx,nb)
         call update_cpml_vzvx(p,vz,vx,conv_pz,conv_px,rho,vv,bb,aa,idz,idx,dt,nz,nx,nb)
         call step_forward_p(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
+        call boundary_rw_p(.true.,bpz(:,:,:,it),bpx(:,:,:,it),p,nz,nx,nb)
         call update_cpml_pzpx(p,vz,vx,conv_vz,conv_vx,rho,vv,bb,aa,idz,idx,dt,nz,nx,nb)
         if(attenuating) call apply_attenuation(p, eta, rho, vv, dt, nzpad, nxpad)
      else ! scheme 2, 2nd order accuracy
         if(attenuating) call apply_attenuation(p, eta, rho, vv, 0.5*dt, nzpad, nxpad)
         call step_forward_v(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
+        call boundary_rw_v(.true.,bvz(:,:,:,it),bvx(:,:,:,it),vz,vx,nz,nx,nb)
         call update_cpml_vzvx(p,vz,vx,conv_pz,conv_px,rho,vv,bb,aa,idz,idx,dt,nz,nx,nb)
         call step_forward_p(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
+        call boundary_rw_p(.true.,bpz(:,:,:,it),bpx(:,:,:,it),p,nz,nx,nb)
         call update_cpml_pzpx(p,vz,vx,conv_vz,conv_vx,rho,vv,bb,aa,idz,idx,dt,nz,nx,nb)
         if(attenuating) call apply_attenuation(p, eta, rho, vv, 0.5*dt, nzpad, nxpad)
      endif
      call add_sources(p, dt, wlt(it), sz, sx, nzpad, nxpad, wltf(it))
-     call boundary_rw(.true.,bvz(:,:,:,it),bvx(:,:,:,it),vz,vx,nz,nx,nb)
      if(nsnap>0) then !save snapshots for re-initialization in backward reconstruction
         if ((isnap<nsnap).and.(it==(isnap+1)*snap_interval)) then
            isnap=isnap+1
@@ -184,7 +189,6 @@ program mexwell_cpml24_backward
            vxsnap(:,:,isnap)=vx       
         endif
      endif
-
      call window2d(v0, p, nz, nx, nb);
      call rsf_write(Fw1,v0)
      call compute_energy(ef(it),vz(nb+1:nb+nz,nb+1:nb+nx),&
@@ -196,7 +200,6 @@ program mexwell_cpml24_backward
 
   !backward reconstruction
   do it=nt,1,-1
-     call boundary_rw(.false.,bvz(:,:,:,it),bvx(:,:,:,it),vz,vx,nz,nx,nb)
      call compute_energy(eb(it),vz(nb+1:nb+nz,nb+1:nb+nx),&
           vx(nb+1:nb+nz,nb+1:nb+nx),p(nb+1:nb+nz,nb+1:nb+nx),&
           rho(nb+1:nb+nz,nb+1:nb+nx),vv(nb+1:nb+nz,nb+1:nb+nx),nz,nx)
@@ -215,11 +218,15 @@ program mexwell_cpml24_backward
      call add_sources(p, -dt, wlt(it), sz, sx, nzpad, nxpad, wltb(it))
      if (order1) then ! scheme 1, 1st order accuracy, default
         if(attenuating) call apply_attenuation(p, eta, rho, vv, -dt, nzpad, nxpad)
+        call boundary_rw_p(.false.,bpz(:,:,:,it),bpx(:,:,:,it),p,nz,nx,nb)
         call step_forward_p(p, vz, vx, vv, rho, -dt, idz, idx, nzpad, nxpad)
+        call boundary_rw_v(.false.,bvz(:,:,:,it),bvx(:,:,:,it),vz,vx,nz,nx,nb)
         call step_forward_v(p, vz, vx, vv, rho, -dt, idz, idx, nzpad, nxpad)
      else ! scheme 2, 2nd order accuracy
         if(attenuating) call apply_attenuation(p, eta, rho, vv, -0.5*dt, nzpad, nxpad)
+        call boundary_rw_p(.false.,bpz(:,:,:,it),bpx(:,:,:,it),p,nz,nx,nb)
         call step_forward_p(p, vz, vx, vv, rho, -dt, idz, idx, nzpad, nxpad)
+        call boundary_rw_v(.false.,bvz(:,:,:,it),bvx(:,:,:,it),vz,vx,nz,nx,nb)
         call step_forward_v(p, vz, vx, vv, rho, -dt, idz, idx, nzpad, nxpad)
         if(attenuating) call apply_attenuation(p, eta, rho, vv,-0.5*dt, nzpad, nxpad)
      endif
@@ -245,6 +252,8 @@ program mexwell_cpml24_backward
   deallocate(conv_vx)
   deallocate(bvz)
   deallocate(bvx)
+  deallocate(bpz)
+  deallocate(bpx)
   deallocate(wltf)
   deallocate(wltb)
   if(nsnap>0) then
@@ -254,7 +263,7 @@ program mexwell_cpml24_backward
   endif
 
   call exit(0)
-end program mexwell_cpml24_backward
+end program mexwell_boundary
 
 !------------------------------------------------------------------------------
 ! check the CFL/stability condition is satisfied or not
@@ -626,6 +635,88 @@ subroutine boundary_rw(v2b,bvz,bvx,vz,vx,nz,nx,nb)
 end subroutine boundary_rw
 
 !-------------------------------------------------------------------------------
+subroutine boundary_rw_v(v2b,bvz,bvx,vz,vx,nz,nx,nb)
+  implicit none
+  
+  logical::v2b !v to bourndary or reverse
+  integer::nz,nx,nb
+  real,dimension(nz+2*nb,nx+2*nb)::vz,vx
+  real::bvz(2,nx,2),bvx(nz,2,2)
+
+  integer::i1,i2
+  
+  if(v2b) then !v to bourndary
+     do i2=1,nx
+        do i1=1,2
+           bvz(i1,i2,1)=vz(i1+nb-1,i2+nb)
+           bvz(i1,i2,2)=vz(i1+nz+nb,i2+nb)
+        enddo
+     enddo
+     do i1=1,nz
+        do i2=1,2
+           bvx(i1,i2,1)=vx(i1+nb,i2+nb-1)
+           bvx(i1,i2,2)=vx(i1+nb,i2+nz+nb)
+        enddo
+     enddo
+  else !boundary to v
+     do i2=1,nx
+        do i1=1,2
+           vz(i1+nb-1,i2+nb)=bvz(i1,i2,1)
+           vz(i1+nz+nb,i2+nb)=bvz(i1,i2,2)
+        enddo
+     enddo
+     do i1=1,nz
+        do i2=1,2
+           vx(i1+nb,i2+nb-1)=bvx(i1,i2,1)
+           vx(i1+nb,i2+nz+nb)=bvx(i1,i2,2)
+        enddo
+     enddo
+  endif
+end subroutine boundary_rw_v
+
+
+!-------------------------------------------------------------------------------
+subroutine boundary_rw_p(p2b,bpz,bpx,p,nz,nx,nb)
+  implicit none
+  
+  logical::p2b !v to bourndary or reverse
+  integer::nz,nx,nb
+  real,dimension(nz+2*nb,nx+2*nb)::p
+  real::bpz(2,nx,2),bpx(nz,2,2)
+
+  integer::i1,i2
+  
+  if(p2b) then !v to bourndary
+     do i2=1,nx
+        do i1=1,2
+           bpz(i1,i2,1)=p(i1+nb-2,i2+nb)
+           bpz(i1,i2,2)=p(i1+nz+nb-1,i2+nb)
+        enddo
+     enddo
+     do i1=1,nz
+        do i2=1,2
+           bpx(i1,i2,1)=p(i1+nb,i2+nb-2)
+           bpx(i1,i2,2)=p(i1+nb,i2+nz+nb-1)
+        enddo
+     enddo
+  else !boundary to v
+     do i2=1,nx
+        do i1=1,2
+           p(i1+nb-2,i2+nb)=bpz(i1,i2,1)
+           p(i1+nz+nb-1,i2+nb)=bpz(i1,i2,2)
+        enddo
+     enddo
+     do i1=1,nz
+        do i2=1,2
+           p(i1+nb,i2+nb-2)=bpx(i1,i2,1)
+           p(i1+nb,i2+nz+nb-1)=bpx(i1,i2,2)
+        enddo
+     enddo
+  endif
+end subroutine boundary_rw_p
+
+
+!-------------------------------------------------------------------------------
 subroutine compute_energy(e,vz,vx,p,rho,vv,nz,nx)
   implicit none
 
@@ -635,3 +726,4 @@ subroutine compute_energy(e,vz,vx,p,rho,vv,nz,nx)
 
   e=0.5*sum((vz*vz+vx*vx)*rho+p*p/(rho*vv*vv))
 end subroutine compute_energy
+

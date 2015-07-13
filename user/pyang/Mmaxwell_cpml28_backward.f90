@@ -184,15 +184,11 @@ program mexwell_cpml28_backward
 
      if (order1) then ! scheme 1, 1st order accuracy, default
         if(attenuating) call apply_attenuation(p, eta, rho, vv, -dt, nzpad, nxpad)
-        call update_cpml_pzpx(p,vz,vx,conv_vz,conv_vx,rho,vv,bndr,idz,idx,-dt,nz,nx,nb)
         call step_forward_p(p, vz, vx, vv, rho, -dt, idz, idx, nzpad, nxpad)
-        call update_cpml_vzvx(p,vz,vx,conv_pz,conv_px,rho,vv,bndr,idz,idx,-dt,nz,nx,nb)
         call step_forward_v(p, vz, vx, vv, rho, -dt, idz, idx, nzpad, nxpad)
      else 
         if(attenuating) call apply_attenuation(p, eta, rho, vv, -0.5*dt, nzpad, nxpad)
-        call update_cpml_pzpx(p,vz,vx,conv_vz,conv_vx,rho,vv,bndr,idz,idx,-dt,nz,nx,nb)
         call step_forward_p(p, vz, vx, vv, rho, -dt, idz, idx, nzpad, nxpad)
-        call update_cpml_vzvx(p,vz,vx,conv_pz,conv_px,rho,vv,bndr,idz,idx,-dt,nz,nx,nb)
         call step_forward_v(p, vz, vx, vv, rho, -dt, idz, idx, nzpad, nxpad)
         if(attenuating) call apply_attenuation(p, eta, rho, vv,-0.5*dt, nzpad, nxpad)
      endif

@@ -41,9 +41,9 @@ mpigpufwi
 # 6. F90 main programs
 f90_progs = '''
 maxwell_direct_backward maxwell_sponge2_backward maxwell_cpml28_backward
-maxwell_cpml24_backward maxwell_cpml3d 
+maxwell_cpml24_backward maxwell_cpml3d maxwell_boundary1 maxwell_boundary2 
 '''
-#maxwell_boundary1 maxwell_boundary2
+
 
 ######################################################################
 # 7. python mains programs

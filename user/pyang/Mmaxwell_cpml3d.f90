@@ -153,15 +153,11 @@ program mexwell_cpml2_backward
      call add_sources(p, -dt, wlt(it), sz, sx, sy, nzpad, nxpad, nypad)
      if (order1) then ! scheme 1, 1st order accuracy, default
         if(attenuating) call apply_attenuation(p, eta, rho, vv, -dt, nzpad, nxpad, nypad)
-        call update_cpml_pzpxpy(p, vz, vx, vy, conv_vz, conv_vx, conv_vy, rho, vv, bb, aa, idz, idx, idy, -dt, nz, nx, ny, nb)
         call step_forward_p(p, vz, vx, vy, vv, rho, -dt, idz, idx, idy, nzpad, nxpad, nypad)
-        call update_cpml_vzvxvy(p, vz, vx, vy, conv_pz, conv_px, conv_py, rho, vv, bb, aa, idz, idx, idy, -dt, nz, nx, ny, nb)
         call step_forward_v(p, vz, vx, vy, vv, rho, -dt, idz, idx, idy, nzpad, nxpad, nypad)
      else !2nd order scheme
         if(attenuating) call apply_attenuation(p, eta, rho, vv, -0.5*dt, nzpad, nxpad,nypad)
-        call update_cpml_pzpxpy(p, vz, vx, vy, conv_vz, conv_vx, conv_vy, rho, vv, bb, aa, idz, idx, idy, -dt, nz, nx, ny, nb)
         call step_forward_p(p, vz, vx, vy, vv, rho, -dt, idz, idx, idy, nzpad, nxpad, nypad)
-        call update_cpml_vzvxvy(p, vz, vx, vy, conv_pz, conv_px, conv_py, rho, vv, bb, aa, idz, idx, idy, -dt, nz, nx, ny, nb)
         call step_forward_v(p, vz, vx, vy, vv, rho, -dt, idz, idx, idy, nzpad, nxpad, nypad)
         if(attenuating) call apply_attenuation(p, eta, rho, vv,-0.5*dt, nzpad, nxpad, nypad)
      endif
