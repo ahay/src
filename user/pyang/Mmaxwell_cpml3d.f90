@@ -38,7 +38,7 @@ program mexwell_cpml2_backward
   call sf_init() ! initialize Madagascar
 
   ! setup I/O files 
-  Fv = rsf_input("in")    ! source position 
+  Fv = rsf_input("in")    ! velocity model
   Frho=rsf_input("rho")   ! density
   Feta=rsf_input("eta")   ! Pascal
   Fw1 =rsf_output("out")  ! output forward wavefield 
@@ -121,11 +121,6 @@ program mexwell_cpml2_backward
 
   !forward modeling
   do it=1,nt
-     if(it==kt) then ! record snapshot at it=kt
-        call window3d(v0, p, nz, nx, ny, nb)
-        call rsf_write(Fw1,v0)
-     endif
-
      if (order1) then ! scheme 1, 1st order accuracy, default
         call step_forward_v(p, vz, vx, vy, vv, rho, dt, idz, idx, idy, nzpad, nxpad, nypad)
         call update_cpml_vzvxvy(p, vz, vx, vy, conv_pz, conv_px, conv_py, rho, vv, bb, aa, idz, idx, idy, dt, nz, nx, ny, nb)
@@ -142,6 +137,10 @@ program mexwell_cpml2_backward
      endif
      call add_sources(p, dt, wlt(it), sz, sx, sy, nzpad, nxpad, nypad)
      call boundary_rw(.true.,bvz(:,:,:,:,it),bvx(:,:,:,:,it),bvy(:,:,:,:,it),vz,vx,vy,nz,nx,ny,nb)
+     if(it==kt) then ! record snapshot at it=kt
+        call window3d(v0, p, nz, nx, ny, nb)
+        call rsf_write(Fw1,v0)
+     endif
   enddo
 
   !backward reconstruction

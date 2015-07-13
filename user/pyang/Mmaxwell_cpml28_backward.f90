@@ -15,7 +15,7 @@
 !!$  You should have received a copy of the GNU General Public License
 !!$  along with this program; if not, write to the Free Software
 !!$  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-program mexwell_cpml24_backward
+program mexwell_cpml28_backward
   use rsf
   implicit none
 
@@ -33,7 +33,7 @@ program mexwell_cpml24_backward
   call sf_init() ! initialize Madagascar
 
   ! setup I/O files 
-  Fv = rsf_input ("in")   ! source position 
+  Fv = rsf_input ("in")   ! velocity model
   Fw1 =rsf_output("out")  ! output forward wavefield 
   Fw2 =rsf_output("back") ! output backward reconstructed wavefield
   Frho=rsf_input("rho")   ! density
@@ -144,9 +144,6 @@ program mexwell_cpml24_backward
 
   !forward modeling
   do it=1,nt
-     call window2d(v0, p, nz, nx, nb);
-     call rsf_write(Fw1,v0)
-
      if (order1) then ! scheme 1, 1st order accuracy, default
         call step_forward_v(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
         call update_cpml_vzvx(p,vz,vx,conv_pz,conv_px,rho,vv,bndr,idz,idx,dt,nz,nx,nb)
@@ -162,15 +159,16 @@ program mexwell_cpml24_backward
         if(attenuating) call apply_attenuation(p, eta, rho, vv, 0.5*dt, nzpad, nxpad)
      endif
      call add_sources(p, dt, wlt(it), sz, sx, nzpad, nxpad, wltf(it))
-
+     call boundary_rw(.true.,bvz(:,:,:,it),bvx(:,:,:,it),vz,vx,nz,nx,nb)
+     
+     call window2d(v0, p, nz, nx, nb);
+     call rsf_write(Fw1,v0)
      call compute_energy(ef(it),vz(nb+1:nb+nz,nb+1:nb+nx),&
           vx(nb+1:nb+nz,nb+1:nb+nx),p(nb+1:nb+nz,nb+1:nb+nx),&
           rho(nb+1:nb+nz,nb+1:nb+nx),vv(nb+1:nb+nz,nb+1:nb+nx),nz,nx)
-     call boundary_rw(.true.,bvz(:,:,:,it),bvx(:,:,:,it),vz,vx,nz,nx,nb)
   enddo
   call rsf_write(Fef,ef) ! store forward energy history
   call rsf_write(Fwltf,wltf) ! store wavelet series during forward modeling
-
 
   !backward reconstruction
   do it=nt,1,-1
@@ -223,7 +221,7 @@ program mexwell_cpml24_backward
   deallocate(wltb)
 
   call exit(0)
-end program mexwell_cpml24_backward
+end program mexwell_cpml28_backward
 
 !--------------------------------------------------------------------------------
 ! check the CFL/stability condition is satisfied or not

@@ -33,9 +33,9 @@ program mexwell_direct_backward
   call sf_init() ! initialize Madagascar
 
   ! setup I/O files 
-  Fv = rsf_input ("in")   ! source position 
-  Fw1 = rsf_output("out")  ! output forward wavefield 
-  Fw2 = rsf_output("back")  ! output forward wavefield 
+  Fv = rsf_input ("in")   ! velocity model
+  Fw1 = rsf_output("out") ! output forward wavefield 
+  Fw2 = rsf_output("back")! output forward wavefield 
   Frho=rsf_input("rho")   ! density
   Feta=rsf_input("eta")   ! Pascal
   Fef=rsf_output("ef")    ! energy (kinematic+deformation) when forward modeling

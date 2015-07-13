@@ -43,7 +43,7 @@ f90_progs = '''
 maxwell_direct_backward maxwell_sponge2_backward maxwell_cpml28_backward
 maxwell_cpml24_backward maxwell_cpml3d 
 '''
-
+#maxwell_boundary1 maxwell_boundary2
 
 ######################################################################
 # 7. python mains programs
@@ -233,6 +233,7 @@ for prog in f90_mains:
         prog = env.RSF_Place('sf'+prog,None,var='F90')        
     if root:
         env.Install(bindir,prog)
+
 
 ######################################################################
 # 7. compiling python programs, python API not needed

@@ -19,7 +19,7 @@
 !!$  You should have received a copy of the GNU General Public License
 !!$  along with this program; if not, write to the Free Software
 !!$  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-program mexwell_cpml24_snapshot
+program mexwell_cpml24_backward
   use rsf
   implicit none
 
@@ -39,7 +39,7 @@ program mexwell_cpml24_snapshot
   call sf_init() ! initialize Madagascar
 
   ! setup I/O files 
-  Fv = rsf_input ("in")   ! source position 
+  Fv = rsf_input ("in")   ! velocity model
   Fw1 =rsf_output("out")  ! output forward wavefield 
   Fw2 =rsf_output("back") ! output backward reconstructed wavefield
   Frho=rsf_input("rho")   ! density
@@ -159,9 +159,6 @@ program mexwell_cpml24_snapshot
   !forward modeling
   if(nsnap>0) isnap=0
   do it=1,nt
-     call window2d(v0, p, nz, nx, nb);
-     call rsf_write(Fw1,v0)
-
      if (order1) then ! scheme 1, 1st order accuracy, default
         call step_forward_v(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
         call update_cpml_vzvx(p,vz,vx,conv_pz,conv_px,rho,vv,bb,aa,idz,idx,dt,nz,nx,nb)
@@ -187,6 +184,9 @@ program mexwell_cpml24_snapshot
            vxsnap(:,:,isnap)=vx       
         endif
      endif
+
+     call window2d(v0, p, nz, nx, nb);
+     call rsf_write(Fw1,v0)
      call compute_energy(ef(it),vz(nb+1:nb+nz,nb+1:nb+nx),&
           vx(nb+1:nb+nz,nb+1:nb+nx),p(nb+1:nb+nz,nb+1:nb+nx),&
           rho(nb+1:nb+nz,nb+1:nb+nx),vv(nb+1:nb+nz,nb+1:nb+nx),nz,nx)
@@ -258,7 +258,7 @@ program mexwell_cpml24_snapshot
   endif
 
   call exit(0)
-end program mexwell_cpml24_snapshot
+end program mexwell_cpml24_backward
 
 !------------------------------------------------------------------------------
 ! check the CFL/stability condition is satisfied or not

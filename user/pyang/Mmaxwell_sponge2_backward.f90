@@ -32,7 +32,7 @@ program mexwell_sponge2_backward
   call sf_init() ! initialize Madagascar
 
   ! setup I/O files 
-  Fv = rsf_input ("in")   ! source position 
+  Fv = rsf_input ("in")   ! velocity model
   Fw1 = rsf_output("out") ! output forward wavefield 
   Fw2 = rsf_output("back")! output backward wavefield x
   Frho=rsf_input("rho")   ! density
@@ -111,9 +111,6 @@ program mexwell_sponge2_backward
 
   !forward modeling
   do it=1,nt
-     call window2d(v0, p, nz, nx, nb)
-     call rsf_write(Fw1,v0)
-
      if (order1) then ! scheme 1, 1st order accuracy, default
         call step_forward(.true.,p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
         if(attenuating) then
@@ -137,6 +134,9 @@ program mexwell_sponge2_backward
 
      !save the boundaries
      call boundary_rw(.true.,bvz(:,:,:,it),bvx(:,:,:,it),vz,vx,nz,nx,nb)
+
+     call window2d(v0, p, nz, nx, nb)
+     call rsf_write(Fw1,v0)
   enddo
 
   !backward reconstruction
