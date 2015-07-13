@@ -1,0 +1,32 @@
+from rsf.proj import *
+
+Fetch('apr18.h','seab')
+
+Flow('data','apr18.h','dd form=native')
+Flow('bin','data',
+     '''window n1=1 f1=2 | math output='(2978-input)/387' |
+     bin head=$SOURCE niter=150 nx=160 ny=160 xkey=0 ykey=1''')
+
+def grey(title):
+    return '''
+    grey pclip=100 labelsz=10 titlesz=12
+    transp=n yreverse=n
+    label1=longitude label2=latitude title="%s"
+    ''' % title
+
+Plot('bin',grey('Binned'))
+
+Flow('lap','bin','lapfill')
+Plot('lap',grey('Filled with Laplacian'))
+
+Result('seabdat','bin lap','SideBySideAniso')
+
+Flow('pef lag','bin','hpef maskin=$SOURCE a=5,3 niter=200 lag=${TARGETS[1]}')
+
+Flow('mis','bin pef',
+     'miss filt=${SOURCES[1]} prec=1 niter=25')
+Plot('mis',grey('Filled with PEF'))
+
+Result('seamda','lap mis','SideBySideAniso')
+
+End()
