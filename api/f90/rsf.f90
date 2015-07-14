@@ -828,5 +828,16 @@ contains
   
   !------------------------------------------------------------
 
+  subroutine rsf_fileflush(hist, hist_src)
+    type(file) :: hist
+    type(file), optional :: hist_src
+    integer(kind=PTRKIND) :: M_NULL = 0
+    if (present(hist_src)) then
+      call sf_fileflush(hist%tag, hist_src%tag)
+    else
+      call sf_fileflush(hist%tag, M_NULL)
+    end if
+  end subroutine rsf_fileflush
+  
 end module RSF
 
