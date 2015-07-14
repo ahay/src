@@ -118,6 +118,7 @@ int main(int argc, char* argv[])
   float* outtrace=NULL;
   float itrace=0;
   float nmostretch;
+  char* offsetname;
   float lmute;
   bool inv;
   /******************************************************/
@@ -189,7 +190,8 @@ int main(int argc, char* argv[])
   /* segy_init gets the list header keys required by segykey function  */
   segy_init(n1_headers,in);
   /* get index to keys I will be using */
-  indx_offset=segykey("offset");
+  if(NULL==(offsetname=sf_getstring("offset")))offsetname="offset";
+  indx_offset=segykey(offsetname);
   /* kls what other header keys do I use?  inline? xline? cdp? */
 
   /* get the parameter for the maximum nmo stretch. */
