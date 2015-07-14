@@ -39,9 +39,15 @@ static float mysign(float f)
     f = (f >= 0  ?  1.0f  :  -1.0f );
     return f;
 }
+
 static float myint(float f)
 {
   return (float) ((int)f);
+}
+
+static float myround(float f)
+{
+  return (float) (f<0.0? (int)(f-0.5): (int)(f+0.5));
 }
 
 typedef float (*func)(float);
@@ -65,7 +71,8 @@ static func functable[] = {
     erff,
     erfcf,
     mysign,
-    myint
+    myint,
+    myround
 };
 
 static sf_complex myabs(sf_complex c)
@@ -580,6 +587,7 @@ size_t sf_math_parse (char*       output /* expression */,
 		} else if (0==strcmp(key,"erfc") && SF_FLOAT==datatype)   { *indx = 17;
 		} else if (0==strcmp(key,"sign") && SF_FLOAT==datatype)   { *indx = 18;
 		} else if (0==strcmp(key,"int")  && SF_FLOAT==datatype)   { *indx = 19;
+		} else if (0==strcmp(key,"round")  && SF_FLOAT==datatype)   { *indx = 20;
 		} else if (0==strcmp(key,"arg") && SF_COMPLEX==datatype) { *indx = 16;
 		} else if (0==strcmp(key,"conj") && SF_COMPLEX==datatype) { *indx = 17;
 		} else if (0==strcmp(key,"real") && SF_COMPLEX==datatype) { *indx = 18;
