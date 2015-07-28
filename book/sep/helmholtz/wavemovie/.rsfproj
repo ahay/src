@@ -1,3 +1,0 @@
-uses=['sfwavemovie', 'sfwindow', 'sfmath', 'sfreal', 'sfgraph']
-data=[]
-size=       6144

@@ -1,3 +1,0 @@
-uses=['sfmake', 'sfgrey', 'sfnoise', 'sfsmooth', 'sfadd', 'sfhpef', 'sfsignoi', 'sfwindow', 'sfhconv']
-data=[]
-size=     105312

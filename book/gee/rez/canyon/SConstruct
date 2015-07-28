@@ -1,8 +1,0 @@
-from rsf.proj import *
-
-Fetch('channels.H','channels')
-Plot('canyon','channels.H','window f3=263 n3=1 | grey crowd=.83 title=canyon')
-Plot('rivers','channels.H','window f3=191 n3=1 | grey crowd=.83 title=rivers')
-Result('canyon','rivers canyon','SideBySideAniso')
-
-End()

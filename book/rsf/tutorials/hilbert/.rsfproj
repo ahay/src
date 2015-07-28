@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfwindow', 'sfenvelope', 'sfmath', 'sfscale', 'sfcat', 'sfgraph', 'sfsegyread', 'sfgrey', 'sfmax1', 'sftransp', 'sfreal', 'sfinttest1', 'sfrtoc', 'sfcmplx', 'sfmask', 'sfbyte', 'sfpad', 'sflocalskew', 'sfpick', 'sfphaserot', 'sfdots']
-data=['https://raw.githubusercontent.com/seg/tutorials/master/1410_Phase/data/trace_il1190_xl1155.trace', 'https://raw.githubusercontent.com/seg/tutorials/master/1410_Phase/data/penobscot_xl1155.sgy']
-size=   34437325

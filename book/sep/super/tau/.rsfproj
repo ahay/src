@@ -1,3 +1,0 @@
-uses=['sfmath', 'sfcut', 'sfadd', 'sfnoise', 'sfmask', 'sfdd', 'sftransp', 'sfheaderwindow', 'sfwindow', 'sfcausint', 'sfgraph', 'sfmul', 'sfclip2', 'sfspray']
-data=[]
-size=      44392

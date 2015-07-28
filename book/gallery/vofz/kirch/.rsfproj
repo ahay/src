@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfspline', 'sfmath', 'sfcat', 'sfgraph', 'sfderiv', 'sfscale', 'sftransp', 'sfgrey', 'sfwindow', 'sfmul', 'sfdepth2time', 'sfcausint', 'sfkirmod', 'sfcostaper', 'sfput', 'sfkirchnew', 'sftime2depth', 'sfspike', 'sfsmooth', 'sfeikonal', 'sfcontour']
-data=[]
-size=   34583080

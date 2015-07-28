@@ -1,3 +1,0 @@
-uses=['sfsigmoid', 'sfgrey', 'sfnoise', 'sffdct', 'sfthr']
-data=[]
-size=    1440000

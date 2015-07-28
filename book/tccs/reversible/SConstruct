@@ -1,5 +1,0 @@
-from rsf.tex import *
-
-End(use='amsmath,amscd,hyperref,listings',color='sinc linear nearest stretch nmo data')
-
-

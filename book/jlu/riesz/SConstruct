@@ -1,3 +1,0 @@
-from rsf.tex import *
-
-End(use='amsmath',color='rizdip sdip dipr')

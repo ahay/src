@@ -1,3 +1,0 @@
-uses=['sfmath', 'sfmask', 'sfdd', 'sfscale', 'sfwindow', 'sfcontour']
-data=[]
-size=   16723304

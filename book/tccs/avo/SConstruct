@@ -1,5 +1,0 @@
-from rsf.tex import *
-
-End(use='amsmath',
-    color='scn avoscn attr scan4 nmo4',
-    hires='gath4 scan4 nmo4')

@@ -1,3 +1,0 @@
-uses=['sfspike', 'sfricker1', 'sfmath', 'sfsmooth', 'sffft1', 'sffft3', 'sfortholr', 'sforthowave', 'sfbyte', 'sfgrey3', 'sfput', 'sfgrey4', 'sfdd', 'sftransp', 'sfgraph', 'sfwindow', 'sfgrey', 'sforthollr', 'sforp']
-data=['data/ortho/DepthSlice.dat', 'data/ortho/xSlice.dat', 'data/ortho/ySlice.dat']
-size= 4363147428

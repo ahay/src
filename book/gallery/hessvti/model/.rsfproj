@@ -1,3 +1,0 @@
-uses=['sfsegyread', 'sfscale', 'sfput', 'sfmath', 'sfcat', 'sfdd', 'sfheadermath', 'sfmask', 'sfcp', 'sfgrey', 'sfintbin', 'sfbyte', 'sfgrey3', 'sfheaderwindow', 'sfcut']
-data=['pub/datasets/2D/Hess_VTI/timodel_vp.segy.gz', 'pub/datasets/2D/Hess_VTI/timodel_delta.segy.gz', 'pub/datasets/2D/Hess_VTI/timodel_epsilon.segy.gz', 'pub/datasets/2D/Hess_VTI/timodel_shot_data_II_shot001-320.segy.gz', 'pub/datasets/2D/Hess_VTI/timodel_shot_data_II_shot321-720.segy.gz']
-size= 7170772440

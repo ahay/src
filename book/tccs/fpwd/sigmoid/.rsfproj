@@ -1,3 +1,0 @@
-uses=['sfsigmoid', 'sfput', 'sfsmooth', 'sfdd', 'sfpwd', 'sfgrey', 'sfmath']
-data=[]
-size=     840008

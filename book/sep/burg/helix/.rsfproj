@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfspike', 'sfhelicon', 'sfgrey', 'sfautocorr', 'sfwilson']
-data=[]
-size=        880

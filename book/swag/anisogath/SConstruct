@@ -1,5 +1,0 @@
-from rsf.tex import *
-  
-Paper('article',use='amsmath')
-
-End()

@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfput', 'sfbyte', 'sfgrey3', 'sfwindow', 'sfgrey', 'sfmath', 'sfcontour']
-data=['https://raw.githubusercontent.com/agile-geoscience/notebooks/master/data/slicing_seismic.txt']
-size=    5110000

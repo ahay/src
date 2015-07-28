@@ -1,3 +1,0 @@
-uses=['sfmath', 'sfnoise', 'sfdd', 'sfput', 'sfhelicon', 'sfwindow', 'sfgrey', 'sfspike', 'sfmask', 'sfadd', 'sfmul', 'sfmiss']
-data=[]
-size=      73888

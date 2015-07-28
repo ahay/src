@@ -1,3 +1,0 @@
-from rsf.tex import *
-
-End(color='vz v eta vz1',use='amsmath',include=r'\DeclareMathOperator{\arccosh}{arccosh}')

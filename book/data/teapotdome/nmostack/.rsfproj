@@ -1,3 +1,0 @@
-uses=['sfintbin3', 'sfwindow', 'sfdd', 'sfstack', 'sfgrey', 'sflinear', 'sfgraph', 'sfspray', 'sfnmo', 'sfcat', 'sfbyte', 'sfgrey3', 'sfwiggle', 'sfvscan']
-data=[]
-size= 93104209656

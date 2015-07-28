@@ -1,8 +1,0 @@
-from rsf.suproj import *
-
-Flow('plane',None,'suplane | suaddnoise sn=10')
-
-for plot in ('wigb','image'):
-    Result(plot,'plane','sux' + plot)
-
-End()

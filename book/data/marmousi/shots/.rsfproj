@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfput', 'sfwindow', 'sfgrey']
-data=['data/marm/marmrefl.hh']
-size=   66908160

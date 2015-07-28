@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfput', 'sfwindow', 'sfattr', 'sfadd', 'sfgrey', 'sfhole', 'sfspike', 'sfhpef', 'sfmiss', 'sfhelicon', 'sfspray', 'sfheaderwindow', 'sfnoise']
-data=['PRIVATE']
-size=  999247412

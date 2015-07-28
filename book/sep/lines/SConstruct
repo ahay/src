@@ -1,9 +1,0 @@
-from rsf.tex import *
-
-End(options='short',use='hyperref',include=r'''
-\newlength{\boxwidth}
-\setlength{\boxwidth}{\textwidth}
-\addtolength{\boxwidth}{-20pt} 
-\setlength{\fboxsep}{10pt}
-\newcommand{\boxit}[1]{\noindent\fbox{\parbox{\boxwidth}{#1}}}
-''')

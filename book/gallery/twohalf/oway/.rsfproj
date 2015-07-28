@@ -1,3 +1,0 @@
-uses=['sfsegyread', 'sfput', 'sfgrey', 'sfbyte', 'sfgrey3', 'sftransp', 'sfmath', 'sfdd', 'sffft1', 'sfwindow', 'sfzomig3']
-data=['datasets/2D/1997_2.5D/model.segy', '/pub/datasets/2D/1997_2.5D/1997_2.5D_shots.segy.gz', 'data/bp/thexp.rsf']
-size=  214974348

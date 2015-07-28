@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfgrey', 'sfimpl2', 'sfreg2tri', 'sftri2reg', 'sfgraph', 'sfwindow', 'sfcmplx', 'sfmath', 'sfcat', 'sftransp', 'sfpad', 'sfmask', 'sfadd', 'sftrirand', 'sfspike', 'sfnoise']
-data=['data/tri/abdomen.HH', 'data/tri/sn1.HH', 'data/tri/se.HH', 'data/tri/sn2.HH', 'data/tri/see.HH', 'data/tri/he.HH', 'data/marm/marmousi.HH']
-size=    3136208

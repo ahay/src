@@ -1,5 +1,0 @@
-def grey(title,transp='n',bias=bias):
-    return '''sfgrey title="%s" transp=%s bias=%g
-           ''' % (title,transp,bias)
-Plot('plot',grey('Functions are useful'))
-

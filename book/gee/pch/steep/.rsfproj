@@ -1,3 +1,0 @@
-uses=['sfdd', 'sftpow', 'sfagc', 'sftransp', 'sfgrey', 'sflopef', 'sfdecon']
-data=['data/wz/wz.10.H']
-size=    1914080

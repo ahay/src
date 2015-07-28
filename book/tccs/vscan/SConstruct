@@ -1,4 +1,0 @@
-from rsf.tex import *
-
-End(options='reproduce',use='amsmath',color='ALL')
-

@@ -1,3 +1,0 @@
-uses=['sfjpg2byte', 'sfdd', 'sfstack', 'sfput', 'sfgrey', 'sfgrad2', 'sfeikonal', 'sfclip', 'sfcontour', 'sfmask', 'sfmath']
-data=['http://files.figshare.com/1546044/IMG_0974.jpg']
-size=    5836800

@@ -1,3 +1,0 @@
-uses=['sffern', 'sfgraph', 'sfput', 'sfspray', 'sfreal', 'sfmath', 'sfmask', 'sfdd', 'sfrtoc', 'sfadd', 'sfmandelbrot', 'sfgrey', 'sflorenz', 'sfwindow']
-data=[]
-size=   34600024

@@ -1,3 +1,0 @@
-uses=['sfspike', 'sfsmooth', 'sfgrey', 'sffft1', 'sffft3', 'sfreal', 'sfwindow', 'sfreverse', 'sfcat', 'sfspray', 'sfput', 'sflmostretch', 'sfimag', 'sfmath']
-data=[]
-size=     208640

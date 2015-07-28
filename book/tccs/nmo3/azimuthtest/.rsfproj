@@ -1,3 +1,0 @@
-uses=['sfspike', 'sfricker1', 'sfspray', 'sfdd', 'sfscale', 'sfinmo3', 'sfmath', 'sfnoise', 'sfpatch', 'sfput', 'sfwindow', 'sfdip', 'sfgrey', 'sfbyte', 'sfgrey3', 'sfcat', 'sfadd', 'sfstack', 'sfsmooth', 'sfpwpaint3', 'sfclip2', 'sfcontour3', 'sfiwarp', 'sftransp', 'sfvscan', 'sfnmo', 'sfpnmo3d', 'sfderiv', 'sfbin', 'sfwiggle', 'sfconjgrad', 'sfnmow_adj', 'sfgraph']
-data=[]
-size= 3533551148

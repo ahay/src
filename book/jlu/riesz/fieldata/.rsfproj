@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfwindow', 'sfgrey', 'sfriesz', 'sfscale', 'sfdivn', 'sflpfdenoise2', 'sfsmooth', 'sfadd']
-data=['PRIVATE']
-size=  467734400

@@ -1,3 +1,0 @@
-uses=['sfsegyread', 'sfput', 'sfspike', 'sfricker1', 'sfscale', 'sftransp', 'sfwindow', 'sfgraph', 'sfmath', 'sfcat', 'sfdd', 'sfgrey', 'sfawefd2d']
-data=['data/pluto/P15VPint_25f_padded.SEGY']
-size= 4309783708

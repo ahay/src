@@ -1,5 +1,0 @@
-from rsf.proj import *
-
-Result('francis', None,'francis',prefix=plprefix)
-
-End()

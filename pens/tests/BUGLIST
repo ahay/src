@@ -1,3 +1,0 @@
-This is a list of known issues with vplot.
-
-1) xtpen does not honor color 0 as background color until after a refresh.

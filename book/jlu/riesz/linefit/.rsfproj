@@ -1,3 +1,0 @@
-uses=['sfmath', 'sfwindow', 'sfcat', 'sfsmooth', 'sfnoise', 'sfput', 'sfgraph', 'sflpf']
-data=[]
-size=       7600

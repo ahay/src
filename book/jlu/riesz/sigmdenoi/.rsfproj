@@ -1,3 +1,0 @@
-uses=['sfsigmoid', 'sfsmooth', 'sfnoise', 'sfbandpass', 'sfriesz', 'sfwindow', 'sfscale', 'sfdivn', 'sfgrey', 'sfdip', 'sflpfdenoise2', 'sfadd', 'sfdomf']
-data=[]
-size=    2080000

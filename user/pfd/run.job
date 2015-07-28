@@ -1,9 +1,0 @@
-
-icc -openmp -inline-forceinline flexSIMD.cpp -I .
-a.out
-# result: zderiv 7.1 gf zderiv reporder 9.0 xderiv 18.8 xderiv 19.2 yderiv 14.0
-
-icc flexSerial1.cpp -I . -O3 -xHost -vec_report2 -o flexSerial1.exe
-flexSerial1.exe
-# result only xderiv is correct 11.1 gf
-
