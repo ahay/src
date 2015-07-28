@@ -35,7 +35,7 @@ insert = ""
 lang = "text"
 code = ""
 coderef = ""
-repos = "http://sourceforge.net/p/rsf/code/HEAD/tree/trunk/"
+repos = "https://github.com/ahay/src/blob/master/"
 
 def dummy(s):
     pass

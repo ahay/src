@@ -841,10 +841,11 @@ class TeXPaper(Environment):
         apply(Environment.__init__,(self,),kw)
         rsf.conf.set_options(self)
         sourceforge = 'http://sourceforge.net/p/rsf/code/HEAD/tree/trunk'
+        github = 'https://github.com/ahay/src/blob/master/'
         self.Append(ENV={'XAUTHORITY':
                          os.path.join(os.environ.get('HOME'),'.Xauthority'),
                          'DISPLAY': os.environ.get('DISPLAY'),
-			 'RSF_REPOSITORY': os.environ.get('RSF_REPOSITORY',sourceforge),
+			 'RSF_REPOSITORY': os.environ.get('RSF_REPOSITORY',github),
 			 'RSF_ENSCRIPT': WhereIs('enscript'),
                          'HOME': os.environ.get('HOME')},
                     SCANNERS=LaTeXS,

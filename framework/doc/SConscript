@@ -30,11 +30,11 @@ repository = os.environ.get('RSF_REPOSITORY')
 
 if not repository:
     if version[-3:] == 'svn':
-        repository = 'trunk'
+        repository = 'master'
     else:
-        repository = 'branches/madagascar-%s' % version
+        repository = 'madagascar-%s' % version
     
-    repository = 'http://sourceforge.net/p/rsf/code/HEAD/tree/'+repository 
+    repository = 'https://github.com/ahay/src/blob/'+repository 
 
 docs = map(lambda x: os.path.join('..','rsf',x),
            Split('sfdoc doc.py prog.py use.py'))
