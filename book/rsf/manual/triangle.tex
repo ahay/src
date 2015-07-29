@@ -1,0 +1,300 @@
+\section{Triangle smoothing (triangle.c)}\label{sec:triangle.c}
+
+
+
+
+\subsection{{sf\_triangle\_init}}
+Initializes the triangle smoothing filter.
+
+\subsubsection*{Call}
+\begin{verbatim}tr = sf_triangle_init (nbox, ndat);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+sf_triangle sf_triangle_init (int nbox /* triangle length */, 
+                              int ndat /* data length */)
+/*< initialize >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt nbox]
+   \setlength\itemsep{0pt}
+   \item[nbox] an integer which specifies the length of the filter (\texttt{int}). 
+   \item[ndat] an integer which specifies the length of the data (\texttt{int}).  
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[tr] the triangle smoothing filter. It is of type \texttt{sf\_triangle}.
+\end{desclist}
+
+
+
+
+\subsection{{fold}}\label{sec:fold}
+Folds the edges of the smoothed data, because when the data is convolved with the data, the length of the data increases and in most cases it is required that the smoothed data is of the same length as the input data.
+
+\subsubsection*{Call}
+\begin{verbatim}fold (o, d, nx, nb, np, x, tmp);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+static void fold (int o, int d, int nx, int nb, int np, 
+                  const float *x, float* tmp)
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt tmp]
+   \setlength\itemsep{0pt}
+   \item[o]   first indices of the input data (\texttt{int}).  
+   \item[d]   step size (\texttt{int}).
+   \item[nx]  data length (\texttt{int}).        
+   \item[nb]  filter length (\texttt{int}).        
+   \item[np]  length of the tmp array in the \texttt{sf\_Triangle} data structure (\texttt{int}).
+   \item[x]   a pointer to the input data (\texttt{const float}).  
+   \item[tmp] a pointer to an array in the \texttt{sf\_Triangle} data structure. Must be of type \texttt{float}
+\end{desclist}
+
+
+
+
+\subsection{{fold2}}\label{sec:fold2}
+Is the same as \hyperref[sec:fold]{\texttt{fold}} except for the fact that it copies from tmp to data, unlike the fold which does it the other way round.
+
+\subsubsection*{Call}
+\begin{verbatim}fold2 (o, d, nx, nb, np, x, tmp);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+static void fold2 (int o, int d, int nx, int nb, int np, 
+                  float *x, const float* tmp)
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt tmp]
+   \setlength\itemsep{0pt}
+   \item[o]  first indices of the input data (\texttt{int}).  
+   \item[d]  step size (\texttt{int}).
+   \item[nx]	 data length (\texttt{int}).        
+   \item[nb]	 filter length (\texttt{int}).        
+   \item[np]  length of the tmp array in the \texttt{sf\_Triangle} data structure. Must be of type \texttt{int}
+   \item[x]   a pointer to the input data (\texttt{const float}).  
+   \item[tmp] a pointer to an array in the \texttt{sf\_Triangle} data structure (\texttt{float}).
+\end{desclist}
+
+
+
+
+\subsection{{doubint}}\label{sec:doubint}
+Integrates the input data first in the backward direction and then if the input variable \texttt{der} is true it integrates the result forward.   
+
+\subsubsection*{Call}
+\begin{verbatim}doubint (nx, xx, der);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+static void doubint (int nx, float *xx, bool der)
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt der]
+   \setlength\itemsep{0pt}
+   \item[nx]  data length (\texttt{int}). 
+   \item[xx]  a pointer to the input data (\texttt{const float}). 
+   \item[der] a parameter to specify whether forward integration is required or not (\texttt{const float}).  
+\end{desclist}
+
+
+
+
+\subsection{{doubint2}}\label{sec:doubint2}
+Unlike the \hyperref[sec:doubint]{\texttt{doubint}} function this function integrates the input data first in the forward direction and then if the input variable \texttt{der} is true it integrates the result backward direction.   
+
+\subsubsection*{Call}
+\begin{verbatim}doubint2 (nx, xx, der);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+static void doubint2 (int nx, float *xx, bool der)
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt der]
+   \setlength\itemsep{0pt}
+   \item[nx]  data length (\texttt{int}). 
+   \item[xx]  a pointer to the input data (\texttt{const float}). 
+   \item[der] a parameter to specify whether forward integration is required or not (\texttt{const float}).  
+\end{desclist}
+
+
+
+
+\subsection{{triple}}\label{sec:triple}
+Does the smoothing to the input data.
+
+\subsubsection*{Call}
+\begin{verbatim}triple (o, d, nx, nb, x, tmp, box);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+static void triple (int o, int d, int nx, int nb, float* x, 
+                    const float* tmp, bool box)
+{
+    ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt box]
+   \setlength\itemsep{0pt}
+   \item[o]   first indices of the input data (\texttt{int}).  
+   \item[d]   step size (\texttt{int}).
+   \item[nx]	  data length (\texttt{int}).        
+   \item[nb]  filter length (\texttt{int}).        
+   \item[np]	  length of the tmp array in the {sf\_Triangle} data structure. Must be of type \texttt{int}
+   \item[x]   a pointer to the input data (\texttt{const float}). 
+   \item[tmp] a pointer to an array in the \texttt{sf\_Triangle} data structure (\texttt{float}).
+   \item[box] a parameter to specify whether a box filter is required (\texttt{bool}).
+\end{desclist}
+
+
+
+
+\subsection{{triple2}}\label{sec:triple2}
+Does the smoothing to the input data.
+
+\subsubsection*{Call}
+\begin{verbatim}triple2 (o, d, nx, nb, x, tmp, box);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+static void triple2 (int o, int d, int nx, int nb, 
+                    const float* x, float* tmp, bool box)
+{
+    ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt tmp]
+   \setlength\itemsep{0pt}
+   \item[o]   first indices of the input data (\texttt{int}).  
+   \item[d]   step size (\texttt{int}).
+   \item[nx]  data length (\texttt{int}).        
+   \item[nb]  filter length (\texttt{int}).        
+   \item[np]  length of the tmp array in the \texttt{sf\_Triangle} data structure. Must be of type \texttt{int}
+   \item[x]   a pointer to the input data (\texttt{const float}). 
+   \item[tmp] a pointer to an array in the \texttt{sf\_Triangle} data structure (\texttt{float}). 
+   \item[box] a parameter to specify whether a box filter is required (\texttt{bool}).
+\end{desclist}  
+
+
+
+
+\subsection{{sf\_smooth}}
+Smoothes the input data by first applying the \hyperref[sec:fold]{\texttt{fold}} function then \hyperref[sec:doubint]{\texttt{doubint}} and then \hyperref[sec:triple]{\texttt{triple}}.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_smooth (tr, o, d, der, box, x);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_smooth (sf_triangle tr  /* smoothing object */, 
+                int o, int d    /* trace sampling */, 
+                bool der        /* if derivative */, 
+                bool box        /* if box filter */,
+                float *x        /* data (smoothed in place) */)
+/*< apply triangle smoothing >*/
+{
+   ...   
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt box]
+   \setlength\itemsep{0pt}
+   \item[tr]  an object (filter) used for smoothing, box or triangle. Must be of type \texttt{sf\_triangle}. 
+   \item[o]   first indices of the input data (\texttt{int}).  
+   \item[d]   step size (\texttt{int}). 
+   \item[der] a parameter to specify whether forward integration in \texttt{doubint} is required or not (\texttt{const float}).  
+   \item[x]   a pointer to the input data (\texttt{float}). 
+   \item[box] a parameter to specify whether a box filter is required (\texttt{bool}).
+\end{desclist}  
+
+
+
+
+\subsection{{sf\_smooth2}}
+Smoothes the input data by first applying the \hyperref[sec:triple2]{\texttt{triple2}} function then \hyperref[sec:doubint2]{\texttt{doubint2}} and then \hyperref[sec:fold2]{\texttt{fold2}}.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_smooth2 (tr, o, d, der, box, x);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_smooth2 (sf_triangle tr  /* smoothing object */, 
+                int o, int d    /* trace sampling */, 
+                bool der        /* if derivative */, 
+                bool box        /* if box filter */,
+                float *x        /* data (smoothed in place) */)
+/*< apply adjoint triangle smoothing >*/
+{
+   ...   
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt box]
+   \setlength\itemsep{0pt}
+   \item[tr]  an object (filter) used for smoothing, box or triangle. Must be of type \texttt{sf\_triangle}. 
+   \item[o]   first indices of the input data (\texttt{int}).  
+   \item[d]   step size (\texttt{int}). 
+   \item[der] a parameter to specify whether forward integration in \texttt{doubint} is required or not (\texttt{const float}).  
+   \item[x]   a pointer to the input data (\texttt{float}). 
+   \item[box] a parameter to specify whether a box filter is required (\texttt{bool}).
+ \end{desclist}
+
+
+
+
+\subsection{{sf\_triangle\_close}}
+Frees the space allocated for the triangle smoothing filter.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_triangle_close(tr);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void  sf_triangle_close(sf_triangle tr)
+/*< free allocated storage >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[tr] the triangle smoothing filter. Must be of type \texttt{sf\_triangle}.            
+\end{desclist}
+
+
+
+
+

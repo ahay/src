@@ -1,0 +1,23 @@
+from rsf.proj import *
+
+Fetch('gravel2D.H','mideast')
+Flow('gravel2D','gravel2D.H','dd form=native')
+Result('gravel2D','gravel2D',
+       '''
+       window n1=500 n2=160 |
+       tpow tpow=-1 | grey pclip=92 transp=n crowd1=0.87
+       ''')
+
+
+Fetch('dune3D.H','mideast')
+Flow('dune3D','dune3D.H','dd form=native | tpow tpow=-2 | byte gainpanel=e')
+frames = []
+for frame in range(6):
+    frames.append('frame%d' % frame)
+    Plot(frames[frame],'dune3D',
+         'window n3=1 n1=600 f3=%d | grey crowd=0.99' % frame)
+Plot('top','frame5 frame4 frame3','SideBySideAniso')
+Plot('bot','frame2 frame1 frame0','SideBySideAniso')
+Result('dune3D','top bot','OverUnderAniso')
+
+End()

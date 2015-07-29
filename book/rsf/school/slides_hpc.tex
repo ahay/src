@@ -1,0 +1,420 @@
+\title[]{High performance computing and Madagascar}
+\author[]{Esteban  D\'{i}az}
+\institute{Center for Wave Phenomena \\
+Colorado School of Mines 
+\date{}
+\logo{}
+}
+\def\big#1{\begin{center} \LARGE \textbf{#1} \end{center}}
+\def\cen#1{\begin{center}        \textbf{#1} \end{center}}
+
+% ------------------------------------------------------------
+\mode<beamer> { \cwpcover }
+% ------------------------------------------------------------
+
+\begin{frame}
+    \big{Why should we bother \\ to go parallel?}
+\end{frame}
+
+\begin{frame}
+    \plot{moore_law}{width=0.95\textwidth}{ \klabellarge{35}{19}{\footnotesize  \url{http://en.wikipedia.org/wiki/Moore\%27s\_law}}}
+\end{frame}
+
+
+\begin{frame}
+    \plot{AmdahlsLaw}{width=.8\textwidth}{ \klabellarge{5}{-8}{\small \url{http://en.wikipedia.org/wiki/Amdahl\%27s\_law}}}
+\end{frame}
+
+
+
+\inputdir{XFig}
+\large
+\begin{frame} \frametitle{outline}
+\itab{{concepts of parallel computing}}
+\vfill 
+\itab{{approaches: OpenMP and MPI}}
+\vfill  
+\itab{{do you need to code parallel? Let SCons do it for you!}}
+\vfill 
+\itab{{demo example}}
+\vfill 
+\end{frame}
+
+
+
+
+\begin{frame} \frametitle{outline}
+\itab{{concepts of parallel computing}}
+\vfill 
+\itab{\gray{approaches: OpenMP and MPI}}
+\vfill  
+\itab{\gray{do you need to code parallel? Let SCons do it for you!}}
+\vfill 
+\itab{\gray{demo example}}
+\vfill 
+\end{frame}
+
+
+
+
+\begin{frame} 
+\plot{shared}{width=0.7\textwidth}{ \klabellarge{20}{+40}{shared memory system}\klabellarge{17}{-35}{\small  modified from Vladimir Bashkardin, 2010}}
+\end{frame}
+\begin{frame}
+\plot{distributed}{width=0.7\textwidth}{ \klabellarge{2}{+65}{distributed memory system}\klabellarge{17}{-20}{\small  modified from Vladimir Bashkardin, 2010}}
+\end{frame}
+
+\begin{frame} 
+\plot{hybrid}{width=0.7\textwidth}{ \klabellarge{-7}{-10}{hybrid memory system (i.e. clusters)}}
+\end{frame} 
+
+
+\begin{frame} \frametitle{outline}
+\itab{\gray{concepts of parallel computing}}
+\vfill 
+\itab{{approaches: OpenMP and MPI}}
+\vfill  
+\itab{\gray{do you need to code parallel? Let SCons do it for you!}}
+\vfill 
+\itab{\gray{demo example}}
+\vfill 
+\end{frame}
+
+
+\begin{frame}
+\itab{\bf{OpenMP:}}
+\vfill
+\itab{\itab{addresses shared memory parallelization}}
+\vfill
+\itab{\itab{supported by most of compilers}}
+\vfill
+\pause
+\itab{\bf{resources:}}
+\vfill
+\itab{\itab{\url{http://openmp.org/wp/}}}
+\vfill
+\itab{\itab{\url{http://www.cOMPunity.org/}}}
+\end{frame}
+
+
+\begin{frame}
+\itab{\bf{MPI (Message Passing Interface):}}
+\vfill
+\itab{\itab{addresses distributed memory parallelization}}
+\vfill
+\itab{\itab{You need MPI libraries}}
+\vfill
+\pause
+\itab{\bf{resources:}}
+\vfill
+\itab{\itab{\url{http://www.open-mpi.org/software/}}}
+\vfill 
+\end{frame}
+
+
+
+
+
+
+
+
+\begin{frame} \frametitle{outline}
+\itab{\gray{concepts of parallel computing}}
+\vfill 
+\itab{\gray{approaches: OpenMP and MPI}}
+\vfill  
+\itab{{do you need to code parallel? Let SCons do it for you!}}
+\vfill 
+\itab{\gray{demo example}}
+\vfill 
+\end{frame}
+
+
+\begin{frame} \frametitle{parallelization with SCons}
+
+    \itab{instead of scons use \bf{pscons} }
+    \vfill
+    \itab{it will automatically run in parallel independent Flows}
+    \vfill
+    \sep
+    \pause
+    \itab{useful environmental variables to have:}
+    \begin{alltt}
+    \$ export RSF\_THREADS='8'
+
+    \$ export RSF\_CLUSTER='localhost 8'
+
+    \$ export OMP\_NUM\_THREADS=\$RSF\_THREADS
+    \end{alltt}
+\end{frame} 
+
+
+\begin{frame}[fragile]
+\frametitle{scons vs pscons}
+
+\begin{python}
+from rsf.proj import * 
+
+
+Flow('a','input','flow a')
+
+Flow('b','input','flow b')
+
+Flow('c','a b','flow c')
+
+\end{python}
+
+\end{frame}
+
+\begin{frame}
+\plot{scons}{height=0.7\textheight}{}
+\end{frame}
+
+\begin{frame}
+\plot{pscons}{height=0.7\textheight}{}
+\end{frame}
+
+
+
+\begin{frame}[fragile]
+\vfill 
+we can do better than the sequential flow:
+\begin{python}      
+Flow('Targets','Sources','flow')
+\end{python}
+\white{      split=[n,m],reduce='cat'}
+\white{{\bf n} = axis to split. \\
+{\bf m} = lenght of dimension {\bf n}}
+\vfill 
+\end{frame}
+
+
+
+\begin{frame}[fragile] 
+\vfill 
+... by setting up some parallel variables in Flow:
+\begin{python}      
+Flow('Targets','Sources','flow',
+      split=[n,m],reduce='cat')
+\end{python}
+{\bf n} = axis to split. \\
+{\bf m} = length of dimension {\bf n}
+\vfill 
+\end{frame}
+ 
+
+
+\begin{frame}[fragile] 
+Let's consider a sequential example:
+\begin{python}
+Flow('a',None,'spike n1=8 n2=4 ')
+Flow('b','a','noise rep=y')
+\end{python}
+\end{frame}
+
+\begin{frame}
+\plot{sequential}{height=0.8\textheight}{}
+\end{frame}
+
+
+
+\begin{frame}[fragile] 
+now let's run it in parallel:
+\begin{python}
+Flow('a',None,'spike n1=8 n2=4 ')
+Flow('b','a','noise rep=y',split=[2,4],reduce='cat')
+\end{python}
+\end{frame}
+
+
+
+\begin{frame}
+\plot{parallel}{height=0.9\textheight}{}
+\end{frame}
+
+
+
+\begin{frame}[fragile]
+The variable `split` in Flow can take several options:
+\begin{python} 
+Flow('Targets','Sources','flow',
+     split=[n,m],reduce='cat') 
+\end{python}
+\pause
+\begin{python} 
+Flow('Targets','Sources','flow',
+     split=[n,'omp'],reduce='cat') 
+\end{python}
+\pause
+\begin{python} 
+Flow('Targets','Sources','flow',
+     split=[n,'mpi'],np=m,reduce='cat') 
+\end{python}
+
+other reduce commands: sfrcat, sfadd, sfinterleave ...
+\end{frame}
+
+
+
+
+\begin{frame} \frametitle{outline}
+\itab{\gray{concepts of parallel computing}}
+\vfill 
+\itab{\gray{approaches: OpenMP and MPI}}
+\vfill  
+\itab{\gray{do you need to code parallel? Let SCons do it for you!}}
+\vfill 
+\itab{{demo example}}
+\vfill 
+\end{frame}
+
+
+
+
+
+\begin{frame}[fragile]
+\begin{python}
+from rsf.proj import * 
+
+# Input data to use in example:
+# produces random numbers with uniform 
+# distribution [-1000,1000]
+
+Flow('random',None,
+    '''spike n1=1024 n2=1024 n3=128|
+       noise rep=y range=2000  type=n
+      |math output="input-1000"''')
+
+Flow('clip_seq','random','clip clip=500')
+\end{python}
+
+Let's see the timing:
+
+   \begin{alltt}
+   time pscons clip_seq.rsf
+   \end{alltt}
+\end{frame}
+
+
+
+
+\begin{frame}[fragile]
+\begin{python}
+# 1: In this case scons will split the input,
+#    process separately, and cat all the 
+#    individual outputs into one target.  
+Flow('clip_scons','random',' clip clip=500',
+      split=[3,128],reduce='cat')
+\end{python}
+
+   \begin{alltt}
+   time pscons clip_scons.rsf
+   \end{alltt}
+\end{frame}
+
+\begin{frame}[fragile]
+\begin{python}
+# 2: Now, I am specifying the type of parallelization
+#    using OpenMP, it is parallelizing over the
+#    slower axis (the third one) 
+Flow('clip_omp_scons','random',' clip clip=500',
+    split=[3,'omp'],reduce='cat')
+\end{python}
+
+   \begin{alltt}
+   time pscons clip_omp_scons.rsf
+   \end{alltt}
+\end{frame}
+
+
+
+\begin{frame}[fragile]
+\begin{python}
+# 3: In this case I use explicit parallelization 
+#    with MPI [n,'mpi'] in this case m is the
+#    number of CPU's to use, n is the axis to split
+
+Flow('clip_mpi_scons','random',' clip clip=500',
+    split=[3,'mpi'],np=8,reduce='cat')
+\end{python}
+   \begin{alltt}
+   time pscons clip_mpi_scons.rsf
+   \end{alltt}
+\end{frame}
+
+
+
+
+\begin{frame}[fragile]
+\begin{python}
+# 4: OMP parallelization in the code. It uses the
+#    number of maximum number of cores available if
+#    $OMP_NUM_THREADS doesn't exist.
+Program('clip_omp','Mclip.c')
+Flow('clip_omp_incore','random clip_omp.exe',
+     './${SOURCES[1]} clip=500')
+\end{python}
+   \begin{alltt}
+   time pscons clip_omp_incore.rsf
+   \end{alltt}
+\end{frame}
+
+
+\begin{frame}[fragile]
+\begin{python}
+# 5: Hybrid case, OMP parallelization in the code, and 
+#    extra parallelization with MPI. In a single 
+#    computer doesn't make too much sense but with
+#    a cluster it does.
+Flow('clip_hybrid','random clip_omp.exe',
+    './${SOURCES[1]} clip=500',split=[3,'mpi'],np=4,reduce='cat')
+\end{python}
+
+   \begin{alltt}
+   time pscons clip_hybrid.rsf
+   \end{alltt}
+\end{frame}
+
+
+\begin{frame} 
+Issues that affect scalability: \\
+\begin{itemize}
+\item I/O (read and write data to disk)
+\pause
+\item network 
+\pause
+\item combination of both
+\end {itemize}
+\end{frame}
+
+
+
+\begin{frame}\frametitle{conclusions}
+\begin {itemize}
+    \item parallelize as much as you can (Amdahl's law)
+    \item use pscons instead of scons
+    \item avoid I/O and network as much as possible
+    \item do code parallelization if needed
+\end {itemize}
+\end{frame}
+
+\begin{frame}\frametitle{resources}
+\itab{\url{http://ahay.org/wiki/Parallel_Computing}}
+\vfill
+\itab{Vladimir Bashkardin's, Houston 2010 school: \small \url{http://ahay.org/wikilocal/docs/Houston2010_HPC.pdf}}
+\vfill
+\itab{Dave Hale's, Houston 2011 workshop: \small \url{http://www.beg.utexas.edu/pttc/2011/2011_pres_01_03_hale.pdf}}
+\vfill
+\end{frame}
+
+\begin{frame}
+    \big{ Thank you!}
+\end{frame}
+
+\begin{frame}
+check at the Yang Liu's 2010 school for a real data example with parallelization:\\ 
+\$RSFSRC/book/rsf/usp/data/
+\end{frame}
+
+
+

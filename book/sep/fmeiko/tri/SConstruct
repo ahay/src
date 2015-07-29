@@ -1,0 +1,314 @@
+from rsf.proj import *
+import string, math
+
+################ ABDOMEN IMAGE ################################
+
+Fetch('abdomen.HH','tri')
+
+Flow('abdomen','abdomen.HH','dd form=native')
+
+def plot(title):
+    return '''
+    grey allpos=y wantaxis=n title="%s" transp=n yreverse=n 
+    screenratio=1 color=p
+    ''' % title
+
+Result('abdomen',plot('Original'))
+Plot('man','abdomen',plot(' '))
+
+Flow('smooth','abdomen','impl2 rect1=20 rect2=20 tau=1')
+Result('smooth',plot('Anisotropic Diffusion'))
+
+Flow('nd1 ed1','smooth','reg2tri nt=2500 edgeout=${TARGETS[1]}')
+Flow('nd2 ed2','nd1 ed1 smooth',
+     '''
+     tri2reg nr=2500 pattern=${SOURCES[2]}
+     egdein=${SOURCES[1]} edgeout=${TARGETS[1]} nodeout=${TARGETS[0]}
+     ''',stdout=0)
+
+Flow('subs ed0','abdomen','reg2tri nt=2000 edgeout=${TARGETS[1]}')
+Plot('tris','ed0',
+     '''
+     graph plotcol=7 min1=0 max1=255 min2=0 max2=255
+     wantaxis=n wanttitle=n screenratio=1
+     ''')
+
+for case in range(1,3):
+    ed = 'ed%d' % case
+    nd = 'nd%d' % case
+    re = 're%d' % case
+    im = 'im%d' % case
+    Plot(ed,
+         '''
+         graph plotcol=5 min1=0 max1=255 min2=0 max2=255
+         wantaxis=n title="%s"
+         screenratio=1 wheretitle=b wherexlabel=t
+         ''' % ('Unrefined','Refined')[case-1])
+    Flow(re,nd,'window n1=1')
+    Flow(im,nd,'window n1=1 f1=1')
+    Plot(nd,[re,im],
+         '''
+         cmplx ${SOURCES[:2]} | 
+         graph plotcol=6 min1=0 max1=255 min2=0 max2=255
+         wantaxis=n wanttitle=n screenratio=1 symbol='*'
+         ''',stdin=0)
+    Result(ed,['man',ed,nd],'Overlay')
+
+Flow('recn','subs','tri2reg n1=256 n2=256')
+Plot('recn',plot('Reconstructed'))
+Result('a2t','man tris recn','SideBySideIso')
+
+################## VELOCITY MODELS #############################
+
+Fetch(['sn1.HH','se.HH'],'tri')
+Flow('sn1','sn1.HH','dd form=native')
+Flow('se','se.HH','dd form=native type=int')
+
+Flow('se1','sn1 se',
+     '''
+     tri2reg n1=20 n2=10 o1=0 o2=0 d1=1 d2=1
+     edgeout=$TARGET edgein=${SOURCES[1]}
+     ''',stdout=0)
+Plot('bound','se1',
+     '''
+     window n2=80 |
+     graph plotcol=7 plotfat=20 yreverse=y wantaxis=n wanttitle=n
+     ''')
+Plot('conf','se1',
+     '''
+      window f2=80 |
+      graph plotcol=6 yreverse=y title="Conforming Triangulation"
+      ''')
+Plot('bconf','conf bound','Overlay')
+
+Flow('se0','sn1',
+     'tri2reg n1=20 n2=10 o1=0 o2=0 d1=1 d2=1 edgeout=$TARGET',stdout=0)
+Plot('nonf','se0',
+     'graph plotcol=6 yreverse=y title="Nonconforming Triangulation" ')
+Plot('nconf','nonf bound','Overlay')
+
+Flow('se2','sn1 se',
+     '''
+     tri2reg nr=200 n1=20 n2=10 o1=0 o2=0 d1=1 d2=1
+     edgeout=$TARGET edgein=${SOURCES[1]}
+     ''',stdout=0)
+Plot('ronf','se2',
+     '''
+      window f2=80 |
+      graph plotcol=6 yreverse=y title="Refinement"
+      ''')
+Plot('rconf','ronf bound','Overlay')
+
+Result('cerveny','bound nconf bconf rconf','TwoRows')
+
+##########################################################################
+
+Fetch(['sn2.HH','see.HH'],'tri')
+Flow('sn2','sn2.HH','dd form=native')
+Flow('see','see.HH','dd form=native type=int')
+
+Flow('salt see1','sn2 see',
+     '''
+     tri2reg n1=8 n2=4 o1=0 o2=0 d1=1 d2=1
+     edgeout=${TARGETS[1]} edgein=${SOURCES[1]}
+     ''')
+Plot('bound2','see1',
+     '''
+     window n2=56 |
+     graph plotcol=7 plotfat=20 yreverse=y wantaxis=n wanttitle=n
+     ''')
+Plot('conf2','see1',
+     '''
+      window f2=56 |
+      graph plotcol=6 yreverse=y title="Conforming Triangulation"
+      ''')
+Plot('bconf2','conf2 bound2','Overlay')
+
+Flow('see0','sn2',
+     'tri2reg n1=8 n2=4 o1=0 o2=0 d1=1 d2=1 edgeout=$TARGET',stdout=0)
+Plot('nonf2','see0',
+     'graph plotcol=6 yreverse=y title="Nonconforming Triangulation" ')
+Plot('nconf2','nonf2 bound2','Overlay')
+
+Flow('sn3','sn2 see',
+     '''
+     tri2reg nr=200 n1=8 n2=4 o1=0 o2=0 d1=1 d2=1
+     nodeout=$TARGET edgein=${SOURCES[1]}
+     ''',stdout=0)
+Flow('see2','sn3 see',
+     '''
+     tri2reg nr=200 n1=8 n2=4 o1=0 o2=0 d1=1 d2=1
+     edgeout=$TARGET edgein=${SOURCES[1]}
+     ''',stdout=0)
+Plot('ronf2','see2',
+     '''
+      window f2=56 |
+      graph plotcol=6 yreverse=y title="Refinement"
+      ''')
+Plot('rconf2','ronf2 bound2','Overlay')
+
+Result('susalt','bound2 nconf2 bconf2 rconf2','TwoRows')
+
+####################### HOLE ########################################
+
+Flow('angle',None,
+     'math n1=49 d1=1 output="2*acos(-1)*x1/48" | window f1=1')
+Flow('x1','angle',"math output='3+1.5*cos(input)' ")
+Flow('y1','angle','math output="3+1.5*sin(input)" ')
+Flow('inner','x1 y1','cat axis=2 ${SOURCES[1]}')
+Flow('x2','angle','math output="6+6*cos(input)" ')
+Flow('y2','angle','math output="6+6*sin(input)" ')
+Flow('outer','x2 y2','cat axis=2 ${SOURCES[1]}')
+Flow('hole','inner outer','cat axis=1 ${SOURCES[1]} | transp | pad n1=3')
+
+Fetch('he.HH','tri')
+Flow('he','he.HH','dd form=native type=int')
+
+Flow('e0','hole he',
+     '''
+     tri2reg n1=12 n2=12 
+     edgeout=$TARGET edgein=${SOURCES[1]}
+     ''',stdout=0)
+Plot('hole','e0',
+     '''
+     window n2=96 |
+     graph plotcol=7 plotfat=20  wantaxis=n wanttitle=n
+     ''')
+Plot('hole0','e0',
+     '''
+     window f2=96 |
+     graph plotcol=6 title="Delaunay Triangulation"
+     ''')
+Plot('out0','hole0 hole','Overlay')
+
+Flow('hole1 e1','hole he',
+     '''
+     tri2reg nr=200 n1=12 n2=12 nodeout=${TARGETS[0]}
+     edgeout=${TARGETS[1]} edgein=${SOURCES[1]}
+     ''',stdout=0)
+Plot('hole1','e1',
+     'window f2=96 | graph plotcol=6 title="First Refinement" ')
+Plot('out1','hole1 hole','Overlay')
+
+Flow('hole2 e2','hole1 he',
+     '''
+     tri2reg nr=200 n1=12 n2=12 nodeout=${TARGETS[0]}
+     edgeout=${TARGETS[1]} edgein=${SOURCES[1]}
+     ''',stdout=0)
+Plot('hole2','e2',
+     'window f2=96 | graph plotcol=6 title="Second Refinement" ')
+Plot('out2','hole2 hole','Overlay')
+
+Flow('hole3 e3','hole2 he',
+     '''
+     tri2reg nr=200 n1=12 n2=12 nodeout=${TARGETS[0]}
+     edgeout=${TARGETS[1]} edgein=${SOURCES[1]}
+     ''',stdout=0)
+Plot('hole3','e3',
+     'window f2=96 | graph plotcol=6 title="Third Refinement" ')
+Plot('out3','hole3 hole','Overlay')
+
+Result('hole','out0 out1 out2','SideBySideIso')
+
+############################# SPHERE ####################################
+
+
+Flow('sphere2',None,
+     '''
+     math n1=101 n2=101 d1=0.01 d2=0.01 output="0.25-(x2-0.5)^2-(x1-0.5)^2"
+     ''')
+Flow('sphere','sphere2',
+     '''
+     mask min=0 | dd type=f | add mode=p $SOURCE | math output="sqrt(input)"
+     ''')
+
+Plot('sphere','grey allpos=y wantaxis=n pclip=100 title=Original')
+
+Flow('sphrec sphed','sphere',
+     'reg2tri nt=500 edgeout=${TARGETS[1]} | tri2reg pattern=$SOURCE')
+Plot('sphed','graph plotcol=7 wantaxis=n wanttitle=n')
+Plot('sphrec','grey allpos=y wantaxis=n pclip=100 title=Reconstruction')
+
+Result('sphere','sphere sphed sphrec','SideBySideIso')
+
+###################### MARMOUSI ##########################################
+
+Fetch('marmousi.HH','marm')
+
+Flow('marm','marmousi.HH','dd form=native')
+Plot('marm','grey allpos=y pclip=100 title="Smoothed Marmousi Model" ')
+
+Flow('mrec','marm',
+     'reg2tri nt=10000 zero=3000 | trirand | tri2reg pattern=$SOURCE')
+Plot('mrec','grey allpos=y pclip=100 title="Reconstruction" ')
+
+Plot('mdif','marm mrec',
+     'add scale=1,-1 ${SOURCES[1]} | grey clip=4432.16 title="Difference" ')
+Result('marmousi','marm mrec mdif','SideBySideIso')
+
+###################### SQUARE ##############################################
+
+Flow('square1',None,'spike n1=2 n2=100 mag=0.5 | noise type=n seed=2004')
+
+square = Split('''
+0.25 0.25
+0.25 0.75
+0.75 0.75
+0.75 0.25
+0.6 0.25
+0.6 0.6
+0.4 0.6
+0.4 0.25
+''')
+
+edge = Split('''
+3 4
+4 5
+5 6
+6 7
+7 8
+8 9
+9 10
+10 3
+''')
+
+Flow('square0.asc',None,
+     'echo %s n1=2 n2=%d data_format=ascii_float in=$TARGET' %
+     (string.join(square),len(square)/2))
+Flow('square','square0.asc square1',
+     'dd form=native | cat axis=2 ${SOURCES[1]} | pad n1=3')
+
+Flow('sqe0','square',
+     'tri2reg n1=10 n2=10 o1=0 o2=0 d1=0.1 d2=0.1 edgeout=$TARGET',
+     stdout=0)
+Plot('sqe0',
+     '''
+     graph plotcol=7 min1=0 max1=1 min2=0 max2=1 
+     title="Nonconforming Triangulation"
+     ''')
+
+Flow('sqe.asc',None,'echo %s n1=2 n2=%d data_format=ascii_int in=$TARGET' %
+     (string.join(edge),len(edge)/2))
+Flow('sqe1','square sqe.asc',
+     '''
+     tri2reg n1=10 n2=10 o1=0 o2=0 d1=0.1 d2=0.1
+     edgeout=$TARGET edgein=${SOURCES[1]}
+     ''',stdout=0)
+Plot('wind','sqe1',
+     '''
+     window n2=8 |
+     graph plotcol=6 min1=0 max1=1 min2=0 max2=1
+     plotfat=20  wantaxis=n wanttitle=n
+     ''')
+Plot('sqe1',
+     '''
+     window f2=8 |
+     graph plotcol=7 min1=0 max1=1 min2=0 max2=1
+     title="Conforming Triangulation"
+     ''')
+Plot('square0','wind sqe0','Overlay')
+Plot('square1','wind sqe1','Overlay')
+
+Result('conform','square0 square1','SideBySideIso')
+
+End()

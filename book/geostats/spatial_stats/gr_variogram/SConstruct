@@ -1,0 +1,200 @@
+#
+# Fast "general relative" variogram computation with FFTs  
+#
+# James W. Jennings Jr.
+# Research Scientist
+# 
+# Bureau of Economic Geology
+# John A. and Katherine G. Jackson School of Geosciences
+# University of Texas at Austin
+# University Station, Box X
+# Austin, TX 78713-8924
+# 
+# 512-471-1534 (voice)
+# 512-471-0140 (fax)
+# mailto:jim.jennings@beg.utexas.edu
+# http://www.beg.utexas.edu/staffinfo/jennings01.htm
+#
+# August 2006
+#
+# $Id: SConstruct 5879 2010-05-03 01:44:26Z ivlad $
+#
+
+#
+# Setting up
+#
+
+from rsf.proj import *
+import rfield
+import spatial_stats
+
+#
+# Set up 1D, 2D, and 3D example random field parameter dictionaries
+#
+
+val_real_par = range(3)             # value realization parameters
+
+val_real_par[0] = {'name':'val1D_', 'nr':1, 'seed':1}
+val_real_par[1] = {'name':'val2D_', 'nr':1, 'seed':1}
+val_real_par[2] = {'name':'val3D_', 'nr':1, 'seed':1}
+
+ind_real_par = range(3)             # indicator realization parameters
+
+ind_real_par[0] = {'name':'ind1D_', 'nr':1, 'seed':2}
+ind_real_par[1] = {'name':'ind2D_', 'nr':1, 'seed':2}
+ind_real_par[2] = {'name':'ind3D_', 'nr':1, 'seed':2}
+
+grid_par = range(3)                 # grid parameters
+
+grid_par[0] = {'nx': 512, 'ny':   1, 'nz':   1,
+               'dx':   1, 'dy':   1, 'dz':   1}
+                  
+grid_par[1] = {'nx': 128, 'ny':  64, 'nz':   1,
+               'dx':   1, 'dy':   1, 'dz':   1}
+
+# original                  
+grid_par[2] = {'nx':  64, 'ny':  64, 'nz':  16,
+               'dx':   1, 'dy':   1, 'dz':   1}
+
+                                            # value covariance parameters
+
+val_covar_par = {   'taper_switch':1,       # covariance taper switch
+                    'alpha':1,              # covariance shape parameter
+                    'oriu':[ 5,1,0],        # covariance range orientation vectors
+                    'oriv':[-1,5,0], 
+                    'oriw':[ 0,0,1],
+                    'ru'  :10,              # covariance range parameters
+                    'rv'  :2,   
+                    'rw'  :1}
+
+                                            # indicator covariance parameters
+
+ind_covar_par = {   'taper_switch':1,       # covariance taper switch
+                    'alpha':2,              # covariance shape parameter
+                    'oriu':[ 1,0,0],        # covariance range orientation vectors
+                    'oriv':[ 0,1,0], 
+                    'oriw':[ 0,0,1],
+                    'ru'  :10,              # covariance range parameters
+                    'rv'  :10,   
+                    'rw'  :1}
+
+#
+# Set up 1D, 2D, and 3D example variogram parameter dictionaries
+#
+
+par = grid_par
+
+for i in range(3): 
+    par[i]['ind'] = ind_real_par[i]['name']+'ind'
+    par[i]['val'] = val_real_par[i]['name']+'val'
+
+#
+# Build example random fields
+#
+
+for i in range(3): 
+    rfield.rfield(ind_real_par[i],grid_par[i],ind_covar_par)
+    rfield.rfield(val_real_par[i],grid_par[i],val_covar_par)
+
+#
+# Make example indicator files
+#
+
+for i in range(3):
+    Flow (ind_real_par[i]['name']+'ind',
+          ind_real_par[i]['name']+'sim_01_real',
+          'mask min=-1.5 | dd type=float')
+
+#
+# Add a positive mean of 10 to the value arrays and apply the mask
+#
+# (The general relative variogram should only be applied to strictly
+# positive data.)
+#
+
+for i in range(3):
+    Flow ( val_real_par[i]['name']+'val',
+          [val_real_par[i]['name']+'sim_01_real',
+           ind_real_par[i]['name']+'ind'],
+          'math output="(val+10)*ind" val=${SOURCES[0]} ind=${SOURCES[1]}')
+
+#
+# Calculate the variograms
+#
+
+rules = [{},{},{}]
+
+for i in range(3): 
+    spatial_stats.gr_variogram(par[i],rules[i])
+    list = rules[i].keys()
+    list.sort()
+    for target in list:
+        Flow (target,rules[i][target][0],rules[i][target][1])
+
+#          
+# Plot results
+#
+ 
+plots = range(3)
+
+for i in range(3): 
+    plots[i] = [par[i]['ind'],
+                par[i]['val'],
+                par[i]['ind']+'_pairs',
+                par[i]['val']+'_vgr']
+
+#          
+# 1D plots
+#
+ 
+if (par[0]['nx'] > 50):
+    circles = ''
+else:
+    circles = 'symbol="o" symbolsz=10'
+    
+for i in (plots[0]):
+    Result (i,'graph title="%s" %s' % (i,circles) )
+
+#          
+# 2D plots	
+#          
+    
+screen_ratio  = ( float(par[1]['ny']*par[1]['dy'])
+                 /float(par[1]['nx']*par[1]['dx']) )
+screen_height = 10
+if (screen_height/screen_ratio > 13):
+    screen_height = 13*screen_ratio
+
+for i in (plots[1]):
+    if (i == par[1]['val']):
+        allpos = 'n'
+    else:
+        allpos = 'y'
+    Result (i,
+            '''
+            grey title="%s" transp=n yreverse=n allpos=%s
+            pclip=100 color=j wantscalebar=y gainpanel=a
+            screenratio=%g screenht=%g
+            ''' % (i,allpos,screen_ratio,screen_height) )
+
+#          
+# 3D plots
+#          
+
+for i in (plots[2]):
+    if (i == par[2]['val']):
+        allpos = 'n'
+    else:
+        allpos = 'y'
+    Result (i,
+            '''
+            transp plane=12 | transp plane=13 | reverse which=1 |
+            byte bar=bar.rsf gainpanel=all pclip=100 wantscalebar=y allpos=%s |
+            grey3 title="%s" 
+            color=j movie=0 flat=y scalebar=y bar=bar.rsf
+            frame1=%d frame2=%d frame3=%d point1=0.5 point2=0.5 > $TARGET &&
+            rm -f bar.rsf
+            ''' % (allpos,i,par[2]['nz']/2,par[2]['nx']/2,par[2]['ny']/2), 
+            stdout=0 )
+
+End ()

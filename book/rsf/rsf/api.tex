@@ -1,0 +1,410 @@
+\title{Guide to RSF API}
+\email{sergey.fomel@beg.utexas.edu}
+\author{Sergey Fomel}
+\lefthead{Fomel}
+\righthead{RSF API}
+
+\maketitle
+
+\begin{abstract}
+
+  This guide explains the RSF programming interface.
+
+\end{abstract}
+
+\section{Introduction}
+
+To work with RSF files in your own programs, you may need to use an
+appropriate programming interface. We will demonstrate the interface in
+different languages using a simple example. The example is a clipping program.
+It reads and writes RSF files and accesses parameters both from the input file
+and the command line. The input is processed trace by trace. This is not
+necessarily the most efficient approach\footnote{Compare with the \href{http://svn.sourceforge.net/viewcvs.cgi/rsf/trunk/filt/proc/Mclip.c?view=markup}{library clip program}.} but it suffices for a simple demonstration.
+
+\section{C interface}
+
+\lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\newcommand{\rsfclip}{\RSF/api/c/test/clip.c}
+
+The C clip function is listed below.
+\lstinputlisting[frame=single]{\rsfclip}
+Let us examine it in detail. 
+
+\lstinputlisting[firstline=3,lastline=3,frame=single]{\rsfclip}
+The include preprocessing directive is required to access the RSF interface. 
+
+\lstinputlisting[firstline=9,lastline=9,frame=single]{\rsfclip}
+RSF data files are defined with an abstract \texttt{sf\_file} data type. An
+abstract data type means that the contents of it are not publicly declared,
+and all operations on \texttt{sf\_file} objects should be performed with
+library functions. This is analogous to \texttt{FILE *} data type used in
+\texttt{stdio.h} and as close as C gets to an object-oriented style of
+programming \cite[]{cbook}.
+
+\lstinputlisting[firstline=11,lastline=12,frame=single]{\rsfclip}
+Before using any of the other functions, you must call
+\texttt{sf\_init}. This function parses the command line and
+initializes an internally stored table of command-line parameters.
+
+\lstinputlisting[firstline=13,lastline=16,frame=single]{\rsfclip}
+The input and output RSF file objects are created with \texttt{sf\_input} and
+\texttt{sf\_output} constructor functions. Both these functions take a string
+argument. The string may refer to a file name or a file tag. For example, if
+the command line contains \texttt{vel=velocity.rsf}, then both
+\texttt{sf\_input("velocity.rsf")} and \texttt{sf\_input("vel")} are
+acceptable. Two tags are special: \texttt{"in"} refers to the file in the
+standard input and \texttt{"out"} refers to the file in the standard
+output. 
+
+\lstinputlisting[firstline=18,lastline=20,frame=single]{\rsfclip} 
+RSF files can store data of different types (character, integer,
+floating point, complex). We extract the data type of the input file
+with the library \texttt{sf\_gettype} function and check if it
+represents floating point numbers. If not, the program is aborted with
+an error message, using the \texttt{sf\_error} function.  It is
+generally a good idea to check the input for user errors and, if they
+cannot be corrected, to take a safe exit.
+
+\lstinputlisting[firstline=22,lastline=26,frame=single]{\rsfclip}
+Conceptually, the RSF data model is a multidimensional hypercube. By
+convention, the dimensions of the cube are stored in \texttt{n1=},
+\texttt{n2=}, etc. parameters. The \texttt{n1} parameter refers to the
+fastest axis. If the input dataset is a collection of traces,
+\texttt{n1} refers to the trace length. We extract it using the
+\texttt{sf\_histint} function (integer parameter from history) and
+abort if no value for \texttt{n1} is found. We could proceed in a
+similar fashion, extracting \texttt{n2}, \texttt{n3}, etc. If we are
+interested in the total number of traces, like in the clip example, a
+shortcut is to use the \texttt{sf\_leftsize} function. Calling
+\texttt{sf\_leftsize(in,0)} returns the total number of elements in
+the hypercube (the product of \texttt{n1}, \texttt{n2}, etc.), calling
+\texttt{sf\_leftsize(in,1)} returns the number of traces (the product
+of \texttt{n2}, \texttt{n3}, etc.), calling
+\texttt{sf\_leftsize(in,2)} returns the product of \texttt{n3},
+\texttt{n4}, etc. By calling \texttt{sf\_leftsize}, we avoid the need
+to extract additional parameters for the hypercube dimensions that we
+are not interested in.
+
+\lstinputlisting[firstline=28,lastline=29,frame=single]{\rsfclip} 
+The clip parameter is read from the command line, where it can be
+specified, for example, as \texttt{clip=10}. The parameter has the
+\texttt{float} type, therefore we read it with the
+\texttt{sf\_getfloat} function. If no \texttt{clip=} parameter is
+found among the command line arguments, the program is aborted with an
+error message using the \texttt{sf\_error} function.
+
+\lstinputlisting[firstline=31,lastline=32,frame=single]{\rsfclip} 
+Next, we allocate an array of floating-point numbers to store a trace
+with the library \texttt{sf\_floatalloc} function. Unlike the standard
+\texttt{malloc} the RSF allocation function checks for errors and
+either terminates the program or returns a valid pointer.
+
+\lstinputlisting[firstline=34,lastline=48,frame=single]{\rsfclip} 
+The rest of the program is straightforward. We loop over all available
+traces, read each trace, clip it and right the output out. The syntax
+of \texttt{sf\_floatread} and \texttt{sf\_floatwrite} functions is
+similar to the syntax of the C standard \texttt{fread} and
+\texttt{fwrite} function except that the type of the element is
+specified explicitly in the function name and that the input and
+output files have the RSF type \texttt{sf\_file}.
+
+\subsection{Compiling}
+
+To compile the \texttt{clip} program, run
+\begin{verbatim}
+cc clip.c -I$RSFROOT/include -L$RSFROOT/lib -lrsf -lm
+\end{verbatim}
+Change \texttt{cc} to the C compiler appropriate for your system and include
+additional compiler flags if necessary. The flags that RSF typically uses are
+in \\ \texttt{\$RSFROOT/share/madagascar/etc/config.py}.
+
+\section{C++ interface}
+
+\lstset{language=c++}
+\renewcommand{\rsfclip}{\RSF/api/c++/test/clip.cc}
+
+The C++ clip function is listed below.
+
+\lstinputlisting[frame=single]{\rsfclip}
+Let us examine it line by line. 
+
+\lstinputlisting[firstline=4,lastline=4,frame=single]{\rsfclip}
+Including ``\texttt{rsf.hh}'' is required for accessing the RSF C++
+interface.
+
+\lstinputlisting[firstline=8,lastline=8,frame=single]{\rsfclip}
+A call to \texttt{sf\_init} is required to initialize the internally stored
+table of command-line arguments.
+
+\lstinputlisting[firstline=10,lastline=11,frame=single]{\rsfclip}
+Two classes: \texttt{iRSF} and \texttt{oRSF} are used to define input and
+output files. For simplicity, the command-line parameters are also handled 
+as an \texttt{iRSF} object, initialized with zero.
+
+\lstinputlisting[firstline=16,lastline=17,frame=single]{\rsfclip}
+Next, we read the data dimensions from the input RSF file object called
+\texttt{in}: the trace length is a parameter called ``\texttt{n1}'' and the
+number of traces is the size of \texttt{in} remaining after excluding the
+first dimension. It is extracted with the \texttt{size} method.
+
+\lstinputlisting[firstline=19,lastline=19,frame=single]{\rsfclip} 
+The clip parameter should be specified on the command line, for
+example, as \texttt{clip=10}. It is extracted with the \texttt{get}
+method of \texttt{iRSF} class from the \texttt{par} object.
+
+\lstinputlisting[firstline=21,lastline=21,frame=single]{\rsfclip}
+The trace object has the single-precision floating-point type and is a
+1-D array of length \texttt{n1}. It is declared and allocated using
+the \texttt{valarray} template class from the standard C++ library.
+
+\lstinputlisting[firstline=23,lastline=32,frame=single]{\rsfclip}
+Next, we loop through the traces, read each trace from \texttt{in}, clip it
+and write the output to \texttt{out}.
+
+\subsection{Compiling}
+
+To compile the C++ program, run
+\begin{verbatim}
+c++ clip.cc -I$RSFROOT/include -L$RSFROOT/lib -lrsf++ -lrsf -lm
+\end{verbatim}
+Change \texttt{c++} to the C++ compiler appropriate for your system and
+include additional compiler flags if necessary. The flags that RSF typically
+uses are in \\ \texttt{\$RSFROOT/share/madagascar/etc/config.py}.
+
+\section{Fortran-77 interface}
+
+\lstset{language=fortran}
+\renewcommand{\rsfclip}{\RSF/api/f77/test/clip.f}
+
+The Fortran-77 clip function is listed below.
+
+\lstinputlisting[frame=single]{\rsfclip}
+Let us examine it in detail.
+
+\lstinputlisting[firstline=8,lastline=8,frame=single]{\rsfclip}
+The program starts with a call to \texttt{sf\_init}, which initializes the
+command-line interface.
+
+\lstinputlisting[firstline=9,lastline=10,frame=single]{\rsfclip}
+The input and output files are created with calls to
+\texttt{sf\_input} and \texttt{sf\_output}. Because of the absence of
+derived types in Fortran-77, we use simple integer pointers to
+represent RSF files. Both \texttt{sf\_input} and \texttt{sf\_output}
+accept a character string, which may refer to a file name or a file
+tag. For example, if the command line contains
+\texttt{vel=velocity.rsf}, then both
+\texttt{sf\_input("velocity.rsf")} and \texttt{sf\_input("vel")} are
+acceptable. Two tags are special: \texttt{"in"} refers to the file in
+the standard input and \texttt{"out"} refers to the file in the
+standard output.
+
+\lstinputlisting[firstline=12,lastline=13,frame=single]{\rsfclip}
+RSF files can store data of different types (character, integer,
+floating point, complex). The function \texttt{sf\_gettype} checks the
+type of data stored in the RSF file. We make sure that the type
+corresponds to floating-point numbers. If not, the program is aborted
+with an error message, using the \texttt{sf\_error} function.  It is
+generally a good idea to check the input for user errors and, if they
+cannot be corrected, to take a safe exit.
+
+\lstinputlisting[firstline=15,lastline=20,frame=single]{\rsfclip}
+Conceptually, the RSF data model is a multidimensional hypercube. By
+convention, the dimensions of the cube are stored in \texttt{n1=},
+\texttt{n2=}, etc. parameters. The \texttt{n1} parameter refers to the
+fastest axis. If the input dataset is a collection of traces,
+\texttt{n1} refers to the trace length. We extract it using the
+\texttt{sf\_histint} function (integer parameter from history) and
+abort if no value for \texttt{n1} is found. Since Fortran-77 cannot
+easily handle dynamic allocation, we also need to check that
+\texttt{n1} is not larger than the size of the statically allocated
+array. We could proceed in a similar fashion, extracting \texttt{n2},
+\texttt{n3}, etc. If we are interested in the total number of traces,
+like in the clip example, a shortcut is to use the
+\texttt{sf\_leftsize} function.  Calling \texttt{sf\_leftsize(in,0)}
+returns the total number of elements in the hypercube (the product of
+\texttt{n1}, \texttt{n2}, etc.), calling \texttt{sf\_leftsize(in,1)}
+returns the number of traces (the product of \texttt{n2}, \texttt{n3},
+etc.), calling \texttt{sf\_leftsize(in,2)} returns the product of
+\texttt{n3}, \texttt{n4}, etc. By calling \texttt{sf\_leftsize}, we
+avoid the need to extract additional parameters for the hypercube
+dimensions that we are not interested in.
+
+\lstinputlisting[firstline=22,lastline=23,frame=single]{\rsfclip}
+The clip parameter is read from the command line, where it can be
+specified, for example, as \texttt{clip=10}. The parameter has the
+\texttt{float} type, therefore we read it with the
+\texttt{sf\_getfloat} function. If no \texttt{clip=} parameter is
+found among the command line arguments, the program is aborted with an
+error message using the \texttt{sf\_error} function.
+
+\lstinputlisting[firstline=25,lastline=37,frame=single]{\rsfclip}
+Finally, we do the actual work: loop over input traces, reading,
+clipping, and writing out each trace.
+
+\subsection{Compiling}
+
+To compile the Fortran-77 program, run
+\begin{verbatim}
+f77 clip.f -L$RSFROOT/lib -lrsff -lrsf -lm
+\end{verbatim}
+Change \texttt{f77} to the Fortran compiler appropriate for your system and
+include additional compiler flags if necessary. The flags that RSF typically
+uses are in \\ \texttt{\$RSFROOT/share/madagascar/etc/config.py}.
+
+\section{Fortran-90 interface}
+
+\lstset{language=fortran}
+\renewcommand{\rsfclip}{\RSF/api/f90/test/clip.f90}
+
+The Fortran-90 clip function is listed below.
+
+\lstinputlisting[frame=single]{\rsfclip}
+
+Let us examine it in detail.
+
+\lstinputlisting[firstline=2,lastline=2,frame=single]{\rsfclip}
+The program starts with importing the \texttt{rsf} module.
+
+\lstinputlisting[firstline=10,lastline=10,frame=single]{\rsfclip}
+A call to \texttt{sf\_init} is needed to initialize the command-line
+interface.
+
+\lstinputlisting[firstline=11,lastline=12,frame=single]{\rsfclip}
+The standard input and output files are initialized with
+\texttt{rsf\_input} and \texttt{rsf\_output} functions. Both functions
+accept optional arguments. For example, if the command line contains
+\texttt{vel=velocity.rsf}, then both
+\texttt{rsf\_input("velocity.rsf")} and \texttt{rsf\_input("vel")} are
+acceptable.
+
+\lstinputlisting[firstline=14,lastline=15,frame=single]{\rsfclip}
+A call to \texttt{from\_par} extracts the ``\texttt{n1}'' parameter
+from the input file. Conceptually, the RSF data model is a
+multidimensional hypercube.  The \texttt{n1} parameter refers to the
+fastest axis. If the input dataset is a collection of traces,
+\texttt{n1} corresponds to the trace length. We could proceed in a
+similar fashion, extracting \texttt{n2}, \texttt{n3}, etc. If we are
+interested in the total number of traces, like in the clip example, a
+shortcut is to use the \texttt{filesize} function.  Calling
+\texttt{filesize(in)} returns the total number of elements in the
+hypercube (the product of \texttt{n1}, \texttt{n2}, etc.), calling
+\texttt{filesize(in,1)} returns the number of traces (the product of
+\texttt{n2}, \texttt{n3}, etc.), calling \texttt{filesize(in,2)}
+returns the product of \texttt{n3}, \texttt{n4}, etc. By calling
+\texttt{filesize}, we avoid the need to extract additional parameters
+for the hypercube dimensions that we are not interested in.
+
+\lstinputlisting[firstline=17,lastline=17,frame=single]{\rsfclip}
+The clip parameter is read from the command line, where it can be
+specified, for example, as \texttt{clip=10}. If we knew a good default
+value for \texttt{clip}, we could specify it with an optional
+argument, i.e. \texttt{call~from\_par("clip",clip,default)}.
+
+\lstinputlisting[firstline=21,lastline=28,frame=single]{\rsfclip}
+Finally, we do the actual work: loop over input traces, reading,
+clipping, and writing out each trace.
+
+\subsection{Compiling}
+To compile the Fortran-90 program, run
+\begin{verbatim}
+f90 clip.f90 -I$RSFROOT/include -L$RSFROOT/lib -lrsff90 -lrsf -lm
+\end{verbatim}
+Change \texttt{f90} to the Fortran-90 compiler appropriate for your system and
+include additional compiler flags if necessary. The flags that RSF typically
+uses are in \\ \texttt{\$RSFROOT/share/madagascar/etc/config.py}.
+
+\section{Python interface}
+
+\lstset{language=python}
+\renewcommand{\rsfclip}{\RSF/api/python/test/clip.py}
+
+The Python clip script is listed below.
+
+\lstinputlisting[frame=single]{\rsfclip}
+Let us examine it in detail. 
+
+\lstinputlisting[firstline=3,lastline=4,frame=single]{\rsfclip}
+The script starts with importing the \texttt{numpy} and \texttt{rsf}
+modules.
+
+\lstinputlisting[firstline=6,lastline=9,frame=single]{\rsfclip}
+Next, we initialize the command line interface and the standard input and
+output files. We also make sure that the input file type is floating point.
+
+\lstinputlisting[firstline=11,lastline=13,frame=single]{\rsfclip}
+We extract the ``\texttt{n1}'' parameter from the input file.
+Conceptually, the RSF data model is a multidimensional hypercube.  The
+\texttt{n1} parameter refers to the fastest axis. If the input dataset
+is a collection of traces, \texttt{n1} corresponds to the trace
+length. We could proceed in a similar fashion, extracting \texttt{n2},
+\texttt{n3}, etc. If we are interested in the total number of traces,
+like in the clip example, a shortcut is to use the \texttt{size}
+method of the \texttt{Input} class1.  Calling \texttt{size(0)} returns
+the total number of elements in the hypercube (the product of
+\texttt{n1}, \texttt{n2}, etc.), calling \texttt{size(1)} returns the
+number of traces (the product of \texttt{n2}, \texttt{n3}, etc.),
+calling \texttt{size(2)} returns the product of \texttt{n3},
+\texttt{n4}, etc.
+
+\lstinputlisting[firstline=15,lastline=16,frame=single]{\rsfclip}
+The clip parameter is read from the command line, where it can be specified,
+for example, as \texttt{clip=10}.
+
+\lstinputlisting[firstline=20,lastline=23,frame=single]{\rsfclip}
+Finally, we do the actual work: loop over input traces, reading,
+clipping, and writing out each trace.
+
+\subsection{Compiling}
+
+The python script does not require compilation. Simply make sure to set
+\texttt{PYTHONPATH} and \texttt{LD\_LIBRARY\_PATH} according to \\
+\texttt{\$RSFROOT/etc/madagascar/env.sh} or \texttt{\$RSFROOT/etc/madagascar/env.csh}.
+
+\section{MATLAB interface} % a meaningless comment
+
+\lstset{language=matlab}
+\renewcommand{\rsfclip}{\RSF/api/matlab/test/clip.m}
+
+The MATLAB clip function is listed below.
+
+\lstinputlisting[frame=single]{\rsfclip}
+
+Let us examine it in detail. 
+
+\lstinputlisting[firstline=4,lastline=4,frame=single]{\rsfclip}
+We start by figuring out the input file dimensions.
+
+\lstinputlisting[firstline=5,lastline=6,frame=single]{\rsfclip}
+The first dimension is the trace length, the product of all other
+dimensions correspond to the number of traces.
+
+\lstinputlisting[firstline=7,lastline=8,frame=single]{\rsfclip}
+Next, we allocate the trace array and create an output file.
+
+\lstinputlisting[firstline=10,lastline=15,frame=single]{\rsfclip}
+Finally, we do the actual work: loop over input traces, reading,
+clipping, and writing out each trace.
+
+\subsection{Compiling}
+
+The MATLAB script does not require compilation. Simply make sure that
+\texttt{\$RSFROOT/lib} is in \texttt{MATLABPATH} and \texttt{LD\_LIBRARY\_PATH}.
+
+\section{Installation} 
+
+To install the interface to a particular language, use \texttt{API=}
+parameter in the RSF configuration. For example, to to install C++ and
+Fortran-90 API bindings in addition to the basic package, run
+\begin{verbatim}
+scons API=c++,f90 config
+\end{verbatim}
+Only the C interface is configured by default. The configuration
+parameters are stored in \\ \texttt{\$RSFROOT/share/madagascar/etc/config.py}.
+
+\bibliographystyle{seg} 
+\bibliography{api}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% End: 

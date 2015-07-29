@@ -1,0 +1,43 @@
+from rsf.proj import *
+import fdmod,gfield
+
+par = {
+    'nx':1200, 'ox':0, 'dx':1.0, 'lx':'x','ux':'m',
+    'nz':800,  'oz':0, 'dz':1.0, 'lz':'z','uz':'m',
+    'ru':30,'rv':6,'aa':1,'ff':45
+    }
+fdmod.param(par)
+
+# ------------------------------------------------------------
+
+gfield.execute('gg',1,par)
+Result('gg',fdmod.cgrey('color=E',par))
+
+# ------------------------------------------------------------
+
+Result('ggz','gg','stack norm=y axis=1 | graph')
+Result('ggx','gg','stack norm=y axis=2 | graph')
+
+# ------------------------------------------------------------
+
+Flow(  'vo','gg','math output="1500+x1"')
+Result('vo',fdmod.cgrey('bias=1500 allpos=y',par))
+
+Flow('nu','gg','scale rscale=0.1')
+Flow('vv','vo nu',
+     '''
+     math v=${SOURCES[0]} n=${SOURCES[1]}
+     output="v/sqrt(1+n)"
+     ''' % par)
+Result('vv',fdmod.cgrey('bias=1500 allpos=y',par))
+
+Flow('ivo','vo','math output=1/input^2 | stack')
+Flow('ivv','vv','math output=1/input^2 | stack')
+
+Result('ivall','ivo ivv',
+       '''
+       cat axis=2 space=n ${SOURCES[1]} |
+       graph
+       ''')
+
+End()

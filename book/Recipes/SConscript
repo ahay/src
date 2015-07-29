@@ -1,0 +1,8 @@
+Import('env pkgdir')
+
+import os
+
+for src in Glob('*.py'):
+    pyc = str(src)+'c'
+    env.RSF_Pycompile(pyc,src)	
+    env.Install(os.path.join(pkgdir,'recipes'),[src,pyc])

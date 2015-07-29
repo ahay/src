@@ -1,0 +1,32 @@
+from rsf.proj import *
+
+Flow('sin',None,'math n1=90000 label1=Sample d1=1 output="sin(0.0001*x1)" ')
+Plot('sin','window j1=100 | graph title=Signal')
+
+Flow('noi','sin','noise seed=2011 var=0.01')
+Plot('noi','window j1=100 | graph title=Signal+Noise')
+
+Result('noi','sin noi','OverUnderAniso')
+
+pars = {
+    'default': '',
+    'variance': 'var=0.11 mean=1',
+    'uniform':  'type=n',
+    'range':    'type=n mean=0.5 range=2'
+}
+
+for case in pars.keys():
+    Flow(case,'sin','noise rep=y seed=2011  %s ' % pars[case])
+    Plot(case,'window j1=100 | graph title="%s"' % pars[case])
+
+    hist = case+'-hist'
+    Plot(hist,case,
+         '''
+         histogram n1=61 o1=-3 d1=0.1 |
+         dd type=float | scale axis=1 |
+         graph title="Normalized Distribution" label1=Value 
+         ''')
+
+    Result(case,[case,hist],'OverUnderAniso')
+
+End()

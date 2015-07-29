@@ -1,0 +1,44 @@
+import sys, os
+sys.path.append('../../framework')
+import bldutil
+
+try: # distribution version
+    Import('env root libdir incdir')
+    env = env.Clone()
+except: # local version
+    env = bldutil.Debug()
+    root = None
+    SConscript('../c/SConstruct')
+
+env.Prepend(CPPPATH=['../../include'],
+            LIBPATH=['../../lib'],
+            LIBS=[env.get('DYNLIB','')+'rsf'])
+
+
+
+if 'f77' in env.get('API',[]):
+    F77 = env.get('F77')
+    F77base =  os.path.basename(F77)
+
+    env.Append(CPPDEFINES=['$CFORTRAN'])
+
+    if F77base[:8] == 'gfortran' or F77base[:3] == 'gfc':
+        env.Append(CPPDEFINES=['GFORTRAN'])
+    elif F77base == 'ifort':
+        env.Append(CPPDEFINES=['INTEL_COMPILER'])
+        
+    obj = env.Object('fortran.o','fortran.c')
+
+    lib = env.StaticLibrary('rsff','fortran.o')
+    env.Install('../../lib',lib)
+
+    env.Depends(obj,'cfortran.h')
+    
+    if root:
+        env.Install(libdir,lib)
+
+    for file in ['getpar','file']:
+        test = 'Test' + file + '.f'
+        env.Program(file,[test,lib],
+                    PROGPREFIX='Test',
+                    PROGSUFFIX='.x')

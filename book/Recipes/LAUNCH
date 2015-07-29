@@ -1,0 +1,76 @@
+#----------------
+# Error Checking
+#----------------
+
+if ( ! -e $WORKDIR ) then
+	echo "\nError: unable to change to working directory."
+	echo "       $WORKDIR"
+	echo "\nJob not submitted."
+	exit
+endif
+
+#if ( ! -f $WORKDIR/$EXECUTABLE ) then
+#	echo "\nError: unable to find launcher executable $EXECUTABLE."
+#	echo "\nJob not submitted."
+#	exit
+#endif
+
+if ( ! -f $WORKDIR/$CONTROL_FILE ) then
+	echo "\nError: unable to find input control file $CONTROL_FILE."
+	echo "\nJob not submitted."
+	exit
+endif
+
+cd $WORKDIR/
+
+set TOTAL=0
+foreach val ($LSB_MCPU_HOSTS)
+    if ($val == "1" || $val == "2") then
+	@ TOTAL = $TOTAL + $val
+    endif
+end
+
+echo "\nTotal MPI processes requested = "$TOTAL"\n"
+
+set icnt=1
+
+while ($icnt <= $TOTAL) 
+    setenv TMP `cat $CONTROL_FILE | awk 'NR=='$icnt | awk '{print $1}'`
+    if ( $TMP == "") then
+	echo "\nError: Not enough processes specified in control file"
+	echo "       executable not defined for process $icnt of $TOTAL"
+	echo "\nJob not submitted."
+	exit
+    endif
+    if ( ! -f $TMP ) then
+	echo "\nError: Executable not found for process $icnt of $TOTAL"
+	echo "\nJob not submitted."
+	exit
+    endif
+    @ icnt++
+end
+
+#----------------
+# Job Submission
+#----------------
+
+echo " LSF_SUBMIT_DIR: $LS_SUBCWD"
+echo " WORKING DIR:   $WORKDIR/"
+set PJL=gmmpirun_wrapper
+
+#------------------------------------------------------------------------
+# Uncomment the following two lines if executing more tasks than processors.
+# Set NSERIAL to something different if you do not need to execute everything 
+# in $CONTROL_FILE.
+#------------------------------------------------------------------------
+#set NSERIAL=`cat $CONTROL_FILE | wc -l`
+#      pam -g 1 $PJL ./$EXECUTABLE $CONTROL_FILE $NSERIAL
+#echo "pam -g 1 $PJL ./$EXECUTABLE $CONTROL_FILE $NSERIAL"
+
+#------------------------------------------------------------------------
+# Uncomment the following line if executing the same number of tasks as
+# processors
+# ------------------------------------------------------------------------
+      pam -g 1 $PJL $EXECUTABLE $CONTROL_FILE
+echo "pam -g 1 $PJL $EXECUTABLE $CONTROL_FILE"
+

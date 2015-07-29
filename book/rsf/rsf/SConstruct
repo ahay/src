@@ -1,0 +1,361 @@
+from rsf.tex import *
+
+import os
+import rsf.doc
+import rsf.prog
+
+root = rsf.prog.RSFROOT
+libdir = os.path.join(root,'lib')
+bindir = os.path.join(root,'bin')
+sfdoc  = os.path.join(bindir,'sfdoc')
+run = 'PYTHONPATH=%s LD_LIBRARY_PATH=%s $SOURCE' % \
+      (os.environ.get('PYTHONPATH'),os.environ.get('LD_LIBRARY_PATH'))
+
+output = {'.tex':'l',
+          '.wiki':'m'}
+
+for prog in rsf.doc.progs.keys():
+    for out in output.keys():
+        Command2(prog+out, sfdoc,'%s -%s . %s' % (run,output[out],prog))
+    Depends('prog.ltx',prog+'.tex')
+    Depends('prog.wiki',prog+'.wiki')
+
+Paper('tour',use='listings,color,hyperref')
+Paper('format',use='hyperref')
+Paper('api', use='hyperref,listings',include='\\newcommand{\\RSF}{../../..}')
+Paper('demo',use='hyperref,listings',include='\\newcommand{\\RSF}{../../..}')
+#Paper('adding',options='short',use='hyperref')
+
+Paper('prog',use='hyperref,amsmath,fancybox,listings,jfc',
+      include='\\newcommand{\\RSF}{../../..}',color='rose const rand')
+
+Paper('abstract',lclass='eage',
+      include=r'''
+      \thispagestyle{empty}
+      \setlength{\textheight}{25cm}
+      \newenvironment{geotitle}{%
+      \begin{minipage}{\textwidth}%
+      \bfseries\Large\centering}
+      {\end{minipage}\vspace{.2in}}%
+      \renewcommand{\title}[1]{%
+      \noindent\begin{geotitle}\setlength{\parindent}{0em}\par%
+      {\smallskip #1}\end{geotitle}}
+      \renewcommand{\author}[1]{%
+      \begin{center}
+      \textbf{#1}
+      \end{center}}
+      ''')
+
+#Paper('dummy')
+
+Depends2('install',map(lambda x: x+'.install',
+                       Split('api format install prog tour demo')))
+
+#Paper('vienna',lclass='beamer',use='helvet,hyperref',
+#     include=r'''
+#     \mode<presentation>
+#     {
+#     \usetheme{Madrid}
+#     \usecolortheme{albatross}
+#     % or ...
+         
+#     %  \setbeamercovered{transparent}
+#     % or whatever (possibly just delete it)
+#     }
+#     ''')
+
+#Paper('vancouver',lclass='beamer',use='helvet,hyperref,listings',
+#      include=r'''
+#      \mode<presentation>{\usetheme{Madrid}}
+#      \newcommand{\TEXMF}{%s/texmf}
+#      ''' % os.environ.get('HOME'))
+
+#Paper('ssd2',
+#      lclass='beamer',
+#      use='helvet,hyperref,listings',
+#      include=r'''
+#               \mode<presentation>{\usetheme{Szeged}}
+#               \usepackage[absolute,overlay]{textpos}
+#               \setlength{\TPHorizModule}{1mm}
+#               \setlength{\TPVertModule}{1mm}
+#               \newcommand{\MadLogo}{%
+#               \begin{textblock}{30}(115,-25)
+#               \includegraphics[width=30\TPHorizModule]{Fig/Madagascar}
+#               \end{textblock}}
+#               ''')
+
+#Paper('delft',
+#      lclass='beamer',
+#      use='helvet,hyperref,listings',
+#      include=r'''
+#               \mode<presentation>{\usetheme{Szeged}}
+#               \usepackage[absolute,overlay]{textpos}
+#               \setlength{\TPHorizModule}{1mm}
+#               \setlength{\TPVertModule}{1mm}
+#               \newcommand{\MadLogo}{%
+#               \begin{textblock}{30}(115,-25)
+#               \includegraphics[width=30\TPHorizModule]{Fig/Madagascar}
+#               \end{textblock}}
+#               ''')
+
+Paper('houston',
+      lclass='beamer',
+      use='helvet,hyperref,color,listings,newalg',
+      include=r'''
+    \usefonttheme{structurebold}
+    \setbeamerfont{title}        {size=\LARGE}
+    \setbeamerfont{subtitle}     {size=\Large}
+    \setbeamerfont{section}      {size=\Large}
+    \setbeamerfont{outline}      {size=\Large}
+    \setbeamerfont{frametitle}   {size=\Large}
+    \setbeamerfont{framesubtitle}{size=\large}
+    \setbeamerfont{author}       {size=\Large,     series=\bfseries}
+    \setbeamerfont{institute}    {size=\normalsize,series=\bfseries}
+    \setbeamerfont{date}         {size=\normalsize,series=\bfseries}
+    \setbeamersize{
+    text margin  left=0.05in,
+    text margin right=0.05in
+    }
+    \mode<presentation>{\usetheme{Malmoe}}
+    \usecolortheme{whale}
+    \usepackage[absolute,overlay]{textpos}
+    \setlength{\TPHorizModule}{1mm}
+    \setlength{\TPVertModule}{1mm}
+    \newcommand{\MadLogo}{%
+               \begin{textblock}{30}(100,2)
+               \includegraphics[width=12\TPHorizModule]{Fig/MadLogo}
+               \end{textblock}} 
+    \newcommand{\PTTCLogo}{%
+               \begin{textblock}{30}(55,76)
+               \includegraphics[width=17\TPHorizModule]{Fig/PTTC}
+               \end{textblock}} 
+  \definecolor{gray}{gray}{0.5} 
+  \definecolor{key}{rgb}{0,0.5,0} 
+  \newenvironment{code}[1][]{ 
+  \lstset{ 
+  language=#1, 
+  basicstyle=\ttfamily\tiny, 
+  keywordstyle=\color{blue}, 
+  stringstyle=\color{red}, 
+  showstringspaces=false, 
+  emph={class, pass, in, for, while, if, is, elif, else, not, and, or, 
+  def, print, exec, break, continue, return}, 
+  emphstyle=\color{black}\bfseries, 
+  emph={[2]True, False, None, self}, 
+  emphstyle=[2]\color{key}, 
+  emph={[3]from, import, as}, 
+  emphstyle=[3]\color{blue}, 
+  morecomment=[s]{"""}{"""}, 
+  commentstyle=\color{gray}\slshape, 
+  framexleftmargin=1mm, framextopmargin=1mm, frame=shadowbox, 
+  rulesepcolor=\color{blue}
+  }}{} 
+    ''')
+
+Paper('reno',
+      lclass='beamer',
+      use='helvet,hyperref,color,listings,newalg',
+      include=r'''
+    \usefonttheme{structurebold}
+    \setbeamerfont{title}        {size=\LARGE}
+    \setbeamerfont{subtitle}     {size=\Large}
+    \setbeamerfont{section}      {size=\Large}
+    \setbeamerfont{outline}      {size=\Large}
+    \setbeamerfont{frametitle}   {size=\Large}
+    \setbeamerfont{framesubtitle}{size=\large}
+    \setbeamerfont{author}       {size=\Large,     series=\bfseries}
+    \setbeamerfont{institute}    {size=\normalsize,series=\bfseries}
+    \setbeamerfont{date}         {size=\normalsize,series=\bfseries}
+    \setbeamersize{
+    text margin  left=0.05in,
+    text margin right=0.05in
+    }
+    \mode<presentation>{\usetheme{Malmoe}}
+    \usecolortheme{whale}
+    \usepackage[absolute,overlay]{textpos}
+    \setlength{\TPHorizModule}{1mm}
+    \setlength{\TPVertModule}{1mm}
+    \newcommand{\MadLogo}{%
+               \begin{textblock}{30}(100,2)
+               \includegraphics[width=12\TPHorizModule]{Fig/MadLogo}
+               \end{textblock}} 
+  \definecolor{gray}{gray}{0.5} 
+  \definecolor{key}{rgb}{0,0.5,0} 
+  \newenvironment{code}[1][]{ 
+  \lstset{ 
+  language=#1, 
+  basicstyle=\ttfamily\tiny, 
+  keywordstyle=\color{blue}, 
+  stringstyle=\color{red}, 
+  showstringspaces=false, 
+  emph={class, pass, in, for, while, if, is, elif, else, not, and, or, 
+  def, print, exec, break, continue, return}, 
+  emphstyle=\color{black}\bfseries, 
+  emph={[2]True, False, None, self}, 
+  emphstyle=[2]\color{key}, 
+  emph={[3]from, import, as}, 
+  emphstyle=[3]\color{blue}, 
+  morecomment=[s]{"""}{"""}, 
+  commentstyle=\color{gray}\slshape, 
+  framexleftmargin=1mm, framextopmargin=1mm, frame=shadowbox, 
+  rulesepcolor=\color{blue}
+  }}{} 
+    ''')
+
+Paper('stanford',
+      lclass='beamer',
+      use='helvet,hyperref,color,listings,newalg',
+      include=r'''
+    \usefonttheme{structurebold}
+    \setbeamerfont{title}        {size=\LARGE}
+    \setbeamerfont{subtitle}     {size=\Large}
+    \setbeamerfont{section}      {size=\Large}
+    \setbeamerfont{outline}      {size=\Large}
+    \setbeamerfont{frametitle}   {size=\Large}
+    \setbeamerfont{framesubtitle}{size=\large}
+    \setbeamerfont{author}       {size=\Large,     series=\bfseries}
+    \setbeamerfont{institute}    {size=\normalsize,series=\bfseries}
+    \setbeamerfont{date}         {size=\normalsize,series=\bfseries}
+    \setbeamersize{
+    text margin  left=0.05in,
+    text margin right=0.05in
+    }
+    \mode<presentation>{\usetheme{Malmoe}}
+    \usecolortheme{whale}
+    \usepackage[absolute,overlay]{textpos}
+    \setlength{\TPHorizModule}{1mm}
+    \setlength{\TPVertModule}{1mm}
+    \newcommand{\MadLogo}{%
+               \begin{textblock}{30}(100,2)
+               \includegraphics[width=12\TPHorizModule]{Fig/MadLogo}
+               \end{textblock}} 
+  \definecolor{gray}{gray}{0.5} 
+  \definecolor{key}{rgb}{0,0.5,0} 
+  \newenvironment{code}[1][]{ 
+  \lstset{ 
+  language=#1, 
+  basicstyle=\ttfamily\tiny, 
+  keywordstyle=\color{blue}, 
+  stringstyle=\color{red}, 
+  showstringspaces=false, 
+  emph={class, pass, in, for, while, if, is, elif, else, not, and, or, 
+  def, print, exec, break, continue, return}, 
+  emphstyle=\color{black}\bfseries, 
+  emph={[2]True, False, None, self}, 
+  emphstyle=[2]\color{key}, 
+  emph={[3]from, import, as}, 
+  emphstyle=[3]\color{blue}, 
+  morecomment=[s]{"""}{"""}, 
+  commentstyle=\color{gray}\slshape, 
+  framexleftmargin=1mm, framextopmargin=1mm, frame=shadowbox, 
+  rulesepcolor=\color{blue}
+  }}{} 
+    ''')
+
+Paper('longbeach',
+      lclass='beamer',
+      use='helvet,hyperref,color,listings,newalg',
+      include=r'''
+    \usefonttheme{structurebold}
+    \setbeamerfont{title}        {size=\LARGE}
+    \setbeamerfont{subtitle}     {size=\Large}
+    \setbeamerfont{section}      {size=\Large}
+    \setbeamerfont{outline}      {size=\Large}
+    \setbeamerfont{frametitle}   {size=\Large}
+    \setbeamerfont{framesubtitle}{size=\large}
+    \setbeamerfont{author}       {size=\Large,     series=\bfseries}
+    \setbeamerfont{institute}    {size=\normalsize,series=\bfseries}
+    \setbeamerfont{date}         {size=\normalsize,series=\bfseries}
+    \setbeamersize{
+    text margin  left=0.05in,
+    text margin right=0.05in
+    }
+    \mode<presentation>{\usetheme{Malmoe}}
+    \usecolortheme{whale}
+    \usepackage[absolute,overlay]{textpos}
+    \setlength{\TPHorizModule}{1mm}
+    \setlength{\TPVertModule}{1mm}
+    \newcommand{\MadLogo}{%
+               \begin{textblock}{30}(100,2)
+               \includegraphics[width=12\TPHorizModule]{Fig/MadLogo}
+               \end{textblock}} 
+  \definecolor{gray}{gray}{0.5} 
+  \definecolor{key}{rgb}{0,0.5,0} 
+  \newenvironment{code}[1][]{ 
+  \lstset{ 
+  language=#1, 
+  basicstyle=\ttfamily\tiny, 
+  keywordstyle=\color{blue}, 
+  stringstyle=\color{red}, 
+  showstringspaces=false, 
+  emph={class, pass, in, for, while, if, is, elif, else, not, and, or, 
+  def, print, exec, break, continue, return}, 
+  emphstyle=\color{black}\bfseries, 
+  emph={[2]True, False, None, self}, 
+  emphstyle=[2]\color{key}, 
+  emph={[3]from, import, as}, 
+  emphstyle=[3]\color{blue}, 
+  morecomment=[s]{"""}{"""}, 
+  commentstyle=\color{gray}\slshape, 
+  framexleftmargin=1mm, framextopmargin=1mm, frame=shadowbox, 
+  rulesepcolor=\color{blue}
+  }}{} 
+    ''')
+
+Paper('slides',lclass='beamer',use='',
+      options='16pt',
+      include=r'''
+      \mode<presentation>{\usetheme{Boadilla}}
+      \usepackage{color}
+      \usepackage{listings}
+      \usepackage{amsmath}
+      \usepackage{amssymb}
+      \usepackage{amsbsy}
+      \usepackage{latexsym}
+      \usepackage[absolute,overlay]{textpos}
+      \AtBeginSection[]{
+          \begin{frame}
+              \frametitle{Outline}
+              \tableofcontents[currentsection,currentsubsection]
+          \end{frame}
+      }
+      \definecolor{lightgray}{gray}{.95}
+      \lstset{
+          basicstyle=\scriptsize\ttfamily,
+          backgroundcolor=\color{lightgray},
+          numbers=none,
+          showstringspace=false,
+          tabsize=2,
+          showtabs=false,
+          breaklines=true,
+          language=,
+      }
+      \newcommand{\sh}[1]{\textcolor{red}{\texttt{#1}}}
+      ''')
+
+# speaker's handout
+#Paper('handout',lclass='beamer',use='',
+#      options='mathserif,12pt,handout,compress,notes=show',
+#      include=r'''
+#      \mode<presentation>{\usetheme{Boadilla}}
+#      \usepackage{color}
+#      \usepackage{listings}
+#      \usepackage{amsmath}
+#      \usepackage{amssymb}
+#      \usepackage{amsbsy}
+#      \usepackage[absolute,overlay]{textpos}
+#      \AtBeginSection[]{
+#          \begin{frame}<bemaer>
+#              \frametitle{Outline}
+#              \tableofcontents[currentsection,currentsubsection]
+#          \end{frame}
+#      }
+#      ''')
+
+End(options='manuscript',use='hyperref',
+    color='''
+          const rand logo fern man spiral t10
+          fig1 fig2 fig3 fig4 fig5 fig6 fig7 fig8 fig9
+          xyz cubeyf1 linearlfb mona monacap monaclip
+          wedge gseis x mona2 pmona2
+          ''')

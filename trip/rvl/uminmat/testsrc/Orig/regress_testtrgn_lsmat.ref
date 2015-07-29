@@ -1,0 +1,17 @@
+create parameter Table - same for all subtests
+
+/*************************************************
+ *            BEGIN UMin UNIT TEST 4             *
+ * Purpose: test TRGNAlg with LAPACK             *
+ * Rosenbrock function - standard problem        *
+ *************************************************/
+
+
+Test 4.1: Rosenbrock function, double precision
+tabulation in TRLAP1.rpt
+
+assign initial vector per TOMS
+create GenOp
+create TRGNAlg (optimization algorithm object)
+run optimization
+iteration count = 16

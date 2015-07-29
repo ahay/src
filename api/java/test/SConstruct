@@ -1,0 +1,12 @@
+from rsf.proj import *
+
+# Compiles Clip.class
+project.Java('.','Clip.java')
+
+Flow('dat',None,'spike n1=1000 n2=100 n3=10 nsp=1 k1=500 l1=1000')
+Flow('clipd','dat Clip.class',
+    '''
+    %s Clip clip=0.5 
+    ''' % WhereIs('java'))
+Flow('test.attr','clipd','sfattr')
+

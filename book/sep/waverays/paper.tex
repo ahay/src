@@ -1,0 +1,641 @@
+\published{SEP Report, 80, 85-100 (1994)}
+
+%\noIdocMenu
+
+\title{Wavefront construction using waverays}
+\author{Hector Urdaneta}
+
+%
+\lefthead{Urdaneta}
+\righthead{Waverays and wavefronts}
+\footer{SEP--80}
+
+\maketitle
+%
+%
+%\def\CAKEDIR{.}
+%\def\figdir{./Fig}
+%
+\begin{abstract}
+A method for computing first arrival traveltimes and amplitudes in
+a general two-dimensional (\mbox{2-D}) velocity model is 
+presented. The method is the result of merging two
+recently published ray tracing methods. The product is a
+very robust algorithm that is able to produce broadband wave phenomena,
+such as dispersion and wavelength dependent scattering.
+Its ability to produce broadband wave phenomena, is achieved
+by performing a wavelength-dependent smoothing of the velocity model
+across wavefronts. In the limit of high frequency, the method
+reduces to geometrical ray theory.
+The method is able to illuminate areas of large geometrical
+spreading where conventional ray tracing methods may give no
+arrivals. The method is tested on synthetic complex
+velocity models.
+\end{abstract}
+
+\section{Introduction}
+
+Traditionally traveltime and amplitude calculations have been
+performed by ray tracing. Different ray tracing algorithms exist that
+are well known and well documented.  They include ray
+bending \cite[]{Julian}, shooting rays \cite[]{Dines} and paraxial
+extrapolation \cite[]{Cervenys}. More recently, several new methods
+have appeared and are enjoying an increasing popularity.  They include
+finite differences \cite[]{GEO55-05-05210526,Podvin,GEO56-06-08120821}
+and shortest path rays \cite[]{GEO56-01-00590067}.
+
+This paper presents a review of two new ray tracing methods and
+explores some of the possibilities produced by their fusion.  The
+first method is Lomax's waveray method for approximating broadband
+wave propagation through complex velocity structures \cite[]{Lomax}.
+The second method was developed at the NORSAR institute in Norway
+by \cite{Vinje}.  As will be shown later, both methods have their own
+advantages and drawbacks, but when they are fused, they interfere
+positively.  The combined product produces a very robust method, which
+approximates broadband wave phenomena in complex velocity models.
+
+The first two parts of this paper describe the 
+basic characteristics of each method and their
+implementations. The paper also reviews some of the work
+done in the last two references listed above. 
+In the last part, I discuss
+the combined method. Implementation issues and synthetic
+examples are shown.
+
+\section{LOMAX'S WAVERAYS}
+
+Two basic ideas characterize Lomax's method: (1)
+it does a wavelength-dependent velocity smoothing and
+(2) it uses Huygen's principle to track the motion
+of narrow-band wavefronts at a number of center frequencies.
+Narrow-band wavefronts are defined as surfaces (lines in \mbox{2-D})
+of constant phase or traveltime in a narrow-band ``wavefield''.
+As these narrow-band wavefronts propagate with time they define
+a wavepath, which is frequency dependent. The wavelength-dependent
+smoothing of the velocity is done by averaging with a Gaussian weighting 
+curve. The smoothing is done along the wavefronts. The final result; i.e,
+the broadband wavefield, is constructed by summing the results of 
+independent narrow-band wavefields at many center frequencies.
+
+Three important advantages of using Lomax's waveray over conventional
+ray tracing methods are: 
+\begin{itemize}
+ \item It increases the stability of wavepaths compared
+  to the paths produced by high frequency methods, due to the
+  wavelength-dependent smoothing.
+ \item It provides 
+  waverays with a sensitivity that produces
+  frequency dependent scattering as a function of the ratio of 
+  wavelength to the characteristic size of the scattering region.
+  Figure~\ref{fig:lomaxsbs} illustrates this point.
+ \item It is capable of handling large to small inhomogeneity sizes,
+  since in the former case it is similar to ray theory and in the
+  latter it responds to a smooth, averaged velocity structure. 
+\end{itemize}
+
+\cite{Lomax} approximates 
+the narrow-band wavefronts at any time by a plane wavefront (see
+Figure~\ref{fig:lomax1}). This approximation requires that the radius
+of curvature of the wavefront be large relative to a wavelength.  A
+better approximation to the wavefronts could probably be obtained
+using a parabolic approximation.  For the sake of computational time,
+plane wavefronts are used.
+
+Before considering the details of the waveray technique, two points
+need to be emphasized.  First, \cite{Lomax} points out, ``it is the
+wavelength dependent smoothing that makes the waveray method a
+broadband wave propagation technique, and distinguishes it from the
+high frequency ray methods.''\ Second, there are no equations that
+give the waveray method a theoretical basis.  Its support comes from
+the fact that it reproduces high-frequency ray propagation and
+produces a good approximation of broadband wave phenomena.
+
+\inputdir{XFig}
+
+\sideplot{lomax1}{width=3.in}{Waveray wavepath and
+wavelength-dependent velocity smoothing at point ${\bf \vec{x}}_{\nu}$
+Adapted from \cite{Lomax}.
+}
+
+\subsection{Waveray implementation}
+
+In the waveray method, the wavelength-dependent
+averaging of the velocity is done dynamically as a function
+of the position and orientation of the plane wavefronts.
+The velocity
+averaging is done using a Gaussian weight curve, centered at the wavepath
+location (see Figure~\ref{fig:lomax1}). Equation~\ref{eqn:velavg} expresses the
+wavelength averaged velocity $\overline{v}$ at a point 
+($ \vec{\bf x}_{\nu} $) for a wave period $\bf T$ \cite[]{Lomax},
+%
+\begin{equation}
+ \overline{v}\, (\vec{\bf x}_{\nu},{\bf T\/}) = \frac{
+  \displaystyle \int_{-\infty}^{\infty}
+  \omega(\gamma)\
+  c\, [\vec{\bf x}(\gamma, {\bf T\/})]\
+  d\gamma}
+  {\displaystyle \int_{-\infty}^{\infty}
+  \omega(\gamma)\ d\gamma}
+\label{eqn:velavg}
+\end{equation}
+%
+where $\gamma$ is the arc length along the wavefront away from 
+$\vec{\bf x}_{\nu}$ expressed in wavelengths.
+$c\, (\vec{\bf x})$ is the velocity at point $\vec{\bf x}$
+and $\omega(\gamma)$ is the Gaussian weight curve:
+%
+\begin{equation}
+ \omega(\gamma) = e^{-4 \ln 2\, \cdot\, (\gamma/\alpha)^{2}}
+\label{eqn:gauss}
+\end{equation}
+%
+where $\alpha$ specifies the half width of the Gaussian bell in
+wavelengths.
+
+($\vec{\bf x}(\gamma,{\bf T\/})$) is the position along the 
+instantaneous straight wavefront given by the recursive relation
+\cite[]{Lomax}:
+%
+\begin{equation}
+ \vec{\bf x}(\gamma, {\bf T\/}) = \vec{\bf x}_{\nu} + \frac{{\bf T\/}}{2 \pi}
+ \int_{0}^{\gamma} c\, [\vec{\bf x}(\gamma\, ', {\bf T\/})]\
+ {\bf \hat{n}}({\bf T\/})\
+ d\gamma\, '
+\label{eqn:post}
+\end{equation}
+%
+where ${\bf \hat{n}}$ is the unit normal to the wavepath at
+point $\vec{\bf x}_{\nu}$.
+
+The discrete representation of equation~\ref{eqn:velavg} is given
+by equation~\ref{eqn:dvelavg}:
+%
+\begin{equation}
+ \overline{v}\, (\vec{\bf x}_{\nu},{\bf T\/}) = \frac{
+ \displaystyle \sum_{n=-N}^{N}
+ \omega_{n}\ c\, [\vec{\bf x}_{\nu}^{\, n}({\bf T\/})] }
+ {\displaystyle \sum_{n=-N}^{N}
+ \omega_{n}}
+\label{eqn:dvelavg}
+\end{equation}
+%
+where the integral has been replaced by a finite sum over $2\,N+1$
+{\bf control points\/}. The position of the control points along the
+wavefronts
+are given by equations~\ref{eqn:dpost0} and \ref{eqn:dpost}.
+%
+\begin{equation}
+ \vec{\bf x}_{\nu} = \vec{\bf x}_{\nu}^{\, 0}
+\label{eqn:dpost0}
+\end{equation}
+%
+\begin{equation}
+\vec{\bf x}_{\nu}^{\, n} = \left\{ \begin{array}{lll}
+        \displaystyle
+        \vec{\bf x}_{\nu}^{\, n-1} + \frac{\gamma_{max}}
+            {4\pi N}\ \lambda\, (\vec{\bf x}_{\nu}^{\, n-1})\ {\bf \hat{n}} &
+        \; &
+        n=1,2, \ldots, N. \\
+        \, \, \,          \\
+        \displaystyle
+        \vec{\bf x}_{\nu}^{\, n+1} - \frac{\gamma_{max}}
+            {4\pi N}\ \lambda\, (\vec{\bf x}_{\nu}^{\, n+1})\ {\bf \hat{n}} &
+        \; &
+        n=-1,-2, \ldots, -N. \end{array}
+        \right.
+%}
+\label{eqn:dpost}
+\end{equation}
+
+These two equations are the discrete version of equation~\ref{eqn:post}, but,
+the dependence on the wavelength has been made explicit.
+Notice that the subscript $\nu$ of $\vec{\bf x}_{\nu}^{\, n}$ 
+runs along the wavepath and the
+superscript $n$ runs along the wavefront.
+$\gamma_{max}$ specifies the largest distance in wavelengths along
+the wavefront at which smoothing is applied. 
+
+The discrete equivalent of the Gaussian weight function is:
+%
+\begin{equation}
+ \omega_{n} = e^{-4 \ln 2\, \cdot\, (\gamma_{n}/\alpha)^{2}}
+\label{eqn:dgauss}
+\end{equation}
+%
+where the distance $\gamma_{n}$ along the wavefront in wavelengths
+is expressed as:
+%
+\begin{equation}
+ \gamma_{n} = \frac{n\, \gamma_{max}}{N}
+\label{eqn:gamma}
+\end{equation}
+
+The motion of the waverays along the direction of propagation 
+is expressed by the following equation:
+%
+\begin{equation}
+ \vec{\bf x}_{\nu+1} = \vec{\bf x}_{\nu} + 
+ \overline{v}_{\nu}\, \Delta t\; {\bf \hat{s}}
+\label{eqn:mvwavpt}
+\end{equation}
+%
+where $\overline{v}_{\nu} = \overline{v}\, (\vec{\bf x}_{\nu},{\bf T\/})$,
+$\Delta t$ is the time step and ${\bf \hat{s}}$ is a unit vector
+that moves along the direction of propagation.
+
+\sideplot{lomax2}{width=3.in}{Waveray wavepath calculation.
+Huygen's principle is used to obtain the bending
+$\Delta {\bf \hat{s}}$
+of the wavepath from points $\vec{\bf x}_{\nu}^{\, 1}$ 
+and $\vec{\bf x}_{\nu}^{\, -1}$.
+Adapted from Lomax (1994).
+}
+
+The change in direction of the waverays is approximated by the 
+difference in movement between the first control point on either
+side of the wave location $\vec{\bf x}_{\nu}$ as shown in
+Figure~\ref{fig:lomax2}:
+%
+\begin{equation}
+ \Delta {\bf \hat{s}} = - \left( \frac{
+    \overline{v}_{\nu}^{\, 1} - \overline{v}_{\nu}^{\, -1}}
+    {| \vec{\bf x}_{\nu}^{\, 1} - \vec{\bf x}_{\nu}^{\, -1} |} \right) \,
+ \Delta t \; {\bf \hat{n}}
+\label{eqn:cdir}
+\end{equation}
+%
+where $\overline{v}_{\nu}^{\, 1}$ and $\overline{v}_{\nu}^{\, -1}$
+are the wavelength averaged velocities at the wavefront points
+$\vec{\bf x}_{\nu}^{\, 1}$ and $\vec{\bf x}_{\nu}^{\, -1}$
+respectively.
+
+Finally, the half width parameter $\alpha$ and the truncation 
+parameter $\gamma_{max}$ are set at $\alpha = 2.0$
+and $\gamma_{max} = 1.5$, based on \cite{Lomax}
+calibration. The number of control points $N$ is set 
+proportional to the ratio $T/\Delta t$ of the wave period over the 
+time step. 
+
+Figure~\ref{fig:lomaxsbs} shows the significant differences between
+the waveray and ray methods. Notice how a high frequency ray
+is scattered by the small velocity anomaly,
+while the waveray's wavepath is little deflected. Note also, how the
+third ray (from right to left) is not perturbed by the low velocity
+anomaly, while the waveray wavepath is deflected.
+The wavelength-dependent velocity averaging smoothes out
+small velocity variations and causes the wavepath to be affected
+from velocity variations away from it.
+
+\inputdir{.}
+
+\plot{lomaxsbs}{width=\textwidth}{Left frame shows a fan of high frequency 
+ray paths. Right frame shows a fan of 12 Hz waveray wavepaths.
+The straight segments perpendicular to the waverays represent the
+instantaneous wavefronts. The velocity model is defined by two 
+circular anomalies drawn in a homogeneous background. The black dot
+(located at 1000 m. by 1250 m. in depth) depicts a low velocity
+anomaly. The white circle a high one.
+}
+%\newpage
+
+
+\section{NORSAR WAVEFRONT CONSTRUCTION}
+\inputdir{XFig}
+
+The main idea behind the ``NORSAR'' method \cite[]{Vinje}
+is to compute ray parameters 
+along wavefronts instead of computing them from independently traced
+rays, as conventional ray methods do. Wavefronts are defined as
+isochron traveltime curves (lines in \mbox{2-D}) from the source. 
+New wavefronts are constructed from previous ones, by ray tracing over 
+a time step. As wavefronts expand out, new rays are interpolated
+between rays that go further apart than a predefined distance {\it DSmax\/}.
+Figure~\ref{fig:norsar1} illustrates how wavefronts expand out, by ray 
+tracing from a time $\tau$ to a time $\tau + \Delta \tau$. The
+dashed line on Figure~\ref{fig:norsar1} represents the new
+wavefront. The
+solid dots represent the end points of the rays. The distance
+between contiguous end points is checked against the predefined maximum
+distance {\it DSmax\/}. If they are located further than 
+{\it DSmax\/}, a new point (empty dots) is interpolated.
+
+The interpolation of these
+new points over the wavefront is done using a vectorial
+third order polynomial
+${\bf \vec{x}}(s) = {\bf \vec{a}} s^{3} + {\bf \vec{b}} s^{2} +
+{\bf \vec{c}} s + {\bf \vec{d}}$.
+The polynomial is evaluated as a function of the normalized
+distance $s$ between points ${\bf \vec{x}}^{\, i}$ and 
+${\bf \vec{x}}^{\, i+1}$.
+Also a scalar third order polynomial is used to interpolate amplitude values
+and the ray's angle of direction [see \cite{Vinje}].
+
+The key property of this procedure is that it
+produces a fairly constant density of rays over C1 models
+\cite[]{Vinje} (see Figure~\ref{fig:gauss-wv}), illuminating
+zones with high geometrical spreading where conventional ray tracing
+have shadow zones.
+
+\sideplot{norsar1}{width=\textwidth}{New wavefronts (dashed lines)  are
+constructed from the previous wavefront (solid line), by ray
+tracing a fix
+number of time steps. New rays are interpolated between points
+on the wavefront that lay further than a predefined distance.
+Adapted from \cite{Vinje}.
+}
+
+Rays are eliminated if they go out of the model boundaries.
+They may also be eliminated if a wavefront crosses over itself, as shown on
+Figure~\ref{fig:norsar2}. The ``self-crossing'' of the wavefronts may
+correspond to a caustic or to the intersection of rays from 
+different parts of the model. Once again, as in the Lomax algorithm,
+for the sake of computational
+time and also of memory, a ``first arrival'' mode should be used.
+This first arrival mode removes all later arrivals.
+When the number of points in a wavefront becomes less than a certain
+value (e.g. 4 points), the algorithm stops.
+
+Traveltimes and amplitudes are interpolated into a rectangular
+grid. Ray cells, defined as the area enclosed by a pair of contiguous rays
+and wavefronts, are checked for the presence of grid points
+(see Figure~\ref{fig:norsar3}). Traveltimes at
+the receivers are estimated by computing the following quantities:
+
+\begin{enumerate}
+ \item the distances $d_{1}$ and $d_{2}$ from the receiver perpendicular
+ to the two rays.
+ \item the normalized distance $s$ along the wavefront
+ $s = d_{1}/(d_{1}+d_{2})$.
+ \item the interpolated point ${\bf \vec{x}}(s)$ over the old wavefront.
+ \item the distance $l_{r}$ from ${\bf \vec{x}}(s)$ to the receiver
+ \item the velocity $v_{mid}$ in the midpoint of the segment $l_{r}$.
+\end{enumerate}
+
+The traveltime at the receiver is then estimated to be:
+%
+\begin{equation}
+ t_{rec} = t + \frac{l_{r}}{v_{mid}}
+\label{eqn:tt}
+\end{equation}
+%
+where $t$ is the traveltime to the old wavefront.
+
+\sideplot{norsar2}{width=\textwidth}{The new wavefront crosses itself.
+If only first arrivals are wanted, the points behind the crossing
+(points no. 7, 8, 9) are removed from the wavefront.
+Adapted from \cite{Vinje}.
+}
+
+In computing amplitudes,
+the geometrical spreading factor $\sqrt{(r_{1}+r_{2})/(R_{1}+R_{2})}$,
+gives the ratio between the amplitude of one wavefront to the next
+one. $R_{1}$, $R_{2}$, $r_{1}$ and $r_{2}$ are shown on
+Figure~\ref{fig:norsar4}. The amplitude estimation at
+the receivers is also obtained in this way, where the distances
+$d_{1}$ and $d_{2}$ are used for $R_{1}$ and $R_{2}$.
+
+Figure~\ref{fig:gauss-wv} shows an example of the Norsar method
+run over a highly contrasted velocity model. The velocity model 
+is a pair of Gaussian bell curves. The distance between
+the peaks is 48 meters with a drop of 4 km/s in velocity.
+
+\sideplot{norsar3}{width=\textwidth}{Traveltimes and amplitudes are found
+at receivers by interpolating within each ray cell. The ray cell is
+defined by $Ray_{1}$ and $Ray_{2}$, and by the new wavefront and
+the previous wavefront.
+Adapted from \cite{Vinje}.
+}
+
+A final point on Norsar's method is, as said by \cite{Vinje}:
+``the way the ray tracing between each wavefront is performed
+is irrelevant to the idea of the wavefront construction''.
+We notice that all along the discussion on the NORSAR method,
+ray tracing was kept as an abstract idea. With this in mind
+we proceed to merge the Lomax algorithm, as the ray tracing 
+algorithm for the NORSAR method. Another advantage of the
+NORSAR method is that the estimation of ray parameters (as
+traveltimes, amplitudes, etc.) does not come from a 
+posteriori interpolation between single, separate rays,
+but instead directly from previously constructed wavefronts.
+
+\sideplot {norsar4}{width=\textwidth}{Amplitudes are computed from
+the previous wavefront. The geometrical spreading factor
+gives the ratio between the amplitude $A_{i}$ at the previous
+wavefront and the new amplitude
+value $A_{i+1}$.
+}
+
+\inputdir{gauss}
+\plot {gauss-wv}{width=6.in}{The ``NORSAR'' or
+wavefront construction
+method covers the whole model with wavefronts and rays.
+The model presents a strong variation
+in velocity, given by a Gaussian bell with a maximum amplitude of 5000 m/s
+and a second Gaussian bell with a minimum amplitude of 1000 m/s. The
+background is 3000 m/s.}
+
+%\newpage
+
+\section{WAVERAYS AND WAVEFRONTS}
+
+The product of merging the two previously discussed ray tracing methods
+is sketched in the following pseudo-code:
+
+\begin{tabbing}
+Hel \= Hello \= Hello \= Hello \= Hello \kill
+\bf 1 \> Allocate memory for wavefronts and output \\
+\bf 2 \> for each source \\
+\bf 3 \> \> \em initialize  \\
+\bf 4 \> \> while number of points in wavefront $> 4$ \\
+\bf 5 \> \> \> \em propagate wavefront \\
+\bf 6 \> \> \> \em check for self crossing \\
+\bf 7 \> \> \> \em check for rays that go out of bounds \\
+\bf 8 \> \> \> \em eliminate self crossing and outofbound rays \\
+\bf 9 \> \> \> \em calculate amplitudes \\
+\bf 10 \> \> \> \em gridding \\
+\bf 11 \> \> \> \em interpolate new rays \\
+\bf 12 \> \> \> \em movwavf
+\end{tabbing}
+
+The algorithm defines the data structure ``{\it cube\/}'' at line {\bf 1}.
+In it, the ray parameters are stored as wavefronts
+propagate.
+
+\begin{tabbing}
+Hello Hello \= Hello \= Hello \= Hello \=       \kill
+\> {\bf struct heptagon} \{     \\
+\> \>  {\bf struct point} \{    \\
+\> \> \>    {\bf float} x;      \\
+\> \> \>    {\bf float} z; \} x0, x1;   \\
+\> \>  {\bf float} angle;       \\
+\> \>  {\bf float} ampl;        \\
+\> \>  {\bf char} cf; \} $*$\it cube;
+\end{tabbing}
+
+where:
+\begin{itemize}
+\item {\it cube\/}[ii].x0 contains the starting position of a ray on a
+wavefront at a time $\tau$. 
+\item {\it cube\/}[ii].x1 contains the arriving position of a ray on a
+wavefront at a time step later, $\tau + \Delta \tau$. 
+\item {\it cube\/}[ii].angle gives the arriving angle 
+at point {\it cube\/}[ii].x1.
+\item {\it cube\/}[ii].ampl is the computed amplitude 
+at point {\it cube\/}[ii].x1.
+\item {\it cube\/}[ii].cf is a flag that defines if point 
+{\it cube\/}[ii].x1 is
+in bounds, out of bounds, or belongs to the inner section of
+a self crossing wavefront.
+\end{itemize}
+
+The index ii runs over the points of a wavefront. 
+Since there is no a priori way of determining how large can a
+wavefront grow over a velocity model, a predefined limit ({\it nrmax})
+of {\it cube\/} elements 
+is established at the beginning of the algorithm, which defines
+the total memory allocated for {\it cube\/}. In other words, 
+{\it nrmax} is the maximum number of points that a wavefront can have.
+If the wavefront grows bigger than {\it nrmax} points the algorithm is
+stopped and an error message is produce indicating that a bigger
+value for {\it nrmax} should be used.
+This
+integer depends directly on the maximum allowed separation {\it DSmax\/}
+between
+two contiguous points in the wavefront. For the examples shown on
+Figure~\ref{fig:marm80-time} through \ref{fig:marm10-ampl}, the program ran 
+with a value of {\it nrmax}=1300. {\it DSmax\/} was set to 21 meters
+for those examples. 
+
+In the case that the algorithm is run in a ``all arrivals'' mode,
+which could be done by eliminating line {\bf 6} out of the algorithm, 
+the number of crossing points on a wavefront could become considerably
+large. As the wavefronts crosses and crosses many times over itself, for
+a velocity model with strong variations (as for example the Marmousi 
+model), the number of crossing points
+can easily reach the
+6 digits figure. This translates directly into a bigger need of computer
+resources, in use of memory and time. 
+
+Subroutine {\em initialize} defines the initial wavefront. It assigns
+an initial amplitude and take-off angle to the points on the initial
+wavefront.
+
+The {\em propagate wavefront} subroutine ray traces using Lomax's
+waverays. The waverays are traced starting at {\it cube\/}[ii].x0
+with a take-off angle {\it cube\/}[ii].angle during one time step
+at a certain frequency. The time step and the frequency are user
+predefined.
+
+Subroutine on line {\bf 6} checks for self crossed wavefronts and flags
+the points that belong to the inner crossed section of the wavefront.
+
+Line {\bf 7} checks for points that fall out of boundaries, raising
+a flag. Notice
+from Figure~\ref{fig:gauss-wv} that the rays cross over
+the boundaries of the model. This is done in order to obtain arrivals
+at the receivers that lie on the boundaries.
+
+Subroutine at line {\bf 8} eliminates the points on a wavefront
+that are flagged for laying out of bounds or belong
+to self crossed wavefronts.
+
+Subroutines on lines {\bf 9}, {\bf 10} and {\bf 11} are implemented 
+as previously explained for the NORSAR method on Figures \ref{fig:norsar4},
+\ref{fig:norsar3} and \ref{fig:norsar1} respectively. On line {\bf 11} the
+number of rays that may be interpolated between any two contiguous
+rays, is given by the number of times the distance between the two rays is
+bigger than the maximum allowed distance {\it DSmax\/}.
+
+Subroutine {\it gridding\/} is a very time consuming, due to
+the irregular distribution of the data in the model. First, the
+subroutine checks for receivers inside the ray cells of two contiguous
+wavefronts. If a receiver is found, the ray parameters are interpolated
+to it.
+
+Subroutine {\it movwavf} prepares the structure {\it cube\/}
+for a new wavefront to be propagated. It takes 
+as the new starting point the previous arriving
+point ({\it cube\/}[ii].x0 = {\it cube\/}[ii].x1).
+
+
+\subsection{Travel-times and amplitudes in the Marmousi model}
+\inputdir{marm}
+
+\plot {marm80-time}{height=3.5in}{Traveltime contours
+computed from the combined method, overlaid on a section of 
+the Marmousi model.
+A frequency of 80~Hz is used.
+}
+
+\plot {marm10-time}{height=3.5in}{As in 
+the previous Figure, but for a frequency of 10 Hz.
+}
+
+\plot {marm80-ampl}{height=3.5in}{Amplitude maps from the
+combined method at a frequency of 80~Hz.
+}
+
+\plot {marm10-ampl}{height=3.5in}{As in 
+the previous Figure, but for a frequency of 10 Hz.
+}
+
+Figures \ref{fig:marm80-time} to \ref{fig:marm10-ampl} display 
+the results of a simulation that used the combined 
+method. The underlying subsurface structure is the 
+Marmousi model \cite[]{Versteeg}.
+A source was put at the surface, 5200 meters away from the left edge
+of the model, and the wavefronts were
+propagated until they crossed the boundaries of the model.
+Figure \ref{fig:marm80-time}
+shows the first-arrival traveltime contours calculated at a frequency
+of 80~Hz. Figure \ref{fig:marm10-time} shows the same experiment at
+a frequency of 10~Hz. Not much difference is apparent.
+
+Figure~\ref{fig:marm80-ampl} shows the amplitude estimates for the 80~Hz
+shot and Figure~\ref{fig:marm10-ampl} shows the 10~Hz estimates. We see
+that more energy gets propagated down in the case of the low
+frequency, illuminating part of the high frequency shadow zones.
+
+We have seen that the combined method accomplishes two important tasks,
+it can be used to compute first arrival traveltimes and amplitudes 
+over any general velocity model and is it able to illuminate high
+frequency shadow zones.
+
+For these experiments, the mesh of the model is re-sampled
+from the original model at 8 x 8 meters. The traveltime
+and amplitude outputs are placed in a mesh of 25 x 12.5 meters.
+
+\section{Conclusions}
+
+I have presented a review of two ray tracing methods. I have 
+implemented both of them in a combined version. The method 
+computes first arrival travel-times and amplitudes of seismic 
+waves in complex \mbox{2-D} velocity structures. 
+The method uses a wavefront construction technique that produces
+a complete coverage of the medium by a fairly
+constant density of wavefronts and rays. Wavefronts are 
+propagated using a wavelength-dependent smoothing ray tracing
+technique, called the waveray method, which leads to an increased 
+stability of the ray paths
+relative to high frequency rays. Also, it gives a sensitivity to
+the rays to larger velocity anomalies that lay within a fraction
+of a wavelength of the ray path. The data (traveltimes and amplitudes)
+is computed on an irregular grid. As the wavefronts are constructed 
+the data is interpolated into a regular grid.
+
+The result is a very robust ray tracing method that is able to 
+illuminate areas of large geometrical spreading zones where
+conventional ray tracing methods produce shadow zones. Portions
+of the diffracted energy is produced in these shadow zones.
+
+Further work should be done on calibrating and testing the results produced
+by the combined method against other methods. Future work
+should be done on a formal derivation of the waveray method.
+Production of seismograms and a {\mbox 3-D} version are also
+sources of future work.
+
+%\newpage
+\bibliographystyle{seg}
+\bibliography{SEP2,SEG,paper}
+
+%\newpage

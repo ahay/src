@@ -1,0 +1,24 @@
+#!/usr/bin/env python
+import sys, os, string, commands, pwd
+
+cluster = string.split(os.environ.get('RSF_CLUSTER','localhost 1'))
+
+for node in cluster[::2]:
+    if node == 'localhost':
+        (stat,top) = commands.getstatusoutput('ps aux')
+    else:
+        (stat,top) = commands.getstatusoutput("ssh %s 'ps aux' " % node)
+    if not stat:
+        print '\n[%s]\n' % node
+        jobs = string.split(top,'\n')
+        print jobs[0]
+        for job in jobs[1:]:
+            fields = string.split(job)
+            if fields[0] != 'root' \
+                   and fields[0] != 'nobody' \
+                   and float(fields[2]) > 0.0 \
+                   and fields[-1] != 'ps aux':
+                print job
+
+sys.exit(0)
+

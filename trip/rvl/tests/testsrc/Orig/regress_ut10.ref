@@ -1,0 +1,15 @@
+
+/*************************************************
+ *            BEGIN RVL UNIT TEST 10             *
+ * Purpose: test conversion of C functions       *
+ * to FOs                                        *
+ *************************************************/
+
+1. Construct RnArray<float>s of length 1 for v, d 
+
+2. Assign v, d
+kappa=2250
+bouy =0.001
+/*************************************************
+ *              END RVL UNIT TEST 10             *
+ *************************************************/

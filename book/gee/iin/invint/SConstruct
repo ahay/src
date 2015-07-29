@@ -1,0 +1,26 @@
+from rsf.proj import *
+
+Flow('time',None,
+     '''
+     spike n1=200 d1=1 o1=1 label1=Sample unit1= |
+     math output="(x1-1)*0.4"
+     ''')
+Flow('head','time',"window n1=41 | math output='exp(0.25*input)+11'")
+Flow('ideal','time','math output="sin(input)*0.5" ')
+Flow('alias','head','math output="sin(input)*0.5" | put head=$SOURCE')
+
+doty = 'dots dots=0 connect=0 gaineach=0 constsep=1 strings=0 clip=1.2'
+
+Flow('data','alias','bin1 nx=200 dx=0.4 x0=0')
+Plot('data',doty + ' strings=1 d1=1 o1=1')
+
+doty = doty + ' connect=1 d1=1 o1=1'
+filter = {'im1-1a':1, 'im1-2+1':2}
+for im in filter.keys():
+    Flow(im,'alias','invbin1 nx=200 dx=0.4 x0=0 filter=%d prec=n' % filter[im])
+    Plot(im,doty)
+    Result(im,['data',im],'Overlay')
+
+###########################################################################
+
+End()

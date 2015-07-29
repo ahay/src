@@ -1,0 +1,8 @@
+from rsf.tex import *
+
+End(options='short',use='listings,hyperref,jfc,amsmath',
+    include=r'''
+    \newcommand{\RSF}{../../..}
+    \newcommand{\E}{\mathcal{E}}
+    ''')
+

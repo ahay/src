@@ -1,0 +1,56 @@
+from rsf.proj import *
+
+data = 'data-BP2.HH'
+Fetch(data,'bp')
+
+Flow('data',data,'dd form=native')
+
+Flow('fft','data',
+     '''
+     pad beg2=650 n2out=2048 n1out=4096 |
+     rtoc | fft3 axis=1 pad=1 | fft3 pad=1 inv=y
+     ''')
+
+# CORRELATION 
+Flow('fft2','fft','math output="input*conj(input)" ')
+# SMOOTHING THE DENOMINATOR
+eps = 0.000003
+Flow('smoo','fft2',
+     '''
+     real | clip2 lower=%g |
+     smooth rect1=100 rect2=50 repeat=5 | rtoc |
+     math num=$SOURCE output=num/input 
+     ''' % eps)
+# INVERSION WITH EPSILON
+Flow('divn','fft2','math output="input/(input+%g)" ' % eps)
+     
+for case in ('fft2','smoo','divn'):
+    back = 'back_'+case
+    Flow(back,case,
+         '''
+         fft3 pad=1 | fft3 axis=1 pad=1 inv=y | real |
+         window f2=650 min1=0 n1=1216
+         ''')
+
+def plot(one,two):
+    n1 = (18-len(one))//2
+    n2 = (18-len(two))//2
+    return '''
+    merge axis=2 nspace=5 ${SOURCES[1]} |
+    grey title="%s%s%s | %s%s%s"
+    label1=Time unit1=s wantaxis2=n crowd=0.87
+    screenht=10 screenwd=7.5 labelsz=4 titlesz=5
+    ''' % ('. '*n1,one,' .'*n1,
+           '. '*n2,two,' .'*n2)
+
+Flow('right','data','window min2=0 | tpow tpow=1 | byte pclip=98')
+Flow('left','back_fft2','window max2=0 | byte')
+
+Result('antoine10','left right',plot('F\'F','Input'))
+
+Flow('right2','back_smoo','window max2=0 | tpow tpow=0.5 | byte')
+Flow('left2', 'back_divn','window max2=0 | tpow tpow=0.5 | byte')
+
+Result('antoine11','left2 right2',plot('F\'F/(F\'F+eps)',' F\'F/<<F\'F>> '))
+
+End()

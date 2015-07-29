@@ -1,0 +1,172 @@
+\section{Command line interface}
+Madagascar was designed initially to be used from the command
+line. Programmers create Madagascar programs (prefixed with the sf
+designation) that read and write Madagascar files. These programs are
+designed to be as general as possible, so that each one could operate
+on any dataset in RSF format, provided you also supply the correct
+parameters and have the right type of data for the program.
+
+\subsection{Using programs}
+Madagascar programs follow the standard UNIX conventions for reading and writing RSF files to and from \textbf{stdin} and \textbf{stdout}. This is also the convention that Seismic Unix uses, so it should be familiar to SU users.
+For example: the program \textbf{sfattr} allows us to get attributes about an RSF file (mean, standard deviation, min, max, etc.) To get the attributes for a pre-computed file, we might use
+\begin{verbatim}
+sfattr < file.rsf
+     rms =       1.41316 
+   mean =      0.999667 
+ 2-norm =       357.503 
+ variance =      0.997693 
+std dev =      0.998846 
+    max =       5.05567 at 36 8 27 
+    min =      -3.59936 at 18 9 6 
+ nonzero samples = 64000 
+ total samples = 64000 
+ \end{verbatim}
+We demonstrate how to read and write RSF files using \textbf{sfwindow} which is a program that allows us to select portions of an RSF file. When \textbf{sfwindow} is used without any additional parameters, we are able to make a copy of a file with a different filename. For example:
+\begin{verbatim}
+ sfwindow < file.rsf > file2.rsf
+ \end{verbatim}
+gives us two files, file.rsf and file2.rsf which are identical but not the same file. If your intention is simply to copy a file, you can also use \textbf{sfcp}.
+In addition to specifying files to read in and out on the command line we can specify the parameters for each program that are necessary for it to run, or to produce the desired result. The general format for specifying parameters on the command line is \textbf{key=val}, where \textbf{key} is the name of the parameter that you want to set, and \textbf{val} is the value of the parameter. There are four (4) types of values that are acceptable: integers, floating point numbers, booleans, or strings. Going back to the window program, we can specify the number of traces or pieces of the file that we want to keep like:
+\begin{verbatim}
+sfwindow < file.rsf n1=10 > file-win.rsf
+\end{verbatim}
+
+\subsection{Self-documentation}
+Of course, we can specify as many parameters as we'd like on the command line. To figure out which parameters are needed for a specific program, just type the name of the program with no input files our output files on the command line to bring up a program's self-documentation.  For example, \textbf{sfwindow}'s self documentation is:
+\begin{verbatimtab}[4]
+NAME
+	sfwindow
+DESCRIPTION
+	Window a portion of a dataset. 
+SYNOPSIS
+	sfwindow < in.rsf > out.rsf verb=n squeeze=y 
+        j#=(1,...) d#=(d1,d2,...) f#=(0,...) min#=(o1,o2,,...) 
+        n#=(0,...) max#=(o1+(n1-1)*d1,o2+(n1-1)*d2,,...)
+PARAMETERS
+        float   d#=(d1,d2,...)  sampling in #-th dimension 
+        largeint f#=(0,...)     window start in #-th dimension 
+        int     j#=(1,...)      jump in #-th dimension 
+        float   max#=(o1+(n1-1)*d1,o2+(n1-1)*d2,,...)   
+            maximum in #-th dimension 
+        float   min#=(o1,o2,,...)       minimum in #-th dimension 
+        largeint n#=(0,...)     window size in #-th dimension 
+        bool    squeeze=y [y/n] 
+            if y, squeeze dimensions equal to 1 to the end 
+        bool    verb=n [y/n]    Verbosity flag
+USED IN
+	bei/dpmv/krchdmo
+	bei/dpmv/matt
+	bei/dwnc/sigmoid
+	bei/fdm/kjartjac
+	bei/fld/cube
+	bei/fld/shotmovie
+	bei/fld/synmarine
+	bei/fld/yc
+	bei/ft1/autocor
+	bei/ft1/brad
+	bei/ft1/ft2d
+	bei/krch/sep73
+	bei/sg/denmark
+	bei/sg/toldi
+	bei/trimo/mod
+	bei/trimo/subsamp
+	bei/vela/stretch
+	bei/vela/vscan
+	bei/wvs/head
+	bei/wvs/vscan
+	cwp/geo2006TimeShiftImagingCondition/flat
+	cwp/geo2006TimeShiftImagingCondition/icomp
+	cwp/geo2006TimeShiftImagingCondition/zicig
+	cwp/geo2007StereographicImagingCondition/flat4
+	cwp/geo2007StereographicImagingCondition/gaus1
+	167 more examples listed in:
+	/usr/local/RSFROOT/share/doc/madagascar/html/sfwindow.html
+SOURCE
+	system/main/window.c
+DOCUMENTATION
+	http://ahay.org/wiki/Guide_to_madagascar_programs#sfwindow
+VERSION
+	1.3-svn
+\end{verbatimtab}
+
+The self-documentation tells us the function of the program, as well as the parameters that are available to be specified. The parameter format is type - name=default value [options] and then a short description of the parameter. File parameters request a name of a file. For example: 
+\begin{verbatim} 
+file=file.rsf 
+\end{verbatim}
+
+Note: strings with spaces must be enclosed in quotation marks
+(e.g. 'my value') so that the Unix shell could interpret them correctly.
+
+\subsection{Piping}
+Sometimes we want to chain multiple commands together without writing intermediate Madagascar RSF files in the process. We can avoid making intermediate files by using another standard UNIX construct, pipes. Pipes allow us to connect the standard output from one Madagascar program to the standard input to another program without first writing to a file. For example we could do the following without pipes:
+\begin{verbatim}
+sfwindow < file.rsf > file-win.rsf
+sftransp < file-win.rsf > file2.rsf
+\end{verbatim}
+Or we could do the equivalent using pipes on one line:
+\begin{verbatim}
+sfwindow < file.rsf | sftransp > file2.rsf
+\end{verbatim}
+Pipes simply make these statements more compact, and allow us to reduce the number of files that we need to save to disk.  Piping is very powerful, because there is no limit to the number of statements that you can pipe together.  For example:
+
+\begin{verbatim}
+sfwindow < file.rsf | sftransp | sfnoise var=1 > file2.rsf 
+\end{verbatim}
+If you're using multiple programs, and do not want to save the intermediate files, then pipes will greatly reduce the number of files that you have to keep track of.  
+
+\subsection{Interacting with files from the command line}
+
+Ultimately though, 95\% of your time using Madagascar on the command line will be to inspect and view files that are output by your scripts. Some of the key commands that are used to interact with files on the command line are:
+\begin{itemize}
+\item \textbf{sfin}, used to get header information,
+\item \textbf{sfattr}, used to get file attributes,
+\item \textbf{sfwindow}, used to select portions of RSF files,
+\item and \textbf{sftransp}, used to reorder files.
+\end{itemize}
+
+Here are detailed usage examples and explanations of what the above programs do:
+
+\textbf{sfin} is one of the most used program on the command line, because most often we simply need to check the dimensionality of our files to make sure that we have them in the correct order.
+\begin{verbatim}
+sfin file.rsf
+ 
+file.rsf:
+    in="/var/tmp/file.rsf@"
+    esize=4 type=float form=native 
+    n1=100         d1=0.004       o1=0          label1="Time" unit1="s" 
+    n2=34          d2=0.1         o2=0          label2="Distance" unit2="km" 
+	3400 elements 13600 bytes
+\end{verbatim}
+
+\textbf{sfattr} is also commonly used from the command line to check files for correct values. Most often, we use sfattr to ensure that files are not filled with zeros, or with NaN's after a long computation, or to make sure that the values are reasonable. sfattr can be used to obtain basic statistics about the files as well.
+
+\begin{verbatim}
+sfattr < file.rsf 
+ 
+******************************************* 
+     rms =             1 
+    mean =             1 
+  2-norm =       58.3095 
+variance =             0 
+ std dev =             0 
+     max =             1 at 1 1 
+     min =             1 at 1 1 
+nonzero samples = 3400 
+  total samples = 3400 
+*******************************************
+\end{verbatim}
+
+\textbf{sfwindow} is used to select subsets of the data contained in an RSF file for computation elsewhere. Typically, you specify the data subset you want to keep using, the n, j, and f parameters which specify the number of indices in the arrays to keep, the jump in indices, and the first index to keep from the file in the respective dimension. For example if we want to keep the 15th-30th time samples from the first axis in \texttt{file.rsf}, we might use the following command:
+\begin{verbatim}
+sfwindow < file.rsf f1=15 n1=15 j1=1 > file-win.rsf
+\end{verbatim}
+
+\textbf{sftransp} is used to reorder RSF files for other programs to be used. For example:
+\begin{verbatim}
+sftransp < file.rsf plane=12 > file-transposed.rsf
+\end{verbatim}
+swaps the first and second axes, so that now the first axis is distance and the second axis is time.
+
+For more information about commonly used Madagascar programs please see the guide to Madagascar programs: \url{http://reproducibility.org/wiki/Guide_to_madagascar_programs}.
+
+

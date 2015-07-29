@@ -1,0 +1,5 @@
+from rsf.tex import *
+Paper('velan',use='hyperref,listings,color')
+End(use='hyperref,listings,color',
+    color='modl modl2 cdp1500 cdp2000 cdp2500 cdp3000 cdp3500 pick')
+

@@ -1,0 +1,57 @@
+from rsf.proj import *
+
+Flow('lag.asc',None,
+     'echo 1 100 101 n=100,100 n1=3 data_format=ascii_int in=$TARGET')
+Flow('lag','lag.asc','dd form=native')
+Flow('bob.asc','lag',
+     'echo -0.9 -0.9 0.81 n1=3 data_format=ascii_float lag=$SOURCE in=$TARGET',
+     stdin=0)
+Flow('bob','bob.asc','dd form=native')
+
+lag = [1,2] + range(98,103) + range(198,203)
+ns = len(lag)
+
+Flow('slag.asc',None,
+     '''
+     echo %s n1=%d n=100,100 in=$TARGET
+     data_format=ascii_int
+     ''' % (string.join(map(str,lag),' '),ns))
+Flow('slag','slag.asc','dd form=native')
+
+t=1
+s0 = 18*(114-73*t)
+s = [96*(8*t-11),
+     84*(1-t),
+     16*(9-8*t),
+     112*(2*t-3)]
+s.extend([s[0],s[3],s[2],5*t-6])
+s.extend([s[2],s[1],s[2],s[7]])
+    
+Flow('ss.asc','slag',
+     '''
+     echo %s n1=%d lag=$SOURCE in=$TARGET
+     data_format=ascii_float a0=%g
+     ''' % (string.join(map(str,s),' '),ns,s0))
+Flow('ss','ss.asc','dd form=native')
+    
+Flow('filt ss0 flag0 flag','ss',
+     '''
+     wilson eps=0.001 lagout=${TARGETS[2]} > ${TARGETS[1]} &&
+     wilson eps=0.001 < $SOURCE lagout=${TARGETS[3]} lagin=${TARGETS[2]} 
+     ''')
+
+for case in ('bob','filt'):
+    Flow(case+'1',case,
+         '''
+         spike n1=60 n2=60 nsp=1 k1=30 k2=30 |
+         helicon adj=0 div=1 filt=$SOURCE |
+         helicon adj=1 div=1 filt=$SOURCE
+         ''',stdin=0)
+    Plot(case,case+'1',
+         '''
+         grey wantaxis=n crowd=0.85 gpow=0.7 title=%s allpos=y
+         ''' % ('Splitting','Factorization')[case=='filt'])
+
+Result('bob','filt bob','SideBySideAniso')
+
+End()

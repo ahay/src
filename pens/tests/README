@@ -1,0 +1,45 @@
+This directory contains a test suite and some examples.
+
+gmake all----show everything one by one
+gmake alltest----show every test one by one
+gamke alldemo----show every demo one by one
+gmake allprog----run every sampling program one by one
+
+Each of the files beginning "TEST" is meant to test something.
+It should be pretty obvious if something is wrong. Some of them
+will print out text on your screen pointing out what to look for.
+(If none of them do, then you've got a problem with your dev.message
+routine.) 
+
+gmake TEST_*.tube----show TEST_*
+
+Demo files are meant to show what sort of nice pictures you can make
+with vplot. 
+
+gmake DEMO_*.tube----show DEMO_*
+gmake demo*.tube----show demo_*.v
+
+Programs:
+
+The program Font.c produces pldb-format files which display the contents
+of a font. For each glyph in a font the corresponding glyph in font 0
+is shown (small), along with the glyph's index. A ``?'' in a box is
+a special error symbol which indicates that the desired glyph is not
+defined. This error glyph is glyph number 30 in font 0.
+
+The program rastest.c must be linked with -lvplot, and the output of it
+can be piped into any pen filter. It produces an interesting color raster
+moire pattern (it may take a while to come out if you're using genraster).
+This program also serves as an example of how to use vplotlib from a C program.
+
+Other example C and FORTRAN programs are:
+
+ellips.f, libvplot_example.c, polytest.c
+
+You'll have to edit the makefile to call the appropriate pen filter.
+
+The programs here are bad examples in that they implicitly use hardwired
+magic numbers, without basing them off of the defined values in vplot.h.
+The metafiles in this directory are also in raw integer Vplot units, not
+inches or centimeters. These, however, are easy to convert using plas (if
+needed) and pldb -i.

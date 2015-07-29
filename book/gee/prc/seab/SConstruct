@@ -1,0 +1,20 @@
+from rsf.proj import *
+
+Fetch('apr18.h','seab')
+
+Flow('data','apr18.h','dd form=native')
+Flow('bin','data',
+     '''window n1=1 f1=2 | math output='(2978-input)/387' |
+     bin head=$SOURCE niter=150 nx=160 ny=160 xkey=0 ykey=1''')
+
+def grey(title):
+    return '''
+    grey pclip=100 labelsz=10 titlesz=12
+    transp=n yreverse=n
+    label1=longitude label2=latitude title="%s"
+    ''' % title
+
+Result('seabin','bin',grey('April 18 Binned'))
+
+###########################################################################
+End()

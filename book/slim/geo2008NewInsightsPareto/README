@@ -1,0 +1,54 @@
+New insights into one-norm solvers from the Pareto curve
+------------------------------------------------------
+
+1. Pre-requisites
+===============
+- RSF (http://rsf.sourceforge.net/) with Matlab API
+	+ add $RSFROOT/lib to your Matlab startup.m file
+- SPGL1 (http://www.cs.ubc.ca/labs/scl/spgl1/)
+	+ add path_to_SPGL1 to your Matlab startup.m file
+- Sparco (http://www.cs.ubc.ca/labs/scl/sparco/)
+	+ add path_to_Sparco to your Matlab startup.m file
+
+IMPORTANT: do not forget to add these pieces of software in your
+Matlab startup.m file!
+
+2. Quickstart
+===============
+
+- In "Fig" folder, run
+
+bash$ scons
+
+at the terminal prompt.
+
+- In the "geop" folder, run
+
+bash$ scons lock
+
+at the terminal prompt.
+
+- In the "pareto" folder, run
+
+bash$ scons lock
+
+at the terminal prompt.
+
+- In the folder where you found this README file, run
+
+bash$ scons read
+
+at the terminal prompt. You can also just run
+
+bash$ scons pdf
+
+at the terminal prompt and open the the PDF file with your favorite reader.
+
+
+Thanks for playing around with our codes!
+
+The authors:
+Gilles Hennenfent       (ghennenfent@eos.ubc.ca)
+Ewout van den Berg      (ewout78@cs.ubc.ca)
+Michael P. Friedlander  (mpf@cs.ubc.ca)
+Felix J. Herrmann       (fherrmann@eos.ubc.ca)

@@ -1,0 +1,72 @@
+******************************************************
+***       Test of GenOp Rn operator class          ***
+*** Rosenbrock function (Mor'{e} et all TOMS 566) ***
+***                                                ***
+*** m=2 n=2                                        ***
+***                                                ***
+*** initial point from TOMS:                       ***
+******************************************************
+
+input vector:
+Vector Object
+member of space:
+RnSpace: simple dense vector space
+dimension = 2
+data container:
+RnArray Local Data Container object
+length = 2
+samples: 
+data[0] = -1.2
+data[1] = 1
+
+output vector:
+Vector Object
+member of space:
+RnSpace: simple dense vector space
+dimension = 2
+data container:
+RnArray Local Data Container object
+length = 2
+samples: 
+data[0] = -4.4
+data[1] = 2.2
+
+Jacobian:
+j[0,0]=24
+j[1,0]=-1
+j[0,1]=10
+j[1,1]=0
+
+******************************************************
+*** global solution for LS problem from TOMS:      ***
+******************************************************
+
+input vector:
+Vector Object
+member of space:
+RnSpace: simple dense vector space
+dimension = 2
+data container:
+RnArray Local Data Container object
+length = 2
+samples: 
+data[0] = 1
+data[1] = 1
+
+output vector:
+Vector Object
+member of space:
+RnSpace: simple dense vector space
+dimension = 2
+data container:
+RnArray Local Data Container object
+length = 2
+samples: 
+data[0] = 0
+data[1] = 0
+
+Jacobian:
+j[0,0]=-20
+j[1,0]=-1
+j[0,1]=10
+j[1,1]=0

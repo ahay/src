@@ -1,0 +1,145 @@
+\section{Inverse linear interpolation (stretch.c)}
+
+
+
+
+\subsection{{sf\_stretch\_init}}
+Initializes the object of the abstract data of type \texttt{sf\_map}, which will be used to define and transform (stretch) coordinates.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_map sf_stretch_init (n1, o1, d1, nd, eps, narrow);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+sf_map sf_stretch_init (int n1, float o1, float d1 /* regular axis */, 
+                        int nd                     /* data length */, 
+                        float eps                  /* regularization */, 
+                        bool narrow                /* if zero boundary */)
+/*< initialize >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt narrow]
+   \setlength\itemsep{0pt}
+   \item[n1]	     axis (\texttt{int}).
+   \item[o1]     first sample on the axis (\texttt{int}).
+   \item[d1]     step length to access the sample on the same axis (\texttt{int}).
+   \item[eps]    regularizaton (\texttt{float}). 
+   \item[narrow] is boundary value zero or not (\texttt{bool}).
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[str] the \texttt{sf\_map} object. It is of type \texttt{sf\_map}.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_stretch\_define}}
+Defines the coordinates for mapping (which in this case is stretching. That is, it fills the required variables in the \texttt{sf\_map} object to map the input coordinates.
+
+
+\subsubsection*{Call}
+\begin{verbatim}sf_stretch_define (str, coord);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_stretch_define (sf_map str, const float* coord)
+/*< define coordinates >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt cool]
+   \setlength\itemsep{0pt}
+   \item[str] the \texttt{sf\_map} object. Must be of type \texttt{sf\_map}. 
+   \item[coor] input coordinates (\texttt{const float}).
+\end{desclist}
+
+
+
+
+\subsection{{sf\_stretch\_apply}}\label{sec:sf_stretch_apply}
+Converts the ordinates (\texttt{ord}) defined in the input to model (\texttt{mod}). It uses the \hyperref[sec:sf_tridiagonal_solve]{\texttt{sf\_tridiagonal\_solve}} function.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_stretch_apply (str, ord, mod);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_stretch_apply (sf_map str, const float* ord, float* mod)
+/*< convert ordinates to model >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ord]
+   \setlength\itemsep{0pt}
+   \item[str] the \texttt{sf\_map} object. Must be of type \texttt{sf\_map}. 
+   \item[ord] input ordinates (\texttt{const float*}).
+   \item[mod] model (\texttt{const float*}).
+\end{desclist}
+
+
+
+
+\subsection{{sf\_stretch\_invert}}
+Converts model (mod) to ordinates by linear interpolation. It is the inverse of \hyperref[sec:sf_stretch_apply]{\texttt{sf\_stretch\_apply}}.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_stretch_invert (str, ord, mod);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_stretch_invert (sf_map str, float* ord, const float* mod)
+/*< convert model to ordinates by linear interpolation >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ord]
+   \setlength\itemsep{0pt}
+   \item[str] the \texttt{sf\_map} object. Must be of type \texttt{sf\_map}. 
+   \item[ord] input ordinates (\texttt{const float*}).
+   \item[mod] model (\texttt{const float*}).
+\end{desclist}
+
+
+
+
+\subsection{{sf\_stretch\_close}}
+This function frees the allocated space for the \texttt{sf\_map} object.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_stretch_close (str);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_stretch_close (sf_map str)
+/*< free allocated storage >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[str] the \texttt{sf\_map} object. Must be of type \texttt{sf\_map}.
+\end{desclist}
+
+
+
+
+

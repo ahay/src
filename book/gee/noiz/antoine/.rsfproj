@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfwindow', 'sfmask', 'sfheaderwindow', 'sfmath', 'sfpad', 'sfput', 'sfwiggle', 'sfbox']
+data=['data/galilee/galilee.h']
+size=    4216916

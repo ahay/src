@@ -1,0 +1,29 @@
+from rsf.proj import *
+
+for case in ('','oc'):
+    parcel = case+'parcel'
+    Result(parcel,None,
+           '''
+           spike n1=100 n2=30 |
+           %s w=17,6 k=5,11 |
+           thplot axis=n title=" " 
+           ''' % parcel)
+    for tent in (0,1):
+        wall = case+'wall'+str(tent)
+        wind = case+'wind'+str(tent)
+        Flow([wall,wind],None, 
+             '''
+             %stentwt windwt=${TARGETS[1]} tent=%d
+             n1=100 n2=30 w=61,19 k=2,2
+             ''' % (case,tent))
+        Result(wall+'wt',wall,'thplot axis=n title=" "')
+        Result(wind+'wt',wind,'thplot axis=n title=" "')
+
+Result('idempatch',None,'idempatch - | window f2=1 | thplot axis=n title=" "')
+Result('cinloip',None,
+       'idempatch a1=11 a2=5 lag1=6 lag2=1 | thplot axis=n title=" " ')
+
+
+
+###########################################################################
+End()

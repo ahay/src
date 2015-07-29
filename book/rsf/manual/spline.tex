@@ -1,0 +1,163 @@
+\section{B-spline interpolation (spline.c)}
+
+
+
+
+\subsection{{sf\_spline\_init}}
+Initializes and defines a banded matrix for spline interpolation.
+
+
+\subsubsection*{Call}
+\begin{verbatim}slv = sf_spline_init (nw, nd);\end{verbatim}
+
+
+\subsubsection*{Definition}
+\begin{verbatim}
+sf_bands sf_spline_init (int nw /* interpolator length */, 
+                         int nd /* data length */)
+/*< initialize a banded matrix >*/
+{
+   ...
+}
+\end{verbatim}
+
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt nw]
+   \setlength\itemsep{0pt}
+   \item[nw] length of the interpolator (\texttt{int}). 
+   \item[nd] length of the data (\texttt{int}).  
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[slv] an object of type \texttt{sf\_band}. It is of type \texttt{sf\_band}.
+\end{desclist}
+
+
+
+\subsection{{sf\_spline4\_init}}
+Initializes and defines a tridiagonal matrix for cubic spline interpolation.
+
+\subsubsection*{Call}
+\begin{verbatim}slv = sf_spline4_init(nd);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+sf_tris sf_spline4_init (int nd /* data length */)
+/*< initialize a tridiagonal matrix for cubic splines >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[nd] length of the data (\texttt{int}).  
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[slv] an object of type \texttt{sf\_tri}. It is of type \texttt{sf\_tri}.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_spline4\_post}}
+Performs the cubic spline post filtering.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_spline4_post (n, n1, n2, inp, out);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_spline4_post (int n            /* total trace length */, 
+                      int n1           /* start point */, 
+                      int n2           /* end point */, 
+                      const float* inp /* spline coefficients */, 
+                      float* out       /* function values */)
+/*< cubic spline post-filtering >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt out]
+   \setlength\itemsep{0pt}
+   \item[n]   total length of the trace (\texttt{int}). 
+   \item[n1]  start point (\texttt{int}).  
+   \item[n2]  end point (\texttt{int}). 
+   \item[inp] spline coefficients (\texttt{const float*}).
+   \item[out] function values (\texttt{float*}).
+\end{desclist}
+
+
+
+
+\subsection{{sf\_spline\_post}}
+Performs the post filtering to convert spline coefficients to model.
+
+
+\subsubsection*{Call}
+\begin{verbatim}sf_spline_post(nw, o, d, n, modl, datr);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_spline_post (int nw, int o, int d, int n, 
+                     const float *modl, float *datr)
+/*< post-filtering to convert spline coefficients to model >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt datr]
+   \setlength\itemsep{0pt}
+   \item[nw]   length of the interpolator (\texttt{int}). 
+   \item[o]    start point (\texttt{int}).  
+   \item[d]    step size (\texttt{int}). 
+   \item[n]    total length of the trace (\texttt{int}). 
+   \item[modl] spline coefficients, which have to be converted to model coefficients.  Must be of type \texttt{const float*}.
+   \item[datr] model, it is the output (\texttt{float*}).
+\end{desclist}
+
+
+
+
+\subsection{{sf\_spline2}}
+Performs pre-filtering for spline interpolation for 2D data.
+
+\subsubsection*{call}
+\begin{verbatim}sf_spline2 (slv1, slv2, n1, n2, dat, tmp);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_spline2 (sf_bands slv1, sf_bands slv2, 
+                 int n1, int n2, float** dat, float* tmp)
+/*< 2-D spline pre-filtering >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt slv2]
+   \setlength\itemsep{0pt}
+   \item[slv1] first banded matrix. Must be of type \texttt{sf\_band}. 
+   \item[slv2] second banded matrix. Must be of type \texttt{sf\_band}. 
+   \item[n1]   data length on the first axis (\texttt{int}).  
+   \item[n2]	  data length on the second axis (\texttt{int}). 
+   \item[dat]  2D data. Must be of type \texttt{const float*}*.
+   \item[tmp]  temporary arrays for calculation (\texttt{float*}).
+\end{desclist}
+
+
+
+
+

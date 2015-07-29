@@ -1,0 +1,45 @@
+import os, sys, string
+sys.path.append('../../framework')
+import bldutil
+
+try: # distributed version
+    Import('env root incdir')
+    env = env.Clone()
+except: # local version
+    env = bldutil.Debug()
+    root = None
+    
+src = Glob('[a-z]*.vplot_font')
+
+for flags in ('CFLAGS','LINKFLAGS'):
+    flag = env.get(flags,'')
+    if isinstance (flag, str):
+        env[flags] = flag.replace('-mmic','')
+
+prog = env.Program('makefont','makefont.c',PROGSUFFIX='.x',PROGPREFIX='')
+
+attr = ('check','header','dim','addr','widthl','widthr','symbol','svec','lig')
+
+for font in src:
+    base = os.path.splitext(str(font))[0]
+    include = base+'.include'
+    bin = base+'.bin'
+       
+    aux = string.join(map(lambda x: '%s_%s' % (base,x),attr))
+
+    ldpath = ''
+    for key in os.environ.keys():
+        if key[-15:] == 'LD_LIBRARY_PATH':
+            ldpath += '%s=%s ' % (key,os.environ[key])
+                          
+    env.Command([include,bin],[prog,font],
+                '%s ${SOURCES[0].abspath} %s '
+                '< ${SOURCES[1]} > ${TARGETS[0]} && '
+                'cat %s > ${TARGETS[1]} && '
+                'rm %s' % (ldpath,base,File(aux),File(aux)))
+
+    env.Install('../../include',include)
+
+    if root:
+        env.Install(incdir,include)
+        env.Install(incdir,bin)
