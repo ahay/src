@@ -1,4 +1,0 @@
-MPI SEGYPP Unit Test 3
-Create SEGYSpace, two vectors in it, assign 1.0 to all samples,
-print out inner product - should be 2222
-mpitest3 result: inner product = 2222

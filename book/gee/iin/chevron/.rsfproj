@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfwindow', 'sfmath', 'sfbin', 'sfgrey', 'sfframe', 'sflapfill', 'sfadd', 'sfcontour']
-data=['data/chevron/s2000.5', 'data/chevron/w2000.5']
-size=      71176

@@ -1,3 +1,0 @@
-uses=['sfspike', 'sfput', 'sfmath', 'sfcmplx', 'sfcat', 'sfgraph']
-data=[]
-size=     204000

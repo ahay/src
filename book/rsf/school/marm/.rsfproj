@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfwindow', 'sfgrey', 'sfmakevel', 'sfmath', 'sfsmooth', 'sfeikEta', 'sfcontour', 'sfeikonal', 'sfwkbjTI', 'sfScanCoef', 'sfrotate', 'sfgraph', 'sfspray']
-data=['data/marm/marmvel.hh']
-size=    7766676

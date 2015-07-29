@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfput', 'sfgrey']
-data=['data/midpts/bei-stack.rsf']
-size=    2000000

@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfput', 'sfgrey', 'sftransp', 'sfradial', 'sfadd']
-data=['data/ground/hector.HH']
-size=    2292000

@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfwindow', 'sfmask', 'sfheaderwindow', 'sfmath', 'sfbin', 'sfgrey', 'sfwilson', 'sfspike', 'sfhelicon', 'sfadd', 'sfmiss', 'sfigrad', 'sfcat', 'sfscale', 'sfdots']
-data=['data/galilee/galilee.h']
-size=   13621800

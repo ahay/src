@@ -1,7 +1,0 @@
-# Input file for libvplot_example
-
- 	unit "Qa"  "Quaternary alluvium"
- 	unit "Tb"  "Tertiary basalt"
- 	unit "Kg"  "biotite monzogranite"
- 	unit "Krp"  "rhyolite porphyry"
- 	unit "Krd"  "biotite rhyodacite"

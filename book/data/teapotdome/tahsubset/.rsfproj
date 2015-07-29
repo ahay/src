@@ -1,3 +1,0 @@
-uses=['sftahsort', 'sftahmakeskey', 'sftahwrite', 'sfgrey', 'sfwindow', 'sfmask', 'sfmul', 'sfheaderwindow', 'sfintbin3', 'sfput', 'sfbyte', 'sfgrey3']
-data=[]
-size=  151126716

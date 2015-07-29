@@ -1,3 +1,0 @@
-uses=['sfspike', 'sfwindow', 'sfmath', 'sfdd', 'sfadd', 'sfsegyheader', 'sfsuwrite', 'sfmul', 'sfput', 'sfsmooth', 'sftowed_array', 'sfmakevel', 'sfacd', 'sfscale', 'sfgrey', 'sfsuread', 'sfgraph']
-data=['data/obs/vel_4layer.HH']
-size=  129523540

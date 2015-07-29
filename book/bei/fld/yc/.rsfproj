@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfwindow', 'sfpow', 'sfgrey']
-data=['data/wz/wz.02.H', 'data/wz/wz.20.H']
-size=          0

@@ -1,3 +1,0 @@
-uses=['sfspike', 'sfdd', 'sfmiss1', 'sfwiggle', 'sfthplot', 'sfcontour']
-data=[]
-size=      12536

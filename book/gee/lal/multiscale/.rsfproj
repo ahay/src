@@ -1,3 +1,0 @@
-uses=['sfmake', 'sfgrey', 'sfwindow', 'sfmath', 'sfinterleave', 'sfmspef', 'sfmsmiss', 'sfhole']
-data=[]
-size=      68384

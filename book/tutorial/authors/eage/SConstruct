@@ -1,7 +1,0 @@
-from rsf.tex import *
-
-Paper('eageabs',
-      lclass='eageabs',
-      options='11pt',
-      use='times,natbib,color,amssymb,amsmath,amsbsy,graphicx,fancyhdr')
-End(use='color')

@@ -1,45 +1,0 @@
-\section{FFT (kiss\_fftr.c)}
-
-\subsection{{sf\_kiss\_fftr\_alloc}}Allocates the memory for the FFT and returns an object of type \texttt{kiss\_fftr\_cfg}.
-
-\subsubsection*{Call}
-\begin{verbatim}kiss_fftr_alloc(nfft, inverse_fft, mem, lenmem);\end{verbatim}\subsubsection*{Definition}
-\begin{verbatim}
-kiss_fftr_cfg kiss_fftr_alloc(int nfft,int inverse_fft,void * mem,size_t * lenmem){   ...
-}
-\end{verbatim}
-
-\subsubsection*{Input parameters}
-\begin{desclist}{\tt}{\quad}[inversewfft]
-   \setlength\itemsep{0pt}
-   \item[nfft]         length of the forward FFT (\texttt{int}).     \item[inverse\_fft] length of the inverse FFT (\texttt{int}).     \item[mem]          pointer to the memory allocated for FFT (\texttt{void*}).   \item[lenmem]       size of the allocated memory (\texttt{size\_t}).
-\end{desclist}
-\subsubsection*{Input parameters}
-\begin{desclist}{\tt}{\quad}[]
-   \item[st] an object for FFT (\texttt{kiss\_fftr\_cfg}).\end{desclist}
- \subsection{{kiss\_fftr}}Performs the forward FFT on the input \texttt{timedata} which is real, and stores the transformed complex \texttt{freqdata} in the location specified in the input.\subsubsection*{Call}
-\begin{verbatim}kiss_fftr( st, timedata, freqdata)\end{verbatim}
-
-\subsubsection*{Definition}
-\begin{verbatim}
-void kiss_fftr(kiss_fftr_cfg st,const kiss_fft_scalar *timedata,kiss_fft_cpx *freqdata){    /* input buffer timedata is stored row-wise */
-    /* The real part of the DC element of the frequency spectrum in st->tmpbuf     * contains the sum of the even-numbered elements of the input time sequence     * The imag part is the sum of the odd-numbered elements     *     * The sum of tdc.r and tdc.i is the sum of the input time sequence.      *      yielding DC of input time sequence     * The difference of tdc.r - tdc.i is the sum of the input (dot product) [1,-1,1,-1...      *      yielding Nyquist bin of input time sequence     */    ...
-}\end{verbatim}
-
-\subsubsection*{Input parameters}
-\begin{desclist}{\tt}{\quad}[freqdata]
-   \setlength\itemsep{0pt}
-   \item[st]       an object for the forward FFT (\texttt{kiss\_fftr\_cfg}).     \item[timedata] time data which is to be transformed (\texttt{const kiss\_fft\_scalar*}).     \item[freqdata] location where the transformed data is to be stored (\texttt{kiss\_fft\_cpx*}).\end{desclist}
-\subsection{{kiss\_fftri}}Performs the inverse FFT on the input \texttt{timedata} which is real, and stores the transformed complex \texttt{freqdata} in the location specified in the input.
-\subsubsection*{Call}
-\begin{verbatim}kiss_fftri(st, freqdata, timedata);\end{verbatim}
-
-\subsubsection*{Definition}
-\begin{verbatim}
-void kiss_fftri(kiss_fftr_cfg st,const kiss_fft_cpx *freqdata,kiss_fft_scalar *timedata)/* input buffer timedata is stored row-wise */
-{   ...
-}\end{verbatim}
-\subsubsection*{Input parameters}
-\begin{desclist}{\tt}{\quad}[freqdata]
-   \setlength\itemsep{0pt}
-   \item[st]       an object for the inverse FFT (\texttt{kiss\_fftr\_cfg}).     \item[timedata] location where the inverse time data is to be stored (\texttt{const kiss\_fft\_scalar*}).     \item[freqdata] complex frequency data which is to be inverse transformed (\texttt{kiss\_fft\_cpx*}).\end{desclist}

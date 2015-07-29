@@ -1,3 +1,0 @@
-uses=['sfwindow', 'sfdd', 'sfmutter', 'sfvscan', 'sfpick', 'sfgrey', 'sfnmo']
-data=['data/midpts/midpts.hh']
-size=     356000

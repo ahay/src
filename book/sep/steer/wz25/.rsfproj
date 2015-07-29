@@ -1,3 +1,0 @@
-uses=['sfdd', 'sftpow', 'sfscale', 'sfwindow', 'sfgrey', 'sfmath', 'sfmask', 'sfadd', 'sfcut', 'sfmutter', 'sfclip', 'sfdip', 'sfplanemis2']
-data=['data/wz/wz.25.H']
-size=    8536000

@@ -1,3 +1,0 @@
-uses=['sfaliasp', 'sfwindow', 'sfgrey', 'sftwodip2', 'sfdip', 'sftransp', 'sfspline', 'sflpad', 'sfplanemis2', 'sfscale']
-data=[]
-size=    1958400

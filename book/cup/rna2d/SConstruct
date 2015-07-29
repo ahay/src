@@ -1,3 +1,0 @@
-from rsf.tex import *
-
-End(color='npar2 ndiff2 mpapatch fxdiff npar ndiff fxdiff mpapatch zdata zfxm ztx znpre')

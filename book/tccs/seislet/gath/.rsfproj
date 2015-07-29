@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfcut', 'sfbandpass', 'sfwindow', 'sfput', 'sfgrey', 'sfdip', 'sfseislet', 'sftransp', 'sfdwt', 'sfthreshold', 'sfmutter', 'sfnoise', 'sfcat', 'sfremap1', 'sfscale', 'sfspike', 'sfvscan', 'sfpick', 'sfnmo', 'sfpatch']
-data=['PRIVATE', 'data/masha/elf-stk.rsf']
-size= 3767939200

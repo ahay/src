@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfput', 'sfgrey', 'sfmath', 'sfmask', 'sfadd', 'sfdip', 'sfplanemis2']
-data=['data/pwd/input.HH']
-size=    1034240

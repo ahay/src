@@ -1,3 +1,0 @@
-uses=['sftahscscale', 'sftahwrite', 'sfscale', 'sfgraph', 'sfwindow', 'sfcmplx', 'sftahsort', 'sfgrey']
-data=[]
-size= 6379277700

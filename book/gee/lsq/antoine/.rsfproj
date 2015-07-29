@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfpad', 'sfrtoc', 'sffft3', 'sfmath', 'sfreal', 'sfclip2', 'sfsmooth', 'sfwindow', 'sftpow', 'sfbyte', 'sfmerge', 'sfgrey']
-data=['data/bp/data-BP2.HH']
-size=  294296128

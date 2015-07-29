@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfwindow', 'sfgrey', 'sfdip', 'sfnoise', 'sfpwdsmooth2', 'sfpwd', 'sfadd', 'sfpad', 'sfcosft', 'sfput', 'sfstolt', 'sfvczo', 'sftransp', 'sfmath', 'sfclip2', 'sffocus', 'sfcut', 'sfmul', 'sfdivn', 'sfscale', 'sfpick', 'sfslice', 'sfshapeagc', 'sfagc']
-data=['data/gom/gomnearoffset.H']
-size=  584161352
