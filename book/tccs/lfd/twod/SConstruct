@@ -1,0 +1,165 @@
+from rsf.proj import *
+top = project.get('RSFROOT')
+libdir = os.path.join(top,'lib')
+
+
+Flow('vel7',None,
+     '''
+     spike n1=512 d1=5 k1=98 n2=512 d2=5 k2=98 |
+     math output="500+0.00012*(x1-800)*(x1-800)+0.0001*(x2-500)*(x2-500)"
+     ''')
+Flow('vel7_t','vel7','transp plane=12')
+Result('vel7',
+       '''
+       grey transp=n pclip=100 screenratio=1 color=j
+       label1="X" label2="Z" scalebar=y poly=y mean=y
+       unit1=m unit2=m  title=Velocity barlabel=Velocity barunit=m/s
+       ''')
+nt=900
+dt=0.002
+Flow('source7',None,
+     '''
+     spike n1=%d d1=%g k1=100 | 
+     ricker1 frequency=20 
+     '''%(nt,dt))
+Result('source7','graph  title="Source Wavelet" ')
+
+Flow('G_7','vel7_t',
+     '''
+     lfdc2_7 dt=0.002 eps=0.0001 npk=50 size=3 
+     ''') 
+Flow('wavapp7','source7 vel7_t G_7',
+     '''
+     ofd2_7 vel=${SOURCES[1]} G=${SOURCES[2]} isx=256 isz=256
+     dt=%g nt=%d 
+     '''%(dt,nt))
+Plot('wavapp7',
+     ''' 
+     window j3=20 |
+     grey poly=y label2="X" label1="Z" title="4th-order Lowrank FD"
+     yreverse=y transp=y gainpanel=each pclip=99
+     ''',view=1)
+Flow('G_10_2','vel7_t',
+     '''
+     lfdc2_7 dt=0.002 eps=0.0001 npk=50 size=6
+     ''')
+Flow('wavapp10_2','source7 vel7_t G_10_2',
+     '''
+     ofd2_10 vel=${SOURCES[1]} G=${SOURCES[2]} isx=256 isz=256
+     dt=%g nt=%d 
+     '''%(dt,nt))
+Flow('wavapp10sn_2','wavapp10_2','window n3=1 f3=800')
+Result('wavapp10sn_2',
+       '''
+       grey poly=y label2="Z" label1="X" title="10th-order LFD 2" screenratio=1
+       yreverse=y transp=n gainpanel=all pclip=99 clip=0.02 unit1=m unit2=m
+       ''' )
+Flow('wavfd7',['source7','vel7'],
+     '''
+     fd2bs vel=${SOURCES[1]}  dt=%g nt=%d isx=256 isz=256 nb=0 c=0.01 
+     '''%(dt,nt) )
+
+Plot('wavfd7',
+     ''' 
+     window j3=20 |
+     grey poly=y label2="Z" label1="X" title="fd2"
+     yreverse=y transp=n gainpanel=each pclip=99
+     ''',view=1)
+nt=720
+dt=0.0025
+Flow('source3',None,
+     '''
+     spike n1=%d d1=%g k1=100 | 
+     ricker1 frequency=20 
+     '''%(nt,dt))
+Result('source3','graph  title="Source Wavelet" ')
+Flow('wavfd10',['source3','vel7'],
+     '''
+     fd2_10 vel=${SOURCES[1]}  dt=%g nt=%d isx=256 isz=256 nb=0 c=0.01 
+     '''%(dt,nt) )
+
+Plot('wavfd10',
+     ''' 
+     window j3=20 |
+     grey poly=y label2="Z" label1="X" title="fd2"
+     yreverse=y transp=n gainpanel=each pclip=99
+     ''',view=1)
+Flow('G_10','vel7_t',
+     '''
+     lfdc2_7 dt=0.0025 eps=0.0001 npk=50 size=6
+     ''')
+Flow('wavapp10','source3 vel7_t G_10',
+     '''
+     ofd2_10 vel=${SOURCES[1]} G=${SOURCES[2]} isx=256 isz=256
+     dt=%g nt=%d 
+     '''%(dt,nt))
+Plot('wavapp10',
+     ''' 
+     window j3=20 |
+     grey poly=y label2="X" label1="Z" title="ofd2"
+     yreverse=y transp=y gainpanel=each pclip=99
+     ''',view=1)
+Flow('fft','vel7','fft1 | fft3 axis=2 pad=1')
+Flow('right left','vel7 fft',
+     'isolr2 seed=2010 dt=%g fft=${SOURCES[1]} left=${TARGETS[1]}' % dt)
+
+Flow('refl',None,'spike n1=512 d1=5 n2=512 d2=5 k1=256 k2=256') 
+
+Flow('wave','source3 refl left right',
+     '''
+     fftwave2 ref=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]} verb=y
+     ''')
+
+Plot('wave','window j3=20 | grey gainpanel=all screenratio=1 wanttitle=n')
+
+Result('wavel','wave',
+       '''
+       window n3=1 f3=640 |
+       grey label2=Z label1=X title="Lowrank Approximation" screenratio=1
+       yreverse=y transp=n unit1=m unit2=m 
+       ''')
+Flow('wavfd7sn','wavfd7','window n3=1 f3=800')
+Flow('wavfd10sn','wavfd10','window n3=1 f3=640')
+Flow('wavapp7sn','wavapp7','window n3=1 f3=800')
+Flow('wavapp10sn','wavapp10','window n3=1 f3=640')
+Result('wavfd7sn',
+       '''
+       grey poly=y label2="Z" label1="X" title="4th-order FD" screenratio=1
+       yreverse=y transp=n gainpanel=all pclip=99 clip=0.02 unit1=m unit2=m
+       ''' )
+Result('wavfd10sn',
+       '''
+       grey poly=y label2="Z" label1="X" title="FD" screenratio=1
+       yreverse=y transp=n gainpanel=all pclip=99 clip=0.02 unit1=m unit2=m
+       ''' )
+Result('wavapp7sn',
+       '''
+       grey poly=y label2="Z" label1="X" title="4th-order Lowrank FD" screenratio=1
+       yreverse=y transp=n gainpanel=all pclip=99 clip=0.02 unit1=m unit2=m
+       ''' )
+Result('wavapp10sn',
+       '''
+       grey poly=y label2="Z" label1="X" title="10th-order Lowrank FD" screenratio=1
+       yreverse=y transp=n gainpanel=all pclip=99 clip=0.02 unit1=m unit2=m
+       ''' )
+
+nt=900
+dt=0.002
+Flow('wavfd107',['source7','vel7'],
+     '''
+     fd2_10 vel=${SOURCES[1]}  dt=%g nt=%d isx=256 isz=256 nb=0 c=0.01 
+     '''%(dt,nt) )
+
+Plot('wavfd107',
+     ''' 
+     window j3=20 |
+     grey poly=y label2="Z" label1="X" title="fd2"
+     yreverse=y transp=n gainpanel=each pclip=99
+     ''',view=1)
+Flow('wavfd107sn','wavfd107','window n3=1 f3=800')
+Result('wavfd107sn',
+       '''
+       grey poly=y label2="Z" label1="X" title="4th-order Lowrank FD" screenratio=1
+       yreverse=y transp=n gainpanel=all pclip=99 clip=0.02 unit1=m unit2=m
+       ''' )
+End()

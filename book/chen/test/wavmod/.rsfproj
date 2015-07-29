@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfput', 'sfgrey', 'sfsignal', 'sfgraph', 'sfmath', 'sfcat', 'sftransp', 'sfwavmod']
+data=['data/marm/marmvel.hh']
+size=  277103976

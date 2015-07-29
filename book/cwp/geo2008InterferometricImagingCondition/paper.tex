@@ -1,0 +1,1098 @@
+\input{pcsmacros}
+\input{macro}
+\published{Geophysics, 73 , no. 2, S47-S61, (2008)}
+% ------------------------------------------------------------
+\title{Interferometric imaging condition for wave-equation migration}
+\author{
+Paul Sava (Colorado School of Mines) 
+\\ and \\
+Oleg Poliannikov (Massachusetts Institute of Technology)
+}
+\email{psava@mines.edu,poliann@erl.mit.edu}
+\righthead{Interferometric imaging condition}
+\lefthead{Sava and Poliannikov}
+%\ms{GEO-2006-0418}
+
+\maketitle
+
+% ------------------------------------------------------------
+\begin{abstract}
+The fidelity of depth seismic imaging depends on the accuracy of the
+velocity models used for wavefield reconstruction. Models can be
+decomposed in two components corresponding to large scale and small
+scale variations. In practice, the large scale velocity model
+component can be estimated with high accuracy using repeated
+migration/tomography cycles, but the small scale component
+cannot. When the Earth has significant small-scale velocity
+components, wavefield reconstruction does not completely describe the
+recorded data and migrated images are perturbed by artifacts.
+
+There are two possible ways to address this problem: improve wavefield
+reconstruction by estimating more accurate velocity models and image
+using conventional techniques (e.g. wavefield cross-correlation), or
+reconstruct wavefields with conventional methods using the known
+background velocity model, but improve the imaging condition to
+alleviate the artifacts caused by the imprecise reconstruction, which
+is what we suggest in this paper.
+
+We describe the unknown component of the velocity model as a random
+function with local spatial correlations. Imaging data perturbed by
+such random variations is characterized by statistical instability,
+i.e. various wavefield components image at wrong locations that depend
+on the actual realization of the random model. Statistical stability
+can be achieved by pre-processing the reconstructed wavefields prior
+to the imaging condition. We employ Wigner distribution functions to
+attenuate the random noise present in the reconstructed wavefields,
+parametrized as a function of image coordinates. Wavefield filtering
+using Wigner distribution functions and conventional imaging can be
+lumped-together into a new form of imaging condition which we call an
+``interferometric imaging condition'' due to its similarity to
+concepts from recent work on interferometry. The interferometric
+imaging condition can be formulated both for zero-offset and for
+multi-offset data, leading to robust and efficient imaging procedures
+that are effective in attenuating imaging artifacts due to unknown
+velocity models.
+\end{abstract}
+
+% ------------------------------------------------------------
+\section{Introduction}
+Seismic imaging in complex media requires accurate knowledge of the
+medium velocity. Assuming single scattering (Born approximation),
+imaging requires propagation of the recorded wavefields from the
+acquisition surface, followed by the application of an imaging
+condition highlighting locations where backscattering occurs,
+i.e. where reflectors are present. Typically, this is achieved with
+simple image processing techniques, e.g. cross-correlation of
+wavefields reconstructed from sources and receivers.
+
+The main requirement for good-quality imaging is accurate knowledge of
+the velocity model. Errors in the model used for imaging lead to
+inaccurate reconstruction of the seismic wavefields and to distortions
+of the migrated images. In any realistic seismic field experiment the
+velocity model is never known exactly. Migration velocity analysis
+estimates large scale approximations of the model, but some fine scale
+variations always remain elusive. For example, when geology includes
+complicated stratigraphic structures or complex salt/carbonate bodies,
+the rapid velocity variations on the scale of the seismic wavelength
+and smaller cannot be estimated correctly by kinematic
+methods. Therefore, even if the broad kinematics of the seismic
+wavefields are reconstructed correctly, the extrapolated wavefields
+also contain phase and amplitude distortions that lead to image
+artifacts obstructing the image of the geologic structure under
+consideration. While it is certainly true that even the recovery of a
+long-wave background may prove to be a challenge in some
+circumstances, we do not attempt to address that issue in this
+paper. Instead, we concentrate solely on the problem of dealing with
+the effect of a small scale random variations not estimated by
+conventional methods.
+
+There are two ways in which we can approach this problem. The first
+option is to improve our velocity analysis methods to estimate the
+small-scale variations in the model. Such techniques take advantage of
+all information contained in seismic wavefields and are not limited to
+kinematic information of selected events picked from the
+data. Examples of techniques in this category are waveform inversion
+\cite[]{tarantola.elsevier,GPR38-03-02870310,GPR38-03-03110312,GEO69-01-02310248},
+wave-equation tomography \cite[]{GEO57-01-00150026} or wave-equation
+migration velocity analysis
+\cite[]{SavaBiondi.gp.wemva1,SavaBiondi.gp.wemva2,Shen:2005}. A more
+accurate velocity model allows for more accurate wavefield
+reconstruction. Then, wavefields can be used for imaging using
+conventional procedures, e.g. cross-correlation.  The second option is
+to concentrate on the imaging condition, rather than concentrate on
+``perfect'' wavefield reconstruction. Assuming that the large-scale
+component of the velocity models is known (e.g. by iterative
+migration/tomography cycles), we can design imaging conditions that
+are not sensitive to small inaccuracies of the reconstructed
+wavefields. Imaging artifacts can be reduced at the imaging condition
+step, despite the fact that the wavefields incorporate small kinematic
+errors due to velocity fluctuations.
+
+Of course, the two options are complementary to each other, and both
+can contribute to imaging accuracy. In this paper, we concentrate on
+the second approach. For purposes of theoretical analysis, it is
+convenient to model the small-scale velocity fluctuations as random
+but spatially correlated variations superimposed on a known
+velocity. We assume that we know the background model, but that we do
+not know the random fluctuations. The goal is to design an imaging
+condition that alleviates artifacts caused by those random
+fluctuations. Conventional imaging consists of cross-correlations of
+extrapolated source and receiver wavefields at image locations. Since
+wavefield extrapolation is performed using an approximation of the
+true model, the wavefields contain random time delays, or equivalently
+random phases, which lead to imaging artifacts.
+
+One way of mitigating the effects of the random model on the quality
+of the resulting image is to use techniques based on acoustic time
+reversal \cite[]{Fink:1999}. Under certain assumptions, a signal sent
+through a random medium, recorded by a receiver array, time reversed
+and sent back through the same medium, refocuses at the source
+location in a statistically stable fashion. Statistical stability
+means that the refocusing properties (i.e. image quality) are
+independent of the actual realization of the random medium
+\cite[]{Papanicolaou:2004,Fouque:2005}.
+
+We investigate an alternative way of increasing imaging statistical
+stability. Instead of imaging the reconstructed wavefields directly,
+we first apply a transformation based on Wigner distribution functions
+\cite[]{Wigner.wdf} to the reconstructed wavefields. We consider a
+special case of the Wigner distribution function (WDF) which has the
+property that it attenuates random fluctuations from the wavefields
+after extrapolation with conventional techniques. The idea for this
+method is borrowed from image processing where WDFs are used for
+filtering of random noise. Here, we apply WDFs to the reconstructed
+wavefields, prior to the imaging condition. This is in contrast to
+data filtering prior to wavefield reconstruction or to image filtering
+after the application of an imaging condition.
+
+Our procedure closely resembles conventional imaging procedures where
+wavefields are extrapolated in the image volume and then
+cross-correlated in time at every image location. Our method uses WDFs
+defined in three-dimensional windows around image locations which
+makes it both robust and efficient. From an implementation and
+computational cost point of view, our technique is similar to
+conventional imaging, but its statistical properties are
+improved. Although conceptually separate, we can lump-together the WDF
+transformation and conventional imaging into a new form of imaging
+condition which resembles interferometric techniques
+\cite[]{Papanicolaou:2004,Fouque:2005}. Therefore, we use the name
+interferometric imaging condition for our technique to contrast it
+with the conventional imaging condition.
+
+A related method discussed in the literature is known under the name
+of coherent interferometric imaging
+\cite[]{Borcea.IP.2006,Borcea.GEO.2006,Borcea.Multiscale.2006}.  This
+method uses similar local cross-correlations and averaging, but unlike
+our method, it parametrizes reconstructed wavefields as a function of
+receiver coordinates. Thus, the coherent interferometric imaging
+functional requires separate wavefield reconstruction from every
+receiver position, which makes this technique prohibitively expensive
+and probably unusable in practice on large-scale seismic imaging
+projects. In contrast, the imaging technique advocated in this paper
+achieves similar statistical stability properties as coherent
+interferometric imaging, but at an affordable computational cost since
+we apply wavefield reconstruction only once for all receiver locations
+corresponding to a given seismic experiment, typically a ``shot''.
+
+% ------------------------------------------------------------
+\section{Imaging conditions}
+
+% ------------------------------------------------------------
+\subsection{Conventional imaging condition}
+Let $\DD{\xm,\tm}$ be the data recorded at time $\tm$ at receivers
+located at coordinates $\xm$ for a seismic experiment with buried
+sources (\rFg{parray}) also known as an exploding reflector seismic
+experiment \cite[]{GPR24-02-03800399}. A conventional imaging
+procedure for this type of data consists of two steps
+\cite[]{Claerbout.iei}: wavefield reconstruction at image coordinates
+$\ym$ from data recorded at receiver coordinates $\xm$, followed by an
+imaging condition taking the reconstructed wavefield at time $\tm=0$
+as the seismic image.
+
+% ------------------------------------------------------------
+\inputdir{XFig}
+% ------------------------------------------------------------
+\multiplot{2}{parray,aarray}{width=0.45\textwidth} {Zero-offset
+seismic experiment sketch (a) and multi-offset seismic experiment
+sketch (b). Coordinates $\xm=\{x,y\}$ characterize receiver positions
+on the surface and coordinates $\ym=\{x,y,z\}$ characterize reflector
+positions in the subsurface.}
+% ------------------------------------------------------------
+
+Mathematically, we can represent the wavefield $\V$ reconstructed at
+ coordinates $\ym$ from data $\D$ recorded at coordinates $\xm$ as a
+ temporal convolution of the recorded trace with the Green's function
+ $\G$ connecting the two points:
+%
+\beq \label{eqn:wrec}
+\VV{\xm,\ym,\tm} = \DD{\xm,\tm} *_t \GG{\xm,\ym,\tm} \;.
+\eeq
+%
+The total wavefield $\U$ reconstructed at $\ym$ from all receivers is
+the superposition of the wavefields $\V$ reconstructed from individual
+traces
+%
+\beq \label{eqn:urec}
+\UU{\ym,\tm} = \intxm \VV{\xm,\ym,\tm} \;,
+\eeq
+%
+where the integral over $\xm$ spans the entire receiver space. As
+stated, the imaging condition extracts the image $\IA{}{\ym}$ from the
+wavefield $\UU{\ym,\tm}$ at time $\tm=0$, i.e.
+%
+\beq \label{eqn:cic}
+\IA{}{\ym} = \UU{\ym,\tm=0} \;.
+\eeq
+
+The Green's function used in the procedure described by \req{wrec} can
+be implemented in different ways. For our purposes, the actual method
+used for computing Green's functions is not relevant. Any procedure
+can be used, although different procedures will be appropriate in
+different situations, with different cost of implementation. We assume
+that a satisfactory procedure exists and is appropriate for the
+respective velocity models used for the simulations. In our examples,
+we compute Green's functions with time-domain finite-difference
+solutions to the acoustic wave-equation, similar to reverse-time
+migration \cite[]{GEO48-11-15141524}.
+
+% ------------------------------------------------------------
+\inputdir{sigs2}
+% ------------------------------------------------------------
+
+% ------------------------------------------------------------
+\multiplot{2}{pvo,xm}{width=0.45\textwidth}{Velocity model (a)
+and imaging target located around $z=8$~km (b). The shaded area is
+imaged in \rFgs{sigs2-winpcic0}-\rfn{sigs2-winpiic1}.  }
+
+\multiplot{6}{pwo-0,pwv-0,pwo-7,pwv-7,pdo,pdv}{width=0.45\textwidth}
+{Seismic snapshots of acoustic wavefields simulated in the background
+velocity model (a)-(c), and in the random velocity model (b)-(d).
+Data recorded at the surface from simulation in the background
+velocity model (e) and from the simulation in the random velocity
+model (f).}
+% ------------------------------------------------------------
+
+Consider the velocity model depicted in \rFg{sigs2-pvo} and the
+imaging target depicted in \rFg{sigs2-xm}. We assume that the model
+with random fluctuations (\rFg{sigs2-pwv-0}) represents the real
+subsurface velocity and use this model to simulate data. We consider
+the background model (\rFg{sigs2-pwo-0}) to represent the migration
+velocity and use this model to migrate the data simulated in the
+random model. We consider one source located in the subsurface at
+coordinates $z=8$~km and $x=13.5$~km, and receivers located close to
+the top of the model at discrete horizontal positions and depth
+$z=0.0762$~km. \rFg{sigs2-pwo-7}-\rfn{sigs2-pwv-7} show snapshots of
+the simulated wavefields at a later time. The panels on the left
+correspond to modeling in the background model, while the panels on
+the right correspond to modeling in the random model.
+
+\rFg{sigs2-pdv} shows the data recorded on the surface. The direct
+wavefield arrival from the seismic source is easily identified in the
+data, although the wavefronts are distorted by the random
+perturbations in the medium. For comparison, \rFg{sigs2-pdo} shows
+data simulated in the background model, which do not show random
+fluctuations.
+
+Conventional imaging using the procedure described above implicitly
+states that data generated in the random model, \rFg{sigs2-pwv-0},
+are processed as if they were generated in the background model,
+\rFg{sigs2-pwo-0}. Thus, the random phase variations in the data are
+not properly compensated during the imaging procedure causing
+artifacts in the image. \rFg{sigs2-winpcic1} shows the image obtained
+by migrating data from \rFg{sigs2-pdv} using the model from
+\rFg{sigs2-pwo-0}. For comparison, \rFg{sigs2-winpcic0} shows the image 
+obtained by migrating the data from \rFg{sigs2-pdo} using the same
+model from \rFg{sigs2-pwo-0}.
+
+Ignoring aperture effects, the artifacts observed in the images are
+caused only by the fact that the velocity models used for modeling and
+migration are not the same. Small artifacts caused by truncation of
+the data on the acquisition surface can also be observed, but those
+artifacts are well-known (i.e. truncation butterflies) and are not the
+subject of our analysis. In this example, the wavefield reconstruction
+procedure is the same for both modeling and migration
+(i.e. time-domain finite-difference solution to the acoustic
+wave-equation), thus it is not causing artifacts in the image. We can
+conclude that the migration artifacts are simply due to the phase
+errors between the Green's functions used for modeling (with the
+random velocity) and the Green's functions used for migration (with
+the background velocity). The main challenge for imaging in media with
+random variations is to design procedures that attenuate the random
+phase delays introduced in the recorded data by the unknown variations
+of the medium without damaging the real reflections present in the
+data.
+
+% ------------------------------------------------------------
+% ------------------------------------------------------------
+% ------------------------------------------------------------
+
+The random phase fluctuations observed in recorded data
+(\rFg{sigs2-pdv}) are preserved during wavefield reconstruction using
+the background velocity model.  We can observe the randomness in the
+extrapolated wavefields in two ways, by reconstructing wavefields
+using individual data traces separately, or by reconstructing
+wavefields using all data traces at once.
+
+The first option is to reconstruct the seismic wavefield at all image
+locations $\ym$ from {\it individual} receiver positions on the
+surface. Of course, this is not conventionally done in reverse-time
+imaging, but we describe this concept just for illustration purposes.
+\rFg{sigs2-uxx1} shows the wavefield reconstructed separately from
+individual data traces depicted in \rFg{sigs2-pdv} using the
+background model depicted in \rFg{sigs2-pwv-0}. In \rFg{sigs2-uxx1},
+the horizontal axis corresponds to receiver positions on the surface,
+i.e. coordinates $\xm$, and the vertical axis represents time.
+According to the notations used in this paper, \rFg{sigs2-uxx1} shows
+the wavefield $\VV{\xm,\ym,\tm}$ reconstructed to a particular image
+coordinate $\ym$ from separate traces located on the surface at
+coordinates $\xm$. A similar plot can be constructed for all other
+image locations. Ideally, the reconstructed wavefield should line-up
+at time $\tm=0$, but this is not what we observe in this figure,
+indicating that the input data contain random phase delays that are
+not compensated during wavefield reconstruction using the background
+velocity.
+
+The second option is to reconstruct the seismic wavefield at all image
+locations $\ym$ from {\it all} receiver positions on the surface at
+once. This is a conventional procedure for reverse-time imaging.
+\rFg{sigs2-uyy1} shows the wavefield reconstructed from all
+data traces depicted in \rFg{sigs2-pdv} using the background model
+depicted in \rFg{sigs2-pwv-0}. In \rFg{sigs2-uyy1}, the vertical and
+horizontal axes correspond to depth and horizontal positions around
+the source, i.e. coordinates $\ym$, and the third cube axis represents
+time. According to the notations used in this paper, \rFg{sigs2-uyy1}
+corresponds to wavefield $\UU{\ym,\tm}$ reconstructed from data at all
+receiver coordinates $\xm$ to image coordinates $\ym$.  The
+reconstructed wavefield does not focus completely at the image
+coordinate and time $\tm=0$ indicating that the input data contains
+random phase delays that are not compensated during wavefield
+reconstruction using the background velocity.
+
+% ------------------------------------------------------------
+% ------------------------------------------------------------
+% ------------------------------------------------------------
+
+% ------------------------------------------------------------
+\subsection{Wigner distribution functions}
+One possible way to address the problem of random fluctuations in
+reconstructed wavefields is to use Wigner distribution functions
+\cite[]{Wigner.wdf} to pre-process the wavefields prior to the 
+application of the imaging condition. Appendix C provides a brief
+introduction for readers unfamiliar with Wigner distribution
+functions. More details about this topic are presented by
+\cite{Cohen.timefrequencyanalysis}.
+
+{\it Wigner distribution functions} (WDF) are bi-linear
+representations of multi-dimensional signals defined in phase space,
+i.e. they depend simultaneously on position-wavenumber ($\ym-\km$) and
+time-frequency ($\tm-\wm$). \cite{Wigner.wdf} developed these concepts
+in the context of quantum physics as probability functions for the
+simultaneous description of coordinates and momenta of a given wave
+function. WDFs were introduced to signal processing by
+\cite{Ville.wdf} and have since found many applications in signal and
+image processing, speech recognition, optics, etc.
+
+A variation of WDFs, called {\it pseudo Wigner distribution functions}
+are constructed using small windows localized in space and/or time
+(Appendix C). Pseudo WDFs are simple transformations with efficient
+application to multi-dimensional signals. In this paper, we apply the
+pseudo WDF transformation to multi-dimensional seismic wavefields
+obtained by reconstruction from recorded seismic data. We use pseudo
+WDFs for decomposition and filtering of extrapolated space-time
+signals as a function of their local wavenumber-frequency. In
+particular, pseudo WDFs can filter reconstructed wavefields to retain
+their coherent components by removing high-frequency noise associated
+with random fluctuations in the wavefields due to random fluctuations
+in the model.
+
+The idea for our method is simple: instead of imaging the
+reconstructed wavefields directly, we first filter them using pseudo
+WDFs to attenuate the random phase noise, and then proceed to imaging
+using a conventional or an extended imaging conditions.  Wavefield
+filtering occurs during the application of the zero-frequency
+end-member of the pseudo WDF transformation, which reduces the random
+character of the field. For the rest of the paper, we use the
+abbreviation WDF to denote this special case of pseudo Wigner
+distribution functions, and not its general form.
+
+As we described earlier, we can distinguish two options. The first
+option is to use wavefield parametrization as a function of data
+coordinates $\xm$. In this case, we can write the pseudo WDF of the
+reconstructed wavefield $\VV{\xm,\ym,\tm}$ as
+%
+\beq \label{eqn:wxx}
+\VA{x}{\xm,\ym,\tm} = \intth \intxh \lb
+\VV{\xm-\frac{\xh}{2},\ym,\tm-\frac{\th}{2}}
+\VV{\xm+\frac{\xh}{2},\ym,\tm+\frac{\th}{2}} 
+\rb \;, 
+\eeq 
+%
+where $\xh$ and $\th$ are variables spanning space and time intervals
+of total extent $X$ and $T$, respectively. For 3D surface acquisition
+geometry, the 2D variable $\xh$ is defined on the acquisition surface.
+The second option is to use wavefield parametrization as a function of
+image coordinates $\ym$. In this case, we can write the pseudo WDF of
+the reconstructed wavefield $\UU{\ym,\tm}$ as
+%
+\beq \label{eqn:wyy}
+\WA{y}{\ym,\tm} = \intth \intyh 
+\UU{\ym-\frac{\yh}{2},\tm-\frac{\th}{2}}
+\UU{\ym+\frac{\yh}{2},\tm+\frac{\th}{2}} \;,
+\eeq
+%
+where $\yh$ and $\th$ are variables spanning space and time intervals
+of total extent $Y$ and $T$, respectively. For 3D surface acquisition
+geometry, the 3D variable $\yh$ is defined around image positions.
+
+For the examples used in this section, we employ $41$ grid points for
+the interval $X$ centered around a particular receiver position, $5
+\times 5$ grid points for the interval $Y$ centered around a
+particular image point, and $21$ grid points for the interval $T$
+centered around a particular time. These parameters are not
+necessarily optimal for the transformation, since they characterize
+the local WDF windows and depend on the specific implementation of the
+pseudo WDF transformation. The main criterion used for selecting the
+size of the space-time window for the pseudo WDF transformation is
+that of avoiding cross-talk between nearby events,
+e.g. reflections. Finding the optimal size of this window is an
+important consideration for our method, although its complete
+treatment falls outside the scope of the current paper and we leave it
+for future research. Preliminary results on optimal window selection
+are discussed by \cite{Borcea.IP.2006}.
+
+% ------------------------------------------------------------
+\inputdir{sigs2}
+% ------------------------------------------------------------
+
+\multiplot{2}{uxx1,wxx1}{width=0.45\textwidth} {Reconstructed
+seismic wavefield as a function of data coordinates (a) and its pseudo
+Wigner distribution function (b) computed as a function of data
+coordinates $\xm$ and time $\tm$. The wavefield is reconstructed using
+the background model from data simulated in the random model.}
+
+% ------------------------------------------------------------
+
+\multiplot{2}{uyy1,wyy1}{width=0.45\textwidth} {Reconstructed
+seismic wavefield as a function of image coordinates (a) and its
+pseudo Wigner distribution function (b) computed as a function of
+image coordinates $\ym$ and time $\tm$.The wavefield is reconstructed
+using the background model from data modeled in the random model.}
+
+% ------------------------------------------------------------
+
+\rFg{sigs2-wxx1} depicts the results of applying the pseudo WDF 
+transformation to the reconstructed wavefield in \rFg{sigs2-uxx1}.
+%
+For the case of modeling in the random model and reconstruction in the
+background model, the pseudo WDF attenuates the random character of
+the wavefield significantly, \rFg{sigs2-wxx1}. The random character of
+the reconstructed wavefield is reduced and the main events cluster
+more closely around time $\tm=0$. Similarly, \rFg{sigs2-wyy1} depicts
+the results of applying the pseudo WDF transformation to the
+reconstructed wavefields in \rFg{sigs2-uyy1}.
+%
+For the case of modeling in the random model and reconstruction in the
+background model, the pseudo WDF also attenuates the random character
+of the wavefield significantly, \rFg{sigs2-wyy1}. The random character
+of the reconstructed wavefields is also reduced and the main events
+focus at the correct image location at time $\tm=0$.
+
+% ------------------------------------------------------------
+\subsection{Zero-offset interferometric imaging condition}
+
+After filtering the reconstructed wavefields with pseudo WDFs, we can
+perform imaging with normal procedures. For the case of wavefields
+parametrized as a function of data coordinates, we obtain the total
+wavefield at image coordinates by summing over receiver coordinates
+$\xm$
+%
+\beq \label{eqn:wxx2}
+\WA{x}{\ym,\tm} = \intxm \VA{x}{\xm,\ym,\tm}\;,
+\eeq
+%
+followed by a conventional imaging condition extracting time $\tm=0$
+from the pseudo WDF of the reconstructed wavefields:
+%
+\beq \label{eqn:ixx}
+\IA{x}{\ym} = \WA{x}{\ym,\tm=0} \;.
+\eeq
+%
+The image obtained with this imaging procedure is shown in
+\rFg{sigs2-winpcii1}. As expected, the artifacts caused by the unknown
+random fluctuations in the model are reduced, leaving a
+cleaner image of the source.
+
+Similarly, for the case of wavefields parametrized as a function of
+image coordinates, we obtain the image by application of the
+conventional imaging condition extracting time $\tm=0$ from the pseudo
+WDF of the reconstructed wavefield:
+%
+\beq \label{eqn:iyy}
+\IA{y}{\ym} = \WA{y}{\ym,\tm=0} \;.
+\eeq
+%
+The image obtained with this imaging procedure is shown in
+\rFg{sigs2-winpiic1}. As in the preceding case, the artifacts caused
+by the unknown random fluctuations in the model are reduced, producing
+a cleaner image of the source, comparable with the one in
+\rFg{sigs2-winpcii1}.
+
+% ------------------------------------------------------------
+\inputdir{sigs2}
+% ------------------------------------------------------------
+
+\multiplot{4}{winpcic0,winpcic1,winpcii1,winpiic1}{width=0.2\textwidth}
+{ Images produced by the conventional imaging condition using the data
+simulated in the background model (a) and using the data simulated in
+the random model (b). Images produced from data simulated in the
+random model using the interferometric imaging condition with
+parametrization as a function of data coordinates (c) and as a
+function of image coordinates (d).}
+% ------------------------------------------------------------
+
+% ------------------------------------------------------------
+\subsection{Multi-offset interferometric imaging condition}
+
+The imaging procedure in \reqs{wyy}-\ren{iyy} can be generalized for
+imaging prestack (multi-offset) data (\rFg{aarray}). The conventional
+imaging procedure for this type of data consists of two steps
+\cite[]{Claerbout.iei}: wavefield simulation from the source location
+to the image coordinates $\ym$ and wavefield reconstruction at image
+coordinates $\ym$ from data recorded at receiver coordinates $\xm$,
+followed by an imaging condition evaluating the match between the
+simulated and reconstructed wavefields.
+
+Let $\UA{S}{\ym,\tm}$ be the source wavefield constructed from the
+location of the seismic source and $\UA{R}{\ym,\tm}$ the receiver
+wavefield reconstructed from the receiver locations. A conventional
+imaging procedure produces a seismic image as the zero-lag of the time
+cross-correlation between the source and receiver
+wavefields. Mathematically, we can represent this operation as
+%
+\beq
+\IA{}{\ym} = \inttm \UA{S}{\ym,\tm} \UA{R}{\ym,\tm} \;,
+\eeq
+%
+where $\IA{}{\ym}$ represents the seismic image for a particular
+seismic experiment at coordinates $\ym$. When multiple seismic
+experiments are processed, a complete image is obtained by summation
+of the images constructed for individual experiments. The actual
+reconstruction methods used to produce the wavefields
+$\UA{S}{\ym,\tm}$ and $\UA{R}{\ym,\tm}$ are irrelevant for the present
+discussion. As in the zero-offset/exploding reflector case, we use
+time-domain finite-difference solutions to the acoustic wave-equation,
+but any other reconstruction technique can be applied without changing
+the imaging approach.
+
+When imaging in random media, the data recorded at the surface
+incorporates phase delays caused by the velocity variations
+encountered while waves propagate in the subsurface. In a typical
+seismic experiment, random phase delays accumulate both on the way
+from the source to the reflectors, as well as on the way from the
+reflectors to the receivers. Therefore, the receiver wavefield
+reconstructed using the background velocity model is characterized by
+random fluctuations, similar to the ones seen for wavefields
+reconstructed in the zero-offset situation. In contrast, the source
+wavefield is simulated in the background medium from a known source
+position and, therefore, it is not affected by random
+fluctuations. However, the zero-lag of the cross-correlations between
+the source wavefields (without random fluctuations) and the receiver
+wavefield (with random fluctuations), still generates image artifacts
+similar to the ones encountered in the zero-offset case.
+
+Statistically stable imaging using pseudo WDFs can be obtained in this
+case, too. What we need to do is attenuate the phase errors in the
+reconstructed receiver wavefield and then apply a conventional imaging
+condition. Therefore, a multi-offset interferometric imaging condition
+can be formulated as
+%
+\beq
+\IA{}{\ym} = \inttm \UA{S}{\ym,\tm} \WA{R}{\ym,\tm} \;,
+\eeq
+%
+where $\WA{R}{\ym,\tm}$ represents the pseudo WDF of the receiver
+wavefield $\UA{R}{\ym,\tm}$ which can be constructed, in principle,
+either with parametrization relative to data coordinates, according to
+\reqs{wxx}-\ren{wxx2}, or relative to image coordinates, according to
+\req{wyy}. Of course, our choice is to use image-space parametrization
+for computational efficiency reasons.
+
+% ------------------------------------------------------------
+\subsection{Discussion}
+
+The strategies described in the preceding section have notable
+similarities and differences.
+% 
+The imaging procedures \ren{wxx}-\ren{wxx2}-\ren{ixx} and
+\ren{wyy}-\ren{iyy} are similar in that they employ wavefields
+reconstructed from the surface data in similar ways. Neither method
+uses the surface recorded data directly, but they use wavefields
+reconstructed from those data as boundary conditions to numerical
+solutions of the acoustic wave-equation. The actual wavefield
+reconstruction procedure is identical in both cases.
+
+The techniques are different because imaging with
+\reqs{wxx}-\ren{wxx2}-\ren{ixx} employs independent wavefield
+reconstruction from receiver locations $\xm$ to image locations
+$\ym$. In practice, this requires separately solving the acoustic
+wave-equation, e.g. by time-domain finite-differences, from all
+receiver locations on the surface. Such computational effort is often
+prohibitive in practice. In contrast, imaging with
+\reqs{wyy}-\ren{iyy} is similar to conventional imaging
+because it requires only one wavefield reconstruction using all
+recorded data at once, i.e. only one solution to the acoustic
+wave-equation, similar to conventional shot-record migration.
+
+The techniques \ren{wxx}-\ren{wxx2}-\ren{ixx} and \ren{wyy}-\ren{iyy}
+are similar in that they both employ noise suppression using pseudo
+Wigner distribution functions. However, the methods are parametrized
+differently, the former relative to data coordinates with 2D local
+space averaging and the later relative to image coordinates with 3D
+local space averaging.
+
+The imaging functionals presented in this paper are described as
+functions of space coordinates, $\xm$ or $\ym$, and time, $\tm$. As
+suggested in Appendix C, pseudo WDFs can be implemented either in time
+or frequency, so potentially the imaging conditions discussed in this
+paper can also be implemented in the frequency-domain. However, we
+restrict our attention in this paper to the time-domain implementation
+and leave the frequency-domain implementation subject to future study.
+
+\rEqs{wxx}-\ren{wxx2}-\ren{ixx} can be collected into the zero-offset 
+imaging functional
+%
+\beq \label{eqn:cint} 
+\IA{CINT}{\ym} = \delta\lp t\rp 
+\intxm \intth \intxh 
+\lb \VV{\xm-\frac{\xh}{2},\ym,\tm-\frac{\th}{2}}
+    \VV{\xm+\frac{\xh}{2},\ym,\tm+\frac{\th}{2}} 
+\rb \;, 
+\eeq 
+%
+where the temporal $\delta$ function implements the zero time imaging
+condition. A similar form can be written for the multi-offset
+case. \rEq{cint} corresponds to the time-domain version of the
+coherent interferometric functional proposed by
+\cite{Borcea.IP.2006,Borcea.GEO.2006,Borcea.Multiscale.2006}. Consistent
+with the preceding discussion, the cost required to implement this
+imaging functional is often prohibitive for practical application to
+seismic imaging problems.
+
+% ------------------------------------------------------------
+\section{Statistical stability}
+The interferometric imaging condition described in the preceding
+section is used to reduce imaging artifacts by attenuating the
+incoherent energy corresponding to velocity errors, as illustrated in
+\rFgs{sigs2-winpcic1} and \rfn{sigs2-winpiic1}. The random model used
+for this example corresponds to the weak fluctuation regime, as
+explained in Appendix A (characteristic wavelength of similar scale
+with the random fluctuations in the medium and fluctuations with small
+magnitude).
+
+By statistical instability we mean that images obtained for different
+realizations of random models with the identical statistics are
+different. \rFgs{sigs2-pdv-r0}-\rfn{sigs2-pdv-r2} illustrate data
+modeled for different realizations of the random model in
+\rFg{sigs2-pwv-0}. The general kinematics of the data are the same,
+but subtle differences exist between the various datasets due
+to the random model variations.  Migration using a
+conventional imaging condition leads to the images in
+\rFgs{sigs2-winpcic-r0}-\rfn{sigs2-winpcic-r2} which also show
+variations from one realization to another.  In
+contrast, \rFgs{sigs2-winpiic-r0}-\rfn{sigs2-winpiic-r2} show images
+obtained by the interferometric imaging condition in
+\reqs{wyy}-\ren{iyy}, which are more similar to one-another since many
+of the artifacts have been attenuated.
+
+% ------------------------------------------------------------
+\inputdir{sigs2}
+% ------------------------------------------------------------
+\multiplot{9}{pdv-r0,pdv-r1,pdv-r2,winpcic-r0,winpcic-r1,winpcic-r2,winpiic-r0,winpiic-r1,winpiic-r2}{width=0.30\textwidth}
+{Illustration of statistical stability for the interferometric imaging
+condition in presence of random model variations. Data modeled using
+velocity with random variations of magnitude $\sigma=30\%$, for
+different realizations of the noise model $n$. Images obtained by
+conventional imaging (d)-(f) and images obtained by interferometric
+imaging (g)-(i).}
+% ------------------------------------------------------------
+
+In typical seismic imaging problems, we cannot ensure that random
+velocity fluctuations are small (e.g. $\sigma\le 5\%$). It is
+desirable that imaging remains statistically stable even in cases when
+velocity varies with larger magnitude. We investigate the statistical
+properties of the imaging functional in \reqs{wyy}-\ren{iyy} using
+numerical experiments similar to the one used earlier. We describe the
+random noise present in the velocity models using the following
+parameters explained in Appendix A: seismic spatial wavelength
+$\lambda=76.2$~m, wavelet central frequency $\omega=20$~Hz, random
+fluctuations parameters: $r_a=0.0762$, $r_c=0.0762$, $\alpha=2$, and
+random noise magnitude $\sigma$ between $15\%$ and $45\%$. This
+numerical experiment simulates a situation that mixes the theoretical
+regimes explained in Appendix B: random model fluctuations of
+comparable scale with the seismic wavelength lead to destruction of
+the wavefronts, as suggested by the ``weak fluctuations'' regime;
+large magnitude of the random noise leads to diffusion of the
+wavefronts, as suggested by the ``diffusion approximation''
+regime. This combination of parameters could be regarded as a
+worst-case-scenario from a theoretical standpoint.
+
+\rFgs{sigs2-pdv-m0}-\rfn{sigs2-pdv-m2} show data simulated in models
+similar to the one depicted in \rFg{sigs2-pwv-0}, but where the random
+noise component is described by $\sigma=15,30,45\%$, respectively. As
+expected, the wavefronts recorded at the surface are increasingly
+distorted to the point where some of the later arrival are not even
+visible in the data.
+
+Migration using a conventional imaging condition leads to the images in
+\rFgs{sigs2-winpcic-m0}-\rfn{sigs2-winpcic-m2}.  As expected, the
+images show stronger artifacts due to the larger defocusing caused by
+the unknown random fluctuations in the model.  However, migration
+using the interferometric imaging condition leads to the images in
+\rFgs{sigs2-winpiic-m0}-\rfn{sigs2-winpiic-m2}.  Artifacts are
+significantly reduced and the images are much better focused.
+
+% ------------------------------------------------------------
+\multiplot{9}{pdv-m0,pdv-m1,pdv-m2,winpcic-m0,winpcic-m1,winpcic-m2,winpiic-m0,winpiic-m1,winpiic-m2}{width=0.30\textwidth}
+{Illustration of interferometric imaging condition robustness in
+presence of random model variations. Data modeled using velocity with
+random variations of magnitudes $\sigma=15\%$ (a), $\sigma=30\%$ (b),
+and $\sigma=45\%$ (c). Images obtained by conventional imaging (d)-(f)
+and images obtained by interferometric imaging (g)-(i).}
+% ------------------------------------------------------------
+
+
+% ------------------------------------------------------------
+\section{Multi-offset imaging examples}
+There are many potential applications for this interferometric imaging
+functional. One application we illustrate in this paper is imaging of
+complex stratigraphy through a medium characterized by unknown random
+variations. In this situation, accurate imaging using conventional
+methods requires velocity models that incorporate the small scale
+(random, as we view them) velocity variations. However, practical
+migration velocity analysis does not produce models of this level of
+accuracy, but approximates them with smooth, large-scale fluctuations
+one order of magnitude larger than that of the typical seismic
+wavelength.  Here, we study the impact of the unknown (random)
+component of the velocity model on the images and whether
+interferometric imaging increases the statistical stability of the
+image.
+
+For all our examples, we extrapolate wavefields using time-domain
+finite-differences both for modeling and for migration. Thus, we
+simulate a reverse-time imaging procedure, although the theoretical
+results derived in this paper apply equally well to other wavefield
+reconstruction techniques, e.g. downward continuation, Kirchhoff
+integral methods, etc. The parameters used in our examples, explained
+in Appendix A, are: seismic spatial wavelength $\lambda=76.2$~m,
+wavelet central frequency $\omega=20$~Hz, random fluctuations
+parameters: $r_a=76.2$~m, $r_c=76.2$~m, $\alpha=2$, and random noise
+magnitude $\sigma=20\%$.
+
+Consider the model depicted in \rFgs{sact1-awo-5}-\rfn{sact1-awv-7}.
+As in the preceding example, the left panels depict the known smooth
+velocity $v_0$, and the right panels depict the model with random
+variations. The imaging target is represented by the oblique lines,
+\rFg{sact1-xm}, located around $z=8$~km, which simulates a
+cross-section of a stratigraphic model.
+
+We model data with a random velocity model and image using the smooth
+model. \rFgs{sact1-awo-5}-\rfn{sact1-awv-7} show wavefield snapshots
+in the two models for different propagation times, one before the
+source wavefields interact with the target reflectors and one after
+this interaction. The propagating waves are affected the the random
+fluctuations in the model both before and after their interaction with
+the reflectors. \rFgs{sact1-ado} and \rfn{sact1-adv} show the
+corresponding recorded data on the acquisition surface located at
+$z=\lambda$, where $\lambda$ represents the wavelength of the source
+pulse.
+
+Migration with a conventional imaging condition of the data simulated
+in the background model using the same velocity produces the image in
+\rFg{sact1-winacic0}. The targets are well imaged, although the image
+also shows artifacts due to truncation of the data on the acquisition
+surface. In contrast, migration with the conventional imaging
+condition of the data simulated in the random model using the
+background velocity produces the image in \rFg{sact1-winacic1}. This
+image is distorted by the random variations in the model that are not
+accounted for in the background migration velocity. The targets are
+harder to discern since they overlap with many truncation and
+defocusing artifacts caused by the inaccurate migration velocity.
+
+Finally, \rFg{sact1-winaiic1} shows the migrated image using the
+interferometric imaging condition applied to the wavefields
+reconstructed in the background model from the data simulated in the
+random model. Many of the artifacts caused by the inaccurate velocity
+model are suppressed and the imaging targets are more clearly visible
+and easier to interpret. Furthermore, the general patterns of
+amplitude variation along the imaged reflectors are similar between
+\rFgs{sact1-winacic1} and \rfn{sact1-winaiic1}.
+
+We note that the reflectors are not as well imaged as the ones
+obtained when the velocity is perfectly known. This is because the
+interferometric imaging condition described in this paper does not
+correct kinematic errors due to inaccurate velocity. It only acts on
+the extrapolated wavefields to reduce wavefield incoherency and add
+statistical stability to the imaging process. Further extensions to
+the interferometric imaging condition can improve focusing and enhance
+the images by correcting wavefields prior to imaging. However, this
+topic falls outside the scope of this paper and we do not elaborate on
+it further.
+
+% ------------------------------------------------------------
+\inputdir{sact1} 
+% ------------------------------------------------------------
+
+\multiplot{2}{avo,xm}{width=0.45\textwidth}{Velocity model (a) and
+imaging target located around $z=8$~km (b). The model consists of a
+smooth version of the Sigsbee2A velocity, in order to avoid
+backscattering during reverse-time migration. The shaded area is
+imaged in \rFgs{sact1-winacic0}-\rfn{sact1-winaiic1}.}
+
+\multiplot{6}{awo-5,awv-5,awo-7,awv-7,ado,adv}{width=0.45\textwidth}
+{Seismic snapshots of acoustic wavefields simulated in the
+background velocity model (a)-(c), and in the random velocity model
+(b)-(d).  Data recorded at the surface from the simulation in the
+background velocity model (e) and from the simulation in the random
+velocity model (f).}
+
+\multiplot{3}{winacic0,winacic1,winaiic1}{width=0.80\textwidth}{Image
+produced using the conventional imaging condition from data simulated
+in the background model (a) and from data simulated in the random
+model (b). Image produced using the interferometric imaging condition
+from data simulated in the random model (c). }
+
+% ------------------------------------------------------------
+\section{Conclusions}
+We extend the conventional seismic imaging condition based on
+wavefield cross-correlations to achieve statistical stability for
+models with rapid, small-scale velocity variation. We assume that the
+random velocity variations on a scale comparable with the seismic
+wavelength are modeled by correlated Gaussian distributions.  Our
+proposed interferometric imaging condition achieves statistical
+stability by applying conventional imaging to the Wigner distribution
+functions of the reconstructed seismic wavefields. The interferometric
+imaging condition is a natural extension of the cross-correlation
+imaging condition and adds minimally to the cost of migration. The
+main characteristic of the method is that it operates on extrapolated
+wavefields at image positions (thus the name interferometric imaging
+condition), in contrast with costlier alternative approaches using
+interferometry parametrized as a function of receiver coordinates.
+
+% ------------------------------------------------------------
+\section{Acknowledgments}
+We acknowledge Associate Editor John Etgen for numerous comments and
+suggestions which have significantly improved the manuscript. This
+work is partially supported by the sponsors of the Center for Wave
+Phenomena at Colorado School of Mines.
+
+% ------------------------------------------------------------
+\bibliographystyle{seg}
+\bibliography{SEG2005,SEP,PCS,MISC}
+
+% ------------------------------------------------------------
+\appendix
+\section{Appendix A}
+\def\ofxyz{ \lp x,y,z \rp}
+
+\subsection{Noise model}
+
+Consider a medium whose behavior is completely defined by the acoustic
+velocity, i.e. assume that the density $\rho\ofxyz = \rho_0$ is
+constant and the velocity $v\ofxyz$ fluctuates around a homogenized
+value $v_0 \lp x,y,z\rp$ according to the relation
+%
+\beq
+\frac{1}                 {v^2   \ofxyz} = 
+\frac{1 + \sigma m\ofxyz}{v_0^2 \ofxyz}\;,
+\eeq
+%
+where the parameter $m$ characterizes the type of random fluctuations
+present in the velocity model, and $\sigma$ denotes their strength.
+
+Consider the covariance orientation vectors
+%
+\bea
+\aa &=& \lp a_x,a_y,a_z\rp^{\top} \in \mathbb{R}^3 \\
+\bb &=& \lp b_x,b_y,b_z\rp^{\top} \in \mathbb{R}^3 \\
+\cc &=& \lp c_x,c_y,c_z\rp^{\top} \in \mathbb{R}^3
+\eea
+%
+defining a coordinate system of arbitrary orientation in space. Let
+$r_a, r_b, r_c > 0$ be the covariance range parameters in the
+directions of $\aa$,$\bb$ and $\cc$, respectively.
+
+We define a covariance function
+%
+\beq
+\cov \ofxyz = \exp \lb -l^{\alpha}\ofxyz \rb \;,
+\eeq
+%
+where $\alpha \in [0,2]$ is a distribution shape parameter and
+%
+\beq
+l \ofxyz = 
+\sqrt{\lp \frac{\aa \cdot \rr}{r_a} \rp^2 +
+      \lp \frac{\bb \cdot \rr}{r_b} \rp^2 +
+      \lp \frac{\cc \cdot \rr}{r_c} \rp^2}
+\eeq
+%
+is the distance from a point at coordinates $\rr=\lp x,y,z \rp$ to the
+origin in the coordinate system defined by $\{r_a \aa, r_b \bb, r_c
+\cc\}$.
+
+Given the IID Gaussian noise field $n\ofxyz$, we obtain the random
+noise $m\ofxyz$ according to the relation
+%
+\beq
+m \ofxyz =
+\mathscr{F}^{-1}
+\lb \sqrt{\widehat{\cov} \lp k_x,k_y,k_z \rp} \;
+          \widehat{   n} \lp k_x,k_y,k_z \rp 
+\rb\;,
+\eeq
+%
+where $k_x,k_y,k_z$ are wavenumbers associated with the spatial
+coordinates $x,y,z$, respectively. Here,
+%
+\bea
+\widehat{\cov} &=& \mathscr{F} \lb \cov \rb
+\\
+\widehat{n}    &=& \mathscr{F} \lb n \rb
+\eea
+%
+are Fourier transforms of the covariance function $\cov$ and the noise
+$n$, $\mathscr{F}[\cdot]$ denotes Fourier transform, and
+$\mathscr{F}^{-1}[\cdot]$ denotes inverse Fourier transform. The
+parameter $\alpha$ controls the visual pattern of the field, and
+$\aa,\bb,\cc, r_a,r_b,r_c$ control the size and orientation of a
+typical random inhomogeneity.
+
+% ------------------------------------------------------------
+\appendix
+\section{Appendix B}
+\subsection{Wave propagation and scale regimes}
+
+Acoustic waves characterized by pressure $p \lp x,y,z,t \rp$
+propagate according to the second order acoustic wave-equation 
+for constant density
+%
+\beq
+\dtwo{p}{t} = v^2 \nabla^2 p + F_{\lambda}(t) \;,
+\eeq
+%
+where $F_{\lambda}\lp t \rp$ is a wavelet of characteristic wavelength
+$\lambda$.
+
+Given the parameters $l$ (size of inhomogeneities), $\lambda$
+(wavelength size), $L$ (propagation distance) and $\sigma$ (noise
+strength), we can define several propagation regimes.
+
+The {\it weak fluctuations regime} characterized by waves with
+wavelength of size comparable to that of typical inhomogeneities
+propagating over a medium with small fluctuations to a distance of
+many wavelengths. This regime is characterized by negligible back
+scattering, and the randomness impacts the propagating waves through
+forward multipathing. The relevant length parameters are related by
+%
+\beq
+l \sim \lambda \ll L \;,
+\eeq
+%
+and the noise strength is assumed small
+%
+\beq
+\sigma \ll 1 \;.
+\eeq
+
+The {\it diffusion approximation regime} characterized by waves with
+wavelength much larger than that of typical inhomogeneities propagate
+over a medium with strong fluctuations to a distance of many
+wavelengths. This regime is characterized by traveling waves that are
+statistically stable but diffuse with time. Back propagation of such
+waves in a medium without random fluctuations results in loss of
+resolution. The relevant length parameters are related by
+%
+\beq
+l \ll \lambda \ll L \;,
+\eeq
+%
+and the noise strength is not assumed small
+%
+\beq
+\sigma \sim 1 \;.
+\eeq
+
+% ------------------------------------------------------------
+\appendix
+\section{Appendix C}
+\subsection{Wigner distribution functions}
+
+Consider the complex signal $u\lp \tm \rp$ which depends on time
+$\tm$. By definition, its {\it Wigner distribution function} (WDF)
+is \cite[]{Wigner.wdf}:
+%
+\beq \label{eqn:wigt}
+W   \lp \tm,\wm \rp = \frac{1}{2\pi} \int
+u^* \lp \tm-\frac{\th}{2} \rp
+u   \lp \tm+\frac{\th}{2} \rp 
+e^{-i\; \wm \; \th} 
+d\th \;,
+\eeq
+%
+where $\wm$ denotes temporal frequency, $\th$ denotes the relative
+time shift of the considered signal relative to a reference time $\tm$
+and the sign $^*$ denotes complex conjugation of complex signal $s$.
+The same WDF can be obtained in terms of the spectrum $U\lp \wm \rp$
+of the signal $u\lp \tm \rp$:
+%
+\beq \label{eqn:wigw}
+W   \lp \tm,\wm \rp = \frac{1}{2\pi} \int
+U^* \lp \wm+\frac{\wh}{2} \rp
+U   \lp \wm-\frac{\wh}{2} \rp 
+e^{-i\; \tm \; \wh} 
+d\wh \;,
+\eeq
+%
+where $\wh$ denotes the relative frequency shift of the considered
+spectrum relative to a reference frequency $\wm$.  The time integral
+in \req{wigt} or the frequency integral in \req{wigw} spans the entire
+domain of time and frequency, respectively. When the interval is
+limited to a region around the reference value, the transformation is
+known as {\it pseudo Wigner distribution function}.
+
+A special subset of the transformation \req{wigt} corresponds to zero
+temporal frequency. For input signal $u\lp \tm \rp$, we obtain the
+output Wigner distribution function $W\lp \tm \rp$ as
+%
+\beq \label{eqn:wigto}
+W   \lp \tm \rp = \frac{1}{2\pi} \int
+u^* \lp \tm-\frac{\th}{2} \rp
+u   \lp \tm+\frac{\th}{2} \rp 
+d\th \;.
+\eeq
+
+The WDF transformation can be generalized to multi-dimensional signals
+of space and time. For example, for 2D real signals function of space,
+$u\lp x,y\rp$, the zero-wavenumber pseudo WDF can be formulated as
+%
+\beq \label{eqn:wigxy}
+W \lp x,y \rp = \frac{1}{4\pi^2} 
+\int\limits_{|x_h| \le X} 
+\int\limits_{|y_h| \le Y}
+u   \lp x-\frac{x_h}{2}, y-\frac{y_h}{2} \rp
+u   \lp x+\frac{x_h}{2}, y+\frac{y_h}{2} \rp 
+d x_h d y_h \;,
+\eeq
+where $x_h$ and $y_h$ denote relative shift of the signal $s$ relative
+to positions $x$ and $y$, respectively. In this particular form, the
+pseudo WDF transformation has the property that it filters the input
+of random fluctuations preserving in the output image the spatially
+coherent components in a noise-free background.
+
+For illustration, consider the model depicted in \rFg{circle-ss}. This
+model consists of a smoothly-varying background with $25\%$ random
+fluctuations. The acoustic seismic wavefield corresponding to a source
+located in the middle of the model is depicted in
+\rFg{circle-wfl-6}. This wavefield snapshot can be considered as the
+random ``image''. The application of the 2D pseudo WDF transformation
+to images shown in \rFg{circle-wfl-6} produces the image shown in
+\rFg{circle-wdf-6}. We can make three observations on this image:
+first, the random noise is strongly attenuated; second, the output
+wavelet is different from the input wavelet, as a result of the
+bi-linear nature of the pseudo WDF transformations; third, the
+transformation is isotropic, i.e. it operates identically in all
+directions.  The pseudo WDF applied to this image uses $11 \times 11$
+grid points in the vertical and horizontal directions. As indicated in
+the body of the paper, we do not discuss here the optimal selection of
+the WDF window. Further details of Wigner distribution functions and
+related transformations are discussed by
+\cite{Cohen.timefrequencyanalysis}.
+
+% ------------------------------------------------------------
+\inputdir{circle}
+% ------------------------------------------------------------
+
+\multiplot{3}{ss,wfl-6,wdf-6}{width=0.30\textwidth}
+{ Random velocity model (a), wavefield snapshot simulated in this
+model by acoustic finite-differences (b), and its 2D pseudo Wigner
+distribution function (c).}

@@ -1,0 +1,44 @@
+from rsf.proj import *
+
+Flow('sigmoid',None,
+     '''
+     sigmoid d1=.004 n1=200 d2=.008 n2=200 |
+     smooth rect1=3 diff1=1 adj=y | smooth rect1=3
+     ''')
+
+order = {'sigmoid':2,  'conflict':1,  'dgulf':1, 'yc27':3}
+p0 =    {'sigmoid':0,  'conflict':0,  'dgulf':0, 'yc27':2}
+smoo =  {'sigmoid':3,  'conflict':1,  'dgulf':4, 'yc27':3}
+pclip = {'sigmoid':100,'conflict':100,'dgulf':96,'yc27':99.5}
+rect  = {'sigmoid':3,  'conflict':5,  'dgulf':10,'yc27':3}
+
+Plot('sigmoid','grey title=INPUT')
+Flow('dip','sigmoid',
+     'dip order=2 p0=0 verb=y niter=10 rect1=3 rect2=3')
+Plot('dip','grey title=DIP scalebar=y pclip=100')
+
+Flow('pwd','sigmoid dip',
+     'pwd order=2 dip=${SOURCES[1]} | smooth rect1=3')
+Plot('pwd','grey pclip=100 title=RESIDUAL')
+
+Flow('txr','dip',
+     '''
+     noise rep=y seed=2004 |
+     pwdsmooth2 dip=$SOURCE rect1=3 rect2=20 eps=0.01
+     ''')
+Plot('txr','grey title=TEXTURE')
+    
+Flow('tris','dip',
+     '''
+     spike n1=200 n2=200 d2=0.008 o2=0 nsp=9
+     k1=50,100,150,50,100,150,50,100,150
+     k2=50,50,50,100,100,100,150,150,150 |
+     pwdsmooth2 dip=$SOURCE rect1=3 rect2=20
+     ''',stdin=0)
+Plot('tris','grey title=d allpos=y')
+Plot('sigmoid2','sigmoid','grey title=a')
+Plot('dip2','dip','grey title=b scalebar=y pclip=100')
+Plot('txr2','txr','grey title=c')
+Result('tris','sigmoid2 dip2 txr2 tris','TwoRows')
+    
+End()

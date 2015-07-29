@@ -1,0 +1,3 @@
+uses=['sfspike', 'sfnoise', 'sfsmooth', 'sfrtoc', 'sfmath', 'sfdd', 'sfput', 'sfmul', 'sfwindow', 'sfgrey', 'sffft3', 'sfimag', 'sfreal', 'sfhpef', 'sfhelicon', 'sfmiss', 'sflapfill', 'sfcat', 'sfdots']
+data=['data/textures/ridges.h', 'data/textures/wood.h', 'data/textures/herr.h', 'data/textures/skull.h', 'data/textures/stanford.tree.H', 'data/book/iee/WGstack.H']
+size=    5488352

@@ -1,0 +1,26 @@
+# Author: G. Hennenfent
+#         Seismic Laboratory for Imaging and Modeling
+#         Department of Earch & Ocean Sciences
+#         The University of British Columbia
+#         
+# Date  : August, 07
+
+from rsf.proj import *
+
+# define SLIM FTP server information
+FTPserver = {
+    'server': 'slim.eos.ubc.ca',
+    'login':'anonymous',
+    'password':'ghennenfent@eos.ubc.ca'}
+
+loc = '/users/hegilles/papers/spsolvers/Fig/'
+
+flist = '''
+pcurve.pdf
+'''
+
+# fetch figures from FTP server
+for fig in Split(flist):
+    Fetch(fig,loc,FTPserver)
+    
+End()

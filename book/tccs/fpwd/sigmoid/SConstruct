@@ -1,0 +1,36 @@
+from rsf.recipes.xproj import *
+
+niter=10
+n1=200
+n2=210
+opt=' rect1=4 rect2=4 niter=5 liter=50 '
+
+Flow('sigmoid',None,
+     '''
+     sigmoid n1=%d n2=%d d2=0.008 |
+     put label2=Distance |
+     smooth rect1=3 diff1=1 adj=1 | smooth rect1=3
+     '''%(n1,n2))
+
+for i1 in ('dip','fdip'):
+	Tflow(i1,'sigmoid', i1+opt)
+	Flow('pwd-'+i1, ['sigmoid', i1],
+		'pwd dip=${SOURCES[1]} order=1 ')
+	Result(i1, 
+		'''
+		grey wanttitle=n color=j
+		scalebar=y minval=-1.4 maxval=1.4 barlabel="Discrete Space Slope"
+		''')
+	Result('pwd-'+i1, 'grey wanttitle=n ')
+
+Result('sigmoid', 'grey wanttitle=n')
+
+Result('diff','fdip dip',
+	'''
+	math ref=${SOURCES[1]} output="input-ref"
+	| grey wanttitle=n color=j scalebar=y minval=-0.1 maxval=0.1
+	''')
+
+
+End()
+

@@ -1,0 +1,63 @@
+from rsf.proj import *
+
+sys.path.append('..')
+import twohalf
+
+# fetch data
+twohalf.getshots('shots')
+twohalf.getvel('model')
+
+# direct wave muting
+Flow ('shots-muted','shots','mutter v0=30000 t0=0.05')
+
+# add crossline and offset axes
+Flow ('twohalf-data','shots-muted',
+	  '''
+	  transp plane=23 | 
+	  put
+	  label3=Crossline unit3=m n3=1 d3=25 o3=0
+	  label4=Offset unit4=m n4=256 d4=25 o4=0
+	  ''')
+Flow ('twohalf-velModel','model',
+	  '''
+	  smooth rect1=20 rect2=20 | 
+	  put n3=1 d3=100 o3=0 label3="Crossline" unit3="km"
+   	  ''')
+
+# migration
+Flow ('twohalf-image twohalf-dag twohalf-cig', 'twohalf-data twohalf-velModel',
+      '''
+      dmigda vel=${SOURCES[1]} 
+      dag=${TARGETS[1]} cig=${TARGETS[2]}
+	  izn=801 izo=0 izd=5
+      ixn=769 ixo=0 ixd=25
+      iscato=0 iscatn=60 iscatd=2
+      dipo=-90 dipn=361 dipd=0.5
+      ''')
+Flow ('twohalf-timage','twohalf-dag','put d1=0.005 | bandpass flo=5 | put d1=5 | stack')
+
+# figures
+
+Result ('twohalf-timage',
+		'''
+		put d1=0.005 unit1=km d2=0.025 unit2=km |
+		grey wanttitle=n clip=2e-6
+		''')
+
+pos = (8800, 15500) # position from Dellinger et al., 2000
+
+for p in range (2):   
+    dag="dag%d" % (pos[p])
+    cig="cig%d" % (pos[p])
+    fig="fig%d" % (pos[p])
+
+     
+    Flow (dag, 'twohalf-dag', 'window min3=%d max3=%d | put d1=0.005 unit1=km | bandpass flo=2' % (pos[p], pos[p]))
+    Flow (cig, 'twohalf-cig', 'window min3=%d max3=%d | put d1=0.005 unit1=km | bandpass flo=2' % (pos[p], pos[p]))
+
+    Plot (dag, 'grey wanttitle=y title="a)" d1num=30 o1num=-90 n1tic=7')	
+    Plot (cig, 'grey wanttitle=y title="b)" d1num=20 o1num=0 n1tic=6')
+
+    Result (fig,[dag, cig],'SideBySideAniso')
+
+End()

@@ -1,0 +1,9 @@
+z1(x)=(4-6*x^2+3*x^3)/6
+z2(x)=(2-x)^3/6
+spl(x)=(heaviside(x+1)-heaviside(x-1))*z1(abs(x))+(heaviside(x-1)-heaviside(x-2))*z2(x)+(heaviside(x+2)-heaviside(x+1))*z2(-x)
+w=var('w')
+splf(w)=2*(integrate(cos(w*x)*z1(x),x,0,1)+integrate(cos(w*x)*z2(x),x,1,2))
+pspl=plot(spl(x),x,-6,6,thickness=3,aspect_ratio=18/golden_ratio)
+wspl=plot(splf(w),w,-2*pi,2*pi,thickness=3,color='red',aspect_ratio=4*pi/golden_ratio,ticks=[[-pi,pi],None])
+both=graphics_array([pspl,wspl])
+both.save(frame=true,tick_formatter='latex',fontsize=12,filename='junk_sage.pdf')

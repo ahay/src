@@ -1,0 +1,1549 @@
+\published{Geophysics, 68, 718-732 (2003)}
+\title{Theory of differential offset continuation}
+\author{Sergey Fomel}
+
+\maketitle
+
+\begin{abstract}
+ I introduce a partial differential equation to describe the
+  process of prestack reflection data transformation in the offset,
+  midpoint, and time coordinates. The equation is proved theoretically
+  to provide correct kinematics and amplitudes on the transformed
+  constant-offset sections. Solving an initial-value problem with the
+  proposed equation leads to integral and frequency-domain offset
+  continuation operators, which reduce to the known forms of dip
+  moveout operators in the case of continuation to zero offset.  
+\end{abstract}
+
+\section{Introduction}
+  
+The Earth subsurface is three-dimensional, while seismic reflection
+data from a multi-coverage acquisition belong to a five-dimensional
+space (time, 2-D offset, and 2-D midpoint coordinates). This fact
+alone indicates the additional connection that exists
+in the data space. I show in this paper that it is possible, under
+certain assumptions, to express this connection in a concise
+mathematical form of a partial differential equation. The theoretical
+analysis of this equation allows us to explain and predict the data
+transformation between different offsets.
+  
+The partial differential equation, introduced in this
+paper\footnote{To my knowledge, the first derivation of the revised
+offset continuation equation was accomplished by Joseph Higginbotham
+of Texaco in 1989.  Unfortunately, Higginbotham's derivation never
+appeared in the open literature.}, describes the process of
+\emph{offset continuation}, which is a transformation of common-offset
+seismic gathers from one constant offset to another
+\cite[]{GPR30-06-08130828}. \cite{GEO61-06-18461858} identified offset
+continuation (OC) with a whole family of prestack continuation
+operators, such as shot continuation \cite[]{SEG-1993-0673}, dip
+moveout as a continuation to zero offset \cite[]{DMObook}, and
+three-dimensional azimuth moveout \cite[]{GEO63-02-05740588}. An
+intuitive introduction to the concept of offset continuation is
+presented by \cite{TLE20-01-02100213}. A general data mapping
+prospective is developed by \cite{GPR48-01-01350162}.
+   
+As early as in 1982, Bolondi et al.  came up with the idea of
+describing offset continuation and dip moveout (DMO) as a continuous
+process by means of a partial differential equation
+\cite[]{GPR30-06-08130828}.  However, their approximate differential
+operator, built on the results of Deregowski and Rocca's classic paper
+\cite[]{GPR29-03-03740406}, failed in the cases of steep reflector dips
+or large offsets.  \cite{Hale.sepphd.36} writes:
+\begin{quote}
+  The differences between this algorithm [DMO by Fourier transform]
+  and previously published finite-difference DMO algorithms are
+  analogous to the differen\-ces be\-t\-ween
+  fre\-qu\-en\-cy-wave\-num\-ber
+  \cite[]{GEO43-01-00230048,GEO43-07-13421351} and
+  fi\-nite-dif\-fe\-rence \cite[]{Claerbout.fgdp.76} algorithms for
+  migration. For example, just as finite-difference migration
+  algorithms require approximations that break down at steep dips,
+  finite-difference DMO algorithms are inaccurate for large offsets
+  and steep dips, even for constant velocity.
+\end{quote}
+Continuing this analogy, we can observe that both finite-difference
+and frequency-domain migration algorithms share a common origin: the
+wave equation. The new OC equation, presented in this paper and valid
+for all offsets and dips, plays a role analogous to that of the wave
+equation for offset continuation and dip moveout algorithms. A
+multitude of seismic migration algorithms emerged from the fundamental
+wave-propagation theory that is embedded in the wave equation.
+Likewise, the fundamentals of DMO algorithms can be traced to the OC
+differential equation.
+
+In the first part of the paper, I prove that the revised equation
+is, under certain assumptions, kinematically valid. This means that
+wavefronts of the offset continuation process correspond to the
+reflection wave traveltimes and correctly transform between different
+offsets.  Moreover, the wave amplitudes are also propagated correctly
+according to the \emph{true-amplitude} criterion \cite[]{GEO58-01-00470066}. 
+
+In the second part of the paper, I relate the offset continuation
+equation to different methods of dip moveout. Considering DMO as a
+continuation to zero offset, I show that DMO operators can be obtained
+by solving a special initial value problem for the OC
+equation.  Different known forms of DMO \cite[]{DMObook} appear as special
+cases of more general offset continuation operators.
+
+The companion paper \cite[]{GEO68-02-07330744} demonstrates a
+practical application of differential offset continuation to seismic
+data interpolation.
+
+\section{Introducing the offset continuation equation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ Most of the contents of this paper refer to the following linear
+partial differential equation:
+\begin{equation}
+h \, \left( {\partial^2 P \over \partial y^2} - {\partial^2 P \over \partial
+h^2} \right) \, = \, t_n \, {\partial^2 P \over {\partial t_n \,
+\partial h}} \,\,\, . 
+\label{eqn:OCequation} 
+\end{equation}
+Equation~(\ref{eqn:OCequation}) describes an {\em artificial}
+(non-physical) process of transforming reflection seismic data
+$P(y,h,t_n)$ in the offset-midpoint-time domain. In
+equation~(\ref{eqn:OCequation}), $h$ stands for the half-offset
+($h=(r-s)/2$, where $s$ and $r$ are the source and the receiver
+surface coordinates), $y$ is the midpoint ($y=(r+s)/2$), and $t_n$ is the time
+coordinate after normal moveout correction is applied:
+\begin{equation}
+\label{eqn:tnmo}
+t_n=\sqrt{t^2-{4 \, h^2 \over v^2}}\;.
+\end{equation}
+The velocity $v$ is assumed to be known a priori.
+Equation~(\ref{eqn:OCequation}) belongs to the class of linear
+hyperbolic equations, with the offset $h$ acting as a time-like
+variable. It describes a wave-like propagation in the offset
+direction.
+
+\subsection{Proof of validity}
+
+A simplified version of the ray method technique \cite[]{cerveny,babich}
+can allow us to prove the theoretical validity of
+equation~(\ref{eqn:OCequation}) for all offsets and reflector dips by
+deriving two equations that describe separately wavefront (traveltime)
+and amplitude transformation.  According to the formal ray theory,
+the leading term of the high-frequency asymptotics for a reflected
+wave recorded on a seismogram takes the form
+\begin{equation}
+   P\left(y,h,t_n\right) \approx
+A_n(y,h)\,R_n\left(t_n-\tau_n(y,h)\right) \;,
+\label{eqn:raymethod} 
+\end{equation}  
+where $A_n$ stands for the amplitude, $R_n$ is the wavelet shape of
+the leading high-frequency term, and $\tau_n$ is the traveltime curve
+after normal moveout. Inserting~(\ref{eqn:raymethod}) as a trial
+solution for~(\ref{eqn:OCequation}), collecting terms that have the
+same asymptotic order (correspond to the same-order derivatives of the
+wavelet $R_n$), and neglecting low-order terms, we arrive at the set of
+two first-order partial differential equations:
+\begin{equation}
+h \, \left[     {\left( \partial \tau_n \over \partial y \right)}^2 - 
+                {\left( \partial \tau_n \over \partial h \right)}^2
+     \right] = \, - \, \tau_n \, {\partial \tau_n \over \partial h} \,\,\,,  
+\label{eqn:eikonal} 
+\end{equation}   
+\begin{equation}
+\left( \tau_n - 2h \, {\partial \tau_n \over {\partial h}} \right)
+\, {\partial A_n \over \partial h} + 2h {\partial \tau_n \over \partial
+y}   {\partial A_n \over \partial y} + h A_n \left( {\partial^2 \tau_n
+\over {\partial y^2}} - {\partial^2 \tau_n \over {\partial h^2}} 
+\right) \, = \, 0 \,\,\,.
+\label{eqn:transport} 
+\end{equation}
+
+Equation~(\ref{eqn:eikonal}) describes the transformation of
+traveltime curve geometry in the OC process analogously to how the
+eikonal equation describes the front propagation in the classic wave
+theory.  What appear to be wavefronts of the wave motion described by
+equation~(\ref{eqn:OCequation}) are traveltime curves of reflected
+waves recorded on seismic sections.  The law of amplitude
+transformation for high-frequency wave components related to those
+wavefronts is given by equation~(\ref{eqn:transport}).  In terms of
+the theory of partial differential equations,
+equation~(\ref{eqn:eikonal}) is the characteristic equation
+for~(\ref{eqn:OCequation}).
+
+\subsection{Proof of kinematic equivalence}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+In order to prove the validity of equation~(\ref{eqn:eikonal}), it is
+convenient to transform it to the coordinates of the initial shot
+gathers: $s=y-h$, $r=y+h$, and $\tau = \sqrt{\tau_n^2+{{4h^2} \over
+    {v^2}}}$. The transformed equation takes the form
+\begin{equation}
+\left( \tau^2 + {{(r-s)^2} \over {v^2}} \right) \left( {\partial \tau
+\over \partial r} -   {\partial \tau \over \partial s} \right) = 2 \, (r-s) \,
+\tau \left( {1 \over {v^2}} - {\partial \tau \over \partial r}
+{\partial \tau \over \partial s} \right) \,\,\,.
+\label{eqn:SCeikonal} 
+\end{equation}
+Now the goal is to prove that any reflection traveltime function
+$\tau(r,s)$ in a constant velocity medium satisfies 
+equation~(\ref{eqn:SCeikonal}). 
+
+Let $S$ and $R$ be the source and the receiver locations, and $O$ be a
+reflection point for that pair.  Note that the incident ray $SO$ and
+the reflected ray $OR$ form a triangle with the basis on the offset
+$SR$ ($l=|SR|=|r-s|$).  Let $\alpha_1$ be the angle of $SO$ from the
+vertical axis, and $\alpha_2$ be the analogous angle of $RO$ (Figure
+\ref{fig:ocoray}). The law of sines gives us the following explicit
+relationships between the sides and the angles of the triangle $SOR$:
+\begin{eqnarray}
+|SO|\,=\,|SR|\, {\cos{\alpha_2} \over
+\sin{\left(\alpha_2-\alpha_1\right)}} \,\,\,, 
+\label{eqn:triangle1} \\ 
+|RO|\,=\,|SR|\, {\cos{\alpha_1} \over
+\sin{\left(\alpha_2-\alpha_1\right)}} \,\,\,.
+\label{eqn:triangle2} 
+\end{eqnarray} 
+Hence, the total length of the reflected ray satisfies
+\begin{equation}
+v \tau = |SO|+|RO|=|SR|\,  {{\cos{\alpha_1}+ \cos{\alpha_2}} \over
+\sin{\left(\alpha_2-\alpha_1\right)}} = |r-s|\,{\cos{\alpha} \over
+\sin{\gamma}} \,\,\,.
+\label{eqn:length} 
+\end{equation}
+Here $\gamma$ is the reflection angle ($\gamma = (\alpha_2 -
+\alpha_1)/2$), and $\alpha$ is the central ray angle ($\alpha =
+(\alpha_2 + \alpha_1)/2$), which coincides with the local dip angle of
+the reflector at the reflection point.  Recalling the well-known
+relationships between the ray angles and the first-order traveltime
+derivatives
+\begin{eqnarray}
+{{\partial \tau} \over {\partial s}} \,=\,{ {\sin{\alpha_1}} \over
+{v}} \,\,\,,
+\label{eqn:snell1}\\
+{{\partial \tau} \over {\partial r}} \,=\, {{\sin{\alpha_2}} \over {v}}  
+\label{eqn:snell2}\,\,\,,
+\end{eqnarray}  
+we can substitute~(\ref{eqn:length}),~(\ref{eqn:snell1}), and~(\ref{eqn:snell2}) into 
+(\ref{eqn:SCeikonal}), which  leads to the simple trigonometric equality
+\begin{equation}
+\cos^2{\left( {\alpha_1 + \alpha_2} \over 2 \right)} +  
+\sin^2{\left( {\alpha_1 - \alpha_2} \over 2 \right)}\, = \, 1 -
+\sin{\alpha_1} \sin{\alpha_2} \,\,\,. 
+\label{eqn:equality} 
+\end{equation}
+It is now easy to show that equality~(\ref{eqn:equality}) is true for any
+$\alpha_1$ and $\alpha_2$, since
+\[
+\sin^2{a} - \sin^2{b} = \sin{(a+b)}\,\sin{(a-b)}\;.
+\]
+
+\inputdir{XFig}
+
+\sideplot{ocoray}{height=2.5in}{Reflection rays in a constant
+velocity medium (a scheme).}
+
+Thus we have proved that equation
+(\ref{eqn:SCeikonal}), equivalent to~(\ref{eqn:eikonal}), is valid in constant
+velocity media independently of the reflector geometry and the offset.
+This means that high-frequency asymptotic components of the waves,
+described by the OC equation,
+are located on the true reflection traveltime curves.  
+
+The theory of characteristics can provide other ways to prove the
+kinematic validity of equation~(\ref{eqn:eikonal}), as described by
+\cite{me} and \cite{plag}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Comparison with Bolondi's OC equation}
+Equation~(\ref{eqn:OCequation}) and the previously published OC
+equation \cite[]{GPR30-06-08130828} differ only with respect to the
+single term $\partial^2 P \over {\partial h^2}$. However, this
+difference is substantial.  
+
+From the offset continuation characteristic equation
+(\ref{eqn:eikonal}), we can conclude that the first-order traveltime
+derivative with respect to offset decreases with decreasing
+offset. The derivative equals zero at the zero offset, as predicted by the
+principle of reciprocity (the reflection traveltime has to be an {\em
+  even} function of offset). Neglecting $\left({\partial \tau_n} \over
+  {\partial h}\right)^2$ in (\ref{eqn:eikonal}) leads to the
+characteristic equation
+\begin{equation}
+ h \,   {\left( \partial \tau_n \over \partial y \right)}^2  
+ = \, - \, \tau_n \, {\partial \tau_n \over \partial h}\;, 
+\label{eqn:ITeikonal} 
+\end{equation}
+which corresponds to the approximate OC equation of
+\cite{GPR30-06-08130828}. The approximate equation has the form
+\begin{equation}
+h \, {\partial^2 P \over \partial y^2} \, = \, t_n \, {\partial^2 P
+\over {\partial t_n \, \partial h}}\;.
+\label{eqn:bolondi} 
+\end{equation}
+Comparing equations~(\ref{eqn:ITeikonal}) and (\ref{eqn:eikonal}), we
+can note that approximation (\ref{eqn:ITeikonal}) is valid only if
+\begin{equation}
+{\left( \partial \tau_n \over \partial h \right)}^2 \, \ll\, {\left(
+\partial \tau_n \over \partial y \right)}^2 \,\,\,. 
+\label{eqn:condition} 
+\end{equation}
+To find the geometric constraints implied by inequality
+(\ref{eqn:condition}), we can express the traveltime derivatives in
+geometric terms. As follows from expressions (\ref{eqn:snell1}) and
+(\ref{eqn:snell2}),
+\begin{eqnarray}
+\label{eqn:snells1}
+{{\partial \tau} \over {\partial y}} & = & {{\partial \tau} \over
+{\partial r}} + {{\partial \tau} \over {\partial s}} \,=\, { {2
+\sin{\alpha} \cos{\gamma}} \over {v}}\;, \\
+{{\partial \tau} \over
+{\partial h}} & = & {{\partial \tau} \over {\partial r}} - {{\partial
+\tau} \over {\partial s}} \,=\, { {2 \cos{\alpha} \sin{\gamma}} \over
+{v}}\;.
+\label{eqn:snells2}
+\end{eqnarray}
+Expression (\ref{eqn:length}) allows transforming
+equations~(\ref{eqn:snells1}) and (\ref{eqn:snells2}) to the form
+\begin{eqnarray}
+\label{eqn:connection1}
+\tau_n \, {{\partial \tau_n} \over {\partial y}} & = & \tau \, {{\partial
+\tau} \over {\partial y}} \,=\, 4h\,{{\sin{\alpha} \cos{\alpha}
+\cot{\gamma}} \over {v^2}}\;; \\ 
+\tau_n \, {{\partial \tau_n} \over {\partial h}} & = &\tau \, {{\partial
+\tau} \over {\partial h}} - {{4h} \over {v^2}} \,=\,-\,
+4h\,{{\sin^2{\alpha}} \over {v^2}}\;.   
+\label{eqn:connection2} 
+\end{eqnarray}
+Without loss of generality, we can assume $\alpha$ to be positive.
+Consider a plane tangent to a true reflector at the reflection
+point
+(Figure \ref{fig:ocobol}).
+The traveltime of a wave, reflected from the plane, has the
+known explicit expression
+\begin{equation}
+\tau\,=\,{2 \over v}\,\sqrt{L^2+h^2\,\cos^2{\alpha}}\,\,\,,   
+\label{eqn:CDP} 
+\end{equation}
+where $L$ is the length of the normal ray from the midpoint. As
+follows from combining (\ref{eqn:CDP}) and (\ref{eqn:length}),
+\begin{equation}
+{\cos{\alpha} \cot{\gamma}} \,=\, {L \over h}   \,\,\,.
+\label{eqn:ratio} 
+\end{equation}
+We can now combine equations~(\ref{eqn:ratio}),
+(\ref{eqn:connection1}), and (\ref{eqn:connection2}) to transform
+inequality (\ref{eqn:condition}) to the form
+\begin{equation}
+ h \ll {L \over {\sin{\alpha}}} \,=\, z\, \cot{\alpha}\,\,,   
+\label{eqn:hm} 
+\end{equation}
+where $z$ is the depth of the plane reflector under the midpoint.  For
+example, for a dip of 45 degrees, equation~(\ref{eqn:bolondi}) will be
+satisfied only for offsets that are much smaller than the depth of the
+reflector.
+
+\sideplot{ocobol}{height=2.5in}{Reflection rays and
+tangent to the reflector in a constant velocity medium (a scheme).}
+  
+\subsection{Offset continuation geometry: time rays}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+To study the laws of traveltime curve transformation in the OC
+process, it is convenient to apply the method of characteristics
+\cite[]{kurant} to the eikonal-type equation~(\ref{eqn:eikonal}). The
+characteristics of equation~(\ref{eqn:eikonal}) [{\em
+  bi}-characteristics with respect to equation (\ref{eqn:OCequation})]
+are the trajectories of the high-frequency energy propagation in the
+imaginary OC process. Following the formal analogy with seismic rays,
+I call those trajectories {\em time rays}, where the word {\em time}
+refers to the fact that the trajectories describe the traveltime
+transformation \cite[]{me}.  According to the theory of first-order
+partial differential equations, time rays are determined by a set of
+ordinary differential equations (characteristic equations) derived
+from equation (\ref{eqn:eikonal}) :
+\begin{eqnarray}
+{{{dy} \over {dt_n}}   =  - {{2 h Y} \over {t_n H}}}\;,\; 
+{{{dY} \over {dt_n}}  =  {Y \over t_n}}\;, 
+\nonumber \\
+{{{dh} \over {dt_n}}  =  {-{1 \over H}+{{2 h} \over t_n}}}\;,\;
+{{{dH} \over {dt_n}} = {{Y^2} \over {t_n H}}}\;, 
+\label{eqn:rays} 
+\end{eqnarray}
+where $Y$ corresponds to $\partial \tau_n \over \partial y$ along a
+ray and $H$ corresponds to $\partial \tau_n \over \partial h$. In this
+notation, equation~(\ref{eqn:eikonal}) takes the form
+\begin{equation}
+h\, (Y^2-H^2) = -\, t_n H 
+\label{eqn:rayeikonal} 
+\end{equation}
+and serves as an additional constraint for the definition of time
+rays.  System~(\ref{eqn:rays}) can be solved by standard mathematical
+methods \cite[]{ode}. Its general solution takes the parametric form,
+where the time variable $t_n$ is the parameter changing along a time
+ray:
+\begin{eqnarray}
+y(t_n)  =  C_1-C_2\,t_n^2 \; & ; & \;h(t_n)=t_n \sqrt{C_2^2 t_n^2 + C_3}\;;
+\\ 
+Y(t_n)  =  {{C_2\,t_n}\over C_3}\; & ; & \;H(t_n)={h \over {C_3\,t_n}}
+\label{eqn:ray} 
+\end{eqnarray}
+and $C_1$, $C_2$, and $C_3$ are independent coefficients, constant
+along each time ray. To find the values of these coefficients, we can
+pose an initial-value problem for the system of differential
+equations~(\ref{eqn:rays}).  The traveltime curve $\tau_n(y;h)$ for a
+given common offset $h$ and the first partial derivative $\partial
+\tau_n \over \partial h$ along the same constant offset section
+provide natural initial conditions. A particular case of those
+conditions is the zero-offset traveltime curve. If the first partial
+derivative of traveltime with respect to offset is continuous, it
+vanishes at zero offset according to the reciprocity principle
+(traveltime must be an even function of the offset):
+\begin{math}
+t_0\left(y_0\right)=\tau_n(y;0), 
+\left. {\partial \tau_n \over \partial h} \right|_{h=0}=0\,.  
+\end{math}
+Applying the initial-value conditions to the general
+solution~(\ref{eqn:ray}) generates the following expressions for the
+ray invariants:
+\begin{eqnarray}
+C_1 & = & y+h\,{Y \over H}=y_0-{t_0\left(y_0\right) \over
+t_0'\left(y_0\right)}\;;\;
+C_2={{h\,Y} \over {\tau_n^2\,H}}=
+-{1 \over t_0\left(y_0\right)\,t_0'\left(y_0\right)}\;;\;
+\nonumber \\
+C_3 & = & {h \over {\tau_n\,H}}=
+-{1 \over \left(t_0'\left(y_0\right)\right)^2}\;,
+\label{eqn:abc} 
+\end{eqnarray}
+where $t_0'\left(y_0\right)$ denotes the derivative
+$\frac{d\,t_0}{d\,y_0}$.  Finally, substituting
+equations~(\ref{eqn:abc})
+into~(\ref{eqn:ray}), we obtain an explicit parametric form of the ray
+trajectories:
+\begin{eqnarray}
+\label{eqn:yhray1}
+y_1\left(t_1\right)  & = & \displaystyle{y+{{h\,Y} \over
+{t_n^2\,H}}\,\left(t_n^2-t_1^2\right)= y_0+{{t_1^2-t_0^2\left(y_0\right)} \over
+{t_0\left(y_0\right)\,t_0'\left(y_0\right)}}}\;;
+\\
+h_1^2\left(t_1\right) & = & \displaystyle{{{h\,t_1^2} \over {t_n^3\,H}}\,
+\left(t_n^2+t_1^2\,{{h\,Y^2} \over {t_n\,H}}\right)=
+t_1^2\,{{t_1^2-t_0^2\left(y_0\right)} \over
+{\left(t_0\left(y_0\right)\,t_0'\left(y_0\right)\right)^2}}}\;.
+\label{eqn:yhray2}
+\end{eqnarray}
+Here $y_1$, $h_1$, and $t_1$ are the coordinates of the continued
+seismic section. Equations~(\ref{eqn:yhray1}) indicates
+that the time ray projections to a common-offset section have a
+parabolic form. Time rays do not exist for $t_0'\left(y_0\right)=0$ (a
+locally horizontal reflector) because in this case post-NMO offset
+continuation transform is not required.
+
+The actual parameter that
+determines a particular time ray is the reflection point location.
+This important conclusion follows from the known parametric equations
+\begin{eqnarray}
+\label{eqn:gur1}
+t_0(x) & = & \displaystyle{t_v \sec{\alpha}=
+t_v(x)\,\sqrt{1+u^2\left(t_v'(x)\right)^2}}\;, 
+\\
+y_0(x) & = & \displaystyle{x+u t_v\tan{\alpha} =x+u^2\,t_v(x)t_v'(x)}\;,
+\label{eqn:gur2}
+\end{eqnarray}
+where $x$ is the reflection point, $u$ is half of the wave velocity ($u=v/2$), 
+$t_v$ is the vertical time (reflector depth divided by $u$), and
+$\alpha$ is the 
+local reflector dip. Taking into account that the derivative of the zero-offset
+traveltime curve is
+\begin{equation}
+{{dt_0}\over{dy_0}}={{t_0'(x)}\over{y_0'(x)}}={{\sin{\alpha}}\over u}=
+{{t_v'(x)} \over \sqrt{1+u^2\left(t_v'(x)\right)^2}}
+\label{eqn:gurtx}
+\end{equation}
+and substituting equations~(\ref{eqn:gur1}) and~(\ref{eqn:gur2})
+into~(\ref{eqn:yhray1}) and~(\ref{eqn:yhray2}), we get
+\begin{eqnarray}
+\label{eqn:rayrp1}
+y_1\left(t_1\right) & = &
+\displaystyle{x+{{t_1^2-t_v^2\left(x\right)} \over
+{t_v\left(x\right)\,t_v'\left(x\right)}}}\;;
+\\
+u^2 t^2\left(t_1\right) & = & 
+\displaystyle{t_1^2\,{{t_1^2-t_v^2\left(x\right)} \over
+{\left(t_v\left(x\right)\,t_v'\left(x\right)\right)^2}}}\;,
+\label{eqn:rayrp2}
+\end{eqnarray}
+where $t^2\left(t_1\right)=t_1^2+h_1^2\left(t_1\right)/u^2$.
+
+To visualize the concept of time rays, let us consider some simple
+analytic examples of its application to geometric analysis of the
+offset-continuation process.
+
+\subsubsection{Example 1: plane reflector}
+
+\inputdir{Sage}
+
+The simplest and most important example is the case of a plane dipping
+reflector. Putting the origin of the $y$ axis at the intersection of
+the reflector plane with the surface, we can express the reflection
+traveltime after NMO in the form
+\begin{equation}
+\tau_n(y,h)=p\,\sqrt{y^2-h^2}\;,
+\label{eqn:planett}
+\end{equation}
+where $p=2\,{ \sin{\alpha} \over v}$, and $\alpha$ is the dip angle. 
+The zero-offset traveltime in this case is a straight line:
+\begin{equation}
+t_0\left(y_0\right)=p\,y_0\;.
+\label{eqn:planezott}
+\end{equation}
+According to equations~(\ref{eqn:yhray1}-\ref{eqn:yhray2}), the time
+rays in this case are defined by
+\begin{equation}
+y_1\left(t_1\right)={t_1^2 \over {p^2\,y_0}}\;;\;
+h_1^2\left(t_1\right)=t_1^2\,{{t_1^2-p^2\,y_0^2} \over
+{p^4\,y_0^2}}\;;\;
+y_0={{y^2-h^2} \over y}\;.
+\label{eqn:planerays}
+\end{equation}
+The geometry of the OC transformation is shown in Figure
+\ref{fig:ocopln}.
+
+\plot{ocopln}{width=6in,height=3in}{Transformation of
+  the reflection traveltime curves in the OC process: the case of a
+  plane dipping reflector. Left: Time coordinate before the NMO
+  correction. Right: Time coordinate after NMO. The solid lines
+  indicate traveltime curves at different common-offset sections; the
+  dashed lines indicate time rays.}
+
+\subsubsection{Example 2: point diffractor}
+
+  The second example is the case of a point diffractor (the left side
+  of Figure \ref{fig:ococrv}).  Without loss of generality, the origin
+  of the midpoint axis can be put above the diffraction point. In this
+  case the zero-offset reflection traveltime curve has the well-known
+  hyperbolic form
+\begin{equation}
+t_0\left(y_0\right)={\sqrt{z^2+y_0^2} \over u}\;,
+\label{eqn:pointzott}
+\end{equation}
+where $z$ is the depth of the diffractor and $u=v/2$ is half of the
+wave velocity. Time rays are defined according to
+equations~(\ref{eqn:yhray1}-\ref{eqn:yhray2}), as follows:
+\begin{equation}
+y_1\left(t_1\right)={{u^2\,t_1^2-z^2} \over y_0}\;;\;
+u^2\,t^2\left(t_1\right)=u^2\,t_1^2+h_1^2\left(t_1\right)=
+u^2\,t_1^2\,{{u^2\,t_1^2-z^2} \over y_0^2}\;.
+\label{eqn:pointrays}
+\end{equation}
+
+
+\plot{ococrv}{width=6in,height=3in}{Transformation of
+  the reflection traveltime curves in the OC process. Left: the case
+  of a diffraction point. Right: the case of an elliptic reflector.
+  Solid lines indicate traveltime curves at different common-offset
+  sections, dashed lines indicate time rays.}
+
+\subsubsection{Example 3: elliptic reflector}
+
+The third example (the right side of Figure \ref{fig:ococrv}) is the
+curious case of a focusing elliptic reflector. Let $y$ be the center
+of the ellipse and $h$ be half the distance between the foci of the
+ellipse. If both foci are on the surface, the zero-offset
+traveltime curve is defined by the so-called ``DMO smile''
+\cite[]{GPR29-03-03740406}:
+\begin{equation}
+t_0\left(y_0\right)={t_n \over h}\,\sqrt{h^2-\left(y-y_0\right)^2}\;,
+\label{eqn:smilezott}
+\end{equation} 
+where $t_n=2\,z/v$, and $z$ is the small semi-axis of the ellipse.
+The time-ray equations are
+\begin{equation}
+y_1\left(t_1\right)=y+{h^2\over {y-y_0}}\,{{t_1^2-t_n^2} \over t_n^2}\;;\;
+h_1^2\left(t_1\right)=h^2\,{t_1^2 \over t_n^2}\,
+\left(1+
+{h^2\over \left(y-y_0\right)^2}\,{{t_1^2-t_n^2} \over t_n^2}
+\right)\;.
+\label{eqn:smilerays}
+\end{equation}
+When $y_1$ coincides with $y$, and $h_1$ coincides with $h$, the
+source and the receiver are in the foci of the elliptic reflector, and
+the traveltime curve degenerates to a point $t_1=t_n$. This remarkable
+fact is the actual basis of the geometric theory of dip moveout
+\cite[]{GPR29-03-03740406}.
+
+\subsection{Proof of amplitude equivalence} 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Let us now consider the connection between the laws of traveltime
+transformation and the laws of the corresponding amplitude
+transformation.  The change of the wave amplitudes in the OC process
+is described by the first-order partial differential transport
+equation~(\ref{eqn:transport}). We can find the general solution of
+this equation by applying the method of characteristics. The solution
+takes the explicit integral form
+\begin{equation}
+A_n\left(t_n\right)=A_0\left(t_0\right)\,\exp{\left(\int_{t_o}^{t_n}
+\left[h\,\left({\partial^2 \tau_n \over \partial y^2}-
+{\partial^2 \tau_n \over \partial h^2}\right)\,
+\left(\tau_n\,{\partial \tau_n \over \partial h} \right)^{-1}\right]\,
+d\tau_n\right)}\;.
+\label{eqn:ampint}
+\end{equation}
+The integral in equation~(\ref{eqn:ampint}) is defined on a curved
+time ray, and $A_n(t_n)$ stands for the amplitude transported along
+this ray. In the case of a plane dipping reflector, the ray amplitude
+can be immediately evaluated by substituting the explicit traveltime
+and time ray equations from the preceding section
+into~(\ref{eqn:ampint}). The amplitude expression in this case takes
+the simple form
+\begin{equation}
+A_n\left(t_n\right)=A_0\left(t_0\right)\,\exp{\left(-\int_{t_o}^{t_n}
+\frac{d\tau_n}{\tau_n}\right)} = A_0\left(t_0\right)\,{t_0 \over t_n}\;.
+\label{eqn:ampplane}
+\end{equation}
+In order to consider the more general case of a curvilinear reflector,
+we need to take into account the connection between the traveltime
+derivatives in~(\ref{eqn:ampint}) and the geometry of the reflector.
+As follows directly from the trigonometry of the incident and
+reflected rays triangle (Figure \ref{fig:ocoray}),
+\begin{eqnarray}
+h & = & {r-s \over 2}=
+D\,{{\cos{\alpha}\,\sin{\gamma}\,\cos{\gamma}} \over
+{\cos^2{\alpha}-\sin^2{\gamma}}}\;,
+\label{eqn:geoh}\\
+y & = & {r+s \over 2}=
+x+D\,{{\cos^2{\alpha}\,\sin{\alpha}} \over
+{\cos^2{\alpha}-\sin^2{\gamma}}}\;,
+\label{eqn:geoy}\\
+y_0 & = & x+D\,\sin{\alpha}\;,
+\label{eqn:geoy0}
+\end{eqnarray}
+where $D$ is the length of the normal ray. Let $\tau_0=2\,D/v$ be the
+zero-offset reflection traveltime. Combining
+equations~(\ref{eqn:geoh}) and~(\ref{eqn:geoy0}) with
+(\ref{eqn:length}), we can get the following relationship:
+\begin{equation}
+a={\tau_n\over\tau_0}={{\cos{\alpha}\,\cos{\gamma}}\over
+\left(\cos^2{\alpha}-\sin^2{\gamma}\right)^{1/2}}=
+\left(1+{{\sin^2{\alpha}\,\sin^2{\gamma}}\over
+{\cos^2{\alpha}-\sin^2{\gamma}}}\right)^{1/2}=
+{h\,\over\sqrt{h^2-\left(y-y_0\right)^2}}\;,
+\label{eqn:A}
+\end{equation}
+which describes the ``DMO smile''~(\ref{eqn:smilezott}) found by
+\cite{GPR29-03-03740406} in geometric terms.
+Equation~(\ref{eqn:A}) allows for a convenient change of variables
+in equation~(\ref{eqn:ampint}). Let the reflection angle $\gamma$ be a
+parameter monotonically increasing along a time ray. In this case,
+each time ray is uniquely determined by the position of the reflection
+point, which in turn is defined by the values of $D$ and $\alpha$.
+According to this change of variables, we can
+differentiate~(\ref{eqn:A}) along a time ray to get
+\begin{equation}
+{{d\tau_n}\over\tau_n}=-{{\sin^2{\alpha}}\over
+{2\,\cos^2{\gamma}\,\left(\cos^2{\gamma}-\sin^2{\alpha}\right)}}\,
+d\left(\cos^2{\gamma}\right)\;.
+\label{eqn:dt2tg}
+\end{equation}
+Note also that the quantity $h\,\left(\tau_n\,{\partial \tau_n \over
+    \partial h} \right)^{-1}$ in equation~(\ref{eqn:ampint}) coincides
+exactly with the time ray invariant $C_3$ found in
+equation~(\ref{eqn:abc}). Therefore its value is constant along each
+time ray and equals
+\begin{equation}
+h\,\left(\tau_n\,{\partial \tau_n \over \partial h}\right)^{-1}=
+-{v^2 \over 4\, \sin^2{\alpha}}\;.
+\label{eqn:c3}
+\end{equation}
+Finally, as shown in Appendix~\ref{chapter:deriv},
+\begin{equation}
+\tau_n\,\left({\partial^2 \tau_n \over \partial y^2}-
+{\partial^2 \tau_n \over \partial h^2}\right)=4\,
+{\cos^2{\gamma}\over v^2}\,\left({\sin^2{\alpha}+DK}\over
+{\cos^2{\gamma}+DK}\right)\;,
+\label{eqn:curve}
+\end{equation}
+where $K$ is the reflector curvature at the reflection point.
+Substituting (\ref{eqn:dt2tg}),~(\ref{eqn:c3}), and~(\ref{eqn:curve})
+into~(\ref{eqn:ampint}) transforms the integral to the form
+\begin{eqnarray*}
+ \int_{t_o}^{t_n}\left[
+h\,\left({\partial^2 \tau_n \over \partial y^2}-
+{\partial^2 \tau_n \over \partial h^2}\right)\,
+\left(\tau_n\,{\partial \tau_n \over \partial h} \right)^{-1}\right]\,
+d\tau_n = 
+\end{eqnarray*}
+\begin{equation}
+ = -{1 \over 2}\,\int_{\cos^2{\gamma_0}}^{\cos^2{\gamma}}
+\left({1 \over {\cos^2{\gamma'}-\sin^2{\alpha}}}-
+{1 \over
+{\cos^2{\gamma'}+DK}}\right)\,d\left(\cos^2{\gamma'}\right) 
+\label{eqn:int2g}
+\end{equation}
+which we can evaluate analytically. The final equation for the
+amplitude transformation is
+\begin{eqnarray}
+A_n & = & A_0\,{\sqrt{\cos^2{\gamma}-\sin^2{\alpha}}\over
+\sqrt{\cos^2{\gamma_0}-\sin^2{\alpha}}}\,\left(
+{\cos^2{\gamma_0}+DK}\over{\cos^2{\gamma}+DK}\right)^{1/2}=
+\nonumber \\
+& = & A_0\,{{\tau_0\,\cos{\gamma}}\over{\tau_n\,\cos{\gamma_0}}}\,
+\left(
+{\cos^2{\gamma_0}+DK}\over{\cos^2{\gamma}+DK}\right)^{1/2}\;. 
+\label{eqn:ampcurve}
+\end{eqnarray}
+In case of a plane reflector, the curvature $K$ is zero, and
+equation~(\ref{eqn:ampcurve}) coincides with~(\ref{eqn:ampplane}).
+In the general case can be rewritten as
+\begin{equation}
+A_n={{c\,\cos{\gamma}}\over{\tau_n\,\sqrt{\cos^2{\gamma}+DK}}}\;,
+\label{eqn:ampray}
+\end{equation}
+where $c$ is constant along each time ray (it may vary with the reflection point
+location on the reflector but not with the offset). We should compare equation
+(\ref{eqn:ampray}) 
+with the known expression for the reflection wave amplitude of the leading
+ray series term in 2.5-D media \cite[]{cwp}:
+\begin{equation}
+A={{C_R(\gamma) \Psi}\over G}\;,
+\label{eqn:amptrue}
+\end{equation}
+where $C_R$ stands for the angle-dependent reflection coefficient, $G$ is the
+geometric spreading
+\begin{equation}
+G=v \tau {\sqrt{\cos^2{\gamma}+DK}\over \cos{\gamma}}\;,
+\label{eqn:GS}
+\end{equation}
+and $\Psi$ includes other possible factors (such as the source
+directivity) that we can either correct or neglect in the preliminary
+processing.  It is evident that the curvature dependence of the
+amplitude transformation (\ref{eqn:ampray}) coincides completely with
+the true geometric spreading factor (\ref{eqn:GS}) and that the angle
+dependence of the reflection coefficient is not accounted for the offset
+continuation process. If the wavelet shape of the reflected wave on
+seismic sections [$R_n$ in equation~(\ref{eqn:raymethod})] is
+described by the delta function, then, as follows from the known
+properties of this function,
+\begin{equation}
+A\,\delta\left(t-\tau(y,h)\right)=\left|{{dt_n} \over {dt}}\right|\,
+A\,\delta\left(t_n-\tau_n(y,h)\right) =
+{t \over t_n}\,A\,\delta\left(t_n-\tau_n(y,h)\right)\;, 
+\label{eqn:deltafun} 
+\end{equation}
+which leads to the equality
+\begin{equation}
+A_n=A\,{t \over t_n}\;.
+\label{eqn:a2an} 
+\end{equation}
+Combining equation~(\ref{eqn:a2an}) with equations~(\ref{eqn:amptrue})
+and~(\ref{eqn:ampray}) allows us to evaluate the amplitude after
+continuation from some initial offset $h_0$ to another offset $h_1$,
+as follows:
+\begin{equation}
+A_1={{C_R(\gamma_0) \Psi_0}\over G_1}\;.
+\label{eqn:ampfin}
+\end{equation}
+According to equation~(\ref{eqn:ampfin}), the OC process described by
+equation (\ref{eqn:OCequation}) is amplitude-preserving in the sense
+that corresponds to the definition of Born DMO
+\cite[]{born,GEO56-02-01820189}. This means that the geometric spreading
+factor from the initial amplitudes is transformed to the true
+geometric spreading on the continued section, while the reflection
+coefficient stays the same. This remarkable dynamic property allows
+AVO (amplitude versus offset) analysis to be performed by a dynamic
+comparison between true constant-offset sections and the sections
+transformed by OC from different offsets.  With a simple trick, the
+offset coordinate is transferred to the reflection angles for the AVO
+analysis.  As follows from~(\ref{eqn:A}) and~(\ref{eqn:length}),
+\begin{equation}
+{\tau_n^2 \over \tau\,\tau_0}=\cos{\gamma}\;.
+\label{eqn:AVO}
+\end{equation}
+If we include the ${t_n^2 \over t\,t_0}$ factor in the DMO operator
+(continuation to zero offset) and divide the result by the DMO section
+obtained without this factor, the resultant amplitude of the reflected
+events will be directly proportional to $\cos{\gamma}$, where the
+reflection angle $\gamma$ corresponds to the initial offset. Of
+course, this conclusion is rigorously valid for constant-velocity
+2.5-D media only.
+
+\cite{GEO58-01-00470066} suggest a definition of true-amplitude DMO different
+from that of Born DMO. The difference consists of two important
+components:
+\begin{enumerate}
+\item {\em True-amplitude DMO addresses preserving the peak amplitude
+    of the image wavelet instead of preserving its spectral density.}
+  In the terms of this paper, the peak amplitude corresponds to the
+  pre-NMO amplitude $A$ from formula~(\ref{eqn:amptrue}) instead of
+  corresponding to the spectral density amplitude $A_n$.  A simple
+  correction factor $t \over t_n$ would help us take the difference
+  between the two amplitudes into account. Multiplication by $t \over
+  t_n$ can be easily done at the NMO stage.
+\item {\em Seismic sections are multiplied by time to correct for the
+    geometric spreading factor prior to DMO (or, in our case, offset
+    continuation) processing.} \end{enumerate} As follows
+from~(\ref{eqn:GS}), multiplication by $t$ is a valid geometric
+spreading correction for plane reflectors only.  It is the
+amplitude-preserving offset continuation based on the OC
+equation~(\ref{eqn:OCequation}) that is able to correct for the
+curvature-dependent factor in the amplitude. To take into account the
+second aspect of Black's definition, we can consider the modified
+field $\hat{P}$ such that
+\begin{equation}
+\hat{P}\left(y,h,t_n\right)=t\,P\left(y,h,t_n\right)\;.
+\label{eqn:p2pt}
+\end{equation}
+Substituting~(\ref{eqn:p2pt}) into the OC equation~(\ref{eqn:OCequation}) transforms the
+latter to the form
+\begin{equation}
+h \, \left( {\partial^2 \hat{P} \over \partial y^2} - {\partial^2 \hat{P} \over
+\partial h^2} \right) \, = \, t_n \, {\partial^2 \hat{P} \over {\partial t_n \,
+\partial h}}\, -{\partial \hat{P} \over \partial h}\; . 
+\label{eqn:BSZequation} 
+\end{equation}
+Equations~(\ref{eqn:BSZequation}) and~(\ref{eqn:OCequation}) differ
+only with respect to the first-order damping term $\partial \hat{P}
+\over \partial h$.  This term affects the amplitude behavior but not
+the traveltimes, since the eikonal-type equation~(\ref{eqn:eikonal})
+depends on the second-order terms only.  Offset continuation operators
+based on~(\ref{eqn:BSZequation}) conform to Black's definition of
+true-amplitude processing.
+
+\cite{menorm} describe an alternative approach to
+confirming the kinematic and amplitude validity of the offset
+continuation equation. Applying equation~(\ref{eqn:OCequation})
+directly on the Kirchhoff model of prestack seismic data shows that
+the equation is satisfied to the same asymptotic order of accuracy
+as the Kirchhoff modeling approximation \cite[]{haddon,norm}.
+
+\section{Integral offset continuation operator}
+%%%%%%%%%%%%%%%%%%%%%%
+Equation~(\ref{eqn:OCequation}) describes a continuous process of
+reflected wavefield continuation in the time-offset-midpoint domain.
+In order to find an integral-type operator that performs the one-step
+offset continuation, I consider the following initial-value
+problem for equation~(\ref{eqn:OCequation}):
+
+{\em Given a post-NMO constant-offset section at half-offset $h_1$}
+\begin{equation}
+\left.P(t_n,h,y)\right|_{h=h_1}=P^{(0)}_1(t_n,y) 
+\label{eqn:bound0} 
+\end{equation}
+{\em and its first-order derivative with respect to offset}
+\begin{equation}
+\left.\partial P(t_n,h,y)\over \partial h\right|_{h=h_1}=P^{(1)}_1(t_n,y)\;, 
+\label{eqn:bound1} 
+\end{equation}
+{\em find the corresponding section $P^{(0)}(t_n,y)$ at offset $h$.}
+
+Equation~(\ref{eqn:OCequation}) belongs to the hyperbolic type, with
+the offset coordinate $h$ being a ``time-like'' variable and the
+midpoint coordinate $y$ and the time $t_n$ being ``space-like''
+variables.  The last condition~(\ref{eqn:bound1}) is required for the
+initial value problem to be well-posed \cite[]{kurant}. From a physical
+point of view, its role is to separate the two different wave-like
+processes embedded in equation~(\ref{eqn:OCequation}), which are
+analogous to inward and outward wave propagation. We will associate
+the first process with continuation to a larger offset and the second
+one with continuation to a smaller offset.  Though the offset
+derivatives of data are not measured in practice, they can be
+estimated from the data at neighboring offsets by a finite-difference
+approximation. Selecting a propagation branch explicitly, for example
+by considering the high-frequency asymptotics of the continuation
+operators, can allow us to eliminate the need for
+condition~(\ref{eqn:bound1}). In this section, I discuss the exact
+integral solution of the OC equation and analyze its asymptotics.
+
+The integral solution of problem~(\ref{eqn:bound0}-\ref{eqn:bound1})
+for equation~(\ref{eqn:OCequation}) is obtained in with the help of
+the classic methods of mathematical physics
+\cite[]{me,Fomel.sepphd.107}. It takes the explicit form
+\begin{eqnarray}
+P(t_n,h,y) & = &
+\int\!\!\int P^{(0)}_1(t_1,y_1)\,G_0(t_1,h_1,y_1;t_n,h,y)\,dt_1\,dy_1
+\nonumber \\ 
++ & & 
+\int\!\!\int P^{(1)}_1(t_1,y_1)\,G_1(t_1,h_1,y_1;t_n,h,y)\,dt_1\,dy_1\;,
+\label{eqn:integral} 
+\end{eqnarray}
+where the Green's functions $G_0$ and $G_1$ are expressed as
+\begin{eqnarray}
+G_0(t_1,h_1,y_1;t_n,h,y) & = & \mbox{sign}(h-h_1)\,{H(t_n) \over \pi}\,
+{\partial \over \partial t_n}\,\left\{
+H(\Theta) \over 
+\sqrt{\Theta}\right\}\;,
+\label{eqn:green0} \\
+G_1(t_1,h_1,y_1;t_n,h,y) & = & \mbox{sign}(h-h_1)\,
+{H(t_n) \over \pi}\,h\,
+{t_n \over t_1^2}\,\left\{
+H(\Theta) \over 
+\sqrt{\Theta}\right\}\;,
+\label{eqn:green1} 
+\end{eqnarray}
+and the parameter $\Theta$ is
+\begin{equation}
+\Theta(t_1,h_1,y_1;t_n,h,y)  = 
+\left(h_1^2/t_1^2-h^2/t_n^2\right)\,\left(t_1^2-t_n^2\right)-
+\left(y_1-y\right)^2\;.
+\label{eqn:gamma}
+\end{equation}
+$H$ stands for the Heaviside step-function. 
+ 
+From equations~(\ref{eqn:green0}) and~(\ref{eqn:green1}) one can see
+that the impulse response of the offset continuation operator is
+discontinuous in the time-offset-midpoint space on a surface defined
+by the equality
+\begin{equation}
+\Theta(t_1,h_1,y_1;t_n,h,y)  = 0\;,
+\label{eqn:conoid}
+\end{equation}
+which describes the ``wavefronts'' of the offset continuation process.
+In terms of the theory of characteristics \cite[]{kurant}, the surface
+$\Theta=0$ corresponds to the characteristic conoid formed by the
+bi-characteristics of equation~(\ref{eqn:OCequation}) -- time rays
+emerging from the point $\{t_n,h,y\}=\{t_1,h_1,y_1\}$. The
+common-offset slices of the characteristic conoid are shown in the
+left plot of Figure \ref{fig:cont}.
+
+\plot{cont}{width=6in}{
+Constant-offset sections of the characteristic conoid - ``offset
+continuation fronts'' (left), and branches of the conoid used in the
+integral OC operator (right). The upper part of the plots
+(small times) corresponds to continuation to smaller offsets; the 
+lower part (large times) corresponds to larger offsets.}
+
+As a second-order differential equation of the hyperbolic type,
+equation (\ref{eqn:OCequation}) describes two different processes. The
+first process is ``forward'' continuation from smaller to larger
+offsets, the second one is ``reverse'' continuation in the opposite
+direction.  These two processes are clearly separated in the
+high-frequency asymptotics of operator~(\ref{eqn:integral}). To obtain
+the asymptotic representation, it is sufficient to note that ${1
+  \over \sqrt{\pi}}\, {H(t) \over \sqrt{t}}$ is the impulse response
+of the causal half-order integration operator and that $H(t^2-a^2)
+\over \sqrt{t^2-a^2}$ is asymptotically equivalent to $H(t-a) \over
+{\sqrt{2a}\,\sqrt{t-a}}$ $(t, a >0)$.  Thus, the asymptotical form of
+the integral offset-continuation operator becomes
+\begin{eqnarray}
+P^{(\pm)}(t_n,h,y) & = &
+{\bf D}^{1/2}_{\pm\,t_n}\,\int w^{(\pm)}_0(\xi;h_1,h,t_n)\,
+P^{(0)}_1(\theta^{(\pm)}(\xi;h_1,h,t_n),y_1-\xi)\,d\xi
+\nonumber \\ 
+& \pm  & 
+{\bf I}^{1/2}_{\pm\,t_n}\,\int w^{(\pm)}_1(\xi;h_1,h,t_n)\,
+P^{(1)}_1(\theta^{(\pm)}(\xi;h_1,h,t_n),y_1-\xi)\,d\xi\;.
+\label{eqn:asintegral} 
+\end{eqnarray}
+Here the signs ``$+$'' and ``$-$'' correspond to the type of
+continuation (the sign of ${h-h_1}$), ${\bf D}^{1/2}_{\pm\,t_n}$ and
+${\bf I}^{1/2}_{\pm\,t_n}$ stand for the operators of causal and
+anticausal half-order differentiation and integration applied with
+respect to the time variable $t_n$, the summation paths
+$\theta^{(\pm)}(\xi;h_1,h,t_n)$ correspond to the two non-negative
+sections of the characteristic conoid~(\ref{eqn:conoid}) (Figure
+\ref{fig:cont}):
+\begin{equation}
+t_1=\theta^{(\pm)}(\xi;h_1,h,t_n)=
+{t_n \over h}\,\sqrt{{U \pm V} \over 2 }\;,
+\label{eqn:summation}
+\end{equation}
+where $U=h^2+h_1^2-\xi^2$, and $V=\sqrt{U^2-4\,h^2\,h_1^2}$; $\xi$ is
+the midpoint separation (the integration parameter), and $w^{(\pm)}_0$
+and $w^{(\pm)}_1$ are the following weighting functions:
+\begin{eqnarray}
+w^{(\pm)}_0 & = & {1 \over \sqrt{2\,\pi}}\,
+{\theta^{(\pm)}(\xi;h_1,h,t_n) \over \sqrt{t_n\,V}}\;,
+\label{eqn:w0} \\
+w^{(\pm)}_1 & = & {1 \over \sqrt{2\,\pi}}\,
+{{\sqrt{t_n}\, h_1} \over {\sqrt{V}\,\theta^{(\pm)}(\xi;h_1,h,t_n)}}\;. 
+\label{eqn:w1} 
+\end{eqnarray}  
+Expression~(\ref{eqn:summation}) for the summation path of the OC
+operator was obtained previously by \cite{stovas} and
+\cite{SEG-1994-1541}. A somewhat different form of it is proposed by
+\cite{GEO61-06-18461858}. I describe the kinematic interpretation
+of formula~(\ref{eqn:summation}) in Appendix~B.
+
+In the high-frequency asymptotics, it is possible to replace the two
+terms in equation~(\ref{eqn:asintegral}) with a single term
+\cite[]{GEO68-03-10321042}. The single-term expression is
+\begin{equation}
+P^{(\pm)}(t_n,h,y)  = 
+{\bf D}^{1/2}_{\pm\,t_n}\,\int w^{(\pm)}(\xi;h_1,h,t_n)\,
+P^{(0)}_1(\theta^{(\pm)}(\xi;h_1,h,t_n),y_1-\xi)\,d\xi\;,
+\end{equation}
+where
+\begin{eqnarray}
+w^{(+)} & = & \sqrt{\theta^{(+)}(\xi;h_1,h,t_n) \over {2\,\pi}}\;
+{{h^2-h_1^2-\xi^2} \over {V^{3/2}}}\;, 
+\label{eqn:wOC12} \\
+w^{(-)} & = & {{\theta^{(-)}(\xi;h_1,h,t_n)} \over \sqrt{2\,\pi t_n}}\;
+{{h_1^2-h^2 +\xi^2} \over {V^{3/2}}}\;. 
+\label{eqn:wOC21} 
+\end{eqnarray}
+A more general approach to true-amplitude asymptotic offset
+continuation is developed by \cite{tygel}.
+
+The limit of expression~(\ref{eqn:summation}) for the output offset $h$
+approaching zero can be evaluated by L'Hospitale's rule. As one would
+expect, it coincides with the well-known expression for the summation
+path of the integral DMO operator
+\cite[]{GPR29-03-03740406}
+\begin{equation}
+t_1=\theta^{(-)}(\xi;h_1,0,t_n)=
+\lim_{h \rightarrow 0} {{t_n \over h}\,\sqrt{{U - V} \over 2 }}=
+{{t_n\,h_1} \over \sqrt{h_1^2-\xi^2}}\;.
+\label{eqn:DMOsummation}
+\end{equation}
+I discuss the connection between offset continuation and DMO in the
+next section.
+
+\section{Offset continuation and DMO}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Dip moveout represents a particular case of offset continuation for
+the output offset equal to zero. In this section, I consider the DMO
+case separately in order to compare the solutions of equation
+(\ref{eqn:OCequation}) with the Fourier-domain DMO operators, which
+have been the standard for DMO processing since Hale's outstanding
+work \cite[]{Hale.sepphd.36,GEO49-06-07410757}.
+
+Equation~(\ref{eqn:integral}) transforms to the time-wavenumber domain
+with the help of integral tables:
+\begin{equation}
+\widetilde{P}(t_n,h,k)=
+H(t_n)\,\left(\widetilde{P}_0(t_n,h,k) +
+t_n\,\widetilde{P}_1(t_n,h,k)\right)\;,
+\label{eqn:pp0p1} 
+\end{equation}
+where
+\begin{eqnarray}
+\widetilde{P}_0  & = & 
+{\partial \over {\partial t_n}}\,
+\int_{\left(h_1/h\right)\,t_n}^{t_n}
+\widetilde{P}^{(0)}_1\left(\left|t_1\right|,k\right)\,
+J_0\left(k\,\sqrt{\left({h^2 \over t_n^2}-{h_1^2 \over t_1^2}\right)\,
+\left(t_n^2-t_1^2\right)}\right)\,dt_1\;,
+\label{eqn:p0} \\
+\widetilde{P}_1  & = & 
+\int_{\left(h_1/h\right)\,t_n}^{t_n}
+h_1\,\widetilde{P}^{(1)}_1\left(\left|t_1\right|,k\right)\,
+J_0\left(k\,\sqrt{\left({h^2 \over t_n^2}-{h_1^2 \over t_1^2}\right)\,
+\left(t_n^2-t_1^2\right)}\right)\,{dt_1 \over t_1^2}\;,
+\label{eqn:p1} 
+\end{eqnarray}
+\begin{eqnarray}
+\widetilde{P}^{(j)}_1(t_1,k) & = & 
+\int\,P\,^{(j)}_1(t_1,y_1)\exp (-iky_1)\,dy_1\;(j=0,1)\;,
+\label{eqn:tildej} \\
+\widetilde{P}(t_n,h,k)  & = & 
+\int\,P(t_n,h,y)\exp (-iky)\,dy\;(j=0,1)\;.
+\label{eqn:tilde}
+\end{eqnarray}
+
+Setting the output offset to zero, we obtain the following DMO-like
+integral operators in the $t$--$k$ domain:
+\begin{equation}
+\widetilde{P}(t_0,0,k)=
+H(t_0)\,\left(\widetilde{P}_0(t_0,k) +
+t_0\,\widetilde{P}_1(t_0,k)\right)\;,
+\label{eqn:dp0p1} 
+\end{equation}
+where
+\begin{equation}
+\widetilde{P}_0(t_0,k)  = 
+- {\partial \over {\partial t_0}}\,
+\int_{t_0}^{\infty}
+\widetilde{P}^{(0)}_1\left(\left|t_1\right|,k\right)\,
+J_0\left({{k\,h_1}\over t_1}\,
+\sqrt{t_1^2-t_0^2}\right)\,dt_1\;,
+\label{eqn:d0} 
+\end{equation}
+\begin{equation}
+\widetilde{P}_1(t_0,k)  = 
+- \int_{t_0}^{\infty}
+h_1\,\widetilde{P}^{(1)}_1\left(\left|t_1\right|,k\right)\,
+J_0\left({{k\,h_1}\over t_1}\,
+\sqrt{t_1^2-t_0^2}\right)\,{dt_1 \over t_1^2}\;,
+\label{eqn:d1} 
+\end{equation}
+the wavenumber $k$ corresponds to the midpoint axis $y$, and $J_0$ is
+the zeroth-order Bessel function.  The Fourier transform
+of~(\ref{eqn:d0}) and (\ref{eqn:d1}) with respect to the time variable
+$t_0$ reduces to known integrals \cite[]{table} and creates explicit
+DMO-type operators in the frequency-wavenumber domain, as follows:
+\begin{equation}
+\widetilde{\widetilde{P}}_0(\omega_0,k)  = 
+i\,
+\int_{-\infty}^{\infty}
+\widetilde{P}^{(0)}_1\left(\left|t_1\right|,k\right)\,
+{\sin{\left(\omega_0\,|t_1|\,A\right)} \over A}
+\,dt_1\;,
+\label{eqn:dw0} 
+\end{equation}
+\begin{equation}
+\widetilde{\widetilde{P}}_1(\omega_0,k)  = 
+i\, \int_{-\infty}^{\infty}
+h_1\,\widetilde{P}^{(1)}_1\left(\left|t_1\right|,k\right)\,
+{\sin{\left(\omega_0\,|t_1|\,A\right)} \over A}
+{dt_1 \over t_1^2}\;,
+\label{eqn:dw1} 
+\end{equation}
+where 
+\begin{equation}
+A=\sqrt{1+{(k\,h_1)^2 \over (\omega_0\,t_1)^2}}\;,
+\label{eqn:a} 
+\end{equation}
+\begin{equation}
+\widetilde{\widetilde{P}}_j(\omega_0,k)=
+\int\,\widetilde{P}_j(t_0,k)\,\exp (i\omega_0 t_0)\,dt_0\;.
+\label{eqn:FFT} 
+\end{equation}
+
+It is interesting to note that the first term of the continuation to
+zero offset~(\ref{eqn:dw0}) coincides exactly with the imaginary part
+of Hale's DMO operator \cite[]{GEO49-06-07410757}. However, unlike Hale's,
+operator~(\ref{eqn:dp0p1}) is causal, which means that its impulse
+response does not continue to negative times. The non-causality of
+Hale's DMO and related issues are discussed in more detail by
+\cite{stovas}.
+%I include a brief summary of this discussion in Appendix~\ref{chapter:hale}.
+
+Though Hale's DMO is known to provide correct reconstruction of the
+geometry of zero-offset reflections, it does not account properly for
+the amplitude changes \cite[]{GEO58-01-00470066}. The preceding section of this
+paper shows that the additional contribution to the amplitude
+is contained in the second term of the OC operator
+(\ref{eqn:integral}), which transforms to the second term in the DMO
+operator~(\ref{eqn:dp0p1}). Note that this term vanishes at the input offset
+equal to zero, which represents the case of the inverse DMO operator.
+
+Considering the inverse DMO operator as the continuation from zero
+offset to a non-zero offset, we can obtain its representation in the
+$t$-$k$ domain from equations~(\ref{eqn:pp0p1}-\ref{eqn:p1}) as
+\begin{equation}
+\widetilde{P}(t_n,h,k)  = 
+H(t_n) {\partial \over {\partial t_n}}\,
+\int_{0}^{t_n}
+\widetilde{P}_0\left(\left|t_0\right|,k\right)\,
+J_0\left({{k\,h}\over t_n}\,
+\sqrt{t_n^2-t_0^2}\right)\,dt_0\;,
+\label{eqn:i0} 
+\end{equation}
+Fourier transforming equation~(\ref{eqn:i0}) with respect to the time
+variable $t_0$ according to equation~(\ref{eqn:FFT}), we get the
+Fourier-domain version of the ``amplitude-preserving'' inverse DMO:
+\begin{equation}
+\widetilde{P}(t_n,h,k) = 
+{H(t_n) \over {2\,\pi}}\,{\partial \over \partial t_n}\,
+\int_{-\infty}^{\infty}
+\widetilde{\widetilde{P}}_0(\omega_0,k)\, 
+{{\sin{\left(\omega_0\,|t_n|\,A\right)} \over {\omega_0\,A}}}
+\,d\omega_0\;,
+\label{eqn:IDMO} 
+\end{equation}
+\begin{equation}
+A=\sqrt{1+{(k\,h)^2 \over (\omega_0\,t_n)^2}}\;.
+\label{eqn:a1} 
+\end{equation}
+
+Comparing operator~(\ref{eqn:IDMO}) with Ronen's version of inverse DMO
+\cite[]{GEO52-07-09730984}, one can see that if Hale's DMO is denoted
+by ${\bf D}_{t_0}\,{\bf H}$, then Ronen's inverse DMO is ${\bf
+H^{T}\,D}_{-t_0}$, while the amplitude-preserving inverse~(\ref{eqn:IDMO})
+is ${\bf D}_{t_n}\,{\bf H^T}$. Here ${\bf D}_t$ is the derivative
+operator $\left( \partial \over \partial t\right)$, and ${\bf H^T}$
+stands for the adjoint operator defined by the dot-product test
+\begin{equation}
+{\bf (Hm,d)=(m,H^{T}d)},
+\label{eqn:dot}
+\end{equation}
+where the parentheses denote the dot product:
+\begin{equation}
+{\bf (m_1,m_2)}=\int\!\int\,m_1(t_n,y)\,m_2(t_n,y)\,dt_n\,dy\;.
+\nonumber
+\end{equation}
+  
+In high-frequency asymptotics, the difference between the amplitudes
+of the two inverses is simply the Jacobian term ${d\,t_0 \over
+  d\,t_n}$, asymptotically equal to ${t_0 \over t_n}$. This difference
+corresponds exactly to the difference between Black's definition of
+amplitude preservation \cite[]{GEO58-01-00470066} and the definition used in Born
+DMO \cite[]{born,GEO56-02-01820189}, as discussed above. While operator
+(\ref{eqn:IDMO}) preserves amplitudes in the Born DMO sense, Ronen's
+inverse satisfies Black's amplitude preservation criteria. This means
+Ronen's operator implies that the ``geometric spreading'' correction
+(multiplication by time) has been performed on the data prior to DMO.
+
+To construct a one-term DMO operator, thus avoiding the estimation of
+the offset derivative in~(\ref{eqn:w1}), let us consider the problem
+of inverting the inverse DMO operator~(\ref{eqn:IDMO}). One of the
+possible approaches to this problem is the least-squares iterative
+inversion, as proposed by \cite{GEO52-07-09730984}. This
+requires constructing the adjoint operator, which is Hale's DMO (or
+its analog) in the case of Ronen's method. The iterative least-squares
+approach can account for irregularities in the data geometry
+\cite[]{IZO,SEG-1994-1545} and boundary effects, but it is computationally
+expensive because of the multiple application of the operators. An
+alternative approach is the asymptotic inversion, which can be viewed
+as a special case of preconditioning the adjoint operator
+\cite[]{SEG-1988-S17.5,SEG-1996-0032}. The goal of the asymptotic inverse is to
+reconstruct the geometry and the amplitudes of the reflection events
+in the high-frequency asymptotic limit.
+
+According to Beylkin's theory of asymptotic inversion, also known as
+the {\em generalized Radon transform} \cite[]{beylkin}, two operators of the
+form
+\begin{equation}
+D(\omega)=\int X(t,\omega)\,M(t)\,
+\exp\left[i\omega \phi (t,\omega)\right]\,dt
+\label{eqn:b0}
+\end{equation}
+and
+\begin{equation}
+\widetilde{M}(t)=\int Y(t,\omega)\,D(\omega)\,
+\exp\left[-i\omega \phi (t,\omega)\right]\,d\omega
+\label{eqn:b1}
+\end{equation}
+constitute a pair of asymptotically inverse operators
+($\widetilde{M}(t)$ matching $M(t)$ in the high-frequency asymptotics)
+if
+\begin{equation}
+X(t,\omega)\,Y(t,\omega)={Z(t,\omega) \over {2\,\pi}}\;,
+\label{eqn:belka}
+\end{equation}
+where $Z$ is the ``Beylkin determinant''
+\begin{equation}
+Z(t,\omega)=\left|\partial \omega \over \partial \hat{\omega}\right|\;
+\mbox{for}\;\hat{\omega}=\omega\,{\partial \phi(t,\omega) \over \partial t}\;.
+\label{eqn:det}
+\end{equation}
+
+With respect to the high-frequency asymptotic representation, we can
+recast (\ref{eqn:IDMO}) in the equivalent form by moving the time
+derivative under the integral sign:
+\begin{equation}
+\widetilde{P}(t_n,k) \approx 
+{H(t_n) \over {2\,\pi}}\,\mbox{Re}\left[
+\int_{-\infty}^{\infty}A^{-2}
+\widetilde{\widetilde{P}}_0(\omega_0,k)\, 
+\exp\left(-i \omega_0\,|t_n|\,A\right)
+\,d\omega_0\right]
+\label{eqn:IDMO2} 
+\end{equation}
+Now the asymptotic inverse of~(\ref{eqn:IDMO2}) is evaluated by
+means of Beylkin's method (\ref{eqn:b0})-(\ref{eqn:b1}), which leads
+to an amplitude-preserving one-term DMO operator of the form
+\begin{equation}
+\widetilde{\widetilde{P}}_0(\omega_0,k)  = 
+\mbox{Im}\left[
+\int_{-\infty}^{\infty} B
+\widetilde{P}^{(0)}_1\left(\left|t_1\right|,k\right)\,
+\exp\left(i \omega_0\,|t_1|\,A\right)
+\,dt_1\right]\;,
+\label{eqn:born} 
+\end{equation}
+where 
+\begin{equation}
+B = A^2 {\partial \over \partial \omega_0}\left(\omega_0\,
+{{\partial (t_n\,A)} \over \partial t_n}\right) = 
+A^{-1}\,(2\,A^2 - 1)\;.
+\label{eqn:jack} 
+\end{equation}
+  
+The amplitude factor~(\ref{eqn:jack}) corresponds exactly to that of
+Born DMO \cite[]{born} in full accordance with the conclusions of the
+asymptotic analysis of the offset-continuation amplitudes. An
+analogous result can be obtained with the different definition of
+amplitude preservation proposed by \cite{GEO58-01-00470066}. In
+the time-and-space domain, the operator asymptotically analogous to
+(\ref{eqn:born}) is found by applying either the stationary phase
+technique \cite[]{GEO55-05-05950607,GEO58-01-00470066} or Goldin's method of
+discontinuities \cite[]{goldintomo,Goldin.sep.67.171}, which is the
+time-and-space analog of Beylkin's asymptotic inverse theory
+\cite[]{stovas}. The time-and-space asymptotic DMO operator takes the
+form
+\begin{equation}
+P_0(t_0,y) = {\bf D}^{1/2}_{-t_0}\,\int w_0(\xi;h_1,t_0)\,
+P^{(0)}_1(\theta^{(-)}(\xi;h_1,0,t_0),y_1-\xi)\,d\xi\;,
+\label{eqn:TADMO}
+\end{equation} 
+where the weighting function $w_0$ is defined as 
+\begin{equation}
+w_0(\xi;h_1,t_0)=\sqrt{t_0 \over {2\,\pi}}\, 
+{{h_1\,(h_1^2+\xi^2)} \over (h_1^2-\xi^2)^2}\;.
+\label{eqn:TAw}
+\end{equation}
+
+\section{Offset continuation in the log-stretch domain}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+The log-stretch transform, proposed by \cite{GPR30-06-08130828}
+and further developed by many other researchers, is a useful
+tool in DMO and OC processing. Applying a log-stretch transform of the
+form
+\begin{equation}
+\sigma = \ln\left|t_n \over t_* \right|\;, 
+\label{eqn:log}
+\end{equation}
+where $t_*$ is an arbitrarily chosen time constant, eliminates the
+time dependence of the coefficients in equation~(\ref{eqn:OCequation})
+and therefore makes this equation invariant to time shifts. After the
+double Fourier transform with respect to the midpoint coordinate $y$
+and to the transformed (log-stretched) time coordinate $\sigma$, the
+partial differential equation~(\ref{eqn:OCequation}) takes the form of
+an ordinary differential equation,
+\begin{equation}
+h\,\left({{d^2 \widehat{\widehat{P}}} 
+\over {dh^2}} + k^2\,\widehat{\widehat{P}}\right) =
+i\Omega\,{{d \widehat{\widehat{P}}} \over {dh}}\;,
+\label{eqn:LSequation}
+\end{equation}
+where
+\begin{equation}
+\widehat{\widehat{P}}(h) = \int\!\int P(t_n=t_*\,\exp(\sigma),h,y)\,
+\exp(i\Omega\sigma - iky)\,d\sigma\,dy\;. 
+\label{eqn:LSFT}
+\end{equation}
+
+Equation~(\ref{eqn:LSequation}) has the known general solution,
+expressed in terms of cylinder functions of complex order $\lambda =
+{{1+i\Omega} \over 2}$ \cite[]{watson}
+\begin{equation}
+\widehat{\widehat{P}}(h) = 
+C_1(\lambda)\,(kh)^{\lambda}\,J_{-\lambda}(kh)+
+C_2(\lambda)\,(kh)^{\lambda}\,J_{\lambda}(kh)\;,
+\label{eqn:gensol}
+\end{equation}
+where $J_{-\lambda}$ and $J_{\lambda}$ are Bessel functions, and $C_1$
+and $C_2$ stand for some arbitrary functions of $\lambda$ that do not
+depend on $k$ and $h$.
+
+In the general case of offset continuation, $C_1$ and $C_2$ are
+constrained by the two initial conditions~(\ref{eqn:bound0}) and
+(\ref{eqn:bound1}). In the special case of continuation from zero offset, we
+can neglect the second term in~(\ref{eqn:gensol}) as vanishing at the zero
+offset. The remaining term defines the following operator of inverse
+DMO in the ${\Omega,k}$ domain:
+\begin{equation}
+\widehat{\widehat{P}}(h) = \widehat{\widehat{P}}(0)\,Z_{\lambda}(kh)\;,
+\label{eqn:OKDMO}
+\end{equation}
+where $Z_{\lambda}$ is the analytic function
+\begin{eqnarray}
+\nonumber
+Z_{\lambda}(x) & = & \Gamma(1-\lambda)\,\left(x \over 2\right)^{\lambda}\,
+J_{-\lambda}(x)=
+{}_0F_1\left(;1-\lambda;-\frac{x^2}{4}\right) \\
+& = &
+\sum_{n=0}^{\infty} {(-1)^n \over n!}\,
+{\Gamma(1-\lambda) \over \Gamma(n+1-\lambda)}\,
+\left(x \over 2\right)^{2n}\;,
+\label{eqn:z}
+\end{eqnarray}
+$\Gamma$ is the gamma function and ${}_0F_1$ is the confluent
+hypergeometric limit function \cite[]{ab}.
+
+The DMO operator now can be derived as the inversion of operator
+(\ref{eqn:OKDMO}), which is a simple multiplication by
+$1/Z_{\lambda}(kh)$. Therefore, offset continuation becomes a
+multiplication by $Z_{\lambda}(kh_2)/Z_{\lambda}(kh_1)$ (the cascade
+of two operators). This fact demonstrates an important advantage of
+moving to the log-stretch domain: both offset continuation and DMO are simple
+filter multiplications in the Fourier domain of the log-stretched time
+coordinate.
+
+In order to compare operator~(\ref{eqn:OKDMO}) with the known versions
+of log-stretch DMO, we need to derive its asymptotic representation
+for high frequency $\Omega$. The required asymptotic expression
+follows directly from the definition of function $Z_{\lambda}$ in
+equation~(\ref{eqn:z}) and the known asymptotic representation for a Bessel
+function of high order \cite[]{watson}:
+\begin{equation}
+J_{\lambda}(\lambda z) \stackrel{\lambda \rightarrow \infty}{\approx} 
+{{(\lambda z)^{\lambda}\,\exp\left(\lambda\,\sqrt{1-z^2}\right)} \over
+{e^{\lambda}\,\Gamma(\lambda+1)\,(1-z^2)^{1/4}\,
+\left\{1+\sqrt{1-z^2}\right\}^{\sqrt{1-z^2}}}}\;.
+\label{eqn:carlini}
+\end{equation}
+Substituting approximation~(\ref{eqn:carlini}) into~(\ref{eqn:z}) and
+considering the high-frequency limit of the resultant expression
+yields
+\begin{equation}
+Z_{\lambda}(kh) \approx 
+\left\{{1+\sqrt{1-\left(kh \over \lambda\right)^2}} \over
+2\right\}^{\lambda}\, 
+{{\exp\left(\lambda\,\left[1 - \sqrt{1-\left(kh \over
+\lambda\right)^2}\right]\right)} \over 
+\left(1-\left(kh \over \lambda\right)^2\right)^{1/4}} \approx
+{F(\epsilon)\,e^{i\Omega\,\psi(\epsilon)}}\;,
+\label{eqn:AOKDMO}
+\end{equation}
+where $\epsilon$ denotes the ratio ${2\,k\,h} \over
+\Omega$,
+\begin{equation}
+F(\epsilon)=\sqrt{{1+\sqrt{1+\epsilon^2}} \over
+{2\,\sqrt{1+\epsilon^2}}}\,
+\exp\left({1-\sqrt{1+\epsilon^2}} \over 2\right)\;,
+\label{eqn:F}
+\end{equation}
+and
+\begin{equation}
+\psi(\epsilon)={1 \over 2}\,\left(1 - \sqrt{1+\epsilon^2} +
+\ln\left({1 + \sqrt{1+\epsilon^2}} \over 2\right)\right)\;.
+\label{eqn:psi}
+\end{equation}
+
+The asymptotic representation~(\ref{eqn:AOKDMO}) is valid for high
+frequency $\Omega$ and $|\epsilon| \leq 1$. The
+phase function $\psi$ defined in~(\ref{eqn:psi}) coincides precisely
+with the analogous term in Liner's \emph{exact log DMO}
+\cite[]{GEO55-05-05950607}, which provides the correct
+geometric properties of DMO. Similar expressions for the log-stretch
+phase factor $\psi$ were derived in different ways by
+\cite{GEO61-03-08150820} and \cite{GEO61-04-11031114}.
+However, the amplitude term $F(\epsilon)$ differs from the previously
+published ones because of the difference in the amplitude preservation
+properties.
+  
+A number of approximate log DMO operators have been proposed in the
+literature. As shown by \cite{GEO55-05-05950607}, all of them but
+exact log DMO distort the geometry of reflection effects at large
+offsets. The distortion is caused by the implied approximations of the
+true phase function $\psi$. Bolondi's OC operator
+\cite[]{GPR30-06-08130828} implies $\psi(\epsilon) \approx -{\epsilon^2
+  \over 8}$, Notfors' DMO \cite[]{GEO52-12-17181721} implies
+$\psi(\epsilon) \approx 1 - \sqrt{1+(\epsilon /2)^2}$, and the ``full
+DMO'' \cite[]{SEG-1987-S14.1} has $\psi(\epsilon) \approx {1 \over 2}
+\ln\left[1-(\epsilon / 2)^2\right]$. All these approximations are
+valid for small $\epsilon$ (small offsets or small reflector dips) and
+have errors of the order of $\epsilon^4$ (Figure \ref{fig:pha}).  The
+range of validity of Bolondi's operator is defined in
+equation~(\ref{eqn:hm}).
+  
+  \sideplot{pha}{height=1.5in}{ Phase functions of the log
+    DMO operators. Solid line: exact log DMO; dashed line: Bolondi's
+    OC; dashed-dotted line: Bale's full DMO; dotted line: Notfors'
+    DMO.  }
+  
+  In practice, seismic data are often irregularly sampled in space but
+  regularly sampled in time. This makes it attractive to apply offset
+  continuation and DMO operators in the $\{\Omega,y\}$ domain, where
+  the frequency $\Omega$ corresponds to the log-stretched time and
+  $y$ is the midpoint coordinate. Performing the inverse Fourier
+  transform on the spatial frequency transforms the inverse DMO
+  operator~(\ref{eqn:OKDMO}) to the $\{\Omega,y\}$ domain, where the
+  filter multiplication becomes a convolutional operator:
+\begin{equation}
+\widehat{P}(\Omega,h,y) =
+{\widehat{F}(\Omega) \over \sqrt{2\,\pi}}\,\int_{|\xi|<h}
+{ h \over {h^2-\xi^2}}\,
+\widehat{P_0}(\Omega,y-\xi)\,
+\exp\left(-{i\Omega \over 2}\,\ln\left(1-{\xi^2 \over h_1^2}\right)\right) 
+\,d\xi\;.
+\label{eqn:OXDMO} 
+\end{equation}
+Here $\widehat{F}(\Omega)$ is a high-pass frequency filter:
+\begin{equation}
+\widehat{F}(\Omega)={{\Gamma(1/2-i\Omega/2)}
+\over {\sqrt{1/2}\,\Gamma(-i\Omega/ 2)}}\;.
+\label{eqn:hat} 
+\end{equation}
+At high frequencies $\widehat{F}(\Omega)$ is approximately equal to
+$(- i \Omega)^{1/2}$, which corresponds to the half-derivative
+operator $\left(\partial \over \partial \sigma \right)^{1/2}$, which,
+in turn, is equal to the $\left(t_n {\partial \over \partial t_n}
+\right)^{1/2}$ term of the asymptotic OC
+operator~(\ref{eqn:asintegral}). The difference between the exact
+filter $\widehat{F}$ and its approximation by the half-order
+derivative operator is shown in Figure \ref{fig:flt}. This difference
+is a measure of the validity of asymptotic OC operators.
+
+\plot{flt}{width=6in}{ Amplitude (left) and phase (right) of
+  the time filter in the log-stretch domain. The solid line is for the
+  exact filter; the dashed line for its approximation by the
+  half-order derivative filter. The horizontal axis corresponds to the
+  dimensionless log-stretch frequency $\Omega$.}
+
+Inverting operator~(\ref{eqn:OXDMO}), we can obtain the DMO operator in the
+$\{\Omega,y\}$ domain.
+
+\section{Discussion}
+
+The differential model for offset continuation is based on several
+assumptions. It is important to fully realize them in order to
+understand the practical limitations of this model.
+\begin{itemize}
+\item The \emph{constant velocity} assumption is essential for
+  theoretical derivations. In practice, this limitation is not too
+  critical, because the operators act locally. DMO and
+  offset continuation algorithms based on the constant-velocity
+  assumptions are widely used in practice \cite[]{DMO00-00-04960496}.
+\item The \emph{single-mode} assumption does not include multiple
+  reflections in the model. If multiple events (with different
+  apparent velocities) are present in the data, they might require
+  extending the model. Convolving two (or more) differential offset
+  continuation operators, corresponding to different velocities, we
+  can obtain a higher-order differential operator for predicting
+  multiple events.
+\item The \emph{continuous AVO} assumption implies that the
+  reflectivity variation with offset is continuous and can be
+  neglected in a local neighborhood of a particular offset. While the
+  offset continuation model correctly predicts the geometric spreading
+  effects in the reflected wave amplitudes, it does not account for
+  the variation of the reflection coefficient with offset.
+\item The \emph{2.5-D} assumption was implicit in the derivation of
+  the offset continuation equation. According to this assumption, the
+  reflector does not change in the cross-line direction, and we can
+  always consider the reflection plane in two dimensions. 
+\end{itemize}
+
+\section{Conclusions}
+%%%%
+I have introduced a partial differential
+equation~(\ref{eqn:OCequation}) and proved that the process described
+by it provides for a kinematically and dynamically equivalent offset
+continuation transform. Kinematic equivalence means that in constant
+velocity media the reflection traveltimes are transformed to their
+true locations on different offsets. Dynamic equivalence means that,
+in the OC process, the geometric spreading term in the amplitudes of
+reflected waves transforms in accordance with the laws of geometric
+seismics, while the angle-dependent reflection coefficient stays the
+same.
+  
+The offset continuation equation can be applied directly to design OC
+operators of the finite-difference type. To construct integral OC
+operators, an initial value problem is solved for the
+offset continuation equation~(\ref{eqn:OCequation}). For the special
+cases of continuation to zero offset (DMO) and continuation from zero
+offset (inverse DMO), the OC operators are related to the known forms
+of DMO operators: Hale's Fourier DMO, Born DMO, and Liner's ``exact
+log DMO.'' The discovery of these relations sheds additional light on
+the problem of amplitude preservation in DMO.
+
+\section{Acknowledgments}
+Sergey Goldin drew my attention to the role of curvature dependence in
+reflected wave amplitudes \cite[]{joint}.  I also acknowledge the
+support of Alexey Stovas, who introduced me to the world of DMO and
+collaborated with me on developing the asymptotic theory of offset
+continuation \cite[]{stovas}. Norman Bleistein collaborated with me on 
+confirming the amplitude validity of offset continuation
+\cite[]{SEG-1996-1731,menorm}. Shuki Ronen and Richard Bale
+pointed out the importance of the log-stretch domain in DMO and
+related problems.  I appreciate the encouragement of Jon Claerbout and
+Fabio Rocca regarding the analysis of the offset-continuation partial
+differential equation.
+
+The financial support for this work was provided by the sponsors of
+the Stanford Exploration Project.
+
+%\newpage
+
+\bibliographystyle{seg}
+\bibliography{ofcon,SEG,SEP2}
+
+%\newpage
+
+\input{ofcon}
+
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% TeX-master: t
+%%% TeX-master: t
+%%% End: 

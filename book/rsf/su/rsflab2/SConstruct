@@ -1,0 +1,18 @@
+from rsf.proj import *
+
+# Download data
+
+Fetch('sonar.su','cwp')
+
+# Convert to RSF
+
+Flow('sonar','sonar.su','suread what=d suxdr=y')
+
+Plot('sonar',     'sonar','grey pclip=100 title="pclip=100" ')
+Plot('sonar99',   'sonar','grey title="pclip=99" ')
+Plot('sonar99leg','sonar','grey wanttitle=n scalebar=y')
+
+Result('sonar99','sonar sonar99','SideBySideAniso')
+Result('sonar99leg','sonar99 sonar99leg','SideBySideAniso')
+
+End()

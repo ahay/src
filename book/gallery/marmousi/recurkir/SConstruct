@@ -1,0 +1,226 @@
+from rsf.proj import *
+
+sys.path.append('..')
+import marmousi
+
+marmousi.getvel('vel')
+Result('vel','grey scalebar=y color=j allpos=y title="Velocity Model" bias=1.5 barreverse=y')
+
+marmousi.get_shots('data')
+
+dz=0.004
+dx=0.004
+
+xmin=2.
+xmax=9.
+
+ns=576
+os=0.
+ds=0.016
+
+# shots
+Flow('yshot',None,'math n1=%d o1=%g d1=%g output=x1' % (ns,os,ds))
+Flow('szero','yshot','math output=0.')
+Flow('shots','szero yshot','cat axis=2 ${SOURCES[1]} ${SOURCES[0]} | transp')
+
+# mute refraction + spreading correction
+Flow('spread','data','mutter half=n v0=1.44 | tpow tpow=1')
+
+# predictive decon
+Flow('filt lag','data',
+     '''
+     lopef a=76,1 w=726,96 gap=13,0 dim=2 lag=${TARGETS[1]}
+     ''')
+
+Flow('decon','data filt',
+     '''
+     decon filt=${SOURCES[1]} | bandpass flo=15 fhi=45
+     ''')
+
+# amplitude taper + static source shift
+Flow('taper1',None,'math n1=75 o1=0. d1=0.004 output=0.')
+Flow('taper2',None,'math n1=51 o1=0. d1=0.004 output="5.*x1"')
+Flow('taper3',None,'math n1=600 o1=0. d1=0.004 output=1.')
+Flow('taper','taper1 taper2 taper3',
+     '''
+     cat axis=1 ${SOURCES[1]} ${SOURCES[2]} |
+     spray axis=2 n=96 d=0.025 o=-2.575 |
+     spray axis=3 n=240 d=0.025 o=3.
+     ''')
+
+Flow('trace','decon taper',
+     '''
+     add mode=p ${SOURCES[1]} |
+     mutter half=n x0=-0.1 tp=0.2 v0=1.6 |
+     window n1=711 f1=14 | put o1=0.     
+     ''')
+
+##########
+# standard
+##########
+
+# traveltime
+Flow('time0 tdl0 tds0','vel shots',
+     '''
+     put d3=%g o3=0. label3= unit3= |
+     eikods shotfile=${SOURCES[1]} tdl1=${TARGETS[1]} tds1=${TARGETS[2]} b1=3 b2=3 |
+     put o4=%g d4=%g | window
+     ''' % (dx,os,ds))
+
+# migration
+Flow('dmig0','trace time0 tds0','kirmig table=${SOURCES[1]} deriv=${SOURCES[2]} aperture=75.')
+
+# plot
+Result('dmig0',
+       '''
+       window f2=%d n2=%d |
+       stack axis=3 norm=n |
+       grey title="Standard"
+       ''' % (xmin/dx,(xmax-xmin)/dx+1))
+
+
+#############
+# recursive 1
+#############
+
+datum1=1.5
+chunk1=2.
+
+# chunk1
+########
+
+# traveltime
+Flow('time1_1','time0','window n1=%d' % (chunk1/dz+1))
+Flow('tds1_1','tds0','window n1=%d' % (chunk1/dz+1))
+
+# migration
+Flow('dmig1_1','trace time1_1 tds1_1','kirmig table=${SOURCES[1]} deriv=${SOURCES[2]} aperture=75.')
+
+# redatum
+#########
+
+Flow('sgreen1','time1_1 tds1_1',
+     '''
+     transp plane=34 memsize=4096 |
+     tinterp deriv=${SOURCES[1]} os=3 ds=0.025 ns=240 |
+     window n1=1 f1=%d |
+     spline o1=3 d1=0.025 n1=240
+     ''' % (datum1/dz))
+
+Flow('rgreen1','time1_1 tds1_1',
+     '''
+     transp plane=34 memsize=4000 |
+     tinterp deriv=${SOURCES[1]} os=0.425 ds=0.025 ns=335 |
+     window n1=1 f1=%d |
+     spline o1=0.425 d1=0.025 n1=335
+     ''' % (datum1/dz))
+
+Flow('redat1','trace sgreen1 rgreen1',
+     '''
+     reverse which=1 opt=i |
+     kirdat datum=%g sgreen=${SOURCES[1]} rgreen=${SOURCES[2]} aperture=200 |
+     reverse which=1 opt=i
+     ''' % datum1)
+
+# chunk2
+########
+
+Flow('chunk2','vel','window n1=%d f1=%d | put o1=0.' % (datum1/dz+1,(3.-datum1)/dz))
+
+# traveltime
+Flow('time1_2 tdl1_2 tds1_2','chunk2 shots',
+     '''
+     put d3=%g o3=0. label3= unit3= |
+     eikods shotfile=${SOURCES[1]} tdl1=${TARGETS[1]} tds1=${TARGETS[2]} |
+     put o4=%g d4=%g | window
+     ''' % (dx,os,ds))
+
+# migration
+Flow('dmig1_2','redat1 time1_2 tds1_2','kirmig table=${SOURCES[1]} deriv=${SOURCES[2]} aperture=75.')
+
+# plot
+######
+
+scale1=4.5
+
+Flow('cut1','dmig1_2','window n1=%d f1=%d | scale dscale=%g' % ((3.-chunk1)/dz+1,(chunk1-datum1)/dz,scale1))
+Flow('dmig1','dmig1_1 cut1','cat axis=1 ${SOURCES[1]}')
+
+Result('dmig1',
+       '''
+       window f2=%d n2=%d |
+       stack axis=3 norm=n |
+       grey title="Recursive 1"
+       ''' % (xmin/dx,(xmax-xmin)/dx+1))
+
+#############
+# recursive 2
+#############
+
+datum2=0.5
+
+# redatum
+#########
+
+for n in range(3):
+    time='time2_'+str(n)
+    tdl='tdl2_'+str(n)
+    tds='tds2_'+str(n)
+
+    Flow([time,tdl,tds],'vel shots',
+         '''
+         window n1=%d f1=%d | put o1=0. d3=%g o3=0. label3= unit3= |
+         eikods shotfile=${SOURCES[1]} tdl1=${TARGETS[1]} tds1=${TARGETS[2]} |
+         put o4=%g d4=%g
+         ''' % (datum2/dz+1,n*datum2/dz,dx,os,ds))
+
+    sgreen='sgreen2_'+str(n)
+    rgreen='rgreen2_'+str(n)
+
+    Flow(sgreen,[time,tds],
+         '''
+         tinterp deriv=${SOURCES[1]} os=3 ds=0.025 ns=240 |
+         window n1=1 f1=%d |
+         spline o1=3 d1=0.025 n1=240
+         ''' % (datum2/dz))
+
+    Flow(rgreen,[time,tds],
+         '''
+         tinterp deriv=${SOURCES[1]} os=0.425 ds=0.025 ns=335 |
+         window n1=1 f1=%d |
+         spline o1=0.425 d1=0.025 n1=335
+         ''' % (datum2/dz))
+
+    if n==0:
+        inp='trace'        
+    else:
+        inp='redat2_'+str(n-1)
+
+    out='redat2_'+str(n)
+
+    Flow(out,[inp,sgreen,rgreen],
+         '''
+         reverse which=1 opt=i |
+         kirdat datum=%g sgreen=${SOURCES[1]} rgreen=${SOURCES[2]} aperture=200 |
+         reverse which=1 opt=i
+         ''' % datum2)
+
+# migration
+Flow('dmig2_2','redat2_2 time1_2 tds1_2','kirmig table=${SOURCES[1]} deriv=${SOURCES[2]} aperture=75.')
+
+# plot
+######
+
+scale2=3.
+
+Flow('cut2','dmig2_2','window n1=%d f1=%d | scale dscale=%g' % ((3.-chunk1)/dz+1,(chunk1-datum1)/dz,scale2))
+Flow('dmig2','dmig1_1 cut2','cat axis=1 ${SOURCES[1]}')
+
+Result('dmig2',
+       '''
+       window f2=%d n2=%d |
+       stack axis=3 norm=n |
+       grey title="Recursive 2"
+       ''' % (xmin/dx,(xmax-xmin)/dx+1))
+
+End()

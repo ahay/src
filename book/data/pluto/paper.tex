@@ -1,0 +1,117 @@
+\title{Pluto Model}
+\author{Trevor Irons}
+\shortpaper
+\maketitle
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+
+\textbf {Data Type:} \emph{Synthetic}\\
+\textbf {Source:} \emph{SMAART Consortium}\\
+\textbf {Location:} \emph{http://www.delphi.tudelft.nl/SMAART/pluto15.htm}\\
+\textbf {Format:} \emph{SEGY and Native} \\
+\textbf{Date of origin:} \emph{Publicly released November 2000}\\
+
+\section{Introduction} 
+The Pluto dataset is one of several that The Subsalt Multiples Attenuation and Reduction Technology Joint Venture (SMAART JV) 
+publicly released between September 2001 and November 2002.  Additional information may be found at:
+\\ \emph{http://www.delphi.tudelft.nl/SMAART/}.  The data remain the property of SMAART and are used under the agreement found 
+at the aforementioned web address.
+
+The Pluto 1.5 dataset is a 2D elastic dataset released in November 2000, designed to emulate deep water subsalt prospects as 
+found in the Gulf of Mexico. It contains realistic free surface and internal multiples over a structure that is relatively 
+easy to image. Table \ref{tbl:FILES} shows the files contained within the Pluto repository of Madagascar.  
+ 
+\tabl{FILES}{A list of all files contained in the \emph{Pluto} repository}
+{
+\tiny
+\lstinputlisting[frame=single]{FILES}
+\normalsize
+}
+
+\section{Velocity Models}
+The Pluto model was designed to offer a complex environment to test multiple attenuation algorithms.  The model is 32 km 
+(105,000 ft) long and 9.14 km (30,000 ft) in deep.  
+
+The velocity model file \textit{int\_depth\_vp.sgy} has 1201 datapoints in the vertical direction and 6960 datums in 
+the horizontal direction. The actual synthetic surveys were conducted on a padded model which contains constant velocity 
+cells outside of the model boundaries.   
+
+To assure the proper geometry Pluto velocity model headers should be formatted as shown in table \ref{tbl:modelHeader}.  
+Values are listed for both metric and standard units.  This article will display metric units exclusively.
+
+\tabl{modelHeader}{Header information for Pluto velocity models}
+{
+\begin{tabular}[t]{|llllll|}
+	\hline
+	\textbf{Standard} &           &              &               &          &       \\
+	n1=1201  &   n2=6960 & 	d1=0.025    &  	 d2=0.025   &	o1=0   & o2=-34.875     \\ 
+	\textbf{Metric}   &           &              &               &          &       \\
+	n1=1201  &   n2=6960 &   d1=.0076  &    d2=.0076  &     o1=0 & o2=-10.629  \\
+	\textbf{Padded} & & & & & \\
+	n1=1401 &    n2=6960 &	d1=.025 or .0076 & d2=.025 or .0076 & 	o1=0 & o2=-34.875 or -10.629   \\
+	\hline
+\end{tabular}
+}
+
+
+The\emph{SConstruct} file found within \emph{rsf/book/data/pluto} is shown in table \ref{tbl:velSConstruct}.  
+This \emph{SConstruct} file produces both metric and standard plots of the velocity model.  However, only the metric one is 
+presented here in figure \ref{fig:velocityProfileMetric}.  Additionally, the padded model found in file \emph{P15VPint\_25f\_padded.SEGY}, 
+is displayed in figure \ref{fig:velocityProfilePadded} for reference.     
+
+\tabl{velSConstruct}{\emph{SConstruct} script generating the velocity model images}
+{
+\tiny
+\lstinputlisting[frame=single]{model/SConstruct}
+\normalsize
+}        
+
+Typing command \ref{eq:SCvel} within the \emph{pluto} directory runs the script.
+\begin{equation}\label{eq:SCvel} \texttt{bash-3.1\$\ scons\ view} \end{equation}
+
+\inputdir{model}
+\plot{velocityProfileMetric}{width=\textwidth}{Pluto P-wave velocity model in metric units}
+\plot{velocityProfilePadded}{width=\textwidth}{Padded velocity model that surveys were conducted on}
+
+\section{Shot Records}
+BP performed a fourth order finite differencing modeling code on the padded velocity model.  Madagascar can easily be used to 
+display and manipulate the data.  The script \emph{pluto/shot/SConstruct} presented in table \ref{tbl:shotSConstruct} fetches 
+the dataset and constructs the \emph{RSF} formatted dataset \emph{plutoShots.rsf}.  
+
+As written this script outputs two images; figure \ref{fig:zero} shows the Pluto zero offset shot gather while figure 
+\ref{fig:shot30} shows shot 30.  
+
+\tabl{shotSConstruct}{\emph{Scons} script that generates \emph{RSF} formatted pluto shot data}
+{
+\tiny
+\lstinputlisting[frame=single]{shot/SConstruct}
+\normalsize
+}
+
+
+\inputdir{shot}
+\plot{zero}{width=\textwidth}{Zero offset data for Pluto synthetic dataset}
+\plot{shot30}{width=\textwidth}{Shot 30 of Pluto dataset}
+
+Shot data should be formatted as shown in table \ref{tbl:shotHeader}.  Again both metric and standard units are shown.  
+
+\tabl{shotHeader}{Header information for Pluto velocity models}
+{
+\begin{tabular}[t]{|lllll|}
+	\hline
+	\textbf{Standard} &     &                       &                       &                \\
+	n1=1126      &	    d1=.008	&   o1=0	&	label1=Z Depth	&	unit1=s  \\
+	n2=350       &	    d2=75	&   o2=0	&	label2=X	&	unit2=ft \\
+	n3=694       &	    d3=150	&   o3=0	&	label3=Shot 	&                \\
+	\textbf{Metric}   &    		&               &                       &                \\
+	    n1=1126  &      d1=0.008    &   o1=0        &	label1="Depth"  &	unit1=s  \\
+	    n2=350   &      d2=0.02286  &   o2=0        &  	label2="Position" &	unit2=km \\
+	    n3=694   &      d3=0.0457   &   o3=0        &  	label3="Shot"	&		 \\
+	\hline
+\end{tabular}
+}
+
+%\section{Multiples}
+%The Pluto model was specifically created to test multiple suppression algorithms.  The file mult.H contained within the repository 
+%contains the data produced by these multiples.   
+
+

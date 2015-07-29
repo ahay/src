@@ -1,0 +1,37 @@
+from rsf.proj import *
+
+fft3 = 'fft1 | fft3 axis=2 | fft3 axis=3'
+ifft3 = 'fft3 axis=3 inv=y | fft3 axis=2 inv=y | fft1 inv=y'
+
+# o1 below is t_c (min. cutoff time) on pag. 1 in paper
+
+Flow('spike',None,
+     '''
+     spike
+     n1=128 o1=0.4    d1=0.0032 k1=65
+     n2=256 o2=-1.536 d2=0.012  k2=129
+     n3=128 o3=-1.024 d3=0.016  k3=65
+     ''')
+
+Flow('filt','spike',fft3 + \
+     ' | dipfilter v1=-2.5 v2=-1.5 v3=1.5 v4=2.5 taper=2 pass=0 dim=3 | ' \
+     + ifft3)
+
+Flow('oper','spikefft3','fkamo h2=2 f2=10 h1=1.8 f1=30')
+
+for case in ('spike','filt'):
+    Flow(case+'fft3',case,'stretch rule=L dens=4 | ' + fft3)
+    Flow(case+'amo',[case+'fft3','oper'],
+         '''
+         add mode=prod ${SOURCES[1]} | %s | stretch rule=L dens=4 inv=y
+         ''' % ifft3)
+    Flow(case+'byte',case+'amo','byte pclip=100 gainpanel=a')
+
+Result('impresp1','spikebyte',
+       'grey3 frame1=65 frame2=129 frame3=65 point1=0.333 wanttitle=n')
+Result('impresp2','spikebyte',
+       'grey3 frame1=65 frame2=97 frame3=97 point1=0.333 wanttitle=n')
+Result('fkfilter','filtbyte',
+       'grey3 frame1=65 frame2=97 frame3=97 point1=0.333 wanttitle=n')
+
+End()

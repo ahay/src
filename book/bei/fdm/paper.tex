@@ -1,0 +1,3193 @@
+%\def\SEPCLASSLIB{../../../prof/sepclasslib}
+\def\CAKEDIR{.}
+\title{Finite-difference migration}
+\author{Jon Claerbout}
+\maketitle
+\label{paper:fdm}
+\def\cn{fdm}    % used in program listings.
+\par
+{\em 
+This chapter is a condensation of
+wave extrapolation and finite-difference basics from IEI
+which is now out of print.
+On the good side,
+this new organization is more compact
+and several errors have been corrected.
+On the bad side,
+to follow up on many
+many interesting details
+you will need to find a copy of IEI
+(http://sepwww.stanford.edu/sep/prof/).
+}
+\sx{finite difference}
+\par
+In chapter \ref{paper:dwnc} we learned how
+to extrapolate wavefields down into the earth.
+The process proceeded simply, since it is just a multiplication in the
+frequency domain by  $\exp [ ik_z ( \omega , k_x ) z ]$.
+%Finite-difference techniques will be seen to be complicated.
+%They will involve new approximations and new pitfalls.
+%Why should we trouble ourselves to learn them?
+%To begin with, many people find finite-difference
+%methods more comprehensible.
+%In $(t,x,z)$-space, there are no complex numbers,
+%no complex exponentials,
+%and no ``magic'' box called FFT.
+%\par
+%The situation is analogous to the one encountered
+%in ordinary frequency filtering.
+%Frequency filtering can be done as a product in the
+%frequency domain or a convolution in the time domain.
+In this chapter
+instead of multiplying a wavefield by a function of $k_x$
+to downward continue waves,
+we will convolve them along the $x$-axis
+with a small filter that represents a differential equation.
+%\par
+%Our question, why bother with finite differences?,
+%is an old question:
+%After the discovery of the fast Fourier transform,
+%why should anyone bother with time-domain filtering operations?
+%\par
+%Our question will be asked many times and under many circumstances.
+%Our space axis could be the shot axis, the geophone axis,
+%the midpoint axis, or the offset axis.
+%For each axis we can choose whether
+%to work with finite differences
+%or to use Fourier transformation.
+%\par
+%The answer to our question is many-sided,
+%just as geophysical objectives are many-sided.
+%Most of the criteria for answering the
+%question are already familiar from ordinary filter theory
+%where a filter can be made time-variable.
+%Time-variable filters are useful in reflection seismology
+%because the frequency content of echoes changes with time.
+%An annoying aspect of time-variable filters is that they cannot be 
+%described by a simple product in the frequency domain.
+%So when an application of time-variable filters comes along,
+%the frequency domain is abandoned,
+%or all kinds of contortions are made
+%(stretching the time axis, for example) to try
+%to make things appear time-invariant.
+%\par
+%The same considerations apply to the horizontal space axis  $x$.
+On space axes, a concern is the seismic velocity  $v$.
+With
+\sx{velocity!laterally variable}
+\bx{lateral velocity variation}, say  $v(x)$,
+then the operation of extrapolating wavefields upward and downward
+can no longer be expressed as a product in the $k_x$-domain.
+(Wave-extrapolation procedures in the
+spatial frequency domain are no longer multiplication,
+but convolution.)
+The alternative we choose here is to go to finite differences
+which are convolution in the physical $x$ domain.
+This is what the wave equation itself does.
+%\par
+%Fourier methods are {\it global.}
+%That is, the entire dataset must be in hand before processing can begin.
+%Remote errors and truncations can have serious local effects.
+%On the other hand, finite-difference methods are {\it local.}
+%Data points are directly related only to their neighbors.
+%Remote errors propagate slowly.
+
+
+
+\section{THE PARABOLIC EQUATION}
+\sx{parabolic wave equation}
+Here we derive the most basic migration equation
+via the dispersion relation,
+equation~(\ref{eqn:wavedisp}).
+Recall this equation basically says $\cos\theta=\sqrt{1-\sin^2\theta}$.
+\begin{equation}
+k_z  \eq 
+{ \omega     \over v} \
+\sqrt{
+        1  \ \ -\ \  {v^2k_x^2 \over   \omega^2 } \ 
+        }
+\label{eqn:gapdisper}
+\end{equation}
+The dispersion relation above is the foundation
+for downward continuing wavefields by Fourier
+methods in chapter~\ref{paper:dwnc}.
+Recall that nature extrapolates forward in time from $t=0$
+whereas a geophysicist extrapolates information
+in depth from $z=0$.
+We get ideas for our task,
+and then we hope to show that our ideas are
+consistent with nature.
+Suppose we substitute $ik_z=\partial/\partial z$
+into equation~(\ref{eqn:gapdisper}), multiply by $P$,
+and interpret velocity as depth variable.
+\begin{equation}
+{\partial P   \over  \partial z }  \eq 
+{ i \, \omega     \over v(z)} \
+\sqrt{
+        1  \ \ -\ \  {v(z)^2\, k_x^2 \over   \omega^2 } \ 
+        }
+\ P
+\label{eqn:gapphase}
+\end{equation}
+Since the above steps are unorthodox,
+we need to enquire about their validity.
+Suppose that equation~(\ref{eqn:gapphase}) were valid.
+Then we could restrict it to constant velocity
+and take a trial solution $P=P_0\exp(-ik_z z)$ and we
+would immediately have equation~(\ref{eqn:gapdisper}).
+Why do we believe the introduction of $v(z)$ in
+equation~(\ref{eqn:gapphase}) has any validity?
+We can think about the phase shift migration method
+in chapter~\ref{paper:dwnc}.
+It handled $v(z)$ by having the earth velocity
+being a staircase function of depth.
+Inside a layer we had the solution to
+equation~(\ref{eqn:gapphase}).
+To cross a layer boundary,
+we simply asserted that the wavefield at the bottom
+of one layer would be the same as the wavefield
+at the top of the next
+which is also the solution to
+equation~(\ref{eqn:gapphase}).
+(Let $\Delta z \rightarrow 0$
+be the transition from one layer to the next.
+Then $\Delta P=0$ since $\partial P/\partial z$ is finite.)
+Although equation~(\ref{eqn:gapphase}) is consistent
+with chapter~\ref{paper:dwnc},
+it is an approximation of limited validity.
+It assumes there is no reflection at a layer boundary.
+Reflection would change part of a downgoing wave
+to an upcoming wave and the wave that continued downward
+would have reduced amplitude because of lost energy.
+Thus, by our strong desire to downward continue wavefields
+(extrapolate in $z$)
+whereas nature extrapolates in $t$,
+we have chosen to ignore
+reflection and transmission coefficients.
+Perhaps we can recover them,
+but now we have bigger fish to fry.
+We want to be able to handle $v(x,z)$,
+\sx{velocity!laterally variable}
+\bx{lateral velocity variation}.
+This requires us to get rid of the square root
+in equation~(\ref{eqn:gapphase}).
+Make a power series for it and drop higher terms.
+\begin{equation}
+{\partial P   \over  \partial z }  \eq 
+{ i \, \omega     \over v(z)} \
+\left(
+1  \ \ -\ \  {v(z)^2\,k_x^2 \over  2\, \omega^2 } \ 
+\right) \ P
+\ + \ \cdots
+\label{eqn:gaptaylor}
+\end{equation}
+The first dropped term is $\sin^4\theta$
+where $\theta$ is the dip angle of a wavefront.
+The dropped terms
+increase slowly with angle,
+but they do increase,
+and dropping them will limit the range of angles
+that we can handle with this equation.
+This is a bitter price to pay
+for the benefit of handling $v(x,z)$,
+and we really will return to patch it up
+(unlike the transmission coefficient problem).
+There are many minus signs cropping up,
+so I give you another equation to straighten them out.
+\begin{equation}
+{\partial P   \over  \partial z }  \eq 
+\left(
+{ i \, \omega     \over v(z)} \
+\ \ -\ \  {v(z)\,k_x^2 \over  - \, i \, \omega \, 2 } \ 
+\right) \ P
+\label{eqn:gapdrop}
+\end{equation}
+Now we are prepared to leap to our final result,
+an equation for downward continuing
+waves in the presence of depth and
+\bx{lateral velocity variation}
+\sx{velocity!laterally variable}
+$v(x,z)$.
+Substitute $\partial_{xx}=-k_x^2$
+into equation~(\ref{eqn:gapdrop})
+and revise interpretation of $P$
+from $P(\omega,k_x,z)$
+to   $P(\omega,  x,z)$.
+\par
+\vspace{.3in}
+\boxit{
+\begin{equation}
+{\partial P   \over  \partial z }  \eq 
+{ i \, \omega     \over v(x,z)} \  \  P
+\ \ +\ \  {v(x,z)\, \over  - \, i \, \omega \, 2 } \ 
+{\partial^2 P   \over \partial x^2}
+\label{eqn:gapprog}
+\end{equation}
+}
+As with $v(z)$,
+there is a loss of lateral transmission
+and reflection coefficients.
+We plan to forget this minor problem.
+It is the price of being a data handler
+instead of a modeler.
+Equation~(\ref{eqn:gapprog})
+is the basis for our first program and examples.
+
+\section{SPLITTING AND SEPARATION}
+\sx{splitting}
+\sx{ full separation}
+\def\I{ {\bf I} }
+\def\A{ {\bf A} }
+\def\B{ {\bf B} }
+\par
+Two processes,  $\A$  and  $\B$, which ordinarily
+act simultaneously, may or may not be interconnected.
+The case where they are independent is called
+{\em 
+\bx{full separation}.
+}
+In this case it is often useful,
+for thought and for computation,
+to imagine process  $\A$  going to completion
+before process  $\B$  is begun.
+Where the processes are interconnected
+it is possible to allow  $\A$  to run for a short while,
+then switch to  $\B$, and continue in alternation.
+This
+alternation approach is called 
+{\em  splitting.}
+\subsection{The heat-flow equation}
+We wish to solve equation~(\ref{eqn:gapprog})
+by a method involving \bx{splitting}.
+Since equation~(\ref{eqn:gapprog})
+is an unfamiliar one,
+we turn to the \bx{heat-flow equation}
+which besides being familiar, has no complex numbers.
+A two-sentence derivation of the \bx{heat-flow equation} follows.
+\label{'HeatDerivation'}
+(1) The heat
+flow  $H_x$  in the  $x$-direction equals the
+negative of the gradient  $- \partial / \partial x$  of
+temperature  $T$  times the heat conductivity  $\sigma$.
+(2)  The decrease of temperature  $- \partial T / \partial t$  is
+proportional to the divergence
+of the  heat flow  $\partial H_x / \partial x$  divided by
+the heat storage capacity  $C$  of the
+material.
+Combining these, extending from one
+dimension to two, taking  $\sigma$  constant and  $C \,=\, 1$,
+gives the equation
+\begin{equation}
+{ \partial T  \over \partial t} \eq
+\left(
+        \sigma\ {\partial^2  \over \partial x^2}
+        \ +\ 
+        \sigma\ {\partial^2  \over \partial y^2}
+\right)\ T
+\label{eqn:heatfloweqn}
+\end{equation}
+
+\subsection{Splitting}
+\par
+The \bx{splitting} method
+for numerically solving
+the \bx{heat-flow equation}
+is to replace the two-dimensional heat-flow equation
+by two one-dimensional equations,
+each of which is used on alternate time steps:
+\begin{eqnarray}
+{\partial T  \over \partial t}\ \  \ & = & \ \ \ 2\, \sigma\ {\partial^2 T 
+\over \partial x^2}\ \ \ \ \ \ 
+{\rm(all\ {\it  y })}
+\label{eqn:four2a}
+\\
+{\partial T   \over \partial t} \ \  \ &=& \ \ \ 
+2\, \sigma\  {\partial^2 T  \over \partial y^2}\ \ \ \ \ \ 
+{\rm(all\ {\it  x })}
+\label{eqn:four2b}
+\end{eqnarray}
+In equation (\ref{eqn:four2a}) the heat conductivity $\sigma$ has been
+doubled for flow in the $x$-direction and zeroed for
+flow in the $y$-direction.
+The reverse applies in equation (\ref{eqn:four2b}).
+At odd moments in time heat flows according to (\ref{eqn:four2a}) and
+at even moments in time it flows according to (\ref{eqn:four2b}).
+This solution by alternation between (\ref{eqn:four2a}) and (\ref{eqn:four2b})
+can be proved mathematically to converge to the solution to 
+(\ref{eqn:heatfloweqn}) with errors of the order of $ \Delta t $.
+Hence the error goes to zero as  $ \Delta t $  goes to zero.  
+
+\subsection{Full separation}
+\inputdir{Math}
+\par
+Splitting can turn out to be much more accurate than might be imagined.
+In many cases there is 
+{\em 
+no
+}
+loss of accuracy.
+Then the method can be taken to an extreme limit.
+Think about a radical approach to
+equations (\ref{eqn:four2a}) and (\ref{eqn:four2b}) in which,
+instead of alternating back and forth between them at alternate
+time steps, what is done is to march
+(\ref{eqn:four2a}) through all time steps.
+Then this
+intermediate result is used as an
+initial condition for (\ref{eqn:four2b}), which is marched
+through all time steps to produce a final
+result.
+It might seem surprising that this
+radical method can produce the correct solution to equation (\ref{eqn:heatfloweqn}).
+But if  $\sigma$  is a constant
+function of  $x$  and  $y$, it does.
+The process is depicted in Figure~\ref{fig:temperature}
+for an impulsive initial disturbance.
+\plot{temperature}{width=6.0in}{
+        Temperature distribution in the $(x,y)$-plane
+        beginning from a delta function (left).
+        After heat is allowed to flow in the $x$-direction
+        but not in the $y$-direction the heat is located in a ``wall'' (center).
+        Finally allowing heat to flow for the same amount of time
+        in the $y$-direction but not the $x$-direction  
+        gives the same symmetrical Gaussian result
+        that would have been found if the heat had moved in
+        $x$- and $y$-directions simultaneously (right).
+        }
+%was height=1.2in
+A differential equation like (\ref{eqn:heatfloweqn}) is said to be
+{\em 
+fully separable
+}
+when the correct solution is obtainable
+by the radical method.
+It should not be
+too surprising that \bx{full separation} works
+when  $\sigma$  is a constant, because then
+Fourier transformation may be used,
+and the two-dimensional
+solution  $ \exp [ - \sigma\, ( k_x^2\ +\  k_y^2 ) t ]$  equals the
+succession of one-dimensional solutions  $ \exp ( - \sigma\, {k_x^2} t )$
+$\exp ( - \sigma\, {k_y^2} t )$.
+It turns out, and will later be shown,
+that the condition required for
+applicability of \bx{full separation} is
+that  $ \sigma\, {\partial^2 / \partial x^2 }$  should commute
+with  $ \sigma\, {\partial^2 / \partial y^2 }$,
+that is, the order of differentiation should be irrelevant.
+Technically there is also a boundary-condition requirement,
+but it creates no difficulty when the
+disturbance dies out before reaching
+a boundary.
+
+\par
+There are circumstances which
+dictate a middle road between \bx{splitting} and \bx{full separation},
+for example if  $\sigma$  were a 
+slowly variable function of  $x$  or  $y$.
+Then you might find that although
+$ {\sigma\, \partial}^2 / {\partial x}^2 $  does not
+strictly commute with  $ {\sigma\, \partial}^2 / {\partial y}^2$,
+it comes close enough that a number of time steps
+may be made with (\ref{eqn:four2a})
+before you transpose the data and switch over to (\ref{eqn:four2b}).
+Circumstances like this one but with
+more geophysical interest arise with
+the wave-extrapolation equation that is considered next.
+
+\subsection{Splitting the parabolic equation}
+In discussing and solving the \bx{parabolic wave equation}
+it is convenient to rearrange it
+to recognize the role of
+an averaged stratified medium of velocity of $\bar v(z)$
+and departures from it.
+\begin{eqnarray}
+        {\partial P   \over  \partial z }
+& = &
+         i\,\omega\ \left( {1    \over \bar v(z)} \right)\ P
+\ +\ 
+         i\,\omega\ \left( {1\over v(x,z) } - {1\over \bar v(z)} \right)\ P
+\ +\ 
+        \left(
+        {v(x,z)\, \over  - \, i \, \omega \, 2 } \
+        {\partial^2   \over \partial x^2} \right) P \quad\quad
+\label{eqn:four3} \\
+& = & \ \   \quad\quad  A\,P \quad\quad +
+        \quad\quad\quad \quad\quad
+        B\,P
+        \quad\quad\quad \quad
+        +\quad \quad C\,P
+                                                \nonumber \\
+& = & \ \ \  \quad  \ {\rm shift} \quad\quad +
+        \quad\quad\quad \quad
+        {\rm thin\ lens}
+        \quad\quad\quad \ 
+        +\quad {\rm diffraction}
+\nonumber
+\end{eqnarray}
+The shift term in (\ref{eqn:four3}) commutes
+with the thin-\bx{lens term}, that is, $ABP=BAP$.
+the shift term also commutes with the diffraction term because  $ACP=CAP$.
+But the thin-lens term
+and the diffraction term do not commute with one another
+because $(BC-CB)P\ne 0$, because
+\begin{equation}
+0\quad\ne\quad
+(BC-CB)P \eq  v(x,z)\
+        \left[
+                \left( -2 {d^2\over d x^2} { 1\over v(x,z)} \right)
+                \ +\
+                {1\over v(x,z)^2} {dv(x,z)\over dx} {\partial\over\partial x}
+        \right] \ P \quad\quad
+\end{equation}
+
+%0\quad\ne\quad
+%(BC-CB)P \eq  v(x,z)\ 
+%        \left[
+%%               \left( -2\{d^2\over d x^2} { 1\over v(x,z)} \right)
+%                \ +\ 
+%                {1\over v(x,z)^2} {dv(x,z)\over dx} {\partial\over\partial x}
+%        \right] \ P \quad\quad
+%\end{equation}
+
+\par
+Mathematicians look at the problem this way:
+Consider any fixed wave propagation angle
+so $vk_x/\omega$ is a constant.
+Now let frequency $\omega$ (and hence $k_x$) tend together to infinity.
+The terms in $BCP$ and $CBP$ grow in proportion to the second power
+of frequency,
+whereas those in $(BC-CB)P$ grow as lower powers.
+There is however, a catch.
+The material properties have a ``wavelength'' too.
+We can think of $(dv/dx)/v$ as a spatial wavenumber
+for the material just as $k_x$ is a spatial wavenumber for the wave.
+If the material contains a step function change in its properties,
+that is an infinite spatial frequency $(dv/dx)/v$ for the material.
+Then the $(BC-CB)P$ terms dominate near the place where
+one material changes to another.
+If we drop the $(BC-CB)P$ terms,
+we'll get the transmission coefficient incorrect,
+although everything would be quite fine everywhere else
+except at the boundary.
+
+\par
+A question is,
+to what degree do the terms commute?
+The problem is just that of
+focusing a slide projector.
+Adjusting the focus knob amounts to
+repositioning the thin-lens term
+in comparison to the free-space diffraction term.
+There is a small range of knob positions over
+which no one can notice any difference,
+and a larger range over which
+the people in the back row are not disturbed by misfocus.
+Much geophysical data processing amounts to downward extrapolation of data.
+The
+\bx{lateral velocity variation}
+\sx{velocity!laterally variable}
+occurring in the \bx{lens term}
+is known only to a limited accuracy
+and we often wish to determine  $v(x)$
+by the extrapolation procedure.
+
+\par
+In practice it seems best to
+forget the  $(BC-CB)P$ terms because we hardly ever know
+the material properties very well anyway.
+Then we split,
+doing the shift and the thin-lens part analytically
+while doing the diffraction part by a numerical method.
+
+
+%For long lateral spatial wavelengths the terms commute.
+%Then diffraction may proceed in ignorance
+%of the lateral variation in  $v$.
+%At shorter wavelengths the diffraction
+%and lensing effects must be interspersed.
+%So the real issue is not merely
+%computational convenience but the interplay
+%between data accuracy and the possible range
+%for velocity in the underlying model.
+
+\subsection{Validity of the splitting and full-separation concepts}
+\par
+Feel free to skip forward over this subsection
+which is merely a mathematical proof.
+\par
+When Fourier transformation is possible,
+extrapolation operators are 
+complex numbers like  $e^{{i} k_z z}$.
+With complex numbers  $a$  and  $b$  there
+is never any question that  $ab\ =\ ba$.
+Then both \bx{splitting} and \bx{full separation} are always valid.
+\par
+Suppose Fourier transformation has not been done,
+or could not be done because of some spatial
+variation of material properties.
+Then extrapolation operators are built up
+by combinations of
+differential operators or their finite-difference representations.
+Let  $\A$  and  $\B$  denote two such operators.
+For example,  $\A$  could be a matrix containing
+the second  $x$  differencing operator.
+Seen as matrices,
+the \bx{boundary condition}s of a
+differential operator are incorporated in the corners of the matrix.
+The bottom line is whether  $\A  \B = \B \A$,
+so the question clearly involves the \bx{boundary}
+conditions as well as the differential operators.
+\par
+Extrapolation downward a short distance can be done
+with the operator  $( \I + \A \, \Delta z )$.
+Let  $ {\bf p}$  denote a vector where components of
+the vector designate the wavefield at various locations on the $x$-axis.
+%As has been seen, the locations need not be constrained to
+%the $x$-axis but could also be distributed throughout the $(x,y)$-plane.
+Numerical analysis gives us a matrix operator, say  $\A $,  which
+enables us to project forward, say,
+\begin{equation}
+{\bf p} (z + \, \Delta z)  \eq  \A_1 \  {\bf p} (z)
+\end{equation}
+The subscript on  $\A$  denotes the fact that
+the operator may change with  $z$.
+To get a step further the operator is applied again, say,
+\begin{equation}
+{\bf p} (z + 2 \, \Delta z)  \eq  \A_2 \  [ \A_1 \  {\bf p} (z)]
+\end{equation}
+From an operational point of view the matrix  $\A$  is never squared,
+but from an analytical point of view,
+it really is squared.
+\begin{equation}
+\A_2  \  [ \A_1 \  {\bf p} (z)]  \eq  ( \A_2  \  \A_1 ) \  {\bf p} (z)
+\end{equation}
+\par
+To march some distance down the $z$-axis we
+apply the operator many times.
+Take an interval  $z_1-z_0$,  to be
+divided into  $N$  subintervals.
+Since there are  $N$  intervals,
+an error proportional to  $1/N$  in each subinterval would accumulate to an 
+unacceptable level by the time  $z_1$  was reached.
+On the other hand, an error
+proportional to  $ 1 / N^2 $  could
+only accumulate to a total error
+proportional to  $1/N$.
+Such an error would disappear as the
+number of subintervals increased.
+\par
+To prove the validity of \bx{splitting}, we
+take  $\Delta z=( z_1 - z_0 ) / N$.
+Observe that the operator  $\I + ( \A + \B ) \Delta z$  differs from the
+operator  $( \I + \A \, \Delta z)( \I + \B \, \Delta z)$  by
+something in proportion to  $\Delta z^2$  or  $1/N^2$.
+So in the limit of a very large number of
+subintervals, the error disappears.
+\par
+It is much easier to establish the validity of the full-separation concept.
+\sx{full separation}
+Commutativity is whether or not  $\A \, \B \, = \, \B \, \A$.
+Commutativity is always true for scalars.
+With finite differencing the question is whether the two matrices commute.
+Taking  $\A$  and  $\B$  to be differential operators,
+commutativity is defined with the help of
+the family of all possible wavefields  $P$.
+Then  $\A$  and  $\B$  are commutative if
+$ \A \, \B \, P \, = \, \B \, \A \, P$.
+\par
+The operator representing  $\partial P / \partial z$  will
+be taken to be  $\A + \B$.
+The simplest numerical
+integration scheme using the \bx{splitting} method is
+\begin{equation}
+P( z_0\ +\ \Delta z)\eq ( \I\ +\ \A \, \Delta z )\ ( \I\ +\ \B \, \Delta z )
+\ P ( z_0 )
+\label{eqn:four13}
+\end{equation}
+Applying (\ref{eqn:four13}) in many stages gives a
+product of many operators.
+The operators  $\A$  and  $\B$  are subscripted with  $j$  to 
+denote the possibility that they change with  $z$.
+\begin{equation}
+P ( z_1 ) \eq  \prod_{j=1}^N\ 
+[ ( \I\ +\ \A_j \, \Delta z )
+( \I\ +\ \B_j \, \Delta z ) ]
+\ P ( z_0 )
+\label{eqn:four14}
+\end{equation}
+As soon as  $\A$  and  $\B$  are assumed
+to be commutative, the factors in (\ref{eqn:four14})
+may be rearranged at will.
+For example,
+the  $\A$  operator could be
+applied in its entirety before the  $\B$  operator
+is applied:
+\begin{equation}
+P ( z_1 ) \eq \left[  \prod_{j=1}^N\ ( \I\ +\ \B_j \, \Delta z ) \right]\ 
+\left[  \prod_{j=1}^N\ ( \I\ +\ \A_j \, \Delta z) \right]
+P ( z_0 )
+\label{eqn:four15}
+\end{equation}
+Thus the
+\bxbx{full-separation}{full separation} concept is
+seen to depend on the commutativity of
+operators.
+
+
+
+\section{FINITE DIFFERENCING IN (omega,x)-SPACE}
+\par
+The basic method for solving differential equations in a computer
+is 
+{\em 
+finite differencing.
+}
+The nicest feature of the method is that it allows analysis of 
+objects of almost any shape, such as earth topography or geological structure.
+Ordinarily, finite differencing is a straightforward task.
+The main pitfall is instability. 
+It often happens that a seemingly reasonable approach
+to a reasonable physical problem
+leads to wildly oscillatory, divergent calculations.
+Luckily, a few easily learned tricks go a long way,
+and we will be covering them here.
+
+\subsection{The lens equation}
+\par
+The parabolic wave-equation operator
+can be split into two parts,
+a complicated part called the
+{\em  diffraction}
+or
+{\em  migration}
+part, and an easy part called the 
+{\em  lens}
+part.
+The \bx{lens equation} applies a time shift that is a function of  $x$.
+The \bx{lens equation} acquires its name because it acts just like
+a thin optical lens when a light beam enters on-axis (vertically).
+Corrections for nonvertical incidence
+are buried somehow in the diffraction part.
+The \bx{lens equation} has an analytical solution,
+namely, $ \exp [ i \omega t_0 (x)]$.
+It is better to use this analytical solution than to use a finite-difference
+solution because there are no approximations in it to go bad.
+The only reason the \bx{lens equation} is mentioned at all
+in a chapter on finite differencing
+is that the companion diffraction equation
+must be marched forward along with the \bx{lens equation},
+so the analytic solutions are marched along in small steps.
+\subsection{First derivatives, explicit method}
+\par
+The inflation of money  $q$  at a 10\% rate can be described by the difference 
+equation
+\begin{eqnarray}
+q_{ t+1 }\ -\ q_t\ \ \ &=&\ \ \ .10 \  q_t
+\label{eqn:two1a}
+\\
+( 1.0 )\ q_{ t+1 }\ \ +\ \  ( -1.1 )\, q_t\ \ \ &=&\ \ \ 0
+\label{eqn:two1b}
+\end{eqnarray}
+This one-dimensional calculation can be reexpressed as
+a differencing star and a data table.
+As such it provides a prototype for the organization of calculations 
+with two-dimensional partial-differential equations.
+Consider
+\begin{makeimage}
+$$
+\begin{tabular}{ccc}
+\hspace{.2in}{\rm Differencing Star} \hspace{.2in}
+    &\hspace{.2in} {\rm Data Table} \hspace{.2in} & \hfil \\
+    &   & \\
+\begin{tabular}{|c|} \hline \\
+\hspace{.25in} $-$ 1.1 \hspace{.25in} \\  \\ \hline
+\\      + 1.0      \\           \\ \hline
+\end{tabular} \hspace{.3in}
+    &\begin{tabular}{|c|}
+          \\    \hline    \\
+     \hspace{.2in} 2.000 \hspace{.2in} \\  \\  \hline
+\\   2.200  \\    \\  \hline  \\   2.420   
+\\   \\ \hline   \\
+     2.662  \\    \\  \hline           \\
+     \end{tabular} 
+                 &\begin{tabular}{c}
+                   time  \\
+                   $\downarrow$   \\
+                   \end{tabular}
+\end{tabular}
+%\EQNLABEL{two2}
+$$
+\end{makeimage}
+\par
+Since the data in the data table satisfy the difference 
+equations~(\ref{eqn:two1a}) and (\ref{eqn:two1b}),
+the differencing star may be laid anywhere on top of the data table,
+the numbers in the star may be multiplied
+by those in the underlying table,
+and the resulting cross products will sum to zero.
+On the other hand, if all but one number (the initial condition) in the
+data table were missing then the rest of the numbers could be filled in, 
+one at a time, by sliding the star along, taking the difference
+equations to be true, and solving for the unknown data value at each
+stage.
+\par
+Less trivial examples utilizing the same differencing star arise when
+the numerical constant .10 is replaced by a complex number.
+Such examples exhibit oscillation as well as growth and decay.
+\subsection{First derivatives, implicit method}
+\par
+Let us solve the equation
+\begin{equation}
+{ dq   \over  dt } \eq 2\ r\ q
+\label{eqn:two3}
+\end{equation}
+by numerical methods.
+The most obvious (but not the only) approach is the basic definition of 
+elementary calculus.
+For the time derivative, this is 
+\begin{equation}
+{ dq   \over  dt } \ \ \  \approx \ \ \ 
+{ q(t+ \Delta t )\ -\ q ( t )  
+\over  \Delta t }
+\label{eqn:two6a}
+\end{equation}
+Using this in equation~(\ref{eqn:two3}) yields the
+the inflation-of-money equations~(\ref{eqn:two1a}) and (\ref{eqn:two1b}),
+where  $2\,r = .1$.
+Thus in the inflation-of-money equation
+the expression of  $dq/dt$  is centered at  $ t+ \Delta t / 2 $,
+whereas the expression of  $q$  by itself is at time  $t$.
+There is no reason the $q$ on the right side of equation (\ref{eqn:two3})
+cannot be averaged at time  $t$ 
+with time  $t+\Delta t$,
+thus centering the
+whole equation at $  t+ \Delta t / 2$.
+When writing difference equations,
+it is customary to write $q(t+\Delta t)$ more simply as $q_{t+1}$.
+(Formally one should say $t=n\Delta t$ and write $q_{n+1}$ instead of
+$q_{t+1}$, but helpful mnemonic information is carried by using
+$t$ as the subscript instead of some integer like $n$.)
+Thus, a centered approximation of (\ref{eqn:two3}) is
+\begin{equation}
+q_{{t+1}}\ -\ q_t \eq 2\,r \,\Delta t \ \ { q_{{t+1}}\ +\ q_t   \over 2 }
+\label{eqn:two4a}
+\end{equation}
+Letting  $\alpha =  r \Delta t $,  this becomes
+\begin{equation}
+( 1- \alpha )\ q_{{t+1}}\ \ - \ ( 1+ \alpha )\ q_t \eq 0
+\label{eqn:two4b}
+\end{equation}
+which is representable as the difference star
+$$
+\begin{tabular}{cc}
+             &\begin{tabular}{|c|}  \hline   \\
+       \quad $ - 1 - \alpha$ \quad \\    \\    \hline
+       \\    $ + 1 - \alpha$       \\     \\   \hline
+             \end{tabular}  \\
+  \begin{tabular}{c}
+         t      \\
+   $\downarrow$ \\
+  \end{tabular}  &     \\
+\end{tabular}
+$$
+\par\noindent
+For a fixed  $\Delta t$  this star gives
+a more accurate solution to the differential
+equation (\ref{eqn:two3}) than does the star for the inflation of money.
+The reasons for the names ``\bx{explicit method}'' and ``\bx{implicit method}''
+above will become clear only after we study a more complicated
+equation such as the \bx{heat-flow equation}.
+\subsection{Explicit heat-flow equation}
+\par
+The \bx{heat-flow equation}~(\ref{eqn:heatfloweqn})
+is a prototype for migration. Let us recopy
+the heatflow equation letting $q$ denote the temperature.
+\begin{equation}
+{ \partial q   \over  \partial t } \eq
+{ \sigma   \over  C }\  { \partial^{2\,} q   \over  \partial x^2 }
+\label{eqn:two5}
+\end{equation}
+Implementing (\ref{eqn:two5})
+in a computer requires some difference approximations
+for the partial differentials.
+As before we use a subscript notation 
+that allows (\ref{eqn:two6a}) to be compacted into
+\begin{equation}
+{ \partial q   \over  \partial t } \ \ \  \approx \ \ \  { q_{{t+1}}\ -\ q_t  
+\over  \Delta t }
+\label{eqn:two6b}
+\end{equation}
+where $t+ \Delta t$ is denoted by  $t+1$.
+The second-derivative formula may be obtained by doing the first
+derivative twice.
+This leads to  $ q_{{t+2}} - 2\,q_{{t+1}} + q_t $.
+The formula is usually treated more symmetrically by shifting
+it to  $ q_{{t+1}} - 2\,q_t + q_{{t-1}} $.
+These two versions
+are equivalent as $ \  \Delta t \  $ tends to zero, but the more symmetrical
+arrangement will be more accurate when $ \  \Delta t \  $ is not zero.
+Using superscripts to describe $x$-dependence gives a finite-difference
+approximation to the second space derivative:
+\begin{equation}
+{ \partial^2 q   \over  \partial x^2 } \ \ \  \approx \ \ \  { q^{{x+1}} 
+\ -\ 2\, q^x \ +\ q^{ x-1 }   \over  \Delta x^2 } 
+\label{eqn:two7}
+\end{equation}
+Inserting the last two equations into the \bx{heat-flow equation}
+(and using = to denote $ \approx $) gives
+
+\par
+\begin{table}
+\begin{center}
+\begin{makeimage}
+\begin{tabular}{c||c|c|c|c|c|c|c|c|c||}
+ \multicolumn{9}{c}{\rm Data Table} &
+\multicolumn{1}{c}{$x$ $\rightarrow$} \\ \cline{2-10}
+%& & & & & & & & &  \\  
+&   & {\em\ i\ } & {\em\  n\ } & {\em\  i\ } & {\em\  t\ } & {\em\  i\ } & {\em\  a\ } & {\em\  l\ } &    \\ 
+%& & & & & & & & &   \\ 
+ \cline{2-10} 
+%&   &\multicolumn{6}{c}{ } &  &  \\ 
+%&   &\multicolumn{6}{c}{ } &  &  \\ 
+&   &\multicolumn{6}{c}{ } &  &  \\ 
+                       \cline{2-2}       \cline{10-10}
+%&   &\multicolumn{6}{c}{ } &  &  \\ 
+& {\em\ s\ } &\multicolumn{6}{c}{ }  && {\em\  s\ }  \\
+%&   &\multicolumn{6}{c}{ } &  &  \\ 
+                       \cline{2-2}       \cline{10-10}
+%&   &\multicolumn{6}{c}{ } &  &  \\ 
+&{\em i} &\multicolumn{3}{c}{ } 
+&\multicolumn{1}{c}{\rm star}
+&\multicolumn{2}{c}{ } & &{\em i}      \\
+%&   &\multicolumn{6}{c}{ } &  &  \\ 
+                       \cline{2-2} \cline{5-7} \cline{10-10}
+%&   &\multicolumn{2}{|c|}{} &&&&\multicolumn{2}{|c|}{} & \\
+&{\em d} &\multicolumn{1}{c}{ } & &$-\alpha$ & 
+$2\alpha - 1$ & $-\alpha$ &\multicolumn{1}{c}{}&&{\em d} \\
+%&   &\multicolumn{2}{|c|}{} &&&&\multicolumn{2}{|c|}{} & \\
+                       \cline{2-2} \cline{5-7} \cline{10-10}
+%&   &\multicolumn{3}{|c|}{} &&\multicolumn{3}{|c|}{} & \\
+&{\em e} &\multicolumn{2}{c}{} & & 1 
+&\multicolumn{2}{c}{} & &{\em e}  \\
+%&   &\multicolumn{3}{|c|}{} &&\multicolumn{3}{|c|}{} & \\
+                      \cline{2-2} \cline{6-6}\cline{10-10}
+%&   &\multicolumn{6}{c}{} & & \\
+%&   &\multicolumn{6}{c}{} & & \\
+%&   &\multicolumn{6}{c}{} & & \\
+&   &\multicolumn{6}{c}{} & & \\
+{\em t} &   &\multicolumn{6}{c}{} & &  \\
+\end{tabular}
+\end{makeimage}
+\end{center}
+\caption{Differencing star and table
+for one-dimensional \bx{heat-flow equation}.}
+\label{eqn:2-1}
+\end{table}
+\par
+\begin{equation}
+{ q_{{t+1}}^x \ \ -\ \ q_t^x   \over  \Delta t } \eq
+{ \sigma  \over  C }
+\ \ { q_t^{{x+1}}\ \ -\ 2\,q_t^x \ +\  q_t^{{x-1}}  
+        \over  \Delta x^2 }
+\label{eqn:two8}
+\end{equation}
+(Of course it is not justified to use
+= to denote $ \approx $,
+but the study of errors must be deferred until the concepts
+have been laid out.
+Errors are studied in IEI chapter 4.
+% in chapter \DSPR.)
+Letting $\alpha = \sigma \, \Delta t / ( C\, \Delta x^2 )$,
+equation~(\ref{eqn:two8}) becomes
+\begin{equation}
+q_{{t+1}}^x\ -\ q_t^x \ -\ \alpha \, ( q_t^{{x+1}}\ -\ 2\,q_t^x
+\ +\ q_t^{{x-1}} \, ) \eq 0
+\label{eqn:two9}
+\end{equation}
+Equation~(\ref{eqn:two9}) can be {\em  explicitly} solved for
+$q$ for any $x$ at the particular time $t+1$
+given $q$ at all $x$ for the particular time $t$
+and hence the name {\em  \bx{explicit method}}.
+\par
+Equation (\ref{eqn:two9}) can be interpreted geometrically
+as a computational
+star in the $(x,t)$-plane, as depicted in Table~\ref{paper:fdm}.1.
+By moving the star around in the data table
+you will note that it
+can be positioned so that only one number at a time (the 1)
+lies over an unknown element in the data table.
+This enables the computation of subsequent rows
+beginning from the top.
+By doing this you are solving
+the partial-differential equation by the
+finite-difference method.
+There are many possible arrangements
+of initial and side conditions,
+such as zero-value side conditions.
+Next is a computer program for the job and its result.
+\moddex{Mheat}{heat-flow equation}{65}{72}{system/generic}
+\begin{verbatim}
+alpha = 0.33
+  0.00  0.00  0.00  0.00  0.00  0.00  1.00  1.00  1.00  1.00  1.00  1.00
+  0.00  0.00  0.00  0.00  0.00  0.33  0.67  1.00  1.00  1.00  1.00  1.00
+  0.00  0.00  0.00  0.00  0.11  0.33  0.67  0.89  1.00  1.00  1.00  1.00
+  0.00  0.00  0.00  0.04  0.15  0.37  0.63  0.85  0.96  1.00  1.00  1.00
+  0.00  0.00  0.01  0.06  0.19  0.38  0.62  0.81  0.94  0.99  1.00  1.00
+  0.00  0.00  0.02  0.09  0.21  0.40  0.60  0.79  0.91  0.98  1.00  1.00
+
+alpha = 0.67
+  0.00  0.00  0.00  0.00  0.00  0.00  1.00  1.00  1.00  1.00  1.00  1.00
+  0.00  0.00  0.00  0.00  0.00  0.67  0.33  1.00  1.00  1.00  1.00  1.00
+  0.00  0.00  0.00  0.00  0.44  0.00  1.00  0.56  1.00  1.00  1.00  1.00
+  0.00  0.00  0.00  0.30 -0.15  0.96  0.04  1.15  0.70  1.00  1.00  1.00
+  0.00  0.00  0.20 -0.20  0.89 -0.39  1.39  0.11  1.20  0.80  1.00  1.00
+  0.13  0.13 -0.20  0.79 -0.69  1.65 -0.65  1.69  0.21  1.20  0.87  0.87
+\end{verbatim}
+\begin{comment}
+\par
+%\progblock{heatex}    {\WHERE/fdm/heat/heatex.r}
+\listing               {heat/heatex.r}
+\par
+%\progblock{heatex_out}{\WHERE/fdm/heat/heatex.2tex}
+\listing               {heat/heatex.2tex}
+\end{comment}
+\subsection{The leapfrog method}
+\par
+A difficulty with the given program is that it doesn't work for all 
+possible numerical values of  $\alpha$.
+You can see that when  $\alpha$  is too large (when $  \Delta x $  is 
+too small) 
+the solution in the interior region of the data table
+contains growing oscillations.
+What is happening is that the low-frequency part of the solution
+is OK (for a while), but the high-frequency part is diverging.
+The mathematical reason the divergence occurs
+is the subject of mathematical analysis
+found in IEI section 2.8.
+Intuitively, at wavelengths long compared
+to  $\Delta x $  or  $\Delta t $,
+we expect the difference approximation to agree with the true
+\bx{heat-flow equation},
+smoothing out irregularities in temperature.
+At short wavelengths the wild oscillation shows
+that the difference equation
+can behave in a way almost opposite
+to the way the differential equation behaves.
+The short wavelength discrepancy arises because difference operators
+become equal to differential operators only at long wavelengths.
+The divergence of the solution is a fatal problem because the subsequent
+round-off error will eventually destroy the low frequencies too.
+\par
+By supposing that the instability arises because the time derivative
+is centered at a slightly different time  $t+1/2$  than
+the second  $x$-derivative at time  $t$,
+we are led to the so-called 
+{\em  \bx{leapfrog method}},
+in which the time derivative is taken as a difference
+between  $t-1$  and  $t+1$:
+\begin{equation}
+{ \partial q   \over  \partial t } \quad \approx \quad
+{ q_{{t+1}}\ -\ q_{{t-1}}   \over  2\  \Delta t }
+\label{eqn:two10}
+\end{equation}
+%The resulting leapfrog differencing star is 
+%\begin{center}
+%\begin{tabular}{|lcc|c|c|}  \hline
+%& \hspace{.8in} &\multicolumn{3}{r}{$x$} \\
+%&   &\multicolumn{3}{c}{ } \\     \cline{4-4}
+%&  &\multicolumn{1}{c|}{}
+%   &  &\multicolumn{1}{|c}{} \\
+%&  &\multicolumn{1}{c|}{}
+%   &\ $-1$\ &\multicolumn{1}{|c}{} \\
+%&  &\multicolumn{1}{c|}{}
+%   &  &\multicolumn{1}{|c}{} \\   \cline{3-5}
+%&  &\multicolumn{1}{|c|}{ } & &  \\
+%&  &\multicolumn{1}{|c|}{\ $-2\alpha$\ }
+%          &\ 4$\alpha$\ &\ $-2\alpha$\  \\
+%&  &\multicolumn{1}{|c|}{ } & &  \\    \cline{3-5}
+%&  &\multicolumn{1}{c|}{}
+%   &  &\multicolumn{1}{|c}{} \\
+%&  &\multicolumn{1}{c|}{}
+%          &\ +1\ &\multicolumn{1}{|c}{} \\
+%&  &\multicolumn{1}{c|}{}
+%   &  &\multicolumn{1}{|c}{} \\     \cline{4-4}
+%\ $t$\ &\multicolumn{4}{c}{} \\
+%\end{tabular}
+%\end{center}
+%%\EQNLABEL{two11}
+Here the result is even worse.
+An analysis found in IEI
+%A later analysis
+shows that the solution is now divergent for 
+{\em  all}
+real numerical values of  $\alpha$.
+Although it was a good idea to center both derivatives in the same
+place, it turns out that it was a bad idea to express a first
+derivative over a span of more mesh points. 
+The enlarged operator has two solutions in time instead of just the
+familiar one. 
+The numerical solution is the sum of the two theoretical solutions,
+one of which, unfortunately (in this case), grows and oscillates for
+all real values of  $\alpha$.
+\par
+To avoid all these problems (and get more accurate answers as well),
+we now turn to some slightly more complicated solution methods known as
+{\em  \bx{implicit method}s}.
+\subsection{The Crank-Nicolson method}
+\par
+The \bx{Crank-Nicolson method} solves both the accuracy and the
+stability problem.
+Recall the difference representation of the \bx{heat-flow equation} (\ref{eqn:two9}).
+\begin{equation}
+q_{{t+1}}^x \ -\ q_t^x  \eq a\  \left( q_t^{{x+1}} - 2
+q_t^x + q_t^{{x-1}} \right)
+\end{equation}
+Now, instead of expressing the right-hand side entirely at time  $t$,
+it will be averaged at  $t$  and  $t+1$, giving
+\begin{equation}
+q_{{t+1}}^x  - q_t^x  \eq  {a \over 2 }\left[
+\left( q_t^{{x+1}} - 2q_t^x + q_t^{{x-1}} \right) +
+\left( q_{{t+1}}^{{x+1}} - 2q_{{t+1}}^x  + q_{{t+1}}^{{x-1}} \right) \, \right]
+\label{eqn:two12a}
+\end{equation}
+This is called the \bx{Crank-Nicolson method}.
+Defining a new parameter
+$\alpha = a/2$,
+the difference star is 
+\begin{equation}
+%\begin{center}
+\begin{tabular}{|lccc|c|}  \hline
+& &\multicolumn{3}{r}{$x$} \\
+&\hspace{.8in} &\multicolumn{3}{c}{ } \\
+                                      \cline{3-5}
+&   &\multicolumn{1}{|c|}{} & &  \\ 
+&   &\multicolumn{1}{|c|}{\ $-\alpha$\ }
+&\ $2\alpha -1$\ &\ $-\alpha$\  \\
+&   &\multicolumn{1}{|c|}{} & &  \\     \cline{3-5}
+&   &\multicolumn{1}{|c|}{} & &  \\
+&   &\multicolumn{1}{|c|}{\ $-\alpha$\ }
+&\ $2\alpha +1$\ &\ $-\alpha$\  \\  
+&   &\multicolumn{1}{|c|}{} & &  \\     \cline{3-5}
+&   &\multicolumn{3}{c}{}   \\
+\ $t$\ &\multicolumn{4}{c}{} \\
+\end{tabular}
+%\end{center}
+\label{eqn:two12b}
+\end{equation}
+When placing this star over the data table, note that, 
+typically, three elements at a time cover unknowns.
+To say the same thing with equations,
+move all the  $t+1$  terms in
+(\ref{eqn:two12a}) to the left and the $t$ terms to the right, obtaining
+\begin{equation}
+- \alpha q_{{t+1}}^{{x+1}} \,+\,
+( 1+2 \alpha  )q_{{t+1}}^x \,-\,
+\alpha q_{{t+1}}^{{x-1}} \eq
+\alpha q_t^{{x+1}} \,+\,
+(1-2 \alpha ) q_t^x \,+\,  \alpha q_t^{{x-1}}
+\label{eqn:two13a}
+\end{equation}
+Now think of the left side of equation~(\ref{eqn:two13a})
+as containing all the {\em  unknown} quantities
+and the right side as containing all {\em  known} quantities.
+Everything on the right can be combined into a single known quantity,
+say, $d_t^x $.
+Now we can rewrite equation~(\ref{eqn:two13a})
+as a set of simultaneous equations.
+For definiteness,
+take the  $x$-axis to be limited to five points.
+Then these equations are:
+\def\al{ \alpha_{}^{} }
+\begin{equation}
+\left[
+\matrix {
+\matrix { e_{\rm left}  \cr - \al \cr 0 \cr 0 \cr 0 } 
+\matrix { - \al \cr 1+2 \alpha \cr - \al \cr 0 \cr 0 }
+\matrix { 0 \cr - \al \cr 1+2 \alpha \cr - \al \cr 0 }
+\matrix { 0 \cr 0 \cr - \al \cr 1+2 \alpha \cr -  \al }
+\matrix { 0 \cr 0 \cr 0 \cr - \al \cr e_{\rm right} }
+}
+\right]
+\ \ 
+\left[
+\matrix { 
+\matrix { q_{t+1}^1 \cr 
+q_{t+1}^2 \cr
+q_{t+1}^3 \cr
+q_{t+1}^4 \cr
+q_{t+1}^5 }
+} \right] \  \eq \ 
+\left[
+\matrix {
+\matrix {
+d_t^1 \cr d_t^2 \cr d_t^3 \cr d_t^4 \cr d_t^5 }
+}
+\right]
+\label{eqn:two13b}
+\end{equation}
+Equation (\ref{eqn:two13a}) 
+does not give us each $q_{t+1}^x$
+{\em  explicitly}, but
+equation (\ref{eqn:two13b}) 
+gives them
+{\em  implicitly} 
+by the solution of simultaneous equations.
+\par
+The values  $e_{\rm left}$  and  $e_{\rm right}$  are adjustable
+and have to do with the side \bx{boundary condition}s.
+The important thing to notice is that the matrix is \bx{tridiagonal}, that is,
+except for three central diagonals all the elements of the
+matrix in (\ref{eqn:two13b}) are zero.
+The solution to such a set of simultaneous equations
+may be economically obtained.
+It turns out that the cost is only about twice 
+that of the \bx{explicit method} given by (\ref{eqn:two9}).
+In fact, this \bx{implicit method} turns out to
+be cheaper, since the increased accuracy
+of (\ref{eqn:two13a}) over (\ref{eqn:two9})
+allows the use of a much larger numerical choice of $\Delta t$.
+A program that demonstrates the stability of the method,
+even for large  $\Delta t$,  is given next.
+\par
+A \bx{tridiagonal} simultaneous equation
+solving subroutine %{\tt rtris()} 
+is explained in the next section.
+The results are stable, as you can see.
+\begin{verbatim}
+alpha = 8.00
+  0.00  0.00  0.00  0.00  0.00  0.00  1.00  1.00  1.00  1.00  1.00  1.00
+  0.17  0.17  0.21  0.30  0.47  0.76  0.24  0.53  0.70  0.79  0.83  0.83
+  0.40  0.40  0.42  0.43  0.40  0.24  0.76  0.60  0.57  0.58  0.60  0.60
+  0.44  0.44  0.44  0.44  0.48  0.68  0.32  0.52  0.56  0.56  0.56  0.56
+\end{verbatim}
+\moddex{Mheat}{heat-flow equation}{51}{75}{system/generic}
+\begin{comment}
+               \listing{heat/heatim.2tex}
+\par
+               \listing{heat/heatim.r}
+\end{comment}
+\subsection{Solving tridiagonal simultaneous equations}
+\par
+Much of the world's scientific computing power gets used up solving
+\bx{tridiagonal} simultaneous equations.
+For reference and completeness the algorithm is included here.
+\par
+Let the simultaneous equations be written as a difference
+equation 
+\begin{equation}
+a_j \, q_{j+1} \ +\  b_j \, q_j \ +\  c_j \, q_{j-1}
+ \eq d_j
+\label{eqn:two14}
+\end{equation}
+Introduce new unknowns  $e_j$  and  $f_j$,  
+along with an equation
+\begin{equation}
+q_j  \eq  e_j \, q_{j+1} \ +\  f_j
+\label{eqn:two15}
+\end{equation}
+Write (\ref{eqn:two15}) with shifted index:
+\begin{equation}
+q_{j-1}  \eq  e_{j-1} \, q_j \ +\ f_{j-1} 
+\label{eqn:two16}
+\end{equation}
+Insert (\ref{eqn:two16}) into (\ref{eqn:two14})
+\begin{equation}
+a_j \, q_{j+1} \ +\  b_j \, q_j \ +\ 
+c_j \, ( e_{j-1} \, q_j \ +\  f_{j-1} )  \eq  d_j
+\label{eqn:two17}
+\end{equation}
+Now rearrange (\ref{eqn:two17}) to resemble (\ref{eqn:two15})
+\begin{equation}
+q_j  \eq 
+{ - \  a_j   \over  b_j \ +\  c_j \, e_{j-1} } \ \  q_{j+1}
+   \ \ +\ \  { d_j \ -\  c_j \, f_{j-1}   \over  b_j \ +\  c_j \, e_{j-1} }
+\label{eqn:two18}
+\end{equation}
+Compare (\ref{eqn:two18}) to (\ref{eqn:two15}) to see recursions for
+the new unknowns  $e_j$  and  $f_j$:
+\begin{eqnarray}
+e_j \ \ \ & = & \ \ \  { - \  a_j   \over  b_j \ +\  c_j \, e_{j-1} }
+\label{eqn:two19a}
+\\
+f_j \ \ \ & = & \ \ \ 
+             { d_j \ -\  c_j \, f_{j-1}   \over  b_j \ +\  c_j \, e_{j-1} }
+\label{eqn:two19b}
+\end{eqnarray}
+\par
+First a \bx{boundary condition} for the left-hand side must be given.
+This may involve one or two points.
+The most general possible end condition is a linear relation like
+equation (\ref{eqn:two15}) at $j=0$, namely, $q_0 \ =\ e_0 q_1 + f_0$.
+Thus, the \bx{boundary condition} must give us both  $e_0$  and  $f_0$.
+With  $e_0$  and all the  $a_j , b_j , c_j $,  we
+can use (\ref{eqn:two19a}) to compute all the $e_j$.
+\par
+On the right-hand boundary we need a \bx{boundary condition}.
+The general two-point \bx{boundary condition} is
+\begin{equation}
+c_{n-1} \, q_{n-1} \ +\  e_{\rm right} \, q_n  \eq  d_n
+\label{eqn:two20}
+\end{equation}
+Equation (\ref{eqn:two20}) includes as special cases the
+zero-value and zero-slope \bx{boundary condition}s.
+Equation (\ref{eqn:two20}) can be compared to equation (\ref{eqn:two16})
+at its end.
+\begin{equation}
+q_{n-1}  \eq  e_{n-1} \, q_n \ +\  f_{n-1} 
+\label{eqn:two21}
+\end{equation}
+Both  $q_n $  and  $q_{n-1}$  are unknown,
+but in equations (\ref{eqn:two20}) and (\ref{eqn:two21}) we have two equations,
+so the solution is easy.
+The final step is to take the value of  $q_n$  and use it
+in (\ref{eqn:two16}) to compute $q_{n-1} , \ q_{n-2} , \ q_{n-3} , \ $ etc.
+\begin{comment}
+The subroutine {\tt rtris()} solves
+equation~(\ref{eqn:two13b}) for $q$ where
+{\tt n=5},
+{\tt endl}$=e_{\rm left}$,
+{\tt endr}$=e_{\rm right}$,
+{\tt  a=c}$=-\alpha$, and
+{\tt    b}$=1-2\alpha$.
+\progdex{rtris}{real tridiagonal solver}
+\end{comment}
+%\progdex{spot1}{linear interp}
+\par
+If you wish to squeeze every last ounce of power from your computer,
+note some facts about this algorithm.
+(1) The calculation of  $e_j$  depends
+on the %
+{\em  medium %
+} through $a_j$, $b_j$, $c_j$, but
+it does not depend
+on the 
+{\em  solution}
+$q_j$  (even through $d_j$).
+This means that it may be possible to save and reuse  $e_j$.
+(2) In many computers, division is much slower than multiplication.
+Thus, the divisor in
+(\ref{eqn:two19a}) or
+(\ref{eqn:two19b})
+can be inverted once
+(and perhaps stored for reuse).
+
+\subsection{Finite-differencing in the time domain}
+IEI develops time-domain finite differencing methods.
+Since the earth velocity is unvarying in time,
+a ``basics only'' book such as this omits
+this topic since you can, in principle,
+accomplish the same goals in the $\omega$-domain.
+There are some applications, however,
+that give rise to time-variable coefficients
+in their partial differential equations.
+Recursive dip filtering is one application.
+Residual migration is another.
+%(reference BEASLEY).
+Some formulations of DMO are another.
+%(reference BIONDI).
+
+
+\section{WAVEMOVIE PROGRAM}
+\par
+Here we see solutions to exercises stated in figure captions.
+The problems and solutions were worked over by former
+teaching assistants.
+(Lynn, Gonzalez, JFC, Hale, Li, Karrenbach, Fomel).
+The various figures are all variations
+of the computer subroutine {\tt wavemovie()}.
+It makes a \bx{movie} of a sum of monochromatic waves. 
+As it stands it will produce a \bx{movie} (three-dimensional matrix)
+of waves propagating through a focus.
+The whole process from compilation through computation to finally
+viewing the film loop takes a few seconds.
+A sample frame of the \bx{movie} is in Figure~\ref{fig:Mfocus1590}.
+\activesideplot{Mfocus1590}{width=3in}{movies}{
+        First frame of movie generated by {\tt wavemovie()}.
+        (Press button for movie.)
+        }
+It shows a snapshot of the $(x,z)$-plane.
+Collapsing spherical waves enter from the top,
+go through a focus and then expand again.
+Notice that the wavefield is small but not zero in the region
+of geometrical shadow.
+In the shadow region you see waves that appear to be circles
+emanating from point sources at the top corners.
+Notice that the amplitudes of expanding spherical waves
+drop off with distance and collapsing spherical waves grow
+towards the focus.
+We will study the program that made this figure
+and see many features of waves
+and mathematics.
+\subsection{Earth surface boundary condition}
+The program that created Figure~\ref{fig:Mfocus1590} begins with
+an initial condition along the top boundary,
+and then this initial wavefield is extrapolated downward.
+So, the first question is: what is the mathematical function of $x$
+that describes a collapsing spherical (actually cylindrical) wave?
+An expanding spherical wave has an equation $\exp[-i\omega (t - r/v)]$,
+where the radial distance is
+$r=\sqrt{(x-x_0)^2+(z-z_0)^2}$ from the source.
+For a collapsing spherical wave we need $\exp[-i\omega (t + r/v)]$.
+Parenthetically, I'll add that 
+the theoretical solutions are not really these,
+but something more like these divided by $\sqrt{r}$;
+actually they should be a \bx{Hankel function}s,
+but the picture is hardly different
+when the exact initial condition is used.
+If you have been following this analysis,
+you should have little difficulty changing
+the initial conditions in the program
+to create the downgoing plane wave
+shown in Figure~\ref{fig:Mdipplane90}.
+\activesideplot{Mdipplane90}{width=3in}{movies}{
+        Specify program changes that give an initial plane
+        wave propagating downward at an angle of 15$^\circ$ to the
+        right of vertical.
+        (Movie)
+        }
+Notice the weakened waves in the zone of theoretical shadow
+that appear to arise from a point source on the top corner of the plot.
+You have probably learned in physics classes of ``standing waves''.
+This is what you will see near the reflecting side boundary
+if you recompute the plot with a single frequency {\tt nw=1}.
+Then the plot will acquire a ``checkerboard'' appearance
+near the reflecting boundary.
+Even this figure with {\tt nw=4} shows the tendency.
+\subsection{Frames changing with time}
+\par
+For a film loop to make sense to a viewer,
+the subject of the \bx{movie} must be periodic,
+and organized so that the last frame leads naturally into the first.
+In the \bx{movie} created by {\tt wavemovie()}
+there is a parameter
+{\tt lambda}
+that controls the basic repetition rate of wave pulses fired
+onto the screen from the top.
+When a wavelet travels one-quarter of the way down the frame,
+another is sent in.
+This is defined by the line
+$$
+\hbox{\tt lambda  =  nz * dz / 4 } \eq  {N_z \, \Delta z   \over 4 }
+$$
+\par
+Take any point in $(x,z)$-space.
+The signal there will be a superposition of sinusoids
+of various frequencies, $\omega_j$.
+We can choose what frequencies
+we will use in the calculation
+and what amplitudes and phases we will attach to the initial conditions
+at those frequencies.
+Here we will simply take uniformly spaced sinusoids of unit amplitude
+and no phase.
+The {\tt nw}  frequencies are
+$\omega_j = \Delta \omega$,
+$2\,\Delta \omega$,
+...,
+{\tt nw}$\,\Delta \omega$.
+The lowest frequency  {\tt dw} = $\Delta \omega$
+must be inversely proportional to the wavelength
+{\tt lambda} $= \lambda$
+$$
+\hbox{\tt dw = v * pi2 / lambda =} \quad \quad
+{ 2 \, \pi \, v   \over \lambda }
+$$
+\par
+Finally, the time duration of the film loop must
+equal the period of the lowest-frequency sinusoid
+$$
+N_t \, \Delta t \ \ \  = \ \ \  { 2 \, \pi   \over  \Delta \omega }
+$$
+This latter equation defines the time interval on the line
+$$
+\hbox{\tt dt   =   pi2 / ( nt * dw )}
+$$
+If you use more frequencies,
+you might like the result better
+because the wave pulses will be shorter,
+and the number of wavelengths between the pulses will increase.
+Thus the quiet zones between the pulses will get quieter.
+The frequency components can be weighted differently---but
+this becomes a digression into simple Fourier analysis.
+\progdex{wavemovie}{2-D wave movie}
+\subsection{Internals of the film-loop program}
+\par
+The differential equation solved by the program is
+equation~(\ref{eqn:gapprog}), copied here as
+\begin{equation}
+{\partial P   \over  \partial z }  \eq 
+{ i \, \omega     \over v(x,z)} \  \  P
+\ \ +\ \  {v \over  - \, i \, \omega \, 2 } \ 
+{\partial^2 P   \over \partial x^2}
+\label{eqn:three1}
+\end{equation}
+For each $\Delta\,z$-step the calculation is done in two stages.
+The first stage is to solve
+\begin{equation}
+{\partial P  \over \partial z} \  \eq 
+{v \over - \, i \, \omega \, 2} \   {\partial^2 P  \over \partial x^2} 
+\label{eqn:three2}
+\end{equation}
+Using the \bxbx{Crank-Nicolson}{Crank-Nicolson method}
+differencing method this becomes
+\begin{equation}
+{ p_{{z+1}}^x - p_z^x   \over  \Delta z }
+\eq
+{v  \over  -i\omega2} \ 
+\left( { p_z^{{x+1}} - 
+2  p_z^x + 
+p_z^{{x-1}}   \over 2\, \Delta x^2 }\,+\,
+{  p_{{z+1}}^{{x+1}}- 
+2  p_{{z+1}}^x  + 
+p_{{z+1}}^{{x-1}}   \over 2\, \Delta x^2 }  \right)
+\end{equation}
+Absorb all the constants into one and define
+\begin{equation}
+\alpha \  \eq \  {v \, \Delta z  \over -\,i\,\omega\,4\, \Delta x^2 }
+\label{eqn:three3}
+\end{equation}
+getting
+\begin{equation}
+p_{{z+1}}^x \,-\, p_z^x
+\eq
+\alpha \, \left[
+\, ( \, p_z^{{x+1}}\,-\, 2 \, p_z^{x\,+\,} p_z^{{x-1}} )
+\,+\,
+( \, p_{{z+1}}^{{x+1}}\,-\, 2 \, p_{{z+1}}^x \,+\, p_{{z+1}}^{{x-1}} )
+\, \right]
+\end{equation}
+Bring the unknowns to the left:
+\begin{equation}
+- \alpha  p_{{z+1}}^{{x+1}} \,+\,
+( 1+2 \alpha )  p_{{z+1}}^x \,-\,
+ \alpha  p_{{z+1}}^{{x-1}}
+\eq
+ \alpha  p_z^{{x+1}} \,+\,
+(1-2 \alpha )   p_z^x \,+\,
+ \alpha  p_z^{{x-1}}
+\label{eqn:three4}
+\end{equation}
+We will solve this as we solved
+equations~(\ref{eqn:two13a}) and~(\ref{eqn:two13b}).
+The second stage is to solve the equation
+\begin{equation}
+{\partial P  \over \partial z} \  \eq \  {i\,\omega  \over v }\ \  P
+\label{eqn:three5}
+\end{equation}
+analytically by
+\begin{equation}
+P(z+ \Delta z) \  \eq \  P(z) \  e^{i \Delta z \ \omega / v }
+\label{eqn:three6}
+\end{equation}
+\par
+By alternating between (\ref{eqn:three4}) and (\ref{eqn:three6}),
+which are derived from (\ref{eqn:three2}) and (\ref{eqn:three5}),
+the program solves (\ref{eqn:three1}) by a \bx{splitting} method.
+The program uses the \bx{tridiagonal} solver discussed earlier,
+like subroutine~\texttt{rtris()} \vpageref{lst:rtris}
+except that version needed here, {\tt ctris()},
+has all the real variables declared complex.
+\par
+Figure~\ref{fig:Mcompart90} shows a change of initial conditions
+where the incoming wave on the top frame is defined to be an impulse,
+namely, $p(x,z=0) =$ $(\cdots,0,0,1,0,0,\cdots)$.
+The result is alarmingly noisy.
+What is happening is that for any frequencies anywhere near
+the Nyquist frequency,
+the {\em  difference} equation departs from
+the {\em  differential} equation that it should mimic.
+This problem is addressed,
+analyzed,
+and ameliorated in IEI.
+%in chapter \DSPR.
+For now, the best thing to do is to avoid sharp corners
+in the initial wave field.
+\activesideplot{Mcompart90}{width=3in}{movies}{
+        Observe and describe various computational artifacts by testing
+        the program using a point source at  $(x,z)$ = {\tt (xmax/2,0)}.
+        Such a source is rich in the high spatial frequencies
+        for which difference equations
+        do not mimic their differential counterparts.
+        (Movie)
+        }
+
+\subsection{Side-boundary analysis}  
+\par
+In geophysics, we usually wish the side-boundary question did not arise.
+The only real reason for side boundaries is that
+either our survey or our processing activity is necessarily limited in extent.
+Given that side boundaries are inevitable, we must think about them.
+The subroutine {\tt wavemovie()} included zero-slope boundary conditions.
+This type of boundary treatment resulted from taking
+$$
+\hbox{\tt d(1)   =   0.       ;       d(nx)   =   0.}
+$$
+\par\noindent
+and in the call to {\tt ctris} taking
+$$
+\hbox{\tt endl   =   - a      ;      endr   =   - c}
+$$
+\activesideplot{Mexpandsphere90}{width=3in}{movies}{
+        Given that the domain of computation is 
+        $0 \le  x  \le \  ${\tt xmax}  and  $0 \le  z  \le  ${\tt zmax},
+        how would you modify the initial conditions at  $z=0$  to simulate
+        a point source at $(x,z)=$ {\tt (xmax/3, -zmax/2)}?
+        (Movie)
+        }
+A quick way to get zero-value side-boundary conditions is to take
+$$
+\hbox{\tt endl    =    endr    =}\quad    10^{30} \quad  \approx \quad \infty
+$$
+Compare the side-boundary behavior of
+Figures~\ref{fig:Mexpandsphere90} and~\ref{fig:Mzeroslope90}.
+\activesideplot{Mzeroslope90}{width=3in}{movies}{
+        Modify the program so that zero-slope side boundaries are
+        replaced by zero-value side boundaries.
+        (Movie)
+        }
+\par
+The zero slope boundary condition is explicitly visible
+as identical signal on the two end columns.
+Likewise, the zero-value side boundary condition
+has a column of zero-valued signal on each side.
+
+
+%\par
+%The familiar zero-slope side-boundary condition $dp\over dx=0$
+%amounts to a perfectly nonreflective side boundary for vertically
+%propagating waves, and weakly reflecting for near-vertically propagating waves.
+%A more general side-boundary condition is
+%$dp\over dx = i\omega\beta p$
+%whose dispersion relation is a straight line.
+%Adjusting $\beta$ can make a straight line tangent
+%to the semicircular dispersion curve of the wave equation itself.
+%If the line is tangent at a $30^\circ$ angle in the $(k_x,k_z)$-plane
+%then it can be shown that $30^\circ$ waves are perfect absorbed
+%and nearby angles are approximatly absorbed.
+%More details are found in the original IEI on page 270.
+%
+%
+%\activesideplot{Mabsorbside90}{width=3in}{movies}{
+%%       Chapter \CRFT\
+%        IEI page 267
+%        explains how to absorb energy at the side boundaries.
+%        Make the necessary changes to the program
+%        to absorb waves incident on the left-side boundary.
+%        (Movie)
+%        }
+
+\subsection{Lateral velocity variation}
+\par
+Lateral velocity variation  $v=v(x)$  has not been
+included in the program, but it is not difficult to install.
+It enters in two places.
+It enters first in equation (\ref{eqn:three6}).
+If the wavefield is such that  $k_x$  is small enough,
+then equation (\ref{eqn:three6}) is the only place it is needed.
+Second, it enters in the \bx{tridiagonal} coefficients
+through the $v$ in equation~(\ref{eqn:three3}).
+The so-called thin-lens approximation of optics seems
+to amount to including the equation (\ref{eqn:three6}) part only.
+An example of
+\bx{lateral velocity variation}
+\sx{velocity!laterally variable}
+is in Figure~\ref{fig:Mlateralvel90}.
+\activesideplot{Mlateralvel90}{width=3in}{movies}{
+        Make changes to the program to include a thin-\bx{lens term} with a
+        lateral velocity change of 40\% across the frame
+        produced by a constant slowness gradient.
+        Identify other parts of the program
+        which are affected by lateral velocity variation.
+        You need not make these other changes.
+        Why are they expected to be small?
+        (Movie)
+        }
+
+\subsection{Migration in (omega,x)-space}
+\par
+The migration program is similar to the film loop program.
+But there are some differences.
+The film loop program has ``do loops'' nested four deep.
+It produces results for many values of  $t$.
+Migration requires a value only at  $t=0$.
+So one loop is saved, which means that for the same
+amount of computer time, the space volume can be increased.
+Unfortunately, loss of a loop seems also to mean loss of a \bx{movie}.
+With $\omega$-domain migration, it seems that
+the only interesting thing to view is the input and the output.
+\par
+The input for this process  
+will probably be field data, unlike for the film loop \bx{movie},
+so there will not be an analytic representation in the  $\omega$-domain.
+The input will be in the time domain and will have
+to be Fourier transformed.
+The beginning of the program
+defines some pulses to simulate field data.
+The pulses are broadened impulses and should migrate to approximate semicircles.
+Exact impulses were not used because the departure of
+difference operators from differential operators
+would make a noisy mess.
+\par
+Next the program Fourier transforms the pseudodata from
+the time domain into the $\omega$-frequency domain.
+\par
+Then comes the downward continuation of each frequency.
+This is a loop on depth  $z$  and on frequency  $\omega$.
+Either of these loops may be on the inside.
+The choice can be made for machine-dependent efficiency.
+\par
+For migration an equation for upcoming waves is required,
+unlike the downgoing wave equation required for the film loop program.
+Change the sign of the $z$-axis in equation (\ref{eqn:three1}).
+This affects the sign of {\tt aa}
+and the sign of the phase of {\tt cshift}.
+\par
+Another difference with the film loop program
+is that the input now has a time axis whereas
+the output is still a depth axis.
+It is customary and convenient to reorganize the calculation
+to plot traveltime depth, instead of depth, making 
+the vertical axes on both input and output the same.
+Using  $\tau=z/v$ ,
+equivalently  $d \tau / dz =1/v$ ,
+the chain rule gives
+\begin{equation}
+{\partial \    \over \partial z} \  \eq \ 
+{\partial \tau  \over \partial z} \  { \partial \    \over \partial \tau}
+\  \eq \ 
+{1 \over v }\  { \partial \    \over \partial \tau}
+\label{eqn:three7}
+\end{equation}
+Substitution into (\ref{eqn:three1}) gives
+\begin{equation}
+{\partial P   \over  \partial \tau } \  \eq \ 
+-\, i \, \omega  \  P
+\ \ -\ \  {v^2  \over  - \, i \, \omega \, 2 } \ 
+{\partial^2 P   \over \partial x^2}
+\label{eqn:three8}
+\end{equation}
+\par
+In the program,
+the time sample size  {\tt dt} $=\, \Delta t$  and
+the traveltime depth sample  {\tt dtau} $=\, \Delta \tau$  are
+taken to be unity, so the maximum frequency is the Nyquist.
+Notice that the frequency loop covers only the negative frequency axis.
+The positive frequencies serve only to keep the time function real,
+a task that is more quickly done by simply taking the real part.
+A program listing follows
+             \listing{kjartjac/kjartjac.rs}
+\par
+The output of the program is shown in Figure~\ref{fig:kjartjac}.
+Mainly, you see semicircle approximations.
+There are also some artifacts at late time that may be
+$\omega$-domain wraparounds.
+The input pulses were apparently sufficiently broad-banded in dip
+that the figure provides a preview of the fact, to be proved later,
+that the actual semicircle approximation is an ellipse
+going through the origin.
+\activesideplot{kjartjac}{width=3.0in}{kjartjac}{
+        Output of the program \protect{\tt kjartjac}: semicircle approximations.
+        }
+\par
+Notice that the waveform of the original pulses was a symmetric
+function of time, whereas the semicircles exhibit a waveform
+that is neither symmetric nor antisymmetric,
+but is a 45$^\circ$ phase-shifted pulse.
+Waves from a point in a three-dimensional world
+would have a phase shift of 90$^\circ$.
+Waves from a two-dimensional exploding reflector
+in a three-dimensional world have the 45$^\circ$ phase shift.
+
+
+
+
+\section{HIGHER ANGLE ACCURACY}
+\def\DQDZ{ { \partial Q   \over  \partial z } }
+\par
+A wave-extrapolation equation is an expression for the derivative
+of a wavefield (usually in the depth $z$ direction).
+When the wavefield and its derivative are known, extrapolation can proceed
+by various numerical representations of
+\begin{equation}
+ P (z \,+\, \Delta z ) \eq
+ P(z) \ + \ 
+ \Delta z \ {dP \over dz }
+\label{eqn:wex}
+\end{equation}
+Extrapolation is moving information from $z$ to $z+\Delta z$
+and what we need to do it is
+a way to find $dP/dz$.
+Two theoretical methods for finding  $dP/dz$  are the original
+{\em  transformation}
+method and the newer
+{\em 
+dispersion-relation
+}
+method.
+
+\subsection{Another way to the parabolic wave equation}
+Here we review the historic ``transformation method''
+of deriving the parabolic wave equation. 
+
+%\par
+%At the time the \bx{parabolic wave equation} was introduced
+%to petroleum prospecting (1969),
+%it was well known that ``wave theory doesn't work.''
+%At that time, petroleum prospectors analyzed seismic data with rays.
+%The wave equation was not relevant to practical work.
+%Wave equations were for university theoreticians.
+%(Actually, wave theory did work for the surface waves of massive earthquakes,
+%scales 1000 times greater than in exploration).
+%Even for university workers,
+%finite-difference solutions to the wave equation
+%didn't work out very well. 
+%Computers being what they were,
+%solutions looked more like ``vibrations of a drum head''
+%than like ``seismic waves in the earth.''
+%The \bx{parabolic wave equation} was originally introduced
+%to speed finite-difference wave modeling.
+%The following introduction to the \bx{parabolic wave equation}
+%is via my original transformation method.
+%\par
+%The difficulty prior to 1969 came from an inappropriate
+%assumption central to all then-existing seismic wave theory,
+%namely, the horizontal layering assumption.
+%Ray tracing was the only way to escape this assumption,
+%but ray tracing seemed to ignore waveform modeling.
+%In petroleum exploration almost all wave theory further limited itself
+%to vertical incidence.
+%The road to success lay in expanding ambitions from
+%\it
+%vertical incidence
+%\rm
+%to include a small
+%\it
+%angular bandwidth
+%\rm
+%around vertical incidence.
+%This was achieved by abandoning much known,
+%but cumbersome, seismic theory.
+
+\par
+A vertically downgoing plane wave is represented mathematically
+by the equation
+\begin{equation}
+P(t,x,z) \  \eq \  P_0 \ \  e^{{-} \,i \omega \,(t \,-\, z/v) }
+\label{eqn:one1}
+\end{equation}
+In this expression,  $P_0$  is absolutely constant.
+A small departure from vertical incidence can be modeled
+by replacing the constant  $P_0$  with something,
+say,  $Q(x,z)$,  which is not strictly constant but varies slowly.
+\begin{equation}
+P(t,x,z) \  \eq \  Q(x,z) \ \  e^{{-} \, i \, \omega \, (t \, - \, z/v) }
+\label{eqn:one2}
+\end{equation}
+Inserting (\ref{eqn:one2}) into the scalar wave
+equation  $ P_{xx} +\,P_{zz} \,=\, P_{tt} / v^2$  yields
+\begin{eqnarray}
+{\partial^2 \   \over \partial x^2} \ \  Q \ \ +\ \ 
+\left( {i \omega  \over v }\  + {\partial \   \over \partial z} \right)^2 \ Q
+\ \ \ &=&\ \ \  - \  { \omega^2   \over v^2} \ \ Q
+\nonumber
+\\
+{\partial^2 Q  \over \partial x^2}  \ \ +\ \ 
+{2\, i \omega  \over v }\  {\partial Q  \over \partial z} \ \ \ +\ \ 
+{\partial^2 Q  \over \partial z^2} \ \ \ \ &=&\ \ \ 0
+\label{eqn:one3}
+\end{eqnarray}
+The wave equation has been reexpressed in terms of  $Q(x,z)$.
+So far no approximations have been made.
+To require the wavefield to be
+near to a plane wave,  $Q(x,z)$  must be near to a constant.
+The appropriate means
+(which caused some controversy when it was first introduced)
+is to drop the highest depth derivative of  $Q$,
+namely,  $Q_{zz}$.
+This leaves us with the
+{\em 
+\bx{parabolic wave equation}
+}
+\begin{equation}
+{\partial Q  \over \partial z} \  \eq 
+{v \over \,-\,2\, i \omega} \   {\partial^2 Q  \over \partial x^2} 
+\label{eqn:one4}
+\end{equation}
+
+%\par
+%When I first introduced equation \EQN{one4}
+%for use in seismology,
+%I thought its most important property was this:
+%For a wavefield close to a vertically propagating plane wave,
+%the second $x$-derivative is small,
+%hence the $z$-derivative is small.
+%Thus, the finite-difference method should allow a very large  $\Delta z$  and
+%thus be able to treat models more like the earth,
+%and less like a drumhead.
+%I soon realized that the
+%\bx{parabolic wave equation}
+%is also just
+%what is needed for seismic imaging
+%because you can insert it in an equation like \EQN{wex}.
+%(Curiously, equation \EQN{one4} also happens to be the
+%Schroedinger equation of quantum mechanics.)
+%
+
+\par
+I called equation~(\ref{eqn:one4}) the $15^\circ$ equation.
+After using it for about a year I discovered a way to improve on it
+by estimating the dropped $\partial_{zz}$ term.
+Differentiate equation~(\ref{eqn:one4}) with respect to $z$
+and substitute the result back into equation~(\ref{eqn:one3})
+getting
+\begin{equation}
+{\partial^2 Q  \over \partial x^2}  \ \ +\ \ 
+{2\, i \omega  \over v }\  {\partial Q  \over \partial z} \ \ \ +\ \ 
+%{\partial^2 Q  \over \partial z^2}
+{v \over \,-\,2\, i \omega} \   {\partial^3 Q  \over \partial z \partial x^2} 
+\eq 0
+\label{eqn:my45}
+\end{equation}
+I named equation~(\ref{eqn:my45}) the $45^\circ$ migration equation.
+It is first order in $\partial_z$,
+so it requires only a single surface boundary condition,
+however, downward continuation will require
+something more complicated than equation~(\ref{eqn:wex}).
+\par
+The above approach,
+the transformation approach,
+was and is very useful.
+But people were confused by the dropping and estimating of the $\partial_{zz}$
+derivative, and a philosophically more pleasing approach was
+invented by Francis \bx{Muir},
+a way of getting equations to extrapolate waves at wider angles
+by fitting the dispersion relation of a semicircle
+by polynomial ratios.
+\subsection{Muir square-root expansion}
+\par
+\bx{Muir}'s method of finding wave extrapolators
+seeks polynomial ratio approximations
+to a square-root dispersion relation.
+Then fractions are cleared
+and the approximate dispersion relation is inverse transformed
+into a differential equation.
+
+%\par
+%Substitution of the plane wave
+%$ \exp (-i \omega t \ +\  i k_x x \ +\  i k_z z )$
+%into the two-dimensional scalar wave equation~\EQN{acoustic8}
+%yields the dispersion relation
+%\begin{equation}
+%k_z^2 \ +\  k_x^2  \eq  { \omega^2   \over  v^2 }
+%\EQNLABEL{one5}
+%\end{equation}
+%Solve for  $ k_z $  selecting the positive square root
+%(thus for the moment selecting
+%{\it downgoing}
+%waves).
+Recall equation~(\ref{eqn:gapdisper})
+\begin{equation}
+k_z \ \  \ =\  \ \  {\omega \over v }\   \sqrt { 1 \  - \  { v^2 \, k_x^2 
+\over \omega^2 }}
+\label{eqn:one6a}
+\end{equation}
+\par
+To inverse transform the  $z$-axis we
+only need to recognize that  $ i k_z $  corresponds
+to  $ \partial / \partial z $.
+Getting into the $x$-domain, however,
+is not simply a matter of substituting
+a second  $x$  derivative for  $k_x^2$.
+The problem is the meaning of the \bx{square root} of a differential operator.
+The square root of a differential operator is not defined in
+undergraduate calculus courses and there is no straightforward
+finite difference representation.
+The square root becomes meaningful only when it is regarded
+as some kind of truncated series expansion.
+It is shown in
+IEI that the Taylor series is a poor choice.
+Francis \bx{Muir} showed that my original 15$^\circ$ and 45$^\circ$ methods were
+just truncations of a continued fraction expansion.
+To see this, define
+\begin{equation}
+        X \eq {v k_x \over\omega}
+        \quad\quad {\rm and} \quad\quad
+        R \eq {v k_z \over\omega}
+        \label{eqn:one7}
+\end{equation}
+With the definitions~(\ref{eqn:one7})
+equation ~(\ref{eqn:one6a}) is more compactly written as
+\begin{equation}
+        R \eq  \sqrt { 1 \  - \  X^2 }
+\label{eqn:abstract}
+\end{equation}
+which you recognize as meaning that cosine
+is the square root of one minus sine squared.
+The desired polynomial ratio of order  $n$  will be
+denoted  $ R_n $,  and
+it will be determined by the recurrence
+\begin{equation}
+R_{n+1}  \eq  1 \ -\  { X^2   \over  1 \ +\  R_n }
+\label{eqn:one8}
+\end{equation}
+The recurrence is a guess
+that we verify by seeing what it converges to (if it converges).
+Set $ n=\infty $ in (\ref{eqn:one8}) and solve
+\begin{eqnarray}
+R_{\infty} \ \  &=& \ \  1 \ -\  { X^2   \over  1 \ +\  R_{\infty} }
+\nonumber
+\\
+R_{\infty} \, ( 1 \ +\  R_{\infty} )
+        \ \  &=&  \ \  1 \ +\  R_{\infty} \ -\  X^2
+\nonumber
+\\
+R^2 \ \  &=&  \ \  1 \ -\  X^2
+\label{eqn:one9}
+\end{eqnarray}
+The square root of (\ref{eqn:one9})
+gives the required expression (\ref{eqn:abstract}).
+Geometrically, (\ref{eqn:one9}) says that the cosine squared of the incident
+angle equals one minus the sine squared and
+truncating the expansion leads to angle errors.
+\bx{Muir} said,
+and you can verify,
+that his recurrence relationship formalizes
+what I was doing
+by re-estimating the $\partial_{zz}$ term.
+Although it is pleasing to think of large values of $n$,
+in real life
+only the low-order terms in the expansion are used.
+The first four truncations of \bx{Muir}'s continued fraction expansion
+beginning from $R_0 = 1$ are
+%Table~\CHAP{fdm}.2
+%shows the result of three \bx{Muir} iterations
+
+\begin{eqnarray}
+ \label{eqn:oldtab2}
+ 5^\circ : \quad\quad & R_0 &\eq  1 \\       
+15^\circ : \quad\quad & R_1 &\eq  1 -\displaystyle {\strut X^2\over 2}
+                        \nonumber \\
+45^\circ : \quad\quad & R_2 &\eq  1 -{\displaystyle{\strut X^2}\over
+                     \displaystyle 2 - {\strut X^2\over 2}}
+                     \nonumber \\
+60^\circ : \quad\quad & R_3 &\eq  1 - {\displaystyle {\strut X^2}
+                    \over\displaystyle 2 - {\strut X^2 \over
+             \displaystyle 2 - {\strut X^2\over 2}}} 
+                        \nonumber
+\end{eqnarray}
+
+
+%       % PLACE HOLDER
+%\begin{table}
+%\begin{center}
+%\begin{tabular}{|r|l|}     \hline
+%           &        \\
+%$5^\circ$ & $R_0 \eq  1$ \\       
+%           &        \\   \hline
+%           &        \\
+%$15^\circ$ & $R_1 \eq  1 -\displaystyle {\strut X^2\over 2}$ \\
+%           &        \\      \hline
+%           &        \\
+%$45^\circ$ & $R_2 \eq  1 -{\displaystyle{\strut X^2}\over
+%             \displaystyle 2 - {\strut X^2\over 2}}$ \\
+%           &        \\       \hline
+%           &       \\
+%$60^\circ$ & $R_3 \eq  1 - {\displaystyle {\strut X^2}
+%                    \over\displaystyle 2 - {\strut X^2 \over
+%             \displaystyle 2 - {\strut X^2\over 2}}}$ \\   
+%           &        \\        \hline
+%\end{tabular}
+%\end{center}
+%\label{TAB-R}
+%\caption{
+%       First four truncations of \bx{Muir}'s continued fraction expansion.
+%       }
+%\end{table}
+
+\par
+For various historical reasons,
+the equations in
+the above equations
+%Table~\CHAP{fdm}.2
+are often referred to as the
+5$^\circ$, 15$^\circ$, and 45$^\circ$ equations, respectively, 
+the names giving a reasonable qualitative (but poor quantitative) guide to
+the range of angles that are adequately handled.
+A trade-off between complexity and accuracy frequently dictates choice of
+the 45$^\circ$ equation.
+It then turns out that a slightly wider range of angles can be
+accommodated if the recurrence is begun
+with something like  $R_0 = \cos$ 45$^\circ$.
+Figure~\ref{fig:disper} shows some plots.
+\activeplot{disper}{width=3in}{}{
+        Dispersion relation of
+        equation \protect(\ref{eqn:oldtab3}).
+        The curve labeled   $45^\circ_+ $
+        was constructed
+        with               $ R_0  =  \cos 45^\circ$.
+        It fits exactly at 0$^\circ$
+        and                45$^\circ$.
+        }
+\subsection{Dispersion relations}
+\par
+Substituting the definitions~(\ref{eqn:one7})
+into equation~(\ref{eqn:oldtab3}) et.~seq.
+%into Table~\CHAP{fdm}.2 WICH IS THE NEW EQNARRAY ABOVE
+gives dispersion relationships
+for comparison to the exact expression (\ref{eqn:one6a}).
+
+
+\begin{eqnarray}
+\label{eqn:oldtab3}
+ 5^\circ : \quad\quad\quad & k_z \eq &  \displaystyle {\strut\omega\over v}     \\
+15^\circ : \quad\quad\quad & k_z \eq &  \displaystyle {\strut\omega\over v} -
+                             \displaystyle {\strut v k_x^2\over 2\omega}
+                             \nonumber \\
+45^\circ : \quad\quad\quad & k_z \eq & \displaystyle{\strut \omega\over v} 
+                                   -{\displaystyle {\strut k_x^2}\over
+                                   \displaystyle {2\,{\omega\over v} - 
+                                   {\strut v k_x^2\over 2\omega}}} 
+                             \nonumber
+\end{eqnarray}
+
+%These are shown in Table~\CHAP{fdm}.3.
+%\begin{table}
+%\begin{center}
+%\begin{tabular}{|r|l|}     \hline
+%           &        \\
+%$5^\circ$ & $k_z \eq  \displaystyle {\strut\omega\over v}$ \\
+%           &        \\   \hline
+%           &        \\
+%$15^\circ$ & $k_z \eq  \displaystyle {\strut\omega\over v} -
+%             \displaystyle {\strut v k_x^2\over 2\omega}$ \\
+%           &        \\      \hline
+%           &        \\
+%$45^\circ$ & $k_z \eq \displaystyle{\strut \omega\over v} 
+%                   -{\displaystyle {\strut k_x^2}\over
+%                   \displaystyle {2\,{\omega\over v} - 
+%                   {\strut v k_x^2\over 2\omega}}}$ \\
+%           &        \\       \hline
+%\end{tabular}
+%\end{center}
+%\EQNLABEL{1-2}
+%\caption{
+%       As displayed in Figure~\protect\FIG{disper},
+%       the dispersion relations
+%       tend toward a semicircle.}
+%\end{table}
+
+
+%\subsection{Depth-variable velocity again}
+\par
+Identification of  $i k_z$  with  $ \partial / \partial z $  converts
+the dispersion relations (\ref{eqn:oldtab3})
+%PREVIOUS of Table~\CHAP{fdm}.3
+into the differential equations
+%of Table~\CHAP{fdm}.4.
+\begin{eqnarray}
+ \label{eqn:oldtab4}
+ 5^\circ : \quad\quad& \displaystyle {\strut \partial P\over \partial z}
+                \eq  i\left(
+                \displaystyle {\strut\omega\over v} \right) P \\
+15^\circ : \quad\quad& \displaystyle {\strut \partial P\over \partial z}
+                \eq    i \left(
+                    \displaystyle {\omega\over v} - 
+                    {\strut v k_x^2\over 2\omega} \right) P
+                    \nonumber \\
+45^\circ : \quad\quad& \displaystyle {\strut\partial P\over \partial z}
+                \eq  i \left(
+                      \displaystyle {\omega\over v} -
+                      {\strut k_x^2\over
+                      \displaystyle {2\,{\omega\over v}   - 
+                      {\strut v k_x^2\over 2\omega}}} \right) P
+                    \nonumber
+\end{eqnarray}
+which are extrapolation equations for when velocity depends only on depth.
+
+
+
+
+%\begin{table}
+%\begin{center}
+%\begin{tabular}{|r|l|}     \hline
+%           &        \\
+%$5^\circ$ & $\displaystyle {\strut \partial P\over
+%            \partial z} \eq  i\left(
+%           \displaystyle {\strut\omega\over v} \right) P$ \\
+%           &        \\   \hline
+%           &        \\
+%$15^\circ$ & $\displaystyle {\strut \partial P\over
+%            \partial z} \eq    i \left(
+%            \displaystyle {\omega\over v} - 
+%            {\strut v k_x^2\over 2\omega} \right) P$ \\
+%           &        \\      \hline
+%       &        \\
+%$45^\circ$ & $\displaystyle {\strut\partial P\over
+%              \partial z} \eq  i \left(
+%              \displaystyle {\omega\over v} -
+%              {\strut k_x^2\over
+%              \displaystyle {2\,{\omega\over v}   - 
+%              {\strut v k_x^2\over 2\omega}}} \right) P$ \\
+%           &        \\       \hline
+%\end{tabular}
+%\end{center}
+%\caption{
+%Extrapolation equations when velocity depends only on depth.}
+%\EQNLABEL{1-3}
+%\end{table}
+
+\par
+The differential equations above
+in Table~\ref{paper:fdm}.4
+were based on a dispersion relation
+that in turn was based on an assumption of constant velocity.
+Surprisingly, these equations also have validity and great utility
+when the velocity is depth-variable,  $v = v(z)$.
+The limitation is that the velocity be constant over each 
+depth ``slab'' of width $\Delta z$ over which the downward-continuation
+is carried out.
+
+
+\subsection{The xxz derivative}
+\par
+The 45$^\circ$ diffraction equation differs from the 15$^\circ$ equation
+by the inclusion of a  $ \partial^3 / \partial x^2 \partial z $ -derivative.
+Luckily this derivative fits on the six-point differencing star
+\begin{center}
+\begin{tabular}{rl}
+$\displaystyle {\strut 1\over\Delta x^2\,\Delta z}$ &
+  \begin{tabular}{|c|c|c|} \hline
+ & &  \\   \ $-1$\ & \ 2\  &\ $-1$\ \\  & &  \\  \hline
+ & &  \\     $ 1$  & $-2$  &  $ 1$  \\  & &  \\  \hline
+  \end{tabular}
+\end{tabular}
+\end{center}
+%\EQNLABEL{two22}
+So other than modifying the six coefficients on the star,
+it adds nothing to the computational cost.
+Using this extra term allows in programs like
+subroutine \texttt{wavemovie()} \vpageref{lst:wavemovie} yields wider angles.
+
+\par
+\activesideplot{Mfortyfive90}{width=3in}{movies}{
+        Figure \protect\ref{fig:Mfocus1590} including the
+        45$^\circ$ term, $ \partial_{xxz} $, for
+        the collapsing spherical wave.
+        What changes must be made to subroutine
+        \protect\texttt{wavemovie()} to get this result?
+        Mark an  $X$  at the theoretical focus location.
+        }
+%
+%\activesideplot{Mhi45}{width=3in}{movies}{
+%        The same as Figure \protect\ref{fig:Mfortyfive}
+%        but with eight wavelengths per frame
+%        instead of the usual four.
+%        }
+
+\activesideplot{Mhi45b90}{width=3in}{movies}{
+        The accuracy of the $x$-derivative may be improved by
+        a technique that is analyzed in IEI p 262-265.
+        Briefly, instead of
+        representing  $k_x^2 \,\Delta x^2$  by the \bx{tridiagonal}
+        matrix  ${\bf T}$  with  $(-1,2,-1)$  on the main diagonal,
+        you use  $ {\bf T}  / ( {\bf I} - {\bf T} / 6 )$.
+        Modify the extrapolation analysis by multiplying through
+        by the denominator.
+        Make the necessary changes to the 45$^\circ$ collapsing wave program.
+        Left without 1/6 trick; right, with 1/6 trick.
+        }
+
+\par
+Theory predicts that in two dimensions,
+waves going through a focus
+suffer a 90$^\circ$ phase shift.
+You should be able to notice that a symmetrical waveform
+is incident on the focus, but an antisymmetrical waveform emerges.
+This is easily seen in Figure~\ref{fig:Mhi45b90}.
+
+\par
+In migrations, waves go just {\em  to} a focus, not {\em  through} it.
+So the migration impulse response in two dimensions
+carries a 45$^\circ$ phase shift.
+Even though real life is three dimensional,
+the two-dimensional response is appropriate
+for migrating seismic lines where focusing
+is presumed to arise from cylindrical, not spherical, reflectors.
+\sx{45 degree phase angle}
+
+
+
+\subsection{Time-domain parabolic equation}
+
+The parabolic wave extrapolation
+equation~(\ref{eqn:one4}) is readily
+expressed in the time domain (instead of the $\omega$-domain).
+Simply replace $-i\omega$ by a time derivative.
+
+\begin{equation}
+{\partial^2 q  \over \partial z \,\, \partial t} 
+\quad = \quad
+{v \over 2} \   {\partial^2 q  \over \partial x^2}
+\label{eqn:tdparax}
+\end{equation}
+
+In principal we never need the time domain because the earth velocity
+is a constant function of time.
+In practice, processes (like DMO) might involve time-dependent coefficients.
+In the time domain, a more complicated numerical procedure is required
+(details in my earlier book FGDP).
+An advantage of the time domain is
+that there is absolutely zero noise preceding
+a first arrival --- no time-domain wraparound.
+Another advantage is that all signals are real valued --- no complex arithmetic.
+A disadvantage arises when the $t$-axis
+is not sampled densely enough --- the propagation velocity becomes 
+frequency dispersive.
+
+
+\subsection{Wavefront healing}
+
+When a planar (or spherical) wavefront encounters an inhomogeneity
+it can be said to be ``damaged''.
+If it continues to propagate for a long time,
+it might be said to ``heal''.
+Here we construct an example of this phenomena
+and see that while there is some healing on the front edge,
+the overall destruction continues.
+The original simplicity of the wavefield is further destroyed
+by further propagation.
+
+\par
+We begin with a plane wave. Then we deform it as though it
+had propagated through a slow lens of thickness $h(x)=\sin x$.
+This is shown in the first frame of
+Figure~\ref{fig:heal}.
+In subsequent frames the wavefront has been extrapolated
+in $z$ using equation~(\ref{eqn:tdparax}).
+
+\activeplot{heal}{width=6in}{movies}{
+		Snapshots of a wavefront propagating to the right.
+		The picture frame moves along with the wavefront.
+	        (Press button for movie.)
+		        }
+
+\par
+In the second frame we notice convex portions of the wavefront weakening
+by something like spherical divergence while concave portions of
+the wavefront strengthen by focusing.
+\par
+In the third frame we have moved beyond the focus
+and we see something like a parabolic wavefront emerge from each focus.
+Now we notice that the original waveform was a doublet
+whereas the parabolic wavefronts all have a single polarity.
+Focusing in 2-D has turned an asymmetrical wavelet into a symmetrical one.
+\par
+In the fourth frame we see the paraboloids enlarging and crossing over one
+another.   Inspect the top or the bottom edges of the 4th and 5th frames.
+You'll notice that the intersections of the wavefronts on these side
+boundaries are moving forward --- towards the initial onset.
+This is peculiar.  The phase fronts are moving forward while the
+energy is falling further behind the original onset.
+
+\par
+Finally, in the last frame, we notice the that the front edge of
+the wave packet has ``healed'' into a plane wave --- a plane wave like
+before encounting the original $\sin(x)$ velocity lens.
+I felt some delight on first viewing this picture.
+I had spent a couple years of my life looking at seismograms
+of earthquakes and nuclear explosions.
+For each event I had a seismic trace at each of about a dozen locations.
+Each trace would have about a hundred wiggles.
+Nothing would be consistent from trace to trace except
+for maybe the half wavelength of the first arrivals.
+Quite often these all would luckily
+begin with the same polarity
+but then become rapidly incoherent.
+Take a dozen random locations on the (vertical) $x$-axis
+of the last frame in
+Figure~\ref{fig:heal}.
+You'll find the dozen time signals agree on the first arrival
+but are randomly related at later times
+just as usually seen with nuclear explosion data.
+
+\par
+Perhaps if we had very dense recordings of earthquakes we could
+extrapolate the wavefield back towards its source and watch
+the waveform get simpler as we proceeded backward.
+Often throughout my career I've wondered how I might approach this goal.
+As we step back in $z$ we wish, at each step,
+that we could find the best lens$(x)$.
+My next book (GEE) has some clues,
+but nothing yet concrete enough to begin.
+We need to optimize some (yet unknown) expression of simplicity
+of the wavefield$(t,x)$
+at the next $z$ as a function of the lens between
+here and there.
+
+
+
+
+
+\todo{
+\section{END OF CHAPTER FOR NOW}
+\subsection{Retardation (frequency domain)}
+\par
+It is often convenient to arrange the calculation of a wave
+to remove the effect of overall translation,
+thereby making the wave appear to ``stand still.''
+It is easy enough to introduce
+the time shift  $t_0$  of a vertically propagating wave
+in a hypothetical medium of velocity  $ \bar v ( z )$, namely,
+\begin{equation}
+t_0  \eq  \int_0^z \  { dz   \over  \bar v (z) }
+\label{eqn:one10}
+\end{equation}
+Instead of solving equations in coordinates $(t,x,z)$
+we could solve them in the so-called \bx{retarded coordinates}
+$(t',x',z')$ where
+$t'=t-t_0(z)$, $x'=x$ and $z'=z$.
+(For more details, see IEI sections 2.5-2.7.)
+A time delay  $t_0$  in
+the time domain corresponds to multiplication
+by  $\exp ( i \omega t_0 )$  in the  $\omega$-domain.
+Thus, the wave pressure $P$  is related
+to the time-shifted mathematical variable  $Q$  by
+\begin{equation}
+P(z, \omega )  \eq 
+Q(z, \omega ) \  \exp
+\left( \  i \omega \int_0^z \  {dz \over  \bar v (z)} \  \right)
+\label{eqn:one11a}
+\end{equation}
+which is a generalization of equation~(\ref{eqn:one2})
+to depth-variable velocity.
+(Equations~(\ref{eqn:one11a}) and (\ref{eqn:one11b}) apply in both $x$- and
+$k_x$-space).
+Differentiating with respect to  $z$  gives
+\begin{eqnarray}
+{\partial P \over \partial z } &=& { \partial Q   \over  \partial z } \ 
+\exp \left(  i\, \omega  \int_0^z \,  {dz \over  \bar v (z) }
+\right) \ +\ 
+Q(z, \omega ) \  { i \omega   \over  \bar v (z) }
+\  \exp \left(  i\, \omega  \int_0^z \, {dz \over  \bar v (z) }  \right)
+\\
+{\partial P   \over \partial z}  &=&
+\exp \left( \  i \omega  \int_0^z \  {dz \over  \bar v (z) } \  \right)
+\  \left( \  {\partial \over \partial z} \ +\ 
+{ i \omega   \over  \bar v (z) } \  \right) \  Q
+\label{eqn:one11b}
+\end{eqnarray}
+Next, substitute (\ref{eqn:one11a}) and (\ref{eqn:one11b})
+into Table~\ref{paper:fdm}.4
+to obtain the retarded equations in Table~\ref{paper:fdm}.5.
+\begin{table}
+\begin{center}
+\begin{tabular}{|r|ll|}     \hline
+     &     &  \\
+$5^\circ$ & $\displaystyle {\strut\partial Q\over
+             \partial z} \eq $ zero
+& $+\ i\omega \left( \displaystyle {1\over v} - 
+  {\strut 1\over\overline{v}(z)} \right) Q$ \\
+     &     &   \\   \hline
+     &     &   \\
+$15^\circ$ & $\displaystyle {\strut\partial Q\over
+             \partial z} \eq - \,i\, {\displaystyle 
+             {\strut v k_x^2\over 2\omega}} \ Q$ 
+& $+\ i\omega \left( \displaystyle {1\over v} - 
+  {\strut 1\over\overline{v}(z)} \right) Q$    \\
+     &     &   \\      \hline
+     &     &   \\
+$45^\circ$ & $\displaystyle {\strut\partial Q\over
+             \partial z} \eq - \,i\, {\displaystyle 
+             {\strut k_x^2}\over\displaystyle 
+             {2\,{\omega\over v} - {\strut v k_x^2
+             \over 2\omega}}} \ Q$ 
+& $+\ i\omega \left(\displaystyle {1\over v} - 
+  {\strut 1\over\overline{v}(z)} \right) Q$ \\
+     &     &   \\       \hline
+     &     &   \\       
+{\rm general} & $\displaystyle {\strut\partial Q\over
+                \partial z} \eq $ {\rm diffraction} 
+ & + {\rm thin lens} \\
+     &     &   \\       \hline
+\end{tabular}
+\end{center}
+\label{eqn:1-4}
+\caption{Retarded form of phase-shift equations.}
+\end{table}
+\subsection{Lateral velocity variation again}
+\par
+Having approximated the square root by a polynomial ratio,
+Table \ref{paper:fdm}.4 or Table \ref{paper:fdm}.5 can be inverse transformed
+from the horizontal wavenumber domain  $ k_x $  to the
+horizontal space domain  $x$  by substituting
+$ \  (ik_x )^2  =  \partial^2 / \partial x^2$.
+The resulting extrapolation equations have a 
+wide range of validity for  $v = v(x,z)$  even though the
+derivation would not seem to permit any change of velocity with $x$.
+\par
+Ordinarily $\bar v(z)$ will be chosen
+to be some kind of horizontal average of $v(x,z)$.
+Permitting $\bar v$ to become a function of $x$ generates many
+new terms.
+The terms are awkward to implement and ignoring them introduced
+unknown hazards.
+So $\bar v$ is usually taken to depend on $z$ but not $x$.
+\subsection{Splitting again}
+The customary numerical solution to the  $x$-domain forms of the equations
+in Tables \ref{paper:fdm}.4 and \ref{paper:fdm}.5 is arrived at by \bx{splitting}.
+That is, you march forward a small  $ \Delta z $-step alternately
+with the two extrapolators
+\begin{eqnarray}
+{ \partial Q   \over  \partial z } \ \  \ &=&\  \ \  \ \rm{lens\ term}
+\label{eqn:one12a}
+\\
+{ \partial Q   \over  \partial z } \ \  \ &=&\  \ \  \ \rm{diffraction\ term}
+\label{eqn:one12b}
+\end{eqnarray}
+%Formal justification of the \bx{splitting} process is found in chapter \TXZ.
+The first equation, called the 
+{\em 
+\bx{lens equation},
+}
+is solved analytically: 
+\begin{equation}
+Q ( z_2 ) \eq  Q ( z_1 ) \  \exp \,
+\left\{ \  i \omega \ \int_{{z}_1}^{{z}_2}
+\left( {1 \over  v(x,z)} \ -\ 
+{1 \over \bar v ( z ) } \  \right) dz \  \right\}
+\label{eqn:one13}
+\end{equation}
+\par
+Migration that includes the \bx{lens equation}
+is called %
+{\em  depth %
+} migration.
+Migration that omits this term is called 
+{\em  time %
+} migration.
+\par
+Observe that the diffraction parts
+of Tables~\ref{paper:fdm}.4 and \ref{paper:fdm}.5 are the same.
+Let us use them and equation (\ref{eqn:one12b}) to
+define a table of diffraction equations.
+Substitute  $  \partial / \partial x $  for  $ i k_x $  and
+clear  $  \partial / \partial x  $  from the denominators to
+get Table~\ref{paper:fdm}.6.
+\begin{table}
+\begin{center}
+\begin{tabular}{|r|l|}     \hline
+     &       \\
+$5^\circ$ & $ \displaystyle {\strut\partial Q\over
+            \partial z}\eq $zero  \\
+     &        \\   \hline
+     &        \\
+$15^\circ$ & $ \displaystyle {\strut\partial Q\over
+             \partial z} \eq 
+             \displaystyle {v(x, z)\over - 2i\omega}
+              {\strut\partial^2 Q\over\partial x^2}$ \\
+     &        \\      \hline
+     &        \\
+$45^\circ$ & $\left[ 1 - \left( \displaystyle 
+             {\strut v(x, z)\over - 2i\omega}\right) ^2
+\displaystyle {\strut\partial^2\over\partial x^2 } 
+              \right]
+\displaystyle {\strut\partial Q\over\partial z}\eq
+\displaystyle {v(x, z)\over - 2i\omega} 
+ {\strut\partial^2 Q\over\partial x^2}$    \\
+     &        \\       \hline
+\end{tabular}
+\end{center}
+\label{eqn:1-5}
+\caption{Diffraction equations for laterally variable media.}
+\end{table}
+        % PLACE HOLDER
+You may wonder where the two velocities $v(x,z)$ and $\bar v (z)$ came from.
+The first arises in the wave equation,
+and it must be $x$-variable if the model is $x$-variable.
+The second arises in a mathematical transformation,
+namely, equation~(\ref{eqn:one11a}),
+so it is purely a matter of definition.
+%\todo{  NOTES OF JIM BLACK?
+%In fact it is possible to choose $\bar v = v(x,z)$, even though this seems
+%inconsistent with the above derivation.
+%When we do this, we are simply dropping
+%some terms in the wave equation that 
+%are proportional to $\partial v/ \partial x$.
+%In this case, the thin-\bx{lens term} drops out of the analysis,
+%yielding \it time \rm migration.
+%\par NOTE TO MYSELF: I need to introduce the change of variables from $z$ to
+%migrated time $t_m$ before I can really make this a convincing discussion.  
+%The argument goes something like this:
+%\begin{enumerate}
+%\item
+%       The wavefield Q is just the wavefield P time-shifted by $t_0$.
+%       Specifically $Q(z,t',x) = P(z,t'-t_0(z),x)$.
+%\item
+%       The time shift $t_0(z)$ is governed by $\bar v$ and thus 
+%       is independent of x.
+%\item
+%       If I have a flat event occurring at time $\tau$ 
+%       on the input zero-offset section 
+%       (with x-independent wavelet and amplitude),
+%       time migration
+%       should do \em absolutely \rm nothing to it, 
+%       even if v(x,z) has lateral velocity variation.  
+%       The event should remain flat and should occur at precisely the same time
+%       on output as on input.
+%       This is easiest to see in Kirchhoff time migration.
+%       A flat event will always be
+%       tangent to the \it top \rm of the local hyperbola,
+%       independent of what the 
+%       local velocity is.
+%       Therefore, it cannot move anywhere at all.
+%\item
+%       In finite-difference time migration,
+%       there is no thin-\bx{lens term},
+%       and the diffraction term always yields zero.
+%       Thus $\partial Q / \partial z = 0$,
+%       meaning that $Q(z,t',x)$ remains \em constant \rm during each 
+%       downward continuation.
+%       Specifically $Q$ always contains our flat event at time $t'=\tau$.
+%\item
+%       The imaging condition says that the migrated image $M(z,x)$ is given by
+%       \begin{equation}
+%       M(z,x) = P(z,t=0,x) = Q(z,t'=t_0(z),x)
+%       \end{equation}
+%       Thus our flat event will appear in the image at the z determined by
+%       \begin{equation}
+%       t_0(z) = \tau
+%       \end{equation}
+%\item
+%       Since both $t_0(z)$ and $\tau$ are independent of x,
+%       it follows that the image of our event is flat in $(x,z)$ space.
+%\item
+%       For time migration,
+%       the output final needs to be in time, not depth.
+%       Thus we need to convert the above flat z-image of event
+%       to a flat migrated time image.  
+%       Let`s call migrated time $t_m$.
+%       One choice of the mapping from $z$ to $t_m$
+%       would be to use the true time-to-depth conversion relationship
+%       given by
+%       \begin{equation}
+%       t_m(x,z)  \eq  \int_0^z \  { dz   \over  v (x,z) }
+%       \end{equation}
+%       Since the image was flat in z-space,
+%       and since this $t_m(z)$ varies with $x$,
+%       it follows that final image will not be flat in $(t_m,x)$ space.
+%       This violates the requirement that a flat event
+%       shall remain flat after time migration.
+%\item
+%       It is easy to see that
+%       the only definition of migrated time that preserves
+%       both the flatness and the time position
+%       of our hypothetical flat event is:
+%       \begin{equation}
+%       t_m(z)  \eq t_0(z) \eq \int_0^z \  { dz   \over \bar v(z)  }
+%       \end{equation}
+%       \par In summary,
+%       we have established that the only consistent way to do
+%       time-to-depth conversion for time migration
+%       is to use the function $t_0(z)$
+%       to define the relationship between depth and migrated time.
+%       \par Now let's see
+%       Applying this definition of $t_m$ causes our flat event to appear on the
+%       final migrated section at $t_m = \tau.$
+%\end{enumerate}
+%\par
+%With the latter choice, we can see that the diffraction 
+%equation for time migration
+%takes the form:
+%\begin{equation}
+%{\partial Q\over \partial t_m} \eq 
+%             { \bar v v(x, z)\over - 2i\omega}
+%              {\partial^2 Q\over\partial x^2}
+%\end{equation}
+%Examining this equation, we see that the diffraction term is proportional to
+%$\bar v v(x,z)$.  Recall that in Kirchhoff time migration,     
+%the summation hyperbola at location $x$ depends upon the
+%\it local \rm value of the RMS velocity.  Obviously it makes little sense 
+%to have the collapse of a diffraction
+%at one end of a seismic line depend upon the velocity at the other end of
+%the line.  Yet this is exactly what happens if we choose $\bar v$ to be an
+%average over $x$ of $v(x,z)$.  In order to make finite-difference time
+%migration respond only to the \it local \rm velocity field, we need to use
+%\begin{equation}
+%{\partial Q\over \partial t_m} \eq 
+%             { v(x, z)^2\over - 2i\omega}
+%              {\partial^2 Q\over\partial x^2}
+%\end{equation}
+%In this case, it is easy to convince 
+%yourself that Kirchhoff and finite-difference time migration are migrating
+%with the same velocity field, which is what we want.
+%END OF BLACK NOTES }
+\subsection{Time domain}
+\par
+To put the above equations in the time domain, it is necessary only to
+get  $ \omega $  into the numerator and
+then replace  $ -i \omega $  by  $ \partial / \partial t $.
+For example, the 15$^\circ$,  retarded, $ v  =  \bar v $  equation
+from Table \ref{paper:fdm}.6 becomes
+\begin{equation}
+{ \partial^2   \over  \partial z \  \partial t } \  Q  \eq
+{v \over 2 }\  { \partial^2 \    \over  \partial x^2 } \  Q
+\label{eqn:one14}
+\end{equation}
+%Interpretation of time  $t$  for a
+%retarded-time variable  $Q$  awaits further clarification in chapter \TXZ.
+\subsection{Upcoming waves}
+\par
+All the above equations are for 
+{\em  downgoing}
+waves.
+To get equations for
+{\em  upcoming}
+waves you need only change the
+signs of  $z$  and  $ \partial / \partial z $.
+Letting  $D$  denote a 
+{\em  downgoing}
+wavefield and  $U$  an
+{\em  upcoming}
+wavefield, equation (\ref{eqn:one14}), for example,
+is found in Table~\ref{paper:fdm}.7.
+\begin{table}
+\begin{center}
+\begin{tabular}{|l|}     \hline
+      \\
+$\displaystyle {\strut\partial^2 \over
+  \partial z \partial t} \ D \eq
+  +\ \displaystyle {\strut v\over 2} 
+  \displaystyle {\strut\partial^2 \over\partial x^2} \ D$
+     \hspace{.2in} \\
+       \\   \hline
+       \\
+$\displaystyle {\strut\partial^2 \over
+  \partial z \partial t} \ U \eq
+  -\ \displaystyle {\strut v\over 2} 
+  \displaystyle {\strut\partial^2 \over\partial x^2} \ U$
+     \hspace{.2in} \\
+        \\      \hline
+\end{tabular}
+\end{center}
+\label{eqn:1-6}
+\caption{Time-domain equations
+for downgoing and upcoming wave diffraction with
+retardation and the 15$^\circ$ approximation.}
+\end{table}
+\par
+Using the exploding-reflector concept,
+it is the upcoming
+wave equation that is found in both migration and diffraction programs.
+The downgoing wave equation is useful
+for modeling and migration procedures that are more elaborate
+than those based on the exploding-reflector concept.
+%(chapter \OFS ).
+\section{SPLITTING AND SEPARATION APPLICATIONS}
+\subsection{Application to 3-D downward continuation}
+\par
+The operator for migration of zero-offset
+reflection seismic data in three 
+dimensions is expandable to second
+order by Taylor series expansion
+to the so-called 15$^\circ$ approximation
+\begin{equation}
+\sqrt{  {(-i \omega ) {}^2 \over v^2}\ \,-\,
+{ \  \partial^2 \    \over  \partial x^2 } \ -\, { \partial^2 \   
+\over  \partial y^2 } \  }
+\  \approx  \  { - i \omega   \over v }\ -\,
+{v \over - 2 i \omega} \  {\partial^2 \   \over \partial x^2 } \ -\,
+{v \over - 2 i \omega} \  {\partial^2 \   \over \partial y^2 }
+\label{eqn:four4}
+\end{equation}
+The most common case is when  $v$  is slowly variable
+or independent of  $x$  and  $y$.
+Then the conditions of \bx{full separation} do apply.
+This is good news because it means that we
+can use ordinary 2-D wave-extrapolation
+programs for 3-D, doing the in-line
+data and the out-of-line data in either order.
+The bad news comes when we try for more accuracy.
+Keeping more terms in the Taylor series
+expansion soon brings in the cross
+term  $ \partial^4 / {\partial x}^2 {\partial y}^2 $.
+Such a term allows neither \bx{full separation} nor \bx{splitting}. 
+Fortunately, present-day marine data-acquisition techniques
+are sufficiently crude in the out-of-line
+direction that there is little
+justification for out-of-line
+processing beyond the 15$^\circ$ equation. 
+Francis \bx{Muir} had the good idea of representing
+the square root as
+\begin{equation}
+\sqrt{  {(-i \omega {)}^2 \over v^2}\ \ -\ 
+\ {\partial^2 \over  \partial x^2 }\ \ -\ \ { \partial^2   
+\over \partial y^2} \ }
+\ \  \approx \ \ \
+\sqrt{ {(-i \omega {)}^2 \over v^2}\ \ -\ 
+\ {\partial^2 \over  \partial x^2 }
+\  }
+\ -\ 
+{v \over - 2 i \omega} \ \  {\partial^2 \   \over \partial y^2 } \ \ \ \
+\label{eqn:four5}
+\end{equation}
+\par
+There may be justification for better approximations with land data.
+Fourier transformation of at least one
+of the two space axes will solve the computational problem.
+This should be a good approach
+when the medium velocity does not vary
+laterally so rapidly as to invalidate application
+of Fourier transformation.
+\subsection{Separability of 3-D migration (Jakubowicz)}
+\par
+In an operations environment, 3-D is much harder to cope with than 2-D.
+Therefore, it may be expedient to suppose that 3-D migration
+can be achieved merely by application of 2-D migration twice, once
+in the $x$-direction and once in the $y$-direction.
+The previous section would lead you to believe that such an expedient process
+would result in a significant degradation of accuracy.
+In fact, the situation is
+{\em  much}
+better than might be supposed.
+It has been shown by Jakubowicz and Levin [1983]
+that, wonder of wonders, for a constant-velocity medium,
+the expedient process is exact.
+\par
+The explanation is this:
+migration consists of more than downward continuation.
+It also involves imaging, that is, the selection of data at  $t=0$.
+In principle, downward continuation is first completed,
+for both the  $x$  and the  $y$  directions.
+After that, the imaging condition is applied.
+In the expedient process there are four steps:
+downward continuation in  $x$, imaging,
+downward continuation in  $y$, and finally
+a second imaging.
+Why it is that the expedient procedure gives the correct result
+seems something of a puzzle, but the validity of the result
+is easy to demonstrate.
+\par
+First note that substitution of (\ref{eqn:four6}) into (\ref{eqn:four7})
+gives (\ref{eqn:four8}) where
+\begin{eqnarray}
+t_1^2 &=& t_0^2 \ +\  (x - x_0 )^2 / v^2
+\label{eqn:four6}
+\\
+t^2 &=& t_1^2 \ +\  (y - y_0 )^2 / v^2
+\label{eqn:four7}
+\\
+t^2 &=& t_0^2
+\ +\  (x - x_0 )^2 / v^2
+\ +\  (y - y_0 )^2 / v^2
+\label{eqn:four8}
+\end{eqnarray}
+Equation (\ref{eqn:four8}) represents travel time
+to an arbitrary point scatterer.
+For a 2-D survey recorded along the $y$-axis,
+i.e.,
+at constant $x$, equation (\ref{eqn:four7}) is the traveltime curve.
+In-line hyperbolas cannot be distinguished from sideswipe hyperbolas.
+2-D migration with equation (\ref{eqn:four7}) brings the energy up to $t_1$.
+Subsequently migrating the other direction with equation (\ref{eqn:four6})
+brings the energy up the rest of the way to  $t_0$.
+This is the same result as the one
+given by the more costly 3-D procedure migrating with (\ref{eqn:four8}).
+\par
+The Jakubowicz justification is somewhat more mathematical,
+but may be paraphrased as follows.
+First note that substitution of (\ref{eqn:four9}) into (\ref{eqn:four10})
+gives (\ref{eqn:four11}) where
+\begin{eqnarray}
+k_{\tau}^2 &=& \omega^2  \ -\  v^2 \, k_x^2
+\label{eqn:four9}
+\\
+k_z^2 &=& {k_{\tau}^2  \over v^2} \ -\  k_y^2
+\label{eqn:four10}
+\\
+k_z^2 &=& {\omega^2  \over v^2}
+\ -\  k_x^2
+\ -\  k_y^2
+\label{eqn:four11}
+\end{eqnarray}
+Two-dimensional Stolt migration over  $x$  may be regarded 
+as a transformation from traveltime depth  $t$  to a pseudodepth  $\tau$  by
+use of equation (\ref{eqn:four9}).
+The second two-dimensional migration over  $y$  may be regarded
+as a transformation from pseudodepth  $\tau$  to true depth  $z$ by
+use of equation (\ref{eqn:four10}).
+The composite is the same as equation (\ref{eqn:four11}),
+which depicts 3-D migration.
+\par
+The validity of the Jakubowicz result
+goes somewhat beyond its proof.
+Our two-dimensional geophysicist may be
+migrating other offsets besides zero offset.
+%(In chapter \OFS\  nonzero-offset data is migrated).
+If a good job is done, all the reflected energy moves up
+to the apex of the zero-offset hyperbola.
+Then the cross-plane migration can handle it if it can handle zero offset.
+So offset is not a problem.
+But can a good job be done of bringing all the energy up to the apex
+of the zero-offset hyperbola?
+\par
+Difficulty arises when the velocity of the earth is depth-dependent,
+as it usually is.
+Then the Jakubowicz proof fails, and so does the expedient 3-D method.
+With a 2-D survey you have the problem that the sideswipe planes
+require a different migration velocity than the vertical plane.
+Rays propagating to the side take longer to reach the high-velocity
+media deep in the earth.
+So sideswipes usually require a lower migration velocity.
+If you really want to do three-dimensional migration with  $v(z)$,
+you should forget about \bx{full separation} and do it the hard way.
+Since we know how to transpose (IEI section 1.6),
+the hard way really isn't much harder.
+\subsection{Separability in shot-geophone space}
+\par
+Reflection seismic data gathering is done on
+the earth's surface.
+One can imagine the appearance of the data
+that would result if the data were generated
+and recorded at depth, that is, with
+deeply buried shots and geophones.
+Such
+buried data could be synthesized from
+surface data by first downward
+extrapolating the geophones, then using the
+reciprocal principle to interchange
+sources and receivers, and finally downward
+extrapolating the surface shots (now the receivers). 
+A second, equivalent approach would
+be to march downward in steps, alternating
+between shots and geophones.
+%This latter approach is developed in chapter \OFS, but
+The result is simply stated by the equation
+\begin{equation}
+{\partial U  \over \partial z} \eq
+\left( \  
+        \sqrt{
+                {{(-\,i \omega ) }^2  \over v ( s )^2}\ -\ 
+                {\partial^2 \    \over \partial s^2} 
+                }
+\ +\ 
+        \sqrt{
+                {{(-\,i \omega )}^2  \over v ( g )^2}\ -\ 
+                {\partial^2 \    \over \partial g^2}
+                } \ 
+\right) \  U
+\label{eqn:four12}
+\end{equation}
+The equivalence of the two approaches
+has a mathematical consequence.
+The shot coordinate  $s$  and the geophone
+coordinate  $g$  are independent variables,
+so the two square-root operators commute.  
+Thus the same solution is obtained by \bx{splitting} as by \bx{full separation}.
+%\par\vspace{2.0\baselineskip}
+\begin{exer}
+\item
+Migrate a two dimensional data set with velocity  $v_1$.
+Then migrate the migrated data set with a velocity  $v_2$.
+Rocca pointed out that this double migration
+simulates a migration with a third velocity  $v_3$.
+Using a method of deduction similar to the Jakubowicz deduction
+equations (\ref{eqn:four9}), (\ref{eqn:four10}), and (\ref{eqn:four11})
+find  $v_3$  in terms of  $v_1$  and  $v_2$.
+\item
+Consider migration of zero-offset data  $P(x,y,t)$  recorded
+in an area of the earth's surface plane.
+Assume a computer with a random access memory (RAM)
+large enough to hold several planes (any orientation) from the data volume.
+(The entire volume resides in slow memory devices).
+Define a migration algorithm by means of a program sketch
+(such as in IEI section 1.3).
+Your method should allow velocity to vary with depth.
+\end{exer}
+\section{THE ACOUSTIC WAVE EQUATION}
+\par
+The acoustic wave equation describes sound waves in a liquid or gas.
+Another more complicated set of equations describes elastic waves in solids.
+Begin with the acoustic case.
+Define          
+  %% PLACE HOLDER
+\vbox{
+\begin{tabbing}
+$\rho$\hspace{.2in} \= =\hspace{.2in} \= mass per unit 
+volume of the fluid             \\
+$u$\hspace{.2in}    \> =\ \> velocity flow of fluid in the 
+$x$-direction                   \\
+$w$\hspace{.2in}    \> =\hspace{.2in} \> velocity flow of 
+fluid in the $z$-direction      \\
+$P$\hspace{.2in}    \> =\hspace{.2in} \> pressure in the
+ fluid
+\end{tabbing}
+}
+\noindent
+Newton's law of momentum conservation says that a small volume within a
+gas will accelerate if there is an applied force.
+The force arises from pressure differences at opposite sides of
+the small volume.
+Newton's law says
+$$
+\ \rm{mass} \  \times \  \rm{acceleration}\ \ =\ \ 
+                                \rm{force}\ \ =\ \ -\ \rm{pressure\ gradient}
+$$
+\begin{eqnarray}
+\rho\ {\partial u \over \partial t } \ \ \ &=&\ \ \ 
+                                - \  { \partial P   \over  \partial x }
+\label{eqn:acoustic3a}
+\\
+\rho \  { \partial w   \over  \partial t } \ \ \ &=&\ \ \ 
+                                -\  { \partial P   \over  \partial z } 
+\nonumber
+%\EQNLABEL{acoustic3b}
+\end{eqnarray}
+\par
+The second physical process is energy storage by compression and volume change.
+If the velocity vector  $u$  at  $ x \ +\  \Delta x $
+exceeds that at  $x$,  then
+the flow is said to be diverging.
+In other words, the
+small volume between  $x$  and  $ x \ +\  \Delta x $  is expanding.
+This expansion must lead to a pressure drop.
+The amount of the pressure drop is in proportion to a property of the fluid
+called its 
+{\em  incompressibility}  
+$K$.
+In one dimension the equation is
+%.ne 1i
+\begin{equation}
+\ \rm{pressure\ drop} \ \ =\ \   \ \rm{(incompressibility)} \  \times \ 
+                                 \ \rm{(divergence\ of\ velocity)}
+\end{equation}
+\begin{equation}
+-\  {\partial P   \over  \partial t } \ \ \  = \ \ \ 
+         K \  { \partial u   \over  \partial x }
+\label{eqn:acoustic4a}
+\end{equation}
+In two dimensions it is
+\begin{equation}
+-\ { \partial P   \over  \partial t } \eq
+K \  \left( { \partial u   \over  \partial x } \ +\ 
+{ \partial w   \over  \partial z }
+ \right)
+\label{eqn:acoustic4b}
+\end{equation}
+To arrive at the one-dimensional wave equation from
+(\ref{eqn:acoustic3a}) and (\ref{eqn:acoustic4a}),
+first divide (\ref{eqn:acoustic3a}) by $ \rho $ and
+take its  $x$-derivative:
+\begin{equation}
+{\partial\ \over \partial x }\ {\partial \ \over  \partial t } \ \  u \ \  =
+\ \  -\  {\partial \   \over  \partial x }
+\  {1 \over \rho }\  { \partial P  \over  \partial x }
+\label{eqn:acoustic5}
+\end{equation}
+Second, take the time-derivatives of (\ref{eqn:acoustic4a}) and (\ref{eqn:acoustic4b}).
+In the  solid-earth sciences we are fortunate
+that the material in question does not change during our experiments.
+This means that  $K$  is a constant function of time:
+\begin{equation}
+{ \partial^2 P   \over  \partial t^2 } \eq
+-\ K\  { \partial \   \over  \partial t } \  { \partial \   
+\over  \partial x } \  u
+\label{eqn:acoustic6}
+\end{equation}
+Inserting (\ref{eqn:acoustic5}) into (\ref{eqn:acoustic6}),
+the one-dimensional scalar wave equation appears.
+\begin{equation}
+{ \partial^2 P   \over  \partial t^2 } \eq K \ 
+{ \partial    \  \over \partial x } \ 
+{1 \over \rho }\  { \partial P   \over  \partial x }
+%\EQNLABEL{acoustic7a}
+\nonumber
+\end{equation}
+In two space dimensions, the exact, acoustic scalar wave equation is
+\begin{equation}
+{ \partial^2 P   \over  \partial t^2 } \eq
+K \  \left( { \partial \   \over  \partial x } \  {1 \over \rho }\ 
+{ \partial \   \over  \partial x }
+\ +\  { \partial \   \over  \partial z } \  {1 \over \rho }\ 
+{ \partial \   \over  \partial z } \  \right) P
+\label{eqn:acoustic7b}
+\end{equation}
+You will often see the scalar wave equation in a simplified form,
+in which it is assumed that  $\rho$  is
+not a function of  $x$  and  $z$.
+Two reasons are often given for this approximation.
+First, observations are practically unable to determine density,
+so density may as well be taken as constant.
+Second, we will soon see that
+Fourier methods of solution do not work for space variable coefficients.
+Before examining the validity of the smooth-density approximation,
+its consequences will be examined.
+It immediately reduces (\ref{eqn:acoustic7b}) to the usual form
+of the scalar wave equation:
+\begin{equation}
+\begin{tabular}{|c|} \hline
+\\   $ \displaystyle {\strut \partial^2 P\over\partial t^2}
+\ =\ \displaystyle {\strut K\over\rho}\ 
+\left( \displaystyle  {\strut \partial^2 \over\partial x^2}
+\ +\ \displaystyle {\strut \partial^2 \over\partial z^2}
+\right)\ P $  \\    \\    \hline
+\end{tabular}
+\label{eqn:acoustic8}
+\end{equation}
+\par
+To see that this equation is a restatement of
+the geometrical concepts of previous sections,
+insert the trial solution
+\begin{equation}
+P \eq \exp ( -\,i \omega t \ +\  i\,k_x x \ +\  i\,k_z z )
+\label{eqn:acoustic9}
+\end{equation}
+What is obtained is the
+{\em 
+dispersion relation of the two-dimensional scalar wave equation:
+}
+\begin{equation}
+{ \omega^2   \over  K / \rho } \eq k_x^2 \ +\  k_z^2
+\label{eqn:acoustic10}
+\end{equation}
+In chapter~\ref{paper:dwnc} equation~(\ref{eqn:wavedisp})
+we found an equation like (\ref{eqn:acoustic10})
+by considering only the geometrical behavior of waves.
+In equation~(\ref{eqn:wavedisp})
+the wave velocity squared is found
+where $ K / \rho $ stands in equation (\ref{eqn:acoustic10}).
+Thus physics and geometry are reconciled by the association
+\begin{equation}
+v^2 \eq {K \over \rho }
+%\EQNLABEL{acoustic11}
+\nonumber
+\end{equation}
+\par
+Last, let us see why Fourier methods fail when the velocity is
+space variable.
+Assume that  $\omega$, $k_x$,  and  $k_z$  are constant functions
+of space.
+Substitute (\ref{eqn:acoustic9}) into (\ref{eqn:acoustic8})
+and you get the contradiction that
+$\omega$, $k_x$,  and  $k_z$  must be space variable
+if the velocity is space variable.
+Try again assuming space variability,
+and the resulting equation is still a differential equation,
+not an algebraic equation like (\ref{eqn:acoustic10}).
+\subsection{Reflections and the high-frequency limit}
+\par
+It is well known that the contact between two different materials can cause
+acoustic reflections.
+A material contact is defined to be a
+place where either  $K$  or  $ \rho $  changes
+by a spatial step function.
+In one dimension
+either  $ \partial K / \partial x $  or  $ \partial \rho / \partial x $  or
+both would be infinite at a point,
+and we know that
+either can cause a reflection.
+So it is perhaps a little surprising that while 
+the density derivative is explicitly
+found in (\ref{eqn:acoustic7b}), the incompressibility derivative is not.
+This means that dropping the density gradients in (\ref{eqn:acoustic7b})
+will not eliminate all possible reflections.
+Dropping the terms will slightly simplify further analysis,
+however, and
+since constant density is a reasonable case, the terms are often dropped.
+\par
+There are also some well-known mathematical circumstances under which the
+first-order terms may be ignored.
+Fix your attention on a wave going in any particular direction.
+Then  $ \omega $, $ k_x$, and  $ k_z $  have
+some prescribed ratio.
+In the limiting case that frequency goes to infinity,
+the $P_{tt}$, $P_{xx}$, and $P_{zz}$ terms in (\ref{eqn:acoustic8})
+all tend to the 
+{\em  second}
+power of infinity.
+Suppose two media gradually blend into one another so
+that  $ \partial \rho / \partial x $  is less than infinity.
+The terms neglected in going from (\ref{eqn:acoustic7b}) to (\ref{eqn:acoustic8}) are
+of the form  $\rho_x \, P_x$  and  $\rho_z \, P_z$.
+As frequency tends to infinity, these terms only tend to the
+{\em  first}
+power of infinity.
+Thus, in that limit they can be neglected.
+\par
+These terms are usually included in theoretical seismology
+where the goal is to calculate synthetic seismograms.
+But where the goal is to create earth models from seismic field data---as
+in this book---these terms are generally neglected.
+Earth imaging is more difficult than calculating synthetic seismograms.
+But often the reason for neglecting the terms is simply to reduce the clutter.
+These terms may be neglected for the same reason
+that equations are often written in two dimensions instead of three:
+the extension is usually possible but not often required.
+Further,
+these terms are often ignored to facilitate Fourier solution techniques.
+Practical situations might arise for which these terms need to be included.
+With the finite-difference method (IEI section 2.2),
+they are not difficult to include.
+But any effort to include them in data processing
+should also take into account other factors of similar significance,
+such as the assumption
+that the acoustic equation approximates the elastic world.
+\begin{exer}
+\item
+Soil is typically saturated with water below a certain depth,
+which is known as the
+{\em 
+water table.
+}
+Experience with hammer-seismograph systems shows that
+seismic velocity typically jumps up
+to water velocity ($V_{{} -2 { H_2 O}}\,=$ $ 1500 \ m/s$)
+at the water table.
+Say that in a certain location, the ground roll is observed to
+be greater than the reflected waves,
+so a decision has been made to bury geophones.
+The troublesome ground roll is observed to
+travel at six-tenths the speed of a water wave.
+How deep must the geophones be buried below the water table to attenuate
+the ground roll by a factor of ten?
+Assume the data contains all frequencies from 10 to 100 Hz.
+(Hints: $\ln 10 \approx 2$, $2 \pi \approx 6$, etc.)
+\item
+Consider the function
+\begin{equation}
+P ( z , t ) \ \  = \ \ 
+P_0 \  {1 \over  \sqrt { Y ( z ) } } \ 
+e^{ i \, \omega \, t\  - \  i \,  \int_0^z \ 
+\omega \, \sqrt { { \rho ( \xi )   \over  K ( \xi ) } } \  d \xi }
+\label{eqn:acousticE1}
+\end{equation}
+where
+\begin{eqnarray*}
+P_0 \ \ & = &\ \  \hbox{constant} \\
+Y \ \ & \equiv &\ \  {1 \over  \sqrt { \rho ( z ) \, K ( z ) } }
+\end{eqnarray*}
+as a trial solution for the one-dimensional
+wave equation:
+\begin{equation}
+\left( \ { \partial^2   \over  \partial t^2 } \  - \ 
+{ K ( z )   \over  \rho ( z ) }
+\  { \partial^2   \over  \partial z^2 } \  \right) P \ \  = \ \ 
+- \  { K ( z )   \over  { \rho ( z ) }^2 } \ 
+{ \partial \rho   \over  \partial z } \  { \partial P   \over  \partial z }
+\label{eqn:acousticE2}
+\end{equation}
+Substitute the trial solution (\ref{eqn:acousticE1})
+into the wave equation  (\ref{eqn:acousticE2}).
+Discuss the trade-off between changes
+in material properties and the validity of your
+solution for different wavelengths.
+\end{exer}
+}
+
+                                                                        
+
+
+
+
+
+
+

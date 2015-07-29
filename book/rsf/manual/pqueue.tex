@@ -1,0 +1,190 @@
+\section{Priority queue (heap sorting) (pqueue.c)}
+
+
+
+
+\subsection{{sf\_pqueue\_init}}
+Initializes the heap with the maximum size given in the input.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_pqueue_init (n);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_pqueue_init (int n)
+/*< Initialize heap with the maximum size >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[n] maximum size of the heap (\texttt{int}).  
+\end{desclist}
+
+
+
+
+\subsection{{sf\_pqueue\_start}}
+Sets the starting values for the queue.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_pqueue_start ();\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_pqueue_start (void)
+/*< Set starting values >*/
+{
+   ...
+}
+\end{verbatim}
+
+
+
+
+\subsection{{sf\_pqueue\_close}}
+Frees the space allocated by \texttt{sf\_pqueue\_init}.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_pqueue_close();\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_pqueue_close (void)
+/*< Free the allocated storage >*/
+{
+   ...
+}
+\end{verbatim}
+
+
+
+
+\subsection{{sf\_pqueue\_insert}}
+Inserts an element in the queue. The smallest element goes first.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_pqueue_insert (v);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_pqueue_insert (float* v)
+/*< Insert an element (smallest first) >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[v] element to be inserted, smallest first (\texttt{float*}).  
+\end{desclist}
+
+
+
+
+\subsection{{sf\_pqueue\_insert2}}
+Inserts an element in the queue. The largest element goes first.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_pqueue_insert2 (v);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_pqueue_insert2 (float* v)
+/*< Insert an element (largest first) >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[v] element to be inserted, largest first (\texttt{float*}).  
+\end{desclist}
+
+
+
+
+\subsection{{sf\_pqueue\_extract}}
+Extracts the smallest element from the list.
+
+\subsubsection*{Call}
+\begin{verbatim}v = sf_pqueue_extract();\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+float* sf_pqueue_extract (void)
+/*< Extract the smallest element >*/
+{
+    unsigned int c;
+    int n;
+   ...
+    return v;
+}
+\end{verbatim}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[v] the extracted smallest element (\texttt{float*}).  
+\end{desclist}
+
+
+
+
+\subsection{{sf\_pqueue\_extract2}}
+Extracts the largest element from the list.
+
+\subsubsection*{Call}
+\begin{verbatim}v = sf_pqueue_extract2();\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+float* sf_pqueue_extract2 (void)
+/*< Extract the largest element >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[v] the extracted largest element (\texttt{float*}).  
+\end{desclist}
+
+
+
+
+
+\subsection{{sf\_pqueue\_update}}
+Updates the heap.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_pqueue_update (v);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_pqueue_update (float **v)
+/*< restore the heap: the value has been altered >*/ 
+{
+   ... 
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[v] elements to be inserted, largest first (\texttt{float**}).  
+\end{desclist}
+
+
+
+
+

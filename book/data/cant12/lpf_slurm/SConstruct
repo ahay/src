@@ -1,0 +1,51 @@
+from rsf.proj import *
+
+shots='../shot/shot.rsf'
+multiples='../srme/multiple.rsf'
+
+lpf='lpf match=${SOURCES[1]} pred=${TARGETS[1]} rect1=50 rect2=50 niter=100'
+
+#lpf='lpf match=${SOURCES[1]} pred=${TARGETS[1]} rect1=10 rect2=50 niter=100'
+
+
+n2=120
+for i in range (n2):
+    mult='mult_%03d'%i
+    Flow(mult,multiples,'window n2=1 f2=%d| pow pow1=2'%(i))
+    shifts = [mult]
+    for s in range(1,11):
+        shift = 'shift_%dn%d' %(i, s)
+        Flow(shift,mult,'window f1=%d | pad end1=%d' % (s,s))
+        shifts.append(shift)
+        shift = 'shift_%dp%d' %(i,s)
+        Flow(shift,mult,'window n1=%d | pad beg1=%d' % (3000-s,s))
+        shifts.append(shift)
+    Flow('shifts%03d'%i,shifts,'cat ${SOURCES[1:%d]}' % len(shifts))
+    #print("shifts=",shifts)
+    Flow('junk_%03d'%i,shifts+['shifts%03d'%i], 
+         'rm ${SOURCES[1:%d]}' % len(shifts), stdout=-1,stdin=0)
+
+    Flow('offset_%03d'%i,shots,'window n2=1 f2=%d | pow pow1=2'%(i))
+    Flow(['flt_%03d'%i,'pre_%03d'%i],['shifts%03d'%i, 'offset_%03d'%i, 'junk_%03d'%i],lpf)
+
+# Let us now do the subtraction
+offsets=[]
+preds=[]
+for i in range (n2):
+    shift='shifts%03d'%i
+    offset='offset_%03d'%i
+    demul='demul_%03d'%i
+    flt='flt_%03d'%i
+    pre='pre_%03d'%i
+    Flow(demul,[offset, pre],'add scale=1,-1 ${SOURCES[1]} | transp plane=23')
+    offsets.append(demul)
+    preds.append(pre)
+    #Flow('j1unk%03d'%i,[demul, offset],'rm ${SOURCES[1]}',stdout=-1,stdin=0)
+
+Flow('demultiple',offsets,'cat ${SOURCES[1:%d]} axis=2' % len(offsets) )
+Flow('pred',preds,'cat ${SOURCES[1:%d]} axis=3 ' % len(preds) )
+
+Flow('cmp','demultiple','shot2cmp half=n positive=n')
+
+End()
+

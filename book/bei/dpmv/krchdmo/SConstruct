@@ -1,0 +1,50 @@
+from rsf.proj import *
+
+Fetch(['midpts.hh','beifit.HH'],'midpts')
+
+Flow('midpts','midpts.hh','dd form=native | mutter half=n v0=1.4')
+Flow('beifit','beifit.HH','dd form=native')
+
+Flow('nmo','midpts','nmostretch v0=2 half=n mute=12 maxstr=0.5')
+Flow('ndmo','nmo','transp plane=23 | dmo velhalf=1 half=n | transp plane=23')
+Flow('dmo','ndmo','nmostretch v0=2 half=n inv=y mute=12 maxstr=0.5')
+
+def vscan(title):
+    return '''
+    window f3=174 n3=1 |
+    vscan v0=%g nv=100 dv=%g half=n slowness=y |
+    grey title="%s"
+    ''' % (1/2.8,(1/1.7-1/2.8)/99,title)
+
+Plot('nmoscan','midpts',vscan('Slowness scan'))
+Plot('dmoscan','dmo',vscan('Slowness scan after DMO'))
+Result('velscan','nmoscan dmoscan','SideBySideAniso')
+
+vel = {
+    'slower': 1.7,
+    'medium': 1.9,
+    'faster': 2.2
+    }
+
+for input in ('midpts','dmo'):
+    subset = input+'_subset'
+    Flow(subset,input,'window min1=0.8 max1=2.4')
+    for case in vel.keys(): 
+        stack = input + case
+        Flow(stack,subset,'nmostretch v0=%g half=n | stack' % vel[case])
+        Plot(stack,'grey title="Stack at %s velocity" ' % case)
+
+Result('cvstacks','midptsfaster midptsslower','OverUnderAniso')
+Result('cvdmostks','dmofaster dmomedium dmoslower','OverUnderAniso')
+
+Flow('wgstack','dmo beifit',
+     'nmo velocity=${SOURCES[1]} slowness=y half=n | stack')
+Result('wgdmostk','wgstack','grey title="DMO Stack" ')
+
+Flow('wgdmomig','wgstack beifit','kirchnew velocity=${SOURCES[1]}')
+Result('wgdmomig','agc | grey title="Migrated DMO Stack" ')
+
+Result('wgdmomig2','wgdmomig','shapeagc | grey title="Migrated DMO Stack" ')
+
+
+End()

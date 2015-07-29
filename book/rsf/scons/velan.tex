@@ -1,0 +1,131 @@
+\title{Revisiting Velocity Analysis Demo from SU \\ with RSF and SCons}
+
+\email{sergey.fomel@beg.utexas.edu}
+
+\author{Sergey Fomel}
+
+\righthead{Velocity Analysis Demo}
+
+\lefthead{Fomel}
+
+\maketitle
+
+\begin{abstract}
+In this guide, we will reproduce the velocity analysis demo from
+Seismic Unix in order to demonstrate several RSF programs and 
+some general features of working with RSF and SCons:
+\begin{itemize}
+  \item Operating with regular and irregular files
+  \item Using different plotting programs
+  \item Combining figures
+  \item Using functions and loops in SCons
+\end{itemize}
+and more.
+\end{abstract}
+
+\section{Introduction}
+
+Seismic Unix (SU) is a package maintained by John Stockwell at the
+Center for Wave Phenomenon at the Colorado School of Mines
+\cite[]{TLE16-07-10451049,su}\footnote{SU is available at
+\url{http://timna.mines.edu/cwpcodes/}.}. In this guide, we will
+reproduce the demo found in
+\texttt{/src/demos/Velocity\_Analysis/Traditional} directory in the SU
+distribution. Step by step instructions will familiarize you with RSF
+tools and working with Scons.
+
+\definecolor{frame}{rgb}{0.905,0.905,0.905}
+\lstset{language=Python,backgroundcolor=\color{frame},showstringspaces=false,numbers=left,numberstyle=\tiny}
+
+\inputdir{rsf}
+
+\section{Setting up}
+
+A complete listing of the \texttt{SConstruct} file used in this guide
+is given in the appendix. Please take a quick look at it before
+proceeding further to get an idea of its general structure. We will
+examine the file in more detail in the next sections. If you have a
+working RSF installation, you should be able to reproduce all results
+from this paper by simply copying the \texttt{SConstruct} file to any
+directory on your system and running \texttt{scons} there. The file is
+available on the web at...
+
+Notice three basic commands reccuring in the \texttt{SConstruct} file:
+\begin{description}
+\item[\texttt{Flow(target,source,command)}] defines how the
+  \texttt{target} file is build from the \texttt{source} file using the
+  \texttt{command}. Note that the \texttt{Flow} command does not
+  execute anything. It just sets a rule for the file creation. The
+  rule is executed when you run \texttt{scons target.rsf} or build
+  another target that has \texttt{target.rsf} in its dependencies.
+\item[\texttt{Plot(target,source,command)}] is a version of
+  \texttt{Flow} used for creating figures. The output of \texttt{Plot}
+  is a vplot figure \texttt{target.vpl} rather than an RSF file.
+  \texttt{Plot} is also used to combine several figures into one.
+\item[\texttt{Result(target,source,command)}] is similar to
+  \texttt{Plot}, only the output figure is considered a repreoducible
+  result and placed in a special directory (\texttt{./Fig} by
+  default). Executing the rule specified in \texttt{Result} typically
+  results in a file \texttt{Fig/target.vpl}
+\end{description}
+
+Several default rules are set up for convenience of working with
+\texttt{SCons}.
+\begin{description}
+\item[scons] blah
+\item[scons view] blah
+\item[scons lock] blah
+\item[scons test] blah
+\end{description}
+
+\section{Synthetic data modeling}
+
+\plot{modl}{width=\textwidth}{rsf/modl} \clearpage
+\plot{modl2}{width=\textwidth}{rsf/modl2} \clearpage
+\plot{data}{width=\textwidth}{rsf/data} \clearpage
+
+\section{Processing individual common midpoint gathers}
+
+\plot{cdp1500}{width=\textwidth}{rsf/cdp1500} \clearpage
+\plot{cdp2000}{width=\textwidth}{rsf/cdp2000} \clearpage
+\plot{cdp2500}{width=\textwidth}{rsf/cdp2500} \clearpage
+\plot{cdp3000}{width=\textwidth}{rsf/cdp3000} \clearpage
+\plot{cdp3500}{width=\textwidth}{rsf/cdp3500} \clearpage
+
+\section{Processing the complete dataset}
+
+\plot{pick}{width=\textwidth}{rsf/pick} \clearpage
+\plot{stack}{width=\textwidth}{rsf/stack} \clearpage
+
+\section{Conclusions}
+
+This tour is not designed as a comprehensive manual. It simply gives a
+glimpse into working in a reproducible research environment with RSF
+and SCons. The reader is encouraged to experiment with the
+\texttt{SConstruct} file attached to this tour and included in the
+Appendix. For other documentation on RSF, please see
+\begin{itemize}
+\item \href{http://www.reproducibility.org/RSF/book/rsf/rsf/tour_html/}{Introduction to RSF}  
+\item  \href{http://www.reproducibility.org/RSF/book/rsf/rsf/install_html/}{Installation instructions}
+\item \href{http://www.reproducibility.org/RSF/}{Self-documentation reference for RSF programs}
+\item A \href{http://www.reproducibility.org/RSF/book/rsf/rsf/prog_html/}{guide to RSF programs}
+\item A \href{http://www.reproducibility.org/RSF/book/rsf/rsf/format_html/}
+  {guide to RSF file format}
+\item A \href{http://www.reproducibility.org/RSF/book/rsf/rsf/api_html/}{guide to
+    RSF programming interface}
+\item A \href{http://www.reproducibility.org/RSF/book/rsf/rsf/demo_html/}{guide to programming with RSF}
+\item A \href{http://www.reproducibility.org/RSF/book/rsf/rsf/tour_html/}{tour of RSF software}
+\item A
+  \href{http://www.reproducibility.org/RSF/book/rsf/scons/paper_html/}{guide
+    to SCons interface for reproducible computations}
+\end{itemize}
+
+\bibliographystyle{seg}
+\bibliography{intro,SEG}
+
+\append{SConstruct file}
+
+Here is a complete listing of the \texttt{SConstruct} file used in this
+example.
+
+\lstinputlisting[frame=single]{rsf/SConstruct}

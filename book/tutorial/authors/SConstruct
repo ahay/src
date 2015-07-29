@@ -1,0 +1,5 @@
+from rsf.tex import *
+
+Paper('intro',use='hyperref,comment,verbatim,moreverb,tabularx,listings')
+
+End(options='short',use='hyperref,comment,verbatim,moreverb,tabularx,listings')

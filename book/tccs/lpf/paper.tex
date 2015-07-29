@@ -1,0 +1,482 @@
+\published{Geophysics, 74, no. 1, V25-V33, (2009)}
+\title{Adaptive multiple subtraction using regularized nonstationary regression}
+
+\author{Sergey Fomel}
+
+\ms{GEO-2008-0262}
+
+\address{Bureau of Economic Geology \\
+John A. and Katherine G. Jackson School of Geosciences \\
+The University of Texas at Austin \\
+University Station, Box X \\
+Austin, TX 78713-8924}
+
+\lefthead{Fomel}
+\righthead{Adaptive multiple suppression}
+
+\maketitle
+
+\begin{abstract}
+  Stationary regression is the backbone of different seismic data
+  processing algorithms including match filtering, which is commonly
+  applied for adaptive multiple subtraction. However, the assumption
+  of stationarity is not always adequate for describing seismic
+  signals. I present a general method of nonstationary regression and
+  show its application to nonstationary match filtering. The key idea
+  is the use of shaping regularization for constraining the
+  variability of nonstationary regression coefficients. 
+
+As shown by simple computational experiments, shaping regularization
+has clear advantages over conventional Tikhonov's regularization,
+incuding a more intuitive selection of parameters and a faster
+iterative convergence.
+
+Using benchmark synthetic data examples, I demonstrate successful
+  applications of this method to the problem of adaptive subtraction
+  of multiple reflections.
+\end{abstract}
+
+\section{Introduction}
+Many natural phenomena, including geological events and geophysical
+data, are fundamentally nonstationary. They may exhibit stationarity
+on the short scale but eventually change their behavior in space and
+time. Nonstationary adaptive filtering is a well-developed field in
+signal processing \cite[]{haykin}. In seismic signal processing,
+nonstationary filters were analyzed by \cite{GEO63-01-02440259} and
+applied to many important problems, including multiple suppression
+\cite[]{EAE-2001-P167}, data interpolation
+\cite[]{SEG-1999-11541157,SEG-2003-19131916}, migration deconvolution
+\cite[]{GEO69-04-10171024,alejandro}.
+
+In this paper, I present a general approach to designing nonstationary
+operators, including the case of nonstationary matching and
+prediction-error filters. The key idea is the application of shaping
+regularization \cite[]{shape} for constraining the continuity and
+smoothness of the filter coefficients. Regularization makes the
+estimation problem well-posed and leads to fast numerical
+algorithms. Advantages of shaping regularization in comparison with
+the classic Tikhonov regularization include an easier control of the
+regularization parameters and a faster iterative convergence resulting
+from the better conditioning of the inverted matrix.
+
+Adaptive subtraction is a method for matching and removing coherent
+noise, such as multiple reflections, after their prediction by a
+data-driven technique \cite[]{GEO57-09-11661177}. Adaptive subtraction
+involves a matching filter to compensate for the amplitude, phase, and
+frequency distortions in the predicted noise model. Different
+techniques for matching filtering and adaptive subtraction have been developed and discussed by a number of authors
+\cite[]{GEO57-09-11661177,GPR41-06-07250736,TLE18-01-00550058,TLE22-04-03400343,GEO68-01-03460354,GPR52-01-00270038,TLE24-03-02820284,TLE24-03-02770280,denisov}. The
+regularized non-stationary regression technique, proposed in this
+paper, allows the matching filter to become smoothly nonstationary
+without the need to break the input data into local windows.
+
+The paper is organized as follows. I start with an overview of
+stationary and nonstationary regression theory and introduce a method
+of regularized nonstationary regression. Next, I demonstrate this
+method using toy examples of line fitting and nonstationary
+deconvolution. Finally, I apply it to the adaptive multiple
+suppression problem and test its performance using a number of
+benchmark synthetic data examples.
+
+\section{Stationary and nonstationary regression}
+Consider a ``master'' signal $m(\mathbf{x})$, where $\mathbf{x}$
+represents the coordinates of a multidimensional space, and a
+collection of ``slave'' signals $s_k(\mathbf{x})$, $k=1,2,\ldots,N$.
+The goal of stationary regression is to estimate coefficients $a_k$,
+$k=1,2,\ldots,N$ such that the prediction error
+\begin{equation}
+  \label{eq:pred}
+  e(\mathbf{x}) = m(\mathbf{x}) - \displaystyle \sum_{k=1}^{N} a_k\,s_k(\mathbf{x})
+\end{equation}
+is minimized in the least-squares sense. Particular examples include:
+
+\subsubsection{Line fitting} 
+Let $\mathbf{x}$ be one-dimensional (denoted by $x$), $N=2$,
+$s_1(x)=1$, and $s_2(x)=x$. The problem of minimizing $e(x)$ amounts
+to fitting a straight line $a_1 + a_2\,x$ to the master signal.
+
+\subsubsection{Match filtering}
+If the slave signals are translates of the same signal
+$s(\mathbf{x})$, the regression problem corresponds to the problem of
+match filtering between $s(\mathbf{x})$ and $m(\mathbf{x})$. In the
+1-D case, one can take, for example, 
+\[
+s_k(x)=s(x-k+N/2)\;,
+\] which turns the sum in equation~\ref{eq:pred} into a convolution
+with an unknown matching filter.
+
+\subsubsection{Prediction-error filtering}
+If the slave signals are causal translates of the master signal, the
+regression problem corresponds to the problem of autoregressive
+prediction-error filtering.  In the 1-D case, one can take, for
+example, 
+\[
+s_k(x) = m(x-k)\;.
+\]
+
+\subsection{Nonstationary regression}
+Non-stationary regression uses a definition similar to
+equation~\ref{eq:pred} but allows the coefficients $a_k$ to change
+with $\mathbf{x}$. The error turns into
+\begin{equation}
+  \label{eq:pred2}
+  e(\mathbf{x}) = m(\mathbf{x}) - 
+  \sum_{k=1}^{N} b_k(\mathbf{x})\,s_k(\mathbf{x})\;,
+\end{equation}
+and the problem of its minimization becomes ill-posed, because one can
+get more unknown variables than constraints. The remedy is to include
+additional constraints that limit the allowed variability of the
+estimated coefficients.
+
+The classic regularization method is Tikhonov's regularization
+\cite[]{tikhonov,engl}, which amounts to minimization of the following
+functional:
+\begin{equation}
+  \label{eq:tikh}
+  F[\mathbf{b}] = \|e(\mathbf{x})\|^2 + 
+  \epsilon^2\,\sum_{k=1}^{N} \|\mathbf{D}\left[b_k(\mathbf{x})\right]\|^2\;,
+\end{equation}
+where $\mathbf{D}$ is the regularization operator (such as the
+gradient or Laplacian filter) and $\epsilon$ is a scalar
+regularization parameter. If $\mathbf{D}$ is a linear operator,
+least-squares estimation reduces to linear inversion
+\begin{equation}
+  \label{eq:inv}
+  \mathbf{b} = \mathbf{A}^{-1}\,\mathbf{d}\;,
+\end{equation}
+where $\mathbf{b} = \left[\begin{array}{cccc}b_1(\mathbf{x}) & b_2(\mathbf{x}) & \cdots & b_N(\mathbf{x})\end{array}\right]^T$, \\
+$\mathbf{d} = \left[\begin{array}{cccc}s_1(\mathbf{x})\,m(\mathbf{x}) & s_2(\mathbf{x})\,m(\mathbf{x}) & \cdots & s_N(\mathbf{x})\,m(\mathbf{x})\end{array}\right]^T$,
+and the elements of matrix $\mathbf{A}$ are
+\begin{equation}
+  \label{eq:aij}
+  A_{ij}(\mathbf{x}) = s_i(\mathbf{x})\,s_j(\mathbf{x}) + \epsilon^2\,\delta_{ij}\,\mathbf{D}^T\,\mathbf{D}\;.
+\end{equation}
+
+Shaping regularization \cite[]{shape} formulates the problem
+differently. Instead of specifying a penalty (roughening) operator
+$\mathbf{D}$, one specifies a shaping (smoothing) operator $\mathbf{S}$.
+The regularized inversion takes the form
+\begin{equation}
+  \label{eq:rinv}
+  \mathbf{b} = \widehat{\mathbf{A}}^{-1}\,\widehat{\mathbf{d}}\;,
+\end{equation}
+where 
+\[
+\widehat{\mathbf{d}} = \left[\begin{array}{cccc}\mathbf{S}\left[s_1(\mathbf{x})\,m(\mathbf{x})\right] & 
+\mathbf{S}\left[s_2(\mathbf{x})\,m(\mathbf{x})\right] & \cdots & 
+\mathbf{S}\left[s_N(\mathbf{x})\,m(\mathbf{x})\right]\end{array}\right]^T\;,
+\]
+the elements of matrix $\widehat{\mathbf{A}}$ are
+\begin{equation}
+  \label{eq:raij}
+  \widehat{A}_{ij}(\mathbf{x}) = \lambda^2\,\delta_{ij} + 
+  \mathbf{S}\left[s_i(\mathbf{x})\,s_j(\mathbf{x}) - 
+    \lambda^2\,\delta_{ij}\right]\;,
+\end{equation}
+and $\lambda$ is a scaling coefficient.The main advantage of this
+approach is the relative ease of controlling the selection of
+$\lambda$ and $\mathbf{S}$ in comparison with $\epsilon$ and
+$\mathbf{D}$.  In all examples of this paper, I define~$\mathbf{S}$ as
+Gaussian smoothing with an adjustable radius and choose $\lambda$ to
+be the median value of $s_i(\mathbf{x})$. As demonstrated in the next
+section, matrix $\widehat{\mathbf{A}}$ is typically much better
+conditioned than matrix $\mathbf{A}$, which leads to fast inversion
+with iterative algorithms.
+
+In the case of $N=1$ (regularized division of two signals), a similar
+construction was applied before to define local seismic
+attributes \cite[]{attr}.
+
+\section{Toy examples}
+
+In this section, I illustrate the general method of regularized
+nonstationary regression using simple examples of nonstationary line
+fitting and nonstationary deconvolution.
+
+\subsection{Nonstationary line fitting}
+\inputdir{regr}
+
+Figure~\ref{fig:pred,pred2}a shows a classic example of linear regression
+applied as a line fitting problem. When the same technique is applied
+to data with a non-stationary behavior (Figure~\ref{fig:pred,pred2}b),
+stationary regression fails to produce an accurate fit and creates
+regions of consistent overprediction and underprediction.
+
+\multiplot{2}{pred,pred2}{width=0.45\textwidth} {Line fitting with
+  stationary regression works well for stationary data (a) but poorly
+  for non-stationary data (b).}
+
+One remedy is to extend the model by including nonlinear terms
+(Figure~\ref{fig:pred3,pred4}a), another is to break the data into local
+windows (Figure~\ref{fig:pred3,pred4}b). Both solutions work to a certain
+extent but are not completely satisfactory, because they decreases the
+estimation stability and introduce additional non-intuitive
+parameters.
+
+\multiplot{2}{pred3,pred4}{width=0.45\textwidth}
+{Nonstationary line fitting using nonlinear terms (a) and local windows (b).}
+
+The regularized nonstationary solution, defined in the previous
+section, is shown in Figure~\ref{fig:pred5}. When using shaping
+regularization with smoothing as the shaping operator, the only
+additional parameter is the radius of the smoothing operator.
+
+\plot{pred5}{width=0.45\textwidth}{Nonstationary line fitting by
+  regularized nonstationary regression.}
+
+This toy example makes it easy to compare shaping regularization with
+the more traditional Tikhonov's
+regularization. Figures~\ref{fig:tmat0,teig0}
+and~\ref{fig:tmat2,teig2} show inverted matrix $\mathbf{A}$ from
+equation~\ref{eq:aij} and the distribution of its eigenvalues for two
+different values of Tikhonov's regularization parameter~$\epsilon$,
+which correspond to mild and strong smoothing constraints. The
+operator $\mathbf{D}$ in this case is the first-order
+difference. Correspondingly, Figures~\ref{fig:smat0,seig0}
+and~\ref{fig:smat1,seig1} show matrix $\widehat{\mathbf{A}}$ from
+equation~\ref{eq:raij} and the distribution of its eigenvalues for
+mild and moderate smoothing implemented with shaping. The operator
+$\mathbf{S}$ is Gaussian smoothing controlled by the 
+smoothing radius.  
+
+When a matrix operator is inverted by an iterative method such as
+conjugate gradients, two characteristics control the number of
+iterations and therefore the cost of inversion \cite[]{golub,vorst}:
+\begin{enumerate}
+\item the condition number $\kappa$ (the ratio between the largest and the smallest eigenvalue)
+\item the clustering of eigenvalues.
+\end{enumerate}
+Large condition numbers and poor clustering lead to slow convergence.
+Figures~\ref{fig:tmat0,teig0}--\ref{fig:smat1,seig1} demonstrate that
+both the condition number and the clustering of eigenvalues are
+significantly better in the case of shaping regularization than in the
+case of Tikhonov's regularization. In toy problems, this difference in
+behavior is not critical, because one can easily invert both matrices
+exactly. However, this difference becomes important in large-scale
+applications, where inversion is iterative and saving the number
+of iterations is crucial for performance.
+
+As the smoothing radius increases, matrix $\widehat{\mathbf{A}}$
+approaches the identity matrix, and the result of non-stationary
+regression regularized by shaping approaches the result of stationary
+regression. This intuitively pleasing behavior is difficult to emulate
+with Tikhonov's regularization.
+
+\multiplot{2}{tmat0,teig0}{width=0.45\textwidth}{Matrix inverted in Tikhonov's regularization applied to nonstationary line fitting (a) and the distribution of its eigenvalues (b). The regularization parameter $\epsilon=0.1$ corresponds to mild smoothing. The condition number is $\kappa \approx 888888$.}
+\multiplot{2}{tmat2,teig2}{width=0.45\textwidth}{Matrix inverted in Tikhonov's regularization applied to nonstationary line fitting (a) and the distribution of its eigenvalues (b). The regularization parameter $\epsilon=10$ corresponds to strong smoothing. The condition number is $\kappa \approx 14073$. Eigenvalues are poorly clustered.}
+
+\multiplot{2}{smat0,seig0}{width=0.45\textwidth}{Matrix inverted in shaping regularization applied to nonstationary line fitting (a) and the distribution of its eigenvalues (b). The smoothing radius is 3 samples (mild smoothing). The condition number is $\kappa \approx 6055$.}
+\multiplot{2}{smat1,seig1}{width=0.45\textwidth}{Matrix inverted in shaping regularization applied to nonstationary line fitting (a) and the distribution of its eigenvalues (b). The smoothing radius is 15 samples (moderate smoothing). The condition number is $\kappa \approx 206$. Eigenvalues are well clustered.}
+
+\subsection{Nonstationary deconvolution}
+\inputdir{lpf}
+
+\plot{lpf}{width=\columnwidth}{Benchmark test of nonstationary
+  deconvolution from \cite{gee}. Top: input signal, bottom:
+  deconvolved signal using nonstationary regularized regression.}
+
+Figure~\ref{fig:lpf} shows an application of regularized nonstationary
+regression to a benchmark deconvolution test from \cite{gee}. The
+input signal is a synthetic trace that contains events with variable
+frequencies. A prediction-error filter is estimated by setting $N=2$,
+$s_1(x)=m(x-1)$ and $s_2(x)=m(x-2)$. I use triangle smoothing with a
+5-sample radius as the shaping operator $\mathbf{S}$. The deconvolved
+signal (bottom plot in Figure~\ref{fig:lpf}) shows the nonstationary
+reverberations correctly deconvolved.
+
+\plot{freq}{width=\columnwidth}{Frequency of different components in the input synthetic signal from Figure~\ref{fig:lpf} (solid line) and the local frequency estimate from non-stationary deconvolution (dashed line).}
+
+A three-point prediction-error filter $\{1,a_1,a_2\}$ can predict an
+attenuating sinusoidal signal 
+\begin{equation}
+\label{eq:cos}
+m(x) = \rho^x\,cos(\omega\,x)\;,
+\end{equation}
+where $\omega$ is frequency, and $\rho$ is the exponent factor,
+provided that the filter coefficients are defined as
+\begin{eqnarray}
+\label{eq:p1}
+a_1 & = & -2\,\rho\,\cos(\omega)\;; \\
+\label{eq:p2}
+a_2 & = & \rho^2\;.
+\end{eqnarray}
+This fact follows from the simple identity
+\begin{eqnarray}
+\nonumber
+m(x)+a_1\,m(x-1)+a_2\,m(x-2)  & = & \\ 
+\rho^x\,\left[\cos(\omega\,x)-2\,\cos(\omega)\,\cos(\omega\,x-\omega)+\cos(\omega\,x-2\,\omega)\right] & = & 0\;.
+\end{eqnarray}
+
+According to equations~\ref{eq:p1}--\ref{eq:p2}, one can get an
+estimate of the local frequency $\omega(x)$ from the non-stationary
+coefficients $b_1(x)=-a_1(x)$ and $b_2(x)=-a_2(x)$ as follows:
+\begin{equation}
+\label{eq:ifreq}
+\omega(x) = \arccos\left(\frac{b_1(x)}{2\,\sqrt{-b_2(x)}}\right)\;.
+\end{equation}
+Figure~\ref{fig:freq} shows frequency of the different components in
+the input non-stationary signal from Figure~\ref{fig:lpf} and the
+local frequency estimate using equation~\ref{eq:ifreq}.  A reasonably
+accurate match between the true nonstationary frequencies and their
+estimate from nonstationary regression can be observed.  The local
+frequency attribute
+\cite[]{attr} provides a different approach to the same problem.
+
+\section{Adaptive multiple subtraction}
+
+In this section, I apply regularized nonstationary regression to the
+problem of adaptive subtraction and evaluate its performance using
+benchmark synthetic tests. 
+
+One possible variation of non-stationary regression applied to
+adaptive subtraction is an introduction of the signal prediction
+filter \cite[]{TLE18-01-00550058}. The signal prediction applies to
+the residual error $e(\mathbf{x})$ in equation~\ref{eq:pred2}, thus
+modifying the objective function \cite[]{GEO70-04-V97V107}.
+
+\subsection{Abma test}
+\inputdir{ray}
+
+\cite{TLE24-03-02770280} present a comparison of different adaptive
+subtraction algorithms used for multiple suppression. I use Abma's
+benchmark examples to illustrate an application of nonstationary
+regression to the adaptive subtraction problem.
+Figure~\ref{fig:planes} shows the first test: the input data
+(Figure~\ref{fig:planes}a) contain a horizontal ``signal'' event and
+dipping ``noise'' events. We are provided with a model of the noise
+(Figure~\ref{fig:planes}b). However, the model events are slightly
+shifted and have a different amplitude behavior. This test simulates a
+typical situation in adaptive surface-related multiple elimination,
+where there are phase and amplitude distortions in the multiple model,
+caused by an imperfect prediction. To handle the variability in noise
+amplitudes, I design a non-stationary matching filter with 13
+coefficients and 3-sample smoothing radius and apply it to match the
+noise model to the data. Subtracting matched noise
+(Figure~\ref{fig:planes}d) produces the desired and nearly perfect
+signal estimate (Figure~\ref{fig:planes}c). The variability of filter
+coefficients is illustrated in Figure~\ref{fig:filt}, which displays
+the zero-lag coefficient and the mean coefficient of the
+non-stationary matching filter.
+
+\plot{planes}{width=0.9\columnwidth}{Benchmark test on
+  adaptive subtraction from \cite{TLE24-03-02770280}. a -- Input
+  synthetic data. b -- Model of the noise containing amplitude and
+  phase differences with respect to the corresponding part of the
+  data. c -- Extracted signal. d -- Estimated noise. }
+
+\plot{filt}{width=0.9\columnwidth}{Variability of non-stationary match 
+filter coefficients for the example shown in Figure~\ref{fig:planes}.
+a -- Zero-lag coefficient. b -- Mean coefficient.}
+
+\plot{curves}{width=0.9\columnwidth}{Benchmark test on adaptive
+  subtraction from \cite{TLE24-03-02770280}. a -- Input synthetic
+  data. b -- Model of the noise containing amplitude and phase
+  differences with respect to the corresponding part of the data. c --
+  Extracted signal. d -- Estimated noise. }
+
+\plot{dfilt}{width=0.9\columnwidth}{Variability of non-stationary
+  match filter coefficients for the example shown in
+  Figure~\ref{fig:curves}.  a -- Zero-lag coefficient. b -- Mean
+  coefficient.}
+
+Another benchmark from \cite{TLE24-03-02770280} is shown in
+Figure~\ref{fig:curves}. This time, the noise part of the data is a
+curved event which has a predictive model (Figure~\ref{fig:curves}b)
+with some amplitude and phase differences. Non-stationary regularized
+regression correctly predicts the noise signal
+(Figure~\ref{fig:curves}d) using match filtering and produces an
+accurate signal estimate (Figure~\ref{fig:curves}c). The variability
+of non-stationary filter coefficients is shown in
+Figure~\ref{fig:dfilt}.
+
+\subsection{Spitz test}
+
+\inputdir{simon}
+
+\plot{simon}{width=\textwidth}{Benchmark test on multiple attenuation
+  from \cite{simon}. a -- Input synthetic data containing a signal
+  (primary reflection) and noise (multiple reflection) events. b --
+  Model of the noise  containing phase differences with
+  respect to the corresponding part of the data. c -- Extracted
+  signal. d -- Estimated noise. }
+
+The next benchmark example (Figure~\ref{fig:simon}) reproduces a test
+created by \cite{simon}, which simulates a seismic gather after
+migration or normal moveout correction. The signal (primary
+reflection) event is horizontal while the noise (multiple reflection)
+event exhibits curvature and overlaps with the signal at small offsets
+(Figure~\ref{fig:simon}a). Multiple prediction
+(Figure~\ref{fig:simon}b) contains a curved event but with incorrect
+curvature. As in the previous examples, non-stationary regularized
+regression correctly predicts the noise signal
+(Figure~\ref{fig:simon}d) using match filtering and produces an
+accurate signal estimate (Figure~\ref{fig:simon}c).
+
+\subsection{Pluto test}
+
+\inputdir{plut}
+
+\multiplot{2}{ref,sig}{width=0.7\textwidth}{Adaptive multiple
+  subtraction in the Pluto synthetic dataset. (a) Input data. (b)
+  Extracted Signal. Surface-related multiples are successfully
+  subtracted.}
+
+\multiplot{2}{mod,pre}{width=0.7\textwidth}{Multiple model from
+  surface-related prediction (a) and estimated multiples (b) for the
+  Pluto synthetic dataset.}
+ 
+\multiplot{2}{zero,csum}{width=0.7\textwidth}{Variability of
+  non-stationary match filter coefficients for the Pluto test. (a)
+  Zero-lag coefficient. (b) Mean coefficient.}
+
+Finally, Figure~\ref{fig:ref,sig} shows an application of the
+nonstationary matching technique to the Pluto synthetic dataset, a
+well-known benchmark for adaptive multiple subtraction. Matching and
+subtracting an imperfect model of the multiples created by the
+surface-related multiple elimination approach of
+\cite{GEO57-09-11661177} leaves a clean estimate of primary
+reflections.  Figure~\ref{fig:mod,pre} shows a comparison between the
+multiple model obtained by surface-related prediction and the multiple
+model generated by nonstationary matching. The matching filter
+non-stationarity is depicted in Figure~\ref{fig:zero,csum}, which
+shows the variability of filter coefficients with time and space.
+
+\section{Conclusions}
+
+I have presented a general method for regularized nonstationary
+regression. The key idea is the application of shaping regularization
+for constraining the variability of nonstationary
+coefficients. Shaping regularization has clear advantages over
+conventional Tikhonov's regularization: a more intuitive selection of
+regularization parameters and a faster iterative convergence because
+of better conditioning and eigenvalue clustering of the inverted matrix.
+
+I have shown examples of applying regularized regression to benchmark
+tests of adaptive multiple subtraction. When the signal
+characteristics change with time or space, regularized nonstationary
+regression provides an effective description of the signal. This
+approach does not require breaking the input data into local windows,
+although it is analogous conceptually to sliding (maximum overlap)
+spatial-temporal windows.
+
+\section{Acknowledgments}
+
+I thank StatoilHydro for a partial financial support of this work. I
+would like also to thank Dave Hale, Long Jin, Dmitry Lokshtanov, and
+Gary Sitton for inspiring discussions and Ray Abma for providing
+benchmark datasets for adaptive subtraction. The Pluto synthetic was
+generated by the SMAART consortium.
+
+This publication is authorized by the Director, Bureau of Economic
+Geology, The University of Texas at Austin.
+
+%\section{Note on reproducibility}
+
+%All computational experiments described in this paper can be
+%reproduced using the \emph{Madagascar} open-source software package
+%available at \url{http://rsf.sourceforge.net}.
+
+\bibliographystyle{seg}
+\bibliography{SEG,lpf}
+
+

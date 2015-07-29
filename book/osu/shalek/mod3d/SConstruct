@@ -1,0 +1,89 @@
+########################################################################
+from rsf.proj import *
+import rsf.recipes.fdmod as fdmod
+
+# ------------------------------------------------------------
+par = {
+    'nx':151, 'ox':0, 'dx':0.002,  'lx':'x', 'ux':'km',
+    'ny':151, 'oy':0, 'dy':0.002,  'ly':'y', 'uy':'km',
+    'nz':151, 'oz':0, 'dz':0.002,  'lz':'z', 'uz':'km',
+    'nt':601, 'ot':0, 'dt':0.0002, 'lt':'t', 'ut':'s',
+    'kt':100,
+    'jsnap':100,
+    'height':10,
+    'nb':20,
+    'frq':45,
+    'nbell':5
+    }
+fdmod.param(par)
+par['nframe']=5
+par['iframe']=4
+par['dabc']='y'
+
+# ------------------------------------------------------------
+# Thomsen parameters
+par['vp']=2.0
+par['vs']=1.0
+par['ro']=2.0
+
+# ------------------------------------------------------------
+par['kz']=2./3.*par['nz']
+
+# ------------------------------------------------------------
+fdmod.wavelet('wav_',par['frq'],par)
+# ------------------------------------------------------------
+# acoustic source
+Flow(  'wava','wav_','transp')
+Result('wava','transp |' + fdmod.waveplot('',par))
+
+# ------------------------------------------------------------
+# source/receiver coordinates
+# ------------------------------------------------------------
+
+xsou=par['ox']+(par['nx']/2*par['dx']);
+ysou=par['oy']+(par['ny']/2*par['dy']);
+zsou=par['oz']+(par['nz']/2*par['dz']);
+
+center=fdmod.center3d(1.1*xsou,1.1*ysou,1.1*zsou,par)
+
+fdmod.point3d('ss-3d',xsou,ysou,zsou,par)
+fdmod.horizontal3d('tt-3d',0,par)
+Flow('rr-3d','tt-3d','put n2=%(nx)d n3=%(ny)d |'%par
+     +'put n2=%d n3=1' %(par['nx']*par['ny']))
+
+# ------------------------------------------------------------
+Flow('zero-3d',None,
+     '''
+     spike nsp=1 mag=0.0
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g 
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g 
+     n3=%(ny)d o3=%(oy)g d3=%(dy)g |
+     put label1=%(lz)s label2=%(lx)s label3=%(ly)s unit1=%(uz)s unit2=%(ux)s unit3=%(uy)s
+     ''' % par)
+
+# ------------------------------------------------------------
+
+Flow('vp-3d','zero-3d','math output="%(vp)g"' %par)
+Flow('vs-3d','zero-3d','math output="%(vs)g"' %par)
+Flow('ro-3d','zero-3d','math output="%(ro)g"' %par)
+Result('vp-3d','byte gainpanel=all| ' + fdmod.cgrey3d('allpos=y bias=2.0'+center,par))
+Result('vs-3d','byte gainpanel=all| ' + fdmod.cgrey3d('allpos=y bias=1.0'+center,par))
+Result('ro-3d','byte gainpanel=all| ' + fdmod.cgrey3d('allpos=y bias=2.0'+center,par))
+
+# -------------------------------------------------------------
+# 3D acoustic modeling
+fdmod.awefd3d('da-3d','wa-3d','wava','vp-3d','ro-3d','ss-3d','rr-3d','',par)
+Result('wa-3d','window n4=1 f4=%(iframe)d | byte gainpanel=all | '%par
+       + fdmod.cgrey3d('pclip=99.9'+center,par))
+Result('da-3d',
+       '''
+       put
+       n1=%(nx)d o1=%(ox)g d1=%(dx)g
+       n2=%(ny)d o2=%(oy)g d2=%(dy)g
+       n3=%(nt)d o3=%(ot)g d3=%(dt)g |
+       transp plane=23 |
+       transp plane=12 |     
+       ''' % par
+       + fdmod.dgrey3d('pclip=99.9'+center+' frame1=%d' % (0.65*par['nt']) ,par))
+
+End()

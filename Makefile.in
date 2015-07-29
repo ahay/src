@@ -1,0 +1,15 @@
+
+all:
+	$(SCONS)
+
+install:
+	$(SCONS) install
+
+clean:
+	$(SCONS) -c
+	rm .sconsign*
+
+distclean:
+	$(SCONS) -c install
+	rm -r .sconsign* build
+

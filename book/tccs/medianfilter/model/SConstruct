@@ -1,0 +1,96 @@
+from rsf.proj import *
+from rsf.recipes.beg import server as private
+
+Fetch('model0.dat','bgp',private)
+
+# Convert to RSF Model
+Flow('model','model0.dat',
+     '''
+     echo in=$SOURCE n1=1500 n2=160 data_format=native_float | 
+     put d1=0.002 o1=0 d2=0.05 o2=0
+     ''',stdin=0)
+Result('model',
+       '''
+       wiggle transp=y yreverse=y color=n wanttitle=n 
+       clip=0.05 wherexlabel=top parallel2=n n2tic=20 labelfat=3 gridfat=3
+       label1="\F-1 Time" label2="\F-1 Distance" unit1="\F-1 s" unit2="\F-1 km"
+       ''' )
+
+# Amplitude spectra of 80th trace in model
+Flow('smodel','model','window n2=1 j2=80 | spectra')
+Result('smodel',
+       '''
+       graph color=n wanttitle=n parallel2=n n2tic=10 labelfat=3 
+       gridfat=3 label2=Amplitude label1=Frequency unit2= unit1=Hz
+       ''')
+
+# Add saltpepper white noise
+Flow('noise0','model','transp | saltpepper seed=122009 den=5 inten=2 | transp')
+Result('noise0',
+       '''
+       wiggle transp=y yreverse=y color=n wanttitle=n 
+       clip=0.05 wherexlabel=top parallel2=n n2tic=20 labelfat=3 gridfat=3
+       label1=Time label2=Distance unit1=s unit2=km
+       ''' )
+
+# Amplitude spectra of 80th trace in model
+Flow('snoise0','noise0','window n2=1 j2=80 | spectra')
+Result('snoise0',
+       '''
+       graph color=n wanttitle=n parallel2=n n2tic=10 labelfat=3 gridfat=3 
+       label2=Amplitude label1=Frequency unit2= unit1=Hz
+       ''')
+
+# Add saltpepper color noise ()
+Flow('noise1','model',
+     'transp | saltpepper den=5 inten=2 seed=2009 | transp | bandpass fhi=100')
+Result('noise1',
+       '''
+       wiggle transp=y yreverse=y color=n wanttitle=n
+       clip=0.05 wherexlabel=top parallel2=n n2tic=20 labelfat=3 gridfat=3
+       label1=Time label2=Distance unit1=s unit2=km
+       ''' )
+
+# Amplitude spectra of 80th trace in noisy model
+Flow('snoise1','noise1','window n2=1 j2=80 | spectra')
+Result('snoise1',
+       '''
+       graph color=n wanttitle=n parallel2=n n2tic=20 labelfat=3 gridfat=3 
+       label2=Amplitude label1=Frequency unit2= unit1=Hz
+       ''')
+
+# Apply Filters to white noise    
+Flow('w11tvmf','noise0','tvmf nfw=11 | bandpass flo=5')
+Result('w11tvmf',
+       '''
+       wiggle transp=y yreverse=y color=n wanttitle=n 
+       clip=0.05 wherexlabel=top parallel2=n n2tic=20 labelfat=3 gridfat=3
+       label1=Time label2=Distance unit1=s unit2=km
+       ''' )
+
+# Apply Filters to color noise
+Flow('c11mf','noise1','mf nfw=11 | bandpass flo=5')
+Result('c11mf',
+       '''
+       wiggle transp=y yreverse=y color=n wanttitle=n 
+       clip=0.05 wherexlabel=top parallel2=n n2tic=20 labelfat=3 gridfat=3
+       label1=Time label2=Distance unit1=s unit2=km
+       ''' )
+
+Flow('cb11tvmf','noise1','tvmf nfw=11 | bandpass flo=5 | bandpass fhi=110')
+Result('cb11tvmf',
+       '''
+       wiggle transp=y yreverse=y color=n wanttitle=n
+       clip=0.05 wherexlabel=top parallel2=n n2tic=20 labelfat=3 gridfat=3
+       label1=Time label2=Distance unit1=s unit2=km
+       ''')
+
+# Amplitude spectra of 80th trace in model
+Flow('scb11tvmf','cb11tvmf','window n2=1 j2=80 | spectra')
+Result('scb11tvmf',
+       '''
+       graph color=n wanttitle=n parallel2=n n2tic=20 labelfat=3 gridfat=3 
+       label2=Amplitude label1=Frequency unit2= unit1=Hz
+       ''')
+
+End()

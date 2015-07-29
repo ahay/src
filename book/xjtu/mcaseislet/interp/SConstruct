@@ -1,0 +1,51 @@
+from rsf.proj import *
+
+Fetch('sean.HH','bp')
+
+def grey(title):
+    return 'grey title="%s" label2="Trace no." label1="Time (s)" labelsz=15 titlesz=18 labelfat=10 titlefat=10' % title
+
+Flow('sean','sean.HH',
+     'dd form=native | window n3=1 f3=3 n1=500 | bandpass fhi=50')
+Plot('sean',grey('(a) Original')) 
+     
+# Pad to a power of 2
+Flow('sean1','sean','pad n2=256')
+
+# Randomly remove 30% of traces
+Flow('mask','sean',
+     '''
+     window n1=1 | noise type=n seed=2014 rep=y mean=0.5 |
+     mask max=0.5 | pad n1=256 |
+     spray axis=1 n=500 | dd type=float
+     ''')
+Flow('sean2','sean1 mask','mul ${SOURCES[1]}')
+Plot('sean2','window n2=180 | %s' % grey('(b) Missing'))
+
+#================================================================================
+Flow('ppq','sean2 mask','twodip2 mask=${SOURCES[1]} order=2 eps=10 lam=15 verb=y gauss=n niter=10 | pad n2=256')
+Flow('dip1','ppq','window n3=1')
+Flow('dip2','ppq','window f3=1')
+Plot('dip1','window n2=180 |%s pclip=100 scalebar=y color=j' % grey('First Dip'))
+Plot('dip2','window n2=180 |%s pclip=100 scalebar=y color=j' % grey('Second Dip'))
+Result('dips','dip1 dip2','SideBySideIso')
+
+# Seislet-based MCA inpainting 1st:
+Flow('rec0','sean2 ppq mask',
+     '''
+     mcaseislet dips=${SOURCES[1]} mask=${SOURCES[2]}
+     verb=y order=2 type=b eps=0.01 niter=10 pclip=3 pscale=50 
+     ''')
+Flow('rec1','rec0','window n3=1')
+Flow('rec2','rec0','window f3=1')
+Flow('rec','rec1 rec2','add scale=1,1 ${SOURCES[1]}')
+
+Plot('rec1','window n2=180 |%s' %grey('(c) Rec1'))
+Plot('rec2','window n2=180 |%s' %grey('(d) Rec2'))
+Plot('rec','window n2=180  |%s' %grey('(e) Interpolated'))
+
+Result('interp','sean sean2 rec1 rec2 rec','SideBySideAniso')
+
+#
+End()
+

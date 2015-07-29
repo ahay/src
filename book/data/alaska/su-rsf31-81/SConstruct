@@ -1,0 +1,77 @@
+import rsf.proj as rsf
+import rsf.suproj as su
+
+def cat_su_rsf_diff(out,sufile,rsffile):
+    rsf.Flow(out+"temp",   [sufile,rsffile],
+            '''
+	    segyread su=y endian=y tfile=t${TARGETS}.rsf
+            | add scale=-1,1 ${SOURCES[1]}
+            ''')
+    rsf.Flow(out,[sufile,rsffile,out+"temp"],
+             '''
+             segyread su=y endian=y tfile=t${TARGETS}.rsf
+             | cat ${SOURCES[1]} ${SOURCES[2]} axis=2
+	     ''')
+
+segyread = '''
+segyread bfile=${TARGETS[1]} hfile=${TARGETS[2]}
+tape=$SOURCE endian=%d |
+segyclean
+''' % (1-su.little_endian())
+
+rawsegy=['L23535','L23536','L23537']
+for file in rawsegy  :
+    rsf.Flow([file,'t'+file,file+'.bin',file+'.asc'],
+         '../line31-81/'+file+'.SGY',
+         'segyread tfile=${TARGETS[1]} bfile=${TARGETS[2]} hfile=${TARGETS[3]}')
+
+rsf.Flow('line' ,rawsegy,'cat ${SOURCES[1:3]} axis=2')
+rsf.Flow('tline',map(lambda x: 't'+x, rawsegy),'cat ${SOURCES[1:3]} axis=2') 
+
+rsf.Flow('linewind','line','window n2=3000')
+
+su.Flow('sulinewind','../line31-81/line.su','suwind count=3000')
+
+#Use a function to compute the difference and cat the su, rsf, diff data 
+cat_su_rsf_diff('linewind_rsf_minus_su','sulinewind.su','linewind')
+rsf.Result('linewind_rsf_minus_su',
+           '''
+	   grey pclip=80 title="su rsf diff" label2="no processing"
+	   ''')
+
+# Form mask to window out misfires
+rsf.Flow('shotmask','tline',
+     '''
+     window n1=1 f1=2 | mask min=157 max=157 |
+     add add=-1 | add scale=-1
+     ''')
+
+# Window out misfires, test shots and auxiliary traces;
+# define shot and offset dimensions
+rsf.Flow('shotline_before',['line','shotmask'],
+     '''
+     headerwindow mask=${SOURCES[1]} |
+     put n2=101 n3=67 | window n2=96 f3=10 |
+     put o2=-5225 d2=110 label2=Offset unit2=ft
+         o3=0 d3=440 label3=Shot unit3=ft
+     ''')
+
+rsf.Result('shotline_before',
+           '''
+	   grey pclip=20 title="shotline from rsf" label2="no processing"
+	   ''')
+
+# zero shot at x=21560ft by splitting data into 3 pieces, multiple center 
+# part by 0 and merging three pieces.
+
+rsf.Result('shotline',
+           '''
+	   grey pclip=20 title="shotline from rsf" label2="no processing"
+	   ''')
+
+
+
+# compare the function for spreading in Madagascar and su
+# 
+su.End()
+rsf.End()

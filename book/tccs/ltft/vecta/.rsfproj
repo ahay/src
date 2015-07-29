@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfgraph', 'sfsegyread', 'sfwindow', 'sfscale', 'sfput', 'sfcmplx', 'sflinefit', 'sfmath', 'sfspray', 'sfsmoothder', 'sfwarp1', 'sfadd', 'sfcat', 'sfdots', 'sfltft', 'sftransp', 'sfreal', 'sfgrey', 'sfricker', 'sffreshape', 'sfwarpscan', 'sfpick', 'sfwarpadd', 'sfrm', 'sfiphase', 'sfspectra', 'sfbyte', 'sfgrey3', 'sfpad', 'sfstack', 'sfinterleave', 'sfwiggle', 'sfsimilarity', 'sfspline', 'sfdeblur', 'sfbox']
+data=['PRIVATE', 'PRIVATE']
+size= 20098254924

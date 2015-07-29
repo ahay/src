@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfwindow', 'sfgrey']
+data=['data/imgs/mona.img']
+size=    1050624

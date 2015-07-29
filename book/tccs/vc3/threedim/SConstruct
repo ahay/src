@@ -1,0 +1,203 @@
+from rsf.proj import *
+import math
+
+
+##################################################
+## Velocity Model
+
+
+# V_fast
+v_background=3.5
+
+
+# Angle between V_fast and x1 axes
+angle_deg=105
+
+
+# Percent anisotropy (1-V_slow/V_fast)*100
+vfvs_perc_aniso=7
+
+
+vf=v_background
+vs=vf-((vfvs_perc_aniso/100.0)*vf)
+wf=1.0/(vf*vf)
+ws=1.0/(vs*vs)
+
+#print vf
+#print vs
+
+deg2rad=math.pi/180.0
+angle_rad=(angle_deg)*deg2rad
+c=math.cos(angle_rad)
+s=math.sin(angle_rad)
+
+
+w1m=wf*c*c+ws*s*s
+w12m=(wf-ws)*(s*c)
+w2m=wf*s*s+ws*c*c
+
+## Or just set the W's manually:
+## w1m=1.0/4.0
+## w12m=0.02
+## w2m=1.0/8.41
+
+#print w1m
+#print w12m
+#print w2m
+
+Flow('w1',None,'spike n1=501 n2=101 n3=101 mag=%g d2=0.1 d3=0.1' % (w1m))
+Flow('w2','w1','math output=%g'% (w2m))
+Flow('w12','w1','math output=%g'% (w12m))
+
+
+##################################################
+## Diffractor Coordinates and Amplitudes
+
+Flow('t',None,'spike n1=500 | noise rep=y seed=122009 type=n mean=1 range=1')
+Flow('x','t','noise rep=y seed=12200 type=n mean=2.5 range=5.0')
+Flow('y','t','noise rep=y seed=1220 type=n mean=2.5 range=5.0')
+Flow('a','t','noise rep=y seed=122')
+
+Flow('spikes','t x y a','cat axis=2 ${SOURCES[1:4]} | transp')
+
+Flow('t1','t','window n1=1 | math output="1.0"')
+Flow('x1','x','window n1=1 | math output="5.0"')
+Flow('y1','y','window n1=1 | math output="5.0"')
+Flow('a1','a','window n1=1 | math output="1.0"')
+Flow('spike','t1 x1 y1 a1','cat axis=2 ${SOURCES[1:4]} | transp')
+
+
+##################################################
+## Diffraction Modelling
+
+Flow('diffs','w1 w2 w12 spike',
+     'diffraction freq=10 w2=${SOURCES[1]} w12=${SOURCES[2]} spikes=${SOURCES[3]}')
+Plot('diffs',
+     '''
+     byte gainpanel=all |
+     grey3 frame1=400 frame2=50 frame3=50
+     label2="x\_1\^" label3="x\_2\^"
+     title="a) Diffraction" pclip=99
+     ''')
+Result('diffs',
+       '''
+       byte gainpanel=all |
+       grey3 frame1=400 frame2=50 frame3=50
+       label2="x\_1\^" label3="x\_2\^"
+       title=Diffraction pclip=99 flat=n
+       ''')
+##################################################
+## Velocity Continuation--Migration
+
+## t^2 Time stretch + CosFT in space + FFT in time
+
+Flow('fft','diffs','t2stretch | pad end1=1024 | fft1 | fft3 axis=2 | fft3 axis=3')
+Result('fft',
+       '''
+       real |
+       byte gainpanel=all |
+       grey3 frame1=50 frame2=50 frame3=50
+       pclip=99 grey title=FFT label2=k_x label3=k_y
+       color=j
+       ''')
+
+eps=0.0000000000001
+
+#### Migration W models:
+## Assume w1 is known from conventional velocity analysis, just for demo purposes.
+## Loop through percent anisotropy, and then angle.
+## Automated calculation of w2 and w12:
+
+inc_angle=5
+inc_aniso=.5
+
+images=[]
+foci=[]
+for j in range(21):
+    
+    # Percent anisotropy (1-V_slow/V_fast)*100
+    vfvs_perc_aniso=inc_aniso*j
+    
+    for i in range(90,179,inc_angle):
+        
+        # Angle between V_fast and x1 axes
+        angle_deg=i
+
+        wfws_perc_aniso=1.0/((1-vfvs_perc_aniso/100.0)*(1-vfvs_perc_aniso/100.0))
+
+        deg2rad=math.pi/180.0
+        angle_rad=(angle_deg)*deg2rad
+        c=math.cos(angle_rad)
+        s=math.sin(angle_rad)
+
+        w1=w1m
+        wf=w1/(c*c+s*s*wfws_perc_aniso)
+        ws=wf*wfws_perc_aniso
+
+        #w1=wf*c*c+ws*s*s
+        w12=(wf-ws)*(s*c)
+        w2=wf*s*s+ws*c*c
+#        print w1
+        ## Velocity Continuation Phase Shift
+        shift='input*exp(I*%g*(x3*x3*%g-2*x2*x3*%g+x2*x2*%g)/(16.0*((x1/2.0)+%g)*(%g*%g-%g*%g)))'%(math.pi,w1,w12,w2,eps,w12,w12,w1,w2)
+        vcfft='vcfft_%d_%d'%(i,j)
+        Flow(vcfft,'fft','math output="%s"' % (shift))
+
+        # Transform back
+        vc='vc_%d_%d'%(i,j)
+        images.append(vc)
+        Flow(vc,vcfft,'fft3 axis=3 inv=y | fft3 axis=2 inv=y | fft1 inv=y | window n1=501 | t2stretch inv=y')
+        ## Kurtosis, Varimax Norm
+        denominator='den_%d_%d'%(i,j)
+        focus='foc_%d_%d'%(i,j)
+        foci.append(focus)
+        Flow(denominator,vc,'math output="input^2" | stack axis=3 | stack axis=2 | stack axis=1 | math output="input^2" ')
+        Flow(focus,[vc, denominator],'math output="input^4" | stack axis=3 | stack axis=2 | stack axis=1 | div ${SOURCES[1]}')
+        
+Flow('focus',foci,'cat ${SOURCES[1:%d]} axis=2 | put n1=%d n2=%d d1=%g d2=%g o1=90 o2=0'%(21*18,18,21,inc_angle,inc_aniso))
+Plot('focus','window f1=1 f2=1 | grey color=j label1=Angle unit1=Degrees label2=Anisotropy unit2=Percent title="Kurtosis"')
+
+Plot('cross',None,
+     '''
+     spike n1=2 nsp=2 k1=1,2 mag=7,105 | dd type=complex |
+     graph symbol=+ plotfat=5 symbolsz=15 min1=0.25 max1=10.25 min2=93 max2=177 yreverse=y plotcol=7
+     wherexlabel=t wantaxis=n wanttitle=n
+     ''')
+
+Result('focus','focus cross','Overlay')
+
+clip=99.85
+clip2=0.5
+Plot('b','vc_105_20',
+       '''
+       byte gainpanel=all clip=%g |
+       grey3 frame1=250 frame2=50 frame3=50
+       title="b) Overmigrated" 
+       label2="x\_1\^" label3="x\_2\^"
+       '''%(clip2))
+
+Plot('d','vc_105_14',
+       '''
+       byte gainpanel=all clip=%g |
+       grey3 frame1=250 frame2=50 frame3=50
+       title="d) Correct Parameters" 
+       label2="x\_1\^" label3="x\_2\^" 
+       '''%(clip2))
+Plot('c','vc_90_0',
+       '''
+       byte gainpanel=all clip=%g |
+       grey3 frame1=250 frame2=50 frame3=50
+       title="c) Isotropic" 
+       label2="x\_1\^" label3="x\_2\^"
+       '''%(clip2))
+Result('images','diffs b c d','TwoColumns')
+## shiftold='input*exp(-I*(-10*x2*x3*%g*%g*%g+x3*x3*%g*(2*%g*%g+3*%g*%g)+x2*x2*%g*(2*%g*%g+3*%g*%g))/(4*(x1+%g)*%g*%g*(%g*%g-%g*%g)))'% (w1,w12,w2,w1,w12,w12,w1,w2,w2,w12,w12,w1,w2,eps,w1,w2,w1,w2,w12,w12)
+Result('vcdiffs','vc_105_14',
+       '''
+       byte gainpanel=all clip=%g |
+       grey3 frame1=250 frame2=50 frame3=50
+       title="Imaged Diffraction" 
+       label2="x\_1\^" label3="x\_2\^"  flat=n
+       '''%(clip2))
+
+End()

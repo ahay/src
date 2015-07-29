@@ -1,0 +1,101 @@
+from rsf.proj import *
+
+eta=0.1
+n1=751
+n2=2301
+d1=4
+d2=4
+
+Fetch('marmvel.hh','marm')
+Flow('marm','marmvel.hh','dd form=native | window j1=10 j2=10')
+Plot('marm','''
+	      window j1=1 j2=1 | grey allpos=y screenratio=.327 screenht=4.7 wanttitle=n 
+		  wantaxis=y label1='Depth (m)' label2='Lateral (m)' bias=1500 polarity=y
+	    ''')
+
+Flow('marm2','marmvel.hh','dd form=native')
+Plot('marm2','''
+	      window j1=1 j2=1 | grey allpos=y screenratio=.327 screenht=4.7 wanttitle=n 
+		  wantaxis=y label1='Depth (m)' label2='Lateral (m)' bias=1500 polarity=y
+	    ''')
+
+Flow('eta',None,'makevel v000=%g n1=%d n2=%d d1=4 d2=4 | window j1=10 j2=10' % (eta,n1,n2))
+Plot('eta','window j1=1 j2=1 | grey allpos=y screenratio=.327 screenht=4.7 wanttitle=n')
+Flow('velx','marm','math y=%s output="input*sqrt(1+2*y)"  | window j1=10 j2=10' % ('eta.rsf'))
+Plot('velx','window j1=1 j2=1 | grey allpos=y screenratio=.327 screenht=4.7 wanttitle=n')
+Result('medium','marm','SideBySideIso')
+
+Flow('marms','marm','smooth rect1=2 rect2=2')
+Flow('etas','eta','smooth rect1=1 rect2=1')
+Flow('velxs','velx','smooth rect1=2 rect2=2')
+
+eiko = 'eiko1'
+Flow(eiko,'marm','eikEta sorder=%d yshot=6700 zshot=2400 vb1=5 b2=5 eta=%s vx=%s eta=0.1 btime=n'  % (3,'eta.rsf','velx.rsf'))
+Plot(eiko,
+         '''
+         window j1=1 j2=1 |
+         contour screenratio=.327 screenht=4.7 wanttitle=n wantaxis=n dash=%d nc=50
+         ''' % (0,3)[1])
+
+Flow('eiko','marm','eikonal order=%d yshot=6700 zshot=2400 b1=5 b2=5 eta=%s vx=%s btime=n'  % (2,'eta.rsf','velx.rsf'))
+Plot('eiko',
+         '''
+         window j1=1 j2=1 |
+         contour screenratio=.327 screenht=4.7 wanttitle=n wantaxis=y  dash=%d nc=50 label1='Depth (m)' label2='Lateral (m)'
+         ''' % (0,5)[1])
+
+Flow('eiko2','marms etas velxs','wkbjTI yshot=6700 zshot=2400 b1=5 b2=5 eta=${SOURCES[1]} vx=${SOURCES[1]} btime=n')
+Plot('eiko2',
+         '''
+         window j1=1 j2=1 |
+         contour screenratio=.327 screenht=4.7 wanttitle=n wantaxis=y  nc=50 label1='Depth (m)' label2='Lateral (m)'
+         ''') 
+
+Result('marmousi','marm2 eiko eiko1 eiko2','Overlay')
+
+
+Flow('marmfoc','marm','window min2=4200 max2=9200')
+Plot('marmfoc','window j1=2 j2=2 | grey allpos=y screenratio=.327 screenht=4.7 wanttitle=n')
+
+Flow('t0','marmfoc','ScanCoef yshot=6700 zshot=2400 vb1=5 b2=5 t1=%s t2=%s btime=n'  % ('t1.rsf','t2.rsf'))
+Flow('tt','t0 t1 t2','math x=${SOURCES[1]} y=${SOURCES[2]} output="input+x*0.1+y*0.1*0.1" ')
+Plot('tt',
+         '''
+         window j1=2 j2=2 |
+         contour screenratio=.327 screenht=4.7 wanttitle=n wantaxis=n  nc=50
+         ''')
+Result('marmousi2','marmfoc tt','Overlay')
+
+Flow('t0s','t0','window max1=0')
+Flow('t1s','t1','window max1=0')
+Flow('t2s','t2','window max1=0')
+eta=0.0
+file=0
+while eta<0.5:
+  tt = 'tt%d' % file
+  ttt = 'ttt%d' % file
+  ttr = 'ttr%d' % file
+  Flow(tt,'t0s t1s t2s','math x=${SOURCES[1]} y=${SOURCES[2]} output="input+x*x*%g/(x-y*%g)" ' % (eta,eta))
+  Flow(ttt,tt,'rotate ')
+#  Flow(ttt,tt,'transp | put n1=209 o1=4200 n2=1 o2=0')
+  Flow(ttr,[tt,ttt],'math x=${SOURCES[1]}  output="input+x" ')
+  Plot(tt,
+         '''
+         graph screenratio=.55 screenht=9.7 wanttitle=n wantaxis=y max2=1.3 min2=0.9 
+	    label1='Lateral (m)' label2='Time (s)' labelsz=10
+         ''')
+  eta += 0.05
+  file += 1
+Result('moveout','tt0 tt1 tt2 tt3 tt4 tt5 tt6 tt7 tt8 tt9', 'Overlay')
+
+for i in range(3):
+  Flow('t%de' % i,'t%ds' % i,'spray axis=2 n=81 d=0.01 o=0 label=eta')
+
+Flow('tall','t0e t1e t2e','math x=${SOURCES[1]} y=${SOURCES[2]} output="input+x*x*x2/(x-y*x2)" ')
+Result('tall',
+       '''
+         grey wanttitle=n wantaxis=y bias=0.9 allpos=y transp=n color=j 
+	 label1=Lateral unit1=m label2="\F10 h" maxval=2 minval=0.9 barreverse=n scalebar=y barlabel="Time (s)"
+         ''')
+
+End()

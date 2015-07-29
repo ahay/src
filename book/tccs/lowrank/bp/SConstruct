@@ -1,0 +1,56 @@
+from rsf.proj import *
+
+Fetch('bpaitvel.hh','bpait')
+
+Flow('bpvel','bpaitvel.hh',
+     '''dd form=native | put
+     label1=Depth label2=Distance unit1=m unit2=m''')
+
+Result('bpvel','''window j1=2 j2=4 | grey  
+    color=j gainpanel=a title=BPait\ Velocity\ Model
+    scalebar=y barreverse=y allpos=y barlabel=Velocity barunit=m/s 
+    screenratio=%g screenht=4 labelsz=5 titlesz=6''' % (12.0/32.0))
+
+# subsampling
+Flow('sub','bpvel','window j1=2 j2=3 | window n2=500 f2=700')
+
+Result('sub',
+       '''
+       grey color=j scalebar=y allpos=y barreverse=y
+       title='Migration Velocity' barlabel=Velocity barunit=m/s
+       ''')
+
+nt=3201
+dt=0.001
+
+Flow('source',None,
+     '''
+     spike n1=%d d1=%g k1=100 | 
+     ricker1 frequency=15
+     '''%(nt,dt))
+
+targets = ','.join(map(lambda x: '\'${TARGETS[%d]}\'' % x, range(5)))
+
+Flow('fft','sub','fft1 | fft3 axis=2 pad=1')
+Flow('right left','sub fft',
+     'isolr2 seed=2010 npk=30 eps=0.00001 dt=%g fft=${SOURCES[1]} left=${TARGETS[1]}' % dt)
+
+Flow('refl',None,'spike n1=956 n2=500 d1=12.5 d2=37.5 o2=26250 k1=3 k2=200 | smooth rect1=2 rect2=2 repeat=3')
+
+Flow('wave','source refl left right',
+     '''
+     fftwave2 ref=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]} verb=y 
+     ''')
+
+Result('snap','wave',
+       '''
+       grey label1=Z label2=X wanttitle=n unit1=m unit2=m
+       ''')
+
+#Flow('tidx1 tidx2 tleft tmid tright','sub fft ../Matlab/isolr2.m ../Matlab/lowrank.m',
+#     WhereIs('matlab') + '''
+#     -nosplash -nojvm -r "addpath ../Matlab; isolr2('${SOURCES[0]}','${SOURCES[1]}',%g,0.00001,50,%s);quit"
+#     ''' % (5*dt,targets),stdin=0,stdout=-1)
+
+
+End()

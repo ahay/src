@@ -1,0 +1,43 @@
+#!/usr/bin/env python
+
+'''
+>>> import m8r
+>>> par = m8r.Par(["prog","a=5","b=as","a=100"])
+>>> par.int("a")
+100
+>>> par.int("c")
+>>> par.int("c",10)
+10
+>>> spike = m8r.spike(n1=10)[0]
+>>> spike.mean()
+1.0
+>>> spike2 = spike+spike
+>>> spike2.rms()
+2.0
+>>> spike3 = spike2*spike2+spike
+>>> spike3.max()
+5.0
+>>> print spike3.dot(spike2)
+100.0
+>>> spike[5]
+1.0
+>>> spike12 = m8r.spike(n1=10,n2=3)[0]
+>>> spike12.size()
+30
+>>> spike12.size(1)
+3
+>>> spike12.shape()
+(3, 10)
+>>> spike21 = spike12.reshape([10,1,3])
+>>> spike21.shape()
+(10, 1, 3)
+>>> spike1 = spike12.reshape()
+>>> spike1.shape()
+(30,)
+'''
+
+import doctest
+doctest.testmod()
+
+#>>> spike[5:7]
+#array([ 1.,  1.], dtype=float32)

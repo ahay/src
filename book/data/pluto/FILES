@@ -1,0 +1,22 @@
+-rwxr-xr-x    1 root     root     1094022346 2005-04-20 07:46 pluto.shot.hh
+-rwxr-xr-x    1 root     root     35109840 2005-04-20 07:46 int_depth_vp.sgy
+-rwxr-xr-x    1 root     root     576162400 2005-04-20 07:47 P15shots150f_endon_0ph-1stHlf.SEGY
+-rwxr-xr-x    1 root     root     576162400 2005-04-20 07:48 P15shots150f_endon_0ph-2ndHlf.SEGY
+-rwxr-xr-x    1 root     root         3067 2005-04-20 07:48 readme.txt
+-rwxr-xr-x    1 root     root       473944 2005-04-20 07:48 Pluto1.5_rc_series.gif
+-rwxr-xr-x    1 root     root        35328 2005-04-20 07:48 Pluto15_Header_Coordinates.xls
+-rwxr-xr-x    1 root     root        26112 2005-04-20 07:48 Pluto1.5Const.doc
+-rwxr-xr-x    1 root     root        22016 2005-04-20 07:48 Pluto_1.5_Acq_parameters.doc
+-rwxr-xr-x    1 root     root     40677840 2005-04-20 07:48 P15VPint_25f_padded.SEGY
+-rwxr-xr-x    1 root     root     39004355 2005-04-20 07:48 pluto.velo.hh
+-rw-r--r--    1 root     root     947523094 2005-12-13 18:55 data.H
+-rw-r--r--    1 root     root     564007299 2005-12-13 18:56 data.art.H
+-rw-r--r--    1 root     root     947536358 2005-12-13 18:57 mult.H
+-rw-r--r--    1 root     root         1983 2005-12-13 18:57 pluto-shot.H
+-rw-r--r--    1 root     root     1094021600 2005-12-13 18:59 pluto-shot.H@
+-rw-r--r--    1 root     root         2086 2005-12-13 18:59 pluto_cmps.H
+-rw-r--r--    1 root     root          146 2005-12-13 19:02 readme-antoine.txt
+-rw-r--r--    1 root     root     1340390400 2005-12-13 19:02 pluto_cmps.H@
+-rw-r--r--    1 root     root     947523393 2005-12-13 19:04 sign.H
+-rw-r--r--    1 root     root     947523699 2005-12-13 19:07 sign.imp.H
+

@@ -1,0 +1,79 @@
+from rsf.proj import *
+
+gmod = '''
+grey transp=y poly=y yreverse=y crowd=0.89
+label2="q s.km^2" label1=time unit1=s title="radon domain"
+'''
+
+wmod = '''
+wiggle transp=y poly=y yreverse=y crowd=0.89
+label2="q s.km^2" label1=time unit1=s title="radon domain"
+'''
+
+gdat = '''
+grey transp=y poly=y yreverse=y crowd=0.89
+label2="offset(km)" label1=time unit1=s title="cmp domain"
+'''
+
+Flow('mod_spike',None,
+     '''
+     spike n1=1200 n2=40 o2=-0.2 d2=0.02
+     k1=200,620,970,200,620,970
+     k2=13,13,13,38,18,15
+     mag=2,2,2,2,2,2
+     nsp=6 |
+     bandpass flo=10 fhi=30
+     ''')
+Flow('dat_spike','mod_spike','radon parab=y nx=60 ox=0 dx=0.025 adj=n')
+Plot('mod_spike',gmod + ' pclip=100')
+Plot('dat_spike',gdat)
+Result('datasynt','mod_spike dat_spike','SideBySideAniso')
+
+Flow('data','data.hh','dd form=native')
+Flow('gulf','gulf.hh','dd form=native | window min1=8 max1=13')
+
+for data in ('data','gulf'):
+    Fetch(data+'.hh','rad')
+    Plot(data,gdat)
+
+prange = {
+    'data': 'p0=-0.05 np=201 dp=0.001',
+    'gulf': 'p0=-0.02 np=101 dp=0.0004'
+}
+
+xrange = {
+    'data': 'nx=60 ox=0.275 dx=0.05',
+    'gulf': 'nx=90 ox=0.255 dx=0.1'
+    }
+
+clip = {
+    'data': 131.365,
+    'gulf': 0.903304
+    }
+
+mutter = {
+    'data': 1.8,
+    'gulf': 1
+    }
+
+gate = {
+    'data': 'min2=-0.02 max2=0.02 | pad beg2=30 n2=201',
+    'gulf': 'min2=-0.004 max2=0.004 | pad beg2=40 n2=101'
+    }
+
+Flow('rad0','dat_spike',
+	'myradon2 parab=y adj=y inv=y spk=n perc=95 ns=2 verb=y p0=-0.2 np=60 dp=0.02')
+Flow('frw0','rad0',
+        'myradon2 parab=y adj=n nx=60 ox=0 dx=0.025')
+Flow('mul0','rad0',
+        'window n2=14 | pad n2=60 | myradon2 parab=y adj=n nx=60 ox=0 dx=0.025')
+Flow('rad1','dat_spike',
+	'radon parab=y adj=y inv=y spk=n perc=95 ns=2 verb=y p0=-0.2 np=60 dp=0.02')
+
+Plot('rad0',gmod + ' pclip=100')
+Plot('rad1',gmod + ' pclip=100')
+Result('rad','rad0 rad1','SideBySideAniso')
+Result('frw0',gdat)
+Result('mul0',gdat + ' title=primaries')
+
+End()

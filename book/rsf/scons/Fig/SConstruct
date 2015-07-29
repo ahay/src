@@ -1,0 +1,12 @@
+from rsf.proj import *
+
+FTPserver = {
+    'server': 'slim.eos.ubc.ca',
+    'login':'anonymous',
+    'password':'ghennenfent@eos.ubc.ca'}
+
+logname = 'users/hegilles/'
+
+Fetch('rsf_diag.pdf',logname+'Fig',FTPserver)
+
+End()

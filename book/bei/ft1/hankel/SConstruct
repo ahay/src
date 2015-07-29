@@ -1,0 +1,6 @@
+from rsf.proj import *
+
+Flow('hankel',None,'spike k1=8 n1=32| halfint inv=y')
+Result('hankel','dots title=" " label1=" " ')
+
+End()

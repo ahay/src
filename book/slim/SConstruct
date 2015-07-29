@@ -1,0 +1,30 @@
+from rsf.book import *
+
+report = (('2008',
+           '''
+           geo2008NewInsightsPareto
+           '''),
+          ('Miscellaneous',
+           '''
+           slimUserManual
+           '''))
+
+Papers(papers=report,
+       copyr='The University of British Columbia',
+       group='Seismic Laboratory for Imaging and Modeling',
+       authors={'geo2008NewInsightsPareto': 'Gilles Hennenfent, Ewout van den Berg, Michael P. Friedlander, and Felix J. Herrmann',
+                'slimUserManual': 'Gilles Hennenfent'},
+       line='Example Report, March 2008',
+       fig=('geo2008NewInsightsPareto/pareto','plot','width=\\textwidth')
+       )
+
+# for backward compatibility with old SEGTeX versions
+newcmds = '''
+\\renewcommand{\\vector}[1]{\\ensuremath{\\mathbf{\\MakeLowercase{#1}}}}
+\\newcommand{\\half}{\\textstyle \\frac{1}{2}}
+\\newtheorem{res}{Result}
+\hyphenation{herr-mann}
+'''
+
+End(use='hyperref,fancybox,amsmath,amsfonts',include=newcmds)
+

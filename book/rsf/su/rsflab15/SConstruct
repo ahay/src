@@ -1,0 +1,61 @@
+from rsf.proj import *
+
+Fetch('seismic.segy','viking')
+
+# Convert to RSF
+Flow('seismic tseismic','seismic.segy',
+     'segyread tfile=${TARGETS[1]}')
+
+for key in ('sx','tracf'):
+    Flow(key,'tseismic',
+         'dd type=float | headermath output=%s' % key)
+
+# Shot bin
+Flow('head','sx tracf',
+     '''
+     math output="(input-3237)/25" | 
+     cat axis=1 ${SOURCES[1]} |
+     dd type=int
+     ''')
+
+# Binning
+Flow('bin0','seismic head',
+     'intbin head=${SOURCES[1]} xkey=1 ykey=0')
+
+Flow('bin','bin0',
+     '''
+     pow pow1=2 | put
+     o2=-1618.5 d2=12.5 label2=Half-Offset unit2=m
+     o3=3237    d3=25   label3=Shot        unit3=m
+     ''')
+
+# Convert to CMP
+Flow('cdps mask','bin','shot2cmp mask=${TARGETS[1]}')
+
+# Brute stack
+Flow('bstack','cdps','stack')
+stacks = ['bstack']
+
+# Constant-velocity NMO and stack
+for v in (1500,2300):
+    stack = 'stack%d' % v    
+    Flow(stack,'cdps',
+         '''
+         nmostretch mute=12 maxstr=0.5 v0=%d | 
+         stack
+         ''' % v)
+    stacks.append(stack)
+
+Flow('vel.asc',None,
+     'echo 1500 1800 2300 n1=3 d1=1 o1=0 in=$TARGET data_format=ascii_float')
+Flow('vel','vel.asc cdps',
+     'dd form=native | remap1 pattern=${SOURCES[1]} | spray axis=2 n=2143')
+
+Flow('stack','cdps vel mask',
+     'nmo velocity=${SOURCES[1]} mask=${SOURCES[2]} | stack')
+stacks.append('stack')
+
+for stack in stacks:
+    Result(stack,'grey wanttitle=n')
+
+End()

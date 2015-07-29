@@ -1,0 +1,166 @@
+from rsf.proj import *
+#import fdmod
+# Fetch Files from repository
+Fetch('bpaitvel.hh','bpait')
+# Convert Files to RSF and append header
+Flow('bpaitvel','bpaitvel.hh', '''dd form=native | put
+    label1=Depth\ Z label2=Distance\ X unit1=m unit2=m''')
+# ------------------------------------------------------------
+#par = {
+#    'nt':500, 'dt':0.001,'ot':0,     'lt':'label1=time unit1=s',
+#    'kt':100,    # wavelet delay
+#    'nx':3201, 'ox':0, 'dx':0.00762,  'lx':'label2=x unit2=km',
+#    'nz':1201, 'oz':0, 'dz':0.00762,  'lz':'label1=z unit1=km'
+#    }
+# add F-D modeling parameters
+#fdmod.param(par)
+
+# Plotting Section
+Result('bpaitvel','''window j1=4 j2=10  | grey  
+    color=j gainpanel=a title=BPait\ Velocity\ Model
+    scalebar=y barreverse=y allpos=y barlabel=Velocity barunit=m/s 
+    screenratio=%g screenht=4 labelsz=5 titlesz=6''' % (12.0/32.0))
+Flow('sub','bpaitvel','sfwindow j1=2 j2=3')
+nt=4001
+dt=0.001
+Flow('source',None,
+     '''
+     spike n1=%d d1=%g k1=100 | 
+     ricker1 frequency=15 
+     '''%(nt,dt))
+Result('source','graph  title="Source Wavelet" ')
+Flow('vel','sub','transp plane=12')
+Result('vel',
+       '''
+       window n1=500 f1=700 |
+       grey color=j scalebar=y allpos=y transp=n screenht=9 screenratio=0.588
+       wheretitle=t title='Migration Velocity' labelsz=6 titlesz=6 barlabel='m/s'
+       bartype=h
+       ''')
+
+Flow('wavffd_smsr',['source','vel'],
+     '''
+     ffd2_ps vel=${SOURCES[1]}  dt=%g nt=%d isx=900 isz=3 nbt=44 nbb=25 nbl=50  nbr=50 
+     ct=0.01 cb=0.01 cl=0.01 cr=0.01
+     '''%(dt,nt) )
+
+Plot('wavffd_smsr',
+     ''' 
+     window j3=200 n1=500 f1=700 | grey poly=y label2="Z" label1="X" title="ffd2_smsr"
+     yreverse=y transp=n gainpanel=each pclip=100
+     ''',view=1)
+Flow('wavsnap','wavffd_smsr','window n3=1 f3=3200 n1=500 f1=700')
+
+Result('wavsnap',
+      '''
+      grey poly=y label2="Depth" label1="Distance" title=" " unit1=m unit2=m
+      yreverse=y transp=n 
+      ''' )
+Flow('sourcesub','source','window j1=2')
+Flow('wavffd_dehf',['sourcesub','vel'],
+     '''
+     ffd2dehf vel=${SOURCES[1]}  dt=%g nt=%d isx=900 isz=3 nbt=44 nbb=25 nbl=50  nbr=50 
+     ct=0.01 cb=0.01 cl=0.01 cr=0.01 az=4.0 ax=4.0
+     '''%(2*dt,nt/2) )
+Flow('wavsnap_dehf','wavffd_dehf','window n3=1 f3=1600 n1=500 f1=700')
+
+Result('wavsnap_dehf',
+      '''
+      grey poly=y label2="Z" label1="X" title=" " unit1=m unit2=m
+      yreverse=y transp=n 
+      ''' )
+Plot('wavffd_dehf',
+     ''' 
+     window j3=100 n1=500 f1=700 | grey poly=y label2="Z" label1="X" title="ffd2_dehf"
+     yreverse=y transp=n gainpanel=each pclip=100
+     ''',view=1)
+Flow('wavffd_smsr2',['sourcesub','vel'],
+     '''
+     ffd2_ps vel=${SOURCES[1]}  dt=%g nt=%d isx=900 isz=3 nbt=44 nbb=25 nbl=50  nbr=50 
+     ct=0.01 cb=0.01 cl=0.01 cr=0.01
+     '''%(dt*2,nt/2) )
+
+#Result('wavffd_smsr2',
+#       ''' 
+#       window j3=200 n1=500 f1=700 | grey poly=y label2="Depth" label1="Distance" title="ffd2_smsr"
+#       yreverse=y transp=n gainpanel=each pclip=100
+#       ''' )
+Flow('wavffd_dehf2',['source','vel'],
+     '''
+     window j1=2 |
+     ffd2dehf vel=${SOURCES[1]}  dt=%g nt=%d isx=900 isz=3 nbt=44 nbb=25 nbl=50  nbr=50 
+     ct=0.01 cb=0.01 cl=0.01 cr=0.01 az=2.0 ax=2.0
+     '''%(dt*2,nt/2) )
+
+Plot('wavffd_dehf2',
+     ''' 
+     window j3=100 n1=500 f1=700 | grey poly=y label2="Z" label1="X" title="ffd2_smsr"
+     yreverse=y transp=n gainpanel=each pclip=100
+     ''',view=1)
+Flow('wavsnap_dehf2','wavffd_dehf2','window n3=1 f3=1600 n1=500 f1=700')
+
+Result('wavsnap_dehf2',
+      '''
+      grey poly=y label2="Z" label1="X" title=" " unit1=m unit2=m
+      yreverse=y transp=n 
+      ''' )
+Flow('wavffd_dehf3',['source','vel'],
+     '''
+     window j1=2 |
+     ffd2dehf vel=${SOURCES[1]}  dt=%g nt=%d isx=900 isz=3 nbt=44 nbb=25 nbl=50  nbr=50 
+     ct=0.01 cb=0.01 cl=0.01 cr=0.01 az=2.0 ax=2.0 
+     '''%(dt*2,nt/2) )
+
+Plot('wavffd_dehf3',
+     ''' 
+     window j3=100 n1=500 f1=700 | grey poly=y label2="Z" label1="X" title="ffd2_smsr"
+     yreverse=y transp=n gainpanel=each pclip=100
+     ''',view=1)
+Flow('wavsnap_dehf3','wavffd_dehf3','window n3=1 f3=1600 n1=500 f1=700')
+
+Result('wavsnap_dehf3',
+      '''
+      grey poly=y label2="Z" label1="X" title=" " unit1=m unit2=m
+      yreverse=y transp=n 
+      ''' )
+Flow('wavffd_dehf5',['source','vel'],
+     '''
+     window j1=4 |
+     ffd2dehf vel=${SOURCES[1]}  dt=%g nt=%d isx=900 isz=3 nbt=44 nbb=25 nbl=50  nbr=50 
+     ct=0.01 cb=0.01 cl=0.01 cr=0.01 az=2.0 ax=2.0 
+     '''%(dt*4,nt/4) )
+
+Plot('wavffd_dehf5',
+     ''' 
+     window j3=100 n1=500 f1=700 | grey poly=y label2="Z" label1="X" title="ffd2_smsr"
+     yreverse=y transp=n gainpanel=each pclip=100
+     ''',view=1)
+Flow('wavsnap_dehf5','wavffd_dehf5','window n3=1 f3=800 n1=500 f1=700')
+
+Result('wavsnap_dehf5',
+      '''
+      grey poly=y label2="Z" label1="X" title=" " unit1=m unit2=m
+      yreverse=y transp=n 
+      ''' )
+
+
+nt=6001
+dt=0.002
+Flow('source4',None,
+     '''
+     spike n1=%d d1=%g k1=8 | 
+     ricker1 frequency=27 | bandpass flo=0.5 
+     '''%(nt,dt))
+Flow('wavffd_dehf4',['source4','vel'],
+     '''
+     ffd2dehf vel=${SOURCES[1]}  dt=%g nt=%d isx=900 isz=3 nbt=44 nbb=25 nbl=50  nbr=50 
+     ct=0.01 cb=0.01 cl=0.01 cr=0.01 az=2.0 ax=2.0  
+     '''%(dt*2,300) )
+
+Plot('wavffd_dehf4',
+     ''' 
+     window j3=50 n1=500 f1=700 | grey poly=y label2="Z" label1="X" title="ffd2_smsr"
+     yreverse=y transp=n gainpanel=each pclip=100
+     ''',view=1)
+End()
+

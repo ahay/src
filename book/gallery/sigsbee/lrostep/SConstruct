@@ -1,0 +1,71 @@
+from rsf.proj import *
+from rsf.gallery import sigsbee
+
+sigsbee.getvel('vel','migvel')
+Result('vel','grey color=j allpos=y bias=1.5 scalebar=y barreverse=y wanttitle=n')
+
+sigsbee.getzo('zodata')
+Result('zodata','grey title="Zero Offset" ')
+
+
+# Interpolate velocity to a coarser grid
+
+Flow('xpat','zodata','window n1=1')
+Flow('vel2','vel xpat',
+     '''
+     transp | math output=1/input |
+     remap1 pattern=${SOURCES[1]} | 
+     math output=1/input 
+     ''')
+Result('vel2','grey color=j allpos=y bias=1.5 scalebar=y barreverse=y title="Migration Velocity" transp=n')
+
+# Lowrank decomposition ----- one step
+Flow('cfft','vel2','rtoc | fft3 axis=1 pad=1 | fft3 axis=2 pad=1')
+Flow('cright cleft','vel2 cfft',
+     'scale dscale=0.5 | cisolr2 seed=2012 dt=0.004 fft=${SOURCES[1]} left=${TARGETS[1]}')
+
+Flow('rzodata','zodata','spline n1=3000 o1=0 d1=0.004')
+Flow('izodata','rzodata','envelope hilb=y | scale dscale=-1')
+Flow('czodata','rzodata izodata','cmplx ${SOURCES[1]}')
+
+# Zero-offset migration
+Flow('czomig','czodata cleft cright',
+     '''
+     reverse which=1 |
+     transp |
+     wcfftexp2 mig=y timer=y
+     left=${SOURCES[1]} right=${SOURCES[2]}
+     nz=1201 dz=0.00762 | real | put unit2=km 
+     ''')
+
+sigsbee.zoimage('czomig')
+
+# High-resolution exploding-reflector sigsbee
+
+sigsbee.gethrzo('zodatah')
+sigsbee.getvel('velh','strvel')
+
+Flow('cffth','velh','transp | rtoc | fft3 axis=1 pad=1 | fft3 axis=2 pad=1')
+
+Flow('crighth clefth','velh cffth',
+     '''
+     transp | scale dscale=0.5 |
+     cisolr2 seed=2012 dt=0.001 fft=${SOURCES[1]} left=${TARGETS[1]} 
+     ''')
+
+Flow('izodatah','zodatah','envelope hilb=y | scale dscale=-1')
+Flow('czodatah','zodatah izodatah','cmplx ${SOURCES[1]}')
+
+# High-resolution zero-offset migration
+Flow('zomigh','czodatah clefth crighth',
+     '''
+     reverse which=1 |
+     transp |
+     wcfftexp2 mig=y timer=y
+     left=${SOURCES[1]} right=${SOURCES[2]}
+     nz=1201 dz=0.00762 | real | put unit2=km
+     ''')
+
+sigsbee.zoimage('zomigh')
+
+End()

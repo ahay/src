@@ -1,0 +1,350 @@
+from rsf.proj import *
+
+# Download from http://www.freeusp.org/2007_BP_Ani_Vel_Benchmark/
+tgz = 'ModelParams.tar.gz'
+
+Fetch(tgz,'BP',top=os.environ.get('DATAPATH'),server='local')
+
+pars = Split('epsilon delta vp theta')
+
+sgy = {}
+for par in pars:
+    sgy[par] = os.path.join('ModelParams',par.capitalize() + '_Model.sgy')
+
+zcat = WhereIs('gzcat') or WhereIs('zcat')
+
+Flow(sgy.values(),tgz,
+     zcat + ' $SOURCE | tar -xvf -',stdin=0,stdout=-1)
+
+for par in pars:
+    Flow([par,par+'.asc',par+'.bin'],sgy[par],
+         '''
+         segyread hfile=${TARGETS[1]} bfile=${TARGETS[2]} read=d |
+         put
+         o2=0 d2=0.00625 label2=Distance unit2=km
+         o1=0 d1=0.00625 label1=Depth unit1=km %s 
+         ''' % ('','| scale dscale=0.001')[par=='vp'])
+    Result(par,
+           '''
+           window j1=8 j2=2 |
+           grey color=j barlabel=%s scalebar=y
+           screenwd=12.595 screenht=1.8
+           labelsz=4 titlesz=5 barreverse=y
+           wanttitle=n allpos=%d bias=%g barunit=%s
+           parallel2=n transp=y
+           ''' % (par.capitalize(),
+                  par != 'theta',
+                  (0,1.5)[par=='vp'],
+                  ('','km/s')[par=='vp']))
+Flow('vx','vp epsilon',
+     '''
+     math e=${SOURCES[1]} output="input*sqrt(1+2*e)"
+     ''')
+Flow('yita','epsilon delta',
+     '''
+     math e=${SOURCES[0]} d=${SOURCES[1]} output="(e-d)/(1+2*d)"
+     ''')
+for par in ('vx','yita'):
+    Result(par,
+           '''
+           window j1=8 j2=2 |
+           grey color=j barlabel=%s scalebar=y
+           screenwd=12.595 screenht=1.8
+           labelsz=4 titlesz=6 barreverse=y
+           wanttitle=y allpos=%d bias=%g barunit=%s
+           parallel2=n transp=y title=%s
+           ''' % (par.capitalize(),
+                  par != 'theta',
+                  (0,1.5)[par=='vx'],
+                  ('','km/s')[par=='vx'],
+                  par.capitalize()))
+
+nt=2001
+dt=0.001
+Flow('source',None,
+     '''
+     spike n1=%d d1=%g k1=101 | 
+     ricker1 frequency=15 
+     '''%(nt,dt))
+Result('source','graph  title="Source Wavelet" ')
+for par in ('vp','vx','yita','theta'):
+    Flow(par+'end2',par,'window j1=2 j2=2 | window  n2=2048 f2=2759 n1=900') 
+    Plot(par+'end2',
+           '''
+           grey color=j barlabel=%s scalebar=y
+           screenwd=12.595 screenht=1.8
+           labelsz=4 titlesz=5 barreverse=y
+           wanttitle=n allpos=%d bias=%g barunit=%s
+           parallel2=y transp=y title=%s
+           ''' % (par.capitalize(),
+                  par != 'theta',
+                  (0,1.5)[par=='vp'],
+                  ('','km/s')[par=='vp'],
+                  par.capitalize()))
+
+Plot('vp2','vp',
+     '''
+     window j1=2 j2=2 | window  n2=2048 f2=2761 n1=900 |
+     grey color=j barlabel=%s scalebar=y
+     labelsz=6 titlesz=8 barreverse=y
+     wanttitle=y allpos=%d bias=%g barunit=%s
+     parallel2=n transp=y title=a
+     screenwd=15 screenht=11
+     '''
+     % ('Vp',
+     1,
+     1.5,
+     'km/s'
+     ))
+Plot('epsilon2','epsilon',
+     '''
+     window j1=2 j2=2 | window  n2=2048 f2=2761 n1=900 |
+     grey color=j barlabel=%s scalebar=y
+     labelsz=6 titlesz=8 barreverse=y
+     wanttitle=y allpos=%d bias=%g barunit=%s
+     parallel2=n transp=y title=b
+     screenwd=15 screenht=11
+     '''
+     % ('Epsilon',
+     1,
+     0,
+     ''
+     ))
+Plot('delta2','delta',
+     '''
+     window j1=2 j2=2 | window  n2=2048 f2=2761 n1=900 |
+     grey color=j barlabel=%s scalebar=y
+     labelsz=6 titlesz=8 barreverse=y
+     wanttitle=y allpos=%d bias=%g barunit=%s
+     parallel2=n transp=y title=c
+     screenwd=15 screenht=11
+     '''
+     % ('Delta',
+     1,
+     0,
+     ''
+     ))
+Plot('theta2','theta',
+     '''
+     window j1=2 j2=2 | window  n2=2048 f2=2761 n1=900 |
+     grey color=j barlabel=%s scalebar=y
+     labelsz=6 titlesz=8 barreverse=y
+     wanttitle=y allpos=%d bias=%g barunit=%s
+     parallel2=n transp=y title=d
+     screenwd=15 screenht=11
+     '''
+     % ('Theta',
+     0,
+     0,
+     ''
+     ))
+Result('ttimodel','vp2 epsilon2 delta2 theta2','TwoRows')
+Result('vp2','vp',
+     '''
+     window j1=4 j2=4 | window  n2=1000 f2=1400 n1=450 |
+     grey color=j barlabel= scalebar=y
+     labelsz=9 titlesz=10 barreverse=y
+     wanttitle=n allpos=%d bias=%g 
+     parallel2=y transp=y title= screenratio=1.0
+     '''
+     % (1,
+     1.5,
+     ))
+Result('epsilon2','epsilon',
+     '''
+     window j1=4 j2=4 | window  n2=1000 f2=1400 n1=450 |
+     grey color=j barlabel= scalebar=y
+     labelsz=9 titlesz=10 barreverse=y
+     wanttitle=n allpos=%d bias=%g 
+     parallel2=y transp=y title= screenratio=1.0
+     '''
+     % (1,
+     0,
+     ))
+Result('delta2','delta',
+     '''
+     window j1=4 j2=4 | window  n2=1000 f2=1400 n1=450 |
+     grey color=j barlabel= scalebar=y
+     labelsz=9 titlesz=10 barreverse=y
+     wanttitle=n allpos=%d bias=%g 
+     parallel2=y transp=y title= screenratio=1.0
+     '''
+     % (1,
+     0,
+     ))
+Result('theta2','theta',
+     '''
+     window j1=4 j2=4 | window  n2=1000 f2=1400 n1=450 |
+     grey color=j barlabel= scalebar=y
+     labelsz=9 titlesz=10 barreverse=y
+     wanttitle=n allpos=%d bias=%g 
+     parallel2=y transp=y title= screenratio=1.0
+
+     '''
+     % (0,
+     0,
+     ))
+Result('vx2','vx',
+     '''
+     window j1=4 j2=4 | window  n2=1000 f2=1400 n1=450 |
+     grey color=j barlabel= scalebar=y
+     labelsz=9 titlesz=10 barreverse=y
+     wanttitle=n allpos=%d bias=%g 
+     parallel2=y transp=y title= screenratio=1.0
+     '''
+     % (1,
+     1.5,
+     ))
+Result('yita2','yita',
+     '''
+     window j1=4 j2=4 | window  n2=1000 f2=1400 n1=450 |
+     grey color=j barlabel= scalebar=y
+     labelsz=9 titlesz=10 barreverse=y
+     wanttitle=n allpos=%d bias=%g 
+     parallel2=y transp=y title= screenratio=1.0
+     '''
+     % (0,
+     0,
+     ))
+
+
+Flow('theta0','thetaend2','window  n2=1024 f2=512')
+Flow('yita0','yitaend2','window  n2=1024 f2=512')
+Flow('vp0','vpend2','window n2=1024 f2=512')
+Flow('vx0','vxend2','window n2=1024 f2=512')
+Result('vx0',
+     '''
+     grey color=j barlabel= scalebar=y
+     labelsz=9 titlesz=10 barreverse=y
+     wanttitle=n allpos=%d bias=%g 
+     parallel2=y transp=y title= screenratio=1.0
+     '''
+     % (1,
+     1.5,
+     ))
+Result('vp0',
+     '''
+     grey color=j barlabel= scalebar=y
+     labelsz=9 titlesz=10 barreverse=y
+     wanttitle=n allpos=%d bias=%g 
+     parallel2=y transp=y title= screenratio=1.0
+     '''
+     % (1,
+     1.5,
+     ))
+Result('yita0',
+     '''
+     grey color=j barlabel= scalebar=y
+     labelsz=9 titlesz=10 barreverse=y
+     wanttitle=n allpos=%d bias=%g 
+     parallel2=y transp=y title= screenratio=1.0
+     '''
+     % (0,
+     0,
+     ))
+Result('theta0',
+     '''
+     grey color=j barlabel= scalebar=y
+     labelsz=9 titlesz=10 barreverse=y
+     wanttitle=n allpos=%d bias=%g 
+     parallel2=y transp=y title= screenratio=1.0
+     '''
+     % (0,
+     0,
+     ))
+Flow('G_25_lfdc s1_lfdc s2_lfdc','vp0 vx0 yita0 theta0',
+     '''
+     lfdanc2_25 dt=0.001 eps=0.000001 npk=30 DE=1 size=17 
+     velx=${SOURCES[1]} eta=${SOURCES[2]} seta=${SOURCES[3]}
+     s1=${TARGETS[1]} s2=${TARGETS[2]}
+     ''')
+Flow('wavan_lfdc','source vp0 G_25_lfdc s1_lfdc s2_lfdc',
+     '''
+     ofd2_25 vel=${SOURCES[1]} G=${SOURCES[2]} isx=500 isz=450
+     s1=${SOURCES[3]} s2=${SOURCES[4]}
+     dt=%g nt=%d 
+     '''%(dt,nt))
+Plot('wavan_lfdc',
+       ''' 
+       window j3=200 | grey poly=y label2="X" label1="Z" title="Lowrank FD"
+       yreverse=y transp=y gainpanel=each pclip=100
+       ''',view=1)
+
+Flow('ttisnapshot_lfd','wavan_lfdc','window n3=1 f3=1500')
+
+Result('ttisnapshot_lfd',
+      '''
+      grey poly=y label2="Distance" label1="Depth" title=" " unit1=km unit2=km
+      yreverse=y transp=y pclip=100 
+      title="Lowrank FD" min1=0 max1=11.23 max2=53 min2=41
+      ''' )
+#nt=3501
+#dt=0.0005
+nt=1701
+dt=0.001
+Flow('source1',None,
+     '''
+     spike n1=%d d1=%g k1=101 |
+     ricker1 frequency=15
+     '''%(nt,dt))
+     #spike n1=%d d1=%g k1=201 |
+Result('source1','graph  title="Source Wavelet" ')
+Flow('G_25_lffdc s1_lffdc s2_lffdc parsc','vp0 vx0 yita0 theta0',
+     '''
+     lffdan dt=%g eps=0.0000001 npk=30 DE=1 size=9  
+     velx=${SOURCES[1]} eta=${SOURCES[2]} seta=${SOURCES[3]}
+     s1=${TARGETS[1]} s2=${TARGETS[2]} paras=${TARGETS[3]}
+     '''%(dt))
+Flow('wavan_lffdc','source1 vp0 G_25_lffdc parsc s1_lffdc s2_lffdc',
+     '''
+     lffd2an25 velz=${SOURCES[1]} 
+     G=${SOURCES[2]} paras=${SOURCES[3]} isx=500 isz=450
+     s1=${SOURCES[4]} s2=${SOURCES[5]}
+     dt=%g nt=%d factor=100.0 ax=2.0 az=2.0 err=0.000001
+     '''%(dt,nt))
+Plot('wavan_lffdc',
+       '''
+       window j3=10 | grey poly=y label2="Distance" label1="Depth" title="Lowrank FFD"
+       yreverse=y transp=y gainpanel=each pclip=100
+       ''',view=1)
+
+#Flow('ttisnapshot_lffd','wavan_lffdc','window n3=1 f3=150')
+
+#Result('ttisnapshot_lffd',
+#      '''
+#      grey poly=y label2="Distance" label1="Depth" title="Lowrank FFD " unit1=km unit2=km
+#      yreverse=y transp=y pclip=100 min1=0 max1=11.23 max2=53 min2=41
+#     ''' )
+
+Flow('snapshotslffd','wavan_lffdc','window j3=20 max3=1.6 | stack axis=3')
+Result('snapshotslffd',
+      '''
+      grey poly=y label2="Distance" label1="Depth" title="Lowrank FFD " unit1=km unit2=km
+      yreverse=y transp=y pclip=100 min1=0 max1=11.23 max2=53 min2=41 screenht=10.08 screenwd=11.44 
+      ''' )
+Flow('snapshotslfd','wavan_lfdc','window j3=400 max3=1.6 | stack axis=3')
+Result('snapshotslfd',
+      '''
+      grey poly=y label2="Distance" label1="Depth" title="Lowrank FD " unit1=km unit2=km
+      yreverse=y transp=y pclip=100 min1=0 max1=11.23 max2=53 min2=41 screenht=10.08 screenwd=11.44 
+      ''' )
+#Flow('G_25_lffdd s1_lffdd s2_lffdd parsd','vp0 vx0 yita0 theta0',
+#     '''
+#     lffdan dt=0.0005 eps=0.0000001 npk=30 DE=1 size=9  
+#     velx=${SOURCES[1]} eta=${SOURCES[2]} seta=${SOURCES[3]}
+#     s1=${TARGETS[1]} s2=${TARGETS[2]} paras=${TARGETS[3]}
+#     size=7
+#     ''')
+#Flow('wavan_lffdd','source1 vp0 G_25_lffdd parsd s1_lffdd s2_lffdd',
+#     '''
+#     lffd2an25 velz=${SOURCES[1]} 
+#     G=${SOURCES[2]} paras=${SOURCES[3]} isx=500 isz=450
+#     s1=${SOURCES[4]} s2=${SOURCES[5]}
+#     dt=%g nt=%d factor=100.0 ax=2.0 az=2.0 err=0.000001
+#     '''%(dt,nt))
+#Result('wavan_lffdd',
+#       '''
+#       window j3=10 | grey poly=y label2="Distance" label1="Depth" title="Lowrank FFD"
+#       yreverse=y transp=y gainpanel=each pclip=100
+#       ''' )
+End()

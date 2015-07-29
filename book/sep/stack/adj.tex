@@ -1,0 +1,113 @@
+
+\section{LEAST-SQUARES INVERSION AND ADJOINT OPERATORS}
+%%%%%%%%%%%%%%%%%%%%%
+Least-squares inversion is widely used in practice not only because it
+  is applicable even when the asymptotic results are unavailable but also
+  because of its ability to handle finite sampling effects that are 
+  difficult to handle in asymptotic theory \cite[]{GEO65-05-13641371}.
+
+The theoretical least-squares inverse of operator (\ref{eqn:operator}) has the
+well-known form \cite[]{tarantola}
+\begin{equation}
+\widetilde{M}(z,x)={\bf \widetilde{A}}[S(t,y)]=
+{\bf \left(A^{T}\,A\right)^{\dagger}\,A^{T}}[S(t,y)]\;,
+\label{eqn:LS}
+\end{equation} 
+where $\dagger$ denotes pseudo-inverse, and 
+the adjoint operator ${\bf A^{T}}$ is defined by the dot-product
+test:
+\begin{equation}
+\left(S(t,y),{\bf A}[M(z,x)]\right) \equiv 
+\left({\bf A^{T}}[S(t,y)],M(z,x)\right)\;.
+\label{eqn:dottest}
+\end{equation}
+With a specified definition of the dot-product, the generalized
+inverse minimizes the following quantity, which is the squared $L_2$
+norm of the residual:
+\begin{equation}
+\left(S(t,y)-{\bf A}[M(z,x)],
+S(t,y)-{\bf A}[M(z,x)]\right)\;.
+\end{equation}
+In the case of integral operators, a natural definition of the dot-product
+is the double integral
+\begin{equation}
+\left(S_1(t,y),S_2(t,y)\right)  = 
+\iint\,S_1(t,y)\,S_2(t,y)\,dy\,dt\;,
+\end{equation}
+\begin{equation}
+\left(M_1(z,x),M_2(z,x)\right)  = 
+\iint\,M_1(z,x)\,M_2(z,x)\,dx\,dz\;.
+\end{equation}
+\par
+The notion of the adjoint operator completely depends on the
+arbitrarily chosen definition of the dot product and norm in the model
+and data spaces. A simple way to change those definitions is to find
+some positive weights $W_M(z,x)$ in the model space and $W_S(t,y)$ in
+the data space that define the dot products as follows:
+\begin{eqnarray}
+\left(S_1(t,y),S_2(t,y)\right) & = &
+\iint\,W_S(t,y)\,S_1(t,y)\,S_2(t,y)\,dy\,dt\;,
+\label{eqn:wsproduct} \\
+\left(M_1(z,x),M_2(z,x)\right) & = &
+\iint\,W_M(z,x)\,M_1(z,x)\,M_2(z,x)\,dx\,dz\;.
+\label{eqn:wmproduct}
+\end{eqnarray}
+\par
+To formally define the adjoint of a stacking operator, 
+let us substitute the definition of the stacking
+operator (\ref{eqn:operator}) into the dot product
+(\ref{eqn:dottest}), as follows:
+\begin{equation}
+\left(S(t,y),{\bf A}[M(z,x)]\right) =
+\int\iint\,w(x;t,y)\,M(\theta(x;t,y),x)\,S(t,y)\,dx\,dy\,dt\;.
+\label{eqn:dot1}
+\end{equation}
+Assuming that the function $\theta$ is monotone in $t$
+\footnote{If this is not
+  the case, a different parameterization of the stacking function is
+  appropriate \cite[]{antial}}, we can change the integration variable $t$ to
+$z=\theta(x;t,y)$ and rewrite equation~(\ref{eqn:dot1}) in the form
+\begin{equation}
+\left(S(t,y),{\bf A}[M(z,x)]\right) =
+\int\iint\,\widetilde{w}(y;z,x)\,M(z,x)\,
+S(\widehat{\theta}(y;z,x),x)\,dy\,dx\,dz\;,
+\label{eqn:dot2}
+\end{equation}
+where $\widehat{\theta}$ has the same meaning as in equation
+(\ref{eqn:inverse}), and
+\begin{equation}
+\widetilde{w}(y;z,x) = w(x;\widehat{\theta}(y;z,x),y)\,
+\left|\partial \widehat{\theta} \over \partial z\right|\;.
+\label{eqn:tildew}
+\end{equation}
+Comparing equations~(\ref{eqn:dot2}) and (\ref{eqn:dottest}), we conclude that the adjoint
+operator ${\bf A^{T}}$ is defined by the equality
+\begin{equation}
+{\bf A^{T}}[S(t,y)]=
+\int \widetilde{w}(y;z,x)\,S(\widehat{\theta}(y;z,x),y)\;dy\;.
+\label{eqn:adjoint}
+\end{equation}
+Thus we have proven that the continuous adjoint of a
+stacking operator is another stacking operator. The adjoint operator
+has the same summation path as the asymptotic inverse (\ref{eqn:inverse}),
+which guarantees the correct reconstruction of the kinematics of the
+input wavefield. The amplitude (weighting function) of the adjoint
+operator is directly proportional to the forward weighting according
+to equation (\ref{eqn:tildew}). The coefficient of proportionality is the
+Jacobian of the transformation of the variables $z$ and $t$.
+\par
+Similar results have been obtained for particular cases of stacking
+operators: velocity transform
+\cite[]{Thorson.sepphd.39,Jedlicka.sep.61.41}, Kirchhoff
+constant-velocity migration \cite[]{Ji.sep.80.499}, and NMO
+\cite[]{Crawley.sep.89.207}.  In the appendix, I exemplify an
+application of least-squares inversion by reviewing inversion of the
+Radon operator and showing that it is precisely equivalent to the
+asymptotic result of the previous section.
+
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% TeX-master: t
+%%% End: 

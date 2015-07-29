@@ -1,0 +1,9 @@
+from rsf.book import *
+
+papers = map(lambda x: 'hw%d' % x,range(1,7))
+
+Book(title='\\Large{GEO384W} \\\\ Seismic Imaging  \\\\ Homework Assignments',
+     author='Sergey Fomel',
+     chapters=papers)
+
+End(options='book',use='hyperref,listings')

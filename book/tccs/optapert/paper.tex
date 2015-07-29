@@ -1,0 +1,480 @@
+\published{Geophysics, 78, no. 6, S243-S254, (2013)}
+\title{Selecting an optimal aperture in Kirchhoff migration using dip-angle images}
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}} 
+
+\lefthead {Klokov and Fomel}
+\righthead {Optimal migration aperture}
+
+\author{Alexander Klokov and Sergey Fomel}
+
+\address {
+\footnotemark[1]Bureau of Economic Geology, 
+Jackson School of Geosciences, 
+The University of Texas at Austin, 
+University Station, Box X, 
+Austin, TX 78713-8924, 
+USA 
+}
+
+\maketitle
+
+\begin{abstract}
+We present a method \old{of}\new{for} selecting a migration aperture \old{for}\new{in} Kirchhoff \old{imaging}\new{migration}.
+We first split migrated data into constant-dip-angle partial images. Then,
+in every partial image, we estimate the consistency between each event and the constant dip of the analyzed
+section. We filter out events whose slope is far from the corresponding dip. Stacking of the filtered
+partial images corresponds to migration having an optimal aperture. Synthetic and real data examples
+demonstrate that the proposed approach to migration-aperture optimization \new{is able to} reduce\old{s} migration noise \old{but}\new{while}
+\old{preserves}\new{preserving} diffraction energy, which characterizes small geological objects and brings additional resolution to the image. 
+\end{abstract}
+
+\section{Introduction}
+Kirchhoff migration remains a popular tool for seismic imaging (\citealp[]{leveille11}).
+It handles every input trace separately, enabling the user to work with data sets of any configuration (including
+irregular geometry) and to apply target-oriented analysis. One of the \old{weaknesses}\new{features} of Kirchhoff migration 
+is its global aperture. The migration operator distributes energy throughout a wide area described by 
+an impulse-response surface. However, a seismic image is constructed only by a local part of the surface that
+touches a reflector. The remainder does not make a constructive contribution and, even worse, may generate
+image artifacts (\citealp[]{sun98,hertweck03}).
+
+The artifact problem can be solved by limiting migration aperture. \citet[]{schleicher97} analyzed 
+influence of aperture parameters on imaging results and proposed a technique\old{that is} based on projected Fresnel zones 
+for shortening the migration curve. After preliminary picking of target 
+reflections and computing diffraction curves, \new{they estimated} the migration-aperture size\old{was estimated} by
+analytical equations. \citet[]{sun98} analyzed the structure of a seismic image and proposed rules for its 
+optimal construction. Two main principles were identified: (1) the tangent point between a diffraction curve and
+a reflector must be located in the central part of the aperture and (2) the aperture must be at least as large as the first
+Fresnel zone. Several methods were proposed to achieve these two objectives. \citet[]{tillmanns99} detected
+instantaneous slowness in the data domain. \citet[]{sun01} described wave-path migration smearing energy 
+within a small zone centered on the specular reflection point and defined under a stationary-phase
+approximation. \citet[]{luth05} smeared migrated multicomponent data only inside a Fresnel volume built
+around rays computed using polarization of the wavefield. \citet[]{buske09} constructed a Fresnel volume for
+single-component seismic data, determining the emergent angle by local slowness analysis.
+\citet[]{tabti04} worked with diffraction-operator panels and picked Fresnel apertures 
+after preliminary low-pass filtering. \citet[]{kabbej07} introduced an attribute that characterizes the distance 
+between a common-midpoint position and a currently imaged depth point then migrated the attribute and used it for
+weighting-function construction. \citet[]{spinner07} used the common-reflection-surface operator to determine
+parameters for the optimal migration aperture. \citet[]{alerini09} estimated horizon slopes in the image domain.
+
+The migrated dip-angle domain has properties that are favorable for taking both issues --- the aperture 
+position and its width --- into consideration. In this domain, a reflection event has a concave shape with
+an apex whose position corresponds to the reflector dip (\citealp[]{audebert02,landa08,klokov12}). 
+The event summation in the dip-angle direction produces an image in accordance with the stationary-point
+principle (\citealp[]{bleistein01}). To limit aperture in the dip-angle domain \new{and to restrict summation to stationary points}, 
+\citet[]{bienati09} applied an automatic slope estimation followed by muting. Aperture size was defined on the basis of wavelet bandwidth.
+\citet[]{dafni12} proposed analyzing migrated gathers simultaneously in dip-angle and scattering-angle directions.
+
+A seismic wavefield may contain reflections and diffractions. There are a number of important 
+differences between these two components \cite[]{klem-musatov94}.
+One of the differences is that reflections require a narrow migration aperture, whereas diffractions require an aperture as
+wide as possible (while allowing matching of a diffraction curve).
+Therefore, all methods that imply migration-aperture limiting are oriented
+toward optimal imaging of reflection boundaries \new{and not diffraction objects}. Diffractions characterize small but important geological
+objects and play a significant role in imaging of rough reflection boundaries \cite[]{khaidukov04}.
+Their attenuation may cause a significant loss of resolution (\citealp[]{neidell97}). For image resolution to be preserved,
+a migration-optimization method should \new{aim to} protect the diffraction component. In this paper, we demonstrate an approach
+that allows us to achieve an optimal aperture size for reflection boundaries while \new{also} protecting the diffraction component.
+The main idea is analyzing slope information in constant-dip partial images.
+
+\section{Diffractions and reflections in constant-dip partial images}
+
+Common-reflection-angle migration \cite[]{xu01} can produce a set of 
+dip-angle gathers in which traces are partial images of a fixed lateral position for different migration dips.
+At the same time, the migrated volume can be considered as a set of constant-dip partial images. Integration of the 
+partial images along the dip angle provides a seismic image:
+\begin{equation}
+\label{eq:imaging}
+I(\mathbf{\bar{x}},z)=\int\limits\hat{I}(\mathbf{\bar{x}},z,\alpha)d\alpha\;,
+\end{equation}
+where $\hat{I}(\mathbf{\bar{x}},z,\alpha)$ is a true-amplitude partial image for migration dip $\alpha$ (\citealp[]{bleistein2002}).
+
+A dip-angle gather exposes the difference between reflections and diffractions (\citealp[]{audebert02,landa08,klokov12}). 
+Reflection events have a concave shape, and an image of a reflection boundary is constructed by a limited range of dip
+angles near the event apex. The effective range contains migrated impulses whose shift from the event apex does not 
+exceed half \old{of a}\new{the prevailing} period. This area is equivalent to the Fresnel zone in the dip-angle domain.
+Diffraction events \old{are}\new{appear} flat, however, which means that the full range of migration-dip angles \old{could offer}\new{provides}
+an effective contribution to the image (Figure~\ref{fig:smile}). Thus, \new{an} optimal migration aperture should simultaneously be limited for reflections
+and expanded for diffractions.
+
+\inputdir{.}
+\plot{smile}{width=0.8\columnwidth}{Reflection event and diffraction event in the 2D dip-angle gather.}
+
+In the constant-dip partial-image domain, reflections and diffractions appear different as well, although they
+have some analogous features. To examine this, let us start with the simple case of zero-offset migration
+having the correct constant velocity. Similar derivations can be considered for prestack data.
+
+A diffraction event behaves hyperbolically (Figure~\ref{fig:scheme-diffr}). Its shape is defined by
+the following equation (see derivation in Appendix):
+\begin{equation}
+\label{eq:diffevent}
+z(x_m)=(x_m - x_0) \tan \alpha + \sqrt {(x_m - x_0)^2 / \cos^2 \alpha + z^2_0}\;,
+\end{equation}
+where $\alpha$ is the constant-dip of the partial image, $x_m$ is an imaging position, and $x_0$ and $z_0$ are position and real depth 
+of the diffraction point, respectively.
+
+At the position of the diffraction point, when $x_m~=~x_0$, the event has the correct depth $z(x_m)=z_0$.
+The slope of the event at this point corresponds to the derivative:
+\begin{equation}
+\label{eq:diffeventderiv}
+\frac {\partial z }{\partial x_m} \vert_{x_m=x_0} = \tan \alpha\;.
+\end{equation}
+Equation~\ref{eq:diffeventderiv} indicates that an effective part of a diffraction event, which corresponds to the
+correct position \new{and contributes to the image}, \old{had}\new{has} the same slope as the migration dip, or the constant-dip of the corresponding partial image.
+
+The response of a plane reflector in the constant-dip partial image is a segment. Let us consider
+a small part of the reflection boundary, which has a dip $\alpha_0$ and lateral length $d$ (Figure~\ref{fig:scheme-refl}).
+In the correct-constant-velocity case, coordinates of the segment edges after constant-dip migration can be defined by
+rotation around escape points $y_1$ and $y_2$:
+\begin{eqnarray}
+\label{eq:p1x}
+  \bar{x_1} & = & z_1 \frac{\sin \alpha_0 - \sin \alpha}{\cos \alpha_0}\;, \\
+\label{eq:p1z}
+  \bar{z_1} & = & z_1 \frac{\cos \alpha}{\cos \alpha_0}\;,
+\end{eqnarray}
+and
+\begin{eqnarray}
+\label{eq:p2x}
+  \bar{x_2} & = & z_2 \frac{\sin \alpha_0 - \sin \alpha}{\cos \alpha_0} + d\;, \\
+\label{eq:p2z}
+  \bar{z_2} & = & z_2 \frac{\cos \alpha}{\cos \alpha_0}\;.
+\end{eqnarray}
+The migrated edge points define a segment, whose slope is
+\begin{equation}
+\label{eq:reflslope}
+\tan \beta = \frac {\bar{z_2}-\bar{z_1}}{\bar{x_2} - \bar{x_1}} = \frac{\cos \alpha \sin \alpha_0}{1 - \sin \alpha \sin \alpha_0}\;.
+\end{equation}
+Equation~\ref{eq:reflslope} illustrates some features of the migrated reflection boundary. For instance, a migrated horizontal
+reflector ($\alpha_0 = 0$) keeps the zero-slope independent of the migration dip.
+
+\inputdir{.}
+\multiplot{2}{scheme-diffr,scheme-refl}{width=0.8\columnwidth}{Constant-dip migration (scheme) of (a) a diffraction point and (b) a reflection boundary.}
+
+Equation~\ref{eq:reflslope} also allows us to find the condition in which the migrated slope is consistent with the constant-dip
+partial image ($\beta=\alpha$). In this case,
+\begin{equation}
+\label{eq:cond}
+\frac{\cos \alpha \sin \alpha_0}{1 - \sin \alpha \sin \alpha_0} = \frac {\sin \alpha}{\cos \alpha}\;.
+\end{equation}
+If $\alpha$ is derived from equation~\ref{eq:cond}, note that the equation has only an $\alpha=\alpha_0$ solution. In other words,
+the slope of a migrated reflection event equals that of the migration dip only after migration with the correct dip. Such is the case when
+the segment corresponds to the stationary point and contributes to the image. Thus, an effective reflection event is consistent
+with the constant-dip partial image, as it is for diffractions. The derivation in the Appendix shows that this fact is true for curved reflectors
+as well.
+
+To verify the assertions presented, we ran the following experiment. We put two reflectors and one scattering point in the constant-velocity field
+(Figure~\ref{fig:theo-model}). One reflector is flat, and the second has a dip of 15~degrees. We assume that reflectivity is generated
+by density variations. The modeled zero-offset section is presented in Figure~\ref{fig:data0}. We migrated the data using Kirchhoff common-angle
+migration with the correct velocity. Figure~\ref{fig:zo-res-init} displays the image and a dip-angle gather extracted from 
+the position where the scattering point is located. The diffraction event appears flat in the dip-angle gather, as expected, \old{and}\new{while} the reflection
+events have concave shapes. Figure~\ref{fig:zodpis0,zodpis15} shows two partial images corresponding to 0~and~15~degrees.
+Note that reflection boundaries and an effective part of the diffraction event are consistent with the partial image --- 0~and~15 degrees, 
+respectively (the slope is indicated by dashed lines).
+
+To represent a realistic situation, we placed the same reflectors and scattering point within a smoothed velocity field from the Marmousi model.
+Both reflection and diffraction events have complicated shapes in the data domain (Figure~\ref{fig:dm-zo}). Figure~\ref{fig:res-init}
+displays the image and the dip-angle gather after migration with the correct velocity. \new{The traveltimes for Kirchhoff angle-domain migration
+were computed by Huygens wavefront-tracing (\citealp{sava01}), which allowed us to handle multiple arrivals.} The diffraction event is flat, as it was in the
+constant-velocity example, but the shape of the reflection events appears much more complicated. The gather is contaminated by strong
+migration artifacts that produce noise in the image. Figure~\ref{fig:dpis0,dpis15} shows two partial images corresponding to 0~and~15 degrees.
+Both images appear to be quite noisy. However, note that, even after migration with a complicated-velocity model, \old{reflection event remaining at the stationary point has a slope consistent with the partial image}\new{effective reflection events are consistent with the dips of partial
+images.} The diffraction event at the scattering-point position has the appropriate slope as well \new{(the slopes are indicated by dashed lines)}. 
+
+An event-slope-consistency analysis may provide information about separation between constructive
+and nonconstructive parts of migrated data. \new{The key observation is that} constructive reflection and diffraction events have slopes
+that are close to the constant-dip of the partial image. Slopes of nonconstructive events differ significantly from those of partial-image
+dips. Integration of constructive events only corresponds to migration having an optimal
+aperture.
+
+\inputdir{theo}
+\plot{theo-model}{width=0.8\columnwidth}{Theoretical model with two plane reflectors and one diffractor.}
+\plot{data0}{width=0.8\columnwidth}{Zero-offset section corresponding to the constant-velocity model.}
+\plot{zo-res-init}{width=0.8\columnwidth}{Depth-migrated image and common-image-gather in dip-angle domain corresponding to distance of 7~km.}
+\multiplot{2}{zodpis0,zodpis15}{width=0.7\columnwidth}{(a) Zero-degree partial image and (b) fifteen-degree partial image for the constant-velocity model.}
+
+\inputdir{depthMig}
+\plot{dm-zo}{width=0.8\columnwidth}{Zero-offset section corresponding to the Marmousi-velocity model.}
+\plot{res-init}{width=0.8\columnwidth}{Depth-migrated image and common-image-gather in dip-angle domain corresponding to distance of 7~km.}
+\multiplot{2}{dpis0,dpis15}{width=0.7\columnwidth}{(a) Zero-degree partial image and (b) fifteen-degree partial image for the Marmousi-velocity model.}
+
+\section {Slope-consistency analysis}
+
+One approach to analyzing constant-dip partial-image consistency
+is to measure the local slope in every partial image and to construct a taper function that is based on this measurement. The 
+taper should protect events whose slope is close to the corresponding constant dip. Slopes that differ significantly from that of
+the constant dip should be attenuated. \old{The weak point of this approach is that it may fail if conflicting dips occur in the partial image.}
+\new{However, if conflicting dips occur in the partial image, dips estimation becomes a non-trivial task.}
+
+\old{An alternative way of estimating}\new{To avoid this issue, we estimate} segment conformity with a partial image \old{is}\new{by}
+stacking along a local trajectory defined by partial-image constant dip. Constructive segments match the trajectory that yields high values of coherency.
+On the other hand, destructive segments get stacked in the wrong direction and provide low values of coherence.
+Classic semblance (\citealp[]{taner69}), as a coherence measure, can be used for \old{construction of}\new{defining} a weight
+function. Weighting of migrated data \old{is equivalent}\new{corresponds} to migration aperture optimization.
+
+For illustration, we use the constant-dip partial images shown in Figure~\ref{fig:dpis0,dpis15}. They correspond to migration dips of 0~and~15 degrees, 
+and we first apply local stacking along directions corresponding to 0~and~15~degrees, respectively. We extend stacking to the dip-angle direction
+as well. Effective contributions are locally plane in this direction, and local stacking along migration dips allows for signal enhancement.
+We measure coherency of the stacked data and get the semblance function $S(\alpha, z, x)$ presented in Figure~\ref{fig:semb-0,semb-15}. 
+High semblance values correspond to events consistent with the dips of partial images. The next step is to transform the semblance function
+to a weight function $W(\alpha, z, x)$, which should optimally handle migrated amplitudes. The weight should not change a plane diffraction
+event or an effective apex area of reflections. At the same time, the weight should smoothly attenuate away from the apexes so that 
+edge effects can be eliminated (\citealp[]{hertweck03}). We define \old{optimal}\new{our} weight function using the following thresholding rule:
+\begin{equation}
+W(\alpha, z, x) = 
+\left\{ \begin{array}{rcl}
+1 & \mbox{for} & S(\alpha, z, x) > s_2\;, \\ 
+\frac {S(\alpha, z, x) - s_1}{s_2 - s_1} & \mbox{for} & s_1 < S(\alpha, z, x) < s_2\;, \\
+0 & \mbox{for} & S(\alpha, z, x) < s_1\;,
+\end{array}\right.
+\end {equation}
+where $s_1$ and $s_2$ define \old{the}\new{two} thresholds. Thus, weight function is defined by summation bases and thresholding parameters. In complex inhomogeneous media, \new{these} parameters depend on migrated data and can be estimated by trial and error. Local summation in the dip-angle direction can
+be performed along constructive parts of the reflection concave event, whose size is defined after analysis of migrated dip-angle gathers.
+An optimal lateral window should suppress migration artifacts at a minimal computational cost.\old{Threshold parameters are then found heuristically.}
+\new{The semblance function in equation~10 appears to have smooth features that simplifies a heuristic choice of the threshold parameters.}
+
+\inputdir{depthMig}
+\multiplot{2}{semb-0,semb-15}{width=0.45\columnwidth}{Semblance function for (a) zero-degree partial image and (b) 
+fifteen-degree partial image.}
+
+In our synthetic example, we used a dip-angle window of~10~degrees\old{and}\new{,} a lateral window of~150~m\new{, and parameters $s_1$ and $s_2$ equal to 0.2 and 0.4, respectively}. Figure~\ref{fig:dpis-cln-0,dpis-cln-15} shows the weighted
+partial images. Reflectors consistent with the partial images, as well as appropriate parts of the diffraction event, are preserved. 
+At the same time, a large amount of noneffective contribution\new{, which may produce migration noise,} has been eliminated. 
+Summation of the weighted partial images provides the stacked image, which has the migration artifacts being suppressed significantly
+(Figure~\ref{fig:res-clean}).
+
+\multiplot{2}{dpis-cln-0,dpis-cln-15}{width=0.7\columnwidth}{(a) Zero-degree partial image and (b) fifteen-degree partial image after
+migration-aperture optimization.}
+\plot{res-clean}{width=0.8\columnwidth}{Image and dip-angle gather after migration-aperture optimization by slope-consistency analysis.}
+
+\old{Local summation in the dip-angle direction by itself attenuates}\new{A weight function constructed by using the dip-angle direction only
+allows for attenuating} reflection events around their apex areas while preserving diffraction events \new{as well}. 
+Figure~\ref{fig:res-clean1} shows the result of migrated data weighting using local summation \old{along migration dips only}\new{along dip-angle
+window of 10 degrees}.
+Reflection events are localized around their effective areas, and the diffraction event has its full width being preserved. However,
+the image remains contaminated by migration artifacts, which happen to be stationary in the dip-angle direction.
+\plot{res-clean1}{width=0.8\columnwidth}{Image and dip-angle gather after migration-aperture optimization by local summation in the dip-angle
+ direction.}
+
+We next address the situation when migration velocity is not correct. Figure~\ref{fig:fres-init} shows the image and the dip-angle 
+gather after migration with 10\% lower velocity. Reflection boundaries look distorted. The diffractor is undermigrated and has a complicated
+shape in the dip-angle gather. The image is contaminated by strong migration artifacts. For migration-aperture optimization by
+slope-consistency analysis, we used the same parameters as in the previous example (Figure~\ref{fig:fres-clean}).
+Reflection and diffraction events both are optimized to their effective parts, eliminating migration noise in the image.
+
+\plot{fres-init}{width=0.8\columnwidth}{Initial image and common-image-gather in dip-angle domain corresponding to distance of 7~km (wrong velocity case).}
+\plot{fres-clean}{width=0.8\columnwidth}{Image and dip-angle gather after migration-aperture optimization by slope-consistency analysis (wrong velocity case).}
+
+These experiments demonstrate that slope-consistency filtering can be used after migration even \new{when} using a complicated velocity model or an
+incorrect model. \new{In the previous section, we considered theoretically the case of the zero-offset migration. 
+The proposed principles may apply also to prestack migration in which stacking of the full offset range provides accumulation of
+effective migrated data parts.}
+The experiments also reveal that noneffective segments may have an appropriate slope as well. For instance, the optimized fifteen-degree
+partial image (Figure~\ref{fig:dpis-cln-15}) has some events at a depth of 1.5~km. These events appear to have a correct slope that is 
+close to 15~degrees, and they therefore evade nonconsistent-slope filtering and bring noise to the image of the flat reflector. This kind
+of noise is inherent in Kirchhoff migration and is produced by the complexity of the velocity model \new{and incompleteness of the migrated 
+data (\citealp[]{stolk04})}. In practice, it can be eliminated by \old{prestack migration using}\new{stacking} the full range of offsets.
+
+The proposed approach can be used easily in three dimensions, in which migrated events are defined by two orthogonal \old{angles}\new{directions}
+(\citealp[]{klokov12}). Migrated constant-dip traces compose a 3D~volume, and slope-consistency analysis should be performed along a plane
+surface whose slope is defined
+by the two migration dips. The method does not require slope estimation and has a relatively low computational cost.
+
+\new{Note that the effectiveness of the method is conditioned to that of semblance estimation. In the case of conflicting events, semblance
+operator effectively deals with events that are relatively strong to be detected. In practice, weak diffraction events might get suppressed
+by reflections and noise, which might cause difficulties in the slope-consistency estimation and, consequently, in the events protection.
+These weak events can be enhanced by diffraction imaging techniques (\citealp[]{fomel07,klokov12})}.
+
+\section{Synthetic data examples}
+
+We next tested the presented approach on \new{prestack migration of} the Sigsbee2B \old{model}\new{data set} \cite[]{paffenholz02}.
+The model contains a number of artificial point scatterers. The top of the salt \new{body} has a high curvature that acts as a transition between 
+reflections and diffractions. There is a number of faults, which produce diffraction energy as well. Therefore, the data set is 
+appropriate for testing of \old{migration-aperture}diffraction protection.
+
+Figure~\ref{fig:sigs-input} shows a seismic image of the left part of the model and one dip-angle gather 
+extracted from the position
+in which two strong diffraction points are present. The gather contains two flat diffraction events at depths of 5.2 and 7.6~km,
+which correspond to the artificial scatterers. \old{Also,}Some diffraction energy is \new{also} found at a depth of 4.3~km scattered by the fault.
+
+Figure~\ref{fig:sigs-ap} shows the image and dip-angle gather after migration-aperture limiting. \new{First}, we detected reflection apex positions,
+estimated effective dip ranges around them, and rejected migrated amplitudes that did not correspond to effective dip intervals. This procedure enables
+elimination of migration noise with correct imaging of reflection boundaries \cite[]{bienati09}. However, aperture limiting causes significant shortening 
+of diffraction events and, as a result, weakening, or even disappearance, of diffraction objects in the image.
+
+To optimize the migration aperture using the proposed slope-consistency approach, we performed semblance analysis using a dip-angle
+aperture of 10 degrees \old{and}\new{,} a lateral base of 200~m\new{, and parameters $s_1$ and $s_2$ equal to 0.2 and 0.4, respectively.}
+(Figure~\ref{fig:sigs-semb}). Reflection events become limited to the vicinity of their apexes, as in the
+previous example. At the same time, the procedure protects diffraction events in the gather and, hence, the corresponding 
+diffraction objects in the image. Artificial point scatterers and faults are imaged correctly.
+
+Figure~\ref{fig:pimage15-input-l}
+demonstrates one constant-dip partial image corresponding to 15 degrees. It resembles the seismic
+image of the model, with some differences. \new{As expected, dipping}\old{Some of the} reflection boundaries are shifted from the correct positions\old{, for example,} and diffraction objects
+are represented by hyperbolic events. After slope-consistency analysis, we construct a filtering mask (Figure~\ref{fig:pimage15-mask})
+to protect events whose slope is close to that of the dip of the partial image (Figure~\ref{fig:pimage15-semb-l}).
+\new{As a result,} diffraction hyperbolas \old{were shortened}\new{became confined} to the vicinities of their correct positions, where they have
+the appropriate slope. Faults at a depth of 4 km and \old{some}\new{other} reflection boundaries were protected as well. Remaining migrated energy was eliminated 
+significantly.
+
+\inputdir{sigsbee}
+\plot{sigs-input}{width=0.8\columnwidth}{Initial image and common-image gather in dip-angle domain corresponding to distance of 6.1 km.}
+\plot{sigs-ap}{width=0.8\columnwidth}{Image and dip-angle gather after migration-aperture limiting.}
+\plot{sigs-semb}{width=0.8\columnwidth}{Image and dip-angle gather after migration-aperture optimization by slope-consistency analysis.}
+
+\multiplot{3}{pimage15-input-l,pimage15-mask,pimage15-semb-l}{width=0.45\columnwidth}{(a) Fifteen-degree constant-dip partial image, 
+(b) weight function produced by slope-consistency analysis, and (c) partial image after migration-aperture optimization. 
+Dashed line indicates position of considered artificial scattering points.}
+
+The salt body complicates Kirchhoff imaging in the right part of the Sigsbee model and increases the amount of migration noise.
+Figure~\ref{fig:init} shows a seismic image and one dip-angle gather extracted from the position in which strong
+diffraction points are present. The scatterer at 7.6~km is illuminated well, and the dip-angle gather contains the corresponding plane
+diffraction event. A fault can be identified at the 15-km position and depth of 7~km. \old{A large}\new{Some} amount of migration noise is concentrated just
+below the salt and in the salt cavities above.
+
+Migration-aperture optimization by slope-consistency analysis allows us to significantly decrease migration noise and, at the same time, 
+to protect diffraction objects --- artificial point scatterers, the fault, and the salt boundary are \new{all} imaged correctly (Figure~\ref{fig:sca}). 
+\new{In comparison, simple} aperture limiting\old{, in turn,} leads to noise suppression as well; however, the diffraction objects are lost, and the salt body appears
+distorted (Figure~\ref{fig:ap}).
+
+\inputdir{rightSigsbee}
+\plot{init}{width=0.8\columnwidth}{Initial image and common-image gather in dip-angle domain corresponding to distance of~16.8~km.}
+\plot{sca}{width=0.8\columnwidth}{Image and dip-angle gather after migration-aperture optimization by slope-consistency analysis.}
+\plot{ap}{width=0.8\columnwidth}{Image and dip-angle gather after migration-aperture limiting.}
+
+\section{Field data application}
+
+We next applied our aperture-optimization technique to a field 3D data set obtained from the Piceance Basin area in Colorado, USA.
+Figure~\ref{fig:image3} shows a part of the Williams Fork Formation, which is a well-known reservoir that
+contains a number of channels and point-bar sand bodies (\citealp{pranter07}). \cite{will} and \cite{klokov12} previously analyzed
+the data by diffraction imaging and showed that a number of diffraction objects were clustered in the top part of the volume.
+The image is corrupted by migration artifacts, and diffraction objects are buried under the noise.
+
+We performed slope-consistency analysis using a 10-degree dip-angle windows, a 50-m-square stacking base\new{, and parameters $s_1$ and $s_2$ equal to
+0.1 and 0.3, respectively} (Figure~\ref{fig:image-clean}). 
+Migration noise appears to be filtered out, whereas point objects in the shallow part are preserved. Diffraction objects are clearly observed
+in the slice. 
+
+For comparison, we migrated the data using a limited aperture of 10 degrees in two principal directions (Figure~\ref{fig:image3s}).
+Although most of the migration artifacts have been successfully eliminated, diffraction objects from the top part get smeared. 
+These objects have low energy caused by scarcity of migration dips in the aperture.
+
+\inputdir{gibson}
+\plot{image3}{width=0.99\columnwidth}{Initial 3D image for Piceance Basin data set.}
+\plot{image-clean}{width=0.99\columnwidth}{Image after migration-aperture optimization by slope-consistency analysis.}
+\plot{image3s}{width=0.99\columnwidth}{Image obtained after migration with limited aperture.}
+
+\section {Conclusions}
+
+Migration-aperture optimization in Kirchhoff angle-domain migration can significantly enhance
+the quality of a seismic image. The aperture-optimization
+method needs to eliminate migration artifacts without distorting the useful signal. The diffraction component of the seismic wavefield
+characterizes small but important geological objects and brings extra resolution to seismic imaging. For an optimal image of diffraction
+objects, as wide a migration aperture as possible should be used. However, imaging of reflections requires an aperture narrowed
+around the tangent point. 
+
+To meet both requirements, we propose utilizing constant-dip partial images. An analysis of the consistency between local slopes and
+constant dips of a partial image makes evaluating the contribution of any part of the migrated data possible. This analysis allows us
+to extract constructive events. Stacking these events is equivalent to migration using an optimal aperture.
+
+\section{Acknowledgments}
+
+We thank Igor Ravve, three anonymous reviewers, and the associate editor \new{J\"{o}rg Schleicher} for constructive suggestions that improved the paper.
+
+Partial funding for this project was provided by RPSEA through the “Ultra-Deepwater and Unconventional 
+Natural Gas and Other Petroleum Resource” program authorized by the US Energy Policy Act of 2005. 
+RPSEA (\url{http://www.rpsea.org/}) is a nonprofit corporation whose mission is to provide a stewardship 
+role in ensuring the focused research, development and deployment of safe and environmentally
+responsible technology that can effectively deliver hydrocarbons from domestic resources to the 
+citizens of the United States. RPSEA, operating as a consortium of premier US energy research universities, 
+industry, and independent research organizations, manages the program under a contract with the US Department 
+of Energy's National Energy Technology Laboratory.
+
+\appendix
+\section{Appendix: Hyperbolic reflector in the dip-angle domain}
+
+For insight into the appearance of reflector images in the dip-angle domain, let us consider the case of a hyperbolic reflector \cite[]{fomel2013}. \new{A special property of hyperbolic reflectors is that they can transform to plane dipping reflectors or point diffractors with an appropriate choice of parameters.} 
+Reflector depth is given by the function
+\begin{equation}
+\label{eq:zx}
+z(x)=\sqrt{z_0^2+(x-x_0)^2\,\tan^2\beta}\;,
+\end{equation}
+and zero-offset reflection traveltime is given by
+\begin{equation}
+\label{eq:ty}
+  t(y)=\frac{2}{v}\,\sqrt{z_0^2+(y-x_0)^2\,\sin^2\beta}\;.
+\end{equation}
+When the reflector is imaged by time migration in the dip-angle domain
+\cite[]{sava03} using velocity $v_m$, point $\{y,t\}$ in
+the data domain migrates to $\{x_m,t_m\}$ in the image domain
+according to 
+\begin{eqnarray}
+\label{eq:xm}
+x_m & = & y - \frac{v_m}{2}\,t\,\sin{\alpha} = \displaystyle y - \frac{v_m\,\sin{\alpha}}{v}\,\sqrt{z_0^2+(y-x_0)^2\,\sin^2\beta}\;, \\
+\label{eq:tm}
+t_m & = & t\,\cos{\alpha} = \displaystyle \frac{2\,\cos{\alpha}}{v}\,\sqrt{z_0^2+(y-x_0)^2\,\sin^2\beta}\;,
+\end{eqnarray}
+where $\alpha$ is the migration dip angle. Eliminating $y$ from
+equations~\ref{eq:xm} and \ref{eq:tm}, we arrive at the equation
+\begin{equation}
+\label{eq:tmxm}
+  t_m(x_m) = \frac{2\,\cos{\alpha}}{v}\,\frac{\gamma\,(x_m-x_0)\,\sin{\alpha}\,\sin^2{\beta} + \sqrt{(x_m-x_0)^2\,\sin^2{\beta}+z_0^2\,D}}{D}\;,
+\end{equation}
+where $\gamma=v_m/v$ and
+$D=1-\gamma^2\,\sin^2{\alpha}\,\sin^2{\beta}$. Equation~\ref{eq:tmxm}
+describes the shape of the image of the hyperbolic
+reflector~(\ref{eq:zx}) in the dip-angle domain.
+
+When the dip of the migrated event, imaged at a correct velocity ($\gamma=1$),
+\begin{equation}
+  \tan{\alpha_m} = \displaystyle \frac{v}{2}\,t_m'(x_m) = 
+  \frac{\cos{\alpha}\,\sin^2{\beta}}{D}\,\left[\sin{\alpha} 
+    + \frac{x_m-x_0}{\sqrt{(x_m-x_0)^2\,\sin^2{\beta}+z_0^2\,D}}\right]\;,
+  \label{eq:alfam}
+\end{equation}
+is equal to the dip of the image ($\alpha_m=\alpha$), it also becomes
+equal to the true dip of the reflector ($\alpha_m=\alpha_0$), where 
+\begin{equation}
+\label{eq:alfa0}
+\tan{\alpha_0} = z'(x_m) = \frac{(x_m-x_0)\,\tan^2{\beta}}{\sqrt{z_0^2+(x-x_0)^2\,\tan^2\beta}}\;.
+\end{equation}
+We can specify these conditions for two special cases described next.
+
+\subsection{Point diffractor}
+
+The hyperbolic reflector in equation~\ref{eq:zx} creates a point diffractor at coordinates $\{x_0,z_0\}$ when $\beta=\pi/2$.  In this case, equation~\ref{eq:tmxm}
+simplifies to \cite[]{klokov12}
+\begin{equation}
+\label{eq:dtmxm}
+t_m(x_m) = \frac{2\,\cos{\alpha}}{v}\,\frac{\gamma\,(x_m-x_0)\,\sin{\alpha} + \sqrt{(x_m-x_0)^2+z_0^2\,\left(1-\gamma^2\,\sin^2{\alpha}\right)}}{1-\gamma^2\,\sin^2{\alpha}}\;.
+\end{equation}
+At a correct velocity ($\gamma=1$),
+\begin{equation}
+\label{eq:dtmxmc}
+t_m(x_m) = \frac{2}{v}\,\frac{(x_m-x_0)\,\sin{\alpha} + \sqrt{(x_m-x_0)^2+z_0^2\,\cos^2{\alpha}}}{\cos{\alpha}}\;,
+\end{equation}
+which is equivalent to equation~\ref{eq:diffevent} in the main text. The dip of the image is
+\begin{equation}
+  \label{eq:dalfam}
+  \tan{\alpha_m} = \frac{v}{2}\,t_m'(x_m) = \tan{\alpha} + \frac{x_m-x_0}{\cos{\alpha}\,\sqrt{(x_m-x_0)^2+z_0^2\,\cos^2{\alpha}}}\;.
+\end{equation}
+It is easy to verify that, above the diffraction point ($x_m=x_0$), $\alpha_m=\alpha$.
+
+\subsection{Plane dipping reflector}
+
+The hyperbolic reflector in equation~\ref{eq:zx} becomes a plane
+dipping reflector when $z_0=0$. In this case, equation~\ref{eq:tmxm}
+simplifies to \cite[]{klokov12}
+\begin{equation}
+  \label{eq:ptmxm}
+  t_m(x_m) = \frac{2}{v}\,\frac{(x_m-x_0)\,\cos{\alpha}\,\sin{\beta}}{1-\gamma\,\sin{\alpha}\,\sin{\beta}}\;.
+\end{equation}
+The dip of the image at a correct velocity is
+\begin{equation}
+  \label{eq:palfam}
+  \tan{\alpha_m} = \frac{v}{2}\,t_m'(x_m) = \frac{\cos{\alpha}\,\sin{\beta}}{1-\sin{\alpha}\,\sin{\beta}}\;,
+\end{equation}
+which is equivalent to equation~\ref{eq:reflslope} in the main text. The dip of the reflector in this case is simply $\alpha_0=\beta$. It
+is easy to verify that when $\alpha=\beta$, $\alpha_m=\alpha$.
+
+\bibliographystyle{seg}
+\bibliography{SEG,optApert}

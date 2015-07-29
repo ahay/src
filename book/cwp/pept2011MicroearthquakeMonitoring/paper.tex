@@ -1,0 +1,472 @@
+\input{pcsmacros}
+\input{macro}
+
+\def\xh{ {{\x}_h} }
+\def\yh{ {{\y}_h} }
+\def\th{ {{\t}_h} }
+
+%\def\geosout#1{ \sout{#1} }
+\def\geosout#1{}
+%\def\geouline#1{ \uline{#1} }
+\def\geouline#1{#1}
+
+% ------------------------------------------------------------
+
+\published{Journal of Petroleum Exploration and Production Technology, 1, 43-49, (2011)}
+\author{Paul Sava}
+\title{Micro-earthquake monitoring with sparsely-sampled data}
+%\institute{Center for Wave Phenomena, 
+%  Colorado School of Mines, 
+%  1500 Illinois Str., Golden, CO 80401, USA}
+%\date{Received: / Accepted:}
+\maketitle
+
+\input{abstract}
+%\keywords{microearthquakes, imaging, interferometry}
+
+% ------------------------------------------------------------
+\section{Introduction}
+
+%% 
+ % about wavefield imaging methodology
+ %%
+Seismic imaging based on the single scattering assumption, also known
+as Born approximation, consists of two main steps: \textit{wavefield
+  reconstruction} which serves the purpose of propagating recorded
+data from the acquisition surface back into the subsurface, followed
+by an \textit{imaging condition} which serves the purpose of
+highlighting locations where scattering occurs.
+%
+This framework holds both when the source of seismic waves is located
+in the subsurface and the imaging target consists of locating this
+source, as well as when the source of seismic waves is located on the
+acquisition surface and the imaging target consists of locating the
+places in the subsurface where scattering or reflection occurs. In
+this paper, I concentrate on the case of imaging seismic sources
+located in the subsurface, although the methodology discussed here
+applies equally well for the more conventional imaging with artificial
+sources.
+
+%% 
+ % micro-earthquakes location techniques
+ %%
+An example of seismic source located in the subsurface is represented
+by micro-earthquakes triggered by natural causes or by fluid injection
+during reservoir production or fracturing. One application of
+micro-earthquake location is monitoring of fluid injection in brittle
+reservoirs when micro-earthquake evolution in time correlates with
+fluid movement in reservoir formations.  Micro-earthquakes can be
+located using several methods including double-difference algorithms
+\cite[]{WaldhauserEllsworth:2000}, Gaussian-beam migration
+\cite[]{SEG-2004-03540357,rentsch:S33}, diffraction stacking
+\cite[]{Gajewski:2007} or \geosout{reverse-time migration}
+\geouline{time-reverse imaging} \cite[]{Gajewski:2005,Artman.meq}.
+
+%% 
+ % RTM for micro-earthquake location
+ %%
+Micro-earthquake location using \geosout{reverse-time migration}
+\geouline{time-reverse imaging}, which is also the technique advocated in
+this paper, follows the same general pattern mentioned in the
+preceding paragraph: wavefield-reconstruction backward in time
+followed by an imaging condition extracting the image, i.e. the
+location of the source. The main difficulty with this procedure is
+that the onset of the micro-earthquake is unknown, i.e. time $\tm=0$
+is unknown, so the imaging condition cannot be simply applied as it is
+usually done in zero-offset migration. Instead, an automatic search
+needs to be performed in the back-propagated wavefield to identify the
+locations where wavefield energy focuses. This process is difficult
+and often ambiguous since false focusing locations might overlap with
+locations of wavefield focusing. This is particularly true when
+imaging using an approximate model which does not explain all random
+fluctuations observed in the recorded data. This problem is further
+complicated if the acquisition array is sparse, e.g. when receivers
+are located in a borehole. In this case, the sparsity of the array
+itself leads to artifacts in the reconstructed wavefield which makes
+the automatic picking of focused events even harder.
+
+% ------------------------------------------------------------
+\inputdir{XFig}
+% ------------------------------------------------------------
+\multiplot{4}{delta0,delta1,delta2,delta3}{width=0.22\textwidth}
+{Schematic representation of focus constructions using time
+  reversal. Each line in the plots represents a wavefront
+  reconstructed at the source from a given receiver. The panels
+  represent the following cases: (a) dense acquisition, complete
+  angular coverage and correct velocity, (b) dense acquisition,
+  partial angular coverage and correct velocity, (c) dense
+  acquisition, partial angular coverage and incorrect velocity, and
+  (d) sparse acquisition, partial angular coverage and incorrect
+  velocity. Panel (d) represents the worst case scenario for
+  micro-earthquake imaging.}
+
+%% 
+ % the problem of sparse data acquisition
+ %%
+The process by which sampling artifacts are generated is explained in
+\rfgs{delta0}-\rfn{delta3}. Each segment in \rfg{delta0} corresponds
+to a wavefront reconstructed from a receiver. For dense, uniform
+\geouline{and wide-aperture} receiver coverage and for reconstruction
+using accurate velocity, the wavefronts overlap at the source
+position, \rfg{delta1}. \geouline{This idealized situation resembles the
+  coverage typical for medical imaging, although the physical
+  processes used are different.} However, if the velocity used for
+wavefield reconstruction is inaccurate, then the wavefronts do not all
+overlap at the source position, \rfg{delta2}, thus leading to imaging
+artifacts. Likewise, if receiver sampling is sparse, reconstruction at
+the source position is incomplete, \rfg{delta3}, even if the velocity
+used for reconstruction is accurate. The cartoons depicted in
+\rfgs{delta0}-\rfn{delta3} represent an ideal situation with receivers
+surrounding the seismic source, which is not typical for seismic
+experiments. In those cases, source illumination is limited to a range
+which correlates with the receiver coordinates.
+
+In general, artifacts caused by unknown velocity fluctuations and
+receiver sampling overlap and, although the two phenomena are not
+equivalent, their effect on the reconstructed wavefields are
+analogous. As illustrated in the following sections, the general
+character of those artifacts is that of random wavefield
+fluctuations. Ideally, the imaging procedure should attenuate those
+random wavefield fluctuations irrespective of their cause in order to
+support automatic source identification.
+
+% ------------------------------------------------------------
+\section{Conventional imaging condition}
+
+Assuming data $\DD{\xm,\tm}$ acquired at coordinates $\xm$ function of
+time $\tm$ (e.g. in a borehole) we can reconstruct the wavefield
+$\VV{\xm,\ym,\tm}$ at coordinates $\ym$ in the imaging volume using an
+appropriate Green's function $\GG{\xm,\ym,\tm}$ corresponding to the
+locations $\xm$ and $\ym$ (\rfg{coord})
+%
+\beq \label{eqn:green}
+\VV{\xm,\ym,\tm} = \DD{\xm,\tm} *_t \GG{\xm,\ym,\tm} \;,
+\eeq
+%
+where the symbol $*_t$ indicates time convolution.  The total
+wavefield $\UU{\ym,\tm}$ at coordinates $\ym$ due to data recorded at
+all receivers located at coordinates $\xm$ is represented by the
+superposition of the reconstructed wavefields $\VV{\xm,\ym,\tm}$:
+%
+\beq \label{eqn:linear}
+\UU{\ym,\tm} = \intxm \VV{\xm,\ym,\tm} \;.
+\eeq
+%
+A conventional imaging condition (CIC) applied to this reconstructed
+wavefield extracts the image $\IA{CIC}{\ym}$ as the wavefield at time
+$\tm=0$
+%
+\beq \label{eqn:cic}
+\IA{CIC}{\ym} = \UU{\ym,\tm=0} \;.
+\eeq
+%
+This imaging procedure succeeds if several assumptions are fulfilled:
+first, the velocity model used for imaging has to be accurate; second,
+the numeric solution to the wave-equation used for wavefield
+reconstruction has to be accurate; third, the data need to be sampled
+densely and uniformly on the acquisition surface. In this paper, I
+assume that the first and third assumptions are not fulfilled. In
+these cases, the imaging is not accurate because contributions to the
+reconstructed wavefield from the receiver coordinates do not interfere
+constructively, thus leading to imaging artifacts. As indicated
+earlier, this situation is analogous to the case of imaging with an
+inaccurate velocity model, e.g. imaging with a smooth velocity of data
+corresponding to geology characterized by rapid velocity variations.
+
+%% 
+ % talk about interferometry as a fix to this problem
+ % cite Sava and Borcea
+ %%
+
+Different image processing procedures can be employed to reduce the
+random wavefield fluctuations. The procedure advocated in this paper
+uses interferometry for noise cancellation. Interferometric procedures
+can be formulated in various frameworks, e.g. coherent interferometric
+imaging \cite[]{Borcea.GEO.2006} or wave-equation migration with an
+interferometric imaging condition \cite[]{SavaPoliannikov.geo.iic}.
+
+\sideplot{coord}{width=\textwidth}{Illustration of the variables $\xm$
+  and $\ym$ used for the description of the conventional and
+  interferometric imaging procedures.}
+
+% ------------------------------------------------------------
+\section{Interferometric imaging condition}
+
+Migration with an interferometric imaging condition (IIC) uses the
+same generic framework as the one used for the conventional imaging
+condition, i.e. wavefield reconstruction followed by an imaging
+condition.  However, the difference is that the imaging condition is
+not applied to the reconstructed wavefield directly, but it is applied
+to the wavefield which has been transformed using pseudo Wigner
+distribution functions (WDF) \cite[]{Wigner.wdf}. By definition, the
+zero frequency pseudo WDF of the reconstructed wavefield
+$\UU{\ym,\tm}$ is
+%
+\beq \label{eqn:wdf}
+\WA{}{\ym,\tm} = \intth \intyh
+\UU{\ym-\frac{\yh}{2},\tm-\frac{\th}{2}}
+\UU{\ym+\frac{\yh}{2},\tm+\frac{\th}{2}} \;,
+\eeq
+%
+where $Y$ and $T$ denote averaging windows in space and time,
+respectively. In general, $Y$ is three dimensional and $T$ is one
+dimensional. Then, the image $\IA{IIC}{\ym}$ is obtained by extracting
+the time $\tm=0$ from the pseudo WDF, $\WA{}{\ym,\tm}$, of the
+wavefield $\UU{\ym,\tm}$:
+%
+\beq \label{eqn:iic}
+\IA{IIC}{\ym} = \WA{}{\ym,\tm=0} \;.
+\eeq
+%
+The interferometric imaging condition represented by \reqs{wdf} and
+\ren{iic} effectively reduces the artifacts caused by the random
+fluctuations in the wavefield by filtering out its rapidly varying
+components \cite[]{SavaPoliannikov.geo.iic}. In this paper, I use this
+imaging condition to attenuate noise caused by sparse data sampling or
+noise caused by random velocity variations. As suggested earlier, the
+interferometric imaging condition attenuates both types of noise at
+once, since it does not explicitly distinguish between the various
+causes of random fluctuations.
+
+%% 
+ % discussion about window shape/size
+ %%
+
+The parameters $Y$ and $T$ defining the local window of the pseudo WDF
+are selected according to two criteria \cite[]{Cohen.tfa.1995}. First,
+the windows have to be large enough to enclose a representative
+portion of the wavefield which captures the random fluctuation of the
+wavefield. Second, the window has to be small enough to limit the
+possibility of cross-talk between various events present in the
+wavefield. Furthermore, cross-talk can be attenuated by selecting
+windows with different shapes, for example Gaussian or
+exponentially-decaying.  \geouline{Therefore, we could in principle
+  define the transformation in} \req{wdf} \geouline{more generally} as
+%
+\beq \label{eqn:wdfgeneral}
+\WA{}{\ym,\tm} = 
+\int d\th W_T\lp \tm,\th \rp
+\int d\yh W_Y\lp \ym,\yh \rp
+\UU{\ym-\frac{\yh}{2},\tm-\frac{\th}{2}}
+\UU{\ym+\frac{\yh}{2},\tm+\frac{\th}{2}} \;,
+\eeq
+%
+where $W_T$ and $W_Y$ are weighting functions which could represent
+Gaussian, boxcar or any other local functions (Artman 2011, personal
+communication).  For simplicity, in all examples presented in this
+paper, the space and time windows are rectangular with no tapering and
+the size is selected assuming that micro-earthquakes occur
+sufficiently sparse, i.e. the various sources are located at least
+twice as far in space and time relative to the wavenumber and
+frequency of the considered seismic event. Typical window sizes used
+here are $11$ grid points in space and $5$ grid points in
+time. \geosout{A complete discussion of optimal window selection falls
+  outside the scope of this paper.}
+
+% ------------------------------------------------------------
+\section{Example}
+
+%% 
+ % describe experiment: setup and objectives
+ %%
+
+I exemplify the interferometric imaging condition method with a
+synthetic example simulating the acquisition geometry of the passive
+seismic experiment performed at the San Andreas Fault Observatory at
+Depth \cite[]{Chavaria:2003,VasconcelosEtAl.eos.safod}. This numeric
+experiment simulates waves propagating from three micro-earthquake
+sources located in the fault zone, \rfg{meqs}, which are recorded in a
+deviated well located at a distance from the fault. For the imaging
+procedure described in this paper, the micro-earthquakes represent the
+seismic sources. This experiment uses acoustic waves, corresponding to
+the situation in which we use the P-wave mode recorded by the
+three-component receivers located in the borehole, \rfgs{saf1-rev3}
+and \rfn{saf2-rev4}. The three sources are triggered $40$~ms apart and
+the triggering time of the second source is conventionally taken to
+represent the origin of the time axis.
+
+The goal of this experiment is to locate the source positions by
+focusing data recorded using dense acquisition in media with random
+fluctuations or by focusing data recorded using sparse acquisition
+arrays in media without random fluctuations. In the first case, the
+imaging artifacts are caused by the fact that data are imaged with a
+velocity model that does not incorporate all random fluctuations of
+the model used for data simulation, while in the second case, the
+imaging artifacts are caused by the fact that the data are sampled
+sparsely in the borehole array. \geouline{The third case is a combination
+of acquisition with two sparse arrays, and imaging with an inaccurate
+velocity model.}
+
+% ------------------------------------------------------------
+\inputdir{XFig}
+% ------------------------------------------------------------
+\sideplot{meqs}{width=0.65\textwidth}{Geometry of the sources used in
+  the numeric experiment. The horizontal and vertical separation
+  between sources is $250$~m. The sources are triggered with $40$~ms
+  delays in the order indicated by their numbers. Time $\tm=0$ is
+  conventionally set to the the triggering moment of source $2$.}
+
+% ------------------------------------------------------------
+\inputdir{saf1}
+% ------------------------------------------------------------
+\multiplot{2}{wfl3-14,rev3}{width=\textwidth} {(a) Wavefields
+  simulated in random media and (b) data acquired with a dense
+  receiver array. Overlain on the model and wavefield are the
+  positions of the sources and borehole receivers. The \geosout{hashed}
+  \geouline{boxed} area corresponds to the images depicted in
+  \rfgs{saf1-uuu3}-\rfn{saf1-wig3}.}
+
+% ------------------------------------------------------------
+\inputdir{saf2}
+% ------------------------------------------------------------
+\multiplot{2}{wfl4-14,rev4}{width=\textwidth} {(a) Wavefields
+  simulated in smooth media and (b) data acquired with a sparse
+  receiver array. Overlain on the model and wavefield are the
+  positions of the sources and borehole receivers. The \geosout{hashed}
+  \geouline{boxed} area corresponds to the images depicted in
+  \rfgs{saf2-uuu4}-\rfn{saf2-wig4}.}
+
+% ------------------------------------------------------------
+\inputdir{saf3}
+% ------------------------------------------------------------
+\multiplot{2}{wfl3-14,rev3}{width=\textwidth} {\geouline{(a) Wavefields
+    simulated in random media and (b) data acquired with two sparse
+    receiver arrays. Overlain on the model and wavefield are the
+    positions of the sources and borehole receivers. The boxed area
+    corresponds to the images depicted in}
+  \rfgs{saf3-uuu3}-\rfn{saf3-wig3}. \geouline{The top traces in panel (b)
+    correspond to the vertical array, and the other traces correspond
+    to the sparse deviated array.}}
+
+% ------------------------------------------------------------
+\inputdir{saf1}
+% ------------------------------------------------------------
+\multiplot{2}{uuu3,wig3}{width=\textwidth}{ Images corresponding to
+  migration of the \textit{densely-sampled data} (\rfg{saf1-rev3})
+  modeled in the \textit{random velocity} by (a) conventional I.C. and
+  (b) interferometric I.C. using the background velocity. The
+  left-most panel shows focusing at source $1$, the middle panel shows
+  focusing at source $2$, and the right-most panel shows focusing at
+  source $3$. The overlain dots represent the exact source
+  positions. }
+
+% ------------------------------------------------------------
+\inputdir{saf2}
+% ------------------------------------------------------------
+\multiplot{2}{uuu4,wig4}{width=\textwidth}{ Images corresponding to
+  migration of the \textit{sparsely-sampled data} (\rfg{saf2-rev4})
+  modeled in the \textit{background velocity} by (a) conventional
+  I.C. and (b) interferometric I.C. using the background velocity. The
+  left-most panel shows focusing at source $1$, the middle panel shows
+  focusing at source $2$, and the right-most panel shows focusing at
+  source $3$. The overlain dots represent the exact source positions.
+}
+
+% ------------------------------------------------------------
+\inputdir{saf3}
+% ------------------------------------------------------------
+\multiplot{2}{uuu3,wig3}{width=\textwidth}{\geouline{Images corresponding
+    to migration of the dual \textit{sparsely-sampled data}}
+  (\rfg{saf3-rev3}) \geouline{modeled in the \textit{random velocity} by
+    (a) conventional I.C. and (b) interferometric I.C. using the
+    background velocity. The left-most panel shows focusing at source
+    $1$, the middle panel shows focusing at source $2$, and the
+    right-most panel shows focusing at source $3$. The overlain dots
+    represent the exact source positions.} }
+
+%% 
+ % show wavefield snapshots (movie) in the vicinity of t=0
+ %%
+
+\rFgs{saf1-uuu3}-\rfn{saf1-wig3}, \rfn{saf2-uuu4}-\rfn{saf2-wig4}
+\geouline{and} \rfn{saf3-uuu3}-\rfn{saf3-wig3} show the wavefields
+reconstructed in reverse time around the target location. From left to
+right, the panels represent the wavefield at different times. As
+indicated earlier, the time at which source $2$ focuses is selected as
+time $\tm=0$, although this convention is not relevant for the
+experiment and any other time could be selected as reference. The
+experiment depicted in \rFgs{saf1-uuu3}-\rfn{saf1-wig3} corresponds to
+modeling in a model with random fluctuations and migration in a smooth
+background model. In this experiment, the data used for imaging are
+densely-sampled in the borehole, \geouline{i.e. there are $81$ receivers
+  separated by approximately $12$~m}. In contrast, the experiment
+depicted in \rfn{saf2-uuu4}-\rfn{saf2-wig4} corresponds to modeling
+and migration in the smooth background model. In this experiment, the
+data are sparsely-sampled in the borehole, \geouline{i.e. there are only
+  $6$ receivers obtained by selecting every $16$th receiver from the
+  original set}.  In all cases, panels (a) correspond to imaging with
+a conventional imaging condition, i.e. simply select the reconstructed
+wavefield at various times, and panels (b) correspond to imaging with
+the interferometric imaging condition, i.e. select various times from
+the wavefield transformed with a pseudo-WDF of $11$ grid points in
+space and $5$ grid points in time. For this example, WDF window
+corresponds to $44$~m in space and $2$~ms in time.
+
+\rFg{saf1-uuu3} shows significant random fluctuations caused by
+wavefield reconstruction using an inaccurate velocity model. The
+fluctuations caused by the random velocity and encoded in the recorded
+data are not corrected during wavefield reconstruction and they remain
+present in the model. Likewise, \rfg{saf2-uuu4} shows significant
+random fluctuations caused by reconstruction using the sparse borehole
+data. However, the \geosout{zero-frequency} pseudo WDF applied to the
+reconstructed wavefields attenuates the rapid wavefield fluctuations
+and leads to sparser, better focused images that are easier to use for
+source location. This conclusion applies equally well for the
+experiments depicted in \rfgs{saf1-uuu3}-\rfn{saf1-wig3} or
+\rfn{saf2-uuu4}-\rfn{saf2-wig4}.
+
+\geouline{The final example corresponds to the case of acquisition with
+  two separate sparse arrays, \rfgs{saf3-wfl3-14}-\rfn{saf3-rev3}. As
+  expected, the wavefields are far less noisy after the application of
+  the WDF, and the focusing is increased due to the larger array
+  aperture. This facilitates an automatic procedure for focusing
+  identification, since most of the spurious noisy is eliminated from
+  the image.  }
+
+%% 
+ % discussion about 3D imaging from a 1D acquisition
+ %%
+
+Finally, I note that the 2D imaging results from this example show
+better focusing than what would be expected in 3D. This is simply
+because the 1D acquisition in the borehole cannot constrain the 3D
+location of the micro-earthquakes, i.e. the azimuthal resolution is
+poor, especially if scatterers are not present in the model used for
+imaging. This situation can be improved by using data acquired in
+several boreholes or by using additional information extracted from
+the wavefields, e.g. polarization of multicomponent data.
+
+% ------------------------------------------------------------
+\section{Conclusions}
+
+The interferometric imaging condition used in conjunction with
+\geosout{reverse-time migration} \geouline{time-reverse imaging} reduces the
+artifacts caused by random velocity fluctuations that are
+unaccounted-for in imaging and by the sparse wavefield sampling on the
+acquisition array. The images produced by this procedure are crisper
+and support automatic picking of micro-earthquake
+locations. \geouline{Imaging with sparse arrays allows increased aperture
+  for identical acquisition cost with that of a narrower but denser
+  array. At the same time, a larger aperture improves focusing of the
+  events, thus facilitating automatic event identification.} The
+interferometric imaging procedure has a similar structure to
+conventional imaging and the moderate cost increase is proportional to
+the size of the windows used by the pseudo Wigner distribution
+functions. The source positions obtained using this procedure can be
+used to monitor fluid injection or for studies of naturally occurring
+earthquakes in fault zones.
+
+% ------------------------------------------------------------
+\section{Acknowledgment}
+This work is supported by the sponsors of the Center for Wave
+Phenomena at Colorado School of Mines and by a research grant from
+ExxonMobil.
+%
+The reproducible numeric examples in this paper use the Madagascar
+open-source software package freely available from
+\url{http://www.reproducibility.org}.
+
+
+
+\bibliographystyle{seg}
+\bibliography{SEG2005,PCS,MISC,BOOKS}

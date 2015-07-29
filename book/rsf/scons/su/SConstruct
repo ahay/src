@@ -1,0 +1,131 @@
+#########################################################
+# Setting up
+#########################################################
+from rsf.suproj import *
+import string
+
+# lateral axis
+nx=100
+fx=0
+dx=0.08
+
+# vertical axis
+nz=110
+fz=0
+dz=0.05
+
+reflectors   = [ [1,   0.0909091],
+                 [2.0, 0.1428570],
+                 [3.5, 0.1111110],
+                 [5,   0.2000000] ]
+velocities   = [ 5, 6, 8, 10, 15 ]
+
+def model(refl):
+    return '''
+    %g %g
+    %g %g
+    1.00000    -99999.0
+    ''' % (fx,refl[0],fx+nx*dx,refl[0])
+
+Flow('model',None,
+     '''
+     echo %s | unif2 ninf=4 nx=%d nz=%d dx=%g dz=%g v00=%s
+     ''' % (string.join(map(model,[[0,0]]+reflectors)),nx,nz,dx,dz,
+            string.join(map(str,velocities),',')))
+Result('model',
+       '''
+       image n1=%d f1=%g d1=%g n2=%d f2=%d d2=%d windowtitle="Model"
+       legend=1 units="wavespeed"
+       wbox=300 hbox=400 xbox=0 ybox=50
+       ''' % (nz,fz,dz,nx,fx,dx))
+
+def ref(refl):
+    return 'ref="%g:-4.0,%g;12.0,%g" ' % (refl[1],refl[0],refl[0])
+
+Flow('data',None,
+     '''
+     susynlv v00=5 fpeak=25 ndpfz=10 dvdz=2 ob=0
+     dt=0.004 nt=501 verb=0 %s
+     nxo=64 fxo=0.1 dxo=0.1
+     nxs=12 fxs=1.4 dxs=-0.1 |
+     suchw key1=cdp key2=gx key3=sx b=1 c=1 d=2 |
+     suaddnoise sn=50 f1=4.0 f2=8.0 f3=20.0 f4=25.0 seed=2004
+     ''' % string.join(map(ref,reflectors)))
+
+Result('data',
+       '''
+       suwind key=sx s=1400 j=250 |
+       sugain tpow=2 gpow=0.5 |
+       suximage label1="Time" label2="Gather" 
+       title="Every 5th Shot Record (display gained)"
+       windowtitle="Shots" 
+       f2=1 d2=0.078125 f2num=1 d2num=5 legend=1 units="amplitude" \
+       wbox=300 hbox=400 xbox=315 ybox=50
+       ''')
+
+if not os.path.isfile('stkvel.p1'): # interactive processing
+    # set velocity sampling
+    nv=120
+    dv=75.0
+    fv=4000.0
+    n1=501
+    d1=0.004
+    pick = []
+    cdps = range(1500,4000,500)
+    for cdp in cdps:
+        panel = 'panel%d' % cdp
+        picks = 'picks%d' % cdp
+        param = 'param%d' % cdp
+        parun = 'parun%d' % cdp
+        pick.append(param+'.su')
+        Flow(panel,'data','suwind key=cdp min=%d max=%d count=12' % (cdp,cdp))
+        Result(panel,
+               'suxwigb title="CDP gather for cdp=%d" xbox=700' % cdp)
+        Flow(picks,panel,
+             '''
+             sugain tpow=2 |
+             sufilter f=1,10,100,120 amps=0,1,1,0 |
+             suvelan nv=%d dv=%g fv=%g |
+             suxcontour nc=35 bclip=0.2 wclip=0.0 d2=%g f2=%g  
+             units="semblance" fc=0.8
+             label1="Time (sec)" label2="Velocity (m/sec)" 
+             title="Velocity Scan (semblance plot) for CMP %s"
+             mpicks=$TARGET
+             ''' % (nv,dv,fv,dv,fv,cdp), stdout=-1)
+        Flow(param,picks,'sort -n | mkparfile string1=tnmo string2=vnmo')
+        Flow(parun,param,'sed s/tnmo/xin/ | sed s/vnmo/yin/')
+        Result(param,parun,
+               '''
+               unisam nout=%d fxout=0.0 dxout=%g par=$SOURCE method=spline |
+               xgraph n=%d nplot=1 d1=%g f1=0.0
+               label1="Time (sec)" label2="Velocity (m/sec)"
+               title="Stacking Velocity Function: CMP %d"
+               grid1=solid grid2=solid
+               linecolor=2 style=seismic
+               ''' % (n1,d1,n1,d1,cdp),stdin=0)
+    Command('stkvel.p1',pick,
+            'echo cdp=%s > $TARGET && cat $SOURCES >> $TARGET' %
+            string.join(map(str,cdps),','))
+
+Flow('nmo','data stkvel.p1','sunmo par=${SOURCES[1]}')
+Result('nmo',
+       '''
+       suwind key=sx s=1400 j=250 |
+       sugain tpow=2 gpow=0.5 |
+       suximage label1="Time" label2="Gather"
+       title="Every 5th Shot Record After NMO"
+       windowtitle="NMO" legend=1 units="amplitude"
+       f2=1 d2=0.078125 f2num=1 d2num=5
+       wbox=300 hbox=400 xbox=630 ybox=50
+       ''')
+
+Flow('stack','nmo','susort | sustack normpow=1.0')
+Result('stack',
+       '''
+       sugain tpow=2 gpow=0.5 |
+       suximage label1="Time" label2="CMP" title="Stack" windowtitle="Stack"
+       f2=350 d2=50  legend=1 units="amplitude"
+       wbox=300 hbox=400 xbox=945 ybox=50
+       ''')
+
+End()

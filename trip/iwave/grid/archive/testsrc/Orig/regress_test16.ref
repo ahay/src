@@ -1,0 +1,288 @@
+GRIDPP Unit Test 16
+Least squares solution of square linear system
+  y_i = i * x_i
+Operator implemented as OpFO, using FOs at top of file
+Target solution - x_i=1, i=1,...n
+LBFGS iteration with backtracking line search
+float version, solution in temp file so not saved
+
+Iteration |      f(x)   | ||gradf(x)||
+         1      2727.636     1772.6345
+BacktrackingLineSearchAlg::run:
+  initial function value = 2727.636
+  initial descent rate   = -1772.6345
+  estimated step         = 0.1
+  max feasible step      = 3.4028235e+38
+BacktrackingLineSearchAlg::run:
+  backtrack step 1
+  trial function value = 8738263
+  trial step           = 0.1
+BacktrackingLineSearchAlg::run:
+  backtrack step 2
+  trial function value = 2108045.2
+  comparison G-A value = 2711.9248
+  trial step           = 0.050000001
+BacktrackingLineSearchAlg::run:
+  backtrack step 3
+  trial function value = 489774.81
+  comparison G-A value = 2719.7805
+  trial step           = 0.025
+BacktrackingLineSearchAlg::run:
+  backtrack step 4
+  trial function value = 104851.66
+  comparison G-A value = 2723.7083
+  trial step           = 0.0125
+BacktrackingLineSearchAlg::run:
+  backtrack step 5
+  trial function value = 18439.039
+  comparison G-A value = 2725.6721
+  trial step           = 0.0062500001
+BacktrackingLineSearchAlg::run:
+  backtrack step 6
+  trial function value = 1745.6785
+  comparison G-A value = 2726.6541
+  trial step           = 0.003125
+BacktrackingLineSearchAlg::run:
+  Termination: successful step
+  new step             = 0.003125
+         2     1745.6785     1418.1178
+BacktrackingLineSearchAlg::run:
+  initial function value = 1745.6785
+  initial descent rate   = -1418.1243
+  estimated step         = 0.003125
+  max feasible step      = 3.4028235e+38
+BacktrackingLineSearchAlg::run:
+  backtrack step 1
+  trial function value = 1734.8152
+  trial step           = 0.003125
+BacktrackingLineSearchAlg::run:
+  Termination: successful step
+  new step             = 0.0046875002
+         3     1734.8152     1413.6792
+BacktrackingLineSearchAlg::run:
+  initial function value = 1734.8152
+  initial descent rate   = -1413.6819
+  estimated step         = 0.0046875002
+  max feasible step      = 3.4028235e+38
+BacktrackingLineSearchAlg::run:
+  backtrack step 1
+  trial function value = 1718.5614
+  trial step           = 0.0046875002
+BacktrackingLineSearchAlg::run:
+  Termination: successful step
+  new step             = 0.0070312503
+         4     1718.5614     1407.0483
+BacktrackingLineSearchAlg::run:
+  initial function value = 1718.5614
+  initial descent rate   = -1407.0603
+  estimated step         = 0.0070312503
+  max feasible step      = 3.4028235e+38
+BacktrackingLineSearchAlg::run:
+  backtrack step 1
+  trial function value = 1694.4873
+  trial step           = 0.0070312503
+BacktrackingLineSearchAlg::run:
+  Termination: successful step
+  new step             = 0.010546875
+         5     1694.4873     1397.1666
+BacktrackingLineSearchAlg::run:
+  initial function value = 1694.4873
+  initial descent rate   = -1397.1669
+  estimated step         = 0.010546875
+  max feasible step      = 3.4028235e+38
+BacktrackingLineSearchAlg::run:
+  backtrack step 1
+  trial function value = 1658.9384
+  trial step           = 0.010546875
+BacktrackingLineSearchAlg::run:
+  Termination: successful step
+  new step             = 0.015820313
+         6     1658.9384     1382.4243
+BacktrackingLineSearchAlg::run:
+  initial function value = 1658.9384
+  initial descent rate   = -1382.4301
+  estimated step         = 0.015820313
+  max feasible step      = 3.4028235e+38
+BacktrackingLineSearchAlg::run:
+  backtrack step 1
+  trial function value = 1606.8796
+  trial step           = 0.015820313
+BacktrackingLineSearchAlg::run:
+  Termination: successful step
+  new step             = 0.02373047
+         7     1606.8796     1360.5592
+BacktrackingLineSearchAlg::run:
+  initial function value = 1606.8796
+  initial descent rate   = -1360.5537
+  estimated step         = 0.02373047
+  max feasible step      = 3.4028235e+38
+BacktrackingLineSearchAlg::run:
+  backtrack step 1
+  trial function value = 1531.5197
+  trial step           = 0.02373047
+BacktrackingLineSearchAlg::run:
+  Termination: successful step
+  new step             = 0.035595704
+         8     1531.5197     1328.2682
+BacktrackingLineSearchAlg::run:
+  initial function value = 1531.5197
+  initial descent rate   = -1328.2582
+  estimated step         = 0.035595704
+  max feasible step      = 3.4028235e+38
+BacktrackingLineSearchAlg::run:
+  backtrack step 1
+  trial function value = 1424.4242
+  trial step           = 0.035595704
+BacktrackingLineSearchAlg::run:
+  Termination: successful step
+  new step             = 0.053393558
+         9     1424.4242     1280.9889
+BacktrackingLineSearchAlg::run:
+  initial function value = 1424.4242
+  initial descent rate   = -1280.9968
+  estimated step         = 0.053393558
+  max feasible step      = 3.4028235e+38
+BacktrackingLineSearchAlg::run:
+  backtrack step 1
+  trial function value = 1276.3658
+  trial step           = 0.053393558
+BacktrackingLineSearchAlg::run:
+  Termination: successful step
+  new step             = 0.080090337
+        10     1276.3658     1212.5895
+BacktrackingLineSearchAlg::run:
+  initial function value = 1276.3658
+  initial descent rate   = -1212.6001
+  estimated step         = 0.080090337
+  max feasible step      = 3.4028235e+38
+BacktrackingLineSearchAlg::run:
+  backtrack step 1
+  trial function value = 1080.1012
+  trial step           = 0.080090337
+BacktrackingLineSearchAlg::run:
+  Termination: successful step
+  new step             = 0.1201355
+        11     1080.1012     1115.4769
+BacktrackingLineSearchAlg::run:
+  initial function value = 1080.1012
+  initial descent rate   = -1115.4609
+  estimated step         = 0.1201355
+  max feasible step      = 3.4028235e+38
+BacktrackingLineSearchAlg::run:
+  backtrack step 1
+  trial function value = 836.18347
+  trial step           = 0.1201355
+BacktrackingLineSearchAlg::run:
+  Termination: successful step
+  new step             = 0.18020326
+        12     836.18347     981.47119
+BacktrackingLineSearchAlg::run:
+  initial function value = 836.18347
+  initial descent rate   = -981.47351
+  estimated step         = 0.18020326
+  max feasible step      = 3.4028235e+38
+BacktrackingLineSearchAlg::run:
+  backtrack step 1
+  trial function value = 561.96411
+  trial step           = 0.18020326
+BacktrackingLineSearchAlg::run:
+  Termination: successful step
+  new step             = 0.27030489
+        13     561.96411     804.60229
+BacktrackingLineSearchAlg::run:
+  initial function value = 561.96411
+  initial descent rate   = -804.60822
+  estimated step         = 0.27030489
+  max feasible step      = 3.4028235e+38
+BacktrackingLineSearchAlg::run:
+  backtrack step 1
+  trial function value = 299.22635
+  trial step           = 0.27030489
+BacktrackingLineSearchAlg::run:
+  Termination: successful step
+  new step             = 0.40545732
+        14     299.22635     587.11633
+BacktrackingLineSearchAlg::run:
+  initial function value = 299.22635
+  initial descent rate   = -587.12085
+  estimated step         = 0.40545732
+  max feasible step      = 3.4028235e+38
+BacktrackingLineSearchAlg::run:
+  backtrack step 1
+  trial function value = 105.7707
+  trial step           = 0.40545732
+BacktrackingLineSearchAlg::run:
+  Termination: successful step
+  new step             = 0.60818601
+        15      105.7707     349.06494
+BacktrackingLineSearchAlg::run:
+  initial function value = 105.7707
+  initial descent rate   = -349.0676
+  estimated step         = 0.60818601
+  max feasible step      = 3.4028235e+38
+BacktrackingLineSearchAlg::run:
+  backtrack step 1
+  trial function value = 16.236853
+  trial step           = 0.60818601
+BacktrackingLineSearchAlg::run:
+  Termination: successful step
+  new step             = 0.91227901
+        16     16.236853     136.76584
+BacktrackingLineSearchAlg::run:
+  initial function value = 16.236853
+  initial descent rate   = -136.76518
+  estimated step         = 0.91227901
+  max feasible step      = 3.4028235e+38
+BacktrackingLineSearchAlg::run:
+  backtrack step 1
+  trial function value = 0.12492604
+  trial step           = 0.91227901
+BacktrackingLineSearchAlg::run:
+  Termination: successful step
+  new step             = 1.3684185
+        17    0.12492604     11.996512
+BacktrackingLineSearchAlg::run:
+  initial function value = 0.12492604
+  initial descent rate   = -11.996589
+  estimated step         = 1.3684185
+  max feasible step      = 3.4028235e+38
+BacktrackingLineSearchAlg::run:
+  backtrack step 1
+  trial function value = 0.016957773
+  trial step           = 1.3684185
+BacktrackingLineSearchAlg::run:
+  Termination: successful step
+  new step             = 2.0526276
+        18   0.016957773     4.4198747
+BacktrackingLineSearchAlg::run:
+  initial function value = 0.016957773
+  initial descent rate   = -4.4199128
+  estimated step         = 2.0526276
+  max feasible step      = 3.4028235e+38
+BacktrackingLineSearchAlg::run:
+  backtrack step 1
+  trial function value = 0.018790461
+  trial step           = 2.0526276
+BacktrackingLineSearchAlg::run:
+  backtrack step 2
+  trial function value = 1.17257e-05
+  comparison G-A value = 0.016954292
+  trial step           = 1.0263138
+BacktrackingLineSearchAlg::run:
+  Termination: successful step
+  new step             = 1.0263138
+        19   1.17257e-05    0.11622267
+BacktrackingLineSearchAlg::run:
+  initial function value = 1.17257e-05
+  initial descent rate   = -0.11622371
+  estimated step         = 1.0263138
+  max feasible step      = 3.4028235e+38
+BacktrackingLineSearchAlg::run:
+  backtrack step 1
+  trial function value = 8.3381879e-09
+  trial step           = 1.0263138
+BacktrackingLineSearchAlg::run:
+  Termination: successful step
+  new step             = 1.5394707
+        20 8.3381879e-09  0.0030992753
+test16 result: max=0 min=0

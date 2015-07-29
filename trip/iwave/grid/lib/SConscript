@@ -1,0 +1,33 @@
+import os
+
+imports = ' libname cpplist srclist'
+
+try:  # madagascar version
+    Import('env root pkgdir libdir' + imports)
+    env = env.Clone()
+    env.Append(CPPPATH = cpplist)
+    cxx = 'c++' in env.get('API',[])
+except:  # autonomous version    
+    Import('vars' + imports)
+    root = None
+    env = Environment(ENV = os.environ,
+                      variables = vars,
+                       CC={'CC' : '${CC}'},
+                       CFLAGS={'CFLAGS' : '${CFLAGS}'},
+                       CCFLAGS={'CCFLAGS' : '${CCFLAGS}'},
+                       CXX={'CXX' : '${CXX}'},
+                       CXXFLAGS={'CXXFLAGS' : '${CXXFLAGS}'},
+                       CPPPATH = cpplist)
+    cxx = env.get('CXX',None)
+
+# create list of source files found in prescribed source directories
+srcs=[]
+for dir in srclist:
+    srcs=srcs+Glob(os.path.join('..',dir,'*.c'))
+    if cxx:
+        srcs=srcs+Glob(os.path.join('..',dir,'*.cc'))
+        srcs=srcs+Glob(os.path.join('..',dir,'*.cpp'))
+
+# create library
+if len(srcs) > 0:
+    env.Library(libname,srcs)

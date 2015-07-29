@@ -1,0 +1,57 @@
+from rsf.proj import *
+
+# using CMPs after demultiple
+data='../lpf/cmp.rsf'
+vel='../vel/vels.rsf'
+
+##############
+## perform nmo
+###############
+
+Flow('nmo',[data,vel],
+     '''
+     nmo half=n velocity=${SOURCES[1]}
+     | mutter half=n v0=1450 x0=200 abs=n
+     ''')
+
+############
+# NMO stack
+############
+
+Flow('nmostk','nmo','stack')
+
+###########
+# DMO stack
+###########
+f1=100
+nout=6000
+flo=20
+dx=6.25
+nc=9701
+nf=3001
+
+#nf=2026
+
+Flow('d0','nmo','window f1=%d | logstretch nout=%d | put o2=14.625 d=6.25'% (f1,nout),split=[3,nc])
+
+#Flow('unstretch','d0','window n1=%d | logstretch inv=y | pad beg1=%d ' % (nout,f1),split=[3,nc])
+
+Flow('fft1','d0','fft1',split=[3,nc])
+
+Flow('fft1t','fft1','transp plane=13 memsize=1200',split=[3,nc],reduce="cat axis=1")
+
+Flow('d','fft1t','finstack | transp memsize=1200')
+
+Flow('invfft1','d','fft1 inv=y',split=[2,nc])
+
+Flow('predmo','invfft1','window n1=%d |logstretch inv=y | pad beg1=%d ' % (nout,f1),split=[2,nc])
+
+Flow('dmostk','predmo',
+     '''
+     put o1=0 d1=.001 n1=3000 unit1=s label1=time
+         o3=5391.88 d3=6.25 n3=1 unit3=m label3=crossline
+         o4=5391.88 d4=6.25 n4=1 unit4=m label4=offset
+     ''')
+
+End()
+

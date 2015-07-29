@@ -1,0 +1,201 @@
+from rsf.proj import *
+import sys
+sys.path.append('Python')
+import fdmod,stiffness,pot,fdd,pot,spk,fdm,stiff
+
+# ------------------------------------------------------------
+par = {
+    'nx':240, 'ox':0, 'dx':0.002,  'lx':'x', 'ux':'km',
+    'ny':240, 'oy':0, 'dy':0.002,  'ly':'y', 'uy':'km',
+    'nz':240, 'oz':0, 'dz':0.002,  'lz':'z', 'uz':'km',
+    'nt':401, 'ot':0, 'dt':0.0002, 'lt':'t', 'ut':'s',
+    'kt':100,
+    'jsnap':100,
+    'height':10,
+    'nb':5,
+    'frq':100,
+    'nbell':1
+    }
+fdm.param(par)
+par['nframe']=4
+par['dabc']='y'
+par['labelattr']=par['labelattr']+'''o2num=0 d2num=0.1 n2tic=5 
+parallel2=n format2=%3.1f  o4num=0 d4num=0.1 n4tic=5  labelsz=8
+'''
+xformat='''pclip=100  frame1=12 frame2=12 frame3=12 
+                      label1=sample# unit1= 
+                      label2=sample# unit2= 
+                      label3=sample# unit3= 
+                      yll=1 xll=2.
+                      o2num=20 d2num=5 n2tic=5 '''
+iframe=4
+# ------------------------------------------------------------
+# Thomsen parameters
+par['vp']=3.5
+par['vs']=1.75
+par['ro']=2.0
+par['eps']=0.4
+par['del']=0.1
+par['gam']=0.
+par['nuu']=30.
+par['alp']=45.
+# ------------------------------------------------------------
+par['kz']=2./3.*par['nz']
+
+# ------------------------------------------------------------
+fdm.wavelet('wav_',par['frq'],par)
+# ------------------------------------------------------------
+# acoustic source
+Flow(  'wava','wav_','transp')
+Result('wava','transp |' + fdm.waveplot('',par))
+
+# ------------------------------------------------------------
+# elastic source
+# ------------------------------------------------------------
+Flow('souz','wav_','math output=input*1')
+Flow('soux','wav_','math output=input*0')
+Flow('souy','wav_','math output=input*0')
+
+Flow('wave2d',['souz','soux'],
+     '''
+     cat axis=2 space=n ${SOURCES[1:2]} |
+     transp plane=12 |
+     transp plane=23 |
+     transp plane=12
+     ''')
+fdm.ewavelet('wave2d','',par)
+
+Flow('wave3d',['souz','soux','souy'],
+     '''
+     cat axis=2 space=n ${SOURCES[1:3]} |
+     transp plane=12 |
+     transp plane=23 |
+     transp plane=12
+     ''')
+fdm.ewavelet3d('wave3d','',par)
+
+# ------------------------------------------------------------
+# source/receiver coordinates
+# ------------------------------------------------------------
+
+xsou=par['ox']+(par['nx']/2*par['dx']);
+ysou=par['oy']+(par['ny']/2*par['dy']);
+zsou=par['oz']+(par['nz']/2*par['dz']);
+print xsou,ysou,zsou
+center=fdm.center3d(xsou,ysou,1*zsou,par)
+
+fdm.point('ss2d',xsou,zsou,par)
+fdm.horizontal('rr2d',0,par)
+Plot('rr2d',fdm.rrplot('',par))
+Plot('ss2d',fdm.ssplot('',par))
+
+fdm.point3d('ss3d',xsou,ysou,zsou,par)
+fdm.horizontal3d('rr3d',0,par)
+
+
+# ------------------------------------------------------------
+# stiffness tensor
+# ------------------------------------------------------------
+Flow('zero3d',None,
+     '''
+     spike nsp=1 mag=0.0
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g 
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g 
+     n3=%(ny)d o3=%(oy)g d3=%(dy)g |
+     put label1=%(lz)s label2=%(lx)s label3=%(ly)s unit1=%(uz)s unit2=%(ux)s unit3=%(uy)s
+     ''' % par)
+Flow('vp3d','zero3d','math output="%(vp)g"' %par)
+Flow('vs3d','zero3d','math output="%(vs)g"' %par)
+Flow('ro3d','zero3d','math output="%(ro)g"' %par)
+Flow('eps3d','zero3d','math output="%(eps)g"' %par)
+Flow('del3d','zero3d','math output="%(del)g"' %par)
+Flow('gam3d','zero3d','math output="%(gam)g"' %par)
+Flow('nuu3d','zero3d','math output="%(nuu)g"' %par)
+Flow('alp3d','zero3d','math output="%(alp)g"' %par)
+
+Flow('cA3d','vp3d vs3d ro3d eps3d del3d gam3d nuu3d alp3d',
+     '''
+     stiff3d      vp=${SOURCES[0]} vs=${SOURCES[1]} ro=${SOURCES[2]}
+                  epsilon=${SOURCES[3]} delta=${SOURCES[4]} gamma=${SOURCES[5]}
+                  nu=${SOURCES[6]} alpha=${SOURCES[7]} 
+                  dim=3 verb=y
+     ''')
+
+# ------------------------------------------------------------
+
+# 3D elastic modeling
+fdm.ewefd3d('de3d','we3d','wave3d','cA3d','ro3d','ss3d','rr3d','ssou=n opot=n nbell=5',par)
+
+Result('de3d',
+       '''
+       window n2=1 |
+       put
+       n1=%(nx)d o1=%(ox)g d1=%(dx)g label1=%(lx)s unit1=%(ux)s 
+       n2=%(ny)d o2=%(oy)g d2=%(dy)g label2=%(ly)s unit1=%(uy)s 
+       n3=%(nt)d o3=%(ot)g d3=%(dt)g label3=%(lt)s unit1=%(ut)s |
+       transp plane=23 |
+       transp plane=12 |
+       ''' % par
+       + fdm.dgrey3d('pclip=99.9 movie=3'+center+' frame1=%d' % (0.85*par['nt']) ,par))
+
+name=[' Z',' X',' Y']
+for i in range(3):
+    tag = "%d"%i
+    par['comp']=i
+    par['iframe']=iframe
+    tit=name[i]
+    Flow('we3d-'+tag,'we3d',
+         ''' 
+         window n5=1 f5=%(iframe)d n4=1 f4=%(comp)d 
+                n1=%(nz)d f1=%(nb)d 
+                n2=%(nx)d f2=%(nb)d 
+                n3=%(ny)d f3=%(nb)d 
+         '''%par )
+#    Result('we3d-'+tag,'we3d-'+tag,fdm.cgrey3d('pclip=100 title="compnent%s"'%tit +center ,par))
+
+pot.cliptogether3('uA3','we3d-0','we3d-1','we3d-2','"\F5 W\_z"','"\F5 W\_x"','"\F5 W\_y"',1,center,'',par)
+#fdd.Polar3d('kp',center,par)
+
+# ------------------------------------------------------------
+
+spk.deltx3('spk3',64,64,64,par)
+
+#fdd.separator3TTI('dz','dx','dy','spk3','cA3d','nuu3d','alp3d','y','k',27,27,27,par)
+fdd.separator3TTI('dz','dx','dy','spk3','cA3d','y','k',27,27,27,par)
+
+Plot('dz',fdm.cgrey3d(' movie=1  flat=y  flat=y color=e'+center,par),view=1)
+Plot('dx',fdm.cgrey3d(' movie=2  flat=y   color=e'+center,par),view=1)
+Plot('dy',fdm.cgrey3d(' movie=3  flat=y  flat=y color=e'+center,par),view=1)
+
+
+
+# ------------------------------------------------------------
+
+
+windowcmd='window min1=20 max1=44 min2=20 max2=44 min3=20 max3=44|'
+
+fdd.separator3TTI('dzX','dxX','dyX','spk3','cA3d','y','x',27,27,27,par)
+
+
+Result('dzX',windowcmd+pot.plotop3d(xformat+' point1=.5 title="\F5 P: L\_z"',par))
+Result('dxX',windowcmd+pot.plotop3d(xformat+' point1=.5 title="\F5 P: L\_x"',par))
+Result('dyX',windowcmd+pot.plotop3d(xformat+' point1=.5 title="\F5 P: L\_y"',par))
+
+ux='we3d-1'
+uy='we3d-2'
+uz='we3d-0'
+
+Flow(ux+'k',ux,'rtoc | fft3 axis=1 opt=n pad=1 | fft3 axis=2 opt=n pad=1| fft3 axis=3 opt=n pad=1')
+Flow(uy+'k',uy,'rtoc | fft3 axis=1 opt=n pad=1 | fft3 axis=2 opt=n pad=1| fft3 axis=3 opt=n pad=1')
+Flow(uz+'k',uz,'rtoc | fft3 axis=1 opt=n pad=1 | fft3 axis=2 opt=n pad=1| fft3 axis=3 opt=n pad=1')
+
+
+Flow('nuu3dr','nuu3d','scale rscale=.017453')
+Flow('alp3dr','alp3d','scale rscale=.017453')
+fdd.SepKP3TTI('P','SV','SH','we3d-0','we3d-1','we3d-2','dz','dx','dy','nuu3dr','alp3dr',par)
+
+pot.cliptogether3('pA3','P','SV','SH','"\F5 P"','"\F5 SV"','"\F5 SH"',1,center,'',par)
+
+
+
+End()

@@ -1,0 +1,176 @@
+from rsf.proj import *
+
+for i in range(6):
+    m = 'm%d' % i
+    j = 'j%d' % i
+
+    # Get a migrated image for month i
+    hh = m + '_stack.HH'
+    Fetch(hh,'dury')
+
+    # Filter: Bandpass and AGC 
+    Flow(m,hh,
+         '''
+         dd form=native |
+         bandpass flo=20 fhi=250 |
+         agc window=100 |
+         window max1=0.3 |
+         put label1=Time unit1=s
+         ''')
+    Flow(j,m,'window j2=2 j3=2')
+
+    # Select 2-D slice
+    slice = 'slice%i' % i
+    Flow(slice,m,'window f3=35 n3=1')
+    Plot(slice,'grey wanttitle=n wheretitle=t wherexlabel=b parallel2=n font=2 format2="%3.2f" labelsz=11')
+
+    Flow('clip.par','slice0','byte | get clip')
+
+    # take difference with base
+    if i > 0:
+        diff = 'diff%i' % i
+        Flow(diff,[slice,'slice0'],'add scale=1,-1 ${SOURCES[1]}')
+        Plot(diff,[diff,'clip.par'],
+             'grey par=${SOURCES[1]} wanttitle=n wheretitle=t wherexlabel=b parallel2=n font=2 format2="%3.2f" labelsz=11')        
+
+Plot('s0',None,'box font=2 x0=2.350000 y0=9.5 label="No steam" xt=0.000000 yt=0.000000')
+Plot('s1',None,'box font=2 x0=7.000000 y0=9.5 label="2-months steam" xt=0.000000 yt=0.000000')
+Plot('s2',None,'box font=2 x0=11.538333 y0=9.5 label="5-months steam" xt=0.000000 yt=0.000000')
+Plot('s3',None,'box font=2 x0=2.350000 y0=9.5 label="9-months steam" xt=0.000000 yt=0.000000')
+Plot('s4',None,'box font=2 x0=7.000000 y0=9.5 label="13-months steam" xt=0.000000 yt=0.000000')
+Plot('s5',None,'box font=2 x0=11.538333 y0=9.5 label="19-months steam" xt=0.000000 yt=0.000000')
+
+Plot('stka','slice0 slice1 slice2','SideBySideAniso')
+Result('stka','stka s0 s1 s2','Overlay')
+
+Plot('stkb','slice3 slice4 slice5','SideBySideAniso')
+Result('stkb','stkb s3 s4 s5','Overlay')
+
+Plot('difa','slice0 diff1 diff2','SideBySideAniso')
+Result('difa','difa s0 s1 s2','Overlay')
+
+Plot('difb','diff3 diff4 diff5','SideBySideAniso')
+Result('difb','difb s3 s4 s5','Overlay')
+
+Plot('difc','slice0 diff1 diff5','SideBySideAniso')
+Result('difc','difc s0 s1 s5','Overlay')
+
+g0=0.9  # starting change 
+g1=2-g0  # last change
+ng=101   # number of changes to scan
+dg = (g1-g0)/(ng-1)
+
+for i in range(1,6):
+    slice = 'slice%d' % i
+
+    # Warping scan
+    ##############
+    scan = 'scan%d' % i
+    Flow(scan,[slice,'slice0'],
+         '''
+         warpscan other=${SOURCES[1]} niter=100
+         ng=%d g0=%g dg=%g rect1=20 rect3=3 
+         ''' % (ng,g0,dg))
+    Result(scan,
+           '''
+           byte allpos=y |
+           grey3 flat=n frame1=200 frame2=50 frame3=36
+           color=j wanttitle=n
+           label1=Time unit1=s
+           label2="Relative Stretch"
+           label3="X distance" unit3=km
+           ''')
+
+    # Pick the stretch
+    pick = 'pick%d' % i
+    Flow(pick,scan,'pick rect1=20 rect2=10 vel0=1 | window')
+    Result(pick,
+           '''
+           grey color=j scalebar=y wanttitle=n
+           label1=Time unit1=s label2=Trace bias=1
+           ''')
+
+    # Convert stretch to shift
+    shift = 'shift%d' % i
+    Flow(shift,pick,'math output="(input-1)*x1" ')
+        
+    # Apply the stretch
+    warp = 'warp%d' % i
+    Flow(warp,[slice,'slice0',shift],
+         '''
+         warp1 other=${SOURCES[1]} warpin=${SOURCES[2]}
+         verb=1 nliter=0 
+         ''')
+    diff = 'dif%d' % i    
+    Flow(diff,[warp,'slice0'],'add scale=1,-1 ${SOURCES[1]}')
+
+    # display
+    Plot(warp,'grey wanttitle=n wheretitle=t wherexlabel=b')
+    Plot(diff,[diff,'clip.par'],
+         'grey par=${SOURCES[1]} wanttitle=n wheretitle=t wherexlabel=b parallel2=n font=2 format2="%3.2f" labelsz=11')  
+
+Plot('stka2','slice0 warp1 warp2','SideBySideAniso')
+Result('stka2','stka2 s0 s1 s2','Overlay')
+
+Plot('stkb2','warp3 warp4 warp5','SideBySideAniso')
+Result('stkb2','stkb2 s3 s4 s5','Overlay')
+
+Plot('difa2','slice0 dif1 dif2','SideBySideAniso')
+Result('difa2','difa2 s0 s1 s2','Overlay')
+
+Plot('difb2','dif3 dif4 dif5','SideBySideAniso')
+Result('difb2','difb2 s3 s4 s5','Overlay')
+
+Plot('difc2','slice0 dif1 dif5','SideBySideAniso')
+Result('difc2','difc2 s0 s1 s5','Overlay')
+
+# 3-D registration
+
+Flow('b0','m0','window n1=10 f1=200 | stack axis=1')
+Result('b0','grey wanttitle=n transp=n yreverse=n label1="X distance" label2="Y distance" wherexlabel=b color=j')
+
+# Warping scan
+##############
+for i in range(1,3):
+    j = 'j%d' % i
+    s = 's%d' % i
+    
+    Flow(s,[j,'j0'],
+         '''
+         warpscan other=${SOURCES[1]} niter=100
+         ng=%d g0=%g dg=%g rect1=20 rect3=3 rect4=3 
+         ''' % (ng,g0,dg))
+
+    # Pick the stretch
+    p = 'p%d' % i
+    Flow(p,s,'pick rect1=20 rect2=5 rect3=5 vel0=1 | window')
+
+    # Convert stretch to shift
+    h = 'h%d' % i
+    Flow(h,p,
+         '''
+         math output="(input-1)*x1" |
+         transp plane=13 | remap1 n1=71 d1=0.005 | transp plane=13 |
+         transp | remap1 n1=72 d1=0.005 | transp
+         ''')
+
+    m = 'm%d' % i
+    w = 'w%d' % i
+
+    # Apply the stretch
+    Flow(w,[m,'m0',h],
+         '''
+         warp1 other=${SOURCES[1]} warpin=${SOURCES[2]}
+         verb=1 nliter=0 
+         ''')
+    
+    t = 't%d' % i
+    b = 'b%d' % i
+    
+    Flow(t,w,'window n1=10 f1=200 | stack axis=1')
+    Flow(b,m,'window n1=10 f1=200 | stack axis=1')
+
+    Result(b,'grey wanttitle=n transp=n yreverse=n label1="X distance" label2="Y distance" wherexlabel=b color=j')
+    Result(t,'grey wanttitle=n transp=n yreverse=n label1="X distance" label2="Y distance" wherexlabel=b color=j')
+
+End()

@@ -1,0 +1,125 @@
+from rsf.proj import *
+from rsf.recipes.beg import server as private
+
+Fetch('model0.dat','bgp',private)
+
+# Convert to RSF Model
+Flow('model','model0.dat',
+     '''
+     echo in=$SOURCE n1=1500 n2=160 data_format=native_float | 
+     put d1=0.002 o1=0 d2=0.05 o2=0
+     ''',stdin=0)
+
+# Add saltpepper white noise
+Flow('noise0','model',
+     'transp | saltpepper seed=122009 den=5 inten=2 |  transp')
+
+for yy in range(9):
+    title = 'mf%d' % (3+yy*2)
+    
+    # Apply filter
+    Flow(title,'noise0','mf nfw=%d | bandpass flo=5 ' % (3+yy*2))
+    Plot(title,
+         '''
+         wiggle transp=y yreverse=y color=n title="window=%d" 
+         clip=0.05 wherexlabel=top wheretitle=b 
+         label1=Time label2=Lateral unit1=s unit2=km
+         ''' % (3+yy*2))
+
+# noise density=5% intensity=0.5
+Flow('snr05',None,
+     '''
+     spike n1=9 d1=2 o1=3
+     nsp=9 k1=1,2,3,4,5,6,7,8,9 mag=54.7,62.5,59.0,47.0,28.8,35.9,55.3,58.3,53.3 |
+     math output="input*0.5"
+     ''')
+Flow('es05',None,
+     '''
+     spike n1=9 d1=2 o1=3 nsp=9 k1=1,2,3,4,5,6,7,8,9 
+     mag=0.577465,0.449585,0.266174,0.098884,0.012485,0.015267,0.017958,0.016764,0.013117
+     ''')
+Flow('en05',None,
+     '''
+     spike n1=9 d1=2 o1=3 nsp=9 k1=1,2,3,4,5,6,7,8,9 
+     mag=0.037391,0.019781,0.013942,0.00941,0.002963,0.002538,0.001127,0.000909,0.000914
+     ''')
+
+# noise density=5% intensity=1
+Flow('snr1',None,
+     '''
+     spike n1=9 d1=2 o1=3
+     nsp=9 k1=1,2,3,4,5,6,7,8,9 mag=30.2,58.2,56.1,47.6,22.0,23.6,44.1,49.1,51.0 |
+     math output="input*0.5"
+     ''')
+Flow('es1',None,
+     '''
+     spike n1=9 d1=2 o1=3 nsp=9 k1=1,2,3,4,5,6,7,8,9 
+     mag=0.572773,0.414113,0.250248,0.095460,0.014247,0.012108,0.017518,0.016522,0.013249
+     ''')
+Flow('en1',None,
+     '''
+     spike n1=9 d1=2 o1=3 nsp=9 k1=1,2,3,4,5,6,7,8,9 
+     mag=0.126716,0.022572,0.015148,0.008847,0.004735,0.004541,0.001928,0.001418,0.000998
+     ''')
+
+# noise density=5% intensity=2
+Flow('snr2',None,
+     '''
+     spike n1=9 d1=2 o1=3 
+     nsp=9 k1=1,2,3,4,5,6,7,8,9 mag=31.6,44.1,41.1,31.0,10.1,22.2,50.3,51.8,50.4 |
+     math output="input*0.5"
+     ''')
+Flow('es2',None,
+     '''
+     spike n1=9 d1=2 o1=3 nsp=9 k1=1,2,3,4,5,6,7,8,9 
+     mag=0.571665,0.429634,0.246916,0.098846,0.012973,0.016185,0.020953,0.018023,0.014574
+     ''')
+Flow('en2',None,
+     '''
+     spike n1=9 d1=2 o1=3 nsp=9 k1=1,2,3,4,5,6,7,8,9 
+     mag=0.117720,0.047330,0.031704,0.020943,0.013110,0.005346,0.001690,0.001350,0.001171
+     ''')
+
+box = '''
+      box x0=%g y0=%g label="%s" xt=%g yt=%g lab_fat=3
+      '''
+Plot('es','es05 es1 es2',
+     '''
+     cat axis=2 ${SOURCES[1:3]} | 
+     graph  wanttitle=n dash=0,9,2 plotfat=5 
+     label2="Signal energy"  unit2= parallel2=n n2tic=20 labelfat=3 gridfat=3  
+     label1="Filter-window length  C" unit1=point 
+     grid=n pad=n o1num=3 d1num=2 n1tic=9
+     ''')
+Plot('les05',None,box % (2.85,8.18,"Intensity 1/2",1,0.5))
+Plot('les2',None,box % (3.4,7.2,"Intensity 2",1,0.5))
+Plot('les1',None,box % (3.7,6.5,"Intensity 1",1,-0.5))
+Result('es','es les05 les1 les2','Overlay')
+
+Plot('en','en05 en1 en2',
+     '''
+     cat axis=2 ${SOURCES[1:3]} | 
+     graph  wanttitle=n dash=0,9,2 plotfat=5 
+     label2="Noise energy"  unit2= parallel2=n n2tic=20 labelfat=3 gridfat=3  
+     label1="Filter-window length  C" unit1=point
+     grid=n pad=n o1num=3 d1num=2 n1tic=9
+     ''')
+Plot('len05',None,box % (4.8,2.08,"Intensity 1/2",-1,-0.5))
+Plot('len1',None,box % (3.13,4.7,"Intensity 1",1,0.5))
+Plot('len2',None,box % (6.15,2.5,"Intensity 2",1,0.5))
+Result('en','en len05 len1 len2','Overlay')
+
+Plot('snr','snr05 snr1 snr2',
+     '''
+     cat axis=2 ${SOURCES[1:3]} |
+     graph  wanttitle=n dash=0,9,2 plotfat=5 
+     label2="SNR"  unit2=dB parallel2=n n2tic=20 labelfat=3 gridfat=3  
+     label1="Filter-window length  C" unit1=point
+     grid=n pad=n o1num=3 d1num=2 n1tic=9
+     ''')
+Plot('lsnr05',None,box % (8.6,5.0,"Intensity 1/2",1,-0.5))
+Plot('lsnr1',None,box % (3.35,7.7,"Intensity 1",1,-0.5))
+Plot('lsnr2',None,box % (6.89,2.5,"Intensity 2",-1,-0.5))
+Result('snr','snr lsnr05 lsnr1 lsnr2','Overlay')
+
+End()

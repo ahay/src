@@ -1,0 +1,26 @@
+from rsf.proj import *
+
+freq=float(ARGUMENTS.get('freq',25)) # Frequency in Hz
+color=ARGUMENTS.get('color','G')     # color scheme
+polar=int(ARGUMENTS.get('polar',1))  # polarity
+
+Flow('top',None,'spike n1=300 d1=1 o1=0 mag=0.06')
+Flow('bot','top','math output="input*(2-x1/299)" ')
+Flow('wedge','top bot',
+     '''
+     cat axis=2 ${SOURCES[1]} |
+     unif2 n1=181 o1=0 d1=0.001 v00=10,15,%d |
+     put label1=Time unit1=s label2=Trace unit2= o2=1
+     ''' % (15+5*polar))
+Result('wedge',
+       'grey color=j title="Wedge Model" mean=y')
+
+Flow('seis','wedge','ai2refl | ricker1 frequency=%g' % freq)
+Result('gseis','seis','grey wanttitle=n color=%s' % color)
+Result('wseis','seis',
+       '''
+       window j2=10 |
+       wiggle poly=y yreverse=y transp=y wanttitle=n wheretitle=b wherexlabel=t
+       ''')
+
+End()

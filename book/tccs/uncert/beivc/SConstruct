@@ -1,0 +1,178 @@
+from rsf.proj import *
+from rsf.recipes.uncert import uncert
+
+Fetch('beinew.HH','midpts')
+Flow('bei','beinew.HH','dd form=native | transp plane=23 | transp plane=34')
+
+uncert('bei',
+       nv=96,       # continuation steps
+       v0=1.3,      # initial velocity
+       dv=0.0125,   # velocity step
+       nx=250,      # lateral dimension
+       nh=48,        # number of offsets
+       padt=1024,   # time padding
+       padt2=2048,  # extra time padding
+       vslope=0.67, #
+       vx0=1.5,     #
+       padx=521,    # lateral padding
+       n1=876,      # vertical extent
+       v1=1.8,      # other velocity
+       dx=0.0335,   # lateral sampling
+       x0=7.705,    # lateral origin
+       rect1=15,    # vertical smoothing
+       rect2=15)    # lateral  smoothing
+
+Flow('left0','bei-unc','math output=x1-0.5*input')
+Flow('rite0','bei-unc','math output=x1+0.5*input')
+Flow('left1','bei-unc2','math output=x2-0.5*input')
+Flow('rite1','bei-unc2','math output=x2+0.5*input')
+Flow('left','left0 left1','cmplx ${SOURCES[:2]}',stdin=0)
+Flow('rite','rite0 rite1','cmplx ${SOURCES[:2]}',stdin=0)
+
+Flow('arr','left rite',
+     'cat axis=3 ${SOURCES[1]} | transp plane=13')
+Plot('arr',
+     '''
+     window j2=4 j3=10 | put n3=1 n2=4788 |
+     graph title="Structural Uncertainty"
+     min1=0 max1=3 min2=7.705 max2=16.0465 pad=n
+     transp=y yreverse=y plotcol=6
+     wheretitle=b wherexlabel=t
+     label1=Time unit1=s label2=Lateral unit2=km       
+     ''')
+
+Plot('agc','bei-agc',
+     '''
+     window max1=3 | grey wanttitle=n wantaxis=n
+     ''')
+
+Result('arr','agc arr','Overlay')
+
+Result('vlf','bei-vlf',
+       '''
+       byte gainpanel=all |
+       transp plane=23 |
+       grey3 frame1=500 frame2=99 frame3=55 flat=n
+       title="Velocity Continuation" point1=0.75 point2=0.75
+       label3=Velocity unit3=km/s label2=Distance unit2=km 
+       label1=Time unit1=s
+       ''')
+
+Result('npk','bei-npk','Overlay')
+
+Flow('scan','bei-vlf1','window n3=1 min3=10 | mutter half=n v0=0.67 x0=1.5')
+Plot('scan','grey color=j allpos=y title="Semblance Scan" label1=Time unit1=s label2=Velocity unit2=km/s')
+
+Flow('pick','scan','pick rect1=15') # 'window n2=1 min2=10')
+
+def graph(col,fat):
+    return '''
+    graph transp=y yreverse=y min2=1.3125 max2=2.5 pad=n plotcol=%d plotfat=%d
+    wantaxis=n wanttitle=n
+    ''' % (col,fat)
+
+Plot('pick0','pick',graph(0,10))
+Plot('pick1','pick',graph(7,1))
+
+Result('scan','scan pick0 pick1','Overlay')
+
+Flow('slice','bei-vlf','window n3=1 min3=10 | mutter half=n v0=0.67 x0=1.5')
+Plot('slice','grey title="Midpoint Slice" label1=Time unit1=s label2=Velocity unit2=km/s ')
+
+Result('slice','slice pick0 pick1','Overlay')
+
+Flow('tslice','bei-vlf','window n1=1 min1=2 | transp')
+Plot('tslice','grey title="Time Slice" label1=Distance unit1=km label2=Velocity unit2=km/s ')
+
+Flow('tpick','bei-npk','window n1=1 min1=2') # 'window n2=1 min2=10')
+
+Plot('tpick0','tpick',graph(0,10))
+Plot('tpick1','tpick',graph(7,1))
+
+Result('tslice','tslice tpick0 tpick1','Overlay')
+
+Flow('ddv','bei-ddv','window n2=1 min2=10')
+Flow('ppick','pick ddv','add ${SOURCES[1]} scale=1,0.25')
+Flow('mpick','pick ddv','add ${SOURCES[1]} scale=1,-0.25')
+
+Plot('ppick0','ppick',graph(0,10))
+Plot('ppick1','ppick',graph(7,1))
+
+Plot('mpick0','mpick',graph(0,10))
+Plot('mpick1','mpick',graph(7,1))
+
+Result('scan2','scan ppick0 mpick0 ppick1 mpick1','Overlay')
+
+Result('slice2','slice ppick0 mpick0 ppick1 mpick1','Overlay')
+
+Flow('smb','bei-vlf1','window n3=1 | mutter half=n v0=0.67 x0=1.5 | put unit2=km/s')
+Plot('smb','grey title=Semblance wheretitle=t allpos=y wherexlabel=b')
+
+eps = (10,50)
+for rect in eps:
+    pick = 'vpick%d' % rect
+    Flow(pick,'smb','pick rect1=%d' % rect)
+    Plot(pick,'graph pad=n transp=y yreverse=y min2=1.325 max2=2.5 title="epsilon=%g" ' % (0.01*rect))
+
+Result('velpick','smb vpick%d vpick%d' % eps,
+       'SideBySideAniso',vppen='txscale=1.5')
+
+Flow('dip','bei-agc','dip rect1=40 rect2=10')
+
+Result('dip','grey color=j scalebar=y title=Dip')
+
+Flow('time','dip','pwpaint i0=125 eps=0.1')
+Flow('flat','bei-agc time','iwarp warp=${SOURCES[1]}')
+
+Result('flat','grey title=Flattened')
+
+Flow('time2','time','math output=x1 | iwarp warp=$SOURCE')
+
+Flow('cont','bei-agc',
+     '''
+     window n2=1 f2=125 max1=2.8 | envelope | 
+     max1 | real | window n1=15 | sort | spray axis=2 n=250
+     ''')
+
+Flow('hors','time2 cont','inttest1 coord=${SOURCES[1]} interp=lag nw=2')
+Flow('hdt','bei-unc  cont','inttest1 coord=${SOURCES[1]} interp=lag nw=2')
+Flow('hdx','bei-unc2 cont','inttest1 coord=${SOURCES[1]} interp=lag nw=2')
+
+Flow('xm','hors hdx','math dx=${SOURCES[1]} output="x2-0.5*dx" ')
+Flow('tm','hors hdt','math dt=${SOURCES[1]} output="input-0.5*dt" ')
+
+Flow('xp','hors hdx','math dx=${SOURCES[1]} output="x2+0.5*dx" ')
+Flow('tp','hors hdt','math dt=${SOURCES[1]} output="input+0.5*dt" ')
+
+Plot('hors',
+     '''
+     transp |
+     graph title="Horizon Uncertainty"
+     min2=0 max2=3 pad=n yreverse=y 
+     wheretitle=b wherexlabel=t
+     label2=Time unit2=s label1=Lateral unit1=km       
+     ''')
+
+Plot('hm','xm tm',
+     '''
+     cmplx ${SOURCES[1]} |
+     transp |
+     graph title="Horizon Uncertainty"
+     min2=0 max2=3 pad=n yreverse=y 
+     wheretitle=b wherexlabel=t
+     label2=Time unit2=s label1=Lateral unit1=km    
+     ''')
+
+Plot('hp','xp tp',
+     '''
+     cmplx ${SOURCES[1]} |
+     transp |
+     graph wanttitle=n wantaxis=n
+     min2=0 max2=3 pad=n yreverse=y 
+     ''')
+
+Result('hors','agc hm hp','Overlay')
+
+
+End()
+       

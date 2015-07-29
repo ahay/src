@@ -1,0 +1,212 @@
+from rsf.proj import *
+
+# Make plane waves 
+
+###################################
+#Flow('plane1',None,
+#     '''
+#     spike n1=1024 n2=256 d2=1 o2=1 label2=Trace unit2=
+#     nsp=1 k1=160 p2=2 mag=1 |
+#     ricker1 frequency=20 |
+#     noise seed=2008 var=0
+#     ''')
+#Flow('plane2',None,
+#     '''
+#     spike n1=1024 n2=256 d2=1 o2=1 label2=Trace unit2=
+#     nsp=1 k1=286 p2=0 mag=0.6 |
+#     ricker1 frequency=20 |
+#     noise seed=2008 var=0
+#     ''')
+#Flow('plane','plane1 plane2','add ${SOURCES[0]} ${SOURCES[1]}')
+#Result('plane',
+#       '''
+#       window j2=1 |
+#       wiggle 
+#       transp=y yreverse=y poly=y clip=0.15
+#       wanttitle=n
+#       ''')
+###################################
+
+#Flow('plane',None,
+#     '''
+#     spike n1=512 n2=256 d2=1 o2=1 label2=Trace unit2=
+#     nsp=4 k1=64,160 p2=0.5,1 mag=0.5,0.5 |
+#     ricker1 frequency=20 |
+#     noise seed=2008 var=0
+#     ''')
+Flow('plane',None,
+     '''
+     spike n1=512 n2=256 d2=1 o2=0 label2=Trace unit2=
+     nsp=3 k1=64,160,286 p2=0.5,1,0 mag=0.5,0.5,1 |
+     ricker1 frequency=20 |
+     noise seed=2008 var=0
+     ''')
+#Flow('plane',None,
+#     '''
+#     spike n1=512 n2=256 d2=1 o2=1 label2=Trace unit2=
+#     nsp=4 k1=64,160,286,200 p2=0.5,1,0,-0.5 mag=0.5,0.5,1,0.3 |
+#     ricker1 frequency=20 |
+#     noise seed=2008 var=0
+#     ''')
+
+Result('plane',
+       '''
+       window j2=4 |
+       wiggle 
+       transp=y yreverse=y poly=y clip=0.15
+       title=Input wheretitle=b wherexlabel=t
+       ''')
+
+# Fourier transform in time
+
+Flow('fft','plane','fft1')
+
+Result('fft','real | window max1=60 | grey title="Frequency domain"')
+
+# Take a frequency slice
+
+Flow('fft1','fft','window n1=1 min1=5')
+
+Result('fft1',
+       'real | graph title="Frequency Slice at 5 Hz" label2= unit2= unit1=')
+
+Flow('fft2','fft','window n1=1 min1=40')
+
+Result('fft2',
+       'real | graph title="Frequency Slice at 40 Hz" label2= unit2= unit1=')
+
+# Estimate plane wave slopes
+
+Flow('p1','fft1','cpef nf=5 | roots niter=100 verb=n')
+Flow('p2','fft2','cpef nf=5 | roots niter=100 verb=n')
+
+# 1-D seislet transform
+
+inverse = '''
+freqlet freq=${SOURCES[1]} type=bio ncycle=100 perc=99
+'''
+
+Flow('freq1','fft1 p1',inverse)
+
+Result('freq1','math output="abs(input)" | real | dots label1= gaineach=n title="Slice transform at 5Hz"')
+
+Flow('freq2','fft2 p2',inverse)
+
+Result('freq2','math output="abs(input)" | real | dots label1= gaineach=n title="Slice transform at 40Hz"')
+
+# Process in frequency slices
+
+Flow('fslice','fft','transp')
+
+# Estimate plane wave slopes
+
+Flow('z','fslice','cpef nf=5 | roots niter=100')
+#Flow('z','p2','spray axis=2 n=257')
+#Flow('pef','fslice','cpef single=n nf=5 | window' )
+#Flow('z','pef','roots niter=100 | spray axis=2 n=257')
+#Flow('z','p1','spray axis=2 n=257')
+
+
+# 1-D seislet transform
+
+Flow('freq','fslice z',inverse + ' verb=n')
+
+# Perfect reconstruct
+
+Flow('rec','freq z',
+     '''
+     freqlet freq=${SOURCES[1]}
+     inv=y type=bio |
+     transp |
+     fft1 inv=y
+     ''')
+Result('rec',
+       '''
+       window j2=4 |
+       wiggle 
+       transp=y yreverse=y poly=y clip=0.15
+       wanttitle=n 
+       ''')
+
+# Partly reconstruct
+
+Flow('rec1','freq z',
+     '''
+     cut n2=1 f2=1 |
+     freqlet freq=${SOURCES[1]}
+     inv=y type=bio |
+     transp |
+     fft1 inv=y
+     ''')
+Result('rec1',
+       '''
+       window j2=4 |
+       wiggle 
+       transp=y yreverse=y poly=y clip=0.15 unit2=
+       title="Partial signal reconstruction" 
+       ''')
+
+# Slope decomposition
+
+for p in range(4):
+    z = 'z%d' % p
+    plane = 'plane%d' % p
+    freq = 'pfreq%d' % p
+
+
+    Flow(z,'z','window n1=1 f1=%d squeeze=n' % p)
+    Plot(freq,'freq',
+         '''
+         window n2=1 f2=%d | transp |
+         math output="abs(input)" |
+         real | window max1=60 n2=25 |
+         wiggle transp=y yreverse=y  wheretitle=b wherexlabel=t 
+         title="Component %d" poly=y  clip=1300
+         label2=Scale unit2=
+         ''' % (p,p))
+         
+    Flow(plane,['freq',z],
+         '''
+         window n2=1 f2=%d squeeze=n |
+         freqlet freq=${SOURCES[1]} 
+         inv=y type=bio |
+         transp |
+         fft1 inv=y
+         ''' % p)
+
+    Plot(plane,
+           '''
+           window j2=4 |
+           wiggle 
+           transp=y yreverse=y poly=y clip=0.15
+           unit2= wheretitle=b wherexlabel=t
+           title="Plane %d" 
+           ''' % p)
+
+    Result(plane,[freq,plane],'SideBySideIso')
+
+# Trace interpolation
+
+Flow('iz','z','math output="sqrt(input)" ')
+Flow('ifreq','freq','pad n1=512')
+
+Flow('iplane','ifreq iz',
+	'''	
+	freqlet freq=${SOURCES[1]} 
+        inv=y type=bio |
+       	transp |
+        fft1 inv=y
+        ''')
+
+Result('iplane',
+           '''
+           window j2=4 |
+           wiggle 
+           transp=y yreverse=y poly=y clip=0.15 unit2=
+           title="Interpolated Result (Resampled by 2)" 
+           ''')
+
+Result('planes','plane','grey title=Input')
+Result('iplanes','iplane','window n2=511 | grey title="Interpolated Result (Resampled by 2)"')
+    
+End()

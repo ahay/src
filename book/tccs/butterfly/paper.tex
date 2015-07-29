@@ -1,0 +1,523 @@
+\published{Geophysics, 78, no. 4, U41-U51, (2013)}
+
+%%%%%%%%%%%%%%%%%%%%%%
+\title{A fast butterfly algorithm for generalized Radon transforms}
+\author{Jingwei Hu\footnotemark[1], Sergey Fomel\footnotemark[2], Laurent Demanet\footnotemark[3], and Lexing Ying\footnotemark[4]} 
+
+\address{
+\footnotemark[1]Institute for Computational Engineering and Sciences (ICES)\\
+The University of Texas at Austin\\
+201 East 24th St, Stop C0200, Austin, TX 78712, USA\\
+hu@ices.utexas.edu\\
+\footnotemark[2]Bureau of Economic Geology and Department of Geological Sciences\\
+Jackson School of Geosciences\\
+The University of Texas at Austin\\
+University Station, Box X, Austin, TX 78713, USA\\
+sergey.fomel@beg.utexas.edu\\
+\footnotemark[3]Department of Mathematics\\
+Massachusetts Institute of Technology\\
+77 Massachusetts Avenue, Cambridge, MA 02139, USA\\
+laurent@math.mit.edu\\
+\footnotemark[4]Department of Mathematics and\\
+Institute for Computational and Mathematical Engineering (ICME)\\
+Stanford University\\
+450 Serra Mall, Bldg 380, Stanford, CA 94305, USA\\
+lexing@math.stanford.edu
+}
+
+%\ms{GEO-2013-}
+
+%\lefthead{J. Hu et al.}
+\righthead{Fast Generalized Radon Transforms}
+
+\maketitle
+
+\begin{abstract}
+Generalized Radon transforms such as the hyperbolic Radon transform cannot be implemented as efficiently in the frequency domain as convolutions, thus limiting their use in seismic data processing. We introduce a fast butterfly algorithm for the hyperbolic Radon transform. The basic idea is to reformulate the transform as an oscillatory integral operator and to construct a blockwise low-rank approximation of the kernel function. The overall structure follows the Fourier integral operator (FIO) butterfly algorithm. For two-dimensional data, the algorithm runs in complexity $O(N^2\log N)$, where $N$ depends on the maximum frequency and offset in the dataset and the range of parameters (intercept time and slowness) in the model space. Using a series of examples, we show that the proposed algorithm can be significantly more efficient than the conventional time-domain integration.
+\end{abstract}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\section{Introduction}
+
+In seismic data processing, the Radon transform (RT) \citep{Radon17}, or slant stack, is a set of line integrals that map mixed and overlapping events in seismic gathers to a new transformed domain where they can be separated \citep{GL91}. The integrals can also be taken along curves: parabolas (parabolic RT), or hyperbolas (hyperbolic RT or velocity stack) are most commonly used. A major difference between these transforms is that the former two are time-invariant (i.e., involve a convolution in time) whereas the latter is time-variant. When the curves are time-invariant, the transform can be performed efficiently in the frequency domain using the convolution theorem. However, this approach does not work for time-variant transforms. As a result, the hyperbolic Radon transform is usually thought of as requiring a computation in the time domain, which is computationally expensive due to the large size of seismic data. Nevertheless, the hyperbolic transform is often preferred as it better matches the true seismic events in common midpoint (CMP) gathers \citep{TC85}.
+
+In this work, we construct a fast butterfly algorithm to effectively evaluate time-variant transforms such as the hyperbolic Radon transform. As opposed to the conventional, relatively costly {\it velocity scan} (i.e., direct integration + interpolation in the time domain), our method provides an accurate approximation in only $O(N^2\log N)$ (all the $\log$ in this paper refer to logarithm to base 2) operations for 2D data. Here $N$ depends on the maximum frequency and offset in the dataset and the range of parameters (intercept time and slowness) in the model space, and can often be chosen small compared to the grid size. The adjoint of the transform can be evaluated similarly without extra difficulty. Note that the algorithm introduced in this paper only deals with the fast implementation of a single integral operator (forward Radon transform or its adjoint), not an iteration process for its inversion which is the main objective of many previous works on fast Radon transforms \citep{Sacchi96, Trad01, LS02, WN09}.
+
+Radon transforms have been widely used to separate and attenuate multiple reflections \citep{Hampson86, Yilmaz89, FM92, Herrmann00, MK02, Hargreaves03, Trad03}. As having fast implementations of both forward and adjoint transforms is an essential component of least-squares minimization, our hope is that the current fast algorithm will help to make the hyperbolic Radon transform an accessible tool for improving the inversion process.
+
+The term ``generalized Radon transform" connotes a broader context where integrals are taken along arbitrary parametrized sets of smooth curves. The term was introduced by \cite{Beylkin84, Beylkin85}, who showed that an asymptotically-correct inverse follows from an amplitude correction to the adjoint. Kirchhoff migration and its (regularized) inverse can be expressed as generalized Radon transforms. The algorithm presented in this paper can in principle be applied in the context of Kirchhoff migration, although we do not attempt to do so here.
+
+The rest of the paper is organized as follows. We first introduce the low-rank approximations and the butterfly structure of the hyperbolic Radon operator; then use these building elements to construct our fast algorithm. A brief description of the algorithm is given in the main text, and a complete derivation can be found in the appendix. We present numerical examples using both synthetic and field data to illustrate the accuracy and efficiency of the proposed algorithm.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\section{Algorithm}
+
+Assume $d(t,h)$ is a function in the data space. The hyperbolic Radon transform $R$ maps $d$ to a function $(Rd)(\tau,p)$ in the model space \citep{TC85} through
+\begin{equation} \label{radon}
+(Rd)(\tau,p)=\int d(\sqrt{\tau^2+p^2h^2},h)\,dh,
+\end{equation}
+where $t$ is time, $h$ is offset, $\tau$ is intercept time, and $p$ is slowness. Fixing $(\tau,p)$, hyperbola $t=\sqrt{\tau^2+p^2h^2}$ describes the traveltime for the event; hence integration along these curves can be used to identify different reflections. 
+
+Instead of approximating the integral in equation \ref{radon} directly, we reformulate it as a double integral,
+\begin{equation} \label{dradon}
+(Rd)(\tau,p)=\iint\hat{d}(f,h) e^{ 2\pi i
+f\sqrt{\tau^2+p^2h^2} } \,df\,dh.
+\end{equation}
+Here $f$ is the frequency, $\hat{d}(f,h)$ is the Fourier transform of $d(t,h)$ in $t$. A simple discretization of equation \ref{dradon} yields 
+\begin{equation} \label{sum}
+(Rd)(\tau,p)=\sum_{f,h}  e^{ 2\pi i
+ f\sqrt{\tau^2+p^2h^2} }\hat{d}(f,h)
+\end{equation}
+(the area element is omitted; the same symbols $f$, $h$, $\tau$, and $p$ are used for both continuous and discrete variables). The reason that hyperbolic RT is harder to compute than linear RT ($t=\tau+ph$) or parabolic RT ($t=\tau+ph^2$) should be clear from equation \ref{sum}: product $f\tau$ in the phase cannot be decoupled from other terms.
+
+To construct the fast algorithm, we first perform a linear transformation to map all discrete points in $(f,h)$ and $(\tau,p)$ domains to points in the unit square $[0,1]\times[0,1]$ ($[a,b]\times[c,d]$ represents a 2D rectangular domain in the $xy$-plane with $x\in[a,b]$ and $y\in[c,d]$), i.e., a point $(f,h)\in[f_\text{min},f_\text{max}]\times[h_\text{min},h_\text{max}]$ is mapped to $\mathbf{k}=(k_1,k_2)\in[0,1]\times[0,1]=K$ via
+\begin{equation}
+f=(f_\text{max}-f_\text{min})k_1+f_\text{min}, \quad h=(h_\text{max}-h_\text{min})k_2+h_\text{min};
+\end{equation}
+a point $(\tau,p)\in[\tau_\text{min},\tau_\text{max}]\times[p_\text{min},p_\text{max}]$ is mapped to $\mathbf{x}=(x_1,x_2)\in[0,1]\times[0,1]=X$ via
+\begin{equation}
+\tau=(\tau_\text{max}-\tau_\text{min})x_1+\tau_\text{min}, \quad p=(p_\text{max}-p_\text{min})x_2+p_\text{min}.%\footnote{The notations $\mathbf{x}$ and $\mathbf{k}$ are adopted to be consistent with the Cand\`{e}s et al. paper referenced below.}
+\end{equation}
+If we define input $g(\mathbf{k})=\hat{d}(f(k_1),h(k_2))$, output $u(\mathbf{x})=(Rd)(\tau(x_1),p(x_2))$, and phase function $\Phi(\mathbf{x},\mathbf{k})=f(k_1)\sqrt{\tau(x_1)^2+p(x_2)^2h(k_2)^2}$, then equation \ref{sum} can be written as 
+\begin{equation} \label{sum1}
+u(\mathbf{x})=\sum_{\mathbf{k}\in K}  e^{ 2\pi i
+\Phi(\mathbf{x},\mathbf{k})}g(\mathbf{k}), \quad \mathbf{x}\in X
+\end{equation}
+(throughout the paper, $K$ and $X$ will either be used for sets of discrete points or square domains containing them; the meaning should be clear from the context). This form is the discrete version of an oscillatory integral of the type
+\begin{equation}
+u(\mathbf{x})=\int_K e^{ 2\pi i
+\Phi(\mathbf{x},\mathbf{k})}g(\mathbf{k}) \,d\mathbf{k},\quad \mathbf{x}\in X,
+\end{equation} %\citep{Hormander71, Duistermaat} not FIO
+whose fast evaluation has been considered in \cite{CDY09}. Our method for computing the summation in equation \ref{sum1} follows the FIO butterfly algorithm introduced there.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\subsection{Low-rank approximations}
+
+Clearly the range and possibly other factors such as gradient of phase $\Phi(\mathbf{x},\mathbf{k})$ determine the degree of oscillations in the kernel $e^{ 2\pi i\Phi(\mathbf{x},\mathbf{k})}$. Let $N$ be an integer power of two, which is on the order of the maximum value of $|\Phi(\mathbf{x},\mathbf{k})|$ for $\mathbf{x}\in X$ and $\mathbf{k}\in K$ (the exact choice of $N$ depends on the desired efficiency and accuracy of the algorithm, which will be made specific in numerical examples). The design of the fast algorithm relies on the key observation that the kernel $e^{ 2\pi i\Phi(\mathbf{x},\mathbf{k})}$, when properly restricted to subsets of $X$ and $K$, admits accurate and low-rank separated approximations. More precisely, if $A$ and $B$ are two square boxes in $X$ and $K$, with sidelengths $w(A)$, $w(B)$ obeying $w(A)w(B)\leq1/N$ --- in which case the pair $(A,B)$ is called admissible --- then
+\begin{equation} \label{low-rank}
+\left|e^{2\pi i \Phi(\mathbf{x},\mathbf{k})} -\sum_{t=1}^{r_\epsilon} 
+\alpha_t^{AB}(\mathbf{x})\beta_t^{AB}(\mathbf{k})\ \right|\leq
+\epsilon, \quad \text{for} \  \  \mathbf{x}\in
+A, \ \ \mathbf{k}\in B,
+\end{equation}
+where $r_{\epsilon}$ is independent of $N$ for a fixed error $\epsilon$. Here and below the subscript $t$ is slightly abused: $t$ should be understood as multi-indices $(t_1,t_2)$, and accordingly $r_{\epsilon}$ is the total number of terms in a double sum. Furthermore, \cite{CDY09} showed that this low-rank approximation can be constructed via a tensor-product Chebyshev interpolation of $e^{2\pi i \Phi(\mathbf{x},\mathbf{k})}$ in the $\mathbf{x}$ variable when $w(A)\leq 1/\sqrt{N}$, and in the $\mathbf{k}$ variable when $w(B)\leq 1/\sqrt{N}$.  
+
+Specifically, when $w(B)\leq1/\sqrt{N}$, $\alpha_t^{AB}$ and $\beta_t^{AB}$ are given by
+\begin{eqnarray} 
+&&\alpha_t^{AB}(\mathbf{x})=e^{2\pi i
+  \Phi(\mathbf{x},\mathbf{k}_t^B)}, \label{expan1a} \\
+&&\beta_t^{AB}(\mathbf{k})=e^{-2\pi i
+  \Phi(\mathbf{x_0}(A),\mathbf{k}_t^B)}L_t^B(\mathbf{k}) e^{2\pi i
+  \Phi(\mathbf{x_0}(A),\mathbf{k})}; \label{expan1b}
+\end{eqnarray}
+and when $w(A)\leq1/\sqrt{N}$, $\alpha_t^{AB}$ and $\beta_t^{AB}$ are given by
+\begin{eqnarray} 
+&&\alpha_t^{AB}(\mathbf{x})=e^{2\pi i
+  \Phi(\mathbf{x},\mathbf{k}_0(B))}L_t^A(\mathbf{x}) e^{-2\pi i
+  \Phi(\mathbf{x}_t^A,\mathbf{k}_0(B))},   \label{expan2a} \\
+&&\beta_t^{AB}(\mathbf{k})=e^{2\pi i
+  \Phi(\mathbf{x}_t^A,\mathbf{k})}. \label{expan2b}
+\end{eqnarray}
+Boldface letters $\mathbf{k}_t^B$, $\mathbf{x}_t^A, \mathbf{k}_0(B), \mathbf{x}_0(A)$ denote 2D vectors. $\mathbf{k}_t^B$ is a point on the 2D, $q_{k_1}\times q_{k_2}$ Chebyshev grid in box $B$ centered at $\mathbf{k}_0(B)$, i.e., let $\mathbf{k}_t^B=(k_{t_1}^B,k_{t_2}^B)$, $\mathbf{k}_0(B)=(k_{0_1}^B,k_{0_2}^B)$, then
+\begin{eqnarray}
+&&k_{t_1}^B=k_{0_1}^B+w(B)z_{t_1}, \quad 0\leq t_1 \leq q_{k_1}-1, \\
+&&k_{t_2}^B=k_{0_2}^B+w(B)z_{t_2}, \quad 0\leq t_2 \leq q_{k_2}-1,
+\end{eqnarray}
+where 
+\begin{equation}
+\left\{z_{t_i}=\frac{1}{2}\cos\left( \frac{\pi t_i}{q_{k_i}-1}\right)\right\}_{0\leq t_i\leq
+  q_{k_i}-1,\  i=1,2}
+\end{equation}
+is the 1D Chebyshev grid of order $q_{k_i}$ on $[-1/2,1/2]$. See Figure \ref{fig:grid} for an illustration. $L_t^B(\mathbf{k})$ is the 2D Lagrange interpolation defined on the Chebyshev grid:
+\begin{equation}
+L_t^B(\mathbf{k})=\left(\prod_{s_1=0, s_1\neq t_1}^{ q_{k_1}-1}\frac{k_1-k_{s_1}^B}{k_{t_1}^B-k_{s_1}^B}   \right)
+\left(\prod_{s_2=0, s_2\neq t_2}^{
+    q_{k_2}-1}\frac{k_2-k_{s_2}^B}{k_{t_2}^B-k_{s_2}^B}
+\right).
+\end{equation}
+Analogously, $\mathbf{x}_t^A$ is a point on the 2D, $q_{x_1}\times q_{x_2}$ Chebyshev grid in box $A$ centered at $\mathbf{x}_0(A)$, and $L_t^A(\mathbf{x})$ is the 2D Lagrange interpolation defined on this grid. Based on the discussion above, the number  $r_{\epsilon}$ in low-rank approximation \ref{low-rank} is equal to $q_{k_1}q_{k_2}$ when $w(B)\leq 1/\sqrt{N}$, and $q_{x_1}q_{x_2}$ when $w(A)\leq 1/\sqrt{N}$.
+
+\inputdir{.}
+\plot{grid}{width=0.8\textwidth}{A 2D, $q_{k_1}\times q_{k_2}$ ($q_{k_1}=7$, $q_{k_2}=5$) Chebyshev grid in box $B$. $\mathbf{k}_0(B)$ is the center of the box. $\mathbf{k}_t^B=(k_{t_1}^B,k_{t_2}^B), \ 0\leq t_1 \leq q_{k_1}-1, \ 0\leq t_2 \leq q_{k_2}-1$ is a point on the grid.}
+
+A simple way of viewing expressions \ref{expan1a} -- \ref{expan2b} is:  when $w(B)\leq1/\sqrt{N}$, plugging expression \ref{expan1a} into approximation \ref{low-rank} (leaving $\beta_t^{AB}(\mathbf{k})$ as it is) yields
+\begin{equation} \label{intera}
+e^{2\pi i \Phi(\mathbf{x},\mathbf{k})}  \approx \sum_t 
+e^{2\pi i \Phi(\mathbf{x},\mathbf{k}_t^B)}\beta_t^{AB}(\mathbf{k}), \quad \text{for} \  \  \mathbf{x}\in
+A, \ \ \mathbf{k}\in B.
+\end{equation}
+For fixed $\mathbf{x}$, the right hand side of equation \ref{intera} is just a special interpolation of function $e^{2\pi i \Phi(\mathbf{x},\mathbf{k})}$ in variable $\mathbf{k}$, where $\mathbf{k}_t^B$ are the interpolation points, $\beta_t^{AB}(\mathbf{k})$ are the basis functions. Likewise, when $w(A)\leq1/\sqrt{N}$, plugging expression \ref{expan2b} into approximation \ref{low-rank}, we get
+\begin{equation} \label{interb}
+e^{2\pi i \Phi(\mathbf{x},\mathbf{k})}  \approx \sum_t 
+e^{2\pi i \Phi(\mathbf{x}_t^A,\mathbf{k})}\alpha_t^{AB}(\mathbf{x}), \quad \text{for} \  \  \mathbf{x}\in A, \ \ \mathbf{k}\in B.
+\end{equation}
+For fixed $\mathbf{k}$, the right hand side of equation \ref{interb} is a special interpolation of $e^{2\pi i\Phi(\mathbf{x},\mathbf{k})}$ in variable $\mathbf{x}$: $\mathbf{x}_t^A$ are the interpolation points, $\alpha_t^{AB}(\mathbf{x})$ are the basis functions. 
+
+Once the low-rank approximation \ref{low-rank} is known, computing the partial sum 
+\begin{equation} \label{partial}
+u^{B}(\mathbf{x}):=\sum_{\mathbf{k}\in B}e^{2\pi i
+  \Phi(\mathbf{x},\mathbf{k})}g(\mathbf{k})
+\end{equation}
+generated by points $\mathbf{k}$ inside a box $B$ becomes
+\begin{equation} \label{partial1}
+u^{B}(\mathbf{x})\approx  \sum_{\mathbf{k}\in B} \sum_t
+\alpha_t^{AB}(\mathbf{x})\beta_t^{AB}(\mathbf{k}) g(\mathbf{k}) =
+\sum_t \alpha_t^{AB}(\mathbf{x})\delta_t^{AB},  \quad \text{for} \  \ \mathbf{x}\in A,
+\end{equation}
+where
+\begin{equation} \label{def}
+\delta_t^{AB}:=\sum_{\mathbf{k}\in B} \beta_t^{AB}(\mathbf{k})g(\mathbf{k}).
+\end{equation}
+The case that the box $B$ represents the whole domain $K$ is of particular interest, since it corresponds to the original problem. Therefore, if we can find the set of interaction coefficients $\delta_t^{AB}$ relative to all admissible couples of boxes $(A,B)$ with $B=K$, our problem will be solved. 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\subsection{Butterfly structure}
+
+The coefficients $\delta_t^{AB}$ for $B=K$ are however not readily available. The so-called butterfly algorithm turns out to be an appropriate tool. The butterfly algorithm was introduced by \cite{MB96}, and generalized by \cite{OWR10} and \cite{CDY09}. Different applications include sparse Fourier transform \citep{Ying09}, and radar imaging \citep{DFMPY12}.  \cite{DFMPY12} also provide a complete error analysis of the method introduced by \cite{CDY09}.
+
+The idea of the butterfly algorithm is to obtain $\delta_t^{AB}$ for $B=K$ at the last step of a hierarchical construction of {\it all} the coefficients $\delta_t^{AB}$ for {\it all} pairs of admissible boxes $(A,B)$ belonging to a quad tree structure. The algorithm starts with very small boxes $B$, where $\delta_t^{AB}$ are easily computed by direct summation, and gradually increases the sizes of the boxes $B$ in a multiscale fashion. In tandem, the sizes of the boxes $A$ where $u^B$ is evaluated must decrease to respect the admissibility of each couple $(A,B)$. The computation then mostly consists in updating coefficients $\delta_t^{AB}$ from one scale to the next --- from finer to coarser $B$ boxes, and from coarser to finer $A$ boxes. 
+
+The main data structure underlying the algorithm is a pair of quad trees $T_X$ and $T_K$. The tree $T_X$ has $[0,1]\times[0,1]$ as its root box (level $0$) and is built by recursive, dyadic partitioning until level $L=\log N$, where the finest boxes are of sidelength $1/N$. The tree $T_K$ is built similarly but in the opposite direction. Figure \ref{fig:tree} shows such a partition for $N=4$. A crucial property of this structure is that at arbitrary level $l$, the sidelengths of a box $A$ in $T_X$ and a box $B$ in $T_K$ always satisfy 
+\begin{equation}
+w(A)w(B)=\frac{1}{2^l}\frac{1}{2^{L-l}}=\frac{1}{N};
+\end{equation}
+thus a low-rank approximation of the kernel $e^{2\pi i \Phi(\mathbf{x},\mathbf{k})}$ is available at every level of the tree, for every couple of admissible boxes $(A,B)$.
+
+\plot{tree}{width=1\textwidth}{The butterfly quad tree structure for the special case of $N=4$.}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Fast butterfly algorithm}
+
+With the previously introduced low-rank approximations and the butterfly structure, we are ready to describe the fast algorithm. Our goal is to approximate $\delta_t^{AB}$, definition \ref{def}, so as to get $u^B(\mathbf{x})$, definition \ref{partial}, by traversing the tree structure (Figure \ref{fig:tree}) from top to bottom on the $X$ side, and from bottom to top on the $K$ side. This can be done in five major steps. To avoid too much technical detail, we deliberately defer the complete derivation of the algorithm until the appendix, and only summarize here the final updating formulas for each step.
+
+1. {\it Initialization.} At level $l=0$, let $A$ be the root box of $T_X$. For each leaf box $B\in T_K$, construct the coefficients $\{\delta_t^{AB}\}$ by
+\begin{equation} \label{Delta1}
+\delta_t^{AB}=e^{-2\pi i
+  \Phi(\mathbf{x}_0(A),\mathbf{k}_t^B)}\sum_{\mathbf{k}\in B}\left(
+  L_t^B(\mathbf{k}) e^{2\pi i \Phi(\mathbf{x}_0(A),\mathbf{k})}g(\mathbf{k}) \right).
+\end{equation}
+
+2. {\it Recursion.} At $l=1,2,...,L/2$, for each pair $(A,B)$, let $A_p$ be $A$'s parent and $\{B_c, c=1,2,3,4\}$ be $B$'s children from the previous level. Update $\{\delta_t^{AB}\}$ from $\{\delta_{t'}^{A_pB_c}\}$ by
+\begin{equation} \label{Delta2}
+\delta_t^{AB}=e^{-2\pi i
+  \Phi(\mathbf{x}_0(A),\mathbf{k}_t^B)}\sum_c\sum_{t'}
+\left(L_t^B(\mathbf{k}_{t'}^{B_c})e^{2\pi i
+  \Phi(\mathbf{x}_0(A),\mathbf{k}_{t'}^{B_c})}\delta_{t'}^{A_pB_c}\right).
+\end{equation}
+
+3. {\it Switch.} At middle level $l=L/2$, for each $(A,B)$ compute the new set of coefficients $\{\delta_t^{AB}\}$ from the old set $\{\delta_s^{AB}\}$ by
+\begin{equation} \label{Delta3}
+\delta^{AB}_t=
+\sum_s e^{2\pi i \Phi(\mathbf{x}_t^A,\mathbf{k}_s^B)}\delta_s^{AB}.
+\end{equation}
+ 
+4. {\it Recursion.} At $l=L/2+1,...,L$, for each pair $(A,B)$, update $\{\delta_t^{AB}\}$ from $\{\delta_{t'}^{A_pB_c}\}$ of the previous level by
+\begin{equation} \label{Delta4}
+\delta_t^{AB}=\sum_c  e^{2\pi i \Phi(\mathbf{x}_t^A,\mathbf{k}_0(B_c))}\sum_{t'} \left( L_{t'}^{A_p}(\mathbf{x}_t^A) e^{-2\pi i \Phi(\mathbf{x}_{t'}^{A_p},\mathbf{k}_0(B_c))}\delta_{t'}^{A_pB_c}\right).
+\end{equation}
+
+5.  {\it Termination.} Finally at level $l=L$, $B$ is the entire domain $K$. For every box $A$ in $X$ and every $\mathbf{x}\in A$, compute $u(\mathbf{x})$ by
+\begin{equation} \label{Delta5}
+u(\mathbf{x})=e^{2\pi i
+  \Phi(\mathbf{x},\mathbf{k}_0(B))}\sum_t \left( L_t^A(\mathbf{x}) e^{-2\pi i
+  \Phi(\mathbf{x}_t^A,\mathbf{k}_0(B))}
+  \delta_t^{AB}\right).
+\end{equation}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\subsection{Numerical complexity and accuracy}
+
+To analyze the algorithm's numerical complexity, let us assume the numbers of Chebyshev points in every box and every dimension of $K$ and $X$ are all equal to a small constant $q$, i.e., $q_{k_1}=q_{k_2}=q_{x_1}=q_{x_2}=q$ and $r_{\epsilon}\equiv q^2$. The main workload of the fast butterfly algorithm is in Steps 2 and 4. For each level, there are $N^2$ pairs of boxes $(A,B)$, and the operations between each $A$ and $B$ is $O(r_{\epsilon}^2)$, which can be further reduced to $O(r_{\epsilon}^{3/2})$ by performing Chebyshev interpolation one dimension at a time. Since there are $\log N$ levels, the total cost is $O(r_{\epsilon}^{3/2} N^2\log N)$. It is not difficult to see that Step 3 takes $O(r_{\epsilon}^2 N^2)$, and Steps 1 and 5 take $O(r_{\epsilon}N_fN_h)$ and $O(r_{\epsilon}N_{\tau}N_p)$ operations. Considering the initial Fourier transform of preparing data in the $(f,h)$ domain, we conclude that the overall complexity of the algorithm is $O(N_h N_t \log N_t+ r_{\epsilon}^{3/2}N^2\log N +r_{\epsilon}^2 N^2+ r_{\epsilon}(N_fN_h+N_{\tau}N_p))$. The analysis in \cite{CDY09} shows that the relation between $r_{\epsilon}$ and error $\epsilon$ is $r_{\epsilon}=O(\log ^4(1/\epsilon))$. We would like to mention that this is only the worst case estimate. Numerical results in the same paper demonstrate that the dependence of $r_{\epsilon}$ on $\log(1/\epsilon)$ is rather moderate in practice.
+
+In comparison, the conventional {\it velocity scan} requires at least $O(N_{\tau}N_pN_h)$ computations, which quickly becomes a burden as the problem size increases. Yet the efficiency of our algorithm is mainly controlled by $O(N^2 \log N)$ with a constant polylogarithmic in $\epsilon$, where $N$ depends neither on data size nor on data content (here we mean the data after the Fourier transform). Since the Chebyshev interpolation is only performed on the kernel, our choice of parameters ($N$ and number of Chebyshev points) relies on the preknowledge about the range of $f$, $h$, $\tau$, and $p$. In other words, we need a general idea about how oscillate the kernel is. Recall that everything is mapped to a unit square, so the larger the range of $\Phi(\mathbf{x},\mathbf{k})$ is, the more oscillations occur in the unit square. If the original data (data before the Fourier transform) contain high frequency information, the accuracy will be affected as the frequency bandwidth is now larger. A possible way to get around it is to divide the Fourier domain into two or three smaller subdomains (so the range of $f$ in each subdomain is smaller than the original problem), and apply the fast algorithm to each part separately, finally add the results back together. This only increases the cost by a small factor, but presumably offers better accuracy.
+
+%where $N$ is determined by the degree of oscillations in the kernel function $e^{ 2\pi i f\sqrt{\tau^2+p^2h^2} }$, i.e., roughly the range of $f$, $h$, $\tau$, and $p$. In other words, $N$ depends neither on data size nor on data content \new{(here we mean the data after the Fourier transform)}, as the Chebyshev interpolation is only performed on the kernel.
+
+%It is also worthwhile (maybe not fair though) to compare our method with the time-invariant transforms, since the parabolic or linear Radon transforms are the main-stream applications in the current data processing practice. Suppose that, given data $d(t,h)$, our goal is to find model $m_*(\tau,p)$ such that $\displaystyle m_*=\text{arg}\min_{m} \|Lm-d\|_2$, where $L$ is the adjoint of the Radon transform. The method for time-invariant transforms is to break this problem into several small problems in the frequency domain and minimize $\|\hat{L}_{f}\hat{m}_f-\hat{d}_f\|_2$ for each frequency $f$. Therefore the total cost is roughly $O(N_f N_{\text{iter}}N_hN_p)$, provided $N_{\text{iter}}$ iterations are needed in a CG type method. On the other hand, our algorithm accelerates the evaluation of the original operator $L$, thus requires $O(N_{\text{iter}} N^2 \log N)$ operations in a least squares minimization.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\section{Numerical examples}
+
+In this section we provide several numerical examples to illustrate the empirical properties of the fast butterfly algorithm. To check the results {\it qualitatively}, we compare with the {\it velocity scan} method (the nearest neighbor interpolation is used to minimize the interpolation cost); to test the results {\it quantitatively}, however, it makes more sense to compare with the direct evaluation of equation \ref{sum}, since the fast algorithm is to speed up this summation in the frequency domain, whereas the {\it velocity scan} computes a slightly different sum in the time domain, which may contain interpolation artifacts.
+
+There is no general rule for selecting parameters $N$, $q_{k_1}$, $q_{k_2}$, ... The larger $N$ is, the fewer Chebyshev points are needed, and vice versa. In practice, parameters can be tuned to achieve the best efficiency and accuracy trade-off. For simplicity, in the following examples $N$ and $q_{k_1}$, $q_{k_2}$, $q_{x_1}$, $q_{x_2}$ are chosen such that the relative error between the fast algorithm and the direct computation of equation \ref{sum} is about $O(10^{-2})$. These combinations are not necessarily optimal in terms of efficiency.
+
+%Another issue is associated with the initial Fourier transform. If a hyperbolic event hits $t_{\text{max}}$ in the original dataset, we usually pad zero in time before the transform to make the data compactly supported.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Synthetic data --- square sampling}
+
+We start with a simple 2D example of square sampling. Figure \ref{fig:data} is a synthetic CMP gather sampled on $N_t=N_h=1000$. Figure \ref{fig:fftabs} shows the absolute value of its Fourier transform on time axis. These band-limited data allow us to shorten the computational range for $f$, which can be crucial as $N$ depends on this range. In model space, the sampling sizes are chosen as $N_{\tau}=N_p=1000$. Figure \ref{fig:fmod} is the output of the fast butterfly algorithm for $N=32$, $q_{k_1}=q_{k_2}=q_{x_1}=q_{x_2}=9$ (here the range of $\Phi=f\sqrt{\tau^2+p^2h^2}$ is about 125). Figure \ref{fig:dimod} is the output of the {\it velocity scan}. The two methods yield nearly the same results. The fast algorithm runs in only $1.75$ s of CPU time, while the {\it velocity scan} takes about 37 s. In Figure \ref{fig:diff}, we plot the difference between the results of the fast algorithm and the direct evaluation of equation \ref{sum}, where the relative error is $0.0178$. For reference, if we let $N=64$ and run the same test, the error decreases to $O(10^{-3})$ and the running time is 3.63 s.
+
+\inputdir{synth2D-1-timer}
+
+\plot{data}{width=1\textwidth}{2D synthetic CMP gather. $N_t=N_h=1000$. $\Delta t=0.004$ s, $\Delta h=0.005$ km.}
+
+\plot{fftabs}{width=1\textwidth}{The Fourier transform (absolute value) on time axis of the synthetic data in Figure \ref{fig:data}.}
+
+\plot{fmod}{width=1\textwidth}{$N_{\tau}=N_p=1000$. Output of the fast butterfly algorithm applied to the synthetic data in Figure \ref{fig:data}. $N=32$, $q_{k_1}=q_{k_2}=q_{x_1}=q_{x_2}=9$. CPU time: {\bf 1.75 s}. Purple curve overlaid is the true slowness.}
+
+\plot{dimod}{width=1\textwidth}{$N_{\tau}=N_p=1000$. Output of the {\it velocity scan} applied to the synthetic data in Figure \ref{fig:data}. CPU time: {\bf 37.23 s}. Purple curve overlaid is the true slowness.}
+
+\plot{diff}{width=1\textwidth}{Difference between the results of the fast algorithm and the direct evaluation of equation \ref{sum} plotted at the same scale as in Figure \ref{fig:fmod}.}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Synthetic data --- rectangular sampling}
+
+We now make two synthetic datasets using rectangular sampling $N_t=4000$, $N_h=400$. The first one (Figure \ref{fig:data-2}) has the same range as the previous example (Figure \ref{fig:data}), while the second one (Figure \ref{fig:data-3}) doubles the range of time and offset. Results of the fast algorithm are shown in Figures \ref{fig:fmod-2} and \ref{fig:fmod-3}. The purpose of showing these two examples is to demonstrate that the choice of $N$ does not depend on the problem size, but rather on the range of parameters --- for the data in Figure \ref{fig:data-3}, one has to increase $N$ to preserve the same accuracy (the range of $\Phi=f\sqrt{\tau^2+p^2h^2}$ is about 125 for the first dataset, and 250 for the second one).
+
+\inputdir{synth2D-2}
+\plot{data-2}{width=1\textwidth}{2D synthetic CMP gather. $N_t=4000$, $N_h=400$. $\Delta t=0.001$ s, $\Delta h=0.0125$ km.}
+
+\inputdir{synth2D-3}
+\plot{data-3}{width=1\textwidth}{2D synthetic CMP gather. $N_t=4000$, $N_h=400$. $\Delta t=0.002$ s, $\Delta h=0.025$ km.}
+
+\inputdir{synth2D-2}
+\plot{fmod-2}{width=1\textwidth}{$N_{\tau}=4000$, $N_p=400$. Output of the fast butterfly algorithm applied to the synthetic data in Figure \ref{fig:data-2}. $N=32$, $q_{k_1}=q_{k_2}=q_{x_1}=q_{x_2}=9$. CPU time: {\bf 2.46 s}. Ref: CPU time of {\it velocity scan}: {\bf 21.84 s}. Purple curve overlaid is the true slowness.}
+
+\inputdir{synth2D-3}
+\plot{fmod-3}{width=1\textwidth}{$N_{\tau}=4000$, $N_p=400$. Output of the fast butterfly algorithm applied to the synthetic data in Figure \ref{fig:data-3}. $N=64$, $q_{k_1}=q_{k_2}=q_{x_1}=q_{x_2}=9$. CPU time: {\bf 4.35 s}. Ref: CPU time of {\it velocity scan}: {\bf 21.93 s}. Purple curve overlaid is the true slowness.}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Synthetic data --- irregular sampling}
+
+Going back to the five steps of the butterfly algorithm, it is clear that the input data $g(\mathbf{k})$ is only involved at the very first step. Besides, for every $(A,B)$ the operation connecting $g(\mathbf{k})$ and $\delta_t^{AB}$ amounts to a matrix-vector multiplication (see equation \ref{Delta1}), which does not at all require the input data to be uniformly distributed (the same argument applies to the output data $u(\mathbf{x})$). Therefore, our algorithm can be easily extended to handle the following problem:
+\begin{equation}
+(Rd)(\tau,p)=\iint d(\sqrt{\tau^2+p^2(h_1^2+h_2^2)},h_1,h_2)\,dh_1\,dh_2,
+\end{equation}
+where $d(t,h_1,h_2)$ is a 3D function. All we need is to introduce a new variable for the absolute offset $h=\sqrt{h_1^2+h_2^2}$, and reorder the values $d(t,h_1,h_2)$ according to $h$. Figure \ref{fig:data-4} shows such synthetic data sampled on $N_t=1000$, $N_{h_1}=N_{h_2}=128$. The output is obtained on $N_{\tau}=1000$, $N_p=128$. The fast algorithm (Figure \ref{fig:fmod-4}) runs in only 1.67 s for $N=64$, $q_{k_1}=q_{k_2}=q_{x_1}=q_{x_2}=5$ (here the range of $\Phi=f\sqrt{\tau^2+p^2(h_1^2+h_2^2)}$ is about 162), while the {\it velocity scan} (Figure \ref{fig:dimod-4}) takes more than 125 s.
+ 
+\inputdir{synth2D-4}
+\plot{data-4}{width=1\textwidth}{3D synthetic CMP gather. $N_t=1000$, $N_{h_1}=N_{h_2}=128$. $\Delta t=0.004$ s, $\Delta h_1=\Delta h_2=0.08$ km.}
+
+\plot{fmod-4}{width=1\textwidth}{$N_{\tau}=1000$, $N_p=128$. Output of the fast butterfly algorithm applied to the synthetic data in Figure \ref{fig:data-4}. $N=64$, $q_{k_1}=q_{k_2}=q_{x_1}=q_{x_2}=5$. CPU time: {\bf 1.67 s}. Purple curve overlaid is the true slowness.}
+
+\plot{dimod-4}{width=1\textwidth}{$N_{\tau}=1000$, $N_p=128$. Output of the {\it velocity scan} applied to the synthetic data in Figure \ref{fig:data-4}. CPU time: {\bf 125.54 s}. Purple curve overlaid is the true slowness.}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+\subsection{Field data}
+
+We now consider a 2D field seismic gather shown in Figure \ref{fig:samiss}. Its Fourier transform is shown in Figure \ref{fig:fftabs-f}. Due to the comparatively wide frequency bandwidth, $N$ cannot be chosen too small (here the range of $\Phi=f\sqrt{\tau^2+p^2h^2}$ is about 306). The input sampling sizes are $N_t=1500$, $N_h=240$, while the output sizes are chosen as $N_{\tau}=1500$, $N_p=800$. Although this small dataset is not very suitable for showcasing the fast algorithm, our method runs in 6.62 s for $N=128$, $q_{k_1}=q_{x_1}=7$, $q_{k_2}=q_{x_2}=5$ (Figure \ref{fig:fmod-f}), still outperforming the {\it velocity scan} which takes about 10 s (Figure \ref{fig:dimod-f}). Note that the simplest interpolation is used in the {\it velocity scan}, any other higher order interpolation should take longer computation time.
+
+\inputdir{field2}
+\plot{samiss}{width=1\textwidth}{2D field CMP gather. $N_t=1500$, $N_h=240$. $\Delta t=0.004$ s, $\Delta h=0.0125$ km.}
+
+\plot{fftabs-f}{width=1\textwidth}{The Fourier transform (absolute value) on time axis of the field data in Figure \ref{fig:samiss}.}
+
+\plot{fmod-f}{width=1\textwidth}{$N_{\tau}=1500$, $N_p=800$. Output of the fast butterfly algorithm applied to the field data in Figure \ref{fig:samiss}. $N=128$, $q_{k_1}=q_{x_1}=7$, $q_{k_2}=q_{x_2}=5$. CPU time: {\bf 6.62 s}.}
+
+\plot{dimod-f}{width=1\textwidth}{$N_{\tau}=1500$, $N_p=800$. Output of the {\it velocity scan} applied to the field data in Figure \ref{fig:samiss}. CPU time: {\bf 9.91 s}.}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\subsection{Computing the adjoint operator}
+
+The last example is concerned with the computation of the adjoint of the hyperbolic Radon transform. Assuming $m(\tau,p)$ and $d(t,h)$ are two arbitrary functions (in the discrete sense) in the model domain and data domain, if we require 
+\begin{equation}
+\langle m(\tau,p),(Rd)(\tau,p)\rangle =\langle(R^*m)(t,h),d(t,h)\rangle,
+\end{equation}
+where $(Rd)(\tau,p)$ is given by equation \ref{sum}, the inner product $\langle\cdot,\cdot\rangle$ is defined as
+\begin{equation}
+\langle g_1(x,y),g_2(x,y)\rangle\,=\sum_{x,y} g_1(x,y)\,\overline{g_2
+(x,y)}, \quad \forall g_1(x,y), \ g_2(x,y);
+\end{equation}
+then it is easy to verify that the adjoint operator $R^*$ is given by
+\begin{equation} \label{invsum}
+(R^*m)(t,h)=\mathcal{F}_{f\rightarrow t}^{-1}\left(\sum_{\tau,p}e^{-2\pi i f \sqrt{\tau^2+p^2h^2}}m(\tau,p)\right),
+\end{equation}
+where $\mathcal{F}^{-1}_{f\rightarrow t}$ is the inverse Fourier transform from variable $f$ to $t$. The summation in equation \ref{invsum} again resembles an oscillatory integral operator, therefore the fast algorithm for computing $R$ applies with minor modifications. The computational cost remains the same.
+
+We consider still the first example and apply the (discrete) adjoint operators of the fast butterfly algorithm and the {\it velocity scan} respectively to the data in Figures \ref{fig:fmod} and \ref{fig:dimod}. The two methods produce similar results (see Figures \ref{fig:fdat}, \ref{fig:didat}). It is also clear that the adjoint is far from the inverse, at least for this geometry, hence some kind of least-squares implementation is needed for inversion process.
+
+To further verify that the numerically computed $R^*$ is the adjoint operator of $R$, one can compare the values of $\langle Rd,Rd\rangle$ and $\langle R^*Rd,d\rangle$ for arbitrary $d$. Indeed, the proposed algorithm passed this dot-product test with a relative error of $O(10^{-7})$ in single precision.
+
+\inputdir{synth2D-1-timer}
+\plot{fdat}{width=1\textwidth}{Output of the adjoint fast butterfly algorithm applied to the data in Figure \ref{fig:fmod}. $N=32$, $q_{k_1}=q_{k_2}=q_{x_1}=q_{x_2}=9$.}
+
+\plot{didat}{width=1\textwidth}{Output of the adjoint {\it velocity scan} applied to the data in Figure \ref{fig:dimod}.}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Conclusions}
+
+We constructed a fast butterfly algorithm for the hyperbolic Radon transform, a type of generalized Radon transforms. Compared with expensive integration in the time domain, the new method runs in only $O(N^2\log N)$ operations, where $N$ depends on the range of frequency and offset in the dataset and the range of intercept time and slowness in the model space, and can often be chosen smaller than the grid size. In practice, this may lead to speedup of several orders of magnitude. Our ongoing work is studying the performance of this fast solver on the sparse iterative inversion of the hyperbolic Radon transform applied to multiple attenuation.
+%A feature of the method is the flexible accuracy and efficiency control by selecting different combinations of $N$ and numbers of Chebyshev interpolation points. 
+
+Due to the generality of the butterfly algorithm, its application is not limited to the hyperbolic transform considered here. Using a different phase function, one can easily extend the algorithm to higher-order transforms. If the slowness or velocity range is not constant but a corridor around a central function, then a sparse butterfly algorithm can be designed to save the cost by building the quad tree adaptively. Furthermore, many of the Radon-like integral operators, such as Kirchhoff migration, the apex-shifted Radon transform, the anisotropic multiparameter velocity scan, etc., can be reformulated in a similar fashion as we did in this paper. To address these extensions, a 3D version of the butterfly algorithm might be more appropriate.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\section{Acknowledgments}
+
+We are grateful to Tariq Alkhalifah, Anatoly Baumstein, Ian Moore, Daniel Trad, and the anonymous reviewer for their valuable comments and suggestions. We thank Dr. Alexander Klokov for preprocessing the field data. We thank KAUST and sponsors of the Texas Consortium for Computational Seismology (TCCS) for financial support. 
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\append{The mathematical derivation of the fast butterfly algorithm}
+
+This appendix gives a complete derivation and description of the butterfly algorithm, which combines the low-rank approximations and the butterfly structure introduced in the main text. For more mathematical exposition, the reader is referred to \cite{CDY09}.
+
+\inputdir {.}
+
+To facilitate the presentation, we add a new figure (Figure \ref{fig:illus}) to illustrate the notations.
+
+1. {\it Initialization.} At level $l=0$, let $A$ be the root box of $T_X$. For each leaf box $B\in T_K$, expressions \ref{expan1a} and \ref{expan1b} are valid as $w(B)\leq 1/\sqrt{N}$. Substituting $\beta_t^{AB}$ (in equation \ref{expan1b}) into the definition of $\delta_t^{AB}$, equation \ref{def}, we get
+\begin{equation} \label{delta1}
+\delta_t^{AB}=e^{-2\pi i
+  \Phi(\mathbf{x}_0(A),\mathbf{k}_t^B)}\sum_{\mathbf{k}\in B}\left(
+  L_t^B(\mathbf{k}) e^{2\pi i \Phi(\mathbf{x}_0(A),\mathbf{k})}g(\mathbf{k}) \right),
+\end{equation}
+i.e. the equation \ref{Delta1} in the main text. In addition, for $\mathbf{x}\in A$, the partial sum $u^B(\mathbf{x})$ in equation \ref{partial1} is given by (with $\alpha_t^{AB}$ (in equation \ref{expan1a}) plugged in)
+\begin{equation} \label{partial2}
+u^{B}(\mathbf{x}) \approx
+\sum_t e^{2\pi i
+  \Phi(\mathbf{x},\mathbf{k}_t^B)}\delta_t^{AB}.
+\end{equation}
+Comparing the right hand sides of equations \ref{partial} and \ref{partial2}, if we call $g(\mathbf{k})$ the sources at $\mathbf{k}$, then coefficients $\delta_t^{AB}$ are just like the {\it equivalent sources} at $\mathbf{k}_t^B$. This initial step is to redistribute the original sources $g(\mathbf{k})$ located at $\mathbf{k}$ (denoted by blue dots in Figure \ref{fig:illus}) to equivalent sources $\delta^{AB}_t$ located at Chebyshev grid $\mathbf{k}_t^B$ (not shown in the figure). We next aim at updating $\delta_t^{AB}$ until the end level $L$.
+
+2. {\it Recursion.} At $l=1,2,...,L/2$, for each pair $(A,B)$, let $A_p$ be $A$'s parent and $\{B_c, c=1,2,3,4\}$ be $B$'s children from the previous level (see Figure \ref{fig:illus}). For each child $B_c$, we have available from the previous level an approximation of the form 
+\begin{equation}
+u^{B_c}(\mathbf{x})\approx  
+\sum_{t'} e^{2\pi i
+  \Phi(\mathbf{x},\mathbf{k}_{t'}^{B_c})}\delta_{t'}^{A_pB_c}, \quad
+ \text{for} \ \ \mathbf{x}\in A_p.
+\end{equation}
+Summing over all children gives
+\begin{equation} \label{uB1}
+u^{B}(\mathbf{x})\approx  
+\sum_c \sum_{t'}  e^{2\pi i
+  \Phi(\mathbf{x},\mathbf{k}_{t'}^{B_c})}\delta_{t'}^{A_pB_c}, \quad
+ \text{for} \ \ \mathbf{x}\in A_p.
+\end{equation} 
+Since $A\subset A_p$, this is of course true for any $\mathbf{x}\in A$. Also we know that equation \ref{intera} holds for $\mathbf{k}_{t'}^{B_c}\in B$, i.e.,
+\begin{equation}
+e^{2\pi \Phi(\mathbf{x},\mathbf{k}_{t'}^{B_c})}\approx\sum_t e^{2\pi i
+    \Phi(\mathbf{x},\mathbf{k}_t^B)}\beta_t^{AB}(\mathbf{k}_{t'}^{B_c}), \quad
+  \text{for} \ \ \mathbf{x}\in A.
+\end{equation}
+Inserting it into expression \ref{uB1} yields
+\begin{equation} \label{uB2}
+u^{B}(\mathbf{x})\approx  
+\sum_c \sum_{t'} \sum_t e^{2\pi i
+    \Phi(\mathbf{x},\mathbf{k}_t^B)}\beta_t^{AB}(\mathbf{k}_{t'}^{B_c})\delta_{t'}^{A_pB_c}, \quad
+ \text{for} \ \ \mathbf{x}\in A.
+\end{equation} 
+On the other hand, $u^B(\mathbf{x})$ admits a low-rank approximation of equivalent sources at the current level,
+\begin{equation} \label{uB3}
+u^{B}(\mathbf{x})\approx  
+\sum_t  e^{2\pi i
+  \Phi(\mathbf{x},\mathbf{k}_{t}^{B})}\delta_{t}^{AB}, \quad
+ \text{for} \ \ \mathbf{x}\in A.
+\end{equation}
+Equating expressions \ref{uB2} and \ref{uB3} suggests that we can take
+\begin{equation} \label{mdelta1}
+\delta_t^{AB}=\sum_c\sum_{t'}\beta_t^{AB}(\mathbf{k}_{t'}^{B_c})\delta_{t'}^{A_pB_c}.
+\end{equation}
+Substituting $\beta_t^{AB}$ (in equation \ref{expan1b}), we get
+\begin{equation} \label{delta2}
+\delta_t^{AB}=e^{-2\pi i
+  \Phi(\mathbf{x}_0(A),\mathbf{k}_t^B)}\sum_c\sum_{t'}
+\left(L_t^B(\mathbf{k}_{t'}^{B_c})e^{2\pi i
+  \Phi(\mathbf{x}_0(A),\mathbf{k}_{t'}^{B_c})}\delta_{t'}^{A_pB_c}\right),
+\end{equation}
+i.e. the equation \ref{Delta2} in the main text.
+
+3. {\it Switch.} A switch of the representation to expressions \ref{expan2a} and \ref{expan2b} is needed at the middle level $l=L/2$ since expressions \ref{expan1a} and \ref{expan1b} are no longer valid as soon as $l>L/2$ (boxes $B$ are getting bigger and bigger so that $w(B)\leq 1/\sqrt{N}$ is no longer satisfied). Plugging $\beta_t^{AB}$ (in equation \ref{expan2b}) into the definition of $\delta_t^{AB}$, equation \ref{def}, one has 
+\begin{equation} \label{mdelta2}
+\delta_t^{AB}=\sum_{\mathbf{k}\in B}e^{2\pi \Phi(\mathbf{x}_t^A,\mathbf{k})}g(\mathbf{k})=u^B(\mathbf{x}_t^A);
+\end{equation}                               
+from expression \ref{uB3}, 
+\begin{equation} \label{uB4}
+u^B(\mathbf{x}_t^A)\approx \sum_s e^{2\pi i
+  \Phi(\mathbf{x}_t^A,\mathbf{k}_s^B)}\delta_s^{AB},
+\end{equation}
+where we use $\{\delta_t^{AB}\}$ to denote the new set of coefficients and $\{\delta_s^{AB}\}$ the old set. Equating expressions \ref{mdelta2} and \ref{uB4}, we can set $\delta_t^{AB}$ as
+\begin{equation} \label{delta3}
+\delta^{AB}_t=
+\sum_s e^{2\pi i \Phi(\mathbf{x}_t^A,\mathbf{k}_s^B)}\delta_s^{AB},
+\end{equation}
+i.e. the equation \ref{Delta3} in the main text. This middle step is to switch from equivalent sources $\delta_s^{AB}$ located at Chebyshev grid $\mathbf{k}_s^B$ on the $K$ side to equivalent sources $\delta_t^{AB}$ located at Chebyshev grid $\mathbf{x}_t^A$ on the $X$ side.
+ 
+4. {\it Recursion.} The rest of the recursion is analogous to Step 2. For $l=L/2+1,...,L$, we have 
+\begin{equation}
+u^{B}(\mathbf{x})\approx \sum_c \sum_{t'}
+\alpha_{t'}^{A_pB_c}(\mathbf{x})\delta_{t'}^{A_pB_c}, \quad
+\text{for} \ \ \mathbf{x}\in A_p,
+\end{equation}
+thus
+\begin{equation} \label{mdelta3}
+u^{B}(\mathbf{x}_t^A)\approx \sum_c \sum_{t'}
+\alpha_{t'}^{A_pB_c}(\mathbf{x}_t^A)\delta_{t'}^{A_pB_c};
+\end{equation}
+recalling expression \ref{mdelta2}, one can simply set
+\begin{equation}
+\delta_t^{AB}=\sum_c \sum_{t'}
+\alpha_{t'}^{A_pB_c}(\mathbf{x}_t^A)\delta_{t'}^{A_pB_c}.
+\end{equation}
+Inserting $\alpha_t^{AB}$ (in equation \ref{expan2a}) gives the update
+\begin{equation} \label{delta4}
+\delta_t^{AB}=\sum_c  e^{2\pi i
+  \Phi(\mathbf{x}_t^A,\mathbf{k}_0(B_c))}\sum_{t'} \left( L_{t'}^{A_p}(\mathbf{x}_t^A) e^{-2\pi i
+  \Phi(\mathbf{x}_{t'}^{A_p},\mathbf{k}_0(B_c))}\delta_{t'}^{A_pB_c}\right),
+\end{equation}
+i.e. the equation \ref{Delta4} in the main text.
+
+5.  {\it Termination.} Finally we reach the level $l=L$, and $B$ is the entire domain $K$. For every box $A$ in $X$ and every $\mathbf{x}\in A$, 
+\begin{equation}
+u(\mathbf{x})=u^{B}(\mathbf{x})\approx \sum_t \alpha_t^{AB}(\mathbf{x})\delta_t^{AB}.
+\end{equation}
+Plugging in $\alpha_t^{AB}$ (in equation \ref{expan2a}), we get
+\begin{equation} \label{delta5}
+u(\mathbf{x})=e^{2\pi i
+  \Phi(\mathbf{x},\mathbf{k}_0(B))}\sum_t \left( L_t^A(\mathbf{x}) e^{-2\pi i
+  \Phi(\mathbf{x}_t^A,\mathbf{k}_0(B))}
+  \delta_t^{AB}\right),
+\end{equation}
+i.e. the equation \ref{Delta5} in the main text. This final step is to transform the equivalent sources $\delta_t^{AB}$ located at Chebyshev grid $\mathbf{x}_t^A$ back to the targets $u(\mathbf{x})$ located at $\mathbf{x}$ (denoted by red dots in Figure \ref{fig:illus}).
+
+In the above algorithm, $L=\log N$ is assumed to be an even number. If $L$ is odd, one can either switch at level $(L-1)/2$ or $(L+1)/2$. Everything else remains unchanged.
+
+\plot{illus}{width=1\textwidth}{The butterfly structure for the special case of $N=4$. The top right panel represents the input domain $K$ with sources $g(\mathbf{k})$ located at $\mathbf{k}$ (blue dots). The bottom left panel represents the output domain $X$ with targets $u(\mathbf{x})$ located at $\mathbf{x}$ (red dots). For the pair of boxes $(A,B)$ at level $l=1$, box $A_p$ is called $A$'s parent at the previous level; four small boxes $B_c$ are called $B$'s children at the previous level.}
+
+
+\onecolumn
+\bibliographystyle{seg}
+\bibliography{hubibtex}

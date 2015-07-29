@@ -1,0 +1,36 @@
+#!/bin/bash
+
+#$ -V                                 # Inherit the submission environment
+#$ -cwd                               # Start job in submission dir
+#$ -N decon                           # Job name
+#$ -j y                               # stderr and stdout into stdout
+#$ -o $JOB_NAME.o$JOB_ID              # Name of the output file
+#$ -pe 16way 256                      # Request nodes
+#$ -q normal                          # Queue name
+#$ -A TCCS                            # Account
+#$ -l h_rt=14:00:00                   # runtime (hh:mm:ss)
+#$ -M salah.alhadab@gmail.com         # Where to send "End of job" note to
+#$ -m e                               # "End of job" email only
+
+source $RSFSRC/env.sh
+
+# number of jobs per node
+export mycores=16
+
+# Total number of threads
+# cores * nodes
+#    16  *  16
+export RSF_THREADS=256
+
+# number of jobs
+# for each node
+export RSF_CLUSTER=`awk -v p=$mycores 'NF>=2 {print $1" "p}' $PE_HOSTFILE`
+
+echo $RSF_THREADS
+echo $RSF_CLUSTER
+
+#echo $NSLOTS
+#echo $PE_HOSTFILE
+
+pscons
+

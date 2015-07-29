@@ -1,0 +1,723 @@
+\lefthead{Schleicher}
+\righthead{Alaska}
+\footer{Open Data/Open Source - Seismic Land Data/Seismic Unix}
+
+\title{Open Data/Open Source: Seismic Unix scripts to process a 2D land line}               % Activate to display a given date or no date
+\author{Karl Schleicher}
+\email{k\_schleicher@hotmail.com}
+
+\address{
+k\_schleicher@hotmail.com \\
+John A. and Katherine G. Jackson School of Geosciences \\
+The University of Texas at Austin \\
+University Station, Box X \\
+Austin, TX 78713-8924}
+
+\maketitle
+
+\begin{abstract}
+This paper describes how to process an internet downloadable 2D land 
+line data set though a very basic processing sequence using Seismic 
+Unix. The data from the Alaska North Slope has good signal, 
+although it may be suitable for testing ground-roll and noise burst 
+attenuation programs.  The detailed steps to download the data set from 
+the Internet and process it are described.  You should be able to 
+follow these steps and recreate my results.  I hope this will 
+accelerate the testing and validation of programs developed in different
+research groups.
+\par
+The paper starts with background information such as data downloading,
+region overview, data acquisition, and previous processing.  The
+scripts and custom programs for Seismic Unix translation, header load, 
+qc, shot record velocity filter, deconvolution, CDP gather, velocity 
+analysis, residual statics, stack, and post stack migration can be 
+downloaded to your computer.
+
+Header loading is not well described in other Seismic Unix documentation
+or papers.  One approach to header loading is described here.  The velocity
+analysis script is more advanced than what I found in previous publications.
+
+This paper is the beginning of an effort to build an open data/open source 
+library for research, software testing, demonstrations, and user training.  
+I encourage you to use these scripts and improve on my results.  You can send 
+me email for the latest results on this line, and progress on other software 
+and data.
+\end{abstract}
+
+\section{Introduction}
+Seismic Unix (SU) is a popular open-source seismic processing software
+package \cite[]{TLE16-07-10451049,cohen}.  The distribution
+includes some example processing scripts and three books that
+teach how to use the software are \emph{Seismic Processing with Seismic 
+Un*x} \cite[]{forel}, \emph{Geophysical Image Processing with Seismic 
+Unix} \cite[]{stockwell}, and \emph{Theory of Seismic Imaging} 
+\cite[]{Scales} .  These reference cover broad subjects including basic 
+Unix commands, setting up a user environment, basic seismic processing, 
+migration theory, programming, and advanced scripting for seismic
+processing.  You can follow the text and recreate some seismic
+processing examples.  These books do not provide good examples of 
+geometry definition and how to load trace headers.\nocite{cohen}
+
+I hope to assist a processing geophysicst working or studying independently 
+at a University or company that needs field data.  I assume he is familiar 
+with Seismic Unix.  I providing example scripts,  programs, and field data 
+to process a 2D land line using the processing system. I describe the data 
+acquisition and previous data processing.  I provide the custom programs 
+that load the trace headers.  The scripts for data reformat to Seismic 
+Unix format, header loading qc display, shot record velocity filter, 
+deconvoution, CDP gather, velocity analysis, residual statics, stack, 
+and post stack migration can be downloaded and this paper describes 
+the scripts.  This is a more complete processing sequence and a 
+different data set than provided in previous publications.  The scripts 
+provide the detailed parameters used by the Seismic Unix programs.  The 
+parameters for deconvolution, velocity filter, mute, moveout velocity, 
+and scaling can adapted for use by other seismic processing  systems. The 
+results are similar to the results obtained in 1981 using GSI's proprietary 
+software.  
+
+You can download Seismic Unix, the field data, and the scripts, and 
+recreate my results.  The scripts, data, and programs can be modified 
+to validate your own seismic processing ideas.  I intend the reader to 
+use the paper and the scripts together to jump directly to a processing 
+stage of interest to change parameters or programs to test alternative 
+processing.  This should accelerate the testing and validation 
+of new seismic research, especially at universities and small companies that 
+do not have large data archives and processing groups.
+
+\section{Background information about the data}
+
+President Warren Harding created the Naval Petroleum Reserve Number 4
+in 1923.  It was renamed the National Petroleum Reserve, Alaska (NPRA)
+in 1976.  Figure~\ref{fig:mapnpra} is a map of the region and 
+Figure~\ref{fig:mapusgs} maps the lines collected and processed between 1974
+and 1981.  I selected and processed line 31-81 because it was a short
+line from the last acquisition season.
+\plot{mapnpra}{width=\textwidth}{Map of the National Petroleum
+Reserve in Alaska from the \href{http://en.wikipedia.org/wiki/National_Petroleum_Reserve\%E2\%80\%93Alaska}{Wikipedia entry about the National Petroleum
+Reserve Alaska}.}
+\plot{mapusgs}{width=\textwidth}{Map of seismic lines collects between
+1974 and 1981 from the Internet site \url{http://energy.usgs.gov/GeochemistryGeophysics/SeismicDataProcessingInterpretation/NPRASeismicDataArchive.aspx}.}
+
+\section{Setting up and reading the data documentation}
+\inputdir{line31-81}
+\href{http://www.ahay.org/wiki/Download}{Download Madagascar} and you
+should have all files to process line 31-81 in 
+the directory: \texttt{\$RSFSRC/book/data/alaska/line31-81}.
+
+Change into this directory.  This paper lists commands and the 
+\texttt{SConstruct} file contains the rules that translate the commands 
+into SU tasks to process the data.
+
+An alternative to installing Madagascar is to go to the website \url{http://dl.dropbox.com/u/37269048/open_lib_demo_2011.tar.gz}
+
+This will download a tar file that you can install.  On my system I
+do this with the commands:
+\begin{verbatim}
+cd
+mv Downloads/rsf-alaska.tar.gz .
+tar xvzf rsf-alaska.tar.gz
+\end{verbatim}
+
+\begin{comment}
+This will untar the directory.  When it completes, continue:\\
+cd open\_lib\_demo\_2011\\
+cat readme
+
+This will tell you about the files you downloaded.  You can look at the 
+su commands the process will use by typing:\\
+cat doit.job
+
+Then you can run the processing by typing:\\  
+./doit.job
+
+You can also run the individual tasks with the scripts in the tar file. 
+For example, to view the previous final stack, the text says run:
+\begin{verbatim}
+scons prevstack.view 
+\end{verbatim}
+You can run the script from the tar file:
+\begin{verbatim}
+./prevstack.job
+\end{verbatim}
+
+The scons will download the file \texttt{31\_81\_IM.JPG} from the Internet and 
+display it using open office draw (oodraw).  The tar file supplies the 
+files so the scripts skip the download.  ./prevstack.job just displays
+the file using oodraw.
+\end{comment}
+
+There used to be a higher resolution image of the stack display, the 
+file S609.TIF.  This file is no longer available on the USGS Internet 
+site.  I was able to view this file in OpenOffice.org draw 
+and zoom to read the side label that describes the acquisition and 
+processing parameters.
+
+The data was acquired 96 trace, 12 fold with a dynamite source.  The
+shotpoint interval is 440 ft and the receiver interval is 110 ft.  The
+average shot depth is 75 ft.  The elevation plot on the section header
+shows the elevation is about 200 ft and there is little variation.
+
+The processing applied by GSI in 1981 was:
+\begin{enumerate}
+\item Edit and true amplitude recovery
+\item Spherical divergence and exponentiation
+(alpha - 4.5 db/s, initial time - 0 s, final time - 4.5 s)
+\item Velocity filtering dip range -12 to 4 ms/trace
+\item Designature deconvolution
+\item Time-variant scaling (unity)
+\item Apply datum statics
+\item Velocity estimation
+\item Normal moveout correction
+\item Automatic Residual Statics application
+\item First Break Suppression \\
+100 ms at 55 ft\\
+380 ms at 2970 ft\\
+700 ms at 5225 ft
+\item Common depth point stack
+\item Time Variant filtering \\
+16-50 Hz at 700 ms\\
+14-45 Hz at 1400 ms\\
+12-40 Hz at 2000 ms\\
+8-40 Hz at 400 ms
+\item Time variant scaling
+\end{enumerate}
+
+The surveyor and observer logs are downloaded and displayed using the commands:
+\begin{verbatim}
+scons surveylog.view 
+scons observerlog.view
+\end{verbatim}
+This can be done using the data on the tar file by typing:
+\begin{verbatim}
+./surveylog.job
+./observerlog.job
+\end{verbatim}
+
+I read the surveyor's log and typed the elevations into the
+\texttt{spnElev.txt} file.  The \texttt{spnElev.txt} file contains two
+columns.  The first is the shotpoint number and the second is the
+elevation.  I read the observer's log and typed the relationship
+between the field record numbers the shotpoint numbers into the
+\texttt{recnoSpn.txt} file.  The file \texttt{recnoSpn.txt} contains two
+columns.  The first column is the field record number and the second
+column is the shotpoint number. I used a shotpoint number -999999 to
+reject bad field records.  These files are used in the next
+section to load the trace headers.
+
+\section{Data Loading and initial data QC}
+
+I found little documentation about loading data and creating trace
+headers in previous publications.  This section described how I loaded 
+the headers.
+
+The three field data SEGY files are downloaded, converted to Seismic 
+Unix format, concatenated, and a print created of the range of each trace 
+header using the command:
+\begin{verbatim}
+scons list1.su
+\end{verbatim}
+Or to use the tar file type:
+\begin{verbatim}
+./list1.job
+\end{verbatim}
+
+The resulting listing is:
+\begin{verbatim}
+6868 traces:
+tracl    1 6868 (1 - 6868)
+tracr    1 6868 (1 - 6868)
+fldr     101 168 (101 - 168)
+tracf    1 101 (1 - 101)
+trid     1
+ns       3000
+dt       2000
+f1       0.000000 512.000000 (0.000000 - 512.000000)
+\end{verbatim}
+
+The print indicates there is little information in the input headers.
+There are 31 shot records (\texttt{fldr} 101 - 130) and each record has 101
+traces (\texttt{tracf} 1 - 101).  The trace headers will be created using \texttt{fldr}
+(the field record number) and \texttt{tracf} (the field trace number).  A list 
+of these headers on the first 3000 traces is created using:
+\begin{verbatim}
+scons list2.su 
+\end{verbatim}
+
+If you are using the tar file type:
+\begin{verbatim}
+./list2.job
+\end{verbatim}
+
+Part of the print is: 
+\begin{verbatim}
+fldr=101 tracf=1  cdp=0	 cdpt=0  offset=0 
+fldr=101 tracf=2  cdp=0	 cdpt=0  offset=0 	
+fldr=101 tracf=3  cdp=0  cdpt=0  offset=0 
+... 
+fldr=101 tracf=101  cdp=0  cdpt=0  offset=0 
+fldr=102 tracf=1    cdp=0  cdpt=0  offset=0 
+fldr=102 tracf=2    cdp=0  cdpt=0  offset=0 
+...
+\end{verbatim}
+
+A first display of the seismic data and a zoom of the same data 
+(figures~\ref{fig:first} and ~\ref{fig:zoomfirst}) are
+produced with the commands: 
+\begin{verbatim}
+scons first.view 
+scons zoomfirst.view
+\end{verbatim}
+
+If you are using the tar file type:
+\begin{verbatim}
+./first.job
+./zoomfirst.job
+\end{verbatim}
+
+\plot{first}{width=\textwidth}{First 3000 traces on the first SEGY file.}
+\plot{zoomfirst}{width=\textwidth}{Zoom of Figure~\ref{fig:first}. The 
+first look at the data. Notice the ground roll and good signal. There 
+are 101 traces in each shotpoint, 5 auxiliary traces and 96 data traces.}
+
+The first 10 records in the file are test records.  These test
+records are the unusual traces in the left third of
+Figure~\ref{fig:first}. The Observer Log does not mention these test
+records, but indicates the first shotpoint is field file identifier 
+(ffid) 110.  There are also 5 auxiliary traces in each shot record.  
+These auxiliary traces can be seen on Figure~\ref{fig:zoomfirst}. 
+
+The display of shotpoint 24 (Figure ~\ref{fig:zoomfirst}) is displayed 
+with the command: 
+\begin{verbatim}
+scons firstrec24.view
+\end{verbatim}
+If you are using the tar file type:
+\begin{verbatim}
+./firstrec24.job
+\end{verbatim}
+
+This display as created using suwind to select traces 2324 through 2424, 
+so it is the 24th record in the input file (including the test records). 
+This plot confirms that the 5 auxiliary traces are \texttt{tracf} 97 through 101.
+
+\plot{firstrec24}{width=\textwidth}{The 24th shot record without 
+processing.  The last 5 traces traces are auxiliary traces.  There is 
+noise on the traces closest to the shotpoint.  One trace has a noise burst 
+near the maximum time.}
+
+The movie display is not included in this paper.  The movie loops 
+continuously and can be stopped by pressing 's'.  Once stopped, you 
+can move forward or backward using the 'f' and 'b' keys.  The movie can be 
+run with the command:
+\begin{verbatim}
+scons firstmovie.view
+\end{verbatim}
+If you are using the tar file type:
+\begin{verbatim}
+./firstmovie.job
+\end{verbatim}
+
+The trace headers are loaded using the command:
+\begin{verbatim}
+scons allshots.su
+\end{verbatim}
+Or from the tar file:
+\begin{verbatim}
+./allshots.job
+\end{verbatim}
+
+The stages in loading the trace header are
+\begin{enumerate}
+\item Run \texttt{sugethw} to create the file \texttt{hdrfile.txt} containing one record for 
+each trace with \texttt{tracl}, \texttt{fldr}, \texttt{tracf}
+\item Run the custom Python program \texttt{InterpText.py}.  This program
+\begin{enumerate}
+\item reads \texttt{recnoSpn.txt} that defines the recno/spn relationship
+\item reads \texttt{spnElev.txt}  the defined the elevation of each shot
+\item interpolates this data and output \texttt{hdrfile1.txt} with values for all keys
+to be loaded
+\end{enumerate}
+\item converts \texttt{hdrfile1.txt} to binary format 
+(\texttt{binary\_hdrfile1.dat})
+\item loads the trace headers
+\item removes bad shotpoints and CDPs (with value=-999999)
+\item removes the bad shotpoint 149
+\item outputs \texttt{allshots.su}
+\end{enumerate}
+
+\texttt{InterpText.py} is a custom Python script to load the trace headers.  
+The code is not elegant, but it is straightforward and works.  This program 
+requires files to define the shotpoint elevation and the 'ffid'/'ep' 
+relationship.  The surveyor log defines the shotpoint elevations.  The 
+observers log describes the relationship between the su header keys 
+'ffid' and 'ep' (these are called 'REC' and 'SHOTPOINT' by in the observers 
+log).  This information was typed into two files (\texttt{recnoSpn.txt} and 
+\texttt{spnElev.txt}).  In addition to interpolating the record 
+number/shotpoint table and the elevation data the program also computes 
+the geometry including the receiver locations and the CDP numbers.
+
+The stack file from the previous process is downloaded and displayed 
+using the commands: 
+\begin{verbatim}
+scons checkstack.view 
+scons zoomcheckstack.view
+\end{verbatim}
+If you are using the tar file type:
+\begin{verbatim}
+./checkstack.job
+./zoomcheckstack.job
+\end{verbatim}
+
+The first result is shown in Figure~\ref{fig:checkstack}.  The zoom display
+is not shown.
+
+\plot{checkstack}{width=\textwidth}{Plot of the SEGY of the final stack 
+from the 1981 processing.}
+
+\section{Shot record velocity filter}
+I applied velocity filtering (sudipfilt) to remove the ground roll.  I
+processed the receivers leading the shotpoint separately from the
+trailing receivers (i.e. I split the shots).  I decided to split the
+shots so that I could use an asymmetrical dip filter (-15,5 ms/trace).
+That dip filter is similar to the 1981 processing that used
+(-12,4). Sudipfilter was intended for post stack processing, so I
+wrote the script \texttt{alaskavelfilt.sh} to loop over the shots and
+divide individual shot records into positive and negative offsets.
+Figure~\ref{fig:velfiltrec24} shows the Figure~\ref{fig:zoomfirst} 
+shotpoint with velocity filtering applied.
+
+The command:
+\begin{verbatim}
+scons velfiltrec24.view 
+\end{verbatim}
+or using the tar file:
+\begin{verbatim}
+../velfiltrec24.job 
+\end{verbatim}
+applies velocity filtering and produces the figure.
+
+\plot{velfiltrec24}{width=\textwidth}{The 24th shot record after 
+agc and velocity filter.}
+
+\section{cdp sort and mute}
+
+The command
+\begin{verbatim}
+scons cdp250-251.view 
+\end{verbatim}
+or using the tar file:
+\begin{verbatim}
+./cdp250-251.job
+\end{verbatim}
+sorts the data to CDP order, applies a mute, and displays CDPs 250 and 
+251.  This result is shown in Figure~\ref{fig:cdp250-251}.  I picked 
+the mute from the stacked section.  The first trace on the stack is 
+created from a single far offset which has moveout applied.  
+In order to recreate this mute I applied moveout using a single velocity 
+function contained in the file \texttt{vbrureorig.txt}. After applying the 
+mute, I reversed the moveout.
+\plot{cdp250-251}{width=\textwidth}{CDP gathers 250 and 251 with mute applied.}
+
+\section{Velocity analysis and residual statics strategy}
+A problem encountered in residual statics estimation is the coupling of 
+velocity and statics.  Changing the medium wavelength statics (0.5 to 3 
+spread length) will change the medium wavelength stacking velocity.  
+The classic approach to this problem is to repeat the velocity analysis 
+and residual static estimation sequence.  Incorporating rapid lateral 
+variation in the initial stacking velocity will prevent the medium wavelength 
+estimation by residual statics.  The undesirable rapid velocity variation 
+is locked into the final velocity field.  I used the strategy described on 
+page 236 of Mike Cox' statics book \cite[]{SCS00-00-00010531}.  I ran 
+velocity analysis and statics twice.  On the first 
+iteration, I used single function velocity function for moveout before 
+residual static estimation.  If the line was longer I might have run
+a coarsely sampled set of velocity analyzes. After the first 
+pass of residual statics,  I ran velocity analysis every 48 CDPs (2640 ft 
+or 0.5 spreadlength).  I did not notice improvement when I compared the 
+stack with the first pass of residual statics and the velocity field from 
+the 48 CDP velocity analysis with the results after two passes of residual 
+statics.  The next sections step through the velocity analysis and residual 
+static processes.
+
+\section{First Pass Velocity analysis}
+I used a long script, iva.sh, that combines several SU programs for velocity 
+interpretation.  My iva.sh is a combination of the scripts \texttt{iva.sh} and 
+\texttt{velanQC.sh} in sections 7.6.7.3 and 8.2.2.2 of 
+\emph{Seismic Processing with Seismic Un*x} \cite[]{forel}.  My script is 
+more practical, because you can start from no velocity function, or review 
+and update an existing velocity field.  The script has more capabilities, 
+is tidier, and is a little shorter than Forel's script.
+
+Figure~\ref{fig:velanal} is an example velocity analysis plot.  It can 
+be produced with the commands: 
+\begin{verbatim}
+rm vbrute.txt 
+scons vbrute.txt
+\end{verbatim}
+Or using the tar file:
+\begin{verbatim}
+./vbrute.job
+\end{verbatim}
+
+There are four components of the plot: semblance plot, constant velocity 
+stack (CVS) plot, cdp gather without NMO, and cdp gather after NMO.  The 
+semblance plots and CVS plot have the velocity function over plotted.  
+The velocity analysis can be picked by pointing on the semblance and 
+'selecting' by pressing the 's' key.  To 'quit' the location press the 
+'q' key.  If you have 'selected' any picks, the plots will be recreated 
+with your new velocity function, otherwise processing will continue at 
+the next location.  (The brute analysis only has one velocity location, 
+so 'q' just quits the velocity analysis.)
+
+The velocities I picked are in the \texttt{vbruteorig.txt} file.
+
+\inputdir{.}
+\plot{velanal}{width=\textwidth}{Example velocity analysis from iva.sh.}
+\inputdir{line31-81}
+
+\section{Brute Stack}
+The brute stack can be produced with the command: 
+\begin{verbatim}
+scons brutestack.view
+\end{verbatim}
+or from the tar file:
+\begin{verbatim}
+./brutestack.job
+\end{verbatim}
+
+This command reads the cdp gather data and applies decon using supef.  In 
+order to define a decon design gate that depends on offset, I used sustatic 
+to time shift the data to line up where I wanted the time gate to start.  
+After decon (supef) the time shift is removed.  Moveout using the brute 
+velocity is applied followed by agc and a mute.  This data is written to a 
+file which is reread to create the brute stack shown in 
+Figure~\ref{fig:brutestack}.  You can create a zoom of this plot using the 
+command:
+\begin{verbatim}
+scons zoombrutestack.view
+\end{verbatim}
+or
+\begin{verbatim}
+./zoombrutestack.job
+\end{verbatim}
+
+You can make a movie of the gathers with moveout applied with the
+command: 
+\begin{verbatim}
+scons movie_velfiltcdpsnmo.view
+\end{verbatim}
+or
+\begin{verbatim}
+./movie_velfiltcdpsnmo.job
+\end{verbatim}
+
+\plot{brutestack}{width=\textwidth}{Brute stack.}
+
+\section{First Pass Residual Statics and Second Pass Velocity Analysis}
+The command:
+\begin{verbatim}
+scons rstack.view
+\end{verbatim}
+or
+\begin{verbatim}
+./rstack.job
+\end{verbatim}
+Will create a stack with residual statics and a detailed velocity analysis 
+by the following steps:
+\begin{enumerate}
+\item Read the gathers created in the brute stack section
+\item Band pass filter, select a time window, and up sample to 1 ms
+\item Compute residual statics
+\item Reread the gathers created in the brute stack section
+\item Apply the residual statics
+\item Remove moveout with the single velocity function 
+\item Second pass velocity estimation every 48 cdps (2640 ft)
+\item Normal moveout correction with the second pass velocity field 
+\item Stack
+\end{enumerate}
+
+The residual statics stack is shown in Figure~\ref{fig:rstack}.  A zoom 
+plot can be produce with the command:\\
+\begin{verbatim}
+scons zoomrstack.view
+\end{verbatim}
+or
+\begin{verbatim}
+./zoomrstack.job
+\end{verbatim}
+
+\plot{rstack}{width=\textwidth}{Stack with first pass residual statics and 
+a lateral variable stacking velocity field.}
+
+The lateral variable stacking velocity field shown in Figure~\ref{fig:vfile} 
+can be created with the command:\\
+\begin{verbatim}
+scons vfile.view
+\end{verbatim}
+or
+\begin{verbatim}
+./vfile.job
+\end{verbatim}
+
+\plot{vfile}{width=\textwidth}{The lateral variable stacking velocity 
+field interpreted after residual statics.}
+
+\section{Second Pass Residual Statics}
+The command:
+\begin{verbatim}
+scons rstack1.view
+\end{verbatim}
+or
+\begin{verbatim}
+./rstack1.job
+\end{verbatim}
+creates a stack with second pass residuals shown in Figure~\ref{fig:rstack1}.  
+I compared figures~\ref{fig:rstack} and~\ref{fig:rstack1} and did not see 
+any improvement.\\
+\\  
+A zoom plot can be produced with the command:
+\begin{verbatim}
+scons zoomrstack1.view
+\end{verbatim}
+or
+\begin{verbatim}
+./zoomrstack1.job
+\end{verbatim}
+
+I enjoyed comparing the zoom plots of the initial brute stack and the stack 
+with two iterations of residual statics and velocity analysis.  These plots
+are not included in the paper, but you can create them with the
+commands:
+\begin{verbatim}
+scons zoombrutestack.view & 
+scons zoomrstack1.view & 
+\end{verbatim}
+or
+\begin{verbatim}
+./zoombrutestack.job & 
+./zoomrstack1.job & 
+\end{verbatim}
+Make the plots full screen size and toggle between the windows using the 
+buttons on the bottom run bar.  The event disruptions that line up vertically
+are static problems solved by the residual statics process.
+  
+\plot{rstack1}{width=\textwidth}{The final stack with the lateral variable 
+stacking velocity and a second pass of residual statics.}
+
+\section{post stack migration}
+The commands:
+\begin{verbatim}
+scons mig.view
+scons migps.view
+\end{verbatim}
+or
+\begin{verbatim}
+./mig.job
+./migps.job
+\end{verbatim}
+apply post stack to the second pass residual statics stack
+(Figure~\ref{fig:rstack1}). The first command produces the Kirchhoff
+migration shown in Figure~\ref{fig:mig} and the second command
+produces the phase shift migration which is not shown.
+The Kirchhoff data used the final stacking velocity field
+(Figure~\ref{fig:vfile}).  The phase-shift migration used a single
+interval velocity.  I converted to interval velocity using Dix'
+equation \cite[]{GEO20-01-00680086} in a spreadsheet.
+
+\plot{mig}{width=\textwidth}{Post stack Kirchhoff migration of the 
+final stack.}
+
+\section{Comparison of the 2011 and 1981 results}
+Figures~\ref{fig:checkstack} and~\ref{fig:rstack1} are the results by GSI 
+using proprietary software in 1981 and the results obtained using SU.  
+Some of the differences in the processing sequences are:
+\begin{enumerate}
+\item The 1981 processing used GSI's designature process.  This source 
+signature removal technique applies the same operator to all traces in a 
+shot record.  The filter is designed differently from conventional 
+deconvolution and the two types of deconvolution will not produce data 
+with the same phase. 
+\item There are many differences in the application of AGC.  For example 
+GSI applied AGC before velocity filtering and inverse AGC after velocity 
+filter.
+\item GSI used diversity stack to control the high amplitude noise bursts.
+\end{enumerate}
+Considering all these differences, I think the results are surprisingly 
+similar, especially below 400 ms.  The shallow results are better on the 
+1981 processing.
+
+\section{Discussion of the Seismic Unix processing}
+I found the SU software hard to use.  The \texttt{sudipfilter} program
+was not intended for shot record velocity filtering, so a collection of
+programs were required.  Many of my input errors were not trapped by
+the code so I struggled to debug my scripts.  SU is a useful
+prototyping environment, but it falls short of the packages I used in 
+industry.  I look forward to future improvements.
+
+\section{key data sets produced}
+This processing sequence produces many data sets, but the best files for 
+additional processing are:
+\begin{enumerate}
+\item allshots.su - unprocessed field data with geometry in headers.  Bad 
+traces and aux traces removed.
+\item velfiltcdpsmuterstat - preprocessed cdp gathers with residual static 
+applied ready for normal moveout.
+\item vpickorig.txt - final stacking velocities.
+\item rstack1.su - final residual statics stack.
+\item mig.su - post stack Kirchhoff migrated data.
+\end{enumerate}
+
+\section{Plans}
+Some of the ideas I have to continue this work include:
+
+\begin{enumerate}
+\item Process using other software (open-source or proprietary). 
+\item Study difference and see if the open-source software can be improved.
+\item Working on different data sets (marine, 3D, ...).
+\end{enumerate}
+
+\section{Conclusions}
+I have provided a set of scripts for processing a land line using
+Seismic Unix. These scripts include the following processing stages:
+\begin{enumerate}
+\item Data load
+\item Trace header creation
+\item Velocity filtering 
+\item CDP gather
+\item Brute velocity analysis
+\item First pass residual statics
+\item Final velocity analysis
+\item Second pass residual statics
+\item Stack
+\item Post stack Kirchhoff time migration
+\item Post stack phase shift migration
+\end{enumerate}
+
+My processing demonstrates processing stages not presented by Forel
+or Stockwell. The results can be recreated by others since the processing
+scripts and the data can be downloaded from the Internet.
+
+The task of loading trace headers is not addressed in other
+publications.  The custom Python program included in this paper is one
+way to accomplish this processing stage.  The velocity analysis script 
+improves the scripts in Forel's book.  I was able to pick the velocities 
+on this line using the script.
+
+Some of the ideas I have to continue this work include:
+\begin{enumerate}
+\item Improve results by selecting different SU programs or different 
+parameters. 
+\item Process using other software (open-source or proprietary).
+\item Working on different data sets (marine, 3D, ...).
+\item Contribute source improvements back to SU.
+\end{enumerate}
+
+\section{Acknowledgments}
+I thank National Energy Research Seismic Library (NERSL) for providing 
+download access of this 2D land line from Alaska.  I thank the Bureau 
+of Economic Geology at the University of Texas for supporting my 
+Open Data/Open Source effort.
+ 
+\bibliographystyle{seg}
+\bibliography{refpaper,SEG}
+

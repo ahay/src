@@ -1,0 +1,123 @@
+from rsf.proj import *
+
+ps = (
+    (0.2,0.0),
+    (0.3,0.3),
+    (0.3,0.6),
+    (0.8,-0.3),
+    (0.8,-0.6),
+    )
+ns = len(ps)
+
+planes = []
+for i in range(ns):
+    plan = 'plane%d' % i
+    mout = 'mout%d' % i
+    Flow(mout,None,
+         '''
+         math n1=300 d1=4 label1=Offset unit1=m
+         output="%g*256+0.25*(%g)*x1" 
+         ''' % ps[i])
+    Flow(plan,mout,'moveout n1=256 d1=1 | put unit1=ms')
+    planes.append(plan)
+
+Flow('input',planes,
+     '''
+     add ${SOURCES[1:%d]} |
+     window f2=10 n2=256  |
+     bandpass flo=0.02 fhi=0.25
+     ''' % ns)
+
+Plot('input','grey title=input clip=0.225')
+
+Flow('fx','input','fft1')
+Flow('fk','fx','fft3 axis=2')
+
+Plot('fk','real | window max1=0.3 | grey title=input')
+
+Result('input1','input fk','SideBySideAniso')
+
+Flow('xf','fx','transp')
+
+Flow('pef','xf','cpef1 nf=6 single=y')
+Flow('res','xf pef','cconv filt=${SOURCES[1]} single=y')
+
+Plot('res','transp | fft1 inv=y | grey title=Difference clip=0.225')
+
+Flow('pred','xf res','add scale=1,-1 ${SOURCES[1]} | transp | fft1 inv=y')
+
+Plot('pred','grey title=F-X clip=0.225')
+
+Result('fig1','pred res','SideBySideAniso')
+
+Flow('pyr','xf','pyramid nu=1061 du=128')
+
+Flow('pef2','pyr','cpef1 nf=6 single=y')
+Flow('res2','pyr pef2','cconv filt=${SOURCES[1]} single=y')
+Flow('pre1','pyr res2','add scale=1,-1 ${SOURCES[1]} | pyramid inv=y')
+
+Plot('pre1','transp | fft1 inv=y | grey title=Pyramid clip=0.225')
+Flow('res1','xf pre1','add scale=1,-1 ${SOURCES[1]}')
+Plot('res1','transp | fft1 inv=y | grey title=Difference clip=0.225')
+
+Result('fdg1','pre1 res1','SideBySideAniso')
+
+Flow('error1','res res1',
+     '''
+     cat ${SOURCES[1]} axis=3 | 
+     math output="abs(input)" |
+     real | stack axis=1
+     ''')
+
+Result('error1','graph dash=1,0 wanttitle=n label2="relative squared error" unit2=')
+
+# Now add noise
+
+Flow('ninput','input','noise seed=2011 var=0.001')
+Plot('ninput','grey title=input clip=0.225')
+
+Flow('nfx','ninput','fft1')
+Flow('nfk','nfx','fft3 axis=2')
+
+Plot('nfk','real | grey title=input')
+
+Result('input2','ninput nfk','SideBySideAniso')
+
+Flow('nxf','nfx','transp')
+
+Flow('npef','nxf','cpef1 nf=6 single=y')
+Flow('nres','nxf npef','cconv filt=${SOURCES[1]} single=y')
+Plot('nres','transp | fft1 inv=y | grey title=Difference clip=0.225')
+
+Flow('npred','nxf nres','add scale=1,-1 ${SOURCES[1]} | transp')
+Plot('npred','fft1 inv=y | grey title=F-X clip=0.225')
+
+Plot('npfk','npred','fft3 axis=2 | real | window max1=0.3 | grey title=F-X')
+
+Result('fig2','npred nres npfk','SideBySideAniso')
+
+Flow('npyr','nxf','pyramid nu=1061 du=128')
+
+Flow('npef2','npyr','cpef1 nf=6 single=y')
+Flow('nres2','npyr npef2','cconv filt=${SOURCES[1]} single=y')
+Flow('npre1','npyr nres2','add scale=1,-1 ${SOURCES[1]} | pyramid inv=y')
+
+Plot('npre1','transp | fft1 inv=y | grey title=Pyramid clip=0.225')
+Flow('nres1','nxf npre1','add scale=1,-1 ${SOURCES[1]}')
+Plot('nres1','transp | fft1 inv=y | grey title=Difference clip=0.225')
+
+Plot('npfk1','npre1','transp | fft3 axis=2 | real | window max1=0.3 | grey title=Pyramid')
+
+Result('fdg2','npre1 nres1 npfk1','SideBySideAniso')
+
+Flow('error2','nres nres1',
+     '''
+     cat ${SOURCES[1]} axis=3 | 
+     math output="abs(input)" |
+     real | stack axis=1
+     ''')
+
+Result('error2','graph dash=1,0 wanttitle=n label2="relative squared error" unit2=')
+
+
+End()

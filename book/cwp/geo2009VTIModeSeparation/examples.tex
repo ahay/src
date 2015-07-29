@@ -1,0 +1,228 @@
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Examples}
+
+I illustrate the anisotropic wave mode separation with a simple
+synthetic example and a more challenging elastic Sigsbee 2A
+model~\cite[]{SEG-2002-21222125}.
+%\subsection{Isotropic media}
+\subsection{Simple model}
+I consider a 2D isotropic model characterized by the $V_{P}$, $V_{S}$
+and density shown in \rfgs{separate3-aoppos}--\subrfn{separate3-ro}.
+The model contains negative P and S velocity anomalies that triplicate
+the wavefields.  The source is located at the center of the
+model.  \rFg{separate3-uI-f06} shows the vertical and horizontal
+components of one snapshot of the simulated elastic wavefield
+{(generated using the $8^{th}$ order finite difference solution of the
+elastic wave equation)}, \rfg{separate3-qI-f06} shows the separation
+to P and S modes using $\DIV{}$ and $\CURL{}$ operators,
+and \rfg{separate3-pI-f06} shows the mode separation obtained using
+the pseudo operators which are dependent on the medium parameters.  A
+comparison of
+\rfgs{separate3-qI-f06} and \subrfn{separate3-pI-f06} indicates 
+that the $\DIV{}$ and $\CURL{}$ operators and the pseudo operators
+work identically well for this isotropic medium.
+
+%\subsection{Anisotropic media}
+I then consider a 2D anisotropic model similar to the previous model
+shown in \rfgs{separate3-aoppos}--\subrfn{separate3-ro} (with $V_{P}$,
+$V_{S}$ representing the vertical P and S wave velocities), and
+additionally characterized by the parameters $\epsilon$ and $\delta$
+shown in \rfgs{separate3-epsilon} and \subrfn{separate3-delta},
+respectively.  The parameters $\epsilon$ and $\delta$ vary gradually
+from top to bottom and left to right, respectively. The upper left
+part of the medium is isotropic and the lower right part is highly
+anisotropic. Since the difference of $\epsilon$ and $\delta$ is great
+at the bottom part of the model, the {\it q}S waves in this region are
+severely triplicated due to this strong anisotropy.
+
+\rFg{separate3-aop00,aop10,aop20,aop01,aop12,aop21,aop02,aop12,aop22} 
+illustrates the pseudo derivative operators obtained at different
+locations in the model defined by the intersections of $x$ coordinates
+0.3, 0.6, 0.9~km and $z$ coordinates 0.3, 0.6, 0.9~km. Since the
+operators correspond to different combination of the parameters
+$\epsilon$ and $\delta$, they have different forms. The isotropic
+operator {at coordinates $x=0.3$~km and $z=0.3$~km, shown
+in} \rfg{separate3-aop00}, is purely vertical and horizontal, while
+the anisotropic operators (\rfg{separate3-aop10}
+to \subrfn{separate3-aop22}) have ``tails'' radiating from the
+center. {The operators become larger at locations where the medium is
+more anisotropic, for example, at coordinates $x=0.9$~km and
+$z=0.9$~km.}
+
+\rFg{separate3-uA-f06} shows the vertical and horizontal components of 
+one snapshot of the simulated elastic anisotropic
+ wavefield, \rfg{separate3-qA-f06} shows the separation to {\it q}P and
+ {\it q}S modes using conventional {isotropic} $\DIV{}$ and $\CURL{}$ operators,
+ and \rfg{separate3-pA-f06} shows the mode separation obtained using the
+pseudo operators constructed using the local medium parameters. 
+A comparison of \rfg{separate3-qA-f06} and \rfn{separate3-pA-f06} indicates
+that the spatially-varying derivative operators successfully separate
+the elastic wavefields into {\it q}P and {\it q}S modes, while the
+$\DIV{}$ and $\CURL{}$ operators only work in the isotropic region of
+the model.
+
+
+% ------------------------------------------------------------
+\inputdir{separate3}
+% ------------------------------------------------------------
+\multiplot{5}{aoppos,vs,ro,epsilon,delta}{width=0.3\textwidth}
+{A $1.2$~km$\times$ $1.2$~km model with parameters (a) $V_{p0}=3$~km/s
+except for a low velocity Gaussian anomaly around $x=0.65$~km and
+$z=0.65$~km, (b) $V_{S0}=1.5$~km/s except for a low velocity Gaussian
+anomaly around $x=0.65$~km and $z=0.65$~km, (c) $\rho=1.0$~g/cm$^3$ in the
+top layer and $2.0$~g/cm$^3$ in the bottom layer, (d) $\epsilon$
+smoothly varying from $0$ to $0.25$ from top to bottom, (e) $\delta$
+smoothly varying from $0$ to $-0.29$ from left to right. A vertical
+point force source is located at $x=0.6$~km and $z=0.6$~km {shown
+by the dot in panels (b), (c), (d), and (e). The dots in panel (a)
+correspond to the locations of the anisotropic operators shown
+in \rFg{separate3-aop00,aop10,aop20,aop01,aop12,aop21,aop02,aop12,aop22}
+}.  }
+
+
+
+
+% ------------------------------------------------------------
+\multiplot{3}{uI-f06,qI-f06,pI-f06}{width=0.65\textwidth}
+{(a) One snapshot of the isotropic wavefield modeled with a vertical
+point force source at $x$=0.6~km and $z$=0.6~km for the model shown in
+{\rfg{separate3-aoppos,vs,ro,epsilon,delta}, (b) isotropic P and S wave modes
+separated using $\DIV{}$ and $\CURL{}$, and (c) isotropic P and S wave modes
+separated using pseudo derivative operators. Both (b) and (c) show good separation
+results.}}
+
+\multiplot{3}{aop00,aop10,aop20,aop01,aop12,aop21,aop02,aop12,aop22}
+{width=0.28\textwidth} {The $8^{th}$ order anisotropic pseudo
+derivative operators in the $z$ and $x$ directions at the
+intersections of $x$=0.3, 0.6, 0.9~km and $z$=0.3, 0.6, 0.9~km for 
+the model shown in {\rfg{separate3-aoppos,vs,ro,epsilon,delta}}.
+}
+
+
+
+\multiplot{3}{uA-f06,qA-f06,pA-f06}{width=0.65\textwidth}
+{(a) One snapshot of the anisotropic wavefield modeled with a vertical
+point force source at $x$=0.6~km and $z$=0.6~km for the model shown in
+{\rfg{separate3-aoppos,vs,ro,epsilon,delta}}, (b) anisotropic {\it q}P
+and {\it q}S modes separated using $\DIV{}$ and $\CURL{}$, and (c)
+anisotropic {\it q}P and {\it q}S modes separated using pseudo
+derivative operators.  The separation of wavefields into {\it q}P and
+{\it q}S modes in (b) is not complete, which is obvious at places such
+as at coordinates $x=0.4$~km $z=0.9$~km. In contrast, the separation
+in (c) is {much better, because the correct
+anisotropic derivative operators are used.}.  }
+
+
+
+
+\subsection{Sigsbee model}
+My second model (\rfg{sigsbee-vp,vs,ro,epsilon,delta}) uses an
+elastic anisotropic version of the Sigsbee 2A
+model~\cite[]{SEG-2002-21222125}. In the modified model, $V_{P0}$ 
+is taken from the original model, the $V_{P0}/V_{S0}$ ratio ranges
+from $1.5$ to $2$, the parameter $\epsilon$ ranges from $0$ to $0.48$
+(\rfg{sigsbee-epsilon}) and the parameter $\delta$ ranges $0$ from to
+$0.10$ (\rfg{sigsbee-delta}). The model is isotropic in the salt and
+the top part of the model. A vertical point force source is located at
+coordinates $x=14.5$~km and $z=5.3$~km to simulate the elastic
+anisotropic wavefield.
+
+%\rFg{sigsbee-uI-f21} shows one snapshot of the modeled elastic isotropic vertical 
+%and horizontal wavefields, using the model shown
+%in \rfg{sigsbee-vp,vs,ro,epsilon,delta} and assuming the whole model
+%is isotropic. \rFg{sigsbee-qI-f21} shows the separation of the elastic
+%wavefields into P and S wave modes using $\DIV{}$ and $\CURL{}$
+%operators. \rFg{sigsbee-pI-f21} shows the separation using
+%derived pseudo derivative operators. Both types of operators work well
+%for isotropic wavefields as expected.
+
+\rFg{sigsbee-uA-f24-wom} shows one snapshot of the modeled elastic anisotropic 
+wavefields using the model shown in \rfg{sigsbee-vp,vs,ro,epsilon,delta}. 
+\rFg{sigsbee-qA-f24-wom} illustrates the separation of the anisotropic elastic
+ wavefields using the $\DIV{}$ and $\CURL{}$ operators, and 
+\rFg{sigsbee-pA-f24-wom} illustrates the separation using my pseudo 
+derivative operators.  \rFg{sigsbee-qA-f24-wom} shows the residual of
+unseparated P and S wave modes, such as at coordinates $x=13$~km and
+$z=7$~km in the {\it q}P panel and at $x=11$~km and $z=7$~km in the
+{\it q}S panel.  The residual of S waves in the {\it q}P panel
+of \rfg{sigsbee-qA-f24-wom} is very significant because of strong
+reflections from the salt bottom.  This extensive residual can be
+harmful to under-salt elastic or even acoustic migration, if not
+removed completely.  In contrast, \rfg{sigsbee-pA-f24-wom} shows the
+{\it q}P and {\it q}S modes {better} separated,
+demonstrating the effectiveness of the anisotropic pseudo derivative
+operators constructed using the local medium parameters.  These
+wavefields composed of well separated {\it q}P and {\it q}S modes are
+essential to producing clean seismic images.
+
+{In order to test the separation with a homogeneous assumption of 
+anisotropy in the model, I show in} \rfg{sigsbee-mA-f24-wom} the
+separation with $\epsilon=0.3$ and $\delta=0.1$ in the $k$
+domain. This separation assumes a model with homogeneous
+anisotropy. The separation shows that there is still residual in the
+separated panels. Although the residual is much weaker compared to
+separating using an isotropic model, it is still visible at locations
+such as at coordinates $x=13$~km and $z=7$~km, and $x=13$~km and
+$z=4$~km in the {\it q}P panel and at $x=16$~km and $z=2.5$~km in the
+{\it q}S panel.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\inputdir{sigsbee}
+% ------------------------------------------------------------
+\multiplot{5}{vp,vs,ro,epsilon,delta}{width=0.3\textwidth}
+%\multiplot{5}{vp1,vs1,ro1,epsilon1,delta1}{width=0.3\textwidth}
+{A Sigsbee 2A model in which (a) is the P wave velocity (taken from
+the original Sigsbee 2A model~{\cite[]{SEG-2002-21222125} }), (b) is
+the S wave velocity, where $V_{P0}/V_{S0}$ ratio ranges from $1.5$ to $2.0$,
+(c) is the density ranging from $1.0$~g/cm$^3$ to $2.2$~g/cm$^3$, (d) is the
+parameter $\epsilon$ ranging from $0.20$ to $0.48$, and (e) is the parameter
+$\delta$ {ranging} from $0$ to $0.10$ in the rest of the model.  }
+
+%\multiplot{3}{aop00,aop10,aop20,aop01,aop12,aop21,aop02,aop12,aop22}
+%{width=0.3\textwidth} {The $8^{th}$ order anisotropic pseudo
+%derivative operators in the $z$ and $x$ directions at the
+%intersections of $x$=0.3, 0.6, 0.9~km and $z$=0.3, 0.6, 0.9~km.}
+% ------------------------------------------------------------
+%\multiplot{3}{uI-f21,qI-f21,pI-f21}{width=0.9\textwidth}
+%{(a) Isotropic wavefield modeled with a vertical source at $x$=0.6~km
+%and $z$=0.6~km, isotropic wave modes separated by (b) $\DIV{}$ and
+%$\CURL{}$ and (c) pseudo derivative operators.}
+
+\plot{uA-f24-wom}
+{width=\textwidth} {Anisotropic wavefield modeled with a vertical
+point force source at $x=14.3$~km and $z=5.3$~km for the model shown in
+{\rfg{sigsbee-vp,vs,ro,epsilon,delta}}.}
+
+
+\plot{qA-f24-wom}
+{width=\textwidth} {Anisotropic {\it q}P and {\it q}S modes
+separated using $\DIV{}$ and $\CURL{}$ for the vertical and horizontal
+components of the elastic wavefields shown in
+{\rfg{sigsbee-uA-f24-wom}}.  Residuals are obvious at places such as
+at coordinates $x=13$~km and $z=7$~km in the {\it q}P panel and at
+$x=11$~km and $z=7$~km in the {\it q}S panel.  }
+
+\plot{pA-f24-wom}
+{width=\textwidth} {Anisotropic {\it q}P and {\it q}S modes
+separated using pseudo derivative operators for the vertical and
+horizontal components of the elastic wavefields shown in
+{\rfg{sigsbee-uA-f24-wom}}.  They show {better}
+separation of {\it q}P and {\it q}S modes. }
+
+%%%need to compute this
+\plot{mA-f24-wom}
+{width=\textwidth} {Anisotropic {\it q}P and {\it q}S modes
+separated in the $k$ domain for the vertical and horizontal components
+of the elastic wavefields shown in {\rfg{sigsbee-uA-f24-wom}}. The
+separation assumes $\epsilon=0.3$ and $\delta=0.1$ throughout the
+model. The separation is incomplete. Residuals are still visible at
+places such at coordinates $x=13$~km and $z=7$~km, and $x=13$~km
+and $z=4$~km in the {\it q}P panel and at $x=16$~km and $z=2.5$~km in
+the {\it q}S panel. }
+

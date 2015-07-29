@@ -1,0 +1,4 @@
+from rsf.tex import *
+
+End(color='sdip spaint spick flat sflat pgath wdip1 wdip2 wpaint wcont')
+

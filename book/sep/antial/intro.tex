@@ -1,0 +1,59 @@
+
+\begin{abstract}
+I propose a method for antialiasing Kirchhoff operators, which
+  switches between interpolation in time and interpolation in space
+  depending on the operator dips. The method is a generalization of
+  Hale's technique for dip moveout antialiasing. It is applicable to a
+  wide variety of integral operators and compares favorably with the
+  popular temporal filtering technique. Simple synthetic examples
+  demonstrate the performance and applicability of the proposed
+  method.
+\end{abstract}
+
+\section{Introduction}
+
+Integral (Kirchhoff-type) operators are widely used in seismic imaging
+and data processing for such tasks as migration, dip moveout
+\cite[]{GEO56-06-07950805}, azimuth moveout \cite[]{GEO63-02-05740588},
+and shot continuation \cite[]{GEO61-06-18461858}. In theory, the
+operators correspond to continuous integrals. In practice, the
+integration is replaced by summation and becomes prone to sampling
+errors. A common problem with practical implementation of integral
+operators is the operator aliasing, caused by spatial undersampling of
+the summation path \cite[]{SEG-1994-1282}. When the integration path is
+parameterized in the spatial coordinate, as it is commonly done in
+practice, the steeper part of the summation path becomes undersampled.
+
+The operator aliasing problem, as opposed to the data aliasing and
+image aliasing problems, is discussed in detail by
+\cite{SEG-1994-1282} and \cite{GEO66-02-06540666}. It arises when
+the slope of the operator traveltime exceeds the limit, defined by the
+time and space sampling of the data - the Nyquist frequencies
+\cite[]{Claerbout.sep.73.371}. Even if the input data are not aliased,
+operator aliasing can cause severe distortions in the output. Several
+successful techniques have been proposed in the literature to overcome
+the operator aliasing problem.  Different versions of the temporal
+filtering method were suggested by \cite{GPR40-05-05650572} and
+\cite{SEG-1994-1282} and further enhanced by \cite{GEO64-06-17831792}
+and \cite{GEO66-02-06540666}. This method reduces the aliasing error
+by limiting the rate of change in the integrand (the input data) with
+temporal filtering. Unfortunately, this approach is suboptimal in the
+case of rapid changes in the summation path gradient. A different
+approach to antialiasing was suggested by \cite{GEO56-06-07950805} for
+the integral dip moveout. Hale's approach provides accurate results by
+parameterizing the operator in the time coordinate rather than the
+space coordinate.  Unfortunately, this approach requires an additional
+expense of interpolation in both space and time coordinates for
+computing the flat part of the operator.
+
+In this paper, I propose a new antialiasing method derived from the
+time-slice technique, developed by \cite{GEO56-06-07950805}. The
+method switches between interpolation in time and interpolation in
+space depending on the local operator dips. It is particularly
+attractive for computing 3-D operators with rapidly varying dips and
+limited aperture \cite[]{Fomel.sep.89.89}.  Synthetic examples show the
+superior performance of the new method in comparison the temporal
+filtering approach.
+
+
+

@@ -1,0 +1,47 @@
+from rsf.proj import *
+from seislet import seislet, diplet
+
+
+#############################################################################
+
+Flow('sigmoid',None,
+     '''
+     sigmoid d1=.004 n1=200 d2=.008 n2=256 |
+     smooth rect1=3 diff1=1 adj=1 | smooth rect1=3 |
+     put label2=Distance
+     ''')
+
+seislet('sigmoid',200,256,d2=0.008)
+diplet('sigmoid',200,256,d2=0.008,pmin=-1.35,pmax=1.35,np=401)
+
+#############################################################################
+
+#Fetch('wz.27.H','wz')
+#Flow('yc','wz.27.H',
+#     'dd form=native | window n1=400 n2=64| tpow tpow=2 | cut n2=1 f2=20')
+#
+#seislet('yc',400,64,p0=2,pmin=0,nsp=100,clip=5)
+
+#############################################################################
+
+#Fetch('WGstack.H','book/iee')
+#Flow('gulf','WGstack.H','dd form=native | window n1=1000 f2=1000 n2=256')
+#
+#seislet('gulf',1000,256,rect1=25,eps=0.01,clip=10)
+
+#############################################################################
+
+Flow('vrms',None,'math d1=0.004 n1=1001 o1=0 output="x1*125+2000" ')
+Flow('synt','vrms',
+     '''
+     spike d1=0.004 n1=1001 o1=0 nsp=17 n2=128 d2=20 o2=0
+     label2="Offset (m)"
+     k1=%s
+     mag=1,1,1,1,-1,1,1,-1,1,1,1,-1,1,1,-1,1,1 |
+     bandpass flo=4 fhi=20 |
+     inmo velocity=$SOURCE half=n
+     ''' % string.join(map(str,range (100,916,48)),','), stdin=0)
+
+seislet('synt',1001,128,rect1=40,rect2=5,pmin=0,p0=1)
+
+End()

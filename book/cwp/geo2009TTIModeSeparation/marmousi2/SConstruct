@@ -1,0 +1,144 @@
+## 
+ # marm2
+ ##
+
+from rsf.proj import *
+#sys.path.append('Python')
+import fdmod,stiff,pot,fdd,pot,spk,marm,pplot,model
+
+from math import *
+par=marm.param()
+
+marm.grabdata(par)
+par['labelattr']=par['labelattr']+''' 
+labelsz=10  xll=2.5 
+'''
+
+
+Flow('vp','vpwin','math output="input"')
+Flow('vpvs','vp','mask min=2 max=3.5 | dd type=float | math output="2+input*0.5" ')
+Flow('vs','vp vpvs','add ${SOURCES[1]} mode=d')
+Flow('rx','rxwin','math output="input"')
+Flow('ro','rxwin','math output=1')
+# ------------------------------------------------------------
+#marm.model('vpwin','vswin','rxwin','ro',par)
+# ------------------------------------------------------------
+Flow('epsilon','rxwin','math output="input/4-0.3" ')
+Flow('delta',  'rxwin','math output="input/8-0.1" ')
+Flow('zero',  'vp','math output="0.0" ')
+marm.dip('nu','rxwin',par)
+
+#------------------------------------------------------------
+# source/receiver coordinates
+ # ------------------------------------------------------------
+fdmod.point('ss',
+            par['ox']+(par['nx']/2*par['dx']),
+            par['oz']+(par['nz']/6*par['dz']),par)
+fdmod.horizontal('rr',1.0,par)
+
+
+# elastic source
+# ------------------------------------------------------------
+fdmod.wavelet('wav_',par['frq'],par)
+Flow('ver','wav_','math output="1*input"')
+Flow('hor','wav_','math output="1*input"')
+Flow('wave',['ver','hor'],
+     '''
+     cat axis=2 space=n ${SOURCES[1:2]} |
+     transp plane=12 |
+     transp plane=23 |
+     transp plane=12
+     ''')
+fdmod.ewavelet('wave','',par)
+
+
+
+stiff.tti2d('cA','vp','vs','rx','epsilon','delta','nu',par)
+Flow( ['dAu','uA'],['wave','cA','rx','ss','rr'],
+         '''
+      	 sfewefd2dtti
+ 	   ompchunk=1 ompnth=0 verb=y free=n snap=y nb=%(nb)d
+           jsnap=%(jsnap)d ssou=n opot=n  nbell=5  anitype=t
+         ccc=${SOURCES[1]}
+         den=${SOURCES[2]}
+         sou=${SOURCES[3]}
+         rec=${SOURCES[4]}
+         wfl=${TARGETS[1]}
+               ''' % par)
+
+pot.displacementsC('uA','uA','uAz','uAx',8,'',par)
+pot.cliptogether( 'uA','uAz','uAx','"u\_x"','"u\_z"',2,'pclip=98',par)
+
+
+nframe=(par['nt']-1)//par['jsnap']+1
+Flow('uAc','uA','window n1=%(nz)d n2=%(nx)d f1=%(nbell)d f2=%(nbell)d |scale axis=123|scale rscale=5'%par)
+Flow('uAwom',['vp','uAc'],'add add=-2.4 | spray axis=3 n=2|spray axis=4 n=%d | scale axis=123|add ${SOURCES[1]}'%nframe)
+fdmod.emovie('uAmovie','uAwom',nframe,'pclip=98',1,par)
+
+
+fdd.derivatives(par)
+order=8
+
+#separate in X domain
+# TTI separator
+spk.delt('spk',64,64,par)
+fdd.separatorD('dzX','dxX','spk','cA','n','x','gauss',1.0,8,27,27,par)
+fdd.oneirST('xop','dzX-tmp','dxX-tmp',27,27,'color=E pclip=100',par)
+
+
+
+
+# ------------------------------------------------------------
+
+
+#fdd.oneirNS('aop','dzX','dxX',7,7,'wheretitle=top pclip=100 wantaxis=n titlesz=30 color=e',par)
+fdd.oneirNS_rot('rop','dzX','dxX','nu',7,7,'wheretitle=top pclip=100 wantaxis=n wanttitle=y titlesz=40 color=e  ',par)
+fdmod.boxarray('aoppos',3,par['oz']+(par['nz']/4+1)*par['dz'],par['nz']/4*par['dz'],
+                        3,par['ox']+(par['nx']/4+1)*par['dx'],par['nx']/4*par['dx'],par)
+Plot('aoppos',fdmod.qqplot('''symbol=o plotcol=6 plotfat=10
+ wantscalebar=y allpos=y barlabel="V\_P0\^ (km/s)"  ''',par))
+Plot('nu',
+fdmod.cgrey('bias=0 color=e allpos=n min1=.5 formatbar=%3.0f barlabel="\s150 \F10 n \s100 (\^o\_)"  color=e',par))
+
+Result('aoppos',['nu','aoppos'],'Overlay')
+
+
+#Plot('aoppos',fdmod.ssplot('',par))
+
+allplots=['rop00','rop01','rop02',
+          'rop10','rop11','rop12',
+          'rop20','rop21','rop22']
+#allplots=['aop00','aop01','aop02',
+#          'aop10','aop11','aop12',
+#          'aop20','aop21','aop22']
+pplot.multip('rop',allplots,3,3,0.25,0.25,-10,-16)
+# ------------------------------------------------------------
+
+
+
+
+
+pot.potentials(   'pA','uAz','uAx','dzX','dxX','n','','q',par)
+pot.cliptogether( 'pA','pAp','pAs',"qS","qP",2,'pclip=98',par)      
+model.wfom('uA-wom','uAz','uAx','vp',2,'"u\_x"','"u\_z"',2,'pclip=98',par)
+model.wfom('pA-wom','pAp','pAs','vp',2.,'qS','qP',2,'pclip=98',par)
+
+
+# VTI separator
+stiff.tti2d('cV','vp','vs','rx','epsilon','delta','zero',par)
+fdd.separatorD('dzXV','dxXV','spk','cV','n','x','gauss',1.0,8,27,27,par)
+fdd.oneirST('vop','dzXV-tmp','dxXV-tmp',27,27,'color=E pclip=100',par)
+pot.potentials(   'vA','uAz','uAx','dzXV','dxXV','n','','q',par)
+pot.cliptogether( 'vA','vAp','vAs',"qS","qP",2,'pclip=98',par)      
+model.wfom('vA-wom','vAp','vAs','vp',2.,'qS','qP',2,'pclip=98',par)
+
+# Isotropic separator
+stiff.tti2d('cI','vp','vs','rx','zero','zero','zero',par)
+fdd.separatorD('dzXI','dxXI','spk','cI','y','x','gauss',1.0,8,27,27,par)
+fdd.oneirST('iop','dzXI-tmp','dxXI-tmp',27,27,'color=E pclip=100',par)
+pot.potentials(   'iA','uAz','uAx','dzXI','dxXI','y','','q',par)
+pot.cliptogether( 'iA','iAp','iAs',"qS","qP",2,'pclip=98',par)      
+model.wfom('iA-wom','iAp','iAs','vp',2.,'qS','qP',2,'pclip=98',par)
+
+End()
+

@@ -1,0 +1,3 @@
+uses=['sfspike', 'sfgrey', 'sfvoft', 'sfcosft', 'sfgazdag', 'sfsmooth', 'sfpow', 'sfdd']
+data=['data/midpts/beistack.HH', 'data/midpts/beivrms.HH']
+size=    2118688

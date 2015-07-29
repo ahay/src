@@ -1,0 +1,38 @@
+from rsf.proj import *
+
+for comp in ('vx','vz','eta'):
+    src = 'marm%s.HH' % comp
+    Fetch(src,'marm')
+    Flow(comp,src,'dd form=native')
+
+
+grey = '''
+grey allpos=y scalebar=y
+screenratio=0.325644 screenht=8 pclip=100
+label1=Depth unit1=m label2=Lateral unit2=m
+'''
+
+Plot('vz','scale dscale=0.001 | %s bias=1.3 title="Vertical velocity" barlabel="km/s" ' % grey)
+Plot('eta',grey + ' title="\F10 h\F3 "')
+Result('marmmod','vz eta','OverUnderIso')
+
+Flow('iso','vz','window | eikonalvti order=1 yshot=3000')
+Flow('ane','vz vx eta',
+     '''
+     window | eikonalvti order=1 yshot=3000
+     vx=${SOURCES[1]} eta=${SOURCES[2]}
+     ''')
+
+def contour(title):
+    return '''
+    contour title="%s" 
+    screenratio=0.325644 screenht=8 nc=30 c0=0 dc=0.1
+    label1=Depth unit1=m label2=Lateral unit2=m
+    ''' % title
+
+Plot('iso',contour('Isotropic'))
+Plot('ane',contour('VTI Anelliptic'))
+
+Result('marm','iso ane','OverUnderIso')
+
+End()

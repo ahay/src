@@ -1,0 +1,3084 @@
+% copyright (c) 1998 Jon Claerbout
+
+\title{Noisy data}
+\author{Jon Claerbout}
+\maketitle
+\label{paper:noiz}
+
+
+Noise comes in two distinct flavors.
+First is erratic bursty noise
+which is difficult to fit into a statistical model.
+It bursts out of our simple models.
+To handle this noise we need ``robust'' estimation procedures
+which we consider first.
+
+\par
+Next is noise that has a characteristic spectrum,
+temporal spectrum, spatial spectrum, or dip spectrum.
+Such noise is called ``stationary'' noise.
+A special case of stationary noise is
+low frequency drift of the mean value of a signal.
+
+\par
+In real life, we need to handle both bursty noise
+and stationary noise at the same time.
+We'll try that now.
+
+\section{MEANS, MEDIANS, PERCENTILES AND MODES}
+\bxbx{Mean}{mean}s, \bx{median}s, and \bx{mode}s are different averages.
+Given some data values $d_i$ for $i=1,2,...,N$,
+the arithmetic mean value $m_2$ is
+\begin{equation}
+m_2 \eq \frac{1 }{ N} \ \sum_{i=1}^N \ d_i
+\end{equation}
+It is useful to notice that this $m_2$ is the solution
+of the simple fitting problem
+$ d_i \approx m_2$ or
+$\bold d \approx m_2$,
+in other words, $\min_{m_2} \sum_i (m_2-d_i)^2$ or
+\begin{equation}
+0 \eq \frac{d }{ dm_2} \ \sum_{i=1}^N \ (m_2-d_i)^2
+\end{equation}
+
+\par
+The median of the $d_i$ values
+is found when the values are sorted from smallest to largest
+and then the value in the middle is selected.
+The median is delightfully well behaved even
+if some of your data values happen to be near infinity.
+Analytically,
+the median arises from the optimization
+\begin{equation}
+\min_{m_1}\ \sum_{i=1}^N \ |m_1-d_i|
+\end{equation}
+To see why, notice that the derivative of the absolute value
+function is the signum function,
+\begin{equation}
+{\rm sgn}(x) \eq \lim_{\epsilon \longrightarrow 0} \ \ 
+                \frac{ x }{ |x| + \epsilon }
+\end{equation}
+The gradient vanishes at the minimum.
+\begin{equation}
+0 \eq \frac{d }{ dm_1} \ \sum_{i=1}^N \ |m_1-d_i|                 
+\end{equation}
+The derivative is easy and the result is a sum of sgn() functions,
+\begin{equation}
+0 \eq                \ \sum_{i=1}^N \ {\rm sgn}(m_1-d_i)
+\end{equation}
+In other words it is a sum of plus and minus ones.
+If the sum is to vanish, the number of plus ones
+must equal the number of minus ones.
+Thus $m_1$ is greater than half the data values and less than the other half,
+which is the definition of a median.
+The mean is said to minimize the $\ell^2$ norm of the residual
+and the median is said to minimize its $\ell^1$ norm.
+
+\par
+Before this chapter,
+our model building was all based on the $\ell^2$ norm.
+The median is clearly a good idea
+for data containing large bursts of noise,
+but the median is a single value while geophysical models
+are made from many unknown elements.
+The $\ell^1$ norm offers us the new opportunity
+to build multiparameter models
+where the data includes huge bursts of noise.
+\sx{L-2 norm}
+\sx{L-1 norm}
+\sx{L-0 norm}
+
+\par
+Yet another average is the ``\bx{mode},''
+which is the most commonly occurring value.
+For example, in the number sequence $(1,1,2,3,5)$ the mode is 1
+because it occurs the most times.
+Mathematically, the mode minimizes the zero norm of the residual,
+namely $\ell^0=|m_0-d_i|^0$.
+To see why, notice that when we raise a residual to the zero power,
+the result is 0 if $d_i=m_0$, and it is 1 if $d_i \ne m_0$.
+Thus, the $\ell^0$ sum of the residuals
+is the total number of residuals less those for which $d_i$ matches $m_0$.
+The minimum of $\ell^0(m)$ is the mode $m=m_0$.
+The zero power function is nondifferentiable at the place of interest so
+we do not look at the gradient.
+
+\inputdir{Math}
+\plot{norms}{width=6in,height=3.2in}{
+  Mean, median, and mode.
+  The coordinate is $m$.
+  Top is the $\ell^2$, $\ell^1$,
+  and $\ell^{1/10}\approx \ell^0$ measures of $m-1$.
+  Bottom is the same measures of the data set $(1,1,2,3,5)$.
+  (Made with Mathematica.)
+}
+\par
+$\ell^2(m)$ and
+$\ell^1(m)$ are convex functions of $m$ (positive second derivative for all $m$),
+and this fact leads to
+the triangle inequalities $\ell^p(a)+\ell^p(b) \ge \ell^p(a+b)$
+for $p\ge 1$
+and assures slopes lead to a unique (if $p>1$) bottom.
+Because there is no triangle inequality for $\ell^0$,
+it should not be called a ``norm'' but a ``measure.''
+
+\par
+Because most values are at the mode,
+the mode is where a probability function is maximum.
+The mode occurs with the maximum likelihood.
+It is awkward to contemplate the mode for floating-point values
+where the probability is minuscule (and irrelevant)
+that any two values are identical.
+A more natural concept is to think of the mode
+as the bin containing the most values.
+
+%\par  ALL THIS IS WRONG !
+%Although the mode is difficult to deal with theoretically
+%and there is little literature about it,
+%the $\ell^0$-guided approach is evidently better than
+%the $\ell^1$-guided approach
+%in the debursting task in Figure \FIG{burst}.
+%The mode seems to say to throw away bad values
+%while the median says to handle their polarity
+%as the polarities of all other values.
+
+\subsection{Percentiles and Hoare's algorithm}
+\par
+The median is the 50-th \bx{percentile}.
+After residuals are ordered from smallest to largest,
+the 90-th percentile is the value with 10\% of the values
+above and 90\% below.
+At SEP the default value for clipping plots of field data
+is at the 98th percentile.
+In other words, magnitudes above the 98-th percentile
+are plotted at the 98-th percentile.
+Any percentile is most easily defined if the population
+of values $a_i$, for $i=1,2,...,n$
+has been sorted into order so that $a_i \le a_{i+1}$ for all $i$.
+Then the 90-th percentile is $a_k$ where $k=(90n)/100$.
+
+\par
+We can save much work by using \bx{Hoare's algorithm}
+which does not fully order the whole list,
+only enough of it to find the desired quantile.
+Hoare's algorithm is an outstanding example
+of the power of a recursive function, a function that calls itself.
+The main idea is this:
+We start by selecting a random value
+taken from the list of numbers.
+Then we split the list into two piles,
+one pile all values greater than the selected,
+the other pile all less.
+The quantile is in one of these piles, and by looking
+at their sizes, we know which one.
+So we repeat the process on that pile
+and ignore the other other one.
+Eventually the pile size reduces to one, and we have the answer.
+
+\par
+In Fortran 77 or C it would be natural to split the list
+into two piles as follows:
+\begin{quotation}
+We divide the list of numbers into two groups,
+a group below $a_k$ and another group above $a_k$.
+This reordering can be done ``in place.''
+Start one pointer at the top of the list and another at the bottom.
+Grab an arbitrary value from the list
+(such as the current value of $a_k$).
+March the two pointers towards each other
+until you have an upper value out of order with $a_k$
+and a lower value out of order with $a_k$.
+Swap the upper and lower value.
+Continue until the pointers merge somewhere midlist.
+Now you have divided the list into two sublists,
+one above your (random) value $a_k$ and the other below.
+\end{quotation}
+Fortran 90 has some higher level intrinsic vector functions
+that simplify matters.
+When \texttt{a} is a vector and \texttt{ak}
+is a value,
+\texttt{a>ak} is a vector of logical values that
+are true for each component that is larger than \texttt{ak}.
+The integer count of how many components
+of \texttt{a} are larger than \texttt{ak}
+is given by the Fortran intrinsic function \texttt{count(a>ak)}.
+A vector containing only values less than \texttt{ak}
+is given by the Fortran intrinsic function \texttt{pack(a,a<ak)}.
+
+\par
+Theoretically about $2n$ comparisons
+are expected to find the median of a list of $n$ values.
+The code below (from Sergey Fomel)
+for this task is \texttt{quantile}.
+\moddex{quantile}{percentile}{22}{48}{api/c}
+
+%\par
+%An interesting application of medians is eliminating \bx{noise spikes}
+%through the use of a running median.
+%A \bx{running median} is a median computed in a moving window.
+%Figure \ref{fig:median590} shows depth-sounding data from the Sea of Galilee
+%before and after a running median of 5 points was applied.
+%The data as I received it is 132044 triples; i.e.,
+%$(x_i,y_i,z_i)$ where $i$ is measured along the vessel's track.
+%In Figure \ref{fig:median590} the
+%depth data $z_i$ appears as one long track
+%although the surveying was done in several episodes that
+%do not always continue the same track.
+%For Figure \ref{fig:median590} I first abandoned the last 2044
+%of the 132044 triples and all the $(x_i,y_i)$-pairs.
+%Then I broke the remaining long signal into
+%the 26 strips you see in the figure.
+%Typically the depth is a ``U''-shaped function as
+%the vessel crosses the lake.
+%You will notice that many spikes are missing on the bottom plot.
+%For more about these tracks, see Figure \ref{noiz/fig:seegap}.
+%\activeplot{median590}{width=6in,height=8.5in}{ER}{
+%        Depth of the Sea of Galilee along the vessel's track.
+%        }
+
+\subsection{The weighted mean}
+The \bx{weighted mean} $m$ is
+\begin{equation}
+m \eq
+\frac{\sum_{i=1}^N \ w_i^2 d_i  }{ \sum_{i=1}^N \ w_i^2 }
+\end{equation}
+where $w_i^2>0$ is the squared weighting function.
+This is the solution to the $\ell^2$ fitting problem
+$ 0  \approx w_i (m - d_i)$;
+in other words,
+\begin{equation}
+0 \eq \frac{d }{ dm} \ \sum_{i=1}^N \ [w_i(m - d_i)]^2
+\end{equation}
+
+\begin{comment}
+\subsection{Weighted L.S. conjugate-direction template}
+The pseudocode for minimizing the {\it weighted} residual
+$\bold 0\approx \bold r = \bold W (\bold F \bold m - \bold d)$
+by conjugate-direction method,
+is effectively like that for the unweighted method
+except that the initial residual is weighted
+and the operator $\bold F$ has the premultiplier $\bold W$.
+Naturally, the adjoint operator $\bold F'$
+has the postmultiplier $\bold W'$.
+In some applications the weighting operator $\bold W$
+is simply a weighting function or diagonal matrix
+(so then $\bold W = \bold W'$)
+and in other applications, the weighting operator $\bold W$
+may be an operator,
+like the derivative along a data recording trajectory
+(so then $\bold W \ne \bold W'$).
+%\par\newslide
+\def\padarrow{\quad\longleftarrow\quad}
+\begin{tabbing}
+mmmmmm \= mmmmmm \= mmmmm \kill
+\> $\bold r \padarrow \bold W (\bold F \bold m - \bold d)$     \\
+\> {\rm iterate \{ }                                            \\
+\>      \>  $\Delta\bold m  \padarrow \bold F'\bold W'\         \bold r$ \\
+\>      \>  $\Delta\bold r\ \padarrow \bold W \bold F \  \Delta \bold m$ \\
+\>      \>  $(\bold m,\bold r) \padarrow {\rm cgstep}
+            (\bold m,\bold r, \Delta\bold m,\Delta\bold r )$ \\
+\>      \> \}                                           
+\end{tabbing}
+
+\subsection{Multivariate $\ell^1$ estimation by iterated reweighting}
+\sx{L1 or $\ell^1$}
+\sx{L2 or $\ell^2$}
+The easiest method of model fitting is linear least squares.
+This means minimizing the sums of squares of residuals ($\ell^2$).
+On the other hand, we often encounter huge noises
+and it is much safer to minimize
+the sums of absolute values of residuals
+($\ell^1$).
+(The problem with $\ell^0$ is that there are multiple minima,
+so the gradient is not a sensible way to seek the deepest).
+
+\par
+There exist specialized techniques for handling $\ell^1$
+multivariate fitting problems.
+They should work better than the simple
+iterative reweighting outlined here.
+\end{comment}
+
+
+
+%\par
+%(An inviting idea is to weight the familiar residual by
+%the inverse of the square root of the residual from the previous iteration.
+%This is wrong.  The required weight does not have the square root,
+%as a more careful derivation shows next.)
+
+\par
+A penalty function that ranges from $\ell^2$ to $\ell^1$,
+depending on the constant $\bar r$ is
+\begin{equation}
+E(\bold r) \eq \sum_i \left( \sqrt{1+r_i^2/\bar r^2} - 1 \right)
+\label{eqn:L12penalty}
+\end{equation}
+Where
+$r_i/\bar r$
+is small, the terms in the sum amount to $r_i^2/2\bar r^2$
+and where
+$r_i^2/\bar r^2$
+is large, the terms in the sum amount to $|r_i/\bar r|$.
+We define the residual as
+\begin{equation}
+r_i \eq \sum_j \ F_{ij}m_j - d_i
+\label{eqn:usualres}
+\end{equation}
+We will need
+\begin{equation}
+{\partial r_i\over\partial m_k}
+\eq \sum_j \ F_{ij} \delta_{jk} \eq F_{ik}
+\label{eqn:partialroverm}
+\end{equation}
+where we briefly used the notation that $\delta_{jk}$ is 1 when
+$j=k$ and zero otherwise.
+Now,
+to let us find the descent direction $\Delta \bold m$,
+we will compute
+the $k$-th component $g_k$ of the gradient $\bold g$.
+We have
+\begin{equation}
+g_k \eq
+{\partial E \over\partial m_k}
+\eq \sum_i \ {1\over\sqrt{1+r_i^2/\bar r^2}}\ 
+{ r_i \over \bar r^2}
+\ 
+{\partial r_i\over\partial m_k}
+\label{eqn:morel1}
+\end{equation}
+
+\begin{equation}
+\bold g \eq \Delta\bold m
+\eq \bold F' \ {\bf diag} \left(  {1\over\sqrt{1+r_i^2/\bar r^2}}
+                  \right) \bold r
+\label{eqn:gradwt}
+\end{equation}
+where we have use the notation ${\bf diag}()$ to designate
+a diagonal matrix with its argument distributed along the diagonal.
+
+\par
+Continuing, we notice that the new weighting of residuals
+has nothing to do with the linear relation between model perturbation
+and residual perturbation;
+that is,
+we retain the familiar relations,
+$\bold r = \bold F \bold m -\bold d$ and
+$\Delta\bold r = \bold F \Delta\bold m $.
+
+\par
+In practice we have the question of how to choose $\bar r$.
+I suggest that $\bar r$ be proportional to
+${\rm median}(|r_i|)$
+or some other percentile.
+
+\subsection{Nonlinear L.S. conjugate-direction template}
+\sx{nonlinear optimization}
+Nonlinear optimization
+arises from two causes:
+\begin{enumerate}
+\item
+Nonlinear physics. The operator depends upon
+the solution being attained.
+\item
+Nonlinear statistics.  We need robust estimators
+like the $\ell^1$ norm.
+\end{enumerate}
+The computing template below is useful in both cases.
+It is almost the same as the template for weighted
+linear least-squares except that the residual
+is recomputed at each iteration.
+Starting from the usual weighted least-squares template
+we simply move the iteration statement a bit earlier.
+\begin{tabbing}
+mmmmmm \= mmmmmm \= mmmmm \kill
+\> {\rm iterate \{ }                                                    \\
+\>      \> $\bold r \padarrow \bold F \bold m - \bold d$                \\
+\>      \> $\bold W \padarrow {\bf diag}[w(\bold r)]$                    \\
+\>      \> $\bold r \padarrow \bold W \bold r $                          \\
+\>      \>  $\Delta\bold m  \padarrow \bold F'\bold W'\         \bold r$ \\
+\>      \>  $\Delta\bold r\ \padarrow \bold W \bold F \  \Delta \bold m$ \\
+\>      \>  $(\bold m,\bold r) \padarrow {\rm cgstep}
+             (\bold m,\bold r, \Delta\bold m,\Delta\bold r )$ \\
+\>      \> \}                                           
+\end{tabbing}
+where ${\bf diag}[w(\bold r)]$ is whatever weighting function we choose
+along the diagonal of a diagonal matrix.
+\par
+Now let us see how the weighting functions relate
+to robust estimation:
+Notice in the code template that $\bold W$ is applied twice
+in the definition of $\bold \Delta\bold m$.
+Thus $\bold W$ is the square root of the diagonal operator
+in equation (\ref{eqn:gradwt}).
+\begin{equation}
+\bold W \eq \ {\bf diag} \left(  {1\over\sqrt{\sqrt{1+r_i^2/\bar r^2}}}  \right)
+\label{eqn:fourthroot}
+\end{equation}
+\begin{comment}
+\par
+% begin Sergey's insertion
+%  XXX
+%Module \texttt{weight\_solver} \vpageref{/prog:weightsolver}
+Module \texttt{solver\_irls} \vpageref{/prog:solver_irls}
+%
+implements the computational template above. In addition to the usual
+set of arguments from the \texttt{solver()} subroutine
+\vpageref{/prog:smallsolver}, it accepts a user-defined function (parameter
+\texttt{wght}) for computing residual weights. Parameters
+\texttt{nmem} and \texttt{nfreq} control the restarting schedule of
+the iterative scheme.
+\moddex{solver_irls}{iteratively reweighted optimization} 
+% end Sergey's insertion
+\end{comment}
+\par
+We can ask whether {\tt cgstep()}, which was not designed
+with nonlinear least-squares in mind, is doing the right thing
+with the weighting function.
+First, we know we are doing weighted linear least-squares correctly.
+Then we recall that on the first iteration, the conjugate-directions
+technique reduces to steepest descent,
+which amounts to a calculation of
+the scale factor $\alpha$ with
+\begin{equation}
+\alpha \eq -\ { 
+        \Delta \bold r \cdot \bold r
+        \over
+        \Delta \bold r \cdot \Delta\bold r
+        }
+\label{eqn:anotheralpha}
+\end{equation}
+Of course, {\tt cgstep()} knows nothing about the weighting function,
+but notice that the iteration loop above nicely inserts
+the weighting function both in $\bold r$ and in $\Delta \bold r$,
+as required by (\ref{eqn:anotheralpha}).
+
+\par
+Experience shows that difficulties arise
+when the weighting function varies rapidly from one iteration to the next.
+Naturally, the conjugate-direction method,
+which remembers the previous iteration, 
+will have an inappropriate memory if 
+the weighting function changes too rapidly.
+A practical approach is to be sure the changes in the weighting function
+are slowly variable.
+
+%I propose gradually increasing $\lambda$ from zero to unity
+%as the iteration proceeds.
+
+\subsection{Minimizing the Cauchy function}
+\sx{Cauchy function}
+A good trick
+(I discovered accidentally) is to use the weight
+\begin{equation}
+\bold W \eq \ {\bf diag} \left(  {1\over{\sqrt{1+r_i^2/\bar r^2}}}  \right)
+\label{eqn:cauchyweight}
+\end{equation}
+Sergey Fomel points out that this weight arises from
+minimizing the \bx{Cauchy function}:
+\begin{equation}
+E(\bold r) \eq \sum_i \ \log (1+r_i^2/\bar r^2)
+\label{eqn:cauchypenalty}
+\end{equation}
+A plot of this function is found in Figure \ref{fig:cauchy}.
+\plot{cauchy}{width=6in,height=3.2in}{
+  The coordinate is $m$.
+  Top is Cauchy measures of $m-1$.
+  Bottom is the same measures of the data set $(1,1,2,3,5)$.
+  Left, center, and right are for
+  \protect$\bar r = (2, 1, .2)$. 
+}
+
+\par
+Because the second derivative is not positive everywhere,
+the Cauchy function introduces the possibility of multiple solutions,
+but because of the good results we see in Figure \ref{fig:burst},
+you might like to try it anyway.
+Perhaps the reason it seems to work so well is that
+it uses mostly residuals of ``average size,''
+not the big ones or the small ones.
+This happens because $\Delta\bold m$ is made from $\bold F'$ and
+the components of $\bold W^2\bold r$  which are a function
+$r_i/(1+r_i^2/\bar r^2)$
+that is maximum for those residuals near
+$\bar r$.
+\par
+% begin Sergey's insertion
+Module \texttt{irls} \vpageref{/prog:irls} supplies two useful
+weighting functions that can be interchanged as arguments to the
+reweighted scheme \vpageref{/prog:solver_irls}.
+\moddex{irls}{weighting functions for iterative reweighting}{40}{72}{api/c}
+% end Sergey's insertion
+%\end{notforlecture}
+
+
+
+\section{NOISE BURSTS}
+\inputdir{burst}
+Sometimes noise comes in isolated \bx{spikes}.
+Sometimes it comes in \bx{bursts} or bunches (like grapes).
+Figure \ref{fig:burst} is a simple one-dimensional example
+of a periodic signal plus spikes and bursts.
+Three processes are applied to this data,
+\bx{despike} and two flavors of \bx{deburst}.
+Here we will examine the processes used.
+(For even better results, see Figure \ref{fig:pefdeburst}.)
+\plot{burst}{width=6.0in,height=2.25in}{
+  Top is synthetic data with noise spikes and bursts.
+  (Most bursts are a hundred times larger than shown.)
+  Next is after running medians.
+  Bottom is after the two processes described here.
+}
+
+\subsection{De-spiking with median smoothing}
+
+\sx{despike}
+\sx{median smoothing}
+The easiest method to remove spikes is to pass a moving window
+across the data and output the median value in the window.
+This method of despiking was done in Figure \ref{fig:burst},
+which shows a problem of the method:
+The window is not long enough to clean the long bursts,
+but it is already so long
+that it distorts the signal by flattening its peaks.
+The window size really should not be chosen in advance
+but should depend upon by what is encountered on the data.
+This I have not done
+because the long-burst problem is solved
+by another method described next.
+
+\subsection{De-bursting}
+Most signals are smooth, but running medians assume they have no curvature.
+An alternate expression of this assumption is that the signal
+has minimal curvature
+$ 0 \approx h_{i+1} -2 h_{i} + h_{i-1} $;
+in other words,
+$ \bold 0 \approx \nabla^2 \bold h$.
+Thus we propose to create the cleaned-up data $\bold h$
+from the observed data $\bold d$ with the fitting problem
+\begin{equation}
+  \begin{array}{lll}
+        0 &\approx & \bold W  (\bold h - \bold d)                       \\
+        0 &\approx & \epsilon\  \nabla^2   \bold h
+  \end{array}
+\end{equation}
+where $\bold W$ is a diagonal matrix with weights sprinkled along the diagonal,
+and where $\nabla^2$ is a matrix
+with a roughener like $(1,-2,1)$ distributed along the diagonal.
+This is shown in Figure \ref{fig:burst} with $\epsilon = 1$.
+Experience showed similar performances
+for $0 \approx \nabla \bold h$ and $0 \approx \nabla^2 \bold h$.
+Better results, however, will be found later in Figure
+\ref{fig:pefdeburst},
+where the $\nabla^2$ operator is replaced
+by an operator designed to predict this very predictable signal.
+
+\section{HYBRID $\ell_1/\ell_2$ MODEL FITTING (HYPERBOLIC)}
+I've seen many applications improved when least-squares ($\ell_2$) model fitting was
+changed to least absolute values ($\ell_1$).
+I've never seen the reverse.
+Until now we have nearly always returned to $\ell_2$ because
+the solving method is easier and faster.
+(It does not require us to specify parameters of numerical analysis
+that are unclear how to specify,
+and would force us into a new learning curve with each application.)
+Here we examine see how our conjugate-direction method
+is easily merged with Newton iteration
+to give some $\ell_1$ characteristics to familiar $\ell_2$ formulations.
+I'll call it the Hybrid (or Hyperbolic) Conjugate Direction (HYCD) method.
+\par
+Considering most applications of interest,
+we need not totally abandon the $\ell_2$ approach,
+but may adopt a hybrid between $\ell_1$ and $\ell_2$.
+A hybrid penalty function for residuals $r_i$  has a new parameter,
+a threshold at which $\ell_2$ behavior transits to $\ell_1$.
+Applications will suggest
+two different hybrid penalty functions,
+one for the data fitting,
+the other for the model styling (prior knowledge or regularization).
+Each fitting goal requires a threshold of residual,
+let us call it $R_d$ for the data fitting,
+and $R_m$ for the model styling.
+It is always annoying to need to specify parameters,
+but these two parameters, I claim,
+are a basic part of the application setting,
+not a requirement of numerical analysis.
+
+\par
+The meaning of the thresholds $R_d$ and $R_m$ is quite clear.
+For a shot gather with
+about 30\% of the area saturated with ground roll,
+choose $R_d$ around the 70th percentile of the fitting residual.
+As for the model styling,
+we often seek earth models that are blocky.
+In other words, earth models whose derivatives are spiky.
+For blocks about 20 points long
+the spikes should average about 20 points apart.
+Thus about 95\% of the residuals should be in the $\ell_2$
+area while only about 5\% in the $\ell_1$ area
+allowing 5\% of the spikes to be of unlimited size.
+This is an $R_m$ at about the 95$^{\rm th}$ percentile of $|\bold r_m| = |\epsilon m_i|$.
+(On early iterations you might omit the model styling by setting $\epsilon=0$
+leaving time to establish an initial $\bold m$.)
+Thus I conclude that in a wide variety of practical examples
+fitting goals for both data and model
+need not go far from the usual $\ell_2$ norm,
+but they do need to incorporate some residual values out in the $\ell_1$ zone,
+possibly far out in it.
+\par
+A convex penalty function that smoothly transits from $\ell_2$ to $\ell_1$ behavior is the hyperbola.
+It is parabolic in the middle,
+but asymptotes to $\ell_1$-like straight lines.
+A circle $t^2=z^2+x^2$ seen in $(t,x)$ space is a hyperbola with a parameter $z$.
+This suggests the penalty function $H^2= R^2 + r^2$
+where $r$ is the residual,
+$R$ is the threshold parameter,
+and where $H(r)$ is the penalty.
+Customarily there is no penalty when the residual vanishes,
+so to accomodate that custom
+(making no fundamental change)
+we subtract the constant $R$ from $H$.
+Thus the hybrid penalty function promoted here
+is the origin-shifted hyperbola
+$H(r) = \sqrt{R^2 + r^2} - R$.
+
+\par
+Technically $H$ is not a norm.  Norms satisfy
+$\alpha || \bold r|| = || \alpha \bold r ||$ for $\alpha > 0$.
+Our hyperbolic penalty function satisfies instead
+\begin{equation}
+\alpha H(R,\bold r) \eq H(\alpha R, \alpha \bold r)
+\end{equation}
+This means when we encounter an application with different values for $R_d$ and $R_m$,
+by scaling the model, we can make them the same.
+
+\subsection{Some convex functions and their derivatives}
+\inputdir{softclip}
+
+Consider now some choices for convex functions
+and their derivatives.
+\noindent\par $\ell_2$ norm = Least Squares:
+\begin{eqnarray}
+C &=&  r^2/2
+\\
+C' &=&  r
+\\
+C'' &=& 1 \quad\quad > \ 0
+\end{eqnarray}
+\noindent\par $\ell_1$ norm:
+\begin{eqnarray}
+C &=&  |r|
+\\
+C' &=&  {\rm sgn}(r)
+\\
+C'' &=& 0 \ {\rm or}\ \infty \quad\quad \ge\ 0
+\end{eqnarray}
+\noindent\par Hyperbolic (or Hybrid):
+\begin{eqnarray}
+H &=& R (\sqrt{1 + r^2/R^2} - 1)
+   \quad=\quad \sqrt{R^2 + r^2}\ -\ R
+\label{eqn:hybrid}
+\\
+H' &=& 
+\label{eqn:dhybrid}
+ \frac{r/R}{\sqrt{1+r^2/R^2}}
+ \quad\quad\quad {(\rm softclip)}
+\\
+H''
+&=& 
+\frac{1}{R(1+ r^2/R^2)^{3/2}}
+		\quad\quad  > \ 0
+\end{eqnarray}
+\par
+Various scalings are possible.
+I've chosen $H$ to have the same physical units as $R$.
+With this scaling:
+As $r/R\rightarrow 0$      or as $R\rightarrow\infty$ the hyperbola goes to $H=r^2/2R$ which is scaled $\ell_2$.
+As $r/R\rightarrow \infty$ or as $R\rightarrow     0$ the hyperbola goes to $H=|r|$ which is simple $\ell_1$.
+\begin{equation}
+H(r) \quad =\quad
+\left\{
+\begin{array}{l}
+|r| - R,  \quad {\rm if} \ R \ll |r| 
+\\
+r^2/(2R), \quad {\rm if} \ R \gg |r|
+\end{array}
+\right.
+\end{equation}
+\par
+Because of the erratic behavior of $C''$ for $\ell_1$,
+and our coming use of second order Taylor series,
+the conjugate direction solver
+we examine next is not intended for use near the $\ell_1$ limit.
+It will turn out we can have many residuals at that limit,
+but not too many (whatever that means!).
+Luckily most applications do not require us to have most residuals near that limit.
+There exist pure $\ell_1$ solvers (including a conjugate direction style solver)
+but they are not the topic here.
+Here we are targeting reliable solvers for typical geophysical investigations.
+
+\par
+Equation (\ref{eqn:dhybrid}) plays such a large role in results to come
+that I give it the name ``soft clip.''
+The clip function itself arises in graphic display devices
+where a certain brightness of image is desired.
+When a physical limit (called ``the clip'')
+is reached, larger values are replaced by the maximum value.
+(Likewise, call for a physical brightness less than zero is replaced by zero.)
+
+\par
+\plot{softclip}{width=6in,height=3in}{
+	Reflection data $\bold d$ before (top)
+	and after (bottom) soft clip $H'(\bold d)$.
+	Clipping large amplitudes enables small ones to be seen.
+	\viewit{softclip}}
+
+\par
+Equation (\ref{eqn:dhybrid}) at small $|r/R|$ 
+behaves as scaled $\ell_2$, namely $H'(r)=r/R$.
+At large $|r/R|$ it behaves as $\ell_1$, namely $H'(r) = {\rm sgn}(r)$.
+Over its whole range $H'(r)$ behaves as a clip function, though with a softer transition around $|r/R|=1$.
+As a demonstration of the soft clip function, a family of not untypical seismic reflection signals $\bold d$
+shown in Figure~\ref{fig:softclip} is passed thru $H'(\bold d)$.
+The intended pleasing result is that large portions of signal of little practical interest
+have become clipped (turned into ``soft'' rectangle functions)
+allowing a gain increase bringing smaller, more sinusoidal signals up into view
+(and up to where data fitting codes will notice them).
+
+
+\subsection{Model derivatives}
+Here is the usual definition of residual $r_i$
+of theoretical data $\sum_j F_{i,j} m_j$ from observed data $d_i$
+\begin{equation}
+r_i = \left(\sum_j F_{i,j} m_j\right) - d_i
+\quad\quad {\rm or}\quad\quad
+ \bold r = \bold F \bold m - \bold d.
+\end{equation}
+The following derivation applies to any convex function $C$.
+Having little experience in choice of convex functions we specialize
+our interest in the hyperbolic function $H$.
+The average penalty measure for mismatch measure between theory and data is
+\begin{equation}
+\bar H(\bold m)
+\quad=\quad
+\frac{1}{N} \sum_{i=1}^N H(r_i)
+\end{equation}
+Let $H'(r_i)$ denote $dH/dr$ evaluated at $r_i$.
+Define a vector $H'(\bold r)$ by applying $H'()$ to each component of $\bold r$.
+\begin{equation}
+H'(\bold r)
+\quad=\quad
+ \frac{d H(r_i)}{d r_i}
+\end{equation}
+In the steepest-descent method the model updates
+in the direction
+$\Delta \bold m$
+of the gradient of the mismatch measure of the residual.
+\begin{equation}
+\Delta\bold m
+\quad=\quad
+\frac{\partial \bar H}{ \partial m_k}
+\quad=\quad
+\frac{1}{N} \
+\sum_i \frac{d H}{d r_i}
+       \frac{\partial r_i}{ \partial m_k}
+\quad=\quad
+\frac{1}{N} \
+	\sum_i H'(r_i) F_{i,k}
+\quad=\quad
+	\bold F\T H'(\bold r)
+\end{equation}
+The gradient vanishes at the minimum giving ``normal equations''
+$\bold 0 =  \bold F\T H'(\bold r)$ like those with the simple Least Squares method.
+In words, at minimum average mismatch, the fitting functions (rows of $ \bold F\T $)
+are orthogonal (normal) to the soft clipped residual.
+
+\subsection{Newton's method in steepest descent}
+\par
+Define a model update direction by the gradient
+$\Delta \bold m = \bold F\T H'(\bold r)$.
+Since $\bold r = \bold F\bold m -\bold d$
+the residual update direction is
+$\Delta \bold r = \bold F \Delta \bold m$.
+To find the distance $\alpha$ to move in those directions
+\begin{eqnarray}
+\bold m &\leftarrow& \bold m + \alpha\Delta \bold m
+\\ 
+\bold r &\leftarrow& \bold r + \alpha\Delta \bold r
+\end{eqnarray}
+choose the scalar $\alpha$ to minimize the average penalty
+\begin{equation}
+\label{eqn:dishes}
+\bar H \quad=\quad
+\frac{1}{N} \ 
+\sum_i
+H( r_i+\alpha\Delta r_i)
+\end{equation}
+The sum in equation (\ref{eqn:dishes})
+is a sum of ``dishes'', shapes between $\ell_2$ parabolas and $\ell_1$ V's.
+The $i$-th dish is centered on
+$\alpha = -r_i/\Delta r_i$.
+It is steep and narrow if $\Delta r_i$ is large, and low and flat where $\Delta r_i$ is small.
+The sum of convex functions is convex.
+There are no local minima.
+It is a one-dimensional function of $\alpha$.
+Finding the minimum should not be difficult.
+\par
+Express $H_i=H(r_i)$ in a Tayor series keeping only the first three terms.
+Let $H_i'$ and $H_i''$ be first and second derivatives of $H(r_i)$ at $r_i$.
+Then equation (\ref{eqn:dishes}) becomes a familiar least squares problem.
+\begin{equation}
+\bar H \quad=\quad
+\frac{1}{N} \ 
+\sum_i 
+\ ( H_i + \alpha\Delta r_i H_i' + (\alpha\Delta r_i)^2 H_i''/2 )
+\end{equation}
+To find $\alpha$, set $d\bar H/d\alpha=0$.
+\begin{equation}
+0\quad=\quad \frac{d\bar H}{d\alpha}
+\quad=\quad
+\sum_i
+\ ( \Delta r_i
+H_i'
+\ +\ 
+\alpha
+(\Delta r_i)^2
+H_i''  )
+\end{equation}
+The Newton method applied to the method of steepest descents
+is to first find $\alpha$ and then use it to update the residual $\bold r$ and the model $\bold m$.
+\begin{eqnarray}
+\label{eqn:newton1}
+\alpha &=&  \ -\  \frac{\sum_i \Delta r_i     H_i' } 
+                {\sum_i (\Delta r_i)^2 H_i'' }
+\\
+\bold r  &=& \bold r + \alpha\,\Delta \bold r
+\\
+\label{eqn:newton3}
+\bold m  &=& \bold m + \alpha\,\Delta \bold m
+\end{eqnarray}
+After this we are not finished because moving $\bold r$
+changes the convex function values and all its derivatives
+$(H_i, H_i', H_i'')$.
+The Newton algorithm is simply to iterate the sequence
+(\ref{eqn:newton1}) to
+(\ref{eqn:newton3}).
+This is Newton line search.  It is cheap.
+\par
+At early iterations the Taylor series might be a poor approximation.
+Consequently, the residual might grow instead of shrinking.
+Then we simply reduce step size,
+$\alpha\leftarrow\alpha/2$, etc.
+Eventually, we get to the bottom of the line we are scanning and are ready for a new line.
+That's when we pay the money to compute a new 
+$\Delta \bold m = \bold F\T H'(\bold r)$ and
+$\Delta \bold r = \bold F \Delta\bold m$.
+This is non-linear steepest descent.
+The reliability of the method is assured by the convexity of the hyperbolic function.
+\par
+You might notice that in the least squares case
+$H=r^2/2$, $H_i'=r_i$, and $H''=1$
+so $\alpha$ becomes the familiar value
+$\alpha = - {\sum_i \Delta r_i  r_i }  \ / \ 
+            {\sum_i (\Delta r_i)^2 }$.
+
+\subsection{Newton plane search}
+
+\par
+The most universally used method of solving
+immense linear regressions such as imaging applications
+is the Conjugate Gradient (CG) method.
+It has the remarkable property that in the presence of exact arithmetic,
+the exact solution is found in a finite number of iterations.
+A simpler method with the same property is the Conjugate Direction method.
+It is debatable which has the better numerical roundoff properties,
+so we generally use the Conjugate Direction method as it is simpler to comprehend.
+It says not to move along the gradient direction line,
+but somewhere in the plane of the gradient and the previous step taken.
+
+\par
+With the steepest-descent method we improved
+the model $\bold m$ by adjusting a single scalar parameter $\alpha$ that multiplies
+$\Delta \bold m= \bold g = \bold F\T\bold r$.
+With the hyperbolic penalty function this becomes
+$\Delta \bold m= \bold g = \bold F\T H'(\bold r)$.
+Extending to the conjugate direction method there are two parameters,
+$\alpha$ and $\beta$, and two vectors.
+One vector is the gradient vector $\bold g$.
+The other vector is the previous step $\bold s$.
+These vectors may be viewed in data space or in model space.
+We are going to take linear combinations of $\bold g$ and $\bold s$
+in both spaces and we need to choose notation for distinguishing them.
+
+\par
+We'll need some unconventional notation.
+Conventionally
+in matrix analysis lower case letters are vectors while upper case letters are matrices.
+But in Fourier analysis lower case letters become upper case upon transformation.
+Let us
+handle $\bold g$ and $\bold s$
+this way:
+Keep using bold capitals for operators
+but now use ordinary italic for vectors
+with model space being lower case italic and data space being upper case italic.
+
+
+\par
+At the $k^{\rm th}$ iteration we will update the model $m$
+with gradient $g$ and step  $s$ where
+\begin{equation}
+s_{k+1} = \alpha_{k} g_{k} + \beta_{k} s_{k}
+\end{equation}
+and the scalars $\alpha$ and $\beta$ are yet to be found.
+The corresponding change of the residual in data space is found by multiplying thru with $\bold F$.
+\begin{eqnarray}
+\Delta r \eq
+S_{k+1} = \bold F s_{k+1}
+&=& \bold F (\alpha_{k} g_{k} + \beta_{k} s_{k})
+\\
+&=& \alpha_{k} \bold F g_{k} + \beta_{k} \bold F s_{k}
+\\
+\Delta \bold r(\alpha,\beta)  &=& \alpha_{k} G_{k} + \beta_{k} S_{k}
+\end{eqnarray}
+
+\par
+In standard $\ell_2$ optimization
+we had a $2\times 2$ matrix to solve for $(\alpha,\beta)$.
+We proceed here in the same way with the hyperbolic penalty function.
+
+\par
+So here we are, embedded in a giant multivariate regression where
+we have a bivariate regression (two unknowns).
+From the multivarate regression we are given three vectors in data space,
+$\bar r_i$, $G_i$ and $S_i$.
+Our next residual will be this perturbation of the old one.
+\begin{equation}
+r_i \quad=\quad \bar r_i \ +\   \alpha G_i \ +\ \beta S_i
+\end{equation}
+Minimize the average penalty by variation of $(\alpha,\beta)$ 
+\begin{equation}
+\bar H(\alpha,\beta) \quad=\quad
+\frac{1}{N} \ 
+\sum_i \ H (\bar r_i+\alpha G_i +\beta S_i)
+\end{equation}
+Let the coefficients $(H_i,H_i',H_i'')$ refer to a Taylor expansion of $H(r)$
+in small values of $(\alpha,\beta)$
+about $\bar r_i$.
+Each residual of each data point
+has its own Taylor series fitting the hyperbola at its own location.
+So all the residuals that do not move far have a good approximations.
+\begin{equation}
+\bar H(\alpha,\beta) \quad=\quad
+\frac{1}{N} \ 
+\sum_i \ H_i\ +\ (\alpha G_i +\beta S_i)H_i'\ +\  (\alpha G_i +\beta S_i)^2 H_i''/2
+\end{equation}
+There are two unknowns, $(\alpha,\beta)$ in a quadratic form.
+Set $d\bar H/d\alpha=0$ and $d\bar H/d\beta=0$ getting
+\begin{equation}
+\left[
+\begin{array}{c}
+0 \\ 0
+\end{array}
+\right]
+\quad=\quad
+\sum_i \ 
+H_i' 
+	\left[
+	\begin{array}{c} G_i \\ S_i  \end{array}
+	\right]
+\ +\ 
+H_i''
+\left\{
+	\left[
+	\begin{array}{c}
+	       \frac{\partial}{\partial\alpha}
+		\\  
+  	       \frac{\partial}{\partial\beta}  
+	\end{array}
+	\right]
+	(\alpha G_i \ +\ \beta S_i)
+\right\}
+       (\alpha G_i \ +\ \beta S_i)
+\end{equation}
+
+%
+resulting in a $2\times 2$ set of equations to solve for $\alpha$ and $\beta$.
+%
+\begin{equation}
+\label{eqn:2x2}
+\left\{
+\sum_i H_i'' \left[
+	\left( \begin{array}{c} G_i \\ S_i\end{array} \right)
+	     ( G_i \quad S_i) 
+     \right] \
+\right\}
+\left[ \begin{array}{c} \alpha \\ \beta \end{array} \right]
+\quad=\quad -\ 
+\sum_i H_i'
+	\left[ \begin{array}{c} G_i \\ S_i\end{array} \right]
+\end{equation}
+% XXXXXX
+%The matrix is the product of a column vector times a row vector.
+%The column vector arises because we take two derivatives to get two equations.
+%The row vector arises because the residual contains both $\alpha$ and $\beta$ terms.
+\par
+New here is the presence of $H'$ and $H''$.
+(Previously with the $\ell_2$ penalty function we had $C'_i=r_i$ and $C_i''=1$.)
+As earlier, the solution of any $2\times 2$ set of simultaneous equations is generally trivial.
+The only difficulties arise when the determinent vanishes
+which here is easy (luckily) to understand.
+Generally the gradient cannot point in the same direction of the previous step
+if the previous move went the proper distance.
+Hence the determinent should not vanish.
+Practice shows that the determinent will vanish when all the inputs are zero,
+and it may vanish if you do so many iterations that you should have stopped already,
+in other words when the gradient and previous step are both tending to zero.
+
+\par
+There is another new aspect.
+After updating
+$\bold m \leftarrow \bold m +\alpha \bold g +\beta \bold s$
+and updating the residuals,
+at the new residual location the values of $(H_i, H_i', H_i'')$ have changed.
+Thus we repeat to update $\alpha$ and $\beta$ a second time or more.
+Don't mess with $\bold s$ yet!
+Eventually we have found the best location in the plane.
+We have finished the plane search.   It's usually cheap.
+Now it's time to get a new plane.
+For the new plane we update $\bold s$
+and we pay the money (run the operator $\bold F\T$) to compute a new 
+$\bold g = \bold F\T H'(\bold r)$.
+This is the non-linear conjugate direction method.
+With $H(r)$ being the hyperbola, I call it the HYCD method.
+
+\par
+We are hoping the presence of some residuals out in the $\ell_1$ region
+does not greatly increase the number of iterations
+compared to the usual $\ell_2$ parabolic penalty function.
+Should anyone choose a threshold $R$ so small
+it drives many of the residuals into the $\ell_1$ region,
+convergence may be slow.
+Few applications will demand such a threshold, I predict.
+
+
+\subsection{Code for the hyperbolic fitter}
+
+The code for the hyperbolic fitter
+should closely follow that for
+\texttt{cgstep} from Chapter 2.
+It is easy enough to include the extra weights $H'$ and $H''$ in the sums.
+You will need to find a way to input the parameter $R$.
+What should we call the new solver?
+A good name might be
+\texttt{hycdstep()}
+for Hyperbolic Conjugate Direction Stepper.
+
+
+\subsection{Measuring success with the hyperbolic measure}
+\par
+Here is the average value of the convex function:
+\begin{equation}
+\label{eqn:measure}
+\bar H(\bold r)
+\quad=\quad
+\frac{1}{N} \sum_{i=1}^N H(r_i)
+\end{equation}
+For positive scalars $r$, the relation between $r$ and $H(r)$ is monotonic
+so it is clearly reversible to $r(H)$.
+Starting from (\ref{eqn:hybrid})
+we get a closed form for the reversion $r(H)$.
+\begin{eqnarray}
+H &=& \sqrt{R^2 + r^2} - R
+\label{eqn:hybrid2}
+\\
+\label{eqn:hypoteneuse}
+(R+H)^2 &=& r^2+R^2
+\\
+\label{eqn:backsolved}
+r(H) &=& \sqrt{(R+H)^2 -R^2}
+\end{eqnarray}
+Using this reverse relation $r(H)$ 
+the average residual $\bar r$ is
+\begin{equation}
+\bar r = r(\bar H)
+\end{equation}
+Since $\bar H$ is a monotonic function of $\bar r$,
+minimizing $\bar H$ is the same as minimizing $\bar r$.
+In any application the average residual $\bar r(\bold r)$
+has a relation to the data $\bold d$ while $\bar H$
+seems merely something internal to the mathematical formulation.
+We use $\bar H$.  We speak of $\bar r$.
+\par
+Inserting $\bar H$ from equation (\ref{eqn:measure})
+into $r(H)$, equation (\ref{eqn:backsolved}),
+we are defining an average $\bar r$ of $\bold r$.
+\begin{eqnarray}
+\bar r &=& \sqrt{ \left( R + \frac{1}{N} \sum_{i=1}^N H(r_i)\right)^2 - R^2}
+\\
+\label{eqn:average}
+\bar r &=& \sqrt{ \left( \frac{1}{N} \sum_{i=1}^N \sqrt{R^2+r_i^2}\right)^2 - R^2}
+\end{eqnarray}
+where the last step was to insert the definition (\ref{eqn:hybrid2}) of $H(r)$.
+
+\par
+Someone doing least-squares fitting might measure the RMS residual
+as a function of iteration.
+Someone doing $\ell_1$ fitting might speak of the median residual.
+With the hyperbolic penalty function we have $\bar r$ as an average residual.
+We measure our success by our ability to drive down $\bar r$.
+
+\subsection{Measuring success}
+I propose the measure of data fitting success be defined by
+\begin{equation}
+	{\rm Fitting~success} = \ 1 - \bar{\bold r}\ /\ \bar{\bold d}
+\end{equation}
+\par
+The measure of success at solving the normal equations 
+must be measured in model space
+where our curious expression $\bar{\bold r}$ is not appropriate.
+The normal equations say that the fitting functions are orthogonal
+to the ``hyperbolic residual'', namely,
+$\bold 0 = \bold F\T C'(\bold r)$.
+Taking the computational success to be measured
+by the degree of satisfying the normal equations
+suggests we measure success by
+\begin{equation}
+{\rm Computational~success} =
+\ 1 - {\rm avg}(\bold F\T C'(\bold r)) \ /\  {\rm avg}(\bold F\T C'(\bold d) )
+\label{eqn:hymodsuccess}
+\end{equation}
+but a good question is,
+``What averaging method should be used in equation (\ref{eqn:hymodsuccess})?''
+The $\ell_2$ norm?
+Unfortunately, it can be shown it does not lead to monotonic improvement with iteration
+(even though the fitting residual diminishes monotonically with iteration).
+Thus it is not an ideal measure of success,
+never-the-less,
+for the time being,
+we will be using it as a measure of success.
+
+\begin{comment}
+\subsection{Migration inversion}
+Seismometers cost money so we often fail to have enough of them.
+This is especially true when theory calls for the 2-dimensional earth surface to be covered with them.
+In reality there might be tens of thousands on the 2-D surface, but even that is not enough.
+The simpler example shown here has merely a line of 16 receivers.
+A scattering point in the earth at $(x_0,z_0)$ creates a spherical wave moving upward to the seismometers.
+The wave bouncing from the scatterer is an impulse
+on the surface $t^2v^2 = (z-z_0)^2+(x-x_0)^2$.
+Here the data plane is $(t,x)$ at $z=0$ and the model plane is $(z_0,x_0)$.
+An impulse in the model creates a hyperbola in the data plane.
+Figure
+\ref{fig:yangzos}
+shows about 8 such hyperbolas
+observed at about 16 locations.
+Our goal is to manufacture the artificial data seen on the right side of Figure
+\ref{fig:yangzos}.
+%\plot{yangzos}{width=1\columnwidth}{Left: Sparse hyperbola data.
+%	Right: Reconstructed.
+%	}
+Notice that some of the hyperbolas are not symmetric,
+many of the their top points are not sampled.
+Notice even the hyperbola with its top at the left edge is well resolved.
+\par
+There is some magic here in that a small data space
+generates a large sharply resolved model space.
+The method depends critically on the model space containing many zeros.
+More precisely, model space is mostly small inconsequential values.
+This is not the place to examine where this assumption would be true in practice.
+What is important to realize is this:
+Model space might really be large but sparsely populated (mostly inconsequential values)
+but in reality we generally do not know where the small values are and where
+the big values should be.
+This is where hyperbolic fitting can be useful.
+With parabolic fitting we do not get sparse models in large model spaces
+without having large data spaces.
+\par
+Seeing the good results motivates us to examine the theory.
+Let $\bold H$ be an operator that copies model impulses into data hyperbolas.
+Depending on various details of the definition of $\bold H$,
+its adjoint is known in industry as downward continuation or demigration.
+The example here is called migration/demigration.
+The fitting goals are
+\begin{eqnarray}
+\bold 0 \approx_2 & \bold r_d &   \ =\ \bold H  \bold m \ -\ \bold d
+\\
+\bold 0 \approx_h & \bold r_m &   \ =\ \epsilon \bold m
+\end{eqnarray}
+where $\approx_2$ denotes parabolic fitting, and
+where $\approx_h$ denotes hyperbolic fitting.
+For coding $\approx_2$ is really the same as $\approx_h$ with a large threshold.
+\par
+Let us contemplate the meaning of the theory.
+When the solution is found, the residuals are orthogonal to the fitting functions.
+Recall the fitting functions are the rows in the $[\bold H\T, \epsilon\bold I]$ matrix.
+\begin{equation}
+\bold 0 \quad=\quad \bold H\T \bold r_d \ +\ \epsilon C'(\epsilon\bold m)
+\label{eqn:hymig}
+\end{equation}
+Orthogonality says there are
+two terms in model space that extinguish each other everywhere.
+The first is the projection of misfit $\bold r_d$
+hyperbolic data into model space.
+The second is essentially the weak components of the model,
+$\epsilon C'(\epsilon \bold m)$,
+the strong components having been clipped out by the soft clip $C'$.
+So the battle between the two terms concerns the fuzz around the big impulses.
+\par
+We always expect a data residual because of defects in the data $\bold d$
+and defects in the modeling operator $\bold H$.
+Observed data $\bold d$ typically contains noise for experimental reasons.
+Theoretical data $\bold H\bold m$ typically includes noises of many types.
+All modeling operators $\bold H$ oversimplify important aspects of physics such as
+3-D, multiples, shear waves, inhomogeneous velocity, etc.
+They also contain additional approximations of numerical analysis.
+Surprising but true in seismology most serious investigators
+believe observed data is generally better than modeled data.
+\par
+In summary, as the iteration process ends,
+the small values in the model battle against against the data misfit,
+so the small values in $\bold m$ are not to be trusted, while the big ones are.
+\end{comment}
+
+\begin{comment}
+\subsection{Estimating blocky interval velocities}
+In seismology measurements are made of the integral through depth of the squared material velocity.
+This is called the RMS velocity.
+The goal is to find the velocity as a function of depth.
+This is called the
+{\em interval}
+velocity (because the RMS velocity
+is often measureable only at fairly wide intervals on the depth axis.)
+Presuming equal intervals in time, the relation is actually this:
+%\begin{equation}
+%  v^2_{{\rm int}(k)} \quad = \quad kV_k^2-(k-1)V_{k-1}^2,
+%\end{equation}
+%or
+\begin{equation}
+  \sum^k_{i=1}{v^2_{{\rm int}(k)}} \quad = \quad kV_k^2,
+\end{equation}
+where $v$ is the desired interval velocity, $V$ is the observed RMS velocity, and $k$ is the sample 
+number denoting uniform spacing in travel-time depth.
+Because the RMS velocities are noisy we must add a regularization.
+Here we choose that to be the depth derivative.
+To linearize the problem, we choose the model space $\bold u$ to contain the squared
+interval velocity $v^2_{{\rm int}}$,
+instead of the interval velocity itself $v_{{\rm int}}$.
+Thus we formulate what is called the Dix problem as:
+\begin{eqnarray}
+\label{eqn:dixfit}
+  \bold W_d (\bold C \bold u-\bold d) &\approx& \bold 0
+  \\
+\label{eqn:dixstyle}
+ \epsilon \  \bold D_z \bold u  &\approx& \bold 0.
+\end{eqnarray}
+In the data-fitting goal \ref{eqn:dixfit}, \textbf{u} is the unknown
+model we are inverting for $v_{\rm int}^2(z)$.
+The vector \textbf{d} contains measurements $kV_k^2$ at regular intervals in (travel-time) depth.
+\textbf{C} is the causal integration operator.
+The software giving us the data also provides a measure of its quality
+which is used in a diagonal weighting matrix $\bold W_d$.
+In the model-styling goal
+\ref{eqn:dixstyle}, $\bold D_{z}$ is the vertical derivative
+of the velocity model;
+and $\epsilon$ controls the
+balance between data fitting
+and the preconceived notion that the velocity function be smooth.
+\par
+%\plot{blockyvel}{width=1\columnwidth,height=1.5in}{
+%	Left: Input RMS velocity.
+%	Right: Output interval velocity, blocky as desired.
+%	}
+\par
+The input RMS velocity is in the left panel of Figure \ref{fig:blockyvel}.
+Irregularities on this function result from noises in the measurement process.
+The violent variation at the end of the trace result from measurement failure.
+(In many locations on earth it is difficult to measure.)
+Thus, we use the hyperbolic-norm to ignore the large residuals in the data-fitting.
+\par
+Rock velocity may vary continuously with depth,
+or rocks may come in fairly homogeneous layers.
+In the layered case, we say the desired model is ``blocky''
+so its derivative $\bold D_z \bold u$ may have spikes.
+The hyperbolic penalty function allows those spikes
+while the usual parabolic penalty function suppresses them.
+What we are demonstrating
+on the right side of Figure
+\ref{fig:blockyvel}
+is that using the hyperbolic penalty function
+enables us to obtain blocky velocity models.
+The balance between blockiness and smoothness is determined by
+the choice of threshold (commonly $R$, in the penalty function)
+that marks the transition from parabola to hyperbola.
+To obtain these results two threshold parameters must be chosen,
+one for the regression
+\ref{eqn:dixfit}
+and one for
+\ref{eqn:dixstyle}.
+\end{comment}
+
+%
+
+%  THIS IS HORRIBLE.  VERBOSE CODES ARE INCOMPLETE !    :-((
+%\par
+%What we need now is another solver module
+%with the weighting functionality of
+%\texttt{weight\_solver} \vpageref{/prog:weightsolver}
+%and with the model damping of
+%\texttt{reg\_solver} \vpageref{/prog:regsolver}.
+%It is in the library under the name \texttt{solver\_mod}.
+%(One goal of this book was to show every code,
+%but that becomes irritating when many codes are nearly the same.
+%This difficulty partly arises because I like to introduce
+%only one concept at a time, and it partly arises (I think)
+%because Fortran 90 is not a highly object-oriented language.)
+%\moddex{deburst1}{remove noise bursts}
+%Additionally, we need the identity operator, here named \texttt{copy}[
+%\opdex{copy}{remove noise bursts}
+
+%\listing{../../Lib/deburst1.rt}
+
+%\par
+%I invite you to experiment with different noises and
+%different debursting methods and tell me what you find.
+%Notice that we have two parameters to adjust,
+%$\epsilon$ and the number of iterations.
+%
+%(The simple median approach
+%can be generalized to an $\ell^1$-norm multivariate fitting problem
+%by the method of linear programming as was done
+%in FGDP and in my classic paper with Francis \bx{Muir}.
+%The reason I do not continue that approach
+%is that so far as I know,
+%those $\ell^1$ techniques require storing the operator.
+%The trouble is that
+%we often have problems
+%in which the data and model spaces themselves
+%strain the available memory
+%while the operator size
+%(data size {\it times} model size)
+%is unreasonably large.
+%As you see, iteratively reweighted least squares
+%can amount to something like an $\ell^1$-norm approach anyway.)
+%
+%\subsection{The view from here}
+%Multivariate fitting is significantly more complicated than running medians.
+%You have struggled to get this high.
+%Let us look at the view in several directions.
+%\par
+%Having done the simple bursty-noise problem in Figure \ref{fig:burst}
+%by a multivariate fitting method,
+%we are ready to fit noisy data to general linear models, such as 
+%\begin{eqnarray}
+%       0 &\approx & \bold W  (\bold F \bold h -\bold d )               \\
+%       0 &\approx & \epsilon \nabla^2 \bold h
+%\end{eqnarray}
+%\par
+%Please notice that we have have learned to handle
+%noise bursts in the {\it residual},
+%which is not the same as noise bursts in the {\it data}.
+%We are now ready for cases in which the model changes rapidly
+%because of being high frequency or having poles or discontinuities.
+%This occurs,
+%for example, in the altitude function across a cliff,
+%where the fitting problem is something like:
+%\begin{eqnarray}
+%       0 &\approx & \bold W_d  (\bold F \bold h - \bold d )            \\
+%       0 &\approx & \bold W_h  \nabla^2 \bold h
+%\end{eqnarray}
+
+
+\begin{comment}
+\section{MEDIAN BINNING}
+\inputdir{rbst}
+We usually add data into bins.
+When the data has erratic noise,
+we might prefer to take the median of the values in each bin.
+Subroutine \texttt{medbin()}
+(in the library, but not listed here)
+performs the chore.
+It is a little tricky because we first need to find out
+how many data values go into each bin,
+then we must allocate that space
+and copy each data value from its track location to its
+bin location.
+Finally we take the median in the bin.
+A small annoyance with medians
+is that when bins have an even number of points,
+like two, there no middle.
+To handle this problem,
+subroutine \texttt{medbin()}
+uses the average of the middle two points.
+
+%\progdex{medianbin2}{median in bin}      %XXX used for one figure.
+\par
+A useful byproduct of the calculation is the residual:
+For each data point its bin median is subtracted.
+The residual can be used to remove suspicious points
+before any traditional least-squares analysis is made.
+An overall strategy could be this:
+First a coarse binning with many points per bin,
+to identify suspicious data values,
+which are set aside.
+Then a sophisticated least squares analysis
+leading to a high-resolution depth model.
+If our search target is small, 
+recalculate the residual with the high-resolution model
+and reexamine the suspicious data values.
+
+\plot{medbin}{width=6in,height=3.8in}{
+  Galilee water depth binned and roughened.
+  Left is binning with the mean, right with the median.
+}
+\par
+Figure \ref{fig:medbin} compares the water depth in the Sea of Galilee
+with and without median binning.
+The difference does not seem great here
+but it is more significant than it looks.
+Later processing will distinguish between empty bins (containing an exact zero)
+and bins with small values in them.
+Because of the way the depth sounder works,
+it often records an erroneously near-zero depth.
+This will make a mess of our later processing
+(missing data fill)
+unless we cast out those data values.
+This was done by median binning in Figure \ref{fig:medbin}
+but the change is disguised by the many empty bins.
+
+\par
+Median binning is a useful tool,
+but where bins are so small that they hold only one or two points,
+there the median for the bin is the same as the usual arithmetic average.
+
+
+\section{ROW NORMALIZED PEF}
+\sx{row normalized PEF}
+We often run into \bx{bursty noise}.
+This can overwhelm the estimate of a prediction-error filter.
+To overcome this problem we can use a weighting function.
+The weight for each row in fitting matrix
+(\ref{eqn:exmiss})
+is adjusted so that each row has about the same
+contribution as each other row.
+A first idea is that the weight for the $n$-th row
+would be the inverse of the sum of the absolute values of the row.
+This is easy to compute:
+First make a vector the size of the PEF $\bold a$ but with each element unity.
+Second, take a copy of the signal vector $\bold y$
+but with the absolute value of each component.
+Third, convolve the two.
+% ------ Temporarily commented by Sergey
+%This is done in subroutine
+%\texttt{rnpef1()}.
+%\progdex{rnpef1}{row normalized PEF}
+%
+\noindent
+The convolution of the ones with the absolute values
+could be the inverse of the weighting function we seek.
+However, any time we are forming an inverse we need to think
+about the possibility of dividing by zero, how it could arise,
+and how divisions by ``near zero'' could be even worse
+(because a poor result is not immediately recognized).
+Perhaps we should use something between $\ell^1$ and $\ell^2$ or Cauchy.
+In any case, we must choose a scaling parameter
+that separates ``average'' rows from unusually large ones.
+For this choice in subroutine \texttt{rnpef1()}, I chose the median.
+
+
+\section{DEBURST}
+\inputdir{burst}
+\par
+We can use the same technique to throw out fitting equations
+from defective data that we use for missing data.
+Recall the theory and discussion leading up to 
+Figure \ref{fig:burst}.
+There we identified defective data by its lack
+of continuity.  We used the fitting equations
+$0\approx w_i (y_{i+1} -2y_i + y_{i-1})$
+where the weights $w_i$ were chosen
+to be approximately the inverse
+to the residual $(y_{i+1} -2y_i + y_{i-1})$ itself.
+\par
+Here we will first use the second derivative
+(Laplacian in 1-D) to throw out bad points,
+while we determine the PEF.
+Having the PEF, we use it to fill in the missing data.
+
+\moddex{pefest}{estimate PEF in 1-D avoiding bad data}{38}{53}{user/gee}
+The result of this ``PEF-deburst'' processing
+is shown in Figure \ref{fig:pefdeburst}.
+\plot{pefdeburst}{width=6.0in,height=3in}{
+  Top is synthetic data with noise spikes and bursts.
+  (Some bursts are fifty times larger than shown.)
+  Next is after running medians.
+  Next is Laplacian filter Cauchy deburst processing.
+  Last is PEF-deburst processing.
+}
+\par
+Given the PEF that comes out of \texttt{pefest1()}\footnote{
+        If you are losing track of subroutines defined earlier,
+        look at the top of the module to see what other modules
+        it \texttt{use}s.
+        Then look in the index to find page numbers of those modules.
+        }, subroutine
+\texttt{fixbad1()} below convolves it with the data and looks for
+anomalous large outputs.  For each that is found, the input data is
+declared defective and set to zero.  Then subroutine \texttt{mis1()}
+\vpageref{/prog:mis2} is invoked to replace the zeroed values by
+reasonable ones.
+\moddex{fixbad}{restore damaged data}{41}{48}{user/gee}
+
+
+
+\subsection{Potential seismic applications of two-stage infill}
+Two-stage data infill has many applications
+that I have hardly begun to investigate.
+\par {\bf Shot continuation}
+is an obvious task for a data-cube extrapolation program.
+There are two applications of shot-continuation.
+First is the obvious one of repairing holes in data
+in an unobtrusive way.
+Second is to cooperate with reflection tomographic studies
+such as that proposed by Matthias \bx{Schwab}.
+\par {\bf Offset continuation} is a well-developed topic because
+of its close link with \bx{dip moveout} (\bx{DMO}).
+DMO is heavily used in the industry.
+I do not know how the data-cube extrapolation code I
+am designing here would fit into DMO and stacking,
+but because these are such important processes,
+the appearance of a fundamentally new tool like
+this should be of interest.
+It is curious that the DMO operator is traditionally
+derived from theory, and the theory requires the
+unknown velocity function of depth, whereas here
+I propose estimating the offset continuation operator
+directly from the data itself, without the need of a velocity model.
+\par
+Obviously, one application is to extrapolate off the sides of a
+\bx{constant-offset section}.
+This would reduce migration semicircles
+at the survey's ends.
+\par
+Another application is to extrapolate off the
+\bx{cable ends}
+of a common-midpoint gather or
+a common shot point gather.
+This could enhance
+the prediction of
+multiple reflections
+or reduce artifacts in velocity analysis.
+\par
+Obviously, the methodology and code in this chapter
+is easily extendable to four dimensions (prestack 3-D data).
+%The application that drove me to putting the code in its
+%present form is extending \bx{Kjartansson}-style \bx{tomography}.
+%
+\end{comment}
+
+\begin{comment}
+\section{TWO 1-D PEFS VERSUS ONE 2-D PEF}
+\inputdir{duel}
+%       Waveforms are commonly recorded
+%       on crossing lines such as shown in Figure \FIG{duelin}.
+%       Obviously we can fill in between lines
+%       by minimizing the power out of a Laplacian operator
+%       but for more predictable images than Galilee
+%       it might be better to minimize the output energy of a PEF.
+%       In practice the problem is, where do we get the PEF?
+
+Here we look at the difference between using two 1-D PEFs,
+and one 2-D PEF.
+Figure \ref{fig:duelin} shows an example of sparse tracks;
+it is not realistic
+in the upper-left corner
+(where it will be used for testing),
+in a quarter-circular disk where
+the data covers the model densely.
+Such a dense region is ideal for determining the 2-D PEF.
+Indeed, we cannot
+determine a 2-D PEF from the sparse data lines,
+because at any place you put the filter
+(unless there are enough adjacent data lines),
+unknown filter coefficients will multiply missing data.
+So every fitting goal is nonlinear
+and hence abandoned by the algorithm.
+\plot{duelin}{width=6in,height=3.0in}{
+  Synthetic wavefield (left) and as observed over survey lines (right).
+  The wavefield is a superposition of waves from three directions.
+}
+
+\par
+The set of test data shown in Figure \ref{fig:duelin}
+is a superposition of three functions like plane waves.
+One plane wave looks like low-frequency horizontal layers.
+Notice that the various layers vary in strength with depth.
+The second wave is dipping about $30^\circ$ down to the right
+and its waveform is perfectly sinusoidal.
+The third wave dips down $45^\circ$ to the left
+and its waveform is bandpassed random noise like the horizontal beds.
+These waves will be handled differently by different processing schemes,
+so I hope you can identify all three.
+If you have difficulty,
+view the figure at a grazing angle from various directions.
+
+\par
+Later we will make use of the dense data region,
+but first let $\bold U$ be the east-west PE operator
+and $\bold V$ be the north-south operator
+and let the signal or image be $\bold h = h(x,y)$.
+The fitting residuals are
+\begin{equation}
+        \begin{array}{lll}
+        \bold 0 &\approx& (\bold I - \bold J) (\bold h - \bold d) \\
+        \bold 0 &\approx&  \bold U \ \bold h  \\
+        \bold 0 &\approx&  \bold V \ \bold h
+        \end{array}
+        \label{eqn:maskregression}
+\end{equation}
+where $\bold d$ is data (or binned data) and $(\bold I-\bold J)$
+masks the map onto the data.
+
+\par
+Figure \ref{fig:dueleither} shows
+the result of using a single one-dimensional PEF
+along either the vertical or the horizontal axis.
+
+% APPLIES TO A DIFFERENT SUBROUTINE
+%To make the figure I used subroutine \LPROG{maski2}.
+%To prepare its input, I used subroutine \GPROG{pef2} to find the 1-D PEFs.
+%Although \GPROG{pef2} is designed to find 2-D PEFs
+%it is easily invoked to find a 1-D PEF.
+%For one figure panel I set {\tt (a1,a2)} equal to {\tt (7,1)}
+%and for the other panel I it set equal to {\tt (1,7)}.
+%In this figure
+%the second PEF {\tt bb(,)} required by the subroutine is taken zero.
+
+\plot{dueleither}{width=6in,height=3.0in}{
+  Interpolation by 1-D PEF along the vertical axis (left)
+  and along the horizontal axis (right).
+}
+
+\par
+%The same solver subroutine {\tt maski2()}
+%was used for two simultaneous 1-D PEFs.
+%For that it was loaded with {\tt aa(7,1)} and {\tt bb(1,7)}.
+%Results for two simultaneous 1-D PEFs are in Figure \FIG{duelversus}.
+%Again I used the same solver for a 2-D PEF
+%loading with {\tt aa(7,4)} (the filter's ``1'' being at (4,1))
+%and with {\tt bb(1,1)} being again a zero filter.
+%To get this 2-D PEF, I used \GPROG{pef2} and I was
+%dependent on the cheating corner of dense data.
+
+%The purpose for cheating here is to establish motivation
+%for the more difficult task of doing the nonlinear estimation
+%on data lines where cheating would be impossible.
+Figure \ref{fig:duelversus} compares
+the use of a pair of 1-D PEFs versus a single 2-D PEF
+(which needs the ``cheat'' corner in Figure \ref{fig:duelin}.
+\plot{duelversus}{width=6in,height=3.0in}{
+  Data infilled by a pair of 1-D PEFs (left)
+  and by a single 2-D PEF (right).
+}
+Studying Figure \ref{fig:duelversus} we conclude
+(what theory predicts) that
+\begin{itemize}
+        \item These waves are predictable with a pair of 1-D filters:
+        \begin{itemize}
+                \item Horizontal (or vertical) plane-wave with random waveform
+                \item Dipping plane-wave with a sinusoidal waveform
+        \end{itemize}
+        \item These waves are predictable with a single 2-D filter:
+        \begin{itemize}
+                \item both of the above
+                \item Dipping plane-wave with a random waveform
+        \end{itemize}
+\end{itemize}
+
+%\subsection{Inverse masking versus missing data fitting}
+%The idea of inverse masking seems like the idea of missing-data fitting
+%but their conceptual bases differ.
+%Missing data estimation arises from the single fitting problem
+%\begin{eqnarray}
+%    \bold 0 &\approx & \bold U          \bold h                             \\
+%    \bold 0 &\approx & \bold A [\bold J \bold h+(\bold I-\bold J)\bold h ]  \\
+%    \bold 0 &\approx & \bold A ( \bold J \bold h + \bold K \bold d )
+%\end{eqnarray}
+%where $\bold J$ is the usual ``missing-data operator''
+%also called the data's free mask,
+%$\bold I-\bold J=\bold K$ is the data-known mask,
+%and where solving proceeds by iteration,
+%implying powers of $\bold A \bold J$ and its adjoint.
+%On the other hand,
+%\bx{masking inversion} has two or three fitting equations
+%like \EQN{maskregression}, say
+%\begin{eqnarray}
+%\bold 0 &\approx& \bold K ( \bold h - \bold d) \\
+%\bold 0 &\approx& \bold U \ \bold h
+%\end{eqnarray}
+%Solving by iteration
+%implies powers of the column operator
+%$ \left[ \begin{array}{c} \bold K \\ \bold U \end{array} \right]$
+%and its adjoint.
+%\par
+%The missing-data formulation assures us that
+%the solution matches the known data exactly at all stages during the iteration.
+%The inverse-mask formulation allows mismatch.
+%Therefore, the mask formulation seems inferior.
+%In practice, however,
+%the mask formulation has many useful generalizations.
+%When field data is stored as tracks,
+%these tracks can cross, and when they do,
+%the data could be inconsistent with itself.
+%This often happens.
+%It is not an embarrassment but
+%an important problem deserving a reformulation (which we tackle next).
+%Another generalization is binning
+%where the tracking operator throws many data values into the same bin.
+%Where data values in a bin differ,
+%the solution (bin value) obviously cannot be consistent with each data value.
+%Yet another generalization of the masking operator is where data
+%is not on a regular mesh but needs to be interpolated from it.
+\end{comment}
+
+\begin{comment}
+\section{SPARSE TRACKS IN SATELLITE ALTIMETRY }
+\sx{satellite altimetry}
+Earth satellites orbiting over the poles go round us in north-flying tracks
+and south-flying tracks.
+Their orbits would be north-south lines,
+but the earth's rotation causes them to appear to drift westward
+(with the sun) so the north-going runs leave northwest-going tracks
+and the southward runs leave southwest-going tracks.
+Figure~\ref{fig:synsat} shows an interesting topography
+striated in two non-orthogonal directions
+(much like superposed plane waves {\tt ;-)} and some tracks.
+For my convenience I have plotted northwest tracks in a vertical
+direction and southwest tracks in a horizontal direction.
+In reality the track types are not orthogonal, so my displays will
+have a shearing distortion (not affecting the analysis).
+The satellites considered here measure \bx{sea surface} altitude.
+You might think the sea surface should be at the same altitude everywhere,
+but the gravitational attraction of the mountains beneath the sea
+causes the altitude of sea level to vary from place to place.
+It would be an arduous task to survey all the oceans to find their depth
+and map it, or to map the strength of gravity on all the ocean surfaces,
+but either map looks much like each other
+and both look like the satellite altimeter map,
+the differences being mainly in calibration and spatial filtering.
+
+\activeplot{synsat}{width=6in,height=1.8in}{ER}{
+        Synthetic topography (left),
+        northward tracks (center), and
+        southward tracks (right).
+        The south pole is the lower left-hand corner
+        and thirty degrees south latitude is the diagonal.
+        }
+
+\par
+There is great track density below $30^\circ$ south latitude,
+but it is much sparser above.
+Most satellite tracks are missing north of the
+$30^\circ$ south latitude because
+knowledge of the distribution of gravity is required
+to guide a ballistic missile to a precise target,
+so they are secret.
+The tracks north of $30^\circ$ south latitude come from other satellites.
+
+\par
+Notice that some tracks are brighter and some are dimmer.
+This mimics a calibration problem
+that causes each track to have a different mean, or more generally,
+a very low-frequency, along-the-track noise.
+
+\par
+Although the geometry of Figure~\ref{fig:synsat} is somewhat unusual,
+it is an attractive example for study for several reasons.
+First, it exhibits the familiar problem that survey lines
+are never as dense as we wish them to be.
+Second, it is not unusual for crossing lines to have inconsistency.
+Third, having dense coverage near sparse coverage
+offers us a good chance to study the transition
+from a region of high information density to a region of low density
+and ambiguity (spatial aliasing).
+
+%\subsection{Conventional wisdom}
+\par
+The obvious way to fill in between the tracks is with some
+kind of smoothness criterion.
+For example, we could have the solution
+fit the track data exactly and between the tracks
+we could have the solution satisfy Laplace's equation.
+For Figure~\ref{fig:seasat},
+I chose instead to minimize the {\it energy} in the output
+of the \bx{Laplacian operator}
+(which amounts to satisfying the {\it squared} Laplace equation).
+The problem with either of these approaches
+is the implicit presumption of isotropy,
+i.e., that the interpolation be independent of orientation.
+The best result is obviously the last one in  Figure~\ref{fig:seasat}
+and we'll explore that next.
+
+\subsection{A deeper model than anisotropy}
+\par
+From the data south of $30^\circ$ latitude
+in Figure~\ref{fig:synsat},
+we see the orientation of the two \bx{striations}
+(along with the third striation of along-the-track noise).
+But there are two orientations in the topography,
+not just one, so the problem is not so simple
+that we can merely find a skewing and stretching of coordinates
+that would make the image appear isotropic.
+The approach I advocate is to seek a partial differential equation
+that the image will be a solution of.
+In reality, a complicated image will satisfy no simple differential equation,
+so instead I seek a filter with minimum power out.
+I first find this filter in the region of good spatial coverage.
+Then I carry it north to the area of sparse coverage
+where I find the solution by the principle of minimum power out.
+The result is shown on the right in Figure~\ref{fig:seasat}.
+The result is overwhelmingly better than the isotropic approach.
+The result is almost perfect but the solutions
+might still be a little weaker in the middle of large track gaps
+because I limited the number of conjugate-direction iterations to 20.
+(The figure computes in a few seconds.)
+\activeplot{seasat}{width=6in,height=1.8in}{ER}{
+        Adjoint reconstruction (left),
+        reconstruction by Laplacian (center), and
+        reconstruction by 2-D PEF (right).
+        }
+\par
+You might notice that the two striations in the topography
+have different textures,
+one being string like and the other being rod-like.
+This means that the underlying ``waves'' making up the striations
+have a different spectrum.
+The method used here works equally well (or badly)
+if the two spectra are the same.
+The fundamental assumption is one of superposition,
+an assumption whose validity will be limited according to
+the geological mechanism that built the topography.
+
+\subsection{Distribution of sparsity}
+\sx{sparsity}
+We rarely have data in which the transition from good coverage to poor
+is as abrupt as here, but
+we generally have data that terminates
+even more abruptly at the edges of a survey.
+There is also the possibility of coverage that is uniformly sparse,
+so that we would have no good region
+in which to learn the data statistics.
+In principle we should be simultaneously estimating the solution
+and its multidimensional prediction-error filter.
+Such simultaneous estimation is nonlinear.
+Thus there are well-known dangers,
+but the problem itself is not ill-conceived or impossible to approach,
+as the one-dimensional example ofFGigure~\ref{fig:exp} shows.
+Although real problems are nonlinear, 
+it is often realistic to approach them textbook-style,
+as a sequence of linearized approximations.
+Sometimes ingenious tricks can be brought to bear,
+as in Figure \ref{fig:lace3}.
+
+\par
+Current practice in the seismic-exploration industry
+meets the requirements perfectly of a nonlinear problem
+that is near to linear,
+because the high costs of occupying many data stations
+limit the surveys to avoid aliasing at central frequencies,
+while allowing aliasing at the highest frequencies
+(which define the resolution).
+
+\subsection{Seasat modeling and solution formulation}
+\sx{Seasat}
+The problem formulation is,
+\begin{eqnarray}
+\label{eqn:seasat}
+\bold 0 &\approx& \bold A_n( \bold T \bold h - \bold d) \\
+\bold 0 &\approx& \bold A_h \ \epsilon\ \bold h
+\end{eqnarray}
+where $\bold A_n$ is a noise whitener,
+$\bold A_h$ is a topography whitener (PEF),
+$\bold d$ is data,
+$\bold h$ is altitude,
+$\bold T$ is the operator that makes data tracks from an altitude map, and
+$\epsilon$ is the usual damping parameter.
+Figure~\ref{fig:seasat} uses two different values of $\bold A_h$,
+one a Laplacian and one a PEF.
+
+\par
+Subroutine \texttt{icai2()} is yet another 2-D convolution program,
+a straightforward generalization of the 1-D subroutine \texttt{icaf1()} \vpageref{/prog:icaf1},
+but with the adjoint being the input instead of the filter.
+We need it to apply the spatial PEF to the topography
+without overflowing the edges.
+\progdex{icai2}{convolution}
+Subroutine \texttt{track()} shows how tracks are defined from topography,
+and it also does the adjoint reconstruction of topography from tracks.
+The array {\tt dknow(,,)} is 1 where data is recorded and 0 where it is not.
+The subroutine also carries along the $\epsilon \bold I$ operator
+with subroutine \texttt{ident()} \vpageref{/prog:ident}.
+\progdex{track}{satellite tracks}
+\progdex{ident}{identity operator}
+
+\subsection{Along-track noise and crooked tracks}
+\sx{crooked tracks}
+Subroutine \texttt{trakwit()}
+applies a weighting operator $\bold A_n$ to each track.
+This \bx{weighting operator} is a little unusual because it
+is not a scaling function but an operator.
+Recall the unknown mean values or low-frequency noise in the data tracks.
+Because of this noise,
+there would be huge residuals if we tried to fit the solution altitude
+to the crossing altimeter tracks
+where they do not match at the point of crossing.
+The proper method is to filter the {\it residual}
+to eliminate the low-frequency noise in the {\it data.}
+Many people filter {\it observed} data to eliminate noise in it,
+but when we come to compare such data to {\it modeled} data
+we need to filter it with the same filter.
+Filtering the residual cleans both data sets at the same time,
+with an assuredly identical filter.
+\par
+The simplest filter that eliminates zero frequency is the
+first-order, finite-difference operator $(1,-1)$.
+The next simplest is an operator with a narrower spectral notch
+around zero frequency, namely  $(1,-1/3,-1/3,-1/3)$, etc.
+I found that both worked about equally well in this case.
+These are rough prior guesses of the filters that whiten the {\it data}.
+A more general solution is to form the {\it residuals}
+and then design a whitener for them.
+A still more general solution is to find the residuals and the PEF
+at the same time.
+%\progdex{trakwit}{weight sat.~tracks}
+\progdex{trakwit}{weight sat. tracks}
+The idea behind
+subroutine {\tt track()} applies also to crooked survey lines.
+For use with crooked lines, however,
+subroutine {\tt trakwit()} would need modification
+so that it could
+apply the data noise-whitening filter along the actual track
+and not simply along the coordinate axis.
+
+\subsection{Seasat optimization}
+\sx{Seasat}
+To prepare to minimize the fitting residuals (\ref{eqn:seasat}),
+we begin by restating the residual
+as the output of the operator
+that takes a model perturbation        $\Delta \bold h$
+and produces the weighted residual perturbation $\Delta \bold r$.
+\begin{equation}
+\left[ 
+\begin{array}{c}
+  \             \\ 
+  \Delta \bold r \\ 
+  \ 
+  \end{array} \right] 
+\eq
+\left[ 
+\begin{array}{ccc}
+  \bold A_n    & \cdot   & \cdot   \\
+  \cdot    & \bold A_n   & \cdot   \\
+  \cdot    & \cdot       &   \bold A_h
+  \end{array} \right] 
+\; \left[ 
+\begin{array}{c}
+  \bold N \\ 
+  \bold S \\ 
+  \epsilon \bold I
+  \end{array} \right]
+\ \left[ \Delta \bold h \right]
+\label{eqn:seastat}
+\end{equation}
+where we have also split the track operator $\bold T$ into two parts,
+$\bold N$ making the northwest tracks and
+$\bold S$ making the southwest tracks.
+\par
+To find the best-fitting topography $\bold h=h(x,y)$,
+we prepare the solver subroutine \texttt{seatopo()}.
+Begin by loading the residual vector
+with the negative of the data $\bold r=-\bold d$
+and load the solution vector with zeros $\bold h=\bold 0$.
+Then proceed as we did with earlier weighted residuals
+like \texttt{pef1()} \vpageref{/prog:pef1} or \texttt{pef2()} \vpageref{/prog:pef2}.
+First we revise the data to weighted data
+by a single application of subroutine \texttt{trakwit()} \vpageref{/prog:trakwit}.
+Then begin the usual conjugate-direction iteration
+containing first the adjoint of operator
+(\ref{eqn:seastat}) and then the forward operator.
+The only thing new here is that the {\it filter weighting} cannot
+have the output  and input share the same computer memory,
+as is allowed
+by the more usual {\it scalar weighting} routines,
+\texttt{ident()} \vpageref{/prog:ident} and \texttt{diag()} \vpageref{/prog:diag},
+so an extra array {\tt dr2} must be declared.
+(In a computer language better than Fortran
+there would be no need to list separate programs
+for each application of weighted least squares---one routine
+should meet all needs.)
+\progdex{seatopo}{topog. estimation}
+
+\par
+Finally, subroutine \texttt{seastat()} builds a topographic map
+from satellite data tracks;
+the subroutine uses either of two different statistical assumptions.
+The first assumption is that the 2-D prediction-error filter (PEF)
+for the topography is Laplace's operator.
+The alternate assumption is that a previous map is available
+which can be used by \texttt{pef2()} \vpageref{/prog:pef2} to compute the required PEF.
+The previous map is presumed to be poor where the tracks are missing.
+To put this presumption into practice, we set
+the map to zero where there are no data tracks,
+so {\tt pef2()} will handle such regions as missing data.
+Then we define the template of free parameters with subroutine \texttt{setfree()} \vpageref{/prog:setfree};
+and we call subroutine \texttt{pef2()} \vpageref{/prog:pef2} to get the PEF.
+With the inputs now all prepared, we invoke subroutine \texttt{seatopo()}.
+\progdex{seastat}{topog. statistics}
+
+\end{comment}
+
+
+
+
+\section{ALTITUDE OF SEA SURFACE NEAR MADAGASCAR}
+\inputdir{mad}
+
+\par
+A satellite points a radar at the ground and
+receives echos we investigate here.
+These echos are recorded only over the ocean.
+The echo tells the distance from the orbit to the ocean surface.
+After various corrections are made for earth and orbit ellipticities
+the residual shows tides, wind stress on the surface,
+and surprisingly a signal proportional to the depth of the water.
+Gravity of mountains on the water bottom pulls water towards them
+raising sea level there.
+
+\par
+The raw data investigated here\footnote{
+	I wish to thank David T. Sandwell
+	http://topex.ucsd.edu/
+	for providing me with this subset of satellite altimetry data,
+	commonly known as Topex-Posidon data.
+	}
+had a strong north-south tilt
+which I\footnote{
+	The calculations here were
+	all done for us by Jesse Lomask.
+	}
+removed at the outset.
+Figure~\ref{fig:jesse1} gives our first view of altimetry data
+(ocean height) from southeast of the island of
+Madagascar.
+
+\plot{jesse1}{width=6.0in, height=2.31in}{
+	Sea height under satellite tracks.
+	The island of Madagascar is
+	in the empty area at $(46^\circ,-22^\circ)$.
+	Left is the adjoint $\bold L\T\bold d$.
+	Right is the adjoint normalized by the bin count,
+	${\bf diag}(\bold L\T\bold 1)^{-1} \bold L\T\bold d$.
+	You might notice a few huge, bad data values.
+	Overall, the topographic function is too smooth,
+	suggesting we need a roughener.
+	}
+About all we can see is satellite tracks.
+The satellite is in a circular polar orbit.
+To us the sun seems to rotate east to west
+as does the circular satellite orbit.
+Consequently, when the satellite moves northward across the site
+we get altitude measurements along a SE-NW line.
+When it moves southward we get measurements along a NE-SW line.
+This data is from the cold war era.
+At that time dense data above the $-30^\circ$ parallel was secret
+although sparse data was available.
+(The restriction had to do with precision guidance of missiles.
+Would the missile hit the silo?
+or miss it by enough to save the retaliation missile?)
+
+\par
+Here are some definitions:
+Let components of $\bold d$ be the data,
+altitude measured along a satellite track.
+The model space is $\bold h$, altitude in the $(x,y)$-plane.
+Let $\bold L$ denote the 2-D linear interpolation operator
+from the track to the plane.
+Let $\bold H$ be the helix derivative,
+a filter with response $\sqrt{k_x^2+k_y^2}$.
+Except where otherwise noted,
+the roughened image $\bold p$ is the preconditioned variable
+$\bold p =\bold H \bold h$.
+The derivative along a track in data space is $\frac{d}{ dt}$.
+A weighting function that vanishes when any filter hits a track end
+or a bad data point is $\bold W$.
+
+\plot{jesse5}{height=3.6in}{
+	All the data $\bold d$  and the missing data markers.
+	}
+\par
+Figure~\ref{fig:jesse5} shows the entire data space,
+over a half million data points (actually 537974).
+Altitude is measured along many tracks across the image.
+In Figure~\ref{fig:jesse5} the tracks are placed end-to-end,
+so it is one long vector (displayed in about 50 signal rows).
+A vector of equal length is the missing data marker vector.
+This vector is filled with zeros everywhere except where
+data is missing or known bad or known to be at the ends of the tracks.
+The long tracks are the ones that are sparse in the north.
+
+\sideplot{jesse2}{width=3.0in, height=2.31in}{
+	The roughened, normalized adjoint,
+	$\bold H \ {\bf diag}(\bold L\T\bold 1)^{-1} \bold L\T\bold d$.
+	Some topography is perceptible
+	through a maze of tracks.
+	}
+
+\par
+Figure~\ref{fig:jesse2} brings this information into model space.
+Applying the adjoint of the linear interpolation operator $\bold L\T$
+to the data $\bold d$ gave our first image $\bold L\T\bold d$
+in model space in Figure~\ref{fig:jesse1}.
+The track noise was so large that roughening it made it worse.
+A more inviting image arose when I normalized the image before roughening it.
+Put a vector of all ones $\bold 1$ into the
+adjoint of the linear interpolation operator $\bold L\T$.
+What comes out $\bold L\T\bold 1$
+is roughly the number of data points landing in each pixel in model space.
+More precisely, it is the sum of the linear interpolation weights.
+This then, if it is not zero, is used as a divisor.
+The division accounts for several tracks contributing to one pixel.
+In matrix formalism this image is
+${\bf diag}(\bold L\T\bold 1)^{-1} \bold L\T\bold d$.
+In Figure~\ref{fig:jesse2} this image is roughened
+with the helix derivative $\bold H$.
+
+\plot{jesse3}{width=6.0in, height=2.31in}{
+	With a simple roughening derivative in data space,
+	model space shows two nice topographic images.
+	Let $\bold n$ denote ascending tracks.
+	Let $\bold s$ denote descending tracks.
+	Left  is $\bold L\T \frac{d}{ dt} \bold n$.
+	Right is $\bold L\T \frac{d}{ dt} \bold s$.
+	}
+
+\par
+There is a simple way here to make a nice image---roughen
+along data tracks.
+This is done in
+Figure~\ref{fig:jesse3}.
+The result is two attractive images, one for each track direction.
+Unfortunately, there is no simple relationship between the two images.
+We cannot simply add them because the shadows go in different directions.
+Notice also that each image has noticeable tracks that we would
+like to suppress further.
+\par
+A geological side note:
+The strongest line, the line that marches along the image from
+southwest to northeast is a sea-floor spreading axis.
+Magma emerges along this line
+as a source growing plates that are spreading apart.
+Here the spreading is in the north-south direction.
+The many vertical lines in the image are called ``transform faults''.
+
+\par
+Fortunately, we know how to merge the data.
+The basic trick is to form the track derivative
+not on the data (which would falsify it)
+but on the residual which
+(in Fourier space) can be understood as
+choosing a different weighting function for the statistics.
+A track derivative on the residual is actually two track derivatives,
+one on the observed data, the other on the modeled data.
+Both data sets are changed in the same way.
+Figure~\ref{fig:jesse10} shows the result.
+\plot{jesse10}{width=6.0in, height=2.31in}{
+	All data merged into a track-free image (hooray!)
+	by applying the track derivative,
+	not to the data, but to the residual.
+	Left is $\bold h$
+	estimated by
+	$\bold 0\approx \bold W \frac{d}{ dt}(\bold L\bold h-\bold d)$.
+	Right is the roughened altitude, $\bold p = \bold H \bold h$.
+	}
+The altitude function remains too smooth for nice viewing
+by variable brightness,
+but roughening it with $\bold H$ makes an attractive image
+showing, in the south, no visible tracks.
+
+
+%\plot{jesse10.res}{width=6.0in, height=2.31in}{
+%	Fifty thousand of a half million (537,974) data points
+%	of Figure~\ref{fig:jesse10}.
+%	Left is the residual $\bold L\bold h -\bold d$.
+%	Right is the residual $\bold W {d\over dt} (\bold L\bold h -\bold d)$.
+%	Jesse,
+%	One thing that was very interesting for Antoine
+%	was to carry the residual back into model space.
+%	I suspect ours will be boring.  If you do this try several pclips.
+%	I'm trying to think up an explanation for this interesting residual.
+%	I'm finding it hard to believe the derivative of
+%	those ramps is the white noise.  It should be steps?
+%	I hope the N-S tilt was removed once and for all?
+%	so that I don't need to mention it here.
+%	--jon
+%	}
+%
+%\sideplot{jesse10.res2}{width=3.0in, height=2.31in}{
+%	Figure~\ref{fig:jesse10} again but the weighted residual
+%	residual $\bold W(\bold L\bold h -\bold d)$.
+%	The spikes are the zero-values at the track ends.
+%	}
+%
+%\plot{jesse11}{width=6.0in, height=2.31in}{
+%	Holes filled with a model space PEF.
+%	Starting from the $\bold h$ in Figure~\ref{fig:jesse10}
+%	and filling holes with GEE program
+%	{\tt Miss} using a PEF $\bold A$ found by {\tt Pef}
+%	we get $\bold h$ on the left.
+%	The ridge topography is building in the northern region.
+%	Right is the roughened altitude $\bold H \bold h$.
+%	The northern ridge cannot stand the roughener
+%	and the north again becomes dominated by tracks.
+%	}
+%
+%\sideplot{jesse12.1}{width=3.0in, height=2.31in}{
+%	The 2-D prediction error $\bold A \bold h$ of model space.
+%	It is white by design.
+%	}
+%
+%\plot{jesse6}{width=6.0in, height=2.31in}{
+%	An attempt to in-fill with a gradient (100 iterations)
+%	without preconditioning.
+%	Left is $\bold h$ where
+%	$\bold 0 \approx \bold W {d\over dt} (\bold L\bold h-\bold d)$
+%	and
+%	$\bold 0 \approx \nabla \bold h$.
+%	Right is $\bold p =\bold H\bold h$.
+%	The lesson here is that regularization with the gradient
+%	doesn't build much topography in the north, even with many iterations.
+%	We'll probably omit this and its residuals from book,
+%	maybe keep in lab.
+%	It is puzzling that the signal is so weak on top.
+%	Do we need a different $\epsilon$ on the top and bottom?
+%	}
+%\plot{jesse6.res}{width=6.0in, height=2.31in}{
+%	(OMIT FROM BOOK)
+%	Residuals 20,000 to 70,000.
+%	Left is the residual $\bold L\bold h -\bold d$.
+%	Right is residual $\bold W {d\over dt} (\bold L\bold h -\bold d)$.
+%	Regularization with $\bold 0 \approx \nabla \bold h$.
+%	}
+%\sideplot{jesse6.res2}{width=3.0in, height=2.31in}{
+%	(OMIT FROM BOOK)
+%	The residual of Figure~\ref{fig:jesse6.res}
+%	with track-end weight without track derivative.
+%	Spikes are zero values where the residual vanishes at track ends.
+%	Same data-space subset.
+%	}
+%\plot{jesse7}{width=6.0in, height=2.31in}{
+%	(OMIT FROM BOOK)
+%	Necessity of the track derivative.
+%	Precondition with the helix.
+%	Left is
+%	$\bold h = \bold H^{-1}\bold p$ where
+%	$\bold p$ was estimated by
+%	$\bold 0\approx  \bold L\bold H^{-1} \bold p-\bold d$.
+%	Right is $\bold p$.
+%	Theoretically this is like regularizing with $\nabla$.
+%	}
+
+\par
+The north is another story.
+We would like the sparse northern tracks
+to contribute to our viewing pleasure.
+We would like them to contribute to a northern image of the earth,
+not to an image of the data acquisition footprint.
+\plot{jesse8}{width=6.0in, height=2.31in}{
+	Using the track derivative in residual space 
+	and helix preconditioning in model space
+	we start building topography in the north.
+	Left is $\bold h=\bold H^{-1}\bold p$ where
+	$\bold p$ is estimated by
+	$ \bold 0 \approx \bold W \frac{d}{ dt} (\bold L\bold H^{-1}\bold p-\bold d)$
+	for only 10 iterations.
+	Right is $\bold p=\bold H\bold h$.
+%	Maybe this is the place to say
+%	that using the helix slows down
+%	each iteration because it is a lot bigger than $\nabla$.
+%	In the lab they might compare this to regularization.
+	}
+This begins to happen in Figure~\ref{fig:jesse8}.
+The process of fitting data by choosing an altitude function $\bold h$
+would normally include some regularization (model styling),
+such as
+$\bold 0\approx \nabla \bold h$.
+Instead we adopt the usual trick
+of changing to preconditioning variables,
+in this case $\bold h = \bold H^{-1}\bold p$.
+As we iterate with the variable $\bold p$ we watch the images
+of $\bold h$ and $\bold p$ and quit either when we are tired,
+or more hopefully, when we are best satisified with the image.
+This subjective choice is rather like choosing the $\epsilon$
+that is the balance between data fitting goals and model styling goals.
+The result
+in Figure~\ref{fig:jesse8}
+is pleasing.
+We have begun building topography in the north that continues
+in a consistant way with what is in the south.
+Unfortunately, this topography does fade out rather quickly
+as we get off the data acquisition tracks.
+
+
+
+%\plot{jesse8.strt}{width=6.0in, height=2.31in}{
+%	(OMIT FROM BOOK)
+%	A good starting solution doesn't help much.
+%	This is like Figure~\ref{fig:jesse8}
+%	but the calculation began at a good
+%	starting solution,
+%	the regularized result in Figure~\ref{fig:jesse6}.
+%	Will omit from book.
+%	}
+
+\par
+If we have reason to suspect that the geological style north of
+the 30th parallel matches that south of it
+(the stationarity assumption) we can compute a PEF on the south side
+and use it for interpolation on the north side.
+This is done in Figure~\ref{fig:jesse9}.
+\plot{jesse9}{width=6.0in, height=2.31in}{
+	Given a PEF $\bold A$ estimated on the densely defined southern part
+	of the model,
+	$\bold p$ was estimated by
+	$\bold 0\approx \bold W \frac{d}{ dt}(\bold L\bold A^{-1}\bold p-\bold d)$
+	for 50 iterations.
+	Left is  $\bold h = \bold A^{-1}\bold p$.
+	Right is $\bold p=\bold H\bold h$.
+%	Figure~\ref{fig:jesse11} used a PEF
+%	but it didn't turn out this well.
+%	Why's that?
+%	A good question.
+	}
+This is about as good as we are going to get.
+Our fractured ridge continues nicely into the north.
+Unfortunately, we have imprinted the fractured ridge
+texture all over the northern space,
+but that's the price we must pay for relying on the stationarity assumption.
+
+\par
+The fitting residuals
+are shown in Figure~\ref{fig:jesse9-res}.
+\plot{jesse9-res}{width=6.0in, height=2.31in}{
+	The residual at
+	fifty thousand of the half million (537,974) data points
+	in Figure~\ref{fig:jesse9}.
+	Left is physical residual $\bold L\bold A^{-1}\bold p -\bold d$.
+	Right is fitting residual
+	$\bold W \frac{d}{ dt}  (\bold L\bold A^{-1}\bold p -\bold d)$.
+	}
+The physical altitude residuals tend to be rectangles,
+each the duration of a track.
+While the satellite is overflying other earth locations the ocean surface
+is changing its altitude.
+The fitting residuals (right side) are very fuzzy.
+They appear to be ``white'', though with ten thousand points
+crammed onto a line a couple inches long, we cannot be certain.
+We could inspect this further.
+If the residuals turn out to be significantly non-white,
+we might do better to change $\frac{d}{ dt}$ to a PEF along the track.
+
+
+%\sideplot{jesse9.res2}{width=3.0in, height=2.31in}{
+%	(OMIT FROM BOOK)
+%	The residual $\bold W(\bold L\bold A^{-1}\bold p -\bold d)$.
+%	 found from
+%	$\bold 0\approx\bold W {d\over dt}(\bold L\bold A^{-1}\bold p-\bold d)$.
+%	Same subset of data space.
+%	Observe that these residuals all have the same polarity.
+%	Why is that?  A good question.
+%	I'm confused.
+%	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\section{ELIMINATING NOISE AND SHIP TRACKS IN GALILEE}
+\inputdir{antoine}
+
+\par
+The Galilee data set exhibits a great number of the problems
+encountered in real life.   It's a blessing to learn from.
+Only 132,044 pings give rise to its 132,044 depth measurements.
+If this were reflection seismology
+we would have that many 1000 point seismograms
+at 1000 receivers, a million times more data!
+Students have asked,
+``Why don't we just hand edit out the bad data points?''
+The answer is we need an easy warm up
+for real life when there is far too much data to hand edit.
+In other words, we wish to think about theories and codes
+that work when transported to other environments.
+The Galilee data set is a marvelous practice case.
+There is much to learn.
+
+\par
+
+We are given depth-sounding data from the Sea of 
+Galilee.  The Sea of Galilee is unique
+because it is a fresh-water lake below sea-level.
+It seems to be connected to the Great Rift (pull-apart)
+valley crossing East Africa. The ultimate goal is to produce a good map of
+the depth to bottom, and images useful for identifying archaeological,
+geological, and geophysical details of the water bottom. In particular,
+we hope to identify some ancient shorelines around the lake and meaningful 
+geological features inside the lake. The ancient shorelines might
+reveal early settlements of archeological interest or old fishing ports.
+The pertinence of this data set to our daily geophysical applications is threefold:
+(1) We often need to interpolate irregular data.
+(2) The data has noise bursts of various types.
+(3) The data has systematic error (drift)
+which tends to leave data-acquisition tracks in the resulting image.
+
+\par
+The Galilee data set was introduced in chapter \ref{paper:iin}
+and recently plotted in Figure~\ref{fig:locfil}.
+Actually, that figure is a view of 2-D model space.
+One of the first things I learned (the hard way) is the importance
+of viewing both the model space and the residuals in data space.
+\par
+\boxit{
+	Be sure to plot both model space and data space.
+	You should try to understand the results in both spaces
+	and might learn from watching movies of each as the iteration progresses.
+	}
+
+\par
+The raw data (Figure \ref{fig:antoine1}),
+is distributed irregularly across the lake surface.
+It is 132,044 triples $(x_i,y_i,z_i)$, where $x_i$ ranges over about 
+12 km, where $y_i$ ranges over about 20 km,
+and $z_i$ is depth in multiples of 10 cm.
+(It would have been helpful if a fourth value had been included,
+the clock-date time $t_i$, of the measurement.)
+The ship surveyed a different amount of distance every day of the survey.
+Figure \ref{fig:antoine1} displays the whole survey as one long track.
+On one traverse across the lake, the depth record is U shaped.
+A few V shaped tracks result from deep-water vessel turn arounds.
+All depth values (data points) used for building the final map are shown here.
+Each point corresponds to one depth measurement inside the lake.
+For display convenience, the long signal is broken
+into 23 strips of 5718 depth measurements
+($23\times 5718 = 131,514$).
+We have no way to know that sometimes the ship stops a little while
+with the data recorder running;
+sometimes it shuts down overnight or longer;
+but mostly it progresses at some unknown convenient speed.
+So the horizontal axis in data space is a measurement number
+that scales in some undocumented way to distance along the track.
+
+\plot{antoine1}{width=6in,height=4in}{
+  The complete Galilee data space.}
+
+
+\subsection{Attenuation of noise bursts and glitches}
+
+
+Let $\bold{h}$ be an abstract vector containing as components
+the water depth over a 2-D spatial mesh.
+Let $\bold{d}$ be an abstract vector whose successive components
+are depths along the vessel tracks.
+One way to grid irregular data is to minimize the length 
+of the residual vector $\bold r_d(\bold h)$:
+\begin{equation}
+	\bold 0 \quad\approx\quad \bold r_d \quad=\quad \bold B \bold h \ -\  \bold d    \label{eqn:eq0}
+\end{equation}
+where $\bold B$ is a 2-D linear interpolation (or inverse binning) operator 
+that carries values from a 2-D map to a 1-D survey line.
+Here $\bold r_d$ is the data residual,
+the modeled data less the observed data.
+Because we are defining $\bold B$ and not its inverse
+we need not concern ourselves that bins may be empty
+or tracks may cross inconsistently.
+%The bin size is 60 $\times$ 50 m so that the number of data points per bin
+%is roughly constant and the aspect ratio of the lake is roughly preserved
+%in the number of samples in the vertical and horizontal directions. 
+%Figure~\ref{fig:medbin}
+%is a display of simple binning of the raw data.
+%(Some data points are outside the lake.
+%These must represent navigation errors.)
+
+
+\par
+
+Some model-space bins will be empty.
+For them we need an additional ``model styling'' goal,
+i.e. regularization.
+For simplicity we might minimize the gradient.
+\begin{equation}
+  \begin{array}{lllll}
+    \bold 0 &\approx& \bold r_d &=& \bold B \bold h \ -\  \bold d \\
+    \bold 0 &\approx& \bold r_h &=& \epsilon \nabla \bold h 
+  \end{array} \label{eqn:eq1}
+\end{equation}
+where $\nabla=\left ( \frac{\partial}{\partial x},
+\frac{\partial}{\partial y}\right)$ and $\bold r_h$ is the model space
+residual.
+Choosing a large scaling factor $\epsilon$ will tend to smooth
+our entire image, not just the areas of empty bins.
+We would like $\epsilon$ to be any number small enough
+that its main effect is to smooth areas of empty bins.
+When we get into this further, though, we'll see that
+because of noise
+some smoothing across the nonempty bins is desireable too.
+
+
+\subsection{Preconditioning for accelerated convergence}
+
+As usual we
+precondition by changing variables so
+that the regularization operator becomes an identity matrix.
+The gradient $\nabla$ in equation (\ref{eq1}) has no inverse, but its
+spectrum $-\nabla'\nabla$,
+can be factored ($-\nabla'\nabla={\bf H\T H}$) into triangular parts 
+${\bf H}$ and ${\bf H\T}$ where ${\bf H}$ is the helix derivative.
+This ${\bf H}$ is invertible by deconvolution.
+The quadratic form
+$\bold h\T\nabla'\nabla\bold h = \bold h\T\bold H\T\bold H \bold h$
+suggests the new preconditioning variable $\bold p = \bold H\bold h$.
+The fitting goals in equation (\ref{eq1}) thus become
+\begin{equation}
+  \begin{array}{lllll}
+    \bold 0 &\approx& \bold r_d &=& \bold B \bold {H^{-1}} \bold p \ -\  \bold d \\
+    \bold 0 &\approx& \bold r_p &=& \epsilon \bold p
+  \end{array} \label{eqn:eq2}
+\end{equation}
+with $\bold r_p$ the residual for the new variable ${\bf p}$.
+Experience shows that an iterative solution for ${\bf p}$ converges much
+more rapidly than an iterative solution for ${\bf h}$,
+thus showing that ${\bf H}$ is a good choice for preconditioning. 
+We could view the estimated final map ${\bf h}={\bf H^{-1}p}$,
+however in practice because the depth function is so smooth,
+we usually prefer to view the roughened depth $\bold p$.
+
+
+\par
+There is no simple way of knowing beforehand the best value of $\epsilon$.
+Practitioners like to see solutions for various values of $\epsilon$.
+Practical exploratory data analysis is pragmatic.
+Without a simple, clear theoretical basis, analysts
+generally begin from ${\bf p=0}$ and then abandon the fitting goal
+$\bold 0 \approx  \bold r_p =\epsilon \bold p$.
+Effectively, they take $\epsilon=0$.
+Then they examine the solution as a function
+of iteration, imagining that the solution at larger iterations
+corresponds to smaller $\epsilon$ and that the solution at smaller iterations
+corresponds to larger $\epsilon$.
+In all our explorations, we follow this approach
+and omit the regularization in the estimation of the depth maps.
+Having achieved the general results we want,
+we should include the parameter $\epsilon$ and adjust it until
+we see a pleasing result at an ``infinite'' number of iterations.
+We should but usually we do not.
+
+
+\subsection{${\ell^1}$ norm}
+
+
+Spikes and erratic noise glitches can be suppressed
+with an approximate $\ell^1$ norm.
+One main problem with the Galilee data is the presence of outliers
+in the middle of the lake and at the track ends.
+We could attenuate these spikes by editing or applying running median filters.
+However, the former involves human labor
+while the latter might compromise small details
+by smoothing and flattening the signal.
+Here we formulate the estimation
+to eliminate the drastic effect of the noise spikes.
+We introduce a weighting operator that deemphasizes high residuals as follows:
+\begin{equation}
+  \begin{array}{lllll}
+    \bold 0 &\approx& \bold r_d &=& \bold W ( \bold B \bold {H^{-1}} \bold p - \bold d
+    )\\
+    \bold 0 &\approx&  \bold r_p &=& \epsilon \bold p
+  \end{array} \label{eqn:eq3}
+\end{equation}
+with a diagonal matrix $\bf{W}$
+(recall equations (\ref{eqn:gradwt}-\ref{eqn:fourthroot})) where
+\begin{equation}
+{\bf W} = {\bf diag} \left( \frac{1}{(1+r_i^2/\bar{r}^2)^{1/4}} \right)
+\end{equation}
+where $r_i$ is the residual for one component of $\bold r_d$
+and $\bar{r}$ is a prechosen constant. This weighting operator
+ranges from $\ell^2$ to $\ell^1$, depending on the constant $\bar{r}$.
+(To see why, examine $\bold W^2 r^2$.)
+
+\par
+We take $\bar{r}=10$ cm
+because the data was given to us as integer multiples of 10 cm.
+(A somewhat larger value might be more appropriate).
+
+
+\plot{antoine2}{width=\textwidth}{Estimated ${\bf p}$
+	in a least-squares sense (left) and in an
+	$\ell^1$ sense (right).
+	Pleasingly, isolated spikes are attenuated.
+	Some interesting features are shown by the arrows:
+	AS points to few ancient shores,
+	O points to some outliers,
+	T points to few tracks,
+	and R points to a curious feature.
+	} 
+
+
+\par
+Figure \ref{fig:antoine2} displays ${\bf p}$ estimated 
+in a least-squares sense on the left and in a $\ell^1$ sense on the right 
+(equation (\ref{eq3}) with a small $\bar{r}$).
+%Most of the glitches are no longer visible.
+%One obvious glitch remains near $(x,y)=(205,238)$.
+%Evidently a north-south track has a long sequence of biased measurements
+%that our $\ell^1$ cannot overcome.
+Some ancient shorelines in the western and southern parts of the Sea of
+Galilee are now easier to identify (shown as AS).
+We also start to see a valley in the middle of the lake (shown as R). 
+Data outside the lake (navigation errors) have been mostly removed.
+Data acquisition tracks (mostly north-south lines and east-west lines,
+one of which is marked with a T)
+are even more visible after the suppression of the outliers.
+
+\par
+Most of the glitches are no longer visible.
+One obvious glitch remains near $(x,y)=(205,238)$.
+Evidently a north-south track has a long sequence of biased measurements
+that our $\ell^1$ approach has not overcome.
+There is a solution to this problem that I should implement.
+A fact ignored in the formulation so far is that a bad data point
+(large residual) casts doubt on neighboring data points.
+The present strategy is to take residuals of one iteration
+inverse to the 1/4 power as weights to the next interation.
+To have a bad residual cast doubt on the neighboring data points,
+the weights should be created by applying some
+smoothing of the residuals along the data tracks.
+
+
+\plot{antoine3}{width=5in,height=3in}{
+	East-west cross sections of the lake bottom
+	(${\bf h = {\bf H^{-1}p}}$).
+	Top with the $\ell^2$ solution.
+	Bottom with the $\ell^1$ approximating procedure.
+	}
+
+\par
+Figure \ref{fig:antoine3}
+shows the bottom of the Sea of Galilee (${\bf h = {\bf H^{-1}p}}$)
+with $\ell^2$ (top) fitting and  $\ell^1$ (bottom) fitting. 
+Each line represents one east-west transect,
+transects at half-kilometer intervals on the north-south axis.
+The $\ell^1$ result is a nice improvement over the $\ell^2$ maps.
+The glitches inside and outside the lake have mostly disappeared.
+Also, the $\ell^1$ norm gives positive depths everywhere. 
+Although not visible everywhere in all the figures,
+topography is produced outside the lake.
+Indeed, the effect of regularization is to produce synthetic topography,
+a natural continuation of the lake floor surface.
+
+\subsection{Attenuation of ship tracks}
+
+\par
+We are now halfway to a noise-free image.
+Figure \ref{fig:antoine2} shows that
+vessel tracks overwhelm possible fine scale details.
+Next we investigate a strategy based on the idea that
+the inconsistency between tracks comes mainly 
+from different human and seasonal conditions during the data acquisition. 
+Since we have no records of the weather and the time 
+of the year the data were acquired
+we presume that the depth differences between different acquisition tracks
+must be small and relatively smooth along the super track.
+
+
+\subsubsection{Abandoned strategy for attenuating tracks}
+An earlier strategy to remove the ship tracks is to filter the
+residual as follows:
+\begin{equation}
+  \begin{array}{lllll}
+    \bold 0 &\approx& \bold r_d &=& \bold W \frac{d}{ds}( \bold B \bold {H^{-1}} \bold p - \bold d
+    ),\\
+    \bold 0 &\approx& \bold r_p &=& \epsilon \bold p,
+  \end{array} \label{eqn:eq5}
+\end{equation}
+where $\frac{d}{ds}$ is the derivative along the track. The derivative 
+removes the drift from the field data (and the modeled data).
+An unfortunate consequence of the track derivative
+is that it creates more glitches and spiky noise at the track ends and
+at the bad data points.
+Several students struggled with this idea with results
+like you see in Figure~\ref{fig:antoine8}.
+\sideplot{antoine8}{width=3in,height=4in}{
+	The result of minimizing the derivative along the tracks.
+	}
+
+\par
+Another explanation is that the operator $d\over ds$ is too simple a lowcut filter.
+We have boosted all the high (spatial) frequencies in the residual
+when all we really sought to do was to remove the very low frequencies, almost zero frequency.
+Perhaps the lake is evaporating, or it is raining,
+or the load in the boat has been changed or shifted.
+Consider the filters that would remove only low frequencies
+leaving higher frequencies alone.
+Such filters are a positive impulse of unit area accompanied
+by a long negative blob, also of unit area.
+The longer the blob, the narrower the low cut filter.
+Unfortunately, the longer the blob, the more nasty spikes it will catch.
+After low-cut filtering, noise bursts affect a longer region of track.
+
+\par
+%\boxit{
+%	In the presence of both noise bursts and
+%	noise with a sensible spectrum (systematic noise),
+%	the systematic noise should be modeled while
+%	the noise bursts should be handled with $\ell^1$.
+%	}
+
+e are in a dilemna.   We need to low cut filter to eliminate the drift from the problem,
+but we don't dare low cut filter because it will smear the noise out to a much larger region.
+The dilemna is resolved by expanding our model space to include the drift.
+
+\subsection{Modeling data acquisition drift}
+
+Now we visualize our data as measuring the difference between the
+bottom of the lake and its top (rain and drain?).
+We are annoyed to have to model the top because we know about nothing of it,
+only that it changes slowly.
+To model the lake top which is the data drift
+we imagine a vector $\bold q$ of random numbers
+that will be passed thru a low-pass filter (like a leaky integrator) $\bold L$.
+The modeled data drift is $\bold L\bold q$.
+We will solve for $\bold q$.
+A price we pay is an increase of the number of unknowns.
+Augmenting earlier fitting goals
+(\ref{eq3}) we have:
+\begin{equation}
+  \begin{array}{lllll}
+    \bold 0 &\approx& \bold r_d &=& \bold W ( \bold B \bold {H^{-1}} \bold p + \lambda
+    \bold L \bold q - \bold d
+    ),\\
+    \bold 0 &\approx& \bold r_p &=& \epsilon_1 \bold p ,\\
+    \bold 0 &\approx& \bold r_q &=& \epsilon_2 \bold q,
+  \end{array} \label{eqn:eq4}
+\end{equation}
+where ${\bf h}={\bf H^{-1}p}$ estimates the interpolated map of the lake, and
+where ${\bf L}$ is a drift modeling operator (leaky integration),
+${\bf q}$ is an additional variable to be estimated,
+and $\lambda$ is a balancing constant to be discussed.
+We then minimize the misfit function,
+\begin{equation}
+  g_2(\bold p,\bold q) = \|\bold r_d\|^2+\epsilon_1^2\|\bold r_p\|^2+\epsilon_2^2\|\bold r_q\|^2,
+\end{equation}
+Now the data $\bold d$ is being modeled in two ways
+by two parts which add,
+a geological map part $\bold B \bold {H^{-1}} \bold p$
+and a recording system drift part $\lambda\bold L \bold q$.
+Clearly, by adjusting the balance of
+$\epsilon_1$ to
+$\epsilon_2$ we are forcing the data to go one way or the other.
+There seems nothing in the data itself that says which part of
+the model should claim it.
+
+\plot{antoine4}{width=6in,height=3.0in}{
+	LEFT: Estimated ${\bf p}$ without attenuation of the tracks, i.e., regression (\ref{eq3}).
+	RIGHT:  Estimated ${\bf p}$ without tracks, i.e., regression (\ref{eq4}). 
+	}
+
+\par
+It is a customary matter of practice to forget the two $\epsilon$s
+and play with the $\lambda$.
+If we kept the two $\epsilon$s,
+the choice of $\lambda$ would be irrelevant to the final result.
+Since we are going to truncate the iteration,
+choice of $\lambda$ matters.
+It chooses how much data energy goes into the equipment drift function
+and how much into topography.
+Antoine ended out with with $\lambda=0.08$.
+
+\par
+There is another parameter to adjust.
+The parameter $\rho$ controlling the decay of the leaky integration. 
+Antoine found that value ${\rho=0.99}$ was a suitable compromise.
+Taking $\rho$ smaller allows the track drift to vary too rapidly thus
+falsifying data in a way that falsifies topography.
+Taking $\rho$ closer to unity does not allow adequately rapid variation
+of the data acquistion system
+thereby pushing acquisition tracks into the topography.
+
+\par
+Figure \ref{fig:antoine4}
+(right)
+shows the estimated roughened image ${\bf p}$
+with $\lambda\bold L$ data-drift modeling and
+(left) ${\bf p}$ without it.
+Data-drift modeling yields an image that is essentially track-free
+without loss of detail.  Hooray!
+\par
+\boxit{
+	In the presence of both noise bursts and
+	noise with a sensible spectrum (systematic noise),
+	the systematic noise should be modeled while
+	the noise bursts should be handled with $\ell^1$.
+	}
+
+
+\par
+Figure \ref{fig:antoine7}(left) shows the data residual in model space.
+We imagine this being random (white) in both data space and model space.
+The most striking feature is the rim around the lake,
+black outside the lake, white inside).   It is the evidence for
+a track around the lake that is improperly corrected for water level,
+the ``rain and drain''.  This track denotes the inconsistancy of
+itself with the other tracks.
+Too bad -- the periphery of the lake is where we might find
+something of archeological interest.
+
+\plot{antoine7}{width=\textwidth,height=3in}{
+	(LEFT)
+	Data residual brought back into model space $\bold B\T \bold r_d$.
+	Mostly noise with some geography.
+	(RIGHT)
+	Data drift brought back into model space $\bold B\T \bold L \bold q$.
+	Mostly tracks with a bit of geography.
+	\viewit{antoine7}}
+
+\par
+Additionally we notice the residual is smaller in the southern half of the lake.
+Perhaps that part of the survey was done with better equipment
+or in better environmental conditions.
+An interesting feature of the northern half of the lake
+is the presence of a white haze, white speckles
+in the deeper water of the northern half.
+An explanation for these will be suggested by Figure \ref{fig:antoine6}.
+
+\par
+Figure \ref{fig:antoine7}(right) also provides diagnostic information.
+The estimated drift (rain? agriculture? instrumentation?)
+$\bold L\bold q$ has been transformed
+to model space $\bold B\T\bold L\bold q$.
+What we basically see is the tracks.
+In the northern half of the lake we particularly notice
+what seems to be a superposition of a sparse survey with a dense one.
+We do not like to see hints of geography in this space but we do.
+The most evident problem is that the west rim of the lake
+is outlined in white while the rest of the lake is dark.
+This means there is one data track, a track around the edge of the lake,
+that may have been taken at high water (for example) and
+it is not consistant with the other data.
+A barely perceptible geograpic feature on this image
+is a darkening in the central parts of the lake.
+We will see this feature later in data space in Figure \ref{fig:antoine6}d
+where we will get a better understanding of it.
+Overall, the lake is not medium gray like the land around; it is darker.
+This is an accident of the data processing.
+An altitude function that is an arbitrary constant,
+$h(x,y)= {\rm const}$, could be added to the geography if
+it were subtracted from the drift (or vice versa).
+The mean should have been removed before display.
+
+
+\par
+Figures \ref{fig:antoine5} and \ref{fig:antoine6} show
+selected segments of data space.
+Examining here the discrepancy between observed data and modeled data
+offers us an opportunity to get new ideas.
+In each figure the top plot is the input data $\bold{d}$.
+Next is the estimated noise-free data ${\bf BH^{-1}p}$.
+Then the estimated drift (secular variations) $\lambda \bold L \bold q$.
+Finally the residual
+$\bold B \bold {H^{-1}} \bold p + \lambda \bold L \bold q - \bold d$
+after a suitable number of iterations.
+The modeled data in both Figures \ref{fig:antoine5}b and 
+\ref{fig:antoine6}b should show no remaining spikes.
+
+\plot{antoine5}{width=\textwidth,height=3in}{
+	(a) Track 17 (input data) in Figure \ref{fig:antoine1}. 
+	(b) The estimated noise-free data  ${\bf BH^{-1}p}$.
+	(c) Estimated drift $\bold L\bold q$.
+	(d) Data residual.
+	}
+\plot{antoine6}{width=\textwidth,height=3in}{ 
+	(a) Track 14 (input data) in Figure \ref{fig:antoine1}. 
+	(b) Modeled data, ${\bf BH^{-1}p}$.
+	(c) Estimated drift.
+	(d) Data-space residual.
+	Notice the residual is large in deep water
+	and it tends to negative polarity.
+	}
+
+\par
+The estimated instrument drift is reasonable, mostly under a meter
+for measurements with a nominal precision of 10 cm.
+There are some obvious problems though.
+It is not a serious problem that the drift signal is always positive.
+A constant can be removed from the drift by adding a constant to the geography.
+More seriously, the drift fluctuates
+more rapidly than we we can expect from rain or irrigation.
+What is really annoying is that
+Figure \ref{fig:antoine6}c shows
+the instrument drift correlates with water depth(!).
+This suggests we should have a slower drift function
+(bigger $\rho$ or weaker $\lambda$), but Antoine tried it and saw
+it pushed data acquisition tracks into the lake image.
+This deserves further study.
+
+\par
+If the data set had included the time and date of each measurement
+we would have been better able to model drift.
+Instead of allowing a certain small change of drift with each measurement,
+we could have allowed a small change
+in proportion to the time since the previous measurement.
+
+\par
+An interesting feature of the data residual in Figure \ref{fig:antoine6}d is
+that it has more variance in deep water than in shallow.
+Perhaps the depth sounder has insufficient power for deeper water
+or for the softer sediments found in deeper water.
+On the other hand, this enhanced deep water variance
+is not seen in Figure~\ref{fig:antoine5}d which is puzzling.
+Perhaps 
+Figure \ref{fig:antoine6} shows residuals in the north while
+Figure \ref{fig:antoine5} shows them in the south.
+
+\par
+An even more curious feature of the data residual
+in Figure \ref{fig:antoine6}d is that it is not symmetrical
+about its mean.
+This corresponds to the speckles that are white
+(but not black) in Figure \ref{fig:antoine7} (left).
+For Gaussian random noise, there will be equal energy
+in positive errors as in negative errors.
+That's clearly not the case here.
+Since we have used something like the $\ell_1$ norm here,
+it is relevant to notice that a median can have larger variance
+on one side of it than the other.
+The plot shows that the larger residuals are up (negative values).
+If we take the theoretical data
+$\bold B\bold h$ to be correct and the observed data wrong,
+$\bold r=\bold B\bold h-\bold d <\bold 0$
+says the large measured depths $\bold d$ are exceeding the real depth
+$\bold B\bold h$.
+Depth is measured from a seismogram by measuring travel time
+to the first strong return.
+A good explanation is this:
+When the outgoing signal is not strong and the water bottom is soft,
+the first actual echo return
+may be earlier than the first perceptible echo return.
+The instrument reports too deep.
+
+
+
+
+
+
+
+
+
+%\par
+%WHAT TO KEEP FROM THIS PARAGRAPH?
+%Looking closely at the residual (Figure
+%\ref{fig:antoine6}d), we notice the drift is large where
+%the data are noisy (Figure \ref{fig:antoine6}a).  
+%It is possible that the day of acquisition was very windy, common 
+%weather condition for the Sea of Galilee.
+%Thus, the wind forces the water to pile up on one
+%side of the lake, which can explain the lower water level on the other side.
+%In addition, the strong wind in the middle of the lake induces noisy 
+%measurements because of the waves,
+%and of the ship's erratic movement.
+%Perhaps the depth sounder is more precise in shallow water than in deep.
+%This could explain the shape and amplitude of the estimated drift in Figure
+%\ref{fig:antoine6}c.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+%\begin{notforlecture}
+\subsection{Regridding}
+\sx{regridding}
+
+%Because of the weighting $\bold W$,
+%which is a function of the residual itself,
+%the fitting problems (\ref{eqn:potato}) and (\ref{eqn:pear}) are nonlinear.
+%Thus a nonlinear solver is required.
+%Unlike linear solvers,
+%nonlinear solvers need a good starting approximation
+%so they do not land
+%in a false minimum.
+%(Linear solvers benefit too by
+%converging more rapidly when started from a good approximation.)
+%I chose the starting solution $\bold h_0$
+%beginning from median binning on a coarse mesh.
+%Then I refined the mesh with linear interpolation.
+
+\par
+We often have an image $\bold h_0$
+on a coarse mesh that we would like to use on a refined mesh.
+This regridding chore reoccurs on many occasions
+so I present reusable code.
+When a continuum is being mapped to a mesh,
+it is best to allocate to each mesh point
+an equal area on the continuum.
+Thus we take an equal interval between each point,
+and a half an interval beyond the end points.
+Given {\tt n} points,
+there are {\tt n-1} intervals between them,
+so we have
+\par\noindent\begin{verbatim}
+          min = o - d/2
+          max = o + d/2 + (n-1)*d
+\end{verbatim}
+\par\noindent
+which may be back solved to
+\par\noindent\begin{verbatim}
+          d = (max-min)/n
+          o = (min*(n-.5) + max/2)/n
+\end{verbatim}
+\par\noindent
+which is a memorable result for {\tt d} and a less memorable one for {\tt o}.
+With these not-quite-trivial results, we can invoke
+the linear interpolation operator \texttt{lint2}.
+It is designed for data points at irregular locations,
+but we can use it for regular locations too.
+Operator \texttt{refine2} defines pseudoirregular coordinates
+for the bin centers on the fine mesh
+and then invokes \texttt{lint2} to
+carry data values from the coarse regular mesh to
+the pseudoirregular finer mesh.
+Upon exiting from \texttt{refine2},
+the data space (normally irregular)
+is a model space (always regular) on the finer mesh.
+\opdex{refine2}{refine 2-D mesh}
+Finally, here is the 2-D linear interpolation operator \texttt{lint2},
+which is a trivial extension of the 1-D version \texttt{lint1} \vpageref{/prog:lint1}.
+\opdex{lint2}{2-D linear interpolation}
+

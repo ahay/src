@@ -1,0 +1,99 @@
+from rsf.proj import *
+from rsf.recipes.beg import server
+
+Fetch('image3d.rsf','cup',server)
+Flow('data','image3d','dd form=native')
+Result('data','data','byte | grey3 color=e frame1=190 frame2=40 frame3=254 flat=n wanttitle=n label2=X unit2=km label3=Y unit3=km')
+
+
+Result('wi','data','put label2=X unit2=km label3=Y unit3=km| window n2=1 f2=47  | grey wanttitle=n pclip=90')
+Result('wc','data','put  label2=X unit2=km label3=Y unit3=km| window n3=1 f3=254  | grey wanttitle=n pclip=90')
+Result('wt','data','put  label2=X unit2=km label3=Y unit3=km| window n1=1 f1=85  | grey wanttitle=n pclip=90')
+
+
+
+
+### Patch  f=73*2/5
+
+Flow('patch','data','patch w=140,266,310 p=10,1,1')
+Flow('patch0','patch','patch inv=y weight=y dim=3')
+#Result('patch0','patch0','byte | grey3 frame1=190 frame2=40 frame3=254 flat=n wanttitle=n label2=X unit2=km label3=Y unit3=km')
+tpres = []
+tpre2ds = []
+
+for nwt in range(0,10):
+    fd     = 'fd-%d' % nwt
+    shiftsa= 'shiftsa-%d' % nwt
+    sh1    = 'sh1-%d' % nwt
+    shifts = 'shifts-%d' % nwt
+    flt    = 'flt-%d' % nwt
+    pre    = 'pre-%d' % nwt
+    tpre   = 'tpre-%d' % nwt
+    Flow(fd,'patch','window n4=1 f4=%d | fft1 | transp plane=12  | transp plane=23 | window n3=30 '  % nwt )
+
+    Flow(shifts,fd,
+        '''
+        cshifts2 ns1=2 ns2=2 | transp plane=34 
+        ''' )
+
+    Flow([flt, pre],[shifts, fd],
+         '''
+         clpf match=${SOURCES[1]} pred=${TARGETS[1]} rect1=10 rect2=10 niter=10
+         ''')
+    Flow(tpre,pre,'transp plane=23 | transp plane=12  | pad end1=43 | fft1 inv=y ')
+    tpres.append(tpre)
+
+    ### 2D
+    shifts2d = 'shift2d-%d' % nwt
+    flt2d = 'flt2d-%d' % nwt
+    pre2d = 'pre2d-%d' % nwt
+    tpre2d = 'tpre2d-%d' % nwt
+    Flow(shifts2d,fd,'shiftd2 ns=3 |transp plane=25 | window squeeze=y')
+
+    Flow([flt2d, pre2d],[shifts2d, fd],
+         'clpf match=${SOURCES[1]} pred=${TARGETS[1]} rect1=10 niter=10')
+
+    Flow(tpre2d,pre2d,'transp plane=13 | transp plane=23 | pad end1=43   |fft1 inv=y')
+    tpre2ds.append(tpre2d)
+
+Flow('tpre1',tpres,'cat ${SOURCES[1:%d]} axis=4 |patch inv=y weight=y dim=3 ' % len(tpres))
+Flow('tpre12d',tpre2ds,'cat ${SOURCES[1:%d]} axis=4 |patch inv=y weight=y dim=3 ' % len(tpre2ds))
+
+
+
+#Result('tpre1','byte | grey3 color=e frame1=190 frame2=40 frame3=254 flat=n wanttitle=n label2=X unit2=km label3=Y unit3=km')
+
+
+Result('wi-3','tpre1','put label2=X unit2=km label3=Y unit3=km| window n2=1 f2=47  | grey wanttitle=n pclip=90')
+Result('wc-3','tpre1','put  label2=X unit2=km label3=Y unit3=km| window n3=1 f3=254  | grey wanttitle=n pclip=90')
+Result('wt-3','tpre1','put  label2=X unit2=km label3=Y unit3=km| window n1=1 f1=95  | grey wanttitle=n pclip=90')
+
+#Result('tpre12d','byte | grey3 color=e frame1=190 frame2=40 frame3=254 flat=n wanttitle=n label2=X unit2=km label3=Y unit3=km')
+
+
+Result('wi-2','tpre12d','put label2=X unit2=km label3=Y unit3=km| window n2=1 f2=47  | grey wanttitle=n pclip=90')
+Result('wc-2','tpre12d','put  label2=X unit2=km label3=Y unit3=km| window n3=1 f3=254  | grey wanttitle=n pclip=90')
+Result('wt-2','tpre12d','put  label2=X unit2=km label3=Y unit3=km| window n1=1 f1=85  | grey wanttitle=n pclip=90')
+
+### No Patch f=361*2/5  361-150=211
+Flow('fd-np','data','fft1 | window n1=150 | transp plane=12  | transp plane=23 ')
+
+Flow('shifts-np','fd-np',
+     '''
+     cshifts2 ns1=2 ns2=2 | transp plane=34 
+     ''' )
+Flow('flt-np pre-np','shifts-np fd-np',
+      '''
+      clpf match=${SOURCES[1]} pred=${TARGETS[1]} rect1=10 rect2=10 niter=30
+      ''', split=[3,150],reduce="cat axis=3")
+
+Result('flt-np','flt-np',
+       '''
+       window n4=1 f4=16 | window max3=140 | transp plane=23 | transp plane=12 |real| smooth rect1=1 rect2=5 rect3=5 |
+       byte pclip=100 bias=0.12 scalebar=y bar=bar.rsf |  
+       grey3 frame1=15 frame2=100 frame3=100  flat=n wanttitle=n bar=bar.rsf scalebar=y color=j
+       ''')
+
+
+End()
+

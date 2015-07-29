@@ -1,0 +1,110 @@
+\section{Moveout analysis}
+% ------------------------------------------------------------
+\inputdir{flat}
+% ------------------------------------------------------------
+\plot{hyper}{width=6.0in}
+{An image is formed when the Kirchoff stacking
+curve (dashed line) touches the true reflection response. 
+Left: the case of under-migration; right: over-migration.}
+% ------------------------------------------------------------
+\plot{off}{width=5.0in}
+{Common-image gathers for
+space-shift imaging (left column) and
+time-shift imaging (right column).}
+% ------------------------------------------------------------
+\plot{ssk}{width=5.0in}
+{Common-image gathers after slant-stack
+for space-shift imaging (left column) and
+for time-shift imaging (right column).
+The vertical line indicates the migration velocity.}
+% ------------------------------------------------------------
+
+We can use the Kirchhoff formulation to analyze the moveout 
+behavior of the time-shift imaging condition in the simplest 
+case of a flat reflector in a constant-velocity medium 
+(Figures~\ref{fig:hyper}-\ref{fig:ssk}). 
+
+The synthetic data are imaged using shot-record 
+wavefield extrapolation migration.
+Figure~\ref{fig:off} shows offset
+common-image gathers for three different migration
+slownesses $s$, one of which is equal to the 
+modeling slowness $s_0$.
+The left column corresponds to the space-shift imaging condition
+and the right column corresponds to the time-shift imaging condition.
+
+For the space-shift CIGs imaged with correct slowness,
+left column in Figure~\ref{fig:off},
+the energy is focused at zero offset,
+but it spreads in a region of offsets when the slowness is wrong.
+Slant-stacking produces the images in left column of Figure~\ref{fig:ssk}.
+
+For the time-shift CIGs imaged with correct slowness,
+right column in Figure~\ref{fig:off},
+the energy is distributed along a line with a slope equal 
+to the local velocity at the reflector position,
+but it spreads around this region when the slowness is wrong.
+Slant-stacking produces the images in the right column of Figure~\ref{fig:ssk}.
+
+Let $s_0$ and $z_0$ represent
+the true slowness and reflector depth, and $s$ and $z$ stand for the
+corresponding quantities used in migration.  An image is formed when
+the Kirchoff stacking curve $t(\hat{h}) = 2\,s\,\sqrt{z^2+\hat{h}^2} +
+2\,\tau$ touches the true reflection response $t_0(\hat{h}) =
+2\,s_0\,\sqrt{z_0^2+\hat{h}^2}$ (Figure~\ref{fig:hyper}). 
+Solving for $\hat{h}$ from the envelope condition 
+$t'(\hat{h})=t_0'(\hat{h})$ yields two solutions:
+\beq \label{eqn:h1}
+\hat{h} = 0
+\eeq
+and
+\beq \label{eqn:h2}
+\hat{h} = \sqrt{\frac{s_0^2 z^2 - s^2 z_0^2}{s^2-s_0^2}} \;.
+\eeq
+Substituting solutions \ref{eqn:h1} and \ref{eqn:h2}
+in the condition $t(\hat{h})=t_0(\hat{h})$ produces
+two images in the $\{z,\tau\}$ space.
+The first image is a straight line
+\beq \label{eqn:line}
+z(\tau) = \frac{z_0\,s_0 - \tau}{s}\;,
+\eeq
+and the second image is a segment of the second-order curve
+\beq \label{eqn:tcurve}
+z(\tau) = \sqrt{z_0^2 + \frac{\tau^2}{s^2-s_0^2}}\;.
+\eeq
+Applying a slant-stack transformation with $z = z_1 - \nu\,\tau$ turns
+line~(\ref{eqn:line}) into a point
+$\{z_0\,s_0/s,1/s\}$ in the $\{z_1,\nu\}$
+space, while curve~(\ref{eqn:tcurve}) turns into the curve
+\beq \label{eqn:tcurve2}
+  z_1(\nu) = z_0\,\sqrt{1 + \nu^2\,\left(s_0^2-s^2\right)}\;.
+\eeq
+The curvature of the $z_1(\nu)$ curve at $\nu=0$ is a clear indicator
+of the migration velocity errors. 
+
+By contrast, the moveout shape $z(h)$ appearing in wave-equation
+migration with the lateral-shift imaging condition is \cite[]{Bartana}
+\beq \label{eqn:hcurve}
+  z(h) = s_0\,\sqrt{\frac{z_0^2}{s^2} + \frac{h^2}{s^2-s_0^2}}\;.
+\eeq
+After the slant transformation $z = z_1 + h\,\tan{\theta}$, the
+moveout curve~(\ref{eqn:hcurve}) turns into the curve
+\beq \label{eqn:hcurve2}
+  z_1(\theta) = \frac{z_0}{s}\,\sqrt{s_0^2 + \tan^2{\theta}\,\left(s_0^2-s^2\right)}\;,
+\eeq
+which is applicable for velocity analysis. A formal connection between
+$\nu$-parameterization in equation~(\ref{eqn:tcurve2}) and
+$\theta$-parameterization in equation~(\ref{eqn:hcurve2}) is given by
+\beq \label{eqn:nu2theta}
+  \tan^2{\theta} = s^2\,\nu^2 - 1\;,
+\eeq
+or
+\beq \label{eqn:angTflat}
+\cos \t = \frac{1}{\nu s} = \frac{\tt_z}{s} \;,
+\eeq
+where $\tt_z = \frac{\partial \tt}{\partial z}$.
+\rEq{angTflat} is a special case of \req{angT} 
+for flat reflectors.
+Curves of shape~\ren{tcurve2} and \ren{hcurve2} are
+plotted on top of the experimental moveouts in Figure~\ref{fig:ssk}.
+

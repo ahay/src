@@ -1,0 +1,55 @@
+from rsf.proj import *
+import math, sys
+from numpy import *
+
+pp=(0.2,1.2,5.2)
+
+for theta in range(3):
+	wrap0='wrap0-%d'%theta
+	wrap1='wrap1-%d'%theta
+	wrap2='wrap2-%d'%theta
+	wrap='wrap-%d'%theta
+	p=pp[theta]
+	Flow(wrap0, None,
+		'''
+		math n1=51 o1=0 d1=0.01
+		output="8*atan(1)*%f*x1"
+		'''%p)
+	Flow(wrap1, None,
+		'''
+		lphfreq o2=%f n3=1 n1=51 iir=y
+		| math output="arg(input)" | real 
+		| window min1=0 n1=51
+		'''%p)
+	Flow(wrap2, None,
+		'''
+		lphfreq o2=%f n3=1 n1=51 iir=y m=2 n=2
+		| math output="arg(input)" | real 
+		window min1=0 n1=51
+		'''%p)
+	Flow(wrap,[wrap0,wrap1,wrap2],
+		'cat axis=2 ${SOURCES[1:3]}')
+Flow('wrap','wrap-0 wrap-1 wrap-2',
+	'''
+	cat axis=2 ${SOURCES[1:3]}
+	| math output="input/3.1415926"
+	| put
+	''')
+
+python = 'PYTHONPATH=%s LD_LIBRARY_PATH=%s %s' % \
+    (os.environ.get('PYTHONPATH',''),
+     os.environ.get('LD_LIBRARY_PATH',''),
+     sys.executable)
+
+Result('wrap', 'wrap Mpygraph.py',
+       python + '''
+       ${SOURCES[1]} label1="Phase" unit1="\$\pi\$"
+       label2="Normalized frequency" unit2="cycles/sample"
+       legend="ideal:N=1:N=2" wherelegend=3
+       plotcol=0 dash=0,1,2,0,1,2,0,1,2
+       min2=-1.6 max2=1.1 format="eps" 
+       ''', suffix='.eps')
+
+End()
+
+

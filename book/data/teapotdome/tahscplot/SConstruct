@@ -1,0 +1,203 @@
+from rsf.proj import *
+
+# xmin/max 788172992  809316480  that means  788172.992  809316.480 ft
+# ymin/max 939209792  976916096  that means  939209.792  976916.096 ft 
+#<../tahscscale/sxyamp.rsf sfwindow n1=1 f1=2 | sfattr  
+#      max =       2.46485 at 59 
+#      min =       0.34461 at 217 
+Flow('s_bin_amp',
+     '../tahscscale/sxyamp_st1500.rsf',
+     '''
+     window n1=1 f1=2 
+     | sfbin interp=1 xkey=0 ykey=1 head=${SOURCES[0]} \
+        xmin=788150000 xmax=809380000 nx=194 dx=110000 \
+	ymin=939180000 ymax=977020000 ny=345 dy=110000 
+     ''')
+
+Result('s_bin_amp',
+	'''
+	sfclip2 lower=0.34461  upper=2.46485 
+        | sfmath output="input-1.4"
+	| grey title="sfbin shot scalar" color=j
+	''')
+
+Flow('s_lapfill_amp',
+     's_bin_amp',
+     'sflapfill grad=n verb=y niter=2000 mask=s_bin_amp.rsf')
+Result('s_lapfill_amp',
+	'''
+	sfclip2 lower=0.34461  upper=2.46485 
+        | sfmath output="input-1.4"
+	| sfgrey title="sflapfill shot scalar" color=j
+	''')
+
+Flow('s_trishape','../tahscscale/sxyamp_st1500.rsf s_bin_amp',
+     'sftrishape pattern=${SOURCES[1]} niter=20 rest1=10 rect2=10')
+
+Result('s_trishape',
+	'''
+	sfclip2 lower=0.34461  upper=2.46485 
+        | sfmath output="input-1.4"
+	| sfgrey title="sftrishape shot scalar" color=j
+	''')
+
+
+Flow('g_bin_amp',
+     '../tahscscale/gxyamp_st1500.rsf',
+     '''
+     window n1=1 f1=2 
+     | sfbin interp=1 xkey=0 ykey=1 head=${SOURCES[0]} \
+        xmin=788150000 xmax=809380000 nx=194 dx=110000 \
+	ymin=939180000 ymax=977020000 ny=345 dy=110000 
+     ''')
+
+Result('g_bin_amp',
+	'''
+	sfclip2 lower=0.34461  upper=2.46485 
+        | sfmath output="input-1.4"
+	| grey title="sfbin group scalar" color=j
+	''')
+
+Flow('g_lapfill_amp',
+     'g_bin_amp',
+     'sflapfill grad=n verb=y niter=2000 mask=g_bin_amp.rsf')
+Result('g_lapfill_amp',
+	'''
+	sfclip2 lower=0.34461  upper=2.46485 
+        | sfmath output="input-1.4"
+	| sfgrey title="sflapfill group scalar" color=j
+	''')
+
+Flow('g_trishape','../tahscscale/gxyamp_st1500.rsf s_bin_amp',
+     'sftrishape pattern=${SOURCES[1]} niter=20 rest1=10 rect2=10')
+
+#<../tahscscale/gxyamp_st1500.rsf sfwindow n1=1 f1=2 | sfattr
+#     max =       6.27922 at 79 
+#     min =      0.152163 at 520 
+#	sfclip2 lower=-.0000806166 upper=.000576617 
+#	| sfmath output="input-.0003786"
+
+Result('g_trishape',
+	'''
+	sfclip2 lower=0.34461  upper=2.46485 
+        | sfmath output="input-1.4"
+	| sfgrey title="sftrishape receiver scalar" color=j
+	''')
+
+#< mesh.rsf sflapfill grad=y niter=20 > fill.rsf
+#< fill.rsf sfgrey allpos=1 pclip=94 crowd=.82 title="Missing filled" yreverse=n transp=n label2="north-south (km)" label1="west-east (km)" > fill.vpl
+#< fill.rsf sfwindow j2=20 | sfgraph yreverse=y crowd=.82 label1="west-east (km)" label2="depth (m)" wherexlabel=t > cros.vpl
+#< fill.rsf sfigrad | sfgrey allpos=0 pclip=94 crowd=.82 title="Filled and d/dx" yreverse=n transp=n label2="north-south (km)" label1="west-east (km)" > ruf2.vpl
+#vppen size=r vpstyle=n gridnum=2,2 mesh.vpl fill.vpl cros.vpl ruf2.vpl > Fig/locfil.vpl
+
+
+Flow('s_lintshape',
+     '../tahscscale/sxyamp_st1500.rsf',
+     '''
+     ../../../../user/karl/sflintshape2d \
+        verbose=1 \
+        xmin=788150000 xmax=809380000 nx=194 dx=110000 \
+	ymin=939180000 ymax=977020000 ny=345 dy=110000 
+     ''')
+
+Result('s_lintshape',
+	'''
+	sfclip2 lower=0.34461  upper=2.46485 
+        | sfmath output="input-1.4"
+	| grey title="s_lintshape2d shot scalar" color=j
+	''')
+Flow('g_lintshape',
+     '../tahscscale/gxyamp_st1500.rsf',
+     '''
+     ../../../../user/karl/sflintshape2d \
+        verbose=1 \
+        xmin=788150000 xmax=809380000 nx=194 dx=110000 \
+	ymin=939180000 ymax=977020000 ny=345 dy=110000 
+     ''')
+
+Result('g_lintshape',
+	'''
+	sfclip2 lower=0.34461  upper=2.46485 
+        | sfmath output="input-1.4"
+	| grey title="g_lintshape2d group scalar" color=j
+	''')
+
+Flow('shotcat','s_bin_amp.rsf s_trishape.rsf s_lintshape.rsf',
+     'cat s_trishape.rsf s_lintshape.rsf')
+Result('shotcat',
+	'''
+	sfclip2 lower=0.34461  upper=2.46485 
+        | sfmath output="input-1.4"
+	| grey title="shotcat" color=j
+	''')
+
+Flow('groupcat','g_bin_amp.rsf g_trishape.rsf g_lintshape.rsf',
+     'cat g_trishape.rsf g_lintshape.rsf')
+Result('groupcat',
+	'''
+	sfclip2 lower=0.34461  upper=2.46485 
+        | sfmath output="input-1.4"
+	| grey title="groupcat" color=j  pclip=100
+	''')
+
+
+Plot('s_bin_amp',
+	'''
+	sfclip2 lower=0.34461  upper=2.46485 
+        | sfmath output="input-1.4"
+	| grey title="sfbin shot scalar" pclip=100 color=j
+	''')
+Plot('s_lapfill_amp',
+	'''
+	sfclip2 lower=0.34461  upper=2.46485 
+        | sfmath output="input-1.4"
+	| grey title="sflapfill shot scalar" pclip=100 color=j
+	''')
+Plot('s_trishape',
+	'''
+	sfclip2 lower=0.34461  upper=2.46485 
+        | sfmath output="input-1.4"
+	| grey title="trishape shot scalar" pclip=100 color=j
+	''')
+Plot('s_lintshape',
+	'''
+	sfclip2 lower=0.34461  upper=2.46485 
+        | sfmath output="input-1.4"
+	| grey title="sflintshape shot scalar"  pclip=100 color=j
+	''')
+Result('s_compare','s_bin_amp s_lapfill_amp s_trishape s_lintshape',
+       'TwoRows')
+
+
+Plot('g_bin_amp',
+	'''
+	sfclip2 lower=0.34461  upper=2.46485 
+        | sfmath output="input-1.4"
+	| grey title="sfbin grp scalar" pclip=100 color=j
+	''')
+Plot('g_lapfill_amp',
+	'''
+	sfclip2 lower=0.34461  upper=2.46485 
+        | sfmath output="input-1.4"
+	| grey title="sflapfill grp scalar" pclip=100 color=j
+	''')
+Plot('g_trishape',
+	'''
+	sfclip2 lower=0.34461  upper=2.46485 
+        | sfmath output="input-1.4"
+	| grey title="sftrishape grp scalar" pclip=100 color=j
+	''')
+Plot('g_lintshape',
+	'''
+	sfclip2 lower=0.34461  upper=2.46485 
+        | sfmath output="input-1.4"
+	| grey title="sflintshape grp scalar" pclip=100 color=j
+	''')
+Result('g_compare','g_bin_amp g_lapfill_amp g_trishape g_lintshape',
+       'TwoRows')
+Result('sg_compare','s_trishape g_trishape s_lintshape g_lintshape',
+       'TwoRows')
+Result('sg_plot','s_bin_amp s_lintshape g_bin_amp g_lintshape',
+	'TwoRows')
+
+End()

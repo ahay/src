@@ -1,0 +1,82 @@
+from rsf.proj import *
+
+bias = 128
+
+def grey(title,transp='n',bias=bias):
+    return '''
+    sfgrey title="%s" transp=%s bias=%g clip=100
+    screenht=10 screenwd=10 crowd2=0.85 crowd1=0.8
+    label1= label2= 
+    ''' % (title,transp,bias)
+
+min = -50
+max = 50
+
+def graph(title=''):
+    return '''
+    sfgraph min2=%f max2=%f title=%s titlesz=14
+    screenratio=.75
+    ''' % (min,max,title)
+
+# fetch the data from the data server
+Fetch('lena.img','imgs')
+Flow('lena','lena.img',
+     '''
+     echo n1=512 n2=513 in=$SOURCE
+     data_format=native_uchar |
+     sfdd type=float | sfwindow f2=1 
+     ''',stdin=0)
+
+# add noise 
+Flow('nlena','lena','sfnoise seed=2006 var=1400')
+
+# plots and FX spectra
+titles = {'lena':'Lena',
+          'nlena':'Noisy Lena'}
+for name in titles.keys():
+    Plot(name,grey(titles[name]) )
+    cftitle = titles[name]+' in FX domain'
+    Flow('fx'+name,name,'sfspectra')
+    Plot('fx'+name,grey(cftitle,'y',100))
+
+# display 2x2 figs
+Result('panel1','lena nlena fxlena fxnlena','TwoRows',
+       vppen='xsize=10 ysize=10')
+
+# denoising using low-pass filtering
+Flow('lplena','nlena','sfbandpass fhi=.075')
+Plot('lplena',grey('Noisy Lena LP filtered'))
+
+# thresholding
+lg = 100.
+thr = lg/6.
+Flow('range',None,'sfmath n1=%d output="x1-%f" ' %(lg,lg/2))
+Flow('thr',None,
+     'sfmath n1=%d n2=2 output="(2*x2-1)*%f" ' %(lg,thr))
+
+Plot('range',graph('Data with threshold level') )
+Plot('thr',graph()+' dash=1')
+Plot('data','range thr','Overlay')
+
+Flow('hdata','range','sfthr thr=%f mode=hard' %thr)
+Plot('hdata',graph('Thresholded data') )
+Result('hthr','data hdata','SideBySideAniso')
+
+# 2-D FFT
+fft2 = 'sffft1 sym=y | sffft3 sym=y'
+Flow('fnlena','nlena',fft2)
+
+# denoising using thresholding in the Fourier domain
+fthr = float(ARGUMENTS.get('fthr', 70))
+Flow('fthrlena','fnlena','sfthr thr=%f mode="hard"' % fthr)
+
+# 2-D inverse FFT
+ifft2 = 'sffft3 sym=y inv=y | sffft1 sym=y inv=y '
+Flow('thrlena','fthrlena',ifft2)
+Plot('thrlena',grey('Thresholding in the Fourier domain') )
+
+# combine figures 
+Result('panel2','lplena thrlena','SideBySideIso',
+       vppen='xsize=10 ysize=10')
+
+End()

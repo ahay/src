@@ -1,0 +1,172 @@
+from rsf.proj import *
+from rsf.recipes.beg import server as private
+
+Fetch('chev.HH','chevron',private)
+
+Flow('chev','chev.HH',
+     '''
+     dd form=native |
+     put o2=7923.3979 d2=12.5 o3=10298.643 d3=12.5
+     label1=Time unit1=s label2=Inline unit2=m label3=Crossline unit3=m
+     ''')
+
+def cubeplot(title,clip='',extra=''):
+    return '''
+    window n1=34 min1=0.402 |
+    byte gainpanel=all %s |
+    transp plane=13 |
+    grey3 frame3=18 frame2=399 frame1=91 flat=y point1=0.8 point2=0.8
+    label3=Time unit3=s label2=Inline unit2=ft label1=Crossline unit1=ft
+    title="%s" %s screenratio=1 labelsz=5
+    ''' % (clip,title,extra)
+
+Result('chev',
+       '''
+       window n1=34 n2=450 n3=450 |
+       byte |
+       grey3 wanttitle=n screenht=7.25 screenratio=0.5 
+       flat=y frame1=22 frame2=183 frame3=65 point1=0.1 point2=0.5 
+       ''')
+
+
+Plot('chev',cubeplot(' '))
+
+patch = 'patch w=84,250,250 p=1,2,2 | put n4=1 n5=4 n6=1'
+
+Flow('chev-pad','chev','pad beg1=25 end1=25')
+Flow('patch','chev-pad',patch)
+Flow('mask','chev','math output=1 | pad beg1=25 end1=25 |' + patch)
+
+Flow('dip','patch mask','dip rect1=10 rect2=10 rect3=10 mask=${SOURCES[1]}',
+     split=[5,4,[0,1]])
+Flow('dipx','dip','window n4=1 | put n4=1 n5=2 n6=2 | patch inv=y weight=y')
+Flow('dipy','dip','window f4=1 | put n4=1 n5=2 n6=2 | patch inv=y weight=y')
+Flow('dips','dipx dipy','cat axis=4 ${SOURCES[1]}')
+
+Result('dipx',
+       cubeplot('Inline Dip','bar=bar1.rsf',
+                '''
+                color=j scalebar=y bar=bar1.rsf wanttitle=n
+                barlabel="Inline Dip" bartype=h
+                '''))
+Result('dipy',
+       cubeplot('Crossline Dip','bar=bar2.rsf',
+                '''
+                color=j scalebar=y bar=bar2.rsf wanttitle=n
+                barlabel="Crossline Dip" bartype=h
+                '''))
+
+Flow('shift1','chev','window f2=1')
+Flow('shift2','chev','window f3=1')
+
+Flow('last1','chev','window f2=449 squeeze=n')
+Flow('last2','chev','window f3=449  squeeze=n')
+
+Flow('ref1','shift1 last1','cat axis=2 ${SOURCES[1]}')
+Flow('ref2','shift2 last2','cat axis=3 ${SOURCES[1]}')
+
+Flow('ref1s','ref1','add mode=p $SOURCE | stack axis=1 norm=n')
+Flow('ref2s','ref2','add mode=p $SOURCE | stack axis=1 norm=n')
+
+Flow('corr1','ref1 chev','add mode=p ${SOURCES[1]} | stack axis=1 norm=n')
+Flow('corr2','ref2 chev','add mode=p ${SOURCES[1]} | stack axis=1 norm=n')
+
+Flow('chev2','chev','add mode=p $SOURCE | stack axis=1 norm=n')
+
+Flow('cos1','corr1 chev2 ref1s',
+     '''
+     math s1=${SOURCES[1]} s2=${SOURCES[2]} output="(s1*s2)/(input*input)"
+     ''')
+Flow('cos2','corr2 chev2 ref2s',
+     '''
+     math s1=${SOURCES[1]} s2=${SOURCES[2]} output="(s1*s2)/(input*input)"
+     ''')
+Flow('cos','cos1 cos2',
+     'cat axis=3 ${SOURCES[1]}')
+Flow('cost','cos',
+     '''
+     mul $SOURCE | stack axis=3 norm=n |
+     clip clip=100 |
+     put o1=0 d1=1 o2=0 d2=1 o3=0 d3=1
+     ''')
+
+Flow('time','cost',
+     'eikonal vel=n zshot=225 yshot=225')
+Result('time',
+       '''
+       grey color=j scalebar=y allpos=y
+       title="Minimum Time" transp=n yreverse=n
+       ''')
+
+Flow('pick2','dips time',
+     '''
+     pwpaint2 cost=${SOURCES[1]} |
+     clip2 lower=0.25 upper=0.75
+     ''')
+Result('pick2',cubeplot('','allpos=y','color=j wanttitle=n'))
+
+Flow('flat2','chev-pad pick2','iwarp warp=${SOURCES[1]} eps=1 n1=34 o1=0.402')
+Result('flat2',cubeplot(''))
+
+# multiple references
+
+picks = []
+for ref in ((150,150),(300,150),(300,300)):
+        pick = 'pick%d-%d' % ref
+        picks.append(pick)
+
+        time = 'time%d-%d' % ref
+        Flow(time,'cost',
+             'eikonal vel=n zshot=%d yshot=%d' % ref)
+        Flow(pick,['dips',time],
+             'pwpaint2 cost=${SOURCES[1]} eps=1')   
+
+np = len(picks)
+Flow('picks',picks,
+     'add ${SOURCES[1:%d]} | scale dscale=%g' % (np,1.0/np))
+
+Flow('flats','chev-pad picks','iwarp warp=${SOURCES[1]} eps=1 n1=34 o1=0.402')
+Result('flats',cubeplot('') + ' frame3=20')
+
+Plot('picks',
+     '''
+     window n1=34 min1=0.402 |
+     transp plane=13 |
+     contour3 frame3=18 frame2=399 frame1=91 flat=y point1=0.8 point2=0.8
+     label3=Time unit3=s label2=Inline unit2=ft label1=Crossline unit1=ft
+     wanttitle=n wantaxis=n screenratio=1 labelsz=5 plotfat=5 
+     c0=0.25 nc=11 dc=0.05
+     ''')
+Result('picks','chev picks','Overlay')
+
+
+title= {
+    'chev':'Unflattened',
+    'flats':'Flattened'
+    }
+
+for case in title.keys():
+    line = case+'-line'
+
+    Plot(line,case,
+         '''
+         reverse which=4 opt=n |
+         window n3=1 f3=150 |
+         grey title=%s
+         ''' % title[case])
+
+    slice = case+'-slice'
+    
+    Plot(slice,case,
+         '''
+         window n1=1 f1=%d |
+         grey pclip=98 transp=n yreverse=n
+         label1=x unit1=ft label2=y unit2=ft
+         title=%s 
+         ''' % ((21,22)[case=='chev'],title[case]))
+
+Result('twod','chev-line flats-line','SideBySideAniso')
+Result('slicecomp22','chev-slice flats-slice','OverUnderIso')
+
+
+End()

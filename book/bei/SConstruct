@@ -1,0 +1,10 @@
+from rsf.book import *
+
+#chapters = Split('fld conj wvs vela krch ft1 dwnc dpmv fdm trimo sg')
+chapters = Split('fld conj wvs vela krch ft1 dwnc dpmv sg')
+
+Book(chapters,author='Jon F. Claerbout',title='Basic Earth Imaging \\\\ (Madagascar version)')
+
+End(options='book',
+    use='hyperref,listings,jfc',
+    include='\\newcommand{\\RSF}{../../..}')

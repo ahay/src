@@ -1,0 +1,11 @@
+from rsf.proj import *
+
+rwemig = Program90('RWEmig')
+rweab  = Program90('RWEab')
+rweaj  = Program90('RWEaj')
+cc2rc  = Program90('CC2RC')
+c2rsinc= Program90('C2Rsinc')
+
+#Flow('test',rwemig,'spike n1=10 | ${SOURCES[0]}' )
+
+End()

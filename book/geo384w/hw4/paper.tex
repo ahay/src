@@ -1,0 +1,273 @@
+\author{Gustav Kirchhoff} 
+%%%%%%%%%%%%%%%%%%%%%%%%%
+\title{Homework 4}
+
+\begin{abstract}
+  This homework has two parts. In the theoretical part, you will
+  perform several analytical derivations: amplitudes of elastic waves,
+  geometric slant stacks, shifted-hyperbola approximations. In the
+  computational part, you will experiment with imaging reflections and
+  diffractions in two synthetic datasets and a field dataset from the
+  Gulf of Mexico.
+\end{abstract}
+
+Completing the computational part of this homework assignment requires
+\begin{itemize}
+\item \texttt{Madagascar} software environment available from \\
+  \url{http://www.ahay.org}
+\item \LaTeX\ environment with \texttt{SEGTeX} available from \\ 
+  \url{http://www.ahay.org/wiki/SEGTeX}
+\end{itemize}
+
+You are welcome to do the assignment on your personal computer by
+installing the required environments. In this case, you can obtain all
+homework assignments from the \texttt{Madagascar} repository by running
+\begin{verbatim}
+svn co http://svn.code.sf.net/p/rsf/code/trunk/book/geo384w/hw4
+\end{verbatim}
+
+\section{Theoretical part}
+
+\begin{enumerate}
+\item Consider the elastic wave equation
+\begin{equation}
+  \label{eq:ewave}
+  \rho\,\ddot{u}_i = C_{ijkl,j}\,u_{k,l} + C_{ijkl}\,u_{k,lj}\;
+\end{equation}
+in the case of an isotropic elasticity
+\begin{equation}
+  \label{eq:lame}
+  C_{ijkl} = \lambda\,\delta_{ij}\,\delta_{kl} + 
+  \mu\,(\delta_{ik}\,\delta_{jl} + \delta_{il}\,\delta_{jk})\;.
+\end{equation}
+Using the geometric representation
+\begin{equation}
+  u_i(\mathbf{x},t) = a_i(\mathbf{x})\,f\left(t-T(\mathbf{x})\right)
+  \label{eq:gwave}
+\end{equation}
+and assuming the P-wave polarization in the direction of the gradient
+of $T$, derive the elastic P-wave amplitude transport equation and
+show its similarity to the corresponding equation for the case of
+acoustic variable-density wave propagation.
+\item Consider a 2-D common-midpoint gather $G(t,x)$, which
+  contains a geometric event $A_0\,f\left(t-T(x)\right)$ with a
+  constant amplitude $A_0$ along a hyperbolic shape
+\begin{equation}
+\label{eq:hyper}
+T(x) = \sqrt{t_0^2+\frac{x^2}{v^2}}\;.
+\end{equation}
+The gather gets transformed by the slant-stack (Radon transform) operator
+\begin{equation}
+\label{eq:radon}
+R(\tau,p) = \mathbf{D}_\tau^{1/2} \int G(\tau + p x, x) d x\;.
+\end{equation}
+where $ \mathbf{D}_\tau^{1/2}$ is a waveform-correcting half-order
+derivative operator.
+
+Using the theory of geometric integration, show that $R(\tau,p)$
+will contain a geometric event $A_1(p)\,f\left(\tau-T_1(p)\right)$.
+Find $T_1(p)$ and $A_1(p)$.
+
+\item Using the hyperbolic traveltime approximation
+\begin{equation}
+T = \sqrt{\left(T_0-\frac{z}{V_0}\right)^2 + \frac{(x_0-x)^2}{V_0^2}}
+\end{equation}
+makes the geometric imaging analysis equivalent to analyzing wave
+propagation in a constant-velocity medium. In particular, we can easily
+verify that the traveltime satisfies the isotropic eikonal equation 
+\begin{equation}
+\left(\frac{\partial T}{\partial x}\right)^2 + \left(\frac{\partial T}{\partial z}\right)^2 = \frac{1}{V_0^2}\;.
+\end{equation}
+
+Suppose that you switch to the more accurate shifted-hyperbola approximation
+\begin{equation}
+T = \left(T_0-\frac{z}{V_0}\right)\,(1-\frac{1}{S}) + \frac{1}{S}\,\sqrt{\left(T_0-\frac{z}{V_0}\right)^2 + S\,\frac{(x_0-x)^2}{V_0^2}}
+\end{equation}
+
+\begin{enumerate}
+\item How would you need to modify the eikonal equation?
+\item How would you need to modify the following expressions for the escape time and location for use in the angle-domain Kirchhoff time migration?
+\begin{eqnarray}
+\hat{T} & = & \frac{T_0-z/V_0}{\cos{\theta}} \\
+\hat{x} & = & x_0 + V_0\,\left(T_0-\frac{z}{V_0}\right)\,\tan{\theta}
+\end{eqnarray}
+
+\end{enumerate}
+
+\end{enumerate}
+
+\newpage
+
+\section{Computational part}
+
+\begin{enumerate}
+\item In the first part of the computational assignment, you will experiment with 
+  imaging a synthetic seismic reflection dataset from Homework 3 using
+  prestack velocity continuation.
+
+  \inputdir{synth}
+
+\plot{data}{width=0.9\textwidth}{2-D synthetic data.}
+  \sideplot{model}{width=\textwidth}{(a) Synthetic model: curved
+    reflectors in a $V(z)$ velocity.}
+  \plot{mig}{width=0.9\textwidth}{Initial constant-velocity migration.}
+\sideplot{dmig2}{width=\textwidth}{Time migration converted to depth, with reflectors overlaid.}
+
+Figure~\ref{fig:data} shows a synthetic reflection dataset computed
+from a reflector model shown in Figure~\ref{fig:model} and assuming a
+velocity model with a constant vertical gradient $V(z) = 1.5 +
+0.36\,z$. A small amount of random noise is added to the data.
+
+Figure~\ref{fig:mig} shows an initial prestack common-offset time
+migration using a constant velocity of 1.5 km/s. 
+Figure~\ref{fig:dmig2} shows the result of prestack time
+migration after velocity continuation, extraction of a velocity slice,
+and conversion from time to depth.
+
+\begin{enumerate}
+\item Change directory 
+\begin{verbatim}
+cd hw4/synth
+\end{verbatim}
+\item Run
+\begin{verbatim}
+scons view
+\end{verbatim}
+to generate the figures and display them on your screen.
+If you are on a computer with multiple CPUs, you
+can also try
+\begin{verbatim}
+pscons view
+\end{verbatim}
+to run certain computations in parallel.
+\item Run 
+\begin{verbatim}
+pscons velcon.vpl
+\end{verbatim}
+to display a movie of the velocity continuation process.
+\item Run 
+\begin{verbatim}
+pscons semb.vpl
+\end{verbatim}
+to display a movie slicing through a semblance cube computed from
+velocity continuation.
+\item The processing flow in the \texttt{SConstruct} file involves
+  some cheating: the exact RMS velocity is used to extract the final
+  image. Modify the processing flow so that only properties estimated
+  from the data get used. 
+\end{enumerate}
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single]{synth/SConstruct}
+
+\item In the second part of the computational assignment, we will use velocity continuation again but
+  this time on a synthetic zero-offset section containing diffraction
+  events.
+
+  Figure~\ref{fig:vel} shows a famous Sigsbee synthetic velocity
+  model. We will focus on the left part of the model, which is
+  appropriate for time-domain imaging. A synthetically generated
+  zero-offset section is shown in Figure~\ref{fig:data}. 
+  
+  Our processing strategy is to extract diffractions from the data
+  (Figure~\ref{fig:dif}) and to image them using zero-offset velocity
+  continuation (Figure~\ref{fig:dimage}). In addition, we are going to
+  analyze the image by expanding it in dip angles by using dip-angle
+  migration (Figure~\ref{fig:anglemig}).
+
+\inputdir{sigsbee}
+\sideplot{vel}{width=\textwidth}{Sigsbee velocity model.}
+\plot{data}{width=0.7\textwidth}{Zero-offset synthetic data.}
+\plot{dif}{width=0.7\textwidth}{Diffractions extracted from the data
+  by plane-wave destruction.}
+\plot{dimage}{width=0.7\textwidth}{Time-migrated image of
+  diffractions.}
+\plot{anglemig}{width=0.7\textwidth}{Dip angle gathers from constant-velocity angle-domain migration.}
+
+\begin{enumerate}
+\item Change directory 
+\begin{verbatim}
+cd hw4/sigsbee
+\end{verbatim}
+\item Run
+\begin{verbatim}
+scons view
+\end{verbatim}
+to generate the figures and display them on your screen.
+If you are on a computer with multiple CPUs, you
+can also try
+\begin{verbatim}
+pscons view
+\end{verbatim}
+to run certain computations in parallel.
+\item Generate a movie displaying the velocity continuation process. Is it possible to detect velocities from focusing zero-offset diffractions?
+\item Modify the program in the \texttt{anglemig.c} file to input a variable migration velocity instead of using a constant velocity. 
+Regenerate Figure~\ref{fig:anglemig} using a variable velocity 
+\begin{verbatim}
+pscons anglemig.view
+\end{verbatim}
+Do you notice a difference?
+\item For EXTRA CREDIT, implement a method for estimating migration
+  velocity from the input data.
+\end{enumerate}
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single]{sigsbee/SConstruct}
+
+\lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single]{sigsbee/anglemig.c}
+
+\item In the final part of the computational assignment, we return to the 2-D field dataset from the Gulf of Mexico.
+The zero-offset data after a DMO stack are shown in Figure~\ref{fig:stack}.
+
+\inputdir{gulf}
+\plot{stack}{width=0.8\textwidth}{2-D field dataset from the Gulf of Mexico after DMO stack.}
+
+\begin{enumerate}
+\item Change directory 
+\begin{verbatim}
+cd hw4/gulf
+\end{verbatim}
+\item Run
+\begin{verbatim}
+scons view
+\end{verbatim}
+to generate Figure~\ref{fig:stack} and display it on your screen.
+\item Edit the \texttt{SConstruct} file to implement a processing flow involving velocity continuation and 
+angle-gather migration. Make sure to select appropriate processing parameters.
+\end{enumerate}
+
+\newpage
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single]{gulf/SConstruct}
+
+\end{enumerate}
+
+\newpage
+
+
+\section{Completing the assignment}
+
+\begin{enumerate}
+\item Change directory to \texttt{hw4}.
+\item Edit the file \texttt{paper.tex} in your favorite editor 
+      and change the first line to have your name instead of Kirchhoff's.
+\item Run
+\begin{verbatim}
+sftour scons lock
+\end{verbatim}
+to update all figures.
+\item Run
+\begin{verbatim}
+sftour scons -c
+\end{verbatim}
+to remove intermediate files.
+\item Run
+\begin{verbatim} 
+  scons pdf
+\end{verbatim}
+  to create the final document.
+\item Submit your result (file \texttt{paper.pdf}) on paper or by
+  e-mail. 
+\end{enumerate}

@@ -1,0 +1,3 @@
+uses=['sfaliasp', 'sfnoise', 'sfdip', 'sfgrey', 'sfpwd', 'sfdots', 'sfpwspray', 'sfwindow', 'sfstack', 'sfsimilarity', 'sfrtoc', 'sfmath', 'sfput', 'sfcat', 'sftransp', 'sfgraph']
+data=[]
+size=     564480

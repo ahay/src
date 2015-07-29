@@ -1,0 +1,3 @@
+uses=['sfspike', 'sfsmooth', 'sfdots']
+data=[]
+size=       2000

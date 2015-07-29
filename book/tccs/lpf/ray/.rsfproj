@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sfput', 'sfgrey', 'sfdd', 'sfwindow', 'sfpad', 'sfcat', 'sflpf', 'sfadd', 'sfstack']
+data=['data/ray/data.segy', 'data/ray/mult.segy', 'data/ray/ddata.segy', 'data/ray/dmult.segy']
+size=   10690600

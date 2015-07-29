@@ -1,0 +1,23 @@
+If $s(t)$ is the input seismic trace, then the analytical trace is defined as the complex-valued signal 
+\[
+a(t) = s(t)+i\,h(t)
+\]
+where $h(t)$ is the Hilbert transform of $s(t)$:
+\[
+h(t) =\displaystyle \frac{1}{\pi} \int \frac{s(\tau)}{t-\tau} d\tau\;.
+\]
+The signal envelope is  the positive signal
+\[
+e(t)=\sqrt{s^2(t)+h^2(t)}\;.
+\]
+A phase-rotated seismic signal is 
+\[
+p(t)=s(t)\,\cos{\phi} +h(t)\,\sin{\phi}
+\]
+where $\phi$ is the phase of rotation.
+
+In the Fourier domain, the continuous Hilbert transform is given by
+\[
+H(\omega) = -i\,\operatorname{sgn}(\omega)\,S(\omega)
+\]
+where sgn is the sign function. The discontinuity of the sign function in the frequency domain at $\omega=0$ is related to the slow $1/t$ decay of the filter impulse response in the time domain. The discontinuity at the Nyquist frequency creates additional undesirable oscillations. Different practical implementations improve the filter response by effectively smoothing the discontinuities.

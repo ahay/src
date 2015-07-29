@@ -1,0 +1,68 @@
+from rsf.proj import *
+
+tmax=80.0
+
+t=0.01 
+spline = ((3*(12-7*t),16*(2*t-3),12-11*t),
+          (40*(4-3*t),15*(11*t-12),-24*t,20-21*t))
+eps=0.0001
+
+for f in (2,4): 
+    flt = 'flt%d' % f
+    spl = spline[f//2-1]
+    ns = len(spl)-1
+
+    Flow(flt+'.asc',None,
+         '''
+         echo %s a0=%.4f n1=%d data_format=ascii_float in=$TARGET 
+         ''' % (string.join(map(str,spl[1:]),' '),spl[0]+eps,ns))
+    Flow([flt,'lag-'+flt],flt+'.asc',
+         '''
+         dd form=native | 
+         wilson niter=100 maxlag=100 lagout=${TARGETS[1]}
+         ''')
+
+for (n1,nd) in ((500,50),(50,500)):
+    d1 = 80.0/(n1-1)
+    coord = 'coord%d' % n1
+    Flow(coord,None,
+         '''
+         spike n1=%d label1= | 
+         noise rep=y rep=y type=n range=%g mean=%g seed=%d
+         ''' % (nd,tmax/2,tmax/2,n1))
+    data = 'data%d' % n1
+    Flow(data,coord,
+         '''
+         math output="(4.*(input-%g)/%g)^2" |
+         math output="0.5*cos(8*input)*exp(-input)"
+         ''' % (tmax/2,tmax))
+    bin = 'bin%d' % n1
+    Flow(bin,[data,coord],
+         'bin1 head=${SOURCES[1]} nx=%d dx=%g x0=0' % (n1,tmax/(n1-1)))
+    Result(bin,'dots dots=2 connect=0 strings=1')
+
+    for nw in (2,4):
+        mov = 'mov%d-%d' % (nw,n1)
+        Flow(mov,[data,coord,'flt%d' %nw],
+             '''
+             invrec1 head=${SOURCES[1]} filt=${SOURCES[2]} niter=30 movie=y
+             nx=%d dx=%g x0=0 nw=%d spline=%d verb=y | 
+             postfilter2 horz=n nw=%d
+             ''' % (n1,tmax/(n1-1),nw,nw > 2,nw))
+        norm = 'norm%d-%d' % (nw,n1)
+        Flow(norm,mov,
+             '''
+             math output="(4.*(x1-%g)/%g)^2" |
+             math output="0.5*cos(8*input)*exp(-input)" |
+             math res=$SOURCE output="(input-res)^2" |
+             cut n1=8 | cut f1=-8 | stack axis=1 norm=n |
+             math output="sqrt(input)"         
+             ''' % (tmax/2,tmax))
+    Result('norm%d' % n1,'norm2-%d norm4-%d' % (n1,n1),
+           '''
+           cat axis=2 ${SOURCES[1]} |
+           graph dash=1,0 title="Model convergence %d" 
+           label1=Iterations label2="Model misfit" 
+           ''' % n1)
+
+End()

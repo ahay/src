@@ -1,0 +1,23 @@
+#########################
+#      Pluto Data       #
+#########################
+from rsf.proj import *
+
+#------- Define Variables and Filenames ------#
+data = 'data.H'
+
+#------------- Import Data -------------------#
+#-- Uses ftp program Fetch
+Fetch(data ,'pluto')
+
+#----------  Convert Data --------------------#
+Flow('shot',data,
+     '''
+     dd form=native
+     ''')
+
+#---------------- Plot Data ---------------#
+Plot('shot','window j3=20 | grey gainpanel=a',view=1)
+Result('shot','window n3=1 f3=470 | grey title=Shot')
+
+End()

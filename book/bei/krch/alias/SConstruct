@@ -1,0 +1,9 @@
+from rsf.proj import *
+
+Result('alias',None,
+       '''
+       aliasp cycles=35 ix0=2 |
+       grey pclip=100 wanttitle=n screenratio=1
+       ''')
+
+End()

@@ -1,0 +1,58 @@
+from rsf.proj import *
+from rsf.gallery import vofz
+
+vofz.zero_offset('data')
+Result('data','grey title="Zero Offset" ')
+
+vofz.get_velocity('vel')
+
+# Convert to RMS
+nt=3001        
+dt=0.002
+
+Flow('x','data','window n1=1')
+Flow('velz','vel x',
+     'transp | remap1 pattern=${SOURCES[1]} | transp')
+
+Flow('vrms','velz',
+     '''
+     mul $SOURCE |
+     depth2time velocity=$SOURCE nt=%d dt=%g |
+     causint |
+     math output="sqrt(input*%g/(x1+%g))"
+     ''' % (nt,dt,dt,dt))
+
+Flow('fft','data','cosft sign2=1')
+
+Flow('vc','fft','vczo v0=0 dv=0.02 nv=151',
+     split=[2,'omp'],reduce='cat axis=3')
+
+Flow('mig','vc vrms',
+     'cosft sign3=-1 o3=1.5 | slice pick=${SOURCES[1]}')
+
+# Convert to depth
+
+Flow('vmig','mig velz','time2depth velocity=${SOURCES[1]}')
+
+vofz.zo_image('vmig')
+
+# Impulse response
+
+vofz.get_impulse('imp','data')
+
+Flow('ifft','imp','cosft sign2=1')
+
+Flow('ivc','ifft',
+     'vczo v0=0 dv=0.02 nv=151 pad2=8192',
+     split=[2,'omp'],reduce='cat axis=3')
+
+Flow('imig','ivc vrms velz',
+     '''
+     cosft sign3=-1 o3=1.5 | slice pick=${SOURCES[1]} |
+     time2depth velocity=${SOURCES[2]}
+     ''')
+
+vofz.impulse_response('imig','vel')
+
+
+End()

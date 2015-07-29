@@ -1,0 +1,278 @@
+from rsf.proj import *
+import math
+
+def velplot(title,label1='Depth',unit1='kft'):
+    return '''
+    grey color=j allpos=y title="%s" scalebar=y
+    barlabel=Velocity barunit=kft/s
+    label1=%s unit1=%s label2="Surface Position" unit2=kft
+    barreverse=y pclip=100 font=2
+    titlefat=8 labelfat=8 titlesz=14 labelsz=10
+    ''' % (title,label1,unit1)
+
+def graph(transp,o2,d2,n2,col,fat,extra=''):
+    return '''
+    graph transp=%d yreverse=y pad=n min2=%g max2=%g
+    plotcol=%d plotfat=%d wantaxis=n wanttitle=n %s font=2
+    titlefat=8 labelfat=8 titlesz=14 labelsz=10
+    ''' % (transp,o2,o2+(n2-1)*d2,col,fat,extra)
+
+def ftmatplot(title):
+    return  '''
+    real |
+    transp |
+    grey font=2  title="%s"
+    unit1=Rad/s label1="Output Frequency" 
+    unit2=s label2="Input Time" 
+    titlefat=4 labelfat=4 titlesz=14
+    wherexlabel=b wheretitle=t
+    screenratio=1.0
+    ''' % title
+def iftmatplot(title):
+    return  '''
+    real |
+    transp |
+    grey font=2  title="%s"
+    unit2=Rad/s label2="Input Frequency" 
+    unit1=s label1="Output Time"
+    titlefat=4 labelfat=4 titlesz=14
+    wherexlabel=b wheretitle=t
+    screenratio=1.0
+    ''' % title
+v0=7
+vg=1.0
+
+Flow('modl',None,
+     '''
+     spike n1=401 o1=-16 d1=0.08
+     n2=4 nsp=4 k2=1,2,3,4 mag=1,3,5,7
+     ''')
+Flow('refl',None,
+     '''
+     spike n1=401 n2=4 nsp=4 k2=1,2,3,4
+     mag=0.090,0.143,0.111,0.200
+     ''')
+Flow('mod1','modl','window min1=0')
+
+Flow('mod2',None,'math n1=150 d1=0.05 output=%g+%g*x1 n2=401 o2=-16 d2=0.08'%(v0,vg))
+Plot('modl','mod2',velplot('Model'))
+Plot('modla','mod1',graph(0,0,0.05,150,0,20,'scalebar=y'))
+Plot('modlb','mod1',graph(0,0,0.05,150,7,5,'scalebar=y'))
+Plot('modl-r','modl modla modlb','Overlay')
+Result('modl','modl modla modlb','Overlay')
+
+Flow('clean','modl refl',
+     '''
+     kirmod nt=376 dt=0.004 freq=25 refl=${SOURCES[1]}
+     ns=1 s0=0 ds=0.05
+     nh=150 h0=0.1 dh=0.05
+     vel=%g gradz=%g type=v
+     '''%(v0,vg))
+Flow('data','clean',
+     '''
+     noise rep=y seed=2004 range=0.0001 |
+     ricker1 frequency=25 |
+     add $SOURCE 
+     ''')
+Plot('data','grey title="CMP Gather" label2=Offset unit2=kft font=2 titlefat=8 labelfat=8 titlesz=14 labelsz=10')
+Result('data','modl-r data','SideBySideAniso')
+
+nx=150
+dx=0.050
+ox=0.100
+nt=376
+dt=0.004
+ot=0.0
+nf=(nt/2)+1
+df=2.0*math.pi/((nt+0)*dt)
+of=-nf*df
+
+#Get Velocity
+Flow('scan','data','vscan half=n semblance=y v0=4 nv=101 dv=0.1')
+Result('scan','grey color=j allpos=y title="Velocity Scan" unit2=kft/s')
+Plot('scan','grey color=j allpos=y title="Velocity Scan" unit2=kft/s font=2 titlefat=10 labelfat=10 titlesz=18 labelsz=14')
+Flow('pick','scan','pick rect1=40')
+
+Plot('pick',
+     '''
+     graph transp=y yreverse=y
+     title="V(t\_0\^)"
+     plotfat=10 plotcol=0
+     wanttitle=n wantaxis=n 
+     min2=4.0 max2=14 min1=0 max1=1.5 font=2
+     titlefat=10 labelfat=10 titlesz=18 labelsz=14
+     ''')
+Flow('vtx','pick',
+     '''
+     spray n=%d o=%g d=%g |
+     rtoc
+     '''%(nx,ox,dx))
+Result('vpick','scan pick','Overlay')
+Plot('semb','scan pick','Overlay')
+
+#Fourier Matrices
+Flow('iftmat','data',
+     '''
+     window n2=1 |
+     spray n=%d d=%g o=%g |
+     rtoc | put o1=0.0 |
+     math output="exp(I*x2*x1)/%g" |
+     transp |
+     put label2=Time unit2=s label1=Frequency unit1=Rad/s |
+     rotate rot1=%d 
+     '''%(nt,df,of,nt,(nf-2)))
+#Plot('iftmat','real | transp | grey font=2 title="Inverse FT Matrix"')
+Plot('iftmat',iftmatplot("Inverse FT Matrix"))
+
+Flow('ftmat','data',
+     '''
+     window n2=1 |
+     spray n=%d d=%g o=%g |
+     rtoc | put o1=0.0 |
+     math output="exp(-I*x2*x1)" |
+     put label1=Time unit1=s label2=Frequency unit2=Rad/s |
+     rotate rot2=%d 
+     '''%(nt,df,of,(nf-2)))
+#Plot('ftmat','real | transp | grey font=2 title="Forward FT Matrix"')
+Plot('ftmat',ftmatplot("Forward FT Matrix"))
+Result('ftmats','ftmat iftmat','SideBySideIso')
+
+#Test Matrix Transforms
+Flow('ftdata','data','fft1 opt=n')
+Plot('ftdata','real | grey color=j title=FTCMP label2=Offset unit2=kft')
+
+Flow('cdata','data','rtoc')
+Flow('myftdata','ftmat cdata','cmatmult2 mat=${SOURCES[1]}')
+Plot('myftdata','window n1=%d | real | grey color=j title="NSCFT"'%(nf))
+
+Flow('myiftdata','iftmat myftdata','cmatmult2 mat=${SOURCES[1]}')
+Plot('myiftdata','real | put o1=0 d1=%g | grey title="NSCIFT"'%(dt))
+
+Result('ftcompare','ftdata myftdata','SideBySideAniso')
+Result('iftcompare','data myiftdata','SideBySideAniso')
+
+#####################################################################################################
+
+#### NMO Shift
+Flow('vfloat','vtx','real | dd type=float')
+
+Flow('deltat_nmo','data vfloat',
+     '''
+     put o2=%g d2=%g | 
+     math v=${SOURCES[1]} output="(sqrt(x1*x1+(x2*x2)/(v*v))-x1)" 
+     '''%(ox,dx))
+
+#### Forward NMO Matrix
+Flow('nmomat','deltat_nmo',
+     '''
+     spray axis=3 n=%d d=%g o=%g |
+     transp plane=23 |
+     put label2=Frequency unit2=Rad/s |
+     rtoc |
+     math output="exp(I*x2*input)" |
+     rotate rot2=%d |
+     transp
+     '''%(nt,df,of,(nf-2)))
+#Plot('nmomat','window n3=1 f3=70 | real | transp | grey font=2 title="Forward NMO Matrix"')
+Flow('nmoexmpl','nmomat','window n3=1 f3=70')
+Plot('nmomat','nmoexmpl',iftmatplot("Forward NMO Matrix"))
+Result('nmomat','iftmat nmomat','SideBySideIso')
+
+#### Inverse NMO Matrix
+Flow('inmomat','deltat_nmo',
+     '''
+     spray axis=3 n=%d d=%g o=%g |
+     transp plane=23 |
+     put label2=Frequency unit2=Rad/s |
+     rtoc |
+     math output="exp(-I*x2*input)" |
+     rotate rot2=%d 
+     '''%(nt,df,of,(nf-2)))
+#Plot('inmomat','window n3=1 f3=70 | real | transp | grey font=2 title="Inverse NMO Matrix"')
+Flow('inmoexmpl','inmomat','window n3=1 f3=70')
+Plot('inmomat','inmoexmpl',ftmatplot("Inverse NMO Matrix"))
+Result('inmomat','ftmat inmomat','SideBySideIso')
+
+Flow('alpha_nmo','vfloat',
+     '''
+     deriv order=1 |
+     math v=${SOURCES[0]} output="(x1-x2*x2*input)/sqrt(x1*x1+x2*x2/(v*v))" | 
+     rtoc
+     ''')
+
+###  APPLY NMO+INMO
+tracelist=[]
+tracelist2=[]
+tracelist3=[]
+for i in range(nx):
+      
+    fop='nmoop-%d'%(i)
+    Flow(fop,'nmomat iftmat','window n3=1 f3=%d | add mode=p ${SOURCES[1]}'%(i))
+
+    fintrace='fintrace-%d'%(i)
+    Flow(fintrace,'myftdata','window n2=1 f2=%d'%(i))
+    
+    outtrace='outrace-%d'%(i)
+    Flow(outtrace,[fintrace,fop],'cmatmult mat=${SOURCES[1]} | put o1=%g d1=%g'%(ot,dt))
+    tracelist.append(outtrace)
+
+    iop='inmoop-%d'%(i)
+    Flow(iop,'inmomat ftmat','window n3=1 f3=%d | add mode=p ${SOURCES[1]}'%(i))
+
+    unstretch='alpha-%d'%(i)
+    Flow(unstretch,'alpha_nmo','window n2=1 f2=%d'%(i))
+
+    outtrace2='outrace2-%d'%(i)
+    Flow(outtrace2,[outtrace,iop,'iftmat',unstretch],
+         'add ${SOURCES[3]} mode=p | cmatmult mat=${SOURCES[1]} | cmatmult mat=${SOURCES[2]} | put o1=%g d1=%g'%(ot,dt))
+    tracelist2.append(outtrace2)
+    
+    outtrace3='outrace3-%d'%(i)
+    Flow(outtrace3,[outtrace,iop,'iftmat'],
+         'cmatmult mat=${SOURCES[1]} | cmatmult mat=${SOURCES[2]} | put o1=%g d1=%g'%(ot,dt))
+    tracelist3.append(outtrace3)
+    
+
+Flow('nmod',tracelist,'cat ${SOURCES[1:%d]} axis=2 '%(nx))
+Plot('nmod','real | grey title=NMO label2=Offset unit2=kft font=2 titlefat=10 labelfat=10 titlesz=18 labelsz=14')
+Result('nmod','data nmod','SideBySideAniso')
+
+Flow('inmod',tracelist2,'cat ${SOURCES[1:%d]} axis=2 '%(nx))
+Plot('inmod','real | grey title=INMO label2=Offset unit2=kft font=2 titlefat=10 labelfat=10 titlesz=18 labelsz=14')
+Result('inmod','data inmod','SideBySideAniso')
+
+Flow('inmod-noalpha',tracelist3,'cat ${SOURCES[1:%d]} axis=2 '%(nx))
+Plot('inmod-noalpha','real | grey title=INMO label2=Offset unit2=kft')
+Result('inmod-noalpha','data inmod-noalpha','SideBySideAniso')
+
+Result('nmo','semb nmod inmod','SideBySideAniso')
+
+### Show Stretch
+
+trace=40
+def traceplot(color,extra=''):
+    return  '''
+    graph wanttitle=n plotcol=%d min2=-0.002 max2=0.003 max1=1.0 %s
+    font=2 titlefat=4 labelfat=4 titlesz=14
+    ''' % (color,extra)
+
+Flow('trace-in','data','window n2=1 f2=%d'%(trace))
+Plot('trace-in',traceplot(4))
+
+Flow('trace-nmod','nmod','window n2=1 f2=%d | real'%(trace))
+Plot('trace-nmod',traceplot(3,'plotfat=5'))
+
+Flow('trace-inmod','inmod','window n2=1 f2=%d | real'%(trace))
+Plot('trace-inmod',traceplot(5,'symbol=+ symbolsz=6'))
+
+Flow('trace-inmodna','inmod-noalpha','window n2=1 f2=%d | real'%(trace))
+Plot('trace-inmodna',traceplot(6,'symbol=* symbolsz=6 wanttitle=y title="NMO Stretch"'))
+
+Result('stretch','trace-in trace-nmod trace-inmod trace-inmodna','Overlay')
+
+
+## Conventional NMO
+Flow('nmo-conventional','data pick','nmo velocity=${SOURCES[1]} half=n str=0.0')
+Plot('nmo-conventional','grey title="Conventional NMO" label2=Offset unit2=kft')
+Result('nmo-compare','data nmod nmo-conventional','SideBySideAniso')
+End()

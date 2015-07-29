@@ -1,0 +1,52 @@
+import sys, os
+sys.path.append('../../framework')
+import bldutil
+
+sources = Split('rsf cub')
+
+try: # distribution version
+    Import('env root libdir incdir')
+    env = env.Clone()
+except: # local version
+    env = bldutil.Debug()
+    root = None
+    SConscript('../c/SConstruct')
+
+dynpre = env.get('DYNLIB','')
+
+env.Prepend(CPPPATH=['../../include'],
+            LIBPATH=['../../lib'],
+            LIBS=[dynpre + 'rsf'])
+
+dynlib = ('-static-intel' not in env.get('LINKFLAGS',''))
+dlibs = ['drsf']+env.get('LIBS',[])
+
+if 'c++' in env.get('API',[]):
+    ccfiles = map(lambda x: x+'.cc',sources)
+    hhfiles = map(lambda x: x+'.hh',sources)
+    dobjects = map(env.SharedObject,ccfiles)
+
+    lib = env.StaticLibrary('rsf++',ccfiles,CCFLAGS='')
+    env.Install('../../lib',lib)
+    env.Install('../../include',hhfiles)
+
+    if root:
+        env.Install(libdir,lib)
+        env.Install(incdir,hhfiles)
+
+    if dynlib:
+        dlib = env.SharedLibrary('rsf++',dobjects,SHLIBPREFIX='libd',LIBS=dlibs)
+        env.Install('../../lib',dlib)
+
+        if root:
+            install = env.Install(libdir,dlib)
+
+            if dynpre and env['PLATFORM'] == 'darwin':                
+                env.AddPostAction(install,
+                '%s -change build/api/c/libdrsf.dylib '
+                '%s/libdrsf.dylib %s' % \
+                (WhereIs('install_name_tool'),libdir,install[0]))
+                             
+    for file in ['getpar','file']:
+        test = 'Test' + file + '.cc'
+        env.Program(file,[test,lib],PROGSUFFIX='.x',PROGPREFIX='Test')

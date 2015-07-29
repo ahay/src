@@ -1,0 +1,6 @@
+GRIDPP Unit Test 5
+create GridDCF, GridDC, tmp file not unlinked, assign
+5.0 to all data samples, compute max and min
+test5 result: max=5 min=5
+temp files not unlinked
+

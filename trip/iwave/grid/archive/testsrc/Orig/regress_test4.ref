@@ -1,0 +1,6 @@
+GRIDPP Unit Test 4
+construct GridDCF, write method
+GridDCF: factory class for GridDC
+precision: decimal digits = 6
+Prototype RSF filename = testgrid.rsf
+

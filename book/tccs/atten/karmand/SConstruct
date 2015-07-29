@@ -1,0 +1,280 @@
+# Nonlinear estimation of von Karman autocorrelation in 1D Fourier domain for well data
+#
+# July 2008
+#
+# Thomas Jules Browaeys 
+# Bureau of Economic Geology
+# University of Texas at Austin
+# mailto:jules.browaeys@beg.utexas.edu
+
+
+from rsf.proj import *
+from rsf.recipes.beg import server as private
+from math import pi
+
+# ----------------------------------------------------------------------
+# WELL LOG DATA RHO,VP,VS
+# ----------------------------------------------------------------------
+
+# WELLS A & B
+# DATA (07): z(col=0), rho(col=5), VP(col=6), VS(col=7)
+
+# WELLS C & D
+# DATA (04): z(col=0), rho(col=1), VP(col=2), VS(col=3)
+
+# Data files
+dfiles = {'A':'07-23-36-10.txt',
+          'B':'07-26-36-10.txt',
+          'C':'04-02-37-10.txt',
+          'D':'04-13-36-10.txt'
+          }
+
+Fetch(dfiles.values(),'apache',private)
+
+# Grids 1-D and data type
+pgrids = {'A':{'nx':7033, 'ny':8, 'ox':155.875, 'dx':0.125},
+          'B':{'nx':7044, 'ny':8, 'ox':157.125, 'dx':0.125},
+          'C':{'nx':6921, 'ny':4, 'ox':142.5,   'dx':0.125},
+          'D':{'nx':7113, 'ny':4, 'ox':161.75,  'dx':0.125}
+          }
+
+# Frequency restriction and plot parameters
+fcbpms = {
+    # Well A - VP
+    'A1':{'bp':0.7847,   'fc1':0.6784,      'fc2':1.4850278,
+          'bp1':6.698,   'bp2':0.349,       'bp3':1.,
+          'col':6,
+          'optsig':'title="Sonic log \F5 V\F2 \_P\^ \k100 \k100 Well 1" format2=%3.1f',
+          'optrfs':'title="Sonic log V\_P\^ spectrum - Well 1" format2=%3.1f',
+          'optest':'title="Estimation on sonic log \F5 V\F2 \_P\^ \k100 \k100 Well 1"',
+          'optesr':'title="Restriction for sonic log \F5 V\F2 \_P\^ \k100 \k100 Well 1"',
+          'min2sc':-0.9, 'max2sc':0.9},
+    # Well A - VS
+    'A2':{'bp':1.0466,   'fc1':0.5069,      'fc2':1.430250,
+          'bp1':5.9241,  'bp2':0.2833,      'bp3':1.,
+          'col':7,
+          'optsig':'title="Sonic log V\_S\^ - Well 1" format2=%3.1f',
+          'optrfs':'title="Sonic log V\_S\^ spectrum - Well 1" format2=%3.1f',
+          'optest':'title="Estimation - V\_S\^ - Well 1"',
+          'optesr':'title="Restriction - V\_S\^ - Well 1"',
+          'min2sc':-1.1, 'max2sc':1.1},
+    # Well B - VP
+    'B1':{'bp':1.89926,  'fc1':0.6133,      'fc2':1.681,
+          'bp1':5.34,    'bp2':1.0,         'bp3':1.,
+          'col':6,
+          'optsig':'title="Sonic log V\_P\^ - Well 2" format2=%3.1f',
+          'optrfs':'title="Sonic log V\_P\^ spectrum - Well 2" format2=%3.1f',
+          'optest':'title="Estimation - V\_P\^ - Well 2"',
+          'optesr':'title="Restriction - V\_P\^ - Well 2"',
+          'min2sc':-1.1, 'max2sc':1.1},
+    # Well B - VS
+    'B2':{'bp':2.84062,  'fc1':0.68047651,  'fc2':1.518522,
+          'bp1':3.0759,  'bp2':4.5,         'bp3':1.,
+          'col':7,
+          'optsig':'title="Sonic log V\_S\^ - Well 2" format2=%3.1f',
+          'optrfs':'title="Sonic log V\_S\^ spectrum - Well 2" format2=%3.1f',
+          'optest':'title="Estimation - V\_S\^ - Well 2"',
+          'optesr':'title="Restriction - V\_S\^ - Well 2"',
+          'min2sc':-1.4, 'max2sc':1.4},
+    # Well C - VP
+    'C1':{'bp':1.3377,   'fc1':0.5198378,   'fc2':1.854343528,
+          'bp1':7.21752, 'bp2':0.3,         'bp3':1.,
+          'col':2,
+          'optsig':'title="Sonic log V\_P\^ - Well 3" format2=%3.1f',
+          'optrfs':'title="Sonic log V\_P\^ spectrum - Well 3" format2=%3.1f',
+          'optest':'title="Estimation - V\_P\^ - Well 3"',
+          'optesr':'title="Restriction - V\_P\^ - Well 3"',
+          'min2sc':-0.9, 'max2sc':0.9},
+    # Well C - VS
+    'C2':{'bp':1.246,    'fc1':0.558081343, 'fc2':1.99418703,
+          'bp1':5.01091, 'bp2':0.352044,    'bp3':1.,
+          'col':3,
+          'optsig':'title="Sonic log \F5 V\F2 \_S\^ \k100 \k100 Well 3" format2=%3.1f  n2tic=5 o2num=-1.0 d2num=0.5',
+          'optrfs':'title="Sonic log V\_S\^ spectrum - Well 3" format2=%3.1f',
+          'optest':'title="Estimation on sonic log \F5 V\F2 \_S\^ \k100 \k100 Well 3"',
+          'optesr':'title="Restriction for sonic log \F5 V\F2 \_S\^ \k100 \k100 Well 3"',
+          'min2sc':-1.4, 'max2sc':1.4},
+    # Well D - VP
+    'D1':{'bp':0.638323, 'fc1':0.706749585, 'fc2':1.82077179,
+          'bp1':2.5841,  'bp2':0.19704,     'bp3':1.,
+          'col':2,
+          'optsig':'title="Sonic log V\_P\^ - Well 4" format2=%3.1f',
+          'optrfs':'title="Sonic log V\_P\^ spectrum - Well 4" format2=%3.1f',
+          'optest':'title="Estimation - V\_P\^ - Well 4"',
+          'optesr':'title="Restriction - V\_P\^ - Well 4"',
+          'min2sc':-0.9, 'max2sc':0.9},
+    # Well D - VS
+    'D2':{'bp':0.57290,  'fc1':0.706749585, 'fc2':1.82077179,
+          'bp1':2.5841,  'bp2':0.19704,     'bp3':1.,
+          'col':3,
+          'optsig':'title="Sonic log V\_S\^ - Well 4" format2=%3.1f',
+          'optrfs':'title="Sonic log V\_S\^ spectrum - Well 4" format2=%3.1f',
+          'optest':'title="Estimation - V\_S\^ - Well 4"',
+          'optesr':'title="Restriction - V\_S\^ - Well 4"',
+          'min2sc':-0.9, 'max2sc':0.9} 
+          }
+
+
+for soniclog in fcbpms.keys():
+
+    well = soniclog[0]
+    tsonic = soniclog[1]
+    
+    dfile = dfiles[well]
+    pgrid = pgrids[well]
+    
+    fcbpm = fcbpms[soniclog]
+    
+    pgrid['col'] = fcbpm['col']
+
+    # Files
+    sonic    = 'sonic'    + soniclog
+    mscale   = 'mscale'   + soniclog
+    msonic   = 'msonic'   + soniclog
+    signal   = 'signal'   + soniclog
+    fsignal  = 'fsignal'  + soniclog
+    rfsignal = 'rfsignal' + soniclog
+
+    # Sonic log signal
+    Flow(sonic,dfile,
+         '''
+         echo n1=%(ny)d n2=%(nx)d o2=%(ox)g d2=%(dx)g in=$SOURCE data_format=ascii_float |
+         dd form=native | transp |
+         window n1=%(nx)d n2=1 f2=%(col)d |
+         put label1=Depth unit1=m label2=Velocity unit2=m/s
+         ''' % pgrid)
+
+    # Plot
+    Result(sonic,'graph title="Sonic well log"')
+    
+    # Shift and scale by mean signal
+    Flow(mscale,sonic,'stack axis=1 norm=n | math output="input*%g"' % (1./pgrid['nx']))
+    Flow(msonic,mscale,'spray axis=1 n=%d o=%g' % (pgrid['nx'],pgrid['ox']))
+    Flow(signal,[sonic,msonic],'math r=${SOURCES[0]} m=${SOURCES[1]} output="r/m-1."')
+
+    # Plot scaled signal
+    Result(signal,
+           '''
+           graph min1=%g max1=%g min2=%g max2=%g label2="V/V\_0\^\k60 \F15 8\F2 1" unit2= %s parallel2=n font=2
+           ''' % (pgrid['ox'],pgrid['ox']+(pgrid['nx']-1.)*pgrid['dx'],fcbpm['min2sc'],fcbpm['max2sc'],fcbpm['optsig'] ))
+
+    # Discrete Fourier Transform (fft) (k=0,N-1)
+    Flow(fsignal,signal,'fft1 sym=y')
+    Flow(rfsignal,fsignal,'add abs=y | real | put label1=f unit1=1/m label2= unit2=')
+    
+    # Files
+    irfsignal = 'irfsignal' + soniclog
+    fitfilt   = 'fitfilt'   + soniclog
+    illbfilt  = 'illbfilt'  + soniclog
+    lifsignal = 'lifsignal' + soniclog
+    lfsignal  = 'lfsignal'  + soniclog
+    illsignal = 'illsignal' + soniclog
+    llsignal  = 'llsignal'  + soniclog
+
+    llisignalf = 'llisignalf' + soniclog
+    
+    
+    # ------------------------------------------
+    # INVERSION FOR VON KARMAN FILTER PARAMETERS 
+    # ------------------------------------------
+    # Estimation of von Karman filter logarithm in spectral domain
+    # Separable least squares for exponent and amplitude
+    # Newton algorithm on nonlinear parameter b*b
+
+    Flow(irfsignal,rfsignal,'karman verb=y niter=100 x0=.2')
+
+    # Plot spectrum and estimation
+    Result(fitfilt,[rfsignal, irfsignal],
+           '''
+           cat ${SOURCES[0:2]} axis=2 |
+           put label2= unit2= label1=f unit1=1/m |
+           graph min1=0. min2=0. max1=1. max2=2.5 %s parallel2=n plotfat=1,5
+           ''' % fcbpm['optrfs'],stdin=0)
+
+    # Logarithmic plots
+    Flow(illbfilt,irfsignal,'math output="log(1.+((%g)*x1)^2)"' % (2.*pi*fcbpm['bp']))
+    Flow(lifsignal,irfsignal,'math output="log(input)"')
+    Flow(lfsignal,rfsignal,'math output="log(input)"')
+    Flow(illsignal,[illbfilt, lifsignal],'cmplx ${SOURCES[0:2]}',stdin=0)
+    Flow(llsignal,[illbfilt, lfsignal],'cmplx ${SOURCES[0:2]}',stdin=0)
+
+    # Plot nonlinear spectral estimation 
+    Result(llisignalf,[llsignal, illsignal],
+           '''
+           cat ${SOURCES[0:2]} axis=2 |
+           graph label1="Ln[1+(k\F5 b\F2 )\^2\_ ]" unit1= label2="Ln[F(k)]" unit2= 
+           min1=0. max1=6.0 min2=-9. max2=1. %s parallel2=n plotfat=1,5 font=2
+           ''' % fcbpm['optest'],stdin=0)
+
+    
+    # ---------------------------------------------
+    # DOMAIN RESTRICTIONS FOR PARAMETERS ESTIMATION
+    # ---------------------------------------------
+
+    # Clipping frequencies are f = sqrt(exp( )-1)/(2.*pi*b)
+    # Close initial guess -> converge
+
+    for restricd in ('L', 'M', 'H'):
+
+        rrfsignal  = 'rrfsignal'  + soniclog + restricd
+        irrfsignal = 'irrfsignal' + soniclog + restricd
+        rfitfilt   = 'rfitfilt'   + soniclog + restricd
+        
+        irllbfilt  = 'irllbfilt'  + soniclog + restricd
+        lirfsignal = 'lirfsignal' + soniclog + restricd
+        lrfsignal  = 'lrfsignal'  + soniclog + restricd
+        irllsignal = 'irllsignal' + soniclog + restricd
+        rllsignal  = 'rllsignal'  + soniclog + restricd
+
+        rllisignalf = 'rllisignalf' + soniclog + restricd
+        
+        if restricd == 'L':
+
+            # Restriction - Low frequency
+            Flow(rrfsignal,rfsignal,'window max1=%g' % (fcbpm['fc1']))
+
+        elif restricd == 'M':
+
+            # Restriction - Medium frequency
+            Flow(rrfsignal,rfsignal,'window min1=%g max1=%g' % (fcbpm['fc1'],fcbpm['fc2']))
+
+        elif restricd == 'H':
+
+            # Restriction - High frequency
+            Flow(rrfsignal,rfsignal,'window min1=%g' % (fcbpm['fc2']))
+
+            
+        # Parameters spectral estimation 
+        Flow(irrfsignal,rrfsignal,'karman verb=y niter=100 x0=.1')
+
+        # Plot spectrum and estimation 
+        Result(rfitfilt,[rrfsignal, irrfsignal],
+               '''
+               cat ${SOURCES[0:2]} axis=2 |
+               put label2= unit2= label1=f unit1=1/m |
+               graph min1=0. min2=0. max1=1. max2=2.5
+               title="Spectrum F(k) restricted" parallel2=n plotfat=1,5           
+               ''',stdin=0)
+
+        # Logarithmic plots
+        if restricd == 'L':
+            Flow(irllbfilt,irrfsignal,'math output="log(1.+((%g)*x1)^2)"' % (2.*pi*fcbpm['bp1']))
+        elif restricd == 'M':
+            Flow(irllbfilt,irrfsignal,'math output="log(1.+((%g)*x1)^2)"' % (2.*pi*fcbpm['bp2']))
+        elif restricd == 'H':
+            Flow(irllbfilt,irrfsignal,'math output="log(1.+((%g)*x1)^2)"' % (2.*pi*fcbpm['bp3']))
+
+        Flow(lirfsignal,irrfsignal,'math output="log(input)"')
+        Flow(lrfsignal,rrfsignal,'math output="log(input)"')
+        Flow(irllsignal,[irllbfilt, lirfsignal],'cmplx ${SOURCES[0:2]}',stdin=0)
+        Flow(rllsignal,[irllbfilt, lrfsignal],'cmplx ${SOURCES[0:2]}',stdin=0)
+
+        # Plot nonlinear spectral estimation
+        Result(rllisignalf,[rllsignal, irllsignal],
+               '''
+               cat ${SOURCES[0:2]} axis=2 |
+               graph label1="Ln[1+(k\F5 b\F2 )\^2\_ ]" unit1= label2="Ln[F(k)]" unit2= 
+               min1=0. max1=5.5 min2=-9. max2=1. %s parallel2=n plotfat=1,5 font=2
+               ''' % fcbpm['optesr'],stdin=0)
+
+End()

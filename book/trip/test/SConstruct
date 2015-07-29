@@ -1,0 +1,7 @@
+from rsf.tex import *
+
+Paper('liu',
+      lclass='cwphandout',
+      use='graphicx,amsmath')
+
+End()

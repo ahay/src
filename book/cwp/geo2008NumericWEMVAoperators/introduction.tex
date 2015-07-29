@@ -1,0 +1,209 @@
+\section{Introduction}
+
+%% 
+ % the need for velocity estimation
+ %%
+
+Accurate wave-equation depth imaging requires accurate knowledge of a
+velocity model. The velocity model is used in the process of wavefield
+reconstruction, irrespective of the method used to solve the acoustic
+wave-equation, e.g. by integral methods (Kirchhoff migration), or by
+differential/spectral methods (migration by wavefield extrapolation
+and reverse-time migration).
+
+%% 
+ % velocity estimation strategies (tomography vs. MVA)
+ % what is the difference between tomography and MVA?
+ %%
+
+Generally-speaking, there are two possible strategies for velocity
+estimation from surface seismic data in the context of wavefield depth
+migration. The two strategies differ by the domain in which the
+information used to update the velocity model is collected. The first
+strategy is formulated in the \textit{data space}, prior to migration,
+and it involves matching of recorded and simulated data using an
+approximate (background) velocity model. Techniques in this category
+are known by the name of tomography (or inversion).  
+%\onecolumn 
+The
+second strategy is formulated in the \textit{image space}, after
+migration, and it involves measuring and correcting image features
+that indicate model inaccuracies. Techniques in this category are
+known as migration velocity analysis (MVA), since they involve
+migrated images and not the recorded data directly.
+
+%% 
+ % implementation strategies for MVA and tomography?
+ % (rays vs. waves)
+ %%
+
+Tomography and migration velocity analysis can be implemented in
+various ways that can be classified based on the carrier of
+information from the data or image to the velocity model. Thus, we can
+distinguish between \textit{ray-based} methods and \textit{wave-based}
+methods. This terminology is applicable to both tomography and
+migration velocity analysis.
+% rays
+For ray-based methods, the carrier of information are wide-band rays
+traced using a background velocity model from picked events in the
+data (or image). Methods in this category are known as
+\textit{traveltime tomography} \cite[]{GEO50-06-09030923} and
+\textit{traveltime MVA}, sometimes described as image-space traveltime
+tomography
+\cite[]{GEO57-05-06800692,AlYahya.thesis,Fowler.thesis,Etgen.thesis,GEO60-02-04760490,GEO66-03-08450860,GEO67-04-12021212,GEO67-04-12131224,GEO68-03-10081021,GPR52-06-06710681,GEO69-02-05330546}.
+% waves
+For wave-based methods, the carrier of information are band-limited
+wavefields constructed using a background velocity model. Methods in
+this category are known as \textit{wave-equation tomography}
+\cite[]{GEO51-07-13871403,tarantola.elsevier,GEO54-12-15751586,GEO57-01-00150026,GEO64-03-08880901,2004_Pratt_BPsalt},
+and \textit{wave-equation MVA}
+\cite[]{BiondiSava.segab.1999,SavaBiondi.gp.wemva1,SavaBiondi.gp.wemva2,ShenSymes.segab.2005,Albertin.eageab.2006,MaharramovAlbertin.segab.2007}.
+This paper concentrates on methods from the latter category.
+
+%% 
+ % why are waves better than rays?
+ %%
+
+The volume of information used for model updates using wave-based
+methods is at least one order of magnitude larger than the volume of
+information used for ray-based methods. Thus, a fundamental
+question we should ask is what is gained by using wave-based
+methods over ray-based methods. First, modern imaging
+applications using wave-based methods (downward continuation or
+reverse-time extrapolation) require consistent velocity estimation
+methods which interact with model in the same frequency band as the
+migration methods. Second, wave-based methods are robust
+(i.e. stable) for models with large and sharp velocity variations
+(e.g. salt). Third, wave-based methods describe naturally all
+propagation paths, thus they can easily handle multi-pathing
+characterizing wave propagation in media with large velocity
+variations.
+
+%% 
+ % WE tomography vs. WE MVA
+ % match data or match images
+ %%
+
+Wave-equation tomography and wave-equation MVA have both similarities
+and differences.
+%
+Wave-equation tomography uses the advantage that the residual used for
+velocity updating is obtained by a direct comparison between recorded
+and measured data. In contrast, wave-equation MVA uses the property
+that the residual used for velocity updating is obtained by a
+comparison between a reference image and an improved version of it.
+%
+On the other hand, wave-equation tomography has the disadvantage that
+the kinematics of events in the data domain are more complex than in
+the image domain. In addition, the dimensionality of the space in
+which to evaluate the misfit between recorded and simulated data is
+higher too, potentially making a comparison more complex.
+%
+Also, wave-equation MVA optimizes directly the desired end product,
+i.e. the migrated image, which potentially makes this technique more
+``interpretive'' and less of a computational ``black-box''.
+
+%% 
+ % where does MVA information come from?
+ % (moveout vs. focusing)
+ % (offset-gathers vs. angle-gathers)
+ %%
+
+One important component of MVA methods is what type of measurement on
+migrated images is used to evaluate its deficiencies. Although
+strictly related to one-another, we can describe two kinds of
+information available to quantify image quality. First is
+\textit{focusing analysis}, which evaluates whether point-like events,
+e.g. fault truncations, are focused in migrated images at their
+correct position. Image enhancement for wave-equation MVA can be
+formulated purely based on this type of information, which makes the
+techniques fast since it only operates with zero-offset data
+\cite[]{Sava.geo.fva}. Second is \textit{moveout analysis}, which is
+the case for all conventional MVA techniques, whether using rays or
+waves. In this case, we can formulate wave-equation MVA based on
+analysis of moveout of common-image gathers using velocity scans
+\cite[]{BiondiSava.segab.1999,SavaBiondi.gp.wemva1,SavaBiondi.gp.wemva2,SoubarasGratacos.2007}
+or based on analysis of differential semblance of nearby traces in
+similar common-image gathers \cite[]{ShenSymes.segab.2005}.
+
+%% 
+ % can also use amplitude information! (4D - Albertin)
+ %%
+
+Moveout analysis requires construction of common-image gathers (CIGs)
+characterizing the dependence of reflectivity function of various
+parameters used to parametrize multiple experiments used for
+imaging. There are two main alternatives for common-image gather
+construction. First, we can construct \textit{offset-domain} CIGs
+\cite[]{GEO49-10-16641674}, when reflectivity depends on
+source-receiver offset on the acquisition surface, which is a data
+parameter. Second, we can construct \textit{angle-domain} CIGs
+\cite[]{GEO55-09-12231234, SEG-1999-08240827, SEG-2000-08300833,
+GEO67-03-08830889, XieWu.adcig, GEO68-03-10651074, SEG-2003-08890892,
+Fomel.seg.3dadcig, GEO69-05-12831298}, when reflectivity depends on
+the angles of incidence at the reflection point, which is an image
+parameter. For wave-equation migration, offset-domain CIGs are not a
+practical solution, since the information from multiple offsets (or
+multiple seismic experiments) mixes in the process of
+migration. Furthermore, angle-domain CIGs suffer from fewer artifacts
+than offset-domain CIGs, due to the fact that reflectivity
+parametrization for angle-gathers occurs after wavefield
+reconstruction in the subsurface, as oppose to offset-gathers when
+reflectivity parametrization is related to data parameters
+\cite[]{GEO69-02-05620575}.
+
+%% 
+ % what is the problem with wave-based methods?
+ %%
+
+Both wave-equation tomography and wave-equation MVA methods are based
+on a fundamental ``small perturbation'' assumption, which requires a
+reasonably-good starting model. This requirement represents a drawback
+which is responsible for the main difficulty of methods in both
+categories. For wave-equation tomography or inversion, we can update
+models based on differences between recorded and simulated data. If
+the starting background model is not accurate enough, we run the risk
+of subtracting wavefields corresponding to different events. Likewise,
+for wave-equation MVA, we update the model based on differences
+between two images, one simulated in the background model and an
+enhanced version of this image. If the enhanced version of the image
+goes too far from the reference image, we run the risk of subtracting
+events corresponding to different reflectors. This phenomenon is
+usually referred-to in the literature as ``cycle skipping'' and
+various strategies have been designed to ameliorate this problem,
+e.g. by optimal selection of frequencies used for velocity analysis
+\cite[]{GEO69-01-02310248,AlbertinFreq}. However, alternative methods
+used to evaluate image accuracy, e.g. differential semblance
+\cite[]{GEO56-05-06540663,SEG-2003-21322135}, have the best potential
+to ameliorate this situation. In this case wave-equation MVA analyzes
+difference between image traces within common-image gathers which are
+likely to be similar enough from one-another such as to avoid the
+cycle-skipping problem. Even in this case, the assumption made is that
+the nearby traces in a gather are sampled well-enough, i.e. the
+seismic events differ by only a fraction of the wavelet, which is a
+function of image sampling and frequency content. In practice, there
+is no absolute guarantee that nearby events are closely related to one
+another, although this is more likely to be true for DSO than it is
+for direct image differencing.
+
+%% 
+ % what are we discussing about in this paper?
+ %%
+
+In this paper, we concentrate on the implementation of the
+wave-equation migration velocity analysis operators for various
+wave-equation migration configurations. The main objective of the
+paper is to derive the linearized operators linking perturbations of
+the slowness model to the corresponding perturbations of the seismic
+wavefield and image. All our theoretical development is formulated
+under the single scattering (Born) approximation applied to acoustic
+waves. We begin by describing the MVA operators corresponding to
+zero-offset, survey-sinking and shot-record wave-equation migration
+frameworks.  We describe the theoretical background for each operator
+and emphasize the similarities and differences between the different
+operators.  Throughout the paper, we use pseudo-code to illustrate
+implementation strategies and data flow for the various wave-equation
+MVA operators. Finally, we illustrate the wave-equation MVA operators
+with impulse responses corresponding to simple and complex models. We
+leave outside the scope of this paper the procedure in which the
+discussed operators are used for migration velocity analysis.

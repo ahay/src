@@ -1,0 +1,64 @@
+from rsf.proj import *
+from rsf.recipes.beg import server as private
+
+Fetch('elfgath.rsf','elf',private)
+
+Flow('gath','elfgath','dd form=native | put unit1=s unit2=m label2=Offset d2=25 o2=100')
+Plot('gath','grey labelsz=12 titlesz=12.5 title="(a) Input" ')
+
+Flow('mask','gath','math output=1 | pad n1=1000')
+Flow('gpad','gath','pad n1=1000')
+
+Flow('dip','gpad mask','dip rect1=10 rect2=10 p0=0 pmin=0 mask=${SOURCES[1]} order=2')
+Plot('dip','window n1=800 | grey labelsz=12 titlesz=12.5 color=j title="(b) Slope" allpos=y')
+
+Flow('trace','dip','window n2=1 | math output=x1')
+Flow('pick','dip trace','pwpaint seed=${SOURCES[1]} eps=0.05 order=2')
+Plot('pick0','pick',
+     '''
+     window n1=800 |
+     grey labelsz=12 titlesz=12.5 color=j allpos=y
+     title="(d) Relative Age" clip=3.2
+     ''')
+Plot('pick1','pick',
+     '''
+     window n1=800 |
+     contour c0=0 dc=0.05 nc=64
+     transp=y yreverse=y plotcol=7 plotfat=5
+     wanttitle=n wantaxis=n
+     ''')
+Plot('pick','pick0 pick1','Overlay')
+
+Flow('flat','gpad pick','iwarp warp=${SOURCES[1]} n1=800')
+Plot('flat','grey labelsz=12 titlesz=12.5 title="(d) Flattened" ')
+
+
+Flow('cont','gpad',
+     'window n2=1 | envelope | max1 | window n1=20 | real')
+
+Flow('k1.p','cont',
+     '''
+     math output="1.5+input/0.004" | 
+     dd type=int form=ascii format="%d," line=100 --out=$TARGET
+     ''',stdout=0)
+Command('k1.par','k1.p',
+         'printf "k1=" > $TARGET && cat $SOURCE >> $TARGET')
+
+Flow('spikes','k1.par',
+     '''
+     spike n1=1000 mag=6000 
+     nsp=20 par=$SOURCE |
+     smooth rect1=2 repeat=2 
+     ''',stdin=0)
+
+Flow('paint','dip spikes','pwpaint seed=${SOURCES[1]} eps=0.05 order=2')
+Plot('paint','paint gath',
+     '''
+     window n1=800 | mutter v0=1200 half=n |
+     add ${SOURCES[1]} scale=12,1 | 
+     grey labelsz=12 titlesz=12.5 color=G title="(c) Painted" allpos=y
+     ''')
+
+Result('pgath','gath dip paint flat','SideBySideAniso')
+
+End()

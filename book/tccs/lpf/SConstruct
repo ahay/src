@@ -1,0 +1,4 @@
+from rsf.tex import *
+
+End(hires='tmat0 tmat2 smat0 smat1 simon',
+    color='filt dfilt zero csum')

@@ -1,0 +1,5 @@
+from rsf.tex import *
+
+End(use='amsmath,dsfont,hyperref',
+    color='ltf0 tt0 oz2 oz6')
+

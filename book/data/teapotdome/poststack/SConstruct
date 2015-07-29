@@ -1,0 +1,54 @@
+from rsf.proj import *
+from rsf.recipes.beg import server
+
+file='filt_mig'
+
+Fetch(file+'.sgy','teapot',server)
+# tshot=184 gets cdpy 
+# tshot=180 gets cdpx
+Flow([file,file+'_hdr',file+'.asc',file+'.bin'],file+'.sgy',
+      '''
+      segyread 
+         tfile=${TARGETS[1]} 
+	 hfile=${TARGETS[2]} 
+	 bfile=${TARGETS[3]}
+         key1=iline1 key2=xline1 iline1=180 xline1=184
+      ''')
+#         key1=iline key2=xline iline=180 xline=184
+
+
+Flow('headerattr.txt',file+'_hdr','headerattr')
+Flow('headerattr.prt','headerattr.txt',"/bin/cat ; echo 'just junk'",stdout=0)
+
+Flow([file+'mapped',file+'mapped_hdr'],[file,file+'_hdr'],
+     '''
+	    tahread
+              verbose=1
+	      input=${SOURCES[0]}
+	      headers=${SOURCES[1]}          
+	   |  tahwrite
+              verbose=1
+	      label2="xline1" o2=1 n2=188 d2=1
+	      label3="iline1" o3=1 n3=345 d3=1
+	      output=${TARGETS[0]}
+	      outheaders=${TARGETS[1]}
+     ''',
+     stdin=0,stdout=0)
+Flow('final.display',file+'mapped',
+	"""
+	echo display2 filt_migmapped.rsf filt_migmapped.rsf ;
+	echo 'just junk'
+	""",stdout=0, stdin=0)
+
+Result('final',file+'mapped','grey')
+Result('zoom',file+'mapped','zoom')
+End()
+
+#Flow('interactive.display',file+'mapped',
+#	"""
+#	display ${SOURCES[0]} ${SOURCES[0]} ; 
+#	echo 'just junk'
+#	""",stdin=0,stdout=0)
+
+#Result(file,file,
+#      'grey title=%s'%file)

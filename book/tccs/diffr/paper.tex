@@ -1,0 +1,360 @@
+\published{Geophysics, 72, U89-U94, (2007)}
+\title{Post-stack velocity analysis by 
+separation and imaging of seismic diffractions}
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}} 
+
+%\ms{GEO-2007-0054.R1}
+
+\lefthead{Fomel, Landa, \& Taner}
+\righthead{Diffraction imaging}
+
+\author{Sergey Fomel\footnotemark[1],
+Evgeny Landa\footnotemark[2], and M. Turhan Taner\footnotemark[3]}
+
+\address{
+\footnotemark[1]Bureau of Economic Geology \\
+John A. and Katherine G. Jackson School of Geosciences \\
+The University of Texas at Austin \\
+University Station, Box X \\
+Austin, TX 78713-8972 \\
+USA \\
+\footnotemark[2]OPERA \\ 
+Batiment IFR \\
+rue Jules Ferry \\
+64000 Pau \\
+France \\
+\footnotemark[3]Rock Solid Images \\
+2600 South Gessner, Suite 650 \\
+Houston, TX 77063 \\
+USA}
+
+\maketitle
+
+\begin{abstract}
+  Small geological features manifest themselves in seismic data in the
+  form of diffracted waves, which are fundamentally different from
+  seismic reflections. Using two field data examples and one synthetic
+  example, we demonstrate the possibility of separating seismic
+  diffractions in the data and imaging them with optimally chosen
+  migration velocities. Our criterion for separating reflection and
+  diffraction events is the smoothness and continuity of local event
+  slopes that correspond to reflection events. \old{Our criterion} For
+  optimal focusing, \old{is} \new{we develop} the local varimax
+  measure. The objective\new{s} of this work \old{is} \new{are}
+  \old{efficient} velocity analysis \new{implemented} in the
+  post-stack domain and high-resolution imaging of small-scale
+  heterogeneities. Our examples demonstrate the effectiveness of the
+  proposed method for high-resolution imaging of such geological
+  features as faults, channels, and salt boundaries.
+\end{abstract}
+
+\section{Introduction}
+
+Diffracted and reflected seismic waves are
+fundamentally different physical phenomena
+\cite[]{TSD00-00-04090409}. Most \old{of} seismic data processing is tuned
+to imaging and enhancing reflected waves, which carry
+most of the information about subsurface. The value of
+diffracted waves, however, should not be underestimated
+\cite[]{GEO69-06-14781490}.  When seismic exploration focuses
+on identifying small subsurface features (such as faults, fractures,
+channels, and rough edges of salt bodies) or small changes in seismic
+reflectivity (such as those caused by fluid presence or fluid flow
+during \new{reservoir} production), it is diffracted waves that
+contain the most valuable information.
+
+In this paper, we develop an integrated approach for extracting and
+imaging of diffracted events. We start with stacked or zero-offset data
+as input and produce time-migrated images with separated and optimally
+focused diffracted waves as output. The output of our processing flow
+can be compared to coherence cubes
+\cite[]{TLE14-10-10531058,GEO63-04-11501165}. 
+While the coherence cube algorithm tries to enhance incoherent
+features, such as faults, in the migrated image domain, we perform the
+separation in unmigrated data, where these features appear in the form
+of diffracted waves.
+
+We also introduce diffraction-event focusing as a criterion for
+migration velocity analysis, \old{different from} \new{as opposed to}
+the usual ``flat-gather'' criterion used in seismic imaging. Focusing
+analysis is applicable not only to multi-coverage prestack data but
+also to post-stack or single-coverage data.
+
+The idea of extracting information from seismic diffractions is not
+new. \cite{GEO49-11-18691880} used forward modeling and local slant
+stacks for estimating velocities from
+diffractions; \cite{GEO63-03-10931100} used common-diffraction-point
+sections for imaging of diffraction energy and detecting local
+heterogeneities; \cite{SEG-2002-22932296} simulated diffraction
+responses for enhancing velocity analysis. \cite{sava} incorporated
+diffraction imaging in wave-equation migration velocity analysis.
+
+The novelty of our approach is in integration of two essential steps:
+\begin{enumerate}
+\item Separating diffracted and reflected events in the data space,
+\item Focusing analysis for automatic detection of migration velocities optimal for imaging diffractions. 
+\end{enumerate}
+We explain both steps \old{in detail} and illustrate their
+application with field and synthetic datasets.
+
+\section{Separating diffractions}
+
+The underlying assumption that we employ for separating diffracted and
+reflected events is that, in a stacked data volume, background
+reflections correspond to strong coherent events with continuously
+variable slopes. Removing those events reveals other coherent
+information, often in the form of \new{seismic} diffractions. We
+propose to identify and remove reflection events with the method of
+plane-wave destruction
+\cite[]{pvi,GEO67-06-19461960}. Plane-wave destruction estimates 
+continuously variable local slopes of dominant seismic events by
+forming a prediction of each data trace from its neighboring traces
+with optimally compact non-stationary filters that 
+follow seismic energy along the estimated slopes. Minimizing the
+prediction residual while constraining the local slopes to vary
+smoothly provides an optimization objective function analogous to
+differential semblance \cite[]{GEO56-05-06540663}. 
+Iterative optimization of the objective function generates a field of
+local slopes. The prediction residual then contains all events,
+including seismic diffractions, that do not follow the dominant
+slope pattern. An analogous
+idea, but with implementation based on prediction-error filters, was
+previously discussed by \cite{SEG-1994-1572} and
+\cite{SEG-1996-0302}. \new{Although} separation of reflection and
+diffraction energy can never be exact, \old{Nevertheless} our method
+serves the practical purpose of enhancing the wave response of small
+subsurface discontinuities.
+
+\section{Imaging diffractions}
+
+How can one detect the spatially-variable velocity \new{necessary} for
+\old{which the} focusing of different \new{diffraction} events\old{ occurs}? A good measure of
+focusing is the \emph{varimax norm} used by \cite{wiggins} for
+minimum-entropy deconvolution and by \cite{GEO52-01-00510059} for
+zero-phase correction. The varimax norm is defined as
+\begin{equation}
+  \label{eq:focus} \phi = \frac{\displaystyle N\,\sum_{i=1}^N
+  s_i^4}{\displaystyle \left(\sum_{i=1}^{N} s_i^2\right)^2}\;,
+\end{equation}
+where $s_i$ are seismic signal amplitudes inside a window of
+size $N$. Varimax is simply related to kurtosis of zero-mean signals.
+
+Rather than working with data windows, we turn focusing into a
+continuously variable attribute using the technique of
+\emph{local attributes} \cite[]{attr}. Noting that the correlation
+coefficient of two sequences $a_i$ and $b_i$ is defined as
+\begin{equation}
+  c[a,b] = {\frac{\displaystyle \sum_{i=1}^N a_i\,b_i}{\displaystyle \sqrt{\sum_{i=1}^N a_i^2\,\sum_{i=1}^N b_i^2}}}
+  \label{eq:c}
+\end{equation}
+and the correlation of $a_i$ with a constant is
+\begin{equation}
+  c[a,1] = {\frac{\displaystyle \sum_{i=1}^N a_i}{\displaystyle \sqrt{N\,\sum_{i=1}^N a_i^2}}}\;,
+  \label{eq:c2}
+\end{equation}
+one can interpret the varimax measure in equation~\ref{eq:focus} as
+the inverse of the squared correlation coefficient between $s_i^2$ and
+a constant: $\phi = 1/c[s^2,1]^2$. Well-focused signals \old{will
+clearly} have low correlation with a constant and
+\new{correspondingly} high varimax.
+
+\old{Taking it} \new{Going} further \new{toward a continuously variable focusing attribute}, notice that the squared correlation coefficient can
+be represented as the product of two quantities $c[s^2,1]^2 = p\,q$,
+where 
+\begin{equation}
+\label{eq:pq}
+p=\frac{\displaystyle \sum_{i=1}^N s_i^2}{\displaystyle N}\;,\quad q=\frac{\displaystyle \sum_{i=1}^N s_i^2}{\displaystyle \sum_{i=1}^N s_i^4}\;.
+\end{equation}
+\new{Furthermore}, $p$ is the solution of the least-squares
+minimization problem
+\begin{equation}
+  \label{eq:p}
+  \min_p \sum_{i=1}^N \left(s_i^2 - p\right)^2\;,
+\end{equation}
+and $q$ is the
+solution of the least-squares minimization
+\begin{equation}
+  \label{eq:q}
+  \min_q \sum_{i=1}^N \left(1 - q\,s_i^2\right)^2\;.
+\end{equation}
+This allows us to define a continuously variable attribute $\phi_i$ by
+using continuously variable quantities $p_i$ and $q_i$, which are
+defined as solutions of regularized optimization problems
+\begin{eqnarray}
+  \label{eq:pt}
+  \min_{p_i} 
+  \left(\sum_{i=1}^N \left(s_i^2 - p_i\right)^2 + R\left[p_i\right]\right)\;, \\
+   \label{eq:qt}
+   \min_{q_i}
+   \left(\sum_{i=1}^N \left(1 - q_i\,s_i^2\right)^2 + R\left[q_i\right]\right)\;,
+\end{eqnarray}
+where $R$ is a regularization operator designed to \new{avoid trivial
+solutions by enforcing} \old{enforce} a desired behavior (such as
+smoothness). Shaping regularization \cite[]{shape} provides a
+particularly convenient method \old{of} \new{for} enforcing smoothing
+in an iterative optimization scheme.
+
+\old{To apply the local focusing measure, we scan different migration
+velocities while evaluating local focusing of migrated events at each
+image location. Example local focusing gathers are shown in
+Figure~\ref{fig:panel}, which corresponds to the first example from
+the next section. Such gathers are suitable for picking velocities
+that provide best focusing of imaged diffractions.  They are analogous
+to semblance panels used in prestack velocity analysis.}
+
+\new{We apply the local focusing measure to obtain migration-velocity panels for every
+point in the image. First, we follow the procedure outlined in the
+previous section to replace a stacked or zero-offset section with a
+section containing only separated diffractions. Next, we migrate the
+data multiple times with different migration velocities. This is
+accomplished by} \emph{velocity continuation}
+\cite[]{GEO68-05-16621672}, a method that performs time-migration velocity analysis
+by continuing seismic images in velocity with the process also called
+``image waves'' \cite[]{hubral}. The velocity continuation theory
+\cite[]{GEO68-05-16501661} shows that one can accomplish time migration with a set of 
+different velocities by making differential steps in velocity
+similarly to the method of cascaded migrations
+\cite[]{GEO52-05-06180643} but described and implemented as a
+continuous process. While comparable in theory to an ensemble of Stolt
+migrations \cite[]{SEG-1984-S1.8,GEO57-01-00510059}, velocity
+continuation has the advantage of working directly in the image
+domain. It is implemented with an efficient and robust algorithm based
+on the Fast Fourier Transform. 
+
+\new{Finally, we compute $\phi_i$ for every sample point in each of the
+migrated images. Thus, $N$ in equations~\ref{eq:pt} and~\ref{eq:qt}
+refers to the total number of sample points in an image. The output is
+\emph{focusing image gathers} (FIGs), exemplified in Figure~\ref{fig:panel}. 
+A FIG is analogous to a conventional migration-velocity analysis panel
+and suitable for picking migration velocities. The main difference is
+that the velocity information is obtained from analysis of diffraction
+focusing as opposed to semblance of flattened image gathers used in
+prestack analysis.}
+
+\section{Examples}
+
+Three different examples illustrate applications of our method to
+imaging of geological faults and irregular salt boundaries.
+
+\subsection{Fault detection}
+\inputdir{fault}
+
+\plot{panel}{width=\columnwidth}{Focusing image gathers (\new{F}IG) for
+  post-stack migration velocity analysis by diffraction focusing. Red
+  colors indicate strong focusing. Superimposed black curves are
+  slices of the picked migration velocity shown in
+  Figure~\ref{fig:bei-pik}.}
+
+\multiplot{2}{bei-stk2,bei-dip}{width=0.6\textwidth}{First test example. 
+(a) Stacked section from a Gulf of Mexico dataset. (b) Local slopes
+estimated by plane-wave destruction.}
+\multiplot{2}{bei-pwd,bei-pik}{width=0.6\textwidth}{Diffraction separation. 
+(a) Diffraction events separated from data in
+Figure~\ref{fig:bei-stk2}. (b) Migration velocity picked from local
+varimax scans after velocity continuation of diffractions.}
+\multiplot{2}{bei-slc,bei-slc2}{width=0.6\textwidth}{Migrated images. 
+(a) Migrated diffractions from Figure~\ref{fig:bei-pwd}. (b) Initial
+data from Figure~\ref{fig:bei-stk2} migrated with velocity estimated
+by diffraction imaging.}
+
+The data for our first example are shown in Figure~\ref{fig:bei-stk2},
+which displays a stacked section of a vintage Gulf of Mexico dataset
+\cite[]{Claerbout.bei.95}. Diffractions caused by irregular fault
+boundaries are preserved in the stack thanks to dip moveout processing
+but are hardly visible underneath strong reflection
+responses. Figure~\ref{fig:bei-dip} shows the dominant slope of
+reflection events estimated by the plane-wave destruction
+method. Numerous diffractions \old{got} \new{were} separated from
+reflections by plane-wave destruction and are shown in
+Figure~\ref{fig:bei-pwd}.
+
+Figure~\ref{fig:bei-pik} shows the migration
+velocity picked from focusing common-image gathers \new{(FIGs). Example FIGs} are
+\old{partially} shown in Figure~\ref{fig:panel}. Figure~\ref{fig:bei-slc}
+is the image of diffracted events, which collapse to collectively form
+fault surfaces. Figure~\ref{fig:bei-slc2} is the image obtained by
+migrating the original stack with velocities estimated from
+\new{diffraction} focusing analysis. In this final image, fault
+surfaces align with discontinuities in seismic reflectors. \old{It}
+\new{The image} compares favorably with images of the same dataset
+from the conventional processing shown by \cite{Claerbout.bei.95}.
+
+\subsection{Salt detection}
+\inputdir{gom}
+
+\multiplot{2}{gom,gom-dip}{width=0.6\textwidth}{Second test example. (a) Near-offset section from a Gulf of Mexico dataset. (b) Local slopes estimated by plane-wave destruction.}
+\multiplot{2}{gom-pwd,gom-pik}{width=0.6\textwidth}{Diffraction separation. (a) Diffraction events separated from data in Figure~\ref{fig:gom}. (b) Migration velocity picked from local varimax scans after velocity continuation of diffractions.}
+\multiplot{2}{gom-slc,gom-slc2}{width=0.6\textwidth}{Migrated images. (a) Migrated diffractions from Figure~\ref{fig:gom-pwd}. (b) Initial data from Figure~\ref{fig:gom} migrated with velocity estimated by diffraction imaging.}
+
+Figure~\ref{fig:gom} shows another example, also from the Gulf of
+Mexico. We used the nearest-offset section for diffraction analysis.
+Plane-wave destruction estimates dominant slopes of continuous
+reflection events [Figure~\ref{fig:gom-dip}] and reveals numerous
+diffractions generated by rough edges of a salt body
+[Figure~\ref{fig:gom-pwd}]. We used shaping regularization
+\cite[]{shape} with the smoothing radius of 40-by-10 samples to
+constrain the slope-estimation \old{part} \new{process}.  Focusing
+analysis \new{generates} \old{provides} a time migration velocity
+[Figure~\ref{fig:gom-pik}] suitable for collapsing diffractions
+[Figure~\ref{fig:gom-slc}]. \old{In the final image
+[Figure~\ref{fig:gom-slc2}],} Both sharp edges of the salt body and
+continuous specular reflections appear in the \new{final} image
+\new{[Figure~\ref{fig:gom-slc2}]}. Inevitably, prestack depth
+migration (as opposed to time migration) is required to properly
+position the salt boundary in depth. \old{However,} Time migration,
+\new{however,} \old{brings} \new{provides} a reasonable first-order approximation computed
+at a small fraction of the cost.
+
+\subsection{Channel detection}
+\inputdir{chan3d}
+
+\multiplot{2}{zovel,zovol}{width=0.6\textwidth}{3-D synthetic test. (a) Synthetic velocity model for a channelized reservoir. (b) Modeled zero-offset data.}
+\multiplot{2}{xdip,xpwd}{width=0.6\textwidth}{Diffraction separation for the 3-D synthetic test from Figure~\ref{fig:zovel,zovol}. (a) Dominant in-line slope estimated by plane-wave destruction. (b) Diffractions separated from the data.}
+\multiplot{2}{zomig,pwmig}{width=0.6\textwidth}{Depth migration of the 3-D synthetic test data. (a) Migrated data. (b) Migrated diffractions.}
+
+The third example is a 3-D synthetic dataset. The velocity model was
+designed to simulate a complex sand channel geometry in a deep-water
+clastic reservoir (Figure~\ref{fig:zovel}).  Including an overburden
+with stochastically generated velocity fluctuations on top of the
+reservoir model, we generated zero-offset data shown in
+Figure~\ref{fig:zovol}. The data contain reflections from continuous
+parts of the model and numerous diffractions generated by the channel
+edges. Separating diffractions using in-line plane-wave destruction
+(Figure~\ref{fig:xdip,xpwd}), we compare depth-migrated images of the
+original data and of the separated diffractions
+(Figure~\ref{fig:zomig,pwmig}). The fine details of the stacked
+channel geometry are revealed by diffraction imaging.
+
+\section{Conclusions}
+
+We have developed a method of efficient migration velocity analysis
+based on separation and imaging of seismic diffractions. The
+efficiency follows from the fact that the proposed analysis is applied
+in the post-stack domain as opposed to the conventional prestack
+velocity analysis.  We used continuity of dominant reflections in the
+zero-offset or stacked sections as a criterion for separating
+reflections from diffractions. We then imaged separated diffractions
+using local focusing analysis for picking \old{best} \new{optimal}
+migration velocities. A prestack extension of \new{our approach was}
+\old{this work is} presented by \cite{tury}.
+
+\begin{comment}
+The examples included in this abstract are from 2-D datasets. However,
+the method is fully applicable in 3-D, where it can be regarded as an
+alternative to coherence cube attributes. We plan to include 3-D
+examples in the presentation and describe, in a companion paper
+\cite[]{tury}, an extension of diffraction separation to prestack data
+analysis.
+\end{comment}
+
+\section{Acknowledgments}
+
+We thank TOTAL for partially supporting this work. The field datasets
+used in this study were released by Western Geophysical, and the
+synthetic reservoir model was created by Jim Jennings at the Bureau of
+Economic Geology in collaboration with Chevron. \new{We are grateful
+to Ken Larner for a thorough and helpful review.}
+
+\bibliographystyle{seg}
+\bibliography{SEG2005,diffr}

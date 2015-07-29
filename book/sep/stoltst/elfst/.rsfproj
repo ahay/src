@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfput', 'sfwindow', 'sfgrey', 'sfcosft', 'sfstolt', 'sftransp', 'sfdepth2time', 'sfspray', 'sfcat', 'sfstack', 'sfstoltstretch', 'sfgazdag', 'sfcascade', 'sfgraph', 'sfmath', 'sfsmooth', 'sfslice']
+data=['data/masha/elf-stk2.rsf', 'data/masha/vsmooth_levset.dat']
+size=  113800000

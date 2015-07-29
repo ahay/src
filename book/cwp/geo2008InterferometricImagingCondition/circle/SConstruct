@@ -1,0 +1,118 @@
+from rsf.proj import *
+import sys
+sys.path.append('..')
+import fdmod,iic
+
+par = {
+    'nt':801, 'ot':0,'dt':0.001, 'lt':'t','ut':'s', 'kt':75,
+    'nx':401, 'ox':0,'dx':0.0075,'lx':'x','ux':'km',
+    'nz':401, 'oz':0,'dz':0.0075,'lz':'z','uz':'km',
+    'xcenter':1.5,'zcenter':1.5, 'height': 10,
+    'vbias':1.75
+    }
+fdmod.param(par)
+
+par['jsnap']=100
+par['wweight']=50
+
+par['labelattr']='wantaxis=n'
+
+# ------------------------------------------------------------
+# acoustic source
+fdmod.wavelet('wav_',30,par)
+
+Flow('wav1', 'wav_','transp')
+Flow('wav2', 'wav_',
+     '''
+     pad beg1=300 |
+     window n1=%(nt)d |
+     put o1=%(ot)d |
+     transp
+     ''' % par)
+
+Flow('wav','wav1 wav2','add ${SOURCES[1]} scale=1,-1')
+
+Result('wav','window |' + fdmod.waveplot('',par))
+# ------------------------------------------------------------
+# velocity
+Flow('vbk',None,
+     '''
+     math output=2
+     n1=%(nz)d d1=%(dz)g o1=%(oz)g
+     n2=%(nx)d d2=%(dx)g o2=%(ox)g
+     ''' % par)
+Plot('vbk',fdmod.cgrey('',par))
+# ------------------------------------------------------------
+# random velocity
+Flow('mask','vbk','math output=1')
+ff=0
+aa=2
+ru=0.02
+rv=0.02
+gm=0.25
+iic.random(112009,'gg','mask',ff,aa,ru,rv,par)
+iic.model('vbk','vel','den','gg',gm,par)
+# ------------------------------------------------------------
+# sources
+fdmod.point('ss',par['xcenter'],par['zcenter'],par)
+Plot(  'ss',fdmod.ssplot('',par))
+Result('ss','vel ss','Overlay')
+# ------------------------------------------------------------
+# receivers
+Flow('rr','ss','window')
+# ------------------------------------------------------------
+# FDM
+fdmod.awefd1('dat','wfl','wav','vel','den','ss','rr','',par)
+# ------------------------------------------------------------
+# WDF
+nwig=5
+Flow('wdf','wfl','wdf verb=y nh1=%d nh2=%d' % (nwig,nwig) )
+# ------------------------------------------------------------
+for k in ('wfl','wdf'):
+    fdmod.wom(k+'m',k,'vel',par['vbias'],par)
+    Plot(   k+'m',fdmod.wgrey('pclip=99',par),view=1)
+
+    for i in range(0,par['nt']//par['jsnap'],1):
+        fdmod.wframe(k+'-'+str(i),k,i,'pclip=99',par)
+	Result(k+'-'+str(i),[k+'-'+str(i),'ss'],'Overlay')
+
+
+# ------------------------------------------------------------
+def grey(title,allpos=1):
+    return '''
+    grey transp=n allpos=%d title="%s"
+    color=b screenratio=1 wantaxis=n
+    ''' % (allpos,title)
+
+Flow(  'sone','wfl','window n3=1 f3=6 | pad n1out=512 n2out=512')
+Result('sone',fdmod.cgrey('pclip=100',par))
+
+Flow(  'sdip','sone','transp | dip rect1=20 rect2=20 order=1')
+Result('sdip','grey color=j title="Seismic Slope" scalebar=y')
+
+Flow(  'spwd','sone sdip','transp | pwd order=1 dip=${SOURCES[1]} | transp')
+Result('spwd',fdmod.cgrey('pclip=100',par))
+
+Flow('seis','sone sdip',
+     'transp | seislet dip=${SOURCES[1]} eps=0.01 adj=y inv=y | transp')
+Result('seis',grey('Seislet Transform',0))
+
+Flow('sinv','seis sdip',
+     'transp | seislet dip=${SOURCES[1]} eps=0.01 | transp')
+Result('sinv',fdmod.cgrey('pclip=100',par))
+
+# ------------------------------------------------------------
+for scale in (2,4,8,16,32,64,128,256):
+    sone = 'sinv%03d' % scale
+    Flow(sone,'seis sdip',
+         '''
+         transp |
+         cut f2=%d |
+         seislet dip=${SOURCES[1]} |
+         transp
+         ''' % scale)
+    Result(sone,fdmod.cgrey('pclip=100',par))
+
+# ------------------------------------------------------------
+
+End()

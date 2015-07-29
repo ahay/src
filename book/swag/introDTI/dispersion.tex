@@ -1,0 +1,127 @@
+\inputdir{XFig}
+\multiplot{2}{Isochron3,Isochron2}{width=0.45\textwidth}{ (a) A
+  schematic representation of the \geoulin2{tilted transverse isotropy} \geosou2{TTI} isochron for zero-offset in
+  which the tilt is constrained to the normal of the isochron -- the
+  isochron is circular.  (b) A similar representation for the non-zero
+  offset case. \geouline{The angle $\phi$ is the group angle which is equal for the incident
+and reflected rays, but differs along the isochron.}}
+
+
+\section{Dip-constrained TTI media}
+
+To appreciate the simplification attained from this \geouline{constraint} \geosout{constrain}, we
+initially restrict our discussions to a homogeneous medium. In this
+case, the zero-offset isochron, which is representative of the equal
+traveltime surface, is spherical in shape, equivalent to the isotropic
+medium isochron, with a radius governed by the velocity in the tilt
+direction, $v_T$, as follows:
+%
+\beq \label{eq:ttime}
+  r\ofx = v_T t\ofx,
+\eeq
+%
+where $t$ is the time along the wavefront and $\xx=\{x,y,z\}$
+represents space coordinates. This convenient assertion is only true if
+we constrain the tilt axis to the direction normal to the reflector
+dip, and thus the group velocity equals the phase velocity equals the
+velocity along the tilt. \rfg{Isochron3} shows a schematic plot of the
+zero-offset isochron with two representative examples of tilt
+direction that are constrained to be orthogonal to the isochron
+surface. \geoulin2{Though such a medium do not physically exist, it is assumed here in the context of a process, and thus what matters
+is the local action of the isochron on the reflection, which is similar to the isotropic case.}
+
+For non zero-offset \geouline{case}, the traveltime isochron is constrained by the
+double-square-root (DSR) formula \cite[]{Claerbout.bei.95}. Thus, the
+total traveltime, $t$, is a combination of traveltimes from the source
+$\ss$ located at ($s_x$,$s_y$), and the receiver $\rr$ located at
+($r_x$,$r_y$) to an image point in the subsurface at location $\xx$ and is
+given by the expression
+%
+\bea \label{eqn:dsr}
+t &=& \sqrt{\frac{(s_x-x)^2+(s_y-y)^2+z^2}{v_g^2(\phi)} } \nonumber \\
+  &+& \sqrt{\frac{(r_x-x)^2+(r_y-y)^2+z^2}{v_g^2(\phi)} } \;,
+\eea
+%
+where $v_g(\phi)$ is the group velocity as a function of group angle
+$\phi$. From \rfg{Isochron2}, \geouline{and considering, for simplicity, that the incident and reflected rays are confined to the vertical plane,} $\phi$ can be evaluated geometrically
+as follows:
+%
+\bea \label{eqn:dsr2}
+\phi 
+&=& \frac{1}{2} \cos^{-1}{\frac{z}{\sqrt{(s_x-x)^2+(s_y-y)^2+z^2}}}
+\nonumber \\
+&+& \frac{1}{2} \cos^{-1}{\frac{z}{\sqrt{(r_x-x)^2+(r_y-y)^2+z^2}}} 
+\;,
+\eea
+%
+\geouline{otherwise we have to project the angles to the plane that constrains the incident and reflected rays.} However, evaluating \geosou2{$v(\phi)$} \geoulin2{$v_g(\phi)$} in complex media is complicated with no
+closed-form representation. \geouline{An alternative is to rely on the phase angle by using plane waves and the Fourier decomposition.}
+
+If we reformulate the DSR equation in terms of changes in time, and
+thus, focus on the plane-wave relation we end up with the following
+DSR formula:
+%
+\beq \label{eqn:3p7}
+\done{t}{z} = 
+\sqrt{ {1 \over  v^2(\theta) } - \lp \done{t}{r} \rp^2 } + 
+\sqrt{ {1 \over  v^2(\theta) } - \lp \done{t}{s} \rp^2 } \;,
+\eeq
+%
+where now $v$ is the phase velocity and has a closed form
+representation in terms of the phase angle $\theta$  given by the
+acoustic approximation \cite[]{GEO63-02-06230631} as follows:
+%
+\bea \label{eqn:vp2}
+v^2(\theta)
+&=& \frac{1}{2} 
+\lp v^2   (2 \eta +1) \sin^2 \theta  +
+    v_T^2           \cos^2 \theta \rp \nonumber \\
+&+& \frac{1}{4}
+\sqrt{a \sin^4      \theta 
+     +b \sin^2 \lp 2\theta\rp
+     +c \cos^4      \theta}
+\;,
+\eea
+%
+where 
+$a=4 v^4 (2\eta +1)^2$, $b=2 v^2 v_T^2 (1-2\eta )$, $c=4 v_T^4$,
+$v$ is the NMO velocity with respect to the tilted symmetry axis, and
+$\eta$ is the anisotropy parameter relating the NMO velocity to the
+velocity normal to the tilt. The angle $\theta$ in \req{3p7} is
+measured from the tilt direction and will also be given by the angle
+gather as part of the process \geouline{of downward continuation}
+ as we will see later.
+
+Thus, in the non-zero offset case the isochron depends on angle, but
+it is a single angle for both source and receiver rays and we do not
+have to worry about relating the two angles, as is the case in VTI and
+general TTI media.  This provides us with analytical relations for
+plane waves at the reflection point. In this case, both the source and
+receiver waves have the same wave \geouline {group} velocity 
+that differs along the
+non-zero offset isochron. In fact, for the zero-dip part of the
+isochron the reflection angle is at its maximum reducing to zero for a
+vertical reflector, as seen in \rfg{Isochron2}.
+
+\geouline{Next, we formulate the extended imaging condition, necessary for angle-gather development, for the DTI model. As shown in this section, angle gathers are also necessary for an explicit formulation of
+ downward continuation in a DTI model.}
+
+
+%\plot{Isochron}{width=0.4\textwidth}{A schematic representation of the TTI
+% isochron for zero-offset in which the tilt is constrained to the
+% normal of the isochron.  Thus, the isochron is circular.}
+
+%\plot{Isochron2}{width=0.4\textwidth}{A schematic representation of the TTI
+%  isochron for zero-offset in which the tilt is constrained to the
+%  normal of the isochron.  Thus, the isochron is circular.}
+
+%One area where such a tilt constrain helps is in angle gather
+%representation as we will see next.
+
+\plot{Reflection}{width=0.6\textwidth}{A schematic plot of the reflection
+  geometry for a \geoulin2{tilted transversely isotropic} \geosou2{TTI} medium with a tilt in the dip direction. The
+  incident and reflection angles are the same \geouline{given by the group angle $\phi$}. \geoulin2{Here, ${\it s}$ and ${\it r}$ correspond, respectively, to the 
+source and receiver locations, $d$ is the distance between the source and the reflector in the direction given by unit vector
+${\bf n}$ normal to the reflector with direction described by unit vector
+${\bf q}$, and ${\bf n_s}$ and ${\bf n_r}$ are, respectively, the unit vector directions for each of the source and receiver rays with ray angle $\phi$
+measured from the normal to the reflector.}}

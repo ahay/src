@@ -1,0 +1,90 @@
+from rsf.proj import *
+import math
+
+labelfat=4
+titlefat=4
+
+labelsize=6
+titlesize=8
+
+nt=1500
+dt=0.002
+Flow('time',None,'spike n1=%d d1=%g o1=-1.5 | math output=x1'%(nt,dt))
+
+
+##### Ellipse _________________________________________________________________
+
+label=0
+k=0
+
+nearlist=[]
+linelist=[]
+sinclist=[]
+
+symbolist=['plotfat=1','symbolsz=1 symbol=.','symbol=*']
+fatlist=['plotfat=8','plotfat=5','plotfat=1',]
+
+for eps in (0.1,0.5,1.0):
+    
+    
+    ei=(nt/2.0)-(eps/dt)
+    near='near-%g'%(label)
+    line='line-%g'%(label)
+    sinc='sinc-%g'%(label)
+    label=label+1
+
+    #Nearest-Neighbor
+    Flow(near,'time',
+         '''
+         math output="1.0/%g" |
+         window min1=%g max1=%g |
+         pad beg1=%d end1=%d
+         '''%(eps,-1.0*eps,eps,(ei),(ei)))
+    Plot(near,
+         '''
+         graph plotcol=%d plotfat=8 wanttitle=y wantaxis=y label1="x" label2="Amplitude"
+         transp=n yreverse=n  labelfat=%d labelsz=%d titlefat=%d titlesz=%d
+         min1=-1.5 max1=1.5 min2=-1.5 max2=15 screenratio=1 %s
+         title="Rectangle Function Approximating \F9 d\F2 (t)" font=2
+         '''%((label+1),labelfat,labelsize,titlefat,titlesize,fatlist[k]))
+    nearlist.append(near)
+
+    #Linear
+    Flow(line,'time',
+         '''
+         math output="1.0/%g-abs(input)/(%g)" |
+         window min1=%g max1=%g |
+         pad beg1=%d end1=%d
+         '''%(eps,eps*eps,-1.0*eps,eps,(ei),(ei)))
+    Plot(line,
+         '''
+         graph plotcol=%d plotfat=3 wanttitle=y wantaxis=y label1="x" label2="Amplitude"
+         transp=n yreverse=n  labelfat=%d labelsz=%d titlefat=%d titlesz=%d
+         min1=-1.5 max1=1.5 min2=-1.5 max2=15 screenratio=1 %s
+         title="Triangle Function Approximating \F9 d\F2 (t)" font=2
+         '''%((label+1),labelfat,labelsize,titlefat,titlesize,fatlist[k]))
+    linelist.append(line)
+
+    #Sinc
+    Flow(sinc,'time',
+         '''
+         put o1=-6 d1=0.008 |
+         math output="(%g*sin(%g*x1))/(%g*x1)" 
+         '''%(5*eps,5*eps*math.pi,5*eps*math.pi))
+    Plot(sinc,
+         '''
+         graph plotcol=%d plotfat=3 wanttitle=y wantaxis=y label1="x" label2="Amplitude"
+         transp=n yreverse=n  labelfat=%d labelsz=%d titlefat=%d titlesz=%d
+         min1=-6.0 max1=6.0 min2=-1.5 max2=6 screenratio=1 %s
+         title="Sinc Function Approximating \F9 d\F2 (t)" font=2
+         '''%((label+1),labelfat,labelsize,titlefat,titlesize,symbolist[k]))
+    sinclist.append(sinc)
+    k=k+1
+    
+Result('nearest',nearlist,'Overlay')
+Result('linear',linelist,'Overlay')
+Result('sinc',sinclist,'Overlay')
+
+
+
+End()

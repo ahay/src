@@ -1,0 +1,309 @@
+\input{pcsmacros}
+\input{pcscolset}
+\pgfdeclareimage[height=1.0in]{logo}{Fig/Madagascar}
+
+\title[]{\mg \\ reproducible experiments}
+\author[]{Paul Sava}
+\institute{
+  Center for Wave Phenomena \\
+  Colorado School of Mines \\
+  psava@mines.edu
+}
+\date{}
+\logo{}
+\large
+
+% ------------------------------------------------------------
+\def\mydemo#1#2{
+  \begin{block}{}
+    \lstinputlisting[firstline=#1,lastline=#2]
+    {pyDemo/SConstruct}
+  \end{block}
+}
+\def\mycode#1#2{
+  \begin{block}{}
+    \lstinputlisting[firstline=#1,lastline=#2]
+    {gauss/SConstruct}
+  \end{block}
+}
+% ------------------------------------------------------------
+\mode<beamer> { \cwpcover }
+
+
+% ------------------------------------------------------------
+% ------------------------------------------------------------
+% ------------------------------------------------------------
+% ------------------------------------------------------------
+
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{scons}
+  \begin{itemize}
+  \item build system (\alert{s}oftware \alert{cons}truction)
+  \item written in \alert{python}
+  \item configuration files are Python scripts
+  \item provides dependency analysis
+  \item allows parallel builds
+  \item works cross-platform
+  \end{itemize}
+\end{frame}
+\cwpnote{}
+
+\begin{frame} \frametitle{python}
+  \begin{itemize}
+  \item dynamic programming language
+  \item clear, readable syntax
+  \item provides full modularity
+  \item integrates with other languages
+  \item free and open-source
+  \end{itemize}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{python primer}
+
+\begin{itemize}
+   \item strings
+   \item lists
+   \item tuples
+   \item dictionaries
+   \item loops
+   \item conditionals
+   \item functions 
+   \item modules
+\end{itemize}
+
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{python primer: strings}
+  \mydemo{4}{14}
+\end{frame}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{python primer: lists}
+  \mydemo{19}{25}
+\end{frame}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{python primer: tuples}
+  \mydemo{29}{32}
+\end{frame}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{python primer: dictionaries}
+  \mydemo{37}{43}
+\end{frame}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{python primer: loops}
+  \mydemo{48}{58}
+\end{frame}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{python primer: conditionals}
+  \mydemo{64}{73}
+\end{frame}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{python primer: functions}
+  \mydemo{78}{84}
+\end{frame}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{python primer: modules}
+  \mydemo{87}{88}
+  \mydemo{92}{94}
+\end{frame}
+
+% ------------------------------------------------------------
+
+
+% ------------------------------------------------------------
+% ------------------------------------------------------------
+% ------------------------------------------------------------
+% ------------------------------------------------------------
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{\mg functions}
+  \big{\texttt{Fetch(rsfFile,dirName)}}
+  \cen{download files from a server}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{\mg functions}
+  \big{\texttt{Flow(outFile,inFile,command)}}
+  \cen{make output from input using the command}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{\mg functions}
+  \big{\texttt{Plot(vplFile,rsfFile,command)}}
+  \cen{make plot in local directory}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{\mg functions}
+  \big{\texttt{Result(vplFile,rsfFile,command)}}
+  \cen{make plot in \texttt{Fig} directory}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{\mg commands}
+
+  \big{\texttt{scons}}
+  \vfill
+  \big{\texttt{scons blah.view}}
+  \big{\texttt{scons view}}
+  \vfill
+  \big{\texttt{scons blah.lock}}
+  \big{\texttt{scons lock}}
+  \vfill
+  \big{\texttt{scons -c}}
+  \vfill
+  \big{\texttt{scons -n}}
+
+\end{frame}
+\cwpnote{}
+
+
+% ------------------------------------------------------------
+% ------------------------------------------------------------
+% ------------------------------------------------------------
+% ------------------------------------------------------------
+\begin{frame} \frametitle{example}
+  \big{\texttt{cd \$RSF/book/rsf/school/gauss}}
+  \vfill
+  \big{\texttt{\$EDITOR SConstruct}}
+\end{frame}
+\cwpnote{}
+
+\inputdir{gauss}
+
+% ------------------------------------------------------------
+
+\begin{frame} \frametitle{import module}
+ \mycode{1}{1}
+\end{frame}
+\cwpnote{}
+
+\begin{frame} \frametitle{setup parameter dictionary}
+ \mycode{3}{11}
+\end{frame}
+\cwpnote{}
+
+\begin{frame} \frametitle{expand parameter dictionary}
+ \mycode{12}{16}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+% Gaussian
+
+\begin{frame} \frametitle{make Gaussian function}
+ \mycode{44}{51}
+\end{frame}
+\cwpnote{}
+
+\begin{frame} \frametitle{plot 2D Gaussian function}
+ \mycode{54}{59}
+\end{frame}
+\cwpnote{}
+
+\begin{frame}
+  \plot{gg}{width=0.69\textwidth}{}
+\end{frame}
+\cwpnote{}
+
+\begin{frame} \frametitle{plot 1D Gaussian function}
+ \mycode{62}{68}
+\end{frame}
+\cwpnote{}
+
+\begin{frame}
+  \plot{gg0}{width=0.90\textwidth}{}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+% velocity 
+
+\begin{frame} \frametitle{make velocity}
+ \mycode{73}{74}
+\end{frame}
+\cwpnote{}
+
+\begin{frame} \frametitle{plot velocity}
+ \mycode{77}{81}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+% FME
+
+\begin{frame} \frametitle{make traveltimes}
+ \mycode{86}{87}
+\end{frame}
+\cwpnote{}
+
+\begin{frame} \frametitle{plot traveltimes}
+ \mycode{90}{91}
+\end{frame}
+\cwpnote{}
+
+\begin{frame} \frametitle{traveltime plot function}
+ \mycode{32}{39}
+\end{frame}
+\cwpnote{}
+
+\begin{frame}
+  \plot{fme}{width=0.69\textwidth}{}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+% HWT
+
+\begin{frame} \frametitle{make rays/wavefronts}
+ \mycode{96}{101}
+\end{frame}
+\cwpnote{}
+
+\begin{frame} \frametitle{plot rays/wavefronts}
+ \mycode{104}{110}
+\end{frame}
+\cwpnote{}
+
+\begin{frame} \frametitle{rays/wavefronts plot function}
+ \mycode{21}{29}
+\end{frame}
+\cwpnote{}
+
+\begin{frame}
+  \plot{hwt}{width=0.69\textwidth}{}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame}
+
+  \big{\url{http://www.ahay.org}}
+  
+  \vfill
+
+  \big{\texttt{\$RSF/book/rsf/school}}
+
+  \vfill
+  
+  \begin{center}
+    \pgfuseimage{logo}
+  \end{center}
+  
+\end{frame}
+\cwpnote{}

@@ -1,0 +1,71 @@
+from rsf.proj import *
+
+Fetch('wood.h','textures')
+Flow('wood','wood.h','dd form=native')
+
+Flow('wood-hole','wood','hole')
+Plot('wood-hole','grey crowd=1')
+
+Flow('wood-known','wood','math output=1 | hole')
+Flow(['wood-pef','wood-lag'],['wood-hole','wood-known'],
+     'hpef a=5,5 niter=60 maskin=${SOURCES[1]} lag=${TARGETS[1]}')
+Flow('wood-miss',['wood-hole','wood-pef','wood-known'],
+     'miss niter=140 filt=${SOURCES[1]} mask=${SOURCES[2]} padin=20')
+Plot('wood-miss','grey crowd=1')
+
+for seed in range(2):
+    nois = 'wood-nois%d' % seed
+    real = 'wood-real%d' % seed
+    Flow(nois,['wood-miss','wood-pef'],
+         '''
+         helicon filt=${SOURCES[1]} |
+         noise var=250 rep=y seed=%d |
+         helicon filt=${SOURCES[1]} div=y
+         ''' % (1994,2004)[seed])
+    Flow(real,['wood-hole','wood-pef','wood-known',nois],
+         '''add scale=1,-1 ${SOURCES[3]} |
+         miss niter=140 filt=${SOURCES[1]} mask=${SOURCES[2]} padin=20 |
+         add ${SOURCES[3]}
+         ''')
+    Plot(real,'grey crowd=1')
+
+Result('manywood','wood-hole wood-miss wood-real0 wood-real1','TwoRows')
+
+def sea(title=' '):
+    return '''
+    grey transp=n yreverse=n
+    label1=longitude label2=latitude title="%s" crowd=.80
+    ''' % title
+
+Fetch('seabin.hh','seab')
+Flow('sea','seabin.hh','dd form=native')
+Plot('sea',sea())
+
+Flow(['sea-pef','sea-lag'],'sea',
+     'hpef a=5,3 niter=50 lag=${TARGETS[1]}')
+Flow('sea-miss',['sea','sea-pef'],
+     'miss niter=100 filt=${SOURCES[1]}')
+Plot('sea-miss',sea())
+
+for seed in range(2):
+    nois = 'sea-nois%d' % seed
+    real = 'sea-real%d' % seed
+    Flow(nois,['sea-miss','sea-pef'],
+         '''
+         helicon filt=${SOURCES[1]} |    
+         noise var=0.001 rep=y seed=%d |
+         helicon filt=${SOURCES[1]} div=y
+         ''' % (1994,2004)[seed])
+    Flow(real,['sea','sea-pef',nois],
+         '''
+         add scale=1,-1 ${SOURCES[2]} |
+         miss niter=100 filt=${SOURCES[1]} mask=${SOURCES[0]} |
+         add ${SOURCES[2]}
+         ''')
+    Plot(real,sea('Realization %d' % (seed+1)))
+
+Result('bobsea','sea sea-miss sea-real0 sea-real1','TwoRows')
+    
+###########################################################################
+
+End()

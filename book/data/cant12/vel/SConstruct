@@ -1,0 +1,150 @@
+from rsf.proj import *
+
+# using CMPs after demultiple
+data='../lpf/cmp.rsf'
+#infile='handvels.txt'
+infile='hvel.txt'
+# data has tpow squared already applied
+
+# handvel2rsf needs to be sfhandvel2rsf
+Flow('velt',infile,'sfhandvel2rsf o1=0 d1=.001 n1=3000 | put o2=5391.88 d2=625')
+# plot velocity
+Result('velt',
+    '''
+    grey color=j allpos=y yreverse=y 
+    label1=Time unit1=s label2=Velocity unit2=m/s
+    ''')
+
+# seismic line CMP axis parameters
+Flow('pattern0',None,
+     'spike n1=9701 d1=6.25 o1=5391.88')
+
+# interploate velocity
+Flow('rms','velt pattern0',
+      'transp memsize=500| remap1 pattern=${SOURCES[1]} |transp memsize=500  ')
+
+# plot interpolate veloctiy
+Result('rms',
+    '''
+    grey color=j allpos=y yreverse=y scalebar=y barreverse=y allpos=y mean=y
+    label1=Time unit1=s label2=Velocity unit2=m/s title="rms velocity"
+    ''')
+
+# Use the velocity to create a mute for automatic velocity picking
+mute='rms.rsf'
+
+# sort to CMP if input is shot gathers
+#Flow('cmp_all',data,'shot2cmp half=n positive=n')
+#data='cmp_all'
+
+ncmp1=9701 # number of cmps
+ncmp=9464  # number of cmps of full fold
+fcmp=118   # cmp first location (actually it skips 118)
+jump=100   # every 100th
+
+n3=int((ncmp1-fcmp)/(jump+1))  # 94 locations
+# n3=95                  
+
+Flow('cmp',data,'window n3=%d f3=%d j3=%d'%(n3,fcmp,jump))
+
+dv=10
+nv=201
+v0=1400
+vscan='vscan v0=%d dv=%d nv=%d semblance=y half=n '%(v0,dv,nv)
+
+Flow('vscan','cmp',vscan,split=[3,n3])
+
+min2=v0
+max2=v0+dv*(nv-1)
+
+# Let us create mute for auto vpick
+###################################
+
+dvel=100
+Flow('mask',mute,
+     '''
+     spray axis=2 n=%d o=%d d=%d label="velocity" unit="m/s"
+     | math output="input-x2" 
+     | mask max=%g min=%g 
+     | dd type=float
+     | smooth rect2=5
+     '''%(nv,v0,dv,dvel/2,-dvel*2),split=[2,ncmp1],reduce="cat axis=3")
+
+Flow('mask0','mask','window n3=%d f3=%d j3=%d'%(n3,fcmp,jump))
+
+Flow('vmuted','vscan mask0','mul ${SOURCES[1]}',split=[3,n3])
+
+## vel picking
+#################
+Flow('pick','vmuted','pick rect1=80 rect2=2')
+
+Flow('picks','pick','spray axis=2 n=1')
+Flow('nmo','cmp picks',
+     '''
+     nmo half=n velocity=${SOURCES[1]} maxstr=.3
+     | mutter half=n v0=1450 x0=200 abs=n
+     ''')
+
+# Make a movie for cmps
+########################
+## first cmp 118
+loc=118
+inc=100
+## jump every 100th
+cmps=[]
+for i in range(n3):
+    cmp='cmp%d'%i
+    vscan='vscan%d'%i
+    vmute='vmute%d'%i
+    pick='pick%d'%i
+    nmo='nmo%d'%i
+    vrms='vrms%d'%i
+    v2rms='v2rms%d'%i
+    
+    #fcmp,fcmp+jump*n3,jump
+    
+    # find CMP location for plotting title
+    j=fcmp+i*jump
+    
+    Flow(nmo,'nmo','window n3=1 f3=%d'%i)
+    
+    Flow(cmp,'cmp','window n3=1 f3=%d'%i)
+    Flow(vscan,'vscan','window n3=1 f3=%d'%i)
+    Flow(vmute,'vmuted','window n3=1 f3=%d'%i)
+    Flow(pick,'pick','window n2=1 f2=%d'%i)
+    
+    Plot(pick,
+     '''
+     graph plotfat=5 plotcol=7 yreverse=y transp=y 
+     pad=n min2=%d max2=%d wantaxis=n wanttitle=n
+     wherexlabel=t
+     '''%(min2,max2))
+    Plot(cmp, 'grey title="cmp %d"'%j)
+    Plot(nmo, 'grey title="nmo %d"'%j)
+    Plot(vscan,'grey color=j allpos=y title="Semblance Scan"')
+    Plot(vmute,'grey color=j allpos=y title="Semblance"')
+    Plot(vrms,[vscan, pick],'Overlay')
+    Plot(v2rms,[vmute, pick],'Overlay')
+    ccmp='ccmp%d'%i
+    Plot(ccmp,[cmp,vrms,nmo],'SideBySideAniso')
+    cmps.append(ccmp)
+Plot('cmps',cmps,'Movie')
+
+# intrepolate velocity
+######################
+Flow('pattern',data,'window n1=1 n2=1')
+
+Flow('vel','pick pattern',
+     'transp memsize=7000| remap1 pattern=${SOURCES[1]} order=2 | transp memsize=7000')
+
+# plot velocity model after interpolation
+#########################################
+Result('vel',
+       '''
+       grey color=j scalebar=y barreverse=y allpos=y mean=y
+       title="Stacking Velocity" unit1=s label2=Distance unit2=m
+       ''')
+Flow('vels','vel','spray axis=2 n=1')
+
+End()
+

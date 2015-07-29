@@ -1,0 +1,167 @@
+from rsf.proj import *
+
+##################
+# Synthetic test
+##################
+ns0=7 # smoothing radius
+ns1=4 # spraying radius
+
+Flow('sigmoid',None,
+     '''
+     sigmoid d1=.004 n1=200 d2=.008 n2=200 taper=n |
+     smooth rect1=3 diff1=1 adj=y | smooth rect1=3
+     ''')
+
+Result('sigmoid1','sigmoid',
+       'grey wanttitle=n label2=Distance labelfat=4 font=2 titlefat=4')
+
+Flow('noise','sigmoid',
+     '''
+     noise seed=2008 var=3.e-7 |
+     saltpepper den=50 inten=0. seed=122009
+     ''')
+Result('gnoise1','noise',
+       '''
+       grey clip=0.00358515 wanttitle=n label2=Distance
+       labelfat=4 font=2 titlefat=4
+       ''')
+
+Flow('ndip','noise','bandpass fhi=60 | dip rect1=%d rect2=%d' % (ns0,ns0))
+Result('ndip1','ndip',
+       '''
+       grey color=j scalebar=y wanttitle=n label2=Distance
+       barlabel=Slope barunit=samples bartype=h labelfat=4
+       font=2 titlefat=4 barlabelfat=4
+       ''')
+Flow('spray','noise ndip',
+     '''
+     pwspray dip=${SOURCES[1]} ns=%d | put d2=0.008 o2=%f
+     ''' % (ns0,(-0.008*ns0)))
+Result('cube','spray',
+       '''
+       transp plane=23 | put d3=1 o3=%d | byte gainpanel=all |
+       grey3 wanttitle= flat=n labelfat=4 font=2 titlefat=4
+       label2=Distance label3="Prediction" unit3=trace
+       frame1=100 frame2=100 frame3=%d point1=0.9 point2=0.8 
+       o3num=%d d3num=3 n3tic=%d  clip=0.00358515
+       '''  % (-ns0,ns0+1,-ns0+1,5))
+
+# Improved similarity stacking (Gaussian taper)
+Flow('stacks1','noise','spray axis=2 n=%d ' % (2*ns0+1))
+
+Flow('weight01','stacks1 spray', 
+     '''
+     similarity other=${SOURCES[1]} rect1=10 rect3=1 | threshold pclip=99
+     ''')
+Result('weight01',
+       '''
+       transp plane=23 | put d3=1 o3=%d |
+       byte gainpanel=all allpos=y bar=bar.rsf pclip=100 |
+       grey3 wanttitle=n flat=n color=j label2=Distance label3="Prediction"
+       unit3=trace frame1=100 frame2=100 frame3=%d point1=0.9 point2=0.8
+       o3num=%d d3num=3 n3tic=%d scalebar=y bar=bar.rsf bartype=h labelfat=4
+       font=2 titlefat=4 barlabel=Weight barunit=samples
+       ''' % (-ns0,ns0+1,-ns0+1,5)) 
+Flow('gausweight1','spray',
+     '''
+     window n3=1 | sfmath output="exp(-x2*x2/((0.02)*(0.02)))" |
+     spray axis=3 n=200
+     ''')
+
+Flow('weight11','gausweight1 weight01', 
+     '''
+     add mode=p ${SOURCES[1]}
+     ''')
+Result('weightcube1','weight11',
+       '''
+       transp plane=23 | put d3=1 o3=%d |
+       byte gainpanel=all allpos=y bar=bar1.rsf |
+       grey3 wanttitle=n flat=n color=j label2=Distance label3="Prediction"
+       unit3=trace frame1=100 frame2=100 frame3=%d point1=0.9 point2=0.8
+       o3num=%d d3num=3 n3tic=%d scalebar=y bar=bar1.rsf bartype=h labelfat=4
+       font=2 titlefat=4 barlabel=Weight barunit=samples
+       ''' % (-1*ns0,ns0+1,-ns0+1,5))
+
+Flow('pwdatacube','spray weight01','add mode=p ${SOURCES[1]}')
+Result('pwdatacube',
+       '''
+       transp plane=23 | put d3=1 o3=%d | byte gainpanel=all |
+       grey3 wanttitle= flat=n labelfat=4 font=2 titlefat=4
+       label2=Distance label3="Prediction" unit3=trace
+       frame1=100 frame2=100 frame3=%d point1=0.9 point2=0.8 
+       o3num=%d d3num=3 n3tic=%d  clip=0.00358515
+       '''  % (-ns0,ns0+1,-ns0+1,5))
+
+Flow('wdatacube','spray weight11','add mode=p ${SOURCES[1]}')
+Result('wdatacube',
+       '''
+       transp plane=23 | put d3=1 o3=%d | byte gainpanel=all |
+       grey3 wanttitle= flat=n labelfat=4 font=2 titlefat=4
+       label2=Distance label3="Prediction" unit3=trace
+       frame1=100 frame2=100 frame3=%d point1=0.9 point2=0.8 
+       o3num=%d d3num=3 n3tic=%d  clip=0.00358515
+       '''  % (-ns0,ns0+1,-ns0+1,5))
+
+Flow('norm','weight11','stack')
+Flow('gsimilarstack1','spray weight11 norm',
+     'add mode=p ${SOURCES[1]} | stack | add mode=d ${SOURCES[2]}')
+Result('gsimilarstack1',
+       '''
+       grey clip=0.00358515 wanttitle=n label2=Distance labelfat=4
+       font=2 titlefat=4
+       ''')
+
+Flow('gdif1','noise gsimilarstack1','sfadd scale=1,-1 ${SOURCES[1]}')
+Result('gdif1',
+       '''
+       grey clip=0.00358515 wanttitle=n label2=Distance labelfat=4
+       font=2 titlefat=4
+       ''')
+
+# Standard stacking
+Flow('mean1','spray','stack axis=2 ')
+Result('mean1',
+       '''
+       grey clip=0.00358515 wanttitle=n label2=Distance labelfat=4
+       font=2 titlefat=4
+       ''')
+Flow('mdif1','noise mean1','sfadd scale=1,-1 ${SOURCES[1]}')
+Result('mdif1',
+       '''
+       grey clip=0.00358515 wanttitle=n label2=Distance labelfat=4
+       font=2 titlefat=4
+       ''')
+
+# LUM filtering
+Flow('median1','spray',
+     '''
+     transp plane=12 | lum nfw=%d shnclip=%d smnclip=%d boundary=y |
+     sfwindow n1=1 f1=%d
+     ''' % ((2*ns0+1),ns0,ns0,ns0))
+Result('median1',
+       '''
+       grey clip=0.00358515 wanttitle=n label2=Distance labelfat=4
+       font=2 titlefat=4
+       ''')
+Flow('ldif1','noise median1','sfadd scale=1,-1 ${SOURCES[1]}')
+Result('ldif1',
+       '''
+       grey clip=0.00358515 wanttitle=n label2=Distance labelfat=4
+       font=2 titlefat=4
+       ''')
+
+# Median filtering
+Flow('mf','spray',
+     '''
+     transp plane=12 | mf nfw=%d boundary=y |
+     sfwindow n1=1 f1=%d
+     ''' % ((2*ns0+1),ns0))
+Result('mf','grey wanttitle=n label2=Distance labelfat=4 font=2 titlefat=4')
+Flow('mdif','noise mf','sfadd scale=1,-1 ${SOURCES[1]}')
+Result('mdif',
+       '''
+       grey clip=0.00358515 wanttitle=n label2=Distance labelfat=4
+       font=2 titlefat=4
+       ''')
+
+End()

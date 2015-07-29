@@ -1,0 +1,83 @@
+from rsf.proj import *
+from rsf.prog import RSFROOT
+
+tests = '''
+align alignh aspect_ratio clipping colors coltab Cyrillic erase greycol hatch 
+limit pattern size text white colormask orient rascolor raster
+'''
+
+demos = '''
+Cross Graph KPCC Math Panama Seplogo Tectonics Texas
+'''
+
+vfiles = '''
+anisotropy bering collage erase FDTT gamma grid impulse jon landsat
+pacific perestroika photo polar pyramid reciprocity time vmap work
+world zplot
+'''
+
+#removed mahjongg sun moffett vgr2 to save space
+
+proj = Project()
+libprefix = project.get('DYNLIB','')
+proj.Prepend(LIBS=[libprefix+'rsfplot'])
+
+def program(prog):
+    exe = proj.Program(prog+'.c')
+    return str(exe[0])
+
+api = proj.get('API',[])
+
+if 'f77' in api:
+    fproj = Project()
+    fproj.Prepend(LIBS=['rsfplotf',libprefix+'rsfplot'])
+
+    def fprogram(prog):
+        exe = fproj.Program(prog+'.f',
+                            LINK=fproj.get('F77'),
+                            LINKFLAGS=fproj.get('F77FLAGS'))
+        return str(exe[0])
+
+for test in Split(tests):
+     Result(test,'./TEST_'+test,'plas')
+
+for demo in Split(demos):
+    Result(demo,'./DEMO_'+demo,'plas')
+
+for vfile in Split(vfiles):
+    demo = 'demo_'+vfile
+    Result(demo,demo+'.v','Movie')
+
+for f in range(19):
+     font = 'font%d' % f
+     Result(font,program('Font'),'./$SOURCE %d | plas' % f,stdin=0)
+
+vppen = os.path.join(RSFROOT,'bin/vppen')
+
+Result('vppen','./TEST_erase','plas | %s gridnum=4 frame=y' % vppen)
+
+Result('vppen2',
+       '''
+       ./TEST_aspect_ratio ./DEMO_Graph ./TEST_colors
+       ./DEMO_Tectonics ./DEMO_Texas ./TEST_align
+       ./TEST_clipping ./DEMO_Graph ./TEST_aspect_ratio
+       ''',
+       '''
+       %s ${SOURCES[:9]} | plas | %s gridnum=3
+       ''' % (WhereIs('cat'),vppen),stdin=0)
+
+for prog in Split('ras ctext poly ufill'):
+    Result(prog,program(prog+'test'),'./$SOURCE',stdin=0)
+
+example = 'libvplot_example'
+Result('example',[example+'.dat',program(example)],'./${SOURCES[1]}')
+
+if 'f77' in api:
+    for prog in Split('fras ftext marker'):
+        Result(prog,fprogram(prog+'test'),'./$SOURCE',stdin=0)
+
+    Result('ellips',fprogram('ellips'),'./$SOURCE',stdin=0)
+
+proj.Program('Jontest.c')
+
+End()

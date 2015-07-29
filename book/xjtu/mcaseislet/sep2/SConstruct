@@ -1,0 +1,152 @@
+from rsf.proj import *
+
+import os
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+
+#Fetch('cmp.HH','acig',private)
+Flow('cmp','cmp.HH','dd form=native | tpow tpow=2 | mutter v0=1.4 half=n')
+
+def grey(title,other=''):
+    return '''
+    grey title="%s" labelsz=12 titlesz=16 labelfat=10 titlefat=10 
+    scalebar=y  label1="Time (s)" label2="Offset (km)" %s
+    ''' % (title,other)
+
+Plot('cmp',grey('(a) Data','clip=228'))
+
+# Playing with amplitude gains
+##############################
+Flow('env','cmp','envelope | scale axis=2')
+Flow('amp','env',
+     '''
+     math output="atan(input)" |
+     math output="input-sin(input)" |
+     add mode=d $SOURCE
+     ''')
+
+Flow('acmp','cmp amp','add mode=p ${SOURCES[1]}')
+Flow('ncmp','cmp',
+     '''
+     scale axis=2 |
+     math output="atan(input)" |
+     math output="input-sin(input)"
+     ''')
+
+# Interpolate near offsets
+Flow('cmp0','cmp','window max2=1 | pad beg2=5')
+Flow('cmp1','cmp0','reverse which=2 opt=n | cat axis=2 $SOURCE')
+Flow('mask0','cmp','math output=1 | window max2=1 | pad beg2=5')
+Flow('mask1','mask0','reverse which=2 opt=n | cat axis=2 $SOURCE')
+Flow('dip1','cmp1','math output="x2*%g/(x1+0.001)" ' % (0.05/(0.004*1.5*1.5)))
+Flow('dip2','cmp1 dip1 mask1',
+     'twodip2 eps=100 lam=10 dip1=${SOURCES[1]} mask=${SOURCES[2]} q0=0')
+Flow('mis','cmp1 dip2 mask1',
+     '''
+     planemis2 dip=${SOURCES[1]} mask=${SOURCES[2]} verb=y prec=0 niter=10000
+     ''')
+Flow('mis2','mis cmp','window min2=0 n2=6 | cat axis=2 ${SOURCES[1]}')
+Flow('mis3','mis2','window f2=1 | reverse which=2 opt=n | cat axis=2 $SOURCE')
+
+#Plot('mis2','grey title="Near Offsets Interpolated" ')
+
+# Predict multiples
+###################
+Flow('ccmp','mis2','pad n1=2048 | fft1 | fft3')
+Flow('mult','ccmp','add mode=p $SOURCE | fft3 inv=y | fft1 inv=y | window n1=1000')
+Plot('mult','window f2=6 | ' + grey('(b) SRME-predicted Multiples'))
+
+# Mask the important part
+#########################
+Flow('mask','mult','math output=1 | mutter hyper=y t0=0.7 v0=2 half=n | smooth rect1=5 rect2=5')
+Flow('cmp2','mask mis2','add mode=p ${SOURCES[1]}')
+Flow('mult2','mask mult','add mode=p ${SOURCES[1]}')
+
+# Estimate dips
+###############
+Flow('mdip','mult2','dip rect1=20 rect2=10 liter=40 pmin=0')
+Flow('vdip','cmp2',
+     'math output="%g*x2/(x1+0.004)" ' % (0.05/(2.5*2.5*0.004)))
+Flow('mask2','mdip','mask max=5 | dd type=float | smooth rect1=5 rect2=5')
+
+Flow('mdip2','cmp2 mdip mask2 vdip',
+     '''
+     twodip2 eps=15 lam=5 dip2=${SOURCES[1]} dip1=${SOURCES[3]} mask=${SOURCES[2]} verb=y 
+     ''')
+
+Flow('mdip0','mdip2','window n3=1 f2=6')
+Flow('mdip1','mdip2','window f3=1 f2=6')
+Plot('mdip0',
+     grey('(c) Signal Slope',
+          'color=j allpos=y clip=5 minval=0 maxval=6 barlabel="Slope (samples)" '))
+Plot('mdip1',
+     grey('(d) Noise Slope',
+          'color=j allpos=y clip=5 minval=0 maxval=6 barlabel="Slope (samples)" '))
+Result('srme','cmp mult mdip0 mdip1','SideBySideAniso')
+
+
+
+Flow('pvel0','cmp mdip0','pveltran half=n v0=1 dv=0.02 nv=100 dip=${SOURCES[1]}')
+Flow('pvel1','cmp mdip1','pveltran half=n v0=1 dv=0.02 nv=100 dip=${SOURCES[1]}')
+Flow('pvel','pvel0 pvel1','stack | envelope')
+
+
+#============== Separate signal/noise [method 1: pwdsigk] ======================
+Flow('comp','cmp2 mdip2','pwdsigk dips=${SOURCES[1]} verb=y niter=10000 eps=0.01')
+
+Flow('nois','comp mask','window f3=1 | add mode=p ${SOURCES[1]}')
+Plot('nois','window f2=6 | ' + grey('PWD Noise','clip=228'))
+
+Flow('sign','mis2 nois','add scale=1,-1 ${SOURCES[1]}')
+Plot('sign','window f2=6 | ' + grey('PWD Signal','clip=228'))
+
+
+Flow('vcmp','cmp','vscan semblance=y v0=1 nv=100 dv=0.02 half=n')
+Flow('vnois','nois','vscan semblance=y v0=1 nv=100 dv=0.02 half=n')
+Flow('vsign','sign','vscan semblance=y v0=1 nv=100 dv=0.02 half=n')
+Plot('vcmp',grey(' data','color=j allpos=y scalebar=y maxval=0.75'))
+Plot('vnois',grey('PWD (nois)','color=j allpos=y maxval=0.75'))
+Plot('vsign',grey('PWD (signal)','color=j allpos=y maxval=0.75'))
+#Result('seppwdsigk','sign nois vcmp vsign','SideBySideAniso')
+
+
+#============== Separate signal/noise [method 2: seisigk] ======================
+Flow('cmp2s','cmp2','window n2=64')
+Flow('mdip2s','mdip2','window n2=64')
+Flow('masks','mask','window n2=64')
+Flow('comps','cmp2s mdip2s','seisigk dips=${SOURCES[1]} verb=y niter=1000')
+
+Flow('noiss','comps masks','window f3=1 | add mode=p ${SOURCES[1]}')
+Flow('signs','mis2 noiss','window n2=64 | add scale=1,-1 ${SOURCES[1]}')
+Flow('vsigns','signs','vscan semblance=y v0=1 nv=100 dv=0.02 half=n')
+Flow('vnoiss','noiss','vscan semblance=y v0=1 nv=100 dv=0.02 half=n')
+
+Plot('noiss','window f2=6 | ' + grey('seisigk Estimated Noise','clip=228'))
+Plot('signs','window f2=6 | ' + grey('seisigk Estimated Signal','clip=228'))
+Plot('vsigns',grey('seisigk (signal)','color=j allpos=y maxval=0.75'))
+Plot('vnoiss',grey('seisigk (noise)','color=j allpos=y maxval=0.75'))
+
+#============== Separate signal/noise [method 3: mcaseislet] ======================
+# obtain similar separation effect with only 10-20 iterations, more efficient!
+Flow('compsmca','cmp2s mdip2s','mcaseislet dips=${SOURCES[1]} verb=y order=1 type=l eps=0.01 niter=15 pclip=10 pscale=13')
+
+Flow('noissmca','compsmca masks','window f3=1 | add mode=p ${SOURCES[1]}')
+Flow('signsmca','mis2 noiss','window n2=64 | add scale=1,-1 ${SOURCES[1]}')
+Flow('vsignsmca','signsmca','vscan semblance=y v0=1 nv=100 dv=0.02 half=n')
+Flow('vnoissmca','noissmca','vscan semblance=y v0=1 nv=100 dv=0.02 half=n')
+
+Plot('noissmca','window f2=6 | ' + grey('MCA Estimated Noise','clip=228'))
+Plot('signsmca','window f2=6 | ' + grey('MCA Estimated Signal','clip=228'))
+Plot('vsignsmca',grey('MCA (signal)','color=j allpos=y maxval=0.75'))
+Plot('vnoissmca',grey('MCA (noise)','color=j allpos=y maxval=0.75'))
+
+Result('signal','sign signs signsmca','SideBySideAniso')
+Result('nois','nois noiss noissmca','SideBySideAniso')
+#Result('mcasn','sign nois signs noiss signsmca noissmca','SideBySideAniso')
+
+Result('vsignal','vsign vsigns vsignsmca vcmp','SideBySideAniso')
+Result('vnois','vnois vnoiss vnoissmca vcmp','SideBySideAniso')
+#Result('vscanmcasn','vsign vnois vsigns vnoiss vsignsmca vnoissmca vcmp','SideBySideAniso')
+
+End()

@@ -1,0 +1,84 @@
+Date: August, 2012
+
+Cant12 directory contains the workflows used to process marine seismic Line 12
+from the data set of the Canterbury Basin, New Zealand using Madagascar. Some
+processing jobs required access to Ranger (32 GB of RAM and 16 cores per node)
+at Texas Advanced Computing Center at UT. Therefore, some directories will 
+have a job file beside the SConstruct file .
+
+The list of sub directories with a brief description of the purpose of each
+
+- SEGY     : To read SEGY files and create shot.rsf file.
+- shot     : To pick sea floor time and create shot.rsf and shot0.rsf.
+- cmp      : To sort SHOT gathers into CMP gathers.
+- decon    : To apply predictive deconvolution; the result was not used in 
+             other processing workflows.
+- interp   : To interpolate shots using PWD method; the result was not used
+             in other processing workflows.
+- srme     : To predict surface related mutliple energy using the algorithm
+             described in (Dragoset 1998).
+- lpf      : To adaptively subtract the predicted mutliples using regularized 
+             nonstationary regressions introduced by Fomel (2009)
+- vel      : To automatically pick stacking velocities from demultipled data
+- stk0     : To create nmostk.rsf and dmostk.rsf from cmp/cmp.rsf; CMPs before
+             demultiple
+- stk      : To create nmostk.rsf and dmostk.rsf after demultiple
+- stkdemul : To apply poststack demultiple using SRME and regularized 
+             nonstationary regressions.
+- velcon   : To estimate migration velocities using both velocity continuation 
+             (Fomel 2003) and path integral (Burnett and Fomel 2011) methods on
+              diffraction data 
+- mig      : To generate conventional migrated section and migrated 
+             diffractions section using Kirchhoff migration in dip-angle 
+             gather domain. 
+
+Date: June 27, 2013
+
+Here are a few tips on running on Stampede:
+
+I donot think using "Fetch" is the approved way to load data onto stampede.
+I suggest you transfer data to stampede from anopther computer:
+
+scp filename username@stampede.tacc.utexas.edu:/path/to/your/project/dir
+or
+rsync filename username@stampede.tacc.utexas.edu:/path/to/your/project/dir
+example - I loged onto fomel5 and ran:
+rcp cant12.*.segy karls@stampede.tacc.utexas.edu:/work/02167/karls/data/cant12/fetch
+
+Also globus-url-copy that may be used to achieve higher performance than 
+the scp and scp programs when transferring large files between TACC clusters 
+and the TACC archive (Ranch). During production, the scp and scp speeds 
+between Stampede and Ranch average about 15MB/s, globus-url-copy speeds are 
+about 125MB/s. These values vary with I/O and network traffic.  Try:
+
+myproxy-logon -T -l <XSEDE_username> -s myproxy.xsede.org
+
+This command will prompt for your XSEDE password. The proxy is valid for 12 
+hours for all logins on the local machine. With globus-url-copy, you must 
+include the name of the server and a full path to the file. The general syntax 
+looks like:
+
+globus-url-copy  gsiftp://<gridftp_server1>/<directory>|<file> \
+          gsiftp://<gridftp_server2>/<directory>|<file>
+
+The following command copies "directory1" from TACC's Stampede to TACC's Ranch system, renaming it to "directory2":
+
+login1$ globus-url-copy -vb \
+       gsiftp://data1.stampede.tacc.utexas.edu:2119/`pwd`/directory1/ \
+       gsiftp://gridftp1.ranch.tacc.utexas.edu:2119/home/00000/johndoe/directory2/
+I ran:
+globus-url-copy -vb  \
+       gsiftp:/work/02167/karls/data/cant12/fetch \
+       gsiftp://gridftp1.ranch.tacc.utexas.edu:/home3/02167/karls/data/cant12/fetch
+and got "command not found"
+
+time scp /work/02167/karls/data/cant12/fetch/*  karls@ranch.tacc.utexas.edu:/home3/02167/karls/data/cant12/fetch
+takes 2m25s
+rsync /work/02167/karls/data/cant12/fetch/*  karls@ranch.tacc.utexas.edu:/home3/02167/karls/data/cant12/fetch
+after the scp took 1m45s
+
+I cd into SEGY and
+sbatch segy.job
+to show the queue:
+showq -u karls
+

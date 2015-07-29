@@ -1,0 +1,187 @@
+from rsf.proj import*
+from rsf.prog import RSFROOT
+from rsf.recipes.beg import server
+
+def Grey(data,other): 
+	Result(data,'grey label2=Trace unit2="" label1=Time unit1="s" title="" wherexlabel=b scalebar=y color=j min1=0 max1=5 min2=0 max2=2000 color=g %s minval=-0.4 maxval=0.4 clip=0.4 '%other)
+
+def Greynoise(data,other): 
+	Result(data,'add mode=p scale=3 | grey label2=Trace unit2="" label1=Time unit1="s" title="" wherexlabel=b scalebar=y color=j min1=0 max1=5 min2=0 max2=2000 color=g %s minval=-0.4 maxval=0.4 clip=0.4 '%other)
+
+def Greyzoom(data,other): 
+	Result(data,'put d1=0.002 d2=1 o1=1.5 o2=0 | grey clip=0.05 minval=-0.05 maxval=0.05 label2=Trace color=g unit2="" label1=Time unit1="s" title="" wherexlabel=b scalebar=y min1=0 max1=5 min2=0 max2=2000 %s'%other)
+
+########################################################################
+# INITIALIZATION
+########################################################################
+matlab         = WhereIs('matlab')
+matROOT = '../matfun'
+matfun = 'Southsea'
+matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
+
+if not matlab:
+    sys.stderr.write('\nCannot find Matlab.\n')
+    sys.exit(1)
+
+############################################################
+## import south sea 
+############################################################
+Fetch('southsea.bin','southsea',server)
+
+Flow('southsea0','southsea.bin',' echo in=$SOURCE n1=2500 n2=2000 data_format=native_float | put n1=2500 n2=2000 d1=0.002 d2=1 o1=0 o2=0 | scale axis=2')
+
+############################################################
+## generate and process synthetic data
+############################################################
+Flow('southsea-fxdecon0 southsea-fxemd0 southsea-fxemdpf0',['southsea0',os.path.join(matROOT,matfun+'.m')],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[0]}','${TARGETS[0]}','${TARGETS[1]}','${TARGETS[2]}');quit"
+     '''%vars(),stdin=0,stdout=-1)
+
+
+Flow('southsea-fxemd-noise0','southsea0 southsea-fxemd0',' add scale=1,-1 ${SOURCES[1]}')
+Flow('southsea-fxdecon-noise0','southsea0 southsea-fxdecon0',' add scale=1,-1 ${SOURCES[1]}')
+Flow('southsea-fxemdpf-noise0','southsea0 southsea-fxemdpf0',' add scale=1,-1 ${SOURCES[1]}')
+
+
+## zoom
+Flow('southsea-zoom','southsea0','put o1=0 d1=0.002 | window n1=750 f1=750')
+Flow('southsea-fxdecon-zoom','southsea-fxdecon0','put o1=0 d1=0.002 |window n1=750 f1=750')
+Flow('southsea-fxemd-zoom','southsea-fxemd0','put o1=0 d1=0.002 |window n1=750 f1=750')
+Flow('southsea-fxemdpf-zoom','southsea-fxemdpf0','put o1=0 d1=0.002 |window n1=750 f1=750')
+Flow('southsea-fxdecon-noise-zoom','southsea-fxdecon-noise0','put o1=0 d1=0.002 |window n1=750 f1=750 ')
+Flow('southsea-fxemd-noise-zoom','southsea-fxemd-noise0','put o1=0 d1=0.002 |window n1=750 f1=750')
+Flow('southsea-fxemdpf-noise-zoom','southsea-fxemdpf-noise0','put o1=0 d1=0.002 |window n1=750 f1=750')
+
+## Ploting
+# without frame
+Grey('southsea0',' minval=-0.6 maxval=0.6')
+Grey('southsea-fxdecon0',' minval=-0.6 maxval=0.6')
+Grey('southsea-fxemd0',' minval=-0.6 maxval=0.6')
+Grey('southsea-fxemdpf0',' minval=-0.6 maxval=0.6')
+Greynoise('southsea-fxdecon-noise0',' minval=-0.3 maxval=0.3')
+Greynoise('southsea-fxemd-noise0',' minval=-0.3 maxval=0.3')
+Greynoise('southsea-fxemdpf-noise0',' minval=-0.3 maxval=0.3')
+Grey('southsea-zoom','min1=1.5 max1=3 minval=-0.6 maxval=0.6')
+
+# zoomed section
+labels=[]
+Plot('label1',None,
+	'''
+	box x0=3.5 y0=8.1 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+labels.append('label1')
+
+Plot('label2',None,
+	'''
+	box x0=5 y0=7.7 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+labels.append('label2')
+
+Plot('label3',None,
+	'''
+	box x0=6.9 y0=7.9 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+labels.append('label3')
+
+Plot('label4',None,
+	'''
+	box x0=9.3 y0=7.7 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+labels.append('label4')
+
+Plot('label5',None,
+	'''
+	box x0=4.3 y0=3.5 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+labels.append('label5')
+
+Plot('label6',None,
+	'''
+	box x0=9.2 y0=3.2 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+labels.append('label6')
+
+
+Grey('southsea-fxdecon-zoom','min1=1.5 max1=3 minval=-0.6 maxval=0.6 ')
+Grey('southsea-fxemd-zoom','min1=1.5 max1=3 minval=-0.6 maxval=0.6')
+Grey('southsea-fxemdpf-zoom','min1=1.5 max1=3 minval=-0.6 maxval=0.6')
+Greynoise('southsea-fxdecon-noise-zoom','min1=1.5 max1=3 minval=-0.3 maxval=0.3')
+Greynoise('southsea-fxemd-noise-zoom','min1=1.5 max1=3 minval=-0.3 maxval=0.3')
+Greynoise('southsea-fxemdpf-noise-zoom','min1=1.5 max1=3 minval=-0.3 maxval=0.3')
+
+
+Result('southsea-fxdecon-zoom1',['./Fig/southsea-fxdecon-zoom.vpl']+  labels,'Overlay')
+Result('southsea-fxemd-zoom1',['./Fig/southsea-fxemd-zoom.vpl']+  labels,'Overlay')
+Result('southsea-fxemdpf-zoom1',['./Fig/southsea-fxemdpf-zoom.vpl']+  labels,'Overlay')
+Result('southsea-fxdecon-noise-zoom1',['./Fig/southsea-fxdecon-noise-zoom.vpl']+  labels,'Overlay')
+Result('southsea-fxemd-noise-zoom1',['./Fig/southsea-fxemd-noise-zoom.vpl']+  labels,'Overlay')
+Result('southsea-fxemdpf-noise-zoom1',['./Fig/southsea-fxemdpf-noise-zoom.vpl']+ labels,'Overlay')
+
+
+
+## Creating framebox
+x=0
+y=1.5
+w=2000
+w1=1.5
+
+Flow('frame.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	string.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame','frame.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=0 max1=2000 min2=0 max2=5 pad=n plotflat=20 plotcol=3 
+	wantaxis=n wanttitle=n yreverse=y scalebar=y
+	''')
+
+## Ploting with frame
+
+labels1=[]
+Plot('label11',None,
+	'''
+	box x0=3.5 y0=6.25 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+labels1.append('label11')
+
+Plot('label22',None,
+	'''
+	box x0=5 y0=6.21 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+labels1.append('label22')
+
+Plot('label33',None,
+	'''
+	box x0=6.9 y0=6.25 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+labels1.append('label33')
+
+Plot('label44',None,
+	'''
+	box x0=9.3 y0=6.3 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+labels1.append('label44')
+
+Plot('label55',None,
+	'''
+	box x0=4.1 y0=4.92 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+labels1.append('label55')
+
+Plot('label66',None,
+	'''
+	box x0=9.4 y0=4.85 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+labels1.append('label66')
+
+Result('southsea',['./Fig/southsea0.vpl', 'frame'],'Overlay')
+Result('southsea-fxdecon',['./Fig/southsea-fxdecon0.vpl', 'frame'],'Overlay')
+Result('southsea-fxemd',['./Fig/southsea-fxemd0.vpl', 'frame'],'Overlay')
+Result('southsea-fxemdpf',['./Fig/southsea-fxemdpf0.vpl', 'frame'],'Overlay')
+Result('southsea-fxdecon-noise',['./Fig/southsea-fxdecon-noise0.vpl', 'frame']+labels1,'Overlay')
+Result('southsea-fxemd-noise',['./Fig/southsea-fxemd-noise0.vpl', 'frame'],'Overlay')
+Result('southsea-fxemdpf-noise',['./Fig/southsea-fxemdpf-noise0.vpl', 'frame']+labels1,'Overlay')
+
+
+
+End()

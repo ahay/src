@@ -1,0 +1,40 @@
+from rsf.proj import *
+from rsf.gallery import gradient
+
+gradient.zero_offset('zodata')
+
+Result('zodata','grey title="Zero-Offset" ')
+
+gradient.get_velocity('vel')
+
+Flow('veloc','vel','window j2=20 min2=1.5')
+
+Result('veloc',
+       gradient.igrey('''
+       color=j allpos=y bias=1.5 scalebar=y
+       barlabel=Velocity barunit=km/s
+       ''','Velocity Model'))
+
+# FFD
+Flow('vel2','veloc','transp | scale dscale=0.5 | window n1=351')
+
+# Zero-offset migration
+zomig = '''
+reverse which=1 |
+transp |
+ffd0 nbt=50 nbb=49 nbl=50 nbr=49 vel=${SOURCES[1]} |
+transp
+'''
+
+Flow('zomig','zodata vel2',zomig)
+
+gradient.zo_image('zomig')
+
+# Impulse response
+gradient.get_impulse('impulse','zodata')
+
+Flow('impres','impulse vel2',zomig)
+
+gradient.impulse_response('impres','veloc')
+
+End()

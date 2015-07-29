@@ -1,0 +1,52 @@
+from rsf.proj import *
+
+ #######################################  
+ # Sigsbee 2B velocity model construct #
+ #######################################
+
+PRFX = 'sigsbee2b_'
+SUFX = '.segy' 
+
+for c in ('migration_velocity','stratigraphy','reflection_coefficients'):
+
+    if(c=='migration_velocity'):
+        v='vmig2B'
+        o=3.055
+        d=.0143
+        s=.0003048
+        l='Migration\ Velocity'
+        a='y'
+        u='\(km\/s\)'
+    if(c=='stratigraphy'):
+        v='vstr2B'
+        o=3.048
+        d=.00762
+        s=.0003048
+        l='Stratigraphic\ Velocity'
+        a='y'
+        u='\(km\/s\)'
+    if(c=='reflection_coefficients'):
+        v='reflectionCoefficients2B'
+        o=3.048
+        d=.00762
+        s=1
+        l='Reflection\ Coefficients'
+        a='n'
+        u=''
+    h = c + 'head'
+    t = PRFX + c + SUFX
+    Fetch(t,'sigsbee')
+
+    Flow([v,h],t,
+         '''
+         segyread tape=$SOURCE tfile=${TARGETS[1]} |
+         put
+         o1=0  d1=.00762   label1=Depth    unit1=km
+         o2=%f d2=%f       label2=Distance unit2=km
+         | scale rscale=%f
+         ''' %(o,d,s) ,stdin=0)
+
+    Result(v,v,'''grey color=i scalebar=y allpos=%s screenratio=.375 screenht=3
+                  wheretitle=t title=%s labelsz=4 titlesz=6 barlabel=%s''' % (a,l,u))
+
+End()

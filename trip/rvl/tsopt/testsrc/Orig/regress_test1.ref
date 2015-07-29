@@ -1,0 +1,9 @@
+create DiscreteTime object
+assign zero, check
+Discrete Time: index = 0
+create another discrete time object
+assign it a different integer
+assign second DT to first
+write them both out
+Discrete Time: index = 11
+Discrete Time: index = 11

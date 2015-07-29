@@ -1,0 +1,11 @@
+from rsf.proj import *
+
+# Input: Matlab logo (L-shaped membrane)
+
+Fetch('matlab.rsf','imgs')
+
+Flow('logo','matlab.rsf','dd form=native | put o1=0 o2=0 d1=1 d2=1')
+
+Result('logo','plsurf title=plsurf mesh=n color=c')
+
+End()

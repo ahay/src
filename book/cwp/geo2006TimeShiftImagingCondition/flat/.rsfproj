@@ -1,0 +1,3 @@
+uses=['sfmath', 'sfspike', 'sfsmooth', 'sfcat', 'sfunif3', 'sfai2refl', 'sfscale', 'sfgrey', 'sftransp', 'sfspray', 'sfput', 'sfricker1', 'sfwindow', 'sfgraph', 'sffft1', 'sfpad', 'sfreal', 'sfsrmod3', 'sfsrsyn', 'sfsrmig3', 'sfstack', 'sfradon', 'sftan2ang', 'sftshift']
+data=[]
+size=  485778384

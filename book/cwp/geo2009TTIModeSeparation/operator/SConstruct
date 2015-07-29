@@ -1,0 +1,201 @@
+## 
+ # elastic modeling; wavefield separation operators
+ ## illustrate VTI and TTI operators in 2D
+
+from rsf.proj import *
+import sys
+#sys.path.append('Python')
+import fdmod,fdd,spk,pot,pplot,stiff
+
+from math import *
+
+proj=Project()
+
+# ------------------------------------------------------------
+par = {
+    'nx':600, 'ox':0, 'dx':0.001,  'lx':'x', 'ux':'km',
+    'nz':600, 'oz':0, 'dz':0.001,  'lz':'z', 'uz':'km',
+    'nt':1001,'ot':0, 'dt':0.0001, 'lt':'t', 'ut':'s',
+    'nkx':600, 'okx':-3.14, 'dkx':0.09968,  'lkx':'k\_x\^ ', 'ukx':'',
+    'nkz':600, 'okz':-3.14, 'dkz':0.09968,  'lkz':'k\_z\^ ', 'ukz':'',
+    'kt':150,
+    'jsnap':200,
+    'height':10,
+    'nb':0,
+    'frq':100,
+    'ratio':1
+    }
+fdmod.param(par)
+par['labelattr']=par['labelattr']+'''
+titlesz=12 labelsz=8 bartype=h  font=4 barlabelsz=6 barlabelfat=3
+wantaxis=y wantlabel=y wanttitle=y parallel2=n 
+'''
+nframe=6
+order=8
+
+kformat='''pclip=100 format2=%1.0f format1=%1.0f
+           min1=-3.14 max1=3.14 label1="k\_z\^"  unit1=radians
+           min2=-3.14 max2=3.14 label2="k\_x\^"  unit2=radians  
+           o2num=-3 d2num=1 n2tic=7 '''
+xformat='''pclip=100  format2=%3.0f format1=%2.0f
+           min1=20 max1=44 min2=20 max2=44 
+           label1=sample# label2=sample# unit1= unit2=
+           o2num=20 d2num=5 n2tic=5'''
+
+
+
+##############################################################
+def delt(spk,m,n,par):
+
+    par['nzspk']=m
+    par['nxspk']=n
+
+    par['spikex']=par['nxspk']/2+1
+    par['spikez']=par['nzspk']/2+1
+    par['middlex']=(par['nxspk']/2)*par['dx']
+    par['middlez']=(par['nzspk']/2)*par['dz']
+
+    Flow(spk,None,
+         '''
+         spike nsp=1 mag=1
+         n1=%(nzspk)d o1=0 d1=1 k1=%(spikez)g
+         n2=%(nxspk)d o2=0 d2=1 k2=%(spikex)g |
+         put
+         label1=%(lz)s label2=%(lx)s
+         unit1=%(uz)s unit2=%(ux)s
+         ''' % par)
+
+
+##############################################################
+delt('spk',64,64,par)
+# ------------------------------------------------------------
+# model parameters
+# ------------------------------------------------------------
+Flow('zero',None,
+     '''
+     spike nsp=1 mag=0.0
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g 
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g |
+     put label1=%(lz)s label2=%(lx)s unit1=%(uz)s unit2=%(ux)s
+     ''' % par)
+
+for i in range(3):
+   
+    vp=3.0
+    vs=1.5
+    ro=1.0
+    epsilon=[0,0.25,0.25]
+    delta=[0,-0.29,-0.29]
+    nu=[0,0,30]
+    taglist=['-ISO','-VTI','-TTI']
+    tag=taglist[i]
+    par['c']=cos(nu[i]*pi/180.)
+    par['s']=sin(nu[i]*pi/180.)
+    Flow('vp',     'zero','add add=%f'%vp)
+    Flow('vs',     'zero','add add=%f'%vs)
+    Flow('ro',     'zero','add add=%f'%ro)
+    Flow('epsilon'+tag,'zero','add add=%f'%epsilon[i])
+    Flow('delta'+tag,  'zero','add add=%f'%delta[i])
+    Flow('nu'+tag, 'zero','add add=%f'%nu[i])
+    
+    
+    stiff.tti2d('cA'+tag,'vp','vs','ro','epsilon'+tag,'delta'+tag,'nu'+tag,par)
+    
+# ------------------------------------------------------------
+# operators with Gaussian filter sigma=1.0
+#   K domain
+    fdd.separatorD('dzK'+tag,'dxK'+tag,'spk','cA'+tag,'y','k','gaussian',1.0,8,25,25,par)
+
+    #  operators in the k domain rotated to symmetry axis and isotropy planes        
+    Flow('dzK-rot'+tag,['dzK'+tag+'-tmp','dxK'+tag+'-tmp'],
+         '''
+         add scale=%(c)f,-%(s)f ${SOURCES[1]}|
+         put label1=%(lkz)s label2=%(lkx)s
+             unit1=%(ukz)s unit2=%(lkx)s
+             o1=%(okz)f d1=%(dkz)f o2=%(okx)f d2=%(dkx)f 
+     '''%par)
+    
+    Flow('dxK-rot'+tag,['dzK'+tag+'-tmp','dxK'+tag+'-tmp'],
+         '''
+         add scale=%(s)f,%(c)f ${SOURCES[1]}|
+         put label1=%(lkz)s label2=%(lkx)s
+             unit1=%(ukz)s unit2=%(lkx)s
+             o1=%(okz)f d1=%(dkz)f o2=%(okx)f d2=%(dkx)f 
+     '''%par)
+    
+    
+    #  plot the unrotated and rotated
+    pot.cliptogetherK( 'dK'+tag,'dzK'+tag+'-tmp','dxK'+tag+'-tmp','"\F5 U\_z"','"\F5 U\_x"',1,kformat,par)
+    pot.cliptogetherK( 'dK-rot'+tag,'dzK-rot'+tag,'dxK-rot'+tag,'"\F5 U\_z"','"\F5 U\_x"',1,kformat,par)
+    
+#  X domain
+
+    fdd.separatorD('dzX'+tag,'dxX'+tag,'spk','cA'+tag,'y','x','gaussian',1.0,8,25,25,par)
+    Flow('dzX-rot'+tag,['dzX'+tag+'-tmp','dxX'+tag+'-tmp'],
+         '''add scale=%(c)f,-%(s)f ${SOURCES[1]}
+     '''%par)
+    Flow('dxX-rot'+tag,['dzX'+tag+'-tmp','dxX'+tag+'-tmp'],
+         '''
+     add scale=%(s)f,%(c)f ${SOURCES[1]}
+        '''%par)
+    
+
+    pot.cliptogetherX( 'dX'+tag, 'dzX'+tag+'-tmp','dxX'+tag+'-tmp','"\F5 L\_z"','"\F5 L\_x"',1,xformat,par)                     
+    pot.cliptogetherX( 'dX-rot'+tag,'dzX-rot'+tag,      'dxX-rot'+tag,      '"\F5 L\_z"','"\F5 L\_x"',1,xformat,par)
+                                       
+# ------------------------------------------------------------
+# operators with Gaussian filter different sigma
+    for sigindex in range(3):
+        sig=0.75+sigindex*0.25
+        sigtag='-sig%01d'%sigindex
+        print sigtag
+        fdd.separatorD('dzK'+sigtag+tag,'dxK'+sigtag+tag,'spk','cA'+tag,'y','k','gaussian',sig,8,25,25,par)
+        fdd.separatorD('dzX'+sigtag+tag,'dxX'+sigtag+tag,'spk','cA'+tag,'y','x','gaussian',sig,8,25,25,par)
+        Plot('dzK'+sigtag+tag,'dzK'+sigtag+tag+'-tmp',
+             '''put label1=%(lkz)s label2=%(lkx)s
+             unit1=%(ukz)s unit2=%(lkx)s
+             o1=%(okz)f d1=%(dkz)f o2=%(okx)f d2=%(dkx)f |'''%par+
+             fdmod.cgrey(kformat+' title="\F5 U\_z"',par))
+        Plot('dzX'+sigtag+tag,'dzX'+sigtag+tag+'-tmp',fdmod.cgrey(xformat+' title="\F5 L\_z"',par))
+
+        pplot.p1x2('dzKX'+sigtag+tag,'dzK'+sigtag+tag,'dzX'+sigtag+tag,par['ys']*.8,par['xs']*.8,par['xc']-1)
+##############################################################
+#   do not apply any taper
+#   k domain
+    fdd.separatorD('dzK-notaper'+tag,'dxK-notaper'+tag,'spk','cA'+tag,'y','k','notaper',1.0,8,25,25,par)
+    Flow('dzK-notaper-rot'+tag,['dzK-notaper'+tag+'-tmp','dxK-notaper'+tag+'-tmp'],
+         '''add scale=%(c)f,-%(s)f ${SOURCES[1]}|
+     put  label1=%(lkz)s label2=%(lkx)s
+         unit1=%(ukz)s unit2=%(lkx)s
+         o1=%(okz)f d1=%(dkz)f o2=%(okx)f d2=%(dkx)f 
+     '''%par)
+
+    Flow('dxK-notaper-rot'+tag,['dzK-notaper'+tag+'-tmp','dxK-notaper'+tag+'-tmp'],
+         '''
+     add scale=%(s)f,%(c)f ${SOURCES[1]}|
+     put label1=%(lkz)s label2=%(lkx)s
+         unit1=%(ukz)s unit2=%(lkx)s
+        o1=%(okz)f d1=%(dkz)f o2=%(okx)f d2=%(dkx)f 
+     '''%par)
+    
+
+
+    pot.cliptogetherK( 'dK-notaper'+tag, 'dzK-notaper'+tag+'-tmp','dxK-notaper'+tag+'-tmp','"\F5 U\_z"','"\F5 U\_x"',1,kformat,par)
+    pot.cliptogetherK( 'dK-notaper-rot'+tag,'dzK-notaper-rot'+tag,      'dxK-notaper-rot'+tag,      '"\F5 U\_z"','"\F5 U\_x"',1,kformat,par)
+                    
+# X domain
+    fdd.separatorD('dzX-notaper'+tag,'dxX-notaper'+tag,'spk','cA'+tag,'y','x','notaper',1.0,8,25,25,par)
+    Flow('dzX-notaper-rot'+tag,['dzX-notaper'+tag+'-tmp','dxX-notaper'+tag+'-tmp'],
+         '''add scale=%(c)f,-%(s)f ${SOURCES[1]}
+     '''%par)
+    Flow('dxX-notaper-rot'+tag,['dzX-notaper'+tag+'-tmp','dxX-notaper'+tag+'-tmp'],
+         '''
+     add scale=%(s)f,%(c)f ${SOURCES[1]}
+        '''%par)
+    pot.cliptogetherX( 'dX-notaper'+tag, 'dzX-notaper'+tag+'-tmp','dxX-notaper'+tag+'-tmp','"\F5 L\_z"','"\F5 L\_x"',1,xformat,par)
+    pot.cliptogetherX( 'dX-notaper-rot'+tag,'dzX-notaper-rot'+tag,      'dxX-notaper-rot'+tag,      '"\F5 L\_z"','"\F5 L\_x"',1,xformat,par)
+
+    Result('dX-notaper'+tag,'Overlay')
+    Result('dX-notaper-rot'+tag,'Overlay')
+
+End()

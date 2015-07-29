@@ -1,0 +1,25 @@
+from rsf.proj import *
+from bay import Bay
+from helderiv import Helderiv
+
+Bay('bay',f2=500,n2=1600,f1=400,n1=700)
+
+def plot(title):
+    return 'grey title="%s" pclip=99.9 gpow=.8 crowd=.85' % title
+
+Plot('bay',plot('Topographic map, Stanford area'))
+Plot('slope','bay','igrad | ' + plot('Southward slope'))
+
+Helderiv('aa',eps=0.001,na=16)
+Helderiv('bb',eps=4,na=16)
+
+Plot('helocut','bay aa bb',
+     '''
+     helicon filt=${SOURCES[1]} div=0 |
+     helicon filt=${SOURCES[2]} div=1 |
+     ''' + plot('Helix derivative'))
+
+Result('helocut','bay helocut slope','OverUnderAniso')
+
+###########################################################################
+End()

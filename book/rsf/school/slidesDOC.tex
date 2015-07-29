@@ -1,0 +1,219 @@
+\input{pcsmacros}
+\input{pcscolset}
+\pgfdeclareimage[height=1.0in]{logo}{Fig/Madagascar}
+
+\title[]{\mg \\ reproducible documents}
+\author[]{Paul Sava}
+\institute{
+  Center for Wave Phenomena \\
+  Colorado School of Mines \\
+  psava@mines.edu
+}
+\date{}
+\logo{}
+\large
+
+% ------------------------------------------------------------
+\mode<beamer> { \cwpcover }
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{definitions}
+
+\begin{columns}[t]
+   \column{.5\textwidth} \big{\latex}
+   \cit{a document markup language and document preparation system 
+     for the \TeX~typesetting program
+   }
+
+   \column{.5\textwidth} \big{\mg}
+   \cit{an open-source software package for multidimensional 
+     data analysis and reproducible computational experiments
+   }
+\end{columns}
+
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{document preparation}
+
+\begin{columns}[t]
+   \column{.5\textwidth} \big{\latex}
+   \cen{documents: \\ articles \\ slides \\ \dots}
+
+   \column{.5\textwidth} \big{\mg}
+   \cen{experiments: \\ figures}
+\end{columns}
+
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{document organization}
+
+\begin{columns}[t]
+   \column{.20\textwidth} \cen{book}
+   \column{.35\textwidth} \cen{chapter}
+   \column{.30\textwidth} \cen{example}
+   \column{.15\textwidth} \cen{figures}
+\end{columns}
+
+\pause
+
+\begin{columns}[t]
+   \column{.20\textwidth} \ctt{rsf/}
+   \column{.35\textwidth} \ctt{school/}
+   \column{.30\textwidth} \ctt{sigsbee/}
+   \column{.15\textwidth} \ctt{Fig}
+\end{columns}
+
+\pause
+
+\begin{columns}[t]
+   \column{.20\textwidth} 
+   \column{.35\textwidth}    
+   \ctt{SConstruct \\ slidesWSI.tex \\ slidesDOC.tex \\ articleWSI.tex \\ \dots}
+   \column{.30\textwidth} 
+   \ctt{SConstruct}
+   \column{.15\textwidth}
+\end{columns}
+
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{figure directories}
+
+\begin{columns}[t]
+   \column{.5\textwidth} 
+   \cen{\texttt{$\dots$/Fig}}
+   \cen{\texttt{scons blah.view}}
+   \cit{ ``testing'' figures}
+
+   \column{.5\textwidth} 
+   \cen{\texttt{\$RSFFIGS}}
+   \cen{\texttt{scons blah.lock}}
+   \cit{``permanent'' figures}
+\end{columns}
+
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame}
+\big{Geophysics article}
+\sep
+\big{\texttt{cd \$RSF/book/rsf/school}}
+\big{\texttt{scons articleWSI.read}}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{general info}
+  \framesubtitle{import commonly used \latex~macros}
+  \normalsize
+  \grayshade{
+   \texttt{$\backslash$input\{\dots\}}
+  }
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{general info}
+  \framesubtitle{paper and author information}
+  \normalsize
+  \grayshade{
+    \texttt{$\backslash$author\{\dots\}} \\
+    \texttt{$\backslash$title\{\dots\}} \\
+    \texttt{$\backslash$email\{\dots\}} \\
+    \texttt{$\backslash$righthead\{\dots\}} \\
+    \texttt{$\backslash$lefthead\{\dots\}} \\
+    \texttt{$\backslash$ms\{\dots\}}
+    \\ \vspace{0.5in}
+    \texttt{$\backslash$maketitle}
+  }
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{chapters}
+  \framesubtitle{paper sections}
+  \normalsize
+  \grayshade{
+    \texttt{$\backslash$begin\{abstract\} \\
+      \dots \\
+      $\backslash$end\{abstract\}
+    }
+    \\ \vspace{0.5in}
+    \texttt{$\backslash$section\{\dots\}
+    }
+  }
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{figures}
+  \framesubtitle{}
+  \normalsize
+  \grayshade{
+    \texttt{$\backslash$inputdir\{\dots\}}
+    \\ \vspace{0.5in}
+    \texttt{$\backslash$plot\{\dots\}\{\dots\}\{\dots\} \\
+    $\backslash$sideplot\{\dots\}\{\dots\}\{\dots\} \\
+    $\backslash$multiplot\{\dots\}\{\dots\}\{\dots\}\{\dots\}
+    }
+  }
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{figure and equation numbers}
+  \framesubtitle{definitions in \texttt{pcsmacros.tex}}
+  \normalsize
+  \grayshade{
+    \texttt{$\backslash$rFg\{\dots\}}
+  }
+  \texttt{$\backslash$def$\backslash$rFg\#1\{Figure$\sim\backslash$ref\{fig:\#1\}\}}
+
+\vfill
+
+  \normalsize
+  \grayshade{
+    \texttt{$\backslash$rEq\{\dots\}}
+  }
+    \texttt{$\backslash$def$\backslash$rEq\#1\{Equation$\sim\backslash$ref\{eqn:\#1\}\}}
+
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{citations}
+  \framesubtitle{entries in \texttt{.bib} files}
+  \normalsize
+  \grayshade{
+    \texttt{$\backslash$cite[]\{\dots\} \\
+      $\backslash$cite\{\dots\}}
+    \\ \vspace{0.5in}
+    \texttt{$\backslash$bibliographystyle\{\dots\} \\
+      $\backslash$bibliography\{\dots\}}
+  }
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame}
+
+  \big{\url{http://www.ahay.org}}
+
+  \vfill
+
+  \big{\texttt{\$RSF/book/rsf/school}}
+
+  \vfill
+
+  \begin{center}
+    \pgfuseimage{logo}
+  \end{center}
+
+\end{frame}
+\cwpnote{}

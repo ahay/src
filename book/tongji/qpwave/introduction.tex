@@ -1,0 +1,117 @@
+\section{Introduction}
+All anisotropy arises from ordered heterogeneity much smaller than the wavelength \cite[]{winterstein}.
+ With the increased resolution of seismic data and because of wider seismic acquisition aperture
+(both with respect to offset and azimuth), there is a growing awareness that an 
+isotropic description of the Earth may no longer be adequate. Anisotropy appears to be a near-ubiquitous
+ property of earth materials, and its effects on seismic data must be quantified.
+
+ Wave equation is the central ingredient in characterizing wave propagation for seismic imaging and elastic
+parameters inversion. In isotropic media, it is common to use scalar acoustic wave 
+equations to describe the propagation of seismic data as representing only P-wave energy \cite[]{yilmaz}.
+ Compared to the elastic wave equation, the acoustic wave equation is simpler and
+ more efficient to use, and does not yield S-waves for modeling of P-waves.
+ Anisotropic media are inherently described by elastic wave equations with P- and S-wave modes
+ intrinsically coupled.
+It is well known that a S-wave passing through an anisotropic medium splits into two mutually
+ orthogonal waves \cite[]{crampin:1984}. Generally the P-wave and the two S-waves are not polarized parallel 
+ and perpendicular to the wave vector, thus are called quasi-P (qP) and qausi-S (qS) waves.
+ However, most anisotropic migration implementations
+ do not use the full elastic anisotropic wave equation because of the high computational cost involved, and
+ the difficulties in separating wavefields into different wave modes. Although an acoustic wave does not
+ exist in anisotropic media, \cite{alkhalifah:2000} introduced a pseudo-acoustic
+ approximate dispersion relation for vertically transverse isotropic (VTI) media by setting the shear 
+velocity along the axis of symmetry to zero, which leads to a fourth-order partial differential equation (PDE)
+ in space-time domain.
+Following the same procedure, he also presented a pseudo-acoustic wave equation of sixth-order in
+vertical orthorhombic (ORT) anisotropic media \cite[]{alkhalifah:2003}. Many authors have
+ implemented pseudo-acoustic VTI modeling and migration based on
+ various coupled second-order PDE systems derived
+ from Alkhalifah's dispersion relation \cite[]{alkhalifah:2000,klie,zhou:2006eage,hestholm}.
+Alternatively, coupled first-order and second-order systems are derived starting from first principles
+ (the equations of motion and Hooke's law) under the pseudo-acoustic approximation for
+ VTI media \cite[]{duveneck:2011} and recently for orthorhombic media 
+as well \cite[]{fowler.king:2011,zhang.zhang:2011}.
+ The pseudo-acoustic tilted transversely isotropic (TTI) or tilted orthorhombic wave equations
+ can be obtained from their pseudo-acoustic VTI (or pseudo-acoustic vertical orthorhombic)
+counterparts by simply performing a coordinate rotation according to the directions of the
+ symmetry axes \cite[]{zhou:2006seg,fletcher:2009}. 
+Pseudo-acoustic wave equations have been
+ widely used for RTM in transversely isotropic (TI) media because
+they describe the kinematic signatures of qP-waves
+ with sufficient accuracy and are simpler than their elastic 
+counterparts, which leads to computational savings in practice.
+
+On the other hand, the pseudo-acoustic approximation may result in some problems in characterizing wave propagation
+ in anisotropic media. First, to enhance computational stability,
+pseudo-acoustic approximations reduce the freedom
+ to choose the material parameters compared with their elastic counterparts \cite[]{grechka:2004}.
+Practitioners often observe instability in practice when the pseudo-acoustic
+ equations are used in complex TI media \cite[]{fletcher:2009,zhang:2011,bube:2012}.
+ Stable RTM implementations in TTI media 
+can be achieved by using pseudo-acoustic wave equations derived directly from first
+ principles \cite[]{duveneck:2011} 
+using self-adjoint or covariant derivative operators \cite[]{macesanu,zhang:2011}. 
+Second, the widely-used pseudo-acoustic approximation
+ still results in significant shear wave presence in both modeling data and RTM images \cite[]{zhang:2003,
+ grechka:2004, jin}. It is not easy to get rid of qSV-waves from
+ the wavefields simulated by the pseudo-acoustic
+  wave equations when a full waveform modeling for 
+qP-wave is required. Placing both sources and receivers into an artificial isotropic or elliptic
+ anisotropic acoustic layer could eliminate many of the undesired
+qSV-wave energy \cite[]{alkhalifah:2000}, but the propagated qP-wave 
+may get converted to qSV-wave and the qSV-wave might get
+ converted back to qP-wave in other portions of the model.
+ A projection filtering based on an approximate representation of characteristic-waveform
+of qP-waves was suggested to suppress undesired 
+qSV-wave energy at each output time step \cite[]{zhang:2009}.
+But qS-wave artifacts still remain and
+ qP-wave amplitudes may be not correctly restored due to the
+ approximation introduced in the used wave equation. To avoid the qSV-wave energy completely,
+different approaches have recently been proposed to model the pure qP-wave
+ propagation in VTI and TTI media. The optimized separable approximation \cite[]{liu:2009, zhang.zhang:2009,
+ du:2010}, the pseudo-analytical method \cite[]{etgen:2009}, the low-rank
+ approximation \cite[]{fomel:2013}, the Fourier finite-difference method \cite[]{song.fomel:2011} and the
+ rapid expansion method \cite[]{pestana.stoffa:2010} belong to this category.
+
+ In fact, anisotropic phenomena are especially noticeable in shear and mode-converted wavefields.
+ Therefore, modeling of anisotropic shear waves
+may be important both on theoretical and practical aspects. \cite{liu:2009}
+ factorized the pseudo-acoustic VTI dispersion relation
+ and obtained two pseudo-partial differential (PPD) equations, of which the qP-wave equation
+is well-posed for any value of the anisotropic parameters, but the qSV-wave
+ equation becomes well-posed only when the condition $\epsilon > \delta$ is satisfied. These PPD equations are very hard
+ to solve in heterogeneous media unless further approximations are introduced \cite[]{liu:2009,
+ chu:2011} or recently developed FFT-based approaches are used \cite[]{pestana:2011,song.fomel:2011,fomel:2013}.
+Note that some of the above efforts to model pure-mode wavefields suffer from accuracy
+ loss more or less due to the approximations to the phase velocities or dispersion relations. Furthermore,
+these pure-mode propagators only consider the phase term in wave propagation, so they are appropriate
+ for seismic migration but not necessarily for accurate seismic modeling, which may require taking account 
+of amplitude effects and other elastic phenomena such as mode conversion.
+
+In kinematics, there are various forms equivalent to the original first- or second-order elastic wave equations.
+Mathematically, analysis of the dispersion relation as matrix eigenvalue system allows one to generate equivalent
+coupled linear second-order systems by similarity transformations \cite[]{fowler:2010}.
+Accordingly, \cite{kang.cheng:2011a} proposed new coupled second-order systems for both
+qP- and qS-waves
+ in TI media by applying specified similarity transformations to the Christoffel equation.
+ Their coupled system for qP-waves represents dominantly
+the energy propagation of scalar qP-waves while that for qSV-waves 
+propagates dominantly the scalar qSV-wave
+ energy. However, each of the two systems still contains
+ relatively weak residual energy of the other mode. 
+\cite{cheng.kang:2012} and \cite{kang.cheng:2012} 
+ called such coupled systems ``pseudo-pure-mode wave equations'' and further proposed an approach
+to get separated qP- or qS-wave data from the pseudo-pure-mode wavefields in general anisotropic media.
+In the two articles of this series, we demonstrate how to simulate propagation of separated wave-modes based on 
+a new simplified description of wave propagation in general anisotropic media.
+We shall focus on qP- and qS-waves in each article separately.
+
+The first paper is structured as follows: First, we revisit the plane-wave analysis of the full elastic anisotropic
+ wave equation. Then we introduce a similarity transformation to the Christoffel equation required to
+ derive the pseudo-pure-mode qP-wave equation, and give the simplified forms under pseudo-acoustic or/and isotropic
+ approximations to illustrate the physical interpretation.
+ After that, we discuss how to obtain separated qP-wave
+ data from the extrapolated wavefields coupled with residual qS-waves.
+Finally, we show numerical examples
+to demonstrate the features and advantages of our approach in wavefield modeling and RTM in 
+TI and orthorhombic media.

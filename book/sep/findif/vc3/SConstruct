@@ -1,0 +1,44 @@
+from rsf.proj import *
+
+Flow('dat',None,
+     '''
+     spike n1=100 n2=129 n3=129
+     k1=50 k2=65 k3=65
+     d2=0.05 d3=0.05 mag=-1 |
+     ricker1 |
+     smooth rect2=3 rect3=3 rep=2
+     ''')
+
+for adj in (0,1):
+    vel = 'vel%d' % adj
+    Flow(vel,'dat','velcon3 adj=%d vel=12' % adj)
+    Plot(vel,
+         '''
+         transp | transp plane=23 |
+         byte gainpanel=%d | window %s3=%d |
+         grey3 frame1=65 frame2=65 frame3=%d
+         point1=0.75 point2=0.75 screenratio=1
+         wanttitle=n
+         ''' % ((75,'f',35,40),(10,'n',65,10))[adj])
+
+Result('velcon','vel1 vel0','SideBySideIso')
+
+Flow('qdome',None,'qdome d1=0.008 n1=200 | window j2=2')
+
+def grey3(title):
+    return '''
+    byte | grey3 frame1=100 frame2=25 frame3=25
+    flat=n point1=0.7 point2=0.7 title="%s"
+    ''' % title
+
+Result('qdome',grey3('Qdome Model'))
+
+Flow('velmod','qdome', 'velcon3 adj=0 nv=100')
+Flow('velmig','velmod','velcon3 adj=1 nv=100')
+
+Plot('velmod',grey3('Velocity Continuation Modeling'))
+Plot('velmig',grey3('Velocity Continuation Migration'))
+
+Result('modmig','velmod velmig','SideBySideIso')
+
+End()

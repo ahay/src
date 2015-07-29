@@ -1,0 +1,3 @@
+uses=['sfsigmoid', 'sfsmooth', 'sfpreconstkirch', 'sfwindow', 'sfgrey', 'sfspectra', 'sfscale', 'sfpow', 'sfcat', 'sfdots']
+data=[]
+size=     721212

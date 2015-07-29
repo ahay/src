@@ -1,0 +1,74 @@
+from rsf.proj import *
+from rsf.prog import RSFROOT
+
+Nt=4000
+dt=0.002
+t0=0
+
+Nx=400
+dx=0.025
+x0=0
+
+# Make synthetic data
+Flow('vel',None,'math n1=%d d1=%g o1=%g output="(1.5+0.5*x1)" ' % (Nt,dt,t0))
+
+# From velocity to slowness
+Flow('slo','vel','math output="1/input" ')
+
+Flow('data-3','vel',
+     '''
+     noise seed=1999 rep=y |
+     math output="input^3" |
+     cut n1=80 | cut f1=3999 |
+     ricker1 frequency=10 |
+     spray n=%d d=%g o=%g label=Offset unit=km |
+     inmo velocity=$SOURCE half=n slowness=n |
+     put label1=Time unit1=s |
+     mutter half=n tp=0.1 v0=1.5 
+     ''' % (Nx,dx,x0))
+Result('data-3','grey title=" " ')
+Flow('datacpx','data-3','rtoc')
+
+
+Ntau=Nt
+dtau=dt
+tau0=t0
+
+Np=400
+p0=0.1
+dp=(0.7-p0)/Np
+
+Plot('slo','graph transp=y yreverse=y min2=0.1 max2=0.6985 plotfat=0.2 plotcol=4 pad=n wanttitle=n wantaxis=n')
+
+
+# Apply FFT in time
+Flow('fftdata','datacpx','fft3 axis=1 pad=1 | window n1=2000 f1=2000')
+#Result('fftreal','fftdata','real | grey title="real" ')
+#Result('fftimag','fftdata','imag | grey title="imag" ')
+#Result('fftabs','fftdata','math output="abs(input)" | real | grey title="abs" ')
+
+Flow('fftdatac','fftdata','window n1=200 f1=10')
+#Result('fftrealc','fftdatac','real | grey title="realc" ')
+#Result('fftimagc','fftdatac','imag | grey title="imagc" ')
+#Result('fftabsc','fftdatac','math output="abs(input)" | real | grey title="absc" ')
+
+
+# direct Radon / single integral (vscan)
+#Flow('smod','data-3','vscan half=n slowness=y nv=%d dv=%g v0=%g type=power weight=n extend=0 mute=0 str=0 | math output=input*%g' % (Np,dp,p0,Nt*Nx*dx))
+#Plot('smod','grey label1=Time unit1=s label2=Slowness unit2=s/km title="smod" scalebar=y')
+#Result('smod','smod slo','Overlay')
+
+# direct Radon / single integral (nearest integer interpolation)
+Flow('dimod','data-3','diradon2 ntau=%d dtau=%g tau0=%g np=%d dp=%g p0=%g fi=1 | math output=input*%g' % (Ntau,dtau,tau0,Np,dp,p0,dx))
+#Plot('dimod','grey label1=Time unit1=s label2=Slowness unit2=s/km title="dimod" scalebar=y')
+#Result('dimod','dimod slo','Overlay')
+
+# Fast Radon
+Flow('bfio.bin',os.path.join(RSFROOT,'include','bfio.bin'),'/bin/cp $SOURCE $TARGET',stdin=0,stdout=-1)
+
+Flow('fmod','fftdatac bfio.bin','radon2 ntau=%d dtau=%g tau0=%g np=%d dp=%g p0=%g fi=1 EL=0 N=64 EPSx1=9 EPSx2=9 EPSk1=9 EPSk2=9 | math output=input*%g' % (Ntau,dtau,tau0,Np,dp,p0,2*dx/Nt))
+Plot('fmod','real | grey label1=Time unit1=s label2=Slowness unit2=s/km title=" " ')
+Result('fmod-3','fmod slo','Overlay')
+
+
+End()

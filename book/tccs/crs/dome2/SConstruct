@@ -1,0 +1,208 @@
+from rsf.proj import *
+
+Flow('dome',None,
+     '''
+     math d1=0.01 n1=2001 o1=-5 unit1=km label1=Distance
+     output="4-3*exp(-(x1-5)^2/9)"
+     ''')
+
+for g in range(2):
+    dome = 'dome%d' % g
+    Plot(dome,'dome',
+         '''
+         graph min2=0 max2=4 min1=0 max1=10
+         yreverse=y plotcol=%d plotfat=%d
+         wantaxis=n wanttitle=n scalebar=y pad=n
+         ''' % ((7,0)[g],(7,3)[g]))
+Flow('vel','dome',
+     '''
+     window min1=0 max1=10 |
+     spray axis=1 n=451 d=0.01 o=0 label=Depth unit=km |
+     math output="1.5+0.5*x1+0.0*x2"
+     ''')
+Plot('vel',
+     '''
+     grey color=j allpos=y bias=1.5 scalebar=y wanttitle=n
+     barreverse=y barlabel=Velocity barunit=km/s
+     ''')
+Result('dome','vel dome0 dome1','Overlay')
+
+Flow('dip','dome','math output="2/3*(x1-5)*input" ')
+
+# Data
+
+Flow('data','dome dip',
+     '''
+     kirmod cmp=y dip=${SOURCES[1]} 
+     nh=161 dh=0.025 h0=0
+     ns=401 ds=0.025 s0=0
+     freq=10 dt=0.004 nt=1001
+     vel=1.5 gradz=0.5 gradx=0.0 verb=y |
+     put d2=0.0125
+     ''')
+
+xx0 = 4
+dx = 1
+t0 = 1.345
+ft = int((t0-1)/0.004)
+fx = int(dx/0.025)
+emax = 0.05
+
+Result('data',
+       '''
+       byte |
+       transp plane=23 |
+       grey3 flat=n frame1=500 frame3=80 frame2=200
+       label1=Time unit1=s 
+       label3=Half-Offset unit3=km 
+       label2=Midpoint unit2=km
+       title=Data point1=0.8 point2=0.8 
+       ''')
+
+Plot('data',
+       '''
+       byte |
+       transp plane=23 memsize=1000 |
+       grey3 flat=y frame1=500 frame3=80 frame2=200
+       label1=Time unit1=s 
+       label3=Half-Offset unit3=km 
+       label2=Midpoint unit2=km
+       title=Data point1=0.8 point2=0.8 
+       ''')
+
+#window min3=%g max3=%g |
+
+
+
+# Extract traveltime
+
+gplot = '''
+transp |
+graph3 frame1=2 frame3=80 frame2=200
+wanttitle=n wantaxis=n min=4 max=0 plotfat=3
+point1=0.8 point2=0.8 plotcol=3
+'''
+
+#window min2=%g max2=%g |
+
+def gplot2(title,col,x0):
+    return '''
+    window min2=%g max2=%g |
+    transp |
+    graph3 frame1=2 frame3=80 frame2=%d
+    title="%s" wantaxis=n min=3 max=1 plotfat=3 plotcol=%d
+    ''' % (x0-dx,x0+dx,fx,title,4-col)
+
+Flow('pick','data','envelope | max1 | window n1=1 | real')
+Plot('pick',gplot)
+
+def tplot(title):
+    return '''
+    grey color=j bias=2 scalebar=y barlabel=Time barunit=s barreverse=y
+    title="%s" label1=Half-Offset unit1=km label2=Midpoint unit2=km
+    ''' % title
+
+########################################
+# NonH-CRS Hessian fitting:#############
+
+#Flow('crs_pick','pick','fitcrspicks')
+#Flow('nonhcrs_pick','pick','fitnonhcrspicks A1=%g A2=%g B=%g' % (-6.9287,-0.0000,1.0265))
+
+#Result('pick-crs-pick','pick crs_pick','Overlay')
+
+#Flow('err-hessian1',['crs_pick','pick'],
+#     'add scale=1,-1 ${SOURCES[1]} | math output="abs(input)" ')
+
+#Flow('err-nonh',['nonhcrs_pick','pick'],
+#     'add scale=1,-1 ${SOURCES[1]} | math output="abs(input)" ')
+
+#Result('err-hessian1',
+#       '''
+#       window min2=%g max2=%g |
+#       %s bias=0 allpos=y clip=%g minval=0 maxval=%g
+#       ''' % (x0-dx,x0+dx,tplot(' CRS Error (-Inv-Hessian * grad)'),emax,emax))
+
+#Result('err-nonh',
+#       '''
+#       window min2=%g max2=%g |
+#       %s bias=0 allpos=y clip=%g minval=0 maxval=%g
+#       ''' % (x0-dx,x0+dx,tplot(' NonH-CRS Error'),emax,emax))
+
+########################################
+
+
+Result('pick',tplot('Traveltime'))
+Result('data2','data pick','Overlay')
+
+# Least squares fitting
+
+Flow('zero',None,'spike n1=4 k1=1 mag=%g' % t0)
+
+type = {
+    'crs': 'CRS',
+    'ncrs': 'Nonhyperbolic CRS'
+    }
+
+for x0 in (3,4):
+     datax = 'data%d' % x0
+     weight = 'weight%d' % x0
+     
+     Flow(weight,'pick','math output=1/input | cut min2=%g | cut max2=%g | cut min1=%g' % (x0+dx,x0-dx,dx))
+     
+     Plot(datax,'data',
+     '''
+     window min3=%g max3=%g min1=1 max1=3 |
+     byte |
+     transp plane=23 |
+     grey3 flat=y frame1=250 frame3=80 frame2=%d
+     label1=Time unit1=s 
+     label3=Half-Offset unit3=km 
+     label2=Midpoint unit2=km
+     wanttitle=n
+     ''' % (x0-dx,x0+dx,fx))
+
+     for case in type.keys():
+
+          coef = 'zero'
+
+          for iter in range(100):
+               time = '%s-time%d-%d'% (case,iter,x0)
+               fit = '%s-fit%d-%d' % (case,iter,x0)
+    
+               Flow([time,fit],['pick',coef],
+               '''
+               mffit coef=${SOURCES[1]} fit=${TARGETS[1]}
+               type=%s x0=%g
+               ''' % (case,x0))
+    
+               match = '%s-match%d-%d'% (case,iter,x0)
+               coef2 = '%s-coef%d-%d'% (case,iter,x0)
+
+               Flow('d'+coef2,['pick',time,fit,weight],
+               '''
+               add mode=p ${SOURCES[0]} |
+               add scale=1,-1 ${SOURCES[1]} |
+               lsfit coef=$TARGET fit=${SOURCES[2]} weight=${SOURCES[3]}
+               ''',stdout=0)
+               Flow(coef2,['d'+coef2,coef],'add ${SOURCES[1]}')
+        
+               coef = coef2
+             
+          fit = case+'-fit%d' % x0
+          Flow(fit,time,'math output="sqrt(input)" ')
+          #   Result(fit,tplot(type[case]))
+
+          err = case+'-err%d' % x0
+          Flow(err,[fit,'pick'],
+               'add scale=1,-1 ${SOURCES[1]} | math output="abs(input)" ')
+          Result(err,
+                 '''
+                 window min2=%g max2=%g |
+                 %s bias=0 allpos=y clip=%g minval=0 maxval=%g
+                 ''' % (x0-dx,x0+dx,tplot(type[case] + ' Error'),emax,emax))
+          
+          Plot(fit+'g',fit,gplot2(type[case],case=='crs',x0))
+          Result(case+'-data%d' % x0,[datax,fit+'g'],'Overlay')
+
+End()
+

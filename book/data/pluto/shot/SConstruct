@@ -1,0 +1,29 @@
+from rsf.proj import *
+
+# Fetch Files from repository
+Fetch("P15shots150f_endon_0ph-1stHlf.SEGY","pluto")
+Fetch("P15shots150f_endon_0ph-2ndHlf.SEGY","pluto")
+
+# Convert Files to RSF and append headers
+files = ['P15shots150f_endon_0ph-1stHlf.SEGY','P15shots150f_endon_0ph-2ndHlf.SEGY']
+counter=0  #o2=360
+for item in ['rsf1','rsf2']:
+    Flow(item,files[counter], '''
+            segyread tape=$SOURCE | put  
+            o1=0 o2=0 o3=0 d2=.02286 d3=.0457 n2=350 n3=347  
+            label1=Time  label2=Position unit1=s unit2=km 
+            label3=Shot''',stdin=0)
+    counter = counter + 1
+
+# Concatinate Files
+Flow('plutoShots',['rsf1', 'rsf2'],'''
+            cat ${SOURCES[0:2]} axis=3''',stdin=0)
+
+# Plotting Section
+Result('zero','plutoShots','''window $SOURCE  min2=0 max2=0 size2=1 | 
+               grey  color=I gainpanel=a label2=Position\ X unit2=km
+               title=Zero\ Offset\ Data label2=Distance''')
+Result('shot30','plutoShots','''window $SOURCE  min3=1.371
+               max3=1.371 size3=1 | grey color=I wantframenum=y  
+               gainpanel=a title=Shot\ \#\ 30 label2=Offset''')
+End()

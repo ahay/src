@@ -1,0 +1,11 @@
+e=var('e')
+ex(e)=(sqrt(1+e^2)-1-log((1+sqrt(1+e^2))/2))/2
+bo(e)=e^2/8;
+no(e)=sqrt(1+e^2/4)-1
+fu(e)=-log(1-e^2/4)/2
+p1=plot(ex(e),(e,0,1))
+p2=plot(bo(e),(e,0,1),linestyle='--')
+p3=plot(no(e),(e,0,1),linestyle=':')
+p4=plot(fu(e),(e,0,1),linestyle='-.')
+p=p1+p2+p3+p4
+p.save(frame=True,axes_labels=['e','y'],gridlines=True,fontsize=14,figsize=[12,6],filename='junk_sage.pdf')

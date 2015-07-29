@@ -1,0 +1,258 @@
+from rsf.suproj import * 
+import rsf.proj
+
+#rsf.proj.Fetch('Nshots.su','nankai')
+
+Flow(['line', 'line.bin',  'line.asc'],'../../teapotdata/npr3_field.sgy',
+     '''
+     segyread bfile=${TARGETS[1]} hfile=${TARGETS[2]}
+        tape=$SOURCE endian=%d conv=1
+	remap=tracl,tracr byte=189l,193l
+     ''' % (1-little_endian()),stdin=0)
+	      
+Result('first','line',
+       '''
+       suwind count=3000 |
+       segyclean |
+       suximage title="display of first 3000 traces" perc=90
+       ''')
+
+Result('firstmovie','line',
+       '''
+       suwind count=49600 |
+       segyclean |
+       suxmovie n2=496 loop=1 fframe=1 dframe=1 
+                 title="prestack traces %g" perc=99 
+       ''')
+ 
+Flow('list1.su','line','surange >list1.txt; echo list1 complete',stdout=0)
+
+Flow('list2.su','line',
+     '''
+     suwind count=3000 
+     | sugethw key=fldr,tracf,cdp,cdpt,offset>list2.txt; echo list1 complete
+     ''',
+     stdout=0)
+
+file='checkstack'
+Flow([file, file+'.bin', file+'.asc'],'../../teapotdata/filt_mig.sgy',
+     '''
+     segyread bfile=${TARGETS[1]} hfile=${TARGETS[2]}
+       tape=$SOURCE endian=%d conv=1
+     | segyclean
+     ''' % (1-little_endian()))
+
+Result('checkstack','checkstack',
+       'suwind count=1000 | suximage perc=99')
+
+Result('checkmovie','checkstack',
+       '''
+       suxmovie n2=188 loop=1 fframe=1 dframe=1 
+                 title="filtered migration %g" perc=99 
+       ''')
+       
+#'filt_mig.sgy',segyread + '''
+#     |   sushw key=ntr a=534 | sushw key=d1 a=0 
+#     ''',
+#     stdin=0)
+
+#Result('shotmovie','line',
+#       '''
+#       suxmovie n2=69 loop=1 fframe=1 dframe=1 
+#                title="record %g" perc=20 
+#       ''')
+
+Result('ntg','line',
+       '''
+       suwind key=tracf min=96 max=96 
+       | suwind tmin=5.5 
+       | suximage perc=20 title="near trace gather"
+       ''')
+
+# Display individual shots 
+
+for fldr in (1707,1847):
+    shot = 'shot%d' % fldr
+    fx = 'fx%d' % fldr
+    fx1 = 'fx1_%d' % fldr
+    Flow(shot,'line','suwind key=fldr min=%d max=%d' % (fldr,fldr))
+    Result(shot, shot,
+           'suxwigb perc=98 title="fldr %d"' % fldr)
+    Result(fx ,shot,'suspecfx | suximage perc=90 title="nonorm fldr %d"' % fldr)
+
+Flow('cdps','line',
+     '''
+     susort cdp | 
+     sufilter f=4,8,85,95 amps=0,1,1,0 | 
+     suresamp dt=.004 nt=1375 | 
+     sugain tpow=2 
+     ''')
+
+#Result('cdpmovie','cdps',
+#       '''
+#       suxmovie n2=48 loop=1 fframe=1 dframe=1 
+#                title="record %g" perc=20 
+#       ''')
+for cdp in (900,1000,1100,1200,1300):
+    file = 'cdp%d' % cdp
+    Flow(file,'cdps','suwind key=cdp min=%d max=%d' % (cdp,cdp))
+    Result(file, file,
+           'suxwigb perc=98 title="cdp %d"' % cdp)
+
+
+# test to make sure gain works when tmin>0.  Looks good!
+#Result('g1','cdp1100','sugain tpow=2 | suxwigb perc=98 title="gain method1"')
+#Result('g2','cdp1100',
+#	'''
+#	suresamp tmin=0 nt=2750 | 
+#	sugain tpow=2 | 
+#	suresamp nt=1375 tmin=5.5 |
+#	suxwigb perc=98 title="gain method2"
+#	''')
+
+Flow('vpick.txt','vpickorig.txt cdps',
+     '''
+     ./iva.sh
+     "cmp1=933 cmp2=958 cmp3=983 cmp4=1008 cmp5=1033 cmp6=1058 cmp7=1083 cmp8=1108 cmp9=1133 cmp10=1158 cmp11=1183 cmp12=1208 cmp13=1233 cmp14=1258 cmp15=1283 numCMPs=15" 
+     cdps.su vpick.txt vpickorig.txt 1400 10
+     ''',stdout=0)
+ 
+Flow('stack','cdps vpick.txt',
+     'sunmo par=vpick.txt | sustack key=cdp normpow=1')
+
+Result('stack','stack','suximage perc=95 f2=900 title="stack"')
+
+Flow('dmo','cdps',
+     '''
+     susort offset cdp
+     | suabshw key=offset
+     | sunmo 
+       tnmo=5.4941,6.04269,6.70336,7.55869,10.9859 \
+       vnmo=1473.53,1488.24,1613.24,1745.59,2102.21 \
+     | suresamp tmin=0 nt=2750 
+     | sumute
+       xmute=-10000,0,10000
+       tmute=10.000,0,10.000
+     | sudmotx 
+        cdpmin=900 cdpmax=1300
+	dxcdp=16.6544 offmax=24000
+	noffmix=1 verbose=1 tmpdir=.
+     | suresamp nt=1375 tmin=5.5
+     | sunmo 
+       tnmo=5.4941,6.04269,6.70336,7.55869,10.9859 \
+       vnmo=1473.53,1488.24,1613.24,1745.59,2102.21 \
+       invert=1
+     ''')
+Result("dmoin","cdps",
+       '''
+       susort offset cdp 
+       | suwind key=offset min=-2435 max=-2435 
+       | suximage title="dmo input offset 2435" perc=80
+       ''')
+
+Result("dmo","dmo",
+       '''
+       suwind key=offset min=2435 max=2435 
+       | suximage title="dmotx ouput offset 2435" perc=80
+       ''')
+
+Flow('dmocdps','dmo','susort cdp offset')
+
+for cdp in (900,1000,1100,1200,1300):
+    file = 'dmocdp%d' % cdp
+    Flow(file,'dmocdps','suwind key=cdp min=%d max=%d' % (cdp,cdp))
+    Result(file, file,
+           'suxwigb perc=98 title="dmocdp %d"' % cdp)
+
+Flow('vpickdmo.txt','vpick.txt dmocdps',
+     '''
+     ./iva.sh
+     "cmp1=933 cmp2=958 cmp3=983 cmp4=1008 cmp5=1033 cmp6=1058 cmp7=1083 cmp8=1108 cmp9=1133 cmp10=1158 cmp11=1183 cmp12=1208 cmp13=1233 cmp14=1258 cmp15=1283 numCMPs=15" 
+     dmocdps.su vpickdmo.txt vpick.txt 1400 10
+     ''',stdout=0)
+
+
+Flow('dmostack','dmocdps vpickdmo.txt',
+     'sunmo par=vpick.txt | sustack key=cdp normpow=1')
+
+Result('dmostack','dmostack','suximage perc=95 title="dmostack" f2=900')
+      
+Flow('stkvel1.intp2.bin','010_Velocity_Interp_IVA.sh',
+     '''
+     ./010_Velocity_Interp_IVA.sh
+     ''')
+
+Result('vfile','stkvel1.intp2.bin',
+       '''
+       ximage n1=2750 d1=.004 f2=900 d2=1 
+           cmap=rdb11 wclip=1450 bclip=2200
+	   title="stacking velocity field. no dmo"
+       ''')
+
+Flow('ktmig',['stack','stkvel1.intp2.bin'],
+     '''
+     sufrac power=.5 sign=1 |
+     suresamp tmin=0 nt=2750 | 
+     /home/karl/src/suktmig2d/suktmig2d 
+        vfile=stkvel1.intp2.bin dx=16.6544 hoffset=0 verbose=1 dcdp=1 |
+     suresamp nt=1375 tmin=5.5 
+     ''')
+
+Result('ktmig','ktmig',
+       '''
+       suwind tmin=5.8 tmax=8.0 |
+       suximage title="suktmig2d" f2=900 perc=99
+       ''')
+
+Flow('migps','stack',
+     '''
+     suresamp tmin=0 nt=2750 | 
+     sumigps
+        dx=16.6544 dt=.004 tmig=0,6.25,11 vmig=1470,1470,3000 
+	nxpad=500 ltaper=20 verbose=1 tmpdir=. |
+     suresamp nt=1375 tmin=5.5 
+     ''')
+
+Result('migps','migps',
+       '''
+       suwind tmin=5.8 tmax=8.0 |
+       suximage title="sumigps" f2=900 perc=99
+       ''')
+
+Flow('migps1','stack',
+     '''
+     suresamp tmin=0 nt=2750 | 
+     sumigps
+        dx=16.6544 dt=.004 
+	tmig=0000,6.25,6.50,6.75,7.00,8.00,9.00,10.0,11.0 
+	vmig=1470,1470,1550,1631,1711,2033,2356,2678,3000 
+	nxpad=500 ltaper=20 verbose=1 tmpdir=. |
+     suresamp nt=1375 tmin=5.5 
+     ''')
+
+Result('migps1','migps1',
+       '''
+       suwind tmin=5.8 tmax=8.0 |
+       suximage title="migps1" f2=900 perc=99
+       ''')
+
+Flow('gazmig','stack',
+     '''
+     suresamp tmin=0 nt=2750 | 
+     sugazmig
+        dx=16.6544 dt=.004 
+	tmig=0000,6.25,6.50,6.75,7.00,8.00,9.00,10.0,11.0 
+	vmig=1470,1470,1550,1631,1711,2033,2356,2678,3000 
+	verbose=1 tmpdir=. |
+     suresamp nt=1375 tmin=5.5 
+     ''')
+
+Result('gazmig','gazmig',
+       '''
+       suwind tmin=5.8 tmax=8.0 |
+       suximage title="gazmig" f2=900 perc=99
+       ''')
+
+
+End()
+

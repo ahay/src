@@ -1,0 +1,16 @@
+from rsf.book import *
+
+papers='''
+constant gradient marmousi sigsbee bp model94 statics94 twohalf hessvti bptti segsalt overthrust
+'''
+
+# lowrank modeling/migration
+# impulse responses
+# one-way wave equation
+
+Papers(copyr='Madagascar Developers',
+       group='Madagascar Community',
+       line='Migration Gallery Project',
+       papers=Split(papers))
+
+End(use='hyperref')

@@ -1,0 +1,29 @@
+from rsf.proj import *
+
+n2=120
+
+for i in range(n2):
+    Flow('demul_%03d'%i, None, 
+         '''
+         /bin/cat slurm_prefix.txt                  >${TARGETS[0]}.job;
+         echo "#SBATCH -o ${TARGETS[0]}.job.o%j"   >>${TARGETS[0]}.job;
+         echo "#SBATCH -e ${TARGETS[0]}.job.e%j"   >>${TARGETS[0]}.job;
+         echo "pushd .."                           >>${TARGETS[0]}.job;
+         echo "scons ${TARGETS[0]}"                >>${TARGETS[0]}.job;
+         echo "popd "                              >>${TARGETS[0]}.job;
+         echo "touch ./${TARGETS[0]}.job.touch"    >>${TARGETS[0]}.job;
+         echo pwd;
+	 pwd;
+         rm ./${TARGETS[0]}.job.touch;
+         export USER=karls;
+         export WORK=/work/02167/karls;
+         export SCRATCH=/scratch/02167/karls;
+         export PATH=/home1/02167/karls/RSFSRC/bin:/opt/apps/intel13/mvapich2/1.9/bin:/opt/apps/intel/13/vtune_amplifier_xe_2013/bin64:/opt/apps/intel/13/composer_xe_2013.2.146/mpirt/bin/intel64:/opt/intel/sep/bin:/usr/lib64/qt-3.3/bin:/usr/local/bin:/bin:/usr/bin:/usr/X11R6/bin:/opt/ofed/bin:/opt/ofed/sbin:.:/opt/apps/intel/13/composer_xe_2013.2.146/bin/intel64:/opt/apps/intel/13/composer_xe_2013.2.146/bin/intel64_mic:/opt/apps/intel/13/composer_xe_2013.2.146/debugger/gui/intel64;
+	 echo sbatch ${TARGETS[0]}.job;
+	 sbatch ${TARGETS[0]}.job;
+	 echo "(while [ ! -f ./${TARGETS[0]}.job.touch ]; do (sleep 1); done )";
+	 (while [ ! -f ./${TARGETS[0]}.job.touch ]; do (sleep 1); done );
+         echo "all done in flow"
+         ''')
+	 
+End()

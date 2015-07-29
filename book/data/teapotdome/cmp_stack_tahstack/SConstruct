@@ -1,0 +1,16 @@
+from rsf.proj import *
+
+# compare nmo/stack with tahnmo/tahstack
+# seems like tahnmostack is divided by a smaller number.  Up shallow it is 
+# stronger than stack, but at depth, where fold is larger they are almost the
+# same.  Could this be the mstretch mute in tahnmo?  How does sustack compare?
+
+Flow("tahstack141.rsf","../tahnmostack/mappedstack.rsf",
+     "sfwindow  n1=1000 n2=1 f2=141")
+Flow("stack141.rsf","../nmostack/stack.rsf",
+     "sfwindow  n1=1000 n2=1 f2=141")
+Flow("cat_stack_tahstack","stack141.rsf tahstack141.rsf",
+     "cat ${SOURCES[:2]}",stdin=0)
+Result("cat_stack_tahstack","sfgrey title='stack and tahstack' pclip=100")
+
+End()

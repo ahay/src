@@ -1,0 +1,2817 @@
+% copyright (c) 2001 Jon Claerbout
+
+\title{Basic operators and adjoints}
+\author{Jon Claerbout}
+\maketitle
+
+\label{paper:ajt}
+
+A great many of the calculations
+we do in science and engineering
+are really matrix multiplication in disguise.
+The first goal of this chapter is to unmask the disguise
+by showing many examples.
+Second, we see how the 
+\bx{adjoint} operator (matrix transpose)
+back projects information from data to the underlying model.
+
+\par
+Geophysical modeling calculations
+generally use linear operators that predict data from models.
+Our usual task is to find the inverse of these calculations;
+i.e., to find models (or make images) from the data.
+Logically, the adjoint is the first step
+and a part of all subsequent steps in this \bx{inversion} process.
+Surprisingly, in practice the adjoint sometimes does a better job
+than the inverse!
+This is because the adjoint operator tolerates imperfections
+in the data and does not demand that the data provide full information.
+
+\par
+Using the methods of this chapter,
+you will find that
+once you grasp the relationship between operators in general
+and their adjoints,
+you can obtain the adjoint just
+as soon as you have learned how to code
+the modeling operator.
+
+\par
+If you will permit me a poet's license with words,
+I will offer you the following table
+of \bx{operator}s and their \bx{adjoint}s: 
+
+\begin{tabular}{p{2em}lp{1em}l}
+&\bx{matrix multiply}          &&conjugate-transpose matrix multiply \\
+&convolve                      &&crosscorrelate        \\
+&truncate                      &&zero pad      \\
+&replicate, scatter, spray     &&sum or stack  \\
+&spray into neighborhoods      &&sum within bins   \\
+&derivative (slope)            &&negative derivative   \\
+&causal integration            &&anticausal integration        \\
+&add functions                 &&do integrals  \\
+&assignment statements         &&added terms   \\
+&plane-wave superposition      &&slant stack / beam form       \\
+&superpose curves              &&sum along a curve \\
+&stretch                       &&squeeze       \\
+&scalar field gradient         &&negative of vector field divergence       \\
+&upward continue               &&downward continue \\
+&diffraction modeling          &&imaging by migration  \\
+&hyperbola modeling            &&CDP stacking  \\
+&ray tracing                   &&\bx{tomography}       \\
+\end{tabular}
+
+\par
+The left column above is often called ``\bx{modeling},''
+and the adjoint operators on the right are often
+used in ``data \bx{processing}.''
+\par
+When the adjoint operator is
+{\em  not}
+an adequate approximation to the inverse,
+then you apply the techniques of fitting and optimization
+explained in Chapter \ref{paper:lsq}.
+These techniques require iterative use of the
+modeling operator and its adjoint.
+
+\par
+The adjoint operator is sometimes called
+the ``\bx{back projection}'' operator
+because information propagated in one direction (earth to data) is projected
+backward (data to earth model).
+Using complex-valued operators,
+the transpose and complex conjugate go together;
+and in \bx{Fourier analysis}, taking the complex conjugate
+of $\exp(i\omega t)$ reverses the sense of time.
+With more poetic license, I say that adjoint operators
+{\em  undo}
+the time and phase shifts of modeling operators.
+The inverse operator does this too,
+but it also divides out the color.
+For example, when linear interpolation is done,
+then high frequencies are smoothed out,
+so inverse interpolation must restore them.
+You can imagine the possibilities for noise amplification.
+That is why adjoints are safer than inverses.
+But nature determines in each application what is the best operator to use,
+and whether to stop after the adjoint,
+to go the whole way to the inverse,
+or to stop partway.
+
+\par 
+The operators and adjoints above transform vectors to other vectors.
+They also transform data planes to model planes, volumes, etc.
+A mathematical operator transforms an ``abstract vector'' which
+might be packed full of volumes of information like television
+signals (time series) can pack together a movie, a sequence of frames.
+We can always think of the operator as being a matrix
+but the matrix can be truly huge (and nearly empty).
+When the vectors transformed by the matrices are large like
+geophysical data set sizes
+then the matrix sizes are ``large squared,''
+far too big for computers.
+Thus although we can always think of an operator as a matrix,
+in practice, we handle an operator differently.
+Each practical application requires the practitioner to
+prepare two computer programs.
+One performs the matrix multiply
+$\bold y =\bold A \bold x$
+and another multiplys by the transpose
+$\tilde{\bold x} =\bold A\T \bold y$
+(without ever having the matrix itself in memory).
+It is always easy to transpose a matrix.
+It is less easy to take a computer program that does
+$\bold y =\bold A \bold x$
+and convert it to another to do
+$\tilde{\bold x} =\bold A\T \bold y$.
+In this chapter are many examples of increasing complexity.
+At the end of the chapter we will see a test for any program pair
+to see whether the operators $\bold A$ and $\bold A\T$ are mutually adjoint
+as they should be.
+Doing the job correctly (coding adjoints without making approximations)
+will reward us later when we tackle model and image estimation applications.
+
+\par
+Mathematicians often denote the transpose of a matrix
+$\bold F$ by $\bold F^{\rm T}$.
+In physics and engineering we often encounter complex numbers.
+There the adjoint is the complex-conjugate transposed matrix
+denoted $\bold F^\ast$.
+%In this book, the adjoint is simply written as $\bold F\T$.
+What this book calls the adjoint is more properly called the Hilbert adjoint.
+
+%\par
+%We will see that computation of the \bx{adjoint}
+%is a straightforward adjunct to the operator computation itself,
+%and the computed adjoint should be, and generally can be,
+%exact (within machine precision).
+%We will see
+%if the application's operator is computed in an approximate way,
+%that it is natural and best that the adjoint
+%be computed with adjoint approximations.
+%
+%Much later in this chapter is a formal definition of adjoint operator.
+%Throughout the chapter we handle an adjoint operator as a matrix transpose,
+%but we hardly ever write down any matrices or their transposes.
+%Instead, we always prepare two routines,
+%one that performs 
+%$\bold y =\bold A \bold x$
+%and another that performs
+%$\tilde{\bold x} =\bold A' \bold y$.
+%So we need a test that the two routines
+%really embody the essential aspects of matrix transposition.
+%Although the test is an elegant and useful test
+%and is itself a fundamental definition,
+%curiously,
+%that definition
+%%helps us not one bit in constructing
+%does not help construct
+%adjoint operators,
+%so we postpone a formal definition of adjoint
+%until after we have seen many examples.
+
+
+\subsection{Programming linear operators}
+\sx{matrix multiply}
+The operation $ y_i = \sum_j b_{ij} x_j$ is the multiplication
+of a matrix $\bold B$ by a vector $\bold x$.
+The adjoint operation is
+$\tilde x_j = \sum_i b_{ij} y_i$.
+The operation adjoint to multiplication by a matrix
+is multiplication by the transposed matrix
+(unless the matrix has complex elements,
+in which case we need the complex-conjugated transpose).
+The following
+\bx{pseudocode}
+does matrix multiplication
+$\bold y=\bold B\bold x$ and multiplication by the transpose
+$\tilde{\bold x} = \bold{B}\T \bold{y}$:
+\par\noindent
+\vbox{\begin{tabbing}
+indent \= atechars \= atechars \=  atechars \= \kill
+\>if adjoint    \\
+\>      \>then erase x  \\
+\>if operator itself    \\
+\>      \>then erase y  \\
+\>do iy = 1, ny \{      \\
+\>do ix = 1, nx \{      \\
+\>      \>if adjoint    \\
+\>      \>      \>x(ix) = x(ix) + b(iy,ix) $\times$ y(iy)       \\
+\>      \>if operator itself    \\
+\>      \>      \>y(iy) = y(iy) + b(iy,ix) $\times$ x(ix)       \\
+\>      \>\}\}
+\end{tabbing} }
+\par\noindent
+Notice that the ``bottom line'' in the program is that $x$ and $y$
+are simply interchanged.
+The above example is a prototype of many to follow,
+so observe carefully the similarities and differences between
+the adjoint and the operator itself.
+
+\par
+Next we restate the matrix-multiply pseudo code in real code.
+\begin{comment}
+in a language called \bx{Loptran}\footnote{
+        The programming language, Loptran,
+        is based on a dialect of Fortran called Ratfor.
+        For more details, see Appendix A.},
+a language designed for
+exposition and research
+in model fitting and optimization in physical sciences.
+\end{comment}
+
+The module \texttt{matmult}
+for matrix multiply and its adjoint
+exhibits the style that we will use repeatedly.
+At last count there were 53 such routines
+(operator with adjoint)
+in this book alone.
+\opdex{matmult}{matrix multiply}{33}{45}{user/pwd}        
+\begin{comment}
+Notice that the module \texttt{matmult}
+does not explicitly erase its output before it begins,
+as does the pseudo code.
+That is because Loptran will always erase for you
+the space required for the operator's output.
+Loptran also defines a logical variable {\tt adj}
+for you to distinguish your computation of the adjoint
+$\bold x=\bold x+\bold B\T \bold y$
+from the forward operation
+$\bold y=\bold y+\bold B\bold x$. 
+In computerese, the two lines beginning \#\% are macro expansions
+that take compact bits of information which expand
+into the verbose boilerplate that Fortran requires.
+Loptran is Fortran with these macro expansions.
+You can always see how they expand by looking at
+\url{http://sep.stanford.edu/sep/prof/}.
+
+\par
+What is new in Fortran 90, and will be a big help to us,
+is that instead of a subroutine with a single entry.
+\end{comment}
+
+We have a module with two entries,
+one named {\tt \_init} 
+for the physical scientist who defines the physical problem by
+defining the matrix, and
+another named {\tt \_lop} 
+for the least-squares problem solver,
+the computer scientist who will not be interested
+in how we specify $\bold B$, but who will be iteratively computing
+$\bold B\bold x$ and $\bold B\T \bold y$
+to optimize the model fitting.
+\begin{comment}
+The lines beginning with {\tt {\#}{\%}} are expanded by Loptran into
+more verbose and distracting Fortran 90 code.
+The second line in the module \texttt{matmult},
+however,
+is pure Fortran syntax saying that
+{\tt bb} is a pointer to a real-valued matrix.
+\end{comment}
+\par
+To use \texttt{matmult}, two calls must be made,
+the first one
+\begin{verbatim}
+           matmult_init( bb);
+\end{verbatim}
+is done by the physical scientist after he or she has prepared the matrix.
+Most later calls will be done by numerical analysts
+in solving code like in Chapter \ref{paper:lsq}.
+These calls look like
+\begin{verbatim}
+            matmult_lop( adj, add, nx, ny, x, y);
+\end{verbatim}
+where {\tt adj} is the logical variable saying whether we desire
+the adjoint or the operator itself,
+and where {\tt add} is a logical variable saying
+whether we want to accumulate like
+$\bold y \leftarrow \bold y+\bold B\bold x$
+or whether we want to erase first and thus do
+$\bold y \leftarrow \bold B\bold x$.
+\begin{comment}
+The return value {\tt stat} is an integer parameter,
+mostly useless (unless you want to use it for error codes). 
+\par
+Operator initialization often allocates memory.
+To release this memory, you can {\tt call matmult\_close()}
+although in this case nothing really happens.
+\end{comment}
+\par
+We split operators into two independent processes,
+the first is used for geophysical set up
+while the second is invoked by mathematical library code
+(introduced in the next chapter)
+to find the model that best fits the data.
+%in other words, to find the zero-offset trace which sprays
+%out to make the best approximations to all the other traces.
+Here is why we do so.
+It is important that the math code contain nothing about
+the geophysical particulars.  This enables us to use
+the same math code on many different geophysical applications.
+This concept of ``information hiding'' arrived late in
+human understanding of what is desirable in a computer language.
+\begin{comment}
+This feature alone is valuable enough to warrant
+upgrading from Fortran 77 to Fortran 90, and likewise from C to C++.
+\end{comment}
+Subroutines and functions are the way that new programs use old ones.
+Object modules are the way that old programs (math solvers)
+are able to use new ones (geophysical operators).
+
+
+\section{FAMILIAR OPERATORS}
+The simplest and most fundamental linear operators
+arise when a matrix operator reduces to a simple row or a column.
+\par\noindent
+A {\bf row} \quad\ \ is a summation operation.
+\par\noindent
+A {\bf column}       is an impulse response.
+\vspace{.2in}
+\par\noindent
+If the inner loop of a matrix multiply ranges within a
+\par\noindent
+{\bf row,} \quad\ \ the operator is called {\em  sum} or {\em  pull}.
+\par\noindent
+{\bf column,}       the operator is called {\em  spray} or {\em  push}.
+\par\noindent
+Generally, inputs and outputs will be high dimensional such as signals or images.
+Push gives ugly outputs.   Some output locations will be empty,
+each having an erratic number of contributions to it.
+Consequently, most data processing (adjoint) is done by {\em pull}.
+
+\par
+A basic aspect of adjointness is that the
+adjoint of a row matrix operator is a column matrix operator.
+For example,
+the row operator $[a,b]$
+\begin{equation}
+y \eq
+\left[ \ a \ b \ \right] 
+\left[
+\begin{array}{l}
+        x_1 \\
+        x_2
+\end{array}
+\right] 
+\eq
+a x_1 + b x_2
+\end{equation}
+has an adjoint that is two assignments:
+\begin{equation}
+        \left[
+        \begin{array}{l}
+                \hat x_1 \\
+                \hat x_2
+        \end{array}
+        \right]
+        \eq
+        \left[
+        \begin{array}{l}
+                a \\
+                b
+        \end{array}
+        \right]
+        \ y
+\end{equation}
+\par
+\boxit{
+The adjoint of a sum of $N$ terms
+is a collection of $N$ assignments.
+}
+
+\subsection{Adjoint derivative}
+In numerical analysis we represent the derivative of a time function
+by a finite difference.
+We do this by subtracting each two neighboring time points and then
+dividing by the sample interval $\Delta t$.
+This amounts to convolution with the filter $(1,-1)/\Delta t$.
+Omitting the $\Delta t$ we express this concept as:
+\begin{equation}
+\left[ \begin{array}{c}
+        y_1 \\
+        y_2 \\
+        y_3 \\
+        y_4 \\
+        y_5 \\
+        y_6
+        \end{array} \right]
+\eq
+\left[ \begin{array}{cccccc}
+        -1& 1& .& .& .& . \\
+         .&-1& 1& .& .& . \\
+         .& .&-1& 1& .& . \\
+         .& .& .&-1& 1& . \\
+         .& .& .& .&-1& 1 \\
+         .& .& .& .& .& 0
+        \end{array} \right] \ 
+\left[ \begin{array}{c}
+        x_1 \\
+        x_2 \\
+        x_3 \\
+        x_4 \\
+        x_5 \\
+        x_6
+        \end{array} \right]
+ \label{eqn:ruff1}
+\end{equation}
+\par
+The \bx{filter impulse response} is seen in any column
+in the middle of the matrix, namely $(1,-1)$. 
+In the transposed matrix,
+the filter-impulse response
+is time-reversed to $(-1,1)$.
+So, mathematically,
+we can say that the adjoint of the time derivative operation
+is the negative time derivative.
+This corresponds also to the fact that
+the complex conjugate of $-i\omega$ is $i\omega$.
+We can also speak of the adjoint of the boundary conditions:
+we might say that the adjoint of ``no boundary condition''
+is a ``specified value'' boundary condition.
+The last row in equation~(\ref{eqn:ruff1}) is optional.
+%and depends not on the code shown, but the code that invokes it.
+It may seem unnatural to append a null row, but it can be a small
+convenience (when plotting) to have the input and output be the same size.
+\par
+
+Equation~(\ref{eqn:ruff1}) is implemented by the code
+in module \texttt{igrad1}
+which does the operator itself (the forward operator)
+and its adjoint.
+\opdex{igrad1}{first difference}{25}{40}{api/c}
+
+\par \noindent
+The adjoint code may seem strange.
+It might seem more natural to code the adjoint
+to be the negative of the operator itself
+and then make the special adjustments for the boundaries.
+The code given, however, is correct and requires no adjustments
+at the ends.
+To see why, notice for each value of \texttt{i},
+the operator itself handles one row of
+equation~(\ref{eqn:ruff1})
+while for each \texttt{i}
+the adjoint handles one column.
+That's why coding the adjoint in this way
+does not require any special work on the ends.
+The present method of coding reminds us that
+the adjoint of a sum of $N$ terms is a collection of $N$ assignments.
+Think of the meaning of
+$y_i=y_i+a_{i,j}x_j$
+for any particular $i$ and $j$.
+The adjoint simply accumulates that same value of $a_{i,j}$
+going the other direction
+$x_j=x_j+a_{i,j}y_i$.
+
+%A complicated way to think about the adjoint of equation
+%(\ref{eqn:ruff1}) is to note that it is the negative of the derivative
+%and that something must be done about the ends.
+%A simpler way to think about it
+%is to apply the idea that the adjoint of a sum of $N$ terms
+%is a collection of $N$ assignments.
+
+\begin{comment}
+\par
+The Ratfor90 dialect of Fortran
+allows us to write the inner code of
+the \texttt{igrad1} module more simply and symmetrically
+using the syntax of C, C++, and Java
+where
+expressions like {\tt a=a+b} can be written more tersely as {\tt a+=b}.
+With this, the heart of module \texttt{igrad1} becomes
+\begin{verbatim}
+if( adj) {   xx(i+1) += yy(i)
+             xx(i)   -= yy(i)
+           }
+else {       yy(i)   += xx(i+1)
+             yy(i)   -= xx(i)
+           }
+\end{verbatim}
+where we see that each component of the matrix is handled both by the
+operator and the adjoint.  Think about the forward operator
+``pulling'' a sum into {\tt yy(i)}, and think about the adjoint
+operator ``pushing'' or ``spraying'' the impulse {\tt yy(i)} back into
+{\tt xx()}.
+\end{comment}
+
+%Something odd happens at the ends of the adjoint only if we take the
+%perspective that the adjoint should have been computed one component
+%at a time instead of all together.
+%By not taking that view, we avoid that confusion.
+
+\inputdir{igrad1}
+
+\par
+Figure \ref{fig:stangrad} illustrates the use of module
+\texttt{igrad1} for each north-south line of a topographic map.  We
+observe that the gradient gives an impression of illumination from a
+low sun angle.
+
+\plot{stangrad}{width=6in,height=8.4in}{ Topography
+  near Stanford (top) southward slope (bottom).  }
+
+To apply \texttt{igrad1} along the 1-axis for each point on the 2-axis
+of a two-dimensional map, we use the loop
+\begin{verbatim}
+for (iy=0; iy < ny; iy++) 
+     igrad1_lop(adj, add, nx, nx, map[iy], ruf[iy]);
+\end{verbatim}
+\begin{comment}
+On the other hand, to see the east-west gradient, we use the loop
+\begin{verbatim}
+do ix=1,nx 
+      stat = igrad1_lop( adj, add, map(ix,:), ruf(ix,:))
+\end{verbatim}
+\end{comment}
+
+%\par
+%The C/C++/Java family of computer languages allows
+%an abbreviation that is handy for all operator routines;
+%it's so handy that Bob Clapp has installed it in our version of Ratfor90.
+%The essential feature of operator calculations is summing
+%and spraying and both are rendered in Fortran as ``A=A+B''.
+%In the C/C++/Java languages A=A+B may be abbreviated A+=B;
+%for example,
+%{\tt xx(i+1) = xx(i+1) + yy(i)} reduces to {\tt xx(i+1) += yy(i)}.
+%The more complicated the subscripting,
+%the more desirable the abbreviation.
+%Also, the abbreviation makes more transparent the nature
+%of operator-adjoint pairs.
+
+
+\subsection{Transient convolution}
+\sx{convolution}
+\sx{convolution ! transient}
+
+\par
+The next operator we examine is convolution.
+It arises in many applications; and it could be derived in many ways.
+A basic derivation is from the multiplication of two polynomials, say
+$X(Z) = x_1 + x_2 Z + x_3 Z^2 + x_4 Z^3 + x_5 Z^4 + x_6 Z^5$ times
+$B(Z) = b_1 + b_2 Z + b_3 Z^2 + b_4 Z^3$.\footnote{
+	This book is more involved with matrices than with Fourier analysis.
+	If it were more Fourier analysis we would choose notation
+	to begin subscripts from zero like this:
+	$B(Z) = b_0 + b_1 Z + b_2 Z^2 + b_3 Z^3$.}
+Identifying the $k$-th power of $Z$ in the product
+$Y(Z)=B(Z)X(Z)$ gives the $k$-th row of the convolution transformation
+(\ref{eqn:contran1}).
+%Matrix multiplication and transpose multiplication still
+%fit easily in the same computational framework
+%when the matrix has a special form, such as
+
+\begin{equation}
+\bold y \eq
+\left[ 
+\begin{array}{c}
+  y_1 \\ 
+  y_2 \\ 
+  y_3 \\ 
+  y_4 \\ 
+  y_5 \\ 
+  y_6 \\ 
+  y_7 \\ 
+  y_8
+  \end{array} \right] 
+\eq
+\left[ 
+\begin{array}{cccccc}
+  b_1 & 0   & 0    & 0   & 0   & 0   \\
+  b_2 & b_1 & 0    & 0   & 0   & 0   \\
+  b_3 & b_2 & b_1  & 0   & 0   & 0   \\
+  0   & b_3 & b_2  & b_1 & 0   & 0   \\
+  0   & 0   & b_3  & b_2 & b_1 & 0   \\
+  0   & 0   & 0    & b_3 & b_2 & b_1 \\
+  0   & 0   & 0    & 0   & b_3 & b_2 \\
+  0   & 0   & 0    & 0   & 0   & b_3 
+  \end{array} \right] 
+\; \left[ 
+\begin{array}{c}
+  x_1 \\ 
+  x_2 \\ 
+  x_3 \\ 
+  x_4 \\ 
+  x_5 \\ 
+  x_6
+  \end{array} \right]
+\eq \bold B \bold x
+\label{eqn:contran1}
+\end{equation}
+Notice that columns of
+equation (\ref{eqn:contran1})
+all contain the same signal,
+but with different shifts.
+This signal is called the filter's impulse response.
+
+
+\par
+Equation~(\ref{eqn:contran1}) could be rewritten as
+\begin{equation}
+\bold y \eq
+\left[ 
+\begin{array}{c}
+  y_1 \\ 
+  y_2 \\ 
+  y_3 \\ 
+  y_4 \\ 
+  y_5 \\ 
+  y_6 \\ 
+  y_7 \\ 
+  y_8
+  \end{array} \right] 
+\eq
+\left[ 
+\begin{array}{ccc}
+  x_1 & 0   & 0    \\
+  x_2 & x_1 & 0    \\
+  x_3 & x_2 & x_1  \\
+  x_4 & x_3 & x_2  \\
+  x_5 & x_4 & x_3  \\
+  x_6 & x_5 & x_4  \\
+  0   & x_6 & x_5  \\
+  0   & 0   & x_6
+  \end{array} \right] 
+\; \left[ 
+\begin{array}{c}
+  b_1 \\ 
+  b_2 \\ 
+  b_3 \end{array} \right]
+  \eq \bold X \bold b
+\label{eqn:contran2}
+\end{equation}
+In applications we can choose between
+$\bold y = \bold X \bold b$
+and
+$\bold y = \bold B \bold x$.
+In one case
+the output $\bold y$
+is dual to the filter $\bold b$,
+and in the other case
+the output $\bold y$
+is dual to the input $\bold x$.
+Sometimes we must solve
+for $\bold b$ and sometimes for $\bold x$;
+so sometimes we use equation~(\ref{eqn:contran2}) and 
+sometimes (\ref{eqn:contran1}).
+Such solutions begin from the adjoints.
+The adjoint of (\ref{eqn:contran1}) is
+\begin{equation}
+\left[ 
+\begin{array}{c}
+\hat  x_1 \\ 
+\hat  x_2 \\ 
+\hat  x_3 \\ 
+\hat  x_4 \\ 
+\hat  x_5 \\ 
+\hat  x_6
+  \end{array} \right] 
+\eq
+\left[ 
+\begin{array}{cccccccc}
+  b_1 & b_2 & b_3 & 0   & 0   & 0   & 0   & 0  \\
+  0   & b_1 & b_2 & b_3 & 0   & 0   & 0   & 0  \\
+  0   & 0   & b_1 & b_2 & b_3 & 0   & 0   & 0  \\
+  0   & 0   & 0   & b_1 & b_2 & b_3 & 0   & 0  \\
+  0   & 0   & 0   & 0   & b_1 & b_2 & b_3 & 0  \\
+  0   & 0   & 0   & 0   & 0   & b_1 & b_2 & b_3 
+  \end{array} \right] 
+\; \left[ 
+\begin{array}{c}
+  y_1 \\ 
+  y_2 \\ 
+  y_3 \\ 
+  y_4 \\ 
+  y_5 \\ 
+  y_6 \\ 
+  y_7 \\ 
+  y_8 \end{array} \right]
+\label{eqn:ajtcontran1}
+\end{equation}
+The adjoint {\em  \bx{crosscorrelate}s} with the filter
+instead of convolving with it (because the filter is backwards).
+Notice that each row in
+equation (\ref{eqn:ajtcontran1}) contains all the filter coefficients
+and there are no rows where the filter somehow uses zero values
+off the ends of the data as we saw earlier.
+In some applications it is important not to assume zero values
+beyond the interval where inputs are given.
+\par
+The adjoint of (\ref{eqn:contran2}) crosscorrelates a fixed portion
+of filter input across a variable portion of filter output.
+\begin{equation}
+\left[ 
+\begin{array}{c}
+\hat  b_1 \\ 
+\hat  b_2 \\ 
+\hat  b_3
+  \end{array} \right] 
+\eq
+\left[ 
+\begin{array}{cccccccc}
+  x_1 & x_2 & x_3 & x_4 & x_5 & x_6 & 0   & 0   \\
+  0   & x_1 & x_2 & x_3 & x_4 & x_5 & x_6 & 0   \\
+  0   & 0   & x_1 & x_2 & x_3 & x_4 & x_5 & x_6   
+  \end{array} \right] 
+\; \left[ 
+\begin{array}{c}
+  y_1 \\ 
+  y_2 \\ 
+  y_3 \\ 
+  y_4 \\ 
+  y_5 \\ 
+  y_6 \\ 
+  y_7 \\ 
+  y_8
+  \end{array} \right]
+\label{eqn:ajtcontran2}
+\end{equation}
+\par
+Module \texttt{tcai1}
+is used for
+$\bold y = \bold B \bold x$
+and module~\texttt{tcaf1}
+is used for
+$\bold y = \bold X \bold b$.
+\opdex{tcai1}{transient convolution}{45}{50}{user/gee}
+\opdex{tcaf1}{transient convolution}{45}{50}{user/gee}
+
+\par
+The polynomials 
+$X(Z)$,
+$B(Z)$, and
+$Y(Z)$
+are called $Z$ transforms.
+An important fact in real life
+(but not important here)
+is that the $Z$ transforms are
+Fourier transforms in disguise.
+Each polynomial is a sum of terms
+and the sum
+amounts to a Fourier sum when we take $Z=e^{i\omega\Delta t}$.
+The very expression
+$Y(Z)=B(Z)X(Z)$ says that a product in the frequency domain
+($Z$ has a numerical value) is a convolution in the time domain
+(that's how we multipy polynomials, convolve their coefficients).
+
+%The length of the output of \bx{transient convolution}
+%\sx{convolution ! transient}
+%is one less than the length of the filter plus the length of the input.
+%Notice, however,
+%that in these modules,
+%the input length plus the filter length equals the output length,
+%because these routines erase the extra memory cell.
+%So you must be sure you have allocated that memory cell.
+%I erase the extra cell to reduce clutter
+%in the many 2-D and 3-D modules
+%that build upon transient convolution.
+%It is important that the extra memory cell be erased and not simply ignored,
+%because otherwise it may contain an impossible value
+%that would break many modules such as plot routines and inversion routines.
+ 
+\subsection{Internal convolution}
+%\begin{notforlecture}
+\sx{convolution ! internal}
+Convolution is the computational equivalent of
+ordinary linear differential operators (with constant coefficients).
+Applications are vast,
+and end effects are important.
+Another choice of data handling at ends
+is that zero data not be assumed
+beyond the interval where the data is given.
+This is important in data where the crosscorrelation changes with time.
+Then it is sometimes handled as constant in short time windows.
+Care must be taken that zero signal values not be presumed
+off the ends of those short time windows;
+otherwise,
+the many ends of the many short segments
+can overwhelm the results.
+\par
+In the sets (\ref{eqn:contran1}) and (\ref{eqn:contran2}),
+the top two equations explicitly assume that the input data vanishes
+before the interval on which it is given, and likewise at the bottom.
+Abandoning the top two and bottom two equations in (\ref{eqn:contran2})
+we get:
+\begin{equation}
+\left[ 
+\begin{array}{c}
+  y_3 \\ 
+  y_4 \\ 
+  y_5 \\ 
+  y_6 
+  \end{array} \right] 
+\eq
+\left[ 
+\begin{array}{ccc}
+  x_3 & x_2 & x_1  \\
+  x_4 & x_3 & x_2  \\
+  x_5 & x_4 & x_3  \\
+  x_6 & x_5 & x_4 
+  \end{array} \right] 
+\; \left[ 
+\begin{array}{c}
+  b_1 \\ 
+  b_2 \\ 
+  b_3 \end{array} \right]
+\label{eqn:trunccontran2}
+\end{equation}
+The adjoint is
+\begin{equation}
+\left[ 
+\begin{array}{c}
+\hat  b_1 \\ 
+\hat  b_2 \\ 
+\hat  b_3
+  \end{array} \right] 
+\eq
+\left[ 
+\begin{array}{ccccc}
+  x_3 & x_4 & x_5 & x_6  \\
+  x_2 & x_3 & x_4 & x_5  \\
+  x_1 & x_2 & x_3 & x_4 
+  \end{array} \right] 
+\; \left[ 
+\begin{array}{c}
+  y_3 \\ 
+  y_4 \\ 
+  y_5 \\ 
+  y_6 
+  \end{array} \right]
+\label{eqn:ajtintcontran2}
+\end{equation}
+The difference between (\ref{eqn:ajtintcontran2})
+and (\ref{eqn:ajtcontran2}) is that here 
+the adjoint crosscorrelates a fixed portion of {\em  output}
+across a variable portion of {\em  input},
+whereas with (\ref{eqn:ajtcontran2})
+the adjoint crosscorrelates a fixed portion of {\em  input}
+across a variable portion of {\em  output}.
+\par
+In practice we typically allocate equal space for input and output.
+Because the output is shorter than the input,
+it could slide around in its allocated space,
+so its location is specified by an additional parameter called its {\tt lag}.
+%The statement {\tt x=y-b+lag} in module
+%\texttt{icaf1}
+%says that the
+%output time {\tt y} aligns with the
+% input time {\tt x} for the filter point {\tt b=lag}.
+\opdex{icaf1}{convolve internal}{45}{50}{user/gee}
+The value of {\tt lag} always used in this book is {\tt lag=1}.
+For {\tt lag=1} the module \texttt{icaf1}
+implements not equation (\ref{eqn:trunccontran2})
+but (\ref{eqn:padconvin}):
+\begin{equation}
+\left[ 
+\begin{array}{c}
+  y_1 \\ 
+  y_2 \\ 
+  y_3 \\ 
+  y_4 \\ 
+  y_5 \\ 
+  y_6 
+  \end{array} \right] 
+\eq
+\left[ 
+\begin{array}{ccc}
+  0   & 0   & 0    \\
+  0   & 0   & 0    \\
+  x_3 & x_2 & x_1  \\
+  x_4 & x_3 & x_2  \\
+  x_5 & x_4 & x_3  \\
+  x_6 & x_5 & x_4 
+  \end{array} \right] 
+\; \left[ 
+\begin{array}{c}
+  b_1 \\ 
+  b_2 \\ 
+  b_3 \end{array} \right]
+\label{eqn:padconvin}
+\end{equation}
+It may seem a little odd to put the required zeros at the beginning
+of the output, but filters are generally designed so that their
+strongest coefficient is the first, namely {\tt bb(1)} so
+the alignment of input and output in equation (\ref{eqn:padconvin})
+is the most common one.
+
+\inputdir{conv}
+\par
+The
+\bx{end effect}s
+of the convolution modules are summarized
+in Figure~\ref{fig:conv}.%
+\sideplot{conv}{width=3in}{
+        Example of convolution end-effects.
+        From top to bottom:
+        input;
+        filter;
+        output of {\tt tcai1()};
+        output of {\tt icaf1()} also with ({\tt lag=1}).
+        }
+%\end{notforlecture}
+
+\subsection{Zero padding is the transpose of truncation}
+Surrounding a dataset by zeros
+(\bx{zero pad}ding)
+is adjoint to throwing away the extended data
+(\bx{truncation}).
+Let us see why this is so.
+Set a signal in a vector $\bold x$, and
+then to make a longer vector $\bold y$,
+add some zeros at the end of $\bold x$.
+This zero padding can be regarded as the matrix multiplication
+\begin{equation}
+\bold y\eq
+ \left[ 
+  \begin{array}{c}
+   \bold I \\ 
+   \bold 0
+  \end{array}
+ \right] 
+ \ 
+ \bold x
+\end{equation}
+The matrix is simply an identity matrix $\bold I$
+above a zero matrix $\bold 0$.
+To find the transpose to zero-padding, we now transpose the matrix
+and do another matrix multiply:
+\begin{equation}
+\tilde {\bold x} \eq
+ \left[ 
+  \begin{array}{cc}
+   \bold I & \bold 0
+  \end{array}
+ \right] 
+\ 
+\bold y
+\end{equation}
+So the transpose operation to zero padding data
+is simply {\em  truncating} the data back to its original length.
+Module \texttt{zpad1} below
+pads zeros on both ends of its input.
+Modules for two- and three-dimensional padding are in the
+library named {\tt zpad2()} and {\tt zpad3()}.
+\opdex{zpad1}{zero pad 1-D}{27}{31}{user/gee}
+
+
+\subsection{Adjoints of products are reverse-ordered products of adjoints}
+Here we examine an example of the general idea that
+adjoints of products are reverse-ordered products of adjoints.
+For this example we use the Fourier transformation.
+No details of \bx{Fourier transformation} are given here
+and we merely use it as an example of a square matrix $\bold F$.
+We denote the complex-conjugate transpose (or \bx{adjoint}) matrix
+with a prime,
+i.e.,~$\bold F\T$.
+The adjoint arises naturally whenever we consider energy.
+The statement that Fourier transforms conserve energy is 
+$\bold y\T\bold y=\bold x\T\bold x$ where $\bold y= \bold F \bold x$.
+Substituting gives $\bold F\T\, \bold F = \bold I$, which shows that
+the inverse matrix to Fourier transform
+happens to be the complex conjugate of the transpose of $\bold F$.
+\par
+With Fourier transforms,
+\bx{zero pad}ding and \bx{truncation} are especially prevalent.
+Most modules transform a dataset of length of $2^n$,
+whereas dataset lengths are often of length $m \times 100$.
+The practical approach is therefore to pad given data with zeros.
+Padding followed by Fourier transformation $\bold F$
+can be expressed in matrix algebra as
+\begin{equation}
+{\rm Program} \eq
+\bold F \ 
+ \left[ 
+  \begin{array}{c}
+   \bold I \\ 
+   \bold 0
+  \end{array}
+ \right] 
+\end{equation}
+According to matrix algebra, the transpose of a product,
+say $\bold A \bold B = \bold C$,
+is the product $\bold C\T = \bold B\T \bold A\T$ in reverse order.
+So the adjoint routine is given by
+\begin{equation}
+{\rm Program}\T \eq
+ \left[ 
+  \begin{array}{cc}
+   \bold I & \bold 0
+  \end{array}
+ \right] 
+\
+\bold F\T
+\end{equation}
+Thus the adjoint routine
+{\em  truncates} the data {\em  after} the inverse Fourier transform.
+This concrete example illustrates that common sense often represents
+the mathematical abstraction
+that adjoints of products are reverse-ordered products of adjoints.
+It is also nice to see a formal mathematical notation
+for a practical necessity.
+Making an approximation need not lead to collapse of all precise analysis.
+
+
+\subsection{Nearest-neighbor coordinates}
+\sx{nearest neighbor coordinates}
+In describing physical processes,
+we often either specify models as values given on a uniform mesh
+or we record data on a uniform mesh.
+Typically we have
+a function $f$ of time $t$ or depth $z$
+and we represent it by {\tt f(iz)}
+corresponding to $f(z_i)$ for $i=1,2,3,\ldots, n_z$
+where $z_i = z_0+ (i-1)\Delta z$.
+We sometimes need to handle depth as
+an integer counting variable $i$
+and we sometimes need to handle it as
+a floating-point variable $z$.
+Conversion from the counting variable to the floating-point variable
+is exact and is often seen in a computer idiom
+such as either of \begin{verbatim}
+            for (iz=0; iz < nz; nz++) {   z = z0 + iz * dz; 
+            for (i3=0, i3 < n3; i3++) {  x3 = o3 + i3 * d3;
+\end{verbatim}
+%{\tt
+%   \begin{tabbing}  indent \= \kill
+%       \> do iz= 1, nz \{   z = z0 + (iz-1) * dz  \\
+%       \> do i3= 1, n3 \{  x3 = o3 + (i3-1) * d3
+%   \end{tabbing}
+%}
+The reverse conversion from the floating-point variable
+to the counting variable is inexact.
+The easiest thing is to place it at the nearest neighbor.
+This is done by solving for {\tt iz}, then adding one half,
+and then rounding down to the nearest integer.
+The familiar computer idioms are:\begin{verbatim}
+        iz = 0.5 + ( z - z0) / dz;
+        i3 = 0.5 + (x3 - o3) / d3;
+\end{verbatim}
+A small warning is in order:
+People generally use positive counting variables.
+If you also include negative ones,
+then to get the nearest integer,
+you should do your rounding with the C function {\tt floor()}.
+
+\subsection{Data-push binning}
+\sx{nearest neighbor binning}
+\sx{data-push binning}
+\inputdir{galilee}
+A most basic data modeling operation is to copy a number from an $(x,y)$-location on a map
+to a 1-D survey data track $d(s)$, where $s$ is a coordinate running along a survey track.
+This copying proceeds for all $s$.
+The track could be along a straight, curved, or arbitrary line.
+Let the coordinate $s$ take on integral values.
+Then along with the elements $d(s)$ are the coordinates $(x(s),y(s))$ where on the map the data value $d(s)$ would be recorded.
+%This operator, copying $d$ values out from the $(x,y)$-plane
+%has an inverse with a name commonly known in practice, ``binning''
+%so we will use that name, even though the forward modelling operator does the opposite,
+%grabs $d(s)$ values from the $(x,y)$ plane while the adjoint adds $d(s)$ values into the $(x,y)$ mesh,
+%and the inverse operator divides that by the number of data values in each bin.
+\par
+Code for the operator is shown
+in module \texttt{bin2}.
+\opdex{bin2}{push data into bin}{46}{55}{user/gee}
+To invert this data modeling operation, to go from $d(s)$ to $(x(s),y(s))$ requires more than the adjoint operator.
+Since each bin contains a different number of data values.
+After the adjoint operation is performed,
+the inverse operator needs to divide the bin sum by the number of data values that landed in the bin.
+It is this inversion operator that is generally called binning (although we will use that name here for the modeling operator).
+To find the number of data points in a bin,
+we can simply apply the adjoint of \texttt{bin2} to pseudo data of all ones.
+To capture this idea in an equation,
+let $\bold B$ denote the linear operator
+in which the bin value is sprayed to the data values.
+The inverse operation,
+in which the data values in the bin are summed
+and divided by the number in the bin, is represented by
+\begin{equation}
+\bold m \eq {\bf diag}( \bold B\T \bold 1)^{-1} \bold B\T \bold d
+\label{eqn:dpbin}
+\end{equation}
+Empty bins, of course, leave us a problem since we dare not divide by the zero sum they contain.
+That we'll address in chapter \ref{paper:iin}.
+In Figure \ref{fig:galbin}, the empty bins contain zero values.
+\plot{galbin}{width=6in,height=4.0in}{
+  Binned depths of the Sea of Galilee.
+}
+
+\subsection{Linear interpolation}
+\par
+\inputdir{XFig}
+The \bx{linear interpolation}
+operator is much like the binning operator but a little fancier.
+When we perform the forward operation, we take each data coordinate
+and see which two model bin centers bracket it.
+Then we pick up the two bracketing model values
+and weight each of them
+in proportion to their nearness to the data coordinate,
+and add them to get the data value (ordinate).
+The adjoint operation is adding a data value
+back into the model vector;
+using the same two weights,
+the adjoint distributes the data ordinate value
+between the two nearest bins in the model vector.
+For example, suppose we have a data point near each end of the model
+and a third data point exactly in the middle.
+Then for a model space 6 points long,
+as shown in Figure \ref{fig:helgerud},
+we have the operator in (\ref{eqn:lintseq}).
+\sideplot{helgerud}{width=3in}{
+  Uniformly sampled model space
+  and irregularly sampled data space corresponding
+  to \protect(\ref{eqn:lintseq}).
+}
+\begin{equation}
+\left[ 
+\begin{array}{c}
+  d_0 \\ 
+  d_1 \\ 
+  d_2 
+  \end{array} \right] 
+\quad \approx \quad
+\left[ 
+\begin{array}{rrrrrr}
+   .7 & .3 &  .  & .  & .  & .  \\
+   .  & .  &  1  & .  & .  & .  \\
+   .  & .  &  .  & .  & .5 & .5 
+  \end{array} \right] 
+\left[ 
+        \begin{array}{c}
+          m_0 \\ 
+          m_1 \\ 
+          m_2 \\ 
+          m_3 \\ 
+          m_4 \\ 
+          m_5
+        \end{array}
+\right] 
+\label{eqn:lintseq}
+\end{equation}
+The two weights in each row sum to unity.
+If a binning operator were used for the same data and model,
+the binning operator would contain a ``1.'' in each row.
+In one dimension (as here),
+data coordinates are often sorted into sequence,
+so that the matrix is crudely a diagonal matrix like equation (\ref{eqn:lintseq}).
+If the data coordinates covered the model space uniformly,
+the adjoint would roughly be the inverse.
+Otherwise,
+when data values pile up in some places and gaps remain elsewhere,
+the adjoint would be far from the inverse.
+\par
+Module \texttt{lint1} does linear interpolation and its adjoint.
+In chapters \ref{paper:iin} and \ref{paper:mda}
+we build inverse operators.
+\opdex{lint1}{linear interp}{45}{59}{user/gee}
+
+%\begin{notforlecture}
+\subsection{Spray and sum : scatter and gather}
+\sx{spray}
+\sx{scatter}
+\sx{gather}
+Perhaps the most common operation is the summing of many values
+to get one value.
+Its adjoint operation takes a single input value
+and throws it out to a space of many values.
+The \bx{summation operator} is a row vector of ones.
+Its adjoint is a column vector of ones.
+In one dimension
+this operator is almost too easy for us to bother showing a routine.
+But it is more interesting in three dimensions,
+where we could be summing or spraying on any of three subscripts,
+or even summing on some and spraying on others.
+In module \texttt{spraysum},
+both input and output are taken
+to be three-dimensional arrays.
+Externally, however, either could be a scalar, vector, plane, or cube.
+For example,
+the internal array  {\tt xx(n1,1,n3)}
+could be externally the matrix  {\tt map(n1,n3)}.
+When
+module \texttt{spraysum} is given
+the input dimensions and output dimensions stated below,
+the operations stated alongside are implied.
+
+\begin{tabular}{p{1em}lll}
+&{\tt (n1,n2,n3)}  &{\tt (1,1,1)}     &Sum a cube into a value.      \\
+&{\tt (1,1,1)}     &{\tt (n1,n2,n3)}  &Spray a value into a cube.\\
+&{\tt (n1,1,1)}    &{\tt (n1,n2,1)}   &Spray a column into a matrix.\\
+&{\tt (1,n2,1)}    &{\tt (n1,n2,1)}   &Spray a row into a matrix.\\
+&{\tt (n1,n2,1)}   &{\tt (n1,n2,n3)}  &Spray a plane into a cube.\\
+&{\tt (n1,n2,1)}   &{\tt (n1,1,1)}    &Sum rows of a matrix into a column.\\
+&{\tt (n1,n2,1)}   &{\tt (1,n2,1)}    &Sum columns of a matrix into a row.\\
+&{\tt (n1,n2,n3)}  &{\tt (n1,n2,n3)}  &Copy and add the whole cube.
+\end{tabular}
+
+If an axis is not of unit length on either input or output,
+then both lengths must be the same; otherwise, there is an error.
+Normally, after (possibly) erasing the output,
+we simply loop over all points on each axis, adding the input to the output.
+This implements either a copy or an add, depending on the {\tt add} parameter.
+It is either a spray, a sum, or a copy,
+according to the specified axis lengths.
+\opdex{spraysum}{sum and spray}{42}{56}{user/gee}
+
+%\end{notforlecture}
+
+\subsection{Causal and leaky integration}
+\sx{causal integration}
+\sx{leaky integration}
+\sx{integration ! leaky}
+\sx{integration ! causal}
+\inputdir{causint}
+Causal integration is defined as
+\begin{equation}
+y(t) \eq \int_{-\infty}^t \ x(\tau )\ d\tau 
+\end{equation}
+Leaky integration is defined as
+\begin{equation}
+y(t) \eq \int_0^\infty \ x(t-\tau)\ e^{-\alpha\tau} \ d\tau
+\end{equation}
+As $\alpha \rightarrow 0$, leaky integration becomes causal integration.
+The word ``leaky'' comes from electrical circuit theory
+where the voltage on a capacitor would be the integral of the current
+if the capacitor did not leak electrons.
+
+\par
+Sampling the time axis gives a matrix equation that
+we should call causal summation,
+but we often call it causal integration.
+Equation (\ref{eqn:leakinteq}) represents causal integration for $\rho=1$
+and leaky integration for $0<\rho <1$.
+
+\begin{equation}
+\bold y \eq
+  \left[
+        \begin{array}{c}
+                y_0 \\
+                y_1 \\
+                y_2 \\
+                y_3 \\
+                y_4 \\
+                y_5 \\
+                y_6 
+        \end{array}
+  \right]
+ \quad = \quad
+  \left[
+        \begin{array}{cccccccc}
+             1 &     0 &     0 &     0 &     0 &     0 &     0 \\
+        \rho   &     1 &     0 &     0 &     0 &     0 &     0 \\
+        \rho^2 &\rho   &     1 &     0 &     0 &     0 &     0 \\
+        \rho^3 &\rho^2 &\rho   &     1 &     0 &     0 &     0 \\
+        \rho^4 &\rho^3 &\rho^2 &\rho   &     1 &     0 &     0 \\
+        \rho^5 &\rho^4 &\rho^3 &\rho^2 &\rho   &     1 &     0 \\
+        \rho^6 &\rho^5 &\rho^4 &\rho^3 &\rho^2 &\rho   &     1 
+        \end{array}
+  \right]
+  \ \ 
+  \left[
+        \begin{array}{c}
+                x_0 \\
+                x_1 \\
+                x_2 \\
+                x_3 \\
+                x_4 \\
+                x_5 \\
+                x_6 
+        \end{array}
+  \right]
+\eq \bold C \bold x
+\label{eqn:leakinteq}
+\end{equation}
+(The discrete world is related to the continuous by
+$ \rho = e^{-\alpha\Delta\tau}$ and in
+some applications, the diagonal is 1/2 instead of 1.)
+Causal integration is
+the simplest prototype of a recursive operator.
+\sx{recursion ! integration}
+The coding is trickier than
+that for the operators we considered earlier.
+Notice when you compute $y_5$ that it is the sum of 6 terms,
+but that this sum is more quickly computed as $y_5 = \rho y_4 + x_5$.
+Thus equation~(\ref{eqn:leakinteq}) is more efficiently thought of as
+the recursion
+\begin{equation}
+y_t \eq \rho\; y_{t-1} + x_t
+\quad
+\quad
+\quad t\ {\rm increasing}
+\label{eqn:myrecur}
+\end{equation}
+(which may also be regarded as a numerical representation
+of the \bx{differential equation} $dy/dt+y (1-\rho)/\Delta t=x(t)$.)
+\par
+When it comes time to think about the adjoint, however,
+it is easier to think of equation~(\ref{eqn:leakinteq}) than of~(\ref{eqn:myrecur}).
+Let the matrix of equation~(\ref{eqn:leakinteq}) be called $\bold C$.
+Transposing to get $\bold{C}\T$ and applying it to $\bold y$
+gives us something back in the space of $\bold x$,
+namely $\tilde{\bold x} = \bold C\T \bold y$.
+From it we see that the adjoint calculation,
+if done recursively,
+needs to be done backwards, as in
+\begin{equation}
+\tilde x_{t-1} \eq \rho \tilde x_{t} + y_{t-1}
+\quad
+\quad
+\quad t \ {\rm decreasing}
+\label{eqn:backrecur}
+\end{equation}
+Thus the adjoint of causal integration
+is \bx{anticausal integration}.
+\par
+A module to do these jobs is \texttt{leakint}.
+The code for anticausal integration is not obvious
+from the code for integration and the adjoint coding tricks we
+learned earlier.
+To understand the adjoint, you need to inspect
+the detailed form of the expression $\tilde{\bold x} = \bold C\T \bold y$
+and take care to get the ends correct.
+Figure \ref{fig:causint} illustrates the program for $\rho = 1$.
+\opdex{causint}{causal integral}{35}{46}{api/c}
+\par
+%\activesideplot{causint}{width=3.00in,height=3.2in}{}
+\sideplot{causint}{width=3.00in}{
+  {\tt in1} is an input pulse.
+  {\tt C in1} is its causal integral.
+  {\tt C' in1} is the anticausal integral of the pulse.
+  {\tt in2} is a separated doublet.
+  Its causal integration is a box
+  and its anticausal integration is a negative box.
+  {\tt CC in2} is the double causal integral of {\tt in2}.
+  How can an equilateral triangle be built?
+}
+\par
+Later we will consider equations
+to march wavefields up towards the earth's surface,
+a layer at a time, an operator for each layer.
+Then the adjoint will start from the earth's surface
+and march down, a layer at a time, into the earth.
+
+%\begin{notforlecture}
+\begin{exer}
+
+\item
+Consider the matrix
+\begin{equation}
+  \left[
+        \begin{array}{cccccccc}
+             1 &     0 &     0 &     0 &     0 &     0 &     0 \\
+             0 &     1 &     0 &     0 &     0 &     0 &     0 \\
+             0 &  \rho &     1 &     0 &     0 &     0 &     0 \\
+             0 &     0 &     0 &     1 &     0 &     0 &     0 \\
+             0 &     0 &     0 &     0 &     1 &     0 &     0 \\
+             0 &     0 &     0 &     0 &     0 &     1 &     0 \\
+             0 &     0 &     0 &     0 &     0 &     0 &     1 
+        \end{array}
+  \right]
+\end{equation}
+and others like it with $\rho$ in other locations.
+Show what combination of these matrices will represent
+the leaky integration matrix
+in equation (\ref{eqn:leakinteq}).  What is the adjoint?
+
+\item
+Modify the calculation in Figure~\ref{fig:causint} so that there is
+a triangle waveform on the bottom row.
+\item
+Notice that the triangle waveform is not time aligned
+with the input {\tt in2}.
+Force time alignment with the operator 
+${\bold C\T \bold C}$ or
+${\bold C  \bold C\T}$.
+\item
+Modify \texttt{causint} \vpageref{lst:causint} by changing the diagonal to contain
+1/2 instead of 1.
+Notice how time alignment changes in Figure~\ref{fig:causint}.
+\end{exer}
+%\end{notforlecture}
+
+
+
+
+\subsection{Backsolving, polynomial division and deconvolution}
+
+\par
+Ordinary differential equations often lead us to the backsolving operator.
+For example, the damped harmonic oscillator leads to
+a special case of equation
+(\ref{eqn:polydiv})
+where $(a_3,a_4,\cdots)=0$.
+There is a huge literature on finite-difference solutions
+of ordinary differential equations
+that lead to equations of this type.
+Rather than derive such an equation on the basis
+of many possible physical arrangements,
+we can begin from the filter transformation $\bold B$ in (\ref{eqn:contran1})
+but put the matrix on the other side of the equation
+so our transformation can be called one of inversion or backsubstitution.
+Let us also force the matrix $\bold B$ to be a square matrix
+by truncating it with
+$\bold T = \left[ \bold I \quad \bold 0 \right]$, say
+$\bold A =\left[ \bold I \quad \bold 0 \right] \bold B = \bold T \bold B$.
+To link up with applications in later chapters,
+I specialize to 1's on the main diagonal and insert some bands of zeros.
+\begin{equation}
+\bold A \bold y
+\eq
+\left[ 
+\begin{array}{ccccccc}
+   1  & 0   & 0    & 0   & 0   & 0   & 0  \\
+  a_1 &  1  & 0    & 0   & 0   & 0   & 0  \\
+  a_2 & a_1 &  1   & 0   & 0   & 0   & 0  \\
+  0   & a_2 & a_1  &  1  & 0   & 0   & 0  \\
+  0   & 0   & a_2  & a_1 &  1  & 0   & 0  \\
+  a_5 & 0   & 0    & a_2 & a_1 &  1  & 0  \\
+  0   & a_5 & 0    &   0 & a_2 & a_1 & 1
+  \end{array} \right] 
+\; \left[ 
+\begin{array}{c}
+  y_0 \\ 
+  y_1 \\ 
+  y_2 \\ 
+  y_3 \\ 
+  y_4 \\ 
+  y_5 \\ 
+  y_6
+  \end{array} \right]
+\eq
+\left[ 
+\begin{array}{c}
+  x_0 \\ 
+  x_1 \\ 
+  x_2 \\ 
+  x_3 \\ 
+  x_4 \\ 
+  x_5 \\ 
+  x_6
+  \end{array} \right] 
+\eq
+\bold x
+\label{eqn:polydiv}
+\end{equation}
+Algebraically, this operator goes under the various names,
+``backsolving'',
+``polynomial division'', and
+``deconvolution''.
+The leaky integration transformation
+(\ref{eqn:leakinteq})
+is a simple example of backsolving
+when $a_1=-\rho$ and $a_2=a_5=0$.
+To confirm this, you need to verify that the matrices in
+(\ref{eqn:polydiv})
+and
+(\ref{eqn:leakinteq})
+are mutually inverse.
+
+\par
+A typical row in equation (\ref{eqn:polydiv}) says
+\begin{equation}
+x_t \eq y_t \ +\ \sum_{\tau > 0} \ a_\tau\ y_{t-\tau}
+\label{eqn:conrecur}
+\end{equation}
+Change the signs of all terms in equation
+(\ref{eqn:conrecur})
+and
+move some terms to the opposite side
+\begin{equation}
+y_t \eq x_t \ -\ \sum_{\tau > 0} \ a_\tau\ y_{t-\tau}
+\label{eqn:deconrecur}
+\end{equation}
+Equation (\ref{eqn:deconrecur}) is a recursion
+to find $y_t$ from the values of $y$ at earlier times.
+
+\par
+In the same way that
+equation (\ref{eqn:contran1})
+can be interpreted as $Y(Z)=B(Z)X(Z)$,
+equation (\ref{eqn:polydiv})
+can be interpreted as $A(Z) Y(Z) = X(Z)$
+which amounts to
+$Y(Z) = X(Z)/A(Z)$.
+Thus, convolution is amounts to polynomial multiplication
+while the backsubstitution we are doing here
+is called deconvolution, and it amounts to polynomial division.
+
+
+
+
+\par
+A causal operator is one that uses its present and past inputs
+to make its current output.
+Anticausal operators use the future but not the past.
+Causal operators are generally associated with lower triangular matrices
+and positive powers of $Z$, whereas
+anticausal operators are associated with upper triangular matrices
+and negative powers of $Z$.
+A transformation like equation
+(\ref{eqn:polydiv})
+but with the transposed matrix would require us
+to run the recursive solution the opposite direction in time,
+as we did with leaky integration.
+
+
+\par
+A module to backsolve equation (\ref{eqn:polydiv}) is \texttt{recfilt}.
+\opdex{recfilt}{deconvolve}{49}{75}{api/c}
+
+\par
+The more complicated an operator, the more complicated is its adjoint.
+Given a transformation from $\bold x$ to $\bold y$ that is
+$\bold T\bold B \bold y = \bold x$,
+we may wonder if the adjoint transform really is
+$(\bold T\bold B)\T \hat{\bold x}= \bold y$.
+It amounts to asking if the adjoint of
+$\bold y = (\bold T\bold B)^{-1}\bold x$ is
+$\hat{\bold x} = ((\bold T\bold B)\T)^{-1}\bold y$.
+Mathematically we are asking if
+the inverse of a transpose is the transpose of the inverse.
+This is so because in
+$\bold A\bold A^{-1} = \bold I = \bold I\T = (\bold A^{-1})\T\bold A\T$
+the parenthesized object must be the inverse of its neighbor $\bold A\T$.
+
+
+
+\par
+The adjoint has a meaning which is nonphysical.
+It is like the forward operator except that we must
+begin at the final time and revert towards the first.
+The adjoint pendulum damps as we compute it backward in time,
+but that, of course, means that the adjoint pendulum diverges
+as it is viewed moving forward in time.
+
+
+\subsection{The basic low-cut filter}
+Many geophysical measurements contain
+very low-frequency noise called ``drift.''
+For example, it might take some months to survey the depth of a lake.
+Meanwhile, rainfall or evaporation could change the lake level so that
+new survey lines become inconsistent with old ones.
+Likewise, gravimeters are sensitive to atmospheric pressure,
+which changes with the weather.
+A magnetic survey of an archeological site would need to contend
+with the fact that the earth's main magnetic field is changing randomly
+through time while the survey is being done.
+Such noises are sometimes called ``secular noise.''
+
+\par
+The simplest way to eliminate low frequency noise is
+to take a time derivative.
+A disadvantage is that the derivative
+changes the waveform
+from a pulse to a doublet (finite difference).
+Here we examine the most basic low-cut filter.
+It preserves the waveform at high frequencies;
+it has an adjustable parameter
+for choosing the bandwidth of the low cut;
+and it is causal (uses the past but not the future).
+
+\par
+We make our causal lowcut filter (highpass filter) by
+two stages which can be done in either order.
+\begin{enumerate}
+\item
+        Apply a time derivative, actually a finite
+        difference, convolving the data with $(1,-1)$.
+\item
+        Integrate, actually to do a leaky integration,
+        to deconvolve with $(1,-\rho)$ where numerically,
+        $\rho$ is slightly less than unity.
+\end{enumerate}
+The convolution ensures that the zero frequency is removed.
+The leaky integration almost undoes the differentiation
+(but does not restore the zero frequency).
+Adjusting the numerical value of $\rho$ adjusts
+the cutoff frequency of the filter.
+To learn the impulse response of the combined processes, we
+need to convolve the finite difference $(1,-1)$
+with the leaky integration 
+$(1, \rho, \rho^2, \rho^3, \rho^4, \cdots)$.
+The result is
+$(   1, \rho, \rho^2, \rho^3, \rho^4, \cdots)$ minus
+$(0, 1, \rho, \rho^2, \rho^3,         \cdots)$.
+We can think of this as
+$(1,    0,      0,      0,      0, \cdots)$ minus
+$(1-\rho) (1, \rho, \rho^2, \rho^3, \cdots)$.
+In other words the impulse response is an impulse
+followed by the negative of a weak $(1-\rho)$ decaying exponential $\rho^t$.
+Roughly speaking, the cutoff frequency of the filter corresponds
+to matching one wavelength to the exponential decay time.
+
+\par
+Some exercise with Fourier transforms
+or $Z$-transforms\footnote{
+        An introduction to $Z$-transforms is found in my
+        earlier books, FGDP and ESA-PVI.
+        },
+shows the
+Fourier transform of this highpass filter 
+to be
+\begin{equation}
+H(Z) \eq \frac{1-Z }{ 1-\rho Z}
+\eq
+1
+-(1-\rho) [
+Z^1
++\rho    Z^2
++\rho^2  Z^3
++\rho^3  Z^4
+\cdots
+]
+\label{eqn:lowcut}
+\end{equation}
+where the unit-delay operator is $Z=e^{i\omega\Delta t}$
+and where $\omega$ is the frequency.
+A symmetrical (noncausal) lowcut filter would filter once forward
+with $H(Z)$ and once backwards (adjoint) with $H(1/Z)$.
+This is not the place for a detailed Fourier analysis of this filter
+but it is the place to mention that a cutoff filter is typically
+specified by its cutoff frequency,
+a frequency that separates the pass and reject region.
+For this filter, the cutoff frequency $\omega_0$
+would correspond to matching a quarter wavelength of a sinusoid
+to the exponential decay length of $\rho^k$, namely,
+say the value of $k$ for which $\rho^k \approx 1/2$
+
+\par
+Seismological data is more complex.  A single ``measurement''
+consists of an explosion and echo signals recorded at many locations.
+As before, a complete survey is a track (or tracks)
+of explosion locations.
+Thus, in seismology, data space is higher dimensional.
+Its most troublesome noise is not simply low frequency;
+it is low velocity.
+We will do more with multidimensional data in later chapters.
+
+
+
+
+%\subsection{Adjoints}
+%\par %XXX
+%The operators and adjoints above transform vectors to other vectors.
+%They also transform data planes to model planes, volumes, etc.
+%A mathematical operator transforms an ``abstract vector'' which
+%might be packed full of volumes of information like television
+%signals (time series) can pack together a movie, a sequence of frames.
+%We can always think of the operator as being a matrix
+%but the matrix can be truly huge.
+%When the vectors transformed by the matrices are large like
+%geophysical data set sizes
+%then the matrix sizes are ``large squared,''
+%far too big for computers.
+%Thus although we can always think of an operator as a matrix,
+%in practice, we handle an operator differently.
+%Each practical application requires the practitioner to
+%prepare two computer programs.
+%One performs the matrix multiply
+%$\bold y =\bold A \bold x$
+%and another multiplys by the transpose
+%$\tilde{\bold x} =\bold A\T \bold y$
+%(without ever having the matrix itself in memory).
+%It is always easy to transpose a matrix.
+%It is less easy to take a computer program that does
+%$\bold y =\bold A \bold x$
+%and convert it to another to do
+%$\tilde{\bold x} =\bold A\T \bold y$.
+%In this chapter are many examples of increasing complexity.
+%At the end of the chapter we will see a test for any program pair
+%to see whether the operators $\bold A$ and $\bold A\T$  are mutually adjoint.
+%Doing the job correctly (coding adjoints without making approximations)
+%will reward us later when we tackle model and image estimation problems.
+
+
+
+
+
+%\subsection{Killing secular noise}
+%Many geophysical measurements contain
+%very low-frequency noise called ``drift.''
+%For example, it might take some months to survey the depth of a lake.
+%Meanwhile, rainfall or evaporation could change the lake level so that
+%new survey lines become inconsistant with old ones.
+%Likewise, gravimenters are sensitive to atmospheric pressure
+%which changes with the weather.
+%A magnetic survey of an archeological site would need to contend
+%with the fact that the earth's main magnetic field is changing randomly
+%through time while the survey is being done.
+%Such noises are sometimes called ``secular noise.''
+%\par
+%The simplest way to eliminate low frequency noise is
+%to take a time derivative.
+%A disadvantage of the derivative is that it causes the signal
+%at high frequencies to change from a pulse to a doublet.
+%Here we examine a simple ``polarity-preserving low-cut filter.''
+%It preserves the wave shape at high frequencies
+%and it has an adjustable parameter
+%for choosing the bandwidth of the low cut.
+%\par
+%A low-cut filter is one that removes from $X$
+%the zero frequency $\omega=0$ component,
+%and suppresses low frequency components
+%($\omega^2 < \epsilon^2$)
+%in the output $Y$.
+%\begin{equation}
+%Y \eq \frac{\omega^2 }{ \omega^2 + \epsilon^2} \ X
+%\label{eqn:locut}
+%\end{equation}
+%To exercise various popular notations we rewrite this as
+%\begin{equation}
+%( \omega^2 + \epsilon^2)  Y \eq \omega^2  X
+%\end{equation}
+%Recalling the fact that the negative of a second derivative operator
+%$-(-i\omega)^2$
+%corresponds to convolution with the coefficients $(-1,2,-1)$
+%we can express the same thought using a convolution notation
+%\begin{equation}
+%(-1, 2+\epsilon^2, -1)
+%\ {\tt \ast} \ 
+%Y \eq
+%(-1, 2, -1)
+%\ {\tt \ast} \ 
+%X
+%\end{equation}
+%which you can think of as a convolution matrix equation where both sides
+%have tridiagonal matrices.
+%We can express the same thought in $Z$-transform notation as
+%\begin{equation}
+%\left(\frac{-1}{Z} +(2+\epsilon^2) -Z\right)
+%Y \eq
+%\left(\frac{-1}{Z} +2 -Z\right)
+%X
+%\end{equation}
+%and we can factor the polynomials
+%\begin{equation}
+%\label{eqn:lofact}
+%{1\over\rho}
+%\left(1-{\rho\over Z}\right)
+%\left(1-{\rho      Z}\right)
+%Y(Z) \eq
+%\left(1-{1\over Z}\right)
+%\left(1-{       Z}\right)
+%X(Z)
+%\end{equation}
+%where $2+\epsilon^2 = (1+\rho^2)/\rho$.
+%(Factoring the polynomial amounts to factoring tridiagonal
+%matrices into a product of upper and lower bidiagonal matrices.)
+%We can group the causal filter parts together
+%thereby defining a causal operator polynomial ratio $H(Z)$:
+%\begin{equation}
+%Y(Z) \eq
+%\rho \
+%{\left(1-{1\over Z}\right)  \over \left(1-{\rho\over Z}\right)} \ 
+%{\left(1-{       Z}\right)  \over \left(1-{\rho      Z}\right)} \
+%X(Z)
+%\eq
+%\rho \
+%\bar H(1/Z) \ H(Z) \ \ X(Z)
+%\label{eqn:lowfac}
+%\end{equation}
+%\par
+%Here $H=\bar H$ because the filter coefficients are not complex numbers.
+%$H(Z)$ is called a causal filter because it uses past values
+%of the filter inputs to create the output.
+%Likewise $H(1/Z)$ is called anticausal because the present output
+%comes from future inputs.
+%If you filter with both,
+%$\bar H(1/Z) H(Z)$,
+%the filter response is 
+%$\omega^2/(\omega^2+\epsilon^2$
+%(to the extent that a time derivative is the same as a finite difference).
+%\par
+%For any application
+%we have a choice between a symmetrical filter $\bar H(1/Z) H(Z)$ whose
+%{\em  amplitude} response is $\bar H(1/Z) H(Z)$,
+%or the causal filter $H(Z)$ whose
+%{\em  energy} response is $\bar H(1/Z) H(Z)$.
+%The causal filter
+%\begin{equation}
+%H(Z) \eq {1-Z \over 1-\rho Z}
+%\label{eqn:lowcut}
+%\end{equation}
+%obviously kills zero frequency because of the time derivative $(1-Z)$.
+%The denominator $1/(1-\rho Z)$ looks like the response of leaky integration.
+%The combination of numerator and denominator
+%has an impulse response that is a positive impulse,
+%followed by a damped exponential of negative polarity.
+%The area of the pulse equals the area of the damped exponential,
+%assuring that the zero-frequency response vanishes
+%and the high-frequency response is an impulse,
+%i.e.\ it does not distort high frequencies.
+%XX
+%
+
+\begin{exer}
+\item
+        Give an analytic expression for
+        the waveform of equation (\ref{eqn:lowcut}).
+\item
+        Define a low-pass filter as $1-H(Z)$.
+        What is the low-pass impulse response?
+\item
+        Put Galilee data on a coarse mesh.
+        Consider north-south lines as one-dimensional signals.
+        Find the value of $\rho$ for which $H$ is the most pleasing filter.
+\item
+        Find the value of $\rho$ for which $\bar HH$ is the most pleasing filter.
+\item
+        Find the value of $\rho$ for which $H$ applied to Galilee has minimum energy.
+        (Experiment with a range of about ten values around your favorite value.)
+\item
+        Find the value of $\rho$ for which $\bar HH$ applied to Galilee has minimum energy.
+\item
+        Repeat above for east-west lines.
+\end{exer}
+
+
+
+%\subsection{Smoothing and roughening with triangles}
+%\sx{triangle function}
+%We commonly need to smooth signals and images.
+%It is particularly economical to smooth with \bx{rectangle function}s.
+%To do this, we first apply causal integration.
+%Then we subtract the integral at two locations
+%and this provides
+%the integral between those locations.
+%This process is usually much more economical
+%than performing convolution with a rectangle,
+%because using integration makes the computational cost
+%independent of the length of the rectangle.
+%Subroutine \texttt{boxconv}
+%from my previous book, PVI, does the job.
+%\progdex{boxconv}{convolve with box}
+%Convolving twice with a box function
+%yields a triangle function as the impulse response of the smoothing.
+%Subroutine \texttt{triangle} does it
+%and also handles side boundaries as also described in PVI.
+%Basically, the output flowing off the side boundaries
+%is folded back in,
+%so that the output the same length as the input.
+%(I need a clever programmer to show me how to
+%use modulo functions to do the folding back.
+%This version does not allow the data
+%to be shorter than the smoothing rectangle.)
+%\progdex{triangle}{convolve with triangle}
+%Subroutine \texttt{triangle2} performs simple Fortran rituals
+%to give us triangle smoothing on both the 1-axis and the 2-axis.
+%\progdex{triangle2}{convolve 2-D triangle}
+%The resulting 2-D impulse response is pleasingly
+%circularly symmetric.
+%This occurs because a triangle function is a good
+%approximation to a Gaussian function.
+%The product of two one-dimensional Gaussians
+%is a two-dimensional one; i.e.,
+%$ e^{-x^2} e^{-y^2} = e^{-(x^2+y^2)}$.
+%The departures from symmetry (which are small)
+%can be seen in Figure \ref{fig:triangle2}.
+%(They are a plus-like image at the apex and rectangle at the floor.)
+%%XXXX
+%%\activesideplot{triangle2}{width=3in,height=1.5in}{}{
+%\activeplot{triangle2}{width=6in,height=3in}{}{
+%        Impulse and its response to the triangle smoother.
+%        }
+%
+%\par
+%In later chapters we will see frequent need for a \bx{roughening operator}.
+%The simplest roughening operator is a derivative in 1-D
+%or a gradient or Laplacian in 2-D.
+%A roughening operator with an adjustable parameter
+%is simply an impulse minus the smoothing operator.
+%This is provided by module \texttt{rufftri2}.
+%\progdex{rufftri2}{roughen with triangle}
+%
+%\par
+%Some linear operators like these smoothing operators
+%turn out to be their own adjoint.
+%(A method to verify this is in the next section.)
+%Then there is no need to include the {\tt adj} argument.
+%(I may eventually come to regret also omitting the {\tt add} argument.)
+%
+%\par
+%Figure \ref{fig:galocut90} shows the effect of roughening
+%(low cut filtering) the depth map of the Sea of Galilee.
+%On the positive side, the roughening gives us a better view
+%of ancient sunken shorelines.
+%On the negative side, it exaggerates various defects in the data
+%(such as spikes and tracks)
+%and defects in data processing (empty bins).
+%\par
+\inputdir{galilee}
+
+\plot{galocut}{width=6in,height=4.0in} {
+  The depth of the Sea of Galilee after roughening.
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% . . JCS Include
+
+\subsection{Smoothing with box and triangle}
+\inputdir{XFig}
+%
+Simple ``\bx{smoothing}'' is a common application of filtering.  A
+smoothing filter is one with all positive coefficients.  On the time
+axis, smoothing is often done with a single-pole damped exponential
+function.  On space axes, however, people generally prefer a
+symmetrical function.  We will begin with rectangle and triangle
+functions. When the function width is chosen to be long, then the
+computation time can be large, but recursion can shorten it
+immensely. 
+%
+\par
+%
+The inverse of any polynomial reverberates forever, although it might
+drop off fast enough for any practical need.  On the other hand, a
+rational filter can suddenly drop to zero and stay there.  Let us look
+at a popular rational filter, the rectangle or ``\bx{box car}'': 
+\begin{equation}
+{ \frac{1- Z^5}{ 1-Z} } \eq 1+Z+Z^2+Z^3+Z^4	\label{eqn:box}
+\end{equation}
+The filter (\ref{eqn:box}) gives a moving average under a {\em
+rectangular} window.  This is a basic smoothing filter.  A clever
+way to apply it is to move the rectangle by adding a new value at one
+end while dropping an old value from the other end.  This approach is
+formalized by the polynomial division algorithm, which can be
+simplified because so many coefficients are either one or zero.  To
+find the recursion associated with $Y(Z)= X(Z)(1-Z^5)/(1-Z)$, we
+identify the coefficient of $Z^t$ in $(1-Z)Y(Z)= X(Z)(1-Z^5)$.  The
+result is 
+\begin{equation}
+y_t \eq  y_{t-1} + x_t - x_{t-5}.
+\end{equation}
+This approach boils down to the program % \texttt{boxconv()} %\vpageref{/prog:boxconv},
+which is so fast it is almost free!
+\moddex{triangle}{box like smoothing}{175}{180}{api/c}
+Its last line scales the output by dividing by the rectangle length.
+With this scaling, the zero-frequency component of the input is
+unchanged, while other frequencies are suppressed. 
+
+\par
+\bxbx{Triangle smoothing}{triangle smoothing} is rectangle smoothing
+done twice.  For a mathematical description of the triangle filter, we
+simply square equation (\ref{eqn:box}).  Convolving a rectangle
+function with itself many times yields a result that mathematically
+tends towards a \bx{Gaussian} function.
+Despite the sharp corner on the top of the triangle function,
+it has a shape that is remarkably similar to a Gaussian. 
+Convolve a triangle with itself and you will see a very nice
+approximation to a Gaussian (the central limit theorem).
+%
+\par
+%
+With filtering, \bx{end effect}s can be a nuisance.  Filtering
+increases the length of the data, but people generally want to keep
+input and output the same length (for various practical reasons).
+This is particularly true when filtering a space axis.  Suppose the
+five-point signal $(1, 1,1,1,1)$ is smoothed using the {\tt boxconv()}
+program with the three-point smoothing filter $(1,1,1)/3$.  The output
+is $5+3-1$ points long, namely, $(1,2,3,3,3,2,1)/3$.  We could simply
+abandon the points off the ends, but I like to \bx{fold} them back in,
+getting instead $(1+2,3,3,3,1+2)$.  An advantage of the folding is
+that a constant-valued signal is unchanged by the smoothing.  This is
+desirable since a smoothing filter is a low-pass filter which
+naturally should pass the lowest frequency $\omega=0$ without
+distortion.  The result is like a wave reflected by a
+\bxbx{zero-slope}{zero slope} end condition.  Impulses are smoothed
+into triangles except near the boundaries.  What happens near the
+boundaries is shown in Figure~\ref{fig:triend}.
+% \sideplot{triend}{width=3in}{
+%	Edge effects when smoothing an impulse with a triangle function.
+%	Inputs are spikes at various distances from the edge.
+%	}
+\inputdir{triangle}
+\sideplot{triend}{width=3in}{
+	Edge effects when smoothing an impulse with a triangle function.
+	Inputs are spikes at various distances from the edge.}
+Note that at the boundary, there is necessarily only half a triangle,
+but it is twice as tall.
+%
+\par
+%
+Figure~\ref{fig:triend} was derived from the routine {\tt triangle()}. %
+%\progdex{triangle}{conv. with triangle} %
+%%%TEMPORTARILY spiced in
+\moddex{triangle}{1D triangle smoothing}{182}{188}{api/c}
+%\begin{verbatim}
+%  module triangle_smooth {
+%    use box_smooth
+%    contains
+%    # Convolve with triangle
+%    #
+%    # input:        nb      rectangle width (points) (Triangle base twice as wide.)
+%    # input:        xx(nd)                is a vector of data.
+%    # output:       yy(nd)                may be on top of uu
+%    subroutine triangle( nb, nd, xx, yy) {
+%      integer,	      intent(in)       ::nb,nd
+%      integer                          ::i,np,nq
+%      real, dimension (:), intent (in) ::xx
+%      real, dimension (:), intent (out)::yy
+%      real, dimension (:), allocatable ::pp,qq
+%      allocate(pp(nd+nb-1), qq(nd+nb+nb-2))
+%      call boxconv( nb, nd, xx, pp);    np = nb+nd-1
+%      call boxconv( nb, np, pp, qq);    nq = nb+np-1
+%      do i=1,nd   { yy(i)     =             qq(i+nb-1)     }
+%      do i=1,nb-1 { yy(i)     =yy(i)      + qq(nb-i  )     } # fold back near end
+%      do i=1,nb-1 { yy(nd-i+1)=yy(nd-i+1) + qq(nd+(nb-1)+i)} # fold back far end
+%      deallocate(pp,qq)
+%    }
+%  }
+%\end{verbatim}
+
+%%%TEMPORTARILY spiced in
+
+%I frequently use this program, so it is cluttered with extra features.
+%For example, the output can share the same location as the input.
+%Further, since it is commonly necessary to smooth along the 2-axis
+%of a two-dimensional array, there are some Fortran-style pointer
+%manipulations to allow the user to smooth either the 1-axis or the
+%2-axis or both.  For those of you unfamiliar with Fortran
+%matrix-handling tricks, I include below another routine, {\tt
+%triangle2()}, that teaches how a two-dimensional array can be
+%smoothed over both its 1-axis and its 2-axis.
+%%\progdex{triangle2}{conv. w. tri. in 2D}%
+%%%%TEMPORTARILY spiced in
+%\moddex{triangle2_smooth}{2D triangle smoothing}
+%
+%%\begin{verbatim}
+%%  module triangle2_smooth {
+%%    use triangle_smooth
+%%    contains
+%%    # smooth by convolving with triangle in two dimensions.
+%%    #
+%%    subroutine triangle2  ( rect1, rect2, n1, n2, xx, yy) {
+%%      integer,intent(in) :: rect1, rect2, n1, n2
+%%      integer            :: i1,i2
+%%      real, intent (in)  ::   xx(:,:)
+%%      real, intent (out) ::   yy(:,:)
+%%      real, allocatable  :: temp(:,:)
+%%      allocate(temp(n1,n2))
+%%      do i2= 1, n2 { call triangle( rect1, n1, xx(1:,i2), temp(1:,i2)) }
+%%      do i1= 1, n1 { call triangle( rect2, n2, temp(i1,1:), yy(i1,1:)) }
+%%      deallocate(temp)
+%%    }
+%%  }
+%\end{verbatim}
+%%%TEMPORTARILY spiced in
+
+%\todo{ \item The program {\tt triangle()} has a bug in the unusual case
+%where {\tt nb $\ge$ nx}.
+%Identify the bug.
+%Recode the program to work for all values of {\tt nb}.
+%}
+
+
+% . . END JCS Include
+% 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+%\begin{notforlecture}
+\subsection{Nearest-neighbor normal moveout (NMO)}
+\par
+\bxbx{Normal-moveout}{normal moveout}
+correction (\bx{NMO}) is a geometrical correction
+of reflection seismic data
+that stretches the time axis so that data recorded
+at nonzero separation $x_0$ of shot and receiver,
+after stretching, appears to be at $x_0=0$.
+NMO correction is roughly like time-to-depth conversion
+with the equation $v^2 t^2 = z^2 + x_0^2$.
+After the data at $x_0$ is stretched from $t$ to $z$,
+it should look like stretched data from any other $x$
+(assuming these are plane horizontal reflectors, etc.).
+In practice, $z$ is not used; rather,
+\bx{traveltime depth} $\tau$ is used,
+where $\tau =z/v$;
+so $t^2 = \tau^2+x_0^2/v^2$.
+(Because of the limited alphabet of programming languages,
+I often use the keystroke {\tt z} to denote $\tau$.)
+
+\inputdir{cunha}
+
+\par
+Typically, many receivers record each shot.
+Each seismogram can be transformed by NMO
+and the results all added.
+This is called ``\bx{stack}ing'' or ``\bx{NMO stack}ing.''
+The adjoint to this operation is to begin from
+a model which ideally is the zero-offset trace
+and spray this model to all offsets.
+From a matrix viewpoint, stacking is like a {\em  row} vector
+of normal moveout operators and modeling is like a {\em  column}.
+An example is shown in Figure \ref{fig:cunha}.
+\sideplot{cunha}{width=3in}{
+  Hypothetical model,
+  synthetic data, and model image.
+}
+
+\par
+A module that does reverse moveout is \texttt{hypotenusei}.
+Given a zero-offset trace, it makes another at non-zero offset.
+The adjoint does the usual normal moveout correction.
+\opdex{hypotenusei}{inverse moveout}{42}{73}{user/gee}
+(My 1992 textbook (PVI) illustrates many additional features of normal moveout.)
+A companion routine \texttt{imospray}
+loops over offsets and makes a trace for each.
+The adjoint of {\tt imospray} is the industrial process of moveout and stack.
+\opdex{imospray}{inverse NMO spray}{47}{62}{user/gee}
+
+\par
+This is the first time we have built an operator (moveout and stack)
+from a collection of other operators (moveout at various offsets)
+and there are new possibilities for confusion and program bugs.
+As earlier with the matrix multiplication operator,
+to use the \texttt{imospray} operator,
+there are two steps, one that we use to set things up
+\begin{verbatim}
+        imospray_init( slow, x0,dx, t0,dt, nt,nx);
+\end{verbatim}
+and another step that we use a lot in the next chapter
+for analysis and data fitting.
+\begin{verbatim}
+        imospray_lop( adj, add, n1, n2, stack, gather);
+\end{verbatim}
+Later we'll see programs that are not operators.
+\begin{comment}
+Every program that is an operator
+(contains {\tt {\#}{\%} {\_}init}
+      and {\tt {\#}{\%} {\_}lop})
+is expanded by Loptran to a longer Fortran code
+where the
+      {\tt {\_}lop}
+function begins by
+(potentially) erasing the output (when \texttt{add=.false.}).
+This
+potential erasing is done in both
+\texttt{hypotenusei} and
+\texttt{imospray}.
+\end{comment}
+Consider the the adjoint of spraying which is stacking.
+Here the occurance of the
+\texttt{add=true} in
+\texttt{imospray} assures we do not erase the stack each time
+we add in another trace.
+\begin{comment}
+Because of Loptran we don't explicitly see that
+\texttt{imospray\_lop}
+has its own potential erase of its output
+which we'd turn off if we wanted to add one stack upon another.
+\end{comment}
+
+%\subsection{Model-pull binning}
+%\sx{model-pull binning}
+%\sx{binning ! model-pull}
+%An alternative to pushing each data point into the nearest bin,
+%is looping over all the bins on the uniform mesh and,
+%for each bin, pulling in the nearest data value.
+%Unlike pushing each data value exactly once,
+%we pull a one data value into each bin
+%so we never have empty bins.
+%The trouble is that each data point is not used exactly once;
+%it may be used many times or never.
+%What you really want is no empty bins
+%and no ignored data points,
+%but you don't get that with either data push or bin pull.
+%An example of interpolating some well depth-information
+%onto a map is shown in Figure \ref{fig:pushpull90}.
+%\activesideplot{pushpull90}{width=3in,height=1.5in}{}{
+%        Well depths mapped with data push (left)
+%        and bin pull (right).
+%        }
+%
+%\par
+%Both data push and bin pull are needed in practice.
+%Earlier we saw module \texttt{dpbin2} \vpageref{/prog:dpbin2}
+%that pushes in two dimensions.
+%Here we see module \texttt{binpull1}
+%that pulls in one dimension.
+%\opdex{binpull1}{pull data into bin}
+%It is an easy exercise to extend \texttt{binpull1}
+%to a two-dimensional module {\tt binpull2}
+%which is found in the library but not shown here.
+%
+%\par
+%The topic of bin pull has much more
+%intellectual content than it might appear.
+%For large data spaces and model spaces, module
+%\texttt{binpull1} is unnecessarily slow,
+%because it is proportional to the product of the sizes of the two spaces,
+%while a deeper analysis based on sorting
+%(in $k$ dimensions, $k$-D trees) can reduce the cost immensely.
+%To reduce the cost of
+%using my simple code,
+%I have split
+%\texttt{binpull1}
+%into two parts, an initialization part
+%{\tt binpull1i()},
+%and the operator part \texttt{binpull1}.
+%The slow part is the initialization.
+%
+
+%\end{notforlecture}
+
+%XXX
+\subsection{Coding chains and arrays}
+
+With a collection of operators,
+we can build more elaborate operators.
+One method is chaining.
+For example, the operator product
+$\bold A = \bold B \bold C$
+is represented in the subroutine 
+\texttt{ chain2( op1, op2, ...)}.
+Likewise the operator product
+$\bold A = \bold B \bold C \bold D$
+is represented in the in the subroutine 
+\texttt{ chain3( op1, op2, op3,...)}.
+As you read these codes, please remember the
+output is the last argument only when the output is $\bold d$.
+When the output is $\bold m$, the output is the second from last.
+\par
+Another amazing thing about matrices is that their elements
+may themselves be matrices.
+A very common example
+is a row matrix containing two elements,
+each element itself a matrix.
+This is done by subroutine \texttt{row}
+also in module \texttt{chain}.
+
+
+
+\moddex{chain}{operator chain and array}{26}{46}{api/c}
+\moddex{chain}{operator chain and array}{70}{90}{api/c}
+
+%\moddex{solver_tiny}{}
+
+\section{ADJOINT DEFINED: DOT-PRODUCT TEST}
+
+\sx{adjoint ! defined}
+Having seen many examples of \bx{space}s, operators, and adjoints,
+we should now see more formal definitions
+because abstraction
+helps us push these concepts to their limits.
+
+\subsection{Definition of a vector space}
+An operator transforms a \bx{space} to another space.
+Examples of spaces are model space $\bold m$
+and data space $\bold d$.
+We think of these spaces as vectors
+whose components are packed with numbers,
+either real or complex numbers.
+The important practical concept is that
+not only does this packing include one-dimensional spaces like signals,
+two-dimensional spaces like images, 3-D movie cubes,
+and zero-dimensional spaces like a data mean, etc,
+but spaces can be sets of all the above.
+One space that is a set of three cubes is
+the earth's magnetic field, which has three components;
+and each component is a function of a three-dimensional space.
+(The 3-D {\em  physical space} we live in is not
+the abstract {\em  \bx{vector space}}
+of models and data so abundant in this book.
+Here the word ``space'' without an adjective means the vector space.)
+\par
+A more heterogeneous example of a vector space is \bx{data tracks}.
+A depth-sounding survey of a lake can make a vector space that is
+a collection of tracks,
+a vector of vectors
+(each vector having a different number of components,
+because lakes are not square).
+This vector space of depths along tracks in a lake
+contains the depth values only.
+The $(x,y)$-coordinate information
+locating each measured depth value
+is (normally) something outside the vector space.
+A data space could also be a collection of echo soundings,
+waveforms recorded along tracks.
+
+\par
+We briefly recall information about vector spaces found in elementary books:
+Let $\alpha$ be any scalar.
+Then if $\bold d_1$ is a vector and $\bold d_2$ is conformable
+with it, then other vectors are
+$\alpha \bold d_1$ and $\bold d_1 + \bold d_2$.
+The size measure of a vector is a positive value called a norm.
+The norm is usually defined to be the \bx{dot product}
+(also called the $L_2$ \bx{norm}), say $\bold d \cdot \bold d$.
+For complex data it is
+$\bar{\bold{d}} \cdot \bold{d}$
+where $\bar{\bold{d}}$ is the complex conjugate of $\bold{d}$.
+In theoretical work the ``length of a vector'' means the vector's norm.
+In computational work the ``length of a vector'' means the
+number of components in the vector.
+
+\par
+Norms generally include a \bx{weighting function}.
+In physics,
+the norm generally measures a conserved quantity
+like energy or momentum,
+so, for example,
+a weighting function for magnetic flux is permittivity.
+In data analysis,
+the proper choice of the weighting function is
+a practical statistical issue,
+discussed repeatedly throughout this book.
+The algebraic view of a weighting function is that
+it is a diagonal matrix
+with positive values $w(i)\ge 0$ spread along the diagonal,
+and it is denoted $\bold W = {\bf diag}[w(i)]$.
+With this weighting function
+the $L_2$ norm of a data space is denoted
+$\bold d\T \bold W \bold d$.
+Standard notation for norms uses a double absolute value,
+where $||\bold d||=\bold d\T \bold W \bold d$.
+A central concept with norms is the triangle inequality,
+$ ||\bold d_1   +   \bold d_2|| \le ||\bold d_1|| + ||\bold d_2|| $
+whose proof you might recall (or reproduce with the use of dot products).
+
+\subsection{Dot-product test for validity of an adjoint}
+\par
+There is a huge gap between the
+conception of an idea and putting it into practice.
+During development, things fail far more often than not.
+Often, when something fails,
+many tests are needed to track down the cause of failure.
+Maybe the cause cannot even be found.
+More insidiously, failure may be below the threshold of detection
+and poor performance suffered for years.
+The \bx{dot-product test}
+enables us to ascertain whether
+the program for the adjoint of an operator
+is precisely consistent with the operator itself.
+It can be, and it should be.
+
+\par
+Conceptually, the idea of matrix transposition is simply ${a}_{ij}'=a_{ji}$.
+In practice, however, we often encounter matrices far too large
+to fit in the memory of any computer.
+Sometimes it is also not obvious how to formulate the process at hand
+as a matrix multiplication.
+(Examples are differential equations and fast Fourier transforms.)
+What we find in practice is that an application and its adjoint 
+amounts to two routines. The first routine
+amounts to the matrix multiplication $ \bold F \bold m$.
+The adjoint routine computes $\bold F\T \bold d$,
+where $\bold F\T$ is the \bx{conjugate-transpose} matrix.
+In later chapters we will be solving huge sets of simultaneous equations,
+in which both routines are required.
+If the pair of routines are inconsistent,
+we are doomed from the start.
+The dot-product test is a simple test for verifying that the two 
+routines are adjoint to each other.
+
+\par
+The associative property of linear algebra says that
+we do not need parentheses in a vector-matrix-vector product
+like $\bold d\T \bold F \bold m $ because we get the same
+result no matter where we put the parentheses.
+They serve only to determine the
+sequence of computation.
+Thus,
+\begin{eqnarray}
+\bold d\T ( \bold F \bold m ) &=& ( \bold d\T \bold F )  \bold m   \\
+\bold d\T ( \bold F \bold m ) &=& ( \bold F\T \bold d )\T \bold m 
+\label{eqn:bilin2}
+\end{eqnarray}
+(In general, the matrix is not square.)
+To perform the dot-product test,
+load the vectors $\bold m$ and $\bold d$ with random numbers.
+Using your program for $\bold F$,
+compute the vector $\tilde{\bold{d}} = \bold{F}\bold{m}$,
+and using your program for $\bold{F}\T$,
+compute $\tilde{\bold{m}} = \bold{F}\T\bold{d}$.
+Inserting these into equation~(\ref{eqn:bilin2})
+gives you two scalars that should be equal.
+\begin{equation}
+\bold{d}\T ( \bold F \bold m ) \eq
+\bold d\T \tilde{\bold d} \eq \tilde{\bold m}\T \bold m
+\eq ( \bold F\T \bold d )\T \bold m
+\label{eqn:bilin}
+\end{equation}
+The left and right sides of this equation will be computationally equal
+only if the program doing $\bold F\T$ is indeed adjoint
+to the program doing $\bold F$
+(unless the random numbers do something miraculous).
+A final word: If an operator uses complex arithmetic
+then both its input and output are ``in the field of complex numbers.''
+The conversion between real and complex numbers is not a linear operator
+despite its seeming similarity to truncation and zero padding.
+
+\par
+The program for applying the dot product test is \texttt{dottest}
+\vpageref{lst:dottest}. 
+The C way of passing a linear operator
+as an argument is to specify the function interface. Fortunately, we
+have already defined the interface for a generic linear operator. To
+use the \texttt{dottest} program, you need to initialize an operator
+with specific arguments (the \texttt{\_init} subroutine) and then pass
+the operator itself (the \texttt{\_lop} function) to the test program.
+You also need to specify the sizes of the model and data vectors so
+that temporary arrays can be constructed. The program runs the dot
+product test twice, second time with \texttt{add = true} to test if
+the operator can be used properly for accumulating results, for example.
+$\bold d \leftarrow \bold d+\bold F\bold m$.
+
+%\begin{notforlecture}
+\moddex{dottest}{dot-product test}{52}{64}{api/c}
+%\end{notforlecture}
+
+\par
+I tested (\ref{eqn:bilin}) on many operators
+and was surprised and delighted to find
+that it is often satisfied to an accuracy near the computing precision.
+I do not doubt that larger rounding errors could occur,
+but so far,
+every time I encountered a relative discrepancy of $10^{-5}$ or more,
+I was later able to uncover a conceptual or programming error.
+Naturally,
+when I do dot-product tests, I scale the implied matrix to a
+small dimension in order
+to speed things along, and to be sure that
+boundaries are not overwhelmed by the much larger interior.
+
+\par
+Do not be alarmed if the operator you have defined has \bx{truncation} errors.
+Such errors in the definition of the original operator
+should be identically matched by
+truncation errors in the adjoint operator.
+\sx{adjoint ! truncation errors}
+If your code passes the \bx{dot-product test},
+then you really have coded the adjoint operator.
+In that case,
+to obtain inverse operators,
+you can take advantage of the standard methods of mathematics.
+
+\par
+We can speak of a \bx{continuous function} $f(t)$
+or a \bx{discrete function} $f_t$.
+For continuous functions we use integration,
+and for discrete ones we use summation.
+In formal mathematics, the dot-product test 
+{\em  defines} the adjoint operator,
+except that the summation in the dot product
+may need to be changed to an integral.
+The input or the output or both can be given
+either on a continuum or in a discrete domain.
+So the dot-product test
+$\bold y\T \tilde{\bold y} = \tilde{\bold x}\T \bold x$
+alternately
+$ \bold m_2 \cdot \bold m_2 = \bold d_2 \cdot \bold d_1) $
+could have an integration on one side of the equal sign
+and a summation on the other.
+Linear-operator theory is rich with concepts not developed here.
+%I assume that you studied it before you came to read this book,
+%and that it is my job to show you how to use it.
+
+\subsection{The word ``adjoint''}
+In mathematics the word ``\bx{adjoint}'' has two meanings.
+One of them, the so-called \bx{Hilbert adjoint},
+is the one generally found in physics and engineering
+and it is the one used in this book.
+\sx{adjoint ! operator}
+\sx{operator ! adjoint}
+In linear algebra is a different matrix,
+called the \bx{adjugate} matrix.
+It is a matrix whose elements
+are signed cofactors (minor determinants).
+For invertible matrices,
+this matrix is the \bx{determinant} times the \bx{inverse matrix}.
+It can be computed without ever using division,
+so potentially the adjugate can be useful in applications
+where an inverse matrix does not exist.
+Unfortunately, the adjugate matrix is sometimes called the adjoint matrix,
+particularly in the older literature.
+Because of the confusion of multiple meanings of the word adjoint,
+in the first printing of PVI, I avoided the use of the word and
+substituted the definition, ``\bx{conjugate transpose}''.
+Unfortunately this was often abbreviated to ``conjugate,''
+which caused even more confusion.
+Thus I decided to use the word adjoint
+and have it always mean the Hilbert adjoint
+found in physics and engineering.
+
+\subsection{Matrix versus operator}
+\sx{operator}
+Here is a short summary of where we have been and where we are going:
+Start from the class of linear operators, add subscripts
+and you get matrices.  Examples of operators without subscripts
+are routines that solve differential equations and
+routines that do fast Fourier transform.
+What people call ``sparse matrices'' are often not really matrices
+but operators,
+because they are not defined by data structures
+but by routines that apply them to a vector.
+With sparse matrices you easily can do
+$\bold A(\bold B(\bold C\bold x))$
+but not
+$(\bold A\bold B\bold C)\bold x$.
+\par
+Although a linear operator does not have defined subscripts,
+you can determine what would be the operator value at any subscript:
+by applying the operator to an impulse function, you would get a matrix column.
+The adjoint operator is one from which we can extract the transpose matrix.
+For large spaces this extraction is unwieldy,
+so to test the validity of adjoints,
+we probe them with random vectors,
+say $\bold x$ and $\bold y$,
+to see whether
+$\bold y\T(\bold A\bold x)=(\bold A\T\bold y)\T \bold x$.
+Mathematicians define adjoints by this test,
+except that instead of using random vectors,
+they say ``for all functions,'' which includes the continuum.
+\par
+This defining test makes adjoints look mysterious.
+Careful inspection of operator adjoints,
+however, generally reveals that they are built up from simple matrices.
+Given adjoints
+$\bold A\T$,
+$\bold B\T$,
+and
+$\bold C\T$,
+the adjoint of
+$\bold A\bold B\bold C$
+is
+$\bold C\T\bold B\T\bold A\T$.
+Fourier transforms and linear-differential-equation solvers
+are chains of matrices,
+so their adjoints can be assembled
+by the application of adjoint components in reverse order.
+The other way we often see complicated operators being built from simple ones
+is when operators are put into components of matrices,
+typically a
+$1\times 2$
+or
+$2\times 1$
+matrix containing two operators.
+An example of the adjoint of a two-component column operator is
+\begin{equation}
+ \left[
+  \begin{array}{c}
+   \bold A \\
+   \bold B
+  \end{array}
+ \right]\T
+\eq
+ \left[
+  \begin{array}{cc}
+   \bold A\T & \bold B\T
+  \end{array}
+ \right]
+\end{equation}
+\par
+Although in practice an operator might be built from matrices,
+fundamentally,
+a matrix is a data structure whereas
+an operator is a procedure.
+A matrix is an operator if its subscripts are hidden
+but it can be applied to a space, producing another space.
+\par
+As matrices have inverses, so do linear operators.
+You don't need subscripts to find an inverse.
+The
+conjugate-gradient method and
+conjugate-direction method
+explained in the next chapter
+are attractive methods of finding them.
+They merely apply
+$\bold A$
+and
+$\bold A\T$
+and use inner products to find coefficients
+of a polynomial in
+$\bold A\bold A\T$
+that represents the inverse operator.
+\par
+Whenever we encounter a \bx{positive-definite} matrix we should recognize
+its likely origin in a nonsymmetric matrix
+$\bold F$
+times its adjoint.
+Those in
+natural sciences often work on solving simultaneous equations but fail
+to realize that they should return to the origin of the equations
+which is often a fitting goal; i.e.,
+applying an operator to a model should yield data,
+i.e.,
+$\bold d  \approx  \bold d_0 + \bold F(\bold m-\bold m_0)$
+where the operator
+$\bold F$
+is a partial derivative matrix
+(and there are potential underlying nonlinearities).
+This begins another story with new ingredients,
+weighting functions and statistics.
+
+\subsection{Inverse operator}
+A common practical task is to fit a vector of observed data
+$\bold d_{\rm obs}$
+to some theoretical data
+$\bold d_{\rm theor}$
+by the adjustment of components in a vector of model parameters $\bold m$.
+\begin{equation}
+\bold d_{\rm obs}
+\quad\approx\quad
+\bold d_{\rm theor}
+\eq
+\bold F \bold m
+\label{eqn:wefit}
+\end{equation}
+A huge volume of literature establishes theory for two estimates
+of the model,
+$\hat {\bold m}_1$ and
+$\hat {\bold m}_2$, where
+\begin{eqnarray}
+\hat {\bold m}_1 &=& (\bold F\T\bold F)^{-1}\bold F\T\bold d
+                                                \label{eqn:overdeterm} \\
+\hat {\bold m}_2 &=& \bold F\T(\bold F\bold F\T)^{-1}\bold d
+                                                \label{eqn:underdeterm}
+\end{eqnarray}
+
+Some reasons for the literature being huge are the
+many questions
+about the existence, quality, and cost
+of the inverse operators.
+Before summarizing that,
+let us quickly see why these two solutions are reasonable.
+Inserting equation
+(\ref{eqn:wefit})
+into equation
+(\ref{eqn:overdeterm}),
+and inserting equation
+(\ref{eqn:underdeterm})
+into equation
+(\ref{eqn:wefit}),
+we get the reasonable statements:
+\begin{eqnarray}
+\hat {\bold m}_1 &=& (\bold F\T\bold F)^{-1}(\bold F\T\bold F)\bold m \eq\bold m
+                                                \label{eqn:overimplication} \\
+\hat {\bold d}_{\rm theor} &=&
+                     (\bold F\bold F\T)(\bold F\bold F\T)^{-1}\bold d \eq\bold d
+                                                \label{eqn:underimplication}
+\end{eqnarray}
+Equation (\ref{eqn:overimplication}) says that the estimate $\hat {\bold m}_1$
+gives the correct model $\bold m$
+if you start from the theoretical data.
+Equation (\ref{eqn:underimplication}) says that the model estimate $\hat {\bold m}_2$
+gives the theoretical data if we derive $\hat{\bold m}_2$
+from the theoretical data.
+Both of these statements are delightful.
+Now let us return to the problem of the inverse matrices.
+
+\par
+Normally a rectangular matrix does not have an inverse.
+Surprising things often happen, but commonly,
+when $\bold F$ is a tall matrix 
+(more data values than model values)
+then the matrix for finding
+$\hat{\bold m}_1$
+is invertible while that for finding
+$\hat{\bold m}_2$
+is not,
+and when the matrix is wide instead of tall
+(the number of data values is less than the number of model values)
+it is the other way around.
+In many applications neither
+$\bold F\T\bold F$ nor
+$\bold F\bold F\T$ 
+is invertible.  This difficulty is
+solved by ``\bx{damping}'' as we will see in later chapters.
+The point to notice in this chapter on adjoints
+is that in any application where
+$\bold F \bold F\T$
+or
+$\bold F\T \bold F$ equals $\bold I$ (unitary operator),
+that the adjoint operator $\bold F\T$ is the inverse $\bold F^{-1}$
+by either equation (\ref{eqn:overdeterm}) or (\ref{eqn:underdeterm}).
+\par
+Theoreticians like to study inverse problems where $\bold m$
+is drawn from the field of continuous functions.
+This is like the vector $\bold m$ having infinitely many components.
+Such problems are hopelessly intractable unless we find,
+or assume, that the operator
+$\bold F\T \bold F$
+is an identity or diagonal matrix.
+
+\par
+In practice, theoretical considerations may have little
+bearing on how we proceed.
+Current computational power limits matrix inversion
+jobs to about $10^4$ variables.
+This book specializes in big problems,
+those with more than about $10^4$ variables,
+but the methods we learn are also excellent for smaller problems.
+
+%\begin{notforlecture}
+\subsection{Automatic adjoints}
+Computers are not only able to perform computations; they can do
+mathematics.  Well known software is Mathematica and Maple.  Adjoints
+can also be done by symbol manipulation.  For example
+Ralf Giering
+offers a program for converting linear operator programs into their
+adjoints.
+Actually, it does more than that.
+He says:\footnote{\url{http://www.autodiff.com/tamc/}}
+\begin{quote}
+Given a Fortran routine (or collection of routines) for a function,
+TAMC produces Fortran routines for the computation
+of the derivatives of this function.
+The derivatives are computed in the reverse mode (adjoint model)
+or in the forward mode (tangent-linear model).
+In both modes Jacobian-Matrix products can be computed.
+\end{quote}
+
+
+\begin{exer}
+\item
+Suppose a linear operator $\bold F$ has
+its input in the discrete domain and
+its output in the continuum.
+How does the operator resemble a matrix?
+Describe the operator $\bold F\T$ that has
+its input in the discrete domain and
+its output in the continuum.
+To which do you apply the words
+``scales and adds some functions,''
+and to which do you apply the words
+``does a bunch of integrals''?
+What are the integrands?
+
+%\item
+%Generally,
+%a computer representation of a one-dimensional function is a series of values
+%(ordinates at discrete, uniformly spaced coordinates).
+%Suppose instead we wish to interlace function values with
+%function derivatives,
+%say $ y_0,y'_1, y_2,y'_3, y_4,y'_5, \cdots$ where
+%prime denotes derivative.
+%A simple transformation with this flavor,
+%going from values to interlaced values and derivatives, is
+%\begin{equation}
+%\bold L \quad = \quad
+%{1 \over \sqrt{2} }
+%\left[ \begin{array}{ccccccccc}
+%        1& 1& .& .& .& .&  .&  . \\
+%        .& 1&-1& .& .& .&  .&  . \\
+%        .& .& 1& 1& .& .&  .&  . \\
+%        .& .& .& 1&-1& .&  .&  . \\
+%        .& .& .& .& 1& 1&  .&  . \\
+%        .& .& .& .& .& 1& -1&  . \\
+%        .& .& .& .& .& .&  1&  1 
+%       \end{array} \right]
+%\end{equation}
+%Although I know an exact inverse operator to $\bold L$ (based
+%on $\bold L\bold L'$ being tridiagonal),
+%I have chosen the scale factor so that the tridiagonal matrix
+%$\bold L'\bold L$ is an identity matrix
+%approximation for low frequencies.
+%This is true because
+%$\bold L'\bold L \bold 1 = \bold 1$ (except for end effects),
+%where $\bold 1$ is a vector of 1's; i.e.,  it is a low-frequency signal.
+%
+%       \begin{enumerate}
+%
+%       \item
+%       Write a module for $\bold L$ and $\bold L'$.
+%       Do the dot-product test.
+%
+%       \item
+%       Given a signal represented in ``signal-derivative-interlace'' form,
+%       write a routine for filtering this signal where the adjoint
+%       is the filter, and another where the adjoint is the input.
+
+%       \item
+%       Evaluate $\bold L'\bold L$ and verify that
+%       $\bold L'\bold L \bold 1 = \bold 1$ (except for end effects).
+
+%       \item
+%       If you don't like the inverse approximation notice that we
+%       could represent the derivative by the bilinear approximation
+%       (see PVI) which has an exact inverse.  Explain.
+
+%       \item
+%       Suggest an application where it might be helpful to have
+%       interlaced signal and derivative.
+
+%       \item
+%       A question arises in the obvious extension to two dimensions,
+%       $L_xL_y$ or
+%       $L_yL_x$ or
+%       $(L_xL_y + L_yL_x)/2$.
+%       What belongs in location $q$ in the data space
+%       \begin{equation}
+%       \left[ \begin{array}{ccc}
+%                a& b& a \\
+%                b& q& b \\
+%                a& b& a \\
+%               \end{array} \right]
+%       \end{equation}
+%       where $a$ denotes function values and $b$ denotes derivatives?
+%\end{enumerate}
+
+\end{exer}
+
+\clearpage
+
+ 
+
+%\end{notforlecture}
+

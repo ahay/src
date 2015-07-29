@@ -1,0 +1,258 @@
+from rsf.proj import *
+
+par = dict(
+    nx=50,
+    nz=50,
+    dx=0.005,
+    dz=0.005,
+    x0=0.0,
+    z0=0.0,
+
+    ns=1,
+    dt=0.0005,
+
+    ielastic=1,
+
+    isep=1,
+    ihomo=1,
+    itaper=1,
+    tapertype="TTI"
+    )
+
+Flow('vp0', None,
+     '''
+       math n1=%d n2=%d d1=%g d2=%g o1=%g o2=%g
+            label1=x1 unit1=km label2=x2 unit2=km 
+            output=3000
+      ''' % (par['nz'],par['nx'],par['dz'],par['dx'],par['z0'],par['x0'])
+     )
+Flow('vs0','vp0','math output=1500')
+
+# =================================================================================
+#  Epsilon = 0.2 Delta=0.2 Eta=0.0 
+# =================================================================================
+Flow('epsi1','vp0','math output=0.2')
+Flow('del1','vp0','math output=0.2')
+
+name1='''
+apvxx1 apvzz1
+'''
+
+Flow(['PseudoPurePx1',  'PseudoPurePz1',    'PseudoPureP1',
+         'apvx1',          'apvz1',
+         'apvxx1',         'apvzz1',
+         'PseudoPureSepP1'],
+         'vp0  vs0  epsi1 del1', 
+         '''
+         vti2dpseudop
+         vp0=${SOURCES[0]}
+         vs0=${SOURCES[1]}
+         epsi=${SOURCES[2]} 
+         del=${SOURCES[3]}
+         PseudoPurePz=${TARGETS[1]}
+         PseudoPureP=${TARGETS[2]}
+         apvx=${TARGETS[3]}
+         apvz=${TARGETS[4]}
+         apvxx=${TARGETS[5]} 
+         apvzz=${TARGETS[6]}
+         PseudoPureSepP=${TARGETS[7]}
+         ns=%d 
+         dt=%g
+         isep=%d
+         ihomo=%d
+         itaper=%d
+         tapertype=%s
+         ''' % (par['ns'],par['dt'],par['isep'],par['ihomo'],par['itaper'],par['tapertype'])
+    )
+
+for pp in Split(name1):
+        Result(pp,
+	'''
+        window n1=41 min1=0.7 n2=41 min2=0.7 |
+        grey color=e polarity=n scalebar=n screenratio=1 wanttitle=n pclip=99.3
+        axisfat=5 axiscol=7 labelsz=10
+	''')
+
+#	grey color=e polarity=n scalebar=y screenratio=0.87 wanttitle=n pclip=100
+
+# =================================================================================
+#  Epsilon = 0.2 Delta=0.1 Eta=0.1 
+# =================================================================================
+Flow('epsi2','vp0','math output=0.2')
+Flow('del2','vp0','math output=0.1')
+
+name2='''
+apvxx2 apvzz2
+'''
+
+Flow(['PseudoPurePx2',  'PseudoPurePz2',    'PseudoPureP2',
+         'apvx2',          'apvz2',
+         'apvxx2',         'apvzz2',
+         'PseudoPureSepP2'],
+         'vp0  vs0  epsi2 del2', 
+         '''
+         vti2dpseudop
+         vp0=${SOURCES[0]}
+         vs0=${SOURCES[1]}
+         epsi=${SOURCES[2]} 
+         del=${SOURCES[3]}
+         PseudoPurePz=${TARGETS[1]}
+         PseudoPureP=${TARGETS[2]}
+         apvx=${TARGETS[3]}
+         apvz=${TARGETS[4]}
+         apvxx=${TARGETS[5]} 
+         apvzz=${TARGETS[6]}
+         PseudoPureSepP=${TARGETS[7]}
+         ns=%d 
+         dt=%g
+         isep=%d
+         ihomo=%d
+         itaper=%d
+         tapertype=%s
+         ''' % (par['ns'],par['dt'],par['isep'],par['ihomo'],par['itaper'],par['tapertype'])
+    )
+
+for pp in Split(name2):
+        Result(pp,
+	'''
+        window n1=41 min1=0.7 n2=41 min2=0.7 |
+        grey color=e polarity=n scalebar=n screenratio=1 wanttitle=n pclip=99.3
+        axisfat=5 axiscol=7 labelsz=10
+	''')
+
+# =================================================================================
+#  Epsilon = 0.2 Delta=0.0 Eta=0.2 
+# =================================================================================
+Flow('epsi3','vp0','math output=0.2')
+Flow('del3','vp0','math output=0.0')
+
+name3='''
+apvxx3 apvzz3
+'''
+
+Flow(['PseudoPurePx3',  'PseudoPurePz3',    'PseudoPureP3',
+         'apvx3',          'apvz3',
+         'apvxx3',         'apvzz3',
+         'PseudoPureSepP3'],
+         'vp0  vs0  epsi3 del3', 
+         '''
+         vti2dpseudop
+         vp0=${SOURCES[0]}
+         vs0=${SOURCES[1]}
+         epsi=${SOURCES[2]} 
+         del=${SOURCES[3]}
+         PseudoPurePz=${TARGETS[1]}
+         PseudoPureP=${TARGETS[2]}
+         apvx=${TARGETS[3]}
+         apvz=${TARGETS[4]}
+         apvxx=${TARGETS[5]} 
+         apvzz=${TARGETS[6]}
+         PseudoPureSepP=${TARGETS[7]}
+         ns=%d 
+         dt=%g
+         isep=%d
+         ihomo=%d
+         itaper=%d
+         tapertype=%s
+         ''' % (par['ns'],par['dt'],par['isep'],par['ihomo'],par['itaper'],par['tapertype'])
+    )
+
+for pp in Split(name3):
+        Result(pp,
+	'''
+        window n1=41 min1=0.7 n2=41 min2=0.7 |
+        grey color=e polarity=n scalebar=n screenratio=1 wanttitle=n pclip=99.3
+        axisfat=5 axiscol=7 labelsz=10
+	''')
+
+# =================================================================================
+#  Epsilon = 0.2 Delta=-0.1 Eta=0.3 
+# =================================================================================
+Flow('epsi4','vp0','math output=0.2')
+Flow('del4','vp0','math output=-0.1')
+
+name4='''
+apvxx4 apvzz4
+'''
+
+Flow(['PseudoPurePx4',  'PseudoPurePz4',    'PseudoPureP4',
+         'apvx4',          'apvz4',
+         'apvxx4',         'apvzz4',
+         'PseudoPureSepP4'],
+         'vp0  vs0  epsi4 del4', 
+         '''
+         vti2dpseudop
+         vp0=${SOURCES[0]}
+         vs0=${SOURCES[1]}
+         epsi=${SOURCES[2]} 
+         del=${SOURCES[3]}
+         PseudoPurePz=${TARGETS[1]}
+         PseudoPureP=${TARGETS[2]}
+         apvx=${TARGETS[3]}
+         apvz=${TARGETS[4]}
+         apvxx=${TARGETS[5]} 
+         apvzz=${TARGETS[6]}
+         PseudoPureSepP=${TARGETS[7]}
+         ns=%d 
+         dt=%g
+         isep=%d
+         ihomo=%d
+         itaper=%d
+         tapertype=%s
+         ''' % (par['ns'],par['dt'],par['isep'],par['ihomo'],par['itaper'],par['tapertype'])
+    )
+
+for pp in Split(name4):
+        Result(pp,
+	'''
+        window n1=41 min1=0.7 n2=41 min2=0.7 |
+        grey color=e polarity=n scalebar=n screenratio=1 wanttitle=n pclip=99.3
+        axisfat=5 axiscol=7 labelsz=10
+	''')
+
+# =================================================================================
+#  Epsilon = 0.2 Delta=-0.2 Eta=0.4 
+# =================================================================================
+Flow('epsi5','vp0','math output=0.2')
+Flow('del5','vp0','math output=-0.2')
+
+name5='''
+apvxx5 apvzz5
+'''
+
+Flow(['PseudoPurePx5',  'PseudoPurePz5',    'PseudoPureP5',
+         'apvx5',          'apvz5',
+         'apvxx5',         'apvzz5',
+         'PseudoPureSepP5'],
+         'vp0  vs0  epsi5 del5', 
+         '''
+         vti2dpseudop
+         vp0=${SOURCES[0]}
+         vs0=${SOURCES[1]}
+         epsi=${SOURCES[2]} 
+         del=${SOURCES[3]}
+         PseudoPurePz=${TARGETS[1]}
+         PseudoPureP=${TARGETS[2]}
+         apvx=${TARGETS[3]}
+         apvz=${TARGETS[4]}
+         apvxx=${TARGETS[5]} 
+         apvzz=${TARGETS[6]}
+         PseudoPureSepP=${TARGETS[7]}
+         ns=%d 
+         dt=%g
+         isep=%d
+         ihomo=%d
+         itaper=%d
+         tapertype=%s
+         ''' % (par['ns'],par['dt'],par['isep'],par['ihomo'],par['itaper'],par['tapertype'])
+    )
+
+for pp in Split(name5):
+        Result(pp,
+	'''
+        window n1=41 min1=0.7 n2=41 min2=0.7 |
+        grey color=e polarity=n scalebar=n screenratio=1 wanttitle=n pclip=99.3
+        axisfat=5 axiscol=7 labelsz=10
+	''')
+
+End()

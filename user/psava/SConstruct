@@ -1,0 +1,28 @@
+import os, sys
+
+try:
+    import bldutil
+    glob_build = True # scons command launched in RSFSRC
+    srcroot = '../..' # cwd is RSFSRC/build/user/psava
+    Import('env bindir libdir pkgdir')
+except:
+    glob_build = False # scons command launched in the local directory
+    srcroot = os.environ.get('RSFSRC', '../..')
+    sys.path.append(os.path.join(srcroot,'framework'))
+    import bldutil
+    env = bldutil.Debug() # Debugging flags for compilers
+    bindir = libdir = pkgdir = None
+
+targets = bldutil.UserSconsTargets()
+
+# C mains
+targets.c = '''
+awefd2d awefd3d camig3 ewefd2d hic2ang ic laps2d lwefd paradd
+sic3d srmig3 srmod3 wdf wei wex wigner xcor2d zomig3
+'''
+
+# Python targets
+targets.py = '''
+'''
+
+targets.build_all(env, glob_build, srcroot, bindir, libdir, pkgdir)

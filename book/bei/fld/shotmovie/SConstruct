@@ -1,0 +1,12 @@
+from rsf.proj import *
+
+Fetch('shots.hh','shots')
+
+Result('shotmovie','shots.hh',
+       '''
+       dd form=native | window n3=1 n1=600 |
+       grey wanttitle=n label1="Time (s)" label2="Offset"
+       ''')
+
+###########################################################################
+End()

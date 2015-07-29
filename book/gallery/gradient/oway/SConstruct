@@ -1,0 +1,52 @@
+from rsf.proj import *
+from rsf.gallery import gradient
+
+gradient.zero_offset('zodata')
+
+Result('zodata','grey title="Zero-Offset" ')
+
+gradient.get_velocity('vel')
+
+Flow('veloc','vel','window j2=20 min2=1.5')
+
+Result('veloc',
+       gradient.igrey('''
+       color=j allpos=y bias=1.5 scalebar=y
+       barlabel=Velocity barunit=km/s
+       ''','Velocity Model'))
+
+# Fourier transform and transpose
+
+fmax = 50 # maximum frequency
+nf = 206  # number of frequencies
+
+Flow('fft','zodata',
+     'fft1 | window max1=%g | transp plane=12 | transp plane=23' % fmax)
+
+# From velocity to slowness
+Flow('slowness','veloc','transp | transp plane=23 | math output=1/input')
+
+# Extended split-step migration
+zomig = '''
+zomig3 ompnth=1 mode=m --readwrite=y verb=y
+nrmax=30 dtmax=0.001 slo=${SOURCES[1]} |
+window | transp
+'''
+
+Flow('mig','fft slowness',zomig,
+     split=[3,nf,[0]],reduce='add')
+
+gradient.zo_image('mig')
+
+# Impulse response
+gradient.get_impulse('impulse','zodata')
+
+Flow('fft_impulse','impulse',
+     'fft1 | window max1=%g | transp plane=12 | transp plane=23' % fmax)
+
+Flow('imp','fft_impulse slowness',zomig,
+     split=[3,nf,[0]],reduce='add')
+
+gradient.impulse_response('imp','veloc')
+
+End()

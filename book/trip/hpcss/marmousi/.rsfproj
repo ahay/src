@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfwave', 'sfgrey', 'sfwindow']
+data=['data/marm/marmvel.hh']
+size=  289096160

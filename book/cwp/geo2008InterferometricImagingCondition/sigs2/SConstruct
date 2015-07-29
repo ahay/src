@@ -1,0 +1,81 @@
+from rsf.proj import *
+import sys
+sys.path.append('..')
+import sigs,fdmod,iic
+
+par=sigs.param()             # init model parameters
+sigs.fdmpar(par)             # add FDM parameters
+sigs.rtmpar(par)             # add RTM parameters
+sigs.velocity('vall',par)    # read velocity
+sigs.win1('vwin','vall',par) # select window
+
+fdmod.param(par)
+Result('vwin',fdmod.cgrey('color=j allpos=y',par))
+
+# ------------------------------------------------------------
+sigs.sedimentmask('mask','vwin',par)
+Result('mask',fdmod.cgrey('',par))
+
+Flow('vo','vwin','window')
+# ------------------------------------------------------------
+ff=0
+aa=2
+ru=0.25*par['ft2km']
+rv=0.25*par['ft2km']
+gm=0.3
+iic.random(112009,'gg','mask',ff,aa,ru,rv,par)
+iic.model('vo','vv','rm','gg',gm,par)
+# ------------------------------------------------------------
+iic.receivers('rr',par)
+
+iic.target(20,20,'qq',par)
+iic.point('pss','ass','wav','xm','qq',par)
+
+# ------------------------------------------------------------
+# traveltimes
+iic.ttimes('vo','pss',par)
+
+xsou=par['ox']+0.84*par['nx']*par['dx']
+zsou=par['oz']
+iic.beam('vo','hwto',xsou,zsou,'qq',par)
+iic.beam('vv','hwtv',xsou,zsou,'qq',par)
+
+# ------------------------------------------------------------
+# passive array modeling
+iic.pmodel('pdo','pwo','wav','vo','rm','pss','rr','qq',par)
+iic.pmodel('pdv','pwv','wav','vv','rm','pss','rr','qq',par)
+
+iic.movie('pwo','vo',par)
+iic.movie('pwv','vv',par)
+
+# passive array imaging
+iic.pimage('pcic0','piic0','pdo','vo','rm','rr','rr',par)
+iic.pimage('pcic1','piic1','pdv','vo','rm','rr','rr',par)
+iic.pimage('pcic2','piic2','pdv','vv','rm','rr','rr',par)
+
+# ------------------------------------------------------------
+iic.realization('gg','mask',ff,aa,ru,rv,
+                'vo','vv','rm',gm,
+                'pdv','pwv','wav','pss','rr','qq',
+                'pcic','piic',par)
+
+iic.magnitude('gg',
+              'vo','vv','rm',0.15,
+              'pdv','pwv','wav','pss','rr','qq',
+              'pcic','piic',par)
+
+#iic.dimension('gg','mask',ff,aa,4,4,
+#              'vo','vv','rm',gm,
+#              'pdv','pwv','wav','pss','rr','qq',
+#              'pcic','piic',par)
+
+#iic.sampling('vo','rm',
+#             'pdv','rr','qq',
+#             'pcic','piic',par)
+
+# ------------------------------------------------------------
+iic.wdfic('pcii1','uxx1','uyy1','wxx1','wyy1',
+          'pdv','vo','rm','rr','qq',par)
+
+End()
+

@@ -1,0 +1,205 @@
+from rsf.proj import *
+from rsf.recipes import fdmod
+
+# ------------------------------------------------------------
+# Sigsbee 2A parameters
+f2m=0.3048     # convert ft to m
+par = dict(
+    nx=1601,ox=25.*f2m,dx=0.025*f2m,lx='x',ux='km',
+    nz=801, oz=4.5*f2m,dz=0.025*f2m,lz='z',uz='km',
+    nt=5001,ot=0.0,    dt=0.0009,   lt='t',ut='s',
+    jsnap=200, # snapshot jump
+    kt=100,    # wavelet delay (samples) 
+    nb=100     # boundary (grid points)
+    )
+
+# ------------------------------------------------------------
+# set plotting parameters
+fdmod.param(par)
+# ------------------------------------------------------------
+
+# ------------------------------------------------------------
+# get the model
+strvelfile = 'sigsbee2a_stratigraphy.sgy'
+Fetch(strvelfile,'sigsbee')
+Flow('vraw',strvelfile,'segyread read=data')
+
+# setup the model
+Flow('modl','vraw',
+     '''
+     scale rscale=%g |
+     put o1=%g d1=%g o2=%g d2=%g |
+     window n1=%d min1=%g n2=%d min2=%g
+     ''' % (0.001*f2m,
+            0     ,0.025*f2m,
+            10*f2m,0.025*f2m,
+            par['nz'],par['oz'],
+            par['nx'],par['ox']
+            ))
+Plot  ('modl',fdmod.cgrey('mean=y',par))
+Result('modl',fdmod.cgrey('mean=y',par))
+
+# ------------------------------------------------------------
+# source coordinates (exploding reflectors)
+fdmod.boxarray('ss',
+               5,   # vertical number
+               5,   # vertical origin 
+               0.5, # vertical sampling
+               14,  # horizontal number
+               10,  # horizontal origin
+               0.5, # horizontal sampling
+               par)
+Plot(  'ss',fdmod.ssplot('',par))
+Result('ss',['modl','ss'],'Overlay')
+
+# ------------------------------------------------------------
+# horizontal array @ z=1.5km
+fdmod.horizontal('tH',1.5,par)
+par['jrH']=10   # jump (grid points)
+par['orH']=14.0 # origin
+par['nrH']=75   # number
+
+
+# vertical array @ x=8.5km
+fdmod.vertical('tV',8.5,par)
+par['jrV']=20   # jump (grid points)
+par['orV']=2.5  # origin
+par['nrV']=25   # number
+
+
+for j in ('H','V'):
+
+    # window array
+    Flow('r'+j,'t'+j,
+         'window j2=%d min2=%g n2=%d'%
+         (par['jr'+j],  # jump
+          par['or'+j],  # origin
+          par['nr'+j])) # number
+    
+    # plot array
+    Plot(  'r'+j,fdmod.rrplot('',par))
+    Result('r'+j,['modl','r'+j],'Overlay')
+    
+# ------------------------------------------------------------
+# merge receiver files
+Flow('rA',['rH','rV'],
+     'cat axis=2 space=n ${SOURCES[1]}')
+Plot('rA',['rH','rV'],'Overlay')
+# ------------------------------------------------------------
+# make the density
+Flow('dens','modl',
+     'math output=1')
+Plot(  'dens',fdmod.cgrey('mean=y',par))
+Result('dens',['dens','ss','rH','rV'],'Overlay')
+
+# ------------------------------------------------------------
+# make stratigraphic velocity
+Flow('vstr','modl',
+     'window')
+# make smooth velocity
+Flow('vsmo','modl',
+     'smooth rect1=25 rect2=25 repeat=3')
+# ------------------------------------------------------------
+for v in ('vstr','vsmo'):
+    # plot velocities
+    Plot(  v,fdmod.cgrey('mean=y',par))
+
+    # overlay sources and receivers
+    Result(v,[v,'ss','rH','rV'],'Overlay')
+
+# ------------------------------------------------------------
+# construct wavelet
+fdmod.wavelet('wav_',10,par) 
+
+# transpose wavelet
+Flow(  'wav','wav_','transp')      
+
+# plot wavelet
+Result('wav','window n2=1000 |'
+       + fdmod.waveplot('',par)) 
+
+# ------------------------------------------------------------
+# run FD modeling
+fdmod.awefd1('tmpA',  # data file (all receivers)
+             'wfld',  # wavefield snapshots
+             'wav',   # source wavelet
+             'vsmo',  # velocity
+             'dens',  # density
+             'ss',    # source coordinates
+             'rA',    # receiver coordinates
+             'fsrf=n',# optional flags
+             par)
+
+# ------------------------------------------------------------
+par['nfrm']=int((par['nt']-1)/par['jsnap'])
+for i in range(par['nfrm']):
+    tag = '-%02d'%i
+    # plot wavefield frames
+    fdmod.wframe('wfld'+tag,
+                 'wfld',i,'pclip=99',par)
+    Plot(  'wovl'+tag,['wfld'+tag,'ss','rH','rV'],
+           'Overlay')
+    Result('wfld'+tag,['wfld'+tag,'ss','rH','rV'],
+           'Overlay')
+Result('wfld',
+       ['wovl-%02d'%i for i in range(par['nfrm'])],
+       'Movie')
+    
+# ------------------------------------------------------------
+# remove the wavelet delay
+Flow('datA','tmpA',
+     '''
+     window squeeze=n f2=%(kt)d |
+     pad end2=%(kt)d |
+     put o2=%(ot)g
+     ''' %par)
+
+# ------------------------------------------------------------
+# window data from the horizontal array
+Flow('datH','datA',
+     '''
+     window squeeze=n n1=%d |
+     put o1=%g d1=%g
+     '''%(par['nrH'],
+          par['orH'],
+          par['jrH']*par['dx']))
+Result('datH',       'window j2=4 | transp|'
+       + fdmod.dgrey(''%par,par))
+Result('wigH','datH','window j2=4 | transp|'
+       + fdmod.dwigl('pclip=98'%par,par))
+
+# ------------------------------------------------------------
+# window data from the vertical array
+Flow('datV','datA',
+     '''
+     window squeeze=n f1=%d |
+     put o1=%g d1=%g
+     '''%(par['nrH'],
+          par['orV'],
+          par['jrV']*par['dz']))
+Result('datV',       'window j2=4 |'
+       + fdmod.egrey(''%par,par))
+Result('wigV','datV','window j2=4 |'
+       + fdmod.ewigl('pclip=98'%par,par))
+    
+# ------------------------------------------------------------
+for j in ('H','V','A'):
+
+    # run FD migration
+    fdmod.zom('img'+j,  # image
+              'dat'+j,  # data
+              'vsmo',   # velocity
+              'dens',   # density
+              'r'+j,    # receiver coordinates
+              'fsrf=n', # optional flags
+              par)
+    
+    # plot image
+    Plot(  'img'+j,'bandpass flo=2 |'
+           + fdmod.cgrey('pclip=99.99',par))
+    
+    # overlay sources and receivers
+    Result('img'+j,['img'+j,'ss','r'+j],'Overlay')
+    
+# ------------------------------------------------------------
+End()

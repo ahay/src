@@ -1,0 +1,317 @@
+\title{Revisiting SEP tour with Madagascar and SCons}
+
+\email{sergey.fomel@beg.utexas.edu}
+
+\author{Sergey Fomel}
+
+\righthead{RSF tour}
+
+\lefthead{Fomel}
+
+\maketitle
+
+\begin{abstract}
+
+Many appreciative users were introduced to SEPlib
+\cite[]{Claerbout.sep.70.413} by an excellent article of
+\cite{Dellinger.sep.73.461}. In this paper, I show how to create a similar
+experience using Madagascar and SCons.
+
+\end{abstract}
+
+\section{Getting started}
+
+Similarly to SU and SEPlib, RSF programs can be piped and executed from the
+command line, for example:
+
+\begin{verbatim}
+bash$ sfspike n1=1000 k1=300 title="\s200 Welcome to \c2 RSF" | \
+sfbandpass fhi=2 phase=1 | sfwiggle | sfpen
+\end{verbatim}
+
+If you are already familiar with SEPlib, you can find most of the familiar
+programs with the names prepended by ``sf''.
+
+Typing a command without arguments, should produce a concise
+self-documentation. 
+
+\begin{verbatim}
+bash$ sfbandpass
+\end{verbatim}
+
+The recommended way of using RSF, however, is not with the command line but
+with SCons and ``SConstruct'' files.
+
+\subsection{Setting up}
+
+\definecolor{frame}{rgb}{0.905,0.905,0.905}
+\lstset{language=Python,backgroundcolor=\color{frame},showstringspaces=false,numbers=left,numberstyle=\tiny}
+
+Open a file named ``SConstruct'' in your favorite editor and start it with a
+line 
+
+\lstinputlisting[firstline=5,lastline=5,frame=single]{rsftour/SConstruct}
+
+This line tells Python to load the RSF project module.
+
+\subsection{Obtaining the test data}
+
+Add a Fetch command as follows:
+
+\lstinputlisting[firstline=11,lastline=11,frame=single]{rsftour/SConstruct}
+
+Now, by running 
+\begin{verbatim}
+bash$ scons Txx.HH
+\end{verbatim}
+you can instruct SCons to connect to an anonymous data server and extract
+(fetch) the data file ``Txx.HH'' from the ``septour'' directory.
+
+\subsection{Displaying the data}
+
+\inputdir{rsftour}
+
+Add the following line to the \texttt{SConstruct} file:
+
+\lstinputlisting[firstline=17,lastline=17,frame=single]{rsftour/SConstruct}
+
+Note that it does not matter if this line appears before or after the
+``Fetch'' line. You are simply instructing SCons how to create a
+result plot from the input.
+
+Run
+\begin{verbatim}
+bash$ scons wiggle0.view
+\end{verbatim}
+If everything is setup correctly in your environment, you should see 
+something like the following output in your terminal:
+\begin{verbatim}
+bash$ scons wiggle0.view
+scons: Reading SConscript files ...
+scons: done reading SConscript files.
+scons: Building targets ...
+retrieve(["Txx.HH"], [])
+< Txx.HH /path/to/RSF/bin/sfwiggle > Fig/wiggle0.vpl
+/path/to/RSF/bin/sfpen Fig/wiggle0.vpl
+\end{verbatim}
+and a figure similar to Figure~\ref{fig:wiggle0} appearing on your screen.
+
+\plot{wiggle0}{width=6in}{To see this figure on your screen, run \texttt{scons~wiggle0.view}}
+
+\section{Processing exercises}
+
+\subsection{Windowing and plotting}
+
+Our next task is to window and plot a significant portion of the data. Add the
+following line to the \texttt{SConstruct} file:
+
+\lstinputlisting[firstline=23,lastline=23,frame=single]{rsftour/SConstruct}
+
+The window command selects the first ten traces and the time window between
+0.4 and 0.8 seconds.
+
+We will plot the windowed data with three different plotting programs.
+
+\lstinputlisting[firstline=25,lastline=30,frame=single]{rsftour/SConstruct}
+
+For convenience, plotting parameters are put in a string called
+\texttt{plotpar}. A Python string can be enclosed in single, double,
+or triple quotes. Triple quotes allow the string to span multiple
+lines. In this case, we use triple quotes for convenience. Next, we
+loop (using Python's \texttt{for} construct) through three different
+programs (\texttt{wiggle}, \texttt{contour}, and \texttt{grey}). For
+each program, the command portion of \texttt{Result} is formed by
+concatenating two strings with Python's addition operator.
+
+Try running \texttt{scons -Q wiggle.view}. You should see something like the
+following output in your terminal:
+\begin{verbatim}
+bash$ scons -Q wiggle.view
+< Txx.HH /path/to/RSF/bin/sfwindow n2=10 n1=200 f1=200 > windowed.rsf
+< windowed.rsf /path/to/RSF/bin/sfwiggle transp=y poly=y yreverse=y 
+pclip=100 nc=200 > Fig/wiggle.vpl
+/path/to/RSF/bin/sfpen Fig/wiggle.vpl
+\end{verbatim}
+and a figure similar to Figure~\ref{fig:wiggle} appearing on your
+screen. The \texttt{-Q} switch tells SCons to run in a quiet mode,
+suppressing verbose comments. We will use it from now on to save
+space. You can dismiss the figure by using the ``q'' key on the
+keyboard or by hitting the ``quit'' button.
+
+Run \texttt{scons -Q view}, and you should see simply
+\begin{verbatim}
+bash$ scons -Q view
+/path/to/RSF/bin/sfpen Fig/wiggle.vpl
+\end{verbatim}
+Since the \texttt{wiggle.vpl} figure is up to date, SCons does not rebuild
+it. After quitting the figure, SCons will resume processing with
+\begin{verbatim}
+< windowed.rsf /path/to/RSF/bin/sfcontour transp=y poly=y yreverse=y 
+pclip=100 nc=200 > Fig/contour.vpl
+/path/to/RSF/bin/sfpen Fig/contour.vpl
+\end{verbatim}
+and a figure similar to Figure~\ref{fig:contour} appearing on your
+screen. Quitting the figure, produces
+\begin{verbatim}
+< windowed.rsf /path/to/RSF/bin/sfgrey transp=y poly=y yreverse=y 
+pclip=100 nc=200 > Fig/grey.vpl
+/path/to/RSF/bin/sfpen Fig/grey.vpl
+\end{verbatim}
+and Figure~\ref{fig:grey}.
+
+\plot{wiggle}{width=6in}{To see this figure on your screen, run \texttt{scons~wiggle.view}} 
+\plot{contour}{width=6in}{To see this figure on your screen, run \texttt{scons~contour.view}}
+\plot{grey}{width=6in}{To see this figure on your screen, run \texttt{scons~grey.view}}
+
+\subsection{Resampling}
+
+The next example demonstrated simple signal processing using the Fast Fourier
+Transform. We will first subsample the original data and then recover the data
+using Fourier interpolation.
+
+Subsampling is accomplished with \texttt{sfwindow}.
+\lstinputlisting[firstline=36,lastline=37,frame=single]{rsftour/SConstruct}
+
+Running \texttt{scons -Q subsampled.rsf} produces
+\begin{verbatim}
+< windowed.rsf /path/to/RSF/bin/sfwindow j1=2 > subsampled.rsf
+\end{verbatim}
+We can verify that the size of the first axis has decreased by running
+
+\begin{verbatim}
+sfin windowed.rsf subsampled.rsf. 
+\end{verbatim}
+
+Try also \texttt{sfwiggle < subsampled.rsf | sfpen} to quickly inspect the subsampled data on the screen.
+
+To interpolate the data back to the original sampling, the following sequence
+of steps can be applied:
+\begin{enumerate}
+\item Fourier transform from time domain to frequency domain.
+\item Pad the frequency axis
+\item Inverse Fourier transform from frequency to time.
+\end{enumerate}
+All three steps are conveniently combined into one using pipes.
+\lstinputlisting[firstline=39,lastline=41,frame=single]{rsftour/SConstruct}
+
+Why do we pad the Fourier domain to 102? The time length of the original data
+is 201 samples. In the frequency domain, it can be represented with 101
+positive frequencies plus the zero frequency, which amounts to 102. Note that
+the output of \texttt{sffft1} does not contain negative frequencies.
+
+Finally, we display the result. The reconstructed data is shown in
+Figure~\ref{fig:resampled}. Comparing this result with
+Figure~\ref{fig:wiggle}, we can verify a fairly accurate reconstruction.
+\lstinputlisting[firstline=43,lastline=43,frame=single]{rsftour/SConstruct}
+
+\plot{resampled}{width=6in}{To see this figure on your screen, run \texttt{scons~resampled.view}} 
+
+As an exercise, try subsampling the data by a factor of 4 and see if you can
+still reconstruct the original data with the Fourier method.
+
+\subsection{Normal Moveout}
+
+The next example applies a simple constant-velocity NMO correction to the
+windowed data
+and pipes the result to a wiggle plotting command:
+\lstinputlisting[firstline=49,lastline=53,frame=single]{rsftour/SConstruct}
+
+Running \texttt{scons -Q nmo.view} produces 
+\begin{verbatim}
+< windowed.rsf /path/to/RSF/bin/sfnmostretch v0=2.05 half=n | 
+/path/to/RSF/bin/sfwiggle pclip=100 max1=0.6 poly=y > Fig/nmo.vpl
+/path/to/RSF/bin/sfpen Fig/nmo.vpl
+\end{verbatim}
+and Figure~\ref{fig:nmo}. Note that SCons does not recreate the
+\texttt{windowed.rsf} file if that file is up to date. You can
+experiment with the NMO velocity (2.05~km/s) or with plotting
+parameters to get different results. As \cite{Dellinger.sep.73.461}
+point out, the NMO velocity of 2.05~km/s ``appears to split the
+difference between two distinctly non-hyperbolic shear waves''.
+
+\plot{nmo}{width=6in}{To see this figure on your screen, run \texttt{scons~nmo.view}}
+
+\subsection{Advanced plotting}
+
+Sometimes, we need to combine different plots either by overlaying
+them on top of each other or by putting them side by side. Here is an
+example of accomplishing it with RSF and SCons.
+
+Start by creating common plotting plotting arguments and plotting the
+data in greyscale. 
+
+\lstinputlisting[firstline=59,lastline=62,frame=single]{rsftour/SConstruct}
+
+Next, plot the wiggle traces twice: the fist time, using thick black
+lines (\texttt{plotcol=0 plotfat=10}), and the second time, using
+thinner white lines (\texttt{plotcol=7 plotfat=5}).
+
+\lstinputlisting[firstline=63,lastline=66,frame=single]{rsftour/SConstruct}
+
+The plots are combined by overlaying or by putting them side by side.
+
+\lstinputlisting[firstline=68,lastline=69,frame=single]{rsftour/SConstruct}
+
+The resultant plots are shown in Figures~\ref{fig:overplot} and~\ref{fig:sidebyside}. 
+
+\plot{overplot}{width=6in}{To see this figure on your screen, run \texttt{scons~overplot.view}}
+
+\plot{sidebyside}{width=6in}{To see this figure on your screen, run \texttt{scons~sidebyside.view}}
+
+\begin{comment}
+Running \texttt{scons -Q overplot.view} produces 
+\begin{verbatim}
+< windowed.rsf /path/to/RSF/bin/sfgrey wheretitle=t wherexlabel=b transp=y poly=y yreverse=y pclip=100 nc=100 allpos=n min1=.4 max1=.8 max2=1. min2=.05 poly=n > grey.vpl
+< windowed.rsf /path/to/RSF/bin/sfwiggle plotcol=0 plotfat=10 transp=y poly=y yreverse=y pclip=100 nc=100 allpos=n min1=.4 max1=.8 max2=1. min2=.05 poly=n > wiggle1.vpl
+< windowed.rsf /path/to/RSF/bin/sfwiggle plotcol=7 plotfat=3 transp=y poly=y yreverse=y pclip=100 nc=100 allpos=n min1=.4 max1=.8 max2=1. min2=.05 poly=n > wiggle2.vpl
+/path/to/RSF/bin/vppen erase=o vpstyle=n grey.vpl wiggle1.vpl wiggle2.vpl > Fig/overplot.vpl
+/path/to/RSF/bin/sfpen Fig/overplot.vpl
+\end{verbatim}
+\end{comment}
+
+\section{Conclusions}
+
+This tour is not designed as a comprehensive manual. It simply gives a
+glimpse into working in a reproducible research environment with RSF
+and SCons. The reader is encouraged to experiment with the
+\texttt{SConstruct} file attached to this tour and included in the
+Appendix. For other documentation on RSF, please see
+\begin{itemize}
+\item \href{http://www.reproducibility.org/RSF/book/rsf/rsf/tour_html/}{Introduction to RSF}  
+\item  \href{http://www.reproducibility.org/RSF/book/rsf/rsf/install_html/}{Installation instructions}
+\item \href{http://www.reproducibility.org/RSF/}{Self-documentation reference for RSF programs}
+\item A \href{http://www.reproducibility.org/RSF/book/rsf/rsf/prog_html/}{guide to RSF programs}
+\item A \href{http://www.reproducibility.org/RSF/book/rsf/rsf/format_html/}
+  {guide to RSF file format}
+\item A \href{http://www.reproducibility.org/RSF/book/rsf/rsf/api_html/}{guide to
+    RSF programming interface}
+\item A \href{http://www.reproducibility.org/RSF/book/rsf/rsf/demo_html/}{guide to programming with RSF}
+\item A
+  \href{http://www.reproducibility.org/RSF/book/rsf/scons/paper_html/}{guide
+    to SCons interface for reproducible computations}
+\end{itemize}
+
+\section{Acknowledgments}
+
+Thanks to Joe Dellinger and S\'{a}ndor T\'{a}las for creating ``SEP
+tour'' and to James Rickett for updating it. Several generations of
+SEP students contributed to SEPlib. We try to preserve all their good
+ideas when refactoring SEPlib into RSF.
+
+The test dataset used in this paper is courtesy of Beltram Nolte and L. Neil Frazer.
+
+\bibliographystyle{seg}
+\bibliography{SEG,SEP2}
+
+\appendix
+\section{SConstruct file}
+
+Here is a complete listing of the \texttt{SConstruct} file used in this
+example.
+
+\lstinputlisting[frame=single]{rsftour/SConstruct}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% End: 

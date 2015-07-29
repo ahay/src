@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfwindow', 'sfscale', 'sfgrey', 'sfbandpass', 'sfmutter', 'sfpad', 'sfmath', 'sfsmooth', 'sfmask', 'sfadd', 'sftwofreq2', 'sfexpsignoi', 'sfcat', 'sfbyte', 'sfdip', 'sfexplanesignoi']
+data=['data/mideast/dune3D.H']
+size=    4224000

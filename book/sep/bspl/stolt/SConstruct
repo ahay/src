@@ -1,0 +1,29 @@
+from rsf.proj import *
+
+Flow('spike',None,
+     '''
+     spike n1=129 n2=129 n3=129 d1=0.004 d2=0.008 d3=0.008
+     nsp=3 k1=50,75,100 k2=50,75,100 k3=50,75,100 |
+     bandpass flo=10 fhi=50
+     ''')
+
+Flow('fft3','spike','cosft sign2=1 sign3=1')
+
+# Loop over interpolation lengths
+for nf in [2,4,8]:
+    stolt = 'stolt%d' % nf
+    Flow(stolt,'fft3',
+              'stolt2 nf=%d vel=2 | cosft sign2=-1 sign3=-1' % nf)
+    Plot(stolt+'-depth',stolt,
+              '''window n1=1 f1=30 |
+              grey title="Stolt migration %d: Depth slice"
+              screenratio=1 screenht=12''' % nf)
+    Plot(stolt+'-line',stolt,
+              '''window n2=1 f2=64 |
+              grey title="Stolt migration %d: In-line slice"
+              screenratio=0.5 screenht=6''' % nf)
+    Plot(stolt,[stolt+'-line',stolt+'-depth'],'OverUnderAniso')
+
+Result('stolt','stolt2 stolt8','SideBySideAniso')
+  
+End()

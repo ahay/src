@@ -1,0 +1,134 @@
+from rsf.proj import *
+
+Fetch('vsmooth_levset.dat','masha')
+
+nx=1000
+dx=13.3333
+
+nz=1000
+dz=5.005
+
+Flow('vel','vsmooth_levset.dat',
+     '''
+     echo in=$SOURCE
+     n1=%d o1=0 d1=%g
+     n2=%d o2=0 d2=%g
+     label1=Lateral unit1=m
+     label2=Depth unit2=m
+     label=Velocity unit="km/s"
+     data_format=ascii_float |
+     dd form=native |
+     transp 
+     ''' % (nx,dx,nz,dz),stdin=0)
+
+Flow('vt','vel','depth2time velocity=$SOURCE nt=800 dt=0.004 t0=0')
+Flow('vel1','vt',
+     '''
+     window n1=513 | stack | 
+     spray axis=2 n=129 d=20 o=0 |
+     spray axis=3 n=129 d=20 o=0
+     ''')
+
+Flow('spike',None,
+     '''
+     spike n1=513 n2=129 n3=129 d1=0.004 d2=20. d3=20.
+     k1=256 k2=65 k3=65 | bandpass flo=5 fhi=50
+     ''')
+
+Flow('pshift','spike vel1',
+     '''
+     cosft sign2=1 sign3=1 | 
+     gazdag velocity=${SOURCES[1]} | 
+     cosft sign2=-1 sign3=-1
+     ''')
+
+ntcut = ([0,200,400,513],[0,125,275,350,400,513])
+vref = ([2122,2124,1004],[1949,1678,1751,1377,627.9])
+ncut = map(len,ntcut)
+
+def migrate(v):
+    return '''
+    stoltstretch velocity=${SOURCES[1]} vel=%g inv=0 pad=1000 |
+    cosft sign2=1 sign3=1 |
+    stolt vel=%g pad=1025 |
+    cosft sign2=-1 sign3=-1 | 
+    stoltstretch velocity=${SOURCES[1]} vel=%g inv=1 
+    ''' % (v,v,v)
+
+def grey(title):
+    return '''
+    window n3=1 f3=64 min1=0.4 max1=1.1 min2=1280 max2=2300 |
+    grey crowd=0.8 grid=y label1=Time unit1=s label2=CMP-X unit2=m
+    pclip=99 title="%s"
+    ''' % title
+
+def grey3(title):
+    return '''
+    window n1=400 | byte gainpanel=64 |
+    grey3 flat=n frame1=150 frame2=64 frame3=64 crowd=0.8
+    point1=0.5 point2=0.75
+    label1=Time unit1=s 
+    label2=CMP-X unit2=m
+    label3=CMP-Y unit3=m
+    title="%s"
+    ''' % title
+
+for c in range(2):
+    casc = 'casc%d' % c
+    nc = ncut[c]-1
+    Flow(casc,'vel1','cascade ncut=%d ntcut=%s' % 
+         (nc-1,string.join(map(str,ntcut[c][1:nc]),',')))
+    
+    data = 'spike'
+    migs = []
+    wins = []
+
+    for ic in range(nc):
+        # migrate
+        migr = 'migr%d-%d' % (ic,c)
+        vel = 'vel%d-%d' % (ic,c)
+    
+        Flow(vel,casc,'window n2=1 f2=%d' % ic)
+        Flow(migr,[data,vel],migrate(vref[c][ic]))
+        migs.append(migr)
+        data = migr
+
+        # window
+        wind = 'wind%d-%d' % (ic,c)
+        Flow(wind,'spike',
+             'math output=%d | window f1=%d n1=%d' % 
+             (ic,ntcut[c][ic],ntcut[c][ic+1]-ntcut[c][ic]))
+        wins.append(wind)
+
+    slic = 'slic%d' % c
+    Flow(slic,wins,
+         '''
+     cat axis=1 ${SOURCES[1:%d]} | 
+     math output=input-0.01 | 
+     smooth rect1=10
+     ''' % nc)
+
+    cmig = 'cmig%d' % c
+    Flow(cmig,migs+[slic],
+         '''
+         cat axis=4 ${SOURCES[1:%d]} |
+         put o4=0 d4=1 |
+         transp plane=24 |
+         slice pick=${SOURCES[%d]} |
+         window
+         ''' % (nc,nc))
+    Plot(cmig,grey('(%s) Cascaded stolt-stretch (%d vel.)' % ('cd'[c],nc)))
+
+Flow('ststr','spike vel1',migrate(1800))
+
+Plot('ststr',grey('(a) Stolt-stretch'))
+Plot('pshift',grey('(b) Phase-shift'))
+
+Result('imp-mig','ststr cmig0 pshift cmig1','TwoRows')
+
+Plot('csc','cmig1',grey3('(a) Cascaded stolt-stretch'))
+Plot('psh','pshift',grey3('(b) Phase-shift'))
+
+Result('imp-mig3','csc psh','SideBySideIso')
+
+End()

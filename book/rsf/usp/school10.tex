@@ -1,0 +1,917 @@
+% $Header: /cvsroot/latex-beamer/latex-beamer/solutions/generic-talks/generic-ornate-15min-45min.en.tex,v 1.4 2004/10/07 20:53:08 Titan Exp $
+
+% This file is a solution template for:
+
+% - Giving a talk on some subject.
+% - The talk is between 15min and 45min long.
+% - Style is ornate.
+
+% Copyright 2004 by Till Tantau <tantau@users.sourceforge.net>.
+%
+% In principle, this file can be redistributed and/or modified under
+% the terms of the GNU Public License, version 2.
+%
+% However, this file is supposed to be a template to be modified
+% for your own needs. For this reason, if you use this file as a
+% template and not specifically distribute it as part of a another
+% package/program, I grant the extra permission to freely copy and
+% modify this file as you see fit and even to delete this copyright
+% notice. 
+\newcommand{\liubang}{\fontsize{6pt}{\baselineskip}\selectfont}
+\newcommand{\qibang}{\fontsize{7pt}{\baselineskip}\selectfont}
+\newcommand{\babang}{\fontsize{8pt}{\baselineskip}\selectfont}
+\newcommand{\jiubang}{\fontsize{9pt}{\baselineskip}\selectfont}
+\newcommand{\shibang}{\fontsize{10pt}{\baselineskip}\selectfont}
+\newcommand{\shiwubang}{\fontsize{15pt}{\baselineskip}\selectfont}
+\newcommand{\shijiubang}{\fontsize{19pt}{\baselineskip}\selectfont}
+\newcommand{\ershierbang}{\fontsize{22pt}{\baselineskip}\selectfont}
+
+\title[Tutorial of Madagascar]{Seismic field data processing example} 
+
+\subtitle{\textcolor{yellow}{---\;\emph{Towards real world}\;---}} % (optional)
+
+\author[Y. Liu]{Yang Liu}
+% - Use the \inst{?} command only if the authors have different
+%   affiliation.
+
+\institute[BEG, UT at Austin] % (optional, but mostly needed)
+{
+  Bureau of Economic Geology \\
+  Jackson School of Geosciences \\
+  The University of Texas at Austin \\
+  yangliu1979@gmail.com
+}
+% - Use the \inst command only if there are several affiliations.
+% - Keep it simple, no one is interested in your street address.
+
+\date[Madagascar school 2010] % (optional)
+{July 24, 2010}
+%{\today}
+
+%\subject{Talks}
+% This is only inserted into the PDF information catalog. Can be left
+% out. 
+
+% If you have a file called "university-logo-filename.xxx", where xxx
+% is a graphic format that can be processed by latex or pdflatex,
+% resp., then you can add a logo as follows:
+
+% \pgfdeclareimage[height=0.5cm]{university-logo}{university-logo-filename}
+% \logo{\pgfuseimage{university-logo}}
+
+% Delete this, if you do not want the table of contents to pop up at
+% the beginning of each subsection:
+\AtBeginSection[]
+{
+  \begin{frame}<beamer>
+    \frametitle{Outline}
+    \tableofcontents[currentsection,currentsubsection]
+  \end{frame}
+}
+
+\AtBeginSubsection[]
+{
+  \begin{frame}<beamer>
+    \frametitle{Outline}
+    \tableofcontents[currentsection,currentsubsection]
+  \end{frame}
+}
+
+% If you wish to uncover everything in a step-wise fashion, uncomment
+% the following command: 
+
+%\beamerdefaultoverlayspecification{<+->}
+
+%\begin{document}
+\begin{frame}
+  \titlepage
+  \begin{pgfpicture}{0cm}{0cm}{128mm}{2mm}
+%\pgfputat{\pgfxy(11.5,1)}{\pgfbox[right,base]{\pgfimage[height=3cm]{../lum/figures/Fig/UTlogo}}} 
+  \end{pgfpicture}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Outline}
+  \tableofcontents
+  % You might wish to add the option [pausesections]
+\end{frame}
+
+% Since this a solution template for a generic talk, very little can
+% be said about how it should be structured. However, the talk length
+% of between 15min and 45min and the theme suggest that you stick to
+% the following rules:  
+
+% - Exactly two or three sections (other than the summary).
+% - At *most* three subsections per section.
+% - Talk about 30s to 2min per frame. So there should be between about
+%   15 and 30 frames, all told.
+
+%  You can create overlays\dots
+%  \begin{itemize}
+%  \item using the \texttt{pause} command:
+%    \begin{itemize}
+%    \item
+%      First item.
+%      \pause
+%    \item    
+%      Second item.
+%    \end{itemize}
+%  \item
+%    using overlay specifications:
+%    \begin{itemize}
+%    \item<3->
+%      First item.
+%    \item<4->
+%      Second item.
+%    \end{itemize}
+%  \item
+%    using the general \texttt{uncover} command:
+%    \begin{itemize}
+%      \uncover<5->{\item
+%        First item.}
+%      \uncover<6->{\item
+%        Second item.}
+%    \end{itemize}
+%  \end{itemize}
+\section{Assignment}
+
+\begin{frame}
+  \frametitle{Assignment}
+    \begin{block}{}
+Field seismic data are always complicated,
+a tutorial is given for setting up a
+simple processing workflow.
+    \end{block}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Tutorial workflow}
+
+  \begin{itemize}
+  \item Conversion to RSF format
+  \item Initial data checking
+  \item Initial signal analysis and quality control
+     \begin{itemize}
+       \item First break mute
+       \item Subsampling with anti-aliasing filter
+       \item Ground-roll attenuation with time-frequency analysis tool
+     \end{itemize}
+   \item Initial velocity analysis
+   \item Brute stacking
+   \item Toy prestack time migration
+  \end{itemize}
+\end{frame}
+
+\section{Simple workflow}
+
+\subsection{Conversion to RSF format}
+
+\addtocounter{framenumber}{-1}
+\begin{frame}[fragile]
+  \frametitle{\jiubang{Convert to RSF format}}
+\babang{
+\begin{verbatim}
+from rsf.proj import * 
+
+#################################################################
+tgz = '2D_Land_data_2ms.tgz'
+Fetch(tgz,
+      server='http://www.freeusp.org',
+      top='RaceCarWebsite/TechTransfer/Tutorials/Processing_2D',
+      dir='Data')
+
+files = map(lambda x: 'Line_001.'+x,Split('TXT SPS RPS XPS sgy'))
+Flow(files,tgz,
+     'gunzip -c $SOURCE | tar -xvf -',stdin=0,stdout=-1)
+#################################################################
+
+Flow('line tline','Line_001.sgy','segyread tfile=${TARGETS[1]}')
+\end{verbatim}
+}
+\end{frame}
+
+\addtocounter{framenumber}{-1}
+\begin{frame}[fragile]
+  \frametitle{\jiubang{Display some shots}}
+\qibang{
+\begin{columns}
+\column{2.2in}
+\begin{block}{}
+\begin{verbatim}
+Result('first','line',
+       '''
+       window n2=1000 |
+       agc rect1=250 rect2=100 |
+       grey title="First 1000 traces"
+       ''')
+\end{verbatim}
+\end{block}
+
+\column{2.5in}
+\framebox{\includegraphics[width=2.5in]{data/Fig/first}}
+\end{columns}
+}
+\end{frame}
+
+\addtocounter{framenumber}{-1}
+\begin{frame}[fragile]
+  \frametitle{\jiubang{True geometry}}
+\liubang{
+\begin{verbatim}
+lines = {'S':251,'R':782}
+color = {'S':4, 'R':2}
+for case in 'SR':
+    Flow(case+'.asc','Line_001.%cPS' % case,'''awk 'NR > 20 {print $8, " ", $9}' ''')
+    Flow(case,case+'.asc',
+         '''
+         echo in=$SOURCE data_format=ascii_float n1=2 n2=%d | dd form=native 
+         ''' % lines[case],stdin=0)
+    Plot(case,
+         '''
+         scale dscale=0.001 | dd type=complex |
+         graph symbol=* title=%c plotcol=%d
+         min1=684 max1=705 min2=3837 max2=3842
+         ''' % (case,color[case]))
+\end{verbatim}
+}
+\end{frame}
+
+\addtocounter{framenumber}{-1}
+\begin{frame}[fragile]
+  \frametitle{\jiubang{True geometry}}
+\liubang{
+\begin{verbatim}
+Plot('s118','S',
+     '''
+     window n2=1 f2=117 | scale dscale=0.001 | dd type=complex |
+     graph symbol=O wanttitle=n plotcol=3 symbolsz=4 plotfat=10
+     min1=684 max1=705 min2=3837 max2=3842
+     ''')
+Result('SRO','R S s118','Overlay')
+\end{verbatim}
+}
+\end{frame}
+
+\begin{frame}
+  \frametitle{\jiubang{Shots and receivers position}}
+    \begin{center}
+    \includegraphics[width=0.8\textwidth]{data/Fig/SRO}
+    \end{center}
+\end{frame}
+
+\addtocounter{framenumber}{-1}
+\begin{frame}[fragile]
+  \frametitle{\jiubang{Arrange receiver coordinates}}
+\liubang{
+\begin{verbatim}
+# Arrange receiver coordinates 
+shots = []
+for shot in range(lines['S']):
+    line = 'line%d' % shot
+    Flow(line,'R','window f2=%d n2=282' % (2*shot))
+    shots.append(line)
+Flow('rece',shots,'rcat axis=3 ${SOURCES[1:%d]}' % len(shots))
+\end{verbatim}
+}
+\end{frame}
+
+\addtocounter{framenumber}{-1}
+\begin{frame}[fragile]
+  \frametitle{\jiubang{Plot stacking diagram}}
+\liubang{
+\begin{verbatim}
+Plot('rec','rece',
+     '''
+     window n1=1 j2=5 j3=2 | scale dscale=0.001 | 
+     rtoc | math output="input+I*x2" |
+     graph symbol=* plotcol=%d title="Stacking Diagram"
+     label1=Distance unit1=km label2="Shot Number"
+     min1=684 max1=705
+     ''' % color['R'])
+Plot('sou','S',
+     '''
+     window n1=1 j2=2 | scale dscale=0.001 | 
+     rtoc | math output="input+I*x1" |
+     graph symbol=* plotcol=%d wanttitle=n wantaxis=n min1=684 max1=705
+     ''' % color['S'])
+Result('diagram','rec sou','Overlay')
+\end{verbatim}
+}
+\end{frame}
+
+\begin{frame}
+  \frametitle{\jiubang{Stacking diagram}}
+    \begin{center}
+    \includegraphics[width=0.8\textwidth]{data/Fig/diagram}
+    \end{center}
+\end{frame}
+
+\addtocounter{framenumber}{-1}
+\begin{frame}[fragile]
+  \frametitle{\jiubang{Plot shots using true geometry}}
+\liubang{
+\begin{verbatim}
+# Display one shot using true geometry
+Flow('sour','S','spray axis=2 n=282')
+Flow('sx','sour','window n1=1 | scale dscale=0.001')
+Flow('sy','sour','window n1=1 f1=1 | scale dscale=0.001')
+Flow('rx','rece','window n1=1 | scale dscale=0.001')
+Flow('ry','rece','window n1=1 f1=1 | scale dscale=0.001')
+
+Flow('offset','sx sy rx ry',
+     '''
+     math SX=${SOURCES[0]} SY=${SOURCES[1]}
+     RX=${SOURCES[2]} RY=${SOURCES[3]}
+     output="sqrt((RX-SX)^2+(RY-SY)^2)"
+     ''')
+\end{verbatim}
+}
+\end{frame}
+
+\addtocounter{framenumber}{-1}
+\begin{frame}[fragile]
+  \frametitle{\jiubang{Plot shots using true geometry}}
+\liubang{
+\begin{verbatim}
+Flow('shot118','lines','window n2=1 f2=117')
+Flow('offset118','offset','window n2=1 f2=117')
+Flow('boff1','offset118','window n1=141 | math output="-input"')
+Flow('boff2','offset118','window f1=141')
+Flow('boff118','boff1 boff2','cat axis=1 ${SOURCES[1]}')
+Result('shot118','shot118 boff118',
+       '''
+       agc rect1=50 rect2=50 |
+       wiggle xpos=${SOURCES[1]} transp=y yreverse=y poly=y
+       wherexlabel=t wheretitle=b title="Shot 118"
+       ''')
+\end{verbatim}
+}
+\end{frame}
+
+\begin{frame}
+  \frametitle{\jiubang{Plot shot 118}}
+    \begin{center}
+    \includegraphics[width=0.8\textwidth]{data/Fig/shot118}
+    \end{center}
+\end{frame}
+
+\subsection{Initial data checking}
+
+\addtocounter{framenumber}{-1}
+\begin{frame}[fragile]
+  \frametitle{\jiubang{Map to regular shot gathers}}
+\babang{
+\begin{verbatim}
+Flow('lines','line',
+     '''
+     intbin yk=cdpt | window f3=2 |
+     put
+     label2=Source d2=0.05  o2=688  unit2=km
+     label3=Offset d3=0.025 o3=-3.5 unit3=km
+     label1=Time unit1=s
+     ''')
+
+Result('lines',
+       '''
+       byte gainpanel=each |
+       grey3 frame1=500 frame2=100 frame3=120 flat=n
+       title="Raw Data"
+       ''')
+\end{verbatim}
+}
+\end{frame}
+
+\begin{frame}
+  \frametitle{\jiubang{2-D shot gathers (suppose regular coordinates)}}
+    \begin{center}
+    \includegraphics[width=0.8\textwidth]{data/Fig/lines}
+    \end{center}
+\end{frame}
+
+\addtocounter{framenumber}{-1}
+\begin{frame}[fragile]
+  \frametitle{\jiubang{Convert shots to CMPs}}
+\babang{
+\begin{verbatim}
+Flow('rcmps mask','lines',
+     '''
+     transp memsize=1000 plane=23 |
+     shot2cmp mask=${TARGETS[1]} half=n |
+     put o2=-1.75 label2="Half-offset"
+     ''')
+Result('rcmps',
+       '''
+       byte gainpanel=each |
+       grey3 frame1=500 frame2=35 frame3=643 flat=n
+       point1=0.8 point2=0.4 title="CMPs"
+       ''')
+\end{verbatim}
+}
+\end{frame}
+
+\begin{frame}
+  \frametitle{\jiubang{Display CMPs}}
+    \begin{center}
+    \includegraphics[width=0.8\textwidth]{data/Fig/rcmps}
+    \end{center}
+\end{frame}
+
+\addtocounter{framenumber}{-1}
+\begin{frame}[fragile]
+  \frametitle{\jiubang{Raw stacking}}
+\babang{
+\begin{verbatim}
+Flow('fold','mask','dd type=float | stack axis=1 norm=n')
+Flow('rstack','rcmps','stack')
+Result('rstack','fold rstack',
+       '''
+       spray axis=1 n=1501 d=0.002 o=0 label=Time unit=s |
+       add scale=1,1000 ${SOURCES[1]} |
+       grey color=j title="Raw Stack (with Fold)"
+       ''')
+\end{verbatim}
+}
+\end{frame}
+
+\begin{frame}
+  \frametitle{\jiubang{Raw stacking}}
+    \begin{center}
+    \includegraphics[width=0.8\textwidth]{data/Fig/rstack}
+    \end{center}
+\end{frame}
+
+\subsection{Initial signal analysis and quality control}
+
+\addtocounter{framenumber}{-1}
+\begin{frame}[fragile]
+  \frametitle{\jiubang{First break mute}}
+\babang{
+\begin{verbatim}
+# Select 4 shots every tenth sequential shot
+Flow('inpmute','lines',
+     '''
+     window f2=198 j2=10 n2=4 |
+     transp plane=23
+     ''')
+Result('inpmute',
+       '''
+       put n2=1128 n3=1 |
+       agc rect1=50 rect2=20 | grey wanttitle=n
+       ''')
+\end{verbatim}
+}
+\end{frame}
+
+\begin{frame}
+  \frametitle{\jiubang{Input}}
+    \begin{center}
+    \includegraphics[width=0.8\textwidth]{data/Fig/inpmute}
+    \end{center}
+\end{frame}
+
+\addtocounter{framenumber}{-1}
+\begin{frame}[fragile]
+  \frametitle{\jiubang{First break mute}}
+\babang{
+\begin{verbatim}
+# Select muting parameter for background noise
+Flow('outmute','inpmute',
+     '''
+     mutter t0=0.1 v0=5.2
+     ''')
+Result('outmute',
+       '''
+       put n2=1128 n3=1 |
+       agc rect1=50 rect2=20 | grey wanttitle=n
+       ''')
+\end{verbatim}
+}
+\end{frame}
+
+\begin{frame}
+  \frametitle{\jiubang{Output}}
+    \begin{center}
+    \includegraphics[width=0.8\textwidth]{data/Fig/outmute}
+    \end{center}
+\end{frame}
+
+\addtocounter{framenumber}{-1}
+\begin{frame}[fragile]
+  \frametitle{\jiubang{Apply muting on all shots}}
+\babang{
+\begin{verbatim}
+# First muting for all shots
+Flow('mutes','lines',
+     '''
+     transp memsize=1000 plane=23 |
+     mutter t0=0.1 v0=5.2 | 
+     transp memsize=1000 plane=23
+     ''' )
+\end{verbatim}}
+\liubang{
+\begin{verbatim}
+[yourcomputer directory]$ sfin lines.rsf
+lines.rsf:
+    in="$RSFDATA/.../.../lines.rsf@"
+    esize=4 type=float form=native 
+    n1=1501        d1=0.002       o1=0          label1="Time" unit1="s" 
+    n2=251         d2=0.05        o2=688        label2="Source" unit2="km" 
+    n3=282         d3=0.025       o3=-3.5       label3="Offset" unit3="km" 
+	106243782 elements 424975128 bytes
+\end{verbatim}}
+\end{frame}
+
+\addtocounter{framenumber}{-1}
+\begin{frame}[fragile]
+  \frametitle{\jiubang{Subsampling -- input}}
+\babang{
+\begin{verbatim}
+# Shot 198
+Flow('shot198','mutes','window n2=1 f2=198')
+Plot('shot198','grey title="Shot 198" labelfat=4 titlefat=4')
+
+# Spectra
+Flow('spec198','shot198','spectra2')
+Plot('spec198',
+     '''
+     grey color=j yreverse=n title="Spectra 198" bias=0.08
+     label1=Frequency unit1=Hz label2=Wavenumber unit2=1/km
+     labelfat=4 titlefat=4
+     ''')
+Result('input198','shot198 spec198','SideBySideAniso')
+\end{verbatim}
+}
+\end{frame}
+
+\begin{frame}
+  \frametitle{\jiubang{Input}}
+    \begin{center}
+    \includegraphics[width=0.9\textwidth]{data/Fig/input198}
+    \end{center}
+\end{frame}
+
+\addtocounter{framenumber}{-1}
+\begin{frame}[fragile]
+  \frametitle{\jiubang{Subsampling -- anti-alias filter design}}
+\babang{
+\begin{verbatim}
+# Test anti-aliasing filter
+Flow('spike',None,'spike n1=1501 d1=0.002 o1=0 k1=750 mag=1 nsp=1')
+Flow('bandp','spike','bandpass flo=3 fhi=125 nphi=8 ')
+Result('sbandp','bandp',
+       '''
+       spectra |
+       graph title="Transfer function"
+       labelsz=4. plotfat=10 grid=y
+       ''')
+\end{verbatim}
+}
+\end{frame}
+
+\begin{frame}
+  \frametitle{\jiubang{Filter}}
+    \begin{center}
+    \includegraphics[width=0.7\textwidth]{data/Fig/sbandp}
+    \end{center}
+\end{frame}
+
+\addtocounter{framenumber}{-1}
+\begin{frame}[fragile]
+  \frametitle{\jiubang{Subsampling -- output}}
+\babang{
+\begin{verbatim}
+# Subsampling all shots to 4ms
+Flow('subsample','mutes',
+     'bandpass flo=3 fhi=125 nphi=8 | window j1=2')
+Flow('subshot198','subsample','window n2=1 f2=198')
+Plot('subshot198','grey title="Subsampled 198" labelfat=4 titlefat=4')
+# Spectra
+Flow('subspec198','subshot198','spectra2')
+Plot('subspec198',
+     '''
+     grey color=j yreverse=n title="Spectra 198" bias=0.08
+     label1=Frequency unit1=Hz label2=Wavenumber unit2=1/km
+     labelfat=4 titlefat=4
+     ''')
+Result('output198','subshot198 subspec198','SideBySideAniso')
+\end{verbatim}
+}
+\end{frame}
+
+\begin{frame}
+  \frametitle{\jiubang{Output}}
+    \begin{center}
+    \includegraphics[width=0.9\textwidth]{data/Fig/output198}
+    \end{center}
+\end{frame}
+
+\addtocounter{framenumber}{-1}
+\begin{frame}[fragile]
+  \frametitle{\jiubang{Calculate time-frequency spectra}}
+\babang{
+\begin{verbatim}
+Flow('ltft198','subshot198',
+     '''
+     ltft rect=20 verb=n nw=50 dw=2 niter=50
+     ''')
+Result('ltft198',
+       '''
+       math output="abs(input)" | real |
+       byte allpos=y gainpanel=100 pclip=99 |
+       grey3 color=j  frame1=120 frame2=7 frame3=71 label1=Time flat=y 
+       unit1=s label3=Offset label2="\F5 f \F-1" unit3=km
+       screenht=10 screenratio=0.7 parallel2=n format2=%3.1f
+       point1=0.8 point2=0.3 wanttitle=n labelfat=4 font=2 titlefat=4
+       ''')
+\end{verbatim}
+}
+\end{frame}
+
+\begin{frame}
+  \frametitle{\jiubang{Local time-frequency (LTF) spectra}}
+    \begin{center}
+    \includegraphics[width=0.9\textwidth]{data/Fig/ltft198}
+    \end{center}
+\end{frame}
+
+\addtocounter{framenumber}{-1}
+\begin{frame}[fragile]
+  \frametitle{\jiubang{Thresholding}}
+\qibang{
+\begin{verbatim}
+Flow('thr198','ltft198',
+     '''
+     transp plane=23 memsize=1000 |
+     threshold2 pclip=25 verb=y |
+     transp plane=23 memsize=1000
+     ''')
+Result('thr198',
+       '''
+       math output="abs(input)" | real |
+       byte allpos=y gainpanel=100 pclip=99 |
+       grey3 color=j  frame1=120 frame2=7 frame3=71 label1=Time flat=y 
+       unit1=s label3=Offset label2="\F5 f \F-1" unit3=km
+       screenht=10 screenratio=0.7 parallel2=n format2=%3.1f
+       point1=0.8 point2=0.3 wanttitle=n labelfat=4 font=2 titlefat=4
+       ''')
+\end{verbatim}
+}
+\end{frame}
+
+\begin{frame}
+  \frametitle{\jiubang{Thresholded LTF spectra}}
+    \begin{center}
+    \includegraphics[width=0.9\textwidth]{data/Fig/thr198}
+    \end{center}
+\end{frame}
+
+\addtocounter{framenumber}{-1}
+\begin{frame}[fragile]
+  \frametitle{\jiubang{Signal and noise separation}}
+\babang{
+\begin{verbatim}
+Flow('noise198','thr198','ltft inv=y | mutter t0=-0.5 v0=0.7')
+Plot('noise198',
+     'grey title="Ground-roll 198" unit2=km labelfat=4 titlefat=4')
+
+Flow('signal198','subshot198 noise198','add scale=1,-1 ${SOURCES[1]}')
+Plot('signal198',
+     'grey title="Ground-roll removal" labelfat=4 titlefat=4')
+Result('sn198','signal198 noise198','SideBySideAniso')
+\end{verbatim}
+}
+\end{frame}
+
+\begin{frame}
+  \frametitle{\jiubang{Signal and noise separation}}
+    \begin{center}
+    \includegraphics[width=0.9\textwidth]{data/Fig/sn198}
+    \end{center}
+\end{frame}
+
+\addtocounter{framenumber}{-1}
+\begin{frame}[fragile]
+  \frametitle{\jiubang{Process the whole dataset}}
+\babang{
+\begin{verbatim}
+Flow('ltfts','subsample',
+     '''
+     ltft rect=20 verb=y nw=50 dw=2 niter=50
+     ''',split=[3,282],reduce="cat axis=4")
+Flow('thresholds','ltfts',
+     '''
+     transp plane=24 memsize=1000 | threshold2 pclip=25 verb=y  |
+     transp plane=24 memsize=1000
+     ''',split=[3,251])
+Flow('noises','thresholds',
+     '''
+     ltft inv=y | transp plane=23 memsize=1000 | 
+     mutter t0=-0.5 v0=0.7 | transp plane=23 memsize=1000
+     ''')
+Flow('signals','subsample noises','add scale=1,-1 ${SOURCES[1]}')
+\end{verbatim}
+}
+\end{frame}
+
+\subsection{Initial velocity analysis}
+
+\addtocounter{framenumber}{-1}
+\begin{frame}[fragile]
+  \frametitle{\jiubang{Convert shots to CMPs}}
+\babang{
+\begin{verbatim}
+Flow('cmps','signals',
+     '''
+     transp memsize=1000 plane=23 |
+     mutter v0=3. |
+     shot2cmp half=n | put o2=-1.75 label2="Half-offset"
+     ''')
+Result('cmps',
+       '''
+       byte gainpanel=each | 
+       grey3 frame1=500 frame2=36 frame3=642 flat=n
+       title="CMP gathers" point1=0.7 label2=Offset label3=Midpoint
+       ''')
+\end{verbatim}
+}
+\end{frame}
+
+\begin{frame}
+  \frametitle{\jiubang{New CMPs}}
+    \begin{center}
+    \includegraphics[width=0.8\textwidth]{data/Fig/cmps}
+    \end{center}
+\end{frame}
+
+\addtocounter{framenumber}{-1}
+\begin{frame}[fragile]
+  \frametitle{\jiubang{Velocity scan parameters}}
+\jiubang{
+\begin{verbatim}
+# Set up velocity scan parameters
+v0 = 2.15
+dv = 0.025
+nv = 100
+\end{verbatim}
+}
+\end{frame}
+
+\addtocounter{framenumber}{-1}
+\begin{frame}[fragile]
+  \frametitle{\jiubang{Velocity scan for all CMPs}}
+\babang{
+\begin{verbatim}
+# Velocity scanning for all CMP gathers
+Flow('scn','cmps',
+     '''
+     vscan semblance=y v0=%g nv=%d dv=%g half=y str=0 |
+     mutter v0=0.9 t0=-4.5 inner=y
+     ''' % (v0,nv,dv),split=[3,1285])
+Flow('vel','scn','pick rect1=15 rect2=25 gate=100 an=10 | window')
+Result('vel',
+       '''
+       grey title="NMO Velocity" label1="Time" label2="Lateral"
+       color=j scalebar=y allpos=y bias=2.1 %g barlabel="Velocity"
+       barreverse=y o2num=1 d2num=1 n2tic=3 labelfat=4 font=2 titlefat=4
+       ''' % (v0+0.5*nv*dv))
+\end{verbatim}
+}
+\end{frame}
+
+\begin{frame}
+  \frametitle{\jiubang{Display NMO velocity}}
+    \begin{center}
+    \includegraphics[width=0.8\textwidth]{data/Fig/vel}
+    \end{center}
+\end{frame}
+
+\subsection{Brute stacking}
+
+\addtocounter{framenumber}{-1}
+\begin{frame}[fragile]
+  \frametitle{\jiubang{Normal moveout (NMO)}}
+\babang{
+\begin{verbatim}
+Flow('nmo','cmps vel',
+     '''
+     nmo velocity=${SOURCES[1]} half=y
+     ''')
+Result('nmo',
+       '''
+       byte gainpanel=e |
+       grey3 frame1=500 frame2=36 frame3=642 flat=n
+       title="NMOed Data" point1=0.7
+       label2=Offset label3=Midpoint
+       ''')
+\end{verbatim}
+}
+\end{frame}
+
+\begin{frame}
+  \frametitle{\jiubang{Display NMOed CMPs}}
+    \begin{center}
+    \includegraphics[width=0.8\textwidth]{data/Fig/nmo}
+    \end{center}
+\end{frame}
+
+\addtocounter{framenumber}{-1}
+\begin{frame}[fragile]
+  \frametitle{\jiubang{Brute stack}}
+\babang{
+\begin{verbatim}
+# Brute stacking
+Flow('bstack','nmo','stack')
+Result('bstack',
+       '''
+       agc rect1=50 |
+       grey title="Brute stacking" labelfat=4 font=2 titlefat=4
+       ''')
+\end{verbatim}
+}
+\end{frame}
+
+\begin{frame}
+  \frametitle{\jiubang{Display brute stacking result}}
+    \begin{center}
+    \includegraphics[width=0.8\textwidth]{data/Fig/bstack}
+    \end{center}
+\end{frame}
+
+  \subsection{Toy migration}
+
+\addtocounter{framenumber}{-1}
+\begin{frame}[fragile]
+  \frametitle{\jiubang{Toy prestack Kirchhoff time migration}}
+\babang{
+\begin{verbatim}
+# Prestack Kirchhoff time migration
+Flow('tcmps','cmps','transp memsize=1000 plane=23')
+Flow('pstm','tcmps vel',
+     '''
+     mig2 vel=${SOURCES[1]} apt=5 antialias=1
+     ''',split=[3,71,[0]],reduce='add')
+Result('pstm',
+       '''
+       grey title="Prestack kirchhoff time migration"
+       labelfat=4 font=2 titlefat=4
+       ''')
+
+End()
+\end{verbatim}
+}
+\end{frame}
+
+\begin{frame}
+  \frametitle{\jiubang{Display migration result}}
+    \begin{center}
+    \includegraphics[width=0.8\textwidth]{data/Fig/pstm}
+    \end{center}
+\end{frame}
+
+\begin{frame}
+  \frametitle{To be continued ...}
+    \begin{center}
+     Modify/add your own modules, improve the final result ...
+    \end{center}
+\end{frame}
+
+\addtocounter{framenumber}{-1}
+\begin{frame}[fragile]
+  \frametitle{Software}
+    \begin{center}
+%  \includegraphics[height=0.24\textwidth]{../freqlet/figures/Fig/Madagascar}\\
+   \shijiubang{http://www.ahay.org}
+       \end{center}
+\babang{
+\begin{verbatim}
+     cd $RSFSRC/book/rsf/usp/data/
+     pscons lock
+     cd $RSFSRC/book/rsf/usp/
+     scons school10.read
+\end{verbatim}}
+
+       \begin{block}{}
+    \begin{center}
+     \shijiubang{Thanks for attention and have a fun!}
+    \end{center}
+   \end{block}
+\end{frame}
+
+  % The following outlook is optional.
+  %\vskip0pt plus.5fill
+  %\begin{itemize}
+  %\item
+  %  Outlook
+  %  \begin{itemize}
+  %  \item
+  %    Something you haven't solved.
+  %  \item
+  %    Something else you haven't solved.
+  %  \end{itemize}
+  %\end{itemize}
+
+
+%\end{document}
+
+

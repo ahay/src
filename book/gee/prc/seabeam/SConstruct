@@ -1,0 +1,54 @@
+from rsf.proj import *
+
+Fetch('seabin.hh','seab')
+
+Flow('mesh','seabin.hh','dd form=native | pad n1=200 beg1=20')
+
+flt = '''342  -176 14
+24 -56 -176    -56 24
+-1  24   14     24 -1'''
+flt = Split(flt)
+a0 = flt.pop(0)
+
+lag = '''     1   2 
+ 98  99 100 101 102
+198 199 200 201 202'''  
+lag = Split(lag)
+
+Flow('lag0',None,
+     'echo %s n1=%d n=100,100 data_format=ascii_int in=$TARGET' %
+     (string.join(lag,' '),len(lag)))
+Flow('lag','lag0','dd form=native')
+Flow('flt0','lag',
+     '''echo %s n1=%d data_format=ascii_float in=$TARGET
+     a0=%s lag=$SOURCE''' % (string.join(flt,' '),len(flt),a0))
+Flow('flt','flt0','dd form=native')
+
+lag = range(1,13) + range(85,113) + range(185,203)
+
+Flow('alag0',None,
+     'echo %s n1=%d n=100,100 data_format=ascii_int in=$TARGET' %
+     (string.join(map(str,lag),' '),len(lag)))
+Flow('alag','alag0','dd form=native')
+
+Flow(['lapfac','laplag'],['flt','alag'],
+     'wilson lagin=${SOURCES[1]} lagout=${TARGETS[1]}')
+
+clip=0.833718
+
+fills = []
+for niter in [20,100]:
+    for prec in [0,1]:
+        fill = 'fill%d-%d' % (prec,niter)
+        fills.append(fill)
+        Flow(fill,['mesh','lapfac'],
+             'miss filt=${SOURCES[1]} niter=%d prec=%d exact=n' %
+             (niter,prec))
+        Plot(fill,
+             'grey transp=n yreverse=n title="niter=%d prec=%d" ' %
+             (niter,prec))
+
+Result('prcfill',fills,'TwoRows')
+
+###########################################################################
+End()

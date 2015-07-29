@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# *****************************************************
+# Job script for Stampede ( Parallel SGLFDRTM ) 
+# Gang Fang
+# TCCS, UT Austin
+# 28 Aug. 2013
+# *****************************************************
+
+
+#SBATCH -J bprtm            # Job name; stored in $SLURM_JOB_NAME
+#SBATCH -o bprtm.%j.out     # Output file; %j expands to jobid
+#SBATCH -e bprtm.%j.err     # Error file; %j expands to jobid
+#SBATCH -p normal           # Queue name
+#SBATCH -N 100              # This is nodes, not cores (16 cores/node)
+#SBATCH -n 100              # Total number of MPI tasks  (if omitted, n=N)
+#SBATCH -t 07:00:00         # Max time allotted for job
+#SBATCH -A TCCS             # Special allocations acct code for tng course
+
+export RSF_THREADS=100
+export RSF_CLUSTER=`host.sh`
+# echo $RSF_CLUSTER
+export OMP_NUM_THREADS=12
+
+pscons 
+
+
+
+

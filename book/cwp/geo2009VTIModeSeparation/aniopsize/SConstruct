@@ -1,0 +1,80 @@
+## 
+ # elastic modeling; wavefield separation operators
+ # with different combinations of epsilon and delta
+ ##
+
+
+from rsf.proj import *
+import sys
+import fdmod,fdd,spk,stiff
+# ------------------------------------------------------------
+par = {
+    'nx':600, 'ox':0, 'dx':0.002,  'lx':'x', 'ux':'km',
+    'nz':600, 'oz':0, 'dz':0.002,  'lz':'z', 'uz':'km',
+    'nt':1601,'ot':0, 'dt':0.0002, 'lt':'t', 'ut':'s',
+    'kt':150,
+    'jsnap':200,
+    'height':10,
+    'nb':0,
+    'frq':75,
+    'ratio':1
+    }
+fdmod.param(par)
+
+nframe=8
+
+
+# ------------------------------------------------------------
+# model parameters
+# ------------------------------------------------------------
+Flow('zero',None,
+     '''
+     spike nsp=1 mag=0.0
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g 
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g |
+     put label1=%(lz)s label2=%(lx)s unit1=%(uz)s unit2=%(ux)s
+     ''' % par)
+
+Flow('vp',     'zero','add add=3.00')
+Flow('vs',     'zero','add add=1.50')
+Flow('ro',     'zero','add add=1.00')
+
+fdd.derivatives(par)
+spk.delt('spk',64,64,par)
+
+epsilon=[0.25, 0.54, 0.2]
+delta=[-0.29, 0.00,  0.0]
+
+order=8
+odlst=[8,2]
+for order in odlst:
+    for ani in range(0,3,1):
+        tag=str(ani)+'-order'+`order`
+        
+        Flow('epsilon'+tag,'zero','add add=%f'%epsilon[ani])
+        Flow('delta'+tag,  'zero','add add=%f'%delta[ani])
+        Flow('nu'+tag,     'zero','add add=0.00')
+        
+
+        stiff.tti2d('cA'+tag,'vp','vs','ro','epsilon'+tag,'delta'+tag,'nu'+tag,par)
+    
+        fdd.separatorD('dzM'+tag,'dxM'+tag,'spk','cA'+tag,
+                       'y','x','sine',1.0,order,25,25,par)
+        fdd.oneirST('mop'+tag,'dzM'+tag,'dxM'+tag,5,5,'pclip=100',par)
+
+        Flow('ax'+tag,'mop'+tag+'-dxM'+tag,'scale axis=123')
+        Flow('az'+tag,'mop'+tag+'-dzM'+tag,'scale axis=123')
+for ani in range(0,3,1):
+    tag=`ani`
+    Flow('diffax'+tag,
+         ['ax'+tag+'-order8','ax'+tag+'-order2'],
+          'add scale=1,-1 ${SOURCES[1]}')
+    Flow('diffaz'+tag,
+         ['az'+tag+'-order8','az'+tag+'-order2'],
+          'add scale=1,-1 ${SOURCES[1]}')
+    fdd.oneirST('diff'+tag,'diffaz'+tag,'diffax'+tag,5,5,'clip=1 color=Ic',par)
+
+    Result('diff'+tag,'grey title="Difference %s" ' % tag)
+ 
+End()
+

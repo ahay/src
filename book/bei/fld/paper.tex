@@ -1,0 +1,434 @@
+\title{Field recording geometry}
+\author{Jon Claerbout} 
+\label{paper:fld}
+
+\maketitle
+
+\pagenumbering{arabic}  % hopefully, this causes page 1 to be on chapter 1 page.
+
+%{\em \today .  This chapter is owned by JFC.}
+
+\par
+The basic equipment for reflection seismic prospecting
+is a source for impulsive sound waves,
+a geophone (something like a microphone),
+and a multichannel waveform display system.
+A survey line is defined along the earth's surface.
+It could be the path for a ship,
+in which case the receiver is called a hydrophone.
+About every 25 meters the source is activated, and
+the echoes are recorded nearby.
+The sound source and receiver have almost no directional tuning capability
+because the frequencies that penetrate the earth
+have wavelengths longer than the ship.
+Consequently, echoes can arrive from several directions at the same time.
+It is the joint task of geophysicists and geologists
+to interpret the results.
+Geophysicists assume the quantitative, physical, and statistical tasks.
+Their main goals, and the goal to which this
+book is mainly directed, is to make good 
+pictures of the earth's interior from the echoes.
+
+\section{RECORDING GEOMETRY}
+
+\par
+Along the horizontal $x$-axis we define two points,
+$s$, where the source (or shot or sender) is located,
+and  $g$, where the geophone (or hydrophone or microphone) is located.
+Then, define the \bx{midpoint}  $y$  between the
+shot and geophone, and
+define  $h$  to be half the horizontal \bx{offset}
+between the shot and geophone:
+%.ne 1.2i
+\begin{eqnarray}
+y\ \ &=&\ \ {g \ +\  s  \over 2 }
+\label{eqn:0.1a}
+\\
+h\ \ &=&\ \ {g \ -\  s  \over 2 }
+\label{eqn:0.1b}
+\end{eqnarray}
+The reason for using
+{\em half}
+the offset in the equations
+is to simplify and symmetrize many later equations.
+Offset is defined
+with  $g - s$  rather than with  $s - g$  so that
+positive offset means waves
+moving in the positive  $x$ direction.
+In the marine case, this means the ship is presumed to sail
+negatively along the  $x$-axis.
+In reality the ship may go either way,
+and shot points may either increase or decrease as the survey proceeds.
+In some situations you can clarify matters by setting the
+field observer's shot-point numbers to negative values.
+\par
+Data is defined experimentally in the space of  $(s,\,g)$.
+Equations~(\ref{eqn:0.1a}) and (\ref{eqn:0.1b})
+represent a change of coordinates to the space of $(y,\,h)$.
+Midpoint-offset coordinates are especially useful
+for interpretation and data processing.
+Since the data is also a function of the travel time  $t$,
+the full dataset lies in a volume.
+Because it is so difficult to make a satisfactory display of such a volume,
+what is customarily done is to display slices.
+The names of slices vary slightly from one company to the next.
+The following names seem to be well known and clearly understood:
+\begin{center}
+\begin{tabular}{lp{2.75in}}
+$(y,\ h = 0,\ t)$       & zero-offset section \\
+$(y,\ h = h_{\rm min\,,}\  t)$ & near-trace section \\
+$(y,\ h = \hbox{const} ,\  t)$ &        constant-offset section \\
+$(y,\ h = h_{\rm max\,,}\  t)$ & far-trace section \\
+$(y = \hbox{const} ,\  h,\  t)$ & common-midpoint gather \\
+$(s = \hbox{const} ,\  g,\  t)$ & field profile (or common-shot gather) \\
+$(s,\ g = \hbox{const} ,\  t)$ & common-geophone gather \\
+$(s,\ g,\ t = \hbox{const} )$ & time slice \\
+$(h,\ y,\ t = \hbox{const} )$ & time slice \\
+%\end{tabbing}
+\end{tabular}
+\end{center}
+\sx{time slice}
+\sx{zero-offset section}
+\sx{near-trace section}
+\sx{section!near-trace}
+\sx{section!zero-offset}
+\par
+\inputdir{XFig}
+A diagram of slice names is in Figure~\ref{fig:sg}.
+Figure~\ref{fig:cube} shows three slices from the data volume.
+The first mode of display is ``engineering drawing mode.''
+The second mode of display is on the faces of a cube.
+But notice that although the data is displayed on the surface
+of a cube, the slices themselves are taken from the interior of the cube.
+The intersections of slices across one another are shown by dark lines.
+\plot{sg}{width=6.0in}{
+        Top shows field recording of marine seismograms from
+        a shot at location  $s$  to geophones at locations labeled  $g$.
+        There is a horizontal reflecting layer to aid interpretation.
+        The lower diagram is called a \bx{stacking diagram}.
+        (It is
+        {\em not}
+        a perspective drawing).
+        Each dot in this plane depicts a possible seismogram.
+        Think of time running out from the plane.
+        The center geophone above (circled)
+        records the seismogram (circled dot) that
+        may be found in various geophysical displays.
+        Lines in this $(s,g)$-plane are planes in the $(t,s,g)$-volume.
+	Planes of various orientations have the names given in the text.
+        }
+%\activeplot{rick}{height=4.5in}{}{
+%       Slices from a cube of data from the Grand Banks.
+%       Left is ``engineering drawing'' mode.
+%       At the right slices from within the cube are shown as faces on the cube.
+%       (Data from Amoco.
+%       Display via Rick Ottolini's movie program).
+%       }
+\inputdir{cube}
+\plot{cube}{width=6.00in,height=8.0in}{
+        Slices from within a cube of data.
+        Top: Slices displayed as a mechanical drawing.
+        Bottom: Same slices shown on perspective of cube faces.
+%       (Push button to interact with Steve Cole's Cubeplot program.)
+        }
+
+\par
+A common-depth-point (CDP) gather is defined
+by the industry and by common usage
+to be the same thing as a common-midpoint (CMP) gather.
+But in this book
+a distinction will be made.
+A \bx{CDP gather} is a \bx{CMP gather} with its time
+axis stretched according to some velocity model, say,
+$$
+(y=\hbox{const},\ h,\ \sqrt{t^2 - 4h^2 /v^2 }) \quad \quad
+\hbox{common-depth-point gather}
+$$
+This offset-dependent stretching makes the time axis of the gather 
+become more like a
+{\em depth}
+axis, thus providing the
+{\em D} 
+in CDP.
+The stretching is called 
+{\em 
+\bx{normal moveout} correction
+}
+(NMO).
+Notice that as the velocity goes to infinity, the amount of stretching
+goes to zero.
+
+\par
+There are basically two ways to get two-dimensional information
+from three-dimensional information.
+The most obvious is to cut out the slices defined above.
+A second possibility is to remove a dimension by summing over it.
+In practice, the offset axis is the best candidate for summation.
+Each CDP gather is summed over offset.
+The resulting sum is a single trace.
+Such a trace can be constructed at each midpoint.
+The collection of such traces, a function of midpoint and time,
+is called a CDP stack.
+Roughly speaking, a CDP stack is like a zero-offset section,
+but it has a less noisy appearance.
+\par
+The construction of a CDP stack requires that a numerical choice
+be made for the moveout-correction velocity.
+This choice is called the {\em stacking velocity.}
+The stacking velocity may be simply someone's guess of the earth's velocity.
+Or the guess may be improved by stacking with some trial velocities
+to see which gives the strongest and least noisy CDP stack.
+\par
+Figures~\ref{fig:yc02} and~\ref{fig:yc20} show
+typical marine and land \bx{profile}s
+(common-shot gathers).
+
+\inputdir{yc}
+\sideplot{yc02}{height=4.0in,width=3.5in}{
+        A seismic land profile.
+        There is a gap where there are no receivers near the shot.
+        You can see events of three different velocities.
+%        Press button to change plot parameters.
+        (Western Geophysical).
+        }
+
+\sideplot{yc20}{height=4.0in,width=3.5in}{
+        A marine profile off the Aleutian Islands.
+%        Press button to change plot parameters.
+        (Western Geophysical).
+        }
+
+The land data has geophones on both sides of the source.
+The arrangement shown is called an
+{\em uneven \bx{split spread}.}
+The energy source was a vibrator.
+The marine data happens to nicely illustrate
+two or three head waves.
+\todo{define head waves?}
+The marine energy source was an air gun.
+These field profiles were each recorded with about 120 geophones.
+
+\subsection{Fast ship versus slow ship}
+\inputdir{sg}
+For marine seismic data,
+the spacing between shots $\Delta s$ is a function of the speed
+of the ship and the time interval between shots.
+Naturally we like $\Delta s$ small
+(which means more shots)
+but that means either the boat slows down,
+or one shot follows the next so soon
+that it covers up late arriving echos.
+The geophone spacing $\Delta g$ is fixed
+when the marine \bx{streamer} is designed.
+Modern streamers are designed for more powerful
+computers and they usually have smaller $\Delta g$.
+Much marine seismic data is recorded with
+$\Delta s = \Delta g$
+and much is recorded with
+$\Delta s = \Delta g/2$.
+There are unexpected differences in what happens in the processing.
+Figure~\ref{fig:geqs} shows
+$\Delta s = \Delta g$,
+and
+Figure~\ref{fig:geq2s} shows
+$\Delta s = \Delta g/2$. %
+\sideplot{geqs}{width=2.5in}{
+        $\Delta g = \Delta s$.
+        The zero-offset section lies under the zeros.
+        Observe the common midpoint gathers.
+        Notice that even numbered receivers
+        have a different geometry than odd numbers.
+        Thus there are two kinds of CMP gathers
+        with different values of the \bx{lead-in} $x_0$ = {\tt x0}
+        }%
+When $\Delta s = \Delta g$ there are some irritating complications
+that we do not have for $\Delta s = \Delta g/2$.
+When $\Delta s = \Delta g$, even-numbered traces
+have a different midpoint than odd-numbered traces.
+For a common-midpoint analysis,
+the evens and odds require different processing.
+The words ``\bx{lead-in}'' describe the distance ($x_0$ = {\tt x0})
+from the ship to the nearest trace.
+When $\Delta s = \Delta g$ the lead-in of a CMP gather
+depends on whether it is made from the even or the odd traces.
+In practice the lead-in is about $3\Delta s$.
+Theoretically we would prefer no lead in,
+but it is noisy near the ship,
+the tension on the cable pulls it out of the water near the ship,
+and the practical gains
+of a smaller lead-in are evidently not convincing.
+
+\sideplot{geq2s}{width=2.5in}{
+        $\Delta g = 2\Delta s$.
+        This is like Figure~\protect\ref{fig:geqs}
+        with odd valued receivers omitted.
+        Notice that each common-midpoint gather has the same geometry.
+        }
+
+\section{TEXTURE}
+
+\par
+Gravity is a strong force for the stratification of rocks,
+and many places in the world rocks are laid down
+in horizontal beds.
+Yet even in the most ideal environment the bedding is
+not mirror smooth; it has some
+{\em \bx{texture}.}
+We begin with synthetic data that mimics the most ideal environment.
+Such an environment is almost certainly marine,
+where sedimentary deposition can be slow and uniform.
+The wave velocity will be taken to be constant,
+and all rays will reflect as from horizontally lying mirrors.
+Mathematically,
+{\em texture}
+is introduced by allowing the reflection coefficients
+of the beds to be laterally variable.
+The lateral variation is presumed to be a random function,
+though not necessarily with a white spectrum.
+Let us examine the appearance of the resulting field data.
+
+\subsection{Texture of horizontal bedding, marine data}
+\inputdir{synmarine}
+Randomness is introduced into the earth with
+a random function of midpoint  $y$  and depth  $z$.
+This randomness is impressed on
+some geological ``layer cake'' function of depth $z$.
+This is done in the first half of program \texttt{Msynmarine} \vpageref{lst:Msynmarine}. %
+\moddex{Msynmarine}{synthetic marine}{52}{74}{user/gee}
+The second half of program \texttt{Msynmarine} \vpageref{lst:Msynmarine}
+scans all shot and geophone locations and depths
+and finds the midpoint,
+and the reflection coefficient for that midpoint,
+and adds it into the data at the proper travel time.
+
+\par
+There are two confusing aspects of subroutine \texttt{synmarine()} \vpageref{lst:synmarine}.
+First, refer to figure~\ref{fig:sg} and notice that since the ship
+drags the long cable containing the receivers,
+the ship must be moving to the left, so data is recorded
+for sequentially {\em decreasing} values of $s$.
+Second, to make a continuous \bx{movie}
+from a small number of frames,
+it is necessary only to make the midpoint axis periodic,
+i.e.~when a value of {\tt iy} is computed beyond the end of the axis
+{\tt ny}, then it must be moved back an integer multiple of {\tt ny}.
+
+\par
+What does the final data space look like?
+This question has little meaning until we decide how the three-dimensional
+data volume will be presented to the eye.
+Let us view the data much as it is recorded in the field.
+For each shot point we see a frame 
+in which the vertical axis is the travel time
+and the horizontal axis is the distance from the ship down the towed
+hydrophone cable.
+The next shot point gives us another frame.
+Repetition gives us the accompanying program
+that produces a cube of data, hence a \bx{movie}.
+This cube is synthetic data for the ideal marine environment.
+And what does the \bx{movie} show?
+
+\sideplot{synmarine}{width=3in}{
+        Output from {\tt synmarine()} subroutine
+        (with temporal filtering on the $t$-axis).
+%        Press button for \bx{movie}.
+        }
+
+\inputdir{shotmovie}
+
+\par
+A single frame shows hyperbolas with imposed texture.
+The \bx{movie} shows the texture
+moving along each hyperbola to increasing offsets.
+(I find that no sequence of still pictures can
+give the impression that the \bx{movie} gives).
+Really the ship is moving; the texture of
+the earth is remaining stationary under it.
+This is truly what most marine data looks like,
+and the computer program simulates it.
+Comparing the simulated data to real marine-data \bx{movie}s,
+I am impressed by the large amount of random lateral variation required
+in the simulated data to achieve resemblance to field data.
+The randomness seems too great to represent lithologic variation.
+Apparently it is the result of something not modeled.
+Perhaps it results from our incomplete understanding of the
+mechanism of reflection from the quasi-random earth.
+Or perhaps it is an effect of the 
+partial focusing of waves sometime after they
+reflect from minor topographic irregularities.
+A full explanation awaits more research.
+
+\sideplot{shotmovie}{width=3in}{
+        Press button for field data \bx{movie}.
+        }
+
+\subsection{Texture of land data: near-surface problems}
+\par
+Reflection seismic data recorded on land frequently displays randomness
+because of the irregularity of the soil layer.
+Often it is so disruptive that the seismic energy sources are
+deeply buried (at much cost).
+The geophones are too many for burial.
+For most land reflection data, the texture caused by these near-surface
+irregularities exceeds the texture resulting from the reflecting layers.
+\par
+To clarify our thinking, an ideal mathematical model will be proposed.
+Let the reflecting layers be flat with no texture.
+Let the geophones suffer random time delays of several time points.
+Time delays of this type are called
+{\em statics.}
+Let the shots have random strengths.
+For this \bx{movie}, let the data frames be
+{\em 
+common-midpoint gathers,
+}
+that is, let each frame show data in  $(h,t)$
+-space at a fixed midpoint  $y$.
+Successive frames will show successive midpoints.
+The study of Figure~\ref{fig:sg} should convince you that the
+traveltime irregularities associated with the geophones should
+move leftward, while the amplitude irregularities associated with
+the shots  should move rightward (or vice versa).
+In real life, both amplitude and time anomalies are associated
+with both shots and geophones.
+
+\begin{exer}
+\inputdir{XFig}
+
+\item
+Modify the program of Figure~\ref{fig:cube} to produce a movie
+of synthetic %
+{\em midpoint %
+} gathers
+with random shot amplitudes and random geophone time delays.
+\sideplot{wirecube}{height=1.0in}{
+        }
+Observing this \bx{movie} you will note the perceptual problem of being
+able to see the leftward motion along with the rightward motion.
+Try to adjust anomaly strengths so that both left-moving
+and right-moving patterns are visible.
+Your mind will often see only one,
+blocking out the other,
+similar to the way you perceive a 3-D cube,
+from a 2-D projection of its edges.
+\item
+Define recursive dip filters to pass and reject the
+various textures of shot, geophone, and midpoint.
+\end{exer}
+%3.1.textemp
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

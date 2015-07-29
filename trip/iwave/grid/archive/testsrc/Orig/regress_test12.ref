@@ -1,0 +1,5 @@
+GRIDPP Unit Test 12
+create GridSpace, construct Vector in space
+assign to perm old file=testgrid.rsf
+all data samples in file = 12.0, compute max and min
+test12 result: max=12 min=12

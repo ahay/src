@@ -1,0 +1,51 @@
+INPUT DATA FOR IWAVE
+
+------------------------------------------------------------------------
+Task info:
+         deriv = 0           derivative order of forward map
+	 
+------------------------------------------------------------------------
+FD:
+
+         order = 4           scheme half-order
+           cfl = 0.5         cfl number - frac of max stable
+          cmin = 1.0         min velocity - checked
+          cmax = 5.0         max velocity - checked
+
+------------------------------------------------------------------------
+Model info:
+
+	   csq = ../csq_4layer.rsf
+
+------------------------------------------------------------------------
+MPI info:
+
+       mpi_np1 = 1      n_doms along axis 1
+       mpi_np2 = 1      n_doms along axis 2
+       mpi_np3 = 1      n_doms along axis 3
+       partask = 1      task parallelization
+
+------------------------------------------------------------------------
+Source info:
+
+        source = ../wavelet12000.su
+       sampord = 1             sampling order
+
+------------------------------------------------------------------------
+Trace info:
+
+          data = ../shot12000.su    output data file
+
+------------------------------------------------------------------------
+Output info:
+
+     printact = 1           per-time-step verbosity level
+                            0 - none
+                            1 - external extended axis index
+                            2 - time step index
+      dump_pi = 0           dump parallel/dom. decomp info
+     dump_lda = 1           dump grid data for allocated arrays
+     dump_ldc = 1           dump grid data for computational arrays
+    dump_term = 1           dump terminator data
+    dump_pars = 1           print parameter table in IWaveOp
+   dump_steps = 1           print major steps in IWaveOp

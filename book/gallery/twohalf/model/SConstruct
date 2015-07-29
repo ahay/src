@@ -1,0 +1,57 @@
+from rsf.proj import *
+
+sys.path.append('..')
+
+import twohalf
+
+twohalf.getvel('model')
+
+Result('model','grey color=j mean=y title="BP 2.5D Model" scalebar=y barreverse=y')
+
+twohalf.getshots('shots')
+
+Result('shots','byte gainpanel=200 | grey3 frame1=200 frame2=100 frame3=200 flat=n title=Shots')
+
+Flow('zo','shots','window n2=1 | cut max1=0.15')
+
+Result('zo','grey title="Zero Offset" ')
+
+dx=12.5
+
+Flow ('lside','model','window n2=1  | spray n=1000 o=%g' % (-1000*dx))
+Flow ('rside','model','window f2=-1 | spray n=1000')
+Flow ('extend','lside model rside','cat axis=2 ${SOURCES[1:3]}')
+
+dt = 0.001
+nt = 3801
+
+Flow('refl','extend',
+     '''
+     depth2time velocity=$SOURCE nt=%d dt=%g|
+     ai2refl |
+     ricker1 frequency=20 |
+     time2depth velocity=$SOURCE
+     ''' % (nt,dt))
+
+Result('refl','grey title="Exploding Reflector" ')
+
+Flow('fft','refl','transp | fft1 | fft3 axis=2 pad=1')
+
+Flow('right left','extend fft',
+     '''
+     transp | scale dscale=0.5 |
+     isolr2 seed=2012 dt=%g fft=${SOURCES[1]} left=${TARGETS[1]} 
+     ''' % dt)
+
+Flow('exp','refl left right',
+     '''
+     fftexp0
+     left=${SOURCES[1]} right=${SOURCES[2]} 
+     nt=%d dt=%g 
+     ''' % (nt,dt))
+
+Flow('twexp','exp','transp | window f2=1000 n2=1761 | costaper nw2=25')
+
+Result('twexp','grey title="Exploding Reflector Data" ')
+
+End()

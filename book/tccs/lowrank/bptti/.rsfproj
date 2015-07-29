@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sfput', 'sftransp', 'sfwindow', 'sfgrey', 'sfscale', 'sfmath', 'sfspike', 'sfricker1', 'sfgraph', 'sfsmooth', 'sfrtoc', 'sffft3', 'sfanisolr2', 'sfreal', 'sfmask', 'sfdd', 'sfspray', 'sfmul', 'sffftwave2']
+data=['LOCAL']
+size= 32692142688

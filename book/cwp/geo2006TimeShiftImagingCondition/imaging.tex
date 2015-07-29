@@ -1,0 +1,100 @@
+\section{Imaging condition in wave-equation imaging}
+A traditional imaging condition for shot-record
+migration, often referred-to as $U \K{D}$ imaging condition 
+\cite[]{Claerbout.blackwell.85},
+consists of time cross-correlation at every image location 
+between the source and receiver wavefields,
+followed by image extraction at zero time:
+\beqa
+\UU  \lp \mm, t   \rp &=& 
+\UR  \lp \mm, t   \rp \ast
+\US  \lp \mm, t   \rp \;,
+\\ 
+\RR  \lp \mm      \rp &=&
+\UU  \lp \mm,t=0  \rp \;,
+\eeqa
+where the symbol $\ast$ denotes cross-correlation in time.
+Here, 
+$\mm=\mv$ is a vector describing the locations of image points,
+$\US(\mm,t)$ and 
+$\UR(\mm,t)$ are source and receiver wavefields respectively, and 
+$\RR(\mm)$ denotes a migrated image.
+A final image is obtained by summation over shots.
+
+\subsection{Space-shift imaging condition}
+A generalized prestack imaging condition \cite[]{SavaFomel.pag}
+estimates image reflectivity using cross-correlation in space and time,
+followed by image extraction at zero time:
+\beqa \label{eqn:imgX}
+\UU  \lp \mm,\hh, t  \rp &=&
+\UR  \lp \mm+\hh, t  \rp \ast
+\US  \lp \mm-\hh, t  \rp \;,
+\\   \label{eqn:imgXb}
+\RR  \lp \mm,\hh     \rp &=&
+\UU  \lp \mm,\hh,t=0 \rp \;.
+\eeqa
+Here, $\hh=\hv$ is a vector describing the space-shift
+between the source and receiver wavefields prior to imaging.
+Special cases of this imaging condition
+are horizontal space-shift \cite[]{GEO67-03-08830889} and
+vertical space-shift \cite[]{GEO69-05-12831298}.
+
+For computational reasons,
+this imaging condition is usually implemented in the
+Fourier domain using the expression
+\beq \label{eqn:imgXw}
+   \RR \lp \mm,\hh    \rp = \sum_\w
+   \UR \lp \mm+\hh,\w \rp
+\K{\US}\lp \mm-\hh,\w \rp \;.
+\eeq
+The $^*$ sign represents a complex conjugate
+applied on the receiver wavefield $\US$ in the
+Fourier domain.
+
+\subsection{Time-shift imaging condition}
+Another possible imaging condition, advocated in this paper,
+involves shifting of the source and receiver
+wavefields in time, as opposed to space,
+followed by image extraction at zero time:
+\beqa \label{eqn:imgT}
+\UU  \lp \mm,t,\tt \rp &=&
+\UR  \lp \mm,t+\tt \rp \ast
+\US  \lp \mm,t-\tt \rp \;,
+\\   \label{eqn:imgTb}
+\RR  \lp \mm,\tt     \rp &=&
+\UU  \lp \mm,\tt,t=0 \rp \;.
+\eeqa
+Here, $\tt$ is a scalar describing the time-shift 
+between the source and receiver wavefields prior to imaging.
+This imaging condition can be implemented in the
+Fourier domain using the expression
+\beq \label{eqn:imgTw}
+   \RR \lp \mm,\tt \rp = \sum_\w
+   \UR \lp \mm,\w  \rp
+\K{\US}\lp \mm,\w  \rp e^{2i\w\tt} \;,
+\eeq
+which simply involves a phase-shift applied 
+to the wavefields prior to summation 
+over frequency $\w$ for imaging at zero time.
+
+\subsection{Space-shift and time-shift imaging condition}
+
+To be even more general, we can formulate an imaging condition
+involving both space-shift and time-shift,
+followed by image extraction at zero time:
+\beqa \label{eqn:imgA}
+\UU  \lp \mm,\hh, t     \rp &=&
+\UR  \lp \mm+\hh, t+\tt \rp \ast
+\US  \lp \mm-\hh, t-\tt \rp \;,
+\\   \label{eqn:imgAb}
+\RR  \lp \mm,\hh,\tt      \rp &=&
+\UU  \lp \mm,\hh,\tt,t=0  \rp \;.
+\eeqa
+However, the cost involved in this transformation is large,
+so this general form does not have immediate practical value.
+Imaging conditions described by equations~
+\ren{imgX}-\ren{imgXb} and 
+\ren{imgT}-\ren{imgTb} are special cases of 
+equations~\ren{imgA}-\ren{imgAb} 
+for $\hh=0$ and $\tt=0$, respectively.
+

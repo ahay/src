@@ -1,0 +1,45 @@
+from rsf.proj import *
+import fdmod,srules
+
+par=srules.param()
+par['nangb']=9
+par['oangb']=-6
+par['dangb']=3
+
+par['nl']=30
+
+par['nanga']=60
+par['danga']=3.
+
+par['tcut']=3
+par['lox']=14
+par['hix']=26
+    
+fdmod.param(par)
+#par['labelattr']=' wantaxis=n '
+
+srules.data()
+
+# ------------------------------------------------------------
+Flow('vel','zvstr',
+     '''
+     put o1=0 d1=%(dz)g o2=10.025 d2=%(dx)g label1=z label2=x |
+     window min1=%(oz)g n1=%(nz)g min2=%(ox)g n2=%(nx)g |
+     scale rscale=0.001
+     ''' % par )
+
+
+#------------------------------------------------------------
+Flow('del','zrefl',
+     '''
+     put d1=%(dz)g o2=%(ox)g d2=%(dx)g label1=z label2=x |
+     window min1=%(oz)g n1=%(nz)g min2=%(ox)g n2=%(nx)g
+     ''' % par)
+
+
+
+# ------------------------------------------------------------
+srules.run(par)
+# ------------------------------------------------------------
+
+End()

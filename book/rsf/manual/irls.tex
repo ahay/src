@@ -1,0 +1,96 @@
+\section{Weighting for iteratively-reweighted least squares (irls.c)}
+
+
+
+
+\subsection{{sf\_irls\_init}}\label{sec:sf_irls_init}
+Allocates the space equal to the data size for iteratively-reweighted least squares.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_irls_init(n);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_irls_init(int n) 
+/*< Initialize with data size >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[n] size of the data (\texttt{int}).  
+\end{desclist}
+
+
+
+
+\subsection{{sf\_irls\_close}}
+Frees the space allocated for the iteratively-reweighted least squares by \hyperref[sec:sf_irls_init]{\texttt{sf\_irls\_init}}.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_irls_close();\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_irls_close(void) 
+/*< free allocated storage >*/
+{
+   ...
+}
+\end{verbatim}
+
+
+
+
+\subsection{{sf\_l1}}
+Calculates the weights for $L_1$ norm.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_l1 (n, res, weight);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_l1 (int n, const float *res, float *weight)  
+/*< weighting for L1 norm >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt weight]
+   \setlength\itemsep{0pt}
+   \item[n]      size of the data (\texttt{int}).  
+   \item[res]    data (\texttt{const float*}).  
+   \item[weight] weights for $L_1$ norm (\texttt{float*}).  
+\end{desclist}
+
+
+
+
+\subsection{{sf\_cauchy}}
+Calculates the weights for Cauchy norm.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_cauchy (n, res, weight);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_cauchy (int n, const float *res, float *weight)  
+/*< weighting for Cauchy norm >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt weight]
+   \setlength\itemsep{0pt}
+   \item[n]      size of the data (\texttt{int}).  
+   \item[res]    data (\texttt{const float*}).  
+   \item[weight] weights for Cauchy norm (\texttt{float*}).  
+\end{desclist}
+

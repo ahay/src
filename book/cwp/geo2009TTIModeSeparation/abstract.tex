@@ -1,0 +1,47 @@
+\begin{abstract}
+Seismic waves propagate through the earth as a superposition of
+different wave-modes.
+% WE imaging - complex geology
+Seismic imaging in areas characterized by complex geology requires
+techniques based on accurate reconstruction of the seismic wavefields.
+A crucial component of the methods in this category, collectively
+known as wave-equation migration, is the imaging condition
+which extracts information about the discontinuities of physical
+properties from the reconstructed wavefields at every location in
+space.
+% distinction between acoustic (scalar) and elastic (vector)
+Conventional acoustic migration techniques image a scalar wavefield
+representing the P wave-mode, in contrast with elastic migration
+techniques which image a vector wavefield representing both the P and
+S wave-modes.
+% IC - what is the physical meaning? - must separate wave modes
+For elastic imaging, it is desirable that the reconstructed vector
+fields are decomposed in pure wave-modes, such that the imaging
+condition produces interpretable images, characterizing for example PP
+or PS reflectivity.
+% How are wave modes separated in anisotropic media? - projection on
+%polarization (k-domain) - or filtering (x-domain)
+In anisotropic media, wave-mode separation can be achieved by
+projection of the reconstructed vector fields on the polarization
+vectors characterizing various wave modes. For heterogeneous media,
+the polarization directions change with position, therefore wave-mode
+separation needs to be implemented using space-domain filters.
+% TTI vs. VTI
+For transversely isotropic media with a tilted symmetry axis (TTI),
+the polarization vectors depend on the elastic material parameters,
+including the tilt angles. Using these parameters, I separate
+the wave-modes by constructing nine filters corresponding to the nine
+Cartesian components of the three polarization directions at every
+grid point.
+% 3D vs. 2D - polarization vectors by orthogonality
+Since the S polarization vectors in TI media are not defined in the
+singular directions, e.g. along the symmetry axes, I construct these
+vectors by exploiting the orthogonality between the SV and SH
+polarization vectors, as well as their orthogonality with the P
+polarization vector. This procedure allows one to separate S wave-modes
+which are only kinematically correct.
+% what we show in this chapter? - discuss the main examples
+Realistic synthetic examples show that this wave-mode separation is
+effective for both 2D and 3D models with high heterogeneity and strong
+anisotropy.
+\end{abstract}

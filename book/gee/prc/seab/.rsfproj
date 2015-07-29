@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfwindow', 'sfmath', 'sfbin', 'sfgrey']
+data=['data/seab/apr18.h']
+size=    4529740

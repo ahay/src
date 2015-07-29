@@ -1,0 +1,48 @@
+from rsf.proj import *
+
+grey = 'grey label1=Time label2=Midpoint pclip=99.5'
+
+# Spike (dipfiltered and bandpassed)
+Flow('taper',None,
+     '''
+     spike
+     n1=256 o1=0.004 d1=0.004
+     n2=256 o2=0     d2=0.008
+     nsp=3
+     k1=100,150,200
+     k2=100,150,200
+     o3=1 |
+     fft1 | fft3 |
+     dipfilter v1=-1.5 v2=-1 v3=1 v4=1.5 taper=2 pass=0 |
+     fft3 inv=y | fft1 inv=y |
+     bandpass flo=10 fhi=50
+     ''')
+
+# Log-stretch 
+Flow('log','taper',"stretch rule=L dens=2")
+
+# 2-D FFT
+Flow('fft0','log',"fft1 | fft3")
+
+# F-K offset continuation
+Flow('oper','fft0',"fkdmo h=0.5")
+Flow('imp',['fft0','oper'],
+     '''add mode=prod ${SOURCES[1]} |
+     fft3 inv=y | fft1 inv=1 |
+     stretch dens=2 inv=y rule=L''')
+Plot('imp',grey +  ' title="Omega-K IDMO impulse response"')
+
+# 1-D FFT
+Flow('fft1','log',"fft1 | transp")
+
+# Finite-difference offset continuation
+Flow('con','fft1',"fincon h0=0 dh=0.004 nh=125")
+Flow('imp2','con',
+     "transp | fft1 inv=y | window n1=512 | stretch dens=2 inv=y rule=L")
+Plot('imp2',grey +  ' title="FinDif OC impulse response"')
+
+
+# Comparison
+Result('off-imp','imp imp2','SideBySideAniso')
+
+End()

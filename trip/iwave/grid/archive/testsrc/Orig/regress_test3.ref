@@ -1,0 +1,48 @@
+GRIDPP Unit Test 2
+test of grid load from file, float and double
+float case:
+
+before read:
+Grid axis list (non-defaults only)
+
+after read:
+Grid axis list (non-defaults only)
+Axis structure, single precision: 
+  number of points = 11
+  step             = 0.1
+  origin           = -0.5
+  axis number      = 1
+Axis structure, single precision: 
+  number of points = 21
+  step             = 0.1
+  origin           = -1
+  axis number      = 2
+Axis structure, single precision: 
+  number of points = 41
+  step             = 0.1
+  origin           = -2
+  axis number      = 3
+
+double case:
+
+before read:
+Grid axis list (non-defaults only)
+
+after read:
+Grid axis list (non-defaults only)
+Axis structure, double precision: 
+  number of points = 11
+  step             = 0.1
+  origin           = -0.5
+  axis number      = 1
+Axis structure, double precision: 
+  number of points = 21
+  step             = 0.1
+  origin           = -1
+  axis number      = 2
+Axis structure, double precision: 
+  number of points = 41
+  step             = 0.1
+  origin           = -2
+  axis number      = 3
+

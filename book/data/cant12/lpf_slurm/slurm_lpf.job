@@ -1,0 +1,36 @@
+#!/bin/bash
+
+#SBATCH -o slurm_lpf.job.o%j 
+#SBATCH -e slurm_lpf.job.e%j 
+#SBATCH -p normal #queue to run on 
+#SBATCH -N 10           #Number nodes to run on 
+#SBATCH -n 10           # total number of MPI tasks.  I guess each node gets n/N
+#SBATCH -t 24:00:00    #maximum time
+#SBATCH -A TCCS        #account to charge
+
+echo SLURM_NNODES=$SLURM_NNODES
+echo SLURM_TASKS_PER_NODE=$SLURM_TASKS_PER_NODE
+
+# previous sge code has seperate path if mycores -lt 16
+
+# number of nodes
+# $SLURM_NNODES
+echo SLURM_NODELIST=$SLURM_NODELIST
+
+# host.sh translates $SLURM_NODELIST to RSF_CLUSTER required by pscons
+export RSF_CLUSTER=`./host.sh`
+echo RSF_CLUSTER=$RSF_CLUSTER
+
+echo RSF_THREADS=$RSF_THREADS
+
+export RSF_THREADS=$SLURM_NNODES
+echo RSF_THREADS=$RSF_THREADS
+export OMP_NUM_THREADS=1
+echo OMP_NUM_THREADS=$OMP_NUM_THREADS
+
+pscons cmp.rsf
+
+
+
+
+

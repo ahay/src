@@ -1,0 +1,723 @@
+%\shortnote
+
+\lefthead{}
+\righthead{}
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}} 
+\published{Geophysical Prospecting, 51, 409-420 (2003)}
+\title{The Wilson-Burg method of spectral factorization \\
+  with application to helical filtering}
+
+\author{Sergey Fomel\/\footnotemark[1],
+Paul Sava\/\footnotemark[2],
+James Rickett\/\footnotemark[3],
+and Jon F. Claerbout\/\footnotemark[2]} 
+
+\footnotetext[1]{\emph{Bureau of Economic Geology, 
+Jackson School of Geosciences,
+The University of Texas at Austin,
+University Station, Box X,
+Austin, Texas 78713-8972, USA}}
+\footnotetext[2]{\emph{Stanford Exploration Project, 
+        Department of Geophysics, 
+        Stanford University, Stanford, California 94305, USA}}
+\footnotetext[3]{\emph{ChevronTexaco Exploration and Production Technology
+    Company, 6001 Bollinger Canyon Road, San Ramon, California 94583-2324}}
+
+\maketitle
+
+\begin{abstract}    
+  Spectral factorization is a computational procedure for constructing
+      minimum-phase (stable inverse) filters required for recursive
+      inverse filtering. We present a novel method of spectral
+      factorization. The method iteratively constructs an
+      approximation of the minimum-phase filter with the given
+      autocorrelation by repeated forward and inverse filtering and
+      rearranging the terms. This procedure is especially efficient in
+      the multidimensional case, where the inverse recursive filtering
+      is enabled by the helix transform.
+      
+      To exemplify a practical application of the proposed method, we
+      consider the problem of smooth two-dimensional data
+      regularization. Splines in tension are smooth interpolation
+      surfaces whose behavior in unconstrained regions is controlled
+      by the tension parameter. We show that such surfaces can be
+      efficiently constructed with recursive filter preconditioning
+      and introduce a family of corresponding two-dimensional
+      minimum-phase filters. The filters are created by spectral
+      factorization on a helix.
+\end{abstract}
+
+\section{Introduction}
+
+Spectral factorization is the task of estimating a minimum-phase signal from a
+given power spectrum. The advent of the helical coordinate system
+\cite[]{helix0,GEO63-05-15321541} has led to renewed interest in spectral factorization
+algorithms, since they now apply to multi-dimensional problems. Specifically,
+spectral factorization algorithms provide the key to rapid multi-dimensional
+recursive filtering with arbitrary functions, which in turn has geophysical
+applications in preconditioning inverse problems \cite[]{SEG-1998-1851,GEO68-02-05770588},
+wavefield extrapolation
+\cite[]{SEG-1998-1124,EAE-2000-P0145,SEG-2000-08620865,SEG-2001-10571060}, and
+3-D noise attenuation \cite[]{SEG-1999-12311234,EAE-1999-6039,EAE-2001-P167}.
+
+The Kolmogoroff (cepstral or Hilbert transform) method of spectral
+factorization \cite[]{kolmog,Claerbout.fgdp.76,oppenheim} is often used by the
+geophysical community because of its computational efficiency. However, as a
+frequency-domain method, it has certain limitations. For example, the
+assumption of periodic boundary conditions often requires extreme amounts of
+zero-padding for a stable factorization. This is one of the limitations which
+make this method inconvenient for multi-dimensional applications.
+
+The Wilson-Burg method, introduced in this paper, is an iterative algorithm
+for spectral factorization based on Newton's iterations. The algorithm
+exhibits quadratic convergence. It provides a time-domain approach that is
+potentially more efficient than the Kolmogoroff method. We include a detailed
+comparison of the two methods.
+
+Recent surveys \cite[]{goodman,kailath} discuss some other methods for spectral
+factorization, such as the Schur method \cite[]{schur}, the Bauer method
+\cite[]{bauer} and Wilson's original method \cite[]{mywilson}. The latter is noted
+for its superb numerical properties. We introduce Burg's modification to this
+algorithm, which puts the computational attractiveness of this method to a new
+level. The Wilson-Burg method avoids the need for matrix inversion, essential
+for the original Wilson's algorithm, reduces the computational effort from
+$O(N^3)$ operations to $O(N^2)$ operations per iteration. A different way to
+accelerate Wilson's iteration was suggested by \cite{laurie}. We have
+found the Wilson-Burg algorithm to be especially suitable for applications of
+multidimensional helical filtering, where the number of filter coefficients
+can be small, and the cost effectively reduces to $O(N)$ operations.
+
+The second part of the paper contains a practical example of the
+introduced spectral factorization method. The method is applied to the
+problem of two-dimensional smooth data regularization. This problem
+often occurs in mapping potential fields data and in other geophysical
+problems. Applying the Wilson-Burg spectral factorization method, we
+construct a family of two-dimensional recursive filters, which
+correspond to different values of tension in the tension-spline
+approach to data regularization \cite[]{GEO55-03-02930305}. We then use
+the constructed filters for an efficient preconditioning of the data
+regularization problem. The combination of an efficient spectral factorization
+and an efficient preconditioning technique provides an attractive practical
+method for multidimensional data interpolation. The technique is illustrated
+with bathymetry data from the Sea of Galilee (Lake Kinneret) in Israel.
+
+\section{Method description}
+
+Spectral factorization constructs a minimum-phase signal from its
+spectrum.  The algorithm, suggested by \cite{mywilson}, approaches
+this problem directly with Newton's iterative method. In a
+$Z$-transform notation, Wilson's method implies solving the equation
+\begin{equation}
+S(Z) = A(Z)\bar{A}(1/Z)
+\label{eqn:specfac}
+\end{equation}
+for a given spectrum $S(Z)$ and unknown minimum-phase signal $A(Z)$
+with an iterative linearization
+\begin{eqnarray}
+\nonumber
+S(Z) & = & A_t(Z)\bar A_t(1/Z)+
+     A_t(  Z)[\bar A_{t+1}(1/Z)-\bar A_t(1/Z)]+
+\bar A_t(1/Z)[     A_{t+1}(  Z)-     A_t(  Z)] \\
+& = & A_t(  Z) \bar A_{t+1}(1/Z) + \bar A_t(1/Z) A_{t+1}(Z)
+- A_t(Z)\bar A_t(1/Z)
+\;,
+\label{eqn:wilson}
+\end{eqnarray}
+where $A_t(Z)$ denotes the signal estimate at iteration $t$. Starting
+from some initial estimate $A_0(Z)$, such as $A_0(Z)=1$, one
+iteratively solves the linear system~(\ref{eqn:wilson}) for the
+updated signal $A_{t+1}(Z)$. \cite{mywilson} presents a rigorous proof
+that iteration~(\ref{eqn:wilson}) operates with minimum-phase signals
+provided that the initial estimate $A_0(Z)$ is minimum-phase. The
+original algorithm estimates the new approximation $A_{t+1}(Z)$ by
+matrix inversion implied in the solution of the system.
+
+Burg (1998, personal communication) recognized that dividing both
+sides of equation (\ref{eqn:wilson}) by $\bar A_t(1/Z) A_t(Z)$ leads
+to a particularly convenient form, where the terms on the left are
+symmetric, and the two terms on the right are correspondingly strictly
+causal and anticausal:
+\begin{equation} \label{eqn:burg}
+1 \ +\ {S(Z) \over \bar A_t(1/Z)\  A_t(Z)} =
+{A_{t+1}(Z) \over A_t(Z)}
+\ +\
+{\bar A_{t+1}(1/Z) \over \bar A_t(1/Z)}
+\end{equation}
+\par
+Equation~(\ref{eqn:burg}) leads to the Wilson-Burg algorithm, which
+accomplishes spectral factorization by a recursive application of
+convolution (polynomial multiplication) and deconvolution (polynomial
+division). The algorithm proceeds as follows:
+\begin{enumerate}
+\item Compute the left side of equation~(\ref{eqn:burg}) using forward
+  and adjoint polynomial division.
+\item Abandon negative lags, to keep only the causal part of the
+  signal, and also keep half of the zero lag. This gives us
+  $A_{t+1}(Z)/A_t(Z)$.
+\item Multiply out (convolve) the denominator $A_t(Z)$. Now we have
+the desired result $A_{t+1}(Z)$.
+\item Iterate until convergence.  
+\end{enumerate}
+
+\tabl{tablerate}{Example convergence of the Wilson-Burg iteration}{
+\begin{center}
+\begin{tabular}{|r||r|r|r|r|}               \hline
+ iter & $a_0$ &  $a_1$ & $a_2$ & $a_3$ \\ \hline \hline
+ 0   & 1.000000    &  0.000000   &  0.000000   &  0.000000 \\
+ 1   & 36.523964   & 23.737839   &  6.625787   &  0.657103 \\
+ 2   & 26.243151   & 25.726116   &  8.471050   &  0.914951 \\
+ 3   & 24.162354   & 25.991493   &  8.962727   &  0.990802 \\
+ 4   & 24.001223   & 25.999662   &  9.000164   &  0.999200 \\
+ 5   & 24.000015   & 25.999977   &  9.000029   &  0.999944 \\
+ 6   & 23.999998   & 26.000002   &  9.000003   &  0.999996 \\
+ 7   & 23.999998   & 26.000004   &  9.000001   &  1.000000 \\
+ 8   & 23.999998   & 25.999998   &  9.000000   &  1.000000 \\
+ 9   & 24.000000   & 26.000000   &  9.000000   &  1.000000 \\ \hline
+\end{tabular}
+\end{center}
+}
+
+An example of the Wilson-Burg convergence is shown in
+Table~\ref{tbl:tablerate} on a simple 1-D signal. The autocorrelation
+$S(Z)$ in this case is $1334 + 867 \left(Z + 1/Z\right) + 242
+\left(Z^2 + 1/Z^2\right) + 24 \left(Z^3 + 1/Z^3\right)$, and the
+corresponding minimum-phase signal is $A(Z) = (2+Z)(3+Z)(4+Z) = 24 +
+26 Z + 9 Z^2 + Z^3$. A quadratic rate of convergence is visible from
+the table. The convergence slows down for signals whose polynomial
+roots are close to the unit circle \cite[]{mywilson}.
+
+The clear advantage of the Wilson-Burg algorithm in comparison with the
+original Wilson algorithm is in the elimination of the expensive matrix
+inversion step. Only convolution and deconvolution operations are used at each
+iteration step.
+
+\subsection{Comparison of Wilson-Burg and Kolmogoroff methods}
+The Kolmogoroff (cepstral or Hilbert transform) spectral factorization
+algorithm \cite[]{kolmog,Claerbout.fgdp.76,oppenheim} is widely used because of
+its computationally efficiency. While this method is easily extended to the
+multi-dimensional case with the help of helical transform
+\cite[]{SEG-1999-16751678}, there are several circumstances that make the
+Wilson-Burg method more attractive in multi-dimensional filtering
+applications.
+
+\begin{itemize}
+\item The Kolmogoroff method takes $O(N \log N)$ operations, where $N$ is the
+  length of the auto-correlation function.  The cost of the Wilson-Burg method
+  is proportional to the [number of iterations] $\times$ [filter length]
+  $\times N$.  If we keep the filter small and limit the number of iterations,
+  the Wilson-Burg method can be cheaper (linear in $N$). In comparison, the
+  cost of the original Wilson's method is the [number of iterations] $\times$
+  $O(N^3)$.
+
+\item The Kolmogoroff method works in the frequency domain and assumes
+  periodic boundary conditions.  Auto-correlation functions,
+  therefore, need to be padded with zeros before they are Fourier
+  transformed.  For functions with zeros near the unit circle, the
+  padding may need to be many orders of magnitude greater than the
+  original filter length, $N$. The Wilson-Burg method is implemented
+  in the time-domain, where no extra padding is required.
+  
+\item Newton's method (the basis of the Wilson-Burg algorithm)
+  converges quickly when the initial guess is close to the solution.
+  If we take advantage of this property, the method may converge in
+  one or two iterations, reducing the cost even further.  It is
+  impossible to make use of an initial guess with the Kolmogoroff
+  method.
+  
+\item The Kolmogoroff method, when applied to helix filtering,
+  involves the dangerous step of truncating the filter coefficients to
+  reduce the size of the filter. If the auto-correlation function has
+  roots close to the unit circle, truncating filter coefficients may
+  easily lead to non-minimum-phase filters. The Wilson-Burg allows us to
+  fix the shape of the filter from the very beginning. This does not
+  guarantee that we will find the exact solution, but at least we can
+  obtain a reasonable minimum-phase approximation to the desired
+  filter. The safest practical strategy in the case of an unknown
+  initial estimate is to start with finding the longest possible
+  filter, remove those of its coefficients that are smaller than a certain
+  threshold, and repeat the factoring process again with the shorter
+  filter.
+\end{itemize}
+
+\subsection{Factorization examples}
+
+\inputdir{helix}
+
+The first simple example of helical spectral factorization is shown in
+Figure~\ref{fig:autowaves}. A minimum-phase factor is found by
+spectral factorization of its autocorrelation. The result is
+additionally confirmed by applying inverse recursive filtering, which
+turns the filter into a spike (the rightmost plot in
+Figure~\ref{fig:autowaves}.)
+
+\plot{autowaves}{width=4.5in, height=4.5in}{Example of 2-D Wilson-Burg
+  factorization. Top left: the input filter. Top right: its
+  auto-correlation. Bottom left: the factor obtained by the Wilson-Burg
+  method. Bottom right: the result of deconvolution.}
+
+A practical example is depicted in Figure~\ref{fig:laplac}.  The
+symmetric Laplacian operator is often used in practice for
+regularizing smooth data. In order to construct a corresponding
+recursive preconditioner, we factor the Laplacian autocorrelation
+(the biharmonic operator) using the Wilson-Burg algorithm.
+Figure~\ref{fig:laplac} shows the resultant filter. The minimum-phase
+Laplacian filter has several times more coefficients than the original
+Laplacian. Therefore, its application would be more expensive in a
+convolution application. The real advantage follows from the
+applicability of the minimum-phase filter for inverse filtering
+(deconvolution). The gain in convergence from recursive filter
+preconditioning outweighs the loss of efficiency from the longer
+filter.  Figure~\ref{fig:thin42} shows a construction of the smooth
+inverse impulse response by application of the $\mathbf{C} = \mathbf{P
+  P}^T$ operator, where $\mathbf{P}$ is deconvolution with the
+minimum-phase Laplacian. The application of $\mathbf{C}$ is equivalent
+to a numerical solution of the biharmonic equation, discussed in the
+next section.
+
+\inputdir{laplac}
+
+\plot{laplac}{width=4.5in, height=4.5in}{Creating a minimum-phase
+  Laplacian filter.  Top left: Laplacian filter. Top right:
+  its auto-correlation (bi-harmonic filter). Bottom left: factor obtained by the Wilson-Burg method
+  (minimum-phase Laplacian). Bottom right: the result of deconvolution.}
+
+\plot{thin42}{width=6in, height=2in}{2-D deconvolution with the
+  minimum-phase Laplacian. Left: input. Center: output of
+  deconvolution.  Right: output of deconvolution and adjoint
+  deconvolution (equivalent to solving the biharmonic differential
+  equation).}
+
+\section{Application of spectral factorization: \newline
+  Regularizing smooth data with splines in tension}
+
+\hyphenation{Woi-now-sky}
+
+The method of minimum curvature is an old and ever-popular approach
+for constructing smooth surfaces from irregularly spaced data
+\cite[]{GEO39-01-00390048}. The surface of minimum curvature corresponds
+to the minimum of the Laplacian power or, in an alternative
+formulation, satisfies the biharmonic differential equation.
+Physically, it models the behavior of an elastic plate. In the
+one-dimensional case, the minimum curvature method leads to the
+natural cubic spline interpolation \cite[]{deBoor}. In the
+two-dimensional case, a surface can be interpolated with biharmonic
+splines \cite[]{sandwell} or gridded with an iterative finite-difference
+scheme \cite[]{swain}.  We approach the gridding (data regularization)
+problem with an iterative least-squares optimization scheme.
+\par
+In most of the practical cases, the minimum-curvature method produces
+a visually pleasing smooth surface. However, in cases of large changes
+in the surface gradient, the method can create strong artificial
+oscillations in the unconstrained regions. Switching to lower-order
+methods, such as minimizing the power of the gradient, solves the
+problem of extraneous inflections, but also removes the smoothness
+constraint and leads to gradient discontinuities
+\cite[]{galilee}. A remedy, suggested by \cite{schweikert},
+is known as \emph{splines in tension}. Splines in tension are
+constructed by minimizing a modified quadratic form that includes a
+tension term. Physically, the additional term corresponds to tension
+in elastic plates \cite[]{timoshenko}. \cite{GEO55-03-02930305}
+developed a practical algorithm of 2-D gridding with splines in
+tension and implemented it in the popular GMT software
+package.
+\par
+In this section, we develop an application of helical preconditioning
+to gridding with splines in tension. We accelerate an iterative data
+regularization algorithm by recursive preconditioning with
+multidimensional filters defined on a helix \cite[]{GEO68-02-05770588}. The
+efficient Wilson-Burg spectral factorization constructs a
+minimum-phase filter suitable for recursive filtering.
+
+We introduce a family of 2-D
+minimum-phase filters for different degrees of tension.  The filters
+are constructed by spectral factorization of the corresponding
+finite-difference forms. In the case of zero tension (the original
+minimum-curvature formulation), we obtain a minimum-phase version of
+the Laplacian filter. The case of infinite tension leads to spectral
+factorization of the Laplacian and produces the \emph{helical
+  derivative} filter \cite[]{iee}.
+\par
+The tension filters can be applied not only for data regularization
+but also for preconditioning in any estimation problems with smooth
+models. Tomographic velocity estimation is an obvious example of such
+an application \cite[]{SEG-1998-1218}.
+
+\subsection{Mathematical theory of splines in tension}
+
+The traditional minimum-curvature criterion implies seeking a
+two-dimensional surface $f(x,y)$ in region $D$, which corresponds to
+the minimum of the Laplacian power:
+\begin{equation}
+  \label{eqn:l2}
+  \iint\limits_{D} \left|\nabla^2 f(x,y)\right|^2\,dx\,dy\;,
+\end{equation}
+where $\nabla^2$ denotes the Laplacian operator: $ \nabla^2 =
+\frac{\partial^2}{\partial x^2} + \frac{\partial^2}{\partial y^2}$.
+\par
+Alternatively, we can seek $f(x,y)$ as the solution of the biharmonic
+differential equation
+\begin{equation}
+  \label{eqn:bi}
+  (\nabla^2)^2 f(x,y) = 0\;.
+\end{equation}
+\cite{fung} and \cite{GEO39-01-00390048} derive
+equation~(\ref{eqn:bi}) directly from~(\ref{eqn:l2}) with the help of
+the variational calculus and Gauss's theorem.
+\par
+Formula~(\ref{eqn:l2}) approximates the strain energy of a thin
+elastic plate \cite[]{timoshenko}. Taking tension into account modifies
+both the energy formula~(\ref{eqn:l2}) and the corresponding
+equation~(\ref{eqn:bi}). \cite{GEO55-03-02930305} suggest the
+following form of the modified equation:
+\begin{equation}
+  \label{eqn:bit}
+  \left[(1-\lambda) (\nabla^2)^2 - \lambda (\nabla^2)\right] f(x,y) = 0\;,
+\end{equation}
+where the tension parameter $\lambda$ ranges from 0 to 1. The
+corresponding energy functional is
+\begin{equation}
+  \label{eqn:l2lam}
+  \iint\limits_{D} \left[(1-\lambda)\,\left|\nabla^2 f(x,y)\right|^2
+\;+\;
+\lambda\,\left|\nabla f(x,y)\right|^2\right]\,dx\,dy\;.
+\end{equation}
+Zero tension leads to the biharmonic equation~(\ref{eqn:bi}) and
+corresponds to the minimum curvature construction. The case of
+$\lambda=1$ corresponds to infinite tension. Although infinite tension
+is physically impossible, the resulting Laplace equation does have the
+physical interpretation of a steady-state temperature distribution. An
+important property of harmonic functions (solutions of the Laplace
+equation) is that they cannot have local minima and maxima in the free
+regions. With respect to interpolation, this means that, in the case
+of $\lambda=1$, the interpolation surface will be constrained to have
+its local extrema only at the input data locations.
+
+Norman Sleep (2000, personal communication) points out that if the
+tension term $\lambda \nabla^2$ is written in the form $\nabla \cdot
+(\lambda \nabla)$, we can follow an analogy with heat flow and
+electrostatics and generalize the tension parameter~$\lambda$ to a
+local function depending on $x$ and $y$. In a more general form,
+$\lambda$ could be a tensor allowing for an anisotropic smoothing in
+some predefined directions similarly to the steering-filter method
+\cite[]{SEG-1998-1851}.
+
+To interpolate an irregular set of data values, $f_k$ at points
+$(x_k,y_k)$, we need to solve equation~(\ref{eqn:bit}) under the
+constraint
+\begin{equation}
+  \label{fk}
+  f(x_k,y_k) = f_k\;.
+\end{equation}
+We can accelerate the solution by recursive filter preconditioning. If
+$\mathbf{A}$ is the discrete filter representation of the differential
+operator in equation~(\ref{eqn:bit}) and we can find a minimum-phase
+filter $\mathbf{D}$ whose autocorrelation is equal to $\mathbf{A}$, then
+an appropriate preconditioning operator is a recursive inverse
+filtering with the filter $\mathbf{D}$. The preconditioned formulation
+of the interpolation problem takes the form of the least-squares system 
+\cite[]{iee}
+\begin{equation}
+\mathbf{K}\, \mathbf{D}^{-1} \mathbf{p} \approx  \mathbf{f}_k\;,
+\label{eqn:prec2}
+\end{equation}
+where $\mathbf{f}_k$ represents the vector of known data, $\mathbf{K}$ is
+the operator of selecting the known data locations, and $\mathbf{p}$ is
+the preconditioned variable: $\mathbf{p} = \mathbf{D\, f}$. After
+obtaining an iterative solution of system~(\ref{eqn:prec2}), we
+reconstruct the model $\mathbf{f}$ by inverse recursive filtering:
+$\mathbf{f} = \mathbf{D}^{-1}\,\mathbf{p}$. Formulating the problem in
+helical coordinates \cite[]{helix0,GEO63-05-15321541} enables both the spectral
+factorization of $\mathbf{A}$ and the inverse filtering with $\mathbf{D}$.
+
+\subsection{Finite differences and spectral factorization}
+
+\inputdir{tension}
+
+In the one-dimensional case, one finite-difference representation of
+the squared Laplacian is as a centered 5-point filter with
+coefficients $(1,-4,6,-4,1)$. On the same grid, the Laplacian operator
+can be approximated to the same order of accuracy with the filter
+$(1/12,-4/3,5/2,-4/3,1/12)$.  Combining the two filters in accordance
+with equation~(\ref{eqn:bit}) and performing the spectral
+factorization, we can obtain a 3-point minimum-phase filter suitable
+for inverse filtering.  Figure~\ref{fig:otens} shows a family of
+one-dimensional minimum-phase filters for different values of the
+parameter $\lambda$.  Figure~\ref{fig:int} demonstrates the
+interpolation results obtained with these filters on a simple
+one-dimensional synthetic. As expected, a small tension value
+($\lambda=0.01$) produces a smooth interpolation, but creates
+artificial oscillations in the unconstrained regions around sharp
+changes in the gradient. The value of $\lambda=1$ leads to linear
+interpolation with no extraneous inflections but with discontinuous
+derivatives. Intermediate values of $\lambda$ allow us to achieve a
+compromise: a smooth surface with constrained oscillations.
+
+\sideplot{otens}{width=3in,height=2.5in}{One-dimensional minimum-phase
+  filters for different values of the tension parameter $\lambda$. The
+  filters range from the second derivative for $\lambda=0$ to the first
+  derivative for $\lambda=1$.}
+
+\plot{int}{width=5.5in,height=7.33in}{Interpolating a simple
+  one-dimensional synthetic with recursive filter preconditioning for
+  different values of the tension parameter $\lambda$. The input data are
+  shown on the top. The interpolation results range from a natural
+  cubic spline interpolation for $\lambda=0$ to linear interpolation for
+  $\lambda=1$.}
+
+\inputdir{Sage}
+
+To design the corresponding filters in two dimensions, we define the
+finite-difference representation of operator~(\ref{eqn:bit}) on a
+5-by-5 stencil. The filter coefficients are chosen with the help of
+the Taylor expansion to match the desired spectrum of the operator
+around the zero spatial frequency.  The matching conditions lead to
+the following set of coefficients for the squared Laplacian:
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|}
+\hline 
+-1/60 & 2/5 & 7/30 & 2/5 & -1/60 \\
+\hline
+2/5 & -14/15 & -44/15 & -14/15 & 2/5 \\
+\hline
+7/30 & -44/15 & 57/5 & -44/15 & 7/30 \\
+\hline
+2/5 & -14/15 & -44/15 & -14/15 & 2/5 \\
+\hline
+-1/60 & 2/5 & 7/30 & 2/5 & -1/60 \\
+\hline
+\end{tabular}
+= 1/60
+\begin{tabular}{|c|c|c|c|c|}
+\hline 
+-1 & 24 & 14 & 24 & -1 \\
+\hline
+24 & -56 & -176 & -56 & 24 \\
+\hline
+14 & -176 & 684 & -176 & 14 \\
+\hline
+24 & -56 & -176 & -56 & 24 \\
+\hline
+-1 & 24 & 14 & 24 & -1 \\
+\hline
+\end{tabular}
+\end{center}
+The Laplacian representation with the same order of accuracy has the
+coefficients
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|}
+\hline 
+-1/360 & 2/45 & 0 & 2/45 & -1/360 \\
+\hline
+2/45 & -14/45 & -4/5 & -14/45 & 2/45 \\
+\hline
+0 & -4/5 & 41/10 & -4/5 & 0 \\
+\hline
+2/45 & -14/45 & -4/5 & -14/45 & 2/45 \\
+\hline
+-1/360 & 2/45 & 0 & 2/45 & -1/360 \\
+\hline
+\end{tabular} =
+1/360 
+\begin{tabular}{|c|c|c|c|c|}
+\hline 
+-1 & 16 & 0 & 16 & -1 \\
+\hline
+16 & -112 & -288 & -112 & 16 \\
+\hline
+0 & -288 & 1476 & -288 & 0 \\
+\hline
+16 & -112 & -288 & -112 & 16 \\
+\hline
+-1 & 16 & 0 & 16 & -1 \\
+\hline
+\end{tabular}
+\end{center}
+For the sake of simplicity, we assumed equal spacing in the $x$ and $y$
+direction. The coefficients can be easily adjusted for anisotropic
+spacing. Figures~\ref{fig:specc} and~\ref{fig:specp} show the spectra
+of the finite-difference representations of operator~(\ref{eqn:bit})
+for different values of the tension parameter. The
+finite-difference spectra appear to be fairly isotropic (independent of
+angle in polar coordinates).  They match the exact expressions at small
+frequencies.
+
+\plot{specc}{width=4.5in}{Spectra of the finite-difference
+  splines-in-tension schemes for different values of the tension
+  parameter (contour plots).}
+
+\plot{specp}{width=4.5in}{Spectra of the
+  finite-difference splines-in-tension schemes for different values of
+  the tension parameter (cross-section plots). The dashed lines show
+  the exact spectra for continuous operators.}
+\par
+Regarding the finite-difference operators as two-dimensional
+auto-correlations and applying the Wilson-Burg method of spectral
+factorization, we obtain two-dimensional minimum-phase filters
+suitable for inverse filtering.  The exact filters contain many
+coefficients, which rapidly decrease in magnitude at a distance from
+the first coefficient. For reasons of efficiency, it is advisable to
+restrict the shape of the filter so that it contains only the
+significant coefficients. Keeping all the coefficients that are $1000$
+times smaller in magnitude than the leading coefficient creates a
+53-point filter for $\lambda=0$ and a 35-point filter for $\lambda=1$,
+with intermediate filter lengths for intermediate values of $\lambda$.
+Keeping only the coefficients that are $200$ times smaller that the
+leading coefficient, we obtain 25- and 16-point filters for
+respectively $\lambda=0$ and $\lambda=1$.  The restricted filters do
+not factor the autocorrelation exactly but provide an effective
+approximation of the exact factors. As outputs of the Wilson-Burg
+spectral factorization process, they obey the minimum-phase condition.
+
+\inputdir{gtens}
+
+\plot{splin}{width=6in,height=6in}{Inverse filtering with the tension
+  filters. The left plots show the inputs composed of filters and
+  spikes. Inverse filtering turns filters into impulses and turns
+  spikes into inverse filter responses (middle plots). Adjoint
+  filtering creates smooth isotropic shapes (right plots). The tension
+  parameter takes on the values 0.3, 0.7, and 1 (from top to bottom).
+  The case of zero tension corresponds to Figure~\ref{fig:thin42}.}
+\par
+Figure~\ref{fig:splin} shows the two-dimensional filters for different
+values of $\lambda$ and illustrates inverse recursive filtering, which
+is the essence of the helix method \cite[]{GEO63-05-15321541}. The case of
+$\lambda=1$ leads to the filter known as \emph{helix derivative}
+\cite[]{iee}.  The filter values are spread mostly in two columns. The
+other boundary case ($\lambda=0$) leads to a three-column filter,
+which serves as the minimum-phase version of the Laplacian. This
+filter is similar to the one shown in Figure~\ref{fig:thin42}.  As
+expected from the theory, the inverse impulse response of this filter
+is noticeably smoother and wider than the inverse response of the
+helix derivative.  Filters corresponding to intermediate values of
+$\lambda$ exhibit intermediate properties.  Theoretically, the inverse
+impulse response of the filter corresponds to the Green's function of
+equation~(\ref{eqn:bit}). The theoretical Green's function for the
+case of $\lambda=1$ is
+\begin{equation}
+  \label{eqn:g1}
+  G = \frac{1}{2\pi}\ln{r}\;,
+\end{equation}
+where $r$ is the distance from the impulse:
+$r=\sqrt{\left(x-x_k\right)^2 + \left(y-y_k\right)}$. In the case of
+$\lambda=0$, the Green's function is smoother at the origin:
+\begin{equation}
+  \label{eqn:g2}
+  G = \frac{1}{8\pi}r^2\ln{r}\;.
+\end{equation}
+The theoretical Green's function expression for an arbitrary value of
+$\lambda$ is unknown\footnote{\cite{mitas} derive an analytical Green's
+  function for a different model of tension splines using special functions.}, 
+but we can assume that its smoothness lies
+between the two boundary conditions.
+\par
+In the next subsection, we illustrate an application of helical inverse
+filtering to a two-dimensional interpolation problem.
+
+\subsection{Regularization example}
+
+We chose an environmental dataset \cite[]{iee} for a simple illustration
+of smooth data regularization. The data were collected on a bottom
+sounding survey of the Sea of Galilee in Israel \cite[]{zvi}.  The data
+contain a number of noisy, erroneous and inconsistent measurements,
+which present a challenge for the traditional estimation methods
+\cite[]{galilee}.
+%Addressing this challenge completely goes beyond the scope of this
+%paper.
+\par
+Figure~\ref{fig:mesh} shows the data after a nearest-neighbor binning
+to a regular grid. The data were then passed to an interpolation
+program to fill the empty bins. The results (for different values of
+$\lambda$) are shown in Figures~\ref{fig:gal} and~\ref{fig:cross}.
+Interpolation with the minimum-phase Laplacian ($\lambda=0$) creates a
+relatively smooth interpolation surface but plants artificial
+``hills'' around the edge of the sea. This effect is caused by large
+gradient changes and is similar to the sidelobe effect in the
+one-dimensional example (Figure~\ref{fig:int}).  It is clearly seen in
+the cross-section plots in Figure~\ref{fig:cross}.  The abrupt
+gradient change is a typical case of a shelf break. It is caused by a
+combination of sedimentation and active rifting. Interpolation with
+the helix derivative ($\lambda=1$) is free from the sidelobe
+artifacts, but it also produces an undesirable non-smooth behavior in
+the middle part of the image. As in the one-dimensional example,
+intermediate tension allows us to achieve a compromise: smooth
+interpolation in the middle and constrained behavior at the sides of
+the sea bottom.
+
+\sideplot{mesh}{width=3in,height=4in}{The Sea of Galilee dataset after
+  a nearest-neighbor binning. The binned data is used as an input for
+  the missing data interpolation program.}
+
+\plot{gal}{width=5.5in,height=7.33in}{The Sea of Galilee dataset after
+  missing data interpolation with helical preconditioning. Different
+  plots correspond to different values of the tension parameter. An
+  east-west derivative filter was applied to illuminate the surface.}
+
+\plot{cross}{width=6in,height=6in}{ Cross-sections of the Sea of
+  Galilee dataset after missing-data interpolation with helical
+  preconditioning.  Different plots correspond to different values of
+  the tension parameter.}
+
+
+\section{Conclusions}
+
+\begin{comment}
+We observe a significant (order-of-magnitude) speed-up in the
+optimization convergence when preconditioning interpolation problems
+with inverse recursive filtering. Since inverse filtering takes almost
+the same time as forward convolution, this speed-up translates
+straightforwardly into computational time savings.
+
+The savings are hardly noticeable for simple test problems, but they
+can have a direct impact on the mere feasibility of iterative
+least-squares inversion for large-scale (seismic-exploration-size)
+problems.
+\end{comment}
+
+The Wilson-Burg spectral factorization method, presented in this paper, allows
+one to construct stable recursive filters. The method appears to have
+attractive computational properties and can be significantly more efficient
+than alternative spectral factorization algorithms. It is particularly
+suitable for the multidimensional case, where recursive filtering is enabled
+by the helix transform.
+
+We have illustrated an application of the Wilson-Burg method for efficient
+smooth data regularization. A constrained approach to smooth data
+regularization leads to splines in tension. The constraint is embedded in a
+user-specified tension parameter. The two boundary values of tension
+correspond to cubic and linear interpolation.  By applying the method of
+spectral factorization on a helix, we have been able to define a family of
+two-dimensional minimum-phase filters, which correspond to the spline
+interpolation problem with different values of tension.  We have used these
+filters for accelerating data-regularization problems with smooth surfaces by
+recursive preconditioning. In general, they are applicable for preconditioning
+acceleration in various estimation problems with smooth models.
+
+\section{Acknowledgments}
+This paper owes a great deal to John Burg. We would like to thank him
+and Francis Muir for many useful and stimulating discussions. The
+first author also thanks Jim Berryman for explaining the variational
+derivation of the biharmonic and tension-spline equations. 
+Ralf Ferber and Ali \"{O}zbek provided helpful reviews.
+
+The financial support for this work was provided by the sponsors of
+the Stanford Exploration Project.
+
+\bibliographystyle{seg}
+\bibliography{SEG,burg}
+
+%\plot{name}{width=6in,height=}{caption}
+%\sideplot{name}{height=1.5in,width=}{caption}
+%
+%\begin{equation}
+%\label{eqn:}
+%\end{equation}
+%
+%\ref{fig:}
+%(\ref{eqn:})
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% TeX-master: t
+%%% End: 

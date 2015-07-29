@@ -1,0 +1,3 @@
+from rsf.tex import *
+
+End(lclass='geophysics',options='manuscript',use='times,mathptm,natbib,graphicx,color')

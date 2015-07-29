@@ -1,0 +1,262 @@
+\lefthead{Bevc}
+\righthead{Imaging complex structures}
+\footer{SEP--84}
+
+\published{SEP Report, 84, 1-10 (1995)}
+\title{Imaging complex structures with first-arrival traveltimes}
+\email{dimitri@sep.stanford.edu}
+\author{Dimitri Bevc}
+%\chapter{Imaging complex structures with layer stripping depth migration}
+%\CHAPLABEL{Layer}
+\def\figdir{./Fig}
+
+\begin{abstract}
+I present a layer-stripping Kirchhoff migration algorithm which is
+capable of obtaining accurate
+images of complex structures by downward continuing
+the data and imaging from a lower datum.
+%I obtain accurate images of complex structures by
+%downward continuing the data and imaging from a lower datum.
+I use eikonal traveltimes in a Kirchhoff datuming algorithm for the
+downward continuation. After downward continuation, I perform
+Kirchhoff migration. 
+The method alternates steps of datuming and imaging. Because traveltimes
+are computed for each step, the adverse effects of caustics, headwaves, and 
+multiple arrivals do not develop.
+In principal, this method only requires the same number of
+traveltime calculations as a standard migration.
+Tests on the Marmousi data set produce excellent results.
+\end{abstract}
+
+\section{Introduction}
+Kirchhoff migration is generally accepted to be the most efficient
+method of imaging 2-D and 3-D prestack seismic data.  The Marmousi
+synthetic data set \cite[]{TLE13-09-09270936} has been a popular
+testbed for migration algorithms and many researchers have discovered
+that Kirchhoff algorithms using first-arrival traveltimes do a poor
+job of imaging the target zone
+\cite[]{Audebert.sep.80.47,GEO59-05-08100817,GEO58-04-05640575}.  Even
+methods which calculate most energetic arrivals and estimate amplitude
+and phase do not always result in images which compare favorably with
+finite-difference shot-profile migration.
+
+In their 1993 Geophysics article, Geoltrain and Brac ask the
+question {\em ``Can we image complex structures with first-arrival
+traveltime?''} They conclude that they cannot, and that they should 
+either ray trace to find the most energetic arrivals, or calculate
+multiple-arrival Green's functions. \cite{Nichols.sepphd.81} calculates 
+band-limited Green's functions to estimate the most energetic
+arrivals. He estimates not only traveltime, but also amplitude and
+phase. My approach is simpler; by breaking up the complex
+velocity structure, I am able 
+to calculate traveltimes in velocity models where
+finite-differencing the eikonal equation is valid.
+This results in images comparable to those obtained by 
+Nichols' method and by shot-profile migration at a reduced
+computational cost.
+
+Like most of the other researchers in the field, I test my method on the
+ever-popular Marmousi synthetic.
+
+\section{TRAVELTIME CALCULATION}
+\inputdir{green}
+
+Green's functions based on 
+first-arrival traveltime calculation methods result in poor images
+in structurally complex areas. Several reasons have been given for this
+failure:
+\begin{itemize}
+	\item The high-frequency approximation of ray and eikonal methods breaks
+	down in complex velocity models. In rapidly varying velocity models,
+	different frequency components of the
+	wavefield propagate at different velocities, so summation trajectories
+	based on only the high-frequency components may not capture
+	the desired events.
+	\item When high velocity zones are present, the first-arrivals
+	may be non-energetic headwaves.
+	\item As energy propagates in complex models, raypaths tend to
+	eventually cross. This causes phase shifts and triplications.
+	First-arrival traveltimes follow the fastest branch of the
+	triplication bow-tie, which is also the low energy branch.
+\end{itemize}
+
+Complexity of velocity models and validity of high-frequency approximations
+can be defined in various ways. The larger the velocity model, the 
+more variation there will tend to be and the more opportunity there will be
+for things to go wrong: There will be more opportunity for frequency
+components to separate, for headwaves to develop, and for triplications
+to occur. 
+
+\plot{velfig}{width=\textwidth}{The Marmousi velocity model.}
+
+The Marmousi velocity model (Figure~\ref{fig:velfig}) results in
+complex propagation paths where late energetic arrivals are not fit well 
+by first-arrival finite-difference traveltimes.
+In Figure~\ref{fig:snap0},
+an acoustic modeling program was used to generate snapshots of 
+the wavefield from two surface source locations in the Marmousi model.
+The corresponding
+contours of finite-difference traveltime at 1.05 s have been overlain.
+Clearly, the finite-difference traveltime contours do not always correspond
+to energetic portions of the wavefield. If these traveltimes were
+used for migration, the resulting image would suffer because 
+parts of the summation trajectories would not correspond to 
+energetic arrivals. By contrast, snapshots for the same source locations
+at an earlier time of 0.6 s (Figures~\ref{fig:snapdatum}a and \ref{fig:snapdatum}b)
+show that the finite-difference traveltime curves overlay the
+high energy portions of the wavefields nicely. This is because there 
+has not been enough time for adverse propagation effects to fully develop.
+Figures~\ref{fig:snapdatum}c and \ref{fig:snapdatum}d are generated by
+starting the acoustic modeling and the finite-difference traveltime
+calculation from a depth of 1500 m. The 0.3 s contours correspond nicely
+to the high energy portions of the wavefields. There is some deviation
+in the shallow part of Figure~\ref{fig:snapdatum}c, but for the most part
+the finite-difference traveltime contour fits the bulk of the acoustic 
+energy pretty well. Overall, the contours in Figure~\ref{fig:snapdatum}
+have not pulled away from the wavefield as they have in Figure~\ref{fig:snap0}.
+
+\plot{snap0}{width=\textwidth}{The result of acoustic wavefield modeling for the Marmousi model overlain
+by contours of finite-difference traveltime. Snapshots (a) and (b) are
+taken at a time of 1.05 s for two  different source locations.}
+
+\plot{snapdatum}{width=\textwidth}{The result of acoustic wavefield modeling for the Marmousi model overlain
+by contours of finite-difference traveltime. Snapshots (a) and (b) are
+taken at a time of 0.6 s for the same two source locations depicted in
+Figure \protect \ref{fig:snap0}. Snapshots (c) and (d) are taken at a
+time of 0.3 s with sources at a depth of 1500 m and the same lateral
+positions as in (a) and (b).}
+
+These properties of first-arrival traveltimes, and the observation that
+Kirchhoff migration using first-arrival traveltimes usually produces an
+acceptable image of the upper 1500 m of the Marmousi synthetic, 
+motivated the development of the layer-striping method described here.
+
+Throughout this study, I use a finite difference solution to the
+eikonal equation to generate traveltimes \cite[]{GEO56-06-08120821}.
+I use my Kirchhoff datuming algorithm \cite[]{Bevc.sep.77.131}, and an
+industry standard Kirchhoff migration code to generate the results.
+
+\section{LAYER-STRIPPING KIRCHHOFF MIGRATION}
+\inputdir{.}
+
+The layer-stripping migration method can be thought of as a hybrid 
+algorithm that incorporates some of the advantages of shot-profile
+migration with the efficiency of Kirchhoff migration.
+This is illustrated by Figures~\ref{fig:s-g} through~\ref{fig:datum}.
+
+In shot-profile migration, shots and geophones are
+alternately downward continued through each depth level.
+Figure~\ref{fig:s-g} illustrates this for one line of shots or geophones.  
+It is evident that there are many propagation paths from the surface
+to the image point, therefore multiple arrivals are handled.
+The computation is performed for all frequencies.
+
+By contrast, first-arrival Kirchhoff migration is performed 
+by summing data over trajectories defined by the propagation paths
+illustrated in Figure~\ref{fig:kirch}. There is only one path linking
+each surface position to the image point, therefore multiple arrivals are
+not handled. Although crossing paths are not illustrated here, they can occur.
+
+The layer-stripping method is illustrated in Figure~\ref{fig:datum}.
+It is a combination of Kirchhoff wave-equation datuming \cite[]{GEO44-08-13291344,GEO49-11-20642067} 
+and Kirchhoff migration. 
+The computation proceeds as follows:
+\begin{enumerate}
+	\item Migrate from surface to some depth level $z_1$.
+	\item Downward continue to depth level $z_1$.
+	\item Migrate from depth level $z_1$.
+	\item Downward continue to depth level $z_2$.
+	\item Migrate from depth level $z_2$.
+	\item etc...
+\end{enumerate}
+The depth step of downward continuation is much larger than the
+$\triangle z$ used in shot-profile migration. Since
+there are multiple paths from the surface to the image point,
+multiple arrivals are handled. Because the paths are shorter than
+in Figure~\ref{fig:kirch}, first-arrival traveltimes are more likely to 
+be valid.
+
+\sideplot{s-g}{width=3.0in}{Propagation paths from the surface to an image point for shot 
+profile migration.}
+
+\sideplot{kirch}{width=3.0in}{Propagation paths from the surface to an image point for Kirchhoff downward
+continuation.}
+
+\sideplot{datum}{width=3.0in}{Propagation paths from the surface to a depth point for layer-stripping
+Kirchhoff downward continuation.}
+
+\section{MARMOUSI EXAMPLE}
+\inputdir{migration}
+
+Figure~\ref{fig:mig0} is the result of
+an industry standard Kirchhoff migration
+of the Marmousi synthetic using eikonal traveltimes. The upper
+portion is well imaged; however, the anticlinal structure below 2200 m and
+the target zone at a lateral position of about 6500 m 
+and depth of 2500 m is not imaged.
+
+Figure~\ref{fig:mig1} is generated by downward continuing the data
+to a depth of 1500 m in one datuming step. The downward
+continued data are then migrated and combined with the previous image of
+the upper 2000 m. The anticlinal structure and the target are now clearly
+imaged.
+
+Continuing the data to 1500 m in three steps of 500 m each, results
+in an even crisper
+image of the anticline and the target (Figure~\ref{fig:mig2}).
+In both of these images,
+the events which unconformably define the top of the anticline,
+the anticline events themselves, and the target events, are clearly
+imaged.
+
+\plot{mig0}{height=3.0in,width=6.0in}
+{Standard Kirchhoff migration using eikonal traveltimes.}
+
+\plot{mig1}{height=3.0in,width=6.0in}
+{Migrated image using traveltimes calculated from the surface, and
+traveltimes calculated from a depth of 1500 m.
+The lower part of the image was obtained by migrating data which
+was redatumed to a depth of 1500 m in one step
+of downward continuation.}
+
+\plot{mig2}{height=3.0in,width=6.0in}
+{Migrated image using traveltimes calculated from the surface, and 
+traveltimes calculated from a depth of 1500 m.
+The lower part of the image was obtained by migrating data which
+was redatumed to a depth of 1500 m in three steps of 500 m each.}
+
+In Figure~\ref{fig:targref}, I compare the images in the vicinity
+of the target zone to the velocity model and a filtered reflectivity
+model which represents the desired image.
+Both images compare favorably to the desired reflectivity.
+The image obtained by downward continuing the data in three steps
+of 500 m is superior since the events display 
+better lateral continuity and the image is clearer.
+This is because the traveltimes calculated for each of the 500 m steps
+are simpler and better behaved than the traveltimes calculated
+for one step of 1500 m.
+
+%\TActiveplot{target}{height=6.0in,width=6.0in}{.}
+%{Comparison of images in the target zone for standard migration.}
+%{Comparison of images in the target zone for standard migration,
+%downward continuation to 1000 m followed by migration, and 
+%downward continuation to 1500 m followed by migration.}
+
+\plot{targref}{height=6.0in,width=6.0in}
+{Comparison of the velocity, the reflectivity, and the images in the
+target zone.}
+
+\section{CONCLUSION}
+I obtain images comparable to shot-profile migration results by 
+combining wave-equation datuming and Kirchhoff migration into
+a layer-stripping migration method. In this case, eikonal traveltimes produce
+satisfactory images because the velocity model is subdivided 
+and traveltimes are calculated 
+under conditions where finite-differencing the eikonal equation is valid.
+By dividing the imaging problem in this
+way, the traveltimes are better behaved and some multiple arrivals
+are accounted for.
+
+\bibliographystyle{seg}
+\bibliography{SEP2,SEG}
+

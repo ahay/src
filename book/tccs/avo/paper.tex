@@ -1,0 +1,446 @@
+\published{Geophysical Prospecting, v. 57, 311-321 (2009)}
+\title{Velocity analysis using $AB$ semblance}
+\author{Sergey Fomel}
+
+\address{Bureau of Economic Geology, \\
+John A. and Katherine G. Jackson School of Geosciences \\
+The University of Texas at Austin \\
+University Station, Box X \\
+Austin, TX 78713-8972}
+
+\lefthead{Fomel}
+\righthead{Velocity analysis using $AB$ semblance}
+
+%\ms{GP-2008-0571}
+
+\maketitle
+
+\begin{abstract}
+  I derive and analyze an explicit formula for a generalized semblance
+  attribute, which is suitable for velocity analysis of prestack
+  seismic gathers with distinct amplitude trends. While the
+  conventional semblance can be interpreted as squared correlation
+  with a constant, the $AB$ semblance is defined as a correlation with a
+  trend.  This measure is particularly attractive for analyzing class
+  II AVO anomalies and converted waves. Analytical derivations and
+  numerical experiments show that the resolution of the $AB$ semblance
+  is approximately twice lower than that of the conventional
+  semblance. However, this does not prevent it from being an effective
+  attribute. I use synthetic and field data examples to demonstrate
+  the improvements in velocity analysis from $AB$ semblance.
+\end{abstract}
+
+\section{Introduction}
+
+Since its introduction by \cite{GEO34-06-08590881}, the semblance
+measure has been an indispensable tool for velocity analysis of
+seismic records. Conventional velocity analysis of seismic gathers
+scans different values of effective moveout velocity, computes
+semblance of flattened gathers and generates velocity spectra for
+later velocity picking \cite[]{yilmaz} .
+
+While effective in most practical situations, semblance becomes
+troublesome in the case of strong variation of amplitudes along
+seismic events \cite[]{GEO66-04-12841293}. A particular example is
+class II AVO anomalies \cite[]{GEO54-06-06800688} that cause seismic
+amplitudes to go through a polarity reversal. To address this
+problem, \cite{SEG-2000-02320235} and
+\cite{GEO66-04-12841293,GEO67-05-16641672} developed 
+algorithms for correcting the semblance measurement for amplitude
+variations.
+
+In this paper, I interpret the semblance attribute as a correlation
+with a constant and derive an explicit mathematical expression for the
+measure which corresponds to correlation with an amplitude trend. This
+measure is equivalent to \emph{$AB$ semblance} \old{defined}
+\new{proposed} by
+\cite{GEO66-04-12841293,GEO67-05-16641672}. It reduces, in the case of
+constant amplitudes, to the conventional semblance. I analyze the
+statistics of the $AB$ semblance attribute and quantify the loss of
+resolution associated with it. Numerical experiments with synthetic
+and field data demonstrate the effectiveness of the $AB$ semblance as a
+robust velocity analysis attribute, which is applicable even in the
+presence of strong amplitude variations and polarity
+reversals. Moreover, the ratio of the $AB$ and conventional semblances
+serves as a useful AVO indicator attribute.
+
+\section{Theory}
+
+I start by interpreting the meaning of the conventional semblance
+attribute as a correlation with a constant. Next, I define $AB$
+semblance as a correlation with a trend and analyze its statistical
+properties.
+
+\subsection{Semblance as correlation}
+
+The correlation coefficient $\gamma$ between two sequences of numbers
+$\mathbf{a}=a_1,a_2,\ldots,a_N$ and $\mathbf{b}=b_1,b_2,\ldots,b_N$
+is defined as
+\begin{equation}
+\label{eq:alpha}
+\gamma(\mathbf{a},\mathbf{b}) = 
+\frac{\mathbf{a} \cdot \mathbf{b}}{|\mathbf{a}|\,|\mathbf{b}|} =
+\frac{\displaystyle \sum_{i=1}^N a_i\,b_i}{
+\displaystyle \sqrt{\sum_{i=1}^{N} a_i^2}\,\sqrt{\sum_{i=1}^{N} b_i^2}}
+\end{equation}
+The correlation coefficient is analogous to the cosine
+\old{measurement} \new{of the angle} between two vectors \new{$\mathbf{a}$ and $\mathbf{b}$}. It takes
+values in the range from $-1$ to $1$.  Taking a correlation of a
+sequence \new{$\mathbf{a}$} with a constant sequence
+$\mathbf{c}=C,C,\ldots,C$ produces a measure \new{$\beta$, defined as}
+\begin{equation}
+\label{eq:beta}
+\beta(\mathbf{a}) = \gamma(\mathbf{a},\mathbf{c}) =
+\frac{\displaystyle \sum_{i=1}^N a_i\,C}{
+\displaystyle \sqrt{\sum_{i=1}^{N} a_i^2}\,\sqrt{\sum_{i=1}^{N} C^2}}
+= \frac{\displaystyle \sum_{i=1}^N a_i}{
+\displaystyle \sqrt{N\,\sum_{i=1}^{N} a_i^2}}
+\end{equation}
+Squaring the correlation with a constant yields the measure equivalent
+to semblance 
+\begin{equation}
+\label{eq:semb}
+\beta^2(\mathbf{a}) = 
+\frac{\displaystyle \left(\sum_{i=1}^N a_i\right)^2}{
+\displaystyle N\,\sum_{i=1}^{N} a_i^2}\;.
+\end{equation}
+Semblance is maximized when the sequence $\mathbf{a}$ has a uniform
+distribution. When seismic amplitude is uniformly distributed along a
+moveout curve, the semblance of a horizontal slice through the gather
+will be maximized when the event is flattened. This fact is the basis
+of the conventional velocity analysis originally developed by
+\cite{GEO34-06-08590881}. The approach fails, however, when the 
+amplitude variation is distinctly non-uniform.
+
+\subsection{$AB$ semblance: correlation with a trend}
+
+Suppose that the reference sequence has a trend $b_i = A + B\,\phi_i$,
+where $\phi_i$ is a known function. The trend can be, for example, an
+expression of the $PP$ reflection coefficient in Shuey's approximation
+\cite[]{GEO50-04-06090614}, where $A$ and $B$ are the AVO intercept
+and gradient, $\phi_i=\sin^2{\theta_i}$, and $\theta_i$ corresponds to
+the reflection angle at trace $i$. \new{In examples of this
+paper, I use offset instead of angle. Relating offset and reflection
+angle can be done either by using approximate equations of by ray
+tracing once the velocity model is established.}
+
+
+Estimating $A$ and $B$ from least-square fitting of the trend amounts
+to the minimization of
+\begin{equation}
+\label{eq:ls}
+F(A,B) = \sum_{i=1}^N \left(a_i - A - B\,\phi_i\right)^2
+\end{equation}
+Differentiating equation~(\ref{eq:ls}) with respect to $A$ and $B$,
+setting the derivatives to zero, and solving the system of two linear
+equations produces the well-known linear fit equations
+\begin{eqnarray}
+\label{eq:a} 
+A & = & \frac{\displaystyle \sum_{i=1}^N \phi_i\,\sum_{i=1}^N a_i\,\phi_i -
+\sum_{i=1}^N \phi_i^2\,\sum_{i=1}^N a_i}{\displaystyle 
+\left(\sum_{i=1}^N \phi_i\right)^2 - N\,\sum_{i=1}^N \phi_i^2}\;, \\
+\label{eq:b}
+B & = & \frac{\displaystyle \sum_{i=1}^N \phi_i\,\sum_{i=1}^N a_i -
+N\,\sum_{i=1}^N a_i\,\phi_i}{\displaystyle 
+\left(\sum_{i=1}^N \phi_i\right)^2 - N\,\sum_{i=1}^N \phi_i^2}\;.
+\end{eqnarray}
+Substituting the trend $b_i = A + B\,\phi_i$ with $A$ and $B$ defined
+from the least-squares equations~(\ref{eq:a}) and~(\ref{eq:b}) into the
+correlation coefficient equation~(\ref{eq:alpha}) and squaring the
+result leads to	equation 
+\begin{equation}
+\label{eq:semb2}
+\boxed{
+\alpha^2(\mathbf{a}) = 
+\frac{\displaystyle 2\,\sum_{i=1}^{N} a_i\,\sum_{i=1}^N \phi_i\,
+\sum_{i=1}^N a_i\,\phi_i - \left(\sum_{i=1}^{N} a_i\right)^2\,
+\sum_{i=1}^N \phi_i^2 -	 N\,\left(\sum_{i=1}^N a_i\,\phi_i\right)^2}
+{\displaystyle \sum_{i=1}^{N} a_i^2\,
+\left[\left(\sum_{i=1}^N \phi_i\right)^2 - N\,\sum_{i=1}^N \phi_i^2\right]}\;.}
+\end{equation}
+Equation~(\ref{eq:semb2}) generalizes the semblance measure
+\new{$\beta$} defined in equation~(\ref{eq:semb}) \new{to a new measure $\alpha$}. In the absence of
+a trend (when the numerator in equation~(\ref{eq:b}) is zero), \old{it
+simply reduces to equation~(\ref{eq:semb})} \new{$\alpha$ is
+equivalent to $\beta$}.
+
+\cite{GEO66-04-12841293} defined semblance using a 
+normalized least-squares objective
+\begin{equation}
+\label{eq:sarkar}
+\alpha^2(\mathbf{a}) = 1 - \frac{F(A,B)}{\displaystyle \sum_{i=1}^{N} a_i^2}\;.
+\end{equation}
+Substituting equations~(\ref{eq:a}) and~(\ref{eq:b}) into~(\ref{eq:sarkar})
+is an alternative way of deriving equation~(\ref{eq:semb2}). This is \new{the}
+\emph{$AB$ semblance} in terminology of
+\cite{GEO66-04-12841293,GEO67-05-16641672}.
+
+\subsection{Sensitivity analysis of $AB$ semblance}
+
+\cite{GEO66-04-12841293,GEO67-05-16641672} observed a decrease of resolution 
+in $AB$ semblance in comparison with the conventional
+semblance when applying it on synthetic examples. The explicit
+equation~(\ref{eq:semb2}) allows us to access the resolution limits of
+both methods by measuring their effect on random noise.
+
+As shown in Appendix A, the semblance of a sequence of uncorrelated
+normally-distributed zero-mean noise samples has the expectation value
+of $1/N$, where $N$ is the number of samples. The corresponding
+$AB$ semblance has the expectation $2/N$ or twice
+higher. Moreover, while the standard deviation of the conventional
+semblance decreases as $1/N$, the deviation of the $AB$
+semblance decreases as $2/N$. This analysis shows that the
+$AB$ measurement is generally twice as sensitive to noise
+and has a twice lower resolution. This is the price one has to pay for
+the ability to handle amplitude trends.
+
+\section{Examples}
+
+In this section, I demonstrate the behavior of $AB$ semblance
+with a synthetic and a field data example.
+
+\subsection{Synthetic example} 
+
+\inputdir{avo}
+
+\plot{cmp}{width=\textwidth}{Synthetic CMP gathers. 
+a: no AVO, b: AVO trend with polarity reversal in the middle section.} 
+
+Figure~\ref{fig:cmp} shows two synthetic CMP gathers generated by
+applying inverse normal moveout with a variable moveout velocity and
+adding a modest amount of random noise. The first gather contains no
+amplitude variations, while the second gather contains a region of
+polarity reversal. Figure~\ref{fig:scn} shows velocity analysis panels
+using conventional semblance scans and the corresponding automatic
+velocity picks. The picking algorithm is explained in Appendix~B. We
+can observe that the AVO anomaly causes a signal loss in the semblance
+measure, which in turn leads to inaccurate velocity picking. The $AB$
+semblance, on the other hand, is not affected much by the amplitude
+variations and allows for accurate velocity picking in both cases, as
+shown in Figure~\ref{fig:avoscn}.
+
+\plot{scn}{width=\textwidth}{Conventional semblance scans for CMP gathers from
+ Figure~\ref{fig:cmp}. Black curves indicate automatic velocity picks.
+ The loss of signal in the right plot is caused by the AVO anomaly. a: no AVO,
+b: AVO trend with polarity reversal in the middle section.}
+ 
+\plot{avoscn}{width=\textwidth}{$AB$ semblance scans for CMP 
+gathers from Figure~\ref{fig:cmp}. Black curves indicate automatic
+velocity picks. Semblance remains strong despite the AVO anomaly. a:
+no AVO, b: AVO trend with polarity reversal in the middle
+section. Compare with Figure~\ref{fig:scn}. }
+
+Figures~\ref{fig:nmo} and~\ref{fig:avonmo} compare NMO-corrected
+gathers using velocities picked from the conventional and $AB$
+semblance scans respectively. While Figures~\ref{fig:nmo}a
+and~\ref{fig:avonmo}a are virtually identical, the residual curvature
+evident in the anomalous region in Figure~\ref{fig:nmo}b disappears in
+Figure~\ref{fig:avonmo}b, which clearly demonstrates the advantage of
+the $AB$ approach. Figure~\ref{fig:attr} shows NMO-corrected
+gathers colored according to the AVO-indicator attribute, which I
+define as a ratio between the conventional and the $AB$
+semblances.  The anomalous region is clearly visible in the attribute
+display.
+
+\plot{nmo}{width=\textwidth}{NMO-corrected CMP gathers from
+ Figure~\ref{fig:cmp} using velocity functions picked from
+ conventional semblance in Figure~\ref{fig:scn}.}
+\plot{avonmo}{width=\textwidth}{NMO-corrected CMP gathers from
+ Figure~\ref{fig:cmp} using velocity functions picked from
+ $AB$ semblance in Figure~\ref{fig:avoscn}.}
+\plot{attr}{width=\textwidth}{NMO-corrected CMP gathers from
+ Figure~\ref{fig:avonmo} colored according to the AVO indication attribute.}
+
+\subsection{Field data example}
+
+For a field data example, I select a gather already processed by a
+seismic contractor. The gather, shown in Figure~\ref{fig:gath4},
+exhibits a clear polarity reversal around 3.8~s. The polarity
+reversal is the apparent cause of a visible residual moveout
+artifact. In order to correct the residual curvature, I apply
+semblance-based analysis. The comparison between the conventional and
+the $AB$ semblance is shown in
+Figure~\ref{fig:scan4}. Similarly to the synthetic example, the
+$AB$ semblance provides a better indicator of the residual
+velocity for the curved event with anomalous
+amplitude. Figure~\ref{fig:nmo4} shows NMO-corrected gather using a
+velocity trend picked automatically from the $AB$
+analysis. The curved reflection event is successfully flattened.
+
+\inputdir{avo2}
+
+\plot{gath4}{width=\textwidth}{Input CMP gather after preprocessing.
+  a: trace display, b: wiggle display.}
+\plot{scan4}{width=\textwidth}{Residual moveout curvature scans using
+  conventional semblance (a) and $AB$ semblance (b).  Black
+  curves indicate automatically picked trends.}
+\plot{nmo4}{width=\textwidth}{CMP gather from Figure~\ref{fig:gath4}
+  after residual normal moveout correction using trends picked from
+  the $AB$ semblance in Figure~\ref{fig:scan4}. a: trace
+  display colored according to the AVO indicator attribute, b: wiggle
+  display.}
+
+\section{Conclusions}
+
+If one interprets the conventional semblance as a correlation with a
+constant, the $AB$ semblance is a correlation with an amplitude
+trend. I have derived an explicit expression for the $AB$ semblance
+and analyzed it to quantify the observable loss of resolution. I have
+demonstrated the advantages of the $AB$ semblance attribute using
+synthetic and field data examples. The ratio of the $AB$ and
+conventional semblances serves as a useful AVO indicator
+attribute. \new{The sensitivity of this attribute to non-linear
+variations in the amplitude trend can be a subject of further
+research.}  Further applications may \new{also} include velocity
+analysis of converted waves and seismic diffractions.
+
+\section{Acknowledgments}
+
+I would like to thank Tury Taner and Richard Uden for inspiring
+discussions and for providing the field data example.
+
+This publication is authorized by the Director, Bureau of Economic
+Geology, The University of Texas at Austin.
+
+\appendix
+\section{Apendix A: Statistical analysis of semblance measures}
+
+In this appendix, I study the influence of noise on semblance
+measures. Let us assume that the signal
+$\mathbf{a}=a_1,a_2,\ldots,a_N$ is composed of random independent
+\old{components} \new{samples} normally distributed with zero mean and $\sigma^2$
+variance. In this case, the mathematical expectation for the semblance
+measure~(\ref{eq:semb}) is
+\begin{equation}
+\label{eq:mean}
+E\left[\beta^2(\mathbf{a})\right] = 
+\frac{\displaystyle E\left[\left(\sum_{i=1}^N a_i\right)^2\right]}
+{\displaystyle E\left[N\,\sum_{i=1}^{N} a_i^2\right]} =
+\frac{\displaystyle \sum_{i=1}^{N} E\left[a_i^2\right]}
+{\displaystyle N\,\sum_{i=1}^{N} E\left[a_i^2\right]}
+ = \frac{1}{N}\;.
+\end{equation}
+Correspondingly, the variance of the noise semblance is
+\begin{eqnarray}
+V\left[\beta^2(\mathbf{a})\right] & = & 
+\frac{\displaystyle E\left[\left(\sum_{i=1}^N a_i\right)^4\right]}
+{\displaystyle E\left[\left(N\,\sum_{i=1}^{N} a_i^2\right)^2\right]} -
+\frac{1}{N^2} =
+\frac{\displaystyle \sum_{i=1}^{N} E\left[a_i^4\right] +
+3\,\sum_{i=1}^{N} \sum_{j \ne i} E\left[a_i^2\,a_j^2\right]}
+{\displaystyle N^2\,\left(\sum_{i=1}^{N} E\left[a_i^4\right] +
+\sum_{i=1}^{N} \sum_{j \ne i} E\left[a_i^2\,a_j^2\right]\right)} -
+\frac{1}{N^2} \nonumber \\ 
+& = &
+\frac{3\,N\,\sigma^4 + 3\,(N^2-N)\,\sigma^4}
+{N^2\,\left[3\,N\,\sigma^4 + (N^2-N)\,\sigma^4\right]} - 
+\frac{1}{N^2} = \frac{2\,(N-1)}{N^2\,(N+2)}\;.
+\label{eq:vari}
+\end{eqnarray}
+Equations~(\ref{eq:mean}) and~(\ref{eq:vari}) show that both the
+mathematical expectation and the standard deviation (the square root
+of variance) of the random noise semblance decrease at the rate of
+$1/N$ with the increase in the number of traces. To derive these
+equations, I make an assumption that the terms in the numerator and
+denominator are statistically independent. Rather than proving this
+assumption mathematically, I test it by numerical experiments with
+multiple random number realizations. Figure~\ref{fig:mean,vari}
+compares the theoretical prediction with experimental measurements
+from 10,000 random realizations.
+
+Applying similar analysis to the $AB$
+semblance~(\ref{eq:semb2}), we deduce that
+\begin{eqnarray}
+\nonumber
+E\left[\alpha^2(\mathbf{a})\right] & = & \frac{\displaystyle E\left[2\,\sum_{i=1}^{N} a_i\,\sum_{i=1}^N \phi_i\,
+\sum_{i=1}^N a_i\,\phi_i - \left(\sum_{i=1}^{N} a_i\right)^2\,
+\sum_{i=1}^N \phi_i^2 -	 N\,\left(\sum_{i=1}^N a_i\,\phi_i\right)^2\right]}
+{\displaystyle E\left[\sum_{i=1}^{N} a_i^2\right]\,
+\left[\left(\sum_{i=1}^N \phi_i\right)^2 - N\,\sum_{i=1}^N \phi_i^2\right]} \\ & = &
+\frac{\displaystyle 2\,E\left[a_i^2\right]\,\left[\left(\sum_{i=1}^N \phi_i\right)^2 - N\,\sum_{i=1}^N \phi_i^2\right]}
+{\displaystyle N\,\,E\left[a_i^2\right]\,\left[\left(\sum_{i=1}^N \phi_i\right)^2 - N\,\sum_{i=1}^N \phi_i^2\right]}
+ = \frac{2}{N}\;.
+\label{eq:amean}
+\end{eqnarray}
+and
+\begin{eqnarray}
+\nonumber
+V\left[\alpha^2(\mathbf{a})\right] & = & 
+\frac{\displaystyle E\left[\left\{2\,\sum_{i=1}^{N} a_i\,\sum_{i=1}^N \phi_i\,
+\sum_{i=1}^N a_i\,\phi_i - \left(\sum_{i=1}^{N} a_i\right)^2\,
+\sum_{i=1}^N \phi_i^2 -	 N\,\left(\sum_{i=1}^N a_i\,\phi_i\right)^2\right\}^2\right]}
+{\displaystyle E\left[\left(\sum_{i=1}^{N} a_i^2\right)^2\right]\,
+\left[\left(\sum_{i=1}^N \phi_i\right)^2 - N\,\sum_{i=1}^N \phi_i^2\right]^2} - \frac{4}{N^2} \\ 
+\nonumber
+& = &
+\frac{\displaystyle 2\,\left[2\,\left(\sum_{i=1}^N \phi_i\right)^2 + N\,\sum_{i=1}^N \phi_i^2\right]^2 +
+6\,N^2\,\left(\sum_{i=1}^N \phi_i^2\right)^2 - 24\,N\,\left(\sum_{i=1}^N \phi_i\right)^2\,\sum_{i=1}^N \phi_i^2}
+{\displaystyle \left[3\,N + (N^2-N)\right]\,\left[\left(\sum_{i=1}^N \phi_i\right)^2 - N\,\sum_{i=1}^N \phi_i^2\right]^2} - \frac{4}{N^2} \\
+& = & \frac{4\,(N-2)}{N^2\,(N+2)}\;.
+\label{eq:avari}
+\end{eqnarray}
+One can see that, in the case of the $AB$ semblance, the
+mathematical expectation and the standard deviation of the random
+noise semblance decrease at the rate of $2/N$, twice higher than that
+for the conventional semblance. Figure~\ref{fig:amean,avari} compares
+the theoretical prediction with experimental measurements.
+
+\inputdir{stat}
+
+\multiplot{2}{mean,vari}{width=0.45\textwidth}{Mathematical expectation (a) 
+and standard deviation (b) of random-noise semblance as functions of
+the number of traces $N$. Solid lines are theoretical curves, circles
+are measurements from a numerical experiment.}
+
+\multiplot{2}{amean,avari}{width=0.45\textwidth}{Mathematical expectation (a) and standard deviation (b) of 
+random-noise $AB$ semblance as a function of the number of
+traces $N$. Solid lines are theoretical curves, circles are
+measurements from a numerical experiment.}
+
+\appendix
+\section{Appendix B: Automatic velocity picking from semblance scans}
+
+The problem of automatic picking of velocities from semblance scans
+has been considered by many authors
+\cite[]{SEG-1999-11621165,SEG-2003-20882091,SEG-2004-16271629}. The
+approach taken in this paper is inspired by the suggestion of
+\cite{harlan} to look at velocity picking as a variational
+problem. According to \cite{harlan}, an optimally picked velocity trend
+$v(t)$ in the semblance field $\alpha(t,v)$ corresponds to the maximum
+of the variational integral
+\begin{equation}
+P_1[v(t)] = \int\limits_{t_{min}}^{t_{max}} \alpha\left(t,v(t)\right)\,d t\;.
+\end{equation}
+
+I take the variational formulation further by considering its
+analogy to the ray tracing problem. The first-arrival seismic
+ray is a trajectory corresponding to the minimum traveltime. The
+trajectory corresponding to an optimal velocity trend should minimize
+an analogous measure defined in the space of the velocity
+scan~$\{t,v\}$. I use the variational measure
+\begin{equation}
+P_2[v(t)] = \int\limits_{t_{min}}^{t_{max}}
+\exp[-\alpha\left(t,v(t)\right)]\,\sqrt{\lambda^2+\left[v'(t)\right]^2}\,d t\;.
+\end{equation}
+where $\lambda$ is a scaling parameter. According to \old{the} variational theory
+\cite[]{lanc}, an optimal trajectory can be determined by solving the eikonal equation
+\begin{equation}
+\label{eq:eik}
+\left(\frac{\partial T}{\partial v}\right)^2 + 
+\frac{1}{\lambda^2}\,\left(\frac{\partial T}{\partial t}\right)^2 = 
+\exp[-2\,\alpha\left(t,v\right)]
+\end{equation}
+with a finite-difference algorithm. The quantity in the right hand
+side of equation~(\ref{eq:eik}) plays the role of squared slowness.
+Small slowness corresponds to high semblance and attracts ray
+trajectories in a ``wave guide''. After obtaining a finite-difference
+solution, the picking trajectory \old{is} \new{can be} extracted by
+tracking \new{backward} along the traveltime gradient direction. An
+analogous approach has been used in medical imaging in the method of
+virtual endoscopy \cite[]{thomas}.  To remove random oscillations, I
+smooth the picked trajectory using the method of shaping
+regularization
+\cite[]{shape}.
+
+\bibliographystyle{seg}
+\bibliography{SEG,avo}

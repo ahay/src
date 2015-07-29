@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfwindow', 'sfintbin', 'sfput', 'sfgrey', 'sflapfill', 'sfgraph', 'sfnoise', 'sfsmooth', 'sfimpl2', 'sfdespike2', 'sfbilat2', 'sfcat', 'sfderiv', 'sftransp', 'sfadd', 'sfwilson', 'sfhelicon']
+data=['seg/tutorials/master/data/Penobscot_HorB.txt']
+size=   18366936

@@ -1,0 +1,44 @@
+from rsf.proj import *
+
+Flow('polar',None,
+     '''
+     math
+     o1=0 d1=0.01 n1=600 label1=Radius
+     o2=-3.15 d2=0.01 n2=631 label2=Angle
+     output="x1/(1+0.5*cos(4*x2))"
+     ''')
+
+Plot('polar',
+     '''
+     grey color=j allpos=y pclip=100 title=Polar
+     screenratio=1
+     ''') 
+
+Flow('rad',None,
+     '''
+     math
+     o1=-6 d1=0.04 n1=301
+     o2=-6 d2=0.04 n2=301
+     output="sqrt(x1*x1+x2*x2)"
+     ''')
+Flow('ang',None,
+     '''
+     math
+     o1=-6 d1=0.04 n1=301
+     o2=-6 d2=0.04 n2=301
+     output="x2&x1"
+     ''')
+Flow('coord','rad ang','cat ${SOURCES[1]} | transp plane=13')
+
+Flow('cart','polar coord',
+     'inttest2 coord=${SOURCES[1]} interp=cub nw=4')
+
+Plot('cart',
+     '''
+     grey color=j allpos=y label1=x label2=y title=Cartesian
+     screenratio=1
+     ''')
+
+Result('polar','polar cart','SideBySideIso')
+
+End()

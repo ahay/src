@@ -1,0 +1,172 @@
+from rsf.proj import *
+import math
+
+for comp in ('vx','vz','eta'):
+    src = 'marm%s.HH' % comp
+    Fetch(src,'marm')
+    Flow(comp,src,'dd form=native | put o2=0')
+    Flow(comp+'1',comp,'window n2=1')
+
+grey = '''
+grey allpos=y scalebar=y color=j barreverse=y
+screenratio=.327 screenht=4.7 pclip=100 labelsz=6 titlesz=7.5
+label1=Depth unit1=m label2=Distance unit2=m wanttitle=n
+'''
+
+Result('vz',
+       '''
+       scale dscale=0.001 | 
+       %s bias=1.3 barlabel="Velocity" barunit="km/s" 
+       ''' % grey)
+Result('eta',grey + ' barlabel="\F10 h\F3 "')
+
+Plot('vz1',
+     '''
+     spray axis=2 n=737 |
+     scale dscale=0.001 | 
+     %s bias=1.3 scalebar=n
+     ''' % grey)
+
+vmax = 5500
+pmax = 0.999/vmax
+np = 202
+dp = pmax/(np-1)
+
+Flow('v','vx eta','math n=${SOURCES[1]} output="input/sqrt(1+2*n)" ')
+Flow('v1','vx1 eta1','math n=${SOURCES[1]} output="input/sqrt(1+2*n)" ')
+
+Result('v',
+       '''
+       scale dscale=0.001 | 
+       %s bias=1.3 barlabel="Velocity" barunit="km/s" 
+       ''' % grey)
+
+for case in ('vz','v','eta'):
+    Flow(case+'2',case+'1','spray axis=2 n=%d d=%g o=0' % (np,dp))
+
+Flow('dx','vz2 v2 eta2',
+     '''
+     math v=${SOURCES[1]} n=${SOURCES[2]} output="1-2*n*x2*x2*v*v" |
+     math vz=${SOURCES[0]} v=${SOURCES[1]} n=${SOURCES[2]}      
+     output="x2*v*v/(vz*input*input*sqrt(1-x2*x2*v*v/input))"
+     ''')
+Flow('dt','vz2 v2 eta2',
+     '''
+     math v=${SOURCES[1]} n=${SOURCES[2]} output="1-2*n*x2*x2*v*v" |
+     math vz=${SOURCES[0]} v=${SOURCES[1]} n=${SOURCES[2]}      
+     output="(input*input+2*n*(x2*v)^4)/(vz*input*input*sqrt(1-x2*x2*v*v/input))"
+     ''')
+
+dz = 12.5
+
+Flow('x','dx','stack axis=1 norm=n | scale dscale=%d' % (2*dz))
+Flow('t','dt','stack axis=1 norm=n | scale dscale=%d' % (2*dz))
+
+Flow('ray','dx',
+     'window n2=%d | reverse which=1 opt=i | causint | scale dscale=%d' % 
+     (np-1,dz))
+
+xmax = 9200
+
+for case in '+-':
+    ray = 'ray'+case
+    Flow(ray,'ray','math output=%g%cinput' % (xmax/2,case))
+    Plot(ray,
+         '''
+         window j2=10 | 
+         graph wanttitle=n transp=y min2=0 max2=%g pad=n
+         wantaxis=n plotcol=7 screenratio=.327 screenht=4.7 
+         scalebar=n plotfat=5
+         ''' % xmax)
+Result('vz1','vz1 ray+ ray-','Overlay')
+
+tmin = 2.4
+tmax = 4.6
+
+xmin = - 10.0
+xmax = 10000.0
+nx = 1000
+dx = xmax/(nx-1)
+
+Plot('t','x t',
+     '''
+     cmplx ${SOURCES[1]} | 
+     graph symbol=o yreverse=y wanttitle=n wantaxis=n
+     min1=%g max1=%g min2=%g max2=%g
+     ''' % (xmin,xmax,tmin,tmax))
+
+t0 = 2.482
+t2 = t0*t0
+vn = 2610.0
+v2 = vn*vn
+
+Flow('nmo',None,
+     'math n1=%d d1=%g o1=0 output="sqrt(%g+%g*x1*x1)" ' %
+     (nx,dx,t2,1/v2))
+
+Plot('nmo',
+     '''
+     graph plotcol=5 yreverse=y title="Hyperbolic"
+     label2=Time unit2=s label1=Offset unit1=m
+     min1=%g max1=%g min2=%g max2=%g
+     ''' % (xmin,xmax,tmin,tmax))
+
+Result('hynmo','t nmo','Overlay')
+
+s = 2.267
+A = (1-s)/2
+n = -A/4
+
+Flow('tnmo','nmo',
+     '''
+     math output="sqrt(%g+%g*x1*x1+%g*x1*x1*x1*x1/(%g+%g*x1*x1))" 
+     ''' % (t2,1/v2,A/(v2*v2),t2,(1+2*n)/v2))
+Plot('tnmo',
+     '''
+     graph plotcol=4 yreverse=y title="Alkhalifah-Tsvankin"
+     label2=Time unit2=s label1=Offset unit1=m
+     min1=%g max1=%g min2=%g max2=%g
+     ''' % (xmin,xmax,tmin,tmax))
+Result('atnmo','t tnmo','Overlay')
+
+Flow('anmo','nmo',
+     'math output="%g+%g*sqrt(%g+%g*x1*x1)" ' %
+     (t0*(1-1/s),1/s,t2,s/v2))
+
+Plot('anmo',
+     '''
+     graph plotcol=4 yreverse=y title="Shifted Hyperbola"
+     label2=Time unit2=s label1=Offset unit1=m
+     min1=%g max1=%g min2=%g max2=%g
+     ''' % (xmin,xmax,tmin,tmax))
+
+Result('shnmo','t anmo','Overlay')
+
+T = 3.726
+X = 8809
+
+T2 = T*T
+X2 = X*X
+
+P = pmax-dp
+
+F = t2*(X-P*T*v2)/(X*(t2-T2+P*T*X))
+B = F   - A*X2/(X2+v2*(t2-T2))
+C = F*F + 2*A*t2*v2/(X2+v2*(t2-T2))
+
+Flow('fnmo','nmo',
+     '''
+     math output="sqrt(%g+%g*x1*x1+%g*x1*x1*x1*x1/
+     (%g+%g*x1*x1+sqrt(%g+%g*x1*x1+%g*x1*x1*x1*x1)))"
+     ''' % (t2,1/v2,A/(v2*v2),t2,B/v2,t2*t2,2*B*t2/v2,C/(v2*v2)))
+
+Plot('fnmo',
+     '''
+     graph plotcol=3 yreverse=y title="Generalized"
+     label2=Time unit2=s label1=Offset unit1=m
+     min1=%g max1=%g min2=%g max2=%g
+     ''' % (xmin,xmax,tmin,tmax))
+
+Result('fsnmo','t fnmo','Overlay')
+
+End()

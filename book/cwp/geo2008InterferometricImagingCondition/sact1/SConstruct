@@ -1,0 +1,81 @@
+from rsf.proj import *
+import sys
+sys.path.append('..')
+import sigs,fdmod,iic
+
+par=sigs.param()             # init model parameters
+sigs.fdmpar(par)             # add FDM parameters
+sigs.rtmpar(par)             # add RTM parameters
+sigs.velocity('vall',par)    # read velocity
+sigs.win2('vwin','vall',par) # select model window
+
+fdmod.param(par)
+Result('vwin',fdmod.cgrey('color=j allpos=y',par))
+
+# ------------------------------------------------------------
+par['mintplot']=5
+par['nt']=8000
+par['tmax']=par['ot'] + (par['nt']-1) * par['dt']
+par['xt']  =par['ox'] + 0.30*par['nx']* par['dx']
+par['fo']=15
+par['jsnap']=500
+par['jdata']=4
+par['wheight']=3.6
+
+# ------------------------------------------------------------
+sigs.sedimentmask('mask','vwin',par)
+Result('mask',fdmod.cgrey('',par))
+
+Flow('vo','vwin','smooth rect1=25 rect2=25')
+Plot('vo',fdmod.cgrey('allpos=y bias=%g' % par['vbias'],par))
+#Result('vo','vo','Overlay')
+# ------------------------------------------------------------
+ff=0
+aa=2
+ru=0.25*par['ft2km']
+rv=0.25*par['ft2km']
+gm=0.15
+iic.random(112009,'gg','mask',ff,aa,ru,rv,par)
+iic.model('vo','vv','rm','gg',gm,par)
+# ------------------------------------------------------------
+iic.receivers('rr',par)
+iic.target(100,25,'qq',par)
+iic.segments('pss','ass','wav','xm','qq',par)
+
+Flow('wav2','wav','cp $SOURCE $TARGET',stdin=0,stdout=-1)
+# ------------------------------------------------------------
+# traveltimes
+iic.ttimes('vo','ass',par)
+
+# ------------------------------------------------------------
+# active array modeling
+iic.amodel('ado','awo','wav', 'vo','rm','xm','ass','rr','qq',par)
+iic.amodel('adv','awv','wav2','vv','rm','xm','ass','rr','qq',par)
+
+iic.movie('awo','vo',par)
+iic.movie('awv','vv',par)
+
+# ------------------------------------------------------------
+par['xk']=150
+par['xl']=par['nx']-150
+Flow('taper',None,
+     '''
+     spike nsp=1 mag=1
+     n1=%(nx)d d1=%(dx)g o1=%(ox)g k1=%(xk)d l1=%(xl)d
+     n2=%(nt)d d2=%(dt)g o2=%(ot)g |
+     smooth rect1=150
+     ''' % par)
+Result('taper','window j1=10 j2=10 | transp |'+fdmod.dgrey('pclip=99',par))
+
+Flow('adotaper','adox taper','add mode=p ${SOURCES[1]}')
+Flow('advtaper','advx taper','add mode=p ${SOURCES[1]}')
+
+Result('adotaper','window j2=5 | transp |'+fdmod.dgrey('pclip=99',par))
+Result('advtaper','window j2=5 | transp |'+fdmod.dgrey('pclip=99',par))
+
+# ------------------------------------------------------------
+# active array migration
+iic.aimage('acic0','aiic0','adotaper','wav','vo','rm','ass','rr','rr',par)
+iic.aimage('acic1','aiic1','advtaper','wav','vo','rm','ass','rr','rr',par)
+
+End()

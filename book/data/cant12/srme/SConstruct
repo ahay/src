@@ -1,0 +1,57 @@
+from rsf.proj import *
+
+data='../shot/shot.rsf'
+
+ns=4791 # number of shots
+
+s0=6144 # first shot
+
+# sort to cmps
+#########################
+Flow('cmp',data,'put o2=14.625 d2=6.25 | shot2cmp half=y positive=n')
+
+# Replicate near offset trace to zero offset
+#########################
+Flow('cmp0','cmp','sfwindow n2=1 squeeze=n')
+Flow('cmp1','cmp0 cmp',
+     '''
+     window n2=1 squeeze=n
+     | cat axis=2 ${SOURCES[0:2]}
+     | put o2=0
+    ''')
+# sort back to shots
+#########################
+Flow('shot_intp0','cmp1','cmp2shot positive=n' )
+
+Flow('shot_intp','shot_intp0','window n3=%d min3=%g| put d2=12.5' % (ns,s0))
+
+# fft and transpose (offset, shot, frequency)
+# pad n1=6048
+
+#kls add window n1=3073 after fft1
+Flow('fft1','shot_intp','pad n1=6048| fft1 | transp memsize=5000',split=[3,ns])
+
+Flow('shot_intp1','fft1','transp plane=23 memsize=16000')
+
+# SRME multiple prediction
+nf=3073 # if padding with 6048 number of frequencies
+#nf=4097 # if padding with 8192
+
+Flow('multip','shot_intp1','multiple verb=y stack=y',split=[3,nf])
+
+Flow('multip_transp','multip','transp plane=23 memsize=16000')
+
+#window n1=3000
+Flow('multiple','multip_transp',
+     '''
+     transp memsize=10000
+     | fft1 inv=y
+     | window n1=3000 f2=4
+     | put o2=29.25 d2=12.5 label2=Offset
+     ''')
+
+#
+# multiple file has the predicted multiples in shot domain
+# tpow scaling was not applied
+End()
+

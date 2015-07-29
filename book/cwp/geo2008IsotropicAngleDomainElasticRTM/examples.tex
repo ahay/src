@@ -1,0 +1,210 @@
+% ------------------------------------------------------------
+\section{Examples}
+% ------------------------------------------------------------
+
+We test the different imaging conditions discussed in the preceding
+sections with data simulated on a modified subset of the Marmousi II
+model \cite[]{martin:1979}. The section is chosen to be at the left
+side of the entire model which is relatively simple, and therefore it
+is easier to examine the quality of the images.
+% ------------------------------------------------------------
+\inputdir{marm2oneA}
+
+\multiplot[!b]{2}{vp,rx}{width=\textwidth}{(a) P- and S-wave
+  velocity models and (b) density model used for isotropic elastic
+  wavefield modeling, where $V_P$ ranges from $1.6$ to $3.2$~km/s from
+  top to bottom and $V_P/V_S=2$, and density ranges from $1$ to
+  $2$~g/cm$^3$ .}
+% ------------------------------------------------------------
+% ------------------------------------------------------------
+
+\multiplot{2}{de1,de2,df1,df2}{angle=0,width=0.25\textwidth} {Elastic
+  data simulated in model \rfn{marm2oneA-vp} and \rfn{marm2oneA-rx}
+  with a source at $x=6.75$~km and $z=0.5$~km, and receivers at
+  $z=0.5$~km: (a) vertical component, (b) horizontal component, (c)
+  scalar potential and (d) vector potential of the elastic
+  wavefield. Both vertical and horizontal components, panels (a) and
+  (b), contain a mix of P and S modes, as seen by comparison with
+  panels (c) and (d).}
+% ------------------------------------------------------------
+% ------------------------------------------------------------
+\multiplot[h]{2}{ieall0,ieall1,ieall2,ieall3}{angle=0,width=0.48\textwidth}
+          {Images produced with the displacement components imaging
+            condition from \req{EICij}. \geouline{Panels (a), (b), (c)
+              and (d) correspond to the cross-correlation of the
+              vertical and horizontal components of the source
+              wavefield with the vertical and horizontal components of
+              the receiver wavefield, respectively. Images (a) to (d)
+              are the $zz$, $zx$, $xz$ and $xx$ components,
+              respectively.} The image corresponds to one shot at
+            position $x=6.75$~km and $z=0.5$~km. Receivers are located
+            at all locations at $z=0.5$~km.}
+% ------------------------------------------------------------
+
+% ------------------------------------------------------------
+\multiplot[h]{2}{jeall0,jeall1,jeall2,jeall3}{angle=0,width=0.48\textwidth}
+          {Images produced with the scalar and vector potentials
+            imaging condition from \req{PICij}. \geouline{Panels (a),
+              (b), (c) and (d) correspond to the cross-correlation of
+              the P and S components of the source wavefield with the
+              P and S components of the receiver wavefield,
+              respectively.  }Images (a) to (d) are the $PP$, $PS$,
+            $SP$ and $SS$ components, respectively.  The image
+            corresponds to one shot at position $x=6.75$~km and
+            $z=0.5$~km.  Receivers are located at all locations at
+            $z=0.5$~km. \geouline{Panels (c) and (d) are blank because
+              an explosive source was used to generate synthetic
+              data.}}
+% ------------------------------------------------------------
+% ------------------------------------------------------------
+\subsection{Imaging with vector displacements}
+
+Consider the images obtained for the model depicted in
+\rFgs{marm2oneA-vp} \geosout{\&} \geouline{and}
+\rfn{marm2oneA-rx}. \rFg{marm2oneA-vp} depicts the P-wave velocity
+(smooth function between $1.6-3.2$~km/s), and \rfg{marm2oneA-rx} shows
+the density (variable between $1-2$~g/cm$^3$). The S-wave velocity is
+a scaled version of the P-wave velocity with $V_P/V_S=2$.  \geosout{Data
+are modeled and migrated in the smooth velocity background to avoid
+back-scattering and the migration density is constant throughout the
+model.}  \geouline{We use a smooth velocity background for both modeling
+and migration.  We use density discontinuities to generate reflections
+in modeling, but use a constant density in migration. The smooth
+velocity background for both modeling and migration is used to avoid
+back-scattering during wavefield reconstruction}.  The elastic data,
+\rfgs{marm2oneA-de1} \geosout{\&} \geouline{and} \rfn{marm2oneA-de2}, are
+simulated using a space-time staggered-grid finite-difference solution
+to the isotropic elastic wave equation
+\cite[]{GEO49-11-19331942,GEO51-04-08890901,GEO52-09-12111228,GEO53-06-07500759}.
+We simulate data for a source located at position $x=6.75$~km and
+$z=0.5$~km. Since we are using an explosive source and the background
+velocity is smooth, the simulated wavefield is represented mainly by
+P-wave incident energy and the receiver wavefield is represented by a
+combination of P- and S-wave reflected energy. The data contain a mix
+of P and S modes, as can be seen by comparing the vertical and
+horizontal displacement components, shown in \rfgs{marm2oneA-de1}
+\geosout{\&} \geouline{and} \rfn{marm2oneA-de2}, with the separated P and S
+wave modes, shown in \rfgs{marm2oneA-df1} \geosout{\&} \geouline{and}
+\rfn{marm2oneA-df2}.
+
+
+Imaging the data shown in \rfgs{marm2oneA-de1} \geosout{\&}\geouline{and}
+\rfn{marm2oneA-de2} using the imaging condition from \req{EICij}, we obtain
+the images depicted in \rfgs{marm2oneA-ieall0} \geosout{\&}\geouline{to}
+\rfn{marm2oneA-ieall3}.  \geouline{\rfgs{marm2oneA-ieall0} to
+\rfn{marm2oneA-ieall3} correspond to the cross-correlation of the $z$
+and $x$ components of the source wavefield with the $z$ and $x$
+components of the receiver wavefield, respectively.}  Since the input
+data do not represent separated wave modes, the images produced with
+the imaging condition based on vector displacements do not separate PP
+and PS reflectivity. Thus, the images are hard to interpret, since it
+is not clear what incident and reflected wave mode\geouline{s}\geosout{do}
+the reflections\geosout{correspond to} \geouline{represent}. In reality,
+reflections corresponding to all wave modes are present in all panels.
+
+
+% ------------------------------------------------------------
+\subsection{Imaging with scalar and vector potentials}
+
+Consider the images (\rfgs{marm2oneA-jeall0,jeall1,jeall2,jeall3})
+obtained \geosout{for}\geouline{using the} imaging condition\geouline{from}
+\geosout{\reqs{PICij} }\geouline{\req{PICij} }applied to the data
+(\rfgs{marm2oneA-de1} and \rfn{marm2oneA-de2}) \geosout{used for}
+\geouline{from} the preceding example. \geosout{Given the explosive}
+\geosout{source used in}\geouline{Because we used an explosive source for}
+our simulation, the source wavefield contains mostly P-wave energy,
+while the receiver wavefield contains P- and S-wave mode
+energy. Helmholtz decomposition after extrapolation but prior to
+imaging isolates P and S wavefield components. Therefore, migration
+produces images of reflectivity corresponding to PP and PS
+reflections, \rfgs{marm2oneA-jeall0} and \rfn{marm2oneA-jeall1}, but
+not reflectivity corresponding to SP or SS reflections,
+\rfgs{marm2oneA-jeall2} and \rfn{marm2oneA-jeall3}. The illumination
+regions are different between PP and PS images, due to different
+illumination angles of the two propagation modes for the given
+acquisition geometry. The PS image, \rfg{marm2oneA-jeall1}, also shows
+the usual polarity reversal for positive and negative angles of
+incidence measured relative to the reflector normal.  \geouline{By
+comparing \rfgs{marm2oneA-jeall0} and \rfn{marm2oneA-jeall1} with
+\rfgs{marm2oneA-ieall0} and \rfn{marm2oneA-ieall1}, it is apparent
+that the crosstalk in the images obtained from displacement-based
+imaging condition is more prominent than the one obtained from
+potential-based imaging conditions, especially in
+\rfg{marm2oneA-ieall0}. Furthermore, the polarity in
+\rfg{marm2oneA-ieall1}, normally taken as the PS image, does
+not reverse polarity at normal incidence, which is not correct
+either.}
+
+% ------------------------------------------------------------
+\subsection{Angle decomposition}
+
+The images shown in the preceding subsection correspond to the
+conventional imaging conditions from \reqs{EICij} and \ren{PICij}.  We can
+construct other images using the extended imaging conditions from
+\reqs{XICa} and \ren{XICe}, which can be used for angle decomposition
+after imaging. Then, we can use \req{PSang_hor} to compute angle
+gathers from horizontal space cross-correlation lags.
+
+\rFgs{marm2allA-je-0700-PPcig1} \geosout{\&} \geouline{and}
+\rfn{marm2allA-je-0700-PScig1} together with
+\rfgs{marm2allA-je-0700-PPang} \geosout{\&} \geouline{and}
+\rfn{marm2allA-je-0700-PSang} show, respectively, the PP and PS
+horizontal lags and angle gathers for the common image gather (CIG)
+location in the middle of the reflectivity model, given a single
+source at $x=6.75$~km and $z=0.5$~km. PP and PS horizontal lags are
+lines dipping at angles \geosout{related} \geouline{that are equal} to the
+incidence angles \geouline{(real incidence angles for PP reflection and
+  average of incidence and reflection angles for PS reflection)} at
+the CIG location. PP angles are larger than PS angles at all
+reflectors, as illustrated on the simple synthetic example shown in
+\rfg{cwgat}.
+
+\rFgs{marm2allA-PPcig} \geosout{\&} \geouline{and} \rfn{marm2allA-PScig}
+together with \rfgs{marm2allA-PPcig-ang} \geosout{\&} \geouline{and}
+\rfn{marm2allA-PScig-ang} show, respectively, the PP and PS
+horizontal lags and angle gathers for the same CIG location, given
+many sources from $x=5.5$ to $7.5$~km and $z=0.5$~km. The horizontal
+space cross-correlation lags are focused around $\hh=\mathbf{0}$,
+which justifies the use of conventional imaging condition extracting
+the cross-correlation of the source and receiver wavefields at zero
+lag in space and time. Thus, the zero lag of the images obtained by
+extended imaging condition represent the image at the particular CIG
+location. The PP and PS gathers for many sources are flat, since the
+migration was done with correct migration velocity. The PS angle
+gather, depicted in \rfg{marm2allA-PScig-ang}, shows a polarity
+reversal at $\theta=0$\geosout{, which is consistent with the fact that
+  PS images change polarity at normal incidence} \geouline{as expected}.
+
+% ------------------------------------------------------------
+\inputdir{marm2allA}
+% ------------------------------------------------------------
+
+%\multiplot{2}{je-0700-PPcig,je-0700-PPang,je-0700-PScig,je-0700-PSang}
+%{width=0.30\textwidth} {Horizontal cross-correlation lags for PP (a)
+%and PS (c) reflections for model in \rfgs{marm2oneA-vp} and
+%\rfn{marm2oneA-rx}. The source is at $x=6.75$~km, and the CIG is
+%located at $x=6.5$~km. Panels (b) and (d) depict PP and PS angle
+%gathers decomposed from the horizontal lag gathers in panels (a) and
+%(c), respectively. As expected, PS angles are smaller than PP angles
+%for a particular reflector due to smaller reflection angles.  }
+
+\multiplot{2}{je-0700-Ecig11,je-0700-Eang11,je-0700-Ecig12,je-0700-Eang12}
+{width=0.30\textwidth} {Horizontal cross-correlation lags for (a) PP
+and (c) PS reflections for the model in \rfgs{marm2oneA-vp} and
+\rfn{marm2oneA-rx}. The source is at $x=6.75$~km, and the CIG is
+located at $x=6.5$~km. Panels (b) and (d) depict PP and PS angle
+gathers decomposed from the horizontal lag gathers in panels (a) and
+(c), respectively. As expected, PS angles are smaller than PP angles
+for a particular reflector due to smaller reflection angles.  }
+
+\multiplot{2}{PPcig,PPcig-ang,PScig,PScig-ang} {width=0.30\textwidth}
+{Horizontal cross-correlation lags for PP (a) and PS (c) reflections
+for \geouline{the} model in \rfgs{marm2oneA-vp} and
+\rfn{marm2oneA-rx}. These CIGs correspond to 81 sources from $x=5.5$
+to $7.5$~km at $z=0.5$~km. The CIG is located at $x=6.5$~km. Panels
+(b) and (d) depict PP and PS angle gathers decomposed from the
+horizontal lag gathers in panels (a) and (c), respectively. Since the
+velocity used for imaging is correct, the PP and PS gathers are
+flat. The PP angle gathers do not change polarity at normal incidence,
+but the PS angle gathers change polarity at normal incidence.}
+

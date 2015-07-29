@@ -1,0 +1,55 @@
+from rsf.proj import *
+
+# Download SEGY data
+Fetch('data2013.sgy','kfupm')
+
+# Convert to RSF
+Flow('data tdata data.bin data.asc','data2013.sgy',
+     'segyread tfile=${TARGETS[1]} bfile=${TARGETS[2]} hfile=${TARGETS[3]}')
+
+# Gain using AGC
+Flow('data-agc','data','shapeagc rect1=250')
+
+# Gain using t^2
+Flow('data-tm','data','pow pow1=2 | scale axis=1 pclip=95')
+
+# Display first 6 shot records
+Flow('first6','tdata','window n1=1 f1=4 | mask max=6')
+
+def Result6(name,title):
+    Result(name,[name,'first6'],
+           '''
+           headerwindow mask=${SOURCES[1]} | 
+           wiggle transp=y yreverse=y poly=y title="%s"
+           ''' % title)
+
+for data in Split('data data-agc data-tm'):
+    Result6(data,data)
+
+# Take Fourier transform and compute amplitude spectrum
+Flow('data-tm-as','data-tm','spectra')
+Result('data-tm-as','data-tm-as first6',
+       '''
+       headerwindow mask=${SOURCES[1]} | 
+       grey allpos=y color=j title="Amplitude Spectra"
+       ''')
+
+# Filter data to remove ground-roll
+Flow('data-tm-filt','data-tm',
+     'trapez frequency=15,20,50,60 | scale axis=2')
+Result6('data-tm-filt','Filtered')
+
+# Autocorrelation
+Flow('data-tm-filt-ac','data-tm-filt',
+     '''
+     fft1 | math output="input*conj(input)" | fft1 inv=y | 
+     window n1=1001 | scale axis=1
+     ''')
+Result6('data-tm-filt-ac','Autocorrelation')
+
+# Spiking deconvolution
+Flow('data-tm-filt-dec','data-tm-filt',
+     'pef minlag=0.002 maxlag=0.2 pnoise=0.001 mincorr=0 maxcorr=3')
+Result6('data-tm-filt-dec','Deconvolution')
+
+End()

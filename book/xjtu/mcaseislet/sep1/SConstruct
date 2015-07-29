@@ -1,0 +1,29 @@
+from rsf.proj import *
+
+def plot(title):
+    return '''
+    grey wantaxis1=n label1=Sample label2="Trace no." title="%s"
+    labelsz=15 titlesz=18 labelfat=10 titlefat=10 crowd1=0.9
+    ''' % title
+
+Flow('signal',None,'make second=n n1=75 n2=32 t1=2')
+Plot('signal',plot('(a) Signal'))
+
+Flow('make',None,'make second=y n1=75 n2=32 t1=2 | put o1=0 d1=1 o2=0 d2=1')
+Plot('make',plot('(b) Signal+Noise'))
+
+Flow('pq','make','twodip2 verb=y gauss=n')
+Flow('rec','make pq',
+     	'''
+     	mcaseislet dips=${SOURCES[1]} 
+	verb=y order=1 type=b eps=0.01 niter=10 pclip=15 decr=n 
+     	''')
+
+Flow('rec1','rec','window n3=1')
+Flow('rec2','rec','window f3=1')
+Plot('rec1',plot('(c) Component 1'))
+Plot('rec2',plot('(d) Component 2'))
+Result('signalnoise','signal make rec1 rec2', 'SideBySideAniso')
+
+End()
+

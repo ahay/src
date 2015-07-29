@@ -1,0 +1,158 @@
+from rsf.proj import *
+
+#==============================================================
+# job running parameters
+par = dict(
+    ns=2801,
+    dt=0.0005,
+
+    isep1=0,
+    isep2=1,
+    ihomo=0,
+    tapertype="TTI",
+    nstep=2
+    )
+# =============================================================
+# download Hess VTI models from 'ftp://software.seg.org'
+# Depth grid: 1501 
+# Horizontal grid: 3617
+# Vertical and horizontal spacing are both 20ft.
+
+from rsf.recipes import bptti2007 
+
+bptti2007.get_model('Vp Vs Epsilon Delta Theta Vx Eta')
+
+# =============================================================
+# produce vp0 & vs0 model by scaling vp model 
+Flow('vp0','Vp',
+     '''
+     smooth rect1=3 rect2=3
+     ''')
+
+Flow('vs0','Vs',
+     '''
+     smooth rect1=20 rect2=20
+     ''')
+
+Flow('epsi','Epsilon',
+     '''
+     smooth rect1=20 rect2=20
+     ''')
+
+Flow('del','Delta',
+     '''
+     smooth rect1=20 rect2=20
+     ''')
+
+Flow('the','Theta',
+     '''
+     smooth rect1=20 rect2=20
+     ''')
+
+Flow('vx','Vx',
+     '''
+     smooth rect1=3 rect2=3
+     ''')
+
+Flow('eta','Eta',
+     '''
+     smooth rect1=3 rect2=3
+     ''')
+
+name0='''
+vp0 vs0
+'''
+
+name00='''
+epsi del the
+'''
+
+for ff in Split(name0):
+        Result(ff,
+	'''
+	grey color=j scalebar=y bias=1.5 allpos=n barreverse=y wanttitle=n}
+	''')
+#	grey scalebar=y bias=1.5 allpos=n barreverse=y wanttitle=n}
+
+for gg in Split(name00):
+        Result(gg,
+	'''
+	grey color=j scalebar=y allpos=n barreverse=y wanttitle=n}
+	''')
+#	grey scalebar=y allpos=n barreverse=y wanttitle=n}
+
+# =================================================================================
+# Forward modeling using original elastic wave eq.
+# =================================================================================
+name1='''
+Elasticx Elasticz
+'''
+
+Flow(['Elasticx',      'Elasticz'],
+         'vp0  vs0  epsi del the', 
+         '''
+         tti2desep
+         vp0=${SOURCES[0]}
+         vs0=${SOURCES[1]}
+         epsi=${SOURCES[2]} 
+         del=${SOURCES[3]}
+         the=${SOURCES[4]}
+         Elasticz=${TARGETS[1]}
+         ns=%d 
+         dt=%g
+         isep=%d
+         ihomo=%d
+         tapertype=%s
+         nstep=%d
+         ''' % (par['ns'],par['dt'],par['isep1'],par['ihomo'],par['tapertype'],par['nstep'])
+    )
+
+for qq in Split(name1):
+        Result(qq,
+	'''
+	grey polarity=n scalebar=n screenratio=1 wanttitle=n}
+	''')
+
+# =================================================================================
+# Forward modeling using pseudo-pure mode wave eq.
+# =================================================================================
+name2='''
+PseudoPurePx PseudoPurePz
+PseudoPureP PseudoPureSepP
+'''
+
+Flow(['PseudoPurePx',  'PseudoPurePz',    'PseudoPureP',
+         'apvx',          'apvz',
+         'apvxx',         'apvzz',
+         'PseudoPureSepP'],
+         'vp0  vs0  epsi del the', 
+         '''
+         tti2dpseudop
+         vp0=${SOURCES[0]}
+         vs0=${SOURCES[1]}
+         epsi=${SOURCES[2]} 
+         del=${SOURCES[3]}
+         the=${SOURCES[4]}
+         PseudoPurePz=${TARGETS[1]}
+         PseudoPureP=${TARGETS[2]}
+         apvx=${TARGETS[3]}
+         apvz=${TARGETS[4]}
+         apvxx=${TARGETS[5]} 
+         apvzz=${TARGETS[6]}
+         PseudoPureSepP=${TARGETS[7]}
+         ns=%d 
+         dt=%g
+         isep=%d
+         ihomo=%d
+         tapertype=%s
+         nstep=%d
+         ''' % (par['ns'],par['dt'],par['isep2'],par['ihomo'],par['tapertype'],par['nstep'])
+    )
+
+for qq in Split(name2):
+        Result(qq,
+	'''
+	grey polarity=n scalebar=n screenratio=1 wanttitle=n}
+	''')
+
+End()

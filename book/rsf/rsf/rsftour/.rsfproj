@@ -1,0 +1,3 @@
+uses=['sfwiggle', 'sfwindow', 'sfcontour', 'sfgrey', 'sffft1', 'sfpad', 'sfnmostretch']
+data=['data/septour/Txx.HH']
+size=      19600

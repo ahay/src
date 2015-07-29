@@ -1,0 +1,165 @@
+from rsf.proj import *
+
+# put parameters in text (ASCII) files
+
+depth = [300,500,600,700,800]
+veloc = [[1500,1700,2000,2300,2400,2500],
+         [1500,1700,2200,2300,2400,2500]]
+nl = len(depth) # number of layers
+
+# Depth of interfaces
+Flow('depth.asc',None,
+     'echo %s n1=%d data_format=ascii_float in=$TARGET' % (string.join(map(str,depth),' '),nl))
+
+# Two velocity layer models
+for case in range(2):
+    Flow('veloc%d.asc' % (case+1),None,
+         '''
+         echo %s n1=%d data_format=ascii_float in=$TARGET
+         ''' % (string.join(map(str,veloc[case]),' '),nl+1))
+
+# Convert from text to RSF format
+for par in ('depth','veloc1','veloc2'):
+    Flow(par,par+'.asc','dd form=native')
+
+Flow('time','depth veloc1','pad end1=1 | add scale=2,1 mode=d ${SOURCES[1]} | causint | window n1=%d' % nl)
+
+# Compute coordinates 
+for case in ('depth','dtime'):
+    Flow(case+'1',case,
+         '''
+         pad end1=1 | causint |
+         spray axis=1 n=2 | put n2=1 n1=%d |
+         pad beg1=1 | window n1=%d
+         ''' % (2*nl+2,2*nl+2))
+
+for case in range(2):
+    vel = 'veloc%d' % (case+1)
+    vel2 = 't'+vel
+    Flow(vel2,vel,'spray axis=1 n=2 | put n2=1 n1=%d' % (2*nl+2))
+    Plot(vel,['depth1',vel2],
+         '''
+         cmplx ${SOURCES[1]} | 
+         graph label1="Depth" unit1=m label2="Velocity" unit2=m/s
+         dash=%d plotcol=%d wanttitle=n parallel2=n font=2
+         ''' % (case,6-case))
+    Plot('t'+vel,['dtime1',vel2],
+         '''
+         cmplx ${SOURCES[1]} | 
+         graph label1="Time" unit1=s label2="Velocity" unit2=m/s
+         dash=%d plotcol=%d wanttitle=n parallel2=n font=2
+         ''' % (case,6-case))
+
+# Display data
+Result('modl','veloc1 veloc2','Overlay')
+Result('tmodl','tveloc1 tveloc2','Overlay')
+
+# Make constant Vs and density
+Flow('vs','veloc1','math output=1000')
+Flow('density','veloc1','math output=1')
+
+# Generate a seismic trace
+for case in ('1','2'):
+    # generate reflectivity (PP,PS,SS)
+    refl = 'refl'+case
+    Flow(refl,['depth','veloc'+case,'vs','density'],
+         '''
+         modrefl vp=${SOURCES[1]} vs=${SOURCES[2]} rho=${SOURCES[3]}
+         nt=1000 dt=0.004 
+         ''')
+    ai = 'ai'+case
+    Flow(ai,refl,'causint')
+    # generate PP reflection data
+    data = 'data'+case
+    Flow(data,refl,'window n2=1 | ricker1 frequency=10')
+
+# Take difference
+Flow('diff','data1 data2','add scale=-1,1 ${SOURCES[1]}')
+
+# Display data
+Result('data','data1 data2 diff',
+       '''
+       cat axis=2 ${SOURCES[1:3]} |
+       dots labels="Base:Monitor:Difference" label1="Time" unit1=s
+       yreverse=y gaineach=n font=2
+       ''')
+
+g0=0.95  # starting change 
+g1=2-g0  # last change
+ng=101   # number of changes to scan
+dg = (g1-g0)/(ng-1)
+niter = 100 # maximum number of iterations
+
+# Scan shifts computing local similarity
+Flow('scan','data2 data1',
+     '''
+     warpscan other=${SOURCES[1]} niter=%d
+     ng=%d g0=%g dg=%g rect1=50 | 
+     math output='(1+input)^4'
+     ''' % (niter,ng,g0,dg))
+Plot('scan',
+     '''
+     grey wanttitle=n allpos=y 
+     color=j pclip=100 transp=n yreverse=y
+     label1="Time" unit1=s label2="Relative stretch"
+     wheretitle=t wherexlabel=b parallel2=n font=2 format2="%3.2f"
+     ''')
+
+# Pick the stretch
+Flow('pick','scan','pick rect1=50 vel0=1 | window')
+Plot('pick',
+     '''
+     graph transp=n min2=%g max2=%g 
+     yreverse=y plotcol=7 plotfat=5 
+     wantaxis=n wanttitle=n pad=n
+     ''' % (g0,g1))
+Result('scan100','scan pick','Overlay')
+
+# Convert stretch to shift
+Flow('shift','pick','math output="(input-1)*x1" ')
+
+# Interpolate at time locations
+Flow('tint','shift time',
+     'math output=x1+input | inttest1 coord=${SOURCES[1]} nw=4 interp=spline')
+
+# Time differences
+for case in ('time','tint'):
+    Flow('d'+case,case,'pad beg1=1 | igrad | window n1=5')
+
+# Estimated velocity ratio
+Flow('rat','dtint dtime','add mode=d ${SOURCES[1]}')
+# True ratio
+Flow('trat','veloc1 veloc2','add mode=d ${SOURCES[1]}')
+
+for rat in ('rat','trat'):
+    Flow(rat+'2',rat,'pad n1=%d | spray axis=1 n=2 | put n2=1 n1=%d' % (nl+1,2*nl+2))
+    Plot(rat,['dtime1',rat+'2'],
+         '''
+         cmplx ${SOURCES[1]} | window n1=%d |
+         graph label1=Time unit1=s label2="V\_0\^/V\_1"
+         wanttitle=n dash=%d plotcol=%d min2=0.8 max2=1.2
+         parallel2=n font=2 format2="%%3.2f"
+         ''' % (2*nl,(0,1)[rat=='rat'],(6,5)[rat=='rat']))
+
+Result('rat','rat trat','Overlay')
+
+# Apply the stretch
+Flow('warp','data2 data1 shift',
+     '''
+     warp1 other=${SOURCES[1]} warpin=${SOURCES[2]}
+     verb=1 nliter=0 
+     ''')
+
+# Take difference
+Flow('diff2','data1 warp','add scale=-1,1 ${SOURCES[1]}')
+
+# Display data after warping
+Result('warp','data1 warp diff2',
+       '''
+       cat axis=2 ${SOURCES[1:3]} |
+       dots labels="Base:Monitor:Difference" label1=Time unit1=s
+       yreverse=y gaineach=n font=2
+       ''')
+
+
+End()

@@ -1,0 +1,298 @@
+from rsf.proj import *
+from rsf.recipes.beg import server as private
+
+import math
+import random
+
+random.seed(2005)
+
+def wiggle(title):
+    return '''
+    wiggle transp=y yreverse=y poly=y title="%s" wheretitle=t wherexlabel=b
+    wanttitle=n
+    ''' % title
+def grey(title,other=''):
+    return '''
+    grey title="%s" 
+    label1="Time (s)" label2="Offset (m)" %s 
+    ''' % (title,other)
+
+#########################
+# Linear Radon model
+#########################
+# Setup plane-wave model
+for p in range(3):
+    plane = 'plane%d' % p
+    Flow(plane,None,
+         '''
+         spike n1=512 n2=128 d2=1 o2=1 label2=Distance unit2=m
+         k1=%d p2=%g mag=%g |
+         ricker1 frequency=%d
+         ''' % ((64,160,286)[p],(1,2,0)[p],(0.5,0.5,1)[p],(10,15,20)[p]))
+ #    nsp=3 k1=64,160,286 p2=0.5,1,0 mag=0.5,0.5,1 |
+# Plane-wave decomposition with 1-D seislet
+
+Flow('plane','plane0 plane1 plane2',
+     '''
+     add ${SOURCES[1]} ${SOURCES[2]} |
+     noise seed=102008 var=0.0001 | bandpass fhi=30
+     ''')
+Result('nplane','plane',
+       'put d2=2 label2=Trace unit2= | window j2=2 |'+wiggle("Original"))
+
+
+#########################
+# Hyperbolic Radon model
+#########################
+# Setup hyperbolic model
+Flow('vrms',None,
+     'math d1=0.004 n1=1001 o1=0 output="x1*125+2000+50*sin(9*x1)" ')
+
+Flow('synt',None,
+     '''
+     spike d1=0.004 n1=1001 |
+     noise rep=y seed=2006 |
+     cut n1=100 | 
+     bandpass flo=4 fhi=20 |
+     spray axis=2 n=128 d=25 o=0 label=Offset unit=m 
+     ''')
+
+Flow('cmpa','synt vrms',
+     'inmo velocity=${SOURCES[1]} half=n | noise seed=2007 var=0.01')
+
+Flow('top','synt','window n1=400')
+Flow('mid','synt',
+     'window f1=400 n1=300 | math output="input*(1-x2*%g)" ' % (2.0/3500))
+Flow('bot','synt','window f1=700')
+
+Flow('cmpb','top mid bot vrms',
+     '''
+     cat axis=1 ${SOURCES[1:3]} |
+     inmo velocity=${SOURCES[3]} half=n |
+     noise seed=2007 var=0.01
+     ''')
+Plot('cmpa','grey title="%s" ' % "(a) Without AVO")
+Plot('cmpb','grey title="%s" ' % "(b) With AVO")
+Plot('ccmp','cmpa cmpb','SideBySideAniso')
+Plot('cmpa','grey wanttitle=n screenratio=1.5' )
+
+# Velocity scanning
+v0 = 3400
+dv = 25
+nv = 120
+Flow('scn','cmpa',
+     'vscan semblance=y v0=%g nv=%d dv=%g' % (v0,nv,dv))
+Flow('scn0','cmpa',
+     'vscan semblance=n v0=%g nv=%d dv=%g' % (v0,nv,dv))
+Plot('scn',
+     'grey color=j allpos=y title="Velocity Scan" label2="Velocity" pclip=100')
+Flow('pick','scn','pick rect1=35 rect2=35 | window')
+Plot('pick',
+     '''
+     graph transp=y yreverse=y min2=3400 max2=6400 plotcol=7
+     plotfat=5 pad=n wanttitle=n wantaxis=n
+     ''')
+Plot('vscan','scn pick','Overlay')
+Plot('radon','scn0',
+     '''
+     grey color=j allpos=y wanttitle=n label2="Velocity"
+     pclip=100 screenratio=1.5
+     ''')
+n2=128          # data dimensions
+d2=25
+d1=0.004
+data='cmpa'
+dips = []
+
+for iv in range(nv):
+    dip = 'dip%d' % iv
+    v = v0 + iv*dv
+    Flow(dip,data,
+         'math output="%g*x2/(x1+0.001)" | clip clip=3' % (4*d2/(v*v*d1)))
+    dips.append(dip)
+Flow('dips',dips,
+     '''
+     cat axis=3 ${SOURCES[1:%d]} |
+     put o3=3400 d3=25 label3=Velocity unit3=m/s
+     ''' % nv)
+Plot('dips',
+     '''
+     byte allpos=n gainpanel=a |
+     grey3 flat=n color=j frame1=138 frame2=32 frame3=50
+     point1=0.7 point2=0.6 wanttitle=n
+     ''')
+
+Flow('diplet','cmpa dips',
+     'diplet dips=${SOURCES[1]} type=b niter=20 ncycle=5 perc=95')
+Plot('diplet',
+     '''
+     put o3=3400 d3=25 label2=Scale unit2= label3=Velocity unit3=m/s |
+     transp plane=23 | byte |
+     grey3 color=j frame1=138 frame3=0 frame2=60 flat=n
+     point1=0.8 point2=0.6 wanttitle=n
+     ''')
+
+Plot('dipradon','diplet',
+     '''
+     put o3=3400 d3=25 | window n2=1 | cut max1=0.1 |
+     grey color=j allpos=y wanttitle=n label2="Velocity" unit2=m/s
+     pclip=100 screenratio=1.5
+     ''')
+
+#########################
+# Real data
+#########################
+Fetch('elf0.H','elf',private)
+Flow('cmp','elf0.H',
+     '''
+     dd form=native | cut n3=1 n2=1 n1=300 f3=663 f2=67 |
+     bandpass flo=5 fhi=60 | window n2=128 n3=1 f3=500 |
+     put d2=0.0125 o2=0.05
+     ''')
+
+Flow('part','cmp','window n2=128 n3=1 f3=500')
+Result('part',grey('Input','label2="Half offset" unit2=km'))
+
+# Velocity scan
+Flow('vpart','part','vscan semblance=n v0=1. nv=50 dv=0.08 half=y')
+Plot('vpart',
+     grey('Velocity Scan (Data)','label2="Velocity (km/s)" \
+     color=j allpos=y screenratio=1.5'))
+
+#########################
+# Hyperbolic Radon 
+#########################
+# Test diplet
+v0 = 1.
+dv = 0.06
+nv = 50
+n1=800
+n2=128          # data dimensions
+d2=0.0125
+o2=0.05
+n3=50
+d1=0.004
+rrdips = []
+
+for iv in range(nv):
+    rrdip = 'rrdip%d' % iv
+    v = v0 + iv*dv
+    Flow(rrdip,'part',
+         'math output="%g*x2/(%g*x1+0.0001)" | clip clip=3' % ((4*d2/d1),(v*v)))
+    rrdips.append(rrdip)
+Flow('rrdips',rrdips,
+     '''
+     cat axis=3 ${SOURCES[1:%d]} |
+     put o3=1.0 d3=0.06 label3=Velocity unit3=km/s
+     ''' % nv)
+Result('rrdips',
+       '''
+       transp plane=23 | byte allpos=n gainpanel=a scalebar=y bar=bar.rsf |
+       grey3 color=j frame1=400 frame3=64 frame2=25
+       label1=Time unit1=s label3="Half offset" unit3=km point1=0.85 point2=0.7
+       title="Variable dip field" flat=n scalebar=y bar=bar.rsf
+       ''')
+
+Flow('rrdiplet','part rrdips',
+     'diplet dips=${SOURCES[1]} type=b niter=10 ncycle=5 perc=99')
+Result('rrdiplet',
+       '''
+       put o3=1.0 d3=0.06 d2=1 o2=0 label2=Scale unit2=
+       label3=Velocity unit3=km/s label1=Time unit1=s |
+       transp plane=23 | byte allpos=y gainpanel=a scalebar=y bar=bar1.rsf |
+       grey3 color=i frame1=400 frame3=0 frame2=25 point1=0.85 point2=0.7
+       title="Frame coefficients" flat=n scalebar=n 
+       ''')
+
+Flow('inver','rrdiplet rrdips','diplet dips=${SOURCES[1]} type=b inv=y')
+Plot('inver',grey('Inversion'))
+Plot('comp2','part inver','SideBySideAniso')
+
+def rnd(x):
+    global nr
+    r = str(random.randint(1,nr))
+    return r
+nsp=200         # number of spikes
+nr = 800
+eps=0.1         # regularization
+k1 = string.join(map(rnd,range(nsp)),',')
+nr = 128
+k2 = string.join(map(rnd,range(nsp)),',')
+nr = 50
+k3 = string.join(map(rnd,range(nsp)),',')
+
+Flow('rrdipimps','rrdiplet rrdips',
+     '''
+     spike nsp=%d k1=%s k2=%s k3=%s
+     n1=%d n2=%d n3=%d o2=%g d2=%g label2="Half offset" |
+     diplet inv=y eps=%g dips=${SOURCES[1]} 
+     ''' % (nsp,k1,k2,k3,n1,n2,n3,o2,n2,eps),stdin=0)
+Result('rrdipimps',
+       '''
+       put d2=0.0125 o2=0.05 |
+       grey unit1=s title="Variable dip field"
+       label2="Half offset" unit2=km
+       ''')
+
+#########################
+# Linear Radon 
+#########################
+p0=-1
+dp=0.06
+np=50
+cdips = []
+for ip in range(np):
+    cdip = 'cdip%d' % ip
+    p = p0 + ip*dp
+    Flow(cdip,'part','math output="%g" | clip clip=3 ' % (p))
+    cdips.append(cdip)
+Flow('cdips',cdips,
+     'cat axis=3 ${SOURCES[1:%d]} | put o3=-1 d3=0.06 label3=Dip unit3=' % np)
+Result('cdips',
+       '''
+       transp plane=23 |
+       byte allpos=n gainpanel=a scalebar=y bar=bar2.rsf |
+       grey3 color=j frame1=400 frame3=64 frame2=25
+       label1=Time unit1=s label3="Half offset" unit3=km point1=0.85 point2=0.7
+       title="Constant dip field" flat=n scalebar=y bar=bar2.rsf
+       ''')
+
+Flow('cdiplet','part cdips',
+     'diplet dips=${SOURCES[1]} type=b niter=10 ncycle=5 perc=99')
+Result('cdiplet',
+       '''
+       put o3=-1.0 d3=0.06 d2=1 o2=0 label2=Scale unit2=
+       label3=Dip unit3= label1=Time unit1=s |
+       transp plane=23 | byte allpos=y gainpanel=a scalebar=y bar=bar3.rsf |
+       grey3 color=i frame1=400 frame3=0 frame2=25 point1=0.85 point2=0.7
+       title="Frame coefficients" flat=n scalebar=n 
+       ''')
+
+Flow('cinv','cdiplet cdips','diplet dips=${SOURCES[1]} type=b inv=y ')
+Plot('cinv',
+       'put d2=2 label2=Trace unit2= | window j2=2 |'+wiggle("Inversion"))
+
+
+
+nsp=200         # number of spikes
+nr = 800
+eps=0.1         # regularization
+k1 = string.join(map(rnd,range(nsp)),',')
+nr = 128
+k2 = string.join(map(rnd,range(nsp)),',')
+nr = 50
+k3 = string.join(map(rnd,range(nsp)),',')
+
+Flow('cdipimps','cdiplet cdips',
+     '''
+     spike nsp=%d k1=%s k2=%s k3=%s
+     n1=%d n2=%d n3=%d o2=%g d2=%g label2="Half offset" |
+     diplet inv=y eps=%g dips=${SOURCES[1]} 
+     ''' % (nsp,k1,k2,k3,n1,n2,n3,o2,n2,eps),stdin=0)
+Result('cdipimps',
+       '''
+       put d2=0.0125 o2=0.05 |
+       grey unit1=s title="Constant dip field"
+       label2="Half offset" unit2=km
+       ''')
+End()

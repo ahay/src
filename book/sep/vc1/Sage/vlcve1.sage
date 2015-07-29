@@ -1,0 +1,10 @@
+t,h,g,x,a=var('t,h,g,x,a')
+tn2(t,h,g)=g^2*t^2 - h^2*(1-g^2)
+zo(t,h,g,x)=sqrt(tn2(t,h,g)+g^2*x^2/(1-g^2))
+zop(t,h,g,a)=sqrt(tn2(t,h,g)+a^2*(1-g^2)*g^2)
+xop(a,g)=a*(1-g^2)
+def Pop(t,g):
+    return parametric_plot([xop(a,g),zop(t,1,g,a)],(a,-g^2*t,g^2*t))
+p=Pop(0.4,1.2)+Pop(0.8,1.2)+Pop(1.2,1.2)+Pop(1.6,1.2)+Pop(2.,1.2)+Pop(2.4,1.2)+Pop(2.8,1.2)+Pop(3.2,1.2)+Pop(3.6,1.2)
+p.axes_range(xmin=-2.5,xmax=2.5,ymin=4.5,ymax=0)
+p.save(frame=True,axes=False,axes_labels=["Midpoint (km)","Pseudo-depth (km)"],fontsize=12,aspect_ratio=5/(4.5*golden_ratio),filename='junk_sage.pdf')

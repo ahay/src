@@ -1,0 +1,152 @@
+from rsf.recipes.xproj import *
+
+
+p=0.3
+
+n0=300
+o1 = 1
+n1 = 30
+d1 = 1
+
+o2=2
+d2=1
+n2=200
+
+liter=50
+
+
+#rl=range(2,11)+range(20,101,10)+range(200,501,100)
+
+Flow('rdip',None,
+	'math n1=%d n2=%d d1=1 d2=1 output=%g'%(n0,n0,p))
+
+Flow('modl',None,
+	'''
+	math n1=%d n2=%d d1=1 d2=1 
+	output="sin(0.2*(x1-x2*%f))"
+	'''%(n0,n0,p))
+
+l1 = []
+for i1 in range(n1):
+	snr = o1 + d1*i1
+	var = 0.5*pow(10, -snr/10)
+	data='data-%d'%snr
+	Flow(data, 'modl', 
+		'noise var=%f seed=%f '%(var, 2012+i1))
+	l1.append(data)
+
+Flow('data', l1,
+	'cat axis=3 ${SOURCES[1:%d]} o=%d d=%d'%(n1, o1, d1))
+
+
+for i3 in ('dip', 'fdip'):
+	l1 = []
+	l2 = []
+	for i2 in range(n2):
+		rect=o2+d2*i2
+		dip='%s-%d'%(i3,rect)
+		mse='mse-%s-%d'%(i3,rect)
+		Tflow(dip, 'data',
+			'%s n4=0 rect1=%d rect2=%d liter=%d'%(i3, rect, rect,liter))
+		Flow(mse, [dip, 'rdip'],
+			'comp ref=${SOURCES[1]} mode=2')
+		l1.append(mse)
+		l2.append(dip+'_runtime')
+	Flow('mse-%s'%i3, l1,
+		'rcat axis=2 ${SOURCES[1:%d]} o=%d d=%d'%(len(l1),o2,d2))
+	Flow('runtime-%s'%i3, l2,
+		'rcat axis=1 ${SOURCES[1:%d]} o=%d d=%d'%(len(l2),o2,d2))
+
+#	math dip=${SOURCES[1]} output="log(dip-input)"
+#	math dip=${SOURCES[1]} output="log(dip/input)/log(10)"
+#	cat axis=3 ${SOURCES[1]} | math output="log(input)/log(10)"
+Result('dmse', 'mse-fdip mse-dip',
+	'''
+	math dip=${SOURCES[1]} output="dip-input"
+	| put label1="SNR" unit1="dB"
+	  label="MSE"
+	| grey wanttitle=n color=j label2="Smoothing radius"
+	  scalebar=y clip=0.1 maxval=0.1
+	''')
+Result('rmse', 'mse-fdip mse-dip ./mseplot.py',
+	'''
+	math dip=${SOURCES[1]} output="log(dip/input)/log(10)"
+	| put label1="SNR" unit1="dB"
+	  label="RMSE" unit="dB"
+	| ./${SOURCES[2]} label2="Smoothing radius" unit2="log"
+	''',suffix='.eps')
+
+for id in ('fdip','dip'):
+	Result('mse-'+id, ['mse-'+id, './mseplot.py'],
+		'''
+		math output="log(input)/log(10)"
+		| put label1="SNR" unit1="dB"
+		  label="MSE" unit="dB"
+		| ./${SOURCES[1]} label2="Smoothing radius" unit2="log scale"
+		  vmin=-4.5 vmax=0.1
+		''',suffix='.eps')
+#		| grey wanttitle=n color=j label2="Smoothing radius"
+#		  scalebar=y bias=-2.5 clip=2 minval=-4.5 maxval=-0.5
+#Result('mse12','mse-fdip mse-dip','')
+
+for i2 in (3,o2+d2*(n2-1)):
+	Plot('mse-%d'%i2, 'mse-fdip-%d mse-dip-%d'%(i2,i2),
+		'''
+		cat axis=2 ${SOURCES[1]}
+		| put label1="SNR" unit1="dB"
+		  label2="MSE" unit2="dB"
+		| math output="log(input)/log(10)"
+		| graph title="Regularization window = %d" dash=0,1 plotcol=7
+		'''%i2)
+
+Result('mse', 'mse-3 mse-%d'%(o2+d2*(n2-1)), 'OverUnderAniso')
+
+Result('runtime', 'runtime-fdip runtime-dip',
+	'''
+	cat axis=2 ${SOURCES[1]} o=0 d=1
+	| put label1="Regularization" label2="Runtime" unit1="" unit2="s"
+	| graph wanttitle=n plotcol=7 dash=0,1 min2=0.0 plotfat=3 
+	  label1="Smoothing radius"
+	''')
+
+Result('modl',
+	'grey wanttitle=n label1=Time unit1="samples" label2=Location unit2="samples"')
+
+
+
+data='data-30'
+niter=10
+dip='ldip n4=0 rect1=10 rect2=10 eta=0.8'
+
+Flow('fdip', data,
+	'fdip n4=0 rect1=10 rect2=10')
+
+l1 = []
+l2 = []
+l3 = []
+for ii in range(niter):
+	Flow('ldip1-%d'%ii, data, dip+' order=1 niter=%d '%ii)
+	Flow('ldip2-%d'%ii, data, dip+' order=2 niter=%d '%ii)
+	l1.append('fdip')
+	l2.append('ldip1-%d'%ii)
+	l3.append('ldip2-%d'%ii)
+
+Flow('fdips', l1, 'cat axis=3 ${SOURCES[1:%d]}'%(len(l1)))
+Flow('ldip1s', l2, 'cat axis=3 ${SOURCES[1:%d]}'%(len(l2)))
+Flow('ldip2s', l3, 'cat axis=3 ${SOURCES[1:%d]}'%(len(l3)))
+
+Flow('cvg', 'fdips ldip1s ldip2s rdip',
+	'''
+	cat axis=4 ${SOURCES[1:3]} o=1 d=1
+	| comp ref=${SOURCES[3]} mode=2
+	| math output="log(input)/log(10)"
+	''')
+
+Result('cvg',
+	'''
+	graph wanttitle=n plotcol=7 dash=0,1,2 plotfat=3
+	label1="Iterations" unit1="" label2="MSE" unit2="log"
+	''')
+
+
+End()

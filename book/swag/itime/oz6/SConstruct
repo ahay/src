@@ -1,0 +1,91 @@
+## Oz data gather 6 (dynamite, nt=1300, dt=0.004, nx=48, dx=100m)
+#  Bandwidth is about 10-30 Hz
+from rsf.proj import *
+import math, os
+from rsf.recipes.itime import itime1,itimec
+from rsf.recipes.fmean import Freqmean,Freqplots
+
+sz1=' labelsz=12 titlesz=12 '
+sz2=' labelsz=10 titlesz=10 '
+
+
+#### Data (Oz shot gather #6)
+#  Bandwidth is about 10-30 Hz
+o1=0; n1=1300; d1=0.004; n2=48;
+ticks='';
+grid='';
+data = 'data6';
+
+Flow('time11',  data,   'window n2=1 | math output="x1"')
+Plot('time12', 'time11','graph wanttitle=n')
+
+Fetch('wz.06.H','wz')
+Flow(data,'wz.06.H',
+     'dd form=native | scale axis=1 | window f2=0 n2=%d | put unit2=""' %n2)
+
+taxis='''min1=0. max1=%f min2=-1. max2=1. grid2=y g2num0=0 g2num=10''' %(o1+(n1-1)*d1)
+
+#Result('spec6','data6','spectra all=y | graph')
+
+
+#### LTFT
+rc1 = 10; # smoothing radius for LTF
+rc2 =  5; # smoothing radius for division
+
+# inst. time (t,f)
+w0=0;  dw=0.2;  nw=301;  
+fmax  = w0 + (nw-1)*dw; # maximum frequency for LTF
+fmax2 = fmax;  #30;            # maximum frequency for averaging
+cltf  = 'rect=%d w0=%f dw=%f nw=%d' %(rc1,w0,dw,nw)
+
+itimec('itime6',data,cltf=cltf,
+       div='rect1=%d rect2=%d rect3=2 niter=150'%(rc1,rc2))
+
+Flow('zc6', 'itime6', 'math output="input-x1" | zerocross levels=3') 
+
+
+tfaxes='min1=0. max1=%f. min2=0. max2=%f' %(o1+n1*d1,fmax2)
+tfpar ='grey color=j scalebar=y'
+
+
+# mean and std of frequency 
+Freqmean('data6_cltf',r=2,std='y')  # generates data6_cltf_s0,  data6_cltf_s1,data6_cltf_s2,
+                                    #           data6_cltf_fmn, data6_cltf_fstd
+Flow('data6_flo','data6_cltf_fmn data6_cltf_fstd','add ${SOURCES[1]} scale=1,-1')
+Flow('data6_fhi','data6_cltf_fmn data6_cltf_fstd','add ${SOURCES[1]} ')
+
+# Figures
+#### inst. traveltime (t)
+Flow('tau6', 'itime6 data6_flo data6_fhi',
+     'stackn min=${SOURCES[1]} max=${SOURCES[2]} | window')
+
+axes  = 'min1=0. max1=5. min2=-0.2. max2=5' 
+ticks = 'o1num=0. d1num=1 n1tic=6 o2num=-1 d2num=0.5 n2tic=5'
+
+Flow('tau_t6', 'tau6', ' math output="input-x1"')
+axes  = 'min1=0. max1=5. min2=-0.5. max2=0.5' 
+ticks= 'o2num=-0.5 d2num=0.5 n2tic=3' 
+
+
+#### Gather figures
+txaxis='min1=0. max1=5.'
+Flow('zctau6', 'tau_t6',
+     '''zerocross levels=3 | clip2 upper=0 | add scale=-1 | 
+        mutter v0=94 x0=47')# | ricker1 frequency=60''')
+
+Plot('data6', data,
+     '''agc | put d2=1 label2="Trace" unit2="" | 
+        wiggle transp=y yreverse=y pclip=100. poly=y plotcol=7 
+        grid1=n grid2=n wanttitle=n wherexlabel=bottom wheretitle=top %s
+     '''%txaxis)
+Plot('events6','zctau6',
+      '''wiggle transp=y yreverse=y pclip=100. plotcol=5 plotfat=1 
+                grid1=n gridcol=7 g1num0=0 g1num=1 grid2=n gridfat=2
+                wantaxis2=n title="Dynamite data" %s''' %txaxis)
+Plot('zeros6','data6',
+     '''math output="0" | wiggle transp=y yreverse=y pclip=100. poly=y plotcol=7 
+        grid1=n grid2=n wanttitle=n wherexlabel=bottom wantaxis2=n %s'''%txaxis) # trick to get a better Figure
+Result('oz6','data6 events6 zeros6','Overlay')
+
+
+End()

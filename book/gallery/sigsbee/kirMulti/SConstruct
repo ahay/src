@@ -1,0 +1,56 @@
+from rsf.proj import *
+from rsf.gallery import sigsbee
+
+# fetch data
+sigsbee.getvel ('vel','migvel')
+sigsbee.getshots ('shot')
+
+# add crossline and offset axes
+Flow ('sigs_data','shot',
+      '''
+      transp plane=23 | 
+      put n3=1 d3=100 o3=0 label3="Crossline" unit3="km"
+      n4=348 o4=0 d4=0.02286 label4="Offset" unit4="km"	
+      ''')
+# additional smoothing
+Flow ('sigs_velModel','vel',
+      '''
+      smooth rect1=20 rect2=20 |
+      put n3=1 d3=100 o3=0 label3="Crossline" unit3="km"
+      ''')
+
+# migration
+Flow ('sigs-image sigs_dag sigs_cig', 'sigs_data sigs_velModel',
+      '''
+      dmigda vel=${SOURCES[1]} 
+      dag=${TARGETS[1]} cig=${TARGETS[2]}
+      izn=1601 izo=1500 izd=5
+      ixn=921 ixo=3300 ixd=25
+      iscato=0 iscatn=11 iscatd=10
+      dipo=-160 dipn=321 dipd=1.0
+      ''')
+
+# figures
+Result ('sigs-image',
+        '''
+	put o1=1.5 d1=0.005 unit1=km o2=3.3 d2=0.025 unit2=km |
+	grey wanttitle=n
+	''')
+
+pos = (6150, 23000) # 6150 m - sedimentary area; 23000 - salt area
+
+for p in range (2):   
+    dag="dag%d" % (pos[p])
+    cig="cig%d" % (pos[p])
+    fig="fig%d" % (pos[p])
+
+     
+    Flow (dag, 'sigs_dag', 'window min3=%d max3=%d | put d1=0.005 o1=1.5 unit1=km | bandpass flo=2' % (pos[p], pos[p]))
+    Flow (cig, 'sigs_cig', 'window min3=%d max3=%d | put d1=0.005 o1=1.5 unit1=km | bandpass flo=2' % (pos[p], pos[p]))
+
+    Plot (dag, 'grey wanttitle=y title="a)" d1num=80 o1num=-160 n1tic=5')	
+    Plot (cig, 'grey wanttitle=y title="b)" d1num=20 o1num=0 n1tic=6')
+
+    Result (fig,[dag, cig],'SideBySideAniso')
+	
+End()

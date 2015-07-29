@@ -1,0 +1,37 @@
+from rsf.proj import *
+
+sys.path.append('..')
+
+import twohalf
+
+twohalf.getvel('model')
+
+Result('model','grey color=j mean=y title="BP 2.5D Model" scalebar=y barreverse=y')
+
+twohalf.getshots('shots')
+
+Result('shots','byte gainpanel=200 | grey3 frame1=200 frame2=100 frame3=200 flat=n title=Shots')
+
+Flow('vel','model','transp')
+for s in range(0,385):
+    shot= 'DATA/shot_'+str(0+s*4)
+    Flow(shot,'shots',
+         '''
+         window n3=1 f3=%d | 
+         spline n1=3161 d1=0.0012 o1=0
+         '''%(s))
+Flow('geo',None,
+     '''
+     echo n1=4 n2=385 data_format=ascii_int esize=4 in=geo
+     | dd form=native
+     ''')
+nt=3161
+dt=0.0012
+Flow('source',None,
+     '''
+     spike n1=%d d1=%g k1=40 |
+     ricker1 frequency=20
+     '''%(nt,dt))
+Result('source','graph  title="Source Wavelet" ')
+
+End()

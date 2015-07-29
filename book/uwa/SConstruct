@@ -1,0 +1,13 @@
+from rsf.book import *
+
+Papers(copyr='University of Western Australia',
+       group='UWA Reservoir Management',
+       papers=Split('''
+       geo2013ElasticModellingGPU
+       '''),
+       authors = {'geo2013ElasticModellingGPU':'Robin Weiss and Jeffrey Shragge'},
+       line='Selected papers',
+       fig=('geo2013ElasticModellingGPU/homo3d','ORTw-3d-GPU',
+            'width=\\textwidth'))
+       
+End(use='amsmath')

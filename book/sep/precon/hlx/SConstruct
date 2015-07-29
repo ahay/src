@@ -1,0 +1,34 @@
+from rsf.proj import *
+
+t = "titles=\"in:in/A:A*in/A:(in/A)/A':AA'(in/A)/A'\""
+g = 'grey gainpanel=every pclip=100 wantaxis=n crowd=.88 gpow=.7 title="%s" '
+
+lag = (99,102,201)
+flt = (-0.5,-0.9,0.4)
+n1 = len(lag)
+
+Flow('waves_lag0.asc',None,
+     "echo %s n1=%d n=100,100 data_format=ascii_int in=$TARGET" %
+     (string.join(map (str, lag),' '),n1))
+Flow('waves_lag','waves_lag0.asc','dd form=native')
+Flow('waves0.asc','waves_lag',
+     '''echo %s a0=1 n1=%d data_format=ascii_float in=$TARGET
+     lag=$SOURCE''' % (string.join(map (str, flt),' '),n1),
+     stdin=0)
+Flow('waves','waves0.asc','dd form=native')
+
+Flow('spike2',None,
+     'spike n1=20 n2=20 nsp=2 k1=3,7 k2=7,3 mag=1,-1')
+Flow('inp2',None,
+     'spike n1=20 n2=20 nsp=2 k1=19,15 k2=13,6 mag=1,-1')
+
+Flow('inp','spike2 inp2 waves',
+     'helicon filt=${SOURCES[2]} | add ${SOURCES[1]}')
+Flow('div','inp waves','helicon filt=${SOURCES[1]} div=y')
+Plot('inp',g % 'input')
+Plot('div',g % 'input/filter')
+Result('waves','inp div','SideBySideAniso',vppen='txscale=1.4')
+    
+###########################################################################
+
+End()

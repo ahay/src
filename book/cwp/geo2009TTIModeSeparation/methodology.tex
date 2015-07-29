@@ -1,0 +1,436 @@
+
+
+\section{Wave-mode separation for 2D TI media}
+%how does separation for VTI work
+\subsection{Wave-mode separation for symmetry planes of VTI media}
+\cite{GEO55-07-09140919} separate {\it quasi-}P 
+and {\it quasi-}SV modes in 2D VTI media by projecting the wavefields
+onto the directions in which P and S modes are polarized.  For
+example, in the wavenumber domain, one can project the wavefields onto
+the P-wave polarization vectors $\UU_P$ to obtain {\it quasi-}P ({\it
+q}P) waves:
+\beq\label{AniDivK}
+\widetilde{{\it q}P}=i\, \UU_P(\kk) \cdot \WWK 
+=i\, U_x\,\WK_x+i\, U_z\,\WK_z\, ,                
+\eeq
+where $\widetilde{{\it q}P}$ is the P-wave mode in the wavenumber
+domain, $\kk=\{k_x,k_z\}$ is the wavenumber vector, $\WWK$ is the
+elastic wavefield in the wavenumber domain, and $\UU_P(\kk)$ is the
+P-wave polarization vector as a function of the wavenumber $\kk$.
+
+%Christoffel equation
+
+% what is different about TTI and VTI
+The polarization vectors $\UU(\kk)$ of plane waves for VTI media in
+the symmetry planes can be found by solving the Christoffel equation
+~\cite[]{akirichards.2002,Tsvankin}:
+\beq\label{3dChristoffel}\lb {\bf G} - \rho V^2 {\bf I} \rb \UU = 0 \, ,
+\eeq
+where {\textbf G} is the Christoffel matrix with
+$G_{ij}=c_{ijkl}n_jn_l$, in which $c_{ijkl}$ is the stiffness tensor.
+The vector $\mathbf n=\frac{\kk}{\left|\kk\right|}$ is the unit
+vector orthogonal to the plane wavefront, with $n_j$ and $n_l$ being
+the components in the $j$ and $l$ directions,
+$i,j,k,l=1,2,3$. The eigenvalues $V$ of this system correspond to the
+phase velocities of different wave-modes and are dependent on the
+plane wave propagation direction $\mathbf k$.
+
+For plane waves in the vertical symmetry plane of a TTI medium, since
+{\it q}P and {\it q}SV modes are decoupled from the SH-mode and
+polarized in the symmetry planes, one can set $n_y=0$ and obtain
+\def\c11{c_{11}}
+\def\c55{c_{55}}
+\def\c13{c_{13}}
+\def\c33{c_{33}}
+\beq\label{VtiChristoffel}
+\lb 
+ \mtrx{ G_{11}-\rho V^2 &  G_{12}\\
+        G_{12}          &  G_{22} -\rho V^2 }
+\rb
+\lb\mtrx{ U_x\\U_z} \rb
+=0 \, ,
+\eeq
+where
+\begin{eqnarray}
+G_{11}&=&c_{11} n_x^2 +c_{55} n_z^2 \, ,\\
+G_{12}&=&\lp c_{13}+c_{55}\rp n_xn_z\, ,\\
+G_{22}&=&c_{55} n_x^2 +c_{33} n_z^2\, .
+\end{eqnarray}
+\rEq{VtiChristoffel} allows one to compute the polarization vectors
+$\UU_P=\{U_x,U_z\}$ and
+$\UU_{SV}=\{-U_z,U_x\}$ (the eigenvectors of the matrix
+{\textbf G}) given the stiffness tensor at every location of the
+medium.
+
+\rEq{AniDivK} represents the separation process for the 
+P-mode in 2D homogeneous VTI media. To separate wave-modes for
+heterogeneous models, one needs to use different polarization vectors at every
+location of the model~\cite[]{yan:WB19}, because the polarization
+vectors change spatially with medium parameters.  In the space domain,
+an expression equivalent to \req{AniDivK} at each grid point is
+\beq\label{AniDivX}
+{\it q}P=\nabla_a\cdot \WW     = L_x[W_x] + L_z[W_z] \, ,
+\eeq
+where $L\lb\,\cdot\,\rb$ indicates spatial filtering, and $L_x$ and $L_z$
+are the filters to separate P waves representing the inverse Fourier
+transforms of $i\, U_x$ and $i\, U_z$, respectively. The terms $L_x$
+and $L_z$ define the ``pseudo-derivative operators'' in the $x$ and $z$
+directions for a VTI medium, respectively, and they change according to the material
+parameters, $V_{P0}$, $V_{S0}$ ($V_{P0}$ and $V_{S0}$ are the P and S
+velocities along the symmetry axis, respectively), $\epsilon$, and
+$\delta$~\cite[]{thomsen:1954}.
+
+\subsection{Wave-mode separation for symmetry planes of TTI media}
+My separation algorithm for TTI models is similar to the approach
+used for VTI models.  The main difference is that for VTI media, the
+wavefields consist of P- and SV-modes, and \reqs{AniDivK}
+and \ren{AniDivX} can be used for separation in all vertical planes of
+a VTI medium. However, for TTI media, this separation only works in
+the plane containing the dip of the reflector, where P- and SV-waves are
+polarized, while other vertical planes contain SH-waves as well.
+
+
+To obtain the polarization vectors for P and S modes in the symmetry
+planes of TTI media, one needs to solve for the Christoffel \req{VtiChristoffel}
+with 
+\begin{eqnarray}
+G_{11}&=&c_{11} n_x^2 +2c_{15}n_xn_z+c_{55} n_z^2 \, ,\\
+G_{12}&=&c_{15} n_x^2+\lp c_{13}+c_{55}\rp n_xn_z+c_{35} n_z^2\, ,\\
+G_{22}&=&c_{55} n_x^2 +2c_{35}n_xn_z+c_{33} n_z^2\, .
+\end{eqnarray}
+Here, since the symmetry axis of the TTI medium does not align with
+the vertical axis $k_z$, the TTI Christoffel matrix is different from
+its VTI equivalent. The stiffness tensor is determined by the
+parameters $V_{P0}$, $V_{S0}$ , $\epsilon$, $\delta$, and the tilt angle
+$\nu$.
+
+In anisotropic media, $\UU_P$ generally deviates from the wave vector
+direction $\kk=\frac{\omega}{V}\nn$, where $\omega$ is the angular
+frequency, $V$ is the phase vector. \rFgs{VTIpolar} and \subrfn{TTIpolar}
+show the P-mode polarization in the wavenumber domain for a VTI medium
+and a TTI medium with a 30$^\circ$ tilt angle, respectively. The
+polarization vectors for the VTI medium deviate from radial
+directions, which represent the isotropic polarization vectors
+$\kk$. The polarization vectors of the TTI medium are rotated
+30$^\circ$ about the origin from the vectors of the VTI medium.
+
+
+\rFgs{dK_notaper_VTI} and \subrfn{dK_notaper_TTI} show the components
+of the P-wave polarization of a VTI medium and a TTI medium with a
+30{$^\circ$} tilt angle, respectively. \rFg{dK_notaper_rot_TTI} shows
+that the polarization vectors in \rfg{dK_notaper_TTI} rotated to the
+symmetry axis and its orthogonal direction of the TTI
+medium. Comparing \rFgs{dK_notaper_VTI} and \subrfn{dK_notaper_rot_TTI},
+we see that within the circle of radius $\pi$~radians, the components of this
+TTI medium are rotated 30{$^\circ$} from those of the VTI
+medium. However, note that the $z$ and $x$ components of the
+polarization vectors for the VTI medium (\rFg{dK_notaper_VTI}) are
+symmetric with respect to the $x$ and $z$ axes, respectively; in
+contrast, the vectors of the TTI medium (\rFg{dK_notaper_rot_TTI}) are
+not symmetric because of the non-alignment of the TTI symmetry with
+the Cartesian coordinates.
+
+
+\def\sk#1{\sin\lp #1 k\rp}
+\def\done#1#2{\frac{\partial#1}{\partial#2}}
+To maintain continuity at the negative and positive Nyquist
+wavenumbers for Fourier transform to obtain space-domain filters,
+i.e. at $k_x,k_z=\pm\pi$~radians, one needs to apply tapers to the vector
+components. For VTI media, a taper corresponding to the
+function~\cite[]{yan:WB19}
+\beq\label{sintaper}
+f(k)= -\frac{8\sk{}}{5k} + \frac{2\sk{2}}{5k} -\frac{8\sk{3}}{105k}
++ \frac{\sk{4}}{140k}
+\eeq
+can be applied to the $x$ and $z$ components of the polarization
+vectors (\rFg{dK_notaper_VTI}), where $k$ represent the components
+$k_x$ and $k_z$ of the vector $\kk$.
+This taper ensures that $U_x$ and $U_z$ 
+are zero at $k_z=\pm\pi$~radians and $k_x=\pm\pi$~radians, respectively.  
+The components $U_x$ and $U_z$ are continuous in the
+$z$ and $x$ directions across the Nyquist wave numbers, respectively,
+due to the symmetry of the VTI media.  
+Moreover, the application of this taper transforms polarization vector 
+components to 8$^{th}$ order derivatives.
+If the components of the isotropic polarization vectors $\kk$ are
+tapered by the function in \req{sintaper} and then transformed to the
+space domain, one obtains the conventional 8$^{th}$ order finite
+difference derivative operators $\done{}{x}$ and
+$\done{}{z}$~\cite[]{yan:WB19}. Therefore, the VTI separators reduce
+to conventional derivatives---the components of the divergence and
+curl operators---when the medium is isotropic.
+
+For TTI media, due to the asymmetry of the Fourier domain derivatives
+(\rFg{dK_notaper_TTI}), one needs to apply a rotational symmetric
+taper to the polarization vector components to obtain continuity
+across Nyquist wavenumbers. A simple Gaussian taper
+%
+\beq\label{gaussiantaper}
+g(\kk)=C \, exp\lb-\frac{\left|\kk\right|^2}{2\sigma^2}\rb
+\eeq
+%
+can be used, where C is a normalizing constant.  When one chooses a
+standard deviation of $\sigma=1$ radian, the magnitude of this taper
+at $\left|\kk\right|=\pi$~radians is about 0.7\% of the peak value,
+and therefore the TTI components can be safely assumed to be
+continuous across the Nyquist wavenumbers.
+Tapering the polarization vector components
+in \rFg{kdomain.notaper} with the function 
+in \req{gaussiantaper}, one obtains the plots
+in \rFg{kdomain.tapered}.  The panels
+in \rFg{kdomain.tapered}, which exhibits circular continuity
+across the Nyquist wavenumbers, transform to the space-domain separators 
+in \rFg{xdomain.tapered}.  The space-domain
+filters for TTI media is rotated from the VTI filters, also by the
+tilt angle $\nu$.
+%With the application of
+%this taper, even for isotropic media, the operators constructed this
+%way are 2D stencils instead of the conventional 1D finite difference
+%operators.
+
+The value of $\sigma$ determines the size of the operators in the
+space domain and also affects the frequency content of the separated
+wave-modes. For example, \rfg{gauss.sigma} shows the component $U_z$
+and operator $L_z$ for $\sigma$ values of $0.25$, $1.00$, and $1.25$
+radians.  A larger value of $\sigma$ results in more concentrated
+operators in the space domain and better preserved frequency of the
+separated wave-modes. However, one needs to ensure that the function
+$g(\kk)$ at $\left|\kk\right|=\pi$~radians is small enough to assume
+continuity of the value function across Nyquist wavenumbers. When one
+chooses $\sigma=1$ radian, the TTI components can be safely assumed to
+be continuous across the Nyquist wavenumbers. %discuss different sigma
+
+For heterogeneous models, I can pre-compute the polarization vectors
+at each grid point as a function of the $V_{P0}/ V_{S0}$ ratio, the
+Thomsen parameters $\epsilon$ and $\delta$, and tilt angle $\nu$. I
+then transform the tapered polarization vector components to the space
+domain to obtain the spatially-varying separators $L_x$ and $L_z$. The
+separators for the entire model are stored and used to separate P- and
+S-modes from reconstructed elastic wavefields at different time
+steps. Thus, wavefield separation in TI media can be achieved simply
+by non-stationary filtering with spatially varying operators.  I
+assume that the medium parameters vary slowly in space and that they
+are locally homogeneous. For complex media, the localized operators
+behave similarly to the long finite difference operators used for
+finite difference modeling at locations where medium parameters change
+rapidly.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\inputdir{Matlab}
+\multiplot{2}{VTIpolar,TTIpolar}{width=.48\textwidth}
+{The polarization vectors of P-mode as a function of normalized
+wavenumbers $k_x$ and $k_z$ ranging from $-\pi$~radians to $+\pi$~radians, for (a) a
+VTI model with $V_{P0}=3.0$~km/s, $V_{S0}=1.5$~km/s, $\epsilon=0.25$ and
+$\delta=-0.29$, and for (b) a TTI model with the same model parameters
+as (a) and a symmetry axis tilt $\nu=30^\circ$. The vectors in (b) are
+rotated 30$^\circ$ with respect to the vectors in (a) around $k_x=0$
+and $k_z=0$.}
+
+
+\inputdir{operator}
+\multiplot{1}{dK-notaper-VTI,dK-notaper-TTI,dK-notaper-rot-TTI}
+{width=.7\textwidth} {The $z$ and $x$ components of the polarization
+vectors for P-mode in the Fourier domain for (a) a VTI medium with
+$\epsilon=0.25$ and $\delta=-0.29$, and for (b) a TTI medium with
+$\epsilon=0.25$, $\delta=-0.29$, and $\nu=30^\circ$. Panel (c)
+represents the projection of the polarization vectors shown in (b)
+onto the tilt axis and its orthogonal direction.
+\label{fig:kdomain.notaper} }
+
+\multiplot{1}{dK-VTI,dK-TTI,dK-rot-TTI}{width=.7\textwidth}
+{The wavenumber-domain vectors
+in \rFg{dK-notaper-VTI,dK-notaper-TTI,dK-notaper-rot-TTI} are tapered
+by the function in \req{gaussiantaper} to avoid Nyquist
+discontinuity. Panel (a) corresponds to \rFg{dK-notaper-VTI}, panel
+(b) corresponds to \rfg{dK-notaper-TTI}, and panel (c) corresponds
+to \rFg{dK-notaper-rot-TTI}.
+\label{fig:kdomain.tapered}}
+
+\multiplot{1}{dX-VTI,dX-TTI,dX-rot-TTI}{width=.7\textwidth}
+{The space-domain wave-mode separators for the medium shown
+in \rFg{VTIpolar,TTIpolar}. They are the Fourier transformation of the
+polarization vectors shown in \rFg{kdomain.tapered}. Panel (a)
+corresponds to \rFg{dK-VTI}, panel (b) corresponds to \rfg{dK-TTI},
+and panel (c) corresponds to \rFg{dK-rot-TTI}. The zoomed views show
+$24\times24$ samples out of the original $64\times64$ samples around the center of
+the filters.
+\label{fig:xdomain.tapered}}
+
+
+\multiplot{1}{dzKX-sig0-TTI,dzKX-sig1-TTI,dzKX-sig2-TTI}
+{width=.7\textwidth} {Panels (a)--(c) correspond to component $U_z$
+(left) and operator $L_z$ (right) for $\sigma$ values of $0.25$,
+$1.00$, and $1.25$ radians in \req{gaussiantaper}, respectively.  A larger
+value of $\sigma$ results in more spread components in the wavenumber
+domain and more concentrated operators in the space domain.
+\label{fig:gauss.sigma}}
+
+
+
+\section{Wave-mode separation for 3D TI media}
+In order to separate all three modes---P, SV, and SH---in a 3D TI
+medium, one needs to construct 3D separators. \cite{dellinger.thesis}
+shows that P-waves can be separated from two shear modes by a
+straightforward extension of the 2D algorithm. Indeed, for 3D TI
+media, one can always obtain the P-mode by constructing P-wave separators
+represented by the polarization vector $\UU_P=\{U_x, U_y, U_z \}$
+and then projecting the 3D elastic wavefields onto the vector $\UU_P$. The
+P-wave polarization vector with components $\{U_x, U_y, U_z\}$ 
+is obtained by solving the 3D
+Christoffel matrix~\cite[]{akirichards.2002,Tsvankin}:
+\beq\label{VtiChristoffel3d.ch3}
+\lb 
+ \mtrx{ G_{11}-\rho V^2 &  G_{12}           & G_{13}\\
+        G_{12}          &  G_{22} -\rho V^2 & G_{23} \\
+        G_{13}          & G_{23}            & G_{33} -\rho V^2
+ }
+\rb
+\lb\mtrx{ U_x\\U_y\\U_z} \rb
+=0 \, .
+\eeq
+The notations in this equation have the same definitions as in \req{3dChristoffel}.
+For TTI media, the matrix ${\mathbf G}$ has the elements
+\begin{eqnarray}
+G_{11}&=&c_{11}n_x^2+c_{66}n_y^2+c_{55}n_z^2 
+     +2 c_{16}n_xn_y+2 c_{15}n_xn_z+2c_{56}n_yn_z \, ,\\
+G_{22}&=&c_{66}n_x^2+c_{22}n_y^2+c_{44}n_z^2 
+     +2 c_{26}n_xn_y+ (c_{45}+c_{46})n_xn_z+2c_{24}n_yn_z \, ,\\
+G_{33}&=&c_{55}n_x^2+c_{44}n_y^2+c_{33}n_z^2 
+     +2 c_{45}n_xn_y+2 c_{35}n_xn_z+2c_{34}n_yn_z \, ,\\
+G_{12}&=&c_{16}n_x^2+c_{26}n_y^2+c_{45}n_z^2 
+     + (c_{12}+c_{66})n_xn_y+ (c_{14}+c_{56})n_xn_z+(c_{25}+c_{46})n_yn_z \, ,\nonumber\\ \\
+G_{13}&=&c_{15}n_x^2+c_{46}n_y^2+c_{35}n_z^2 
+     + (c_{14}+c_{56})n_xn_y+ (c_{13}+c_{55})n_xn_z+(c_{36}+c_{45})n_yn_z \, ,\nonumber\\\\
+G_{23}&=&c_{56}n_x^2+c_{24}n_y^2+c_{34}n_z^2 
+     + (c_{25}+c_{46})n_xn_y+ (c_{36}+c_{45})n_xn_z+(c_{23}+c_{44})n_yn_z \, .\nonumber\\
+\end{eqnarray}
+
+When constructing shear mode separators, one faces an additional
+complication: SV- and SH-waves have the same velocity along the
+symmetry axis of a 3D TI medium, and this singularity prevents one
+from obtaining polarization vectors for shear modes in this
+particular direction by solving the Christoffel
+equation~\cite[]{Tsvankin}. In 3D TI media, the polarization of the
+shear modes around the singular directions are non-linear and cannot
+be characterized by a plane-wave solution. Consequently, constructing
+3D global separators for fast and slow shear modes is difficult.
+
+% how does S-wave-mode separaton work
+To mitigate the effects of the shear wave-mode singularity, I use
+the mutual orthogonality among the P, SV, and SH modes depicted
+in \rFg{polar3d}. In this figure, vector
+$\nn=\{\sin\nu\cos\alpha,\sin\nu\sin\alpha,\cos\nu\}$ represents the
+symmetry axis of a TTI medium, with $\nu$ and $\alpha$ being the tilt
+and azimuth of the symmetry axis, respectively. The wave vector $\kk$
+characterizes the propagation direction of a plane wave. Vectors
+${\mathbf P}$, ${\mathbf {SV}}$, and ${\mathbf {SH}}$ symbolize the
+compressional, and fast and slow shear polarization directions, respectively. 
+For TI media, plane waves propagate in symmetry planes, and the symmetry axis
+$\nn$ and any wave vector $\kk$ form a symmetry plane. For a plane
+wave propagating in the direction $\kk$, the P-wave is polarized in
+this symmetry plane and deviates from the vector $\kk$; the SV- and
+SH-waves are polarized perpendicular to the P-mode, in and out of the
+symmetry plane, respectively.
+
+Using this mutual orthogonality among all three modes, I first
+obtain the SH-wave polarization vector $\UU_{SH}$ by cross multiplying
+vectors $\nn$ and $\kk$, which ensures that the SH mode is
+polarized orthogonal to symmetry planes:
+\bea\label{ShPolar}
+\UU_{SH} 
+&=&\nn\times\kk \nonumber \\
+&=&\{ k_z n_y-k_y  n_z, \nonumber \\
+&&~\,   k_x n_z- k_z n_x,  \nonumber \\
+&&~\,   k_y n_x - k_x n_y \} \, .
+\eea
+
+Then I calculate the SV polarization vector $\UU_{SV}$ by 
+cross multiplying polarization vectors P and SH modes, which ensures
+the orthogonality between SV and P modes and SV and SH modes:
+\bea\label{SvPolar}
+\UU_{SV}
+&=&\UU_{P}\times\UU_{SH} \, , \nonumber  \\
+&=&\{     
+     k_y n_x U_y - k_x n_y U_y+k_z n_x U_z - k_x n_z U_z,  \nonumber \\
+&&~\,  k_z n_y U_z - k_y n_z U_z+k_x n_y U_x - k_y n_x U_x,  \nonumber \\
+&&~\,  k_x n_z U_x - k_z n_x U_x+k_y n_z U_y - k_z n_y U_y
+\} \, .
+\eea
+Here, the magnitude of the P-wave polarization vectors for a certain
+wavenumber $|\kk|$ is a constant:
+\beq
+\left| U_{P} \right| = \sqrt{U_x^2+U_y^2+U_z^2}=c \, .
+\eeq
+This ensures that for a certain wavenumber, P-waves obtained by
+projecting the elastic wavefields onto the polarization vectors are
+uniformly scaled. For comparison, the magnitudes of all three modes
+are respectively
+\bea
+\left| U_{P} \right| &=&c \, , \\
+\left| U_{SV}\right| &=&c\sin\phi \, , \\
+\left| U_{SH}\right| &=&c\sin\phi  \, ,
+\eea
+where $\phi$ is the polar angle of the propagating plane wave, i.e.,
+the angle between vectors $\kk$ and $\nn$.
+\rFg{polar3dP,polar3dS2,polar3dS1} shows the polarization
+vectors of P-, SH-, and SV-modes computed
+using \reqs{VtiChristoffel3d.ch3}, \ren{ShPolar}, and \ren{SvPolar},
+respectively. The P-wave polarization vectors in \rfg{polar3dP}
+all have the same magnitude, but the SV and SH polarization vectors
+in \rfgs{polar3dS1} and \subrfn{polar3dS2} vary in magnitude. In the
+symmetry axis direction, they become zero.  The zero amplitude of the
+shear modes in the symmetry axis direction is not an abrupt but a
+continuous change over nearby propagation angles. Using separators
+represented by solutions to \req{VtiChristoffel3d.ch3} and
+expressions \ren{ShPolar} and \ren{SvPolar} to filter the wavefields,
+I obtain separated shear modes that are scaled differently than the
+P-mode. For a certain wavenumber, the shear modes are scaled by
+$\sin\phi$, with $\phi$ being the polar angle, which increases from
+zero in the symmetry axis to unity in the orthogonal propagation
+directions. Therefore, the separated SV- and SH-waves have zero
+amplitude in the symmetry axis direction, and the amplitudes of the
+shear modes are just kinematically correct.
+
+The components of the polarization vectors for P-, SV-, and SH-waves
+can be transformed back to the space domain to construct spatial
+filters for 3D heterogeneous TI media.  For example, \rfg{filters3d}
+illustrates nine spatial filters transformed from the Cartesian
+components of the polarization vectors shown
+in \rfg{polar3dP,polar3dS2,polar3dS1}.  All these filters can be
+spatially varying when the medium is heterogeneous.  Therefore, in
+principle, wave-mode separation in 3D would perform well even for
+models that have complex structures and arbitrary tilts and azimuths
+of TI symmetry.
+
+\inputdir{XFig}
+\plot{polar3d}
+{width=\textwidth}{A schematic showing the elastic wave-modes
+polarization in a 3D TI medium. The three parallel planes represent
+the isotropy planes of the medium. The vector $\nn$ represents the
+symmetry axis, which is orthogonal to the isotropy plane. The vector
+$\kk$ is the propagation direction of a plane wave. The wave-modes P, SV,
+and SH are polarized in the direction ${\mathbf P}$, ${\mathbf {SV}}$,
+and ${\mathbf {SH}}$, respectively. The three modes are polarized orthogonal
+to each other.}
+
+
+
+\inputdir{Matlab}
+\multiplot{2}{polar3dP,polar3dS2,polar3dS1}{width=.45\textwidth}
+{The wave-mode polarization for P-, SH-, and SV-mode for a VTI medium
+with parameters $V_{P0}=4.95$~km/s, $V_{S0}=2.48$~km/s,
+$\epsilon=0.4$, and $\delta=0.1$. The P-mode polarization is computed
+using the 3D Christoffel equation, and SV and SH polarizations are
+computed using \rEqs{SvPolar} and~\ren{ShPolar}. Note that the SV- and
+SH-wave polarization vectors have zero amplitude in the vertical
+direction.}
+
+\inputdir{vti3}
+\plot{filters3d}{width=\textwidth}{The separation 
+filters $L_x$, $L_y$, and $L_z$ for the P, SV, and SH modes for a VTI
+medium. The corresponding wavenumber-domain polarization vectors are
+shown in \rFg{polar3dP,polar3dS2,polar3dS1}. Note that the filter
+$L_z$ for the SH mode is blank because the $z$ component of the
+polarization vector is zero.  The zoomed views show $24\times24$ samples out
+of the original $64\times64$ samples around the center of the filters. }

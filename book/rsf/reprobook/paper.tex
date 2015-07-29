@@ -1,0 +1,512 @@
+\title{Reproducible research: Lessons from the Madagascar project}
+
+\lefthead{Fomel et al.}
+\righthead{Implementing
+Reproducible Computational Research}
+
+\author{
+Sergey Fomel\footnotemark[1],
+Paul Sava\footnotemark[2],
+Ioan Vlad\footnotemark[3], \\
+Yang Liu\footnotemark[4],
+Xiaolei Song\footnotemark[1], and
+Zhonghuan Chen\footnotemark[5]
+}
+
+\address{
+\footnotemark[1]Bureau of Economic Geology \\
+Jackson School of Geosciences \\
+The University of Texas at Austin \\
+University Station, Box X \\
+Austin, TX 78713-8972 \\
+USA \\
+\footnotemark[2] Department of Geophysics \\
+Colorado School of Mines \\
+Golden, CO 80401 \\
+USA \\
+\footnotemark[3] TGS \\
+2500 CityWest Boulevard, Suite 2000 \\
+Houston, Texas 77042
+USA \\
+\footnotemark[4] College of Geo-Exploration Science and Technology \\
+Jilin University \\
+No.938 Xi Minzhu Street \\
+Changchun, Jilin Province 130026
+China \\
+\footnotemark[5] Department of Automation \\
+Tsinghua University \\
+FIT 1-115, Tsinghua University \\
+Beijing 100084
+China
+}
+
+\begin{abstract}
+PLACEHOLDER: Reproducibility is important. We implement it in Madagascar. Here is how. Here is what we have learned.
+\end{abstract}
+
+\section{Introduction}
+
+[Why reproducible]In scientific research over all fields,
+everyone needs to "stand on the shoulders of giants" at first.
+Currently, there is a steep road to their shoulders.
+What we do on reproducible research 
+is to help people to climb on "the shoulders of giants".
+
+[How reproducible]The target of reproducible research 
+is similar to the open software project.
+However, the reproducible research provides not only the software (algorithms)
+but also the experiments and documents (paper, slides and reports).
+Moreover, the reproducible research makes it clear that
+how to organize the experiments to prove the ideas in the documents
+and how to design the algorithm software to finish the experiments.
+The latter is more significant than the former in reproducible research.
+
+[Who need it]The reproducible research is helpful to the following people:
+\begin{description}
+\item [Beginner]
+\item [Interdisciplinary researcher]
+\item [The developer himself]
+\end{description}
+
+[About geoscience reproducible research]
+
+[About madagascar]
+
+[Road ahead]For the target of helping people to climb on giants's shoulder,
+the open software is not enough, 
+providing the experiments, documents is still not enough.
+These materials provided by current reproducible research 
+can show how to implement the new method
+and how to prove the results in the research,
+but it is not enough to show the reader
+how the author yields the new idea.
+More works are ahead to exchange the mind between the authors and the readers.
+
+
+\section{History of the Madagascar project}
+
+The history of reproducible research in applied geophysics goes back
+to the work of Jon Claerbout at Stanford University
+\cite[]{cise}. While working on the manuscript of a book
+\footnote{published later as \cite[]{pvi}}, Claerbout had what he
+described as a ``eureka'' moment \cite[]{Claerbout.sep.67.139}:
+\begin{quote}
+My third textbook on earth soundings analysis consists of about 300
+pages, 120 figures, and listings of 40 terse subroutines. The
+subroutines were used in preparing the figures. Each of the figure
+captions contains a one-word name for the figure. Behind the visible
+book are plot files for each figure as well as main programs and
+command scripts (makefiles) that I used to make each figure. I
+suddenly realized that I had all the materials needed by any reader or
+student to recreate my work. This would give a tremendous boost to
+anyone wishing to go beyond me.
+\end{quote}
+A that moment, he had a vision of computational reproducibility
+achieved ... Cake to make ... CiSE article ... CD-Rom to Web...
+
+The work of Claerbout inspired other research groups, most notably the
+lab of David Donoho... Claerbout's principle...
+
+However, the computational environment for reproducible experiments
+created by Claerbout and his students at the Stanford Exploration
+Project (SEP) did not spread to the rest of the geophysical
+community. Part of the reason was the complexity of the tools used to
+implement it: an accumulation of make rules, Perl scripts, Unix shell
+scripts, etc. The Madagascar project started in 2003 as an attempt to
+reimplement the functionality of the SEP environment and to make it
+accessible to other users in an open-source form.
+
+Madagascar was released under a GPL license and publicly announced in
+June 2006 at the workshop ``Open Source E\&P Software – Putting the
+Pieces Together'' organized by the European Association of
+Geoscientists and Engineers (EAGE). ... version 1.0 ... number of
+developers ... number of papers ... 
+
+.... Madagascar schools ...
+
+\section{Madagascar approach to reproducibility}
+
+Describe how scons - scons lock - scons test works. Generating papers
+for the website...
+
+\section{Example}
+
+Many appreciative users were familiar with SU or SEPlib,
+now they had a new choice -- Madagascar (RSF), another 
+open-source software, but there are some different places 
+from others open-source softwares. In this section,
+we show some simple examples about some geophysics processing 
+flows, maybe these can help Madagascar users know
+it better.
+
+\subsection{Example1 - Set up 1-D synthetic data}
+
+\begin{enumerate}
+\item Command line
+
+For the detailed parameter of every Madagascar function, just type
+the function name without parameter in command line.
+
+\begin{verbatim}
+sfmake
+\end{verbatim} 
+
+The detailed information about ``sfmake'' will be followed:
+
+\begin{verbatim}
+NAME
+        sfmake
+DESCRIPTION
+        Simple 2-D synthetics with crossing plane waves.
+SYNOPSIS
+        sfmake > mod.rsf n1=100 n2=14 n3=1 second=y n=3 p=3 t1=4 t2=4
+PARAMETERS
+        int     n=3     
+        int     n1=100  
+        int     n2=14   
+        int     n3=1    dimensions 
+        int     p=3     
+        bool    second=y [y/n]  if n, only one plane wave is modeled 
+        int     t1=4    triangle smoother for first wave 
+        int     t2=4    triangle smoother for second wave
+USED IN
+        gee/lal/multiscale
+        gee/mda/hole
+        gee/pch/signoi
+        sep/pwd/hole
+        sep/pwd/signoi
+        sep/spitz/sign
+SOURCE
+        user/gee/Mmake.c
+VERSION
+        Mmake.c 839 2004-10-25 11:54:43Z fomels
+\end{verbatim}
+
+{\begin{enumerate}
+\item Making 1-D spike data.
+
+\begin{verbatim}
+sfspike n1=1000 nsp=2 k1=300,600 mag=1.0,2.0 > spike.rsf
+\end{verbatim}
+This command generates a 1-D list of 1000 numbers (n1=1000), all zero
+except for two spikes (nsp=2) with amplitude 1.0 and 2.0 (mag=1.0,2.0)
+at position 300 and 600 (k1=300,600). ps: \texttt{sfspike} need no input.
+\texttt{``.rsf''} is Madagascar data file.
+
+The file \texttt{spike.rsf} is a text header. The \emph{actual data}
+are stored in the binary file pointed to by the \texttt{in=} parameter
+in the header. You can look at the header file directly with
+\texttt{more}, or better, examine the file properties with:
+\begin{verbatim}
+sfin spike.rsf
+\end{verbatim}
+You can learn more about the contents of \texttt{spike.rsf} with
+\begin{verbatim}
+sfattr < spike.rsf
+\end{verbatim}
+
+\item Generating graphic file.
+
+The following command makes a graphics file from \texttt{spike.rsf}:
+\begin{verbatim}
+sfgraph title="Hello world!" < spike.rsf > spike.vpl
+\end{verbatim}
+The frequently-used plot functions are:
+
+\texttt{sfgraph, sfwiggle, sfgrey, sfdots, sfgrey3}.
+
+\texttt{``.vpl''} is Madagascar graphics file.
+
+\item Displaying graphics.
+\begin{verbatim}
+xtpen < spike.vpl
+\end{verbatim}
+
+In addition, if you need save this graphics to other type graphics file,
+try the followed commands.
+\begin{verbatim}
+vplot2eps < spike.vpl > spike.eps
+\end{verbatim} 
+or
+\begin{verbatim}
+vplot2gif < spike.vpl > spike.gif
+\end{verbatim}
+
+If you are ``Microsoft windows os'' user, another software ``Illustrator''
+can be used to edit ``.eps'' vector file. 
+
+\item Making 1-D synthetic trace with 5Hz Ricker wavelet.
+\begin{verbatim}
+sfricker1 frequency=5 < spike.rsf > wave.rsf
+\end{verbatim}
+
+\item Displaying the result.
+\begin{verbatim}
+sfgraph title="Two Ricker wavelets" < wave.rsf > wave.vpl
+xtpen < wave.vpl
+\end{verbatim}
+
+\emph{You can \texttt{pipe} Madagascar commands together and do the whole 
+thing at once like this:}
+\begin{verbatim}
+sfspike n1=1000 nsp=2 k1=300,600 mag=1.0,2.0 | sfricker1 frequency=5 | \
+sfgraph symbol=y title="Two Ricker wavelets" | xtpen
+\end{verbatim}
+
+After that, we will have no any intermediate file except a figure like this:
+
+\inputdir{exam1}
+\plot{wave}{width=\textwidth}{Welcome to Madagascar.}
+
+\end{enumerate}}
+
+\item \href{http://rsf.sourceforge.net/SCons}{SCons files}.
+%%%%% Lend from Reproducible computational experiments using SCons %%%%%
+The main \texttt{SConstruct} commands defined in our reproducible
+research environment are collected in Table~\ref{tbl:commands}.
+
+\tabl{commands}{Basic methods of an \texttt{rsfproj} object.}{
+\begin{center}
+\begin{tabular}{|p{0.9\textwidth}|} \hline
+\noindent\texttt{Fetch(data\_file,dir[,ftp\_server\_info])}\\ \ \\
+\indent A rule to download \texttt{$<$data\_file$>$} from a specific
+directory \texttt{$<$dir$>$} of an FTP server
+\texttt{$<$ftp\_server\_info$>$}. \\
+\hline 
+\noindent\texttt{Flow(target[s],source[s],command[s][,stdin][,stdout])}\\ \ \\
+\indent A rule to generate \texttt{$<$target[s]$>$} from
+\texttt{$<$source[s]$>$} using \texttt{command[s]} \\
+\hline 
+\noindent\texttt{Plot(intermediate\_plot[,source],plot\_command)} or\\
+\texttt{Plot(intermediate\_plot,intermediate\_plots,combination})\\ \ \\
+\indent A rule to generate \texttt{$<$intermediate\_plot$>$} 
+in the working directory. \\
+\hline 
+\noindent\texttt{Result(plot[,source],plot\_command)} or\\ 
+\texttt{Result(plot,intermediate\_plots,combination})\\ \ \\
+\indent A rule to generate a final \texttt{$<$plot$>$} in
+the special \texttt{Fig} folder of the working directory. \\
+\hline 
+\noindent\texttt{End()} \\ \ \\
+\indent A rule to collect default targets. \\
+\hline 
+\end{tabular}
+\end{center}}
+
+These commands are defined in \texttt{\$RSFROOT/lib/rsfproj.py} where
+\texttt{RSFROOT} is the environmental variable to the Madagascar
+installation directory. The source of this file is in
+\href{http://sourceforge.net/p/rsf/code/HEAD/tree/trunk/framework/rsf/proj.py}{python/rsfproj.py}.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+If you have SCons installed, you can use it to automate Madagascar
+processing. Here is a simple \texttt{SConstruct} file to make
+\texttt{wave.rsf} and
+\texttt{wave.vpl}:
+\definecolor{frame}{rgb}{0.905,0.905,0.905}
+\lstset{language=Python,backgroundcolor=\color{frame},showstringspaces=false,numbers=left,numberstyle=\tiny}
+\lstinputlisting[frame=single]{exam1/SConstruct}
+
+Put the file in an empty directory, give it the name
+\texttt{SConstruct}, cd to that directory, and issue the command:
+\begin{verbatim}
+scons
+\end{verbatim}
+The graphics file is now stored in the Fig subdirectory. You can view it
+manually with:
+\begin{verbatim}
+xtpen Fig/wave.vpl
+\end{verbatim}
+or you can use
+\begin{verbatim}
+scons view
+\end{verbatim}
+When an \texttt{SConstruct} file makes more than one graphics file, the scons
+view command will display all of them in sequence. 
+
+When one use \texttt{SConstruct}, all Madagascar commands can be abbreviate by
+removing ``sf''.
+
+\end{enumerate}
+
+\subsection{Example2 - Set up 2-D synthetic data and simple processing flow (Scons) }
+\inputdir{exam2}
+
+The second example is how to set up a simple 2-D prestack model and
+processing flow.  The plan for this experiment is simply to create a
+sythetic data, to add some noise and to eliminate it with median
+filter.
+
+\lstinputlisting[firstline=5,lastline=5,frame=single]{exam2/SConstruct}
+%
+is a standard Python command that loads the Madagascar project
+management module \texttt{rsfproj.py} which provides our extension to
+SCons. Do you want to use ``SU'' project? Try \texttt{``from suproj
+import *''}.\\
+
+\lstinputlisting[firstline=11,lastline=22,frame=single]{exam2/SConstruct}
+%
+instructs SCons to generate a velocity data \texttt{$V=2000+125*t$}. \\
+
+\lstinputlisting[firstline=14,lastline=23,frame=single]{exam2/SConstruct}
+%
+generates the synthetic prestack multiple layed model. The number of layers 
+is 17 \texttt{nsp=17}, the position of layers is controled by k1, 
+\texttt{string.join(map(str,range (100,916,48)),',')} is a Python string 
+command, the result is string
+\texttt{100,148,196,...,868,916}. \texttt{band} and
+\texttt{inmo} are used to make hyperbolas with wavelet. One can replace 
+\texttt{bandpass flo=4 fhi=20} with \texttt{ricker1 frequency=2}.\\
+
+\lstinputlisting[firstline=29,lastline=30,frame=single]{exam2/SConstruct}
+%
+displays the synthetic data with grey figure, \texttt{screenratio=1.2} is 
+the parameter that can control the length-width ratio of a figure. More
+parameters about ploting can be found by using \texttt{sfdoc stdplot} in
+command line.
+
+The frequently-used parameters are:
+
+\texttt{screenratio, screenht, title, labeln, yreverse, etc.}
+
+%\plot{synt}{height=0.25\textheight}{Synthetic prestack data.}
+
+\lstinputlisting[firstline=36,lastline=36,frame=single]{exam2/SConstruct}
+%
+adds white saltpepper noise to synthetic data. \\
+
+\lstinputlisting[firstline=42,lastline=43,frame=single]{exam2/SConstruct}
+%
+generate the temporary figure file about noisy data with wiggle
+figure and final figure file.\\
+
+\lstinputlisting[firstline=49,lastline=54,frame=single]{exam2/SConstruct}
+%
+executes the simple band-pass filtering and displays with grey figure.\\
+
+\multiplot{3}{synt,noise,band}{width=0.25\textwidth}{Left: Synthetic 
+   prestack data. Middle: Noisy data. Right: Result after band-pass filtering.}
+
+\lstinputlisting[firstline=60,lastline=78,frame=single]{exam2/SConstruct}
+%
+plots the figure with advanced displaying methods. 
+
+The frequently-used parameters of merging in \texttt{Result} are:
+
+\texttt{SideBySideIso, SideBySideAniso, OverUnderIso, OverUnderAniso, TwoRows}.
+
+\plot{sidebyside}{height=0.25\textheight}{Left: grey. Middle: 
+                 wiggle. Right: color.}
+
+\lstinputlisting[firstline=84,lastline=85,frame=single]{exam2/SConstruct}
+%
+executes the simple median filter and generates the corresponding
+figure file.\\
+
+\lstinputlisting[firstline=92,lastline=120,frame=single]{exam2/SConstruct}
+%
+extracts the $64th$ trace from profile (\texttt{window n2=1 f2=64}),
+analyzes the corresponding amplitude spectra, and finally displays 
+the comparison result.
+
+\plot{compare}{height=0.5\textheight}{Top left: noisy model. Top
+right: denoised result with median filter. Bottom left: amplitude spectra 
+of the 64th trace in the noisy model. Bottom right: corresponding amplitude
+spectra in denoised result.}
+
+\lstinputlisting[firstline=126,lastline=126,frame=single]{exam2/SConstruct}
+%
+represents the ending symbol.
+
+The whole \texttt{SConstruct} file is as follows:
+
+\definecolor{frame}{rgb}{0.905,0.905,0.905}
+\lstset{language=Python,backgroundcolor=\color{frame},showstringspaces=false,numbers=left,numberstyle=\tiny}
+\lstinputlisting[frame=single]{exam2/SConstruct}
+
+\subsection{Example3 - Set up 2-D Kirchhoff modeling and secondary processing flow (Scons)}
+\inputdir{exam3}
+
+The third example is how to set up a simple 2-D prestack model with
+Kirchhoff method and advanced processing flow. The plan for this
+experiment is to create a sythetic dataset, to execute NMO and
+stacking.
+
+\definecolor{frame}{rgb}{0.905,0.905,0.905}
+\lstset{language=Python,backgroundcolor=\color{frame},showstringspaces=false,numbers=left,numberstyle=\tiny}
+\lstinputlisting[frame=single]{exam3/SConstruct}
+
+The corresponding figures are displayed as:
+\multiplot{2}{modl,modl2}{width=0.45\textwidth}{Left: Model. 
+            Right: True model.}
+\plot{data}{height=0.4\textheight}{Synthetic data.}
+\plot{cdp2500}{height=0.4\textheight}{Left: CDP gather at CDP=2.5km. 
+           Middle: Velocity scan. Right: NMO.}
+\plot{pick}{height=0.4\textheight}{Stacking velocity.}
+\plot{stack}{height=0.4\textheight}{NMO stack.}
+
+\subsection{Example4 - Set up 2-D Time-domain acoustic FD modeling}
+\inputdir{exam4}
+
+The fourth example is how to set up a simple 2-D prestack model with acoustic 
+finite different method.
+
+\definecolor{frame}{rgb}{0.905,0.905,0.905}
+\lstset{language=Python,backgroundcolor=\color{frame},showstringspaces=false,numbers=left,numberstyle=\tiny}
+\lstinputlisting[frame=single]{exam4/SConstruct}
+
+\plot{mod2}{width=0.9\textwidth}{Velocity model}
+\multiplot{4}{data15,data30,data45,data60}{width=0.45\textwidth}{Shot 
+             gather at distance=8.1km,16.2km,24.3km,32.4km}
+\multiplot{5}{snap45-1,snap45-2,snap45-3,snap45-4,snap45-5}{width=0.45\textwidth}{Snapshot at different time of shot at distance=21.6km}
+\clearpage
+
+\subsection{Example5 - Set up Prestack deep migration processing flow (Scons)}
+\inputdir{exam5}
+
+The fifth example will set up a simple 2-D prestack synthetic data
+with kirchhoff modeling, and then apply 3-D S/R migration with
+extended SSF to get the model image. 8 shots are used to image the
+model.
+
+\definecolor{frame}{rgb}{0.905,0.905,0.905}
+\lstset{language=Python,backgroundcolor=\color{frame},showstringspaces=false,numbers=left,numberstyle=\tiny}
+\lstinputlisting[frame=single]{exam5/SConstruct}
+
+\plot{model}{width=0.6\textwidth}{Velocity model.}
+\multiplot{8}{shot0,shot1,shot2,shot3,shot4,shot5,shot6,shot7}{width=0.35\textwidth}{Shot gather at distance=0.5km,1.0km,1.5km,2.0km,2.5km,3.0km,3.5km,4.0km}
+\plot{img}{width=0.6\textwidth}{Image.}
+
+\section{Lessons learned}
+
+Over 20 years of experience with reproducible research in geophysical
+applications taught us several important lessons. Whether you use
+Madagascar in your research or you prefer other tools to implement
+computational reproducibility, we hope that you can learn from our
+lessons to improve the experience.
+
+\subsection{``The principal beneficiary is the author.''}
+
+\subsection{Each computation is a test.}
+
+\subsection{Reproducibility requires maintenance.}
+
+\subsection{Reproducibility maintenance requires an open community.}
+
+\section{Conclusions}
+
+... again about the importance of reproducibility ... history
+... lessons ...
+
+While the goal and purpose for reproducible research in computational
+science are clearly defined, the tools used to implement
+reproducibility in practice are constantly evolving. The Madagascar
+project provides some of the tools that can be used today but awaits
+new, more powerful or more convenient tools, that might be available
+tomorrow.
+
+In particular ... wish list ...
+
+\bibliographystyle{seg}
+\bibliography{mad}

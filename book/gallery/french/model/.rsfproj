@@ -1,0 +1,3 @@
+uses=['sfdd', 'sftransp', 'sfscale', 'sfremap1', 'sfsmooth', 'sfderiv', 'sfunif3', 'sfbyte', 'sfgrey3', 'sfkirmod3', 'sfwindow', 'sfput', 'sfadd']
+data=['data/french/french.asc']
+size=  846135772

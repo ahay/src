@@ -1,0 +1,9 @@
+from rsf.tex import *
+
+End(color='fdip dip diff fdip1 fdip2',
+    include=r'''
+\newcommand{\vct}{\mathbf}
+\newcommand{\mtx}{\tensor}
+\newcommand{\discriminant}{D}
+   ''')
+

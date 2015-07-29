@@ -1,0 +1,188 @@
+from rsf.proj import *
+
+##################################
+# Usefule plotting functions
+##################################
+
+def velplot(title,label1='Depth',unit1='kft'):
+    return '''
+    grey color=j allpos=y title="%s" scalebar=y
+    barlabel=Velocity barunit=kft/s
+    label1="%s" unit1="%s" label2=Lateral unit2=kft
+    barreverse=y pclip=100 
+    ''' % (title,label1,unit1)
+
+def graph(transp,o2,d2,n2,col,fat,extra=''):
+    return '''
+    graph transp=%d yreverse=y pad=n min2=%g max2=%g
+    plotcol=%d plotfat=%d wantaxis=n wanttitle=n %s
+    ''' % (transp,o2,o2+(n2-1)*d2,col,fat,extra)
+
+def wiggle(title):
+    return  '''
+    wiggle transp=y yreverse=y poly=y xpos=${SOURCES[1]}
+    title="%s" label2=Half-Offset unit2=kft zplot=0.5
+    wherexlabel=t wheretitle=b
+    ''' % title
+
+Flow('modl',None,
+     '''
+     spike n1=200 o1=-8 d1=0.08 n2=4
+     nsp=4 k2=1,2,3,4 mag=1,2.2,3.5,5
+     ''')
+Flow('refl',None,
+     '''
+     spike n1=200 n2=4 nsp=4 k2=1,2,3,4
+     mag=0.0909091,0.1428570,0.1111110,0.2000000
+     ''')
+Flow('mod1','modl','window min1=0')
+
+Flow('unif','mod1','unif2 n1=110 d1=0.05 v00=5,6,8,10,15')
+Result('modl','unif',velplot('Model'))
+
+Flow('mod2','unif','math output=5+2*x1')
+
+Plot('modl','mod2',velplot('True Model'))
+Plot('modla','mod1',graph(0,0,0.05,110,0,20,'scalebar=y'))
+Plot('modlb','mod1',graph(0,0,0.05,110,7,5,'scalebar=y'))
+Result('modl2','modl modla modlb','Overlay')
+
+Flow('clean','modl refl',
+     '''
+     kirmod nt=501 dt=0.004 freq=25 refl=${SOURCES[1]}
+     ns=12 s0=1.4 ds=-0.1
+     nh=64 h0=0.1 dh=0.1
+     vel=5 gradz=2 type=v
+     ''')
+Flow('data','clean',
+     '''
+     noise rep=y seed=2004 range=0.0002 |
+     ricker1 frequency=25 |
+     add $SOURCE 
+     ''')
+
+shots = []
+for shot in range(0,12,5):
+    data = 'data%d' % shot
+    shots.append(data)
+    Plot(data,'data',
+         '''
+         window n3=1 f3=%d | tpow tpow=2 |
+         grey title="Shot %d"
+         ''' % (shot,shot+1))
+Result('data',shots,'SideBySideAniso')
+
+v0=4
+dv=0.075
+nv=120
+
+###############################
+#
+# Processing individual CMPs
+#
+###############################
+
+###############################
+# Create offset and cmp headers
+###############################
+Flow('off','data','window n1=1 | math output="0.5*x1" ')
+Flow('cmp','off','math output="input+x2" ')
+
+##############################
+# Loop over selected cmps
+##############################
+for x in range(1500,4000,500):    
+    ##################
+    # Extracting CMP
+    ##################
+    y = 0.001*x
+    cdp = 'cdp%d' % x
+    off = 'off%d' % x
+    msk = 'msk%d' % x    
+    Flow(msk,'cmp','mask min=%g max=%g' % (y-0.001,y+0.001))
+    Flow(off,['off',msk],
+         'spray axis=1 n=1 | headerwindow mask=${SOURCES[1]}')
+    Flow(cdp,['data',msk],'headerwindow mask=${SOURCES[1]}')
+    Plot(cdp,[cdp,off],wiggle('CDP gather for cdp=%g' % y))
+    ##################
+    # Velocity Scan
+    ##################
+    scn = 'scn%d' % x
+    Flow(scn,[cdp,off],
+         '''
+         vscan offset=${SOURCES[1]}
+         semblance=y v0=%g dv=%g nv=%d
+         ''' % (v0,dv,nv))
+    Plot(scn,
+         '''
+         grey color=j allpos=y
+         label2=Velocity unit2=kft/s title="Velocity Scan"
+         ''')
+    ##################
+    # Velocity Picking
+    ##################
+    pik = 'pik%d' % x
+    Flow(pik,scn,
+         '''
+         mutter x0=4 inner=y v0=3 half=n |
+         mutter x0=4 inner=n v0=8 half=n |
+         pick rect1=50 vel0=5 gate=10
+         ''')
+    Plot(pik+'a',pik,graph(1,v0,dv,nv,0,20))
+    Plot(pik+'b',pik,graph(1,v0,dv,nv,7,5))
+    Plot(scn+'a',[scn,pik+'a',pik+'b'],'Overlay')
+    ##################
+    # NMO
+    ##################
+    nmo = 'nmo%d' % x
+    Flow(nmo,[cdp,off,pik],
+         'nmo offset=${SOURCES[1]} velocity=${SOURCES[2]}')
+    Plot(nmo,[nmo,off],wiggle('Normal Moveout Applied'))
+    #####################
+    # Putting it together
+    #####################
+    Result(cdp,[cdp,scn+'a',nmo],'SideBySideAniso')
+
+####################################################
+#
+# Processing the whole dataset
+#
+####################################################
+
+#####################
+# Convert shot to cmp
+#####################
+Flow('cmpdata cmpmask','data',
+     '''
+     reverse which=4 |
+     put o2=0.05 d2=0.05 |
+     shot2cmp mask=${TARGETS[1]}
+     ''')
+#####################
+# Velocity scan
+#####################
+Flow('scan','cmpdata cmpmask',
+     '''
+     vscan semblance=y mask=${SOURCES[1]}
+     v0=%g dv=%g nv=%d
+     ''' % (v0,dv,nv))
+#####################
+# Velocity picking
+#####################
+Flow('pick','scan',
+     '''
+     mutter x0=4 inner=y v0=3 half=n |
+     mutter x0=4 inner=n v0=8 half=n |
+     pick rect1=50 rect2=100 vel0=5 | window
+     ''')
+Result('pick',velplot('Stacking Velocity','Time','s'))
+
+#####################
+# NMO and stack
+#####################
+Flow('nmo','cmpdata cmpmask pick',
+     'nmo mask=${SOURCES[1]} velocity=${SOURCES[2]}')
+Flow('stack','nmo','stack')
+Result('stack','grey title="NMO Stack" ')
+    
+End()

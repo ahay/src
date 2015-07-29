@@ -1,0 +1,43 @@
+from rsf.proj import *
+imgs=[]
+for shot in range(12,684,2):
+    img = 'Imag_'+str(shot)
+    imgs.append(img)
+Flow('img_s1',imgs,
+     '''
+     add ${SOURCES[1:425]}  
+     ''')
+imgs=[]
+for shot in range(684,1012,2):
+    img = 'Imag_'+str(shot)
+    imgs.append(img)
+Flow('img_s2',imgs,
+     '''
+    add ${SOURCES[1:73]}  
+     ''')
+Flow('img_s','img_s1 img_s2','add ${SOURCES[1]}')
+Flow('img_ps','img_s',
+     '''
+     laplace
+     ''')
+Result('img_s',
+       '''
+       pow pow2=3.0 | 
+       agc rect1=200 rect2=200 |
+       grey poly=y label2="Depth" label1="Distance" title="RTM Image"
+       yreverse=y transp=n gainpanel=each pclip=99
+      ''')
+Result('img_ps',
+       '''
+       pow pow2=3.0 | 
+       agc rect1=200 rect2=200 |
+       grey poly=y label2="Depth" label1="Distance" title="RTM Image"
+       yreverse=y transp=n gainpanel=each pclip=99
+       unit1=km unit2=km
+      ''')
+End()
+
+
+
+
+

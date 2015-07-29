@@ -1,0 +1,67 @@
+\section{Introduction to Madagascar}
+To begin, let's talk about the core principles of Madagascar, and the RSF file format.  
+
+\setlength{\unitlength}{1in}
+\begin{figure}
+    \begin{picture}(4,4.5)(0,0)
+        \put(2,4){\framebox(2,0.5){LaTeX}}
+        \put(3,4){\vector(0,-1){0.5}}
+        \put(2,3){\framebox(2,0.5){Python}}
+        \put(3,3){\vector(0,-1){0.5}}
+        \put(2,2){\framebox(2,0.5){SCons}}
+        \put(3,2){\vector(-2,-1){1}}
+        \put(0,1){\framebox(2,0.5){VPLOT}}
+        \put(3,2){\vector(2,-1){1}}
+        \put(2,1){\vector(2,-1){1}}
+        \put(4,1){\vector(-2,-1){1}}
+        \put(4,1){\framebox(2,0.5){Programs}}
+        \put(2,0){\framebox(2,0.5){RSF file format}}
+    \end{picture}
+    \caption{The hierarchy of Madagascar.  Fundamentally, everything builds off of the RSF file format.  As you go up the chain the complexity level may increase, but the capabilities of the processing package increase as well.}
+\end{figure}
+
+\subsection{Madagascar's design}
+
+There are a few layers to Madagascar.  At the bottom-most layer, is the RSF file format, which is a common exchange format that all Madagascar programs use.  Non-Madagascar programs can also read/write to and from RSF because it is an open exchange format.  The next level of Madagascar contains the actual Madagascar programs that manipulate RSF files to process data.  Concurrent to this level is the VPLOT graphics library which allows users to plot and visualize RSF files.  The scripting utilities in Python and SCons are up another level from the core programs.  These scripting utilities allow users to make powerful scripts that can perform even the most advanced data processing tasks.  The last level includes support for LaTeX which allows you to make documents combining the features of Madagascar with the powerful typesetting of LaTeX.  Throughout the course of these tutorials, we will examine all of these components, and demonstrate how they can be used individually, as well as together.  When combined, the individual components of Madagascar allow us to: conduct experiments, process data, visualize our results, make reproducible scripts that can be shared with others, and write papers to document our experiments.  Thus, Madagascar provides a fully integrated research environment.
+
+\subsection{RSF file format}
+
+As previously mentioned, the lowest level of Madagascar is the RSF file format, which is the format used to exchange information between Madagascar programs.  Conceptually, the RSF file format is one of the easiest to understand, as RSF files are simply regularly sampled hypercubes of information.   For reference, a hypercube is a hyper dimensional cube (or array) that can best be visualized as an $N$-dimensional array, where $N$ is between 1 and 9 in Madagascar. 
+
+RSF hypercubes are defined by two files, the header file and the binary file.  The header file contains information about the dimensionality of the hypercube as well as the data contained within the hypercube.  Information contained in the header file may include the following: 
+\begin{itemize}
+    \item number of elements on all axes,
+    \item the origin of the axes,
+    \item the sampling interval of elements on the axes,
+    \item the type of elements in the axes (i.e. float, integer),
+    \item the size of the elements (e.g. single or double precision),
+    \item and the location of the actual binary file.
+\end{itemize}
+Since we often want to view this information about files without deciphering it, we store the header file as an ASCII text file in the local directory, usually with the suffix \textbf{.rsf}.  At any time, you can view or edit the contents of the header files using a text editor such as gedit, VIM, or Emacs.
+
+The binary file is a file stored remotely (i.e. in a separate directory) that contains the actual hypercube data.  Because the hypercube data can be very large ($10s$ of GB or TB) we usually store the binary files in a remote directory with the suffix \textbf{.rsf@}.  The remote directory is specified by the user using the \textbf{DATAPATH} environmental variable.  The advantage to doing this, is that we can store the large binary data file on a fast remote filesystem if we want, and we can avoid working in local directories.  
+
+\begin{figure}
+\setlength{\unitlength}{1cm}
+\begin{picture}(12,7)(0,0)
+    \put(2,6){\framebox(2,2){Header}}
+    \put(3,6){\vector(0,-1){2}}
+    \put(2,0){\framebox(10,4){Binary}}
+\end{picture}
+\caption{Cartoon of the RSF file format.  The header file points to the binary file, which can be separate from one another.  The header file, which is text, is very small compared to the binary file.}
+\label{fig:rsfformat}
+\end{figure}
+
+Because the header and binary are separated from one another, it is possible that we can lose either the header or binary for a particular RSF file.  If the header is lost, then we can simply reconstruct the header using our previous knowledge of the data and a text editor.  However, if we lose the binary file, then we cannot reconstruct the data regardless of what we do.  Therefore, you should try and avoid losing either the header or binary data.  The best way to avoid data loss is to make your research reproducible so that your results can be replicated later.
+
+Sometimes though we need to store RSF files for archiving or to transfer to other machines.  Fortunately, we can avoid transferring the header and binary separately by using the combined header/binary format for RSF files.  Files can be constructed using the combined header/binary format by specifying additional parameters on the command line, in particular \textbf{--out=stdout}, for any Madagascar program.  The output file will then be header/binary combined, which allows you to transfer the file without fear for losing either the header or binary.  Be careful though: header/binary combined files can be very large, and might slow down your local filesystem.  A best practice is to only use combined header/binary files when absolutely necessary for file transfers.  Note: header/binary combined files are usually automatically converted to header/binary separate files when processed by a Madagascar program.
+
+
+\subsection{Additional documentation}
+
+For more complete documentation on the RSF file format see the following links:
+
+A gentle guide to the RSF file format: \url{http://reproducibility.org/wiki/Guide_to_RSF_file_format}
+
+A detailed guide to the RSF file format: \url{http://reproducibility.org/wiki/RSF_Comprehensive_Description}
+

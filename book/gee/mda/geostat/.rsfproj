@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfhole', 'sfgrey', 'sfmath', 'sfhpef', 'sfmiss', 'sfhelicon', 'sfnoise', 'sfadd']
+data=['data/textures/wood.h', 'data/seab/seabin.hh']
+size=    1138960

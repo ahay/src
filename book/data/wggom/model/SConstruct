@@ -1,0 +1,119 @@
+#########################################
+#                                       #
+# ##################################### #
+# #        WGGOM/model                # #
+# ##################################### #
+#                                       #
+#########################################
+#---------------------------------------
+ # This script reads SEGY amd Native   #
+ # format files,converts them to RSF   #
+ # format and produces plots or movies #   
+#---------------------------------------
+from rsf.proj import *
+
+ #######################################
+ #        Define Variables             #
+ #######################################
+#----- Define source to download from
+source='gom'
+
+#----- Define File(s) to Download -----#
+	#- Include extensions (segy, SEGY, sgy, HH, h, hh)
+	#- FileType is either SEGY or native
+segyFiles=[]	
+nativeFiles=['gom.velo.hh']
+
+ #######################################
+ #      Define Header info             #
+ #######################################
+	                    #- Define n,o,d values
+insertHeader='n'        #- Enter ['y','n']. If you want to specify
+                        #- header information they  must be 
+                        #- entered in the same order as above,
+#----------  SEGY HEADERS -------------#
+segyHeader=[]
+nativeHeader=['dd form=native | put label1=z unit1=km label2=x unit2=km']        
+ #######################################
+ #      Concatinate  Datasets          #
+ #######################################
+ #-----  If datasets are downloaded in partial segments
+     #-  use this funcion to Concatinate
+     #-  Every file processed must be catted!
+catData='n'            #- Enter ['y','n'] to specify use 
+ 
+catRules ='cat ${SOURCES[0:2]} axis=3' #- Enter number of files at sources
+                                       #- and axis to cat
+
+############################################################################
+############################################################################
+########## You should not need to change anything below this line ##########
+############################################################################
+############################################################################
+
+ #######################################
+ #             Import Data             #
+ #######################################
+
+for file in segyFiles:
+	Fetch(file,source)
+
+for file in nativeFiles:
+	Fetch(file,source)
+
+ #######################################
+ #        Convert Data to RSF          #
+ #######################################
+
+#----- Convert SEGY Files -------------#
+RSFfiles=[]
+segyHeaderNumber=0
+for file in segyFiles:
+    fileOut = ''
+    fileLength =len(file)
+    for letter in file[0:fileLength]:
+        if letter is not '.':
+            fileOut = fileOut + letter
+        if letter == '.':
+            break
+    if insertHeader == 'y':
+        Flow(fileOut,file,segyHeader[segyHeaderNumber],stdin=0)
+        segyHeaderNumber=segyHeaderNumber+1
+        RSFfiles.append(fileOut)
+    if insertHeader == 'n':
+        Flow(fileOut,file, 'segyread tape=$SOURCE',stdin=0)
+        RSFfiles.append(fileOut)
+
+#----- Convert Native Files -----------#
+nativeHeaderNumber=0
+for file in nativeFiles:
+    fileOut = ''
+    fileLength = len(file)
+    for letter in file[0:fileLength]:
+        if letter is not '.':
+            fileOut = fileOut + letter
+        if letter == '.':
+            break
+    if insertHeader == 'y':
+        Flow(fileOut,file,nativeHeader[nativeHeaderNumber],stdin=0)
+        nativeHeaderNumber = nativeHeaderNumber + 1
+        RSFfiles.append(fileOut)
+    if insertHeader == 'n':
+        Flow(fileOut,file,'dd form=native')
+        RSFfiles.append(fileOut)
+
+ #######################################
+ #        Concatenate Data             #
+ #######################################
+if catData == 'y':
+    Flow('RSFfile',RSFfiles,catRules,stdin=0)
+
+ #######################################
+ #          Display Data               #
+ #######################################
+if catData == 'y':
+    Result('RSFfile','window j3=20 | grey gainpanel=a title=Shots')
+if catData =='n':
+    for file in RSFfiles:
+        Result(file,'window j3=20 | grey gainpanel=a title=Shots')
+End()

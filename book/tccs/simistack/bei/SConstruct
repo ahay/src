@@ -1,0 +1,75 @@
+from rsf.proj import *
+
+# Get data
+
+Fetch('midpts.hh','midpts')
+Flow('bei','midpts.hh','dd form=native | put d2=0.067 o2=0.132')
+
+# Velocity scan
+
+Flow('scn','bei','mutter v0=1.4 | vscan semblance=y v0=1.4 nv=48 dv=0.025')
+
+# Pick NMO velocity
+
+Flow('vel','scn','mutter x0=1.5 v0=0.67 half=n | pick rect1=40 rect2=10 | window')
+
+# Apply NMO
+
+Flow('nmo','bei vel','mutter v0=1.4 | nmo velocity=${SOURCES[1]}')
+
+# Apply DMO
+
+Flow('dmo','nmo',
+     '''
+     window f1=15 | logstretch nout=2048 | fft1 | transp plane=13 memsize=500 |
+     findmo |
+     transp memsize=500 plane=13 | fft1 inv=y | window n1=2048 | logstretch inv=y | pad beg1=15 
+     ''')
+
+Flow('dmo1','dmo','window squeeze=n')
+
+#-------------simislarity stack
+
+Flow('stack1', 'dmo', 'stack')
+
+
+## initial stack
+Plot('stack1','stack1', 'agc rect1=50 | grey  title="a)" label2=CMP label1=Time unit1=s unit2=km screenratio=0.75 ')     
+
+Flow('stacks', 'stack1','spray axis=3 n=25 | transp plane=23')
+
+Flow('weight', 'dmo1 stacks', 
+     '''similarity other=${SOURCES[1]} niter=40 rect1=5 rect2=8 rect3=20
+     ''')
+## local similarity
+Result('weight',    
+       '''
+       byte allpos=y gainpanel=all |
+       grey3 flat=n frame1=490 frame2=13 frame3=60 title="" color=j 
+       label1=Time unit1=s label2=Offset label3=CMP unit2=km unit3=km point2=0.35 point1=0.55 screenratio=0.7 
+       ''')
+
+
+Flow('tweight','weight','threshold pclip=99.9')
+
+Flow('simistack1','tweight dmo1',                                                             
+     '''
+     sfmath y=${SOURCES[1]} output=input*y | stack 
+     ''')
+
+Flow('nor','tweight','stack | stack axis=1 | spray n=1000 | transp  | put d1=0.004 o1=-4.19095e-0')
+
+Flow('simistack','simistack1 nor','sfmath y=${SOURCES[1]} output=input/y ')
+
+Flow('snrstack', 'dmo', 'snrstack w=20 ee=1e-1 esp=10000')
+
+Plot('snrstack','snrstack','agc rect1=50 | grey  title="b)" label2=CMP label1=Time unit1=s unit2=km screenratio=0.75')
+Plot('simistack','simistack','agc rect1=50 | grey  title="c)" label2=CMP label1=Time unit1=s unit2=km screenratio=0.75') 
+
+Result('field','stack1 snrstack simistack ','SideBySideAniso')
+
+
+
+
+End()
+

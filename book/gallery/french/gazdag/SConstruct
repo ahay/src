@@ -1,0 +1,34 @@
+from rsf.proj import *
+from rsf.gallery import french
+
+french.get_refl('model')
+
+Result('model',
+       '''
+       unif3 v00=1,2 n1=401 d1=10.265 |
+       byte allpos=y bias=1 |
+       grey3 color=j title="French model" label1=Depth unit1=m
+       frame1=175 frame2=60 frame3=80 flat=n 
+       ''')
+
+# Zero-offset
+
+french.get_zodata('data')
+
+Result('data',
+       '''
+       byte gainpanel=all |
+       grey3 title="Zero Offset" 
+       frame1=250 frame2=81 frame3=81 flat=n
+       screenratio=1 point1=0.65 point2=0.65
+       ''')
+
+Flow('cosft','data','cosft sign2=1 sign3=1')
+
+Flow('gazdag','cosft','gazdag vel=2000',split=[3,'omp'])
+
+Flow('image','gazdag','cosft sign2=-1 sign3=-1')
+
+french.time_mig('image')
+
+End()

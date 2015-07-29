@@ -1,0 +1,26 @@
+from rsf.proj import *
+import fdmod
+
+# Fetch Files from repository
+Fetch("velsmooth.HH","Amoco")
+Fetch("velmodel.hh","Amoco")
+# Convert Files to RSF
+Flow('velsmooth','velsmooth.HH', '''dd form=native | put
+    unit1=km unit2=km label1=Depth\ Z label2=Position title=Velocity\ Model''')
+
+Flow('velmodel','velmodel.hh', '''dd form=native | scale rscale=.001 | put
+    unit1=km unit2=km label1=Depth\ Z label2=Position title=Velocity\ Model  
+    ''')
+
+Result('velmodel',
+       '''
+       grey  scalebar=y barreverse=y
+       color=j allpos=y bias=1.9
+       screenwd=8.8 screenht=1.6
+       barlabel=" " barunit=km/s
+       title="Amoco Velocity Model" 
+       labelsz=4 titlesz=6
+       wheretitle=t 
+       ''')
+
+End()

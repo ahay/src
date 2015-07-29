@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sfwindow', 'sfagc', 'sfgrey', 'sfdd', 'sfscale', 'sfgraph', 'sfrcat', 'sfrtoc', 'sfmath', 'sfspray', 'sfcat', 'sfwiggle', 'sfintbin', 'sfput', 'sfbyte', 'sfgrey3', 'sftransp', 'sfshot2cmp', 'sfstack', 'sfadd', 'sfmutter', 'sfspectra2', 'sfspike', 'sfbandpass', 'sfspectra', 'sfltft', 'sfreal', 'sfthreshold2', 'sfvscan', 'sfpick', 'sfnmo', 'sfmig2']
+data=[]
+size= 111387598112

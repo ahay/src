@@ -1,0 +1,33 @@
+from rsf.proj import *
+import rsf.recipes.stack as stack
+
+Fetch('gomnearoffset.H','gom')
+
+Flow('gom','gomnearoffset.H','dd form=native')
+Result('gom',
+       '''
+       window n1=251 |
+       grey label1=Time unit1=s label2=Distance unit2=m title="Near Offset"
+       ''')
+
+stack.diffimg('gom',
+              'gom',
+              v0=1200,
+              nv=101,
+              dv=12.5,
+              nx=920,
+              padx=2049,
+              nt=251,
+              an=10,
+              tmin=1.6,
+              tmax=2.8,
+              rect1=10,
+              rect2=40,
+              srect1=1,
+              srect2=5,
+              frect1=40,
+              frect2=10,
+              units='m',
+              beg1=400)
+
+End()

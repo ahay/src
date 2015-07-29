@@ -1,0 +1,161 @@
+from rsf.proj import *
+
+par = dict(
+    ny=501,
+    nx=501,
+    nz=501,
+    dy=6,
+    dx=6,
+    dz=6,
+    y0=0.0,
+    x0=0.0,
+    z0=0.0,
+
+    ns=1000,
+    dt=0.0005,
+
+    vp0=3000,
+    vs0=1500,
+    epsi1=0.2,
+    epsi2=0.067,
+    del1=0.1,
+    del2=-0.0422,
+    del3=0.125,
+    gam1=0.1,
+    gam2=0.047,
+
+    alpha=0,
+    the=0,
+    phi=0,
+
+	bd=30,
+
+    hny=250,
+    hnx=250,
+    hnz=250,
+
+    itaper=0,
+
+    seed=2012,
+    eps=1.e-6,
+    npk=30,
+
+    )
+
+# =================================================================================
+# calculate pseudo-pure-mode qP-wavefield
+# =================================================================================
+name1='''
+PseudoPurePx PseudoPurePy PseudoPurePz
+'''
+
+Flow(['PseudoPurePx',  'PseudoPurePy', 'PseudoPurePz'],None,
+      '''
+         ort3dpseudophomo
+         PseudoPurePy=${TARGETS[1]}
+         PseudoPurePz=${TARGETS[2]}
+         ns=%d 
+         ny=%d 
+         nx=%d 
+         nz=%d 
+         dt=%g
+         dy=%g
+         dx=%g
+         dz=%g
+         vp0=%g
+         vs0=%g
+         epsi1=%g
+         epsi2=%g
+         del1=%g
+         del2=%g
+         del3=%g
+         gam1=%g
+         gam2=%g
+		 bd=%d
+     ''' % (par['ns'],par['ny'],par['nx'],par['nz'],par['dt'],par['dy'],par['dx'],par['dz'],
+            par['vp0'],par['vs0'],par['epsi1'],par['epsi2'],par['del1'],par['del2'],par['gam1'],
+            par['gam2'],par['del3'],par['bd'])
+)
+
+for qq in Split(name1):
+       Result(qq,
+        '''
+	byte pclip=98 gainpanel=all |
+        grey3 polarity=n scalebar=n frame1=251 frame2=251 frame3=251 screenratio=1 wanttitle=n flat=y
+        ''')
+
+#########################################################################
+#   calculate deviation correction operators in k-domain
+#########################################################################
+name2='''
+apvx apvy apvz taperK
+'''
+
+Flow(['apvx',  'apvy',   'apvz',  'taperK'], None,
+       '''
+         ort3dhomodevK
+         apvy=${TARGETS[1]}
+         apvz=${TARGETS[2]}
+         taper=${TARGETS[3]}
+         itaper=%d
+         hnx=%d
+         hny=%d
+         hnz=%d
+         dx=%g
+         dy=%g
+         dz=%g
+         vp0=%g
+         vs0=%g
+         de1=%g
+         de2=%g
+         de3=%g
+         ep1=%g
+         ep2=%g
+         ga1=%g
+         ga2=%g
+         alpha=%g
+         the=%g
+         phi=%g
+         ''' % (par['itaper'],
+                par['hnx'],par['hny'],par['hnz'],par['dx'],par['dy'],par['dz'],
+                par['vp0'],par['vs0'],par['del1'],par['del2'],par['del3'],
+                par['epsi1'],par['epsi2'],
+                par['gam1'],par['gam2'],
+                par['alpha'],par['the'],par['phi'])
+    )
+
+for pp in Split(name2):
+        Result(pp,
+        '''
+        byte bias=1 gainpanel=all |
+        grey3 polarity=n scalebar=n frame1=251 frame2=251 frame3=251 screenratio=1 wanttitle=n flat=y pclip=99 color=j
+        ''')
+
+#########################################################################
+#   deviation correction for wave-mode seapration
+#########################################################################
+name3='''
+PseudoPureP PseudoPureSepP
+'''
+
+Flow(['PseudoPureP','PseudoPureSepP'],
+     ['apvx', 'apvy', 'apvz',
+      'PseudoPurePx', 'PseudoPurePy', 'PseudoPurePz'],
+       '''
+         ort3dhomodevcK
+         apvy=${SOURCES[1]}
+         apvz=${SOURCES[2]}
+         PseudoPurePx=${SOURCES[3]}
+         PseudoPurePy=${SOURCES[4]}
+         PseudoPurePz=${SOURCES[5]}
+         PseudoPureSepP=${TARGETS[1]}
+       '''
+    )
+
+for qq in Split(name3):
+       Result(qq,
+        '''
+	byte pclip=98 gainpanel=all |
+        grey3 polarity=n scalebar=n frame1=251 frame2=251 frame3=251 screenratio=1 wanttitle=n flat=y
+        ''')
+End()

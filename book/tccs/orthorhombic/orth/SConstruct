@@ -1,0 +1,185 @@
+from rsf.proj import *
+
+
+nt=1201
+dt=0.001
+
+
+Flow('source',None,
+     '''
+     spike n1=%d d1=%g k1=101 | 
+     ricker1 frequency=15
+     '''%(nt,dt))
+
+Flow('vc1',None,
+     '''
+     spike n1=256 n2=256 n3=256 d1=0.025 d2=0.025 d3=0.025 o1=-3.175 o2=-3.175 o3=-3.175 unit1=km unit2=km unit3=km k1=3 k2=251 k3=126 |
+     math output=2
+     ''')
+Flow('vc2',None,
+     '''
+     spike n1=256 n2=256 n3=256 d1=0.025 d2=0.025 d3=0.025 o1=-3.175 o2=-3.175 o3=-3.175 unit1=km unit2=km unit3=km k1=3 k2=251 k3=126 |
+     math output=2.1
+     ''')
+Flow('vc3',None,
+     '''
+     spike n1=256 n2=256 n3=256 d1=0.025 d2=0.025 d3=0.025 o1=-3.175 o2=-3.175 o3=-3.175 unit1=km unit2=km unit3=km k1=3 k2=251 k3=126 |
+     math output=2.05
+     ''')
+Flow('mu',None,
+     '''
+     spike n1=256 n2=256 n3=256 d1=0.025 d2=0.025 d3=0.025 o1=-3.175 o2=-3.175 o3=-3.175 unit1=km unit2=km unit3=km k1=3 k2=251 k3=126 |
+     math output=1.0
+     ''')
+Flow('e2',None,
+     '''
+     spike n1=256 n2=256 n3=256 d1=0.025 d2=0.025 d3=0.025 o1=-3.175 o2=-3.175 o3=-3.175 unit1=km unit2=km unit3=km k1=3 k2=251 k3=126 |
+     math output=0.3
+     ''')
+Flow('e3',None,
+     '''
+     spike n1=256 n2=256 n3=256 d1=0.025 d2=0.025 d3=0.025 o1=-3.175 o2=-3.175 o3=-3.175 unit1=km unit2=km unit3=km k1=3 k2=251 k3=126 |
+     math output=0.1
+     ''')
+Flow('refl',None,
+     '''
+     spike n1=256 n2=256 n3=256 d1=0.025 d2=0.025 d3=0.025 o1=-3.175 o2=-3.175 o3=-3.175 unit1=km unit2=km unit3=km k1=128 k2=128 k3=128 |
+     smooth rect1=2 rect2=2 rect3=3 repeat=3
+     ''')
+
+# Lowrank decomposition
+Flow('fftc','vc1','fft1 pad=1 | fft3 axis=2 pad=1 | fft3 axis=3 pad=1')
+Flow('mid left right','vc1 fftc vc2 vc3 mu e2 e3',
+     '''
+     ortholr seed=2010 npk=10 eps=0.00001 dt=%g 
+     fft=${SOURCES[1]} velx=${SOURCES[2]} vely=${SOURCES[3]} 
+     mu=${SOURCES[4]} etax=${SOURCES[5]} etay=${SOURCES[6]} 
+     left=${TARGETS[1]} right=${TARGETS[2]}
+     ''' % dt)
+
+Flow('wavec snapsc','source refl left mid right',
+     '''
+     orthowave ref=${SOURCES[1]} left=${SOURCES[2]} mid=${SOURCES[3]} right=${SOURCES[4]} verb=y
+     snap=50 snaps=${TARGETS[1]}
+     ''')
+
+Result('wavec',
+       '''
+       byte gainpanel=all |
+       grey3 frame1=128 frame2=128 frame3=128 point1=0.4 point2=0.7
+       wanttitle=n label1=Z label2=X label3=Y flat=n
+       ''')
+
+Plot('snapsc2','snapsc',
+     '''
+     put n4=23 |
+     byte gainpanel=all |
+     grey4 frame1=128 frame2=128 frame3=128 point1=0.4 point2=0.7
+     wanttitle=n label1=Z label2=X label3=Y flat=n
+     ''')
+
+Fetch(Split('DepthSlice.dat xSlice.dat ySlice.dat'),'ortho')
+
+Flow('depth','DepthSlice.dat',
+     '''
+     echo n1=2 n2=361 in=$SOURCE data_format=ascii_float |
+     sfdd form=native type=complex |
+     transp plane=12
+     ''',stdin=0)
+Flow('yz','xSlice.dat',
+     '''
+     echo n1=2 n2=361 in=$SOURCE data_format=ascii_float |
+     sfdd form=native type=complex |
+     transp plane=12
+     ''',stdin=0)
+Flow('xz','ySlice.dat',
+     '''
+     echo n1=2 n2=361 in=$SOURCE data_format=ascii_float |
+     sfdd form=native type=complex |
+     transp plane=12
+     ''',stdin=0)
+Plot('depth',
+     '''
+     sfgraph dash=1 plotcol=5 plotfat=9 screenratio=1 min1=-2.8 min2=-2.8 max1=2.8 max2=2.8 title= label1= label2= unit1= unit2= wantaxis1=n wantaxis2=n
+     ''')
+Plot('yz',
+     '''
+     sfgraph dash=1 plotcol=5 plotfat=9  screenratio=1 min1=-2.8 min2=-2.8 max1=2.8 max2=2.8 title= label1= label2= unit1= unit2=  wantaxis1=n wantaxis2=n 
+     ''')
+Plot('xz',
+     '''
+     sfgraph dash=1 plotcol=5 plotfat=9  title= screenratio=1 min1=-2.8 min2=-2.8 max1=2.8 max2=2.8 label1= label2= unit1= unit2=  wantaxis1=n wantaxis2=n
+     ''')
+Flow('snapc','snapsc','window n4=1 f4=22')
+Plot('wavexy','snapc','window n1=1 f1=127 | grey screenratio=1 min1=-2.8 min2=-2.8 max1=2.8 max2=2.8 transp=n label1="X" unit1="km" label2="Y" unit2="km" title="Depth Slice at 1s"  ')
+Plot('wavexz','snapc','window n3=1 f3=127 | grey screenratio=1 min1=-2.8 min2=-2.8 max1=2.8 max2=2.8 title="Y Slice at 1s" label1="Z" unit1="km" label2="X" unit2="km"')
+Plot('waveyz','snapc','window n2=1 f2=127 | grey screenratio=1 min1=-2.8 min2=-2.8 max1=2.8 max2=2.8 label1="Z" unit1="km" label2="Y" unit2="km" title="X Slice at 1s" ')
+Result('wavexy','wavexy depth','Overlay')
+Result('wavexz','wavexz xz','Overlay')
+Result('waveyz','waveyz yz','Overlay')
+
+Flow('midl leftl rightl','vc1 fftc vc2 vc3 mu e2 e3',
+     '''
+     orthollr seed=2010 npk=10 eps=0.00001 dt=%g 
+     fft=${SOURCES[1]} velx=${SOURCES[2]} vely=${SOURCES[3]} 
+     mu=${SOURCES[4]} etax=${SOURCES[5]} etay=${SOURCES[6]} 
+     left=${TARGETS[1]} right=${TARGETS[2]}
+     ''' % dt)
+
+Flow('wavecl snapscl','source refl leftl midl rightl',
+     '''
+     orthowave ref=${SOURCES[1]} left=${SOURCES[2]} mid=${SOURCES[3]} right=${SOURCES[4]} verb=y
+     snap=50 snaps=${TARGETS[1]}
+     ''')
+Flow('snapcl','snapscl','window n4=1 f4=22')
+Plot('wavexyl','snapcl','window n1=1 f1=127 | grey screenratio=1 min1=-2.8 min2=-2.8 max1=2.8 max2=2.8 transp=n label1="X" unit1="km" label2="Y" unit2="km" title="Depth Slice at 1s"  ')
+Plot('wavexzl','snapcl','window n3=1 f3=127 | grey screenratio=1 min1=-2.8 min2=-2.8 max1=2.8 max2=2.8 title="Y Slice at 1s" label1="Z" unit1="km" label2="X" unit2="km"')
+Plot('waveyzl','snapcl','window n2=1 f2=127 | grey screenratio=1 min1=-2.8 min2=-2.8 max1=2.8 max2=2.8 label1="Z" unit1="km" label2="Y" unit2="km" title="X Slice at 1s" ')
+Result('wavexyl','wavexyl depth','Overlay')
+Result('wavexzl','wavexzl xz','Overlay')
+Result('waveyzl','waveyzl yz','Overlay')
+
+Flow('va0','vc1',
+     '''
+     orp phi=0 
+     ''')
+Flow('va45','vc1',
+     '''
+     orp phi=45 
+     ''')
+Flow('va90','vc1',
+     '''
+     orp phi=90
+     ''')
+Result('va0',
+       '''
+       sfput o1=0 d1=0.392156 n1=256 |
+       sfgraph dash=0,0,0 plotcol=6,3,4 plotfat=5 bgcolor=w 
+       label1="Frequency (% of the Nyquist)" 
+       unit1=" " title="Phase velocity in 0 degree azmuth"  
+       label2="velocity" unit2=km/s
+       ''')
+Result('va45',
+       '''
+       sfput o1=0 d1=0.392156 n1=256 |
+       sfgraph dash=0,0,0 plotcol=6,3,4 plotfat=5 bgcolor=w 
+       title="Phase velocity in 45 degree azmuth"  
+       label1="Frequency (% of the Nyquist)" unit1=  
+       label2="velocity" unit2=km/s
+       ''')
+Result('va90',
+       '''
+       sfput o1=0 d1=0.392156 n1=256 |
+       sfgraph dash=0,0,0 plotcol=6,3,4 plotfat=5 bgcolor=w 
+       unit1=" " title="Phase velocity in 90 degree azmuth"  
+       label1="Frequency (% of the Nyquist)" 
+       label2="velocity" unit2=km/s
+       ''')
+Plot('moviel','snapscl',
+     '''
+     window n4=20 |
+     byte gainpanel=all |
+     grey4 frame1=128 frame2=128 frame3=128 point1=0.7 point2=0.7
+     wanttitle=n label1=Z label2=X label3=Y flat=n screenratio=1.0
+     ''')
+End()

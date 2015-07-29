@@ -1,0 +1,6 @@
+from rsf.tex import *
+
+for n in range(6):
+    Paper('users%d' % n,use='hyperref,comment,verbatim,moreverb,tabularx,listings')
+
+End(options='short',use='hyperref,comment,verbatim,moreverb,tabularx,listings')

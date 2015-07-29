@@ -1,0 +1,39 @@
+from rsf.proj import *
+from rsf.recipes.velcon import velcon
+from rsf.recipes.dix    import dix
+
+Fetch('beinew.HH','midpts')
+Flow('bei','beinew.HH','dd form=native | transp plane=23 | transp plane=34')
+
+velcon('bei',
+       nv=96,       # continuation steps
+       v0=1.3,      # initial velocity
+       dv=0.0125,   # velocity step
+       nx=250,      # lateral dimension
+       nh=48,       # number of offsets
+       padt=1024,   # time padding
+       padt2=2048,  # extra time padding
+#       vslope=0.67, 
+#       vx0=1.5,     
+       padx=521,    # lateral padding
+       n1=876,      # vertical extent
+       v1=1.8,      # other velocity
+       dx=0.0335,   # lateral sampling
+       x0=7.705,    # lateral origin
+       rect1=15,    # vertical smoothing
+       rect2=5)     # lateral  smoothing
+
+dix('bei',       # data name
+    'bei-agc',   # migrated image
+    'bei-npk',   # migration velocity
+    'bei-agc2',  # semblance slice
+    v0=1.3,      # minimum velocity
+    vm=1.9,      # median velocity
+    nx=250,      # lateral dimension
+    dx=0.0335,   # midpoint sampling
+    x0=7.705,    # lateral origin
+    rect1=30,    # vertical smoothing
+    rect2=10)    # lateral  smoothing
+
+End()
+       

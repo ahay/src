@@ -1,0 +1,209 @@
+\title{Industrial seismology sampler}
+\author{Jon Claerbout}
+\maketitle
+\label{paper:rez}
+\plot{line}{width=6in, height=4.5in}{
+	A 2-D seismic survey line.
+	Left half is layers.
+	Right half is a salt dome.
+	Salt flows upwards, dragging hence bending upwards the adjacent layers.
+	There are no reflections inside the salt.
+	In the salt are only artefacts of data processing.
+	}
+Industrial seismology is a big consumer
+of technologies developed in this book.
+This book steers away from seismology because of its complexity
+(and because I have written other books devoted to seismology).
+Figure~\ref{fig:line} is a traditional single survey line
+of the kind that dominated the industry in the 1960s.
+
+\par
+This book is merely a ``warm up'' to today's industry.
+In earlier chapters you saw tiny data
+sets manageable in a small desktop computer.
+Industrial seismology measures hydrophone voltage
+in a five dimensional data space,
+two surface coordinates $(x_s,y_s)$ for each source pop,
+two more  $(x_r,y_r)$ for each receiver,
+and the echo delay time $t$.
+It has the 3-D model space of our world $(x,y,z)$,
+though on the cube here we do not see $z$,
+but $t$, the vertical seismic travel time.
+\par
+
+\plot{rivers}{width=6in,height=5in}{
+	At $t=$1.387s (about 1.4km depth):
+	The upper right circular corner is a salt dome.
+	River meanders from about a million years ago.
+	River meanders are a common sight in 3-D reflection seismic images.
+	Rivers typically migrate significant distances
+	in the 7000 years between our resolution slices.
+	Some depth ranges contain no rivers.
+	Such correspond to eras when these layers
+	were being laid down lay beneath the sea.
+	}
+
+\par
+Illustrations here may look like data,
+but they are slices from model space,
+On figure \ref{fig:line} the alternating voltages in the seismic microphone
+suggest black-white physical layering in the earth.
+While this surely indicative,
+higher frequency filtration would yield more layers.
+Keep this in mind as you examine Figure \ref{fig:rivers},
+a horizontal slice inside the earth at a constant depth
+(travel-time depth $t=1.387$sec).
+Local outline shapes are truly meaningful here while
+black/white polarities hardly so.
+Whether a river is white in a black background,
+or black in a white background is an accidental function
+of overall travel time and spectrum.
+What is significant is the rings surrounding the dome.
+These are a consequence of the upward bending layers
+you saw in figure  \ref{fig:line}.
+
+\plot{rivers2}{width=6in, height=5in}{
+	At $t$=0.888s:
+	The $(x,y)$ plane shown here is grabbed
+	from a volume of slices separated by 6ms, about 18 feet.
+	Slice to slice represents about 7,000 years of
+	sedimentary deposition in the Gulf of Mexico.
+	Top to bottom is about a million years
+	(about the age of the human species).
+	Think of the creatures in all those rivers, their ancient worlds.
+	Awesome, isn't it?
+	}
+
+\par
+Seismic waves here are a little faster than 2 km/sec,
+but they must go both down into the earth and up again,
+so the bottom of the time axis is a little more than 2 km deep.
+A ship sails from west to east creating an $x$-axis,
+22 kilofeet long, a little under 5 miles.
+Where the vertical axis is not north-south it is travel time.
+Typically that axis might run to 5 sec.
+Here for space limitations, it runs less than 2s.
+All the planes you see in this chapter come from one
+$292\times 451\times 551 $ cube of 72 megapixels,
+a subset of a larger volume of model space.
+
+\par
+\plot{bigcanyon}{width=6in, height=5in}{
+	At $t$=1.830s, a rarely seen image:
+	Embedded in this map view
+	at $(x,y)=$(6-13, \, 14-16)
+	are many drainage tributaries (a dendritic pattern)
+	to a central canyon on a lower slice (not shown).
+	An artist might see it as a tree root,
+	feeders going off to the lower left.
+	The fault in Figure~\ref{fig:fault}
+	is here again seen emerging southward
+	from the salt-dome at $x$=14.
+	}
+
+\par
+You may be seeing paper or images of what's on paper,
+but what you see is merely two-dimensional slices thru the 3-D model space.
+I can plunge into these volumes, panning and zooming.
+Thanks to my colleague Bob Clapp and others like him
+after some years we may escape the constraints of PDF files
+and deliver such experiences to readers outside our lab.
+
+The upper right corner of the constant depth slices shows a circular region.
+This is salt.  Salt, like ice, seems brittle, but under pressure it flows like a liquid.
+Before the past million years ago before the sediments
+of this cube were laid down
+there was a salt lake here
+that eventually dried and was buried beneath the sand, shale,
+and carbonates that became this cube.
+Salt is lighter than rock,
+and so eventually it erupted like a pimple on the face of the earth,
+a pimple two miles wide.
+No oil in here, but the bent up layers aside it seen
+in Figure \ref{fig:line} are excellent prospects.
+Salt flow is a dominant feature in the Gulf of Mexico.
+
+\plot{worms}{width=6in, height=5in}{
+	At $t$=1.938s:
+	To the east of the fault noted already in Figure \ref{fig:bigcanyon}
+	is a broken up layer with a ``wormy'' appearance.
+	I do not know what it is.
+	Curiously it is found only on one side of the fault.
+	}
+
+\plot{slump}{width=6in, height=5in}{
+	At $t$=1.014s:
+	A full-page slash upon the earth of strikingly mathematical perfection,
+	that of a hyperbola.
+	Increasing the slice depth I found it shifted southward,
+	persisting only about 6 of these 18 foot slices, roughly 120' 
+	top to bottom.
+	I interpret this as a land slump.
+	Sediment accumulates on the water bottom increasing its weight
+	until suddenly with an earthquake
+	it slides down toward deeper water.
+%
+	Seeing a hyperbola in a solid material was
+	startling to us seismic data analysts.
+	We see many hyperbolas on the time axis, but never on a space axis.
+	Our first thought was, ``This must be a data processing artifact.''
+	Now we feel we have eliminated that possibility.
+	Something about the presumed stress to earthquake process
+	could make this shape.
+%
+	I first suggested to a petroleum geologist it might be a beach.
+	He said beaches move rapidly in geologic time
+	as land and water levels rise and fall.
+	He suggested an area covered in parallel lines.
+	I believe he was correct, but the example we found
+	was sufficiently imperfect that I'm not showing it.
+	}
+
+\par
+This data cube (actually model space) is about 20 years old.
+It came from Chevron via David Lumley to James Rickett.
+It is textbook quality 3-D data from the Gulf of Mexico.
+It would have taken the survey company about a month to acquire,
+and it would cost the oil company (group maybe) about ten million dollars.
+
+\plot{karst}{width=6in, height=5in}{
+	At $t$=1.578s:
+	A speckled area about 6 kilofeet square is centered about $(4.,6.)$.
+	I interpret this as karst, limestone in its varied forms,
+	very rugged. Some circular dots might be sink holes.
+	At increasing travel-time depths,
+	this area drifted towards the southeast,
+	the drift being evidence of changing sea level.
+	}
+
+\par
+A ship with an air gun towed
+a 7km long cable with a thousand hydrophones.
+Today there would be several gun boats.
+The recording ship would trail about a dozen streamers
+separated about 150 meters.
+World-wide there are about 50 marine survey teams working continuously.
+The half dozen largest seismic survey companies together sell
+about ten billion dollars of surveys per year to oil companies, private and national.
+Data is also recorded on land with more varied equipment types.
+\par
+
+\plot{fault}{width=6in, height=4in}{
+	Under about $x=$ 14 kilofeet
+	is a prominent near-vertical fault in this 2-D line.
+	Faults are more common than river meanders,
+	especially prolific in 2-D seismic display.
+	This data cube is unusual in that it shows only
+	this one prominent fault.
+	Fascinating detail easily apparent on the time slices
+	are unintelligible on the 2-D $(x,t)$ lines
+	simply showing as mere irregularities on the layers,
+	seeming merely noise.
+	Back in the 1960s, when this was the only kind of data we had,
+	we might see many faults per mile,
+	but never imagined the wealth of geologic detail
+	you have seen here on the time slices..
+	}
+
+
+\clearpage

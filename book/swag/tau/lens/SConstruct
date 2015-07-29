@@ -1,0 +1,88 @@
+import sys
+import rsf.recipes.tau as tau
+
+from rsf.proj import *
+
+nx = 501;  x0 = 0.; dx = 5.
+nz = 401;  z0 = 0.; dz = 5.
+nT = 251;  T0 = 0.; dT = .0042
+nt = 1801; t0 = 0.; dt = .0008
+
+b = [40   ,20   ,20   ,20   ]
+c = [4.e-5,1.e-4,1.e-4,1.e-4]
+
+j3 = 10; n3 = 1 + int((nt-1)/j3)
+
+freq = 20
+
+spk0= 1 + int(1./(freq*dt))
+dspk= int(.5/ dt)
+spk = range(spk0,spk0+3*dspk,dspk)
+
+par = {'nx' : nx, 'x0' : x0, 'dx' : dx,
+	   'nz' : nz, 'z0' : z0, 'dz' : dz,
+	   'nT' : nT, 'T0' : T0, 'dT' : dT,
+	   'nt' : nt, 't0' : t0, 'dt' : dt}
+
+Flow('veloC',None,'''
+math n1=%d o1=0 d1=%g n2=%d o2=0 d2=%g
+output="2275+.025*x1-650*exp(-5.e-6*((x1-%g)^2+(x2-%g)^2))" |
+put label1=Depth unit1=m label2=Distance unit2=m
+''' % (nz,dz,nx,dx,z0+.55*(nz-1)*dz,x0+.5*(nx-1)*dx))
+
+Flow('data',None,'''
+spike nsp=3 mag=1 n1=%d o1=0 d1=%g k1=%d,%d,%d |
+ricker1 frequency=%g | scale axis=1 | reverse which=1 opt=i |
+transp | put label1=Distance unit1=m label2=Time unit2=s
+''' % (nt,dt,spk[0],spk[1],spk[2],freq)) 
+
+tau.init(par)
+
+tau.compute_tau('tauC','veloC')
+tau.compute_sigma('sigmC','tauC')
+tau.coord_xmid('cr')
+
+tau.mapping('veloT','veloC','tauC',inv=False)
+tau.mapping('sigmT','sigmC','tauC',inv=False)
+tau.mapping('veloB','veloT','tauC',inv=True)
+
+tau.rtm_iso('imagC','waveC','data','veloC',None,None,'cr',n3,b,c,tau=False)
+tau.rtm_iso('imagT','waveT','data','veloT','veloT','sigmT','cr',n3,b,c,tau=True)
+
+m2kmC = 'put d2=%g unit2=km d1=%g unit1=km' % (.001*dx,.001*dz)
+m2kmT = 'put d2=%g unit2=km' % (.001*dx)
+screen = 'screenwd=12 screenht=10 labelsz=10'
+contt = 'contour allpos=y plotcol=7 plotfat=5 wantaxis=n wanttitle=n c0=0 dc=.08 ' + screen
+contx = 'contour allpos=y plotcol=7 plotfat=5 wantaxis=n wanttitle=n c0=0 dc=%g ' % (25*dx) + screen
+vgrey = 'grey color=i title= allpos=y bias=1500 ' + screen
+wgrey = 'grey grid=y title= clip=.5' + screen
+
+pad1 = int((nx-1) / 2)
+pad2 = nx - 1 - pad1
+
+Result('spike','data','pad beg1=%d end1=%d | put o1=%g d1=%g unit1=km | bandpass fhi=20 | transp | grey pclip=100 title= ' % (pad1,pad2,1e-3*x0,1e-3*dx) + screen)
+
+Plot('gridC1','tauC',contt)
+Plot('gridC2','tauC','math output=x2 | ' + contx)
+Plot('gridC3','veloC',m2kmC + ' | ' + vgrey)
+
+Plot('gridT1','veloT','math output=x1 | ' + contt)
+Plot('gridT2','veloT','math output=x2 | ' + contx)
+Plot('gridT3','veloT',m2kmT + ' | ' + vgrey)
+
+Result('lengC','gridC3 gridC2 gridC1','Overlay')
+Result('lengT','gridT3 gridT2 gridT1','Overlay')
+
+tau.mapping('imagB','imagT','tauC',inv=True)
+
+Flow('imagC1','imagC','scale axis=2')
+Flow('imagT1','imagT','scale axis=2')
+Flow('imagB1','imagB','scale axis=2')
+
+Result('leniC','imagC1',m2kmC + ' | ' + wgrey)
+Result('leniT','imagT1',m2kmT + ' | ' + wgrey)
+Result('leniB','imagB1',m2kmC + ' | ' + wgrey)
+
+Result('leniE','imagC1 imagB1','add scale=-1,1 ${SOURCES[1]} | ' + m2kmC + ' | ' + wgrey)
+
+End()

@@ -1,0 +1,49 @@
+from rsf.proj import *
+
+Flow('mod',None,
+     'sigmoid n1=200 d2=.008 n2=200 | smooth rect1=3 diff1=1 adj=1 | smooth rect1=3')
+Flow('vel',None,
+     '''
+     math n1=199 d1=0.004 o1=0.004 output='%g*x1' |
+     math output='%g * (sqrt((exp(input)-1)/input) - 1)' |
+     pad beg1=1 | math output='input+%g'
+     ''' % (0.5,1.5,1.5))
+
+Flow('mkaa','mod vel','kirchnew velocity=${SOURCES[1]} adj=0')
+
+Plot('dat','mkaa','grey labelsz=10 titlesz=12 title="Input Data" ')
+
+for ps in (0,1):
+    mig = 'mig%d' % ps
+    err = 'err%d' % ps
+    Flow([mig,err],'mkaa vel',
+         'kirchinv velocity=${SOURCES[1]} ps=%d err=${TARGETS[1]}' % ps)
+
+Flow('mig','mkaa vel','kirchnew velocity=${SOURCES[1]} ps=1 adj=1')
+     
+
+Result('migiter','err0 err1',
+       '''
+       cat axis=2 ${SOURCES[1]} |
+       graph min2=0 max2=0.3 
+       labelsz=10 titlesz=12 dash=1,0 unit1= unit2=
+       title="Iterative Convergence"
+       ''')
+Plot('mig','mig1','grey labelsz=10 titlesz=12 title="Least-squares Image" ')
+
+Result('migcvv','dat mig','SideBySideAniso')
+
+Flow('migdat','mig1 vel','kirchnew velocity=${SOURCES[1]} adj=0 ps=1')
+
+clip=0.0481432
+
+Plot('migres','mkaa migdat',
+     '''
+     add scale=1,-1 ${SOURCES[1]} |
+     grey clip=%g title="Residual Error"
+     ''' % clip)
+Plot('migdat','grey clip=%g title="Predicted Data" ' % clip)
+
+Result('migrst','migdat migres','SideBySideAniso')
+
+End()

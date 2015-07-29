@@ -1,0 +1,195 @@
+from rsf.proj import *
+from rsf.recipes.beg import server
+
+sgy='BOONS.SGY'
+
+Fetch(sgy,'boonsegy',server)
+
+Flow('boons tboons boons.asc boons.bin',
+     sgy,
+     'segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]}')
+
+#C 3 Line number in bytes 9  - 12      105 - 201 (fldr)
+#C 4 Trace number in bytes 21 - 24      74 - 206 (cdp)                       
+
+# 110 foot stacking bins
+
+Flow('boon3','boons','intbin xk=cdp yk=fldr | put label3=Line label2=Trace')
+
+Result('boon3','byte gainpanel=all | grey3 frame1=1000 frame2=76 frame3=45 title="Boonsville Data" flat=n point1=0.7 point2=0.7')
+
+Flow('boont','boon3','window j1=2')
+
+Flow('dip3','boont','fdip rect1=20 rect2=5 rect3=5 verb=y')
+
+Flow('dip1','dip3','window n4=1')
+Flow('dip2','dip3','window f4=1')
+
+Result('dip1','byte gainpanel=all bar=bar1.rsf | grey3 frame1=500 frame2=76 frame3=45 title="Inline Dip" color=j scalebar=y flat=n point1=0.7 point2=0.7')
+Result('dip2','byte gainpanel=all bar=bar2.rsf | grey3 frame1=500 frame2=76 frame3=45 title="Crossline Dip" color=j scalebar=y flat=n point1=0.7 point2=0.7')
+
+Flow('seed','dip3','window n2=1 n3=1 n4=1 | math output=x1')
+
+Flow('shift1','boont','window f2=1')
+Flow('shift2','boont','window f3=1')
+
+Flow('last1','boont','window f2=-1 squeeze=n')
+Flow('last2','boont','window f3=-1 squeeze=n')
+
+Flow('ref1','shift1 last1','cat axis=2 ${SOURCES[1]}')
+Flow('ref2','shift2 last2','cat axis=3 ${SOURCES[1]}')
+
+Flow('ref1s','ref1','add mode=p $SOURCE | stack axis=1 norm=n')
+Flow('ref2s','ref2','add mode=p $SOURCE | stack axis=1 norm=n')
+
+Flow('corr1','ref1 boont','add mode=p ${SOURCES[1]} | stack axis=1 norm=n')
+Flow('corr2','ref2 boont','add mode=p ${SOURCES[1]} | stack axis=1 norm=n')
+
+Flow('boon2','boont','add mode=p $SOURCE | stack axis=1 norm=n')
+
+Flow('wcos1','corr1 boon2 ref1s',
+     '''
+     math s1=${SOURCES[1]} s2=${SOURCES[2]} output="(s1*s2)/(input*input)"
+     ''')
+Flow('wcos2','corr2 boon2 ref2s',
+     '''
+     math s1=${SOURCES[1]} s2=${SOURCES[2]} output="(s1*s2)/(input*input)"
+     ''')
+Flow('wcos','wcos1 wcos2',
+     '''
+     cat axis=3 ${SOURCES[1]} |
+     smooth rect1=40 rect2=40 
+     ''')
+
+Flow('time','wcos',
+     '''
+     mul $SOURCE | stack axis=3 norm=n |
+     put o1=0 d1=1 o2=0 d2=1 o3=0 d3=1 |
+     eikonal vel=n zshot=76 yshot=45
+     ''')
+
+Flow('pick','dip3 seed time',
+     'pwpaint2 seed=${SOURCES[1]} cost=${SOURCES[2]} order=1')
+Result('pick','byte gainpanel=all allpos=y | grey3 frame1=500 frame2=76 frame3=45 title="Relative Age" color=j flat=n point1=0.7 point2=0.7')
+
+Flow('flat','boont pick','iwarp warp=${SOURCES[1]}')
+Result('boont','byte gainpanel=all | grey3 frame1=500 frame2=76 frame3=45 wanttitle=n flat=y')
+Result('flat','byte gainpanel=all | grey3 frame1=500 frame2=76 frame3=45 wanttitle=n flat=y')
+
+Flow('wboon','boont','window min1=0.75 max1=1.25')
+Flow('wflat','flat', 'window min1=0.75 max1=1.25')
+
+Result('wboon','byte gainpanel=all | grey3 frame1=119 frame2=76 frame3=45 wanttitle=n flat=y color=G')
+Result('wflat','byte gainpanel=all | grey3 frame1=119 frame2=76 frame3=45 wanttitle=n flat=y color=G')
+
+# Contour3
+
+Flow('cont','boont',
+     '''
+     window n2=1 n3=1 f2=76 f3=45 | envelope | 
+     max1 | window n1=10 | real
+     ''')
+Plot('wboon','byte gainpanel=all | grey3 frame1=119 frame2=76 frame3=45 wanttitle=n flat=y')
+Plot('cont','pick cont',
+     '''
+     window min1=0.75 max1=1.25 |
+     contour3 frame1=119 frame2=76 frame3=45 flat=y 
+     wanttitle=n wantaxis=n plotfat=5 cfile=${SOURCES[1]}
+     ''')
+Result('cont','wboon cont','Overlay')
+
+# Strongest horizon
+
+Flow('cont0','boont',
+     '''
+     window n2=1 n3=1 f2=76 f3=45 | envelope | 
+     max1 | window n1=1 | real
+     ''')
+Plot('cont0','pick cont0',
+     '''
+     window min1=0.75 max1=1.25 |
+     contour3 frame1=119 frame2=76 frame3=45 flat=y 
+     wanttitle=n wantaxis=n plotfat=5 cfile=${SOURCES[1]}
+     ''')
+Result('cont0','wboon cont0','Overlay')
+
+# cont1 and cont2 -> mask
+
+t0=1.129
+dt=0.1
+
+t1=t0-dt
+t2=t0+dt
+
+Flow('mask','pick','mask min=%g max=%g | dd type=float | smooth rect1=10' % (t1,t2))
+Flow('boonm','boont mask','mul ${SOURCES[1]}')
+
+Plot('wboonm','boonm',
+     '''
+     window min1=1.05 max1=1.25 |
+     byte gainpanel=all | 
+     grey3 frame1=50 frame2=76 frame3=45 wanttitle=n flat=y point1=0.25
+     ''')
+Plot('contm','pick cont0',
+     '''
+     window min1=1.05 max1=1.25 |
+     contour3 frame1=50 frame2=76 frame3=45 flat=y point1=0.25
+     wanttitle=n wantaxis=n plotfat=5 cfile=${SOURCES[1]}
+     ''')
+
+Plot('boonm',
+     '''
+     window min1=0.8 max1=1.4 |
+     byte gainpanel=all |
+     grey3 frame1=%d frame2=76 frame3=45 wanttitle=n 
+     flat=y point1=0.7 point2=0.7
+     ''' % int((t0-0.8)/0.002))
+
+Result('boonm','wboonm contm','Overlay')
+
+# previous method - similarity with envelope
+Flow('rot','boonm','simenv verb=n rect=1000',split=[3,97],reduce='cat axis=4')
+
+# new method - local skewness
+Flow('sqr','boonm','localskew verb=n rect=1000',split=[3,97],reduce='cat axis=4')
+Flow('kur','boonm','localskew verb=n rect=1000 const=y inv=n',split=[3,97],reduce='cat axis=4')
+Flow('skew','sqr kur','mul ${SOURCES[1]}')
+
+Flow('mrot','sqr','stack axis=1 | transp',split=[4,97],reduce='cat axis=3')
+
+Flow('mpik','mrot','pick rect1=10 rect2=10 | add add=90')
+
+Result('mpik',
+       '''
+       grey color=j scalebar=y title="Estimated Phase Rotation"
+       unit1= unit2= transp=n yreverse=n 
+       ''')
+
+Flow('ampl','flat','window n1=1 min1=1.129')
+Result('ampl','grey title="Amplitude Before Rotation" unit1= unit2= transp=n yreverse=n color=G')
+
+Flow('npik','mpik','spray axis=1 n=1001 d=0.002')
+
+Flow('boonr','boonm npik','phaserot phase=${SOURCES[1]}')
+
+Result('boonr',
+       '''
+       window min1=0.8 max1=1.4 |
+       byte gainpanel=all |
+       grey3 frame1=%d frame2=76 frame3=45 wanttitle=n flat=n point1=0.7 point2=0.7
+       ''' % int((t0-0.8)/0.002))
+
+Flow('flatr','boonr pick','iwarp warp=${SOURCES[1]}')
+
+Flow('ampr','flatr','window n1=1 min1=1.129')
+Result('ampr','grey title="Amplitude After Rotation" unit1= unit2= transp=n yreverse=n color=G')
+
+Flow('hist','ampl','histogram o1=-80000 n1=251 d1=800') 
+
+Result('hist','dd type=float | graph title="Amplitude Distribution Before Rotation" ')
+
+Flow('histr','ampr','histogram o1=-80000 n1=251 d1=800') 
+
+Result('histr','dd type=float | graph title="Amplitude Distribution After Rotation" ')
+
+End()

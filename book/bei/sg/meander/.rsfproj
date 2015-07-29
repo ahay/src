@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfgrey']
+data=['data/meander/meandercube.H']
+size=          0

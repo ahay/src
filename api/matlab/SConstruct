@@ -1,0 +1,41 @@
+import sys, os, string, re
+sys.path.append('../../framework')
+import bldutil
+
+try: # distribution version
+    Import('env root libdir incdir')
+    env = env.Clone()
+except: # local version
+    env = bldutil.Debug()
+    root = None
+    SConscript('../c/SConstruct')
+
+env.Prepend(CPPPATH=['../../include'],
+            LIBPATH=['../../lib'],
+            LIBS=['drsf'])
+
+if 'matlab' in env.get('API',[]):
+    mex = env.get('MEX')
+    suffix = env.get('MEXSUFFIX')
+
+    if mex:
+        mexcom = mex + " CC=$CC CFLAGS='$CFLAGS $_CCCOMCOM -fPIC' $SOURCE $_LIBDIRFLAGS $_LIBFLAGS -output $TARGET"
+
+    for inp in Split('m8r par dim read_header read read_all write write_all create'):
+        if inp == 'm8r':
+            cfile = inp
+        else:
+            cfile = 'rsf_' + inp
+
+        if mex:
+            mfile = env.Command(cfile+suffix,cfile+'.c',mexcom)
+
+            if root:
+                install = env.Install(libdir,mfile)
+
+                if env['PLATFORM'] == 'darwin':
+                    env.AddPostAction(install,
+                    '%s -change build/api/c/libdrsf.dylib '
+                    '%s/libdrsf.dylib %s/%s' % \
+                        (WhereIs('install_name_tool'),
+                         libdir,libdir,mfile[0]))

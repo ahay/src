@@ -1,0 +1,829 @@
+from rsf.proj import *
+import math
+from rsf.recipes.beg import server as private
+
+nt=501
+dt = 0.008
+nf = 300
+ot=0
+df = 1/(nt*dt)
+wf = 2*math.pi
+
+def grey(title,bias,other):
+    return '''
+    transp | grey title="%s" bias=%g color=j scalebar=n screenratio=0.8 
+    barwidth=0.2 crowd1=0.75  crowd2=0.3 wherexlabel=b allpos=y
+    label2=Time unit2=s label1=Frequency unit1=Hz %s
+    ''' % (title,bias,other)
+
+
+###########################
+# Model 0 Ricker wavelets
+###########################
+## Flow('ricker',None,
+##      '''
+##      spike n1=512 d1=1 o1=0 k1=128,256 nsp=2 mag=1,0.5 |
+##      ricker1 frequency=0.2
+##      ''')
+## Flow('rtft rbasis','ricker',
+##      '''
+##      rtft rect=5 nw=257 w0=0 dw=0.002
+##      verb=y niter=100 basis=${TARGETS[1]}
+##      ''')
+## Result('rtft',
+##        '''
+##        stack axis=3 norm=n |
+##        grey transp=n yreverse=n color=j
+##        title="LTF transform spectra (smooth=7)"
+##        crowd1=0.75 crowd2=0.25
+##        labelfat=3 font=2 titlefat=3 parallel2=n
+##        ''')
+
+## Flow('inv','rtft','rtft inv=y')
+## Result('inv','inv ricker',
+##        '''
+##        cat axis=3 ${SOURCES[1]} |
+##        graph title=Comparison
+##        ''')
+
+## Flow('ltft0','ricker','ltft rect=7 verb=n')
+## Result('ltft0',
+##        '''
+##        window n1=%d |
+##        math output="abs(input)" | real |
+##        grey transp=n yreverse=n color=j
+##        title="LTF transform spectra (smooth=7)"
+##        crowd1=0.75 crowd2=0.25
+##        labelfat=3 font=2 titlefat=3 parallel2=n
+##        ''' % nt)
+
+###########################
+# Model 1 crossing chirps
+###########################
+Flow('cchirps',None,
+     '''
+     spike n1=%d d1=1 o1=0 |
+     math output="cos(%g*(10+x1/7)*x1/%d)+cos(%g*(%d/2.8-x1/6.0)*x1/%d)" |
+     pad end1=11
+     ''' % (nt,2*math.pi,nt,2*math.pi,nt,nt))
+Result('cchirps',
+       '''
+       window n1=%d |
+       graph title=Input labelfat=3 font=2 titlefat=3
+       crowd1=0.75 crowd2=0.25 parallel2=n
+       wherexlabel=t wheretitle=b plotfat=3
+       '''% nt)
+
+## nf0 = 257
+## df = 0.00195312
+## wf = 2*math.pi
+## #---cos basis
+## Flow('cbasis','cchirps',
+##      '''
+##      spray axis=2 n=%d d=%g o=0 |
+##      math output="cos(%g*x2*x1)"
+##      ''' % (nf0,df,wf))
+## Result('cbasis',
+##        '''
+##        grey transp=n yreverse=n color=j
+##        title="Cosine bases" label2=Frequency unit2=Hz
+##        screenratio=0.8 crowd1=0.75 crowd2=0.3
+##        labelfat=3 font=2 titlefat=3 parallel2=n
+##        ''')
+## #---sin basis
+## Flow('sbasis','cchirps',
+##      '''
+##      spray axis=2 n=%d d=%g o=0 | math output="sin(%g*x2*x1)"
+##      ''' % (nf0,df,wf))
+## Result('sbasis',
+##        '''
+##        grey transp=n yreverse=n color=j
+##        title="Sine bases" label2=Frequency unit2=Hz
+##        screenratio=0.8 crowd1=0.75 crowd2=0.3
+##        labelfat=3 font=2 titlefat=3 parallel2=n
+##        ''')
+## #       'window j2=4 | wiggle poly=y title="Sine bases" ') 
+
+# S transform
+Flow('st1','cchirps','st')
+Result('st1',
+       '''
+       window n1=%d |
+       math output="abs(input)" | real |
+       grey transp=n yreverse=n color=j
+       title="S transform spectra"
+       crowd1=0.75 crowd2=0.25
+       labelfat=3 font=2 titlefat=3 parallel2=n
+       ''' % nt)
+
+## Flow('ist1','st1','st inv=y')
+## Result('ist1',
+##        '''
+##        window n1=%d |
+##        graph title="Inverse S transform" label2= unit2=
+##        labelfat=3 font=2 titlefat=3
+##        screenratio=0.8 crowd1=0.75 crowd2=0.3 parallel2=n
+##        '''% nt)
+## Flow('diff2','cchirps ist1','add scale=1,-1 ${SOURCES[1]}')
+## Result('diff2',
+##        '''
+##        window n1=%d |
+##        graph title="Difference between input and IST" label2= unit2=
+##        labelfat=3 font=2 titlefat=3
+##        screenratio=0.8 crowd1=0.75 crowd2=0.3
+##        min2=-0.05 max2=0.05 parallel2=n
+##        ''' % nt)
+# Local prediction filter
+## Flow('tfreq1','cchirps','timefreq rect=20')
+## Result('tfreq1',
+##        '''
+##        grey color=j wanttitle="Time-frequency spectra (lpf)"
+##        ''')
+
+# test sfltft
+Flow('ltft1 scbasis','cchirps','ltft rect=7 verb=n basis=${TARGETS[1]}')
+## Result('sbasis','scbasis',
+##        '''
+##        window n2=257 |
+##        grey transp=n yreverse=n color=j
+##        title="Sine bases" label2=Frequency unit2=Hz
+##        crowd1=0.75 crowd2=0.2
+##        labelfat=3 font=2 titlefat=3 parallel2=n
+##        ''')
+## Result('cbasis','scbasis',
+##        '''
+##        window f2=257 | put o2=0 |
+##        grey transp=n yreverse=n color=j
+##        title="Cosine bases" label2=Frequency unit2=Hz
+##        crowd1=0.75 crowd2=0.2
+##        labelfat=3 font=2 titlefat=3 parallel2=n
+##        ''')
+
+Result('ltft1',
+       '''
+       window n1=%d |
+       math output="abs(input)" | real |
+       grey transp=n yreverse=n color=j
+       title="LTF decomposition spectra (smooth=7)"
+       crowd1=0.75 crowd2=0.25
+       labelfat=3 font=2 titlefat=3 parallel2=n
+       ''' % nt)
+## Flow('iltft1','ltft1','ltft inv=y')
+## Result('iltft1',
+##        '''
+##        window n1=%d |
+##        graph title="Inverse LTF transform" label2= unit2=
+##        labelfat=3 font=2 titlefat=3
+##        screenratio=0.8 crowd1=0.75 crowd2=0.3
+##        ''' % nt)
+## Flow('diff1','cchirps iltft1','add scale=1,-1 ${SOURCES[1]}')
+## Result('diff1',
+##        '''
+##        window n1=%d |
+##        graph title="Difference between input and ILTFT" label2= unit2=
+##        labelfat=3 font=2 titlefat=3
+##        screenratio=0.8 crowd1=0.75 crowd2=0.3
+##        min2=-0.05 max2=0.05 parallel2=n
+##        ''' % nt)
+
+# choose parameters
+Flow('ltft12','cchirps','ltft rect=14 verb=n')
+Result('ltft12',
+       '''
+       window n1=%d |
+       math output="abs(input)" | real |
+       grey transp=n yreverse=n color=j
+       title="LTF decomposition spectra (smooth=14)"
+       crowd1=0.75 crowd2=0.25
+       labelfat=3 font=2 titlefat=3 parallel2=n
+       ''' % nt)
+## Flow('iltft12','ltft12','ltft inv=y')
+## Result('iltft12',
+##        '''
+##        window n1=%d |
+##        graph title="Inverse LTF transform" label2= unit2=
+##        labelfat=3 font=2 titlefat=3
+##        screenratio=0.8 crowd1=0.75 crowd2=0.3
+##        ''' % nt)
+## Flow('diff12','cchirps iltft12','add scale=1,-1 ${SOURCES[1]}')
+## Result('diff12',
+##        '''
+##        window n1=%d |
+##        graph title="Difference between input and ILTFT" label2= unit2=
+##        labelfat=3 font=2 titlefat=3
+##        screenratio=0.8 crowd1=0.75 crowd2=0.3
+##        min2=-0.05 max2=0.05 parallel2=n
+##        ''' % nt)
+
+## Flow('ltft13','cchirps','ltft rect=11 verb=y')
+## Result('ltft13',
+##        '''
+##        window n1=%d |
+##        math output="abs(input)" | real |
+##        grey transp=n yreverse=n color=j
+##        title="LTF transform spectra (weak)"
+##        crowd1=0.75 crowd2=0.25
+##        labelfat=3 font=2 titlefat=3 parallel2=n
+##        ''' % nt)
+## Flow('iltft13','ltft13','ltft inv=y')
+## Result('iltft13',
+##        '''
+##        window n1=%d |
+##        graph title="Inverse LTF transform" label2= unit2=
+##        labelfat=3 font=2 titlefat=3
+##        screenratio=0.8 crowd1=0.75 crowd2=0.3
+##        ''' % nt)
+## Flow('diff13','cchirps iltft13','add scale=1,-1 ${SOURCES[1]}')
+## Result('diff13',
+##        '''
+##        window n1=%d |
+##        graph title="Difference between input and ILTFT" label2= unit2=
+##        labelfat=3 font=2 titlefat=3
+##        screenratio=0.8 crowd1=0.75 crowd2=0.3
+##        min2=-0.05 max2=0.05 parallel2=n
+##        ''' % nt)
+## ###########################
+## # Model 2 three cosines
+## ###########################
+## nlevel0=0
+## nf0=200
+## Flow('cosines',None,
+##      '''
+##      math n1=%d o1=0 d1=%g n2=1
+##      output="cos(%g*(10*x1))+cos(%g*(20*x1))+cos(%g*(30*x1))" |
+##      put label1=Time unit1=s label2=Amplitude 
+##      ''' % (nt,dt,wf,wf,wf))
+
+## Flow('spikes',None,
+##      '''
+##      spike n1=%d o1=0 d1=%g n2=1 nsp=2 mag=10,10 k1=%d,%d
+##      ''' % (nt,dt,nt/2,nt/2+40))
+## Flow('cspikes','cosines spikes','add ${SOURCES[1]} | noise var=%g' % (nlevel0))
+
+## Result('cspikes',
+##        '''
+##        graph pad=n screenratio=0.8 crowd1=0.75 label2=Amplitude
+##        label1=Time unit1=s crowd2=0.3 wanttitle=n
+##        ''')
+
+## Flow('ltft2','cspikes','ltft rect=6 verb=n')
+## Result('ltft2',
+##        '''
+##        math output="abs(input)" | real |
+##        '''+ grey('LTFT',0.01,'yreverse=n wheretitle=t \
+##        labelfat=3 font=2 titlefat=3'))
+
+## Flow('iltft2','ltft2','ltft inv=y')
+## Result('iltft2',
+##        '''
+##        graph pad=n screenratio=0.8 crowd1=0.75 label2=Amplitude
+##        label1=Time unit1=s crowd2=0.3 title="Inverse LTF transform"
+##        ''')
+
+## # Guochang's method
+## #---cos basis
+## Flow('bcos-0','cspikes',
+##      'spray axis=2 n=%d d=%g o=0| math output="cos(%g*x2*x1)"' % (nf0,df,wf))
+
+## #---sin basis
+## Flow('bsin1-0','cspikes',
+##      '''
+##      spray axis=2 n=%d d=%g o=0| math output="sin(%g*x2*x1)"| window f2=1
+##      ''' % (nf0,df,wf))
+
+## #-----similarity vs projection
+## Flow('mask','cspikes',
+##      'noise rep=y type=n seed=2008 | mask min=0')
+## #Flow('zero','s-0 mask','headercut mask=${SOURCES[1]}')
+
+## Flow('bsincos-0','bsin1-0 bcos-0','cat axis=2 ${SOURCES[1]}')
+## Flow('s-0s2','cspikes mask',
+##      '''
+##      spray axis=2 n=%d d=%g o=0 | transp |
+##      headercut mask=${SOURCES[1]} | transp
+##      ''' % (2*nf0-1, df))
+## Result('s-0s2',
+##        '''
+##        window n2=1 |
+##        graph pad=n screenratio=0.8 crowd1=0.75 label2=Amplitude
+##        label1=Time unit1=s crowd2=0.3 wanttitle=n
+##        ''')
+## Flow('project-0 pred','bsincos-0 s-0s2',
+##      'lpf match=${SOURCES[1]} niter=100 rect1=20 pred=${TARGETS[1]}')
+## Flow('proj-0-old','project-0',
+##      '''
+##      pad beg2=1 | put n2=%d n3=2 | math output=input*input |
+##      stack axis=3 norm=n | math output="sqrt(input)"
+##      ''' % nf0)
+## Result('proj-0-old',grey('',0.2,''))
+## Flow('proj-0','cspikes','timefreq nw=200 dw=0.249501 rect=15')
+## Result('proj-0',grey('',0.2,''))
+
+## Result('pred',
+##        '''
+##        stack |
+##        graph pad=n screenratio=0.8 crowd1=0.75 label2=Amplitude
+##        label1=Time unit1=s crowd2=0.3 wanttitle=n
+##        ''')
+
+## ###########################
+## # Model 3 frequency-vary sinusoid
+## ###########################
+## Flow('simple',None,
+##       '''
+##       math n1=251 o1=0 d1=0.004 n2=1 output="cos(%g*(3.0*x1*x1+5)*x1)"
+##       label1=Time unit1=s 
+##       ''' % (2*wf))
+## Result('simple',
+##        '''
+##        graph yreverse=y transp=y wanttitle=n
+##        screenratio=2.5 labelsz=6
+##        ''')
+
+## Flow('ltft3','simple','ltft rect=6 verb=n')
+## Result('ltft3',
+##        '''
+##        math output="abs(input)" | real |
+##        grey yreverse=y transp=y wanttitle=n color=j
+##        screenratio=2.5 labelsz=6
+##        ''')
+
+## Flow('iltft3','ltft3','ltft inv=y')
+## Result('iltft3',
+##        '''
+##        graph yreverse=y transp=y title=Inverse
+##        screenratio=2.5 labelsz=6
+##        ''')
+
+## #---cos basis
+## Flow('bcos1','simple',
+##      '''
+##      spray axis=2 n=20 d=2 o=0 label=Frequency unit=Hz |
+##      math output="cos(%g*x2*x1)" | window f2=1
+##      ''' % wf)
+## Flow('bcos','simple bcos1',
+##      '''
+##      spray axis=2 n=1 d=2 o=0 label=Frequency unit=Hz |
+##      math output=0.5 | cat axis=2 ${SOURCES[1]}
+##      ''')
+
+## Result('bcos',
+##        '''
+##        wiggle yreverse=y transp=y wanttitle=n
+##        poly=y screenratio=2 labelsz=6
+##        ''')
+
+## #---sin basis
+
+## Flow('bsin','simple',
+##      '''
+##      spray axis=2 n=20 d=2 o=0 label=Frequency unit=Hz |
+##      math output="sin(%g*x2*x1)"| window f2=1
+##      ''' % wf)
+
+## Result('bsin',
+##        '''
+##        wiggle yreverse=y transp=y wanttitle=n poly=y
+##        screenratio=2 wantaxis1=n labelsz=6
+##        ''')
+
+## ###########################
+## # Model 4 chirp signal:
+## # cos(g(f)*t+a)+cos(g(f)*t+b)
+## ###########################
+## nlevel1=0
+## dt1 = 0.004
+## Flow('tchirps',None,
+##     '''
+##     math n1=%d o1=0 d1=%g n2=1
+##     output="cos(%g*(3.0*x1*x1+5)*x1)+cos(%g*(8*x1*x1+19)*x1)"
+##     ''' % (nt, dt1, wf, wf))
+## Result('tchirps',
+##        '''
+##        graph pad=n screenratio=0.8 crowd1=0.75
+##        label2=Amplitude label1=Time unit1=s crowd2=0.3 wanttitle=n
+##        ''')
+
+## Flow('ltft4','tchirps','ltft rect=6 verb=n')
+## Result('ltft4',
+##        '''
+##        math output="abs(input)" | real |
+##        ''' + grey('',0.02,''))
+
+## Flow('iltft4','ltft4','ltft inv=y')
+## Result('iltft4',
+##        '''
+##        put unit2= |
+##        graph pad=n screenratio=0.8 crowd1=0.75
+##        label2=Amplitude label1=Time unit1=s crowd2=0.3 title=Inverse
+##        ''')
+
+## # S transform
+## Flow('st2','tchirps','pad end1=11 | st')
+## Result('st2',
+##        '''
+##        window n1=501 |
+##        math output="abs(input)" | real |
+##        ''' + grey('S transform',0.02,'wheretitle=t'))
+
+## Flow('ist2','st2','st inv=y')
+## Result('ist2',
+##        '''
+##        window n1=501 |
+##        graph pad=n screenratio=0.8 crowd1=0.75
+##        label2=Amplitude unit2= label1=Time unit1=s crowd2=0.3
+##        title="Inverse S transform" 
+##        ''') 
+
+## # Guochang's method
+## #---cos basis
+## Flow('bcos-1','tchirps',
+##      '''
+##      spray axis=2 n=%d d=%g o=0 |
+##      math output="cos(%g*x2*x1)"
+##      ''' % (nf,df,wf))
+## #---sin basis
+## Flow('bsin1-1','tchirps',
+##      '''
+##      spray axis=2 n=%d d=%g o=0 |
+##      math output="sin(%g*x2*x1)"|
+##      window f2=1
+##      ''' % (nf,df,wf))
+
+## #-----similarity vs projection
+## Flow('bsincos-1','bsin1-1 bcos-1','cat axis=2 ${SOURCES[1]}')
+## Flow('s-1s2','tchirps','spray axis=2 n=%d d=%g o=0' % (2*nf-1, df))
+
+## Flow('project-1','bsincos-1 s-1s2',
+##      'lpf match=${SOURCES[1]} niter=30 rect1=23 ')
+## Flow('proj-1-old','project-1',
+##      '''
+##      pad beg2=1 | put n2=%d n3=2 |
+##      math output=input*input |
+##      stack axis=3 norm=n |
+##      math output="sqrt(input)"
+##      ''' % nf)
+
+## Flow('proj-1','tchirps','timefreq nw=300 dw=0.249501 rect=18')
+## Result('proj-1',grey('',0.2,''))
+
+## ###########################
+## # Model 5 synthetic trace
+## #         by ricker wavelet
+## ###########################
+## nlevel2=0
+## dt2=0.002
+## nf2=500
+## Flow('syn1',None,
+##      '''
+##      spike n1=%d d1=%g o1=0 nsp=4 k1=%g,%g,%g,%g mag=1,1,1,1 |
+##      ricker1 frequency=50
+##      ''' % (nt,dt2,0.2*nt,0.4*nt,0.605*nt,0.8*nt))
+## Flow('syn2',None,
+##      '''
+##      spike n1=%d d1=%g o1=0 nsp=2 k1=%g,%g mag=1,1 |
+##      ricker1 frequency=40
+##      ''' % (nt,dt2,0.6*nt,0.79*nt))
+## Flow('syn3',None,
+##      '''
+##      spike n1=%d d1=%g o1=0 nsp=3 k1=%g,%g,%g mag=1,1,1 |
+##      ricker1 frequency=30
+##      ''' % (nt,dt2,0.21*nt,0.59*nt,0.81*nt))
+## Flow('syn4',None,
+##      '''
+##      spike n1=%d d1=%g o1=0 nsp=1 k1=%g mag=2 |
+##      ricker1 frequency=20
+##      ''' % (nt,dt2,0.43*nt))
+
+## Flow('syn','syn1 syn2 syn3 syn4',
+##      '''
+##      add ${SOURCES[1:4]} |
+##      noise var=%g
+##      ''' % (nlevel2))
+
+## Flow('secs','syn syn1 syn2 syn3 syn4',
+##      '''
+##      cat ${SOURCES[1:5]} axis=2 
+##      ''')
+## Result('secs',
+##        '''
+##        dots  gaineach=n 
+##        labels="Sum\^ \_\^ \_=:50Hz\^
+##        \_\^ \_+:40Hz\^ \_\^ \_+:30Hz\^ \_\^ \_+:20Hz"
+##        wanttitle=n titles=
+##        ''')
+
+## Result('syn',
+##        '''
+##        graph pad=n screenratio=0.8 crowd1=0.75
+##        label2=Amplitude label1=Time unit1=s
+##        crowd2=0.3 wanttitle=n pad=n
+##        ''')
+
+## Flow('ltft5','syn','ltft rect=6 verb=n nw=500 dw=0.249501')
+## Result('ltft5',
+##        '''
+##        math output="abs(input)" | real |
+##        ''' + grey('',0.0,''))
+
+## Flow('iltft5','ltft5','ltft inv=y')
+## Result('iltft5',
+##        '''
+##        put unit2= |
+##        graph pad=n screenratio=0.8 crowd1=0.75
+##        label2=Amplitude label1=Time unit1=s
+##        crowd2=0.3 title=Inverse pad=n
+##        ''')
+
+## # S transform
+## Flow('st3','syn','pad end1=11 | st fhi=124.7505')
+## Result('st3',
+##        '''
+##        math output="abs(input)" | real |
+##        ''' + grey('S transform',0.0,'wheretitle=t'))
+
+## Flow('ist3','st3','st inv=y')
+## Result('ist3',
+##        '''
+##        window n1=501 | put unit2= |
+##        graph pad=n screenratio=0.8 crowd1=0.75
+##        label2=Amplitude label1=Time unit1=s
+##        crowd2=0.3 title="Inverse ST" pad=n
+##        ''')
+
+
+## #---STFT with 30ms and 100ms Hamming window
+## for case in ('s-2sh','s-2lg'):
+##     Fetch(case+'.rsf','guochang',private)
+##     Result(case,grey('',0,'') )
+
+## # Guochang's method
+## #---cos basis
+## Flow('bcos-2','syn',
+##      '''
+##      spray axis=2 n=%d d=%g o=0 |
+##      math output="cos(%g*x2*x1)"
+##      ''' % (nf2,df,wf))
+
+## #---sin basis
+## Flow('bsin1-2','syn',
+##      '''
+##      spray axis=2 n=%d d=%g o=0 |
+##      math output="sin(%g*x2*x1)"|
+##      window f2=1
+##      ''' % (nf2,df,wf))
+
+## #-----similarity vs projection
+## Flow('bsincos-2','bsin1-2 bcos-2','cat axis=2 ${SOURCES[1]}')
+## Flow('s-2s2','syn','spray axis=2 n=%d d=%g o=0' % (2*nf2-1, df))
+
+## Flow('project-2','bsincos-2 s-2s2','lpf match=${SOURCES[1]} niter=80 rect1=8')
+## Flow('proj-2-old','project-2',
+##      '''
+##      pad beg2=1 | put n2=%d n3=2 |
+##      math output=input*input |
+##      stack axis=3 norm=n |
+##      math output="sqrt(input)"
+##      ''' % nf2)
+
+## Flow('proj-2','syn','timefreq nw=500 dw=0.249501 rect=8 niter=80')
+## Result('proj-2',grey('',0.,''))
+
+## ###########################
+## # Model 6 random reflectivity
+## # with ricker frequency f=at+b
+## ###########################
+## nf6=600
+## nt6=2000
+## dt6=0.001
+## nlevel6=0
+## Flow('refl',None,
+##      '''
+##      math n1=%d d1=%g o1=%g output=0 | noise var=1 
+##      ''' % (nt6,dt6,ot))
+## Flow('rfreq','refl','math output="25*x1*x1+15"')
+## Flow('rphase','refl','math output=0')
+## Flow('random','refl rfreq rphase',
+##      '''
+##      ricker2 tfreq=${SOURCES[1]} tphase=${SOURCES[2]}
+##      norm=n hiborder=100 |
+##      noise var=%g  |
+##      agc rect1=100 
+##      ''' % nlevel6)
+
+## Result('refl',
+##        '''
+##        graph pad=n screenratio=0.8 crowd1=0.75 label2=Amplitude
+##        label1=Time unit1=s crowd2=0.3 wanttitle=n
+##        ''')
+## Result('random',
+##        '''
+##        graph pad=n screenratio=0.8 crowd1=0.75
+##        label2=Amplitude label1=Time unit1=s crowd2=0.3 wanttitle=n
+##        ''')
+
+## Flow('ltft6','random','ltft rect=20 verb=n nw=800 dw=0.249501')
+## Result('ltft6',
+##        '''
+##        math output="abs(input)" | real |
+##        ''' + grey('',0.0,''))
+
+## Flow('iltft6','ltft6','ltft inv=y')
+## Result('iltft6',
+##        '''
+##        put unit2= |
+##        graph pad=n screenratio=0.8 crowd1=0.75
+##        label2=Amplitude label1=Time unit1=s crowd2=0.3 title=Inverse
+##        ''')
+
+## # Guochang's method
+## #---cos basis
+## Flow('bcos-6','random',
+##      '''
+##      spray axis=2 n=%d d=%g o=0 |
+##      math output="cos(%g*x2*x1)"
+##      ''' % (nf6,df,wf))
+
+## #---sin basis
+## Flow('bsin1-6','random',
+##      '''
+##      spray axis=2 n=%d d=%g o=0 |
+##      math output="sin(%g*x2*x1)"|
+##      window f2=1
+##      ''' % (nf6,df,wf))
+
+## Flow('bsincos-6','bsin1-6 bcos-6','cat axis=2 ${SOURCES[1]}')
+## Flow('s-6s','random','spray axis=2 n=%d d=%g o=0' % (2*nf6-1, df))
+
+## Flow('project-6','bsincos-6 s-6s',
+##      'lpf match=${SOURCES[1]} niter=100 rect1=90 ')
+## Flow('proj-6-old','project-6',
+##      '''
+##      pad beg2=1 | put n2=%d n3=2 |
+##      math output=input*input |
+##      stack axis=3 norm=n |
+##      math output="sqrt(input)"
+##      ''' % nf6)
+
+## Flow('proj-6','random','timefreq nw=800 dw=0.249501 rect=90')
+## Result('proj-6','window max2=149 | ' + grey('',0.2,''))
+
+## #---test local frequency 
+## Flow('numer-6','proj-6',' math output="input*x2" | stack axis=2')
+## Flow('denom-6','proj-6','stack axis=2')
+
+## Flow('lcf-6','numer-6 denom-6','math x=${SOURCES[1]} output="input/(x+0.01)"')
+## Flow('theo-6','lcf-6','math output="25*x1*x1+15" ')
+
+
+## Flow('flcf-6','random','iphase rect1=90 order=10 hertz=y')
+
+## Result('lcf-6','lcf-6 theo-6 flcf-6',
+##        '''
+##         cat axis=2 ${SOURCES[1]} ${SOURCES[2]}| 
+##         graph pad=n screenratio=0.8 yreverse=y min2=0 max2=149
+##         label2=Frequency unit2=Hz plotcol=6,5,3
+##         crowd1=0.75 label1=Time unit1=s crowd2=0.3 wanttitle=n Xdash=0,5,1
+##        ''')
+
+## ###########################
+## # Model 7 The whole 4D data
+## ###########################
+## nf9=601
+## df9=0.25
+
+## #-----read data from segy file
+## Fetch('ln472_old.sgy','guochang',private)
+
+## Flow('old','ln472_old.sgy',
+##      '''
+##      segyread bfile=/dev/null hfile=/dev/null read=data |  
+##      put n1=751 n2=201 o1=0 d1=0.002 02=1 d2=0.01 label1="Time" unit1="s" 
+##      label2="X" unit2="km" | window min1=0
+##      ''')
+## Result('old','old',
+##        'grey wanttitle=n label2="Distance" label1=Time unit1=s')
+
+## Flow('rltft','old','ltft rect=5 verb=y nw=601 dw=0.25 niter=50')
+## Result('rltft',
+##        '''
+##        math output="abs(input)" | real |
+##        transp plane=23 |
+##        byte allpos=y gainpanel=40 pclip=100 |
+##        grey3 color=j  frame1=615 frame3=40 frame2=76  label1=Time flat=y 
+##        unit1=s label2=Distance label3=Frequency unit3=Hz
+##        point1=0.8 point2=0.8 wanttitle=n 
+##        ''') 
+
+## Flow('riltft','rltft','ltft inv=y verb=y')
+## Result('riltft',
+##        '''
+##        grey title="Inverse LTF" label2="Distance"
+##        unit2=km label1=Time unit1=s
+##        ''')
+
+## # Dominant frequency
+## Flow('numer','rltft',
+##      '''
+##      math output="abs(input)" | real |
+##      math output="input*x2"| stack
+##      ''')
+## Flow('denom','rltft',
+##      '''
+##      math output="abs(input)" | real |
+##      stack
+##      ''')
+## Flow('lf','numer denom',
+##      'math den=${SOURCES[1]} output="input/(den+0.001)"')
+
+## Result('lf',
+##        '''
+##        grey allpos=y color=j label1=Time scalebar=y
+##        barlabel=Frequency barunit=Hz pclip=99.
+##        unit1=s  label3=Frequency label2=Distance unit3=Hz wanttitle=n 
+##        ''' )
+
+## #---cos basis
+## Flow('bcos-9','old',
+##      '''
+##      spray axis=3 n=%d d=%g o=0 |
+##      math output="cos(%g*x3*x1)"
+##      ''' % (nf9,df9,wf))
+
+
+## #---sin basis
+## Flow('bsin1-9','old',
+##      '''
+##      spray axis=3 n=%d d=%g o=0 |
+##      math output="sin(%g*x3*x1)"|
+##      window f3=1
+##      ''' % (nf9,df9,wf))
+
+## #-----projection
+
+## Flow('bsincos-9','bsin1-9 bcos-9','cat axis=3 ${SOURCES[1]}')
+## Flow('olds','old','spray axis=3 n=%d d=%g o=0' % (2*nf9-1, df9))
+
+## #Flow('allproject-9','olds bsincos-9',
+## #     'lpf match=${SOURCES[1]} niter=30 rect1=14 ')
+
+
+## win9 = []
+## for f9 in range(0,1200,100):
+##     winold9      = 'winold-%d'  % f9
+##     winbsincos9   = 'winsincos-9-%d'  %f9
+##     winproject9   = 'winproject-9-%d' % f9
+##     win9.append(winproject9)
+
+##     Flow(winbsincos9,'bsincos-9','window f3=%d n3=100' % f9)
+##     Flow(winold9,'olds','window f3=%d n3=100' % f9)
+
+##     Flow(winproject9,[winbsincos9, winold9],
+##          'lpf match=${SOURCES[1]} niter=30 rect1=14')
+
+## Flow('project-9',win9,
+##      '''
+##      cat ${SOURCES[1:%d]} axis=3 | put o3=0 d3=%g  label3=Frequency Unit3=Hz |
+##      math output="input*input"
+##      ''' % (len(win9),df9))
+    
+
+## Flow('proj-9-old','project-9',
+##      '''
+##      pad beg3=1 |pad end3=1 | put n3=%d n4=2 | math output=input*input | 
+##      stack axis=4 norm=n | math output="sqrt(input)" 
+##      ''' % nf9)
+
+## Flow('proj-9','old','timefreq rect=14 nw=601 dw=0.25')
+
+## Result('proj-9',
+##        '''
+##        transp plane=23 |
+##        byte allpos=y gainpanel=40 pclip=100 |
+##        grey3 color=j  frame1=615 frame3=40 frame2=76  label1=Time flat=y 
+##        unit1=s label2=Distance label3=Frequency unit3=Hz
+##        point1=0.8 point2=0.8 wanttitle=n 
+##        ''')
+
+
+## #---test local frequency
+
+## Flow('sproj-9','proj-9','smooth rect1=10 rect2=10 ')
+
+## Flow('numer-9','proj-9','math output="input*x2" | stack')
+## Flow('denom-9','proj-9','stack axis=2')
+## Flow('glcf-9','numer-9 denom-9','add mode=d ${SOURCES[1]}')
+## Flow('lcf-9','numer-9 denom-9','math x=${SOURCES[1]} output="input/(x+0.001)"')
+
+## Result('lcf-9',
+##        '''
+##        grey allpos=y color=j label1=Time scalebar=y
+##        barlabel=Frequency barunit=Hz pclip=99.
+##        unit1=s  label3=Frequency label2=Distance unit3=Hz wanttitle=n 
+##        ''' )
+
+
+## ###############################
+
+End()
+

@@ -1,0 +1,94 @@
+from rsf.proj import *
+from rsf.recipes.velcon import velcon
+from rsf.recipes.beg import server as private
+
+Fetch('elf0.H','elf',private)
+
+# edit trace? 
+Flow('elf','elf0.H',
+     '''
+     dd form=native | cut n3=1 n2=1 n1=300 f3=663 f2=67 |
+     transp plane=23 memsize=500 | transp plane=34
+     ''')
+
+velcon('elf',
+       nv=120,      # continuation steps
+       v0=1400,     # initial velocity
+       dv=25,       # velocity step
+       nx=1000,     # lateral dimension
+       nh=136,      # number of offsets
+       padt=1024,   # time padding
+       padt2=4096,  # extra time padding
+       padx=1025,   # lateral padding
+       dx=13.3333,  # lateral sampling
+       v1=2000,     # other velocity
+       vx0=2000,    # semblance muting
+       vslope=1200, # semblance muting
+       units='m',   # lateral units
+       rect1=70,
+       rect2=70)
+#              rect1=35,    # vertical smoothing
+#              rect2=35)    # lateral  smoothing
+
+Flow('scan','elf-vlf2','window n3=1 min3=10000 | mutter v0=1200 x0=2000 half=n')
+Plot('scan',
+     '''
+     grey color=j allpos=y title="Semblance Scan"
+     label1=Time unit1=s label2=Velocity unit2="m/s"
+     ''')
+
+Flow('pick','scan','pick rect1=35')
+
+Flow('slice','elf-vlf','window n3=1 min3=10000 | mutter v0=1200 x0=2000 half=n')
+Plot('slice',
+     '''
+     grey title="Velocity Continuation"
+     label1=Time unit1=s label2=Velocity unit2="m/s"
+     ''')
+
+def graph(col,fat):
+    return '''
+    graph transp=y yreverse=y min2=1425 max2=4400 pad=n plotcol=%d plotfat=%d
+    wantaxis=n wanttitle=n
+    ''' % (col,fat)
+
+Plot('pick0','pick',graph(0,10))
+Plot('pick1','pick',graph(7,1))
+
+Result('escan','scan pick0 pick1','Overlay')
+
+Result('eslice','slice pick0 pick1','Overlay')
+
+Flow('ddv','elf-ddv','window n2=1 min2=10000')
+Flow('ppick','pick ddv','add ${SOURCES[1]} scale=1,0.25')
+Flow('mpick','pick ddv','add ${SOURCES[1]} scale=1,-0.25')
+
+Plot('ppick0','ppick',graph(0,10))
+Plot('ppick1','ppick',graph(7,1))
+
+Plot('mpick0','mpick',graph(0,10))
+Plot('mpick1','mpick',graph(7,1))
+
+#Result('escan2','scan ppick0 mpick0 ppick1 mpick1','Overlay')
+#Result('eslice2','slice ppick0 mpick0 ppick1 mpick1','Overlay')
+
+Flow('left0','elf-unc','math output=x1-0.5*input')
+Flow('rite0','elf-unc','math output=x1+0.5*input')
+Flow('left1','elf-unc2','math output=x2-0.5*input')
+Flow('rite1','elf-unc2','math output=x2+0.5*input')
+Flow('left','left0 left1','cmplx ${SOURCES[:2]}',stdin=0)
+Flow('rite','rite0 rite1','cmplx ${SOURCES[:2]}',stdin=0)
+
+Flow('arr','left rite',
+     'cat axis=3 ${SOURCES[1]} | transp plane=13')
+#Result('earr','arr',
+#       '''
+#       window j2=10 j3=10 | put n3=1 n2=8000 |
+#       graph title="Structural Uncertainty"
+#       min1=0 max1=3.196 min2=0 max2=13320 pad=n
+#       transp=y yreverse=y wheretitle=b wherexlabel=t
+#       label1="Time (s)" label2="Lateral (m)"
+#       ''')
+
+End()
+       

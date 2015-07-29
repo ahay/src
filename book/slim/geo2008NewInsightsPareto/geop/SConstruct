@@ -1,0 +1,110 @@
+# Author: G. Hennenfent
+#         Seismic Laboratory for Imaging and Modeling
+#         Department of Earth & Ocean Sciences
+#         The University of British Columbia
+#         
+# Date  : December, 07
+import sys
+
+from rsf.proj import *
+try:
+    import numpy   as     np
+except:
+    sys.stderr.write('\nCannot find numpy.\n')
+    sys.exit(1)
+
+import os
+
+########################################################################
+# INITIALIZATION
+########################################################################
+matlab         = WhereIs('matlab')
+if not matlab:
+    sys.stderr.write('\nCannot find Matlab.\n')
+    sys.exit(1)
+
+matROOT = '../Matfcts'
+
+# define customized plotting function
+def mygrey(title,label1="Time",label2="Offset",unit1="s",unit2="m"):
+    return '''
+    sfgrey title="%s" minval=-2 maxval=2 clip=4 crowd1=.5 crowd2=.75
+    label1="%s" unit1="%s" label2="%s" unit2="%s" parallel2=n
+    '''%(title,label1,unit1,label2,unit2)
+
+# define plot parameters
+min1 = 0
+max1 = 2.25e4
+min2 = -1
+max2 = 250
+
+# define number of iterations
+maxiters = 100
+
+# define SLIM FTP server information
+FTPserver = {
+    'server': 'slim.eos.ubc.ca',
+    'login':'anonymous',
+    'password':'ghennenfent@eos.ubc.ca'}
+
+matfun = 'BuildPareto'
+Flow('pxnorms prnorms pbxnorms pbrnorms pixnorms pirnorms',[os.path.join(matROOT,matfun+'.m')],
+     matlab + '''
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('$TARGET','${TARGETS[1]}','${TARGETS[2]}','${TARGETS[3]}','${TARGETS[4]}','${TARGETS[5]}');quit"
+     '''%vars(),stdin=0,stdout=-1)
+Flow('ppath','pxnorms prnorms','sfcmplx ${SOURCES[:-1]}',stdin=0)
+Flow('pbpath','pbxnorms pbrnorms','sfcmplx ${SOURCES[:-1]}',stdin=0)
+Flow('pipath','pixnorms pirnorms','sfcmplx ${SOURCES[:-1]}',stdin=0)
+
+# plot result
+Plot('ppath',
+     '''
+     sfgraph label1="\F15 7\F-1 x\F15 7\F-1 \_\s75 1" label2="\F15 7\F-1 y-Ax\F15 7\F-1 \_\s75 2" title=""
+     min1=%(min1)g max1=%(max1)g min2=%(min2)g max2=%(max2)g
+     symbol=+ symbolsz=6 parallel2=n
+     '''%vars() )
+Plot('pbpath',
+     '''
+     sfgraph label1="\F15 7\F-1 x\F15 7\F-1 \_\s75 1" label2="\F15 7\F-1 y-Ax\F15 7\F-1 \_\s75 2" title=""
+     min1=%(min1)g max1=%(max1)g min2=%(min2)g max2=%(max2)g
+     symbol=0 symbolsz=10 plotcol=2 parallel2=n
+     '''%vars() )
+Plot('pipath',
+     '''
+     sfgraph label1="\F15 7\F-1 x\F15 7\F-1 \_\s75 1" label2="\F15 7\F-1 y-Ax\F15 7\F-1 \_\s75 2" title=""
+     min1=%(min1)g max1=%(max1)g min2=%(min2)g max2=%(max2)g parallel2=n
+     '''%vars() )
+
+########################################################################
+# CRSI with SPGL1
+########################################################################
+matfun = 'TrackCRSIwSPGL1'
+
+Flow('data interp model xnorms rnorms',[os.path.join(matROOT,matfun+'.m')],
+     matlab + '''
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('$TARGET','${TARGETS[1]}','${TARGETS[2]}','${TARGETS[3]}','${TARGETS[4]}',%(maxiters)g);quit"
+     '''%vars(),stdin=0,stdout=-1)
+Flow('opath','xnorms rnorms','sfcmplx ${SOURCES[:-1]}',stdin=0)
+
+# plot result
+Plot('opath',
+     '''
+     sfgraph label1="\F15 7\F-1 x\F15 7\F-1 \_\s75 1" label2="\F15 7\F-1 y-Ax\F15 7\F-1 \_\s75 2" title=""
+     min1=%(min1)g max1=%(max1)g min2=%(min2)g max2=%(max2)g
+     plotcol=3 dash=5 parallel2=n
+     '''%vars() )
+Result('res','ppath pbpath pipath opath','Overlay')
+
+Result('data','sfput d1=.004 |'+mygrey("",label1="Time",label2="Trace #",unit1="s",unit2=""))
+Result('interp','sfput d1=.004 |'+mygrey("",label1="Time",label2="Trace #",unit1="s",unit2=""))
+
+End()
+
+########################################################################
+# RUN TIME (iMac 2.4 GHz Intel Core 2 Duo, 2GB 667 MHz DDR2 SDRAM)
+########################################################################
+## time scons
+## scons: done building targets.
+## real    2m23.229s
+## user    1m47.608s
+## sys     0m34.237s

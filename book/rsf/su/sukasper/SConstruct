@@ -1,0 +1,53 @@
+from rsf.suproj import *
+
+# byte swap for big endian
+if little_endian():
+    pre = ''
+else:
+    pre = 'suswapbytes | '
+
+pars = {
+    'perc':90,
+    'tpow':3.2,
+    'f':','.join(map(str,(0,15,40,50))),
+    'amps':','.join(map(str,(0,0,1,1)))
+    }
+    
+def geometry(h,v):
+    return ' -geometry 600x450+%d+%d' % ((0,640)[h],(50,530)[v])
+
+Fetch('ozdata.25','oz.original')
+Flow('data','ozdata.25',pre + 'sushw key=f2,d2 a=-2.4,0.05')
+
+Result('data',
+       '''
+       suximage title="Original Data" windowtitle="Raw Data"
+       label1="Time (s)" label2="Offset (km)" 
+       ''' + geometry(0,0))
+
+Result('gain','data',
+       '''
+       sugain tpow=%(tpow)g |
+       suximage perc=%(perc)g title="Data with tpow=%(tpow)g perc=%(perc)g" 
+       windowtitle="tpow=%(tpow)g perc=%(perc)g" 
+       label1="Time (s)" label2="Offset (km)" 
+       ''' % pars + geometry(0,1))
+
+Flow('spec','data','suspecfx')
+Result('spec',
+       '''
+       suximage title="FX spectrum" windowtitle="FX spectrum" 
+       label1="Freq (Hz)" label2="Offset (km)" 
+       ''' + geometry(1,0))
+
+Flow('filt','data','sufilter f=%(f)s amps=%(amps)s' % pars)
+Result('filt',
+       '''
+       sugain tpow=%(tpow)g |
+       suximage perc=%(perc)g 
+       title="f=%(f)s amps=%(amps)s tpow=%(tpow)g perc=%(perc)g" 
+       windowtitle="Low Pass" 
+       label1="Time (s)" label2="Offset (km)" 
+       ''' % pars + geometry(1,1))
+
+End()

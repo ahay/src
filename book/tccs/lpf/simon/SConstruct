@@ -1,0 +1,85 @@
+from rsf.proj import *
+
+nt=401
+ns=25
+
+def grey(title):
+    return '''
+    window f1=225 | reverse which=2 |
+    grey grid2=y gridcol=5 gridfat=3 title="\F2 %s" 
+    labelsz=10 titlesz=12.5 label2="\F2 Offset" label1="\F2 Time"
+    parallel2=n format2="%%3.2f"
+    ''' % title
+
+# Generate data
+###############
+
+Flow('primary',None,
+     '''
+     spike
+     n1=401 d1=0.002
+     n2=42 o2=0.06 d2=0.01
+     k1=301 label2=Offset |
+     ricker1 frequency=35 |
+     reverse which=2
+     ''')
+Flow('multiple','primary','nmostretch inv=y v0=1 half=n')
+Flow('data','primary multiple','add ${SOURCES[1]}')
+Plot('data',grey('Data'))
+
+# Generate muliple model
+########################
+
+Flow('model','primary','nmostretch inv=y v0=1.2 half=n')
+Plot('model',grey('Multiple model'))
+
+# Filter to reject primaries
+############################
+
+Flow('lag.asc',None,
+     '''
+     echo %d n1=1 n=%d,100 data_format=ascii_int in=$TARGET
+     ''' % (nt,nt))
+Flow('lag','lag.asc','dd form=native')
+
+Flow('pef.asc','lag',
+     '''
+     echo -1 a0=1 n1=1 data_format=ascii_float in=$TARGET
+     lag=$SOURCE
+     ''',stdin=0)
+Flow('pef','pef.asc','dd form=native')
+
+# Model shifts
+##############
+
+shifts = ['model']
+for s in range(1,ns):
+    shift = 'shift+%d' % s
+    Flow(shift,'model',
+         'window n1=%d | pad beg1=%d' % (nt-s,s))
+    shifts.append(shift)
+Flow('shifts',shifts,'cat ${SOURCES[1:%d]}' % len(shifts))
+
+# Nonstationary regression
+##########################
+
+Flow('filt pred','shifts data pef',
+     '''
+     lpf match=${SOURCES[1]} rect1=100 rect2=1 niter=400
+     pred=${TARGETS[1]} pef=${SOURCES[2]}
+     ''')
+
+# Separate primary and multiple
+###############################
+
+Flow('prim','data pred','add scale=1,-1 ${SOURCES[1]}')
+
+Plot('prim',grey('Estimated primary'))
+Plot('pred',grey('Estimated multiple'))
+
+# Combined plot
+###############
+
+Result('simon','data model prim pred','TwoRows')
+
+End()

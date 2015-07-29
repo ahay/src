@@ -1,0 +1,96 @@
+from rsf.proj import *
+
+sys.path.append('..')
+import marmousi
+
+marmousi.getvel('vel')
+Result('vel','grey min2=0 max2=9.2 min1=0 max1=3 scalebar=y color=j allpos=y title="Velocity Model" bias=1.5 barreverse=y')
+
+marmousi.get_zodata('exp')
+Result('exp','grey title="Exploding Reflector Data" ')
+#marmousi.getvel('vel')
+#Result('vel','grey scalebar=y color=j allpos=y title="Velocity Model" bias=1.5 barreverse=y')
+
+
+# From velocity to slowness
+Flow('slowness','vel','transp | transp plane=23 | math output=1/input')
+
+# Fourier transform and transpose
+
+fmax = 50 # maximum frequency
+nf = 206  # number of frequencies
+
+Flow('fft','exp',
+     'fft1 | window max1=%g | transp plane=12 | transp plane=23' % fmax)
+
+# Extended split-step migration
+Flow('mig','fft slowness',
+     '''
+     zomig3 ompnth=1 mode=m --readwrite=y verb=y
+     nrmax=40 dtmax=0.001 slo=${SOURCES[1]} |
+     window | transp
+     ''',split=[3,nf,[0]],reduce='add')
+
+Result('mig',
+       '''
+       grey title=Migration 
+       label2=Depth    unit2=km 
+       label1=Distance unit1=km
+       ''')
+
+
+nw=200
+jw=1
+ow=1
+nt=751
+dt=0.004
+ot=0
+nmx=2301
+dmx=0.004
+omx=0
+
+marmousi.get_shots('shots')
+
+Result('shots','byte | grey3 flat=n frame1=250 frame2=80 frame3=100 title=Shots')
+# Receiver shot gather wavefield FFT
+Flow('rfft','shots',
+     '''
+      fft1 | window squeeze=n n1=%d min1=%g j1=%d |
+      spray axis=3 n=1 o=0 d=1 label=hy | spray axis=5 n=1 o=0 d=1 label=sy
+       ''' % (nw,ow,jw), local=1)
+
+# Source wavefield FFT
+Flow('sfft',None,
+     '''
+      spike k1=1 n1=%d d1=%g |
+      fft1 | window squeeze=n n1=%d min1=%g j1=%d | put label1=w
+      ''' % (nt,dt,nw,ow,jw),local=1)
+
+# Interpolate wavefields on surface grid
+Flow('rwav swav','rfft sfft','srsyn nx=%d dx=%g ox=%g wav=${SOURCES[1]} swf=${TARGETS[1]}' % (nmx,dmx,omx),local=1)
+# w, x, y, s
+
+# Transpose and setting coordinates for 3-D migration
+Flow('rtra','rwav','transp plane=12 | transp plane=23',local=1)
+Flow('stra','swav','transp plane=12 | transp plane=23',local=1)
+# x, y, w, s
+# Prepare slowness on 3-D grid
+Flow('slow','vel',
+     '''
+     transp | window j1=1 | math output=1/input |
+      spray axis=2 n=1 d=1 o=0 |
+      window j3=1 squeeze=n
+      ''',local=1)
+
+Flow('img cig','stra rtra slow',
+     '''
+     srmig3 nrmax=20 dtmax=5e-05 eps=0.01 --readwrite=y verb=y ompnth=1
+     tmx=16 rwf=${SOURCES[1]} slo=${SOURCES[2]} cig=${TARGETS[1]}
+     itype=o
+     ''',split=[4,500,[0,1]],reduce='add')
+
+Result('image','img2','grey title="PSPI wave equation image"',local=1)
+
+Result('agc','img2','agc rect1=600 rect2=400 | grey title="PSPI wave equation image"',local=1)
+
+End()

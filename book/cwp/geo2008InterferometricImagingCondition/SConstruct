@@ -1,0 +1,59 @@
+from rsf.tex import *
+import glob, os
+
+for handout in glob.glob('handout*.tex'):
+    name = os.path.splitext(handout)[0]
+    Paper(name,
+          lclass='cwphandout',
+          use='times,natbib,amsmath,graphicx,color,amssymb,amsbsy,lineno,ulem,setspace')
+# ------------------------------------------------------------
+for slides in glob.glob('slides*.tex'):
+    slidesname = os.path.splitext(slides)[0]
+    Paper(slidesname,
+          lclass='cwpslides',
+          use='multicol,color,overpic,listings')
+
+for notes in glob.glob('notes*.tex'):
+    notesname = os.path.splitext(notes)[0]
+    Paper(notesname,
+          lclass='cwpnotes',
+          options='handout,notes',
+          use='multicol,color,overpic,listings')
+    
+# ------------------------------------------------------------
+for report in glob.glob('report*.tex'):
+    name = os.path.splitext(report)[0]
+    Paper(name,lclass='cwpreport',
+          use='times,natbib,amsmath,graphicx,color,amssymb,amsbsy,lineno,ulem,setspace,mathrsfs',
+          include=r'''
+          \setlength{\paperwidth}{8.5in}
+          \setlength{\paperheight}{11.0in}
+          \setlength{\topmargin}{-0.25in}
+          \setlength{\textheight}{8.75in}
+          \setlength{\textwidth}{6.5in}
+          \setlength{\oddsidemargin}{+.015625in}
+          \setlength{\evensidemargin}{+.015625in}
+          ''')
+
+for cover in glob.glob('cover*.tex'):
+    name = os.path.splitext(cover)[0]
+    Paper(name,
+          lclass='geophysics',
+          options='12pt',
+          use='')
+# ------------------------------------------------------------
+for segabs in glob.glob('segabs*.tex'):
+    name = os.path.splitext(segabs)[0]
+    Paper(name,
+          lclass='segabs',
+          options='',
+          use='times,natbib,amsmath,graphicx,color,amssymb,amsbsy,lineno,ulem,setspace')
+for eageabs in glob.glob('eageabs*.tex'):
+    name = os.path.splitext(eageabs)[0]
+    Paper(name,
+          lclass='eage',
+          options='11pt',
+          use='times,mathptm,natbib,color,amssymb,mathrsfs')
+# ------------------------------------------------------------
+
+End(use='color,amssymb,mathrsfs,amsbsy,ulem,setspace')

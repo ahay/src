@@ -1,0 +1,106 @@
+from rsf.proj import *
+from rsf.recipes.beg import server
+from math import *
+
+
+#----------------------------------------------dat
+
+Fetch('image2d.rsf','cup',server)
+Flow('data','image2d','dd form=native')
+Result('data','data','grey title="Data"')
+
+Flow('mask','data','envelope | causint | math output="input*input" | mask min=40 | dd type=float')
+
+Result('zdata','data','window min1=3 max1=4 min2=4000 max2=6000 | grey title="Zoom Data" color=e screenratio=1.5')
+
+########## Patch
+Flow('patch','data','patch w=256,1001 p=20,1')
+Flow('patch0','patch','patch inv=y weight=y dim=2')
+
+#Result('patch','patch','grey title="Patch Data"')
+#Result('patch0','patch0','grey title=" Inv Patch Data"')
+nx=1001
+nshifts = []
+for s in range(1,5):
+
+    nshift = 'nshift-%d' % s
+    Flow(nshift,'patch','window f2=%d | pad end2=%d' % (s,s))
+    nshifts.append(nshift)
+
+    nshift = 'nshift+%d' % s
+    Flow(nshift,'patch','window n2=%d | pad beg2=%d ' % (nx-s,s)) 
+    nshifts.append(nshift)
+
+
+Flow('nshifts',nshifts,'cat ${SOURCES[1:%d]} axis=4 | put o2=0 ' % len(nshifts))
+
+
+
+
+
+wflts = []
+wpres = []
+for nwt in range(0,20):
+    wdata  = 'wdata%d'  % nwt
+    wshift = 'wshift%d' % nwt
+    wflt   = 'wfl%d'    % nwt
+    wpre   = 'wpre%d'    % nwt
+    Flow(wdata,'patch','window n3=1 f3=%d | fft1 ' % nwt) 
+    Flow(wshift,'nshifts','window n3=1 f3=%d | window | fft1' % nwt)   
+    Flow([wflt, wpre],[wshift, wdata],
+         'clpf match=${SOURCES[1]} pred=${TARGETS[1]} rect2=20 rect1=3 niter=10 verb=n')
+    wpres.append(wpre)
+
+Flow('pre',wpres,'cat ${SOURCES[1:%d]} axis=4 | fft1 inv=y  ' % len(wpres))
+Flow('npre','pre','transp plane=34 memsize=1000 | patch inv=y weight=y dim=2')
+Result('npre','npre','grey title="RNA"')
+Result('nprediff','data npre',' math x=${SOURCES[1]} output="input-x" | grey title="RNA Noise"')
+Result('znpre','npre','window min1=3 max1=4 min2=4000 max2=6000 | grey title="Zoom RNA" color=e screenratio=1.5')
+
+
+
+
+Flow('fxpatch','data','patch w=256,20 p=20,100')
+Flow('fxpatch0','fxpatch','patch inv=y weight=y dim=2')
+
+#Result('fxpatch','fxpatch','grey title="Patch Data"')
+#Result('fxpatch0','fxpatch0','grey title=" Inv Patch Data"')
+
+Flow('wpatch','fxpatch','window')
+
+fxds = []
+mpas = []
+for nwx in range(0,100):
+    for nw in range(0,20):
+        fxdata = 'fxdata%d-%d' % (nwx,nw)
+        fxd  = 'fx%d-%d'       % (nwx,nw)
+        Flow(fxdata,'wpatch','window n3=1 f3=%d n4=1 f4=%d' % (nw,nwx))
+
+        Flow(fxd,fxdata,'fxdecon verb=1')
+        fxds.append(fxd)
+        
+        lom = 'lom%d-%d' % (nwx,nw)
+        lag = 'lag%d-%d' % (nwx,nw)
+        mpa = 'mpa%d-%d' % (nwx,nw)
+        Flow([lom, lag],fxdata,'hpef niter=200 a=4,5 lag=${TARGETS[1]}')
+        Flow(mpa,[fxdata,lom],'helicon filt=${SOURCES[1]}')
+        mpas.append(mpa)
+
+Flow('fx',fxds,'cat ${SOURCES[1:%d]} axis=3 | put n3=20 n4=100 | patch inv=y weight=y ' % len(fxds))
+Flow('fxm','fx mask','clip clip=100 | math x=${SOURCES[1]} output="x*input" ')
+Result('fxm','fxm','grey title="FX Decon"')
+Result('fxdiff','data fxm',' math x=${SOURCES[1]} output="input-x" | grey title=" FX Noise"')
+Result('zfxm','fxm','window min1=3 max1=4 min2=4000 max2=6000 | grey title="Zoom FX Decon" color=e screenratio=1.5')
+
+Flow('txdiff',mpas,'cat ${SOURCES[1:%d]} axis=3 | put n3=20 n4=100 | patch inv=y weight=y' % len(mpas))
+Flow('tx','txdiff data','math x=${SOURCES[1]} output="x-input"')
+Result('tx','tx','grey title="TX PEF"')
+Result('txdiff',' grey title=" TX Noise"')
+Result('ztx','tx','window min1=3 max1=4 min2=4000 max2=6000 | grey title="Zoom TX PEF" color=e screenratio=1.5')
+
+
+Result('dataf','data','window n2=1 min2=6000 | spectra | graph pad=n max1=90 max2=9title="Data"')
+Result('npref','npre','window n2=1 min2=6000 | spectra | graph pad=n max1=90 max2=9 title="RNA"')
+Result('fxf','fxm','window n2=1 min2=6000 | spectra |graph pad=n max1=90 max2=9 title="FX"')
+Result('txf','tx','window n2=1 min2=6000 | spectra | graph pad=n max1=90 max2=9 title="TX"')
+End()

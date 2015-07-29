@@ -1,0 +1,24 @@
+from rsf.proj import *
+import fdmod
+# Fetch Files from repository
+Fetch('bpaitvel.hh','bpait')
+# Convert Files to RSF and append header
+Flow('bpaitvel','bpaitvel.hh', '''dd form=native | put
+    label1=Depth\ Z label2=Distance\ X unit1=m unit2=m''')
+# ------------------------------------------------------------
+#par = {
+#    'nt':500, 'dt':0.001,'ot':0,     'lt':'label1=time unit1=s',
+#    'kt':100,    # wavelet delay
+#    'nx':3201, 'ox':0, 'dx':0.00762,  'lx':'label2=x unit2=km',
+#    'nz':1201, 'oz':0, 'dz':0.00762,  'lz':'label1=z unit1=km'
+#    }
+# add F-D modeling parameters
+#fdmod.param(par)
+
+# Plotting Section
+Result('bpaitvel','''window j1=4 j2=10  | grey  
+    color=j allpos=y title=BPait\ Velocity\ Model
+    scalebar=y  barreverse=y barlabel=Velocity barunit=m/s''')
+
+End()
+

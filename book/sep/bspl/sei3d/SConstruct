@@ -1,0 +1,88 @@
+from rsf.proj import *
+
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+
+head = 'head.HH'
+data = 'dat.HH'
+
+Fetch([head,data],'sep',private)
+
+Flow('mask',head,'dd form=native | window n2=1 f2=2 | mask min=500 max=600')
+Flow('head',[head,'mask'],
+     'transp memsize=1000 | dd form=native | headerwindow mask=${SOURCES[1]}')
+Flow('data',[data,'mask'],
+     '''
+     transp memsize=1000 | 
+     dd form=native | 
+     headerwindow mask=${SOURCES[1]} |
+     transp memsize=1000
+     ''')
+
+
+Flow('cmpx','head','window n1=1 f1=0')
+Flow('cmpy','head','window n1=1 f1=1')
+Plot('cmp','cmpx cmpy',
+     '''
+     cmplx ${SOURCES[1]} | 
+     graph transp=y symbol='+' symbolsz=2 
+     label1="In-line midpoint" label2="Cross-line midpoint" 
+     title="CMP Geometry"
+     ''')
+
+Flow('transp fold','data head',
+     '''
+     bin xkey=0 ykey=1 head=${SOURCES[1]} fold=${TARGETS[1]}
+     nx=467 x0=13594 dx=15
+     ny=18  y0=19090 dy=15
+     ''')
+
+Plot('fold',
+     '''
+     grey allpos=y pclip=100 transp=1 yreverse=n scalebar=1 
+     label1="In-line midpoint" label2="Cross-line midpoint" 
+     wheretitle=t wherexlabel=b title="Fold Map"
+     ''')
+
+Result('cmpfold','cmp fold','SideBySideAniso')
+
+def grey3(title):
+    return '''
+    byte clip=9500 |
+    transp memsize=1000 plane=23 | transp memsize=1000 |
+    grey3 flat=n  point1=0.9 point2=0.9  frame1=100 frame2=280 frame3=9
+    title="%s" label1=Time unit1=s 
+    label2="In-line midpoint" label3="Cross-line"
+    ''' % title
+
+Result('bin1','transp',grey3('Nearest Neighbor'))
+
+Flow('dip','transp',
+     '''
+     dip n4=0 nw=3 mask=${SOURCE} nliter=10 
+     rect1=5 rect2=5 rect3=5
+     ''')
+
+Flow('bank nh lag',None,
+     '''
+     splinebank pmax=4 np=400 nh=${TARGETS[1]} lag=${TARGETS[2]}
+     nt=100 niter=20 eps=0.0001
+     ''')
+
+Flow('pch','dip',
+     'math output="0.5+0.5*(input/%g+1)*%d" | dd type=int' % (4,399))
+
+for nw in (2,4):
+    int = 'int%d' % nw
+    Flow(int,'data head bank pch',
+         '''
+         invbin head=${SOURCES[1]} xkey=0 ykey=1 interp=%d stat=n niter=50
+         filt=${SOURCES[2]} pch=${SOURCES[3]} eps=1
+         nx=467 x0=13594 dx=15
+         ny=18  y0=19090 dy=15 |
+         postfilter2 nw=%d
+         ''' % (nw,nw))
+    Result(int,grey3('B-spline %d' % nw))
+
+End()

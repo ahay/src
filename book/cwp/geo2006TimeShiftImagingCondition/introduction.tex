@@ -1,0 +1,61 @@
+\section{Introduction}
+A key challenge for imaging in complex areas is accurate determination
+of a velocity model in the area under investigation.  Migration
+velocity analysis is based on the principle that image accuracy
+indicators are optimized when data are correctly imaged.  A common
+procedure for velocity analysis is to examine the alignment of images
+created with multi-offset data.  An optimal choice of image analysis
+can be done in the angle domain which is free of some complicated
+artifacts present in surface offset gathers in complex areas
+\cite[]{GEO69-02-05620575}.
+
+\par Migration velocity analysis after migration by wavefield
+extrapolation requires image decomposition in scattering angles
+relative to reflector normals. Several methods have been proposed for
+such decompositions \cite[]{GEO55-09-12231234, SEG-1999-08240827,
+SEG-2000-08300833, GEO67-03-08830889, XieWu.adcig, GEO68-03-10651074,
+SEG-2003-08890892, Fomel.seg.3dadcig, GEO69-05-12831298}.  These
+procedures require decomposition of extrapolated wavefields in
+variables that are related to the reflection angle.
+
+A key component of such image decompositions is the imaging condition.
+A careful implementation of the imaging condition preserves all
+information necessary to decompose images in their angle-dependent
+components.  The challenge is efficient and reliable construction of
+these angle-dependent images for velocity or amplitude analysis.
+
+In migration with wavefield extrapolation, a prestack imaging
+condition based on spatial shifts of the source and receiver
+wavefields allows for angle-decomposition
+\cite[]{GEO67-03-08830889,SavaFomel.pag}.  Such formed angle-gathers
+describe reflectivity as a function of reflection angles and are
+powerful tools for migration velocity analysis (MVA) or amplitude
+versus angle analysis (AVA).  However, due to the large expense of
+space-time cross-correlations, especially in three dimensions, this
+imaging methodology is not used routinely in data processing.
+
+This paper presents a different form of imaging condition.  The key
+idea of this new method is to use time-shifts instead of space-shifts
+between wavefields computed from sources and receivers.  Similarly to
+the space-shift imaging condition, an image is built by space-time
+cross-correlations of subsurface wavefields, and multiple lags of the
+time cross-correlation are preserved in the image.  Time-shifts have
+physical meaning that can be related directly to reflection geometry,
+similarly to the procedure used for space-shifts.  Furthermore,
+time-shift imaging is cheaper to apply than space-shift imaging, and
+thus it might alleviate some of the difficulties posed by costly
+cross-correlations in 3D space-shift imaging condition.
+
+The idea of a time-shift imaging condition is related to the idea of
+depth focusing analysis \cite[]{SEG-1986-S7.6,
+GEO57-12-16081622,GEO58-08-11481156, SEG-1995-0465,SEG-1996-0463}.
+The main novelty of our approach is that we employ time-shifting to
+construct angle-domain gathers for prestack depth imaging.
+
+The time-shift imaging concept is applicable to Kirchhoff migration,
+migration by wavefield extrapolation, or reverse-time migration.  We
+present a theoretical analysis of this new imaging condition, followed
+by a physical interpretation leading to angle-decomposition.  Finally,
+we illustrate the method with images of the complex Sigsbee 2A dataset
+\cite[]{SEG-2002-21222125}.
+
