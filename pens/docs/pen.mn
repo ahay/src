@@ -1,0 +1,545 @@
+.TH Pen 9 "April 6 1986"
+.SH NAME
+pen \- VPLOT graphics output filters for all devices
+.PP
+.SH SYNOPSIS
+pen  plot_file1 [plot_file2 ...] [options]
+.PP
+Seplib version: Pen < Plot1.h [Plot2.h ...] [options]
+.PP
+.SH DESCRIPTION
+Pen filters accept input in the
+.B vplot(9)
+graphical metalanguage
+and translate it into code for any of about 20
+graphics output devices
+including graphics terminals, laser printers, electrostatic plotters,
+and dot-matrix line printers.
+Interactive input
+(mouse, cursor keys, keyboard) is not yet supported.
+.PP
+The output of a
+.B pen
+filter can be sent to a plot device
+or saved as a file of device-language commands.
+If the output is not redirected it is understood
+that you want to plot on the standard output device.
+.PP
+There are now many different
+.B pen
+filters for different devices.
+These programs differ only in the device-dependent output routines.
+They share a common
+.B vplot
+interpreter,
+and most filters make use of common intermediate-level code.
+This manual entry
+describes those options that are implemented in the device independent part
+and thus are common to all pen filters.
+.PP
+.SH DEVICES SUPPORTED
+Well supported devices: Imagen, Tektronix 410x, Envision, DEC Regis,
+PostScript, Rastertech, Printronix, portable pixmap, X toolkit.
+.PP
+Partially supported devices: Tektronix 401x,
+XWindows, SunView, Sun NeWS, Masscomp (GPS), HPGL.
+.PP
+Virtual devices: raspen (generic raster device), vppen (generic vplot
+device)
+.PP
+.SH OPTIONS
+.PP
+Pen has many options.
+Though many of these are included mostly for backward
+compatibility with older versions of
+.B vplot,
+they also add quite a lot of flexibility to the system.
+.PP
+Those options for which the default is device- or host-dependent
+are marked with an `X', since the default varies from machine to machine
+or device to device.
+.PP
+All options have the form
+.B a=b,
+where
+.B `a'
+is the name of the option being set and
+.B `b'
+is the value it is being set to.
+Alternatively, commonly used sets of options may be listed in a parameter file
+and
+.B par=parameter_file_name
+can be put as an option on the command line.
+The last occurrence of any given option on the command line
+is the one that is used (see also
+.B man getpar.
+)
+The form
+.B a=
+has the effect of causing the option
+.B a
+to be unset.
+.TP 
+.B in=string (numvplot=0 in1=string1 in2=string2 ...)
+.B String
+is an input file containing vplot-format plot commands.
+The 
+.B `in='
+is optional;
+any text on the command line which doesn't contain an `=' is assumed
+to be an input file.
+The standard input is also read.
+It is valid to have inputs in all three of these forms at the same time;
+they will be read in order.
+This is not quite the same as concatenating the files and then
+processing the result,
+as the clipping window, fatness, current color number,
+text justification mode, text font, text precision, text overlay
+mode, and plot style
+get reset to the default at the start of each new input file (and at
+the start of each frame within a file).
+(Non-sep filter versions only:
+.B numvplot=0
+controls how many extra input file specifications of the form
+.B inX=stringX,
+where X runs from 1 to numvplot, will be searched for.)
+.TP
+.B wstype=
+Some pen filters may support several related, but not identical, devices.
+This variable allows you to tell the pen filter the exact device type
+that you are using. The work station type
+variable can also be set via the environment variable WSTYPE. The
+command line takes precedence. Normally the presence of any options
+on the command line inhibits self-documentation. The
+.B wstype
+option, if alone on the command line, will not.
+.TP 
+.B hshift=0, vshift=0
+This is an amount to translate the plot, in inches, in the horizontal and
+vertical directions, respectively.
+This is independent of all other scaling and origin setting.
+These are useful when including graphics into a paper via TeX.
+The program
+.B vppen
+(a special sort of pen filter) can be used to calculate
+an appropriate hshift and vshift.
+.TP
+.B xcenter= ycenter=
+If specified, the coordinate given (in inches)
+is forced to be in the middle of
+your screen.
+In combination with the
+.B interact
+option, this allows you to zoom in on an interesting part of your plot
+without having it zoom off the screen.
+This is independent of everything except translation (hshift and vshift).
+.TP
+.B pause=0
+Number of seconds to wait in between plots.  -1 means to prompt and stop and
+wait for a carriage return before continuing.
+.TP
+.B fat=0
+Base line thickness.  Add this fatness to all vectors drawn.
+Fatnesses are measured in units of 1/200'th of an
+inch.  A fatness of 1 or 2 may very well have no effect on a low resolution
+device, but it will on a high resolution one.
+.B Fat
+scales as does fatmult.
+.TP
+.B fatmult=1.
+Fatness multiplication factor.  This is mainly useful when you want to turn
+off fatness for speed of plotting.  This option can also be set via the
+environment variable FATMULT.
+.TP
+.B patternmult=1.
+Pattern multplication factor.  This multiplies the size of patterns inside
+polygons, both bit patterns and hatch patterns.  Like FATMULT, can be set
+via an environmental variable PATTERNMULT. If you set ``patternmult=0''
+then polygons will only be filled solidly or not at all.
+.TP
+.B scale=1. xscale=1. yscale=1. txscale=1. mkscale=1. dashscale=1.
+Amounts by which to stretch the plot.
+.B Scale
+stretches both axes equally,
+.B xscale
+X only, and
+.B yscale
+Y only.  Again, this is vplot's X and Y, not
+necessarily the screen's if the plot has been rotated.
+Fatnesses, patterns, dashed line pattern lengths,
+and marker sizes do NOT scale geometrically along with the rest of the plot.
+Patterns and dashed line lengths do not scale at all
+except by their own special scaling options given below.
+Markers, text fatnesses, and vector fatnesses scale with screen size and with the
+.B scale
+option, but not with
+.B xscale
+and
+.B yscale.
+Special scaling options that control specific things are
+.B txscale,
+which scales only text size;
+.B mkscale,
+which scales only markers;
+.B dashscale,
+which scales only dashed line patterns;
+.B fatmult,
+which scales all fatnesses; and
+.B patternmult,
+which scales only patterns.
+Note text will not stretch differentially with
+.B xscale
+and
+.B yscale
+unless the default option
+.B txsquare=y
+is overridden.
+.TP
+.B shade=y overlay=n
+These options can be used to control shading of polygons.
+If shading is turned off, the interior is not filled.
+(`A' style polygons normally do not have any outline.  If
+.B shade=n,
+one will be drawn so that you can still see where the polygon is.)
+For devices that support polygons filled with patterns, the overlay
+option sets the default overlay mode: n = replace, y = overlay.  This can be
+reset during plotting by the
+.B overlay
+command in vplot.  The difference
+between these two options is whether color zero is treated as transparent
+or not. This option also applies to raster. Not all devices will support
+all overlay options. On some devices that do support both overlay options
+(in particular those that simulate raster in software)
+.B overlay=y
+may be much faster than the default.
+.TP
+.B style=standard
+This option sets the default coordinate system.  (It is overridden if
+the coordinate system for the frame is set by the VP_SETSTYLE command in
+the vplot file.)
+.B style=rotated
+sets the origin in the upper left corner of
+the plot with y horizontal and x positive downwards.
+.B style=standard
+sets the origin in the lower left corner of the plot
+with y vertical and x horizontal.
+.B style=absolute
+is the same as
+.B standard
+but with `size=absolute' implied as well.
+Other possibilities are `old' and `mazama', both obsolete standards.
+This option can also be set using the environment variable PLOTSTYLE.
+.TP
+.B txfont=X txprec=X txovly=0 font?= txsquare=y
+Default text font, text precision, and text overlay mode.
+Alternate font file. If
+.B txsquare=y,
+then xscale and yscale will not be allowed to distort text.
+If
+.B txsquare=n,
+text will stretch consistently with everything else.
+These are described in more detail in vplottext(9).
+.TP
+.B window=y frame=n xwmin= xwmax= ywmin= ywmax=
+.B Window=n
+turns off all clipping windows
+(except that of the edge of the screen).
+This is useful if you have accidentally
+clipped your plot away to nothing, and can't figure out what's going wrong.
+.B Frame=y
+shows you where your windows are, by
+outlining them in white.  (The first window should always
+simply frame the screen, but often one side or another is clipped by
+the device because the device's coordinates are off by one.)
+.B xwmin, xwmax, ywmin, ywmax
+allow you to specify a global
+clipping window in addition to any specified in the Vplot.  The window's
+position is given in vplot units of inches. (The 4 corners of the
+window specified will be translated into device coordinates, and the
+smallest rectangle with sides perpendicular to the edge of the screen
+containing these 4 points will be used as a global clipping window.)
+Together with concatenation of vplot files and hshift and vshift,
+this gives a primitive sort of cut and paste capability.
+.TP
+.B rotate=0
+Global rotation of entire plot by this many degrees clockwise, about the
+origin.
+Vshifts and/or hshifts may be needed to keep the plot from rotating off the
+screen.
+Since clipping windows must be standard up-down left-right rectangles,
+they cannot rotate correctly except to multiples of 90 degrees.
+The smallest clipping window that is possible that contains the desired
+clipping window will be used in this case.
+.TP
+.B erase=y break=b background=y
+.B Erase=y
+forces an erase at the start of each input file, and follows the vplot
+literally thereafter.
+.B Erase=literal
+does not force an erase at the start.
+.B Erase=n
+ignores ALL erases.
+.B Erase=once
+forces one erase at the start of
+plotting and thereafter ignores all erases.
+These options are especially useful when combining several vplot files.
+``Forcing an erase at the start'' creates an erase as the very first thing
+in the input plot file, but only if the plot file didn't already start with one.
+.B Break=b
+treats the Vplot `break' command as a chance to pause, but not to erase.
+.B Break=e
+makes `break' and `erase' synonymous.
+.B Break=i
+ignores break commands completely.
+.B Background=n
+ignores the background command completely.
+.TP
+.B size=X
+.B size=relative
+scales the plot workspace, a 10.24 inch high by 13.65 inch wide rectangle,
+to fit the size of the screen.
+.B size=absolute
+scales to real inches.
+Hardcopy devices with large or semi-infinite plotting surfaces
+should default to
+.B size=absolute, while
+screen devices and ``page-oriented'' hardcopy devices like laserwriters
+default to
+.B size=relative.
+.TP
+.B echo=X
+Echoing is typically turned off for the duration of plotting for most (but
+not all) pen filters.
+.B echo=y
+forces echoing to be left on, and
+.B echo=n
+forces it to be turned off in case the default picked by the pen filter
+is inappropriate.
+.TP
+.B endpause=X
+Some filters by default pause at the end of plotting (usually with a beep)
+and wait for a carriage return.
+This is so you can see the last
+frame of the plot before the text is turned back on, obliterating it.
+For some devices this is not necessary, and there is no default
+pause at the end.
+Should the default not be appropriate (for example when plotting from within
+a shell repeatedly),
+.B endpause=y
+or
+.B endpause=n
+can be used to force this `end pause' on or off.
+.TP
+.B cachepipe=X
+If this is set to yes any piped input will be copied to a temporary file 
+before being used. It is typically turned off as most filters read the 
+input only once. Any filter that may reread the data should turn this on.
+.B cachepipe=y
+Turns on the copying of the piped input to a temporary file.
+.B cachepipe=n
+Turns off the copying of the piped input to a temporary file.
+.TP
+.B mono=n
+If
+.B mono=y,
+the plot will come out in black and white,
+possibly speeding up the plotting and allowing the use of
+such monochrome features as dithering and halftoning on color screen devices.
+.TP
+.B dither=X
+For 
+.B mono=y
+(monochrome devices), dithering is a means of representing a
+continuous-tone grey image.
+See the manual page for vplot raster for a discussion of dithering
+methods. If
+.B dither=0,
+no special treatment will be given to raster colors. (This means that
+all the points in the raster image will be shaded except those with color 0.)
+Available dithering methods are:
+.br
+            1   Random Dither
+.br
+            2   Ordered Dither
+.br
+            3   Minimized Average Error Method
+.br
+            4   Digital Halftoning Method
+
+Devices that do their own dithering may not support all of these
+methods.
+.TP
+.B greyc=1.
+This parameter applies only when using dithering (described above) to
+plot grey rasters on a monochrome device. It has been observed that grey
+scale reproduction on hardcopy devices is quite different than that on
+graphics displays. Briefly, the transition from black to white occurs more
+rapidly on a display device, leaving both ends of the grey scale clipped
+at black or white. This nonlinearity in the perceived grey scale is a useful
+feature that can be simulated on a hardcopy device by use of the
+.B greyc 
+parameter. Greyc values less than 1. alter the grey scale to simulate this
+nonlinearity. The smaller the greyc value, the more rapidly the transition
+from black to white occurs. See the vplot raster manual page for a more
+complete discussion of this parameter and how to use it. 
+.TP
+.B pixc=1.
+This parameter also applies only when using dithering to plot grey rasters
+on monochrome devices. It has been noted that grey rasters come out
+significantly darker than expected on a hardcopy device than when they
+are displayed on a graphics screen. This parameter applies a correction
+based on the assumption that this darkening is due to the overlap of
+pixels on the hardcopy device. Pixc values less than 1. shift the grey
+color scale toward white to compensate for the darkening due to pixel
+overlap. See the vplot raster manual page for a more complete discussion
+of this parameter and how to use it.
+.TP
+.B invras=y
+Color 0 is the background color on all devices. For monochrome paper plotters,
+this is usually WHITE, the color of the paper. On these devices
+color 7 (WHITE) comes out as BLACK since it has to be the opposite of
+color 0. If
+.B invras=y,
+this convention is reversed for the purposes of dithered raster,
+so that color 0 is black and color 7 is white despite the fact that
+this color scheme is the reverse of that used for vectors on the same
+plot. This option has no effect on raster that is not dithered.
+.TP
+.B wantras=y
+If
+.B wantras=n,
+all raster data will be displayed as a solid white block.
+This shows where the raster data is, but on most devices will plot significantly
+faster.  This allows you to get the general layout of your plot right without
+having to wait hours for the raster data to plot on your screen.
+.TP
+.B interact=
+If
+.B interact=file_name
+is specified, at the end of each plot the cursor will
+be turned on and you may pick points around the screen.  The Vplot coordinates
+of these points will be stored into the file
+.B file_name.
+Picking the far upper-right hand corner of the screen will
+end the picking. (The may also be device-dependent ways to end the picking,
+such as hitting Escape or q.)
+Many of the pen options are specified in Vplot coordinates, in inches.
+This option allows you to find the coordinates of specific points of
+interest.  It is a primitive sort of interaction, but useful.
+This option can also be quite useful for low-level hand editing
+of Vplot files in conjunction with ``plas -i'' and ``pldb -i''.
+.TP
+.B selfdoc=n
+If all else fails,
+.B selfdoc=y
+will force pen to self document no matter what it thinks it should do.
+(This applies to the non-SEP version only.)
+.TP
+.B signal=
+If the
+.B signal
+option is set to anything, then no signal catching will be done. Useful
+for debugging.
+.TP
+.B red=1.,0.,0.,0. green=0.,1.,0.,0. blue=0.,0.,1.,0.
+These options allow various sorts of linear transformations on
+the color table. The first three numbers are the amounts that
+red, green, and blue on the input will be mapped into the given
+color. The last number is an additive constant. For example,
+to reverse the color red, you would do
+.B red=-1.,0.,0.,1.
+This would cause a black to white grey scale to come out from
+red to cyan.
+Any values for these parameters are allowed; colors are clipped
+to fully saturated or fully off.
+Note this option only affects explicitly user-defined colors.
+.TP
+.B redpow=1., greenpow=1., bluepow=1.
+This allows a printer ``gamma'' correction for the given color.
+A large number makes the overall color scale darker, a small number
+makes the overall color scale brighter. Nonpositive powers are not
+valid.
+Note this option only affects explicitly user-defined colors.
+.TP
+.B colormask=y,y,y,y,y
+The
+.B colormask
+option is used to ``turn off'' certain color planes in the device.
+This option is
+useful if you wish to submit color figures to printers, who often require
+the plot to be broken up into 4 different ``color planes''.
+It is somewhat limited.
+It only affects colors set by the user,
+so if you want it to affect the
+default colors 0 through 7 you'll have to set these yourself.
+(You can easily create a file to do this using plas.
+Prepend this to your plot file.)
+Each of the first 4 ``y/n'' toggles controls a color plane.
+``Masked off'' color planes are set to the value of the corresponding
+plane of the current background color, color 0, which is always left
+untouched.
+(So make sure to set color 0 first thing!)
+The 4 color planes will be red, green, blue, and white if the background
+color is black; and cyan, magenta, yellow, and black if the background
+color is white.
+The 5th ``y/n'' toggle controls whether the planes are plotted in color.
+(This option should not be used if more than one plane is on (in which
+case it is undefined) or if the 4th plane is on (in which case it is
+unnecessary).)
+.SH SEE ALSO
+Vppen, Ipen, Vplot, Libvplot, Vplottext, Vplotraster, Vplothacker
+.SH AUTHOR
+The original filter was
+.B pen,
+ written
+by Rob Clayton, who also invented
+.B vplot.
+Originally it was only possible to do vectors and that on only one device.
+Vplot has since been expanded beyond recognition, and is supported on
+about 20 devices.
+Michel Debiche, Glenn Kroeger, Chuck Karish, Steve Cole, and especially
+Joe Dellinger have all worked on Vplot at one time or another.
+
+This documentation was written by Joe Dellinger.
+.SH COPYRIGHT
+Please read the official Vplot copyright notice, which is contained
+in the Vplot manual page.
+.SH BUGS
+
+There are a few ``magic numbers'' referred to in this documentation.
+These are defined in ``vplot.h'', and are subject to change.
+
+Vplot was never intended to be used in an interactive way, but does OK
+for hard-copy purposes. It would be nice if someone out there took
+Vplot apart and rebuilt it again in an interactive framework, using
+a standardized meta-language. (We did not use a standard meta-language
+because none existed at the time Vplot was started, circa late 70's.
+Since then Vplot has slowly grown, for the most part staying backwards
+compatible.)
+
+Pen has a huge number of options supporting
+backwards compatibility, and would need twice
+as many to make absolutely everyone happy. Most of the completely
+arcane ones have finally died a merciful death.
+
+Not all devices support all the
+primitives, but at least the software capability exists.
+Several generic software routines inside `pen' should be redone when
+possible, as I was just learning C when I wrote them. They seem to work
+reliably, however. We use vplot a lot and haven't seen bugs in the
+device-independent code in a long time now. Bugs in device-dependent
+code is another story. (There is a tendency for people to only support
+a device to the extent that it does what they themselves need, which
+creates problems when someone else comes along and tries to do something
+else with it.)
+
+Why are we still using inches? Everything should be
+changed to centimeters! (Except that, strangely enough, every device we
+have here has a screen resolution that is defined by the manufacturer
+in terms of pixels per
+INCH! So how serious is the US on standardizing with the rest of the world
+anyway?)
+
+Bona-fide bugs that I know about but haven't bothered to fix are listed in
+the file `known_bugs'. There are also such files in device subdirectories
+where appropriate.

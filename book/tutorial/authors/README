@@ -1,0 +1,5 @@
+To build the examples in this section you must go into 
+the directory that you wish to examine, for example: cwp  
+and make a symbolic link to the directory: data in 
+this folder.  The folder data contains the rules to build 
+the plots that we want to use in these examples.

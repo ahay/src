@@ -1,0 +1,200 @@
+=======================
+Madagascar Installation
+=======================
+
+Prerequisites
+=============
+
+   1. C compiler. ANSI-compliant compiler such as GCC should work. GCC
+   usually comes pre-installed on Linux machines.
+
+   2. Python interpreter. Python is an interpretable programming
+   language. It is used in Madagascar installation scripts and project
+   management scripts. Python comes pre-installed on some
+   platforms. The preferred Python version is 2.7 but older versions
+   are also supported. If you experience problems and you have an
+   earlier version, you should probably upgrade.
+
+For more information see:
+http://ahay.org/wiki/Main_Page
+http://ahay.org/wiki/Installation
+http://ahay.org/wiki/Advanced_Installation
+
+Software construction
+=====================
+
+   1. Configuration.
+
+      Change to the top Madagascar source directory and run
+
+      ./configure --prefix=/directory/where/you/want/madagascar/installed
+
+      You can examine the config.py file that this command
+      generates. Additional options are available. You can obtain a
+      full list of customizable variables by running "scons -h". For
+      example, to install Fortran-90 API bindings in addition to the
+      basic package, run
+
+      ./configure --prefix=/directory/where/you/want/madagascar/installed \
+      API=fortran-90 
+
+   2. Building and installing the package.
+
+      Run "make install" or the following two commands in succession:
+
+      make 
+      make install
+
+      If you need "root" privileges for installing under $RSFROOT, you
+      may need to run
+
+      make
+      su
+      make install
+
+      or
+
+      make
+      sudo make install
+
+   3. User setup
+
+      If your shell is sh or bash, add to your $HOME/.bashrc and
+      $HOME/.bash_profile files the line
+
+      source RSFROOT/share/madagascar/etc/env.sh
+
+      where RSFROOT is the install directory you specified in the --prefix 
+      option to ./configure. If your shell is (t)csh, add to your $HOME/.cshrc
+      file the line
+
+      source RSFROOT/share/madagascar/etc/env.csh
+
+      Be aware that on some systems the default value for DATAPATH set in the 
+      script above may get automatically cleaned at some intervals, so if you 
+      want to keep your data binaries for a long time, set DATAPATH in your 
+      resource file to another location where you have write access and that 
+      allows large files. Remember that the value of DATAPATH should have a 
+      slash at the end. 
+
+Testing Your Installation
+=========================
+
+Here are a few simple tests and and a brief introduction to Madagascar:
+
+Typing any Madagascar command in a terminal window without parameters should
+generate a brief documentation on that command. Try one of the following:
+
+	sfin
+	sfattr
+	sfspike
+	sfbandpass
+	sfwiggle
+
+If you get an error like "Command not found", you may not have your
+PATH environment variable set correctly, or you may need to
+issue the rehash command.
+
+Now try making a simple Madagascar data file:
+
+	sfspike n1=1000 k1=300 > spike.rsf
+
+This command generates a one dimensional list of 1000 numbers, all zero except
+for a spike equal to one at position 300. If this generates an error like
+
+	Cannot write to data file /path/spike.rsf@: Bad file descriptor
+
+you may need to create the directory pointed to by your DATAPATH
+environment variable.
+
+The file spike.rsf is a text header.  The actual data are stored in
+the binary file pointed to by the in parameter in the header.  You
+can look at the header file directly with more, or better, examine
+the file properties with
+
+	sfin spike.rsf
+
+You can learn more about the contents of spike.rsf with
+
+	sfattr < spike.rsf
+
+
+The following command applies a bandpass filter to spike.rsf and puts
+the result in filter.rsf:
+
+	sfbandpass fhi=2 phase=y < spike.rsf > filter.rsf
+
+The following command makes a graphics file from filter.rsf:
+
+	sfwiggle clip=0.02 title="Welcome to Madagascar" < filter.rsf > filter.vpl
+
+If you have an X11 display program running, and your DISPLAY
+environment variable is set correctly, you can display the graphics file with:
+
+	sfpen < filter.vpl
+
+You can pipe Madagascar commands together and do the whole thing at once like
+this:
+
+	sfspike n1=1000 k1=300 | sfbandpass fhi=2 phase=y | \
+	sfwiggle clip=0.02 title="Welcome to Madagascar" | sfpen
+
+If you have SCons installed, you can use it to automate Madagascar processing.
+Here is a simple SConstruct file to make filter.rsf and filter.vpl :
+
+####################################
+#
+# Setting up
+#
+from rsf.proj import *
+
+#
+# Make filter.rsf
+#
+Flow('filter',None, 'spike n1=1000 k1=300 | bandpass fhi=2 phase=y')
+
+#
+# Make filter.vpl
+#
+Result('filter','wiggle clip=0.02 title="Welcome to Madagascar"')
+
+End()
+####################################
+
+Put the file in an empty directory, give it the name SConstruct,
+cd to that directory, and issue the command:
+
+	scons
+
+The graphics file is now stored in the Fig subdirectory.  You can
+view it manually with:
+
+	sfpen Fig/filter.vpl
+
+... or you can use:
+
+	scons view
+
+When an SConstruct file makes more than one graphics file, the  
+
+	scons view 
+
+command will display all of them in sequence. 
+
+Now edit the SConstruct file: change the title string on the
+Result line to "Hello World!", save the file, and rerun the scons
+command. 
+
+You will see that scons has figured out that the file
+filter.rsf does not need to be rebuilt because nothing that affects
+it has changed. Only the file filter.vpl is rebuilt.
+
+Bugs
+====
+
+Please report all problems encountered during software construction to
+the RSF-user mailing list:
+
+https://lists.sourceforge.net/lists/listinfo/rsf-user
+
+You can also send suggestions for improvement of this document to the list.

@@ -1,0 +1,347 @@
+\lefthead{Fomel}
+\righthead{3-D plane waves}
+\footer{SEP--102}
+\published{SEP report, 102, 101-110 (1999)}
+\title{Plane wave prediction in 3-D}
+
+\email{sergey@sep.stanford.edu}
+%\keywords{helix, filtering, 3-D}
+
+\author{Sergey Fomel}
+
+\shortpaper
+\maketitle
+
+\section{Introduction}
+
+The theory of plane-wave prediction in three dimensions is described
+by \cite{Claerbout.sep.77.19,gee}. Predicting a local plane wave with
+T-X filters amounts to finding a pair of two-dimensional filters
+for two orthogonal planes in the 3-D space.  Each of the filters
+predicts locally straight lines in the corresponding plane. The system
+of two 2-D filters is sufficient for predicting all but purely
+vertical plane waves. In the latter case, a third 2-D filter for the
+remaining orthogonal plane is needed.  \cite{Schwab.sepphd.99}
+discusses this approach in more detail.
+\par
+Using two prediction filters implies dealing with two filtering output
+volumes for each input volume. This situation becomes inconvenient
+when one
+uses the prediction output as a measure of coherency in the input
+volume \cite[]{Claerbout.sep.77.19,Schwab.sep.92.29}. Two outputs are
+obviously more difficult to interpret than one, and there is no
+natural way of combining them into one image. Another difficulty
+arises when plane-wave destructors are used for regularizing linear
+inverse problems \cite[]{Clapp.sep.95.bob1}. We cannot
+apply an efficient recursive preconditioning
+\cite[]{Claerbout.sep.97.jon2} unless the regularization operator is
+square, or, in other words, only one plane-wave destructor is involved.
+\par
+Helical filtering \cite[]{GEO63-05-15321541} brings us new tools for
+addressing this problem. In this paper, I show how to combine
+orthogonal 2-D plane predictors into a single three-dimensional filter
+with similar spectral properties. The 3-D filter can then work for
+coherency measurements or for preconditioning 3-D inverse problems.
+The construction employs the Wilson-Burg method of spectral
+factorization, adapted for multidimensional filtering with the help of
+the helix transform \cite[]{Sava.sep.97.paul1}.
+\par
+I use simple synthetic examples to demonstrate the applicability of 
+plane-wave prediction to 3-D problems.
+
+\section{Factorizing plane waves}
+\inputdir{eplane}
+
+Let us denote the coordinates of a three-dimensional space by $t$,
+$x$, and $y$.  A theoretical plane wave is described by the equation
+\begin{equation}
+\label{eqn:pln}
+U(t,x,y) = f (t - p_x x - p_y y)\;,
+\end{equation}
+where $f$ is an arbitrary function, and $p_x$ and $p_y$ are the plane
+slopes in the corresponding direction. It is easy to verify that a
+plane wave of the form (\ref{eqn:pln}) satisfies the following system
+of partial differential equations:
+\begin{equation}
+\label{eqn:pde}
+\left\{\begin{array}{rcl}\displaystyle
+\left(\frac{\partial}{\partial x} + p_x\,\frac{\partial}{\partial t}\right)\,U
+& = & 0 \\ \displaystyle
+\left(\frac{\partial}{\partial y} + p_y\,\frac{\partial}{\partial t}\right)\,U
+& = & 0
+\end{array}\right.
+\end{equation}
+\par
+The first equation in (\ref{eqn:pde}) describes plane waves on the
+$\{t,x\}$ slices.  In is discrete form, it is represented as a
+convolution with the two-dimensional finite-difference filter
+$\mathbf{A}_x$. Similarly, the second equation transforms into a
+convolution with filter $\mathbf{A}_y$, which acts on the $\{t,y\}$
+slices. The discrete (finite-difference) form of equations
+(\ref{eqn:pde}) involves a blocked convolution operator:
+\begin{equation}
+\label{eqn:cnv}
+\left(\begin{array}{c}\displaystyle
+\mathbf{A}_x \\
+\mathbf{A}_y
+\end{array}\right)\,\mathbf{U} = \mathbf{0}\;.
+\end{equation}
+where $\mathbf{U}$ is the model vector corresponding to $U(t,x,y)$.
+\par
+In many applications, we are actually interested in the spectrum of
+the prediction filter, which approximates the inverse spectrum of the
+predicted data. In other words, we deal with the square operator
+\begin{equation}
+\label{eqn:ata}
+\left(\begin{array}{cc}\displaystyle \mathbf{A}_x^T & \mathbf{A}_y^T
+      \end{array}\right)\,
+\left(\begin{array}{c}\displaystyle
+\mathbf{A}_x \\
+\mathbf{A}_y
+\end{array}\right) = 
+\mathbf{A}_x^T \mathbf{A}_x + \mathbf{A}_y^T \mathbf{A}_y\;.
+\end{equation}
+If we were able to transform this operator to the form
+$\mathbf{A}^T \mathbf{A}$, where $\mathbf{A}$ is a three-dimensional
+minimum-phase convolution, we could use the three-dimensional filter
+$\mathbf{A}$ in place of the inconvenient pair of $\mathbf{A}_x$ and
+$\mathbf{A}_y$.
+\par
+The problem of finding $\mathbf{A}$ from its spectrum is known as
+spectral factorization. It is well understood for 1-D signals
+\cite[]{Claerbout.fgdp.76}, but until recently it was an open problem
+in the multidimensional case. Helix transform maps multidimensional
+filters to 1-D by applying special boundary conditions and allows us
+to use the full arsenal of 1-D methods, including spectral
+factorization, on multidimensional problems
+\cite[]{GEO63-05-15321541}. A problem, analogous to (\ref{eqn:ata}),
+has already occurred in the factorization of the discrete
+two-dimensional Laplacian operator:
+\begin{equation}
+\label{eqn:lap}
+\Delta = \nabla^T \nabla = 
+\left(\begin{array}{cc}\displaystyle \mathbf{D}_x^T & \mathbf{D}_y^T
+      \end{array}\right)\,
+\left(\begin{array}{c}\displaystyle
+\mathbf{D}_x \\
+\mathbf{D}_y
+\end{array}\right) = \mathbf{H}^T \mathbf{H}\;,
+\end{equation}
+where $\mathbf{D}_x$ and $\mathbf{D}_y$ represent the partial derivative
+operators along the $x$ and $y$ dimensions, respectively, and the
+two-dimensional filter $\mathbf{H}$ has been named \emph{helix
+  derivative} \cite[]{gee,Zhao.sep.100.yi1}.
+\par
+If we represent the filter $\mathbf{A}_x$ with the help of a simple first-order 
+upwind finite-difference scheme 
+\begin{equation}
+\label{eqn:fin}
+\mathbf{U}_{x+1}^t - \mathbf{U}_{x}^t + p_x \left(\mathbf{U}_{x+1}^{t+1} - \mathbf{U}_{x+1}^{t}\right) = 0\;,
+\end{equation}
+then, after the helical mapping to 1-D, it becomes a one-dimensional
+filter with the $Z$-transform
+\begin{equation}
+\label{eqn:hlx}
+\mathbf{A}_x (Z) = 1 - p_x Z^{N_t + 1} + (p_x - 1) Z^{N_t}\;,
+\end{equation}
+where $N_t$ is the number of samples on the $t$-axis. Similarly, the
+filter $\mathbf{A}_y$ takes the form
+\begin{equation}
+\label{eqn:hly}
+\mathbf{A}_y (Z) = 1 - p_y Z^{N_t N_x + 1} + (p_y - 1) Z^{N_t N_x}\;.
+\end{equation}
+The problem is reduced to a 1-D spectral factorization of
+\begin{eqnarray}
+\nonumber 
+& \mathbf{A}_x (1/Z) \mathbf{A}_x (Z) + \mathbf{A}_y (1/Z) \mathbf{A}_y (Z) = 
+- p_y \frac{1}{Z^{N_t N_x + 1}} + (p_y - 1) \frac{1}{Z^{N_t N_x}} -
+& \\
+\nonumber 
+& p_x \frac{1}{Z^{N_t + 1}} + (p_x - 1) \frac{1}{Z^{N_t-1}}  + 
+\left[p_x (1 - p_x) + p_y (1 - p_y)\right] \frac{1}{Z} +
+& \\
+\nonumber
+& 2 + 
+p_x (p_x - 1) + p_y (p_y - 1) + 
+\left[p_x (1 - p_x) + p_y (1 - p_y)\right] Z + & \\
+&  (p_x - 1) Z^{N_t-1}
+- p_x Z^{N_t + 1} + (p_y - 1) Z^{N_t N_x}
+- p_y Z^{N_t N_x + 1}\;. &
+\label{eqn:spc}
+\end{eqnarray}
+After a minimum-phase factor of (\ref{eqn:spc}) has been found, we can
+use it for 3-D forward and inverse convolution.
+\par
+All examples in this paper actually use a slightly more sophisticated
+formula for 2-D plane-wave predictors:
+\begin{equation}
+\label{eqn:lax}
+\mathbf{A}_x (Z) = 1  + \frac{p_x}{2} (1 - p_x) Z^{N_t - 1} + (p_x^2 - 1) Z^{N_t}
+- \frac{p_x}{2} (1 + p_x) Z^{N_t + 1}\;.
+\end{equation}
+Formula (\ref{eqn:lax}) corresponds to the Lax-Wendroff finite
+difference scheme \cite[]{Clapp.sep.95.bob1}.  It provides a valid
+approximation of the plane-wave differential equation for 
+$-1 \le p_x \le 1$.
+\par
+\plot{eplane}{width=6in}{3-D plane wave prediction with a 402-point
+  filter. Left: $p_x=0.7$, $p_y=0.5$. Right: $p_x=-0.7$, $p_y=0.5$.}
+
+\inputdir{XFig}	
+\sideplot{shape}{height=1.5in}{Schematic filter shape for a 26-point 3-D
+  plane prediction filter. The dark block represents the leading
+  coefficient. There are 9 blocks in the first row and 17 blocks in
+  the second row.}
+
+\inputdir{eplane}
+\plot{tplane}{width=6in}{3-D plane wave prediction with a 26-point
+  filter. Left: $p_x=0.7$, $p_y=0.5$. Right: $p_x=-0.7$, $p_y=0.5$.}
+ 
+Figure~\ref{fig:eplane} shows examples of plane-wave construction. The
+two plots in the figure are outputs of a spike, divided recursively
+(on a helix) by $\mathbf{A}^{T} \mathbf{A}$, where $\mathbf{A}$ is a 3-D
+minimum-phase filter, obtained by Wilson-Burg factorization. The
+factorization was carried out in the assumption of $N_t=20$ and
+$N_x=20$; therefore, the filter had $N_t N_x +2 = 402$ coefficients.
+Using such a long filter may be too expensive for practical purposes.
+Fortunately, the Wilson-Burg method allows us to specify the filter
+length and shape beforehand. By experimenting with different filter
+shapes, I found that a reasonable accuracy can be achieved with a
+26-point filter, depicted in Figure~\ref{fig:shape}. Plane-wave
+construction for a shortened filter is shown in
+Figure~\ref{fig:tplane}. The predicted plane wave is shorter and looks
+more like a slanted disk. It is advantageous to deal with short plane
+waves if the filter is applied for local prediction of non-stationary
+signals.
+
+\inputdir{bob}
+
+\cite{Clapp.sep.105.bob2} has proposed constructing 3-D plane-wave
+destruction (steering) filters by splitting. In Clapp's method, the
+two orthogonal 2-D filters $\mathbf{A}_x$ and $\mathbf{A}_y$ are
+simply convolved with each other instead of forming the
+autocorrelation~(\ref{eqn:ata}). While being a much more efficient
+approach, splitting suffers from induced anisotropy in the inverse
+impulse response. Figure~\ref{fig:bob} illustrates this effect in the
+2-D plane by comparing the inverse impulse responses of plane-wave
+filters obtained by spectral factorization and splitting.  The
+splitting response is evidently much less isotropic.
+
+\plot{bob}{width=4in,height=2in}{Two-dimensional inverse impulse
+  responses for filters constructed with spectral factorization (left)
+  and splitting (right). The splitting response is evidently much less
+  isotropic.}
+
+\par
+In the next sections, I address the problem of estimating plane-wave
+slopes and show some examples of applying local plane-wave prediction
+in 3-D problems.
+
+\section{Estimating plane waves}
+
+It may seem difficult to estimate the plane slope $p_x$ for a
+Lax-Wendroff filter of the form (\ref{eqn:lax}) because $p_x$ appears
+non-linearly in the filter coefficients. However, using the analytical
+form of the filter, we can easily linearize it with respect to the
+plane slope and set up a simple iterative scheme: 
+\begin{equation}
+  \label{eqn:itr}
+  p_x^{(k+1)} = p_x^{(k)} + \Delta  p_x^{(k)}\;,
+\end{equation}
+where $k$ stands for the iteration count, and  $\Delta  p_x^{(k)}$ is found
+from the linearized equation
+\begin{equation}
+  \label{eqn:lin}
+\left(\mathbf{A'}_x \mathbf{U}\right) \Delta  p_x = - 
+\mathbf{A}_x \mathbf{U}\;,
+\end{equation}
+where $\mathbf{A'}_x$ is the derivative of $\mathbf{A}_x$ with respect to
+$p_x$. To avoid unstable division by zero when solving equation
+(\ref{eqn:lin}) for $\Delta p_x$, Adding a regularization equation
+\begin{equation}
+  \label{eqn:reg}
+\epsilon \nabla \Delta  p_x \approx 0\;,
+\end{equation}
+where $\epsilon$ is a small scalar regularization parameter, I solve
+system (\ref{eqn:lin}-\ref{eqn:reg}) in the least-square sense to
+obtain a smooth slope variation $\Delta p_x$ at each iteration.  In
+practice, iteration process (\ref{eqn:itr}) quickly converges to a
+stable estimate of $p_x$.
+\section{Examples}
+Two simple examples in this section demonstrate an application of 3-D
+local plane-wave prediction to the problems of discontinuity
+enhancement and missing data interpolation.
+
+\subsection{3-D discontinuity enhancement}
+\inputdir{cube}
+
+\sideplot{cube}{height=2.5in}{A synthetic model, showing a fault
+  between two plane waves of different slopes.}
+\plot{cslope}{width=6in}{Plane wave slope estimates in the $x$ and $y$
+  directions (left and right plots, respectively) from the synthetic
+  two-plane model.}
+\par
+Figure~\ref{fig:cube} shows a simple synthetic model of two plane
+waves, separated by a plane fault. The slope estimates for the two
+orthogonal directions are shown in Figure~\ref{fig:cslope}. We can see
+that the estimation procedure correctly identified the regions of
+constant slope. Finally, estimating a local 3-D plane-wave predictor by
+spectral factorization and convolving the resultant non-stationary
+filter with the input model, we obtain the prediction residual, shown
+in Figure~\ref{fig:cmain}. In the residual, both plane waves are
+effectively destroyed, and we observe a sharp image of the fault
+plane. This result compares favorably with results of alternative
+methods, collected by \cite[]{Schwab.sepphd.99}.
+\sideplot{cmain}{height=2.5in}{Magnitude of the residual after
+  convolving the synthetic two-plane model with a local 3-D plane wave
+  filter.}
+\subsection{3-D missing data interpolation}
+\inputdir{qint}
+
+\sideplot{qdome}{height=2.5in}{Claerbout's ``qdome'' synthetic model.}
+\plot{qslope}{width=6in}{Plane wave slope estimates in the $x$ and $y$
+  directions (left and right plots, respectively) from the ``qdome''
+  model.}  
+
+Figures~\ref{fig:qdome} and~\ref{fig:qslope} show Claerbout's
+``qdome'' synthetic model \cite[]{Claerbout.sep.77.19,gee} and its
+corresponding slope estimates. In a missing data interpolation
+experiment, I remove 75\% of the traces in the original model,
+arriving at the missing data model, shown in the left plot of
+Figure~\ref{fig:qmiss}. The missing data interpolation result is shown
+in the right plot of Figure~\ref{fig:qmiss}. Most of the original
+signal, except for some high-curvature areas, has been restored. Local
+3-D plane-wave predictors allow us to use the efficient interpolation
+technique of \cite{Fomel.sep.95.sergey1}, based on recursive
+filter preconditioning.
+
+\plot{qmiss}{width=6in}{Left: ``qdome'' model with 75\% of the
+  randomly chosen traces removed. Right: result of missing data
+  interpolation with a 3-D local plane-wave prediction filter.}
+
+\section{Conclusions}
+I have shown that a 3-D plane-wave prediction filter can be
+constructed from a pair of two-dimensional filters by using helix
+transform and a one-dimensional spectral factorization algorithm.
+\par
+In all the examples, I used analytical finite-difference filters
+instead of more general prediction-error filters.  A similar
+factorization idea could be applied to 3-D prediction-error filters.
+However, treating non-stationarity in this case is less
+straightforward and requires additional care
+\cite[]{Crawley.sep.97.sean2,Clapp.sep.100.bob3}.
+\par
+3-D plane-wave prediction filters can find many interesting
+applications in data processing and inversion.  An especially
+promising application is solution steering in tomography-type
+problems \cite[]{Clapp.sep.95.bob1,Clapp.sep.97.bob2}.
+
+
+\section{Acknowledgments}
+Jon Claerbout suggested the problem of 3-D plane wave prediction and
+the idea of its solution.  Unfortunately, he is currently not able to
+share the authorship.
+
+\bibliographystyle{seg}
+\bibliography{SEG,SEP2,plane}
+

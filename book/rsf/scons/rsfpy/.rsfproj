@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfwindow', 'sfnoise', 'sfgrey', 'sfspectra', 'sfbandpass', 'sfmath', 'sfgraph', 'sfthr', 'sffft1', 'sffft3']
+data=['data/imgs/lena.img']
+size=    9459264

@@ -1,0 +1,29 @@
+from rsf.proj import *
+
+Fetch('solaridder.HH','solar')
+
+Flow('solarlc','solaridder.HH',
+     '''
+     dd form=native | transp plane=13 memsize=5000 | 
+     bandpass flo=1 nplo=1 | transp plane=13 memsize=5000
+     ''')
+
+Plot('solarshort','solarlc',
+     '''
+     window min3=10 n3=250 | transp plane=13 | byte | 
+     grey3 flat=n point1=.66 point2=.66 title='doppler data' color=h
+     frame1=50 frame2=100 frame3=100
+     ''')
+
+Flow('kolcube','solarlc','specfac')
+
+Plot('kolcube',
+     '''
+     window max3=10 | transp plane=13 | byte | 
+     grey3 flat=n point1=.66 point2=.66 title='spectral factorization' color=h 
+     frame1=50 frame2=100 frame3=100
+     ''')
+
+Result('solar','solarshort kolcube','SideBySideAniso')
+
+End()

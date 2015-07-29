@@ -1,0 +1,169 @@
+%\geometry{a4paper}  
+%\usepackage[parfill]{parskip} 
+%
+%\usepackage{graphicx}
+%\usepackage{epstopdf}
+%
+%\usepackage[dvips, bookmarks, hyperindex=true, colorlinks=false, 
+%            linktocpage=true
+%            pdfsubject={Madagascar Manual}, 
+%            pdfkeywords={reproducible research, open source, geophysics, Madagascar}]
+%            {hyperref}
+
+
+\title{Madagascar Programming Reference Manual}
+\author{KAUST\\
+               \\
+               Mohammad Akbar Zuberi\\
+               Tariq Alkhalifah\\
+               Christos Saragoitis\\
+               \\
+               Seismic Wave Analysis Group\\
+               \texttt{http://swag.kaust.edu.sa}\\}
+\date{}   
+
+\lefthead{SWAG}
+\righthead{Programming Reference}
+
+\maketitle
+\cleardoublepage
+
+\tableofcontents\addcontentsline{toc}{chapter}{Contents}
+\cleardoublepage
+
+\chapter*{Preface}
+\addcontentsline{toc}{chapter}{Preface}
+\input{preface}
+
+\chapter{Introduction}
+\input{intro}
+
+\chapter{An example: Finite-Difference modeling}
+\input{example_fd}
+
+% ########
+%\part{The RSF library}
+
+\chapter{Data types}\label{sec:datatypes}
+  \input{data_types}
+
+\chapter{Preparing for input}\label{sec:input}
+   \input{alloc} % Convenience allocation programs
+   \input{simtab}       % Simbol Table for parameters
+   \input{getpar}       % Parameter handling
+   
+\chapter{Operations with RSF files}\label{sec:files}
+   \input{file}          % Main operations with RSF files 
+   \input{files}         % Additional operations with RSF files
+   \input{komplex}       % Complex number operations
+
+\chapter{Error handling}\label{sec:error}
+   \input{error}         % Error handling
+
+\chapter{Linear operators}\label{sec:lop}
+   \input{lop_intro}
+   \input{adjnull}       % Adjoint zeroing
+   \input{copy}          % Simple identity operator
+   \input{ccopy}         % Simple identity operator (for complex data)
+   \input{mask}          % Simple mask operator
+   \input{weight}        % Simple weight operator
+   \input{igrad1}        % 1-D finite difference
+   \input{causint}       % Causal integration
+   \input{chain}         % Chaining linear operators
+   \input{dottest}       % Dot product test for linear operators
+
+
+\chapter{Data analysis}\label{sec:analysis}
+   \input{kiss_fftr}     % FFT
+   \input{tent2}         % Cosine window weighting function
+   \input{impl2}         % Anisotropic diffusion, 2-D
+
+
+\chapter{Filtering}\label{sec:filter}
+   \input{freqfilt}      % Frequency-domain filtering
+   \input{freqfilt2}     % Frequency-domain filtering in 2-D
+   \input{helicon}       % Helical convolution
+
+   \input{helix}         % Helical filter definition and allocation
+   \input{recfilt}       % Recursive convolution (polynomial division)
+   \input{cosft}         % Cosine Fourier transform
+
+
+\chapter{Solvers}\label{sec:solvers}
+   \input{banded}       % Banded matrix solver
+   
+   \input{cgstep}       % Claerbout's conjugate-gradient iteration
+   
+   \input{conjgrad}     % Conjugate-gradient with shaping regularization
+   \input{conjprec}     % Conjugate-gradient with preconditioning   
+   \input{ccgstep}      % Claerbout's conjugate-gradient iteration for complex numbers.
+   \input{cconjgrad}    % Conjugate-gradient with shaping regularization for complex numbers
+
+   \input{cdstep}       % Conjugate-direction iteration
+   \input{llist}        % Linked list for use in conjugate-direction-type methods
+   \input{ccdstep}      % Conjugate-direction iteration for complex numbers
+   \input{clist}        % Linked list for use in conjugate-direction-type methods with complex numbers
+    
+   \input{quadratic}    % Solving quadratic equations
+   \input{fzero}        % Zero finder
+   \input{runge}        % Runge-Kutta ODE solvers
+
+   \input{tinysolver}   % Solver function for iterative least-squares optimization
+   \input{bigsolver}    % Solver functions for iterative least-squares optimization
+   \input{irls}         % Weighting for iteratively-reweighted least squares
+   \input{tridiagonal}  % Tridiagonal matrix solver
+   
+
+\chapter{Interpolation}\label{sec:interpolation}
+   \input{int1}        % 1-D interpolation
+   \input{int2}        % 2-D interpolation
+   \input{int3}        % 3-D interpolation
+   \input{interp}      % Basic interpolation functions
+   \input{prefilter}   % Convert data to B-spline coefficients by fast B-spline transform
+   \input{spline}      % B-spline interpolation
+   \input{stretch}     % Inverse linear interpolation
+   \input{eno}         % 1-D ENO interpolation
+   \input{eno2}        % ENO interpolation in 2-D
+   \input{pweno}       % 1-D ENO power-p interpolation
+
+\chapter{Smoothing}\label{sec:smoothing}
+   \input{triangle1}   % 1-D triangle smoothing as a linear operator
+   \input{triangle2}   % 2-D triangle smoothing as a linear operator
+   \input{triangle}    % Triangle smoothing
+   \input{edge}        % Smooth gradient operations
+
+
+\chapter{Ray tracing}\label{sec:ray}
+   \input{celltrace}   % Cell ray tracing
+   \input{cell}        % Cell ray tracing
+
+\chapter{General tools}\label{sec:general}
+   \input{deriv}      % First derivative FIR filter
+   \input{quantile}   % Computing quantiles by Hoare's algorithm
+   \input{randn}      % Pseudo-random numbers: uniform and normally distributed
+   \input{math1}      % Evaluating mathematical expressions
+
+\chapter{Geometry}\label{sec:geometry}
+   \input{point}      % Construction of points
+   \input{vector}     % Construction of vectors
+   \input{decart}     % Conversion between line and Cartesian coordinates of a vector
+   \input{axa}        % Axes
+
+\chapter{Miscellaneous}\label{sec:misc}
+   \input{sharpen}    % Sharpening
+   \input{sharpinv}   % Sharpening inversion added Bregman iteration
+
+\chapter{System}\label{sec:system}
+   \input{pqueue}     % Priority queue (heap sorting)
+   \input{system}     % Simplified system command
+   \input{stack}      % Generic stack (FILO) structure operations
+%    \input{c99}      % Supplying compatibility with the C99 standard
+
+\cleardoublepage
+
+
+\printindex
+\addcontentsline{toc}{chapter}{Index}
+\cleardoublepage
+
+

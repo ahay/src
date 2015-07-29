@@ -1,0 +1,57 @@
+\section{Helical convolution (helicon.c)}
+
+
+
+
+\subsection{{sf\_helicon\_init}}
+Initializes an object of type \texttt{sf\_filter} to be used in the linear operator function.
+
+
+\subsubsection*{Call}
+\begin{verbatim}sf_helicon_init(bb);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_helicon_init (sf_filter bb) 
+/*<  Initialized with the filter. >*/
+{
+   ...
+}
+
+\end{verbatim}
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[bb] the filter object (\texttt{sf\_filter}).  
+\end{desclist}
+
+
+
+
+\subsection{{sf\_helicon\_lop}}
+Does the helical convolution. It applies the filter to either \texttt{yy} or \texttt{xx}, depending on whether \texttt{adj} is true of false and then applies the result to \texttt{xx} or \texttt{yy} as a linear operator.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_helicon_lop (adj, add, nx, ny, xx, yy);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_helicon_lop( bool adj, bool add, 
+                     int nx, int ny, float* xx, float*yy) 
+/*< linear operator >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt add]
+   \setlength\itemsep{0pt}
+   \item[adj] a parameter to determine whether the filter is applied to \texttt{yy} or \texttt{xx} (\texttt{bool}).
+   \item[add] a parameter to determine whether the input needs to be zeroed (\texttt{bool}).
+   \item[nx]  size of \texttt{x}x (\texttt{int}).
+   \item[ny]  size of \texttt{y}y (\texttt{int}).
+   \item[xx]  data or operator, depending on whether \texttt{adj} is true or false (\texttt{float*}).
+   \item[yy]  data or operator, depending on whether \texttt{adj} is true or false (\texttt{float*}).
+\end{desclist}
+

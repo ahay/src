@@ -1,0 +1,235 @@
+\author{Eliakim Hastings Moore}
+%%%%%%%%%%%%%%%%%%%%%%%
+\title{Homework 5}
+
+\begin{abstract}
+  This homework has the following parts:
+  \begin{enumerate}
+  \item A theoretical question related to covariance estimation.
+  \item Missing data interpolation using compressive properties of the 2-D Fourier transform.
+  \item Compression of sand dune images.
+  \end{enumerate}
+\end{abstract}
+
+\section{Prerequisites}
+
+Completing the computational part of this homework assignment requires
+\begin{itemize}
+\item \texttt{Madagascar} software environment available from \\
+\url{http://www.ahay.org/}
+\item \LaTeX\ environment with \texttt{SEG}\TeX\ available from \\ 
+\url{http://www.ahay.org/wiki/SEGTeX}
+\end{itemize}
+To do the assignment on your personal computer, you need to install
+the required environments. Please ask for help if you don't know where
+to start.
+
+The homework code is available from the \texttt{Madagascar} repository
+by running
+\begin{verbatim}
+svn co http://svn.code.sf.net/p/rsf/code/trunk/book/geo391/hw5
+\end{verbatim}
+
+\section{Theory}
+
+Suppose that we use the gradient operator for data interpolation:
+\begin{equation}
+\label{eq:grad}
+\min\,\left|\nabla \mathbf{m}\right|^2\;.
+\end{equation}  
+This approach roughly corresponds to minimizing the surface area and
+represents the behavior of a soap film or a thin rubber sheet.
+
+The corresponding inverse model covariance operator is the negative Laplacian
+$\mathbf{C}_m^{-1}=\nabla^T\,\nabla=-\nabla^2$. The corresponding
+covariance operator corresponds to the Green's function $G(\mathbf{x})$ that solves
+\begin{equation}
+\label{eq:green}
+-\nabla^2 G = \delta(\mathbf{x}-\mathbf{x}_0)\;.
+\end{equation}
+In 2-D, the Green's function has the form 
+\begin{equation}
+\label{eq:g2d}
+G(\mathbf{x}) = \displaystyle A - \frac{\ln |\mathbf{x}-\mathbf{x}_0|}{2\pi}
+\end{equation}
+with some constant $A$.
+
+To derive equation~(\ref{eq:g2d}), we can introduce polar coordinates
+around $\mathbf{x}_0$ with the radius $r= |\mathbf{x}-\mathbf{x}_0|$
+and note that the Laplacian operator for a radially-symmetric function
+$\phi(r)$ in polar coordinates takes the form
+\begin{equation}
+\label{eq:polar}
+\nabla^2 \phi = \displaystyle \frac{1}{r}\,\frac{d}{dr}\,\left(r\,\frac{d \phi}{dr}\right)
+\end{equation}  
+Away from the point $\mathbf{x}_0$, solving
+\begin{equation}
+\label{eq:away}
+\frac{1}{r}\,\frac{d}{dr}\,\left(r\,\frac{d G}{dr}\right) = 0
+\end{equation}
+leads to $G(r) = A + B\,\ln r$. To find the constant $B$, we can
+integrate $\nabla^2 G$ over a circle with some small radius $\epsilon$
+around the origin and apply the Green's theorem
+\begin{equation}
+\label{eq:integrate}
+-1 = \iint \nabla^2 G dx\,dy = \oint \nabla G \cdot \vec{ds} = 
+\int\limits_{0}^{2\pi} \left.\frac{\partial G}{\partial r}\right|_{r=\epsilon}\,\epsilon\,d\theta = 2\pi\,B\;.
+\end{equation}
+
+Derive the model covariance function $G(\mathbf{x})$ which corresponds
+to replacing equation~(\ref{eq:grad}) with equation
+\begin{equation}
+\label{eq:lap}
+\min\,\left|\nabla^2 \mathbf{m}\right|^2
+\end{equation} 
+and approximates the behavior of a thin elastic plate.
+
+\section{Projection onto convex sets}
+\inputdir{pocs}
+
+\sideplot{hole}{width=\textwidth}{Seismic depth slice
+  after removing selected parts of the data.}
+
+The goal of the next exercise is to figure out if one can use compactness
+of the Fourier transform to reconstruct missing data. The missing
+parts are created artificially by cutting holes in the original data
+(Figure~\ref{fig:hole}).
+
+\multiplot{2}{fft-data,fft-hole}{width=0.4\textwidth}{Fourier transform of the original data (a) and data with holes
+  with holes (b). The absolute value is displayed}
+
+\sideplot{fft-mask}{width=0.8\textwidth}{Fourier-domain mask for selecting a convex set.}
+
+Figures~\ref{fig:fft-data} and~\ref{fig:fft-hole} show the digital
+Fourier transform of the original data and the data with holes. We
+observe again that the support of the data in the Fourier domain is
+compact thanks to the data smoothness. Cutting holes in the physical
+domain creates discontinuities that make the Fourier response spread
+beyond the original support. Figure~\ref{fig:fft-mask} shows a
+Fourier-domain mask designed to contain the support of the original
+data.
+
+To accomplish the task of missing data interpolation, we will use an
+iterative method known as POCS (\emph{projection onto convex
+sets}). By definition, a convex set $\mathcal{C}$ is a set of
+functions such that, for any $f_1(\mathbf{x})$ and $f_2(\mathbf{x})$
+from the set, $g(\mathbf{x}) = \lambda\,f_1(\mathbf{x}) +
+(1-\lambda)\,f_2(\mathbf{x})$ (for $0 \le \lambda \le 1$) also belongs
+to the set. A projection onto a convex set means finding a function in
+the set that is of the shortest distance to the given function. The
+POCS theorem states that if one wants to find a function that belongs
+to the intersection of two convex sets $C_1$ and $C_2$, the task can
+be accomplished iteratively by alternating projections onto the two
+sets.
+
+In our example, $C_1$ is the set of all functions that are equal to
+the known data outside of the holes. $C_2$ is the set of all functions
+that have a predifined compact support in the Fourier domain (and
+therefore are smooth in the physical domain). The algorithm consists
+of the following steps:
+\begin{enumerate}
+\item Apply 2-D Fourier transform. 
+\item Multiply by a Fourier-transform mask to enforce compact support.
+\item Apply inverse 2-D Fourier transform.
+\item Replace data outside of the holes with known data.
+\item Repeat.
+\end{enumerate}
+The output after 5 iterations is shown in Figure~\ref{fig:pocs}.
+
+\sideplot{pocs}{width=\textwidth}{Missing data interpolated by
+  iterative projection onto convex sets.}
+
+\lstinputlisting[frame=single]{pocs/SConstruct}
+
+Your task:
+\begin{enumerate}
+\item Change directory to \texttt{hw5/pocs}
+\item Run 
+\begin{verbatim}
+scons view
+\end{verbatim}
+to reproduce the figures on your screen.
+\item Additionally, you can run
+\begin{verbatim}
+scons pocs.vpl
+\end{verbatim}
+to see a movie of different iterations.
+\item By modifying appropriate parameters in the \texttt{SConstruct} file and repeating computations,
+find out
+\begin{enumerate}
+\item How many iterations are required for convergence?
+\item How large can you make the holes and still be able to achieve a reasonably good reconstruction?
+\end{enumerate}
+\item \textbf{EXTRA CREDIT} for finding a different convex set or a different iteration strategy for either faster or more accurate missing data reconstruction.
+\end{enumerate}
+
+\section{Compression of Sand Dune Images}
+\inputdir{dunes}
+
+\sideplot{dune}{width=\textwidth}{Image of sand dunes in a river.}
+
+Figure~\ref{fig:dune} shows an image of sand dunes at the bottom of a
+river\footnote{courtesy of Ryan Ewing}. In this part of the assignment, you
+will try to compress the image by applying different transforms.
+
+\multiplot{2}{cos,sort}{width=0.45\textwidth}{(a) Sand dunes image in the cosine Fourier domain. (b) Fourier coefficients sorted by absolute value and displayed on the logarithmic (decibel) scale.}
+
+Figure~\ref{fig:cos} shows the image after applying the \emph{cosine
+transform} (a version of the Fourier transform that keeps coefficients
+real). Notice both compactness and sparsity in the Fourier domain. To
+analyze the sparsity pattern, Figure~\ref{fig:sort} shows Fourier
+coefficients after sorting them by absolute value. The rate 
+of coefficient decay is a measure of sparsity.
+
+\plot{inv}{width=\textwidth}{(a) Sand dunes image reconstructed after thresholding. (b) Compression noise.}
+
+Figure~\ref{fig:inv} shows the result of shrinkage (soft thresholding)
+of Fourier coefficients using 1\% threshold and the difference between
+the reconstructed image and the true image.
+
+Your task:
+\begin{enumerate}
+\item Change directory to \texttt{hw5/dunes}
+\item Run 
+\begin{verbatim}
+scons view
+\end{verbatim}
+to reproduce the figures on your screen.
+\item Modify the \texttt{SConstruct} file to adjust the threshold percentage to the level that makes noise negligible.
+\item  Modify the \texttt{SConstruct} file to use DWT (the \emph{digital wavelet transform}) instead of the cosine transform. 
+Compare the results. Which transform has more sparsity and provides better compression? 
+\item \textbf{EXTRA CREDIT} for finding and implementing a transform with an even better compression.
+\end{enumerate}
+
+\newpage
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,title=dunes/SConstruct]{dunes/SConstruct}
+
+\newpage
+
+\section{Completing the assignment}
+
+\begin{enumerate}
+\item Change directory to \texttt{hw5}.
+\item Edit the file \texttt{paper.tex} in your favorite editor and change the
+  first line to have your name instead of Moore's.
+\item Run
+\begin{verbatim}
+sftour scons lock
+\end{verbatim}
+to update all figures.
+\item Run
+\begin{verbatim}
+sftour scons -c
+\end{verbatim}
+to remove intermediate files.
+\item Run
+\begin{verbatim}
+scons pdf
+\end{verbatim}
+to create the final document.
+\item Submit your result (file \texttt{paper.pdf}) on paper or by
+e-mail.
+\end{enumerate}
+

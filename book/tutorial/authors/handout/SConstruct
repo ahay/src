@@ -1,0 +1,8 @@
+from rsf.tex import *
+
+Paper('handout',
+      lclass='cwphandout',
+      use='graphicx,color,listings,amsmath,amssymb,amsbsy,hyperref,framed')
+
+
+End(use='color')

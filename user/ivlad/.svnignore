@@ -1,0 +1,12 @@
+.sconsign
+sflmo
+sfmulticheck
+sfquantile
+sfhist2
+sffiledims
+sfcreate
+sfseekwin
+sfgettype
+sffileflush
+sfleftsize
+sfsparsify

@@ -1,0 +1,133 @@
+\section{Advanced SCons}
+
+Now that you have a grasp of how to use SCons to put together simple processing flows, we're going to show you how to abuse SCons to make more advanced processing flows that can handle multiple input and output files properly.  Additionally, we're going to demonstrate some SCons tricks that make your life easier, and allow you to work faster, and smarter.
+
+\subsection{Multiple input files}
+
+Many Madagascar programs require multiple input files and/or output multiple files.  In order for SCons to properly recognize that these additional files are dependencies for a specific output file we have to change the syntax that we use for \textbf{Flow}, \textbf{Plot} and \textbf{Result} statements.  To do so, we'll need to use Python lists to help us keep everything together when using our SCons commands.  We first discuss the case where we need multiple input files.  
+
+An example of a Madagascar program that requires multiple input files is \textbf{sfcat}.  For reference, sfcat is used to concatenate multiple files together, essentially a file manipulation program.  For example, we might use sfcat on the command line in the following fashion:
+\begin{verbatimtab}[4]
+< file.rsf sfcat axis=2 
+    file1.rsf file2.rsf file3.rsf file4.rsf > catted.rsf
+\end{verbatimtab}
+To replicate this behavior using SCons we need to tell our \textbf{Flow} statements about the presence of multiple input files.  \textbf{Important: if we do not indicate to SCons that we have multiple input files then the dependency chain will not be correct and we cannot guarantee our results are correct}.  We can easily tell SCons of the presence of multiple input files by using a Python list as our input file, instead of a string:
+\begin{verbatimtab}[4]
+Flow('catted',['file','file1','file2','file3','file4'],
+    'sfcat axis=2 ${SOURCES[1:-1]}')
+\end{verbatimtab} 
+or, equivalently,
+\begin{verbatimtab}[4]
+Flow('catted','file file1 file2 file3 file4',
+    'sfcat axis=2 ${SOURCES[1:-1]}')
+\end{verbatimtab} 
+As you may have noticed, there are two new items in this \textbf{Flow} statement, but let's start by discussing only the list of file names: \textbf{['file','file1','file2','file3','file4']}.  The list of file names is simply a Python list of strings that contains each of the names of the files that we want to use in this Flow command.  As usual, we don't have to append the '.rsf' suffix to the end of these names because SCons adds it for us.  
+
+The second new part to the \textbf{Flow} command is:
+\textbf{\${SOURCES[1:-1]}}, referred to as the SCons source list,
+which tells SCons about the presence of additional input files in the
+command, and to substitute the names into the command automatically.
+Without this command, SCons would not include the files in the final
+command.  As an example of what the SCons source list does, compare
+the two SConstructs below against one another.  The top is correct,
+the bottom is incorrectly configured:
+\lstset{language=python,showstringspaces=false}
+\begin{lstlisting}
+# Correct
+from rsf.proj import *
+Flow('file',None,'spike n1=100')
+Flow('file1',None,'spike n1=100 mag=2')
+Flow('file2',None,'spike n1=100 mag=3')
+Flow('file3',None,'spike n1=100 mag=4')
+Flow('file4',None,'spike n1=100 mag=5')
+
+Flow('catted',['file','file1','file2','file3','file4'],
+    'sfcat axis=2 ${SOURCES[1:-1]}')
+End()
+\end{lstlisting}
+\begin{lstlisting}
+# Wrong
+from rsf.proj import *
+Flow('file',None,'spike n1=100')
+Flow('file1',None,'spike n1=100')
+Flow('file2',None,'spike n1=100')
+Flow('file3',None,'spike n1=100')
+Flow('file4',None,'spike n1=100')
+
+Flow('catted',['file','file1','file2','file3','file4'],'sfcat axis=2')
+End()
+\end{lstlisting}
+If you noticed the command line output from SCons, you would find that for the incorrect SConstruct, SCons ran the following command:
+\begin{verbatim}
+< file.rsf sfcat axis=2 > catted.rsf
+\end{verbatim}
+which is not correct.  This is because SCons was not informed that the additional sources actually are used inside the command and did not substitute them in.  
+
+The SCons source list contains a reference to all of the file names that we passed in our Python list earlier.  In order to access those names we have to use a specific notation, but it is essentially a Python list enclosed in curly brackets that begins with a \$. Since the source list is a Python list, we can get the file names in a few ways if we follow standard Python list conventions.   Standard Python list conventions are:
+\begin{itemize}
+\item List indexing starts with index 0,
+\item Lists may be negatively indexed, which returns the items from the end (e.g. LIST[-1]),
+\item Lists may be sliced using the LIST[start:end] notation, where start and end are indices,
+\item List slicing indices are inclusive for the starting index, and exclusive for the ending index (e.g. LIST[0:4] returns LIST[0],LIST[1],LIST[2],LIST[3] but NOT LIST[4],
+\item Open slicing indices may be used (e.g. LIST[2:] gets everything from index 2 to the end, and LIST[:4] returns everything from 0 to but not including 4).  
+\item Negative and positive indices may be used together (e.g. LIST[1:-1] returns all elements but the first and last).
+\end{itemize}
+These are the most useful conventions to remember, and the ones you will most frequently see.  Please see the Python documentation (freely available online) for more information about dealing with Lists.
+
+Using the above conventions the following \textbf{Flow} statements are all equivalent for lettings SCons know about the presence of multiple input files:
+\begin{verbatimtab}[4]
+Flow('catted',['file','file1','file2','file3','file4'],
+    '''
+    sfcat axis=2 ${SOURCES[1]} ${SOURCES[2]} 
+    ${SOURCES[3]} ${SOURCES[4]}
+    ''')
+Flow('catted',['file','file1','file2','file3','file4'],
+    '''
+    sfcat axis=2 ${SOURCES[1:5]}
+    ''')
+Flow('catted',['file','file1','file2','file3','file4'],
+    '''
+    sfcat axis=2 ${SOURCES[1:-1]}
+    ''')
+\end{verbatimtab}
+Note:  never use SOURCES[0] because SOURCES[0] corresponds to 'file' which is already used by SCons for standard input.   Also, never use open slicing on the SOURCES list, because at the end of the SOURCES list are extra items added by SCons for safe keeping that will break the command if accidentally used.
+
+\subsection{Multiple outputs}
+
+For multiple outputs, we can use the same conventions as before, except we specify a list of output files instead of input files, and we use the TARGETS SCons list, instead of SOURCES.  For example:
+\begin{verbatim}
+Flow(['pef','lag'], 'dat', 'sflpef lag=${TARGETS[1]}').
+\end{verbatim}
+
+\subsection{None inputs}
+
+Sometimes, \textbf{Flow}s are created that don't have an input file.  For example, files created using \textbf{sfspike} do not require input files.  To get around the need for an input file, we can use the Python keyword \textbf{None}, equivalent to NULL in C or Java, to indicate to SCons that no input file is needed.  For example:
+\begin{verbatim}
+Flow('spike',None,'sfspike n1=100')
+\end{verbatim}
+
+\subsection{Toggling standard input and standard output}
+When None inputs are used, then standard input is no longer needed and can be disabled. To turn off standard input on a \textbf{Flow}, add another argument to the \textbf{Flow} statement:
+\begin{verbatim}
+Flow('spike',None,'sfspike n1=100',stdin=0)
+\end{verbatim}
+When SCons runs this \textbf{Flow}, the output command line will be:
+\begin{verbatim}
+sfspike n1=100 > spike.rsf
+\end{verbatim}
+Likewise, we can toggle output to standard output as well.  Standard output has two options, redirect to null or completely off.  For some programs we need to redirect standard output to null, and others will require standard output to be completely off.  To toggle standard output off use the following syntax:
+\begin{verbatim}
+Flow('spike',None,'sfspike n1=100',stdout=-1)
+\end{verbatim}
+OR to redirect to \texttt{/dev/null}:
+\begin{verbatim}
+Flow('spike',None,'sfspike n1=100',stdout=0)
+\end{verbatim}
+
+\subsection{Plots with a different output name}
+
+Occasionally, you might want to create a plot with a different name than the input file.  For example, a file might have multiple axes, and you could window along one of the axes, to create multiple graphs from a single input file.  To distinguish between the different plots, you can rename the output files from Plot and Result commands using a syntax similar to Flow:
+\begin{verbatim}
+Plot('output','input','sfgraph')
+\end{verbatim}
+This Plot command will produce output.vpl instead of input.vpl.  In this way, you can create multiple visualizations of the same file. This applies to Result commands as well.

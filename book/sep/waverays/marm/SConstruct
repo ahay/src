@@ -1,0 +1,36 @@
+from rsf.proj import *
+
+Fetch('marmvel.hh','marm')
+
+Flow('marm','marmvel.hh',
+     '''
+     window j1=2 j2=2 | window min2=2000. n2=801 |
+     put label2=Surface unit2=m label1=Depth unit1=m
+     label=Velocity unit=m/s
+     ''')
+
+Plot('marm','grey mean=y scalebar=y bartype=h wanttitle=n')
+
+for freq in (10,80):
+    time = 'time-%d' % freq
+    ampl = 'ampl-%d' % freq
+    Flow([time,ampl],'marm',
+         '''
+         norsar time=${TARGETS[0]} ampl=${TARGETS[1]}
+         gnx=257 gdx=25.  gox=-3200.
+         gnz=241 gdz=12.5 goz=0.
+         ns=1 ds=1. os=5200.
+         nang=21 rays=0 wfront=1
+         gap=3 DSmax=20.
+         dt=0.001 nt=4
+         nrmax=1300 nou=2
+         freq=%d N=%d
+         ''' % (freq,(3,21)[freq==10]),stdout=0)
+
+    Plot(time,'put o2=2000 | contour plotfat=2 wanttitle=n scalebar=y bartype=h')
+    Result('marm%d-time' % freq,['marm',time],'Overlay')
+
+    Result('marm%d-ampl' % freq,ampl,
+           'put o2=2000 label=Amplitude unit= | grey bias=0.2 scalebar=y bartype=h wanttitle=n')
+
+End()

@@ -1,0 +1,3 @@
+uses=['sfmath', 'sfcat', 'sfnoise', 'sfsmooth', 'sfunif3', 'sfbyte', 'sfgrey3', 'sfadd']
+data=[]
+size=   65120000

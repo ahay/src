@@ -1,0 +1,111 @@
+e
+S s
+z
+Test of text
+z
+
+F -1 2 -1
+c 1
+m 1700 3400
+d 1700 4000
+m 600 600
+d 600 3000
+c 7
+J 0 0
+m 600 600
+G 1000 0 1000 1000
+Tilted 45 degrees,
+G 1000 0 0 2000
+ Tall,
+G 1000 0 0 -1000
+ upside down,
+G 100 0 0 100
+ Ridiculously and Absurdly Small,
+G 2000 0 0 1000
+ and Wide.
+m 600 1200
+T 10 0
+\s80 This li
+T 10 0
+\s80 ne should b
+T 10 0
+\s80 e continuous.
+c 4
+m 600 1800
+T 15 0
+[\\]^_`\s40 Ligatures: ffifllfli!
+z
+Each text command should leave the current position such that the next
+z
+text command will correctly continue where the last left off.
+z
+There should be a line saying "This line should be continuous."
+z
+
+m 600 2300
+T 8 8
+Angle u
+c 5
+T 8 0
+p, then fl
+c 6
+T 8 -6
+at then down a bit-
+T 7 -45
+- wh
+T 6 -50
+oops, 
+T 5 -60
+off 
+T 4 -70
+the 
+T 3 -80
+edg
+T 2 -90
+e!
+c 7
+m 600 3000
+J 0 3
+T 25 0
+{|}~
+f 15
+m 4000 3000
+d 4000 3000
+f 0
+J 0 0
+T 4 0
+\F1 =Normal=
+J 3 4
+f 15
+m 4000 3000
+d 4000 3000
+f 0
+z
+
+z
+The words "Right Cap" should have an error glyph in the space between them.
+T 8 0
+RightCap
+z
+Attempting to use that glyph should have just generated an error message.
+J 2 3
+f 15
+m 3000 3600
+d 3000 3600
+f 0
+T 5 90
+=Center=
+f 1
+J 4 6
+m 1700 3400
+T 10 0
+6.\m0 4\s60 83\s40 3\s100 94\M0 
+m 1700 3800
+T 3 0
+X
+m 1700 4000
+T 8 0
+x\^x\_x.\m0 iii\M0 
+m 1700 3654
+T 4 4
+\^D\_o\_t\_s\^\^ are \s200 all \s150 aligned,\m0 No matter what!\M0 

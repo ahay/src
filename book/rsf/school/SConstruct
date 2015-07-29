@@ -1,0 +1,100 @@
+from rsf.tex import *
+
+# Paul's slides
+for slides in glob.glob('slides???.tex'):
+    slidesname = os.path.splitext(slides)[0]
+    Paper(slidesname,
+          lclass='cwpslides',
+          use='multicol,color,overpic,listings,amsmath,amssymb,amsbsy,framed',
+          color='ALL')
+    
+    #Paper('slidesPRG',
+    #      lclass='cwpslides',
+    #      use='multicol,color,overpic,listings,amsmath,amssymb,amsbsy,framed',
+    #      color='ALL')
+    #Paper('slidesWSI',
+    #      lclass='cwpslides',
+    #      use='multicol,color,overpic,listings,amsmath,amssymb,amsbsy,framed',
+    #      color='ALL')
+    #Paper('slidesDOC',
+    #      lclass='cwpslides',
+    #      use='multicol,color,overpic,listings,amsmath,amssymb,amsbsy,framed',
+    #      color='ALL')
+    #Paper('slidesPYT',
+    #      lclass='cwpslides',
+    #      use='multicol,color,overpic,listings,amsmath,amssymb,amsbsy,framed',
+    #      color='ALL')
+
+for eageabs in glob.glob('eageabs*.tex'):
+    name = os.path.splitext(eageabs)[0]
+    Paper(name,
+          lclass='eageabs',
+          options='11pt',
+          use='times,natbib,color,amssymb,amsmath,amsbsy,graphicx,fancyhdr')
+
+for segabs in glob.glob('segabs*.tex'):
+    name = os.path.splitext(segabs)[0]
+    Paper(name,
+          lclass='segabs',
+          options='notimes',
+          use='natbib,graphicx,color,listings,amsmath,amssymb,amsbsy')
+
+#Paper('slides_hpc',
+#      lclass='cwpslides',
+#      use='pythonlisting,alltt,multicol,color,overpic,listings,amsmath,amssymb,amsbsy,comment,xcolor',
+#    include=r'''
+#    \def \largelabel#1#2#3{
+#\put(#1,#2){\Large \textbf{#3}}
+#}
+#\def\sep{ \vfill \hrule \vfill}
+#\def\itab{ \hspace{0.5in}}
+#\def\black#1{\textcolor{black}{#1}}
+#\def\gray#1{\textcolor{gray}{#1}}
+#\def\white#1{\textcolor{white}{#1}}
+#
+#\def\klabellarge#1#2#3{ \black{ \largelabel{#1}{#2}{#3} }}
+#'''
+#)
+
+for article in glob.glob('article*.tex'):
+    name = os.path.splitext(article)[0]
+    Paper(name,
+          lclass='geophysics',
+          options='manuscript',
+          use='amsmath,amssymb,amsbsy,setspace,hyperref,color')
+
+Paper('slidesMadFast',
+      lclass='cwpslides',
+      use='multicol,color,overpic,listings,amsmath,amssymb,amsbsy',
+      include='\\newcommand{\\RSFSRC}{../../..}')
+
+Paper('shragge',
+      lclass='beamer',
+      options='10pt,handout',
+      use='times,amsmath,amssymb,[absolute]textpos,listings',
+      include=r'''
+\usetheme{Madrid}
+\usefonttheme{structurebold}
+\setbeamercovered{dynamic}
+\setbeamertemplate{caption}[numbered] 
+\numberwithin{section}{part}
+\numberwithin{figure}{part}
+\numberwithin{table}{part}
+\setbeamercolor{frametitle}{fg=white,bg=blue}
+\setbeamercovered{invisible} 
+
+\setlength{\TPHorizModule}{30mm}
+\setlength{\TPVertModule}{\TPHorizModule}
+\textblockorigin{10mm}{10mm} % start everything near the top-left corner
+\setlength{\parindent}{0pt}
+
+\definecolor{darkgray}{rgb}{0.95,0.95,0.95}
+\definecolor{Brown}{cmyk}{0,0.81,1,0.60}
+\definecolor{OliveGreen}{cmyk}{0.64,0,0.95,0.40}
+\definecolor{CadetBlue}{cmyk}{0.62,0.57,0.23,0}
+\definecolor{lightlightgray}{gray}{0.9}
+\definecolor{lightlightgray}{gray}{0.9}
+''')
+
+End()
+

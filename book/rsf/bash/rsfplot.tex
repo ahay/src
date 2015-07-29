@@ -1,0 +1,287 @@
+% Macro for code snippets
+\newcommand{\sconscode}[3]
+{
+  \begin{block}{}
+  \lstinputlisting[firstline={#1},lastline={#2}]{#3}
+  \end{block}
+}
+
+%
+% Document
+%
+\title[]{Plotting in Madagascar}
+
+%\author[Bashkardin]{Vladimir Bashkardin}
+\institute[RSF-dev team]{Madagascar development team}
+\date[Madagascar school in Houston] % (optional)
+{July 24, 2010}
+
+\setbeamercolor{alerted text}{fg=white}
+\begin{frame}
+  \titlepage
+  % Hide progress bar in the footline
+  \appendix
+\end{frame}
+
+\begin{frame}
+  \frametitle{Outline}
+   \hspace*{2cm}
+   \begin{minipage}[t][3cm]{10cm}
+    \tableofcontents
+   \end{minipage}
+\end{frame}
+
+\section{Plotting infrastructure}
+
+\begin{frame}
+  \begin{block}{Principles}
+    \begin{itemize}
+      \item All plotting programs take RSF files as input through stdin and write binary Vplot to stdout
+      \item Device-dependent rendering is handled by Vplot pens
+      \item Madagascar SCons build workflows will handle all conversions automatically
+    \end{itemize}
+  \end{block}
+  \begin{block}{Command line}
+    \$ \textless input.rsf plotting\_program [parameters] \textgreater output.vpl \\
+    \$ \textless input.vpl vplot\_pen [parameters] \\
+    \$ \textless input.rsf some\textbar processing\textbar workflow\textbar plotting\textbar pen\textgreater image
+  \end{block}
+
+  \begin{block}{Manual conversion}
+    \$ vpconvert file.vpl file.jpg \\
+    \$ vpconvert format=tiff Fig/*.vpl
+  \end{block}
+\end{frame}
+
+\begin{frame}
+  \begin{block}{Pens}
+  \begin{table}
+    \begin{center}
+     \begin{tabular}{|c|c|c|}
+      \hline    Pen name   &  Dependency   &    Output          \\
+      \hline & & \\[-1em]
+      \hline     xtpen     &     X11       &     Screen         \\
+      \hline     oglpen    &   OpenGL      &     Screen         \\
+      \hline     jpegpen   &   libjpeg     &     JPEG           \\
+      \hline     tiffpen   &   libtiff     &     TIFF           \\
+      \hline     ppmpen    &   NetPBM      &     PPM            \\
+      \hline     gdpen     & LibGD, FFmpeg &  PNG,JPEG,GIF,MPEG \\
+      \hline     pngpen    &   Cairo       &      PNG           \\
+      \hline     svgpen    &   Cairo       &      SVG           \\
+      \hline     pdfpen    &   Cairo       &      PDF           \\
+      \hline     pspen     &    None       &   Postscript       \\
+      \hline     vppen     &    None       &   Vplot filter     \\
+      \hline
+    \end{tabular}
+   \end{center}
+  \end{table}
+  \end{block}
+\end{frame}
+
+\begin{frame}
+  \begin{figure}
+  \includegraphics[scale=0.3]{Fig/xtglpens.pdf}
+  \end{figure}
+  \begin{block}{}
+   RSFSRC \$ ./configure SFPEN=oglpen
+  \end{block}
+\end{frame}
+
+\begin{frame}
+  \begin{block}{SConstruct functions}
+   \lstinputlisting{plotmeta.txt}
+  \end{block}
+  \begin{block}{Command line}
+   \$ scons \textless target\textgreater.view \# View result on the screen \\
+   \$ scons \textless target\textgreater.print \# Send to a printer \\
+   \$ scons \textless target\textgreater.lock \# Install figures into a separate location
+  \end{block}
+  \begin{block}{Environment variables}
+   {\bf RSFFIGS} - location for installation of figures \\
+   {\bf PSPRINTER} - destination for lp command
+  \end{block}
+\end{frame}
+
+\section{Examples}
+
+\begin{frame}
+  \sconscode{4}{5}{plot/SConstruct}
+  \begin{figure}
+  \includegraphics[scale=0.25]{plot/Fig/line.pdf}
+  \end{figure}
+\end{frame}
+
+\begin{frame}
+  \sconscode{8}{11}{plot/SConstruct}
+  \begin{figure}
+  \includegraphics[scale=0.25]{plot/Fig/sqline.pdf}
+  \end{figure}
+\end{frame}
+
+\begin{frame}
+  \sconscode{14}{15}{plot/SConstruct}
+  \begin{figure}
+  \includegraphics[scale=0.25]{plot/Fig/mlines.pdf}
+  \end{figure}
+\end{frame}
+
+\begin{frame}
+  \sconscode{16}{17}{plot/SConstruct}
+  \begin{figure}
+  \includegraphics[scale=0.25]{plot/Fig/mplines.pdf}
+  \end{figure}
+\end{frame}
+
+\begin{frame}
+  \sconscode{20}{22}{plot/SConstruct}
+  \begin{figure}
+  \includegraphics[scale=0.25]{plot/Fig/dplines.pdf}
+  \end{figure}
+\end{frame}
+
+\begin{frame}
+  \sconscode{24}{27}{plot/SConstruct}
+  \begin{figure}
+  \includegraphics[scale=0.25]{plot/Fig/mblines.pdf}
+  \end{figure}
+\end{frame}
+
+\begin{frame}
+  \sconscode{30}{33}{plot/SConstruct}
+  \begin{figure}
+  \includegraphics[scale=0.25]{plot/Fig/sqsurf.pdf}
+  \end{figure}
+\end{frame}
+
+\begin{frame}
+  \sconscode{34}{34}{plot/SConstruct}
+  \begin{figure}
+  \includegraphics[scale=0.25]{plot/Fig/csqsurf.pdf}
+  \end{figure}
+\end{frame}
+
+\begin{frame}
+  \sconscode{37}{40}{plot/SConstruct}
+  \begin{figure}
+  \includegraphics[scale=0.25]{plot/Fig/csurf.pdf}
+  \end{figure}
+\end{frame}
+
+\begin{frame}
+  \sconscode{48}{51}{plot/SConstruct}
+  \begin{figure}
+  \includegraphics[scale=0.25]{plot/Fig/sgath.pdf}
+  \end{figure}
+\end{frame}
+
+\begin{frame}
+  \sconscode{54}{58}{plot/SConstruct}
+  \begin{figure}
+  \includegraphics[scale=0.25]{plot/Fig/fganom.pdf}
+  \end{figure}
+\end{frame}
+
+\begin{frame}
+  \sconscode{61}{63}{plot/SConstruct}
+  \begin{figure}
+  \includegraphics[scale=0.25]{plot/Fig/ganom3.pdf}
+  \end{figure}
+\end{frame}
+
+\begin{frame}
+  \sconscode{66}{71}{plot/SConstruct}
+  \begin{figure}
+  \includegraphics[scale=0.25]{plot/Fig/sganom.pdf}
+  \end{figure}
+\end{frame}
+
+\begin{frame}
+  \sconscode{74}{75}{plot/SConstruct}
+  \begin{figure}
+  \includegraphics[scale=0.25]{plot/Fig/sqplsin.pdf}
+  \end{figure}
+\end{frame}
+
+\begin{frame}
+  \begin{block}{Combinations}
+    Movie \\
+    Overlay \\
+    SideBySideAniso \\
+    OverUnderAniso \\
+    SideBySideIso \\
+    OverUnderIso \\
+    TwoRows \\
+    TwoColumns
+  \end{block}
+  \begin{block}{Command line help for common parameters}
+    \$ sfdoc stdplot
+  \end{block}
+  \begin{block}{Use functions to reduce code redundancy}
+%   \vspace{-0.5cm}
+   \lstinputlisting{plotdef.txt}
+  \end{block}
+\end{frame}
+
+\section{Plots in reproducible documents}
+
+\begin{frame}
+%  \vspace{0.5cm}
+  \begin{figure}
+  \includegraphics[scale=0.55]{Fig/pstruct.pdf}
+  \caption{Directory structure for reproducible documents}
+  \end{figure}
+\end{frame}
+
+\begin{frame}
+  \begin{block}{paper/sample1/SConstruct}
+  \lstinputlisting{sample1/SConstruct}
+  \end{block}
+  \begin{block}{paper/sample2/SConstruct}
+  \lstinputlisting{sample2/SConstruct}
+  \end{block}
+\end{frame}
+
+\begin{frame}
+  \begin{block}{paper/sample.tex}
+  \lstinputlisting[language=TeX,
+                   morekeywords={begin,end,plot,title,author,
+                                 subsection,ref,inputdir}]
+                   {sample.tex}
+  \end{block}
+\end{frame}
+
+\begin{frame}
+  \begin{block}{paper/SConstruct}
+  \lstinputlisting[firstline=1,lastline=4]{SConstruct}
+%  \vspace{3mm}
+  \lstinputlisting[firstline=37,lastline=37]{SConstruct}
+  \end{block}
+  \begin{block}{Command line}
+    \$ sftour scons lock \\
+    \$ scons sample.pdf \\
+    \$ scons sample.html \\
+    \$ scons sample.install
+  \end{block}
+\end{frame}
+
+\begin{frame}
+  \begin{columns}
+    \begin{column}{5.5cm}
+      \begin{block}{}
+      \includegraphics[page=1,scale=0.25]{sample.pdf}
+      \end{block}
+    \end{column}
+    \begin{column}{5.5cm}
+      \begin{block}{}
+      \includegraphics[page=2,scale=0.25]{sample.pdf}
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}
+  \begin{block}{Takeaway message}
+    You do not have to convert anything manually, if you follow the workflow above.
+  \end{block}
+\end{frame}
+

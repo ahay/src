@@ -1,0 +1,19 @@
+from rsf.proj import *
+
+try:
+    import rsf.api as rsf
+    import numpy
+    import scipy
+    from mayavi import mlab
+except Exception, e:
+    import sys
+    print \
+'''ERROR: NEED PYTHON API, NUMPY, SCIPY ''', e
+    sys.exit(1)
+
+Flow('blank',None,'spike n1=50 n2=50 n3=50')
+
+Flow('noise','blank','noise')
+
+Result('noise','threedcube')
+End()

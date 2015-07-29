@@ -1,0 +1,19 @@
+from rsf.proj import *
+
+Fetch('wz.10.H','wz')
+Flow('wz','wz.10.H','dd form=n | tpow tpow=2 | agc rect1=200 rect2=4 | transp')
+Plot('wz','grey')
+
+for a1 in [1,5]:
+    filt,lag,dec = map(lambda x: x + str(a1),['filt','lag','dec'])
+    Flow([filt,lag],'wz',
+         '''
+         lopef dim=2 a=%d,10 w=25,250 steepdip=1 tgap=.020 lag=${TARGETS[1]}
+         ''' % a1)
+    Flow(dec,['wz',filt],'decon filt=${SOURCES[1]}')
+Plot('dec1','grey title="1-D decon" ')
+Plot('dec5','grey title="Steep-dip decon" ')
+
+Result('wz','wz dec1 dec5','OverUnderAniso')
+
+End()

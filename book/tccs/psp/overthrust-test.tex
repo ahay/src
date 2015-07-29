@@ -1,0 +1,69 @@
+\begin{table}
+\footnotesize
+\centering
+\begin{tabular}{r|c|c|c|c|c|}
+\cline{2-6}
+ & \multicolumn{5}{|c|}{number of processes} \\
+\cline{2-6}
+ & 128 & 256 & 512 & 1024 & 2048  \\
+\hline
+\multicolumn{1}{|r|}{Hz}
+ & 3.175
+ & 4
+ & 5.04
+ & 6.35
+ & 8 \\
+\hline
+\multicolumn{1}{|r|}{grid}
+ & $319^2 \!\times\! 75$
+ & $401^2 \!\times\! 94$
+ & $505^2 \!\times\! 118$
+ & $635^2 \!\times\! 145$
+ & $801^2 \!\times\! 187$ \\
+\hline
+\multicolumn{1}{|r|}{setup (sec)}
+ & 48.40 (46.23)
+ & 66.33 (63.41) 
+ & 92.95 (86.90)
+ & 130.4 (120.6)
+ & 193.0 (175.2) \\
+\hline
+\multicolumn{1}{|r|}{apply (sec/rhs)}
+ & 0.468 (1.07)
+ & 0.550 (1.28) 
+ & 0.645 (2.40)
+ & 0.700 (3.33)
+ & 0.880 (6.13) \\
+\hline
+\multicolumn{1}{|r|}{3 digits (iter's)}
+ & 42
+ & 44
+ & 42
+ & 39
+ & 40 \\
+\hline
+\multicolumn{1}{|r|}{4 digits (iter's)}
+ & 54
+ & 57
+ & 57
+ & 58
+ & 58 \\
+\hline
+\multicolumn{1}{|r|}{5 digits (iter's)}
+ & 63
+ & 69
+ & 70
+ & 68
+ & 72 \\
+\hline
+\end{tabular}
+\caption{Convergence rates and timings on TACC's Lonestar for the 
+SEG/EAGE Overthrust model, where timings in parentheses do not make use of 
+selective inversion. All cases used a double-precision second-order 
+stencil with five grid spacings for all PML (with an amplitude
+of 7.5), and a damping parameter of $2.25 \pi$.
+The preconditioner was configured with four planes per panel and eight 
+processes per node, and the `apply' timings are with respect to a single 
+application of the preconditioner to four right-hand sides.}
+\label{tbl:overthrust-test}
+\end{table}

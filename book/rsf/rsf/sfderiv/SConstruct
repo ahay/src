@@ -1,0 +1,106 @@
+from rsf.proj import *
+from math import pi
+
+# Impulse response test
+
+shift = 2*pi*256
+Flow('nfreq',None,
+     '''
+     math type=complex
+     n1=512 d1=0.00195312 o1=-0.5 label1=Frequency unit1=cycle
+     output="I*%g*x1"
+     ''' % (2*pi))
+Flow('ntime','nfreq',
+     '''
+     math output="input*exp(I*x1*%g)" |
+     put fft3_n1=512 fft3_o1=-256 |
+     fft3 axis=1 inv=y |
+     real
+     ''' % shift)
+
+Flow('spike',None,'spike n1=512 k1=257 d1=1 o1=-256')
+
+fft = '''
+rtoc |
+fft3 axis=1 pad=1 opt=n |
+math output="input*exp(-I*x1*%g)"
+''' % shift
+
+for order in (2,20):
+    time = 'time%d' % order
+    freq = 'freq%d' % order
+    Flow(time,'spike','deriv order=%d' % order)
+    Flow(freq,time,fft)
+
+Result('freq','nfreq freq20 freq2',
+       '''
+       cat axis=2 ${SOURCES[1:3]} | imag |
+       dots labels=ideal:order=20:order=2 gaineach=n 
+       ''')
+Result('time','ntime time20 time2',
+       '''
+       cat axis=2 ${SOURCES[1:3]} |
+       window min1=-33 max1=33 |
+       dots unit1=sample labels=ideal:order=20:order=2 gaineach=n dots=2
+       ''')
+
+# Compare with igrad
+
+Flow('itime','spike','igrad')
+Flow('ifreq','itime',fft)
+
+Result('ifreq','ifreq freq2',
+       '''
+       cat axis=2 ${SOURCES[1]} | imag |
+       dots labels=igrad:order=2 gaineach=n 
+       ''')
+Result('itime','itime time2',
+       '''
+       cat axis=2 ${SOURCES[1]} |
+       window min1=-33 max1=33 |
+       dots unit1=sample labels=igrad:order=2 gaineach=n dots=2
+       ''')
+
+# Error when differentiating a smooth function
+n1 = 2049
+d1 = 0.004
+
+Flow('sin',None,'math n1=%d d1=%g output="sin(x1)" ' % (n1,d1))
+Flow('cos','sin','math output="cos(x1)" ')
+
+j = 1
+errs=[[],[]]
+for n in range(10):
+     sin = 'sin%d' % n
+     cos = 'cos%d' % n
+     Flow(sin,'sin','window j1=%d' % j)
+     Flow(cos,'cos','window j1=%d' % j)
+
+     for case in range(2):   
+          err = 'err%d-%d' % (case,n)
+          Flow(err,[sin,cos],
+               '''
+               %s | math exact=${SOURCES[1]} output="(%g*input-exact)^2"  |
+               stack axis=1 | math output="log(input)"
+               ''' % (('deriv order=2','igrad')[case],1.0/d1))
+          errs[case].append(err)
+
+     j *= 2
+     d1 *= 2
+
+for case in range(2):
+     err = 'errs%d' % case
+     Flow(err,errs[case],
+          '''
+          cat axis=1 ${SOURCES[1:%d]} |
+          put o1=1 d1=1 
+          ''' % len(errs[case]))
+
+Result('errs','errs0 errs1',
+       '''
+       cat axis=2 ${SOURCES[1]} |
+       graph label1="Log(\F10 D\F3 x)" label2="Log(error)" wanttitle=n symbol=di
+       symbolsz=5 labelsz=5 min1=0.5 max1=10.5 min2=-20.5 max2=-0.5 screenratio=2
+       ''')
+
+End()

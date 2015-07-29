@@ -1,0 +1,151 @@
+from rsf.proj import *
+
+# Download data
+Fetch('apr18.h','seab')
+Flow('data','apr18.h','dd form=native')
+
+def grey(title):
+    return '''
+    grey pclip=100 labelsz=10 titlesz=12
+    transp=n yreverse=n
+    label1=longitude label2=latitude title="%s"
+    ''' % title
+
+def sgrey(title):
+    return '''
+    grey labelsz=10 titlesz=12 allpos=y
+    transp=n yreverse=n title="%s" 
+    label1=1/longitude label2=1/latitude 
+    ''' % title
+
+# Bin to regular grid
+Flow('bin','data',
+     '''
+     window n1=1 f1=2 | math output='(2978-input)/387' |
+     bin head=$SOURCE niter=150 nx=160 ny=160 xkey=0 ykey=1
+     ''')
+
+# Mask for known data
+Flow('msk','bin',
+     '''
+     math output="abs(input)" |
+     mask min=0.001 | dd type=float
+     ''')
+
+Plot('bin',grey('Binned'))
+Plot('msk',grey('Mask') + ' allpos=y')
+
+Result('data','bin msk','SideBySideAniso')
+
+# Laplacian factorization
+
+Flow('lag0.asc',None,
+     '''
+     echo 1 160 n1=2 n=160,160 
+     data_format=ascii_int in=$TARGET
+     ''')
+Flow('lag0','lag0.asc','dd form=native')
+
+Flow('flt0.asc','lag0',
+     '''
+     echo -1 -1 a0=2 n1=2 lag=$SOURCE 
+     data_format=ascii_float in=$TARGET
+     ''',stdin=0)
+Flow('flt0','flt0.asc','dd form=native')
+
+Flow('lapflt laplag','flt0',
+     'wilson eps=1e-3 lagout=${TARGETS[1]}')
+
+# Missing data interpolation with Laplacian
+
+niter=100 
+
+program = Program('interpolate.c')
+
+for prec in (0,1):
+    interp='linterp%d' % prec
+    Flow(interp,'bin msk lapflt %s' % program[0],
+         '''
+         ./${SOURCES[3]} prec=%d niter=%d
+         mask=${SOURCES[1]} filt=${SOURCES[2]}
+         ''' % (prec,niter))
+    Plot(interp,grey('%s preconditioning' %
+                     ('Without','With')[prec]))
+Result('lseabeam','linterp0 linterp1','SideBySideAniso')
+
+# Random realization of white noise
+seed = 112014  # CHANGE ME!!!
+
+Flow('white','bin',
+     '''
+     noise rep=y seed=%d var=0.02
+     ''' % seed)
+
+# Covariance estimation by FFT
+
+import rsf.recipes.spatial_stats as stats
+
+par = dict(val='bin',ind='msk', 
+           nx=160,ny=160,nz=1,
+           dx=0.00337373,
+           dy=0.00338847,
+           dz=1)
+
+rules = {}
+stats.covariance(par,rules)
+for case in rules.keys():
+    Flow(case,rules[case][0],rules[case][1])
+
+Flow('fcov','bin_cov',
+     '''
+     window n1=160 n2=160 |
+     fft1 | fft3 axis=2 | 
+     math output="abs(input)" 
+     ''')
+Flow('rand2','white fcov',
+     '''
+     fft1 | fft3 axis=2 |
+     math fcov=${SOURCES[1]} output="input*fcov" |
+     fft3 axis=2 inv=y | fft1 inv=y
+     ''')
+Plot('rand2',grey('FFT Pattern'))
+
+Flow('frand2','rand2','spectra2')
+Plot('frand2',sgrey('FFT Spectrum'))
+
+Result('rand2','rand2 frand2','SideBySideAniso')
+
+# Covariance estimation by PEF
+
+# Estimate PEF
+Flow('pef lag','bin msk',
+     '''
+     hpef maskin=${SOURCES[1]} lag=${TARGETS[1]}
+     a=5,3 niter=50
+     ''')
+
+Flow('rand','white pef',
+     'helicon filt=${SOURCES[1]} div=y')
+Plot('rand',grey('REF Pattern'))
+
+Flow('frand','rand','spectra2')
+Plot('frand',sgrey('PEF Spectrum'))
+
+Result('rand','rand frand','SideBySideAniso')
+
+# Missing data interpolation with PEF
+
+niter=20 # CHANGE ME!!!
+
+for prec in (0,1):
+    interp='interp%d' % prec
+    Flow(interp,'bin msk pef %s' % program[0],
+         '''
+         ./${SOURCES[3]} prec=%d niter=%d
+         mask=${SOURCES[1]} filt=${SOURCES[2]}
+         ''' % (prec,niter))
+    Plot(interp,grey('%s preconditioning' %
+                     ('Without','With')[prec]))
+Result('seabeam','interp0 interp1','SideBySideAniso')
+
+End()

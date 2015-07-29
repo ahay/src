@@ -1,0 +1,25 @@
+from rsf.proj import *
+
+def grey(title):
+    return 'grey crowd=.88 wantaxis=n title="%s"' % title
+
+Flow('track top mask',None,'syntop mod=${TARGETS[1]} mask=${TARGETS[2]}')
+Plot('top',grey('model'))
+Plot('track',grey('as seen'))
+Result('duelin','top track','SideBySideAniso',vppen='txscale=2')
+
+filt = {
+    'one': ('a=7,1','1-axis PEF'),
+    'two': ('a=1,7','2-axis PEF'),
+    'pair': ('a=7,1 b=1,7','pair of 1-D PEFs'),
+    'cheat': ('a=7,4 center=3,0','2-D PEF (cheat?)')
+    }
+
+for case in filt.keys():
+    Flow(case,'track mask','maskinv mask=${SOURCES[1]} '+filt[case][0])
+    Plot(case,grey(filt[case][1]))
+
+Result('dueleither','one two','SideBySideAniso',vppen='txscale=2')
+Result('duelversus','pair cheat','SideBySideAniso',vppen='txscale=2')
+
+End()

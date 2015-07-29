@@ -1,0 +1,22 @@
+from rsf.proj import *
+
+Flow('model',None,
+     '''
+     spike n1=256 d1=.016 nsp=2 k1=24,140 n2=1 |
+     boxsmooth rect1=20
+     ''')
+Flow('empty','model','scale dscale=0')
+Flow('data','model','imospray n2=11 d2=.60 o2=0. v=1.5')
+Flow('imag','data model',
+     'conjgrad imospray mod=${SOURCES[1]} n2=11 d2=.60 o2=0. v=1.5 niter=1')
+
+images = ['model','empty','data','empty','imag']
+
+Result('cunha',images,
+       '''cat axis=2 ${SOURCES[1:%d]} |
+       dots dots=0 yreverse=1 gaineach=0
+       labels="Model:::::::Synthe-:tic data::::::Image"
+       ''' % len(images))
+
+###########################################################################
+End()

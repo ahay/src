@@ -1,0 +1,25 @@
+from rsf.proj import *
+
+CTP  = project.get('CUDA_TOOLKIT_PATH')
+NVCC = project.get('NVCC')
+
+if not CTP or not NVCC:
+    sys.stderr.write('\nNo CUDA installed.\n')
+    sys.exit(1)
+
+libpath = ':'.join([os.path.join(CTP,'lib64'),
+                    os.path.join(CTP,'lib')])
+project.Prepend(LIBS=['cuda','cudart'],
+                LIBPATH=[libpath])
+
+cfile = Command('gpuhello.c','gpuhello.cu','cp $SOURCE $TARGET')
+prog = Program(cfile,CC=NVCC,LINKFLAGS='',CCFLAGS='--x=cu')
+exe = str(prog[0])
+
+Flow('a',None,'math n1=512 n2=256 output="x1+x2"')
+Flow('b',None,'math n1=512 n2=256 output="-x1-x2"')
+
+Flow('c','a %s b' % exe,'LD_LIBRARY_PATH=%s ./${SOURCES[1]} b=${SOURCES[2]}' % libpath)
+
+End()
+

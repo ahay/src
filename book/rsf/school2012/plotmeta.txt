@@ -1,0 +1,4 @@
+Plot(intermediate_plot[,source],plot_command)
+Plot(intermediate_plot,intermediate_plots,combination)
+Result(plot[,source],plot_command)
+Result(plot,intermediate_plots,combination)

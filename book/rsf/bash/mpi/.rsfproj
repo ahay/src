@@ -1,0 +1,3 @@
+uses=['sfmath', 'sfmpihello']
+data=[]
+size=    1048576

@@ -1,0 +1,3 @@
+uses=['sfmath', 'sfput', 'sffft3', 'sfreal', 'sfspike', 'sfderiv', 'sfrtoc', 'sfcat', 'sfimag', 'sfdots', 'sfwindow', 'sfigrad', 'sfstack', 'sfgraph']
+data=[]
+size=     102724

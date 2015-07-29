@@ -1,0 +1,1787 @@
+% copyright (c) 1997 Jon Claerbout
+
+\title{Nonstationarity: patching}
+\author{Jon Claerbout}
+\maketitle
+\sx{nonstationarity}
+\sx{patching}
+
+\label{paper:pch}
+\inputdir{XFig}
+
+There are many reasons
+for cutting data planes or image planes into overlapping pieces (patches),
+operating on the pieces, and then putting them back together again,
+as depicted in Figure~\ref{fig:antoine}.
+The earth's dip varies with lateral location and depth. 
+The dip spectrum and spatial spectrum thus also varies.
+The dip itself is the essence of almost all earth mapping,
+and its spectrum plays an important role
+in the estimation any earth properties.
+In statistical estimation theory,
+the word to describe changing statistical properties is ``\bx{nonstationary}''.
+
+\plot{antoine}{width=5.00in,height=3.5in}{
+  Decomposing a wall of information into windows (also called patches).
+  Left is an example of a 2-D space
+  input to module \texttt{patch}.
+  Right shows a close-up of the output (top left corner).
+}
+
+%\activesideplot{rayab2D}{width=3.00in,height=1.5in}{NR}{
+%        Left is space of inputs and outputs.
+%        Right is during analysis.
+%        }
+
+\par
+We begin this chapter with basic patching concepts
+along with supporting utility code.
+%As in Chapters \ref{iin/paper:iin} and \ref{gem/paper:gem},
+%I exhibit two-dimensional subroutines only.
+%Three-dimensional code is an easy extension,
+%which is in the library (CD-ROM and web)
+%but not displayed (to reduce clutter).
+The language of this chapter,
+{\it patch,}
+{\it overlap,}
+{\it window,}
+{\it wall,}
+is two-dimensional,
+but it may as well be three-dimensional,
+{\it cube,}
+{\it subcube,}
+{\it brick,}
+or one-dimensional,
+{\it line,}
+{\it interval.}
+We sometimes use the language of windows on a wall.
+But since we usually want to have overlapping windows,
+better imagery would be to say we assemble a quilt from patches.
+\par
+The codes are designed to work in any number of dimensions.
+After developing the infrastructure,
+we examine some two-dimensional, time- and space-variable applications:
+adaptive steep-dip rejection,
+noise reduction by prediction,
+and segregation of signals and noises.
+
+\section{PATCHING TECHNOLOGY}
+A plane of information, either data or an image,
+\sx{wall}
+say {\tt wall(nwall1, nwall2)}, will be divided up into
+an array of overlapping \bx{window}s
+each window of size {\tt (nwind1,nwind2)}.
+To choose the number of windows, you specify {\tt (npatch1,npatch2)}.
+Overlap on the 2-axis is measured by the fraction
+{\tt (nwind2*npatch2)/nwall2}.
+We turn to the language of F90 which allows us to discuss
+$N$-dimensional hypercubes almost as easily as two-dimensional spaces.
+We define an $N$-dimensional volume (like the wall) with the vector
+\texttt{nwall= (nwall1, nwall2, ...)}.
+We define subvolume size (like a 2-D window) with the vector
+\texttt{nwind=(nwind1, nwind2, ...)}.
+The number of subvolumes on each axis is
+\texttt{npatch=(npatch1, npatch2, ...)}.
+The operator
+\texttt{patch} \vpageref{lst:patch}
+simply grabs one patch from the wall,
+or when used in adjoint form, it puts the patch back on the wall.
+The number of patches on the wall is
+\texttt{product(npatch)}.
+Getting and putting all the patches is shown later in module
+\texttt{patching} \vpageref{lst:patching}.
+
+\par
+The $i$-th patch is denoted by the scalar counter \texttt{ipatch}.
+Typical patch extraction begins by taking
+\texttt{ipatch}, a C linear index,
+and converting it to a multidimensional subscript \texttt{jj}
+each component of which is less than \texttt{npatch}.
+The patches cover all edges and corners of the given data plane
+(actually the hypervolume)
+even where
+\texttt{nwall/npatch} is not an integer,
+even for axes whose length is not an integer number of the patch length.
+Where there are noninteger ratios,
+the spacing of patches is slightly uneven,
+but we'll see later that
+it is easy to reassemble seamlessly the full plane from the patches,
+so the unevenness does not matter.
+You might wish to review the utilities
+\texttt{line2cart} and
+\texttt{cart2line} \vpageref{lst:cartesian}
+which convert between multidimensional array subscripts
+and the linear memory subscript
+before looking at the patch extraction-putback code:
+\opdex{patch}{extract patches}{41}{67}{user/gee}
+The cartesian vector \texttt{jj}
+points to the beginning of a patch, where on the wall
+the (1,1,..) coordinate of the patch lies.
+Obviously this begins at the beginning edge of the wall.
+Then we pick \texttt{jj} so that the last patch on any axis
+has its last point exactly abutting the end of the axis.
+The formula for doing this would divide by zero
+for a wall with only one patch on it.
+This case arises legitimately where an axis has length one.
+Thus we handle the case \texttt{npatch=1} by abutting the patch to the
+beginning of the wall and forgetting about its end.
+As in any code mixing integers with floats,
+to guard against having a floating-point number, say 99.9999,
+rounding down to 99 instead of up to 100,
+the rule is to always add .5 to a floating point number
+the moment before converting it to an integer.
+Now we are ready to sweep a window to or from the wall.
+The number of points in a window is 
+\texttt{size(wind)} or equivalently
+\texttt{product(nwind)}.
+
+\inputdir{patch}
+
+Figure~\ref{fig:parcel} shows an example with five
+nonoverlapping patches on the 1-axis and many overlapping patches
+on the 2-axis.
+
+\sideplot{parcel}{width=3.00in}{
+  A plane of identical values
+  after patches have been cut
+  and then added back.
+  Results are shown for
+  \texttt{nwall=(100,30)},
+  \texttt{nwind=(17,6)},
+  \texttt{npatch=(5,11)}.
+  For these parameters,
+  there is gapping on the horizontal axis
+  and overlap on the depth axis.
+  % n1=100 w1=17 k1=5 n2=30 w2=6 k2=11
+}
+\subsection{Weighting and reconstructing}
+\sx{weighting patches}
+\par
+The adjoint of extracting all the patches is adding them back.
+Because of the overlaps, the adjoint is not the inverse.
+In many applications, \bx{inverse patching} is required;
+i.e.~patching things back together seamlessly.
+This can be done with weighting functions.
+You can have any weighting function you wish
+and I will provide you
+the patching reconstruction operator $\tilde{\bold I}_p$ in
+\begin{equation}
+\tilde {\bold d}
+\quad = \quad 
+[ \bold W_{\rm wall} \bold P\T \bold W_{\rm wind} \bold P ] \bold d
+\quad = \quad 
+\tilde{\bold I}_p \, \bold d
+\label{eqn:idemeqn}
+\end{equation}
+where $\bold d$ is your initial data,
+$\tilde{\bold d}$ is the reconstructed data,
+$\bold P$ is the patching operator,
+$\bold P\T$ is adjoint patching (adding the patches).
+$\bold W_{\rm wind}$ is your chosen weighting function in the window, and 
+$\bold W_{\rm wall}$ is the weighting function
+for the whole wall.
+You specify any $\bold W_{\rm wind}$ you like,
+and module \texttt{mkwallwt} below
+builds the weighting function $\bold W_{\rm wall}$
+that you need to apply
+to your wall of reconstructed data,
+so it will undo the nasty effects of the overlap of windows
+and the shape of your window-weighting function.
+You do not need to change your window weighting function
+when you increase or decrease the amount of overlap
+between windows because
+$\bold W_{\rm wall}$
+takes care of it.
+The method is to
+use adjoint \texttt{patch} \vpageref{lst:patch}
+to add the weights of each window onto the wall
+and finally to invert the sum wherever it is non-zero.
+(You lose data wherever the sum is zero).
+
+\moddex{mkwallwt}{make wall weight}{25}{59}{user/gee}
+
+\par
+No matrices are needed to show that this method succeeds,
+because data values are never mixed with one another.
+An equation for any reconstructed data value $\tilde d$
+as a function of the original value $d$ and the weights $w_i$
+that hit $d$ is $\tilde d = (\sum_i w_i d) / \sum_i w_i = d$.
+Thus, our process is simply a ``partition of unity.''
+
+\par
+To demonstrate the program,
+I made a random weighting function
+to use in each window with positive random numbers.
+The general strategy allows us to use different weights in different windows.
+That flexibility adds clutter, however,
+so here we simply use the same weighting function in each window.
+
+%\progdex{mkrandwt}{make random wt.}
+
+\par
+The operator
+$\tilde{\bold I}_p$
+is called ``\bx{idempotent}.''
+The word ``idempotent'' means ``self-power,'' because
+for any $N$,  $0^N=0$ and $1^N=1$,
+thus the numbers 0 and 1 share the property that raised
+to any power they remain themselves.
+Likewise, the patching reconstruction operator
+multiplies every data value by either one or zero.
+Figure~\ref{fig:idempatch} shows the result
+obtained when a plane of identical constant values $\bold d$
+is passed into the patching reconstruction operator $\tilde{\bold I}_p$.
+The result is constant on the 2-axis, which confirms
+that
+there is adequate sampling on the 2-axis,
+and although the weighting function is made of random numbers,
+all trace of random numbers has disappeared from the output.
+On the 1-axis the output is constant,
+except for being zero in gaps,
+because the windows do not overlap on the 1-axis.
+
+\sideplot{idempatch}{width=3.00in}{
+  A plane of identical values passed through
+  the idempotent patching reconstruction operator.
+  Results are shown for the same parameters
+  as Figure~\protect\ref{fig:parcel}.
+}
+
+\par
+Module \texttt{patching} assists in reusing the patching technique. It
+takes a linear operator $\bold F$.
+as its argument and applies it in patches.
+Mathematically, this is
+$ [\bold W_{\rm wall} \bold P\T \bold W_{\rm wind} \bold F \bold P ] \bold d$.
+It is assumed that the input and output sizes for the operator
+\texttt{oper} are equal.
+\moddex{patching}{generic patching}{51}{70}{user/gee}
+
+\par
+%The first code of this nature we will examine
+%(subroutine {\tt idempatch()})
+%uses the trivial identity matrix as the linear
+%operator $\bold F$.
+%(Later, after you understand the clutter,
+%we proceed to install 2-D filtering as $\bold F$.)
+%To perform the weighting operation we use subroutine
+%\GPROG{diag}.
+%To show you where to install data processing with any linear operator,
+%I included some trivial processing, multiplying by {\tt 1.0}.
+%This is done by subroutine \GPROG{ident}.
+%Because the composite operator is also a linear operator
+%I also include code for the adjoint.
+%Including the adjoint nearly doubles the length of the code
+%which means that you hardly need to think about
+%the second half which is a mirror image.
+%\progdex{idempatch}{patch inversion}
+%
+%\par
+%Figure~\FIG{idempatch} shows the result
+%when a plane of identical values is passed through the
+%{\tt idempatch()} subroutine.
+
+\subsection{2-D filtering in patches}
+A way to do time- and space-variable filtering
+\sx{filter ! time and space variable}
+is to do invariant filtering within each patch.
+Typically, we apply a filter, say $\bold F_p$, in each patch.
+The composite operator, filtering in patches,
+$\tilde{\bold F}$,
+is given by
+\begin{equation}
+\tilde {\bold d}
+\quad = \quad 
+[ \bold W_{\rm wall} \bold P\T \bold W_{\rm wind} \bold F_p \bold P ]\  \bold d
+\quad = \quad 
+\tilde{\bold F}
+\ \bold d
+\label{eqn:patchfilt}
+\end{equation}
+%A convenient subroutine for two-dimensional filtering is
+%\texttt{icaf2()} \vpageref{lst:icaf2}.
+%For this no-end-effect convolution routine,
+\inputdir{XFig}
+I built a triangular weighting routine
+\texttt{tentn()}
+that tapers from the center of the patch of the filter's {\it outputs}
+towards the edges.
+Accomplishing this weighting is complicated by
+(1) the constraint
+that the filter must not move off the edge of the input patch
+and
+(2) the alignment of the input and the output.
+The layout for prediction-error filters is shown
+in Figure \ref{fig:rabdomain}.
+\sideplot{rabdomain}{width=1.50in}{
+  Domain of inputs and outputs of a two-dimensional
+  prediction-error filter.
+}
+\sideplot{rabtent}{width=1.50in}{
+  Placement of tent-like weighting
+  function in the space of filter inputs and outputs.
+}
+We need a weighting function that vanishes where the filter
+has no outputs.
+The amplitude of the weighting function is not very important
+because we have learned how to put signals back together
+properly for arbitrary weighting functions.
+We can use any pyramidal or tent-like shape
+that drops to zero outside the domain of the filter output.
+The job is done by subroutine {\tt tentn()}.
+A new parameter needed by \texttt{tentn}
+is \texttt{a}, the coordinate of the beginning of the tent.
+%When you are studying diagrams in
+%Figure \ref{fig:rabdomain}, %to internal filtering
+%%with subroutine \texttt{icaf2()} \vpageref{lst:icaf2},
+%it helps to remember that when the filter index {\tt b1}
+%equals {\tt lag1},
+%then the output 1-axis pointer {\tt y1}
+%matches the input pointer {\tt x1} (and likewise for the 2-axis).
+\moddex{tent}{tent weights}{45}{58}{user/gee}
+
+\inputdir{patch}
+\par
+In applications where triangle weights are needed on the {\it inputs}
+(or where we can work on a patch
+without having interference with edges),
+we can get ``triangle tent'' weights
+from {\tt tentn()} if we set filter dimensions and lags to unity,
+as shown in Figure~\ref{fig:wind1wt}.
+\sideplot{wind1wt}{width=3.00in}{
+  Window weights from {\tt tentn()}
+  with
+  %	{\tt         w1=61, w2=19 a1=1, a2=1, lag1=1, lag2=1 }.
+  \texttt{ nwind=(61,19), center=(31,1), a=(1,1) }.
+}
+\par
+    Triangle weighting functions
+\sx{triangle weighting functions}
+can sum to a constant
+if the spacing is such that the midpoint of one triangle
+is at the beginning of the next.
+I imagined in two dimensions that something similar would happen
+with shapes like Egyptian pyramids of Cheops, $2-|x-y|+|x+y|$.
+Instead,
+the equation $(1-|x|)(1-|y|)$
+which has the tent-like shape shown
+in Figure~\ref{fig:wind1wt}
+adds up to the constant flat top shown in Figure~\ref{fig:wall1wt}.
+(To add interest to Figure~\ref{fig:wall1wt},
+I separated the windows by a little more than the precise matching distance.)
+In practice we may chose window shapes and overlaps for
+reasons other than the constancy of the sum of weights,
+because \texttt{mkwallwt} \vpageref{lst:mkwallwt} accounts for that.
+
+\sideplot{wall1wt}{width=3.00in}{
+  (Inverse) wall weights with
+  {\tt n1=100, w1=61, k1=2, n2=30, w2=19, k2=2 }
+}
+
+%\par
+%Inserting the calls to internal convolution \GPROG{CHANGED cvi2} 
+%and \GPROG{tent2}
+%into \GPROG{idempatch} gives the subroutine
+%\GPROG{cinloip}
+%that does the time and space variable filtering
+%by invariant filtering in patches.
+
+%(Grumbling about computer languages commented out here).
+%
+%(Subroutine {\tt cinloip()}, filtering in patches, is commented out here.
+%I don't know if I never use filtering in patches or whether
+%I have some other program that does this job.)
+
+%\par
+%The basic rule of computer program management is that we should
+%have no duplicated code.
+%Otherwise improvements might be made to one copy but not the other,
+%and inconsistency could grow.
+%It is an aggravation to me,
+%and a defect in the Fortran language
+%that I must present to you two copies of nearly identical code,
+%\GPROG{idempatch} and \GPROG{cinloip},
+%and when you or I prepare the next application,
+%we cannot link this code from a library,
+%but we will need to create another copy
+%changing the call to {\tt ident()} to a call to our next
+%application subroutine.
+%I plan to study the possibility of using interlude subroutines
+%that pick up the required variables through common
+%and the use of other languages.
+
+\par
+Finally is an example
+of filtering a plane of uniform constants with an impulse function.
+The impulse function is surrounded by zeros,
+so the filter output patches are smaller than 
+the input patches back in Figure~\ref{fig:idempatch}.
+Here in Figure~\ref{fig:cinloip},
+both axes need more window density.
+\sideplot{cinloip}{width=3.00in}{
+  Filtering in patches Mid
+  with the same parameters
+  as in Figures~\protect\ref{fig:parcel} and~\protect\ref{fig:idempatch}.
+  Additionally, the filter parameters are
+  { \tt 
+    a1=11   a2=5
+    lag1=6  lag2=1
+  }.
+  Thus, windows are centered on the 1-axis and
+  pushed back out the 2-axis.
+}
+
+%\progdex{cinloip}{patch and filter}
+
+\subsection{Designing a separate filter for each patch}
+Recall the prediction-error filter subroutine 
+\texttt{find\_pef()} \vpageref{lst:pef}.
+Given a data plane, this subroutine finds a filter that tends
+to whiten the spectrum of that data plane.
+The output is white residual.
+Now suppose we have a data plane where the dip spectrum
+is changing from place to place.
+Here it is natural to apply subroutine {\tt find\_pef()} in local patches.
+This is done by subroutine \texttt{find\_lopef()}. 
+The output of this subroutine is an array of helix-type filters,
+which can be used, for example,
+in a local convolution operator
+\texttt{loconvol} %\vpageref{lst:loconvol}.
+\moddex{lopef}{local PEF}{58}{81}{user/gee}
+We notice that when a patch has fewer regression equations
+than the filter has coefficients, then the filter is taken
+to be that of the previous patch.
+
+\opdex{loconvol}{local convolution}{27}{42}{user/gee}
+
+\par
+
+\subsection{Triangular patches}
+\sx{patch ! triangular}
+I have been running patching code for several years
+and my first general comment is that realistic applications
+often call for patches of different sizes and different shapes.
+(Tutorial, non-interactive C code is poorly suited to this need.)
+Raw seismic data in particular seems more suited to triangular shapes.
+It is worth noting that the basic concepts in this chapter
+have ready extension to other shapes.
+For example,
+a rectangular shape could be duplicated into two identical patches;
+then data in one could be zeroed above the diagonal
+and in the other below;
+you would have to allow, of course, for overlap the size of the filter.
+Module \texttt{pef} \vpageref{lst:pef} automatically ignores the zeroed portion
+of the triangle,
+and it is irrelevant what \texttt{mis2()} \vpageref{lst:mis2}
+does with a zeroed portion of data,
+if a triangular footprint of weights is designed to ignore its output.
+
+\begin{exer}
+\item
+        Code the linear operator
+        $ \bold W_{\rm wall} \bold P\T \bold W_{\rm wind} \bold P $
+        including its adjoint.
+%       (Note: It is cheating to search around the CD-ROM for subroutine {\tt idempatch()}).
+\item
+        {\bf Smoothing program.}
+        Some familiar operations can be seen in a new light when done in patches.
+        Patch the data.
+        In each patch,
+        find the mean value.
+        Replace each value by the mean value.
+        Reconstruct the wall.
+\item
+        {\bf Smoothing while filling missing data.}
+        This is like smoothing,
+        but you set window weights to zero where there is no data.
+        Because there will be a
+        different set of weights in each window,
+        you will need to make a simple generalization to \texttt{mkwallwt} \vpageref{lst:mkwallwt}.
+\item
+        {\bf Gain control.}
+        Divide the data into patches.
+        Compute the square root of the sum of the squares
+        of all the data in each patch.
+        Divide all values in that patch by this amount.
+        Reassemble patches.
+\end{exer}
+
+\section{STEEP-DIP DECON}
+\sx{steep dip decon}
+\sx{deconvolution ! steep dip}
+\par
+Normally,
+when
+an autoregression filter (PEF) predicts
+a value at a point it uses values at earlier points.
+In practice,
+a gap may also be set between the predicted value
+and the earlier values.
+What is not normally done is to supplement the fitting
+signals on nearby traces.
+That is what we do here.
+We allow the prediction of a signal to include nearby signals
+at earlier times.
+The times accepted in the goal are inside a triangle of velocity
+less than about the water velocity.
+The new information allowed in the prediction
+is extremely valuable for water-velocity events.
+Wavefronts are especially predictable
+when we can view them along the wavefront
+(compared to perpendicular or at some other angle from the wavefront).
+It is even better on land,
+where noises move more slowly at irregular velocities,
+and are more likely to be aliased.
+
+\par
+Using \texttt{lopef} \vpageref{lst:lopef},
+the overall process proceeds independently
+in each of many overlapping windows.
+The most important practical aspect is the filter masks, described next.
+
+\subsection{Dip rejecting known-velocity waves}
+\sx{dip reject}
+Consider the two-dimensional filter
+\begin{equation}
+   \begin{array}{rrr}
+      \     & +1 & \     \\
+        -1  &  0 &  -1   \\
+      \     & +1 & \     
+      \end{array}
+\end{equation}
+
+\noindent
+When this this filter is applied to a field profile
+with 4 ms time sampling and 6 m trace spacing,
+it should perfectly extinguish
+1.5 km/s water-velocity noises.
+Likewise, the filter
+\begin{equation}
+   \begin{array}{rrr}
+      \  &  +1  &  \    \\
+      \  &   0  &  \    \\
+      \  &   0  &  \    \\
+      -1 &   0  &  -1   \\
+      \  &   0  &  \    \\
+      \  &   0  &  \    \\
+      \  &  +1  &  \   
+      \end{array}
+\end{equation}
+
+%{\samepage
+%\begin{verbatim}
+%                  +1
+%                   0
+%                   0
+%               -1  0 -1
+%                   0
+%                   0
+%                  +1
+%\end{verbatim}
+%}
+
+\noindent
+should perfectly extinguish water noise
+when the trace spacing is 18 m.
+Such noise is, of course, spatially aliased
+for all temporal frequencies above 1/3 of Nyquist,
+but that does not matter.
+The filter extinguishes them perfectly anyway.
+Inevitably, the filter cannot both extinguish the noise
+and leave the signal untouched where the alias of one is equal to the other.
+So we expect the signal to be altered where it matches aliased noise.
+This simple filter does worse than that.
+On horizontal layers, for example,
+signal wavelets become filtered by $(1,0,0,-2,0,0,1)$.
+If the noise is overwhelming,
+this signal distortion is a small price to pay
+for eliminating it.
+If the noise is tiny, however, the distortion is unforgivable.
+In the real world,
+data-adaptive deconvolution is usually a good compromise.
+
+\par
+The two-dimensional deconvolutions filters
+we explore here
+look like this:
+
+\begin{equation}
+   \begin{array}{ccccccccc}
+                 x& x& x& x& x& x& x& x& x \\
+                 x& x& x& x& x& x& x& x& x \\
+                 .& x& x& x& x& x& x& x& . \\
+                 .& x& x& x& x& x& x& x& . \\
+                 .& x& x& x& x& x& x& x& . \\
+                 .& .& x& x& x& x& x& .& . \\
+                 .& .& x& x& x& x& x& .& . \\
+                 .& .& x& x& x& x& x& .& . \\
+                 .& .& .& x& x& x& .& .& . \\
+                 .& .& .& x& x& x& .& .& . \\
+                 .& .& .& x& x& x& .& .& . \\
+                 .& .& .& .& .& .& .& .& . \\
+                 .& .& .& .& .& .& .& .& . \\
+                 .& .& .& .& .& .& .& .& . \\
+                 .& .& .& .& 1& .& .& .& .
+      \end{array}
+\end{equation}
+
+%\begin{verbatim}
+%                 x  x  x  x  x  x  x  x  x
+%                 x  x  x  x  x  x  x  x  x
+%                 .  x  x  x  x  x  x  x  .
+%                 .  x  x  x  x  x  x  x  .
+%                 .  x  x  x  x  x  x  x  .
+%                 .  .  x  x  x  x  x  .  .
+%                 .  .  x  x  x  x  x  .  .
+%                 .  .  x  x  x  x  x  .  .
+%                 .  .  .  x  x  x  .  .  .
+%                 .  .  .  x  x  x  .  .  .
+%                 .  .  .  x  x  x  .  .  .
+%                 .  .  .  .  .  .  .  .  .
+%                 .  .  .  .  .  .  .  .  .
+%                 .  .  .  .  .  .  .  .  .
+%                 .  .  .  .  1  .  .  .  .
+%\end{verbatim}
+
+\noindent
+where each $.$ denotes a zero and each
+$x$ denotes a (different) adjustable filter coefficient
+that is chosen to minimize the power out.
+
+\par
+You can easily imagine variations on this shape,
+such as a diamond instead of a triangle.
+I invite you to experiment with the various shapes that suggest themselves.
+
+\subsection{Tests of steep-dip decon on field data}
+\inputdir{mideast}
+\par
+Low-velocity noises on shot records
+are often not fully suppressed by stacking
+because the noises are spatially aliased.
+Routine field arrays are not perfect
+and the noise is often extremely strong.
+An interesting, recently-arrived data set
+worth testing is shown in Figure \ref{fig:gravel2D}.
+
+\plot{gravel2D}{height=4.0in,width=6in}{
+  Gravel plain ground roll (Middle East)
+  Worth testing.
+}
+
+\par
+I scanned the forty \bx{Yilmaz} and \bx{Cumro} shot profiles
+for strong low-velocity noises and I selected six examples.
+To each I applied an AGC that is a slow function of time and space
+(triangle smoothing windows with triangle half-widths of 200
+time points and 4 channels).
+Because my process simultaneously does
+both low-velocity rejection and deconvolution,
+I prepared more traditional 1-D deconvolutions for comparison.
+This is done in windows of 250 time points and 25 channels,
+the same filter being used for each of the 25 channels in the window.
+In practice, of course, considerably more thought would be given
+to optimal window sizes as a function of the regional nature of the data.
+The windows were overlapped by about 50\%.
+The same windows are used on the steep-dip deconvolution.
+
+\inputdir{steep}
+\par
+It turned out to be much easier than expected
+and on the first try
+I got good results on all all six field profiles tested.
+I have not yet tweaked the many adjustable parameters.
+As you inspect these
+deconvolved profiles from different areas of the world
+with different recording methods, land and marine,
+think about how the stacks should be improved by the deconvolution.
+Stanford Exploration Project report 77 (SEP-77) shows the full suite of results.
+Figure~\ref{fig:wz} is a sample of them.
+
+\plot{wz}{width=7in,height=8.0in}{
+  Top is a North African vibrator shot profile (Y\&C \#10) after AGC.
+  Middle is gapped 1-D decon.
+  Bottom is steep-dip decon.
+}
+%\ACTIVEPLOT{wz.25}{width=7in,height=8.0in}{steep}{
+%       Bottom is an Alberta dynamite shot profile (Y\&C \#25) after AGC.
+%       Middle is gapped 1-D decon.  Top is steep-dip decon.
+%       }
+%\ACTIVEPLOT{wz.31}{width=7in,height=8.0in}{steep}{
+%       Bottom is a North Sea air gun shot profile (Y\&C \#30) after AGC.
+%       Middle is gapped 1-D decon.  Top is steep-dip decon.
+%       }
+%\ACTIVEPLOT{wz.32}{width=7in,height=8.0in}{steep}{
+%       Bottom is a North Sea air gun shot profile (Y\&C \#31) after AGC.
+%       Middle is gapped 1-D decon.  Top is steep-dip decon.
+%       }
+%\ACTIVEPLOT{wz.39}{width=7in,height=8.0in}{steep}{
+%       Bottom is a Middle east Geoflex shot profile (Y\&C \#39) after AGC.
+%       Middle is gapped 1-D decon.  Top is steep-dip decon.
+%       }
+
+\par
+Unexpectedly, results showed that 1-D deconvolution
+also suppresses low-velocity noises.
+An explanation can be that these noises are often either low-frequency
+or quasimonochromatic.
+
+\par
+As a minor matter, fundamentally,
+my code cannot work ideally along the side boundaries
+because there is no output
+(so I replaced it by the variance scaled input).
+With a little extra coding,
+better outputs could be produced along the sides
+if we used spatially one-sided filters like
+\begin{equation}
+   \begin{array}{ccccc}
+                 x&  x&  x&  x&  x \\
+                 .&  x&  x&  x&  x \\
+                 .&  x&  x&  x&  x \\
+                 .&  .&  x&  x&  x \\
+                 .&  .&  x&  x&  x \\
+                 .&  .&  .&  x&  x \\
+                 .&  .&  .&  x&  x \\
+                 .&  .&  .&  .&  . \\
+                 .&  .&  .&  .&  . \\
+                 .&  .&  .&  .&  1
+      \end{array}
+\end{equation}
+
+\noindent
+These would be applied on one side of the shot
+and the opposite orientation would be applied on the other side.
+With many kinds of data sets,
+such as off-end marine recording in which
+a ship tows a hydrophone streamer,
+the above filter might be better in the interior too.
+
+\subsection{Are field arrays really needed?}
+\inputdir{mideast}
+Field arrays
+\sx{field arrays}
+cancel random noise but their main function,
+I believe, is to cancel low-velocity coherent noises,
+something we now see is handled effectively by steep-dip deconvolution.
+While I do not advocate abandoning field arrays,
+it is pleasing to notice that with the arrival of steep-dip deconvolution,
+we are no longer so dependent on field arrays
+and perhaps coherent noises can be controlled
+where field arrays are impractical,
+as in certain 3-D geometries.
+A recently arrived 3-D shot profile from the sand dunes
+in the Middle East is Figure \ref{fig:dune3D}.
+The strong hyperbolas are \bx{ground roll} seen in a line
+that does not include the shot.
+The open question here is,
+how should we formulate the problem of ground-roll removal in 3-D?
+\plot{dune3D}{height=4in,width=6in}{
+  Sand dunes.  One shot, six parallel receiver lines.
+}
+
+\subsection{Which coefficients are really needed?}
+Steep-dip decon is a heavy consumer of computer time.
+Many small optimizations could be done,
+but more importantly,
+I feel there are some deeper issues that warrant further investigation.
+The first question is,
+how many filter coefficients should there be
+and where should they be? 
+We would like to keep the number of nonzero filter coefficients to a minimum
+because it would speed the computation,
+but more importantly I fear the filter output
+might be defective in some insidious way (perhaps missing primaries)
+when too many filter coefficients are used.
+Perhaps if 1-D decon were done sequentially with steep-dip decon
+the number of free parameters (and hence the amount of computer time)
+could be dropped even further.
+I looked at some of the filters
+and they scatter wildly with the Nyquist frequency
+(particularly those coefficients on the trace with the ``1'' constraint).
+This suggests using a damping term on the filter coefficients,
+after which perhaps the magnitude of a filter coefficient
+will be a better measure of whether this practice is really helpful.
+Also, it would, of course, be fun to get some complete data sets
+(rather than a single shot profile) to see the difference in the final stack.
+
+%\newpage
+%\section{SIGNAL ENHANCEMENT BY PREDICTION}
+%\sx{signal enhancement by prediction}
+%In historic exploration-industry use,
+%prediction-error filtering provides temporal predictions
+%that are immediately subtracted from the data itself.
+%In recent years,
+%Luis \bx{Canales} proposed and developed a process
+%of looking at the {\it spatial} predictions themselves
+%and this process has become quite popular.
+%The idea is that because noise is unpredictable,
+%better-looking seismic data can result
+%from looking at the spatial predictions
+%than looking at the data itself.
+%Although Canales' process is done in the temporal-frequency domain,
+%we can also do it in the time domain,
+%where we can maintain tighter control over nonstationarity
+%and statistical fluctuations.
+%The form of the prediction-error filter is
+%\begin{equation}
+%\begin{array}{ccccccc}
+%a     &a     &a     &\cdot &\cdot &\cdot  &\cdot        \\
+%a     &a     &a     &\cdot &\cdot &\cdot  &\cdot        \\
+%a     &a     &a     &1     &\cdot &\cdot  &\cdot        \\
+%a     &a     &a     &\cdot &\cdot &\cdot  &\cdot        \\
+%a     &a     &a     &\cdot &\cdot &\cdot  &\cdot
+%\end{array}
+%\end{equation}
+%and the prediction is the same without the ``1''.
+%It is perplexing that the spatial prediction has a horizontal direction.
+%Some people average the left and the right, but here I have not.
+%An alternative is to use interpolation,
+%\begin{equation}
+%\begin{array}{ccccccc}
+%a     &a     &a     &\cdot &a     &a      &a            \\
+%a     &a     &a     &\cdot &a     &a      &a            \\
+%a     &a     &a     &1     &a     &a      &a            \\
+%a     &a     &a     &\cdot &a     &a      &a            \\
+%a     &a     &a     &\cdot &a     &a      &a   
+%\end{array}
+%\end{equation}
+%but here I have not.
+%In either case, it is important to realize that after the filter coefficients
+%are determined by minimizing output power,
+%the ``1'' in the filter is replaced by zero before it is used.
+%Thus the methods are prediction or interpolation
+%and they should not be called ``deconvolution''.
+%
+%\activeplot{idapred}{width=6.5in,height=8.0in}{CR}{
+%        Stack of Shearer's IDA data (left).
+%        Prediction (right).
+%        Notice that the time scale
+%        is minutes and the offset is degrees of angle
+%        on the earth's surface.
+%        }
+%
+%\par
+%To compare the spatial predictions to the data itself,
+%I selected the interesting data set
+%shown in Figure~\ref{fig:idapred}.
+%The data plane is a stack of \bx{earthquake}s.
+%At early times, before 93 minutes travel time,
+%the data resembles a common-midpoint gather.
+%At later times,
+%the strong surface waves travel
+%round the earth and past the antipodes
+%and come back towards the source.
+%Otherwise, there are remarkable similarities
+%to conventional exploration seismic data.
+%Many fewer earthquakes are observed near 180 degrees
+%than near 90 degrees for the simple geometrical reason that the 10
+%degrees surrounding the equator is a much bigger area than the 10 degrees
+%surrounding the pole.
+%Thus the quality of the stacks degrades rapidly toward the poles.
+%Although data quality is poor at the poles themselves,
+%notice that waves going beyond the antipodes come back toward the source.
+%The data has a large dynamic range
+%that I compressed by various range- and time-dependent gain multipliers
+%and in the last step before display,
+%I took the signed square roots of the values of the stack.
+%
+
+%\subsection{Parameters for signal enhancement by prediction}
+%The predictions in Figure~\ref{fig:idapred} were derived from
+%prediction errors computed from subroutine 
+%\texttt{find\_lopef} \vpageref{lst:lopef},
+%seen earlier in another application.
+%The prediction is simply the data minus the prediction error.
+%\par
+%Data is analyzed in many overlapping windows which are then merged.
+%Because the quality of the results depends on the window sizes,
+%I report here the reasoning behind my choices.
+%First,
+%the Canales process is generally applied in the temporal frequency domain.
+%The number of coefficients on the space axis for the predictions
+%is generally taken much larger
+%than the wave-slope count in a typical window.
+%This is common practice and
+%I explain the larger size by saying that because
+%the prediction of the data is based on noisy data itself,
+%the process needs a sizeable window in which to do statistical averaging.
+%
+%\par
+%%but this fact is irrelevant.
+%To match the stepout of the dominant wave
+%(an around-world \bx{Rayleigh wave})
+%I took the filter length and width to be
+%{\tt a1=27} and {\tt a2=7}.
+%Then for statistical smoothing
+%I chose fitting windows to be ten times
+%as large as the filter in both directions.
+%Obviously,
+%the statistics could be gathered in different amounts
+%on the two axes and averaging differently could
+%give significantly different results.
+%Anyway, the result for my choices is that the entire page
+%is divided into four windows horizontally and three vertically.
+%\par
+%The temporal (half) extent of the filter is evident by the
+%strong character change at the top and bottom.
+%The spatial extent is not revealed in this way because
+%of the vanishing traces (empty bins) along the edges.
+%\par
+%I notice a disturbing darkness at late times and wide offsets.
+%This is energy at zero frequency,
+%a highly predictable frequency,
+%that might have crept in because I used medians on bins
+%with small numbers of traces,
+%perhaps an {\it even} number so the median had a consistent bias.
+%
+%\par
+%Overall, the prediction process performs as expected.
+%It is disappointing, however,
+%in that it tends to swamp weak events in the ``side lobes''
+%of strong events.
+%I believe the widespread acceptance of this process
+%arises from its use on data of very low quality.
+%Where there is barely one perceptible event,
+%a process that strengthens that event is a welcome process.
+%
+
+\section{INVERSION AND NOISE REMOVAL}
+Here we relate the basic theoretical statement
+of geophysical inverse theory
+to the basic theoretical statement
+of separation of signals from noises.
+\par
+A common form of linearized \bx{geophysical inverse theory} is
+                                        \sx{inverse theory}
+\begin{eqnarray}
+\bold 0 & \approx & \bold W ( \bold L \bold m - \bold d)  \\
+\bold 0 & \approx & \epsilon  \bold A \bold m
+\end{eqnarray}
+We choose the operator $\bold L = \bold I$ to be an identity
+and we rename the model $\bold m$ to be signal $\bold s$.
+Define noise by the decomposition of data into signal plus noise,
+so
+$\bold n = \bold d-\bold s$.
+Finally, let us rename the weighting (and filtering) operations
+$\bold W=\bold N$ on the noise and 
+$\bold A=\bold S$ on the signal.
+Thus the usual model fitting becomes
+a fitting for signal-noise separation:
+\begin{eqnarray}
+\label{eqn:noisereg}
+0 & \approx &          \bold N (-\bold n) = \bold N ( \bold s - \bold d)  \\
+\label{eqn:signalreg}
+0 & \approx & \epsilon \bold S   \bold s
+\end{eqnarray}
+
+\section{SIGNAL-NOISE DECOMPOSITION BY DIP}
+Choose noise $\bold n$ to be energy that has no spatial correlation
+and signal $\bold s$ to be energy with spatial correlation
+consistent with one, two, or possibly a few plane-wave segments.
+(Another view of noise is that a huge number of plane waves is required
+to define the wavefield; in other words, with \bx{Fourier analysis}
+you can make anything, signal or noise.)
+We know that a first-order differential equation can absorb (kill)
+a single plane wave, a second-order equation
+can absorb one or two plane waves, etc.
+In practice, we will choose the order of the wavefield
+and minimize power to absorb all we can,
+and call that the signal.
+
+$\bold S $ is the operator that absorbs (by prediction error)
+the plane waves and $\bold N$ absorbs noises
+and $\epsilon > 0$ is a small scalar to be chosen.
+The difference between $\bold S$ and $\bold N$
+is the spatial order of the filters.
+Because we regard the noise as spatially uncorrelated,
+$\bold N$ has coefficients only on the time axis.
+Coefficients for $\bold S$
+are distributed over time and space.
+They have one space level,
+plus another level
+for each plane-wave segment slope that
+we deem to be locally present.
+In the examples here the number of slopes is taken to be two.
+Where a data field seems to require more than two slopes,
+it usually means the ``patch'' could be made smaller.
+\par
+It would be nice if we could forget about the goal
+(\ref{eqn:signalreg})
+but without it the goal
+(\ref{eqn:noisereg}),
+would simply set the signal $\bold s$
+equal to the data $\bold d$.
+Choosing the value of $\epsilon$ 
+will determine in some way the amount of data energy partitioned into each.
+The last thing we will do is choose the value of $\epsilon$,
+and if we do not find a theory for it, we will experiment.
+
+\par
+The operators $\bold S $ and $\bold N$
+can be thought of as ``leveling'' operators.
+The method of least-squares sees mainly big things,
+and spectral zeros in $\bold S $ and $\bold N$
+tend to cancel
+spectral lines and plane waves in $\bold s$ and $\bold n$.
+(Here we assume that power levels remain fairly level in time.
+Were power levels to fluctuate in time,
+the operators $\bold S $ and $\bold N$
+should be designed to level them out too.)
+
+\par
+None of this is new or exciting in one dimension,
+but I find it exciting in more dimensions.
+In seismology,
+quasi-sinusoidal signals and noises are quite rare,
+whereas local plane waves are abundant.
+Just as
+a short one-dimensional filter can absorb a sinusoid of any frequency,
+a compact two-dimensional filter can absorb a wavefront of any dip.
+
+\par
+To review basic concepts,
+suppose we are in the one-dimensional frequency domain.
+Then the solution to the fitting goals
+(\ref{eqn:signalreg})
+and
+(\ref{eqn:noisereg})
+amounts to minimizing a quadratic form
+by setting to zero its derivative, say
+\begin{equation}
+0 \eq
+\frac{\partial \ }{\partial \bold s\T}
+\left(
+   (\bold s\T-\bold d\T)\bold N\T\bold N(\bold s - \bold d )
++ \epsilon^2 \bold s\T \bold S\T\bold S \bold s
+\right)
+\end{equation}
+which gives the answer
+\begin{eqnarray}
+                                                \label{eqn:notchfilter}
+\bold s &=&
+                \left(
+                   \frac{
+                   \bold N\T \bold N
+                     }{
+                   \bold N\T \bold N \ + \ \epsilon^2 \bold S\T\bold S} 
+                \right) \ \bold d
+\\
+                                                \label{eqn:narrowfilter}
+\bold n \eq \bold d - \bold s
+&=&
+                \left(
+                   \frac{\epsilon^2 \bold S\T\bold S
+                     }{
+                   \bold N\T \bold N \ + \ \epsilon^2 \bold S\T\bold S} 
+                \right) \ \bold d
+\end{eqnarray}
+To make this really concrete,
+consider its meaning in one dimension,
+where signal is white
+$\bold S\T\bold S=1$ and
+noise has the frequency $\omega_0$,
+which is killable with the multiplier
+$\bold N\T\bold N=(\omega-\omega_0)^2$.
+Now we recognize that equation (\ref{eqn:notchfilter})
+is a notch filter and equation (\ref{eqn:narrowfilter})
+is a narrow-band filter.
+\par
+The analytic solutions in equations~(\ref{eqn:notchfilter})
+and~(\ref{eqn:narrowfilter})
+are valid in 2-D \bx{Fourier space} or dip space too.
+I prefer to compute them in the time and space domain
+to give me tighter control on window boundaries,
+but the Fourier solutions give insight
+and offer a computational speed advantage.
+
+\par
+Let us express the fitting goal in the form needed in computation.
+\begin{equation}
+                                        \label{eqn:signoireg}
+\left[ 
+   \begin{array}{c}
+           \bold 0  \\
+           \bold 0 
+           \end{array}
+   \right] 
+%
+\quad\approx\quad
+%
+\left[ 
+   \begin{array}{c}
+                    \bold N  \\
+           \epsilon \bold S 
+          \end{array}
+   \right] \ 
+                  \bold s
+\ +\ 
+\left[ 
+   \begin{array}{c}
+           -\bold N  \bold d  \\
+            \bold 0 
+           \end{array}
+   \right] 
+\end{equation}
+\par
+%Subroutine \texttt{signoi2()}
+%using \texttt{pef2()} \vpageref{lst:pef2}
+%first computes the prediction-error
+%filters $\bold S $ and $\bold N$.
+%Then it loads the residual vector $\bold r$
+%with the negative of the noise whitened data $-\bold N\bold d$.
+%Then it enters the usual conjugate-direction iteration loop
+%where it makes adjustments of
+%$\Delta \bold r$ and 
+%$\Delta \bold s$.
+%Finally, it defines noise by $\bold n = \bold d - \bold s$.
+
+\opdex{signoi}{signal and noise separation}{49}{66}{user/gee}
+As with the missing-data subroutines,
+the potential number of iterations is large,
+because the dimensionality of the space of unknowns
+is much larger than the number of iterations we would find acceptable.
+Thus,
+sometimes changing the number of iterations {\tt niter}
+can create a larger change than changing {\tt epsilon}.
+Experience shows that helix preconditioning saves the day.
+
+\par
+%Subroutine \texttt{signoi2()} \vpageref{lst:signoi2} is set up in a bootstrapping way.
+%It uses not only data, but also signal and noise.
+%The first time in,
+%I used a crude estimate of the signal and noise
+%that is merely a copy of the raw data.
+%Notice that these copies are used only to compute
+%$\bold S$ and $\bold N$,
+%the signal and noise \bx{whiteners}.
+%Because the program
+%uses models of signal and noise
+%to enhance the separation of signal and noise,
+%we might consider a second invocation of the program.
+%I tried multiple invocations to little avail.
+%Another thing for contemplation
+%is some automatic way of choosing $\epsilon$.
+
+\subsection{Signal/noise decomposition examples}
+\sx{filter ! multidip}
+\sx{multidip filtering}
+\inputdir{signoi}
+Figure~\ref{fig:signoi} demonstrates the
+signal/noise decomposition concept on synthetic data.
+The signal and noise have similar frequency spectra
+but different dip spectra.
+
+\plot{signoi}{width=6in,height=2.0in}{
+  The input signal is on the left.
+  Next is that signal with noise added.
+  Next,
+  for my favorite value of
+  {\tt epsilon=1.},
+  is the estimated signal and the estimated noise.
+}
+
+\par
+%\par
+%Ray Abma
+%\sx{Abma, Ray}
+%first noticed that different results were obtained when the
+%fitting goal was cast in terms of $\bold n$ instead of $\bold s$.
+%At first I could not believe his result,
+%but after repeating the computations independently I had to agree that
+%the result does depend on the choice of independent variable.
+%I sought an explanation in terms of differing null spaces,
+%but this is not yet satisfactory.
+
+\par
+Before I discovered helix preconditioning,
+Ray Abma found that different results were obtained when the
+fitting goal was cast in terms of $\bold n$ instead of $\bold s$.
+Theoretically it should not make any difference.
+Now I believe that with preconditioning, or even without it,
+if there are enough iterations,
+the solution should be independent
+of whether the fitting goal is cast with either $\bold n$ or $\bold s$.
+
+\par
+Figure~\ref{fig:signeps} shows the result of experimenting with
+the choice of $\epsilon$.
+As expected, increasing $\epsilon$
+weakens $\bold s$ and increases $\bold n$.
+When $\epsilon$ is too small,
+                                the noise is small and
+                                the signal is almost the original data.
+When $\epsilon$ is too large,
+                                the signal is small and
+                                coherent events are pushed into the noise.
+(Figure~\ref{fig:signeps}
+rescales both signal and noise images for the clearest display.)
+
+\plot{signeps}{width=6in,height=2.0in}{
+  Left is an estimated signal-noise pair where {\tt epsilon=4}
+  has improved the appearance of the estimated signal but
+  some coherent events have been pushed into the noise.
+  Right is a signal-noise pair where {\tt epsilon=.25},
+  has improved the appearance of the estimated noise but
+  the estimated signal looks no better than original data.
+}
+\par
+Notice that the leveling operators
+$\bold S$ and $\bold N$ were both estimated
+from the original signal and noise mixture
+$\bold d = \bold s +\bold n$
+shown in Figure~\ref{fig:signoi}.
+Presumably we could do even better if we were to reestimate
+$\bold S$ and $\bold N$ from the estimates
+$\bold s$ and $\bold n$ in Figure~\ref{fig:signeps}.
+
+
+
+\subsection{Spitz for variable covariances}
+\par
+Since signal and noise are uncorrelated,
+the spectrum of data is the spectrum of the signal plus that of the noise.
+An equation for this idea is
+\begin{equation}
+\label{eqn:sigma}
+\sigma_d^2 \eq 
+\sigma_s^2 \ + \ 
+\sigma_n^2
+\end{equation}
+This says resonances in the signal
+and resonances in the noise
+will both be found in the data.
+When we are given $\sigma_d^2$ and $\sigma_n^2$ it seems a simple
+matter to subtract to get $\sigma_s^2$.
+Actually it can be very tricky.
+We are never given $\sigma_d^2$ and $\sigma_n^2$;
+we must estimate them.
+Further, they can be a function of frequency, wave number, or dip,
+and these can be changing during measurements.
+We could easily find ourselves with a negative estimate for
+$\sigma_s^2$ which would ruin any attempt to segregate signal from noise.
+An idea of Simon Spitz can help here.
+
+\par
+Let us reexpress equation (\ref{eqn:sigma}) with prediction-error filters.
+\begin{equation}
+\frac{1}{ \bar A_d A_d} \eq
+\frac{1}{ \bar A_s A_s} \ + \ 
+\frac{1}{ \bar A_n A_n}
+\eq
+{
+	  \frac{{\bar A_s A_s} \ +\  {\bar A_n A_n}}{( {\bar A_s A_s} )   ( {\bar A_n A_n})}
+}
+\end{equation}
+Inverting
+\begin{equation}
+{ \bar A_d A_d} \eq
+{
+	\frac{( {\bar A_s A_s} ) \  ( {\bar A_n A_n})}{{\bar A_s A_s} \ +\  {\bar A_n A_n}}
+}
+\end{equation}
+The essential feature of a PEF is its zeros.
+Where a PEF approaches zero, its inverse is large and resonating.
+When we are concerned with the zeros of a mathematical function
+we tend to focus on numerators and ignore denominators.
+The zeros in
+${\bar A_s A_s}$
+compound with the zeros in
+${\bar A_n A_n}$
+to make the zeros in 
+${\bar A_d A_d}$.
+This motivates the ``Spitz Approximation.''
+\begin{equation}
+{ \bar A_d A_d} \eq
+	( {\bar A_s A_s} )\   ( {\bar A_n A_n})
+\end{equation}
+
+\par
+It usually happens that we can
+find a patch of data where no signal is present.
+That's a good place to estimate the noise PEF $A_n$.
+It is usually much harder to find a patch of data where no noise is present.
+This motivates the Spitz approximation which by saying
+$ A_d = A_s  A_n $
+tells us that the hard-to-estimate $A_s$ is the ratio
+$ A_s = A_d /  A_n $
+of two easy-to-estimate PEFs.
+
+\par
+It would be computationally convenient if
+we had $A_s$ expressed not as a ratio.
+For this, form the signal
+$\bold u = \bold A_n \bold d$
+by applying the noise PEF $A_n$ to the data $\bold d$.
+The spectral relation is
+\begin{equation}
+\sigma_u^2 \eq 
+\sigma_d^2 /
+\sigma_n^2
+\end{equation}
+Inverting this expression
+and using the Spitz approximation
+we see that
+a PEF estimate on $\bold u$ is the required $A_s$ in numerator form because
+\begin{equation}
+A_u \eq A_d / A_n \eq A_s
+\end{equation}
+
+\subsection{Noise removal on Shearer's data}
+\inputdir{ida}
+Professor Peter \bx{Shearer}\footnote{
+        I received the data for this stack from Peter Shearer
+        at the \bx{Cecil and Ida Green} Institute of Geophysics
+        \sx{Green, Cecil and Ida}
+        and Planetary Physics of the Scripps Oceanographic Institute.
+        I also received his permission to redistribute it
+        to friends and colleagues.
+        Should you have occasion to copy it please reference him.
+%        \cite{Shearer.jgr.91.18147} \cite{Shearer.jgr.91.20535}
+%        it properly.
+        Examples of earlier versions of these stacks
+        are found in the references.
+        Professor Shearer may be willing to supply newer and better stacks.
+        His electronic mail address is {\tt shearer@mahi.ucsd.edu}.
+        }
+gathered the earthquakes from the IDA network,
+an array of about 25 widely distributed gravimeters,
+donated by Cecil Green,
+and Shearer selected most of the shallow-depth earthquakes
+of magnitude greater than about 6 over the 1981-91 time interval,
+and sorted them by epicentral distance into bins $1^\circ$ wide
+and stacked them.
+He generously shared his edited data with me
+and I have been restacking it,
+compensating for amplitude in various ways,
+and planning time and filtering compensations.
+
+\par
+Figure~\ref{fig:sneps} shows a test of noise subtraction
+by multidip narrow-pass filtering
+on the \bx{Shearer-IDA stack}.
+As with prediction there is a general reduction of the noise.
+Unlike with prediction, weak events are preserved
+and noise is subtracted from them too.
+
+\plot{sneps}{width=6.5in,height=8.0in}{
+  Stack of Shearer's IDA data (left).
+  Multidip filtered (right).
+  It is pleasing that the noise is reduced while
+  weak events are preserved.
+}
+
+\par
+Besides the difference in theory,
+the separation filters are much smaller
+because their size is determined by
+the concept that ``two dips will fit anything locally''
+({\tt a2=3}),
+versus the prediction filters
+``needing a sizeable window to do statistical averaging.''
+The same aspect ratio {\tt a1/a2} is kept and
+the page is now divided into
+11 vertical patches and 24 horizontal patches
+(whereas previously the page was divided in $3\times 4$ patches).
+In both cases the patches overlap about 50\%.
+In both cases I chose to have about ten times as many equations
+as unknowns on each axis in the estimation.
+The ten degrees of freedom could be distributed differently
+along the two axes, but I saw no reason to do so.
+
+\subsection{The human eye as a dip filter}
+
+\par
+Although the filter seems to be performing as anticipated,
+no new events are apparent.
+I believe the reason that we see no new events is
+that the competition is too tough.
+We are competing with the human eye, which
+through aeons of survival has become is a highly skilled filter.
+Does this mean that there is no need for filter theory and filter subroutines
+because the eye can do it equally well?
+It would seem so.
+Why then pursue the subject matter of this book?
+\par
+The answer is 3-D.
+The human eye is not a perfect filter.
+It has a limited (though impressive) dynamic range.
+A nonlinear display (such as wiggle traces)
+can prevent it from averaging.
+The eye is particularly good at dip filtering,
+because the paper can be looked at from a range of grazing angles
+and averaging window sizes miraculously adjust to the circumstances.
+The eye can be overwhelmed by too much data.
+The real problem with the human eye
+is that the retina is only two-dimensional.
+The world contains many three-dimensional data volumes.
+I don't mean the simple kind of 3-D where the contents of the room
+are nicely mapped onto your 2-D retina.
+I mean the kind of 3-D found inside a bowl of soup or inside a rock.
+A rock can be sliced and sliced and sliced again and each slice is a picture.
+The totality of these slices is a movie.
+The eye has a limited ability to deal with \bx{movies} by optical persistence,
+an averaging of all pictures shown in about 1/10 second interval.
+Further, the eye can follow a moving object and perform the same
+averaging.
+I have learned, however, that the eye really cannot follow two objects
+at two different speeds and average them both over time.
+Now think of the third dimension in Figure~\ref{fig:sneps}.
+It is the dimension that I summed over to make the figure.
+It is the $1^\circ$ range bin.
+If we were viewing the many earthquakes in each bin,
+we would no longer be able to see the out-of-plane information
+which is the in-plane information in Figure~\ref{fig:sneps}.
+
+\par
+To view genuinely 3-D information we must see a movie,
+or we must compress the 3-D to 2-D.
+There are only a small number of ways to compress 3-D to 2-D.
+One is to select planes from the volume.
+One is to sum the volume over one of its axes,
+and the other is a compromise,
+a filtering over the axis we wish to abandon before subsampling on it.
+That filtering is a local smoothing.
+If the local smoothing has motion
+(out of plane dip) of various velocities (various dips),
+then the desired process of smoothing the out of plane direction
+is what we did in the in-plane direction
+in Figure~\ref{fig:sneps}.
+But Figure~\ref{fig:sneps} amounts to more than that.
+It amounts to a kind of simultaneous smoothing in the {\it two}
+most coherent directions
+whereas in 3-D your eye can smooth in only {\it one} direction
+when you turn your head along with the motion.
+
+\par\noindent
+\boxit{
+        If the purpose of data processing
+        is to collapse 3-D data volumes to 2-D
+        where they are comprehensible to the human eye,
+        then perhaps data-slope adaptive,
+        low-pass filtering in the out-of-plane direction
+        is the best process we can invent.
+        }
+
+\par
+
+\par
+My purpose in filtering the earthquake stacks
+is to form a guiding ``pilot trace''
+to the analysis of the traces {\it within} the bin.
+Within each bin,
+each trace needs small time shifts and perhaps a small temporal filter
+to best compensate it to .\ .\ . to what? to the pilot trace,
+which in these figures was simply a stack of traces in the bin.
+Now that we have filtered in the range direction, however,
+the next stack can be made with a better quality pilot.
+
+\par
+%Subroutine \texttt{losn2()} \vpageref{lst:losn2}
+%does the ``patching,''
+%invokes the signal partitioning operator
+%\texttt{signoi} \vpageref{lst:signoi}
+%on each patch,
+%applies a tent-like weighting function,
+%and reassembles the patches compensating for their overlap.
+%The tents are easier to make here than they were in
+%local prediction error 
+%(\texttt{lopef2()} \vpageref{lst:lopef2})
+%because they cover the space of filter {\it inputs} instead of {\it outputs.}
+%(In early versions of this code,
+%I used internal convolution
+%instead of transient convolution,
+%and it left me confused about the proper shape of the output data space.)
+%\progdex{losn2}{local signoi}
+
+%\begin{notforlecture}
+%\subsection{Theory for noise along with missing data}
+%Data $\bold d$ space can be decomposed into
+%known plus missing parts,
+%$\bold d = \bold k + \bold m$.
+%We partition
+%an identity operator $\bold I$ on the data space
+%into parts that separate the known from the missing data
+%$\bold I = \bold K + \bold M$.
+%Thus data space can be written as
+%\begin{equation}
+%\bold d \eq \bold K \bold d + \bold M \bold m
+%\end{equation}
+%where
+%$\bold K\bold d$ is zero-padded known data and
+%all the components of $\bold m$ are freely adjustable.
+%
+%\par
+%Data space $\bold d$
+%can also be decomposed into
+%signal plus noise,
+%$\bold d = \bold s + \bold n$.
+%Thus
+%\begin{equation}
+%\bold s + \bold n \eq \bold K \bold d + \bold M \bold m
+%\label{eqn:snkm}
+%\end{equation}
+%
+%\par
+%Writing goals for signal and noise and then eliminating the noise
+%by the constraint equation (\ref{eqn:snkm}) gives
+%\begin{eqnarray}
+%\bold 0&\approx&\bold N\bold n\eq \bold N(\bold K\bold d+\bold M\bold m-\bold s)\\
+%\bold 0&\approx&\bold S\bold s\eq \bold S                               \bold s
+%\end{eqnarray}
+%Putting this in matrix form we have
+%the operator needed in computation
+%\begin{equation}
+%\left[ 
+%   \begin{array}{c}
+%           \bold 0   \\
+%           \bold 0 
+%           \end{array}
+%   \right] 
+%%
+%\quad\approx\quad
+%%
+%\left[ 
+%   \begin{array}{cc}
+%        -\bold N   & \bold N \bold M  \\
+%         \bold S   & \bold 0
+%          \end{array}
+%   \right] \ 
+%\left[ 
+%        \begin{array}{c}
+%                  \bold s \\
+%                  \bold m
+%          \end{array}
+%\right] 
+%\ + \ 
+%\left[ 
+%   \begin{array}{c}
+%           \bold N \bold K \bold d   \\
+%           \bold 0 
+%           \end{array}
+%   \right] 
+%\end{equation}
+%I have not had time to prepare an example.
+%
+%\end{notforlecture}
+
+
+
+\section{SPACE-VARIABLE DECONVOLUTION}
+%\begin{notforlecture}
+\sx{time-variable deconvolution}
+\sx{deconvolution ! time-variable}
+\sx{filter ! time-variable}
+Filters sometimes change with time and space.
+We sometimes observe signals whose spectrum changes with position.
+A filter that changes with position is called nonstationary.
+We need an extension of our usual convolution operator
+\texttt{hconest} \vpageref{lst:hconest}.
+Conceptually,
+little needs to be changed besides changing 
+\texttt{aa(ia)} to
+\texttt{aa(ia,iy)}.
+But there is a practical problem.
+Fomel and I have made the decision
+to clutter up the code somewhat
+to save a great deal of memory.
+This should be important to people interested in
+solving multidimensional problems with big data sets.
+\par
+Normally, the number of filter coefficients is many fewer
+than the number of data points,
+but here we have very many more.
+Indeed, there are {\tt na} times more.
+%The memory requirement for a filter was formerly less than for data.
+Variable filters require {\tt na} times more memory than the data itself.
+To make the nonstationary helix code more practical,
+we now require the filters to be constant in patches.
+The data type for nonstationary filters
+(which are constant in patches)
+is introduced in module
+	\texttt{nhelix}, which is a simple modification of module
+	\texttt{helix} \vpageref{lst:helix}.
+	\moddex{nhelix}{non-stationary convolution}{10}{15}{user/gee}
+What is new is the integer valued vector \texttt{pch(nd)}
+the size of the one-dimensional (helix) output data space.
+Every filter output point is to be assigned to a patch.
+All filters of a given patch number will be the same filter.
+Nonstationary helixes are created with
+	\texttt{createnhelix}, which is a simple modification of module
+	\texttt{createhelix} \vpageref{lst:createhelix}.
+	\moddex{createnhelix}{create non-stationary helix}{29}{68}{user/gee}
+Notice that the user must define the \texttt{pch(product(nd))}
+vector before creating a nonstationary helix.
+For a simple 1-D time-variable filter,
+presumably \texttt{pch} would be something like
+$(1,1,2,2,3,3,\cdots)$.
+For multidimensional patching we need to think a little more.
+
+\par
+Finally, we are ready for the convolution operator.
+The operator \texttt{nhconest} \vpageref{lst:nhconest}
+allows for a different filter in each patch.
+\opdex{nhconest}{non-stationary convolution}{51}{68}{user/gee}
+A filter output \texttt{y[iy]}
+has its filter from the patch \texttt{ip=aa->pch[iy]}.
+\begin{comment}
+The line
+\texttt{t=a(ip,:)}
+extracts the filter for the \texttt{ip}th patch.
+If you are confused (as I am) about the difference
+between \texttt{aa} and \texttt{a},
+maybe now is the time to have a look at beyond Loptran
+to the Fortran version.\footnote{
+	http://sepwww.stanford.edu/sep/prof/gee/Lib/
+	}
+\end{comment}
+%\end{notforlecture}
+\par
+Because of the massive increase in the number of filter coefficients,
+allowing these many filters
+takes us from overdetermined to very undetermined.
+We can estimate all these filter coefficients
+by the usual deconvolution fitting goal (\ref{eqn:pefregression})
+\begin{equation}
+\bold 0 \quad\approx\quad
+\bold r \eq \bold Y \bold K \bold a +\bold r_0
+\end{equation}
+but we need to supplement it with some damping goals, say
+\begin{equation}\begin{array}{lll}
+\bold 0  &\approx&      \bold Y  \bold K \bold a  +\bold r_0
+\\
+\bold 0  &\approx&      \epsilon\ \bold R \bold a 
+\label{eqn:leakydecon}
+\end{array}
+\end{equation}
+where $\bold R$ is a roughening operator to be chosen.
+
+\par
+Experience with missing data in Chapter \ref{paper:iin}
+shows that when the roughening operator $\bold R$ is a differential operator,
+the number of iterations can be large.
+We can speed the calculation immensely by ``preconditioning''.
+Define a new variable $\bold m$ by
+$\bold a=\bold R^{-1}\bold m$
+and insert it into (\ref{eqn:leakydecon}) to get
+the equivalent preconditioned system of goals.
+\begin{eqnarray}
+\label{eqn:goodleak}
+\bold 0   &\approx &   \bold Y  \bold K \bold R^{-1}\bold m  \\
+\bold 0   &\approx &   \epsilon \ \bold m
+\label{eqn:dumbdamp}
+\end{eqnarray}
+
+\par
+The fitting (\ref{eqn:goodleak}) uses the operator $\bold Y\bold K\bold R^{-1}$.
+For $\bold Y$ we can use subroutine
+\texttt{nhconest()} \vpageref{lst:nhconest};
+for the smoothing operator $\bold R^{-1}$ we can use nonstationary
+polynomial division
+with operator \texttt{npolydiv()}:
+%\begin{notforlecture}
+\opdex{npolydiv}{non-stationary polynomial division}{56}{90}{user/gee}
+
+Now we have all the pieces we need.
+As we previously estimated stationary filters with
+the module \texttt{pef} \vpageref{lst:pef},
+now we can estimate nonstationary PEFs with
+the module \texttt{npef} \vpageref{lst:npef}.
+The steps are hardly any different.
+\moddex{npef}{non-stationary PEF}{29}{61}{user/gee}
+Near the end
+of module \texttt{npef}
+is a filter \texttt{reshape}
+from a 1-D array to a 2-D array.
+\begin{comment}
+If you find it troublesome that
+\texttt{nhconest} \vpageref{lst:nhconest}
+was using the filter
+during the optimization as already multidimensional,
+perhaps again,
+it is time to examine the Fortran code.
+The answer is that there has been a conversion
+back and forth partially hidden by Loptran.
+%\end{notforlecture}
+\end{comment}
+
+\inputdir{tvdecon}
+
+\par
+Figure~\ref{fig:tvdecon} shows a synthetic data example using these programs.
+As we hope for deconvolution, events are compressed.
+The compression is fairly good, even though each event has
+a different spectrum.
+What is especially pleasing is that satisfactory results
+are obtained in truly small numbers of iterations (about three).
+The example is for two free filter coefficients $(1,a_1,a_2)$
+per output point.
+The roughening operator $\bold R$ was taken to be $(1,-2,1)$
+which was factored into
+causal and anticausal finite difference.
+\plot{tvdecon}{width=6.0in,height=3in}{
+  Time variable deconvolution with
+  two free filter coefficients and a gap of 6.
+}
+\par
+I hope also to find a test case with field data,
+but experience in seismology
+is that spectral changes are slow,
+which implies unexciting results.
+Many interesting examples should exist
+in two- and three-dimensional filtering, however,
+because reflector dip is always changing
+and that changes the {\it spatial} spectrum.
+\par
+In multidimensional space, the smoothing filter $\bold R^{-1}$
+can be chosen with interesting directional properties.
+Sergey, Bob, Sean and I have joked about this code being
+the ``double helix'' program because there are two multidimensional
+helixes in it, one the smoothing filter, the other the deconvolution filter.
+Unlike the biological helixes, however, these two helixes
+do not seem to form a symmetrical pair.
+
+\begin{exer}
+\item
+Is 
+\texttt{nhconest} \vpageref{lst:nhconest}
+the inverse operator to
+\texttt{npolydiv} \vpageref{lst:npolydiv}?
+Do they commute?
+\item
+Sketch the matrix corresponding to operator
+\texttt{nhconest} \vpageref{lst:nhconest}.  {\sc hints:}
+Do not try to write all the matrix elements.
+Instead draw short lines to indicate rows or columns.
+As a ``warm up'' consider a simpler case where one filter
+is used on the first half of the data and another filter
+for the other half.
+Then upgrade that solution from two to about ten filters.
+\end{exer}
+
+
+%\reference{
+%       Shearer, P.M., 1991,
+%       Imaging global body wave phases by stacking long-period seismograms.
+%       J. Geophy. Res.,  v.~96, n.~B12,
+%       pp. 20,535--20,324.
+%       % November 10, 1991
+%       }
+%
+%\reference{
+%       Shearer, P.M., 1991,
+%       Constraints on upper mantle discontinuities from observations
+%       of long period reflected and converted phases.
+%       J. Geophy. Res.,  v.~96, n.~B11,
+%       pp. 18,147--18,182.
+%       % October 10, 1991
+%       }
+%
+%I need help from Diane here.
+%%\putbib[MISC,SEP]
+
+%\bibliographystyle{sep}\bibliography{SEP,MISC}
+
+%XXX putbib[SEP,MISC] busted
+
+                                                                        

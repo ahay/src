@@ -1,0 +1,528 @@
+% Started 07/26/97
+
+\lefthead{Clapp, et al.}
+\righthead{Steering filters}
+\footer{SEP--95}
+\published{SEP report, 95, 27-42 (1997)}
+\title{Solution steering with space-variant filters}
+
+\email{bob@sep.stanford.edu, sergey@sep.stanford.edu, jon@sep.stanford.edu}
+%\keywords{ interpolation, preconditioning, regularization, helix, least-squares}
+
+\author{Robert G. Clapp, Sergey Fomel, and Jon Claerbout}
+
+\maketitle
+
+\begin{abstract}
+Most geophysical problem require some type of regularization.
+Unfortunately most regularization schemes produce  ``smeared'' results 
+that are often undesirable when applying other criteria (such as geologic
+feasibility).
+By forming regularization operators in terms of 
+recursive steering filters, built from a priori information sources,
+we can efficiently guide the solution towards
+a more appealing form. The steering
+methodology proves effective in interpolating
+low frequency functions, such as velocity, 
+but performs poorly when encountering multiple
+dips and high frequency data.  Preliminary results using steering filters for
+regularization in tomography problems are encouraging. 
+\end{abstract}
+
+\section{INTRODUCTION}
+%background
+When attempting to do inversion we are constantly confronted with the
+problem of slow convergence. \cite{Claerbout.sep.82.183}
+suggested using a preconditioner
+to speed up convergence.  Unfortunately it is often difficult to find an
+appropriate preconditioner and/or the preconditioner is so 
+computationally expensive that
+it negates the savings gained by reducing
+the  number of iterations \cite[]{Claerbout.tdf.82}.
+\cite{Claerbout.sep.95.jon1} proposed
+designing helicon-style operators
+to  provide  a method to find stable inverses, 
+and potentially, appropriate preconditioners
+\cite[]{Fomel.sep.95.sergey1,Fomel.sep.94.sergey1}.
+\par
+In addition, geophysical problems are often under-determined,
+requiring some type of regularization.  Unfortunately the simplest,
+and most common, regularization techniques tend to create isotropic
+features when we would often prefer solutions that follow trends.
+This problem is especially prevalent in velocity estimation.  The
+result obtained through many inversion schemes produce a velocity
+structure that geologists (whose insights are hard to encode into the
+regression equations) find unreasonable \cite[]{Etgen}.  Fortunately,
+there are often other sources of information that can be encoded into
+the regularization operator that allow the inversion to be guided
+towards a more appealing result.  For example, in the case of velocity
+estimation, reflector dips might be appropriate.
+
+%claim
+
+We create small, space-variant, steering filters from dip or other a priori 
+information.
+We use the inverse of these filters to form a preconditioner which acts
+as our regularization operator.
+We show this methodology applied to three different types of problems. In the 
+first set of examples we interpolate 
+well-log information using reflector dip as the basis for our steering  filters.
+For the second set of examples we do a more traditional 
+seismic data interpolation problem.  Starting
+from a shot gather with a portion of the data missing.  We use a velocity
+function to create hyperbolic paths, which in turn are used to construct 
+steering filters.
+In the final example we show some preliminary
+results of using steering filters in conjunction with 
+a tomographic  operator to create velocity models which both satisfy
+the data and are geologically reasonable.
+
+\section{THEORY/MOTIVATION}
+\subsection{Regularization}
+\inputdir{XFig}
+
+In general, geophysical problems are ill-posed.
+To obtain  pleasing results we impose some type of regularization
+criteria such as
+diagonal scaling, limiting solutions to large 
+singular values \cite[]{Clapp.sep.84.75},  or
+minimizing different solution norms \cite[]{Nichols.sep.82.1}.
+The 
+typical  SEP approach is to minimize the power out of a regularization
+operator ($\mathbf A$) applied to the model ($\mathbf m$),
+described by the fitting goal
+\begin{equation}
+0 \approx \mathbf A  \mathbf m .
+\label{eq:first}
+\end{equation}
+Where $\mathbf A$'s spectrum will be the inverse of $\mathbf m$,
+so to produce a smooth $\mathbf m$, we need a rough 
+$\mathbf A$\cite[]{Claerbout.tdf.82}).
+The regularization operator can take many forms, in order of increasing
+complexity:
+\begin{description}
+        \item [Laplacian operator ($\nabla^2$)] The symmetric nature of the
+Laplacian leads to isotropic smoothing of the image.
+  \item [Steering filters] Simple plane wave annihilation filters which
+   tend to orient the data in 
+   some preferential direction,
+   chosen a priori. These filters can be simple two point filters,
+   Figure \ref{fig:steering}, to larger filters that sacrifice compactness for
+   more precise dip annihilation.
+\sideplot{steering}{height=1.0in}{An example of steering filter. In
+this case  preference is given to slopes at 45 degrees.}
+
+        \item  [Prediction Error Filters (PEF)] Like steering filters apply a 
+   preferential smoothing direction, but are not limited to a single dip
+    and determine their smoothing directions
+         from the known data \cite[]{Schwab.sep.94.matt2}.
+\end{description}
+
+
+\subsection{Preconditioning}
+Another important consideration is the speed of convergence of the problem.  
+The size of most geophysical
+problems make direct matrix inversion methods impractical. 
+An appealing alternative for linear problems is the family of
+conjugate gradient methods.  Unfortunately, 
+the operators used in seismic reflection  problems
+are often computationally expensive.
+As a result it is important to minimize the number of steps it takes
+to get to a reasonable solution.
+One way that can reduce the number of iterations is by reformulating the 
+problem in terms of some new variable ($\mathbf x$) with a preconditioning
+operator ($\mathbf B$).  Changing a tradition inversion problem where the
+operator ($\mathbf C$) maps the model ($\mathbf m$) to the data ($\mathbf d$),
+\begin{equation}
+\mathbf d \approx \mathbf C \mathbf m
+\label{eq:precondition1}
+\end{equation}
+we can rewrite 
+\begin{equation}
+\mathbf d \approx \mathbf C \mathbf B \mathbf x
+\end{equation}
+where
+\begin{equation}
+\mathbf m = \mathbf B  \mathbf x.
+\label{eq:precondition}
+\end{equation}
+
+\subsection{Helix transform}
+The next question is  how to choose  $\mathbf B$?
+We have three general requirements:
+\begin{itemize}
+\item it produces relatively smooth (by some criteria) results;
+\item it spreads information quickly;
+\item and it is computationally inexpensive.
+\end{itemize}
+By defining our operators via the helix method 
+\cite[]{Claerbout.sep.95.jon1} we can meet all of these
+requirements.
+The helix concept is to transform {\it N}-Dimensional
+operators into  1-D operators  to take
+advantage of the well developed  1-D theory.
+In this case we utilize our ability to construct 
+stable inverses from simple, causal filters.  
+ We can set $\mathbf B$,  from equation  (\ref{eq:precondition})  to
+\begin{equation}
+\mathbf B = \mathbf  A^{-1} ,
+\label{eq:inverse}
+\end{equation}
+where $\mathbf A$ is the roughening operator from fitting
+goal (\ref{eq:first}), and $\mathbf B$ is simulated using
+polynomial division.
+If $\mathbf A$ is a small roughening
+operator, $\mathbf B$ is a large smoothing operator without the
+heavy costs usually associated with larger operators.
+
+\subsection{Steering Filters}
+\input{steering} 
+
+\subsection{Space variable filters}
+Steering filters are effective in spreading information
+along a given direction, but are limited to a single dip.
+If it is inappropriate to apply a single smoothing direction to
+the entire
+model 
+there are two general
+courses of action:
+\begin{description}
+\item [Patching] \cite[]{Claerbout.sep.73.391,Schwab.sep.84.271}
+Redefine our problem into a series of problems,
+each on a small subset of the data where the stationarity assumption is
+valid, then recombine the data.  This approach leads to problems in determining
+                 subsets where the stationarity condition is satisfied
+    and how to effectively remove patching boundaries from the final output.
+\item [Space varying filters] Filters that vary with location
+but are spatially smooth. In many ways this is the a more appealing
+approach.
+In the past, space varying filters have not been used because they
+impose significant memory issues (a filter at every location) and must
+be spatially smooth.
+By choosing steering filters for our regularization operator and using
+helix enabled polynomial division, these 
+weaknesses are significantly diminished.  
+We can construct and store relatively
+small filters which are much easier to smooth  (smoothing the preferential
+dip direction is sufficient).
+In addition the polynomial division produced inverse
+filters will have an even higher level of smoothness because 
+each filter spreads
+information over large, overlapping regions at each iteration.
+\end{description}
+
+\section{WELL LOG/DIP INTERPOLATION}
+\inputdir{qdome}
+
+To illustrate the effectiveness of this method
+imagine a simple interpolation problem.
+Following the methodology of \cite[]{Fomel.sep.95.sergey1} we first bin the 
+data, producing
+a model $\mathbf m$, composed of known data $\mathbf m_k$ and unknown data 
+$\mathbf m_u$.  We 
+have an operator $\mathbf J$ which is simply a diagonal masking operator with 
+zeros at known data locations and ones at unknown locations. We can write
+$\mathbf m_k$ and $\mathbf m_u$ in terms of $\mathbf m$ and $\mathbf J$,
+\begin{eqnarray}
+\mathbf m_k &\approx& (\mathbf I\mathbf - \mathbf J)\mathbf m \\
+\mathbf m_u &\approx& \mathbf J \mathbf m
+\end{eqnarray}
+where $\mathbf I$ is the identity matrix.  
+We have the preconditioning operator $\mathbf B$, which applies polynomial
+division using the helix methodology.  In this case we have a 
+single equation in our estimation problem,
+\begin{equation}
+\mathbf m_k \approx (\mathbf I-\mathbf J) \mathbf B \mathbf x .
+\label{eq:easy}
+\end{equation}
+So the only question that remains is what to use for $\mathbf B$, or 
+more specifically $\mathbf B^{-1}$, $\mathbf A$.
+\par
+For this experiment  
+we create a series of well logs by subsampling a 2-D velocity field.
+We use as our a priori information source, reflector dips,
+to build  our steering filters, and thus our operator $\mathbf A$. 
+For this test we  pick our dips  from our ``goal'',
+left portion of Figure \ref{fig:reflectors}.
+We define areas in which we believe each of these dips to be
+approximately correct, and  smooth the overall 
+field (right portion of Figure \ref{fig:qdome-reflectors}).
+
+\plot{reflectors}{width=5in,height=3.6in}{Left, a synthetic seismic section with 
+four picked reflectors indicated by '*'; right; the dip field constructed from the picked reflectors.} 
+
+%\activesideplot{qdome-dip-field}{width=3in}{}{Smoothed dip field.  Dips range from -5 
+%degrees to 40 degrees.}
+\par
+For the first test, we simulate nine well logs along the survey
+(Figure \ref{fig:qdome-combo1}). We use equation (\ref{eq:easy}) as our
+fitting goal and  a conjugate gradient solver to estimate $\mathbf x$.
+Within 12 iterations we  have a satisfactory 
+solution(Figure \ref{fig:qdome-combo1}).
+If you look closely, especially near the bottom of the section you
+can still see the well locations, but in general the solution 
+converges quickly to something 
+fairly close to the correct velocity field (Figure \ref{fig:qdome-reflectors}). 
+
+
+\plot{combo1}{height=3.4in,width=6.0in}{Left, correct velocity field; middle, well subset selected as input;
+right, velocity field resulting from interpolation.}
+
+\par
+For a more difficult test, we decreased the number of wells, and give
+them varying lengths.
+In Figure \ref{fig:qdome-combo4} you see that in a few iterations
+we  achieve a result quite similar
+to our goal. In addition, in areas far away from known data the method
+still followed the general dip direction simply at a lower frequency level.
+
+\plot{combo4}{height=3.4in,width=6.0in}{Left model (our goal), middle well logs, and right estimated model
+after 12 iterations.}
+
+
+\section{SHOT-GATHER BASED INTERPOLATION}
+\inputdir{shot}
+
+Another possible application for using recursive
+steering filters is to interpolate
+seismic data.  As an initial test 
+we chose to interpolate 
+a shot gather.  We used a $v(z)$ velocity function to construct
+hyperbolic trajectories, which in turn were used to
+construct our dip
+field (similar to the seismic dips used in the previous section).
+\par
+For a first test
+we created a synthetic shot gather using a $v(z)=a+bz$ model as input
+to a finite difference code.  We then cut
+a hole in this shot gather  and attempted
+to recover the removed values.
+As Figure \ref{fig:combo} shows we did a good job 
+recovering the amplitude within a few iterations.
+
+\plot{combo}{width=6in,height=3.8in}{}{Left, synthetic shot gather; center,
+holes cut out of shot gather; right, inversion result after 15 iterations.}
+\par
+To see how the method reacted when it was given data that did not
+fit its model (in this case hyperbolic moveout) we used a dataset with
+significant noise problems (ground roll, bad traces, etc.).  Using
+the same technique as in Figure \ref{fig:combo} 
+we ended up with a result which did a fairly
+decent job fitting portions of the data where noise content was low,
+but a poor job elsewhere (Figure \ref{fig:wz-combo}).  Even  where
+the method did the best job of reconstructing the data, it still left
+a visible footprint. A more esthetically pleasing result can be achieved
+by using the above method followed a more traditional interpolation problem
+using  the operator $\mathbf A$ and the fitting goal
+\begin{equation}
+\mathbf A \mathbf m \approx 0 ,
+\label{eq:old}
+\end{equation}
+where  $\mathbf m$ is initialized with the result of our previous 
+inversion problem and not allowed to change at locations where we have data.
+The bottom right panel in Figure \ref{fig:wz-combo}  shows
+the result of applying a few iterations of fitting goal (\ref{eq:old}) 
+to the bottom left result in Figure \ref{fig:wz-combo}.
+By using  both methodologies the interpolated data does a much better job 
+blending into its
+surroundings but still is a poor interpolation result.
+
+\inputdir{wz25}
+
+\plot{wz-combo}{width=6in,height=7in}{Top left, original shot
+gather; top right, gather with holes (input); bottom left,
+result applying equation \ref{eq:easy}, bottom right, result after
+applying equation (\ref{eq:easy}) followed by (\ref{eq:old}).}
+
+\begin{comment}
+
+\section{REGULARIZATION}
+The steering filter methodology has the most potential as a regularization 
+operator in large inversion problems. For our final example
+we use inverse steering-filters in conjunction with another
+operator, in this case a tomography operator, to improve the 
+inversion result.
+For our tomography operator we chose Toldi's 
+interval to stacking velocity operator\cite[]{Toldi.sep.43}. 
+Generally, \cite{Toldi.sep.43} related perturbations in 
+interval slowness
+to perturbations in stacking slowness 
+in  simple  slowness models.  
+\par
+We constructed a synthetic interval slowness perturbation model (Figure 
+\ref{fig:toldi-steer},  left panel) where the perturbations from zero follow a 
+sinusoidal path, and the anomalies go from positive to negative as you go
+from left to right.  
+We  used Toldi's forward operator to compute
+stacking velocities at various depth levels (Figure \ref{fig:toldi-stack}, 
+left panel), in this case we simulating collecting stacking velocity at 10
+evenly spaced depths (compared to 160 depth locations in our interval
+slowness model), assuming a cable length of $2~km$.
+
+\activeplot{toldi-steer}{width=6in,height=3.8in}{}{Left, slowness  perturbation model;
+center, inversion result using Laplacian smoother; right, inversion result
+using steering filters.}
+
+\activeplot{toldi-stack}{width=6in,height=3.8in}{}{Left, input stacking slowness;
+right, calculated stacking slowness of steering filter inversion model.}
+\par
+We applied a fairly traditional inversion methodology to estimate 
+our interval velocity perturbations:
+
+\begin{eqnarray}
+{\mathbf T} {\mathbf m} &\approx& {\mathbf d} \\
+{\mathbf \epsilon} {\mathbf A} {\mathbf m} &\approx&  0 .
+\end{eqnarray}
+Where ${\mathbf T}$, is the Toldi operator; ${\mathbf A}$, is a Laplacian smoother; 
+${\mathbf m}$, is our interval slowness perturbation model; and ${\mathbf d}$, is
+our data, stacking slowness perturbations.
+\par
+The center panel of Figure \ref{fig:toldi-steer} shows the inversion result.  
+We tried a variety of ${\mathbf \epsilon}$ values, selecting one that 
+created a rough
+model, but did a fairly good job recovering the correct interval velocity
+perturbations.
+Next, we attempted to recover the interval slowness perturbations, starting
+from the same stacking slowness perturbations, using the
+steering filter
+methodology.  
+We constructed our steering filters to follow the sinusoidal pattern of the 
+model and changed our fitting goal to:
+\begin{eqnarray}
+{\mathbf A^{-1} x} &=& {\mathbf m} \\
+{\mathbf T} {\mathbf A}^{-1} {\mathbf x} &\approx& {\mathbf d} 
+\end{eqnarray}
+where ${\mathbf A}$ is our steering filter matrix.  As the right panel of 
+Figure \ref{fig:toldi-steer} shows we did a substantially better job 
+following ``geology'', with the added benefit of better vertically
+constraining  the interval slowness perturbations. 
+
+\end{comment} 
+
+
+\section{FUTURE WORK AND CONCLUSIONS}
+We show that by using helicon enabled inverse 
+operators built from small steering filters we can quickly obtain esthetically
+pleasing models.
+Tests on smooth models, with a single dip at each location proved 
+successful.  The methodology does not adequately handle models with
+multiple dips at each location and presupposes some knowledge of the
+desired final model. 
+A different approach would be to estimate
+the steering filters ($\mathbf S$) from the experimental data ($\mathbf m$). 
+Generally, this leads to a
+system of non-linear equations
+\begin{equation}
+  \label{eqn:system}
+  \mathbf{P}(\sigma) \mathbf{m} =
+  (\mathbf{I} - \mathbf{S}(\sigma)) \mathbf{m} = \mathbf{0}\;,
+\end{equation}
+which need to be solved with respect to $\sigma$. One way of solving
+system (\ref{eqn:system}) is to apply the general Newton's method,
+which leads to the iteration
+\begin{equation}
+  \label{eqn:newton}
+  \sigma_{k} = \sigma_{k-1} + \frac{\mathbf{P}(\sigma_{k-1})
+    \mathbf{m}}{\mathbf{S}'(\sigma_{k-1}) \mathbf{m}}\;,
+\end{equation}
+where the derivative $\mathbf{S}'(\sigma)$ can be computed analytically.
+It is interesting to note that if we start with $\sigma =0$ and apply
+the first-order filter (\ref{eqn:p1}), then the first iteration of
+scheme (\ref{eqn:newton}) will be exactly equivalent to the
+slope-estimation method of \cite{Claerbout.blackwell.92}, used by
+\cite{Bednar.sep.95.bednarb} for calculating coherency attributes.
+Finally, the steering filter
+regularization methodology needs to be tried in
+conjunction with a variety of operators and 
+applied to  real data problems.
+
+
+\bibliographystyle{seg}
+\bibliography{SEG,SEP2,bob}
+
+%\newpage
+%\FloatListing
+%\APPENDIX{A}
+
+
+
+%We used a Fortran90 inversion toolkit \cite[]{Fomel.sep.93.317} to estimate
+%the model.  We first read in and binned the data:
+%\begin{verbatim}
+%call sreed( 'in', raw_data, 4*3*nd)
+%call bin2_init (transpose(raw_data(:2,:)), o, d, n)
+%call bin2 (raw_data(3,:), mm)
+%call bin2_close ()
+%\end{verbatim}
+%
+%
+%then constructed the filters for $\mathbf P$  
+%and the mask matrix $\mathbf J$ (equation \ref{eq:easy}).
+%\begin{verbatim}
+%call sreed('angle',angle_in,n123*4)
+%do i1=1,n123
+%    call small_filter(filt(i1),angle_in(i1),n(1))
+%deallocate(angle_in);
+%mask =  (data != 0.)
+%\end{verbatim}
+%
+%Constructed and initialized the chain operator $(\mathbf I-\mathbf J) \mathbf F$:
+%
+%\begin{verbatim}
+%call init_mis(model,data,mask,filt)
+%\end{verbatim}      
+%
+%
+%where {\tt init\_mis} is:
+%\begin{verbatim}
+%subroutine init_mis(model,data,mask,filt){
+%real :: model(:),data(:)
+%logical,pointer :: mask(:)
+%type(filters),pointer :: filt(:)
+%
+%if(size(model)!=size(data))
+%  call erexit("expecting model and data to be same size")
+%
+%call  init_helicon(filt,model)
+%call  init_mask(mask,model)
+%
+%allocate(temp(size(model)))
+%
+%}
+%\end{verbatim}
+%
+%and then initialized the conjugate gradient solver and passed in our
+%chain operator:
+%
+%\begin{verbatim}
+%call init_mis(model,data,mask,filt)
+%model=0.
+%call cgstep_init()
+%call solver(mask_helix_chain, cgstep,niter=niter, dat=data, mask=mask, x=model)
+%call cgstep_close()
+%\end{verbatim}
+%
+%where or chain operator is simply:
+%\begin{verbatim}
+%integer function mask_helix_chain(adj,add,model,data){
+%logical :: adj,add
+%real :: model(:),data(:)
+%
+%call chain (mask_op, helidiv2,  adj, add, model, data, temp)
+%}
+%\end{verbatim}
+%
+%Finally, construct our output
+%model, $\mathbf m_k + (\mathbf I - \mathbf J) \mathbf F \mathbf x$,
+%and write out the result:
+%
+%\begin{verbatim}
+%ierr= helidiv2(F,T,model,real_model)
+%
+%where(mask)
+%  real_model=data
+%
+%call srite( 'out', real_model, 4*n123)
+%\end{verbatim}
+%
+%

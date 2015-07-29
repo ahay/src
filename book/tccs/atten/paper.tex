@@ -1,0 +1,1028 @@
+%\documentclass[paper]{geophysics}
+%\documentclass[paper,revised]{geophysics}
+%\usepackage{times,graphicx,timet}
+
+% Defining macros
+
+%\begin{document}
+
+%\usepackage{xcolor}
+
+
+% ----------------------------------
+% ARTICLE
+% ----------------------------------
+
+\published{Geophysics, 74, no. 2, WA77-WA92, (2009)}
+\title{Fractal heterogeneities in sonic logs\\ and low-frequency scattering attenuation}
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}} 
+
+%\ms{GEO-2007-0352} % paper number
+
+\author{Thomas J. Browaeys and Sergey Fomel}
+
+\footer{}
+\lefthead{Browaeys \& Fomel}
+\righthead{Fractals heterogeneities and attenuation}
+
+\maketitle
+
+
+%\pagebreak
+
+
+\begin{abstract}
+Cycles in sedimentary strata exist at different scales
+and can be described by fractal statistics.
+We use von K\'arm\'an's autocorrelation function
+to model heterogeneities in sonic logs from a clastic reservoir and
+propose a nonlinear parameter estimation.
+Our method is validated using synthetic signals,
+and when applied to real sonic logs, it extracts both
+the fractal properties of high spatial frequencies and one dominant cycle between 2.5 and 7 m.
+Results demonstrate non-Gaussian and antipersistent statistics of sedimentary layers.
+We derive an analytical formula for the scattering attenuation of scalar waves 
+by 3D isotropic fractal heterogeneities using the mean field theory.
+Penetration of waves exhibits a high-frequency cutoff sensitive to heterogeneity size.
+Therefore shear waves can be more attenuated than compressional waves because of their shorter wavelength.
+\end{abstract}
+
+
+\section{Introduction}
+
+
+Propagation of waves in heterogeneous media involves attenuation and
+dispersion by scattering.  Theoreticians are still challenged by the
+phenomenon of wave propagation in random media. The mean field theory
+\cite[]{Chernov_60,Karal_K64,Uscinski_77} is commonly used and
+provides both dispersion and attenuation, depending on scattering
+cross-sections of the heterogeneities
+\cite[]{Waterman_T61,Wu_A85,Kanaun_L08}, which are described by their
+statistical spatial autocorrelation.  Higher order correlations have
+been more recently incorporated in a frequency-dependent effective
+medium theory \cite[]{Chesnokov_KK98}.  One major advance, pointed out
+by \cite{Wu_82,Wu_A85}, is the restriction of the validity of the mean
+field formalism to low frequency.  The theory in fact includes
+destructive interferences, caused by averaging different realizations
+of the random medium, and overestimates attenuation at high
+frequencies.  Alternative solutions have been proposed to remove this
+artificial decoherence of the phase.  Two important examples are
+radiative transfer theory \cite[]{Wu_93,Haney_WS05} and the Rytov
+approximation \cite[]{Rytov_KT89}, which is more adequate than the
+Born approximation when phase fluctuations are important.
+
+In the area of seismic imaging, the layered structure of sediments led
+\cite{Odoherty_A71} to introduce the fundamental concept of
+stratigraphic filtering.  The empirical formula postulated by
+O'Doherty and Anstey was demonstrated in 1D using mean field formalism
+\cite[]{Banik_LS85,Resnick_90} and, alternately, using wave
+localization theory \cite[]{Sheng_WZP86,Shapiro_Z93,Shapiro_H99}, with
+a recent extension to a larger frequency band for acoustic waves in 3D
+\cite[]{Muller_S01}.  The wave localization method utilizes phase, and
+logarithm of the amplitude, which have the property of self-averaging
+over some distance called the localization length, in a stationary
+random medium.  These quantities are exactly the ones used in the
+Rytov method and avoid the phenomenon of artificial phase decoherence
+at high frequencies.  Multiple scattering of seismic waves remains a
+complex and active research area.
+
+The fractal property of subsurface heterogeneities was initially discussed by \cite{Hewett_86} 
+for hydrocarbon reservoirs and has been confirmed in both vertical and horizontal wells \cite[]{Stefani_G01}.
+The study of seismic scattering by 2D numerical wave propagation \cite[]{Frankel_C86} 
+demonstrates the necessity of self-similar heterogeneities for modeling
+both observations of coda waves and of traveltime anomalies.
+A $1/f$ spectrum of heterogeneities was modeled 
+using the von K\'arm\'an spatial autocorrelation function \cite[]{Vonkarman_48}
+in order to obtain a constant quality factor at high frequencies.
+For scatterers larger than the wavelength, multipathing was observed, whereas
+3D effects were revealed to be important for scattering loss at low frequency.
+\cite{Gist_94} tried to explain seismic-wave attenuation in VSP surveys 
+by 3D scattering from fractal heterogeneities.
+One of the first attempts to relate the statistics of well log data 
+to seismic scattering used wave localization theory \cite[]{White_SN90}.
+A more detailed study of acoustic-wave localization effects in 1D fractal media \cite[]{Vanderbaan_01}
+shows that a constant quality factor is possible only for the $1/f$ fractal spectrum
+and that localization can not occcur if the medium contains periodic layers involving resonance
+and violating the ergodicity assumption.
+Convergence of the localization effect in realistic 3D seismic surveys seems questionable.
+Presence of strong cycles in well log data is causing difficulties 
+when the fractal exponent is being estimated \cite[]{Dolan_BR98}
+and is commonly attributed to Milankovitch cycles \cite[]{Anstey_D02a}.
+
+Further investigation of the relationship between cycles, fractal
+properties, and correlation lengths is necessary and low-frequency
+scattering theories in 3D fractal media can be appropriate for
+conventional seismic surveys.  In this paper, we propose a nonlinear
+estimation method for fractal statistics of sonic-log heterogeneities
+using von K\'arm\'an's model.  We attempt to identify different scales
+of the sedimentation process as proposed by \cite{Odoherty_A71} and
+\cite{Anstey_D02a}.  The inversion captures small-scale
+heterogeneities while larger local cycles exist.  We use the mean
+field theory to calculate analytical solution of low-frequency
+attenuation by scattering from 3D fractal heterogeneities and predict
+a shift of the dominant frequency with depth in seismic surveys.
+
+The paper is organized into two parts.
+In the first part we present a description of cycles in sediments
+in connection with fractal statistics.
+The von K\'arm\'an spatial autocorrelation function is introduced,
+and we briefly review some features of fractal statistics.
+We present our estimation method, validate it on synthetic signals,
+apply it to our sonic-log data, and show that one can detect the high-frequency part
+of the superposition of different geological scales.
+The second part explains the derivation of scattering attenuation
+for low-frequency acoustic waves by 3D isotropic fractal heterogeneities using the mean field theory.
+Results comply with the Rayleigh regime
+and the Backus effective medium for very low frequency.
+We present analytical predictions of scattering attenuation and show the existence of
+a cutoff frequency for the penetration of waves.
+We use the frequency dependence of the penetration depth
+to calculate the shift of the dominant frequency of a Ricker wavelet.
+We conclude by suggesting further improvements.
+
+
+\section{Statistical model of heterogeneities}
+
+
+Let us consider the spatial fluctuations of seismic velocities to be small and to 
+constitute a second-order stochastic process.
+We describe the fluctuations by using different realizations of the random function $f(\mathbf{x})$
+with the expectation value $\langle f \rangle = 0$ and with the spatial covariance 
+depending on the relative distance $\mathbf{r}$ defined by
+\begin{eqnarray}
+\langle f(\mathbf{x})f(\mathbf{x}+\mathbf{r})\rangle & = & \sigma^2 N(\mathbf{r}), \label{eqn:covarf}
+\end{eqnarray}
+where $\sigma$ is the standard deviation and $N(\mathbf{r})$ is the spatial autocorrelation 
+function with $N(\mathbf{0})=1$.
+The energy spectrum $E^{(s)}(\mathbf{k})$ of the fluctuations in $s$ dimensions ($s=1,2,3$) is
+related to the autocorrelation by the Wiener-Khintchine theorem \cite[]{Born_W64}:
+\begin{eqnarray}
+E^{(s)}(\mathbf{k}) = |F(\mathbf{k})|^2 & = & 
+\sigma^2\int N(\mathbf{r})e^{-i\mathbf{k}\cdot\mathbf{r}}d\mathbf{r}, \label{eqn:wienerkh}\\
+F(\mathbf{k}) & = & \int f(\mathbf{x})e^{-i\mathbf{k}\cdot\mathbf{x}}d\mathbf{x},
+\end{eqnarray}
+where $\mathbf{k}$ is the spatial wave vector and $F(\mathbf{k})$ is the Fourier transform of $f(\mathbf{x})$.
+The energy spectrum in equation \ref{eqn:wienerkh} can be simplified, for an isotropic correlation function, to
+\begin{eqnarray}
+E^{(1)}(k) & = & 2~\sigma^2\int_{0}^{\infty}N(r)\cos(kr)dr, \label{eqn:etf1d}\\
+E^{(3)}(k) & = & \frac{4\pi}{k}~\sigma^2\int_{0}^{\infty} rN(r)\sin(kr)dr, \label{eqn:etf3d}
+\end{eqnarray}
+where $k=|\mathbf{k}|$.  The von K\'arm\'an autocorrelation function
+$N_{H,b}(\mathbf{r})$ describes a self-affine medium relevant for
+geological structures
+\cite[]{Goff_J88,Holliger_L92,Dolan_BR98,Sato_F98,Klimes_02,Goff_H03}.
+This function was initially derived by \cite{Vonkarman_48} while
+studying the velocity field in a turbulent fluid and has been used to
+describe heterogeneous media \cite[]{Tatarski_61,Frankel_C86}.  The
+Fourier transform of $N_{H,b}(\mathbf{r})$ was given by
+\cite{Lord_54}.  The statistical autocorrelation $N_{H,b}(\mathbf{r})$
+and the energy spectrum $E^{(s)}_{H,b}(\mathbf{k})$ in the Fourier
+domain are
+\begin{eqnarray}
+N_{H,b}(\mathbf{r}) & = & \frac{2^{(1-H)}}{\Gamma(H)}~(r/b)^{H}K_{H}(r/b),\label{eqn:vkacf}\\
+E^{(s)}_{H,b}(\mathbf{k}) & = & \sigma^2~C^{(s)}_{H}
+\frac{\left(2b\right)^s}{\left(1+b^2k^2\right)^{H+\frac{s}{2}}},\label{eqn:vkes} \\
+\mbox{with} & & C^{(s)}_{H}=\left|\frac{\Gamma(H+\frac{s}{2})}{\Gamma(H)}\right|\pi^{\frac{s}{2}}, \label{eqn:calpha}
+\end{eqnarray}
+where $r=|\mathbf{r}|$, $K_{H}$ is the modified Bessel function 
+of the second kind with order $H$, and $\Gamma$ is the Gamma function. 
+Parameters describing the heterogeneities are characteristic distance $b$,
+below which the distribution is fractal,
+and exponent $H$, characterizing the roughness of the medium.
+We use the energy spectrum in equation \ref{eqn:vkes} with $s=1$ to analyze sonic logs
+and with $s=3$ to predict 3D scattering attenuation.
+
+
+\subsection{Fractal statistics}
+
+
+Among different concepts introduced by the theory of fractals \cite[]{Mandelbrot_83},
+self-affine property accounts for invariance of roughness of a curve observed at different scales.
+Self-affine fractals can be characterized by the power-law dependence of their energy spectrum $E(f)$
+on frequency $f$:
+\begin{eqnarray}
+E(f) & \propto & f^{-\beta}. \label{eqn:fracspec}
+\end{eqnarray}
+The exponent $\beta$, in the energy spectrum $E^{(s)}_{H,b}(\mathbf{k})$ from equation \ref{eqn:vkes}, is
+\begin{eqnarray}
+\beta & = & 2H+s. \label{eqn:fracexp}
+\end{eqnarray}
+For $\beta=0$, energy spectrum is constant and describes the familiar white noise.
+Causal integration of Gaussian white noise produces the classical Brownian motion, or random walk,
+characteristic of diffusion processes, and results in an energy spectrum with $\beta=2$. 
+The autocorrelation function of Brownian motion signals is a decreasing exponential and
+the autocorrelation in equation \ref{eqn:vkacf} properly reduces to $\exp{[-r/b]}$ for $H=0.5$.
+Another interesting form of spectrum is for $\beta=1$.  
+The associated signal is called Flicker noise \cite[]{Schottky_26,Dolan_BR98} and can be interpreted 
+as the superposition of different relaxation processes.
+For geological layers, such form of spectrum was interpreted as the expression
+of quasi-cyclicity and blocky layering \cite[]{Shtatland_91}.
+Generalization, including Gaussian white noise and Brownian motion, leads to two types 
+of fractal signals \cite[]{Shtatland_91,Turcotte_97,Li_03}, namely
+\begin{itemize} 
+\item fractional Gaussian noise (fGn) defined as filtered Gaussian white noise with $-1 \leq \beta \leq 1$,
+\item fractional Brownian motion (fBm) built by causal integration of fGn above and resulting in $1 \leq \beta \leq 3$.
+\end{itemize}
+The fGn is stationary and Gaussian, whereas the fBm is neither stationary nor Gaussian.
+Exponent $\beta_{fBm}$ of the fBm is related to exponent $\beta_{fGn}$ of the fGn, used for integration, by 
+$\beta_{fBm}=\beta_{fGn}+2$.
+
+The significance of parameter $H$ in equation \ref{eqn:fracexp} is delicate and connected to the Hurst exponent $Hu$,
+which measures the correlation of time series \cite[]{Hurst_51} by
+\begin{eqnarray}
+Hu & = & \frac{\log\left(R/\sqrt{S}\right)}{\log(T)}\,, \label{eqn:Hurst}
+\end{eqnarray}
+where $R$ and $S$ are respectively range of variations and variance
+calculated for the length $T$ of the signal. The meaning of the value of $Hu$ is 
+\begin{itemize} 
+\item antipersistence for $0\leq Hu\leq 0.5$,
+\item random process for $Hu=0.5$, and
+\item persistence for $0.5\leq Hu\leq 1$.
+\end{itemize}
+Estimation of $Hu$ using formula \ref{eqn:Hurst} is relevant only for fGn signals \cite[]{Turcotte_97}.
+For example, Gaussian white noise produces $Hu=0.5$.
+Parameter $H$ defined in equation \ref{eqn:fracexp} is associated with the Hurst exponent by
+\begin{itemize} 
+\item $H=Hu-1$ for fGn with $-1\leq\beta\leq 1$;
+\item $H$ equals the Hurst exponent of incremented fGn \cite[]{Li_03} for fBm with $1\leq\beta\leq 3$.
+\end{itemize}
+The different self-affine 1D fractal models are presented in Table~\ref{tbl:fractclass}
+according to the nature and persistency of the signal.
+A previous analysis of the logarithm of acoustic impedance from well data
+by \cite{Walden_H85} shows $1/2 \leq \beta \leq 3/2$, promoting the so-called $1/f$ geology.
+An improved solution, reproducing the complete well log sequence in sedimentary rocks, uses
+a similar random process based on fractional L\'evy motion \cite[]{Painter_P94}, 
+but fBm can be adequate at small scales, inside different facies \cite[]{Lu_MFC02}.
+ 
+% Table fractal classification 
+\tabl{fractclass}
+{Classification of 1D fractal statistics according to the exponent $\beta$ and geological interpretation.}
+{
+\begin{center}
+    \begin{tabular}{|c|r|r|c|}
+      \hline
+      {\it Fractal exponent} & Von K\'arm\'an exponent $H$ & {\it Description} & {Geology} \\[0.2mm]
+      \hline
+      $\beta=0$     & $-0.5$       & Gaussian white noise & Random process \\[0.3mm]
+      \hline
+      $0<\beta<1$   & $-0.5<H<0$   & Persistent fGn & \\[0.3mm]
+      \hline
+      $\beta=1$     & $0$          & Flicker noise & Blocky layers\\[0.3mm]
+      \hline
+      $1<\beta<2$   & $0<H<0.5$    & Antipersistent fBm & Quasi-cyclic deposition \\[0.3mm]
+      \hline
+      $\beta=2$     & $0.5$        & Brownian walk & Random deposition \\[0.3mm]
+      \hline
+      $2<\beta<3$   & $0.5<H<1$    & Persistent fBm & Transitional deposition \\
+      \hline
+    \end{tabular}
+\end{center}
+}
+
+\subsection{Synthetic realizations}
+
+% Table synthetic generation
+\tabl{randmethod}
+{Synthesis of correlated heterogeneous media by generating fractional Gaussian noise (fGn)
+or fractional Brownian motion (fBm) with the spectrum $E^{(s)}_{H,b}(\mathbf{k})$.
+The spatial Fourier transforms in $s$ dimensions
+of the distributions $f(\mathbf{x})$ and $g(\mathbf{x})$
+are respectively $F(\mathbf{k})$ and $G(\mathbf{k})$ with $|G(\mathbf{k})|=1$,
+and $\mbox{sign}(\mathbf{k})=\mathbf{k}/|\mathbf{k}|$.}
+{
+\begin{center}
+    \begin{tabular}{|c|l|c|c|}
+      \hline
+      {\it Steps} & {\it Domain} & {\it Operation for fGn} & {\it Operation for fBm} \\[0.2mm]
+      \hline
+      1 & Space & \multicolumn{2}{c|}{Generate Gaussian white noise $g(\mathbf{x})$ with zero mean and unit variance} \\[0.2mm]
+      \hline
+      2 & Fourier & \multicolumn{2}{c|}{Generate energy spectrum $E^{(s)}_{H,b}(\mathbf{k})$} \\[0.5mm]
+      \hline
+      3 & Fourier & 
+      $F(\mathbf{k})=\sqrt{E^{(s)}_{H,b}(\mathbf{k})}~G(\mathbf{k})$ & 
+      $F(\mathbf{k})=-i~\mbox{sign}(\mathbf{k})~\sqrt{E^{(s)}_{H,b}(\mathbf{k})}~G(\mathbf{k})$ \\[0.5mm] 
+      \hline
+      4 & Space & {Obtain correlated fGn $f(\mathbf{x})$} & {Obtain correlated fBm $f(\mathbf{x})$} \\
+      \hline
+    \end{tabular}
+\end{center}
+}
+
+Our method of synthesizing correlated random media is summarized in Table~\ref{tbl:randmethod}
+for fractional Gaussian noise (fGn) and fractional Brownian motion (fBm).
+The Gaussian nature of the initial white noise is contained in the phase of its Fourier transform $G(\mathbf{k})$, 
+whereas the amplitude is constant with frequency  because the noise is white.
+The causal integration, to produce the fBm, is performed by a phase rotation in the Fourier domain, strictly equivalent to the Hilbert transform.
+The fractal property, below spatial scale $b$, is imposed by the amplitude $\sqrt{E^{(s)}_{H,b}}$ of the von K\'arm\'an model.
+
+\inputdir{enerd}
+\multiplot{4}{signal,f2dfile,cgaussb,fcgaussbp}{width=0.47\textwidth}
+{Variations of $V_S$ in a high-resolution reservoir model based 
+on seismic and well data from a field in Canada
+(a) and its spectral energy density (b).
+Synthetic realization of 2D fGn
+using the von K\'arm\'an spectral amplitude with the exponent $\beta=1$ 
+and elliptical anisotropy (c,\,d).}
+
+For dimension $s=2$, the exponent in equation \ref{eqn:vkes} is $\beta=2H+2$.
+Therefore, the energy spectrum of the 2D fGn with $H=-0.5$ in Figure~\ref{fig:signal,f2dfile,cgaussb,fcgaussbp}
+is $E(f)\propto 1/f$.
+\cite{Klimes_02} in fact proposed using $-0.5\leq H\leq 0$ to synthesize geologically realistic 2D models
+with the von K\'arm\'an function.
+Because sediments are made up of layers, we consider the autocorrelation function to be vertical transverse isotropic.
+We use two different correlation lengths $b_x$ and $b_z$ for horizontal and vertical directions,
+and define the Riemannian relative distance \cite[]{Goff_J88}:
+\begin{eqnarray}
+r/b=\sqrt{(r_x/b_x)^2+(r_z/b_z)^2}.
+\end{eqnarray}
+Figure~\ref{fig:signal,f2dfile,cgaussb,fcgaussbp}
+shows, for comparison, the signal and associated energy spectrum of the synthetic fGn 
+and of a 2D section from a high-resolution model of a clastic reservoir in Canada.
+The spectrum of the synthetic heterogeneous medium is similar to the one from the reservoir model,
+but the synthetic fGn, although exhibiting some comparable roughness in the space domain,
+does not contain coherent, large geological structures, i.e. folded beds.
+
+
+\subsection{Nonlinear parameter estimation on sonic well logs}
+
+
+We propose to use the synthesis of a random medium 
+detailed in Table~\ref{tbl:randmethod} for $s$=1
+as a basis for the procedure to estimate heterogeneity parameters from sonic logs.
+We achieve optimization by using a weighted least-squares method in the spectral domain
+on the logarithm of the amplitude, with the model derived from equation \ref{eqn:vkes}\,:
+\begin{eqnarray}
+\ln|F(k)| & = & \ln|F(0)| - p\ln\left[1+(kb)^2\right],\label{eqn:nlinvmethod} \\
+p & = & \frac{H}{2}+\frac{1}{4}\ \ \ \mbox{and} \\
+|F(0)| & = & \sigma~\sqrt{2b~C^{(1)}_{H}}\,. \label{eqn:nlinvconstant}
+\end{eqnarray}
+We estimate the three parameters, $b$, $H$, and $\sigma$, using a separable least-squares method 
+\cite[]{Golub_P73} for $\ln|F(0)|$ and the slope $p$, and a Gauss Newton optimization algorithm on the nonlinear parameter $b^2$.
+Parameter $\ln|F(0)|$ is included in the optimization algorithm
+because it is difficult to estimate directly from the zero-frequency component in the data.
+Standard deviation $\sigma$, extracted from relation \ref{eqn:nlinvconstant}, is confirmed by direct evaluation on the spatial signal.
+When applying the method, we first substract the signal expectation and use it as a scaling factor.
+We have tested the efficiency of the algorithm on synthetic fGn and fBm 
+generated by the procedure in Table~\ref{tbl:randmethod} with a discrete length of 4056 points.
+Three synthetic fractal signals and their parameter estimations are shown 
+in Figure~\ref{fig:cgaussM025,lligaussfM025,cgauss025,lligaussf025,cgauss05,lligaussf05}.
+Results of the validation tests are presented in Table~\ref{tbl:synthetictest}.
+
+\inputdir{karman1}
+\multiplot{6}{cgaussM025,lligaussfM025,cgauss025,lligaussf025,cgauss05,lligaussf05}{width=0.35\textwidth}
+{Synthetic signals generated as fGn with $H=-0.25$, $b=10$\,m, $\sigma=20~\%$ in (a); 
+fBm with $H=0.25$, $b=5$\,m, $\sigma=30~\%$ in (c); and fBm with $H=0.5$, $b=5$\,m, $\sigma=30~\%$ in (e).
+Parameter estimations on the logarithm of the spectral amplitude are shown on the right (b,\,d,\,f).}
+
+\inputdir{karmand}
+\multiplot{6}{signalA1,signalC2,llisignalfA1,llisignalfC2,rllisignalfA1L,rllisignalfC2L}{width=0.35\textwidth}
+{Sonic log $V_P$ (a) from well N$^{\circ}$1 and $V_S$ (b) from well N$^{\circ}$3, scaled by their respective average value $V_0$.
+Parameter estimation on the logarithm of the spectral amplitude (c,\,d) shows the existence of different slopes 
+for low, medium, and high frequencies.
+These tool artefacts are removed by restricting the estimation method to low frequency (e,\,f).}
+
+
+% Table synthetic tests
+\tabl{synthetictest}
+{Comparison of the stochastic medium parameters
+used to generate synthetics fGn and fBm and their 
+recovery by the nonlinear estimation method.}
+{
+\begin{center}
+    \begin{tabular}{|l|rcc|}
+      \hline
+      {\it Parameters} & $H$ & $b$~(m) & $\sigma$~(\%) \\[0.2mm]
+      \hline
+     {Generated fGn} & -0.25 & 10.0 & 20 \\[-0.4mm]
+     {Recovered}     & -0.21 & 11.0 & 18 \\[0.2mm]
+      \hline
+     {Generated fGn} & -0.25 &  5.0 & 20 \\[-0.4mm]
+     {Recovered}     & -0.21 &  5.9 & 17 \\[0.2mm]
+      \hline
+     {Generated fBm} &  0.25 &  10.0 & 30 \\[-0.4mm]
+     {Recovered}     &  0.26 &  10.2 & 23 \\[0.2mm]
+      \hline
+     {Generated fBm} &  0.50 & 5.0 & 40 \\[-0.4mm]
+     {Recovered}     &  0.51 & 5.3 & 32 \\[0.2mm]
+      \hline
+     {Generated fBm} & 0.75 & 3.0 & 40 \\[-0.4mm]
+     {Recovered}     & 0.79 & 2.7 & 30 \\[0.2mm]
+      \hline
+    \end{tabular}
+\end{center}
+}
+
+Well log data come from a sandy channel reservoir with a clastic overburden,
+and the facies evolves from silty sandstone to mudstone,
+which is characteristic of alluvial deposition.
+Velocities $V_P$ and $V_S$ were both measured with a spatial sampling of $0.125$~m. 
+Figure~\ref{fig:signalA1,signalC2,llisignalfA1,llisignalfC2,rllisignalfA1L,rllisignalfC2L} shows
+the parameter estimation for two sonic logs.
+Comparison with the method applied to the synthetics in 
+Figure~\ref{fig:cgaussM025,lligaussfM025,cgauss025,lligaussf025,cgauss05,lligaussf05}
+uncovers the existence of different slopes for different frequencies in Figures~\ref{fig:llisignalfA1} and \ref{fig:llisignalfC2}.
+We can reasonably delimit three domains, denoted (A) for low frequencies, (B) for medium frequencies, and (C) for very high frequencies.
+These domains can be identified by parameters $r_{S}$ 
+and $r_{I}$, representing specific values of relative distance $r$, namely
+\begin{eqnarray}
+\mbox{(A) for}\ \ r\geq r_{S}, & \mbox{(B) for}\ \ r_{S}\geq r\geq r_{I}, & \mbox{(C) for}\ \ r_{I}\geq r, \nonumber
+\end{eqnarray}
+%\begin{array}{lr}
+%\mbox{(A)} & r \geq r_{S}, \nonumber\\
+%\mbox{(B)} & r_{S} \geq r \geq r_{I}, \nonumber\\
+%\mbox{(C)} & r_{I} \geq r, \nonumber
+%\end{array}
+where 1\,m~$<r_{S}<2$\,m and $r_{I}<1$\,m.
+The sharp break (B) in the medium frequencies
+followed by a white noise (C) at high frequencies is characteristic of the tool artefact.
+Data acquisition involves a convolution 
+with a box-car window \cite[]{Shiomi_SO97,Dolan_BR98}.
+Application of the estimation method is thus restricted to relative distances $r>r_S$,
+and results are shown in Figures~\ref{fig:rllisignalfA1L} and \ref{fig:rllisignalfC2L}.
+
+Results are summarized in Table~\ref{tbl:sonicgeneral} 
+for the four different sonic logs $V_P$ and $V_S$.
+The ratio $\langle V_P \rangle / \langle V_S \rangle$ is almost constant
+for the four well logs and roughly equal to two.
+The updated estimation in the spatial wavelength domain (A) produces reasonable results in Table~\ref{tbl:sonicgeneral}.
+Standard deviation $\sigma$ varies from 20 to 45~\% 
+and is larger for $V_S$ logs than for $V_P$ logs.
+Correlation length $b$ is about 5~m for both $V_P$ and $V_S$,
+except for the well N$^{\circ}$4, which is 2.5~m.
+Exponent $H$ for $V_P$ varies from 0.1 to 0.4
+and for $V_S$ from 0.2 to 0.6.
+In Figure~\ref{fig:rfsignalC2,fitfiltb025},
+comparison of the frequency content of one real sonic log
+with one realization of a synthetic fBm, generated using similar parameters, shows that
+the sonic-log data contain higher peaks for very large wavelengths.
+We detected in the different sonic well logs the recurrence of some particular spatial cycles 
+at 2.5~m, 5~m, 10~m, and 20~m.
+
+% Table soniclogs
+\tabl{sonicgeneral}
+{Parameters estimation from four wells in a clastic overburden, 
+for the full sonic logs, and for limited spatial frequency bandwidths 
+using the indicated restriction on the relative distance $r$ to remove the tool artefacts.
+Relevant physical values are underlined.}
+{
+\begin{center}
+\begin{tabular}{|r|c|c|c|c|}
+      \hline
+      {Well} \hfill {Log} & {\it b} (m) & $H$ & $\sigma$ (\%) & {$\langle{V}\rangle$ (m/s)}\\[1mm]
+      \hline
+N$^{\circ}$1 \hspace{4mm} $V_P$ full & 0.79 & 1.32 & 17 & \underline{2791} \\
+            {$r>1.5$~m} & \underline{6.70} & \underline{0.13} & \underline{22} & \\ \cline{2-5}
+             $V_S$ full & 1.05 & 1.16 & 32 & \underline{1218} \\
+            {$r>2.0$~m} & \underline{5.92} & \underline{0.21} & \underline{35} & \\
+      \hline
+N$^{\circ}$2 \hfill $V_P$ full & 1.90 & 0.92 & 27 & \underline{2842} \\
+              $r>1.6$~m & \underline{5.34} & \underline{0.38} & \underline{29} & \\ \cline{2-5}
+             $V_S$ full & 2.84 & 0.83 &  45 & \underline{1240} \\
+              $r>1.5$~m & \underline{3.08} & \underline{0.62} & \underline{44} & \\
+    \hline
+N$^{\circ}$3 \hfill $V_P$ full & 1.34 & 1.16 & 20 & \underline{2787}\\
+              $r>1.9$~m & \underline{7.22} & \underline{0.18} & \underline{21} & \\ \cline{2-5}
+             $V_S$ full & 1.25 & 1.23 & 32 & \underline{1216} \\
+              $r>1.8$~m & \underline{5.01} & \underline{0.32} & \underline{36} & \\
+      \hline
+N$^{\circ}$4 \hfill $V_P$ full & 0.64 & 1.98 & 18 & \underline{2745} \\
+              $r>1.4$~m & \underline{2.58} & \underline{0.39} & \underline{38} & \\ \cline{2-5}
+             $V_S$ full & 0.57 & 2.26 & 32 & \underline{1247} \\
+              $r>1.3$~m & \underline{2.46} & \underline{0.56} & \underline{33} & \\
+     \hline
+\end{tabular}
+\end{center}
+}
+
+\inputdir{spectra}
+\multiplot{2}{rfsignalC2,fitfiltb025}{width=0.44\textwidth}
+{Fourier spectrum of the scaled $V_S$ sonic log from well N$^{\circ}$ 3 (a). The shape of the low-frequency 
+content is different from that of the Fourier spectrum of the fractional Brownian motion (b)
+synthesized with the von K\'arm\'an model using $H=0.25$, $b=5$\,m, and $\sigma=30~\%$.}
+
+\subsection{Fractal heterogeneities and cycles in sediments}
+
+\cite{Odoherty_A71} and \cite{Anstey_D02a} described variations in
+well logs by the superposition of different types of deposition,
+leading to ``layers inside layers''.  Their classification includes
+\begin{enumerate}
+\renewcommand{\theenumi}{\arabic{enumi}}
+\item A large number of small thickness layers ($\leq 1$~m)
+for weakly transitional depositions with small reflection coefficients;
+\item Cyclic layers of thicknesses from 1 to 10~m with sharp interfaces,
+corresponding to fine layering depositions inside a facies
+for short-period sea cycles; and
+\item Horizons imaged by seismic reflection, i.e. different facies for a small number of thicker blocky layers associated with low-order cycles.
+\end{enumerate}
+They suggested that transmission losses could be compensated by
+multiple reflections, depending on seismic wavelength.  This
+classification is in agreement with the fact that high exponents, $H$,
+appear for shorter scales, $b$, in Table~\ref{tbl:sonicgeneral}.  The
+estimation performed on the sonic logs indicates fractal properties
+for distances shorter than $b\simeq 5$\,m.  Acccording to
+\cite{Anstey_D02a}, well log signals are the superposition of several
+processes with different scales.  The von K\'arm\'an model captures
+part of it.  Parameters extracted by our analysis describe
+heterogeneities corresponding to type 2 of the O'Doherty-Anstey
+classification, which is a fractal behavior inside major geological
+units, at least from 10 down to 1~m, with a correlation length of 5~m.
+Previous estimations of the correlation length on well logs were
+produced by direct calculation of the spatial autocorrelation
+\cite[]{White_SN90,Shiomi_SO97}.  \cite{White_SN90} suggested the
+possibility of superposition of two correlation lengths at 5 and 20~m.
+The wavelet detection analysis of gamma-ray and resistivity well logs
+for a sandstone confirmed the strong evidence of local cyclicity in
+the stratigraphic sequences \cite[]{Rivera_RJCA04}.  We think that
+direct estimation of correlation distance $b$ using the
+autocorrelation function, or our estimation method, captures the
+shortest dominant cycle in the sedimentary layers.  This would explain
+why the fractal behavior seems to hold for larger scales in
+Figures~\ref{fig:rllisignalfA1L} and \ref{fig:rllisignalfC2L}.
+
+Parameter $H$, estimated from well logs, is $0< H\leq0.5$ and 
+consistent with an antipersistent fractional Brownian motion characteristic of cyclicity (see Table~\ref{tbl:fractclass}).
+The Hurst exponent commonly exhibits some antipersistence  in sediments with values from 0.2
+to 0.5 for sandstones \cite[]{Dolan_BR98,Lu_MFC02}.
+High values of 0.5 and 0.6 could be interpreted, in a clastic context,
+to be caused by a transitional deposition involving persistency, as in natural floods.
+Natural flood records exhibit a Hurst exponent, $0.5\leq Hu \leq 1.0$, associated 
+with so-called black noise \cite[]{Hurst_51,Mandelbrot_W69}.
+
+
+\subsubsection{Seismic-scale heterogeneities}
+
+
+Inside a main facies, we can not recover the short wavelengths of type 1 in the O'Doherty-Anstey 
+classification because of well-logging tool limitation.
+Type 3 of the classification includes
+Milankovitch cycles of about 10 to 20~m
+and third-order sea-level cycles from 15 to 300~m \cite[]{Anstey_D02a}.
+Seismic reflectors are conventionally identified 
+as being chronostratigraphic horizons separating different geological 
+units. They correspond to the wavelength of conventional seismic surveys,
+up to 100 Hz, and should induce some resonant scattering with ``friendly'' multiples.
+Multipathing is observed for this ratio
+of seismic wavelength to the size of heterogeneities,
+as shown by numerical experiments \cite[]{Frankel_C86}.
+This domain should be treated using wave-localization theory and the Rytov method.
+These could nevertheless fail to explain the data because 
+of quasi-periodicity of the medium at this scale, violating the ergodicity assumption required 
+by wave-localization theory. 
+Statistical methods using the autocorrelation function seem to be adapted 
+to describe quasi-periodic media when the ratio of $b$ over the seismic wavelength is small.
+When the wavelength is of the same size, local quasi-cyclicity of the sedimentary sequence should not be ignored \cite[]{Morlet_AFG82,Stovas_U07}.
+
+The non-Gaussian nature and non-stationarity of sedimentary layers
+call for more sophisticated methods to be used, especially in order to capture larger scale pseudo-cyclic heterogeneities, 
+as, for example, a multifractal analysis \cite[]{Marsan_B03} or a local cyclicity detection by wavelet analysis \cite[]{Rivera_RJCA04}.
+The wavelet transform was indeed introduced so that seismic signals in locally cyclic sedimentary layers could be analyzed \cite[]{Morlet_AFG82}.
+
+
+\section{Scattering attenuation in 3D}
+
+
+Different scattering regimes exist when waves propagate in heterogeneous media,
+according to the ratio of the wavelength, $\lambda$, to the size, $b$, of heterogeneities.
+The formalism including the different scattering regimes,
+when heterogeneities are modeled by spherical inclusions,
+is the Mie scattering theory.
+Recent experimental results 
+\cite[]{Legonidec_G07} 
+on sonic-wave reflectivity in a granular medium,
+made up of beads of size $b$ in a water tank, illustrate this classification~:
+\begin{enumerate}
+\item for low frequencies, when $\lambda>\pi b$, backward scattering is dominant,
+the Born approximation can be used, and the regime is Rayleigh scattering;
+\item for wavelengths similar in size to heterogeneity, when $\pi b>\lambda>\pi b/2$,
+lateral scattering is important, multiples should not be neglected,
+and the regime is called resonant scattering; and
+\item for high frequencies, when $\pi b/2>\lambda$, waves are scattered mainly forward, and
+localization theory and the Rytov formalism are appropriate.
+\end{enumerate}
+Experiments have demonstrated that wave reflectivity strongly decreases 
+when the wavelength of the incident wave is twice the diameter of the beads,
+for which lateral scattering starts to be dominant.
+Mean wavefield formalism is valid only for a low frequency,
+when the wavelength is larger than the size of heterogeneities
+because of the assumptions in the derivation \cite[]{Karal_K64}.
+The Born approximation can describe the Rayleigh regime and the approach of resonant phase scattering \cite[]{Frankel_C86,Sato_F98}.
+For wavelengths shorter than the size of heterogeneities, 
+artificial decoherence by phase randomization occurs \cite[]{Wu_82,Sato_F98}.
+We intend to describe the 3D attenuation in a stochastic fractal medium,
+when $kb\leq1$, which is relevant for seismic survey frequencies.
+The limit of validity corresponds to wavelengths approaching the size of heterogeneities.
+We assume heterogeneities to be isotropic.
+The schemes in Figure~\ref{fig:schemescatter3dgg,schemescatterd,schemescatter3d}
+compare a realistic geological structure
+with two different end-member models.
+Scattering calculations in 1D underestimate the scattering loss by small-scale heterogeneities.
+
+\inputdir{XFig}
+\multiplot{3}{schemescatter3dgg,schemescatterd,schemescatter3d}{width=0.25\textwidth}
+{Schematic comparison of single scattering effects,
+during a vertical wave propagation in sediments,
+between a realistic geological structure (a) and two end-member models:
+horizontal layers with propagation including 1D scattering (b)
+and isotropic heterogeneities with 3D scattering (c).}
+
+\subsection{Low-frequency waves in 3D isotropic heterogeneous media}
+
+
+A scalar wave $u(\mathbf{x},\omega)$ in a weakly inhomogeneous medium 
+\cite[]{Chernov_60,Tatarski_61,Karal_K64}
+satisfies the Helmholtz wave equation\,
+\begin{eqnarray}
+\Delta u(\mathbf{x},\omega) + k_0^2\left[1+f(\mathbf{x})\right]^2u(\mathbf{x},\omega) & = & 0\,, \label{eqn:helmh}
+\end{eqnarray}
+where $f(\mathbf{x})$ is a small perturbation of the medium from homogeneity, and $k_0=\omega/c_0$.
+Phase velocity $c_0$ is the background velocity.
+Assuming a second-order stationary statistical distribution 
+for fluctuations $f(\mathbf{x})$ and a zero expectation value $\langle f \rangle = 0$, spatial covariance of the velocity variations is
+defined by relation \ref{eqn:covarf}.
+Expectation $\langle u(\mathbf{x},\omega)\rangle$ of random plane-wave realizations
+is calculated \cite[]{Karal_K64} 
+using a perturbation theory to the second order in $f(\mathbf{x})$ by
+\begin{eqnarray}
+\left[\Delta+k_0^2(1+\sigma^2)\right]\langle u(\mathbf{x},\omega)\rangle -
+4\,k_0^4\,\sigma^2\int N(\mathbf{x}^{\prime}-\mathbf{x})\,G(\mathbf{x},\mathbf{x}^{\prime},\omega)
+\,\langle u(\mathbf{x}^{\prime},\omega)\rangle~d\mathbf{x}^{\prime}= 0\,,
+\end{eqnarray}
+where $G(\mathbf{x},\mathbf{x}^{\prime},\omega)$ is Green's function of the operator $\left[\Delta+k_0^2\right]$,
+and integration is performed over the 3D space.
+The dispersion relation for a plane wave propagating in the heterogeneous medium follows as
+\begin{eqnarray}
+\frac{k^2}{k_0^2} & = & 1 + \sigma^2\left[1 - 4\,k_0^2
+\int N(\mathbf{r})\,G(\mathbf{r},\omega)\,e^{i\,\mathbf{k}\cdot\mathbf{r}}d\mathbf{r}\right], \label{eqn:dispersg}\\
+G(\mathbf{r},\omega) & = & \frac{e^{ik_0r}}{4\pi r}\,,\label{eqn:green3d}
+\end{eqnarray}
+where $\mathbf{r} = \mathbf{x}^{\prime}-\mathbf{x}$ is the relative position, with an absolute value $r=|\mathbf{r}|$,
+and $G(\mathbf{r},\omega)$ is the 3D isotropic free-space Green's function with the outward radiation condition 
+\cite[]{Bleistein_CS01}.
+The path of waves should be sufficiently long to significantly sample medium heterogeneities statistically \cite[]{Gist_94}.
+The Born approximation is present because of Green's function.
+Heterogeneities with the isotropic correlation function $N(r)$
+produce an isotropic wave vector $\mathbf{k}$.
+Combining Green's function in equation \ref{eqn:green3d} with the isotropic integral in equation \ref{eqn:etf3d} reduces 
+the squared dispersion relation of equation \ref{eqn:dispersg} to
+\begin{eqnarray}
+\frac{k^2}{k_0^2} & = & 1 + \sigma^2\left[1 - \frac{4\,k_0^2}{k}\int_{0}^{\infty}\hspace{-2mm} N(r)\,e^{ik_0r}\sin(kr)\,dr\right].
+\end{eqnarray}
+Second-order expansion $k/k_0=1+O(\sigma^2)$ in the solution constrains validity to the domain 
+$k_0b\ll 1/\sigma$, where $b$ is the characteristic length scale of the heterogeneities.
+The second-order approximation for the 3D dispersion relation is finally
+\begin{eqnarray}
+\frac{k}{k_0} & = & 1 + \frac{\sigma^2}{2} + i\,\sigma^2\,k_0\left[S(0) - S(2k_0)\right]. \label{eqn:dispersc}
+\end{eqnarray}
+Quantity $S(k)$, introduced above, is related to the real and even function $E^{(1)}(k)$, defined by the isotropic integral of equation \ref{eqn:etf1d}\,:
+\begin{eqnarray}
+S(k) & = & \int_{0}^{+\infty}\hspace{-3mm}N(r)e^{ikr}dr\,, \label{eqn:defskint} \\
+E^{(1)}(k)~\sigma^{-2} & = & \int_{-\infty}^{+\infty}\hspace{-3mm}N(r)e^{ikr}dr = 2~\mbox{Re}[S(k)]\,, \label{eqn:rsint} \\
+2\,i\,\mbox{Im}[S(k)] & = & S(k) - S(-k).
+\end{eqnarray}
+Connection to the O'Doherty-Anstey formula is detailed in Appendix~A.
+
+
+\subsection{Attenuation in 3D fractal media}
+
+
+The energy spectrum, $E^{(1)}_{H,b}(k)$, of von K\'arm\'an's autocorrelation 
+function $N_{H,b}(r)$ in equation \ref{eqn:vkes} is real and even\,:
+\begin{eqnarray}
+{E^{(1)}_{H,b}(k)}~{\sigma^{-2}} & = & \int_{-\infty}^{+\infty}\hspace{-3mm}N_{H,b}(r)\,e^{ikr}dr\,,\\
+& = & C^{(1)}_{H}~\frac{2b}{\left(1+b^2k^2\right)^{H+\frac{1}{2}}}\,.
+\end{eqnarray}
+Values of $S(k)$ defined by equation \ref{eqn:defskint} are
+\begin{eqnarray}
+S(0) & = & C^{(1)}_{H}\,b\,, \\
+Re[S(2k_0)] & = & \frac{C^{(1)}_{H}\,b}{(1+4\,b^2k_0^2)^{H+\frac{1}{2}}}\,.
+\end{eqnarray}
+Coefficient $C^{(1)}_{H}$, defined by equation \ref{eqn:calpha}, is an increasing function of exponent $H$
+and has to be calculated numerically, except for some specific values\,:
+$$
+\begin{array}{lll}
+C^{(1)}_{H}\sim{\pi}/{\Gamma(H)}\rightarrow 0 & \mbox{for}\ \ \ H\rightarrow 0\,, & \\
+C^{(1)}_{-0.25}=1.3110\ldots\,, & C^{(1)}_{0.25}=0.5991\ldots\,, & C^{(1)}_{0.5}=1\,, \nonumber \\
+ & C^{(1)}_{0.75}=1.3317\ldots\,, & C^{(1)}_{1}=\pi/2\,.
+\nonumber
+\end{array}
+$$
+The dispersion relation of equation \ref{eqn:dispersc} solves for an explicit solution of attenuation and dispersion\,:
+\begin{eqnarray}
+Re[k/k_0] & = & 1+\frac{\sigma^2}{2}\left(1+2k_0~Im[S(2k_0)]\right)\,,\\
+Im[k/k_0] & = & \sigma^2k_0b~C^{(1)}_{H}
+\left[1-\frac{1}{(1+4\,b^2k_0^2)^{H+\frac{1}{2}}} \right].
+\end{eqnarray}
+When $H=0.5$, the derivation produces simple expressions as detailed in Appendix~B.
+The use of $S^{\ast}(k)=S(-k)$ with the Kramers-Kr\"{o}nig relation can be used 
+to determine the real part of $k$.
+In the context of the second-order approximation,
+scattering attenuation in a von K\'arm\'an isotropic medium is
+\begin{eqnarray}
+\frac{1}{Q} = \frac{2\,Im[k]}{Re[k]} = 2~\sigma^2\,k_0b~C^{(1)}_{H}
+\left[1-\frac{1}{(1+4\,b^2k_0^2)^{H+\frac{1}{2}}}\right].
+\end{eqnarray}
+For $k_0b\,\ll\,1$, the scattering attenuation reduces to the Rayleigh diffusion regime\,:
+\begin{eqnarray}
+\frac{1}{Q} & \simeq & 8\,\sigma^2\,C^{(1)}_{H}\left(H+\frac{1}{2}\right)\left(k_0b\right)^3.
+\end{eqnarray}
+
+
+\subsubsection{Penetration depth}
+
+
+Waves propagating in disordered media are exponentially 
+attenuated by scattering \cite[]{Odoherty_A71,White_SN90}.
+We define penetration depth $d(f)$ to be the skin depth \cite[]{Vanderbaan_WS07}
+for low-frequency waves propagating in the heterogeneous medium\,:
+\begin{eqnarray}
+\frac{1}{d(f)} & = & \frac{k_0}{2Q} = Im[k]\,,\\
+d(f) & = & \frac{b~(1+4\,b^2k_0^2)^{H+\frac{1}{2}}}
+{\sigma^2\,(k_0b)^2\,C^{(1)}_{H}\left[(1+4\,b^2k_0^2)^{H+\frac{1}{2}}-1\right]}\,, \label{eqn:penedep}
+\end{eqnarray}
+where $f$ is frequency.
+Penetration depth $d(f)$ corresponds to a decrease of wave amplitude by $1/e$.
+For two-way traveltime, recorded amplitude is 14~\% of the initial one.
+Figure~\ref{fig:depthlfb05M025,depthlfb25025,depthlfb05025,depthlfb10025,depthlfb05075,llqfb05025}
+shows the frequency dependence of the penetration depth for different values of parameters $b$ and $H$
+and the scattering attenuation for acoustic P- and S- waves.
+Seismic background velocities are $V_P=2700$~m/s and $V_S=1230$~m/s.
+
+\inputdir{qcurve}
+\multiplot{6}{depthlfb05M025,depthlfb25025,depthlfb05025,depthlfb10025,depthlfb05075,llqfb05025}{width=0.35\textwidth}
+{Penetration depth for P (solid) and S (dashed) scalar waves
+in heterogeneous media described by the von K\'arm\'an model with $\sigma=30~\%$.
+For $b=5$\,m, a higher exponent $H$ decreases the penetration (a,\,c,\,e).
+The value of $b$ strongly influences the penetration of waves (b,\,d).
+The slope break in the attenuation curve (f) determines the frequency below which our scattering model
+is valid.}
+
+Scattering attenuation $1/Q$ is proportional to $1/\lambda^3$
+at low frequencies and corresponds to the Rayleigh diffusion regime.
+Attenuation increases at higher frequencies, where $1/Q$ is proportional to $1/\lambda$
+and wavelength is comparable to the size of the heterogeneities.
+Nevertheless, the validity of our scattering theory is constrained to 
+the low-frequency bandwidth until the attenuation curves in Figure~\ref{fig:llqfb05025}
+reach the change of slope at 45~Hz for S-waves and 70~Hz for P-waves.
+For a conventional seismic survey and for correlation length $b=5$\,m, previously estimated,
+wavelengths of P- and S-waves and ratio $\lambda/b$ are indicated in Table~\ref{tbl:seisfreq}.
+
+
+% Table seismic frequencies
+\tabl{seisfreq}
+{Ratio of the wavelength $\lambda$ over the size of heterogeneities $b=5$\,m for realistic seismic frequencies,
+when $V_P=2700$~m/s, $V_S=1230$~m/s.}
+{
+\begin{center}
+\begin{tabular}{|c|c|c|c|}
+\hline
+Wave & Frequency~(Hz) & $\lambda$~(m) & $\lambda/b$ \\
+\hline
+P & 10  & 270 & 54 \\
+  & 90  & 30  &  6 \\ \hline
+S & 10  & 123 & 24 \\
+  & 50  & 25  &  5 \\
+\hline
+\end{tabular}
+\end{center}
+}
+
+Scattering is more important for seismic wavelengths with a dimension
+similar to that of heterogeneities\,: high frequencies and S-waves,
+because their wavelengths are shorter than P-waves, are more
+attenuated.  Penetration depth is close to infinity at very low
+frequencies but decreases drastically in a narrow frequency band,
+depending on parameters $H$ and $b$ (see
+Figure~\ref{fig:depthlfb05M025,depthlfb25025,depthlfb05025,depthlfb10025,depthlfb05075,llqfb05025}).
+This steep descent shifts to higher frequencies when the fractal
+exponent decreases, corresponding to a stronger cyclicity of the
+layers.  A shorter correlation length of heterogeneities highly
+improves penetration of high frequencies for both types of wave (see
+Figures~\ref{fig:depthlfb25025}~and~\ref{fig:depthlfb10025}).  For
+large-size heterogeneities, i.e. $b>20$~m, the scattering theory we
+use is not valid because the seismic frequencies statisfy $k_0b\geq
+1$.  Scattering regimes and the suggested description of
+heterogeneities are summarized in Figure~\ref{fig:schemeshetb}.  Our
+results therefore ignore the effects of large cycles in sediments.  We
+refer the reader to \cite{Stovas_U07} for more information on the
+effects of cycles on wave progagation.
+
+\inputdir{XFig}
+\plot{schemeshetb}{width=0.8\textwidth}
+{Schematic representation, including the suggested description of heterogeneities, 
+of the different scattering regimes depending on the ratio between
+the seismic wavelength $\lambda$ and the size of heterogeneities $b$.
+The scale is for indication only and depends on the frequency band of the survey.}
+
+\subsubsection{Dominant frequency versus depth}
+
+If seismic pulse is defined as a Ricker wavelet, a relation can be derived for
+modification of the frequency content of P and S acoustic waves by scattering attenuation. 
+Dominant frequency $f_{{dom}}(z)$ with depth $z$ and initial spectrum $S_I(f)$ of the source are defined by
+\begin{eqnarray}
+S_I(f) & = & \left(\frac{f}{f_0}\right)^2e^{-f^2/f_0^2},\\
+f_{{dom}}(z) & = & \frac{d}{df}\left(S_I(f)\,e^{-z/d(f)}\right),
+\end{eqnarray}
+with initial condition $f_{{dom}}(0)=f_0$, and where $d(f)$ is the penetration depth
+defined in equation \ref{eqn:penedep}.
+Dispersion involves different traveltimes
+at different frequencies but does not modify the frequency content or amplitude.
+For convenience, we estimate dominant frequency as frequency expectation\,:
+\begin{eqnarray}
+f_{{dom}}(z) & = & \frac{1}{\langle S_I \rangle_z}\int f\,S_I(f)\,e^{-z/d(f)}\,df\,,\\
+\langle S_I \rangle_z & = & \int S_I(f)\,e^{-z/d(f)}\,df\,.
+\end{eqnarray}
+Figure~\ref{fig:fdomfb25025,fdomfb05M025,fdomfb05025,fdomfb0505,fdomfb10025,fdomfb05075}
+shows the evolution of the dominant frequency with depth 
+in fractal media, with $V_P=2700$~m/s, $V_S=1230$~m/s, and standard deviation $\sigma=30\,\%$.
+The value of correlation length $b$ again has a very high impact,
+whereas the fractal exponent moderately influences results.
+For a multicomponent seismic survey in a clastic reservoir,
+evolution of the peak frequency should show a more 
+important decrease with depth for PS data than for PP data.
+
+\inputdir{pdepth}
+\multiplot{6}{fdomfb25025,fdomfb05M025,fdomfb05025,fdomfb0505,fdomfb10025,fdomfb05075}{width=0.35\textwidth}
+{Evolution of the dominant frequency with depth for P (solid line) and S (dashed line) scalar waves modeled by a Ricker wavelet ($f_0=60$\,Hz)
+in heterogeneous media with $\sigma=30~\%$. For a constant exponent $H=0.25$, 
+the dominant frequency shifts to lower frequencies faster for larger values of $b$ (a,\,c,\,e).
+The exponent $H$ weakly influences the evolution of the dominant frequency (b,\,d,\,f).}
+
+\section{Discussion}
+
+
+The attenuation caused by anticorrelated 3D small-scale heterogeneities
+can be explained by a low-frequency scattering theory.
+The length scales that we estimated from sonic logs justify this approach 
+for conventional seismic frequencies.
+The intensity of scattering attenuation and the value of
+frequency cutoff strongly depend on the size of the heterogeneities, and
+S-waves are more attenuated than P-waves at the same frequency.
+Using low-frequency P-waves provides a better depth of penetration. More reflectors can be detected and imaged,
+but, of course, with less resolution. This phenomenon was observed  
+in sub-basalt imaging \cite[]{Ziolkowski_HGJDHLL03}.
+Our analysis of sonic logs confirms the relevance
+of a fractal description for the high-frequency content of quasi-periodic geological layers.
+Because sediments are highly stratified, their layered structure
+has previously motivated use of 1D models for seismic scattering attenuation,
+but a realistic estimate needs to be conducted in 3D.
+More generally, description of geological heterogeneities and 
+use of scattering theories should be as depicted in Figure~\ref{fig:schemeshetb}.
+
+Several limitations should be pointed out in our study. 
+Well logs constitute 1D samples of the geological medium in the near vertical direction.
+Use of 3D isotropy is the simplest assumption 
+consistent with our limited knowledge.
+We consequently ignore the anisotropic effect of layering, which undoubtly affects lateral scattering when $\lambda\sim b$.
+Also note that the relation between fractal exponent $\beta$
+and parameter $H$ depends on spatial dimension $s$.
+We have therefore proposed different values of parameter $H$ for depth of penetration and evolution of dominant frequency
+in Figures~\ref{fig:depthlfb05M025,depthlfb25025,depthlfb05025,depthlfb10025,depthlfb05075,llqfb05025}
+and~\ref{fig:fdomfb25025,fdomfb05M025,fdomfb05025,fdomfb0505,fdomfb10025,fdomfb05075}
+and have attempted to extract some general trends.
+
+Our analysis is limited by the fact that we used variations of the
+seismic velocity, but not of density, in order to be consistent with
+the mean field theory.  This theory retrieves the Backus limit and the
+Rayleigh diffusion regime.  Fortunately, densities commonly exhibit
+fewer variations.  Meanwhile, analysis of the logarithm of impedance
+$Z$ relates directly to the reflection coefficients
+\cite[]{Shtatland_91}.  Backscattering is known to be related to
+impedance fluctuations \cite[]{Banik_LS85,Wu_88}.  Modification of the
+Helmholtz equation~(\ref{eqn:helmh}) in 1D to incorporate $\ln\,Z$ was
+succesfully achieved by \cite{Banik_LS85}, and they provided a proof
+of O'Doherty-Anstey formula.  Impedance $Z(z)$, depending on depth
+$z$, and reflection coefficient series $R(z)$ are connected by
+\begin{eqnarray}
+\lim_{dz\rightarrow 0}\,R(z+dz/2) & = & \lim_{dz\rightarrow 0}\,\frac{Z(z+dz)-Z(z)}{Z(z+dz)+Z(z)},\\
+R(z) & = & \frac{1}{2}~{d\ln Z(z)}.
+\end{eqnarray}
+Reflection series can reasonably be considered to be Gaussian and stationary
+only inside blocky layers, using the segmentation method \cite[]{Todoeschuck_JL90}.
+Incrementation of the fractional Gaussian noise, corresponding to
+reflection series $R(z)$, produces the non-stationary and non-Gaussian fBm describing quantity $\ln Z(z)$
+\cite[]{Shtatland_91}.
+A white spectrum of reflectivity coefficients occurs for $\beta=2$ and generates a Brownian walk describing $\ln Z(z)$
+and involving an exponential autocorrelation.
+We advocate the use of a non-white reflectivity hypothesis, as previously recommended by 
+several authors \cite[]{Todoeschuck_JL90,Lancaster_W00,Anstey_D02b}.
+
+\section{Conclusions}
+
+The high-frequency quasi-cyclic variations of seismic velocities
+can be described as an antipersistent fractional Brownian motion
+as demonstrated by our sonic-log data from a clastic reservoir.
+The correlation length, estimated for von K\'arm\'an's model,
+is about 5\,m, but the sonic logs contain
+larger local cycles at 10 and 20~m~: our method extracts  
+one dominant cycle of deposition.
+Conventional seismic surveys contain frequencies as high as 100 Hz,
+with typical peak frequencies at 25 Hz.
+Our statistical description of geological heterogeneities below 10~m
+can thus be used consistently in our low-frequency scattering theory
+to estimate the scattering loss caused by small-scale heterogeneities.
+
+Shear waves have shorter wavelengths than compressional waves
+and can be more attenuated because they are more sensitive to heterogeneities.
+We showed the existence of a high-frequency cutoff for the depth of penetration of waves,
+whose position in frequency depends on the maximum size of fractal heterogeneities. 
+The dominant frequency of a wavelet decreases faster for
+higher fractal exponents and for larger characteristic sizes of heterogeneities.
+This loss of high-frequency content
+influences resolution in seismic imaging.
+Our study recommends using low-frequency P-waves for deep targets 
+under a strongly heterogeneous overburden.
+
+Agreement of our results with the Backus limit
+and the Rayleigh diffusion regime is due to the use of velocity fluctuations.
+Nevertheless, proper connection with the O'Doherty-Anstey formula requires
+use of the logarithm of impedance.
+Moreover, more complex, multiple scattering occurs when sizes of heterogeneities
+are similar to that of the seismic wavelength.
+Large-scale local cycles, present in the sonic-log data,
+call for incorporation of resonant scattering effects
+into high-frequency scattering theories.
+
+
+\section{ACKNOWLEDGMENTS}
+
+
+We thank Apache Canada Ltd. for providing the data used in this study and Mark Tomasso 
+from the Bureau of Economic Geology for the velocity model.
+We acknowledge Apache Corporation, GX Technology Corporation, 
+and the Jackson School of Geosciences for financial support.
+This publication is authorized by the Director, Bureau of Economic Geology,
+The University of Texas at Austin.
+
+
+\append{O'Doherty-Anstey formula and the mean field theory}
+\label{Odohertyformula}
+
+
+O'Doherty and Anstey \cite[]{Odoherty_A71,Resnick_90} proposed 
+that local transmission coefficient $T(\omega)$ for traveltime $\Delta t$ in sedimentary layers 
+should be 
+\begin{eqnarray}
+T(\omega) = \exp\left[-\frac{\omega\,\Delta t}{2\,Q(\omega)}\right] = e^{-R(\omega)\,\Delta t},
+\end{eqnarray}
+where $R(\omega)$ is the spectrum of reflection coefficients, which is related to the spectrum
+of impedance fluctuations \cite[]{Banik_LS85}.
+Because we have used velocity fluctuations, attenuation in the dispersion relation of equation \ref{eqn:dispersc}
+depends on the velocity spectrum\,:
+\begin{eqnarray}
+\frac{1}{Q(\omega)} & = & 2~\frac{Im[k]}{Re[k]}, \\
+& = & {k_0}\left[E^{(1)}(0) - E^{(1)}(2k_0)\right], \\
+T(\omega)  & = & \exp\left\{-\frac{k_0\,\omega}{2}\,\left[E^{(1)}(0) - E^{(1)}(2k_0)\right]\Delta t\right\}. \label{eqn:rspec}
+\end{eqnarray}
+These formulae have been previously derived and analyzed \cite[]{Lerche_86,Wu_88,Sato_F98}.
+The term $E^{(1)}(2k_0)$ can be interpreted as backward scattering
+with exchange wavenumber $2k_0$, whereas the term $E^{(1)}(0)$ is forward scattering
+with exchange wavenumber $0$.
+Both energy terms reduce to 1D expressions because of isotropic integration, 
+whereas one symmetry axis is imposed by propagation direction of the wave.
+Further interpretation can be found using a dynamic effective model
+for multiple scattering \cite[]{Waterman_T61}\,:
+the scattered waves interfere with the main wavefield, 
+and their relative phase continuously changes in all directions,
+except for significant interferences in forward and backward directions.
+Previous 1D derivations \cite[]{Sato_F98}
+have incorporated a traveltime correction, corresponding to neglecting forward scattering
+in order to reproduce the O'Doherty-Anstey formula. This approach extends validity of the analytical expressions
+to higher frequencies, but no simple traveltime phase correction exists for the mean field theory in 3D.
+Constant $E^{(1)}(0)$ ensures recovery of the Backus effective medium and the Rayleigh diffusion regime for very low frequencies.
+
+
+\append{Exponentially correlated heterogeneities}
+\label{Expohet}
+
+
+Results have been derived several times \cite[]{Karal_K64,Sato_F98} 
+using exponential correlation function
+$N(r)=\exp[-r/b]$ and are added here as a specific case
+with simple analytical expressions within the general framework of von K\'arm\'an's media.
+Values of the integral in equation \ref{eqn:defskint} are
+\begin{eqnarray}
+S(0) & = & b\,,\\
+S(2k_0) & = & \frac{b}{1-2\,i\,k_0b}\,.
+\end{eqnarray}
+Using these expressions in the dispersion relation of equation \ref{eqn:dispersc}, the new dispersion relation, phase velocity $c(\omega)$, and attenuation are
+\begin{eqnarray}
+\frac{k}{k_0} & = & \frac{c_0}{c(\omega)} + \frac{i}{2\,Q(\omega)} \; = \; 1 + \frac{\sigma^2}{2}\left[1 + \frac{(2\,k_0b)^2}{1-2\,i\,k_0b}\right] + O(\sigma^4)\,,  \\
+\frac{1}{c(\omega)} & = & \frac{1}{c_0}
+\left[1+\sigma^2~\frac{1/2+(2\,k_0b)^2}{1+(2\,k_0b)^2}\right]\,, \label{eqn:vdispe1} \\
+\frac{1}{Q(\omega)} & = & \sigma^2~\frac{8\,(k_0b)^3}{1+(2\,k_0b)^2}\,. \label{eqn:vqe1}
+\end{eqnarray}
+In the limit of very long wavelengths, i.e. $k_0\rightarrow 0$,
+attenuation and velocity reduce respectively to the Rayleigh diffusion
+regime and the effective medium theory of \cite{Backus_62}\,:
+\begin{eqnarray}
+\frac{1}{c(\omega)} & \rightarrow & \frac{1}{c_0}\left(1+\frac{\sigma^2}{2}\right)\,,\\
+\frac{1}{Q(\omega)} & \sim & 8\,\sigma^2\,(k_0b)^3 \rightarrow 0\,.
+\end{eqnarray}
+
+
+\bibliographystyle{seg}  % style file is seg.bst
+\bibliography{atten}
+
+%\end{document}

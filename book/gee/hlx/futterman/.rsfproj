@@ -1,0 +1,3 @@
+uses=['sfmath', 'sfwindow', 'sfspectra', 'sfreverse', 'sfcat', 'sfmul', 'sfkolmog', 'sfdots']
+data=[]
+size=        904

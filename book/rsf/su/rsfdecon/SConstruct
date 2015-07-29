@@ -1,0 +1,72 @@
+from rsf.proj import *
+
+# We make some simple data: 8 traces with 2-way reverberations and
+# a weak tilting reflector hidden underneath the reverberations.  The
+# spike data is convolved with the minimum phase wavelet specified below.
+# Then a tiny bit of noise is added--tiny because: (1) the definition
+# of signal to noise is stringent--based on the biggest amplitude
+# on the trace and (2) these are single traces, usually you'd have
+# a cmp gather and the ultimate goal of stacking to combat noise.
+
+# In this demo, we do spiking decon first and then do gapped decon
+# (prediction error filtering).  You are to assume that the decon
+# parameters are estimated from the autocorrelation shown in frame two.
+
+# Construction of the minimum phase wavelet with Mathematica:
+# (2-z)(3+z)(3-2z)(4+z)(4-2z)(4+3z)//(CoefficientList[#,z])&
+#     {1152, -384, -904, 288, 174, -34, -12}
+
+# First make the synthetic data for the deconvolution demo
+
+Flow('traces',None,'traces -')
+Flow('filter',None,
+     '''
+     spike n1=7 nsp=7 k1=1,2,3,4,5,6,7 mag=1152,-384,-904,288,174,-34,-12
+     ''')
+Flow('modeldata','traces filter',
+     '''
+     noise seed=2013 var=5.24413e-5 |
+     conv filt=${SOURCES[1]} trans=y
+     ''')
+
+def wiggle(title):
+    return '''
+    wiggle title="%s" transp=y yreverse=y poly=y pclip=99.9
+    ''' % title
+
+# Plot the model 
+Result('modeldata',wiggle('Data'))
+
+tpow=1 # gain power before examining autocorrelations
+# tpow=2 might be better for field data
+ 
+# Plot the autocorrelation with gain
+autocorr = '''
+pow pow1=%d | 
+fft1 | math output="input*conj(input)" | fft1 inv=y | 
+window n1=31 |
+''' % tpow
+
+Result('autocorr','modeldata',
+       autocorr + wiggle('Autocorrelation'))
+
+######DECON EXAMPLES######
+# First, spike it up
+
+Flow('spiky','modeldata','pef maxlag=.04')
+Result('spiky',wiggle('Spiking Decon'))
+
+# Plot the autocorrelation after spike
+Result('autospiky','spiky',
+       autocorr + wiggle('Autocorelation after Spiking Decon'))
+
+# Second, go after the reverberations:  note reflector!
+
+Flow('reverb','spiky','pef minlag=.05 maxlag=.16')
+Result('reverb',wiggle('PEF 50,160ms (Note dipping reflector!)'))
+
+# Bandpass
+Flow('band','reverb','trapez frequency=5,15,80,100')
+Result('band',wiggle('Spike, PEF, BandPass'))
+
+End()

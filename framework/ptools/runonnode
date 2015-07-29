@@ -1,0 +1,80 @@
+#!/usr/bin/env python
+# next steps:
+# does lock block second task?
+# add change back to not running at end of task
+# write code in myproj to build hosts.txt
+# run test on stampede
+
+import fcntl, os, string, sys
+
+hosts_file=sys.argv[1]
+hosts_fd=open(hosts_file,'r+')
+
+#hosts.txt file contains:
+# line 1 is "numnodes" space and number nodes in i4 format with leading 0's
+# line 2 is headers "host" and "state"
+# line 3 through numnodes+2 is host names (40 char long blank padded) and
+#        either notrunning or running.  record is padded to 80 characters 
+# fields are fixed length so when state changes the file size does not change
+ 
+# lock hosts.txt, get notrunning node, mark it running, unlock hosts.txt
+fcntl.lockf(hosts_fd,fcntl.LOCK_EX)
+
+# get notrunning node, mark it running
+hosts_txt=hosts_fd.readlines()
+numnodes=int(string.split(hosts_txt[0])[1])
+
+idle_node=-1
+for node in range(numnodes):
+    if(string.split(hosts_txt[2+node])[1]=='notrunning'):
+        idle_node=node
+        break
+
+if(idle_node==-1):
+    sys.stderr.write("runonnode: looking for an idle node in hosts.txt, but all\n")
+    sys.stderr.write("runonnode: but all are running. pscons should not do that.\n")
+    sys.stderr.write("runonnode: is num threads in pscons consistant with RSF_CLUSTER?\n")
+    sys.stderr.write("runonnode: numnodes=%d\n"%numnodes);
+    sys.exit(1)
+    
+host=string.split(hosts_txt[2+idle_node])[0]
+hosts_txt[2+idle_node]=string.ljust(host,40)+string.ljust("running",10)+"\n"
+
+hosts_fd.seek(0)   
+for line in hosts_txt:
+    hosts_fd.write(line)
+hosts_fd.flush()   # need to do this or file does not change
+
+fcntl.lockf(hosts_fd,fcntl.LOCK_UN)
+#print "hosts_fd.txt unlocked"
+
+# make a string that contains all the args that appear after runonnode.py
+command=string.join(sys.argv[2:])
+
+task="ssh "+host+' \"'+command+' \"'
+
+print "runonnode: start command on %s"%host
+#print "task=",task
+
+os.system("date")
+ 
+retcode = os.system(task)
+
+# lock hosts.txt, mark the node notrunning, unlock hosts.txt
+fcntl.lockf(hosts_fd,fcntl.LOCK_EX)
+hosts_fd.seek(0)   
+hosts_txt=hosts_fd.readlines()
+hosts_txt[2+idle_node]=string.ljust(host,40)+string.ljust("notrunning",10)+"\n"
+hosts_fd.seek(0)   
+for line in hosts_txt:
+    hosts_fd.write(line)
+hosts_fd.flush()   # this will actually mode buffer to output file
+fcntl.lockf(hosts_fd,fcntl.LOCK_UN)
+
+
+hosts_fd.close()
+
+if retcode != 0:
+    print "runonnode: exit code %d on %s" % (retcode,host)
+sys.exit(retcode)
+

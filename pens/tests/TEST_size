@@ -1,0 +1,115 @@
+e
+S a
+z
+Test of absolute scaling.
+z
+
+z
+The grid lines should be exactly one inch apart.
+z
+The two very fat white lines should each be one inch wide,
+z
+exactly filling the space between the adjacent grid lines.
+z
+The thinner vertical white line should be 1/10th of an inch wide.
+z
+The letter `A' in "A!g" should be exactly one inch tall in all orientations.
+z
+The red dashed lines should be on for half an inch, and then off for the same.
+z
+Each vertical red dash should start at the end of a horizontal red dash.
+z
+The yellow single `A' should be one inch high.
+z
+It should exactly span the gap between adjacent grid lines.
+z
+
+c 7
+f 200
+m 1500 600
+d 1500 3000
+f 0
+c 0
+m 1200 1200
+d 1800 1800
+c 7
+f 20
+m 2700 0
+d 2700 6000
+f 10
+J 2 3
+m 3900 3900
+T 33 0
+A!g
+m 3300 2700
+T 33 -90
+A!g
+m 4200 600
+T 33 30
+A!g
+c 6
+M 1 65 33
+4800 300
+M 1 2 33
+300 300
+M 1 3 33
+900 300
+M 1 5 33
+1500 300
+M 1 4 33
+2100 300
+c 7
+f 200
+m 600 1500
+d 4200 1500
+f 0
+c 5
+m 0 0
+d 0 6000
+m 600 0
+d 600 6000
+m 1200 0
+d 1200 6000
+m 1800 0
+d 1800 6000
+m 2400 0
+d 2400 6000
+m 3000 0
+d 3000 6000
+m 3600 0
+d 3600 6000
+m 4200 0
+d 4200 6000
+m 4800 0
+d 4800 6000
+m 5400 0
+d 5400 6000
+m 6000 0
+d 6000 6000
+s 1
+300 300
+c 2
+m 0 0
+d 6000 0
+m 0 600
+d 6000 600
+m 0 1200
+d 6000 1200
+m 0 1800
+d 6000 1800
+m 0 2400
+d 6000 2400
+m 0 3000
+d 6000 3000
+m 0 3600
+d 6000 3600
+m 0 4200
+d 6000 4200
+m 0 4800
+d 6000 4800
+m 0 5400
+d 6000 5400
+m 0 6000
+d 6000 6000
+m 300 0
+d 300 6000

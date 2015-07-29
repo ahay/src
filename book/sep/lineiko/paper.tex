@@ -1,0 +1,412 @@
+\lefthead{Fomel}
+\righthead{Linearized Eikonal}
+\footer{SEP--94}
+%\shortnote
+\published{SEP report, 94, 123-131 (1997)}
+\title{Traveltime computation with \\ the linearized eikonal equation}
+
+\email{sergey@sep.stanford.edu}
+%\keywords{ eikonal, traveltime, imaging, velocity, tomography }
+\author{Sergey Fomel}
+
+\maketitle
+
+\section{INTRODUCTION}
+
+Traveltime computation is an important part of seismic imaging
+algorithms. Conventional implementations of Kirchhoff migration
+require precomputing traveltime tables or include traveltime
+calculation in the innermost computational loop .  The cost of
+traveltime computations is especially noticeable in the case of 3-D
+prestack imaging where the input data size increases the level of
+nesting in computational loops.
+\par
+The eikonal differential equation is the basic mathematical model,
+describing the traveltime (eikonal) propagation in a given velocity
+model.  Finite-difference solutions of the eikonal equation have been
+recognized as one of the most efficient means of traveltime
+computations
+\cite[]{GEO55-05-05210526,GEO56-06-08120821,Popovici.sep.70.245}.  The
+major advantages of this method in comparison with ray tracing
+techniques include an ability to work on regular model grids, a
+complete coverage of the receiver space, and a fair numerical
+robustness. The most common implementations of the finite-difference
+eikonal equation compute the \emph{first-arrival} traveltimes, though
+frequency-dependent enhancements
+\cite[]{SEG-1992-1315,Nichols.sepphd.81} can extend the method to
+computing the most energetic arrivals. The major numerical complexity
+of the finite-difference eikonal computations arises from the
+fundamental non-linearity of the eikonal equation. The numerical
+complexity is related not only to the direct cost of the computation,
+but also to the accuracy and stability of finite-difference schemes.
+\par
+It is important to note that the current practice of seismic imaging
+is not limited to a single migration. Moreover, it is repeated
+migrations, with velocity analysis and refinement of the velocity
+model at each step, that take most of the computational effort. When
+the changes in the velocity model at each step are small compared to
+the initial model, it is appropriate to linearize the eikonal equation
+with respect to the slowness and traveltime perturbations.
+Mathematically, the linearized eikonal equation corresponds precisely
+to the linearization assumption, commonly used in traveltime
+tomography.
+\par
+In this paper, I propose an algorithm of finite-difference traveltime
+computations, based on an iterative linearization of the eikonal
+equation. The algorithm takes advantage of an implicit
+finite-difference scheme with superior stability and accuracy
+properties.  I test the algorithm on a simple synthetic example and
+discuss its possible applications in residual traveltime computation,
+interpolation, and tomography.
+
+\section{THE LINEARIZED EIKONAL EQUATION}
+
+The eikonal equation, describing the traveltime propagation in an
+isotropic medium, has the form
+\begin{equation}
+\left(\nabla \tau\right)^2 = n^2(x,y,z)\;,
+\label{eqn:eikeqn}
+\end{equation}
+where $\tau (x,y,z)$ is the traveltime (eikonal) from the source to
+the point with the coordinates $(x, y, z)$, and $n$ is the slowness at
+that point (the velocity $v$ equals $1/n$.) In Appendix A, I review a
+basic derivation of the eikonal and transport equations. To formulate
+a well-posed initial-value problem on equation (\ref{eqn:eikeqn}), it is
+sufficient to specify $\tau$ at some closed surface and to choose one
+of the two branches of the solution (the wave going from or to the
+source.)
+\par
+Equation (\ref{eqn:eikeqn}) is nonlinear. The nonlinearity is essential for
+producing multiple branches of the solution. Multi-valued eikonal
+solutions can include different types of waves (direct, reflected,
+diffracted, head, etc.) as well as different branches of caustics.  To
+linearize equation (\ref{eqn:eikeqn}), we need to assume that an initial
+estimate $\tau_0$ of the eikonal $\tau$ is available. The traveltime
+$\tau_0$ corresponds to some slowness $n_0$, which can be computed
+from equation (\ref{eqn:eikeqn}) as
+\begin{equation}
+n_0 = \left|\nabla \tau_0\right|\;.
+\label{eqn:n0}
+\end{equation}
+Let us denote the residual traveltime $\tau - \tau_0$ by $\tau_1$ and
+the residual slowness $n - n_0$ by $n_1$. With these definitions, we
+can rewrite equation (\ref{eqn:eikeqn}) in the form
+\begin{equation}
+\left(\nabla \tau_0 + \nabla \tau_1 \right)^2 = 
+\left(\nabla \tau_0\right)^2 + 
+2\,\nabla \tau_0 \cdot  \nabla \tau_1 +
+\left(\nabla \tau_1\right)^2 =
+(n_0 + n_1)^2  = n_0^2 + 2\,n_0\,n_1 + n_1^2\;,
+\label{eqn:eik1}
+\end{equation}
+or, taking into account equality (\ref{eqn:n0}),
+\begin{equation}
+2\,\nabla \tau_0 \cdot  \nabla \tau_1 +
+\left(\nabla \tau_1\right)^2 = 2\,n_0\,n_1 + n_1^2\;.
+\label{eqn:eik2}
+\end{equation} 
+Neglecting the squared terms, we arrive at the equation
+\begin{equation}
+\nabla \tau_0 \cdot  \nabla \tau_1 = 
+n_0\,n_1\;,
+\label{eqn:lineik}
+\end{equation} 
+which is the linearized version of the eikonal equation (\ref{eqn:eikeqn}).
+The accuracy of the linearization depends on the relative ratio of the
+slowness perturbation $n_1$ and the true slowness model $n$. Though it
+is difficult to give a quantitative estimate, the ratio of 10\% is
+generally assumed to be a safe upper bound.
+\par
+The intimate connection of the linearized eikonal equation
+and traveltime tomography is discussed in Appendix B.
+
+\section{ALGORITHM}
+
+Linearization of the eikonal equation suggests the following algorithm
+of traveltime computation:
+\begin{enumerate}
+\item Start with an initial traveltime field $\tau_0$. The initial
+traveltime may be the result of a previous computation or (for simple
+models) the result of an approximate analytic evaluation.
+\item Compute the finite-difference gradient $\nabla \tau_0$ and the
+corresponding slowness model $n_0$ with equation
+(\ref{eqn:n0}).
+\item Compute the slowness perturbation $n_1$ as the difference
+between the true slowness model $n$ and $n_0$. Exit the computation if
+the perturbation is smaller than the desired accuracy.
+\item Solve numerically equation (\ref{eqn:lineik}) for the traveltime
+perturbation $\tau_1$.
+\item Update the traveltime field $\tau_0$ by adding $\tau_1$ to it.
+\item Repeat the loop.
+\end{enumerate} 
+\par
+Equation (\ref{eqn:lineik}) can be solved numerically with a simple explicit
+upwind finite-difference method.  
+
+\begin{comment}
+For a numerical test of the
+algorithm, I chose to solve it by a less efficient but more robust
+``brute-force'' implicit method, applying one of the generic linear
+solvers. The gradient operator $\nabla$ was computed with centered
+finite differences. The implicit method is unconditionally stable. Its
+accuracy corresponds to the accuracy of the finite-difference gradient
+approximation. I found it helpful to regularize the linear solver with
+a smoothing preconditioner. The regularization assures that the
+traveltime remains a smooth function of the spatial coordinates.
+\par
+An important feature of the suggested algorithm is that it does not
+require an iterative solver to iterate until the full convergence. A
+few iteration steps of the estimation process can be interlaced with
+re-linearization in the main loop of the algorithm.
+\par
+Theoretically, a global convergence of the described procedure cannot
+be guaranteed for all cases. However, I observed a stable convergence
+in the preliminary numerical tests.
+\end{comment}
+  
+\section{NUMERICAL TEST}
+\inputdir{test}
+
+For the first numerical test, I used a model with a smooth anomaly
+inside a constant slowness background. The initial traveltime was
+computed analytically, using the background slowness. The result of
+the computation is shown in Figure \ref{fig:linear}. The computation
+involved 5 re-linearization cycles.
+% with 10 linear inversion iterations
+%in each cycle.
+
+\sideplot{linear}{width=\textwidth}{The traveltime
+  contours for a smooth anomaly, computed by the linearized eikonal
+  solver. The background slowness is 1~s/km. The maximum anomaly
+  slowness is 2.25~s/km. The wave source is in on the top
+  plane of the model.}
+
+% The left plot shows a vertical slice. The right
+%  plot shows a horizontal slice, taken at 2.5~km depth.}
+
+\sideplot{mihai}{width=\textwidth}{The traveltime
+  contours for a smooth anomaly, computed by the exact eikonal solver.
+  The input and plotting parameters are the same as in the preceeding
+  figure.}
+\par
+The result shows the expected behavior of the wavefronts. It agrees
+with the result of a direct eikonal computation, shown in Figure
+\ref{fig:mihai}. The direct computation was done with Mihai
+Popovici's TTGES eikonal solver, which has outstanding efficiency and
+stability properties. Obviously, more tests are required to evaluate
+the comparative performance of the algorithm and the limits of its
+practical applicability. The discussion section contains some
+speculations about the perspective usage of the linearized algorithm.
+
+\section{Discussion}
+
+Although the first numerical experiments have been too incomplete for
+drawing any solid conclusions, it is interesting to discuss the
+possible applications of the linearized eikonal.
+
+\begin{description}
+\item[Multi-valued traveltimes] Conventional eikonal solvers usually
+  force the choice of a particular branch of the multi-valued
+  traveltime, most commonly the first-arrival branch. However, in some
+  cases other branches may in fact be more useful for imaging or
+  velocity estimation \cite[]{gray}. When the linearization assumption
+  is correct, the linearized eikonal should follow the branch of the
+  initial traveltime. This branch does not have to be the first
+  arrival.  It can correspond to any other arrival, such as reflected
+  waves or multiple reflections.
+  
+\item[Spherical Coordinates] Though the eikonal equation itself does
+  not favor any particular direction, its solution for the case of a
+  point source lands more naturally into a spherical coordinate
+  system.  \cite{GEO56-06-08120821},
+  \cite{Popovici.sep.70.245}, \cite{SEG-1994-1394}, and
+  \cite{schneider} presented upwind finite-difference eikonal
+  schemes based on a spherical computational grid. To use the
+  linearized equation (\ref{eqn:lineik}) on such a grid, it is necessary to
+  rewrite the gradient operator in the spherical coordinates, as
+  follows:
+  \[
+  \nabla \tau = \left\{
+    \frac{\partial \tau}{\partial r}\,,\;
+    \frac{1}{r}\,\frac{\partial \tau}{\partial \theta}\,,\;
+    \frac{1}{r \sin^2 \theta}\,\frac{\partial \tau}{\partial \phi}\right\}\;.
+\].
+
+\item[Interpolation] One of the most natural applications for the
+  linearized eikonal is interpolation of traveltimes. Interpolating
+  regularly gridded input (such as subsampled traveltime tables)
+  reduces to \emph{masked} inversion of equation (\ref{eqn:lineik}).
+  Interpolating irregular input (such as the result of a ray tracing
+  procedure) reduces to \emph{regularized} inversion. In both cases, a
+  simpler way of traveltime binning would be required to initiate the
+  linearization.
+  
+\item[Tomography] Tomographic velocity estimation is possible when the
+  input traveltime data corresponds to a collection of sources. In
+  this case, we can reduce the linearized traveltime inversion to the
+  system of equations
+  \begin{equation}
+    \label{eq:tomo}
+    n_0^{(1)} \cdot \nabla \tau_1^{(1)} =
+    n_0^{(2)} \cdot \nabla \tau_1^{(2)} =
+    \cdots = s_1\;.
+  \end{equation}
+  Here $\tau_1^{(i)}$ stands for the traveltime from source $i$.
+  Equations (\ref{eq:tomo}) are additionally constrained by the known
+  values of the traveltime fields at the receiver locations.
+  
+\item[Amplitudes] The amplitude transport equation, briefly reviewed
+  in Appendix A, has the form (\ref{eq:amp}). Introducing the
+  logarithmic amplitude $J = - ln (A/A_0)$, where $A_0$ is the
+  constant reference, we can rewrite this equation in the form
+  \begin{equation}
+    \label{eq:log}
+    2 \nabla \tau \cdot \nabla J = \Delta \tau\;.
+  \end{equation}
+  The left-hand side of equation (\ref{eq:log}) has exactly the same
+  form as the left-hand side part of the linearized eikonal equation
+  (\ref{eqn:lineik}). This suggests reusing the traveltime computation
+  scheme for amplitude calculations. The amplitude transport equation
+  is linear. However, it explicitly depends on the traveltime.
+  Therefore, the amplitude computation needs to be coupled with the
+  eikonal solution.
+  
+\item[Anisotropy] In a recent paper, \cite{tariq} proposed a
+  simple eikonal-type equation for seismic imaging in vertically
+  transversally-isotropic media. Alkhalifah's equation should be
+  suitable for linearization, either in the normal moveout velocity
+  $V_{NMO}$ or in the dimensionless anisotropy parameter $\eta$. This
+  untested opportunity looks promising because of the validity of the
+  weak anisotropy assumption in many regions of the world.
+
+\end{description}
+
+\section{Conclusions}
+
+I have presented a finite-difference method of traveltime
+computations, based on the linearized eikonal equation. Preliminary
+numerical experiments show that the method is as simple and robust as
+can be expected from the theory. The required assumption is that a
+reasonable estimate of the traveltime is available prior to
+linearization. Such an estimate may result from the computation in a
+different velocity model, with a different method (e.g., ray tracing),
+or by an analytic evaluation.
+\par
+In the situations where the underlying assumption is valid, the
+linearized approach may allow us
+\begin{itemize}
+\item to employ unconditionally stable implicit finite-difference
+  schemes with an easy control of the numerical stability,
+\item to parallelize the essential parts of the algorithm with minimum
+  effort,
+\item to compute branches of the multi-valued traveltime other than
+  the first arrival,
+\item to connect traveltime computations with tomographic velocity
+  estimation,
+\item to couple traveltime and amplitude computations.
+\end{itemize}
+Future research is necessary to confirm these expectations.
+
+\section{ACKNOWLEDGMENTS}
+I thank Biondo Biondi for interesting discussions on the traveltime
+computation problem and its applications. The TTGES eikonal solver
+that I used for testing was kindly made available to SEP by Mihai
+Popovici of 3DGeo.
+
+\bibliographystyle{seg}
+\bibliography{SEG,SEP2,eiko}
+
+\append{A SIMPLE derivation of the eikonal and transport equations}
+
+In this Appendix, I remind the reader how the eikonal equation is
+derived from the wave equation. The derivation is classic and can be
+found in many popular textbooks. See, for example, \cite[]{cherv}.
+\par
+Starting from the wave equation,
+\begin{equation}
+  {\frac{\partial^2 P}{\partial x^2}} +
+  {\frac{\partial^2 P}{\partial y^2}} +
+  {\frac{\partial^2 P}{\partial z^2}} =
+  {n^2 (x,y,z)\,\frac{\partial^2 P}{\partial t^2}}\;,
+  \label{eq:wave}
+\end{equation}
+we introduce a trial solution of the form
+\begin{equation}
+  \label{eq:trial}
+  P (x,y,t) = A (x,y,z) f (t - \tau (x,y,z))\;,
+\end{equation}
+where $\tau$ is the eikonal, and $A$ is the wave amplitude. The
+waveform function $f$ is assumed to be a high frequency
+(discontinuous) signal. Substituting solution (\ref{eq:trial}) into
+equation (\ref{eq:wave}), we arrive at the constraint
+\begin{equation}
+  \label{eq:ray}
+  \Delta A \, f - 2 \nabla A \cdot \nabla \tau f' -
+  A \Delta \tau f '  + A \left(\nabla \tau\right)^2 f'' =
+  n^2 A f''\;.
+\end{equation}
+Here $\Delta \equiv \nabla^2$ denotes the Laplacian operator.
+Equation (\ref{eq:ray}) is as exact as the initial wave equation
+(\ref{eq:wave}) and generally difficult to satisfy. However, we can
+try to satisfy it asymptotically, considering each of the
+high-frequency asymptotic components separately. The leading-order
+component corresponds to the second derivative of the wavelet $f''$.
+Isolating this component, we find that it is satisfied if and only if
+the traveltime function $\tau (x,y,z)$ satisfies the eikonal equation
+(\ref{eqn:eikeqn}).
+\par
+The next asymptotic order corresponds to the first derivative $f'$. It
+leads to the \emph{amplitude transport equation}
+\begin{equation}
+  \label{eq:amp}
+2 \nabla A \cdot \nabla \tau + A \Delta \tau = 0\;.
+\end{equation}
+The amplitude, defined by equation (\ref{eq:amp}), is often referred
+to as the amplitude of the zero-order term in the ray series. A series
+expansion of the function $f$ in high-frequency asymptotic components
+produces recursive differential equations for the terms of higher
+order. In practice, equation (\ref{eq:amp}) is sufficiently accurate
+for describing the major amplitude trends in most of the cases. It
+fails, however, in some special cases, such as caustics and diffraction.
+
+\append{CONNECTION OF THE LINEARIZED EIKONAL EQUATION AND 
+TRAVELTIME TOMOGRAPHY}
+
+The eikonal equation (\ref{eqn:eikeqn}) can be rewritten in the form
+\begin{equation}
+\mathbf{n}  \cdot \nabla \tau = n \;,
+\label{eqn:eikvec}
+\end{equation} 
+where $\mathbf{n}$ is the unit vector, pointing in the traveltime
+gradient direction. The integral solution of equation (\ref{eqn:eikvec})
+takes the form
+\begin{equation}
+\tau = \int_{\Gamma (\mathbf{n})} n dl\;,
+\label{eqn:eikint}
+\end{equation} 
+which states that \emph{the traveltime $\tau$ can be computed by
+integrating the slowness $n$ along the ray $\Gamma (\mathbf{n})$,
+tangent at every point to the gradient direction $\mathbf{n}$}.
+\par
+Similarly, we can rewrite the linearized eikonal equation (\ref{eqn:lineik})
+in the form
+\begin{equation}
+\mathbf{n_0}  \cdot \nabla \tau_1 = n_1 \;,
+\label{eqn:linvec}
+\end{equation}
+where $\mathbf{n_0}$ is the unit vector, pointing in gradient
+direction for the initial traveltime $\tau_0$.  The integral solution
+of equation (\ref{eqn:linvec}) takes the form
+\begin{equation}
+\tau_1 = \int_{\Gamma (\mathbf{n_0})} n_1 dl\;,
+\label{eqn:eikint}
+\end{equation} 
+which states that \emph{the traveltime perturbation $\tau_1$ can be
+  computed by integrating the slowness perturbation $n_1$ along the
+  ray $\Gamma (\mathbf{n_0})$, defined by the initial slowness model
+  $n_0$}.  This is exactly the basic principle of traveltime
+tomography.
+\par
+I have borrowed this proof from \cite{nsk}, who used linearization
+of the eikonal equation as the theoretical basis for traveltime inversion.
+

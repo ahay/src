@@ -1,0 +1,100 @@
+\title{Madagascar project: reproducibility challenge}
+
+\author{Sergey Fomel}
+
+\lefthead{Fomel}
+\righthead{Reproducibility challenge}
+
+\address {
+sergey.fomel@beg.utexas.edu \\
+Jackson School of Geosciences \\
+The University of Texas at Austin \\ 
+University Station, Box X \\
+Austin, TX 78713-8924 \\
+USA}
+
+\maketitle
+
+\begin{abstract}
+This paper presents a challenge for different implementations of
+reproducible research. The computational experiment refers to spatial
+interpolation of rainfall measurements, a task of the 1997 Spatial
+Interpolation Comparison. The reproducibility challenge is to capture
+the computational workflow described in this paper in a form that
+allows the reader to reproduce the experiment and to extend it by
+trying a different algorithm, a different data set, or a different
+choice of parameters.
+\end{abstract}
+
+\section{Introduction}
+\inputdir{rain}
+
+In 1997, the European Communities organized a Spatial Interpolation
+Comparison. Many different organizations participated with the results
+published in a special issue of the \emph{Journal of Geographic
+Information and Decision Analysis} \cite[]{dubois} and a separate
+report \cite[]{rain}.
+
+\sideplot{elev}{width=\textwidth}{Digital elevation map of Switzerland.}
+
+The comparison used a dataset from rainfall measurements in
+Switzerland on the 8th of May 1986, the day of the Chernobyl disaster.
+Figure~\ref{fig:elev} shows the data area: the Digital Elevation Model
+of Switzerland with superimposed country's borders.  A total of 467
+rainfall measurements were taken that day. A randomly selected subset
+of 100 measurements was used as the input data the 1997 Spatial
+Interpolation Comparison in order to interpolate other measurements
+using different techniques and to compare the results with the known
+data. Figure~\ref{fig:raindata} shows the spatial locations of the
+selected data samples and the full dataset.
+
+\plot{raindata}{width=\textwidth}{Left: locations of weather stations
+  used as input data in the spatial interpolation contest.  Right: all
+  weather stations locations.}
+
+Many different spatial interpolation techniques have been tried on
+this dataset \cite[]{dubois,Fomel.sepphd.107}. For simplicity, I
+present here only one the result of simple Delaunay triangulation with
+linear interpolation of rainfall values inside each triangle. The
+interpolation result is shown in
+Figure~\ref{fig:trian}. Figure~\ref{fig:pred} provides a comparison
+between interpolated and known data values. It also indicates the
+value of the correlation coefficient.
+
+\sideplot{trian}{width=\textwidth}{Rainfall data interpolated using
+  Delaunay triangulation.}
+
+\sideplot{pred}{width=\textwidth}{Correlation between
+  interpolated and true data values.}
+
+Add precon?
+
+\section{Reproducibility challenge}
+
+How can the reader... The challenge of this exercise is to...
+
+\subsection{Madagascar solution}
+
+The solution adopted in the Madagascar project consists of...
+
+To reproduce the paper using Madagascar, ...
+
+\subsection{Additional materials}
+
+In addition to the usual Madagascar files (\texttt{paper.tex} for the
+source of this paper and \texttt{SConstruct} for describing the
+workflow), I provide the following materials:
+\begin{itemize}
+\item Shell script \texttt{run.sh} for running the workflow (generated with \texttt{scons -n}).
+\item IPython notebook \texttt{run.ipynb} that captures the 
+      \texttt{SConstruct} file and the output of the experiment.
+\end{itemize}
+
+\appendix
+\section{SConstruct}
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,title=rain/SConstruct]{rain/SConstruct}
+
+\bibliographystyle{seg}
+\bibliography{rain}

@@ -1,0 +1,9 @@
+from rsf.tex import *
+
+End(use=['amsfonts','amsmath','amssymb','tikz','paralist','hyperref',
+         '[vlined,algosection,ruled,norelsize]algorithm2e'],
+    include=r'''
+\def\gmres{{GMRES}} 
+\def\gmresk{{\rm GMRES($k$)}} 
+    ''',
+    color='overthrust solution-overthrust')

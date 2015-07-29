@@ -1,0 +1,19 @@
+from rsf.proj import *
+
+
+Flow('noise',None,'spike n1=201 | noise seed=2012 | bandpass flo=20 fhi=40')
+Result('noise','graph title=""')
+
+Flow('fourier','noise','fft1 inv=n opt=n')
+
+Flow('fourier-real','fourier','real')
+Flow('fourier-imag','fourier','imag')
+
+Flow('spectra','fourier-real fourier-imag',
+    '''
+    math output="sqrt(input*input+i*i)" i=${SOURCES[1]}
+    ''')
+
+Result('spectra','graph title=""')
+
+End()

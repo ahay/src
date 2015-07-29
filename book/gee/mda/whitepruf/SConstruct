@@ -1,0 +1,6 @@
+from rsf.proj import *
+
+Result('whitepruf', None,'whitepruf',prefix=plprefix)
+
+###########################################################################
+End()

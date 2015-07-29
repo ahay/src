@@ -1,0 +1,286 @@
+# Nonlinear estimation of von Karman autocorrelation in 1D Fourier domain for synthetic fGn-fBm
+#
+# November 2007
+#
+# Thomas Jules Browaeys 
+# Bureau of Economic Geology
+# University of Texas at Austin
+# mailto:jules.browaeys@beg.utexas.edu
+
+
+from rsf.proj import *
+from math import pi
+
+
+# ----------------------------------------------
+# SPATIAL 1-D GRID 
+# ----------------------------------------------
+
+# nx = number of points in X
+# dx = space data step sampling
+
+# fpx = 1/dx        = frequency space periodicity (Hz)
+# lx  = nx*dx       = space period
+# dfx = 1/lx        = frequency step
+# fmx = 1/dx - 1/lx = maximum frequency
+# fnx = 1/(2*dx)    = nx/(2*lx) = Nyquist frequency
+
+# Signal X detecting content (Hz) =  dfx < fx < fnx
+
+
+# Spatial grid (m)
+pgrid = {'nx':4056, 'ox':1., 'dx':0.25}
+
+# Create spatial grid
+Flow('spacegrid',None,'spike nsp=1 mag=1 n1=%(nx)d d1=%(dx)g o1=%(ox)g | put label1=z unit1=m' % pgrid)
+
+
+# ----------------------------------------------
+# SYNTHETIC GAUSSIAN 1-D SIGNAL  fGn - fBm
+# ----------------------------------------------
+
+# Fractal exponent and constant
+# -----------------------------
+# nu  = H exponent > -0.5   = -0.25  0.25   0.5  0.75   1.0
+# ca  = H spectrum constant = -1.311 0.5991 1.0  1.3317 1.57
+
+# Parameters values suggestion
+# ----------------------------
+# H= -0.25, ca =-1.311,  b=10,   wdd=0.2,   wsd = 727 (317,741)
+# H = 0.25, ca = 0.5991, b = 5,  wdd = 0.3, wsd = 317 (647) 
+# H = 0.5,  ca = 1.0,    b = 5,  wdd = 0.3, wsd = 213
+# H = 0.75, ca = 1.3317, b = 10, wdd = 0.4, wsd = 317
+
+
+# Signal parameters (Gaussian white noise mean and range)
+psyn = {'wmu':0.0, 'wrn':1.0}
+
+# Windowing and plots (maximum depth (m), maximum white noise spectrum plot amplitude)
+wdcp = {'xmax':1000.,  'wnsmax':2.}
+
+
+for hnux in ('M025','025','05'):
+    
+    if hnux == 'M025':
+        
+        # Fractional Gaussian noise fGn (nu < 0)
+        psyn.update({
+            'b':10.,       # correlation length (m)
+            'nu':-0.25,    # H exponent
+            'ca':-1.311,   # H spectrum constant
+            'wdd':0.2,     # Gaussian white noise standard deviation
+            'wsd':727      # random generator seed
+            })
+        # Minimum and maximum graph amplitude
+        wdcp.update({'smax':3.0,'smin':-3.0})
+        # Titles and plot options
+        titlevkc = 'title="fGn spectrum" format2=%3.1f'
+        pplotsig = 'title="Fractional Gaussian noise\k100 \k100 \F5 H\F2 \k60 =\k60 \F15 8\F2 0.25" n2tic=7 o2num=-3.0 d2num=1. format2=%3.1f'
+        titlefit = 'title="fGn spectrum b=10m H=-0.25"'
+        titlelli = 'title="Estimation on synthetic\k100 \k100 \F5 H\F2 \k60 =\k60 \F15 8\F2 0.25"'
+        optp = 'parallel2=n n2tic=7 o2num=-3.0 d2num=1.0 format2=%3.1f'
+
+    elif hnux == '025':
+        
+        # Fractional Brownian motion fBm (nu > 0)
+        psyn.update({
+            'b':5.,        # correlation length (m)
+            'nu':0.25,     # H exponent
+            'ca':0.5991,   # H spectrum constant
+            'wdd':0.3,     # Gaussian white noise standard deviation
+            'wsd':317      # random generator seed
+            })
+        # Minimum and maximum graph amplitude
+        wdcp.update({'smax':1.5,'smin':-1.5})
+        # Titles
+        titlevkc = 'title="fBm spectrum" format2=%3.1f'
+        pplotsig = 'title="Fractional Brownian motion\k100 \k100 \F5 H\F2 \k60 =\k60 0.25" n2tic=5 o2num=-1.0 d2num=0.5 format2=%3.1f'
+        titlefit = 'title="fBm spectrum b=5m H=0.25"'
+        titlelli = 'title="Estimation on synthetic\k100 \k100 \F5 H\F2 \k60 =\k60 0.25"'
+        optp = 'parallel2=n n2tic=5 o2num=-1.0 d2num=0.5 format2=%3.1f'
+
+    elif hnux == '05':
+
+        # Fractional Brownian motion fBm (nu > 0)
+        psyn.update({
+            'b':5.,        # correlation length (m)
+            'nu':0.5,      # H exponent
+            'ca':1.0,      # H spectrum constant
+            'wdd':0.3,     # Gaussian white noise standard deviation
+            'wsd':213      # random generator seed
+            })
+        # Minimum and maximum graph amplitude
+        wdcp.update({'smax':1.5,'smin':-1.5})
+        # Titles
+        titlevkc = 'title="fBm spectrum" format2=%3.1f'
+        pplotsig = 'title="Fractional Brownian motion\k100 \k100 \F5 H\F2 \k60 =\k60 0.5" n2tic=5 o2num=-1.0 d2num=0.5 format2=%3.1f'
+        titlefit = 'title="fBm spectrum b=5m H=0.5"'
+        titlelli = 'title="Estimation on synthetic\k100 \k100 \F5 H\F2 \k60 =\k60 0.5"'
+        optp = 'parallel2=n n2tic=5 o2num=-1.0 d2num=0.5 format2=%3.1f'
+
+    else:
+        
+        raise RuntimeError, "Unknown value"
+
+        
+    # Variance of Gaussian white noise
+    psyn['wvr'] = psyn['wdd']*psyn['wdd']
+
+    # Generate white noise signal
+    wgauss = 'wgauss'+hnux
+    Flow(wgauss,'spacegrid','noise mean=%(wmu)g range=%(wrn)g rep=y seed=%(wsd)g type=y var=%(wvr)g' % psyn)
+
+
+    # Discrete Fourier Transform (fft) (k=0,N-1)
+
+    # S(k*DF) = DL*sum(n=0,N-1) s(n*DL)*exp(-2*i*pi*k*n/N)
+    # s  = spatial signal
+    # S  = frequency signal
+    # N  = points number in space
+    # DF = frequency sampling step = 1/L
+    # L  = spatial length of signal = 1/DF
+    # DL = space sampling step = L/N = 1/(N*DF)
+    # FM = maximum frequency = 1/DL - 1/L
+
+    # Symmetry S(-u) = S*(u)
+    # Periodicity S(ix+NX) = S(ix)
+    # Physical vectors (k=0,N-1)
+    # S(N-1) = S(-1) = S*(1)
+    # S(N-2) = S(-2) = S*(2)
+    # ...
+    # S(N/2+1) = S(-N/2-1) = S*(N/2-1)
+    # S(N/2)   = S(-N/2)   = S*(N/2)
+
+    # Dimension in Fourier space [0,nx/2] is nx/2+1
+    # [fx] = dfx*(-nx/2+1:1:nx/2)
+
+
+    fwgauss  = 'fwgauss'  + hnux
+    vkfilt   = 'vkfilt'   + hnux
+    fcgauss  = 'fcgauss'  + hnux
+    cgauss   = 'cgauss'   + hnux
+    rvkfilt  = 'rvkfilt'  + hnux
+    vkcfilt  = 'vkcfilt'  + hnux
+
+    rfcgauss = 'rfcgauss' + hnux
+    
+    # Fourier transform of Gaussian noise
+    Flow(fwgauss,wgauss,'fft1 sym=y')
+
+    
+    # Von Karman 1D filter in spectral domain
+    Flow(vkfilt,fwgauss,'math output="sqrt((%g))*(1.+((%g)*x1)^2)^(%g)"' % (2.*psyn['b']*psyn['ca'],2.*pi*psyn['b'],-0.25-0.5*psyn['nu']))
+    
+    if hnux == 'M025':
+        # Stochastic process von Karman 1D filtering
+        Flow(fcgauss,[vkfilt,fwgauss],'math r=${SOURCES[0]} p=${SOURCES[1]} type=complex output="r*p"')
+        
+    else:
+        # Stochastic process von Karman 1D filtering and integration
+        Flow(fcgauss,[vkfilt,fwgauss],'math r=${SOURCES[0]} p=${SOURCES[1]} type=complex output="-I*r*p"')
+
+    Flow(cgauss,fcgauss,'fft1 sym=y inv=y | put label1=Depth unit1=m')
+
+    # Multiply by amplitude
+    Flow(rvkfilt,vkfilt,'add abs=y | real | put label1=f unit1=1/m | math output="input*(%(wdd)g)"' % psyn)
+    Flow(rfcgauss,fcgauss,'add abs=y | real | put label1=f unit1=1/m')
+
+    
+    # Plot signal and spectrum
+    
+    Plot(wgauss,
+         '''
+         graph label1=Depth min1=0. max1=%g min2=%g max2=%g title="White Gaussian noise" %s
+         ''' % (wdcp['xmax'],wdcp['smin'],wdcp['smax'],optp))
+    Plot(fwgauss,'add abs=y | real | put label1=f unit1=1/m | graph min1=0. max1=%(wnsmax)g min2=0. title="White noise spectrum"'% wdcp)
+    Plot(vkcfilt,[rfcgauss, rvkfilt],
+         '''
+         cat ${SOURCES[0:2]} axis=2 |
+         graph min1=0. max1=2. min2=0. parallel2=n plotfat=1,9 %s
+         ''' % titlevkc,stdin=0)
+    Plot(cgauss,'graph label1=Depth min1=0. max1=%(xmax)g min2=%(smin)g max2=%(smax)g title="Fractional Gaussian noise"'% wdcp)
+
+    Result('panel1'+hnux,[wgauss, fwgauss, vkcfilt, cgauss],'TwoRows',vppen='xsize=10 ysize=10')
+
+    Result(cgauss,
+           '''
+           graph label1=Depth min1=0. label2="Dimensionless amplitude" max1=%g min2=%g max2=%g parallel2=n %s font=2
+           ''' % (wdcp['xmax'],wdcp['smin'],wdcp['smax'],pplotsig))
+    
+    
+    # Logarithmic plot of spectrum and spectral filter
+
+    llbfilt  = 'llbfilt'  + hnux
+    lvkfilt  = 'lvkfilt'  + hnux
+    lfcgauss = 'lfcgauss' + hnux
+    llfilt   = 'llfilt'   + hnux
+    llgauss  = 'llgauss'  + hnux
+    llgaussf = 'llgaussf' + hnux
+    
+    Flow(llbfilt,rvkfilt,'math output="log(1.+((%g)*x1)^2)"' % (2.*pi*psyn['b']))
+    Flow(lvkfilt,rvkfilt,'math output="log(input)"')
+    Flow(lfcgauss,rfcgauss,'math output="log(input)"')
+    Flow(llfilt,[llbfilt, lvkfilt],'cmplx ${SOURCES[0:2]}',stdin=0)
+    Flow(llgauss,[llbfilt, lfcgauss],'cmplx ${SOURCES[0:2]}',stdin=0)
+
+    Plot(llgaussf,[llgauss, llfilt],
+         '''
+         cat ${SOURCES[0:2]} axis=2 |
+         put label1='Ln[1+(kb)\^2\_]' unit1= label2='Ln[F(k)]' |
+         graph min1=0. max1=8. title="Spectral logarithm filter"
+         ''',stdin=0)
+
+    
+    # ------------------------------------------
+    # INVERSION FOR VON KARMAN FILTER PARAMETERS 
+    # ------------------------------------------
+    
+    irfcgauss  = 'irfcgauss' + hnux
+    lifcgauss  = 'lifcgauss' + hnux
+    illgauss   = 'illgauss'  + hnux
+    lligauss   = 'lligauss'  + hnux
+    fitfilt    = 'fitfilt'   + hnux
+    fitfiltb   = 'fitfiltb'  + hnux
+    
+    # Separable least squares for exponent and amplitude
+    # Newton algorithm on nonlinear parameter b*b
+    
+    Flow(irfcgauss,rfcgauss,'karman verb=y niter=100 x0=1.')
+
+    # Logarithmic plots
+    Flow(lifcgauss,irfcgauss,'math output="log(input)"')
+    Flow(illgauss,[llbfilt, lifcgauss],'cmplx ${SOURCES[0:2]}',stdin=0)
+    
+    Plot(lligauss,[llgauss, illgauss],
+         '''
+         cat ${SOURCES[0:2]} axis=2 |
+         put label1='Ln[1+(kb)\^2\_]' unit1= label2='Ln[F(k)]' |
+         graph min1=0. max1=8. title="Estimation of spectral logarithm filter"
+         ''',stdin=0)
+    
+    Plot(fitfilt,[rfcgauss, irfcgauss],
+         '''
+         cat ${SOURCES[0:2]} axis=2 |
+         put label1=f unit1=1/m | graph min1=0. max1=2. min2=0. title="Spectrum estimation"
+         ''',stdin=0)
+
+    Result('panel2'+hnux,[llgaussf, vkcfilt, lligauss, fitfilt],'TwoRows',vppen='xsize=10 ysize=10')
+    
+    Result('lligaussf'+hnux,[llgauss, illgauss],
+           '''
+           cat ${SOURCES[0:2]} axis=2 |
+           graph min1=0. max1=8. max2=2. min2=-8.
+           label1="Ln[1+(k\F5 b\F2 )\^2\_ ]" unit1= label2="Ln[F(k)]"
+           parallel2=n plotfat=1,5 %s font=2
+           ''' % titlelli, stdin=0)
+    
+    Result(fitfiltb,[rfcgauss, irfcgauss],
+           '''
+           cat ${SOURCES[0:2]} axis=2 |
+           put label1=f unit1=1/m |
+           graph min1=0. min2=0. max1=1. max2=2.5
+           parallel2=n plotfat=1,5 n2tic=6 o2num=0.0 d2num=0.5 %s
+           ''' % (titlefit + ' format2=%3.1f'),stdin=0)
+
+
+End()

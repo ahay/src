@@ -1,0 +1,44 @@
+from rsf.proj import *
+
+Fetch('WGstack.H','book/iee')
+Flow('dgulf','WGstack.H','dd form=native | window n1=1000 f2=1020 n2=200')
+
+Fetch('wz.27.H','wz')
+Flow('yc','wz.27.H','dd form=native | window n1=400 n2=64| tpow tpow=2')
+Flow('yc2','yc','window f2=21')
+Flow('yc27','yc yc2','window n2=20 | pad n2=21 | cat axis=2 ${SOURCES[1]}')
+
+Flow('sigmoid',None,
+     '''
+     sigmoid d1=.004 n1=200 d2=.008 n2=200 |
+     smooth rect1=3 diff1=1 adj=1 |
+     smooth rect1=3
+     ''')
+
+Flow('conflict',None,'conflict -')
+
+for example in ('sigmoid','conflict','yc27','dgulf'):
+    lom = 'lom-'+example
+    lag = 'lag-'+example
+    mpa = 'mpa-'+example
+    Flow([lom,lag],example,
+         'lopef a=7,2 w=20,%d lag=${TARGETS[1]}' %
+         [8,4][int(example=='conflict')])
+    if example=='conflict':
+        rect1=1
+    elif example=='dgulf':
+        rect1=4
+    else:
+        rect1=3
+    Flow(mpa,[example,lom],'decon filt=${SOURCES[1]} rect1=%d' % rect1)
+    if example=='dgulf':
+        pclip=96
+    elif example=='yc27':
+        pclip=99.5
+    else:
+        pclip=100
+    Plot(example,'grey pclip=%g title=INPUT' % pclip)
+    Plot(mpa,'grey pclip=%g title=LOMOPLAN' % pclip)
+    Result(example,[example,mpa],'SideBySideAniso')
+    
+End()

@@ -1,0 +1,3 @@
+uses=['sfdd', 'sftransp', 'sfwindow', 'sfput', 'sfgraph', 'sfstack', 'sfmath', 'sfspray', 'sffft1', 'sfadd', 'sfreal', 'sfspike', 'sfnoise', 'sfkarman', 'sfcat']
+data=['PRIVATE']
+size=     224284

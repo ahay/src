@@ -1,0 +1,48 @@
+import os, sys
+
+Import('env bindir libdir pkgdir shrdir srcdir')
+
+sys.path.insert(0,os.path.join(srcdir,'build','framework'))
+
+env.Append(ENV={'LD_LIBRARY_PATH':os.environ.get('LD_LIBRARY_PATH')})
+
+if env['PLATFORM'] == 'darwin':
+    env.Append(ENV={'DYLD_LIBRARY_PATH':os.environ.get('DYLD_LIBRARY_PATH')})
+
+env.Prepend(ENV={'PYTHONPATH':os.path.dirname(pkgdir)})
+
+docdir = os.path.join(shrdir,'doc','madagascar')
+
+txtdir = os.path.join(docdir,'txt')
+htmdir = os.path.join(docdir,'html')
+spcdir = os.path.join(docdir,'spec')
+
+mandir = os.path.join(shrdir,'man')
+mn1dir = os.path.join(mandir,'man1')
+
+htm = os.path.join(htmdir,'index.html')
+txt = os.path.join(txtdir,'INDEX.txt')
+spc = os.path.join(spcdir,'extend.spec')
+man = os.path.join(mn1dir,'index.man')
+
+version = env.get('version','')
+repository = os.environ.get('RSF_REPOSITORY')
+
+if not repository:
+    if version[-3:] == 'svn':
+        repository = 'trunk'
+    else:
+        repository = 'branches/madagascar-%s' % version
+    
+    repository = 'http://sourceforge.net/p/rsf/code/HEAD/tree/'+repository 
+
+docs = map(lambda x: os.path.join('..','rsf',x),
+           Split('sfdoc doc.py prog.py use.py'))
+python = sys.executable
+
+env.Command(htm,docs,
+            '%s $SOURCE -w %s -r %s -v %s' % (python,htmdir,
+                                              repository,version))
+env.Command(txt,docs,'%s $SOURCE -t %s' % (python,txtdir))
+env.Command(spc,docs,'%s $SOURCE -s %s' % (python,spcdir))
+env.Command(man,docs,'%s $SOURCE -g %s' % (python,mn1dir))

@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfgrey', 'sfcanny', 'sfimpl2', 'sfpatch', 'sfput', 'sfomp']
+data=['data/imgs/mona.img']
+size=    6031872

@@ -1,0 +1,39 @@
+from rsf.proj import *
+
+def synth(n1=75,n2=5,static=2,jump=4,step=[-4,2,1],amp=[1.,-1.,0.7]):
+    i0 = [n1/3,n1/3+static,n1/2]
+    k1=[]
+    k2=[]
+    mag=[]
+    for wave in range(len(step)):
+        for i2 in range(n2):
+            i1 = i0[wave]+jump*step[wave]*(i2+1-(n2+1)/2)
+            if i1 > 0 and i1 <= n1:
+                k1.append(str(i1))
+                k2.append(str(i2+1))
+                mag.append(str(amp[wave]))
+    return '''
+    spike n1=%d n2=%d d1=1 d2=1 nsp=%d k1=%s k2=%s mag=%s
+    ''' % (n1,n2,len(k1),
+           string.join(k1,','),
+           string.join(k2,','),
+           string.join(mag,','))
+
+dots = '''
+dots dots=0 constsep=1 connect=1 pclip=100
+gaineach=0 overlap=2.5 title=" " label1=" "
+'''
+
+Flow('syn',None,synth())
+Flow(['pad','mask'],'syn','lpad jump=4 mask=${TARGETS[1]}')
+Plot('pad',dots)
+
+Flow(['pef','lag'],'syn','lpef lag=${TARGETS[1]} a=9,4 jump=4')
+Flow('lace',['pad','mask','pef'],
+     'miss padin=4 filt=${SOURCES[2]} mask=${SOURCES[1]} prec=n')
+Plot('lace',dots)
+
+Result('lace3','pad lace','SideBySideIso')
+
+###########################################################################
+End()

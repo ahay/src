@@ -1,0 +1,43 @@
+\section{Solver function for iterative least-squares optimization (tinysolver.c)}
+
+
+
+
+\subsection{{sf\_tinysolver}}
+Performs the linear inversion for equations of the type $Lx=y$ to compute the model $x$.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_tinysolver (Fop, stepper, nm, nd, m, m0, d, niter);\end{verbatim}
+
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_tinysolver (sf_operator Fop       /* linear operator */, 
+                    sf_solverstep stepper /* stepping function */, 
+                    int nm                /* size of model */, 
+                    int nd                /* size of data */, 
+                    float* m              /* estimated model */,
+                    const float* m0       /* starting model */,
+                    const float* d        /* data */, 
+                    int niter             /* iterations */)
+/*< Generic linear solver. Solves oper{x} =~ dat >*/
+{
+   ...
+}
+\end{verbatim}
+
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt stepper]
+   \setlength\itemsep{0pt}
+   \item[Fop]     a linear operator applied to the model $x$.  Must be of type \texttt{sf\_operator}. 
+   \item[stepper] a stepping function to perform updates on the initial model (\texttt{sf\_solverstep}). 
+   \item[nm]      size of the model (\texttt{int}). 
+   \item[nd]      size of the data (\texttt{int}). 
+   \item[m]       estimated model (\texttt{int}). 
+   \item[mo]      initial model (\texttt{const float}). 
+   \item[d]       data (\texttt{const float}). 
+   \item[niter]   number of iterations (\texttt{int}).
+\end{desclist}
+
+

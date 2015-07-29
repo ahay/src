@@ -1,0 +1,12 @@
+from rsf.proj import *
+
+prog = Program('omphello.c')
+exe = str(prog[0])
+
+Flow('a',None,'math n1=512 n2=512 output="x1+x2"')
+Flow('b',None,'math n1=512 n2=512 output="-x1-x2"')
+
+Flow('c','a %s b' % exe,'./${SOURCES[1]} b=${SOURCES[2]}')
+
+End()
+

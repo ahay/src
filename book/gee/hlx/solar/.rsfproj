@@ -1,0 +1,3 @@
+uses=['sfdd', 'sftransp', 'sfbandpass', 'sfwindow', 'sfbyte', 'sfgrey3', 'sfspecfac']
+data=['data/solar/solaridder.HH']
+size=  270544264

@@ -1,0 +1,870 @@
+\section{Convenience allocation programs (alloc.c)}
+
+
+
+
+\subsection{{sf\_alloc}}\label{sec:sf_alloc}
+Checks whether the requested size for memory allocation is valid and if so it returns a pointer of void type, pointing to the allocated memory block. It takes the 'number of elements' and 'size of one element' as input arguments. Both arguments have to be of the of type \texttt{size\_t}.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_alloc (n, size);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void *sf_alloc (size_t n    /* number of elements */, 
+                size_t size /* size of one element */)
+          /*< output-checking allocation >*/
+{
+   ...    
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt size]
+   \setlength\itemsep{0pt}
+   \item[n]	   number of elements (\texttt{size\_t}).
+   \item[size] size of each element, for example \texttt{sizeof(float)} (\texttt{size\_t}).
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ptr]
+   \setlength\itemsep{0pt}
+   \item[ptr] a void pointer pointing to the allocated block of memory.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_realloc}}
+The same as \hyperref[sec:sf_alloc]{\texttt{sf\_alloc}} but it allocates new memory such that it appends the block previously assigned by \texttt{sf\_alloc}. It takes three parameters, first one is a void pointer to the old memory block. Second and third parameters are the same as for \texttt{sf\_alloc} but are used to determine the new block, which is to be appended.
+\texttt{sf\_realloc} returns a void pointer pointing to the whole memory block (new + old).
+
+
+\subsubsection*{Call}
+\begin{verbatim}sf_realloc (ptr, n, size);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void *sf_realloc (void* ptr   /* previous data */, 
+                  size_t n    /* number of elements */, 
+                  size_t size /* size of one element */)
+/*< output-checking reallocation >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt size]
+   \setlength\itemsep{0pt}
+   \item[ptr]  pointer to the previously assigned memory block.
+   \item[n]	   number of elements (\texttt{size\_t}).
+   \item[size] size of each element, for example \texttt{sizeof(float)} (\texttt{size\_t}).
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[ptr]	pointer to the new aggregate block.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_charalloc}}\label{sec:sf_charalloc}
+Allocates the memory exactly like \hyperref[sec:sf_alloc]{\texttt{sf\_alloc}} but the size in this one is fixed which is the size of one character. Therefore \texttt{sf\_charalloc} allocates the memory for \texttt{n} elements which must be of character type. Because the size is fixed there is just one input parameter which is the number of elements (i.e.~characters). Output is a void pointer pointing to the block of memory allocated.
+
+\subsubsection*{Call}
+\begin{verbatim}ptr = sf_charalloc (n);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+char *sf_charalloc (size_t n /* number of elements */)
+/*< char allocation >*/ 
+{
+   ...    
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[n]	number of elements (\texttt{size\_t}).
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[ptr]	a void pointer pointing to the allocated block of memory.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_ucharalloc}}\label{sec:sf_ucharalloc}
+The same as \hyperref[sec:sf_charalloc]{\texttt{sf\_charalloc}} but it only allocates the memory for the unsigned character type, that is, the size of the elements is \texttt{sizeof(unsigned char)}.
+
+\subsubsection*{Call}
+\begin{verbatim}ptr = sf_ucharalloc (n);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+unsigned char *sf_ucharalloc (size_t n /* number of elements */)
+/*< unsigned char allocation >*/ 
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[n]	number of elements (\texttt{size\_t}).
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[ptr] a void pointer pointing to the allocated block of memory.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_shortalloc}}
+Allocates the memory for  the short integer type, that is,  the size of the elements is, for example \texttt{sizeof(short int)}. 
+
+\subsubsection*{Call}
+\begin{verbatim}ptr = sf_shortalloc (n);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+short *sf_shortalloc (size_t n /* number of elements */)
+/*< short allocation >*/  
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[n]  number of elements (\texttt{size\_t}).
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[ptr] a void pointer pointing to the allocated block of memory.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_intalloc}}\label{sec:sf_intalloc}
+Allocates the memory for  the large integer type, that is,  the size of the elements is, for example \texttt{sizeof(int)}. 
+
+\subsubsection*{Call}
+\begin{verbatim}ptr = sf_intalloc (n);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+int *sf_intalloc (size_t n /* number of elements */)
+          /*< int allocation >*/  
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[n]	number of elements (\texttt{size\_t}).
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[ptr] a void pointer pointing to the allocated block of memory.
+\end{desclist}
+
+
+
+
+
+\subsection{{sf\_largeintalloc}}
+Allocates the memory for  the large integer type, that is,  the size of the elements is, for example \texttt{sizeof(large int)}. 
+
+\subsubsection*{Call}
+\begin{verbatim}ptr = sf_largeintalloc (n);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+off_t *sf_largeintalloc (size_t n /* number of elements */)
+/*< sf_largeint allocation >*/  
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[n]  number of elements (\texttt{size\_t}).
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[ptr] a void pointer pointing to the allocated block of memory.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_floatalloc}}\label{sec:sf_floatalloc}
+Allocates the memory for  the floating point type, that is,  the size of the elements is, for example \texttt{sizeof(float)}. 
+
+\subsubsection*{Call}
+\begin{verbatim}ptr = sf_floatalloc (n);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+float *sf_floatalloc (size_t n /* number of elements */)
+          /*< float allocation >*/ 
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[n] number of elements (\texttt{size\_t}).
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[ptr] a void pointer pointing to the allocated block of memory.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_complexalloc}}\label{sec:sf_complexalloc}
+Allocates the memory for the \texttt{sf\_complex} type, that is, the size of the elements is, for example \texttt{sizeof(sf\_complex)}. 
+
+
+\subsubsection*{Call}
+\begin{verbatim}ptr = sf_complexalloc (n);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+sf_complex *sf_complexalloc (size_t n /* number of elements */) 
+/*< complex allocation >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[n] number of elements (\texttt{size\_t}).
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[ptr] a void pointer pointing to the allocated block of memory.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_complexalloc2}}\label{sec:sf_complexalloc2}
+Allocates a 2D array in the memory for the  \texttt{sf\_complex} type. It works just like \hyperref[sec:sf_complexalloc]{\texttt{sf\_complexalloc}} but does it for two dimensions. This is done by making a pointer point to another pointer, which in turn points to a particular column (or row) of an allocated 2D block of memory of size \texttt{n1*n2}. \texttt{n1} is the fastest dimension.
+
+\subsubsection*{Call}
+\begin{verbatim}ptr = sf_complexalloc2 (n1, n2);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+sf_complex **sf_complexalloc2 (size_t n1 /* fast dimension */, 
+                               size_t n2 /* slow dimension */)
+/*< complex 2-D allocation, out[0] points to a contiguous array >*/ 
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[n1] number of elements in the fastest dimension (\texttt{size\_t}).
+   \item[n2] number of elements in the slower dimension (\texttt{size\_t}).
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[ptr] a void pointer pointing to the allocated block of memory.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_complexalloc3}}
+Allocates a 3D array in the memory for the  \texttt{sf\_complex} type. It works just like \hyperref[sec:sf_complexalloc2]{\texttt{sf\_complexalloc2}} but does it for three dimensions. This is done by extending the same argument as for \texttt{sf\_complexalloc2} this time making a pointer such that \texttt{Pointer2 -> Pointer1 -> Pointer}. \texttt{n1} is the fastest dimension.
+
+\subsubsection*{Call}
+\begin{verbatim}ptr = sf_complexalloc3 (n1, n2, n3);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+sf_complex ***sf_complexalloc3 (size_t n1 /* fast dimension */, 
+                                size_t n2 /* slower dimension */, 
+                                size_t n3 /* slowest dimension */)
+/*< complex 3-D allocation, out[0][0] points to a contiguous array >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[n1] number of elements in the fastest dimension (\texttt{size\_t}).
+   \item[n2] number of elements in the slower dimension (\texttt{size\_t}).
+   \item[n3] number of elements in the slower dimension (\texttt{size\_t}).
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[ptr] a void pointer pointing to the allocated block of memory.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_complexalloc4}}
+Allocates a 4D array in the memory for the  \texttt{sf\_complex} type. It works just like \hyperref[sec:sf_complexalloc2]{\texttt{sf\_complexalloc2}} but does it for four dimensions. This is done by extending the same argument as for \texttt{sf\_complexalloc2} but this time making a pointer such that \texttt{Pointer3 -> Pointer2 -> Pointer1 -> Pointer}. \texttt{n1} is the fastest dimension.
+
+\subsubsection*{Call}
+\begin{verbatim}ptr = sf_complexalloc4 (n1, n2, n3, n4);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+sf_complex ****sf_complexalloc4 (size_t n1 /* fast dimension */, 
+                                 size_t n2 /* slower dimension */, 
+                                 size_t n3 /* slower dimension */, 
+                                 size_t n4 /* slowest dimension */)
+/*< complex 4-D allocation, out[0][0][0] points to a contiguous array >*/ 
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[n1] number of elements in the fastest dimension (\texttt{size\_t}).
+   \item[n2] number of elements in the slower dimension (\texttt{size\_t}).
+   \item[n3] number of elements in the slower dimension (\texttt{size\_t}).
+   \item[n4] number of elements in the slower dimension (\texttt{size\_t}).
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[ptr] a void pointer pointing to the allocated block of memory.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_boolalloc}}\label{sec:sf_boolalloc}
+Allocates the memory for  the bool type, that is,  the size of the elements is, for example \texttt{sizeof(bool)}. 
+
+\subsubsection*{Call}
+\begin{verbatim}ptr = sf_boolalloc (n);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+bool *sf_boolalloc (size_t n /* number of elements */)
+/*< bool allocation >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[n] number of elements (\texttt{size\_t}).
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[ptr] a void pointer pointing to the allocated block of memory.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_boolalloc2}}\label{sec:sf_boolalloc2}
+Allocates a 2D array in the memory for the bool type. It works just like \hyperref[sec:sf_boolalloc]{\texttt{sf\_boolalloc}} but does it for two dimensions. This is done by making a pointer point to another pointer, which in turn points to a particular column (or row) of an allocated 2D block of memory of size \texttt{n1*n2}. \texttt{n1} is the fastest dimension.
+
+\subsubsection*{Call}
+\begin{verbatim}ptr = sf_boolalloc2 (n1, n2);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+bool **sf_boolalloc2 (size_t n1 /* fast dimension */, 
+                      size_t n2 /* slow dimension */)
+/*< bool 2-D allocation, out[0] points to a contiguous array >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[n1] number of elements in the fastest dimension (\texttt{size\_t}).
+   \item[n2] number of elements in the slower dimension (\texttt{size\_t}).
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[ptr] a void pointer pointing to the allocated block of memory.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_boolalloc3}}
+Allocates a 3D array in the memory for the bool type. It works just like \hyperref[sec:sf_boolalloc2]{\texttt{sf\_boolalloc2}} but does it for three dimensions. This is done by extending the same argument as for \texttt{sf\_boolalloc2} but this time making a pointer such that \texttt{Pointer2 -> Pointer1 -> Pointer}. \texttt{n1} is the fastest dimension.
+
+\subsubsection*{Call}
+\begin{verbatim}ptr = sf_boolalloc3 (n1, n2, n3);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+bool ***sf_boolalloc3 (size_t n1 /* fast dimension */, 
+                       size_t n2 /* slower dimension */, 
+                       size_t n3 /* slowest dimension */)
+/*< bool 3-D allocation, out[0][0] points to a contiguous array >*/ 
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[n1] number of elements in the fastest dimension (\texttt{size\_t}).
+   \item[n2] number of elements in the slower dimension (\texttt{size\_t}).
+   \item[n3] number of elements in the slower dimension (\texttt{size\_t}).
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[ptr] a void pointer pointing to the allocated block of memory.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_floatalloc2}}\label{sec:sf_floatalloc2}
+Allocates a 2D array in the memory for the float type. It works just like \hyperref[sec:sf_floatalloc]{\texttt{sf\_floatalloc}} but does it for two dimensions. This is done by making a pointer point to another pointer, which in turn points to a particular column (or row) of an allocated 2D block of memory of size \texttt{n1*n2}. \texttt{n1} is the fastest dimension.
+
+\subsubsection*{Call}
+\begin{verbatim}ptr = sf_floatalloc2 (n1, n2);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+float **sf_floatalloc2 (size_t n1 /* fast dimension */, 
+                        size_t n2 /* slow dimension */)
+/*< float 2-D allocation, out[0] points to a contiguous array >*/ 
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[n1] number of elements in the fastest dimension (\texttt{size\_t}).
+   \item[n2] number of elements in the slower dimension (\texttt{size\_t}).
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[ptr] a void pointer pointing to the allocated block of memory.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_floatalloc3}}
+Allocates a 3D array in the memory for the float type. It works just like \hyperref[sec:sf_floatalloc2]{\texttt{sf\_floatalloc2}} but does it for three dimensions. This is done by extending the same argument as for \texttt{sf\_floatalloc2} but this time making a pointer such that \texttt{Pointer2 -> Pointer1 -> Pointer}. \texttt{n1} is the fastest dimension.
+
+
+\subsubsection*{Call}
+\begin{verbatim}ptr = sf_floatalloc3 (n1, n2, n3);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+float ***sf_floatalloc3 (size_t n1 /* fast dimension */, 
+                         size_t n2 /* slower dimension */, 
+                         size_t n3 /* slowest dimension */)
+/*< float 3-D allocation, out[0][0] points to a contiguous array >*/ 
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[n1] number of elements in the fastest dimension (\texttt{size\_t}).
+   \item[n2] number of elements in the slower dimension (\texttt{size\_t}).
+   \item[n3] number of elements in the slower dimension (\texttt{size\_t}).
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[ptr] a void pointer pointing to the allocated block of memory.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_floatalloc4}}
+Allocates a 4D array in the memory for the float type. It works just like \hyperref[sec:sf_floatalloc2]{\texttt{sf\_floatalloc2}} but does it for four dimensions. This is done by extending the same argument as for \texttt{sf\_floatalloc2} but this time making a pointer such that \texttt{Pointer3 -> Pointer2 -> Pointer1 -> Pointer}. \texttt{n1} is the fastest dimension.
+
+\subsubsection*{Call}
+\begin{verbatim}ptr = sf_floatalloc4 (n1, n2, n3, n4);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+float ****sf_floatalloc4 (size_t n1 /* fast dimension */, 
+                          size_t n2 /* slower dimension */, 
+                          size_t n3 /* slower dimension */, 
+                          size_t n4 /* slowest dimension */)
+/*< float 4-D allocation, out[0][0][0] points to a contiguous array >*/ 
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[n1] number of elements in the fastest dimension (\texttt{size\_t}).
+   \item[n2] number of elements in the slower dimension (\texttt{size\_t}).
+   \item[n3] number of elements in the slower dimension (\texttt{size\_t}).
+   \item[n4] number of elements in the slower dimension (\texttt{size\_t}).
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[ptr] a void pointer pointing to the allocated block of memory.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_floatalloc5}}
+Allocates a 5D array in the memory for the float type. It works just like \hyperref[sec:sf_floatalloc2]{\texttt{sf\_floatalloc2}} but does it for four dimensions. This is done by extending the same argument as for \texttt{sf\_floatalloc2} but this time making a pointer such that \texttt{Pointer4 -> Pointer3 -> Pointer2 -> Pointer1 -> Pointer}. \texttt{n1} is the fastest dimension.
+
+
+\subsubsection*{Call}
+\begin{verbatim}ptr = sf_floatalloc5 (n1, n2, n3, n4, n5);\end{verbatim}
+
+
+\subsubsection*{Definition}
+\begin{verbatim}
+float *****sf_floatalloc5 (size_t n1 /* fast dimension */, 
+                           size_t n2 /* slower dimension */, 
+                           size_t n3 /* slower dimension */, 
+                           size_t n4 /* slower dimension */,
+                           size_t n5 /* slowest dimension */)
+/*< float 5-D allocation, out[0][0][0][0] points to a contiguous array >*/ 
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[n1] number of elements in the fastest dimension (\texttt{size\_t}).
+   \item[n2] number of elements in the slower dimension (\texttt{size\_t}).
+   \item[n3] number of elements in the slower dimension (\texttt{size\_t}).
+   \item[n4] number of elements in the slower dimension (\texttt{size\_t}).
+   \item[n5] number of elements in the slower dimension (\texttt{size\_t}).
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[ptr] a void pointer pointing to the allocated block of memory.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_floatalloc6}}
+Allocates a 6D array in the memory for the float type. It works just like \hyperref[sec:sf_floatalloc2]{\texttt{sf\_floatalloc2}} but does it for four dimensions. This is done by extending the same argument as for \texttt{sf\_floatalloc2} but this time making a pointer such that \texttt{Pointer5 -> Pointer4 -> Pointer3 -> Pointer2 -> Pointer1 -> Pointer}. \texttt{n1} is the fastest dimension.
+
+\subsubsection*{Call}
+\begin{verbatim}ptr = sf_floatalloc6 (n1, n2, n3, n4, n5, n6);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+float ******sf_floatalloc6 (size_t n1 /* fast dimension */, 
+                            size_t n2 /* slower dimension */, 
+                            size_t n3 /* slower dimension */, 
+                            size_t n4 /* slower dimension */,
+                            size_t n5 /* slower dimension */,
+                            size_t n6 /* slowest dimension */)
+/*< float 6-D allocation, out[0][0][0][0][0] points to a contiguous array >*/ 
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[n1] number of elements in the fastest dimension (\texttt{size\_t}).
+   \item[n2] number of elements in the slower dimension (\texttt{size\_t}).
+   \item[n3] number of elements in the slower dimension (\texttt{size\_t}).
+   \item[n4] number of elements in the slower dimension (\texttt{size\_t}).
+   \item[n5] number of elements in the slower dimension (\texttt{size\_t}).
+   \item[n6] number of elements in the slower dimension. Must be of type \texttt{size\_t}
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[ptr] a void pointer pointing to the allocated block of memory.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_intalloc2}}\label{sec:sf_intalloc2}
+Allocates a 2D array in the memory for the float type. It works just like \hyperref[sec:sf_intalloc]{\texttt{sf\_intalloc}} but does it for two dimensions. This is done by making a pointer point to another pointer, which in turn points to a particular column (or row) of an allocated 2D block of memory of size \texttt{n1*n2}. \texttt{n1} is the fastest dimension.
+
+
+\subsubsection*{Call}
+\begin{verbatim}ptr = sf_intalloc2 (n1, n2);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+int **sf_intalloc2 (size_t n1 /* fast dimension */, 
+                    size_t n2 /* slow dimension */)
+/*< float 2-D allocation, out[0] points to a contiguous array >*/  
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[n1] number of elements in the fastest dimension (\texttt{size\_t}).
+   \item[n2] number of elements in the slower dimension (\texttt{size\_t}).
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[ptr] a void pointer pointing to the allocated block of memory.
+\end{desclist}
+
+
+
+
+
+\subsection{{sf\_intalloc3}}
+Allocates a 3D array in the memory for the float type. It works just like \hyperref[sec:sf_intalloc2]{\texttt{sf\_intalloc2}} but does it for three dimensions. This is done by extending the same argument as for \texttt{sf\_intalloc2} this time making a pointer such that \texttt{Pointer2 -> Pointer1 -> Pointer}. \texttt{n1} is the fastest dimension.
+
+\subsubsection*{Call}
+\begin{verbatim}ptr = sf_intalloc3 (n1, n2, n3);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+int ***sf_intalloc3 (size_t n1 /* fast dimension */, 
+                     size_t n2 /* slower dimension */, 
+                     size_t n3 /* slowest dimension */)
+/*< int 3-D allocation, out[0][0] points to a contiguous array >*/ 
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[n1] number of elements in the fastest dimension (\texttt{size\_t}).
+   \item[n2] number of elements in the slower dimension (\texttt{size\_t}).
+   \item[n3] number of elements in the slower dimension (\texttt{size\_t}).
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[ptr] a void pointer pointing to the allocated block of memory.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_intalloc4}}
+Allocates a 4D array in the memory for the float type. It works just like \hyperref[sec:sf_intalloc2]{\texttt{sf\_intalloc2}} but does it for four dimensions. This is done by extending the same argument as for \texttt{sf\_intalloc2} but this time making a pointer such that \texttt{Pointer3 -> Pointer2 -> Pointer1 -> Pointer}. \texttt{n1} is the fastest dimension.
+
+\subsubsection*{Call}
+\begin{verbatim}ptr = sf_intalloc4 (n1, n2, n3, n4);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+int ****sf_intalloc4 (size_t n1 /* fast dimension */, 
+                      size_t n2 /* slower dimension */, 
+                      size_t n3 /* slower dimension */,
+                      size_t n4 /* slowest dimension */ )
+/*< int 4-D allocation, out[0][0][0] points to a contiguous array >*/ 
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[n1] number of elements in the fastest dimension (\texttt{size\_t}).
+   \item[n2] number of elements in the slower dimension (\texttt{size\_t}).
+   \item[n3] number of elements in the slower dimension (\texttt{size\_t}).
+   \item[n4] number of elements in the slower dimension (\texttt{size\_t}).
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[ptr] a void pointer pointing to the allocated block of memory.
+\end{desclist}
+
+
+
+
+
+\subsection{{sf\_charalloc2}}
+Allocates a 2D array in the memory for the float type. It works just like \hyperref[sec:sf_charalloc]{\texttt{sf\_charalloc}} but does it for two dimensions. This is done by making a pointer point to another pointer, which in turn points to a particular column (or row) of an allocated 2D block of memory of size \texttt{n1*n2}. \texttt{n1} is the fastest dimension.
+
+
+\subsubsection*{Call}
+\begin{verbatim}ptr = sf_charalloc2 (n1, n2);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+char **sf_charalloc2 (size_t n1 /* fast dimension */, 
+                      size_t n2 /* slow dimension */) 
+/*< char 2-D allocation, out[0] points to a contiguous array >*/
+{
+   ...
+}
+\end{verbatim}
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[n1] number of elements in the fastest dimension (\texttt{size\_t}).
+   \item[n2] number of elements in the slower dimension (\texttt{size\_t}).
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[ptr] a void pointer pointing to the allocated block of memory.
+\end{desclist}
+
+
+
+
+\subsection{{sf\_uncharalloc2}}\label{sec:sf_uncharalloc2}
+Allocates a 2D array in the memory for the float type. It works just like \hyperref[sec:sf_ucharalloc]{\texttt{sf\_uncharalloc}} but does it for two dimensions. This is done by making a pointer point to another pointer, which in turn points to a particular column (or row) of an allocated 2D block of memory of size \texttt{n1*n2}. \texttt{n1} is the fastest dimension.
+
+\subsubsection*{Call}
+\begin{verbatim}ptr = sf_ucharalloc2 (n1, n2);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+unsigned char **sf_ucharalloc2 (size_t n1 /* fast dimension */, 
+                                size_t n2 /* slow dimension */)
+/*< unsigned char 2-D allocation, out[0] points to a contiguous array >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[n1] number of elements in the fastest dimension (\texttt{size\_t}).
+   \item[n2] number of elements in the slower dimension (\texttt{size\_t}).
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[ptr] a void pointer pointing to the allocated block of memory.
+\end{desclist}
+
+
+
+
+
+\subsection{{sf\_uncharalloc3}}
+Allocates a 3D array in the memory for the float type. It works just like \hyperref[sec:sf_uncharalloc2]{\texttt{sf\_uncharalloc2}} but does it for three dimensions. This is done by extending the same argument as for \texttt{sf\_uncharalloc2} but this time making a pointer such that \texttt{Pointer2 -> Pointer1 -> Pointer}. \texttt{n1} is the fastest dimension.
+
+\subsubsection*{Call}
+\begin{verbatim}ptr = sf_ucharalloc3 (n1, n2, n3);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+unsigned char ***sf_ucharalloc3 (size_t n1 /* fast dimension */, 
+                                 size_t n2 /* slower dimension */, 
+                                 size_t n3 /* slowest dimension */)
+/*< unsigned char 3-D allocation, out[0][0] points to a contiguous array >*/ 
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[n1] number of elements in the fastest dimension (\texttt{size\_t}).
+   \item[n2] number of elements in the slower dimension (\texttt{size\_t}).
+   \item[n3] number of elements in the slower dimension (\texttt{size\_t}).
+\end{desclist}
+
+\subsubsection*{Output}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[ptr] a void pointer pointing to the allocated block of memory.
+\end{desclist}
+
+
+
+

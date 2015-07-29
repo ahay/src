@@ -1,0 +1,177 @@
+# ------------------------------
+	bash $ sfdoc -k .
+	sfwave: Rice HPCSS seismic modeling and migration.
+	sfofpwd: Objective function of dip estimation with PWD filters.
+	sferf: Bandpass filtering using erf function.
+	sfinfill: Shot interpolation.
+	sfgbeamform: 2-D lateral smoothing.
+	...
+# ------------------------------
+	bash $ sfdoc -k interpolation
+	sfinfill: Shot interpolation. 
+	sflevint: Leveler inverse interpolation in 1-D. 
+	sfmsmiss: Multiscale missing data interpolation (N-dimensional). 
+	sffreqreg: Local frequency interpolation. 
+	...
+# ------------------------------
+	bash $ sfwindow
+	NAME
+			sfwindow
+	DESCRIPTION
+			Window a portion of a dataset. 
+	SYNOPSIS
+			sfwindow < in.rsf > out.rsf verb=n squeeze=y j#=(1,...) d#=(d1,d2,...) f#=(0,...) min#=(o1,o2,,...) n#=(0,...) max#=(o1+(n1-1)*d1,o2+(n1-1)*d2,,...)
+	PARAMETERS
+			float   d#=(d1,d2,...)  sampling in #-th dimension 
+			largeint f#=(0,...)     window start in #-th dimension 
+			int     j#=(1,...)      jump in #-th dimension 
+			float   max#=(o1+(n1-1)*d1,o2+(n1-1)*d2,,...)   maximum in #-th dimension 
+			float   min#=(o1,o2,,...)       minimum in #-th dimension 
+			largeint n#=(0,...)     window size in #-th dimension 
+			bool    squeeze=y [y/n] if y, squeeze dimensions equal to 1 to the end 
+	...
+	USED IN
+			bei/dpmv/krchdmo
+			bei/dpmv/matt
+			bei/dwnc/sigmoid
+	...
+	SOURCE
+			system/main/window.c
+	DOCUMENTATION
+			http://ahay.org/wiki/Guide_to_madagascar_programs#sfwindow
+# ------------------------------
+	bash $ cat $RSFSRC/book/bei/dpmv/krchdmo/SConstruct
+	...
+	def vscan(title):
+		return '''
+		window f3=174 n3=1 |
+		vscan v0=%g nv=100 dv=%g half=n slowness=y |
+		grey title="%s"
+		''' % (1/2.8,(1/1.7-1/2.8)/99,title)
+	...
+# ------------------------------
+	bash $ cat SConstruct
+	from rsf.proj import *
+
+	Flow('a',None,'''
+		math n1=101 d1=0.01 o1=0 n2=4 d2=1 o2=1 
+		output="sin(x1*2*3.1415926*x2)" 
+		''')
+	Result('a','graph screenratio=1 title=sin')
+	End()
+
+	bash $ scons -n -Q
+	/Users/maxu1/rsf/bin/sfmath n1=101 d1=0.01 o1=0 n2=4 d2=1 o2=1 output="sin(x1*2*3.1415926*x2)" > a.rsf
+	< a.rsf /Users/maxu1/rsf/bin/sfgraph screenratio=1 title=sin > Fig/a.vpl
+# ------------------------------
+	bash $ sfmath n1=3 o1=1 n2=2 o2=1 output="x1*x2" > a.rsf
+	bash $ < a.rsf sfdisfil col=3
+	   0:             1            2            3
+	   3:             2            4            6
+# ------------------------------
+	bash $ sfin a.rsf 
+	a.rsf:
+		in="/var/tmp/a.rsf@"
+		esize=4 type=float form=native 
+		n1=3        d1=1        o1=1      label1="Time" unit1="sec" 
+		n2=2        d2=1        o2=1      label2="Distance" unit2="m"
+		6 elements 24 bytes
+	bash $ ls -l /var/tmp/a.rsf*
+	-rw-r--r--  1 maxu2  wheel  24 Jul 14 20:34 /var/tmp/a.rsf@
+# ------------------------------
+	bash $ sfin a.rsf 
+	a.rsf:
+		in="/var/tmp/a.rsf@"
+		esize=4 type=float form=native 
+		n1=3           d1=1           o1=1          
+		n2=2           d2=1           o2=1          
+		6 elements 24 bytes
+	bash $ < a.rsf sfput n1=6 n2=1 > a2.rsf
+	bash $ sfin a2.rsf 
+	a2.rsf:
+		in="/var/tmp/a2.rsf@"
+		esize=4 type=float form=native 
+		n1=6           d1=1           o1=1          
+		n2=1           d2=1           o2=1          
+		6 elements 24 bytes
+# ------------------------------
+	bash $ mv a.rsf b.rsf
+	bash $ sfin b.rsf 
+	b.rsf:
+		in="/var/tmp/a.rsf@"
+		esize=4 type=float form=native 
+		n1=3           d1=1           o1=1          
+		n2=2           d2=1           o2=1          
+		6 elements 24 bytes
+	bash $ sfmv a.rsf b.rsf
+	bash $ sfin b.rsf 
+	b.rsf:
+		in="/var/tmp/b.rsf@"
+		esize=4 type=float form=native 
+		n1=3           d1=1           o1=1          
+		n2=2           d2=1           o2=1          
+		6 elements 24 bytes
+# ------------------------------
+	bash $ sfcp a.rsf b.rsf
+	bash $ sfin b.rsf 
+	b.rsf:
+		in="/var/tmp/b.rsf@"
+		esize=4 type=float form=native 
+		n1=3           d1=1           o1=1          
+		n2=2           d2=1           o2=1          
+		6 elements 24 bytes
+	bash $ rm a.rsf 
+	bash $ ls /var/tmp/a.rsf@
+	/var/tmp/a.rsf@
+	bash $ sfrm a.rsf 
+	bash $ l /var/tmp/a.rsf
+	ls: /var/tmp/a.rsf: No such file or directory
+# ------------------------------
+	bash $ sfmath n1=3 o1=1 n2=2 o2=1 output="x1*x2" out=stdout > a.rsf
+	bash $ sfin a.rsf 
+	a.rsf:
+		in="stdin"
+		esize=4 type=float form=native 
+		n1=3           d1=1           o1=1          
+		n2=2           d2=1           o2=1          
+		6 elements 24 bytes
+# ------------------------------
+	bash $ cat a.asc
+	1 2 3 2 4 6
+	bash $ echo in=a.asc n1=3 o1=1 d1=1 n2=2 o2=1 d2=1 data_format=ascii_int | sfdd form=native type=float > a.rsf 
+	bash $ sfin a.rsf
+	a.rsf:
+		in="/var/tmp/a.rsf@"
+		esize=4 type=float form=native 
+		n1=3           d1=1           o1=1          
+		n2=2           d2=1           o2=1          
+		6 elements 24 bytes
+	bash $ < a.rsf sfdisfil col=3   
+	0:             1            2            3
+	3:             2            4            6
+	bash $ < a.rsf sfmath output="-1.5*input" > b.rsf
+	bash $ < b.rsf sfdd form=ascii out=b.asc > /dev/null
+	bash $ cat b.asc
+	-1.5 -3 -4.5 -3 -6 -9 
+# ------------------------------
+	bash $ sfspike n1=5 k1=2 
+	   0:             0            1            0            0            0
+	bash $ sfspike n1=5 k1=2 | sfmath output="1-input" 
+	   0:             1            0            1            1            1
+	bash $ sfspike n1=5 k1=2 > a.rsf
+	bash $ sfspike n1=5 k1=4 > b.rsf
+	bash $ < a.rsf sfadd scale=1,-2 b.rsf > c.rsf
+	   0:             0            1            0           -2            0
+# ------------------------------
+	bash $ < a.rsf sfattr 
+	******************************************* 
+		 rms =       3.41565 
+		mean =             3 
+	  2-norm =        8.3666 
+	variance =           3.2 
+	 std dev =       1.78885 
+		 max =             6 at 3 2 
+		 min =             1 at 1 1 
+	nonzero samples = 6 
+	  total samples = 6 
+	******************************************* 
