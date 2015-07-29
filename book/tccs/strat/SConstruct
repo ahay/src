@@ -1,0 +1,5 @@
+from rsf.tex import *
+
+End(color='sigmoid sdip t0sig x0sig sigmoid-t0sigx0sig shift shift0 sigmoid2 sigmoid1 win wdip1 wdip2 t0real1 x0real1 y0real2 coord win1 win2 coord chev slice-110 slice-120 slice-130 slice-140 slice 3-10 slice-320 slice-330 slice-340')
+
+

@@ -1,0 +1,60 @@
+from rsf.proj import *
+from rsf.gallery import vofz
+
+vofz.get_velocity('vel')
+
+# Convert to time
+
+nt=3001        
+dt=0.002
+
+Flow('x','zoff','window n1=1')
+Flow('velt','vel x',
+     '''
+     depth2time velocity=$SOURCE nt=%d dt=%g |
+     transp | remap1 pattern=${SOURCES[1]} | transp
+     ''' % (nt,dt))
+
+vofz.zero_offset('zoff')
+
+Result('zoff','grey title="Zero-Offset" ')
+
+Flow('fft','zoff velt',
+     '''
+     stoltstretch velocity=${SOURCES[1]} vel=1.5 |
+     cosft sign2=1
+     ''')
+
+Flow('stolt','fft','stolt vel=1.5 minstr=0.5',split=[2,'omp'])
+
+Flow('smig','stolt velt',
+     '''
+     cosft sign2=-1 |
+     stoltstretch velocity=${SOURCES[1]} vel=1.5 inv=y |
+     time2depth velocity=${SOURCES[1]} intime=y
+     ''')
+
+vofz.zo_image('smig')
+
+# Impulse response
+
+vofz.get_impulse('imp','zoff')
+
+Flow('ifft','imp velt',
+     '''
+     stoltstretch velocity=${SOURCES[1]} vel=1.5 |
+     cosft sign2=1
+     ''')
+
+Flow('istolt','ifft','stolt vel=1.5 minstr=0.5',split=[2,'omp'])
+
+Flow('ismig','istolt velt',
+     '''
+     cosft sign2=-1 |
+     stoltstretch velocity=${SOURCES[1]} vel=1.5 inv=y |
+     time2depth velocity=${SOURCES[1]} intime=y
+     ''')
+
+vofz.impulse_response('ismig','vel')
+
+End()

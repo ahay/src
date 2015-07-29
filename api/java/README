@@ -1,0 +1,10 @@
+The JAVA API presently depends on the Mines JTK to implement fast fileIO.  
+
+You can get the Mines JTK at:
+
+http://inside.mines.edu/~dhale/jtk/
+
+To link to it, add the MINESJTK environmental variable to your profile.
+
+e.g. export MINESJTK=PATH_TO_JTK
+

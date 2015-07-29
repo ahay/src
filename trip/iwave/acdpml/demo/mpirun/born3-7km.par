@@ -1,0 +1,60 @@
+INPUT DATA FOR IWAVE++
+------------------------------------------------------------------------
+Mapping info:
+         deriv = 1
+       adjoint = 0
+
+------------------------------------------------------------------------
+FD:
+
+         order = 2           scheme half-order
+           cfl = 0.5        cfl number - frac of max stable
+          cmin = 1.0         min velocity - checked
+          cmax = 5.0         max velocity - checked
+
+------------------------------------------------------------------------
+Model info:
+
+	   csq = ../csq_4layersm.rsf
+	csq_d1 = ../dcsq_4layer.rsf
+
+------------------------------------------------------------------------
+PML info:
+  freesurface = 0
+           L0 = 30
+           L1 = 30
+         pmlampl = 0.03   set to 0.0 turn off pml
+
+------------------------------------------------------------------------
+MPI info:
+
+       mpi_np1 = 1      n_doms along axis 1
+       mpi_np2 = 1      n_doms along axis 2
+       mpi_np3 = 1      n_doms along axis 3
+       partask = 10     task parallelization
+
+------------------------------------------------------------------------
+Source info:
+
+        source = ../wavelet3-7km.su
+       sampord = 1             sampling order
+
+------------------------------------------------------------------------
+Trace info:
+
+          data = ../born3-7km.su    output data file
+
+------------------------------------------------------------------------
+Output info:
+
+     printact = 1           per-time-step verbosity level
+                            0 - none
+                            1 - time step index
+                            2 - internal time step info
+                            > 5: dump everything
+      dump_pi = 0           dump parallel/dom. decomp info
+     dump_lda = 1           dump grid data for allocated arrays
+     dump_ldc = 0           dump grid data for computational arrays
+    dump_term = 1           dump terminator data
+    dump_pars = 0           print parameter table in IWaveOp
+   dump_steps = 0           print major steps in IWaveOp

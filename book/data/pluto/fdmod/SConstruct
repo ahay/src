@@ -1,0 +1,88 @@
+from rsf.proj import *
+import fdmod
+
+# Fetch Files from repository
+Fetch("P15VPint_25f_padded.SEGY","pluto")
+
+Flow('velocityProfilePadded','P15VPint_25f_padded.SEGY',
+     '''
+     segyread read=d |
+     put  d1=.025 d2=.025 label1=Depth o2=-34.875
+     label2=Distance unit1=kft unit2=kft
+     ''')
+
+# ------------------------------------------------------------
+par = dict(
+    nt=10000, dt=0.001,ot=0,     lt='t',ut='s',
+    kt=100,    # wavelet delay
+    nx=6960, ox=0,       dx=.00762 ,lx='x',ux='km',
+    nz=1401, oz=0,       dz=.00762 ,lz='z',uz='km',
+    )
+# add F-D modeling parameters
+fdmod.param(par)
+
+# ------------------------------------------------------------
+# wavelet
+Flow('wav',None,
+     '''
+     spike nsp=1 mag=1 n1=%(nt)d d1=%(dt)g o1=%(ot)g k1=%(kt)d |
+     ricker1 frequency=15 |
+     scale axis=123 |
+     put label1=t label2=x label3=y unit2= |
+     transp
+     ''' % par)
+Result('wav','window n2=200 | graph title="" label1="t" label2=')
+# ------------------------------------------------------------
+
+# experiment setup
+
+Flow('r_',None,'math n1=%(nx)d d1=%(dx)g o1=%(ox)g output=0' % par)
+Flow('s_',None,'math n1=1      d1=0      o1=0      output=0' % par)
+
+# receiver positions
+Flow('zr','r_','math output="0" ')
+Flow('xr','r_','math output="x1"')
+Flow('rr',['xr','zr'],
+     '''
+     cat axis=2 space=n
+     ${SOURCES[0]} ${SOURCES[1]} | transp
+     ''', stdin=0)
+Plot('rr',fdmod.rrplot('',par))
+
+# source positions
+Flow('zs','s_','math output=1')
+Flow('xs','s_','math output=10.0')
+Flow('rs','s_','math output=1')
+Flow('ss',['xs','zs','rs'],
+     '''
+     cat axis=2 space=n
+     ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[2]} | transp
+     ''', stdin=0)
+Plot('ss',fdmod.ssplot('',par))
+
+# ------------------------------------------------------------
+
+# velocity
+Flow('vel','velocityProfilePadded',
+     '''
+     scale rscale=.0003048 | 
+     put o1=%(oz)g d1=%(dz)g  o2=%(oz)g d2=%(dz)g
+     ''' % par)
+
+Plot('vel','window j1=2 j2=2 | ' + fdmod.cgrey('allpos=y bias=1.5 pclip=98',par))
+Result('vel',['vel','rr','ss'],'Overlay')
+
+# ------------------------------------------------------------
+
+# density
+Flow('den','vel','math output=1')
+
+# ------------------------------------------------------------
+# finite-differences modeling
+fdmod.awefd('dat','wfl','wav','vel','den','ss','rr','free=y dens=y',par)
+
+Result('wfl','window n3=1 f3=33 j1=2 j2=2 | ' + fdmod.wgrey('pclip=99',par))
+Result('dat','window j2=10 j1=2 | transp |'   + fdmod.dgrey('pclip=99',par))
+
+End()
+

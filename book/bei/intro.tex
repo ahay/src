@@ -1,0 +1,84 @@
+\chapter*{Themes}
+
+The main theme of this book is to take a good quality reflection
+seismic data set from the Gulf of Mexico and guide you through the
+basic geophysical data processing steps from raw data to the
+best-quality final image. Secondary themes are to introduce you (1) to
+cleaned up but real working % Fortran 
+code that does the job, (2) to the
+concept of “adjoint operator”, and (3) to the notion of electronic
+document.
+
+\subsection*{What it does, what it means, and how it works}
+A central theme of this book is to merge the abstract with the
+concrete by linking mathematics to runnable computer codes. The codes
+are in a consistent style using nomenclature that resembles the
+accompanying mathematics so the two illuminate each other. The code
+shown is exactly that used to generate the illustrations. There is
+little or no mathematics or code that is not carried through with
+examples using both synthetic and real data.
+
+%The code itself is in
+%a dialect of Fortran more suitable for exposition than standard Fortran. (This "ratfor" dialect
+%easily translates to standard Fortran). 
+
+Some codes have been heavily tested while others have
+only been tested by the preparation of the illustrations.
+
+\subsection*{Imaging with adjoint (conjugate-transpose) operators}
+
+A secondary theme of this book is to develop in the reader an
+understanding of a universal linkage beween forward modeling and data
+processing. Thus the codes here that incarnate linear operators are
+written in a style that also incarnates the adjoint
+(conjugate-transpose) operator thus enabling both modeling and data
+processing with the same code. This style of coding, besides being
+concise and avoiding redundancy, ensures the consistency required for
+estimation by conjugate-gradient optimization as described in my other
+books.  Adjoint operators link the modeling activity to the model
+estimation activity. While this linkage is less sophisticated than
+formal estimation theory (“inversion”), it is robust, easily
+available, and does not put unrealistic demands on the data or
+imponderable demands on the interpreter.
+
+
+\subsection*{Electronic document}
+
+A goal that we met with the 1992 CD-ROM version of this book was to
+give the user a full copy, not only of the book, but of all the
+software that built the book including not only the seismic data
+processing codes but also the word processing, the data, and the whole
+superstructure.  Although we succeeded for a while having a book that
+ran on machines of all the major manufacturers, eventually we were
+beaten down by a host of incompatibilities. This struggle
+continues. With my colleagues, we are now working towards having books
+on the World Wide Web where you can grab parts of a book that
+generates illustrations and modify them to create your own
+illustrations.
+
+\subsection*{Acknowledgements}
+
+I had the good fortune to be able to establish a summer 1992
+collaboration with Jim Black of IBM in Dallas who, besides bringing
+fresh eyes to the whole undertaking, wrote the first version of
+chapter 8 on dip moveout, made significant contributions to the other
+chapters, and organized the raw data.  In this book, as in my previous
+(and later) books, I owe a great deal to the many students at the
+Stanford Exploration Project. The local computing environment from my
+previous book is still a benefit, and for this I thank Stew Levin,
+Dave Hale, and Richard Ottolini. In preparing this book I am specially
+indebted to Joe Dellinger for his development of the intermediate
+graphics language vplot that I used for all the figures. I am grateful
+to Kamal Al-Yahya for converting my thinking from the troff
+typesetting language to LATEX. Bill Harlan offered helpful
+suggestions. Steve Cole adapted vplot to Postscript and X. Dave
+Nichols introduced our multivendor environment. Joel M. Schroeder and
+Matthias Schwab converted from cake to gmake. Bob Clapp expanded
+Ratfor for Fortran 90. Martin Karrenbach got us started with
+CD-ROMs. Sergey Fomel upgraded the Latex version to “2e” and he
+implemented the basic changes taking us from CD-ROM to the WWW, a
+process which continues to this day in year 2000.
+
+\noindent Jon Claerbout \\
+Stanford University \\
+December 26, 2000

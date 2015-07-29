@@ -1,0 +1,3 @@
+uses=['sfspike', 'sfmath', 'sftransp', 'sfpfactor2', 'sfhelicon', 'sfbyte', 'sfgrey3', 'sfsmooth', 'sfpwsmooth']
+data=[]
+size=    2566816

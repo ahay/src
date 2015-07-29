@@ -1,0 +1,82 @@
+from rsf.proj import *
+
+Flow('velx',None,
+     '''
+     math n1=512 d1=5 n2=512 d2=5
+     output="800+0.0001*(x1-1000)*(x1-1000)+0.0001*(x2-1200)*(x2-1200)"
+     label=Velocity unit1=m unit2=m unit=m/s label1=X label2=Z 
+     ''')
+Plot('velx',
+       '''
+       grey transp=n screenration=1 color=j
+       scalebar=y bias=1000 title="V\_x\^"
+       ''')
+Result('velx','Overlay')
+
+Flow('velz','velx',
+     '''
+     math output="700+0.0001*(x2-1200)*(x2-1200)"    
+     ''')
+Plot('velz',
+     '''
+     grey transp=n screenration=1 color=j
+     scalebar=y bias=1000 title="V\_z\^"
+     ''')
+Result('velz','Overlay')
+
+Flow('eta','velx','math output=0.3')
+Result('eta',
+       '''
+       grey transp=n screenration=1 color=j
+       scalebar=y title="\F10 h \F3 "
+       barlabel= barunit=
+       ''')
+
+Flow('theta','velx','math output=45')
+Result('theta',
+       '''
+       grey transp=n screenration=1 color=j
+       scalebar=y title="\F10 q \F3 "
+       barlabel= barunit=
+       ''')
+
+dt=0.001
+nt=1500
+
+Flow('source',None,
+     '''
+     spike n1=%d d1=%g k1=100 | 
+     ricker1 frequency=20 
+     ''' % (2*nt,dt))
+Result('source','graph  title="Source Wavelet" ')
+
+Flow('fft','velz','rtoc | fft3 axis=1 pad=1 | fft3 axis=2 pad=1')
+Flow('right left','velz velx eta theta fft',
+     '''
+     anisolr2 seed=2010 dt=%g velx=${SOURCES[1]} eta=${SOURCES[2]} theta=${SOURCES[3]} 
+     fft=${SOURCES[4]} left=${TARGETS[1]} 
+     ''' % dt)
+
+
+Flow('refl',None,'spike n1=512 d1=5 n2=512 d2=5 k1=256 k2=256') 
+
+Flow('wave','source refl left right',
+     '''
+     fftwave2 cmplx=y ref=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]} verb=y snap=1 snaps=$TARGET
+     ''',stdout=0)
+
+Plot('wave',
+     '''
+     window j3=50  |
+     grey label2="Z" label1="X" title="TTI 45"
+     yreverse=y transp=n gainpanel=each pclip=100 screenratio=1
+     ''',view=1)
+
+Flow('snapshot','wave','window j3=300 max3=1.5 | stack axis=3')
+Result('snapshot',
+       '''
+       grey label2="Z" label1="X" title="TTI 45 degree" screenratio=1
+       yreverse=y transp=n gainpanel=all unit1=m unit2=m
+       ''')
+
+End()

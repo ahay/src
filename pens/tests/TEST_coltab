@@ -1,0 +1,49 @@
+e
+S s
+F 14 1 0
+z
+Test of color tables
+z
+
+z
+The background should be dark grey.
+z
+Text should be the color it claims to be.
+C 0 120 120 120
+f 5
+J 0 -2
+C 1 220 220 255
+c 1
+m 1000 1000
+T 9 0
+220 220 255 (grayish purple)
+C 2 200 200 0
+c 2
+m 2000 2000
+T 9 0
+200 200 0 (dirty yellow)
+C 3 250 150 200
+c 3
+m 3000 3000
+T 9 0
+250 150 200 (hot pink)
+C 4 200 200 200
+c 4
+m 5000 4000
+T 9 0
+200 200 200 (Grey)
+C 5 100 150 80
+c 5
+m 100 4000
+T 9 0
+100 150 80 (dark green)
+C 6 100 180 250
+c 6
+m 4000 1500
+T 9 0
+100 180 250 (sky blue)
+C 7 255 190 240
+c 7
+m 1000 2500
+T 9 0
+255 190 240 (purplish pink)

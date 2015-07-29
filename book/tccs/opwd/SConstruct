@@ -1,0 +1,11 @@
+from rsf.tex import *
+
+
+End(use='amsmath',
+    color='circle odip lerr oerr dip pick-dip pick-odip',
+    include=
+    r'''
+    \newcommand{\txt}{\mathrm}
+    \newcommand{\vct}{\mathbf}
+    ''')
+

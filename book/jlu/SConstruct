@@ -1,0 +1,12 @@
+from rsf.book import *
+
+Papers(copyr='Jilin University',
+       group='CLEG',
+       papers=Split('''
+       txyapf
+       '''),
+       authors = {'txyapf':'Yang Liu, Ning Liu, and Cai Liu'}
+       )
+       
+End(use='amsmath')
+

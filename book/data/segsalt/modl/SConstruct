@@ -1,0 +1,39 @@
+from rsf.proj import *
+from rsf.recipes.beg import server as private
+# replace with your own data server
+
+for case in 'abcde':
+    salt = 'salt' + case*2
+    Fetch([salt+'.h',salt+'@'],'segsalt',private)
+    Flow(salt,[salt+'.h','./'+salt+'@'],
+         '''
+         (cat ${SOURCES[0]} ; echo in=${SOURCES[1]} data_format=xdr_float) |
+         put n1=780 |
+         dd form=native | transp | 
+         put label1=Z unit1=m label2=X unit2=m label=Velocity unit=m/s
+         ''',stdin=0)
+    Result(salt,
+           '''
+           grey color=j title=%s scalebar=y bias=2500 barreverse=y
+           ''' % (case.capitalize()*2))
+
+Fetch(['salt.h','Saltf@@'],'segsalt',private)
+Flow('salt','salt.h ./Saltf@@',
+     '''
+     (cat ${SOURCES[0]} ; echo in=${SOURCES[1]} data_format=xdr_float) | 
+     dd form=native | 
+     put label1=X unit1=m label2=Y unit2=m label3=Z unit3=m
+     label=Velocity unit=m/s
+     ''',stdin=0)
+
+point=676.0/(676+210)
+
+Result('salt',
+       '''
+       byte clip=1000 bias=2500 |
+       grey3 color=j title="SEG/EAGE Salt Model" 
+       frame1=338 frame2=338 frame3=100
+       screenratio=1 point1=%g point2=%g
+       ''' % (point,point))
+
+End()

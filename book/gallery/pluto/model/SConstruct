@@ -1,0 +1,44 @@
+from rsf.proj import *
+
+Fetch('int_depth_vp.sgy','pluto')
+Fetch('P15VPint_25f_padded.SEGY','pluto')
+
+Flow('standard','int_depth_vp.sgy',
+     '''
+     segyread read=d |
+     put  d2=0.025 label1=Depth o2=-34.875 
+     label2=Position unit1=kft unit2=kft 
+     label=Velocity unit=kft/s |
+     scale rscale=0.001
+     ''')
+
+Flow('metric','int_depth_vp.sgy',
+     '''
+     segyread read=d |
+     put d1=.00760 d2=.00760 o2=-10.629
+     label1=Depth label2=Position label=Velocity 
+     unit1=km unit2=km unit=km/s |
+     scale rscale=.0003048
+     ''')
+
+Flow('padded','P15VPint_25f_padded.SEGY',
+     '''
+     segyread read=d |
+     put  d1=.0076 d2=.00760 o2=-10.629 label1=Depth
+     label2=Position unit1=km unit2=km label=Velocity |
+     scale rscale=.0003048
+     ''')
+
+for model in ('standard','metric','padded'):
+    Result(model,
+           '''
+           grey scalebar=y color=j mean=y title="Velocity Model"
+           screenratio=.28125 screenht=2 
+           labelsz=4 wanttitle=n barreverse=y
+           ''')
+
+Fetch('data.H','pluto')
+
+Flow('shots','data.H','dd form=native')
+
+End()

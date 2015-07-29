@@ -1,0 +1,37 @@
+from rsf.proj import *
+
+Flow('puckin',None,'aliasp - | noise var=0.001 seed=2011')
+
+for niter in (1,5):
+    dip = 'dip%d' % niter
+    pwd = 'residual%d' % niter
+
+    Flow(dip,'puckin','dip order=12 p0=2 rect1=100 rect2=10 niter=%d' % niter)
+    Result(dip,'grey color=j scalebar=y title=Slope')
+
+    Flow(pwd,['puckin',dip],'pwd dip=${SOURCES[1]} order=12')
+
+for case in Split('puckin residual1 residual5'):
+    Result(case,'dots gaineach=n')
+
+Flow('pred','puckin dip5','pwspray dip=${SOURCES[1]} order=12 ns=1 reduce=predict')
+Flow('coh','pred puckin','similarity other=${SOURCES[1]} rect1=20 rect2=2 eps=1')
+Flow('ccoh','coh','rtoc')
+
+Result('coh','grey allpos=y title=Coherence color=j')
+
+scale=0.4
+
+for s in '+-':
+    step = 'step%c' % s
+    Flow(step,'dip5 ccoh',
+         '''
+         rtoc | math c=${SOURCES[1]}
+         output="x1%cc*input*%g+I*(x2%cc*%g)" |
+         window j1=10 | put n1=1440 n2=1
+         ''' % (s,scale,s,scale))
+Flow('step','step- step+','cat axis=2 ${SOURCES[1]} | transp')
+
+Result('puckout','step','graph wanttitle=n wantaxis=n plotcol=6')
+
+End()

@@ -1,0 +1,347 @@
+\published{Journal of Applied Geophysics, 93, 60-66, (2013)}
+\title{Noncausal $f$-$x$-$y$ regularized nonstationary prediction filtering for random noise attenuation on 3D seismic data}
+
+\author{Guochang Liu and Xiaohong Chen}
+
+\ms{APPGEO2549}
+
+\address{
+China University of Petroleum, \\
+State Key Laboratory of Petroleum Resource and Prospecting, \\
+102249, Beijing, China. \\
+E-mail: guochang.liu@yahoo.com; chenxh@cup.edu.cn}
+
+\lefthead{Liu et al.}
+\righthead{f-x-y NRNA for noise attenuation}
+
+\maketitle
+
+\begin{abstract}
+Seismic noise attenuation is very important for seismic data analysis and 
+interpretation, especially for 3D seismic data. In this paper, we propose 
+a novel method for 3D seismic random noise attenuation by applying noncausal 
+regularized nonstationary autoregression (NRNA) in $f$-$x$-$y$ domain. The proposed 
+method, 3D NRNA (f-x-y domain) is the extended version of 2D NRNA (f-x domain). 
+f-x-y NRNA can adaptively estimate seismic events of which slopes vary in 3D space. 
+The key idea of this paper is to consider that the central trace can be predicted 
+by all around this trace from all directions in 3D seismic cube, while the 2D 
+f-x NRNA just considers the middle trace can be predicted by adjacent traces 
+along one space direction. 3D $f$-$x$-$y$ NRNA uses more information from circumjacent 
+traces than 2D $f$-$x$ NRNA to estimate signals. Shaping regularization technology 
+guarantees the nonstationary autoregression problem can be realizable in mathematics 
+with high computational efficiency. Synthetic and field data examples demonstrate 
+that, compared with $f$-$x$ NRNA method, $f$-$x$-$y$ NRNA can be more effective in suppressing 
+random noise and improve trace-by-trace consistency, which are useful in conjunction 
+with interactive interpretation and auto-picking tools such as automatic event tracking. 
+
+\end{abstract}
+
+\section{Introduction}
+
+Seismic noise attenuation is very important for seismic data processing and 
+interpretation, especially for 3D seismic data. Among the methods of seismic 
+noise attenuation, prediction filtering is one of the most effective and most 
+commonly used methods, e.g., \cite []{Gulunay1986, Galbraith1991, Gulunay1993, 
+Sacchi2001}. Prediction filtering can be implemented in $f$-$x$ 
+domain or $t-x$ domain \cite[]{Hornbostel1991, Abma1995}. \cite{Abma1995}
+compared $f$-$x$ method and $t-x$ method and gave the advantages 
+and disadvantages of both these methods. The proposed method in our paper 
+belongs to the category of $f$-$x$ domain methods. The $f$-$x$ prediction technique 
+was introduced for random noise attenuation on 2D poststack data by \cite{Canales1984}
+and further developed by \cite{Gulunay1986}. \cite{Wang1991} and 
+\cite{Hornbostel1991} used noncausal filters for random noise attenuation on 
+stacked seismic data and obtain a good result. Linear prediction filtering 
+states that the signal can be described by an autoregressive (AR) model, 
+which means that a superposition of linear events transforms into a 
+superposition of complex sinusoids in the $f$-$x$ domain. \cite{Sacchi2001} 
+utilized the autoregressive-moving average (ARMA) structure of 
+the signal to estimate a prediction error filter (PEF) and applied ARMA 
+model to attenuate random noise. \cite{Liu2009} applied ARMA-based 
+noncausal spatial prediction filtering to avoid the model inconsistency.
+ 
+As already noted, these above mentioned $f$-$x$ methods assume seismic section 
+is composed of a finite number of linear events with constant dip in $t-x$ 
+domain. To cope with the assumption continuous changes dips, short temporal 
+and spatial analysis windows are usually used in $f$-$x$ prediction filtering. 
+Except using windowing strategy, several nonstationary prediction filters 
+are proposed and used in seismic noise attenuation and interpolation. 
+\cite{Naghizadeh2009} proposed an adaptive $f$-$x$ prediction filter, 
+which was used to interpolate waveforms that have spatially variant dips. 
+\cite{Fomel2009} developed a general method of regularized nonstationary 
+aoturegression (RNA) with shaping regularization \cite[]{Fomel2007} for 
+time domain inverse problems. \cite{Liu2012} propose a method for 
+random noise attenuation in seismic data by applying noncausal 
+regularized nonstationary autoregression (NRNA) in frequency domain, 
+which is implemented for 2D seismic data. These nonstationary methods 
+can control algorithm’s adaptability to changes in local dip so that 
+they can process curved events.
+ 
+If using $f$-$x$ prediction filter to suppress random noise on 3D seismic 
+data, one need to run the 2D algorithm slice by slice (along inline x or 
+crossline y). To use more information to predict the effective signal 
+in 3D data, several geophysicists extended $f$-$x$ prediction filtering to 
+3D case. \cite{Chase1992} designs and applies 2-D prediction filters in the
+ plane defined by the inline and crossline directions for each temporal 
+frequency slice of the 3-D data volume. \cite{Ozdemir1999} applied 
+f-x-y projection filtering to attenuate random noise of seismic data 
+with low poor signal to noise ratio (SNR), in which the crucial step 
+of 2-D spectral factorization is achieved through the causal helical 
+filter. \cite{Gulunay2000} proposed using full-plane noncausal prediction 
+filters to process each frequency slice of the 3-D data. \cite{Wang2002} 
+applied $f$-$x$-$y$ 3D prediction filter to implement seismic data interpolation 
+and gave a good result. \cite{Hodgson2002} presented a novel method of 
+noise attenuation for 3D seismic data, which applies a smoothing filter 
+to each targeted frequency slice and allows targeted filtering of selected 
+parts of the frequency spectrum.
+
+In this paper, we extend $f$-$x$ NRNA method \cite[]{Liu2012} to $f$-$x$-$y$ case 
+and use $f$-$x$-$y$ NRNA to attenuate random noise for 3D seismic data. The 
+coefficients of 3D NRNA method are smooth along two space coordinates 
+(x and y) in $f$-$x$-$y$ domain. This paper is organized as follows: First, 
+we provide the theory for random noise on 3D seismic data, paying 
+particular attention to establishment of $f$-$x$-$y$ NRNA equations with 
+constraints and implementation of it with shaping regularization. 
+Then we evaluate and compare the proposed method with $f$-$x$ NRNA using 
+synthetic and real data examples and discuss the parameter selection 
+problem associated with our algorithm. 
+
+\section{Methodology}
+
+ \subsection{The review of $f$-$x$ NRNA}
+
+Seismic section $S(t,x)$ in $f$-$x$ domain is predictable if it only 
+includes linear events in $t-x$ domain. The relationship between the 
+n-th trace and (n-i)-th trace can be easily described as
+      \begin{equation}
+          {{S}_{n}}(f)=\sum\limits_{i=1}^{M}{{{a}_{i}}(f){{S}_{n-i}}(f)},
+        \label{eq:eq1}
+      \end{equation}
+where M is the number of events in 2D seismic section. Eq. (1) describes 
+forward prediction equations, namely causal prediction filtering equations 
+\cite[]{Gulunay2000}. In the case of both forward and backward prediction equations 
+(noncausal prediction filter), Eq. ~\ref{eq:eq1} can be written as \cite[]{Spitz1991,Gulunay2000, Naghizadeh2009, Liu2012}
+      \begin{equation}
+          {{S}_{n}}(f)\text{=}\sum\limits_{i=1}^{M}{{{a}_{i}}{{S}_{n-i}}}(f)\text{+}\sum\limits_{i=-1}^{-M}{{{a}_{i}}{{S}_{n-i}}(f)},
+        \label{eq:eq2}
+      \end{equation}
+where M is the parameter related to the number of events. Note that Eq. ~\ref{eq:eq2} 
+implies the assumption $\sum\nolimits_{i=1}^{M}{{{a}_{i}}{{S}_{n-i}}(f)}\text{=0}.\text{5}{{S}_{n}}(f)$and$\sum\nolimits_{i=-1}^{-M}{{{a}_{i}}{{S}_{n-i}}(f)}\text{=0}.\text{5}{{S}_{n}}(f)$. Theoretically, ${{a}_{i}}$in forward prediction equations 
+is the complex conjugation of ${{a}_{-i}}$in backward equations \cite[]{Galbraith1991}. 
+\cite{Gulunay2000} pointed that it is possible to reduce the order of the normal equations 
+from 2M to M because the coefficients of noncausal prediction filter have conjugate symmetry. 
+f-x prediction filtering has the assumption that the events of seismic section are 
+linear. If seismic events are not linear, or the amplitudes of wavelet are varying, 
+they no longer follow linear or stationary assumptions (Canales, 1984). One needs to 
+perform $f$-$x$ prediction filtering over a short sliding window in time and space to 
+cope with continuous changes in dips \cite[]{Naghizadeh2009}. \cite{Fomel2009} 
+developed a general method of RNA using shaping regularization technology, which 
+is implemented for real number. \cite{Liu2012} extended the RNA method to $f$-$x$ 
+domain for complex numbers and applied it to seismic random noise attenuation for 
+2D seismic data. The $f$-$x$ NRNA is defined as \cite[]{Liu2012}
+      \begin{equation}
+          {{\varepsilon }_{n}}(f)={{S}_{n}}(f)-\sum\limits_{i=1}^{M}{{{a}_{n,i}}(f){{S}_{n-i}}(f)}-\sum\limits_{i=-1}^{-M}{{{a}_{n,i}}(f){{S}_{n-i}}(f)}.
+        \label{eq:eq3}
+      \end{equation}
+
+Eq. ~\ref{eq:eq3} indicates that one trace noise-free in $f$-$x$ domain can be predicted by 
+adjacent traces with the different weights ${{a}_{n,i}}(f)$. Note that the 
+weights ${{a}_{n,i}}(f)$ is varying along the space direction, which 
+indicated by subscript i in ${{a}_{n,i}}(f)$. In Eq. ~\ref{eq:eq3}, the coefficients $a$is 
+the function of space i, but it is not in Eq. ~\ref{eq:eq2}. When applying $f$-$x$ NRNA to seismic 
+noise attenuation, we assume the prediction error${{\varepsilon }_{n}}(f)$ is the 
+random noise and the predictable part $\sum\limits_{i=1}^{M}{{{a}_{n,i}}(f){{S}_{n-i}}(f)}+\sum\limits_{i=-1}^{-M}{{{a}_{n,i}}(f){{S}_{n-i}}(f)}$
+is the signal. Finding spatial-varying coefficients ${{a}_{n,i}}(f)$ form Eq. ~\ref{eq:eq3} 
+is ill-posed problem because there are more unknown variables than constraint equations. To obtain the 
+coefficients, we should add constraint equations. Shaping regularization \cite[]{Fomel2009} 
+can be used to solve the under-constrained problem \cite[]{Liu2012}. The RNA method 
+can also be used for seismic data processing in t-x-y domain, such as seismic data 
+interpolation \cite[]{Liu2011}.
+
+ \subsection{f-x-y NRNA for random noise attenuation}
+
+Two dimensional $f$-$x$ NRNA only considers one space coordinate x. If we use $f$-$x$ 
+NRNA on 3D seismic cube, we usually apply $f$-$x$ RNA in one space slice. $f$-$x$ NRNA 
+reduces the effectiveness because the plane event in 3D cube is predictable along 
+different directions rather than only one direction. Therefore, we should develop 
+3D $f$-$x$-$y$ NRNA to suppress random noise for 3D seismic data.
+
+\inputdir{.}
+
+\plot{fig1}{width=0.5\columnwidth}{The $f$-$x$-$y$ prediction filter. The trace ${{\text{T}}_{\text{33}}}$ is predicted from circumjacent traces ${{\text{T}}_{11}}\sim {{\text{T}}_{55}}$(except itself ${{\text{T}}_{\text{33}}}$).
+}
+
+
+
+Next, we use Fig. ~\ref{fig:fig1} to illustrate the idea of $f$-$x$-$y$ NRNA. The middle trace 
+${{\text{T}}_{\text{33}}}$is the one we want to predict. Trace ${{\text{T}}_{\text{33}}}$ 
+can be predicted from circumjacent traces ${{\text{T}}_{11}}\sim {{\text{T}}_{55}}$(except 
+itself ${{\text{T}}_{\text{33}}}$). The prediction process includes all different directions. 
+For example, if we use ${{\text{T}}_{21}}$to predict ${{\text{T}}_{\text{33}}}$, we can 
+estimate a corresponding coefficient using the described algorithm in the following. $f$-$x$-$y$ 
+NRNA uses all around traces to predict the middle trace. Therefore, the prediction uses more 
+information than $f$-$x$ NRNA. For all the traces in 3D cube, similar to the trace ${{\text{T}}_{\text{33}}}$, 
+we can use circumjacent traces to predict them. Mathematically, we can write the prediction process as
+      \begin{equation} 
+          {{S}_{x,y}}(f)=\sum\limits_{i=-M,i\ne 0}^{M}{{{a}_{i}}(f){{S}_{x,y,i}}(f)},
+        \label{eq:eq4}
+      \end{equation}
+where M and i are the number and index of circumjacent traces, respectively. In the case of Fig. ~\ref{fig:fig1}, 
+M=24 and i is from 1 to 24. Note that ${{S}_{x,y,i}}(f)$indicates the 24 circumjacent traces around
+ ${{S}_{x,y}}(f)$. Eq. ~\ref{eq:eq4} is the equations of noncausal regularized stationary autoregression. 
+Similarly to $f$-$x$ NRNA, considerng the nonstationary case, we can obtain
+      \begin{equation}
+          {{\tilde{S}}_{x,y}}(f)=\sum\limits_{i=-M,i\ne 0}^{M}{{{a}_{x,y,i}}(f){{S}_{x,y,i}}(f)},
+        \label{eq:eq5}
+      \end{equation}
+where ${{a}_{x,y,i}}(f)$is the space-varying coefficients, which means they have three free degrees, 
+space axis x, space axis y and shift axis i. ${{\tilde{S}}_{x,y}}(f)$can be regarded as the 
+estimation of noise-free signal. However, the coefficients ${{a}_{x,y,i}}(f)$ are not 
+known. Once we obtain the coefficients, we can estimate the effective signal using 
+Eq. ~\ref{eq:eq5} Similar to $f$-$x$ NRNA, we use shaping regularization to solve this ill-posed 
+problem. Here, we assume that the coefficients ${{a}_{x,y,i}}(f)$ $f$-$x$-$y$ RNA are 
+smooth along two space axes x and y, which is reasonable because the curved surface 
+event in 3D seismic data is locally plane. Therefore, we can obtain the following 
+least square problem with shaping regularization
+      \begin{equation}
+          \min_{a_{x,y,i}(f)}||{{S}_{x,y}}(f)-\sum\limits_{i=-M,i\ne 0}^{M}{{{a}_{x,y,i}}(f){{S}_{x,y,i}}(f)}||_{2}^{2}+R[{{a}_{x,y,i}}(f)],
+        \label{eq:eq6}
+      \end{equation}
+where R[.] denotes shaping regularization term which constrains coefficients ${{a}_{x,y,i}}(f)$
+to be smooth along space axes. We use one coefficient with a given frequency and a given shift 
+(e.g., from ${{\text{T}}_{21}}$ to ${{\text{T}}_{33}}$ indicated by arrow in Fig. ~\ref{fig:fig1}) to 
+explain the constraint in Eq. ~\ref{eq:eq6}. This 3D cube of coefficient with a given frequency and a 
+given shift can be expressed as ${{a}_{x,y,{{i}_{0}}}}({{f}_{0}})$, which is smooth along 
+with variables x and y. The smooth constraint of coefficients is the objective of shaping 
+regularization. Finally, we use Eq. ~\ref{eq:eq6} to obtain obtain the complex coefficients of $f$-$x$-$y$ 
+RNA, and use Eq. ~\ref{eq:eq5} to achieve the estimation of signal. 
+
+Transform-base methods can also be used for seismic noise attenuation \cite[]{Ma2010}. \cite{Tang2011} 
+proposed to total-variation-based curvelet shrinkage for 3D seismic data denoising 
+in order to suppress nonsmooth artifacts caused by the curvelet transform. Because the $f$-$x$-$y$ 
+NRNA method uses shaping regularization to solve the ill-posed inverse problem and is 
+complemented in frequency domain, it has higher computation efficiency than curvelet-based methods.
+
+\section{Synthetic examples}
+
+\inputdir{sin}
+
+\multiplot{2}{sin,cmp}{width=0.4\columnwidth}{Synthetic benchmark 3D cube with one curved 
+surface event (a) and noisy data cube (b).}
+
+\multiplot{2}{tsin,flt}{width=0.4\columnwidth}{(a) Travel time of the event in Fig. ~\ref{fig:sin}. 
+(b) The imaginary part of $f$-$x$-$y$ NRNA coefficients at a given shift ${{a}_{x,y,{{i}_{0}}}}(f)$}
+
+\multiplot{2}{tpre2d,tpre}{width=0.4\columnwidth}{The results of $f$-$x$ NRNA (a) and $f$-$x$-$y$ NRNA (b).}
+
+We demonstrate the effectiveness of the proposed $f$-$x$-$y$ NRNA using two synthetic 
+dataset. The first synthetic example involves only one curved surface. Fig. ~\ref{fig:sin} 
+shows the synthetic dataset. Three slices of Fig. ~\ref{fig:sin} illustrate the Y=2.4 km, 
+X=2.4 km and Time=1 s, respectively. The following figures in this paper have 
+the same way for display. The traveltime of this surface is shifted sine 
+function (Fig. ~\ref{fig:tsin}). We can find that the traveltime is not linear varying. 
+Therefore, we cannot use stationary $f$-$x$-$y$ prediction filtering to estimate 
+the effective signal. Fig. ~\ref{fig:cmp} is the noisy data. This curved surface event 
+is greatly contaminated by random noise. We respectively use $f$-$x$ NRNA and 
+f-x-y NRNA to attenuate the random noise and compare their results (Fig. ~\ref{fig:tpre2d}-~\ref{fig:tpre}). 
+The SNRs of $f$-$x$ NRNA and $f$-$x$-$y$ NRNA are 0.34 and 2.4, respectively. Although 
+f-x NRNA has suppressed a lot of random noise, there are still some random 
+noises in the result (Fig. ~\ref{fig:tpre2d}). Compared with $f$-$x$ NRNA, $f$-$x$-$y$ NRNA gives a 
+better result. The curved surface event is very clear and consistent, which 
+may be easier to automatic event tracking for interpretation. Fig. ~\ref{fig:flt} shows 
+the imaginary part of $f$-$x$-$y$ NRNA coefficients at a given shift ${{a}_{x,y,{{i}_{0}}}}(f)$, 
+which are smooth along with space axes. From the slice with 20.833 Hz (up slice in Fig. ~\ref{fig:flt}), 
+one can find that the coefficients reflect the information of traveltime or time shifts 
+between circumjacent traces (Fig. ~\ref{fig:tsin}). From the frontal and lateral slices 
+in Fig. ~\ref{fig:flt}, one can conclude that the coefficients are related to dips of 
+events from the frontal and lateral slices in Fig. ~\ref{fig:sin}. The coefficient is 
+zero if the event is horizontal (e.g. position B). The coefficients are 
+respectively positive and negative if the events are upgoing (e.g. position A) 
+and downgoing (e.g. position C). The estimated rusult of coefficients is 
+consistent with theoretical analysis.
+
+\inputdir{shot}
+
+\multiplot{4}{cmp0,cmp,tpre2d,tpre}{width=0.4\columnwidth}{(a) Synthetic 3D shot gather. (b) Noisy data. 
+(c) The result of $f$-$x$ RNA. (d) The result of $f$-$x$-$y$ RNA.}
+
+ 
+The second synthetic example is a synthetic shot gather with four hyperbolic 
+events (Fig. ~\ref{fig:cmp0}). Here, we consider anisotropy of the propagating velocity, 
+so that there are intersecting events in Y slice but they are not intersecting 
+in X slice (the second and third events). Comparing the results of $f$-$x$ NRNA 
+(Fig ~\ref{fig:tpre2d}) and $f$-$x$-$y$ NRNA (Fig ~\ref{fig:tpre}), we can find that $f$-$x$-$y$ RNA can remove more 
+noise that $f$-$x$ NRNA, especially for poor signals (for example, far offset of 
+the events indicated by arrows in Fig. ~\ref{fig:cmp0}-~\ref{fig:tpre}). The SNRs of $f$-$x$ NRNA and $f$-$x$-$y$ 
+NRNA are 0.95 and 2.61, respectively. Both of these synthetic examples 
+demonstrate the proposed $f$-$x$-$y$ NRNA can be effectively use to attenuation 
+random noise for 3D seismic data cube.
+
+\section{Application on field poststack data}
+
+\inputdir{real}
+
+\plot{data}{width=0.9\columnwidth}{The 3D field data cube after time migration.}
+
+\plot{flt-np}{width=0.9\columnwidth}{The imaginary part of $f$-$x$-$y$ NRNA coefficients at 
+a given shift ${{a}_{x,y,{{i}_{0}}}}(f)$ for real dataset.}
+
+\multiplot{3}{wi,wi-2,wi-3}{width=0.5\columnwidth}{The slice X of field data cube. (a) Original data; (b) $f$-$x$ NRNA; (c) $f$-$x$-$y$ NRNA.}
+
+\multiplot{3}{wc,wc-2,wc-3}{width=0.5\columnwidth}{The slice Y of field data cube. (a) Original data; (b) $f$-$x$ NRNA; (c) $f$-$x$-$y$ NRNA.}
+
+\multiplot{3}{wt,wt-2,wt-3}{width=0.5\columnwidth}{The time slice of field data cube. (a) Original data; (b) $f$-$x$ NRNA; (c) $f$-$x$-$y$ NRNA.}
+
+The $f$-$x$-$y$ NRNA method is applied to a 3D image after time migration (Fig. ~\ref{fig:data}). 
+The shallow structures are simple plane layers (above 1 s) and the deep structures 
+are complex curved layers (below 1 s). We respectively apply $f$-$x$ NRNA and $f$-$x$-$y$ 
+NRNA to enhance the reflectors of this 3D image cube. Fig. ~\ref{fig:flt-np} shows the imaginary 
+part of $f$-$x$-$y$ NRNA coefficients at a given shift ${{a}_{x,y,{{i}_{0}}}}(f)$. 
+Similar to synthetic example, the $f$-$x$-$y$ NRNA coefficients are smooth and reflect 
+the information of event dips. In this example, we use M=2 for $f$-$x$-$y$ NRNA and 
+M=8 for $f$-$x$ NRNA, respectively. Figs. ~\ref{fig:wi}-~\ref{fig:wi-3} and ~\ref{fig:wc}-~\ref{fig:wc-3} respectively shows the X and Y 
+slices after $f$-$x$ NRNA noise attenuation and $f$-$x$-$y$ NRNA noise attenuation. We 
+can find that $f$-$x$-$y$ NRNA method can give a better result than $f$-$x$ NRNA method. 
+The result of $f$-$x$-$y$ NRNA has a much better lateral continuity. These two methods 
+not only improve the shallow plane events evidently (e.g. 0s -0.5s), but also 
+improve the deep curved surface events (e.g. the area indicated by ellipse). 
+This is because these two methods both are nonstationary methods, which is 
+suitable for curved events. In addition, comparing $f$-$x$ NRNA and $f$-$x$-$y$ NRNA 
+methods from time slices (Fig. ~\ref{fig:wt}-~\ref{fig:wt-3}), one can also see that the $f$-$x$-$y$ NRNA 
+gives more consistent result. The lateral continuity and trace-by-trace 
+consistency of the reflections are crucial in structural interpretation 
+of seismic data by reflection picking especially for the auto-picking 
+tools of interactive interpretation systems \cite[]{Fomel2010}.
+
+\section{Conclusions}
+
+We have proposed a novel method for seismic noise attenuation using $f$-$x$-$y$ NRNA for 3D seismic data. 
+f-x-y NRNA is the 3D extension of $f$-$x$ NRNA. By using more information to predict the seismic signal, 
+the $f$-$x$-$y$ NRNA improves the denoising result for 3D seismic data. The varying coefficients of the 
+f-x-y NRNA are smooth along space coordinates for a given direction. The smoothness is controlled 
+by shaping regularization, which has the key parameter: the smooth radius. The smooth radius can 
+be selected by user according to the smoothness of assumed coefficients. This approach does not 
+require breaking the input data into local windows along space axis, although it is conceptually 
+analogous to sliding spatial windows with maximum overlap. Execution time of $f$-$x$-$y$ NRNA is reduced 
+by iteration inversion and shaping regularization. Synthetic and field data examples both confirm 
+that the proposed $f$-$x$-$y$ RNA approach can be significantly more effective in noise attenuation and 
+consistency improvement than $f$-$x$ RNA for 3D seismic data. Therefore, it may be useful in conjunction 
+with interactive interpretation systems and auto-picking tools such as automatic event tracking. 
+
+\section{Acknowledgments}
+
+We would like to thank Yang Liu and Jingye Li for inspiring discussions. 
+This research was partially supported by Science Foundation of China University 
+of Petroleum, Beijing (No. YJRC-2013-39) and the National Natural Science 
+Foundation of China (no. U1262207).
+
+%\section{Note on reproducibility}
+
+%All computational experiments described in this paper can be
+%reproduced using the \emph{Madagascar} open-source software package
+%available at \url{http://rsf.sourceforge.net}.
+
+
+\bibliographystyle{seg}
+\bibliography{paper}
+
+

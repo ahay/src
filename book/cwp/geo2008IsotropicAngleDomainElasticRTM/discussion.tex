@@ -1,0 +1,83 @@
+\section{Discussion}
+
+\geouline{Our presentation of the angle-domain reverse-time migration
+method outlined in the preceding sections deliberately ignores several
+practical challenges in order to maintain the focus of this paper to
+the actual elastic imaging condition. However, for completeness, we
+would like to briefly mention several complementary issues that need
+to be addressed in conjunction with the imaging condition in order to
+design a practical method for elastic reverse-time migration.}
+
+%% 
+ % discuss mode conversion at the injection point
+ %%
+
+\geouline{First, reconstruction of the receiver wavefield requires that
+  the multicomponent recorded data be injected into the model in
+  reverse-time. In other words, the recorded data act as a
+  displacement sources at receiver positions. In elastic materials,
+  displacement sources trigger both compressional and transverse wave
+  modes, no matter what portion of the recorded elastic wavefield is
+  used as a source. For example, injecting a recorded compressional
+  mode triggers both a compressional (physical) mode and a transverse
+  (non-physical) mode in the subsurface . Both modes propagate in the
+  subsurface and might correlate with wave modes from the
+  source side. There are several ways to address this
+  problem, such as by imaging in the angle-domain where the
+  non-physical modes appear as events with non-flat moveout. We can
+  make an analogy between those non-physical waves and multiples
+  that also lead to non-flat events in the angle-domain. Thus, the
+  source injection artifacts might be eliminated by filtering the
+  migrated images in the angle domain, similar to the technique
+  employed by} \cite{SavaGuitton.geo.mat} \geouline{for suppressing
+  multiples after imaging.}
+
+%% 
+ % discuss the need for additional mode separation on the surface
+ % discuss surface waves
+ %%
+
+\geouline{Second, the data recorded at a free surface contain both
+  up-going and down-going waves. Ideally, we should use only the
+  up-going waves as a source for reconstructing the elastic wavefields
+  by time-reversal. In our examples, we assume an absorbing surface in
+  order to avoid this additional complication and concentrate on the
+  imaging condition. However, practical implementations require
+  directional separation of waves at the surface}
+\cite[]{WapenaarHaime1990,WapenaarEtAl1990,
+  AmundsenReitan1995,AmundsenEtAl2001,HouMarfurt2002}.
+\geouline{Furthermore, a free surface allows other wave modes to be
+  generated in the process of wavefield reconstruction using the
+  elastic wave-equation, e.g. Rayleigh and Love waves. Although those
+  waves do not propagate deep into the model, they might interfere
+  with the directional wavefield separation at the surface.}
+
+%% 
+ % discuss amplitude treatment and AVA
+ %%
+
+\geouline{ Third, we suggest in this paper that angle-dependent
+  reflectivity constructed using extended imaging conditions might
+  allow for elastic AVA analysis. This theoretical possibility
+  requires that the wavefields are correctly reconstructed in the
+  subsurface to account for accurate amplitude variation. For example,
+  boundaries between regions with different material properties need
+  to be reasonably located in the subsurface to generate correct mode
+  conversions, and the radiation pattern of the source also needs to
+  be known. Neither one of these aspects is part of our analyses, but
+  they represent important considerations for practical elastic
+  wavefield imaging.}
+
+
+%% 
+ % discuss wave-mode separation in anisotropic media
+ %%
+
+\geouline{Fourth, the wave-mode separation using divergence and curl
+  operators, as required by Helmholtz decomposition, does not work
+  well in elastic anisotropic media. Anisotropy requires that the
+  separation operators take into account the local
+  anisotropic parameters that may vary spatially}
+\cite[]{YanSava.geo.separate}. \geouline{However, we do not discuss
+  anisotropic wave-mode decomposition in this paper and restrict our
+  attention to angle-domain imaging in isotropic models.}

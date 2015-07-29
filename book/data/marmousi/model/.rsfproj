@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfscale', 'sfput', 'sfwindow', 'sfgrey']
+data=['data/marm/marmvel.hh', 'data/marm/marmsmooth.HH']
+size=    7099596

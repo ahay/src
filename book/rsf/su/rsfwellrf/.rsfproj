@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfwindow', 'sfput', 'sfgraph', 'sfmul', 'sfdepth2time', 'sfai2refl', 'sfricker1', 'sfspray', 'sfwiggle']
+data=['data/cwp/sonic.txt']
+size=     567004

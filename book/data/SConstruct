@@ -1,0 +1,15 @@
+from rsf.book import *
+
+papers = '''
+amoco
+marmousi
+marmousi2
+pluto
+sigsbee
+'''
+
+Papers(Split(papers),
+       copyr='Colorado School of Mines',group='Madagascar Datasets',
+       fig=('marmousi/model','marmvel','width=\\textwidth'))
+
+End()

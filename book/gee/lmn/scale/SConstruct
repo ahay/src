@@ -1,0 +1,37 @@
+from rsf.proj import *
+
+import string
+
+Flow(['f','f0'],None,
+     '''echo %s in=${TARGETS[1]} n1=%d esize=0 > ${TARGETS[1]} &&
+     dd form=native < ${TARGETS[1]}''' %
+     (9*'1 ' + 9*'-1 ',18))
+
+n1=94
+n2=19
+k2 = []
+k1 = []
+mag = []
+for i2 in range(1,1+n2):
+    k2.append(i2)
+    k1.append(40 + 2 * i2)
+    mag.append(1)
+    k2.append(i2)
+    k1.append(80 - 3 * i2)
+    mag.append(-1)
+
+Flow('spitz',None,
+     'spike n1=%d n2=%d nsp=%d k1=%s k2=%s mag=%s' %
+     (n1,n2,len(k1),
+      string.join(map(str,k1),','),
+      string.join(map(str,k2),','),
+      string.join(map(str,mag),',')))
+Flow('super','spitz f','conv filt=${SOURCES[1]} | window f1=20')
+
+Plot('grey','super',
+     'grey clip=3 transp=n yreverse=n wantaxis=n wanttitle=n crowd=.9')
+Plot('dots','super',
+     'dots label1=" " dots=n connect=n gaineach=n overlap=1.6')
+Result('super','dots grey','SideBySideAniso')
+
+End()

@@ -1,0 +1,84 @@
+from rsf.proj import *
+
+for file in [
+    	 'Z700_SimSou_688-UNBLENDED-',                  
+    	 'Z700_SimSou_754-UNBLENDED-',
+    	 'Z700_SimSou_763-UNBLENDED-', 
+    	 'Z700_SimSou_985-UNBLENDED-',
+         'Z700_SimSou_688-BLENDED-Far-Unsynch-1000dither',
+	 'Z700_SimSou_754-BLENDED-Close-Synch-1000dither',
+    	 'Z700_SimSou_763-BLENDED-Close-Synch-1000dither', 
+    	 'Z700_SimSou_985-BLENDED-Far-Unsynch-1000dither'
+             ]:
+
+	 print file
+
+	 Flow([file,'t'+file,file+'.asc',file+'.bin'],
+	      '/home/karl/data/fairfield_blended_source/'+file+'.segy',
+	      '''
+	      segyread 
+	         tfile=${TARGETS[1]} 
+		 hfile=${TARGETS[2]} 
+		 bfile=${TARGETS[3]}
+	       ''')
+
+	 Result(file,file,
+	      'grey title=%s'%file)
+
+
+# cat delay.rsf from this and verify that cdpx is indead the 
+Flow('delay','tZ700_SimSou_688-UNBLENDED-',
+	'''
+        dd type=float
+      	| headermath output="cdpy"
+	''')
+
+# sfdisfil < delay.rsf 
+# will verify that cdpx is indead the async delay
+
+Flow('unblended_688_985',
+	['Z700_SimSou_688-UNBLENDED-','Z700_SimSou_985-UNBLENDED-'],
+	'''
+	cat ${SOURCES[1]}
+	''')
+Result('unblended_688_985','unblended_688_985',
+	'grey title=unblended_688_985')
+
+
+Flow('tunblended_688_985',
+	['tZ700_SimSou_688-UNBLENDED-','tZ700_SimSou_985-UNBLENDED-'],
+	'''
+	cat ${SOURCES[1]}
+	''')
+Flow('delays_688_985','tunblended_688_985',
+	'''
+        dd type=float
+      	| headermath output="cdpy"
+	''')
+# sfdisfil < delay.rsf 
+# will verify that cdpx is indead the async delay
+
+exe = Program('sfblend.c',CPPDEFINES='NO_BLAS')
+print exe[0]
+print "Flow blended_688_985"
+Flow(   'reblended_688_985',
+      	'unblended_688_985 %s delays_688_985' %exe[0],
+	'''
+	./${SOURCES[1]} delays=${SOURCES[2]}
+	''')
+
+print "Result reblended_688_985"
+Result('reblended_688_985','reblended_688_985',
+	'grey title=reblended_688_985')
+	
+
+Flow('blended_688_985',
+	['Z700_SimSou_688-BLENDED-Far-Unsynch-1000dither',
+    	 'Z700_SimSou_985-BLENDED-Far-Unsynch-1000dither'],
+	'''
+	cat ${SOURCES[1]}
+	''')
+Result('blended_688_985','blended_688_985',
+	'grey title=blended_688_985')
+
+End()

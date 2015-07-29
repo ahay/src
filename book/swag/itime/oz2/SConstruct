@@ -1,0 +1,88 @@
+## Oz data gather 2 (Vibroseis, nt=1075, dt=0.004, nx=120, dx=100m BW:10-30 Hz)
+#  Bandwidth is about 10-45 Hz
+from rsf.proj import *
+import math, os
+from rsf.recipes.itime import itime1,itimec
+from rsf.recipes.fmean import Freqmean,Freqplots
+
+sz1=' labelsz=12 titlesz=12 '
+sz2=' labelsz=10 titlesz=10 '
+
+
+#### Data (Oz shot gather #2)
+#  Bandwidth is about 10-45 Hz
+o1=0; n1=1075; d1=0.004; nx=120;
+f2  = 10; # which trace to plot
+ticks='';
+grid='';
+data = 'data2';
+
+Flow('time11',  data,   'window n2=1 | math output="x1"')
+Plot('time12', 'time11','graph wanttitle=n')
+
+Fetch('wz.02.H','wz')
+Flow(data,'wz.02.H',
+     'dd form=native | window n1=%d f2=0 n2=%d | scale axis=1 | put unit2=""' %(n1,nx))
+
+taxis='''min1=0. max1=%f min2=-1. max2=1. grid2=y g2num0=0 g2num=10''' %(o1+(n1-1)*d1)
+
+#Result('spec2','data2','spectra all=y | graph')
+
+#### LTFT
+# inst. time (t,f)
+rc1 =   5; # smoothing radius for LTF (across t)
+rc2 =   5; # smoothing radius for division (across f)
+rc3 =   3; # smoothing radius for division (across traces)
+w0=0;  dw=0.2;  nw=301;  
+fmax  = w0 + (nw-1)*dw; # maximum frequency for LTF
+fmax2 = fmax;           # maximum frequency for averaging
+cltf  = 'rect=%d w0=%f dw=%f nw=%d' %(rc1,w0,dw,nw)
+
+
+itimec('itime2',data,cltf=cltf,
+       div='rect1=%d rect2=%d rect3=%d niter=100'%(rc1,rc2,rc3))
+
+Flow('zc2', 'itime2', 'math output="input-x1" | zerocross levels=3') 
+
+tfaxes='min1=0. max1=%f. min2=0. max2=%f' %(o1+(n1-1)*d1,fmax2)
+tfpar ='grey color=j scalebar=y'
+
+
+# mean and std of frequency 
+Freqmean('data2_cltf',r=5,std='y')  # generates data2_cltf_s0,  data2_cltf_s1,data2_cltf_s2,
+                                    #           data2_cltf_fmn, data2_cltf_fstd
+Flow('data2_flo','data2_cltf_fmn data2_cltf_fstd','add ${SOURCES[1]} scale=1,-1')
+Flow('data2_fhi','data2_cltf_fmn data2_cltf_fstd','add ${SOURCES[1]} ')
+
+# Figures
+#### inst. traveltime (t)
+Flow('tau2', 'itime2 data2_flo data2_fhi',
+     'stackn min=${SOURCES[1]} max=${SOURCES[2]} | window')
+
+Flow('tau_t2', 'tau2', ' math output="input-x1"')
+axes  = 'min1=0. max1=%g. min2=-0.5. max2=0.5'%(o1+(n1-1)*d1) 
+ticks= 'o2num=-0.5 d2num=0.5 n2tic=3' 
+grid1 = '' #'gridcol=5  grid1=y g1num0=0.4 g1num=0.8'
+grid2 = 'gridcol=5  grid2=y g2num0=0.  g2num=1'
+
+
+#### Gather figures
+txaxis='min1=0. max1=%g.'%(o1+(n1-1)*d1)
+Flow('zctau2', 'tau_t2',
+     'zerocross levels=3 | clip2 upper=0 | add scale=-1 | mutter x0=90 v0=200')# | ricker1 frequency=60')
+
+Plot('data2', data,
+     '''agc | put d2=1 label2="Trace" unit2="" | 
+        wiggle transp=y yreverse=y pclip=100. poly=y plotcol=7 plotfat=1
+        grid1=n grid2=n wanttitle=n wherexlabel=bottom wheretitle=top %s'''%txaxis)
+Plot('events2','zctau2',
+      '''wiggle transp=y yreverse=y pclip=100. plotcol=5 plotfat=1
+                grid1=n gridcol=7 g1num0=0 g1num=1 grid2=n gridfat=2
+                wantaxis2=n title="Vibroseis data" %s''' %txaxis)
+Plot('zeros2','data2',
+     '''math output="0" | wiggle transp=y yreverse=y pclip=100. poly=y plotcol=7 plotfat=1
+        grid1=n grid2=n wanttitle=n wherexlabel=bottom wantaxis2=n %s'''%txaxis)
+Result('oz2','data2 events2 zeros2','Overlay')
+
+
+End()

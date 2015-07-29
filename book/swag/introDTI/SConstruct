@@ -1,0 +1,10 @@
+from rsf.tex import *
+import glob, os
+
+for article in glob.glob('article*.tex'):
+    name = os.path.splitext(article)[0]
+    Paper(name,
+          lclass='geophysics',
+          use='times,natbib,amsmath,graphicx,color,amssymb,amsbsy,ulem,setspace')
+    
+End()

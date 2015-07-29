@@ -1,0 +1,43 @@
+\section{Introduction}
+
+Seismic waves are described by the elastic wave equation with P- and S-waves intrinsically coupled. An elastic migration or inversion
+program \old{must}\new{should} be able to handle both wave modes. Normally the \old{two}\new{P and S} modes are separated\old{ from one another,} and each is treated independently.
+\new{Otherwise, the two modes are mixed on all wavefield components and cause crosstalk and image artifacts \cite[]{yan.sava:2009}.}
+In isotropic media, far-field P- and S-wave modes can be separated by taking the divergence and curl \old{of}\new{in} the extrapolated elastic wavefield.
+It is well known that a shear wave passing through an anisotropic medium \old{splits}\new{can split} into two mutually orthogonal waves \cite[]{crampin:1984}.
+Generally the P-wave and the two S-waves \new{in anisotropic materials} are not polarized parallel and perpendicular to the wave vectors
+ and \old{do not}\new{can not be} fully separate\new{d} with divergence and curl operations.
+
+To account for seismic anisotropy, wave mode separation concept and approach have been extended\old{ to anisotropic media during}\new{in} the past two decades. 
+\cite {dellinger.etgen:1990} generalize divergence and curl to anisotropic media by constructing the separators in the
+wavenumber domain, and independently solving the Christoffel equation in each wave propagation direction.
+For heterogeneous media, these divergence-like and curl-like separators are rewritten by \cite{yan.sava:2009} as nonstationary spatial filters
+ determined by the local polarization vectors. 
+\cite{zhang.mcmechan:2010} develop a wavefield decomposition method to separate elastic wavefields into vector P- and S-wave fields
+for vertically transverse isotropic (VTI) media.
+Alternatively, we may \old{simulate propagation of separated wave modes using the so-called pseudo-pure-mode wave equations,
+which can implicitly achieve partial mode separation during wavefield extrapolation, plus correction of polarization deviation}
+\new{implicitly achieve partial mode separation during wavefield extrapolation using the so-called
+pseudo-pure-mode wave equations, and then obtain completely separated wave modes by correcting the polarization projection deviation of the
+pseudo-pure-mode wavefields}
+from the isotropic reference\old{ for complete mode separation} \cite[]{cheng.kang:2012,cheng.kang:2013}.
+Although these studies provide significant insights into wave mode separation in anisotropic media,
+\old{great challenges remains for computational implementation}\new{many challenges remain, especially in the computational implementation}
+if the proposed approaches are directly used in practice.
+For example, mode separation using nonstationary filtering is computationally expensive, especially in 3D.
+To improve efficiency, \cite {yan.sava:2011} present a mixed-domain algorithm that resembles the phase-shift plus interpolation (PSPI) scheme
+ from one-way wave equation migration \cite[]{gazdag:1984}.
+The compromise between accuracy and cost requires to determine the minimal reference models
+ that best represent the true model space, and the choice of the models is case dependent. On the other hand, \cite{zhang.mcmechan:2010}'s
+ wavenumber-domain vector decomposition approach is effective when the model can be separated into distinct geologic units.
+ \new{In addition, spectral methods were proposed to provide solutions which can completely avoid the crosstalk between the qP and qS modes
+in wavefield modeling and reverse-time migration (RTM) \cite[]{etgen:2009,liu:2009,chu:2011,pestana:2011,fomel:2013,song:2013a}. However, these pure-mode solutions fail to provide accurate amplitudes for qP- and qS-waves.
+For true-amplitude ERTM in anisotropic media,
+effective mode separation and decomposition are highly required before applying
+ the imaging condition to the extrapolated elastic wavefields \cite[]{zhang.mcmechan:2011}.} 
+
+ In this paper, we \new{respectively} propose fast algorithms for \new{elastic} wave mode separation and vector decomposition in \new{3D} heterogeneous transverse isotropic (TI) media.
+ First, we give a brief review of the underlying principles. Then we present space-wavenumber-domain operations for mode separation
+ and vector decomposition in the form of Fourier integral operators, and discuss how to construct efficient algorithms using low-rank approximation
+\cite[]{engquist.ying:2008}\old{ of them}. 
+ At the end, we test efficiency and accuracy of the proposed method using synthetic models of increasing complexity.

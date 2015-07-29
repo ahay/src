@@ -1,0 +1,65 @@
+/*************************************************
+ *            BEGIN RVL UNIT TEST 6              *
+ * Purpose: test ASCII i/o FOs for RnArray       *
+ *************************************************/
+
+1. construct RnSpace<double>, Vector in it, random initialization
+
+2. construct ASCIIWriter FO for file test1.dat
+
+3. save Vector to test1.dat by evaluating FO
+
+4. construct a second vector in the space
+
+5. construct ASCIIReader FO for file test1.dat
+
+6. load test1.dat into vector constructed in step 4
+
+7. write both vectors to stdout: they should be same
+   also same as contents of test1.dat, which you should check
+
+   first vector:
+
+Vector Object
+member of space:
+RnSpace: simple dense vector space
+dimension = 10
+data container:
+RnArray Local Data Container object
+length = 10
+samples: 
+data[0] = 0.108797
+data[1] = 0.728763
+data[2] = 0.109489
+data[3] = 0.131133
+data[4] = 0.924143
+data[5] = 0.312103
+data[6] = 0.523156
+data[7] = 0.26092
+data[8] = 0.851918
+data[9] = 0.940463
+
+   second vector:
+
+Vector Object
+member of space:
+RnSpace: simple dense vector space
+dimension = 10
+data container:
+RnArray Local Data Container object
+length = 10
+samples: 
+data[0] = 0.108797
+data[1] = 0.728763
+data[2] = 0.109489
+data[3] = 0.131133
+data[4] = 0.924143
+data[5] = 0.312103
+data[6] = 0.523156
+data[7] = 0.26092
+data[8] = 0.851918
+data[9] = 0.940463
+
+/*************************************************
+ *              END RVL UNIT TEST 6              *
+ *************************************************/

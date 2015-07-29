@@ -1,0 +1,19 @@
+from rsf.proj import *
+from rsf.recipes import fdmod
+import itest
+
+par=itest.param()
+#par['labelattr']=' wantaxis=n '
+# ------------------------------------------------------------
+itest.thrsou('ss',par)
+itest.thrsou('sx',par)
+itest.flat('refl',par)
+# ------------------------------------------------------------
+itest.run(par)
+# ------------------------------------------------------------
+par['oangb']=0
+par['nangb']=1
+par['dangb']=3
+itest.stereo3d(par)
+
+End()

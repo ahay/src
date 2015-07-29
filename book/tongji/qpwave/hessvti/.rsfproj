@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sfscale', 'sfput', 'sfmath', 'sfcat', 'sfdd', 'sfheadermath', 'sfmask', 'sfcp', 'sfwindow', 'sfsmooth', 'sfgrey', 'sfvti2dpseudop', 'sfvti2dpseudopfvs0', 'sfdatasucjb2rsf2d']
+data=['pub/datasets/2D/Hess_VTI/timodel_vp.segy.gz', 'pub/datasets/2D/Hess_VTI/timodel_delta.segy.gz', 'pub/datasets/2D/Hess_VTI/timodel_epsilon.segy.gz', 'pub/datasets/2D/Hess_VTI/timodel_crho.segy.gz', 'pub/datasets/2D/Hess_VTI/timodel_shot_data_II_shot001-320.segy.gz', 'pub/datasets/2D/Hess_VTI/timodel_shot_data_II_shot321-720.segy.gz', 'PRIVATE']
+size=  319491000

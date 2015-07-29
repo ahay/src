@@ -1,0 +1,128 @@
+\section{Angle transformation in wave-equation imaging}
+Using the definitions introduced in the preceding section,
+we can make the standard notations for source and 
+receiver coordinates:
+$\ss = \mm - \hh$ and $\rr = \mm + \hh$.
+The traveltime from a source to a receiver is a function
+of all spatial coordinates of the seismic experiment
+$ t = t \lp \mm,\hh \rp$.
+Differentiating $t$ with respect to all
+components of the vectors $\mm$ and $\hh$,
+and using the standard notations
+$ {\bf p}_\alpha = \nabla_\alpha t$, 
+where $\alpha=\{\mm,\hh,\ss,\rr\}$, we can write:
+\beqa \label{eqn:PmPh}
+\pmv &=& \prv + \psv \;, 
+\\   \label{eqn:PmPhb}
+\phv &=& \prv - \psv \;.
+\eeqa
+From equations~\ren{PmPh}-\ren{PmPhb}, we can write
+\beqa
+2 \psv &=& \pmv - \phv \;, \\
+2 \prv &=& \pmv + \phv \;.
+\eeqa
+% ------------------------------------------------------------
+\inputdir{XFig}
+\plot{vec3}{width=3.0in}
+{Geometric relations between ray vectors at a reflection point.}
+% ------------------------------------------------------------
+By analyzing the geometric relations of various
+vectors at an image point (Figure~\ref{fig:vec3}), 
+we can write the following trigonometric expressions:
+\beqa \label{eqn:cosph}
+\mph^2 &=& \mps^2 + \mpr^2 - 2 \mps \mpr \cos(2 \t) \;,
+\\   \label{eqn:cospm}
+\mpm^2 &=& \mps^2 + \mpr^2 + 2 \mps \mpr \cos(2 \t) \;.
+\eeqa
+Equations~\ren{cosph}-\ren{cospm} relate wavefield quantities,
+$\phv$ and $\pmv$, to a geometric quantity, reflection angle $\t$.
+Analysis of these expressions provide sufficient information for
+complete decompositions of migrated images in components for
+different reflection angles.
+
+\subsection{Space-shift imaging condition}
+Defining $\kmv$ and $\khv$ as location and
+offset wavenumber vectors, and assuming $\mps=\mpr=s$,
+where $s\lp \mm \rp$ is the slowness at image locations,
+we can replace 
+$\mpm = \mkm/\w$ and
+$\mph = \mkh/\w$ in equations~\ren{cosph}-\ren{cospm}:
+\beqa \label{eqn:coskh}
+\mkh^2 &=& 2(\w\,s)^2 (1 - \cos 2\t ) \;,
+\\   \label{eqn:coskm}
+\mkm^2 &=& 2(\w\,s)^2 (1 + \cos 2\t ) \;.
+\eeqa
+Using the trigonometric identity
+\beq
+\cos(2\t) = \frac{1-\tan^2 \t}
+                 {1+\tan^2 \t} \;,
+\eeq
+we can eliminate from equations~\ren{coskh}-\ren{coskm}
+the dependence on frequency and slowness, and obtain an angle 
+decomposition formulation after imaging
+by expressing $\tan \t$ as a function of position and
+offset wavenumbers $(\kmv,\khv)$:
+\beq \label{eqn:angX}
+\tan \t = \frac{\mkh}{\mkm} \;.
+\eeq
+
+We can construct
+angle-domain common-image gathers
+by transforming prestack migrated images
+using \req{angX}
+\beq \label{eqn:XSTKa}
+\RR \lp \mm, \hh \rp  \Longrightarrow 
+\RR \lp \mm, \t  \rp \;.
+\eeq
+In 2D, this transformation is equivalent with a slant-stack
+on migrated offset gathers. For 3D, this transformation
+is described in more detail by \cite{Fomel.seg.3dadcig} or
+\cite{SavaFomel.pag}.
+
+\subsection{Time-shift imaging condition}
+Using the same definitions as the ones introduced in the 
+preceding subsection, we can re-write \req{coskm}
+as
+\beq
+\mpm^2 = 4 s^2 \cos^2 \t \;,
+\eeq
+from which we can derive an expression for angle-transformation
+after time-shift prestack imaging:
+\beq \label{eqn:angT}
+\cos \t = \frac{\mpm}{2s} \;.
+\eeq
+Relation~\ren{angT} can be interpreted using ray parameter vectors
+at image locations (Figure~\ref{fig:img3}).
+% ------------------------------------------------------------
+\inputdir{XFig}
+\plot{img3}{width=3.0in}
+{Interpretation of angle-decomposition based on \req{angT}
+for time-shift gathers.}
+% ------------------------------------------------------------
+Angle-domain common-image gathers can be obtained 
+by transforming prestack migrated images using \req{angT}:
+\beq \label{eqn:TSTKa}
+\RR \lp \mm, \tt \rp \Longrightarrow 
+\RR \lp \mm, \t  \rp \;.
+\eeq
+\rEq{angT} can be written as
+\beq  \label{eqn:angTcart}
+\cos^2 \t 
+= \frac{|\nabla_{\mm} 2 \tt |^2}{4 s^2\lp \mm \rp}
+= \frac{\tt_x^2 + \tt_y^2 + \tt_z^2}{s^2 \lp x,y,z\rp} \;,
+\eeq
+where $\tt_x,\tt_y,\tt_z$ are partial derivatives of $\tt$
+relative to $x,y,z$.
+We can rewrite \req{angTcart} as
+\beq \label{eqn:angTalg}
+\cos^2 \t = \frac{\tt_z^2}{s^2 \lp x,y,z \rp} \lp 1+z_x^2+z_y^2 \rp \;,
+\eeq
+where $z_x,z_y$ denote partial derivative of coordinate $z$
+relative to coordinates $x$ and $y$, respectively.
+\rEq{angTalg} describes an algorithm in two steps
+for angle-decomposition after time-shift imaging:
+compute $\cos \t$ through a slant-stack in $z-\tt$ panels
+(find a change in $\tt$ with respect to $z$),
+then apply a correction using the migration slowness $s$ and
+a function of the structural dips $\sqrt{1+z_x^2+z_y^2}$.
+

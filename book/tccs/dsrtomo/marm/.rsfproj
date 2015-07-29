@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfscale', 'sfput', 'sfwindow', 'sfgrey', 'sfmath', 'sfdsreiko', 'sfbyte', 'sfgrey3', 'sfmask', 'sflpad', 'sfnoise', 'sfthr', 'sfadd', 'sfspray', 'sfdsrtomo', 'sfgraph', 'sftransp', 'sfcat', 'sfmkrcv', 'sfpad', 'sffatomoomp']
+data=['data/marm/marmvel.hh']
+size= 4054161214

@@ -1,0 +1,13 @@
+from rsf.proj import *
+
+Fetch('wz.35.H','wz')
+
+Flow('wind','wz.35.H','dd form=native | window n1=400 j1=2 | smooth rect1=3')
+Plot('wind','pow pow1=2 | grey')
+
+Flow('mute','wind','mutter v0=0.31 half=n')
+Plot('mute','pow pow1=2 | grey')
+
+Result('denmark','wind mute','SideBySideAniso')
+
+End()

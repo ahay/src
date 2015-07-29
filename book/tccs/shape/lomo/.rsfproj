@@ -1,0 +1,3 @@
+uses=['sfsigmoid', 'sfsmooth', 'sfgrey', 'sfdip', 'sfpwd', 'sfnoise', 'sfpwdsmooth2', 'sfspike']
+data=[]
+size=     640000

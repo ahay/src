@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sfdd', 'sfput', 'sfwindow', 'sfgrey', 'sfdip', 'sfodip', 'sfmath', 'sfpad', 'sfbandpass', 'sfpwpaint', 'sfadd', 'sfcontour', 'sfiwarp']
+data=['PRIVATE']
+size=   54083264

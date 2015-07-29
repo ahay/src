@@ -1,0 +1,58 @@
+from rsf.proj import *
+import math
+
+n1=400
+
+Flow('spike',None,'spike n1=%d d1=1 o1=1 label1=Sample unit1=' % n1)
+
+waves = []
+freqs = []
+for j in range(n1//15,n1,n1//5):
+    wave = 'wave%d' % j
+    waves.append(wave)
+    Flow(wave,'spike',
+         '''
+         math output="(x1-1-%(j)d)/%(n1)d" |
+         math output="exp(-input*15)*sin(input*0.95*%(j)d)" |
+         window f1=%(j)d | pad beg1=%(j)d
+         '''
+         % {'n1':n1,'j':j})
+    freq = 'freq%d' % j
+    freqs.append(freq)
+    Flow(freq,'spike',
+         '''
+         math output="0.95*%(j)d/%(n1)d" |
+         window f1=%(j)d | pad beg1=%(j)d
+         '''
+         % {'n1':n1,'j':j})
+         
+Flow('in',waves,'add ${SOURCES[1:%d]}' % len(waves))
+Flow('freq',freqs,'cat ${SOURCES[1:%d]}' % len(freqs))
+Plot('freq',
+     '''
+     transp plane=23 | 
+     graph min2=0 max2=1 title="Local Frequency" wanttitle=n
+     label2="\F2 Frequency" label1="\F2 Sample" unit2=cycles
+     parallel2=n format2="%3.1f"
+     ''')
+
+Flow('shift','in','shift1 ns=2')
+Flow('pef pre','shift in',
+     'lpf match=${SOURCES[1]} rect1=7 pred=${TARGETS[1]}')
+Flow('err','pre in','add scale=-1,1 ${SOURCES[1]}')
+
+Result('lpf','in err',
+       '''
+       cat axis=2 ${SOURCES[1]} |
+       dots yreverse=1 strings=1 connect=3 labels=Input:Deconvolution
+       label1="\F2 Sample"
+       ''')
+
+Flow('atten','pef','window n2=1 f2=1 | math output="sqrt(-input)" ')
+Flow('ifreq','pef atten','window n2=1 | math atten=${SOURCES[1]} output="acos(input/(2*atten))" ')
+
+Plot('ifreq','graph wanttitle=n min2=0 max2=1 dash=1 wantaxis=n')
+
+Result('freq','freq ifreq','Overlay')
+
+End()

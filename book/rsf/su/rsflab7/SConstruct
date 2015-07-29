@@ -1,0 +1,29 @@
+from rsf.proj import *
+
+# Download data
+Fetch('simple.su','cwp')
+
+# Convert to RSF
+Flow('simple','simple.su',
+     '''
+     suread what=d suxdr=y |
+     put o2=0 d2=40 label2=Distance unit2=m
+     ''')
+Result('simple','wiggle transp=y yreverse=y poly=y title=Data')
+
+# Cosine Fourier transform
+Flow('cosft','simple','cosft sign2=1')
+
+# Migration
+for mig in Split('stolt gazdag'):
+    Flow(mig,'cosft',mig + ' vel=2000')
+    Result(mig,
+           '''
+           cosft sign2=-1 |
+           wiggle transp=y yreverse=y poly=y 
+           title="%s Migration" pclip=99
+           screenht=8 screenwd=12.8
+           label1=Depth unit1=m
+           ''' % mig.capitalize())
+    
+End()

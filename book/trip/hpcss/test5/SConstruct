@@ -1,0 +1,24 @@
+from rsf.proj import *
+from rsf.recipes.modmig import modmig
+
+par = {
+    'nt': 2401,
+    'nz': 801,
+    'nx': 1601,
+    'nm': 0,
+    'igz': 4,
+    'igxb': 401,
+    'igxe': 1201,
+    'isz': 8,
+    'isxb': 801,
+    'isxe': 801,
+    'isxd': 20,
+    'dz': 0.0025,
+    'dx': 0.0025,
+    'dt': 0.001,
+    'fpeak': 10
+    }
+
+modmig(par)
+
+End()

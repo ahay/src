@@ -1,0 +1,922 @@
+\lefthead{Fomel}
+\righthead{Forward interpolation}
+\footer{SEP--107}
+\published{SEP Report (Ph.D. Thesis Chapter), 107 (2001)}
+\title{Forward interpolation}
+
+\email{sergey@sep.stanford.edu}
+
+\author{Sergey Fomel}
+
+\newtheorem{property}{Property}
+
+\maketitle
+
+\label{chapter:forwd}
+
+\begin{abstract}
+As I will illustrate in later chapters, the crucial part of data
+regularization problems is in the choice and implementation of the
+regularization operator $\mathbf{D}$ or the corresponding
+preconditioning operator $\mathbf{P}$. The choice of the forward
+modeling operator $\mathbf{L}$ is less critical. In this chapter, I
+discuss the nature of forward interpolation, which has been one of the
+traditional subjects in computational mathematics. \cite{wolberg}
+presents a detailed review of different conventional approaches. I
+discuss a simple mathematical theory of interpolation from a regular
+grid and derive the main formulas from a very general idea of function
+bases.
+
+Forward interpolation plays only a supplementary role in this
+dissertation, but it has many primary applications, such as trace
+resampling, NMO, Kirchhoff and Stolt migrations, log-stretch, and
+radial transform, in seismic data processing and imaging. Two simple
+examples appear at the end of this chapter.
+\end{abstract}
+
+\section{Interpolation theory}
+
+Mathematical interpolation theory considers a function $f$, defined on
+a regular grid $N$. The problem is to find $f$ in a continuum that
+includes $N$. I am not defining the dimensionality of $N$ and $f$ here
+because it is not essential for the derivations.  Furthermore, I am
+not specifying the exact meaning of ``regular grid,'' since it will
+become clear from the analysis that follows. The function $f$ is
+assumed to belong to a Hilbert space with a defined dot product.
+
+%\newtheorem{property}{Property}
+
+If we restrict our consideration to a linear case, the desired
+solution will take the following general form
+\begin{equation}\label{eq:linear}
+  f (x) = \sum_{n \in N} W (x, n) f (n)\;,
+\end{equation}
+where $x$ is a point from the continuum, and $W (x, n)$ is a linear
+weight function that can take both positive and negative values. If
+the grid $N$ itself is considered as continuous, the sum in formula
+(\ref{eq:linear}) transforms to an integral in $dn$. Two general
+properties of the linear weighting function $W (x, n)$ are evident
+from formula (\ref{eq:linear}).
+\begin{property} 
+\begin{equation}\label{eq:wnn}
+  W (n, n) = 1\;.
+\end{equation}
+\end{property}
+Equality (\ref{eq:wnn}) is necessary to assure that the interpolation
+of a single spike at some point $n$ does not change the value $f (n)$
+at the spike. 
+\begin{property}
+\begin{equation}\label{eq:sum}
+  \sum_{n \in N} W (x, n) = 1\;.
+\end{equation}
+\end{property}
+This property is the normalization condition. Formula (\ref{eq:sum})
+assures that interpolation of a constant function $f(n)$ remains
+constant.
+
+One classic example of the interpolation weight $W (x, n)$ is the
+Lagrange polynomial, which has the form
+\begin{equation}\label{eq:lagrange}
+  W (x, n) = \prod_{i \neq n} \frac{(x-i)}{(n-i)}\;.
+\end{equation}
+The Lagrange interpolation provides a unique polynomial, which goes
+exactly through the data points $f (n)$\footnote{It is interesting to
+note that the interpolation and finite-difference filters developed
+by \cite{Karrenbach.sepphd.83} from a general approach of
+self-similar operators reduce to a localized form of Lagrange
+polynomials.}. The local 1-point Lagrange interpolation is equivalent
+to the nearest-neighbor interpolation, defined by the formula
+\begin{equation}\label{eq:bin}
+  W (x, n) = \left\{\begin{array}{lcr}
+1, & \mbox{for} & n - 1/2 \leq x < n + 1/2 \\
+0, & \mbox{otherwise} &
+\end{array}\right.
+\end{equation}
+Likewise, the local 2-point Lagrange interpolation is equivalent
+to the linear interpolation, defined by the formula
+\begin{equation}\label{eq:lin}
+  W (x, n) = \left\{\begin{array}{lcr}
+1 - |x-n|, & \mbox{for} & n - 1 \leq x < n + 1 \\
+0, & \mbox{otherwise} &
+\end{array}\right.
+\end{equation}
+
+\inputdir{Sage}
+
+Because of their simplicity, the nearest-neighbor and linear
+interpolation methods are very practical and easy to apply. Their
+accuracy is, however, limited and may be inadequate for
+interpolating high-frequency signals. The shapes of
+interpolants~(\ref{eq:bin}) and~(\ref{eq:lin}) and their spectra are
+plotted in Figures~\ref{fig:nnint} and~\ref{fig:linint}. The spectral
+plots show that both interpolants act as low-pass filters, preventing
+the high-frequency energy from being correctly interpolated.
+\par
+\plot{nnint}{width=6in}{Nearest-neighbor interpolant (left) and its spectrum
+  (right).}
+\plot{linint}{width=6in}{Linear interpolant (left) and its spectrum
+  (right).}
+
+The Lagrange interpolants of higher order correspond to more
+complicated polynomials. Another popular practical approach is cubic
+convolution \cite[]{keys}. The cubic convolution interpolant is a local
+piece-wise cubic function:
+\begin{equation}\label{eq:keys}
+  W (x, n) = \left\{\begin{array}{lcr}
+3/2 |x-n|^3 - 5/2 |x-n|^2 + 1, & \mbox{for} & 0 \leq |x-n| < 1 \\
+-1/2 |x-n|^3 + 5/2 |x-n|^2 - 4 |x-n| + 2, & \mbox{for} & 1 \leq |x-n| < 2 \\
+0, & \mbox{otherwise} &
+\end{array}\right.
+\end{equation}
+The shapes of interpolant~(\ref{eq:keys}) and its spectrum are plotted
+in Figure~\ref{fig:ccint}.  
+
+\plot{ccint}{width=6in}{Cubic-convolution interpolant (left) and its spectrum
+  (right).}
+
+\inputdir{chirp}
+
+I compare the accuracy of different forward interpolation methods on a
+one-dimensional signal shown in Figure~\ref{fig:chirp}. The ideal
+signal has an exponential amplitude decay and a quadratic frequency
+increase from the center towards the edges. It is sampled at a regular
+50-point grid and interpolated to 500 regularly sampled locations. The
+interpolation result is compared with the ideal one.
+Figures~\ref{fig:binlin} and~\ref{fig:lincub} show the interpolation
+error steadily decreasing as we proceed from 1-point nearest-neighbor
+to 2-point linear and 4-point cubic-convolution interpolation. At the
+same time, the cost of interpolation grows proportionally to the
+interpolant length.
+
+\sideplot{chirp}{height=2.5in}{One-dimensional test signal. Top:
+  ideal.  Bottom: sampled at 50 regularly spaced points. The bottom
+  plot is the input in a forward interpolation test.}
+
+\sideplot{binlin}{height=2.5in}{Interpolation error of the
+  nearest-neighbor interpolant (dashed line) compared to that of the
+  linear interpolant (solid line).}
+
+\sideplot{lincub}{height=2.5in}{Interpolation error of the linear
+  interpolant (dashed line) compared to that of the cubic convolution
+  interpolant (solid line).}
+
+\section{Function basis}
+A particular form of the solution (\ref{eq:linear}) arises from
+assuming the existence of a basis function set $\{\psi_k(x)\},\;k \in
+K$, such that the function $f (x)$ can be represented by a linear
+combination of the basis functions in the set, as follows:
+\begin{equation}\label{eq:basis}
+  f (x) = \sum_{k \in K} c_k \psi_k (x)\;.
+\end{equation}
+We can find the linear coefficients $c_k$ by multiplying both
+sides of equation (\ref{eq:basis}) by one of the basis functions
+(e.g. $\psi_j (x)$). Inverting the equality
+\begin{equation}\label{eq:dotprod}
+  \left( \psi_j (x), f (x)\right) = \sum_{k \in K} c_k \Psi_{jk}\;,
+\end{equation}
+where the parentheses denote the dot product, and
+\begin{equation}\label{eq:psi0}
+\Psi_{jk} = \left( \psi_j (x), \psi_k (x)\right) \;,
+\end{equation}
+leads to the following explicit expression for the coefficients
+$c_k$:
+\begin{equation}\label{eq:ck}
+  c_k = \sum_{j \in K} \Psi^{-1}_{kj} \left( \psi_j (x), f
+  (x)\right) \;.
+\end{equation}
+Here $\Psi^{-1}_{kj}$ refers to the $kj$ component of the matrix,
+which is the inverse of $\Psi$.  The matrix $\Psi$ is invertible as
+long as the basis set of functions is linearly independent. In the
+special case of an orthonormal basis, $\Psi$ reduces to the identity
+matrix:
+\begin{equation}
+\label{eqn:deltajk}
+\Psi_{jk} = \Psi^{-1}_{kj} = \delta_{jk}\;.
+\end{equation}
+
+Equation (\ref{eq:ck}) is a least-squares estimate of the coefficients
+$c_k$: one can alternatively derive it by minimizing the least-squares
+norm of the difference between $f(x)$ and the linear
+decomposition~(\ref{eq:basis}). For a given set of basis functions,
+equation~(\ref{eq:ck}) approximates the function $f(x)$ in formula
+(\ref{eq:linear}) in the least-squares sense.
+
+
+\section{Solution}
+
+The usual (although not unique) mathematical definition of the
+continuous dot product is
+\begin{equation}\label{eq:dot}
+  (f_1, f_2) = \int \bar{f}_1 (x) f_2 (x) dx \;,
+\end{equation}
+where the bar over $f_1$ stands for complex conjugate (in the case of
+complex-valued functions). Applying definition (\ref{eq:dot}) to the
+dot product in equation~(\ref{eq:ck}) and approximating the integral
+by a finite sum on the regular grid $N$, we arrive at the approximate
+equality
+\begin{equation}\label{eq:grid}
+  (\psi_j (x), f (x)) = \int \bar{\psi}_j (x) f (x) dx \approx
+  \sum_{n \in N} \bar{\psi}_j (n) f (n)\;.
+\end{equation}
+We can consider equation (\ref{eq:grid}) not only as a useful
+approximation, but also as an implicit \emph{definition} of the
+regular grid. Grid regularity means that approximation (\ref{eq:grid})
+is possible. According to this definition, the more regular the grid
+is, the more accurate is the approximation.
+
+Substituting equality~(\ref{eq:grid}) into equations~(\ref{eq:ck})
+and~(\ref{eq:basis}) yields a solution to the interpolation problem.
+The solution takes the form of equation (\ref{eq:linear}) with
+\begin{equation}\label{eq:solution}
+  W (x, n) = \sum_{k \in K} \sum_{j \in K} \Psi^{-1}_{kj} \psi_k
+  (x) \bar{\psi}_j (n)\;.
+\end{equation}
+We have found a constructive way of creating the linear
+interpolation operator from a specified set of basis functions.
+
+It is important to note that the adjoint of the linear operator in
+formula (\ref{eq:linear}) is the continuous dot product of the
+functions $W (x, n)$ and $f (x)$. This simple observation follows from
+the definition of the adjoint operator and the simple equality
+\begin{eqnarray}\label{eq:dottest}
+ \left(f_1 (x), \sum_{n \in N} W (x, n) f_2 (n)\right) = \sum_{n
+ \in N} f_2 (n) \left(f_1 (x), W (x, n) \right) = \nonumber \\
+ \left(\left(W (x, n), f_1 (x)\right), f_2 (n) \right) \;.
+\end{eqnarray}
+In the final equality, we have assumed that the discrete dot product
+is defined by the sum
+\begin{equation}\label{eq:ddot}
+  (f_1 (n), f_2 (n)) = \sum_{n \in N} \bar{f}_1 (n) f_2 (n) \;.
+\end{equation}
+Applying the adjoint interpolation operator to the function $f$,
+defined with the help of formula (\ref{eq:solution}), and employing
+formulas (\ref{eq:basis}) and (\ref{eq:ck}), we discover that
+\begin{eqnarray}\label{eq:adjoint}
+ \left(W (x, n), f (x)\right) = \sum_{k \in K} \sum_{j \in K}
+ \Psi^{-1}_{kj} \bar{\psi}_j (n) \left(\psi_k (x), f (x)\right) =
+ \nonumber \\ \sum_{j \in K} \bar{\psi}_j (n) \sum_{k \in K}
+ \Psi^{-1}_{jk} \left(\psi_k (x), f (x)\right) = \sum_{j \in K} c_j
+ \psi_j (n) = f (n)\;.
+\end{eqnarray}
+This remarkable result shows that although the forward linear
+interpolation is based on approximation (\ref{eq:grid}), the adjoint
+interpolation produces an exact value of $f (n)$! The approximate
+nature of equation (\ref{eq:solution}) reflects the fundamental
+difference between adjoint and inverse linear operators
+\cite[]{Claerbout.blackwell.92}. 
+
+When adjoint interpolation is applied to a constant function $f (x)
+\equiv 1$, it is natural to require the constant output $f (n) = 1$.
+This requirement leads to yet another general property of the
+interpolation functions $W (x,n)$:
+\begin{property}
+\begin{equation}\label{eq:intwdx}
+\int W (x, n) dx = 1\;.
+\end{equation}
+\end{property}
+
+The functional basis approach to interpolation is well developed in
+the sampling theory \cite[]{garcia}. Some classic examples are discussed
+in the next section.
+
+\section{Interpolation with Fourier basis}
+To illustrate the general theory with familiar examples, I consider
+in this section the most famous example of an orthonormal function
+basis, the Fourier basis of trigonometric functions. What kind of
+linear interpolation does this basis lead to?
+
+\subsection{Continuous Fourier basis}
+
+\inputdir{Sage}
+
+For the continuous Fourier transform, the set of basis functions is
+defined by
+\begin{equation}\label{eq:cft}
+  \psi_\omega (x) = \frac{1}{\sqrt{2 \pi}} e^{i \omega x} \;,
+\end{equation}
+where $\omega$ is the continuous frequency. For a $1$-point
+sampling interval, the frequency is limited by the Nyquist
+condition: $|\omega| \leq \pi$. In this case, the interpolation
+function $W$ can be computed from equation~(\ref{eq:solution}) to be
+\begin{equation}\label{eq:w-cft}
+  W (x, n) = \frac{1}{2 \pi} \int_{-\pi}^{\pi} e^{i \omega (x-n)}
+  d\omega = \frac{\sin \left[\pi (x - n) \right]}{\pi (x - n)} \;.
+\end{equation}
+The shape of the interpolation function~(\ref{eq:w-cft}) and its
+spectrum are shown in Figure~\ref{fig:sincint}. The spectrum is
+identically equal to 1 in the Nyquist frequency band.
+
+\plot{sincint}{width=6in}{Sinc interpolant (left) and its spectrum
+  (right).}
+
+Function~(\ref{eq:w-cft}) is well-known as the Shannon sinc
+interpolant. According to the sampling theorem
+\cite[]{kotelnikov,shannon}, it provides an optimal interpolation for
+band-limited signals.  A known problem prohibiting its practical
+implementation is the slow decay with $(x - n)$, which results in a
+far too expensive computation. This problem is solved in practice with
+heuristic tapering \cite[]{Hale.sep.25.39}, such as triangle tapering
+\cite[]{Harlan.sep.30.103}, or more sophisticated taper windows
+\cite[]{wolberg}. One popular choice is the Kaiser window \cite[]{kaiser},
+which has the form
+\begin{equation}
+  \label{eqn:kais}
+  W (x, n) = \left\{\begin{array}{lcr} \displaystyle
+      \frac{\sin \left[\pi (x - n) \right]}{\pi (x - n)}\,
+      \frac{I_0\left(a\,\sqrt{1-\left(\frac{x-n}{N}\right)^2}\right)}
+      {I_0(a)} & \mbox{for} & n - N < x < n + N \\
+      0, & \mbox{otherwise} &
+\end{array}\right.
+\end{equation}
+where $I_0$ is the zero-order modified Bessel function of the first
+kind.  The Kaiser-windowed sinc interpolant~(\ref{eqn:kais}) has the
+adjustable parameter $a$, which controls the behavior of its
+spectrum. I have found empirically the value of $a=4$ to provide
+a spectrum that deviates from 1 by no more than 1\% in a relatively
+wide band.
+
+While the function $W$ from equation (\ref{eq:w-cft}) automatically
+satisfies properties (\ref{eq:sum}) and (\ref{eq:intwdx}), where both
+$x$ and $n$ range from $-\infty$ to $\infty$, its tapered version may
+require additional normalization.
+
+\inputdir{chirp}
+
+Figure~\ref{fig:cubkai} compares the interpolation error of the
+8-point Kaiser-tapered sinc interpolant with that of cubic convolution
+on the example from Figure~\ref{fig:chirp}. The accuracy improvement
+is clearly visible.
+
+\sideplot{cubkai}{height=2.5in}{Interpolation error of the
+  cubic-convolution interpolant (dashed line) compared to that of an
+  8-point windowed sinc interpolant (solid line).}
+
+The differences among the described forward interpolation methods are
+also clearly visible from the discrete spectra of the corresponding
+interpolants.  The left plots in Figures~\ref{fig:speclincub}
+and~\ref{fig:speccubkai} show discrete interpolation responses: the
+function $W(x,n)$ for a fixed value of $x=0.7$. The right plots
+compare the corresponding discrete spectra. Clearly, the spectrum gets
+flatter and wider as the accuracy of the method increases.
+
+\sideplot{speclincub}{height=2.5in}{Discrete interpolation responses
+  of linear and cubic convolution interpolants (left) and their
+  discrete spectra (right) for $x=0.7$.}
+
+\sideplot{speccubkai}{height=2.5in}{Discrete interpolation responses
+  of cubic convolution and 8-point windowed sinc interpolants (left)
+  and their discrete spectra (right) for $x=0.7$.}
+
+\subsection{Discrete Fourier basis}
+
+\inputdir{Sage}
+
+Assuming that the range of the variable $x$ is limited in the interval
+from $-N$ to $N$, the discrete Fourier basis (\emph{Fast Fourier
+  Transform}) employs a set of orthonormal periodic functions
+\begin{equation}\label{eq:fft}
+  \psi_k (x) = \frac{1}{\sqrt{2N}} e^{i \pi \frac{k}{N} x} \;,
+\end{equation}
+where the discrete frequency index $k$ also ranges, according to the
+Nyquist sampling criterion, from $-N$ to $N$. The interpolation
+function is computed from equation~(\ref{eq:solution}) to be
+\begin{eqnarray}\label{eq:w-fft}
+  W (x, n) & = & \frac{1}{2 N} \sum_{k=-N}^{N-1} e^{i \pi \frac{k}{N} (x-n)} =
+\frac{1}{2 N} e^{- i \pi (x-n)} \left[
+  1 + e^{i \pi \frac{x-n}{N}} + \cdots +  e^{i \pi \frac{2N-1}{N} (x-n)}
+\right] =  \nonumber \\
+& & \frac{1}{2 N} e^{- i \pi (x-n)}
+\frac{e^{2i \pi (x-n)} - 1}{e^{i \pi \frac{x-n}{N}} - 1} =
+\frac{1}{2 N} e^{- i \pi \frac{x-n}{2 N}}
+\frac{e^{i \pi (x-n)} - e^{-i \pi (x-n)}}{e^{i \pi \frac{x-n}{2 N}} -
+e^{- i \pi \frac{x-n}{2 N}}} = \nonumber \\
+& & e^{-i \pi \frac{x-n}{2 N}}
+\frac{\sin \left[\pi (x - n)\right]}{2N \sin\left[\pi (x - n)/2N\right]} \;.
+\end{eqnarray}
+An interpolation function equivalent to (\ref{eq:w-fft}) has been
+found by Muir \cite[]{Lin.sep.79.255,Popovici.sep.79.261,muir}. It can
+be considered a tapered version of the sinc interpolant
+(\ref{eq:w-cft}) with smooth tapering function
+\[
+\frac{\pi (x - n)/2N}{\tan\left[\pi (x - n)/2N\right]}\;.
+\]
+Unlike most other tapered-sinc interpolants, Muir's interpolant
+(\ref{eq:w-fft}) satisfies not only the obvious property
+(\ref{eq:wnn}), but also properties (\ref{eq:sum}) and
+(\ref{eq:intwdx}), where the interpolation function $W (x,n)$ should
+be set to zero for $x$ outside the range from $n - N$ to $n+N$. The
+form of this function is shown in Figure \ref{fig:ma-sinc}.
+
+\plot{ma-sinc}{width=6.0in}{The left plots show the sinc interpolation
+  function.  Note the slow decay in $x$. The middle shows the
+  effective tapering function of Muir's interpolation; the right is
+  Muir's interpolant. The top is for $N=2$ (5-point interpolation);
+  the bottom, $N=6$ (13-point interpolation).}
+
+The development of the mathematical wavelet theory \cite[]{wavelet} has
+opened the door to a whole universe of orthonormal function bases,
+different from the Fourier basis. The wavelet theory should find many
+useful applications in geophysical data interpolation, but exploring
+this interesting opportunity would go beyond the scope of the present
+work.
+
+The next section carries the analysis to the continuum and compares
+the mathematical interpolation theory with the theory of seismic
+imaging.
+
+\section{Continuous case and seismic imaging}
+Of course, the linear theory is not limited to discrete grids.  It is
+interesting to consider the continuous case because of its connection
+to the linear integral operators commonly used in seismic imaging.
+Indeed, in the continuous case, linear decomposition (\ref{eq:basis})
+takes the form of the integral operator
+\begin{equation}\label{eq:cont}
+ f (y) = \int m (x) G (y; x) d x \;,
+\end{equation}
+where $x$ is a continuous analog of the discrete coefficient $k$ in
+(\ref{eq:basis}), the continuous function $m (x)$ is analogous to the
+coefficient $c_k$, and $G (y; x)$ is analogous to one of the basis
+functions $\psi_k (x)$. The linear integral operator in
+(\ref{eq:cont}) has a mathematical form similar to the form of
+well-known integral imaging operators, such as Kirchhoff migration or
+``Kirchhoff'' DMO. Function $G (y; x)$ in this case represents the
+Green's function (impulse response) of the imaging operator.  Linear
+decomposition of the data into basis functions means decomposing it
+into the combination of impulse responses (``hyperbolas'').
+
+In the continuous case, equation~(\ref{eq:solution}) transforms to
+\begin{equation}\label{eq:wyn}
+  W (y, n) = \int\!\!\int \Psi^{-1} (x_1, x_2) G (y;x_1) \bar{G} (n;x_2)
+  dx_1\,dx_2\;,
+\end{equation}
+where $\Psi^{-1} (x_1, x_2)$ refers to the inverse of the ``matrix''
+operator
+\begin{equation}\label{eq:psi}
+  \Psi (x_1, x_2) = \int G (y;x_1) \bar{G} (y;x_2) dy\;.
+\end{equation}
+When the linear operator, defined by equation~(\ref{eq:cont}), is
+\emph{unitary},
+\begin{equation}\label{eq:delta}
+\Psi^{-1} (x_1, x_2) = \delta (x_1 - x_2)\;,
+\end{equation}
+and equation~(\ref{eq:wyn}) simplifies to the single integral
+\begin{equation}\label{eq:wxn}
+  W (y, n) = \int G (y;x) \bar{G} (n;x) dx \;.
+\end{equation}
+With respect to seismic imaging operators, one can recognize in the
+interpolation operator (\ref{eq:wxn}) the generic form of azimuth moveout
+\cite[]{Biondi.sep.93.15}, which is derived either as a cascade of adjoint
+($\bar{G}(n;y)$) and forward ($G (x;y)$) DMO or as a cascade of migration
+($\bar{G} (n;y)$) and modeling ($G (x;y)$)
+\cite[]{Fomel.sep.84.25,GEO63-02-05740588}. In the first case, the
+intermediate variable $y$ corresponds to the space of zero-offset data cube.
+In the second case, it corresponds to a point in the subsurface.
+
+\subsection{Asymptotically pseudo-unitary operators as orthonormal bases}
+
+It is interesting to note that many integral operators routinely used
+in seismic data processing have the form of operator (\ref{eq:cont})
+with the Green's function
+\begin{equation}
+  \label{eq:green}
+  G (t,\mathbf{y};z,\mathbf{x}) = \left|\frac{\partial}{\partial t}\right|^{m/2}
+  A (\mathbf{x};t,\mathbf{y})
+  \delta \left(z - \theta(\mathbf{x};t,\mathbf{y}) \right)\;.
+\end{equation}
+where we have split the variable $x$ into the one-dimensional
+component $z$ (typically depth or time) and the $m$-dimensional
+component $\mathbf{x}$ (typically a lateral coordinate with $m$ equal
+$1$ or $2$). Similarly, the variable $y$ is split into $t$ and
+$\mathbf{y}$.  The function $\theta$ represents the \emph{summation
+  path}, which captures the kinematic properties of the operator, and
+$A$ is the amplitude function. In the case of $m=1$, the fractional
+derivative $\left|\frac{\partial}{\partial t}\right|^{m/2}$ is defined
+as the operator with the frequency response $(i\,\omega)^{m/2}$, where
+$\omega$ is the temporal frequency \cite[]{samko}.
+
+The impulse response (\ref{eq:green}) is typical for different forms
+of Kirchhoff migration and datuming as well as for velocity transform,
+integral offset continuation, DMO, and AMO. Integral operators of that
+class rarely satisfy the unitarity condition, with the Radon transform
+(slant stack) being a notable exception. In an earlier paper
+\cite[]{Fomel.sep.92.267}, I have shown that it is possible to define
+the amplitude function $A$ for each kinematic path $\theta$ so that
+the operator becomes \emph{asymptotically pseudo-unitary}. This means
+that the adjoint operator coincides with the inverse in the
+high-frequency (stationary-phase) approximation.  Consequently,
+equation (\ref{eq:delta}) is satisfied to the same asymptotic order.
+
+Using asymptotically pseudo-unitary operators, we can apply formula
+(\ref{eq:wxn}) to find an explicit analytic form of the interpolation
+function $W$, as follows:
+\begin{eqnarray}
+  \label{eq:apu}
+  W (t, \mathbf{y}; t_n, \mathbf{y}_n) =  \int\!\!\int
+  G (t, \mathbf{y}; z,\mathbf{x})\, G(t_n,\mathbf{y}_n;z,\mathbf{x})\,
+  d z \, d \mathbf{x} =
+  \nonumber \\
+  \left|\frac{\partial}{\partial t}\right|^{m/2}
+  \left|\frac{\partial}{\partial t_n}\right|^{m/2} \int
+  A (\mathbf{x};t,\mathbf{y}) \, A (\mathbf{x};t_n,\mathbf{y}_n)\,
+  \delta \left(\theta(\mathbf{x};t  ,\mathbf{y}  ) -
+               \theta(\mathbf{x};t_n,\mathbf{y}_n) \right) \,
+             d \mathbf{x}\;.
+\end{eqnarray}
+Here the amplitude function $A$ is defined according to the general
+theory of asymptotically pseudo-inverse operators as
+\begin{equation}
+A = {\frac{1}{\left(2\,\pi\right)^{m/2}}}\,
+{\left|F\,\widehat{F}\right|^{1/4}\,
+\left|\frac{\partial \theta}{\partial t}\right|^{(m+2)/4}}\;,
+\label{eq:weight}
+\end{equation}
+where
+\begin{eqnarray}
+F & = & \frac{\partial \theta}{\partial t}\,
+\frac{\partial^2 \theta}{\partial \mathbf{x}\, \partial \mathbf{y}} -
+\frac{\partial \theta}{\partial \mathbf{y}}\,
+\frac{\partial^2 \theta}{\partial \mathbf{x}\, \partial t}\;,
+ \\
+\widehat{F} & = & \frac{\partial \widehat{\theta}}{\partial z}\,
+\frac{\partial^2 \widehat{\theta}}{\partial \mathbf{x}\, \partial \mathbf{y}} -
+\frac{\partial \widehat{\theta}}{\partial \mathbf{x}}\,
+\frac{\partial^2 \widehat{\theta}}{\partial \mathbf{y}\, \partial z}\;,
+\end{eqnarray}
+and $\widehat{\theta} (\mathbf{x};t,\mathbf{y})$ is the \emph{dual}
+summation path, obtained by solving equation $z=\theta(x;t,y)$ for $t$
+(assuming that an explicit solution is possible).
+
+For a simple example, let us consider the case of zero-offset time
+migration with a constant velocity $v$. The summation path $\theta$
+in this case is an ellipse
+\begin{equation}
+  \label{eq:ellips}
+  \theta(\mathbf{x};t,\mathbf{y}) = \sqrt{t^2 -
+    \frac{(\mathbf{x}-\mathbf{y})^2}{v^2}}\;,
+\end{equation}
+and the dual summation path $\widehat{\theta}$ is a hyperbola
+\begin{equation}
+  \label{eq:hyper}
+  \widehat{\theta}(\mathbf{y};z,\mathbf{x}) = \sqrt{z^2 +
+    \frac{(\mathbf{x}-\mathbf{y})^2}{v^2}}\;.
+\end{equation}
+The corresponding pseudo-unitary amplitude function is found from
+formula (\ref{eq:weight}) to be \cite[]{Fomel.sep.92.267}
+\begin{equation}
+  A = {\frac{1}{\left(2\,\pi\right)^{m/2}}}\,
+  {\frac{\sqrt{t/z}}{v^m z^{m/2}}}\;.
+\label{eq:zomig}
+\end{equation}
+Substituting formula (\ref{eq:zomig}) into (\ref{eq:apu}), we derive
+the corresponding interpolation function
+\begin{equation}
+  \label{eq:pumig}
+  W (t, \mathbf{y}; t_n, \mathbf{y}_n)
+  = \frac{1}{\left(2\,\pi\right)^{m}} \,
+  \left|\frac{\partial}{\partial t}\right|^{m/2}
+  \left|\frac{\partial}{\partial t_n}\right|^{m/2} \int
+  \frac{\sqrt{t\,t_n}}{v^{2m} z^{m+1}}\,
+  \delta (z - z_n) \,d \mathbf{x}\;,
+\end{equation}
+where $z = \theta(\mathbf{x};t,\mathbf{y})$, and $z_n =
+\theta(\mathbf{x};t_n,\mathbf{y}_n)$. For $m=1$ (the two-dimensional
+case), we can apply the known properties of the delta function to
+simplify formula (\ref{eq:pumig}) further to the form
+\begin{equation}
+  W
+  = {\frac{v}{\pi}}\,
+  {\left|\frac{\partial}{\partial t}\right|^{1/2}
+    \left|\frac{\partial}{\partial t_n}\right|^{1/2}
+    \frac{\sqrt{t\,t_n}}{\sqrt{
+	\left[(\mathbf{y}-\mathbf{y}_n)^2 - v^2 (t - t_n)^2\right]
+	\left[v^2 (t + t_n)^2 - (\mathbf{y}-\mathbf{y}_n)^2\right]
+  }}}\;.
+  \label{eq:2dmig}
+\end{equation}
+The result is an interpolant for zero-offset seismic sections.  Like
+the sinc interpolant in equation~(\ref{eq:w-cft}), which is based on
+decomposing the signal into sinusoids, equation~(\ref{eq:2dmig}) is
+based on decomposing the zero-offset section into hyperbolas. 
+
+While opening a curious theoretical possibility, seismic imaging
+interpolants have an undesirable computational complexity. Following
+the general regularization framework of Chapter~\ref{chapter:funda}, I
+shift the computational emphasis towards appropriately chosen
+regularization operators discussed in Chapter~\ref{chapter:regul}.
+For the forward interpolation method, all data examples in this
+dissertation use either the simplest nearest neighbor and linear
+interpolation or a more accurate B-spline method, described in the
+next section.
+
+\section{Interpolation with convolutional bases}
+
+\cite{unser1} noticed that the basis function idea has an
+especially simple implementation if the basis is convolutional and
+satisfies the equation
+\begin{equation}
+  \label{eqn:conv}
+  \psi_k (x) = \beta (x-k)\;.
+\end{equation}
+In other words, the basis is constructed by integer shifts of a single
+function $\beta(x)$. Substituting expression~(\ref{eqn:conv}) into
+equation~(\ref{eq:basis}) yields
+\begin{equation}\label{eqn:beta}
+  f (x) = \sum_{k \in K} c_k \beta (x - k)\;.
+\end{equation}
+Evaluating the function $f(x)$ in equation~(\ref{eqn:beta}) at an
+integer value $n$, we obtain the equation
+\begin{equation}\label{eqn:dig}
+  f (n) = \sum_{k \in K} c_k \beta (n-k)\;,
+\end{equation}
+which has the exact form of a discrete convolution. The basis function
+$\beta(x)$, evaluated at integer values, is digitally convolved with
+the vector of basis coefficients to produce the sampled values of the
+function $f(x)$. We can invert equation~(\ref{eqn:dig}) to obtain the
+coefficients $c_k$ from $f(n)$ by inverse recursive filtering
+(deconvolution). In the case of a non-causal filter $\beta(n)$, an 
+appropriate spectral factorization will be
+needed prior to applying the recursive filtering.
+\par
+
+\inputdir{XFig}
+
+According to the convolutional basis idea, forward interpolation
+becomes a two-step procedure. The first step is the direct inversion
+of equation~(\ref{eqn:dig}): the basis coefficients $c_k$ are found by
+deconvolving the sampled function $f(n)$ with the factorized filter
+$\beta(n)$. The second step reconstructs the continuous (or arbitrarily
+sampled) function $f(x)$ according to formula~(\ref{eqn:beta}). The
+two steps could be combined into one, but usually it is more
+convenient to apply them separately. I show a schematic relationship
+among different variables in Figure~\ref{fig:scheme}.
+
+\sideplot{scheme}{height=1.5in}{Schematic relationship among
+  different variables for interpolation with a convolutional basis.}
+
+\subsection{B-splines}
+
+\inputdir{Sage}
+
+B-splines represent a particular example of a convolutional basis.
+Because of their compact support and other attractive numerical
+properties, B-splines are a good choice of the basis set for the
+forward interpolation problem and related signal processing problems
+\cite[]{unser}.  According to \cite{handbook}, they exhibit superior
+performance for any given order of accuracy in comparison with other
+methods of similar efficiency.
+\par
+B-splines of the order 0 and 1 coincide with the nearest neighbor and
+linear interpolants~(\ref{eq:bin}) and~(\ref{eq:lin}) respectively.
+B-splines $\beta^n(x)$ of a higher order $n$ can be defined by a
+repetitive convolution of the zeroth-order spline $\beta^0(x)$ (the
+box function) with itself:
+\begin{equation}
+\label{eqn:bdef}
+\beta^n(x) = 
+\underbrace{\beta^0(x) \ast \cdots \ast \beta^0(x)}_{(n+1)\quad 
+\mbox{times}}\;.
+\end{equation}
+There is also the explicit expression
+\begin{equation}
+\label{eqn:expl}
+\beta^n(x) = 
+\frac{1}{n!}\,\sum_{k=0}^{n+1} C_k^{n+1} (-1)^k 
+(x + \frac{n+1}{2} - k)_{+}^n\;,
+\end{equation}
+which can be proved by induction. Here $C_k^{n+1}$ are the binomial
+coefficients, and the function $x_{+}$ is defined as follows:
+\begin{equation}
+  \label{eqn:xp}
+  x_{+} = \left\{\begin{array}{lcr}
+x, & \mbox{for} & x > 0 \\
+0, & \mbox{otherwise} &
+\end{array}\right.
+\end{equation}
+As follows from formula~(\ref{eqn:expl}), the most commonly used cubic
+B-spline $\beta^3(x)$ has the expression
+\begin{equation}
+  \label{eqn:beta3}
+  \beta^3(x) = \left\{\begin{array}{lcr}
+\displaystyle \left(4-6 |x|^2+3 |x|^3\right)/6, & 
+\mbox{for} & 1 > |x| \geq 0 \\
+\displaystyle (2-|x|)^3/6, & \mbox{for} & 2 > |x| \geq 1 \\
+0, & \mbox{elsewhere} &
+\end{array}\right.
+\end{equation}
+The corresponding discrete filter $\beta^3(n)$ is a centered 3-point
+filter with coefficients 1/6, 2/3, and 1/6. According to the
+traditional method, deconvolution with this filter is performed as a
+tridiagonal matrix inversion \cite[]{deBoor}. One can, however,
+accomplish the same task more efficiently by spectral factorization
+and recursive filtering \cite[]{unser1}. The recursive filtering
+approach generalizes straightforwardly to B-splines of higher orders.
+\par
+Both the support length and the smoothness of B-splines increase with
+the order. In the limit, B-splines converge to the Gaussian function.
+Figures~\ref{fig:splint3} and~\ref{fig:splint7} show the third- and
+seventh-order splines $\beta^3(x)$ and $\beta^7(x)$, respectively, and
+their continuous spectra.
+
+\plot{splint3}{width=6in}{Third-order B-spline $\beta^3(x)$ (left)
+  and its spectrum (right).}
+
+\plot{splint7}{width=6in}{Seventh-order B-spline $\beta^7(x)$ (left)
+  and its spectrum (right).}
+\par
+It is important to realize the difference between B-splines and the
+corresponding interpolants $W(x,n)$, which are sometimes called
+\emph{cardinal splines}.  An explicit computation of the cardinal
+splines is impractical, because they have infinitely long support.
+Typically, they are constructed implicitly by the two-step
+interpolation method outlined above. The cardinal splines of orders 3
+and 7 and their spectra are shown in Figures~\ref{fig:crdint3}
+and~\ref{fig:crdint7}. As B-splines converge to the Gaussian function,
+the corresponding interpolants rapidly converge to the sinc
+function~(\ref{eq:w-cft}). Good convergence is achieved with the help
+of the implicitly-generated long support, which results from
+recursive filtering at the first step of the interpolation procedure.
+
+\plot{crdint3}{width=6in}{Effective third-order B-spline interpolant
+  (left) and its spectrum (right).}
+
+\plot{crdint7}{width=6in}{Effective seventh-order B-spline interpolant
+  (left) and its spectrum (right).}
+
+\inputdir{chirp}
+
+In practice, the recursive filtering step adds only marginally to the
+total interpolation cost. Therefore, an $n$-th order B-spline
+interpolation is comparable in cost with any other method that uses an
+$(n+1)$-point interpolant. The comparison in accuracy usually turns
+out in favor of B-splines. Figures~\ref{fig:cubspl4}
+and~\ref{fig:kaispl8} compare interpolation errors of B-splines and
+other similar-cost methods on the example from Figure~\ref{fig:chirp}.
+
+\sideplot{cubspl4}{height=2.5in}{Interpolation error of the
+  cubic-convolution interpolant (dashed line) compared to that of the
+  third-order B-spline (solid line).}
+
+\sideplot{kaispl8}{height=2.5in}{Interpolation error of the 8-point
+  windowed sinc interpolant (dashed line) compared to that of the
+  seventh-order B-spline (solid line).}
+\par
+Similarly to the comparison in Figures~\ref{fig:speclincub}
+and~\ref{fig:speccubkai}, we can also compare the discrete responses
+of B-spline interpolation with those of other methods. The right plots
+in Figures~\ref{fig:speccubspl4} and~\ref{fig:speckaispl8} show that the
+discrete spectra of the effective B-spline interpolants are genuinely
+flat at low frequencies and wider than those of the competitive
+methods. Although the B-spline responses are infinitely long because
+of the recursive filtering step, they exhibit a fast amplitude decay.
+
+\sideplot{speccubspl4}{height=2.5in}{Discrete interpolation responses
+  of cubic convolution and third-order B-spline interpolants (left)
+  and their discrete spectra (right) for $x=0.7$.}
+
+\sideplot{speckaispl8}{height=2.5in}{Discrete interpolation responses of
+  8-point windowed sinc and seventh-order B-spline interpolants (left)
+  and their discrete spectra (right) for $x=0.7$.}
+
+\subsection{2-D example}
+
+\inputdir{chirp2}
+
+For completeness, I include a 2-D forward interpolation example.
+Figure~\ref{fig:chirp2} shows a 2-D analog of the function in
+Figure~\ref{fig:chirp} and its coarsely-sampled version.
+
+\plot{chirp2}{width=6in,height=3in}{Two-dimensional test function
+  (left) and its coarsely sampled version (right).}
+\par
+Figure~\ref{fig:plcbinlin} compares the errors of the 2-D nearest
+neighbor and 2-D linear (bi-linear) interpolation. Switching to
+bi-linear interpolation shows a significant improvement, but the error
+level is still relatively high. As shown in
+Figures~\ref{fig:plccubspl} and~\ref{fig:plckaispl}, B-spline
+interpolation again outperforms other methods with comparable cost. In
+all cases, I constructed 2-D interpolants by orthogonal splitting.
+Although the splitting method reduces computational overhead, the main
+cost factor is the total interpolant size, which is squared when the
+interpolation goes from one to two dimensions.
+
+\plot{plcbinlin}{width=5.5in,height=3.2in}{2-D Interpolation errors of
+  nearest neighbor interpolation (left) and linear interpolation
+  (right).  The top graphs show 1-D slices through the center of the
+  image. Bi-linear interpolation exhibits smaller error and therefore
+  is more accurate.}
+
+\plot{plccubspl}{width=5.5in,height=3.2in}{2-D Interpolation errors of
+  cubic convolution interpolation (left) and third-order B-spline
+  interpolation (right).  The top graphs show 1-D slices through the
+  center of the image. B-spline interpolation exhibits smaller error
+  and therefore is more accurate.}
+
+\plot{plckaispl}{width=5.5in,height=3.2in}{2-D Interpolation errors of
+  8-point windowed sinc interpolation (left) and seventh-order
+  B-spline interpolation (right).  The top graphs show 1-D slices
+  through the center of the images. B-spline interpolation exhibits
+  smaller error and therefore is more accurate.}
+
+\subsection{Beyond B-splines}
+
+It is not too difficult to construct a convolutional basis with more
+accurate interpolation properties than those of B-splines, for example
+by sacrificing the function smoothness. The following piece-wise cubic
+function has a lower smoothness than $\beta^3(x)$ in
+equation~(\ref{eqn:beta3}) but slightly better interpolation behavior:
+\begin{equation}
+  \label{eqn:mu3}
+  \mu^3(x) = \left\{\begin{array}{lcr}
+\displaystyle \left(10-13 |x|^2+6 |x|^3\right)/16, & 
+\mbox{for} & 1 > |x| \geq 0 \\
+\displaystyle (2-|x|)^2 (5-2 |x|)/16, & \mbox{for} & 2 > |x| \geq 1 \\
+0, & \mbox{elsewhere} &
+\end{array}\right.
+\end{equation}
+\par
+
+\begin{comment}
+Figures \ref{fig:splmom4} and \ref{fig:specsplmom4} compare the test
+interpolation errors and discrete responses of methods based on the
+B-spline function $\beta^3(x)$ and the lower smoothness function
+$\mu^3(x)$. The latter method has a slight but visible performance
+advantage and a slightly wider discrete spectrum.
+
+%\sideplot{splmom4}{height=2.5in}{Interpolation error of the
+  third-order B-spline interpolant (dashed line) compared to that of
+  the lower smoothness spline interpolant (solid line).}
+%\sideplot{specsplmom4}{height=2.5in}{Discrete interpolation responses
+  of third-order B-spline and lower smoothness spline interpolants
+  (left) and their discrete spectra (right) for $x=0.7$. A slight but
+  visible difference in the interpolation responses accounts for a
+  small improvement in accuracy.}
+\end{comment}
+
+\par
+\cite{mom} have developed a general approach for constructing
+non-smooth piece-wise functions with optimal interpolation properties.
+However, the gain in accuracy is often negligible in practice. In the
+rest of the dissertation, I use the classic and better tested B-spline
+method.
+
+\section{Seismic applications of forward interpolation}
+
+\inputdir{stolt}
+
+For completeness, I conclude this section with two simple examples of
+forward interpolation in seismic data processing.
+Figure~\ref{fig:stolt} shows a 3-D impulse response of Stolt migration
+\cite[]{GEO43-01-00230048}, computed by using 2-point linear
+interpolation and 8-point B-spline interpolation. As noted by
+\cite{Ronen.sep.30.95} and \cite{Harlan.sep.30.103},
+inaccurate interpolation may lead to spurious artifact events in
+Stolt-migrated images. Indeed, we see several artifacts in the image
+with linear interpolation (the left plots in Figure~\ref{fig:stolt}).
+The artifacts are removed if we use a more accurate interpolation
+method (the right plots in Figure~\ref{fig:stolt}).
+
+\plot{stolt}{width=5.5in}{Stolt-migration impulse response. Left: using
+  linear interpolation. Right: using seventh-order B-spline
+  interpolation. Migration artifacts are removed by a more accurate
+  forward interpolation method.}
+
+\inputdir{radial}
+
+\par
+Another simple example is the radial trace transform
+\cite[]{Ottolini.sepphd.33}. Figure~\ref{fig:radialdat} shows a land
+shot gather contaminated by nearly radial ground-roll. As discussed by
+\cite{Claerbout.sep.35.43}, \cite{SEG-1999-12041207,SEG-2000-21112114}, and
+\cite{Brown.sep.103.morgan1,SEG-2000-21152118}, one can effectively
+eliminate ground-roll noise by applying a radial trace transform
+followed by high-pass filtering and the inverse radial transform.
+Figure~\ref{fig:radial} shows the result of the forward radial
+transform of the shot gather in Figure~\ref{fig:radialdat} in the
+radial band of the ground-roll noise and the transform error after we
+go back to the original domain. Comparing the results of using linear
+and third-order B-spline interpolation, we see once again that the
+transform artifacts are removed with a more accurate interpolation
+scheme.
+
+\sideplot{radialdat}{height=2.5in}{Ground-roll-contaminated shot
+  gather used in a radial transform test}
+
+\plot{radial}{width=5.5in}{Radial trace transform results. Top: radial
+  trace domain. Bottom: residual error after the inverse transform.
+  The error should be zero in a radial band from 0 to 0.65 km/s radial
+  velocity. Left: using linear interpolation. Right: using third-order
+  B-spline interpolation.}
+
+\section{Acknowledgments}
+
+A short conversation with Dave Hale led me to a better understanding
+of different forward interpolation methods. Tamas Nemeth helped me 
+better understand the general interpolation theory.
+
+\bibliographystyle{seg}
+\bibliography{SEG,SEP2,forwd}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% End: 

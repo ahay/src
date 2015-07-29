@@ -1,0 +1,5 @@
+from rsf.tex import *
+
+End(color='ALLRUNTIME SPEEDUP P2PvMPI Runtimes3d Speedup3d Runtimes Speedup ISOc VTIc HTIc ORTc',
+    hires='ISOc-3d VTIc-3d HTIc-3d ORTc-3d',
+    use='amsmath')

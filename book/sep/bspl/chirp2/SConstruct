@@ -1,0 +1,64 @@
+from rsf.proj import *
+
+def alias(n,tmax=80.0):
+    d = tmax/(n-1)
+    c = 0.5*tmax
+    r = 0.25*tmax
+    return '''
+    math n1=%d n2=%d d1=%g d2=%g output="((x1-%g)^2+(x2-%g)^2)/%g" |
+    math output="0.5*cos(8*input)*exp(-input)"
+    ''' % (n,n,d,d,c,c,r*r)
+
+def coord(n,tmax=80.0):
+    d = tmax/(n-1)
+    return '''
+    math n1=2 n2=%d n3=%d d1=1 d2=%g d3=%g output="(1-x1)*x2+x1*x3"
+    ''' % (n,n,d,d)
+
+def grey(title):
+    return 'grey pclip=100 wantaxis=n crowd=.88 gpow=.7 title="%s" ' % title
+
+for case in (50,500):
+    twod = 'twod%d' % case
+    Flow(twod,None,alias(case))
+    Plot(twod,grey(('Decimated','Ideal')[case//500]))
+    pair = 'pair%d' % case
+    Flow(pair,None,coord(case))
+
+Result('chirp2','twod500 twod50','SideBySideAniso')
+
+title = {
+    '1_lag': 'Nearest Neighbor',
+    '2_lag': 'Linear',
+    '4_cub': 'Cubic Convolution',
+    '4_spl': 'Spline-4',
+    '8_spl': 'Spline-8',
+    '8_kai': 'Sinc-8'
+    }
+
+for size in (1,2,4,8):
+    for case in ('lag','cub','spl','kai'):
+        plc = 'plc%d_%s' % (size,case)
+        Flow(plc,'twod50 twod500 pair500',
+             '''
+             inttest2 nw=%d interp=%s coord=${SOURCES[2]} |
+             add scale=1,-1 ${SOURCES[1]} |
+             window f1=31 n1=438 f2=31 n2=438
+             ''' % (size,case))
+        Plot('grey_'+plc,plc,
+             grey(title.get('%d_%s' % (size,case))) + ' clip=0.1')
+        max = (0.2,0.02,0.002)[size//3]
+        Plot('graf_'+plc,plc,
+             '''
+             window n2=1 f2=250 |
+             graph wanttitle=n wantaxis1=n min2=-%g max2=%g 
+             screenratio=0.35 screenht=4.8125 crowd1=0.88
+             labelsz=6
+             ''' % (max,max))
+        Plot(plc,['graf_'+plc,'grey_'+plc],'OverUnderAniso')
+
+Result('plcbinlin','plc1_lag plc2_lag','SideBySideAniso',vppen='txscale=1.5')
+Result('plccubspl','plc4_cub plc4_spl','SideBySideAniso',vppen='txscale=1.5')
+Result('plckaispl','plc8_kai plc8_spl','SideBySideAniso',vppen='txscale=1.5')
+
+End()

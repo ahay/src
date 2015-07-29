@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfbandpass', 'sfagc', 'sfwindow', 'sfput', 'sfgrey', 'sfbyte', 'sfget', 'sfadd', 'sfbox', 'sfwarpscan', 'sfmath', 'sfgrey3', 'sfpick', 'sfwarp1', 'sfstack', 'sftransp', 'sfremap1']
+data=['data/dury/m0_stack.HH', 'data/dury/m1_stack.HH', 'data/dury/m2_stack.HH', 'data/dury/m3_stack.HH', 'data/dury/m4_stack.HH', 'data/dury/m5_stack.HH']
+size=  431114976

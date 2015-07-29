@@ -1,0 +1,20 @@
+from rsf.proj import *
+
+Flow('spike',None,
+     'spike n1=29 nsp=5 k1=5,10,15,20,25 mag=1,-4,6,-4,1')
+
+Flow('data2','spike','causint adj=n')
+Flow('data3','data2','causint adj=y')
+Flow('data4','data3','causint adj=n')
+Flow('data5','data4','causint adj=y')
+
+Result('amoflt','spike data2 data3 data4 data5',
+       '''
+       cat axis=2 ${SOURCES[1:5]} |
+       dots labels='in:C in:C`C in:CC`C in:C`CC`C in'
+       yreverse=1 overlap=.8 constsep=1 connect=0 label1=
+       ''')
+
+Result('amotra',None,'nmotraj',prefix=plprefix)
+
+End()

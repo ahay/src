@@ -1,0 +1,280 @@
+\section{Examples}
+
+% ------------------------------------------------------------
+\inputdir{XFig}
+% ------------------------------------------------------------
+\plot{zokernel}{width=\textwidth} {Schematic representation of the
+forward and adjoint operators for ray-based MVA and wave-based
+MVA. The forward operator $F$ applied to a slowness anomaly $\ds$
+generates a traveltime perturbation (a) or an image perturbation
+(b). The ray-based adjoint MVA operator $A$ applied to the traveltime
+perturbation generates a slowness perturbation uniformly distributed
+along a ray normal to the reflector (c). The wave-based adjoint MVA
+operator $A$ applied to the image perturbation generates a slowness
+perturbation with a wider space distribution but with a relative focus
+at the location of the original slowness anomaly (d).}
+
+We illustrate the wave-equation migration velocity analysis operators
+using impulse responses corresponding to different imaging
+configurations. We concentrate on imaging in the zero-offset and
+shot-record frameworks, since they also implicitly characterize the
+essential elements of the survey-sinking framework. In all cases, we
+use wavefield reconstruction based on one-way wavefield extrapolation
+with the multi-reference split-step Fourier method
+\cite[]{GEO55-04-04100421,GEO61-05-14121416}.
+
+% ------------------------------------------------------------
+\inputdir{flatWEMVA}
+% ------------------------------------------------------------
+
+\multiplot{2}{vel,img}{width=\textwidth}{ Simple synthetic model with
+(a) linear $v\lp z \rp$ velocity and (b) a horizontal reflector. }
+
+A fundamental question concerning the wavefield scattering operator
+($\SCAT$) is what is its sensitivity for a given perturbation of the
+image or of the slowness model. This sensitivity is usually
+characterized using the so-called ``sensitivity kernels'' which are
+often discussed in the literature in the context of tomography
+problems. For wave-equation MVA, this topic was discussed in the
+context of zero-offset imaging by
+\cite{SavaBiondi.gp.wemva1,SavaBiondi.gp.wemva2}.  The important topic
+of sensitivity and model resolution falls outside the scope of this
+paper, so we do not discuss it here in any detail. We merely concern
+ourselves with describing the behavior of the wave-equation MVA
+operators described earlier.
+
+% ------------------------------------------------------------
+\multiplot{2}{ds4,di4}{width=\textwidth}{ (a) Slowness perturbations
+used to demonstrate the WEMVA operators in
+\rFgs{flatWEMVA-ZFds4}-\rfn{flatWEMVA-SAFds4}, and (b) image
+perturbation used to demonstrate the WEMVA operators in
+\rFgs{flatWEMVA-ZAdi4}-\rfn{flatWEMVA-SFAdi4}.}
+
+\multiplot{2}{Zdat,Sdat}{width=\textwidth}{ (a) Simulated zero-offset
+data and (b) simulated shot-record data for the model depicted in
+\rfgs{flatWEMVA-vel}-\rfn{flatWEMVA-img} with a source located at
+coordinates $x=6$~km and $z=0$~km.}
+% ------------------------------------------------------------
+
+We can analyze the sensitivity of the wavefield scattering operator in
+two ways. The first option is to assume a localized slowness
+perturbation, compute image perturbations using the forward scattering
+operator and then return to the slowness perturbation using the
+adjoint scattering operator. The second option is to assume a
+localized image perturbation, compute the slowness perturbation using
+the adjoint scattering operator and then return to the image
+perturbation using the forward scattering operator. 
+
+% ------------------------------------------------------------
+\multiplot{2}{ZFds4,ZAFds4}{width=\textwidth}{(a) Zero-offset image
+perturbation obtained by the application of the forward scattering
+operator to the slowness perturbation from \rFg{flatWEMVA-ds4} and (b)
+zero-offset slowness perturbation obtained by the application of the
+adjoint scattering operator to the image perturbation from panel (a).
+}
+
+\multiplot{2}{SFds4,SAFds4}{width=\textwidth}{(a) Shot-record image
+perturbation obtained by the application of the forward scattering
+operator to the slowness perturbation from \rFg{flatWEMVA-ds4} and (b)
+shot-record slowness perturbation obtained by the application of the
+adjoint scattering operator to the image perturbation from panel (a).}
+% ------------------------------------------------------------
+
+As discussed in the preceding sections, the main difference between
+ray-based and wave-based MVA techniques is that the connection between
+measurements on the image and updates to the model is done with rays
+and waves, respectively. The impact of this fundamental difference is
+best seen if we analyze impulse responses of the wave-equation MVA and
+compare them with those of conventional traveltime
+tomography. \rFg{zokernel} shows a one-to-one comparison between the
+forward and adjoint operators for ray-based MVA (traveltime
+tomography) on the left and wave-based MVA on the right in the
+context of zero-offset imaging.
+%
+Assuming a small slowness perturbation $\ds$, we can construct using
+the forward MVA operators a traveltime perturbation and an image
+perturbation corresponding to ray-based MVA (a) and wave-based MVA
+(b), respectively. For this zero-offset configuration, the ray-based
+MVA produces a traveltime anomaly strictly located on the reflector
+under the slowness anomaly, while the wave-based MVA produces an image
+anomaly distributed in space in the vicinity of the reflector.
+%
+Then, we can construct respective slowness updates if we apply the
+ray-based and wave-based adjoint MVA operators to the traveltime
+perturbation and image perturbation, respectively. For the ray-based
+MVA, the slowness update spreads uniformly along a ray orthogonal to
+the reflector (c), while for wave-based MVA, the slowness update is
+distributed in space from the image perturbation to the surface, but
+with a concentration at the location of the true anomaly (d). Similar
+behavior characterizes wave-equation MVA under shot-record or
+survey-sinking frameworks.
+
+%% 
+ % flat horizontal reflector
+ %%
+
+% ------------------------------------------------------------
+\multiplot{2}{ZAdi4,ZFAdi4}{width=\textwidth} { (a) Zero-offset
+slowness perturbation obtained by the application of the adjoint
+scattering operator to the image perturbation from \rFg{flatWEMVA-di4}
+and (b) zero-offset image perturbation obtained by the application of
+the forward scattering operator to the slowness perturbation from
+panel (a).  }
+
+\multiplot{2}{SAdi4,SFAdi4}{width=\textwidth} { (a) Shot-record
+slowness perturbation obtained by the application of the adjoint
+scattering operator to the image perturbation from \rFg{flatWEMVA-ds4}
+and (b) shot-record image perturbation obtained by the application of
+the forward scattering operator to the slowness perturbation from
+panel (a).  }
+% ------------------------------------------------------------
+
+The first set of examples corresponds to a simple model consisting of
+a linear $v\lp z \rp$ velocity model and a horizontal reflector,
+\rFgs{flatWEMVA-vel}-\rfn{flatWEMVA-img}. The velocity is linearly
+increasing from $1.5$~km/s to $2.75$~km/s. We simulate zero-offset
+data, \rfg{flatWEMVA-Zdat}, and one shot corresponding to horizontal
+position $x=6$~km, \rfg{flatWEMVA-Sdat}.
+
+Assuming a localized slowness perturbation, \rfg{flatWEMVA-ds4}, we
+can compute image perturbations using the forward scattering
+operators, as defined in the preceding sections. \rFg{flatWEMVA-ZFds4}
+shows the image perturbation for the zero-offset case and
+\rFg{flatWEMVA-SFds4} shows the similar image perturbation for the
+shot-record case. As illustrated in \rFg{zokernel}, the image
+perturbations are distributed in the vicinity of the reflector. Two
+interfering events are seen for the shot-record case, corresponding to
+the source and receiver wavefields, respectively.
+
+Similarly, we can compute slowness perturbations using the adjoint
+scattering operators. \rFg{flatWEMVA-ZAFds4} shows the slowness
+perturbation for the zero-offset case computed from the image
+perturbation in \rFg{flatWEMVA-ZFds4} and \rFg{flatWEMVA-SAFds4} shows
+the similar slowness perturbation for the shot-record case computed
+from the image perturbation in \rFg{flatWEMVA-SFds4}.  As illustrated
+in \rFg{zokernel}, the slowness perturbations are distributed in an
+area connecting the reflector to the surface, but with a relative
+focus at the location of the original anomaly. For the shot-record
+case, the back-projection splits toward the source and receivers,
+corresponding to the upward continuation of the source and receiver
+wavefields.
+
+We can also analyze the wave-equation MVA operator sensitivity in
+another way. Assuming a localized image perturbation,
+\rFg{flatWEMVA-di4}, we can compute slowness perturbations using the
+adjoint scattering operators, as defined in the preceding
+sections. \rFg{flatWEMVA-ZAdi4} shows the slowness perturbation for
+the zero-offset case and \rFg{flatWEMVA-SAdi4} shows the similar
+slowness perturbation for the shot-record case. Here, too, we see
+slowness perturbations distributed in an area connecting the reflector
+to the surface, but in this case, there is no relative focus of the
+anomaly because the image perturbation is strictly localized on the
+reflector. For the shot-record case, the back-projection splits toward
+the source and receivers, corresponding to the upward continuation of
+the source and receiver wavefields. This case corresponds to the case
+of practical MVA where measurements of defocusing features are made on
+the image itself.
+
+As we have done in the preceding experiment, we can also compute image
+perturbations using the forward scattering operators based on the
+back-projections created using the adjoint scattering operators.
+\rFg{flatWEMVA-ZFAdi4} shows the image perturbation for the
+zero-offset case computed from the slowness perturbation in
+\rFg{flatWEMVA-ZAdi4} and \rFg{flatWEMVA-SFAdi4} shows the similar
+image perturbation for the shot-record case computed from the slowness
+perturbation in \rFg{flatWEMVA-SAdi4}. We can observe that the
+resulting image perturbations spread beyond the original location,
+indicating wider sensitivity of the wave-based MVA kernels to image
+perturbations than that of the corresponding ray-based MVA kernels.
+
+%% 
+ % Sigsbee 2A
+ %%
+
+Similar sensitivity can be observed for the more complex Sigsbee 2A
+model \cite[]{SEG-2002-21222125},
+\rFgs{saltWEMVA-vel}-\rfn{saltWEMVA-img}. Similarly to the preceding
+example, we simulate zero-offset data, \rfg{saltWEMVA-Zdat}, and one
+shot corresponding to horizontal position $x=14.6$~km,
+\rfg{saltWEMVA-Sdat}.
+
+\rFgs{saltWEMVA-ZFds2} and \rfn{saltWEMVA-SFds2} correspond to the
+image perturbations for the slowness anomaly shown in
+\rFg{saltWEMVA-ds2}. We can observe image perturbations that spread in
+the vicinity of the reflector, similarly to the simpler example
+described earlier. The multi-pathing from the source to the reflector
+generates the multiple events characterizing the image
+perturbations.
+%
+\rFgs{saltWEMVA-ZAFds2} and \rfn{saltWEMVA-SAFds2} correspond to the
+slowness perturbations constructed by applying the zero-offset and
+shot-record adjoint scattering operators to the image perturbations
+from \rFgs{saltWEMVA-ZFds2} and \rfn{saltWEMVA-SFds2}. We see similar
+back-projection patterns to the ones observed in the preceding
+example, except that the propagation pattens are more complicated due
+to the presence of the salt body in the background model.
+
+\rFgs{saltWEMVA-ZAdi2} and \rfn{saltWEMVA-SAdi2} correspond to the
+slowness perturbations for the image anomaly shown in
+\rFg{saltWEMVA-di2}. We can observe slowness perturbations that spread
+in the vicinity of the reflector, similarly to the simpler example
+described earlier.  
+%
+Finally, \rFgs{saltWEMVA-ZFAdi2} and \rfn{saltWEMVA-SFAdi2} correspond
+to the image perturbations for the slowness perturbations constructed
+by the adjoint MVA operators shown in \rFgs{saltWEMVA-ZAdi2} and
+\rfn{saltWEMVA-SAdi2} for the zero-offset and shot-record cases,
+respectively.
+
+% ------------------------------------------------------------
+\inputdir{saltWEMVA}
+% ------------------------------------------------------------
+
+\multiplot{2}{vel,img}{width=\textwidth}{ (a) Sigsbee 2A synthetic
+model and (b) a sub-salt horizontal reflector.  }
+
+% ------------------------------------------------------------
+\multiplot{2}{ds2,di2}{width=\textwidth}{ (a) Slowness perturbations
+used to demonstrate the WEMVA operators in
+\rFgs{saltWEMVA-ZFds2}-\rfn{saltWEMVA-SAFds2}, and (b) image
+perturbation used to demonstrate the WEMVA operators in
+\rFgs{saltWEMVA-ZAdi2}-\rfn{saltWEMVA-SFAdi2}.}
+
+\multiplot{2}{Zdat,Sdat}{width=\textwidth}{(a) Simulated zero-offset
+data and (b) simulated shot-record data for the model depicted in
+\rfgs{saltWEMVA-vel}-\rfn{saltWEMVA-img} with a source located at
+coordinates $x=14.6$~km and $z=1.52$~km.}
+% ------------------------------------------------------------
+
+% ------------------------------------------------------------
+\multiplot{2}{ZFds2,ZAFds2}{width=\textwidth}{(a) Zero-offset
+image perturbation obtained by the application of the forward
+scattering operator to the slowness perturbation from
+\rFg{saltWEMVA-ds2} and (b) zero-offset slowness perturbation obtained
+by the application of the adjoint scattering operator to the image
+perturbation from panel (a).  }
+
+\multiplot{2}{SFds2,SAFds2}{width=\textwidth}{(a) Shot-record
+image perturbation obtained by the application of the forward
+scattering operator to the slowness perturbation from
+\rFg{saltWEMVA-ds2} and (b) shot-record slowness perturbation obtained
+by the application of the adjoint scattering operator to the image
+perturbation from panel (a).}
+% ------------------------------------------------------------
+
+% ------------------------------------------------------------
+\multiplot{2}{ZAdi2,ZFAdi2}{width=\textwidth}{(a) Zero-offset slowness
+perturbation obtained by the application of the adjoint scattering
+operator to the image perturbation from \rFg{saltWEMVA-di2} and (b)
+zero-offset image perturbation obtained by the application of the
+forward scattering operator to the slowness perturbation from panel
+(a).}
+
+\multiplot{2}{SAdi2,SFAdi2}{width=\textwidth}{(a) Shot-record slowness
+perturbation obtained by the application of the adjoint scattering
+operator to the image perturbation from \rFg{saltWEMVA-ds2} and (b)
+shot-record image perturbation obtained by the application of the
+forward scattering operator to the slowness perturbation from panel
+(a). }
+% ------------------------------------------------------------
+

@@ -1,0 +1,88 @@
+import sys
+import rsf.recipes.tau as tau
+
+from rsf.proj import *
+
+nx = 751;  x0 = 0.; dx = 4.
+nz = 751;  z0 = 0.; dz = 4.
+nT = 501;  T0 = 0.; dT = .0024
+nt = 12001;t0 = 0.; dt = .00016
+
+b = [40   ,20   ,20   ,20   ]
+c = [4.e-5,1.e-4,1.e-4,1.e-4]
+
+j3 = 50; n3 = 1 + int((nt-1)/j3)
+
+freq = 25
+
+spk0= 1 + int(1./(freq*dt))
+dspk= int(.5/ dt)
+spk = range(spk0,spk0+3*dspk,dspk)
+
+par = {'nx' : nx, 'x0' : x0, 'dx' : dx,
+	   'nz' : nz, 'z0' : z0, 'dz' : dz,
+	   'nT' : nT, 'T0' : T0, 'dT' : dT,
+	   'nt' : nt, 't0' : t0, 'dt' : dt}
+
+Fetch('marmvel.hh','marm')
+
+Flow('veloC','marmvel.hh','''
+dd form=native | window n2=%d f2=1100 |
+put o1=0 d1=%g o2=0 d2=%g label1=Depth unit1=m label2=Distance unit2=m
+''' % (nx,dz,dx))
+
+Flow('vmapC','veloC','smooth rect1=8 rect2=8 repeat=2')
+
+Flow('data',None,'''
+spike nsp=3 mag=1 n1=%d o1=0 d1=%g k1=%d,%d,%d |
+ricker1 frequency=%g | scale axis=1 | reverse which=1 opt=i |
+transp | put label1=Distance unit1=m
+''' % (nt,dt,spk[0],spk[1],spk[2],freq)) 
+
+tau.init(par)
+
+tau.compute_tau('tauC','vmapC')
+tau.compute_sigma('sigmC','tauC')
+tau.coord_xmid('cr')
+
+tau.mapping('veloT','veloC','tauC',inv=False)
+tau.mapping('vmapT','vmapC','tauC',inv=False)
+tau.mapping('sigmT','sigmC','tauC',inv=False)
+tau.mapping('veloB','veloT','tauC',inv=True)
+tau.mapping('vmapB','vmapT','tauC',inv=True)
+
+tau.rtm_iso('imagC','waveC','data','veloC',None   ,None   ,'cr',n3,b,c,tau=False)
+tau.rtm_iso('imagT','waveT','data','veloT','vmapT','sigmT','cr',n3,b,c,tau=True)
+
+m2kmC = 'put d2=%g unit2=km d1=%g unit1=km' % (.001*dx,.001*dz)
+m2kmT = 'put d2=%g unit2=km' % (.001*dx)
+screen = 'screenwd=12 screenht=10 labelsz=10'
+contt = 'contour allpos=y plotcol=7 plotfat=5 wantaxis=n wanttitle=n c0=0 dc=.12 ' + screen
+contx = 'contour allpos=y plotcol=7 plotfat=5 wantaxis=n wanttitle=n c0=0 dc=%g ' % (45*dx) + screen
+vgrey = 'grey color=i title= allpos=y ' + screen 
+wgrey = 'grey grid=y title= clip=.5 ' + screen
+
+Plot('gridC1','tauC',contt)
+Plot('gridC2','tauC','math output=x2 | ' + contx)
+Plot('gridC3','veloC',m2kmC + ' | ' + vgrey)
+
+Plot('gridT1','veloT','math output=x1 | ' + contt)
+Plot('gridT2','veloT','math output=x2 | ' + contx)
+Plot('gridT3','veloT',m2kmT + ' | ' + vgrey)
+
+Result('margC','gridC3 gridC2 gridC1','Overlay')
+Result('margT','gridT3 gridT2 gridT1','Overlay')
+
+tau.mapping('imagB','imagT','tauC',inv=True)
+
+Flow('imagC1','imagC','scale axis=2')
+Flow('imagT1','imagT','scale axis=2')
+Flow('imagB1','imagB','scale axis=2')
+
+Result('mariC','imagC1',m2kmC + ' | ' + wgrey)
+Result('mariT','imagT1',m2kmT + ' | ' + wgrey)
+Result('mariB','imagB1',m2kmC + ' | ' + wgrey)
+
+Result('mariE','imagC1 imagB1','add scale=-1,1 ${SOURCES[1]} | ' + m2kmC + ' | ' + wgrey)
+
+End()

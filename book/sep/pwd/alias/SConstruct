@@ -1,0 +1,42 @@
+from rsf.proj import *
+
+Flow('aliasp',None,'aliasp cycles=25')
+Plot('aliasp','window n1=575 | grey title=Input crowd=0.85')
+
+Flow('dip2','aliasp',
+     'twodip2 order=3 nj1=4 nj2=4 p0=2 q0=-1 eps=4 gauss=n')
+Flow('dip1','aliasp dip2',
+     'dip idip=${SOURCES[1]} order=3 nj1=4 rect1=7 rect2=3')
+Flow('dip','dip1',
+     'transp | spline n1=96 o1=0 d1=0.25 | transp')
+
+Flow('aliasp4 ones4','aliasp','lpad jump=4 mask=${TARGETS[1]}')
+
+for prec in [0,1]:
+    dealias = 'dealias%d' % prec
+    
+    Flow(dealias,'aliasp4 dip ones4',
+         '''
+         planemis2 dip=${SOURCES[1]} mask=${SOURCES[2]} order=3 verb=y prec=%d
+         ''' % prec)
+    Plot(dealias,'window n1=575 | grey title=Output crowd=0.85')
+
+    Result('aliasp%d' % prec,['aliasp',dealias],'SideBySideAniso')
+
+Flow('dip3','aliasp',
+     'twodip2 order=12 p0=2 q0=-1 eps=4 gauss=n')
+Flow('dip4','dip3',
+     '''
+     window n3=1 |
+     transp | spline n1=96 o1=0 d1=0.25 | transp |
+     scale dscale=0.25
+     ''')
+
+Flow('dealias','aliasp4 dip4 ones4',
+     '''
+     planemis2 dip=${SOURCES[1]} mask=${SOURCES[2]} order=12 verb=y prec=0
+     ''')
+Plot('dealias','window n1=575 | grey title=Output crowd=0.85')
+Result('aliasp','aliasp dealias','SideBySideAniso')
+
+End()

@@ -1,0 +1,24 @@
+from rsf.proj import *
+# Fetch Files from repository
+raw=['marmvel.hh','marmsmooth.HH']
+for file in raw:
+    Fetch(file,"marm")
+    if file is 'marmvel.hh':
+        d=.004
+        fileOut='marmvel'
+        t='Velocity\ Model'
+    if file is 'marmsmooth.HH':
+        d=.024
+        fileOut='marmsmooth'
+        t='Smoothed\ Velocity\ Model'
+# Convert Files to RSF and update headers
+    Flow(fileOut,file,'''dd form=native | 
+        scale rscale=.001 | put
+        label1=Depth label2=Position unit1=km unit2=km
+        d1=%f d2=%f''' % (d,d))
+# Plotting Section
+    Result(fileOut,'''window $SOURCE  | 
+        grey color=I gainpanel=a allpos=y scalebar=y 
+        title=%s barlabel=Velocity barunit=km/s screenratio=.326
+        screenht=3 wheretitle=t labelsz=4 titlesz=6 ''' % t)
+End()

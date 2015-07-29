@@ -1,0 +1,130 @@
+#
+# Fast Gaussian random field generation with FFTs
+#
+# James W. Jennings Jr.
+# Research Scientist
+# 
+# Bureau of Economic Geology
+# John A. and Katherine G. Jackson School of Geosciences
+# University of Texas at Austin
+# University Station, Box X
+# Austin, TX 78713-8924
+# 
+# 512-471-1534 (voice)
+# 512-471-0140 (fax)
+# mailto:jim.jennings@beg.utexas.edu
+# http://www.beg.utexas.edu/staffinfo/jennings01.htm
+# 
+# July 2005
+#
+# $Id: SConstruct 6448 2010-07-23 18:58:32Z sfomel $
+#
+
+#
+# Setting up
+#
+
+from rsf.proj import *
+import rsf.recipes.rfield as rfield
+
+#
+# Set up 1D, 2D, and 3D example random field parameter dictionaries
+#
+
+real_par = [{},{},{}]               # realization parameters
+
+real_par[0] = {'name':'ex1D_', 'nr':3, 'seed':1}
+real_par[1] = {'name':'ex2D_', 'nr':3, 'seed':1}
+real_par[2] = {'name':'ex3D_', 'nr':3, 'seed':1}
+
+grid_par = [{},{},{}]               # grid parameters
+
+grid_par[0] = {'nx':1024, 'ny':   1, 'nz':   1,
+               'dx':   1, 'dy':   1, 'dz':   1}
+                  
+grid_par[1] = {'nx':1024, 'ny': 512, 'nz':   1,
+               'dx':   1, 'dy':   1, 'dz':   1}
+                  
+grid_par[2] = {'nx': 256, 'ny': 256, 'nz':  16,
+               'dx':   4, 'dy':   2, 'dz':  16}
+                  
+covar_par = {'taper_switch':1,      # covariance taper switch
+             'alpha':1,             # covariance shape parameter
+             'oriu':[ 5,1,0],       # covariance range orientation vectors
+             'oriv':[-1,5,0], 
+             'oriw':[ 0,0,1],
+             'ru'  :100,            # covariance range parameters
+             'rv'  :20,   
+             'rw'  :20}
+
+#
+# Build the random fields
+#
+
+for i in range(3): 
+    rfield.rfield(real_par[i],grid_par[i],covar_par)
+
+#
+# Plot the results.
+#
+
+results = ['dist','covar','pspec_real','aspec_real']
+           
+plots = range(3)
+
+for i in range(3):
+    plots[i] = results
+    for j in range(real_par[i]['nr']):
+        plots[i] = plots[i] + ['sim_%02d_real' % (j+1)]
+    plots[i] = map(lambda x: real_par[i]['name']+x,plots[i])
+    
+#          
+# 1D plots
+#
+ 
+if (grid_par[0]['nx'] > 50):
+    circles = ''
+else:
+    circles = 'symbol="o" symbolsz=10'
+    
+for i in (plots[0]):
+    Result (i,'graph title="%s" %s label2=""' % (i,circles))
+
+#          
+# 2D plots	
+#          
+    
+screen_ratio  = ( float(grid_par[1]['ny']*grid_par[1]['dy'])
+                 /float(grid_par[1]['nx']*grid_par[1]['dx']) )
+screen_height = 10
+if (screen_height/screen_ratio > 13):
+    screen_height = 13*screen_ratio
+
+for i in (plots[1]):
+    Result (i,
+            '''
+            grey title="%s" transp=n yreverse=n
+            pclip=100 color=E wantscalebar=y gainpanel=a
+            screenratio=%g screenht=%g
+            ''' % (i,screen_ratio,screen_height)
+           )
+
+#          
+# 3D plots
+#          
+
+for i in (plots[2]):
+    Result (i,
+            '''
+            transp plane=12 | transp plane=13 | reverse which=1 |
+            byte bar=bar.rsf gainpanel=all pclip=100 wantscalebar=y |
+            grey3 title="%s" 
+            color=E movie=0 flat=y scalebar=y bar=bar.rsf
+            frame1=%d frame2=%d frame3=%d point1=0.5 point2=0.5 > $TARGET &&
+            rm -f bar.rsf
+            ''' % (i,grid_par[2]['nz']/2-1,
+                     grid_par[2]['nx']/2,
+                     grid_par[2]['ny']/2) , stdout=0
+           )
+
+End ()

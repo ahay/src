@@ -1,0 +1,7 @@
+from rsf.proj import *
+
+for res in ['reflkine','reflexpt']:
+    Result(res,None,res,prefix=plprefix)
+
+###########################################################################
+End()

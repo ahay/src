@@ -1,0 +1,11 @@
+from rsf.tex import *
+
+#Paper('total',lclass='article',use='graphicx,subfigure,natbib')
+
+#Paper('seg2006',lclass='segabs')
+
+#Command2('paper-revised.tex','paper.tex','cp $SOURCE $TARGET')
+#Paper('paper-revised',options='manuscript,revised')
+
+End(color='panel bei-dip bei-pik gom-dip gom-pik zovel xdip',
+    hires='panel zomig pwmig') #options='manuscript')

@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfreverse', 'sfwindow', 'sfput', 'sfgrey', 'sfmath', 'sfcat', 'sfspray', 'sfvscan', 'sfpick', 'sfgraph', 'sftransp', 'sfremap1', 'sfnmo', 'sfstack', 'sfslice', 'sfdix', 'sftime2depth']
+data=['data/blake/cmps-tp.HH']
+size=  296010248

@@ -1,0 +1,140 @@
+from rsf.proj import *
+from rsf.recipes.beg import server
+from math import *
+def Grey(data,other): 
+	Result(data,'put d2=1 |grey label2=Trace unit2="" label1=Time unit1="s" title="" wherexlabel=b wheretitle=t scalebar=n  clip=2  %s  '%other)
+
+def Greydemo(datao,datai,other): 
+	Plot(datao,datai,'put d2=1 |grey label2=Trace unit2="" label1=Time unit1="s" title="" wherexlabel=t wheretitle=b scalebar=n  clip=2  %s  '%other)
+
+def Greynoise(data,other): 
+	Result(data,'put d2=1 |grey label2=Trace unit2="" label1=Time unit1="s" title="" wherexlabel=b wheretitle=t scalebar=n color=j  minval=-0.4 maxval=0.4 clip=0.2 %s  '%other)
+
+#----------------------------------------------dat
+
+Fetch('image2d.rsf','cup',server)
+Flow('data','image2d','dd form=native')
+
+Flow('mask','data','envelope | causint | math output="input*input" | mask min=40 | dd type=float')
+
+Result('zdata','data','window min1=3 max1=4 min2=4000 max2=6000 | grey title="Zoom Data" color=e screenratio=1.5')
+
+########## Patch
+Flow('patch','data','patch w=256,1001 p=20,1')
+Flow('patch0','patch','patch inv=y weight=y dim=2')
+
+#Result('patch','patch','grey title="Patch Data"')
+#Result('patch0','patch0','grey title=" Inv Patch Data"')
+nx=1001
+nshifts = []
+for s in range(1,5):
+
+    nshift = 'nshift-%d' % s
+    Flow(nshift,'patch','window f2=%d | pad end2=%d' % (s,s))
+    nshifts.append(nshift)
+
+    nshift = 'nshift+%d' % s
+    Flow(nshift,'patch','window n2=%d | pad beg2=%d ' % (nx-s,s)) 
+    nshifts.append(nshift)
+
+
+Flow('nshifts',nshifts,'cat ${SOURCES[1:%d]} axis=4 | put o2=0 ' % len(nshifts))
+
+wflts = []
+wpres = []
+for nwt in range(0,20):
+    wdata  = 'wdata%d'  % nwt
+    wshift = 'wshift%d' % nwt
+    wflt   = 'wfl%d'    % nwt
+    wpre   = 'wpre%d'    % nwt
+    Flow(wdata,'patch','window n3=1 f3=%d | fft1 ' % nwt) 
+    Flow(wshift,'nshifts','window n3=1 f3=%d | window | fft1' % nwt)   
+    Flow([wflt, wpre],[wshift, wdata],
+         'clpf match=${SOURCES[1]} pred=${TARGETS[1]} rect2=20 rect1=3 niter=10 verb=n')
+    wpres.append(wpre)
+
+Flow('pre',wpres,'cat ${SOURCES[1:%d]} axis=4 | fft1 inv=y  ' % len(wpres))
+Flow('npre','pre','transp plane=34 memsize=1000 | patch inv=y weight=y dim=2 --out=stdout')
+Flow('nprediff','data npre','add scale=1,-1 ${SOURCES[1]} --out=stdout')
+
+# ortho
+Flow('rnadiff-ortho rna-ortho','nprediff npre','ortho rect1=5 rect2=5 sig=${SOURCES[1]} sig2=${TARGETS[1]}')
+Flow('rna-simi','npre nprediff','similarity other=${SOURCES[1]} niter=40 rect1=5 rect2=5')
+Flow('rna-simi-ortho','rna-ortho rnadiff-ortho','similarity other=${SOURCES[1]} niter=40 rect1=5 rect2=5')
+
+Grey('data','')
+Grey('npre',' ')
+Grey('nprediff',' ')
+Grey('rna-ortho',' ')
+Grey('rnadiff-ortho','')
+## Creating framebox
+x=440
+y=2.0
+w=360
+w1=0.8
+
+Flow('frame1.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	string.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame1','frame1.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=0 max1=2000 min2=0 max2=5 pad=n plotfat=15 plotcol=4 
+	wantaxis=n wanttitle=n yreverse=y scalebar=n
+	''')
+
+## Creating framebox
+x=900
+y=2.3
+w=400
+w1=0.8
+
+Flow('frame2.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	string.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame2','frame2.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=0 max1=2000 min2=0 max2=5 pad=n plotfat=15 plotcol=4 
+	wantaxis=n wanttitle=n yreverse=y scalebar=n
+	''')
+
+## Create label A
+Plot('labela',None,
+	'''
+	box x0=5.5 y0=5.9 label="A" xt=0.5 yt=0.5 length=0.75 
+	''')
+
+## Create label B
+Plot('labelb',None,
+	'''
+	box x0=8.9 y0=5.3 label="B" xt=0.5 yt=0.5 length=0.75 
+	''')
+
+Result('rnadiff-ortho0','Fig/rnadiff-ortho.vpl frame1 frame2 labela labelb','Overlay')
+Result('nprediff0','Fig/nprediff.vpl frame1 frame2 labela labelb','Overlay')
+
+
+Grey('rna-simi','color=j clip=0.4 scalebar=y minval=0 maxval=0.5')
+Grey('rna-simi-ortho','color=j clip=0.4 scalebar=y minval=0 maxval=0.5')
+
+
+Flow('zoom-rnadif-a','nprediff','put d2=1 | window n1=400 f1=1000 n2=175 f2=225')
+Flow('zoom-rnadif-b','nprediff','put d2=1 | window n1=400 f1=1200 n2=200 f2=450 ')
+Flow('zoom-orthodif-a','rnadiff-ortho','put d2=1 | window n1=400 f1=1000 n2=175 f2=225')
+Flow('zoom-orthodif-b','rnadiff-ortho','put d2=1 | window n1=400 f1=1200 n2=200 f2=450')
+
+Grey('zoom-rnadif-a','')
+Grey('zoom-rnadif-b','')
+Grey('zoom-orthodif-a','')
+Grey('zoom-orthodif-b','')
+
+
+Greydemo('a','data','title="Noisy data" labelsz=10 labelfat=4')
+Greydemo('b','rna-ortho','title="Denoised data" labelsz=10 labelfat=4')
+Greydemo('c','rnadiff-ortho','title="Removed noise" labelsz=10 labelfat=4' )
+Greydemo('d','rna-simi-ortho','color=j clip=0.5 scalebar=y minval=0 maxval=0.5 title="Local similarity between denoised data and removed noise" labelsz=10 labelfat=4')
+
+Plot('data1','a b','SideBySideAniso')
+Plot('data2','c d','SideBySideAniso')
+Result('demon','data1 data2','OverUnderAniso')
+
+End()

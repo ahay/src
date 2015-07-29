@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfwindow', 'sfmath', 'sfbin', 'sfgrey', 'sfdip', 'sfplanemis2', 'sfpmshape2']
+data=['data/seab/apr18.h']
+size=    4836940

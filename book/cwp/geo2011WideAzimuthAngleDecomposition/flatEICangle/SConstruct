@@ -1,0 +1,517 @@
+## 
+ # EIC 3D angle decomposition
+ ##
+
+from rsf.proj import *
+import fdmod,encode,wei,adcig,polar
+import math
+
+# ------------------------------------------------------------
+par = {
+    'nt':800, 'ot':0, 'dt':0.002, 'lt':'t', 'ut':'s',
+    'nx':400, 'ox':0, 'dx':0.02,  'lx':'x', 'ux':'km',
+    'ny':400, 'oy':0, 'dy':0.02,  'ly':'y', 'uy':'km',
+    'nz':200, 'oz':0, 'dz':0.01,  'lz':'z', 'uz':'km',
+    'kt':80,
+    'jsnap':100,
+    'nb':10,
+    'frq':20
+    }
+fdmod.param(par)
+par['jrr']=1
+
+# taper parameters
+par['xk']=50
+par['yk']=50
+par['xl']=par['nx']-50
+par['yl']=par['ny']-50
+
+par['jw']=1
+par['ow']=4
+par['nw']=72
+par['nrmax']=1
+wei.wempar(par)
+
+# ------------------------------------------------------------
+# source/receiver coordinates
+# ------------------------------------------------------------
+par['ixsou']=par['nx']/2
+par['iysou']=par['ny']/2
+
+par['xsou']=par['ox']+par['ixsou']*par['dx']
+par['ysou']=par['oy']+par['iysou']*par['dy']
+par['zsou']=par['oz']
+
+center=fdmod.center3d(par['xsou'],
+                      par['ysou'],
+                      par['oz']+par['nz']/2*par['dz'],par)
+
+fdmod.point('ss-2d',par['xsou'],par['zsou'],par)
+fdmod.horizontal('tt-2d',par['oz'],par)
+Flow('rr-2d','tt-2d','window j2=%(jrr)d'%par)
+
+Plot('rr-2d',fdmod.rrplot('plotfat=10',par))
+Plot('ss-2d',fdmod.ssplot('',par))
+
+fdmod.point3d('ss-3d',par['xsou'],par['ysou'],par['zsou'],par)
+
+fdmod.horizontal3d('tt-3d',par['oz'],par)
+Flow('rr-3d','tt-3d','put n2=%(nx)d n3=%(ny)d |'%par
+     +'window j2=%d j3=%d | put n2=%d n3=1'
+     %(par['jrr'],par['jrr'],par['nx']/par['jrr']*par['ny']/par['jrr']))
+
+# ------------------------------------------------------------
+# CIPs
+# ------------------------------------------------------------
+
+par['ocz']=1.00
+par['jcy']=1
+
+par['jcx']=10
+par['ncx']=par['nx']/par['jcx']
+par['dcx']=par['dx']*par['jcx']
+par['fcx']=0
+
+par['jcy']=10
+par['ncy']=par['ny']/par['jcy']
+par['dcy']=par['dy']*par['jcy']
+par['fcy']=0
+
+# ------------------------------------------------------------
+
+par['zC']=1.0
+fdmod.horizontal3d('ct',par['zC'],par)
+Flow('coo-2d','ct',
+     'put n2=%(nx)d n3=%(ny)d | window j2=%(jcx)d f2=%(fcx)d n3=1 |'%par 
+     + 'put n2=%d n3=1' %(par['ncx']))
+Plot('coo-2d','window j1=2 |' 
+     + fdmod.qqplot('plotcol=5 plotfat=10',par))
+
+# ------------------------------------------------------------
+CIPLIST = ['A','B','C','D','E','F','G','H','I']
+
+#par['Ax']= 8*par['ncx']/20; par['Ay']= 8*par['ncy']/20;
+#par['Bx']= 8*par['ncx']/20; par['By']=12*par['ncy']/20;
+#par['Cx']=12*par['ncx']/20; par['Cy']=12*par['ncy']/20;
+#par['Dx']=12*par['ncx']/20; par['Dy']= 8*par['ncy']/20;
+#par['Ex']= 6*par['ncx']/20; par['Ey']= 6*par['ncy']/20;
+#par['Fx']= 7*par['ncx']/20; par['Fy']= 7*par['ncy']/20;
+#par['Gx']= 8*par['ncx']/20; par['Gy']= 8*par['ncy']/20;
+#par['Hx']= 9*par['ncx']/20; par['Hy']= 9*par['ncy']/20;
+#par['Ix']=10*par['ncx']/20; par['Iy']=10*par['ncy']/20;
+
+par['Ix']=4.0; par['Iy']=4.0;
+
+sq=math.sqrt(2)/2;
+
+par['Ax']=4.0-sq; par['Ay']=4.0-sq;
+par['Bx']=4.0-sq; par['By']=4.0+sq;
+par['Cx']=4.0+sq; par['Cy']=4.0+sq;
+par['Dx']=4.0+sq; par['Dy']=4.0-sq;
+
+par['Ex']=4.0-sq*math.tan(40*math.pi/180); par['Ey']=4.0-sq*math.tan(40*math.pi/180);
+par['Fx']=4.0-sq*math.tan(30*math.pi/180); par['Fy']=4.0-sq*math.tan(30*math.pi/180);
+par['Gx']=4.0-sq*math.tan(20*math.pi/180); par['Gy']=4.0-sq*math.tan(20*math.pi/180);
+par['Hx']=4.0-sq*math.tan(10*math.pi/180); par['Hy']=4.0-sq*math.tan(10*math.pi/180);
+
+
+for c in (CIPLIST):        
+    ctag = "-"+c        
+#    ic=par[c+'y']*par['ncx']+par[c+'x']
+
+#    xcip=par['ox']+par[c+'x']*par['dx']*par['jcx']
+#    ycip=par['oy']+par[c+'y']*par['dy']*par['jcy']
+#    zcip=par['zC']
+    
+    Flow('coo'+ctag,None,
+         'spike nsp=3 n1=3 d1=0 o1=0 mag=%g,%g,%g k1=1,2,3'
+         %( par[c+'x'],
+            par[c+'y'],
+            par['zC']))
+
+Flow('coo-3d', map(lambda x: 'coo-%s' % x,(CIPLIST)),
+     'cat axis=2 space=n ${SOURCES[1:%d]}'%len(CIPLIST))
+
+# ------------------------------------------------------------
+# lag parameters
+par['nhz']=0
+par['nhx']=30
+par['nhy']=30
+par['nht']=25
+par['dht']=par['dt']*2
+
+adcig.hparam(2.5,
+             2*par['nhx']+1,-par['nhx']*par['dx'] ,par['dx'],
+             2*par['nhy']+1,-par['nhy']*par['dy'] ,par['dy'],
+             2*par['nht']+1,-par['nht']*par['dht'],par['dht'],
+             par)
+
+cipparam = '''
+nhx=%d ohx=%g dhx=%g
+nhy=%d ohy=%g dhy=%g
+nhz=%d ohz=%g dhz=%g
+nht=%d oht=%g dht=%g
+''' %(
+2*par['nhx']+1,-par['nhx']*par['dx'] ,par['dx'],
+2*par['nhy']+1,-par['nhy']*par['dy'] ,par['dy'],
+2*par['nhz']+1,-par['nhz']*par['dz'] ,par['dz'],
+2*par['nht']+1,-par['nht']*par['dht'],par['dht']
+)
+
+# ------------------------------------------------------------
+# wavelet
+fdmod.wavelet('wav_',par['frq'],par)
+Flow(  'wav','wav_','transp')
+Result('wav','transp |' + fdmod.waveplot(''+par['labelrot2'],par))
+
+# ------------------------------------------------------------
+# velocity
+par['vep']=3.0
+par['ves']=1.5
+par['ro']=2.0
+
+# ------------------------------------------------------------
+# 2D model
+Flow('ro-2d',None,
+     '''
+     spike nsp=2 mag=+1,+1
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=101,101 l1=101,101
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=1,201 l2=200,%(nx)d |
+     put label1=%(lz)s label2=%(lx)s unit1=%(uz)s unit2=%(ux)s |
+     add add=1.0
+     ''' % par)
+
+Flow(  'vel-2d','ro-2d','math output="%g"' %par['vep'])
+Plot(  'vel-2d',fdmod.cgrey('allpos=y bias=3.0'+par['labelrot0'],par))
+Result('vel-2d',['vel-2d','rr-2d','ss-2d'],'Overlay')
+
+Flow(  'co-2d','ro-2d','math output=1.0')
+Plot(  'ro-2d','add add=-1.0 | ricker1 frequency=10 |'
+       + fdmod.cgrey(''+par['labelrot0'],par))
+Result('ro-2d',['ro-2d','rr-2d','ss-2d'],'Overlay')
+
+# ------------------------------------------------------------
+# 3D model
+Flow('ro-3d','ro-2d',
+     '''
+     spike nsp=4 mag=+1,+1,+1,+1
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=101,101,101,101 l1=101,101,101,101
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=1,201,1,201 l2=200,%(nx)d,200,%(nx)d
+     n3=%(ny)d o3=%(oy)g d3=%(dy)g k3=1,201,201,1 l3=200,%(ny)d,%(ny)d,200 |
+     add add=1.0 |
+     put label1=%(lz)s label2=%(lx)s unit1=%(uz)s unit2=%(ux)s label3=%(ly)s unit3=%(uy)s
+     ''' %par)
+
+Flow(  'vel-3d','ro-3d','math output="%g"' %par['vep'])
+Result('vel-3d','byte gainpanel=a pclip=100 |'
+       + fdmod.cgrey3d('allpos=y bias=3.0'+center+par['labelrot0'],par))
+
+Flow(  'co-3d','ro-3d','math output=1.0')
+Result('ro-3d','add add=-1.0 | ricker1 frequency=10 | byte gainpanel=a pclip=100 |'
+       + fdmod.cgrey3d(center+' frame1=%d '%(par['zC']/par['dz'])+par['labelrot'],par))
+
+# ------------------------------------------------------------
+# 2D acoustic modeling
+Flow('dm-2d',None,
+     '''
+     spike nsp=1 mag=1
+     n1=%(nx)d d1=%(dx)g o1=%(ox)g k1=%(xk)d l1=%(xl)d
+     n2=%(nt)d d2=%(dt)g o2=%(ot)g |
+     smooth rect1=50
+     ''' % par)
+fdmod.awefd2d('dd-2d','ww-2d','wav','vel-2d','ro-2d','ss-2d','rr-2d','',par)
+fdmod.awefd2d('do-2d','wo-2d','wav','vel-2d','co-2d','ss-2d','rr-2d','',par)
+Flow('dat-2d','dd-2d do-2d dm-2d',
+     '''
+        add scale=1,-1 ${SOURCES[1]} | 
+        transp plane=23 |
+        pad n2out=%(jrr)d |
+        transp plane=12 |
+        put n1=%(nx)d o1=%(ox)g d1=%(dx)g n2=1 |
+        window |
+        add mode=p ${SOURCES[2]}
+     ''' %par)
+Result('dat-2d','transp |' + fdmod.dgrey(''+par['labelrot'],par))
+
+# ------------------------------------------------------------
+# 3D acoustic modeling
+Flow('dm-3d',None,
+     '''
+     spike nsp=1 mag=1
+     n1=%(nx)d d1=%(dx)g o1=%(ox)g k1=%(xk)d l1=%(xl)d
+     n2=%(ny)d d2=%(dy)g o2=%(oy)g k2=%(yk)d l2=%(yl)d
+     n3=%(nt)d d3=%(dt)g o3=%(ot)g |
+     smooth rect1=50 rect2=50
+     ''' % par)
+fdmod.awefd3d('dd-3d','ww-3d','wav','vel-3d','ro-3d','ss-3d','rr-3d','',par)
+fdmod.awefd3d('do-3d','wo-3d','wav','vel-3d','co-3d','ss-3d','rr-3d','',par)
+Flow('dat-3d',['dd-3d','do-3d','dm-3d'],
+     '''
+     add scale=1,-1 ${SOURCES[1]} | 
+     transp plane=23 | transp plane=34 | transp plane=45 | 
+     put n1=%d n2=1 n3=%d n4=1 |
+     pad n2out=%d n4out=%d |
+     transp plane=12 | transp plane=34 |
+     put n1=%d n2=1 n3=%d n4=1 |
+     window |
+     add mode=p ${SOURCES[2]} |
+     ''' %(par['nx']/par['jrr'],
+           par['ny']/par['jrr'],
+           par['jrr'],
+           par['jrr'],
+           par['nx'],
+           par['ny']) +
+     '''
+     put n1=%(nx)d o1=%(ox)g d1=%(dx)g label1=%(lx)s unit1=%(ux)s
+     n2=%(ny)d o2=%(oy)g d2=%(dy)g label2=%(ly)s unit2=%(uy)s
+     ''' % par)
+Plot('dat-3d',
+     '''
+     transp plane=23 |
+     transp plane=12 |
+     ''' % par
+     + fdmod.dgrey3d('pclip=99.9'+center+' frame1=1 movie=1 dframe=25 ',par),view=1)
+
+# ------------------------------------------------------------
+# WEM data - time domain
+Flow('sou-2d','wav',
+         '''
+         window |
+         pad beg2=%(ixsou)d n2out=%(nx)d |
+         put o2=%(ox)g d2=%(dx)g label2=%(lx)s unit2=%(ux)s
+             o3=0      d3=1      label3=%(ly)s unit3=%(uy)s
+         ''' %par )
+Flow('sou-3d','wav',
+         '''
+         window |
+         pad beg2=%(ixsou)d n2out=%(nx)d |
+         pad beg3=%(iysou)d n3out=%(ny)d |
+         put o2=%(ox)g d2=%(dx)g label2=%(lx)s unit2=%(ux)s
+             o3=%(oy)g d3=%(dy)g label3=%(ly)s unit3=%(uy)s
+         ''' %par )
+
+Flow('rec-2d','dat-2d','transp plane=12')
+Flow('rec-3d','dat-3d','transp plane=23 | transp plane=12')
+
+# ------------------------------------------------------------
+# reflector normals
+Flow('nor','nor.asc','dd type=float form=native | spray axis=2 n=%d o=0 d=1'%len(CIPLIST))
+Flow('vep','nor','window n1=1 | math output=%g'%par['vep'])
+Flow('ves','nor','window n1=1 | math output=%g'%par['ves'])
+Flow('vel','vep ves','cat axis=2 space=n ${SOURCES[1]} | transp')
+
+# ------------------------------------------------------------
+# polar coordinates overlay
+cco = {'n':181,'o':-90,'d':1}
+jc=15;
+jr=15;
+polar.ovl('ovl',jc,jr,'',cco)
+
+# ------------------------------------------------------------
+#coarse='nph=120 dph=3 oph=-180 nth=30 dth=3 oth=0'
+coarse=''
+
+# ------------------------------------------------------------
+# WEM data - freq domain
+for k in (['-2d','-3d']):
+    encode.time2freq('sou'+k,'dfs'+k,par)
+    encode.time2freq('rec'+k,'dfr'+k,par)
+
+    wei.slowness('slo'+k,'vel'+k,par)
+    
+    # new CIC mig
+    wei.cicmig('cic'+k,
+               'dfs'+k,
+               'dfr'+k,
+               'slo'+k,'',par)
+
+# EIC mig
+wei.hicmig('img-2d',
+           'hic-2d-one',
+           'dfs-2d',
+           'dfr-2d',
+           'slo-2d',
+           'coo-2d','nhy=0',par)
+wei.hicmig('img-3d',
+           'hic-3d-one',
+           'dfs-3d',
+           'dfr-3d',
+           'slo-3d',
+           'coo-3d','',par)
+     
+# CIC plots
+for i in (['cic','img']):
+    Plot(  i+'-2d','window | transp |' 
+           + fdmod.cgrey('pclip=99.9'+par['labelrot'],par))
+    Result(i+'-2d',[i+'-2d','rr-2d','ss-2d','coo-2d'],'Overlay')
+    
+    Result(i+'-3d','transp plane=23 | transp plane=12 | byte gainpanel=a pclip=99.9 |' 
+           + fdmod.cgrey3d(center+' frame1=%d '%(par['zC']/par['dz'])+par['labelrot'],par))
+
+# EIC plots
+Flow('hic-2d',
+     'hic-2d-one',
+     'transp plane=45 | transp plane=34 | transp plane=23 | stack')
+Result('hic-2d',
+       '''
+       window |
+       grey title="" pclip=100 screenratio=1
+       label1="\F10 l\F3 \_x\^" unit1=%(ux)s
+       label2="\F10 t\F3 "      unit2=%(ut)s
+       '''%par+par['labelattr']+par['labelrot'] )
+
+# ------------------------------------------------------------
+Flow('hic-3d',
+     'hic-3d-one',
+     'transp plane=45 | transp plane=34 | transp plane=23 | stack ')
+
+Result('hic',
+       'hic-3d',
+       'window | transp plane=23 | transp plane=12 | byte gainpanel=a pclip=99.9 |'
+       + adcig.hgrey(par['labelrot2'],par))
+
+# compute angles 
+Flow('apo',['hic-3d','nor','vel'],
+     'hic2ang adj=y verb=y nor=${SOURCES[1]} vel=${SOURCES[2]}'+coarse)
+polar.p2c('apo','aca',cco)
+
+Result('apo',polar.polplot('color=E',par))
+Plot('aca',polar.carplot('color=E',par))
+Result('aca',['aca','ovl'],'Overlay')
+    
+# ------------------------------------------------------------
+# true angle gathers
+for c in range(len(CIPLIST)):    
+    ctag = "-"+CIPLIST[c]
+
+    Flow('hic'+ctag,
+         'hic-3d-one',
+         'window squeeze=n n5=1 f5=%d'%c)
+    
+    Flow('nor'+ctag,'nor',  'window n2=1 f2=%d'%c)
+    Flow('vel'+ctag,'vel',  'window n2=1 f2=%d'%c)
+    
+    # compute angles
+    Flow('apo'+ctag,['hic'+ctag,'nor'+ctag,'vel'+ctag],
+         'hic2ang adj=y verb=y nor=${SOURCES[1]} vel=${SOURCES[2]}'+coarse)
+    polar.p2c('apo'+ctag,'aca'+ctag,cco)
+
+    Flow('aic'+ctag,['apo'+ctag,'nor'+ctag,'vel'+ctag],
+         'hic2ang adj=n verb=y nor=${SOURCES[1]} vel=${SOURCES[2]}'+cipparam)
+    
+# ------------------------------------------------------------
+# fake angle gathers
+for c in (CIPLIST):
+    ctag = "-"+c
+
+    x=(par[c+'x']-par['Ix'])
+    y=(par[c+'y']-par['Iy'])
+    z=(par['zC']-par['oz'])
+    
+    t=math.atan(math.sqrt(x*x+y*y)/z)/math.pi*180
+    if(x!=0):
+        f=math.fabs(math.atan(y/x))/math.pi*180
+    else:
+        f=0;
+        
+    if(x<0):
+        f=180-f;
+    if(y!=0):
+        f=f*y/abs(y);
+        
+    print c,"%6.3g"%par[c+'x'],"%6.3g"%par[c+'y'],"%6.3g"%f,"%6.2g"%t
+
+    if(c == 'I'):
+        Flow('pol'+ctag,None,
+             '''
+             spike nsp=1 mag=0.01
+             n1=90  o1=0    d1=1 k1=%d l1=%d
+             n2=360 o2=-180 d2=1 k2=%d l2=%d |
+             smooth rect1=3 rect2=3 repeat=2
+             ''' %(t+1,t+1,1,360) )
+    else:
+        Flow('pol'+ctag,None,
+             '''
+             spike nsp=1 mag=1
+             n1=90  o1=0    d1=1 k1=%d l1=%d
+             n2=360 o2=-180 d2=1 k2=%d l2=%d |
+             smooth rect1=3 rect2=3 repeat=2
+             ''' %(t+1,t+1,180+f+1,180+f+1) )
+
+    polar.p2c('pol'+ctag,'car'+ctag,cco)
+
+    Flow('fic'+ctag,['pol'+ctag,'nor'+ctag,'vel'+ctag],
+         'hic2ang adj=n verb=y anis=n nor=${SOURCES[1]} vel=${SOURCES[2]}'+cipparam)
+    Flow('jan'+ctag,['fic'+ctag,'nor'+ctag,'vel'+ctag],
+         'hic2ang adj=y verb=y anis=n nor=${SOURCES[1]} vel=${SOURCES[2]}')
+    
+# ------------------------------------------------------------
+# ------------------------------------------------------------
+# ------------------------------------------------------------
+# ------------------------------------------------------------
+
+Flow('hic-3d-byt',
+     'hic-3d-one',
+     'byte gainpanel=a pclip=99.9')
+
+Flow('fic-3d-byt',
+     map(lambda x: 'fic-%s' % x,(CIPLIST)),
+     'cat axis=5 space=n ${SOURCES[1:%d]} | byte gainpanel=a pclip=99.9'%len(CIPLIST))
+Flow('aic-3d-byt',
+     map(lambda x: 'aic-%s' % x,(CIPLIST)),
+     'cat axis=5 space=n ${SOURCES[1:%d]} | byte gainpanel=a pclip=99.9'%len(CIPLIST))
+
+Flow('pol-byt',
+     map(lambda x: 'pol-%s' % x,(CIPLIST)),
+     'cat axis=3 space=n ${SOURCES[1:%d]} | byte gainpanel=a pclip=99.9'%len(CIPLIST))
+Flow('car-byt',
+     map(lambda x: 'car-%s' % x,(CIPLIST)),
+     'cat axis=3 space=n ${SOURCES[1:%d]} | byte gainpanel=a pclip=99.9'%len(CIPLIST))
+
+Flow('apo-byt',
+     map(lambda x: 'apo-%s' % x,(CIPLIST)),
+     'cat axis=3 space=n ${SOURCES[1:%d]} | byte gainpanel=a pclip=100'%len(CIPLIST))
+Flow('aca-byt',
+     map(lambda x: 'aca-%s' % x,(CIPLIST)),
+     'cat axis=3 space=n ${SOURCES[1:%d]} | byte gainpanel=a pclip=99.9'%len(CIPLIST))
+Flow('jan-byt',
+     map(lambda x: 'jan-%s' % x,(CIPLIST)),
+     'cat axis=3 space=n ${SOURCES[1:%d]} | byte gainpanel=a pclip=100'%len(CIPLIST))
+# ------------------------------------------------------------
+for c in range(len(CIPLIST)):    
+    ctag = "-"+CIPLIST[c]
+
+    Result('hic'+ctag,
+           'hic-3d-byt',
+           'window n5=1 f5=%d | transp plane=23 | transp plane=12 |' %c
+           + adcig.hgrey(par['labelrot2'],par))
+#    Result('fic'+ctag,
+#           'fic-3d-byt',
+#           'window n5=1 f5=%d | transp plane=23 | transp plane=12 |' %c
+#           + adcig.hgrey(par['labelrot2'],par))
+    Result('aic'+ctag,
+           'aic-3d-byt',
+           'window n5=1 f5=%d | transp plane=23 | transp plane=12 |' %c
+           + adcig.hgrey(par['labelrot2'],par))
+    
+    Result('apo'+ctag,
+           'apo-byt',
+           'window n3=1 f3=%d |'%c +polar.polplot('color=E',par))
+    Result('pol'+ctag,
+           'pol-byt',
+           'window n3=1 f3=%d |'%c +polar.polplot('color=E',par))
+#    Result('jan'+ctag,
+#           'jan-byt',
+#           'window n3=1 f3=%d |'%c +polar.polplot('color=E',par))
+    
+    Plot('aca'+ctag,
+         'aca-byt',
+         'window n3=1 f3=%d |'%c +polar.carplot('color=E',par))
+    Plot('car'+ctag,
+         'car-byt',
+         'window n3=1 f3=%d |'%c +polar.carplot('color=E',par))
+
+    Result('aca'+ctag,['aca'+ctag,'ovl'],'Overlay')
+    Result('car'+ctag,['car'+ctag,'ovl'],'Overlay')
+     
+End()

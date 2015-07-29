@@ -1,0 +1,3 @@
+uses=['sfmath', 'sfspike', 'sfbandpass', 'sfinmo', 'sfgrey', 'sfsaltpepper', 'sfwiggle', 'sfmf', 'sfwindow', 'sfspectra', 'sfgraph']
+data=[]
+size=    1545644

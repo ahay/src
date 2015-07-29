@@ -1,0 +1,294 @@
+\published{Computers \& Geosciences, 68, 64-72, (2014)}
+
+\title{RTM using effective boundary saving: A staggered grid GPU implementation}
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+
+
+\author{Pengliang Yang\footnotemark[1], Jinghuai Gao\footnotemark[1], and Baoli Wang\footnotemark[2] \\
+\footnotemark[1]Xi'an Jiaotong University, National Engineering Laboratory for Offshore Oil Exploration, Xi'an, China, 710049\\
+\footnotemark[2]CCTEG  Xi'an Research Institute, Xi'an, China, 710077
+}
+
+
+\righthead{Boundary saving in GPU-based RTM}
+\lefthead{Yang et al.}
+
+\footer{TCCS-7}
+
+\maketitle
+
+\begin{abstract}
+GPU has become a booming technology in reverse time migration (RTM) to perform the intensive computation. Compared with saving forward modeled wavefield on the disk, RTM via wavefield reconstruction using saved boundaries on device is a more efficient method because computation is much faster than CPU-GPU data transfer.
+In this paper, we introduce the effective boundary saving strategy in backward reconstruction for RTM. The minimum storage requirement for regular and staggered grid finite difference is determined for perfect reconstruction of the source wavefield. Particularly, we implement RTM using GPU programming, combining staggered finite difference scheme with convolutional perfectly matched layer (CPML) boundary condition.  We demonstrate the validity of the proposed approach and CUDA codes with numerical example and imaging of benchmark models.
+\end{abstract}
+
+
+\section{Introduction}
+\inputdir{.}
+
+One-way equation based imaging techniques are inadequate to obtain accurate images in complex media due to propagation direction changes in the background model \citep{biondi20063d}. These approaches are extremely limited when handling the problems of turning waves in the model containing sharp wave-speed contrasts and steeply dipping reflectors. As an advanced imaging technology without dip and extreme lateral velocity limitation, reverse time migration (RTM) was proposed early  \citep{baysal1983reverse,m1983migration}, but not practical in terms of stringent computation and memory requirement.
+However, it gained increasingly attention in recent years due to the tremendous advances in computer capability. Until recently, 3D prestack RTM is now feasible to obtain high fidelity images \citep{yoon20033d,guitton2006least}.
+
+Nowadays, graphics processing unit (GPU) is a booming technology, widely used to mitigate the computational drawbacks in seismic imaging and inversion, from one-way depth migration \citep{liu2012gpu,lin2012application} to two-way  RTM \citep{hussain2011implementation,micikevicius20093d,clapp2010selecting}, from 2D to 3D  \citep{micikevicius20093d,abdelkhalek2009fast,foltinek2009industrial,liu20133d,michea2010accelerating}, from acoustic media to elastic media \citep{weiss2013solving}, from isotropic media to anisotropy \citep{guo2013application,suh2011expanding,liu2009anisotropic}. The investigators have studied many approaches: the  Fourier integral method \citep{liu2012fourier},  spectral element method \citep{komatitsch2010running}, finite element method \citep{komatitsch2010high} as well as the rapid expansion method (REM) with pseudo-spectral approach \citep{kim2012acceleration}. A variety of applications were conducted, for instance, GPU-based RTM denoising \citep{ying2013denoise}, iterative velocity model building \citep{ji2012iterative}, multi-source RTM \citep{boonyasiriwat2010multisource}, as well as least-square RTM \citep{leader2012least}.
+
+
+The superior speedup performance of GPU-based imaging and inversion has been demonstrated by numerous studies. One key problem of GPU-based RTM is that the computation is much faster while the data exchange between host and device always takes longer time. Many researchers choose to reconstruct the source wavefield instead of storing the modeling time history on the disk, just saving the boundaries. Unlike most GPU-based imaging and inversion studies, this paper is devoted to the practical technical issues instead of speedup performance. Starting from the computational strategies by \cite{dussaud2008computational}, we determine the minimum storage requirement in backward wavefield reconstruction for regular and staggered grid finite difference. We implement RTM with staggered finite difference scheme combined with convolutional perfectly matched layer (CPML) boundary condition using GPU programming.  We demonstrate the validity of the proposed approach and CUDA codes with numerical test and imaging of benchmark models.
+
+
+\section{Overview of RTM and its computation}
+
+In the case of constant density, the acoustic wave equation is written as
+\begin{equation}\label{eq:scalar_wav}
+\frac{1}{v^2(\textbf{x})}\frac{\partial^2 p(\textbf{x},t;\textbf{x}_s)}{\partial t^2}=\nabla^2 p(\textbf{x},t;\textbf{x}_s)+f(t)\delta(\textbf{x}-\textbf{x}_s),
+\end{equation}
+where $p(\textbf{x},t;\textbf{x}_s)$ is the wavefield excited by the source at the position $\textbf{x}=\textbf{x}_s$,  $v(\textbf{x})$ stands for the velocity in the media, $\nabla^2=\nabla\cdot\nabla=\partial_{xx}+\partial_{zz}$, $f(t)$ denotes the source signature. For the convenience, we eliminate the source term hereafter and use the notation $\partial_u=\frac{\partial}{\partial u}$ and $\partial_{uu}=\frac{\partial}{\partial u^2}$, $u=x,z$. The forward marching step can be specified after discretization as
+\begin{equation}\label{eq:forward}
+p^{k+1}=2p^{k}-p^{k-1}+v^2\Delta t^2 \nabla^2 p^{k}.
+\end{equation}
+Based on the wave equation, the principle of RTM imaging can be interpreted as the cross-correlation of two wavefields at the same time level, one computed by forward time recursion, the other computed by backward time stepping \citep{symes2007reverse}.
+ Mathematically, the cross-correlation imaging condition can be expressed as
+\begin{equation}
+I(\textbf{x})=\sum_{s=1}^{ns}\int_{0}^{t_{\max}}\mathrm{d}t \sum_{g=1}^{ng} p_s(\textbf{x},t;\textbf{x}_s)p_g(\textbf{x},t;\textbf{x}_g),
+\end{equation}
+where $I(\textbf{x})$ is the migrated image at point ${\bf x}$; and $p_s(\cdot)$ and $p_g(\cdot)$ are the source wavefield and receiver (or geophone) wavefield. The normalized cross-correlation imaging condition is designed by incorporating illumination compensation:
+\begin{equation}
+I(\textbf{x})=\sum_{s=1}^{ns}\frac{\int_{0}^{t_{\max}}\mathrm{d}t\sum_{g=1}^{ng} p_s(\textbf{x},t;\textbf{x}_s)p_g(\textbf{x},t;\textbf{x}_g)}{\int_{0}^{t_{\max}}\mathrm{d}t p_s(\textbf{x},t;\textbf{x}_s)p_s(\textbf{x},t;\textbf{x}_s)}.
+\end{equation}
+
+There are some possible ways to do RTM computation. The simplest one may be just storing the forward modeled wavefields on the disk, and reading them for imaging condition in the backward propagation steps. This approach requires frequent disk I/O and has been replaced by wavefield reconstruction method. The so-called wavefield reconstruction method is a way to recover the wavefield via backward reconstructing or forward remodeling, using the saved wavefield snaps and boundaries. It is of special value for GPU computing because saving the data in device variables eliminates data transfer between CPU and GPU. By saving the last two wavefield snaps and the boundaries, one can reconstruct the wavefield of every time step, in time-reversal order. The checkpointing technique becomes very useful to further reduce the storage \citep{symes2007reverse,dussaud2008computational}. Of course, it is also possible to avert the issue of boundary saving by applying the random boundary condition, which may bring some noises in the migrated image \citep{clapp2009reverse,clapp2010selecting,liu2013wavefield,liu20133d}.
+
+
+\section{Effective boundary saving}
+
+Here we mainly focus on finding the part of boundaries which is really necessary to be saved (referred to as the effective boundary in this paper), even though there are many other practical implementation issues in GPU-based RTM \citep{liu2012issues}.  In what follows, we introduce the effective boundary saving for regular grid and staggered grid finite difference. All analysis will be based on 2D acoustic wave propagation in RTM. In other cases, the wave equation may change but the principle of effective boundary saving remains the same.
+
+\subsection{Which part of the wavefield should be saved?}
+
+To reconstruct the modeled source wavefield in backward steps rather than read the stored history from the disk, one can reuse the same template by exchanging the role of $p^{k+1}$ and $p^{k-1}$, that is,
+\begin{equation}\label{eq:forward}
+p^{k-1}=2p^{k}-p^{k+1}+v^2\Delta t^2 \nabla^2 p^{k}.
+\end{equation}
+We conduct the modeling (and the backward propagation in the same way due to template reuse):
+\begin{displaymath}
+\begin{split}
+ &for\;ix,iz... \quad p_0(:)=2p_1(:)-p_0(:)+v^2(:)\Delta t^2 \nabla^2 p_1(:)\\
+ &ptr=p_0;p_0=p_1;p_1=ptr;// \mathrm{exchange\; pointer}
+\end{split}
+\end{displaymath}
+where $(:)=[ix,iz]$, $p_0$ and $p_1$ are $p^{k+1}/p^{k-1}$ and $p^k$, respectively. When the modeling is finished, only the last two wave snaps ($p^{nt}$ and $p^{nt-1}$) as well as the saved boundaries are required to do the backward time recursion.
+
+
+As you see, RTM begs for an accurate reconstruction before applying the imaging condition using the backward propagated wavefield. The velocity model is typically extended with sponge absorbing boundary condition (ABC) \citep{cerjan1985nonreflecting} or PML and its variants \citep{komatitsch2007unsplit} to a larger size. In  Figure 1, the original model size $A_1A_2A_3A_4$ is extended to $C_1C_2C_3C_4$. In between is the artificial boundary ($C_1C_2C_3C_4\backslash A_1A_2A_3A_4$).
+Actually, the wavefield we intend to reconstruct is not the part in extended artificial boundary $C_1C_2C_3C_4\backslash A_1A_2A_3A_4$ but the part in the original model zone $A_1A_2A_3A_4$. We can reduce the boundary load further (from whole $C_1C_2C_3C_4\backslash A_1A_2A_3A_4$ to part of it $B_1B_2B_3B_4$ ) depending on the required grids in finite difference scheme, as long as we can maintain the correctness of wavefield in $A_1A_2A_3A_4$. We do not care about the correctness of the wavefield neither in $A_1A_2A_3A_4$ nor in the effective zone $B_1B_2B_3B_4$ (i.e. the wavefield in $C_1C_2C_3C_4\backslash B_1B_2B_3B_4$). Furthermore, we only need to compute the imaging condition in the zone $A_1A_2A_3A_4$, no concern with the  part in $C_1C_2C_3C_4\backslash A_1A_2A_3A_4$.
+
+\plot{fig1}{width=0.6\textwidth}{ Extend the model size with artificial boundary. $A_1A_2A_3A_4$ indicates the original model size ($nz\times nx$).  $C_1C_2C_3C_4$ is the extended model size $(nz+2nb)(nx+2nb)$. $B_1B_2B_3B_4\backslash A_1A_2A_3A_4$ is the effective boundary area.}
+
+\subsection{Effective boundary for regular grid finite difference}
+
+
+Assume $2N$-th order finite difference scheme is applied. The Laplacian operator is specified by
+\begin{equation}
+\begin{array}{rl}
+ \nabla^2 p^{k}&=\partial_{xx}p^{k}+\partial_{zz}p^{k}\\
+ &=\frac{1}{\Delta z^2}\sum_{i=-N}^Nc_ip^k[ix][iz+i]+\frac{1}{\Delta x^2}\sum_{i=-N}^Nc_i p^k[ix+i][iz]\\
+\end{array}
+\end{equation}
+where $c_i$ is given by Table 1, see a detailed derivation in \cite{fornberg1988generation}. The Laplacian operator has $x$ and $z$ with same finite difference structure. For $x$ dimension only, the second derivative of order $2N$ requires at least $N$ points in the boundary zone, as illustrated by Figure 2. In 2-D case, the required boundary zone has been plotted in Figure 3a. Note that four corners in $B_1B_2B_3B_4$ in Figure 1 are not needed. This is exactly the boundary saving scheme proposed by \cite{dussaud2008computational}.
+
+\begin{table*}
+  \centering
+  \caption{Finite difference coefficients for regular grid (Order-$2N$)}\label{table:1}
+  \begin{tabular}{c|c|c|c|c|c|c|c|c|c}
+     \hline
+     $i$  &-4 	& -3 	& -2 	& -1 	& 0 	& 1 	& 2 	& 3 	& 4\\
+     \hline
+     $N=1$	     & 	     & 	&  	& 1 	& -2 	& 1 	&  	&   	&  \\
+     $N=2$	     &  	    & 	&-1/12	&4/3	&-5/2	&4/3	&-1/12	&   	&  \\
+     $N=3$	     & 	     & 1/90	&-3/20	&3/2	&-49/18	&3/2	&-3/20	&1/90	&  \\
+     $N=4$	     &-1/560 &8/315	&-1/5	&8/5	&-205/72&8/5	&-1/5	&8/315	&-1/560 \\
+     \hline
+   \end{tabular}
+\end{table*}
+
+Keep in mind that we only need to guarantee the correctness of the wavefield in the original model zone $A_1A_2A_3A_4$. However, the saved wavefield in $A_1A_2A_3A_4\backslash B_1B_2B_3B_4$ is also correct. Is it possible to further shrink it to reduce number of points for saving? The answer is true. Our solution is: \emph{saving the inner $N$ layers on each side neighboring the boundary} $A_1A_2A_3A_4\backslash D_1D_2D_3D_4$, as shown in Figure 3b. We call it the effective boundary for regular finite difference scheme.
+
+After $nt$ steps of forward modeling, we begin our backward propagation with the last 2 wavefield snap $p^{nt}$ and $p^{nt-1}$ and saved effective boundaries in $A_1A_2A_3A_4\backslash D_1D_2D_3D_4$. At that moment, the wavefield is correct for every grid point. (Of course, the correctness of the wavefield in $A_1A_2A_3A_4$ is guaranteed.) At time $k$, we assume the wavefield in $A_1A_2A_3A_4$ is correct. One step of backward propagation means $A_1A_2A_3A_4$ is shrunk to $D_1D_2D_3D_4$. In other words, the wavefield in $D_1D_2D_3D_4$ is correctly reconstructed. Then we load the saved effective boundary of time $k$ to overwrite the area $A_1A_2A_3A_4\backslash D_1D_2D_3D_4$. Again, all points of the wavefield in $A_1A_2A_3A_4$ are correct. We repeat this overwriting and computing process from one time step to another ($k\rightarrow k-1$), in reverse time order. The wavefield in the boundary $C_1C_2C_3C_4\backslash A_1A_2A_3A_4$ may be incorrect because the points here are neither saved nor correctly reconstructed from the previous step.
+
+
+
+\plot{fig2}{width=0.8\textwidth}{1-D schematic plot of required points in regular grid for boundary saving. Computing the laplacian needs $N$ points in the extended boundary zone, the rest $N+1$ points in the inner model grid. $N$ points is required for boundary saving.}
+
+\plot{fig3}{width=\textwidth}{A 2-D sketch of required points for boundary saving for regular grid finite difference: (a) The scheme proposed by \cite{dussaud2008computational} (red zone). (b) Proposed effective boundary saving scheme (gray zone).}
+
+\subsection{Effective boundary for staggered grid finite difference}
+
+The limitation of boundary saving strategy proposed in \cite{dussaud2008computational} is that only regular grid finite difference scheme is considered in RTM. In the case of staggered grid, half grid points are employed to obtain higher accuracy for finite difference. Recursion from time $k$ to $k+1$ (or $k-1$) may not be realized with ease due to the Laplacian operator, which involves the second derivative. An effective approach is to split Eq. \eqref{eq:scalar_wav} into several first derivative equations or combinations of first derivative and second derivative equations. The first derivative is defined as
+\begin{equation}
+\partial_u f=\frac{1}{\Delta u}\left(
+\sum_{i=1}^{N} c_i(f[u+i\Delta u/2]-f[u-i\Delta u/2])\right), u=z,x
+\end{equation}
+where the finite difference coefficients are listed in Table 2.
+
+
+\begin{table*}
+  \centering
+  \caption{Finite difference coefficients for staggered grid (Order-$2N$)}\label{table:2}
+  \begin{tabular}{c|c|c|c|c}
+     \hline
+     $i$ 	& 1 		& 2 		& 3 		& 4\\
+     \hline
+     $N=1$	&1 		&  		&  		&   	\\
+     $N=2$ 	&1.125		&-0.0416667	&		&   	\\
+     $N=3$	&1.171875	&-0.0651041667	&0.0046875	&	\\
+     $N=4$	&1.1962890625	&-0.079752604167&0.0095703125	&-0.000697544642857\\
+     \hline
+   \end{tabular}
+\end{table*}
+
+The use of half grid points in staggered grid makes the effective boundary a little different from that in regular grid. To begin with, we define some intermediate auxiliary variables: $Ax:=\partial_x p$, $Az:=\partial_z p$, $Px:=\partial_x Ax$ and $Pz:=\partial_z Az$. Thus the acoustic wave equation reads
+\begin{equation}\label{}
+\left\{
+\begin{split}
+&\frac{\partial^2 p}{\partial t^2}=v^2\left(Px+Pz\right)\\
+&Px=\partial_x Ax,Pz=\partial_z Az\\
+&Ax=\partial_x p, Az=\partial_z p
+\end{split}
+\right.
+\end{equation}
+It implies that we have to conduct 2 finite difference steps (one for $Ax$ and $Az$ and the other for $Px$ and $Pz$ ) to compute the Laplacian in one step of time marching. Take 8-th order ($2N=8$) finite difference in $x$ dimension for example. As can be seen from Figure 4, computing $\partial_{xx}$ at $Px_0$ needs the correct values at $Ax_4$,$Ax_3$,$Ax_2$,$Ax_1$ in the boundary; computing $Ax_1$,$Ax_2$,$Ax_3$,$Ax_4$ needs the correct values at $Px_4$,$Px_5$,$Px_6$,$Px_7$ in the boundary. An intuitive approach is saving $N$ points of $Ax$ ($Ax_1,\ldots,Ax_4$) and $N$ points of $Px$ ($Px_4, \ldots, Px_7$). The saving procedure guarantees the correctness of these points in the wavefield. Another possible approach is just saving the $2N-1$ points of $Px$ ($Px_1,\ldots, Px_7$). In this way, the values of $Ax_1,\ldots,Ax_4$ can be correctly obtained from the calculation of the first derivative.
+The latter method is preferable because it is much easier for implementation while requiring less points. Speaking two dimensionally, some points in the four corners at in $B_1B_2B_3B_4$ of Figure 1 may be still necessary to store, as shown in Figure 5a. The reason is that you are working with Laplacian, not second derivative in one dimension. Again, we switch our boundary saving part from out of $A_1A_2A_3A_4$ to $A_1A_2A_3A_4\backslash D_1D_2D_3D_4$. Less grid points are required to guarantee correct reconstruction  while points in the corner are no longer needed. Therefore, \emph{the proposed effective boundary for staggered finite difference needs $2N-1$ points to be saved on each side}, see Figure 5b.
+
+
+\plot{fig4}{width=0.8\textwidth}{$2N$-th order staggered grid finite difference: correct backward propagation needs $2N-1$ points on one side. For $N=4$, computing $\partial_{xx}$ at $Px_0$ needs the correct values at $Ax_4$, $Ax_3$, $Ax_2$, $Ax_1$ in the boundary; computing $Ax_4$,$Ax_3$, $Ax_2$, $Ax_1$ needs the correct values at $Px_4$, $Px_5$, $Px_6$, $Px_7$ in the boundary. Thus, $2N-1=7$ points in boundary zone is required to guarantee the correctness of the inner wavefield.}
+
+\plot{fig5}{width=\textwidth}{A 2-D sketch of required points for boundary saving for staggered grid finite difference: (a) Saving the points outside the model  (red region). (b) Effective boundary, saving the points inside the model zone  (gray region).}
+
+\subsection{Storage analysis}
+
+For the convenience of complexity analysis, we define the size of the original model as $nz\times nx$. In each direction, we pad the model with the $nb$ points on both sides as the boundary. Thus, the extended model size becomes $(nz+2nb)(nx+2nb)$. Conventionally one has to save the whole wavefield within the model size on the disk. The required number of points is
+\begin{equation}
+ nz\cdot nx.
+\end{equation}
+According to \cite{dussaud2008computational}, for $2N$-th order finite difference in regular grid,  $N$ points on each side are added to guarantee the correctness of inner wavefield. The saving amount of every time step is
+\begin{equation}
+ 2N\cdot nz+2N\cdot nx=2N(nz+nx).
+\end{equation}
+In the proposed effective boundary saving strategy, the number becomes
+\begin{equation}
+ 2N\cdot nz+2N\cdot nx-4N^2=2N(nz+nx)-4N^2.
+\end{equation}
+
+
+In the case of staggered grid, there are $2N-1$ points on each side. Allowing for four corners, the number for the effective boundary saving is
+\begin{equation}
+2(2N-1)nz+2(2N-1)nx-4(2N-1)^2=2(2N-1)(nz+nx)-4(2N-1)^2
+\end{equation}
+Assume the forward modeling is performed $nt$ steps using the floating point format on the computer. The saving amount will be multiplied by $nt\cdot \mathrm{sizeof(float)}=4nt$. Table 3 lists this memory requirement for different boundary saving strategies.
+
+
+\begin{table*}
+  \centering
+  \caption{Storage requirement for different saving strategy}\label{table:3}
+  \begin{tabular}{l|l}
+     \hline
+     Boundary saving scheme	  			&  Saving amount (Unit: Bytes)\\
+     \hline
+     Conventional saving strategy			&  $4 nt\cdot nz\cdot nx$ \\
+     Dussaud's: regular grid				&  $4 nt\cdot2N(nz+nx) $ \\
+     Effective boundary: regular grid			&  $4 nt\cdot(2N(nz+nx)-4N^2) $	\\
+     Effective boundary: staggered grid			&  $4 nt\cdot(2(2N-1)(nz+nx)-4(2N-1)^2) $ \\
+     \hline
+   \end{tabular}
+\end{table*}
+
+In principle, the proposed effective boundary saving will reduce $4nt\cdot 4N^2$ bytes for regular grid finite difference, compared with the method of \cite{dussaud2008computational}. The storage requirement of staggered grid based effective boundary saving is about $(2N-1)/N$ times of that in the regular grid finite difference, by observing $2N\ll nb\ll nx,nz$. For the convenience of practical implementation, the four corners can be saved twice so that the saving burden of the effective boundary saving has no difference with the method of \cite{dussaud2008computational} in regular grid finite difference. Since the saving burden for staggered grid finite difference has not been touched in \cite{dussaud2008computational}, it is still of special value to minimize its storage requirement for GPU computing.
+
+\section{GPU implementation using CPML boundary condition}
+
+\subsection{CPML boundary condition}
+
+To combine the absorbing effects into the acoustic equation, CPML boundary condition is such a nice way that we merely need to combine two convolutional terms into the above equations:
+\begin{equation}\label{eq:cpml}
+\left\{
+\begin{split}
+\frac{\partial^2 p}{\partial t^2}&=v^2\left(Px+Pz\right)\\
+Px&=\partial_x Ax+\Psi_x\\
+Pz&=\partial_z Az+\Psi_z\\
+Ax&=\partial_x p+\Phi_x\\
+Az&=\partial_z p+\Phi_z
+\end{split}
+\right.
+\end{equation}
+where $\Psi_x$, $\Psi_z$ are the convolutional terms of $Ax$ and $Az$; $\Phi_x$, $\Phi_z$ are the convolutional terms of $Px$ and $Pz$. These convolutional terms can be computed via the following relation:
+\begin{equation}\label{eq:conv}
+\left\{
+\begin{split}
+\Psi_x^n=b_x \Psi_x^{n-1}+(b_x-1) \partial_x^{n+1/2}Ax\\
+\Psi_z^n=b_z \Psi_z^{n-1}+(b_z-1) \partial_z^{n+1/2}Az\\
+\Phi_x^n=b_x \Phi_x^{n-1}+(b_x-1) \partial_x^{n-1/2}p\\
+\Phi_z^n=b_z \Phi_z^{n-1}+(b_z-1) \partial_z^{n-1/2}p\\
+\end{split}
+\right.
+\end{equation}
+where $b_x=e^{-d(x)\Delta t}$ and $b_z=e^{-d(z)\Delta t}$. In the absorbing layers, the damping parameter $d(u)$ we used is \citep{collino2001application}:
+\begin{equation}
+ d(u)=d_0(\frac{u}{L})^2, d_0=-\frac{3v}{2L}\ln(R),
+\end{equation}
+where $ L$ indicates the PML thickness; $u$ represent the distance between current position (in PML) and PML inner boundary. $R$ is always chosen as $10^{-3}\sim 10^{-6}$. For more details about the derivation of CPML, the interested readers are referred to \cite{collino2001application} and \cite{komatitsch2007unsplit}. The implementation of CPML boundary condition is easy to carry out: in each iteration the wavefield extrapolation is performed according to the first equation in \eqref{eq:cpml}; it follows by adding  the convolutional terms in terms of \eqref{eq:conv}.
+
+\subsection{Memory manipulation}
+
+Consider the Marmousi model (size=751x2301) and the Sigsbee model (size=1201x3201).  Assume $nt=10000$ and the finite difference of order $2N=8$. Conventionally, one have to store 64.4 GB for Marmousi model and 143.2 GB for Sigsbee model on the disk of the computer. Using the method of \cite{dussaud2008computational} or regular grid based effective boundary saving, the storage requirement will be greatly reduced, about 0.9 GB and 1.3 GB for the two models. Staggered grid finite difference is preferable due to higher accuracy, however, the saving amount of effective boundary needs 1.6 GB and 2.3 GB for the two models, much larger than regular grid. Besides the additional variable allocation, the storage requirement may still be a bottleneck to save all boundaries on GPU to avert the CPU saving and data exchange for low-level hardware, even if we are using effective boundary saving.
+
+Fortunately, page-locked (also known as pinned) host memory provides us a practical solution to mitigate this conflict. Zero-copy system memory has identical coherence and consistency to global memory. Copies between page-locked host memory and device memory can be performed concurrently with kernel execution \citep{nvidia2011nvidia}. \footnote{Generally, a computer has same or larger amount of resource on host compared with GDDR memory on device.} Therefore, we store a certain percentage of effective boundary on the page-locked host memory, and the rest on device. A reminder is that overuse of the pinned memory may degrade the bandwidth performance.
+
+
+\subsection{Code organization}
+
+Allowing for the GPU block alignment, the thickness of CPML boundary is chosen to be 32. Most of the CUDA kernels are configured with a block size 16x16. Some special configurations are related to the initialization and calculation of CPML boundary area. The CPML variables are initialized along x and z axis with CUDA kernels \texttt{cuda\_init\_abcz($\ldots$)} and \texttt{cuda\_init\_abcx($\ldots$)}. When \texttt{device\_alloc($\ldots$)} is invoked to allocate memory, there is a variable \texttt{phost} to control the percentage of the effective boundary saved on host and device memory by calling the function \texttt{cudaHostAlloc($\ldots$)}. A pointer is referred to the pinned memory via \texttt{cudaHostGetDevicePointer($\ldots$)}. The wavelet is generated on device using \texttt{cuda\_ricker\_wavelet($\ldots$)} with a dominant frequency \texttt{fm} and delayed wavelength. Adding a shot can be done by a smooth bell transition \texttt{cuda\_add\_bellwlt($\ldots$)}. We implement RTM (of order \texttt{NJ=2, 4, 6, 8, 10}) with forward and backward propagation functions \texttt{step\_forward($\ldots$)} and \texttt{step\_backward($\ldots$)}, in which the shared memory is also used for faster computation. The cross-correlation imaging of each shot is done by \texttt{cuda\_cross\_correlate($\ldots$)}. The final image can be obtained by stacking the images of many shots using \texttt{cuda\_imaging($\ldots$)}. Most of the low-frequency noise can be removed by applying the muting function \texttt{cuda\_mute($\ldots$)}  and the Laplacian filtering \texttt{cuda\_laplace\_filter($\ldots$)}.
+
+
+
+\section{Numerical examples}
+
+\subsection{Exact reconstruction}
+
+To make sure that the proposed effective boundary saving strategy does not introduce any kind of error/artifacts for the source wavefield,  the first example is designed using a constant velocity model: velocity=2000 m/s, $nz=nx=320$, $\Delta z=\Delta x=5m$. The source position is set at the center of the model. The modeling process is performed $nt=1000$ time samples. We record the modeled wavefield snap at $k=420$ and $k=500$, as shown in the top panels of Figure 6. The backward propagation starts from $k=1000$ and ends up with $k=1$. In the backward steps, the reconstructed wavefield at $k=500$ and $k=420$ are also recorded, shown in the bottom panels of Figure 6. We also plot the wavefield in the boundary zone in both two panels. Note that the correctness of the wavefield in the original model zone is guaranteed while the wavefield in the boundary zone does not need to be correct.
+
+\plot{fig6}{width=\textwidth}{ The wavefield snaps with a constant velocity model: velocity=2000 m/s,  $nz=nx=320$, $\Delta z=\Delta x=5m$, source at the center. The forward modeling is conducted with $nt=1000$ time samples.  (a--b) Modeled wavefield snaps at $k=420$ and $k=500$. The backward propagation starts from $k=1000$ and ends at $k=1$. (c--d) Reconstructed wavefield snaps at $k=500$ and $k=420$. Note the correctness of the wavefield in the original model zone is guaranteed while the wavefield in the boundary zone may be incorrect (32 layers of the boundary on each side are also shown in the figure).}
+
+\subsection{Marmousi model}
+\inputdir{marmousi}
+
+The second example is GPU-based RTM for Marmousi model (Figure 7) using our effective boundary saving. The spatial sampling interval is $\Delta x=\Delta z=4m$. 51 shots are deployed. In each shot, 301 receivers are placed in the split shooting mode. The parameters we use are listed as follows: $nt=13000$, $\Delta t=0.3$ ms. Due to the limited resource on our computer, we store 65\% boundaries using page-locked memory. Figure 8 gives the resulting RTM image after Laplacian filtering. As shown in the figure, RTM with the effective boundary saving scheme produces excellent image: the normalized cross-correlation imaging condition greatly improves the deeper parts of the image due to the illumination compensation. The events in the central part of the model, the limits of the faults and the thin layers are much better defined.
+
+\plot{marmousi}{width=0.6\textwidth}{The Marmousi velocity model.}
+
+\multiplot{2}{mimag1,mimag2}{width=0.45\textwidth}{RTM result of Marmousi model using effective boundary saving scheme (staggered grid finite difference). (a) Result of cross-correlation imaging condition. (b) Result of normalized cross-correlation imaging condition.}
+
+\subsection{Sigsbee model}
+\inputdir{sigsbee}
+
+The last example is Sigsbee model shown in Figure 9. The spatial interval is  $\Delta x=\Delta z=25m$. 55 shots are evenly distributed on the surface of the model. We still perform $nt=13000$ time steps for each shot (301 receivers). Due to the larger model size, 75\% boundaries have to be stored with the aid of pinned memory. Our RTM result is shown in Figure 10. Again, the resulting image obtained by normalized cross-correlation imaging condition exhibits better resolution for the edges of the salt body and the diffraction points. Some events in the image using normalized cross-correlation imaging condition are more visible, while they have a much lower amplitude or are even completely lost in the image of cross-correlation imaging condition.
+
+
+\plot{sigsbee}{width=0.6\textwidth}{The Sigsbee velocity model.}
+
+\multiplot{2}{simag1,simag2}{width=0.8\textwidth}{RTM result of Sigsbee model using effective boundary saving scheme (staggered grid finite difference). (a) Result of cross-correlation imaging condition. (b) Result of normalized cross-correlation imaging condition.}
+
+\section{Conclusion and discussion}
+
+In this paper, we introduce the effective boundary saving strategy for GPU-based RTM imaging. Compared with the method of \cite{dussaud2008computational}, the saving amount of effective boundary with regular grid finite difference scheme is slightly reduced. The RTM storage of effective boundary saving for staggered finite difference is first explored, and then implemented with CPML boundary condition. We demonstrate the validity of effective boundary saving strategy by numerical test and imaging of benchmark models.
+
+The focus of this paper is RTM implementation using effective boundary saving in staggered grid instead of GPU acceleration.
+A limitation of this work is that the numerical examples are generated with NVS5400M GPU on a laptop (compute capability 2.1, GDDR3). It is easy to do performance analysis for different dataset size and higher stencil orders if the latest GPU card and CUDA driver are available. It is also possible to obtain improved speedup by incorporating MPI with GPU programming using advanced clusters with larger GDDR memory \citep{komatitsch2010high,suh2010cluster} or FPGA optimization \citep{fu2011eliminating,medeiros2011fpga}.  Unfortunately, higher stencil orders of staggered grid RTM using effective boundary implementation in 3D is still a problem. 3D RTM using the 2nd order regular grid finite difference with Clayton and Enquist boundary condition (only 1 layer on each side to save) needs tens of GBs \citep{liu2013wavefield}. It implies that 3D RTM with higher stencil orders will definitely exceed the memory bound of current and next generation GPUs. For GPU implementation of 3D RTM, the practical way is using the random boundary condition \citep{liu20133d} or saving on the disk. A deeper discussion of the practical issues for GPU implementation of RTM can be found in \cite{liu2012issues}.
+
+
+\section*{Acknowledgments}
+
+The work of the first author is supported by China Scholarship Council during his visit to The University of Texas at Austin. This work is sponsored by National Science Foundation of China (No. 41390454). We wish to thank Sergey Fomel and two anonymous reviewers for constructive suggestions, which lead to massive amount of revision and improvement in this paper. The code of even-order GPU-based prestack RTM (combined with CPML boundary condition) using effective boundary saving strategy is available alongside this paper. The RTM examples are reproducible with the help of Madagascar software package \citep{m8r}.
+
+
+\bibliographystyle{seg}  % style file is seg.bst
+\bibliography{bibliography}

@@ -1,0 +1,79 @@
+\appendix
+\section{Wavefield composed of N plane waves}
+Here, we extend prediction filter theory to N plane waves. Assume that the 
+data have N plane waves with different dipping angles, the dataset can then be 
+expressed by
+
+\begin{equation}
+	w(t,x) = \sum_{\rm i=1}^N a_{\rm i} \delta(t-t_{\rm i}-p_{\rm i}x)
+\end{equation}
+Fourier transform along the time axis will give us
+\begin{equation}
+	W(f,x) = \sum_{\rm i=1}^N a_{\rm i} e^{i 2\pi f (t_{\rm i}+p_{\rm i} x)} = \sum_{\rm i=1}^N E_{\rm i}
+\label{eqn:N1}
+\end{equation}
+where $E_{\rm i}=a_{\rm i} e^{i 2\pi f(t_{\rm i}+p_{\rm i}x)}$.
+\par
+Trace $(x-j\Delta x)$ is represented by
+\begin{equation}
+	W(f, x-j\Delta x)=\sum_{\rm i=1}^N P_{\rm i}^{\rm j}E_{\rm i}
+\end{equation}
+where propagator $P_{\rm i}=e^{i\frac{\pi}{2}p_{\rm i}v}$.
+Assuming trace $W(f, x-j\Delta x), j=1,2,...,N$ is known, trace $W(f,x)$ can 
+be predicted by a N points prediction filter
+\begin{equation}
+	W(f,x) = \sum_{\rm j=1}^N C_j W(f,x-j\Delta x)
+\label{eqn:N2}
+\end{equation}
+Inserting equation (\ref{eqn:N1}) into equation (\ref{eqn:N2})
+\begin{equation}
+	\sum_{\rm i=1}^N E_{\rm i} = \sum_{\rm j=1}^N C_j \sum_{\rm i=1}^N P^{-j}_i E_i = \sum_{\rm i=1}^N E_i \sum_{\rm j=1}^N P^{-j}_i C_j
+\end{equation}
+For each $E_{\rm i}, i = 1,2,...,N$
+\begin{equation}
+	1 = \sum_{\rm j=1}^N P^{-j}_i C_j
+\label{eqn:N3}
+\end{equation}
+Equation (\ref{eqn:N3}) can be expressed in matrix form
+\begin{equation}
+\left[\begin{array}{c}
+ 1 \\
+ 1 \\
+ . \\
+ 1 
+\end{array}  \right]
+=
+\left[\begin{array}{cccccc}
+ P_1^{-1} & P_1^{-2} & . & . & . & P_1^{\rm -N} \\
+ P_2^{-1} & p_2^{-2} & . & . & . & P_2^{\rm -N} \\
+    .     &    .     & . & . & . &    .    \\
+ P_{\rm N}^{-1} & P_{\rm N}^{-2} & . & . &. & P_{\rm N}^{\rm -N} 
+\end{array}  \right]
+\left[\begin{array}{c}
+ C_1 \\
+ C_2 \\
+ . \\
+ C_{\rm N} 
+\end{array}  \right]
+\label{eqn:N4}
+\end{equation}
+Equation (\ref{eqn:N4}) is a Van der Monde system. This system guarantees that 
+there is one solution. So every $C_{\rm i}$ is a function of $P_{\rm j}$. 
+This means that the prediction filter relies on frequency in the case of 
+frequency-independent grid; whereas in the case of frequency-dependent 
+grids, we can still get a prediction filter which is independent from 
+frequency.
+\subsection{Estimating the prediction filter coefficients}
+\par
+For sake of simplicity, we denote $W_{\rm j}=W(f,j\Delta x)$. $W_{\rm j}$ is 
+predictable from $W_{\rm j-1}, W_{\rm j-2},..., W_{\rm j-N}$. 
+\begin{equation}
+	W_{\rm j}=\sum_{\rm z=1}^{\rm N}C_{\rm z}W_{\rm j-z}
+\label{eqn:N5}
+\end{equation}
+Actually, equation (\ref{eqn:N5}) is a convolution operator. For each frequency
+{\tt f}, we have an equation like (\ref{eqn:N5}). 
+All frequencies have the same prediction filter $C_1, C_2,..., C_{\rm N}$. 
+Usually this is an over-determined system. We can use some optimization 
+method to solve it, e.g., conjugate gradient, LSQR, Lanzcos, etc. 
+

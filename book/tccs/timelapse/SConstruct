@@ -1,0 +1,7 @@
+from rsf.tex import *
+
+End(color='''
+    scan100 time2-over mdif-time2-over
+    scan-time2-over pick-time2-over
+    b2 t2
+    ''')

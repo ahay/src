@@ -1,0 +1,3 @@
+uses=['sfwindow', 'sfdd', 'sfgrey', 'sfadd', 'sfnmostretch', 'sfcat', 'sfwiggle']
+data=['data/toldi/dynamics.H']
+size=      68000

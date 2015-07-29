@@ -1,0 +1,59 @@
+from rsf.proj import *
+
+Fetch('cmp807_raw.HH','rad')
+Flow('cmp','cmp807_raw.HH',
+     'dd form=native | tpow tpow=2 | mutter half=n v0=1.3 tp=0.2')
+Plot('cmp','grey title="Input CMP gather" ')
+
+def iscan(miter,psun1,psun2):
+    return '''
+    cgscan miter=%d psun1=%d psun2=%d error=${TARGETS[1]}
+    niter=10 s02=0.25 v0=1.250 dv=0.025 nv=60 anti=1
+    ''' % (miter,psun1,psun2)
+
+scale = 7.988e-05 # 1/sqrt(cmp*cmp)
+
+for psun in (0,1):
+    scan = 'cgscan%d' % psun
+    err  = 'cgerr%d' % psun
+    Flow([scan,err],'cmp',iscan(2,psun,psun))
+    Plot(err,
+         '''
+         window | scale dscale=%g |
+         graph min2=0 max2=0.8 labelsz=10 titlesz=12 title="%s" dash=%d
+         ''' % (scale,('Unweighted versus Pseudounitary','')[psun],1-psun))
+    
+Flow('cdscan cderr','cmp',iscan(10,2,0))
+Plot('cdscan','grey title="L2 inverse" ')
+Plot('cderr',
+     '''
+     window | scale dscale=%g |
+     graph min2=0 max2=0.8 labelsz=10 titlesz=12
+     title="Gradients versus Directions" dash=1
+     ''' % scale)
+
+Plot('cgan1',None,
+     'box x0=3.013333 y0=6.550000 label="unweighted"    xt=1 yt=1')
+Plot('cgan2',None,
+     'box x0=5.598333 y0=3.62000 label="pseudounitary" xt=-1 yt=-1')
+Plot('cdan1',None,
+     'box x0=2.686667 y0=5.658333 label="gradients"  xt=1 yt=1')
+Plot('cdan2',None,
+     'box x0=5.258333 y0=3.525000 label="directions" xt=-1 yt=-1')
+
+Plot('cgiter','cgerr0 cgerr1 cgan1 cgan2','Overlay')
+Plot('cditer','cgerr1 cderr  cdan1 cdan2','Overlay')
+Result('diritr','cgiter cditer','SideBySideAniso')
+
+Result('dircvv','cmp cdscan','SideBySideAniso')
+
+Flow('cdcmp','cdscan',
+     'cgscan psun2=0 niter=0 adj=y s02=0.25')
+Plot('cdcmp','grey title="L2 inverse + modeling" ')
+
+Flow('cdres','cdcmp cmp','add scale=1,-1 ${SOURCES[1]}')
+Plot('cdres','grey title="L2 residual data" clip=187.628')
+
+Result('dirrst','cdcmp cdres','SideBySideAniso')
+
+End()

@@ -1,0 +1,948 @@
+\published{Geophysics, 75, no. 3, V25-V38, (2010)}
+\title{Seislet transform and seislet frame}
+\author{Sergey Fomel and Yang Liu}
+
+\ms{GEO-2009}
+
+\lefthead{Fomel and Liu}
+\righthead{Seislet transform and frame}
+
+\address{Bureau of Economic Geology \\
+John A. and Katherine G. Jackson School of Geosciences \\
+The University of Texas at Austin \\
+University Station, Box X \\
+Austin, TX 78713-8924}
+
+\maketitle
+
+\begin{abstract}
+  We introduce a digital wavelet-like transform, which is tailored
+  specifically for representing seismic data. The transform provides a
+  multiscale orthogonal basis with basis functions aligned along
+  seismic events in the input data. It is defined with the help of the
+  wavelet lifting scheme combined with local plane-wave
+  destruction. In the 1-D case, the seislet transform is designed to
+  follow locally sinusoidal components. In the 2-D case, it is
+  designed to follow local plane wave components with smoothly
+  variable slopes. If more than one component is present, the
+  transform turns into an overcomplete representation or a {tight}
+  frame.  In these terms, the classic digital wavelet transform is
+  simply a seislet transform for a zero frequency (in 1-D) or zero
+  slope (in 2-D).
+
+  The main objective of the new transform is an {effective} seismic
+  data compression for designing efficient data analysis
+  algorithms. Traditional signal processing tasks such as noise
+  {attenuation} and trace interpolation \old{are} \new{become} simply
+  defined in the seislet domain. When applied in the offset direction
+  on common midpoint or common image point gathers, the seislet
+  transform finds an additional application in optimal stacking of
+  seismic records.
+\end{abstract}
+
+\section{Introduction}
+
+Wavelet transforms have found many applications in science and engineering 
+\cite[]{mallat}, including geophysics \cite[]{SEG-1994-1465,dessing,wapenaar,hesam}. 
+The power of wavelet transforms, in comparison with the classic Fourier 
+transform, lies in their ability to represent non-stationary signals.  As a 
+result, wavelets can provide a compact basis for non-stationary 
+data decomposition. Having a compact basis is useful both for data compression 
+and for designing efficient numerical algorithms.
+
+A number of wavelet-like transforms that explore directional characteristics 
+of images have been proposed in the image analysis literature \cite[]{beyond}. Among 
+those transforms are bandelets \cite[]{bandelet}, % beamlets,
+contourlets \cite[]{contourlet}, curvelets \cite[]{curvelet}, directionlets 
+\cite[]{directionlet}, shearlets \cite[]{shearlet}, etc. Unlike isotropic 
+wavelets, di\-rec\-ti\-onal transforms attempt to design basis
+functions so that they appear elongated anisotropically along 2-D
+curves or 3-D surfaces, which might be characteristic for an
+image. Therefore, these transforms achieve better accuracy and better
+data compression in representing non-stationary images with curved
+edges.  Curvelets are particularly appropriate for seismic data
+because they provide {a} provably optimal decomposition of
+wave-propagation operators \cite[]{candes}.  Application of the
+curvelet transform to seismic imaging and seismic data analysis
+\old{is} \new{has been} an area of active research
+\cite[]{herrmann,douma,chauris,herrmann08}.
+
+Although {the} wavelet theory originated in seismic data analysis
+\cite[]{SEG-1981-S15.1}, none of the known wavelet-like transforms were 
+designed specifically for seismic data. Even though some of the
+transforms are applicable for representing seismic data, their
+original design was motivated by different kinds of data, such as
+piecewise-smooth images. In this paper, we investigate the possibility
+{of designing} a transform tailored specifically
+for seismic data. In analogy with the previous naming games, we call
+such a transform \emph{the seislet transform} \cite[]{seislet}.
+
+In seismic data analysis, it is common to represent signals as sums of
+sinusoids (in 1-D) or plane waves (in 2-D) with the help of the
+digital Fourier transform (DFT). \old{A class of} \new{Certain}
+methods for seismic data regularization, such as the anti-leakage
+Fourier transform \cite[]{antileak}, the Fourier reconstruction method
+\cite[]{frsi1,frsi2,frsi3}, {or POCS \cite[]{pocs}} rely on the ability to represent signals
+sparsely in the transform domain. The digital wavelet transform (DWT)
+is often preferred to the Fourier transform for characterizing digital
+images, because of its ability to localize events in both time and
+frequency domains \cite[]{ripples,mallat}.  However, DWT may not be
+optimal for describing data that consist of individual sinusoids or
+plane waves. It is for {those} kinds of data that the seislet
+transform attempts to achieve an optimally compact representation.
+
+The approach taken in this paper follows the general recipe for
+digital wavelet transform construction known as the \emph{lifting
+scheme} \cite[]{lifting}. The lifting scheme provides a convenient and
+efficient construction for digital wavelet transforms of different
+kinds. The key ingredients of this scheme are a prediction operator
+and an update operator defined at different digital scales. The goal
+of the prediction operator is to predict regular parts of the input
+data so that they could be subtracted from the analysis. The goal of
+the update operator is to carry essential parts of the input data to
+the next analysis scale. Conventional wavelet transforms use
+prediction and update operators designed for characterizing locally
+smooth images.  In this paper, we show how designing prediction and
+update tailored for seismic data can improve the effectiveness of the
+transform in seismic applications. In 1-D, our prediction and update
+operators focus on predicting sinusoidal signals with chosen
+frequencies.  In 2-D and 3-D, we use predictions along locally
+dominant event slopes found by the method of plane-wave destruction
+\cite[]{pvi,GEO67-06-19461960}. \new{One can extend the idea of the seislet transform 
+further by changing the definition of prediction and update operators
+in the lifting scheme \cite[]{seg2009}.}
+
+The seislet transform decomposes a seismic image into an orthogonal
+basis which is analogous to the wavelet basis but aligned along
+dominant seismic events. In 1-D, the classic wavelet transform is
+equivalent to the seislet transform with a zero frequency. In 2-D,
+{the} wavelet transform in the horizontal direction is equivalent to the
+seislet transform with a zero slope. When more than one frequency or
+more than one slope field are employed for analysis, the seislet
+transform turns into an overcomplete representation or a {tight}
+frame.
+
+The paper is organized as follows. We start by reviewing the digital
+wavelet transform and the lifting scheme. Next, we modify the lifting
+scheme to define 1-D and 2-D seislet
+transforms. Finally, we generalize the transform construction to a
+frame. We illustrate applications of both the seislet transform and
+the seislet frame with synthetic and field data examples.
+
+%Other geophysical predictions may
+%lead to other kinds of wavelet-like transforms. 
+
+%I show that
+%traditional signal processing operations such as noise removal and
+%trace interpolation become simply defined in the seislet domain.  The
+%seislet transform introduced in this paper is particularly meanigful
+%when applied in the offset direction on common midpoint or common
+%image point gathers. In this case, the first wavelet coefficient is
+%simply the seismic stack but computed in the most effective manner by
+%recursive partial stacking of neighboring traces. The seislet stack
+%avoids usual problems with wavelet stretching and nonhyperbolic
+%moveouts. All other gather attributes including multiple reflections
+%and and amplitude variation with offset appear in the higher order
+%seislet coefficients. I use a North Sea field data example to
+%demonstrate this effect.
+
+\section{Lifting scheme for wavelet transforms}
+
+
+In order to define the new transform, we follow the general recipe for
+digital wavelet transforms provided by \cite{athome}. In the most
+general terms, the lifting scheme \cite[]{lifting} \old{is} \new{can
+be} defined as follows:
+\begin{enumerate}
+\item Organize the input data as a sequence of records.
+\item Break the data into even and odd components $\mathbf{e}$ and
+  $\mathbf{o}$.
+\item Find a residual difference $\mathbf{r}$ between the odd
+  component and its prediction from the even component:
+  \begin{equation}
+    \label{eq:c}
+    \mathbf{r}  = \mathbf{o} - \mathbf{P[e]}\;,
+  \end{equation}
+  where $\mathbf{P}$ is a \emph{prediction} operator.
+\item Find a coarse approximation $\mathbf{c}$ of the data by updating 
+      the even component
+\begin{equation}
+    \label{eq:r}
+    \mathbf{c}  = \mathbf{e} + \mathbf{U[r]}\;,
+  \end{equation}
+  where $\mathbf{U}$ is an \emph{update} operator.
+\item The coarse approximation $\mathbf{c}$ becomes the new data, 
+and the sequence of steps is repeated at the next scale	level.
+\end{enumerate}
+A digital wavelet transform consists of data approximation at the
+coarsest level and residuals from all the levels. The key in designing
+an effective transform is making sure that the prediction
+operator~$\mathbf{P}$ leaves small residuals while the update
+operator~$\mathbf{U}$ preserves essential features of the original
+data while promoting them to the next scale level.  For example, one
+can obtain the classic Haar wavelet by defining the prediction
+operator as a simple shift from the nearest sample:
+\begin{equation}
+  \label{eq:p1}
+  \mathbf{P[e]}_k = \mathbf{e}_{k}\;,
+\end{equation}
+with the update operator designed to preserve the DC (zero frequency) component
+of the signal. Alternatively, the $(2,2)$ Cohen-Daubechies-Feauveau
+biorthogonal wavelets \cite[]{Cohen92} are constructed by making
+the prediction operator a linear interpolation between two neighboring
+samples,
+\begin{equation}
+  \label{eq:p}
+  \mathbf{P[e]}_k = \left(\mathbf{e}_{k-1} + \mathbf{e}_{k}\right)/2\;,
+\end{equation}
+and by constructing the update operator to preserve the running
+average of the signal \cite[]{athome}, as follows:
+\begin{equation}
+  \label{eq:u}
+  \mathbf{U[r]}_k = \left(\mathbf{r}_{k-1} + \mathbf{r}_{k}\right)/4\;.
+\end{equation}
+
+The digital wavelet transform is an efficient operation. Assuming that
+the prediction and update operation take a constant cost per record,
+the number of operations at the finest scale is proportional to the
+total number of records $N$, the next scale computation takes
+$O(N/2)$, etc. so that the total number of operations is proportional
+to $N+N/2+N/4+\ldots + 2 =2\,(N-1)$, which is smaller than the
+$O(N\,\log{N})$ cost of the Fast Fourier Transform.
+
+The digital wavelet transform is also easily invertible. Reversing the lifting 
+scheme operations provides the inverse transform algorithm, as follows:
+\begin{enumerate}
+\item Start with the coarsest scale data representation $\mathbf{c}$
+      and the coarsest scale residual $\mathbf{r}$.
+\item Reconstruct the even component $\mathbf{e}$ by reversing the 
+      operation in equation~\ref{eq:r}, as follows:
+\begin{equation}
+    \label{eq:e}
+    \mathbf{e} = \mathbf{c} - \mathbf{U[r]}\;,
+  \end{equation}
+\item Reconstruct the odd component 
+  $\mathbf{o}$ by reversing the operation in equation~\ref{eq:c}, as follows:
+  \begin{equation}
+    \label{eq:o}
+    \mathbf{o} = \mathbf{r}  + \mathbf{P[e]}\;,
+  \end{equation} 
+\item Combine the odd and even components to generate the data at 
+      the previous scale level and repeat the sequence of steps.
+\end{enumerate}
+
+Figure~\ref{fig:lena,linear2} shows a classic benchmark image from the
+image analysis literature and its digital wavelet transform using 2-D
+biorthogonal wavelets. Thanks to the general smoothness of the
+``Lena'' image, the residual differences from equation~\ref{eq:r}
+(stored as wavelet coefficients at different scales) have a small
+dynamic range, which enables an effective compression of the
+\old{input} image \new{in the transform domain}. Wavelet compression
+algorithms are widely used in practice for compression of natural
+images. As for compression of seismic data, the classic DWT may not be
+optimal, because it does not take into account the specific nature of
+seismic data patterns. In the next section, we turn the wavelet
+transform into the seislet transform, which is tailored for
+representing seismic data.
+
+\inputdir{lena}
+
+\multiplot{2}{lena,linear2}{width=0.5\columnwidth}{Benchmark ``Lena'' 
+image from image analysis literature (a) and its 2-D digital wavelet 
+transform using bi-orthogonal wavelets (b).}
+
+
+%Figure~\ref{fig:wrec1,wrec5} shows
+%reconstructions of the original image using only the top 1\% and 5\%
+%of significant wavelet coefficients and soft thresholding
+%\cite[]{donoho}. The most essential features of the original image are
+%preserved in the reconstruction.
+%
+%\multiplot{2}{wrec1,wrec5}{width=0.6\columnwidth}{Inverse digital
+%  wavelet transform using only 1\% (a) and 5\% (b) of significant
+%  wavelet coefficients from Figure~\ref{fig:linear2}.}
+%
+%By spanning different scales, the basis functions generated by the
+%wavelet transform provide signal localization in both initial and
+%Fourier transform domains. The power of multiscale characterization
+%combined with the divide-and-conquer algorithmic strategy make the
+%digital wavelet transform an effective image analysis tool.
+%
+%Figure~\ref{fig:ilinear,flinear} shows
+%individual wavelets and their Fourier spectra. Spanning a set of
+%scales in the initial domain allows the wavelet transform to also span
+%a set of spectral scales.
+
+%\nopagebreak
+%
+%\multiplot{2}{ilinear,flinear}{width=0.6\columnwidth}{Wavelet basis
+%  functions for linear bi-orthogonal wavelets (a) and their Fourier
+%  spectra (b).}
+%
+%\nopagebreak
+
+\section{From wavelets to seislets}
+
+We adopt the general idea of the lifting scheme to transforming
+seismic data. The key idea of the seislet transform \cite[]{seislet}
+is recognizing that
+\begin{itemize}
+\item seismic data can be organized as collections of traces or
+  records;
+\item prediction of one seismic trace or record from the other and
+  update of records on the next scale should follow features
+  characteristic for seismic data.
+\end{itemize}
+
+\subsection{1-D seislet transform}
+
+The prediction and update operators employed in the lifting scheme can
+be understood as digital filters. In the $Z$-transform notation, the
+Haar prediction filter from equation~\ref{eq:p1} is
+\begin{equation}
+  \label{eq:f1}
+  P(Z) = Z
+\end{equation}
+(shifting each sample by one), and the linear interpolation filter
+from equation~\ref{eq:p} is
+\begin{equation}
+  \label{eq:f}
+  P(Z) = 1/2\,(1/Z+Z)\;.
+\end{equation}
+These predictions are appropriate for smooth signals but may not be
+optimal for a sinusoidal signal. \old{On the other hand} \new{In
+comparison}, the prediction
+\begin{equation}
+  \label{eq:s1}
+  P(Z) = Z/Z_0\;,
+\end{equation}
+where $Z_0 = e^{i\,\omega_0 \Delta t}$, perfectly characterizes a
+sinusoid with $\omega_0$ circular frequency sampled on a $\Delta t$
+grid. In other words, if a constant signal ($\omega_0=0$) is perfectly
+predicted by shifting each trace to its neighbor, a sinusoidal signal
+($\omega_0\ne0$) requires the shift to be modulated by an appropriate
+frequency. 
+%$1-P(Z)$ is the corresponding prediction-error
+%filter. 
+Likewise, the linear interpolation in equation~\ref{eq:f} needs to be
+replaced by a filter tuned to a particular frequency in order to
+predict a sinusoidal signal with that frequency perfectly:
+\begin{equation}
+  \label{eq:s}
+  P(Z) = 1/2\,(Z_0/Z+Z/Z_0)\;.
+\end{equation}
+The analysis easily extends to higher-order filters.
+
+\subsection{2-D seislet transform}
+
+If we view seismic data as collections of traces, we can predict one
+trace from the other by following local {slopes of} seismic
+events. Such a prediction is a key operation in the method of
+plane-wave destruction
+\cite[]{GEO67-06-19461960}. In fact, it is the minimization of
+prediction error that provides a criterion for estimating local slopes
+\cite[]{pvi}. {For completeness, we include a review of plane-wave
+destruction in the appendix.}
+
+The prediction and update operators for a simple seislet transform are
+defined by modifying the biorthogonal wavelet construction in
+equations~\ref{eq:p}-\ref{eq:u} as follows:
+\begin{eqnarray}
+  \label{eq:sp}
+  \mathbf{P[e]}_k & = & \left(\mathbf{S}_k^{(+)}[\mathbf{e}_{k-1}] + 
+  \mathbf{S}_k^{(-)}[\mathbf{e}_{k}]\right)/2 \\
+  \label{eq:su}
+  \mathbf{U[r]}_k & = & \left(\mathbf{S}_k^{(+)}[\mathbf{r}_{k-1}] + 
+    \mathbf{S}_k^{(-)}[\mathbf{r}_{k}]\right)/4\;,
+\end{eqnarray}
+where $\mathbf{S}_k^{(+)}$ and $\mathbf{S}_k^{(-)}$ are operators that
+predict a trace from its left and right neighbors correspondingly by
+shifting seismic events according to their local slopes. The
+predictions need to operate at different scales, which, in this case,
+mean different separation distances between the traces.
+Equations~\ref{eq:sp}-\ref{eq:su}, in combination with the forward and
+inverse lifting schemes~\ref{eq:c}-\ref{eq:r}
+and~\ref{eq:e}-\ref{eq:o}, provide a complete definition of the 2-D
+seislet transform.
+
+\inputdir{seis}
+
+\multiplot{2}{sigmoid,sigmoiddip}{width=0.6\columnwidth}{Synthetic
+  seismic image (a) and local slopes estimated by plane-wave
+  destruction (b).}
+\multiplot{2}{sigmoidwvlt,sigmoidseis}{width=0.6\columnwidth}{Wavelet
+  transform (a) and seislet transform (b) of the synthetic image from
+  Figure~\ref{fig:sigmoid,sigmoiddip}.}
+\plot{sigmoidcoef}{width=\textwidth}{Transform coefficients sorted
+  from large to small, normalized, and plotted on a decibel
+  scale. Solid line: seislet transform. Dashed line: wavelet
+  transform.}
+\multiplot{2}{sigmoidimpw,sigmoidimps}{width=0.6\columnwidth}{Randomly
+  selected representative basis functions for wavelet transform (a)
+  and seislet transform (b).}
+\multiplot{2}{sigmoidwrec1,sigmoidsrec1}{width=0.6\columnwidth}{Synthetic image
+  reconstruction using only 1\% of significant coefficients (a) by
+  inverse wavelet transform (b) by inverse seislet transform. Compare with 
+  Figure~\ref{fig:sigmoid}.}
+%\multiplot{2}{sigmoidwrec3,sigmoidsrec3}{width=0.6\columnwidth}{Image
+%  reconstruction using only 3\% of significant coefficients (a) by
+%  inverse wavelet transform (b) by inverse seislet transform.}
+
+Figure~\ref{fig:sigmoid} shows a synthetic seismic image from
+\cite{bei}. After estimating local slopes from the image by plane-wave
+destruction (Figure~\ref{fig:sigmoiddip}), we applied the 2-D seislet
+transform described above. The transform is shown in
+Figure~\ref{fig:sigmoidseis} and should be compared with the
+corresponding wavelet transform in Figure~\ref{fig:sigmoidwvlt}.
+Apart from the fault and unconformity regions, where the image is not
+predictable by continuous local slopes, the 2-D seislet transform
+coefficients are small, which enables an effective compression. In
+contrast, the wavelet transform has small residual coefficients at
+fine scales but develops large coefficients at coarser scales.
+Figure~\ref{fig:sigmoidcoef} shows a comparison between the decay of
+coefficients (sorted from large to small) between the wavelet
+transform and the seislet transform. A significantly faster decay of
+the seislet coefficients is evident.
+
+Effectively, the wavelet transform in this case is equivalent to the
+2-D seislet transform with the erroneous zero slope.
+Figure~\ref{fig:sigmoidimpw,sigmoidimps} shows example basis functions
+for the wavelet and 2-D seislet transform used in this example. If
+using only a small number of the most significant coefficients, the
+wavelet transform fails to reconstruct the most important features of
+the original image, while the 2-D seislet transform achieves an
+excellent reconstruction (Figure~\ref{fig:sigmoidwrec1,sigmoidsrec1}).
+We use the method of soft thresholding \cite[]{donoho} for selecting
+the most significant coefficients.
+
+%\section{Example applications of 2-D seislet transform}
+\subsection{Example applications of 2-D seislet transform}
+
+In this section, we discuss some example applications of the 2-D seislet 
+transform.
+
+\subsubsection{Denoising and trace interpolation}
+
+\inputdir{gath}
+
+Figure~\ref{fig:gath} shows a common-midpoint gather from a North Sea
+dataset. Plane-wave destruction estimates local slopes shown in
+Figure~\ref{fig:gathdip} and enables the 2-D seislet transform shown
+in Figure~\ref{fig:gathseis}. Small dynamic range of seislet
+coefficients implies a good compression
+ratio. Figure~\ref{fig:gathsrec5} shows data reconstruction using only
+5\% of the significant seislet coefficients.
+
+If we choose the significant coefficients at the coarse scale and
+zero out difference coefficients at the finer scales, the inverse
+transform will effectively remove incoherent noise from the gather
+(Figure~\ref{fig:gathseis,gathsrec5}). Thus, denoising is a naturally
+defined operation in the 2-D seislet domain
+(Figure~\ref{fig:sign,gathslet16}).
+
+If we extend the seislet \new {transform} domain and interpolate the
+smooth local slope to a finer grid, the inverse seislet transform will
+accomplish trace interpolation of the input gather
+(Figure~\ref{fig:seis4,gath4}). {We extend not simply with zeros but
+with small random noise to account for the fact that realistic noise
+is unpredictable and therefore exists on different scale levels.}  In
+this example, the number of traces is increased by four. Thus, trace
+interpolation also turns out to be a natural operation when viewed
+from the 2-D seislet domain.
+
+\multiplot{2}{gath,gathdip}{width=0.6\columnwidth}{Common-midpoint
+  gather (a) and local slopes estimated by plane-wave destruction
+  (b).}
+\multiplot{2}{gathseis,gathsrec5}{width=0.6\columnwidth}{Seislet
+  transform of the input gather (a) and (a) and data reconstruction
+  using only 5\% of significant seislet coefficients (b).}
+\multiplot{2}{sign,gathslet16}{width=0.6\columnwidth}{Zeroing seislet
+  difference coefficients at fine scales (a) enables effective
+  denoising of the reconstructed data (b).}
+\multiplot{2}{seis4,gath4}{width=0.6\columnwidth}{Extending seislet
+  transform with random noise (a) enables trace interpolation in the
+  reconstructed data. The interpolated section (b) has 4 times more
+  traces than the original shown in Figure~\ref{fig:gath}.}
+
+\subsubsection{Seislet stack}
+
+The seislet transform acquires a special meaning when applied in the
+offset direction on common midpoint or common image point
+gathers. According to the lifting construction, the zero-order seislet
+coefficient is nothing more than seismic stack computed in a recursive
+manner by successive partial stacking of neighboring traces. As a
+consequence, seislet stack avoids the problem of ``NMO stretch''
+associated with usual stacking \cite[]{nmo} as well as the problem of
+nonhyperbolic moveouts \cite{grechka}. All other gather attributes
+including multiple reflections and amplitude variation with offset
+appear in the higher order seislet coefficients.
+Figure~\ref{fig:sstack} shows a comparison between the conventional
+normal moveout stack and the seislet stack. The higher resolution of
+the seislet stack is clearly visible. Figure~\ref{fig:nmo,snmo}
+compares the common-midpoint gather after conventional normal moveout
+correction and an effective seislet moveout computed by separating
+contributions from individual traces to the seislet stack.
+  
+\inputdir{gath} 
+\plot{sstack}{width=\columnwidth}{Left: conventional normal-moveout
+ stack. Right: seislet stack.}
+\multiplot{2}{nmo,snmo}{width=0.6\columnwidth}{Input gather after 
+ normal moveout correction (a) and effective seislet moveout (b).}
+
+\section{From transform to frame}
+
+The 1-D and 2-D transforms, defined in the previous sections, are appropriate 
+for analyzing signals, which have a single dominant sinusoid or plane-wave 
+component. In practice, it is common to analyze signals composed of multiple 
+sinusoids (in 1-D) or plane waves (in 2-D). If a range of frequencies or 
+plane-wave slopes is chosen, and the appropriate transform is constructed for 
+each of them, all the transform domains taken together will constitute an 
+overcomplete representation or a frame \cite[]{mallat}.
+
+{Mathematically, if $\mathbf{F}_n$ is the orthonormal seislet transform for $n$-th frequency or plane wave, 
+then, for any data vector $\mathbf{d}$,
+\begin{equation}
+\label{eq:frame}
+\sum\limits_{n=1}^N \|\mathbf{F}_n\,\mathbf{d}\|^2 = \sum\limits_{n=1}^N \mathbf{d}^T\,\mathbf{F}_n^T\,\mathbf{F}_n\,\mathbf{d} =
+\sum\limits_{n=1}^N \|\mathbf{d}\|^2 = N\,\|\mathbf{d}\|^2\;,
+\end{equation}
+which means that all transforms taken together constitute a \emph{tight frame} with constant $N$.}
+
+For example, in the 1-D case, one can find appropriate frequencies by
+autoregressive spectral analysis
+\cite[]{Burg75,marple}. We define the algorithm for the \emph{1-D
+  seislet frame} as follows:
+\begin{enumerate}
+\item Select a range of coefficients $Z_1, Z_2, \ldots, Z_k$. When
+  using autoregressive spectral analysis, these coefficients are
+  simply the roots of the prediction-error filter. Alternatively, they
+  can be defined from an appropriate range of frequencies 
+  $\omega_1, \omega_2, \ldots, \omega_k$.
+\item For each of the coefficients, perform the 1-D
+  seislet transform. 
+\end{enumerate}
+
+Because of its over-completeness, a frame representation for a given
+signal is not unique. In order to assure that different frequency
+components do not leak into other parts of the frame, it is
+advantageous to employ sparseness-promoting inversion. We adopt a
+nonlinear shaping regularization scheme \cite[]{inv}, analogous to the
+sparse inversion method of \cite{daube}, and define sparse
+decomposition as  an iterative process 
+\begin{eqnarray}
+  \label{eq:shape4}
+  \widehat{\mathbf{f}}_{k+1} & = & \mathbf{S}[\mathbf{F}\,\mathbf{d}+(\mathbf{I}-\mathbf{F}\,
+   \mathbf{F}')\,\widehat{\mathbf{f}}_{k}]\;, \\
+   \mathbf{f}_{k+1} & = & \mathbf{f}_k + \mathbf{F}\,\mathbf{d}- \mathbf{F}\,\mathbf{F}' \widehat{\mathbf{f}}_{k+1}\;,
+   \label{eq:bregman} 
+\end{eqnarray}
+where $\mathbf{f}_k$ is the seislet frame at $k$-th iteration,
+\new{$\widehat{\mathbf{f}}_k$ is an auxiliary quantity,}
+$\mathbf{d}$ is input data, 
+$\mathbf{I}$ is the identity operator,
+$\mathbf{F}$ and $\mathbf{F}'$ are frame construction and deconstruction 
+operators 
+\begin{eqnarray*}
+  \mathbf{F} & \equiv & 
+\left[\begin{array}{cccc}\mathbf{F}_1 &\mathbf{F}_2 & 
+    \cdots &\mathbf{F}_k\end{array}\right]^T\;, \\
+\mathbf{F}' & \equiv &  
+\left[\begin{array}{cccc}\mathbf{F}_1^{-1} &\mathbf{F}_2^{-1} & 
+    \cdots &\mathbf{F}_k^{-1}\end{array}\right]\;,
+\end{eqnarray*}
+where $\mathbf{F}_j$ is the seislet transform for an individual frequency, and 
+$\mathbf{S}$ is a nonlinear shaping operator, such as soft thresholding 
+\cite[]{donoho}. The iteration~\ref{eq:shape4}-\ref{eq:bregman} starts 
+with $\mathbf{f}_0=\mathbf{0}$ and \old{$\mathbf{d}_0=\mathbf{d}$}
+\new{$\widehat{\mathbf{f}}_0=\mathbf{F}\,\mathbf{d}$} and is related
+to the linearized Bregman iteration \cite[]{Osher05,Yin08}.  We find
+that a small number of iterations is usually sufficient for
+convergence and achieving both model sparseness and data recovery.
+
+\subsection{1-D data analysis with 1-D seislet frame}
+
+We use a simple synthetic test to verify the compression
+ effectiveness of 1-D seislet frame. A test signal mixing two
+ sinusoids with different frequencies and some random noise is
+ displayed in Figure~\ref{fig:tatrace}. We use a prediction-error
+ filter to detect the signal frequencies and to design the
+ corresponding seislet frame.  
+%The lifting scheme with the CDF 9/7
+% biorthogonal wavelets is used as the basis. 
+The result is shown in
+ Figure~\ref{fig:taft}. The 1-D seislet frame algorithm with shaping
+ regularization compresses the sinusoidal signal into two nearly
+ perfect impulses with some dispersive random noise. For comparison,
+ we also apply DFT and DWT to transform the signal
+ (Figures~\ref{fig:fourier} and ~\ref{fig:tdwt}). In the Fourier
+ transform domain, the signal appears as two impulses corresponding to
+ the chosen frequency components. The resolution is not perfect
+ because of spectral leakage caused by non-periodic input data.
+%of the random noise and because the frequencies do not fall
+% exactly on the Fourier grid. 
+In the wavelet domain, the transform coefficients are not compressed
+ well. For further comparison, we plot the coefficients in the three
+ different transform domains, sorted from large to small, on a decibel
+ scale (Figure~\ref{fig:tlog}). The significantly faster rate of
+ coefficient decay shows the superiority of {the} 1-D seislet
+ frame in compressing sinusoidal signals.
+
+\inputdir{sin2}
+\multiplot{4}{tatrace,taft,tdwt,fourier}{width=0.45\columnwidth}{Mixed 
+  sinusoidal signal (a), 1-D seislet frame (b), 1-D wavelet transform (c), 
+  and 1-D Fourier transform (d).}  
+\plot{tlog}{width=\columnwidth}{Compression comparison between digital Fourier 
+  transform, digital wavelet transform, and 1-D seislet frame. Transform 
+  coefficients are sorted from large to small, normalized, and plotted on a 
+  decibel scale.}
+
+
+ \subsection{2-D data analysis with 1-D seislet frame} 
+ 
+ To analyze 2-D data, one can apply 1-D seislet frame in the distance
+ direction after the Fourier transform in time (the $F$-$X$
+ domain). In this case, different frame frequencies correspond to
+ different plane-wave slopes \cite[]{Canales84}. We use a simple
+ plane-wave synthetic model to verify this observation
+ (Figure~\ref{fig:plane}). The $F$-$X$ plane is shown in
+ Figure~\ref{fig:fft}. We find a prediction-error-filter (PEF) in each
+ frequency slice and detect its roots to select appropriate spatial
+ frequencies. We use Burg's algorithm for PEF estimation
+ \cite[]{Burg75,Claerbout76} and an eigenvalue-based algorithm for
+ root finding \cite[]{roots}. The seislet coefficients and the
+ corresponding recovered plane-wave components are shown in
+ Figure~\ref{fig:plane1,plane2,plane3}. Similarly to the 1-D example,
+ information from different plane-waves gets \new{strongly} compressed
+ in the transform domain.
+\inputdir{plane}
+\multiplot{2}{plane,fft}{width=0.6\columnwidth}{Synthetic plane-wave data
+  (a) and corresponding Fourier transform along the time direction (b).}
+\multiplot{3}{plane1,plane2,plane3}{width=0.7\columnwidth}{Seislet
+  coefficients (left) and corresponding recovered plane-wave
+  components (right) for three different parts of the 1-D
+  seislet frame in the $F$-$X$ domain.}
+
+\subsection{2-D data analysis with 2-D seislet frame} 
+
+\begin{comment}
+After adding some random noise into Figure~\ref{fig:plane}, we tested
+2-D seislet frame for seismic data analysis 
+(Figure~\ref{fig:nplane}). A direct application is 
+$\tau$-$p$ transform. Figure~\ref{fig:cdipimps} shows 
+example basis functions for 2-D seislet frame, the tendency of frame basis 
+follows different plane-wave directions. A seismic slope field is shown in 
+Figure~\ref{fig:cdips}. We use the slope field to scan
+the data, 2-D seislet transform can compress seismic events corresponding to 
+each slope. Sharpening operator enforces large seislet 
+coefficients into a small dynamic range  
+(Figure~\ref{fig:cdiplet}) and Bregman iteration 
+guarantee 2-D inverse seislet frame return data back to original domain. 
+Thus, 2-D seislet frame can be used as $\tau$-$p$ 
+transform operator.
+
+%\inputdir{diplet}
+%\multiplot{4}{nplane,cdipimps,cdips,cdiplet}{width=0.45\textwidth}{Plane-wave
+%  model (a), randomly selected representative basis functions for 2-D seislet
+%  frame (b), dip field (c), and frame coefficients (d).}
+
+
+\section{Example applications of seislet frame}
+
+%\begin{comment}
+\subsection{Spectral decomposition with 1-D seislet frame}
+
+%\inputdir{boon}
+%\multiplot{2}{boon,bspec}{width=0.45\columnwidth}{A section of Boonsville 
+%  3-D dataset used for testing spectral decomposition (a) and average 
+%  spectrum of data (b).}
+%\multiplot{3}{boon3,flet3,spec3}{width=0.45\textwidth}{First
+%  spectral component from the seislet frame.  Reconstructed data (a),
+%  seislet coefficients (b), and average spectrum (c).}
+%\multiplot{3}{boon2,flet2,spec2}{width=0.45\textwidth}{Second
+%  spectral component from seislet frame.  Reconstructed data (a),
+%  seislet coefficients (b), and average spectrum (c).}
+
+The example is spectral decomposition of a 2-D seismic section,
+extracted from the Boonsville 3-D dataset \cite[]{boon} and shown in
+Figure~\ref{fig:boon}.  
+We use a multi-channel PEF to detect the dominant
+frequency components in all traces and then apply 1-D seislet frame
+to separate different data components. Two of the components are
+displayed in Figures~\ref{fig:boon3,flet3,spec3} and
+\ref{fig:boon2,flet2,spec2}.  The first component corresponds to
+relatively low frequencies, the second component corresponds to
+relatively high frequencies (Figures~\ref{fig:boon3} and
+\ref{fig:boon2}). The two components exhibit a high compression ratio
+in the transform domain (Figures~\ref{fig:flet3} and \ref{fig:flet2})
+and correspond to different parts of the spectrum
+(Figures~\ref{fig:spec3} and \ref{fig:spec2}, compare with
+Figure~\ref{fig:bspec}). Spectral decomposition
+has important applications in seismic interpretation
+\cite[]{spectral}.  By increasing the PEF size and, correspondingly,
+the number of frame frequencies, one could obtain a more detailed
+decomposition of the original data.
+
+\subsection{Hyperbolic radon transform with 2-D seislet frame}
+\end{comment}
+
+To show an example of 2-D data analysis with 2-D seislet frames, we
+use the CMP gather from Figure ~\ref{fig:gath}.  We try two different
+choices for selecting a set of dip fields for the frame construction.
+
+First, we define dip fields by scanning different constant dips
+(Figure~\ref{fig:cdips}). In this case, the zero-scale coefficients
+out of the 2-D seislet frame correspond to the slant-stack (Radon transform) gather
+(Figure~\ref{fig:cdiplet}). Figure~\ref{fig:cdipimps} shows
+randomly selected example frame functions for the 2-D seislet frame using constant dips
+
+Our second choice is a set of dip fields defined by the hyperbolic shape
+of seismic events on the CMP gather:
+\begin{equation}
+t(x)=\sqrt{t^2_0+\frac{x^2}{v^2}}\;,
+\label{eq:hyper}
+\end{equation} 
+where $t(x)$ is traveltime for reflection at offset $x$,
+$t_0$ is the zero-offset traveltime, and $v$ is the root-mean-square
+velocity. For a range of constant velocities, the direct relationship between dip and
+velocity is given by 
+\begin{equation}
+p =\frac{dt}{dx}=\frac{x}{v^2 t}\;.
+\label{eq:hyperdip}
+\end{equation} 
+The dip field $p(x,t,v)$ is shown in
+Figure~\ref{fig:rrdips}. Analogously to the case of constant dips, the
+frame coefficients at the zero scale correspond to the hyperbolic
+Radon transform \cite[]{GEO50-12-27272741}, with the primary and
+multiple reflections distributed in different velocity ranges
+(Figure~\ref{fig:rrdiplet}).  Figure~\ref{fig:rrdipimps} shows
+randomly selected frame functions for the 2-D seislet frame with
+varying dip fields defined by a range of constant velocities.
+
+%2-D seislet frame can be treated as $\tau$-$p$ transform, we could further 
+%use hyperbolic shape ($t=\sqrt{t^2_0+\frac{x^2}{v^2}}$) of seismic events to 
+%define time-space-varying dip, where $t$ is travel time for all reflection, 
+%$t_0$ is travel time at zero offset, $x$ is offset, and $v$ is 
+%medium velocity. We found the direct relationship between dip and velocity 
+%as $p=\frac{dt}{dx}=\frac{x}{v^2 t}$, the dip field depend on both time and 
+%space distance. A real data is shown in 
+%Figure~\ref{fig:gath}, which is a multiple-infested 
+%CMP gather from the Mobil AVO dataset \cite[]{CSI00-00-00010213}. 
+%Figure~\ref{fig:rrdipimps} shows basis functions for 
+%2-D seislet frame, the tendency of frame basis follows hyperbolic directions.
+%After setting up a time-space-varying dip field 
+%(Figure~\ref{fig:rrdips}), 2-D seislet frame with
+%sharpening operator can perfectly concentrate seislet coefficients in a small
+%scale. Especially, the frame coefficients at zero scale equals to hyperbolic 
+%radon transform, the primary and multiple reflections distribute in the 
+%different velocity range (Figure~\ref{fig:rrdiplet}).
+
+\inputdir{diplet}
+\multiplot{2}{cdips,rrdips}{width=0.6\textwidth}{Constant dip field (a) and  time and space varying dip field (b).}
+\multiplot{2}{cdiplet,rrdiplet}{width=0.6\textwidth}{2-D seislet frame coefficients with constant dip field (a) and with
+  varying dip field (b).}
+\multiplot{2}{cdipimps,rrdipimps}{width=0.6\textwidth}{Randomly
+selected representative frame functions for 2-D seislet frame with
+constant dip field (a) and varying dip field (b).}
+
+\section{Discussion}
+
+\tabl{cpu}{CPU times (in seconds) for different transforms.}
+{
+    \begin{center}
+     \begin{tabular}{|c|c|c|c|c|}
+     \hline Data size & 1-D FFT & 1-D DWT & 1-D seislet & 2-D seislet \\
+     \hline $1024 \times 1024$ & 0.06 & 0.03 & 0.17 & 1.03 \\
+     \hline $512 \times 512$   & 0.02 & 0.01 & 0.04 & 0.22 \\
+	\hline 
+	\end{tabular} 
+   \end{center}
+}  
+
+How efficient are the proposed algorithms? \new{The CPU times, 
+in our implementation, are shown in Table~\ref{tbl:cpu}.}
+\old{This shows} \new{They confirm} that, while the seislet transform and frame can be more
+expensive than FFT or DWT, they are still comfortably efficient in
+practice. In applications of the 2-D seislet transform, the main cost
+may not be in the transform itself but in iterative estimation of the
+slope fields.  In practical large-scale applications, it is
+advantageous to break the input data in parts and process them in
+parallel.
+
+How effective are the seislet transform and frame in compressing
+seismic data? \new{In the case of the 2-D seislet transform that
+requires a slope field}, it appears that \old{, in the 2-D seislet
+transform that requires a slope field,} one would need to store this
+field in addition to the compressed data. However, since we force the
+estimated slopes to be smooth, the slope field can be easily
+compressed with one of the classic compression algorithms. Consider
+the example in Figure~\ref{fig:sigmoid,sigmoiddip}. Suppose that we
+apply lossy compression and require 99\% of the energy to be
+preserved. The seislet transform compression ratio in this case is
+less that 1\% while the corresponding wavelet transform ratio is
+26\%. Applied to the smooth slope field from
+Figure~\ref{fig:sigmoiddip}, the wavelet transform compresses it to
+about 0.1\%. This example shows that compressing seismic data with the
+seislet transform and the corresponding slope field with the wavelet
+transform can be significantly more effective that trying to compress
+seismic data with the wavelet transform.
+
+\section{Conclusions}
+
+We have introduced a new digital transform named \emph{seislet
+transform} because of its ability to characterize and compress seismic
+data in the manner similar to that of digital wavelet transforms. We
+define the seislet transform by combining the wavelet lifting scheme
+with local plane-wave destruction.  In 1-D, the seislet transform
+follows sinusoidal components. In 2-D, it follows locally plane
+events. When more than one sinusoid or more than one local slope are
+\old{used} \new{applied} for the analysis, the transform turns into an overcomplete
+representation or a frame. The seislet transform and seislet frame can
+achieve a better compression ratio than either the digital Fourier
+transform (DFT) or the digital wavelet transform (DWT).
+
+The seislet transform provides a convenient orthogonal basis with the basis 
+functions spanning different scales analogously to those of the digital wavelet
+transform but aligned along the dominant seismic events. Traditional signal 
+analysis operations such as denoising and trace interpolation become simply 
+defined in the seislet domain and allow for efficient algorithms. 
+Seismic stacking also has a simple meaning of the zeroth-order seislet 
+coefficient computed in an optimally efficient manner by recursive partial 
+stacking and thus avoiding the usual problems with wavelet stretch and 
+nonhyperbolic moveouts. \old{One can extend the idea of the seislet transform 
+further by changing the definition of prediction and update operators in the 
+lifting scheme.}
+
+\section{Acknowledgments}
+
+We thank BGP Americas for a partial financial support of this work. The first
+author is grateful to Huub Douma for inspiring discussions and for suggesting 
+the name ``seislet''. This publication is authorized by the Director, Bureau 
+of Economic Geology, The University of Texas at Austin.
+
+%We also thank Hongliu Zeng for useful 
+%discussions.
+
+\append{Review of plane-wave destruction}
+
+{This appendix reviews the basic theory of plane-wave destruction 
+\cite[]{GEO67-06-19461960}.}
+
+{Following the physical model of local plane waves, we \old{can}
+define the mathematical basis of plane-wave destruction filters via
+the local plane differential equation \cite[]{pvi}
+\begin{equation}
+  {\frac{\partial P}{\partial x}} +
+  {\sigma\,\frac{\partial P}{\partial t}} = 0\;,
+  \label{eqn:pde}
+\end{equation}
+where $P(t,x)$ is the wave field, and $\sigma$ is the local slope, which may
+also depend on $t$ and $x$. In the case of a constant slope,
+equation~\ref{eqn:pde} has the simple general solution
+\begin{equation}
+  \label{eqn:plane}
+  P(t,x) = f(t - \sigma x)\;,
+\end{equation}
+where $f(t)$ is an arbitrary waveform. Equation~\ref{eqn:plane} is
+nothing more than a mathematical description of a plane wave.}
+
+{If we assume that the slope $\sigma$ does not depend on $t$, we can
+transform equation~\ref{eqn:pde} to the frequency domain, where it
+takes the form of the ordinary differential equation
+\begin{equation}
+  {\frac{d \hat{P}}{d x}} +
+  i \omega\,\sigma\, \hat{P} = 0
+  \label{eqn:ode}
+\end{equation}
+and has the general solution
+\begin{equation}
+  \label{eqn:px}
+  \hat{P} (x) = \hat{P} (0)\,e^{i \omega\,\sigma x}\;,
+\end{equation}
+where $\hat{P}$ is the Fourier transform of $P$. The complex
+exponential term in equation~\ref{eqn:px} simply represents a shift
+of a $t$-trace according to the slope $\sigma$ and the trace separation
+$x$.}
+
+In the frequency domain, the operator for transforming the trace \old{at
+position} $x-1$ to the neighboring trace \old{[For simplicity, it is
+  assumed that $x$ takes integer values that correspond to trace
+  numbering.] and at position} $x$ is a multiplication by $e^{i
+  \omega\,\sigma}$. In other words, a plane wave can be perfectly
+predicted by a two-term prediction-error filter in the $F$-$X$ domain:
+\begin{equation}
+  \label{eqn:pef}
+  a_0 \, \hat{P} (x) + a_1\, \hat{P} (x-1) = 0\;,
+\end{equation}
+where $a_0 = 1$ and $a_1 = - e^{i \omega\,\sigma}$. The goal of
+predicting several plane waves can be accomplished by cascading
+several two-term filters. In fact, any $F$-$X$ prediction-error
+filter represented in the $Z$-transform notation as
+\begin{equation}
+  \label{eqn:pef2}
+  A(Z_x) = 1 + a_1 Z_x + a_2 Z_x^2 + \cdots + a_N Z_x^N
+\end{equation}
+can be factored into a product of two-term filters:
+\begin{equation}
+  \label{eqn:pef3}
+  A(Z_x) = \left(1 - \frac{Z_x}{Z_1}\right)\left(1 - \frac{Z_x}{Z_2}\right)
+  \cdots\left(1 - \frac{Z_x}{Z_N}\right)\;,
+\end{equation}
+where $Z_1,Z_2,\ldots,Z_N$ are the zeroes of
+polynomial~\ref{eqn:pef2}. According to equation~\ref{eqn:pef},
+the phase of each zero corresponds to the slope of a local plane wave
+multiplied by the frequency. Zeroes that are not on the unit circle
+carry an additional amplitude gain not included in
+equation~\ref{eqn:ode}.
+
+In order to incorporate time-varying slopes, we need to return to
+the time domain and look for an appropriate analog of the phase-shift
+operator~\ref{eqn:px} and the plane-prediction
+filter~\ref{eqn:pef}. An important property of plane-wave
+propagation across different traces is that the total energy of the
+propagating wave stays invariant throughout the process: the energy of 
+the wave at one trace is completely transmitted to the next trace.
+ This property
+is assured in the frequency-domain solution~\ref{eqn:px} by the fact
+that the spectrum of the complex exponential $e^{i \omega\,\sigma}$ is
+equal to one.  In the time domain, we can reach an equivalent effect
+by using an all-pass digital filter. In the $Z$-transform notation,
+convolution with an all-pass filter takes the form
+\begin{equation}
+\label{eqn:allpass}
+\hat{P}_{x+1}(Z_t) = \hat{P}_{x} (Z_t) \frac{B(Z_t)}{B(1/Z_t)}\;,
+\end{equation}
+where $\hat{P}_x (Z_t)$ denotes the $Z$-transform of the corresponding
+trace, and the ratio $B(Z_t)/B(1/Z_t)$ is an all-pass digital filter
+approximating the time-shift operator~$e^{i \omega \sigma}$. In
+finite-difference terms, equation~\ref{eqn:allpass} represents an
+implicit finite-difference scheme for solving equation~\ref{eqn:pde}
+with the initial conditions at a constant $x$.  The coefficients of
+filter $B(Z_t)$ can be determined, for example, by fitting the filter
+frequency response at low frequencies to the response of the
+phase-shift operator. This leads to a version of Thiran's
+maximally-flat all-pass fractional-delay filters \cite[]{thiran,review}.
+
+{Taking both dimensions into consideration,
+equation~\ref{eqn:allpass} transforms to the prediction equation
+analogous to~\ref{eqn:pef} with the 2-D prediction filter
+\begin{equation}
+  \label{eqn:2dpef}
+  A(Z_t,Z_x) = 1 - Z_x \frac{B(Z_t)}{B(1/Z_t)}\;.
+\end{equation}
+In order to characterize several plane waves, we can cascade several
+filters of the form~\ref{eqn:2dpef} in a manner similar to that of
+equation~\ref{eqn:pef3}. A modified version of the filter
+$A(Z_t,Z_x)$, namely the filter
+\begin{equation}
+  \label{eqn:2dpef2}
+  C(Z_t,Z_x) = A(Z_t,Z_x) B(1/Z_t) = B(1/Z_t) - Z_x B(Z_t)\;,
+\end{equation}
+avoids the need for polynomial division. In case of \old{the} \new{a}
+3-point filter $B(Z_t)$, the 2-D filter~\ref{eqn:2dpef2} has exactly
+six coefficients. It consists of two columns, each column having three
+coefficients and the second column being a reversed copy of the first
+one.}
+
+
+\bibliographystyle{seg}
+\bibliography{SEG,seislet}

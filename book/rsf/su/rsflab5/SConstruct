@@ -1,0 +1,67 @@
+from rsf.proj import *
+
+# Velocity model
+Flow('syncline.asc',None,
+     '''
+     echo
+     0    1100
+     0    1100
+     500  1100
+     1000 1300
+     2000 1000
+     2700 1100
+     3200 1000
+     4000 1050
+     n1=2 n2=8 in=$TARGET
+     data_format=ascii_float
+     ''')
+Flow('syncline','syncline.asc',
+     '''
+     dd form=native |
+     spline n1=400 d1=10 o1=0 |
+     unif2  n1=200 d1=10 v00=2000,3000 |
+     put label1=Depth unit1=m label2=Distance unit2=m
+     label=Velocity unit=m/s
+     ''')
+Result('syncline',
+       '''
+       grey color=j scalebar=y barreverse=y mean=y
+       screenht=7 screenwd=14 title="Syncline Model"
+       ''')
+
+# Source
+Flow('sou',None,'spike n1=2 nsp=2 k1=1,2 mag=1000,20')
+
+# Receivers
+Flow('recx','syncline','window n1=1 squeeze=n | math output=x2')
+Flow('recz','recx','math output=20')
+Flow('rec','recx recz','cat axis=1 ${SOURCES[1]}')
+
+# Wavelet
+Flow('wav',None,
+     '''
+     spike n1=2200 d1=0.001 k1=200 | 
+     ricker1 frequency=20 
+     ''')
+
+# Density
+Flow('den','syncline','math output=1')
+
+# Finite-difference modeling
+Flow('hseis seis','wav syncline sou rec den',
+     '''
+     transp | 
+     awefd2d verb=y free=n snap=y dabc=y jdata=2 jsnap=10 
+     vel=${SOURCES[1]} sou=${SOURCES[2]} rec=${SOURCES[3]} den=${SOURCES[4]} 
+     wfl=${TARGETS[1]} |
+     window f2=100 | put o2=0 | transp |
+     put label1=Time label2=Distance unit1=s unit2=m
+     ''')
+Plot('seis',
+     '''
+     grey gainpanel=a title=Wave
+     label1=Depth label2=Distance unit1=m unit2=m
+     ''',view=1)
+Result('hseis','grey title=Data')
+
+End()

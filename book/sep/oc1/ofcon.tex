@@ -1,0 +1,332 @@
+\append{Second-order reflection traveltime derivatives}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\label{chapter:deriv}
+This appendix contains a derivation of equations connecting
+second-order partial derivatives of the reflection traveltime with the
+geometric properties of the reflector in a constant velocity medium.
+These equations are used in the main text of this paper to describe
+the amplitude behavior of offset continuation.  Let $\tau(s,r)$ be the
+reflection traveltime from the source $s$ to the receiver $r$.
+Consider a formal equality
+\begin{equation}
+\tau(s,r)=\tau_1\left(s,x(s,r)\right)+\tau_2\left(x(s,r),r\right)\;,   
+\label{eqn:t1pt2} 
+\end{equation}
+where $x$ is the reflection point parameter, $\tau_1$ corresponds to the
+incident ray, and $\tau_2$ corresponds to the reflected ray.
+Differentiating (\ref{eqn:t1pt2}) with respect to $s$ and $r$ yields
+\begin{eqnarray}
+{\partial \tau \over \partial s}  & = & 
+{\partial \tau_1 \over \partial s} + {\partial \tau \over \partial x}\,
+{\partial x \over \partial s}\;,
+\label{eqn:dt1ds} \\
+{\partial \tau \over \partial r}  & = & 
+{\partial \tau_2 \over \partial r} + {\partial \tau \over \partial x}\,
+{\partial x \over \partial r}\;.
+\label{eqn:dt2dr} 
+\end{eqnarray}
+According to Fermat's principle, the two-point reflection ray path must
+correspond to  the traveltime stationary point. Therefore 
+\begin{equation}
+{\partial \tau \over \partial x} \equiv 0  
+\label{eqn:fermat} 
+\end{equation}
+for any $s$ and $r$. Taking into account (\ref{eqn:fermat}) while
+differentiating (\ref{eqn:dt1ds}) and (\ref{eqn:dt2dr}), we get
+\begin{eqnarray}
+{\partial^2 \tau \over \partial s^2}  & = & 
+{\partial^2 \tau_1 \over \partial s^2} + 
+B_1\,
+{\partial x \over \partial s}\;,
+\label{eqn:d2tds2} \\
+{\partial^2 \tau \over \partial r^2}  & = & 
+{\partial^2 \tau_2 \over \partial r^2} + 
+B_2\,
+{\partial x \over \partial r}\;,
+\label{eqn:d2tdr2} \\
+{\partial^2 \tau \over \partial s \partial r}  & = &  
+B_1\,
+{\partial x \over \partial r}\;=
+B_2\,
+{\partial x \over \partial s}\;,
+\label{eqn:d2tdsdr}
+\end{eqnarray}
+where
+\[
+B_1={\partial^2 \tau_1 \over \partial s \partial x}\;;\;
+B_2={\partial^2 \tau_2 \over \partial r \partial x}\;.
+\]
+Differentiating equation~(\ref{eqn:fermat}) gives us the additional
+pair of equations
+\begin{eqnarray}
+C\,{\partial x \over \partial s}+B_1  & = & 0\;,
+\label{eqn:b12c} \\
+C\,{\partial x \over \partial r}+B_2  & = & 0\;,
+\label{eqn:b22c}
+\end{eqnarray}
+where
+\[
+C={\partial^2 \tau \over \partial x^2}=
+{\partial^2 \tau_1 \over \partial x^2}+
+{\partial^2 \tau_2 \over \partial x^2}\;.
+\]
+Solving the system (\ref{eqn:b12c}) - (\ref{eqn:b22c}) for $\partial x
+\over \partial s$ and $\partial x \over \partial r$ and substituting
+the result into (\ref{eqn:d2tds2}) - (\ref{eqn:d2tdsdr}) produces the
+following set of expressions:
+\begin{eqnarray}
+{\partial^2 \tau \over \partial s^2}  & = & 
+{\partial^2 \tau_1 \over \partial s^2} -
+C^{-1}\,B_1^2\;;
+\label{eqn:cs2} \\
+{\partial^2 \tau \over \partial r^2}  & = & 
+{\partial^2 \tau_2 \over \partial r^2} -
+C^{-1}\,B_2^2\;;
+\label{eqn:cr2} \\
+{\partial^2 \tau \over \partial s \partial r}  & = &  
+- C^{-1}\,B_1\,B_2\;.
+\label{eqn:csr}
+\end{eqnarray}
+In the case of a constant velocity medium, expressions (\ref{eqn:cs2}) to
+(\ref{eqn:csr}) can be applied directly to the explicit
+equation for the two-point eikonal 
+\begin{equation}
+\tau_1(y,x)=\tau_2(x,y)={\sqrt{(x-y)^2+z^2(x)}\over v}\;.
+\label{eqn:twopoint}
+\end{equation}
+Differentiating (\ref{eqn:twopoint}) and taking into account the trigonometric
+relationships for the incident and reflected rays (Figure
+\ref{fig:ocoray}), one can 
+evaluate all the quantities in (\ref{eqn:cs2}) to (\ref{eqn:csr}) explicitly.
+After some heavy algebra, the resultant expressions for the traveltime 
+derivatives take the form 
+\begin{eqnarray}
+{\partial \tau \over \partial s}  = 
+{\partial \tau_1 \over \partial s} =
+{\sin{\alpha_1}\over v}& \;;\; &
+{\partial \tau \over \partial r} =
+{\partial \tau_2 \over \partial r} =
+{\sin{\alpha_2}\over v}\;;
+\label{eqn:tstr} \\
+{\partial \tau_1 \over \partial x}  = 
+{\sin{\gamma}\over v \cos{\alpha}} & \;;\; &
+{\partial \tau_2 \over \partial x} =
+- {\sin{\gamma}\over v \cos{\alpha}}\;;
+\label{eqn:txx}
+\end{eqnarray}
+\begin{eqnarray}
+B_1  & = & 
+{\partial^2 \tau_1 \over \partial s\,\partial x} =
+{\cos{\alpha_1}\over{v\,D\,\cos{\alpha}}}\,
+\left(-1-{\sin{\gamma}\over\cos{\alpha}}\,\sin{\alpha_1}\right)\;;
+\label{eqn:B1} \\ 
+B_2  & = &
+{\partial^2 \tau_2 \over \partial r\,\partial x} =
+{\cos{\alpha_2}\over{v\,D\,\cos{\alpha}}}\,
+\left(-1+{\sin{\gamma}\over\cos{\alpha}}\,\sin{\alpha_2}\right)\;;
+\label{eqn:B2} 
+\end{eqnarray}
+\begin{equation}
+B_1\,B_2  =  {\cos^6{\gamma}\over v^2\,D^2\,a^4}\;;\;
+B_1+B_2 = -2\,{\cos^3{\gamma}\over v\,D\,a^2}\,\left(2\,a^2-1\right)\;;
+\label{eqn:B1B2}
+\end{equation}
+\begin{equation}
+{\partial^2 \tau_1 \over \partial x^2} =
+{{\cos^2{\gamma}+D\,K}\over{v\,D\,\cos^3{\alpha}}}\,\cos{\alpha_1}\;;\;
+{\partial^2 \tau_2 \over \partial x^2} =
+{{\cos^2{\gamma}+D\,K}\over{v\,D\,\cos^3{\alpha}}}\,\cos{\alpha_2}\;;
+\label{eqn:C1C2} 
+\end{equation}
+\begin{equation}
+C={\partial^2 \tau_1 \over \partial x^2}+{\partial^2 \tau_2 \over \partial x^2}=
+2\,\cos{\gamma}\,{{\cos^2{\gamma}+D\,K}\over{v\,D\,\cos^3{\alpha}}}\;.
+\label{eqn:C}
+\end{equation}
+Here $D$ is the length of the normal (central) ray, $\alpha$ is its dip angle
+($\alpha={{\alpha_1+\alpha_2}\over 2}$, $\tan{\alpha}=z'(x)$),
+$\gamma$ is the reflection angle 
+$\left(\gamma={{\alpha_2-\alpha_1}\over 2}\right)$, $K$ is the reflector 
+curvature at the reflection point $\left(K=z''(x)\,\cos^3{\alpha}\right)$, and 
+$a$ is the dimensionless function of $\alpha$ and $\gamma$ defined in (\ref{eqn:A}).
+
+The equations derived in this appendix were used to obtain the equation
+\begin{equation}
+\tau_n\,\left({\partial^2 \tau_n \over \partial y^2}-
+{\partial^2 \tau_n \over \partial h^2}\right)=
+4\,\left(\tau\,{\partial^2 \tau \over \partial s\,\partial r}+
+{\cos^2{\gamma}\over v^2}\right)=
+4\,
+{\cos^2{\gamma}\over v^2}\,\left({\sin^2{\alpha}+DK}\over
+{\cos^2{\gamma}+DK}\right)\;,
+\label{eqn:curved}
+\end{equation}
+which coincides with (\ref{eqn:curve}) in the main text.
+
+\append{The kinematics of offset continuation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\label{chapter:kinem}
+This Appendix presents an alternative method to derive equation
+(\ref{eqn:summation}), which describes the summation path of the
+integral offset continuation operator. The method is based on the
+following considerations.
+
+The summation path of an integral (stacking) operator coincides with
+the phase function of the impulse response of the inverse operator.
+Impulse response is by definition the operator reaction to an impulse
+in the input data. For the case of offset continuation, the input is a
+reflection common-offset gather. From the physical point of view, an
+impulse in this type of data corresponds to the special focusing
+reflector (elliptical isochrone) at the depth. Therefore, reflection
+from this reflector at a different constant offset corresponds to the
+impulse response of the OC operator.  In other words, we can view
+offset continuation as the result of cascading prestack common-offset
+migration, which produces the elliptic surface, and common-offset
+modeling (inverse migration) for different offsets.  This approach
+resemble that of \cite{GPR29-03-03740406}.  It was also applied to a
+more general case of azimuth moveout (AMO) by
+\cite{SEG-1995-1449} and fully generalized by 
+\cite{GPR48-01-01350162}.  The geometric approach implies that
+in order to find the summation pass of the OC operator, one should
+solve the kinematic problem of reflection from an elliptic reflector
+whose focuses are in the shot and receiver locations of the output
+seismic gather.
+
+In order to solve this problem , let us consider an elliptic surface of
+the general form
+\begin{equation}
+h(x)=\sqrt{d^2-\beta\,(x-x')^2}\;,
+\label{eqn:ellips}
+\end{equation}
+where $0 < \beta < 1$. In a constant velocity medium, the reflection
+ray path for a given source-receiver pair on the surface is controlled
+by the position of the reflection point $x$.  Fermat's principle
+provides a required constraint for finding this position. According to
+Fermat's principle, the reflection ray path corresponds to a
+stationary value of the travel-time. Therefore, in the neighborhood of
+this path,
+\begin{equation}
+{\partial \tau(s,r,x) \over \partial x} = 0\;,
+\label{eqn:fermat1}
+\end{equation}
+where $s$ and $r$ stand for the source and receiver locations on the
+surface, and $\tau$ is the reflection traveltime
+\begin{equation}
+\tau(s,r,x) =   { \sqrt{h^2(x)+(s-x)^2} \over v} + 
+                { \sqrt{h^2(x)+(r-x)^2} \over v}\;.
+\label{eqn:length1}
+\end{equation}
+
+Substituting equations~(\ref{eqn:length1}) and (\ref{eqn:ellips}) into
+(\ref{eqn:fermat1}) leads to a quadratic algebraic equation on the
+reflection point parameter $x$.  This equation has the explicit
+solution
+\begin{equation}
+x(s,r)= x' + {{\xi^2+H^2-h^2+\mbox{sign}(h^2-H^2)\,
+\sqrt{\left(\xi^2-H^2-h^2\right)^2-4\,H^2\,h^2}\over
+{2\,\xi\,(1-\beta)}}}\;,
+\label{eqn:reflection}
+\end{equation}
+where $h=(r-s)/2$, $\xi = y-x'$, $y=(s+r)/2$, and $H^2=d^2\,\left({1
+    \over \beta} - 1\right)$. Replacing $x$ in equation
+(\ref{eqn:length1}) with its expression (\ref{eqn:reflection}) solves
+the kinematic part of the problem, producing the explicit traveltime
+expression
+\begin{equation}
+\tau(s,r)=\left\{
+        \begin{array}{lcr}\displaystyle{
+{1 \over v} \sqrt{{4\,h^2-\beta\,(f+g)^2} \over {1-\beta}}}
+& \mbox{for} & h^2 > H^2 \\ & & \\ \displaystyle{
+{1 \over v} \sqrt{{4\,h^2+\beta\,(F+G)^2} \over {1-\beta}}}
+& \mbox{for} & h^2 < H^2
+        \end{array}
+        \right.\;, 
+\label{eqn:tau}
+\end{equation} 
+where 
+\begin{eqnarray}
+f=\sqrt{(r-x')^2-H^2}\; & , & \;g=\sqrt{(s-x')^2-H^2}\;,
+\nonumber \\
+F=\sqrt{H^2-(r-x')^2}\; & , & \;G=\sqrt{H^2-(s-x')^2}\;.
+\nonumber
+\end{eqnarray}
+
+The two branches of equation~(\ref{eqn:tau}) correspond to the
+difference in the geometry of the reflected rays in two different
+situations. When a source-and-receiver pair is inside the focuses of
+the elliptic reflector, the midpoint $y$ and the reflection point $x$
+are on the same side of the ellipse with respect to its small
+semi-axis. They are on different sides in the opposite case (Figure
+\ref{fig:ell}).
+
+\inputdir{Sage}
+
+\sideplot{ell}{height=1.in}{.}{
+Reflections from an ellipse. The three pairs of reflected rays
+correspond to a common midpoint (at 0.1) and different offsets. The
+focuses of the ellipse are at 1 and -1.
+} 
+
+If we apply the NMO correction, equation (\ref{eqn:tau}) is transformed to
+\begin{equation}
+\tau_n(s,r)=\left\{
+        \begin{array}{lcr}\displaystyle{
+{1 \over v} \sqrt{\beta \over {1-\beta}}\,
+\sqrt{4\,h^2-(f+g)^2}}
+& \mbox{for} & h^2 > H^2 \\ & & \\ \displaystyle{
+{1 \over v} \sqrt{\beta \over {1-\beta}}\,
+\sqrt{4\,h^2+(F+G)^2}}
+& \mbox{for} & h^2 < H^2
+        \end{array}
+        \right.\;. 
+\label{eqn:taun}
+\end{equation}
+Then, recalling the relationships between the parameters of the
+focusing ellipse $r$, $x'$ and $\beta$ and the parameters of the
+output seismic gather \cite[]{GPR29-03-03740406}
+
+\begin{equation}
+r={ {v\,t_n} \over 2}\;,\;x'=y\;,\;
+\beta={t_n^2 \over {t_n^2+{{4\,h^2} \over v^2}}}\;,\;
+H=h\;,
+\label{eqn:ell2}
+\end{equation}
+and substituting expressions (\ref{eqn:ell2}) into equation (\ref{eqn:taun}) yields the
+expression
+\begin{equation}
+t_1(s_1,r_1;s,r,t_n)=\left\{
+        \begin{array}{lcr}\displaystyle{
+{t_n \over {2\,h}}\,
+\sqrt{4\,h_1^2-(f+g)^2}}
+& \mbox{for} & h_1^2 > h^2 \\ & & \\ \displaystyle{
+{t_2 \over {2\,h}}\,
+\sqrt{4\,h_1^2+(F+G)^2}}
+& \mbox{for} & h_1^2 < h^2
+        \end{array}
+        \right.\;, 
+\label{eqn:final}
+\end{equation}
+where 
+\begin{eqnarray}
+f=\sqrt{(r_1-r)\,(r_1-s)}\;,\;g=\sqrt{(s_1-r)\,(s_1-s)}\;,
+\nonumber \\
+F=\sqrt{(r-r_1)\,(r_1-s)}\;,\;G=\sqrt{(s_1-r)\,(s-s_1)}\;.
+\nonumber
+\end{eqnarray}
+
+It is easy to verify algebraically the mathematical equivalence of
+equation (\ref{eqn:final}) and equation (\ref{eqn:summation}) in the
+main text. The kinematic approach described in this appendix applies
+equally well to different acquisition configurations of the input and
+output data. The source-receiver parameterization used in
+(\ref{eqn:final}) is the actual definition for the summation path of
+the integral shot continuation operator
+\cite[]{SEG-1993-0673,GEO61-06-18461858}. A family of these summation
+curves is shown in Figure \ref{fig:shc}.
+
+\plot{shc}{width=6in,height=3in}{.}{
+Summation paths of the integral shot continuation. The output source
+is at -0.5 km. The output receiver is at 0.5 km. The indexes of the
+curves correspond to the input source location.}
+
+

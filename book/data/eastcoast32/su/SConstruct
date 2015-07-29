@@ -1,0 +1,323 @@
+from rsf.suproj import * 
+
+#http://woodshole.er.usgs.gov/operations/ia/public_ds_info.php?fa=1978-015-FA
+#http://cotuit.er.usgs.gov/Data/1978-015-FA/NL/001/01/32-obslogs/32obslog.pdf   #http://cotuit.er.usgs.gov/Data/1978-015-FA/SE/001/18/
+#################### 
+# Fetch the dataset and convert to multiple rsf files
+# check web at
+# http://energy.usgs.gov/GeochemistryGeophysics/\
+# SeismicDataProcessingInterpretation/\
+# NPRASeismicDataArchive/tabid/494/\
+# Agg2146_SelectTab/4/Default.aspx
+####################
+
+# first download the display of the previous stack
+# download and view the image of the previous stack:
+#Fetch('41_81_IM.JPG',
+#      server='http://certmapper.cr.usgs.gov',
+#      top='nersl/NPRA/SEISMIC/1981/41_81',
+#      dir='IMAGES')
+#THis can be done using:
+# wget http://certmapper.cr.usgs.gov/nersl/NPRA/SEISMIC/1981/41_81/IMAGES/41_81_IM.JPG 
+#Result('prevstack','41_81_IM.JPG',
+#       'oodraw ${SOURCES[0]}',stdin=0)
+
+# download and view the survey notes:
+#Fetch('41_81_S.PDF',
+#      server='http://certmapper.cr.usgs.gov',
+#      top='nersl/NPRA/SEISMIC/1981/41_81',
+#      dir='DOCUMENTS')
+#Result('surveylog','41_81_S.PDF',
+#       'acroread ${SOURCES[0]}',stdin=0)
+
+# download and view the observer notes:
+#Fetch('32obslog.pdf',
+#      server='http://cotuit.er.usgs.gov',
+#      top='Data/1978-015-FA/NL/001/01',
+#      dir='32-obslogs')
+Result('observerlog','../fetch/32obslog.pdf',
+       'acroread ${SOURCES[0]}',stdin=0)
+
+# convert, and view previous processing stack
+file='checkstack'
+Flow([file, file+'.bin', file+'.asc'],
+     '../fetch/CSDS32_1.SGY',
+     '''
+     segyread bfile=${TARGETS[1]} hfile=${TARGETS[2]}
+     	      tape=$SOURCE endian=%d
+     | segyclean
+     ''' % (1-little_endian()),
+     stdin=0)
+
+Result('checkstack','checkstack',
+       'suximage title="checkstack" perc=90')
+Result('zoomcheckstack','checkstack',
+       '''
+       suwind tmin=0 tmax=3  |
+       suximage title="zoom checkstack" perc=90
+       ''')
+
+# i added suwind to padd all traces to the same time length
+segyread = '''
+segyread bfile=${TARGETS[1]} hfile=${TARGETS[2]}
+tape=$SOURCE endian=%d
+| segyclean
+| suwind tmax=12.28
+''' % (1-little_endian())
+
+rawsegy=['U32A_01','U32A_02','U32A_03','U32A_04','U32A_05',
+         'U32A_06','U32A_07','U32A_08','U32A_09','U32A_10',
+         'U32A_11','U32A_12','U32A_13','U32A_14','U32A_15',
+         'U32A_16','U32A_17','U32A_18','U32A_19','U32A_20',
+	 'U32A_21']
+easysegy=['U32A_01','U32A_02','U32A_03','U32A_05',
+         'U32A_06','U32A_07','U32A_08','U32A_09','U32A_10',
+         'U32A_11','U32A_12','U32A_13','U32A_14','U32A_15',
+         'U32A_16','U32A_18','U32A_19','U32A_20',
+	 'U32A_21']
+# after running segyread and running surange and sugethw a few times
+# I learned
+# 'U32A_04' needs to have fldr 688 and 689 removed 
+# 'U32A_17' needs to have fldr 500-510 renumberred to 700-710 
+
+# there are also 'U32B_01','U32B_02','U32B_03'
+# and  'U32C_01','U32C_02','U32C_03'
+# and 'U32_01'
+# I think the line is collected in 3 parts. 32, 32a, and 32b.  There is plany
+# to use on line 32A.
+
+for file in easysegy  :
+    Flow([file, file+'.bin',  file+'.asc'],
+         '../fetch/'+file+'.SGY',segyread,stdin=0)
+    Flow(file+'_list1',file,'surange; echo file_list1 complete',stdout=0)
+
+# now handle the exception tapes:
+file='U32A_04'
+Flow([file, file+'.bin',  file+'.asc'],
+     '../fetch/'+file+'.SGY',
+     '''
+        segyread bfile=${TARGETS[1]} hfile=${TARGETS[2]}
+	     tape=$SOURCE endian=%d
+        | segyclean
+        | suwind tmax=12.28
+	| suwind key=fldr min=690 max=99999 
+     ''' % (1-little_endian()),stdin=0)
+Flow(file+'_list1',file,'surange; echo file_list1 complete',stdout=0)
+
+file='U32A_17'
+Flow(['U32A_17_init', file+'.bin',  file+'.asc'],
+     '../fetch/'+file+'.SGY',
+     '''
+        segyread bfile=${TARGETS[1]} hfile=${TARGETS[2]}
+	     tape=$SOURCE endian=%d
+        | segyclean
+        | suwind tmax=12.28
+     ''' % (1-little_endian()),stdin=0)
+
+Flow('hdrfile_17.txt', 'U32A_17_init',
+     'sugethw output=geom key=tracl,fldr,tracf')
+
+Flow ('hdrfile1_17.txt',
+      'hdrfile_17.txt Fix_hdr_17.py',
+     ''' 
+     ./Fix_hdr_17.py
+     ''')
+
+Flow ('binary_hdrfile1_17.dat','hdrfile1_17.txt',
+     ''' 
+     a2b n1=3
+     ''')
+
+Flow (file, 'U32A_17_init binary_hdrfile1_17.dat',
+     '''
+     sushw 
+     	   infile=${SOURCES[1]}
+    	   key=tracl,fldr,tracf
+    ''')
+
+
+
+# concatinate the input files
+Flow ('line', rawsegy,
+     'cat ${SOURCES}',stdin=0)
+
+# you can make this list with the command scons list1.su
+Flow('list1','line','surange; echo list1 complete',stdout=0)
+
+# you can make this list with the command scons list2.su
+Flow('list2','line',
+     '''
+     suwind count=3000 
+     | sugethw key=fldr,tracf,cdp,cdpt,offset ;
+     echo list2 complete
+     ''',
+     stdout=0)
+
+# display the first 3000 traces
+
+Result('first','line',
+       'suwind count=3000 | suximage perc=90')
+
+Result('zoomfirst','line',
+       '''
+       suwind key=tracl min=48141 max=48300 tmin=0 tmax=3 |
+       suximage perc=90
+       ''')
+
+Result('firstmovie','line',
+       '''
+       suwind count=4800 
+       | suxmovie n2=48 loop=1 fframe=1 dframe=1  d1=.004
+                title="record %g" perc=20 
+       ''')
+
+Result('firstrec24','line',
+       '''
+       suwind key=tracl min=48141 max=48300 tmin=0 tmax=6 |
+       suximage perc=90
+       ''')
+
+Flow('ntg','line',
+       'suwind key=tracf min=48 max=48')
+
+Result('ntg','ntg',
+       'suximage perc=90 title=ntg f2=1')
+
+
+Flow ('hdrfile.txt','line',
+     'sugethw output=geom key=tracl,fldr,tracf')
+ 
+Flow ('hdrfile1.txt',
+      'hdrfile.txt InterpText.py recnoSpn.txt',
+     ''' 
+     ./InterpText.py
+     ''')
+
+Flow ('binary_hdrfile1.dat','hdrfile1.txt',
+     ''' 
+     a2b n1=10
+     ''')
+
+keys='fldr,ep,sx,sy,gx,gy,cdp,tracf,offset,tstat'
+
+Flow ('allshots', 'line binary_hdrfile1.dat',
+     '''
+        sushw 
+     	   infile=${SOURCES[1]}
+    	   key=%s |
+        suwind 
+     	    key=cdp 
+    	    min=-999998 
+    	    max=999999 |
+        suwind 
+     	    key=ep 
+    	    min=1 
+            max=999999 |
+        sustatic 
+            hdrs=1 
+            sign=-1 
+     ''' % keys)
+
+Flow('ntgdelay','allshots',
+     'suwind key=tracf min=48 max=48')
+
+Result('ntgdelay','ntgdelay',
+       'suximage perc=90 title=ntgdelay f2=1')
+
+# plot the first 1000 traces of ntg with spreading, decon, and nmo
+# pick waterbottom and waterbottom multiple on first trace.  I get 5.139 and
+# 10.230.  The delay to apply to make the multiple twicwe the watbot time
+# is .048.  I remember GSI required a 51 ms instrument delay.
+
+Result('ntg_pick_delay','ntgdelay',
+       '''
+       suwind count=1000 
+       |  sugain tpow=1.0 
+       | supef maxlag=.100 
+       | sunmo tnmo=0 vnmo=1500 
+       | suximage perc=90 title="ntgdelay with spreading, decon, and nmo" f2=1
+       ''')
+# remove 51 ms delay and plot data to check work
+Result('ntg_static','ntgdelay',
+       '''
+       suwind count=1000 
+       | suchw key1=tstat a=51 b=0 key2=offset 
+       | sustatic hdrs=1 sign=1
+       | sugain tpow=1.0 
+       | supef maxlag=.100 
+       | sunmo tnmo=0 vnmo=1500 
+       | suximage perc=90 title="ntgdelay with spreading, decon, and nmo" f2=1
+       ''')
+
+Result('secondmovie','allshots',
+       '''
+       suwind count=9600 
+       | suxmovie n2=192 loop=1 fframe=1 dframe=1  d1=.004
+                title="record %g" perc=99 
+       ''')
+Result('thirdmovie','allshots',
+       '''
+       suwind count=9600 
+       | sugain tpow=1.0 
+       | sumute xmute=0,4000 tmute=0,4 mode=0 
+         key=offset 
+         taper=50 
+       | suxmovie n2=192 loop=1 fframe=1 dframe=1 d1=.004
+                title="sugain, sumute record %g" perc=99
+       ''')
+
+# I see no noise for velfilt.  may need 51 ms delay, decon, and radon
+Flow('cdps','allshots',
+     '''
+     susort cdp offset 
+     | suchw key1=tstat a=51 b=0 key2=offset 
+     | sustatic hdrs=1 sign=1
+     | sugain tpow=1.0 
+     | sumute 
+       xmute=0,4000 tmute=0,4 
+       mode=0 
+       key=offset 
+       taper=50 
+     | supef maxlag=.100
+     ''' ) 
+
+Flow('vels.txt','velsorig.txt cdps',
+     '''
+     ./iva.sh
+     "cmp1=851 cmp2=1351 cmp3=1851 cmp4=2351 cmp5=2851 cmp6=3351
+      cmp7=3851 cmp8=4351 cmp9=4851 cmp10=5351 numCMPs=10" 
+     ${SOURCES[1]} ${TARGETS[0]} ${SOURCES[0]} 1400 20
+     ''',stdout=0,stdin=0)
+
+#Result('test','allshots',
+#	'''
+#	 suxmovie n2=96 loop=1 fframe=1 dframe=1  d1=.004
+#            title="allshots record %g" perc=20
+# 	''')
+
+Flow('stack','cdps vels.txt',
+     '''
+     sunmo 
+       par=${SOURCES[1]}
+     | sustack 
+        key=cdp 
+        normpow=1 
+     ''')
+
+Result('stack','stack',
+       '''
+       suximage title="stack" f2=838 perc=90
+       ''')
+
+Flow('stkvel1.intp2.bin','010_Velocity_Interp_IVA.sh',
+     '''
+     ./010_Velocity_Interp_IVA.sh
+     ''')
+
+Result('vfile','stkvel1.intp2.bin',
+       '''
+       ximage n1=3071 d1=.004 f2=838 d2=1 cmap=rgb11 
+          wclip=1300 bclip=3000
+       ''')
+
+End()

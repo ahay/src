@@ -1,0 +1,458 @@
+\published{Geophysics, 76, T123-T129, (2011)}
+\title{Fourier finite-difference wave propagation}
+
+\lefthead{Song \& Fomel}
+\righthead{FFD wave propagation}
+
+\author{Xiaolei Song and Sergey Fomel}
+
+
+
+\address{Bureau of Economic Geology \\
+John A. and Katherine G. Jackson School of Geosciences \\
+The University of Texas at Austin \\
+University Station, Box X \\
+Austin, TX 78713-8924}
+
+%\ms{GEO-2010}
+
+\maketitle
+
+\begin{abstract}
+  We introduce a novel technique for seismic wave extrapolation in
+  time.  The technique involves cascading a Fourier Transform operator
+  and a finite difference operator to form a chain operator: 
+  Fourier Finite Differences (FFD).  We derive the FFD operator from a
+  pseudo-analytical solution of the acoustic wave equation.  2-D
+  synthetic examples demonstrate that the FFD operator can have high
+  accuracy and stability in complex velocity media. 
+  Applying the FFD method to the anisotropic case overcomes some
+  disadvantages of other methods, such as the coupling of qP-waves and
+  qSV-waves.  The FFD method can be applied to enhance accuracy and
+  stability of seismic imaging by reverse-time migration.
+\end{abstract}
+
+\section{Introduction}
+
+The wavefield extrapolation problem refers to advancement of a
+wavefield through space or time.  Both extrapolation in depth and
+extrapolation in time can be used in seismic modeling and seismic
+migration.  Reverse time migration, or RTM
+\cite[]{baysal,McMechan,whitmore,levin}, involves wave extrapolation
+forward and backward in time. RTM is useful for accurate imaging in
+complex areas and is drawing more and more attention as the most
+powerful depth-imaging method \cite[]{yoon,sym,fletcher,fowler}.\\
+
+Reverse-time migration can correctly handle complex velocity models
+without dip limitations on the image.  However, it has large memory
+requirements and needs a significant amount of computation.  The most
+popular and straightforward way to implement reverse-time migration is
+the method of explicit finite differences, which is only conditionally
+stable because of the limit on time-step size.  Finite-difference
+methods also suffer from numerical dispersion problems, which can be
+overcome either by decreasing the time step or by high-order schemes
+\cite[]{Wu,liu}.  Several alternative algorithms have been developed
+for seismic wave extrapolation in variable velocity media.
+\cite{yu} introduced an algorithm based on a high-order differential operator, 
+which allows a large extrapolation time step by solving a coefficient optimization problem.
+\cite{zhang} proposed one-step extrapolation method by introducing a square-root operator. This method can formulate the two-way wave equation as a first-order partial differential equation in time similar to the one-way wave equation.
+\cite{etgen} modified the Fourier Transform of the Laplacian operator to compensate exactly for the error
+resulting from the second-order time marching scheme used in conventional pseudo spectral methods \cite[]{pseudo}.
+\cite{fowler} provided an accurate VTI P-wave modeling method with coupled second-order pseudo-acoustic equations.
+\cite{pestana} presented an application of Rapid Expansion Method (REM) \cite[]{tal} for forward modeling with one-step time evolution algorithm and RTM with recursive time stepping algorithm.\\
+
+In this paper, we present a new wave extrapolator derived from the pseudo-analytical approach of \cite{etgen}.
+Our method combines FFT and finite differences. 
+We call it the Fourier Finite Difference method 
+because it is analogous to the concept introduced previously for one-way wave extrapolation by \cite{ffd}.\\ 
+
+As a chain operator of Fast Fourier Transform and Finite Difference
+operators, the proposed extrapolator can be as accurate as the
+parameter interpolation approach employed by \cite{etgen} but at a
+cost of only one Fast Fourier Transform (FFT) and inverse Fast Fourier
+Transform (IFFT) operation.  The advantages of the FFD operator are
+even more apparent in the anisotropic case: no need for several
+interpolations for different parameters with the corresponding
+computational burden of several FFTs and IFFTs.  In addition, the
+operator can overcome the coupling of qP-waves and qSV-waves
+\cite[]{zhang2}.  We demonstrate the method on synthetic examples and
+propose to incorporate FFD into reverse-time migration in order to
+enhance migration accuracy and stability.
+
+\section{Theory}
+
+The acoustic wave equation is widely used in 
+forward seismic modeling and reverse-time migration \cite[]{bednar,etgen1}:
+\begin{equation}
+\label{eq:acoustic} 
+\frac{\partial^2p}{\partial t^2} = v(\mathbf{x})^2\,\nabla^2p\;,
+\end{equation}
+where $p(\mathbf{x},t)$ is the seismic pressure wavefield, 
+and $v(\mathbf{x})$ is the propagation velocity.
+Assuming a constant velocity $v$, after Fourier transform in space,
+ we can get the following explicit expression:
+\begin{equation}
+\label{eq:ode} 
+\frac{d^2\hat{p}}{dt^2} = - v^2|\mathbf{k}|^2\hat{p}\;,
+\end{equation}
+where
+\begin{equation}
+\label{eq:p} 
+\hat{p}(\mathbf{k},t)=\int^{+\infty}_{-\infty}{p(\mathbf{x},t)e^{i\mathbf{k}\cdot\mathbf{x}}d\mathbf{x}}\;.
+\end{equation}
+\\
+Equation~\ref{eq:ode} has the following solution:
+\begin{equation}
+\label{eq:fourier} 
+\hat{p}(\mathbf{k},t+\Delta t) = e^{\pm i|\mathbf{k}|v\Delta t}\hat{p}(\mathbf{k},t)\;.
+\end{equation}
+A second-order time-marching scheme and the inverse Fourier transform lead to 
+the well-known expression \cite[]{Etgen.sep.60.131,yu}\hyphenation{Sou-ba-ras}:
+\begin{eqnarray}
+\label{eq:exact} 
+\lefteqn{p(\mathbf{x},t+\Delta t)+p(\mathbf{x},t-\Delta t)-2p(\mathbf{x},t)  = }\nonumber \\
+& & 2\int^{+\infty}_{-\infty}{\hat{p}(\mathbf{k},t)(\cos(|\mathbf{k}|v\Delta t)-1)e^{-i\mathbf{k}\cdot\mathbf{x}}d\mathbf{k}}\;.
+\end{eqnarray} 
+
+
+Equation~\ref{eq:exact} provides an elegant and efficient solution 
+in the case of a constant-velocity medium with the aid of FFT. 
+In the case of a variable-velocity medium, 
+equation~\ref{eq:exact} can provide an approximation by replacing $v$ with $v(\mathbf{x})$. 
+However, FFT can no longer be applied directly for 
+the inverse Fourier transform from the wavenumber domain back to the space domain.
+To overcome this problem, \cite{etgen} propose a velocity interpolation method. 
+They present an implementation for isotropic, VTI (vertical transversely isotropic) and TTI (tilted transversely isotropic) media.  
+In the isotropic case, two FFTs can be sufficient. 
+For anisotropic media, more than one velocity parameter must be used. 
+Therefore, it is necessary to perform velocity interpolation 
+by combining different parameters and 
+computing the corresponding forward and inverse FFTs 
+for each of the velocity parameters, thus increasing the computational burden.
+Other FFT-based solutions include the optimized separable approximation or OSA \cite[]{song,morton,zhang,du} 
+and the lowrank approximation \cite[]{ying}.
+
+We propose an alternative approach.
+First, we adopt the following form of the right-hand side of equation~\ref{eq:exact} in the variable velocity case: 
+\begin{eqnarray}
+\label{eq:numerator}
+\lefteqn{2\left[\cos(v(\mathbf{x})|\mathbf{k}|\Delta t)-1\right] = }\nonumber \\
+& & 2\left[\cos(v_0|\mathbf{k}|\Delta t)-1\right]\left[\frac{\cos(v(\mathbf{x})|\mathbf{k}|\Delta t)-1}{\cos(v_0|\mathbf{k}|\Delta t)-1}\right]\;,
+\end{eqnarray} 
+where $v_0$ is the reference velocity, such as the RMS (root-mean-square) velocity of the medium.
+After that, we apply the following approximation:
+\begin{equation}
+\label{eq:approximate}
+\frac{\cos(v(\mathbf{x})|\mathbf{k}|\Delta t)-1}{\cos(v_0|\mathbf{k}|\Delta t)-1} \approx a + 2\sum^3_{n=1}{b_n\cos(k_n\Delta x_n)}\;,
+\end{equation} 
+where coefficients $a$ and $b_n$ are defined using the Taylor expansion around $k=0$,
+\begin{equation}
+\label{eq:coefficient}
+ {\begin{array}{*{20}c}
+\displaystyle a=\frac{v^2(\mathbf{x})}{v_0^2}\left[1+\frac{(\Delta t)^2(v_0^2-v^2(\mathbf{x}))(\Delta x_1^2\Delta x_2^2+\Delta x_2^2\Delta x_3^2+\Delta x_3^2\Delta x_1^2)}{6\Delta x_1^2\Delta x_2^2\Delta x_3^2}\right] \,\\ 
+\displaystyle b_n=\frac{(\Delta t)^2v^2(\mathbf{x})(v^2(\mathbf{x})-v_0^2)}{12(\Delta x_n^2)v_0^2} \, \\ 
+ \end{array} }  \;, 
+\end{equation}
+and $\Delta x_n$ is the sampling in the n-th direction. 
+We only need to calculate these coefficients once. After completing the calculation, they can be used at each time step during the wave extrapolation process.
+
+
+Equation~\ref{eq:numerator} consists of two terms: the first term is independent of $\mathbf{x}$ and  only depends on $\mathbf{k}$. 
+For this part, we use inverse FFT to return to the space domain from the wavenumber domain.
+For the remaining part, however, we can avoid phase shift in the wavenumber domain by implementing space shifts 
+through finite differences (approximation~\ref{eq:approximate}) with coefficients provided by equation~\ref{eq:coefficient}.
+This approach is analogous to the FFD method proposed by \cite{ffd} for one-way extrapolation in depth.
+
+\inputdir{cos}
+Figure~\ref{fig:cos-side1} (a) shows approximations for $[\cos(v(\mathbf{x})|\mathbf{k}|\Delta t)-1]$  
+by the 4th-order FD method (dash line) and pseudo-spectral method (dotted line). Figure~\ref{fig:cos-side1} (b) shows approximations by the FFD method (2nd-order: dash line, 4th-order: dotted line). 
+The solid lines stand for the exact values for function $[\cos(v(\mathbf{x})|\mathbf{k}|\Delta t)-1]$ with true velocity: $v=4.0 km/s$ (bottom solid line) and $v_0=2.0 km/s$ (top solid line), which indicates a significant velocity contrast ($100\%$ difference).
+In this situation, all the approximations deviate from the exact solution as the wavenumber $|k|$ becomes large.
+However, the 4th-order FFD method approximates the exact solution with the most accuracy, as shown in the error plot (Figure~\ref{fig:diff1}).
+In order to enhance the stability, one can suppress the wavefield at high wavenumbers for both pseudo-spectral and the FFD method. 
+
+\plot{cos-side1}{width=0.9\textwidth}{Different approximations for $\cos(v(\mathbf{x})|\mathbf{k}|\Delta t)-1$. 
+Solid lines: exact solution ($\cos(v(\mathbf{x})|\mathbf{k}|\Delta t)-1$) for $v=4.0$ km/s and $v_0=2.0$ km/s.
+(a) Dash line: the 4th-order FD. Dotted line: pseudo-spectral method. (b) Dash line: the 2nd-order FFD method. Dotted line: the 4th-order FFD with $v_0$ as reference velocity.  $\Delta t=0.001$ s. 
+$\Delta x=0.005\,km$.}
+
+\plot{diff1}{width=0.9\textwidth}{Errors for different approximations for $\cos(v(\mathbf{x})|\mathbf{k}|\Delta t)-1$. 
+Solid lines: exact solution ($\cos(v(\mathbf{x})|\mathbf{k}|\Delta t)-1$) for $v=4.0$ km/s and $v_0=2.0$ km/s.
+(a) Dash line: the 4th-order FD. Dotted line: pseudo-spectral method. (b) Dash line: the 2nd-order FFD method. Dotted line: the 4th-order FFD with $v_0$ as reference velocity.  $\Delta t=0.001$ s. 
+$\Delta x=0.005\,km$.}
+
+Assuming that $p(\mathbf{x},t-\Delta t)$ and $p(\mathbf{x},t)$ are already known, the time-marching algorithm can be specified as follows:
+
+\begin{enumerate}
+\item Transform $p(\mathbf{x},t)$ to $\hat{p}(\mathbf{k},t)$ by 3-D FFT;
+\item Multiply $\hat{p}(\mathbf{k},t)$ by $2\left[\cos(v_0|\mathbf{k}|\Delta t)-1\right]$ to get $\hat{q}(\mathbf{k},t)$;
+\item Transform $\hat{q}(\mathbf{k},t)$ to $q(\mathbf{x},t)$ by inverse FFT;
+\item Apply finite differences to $q(\mathbf{x},t)$ with coefficients in equation~\ref{eq:coefficient} to get $q(\mathbf{x},t+\Delta t)$. 
+Namely,
+\begin{eqnarray}
+\label{eq:fd}
+\lefteqn{q^{i,j,k}(t+\Delta t) = a^{i,j,k}q^{i,j,k}(t)}\nonumber \\
+& & +b_1^{i,j,k}(q^{i-1,j,k}(t)+q^{i+1,j,k}(t)) \nonumber \\
+& & +b_2^{i,j,k}(q^{i,j-1,k}(t)+q^{i,j+1,k}(t))\nonumber \\
+& & +b_3^{i,j,k}(q^{i,j,k-1}(t)+q^{i,j,k+1}(t))\;,
+\end{eqnarray} 
+where $i$ is the grid index of $x_i$ direction;
+\item $p(\mathbf{x},t+\Delta t) \leftarrow q(\mathbf{x},t+\Delta t) + 2p(\mathbf{x},t) - p(\mathbf{x}, t-\Delta t)$.
+\end{enumerate}
+Here $q(\mathbf{x},t)$ and $\hat{q}(\mathbf{k},t)$ are temporary functions.\\
+
+The FFD approach is not limited to the isotropic case. 
+In the case of transversally isotropic (TTI) media, the term $v(\mathbf{x})\,|\mathbf{k}|$ on the left-hand side of equation~\ref{eq:approximate},
+can be replaced with the acoustic approximation \cite[]{alkhalifah1,alkhalifah2,anelliptic},
+
+%\begin{eqnarray}
+%\label{eq:ttiexact} 
+%\lefteqn{f(\mathbf{v},\mathbf{\hat{k}},\eta)  = } \\
+%&\sqrt{\frac{1}{2}(v_x^2\,\hat{k}_x^2+v_z^2\,\hat{k}_z^2)+\frac{1}{2}\sqrt{(v_x^2\,\hat{k}_x^2+v_z^2\,\hat{k}_z^2)^2-\frac{8\eta}{1+2\eta}v_x^2v_z^2\,\hat{k}_x^2\,\hat{k_z^2}}}\;,\nonumber 
+%\end{eqnarray} 
+
+\begin{equation}
+\label{eq:ttiexact} 
+f(\mathbf{v},\mathbf{\hat{k}},\eta)=\sqrt{\frac{1}{2}(v_1^2\,\hat{k}_1^2+v_2^2\,\hat{k}_2^2)+\frac{1}{2}\sqrt{(v_1^2\,\hat{k}_1^2+v_2^2\,\hat{k}_2^2)^2-\frac{8\eta}{1+2\eta}v_1^2v_2^2\,\hat{k}_1^2\,\hat{k_2^2}}}\;, 
+\end{equation} 
+
+where $v_1$ is the P-wave phase velocity in the symmetry plane, 
+$v_2$ is the P-wave phase velocity in the direction normal to the symmetry plane, 
+$\eta$ is the anisotropic elastic parameter \cite[]{alkhalifah} related to Thomsen's elastic parameters $\epsilon$ and $\delta$ \cite[]{thomsen} by
+$$\frac{1+2\delta}{1+2\epsilon}=\frac{1}{1+2\eta}\,;$$
+and $\hat{k}_1$ and $\hat{k}_2$ stand for the wavenumbers evaluated in a rotated coordinate system aligned with the symmetry axis:
+
+\begin{equation}
+\label{eq:wavenumber}
+\begin{array}{*{20}c}
+\hat{k}_1=k_1\cos{\phi}+k_2\sin{\phi}\;\\ 
+\hat{k}_2=-k_1\sin{\phi}\cos{\theta}+k_2\cos{\phi}\cos{\theta}+k_3\sin{\theta}\;\\ 
+\hat{k}_3=k_1\sin{\phi}\sin{\theta}-k_2\cos{\phi}\sin{\theta}+k_3\cos{\theta}\;,\\ 
+ \end{array}
+\end{equation}
+
+where $\theta$ is the tilt angle measured with respect to vertical and
+$\phi$ is the angle between the projection of the symmetry axis in the
+horizontal plane and the original X-coordinate. The symmetry axis has
+the direction of
+$\left\{-\sin\theta\sin\phi,-\sin\theta\cos\phi,\cos\theta\right\}$.
+
+Using these definitions, 
+we develop a finite-difference approximation analogous to equation~\ref{eq:approximate} for FFD in TTI media. The details of the derivation are given in the appendix.
+For the 2D TTI case, the corresponding FFD algorithm is as following:
+\begin{enumerate}
+\item Transform $p(\mathbf{x},t)$ to $\hat{p}(\mathbf{k},t)$ by FFT;
+\item Multiply $\hat{p}(\mathbf{k},t)$ by $\displaystyle\frac{2[\cos(f(\mathbf{v_0},\mathbf{\hat{k}},\eta_0)\Delta t)-1]}{|\mathbf{\hat{k}}|^2}$ to get $\hat{q}(\mathbf{k},t)$;
+\item Transform $\hat{q}(\mathbf{k},t)$ to $q(\mathbf{x},t)$ by inverse FFT;
+\item Apply finite differences to $q(\mathbf{x},t)$ with coefficients in Table~\ref{tbl:equations} to get $q(\mathbf{x},t+\Delta t)$. Namely,
+\begin{eqnarray}
+\label{eq:fd}
+\lefteqn{q^{i,j,t+\Delta t} = a^{i,j}q^{i,j,t}} \\
+& & +b_1^{i,j}(q^{i-1,j,t}+q^{i+1,j,t}) \nonumber \\
+& & +b_2^{i,j}(q^{i,j-1,t}+q^{i,j+1,t})\nonumber \\
+& & +d_1^{i,j}(q^{i-2,j,t}+q^{i+2,j,t}) \nonumber \\
+& & +d_2^{i,j}(q^{i,j-2,t}+q^{i,j+2,t})\nonumber \\
+& & +c^{i,j}(q^{i-1,j-1,t}+q^{i-1,j+1,t}+q^{i+1,j-1,t}+q^{i+1,j+1,t})\nonumber\;.
+\end{eqnarray} 
+where $i$ is the grid index of $x_i$ direction;
+\item $p(\mathbf{x},t+\Delta t) \leftarrow q(\mathbf{x},t+\Delta t) + 2p(\mathbf{x},t) - p(\mathbf{x}, t-\Delta t)$.
+\end{enumerate}
+Here, $q(\mathbf{x},t)$ and $\hat{q}(\mathbf{k},t)$ are temporary functions.
+
+
+
+\section{Numerical Examples}
+
+%\subsection{Isotropic Cases}
+
+\inputdir{ffd}
+Our first example is a comparison of four methods: the 4th-order
+finite differences, pseudo-spectral method, velocity interpolation,
+and the FFD method in a velocity model with smooth variation,
+formulated as
+$$v(x,z)\,=\,550+1.5\times10^{-4}(x-800)^2+10^{-4}(z-500)^2;$$
+$$0\le x\le2560,\;0\le z\le2560.$$
+The velocity is between 550 m/s and 1439 m/s.
+A Ricker-wavelet source with maximum frequency 70 Hz is located at the center of the model. For all the numerical simulations based on this model, we use the same grid size: $\Delta x\,=\,5$ m and $\Delta t\,=\,2$ ms.
+
+Figure~\ref{fig:wavfd} shows an obvious numerical dispersion from the
+snapshot of the acoustic wavefield computed by the 4th-order finite
+difference method.  Figure~\ref{fig:wavsp} shows a slight dispersion
+from the snapshot computed by pseudo-spectral method \cite[]{reshef}.
+Figure~\ref{fig:wavpspi} shows the corresponding snapshot of the
+velocity-interpolation method \cite[]{etgen,crawley}, calculated using
+two reference velocities.  It is practically free of dispersion thanks
+to spectral compensation.  Figure~\ref{fig:wavffd} shows a snapshot of
+the proposed FFD method.  It is almost exactly the same as
+Figure~\ref{fig:wavpspi}; however, only one reference velocity is used
+instead of two.  As comparison between Figure~\ref{fig:wavffd} and
+Figure~\ref{fig:wavpspi} implies, the FFD method has practically the
+same accuracy as the velocity interpolation method while having only
+one reference velocity and therefore replacing the cost of one
+additional FFT with the cost of a low-order finite-difference
+operator.
+
+\inputdir{ffd}
+
+\multiplot{4}{wavfd,wavsp,wavpspi,wavffd}{width=0.4\textwidth}{Acoustic wavefield snapshot by: (a) 4th-order Finite Difference method; (b) pseudo-spectral method; (c) velocity interpolation method with 2 reference velocities; (d) FFD method with RMS velocity.} 
+
+\inputdir{bpmodel}
+
+Our next example is a snapshot of the acoustic wavefield calculated by FFD in the BP model \cite[]{bp}. We use a Ricker-wavelet at a point source. The maximum frequency is 50 Hz. The horizontal grid size $\Delta x$ is 37.5 m, the vertical grid size $\Delta z$ is 12.5 m and the time step is 1 ms. 
+Figure~\ref{fig:vel} shows a part of the model with a salt body.
+Figure~\ref{fig:wavsnap} shows a wavefield snapshot confirming that the FFD method can work in a complex-velocity medium as well.\\
+
+\inputdir{bpmodel}
+
+\plot{vel}{width=0.9\textwidth}{Portion of BP 2004 synthetic velocity model.}
+\plot{wavsnap}{width=0.9\textwidth}{Wavefield snapshot in the BP Model shown in Figure~\ref{fig:vel}.}
+
+Next we apply our FFD algorithm to RTM with a simple exponential decaying boundary condition \cite[]{cerjan}. The dominant frequency is 27 Hz. The space grid is 25 m and the time step is 1.5 ms. Figure~\ref{fig:img} shows the output image. The inner and outer flanks of the salt body are clearly imaged.\\ 
+
+\inputdir{.}
+\plot{img}{width=0.9\textwidth}{RTM image of BP salt model.}
+
+\inputdir{anisotropic}
+The cost advantage of FFD is even more appealing in anisotropic (TTI) media, 
+which require multiple velocity parameters and increase the cost of velocity interpolation.
+Figure~\ref{fig:TTI-snapshot} shows the impulse response of a 4th-order FFD operator 
+in a TTI model with the tilt of $45\,^{\circ}$ and a smooth velocity variation ($v_x$: 800-1225.41 m/s, $v_z$: 700-883.6 m/s). The space grid size is 5 m and the time step is 1 ms. 
+Note no coupling of qP-waves and qSV-waves \cite[]{zhang2} in the figure, 
+thanks to the Fourier construction of the operator.\\
+
+For this paper, we implemented a 2nd-order 5-point FD scheme for 2D isotropic case. 
+One can observe little dispersion in isotropic examples. For TTI media, we use a 13-point scheme which minimizes the error in the symmetry plane and in the direction normal to the symmetry plane. One can still see some dispersion in the corresponding snapshot; which indicates that a higher order FD scheme might be required to further supress the dispersion.\\ 
+
+\inputdir{anisotropic}
+\plot{TTI-snapshot}{width=0.9\textwidth}{Wavefield snapshot in a TTI medium with tilt of 45 degrees. 
+$v_x(x,z)=800+10^{-4}(x-1000)^2+10^{-4}(z-1200)^2$; $v_z(x,z)=700+10^{-4}(z-1200)^2$; $\eta=0.3$; $\theta=45\,^{\circ}$.}
+
+\inputdir{bptti}
+
+Our last example is qP-wave simulation in the BP 2D TTI model. 
+Figure~\ref{fig:vp2}-\ref{fig:theta2} shows parameters for part of the model.
+The maximum frequency is 50 Hz. The space grid size is 12.5 m and the time step is 1 ms.
+The snapshot of the acoustic wavefield in Figure~\ref{fig:ttisnapshot} demonstrates the stability of our approach in a complicated anisotropic model.
+Some small dispersion is present in the TTI examples, pointing to a possible need to extend the FD part of the FFD scheme from second order to higher orders.
+
+\inputdir{bptti}
+%\multiplot{4}{vp2,epsilon2,delta2,theta2}{width=0.2\textwidth}{Partial region of the 2D BP TTI model. a: $v_z$. b: $\epsilon$. c: $\delta$. d:$\theta$.}
+\multiplot{4}{vp2,vx2,yita2,theta2}{width=0.45\textwidth}{Partial region of the 2D BP TTI model. a: $v_z$. b: $v_x$. c: $\eta$. d:$\theta$.}
+\plot{ttisnapshot}{width=0.9\textwidth}{Scalar wavefield snapshot in the 2D BP TTI model, shown in Figure~\ref{fig:vp2,vx2,yita2,theta2}.}
+
+
+%\plot{ttisnapshot}{width=0.45\textwidth}{width=\columnwidth}{Scalar wavefield snapshot in the 2D BP TTI model, shown in Figure~\ref{fig:vp2,vx2,yita2,theta2}.}
+\section{Conclusions}
+Accurate and efficient numerical wave propagation in variable velocity media is crucial for seismic modeling and seismic migration,
+particularly for reverse-time migration.
+The FFD technique proposed in this paper promises higher accuracy than that of the conventional, explicit finite-difference method, 
+at the cost of only one forward and inverse Fast Fourier Transform.
+Results in synthetic isotropic and anisotropic models illustrate FFD's stability in complicated velocity models. 
+The method can be used in reverse-time migration to enhance its accuracy and stability.
+
+\section{Acknowledgement}
+
+We thank BP for releasing benchmark synthetic models, Bjorn Enquist,
+Paul Fowler and Lexing Ying for useful discussions, and John Etgen,
+Stig Hestholm, Erik Saenger and two anonymous reviewers for helpful
+reviews.
+
+This publication is authorized by the Director, Bureau of Economic
+Geology, The University of Texas at Austin.
+
+
+\append{FFD for TTI media}
+To develop a 25-point finite-difference scheme analogous to equation~\ref{eq:approximate} for FFD in 3D TTI media, we first apply the following approximation:
+\begin{eqnarray}
+\label{eq:ttiapprox} 
+\lefteqn{\frac{\cos(f(\mathbf{v},\mathbf{\hat{k}},\eta)\Delta t)-1}{\cos(f(\mathbf{v_0},\mathbf{\hat{k_0}},\eta_0)\Delta t)-1}|\mathbf{\hat{k}}|^2 \approx  } \\
+\displaystyle & a + 2 \sum^{3}_{n=1}{(b_n\cos(k_n\Delta x_n)+d_n\cos(2k_n\Delta x_n))} \nonumber \\
+\displaystyle & + 2 \sum^{3}_{n=1}{c_n [\cos(k_i\Delta x_i+k_j\Delta x_j) + \cos(k_i\Delta x_i-k_j\Delta x_j)]} \nonumber \;,\nonumber 
+\end{eqnarray} 
+where $i,j=1,2,3;\,i\neq j;\,i,j\neq n$.
+
+In approximation~\ref{eq:ttiapprox},
+$f(\mathbf{v},\mathbf{\hat{k}},\eta)$ is a function as in
+expression~\ref{eq:ttiexact} and $a$, $b_n$, $c_n$ and $d_n$ are
+coefficients determined from the Taylor expansion around $k=0$.
+
+Notice that we multiply the left-hand side with
+$|\mathbf{\hat{k}}|^2$, so one needs to multiply
+$\hat{p}(\mathbf{\hat{k},t})$ with
+$\displaystyle\frac{2[\cos(f(\mathbf{v_0},\mathbf{k},\eta_0)\Delta
+t)-1]}{|\mathbf{\hat{k}}|^2}$.
+
+The coefficients for Equation~\ref{eq:ttiapprox} are derived in
+Table~\ref{tbl:equations} and Table~\ref{tbl:wh}.  $w_{n0}$, $h_{n0}$,
+$p_{n0}$ and $q_{n0}$ have similar expressions as above in
+Table~\ref{tbl:wh} with $\mathbf{v}$, $\eta$ and $\theta$ substited by
+the corresponding reference values: RMS velocity $\mathbf{v}_0$,
+average anisotropic parameter $\eta_0$ and average tilt angles
+$\theta_0$ and $\phi_0$.
+\tabl{equations}{Coefficients for equation~\ref{eq:ttiapprox}.}
+{
+    \begin{center}
+     \begin{tabular}{|c|c|}
+      \hline $a$ &
+     $\displaystyle a=-2b_1-2b_2-2b_3-4c_1-4c_2-4c_3-2d_1-2d_2-2d_3$ \\ 
+      \hline $b$ &
+      $\displaystyle b_1=-2c_2-2c_3-4d_1-\frac{w_1+h_1}{\Delta x_1^2(w_{10}+h_{10})}$\\ 
+      \hline $c$ &
+      $\displaystyle b_2=-2c_1-2c_3-4d_2-\frac{w_2+h_2}{\Delta x_2^2(w_{20}+h_{20})}$\\ 
+      \hline $d$ &
+      $\displaystyle b_3=-2c_1-2c_2-4d_3-\frac{w_3+h_3}{\Delta x_3^2(w_{30}+h_{30})}$\\ 
+      \hline $e$ &
+      $\displaystyle d_1=\frac{(w_1+h_1)(2x_1^2+\Delta t^2(w_{10}+h_{10}-w_1-h_1))}{24\Delta x_1^4(w_{10}+h_{10})}$\\
+      \hline $f$ &
+      $\displaystyle d_2=\frac{(w_2+h_2)(2x_2^2+\Delta t^2(w_{20}+h_{20}-w_2-h_2))}{24\Delta x_2^4(w_{20}+h_{20})}$\\
+      \hline $g$ &
+      $\displaystyle d_3=\frac{(w_3+h_3)(2x_3^2+\Delta t^2(w_{30}+h_{30}-w_3-h_3))}{24\Delta x_3^4(w_{30}+h_{30})}$\\
+      \hline $h$ &
+ $\begin{array}{c}  \displaystyle c_1=\frac{1}{12\Delta x_2^2\Delta x_3^2}\left[\frac{\Delta x_2^2(w_2+h_2)}{w_{20}+h_{20}}+\frac{\Delta x_3^2(w_3+h_3)}{w_{30}+h_{30}}\right]-d_2\frac{\Delta x_2^2}{\Delta x_3^2}-d_3\frac{\Delta x_3^2}{\Delta x_2^2} \\  
+\displaystyle\; +\frac{\Delta t^2(p_1+q_1)(p_10+q_10-p1-q1)}{12\Delta x_2^2\Delta x_3^2(p_10+q_10)}\end{array}$ \\
+      \hline $i$ &
+ $\begin{array}{c}  \displaystyle c_2=\frac{1}{12\Delta x_1^2\Delta x_3^2}\left[\frac{\Delta x_1^2(w_1+h_1)}{w_{10}+h_{10}}+\frac{\Delta x_3^2(w_3+h_3)}{w_{30}+h_{30}}\right]-d_1\frac{\Delta x_1^2}{\Delta x_3^2}-d_3\frac{\Delta x_3^2}{\Delta x_1^2} \\  
+\displaystyle\; +\frac{\Delta t^2(p_2+q_2)(p_20+q_20-p2-q2)}{12\Delta x_1^2\Delta x_3^2(p_20+q_20)}\end{array}$ \\
+      \hline $j$ &
+ $\begin{array}{c}  \displaystyle c_3=\frac{1}{12\Delta x_1^2\Delta x_2^2}\left[\frac{\Delta x_1^2(w_1+h_1)}{w_{10}+h_{10}}+\frac{\Delta x_2^2(w_2+h_2)}{w_{20}+h_{20}}\right]-d_1\frac{\Delta x_1^2}{\Delta x_2^2}-d_2\frac{\Delta x_2^2}{\Delta x_1^2} \\  
+\displaystyle\; +\frac{\Delta t^2(p_3+q_3)(p_30+q_30-p3-q3)}{12\Delta x_1^2\Delta x_2^2(p_30+q_30)}\end{array}$ \\
+      \hline 
+     \end{tabular}   
+    \end{center}   
+}
+
+\tabl{wh}{Coefficients for Table~\ref{tbl:equations}.}
+{
+    \begin{center}
+     \begin{tabular}{|c|c|}
+      \hline $a$ &
+$w_1=v_1^2\cos^2\phi+\sin^2\phi(v_1^2\cos^2\theta+v_2^2\sin^2\theta)$ \\ 
+      \hline $b$ &
+$w_2=(v_1^2+v_2^2)\cos^2\phi\cos^2\theta+v_1^2\sin^2\theta$ \\ 
+      \hline $c$ &
+$w_3=v_1^2\sin^2\theta+v_2^2\cos^2\theta$ \\ 
+      \hline $d$ &
+$\displaystyle h_1=\sqrt{w1^2-\frac{8\eta v_1^2v_2^2\sin^2\phi(\cos^2\phi+\sin^2\phi\cos^2\theta)\sin^2\theta}{1+2\eta}}$ \\ 
+      \hline $e$ &
+$\displaystyle h_2=\sqrt{w2^2-\frac{8\eta v_1^2v_2^2\cos^2\phi\cos^2\theta(\cos^2\phi\cos^2\theta+\sin^2\phi)}{1+2\eta}}$ \\ 
+      \hline $f$ &
+$\displaystyle h_3=\sqrt{w3^2-\frac{8\eta v_1^2v_2^2\cos^2\theta\sin^2\theta}{1+2\eta}}$ \\       \hline $g$ &
+$p_1=w_2+w_3+v_1^2\cos\phi\sin2\theta-2v_2^2\cos\phi\cos^2\theta$ \\ 
+      \hline $h$ &
+$\displaystyle q_1=\sqrt{p_1^2-\frac{32\eta v_1^2v_2^2\cos^2\theta\sin^4\frac{\phi}{2}(\cos^2\phi\cos^2\theta+\sin^2\theta+\sin^2\phi+\cos\phi\sin2\theta)}{1+2\eta}}$ \\ 
+      \hline $i$ &
+$p_2=w_1+w_3+(v_2^2-v_1^2)\sin\phi\sin2\theta$ \\ 
+      \hline $j$ &
+$\displaystyle q_2=\sqrt{p_2^2-\frac{8\eta v_1^2v_2^2(\cos\theta+\sin\phi\sin\theta)^2(\cos^2\phi+(\cos\theta\sin\phi-\sin\theta)^2)}{1+2\eta}}$ \\ 
+      \hline $k$ &
+$p_3=w_1+w_2+v_1^2\sin^2\theta\sin2\phi+\frac{1}{2}v_2^2\sin2\phi\sin2\theta$ \\ 
+      \hline $l$ &
+$\displaystyle q _3=\sqrt{p_3^2-\frac{4\eta v_1^2v_2^2\cos^2(\phi+\theta)(\sin2\phi\cos2\theta-3-\cos2\theta-\sin2\phi)}{1+2\eta}}$ \\ 
+      \hline 
+     \end{tabular}   
+    \end{center}   
+}
+
+\bibliographystyle{seg}
+
+\bibliography{ffd,SEP2}

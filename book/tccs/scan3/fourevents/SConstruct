@@ -1,0 +1,207 @@
+from rsf.proj import *
+from rsf.prog import RSFROOT
+
+Nt=1000
+dt=0.004
+t0=0
+
+Nx=100
+dx=0.08
+x0=-4
+
+Ny=Nx
+dy=dx
+y0=x0
+
+fw=10.0
+
+########  4 Reflection Events ################################################
+# before after isotropic NMO
+
+# first layer
+t1=0.7
+it1=int(t1/dt)
+Flow('spike1',None,
+     '''
+     spike n1=%d k1=%d nsp=1 |
+     ricker1 frequency=%g |
+     spray axis=2 n=%d d=%g o=%g |
+     spray axis=3 n=%d d=%g o=%g 
+     ''' % (Nt,it1,fw,Nx,dx,x0,Ny,dy,y0))
+Vavg=0.3
+Vcos=0
+Vsin=0
+Flow('vel1-before.asc',None,'echo %g %g %g n1=3 data_format=ascii_float in=$TARGET' % (Vavg,Vcos,Vsin))
+Flow('vel1-before','vel1-before.asc','dd form=native | spray axis=1 n=%d' % (Nt))
+Flow('cmp1-before','spike1 vel1-before','inmo3_ort velocity=${SOURCES[1]} half=n')
+#Result('cmp1-before','byte gainpanel=all | grey3 title="layer 1" frame1=%d frame2=%d frame3=%d' % (it1,Nx/2,Ny/2))
+
+Flow('vel1.asc',None,'echo %g %g %g n1=3 data_format=ascii_float in=$TARGET' % (0,Vcos,Vsin))
+Flow('vel1','vel1.asc','dd form=native | spray axis=1 n=%d' % (Nt))
+Flow('cmp1','spike1 vel1','inmo3_ort velocity=${SOURCES[1]} half=n')
+#Result('cmp1','byte gainpanel=all | grey3 title="layer 1" frame1=%d frame2=%d frame3=%d' % (it1,Nx/2,Ny/2))
+
+
+# second layer
+t2=1.8
+it2=int(t2/dt)
+Flow('spike2',None,
+     '''
+     spike n1=%d k1=%d nsp=1 |
+     ricker1 frequency=%g |
+     spray axis=2 n=%d d=%g o=%g |
+     spray axis=3 n=%d d=%g o=%g 
+     ''' % (Nt,it2,fw,Nx,dx,x0,Ny,dy,y0))
+Vavg=0.29
+Vcos=0.021
+Vsin=0.021
+Flow('vel2-before.asc',None,'echo %g %g %g n1=3 data_format=ascii_float in=$TARGET' % (Vavg,Vcos,Vsin))
+Flow('vel2-before','vel2-before.asc','dd form=native | spray axis=1 n=%d' % (Nt))
+Flow('cmp2-before','spike2 vel2-before','inmo3_ort velocity=${SOURCES[1]} half=n')
+#Result('cmp2-before','byte gainpanel=all | grey3 title="layer 2" frame1=%d frame2=%d frame3=%d' % (it2,Nx/2,Ny/2))
+
+Flow('vel2.asc',None,'echo %g %g %g n1=3 data_format=ascii_float in=$TARGET' % (0,Vcos,Vsin))
+Flow('vel2','vel2.asc','dd form=native | spray axis=1 n=%d' % (Nt))
+Flow('cmp2','spike2 vel2','inmo3_ort velocity=${SOURCES[1]} half=n')
+#Result('cmp2','byte gainpanel=all | grey3 title="layer 2" frame1=%d frame2=%d frame3=%d' % (it2,Nx/2,Ny/2))
+
+
+
+# third layer
+t3=2.6
+it3=int(t3/dt)
+Flow('spike3',None,
+     '''
+     spike n1=%d k1=%d nsp=1 |
+     ricker1 frequency=%g |
+     spray axis=2 n=%d d=%g o=%g |
+     spray axis=3 n=%d d=%g o=%g 
+     ''' % (Nt,it3,fw,Nx,dx,x0,Ny,dy,y0))
+Vavg=0.25
+Vcos=-0.01
+Vsin=-0.017
+Flow('vel3-before.asc',None,'echo %g %g %g n1=3 data_format=ascii_float in=$TARGET' % (Vavg,Vcos,Vsin))
+Flow('vel3-before','vel3-before.asc','dd form=native | spray axis=1 n=%d' % (Nt))
+Flow('cmp3-before','spike3 vel3-before','inmo3_ort velocity=${SOURCES[1]} half=n')
+#Result('cmp3-before','byte gainpanel=all | grey3 title="layer 3" frame1=%d frame2=%d frame3=%d' % (it3,Nx/2,Ny/2))
+
+Flow('vel3.asc',None,'echo %g %g %g n1=3 data_format=ascii_float in=$TARGET' % (0,Vcos,Vsin))
+Flow('vel3','vel3.asc','dd form=native | spray axis=1 n=%d' % (Nt))
+Flow('cmp3','spike3 vel3','inmo3_ort velocity=${SOURCES[1]} half=n')
+#Result('cmp3','byte gainpanel=all | grey3 title="layer 3" frame1=%d frame2=%d frame3=%d' % (it3,Nx/2,Ny/2))
+
+
+# fourth layer
+t4=3.4
+it4=int(t4/dt)
+Flow('spike4',None,
+     '''
+     spike n1=%d k1=%d nsp=1 |
+     ricker1 frequency=%g |
+     spray axis=2 n=%d d=%g o=%g |
+     spray axis=3 n=%d d=%g o=%g 
+     ''' % (Nt,it4,fw,Nx,dx,x0,Ny,dy,y0))
+Vavg=0.15
+Vcos=0
+Vsin=0.02
+Flow('vel4-before.asc',None,'echo %g %g %g n1=3 data_format=ascii_float in=$TARGET' % (Vavg,Vcos,Vsin))
+Flow('vel4-before','vel4-before.asc','dd form=native | spray axis=1 n=%d' % (Nt))
+Flow('cmp4-before','spike4 vel4-before','inmo3_ort velocity=${SOURCES[1]} half=n')
+#Result('cmp4-before','byte gainpanel=all | grey3 title="layer 4" frame1=%d frame2=%d frame3=%d' % (it4,Nx/2,Ny/2))
+
+Flow('vel4.asc',None,'echo %g %g %g n1=3 data_format=ascii_float in=$TARGET' % (0,Vcos,Vsin))
+Flow('vel4','vel4.asc','dd form=native | spray axis=1 n=%d' % (Nt))
+Flow('cmp4','spike4 vel4','inmo3_ort velocity=${SOURCES[1]} half=n')
+#Result('cmp4','byte gainpanel=all | grey3 title="layer 4" frame1=%d frame2=%d frame3=%d' % (it4,Nx/2,Ny/2))
+
+
+## Add events to create CMP.
+Flow('cmp-before','cmp1-before cmp2-before cmp3-before cmp4-before',
+     '''
+     math cmp2=${SOURCES[1]} cmp3=${SOURCES[2]} cmp4=${SOURCES[3]} output="input+cmp2+cmp3+cmp4"
+     ''')
+Result('cmp-before','byte gainpanel=all | grey3 title=" " label2="Inline Offset" unit2=km label3="Crossline Offset" unit3=km frame1=%d frame2=%d frame3=%d' % (it3,Nx/2,Ny/2))
+
+Flow('cmp','cmp1 cmp2 cmp3 cmp4',
+     '''
+     math cmp2=${SOURCES[1]} cmp3=${SOURCES[2]} cmp4=${SOURCES[3]} output="input+cmp2+cmp3+cmp4"
+     ''')
+Result('cmp','byte gainpanel=all | grey3 title=" " label2="Inline Offset" unit2=km label3="Crossline Offset" unit3=km frame1=%d frame2=%d frame3=%d' % (it3,Nx/2,Ny/2))
+
+
+######################################################
+
+# compute cmp^2
+Flow('cmp_sq','cmp','math output="input^2" ')
+#Result('cmp_sq','byte gainpanel=all | grey3 title="cmp\^2" frame1=%d frame2=%d frame3=%d' % (it3,Nx/2,Ny/2))
+
+# Apply FFT in time
+Flow('NMOfftdata','cmp','rtoc | fft3 axis=1 pad=1 | window n1=500 f1=500')
+#Result('NMOfftreal','NMOfftdata','real | grey title="NMOreal" ')
+
+Flow('NMOfftdatac','NMOfftdata','window n1=100 f1=0')
+#Result('NMOfftrealc','NMOfftdatac','real | grey title="NMOrealc" ')
+
+Flow('NMOfftdata_sq','cmp_sq','rtoc | fft3 axis=1 pad=1 | window n1=500 f1=500')
+#Result('NMOfftreal_sq','NMOfftdata_sq','real | grey title="NMOreal\^2" ')
+
+Flow('NMOfftdatac_sq','NMOfftdata_sq','window n1=160 f1=0')
+#Result('NMOfftrealc_sq','NMOfftdatac_sq','real | grey title="NMOrealc\^2" ')
+
+
+Ntau=Nt
+dtau=dt
+tau0=t0
+
+Np=100
+p0=-0.03
+dp=(0.03-p0)/Np
+
+Nq=Np
+q0=p0
+dq=dp
+
+Ns=1
+s0=0.0
+ds=0.1
+
+# prepare to apply fast butterfly
+Flow('bfio.bin',os.path.join(RSFROOT,'include','bfio.bin'),'/bin/cp $SOURCE $TARGET',stdin=0,stdout=-1)
+
+# compute integral of d(t,x,y)
+Flow('NMOfmod','NMOfftdatac bfio.bin','radon34 ntau=%d dtau=%g tau0=%g np=%d dp=%g p0=%g nq=%d dq=%g q0=%g ns=%d ds=%g s0=%g fi=2 EL=0 N=32 EPSx1=7 EPSx2=5 EPSx3=5 EPSk1=7 EPSk2=5 EPSk3=5 | real | math output=input*%g' % (Ntau,dtau,tau0,Np,dp,p0,Nq,dq,q0,Ns,ds,s0,2*dx*dy/Nt))
+#Result('NMOfmod','byte gainpanel=all | grey3 title="NMOfmod" label1=Time unit1=s label2=Wcos unit2="s\^2\_/km\^2\_" label3=Wsin unit3="s\^2\_/km\^2\_" frame1=%d frame2=%d frame3=%d' % (it4,Np/2,Nq/2))
+
+# compute integral of d(t,x,y)^2
+Flow('NMOfmod_sq','NMOfftdatac_sq bfio.bin','radon34 ntau=%d dtau=%g tau0=%g np=%d dp=%g p0=%g nq=%d dq=%g q0=%g ns=%d ds=%g s0=%g fi=2 EL=0 N=32 EPSx1=9 EPSx2=5 EPSx3=5 EPSk1=9 EPSk2=5 EPSk3=5 | real | math output=input*%g' % (Ntau,dtau,tau0,Np,dp,p0,Nq,dq,q0,Ns,ds,s0,2*dx*dy/Nt))
+#Result('NMOfmod_sq','byte gainpanel=all | grey3 title="NMOfmod\^2\_" label1=Time unit1=s label2=Wcos unit2="s\^2\_/km\^2\_" label3=Wsin unit3="s\^2\_/km\^2\_" frame1=%d frame2=%d frame3=%d' % (it2,Np/2,Nq/2))
+
+# compute semblance
+Flow('NMOsemb','NMOfmod NMOfmod_sq','math output="input^2" | divn den=${SOURCES[1]} rect1=10 rect2=10 rect3=10 | math output="input/%g" ' %(Nx*dx*Ny*dy))
+#Result('NMOsemb','byte gainpanel=all allpos=y bar=bar.rsf | grey3 title=" " maxval=1 minval=0 scalebar=y color=j label1=Time unit1=s label2="Wcos" unit2="s\^2\_/km\^2\_" label3="Wsin" unit3="s\^2\_/km\^2\_" frame1=%d frame2=%d frame3=%d' % (it3,33,22))
+Result('NMOsemb','byte gainpanel=all allpos=y | grey3 title=" " maxval=1 minval=0 color=j label1=Time unit1=s label2="Wcos" unit2="s\^2\_/km\^2\_" label3="Wsin" unit3="s\^2\_/km\^2\_" frame1=%d frame2=%d frame3=%d' % (it3,33,22))
+
+#(it1,50,50)
+#(it2,85,85)
+#(it3,33,22)
+#(it4,50,83)
+
+# bad autopicking
+# pick Vcos-2 and Vsin-2
+#Flow('NMOpik','NMOsemb','scale axis=3 | pick3 smooth=n rect1=100 vel0=0')
+#Flow('pik1','NMOpik','window f4=0 n4=1')
+#Flow('pik2','NMOpik','window f4=1 n4=1')
+#Result('pik1','graph transp=y yreverse=y min2=-0.03 max2=0.03 plotfat=5 plotcol=3 pad=n title="Wcos" label1=Time unit1=s wantaxis=y wanttitle=y')
+#Result('pik2','graph transp=y yreverse=y min2=-0.03 max2=0.03 plotfat=5 plotcol=3 pad=n title="Wsin" label1=Time unit1=s wantaxis=y wanttitle=y')
+
+# RMO using picked vel
+#Flow('Vavg0',None,'math n1=%d d1=%g o1=%g output="0.0" ' % (Nt,dt,t0))
+#Flow('RMOpikvel','Vavg0 pik1 pik2','cat axis=2 ${SOURCES[1:3]}')
+#Flow('RMOdata','cmp RMOpikvel','nmo3_ort velocity=${SOURCES[1]} half=n')
+#Result('RMOdata','byte gainpanel=all | grey3 title="RMOdata" frame1=%d frame2=%d frame3=%d' % (it2,Nx/2,Ny/2))
+
+# Slow Radon compute integral of d(t,x,y)
+#Flow('smod','cmp','diradon34 ntau=%d dtau=%g tau0=%g np=%d dp=%g p0=%g nq=%d dq=%g q0=%g ns=%d ds=%g s0=%g fi=2 | math output=input*%g' % (Ntau,dtau,tau0,Np,dp,p0,Nq,dq,q0,Ns,ds,s0,dx*dy))
+#Result('smod','byte gainpanel=all | grey3 title="NMOsmod" label1=Time unit1=s label2=Wcos unit2="s\^2\_/km\^2\_" label3=Wsin unit3="s\^2\_/km\^2\_" frame1=%d frame2=%d frame3=%d' % (it4,Np/2,Nq/2))
+
+End()

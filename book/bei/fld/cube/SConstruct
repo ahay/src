@@ -1,0 +1,17 @@
+from rsf.proj import *
+
+Fetch('shots.hh','shots')
+
+Flow('cube','shots.hh','dd form=native | window n1=400 n2=24 | byte')
+
+cubeplot = '''
+grey3 frame1=320 frame2=3 frame3=20 point1=.75
+label1="Time (s)" label2=Offset label3=Shot wanttitle=n 
+'''
+
+Plot('flat','cube',cubeplot)
+Plot('cube',cubeplot + ' flat=n') 
+Result('cube','flat cube','OverUnderAniso')
+
+###########################################################################
+End()

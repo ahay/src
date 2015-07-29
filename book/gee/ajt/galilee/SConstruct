@@ -1,0 +1,41 @@
+from rsf.proj import *
+
+Fetch('galilee.h','galilee')
+
+base = -212
+
+Flow('data','galilee.h','dd form=native')
+Flow('mask','data','window n1=1 f1=2 | mask max=%g' % base)
+Flow('triplets',['data','mask'],'headerwindow mask=${SOURCES[1]}')
+
+bin = '''
+window n1=1 f1=2 | math output=%g-input |
+bin interp=1 xkey=0 ykey=1 head=$SOURCE
+xmin=198 xmax=212 ymin=233 ymax=257
+''' % base
+
+Flow('galbin1','triplets',bin + ' nx=140 ny=220')
+Flow('galbin2','triplets',bin + ' nx=420 ny=660')
+
+def plot(title,allpos=0):
+    return '''
+    grey gpow=.60 allpos=%d pclip=90
+    crowd=.85 title="%s" yreverse=n transp=n
+    label2="north-south (km)" label1="west-east (km)"
+    ''' % (allpos,title)
+
+Plot('galbin1',plot('Coarse Binning',1))
+Plot('galbin2',plot('Fine Binning',1))
+Result('galbin',['galbin1','galbin2'],'SideBySideAniso')
+
+Flow('mesh','triplets',bin + ' interp=2 nx=140 ny=220')
+# Plot('mesh',plot('Binned',1))
+
+Flow('ruff2','mesh','light ay=0 ax=1 eps=0.4')
+Flow('ruff0','mesh','light ay=0 ax=1 eps=0')
+Plot('ruff2',plot('Roughened: Lowcut'))
+Plot('ruff0',plot('Roughened: Gradient'))
+Result('galocut',['ruff2','ruff0'],'SideBySideAniso')
+
+###########################################################################
+End()

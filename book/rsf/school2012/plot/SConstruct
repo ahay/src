@@ -1,0 +1,93 @@
+from rsf.proj import *
+## If you change the order of lines here, do not forget to modify ../rsfplot.tex
+# Graph, x linear example
+Flow('sinc',None,'math n1=101 d1=0.2 o1=-10 output="sin(x1)/x1"')
+Result('sinc','graph title=Sinc Function')
+
+# Graph, x squared example
+Flow('xsq',None,'math n1=10 output="x1*x1"')
+Flow('sqline','xsq','cmplx $SOURCE')
+Result('sqline','''
+       graph symbol="+" title="Line, x\\^2" symbolsz=12''')
+Flow('msinc',None,
+     '''math n1=101 d1=0.2 o1=-10 n2=3
+        output="sin((x2+1)*x1)/((x2+1)*x1)"''')
+Result('msincs','msinc','graph title="Multiple Sincs, n3 > 1"')
+Result('mpsincs','msinc','''
+       graph title="With symbol=" symbol=+*o symbolsz=8''')
+
+Flow('mline',None,'math n1=10 n2=3 output="(x2+1)*x1"')
+Result('dplines','mline','''
+       dots title="Lines with bars" gaineach=n radius=0.15''')
+
+# Box example
+Plot('label1',None,'''
+     box y0=5.6 x0=6.4 xt=-1 yt=1 label="Line \F10 a"''')
+Plot('msinc','msinc','graph title="Sincs with a label (overlay)"')
+Result('mbmincs','msinc label1','Overlay')
+
+# Surface and contours
+Flow('sinsq',None,'''
+     math n1=201 n2=201 o1=-1.0 o2=-1.0 d1=0.01 d2=0.01
+          output="sin(3.14*x1)*sin(3.14*x2)" label1=x label2=y''')
+Result('sqsurf','sinsq','grey color=j title=Surface scalebar=y')
+Result('csqsurf','sinsq','contour title=Isolines allpos=n')
+
+# Surface and contours, overlay
+Plot('psinsq','sinsq','''grey color=j title=Overlay scalebar=y
+                              min1=-1 max1=1 min2=-1 max2=1''')
+Plot('pcsinsq','sinsq','contour title=Overlay allpos=n scalebar=y')
+Result('csurf','psinsq pcsinsq','Overlay')
+
+# Wiggle example
+Flow('signal',None,'''spike nsp1 n1=301 d1=0.004 o1=0.0 k1=101 l1=101 title=
+                            label1=Time unit1=s | ricker1 frequency=15 |
+                      spray axis=2 d=0.01 n=51 o=0 label=Distance unit=km''')
+Flow('vel','signal','math output=2')
+Flow('gath',['signal','vel'],'inmo velocity=${SOURCES[1]}')
+Plot('wgath','gath','''wiggle poly=y min2=0 max2=0.5 plotcol=7
+                       yreverse=y wherexlabel=top gridcol=7''')
+Plot('rgath','gath','grey transp=n min2=0 max2=0.5')
+Result('sgath','rgath wgath','Overlay')
+
+# Cubeplot example
+Flow('ganom',None,'''math n1=41 n2=41 n3=41 o1=-1 o2=-1 o3=-1
+     d1=0.05 d2=0.05 d3=0.05 output="exp(-2*(x1^2+x2^2+x3^2))"''')
+Result('fganom','ganom','''byte gainpanel=all bar=gbar.rsf
+       allpos=y | cubeplot color=j scalebar=y bar=gbar.rsf
+       title="Slices, flat" frame1=20 frame2=20 frame3=20''')
+
+# Cubeplot, non-flat example
+Result('ganom3','ganom','''byte gainpanel=all bar=gbar.rsf
+       allpos=y | cubeplot color=j scalebar=y bar=gbar.rsf
+       title="Cube" frame1=20 frame2=20 frame3=20 flat=n''')
+
+# SideBySide example
+Flow('ganom1',None,'''math n1=41 n2=41 n3=41 o1=-1 o2=-1 o3=-1
+     d1=0.05 d2=0.05 d3=0.05 output="exp(-2*(x1^2+x2^2+x3^2))"''')
+Plot('ganom','ganom','''byte gainpanel=all bar=gbar.rsf
+     allpos=y | cubeplot color=j scalebar=y bar=gbar.rsf
+     title="Surface" frame1=20 frame2=20 frame3=20''')
+Plot('ganom1','ganom1','''contour3 color=j scalebar=y
+     title=Isolines nc=30 frame1=20 frame2=20 frame3=20''')
+Result('sganom','ganom ganom1','SideBySideAniso')
+
+Result('ganom2','ganom ganom1','SideBySideIso')
+
+Result('ganom-7','ganom1 ganom','Overlay')
+
+Flow('data1',None,'spike n1=30 k1=15 label1=" " ')
+Flow('data2','data1','causint')
+Result('dots','data1 data2','''
+       cat axis=2 ${SOURCES[1:2]} |
+       dots title="Dirac Delta and Step functions" gaineach=n radius=0.15
+       yreverse=1 overlap=.8 constsep=1 connect=0''')
+
+Result('dplines2','data1 data2',
+       '''
+       cat axis=2 ${SOURCES[1:2]} |
+       graph
+       ''')
+
+End()
+

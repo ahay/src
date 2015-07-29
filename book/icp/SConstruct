@@ -1,0 +1,12 @@
+from rsf.book import *
+
+Papers(copyr='ICP',
+       group='ICP-Ecopetrol',
+       papers=Split('''
+       sam2013gpushortestpath/segabs_graphrayt.tex
+       '''),
+       authors = {'sam2013gpushortestpath-segabs_graphrayt':'Jorge Monsegny and William Agudelo'}
+       )
+       
+End(use='algorithm,algorithmic')
+

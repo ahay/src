@@ -1,0 +1,337 @@
+\input{pcsmacros}
+\input{pcscolset}
+\pgfdeclareimage[height=1.0in]{logo}{Fig/Madagascar}
+
+\title[]{\mg \\ seismic imaging tutorial}
+\author[]{Paul Sava}
+\institute{
+  Center for Wave Phenomena \\
+  Colorado School of Mines \\
+  psava@mines.edu
+}
+\date{}
+\logo{}
+\large
+
+% ------------------------------------------------------------
+\def\mycode#1#2{
+  \begin{block}{}
+    \lstinputlisting[firstline=#1,lastline=#2]
+    {sigsbee/SConstruct}
+  \end{block}
+}
+% ------------------------------------------------------------
+\mode<beamer> { \cwpcover }
+
+% ------------------------------------------------------------
+\inputdir{XFig}
+% ------------------------------------------------------------
+\begin{frame} \frametitle{exploding reflector model}
+
+  \cit{reflectors are treated as collections of simultaneous sources}
+  
+  \plot{expref}{width=\textwidth}{}
+  \talkcite{Jon Claerbout, Basic Earth Imaging}
+  
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{acoustic wave propagation}
+
+  \[
+  \frac{1}{v^2} \dtwo{\UU}{t} - 
+  \rho \DIV{\lp \frac{1}{\rho} \GRAD{\UU} \rp} = f
+  \]
+
+  \begin{itemize}
+  \item $\UU\ofxt$: acoustic wavefield
+  \item $v\ofx$: velocity
+  \item $\rho\ofx$: density
+  \end{itemize}
+  
+  \sep
+  \begin{columns}[t]
+    \column{.5\textwidth} \cen{modeling}
+    \cit{forward propagation}
+
+    \column{.5\textwidth} \cen{migration}
+    \cit{backward propagation}
+  \end{columns}
+  
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+% ------------------------------------------------------------
+% ------------------------------------------------------------
+% ------------------------------------------------------------
+\begin{frame} \frametitle{example}
+  \big{\texttt{cd \$RSF/book/rsf/school/sigsbee}}
+  \vfill
+  \big{\texttt{\$EDITOR SConstruct}}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{import packages}
+  \framesubtitle{modules available in \texttt{\$RSF/book/Recipes} }
+  \mycode{1}{2}
+  \sep
+  \texttt{fdmod.py}: \textit{FD modeling and plotting functions}
+
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{setup parameter dictionary}
+  \mycode{6}{14}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\inputdir{sigsbee}
+% ------------------------------------------------------------
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{setup plotting parameters}
+  \mycode{18}{18}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{fetch the model}
+  \mycode{23}{25}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{setup the model}
+  \mycode{28}{40}
+\end{frame}
+\cwpnote{}
+
+\begin{frame} \frametitle{\texttt{scons modl.view}} 
+  \plot{modl}{width=\textwidth}{} 
+\end{frame}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{make the source array}
+  \mycode{44}{53}
+\end{frame}
+\cwpnote{}
+
+\begin{frame} \frametitle{\texttt{scons ss.view}}
+  \plot{ss}{width=\textwidth}{} 
+\end{frame}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{make the horizontal receiver array}
+  \mycode{57}{61}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{make the vertical receiver array}
+  \mycode{64}{68}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{plot the receiver arrays}
+  \mycode{70}{81}
+\end{frame}
+\cwpnote{}
+
+\begin{frame} \frametitle{\texttt{scons rH.view}}
+  \plot{rH}{width=\textwidth}{} 
+\end{frame}
+\begin{frame} \frametitle{\texttt{scons rV.view}}
+  \plot{rV}{width=\textwidth}{} 
+\end{frame}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{group the receivers in one array}
+  \mycode{85}{87}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{make the density}
+  \mycode{90}{93}
+\end{frame}
+\cwpnote{}
+
+\begin{frame} \frametitle{\texttt{scons dens.view}}
+  \plot{dens}{width=\textwidth}{} 
+\end{frame}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{make the stratigraphic velocity}
+  \mycode{97}{98}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{make the smooth velocity}
+  \mycode{100}{101}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{plot the velocities}
+  \mycode{103}{108}
+\end{frame}
+\cwpnote{}
+
+\begin{frame} \frametitle{\texttt{scons vstr.view}}
+  \plot{vstr}{width=\textwidth}{} 
+\end{frame}
+\begin{frame} \frametitle{\texttt{scons vsmo.view}}
+  \plot{vsmo}{width=\textwidth}{} 
+\end{frame}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{make the wavelet}
+  \mycode{112}{119}
+\end{frame}
+\cwpnote{}
+
+\begin{frame} \frametitle{\texttt{scons wav.view}}
+  \plot{wav}{width=\textwidth}{} 
+\end{frame}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{run FD modeling}
+  \mycode{123}{131}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{plot the wavefield}
+  \mycode{134}{146}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \big{\texttt{scons wfld.view}} \end{frame}
+\begin{frame} \plot{wfld-00}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wfld-01}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wfld-02}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wfld-03}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wfld-04}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wfld-05}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wfld-06}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wfld-07}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wfld-08}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wfld-09}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wfld-10}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wfld-11}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wfld-12}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wfld-13}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wfld-14}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wfld-15}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wfld-16}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wfld-17}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wfld-18}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wfld-19}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wfld-20}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wfld-21}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wfld-22}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wfld-23}{width=\textwidth}{} \end{frame}
+\begin{frame} \plot{wfld-24}{width=\textwidth}{} \end{frame}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{remove the wavelet delay}
+  \mycode{150}{155}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{setup the horizontal array data}
+  \mycode{159}{169}
+\end{frame}
+\cwpnote{}
+
+\begin{frame} \frametitle{\texttt{scons datH.view}}
+  \plot{datH}{width=\textwidth}{} 
+\end{frame}
+\begin{frame} \frametitle{\texttt{scons wigH.view}}
+  \plot{wigH}{width=\textwidth}{} 
+\end{frame}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{setup the vertical array data}
+  \mycode{173}{183}
+\end{frame}
+\cwpnote{}
+
+\begin{frame} \frametitle{\texttt{scons datV.view}}
+  \plot{datV}{width=\textwidth}{} 
+\end{frame}
+\begin{frame} \frametitle{\texttt{scons wigV.view}}
+  \plot{wigV}{width=\textwidth}{} 
+\end{frame}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{run FD migration}
+  \mycode{186}{186}
+  \mycode{189}{195}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{plot the image}
+  \mycode{186}{186}
+  \mycode{198}{199}
+  \mycode{202}{202}
+\end{frame}
+\cwpnote{}
+
+\begin{frame} \frametitle{\texttt{scons imgH.view}}
+  \plot{imgH}{width=\textwidth}{} 
+\end{frame}
+\begin{frame} \frametitle{\texttt{scons imgV.view}}
+  \plot{imgV}{width=\textwidth}{} 
+\end{frame}
+\begin{frame} \frametitle{\texttt{scons imgA.view}}
+  \plot{imgA}{width=\textwidth}{} 
+\end{frame}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{close}
+  \mycode{205}{205}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame}
+
+  \big{\url{http://www.ahay.org}}
+  
+  \vfill
+
+  \big{\texttt{\$RSF/book/rsf/school}}
+
+  \vfill
+  
+  \begin{center}
+    \pgfuseimage{logo}
+  \end{center}
+  
+\end{frame}
+\cwpnote{}
+
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{assignment}
+
+\postit{
+  \cit{Modify the acquisition parameters \\
+    to explore the seismic illumination \\
+    at different locations in the subsurface.}
+  }
+
+\end{frame}
+\cwpnote{}
+

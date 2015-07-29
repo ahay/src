@@ -1,0 +1,666 @@
+\published{Geophysical Prospecting,  61, 526-536 (2013)}
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+
+\title{Seismic wave extrapolation using lowrank symbol approximation}
+\author{Sergey Fomel\footnotemark[1], Lexing Ying\footnotemark[2], and Xiaolei Song\footnotemark[1]}
+
+\ms{GP-2011-1032.R1}
+
+\lefthead{Fomel, Ying, \& Song}
+\righthead{Lowrank wave extrapolation}
+
+\address{
+\footnotemark[1]Bureau of Economic Geology, \\
+John A. and Katherine G. Jackson School of Geosciences \\
+The University of Texas at Austin \\
+University Station, Box X \\
+Austin, TX 78713-8972 \\
+USA \\
+sergey.fomel@beg.utexas.edu \\
+\footnotemark[2]Department of Mathematics \\
+The University of Texas at Austin \\
+1 University Station \\
+Austin, TX 78712 \\
+USA \\
+lexing@math.utexas.edu
+}
+
+\maketitle
+
+\newpage
+
+\begin{abstract}
+We consider the problem of constructing a wave extrapolation operator
+in a variable and possibly anisotropic medium. Our construction
+involves Fourier transforms in space combined with the help of a
+lowrank approximation of the space-wavenumber wave-propagator
+matrix. A lowrank approximation implies selecting a small set of
+representative spatial locations and a small set of representative
+wavenumbers. We present a mathematical derivation of this method, a
+description of the lowrank approximation algorithm, and numerical
+examples which confirm the validity of the proposed approach. Wave
+extrapolation using lowrank approximation can be applied to seismic
+imaging by reverse-time migration in 3D heterogeneous isotropic or
+anisotropic media.
+\end{abstract}
+
+\section{INTRODUCTION}
+
+Wave extrapolation in time plays an important role in seismic imaging
+(reverse-time migration), modeling, and full waveform
+inversion. Conventionally, extrapolation in time is performed by
+finite-difference methods \cite[]{Etgen.sep.48.133}. Spectral methods
+\cite[]{GPR35-05-04790490,GEO53-09-11751183} have started to 
+gain attention recently and to become feasible in large-scale 3-D
+applications thanks to the increase in computing power. The
+attraction of spectral methods is in their superb accuracy and, in
+particular, in their ability to suppress dispersion artifacts
+\cite[]{chunlei,etgen}.
+
+Theoretically, the problem of wave extrapolation in time can be
+reduced to analyzing numerical approximations to the mixed-domain
+space-wavenumber operator \cite[]{wards}. In this paper, we propose a
+systematic approach to designing wave extrapolation operators by
+approximating the space-wavenumb\-er matrix symbol with a lowrank
+decomposition. A lowrank approximation implies selecting a small set
+of representative spatial locations and a small set of representative
+wavenumbers. The optimized separable approximation or OSA
+\cite[]{song} was previously employed for wave extrapolation 
+\cite[]{zhang,du} and can be considered as another form of lowrank decomposition. However, the
+decomposition algorithm in OSA is significantly more expensive,
+especially for anisotropic wave propagation, because it involves
+eigenfunctions rather than rows and columns of the original
+extrapolation matrix. Our algorithm can also be regarded as an
+extension of the wavefield interpolation algorithm of \cite{etgen},
+with optimally selected reference velocities and weights. Another
+related method is the Fourier finite-difference (FFD) method proposed
+recently by \cite{song2010b}. FFD may have an advantage in efficiency, because
+it uses only one pair of multidimensional forward and inverse
+FFTs (fast Fourier transforms) per time step. However, it does not
+offer flexible controls on the approximation accuracy.
+
+Our approach to wave extrapolation is general and can apply to
+different types of waves, including both acoustic and elastic seismic
+waves, as well as velocity continuation \cite[]{GEO68-05-16501661},
+offset continuation \cite[]{GEO68-02-07180732}, prestack exploding
+reflector extrapolation \cite[]{perm}, etc.
+
+The paper is organized as follows. We first present the theory behind
+the proposed algorithm, then describe the algorithm and test its
+accuracy on a number of synthetic benchmark examples of increasing
+complexity.
+
+\section{WAVE EXTRAPOLATION}
+
+\newcommand{\x}{\mathbf{x}}
+\renewcommand{\k}{\mathbf{k}}
+\newcommand{\eps}{\varepsilon}
+
+Let $P(\x,t)$ be the seismic wavefield at
+location~$\x$ and time~$t$. The wavefield at the next time
+step $t+\Delta t$ can be approximated by the following mixed-domain
+operator \cite[]{wards}
+\begin{equation}
+  \label{eq:exp}
+  P(\x,t+\Delta t) = \int
+  \widehat{P}(\k,t)\,e^{i\,\phi(\x,\k,\Delta t)}\,d\k\;,
+\end{equation}
+where $\widehat{P}(\k,t)$ is the spatial Fourier transform of $P(\x,t)$
+\begin{equation}
+  \label{eq:ft}
+  \widehat{P}(\k,t) = \frac{1}{(2\,\pi)^3}\,\int P(\x,t) e^{-i\,\k \cdot \x}\,
+  d\x\;,
+\end{equation}
+where $\k$ is the spatial wavenumber.
+To define the phase function~$\phi(\x,\k,t)$, which appears in
+equation~(\ref{eq:exp}), one can substitute
+approximation~(\ref{eq:exp}) into the wave equation and extract the
+geometrical (high-frequency) asymptotic of it. In case of seismic
+wave propagation, this leads to the eikonal-like equation
+\begin{equation}
+  \label{eq:eiko}
+  \frac{\partial \phi}{\partial t} = \pm V(\x,\k)\,\left|\nabla \phi\right|\;,
+\end{equation}
+where $V(\x,\k)$ is the phase velocity, and the choice of the sign
+corresponds, in the case of a point source, to expanding or
+contracting waves. In the isotropic case, $V$ does not depend on
+$\k$. The initial condition for equation~(\ref{eq:eiko}) is
+\begin{equation}
+  \label{eq:ic}
+  \phi(\x,\k,0) = \k \cdot \x\;,
+\end{equation}
+which turns equation~(\ref{eq:exp}) into the simple inverse Fourier transform operation.
+
+Assuming small steps $\Delta t$ in equation~(\ref{eq:exp}), one can
+build successive approximations for the phase function~$\phi$ by
+expanding it into a Taylor series. In particular, let us represent the
+phase function as
+\begin{equation}
+  \label{eq:taylor}
+  \phi(\x,\k,t) \approx  \k \cdot \x + \phi_1(\x,\k)\,t + \phi_2(\x,\k)\,\frac{t^2}{2} + \cdots
+\end{equation}
+Correspondingly,
+\begin{equation}
+  \label{eq:grad}
+  \left|\nabla \phi\right| \approx |\k| + \frac{\nabla \phi_1 \cdot
+    \k}{|\k|}\,t + O(t^2)\;.
+\end{equation}
+Substituting expansions~(\ref{eq:taylor}) and~(\ref{eq:grad}) into equation~(\ref{eq:eiko}) and
+separating terms with different powers of $t$, we find that
+\begin{eqnarray}
+  \label{eq:phi1}
+  \phi_1(\x,\k) & = & V(\x,\k)\,|\k|\;, \\
+  \label{eq:phi2}
+  \phi_2(\x,\k) & = & V(\x,\k)\,\nabla V \cdot \k\;.
+\end{eqnarray}
+
+When either the velocity gradient $\nabla V$ or the time step $\Delta
+t$ are small, the Taylor expansion~(\ref{eq:taylor}) can be reduced to
+only two terms, which in turn reduces equation~(\ref{eq:exp}) to the
+familiar expression \cite[]{etgen}
+\begin{equation}
+  \label{eq:expf}
+  P(\x,t+\Delta t) \approx \int
+  \widehat{P}(\k,t)\,e^{i\,\left[\k \cdot \x+V(\x,\k)\,|\k|\,\Delta t\right]}\,d\k\;,
+\end{equation}
+or
+\begin{equation}
+P(\x,t+\Delta t) + P(\x,t-\Delta t) \approx 
+    2\,\int \widehat{P}(\k,t)\,e^{i\,\k \cdot \x}\cos\left[V(\x,\k)\,|\k|\,\Delta t\right]\,d\k\;.
+\label{eq:cosf}
+\end{equation}
+
+In rough velocity models, where the gradient $\nabla V$ does not
+exist, one can attempt to solve the eikonal
+equation~\ref{eq:eiko} numerically or to apply approximations other than
+the Taylor expansion~(\ref{eq:taylor}). In the examples of this
+paper, we used only the $\phi_1$ term.
+
+Note that the approximations that we use, starting from
+equation~(\ref{eq:exp}), are focused primarily on the phase of wave
+propagation. As such, they are appropriate for seismic migration but
+not necessarily for accurate seismic modeling, which may require
+taking account of amplitude effects caused by variable density and
+other elastic phenomena.
+
+The computational cost for a straightforward application of
+equation~(\ref{eq:exp}) is $O(N_x^2)$, where $N_x$ is the total size
+of the three-dimensional $\x$ grid. Even for modest-size problems,
+this cost is prohibitively expensive. In the next section, we describe
+an algorithm that reduces the cost to $O(M\,N_x\,\log{N_x})$, where
+$M$ is a small number.
+
+\section{LOWRANK APPROXIMATION}
+
+The key idea of the lowrank decomposition is decomposing the
+wave extrapolation matrix
+\begin{equation}
+\label{eq:mat}
+W(\x,\k) = e^{i\,\left[\phi(\x,\k,\Delta t)-\k \cdot \x\right]}
+\end{equation}
+for a fixed $\Delta t$ into a separated representation
+\begin{equation}
+  \label{eq:lra}
+  W(\x,\k) \approx \sum\limits_{m=1}^M \sum\limits_{n=1}^N W(\x,\k_m) a_{mn} W(\x_n,\k).
+\end{equation}
+Representation~(\ref{eq:lra}) speeds up the computation of
+$P(\x,t+\Delta t)$ since
+\begin{eqnarray}
+\nonumber
+  P(\x,t+\Delta t) & = & \int e^{i \x \k} W(\x,\k) \widehat{P}(\k,t) d
+  \k \\
+ & \approx & \sum\limits_{m=1}^M W(\x,\k_m) \left( \sum\limits_{n=1}^N a_{mn} \left(\int e^{i \x\k} W(\x_n,\k) \widehat{P}(\k,t) d\k \right) \right)\;.
+\label{eq:pxt}
+\end{eqnarray}
+The evaluation of the last formula is effectively equivalent to
+applying $N$ inverse Fast Fourier Transforms. Physically, a separable
+lowrank approximation amounts to selecting a set of $N$ representative
+spatial locations and $M$ representative wavenumbers.
+
+In order to discuss the construction of approximation~(\ref{eq:lra}),
+let us view it as a matrix decomposition problem
+\begin{equation}
+  \label{eq:lramatrix}
+  \mathbf{W} \approx \mathbf{W}_1 \, \mathbf{A} \, \mathbf{W}_2
+\end{equation} 
+where $\mathbf{W}$ is the $N_x\times N_x$ matrix with entries
+$W(\x,\k)$, $\mathbf{W}_1$ is the submatrix of $\mathbf{W}$ that
+consists of the columns associated with $\{\k_m\}$, $\mathbf{W}_2$ is
+the submatrix that consists of the rows associated with $\{\x_n\}$,
+and $\mathbf{A} = \{a_{mn}\}$. In practice, we find that the
+matrix $\mathbf{W}$ has a low rank separated representation provided
+that $\Delta t$ is sufficiently small, which, in the case of
+smooth models, can be partially explained by the separation of terms
+in the Taylor series~\ref{eq:taylor}. Let $\eps$ be a prescribed
+accuracy of this separated representation, and $r_\eps$ be the
+numerical rank of $\mathbf{W}$. The construction of the separated
+representation in equation~(\ref{eq:lramatrix}) follows the method of
+%\cite{engquistying2007,engquistying2009} 
+Engquist and Ying (2007, 2009) and is detailed in the appendix. The
+main observation is that the columns of $\mathbf{W}_1$ and the rows of
+$\mathbf{W}_2$ should span the column space and row space of
+$\mathbf{W}$, respectively, as well as possible. The algorithm for
+computing (\ref{eq:lramatrix}) takes the following steps:
+\begin{enumerate}
+\item Pick a {\em uniformly random} set $S$ of $\beta \cdot r_\eps$
+  columns of $\mathbf{W}$ where $\beta$ is chosen to be 3 or 4 in
+  practice. Perform the pivoted QR factorization to
+  $(\mathbf{W}(:,S))^*$ \cite[]{golub}. The first $r_\eps$ pivoted
+  columns correspond to $r_\eps$ rows of the matrix
+  $\mathbf{W}(:,S)$. Define $\mathbf{W}_1$ to be the submatrix of
+  $\mathbf{W}$ that consists of these rows and set $\x_1,\ldots,\x_N$
+  with $n=r_\eps$ to be the corresponding $x$ values of these rows.
+\item Pick a {\em uniformly random} set $T$ of $\beta \cdot r_\eps$
+  rows of $\mathbf{W}$ and perform the pivoted QR factorization to
+  $\mathbf{W}(T,:)$. Define $\mathbf{W}_2$ to be the submatrix of $\mathbf{W}$ that consists of
+  these columns and set $\k_1,\ldots,\k_M$ with $m=r_\eps$ to be the
+  corresponding $k$ values of these columns.
+\item Set the middle matrix $\mathbf{A} = \mathbf{W}^{\dagger}(\x_n,\k_m)_{1\le n \le N, 1\le
+      m \le M}$ where $\dagger$ stands for the pseudoinverse.
+\item Combining the result of the previous three steps gives the
+  required separated representation $\mathbf{W} \approx \mathbf{W}_1 \, \mathbf{A} \, \mathbf{W}_2$.
+\end{enumerate}
+The algorithm does not require, at any step, access to the full matrix
+$\mathbf{W}$, only to its selected rows and columns. Once the
+decomposition is complete, it can be used at every time step during
+the wave extrapolation process. In multiple-core implementations, the
+matrix operations in equation~(\ref{eq:lra}) are easy to
+parallelize. The algorithm details are outlined in the appendix.
+
+The cost of the algorithm is $O(M\,N_x\,\log{N_x})$ operations per time
+ step, where $N_x\,\log{N_x}$ refers to the cost of the Fourier
+ transform. In comparison, the cost of finite-difference wave
+ extrapolation is $O(L\,N_x)$, where $L$ is the size of the
+ finite-difference stencil. \cite{lfd} present an application of the proposed
+ lowrank approximation algorithm for devising accurate
+ finite-different schemes. There is a natural trade-off in the
+ selection of $M$: larger values lead to a more accurate wave
+ representation but require a longer computational time. In the
+ examples of the next section, we select these parameters based on an
+ estimate of the approximation accuracy and generally aiming for the
+ relative accuracy of $10^{-4}$. The resulting $M$ is typically
+ smaller than the number of Fourier transforms required for
+ pseudo-spectral algorithms such as pseudo-spectral implementations of
+ the rapid expansion method \cite[]{rem}. 
+
+\section{EXAMPLES}
+
+We start with a simple 1-D example. The 1-D velocity model contains a
+linear increase in velocity, from 1~km/s to 2.275~km/s. The
+extrapolation matrix, $2\,(\cos\left[V(x)\,|k|\,\Delta t\right]-1)$,
+or pseudo-Laplacian in the terminology of \cite{etgen}, for the time
+step $\Delta t=0.001\,\mbox{s}$ is plotted in
+Figure~\ref{fig:prop}. Its lowrank approximation is shown in
+Figure~\ref{fig:prod} and corresponds to $N=M=2$. The $x$ locations
+selected by the algorithm correspond to velocities of 1.59 and
+2.275~km/s. The wavenumbers selected by the algorithm correspond to
+the Nyq\-uist frequency and 0.7 of the Nyquist frequency. The
+approximation error is shown in Figure~\ref{fig:proderr}. The relative
+error does not exceed 0.34\%. Such a small approximation error results
+in accurate wave extrapolation, which is illustrated in
+Figure~\ref{fig:wave2,awave2,waverr}. The extrapolated wavefield shows
+a negligible error in wave amplitudes, as demonstrated in
+Figure~\ref{fig:waverr}.
+
+\inputdir{fio} 
+
+\multiplot{3}{prop,prod,proderr}{height=0.25\textheight}{Wave 
+  extrapolation matrix for 1-D wave propagation with linearly
+  increasing velocity (a), its lowrank approximation (b), and
+  Approximation error (c).}
+\multiplot{3}{wave2,awave2,waverr}{height=0.225\textheight}{(a) 1-D wave
+  extrapolation using the exact extrapolation symbol. (b) 1-D wave
+  extrapolation using lowrank approximation. (c) Difference between
+  (a) and (b), with the scale amplified 10 times compared to (a) and (b).}
+
+\inputdir{impres} 
+
+\multiplot{2}{wavefd,wave}{width=0.45\textwidth}{Wavefield snapshot in a smooth
+  velocity model computed using (a) fourth-order finite-difference method
+  and (b) lowrank approximation. The velocity model is 
+  $v(x,z)\,=\,550+0.00015\,(x-800)^2+0.001\,(z-500)^2$. 
+ The wave source is a point-source Ricker wavelet, located in the
+  middle of the model. The finite-difference result exhibits
+  dispersion artifacts while the result of the lowrank approximation,
+  similarly to that of the FFD method, is dispersion-free.}
+
+\multiplot{2}{slicefd,slice}{width=0.45\textwidth}{Horizontal slices through wavefield snapshots in Figure~\ref{fig:wavefd,wave}}
+
+Our next example (Figures~\ref{fig:wavefd,wave} and
+\ref{fig:slicefd,slice}) corresponds to wave extrapolation in a 2-D
+smoothly variable isotropic velocity field. As shown by
+\cite{song2010b}, the classic finite-difference method (second-order
+in time, fourth-order in space) tends to exhibit dispersion artifacts
+with the chosen model size and extrapolation step, while spectral
+methods exhibit high accuracy. As yet another spectral method, the
+lowrank approximation is highly accurate. The wavefield snapshot,
+shown in Figures~\ref{fig:wave} and~\ref{fig:slice}, is free from
+dispersion artifacts and demonstrates high accuracy. The approximation
+rank decomposition in this case is $N=M=2$, with the expected error of
+less than $10^{-4}$. In our implementation, the CPU time for
+  finding the lowrank approximation was 2.45~s, the single-processor
+  CPU time for extrapolation for 2500 time steps was 101.88~s or 2.2
+  times slower than the corresponding time for the finite-difference
+  extrapolation (46.11~s).
+
+\inputdir{fowler}
+
+\multiplot{2}{fwavefd,fwave}{width=0.45\textwidth}{Wavefield snapshot in a simple two-layer 
+  velocity model using (a) fourth-order finite-difference method and
+  (b) lowrank approximation. The upper-layer velocity is 1500~m/s, and
+  the bottom-layer velocity is 4500~m/s.  The finite-difference result
+  exhibits clearly visible dispersion artifacts while the result of
+  the lowrank approximation is dispersion-free.}
+
+To show that the same effect takes place in case of rough velocity
+model, we use first a simple two-layer velocity model, similar to the
+one used by \cite{fowler}. The difference between a
+dispersion-infested result of the classic finite-difference method
+(second-order in time, fourth-order in space) and a dispersion-free
+result of the lowrank approximation is clearly visible in Figure~\ref{fig:fwavefd,fwave}. The time step
+was 2~ms, which corresponded to the approximation rank of 3. In
+  our implementation, the CPU time for finding the lowrank
+  approximation was 2.69~s, the single-processor CPU time for
+  extrapolation for 601 time steps was 19.76~s or 2.48 times slower
+  than the corresponding time for the finite-difference extrapolation
+  (7.97~s).  At larger time steps, the finite-difference method in
+this model becomes unstable, while the lowrank method remains stable
+but requires a higher rank.
+
+\inputdir{bp}
+
+\plot{sub}{width=\columnwidth}{Portion of BP-2004 synthetic isotropic velocity
+  model.}
+
+\plot{snap}{width=\columnwidth}{Wavefield snapshot for the velocity
+  model shown in Figure~\ref{fig:sub}.}
+
+Next, we move to isotropic wave extrapolation in a complex 2-D velocity
+field. Figure~\ref{fig:sub} shows a portion of the BP velocity model
+\cite[]{bp}, containing a salt body. The wavefield snapshot (shown in
+Figure~\ref{fig:snap}) confirms the ability of our method to handle
+complex models and sharp velocity variations. The lowrank
+decomposition in this case corresponds to $N=M=3$, with the expected
+error of less than $10^{-7}$. Increasing the time step size $\Delta t$
+does not break the algorithm but increases the rank of the
+approximation and correspondingly the number of the required Fourier
+transforms. For example, increasing $\Delta t$ from 1~ms to 5~ms leads
+to $N=M=5$.
+
+\inputdir{threed}
+
+\plot{salt}{width=\textwidth}{SEG/EAGE 3-D salt model.}
+\plot{wave3}{width=\textwidth}{Snapshot of a point-source wavefield propagating in the SEG/EAGE 3-D salt model.}
+
+Our next example is isotropic wave extrapolation in a 3-D complex
+velocity field: the SEG/EAGE salt model \cite[]{seg-eage} shown in
+Figure~\ref{fig:salt}. A dispersion-free wavefield snapshot is shown
+in Figure~\ref{fig:wave3}. The lowrank decomposition used $N=M=2$, with
+the expected error of $10^{-5}$.
+
+\inputdir{bptti}
+
+\multiplot{4}{vpend2,vxend2,etaend2,thetaend2}{width=0.45\textwidth}{Portion of BP-2007 anisotropic benchmark model. (a) Velocity along the axis of symmetry. (b) Velocity perpendicular to the axis of symmetry. (c) Anellipticity parameter $\eta$. (d) Tilt of the symmetry axis.}
+
+\plot{snap4299}{width=\textwidth}{Wavefield snapshot for the velocity
+  model shown in Figure~\ref{fig:vpend2,vxend2,etaend2,thetaend2}.}
+
+Finally, we illustrate wave propagation in a complex anisotropic
+model. The model is a 2007 anisotropic benchmark dataset from
+BP\footnote{The dataset was created by Hemang Shah and is
+    provided at \url{http://software.seg.org/} courtesy of BP Exploration Operation Company
+    Limited.}. It exhibits a strong TTI (tilted transverse isotropy)
+with a variable tilt of the symmetry axis
+(Figure~\ref{fig:vpend2,vxend2,etaend2,thetaend2}).  A wavefield
+snapshot is shown in Figure~\ref{fig:ttisnapshot}. Because of the
+complexity of the wave propagation patterns, the lowrank decomposition
+took $N=M=10$ in this case and required 10 FFTs per time step. In a
+TTI medium, the phase velocity $V(\x,\k)$ from
+equation~(\ref{eq:cosf}) can be expressed with the help of the
+acoustic approximation
+\cite[]{GEO63-02-06230631,GEO65-04-12391250,GPR52-03-02470259}
+\begin{equation}
+\label{eq:tti}
+V(\x,\k) =
+\sqrt{\frac{1}{2}(v_x^2\,\hat{k}_x^2+v_z^2\,\hat{k}_z^2)+\frac{1}{2}\sqrt{(v_x^2\,\hat{k}_x^2+v_z^2\,\hat{k}_z^2)^2-\frac{8\eta}{1+2\eta}v_x^2v_z^2\,\hat{k}_x^2\,\hat{k_z^2}}}\;,
+\end{equation}
+where $v_x$ is the P-wave phase velocity in the symmetry plane, $v_z$
+is the P-wave phase velocity in the direction normal to the symmetry
+plane, $\eta$ is the anellipticity parameter
+\cite[]{GEO60-05-15501566}, and $\hat{k}_x$ and $\hat{k}_z$ stand for
+the wavenumbers evaluated in a rotated coordinate system aligned with
+the symmetry axis:
+\begin{equation}
+\label{eq:wavenumber}
+\begin{array}{*{20}c}
+\hat{k}_x=k_x\cos{\theta}+k_z\sin{\theta}\;\\ 
+\hat{k}_z=k_z\cos{\theta}-k_x\sin{\theta}\;,\\ 
+ \end{array}
+\end{equation}
+where $\theta$ is the tilt angle measured with respect to horizontal.
+
+\section{CONCLUSIONS}
+
+We have presented a novel algorithm for wave extrapolation in
+heterogeneous and anisotropic media. The algorithm is based on a
+lowrank approximation of the extrapolation symbol. It reduces the cost
+of extrapolation to that of a small number of FFT operations per time
+step, which correspond to the approximation rank. The algorithm
+has a high, spectral accuracy. In that sense, it is comparable with a
+number of other recently proposed FFT-based methods. Its advantage is
+a direct control on the accuracy-efficiency trade-off by controlling
+the rank of the approximation and the corresponding approximation
+error. We propose to incorporate the lowrank extrapolation algorithm
+in seismic imaging by reverse-time migration. 
+
+\section{Acknowledgments}
+
+We thank KAUST for partial financial support; Tariq Alkhalifah,
+Bj\"{o}rn Engquist, Laurent Demanet, and Paul Fowler for useful
+discussions; and BP for releasing benchmark synthetic models.
+
+The reproducible computational examples in this paper use the
+Madagascar open-source software package \url{http://www.ahay.org/}.
+
+This publication is authorized by the Director, Bureau of Economic
+Geology, The University of Texas at Austin.
+
+\appendix
+\section{Linear-time algorithm for a lowrank matrix approximation}
+\label{sec:lowrank}
+
+In this appendix, we outline the lowrank matrix approximation
+algorithm in more details.
+
+Let $N_x$ be the number of samples both in space and wavenumber. Let
+us denote the samples in the spatial domain by
+$\x=\{x_1,\ldots,x_{N_x}\}$ and the ones in the Fourier domain by
+$\k=\{k_1,\ldots,k_{N_x}\}$. The elements of the interaction matrix
+$\mathbf{W}$ from equation~(\ref{eq:mat}) are then defined as
+\begin{equation}
+W_{ij} = e^{\imath [\phi(x_i,k_j,\Delta t] - x_i \cdot k_j]},\quad
+1\le i,j\le N_x.
+\label{eq:wij}
+\end{equation}
+Here we describe an algorithm by \cite{engquistying2009} that
+generates, in a time linear with respect to $N_x$, an approximate
+factorization of $\mathbf{W}$ of rank $r$ in the following form
+\begin{equation}
+\mathbf{W} \approx \mathbf{U M V^*}\;,
+\label{eq:umv}
+\end{equation}
+where $\mathbf{U}$ consists of $r$ selected columns from $\mathbf{W}$,
+$\mathbf{M}$ is a matrix of size $r\times r$ and $\mathbf{V^*}$ consists of $r$
+selected rows from $\mathbf{W}$.
+
+The first question is: which columns of $\mathbf{W}$ shall one pick
+for the matrix $\mathbf{U}$? It has been shown by \cite{Goreinov:97}
+and \cite{GuEisenstat:96} that the $r$-dimensional volume spanned by
+these columns should be the maximum or close to the maximum among all
+possible choices of $r$ columns from $\mathbf{W}$. More precisely, suppose
+$\mathbf{W} = [w_1,\ldots,w_{N_x}]$ is a column partitioning of $\mathbf{W}$. Then one aims to find
+$\{j_1,\ldots,j_r\}$ such that
+\begin{equation}
+\{j_1,\ldots,j_r\} = \text{argmin}_{\{j_1,\ldots,j_r\}} \vol_r(w_{j_1},\ldots,w_{j_r}).
+\label{eq:argmin}
+\end{equation}
+However, finding a set of $r$ columns with almost the maximum
+$r$-dimensional volume is a computationally difficult problem due to
+the following two reasons. First, the length of the vectors $N$ is
+typically very large for three dimensional problems, hence
+manipulating these vectors can be costly. Second, the number of the
+vectors $N_x$ is also large. A exhaustive search over all possible
+choices of $r$ vectors to find the one with the maximum volume is
+prohibitive expensive, so one needs to find a more practical approach.
+
+In order to overcome the problem associated with long vectors, the
+first idea is to project to a lower dimensional space and search for
+the set of vectors with maximum volume among the projected vectors.
+However, one needs to ensure that the volume is roughly preserved
+after the projection so that the set of vectors with the maximum
+projected volume also has a near-maximum volume in the original space.
+One of the most celebrated theorems in high dimensional geometry and
+probability is the following Johnson-Lindenstrauss lemma
+\cite[]{JohnsonLindenstrauss:84}.
+\begin{theorem}
+  Let $v_1,\ldots,v_N$ be a set of $N$ vectors in $R^d$. Let $T$ be a
+  randomly generated subspace of dimension $t=O(\log N /\varepsilon^2)$ and
+  use $P_T$ to denote the orthogonal projection onto $T$. Then with
+  high probability,
+  \[
+  (1-\varepsilon) \lVert v_i-v_j \rVert \le 
+  \sqrt{\frac{d}{t}}  \lVert P_T v_i-P_T v_j \rVert \le
+  (1+\varepsilon) \lVert v_i-v_j \rVert
+  \]
+  for $1\le i,j \le N$.
+\end{theorem}
+
+This theorem essentially says that projecting to a subspace of
+dimension $O(\log N)$ preserves the pairwise distance between $N$
+arbitrary vectors. There is an immediate generalization of this
+theorem due to \cite{Magen:2002}, formulated 
+slightly differently for our purpose.
+
+\begin{theorem}
+  Let $v_1,\ldots,v_N$ be a set of $N$ vectors in $R^d$. Let $T$ be a
+  randomly generated subspace of dimension $t=O(r^3 \log N /\varepsilon^2)$
+  and use $P_T$ to denote the orthogonal projection onto $T$. Then
+  with high probability,
+  \[
+  (1-\varepsilon) \cdot \vol_r(v_{i_1},\ldots,v_{i_r}) \le
+  \left(\frac{d}{t}\right)^{r/2}  \vol_r(P_T v_{i_1},\ldots,P_T v_{i_r}) \le
+  (1+\varepsilon) \cdot \vol_r(v_{i_1},\ldots,v_{i_r})
+  \]
+  for any $\{i_1,\ldots,i_r\} \subset \{1,\ldots,N\}$.
+\end{theorem}
+
+The main step of the proof is to bound the singular values of a random
+matrix between $(1-\varepsilon)^{1/r}$ and $(1+\varepsilon)^{1/r}$
+(after a uniform scaling) and this ensures that the $r$-dimensional
+volume is preserved within a factor of $(1-\varepsilon)$ and
+$(1+\varepsilon)$. In order to obtain this bound on the singular
+values, we need $t$ to be $O(r^3 \log N)$. However, bounding the
+singular values is only one way to bound the volume, hence it is
+possible to improve the dependence of $t$ on $r$. In fact, in
+practice, we observe that $t$ only needs to scale like $O(r\log N)$.
+
+Given a generic subspace $T$ of dimension $t$, computing the
+projections $P_T w_1,\ldots, P_T w_N$ takes $O(tN^2)$ steps. Recall
+that our goal is to find an algorithm with linear complexity, hence
+this is still too costly. In order to reduce the cost of the random
+projection, the second idea of our approach is to randomly choose $t$
+coordinates and then project (or restrict) each vector only to these
+coordinates. This is a projection with much less randomness but one
+that is much more efficient to apply. Computationally, this is
+equivalent to restricting $\mathbf{W}$ to $t$ randomly selected
+rows. We do not yet have a theorem regarding the volume for this
+projection. However, it preserves the $r$-dimensional volume very well
+for the matrix $\mathbf{W}$ and this is in fact due to the oscillatory
+nature of the columns of $\mathbf{W}$. We denote the resulting vectors by
+$\{\mathbf{\wt{w}}_1,\ldots,\mathbf{\wt{w}}_{N_x}\}$.
+
+The next task is to find a set of columns $\{j_1,\ldots,j_r\}$ so
+that the volume $\vol_r(\wt{w}_{j_1},\ldots,\wt{w}_{j_r})$ is
+nearly maximum. As we mentioned earlier, exhaustive search is too
+costly. To overcome this, the third idea is to use the following
+pivoted QR algorithm (or pivoted Gram-Schmidt process) to find the $r$
+columns.
+\begin{algorithmic}[1]
+  \FOR{$s=1,\ldots, r$}
+
+  \STATE Find $j_s$ among $\{1,\ldots,N\} \setminus {j_1,\ldots,j_{s-1}}$ such that
+  $\wt{w}_{j_s}$ has the largest norm
+  \STATE Orthogonalize the vectors $\wt{w}_j$ for $j\in \{1,\ldots,N\}
+  \setminus {j_1,\ldots,j_s}$ with $\wt{w}_{j_s}$ and update them
+  \ENDFOR
+
+  \STATE $\{j_1,\ldots,j_r\}$ is the column set required
+\end{algorithmic}
+Once the column set is found, we set $\mathbf{U} = \left[ \mathbf{w}_{j_1},\ldots,\mathbf{w}_{j_r}\right]$.
+
+In order to identify $\mathbf{V^*}$, one needs to find a set of $r$ rows of $\mathbf{W}$
+that has an almost maximum volume. To do that, we repeat the same
+steps now to $\mathbf{W^*}$. More precisely, let
+\begin{equation}
+\mathbf{W} = 
+\begin{bmatrix}
+  \mathbf{m}_1 \\
+  \vdots\\
+  \mathbf{m}_{N_x}
+\end{bmatrix}
+\label{eq:w}
+\end{equation}
+be the row partitioning of the matrix $\mathbf{W}$. The algorithm takes the
+following steps:
+\begin{algorithmic}[1]
+  \STATE Select uniform randomly a set of $t$ columns and obtain an
+  $N_x \times t$ tall matrix
+
+  \STATE Perform pivoted QR algorithm on the rows of this tall matrix
+  and denote the first $r$ rows selected by $\{i_1,\ldots,i_r\}$
+  
+  \STATE The matrix $\mathbf{V^*}$ is
+  \begin{equation}
+  \mathbf{V^*} = 
+  \begin{bmatrix}
+    \mathbf{m}_{i_1} \\
+    \vdots\\
+    \mathbf{m}_{i_r}
+  \end{bmatrix}\;.
+  \label{eq:v}
+  \end{equation}
+\end{algorithmic}
+
+Once both $\mathbf{U}$ and $\mathbf{V^*}$ are identified, the last task is to compute
+the $r\times r$ matrix $\mathbf{M}$ for $ \mathbf{W} \approx \mathbf{U M V^*}$. Minimizing
+\begin{equation}
+\min_{\mathbf{M}} \lVert \mathbf{W - U M V^*} \rVert_F
+\label{eq:min}
+\end{equation} 
+yeilds $ \mathbf{M = (U)^{\dagger} W (V^*)}^{\dagger}$ where $\dagger$ stands for the
+pseudo-inverse. However, this formula requires taking matrix product
+with $\mathbf{W}$, which takes $O(t\,N_x^2)$ steps. In order to achieve linear
+scaling, the fourth idea of our approach is to select randomly a set
+of $t$ rows $A$ and a set of $t$ columns $B$ and minimize
+\begin{equation}
+\min_{\mathbf{M}} \lVert \mathbf{W}(A,B) - \mathbf{U}(A,:) \, \mathbf{M} \, \mathbf{V}(B,:)^* \rVert_F\;.
+\label{eq:min2}
+\end{equation}
+The solution for this problem is 
+\begin{equation}
+\mathbf{M} = (\mathbf{U}(A,:))^{\dagger} \,\mathbf{W}(A,B) \, \left(\mathbf{V}(B,:)^*\right)^{\dagger}\;.
+\label{eq:m}
+\end{equation}
+
+Let us now discuss the overall cost of this algorithm. Random sampling
+of $t$ rows and $t$ columns of the matrix $\mathbf{W}$ clearly takes $O(t\,N_x)$
+steps. Pivoted QR factorization on the projected columns
+$\{\wt{w}_1,\ldots,\wt{w}_{N_x}\}$ takes $O(t^2\,N_x)$ steps and the cost for
+for the pivoted QR factorization on the projected rows. Finally,
+performing pseudo-inverses takes $O(t^3)$ steps. Therefore, the
+overall cost of the algorithm is $O(t\,N_x) + O(t^2\,N_x) + O(t^3) = O(t^2\,N_x)$.
+As we mentioned earlier, in practice $t=O(r \log N_x)$. Hence, the
+overall cost is linear in $N_x$.
+
+\bibliographystyle{seg}
+\bibliography{SEG,SEP2,wave}

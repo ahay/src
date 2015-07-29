@@ -1,0 +1,125 @@
+from rsf.proj import *
+
+#####Smooth-vary Velocty 
+#v=2.25
+v=2.25
+dt=0.001
+v0=2.0
+dx=0.005
+a=v*v*(1+dt*dt*(v0*v0-v*v)/6.0/(dx*dx))
+b=dt*dt*v*v*(v*v-v0*v0)/12.0/(dx*dx)
+t2=dt*dt
+t4=t2*t2
+v2=v*v
+v4=v2*v2
+v02=v0*v0
+v04=v02*v02
+x2=dx*dx
+x4=x2*x2
+b1=(-2*t4*v4*v2+5*t4*v4*v02-3*t4*v2*v04+20*t2*v4*x2-20*t2*v2*v02*x2)/(180*v02*x4)
+c=(2*t4*v4*v2-5*t4*v4*v02+3*t4*v2*v04-5*t2*v4*x2+5*t2*v2*v02*x2)/(720*v02*x4)
+a1=v2/v02-2*b1-2*c
+n=1
+Flow('cos',None,
+     '''
+     spike n1=600 d1=1 |
+     math output="(cos(x1*%g*%g)-1)^%d"
+     '''%(v,dt,n))
+Flow('cos0',None,
+     '''
+     spike n1=600 d1=1 |
+     math output="(cos(x1*%g*%g)-1)^%d"
+     '''%(v0,dt,n))
+Flow('ffd',None,
+     '''
+     spike n1=600 d1=1  |
+     math output="((cos(x1*%g*%g)-1)/(%g*%g)*(%g+%g*cos(x1*%g)))^%d"
+     '''%(v0,dt,v0,v0,a,2*b,dx,n))
+Flow('fd',None,
+     '''
+     spike n1=600 d1=1 |
+     math output="(0.5*%g*%g*%g*%g*(-2.5+8.0/3.0*cos(x1*%g)-1.0/6.0*cos(x1*%g))/%g)^%d"
+     '''%(v,v,dt,dt,dx,2*dx,dx*dx,n))
+Flow('ffd4',None,
+     '''
+     spike n1=600 d1=1 |
+     math output="((cos(x1*%g*%g)-1)*(%g+%g*cos(x1*%g)+(%g)*cos(x1*%g)))^%d"
+     '''%(v0,dt,a1,2*b1,dx,2*c,2*dx,n))
+Flow('sp',None,
+     '''
+     spike n1=600 d1=1 |
+     math output="-0.5*(%g*%g*x1*x1)^%d"
+     '''%(v2,dt*dt,n))
+Plot('cos','cos ffd fd ffd4 cos0',
+     '''
+     sfcat axis=2 ${SOURCES[1]} ${SOURCES[2]} ${SOURCES[3]} ${SOURCES[4]} | 
+     sfgraph dash=0,3,2,4,0 plotfat=3 label1=k unit1= title=a 
+     ''')
+Result('cos','cos ffd fd ffd4 sp cos0',
+     '''
+     sfcat axis=2 ${SOURCES[1]} ${SOURCES[2]} ${SOURCES[3]} ${SOURCES[4]} ${SOURCES[5]} | 
+     sfgraph dash=0,3,2,3,2,0 plotfat=5 label1="|k|" unit1="1/km" title=  
+     label2="Operator"
+     ''')
+Plot('cos_side1','cos ffd ffd4 cos0',
+     '''
+     sfcat axis=2 ${SOURCES[1]} ${SOURCES[2]} ${SOURCES[3]} | 
+     sfgraph dash=0,3,2,0 plotfat=3 label1=k unit1="1/km" title=b min2=-3 label2="Function value" labelsz=10
+ 
+     ''')
+Plot('cos_side2','cos fd sp',
+     '''
+     sfcat axis=2 ${SOURCES[1]} ${SOURCES[2]} | 
+     sfgraph dash=0,3,2 plotfat=3 label1=k unit1="1/km" title=a min2=-3  label2="Function value" labelsz=10
+
+
+     ''')
+Result('cos-side1','cos_side2 cos_side1','SideBySideIso')
+Flow('cos_diff','cos','math output="0.0"')
+Flow('cos0_diff','cos0 cos','add scale=1,-1 ${SOURCES[1]}')
+Flow('ffd_diff','ffd cos','add scale=1,-1 ${SOURCES[1]}')
+Flow('ffd4_diff','ffd4 cos','add scale=1,-1 ${SOURCES[1]}')
+Flow('fd_diff','fd cos','add scale=1,-1 ${SOURCES[1]}')
+Flow('sp_diff','sp cos','add scale=1,-1 ${SOURCES[1]}')
+Plot('diff1','cos_diff ffd_diff ffd4_diff cos0_diff',
+     '''
+     sfcat axis=2 ${SOURCES[1]} ${SOURCES[2]} ${SOURCES[3]} | 
+     sfgraph dash=0,3,2,0 plotfat=3 label1=k min2=-1.5
+     unit1="1/km" title=b labelsz=10     
+     label2="Error"
+     ''')
+Plot('diff2','cos_diff fd_diff sp_diff',
+     '''
+     sfcat axis=2 ${SOURCES[1]} ${SOURCES[2]} | 
+     sfgraph dash=0,3,2 plotfat=3 label1=k min2=-1.5 
+     unit1="1/km" title=a labelsz=10
+     label2="Error"
+
+     ''')
+Result('diff1','diff2 diff1','SideBySideIso')
+Result('diff','cos_diff ffd_diff fd_diff cos0_diff',
+     '''
+     sfcat axis=2 ${SOURCES[1]} ${SOURCES[2]} ${SOURCES[3]}  | 
+     sfgraph dash=0,3,2,0 plotfat=5 label1="|k|" 
+     max2=0.4 unit1="1/km" title= 
+     label2="Error"
+     ''')
+Result('cos1','cos cos0',
+     '''
+     sfcat axis=2 ${SOURCES[1]}  | 
+     sfgraph dash=0,0 plotcol=6,6 plotfat=5 label1="|k|" unit1="1/km" title=  
+     label2="Operator"
+     ''')
+Result('cos2','cos cos0 fd',
+     '''
+     sfcat axis=2 ${SOURCES[1]} ${SOURCES[2]}  | 
+     sfgraph dash=0,0,2 plotcol=6,6,1 plotfat=5 label1="|k|" unit1="1/km" title=  
+     label2="Operator"
+     ''')
+Result('cos3','cos cos0 fd ffd',
+     '''
+     sfcat axis=2 ${SOURCES[1]} ${SOURCES[2]} ${SOURCES[3]} | 
+     sfgraph dash=0,0,2,3 plotcol=6,6,1,4 plotfat=5 label1="|k|" unit1="1/km" title=  
+     label2="Operator"
+     ''')
+End()

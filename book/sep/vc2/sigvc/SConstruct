@@ -1,0 +1,56 @@
+from rsf.proj import *
+from rsf.recipes.velcon import velcon
+
+Flow('sig',None,
+     '''
+     sigmoid n1=200 d2=0.008 n2=200 | put n3=1 d3=0.008 o3=0 |
+     smooth rect1=3 diff1=1 adj=1 | pad beg1=25 | put o1=0 |
+     smooth rect1=3 | 
+     preconstkirch zero=y inv=y h0=0 dh=0.008 nh=61 vel=1.5  |
+     halfint inv=y 
+     ''')
+
+velcon('sig',
+       nv=100,     # continuation steps
+       v0=2,       # initial velocity
+       dv=-0.01,   # velocity step
+       nx=200,     # lateral dimension
+       nh=61,      # number of offsets
+       padt=1024,  # time padding
+       padt2=2048, # extra time padding
+       padx=521,   # lateral padding
+       v1=1.5,     # other velocity
+       srect1=10,  # semblance vertical smoothing
+       srect2=10,  # semblance lateral  smoothing
+       rect1=10,   # vertical smoothing
+       rect2=10)   # lateral  smoothing
+
+Plot('vel','sig-sem',
+     '''
+     window min3=1 n3=1 | contour nc=100 title="Velocity Continuation"
+     ''')
+
+Flow('mva','sig-cip',
+     'vscan v0=2 dv=-0.01 nv=100 half=y semblance=y v1=2')
+
+Plot('mva',
+     '''
+     window min3=1 n3=1 |
+     contour nc=25 title="Conventional Velocity Analysis"
+     ''')
+
+Result('sig-mva1','vel mva','SideBySideAniso')
+
+Flow('pick','mva','pick rect1=100 rect2=10 | transp plane=23')
+Flow('conv','sig-cip pick',
+     '''
+     vscan v0=2 dv=-0.01 nv=100 half=y v1=2 |
+     slice pick=${SOURCES[1]} 
+     ''')
+Plot('conv','grey title="Conventional Velocity Analysis" ')
+Plot('velc','sig-fmg','grey title="Velocity Continuation" ')
+
+Result('sig-all','sig-migr1 sig-migr velc conv','TwoRows')
+
+End()
+       

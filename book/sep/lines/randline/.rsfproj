@@ -1,0 +1,3 @@
+uses=['sfrandline', 'sfgrey', 'sfnoise']
+data=[]
+size=     120000

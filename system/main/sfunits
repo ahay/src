@@ -1,0 +1,88 @@
+#!/usr/bin/env python
+
+# Copyright (C) 2007 University of Texas at Austin
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+import re, os, sys, commands
+
+argc = len(sys.argv)
+
+def usage():
+    print '''
+    Usage: %s unit1= unit2= ... file.rsf
+    outputs a parameter file for changing units in an RSF file
+    requires Unix "units" program
+    ''' % sys.argv[0]
+    sys.exit(0)
+
+if argc < 3:
+    usage()
+
+rsfroot = os.environ.get('RSFROOT',sys.prefix)
+if rsfroot:
+    sfget = os.path.join(rsfroot,os.path.join('bin','sfget'))
+else:
+    (stat,sfget) = commands.getstatusoutput('which sfget')
+    if stat:
+        sys.stderr.write('Don\'t know how to run "sfget" \n')
+        sys.exit(1)
+
+(stat,units) = commands.getstatusoutput('which units')
+if stat:
+    sys.stderr.write('Don\'t know how to run "units" \n')
+    sys.exit(2)
+
+rsf = sys.argv[argc-1]
+
+out = ''
+for u in range(1,argc-1):
+    unit = sys.argv[u]
+    form = re.match(r'unit(\d)=(.+)',unit)
+    if not form:
+        usage()
+    num = int(form.group(1))
+    new = form.group(2)
+    get = '%s unit%d parform=n < %s' % (sfget,num,rsf)
+    (stat,old) = commands.getstatusoutput(get)
+    if stat:
+        out = out + form.group(0) + '\n'
+        continue
+    if old==new:
+        continue
+    run = '%s \'%s\' \'%s\'' % (units,old,new)
+    (stat,conv) = commands.getstatusoutput(run)
+    if stat:
+        sys.stderr.write('Cannot convert "%s" to "%s" with %s\n' %
+                         (old,new,units))
+        sys.exit(3)
+    fact = re.match('\s*\*\s+(\S+)',conv)
+    if not fact:
+        sys.stderr.write('Error parsing the output of %s\n' % units)
+        sys.exit(4)
+    fact = float(fact.group(1))
+    sys.stderr.write('Converting "%s" to "%s" on axis %d\n' % (old,new,num))
+    out = out + form.group(0)
+    for dim in ('o','d'):
+        get = '%s %s%d parform=n < %s' % (sfget,dim,num,rsf)
+        (stat,old) = commands.getstatusoutput(get)
+        if not stat:
+            size = float(old)
+            out = out + ' %s%d=%g' % (dim,num,size*fact)
+    out = out + '\n'
+
+sys.stderr.write('\n')
+sys.stdout.write(out)
+sys.exit(0)

@@ -1,0 +1,234 @@
+\published{Geophysical Prospecting, 63, 368-377 (2015)}
+
+%%%%%%%%%%%%%%%%%%%%%%
+\title{A fast algorithm for 3D azimuthally anisotropic velocity scan}
+\author{Jingwei Hu, Sergey Fomel, and Lexing Ying} 
+  
+\lefthead{Hu et al.}
+\righthead{Fast 3D anisotropic velocity scan}
+\footer{TCCS-8}
+
+\maketitle
+
+\begin{abstract}
+Conventional velocity scan can be computationally expensive for large-size seismic data, particularly when the presence of anisotropy requires multiparameter estimation. We introduce a fast algorithm for 3D azimuthally anisotropic velocity scan, which is a generalization of the previously proposed 2D butterfly algorithm for hyperbolic Radon transform. To compute the semblance in a two-parameter residual moveout domain, the numerical complexity of our algorithm is roughly $O(N^3\log N)$ as opposed to $O(N^5)$ of the straightforward velocity scan, with $N$ being representative of the number of points in either dimension of data space or parameter space. We provide both synthetic and field-data examples to illustrate the efficiency and accuracy of the algorithm.
+\end{abstract}
+
+%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Introduction}
+
+Multiazimuth seismic data reveal the Earth's seismic response along different azimuthal directions. Detecting and measuring the anisotropy in such data can be useful for characterizing fractures or stress in the subsurface \citep{TG}. When apparent azimuthal anisotropy is present, conventional single-parameter isotropic velocity scan and normal moveout are usually inadequate. To further flatten the events, a residual anisotropic moveout is necessary. This, however, brings several difficulties in the implementation. First, the computational cost increases dramatically compared with the single-parameter case. If we assume for simplicity that there are $N$ sample points in every dimension of data and model (parameter) domains, then the numerical complexity of a two-parameter velocity scan will be at least $O(N^5)$; i.e., summing over $O(N^2)$ data points for each of $O(N^3)$ values (time + two parameters). Second, the simultaneous automatic picking from a high-dimensional semblance volume also poses a challenge \citep{AB99, SMGSTH03, ARDC04, TDSFMHCO12}. 
+
+%To avoid these issues, a velocity-independent moveout correction can be used in place of velocity scan to improve the efficiency \citep{BF09}. However, if the semblance scan is inevitable to 
+%To handle the second issue, different coherency measures or constraints can be added to the semblance map to enhance the fidelity of velocity analysis, as well as to shorten the time for auto-picking \citep{TDSFMHCO12}. 
+
+In this work, we attempt to solve a fundamental problem related to the first difficulty. Specifically, we introduce a fast algorithm to speed up the velocity-scan process. The stacking procedure involved in computing the semblance can be regarded as a generalized Radon transform \citep{Beylkin84}. Following our previous work on the hyperbolic Radon transform \citep{HFDY12, HFDY13}, we formulate the time-domain summation as a discrete oscillatory integral in the frequency domain, and apply the 3D version of the FIO (Fourier integral operator) butterfly algorithm \citep{CDY09}. As a result, complexity of the velocity scan reduces to roughly $O(N^3 \log N)$, where $N$ is representative of the number of points in either dimension of data space or model space. An alternative approach was developed by \cite{BF09}, but may not be applicable for noisy data.
+
+%The paper is organized as follows. In the theory part, we first describe an orthogonal anisotropic velocity scan, and then give a brief description of the 3D butterfly algorithm as well as discuss its numerical complexity. In the second part, we provide two synthetic and one field data examples to illustrate the efficiency and accuracy of the proposed algorithm.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Theory}
+
+As explained by \cite{GT98}, a pure-mode (P or S) reflection event in an effectively azimuthally anisotropic medium can be described by
+\begin{equation} \label{NMO}
+t=\sqrt{\tau^2+W_{11}x^2+W_{22}y^2+2W_{12}xy},
+\end{equation}
+where $t$ is two-way CMP traveltime, $\tau$ is two-way zero-offset traveltime, $(x,y)$ is the full source-receiver offset in surface survey coordinates, and
+\begin{equation}
+\mathbf{W}= \left( \begin{array}{cc}
+W_{11} & W_{12}  \\
+W_{12} & W_{22}  \end{array} \right)
+\end{equation}
+is the slowness matrix. Equation \ref{NMO} follows from a truncated 2D Taylor expansion. Geometrically, it represents a curved surface that is hyperbolic in cross section and elliptic in map view.
+
+Ideally, one can perform a semblance scan \citep{TK69} over the three parameters $W_{11}$, $W_{22}$, and $W_{12}$ simultaneously to estimate the velocity and perform NMO correction. However, this approach, if not impossible, is extremely expensive for large-size seismic data. Furthermore, since these parameters are not orthogonal, the semblance plots might appear to be extended and ambiguous, hence presenting difficulties for picking \citep{FJH06}. 
+
+\cite{DSSHOZ11} proposed a stable way of detecting azimuthal anisotropy using an orthogonal parametrization of the moveout function, which is based on an equivalent reformulation of equation \ref{NMO},
+\begin{equation} \label{NMO1}
+t=\sqrt{\tau^2+W_{\text{avg}}(x^2+y^2)+W_{\cos}(x^2-y^2)+2W_{\sin}xy}.
+\end{equation}
+The cosine and sine dependent slownesses $W_{\cos}$ and $W_{\sin}$ are usually much smaller than the averaged slowness $W_{\text{avg}}$. Therefore, a possible workflow for anisotropic velocity analysis and NMO correction can proceed in three steps: 
+\begin{enumerate}
+\item Perform an isotropic velocity scan to estimate $W_{\text{avg}}$ and flatten seismic events. 
+\item Perform a residual anisotropic moveout to account for $W_{\cos}$ and $W_{\sin}$ dependent terms simultaneously.
+\item Convert orthogonal parameters to more intuitive anisot-ropy parameters. For instance, the normal moveout velocity at azimuth $\alpha$ can be recovered by 
+\begin{equation}
+V_{\text{nmo}}^{-2}(\alpha)=W_{\text{avg}}+W_{\cos}\cos 2 \alpha + W_{\sin}\sin 2 \alpha.
+\end{equation}
+\end{enumerate}
+In this procedure, the first two steps require a velocity-scan process. In fact, because $x$ and $y$ are symmetric in $W_{\text{avg}}(x^2+y^2)$, the single-parameter isotropic scan involved in the first step can be handled efficiently by a 2D butterfly algorithm, as discussed in our previous work \citep{HFDY12, HFDY13}. Our goal in this paper is to speed up the more expensive, two-parameter velocity scan in the second step.
+
+To be specific, what we need for residual moveout is to compute a semblance as follows (assuming that the $W_{\text{avg}}$ part has been moved out from the previous step):
+\begin{equation} \label{semb}
+S(\tau,W_{\cos},W_{\sin})=\frac{\left(\displaystyle\sum_{x,y}d(t(x,y;\tau,W_{\cos},W_{\sin}),x,y)\right)^2}{N_xN_y\displaystyle\sum_{x,y}d^2(t(x,y;\tau,W_{\cos},W_{\sin}),x,y)},
+\end{equation}
+where $d(t,x,y)$ is a 3D CMP dataset after isotropic moveout and
+\begin{equation}
+t(x,y;\tau,W_{\cos},W_{\sin})=\sqrt{\tau^2+W_{\cos}(x^2-y^2)+2W_{\sin}xy}.
+\end{equation}
+
+\subsection{Basic formulation}
+
+The right-hand side of equation \ref{semb} is a quotient of two (discrete) generalized Radon transforms \citep{Beylkin84}. They can be expressed in a unified way as (to simplify the notation, we write $p=W_{\cos}$, $q=W_{\sin}$ in this and next subsections)
+\begin{equation} \label{Radon}
+(Rg)(\tau,p,q)=\sum_{x,y}g(\sqrt{\tau^2+p(x^2-y^2)+2qxy},x,y),
+\end{equation}
+where $g$ is $d$ or some composite function of $d$. %Indeed, this transform is quite general to embrace the components of many semblance-related attributes. 
+
+To construct the fast algorithm, we first rewrite equation \ref{Radon} in the frequency domain as
+\begin{equation} \label{3DRadon}
+(Rg)(\tau,p,q)=\sum_{f,x,y} e^{2\pi i f \sqrt{\tau^2+p(x^2-y^2)+2qxy}}\hat{g}(f,x,y),
+\end{equation}
+where $f$ is frequency and $\hat{g}(f,x,y)$ is the Fourier transform of $g(t,x,y)$ in time. We next perform a linear transformation to map all discrete points in $(f,x,y)$ and $(\tau,p,q)$ domains to points in the unit cube $[0,1]^3$; i.e., a point $(f,x,y)\in[f_\text{min},f_\text{max}]\times[x_\text{min},x_\text{max}]\times [y_\text{min},y_\text{max}]$ is mapped to $\mathbf{k}=(k_1,k_2,k_3)$ $\in[0,1]\times[0,1]\times[0,1]=K$ via
+\begin{eqnarray*}
+&&f=(f_\text{max}-f_\text{min})k_1+f_\text{min}, \\
+&&x=(x_\text{max}-x_\text{min})k_2+x_\text{min}, \\
+&&y=(y_\text{max}-y_\text{min})k_3+y_\text{min};
+\end{eqnarray*}
+a point $(\tau,p,q)\in[\tau_\text{min},\tau_\text{max}]\times[p_\text{min},p_\text{max}]\times[q_\text{min},q_\text{max}]$ is mapped to $\mathbf{x}=(x_1,x_2,x_3)\in[0,1]\times[0,1]\times[0,1]=X$ via
+\begin{eqnarray*}
+&&\tau=(\tau_\text{max}-\tau_\text{min})x_1+\tau_\text{min}, \\
+&&p=(p_\text{max}-p_\text{min})x_2+p_\text{min}, \\
+&&q=(q_\text{max}-q_\text{min})x_3+q_\text{min}.
+\end{eqnarray*}
+If we define a phase function $\Phi(\mathbf{x},\mathbf{k})$ as
+\begin{equation}
+\Phi(\mathbf{x},\mathbf{k})= f \sqrt{\tau^2+p(x^2-y^2)+2qxy},
+\end{equation}
+then equation \ref{3DRadon} can be recast as
+\begin{equation}  \label{OIO}
+(Rg)(\mathbf{x})=\sum_{\mathbf{k}\in K}  e^{ 2\pi i
+\Phi(\mathbf{x},\mathbf{k})}\hat{g}(\mathbf{k}), \quad \mathbf{x}\in X
+\end{equation}
+(throughout the paper, $K$ and $X$ are used to denote either sets of discrete points or the cubic
+domains containing them).
+
+\subsection{Fast 3D butterfly algorithm}
+
+Equation \ref{OIO} is the discretized form of a 3D oscillatory integral of the type
+\begin{equation} 
+u(\mathbf{x})=\int_K e^{ 2\pi i
+\Phi(\mathbf{x},\mathbf{k})}v(\mathbf{k}) \,d\mathbf{k},\quad \mathbf{x}\in X, 
+\end{equation}
+whose fast evaluation can be realized by a butterfly algorithm \citep{CDY09}. 
+
+The overall structure of the 3D butterfly algorithm basically follows its 2D analogue. The idea is to partition the computational domains $X$ and $K$ recursively into a pair of {\it octrees}, $T_X$ and $T_K$, ending at level $l=\log N$ (see Figure \ref{fig:cube} for an illustration). Here $N$ is chosen as an integer power of two, which is on the order of the maximum of $|\Phi(\mathbf{x},\mathbf{k})|$ for all possible $\mathbf{x}$ and $\mathbf{k}$ (so it is mainly determined by the range of variables $(f,x,y)$ and $(\tau,p,q)$). A crucial property of this structure is that at arbitrary level $l$, the side lengths $w(A)$ of a box $A$ in $T_X$ and $w(B)$ of a box $B$ in $T_K$ always satisfy $w(A)w(B)=1/N$. Then when $\mathbf{x}$, $\mathbf{k}$ restricted in $A$ and $B$ respectively, one can construct a low-rank, separated expansion for the kernel function $e^{2\pi i\Phi(\mathbf{x},\mathbf{k})}$ (via a Chebyshev interpolation):
+\begin{equation} \label{lowrank}
+\left |e^{2\pi i \Phi(\mathbf{x},\mathbf{k})} -\sum_{r=1}^{r_{\epsilon}}\alpha_r^{AB}(\mathbf{x})\beta_r^{AB}(\mathbf{k})\right|<\epsilon.
+\end{equation}
+By embedding this approximation in the above tree structure and traversing $T_X$ from top to bottom, $T_K$ from bottom to top, we arrive at a fast algorithm running in complexity $O(N^3\log N)$ (there are $N^3$ pairs of boxes $(A,B)$ on every level, and there are $\log N$ levels in total). Detailed description of the algorithm can be found in \cite{HFDY13}, where the difference between 2D and 3D formulations should be clear from the context.
+
+\inputdir{.}
+\plot{cube}{width=0.9\columnwidth}{Butterfly tree structure for the special case of $N=4$.} 
+
+Considering the initial Fourier transform for preparing data in $(f,x,y)$ domain, the overall complexity of our algorithm is roughly $O(N_xN_yN_t\log N_t)+ O(C_1(r_{\epsilon})(N_fN_xN_y+N_{\tau}N_pN_q))+O(C_2(r_{\epsilon})N^3\log N)$ ($r_{\epsilon}$ terms are due to low-rank approximations, and $C_2(r_{\epsilon})$ is bigger than $C_1(r_{\epsilon})$).
+
+By comparison, the conventional straightforward velocity scan requires at least $O(N_{\tau}N_pN_qN_xN_y)$ computations, which may quickly become a bottleneck as the problem size increases. Yet the efficiency of our algorithm is controlled mainly  by $O(N^3\log N)$ with an $\epsilon$-dependent constant, where $N$ is determined by the degree of oscillations in the kernel $e^{2\pi i \Phi(\mathbf{x},\mathbf{k})}$. Generally speaking, $N$ depends on the maximum frequency and offset in the dataset, and the range of parameters in the model space. In practice, $N$ can often be chosen smaller than the grid size. 
+
+The significance of above analysis for the fast algorithm lies in the fact that the input and output data sizes $N_tN_xN_y$ and $N_{\tau}N_p N_q$ have little impact on the final computational cost; a dense sampling therefore becomes affordable. %\citep{AB99, SMGSTH03}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Numerical examples}
+
+
+\subsection{Example 1}
+
+We first consider a simple 3D synthetic CMP gather consisting of four isolated events, each with a different degree of azimuthal anisotropy (Figure \ref{fig:cmp-before}). The moveout parameters $\tau$, $W_{\text{avg}}$, $W_{\cos}$, and $W_{\sin}$ used to generate the events are specified in Table \ref{table2}. Figure \ref{fig:cmp} shows the data after isotropic NMO using the exact $W_{\text{avg}}$. Except for the first flattened isotropic event, the other three events clearly require an additional moveout. The computed semblance by the fast algorithm is shown in Figure \ref{fig:NMOsemb}, where manually picked parameters coincide well with exact values. Besides accuracy, what is remarkable is that, even for this moderate-sized problem ($N_t=N_{\tau}=1000$, $N_x=N_y=N_{W_{\cos}}=N_{W_{\sin}}=100$), CPU time of the butterfly algorithm (for a single Radon transform) is about 139 s, whereas the direct velocity scan takes 4681 s.
+
+\begin{table}
+\centering
+\begin{tabular}{ c c c c c}
+\hline
+event &   $\tau$ & $W_{\text{avg}}$ & $W_{\cos}$ & $W_{\sin}$  \\ \hline
+1&  0.7 & 0.3 & 0 & 0\\ \hline
+2&  1.8 & 0.29 & 0.021 & 0.021\\ \hline
+3&  2.6 & 0.25 & -0.01 & -0.017\\ \hline
+4&  3.4 & 0.15 & 0 & 0.02\\ \hline
+\end{tabular}
+\caption{Parameters used to generate the seismic events in Figure \ref{fig:cmp-before,cmp}.}
+\label{table2}
+\end{table}
+
+\inputdir{fourevents}
+
+\multiplot{2}{cmp-before,cmp}{width=2.7in}{3D synthetic CMP gather (a) before and (b) after isotropic NMO. $N_t=1000$, $N_x=N_y=100$. $\Delta t=0.004$ s, $\Delta x=\Delta y=80$ m.}
+
+\plot{NMOsemb}{width=2.7in}{Semblance plot (event 3) computed by the fast algorithm. $N_{\tau}=1000$, $N_{W_{\cos}}=N_{W_{\sin}}=100$.}
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\subsection{Example 2}
+
+We now further investigate the properties of the fast algorithm using a more realistic 3D synthetic CMP gather (Figure \ref{fig:data}). The semblance plot computed by the fast algorithm is shown in Figure \ref{fig:NMOsemb-1}. Figure \ref{fig:NMOdatacut} is the isotropically NMO corrected data. After residual moveout using picked velocities from the semblance, curved events are flattened to the right position (Figure \ref{fig:RMOdatacut}).
+
+We next fix $N_t=N_{\tau}=1000$, $N_x=N_y=400$ and compare CPU time of the fast algorithm and the direct velocity scan for different $N_{W_{\cos}}$ and $N_{W_{\sin}}$ (Table \ref{table1}). When $N_{W_{\cos}}$ and $N_{W_{\sin}}$ increase by a factor of 2, computation time of the direct velocity scan increases nearly by a factor of 4, which is consistent with our previous discussion on numerical complexity. On the other hand, CPU time of the fast algorithm is not affected much by the size of output sampling, again confirming our expectations.
+
+\inputdir{noncwavg-1}
+
+\plot{data}{width=2.7in}{3D synthetic CMP gather. $N_t=1000$, $N_x=N_y=400$. $\Delta t=0.004$ s, $\Delta x=\Delta y=25$ m.}
+
+\begin{table}
+\centering
+\begin{tabular}{ c c c c}
+\hline
+  &  Direct & Fast butterfly & Speedup\\ 
+ $N_{W_{\cos}}\times N_{W_{\sin}}$ & velocity scan & algorithm & factor\\ \hline
+$10\times 10$ & 1847 s& 145 s & {\bf 12.7}\\ \hline
+$20\times 20$& 7394 s & 146 s & {\bf 50.6}\\  \hline
+$100\times 100$ & $\sim$ 184700 s & 159 s & $\sim$ {\bf 1162}\\ \hline
+$200\times 200$ & $\sim$ 738800 s & 196 s & $\sim$ {\bf 3769}\\ \hline
+\end{tabular}
+\caption{CPU time of direct velocity scan and fast butterfly algorithm for different $N_{W_{\cos}}$ and $N_{W_{\sin}}$ applied to the synthetic data in Figure \ref{fig:data}.}
+\label{table1}
+\end{table}
+
+\plot{NMOsemb-1}{width=2.7in}{Semblance plot computed by the fast algorithm. $N_{\tau}=1000$, $N_{W_{\cos}}=N_{W_{\sin}}=200$. %Purple curves overlaid are the exact $W_{\cos}(\tau)$ and $W_{\sin}(\tau)$.
+}
+
+\multiplot{2}{NMOdatacut,RMOdatacut}{width=2.7in}{Synthetic gather (a) before and (b) after residual moveout using picked velocities from the semblance scan.}
+
+
+%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Example 3}
+
+Finally we consider a field-data example. A subset of the McElroy dataset from West Texas was formed in a supergather (Figure \ref{fig:super}). This dataset was studied by \cite{BF09}, in which they proposed a velocity-independent moveout correction to avoid costly velocity scan. With the fast algorithm, we are now able to compute the semblance efficiently: only 45 s for a single Radon transform when $N_t=N_{\tau}=400$, $N_x=N_y=297$, and $N_{W_{\cos}}=N_{W_{\sin}}=200$; direct computation at this sampling would take approximately 30 hours. 
+
+Although the original data have been isotropically NMO corrected, the time slice still shows a subtle directional trend to flatness (Figure \ref{fig:super}). From the semblance plot (Figure \ref{fig:semb}), we observe some nonzero values of anisotropic parameters. %Due to the small variations of the residual velocity, the 3D picking can be tricky. We do not attempt to address it here and will leave it as future work.
+%Figure \ref{fig:super1-aniso,RMOdata1-aniso} shows a comparison of the event around 0.97 s before and after residual moveout.
+
+%\multiplot{2}{super1-aniso,RMOdata1-aniso}{width=2.8in,height=0.4in}{Event around 0.97 s before (a) and after (b) residual moveout using the picked velocities from the semblance scan. The horizontal axis is azimuth ranging from $-180^\circ$ to $180^\circ$.}
+
+\inputdir{realdata}
+
+\plot{super}{width=2.7in}{An isotropically NMO-corrected supergather from the McElroy dataset, West Texas. $N_t=400$, $N_x=N_y=297$. $\Delta t=0.002$ s, $\Delta x=\Delta y=25$ m.}
+\plot{semb}{width=2.7in}{Semblance plot computed by the fast algorithm. $N_{\tau}=400$, $N_{W_{\cos}}=N_{W_{\sin}}=200$.}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\section{Conclusions}
+
+We have introduced a fast algorithm for 3D, azimuthally aniso-tropic velocity scan. Our synthetic and field-data experiments show that the method can be orders of magnitude faster than the conventional velocity scan, especially for large-size data and dense parameter sampling. 
+
+To illustrate the idea, equation \ref{NMO1} was used throughout the paper. Applicability of the butterfly algorithm is not limited to this form of the moveout function, as long as the transform can be written in the form of equation \ref{OIO}.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Acknowledgments}
+
+We thank Chevron for providing the field data. We thank KAUST and sponsors of the Texas Consortium for Computational Seismology (TCCS) for financial support. 
+ 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%\onecolumn
+\bibliographystyle{seg}
+\bibliography{hu_bibtex}

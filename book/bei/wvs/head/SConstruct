@@ -1,0 +1,41 @@
+from rsf.proj import *
+
+n1 = {
+    '34': 400,
+    '32': 400,
+    '20': 450
+    }
+
+for case in ('34','32','20'):
+    data = 'wz.%s.H' % case
+    Fetch(data,'wz')
+    Flow(case,data,'dd form=native')
+    
+    window = 'window n1=%d | pow pow2=1' % n1[case]
+    raw = 'raw'+case
+    lmo = 'lmo'+case
+    
+    Flow(raw,case,window)
+    Plot(raw,'grey wanttitle=n')
+    
+    Flow(lmo,case,'lmostretch delay=1 v0=1.47 half=n | ' + window)
+    Plot(lmo,'grey wanttitle=n')
+
+    Result('wzl-'+case,[raw,lmo],'SideBySideAniso',vppen='txscale=1.5')
+
+Fetch('midpts.hh','midpts')
+Flow('cdp','midpts.hh','window n3=1 n1=300 j1=2 | dd form=native')
+Flow('lmo','cdp','lmostretch delay=0.4 v0=1.47 half=n')
+
+wiggle = '''
+wiggle pclip=100 zplot=1.
+title="%s" transp=y yreverse=y
+label1="Time (s)" label2="Offset (km)"
+'''
+
+Plot('cdp',wiggle % ' ')
+Plot('lmo',wiggle % 'LMO')
+Result('wglmo','cdp lmo','SideBySideAniso',vppen='txscale=1.5')
+
+###########################################################################
+End()

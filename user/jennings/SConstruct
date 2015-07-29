@@ -1,0 +1,76 @@
+import sys, os
+
+try:
+    import bldutil
+    srcroot = '../..' # cwd is RSFSRC/build/user/jennings
+    Import('env root bindir pkgdir')
+    env = env.Clone()
+except:
+    srcroot = os.environ.get('RSFSRC', '../..')
+    sys.path.append(os.path.join(srcroot,'framework'))
+    import bldutil
+    env = bldutil.Debug() # Debugging flags for compilers
+    root = None
+    SConscript(os.path.join(srcroot,'api/c/SConstruct'))
+
+# C mains
+progs = '''
+minmax listminmax sizes
+'''
+
+# Python mains that do not need SWIG+numpy
+py_meta = '''
+figlist booklist testlist
+'''
+
+# Python modules that do not need SWIG+numpy
+pylibs_meta = '''
+'''
+
+src = Glob('[a-z]*.c')
+
+env.Prepend(CPPPATH=['../../include'],
+            LIBPATH=['../../lib'],
+            LIBS=[env.get('DYNLIB','')+'rsf'])
+
+for source in src:
+    inc = env.RSF_Include(source,prefix='')
+    obj = env.StaticObject(source)
+    env.Depends(obj,inc)
+
+mains = Split(progs)
+for prog in mains:
+    sources = ['M' + prog]
+    bldutil.depends(env,sources,'M'+prog)
+    prog = env.Program(prog,map(lambda x: x + '.c',sources))
+    if root:
+        env.Install(bindir,prog)
+
+######################################################################
+# PYTHON METAPROGRAMS (python API not needed)
+######################################################################
+
+if root: # no compilation but rename
+
+    # Python main programs
+    py_mains_meta = Split(py_meta)
+    for prog in  Split(py_meta):
+        env.InstallAs(os.path.join(bindir,'sf'+prog),'M'+prog+'.py')
+        
+    # User modules
+    rsfuser = os.path.join(pkgdir,'user')
+    for module in Split(pylibs_meta):
+        env.Install(rsfuser,module+'.py')
+
+######################################################################
+# SELF-DOCUMENTATION
+######################################################################
+if root:
+    user = os.path.basename(os.getcwd())
+    main = 'sf%s.py' % user
+    docs = map(lambda prog: env.Doc(prog,'M'+prog),mains) + \
+           map(lambda prog: env.Doc(prog,'M'+prog+'.py',lang='python'),
+               py_mains_meta)
+    env.Depends(docs,'#/framework/rsf/doc.py')	
+    doc = env.RSF_Docmerge(main,docs)
+    env.Install(pkgdir,doc)

@@ -1,0 +1,9 @@
+from rsf.tex import *
+
+#Paper('solution',include=r'''
+#\newcommand{\answer}[1]{\textit{\textcolor{red}{#1}}}
+#''',use='hyperref,listings,color')
+
+End(use='hyperref,listings')
+
+

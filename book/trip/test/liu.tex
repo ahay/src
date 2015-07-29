@@ -1,0 +1,72 @@
+% You can define macros here
+
+\author{Yujin Liu and William W. Symes}
+\title{Extended modeling in Madagascar}{Madagascar course at TRIP}
+
+
+\section{Introduction}
+
+This guide demonstrates how to implement extended modeling in Madagascar.
+
+
+\section{Theory}
+
+Acoustic constant density (ACD) Equation:
+\begin{equation}
+    \nabla^2 U - \frac{1}{v^2} \frac{\partial^2 U}{\partial t^2} = f(t)
+\label{eqn:1}
+\end{equation}
+Here $\nabla$ is Laplacian operator, $f(t)$ is the source wavelet, $v$ is velocity, $U$ is a scalar wavefield.
+
+Extended acoustic constant density (EACD) Equation:
+\begin{equation}
+    \nabla^2 U - \frac{1}{v^2} \circ \frac{\partial^2 U}{\partial t^2} = f(t)
+\label{eqn:2}
+\end{equation}
+Notes: scalar $\frac{1}{v^2}$ in equation ~\ref{eqn:1} became an operator \cite[]{symes_geopro_2008,krebs_fast_2009,duquet_3d_1999}.
+
+
+\section{Implementation}
+In this part, I will give the implementations in detail.
+
+Discrete form of equation ~\ref{eqn:1} is:
+
+\begin{equation}
+U^{n+1}_{i,j} = \left[ \Delta U^{n}_{i,j} -f(t) \right] v^2_{i,j} \Delta t^2 + 2 U^{n}_{i,j} - U^{n-1}_{i,j} \;,
+\end{equation}
+where $n-1$, $n$ and $n+1$ represent various time steps, ${i,j}$ represent vertical and horizontal space grid respectively.
+
+Discrete form of equation ~\ref{eqn:2} is:
+\begin{equation}
+U^{n+1}_{i,j} = \sum_k \left[ \Delta U^{n}_{i,j-k} -f(t) \right] v^2_{i,j-k,k} \Delta t^2 + 2 U^{n}_{i,j} - U^{n-1}_{i,j} \;,
+\end{equation}
+where $n-1$, $n$ and $n+1$ represent various time steps, ${k}$ represent offset grid.
+
+\section{Results}
+
+Model info: constant velocity (v=1.5km/s), nx=151, dx=0.01, nz=151, dz=0.01, fpeak=10hz, nh = 31, oh=-15, dh=dx
+
+\inputdir{flat}
+\plot{time200}{width=0.45\textwidth}{Wavefiled at time 0.2s, left is ordinary modeling and right is extended modeling.}
+\sideplot{time600}{width=0.45\textwidth}{Wavefiled at time 0.6s, left is ordinary modeling and right is extended modeling.}
+
+\multiplot{2}{time200,time600}{width=0.45\textwidth}{Wavefiled at (a) time 0.2s, (b) time 0.6s (Left is ordinary modeling, right is extended modeling).}
+
+
+\begin{figure}
+    \includegraphics[width=0.45\textwidth]{flat/Fig/time800} 
+    \caption{Wavefiled at time 0.8s, left is ordinary modeling and right is extended modeling.}
+\label{Fig:noise}
+\end{figure}
+
+From figures~\ref{fig:time200}-~\ref{fig:time600}, we can see that they are same when assuming no energy at non-zero offset of extended model.
+
+\section{Conclusions}
+
+
+This simple document only shows we can use Madagascar as an useful tool and the way how to use it in our research.
+
+Give you the key, open the door by yourself.
+
+\bibliographystyle{seg}
+\bibliography{demobib}

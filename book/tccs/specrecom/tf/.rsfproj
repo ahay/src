@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfwindow', 'sfgraph', 'sfspectra', 'sfrickerfit', 'sfltft', 'sfmath', 'sfreal', 'sfgrey', 'sfcat', 'sfput', 'sftransp']
+data=['data/attr/pptrace.rsf']
+size=    6951724

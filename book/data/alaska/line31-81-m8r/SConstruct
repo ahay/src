@@ -1,0 +1,331 @@
+from rsf.proj import *
+
+############################
+# Data fetching, SEG-Y -> RSF
+#############################
+
+rawsegy=['L23535','L23536','L23537']
+
+for file in rawsegy  :
+    Fetch(file+'.SGY',
+	  server='http://certmapper.cr.usgs.gov',
+      	  top='nersl/NPRA/SEISMIC/1981/31_81',
+      	  dir='DMUX')
+    Flow([file, file+'.bin',  file+'.asc', 't'+file],
+         file+'.SGY',
+         '''
+         segyread bfile=${TARGETS[1]} hfile=${TARGETS[2]} tfile=${TARGETS[3]}
+         ''')
+
+# concatinate the input files
+
+Flow('line',rawsegy,'cat axis=2 ${SOURCES[1:3]}')
+Flow('tline',map(lambda x: 't'+x,rawsegy),'cat axis=2 ${SOURCES[1:3]}')
+
+# display the first 3000 traces
+
+Plot('first','line',
+     'window n2=3000 | grey pclip=90 title="First 3,000 Traces" ')
+
+Result('zoomfirst','line',
+       '''
+       window min2=1000 max2=1250 min1=0 max1=3 |
+       grey pclip=90 title=Zoom
+       ''')
+
+Result('firstrec24','line',
+       '''
+       window min2=2324 max2=2424 min1=0 max1=6 |
+       grey pclip=90 title="First Record"
+       ''')
+
+# Window out misfire
+Flow('shotmask','tline',
+     '''
+     window n1=1 f1=2 | mask min=157 max=157 |
+     add add=-1 | add scale=-1
+     ''')
+
+# Convert to shots
+maskshot = '''
+headerwindow mask=${SOURCES[1]} |
+put n2=101 n3=67 |
+window n2=96 f3=10 |
+put o3=100 d3=1 label3=Shot
+o2=-5225 d2=110 label2=Offset unit2=ft
+'''
+
+Flow('shots',  'line shotmask',maskshot)
+Flow('tshots','tline shotmask',maskshot)
+
+Plot('shots','grey title=Shots gainpanel=all pclip=90',view=1)
+
+Result('shots',
+       '''
+       byte gainpanel=all pclip=90 |
+       grey3 frame1=1000 frame2=50 frame3=30 title=Shots 
+       flat=n point1=0.7 point2=0.7
+       ''')
+
+###########################
+# Previous Stack
+###########################
+Fetch('31_81_PR.SGY',
+      server='http://certmapper.cr.usgs.gov',
+      top='nersl/NPRA/SEISMIC/1981/31_81',
+      dir='PROCESSED')
+
+file='checkstack'
+Flow([file, file+'.bin',  file+'.asc', 't'+file],
+     '31_81_PR.SGY',
+     '''
+     segyread bfile=${TARGETS[1]} hfile=${TARGETS[2]} tfile=${TARGETS[3]}
+     ''')
+
+Result('checkstack','grey title="Check Stack" pclip=90')
+Result('zoomcheckstack','checkstack',
+       '''
+       window max1=3 |
+       grey title="Zoom Check Stack" pclip=90
+       ''')
+
+# Local slope
+Flow('dip','checkstack','fdip rect1=50 rect2=10 verb=y')
+Result('dip','grey color=j scalebar=y title=Slope')
+
+Flow('pwd','checkstack dip','pwd dip=${SOURCES[1]}')
+Result('pwd','grey title=PWD')
+Result('zoompwd','pwd',
+       '''
+       window max1=3 |
+       grey title="Zoom PWD" pclip=90
+       ''')
+
+#############################
+# Elevation profile, datuming
+#############################
+
+Flow('spelev','../line31-81/spnElev.txt',
+     '''
+     echo in=$SOURCE data_format=ascii_float n1=2 n2=33 |
+     dd form=native 
+     ''',stdin=0)
+Plot('spelev',
+     '''
+     dd type=complex |
+     window |
+     graph wanttitle=n wantaxis=n symbol=o plotcol=5
+     min2=75 max2=125 min1=85 max1=172
+     ''')
+
+Flow('elev','spelev','transp | linear o1=85 d1=1 n1=88 rect=2 niter=100')
+Plot('elev',
+     '''
+     graph title=Elevation label1=Shot label2=Elevation unit2=ft
+     min2=75 max2=125 min1=85 max1=172
+     ''')
+Result('elev','elev spelev','Overlay')
+
+ng=96
+ns=57
+ngs = ng*ns
+
+# Shot elevation (fldr)
+Flow('spoint','tshots','window n1=1 f1=2 | put n1=%d n2=1 | dd type=float' % ngs) 
+Flow('selev','elev spoint','inttest1 coord=${SOURCES[1]} interp=lag nw=2')
+Result('selev',
+       '''
+       window n1=%d j1=%d | put o1=100 d1=1 label1=Shot | 
+       graph title="Shot Elevation" label2=Elevation unit2=ft
+       ''' % (ns,ng))
+
+# observer log says shot holes 82.5 ft before spn 123, then changes to 67.5 ft.
+Flow('sdepth','spoint',
+     'mask max=123 | dd type=float | math output="82.5*input+67.5*(1-input)" ')
+
+# Receiver elevation
+Flow('gpoint','tshots',
+     '''
+     window n1=1 f1=2 | dd type=float | 
+     math output="input+x1/440" | put n1=%d n2=1
+     ''' % ngs)
+Flow('gelev','elev gpoint','inttest1 coord=${SOURCES[1]} interp=lag nw=2')
+
+vnear = 10000 # replacement velocity (ft/s)
+
+# Elevation statics
+Flow('estat','selev sdepth gelev','add scale=1,-1,1 ${SOURCES[1:3]} | scale dscale=%g | put n1=%d n2=%d' % (1.0/vnear,ng,ns))
+Result('estat','grey color=j mean=y scalebar=y barlabel=Time barunit=s title="Elevation Statics" ')
+
+Flow('eshots','shots estat','datstretch datum=${SOURCES[1]}')
+
+Result('eshots',
+       '''
+       byte gainpanel=all pclip=90 |
+       grey3 frame1=1000 frame2=50 frame3=30 title="Elevation Statics"
+       flat=n point1=0.7 point2=0.7
+       ''')
+
+############################
+# Gain, mute, and dip filter
+############################
+
+Flow('gshots','eshots',
+     '''
+     pow pow1=1 | put d3= |
+     mutter half=n v0=%g tp=0 | put d3=1 |
+     shapeagc rect1=250
+     ''' % (5280/0.488))
+
+Result('gshots',
+       '''
+       byte gainpanel=all |
+       grey3 frame1=1000 frame2=50 frame3=30 title="Gain & Mute"
+       flat=n point1=0.7 point2=0.7
+       ''')
+
+# Dip filter
+############
+
+# FFT and bias
+Flow('fft','gshots',
+     '''
+     put d2=1 o2=-47.5 | fft1 | 
+     math output="input*exp(-I*0.003*x2*x1)" |
+     fft3
+     ''')
+
+Result('fft',
+       '''
+       window max1=100 |
+       math output="abs(input)" | real |
+       byte gainpanel=all allpos=y |
+       grey3 frame1=200 frame2=100 frame3=30 title="2-D Fourier"
+       flat=n point1=0.7 point2=0.7 color=j
+       ''')
+
+Flow('filt','fft','dipfilter v1=-90 v2=-83 v3=83 v4=90 pass=n')
+
+Result('filt',
+       '''
+       window max1=100 |
+       math output="abs(input)" | real |
+       byte gainpanel=all allpos=y |
+       grey3 frame1=200 frame2=100 frame3=30 title="2-D Fourier"
+       flat=n point1=0.7 point2=0.7 color=j
+       ''')
+
+Flow('dshots','filt',
+     '''
+     fft3 inv=y | 
+     math output="input*exp(I*0.003*x2*x1)" |
+     fft1 inv=y | put d2=110 o2=-5225
+     ''')
+
+Result('dshots',
+       '''
+       byte gainpanel=all |
+       grey3 frame1=1000 frame2=50 frame3=30 title="Dip Filter"
+       flat=n point1=0.7 point2=0.7
+       ''')
+
+Plot('dshots','grey title=Shots gainpanel=all pclip=90',view=1)
+
+# Sort to CMP 
+
+Flow('cmps','dshots','put o3=0 d3=440 | shot2cmp half=n')
+
+# Brute velocity function
+
+vbruteorig=open('../line31-81/vbruteorig.txt')
+vbrute = vbruteorig.read().replace('\\','')
+vbruteorig.close()
+
+exec vbrute in locals()
+
+Flow('vbrute.asc',None,
+     '''
+     echo %s %s in=$TARGET data_format=ascii_float n1=9 n2=2 
+     ''' % tuple(map(lambda x: ' '.join(map(str,x)),[tnmo,vnmo])),stdin=0)
+Flow('vbrute','vbrute.asc',
+     'dd form=native | linear n1=3000 o1=0 d1=0.002 rect=5 niter=10')
+
+Result('vbrute',
+       '''
+       graph label1=Time unit1=s label2=Velocity unit2=ft/s title="Picked Velocity"
+       transp=y yreverse=y
+       ''')
+
+Flow('vbrutes','vbrute','spray axis=2 n=551')
+
+Flow('cmpsmute','cmps vbrutes',
+     '''
+     nmo half=n velocity=${SOURCES[1]} |
+     mutter half=n v0=14000 |
+     inmo half=n velocity=${SOURCES[1]}
+     ''')
+
+Plot('cmpsmute','grey title=CMPs gainpanel=all pclip=90',view=1)
+
+for cmpn in (250,251,368):
+    cmpi = 'cmp%d' % cmpn 
+    Flow(cmpi,'cmpsmute','window n3=1 f3=%d' % cmpn)
+    Plot(cmpi,'wiggle poly=y transp=y yreverse=y max1=3 title="CMP %d" ' % cmpn)
+    Plot(cmpi+'g',cmpi,'grey  title="CMP %d" ' % cmpn)
+    nmoi = 'nmo%d' % cmpn
+    Flow(nmoi,[cmpi,'vpick'],'nmo half=n velocity=${SOURCES[1]}')
+    Plot(nmoi,'grey  title="NMO %d" ' % cmpn)
+
+# make wiggle plot of two cdp gathers
+Result('cmp250','cmp250 cmp251','SideBySideAniso')
+
+# run velocity analysis at one location, near the center of the line.
+Flow('vscan','cmp368','vscan semblance=y half=n nv=101 v0=7000 dv=100')
+Plot('vscan','grey color=j allpos=y title="Velocity Scan" ')
+
+Flow('vpick','vscan','mutter inner=y t0=1 x0=7000 v0=1500 half=n | pick rect1=100')
+Plot('vpick','graph plotcol=7 plotfat=5 wantaxis=n wanttitle=n yreverse=y transp=y min2=7000 max2=17000 pad=n')
+Plot('vscanpick','vscan vpick','Overlay')
+
+Result('vscan','cmp368g vscanpick','SideBySideAniso')
+Result('nmo368','cmp368g nmo368','SideBySideAniso')
+
+# apply decon and moveout the cdp gathers using the brute velocity function.
+# decon (supef) is inside linear moveout/inverse linear moveout pair so I 
+# can make the decon design gate start time increase with offset and start
+# below the mute.
+
+Flow('lmo','cmpsmute','window n1=1 | math output="0.001*(-200+0.0861*abs(x1))" ')
+Flow('decon','cmpsmute lmo',
+     '''
+     datstretch datum=${SOURCES[1]} |
+     pef maxlag=.2 pnoise=.01 mincorr=.25 maxcorr=5 |
+     datstretch datum=${SOURCES[1]} inv=y
+     ''')
+Flow('dec368','decon','window n3=1 f3=368')
+Plot('dec368','grey title=Deconvolution')
+Result('dec368','cmp368g dec368','SideBySideAniso')
+
+# NMO, gain, and mute
+Flow('vpicks','vpick','spray axis=3 n=551')
+Flow('nmo','decon vpicks','nmo velocity=${SOURCES[1]} half=n | shapeagc rect1=50 rect2=50 rect3=1000')
+
+Plot('nmo','grey title=CMPs gainpanel=all pclip=90',view=1)
+
+##########################################
+# brute stack, display, and zoom display
+##########################################
+Flow('brutestack','nmo','stack')
+
+Result('brutestack',
+       '''
+       grey title="brutestack" 
+       ''')
+
+Result('zoombrutestack','brutestack',
+       '''
+       window max1=3.0 |
+       grey title="brutestack" 
+       ''')
+
+End()

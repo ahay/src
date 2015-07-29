@@ -1,0 +1,343 @@
+\def\tabhead{
+mmmmmmmmmm\=mm\=mm\=mm\=mm\=mm \kill
+}
+
+% ------------------------------------------------------------
+\def\zomig{ \vspace{0.1in}
+\begin{singlespace}
+\hrule \vspace{0.1in}
+{\sc zero-offset migration algorithm}
+\begin{tabbing} \tabhead
+                                     \> \black{$\ww=\wmin \dots \wmax \{$} \\
+@ $\ww$                              \> \> read $\UU\ofm$ \\
+                                     \> \> \black{$z=\zmin \dots \zmax \{$} \\
+@ $z$ and $\ww$ (optional)           \> \> \> write $\UU\ofm$ \\
+%
+@ $z$                                \> \> \> read $\RR\ofm$ \\
+\IMCO                                \> \> \> $\RR\ofm += \UU\ofm$ \\
+@ $z$                                \> \> \> write $\RR\ofm$ \\
+%
+\EXTR                                \> \> \> $\UU\ofm = \PSop{-}{ZOM}{2s_0\ofm,\UU\ofm}$ \\
+                                     \> \> \black{$\}$} \\
+                                     \> \black{$\}$}
+\end{tabbing}
+\hrule \vspace{0.1in}
+\end{singlespace}
+}
+% ------------------------------------------------------------
+\def\zomod{ \vspace{0.1in}
+\begin{singlespace}
+\hrule \vspace{0.1in}
+ {\sc zero-offset modeling algorithm}
+\begin{tabbing} \tabhead
+                                     \> \black{$\ww=\wmin \dots \wmax \{$} \\
+@ $\ww$                              \> \> initialize $\UU\ofm=0$ \\
+                                     \> \> \black{$z=\zmax \dots \zmin \{$} \\
+%
+\EXTR                                \> \> \> $\UU\ofm = \PSop{+}{ZOM}{2s_0\ofm,\UU\ofm}$ \\
+%
+@ $z$                                \> \> \> read $\RR\ofm$ \\
+\IMCO                                \> \> \> $\UU\ofm += \RR\ofm$ \\
+%
+@ $z$ and $\ww$ (optional)           \> \> \> write $\UU\ofm$ \\
+                                     \> \> \black{$\}$} \\
+                                     \> \> write $\UU\ofm$ \\
+                                     \> \black{$\}$}
+\end{tabbing}
+\hrule \vspace{0.1in}
+\end{singlespace}
+}
+
+% ------------------------------------------------------------
+\def\zofor{ \vspace{0.1in}
+\begin{singlespace}
+\hrule \vspace{0.1in} 
+{\sc zero-offset forward scattering algorithm}
+\begin{tabbing} \tabhead
+                                     \> \black{$\ww=\wmin \dots \wmax \{$} \\
+@ $\ww$                              \> \> initialize $\dUU\ofm=0$ \\
+                                     \> \> \black{$z=\zmin \dots \zmax \{$} \\
+@ $z$ and $\ww$                      \> \> \> read $\UU\ofm$ \\
+%
+@ $z$                                \> \> \> read $\ds\ofm$ \\
+\SCAT                                \> \> \> $\dUU\ofm += \FSop{-}{ZOM}{\UU\ofm,2s_0\ofm,\ds\ofm}$ \\
+%
+@ $z$                                \> \> \> read $\dR\ofm$ \\
+\IMCO                                \> \> \> $\dR\ofm += \dUU\ofm$ \\
+@ $z$                                \> \> \> write $\dR\ofm$ \\
+%
+\EXTR                                \> \> \> $\dUU\ofm = \PSop{-}{ZOM}{2s_0\ofm,\dUU\ofm}$ \\
+                                     \> \> \black{$\}$} \\
+                                     \> \black{$\}$}
+\end{tabbing}
+\hrule \vspace{0.1in}
+\end{singlespace}
+}
+% ------------------------------------------------------------
+\def\zoadj{ \vspace{0.1in}
+\begin{singlespace}
+\hrule \vspace{0.1in} 
+{\sc zero-offset adjoint scattering algorithm}
+\begin{tabbing} \tabhead
+                                     \> \black{$\ww=\wmin \dots \wmax \{$} \\
+@ $\ww$                              \> \> initialize $\dUU\ofm=0$ \\
+                                     \> \> \black{$z=\zmax \dots \zmin \{$} \\
+@ $z$ and $\ww$                      \> \> \> read $\UU\ofm$ \\
+%
+\EXTR                                \> \> \> $\dUU\ofm = \PSop{+}{ZOM}{2s_0\ofm,\dUU\ofm}$ \\
+%
+@ $z$                                \> \> \> read $\dR\ofm$ \\
+\IMCO                                \> \> \> $\dUU\ofm += \dR\ofm$ \\
+%
+@ $z$                                \> \> \> read $\ds\ofm$ \\
+\SCAT                                \> \> \> $\ds\ofm += \ASop{+}{ZOM}{\UU\ofm,2s_0\ofm,\dUU\ofm}$ \\
+@ $z$                                \> \> \> write $\ds\ofm$ \\
+                                     \> \> \black{$\}$} \\
+                                     \> \black{$\}$}
+\end{tabbing}
+\hrule \vspace{0.1in}
+\end{singlespace}
+}
+
+% ------------------------------------------------------------
+\def\ssmig{ \vspace{0.1in}
+\begin{singlespace}
+\hrule \vspace{0.1in}
+{\sc survey-sinking migration algorithm}
+\begin{tabbing} \tabhead
+                                     \> \black{$\ww=\wmin \dots \wmax \{$} \\
+@ $\ww$                              \> \> read $\UU\ofmh$ \\
+                                     \> \> \black{$z=\zmin \dots \zmax \{$} \\
+@ $z$ and $\ww$ (optional)           \> \> \> write $\UU\ofmh$ \\
+%
+@ $z$                                \> \> \> read $\RR\ofmh$ \\
+\IMCO                                \> \> \> $\RR\ofmh += \UU\ofmh$ \\
+@ $z$                                \> \> \> write $\RR\ofmh$ \\
+%
+\EXTR                                \> \> \> $\UU\ofmh = \PSop{-}{SSM}{s_0\ofm,\UU\ofmh}$ \\
+                                     \> \> \black{$\}$} \\
+                                     \> \black{$\}$}
+\end{tabbing}
+\hrule \vspace{0.1in}
+\end{singlespace}
+}
+% ------------------------------------------------------------
+\def\ssmod{ \vspace{0.1in}
+\begin{singlespace}
+\hrule \vspace{0.1in}
+{\sc survey-sinking modeling algorithm}
+\begin{tabbing} \tabhead
+                                     \> \black{$\ww=\wmin \dots \wmax \{$} \\
+@ $\ww$                              \> \> initialize $\UU\ofmh=0$ \\
+                                     \> \> \black{$z=\zmax \dots \zmin \{$} \\
+%
+\EXTR                                \> \> \> $\UU\ofmh = \PSop{+}{SSM}{s_0\ofm,\UU\ofmh}$ \\
+%
+@ $z$                                \> \> \> read $\RR\ofmh$ \\
+\IMCO                                \> \> \> $\UU\ofmh += \RR\ofmh$ \\
+%
+@ $z$ and $\ww$ (optional)           \> \> \> write $\UU\ofmh$ \\
+                                     \> \> \black{$\}$} \\
+@ $\ww$                              \> \> write $\UU\ofmh$ \\
+                                     \> \black{$\}$}
+\end{tabbing}
+\hrule \vspace{0.1in}
+\end{singlespace}
+}
+
+% ------------------------------------------------------------
+\def\ssfor{ \vspace{0.1in}
+\begin{singlespace}
+\hrule \vspace{0.1in}
+{\sc survey-sinking forward scattering algorithm}
+\begin{tabbing} \tabhead
+                                     \> \black{$\ww=\wmin \dots \wmax \{$} \\
+@ $\ww$                              \> \> initialize $\dUU\ofmh=0$ \\
+                                     \> \> \black{$z=\zmin \dots \zmax \{$} \\
+@ $z$ and $\ww$                      \> \> \> read $\UU\ofmh$ \\
+%
+@ $z$                                \> \> \> read $\ds\ofm$ \\
+\SCAT (source)                       \> \> \> $\dUU\ofmh += \FSop{-}{SSM}{\UU\ofmh,s_0\ofmm,\ds\ofmm}$ \\
+\SCAT (receiver)                     \> \> \> $\dUU\ofmh += \FSop{-}{SSM}{\UU\ofmh,s_0\ofmp,\ds\ofmp}$ \\
+%
+@ $z$                                \> \> \> read $\dR\ofmh$ \\
+\IMCO                                \> \> \> $\dR\ofmh += \dUU\ofmh$ \\
+@ $z$                                \> \> \> write $\dR\ofmh$ \\
+%
+\EXTR                                \> \> \> $\dUU\ofmh = \PSop{-}{SSM}{s_0\ofm,\dUU\ofmh}$ \\
+                                     \> \> \black{$\}$} \\
+                                     \> \black{$\}$}
+\end{tabbing}
+\hrule \vspace{0.1in}
+\end{singlespace}
+}
+% ------------------------------------------------------------
+\def\ssadj{ \vspace{0.1in}
+\begin{singlespace}
+\hrule \vspace{0.1in}
+{\sc survey-sinking adjoint scattering algorithm}
+\begin{tabbing} \tabhead
+                                     \> \black{$\ww=\wmin \dots \wmax \{$} \\
+@ $\ww$                              \> \> initialize $\dUU\ofmh=0$ \\
+                                     \> \> \black{$z=\zmax \dots \zmin \{$} \\
+@ $z$ and $\ww$                      \> \> \> read $\UU\ofmh$ \\
+%
+\EXTR                                \> \> \> $\dUU\ofmh = \PSop{+}{SSM}{s_0\ofm,\dUU\ofmh}$ \\
+%
+@ $z$                                \> \> \> read $\dR\ofmh$ \\
+\IMCO                                \> \> \> $\dUU\ofmh += \dR\ofmh$ \\
+%
+@ $z$                                \> \> \> read $\ds\ofm$ \\
+\SCAT (source)                       \> \> \> $\ds\ofmm += \ASop{+}{SSM}{\UU\ofmh,s_0\ofmm,\dUU\ofmh}$ \\
+\SCAT (receiver)                     \> \> \> $\ds\ofmp += \ASop{+}{SSM}{\UU\ofmh,s_0\ofmp,\dUU\ofmh}$ \\
+@ $z$                                \> \> \> write $\ds\ofm$ \\
+                                     \> \> \black{$\}$} \\
+                                     \> \black{$\}$}
+\end{tabbing}
+\hrule \vspace{0.1in}
+\end{singlespace}
+}
+
+% ------------------------------------------------------------
+\def\srmig{ \vspace{0.1in}
+\begin{singlespace}
+\hrule \vspace{0.1in}
+{\sc shot-record migration algorithm}
+\begin{tabbing} \tabhead
+                                     \> \black{$\ww=\wmin \dots \wmax \{$} \\
+@ $\ww$                              \> \> read $\US\ofm$ and $\UR\ofm$ \\
+                                     \> \> \black{$z=\zmin \dots \zmax \{$} \\
+@ $z$ and $\ww$(optional)            \> \> \> write $\US\ofm$ and $\UR\ofm$ \\
+%
+@ $z$                                \> \> \> read $\RR\ofm$ \\
+\IMCO                                \> \> \> $\RR\ofm += \CONJ{\US\ofm} \UR\ofm$ \\
+@ $z$                                \> \> \> write $\RR\ofm$ \\
+%
+\EXTR                                \> \> \> $\US\ofm = \PSop{+}{SRM}{s_0\ofm,\US\ofm}$ \\
+\EXTR                                \> \> \> $\UR\ofm = \PSop{-}{SRM}{s_0\ofm,\UR\ofm}$ \\
+                                     \> \> \black{$\}$} \\
+                                     \> \black{$\}$}
+\end{tabbing}
+\hrule \vspace{0.1in}
+\end{singlespace}
+}
+% ------------------------------------------------------------
+\def\srfor{ \vspace{0.1in}
+\begin{singlespace}
+\hrule \vspace{0.1in}
+{\sc shot-record forward scattering algorithm}
+\begin{tabbing} \tabhead
+                                     \> \black{$\ww=\wmin \dots \wmax \{$} \\
+@ $\ww$                              \> \> initialize $\dUS\ofm=0$ and $\dUR\ofm=0$ \\
+                                     \> \> \black{$z=\zmin \dots \zmax \{$} \\
+@ $z$ and $\ww$                      \> \> \> read $\US\ofm$ and $\UR\ofm$ \\
+%
+@ $z$                                \> \> \> read $\ds\ofm$ \\
+\SCAT (source)                       \> \> \> $\dUS\ofm += \FSop{+}{SRM}{\US\ofm,s_0\ofm,\ds\ofm}$ \\
+\SCAT (receiver)                     \> \> \> $\dUR\ofm += \FSop{-}{SRM}{\UR\ofm,s_0\ofm,\ds\ofm}$ \\
+%
+@ $z$                                \> \> \> read $\dR\ofm$ \\
+\IMCO (source)                       \> \> \> $\dR\ofm += \CONJ{\US \ofm} \dUR\ofm$ \\
+\IMCO (receiver)                     \> \> \> $\dR\ofm += \CONJ{\dUS\ofm} \UR \ofm$ \\
+@ $z$                                \> \> \> write $\dR\ofm$ \\
+%
+\EXTR (source)                       \> \> \> $\dUS\ofm = \PSop{+}{SRM}{s_0\ofm,\dUS\ofm}$ \\
+\EXTR (receiver)                     \> \> \> $\dUR\ofm = \PSop{-}{SRM}{s_0\ofm,\dUR\ofm}$ \\
+                                     \> \> \black{$\}$} \\
+                                     \> \black{$\}$}
+\end{tabbing}
+\hrule \vspace{0.1in}
+\end{singlespace}
+}
+
+% ------------------------------------------------------------
+\def\sradj{ \vspace{0.1in}
+\begin{singlespace}
+\hrule \vspace{0.1in}
+{\sc shot-record adjoint scattering algorithm}
+\begin{tabbing} \tabhead
+                                     \> \black{$\ww=\wmin \dots \wmax \{$} \\
+@ $\ww$                              \> \> initialize $\dUS\ofm=0$ and $\dUR\ofm=0$ \\
+                                     \> \> \black{$z=\zmax \dots \zmin \{$} \\
+@ $z$ and $\ww$                      \> \> \> read $\US\ofm$ and $\UR\ofm$ \\
+%
+\EXTR (receiver)                     \> \> \> $\dUR\ofm = \PSop{+}{SRM}{s_0\ofm,\dUR\ofm}$ \\
+\EXTR (source)                       \> \> \> $\dUS\ofm = \PSop{-}{SRM}{s_0\ofm,\dUS\ofm}$ \\
+%
+@ $z$                                \> \> \> read $\dR\ofm$ \\
+\IMCO (receiver)                     \> \> \> $\dUR\ofm += \US\ofm      \dR\ofm $ \\
+\IMCO (source)                       \> \> \> $\dUS\ofm += \UR\ofm\CONJ{\dR\ofm}$ \\
+%
+@ $z$                                \> \> \> read $\ds\ofm$ \\
+\SCAT (receiver)                     \> \> \> $\ds\ofm += \ASop{+}{SRM}{\UR\ofm,s_0\ofm,\dUR\ofm}$ \\
+\SCAT (source)                       \> \> \> $\ds\ofm += \ASop{-}{SRM}{\US\ofm,s_0\ofm,\dUS\ofm}$ \\
+@ $z$                                \> \> \> write $\ds\ofm$ \\
+%
+                                     \> \> \black{$\}$} \\
+                                     \> \black{$\}$}
+\end{tabbing}
+\hrule \vspace{0.1in}
+\end{singlespace}
+}
+
+% ------------------------------------------------------------
+% ------------------------------------------------------------
+% ------------------------------------------------------------
+% ------------------------------------------------------------
+\def\psop{ \vspace{0.1in}
+\begin{singlespace}
+\hrule \vspace{0.1in} 
+{\sc mixed-domain implementation of the extrapolation operator} $\PSop{\pm}{ZOM}{}$
+\begin{tabbing} \tabhead
+fFT                                  \> $\UU\ofm \rarrow{2D} \UU\ofk$ \\
+$\ww-\kk$                            \> $\UU\ofk *= \PSk{\pm}$ \\
+iFT                                  \> $\UU\ofm \larrow{2D} \UU\ofk$ \\
+$\ww-\xx$                            \> $\UU\ofm *= \PSx{\pm}$ \\
+\end{tabbing}
+\hrule \vspace{0.1in} 
+\end{singlespace}
+}
+
+% ------------------------------------------------------------
+\def\scop{ \vspace{0.1in}
+\begin{singlespace}
+\hrule  \vspace{0.1in}
+{\sc mixed-domain implementation of the forward scattering operator} $\FSop{\pm}{ZOM}{}$
+\begin{tabbing} \tabhead
+                                     \> $\dWW\ofm = \ds\ofm \UU\ofm $ \\
+                                     \> $\dPP\ofm = \dWW\ofm$ \\
+fFT                                  \> $\dPP\ofm \rarrow{2D} \dPP\ofk$ \\
+                                     \> $j=1 \dots N$ \{ \\
+                                     \> \> $\dQQ\ofk = \dPP\ofk$ \\
+$\ww-\kk$                            \> \> $\dQQ\ofk *= \MOD{\kk_\mm}^{2j}$ \\
+iFT                                  \> \> $\dQQ\ofm \larrow{2D} \dQQ\ofk$ \\
+$\ww-\xx$                            \> \> $\dQQ\ofm *= \frac{c_j}{\lb \ws_0\ofm \rb^{2j}}$ \\
+                                     \> \> $\dWW\ofm += \dQQ\ofm$ \\
+                                     \> $\}$ \\
+				     \> $\dWW\ofm *= \pm i\ww\dz$
+\end{tabbing}
+\hrule \vspace{0.1in}
+\end{singlespace}
+}
+
+% ------------------------------------------------------------
+\def\acop{ \vspace{0.1in}
+\begin{singlespace}
+\hrule  \vspace{0.1in}
+{\sc mixed-domain implementation of the adjoint scattering operator} $\ASop{\mp}{ZOM}{}$
+\begin{tabbing} \tabhead
+                                     \> $\ds\ofm = \dWW\ofm \CONJ{\UU\ofm} $ \\
+                                     \> $\dPP\ofm = \ds\ofm$ \\
+fFT                                  \> $\dPP\ofm \rarrow{2D} \dPP\ofk$ \\
+                                     \> $j=1 \dots N$ \{ \\
+                                     \> \> $\dQQ\ofk = \dPP\ofk$ \\
+$\ww-\kk$                            \> \> $\dQQ\ofk *= \MOD{\kk_\mm}^{2j}$ \\
+iFT                                  \> \> $\dQQ\ofm \larrow{2D} \dQQ\ofk$ \\
+$\ww-\xx$                            \> \> $\dQQ\ofm *= \frac{c_j}{\lb \ws_0\ofm \rb^{2j}}$ \\
+                                     \> \> $\ds\ofm += \dQQ\ofm$ \\
+                                     \> $\}$ \\
+				     \> $\ds\ofm *= \mp i\ww\dz$
+\end{tabbing}
+\hrule \vspace{0.1in}
+\end{singlespace}
+}

@@ -1,0 +1,316 @@
+from rsf.proj import *
+import math
+
+Fetch (['marmrefl.hh','marmvel.hh'],'marm')
+
+Flow ('raw','marmvel.hh',
+     '''
+     dd form=native | window f2=1000 n2=1001 |
+     scale dscale=0.001 |
+     put o2=4 d2=0.004 d1=0.004
+     label1=Depth unit1=km label2=Distance unit2=km
+     label=Velocity unit=km/s 
+     ''')
+
+Flow ('leftraw','raw','window n2=1 | spray axis=2 n=1000')
+Flow ('rightraw','raw','window f2=1000 | spray axis=2 n=1000')
+Flow ('rawwide1','leftraw raw rightraw','cat axis=2 ${SOURCES[1]} ${SOURCES[2]} | put o2=0')
+Flow ('bottom','rawwide1','window f1=750 | spray axis=1 n=750')
+Flow ('rawwide','rawwide1 bottom','cat axis=1 ${SOURCES[1]}')
+
+# Gaussian smoothing
+Flow('smooth','rawwide',
+     '''
+     math output=1/input | 
+     smooth rect1=30 rect2=30 repeat=2 | 
+     math output=1/input
+     ''')
+
+# Exploding reflector modeling
+dt = 0.001
+nt = 3001
+
+# 15 degree
+Flow('mod', None,
+     '''
+     spike n1=1501 d1=0.004 n2=3001 d2=0.004 o2=0
+     nsp=3 k1=676,376,151
+     k2=1751,1,1 l2=1751,3001,3001
+     mag=30,1,1 p2=0,0,0.2679
+     ''')
+
+Flow('reflMod','mod','ricker1 frequency=20')
+
+Flow('fftMod','reflMod','transp | fft1 | fft3 axis=2 pad=1')
+
+Flow('rightMod leftMod','smooth fftMod',
+     '''
+     transp | scale dscale=0.5 |
+     isolr2 seed=2011 dt=%g fft=${SOURCES[1]} left=${TARGETS[1]} 
+     ''' % dt)
+
+Flow('expMod','reflMod leftMod rightMod',
+     '''
+     fftexp0
+     left=${SOURCES[1]} right=${SOURCES[2]} 
+     nt=%d dt=%g 
+     ''' % (nt,dt))
+
+Flow ('expMod0','expMod','window j1=2 j2=2 | transp | halfint inv=y')
+Flow ('data','expMod0',
+	  '''
+	  put label2=distance unit2=km
+		  n3=1 d3=0.1 o3=0.0 unit3=km
+	      n4=1 o4=0 d4=0.1 label4=offset unit4=km | halfint inv=y adj=y
+	  ''')
+
+Plot ('smoothmodel','smooth',
+        '''
+		put label1=depth unit1=km label2=distance unit2=km label='"velocity"' |
+        window j1=2 j2=2 | 
+        grey wanttitle=n title="Marmousi Model: Smoothed velocity" allpos=y bias=1
+        color=I scalebar=y barreverse=y max1=3 min2=4 max2=8
+        ''')
+
+Plot ('modelRefl0',None,
+	      '''
+		  spike n1=4 nsp=4 k1=1,2,3,4 mag=1.5,0,1.5,12 | dd type=complex |
+		  graph transp=y yreverse=y wanttitle=n wantaxis=n plotfat=10 pad=n plotcol=0 scalebar=y min2=4 max2=8 min1=0 max1=3
+		  ''')
+
+Plot ('modelRefl1',None,
+	      '''
+		  spike n1=4 nsp=4 k1=1,2,3,4 mag=1.6716,4,2.7432,8 | dd type=complex |
+		  graph transp=y yreverse=y wanttitle=n wantaxis=n plotfat=10 pad=n plotcol=0 scalebar=y min2=4 max2=8 min1=0 max1=3
+		  ''')
+
+Plot ('modelDiff',None,
+	      '''
+		  spike n1=4 nsp=4 k1=1,2,3,4 mag=2.7,7,2.7,7 | dd type=complex |
+		  graph transp=y yreverse=y wanttitle=n wantaxis=n plotfat=20 pad=n plotcol=0 scalebar=y min2=4 max2=8 min1=0 max1=3
+		  ''')
+
+Result ('dm-zo','expMod0',
+	   '''
+	   put label1=time unit1=s label2=distance unit2=km |
+	   grey wanttitle=n title="Zero-Offset Exploding Reflector Modeling" min2=4 max2=8 min1=1
+	   ''')
+
+# depth imaging experiment
+
+Plot ('vline', None,
+      '''
+	  spike n1=4 nsp=4 k1=1,2,3,4 mag=0,7,3,7 | dd type=complex |
+	  graph transp=y yreverse=y wanttitle=n wantaxis=n plotfat=6 pad=n plotcol=0 min2=4 max2=8 min1=1 max1=3 dash=2
+	  ''')
+Plot ('vlinef',None,
+      '''
+	  spike n1=4 nsp=4 k1=1,2,3,4 mag=0,7,3,7 | dd type=complex |
+	  graph transp=y yreverse=y wanttitle=n wantaxis=n plotfat=8 pad=n plotcol=0 min2=4 max2=8 min1=1 max1=3 dash=2
+	  ''')
+Plot ('vlinet',None,
+      '''
+	  spike n1=4 nsp=4 k1=1,2,3,4 mag=0,7,3,7 | dd type=complex |
+	  graph transp=y yreverse=y wanttitle=n wantaxis=n plotfat=4 pad=n plotcol=7 min2=4 max2=8 min1=1 max1=3 dash=2
+	  ''')
+Flow ('dimage ddag','data smooth',
+   	  '''
+	  dmigda vel=${SOURCES[1]}
+	  dag=${TARGETS[1]}
+	  ixo=4000 ixn=161 ixd=25
+	  izo=0 izn=601 izd=5
+	  dipn=121 dipo=-60 dipd=1
+	  ''')
+Plot ('dimage0', 'dimage','grey wanttitle=n min1=1000')
+Plot ('dimage','dimage0 vline','Overlay')
+Flow ('dpis','ddag','transp plane=23')
+
+# lines
+Plot ('line00f',None,
+      '''
+	  spike n1=4 nsp=4 k1=1,2,3,4 mag=1.5,4,1.5,8 | dd type=complex |
+	  graph transp=y yreverse=y wanttitle=n wantaxis=n plotfat=8 pad=n plotcol=0 min2=4 max2=8 min1=1 max1=3 dash=3
+	  ''')
+Plot ('line01f',None,
+      '''
+	  spike n1=4 nsp=4 k1=1,2,3,4 mag=2.7,6.75,2.7,7.25 | dd type=complex |
+	  graph transp=y yreverse=y wanttitle=n wantaxis=n plotfat=8 pad=n plotcol=0 min2=4 max2=8 min1=1 max1=3 dash=3
+	  ''')
+Plot ('line00n',None,
+      '''
+	  spike n1=4 nsp=4 k1=1,2,3,4 mag=1.5,4,1.5,8 | dd type=complex |
+	  graph transp=y yreverse=y wanttitle=n wantaxis=n plotfat=4 pad=n plotcol=7 min2=4 max2=8 min1=1 max1=3 dash=3
+	  ''')
+Plot ('line01n',None,
+      '''
+	  spike n1=4 nsp=4 k1=1,2,3,4 mag=2.7,6.75,2.7,7.25 | dd type=complex |
+	  graph transp=y yreverse=y wanttitle=n wantaxis=n plotfat=4 pad=n plotcol=7 min2=4 max2=8 min1=1 max1=3 dash=3
+	  ''')
+Plot ('_dpis0','dpis',
+		'''
+	    put d1=0.005 unit1=km label2=distance unit2=km o2=4 d2=0.025 |
+		window min3=0 n3=1 | grey wanttitle=n min1=1
+		''')
+Result ('dpis0','_dpis0 line00f line01f line00n line01n','Overlay')
+Plot ('line10f', None,
+      '''
+	  spike n1=4 nsp=4 k1=1,2,3,4 mag=1.6716,4,2.7432,8 | dd type=complex |
+	  graph transp=y yreverse=y wanttitle=n wantaxis=n plotfat=8 pad=n plotcol=0 min2=4 max2=8 min1=1 max1=3 dash=3
+	  ''')
+Plot ('line11f',None,
+      '''
+	  spike n1=4 nsp=4 k1=1,2,3,4 mag=2.633,6.75,2.767,7.25 | dd type=complex |
+	  graph transp=y yreverse=y wanttitle=n wantaxis=n plotfat=8 pad=n plotcol=0 min2=4 max2=8 min1=1 max1=3 dash=3
+	  ''')
+Plot ('line10n',None,
+      '''
+	  spike n1=4 nsp=4 k1=1,2,3,4 mag=1.6716,4,2.7432,8 | dd type=complex |
+	  graph transp=y yreverse=y wanttitle=n wantaxis=n plotfat=4 pad=n plotcol=7 min2=4 max2=8 min1=1 max1=3 dash=3
+	  ''')
+Plot ('line11n',None,
+      '''
+	  spike n1=4 nsp=4 k1=1,2,3,4 mag=2.633,6.75,2.767,7.25 | dd type=complex |
+	  graph transp=y yreverse=y wanttitle=n wantaxis=n plotfat=4 pad=n plotcol=7 min2=4 max2=8 min1=1 max1=3 dash=3
+	  ''')
+Plot ('_dpis15','dpis',
+		'''
+	    put d1=0.005 unit1=km label2=distance unit2=km o2=4 d2=0.025 |
+		window min3=-15 n3=1 | grey wanttitle=n min1=1
+		''')
+Result ('dpis15','_dpis15 line10f line11f line10n line11n','Overlay')
+
+# result init
+Plot ('image-init0','ddag',
+		'''
+		stack | 
+		put d1=0.005 unit1=km label2=distance unit2=km o2=4 d2=0.025 |	
+		grey wanttitle=n min1=1
+		''')
+Plot ('image-init','image-init0 vline','Overlay')
+Plot ('dag-init','ddag',
+	  '''
+	  put d1=0.005 unit1=km unit3=km o3=4 d3=0.025 |
+	  window min3=7 n3=1 | grey wanttitle=n min1=1 screenratio=1.5
+	  d1num=30 o1num=-60 n1tic=5 pclip=99.5
+   	  ''')
+Result ('res-init','image-init dag-init','SideBySideAniso')
+
+# aperture optimization
+Flow ('ddagn','ddag','noise range=1e-6')
+Flow ('ddag2', 'ddagn', 'math output=input*input')
+xapp=5
+Flow ('weight', 'ddagn ddag2', 'crssemb dataSq=${SOURCES[1]} xapp=%g s1=0.2 s2=0.4 | smooth rect1=3 rect2=3' % xapp)
+Flow ('ddag-clean', 'ddag weight','math x=${SOURCES[0]} y=${SOURCES[1]} output=x*y')
+
+# result clean
+Plot ('image-clean0','ddag-clean',
+		'''
+		stack | 
+		put d1=0.005 unit1=km label2=distance unit2=km o2=4 d2=0.025 |	
+		grey wanttitle=n min1=1
+		''')
+Plot ('image-clean','image-clean0 vline','Overlay')
+Plot ('dag-clean','ddag-clean',
+	  '''
+	  put d1=0.005 unit1=km unit3=km o3=4 d3=0.025 |
+	  window min3=7 n3=1 | grey wanttitle=n min1=1 screenratio=1.5
+	  d1num=30 o1num=-60 n1tic=5 pclip=99.5
+   	  ''')
+Result ('res-clean','image-clean dag-clean','SideBySideAniso')
+
+# clean dpis
+Flow ('dpis-cln','ddag-clean','transp plane=23')
+Result ('dpis-cln-0','dpis-cln',
+		'''
+	    put d1=0.005 unit1=km label2=distance unit2=km o2=4 d2=0.025 |
+		window min3=0 n3=1 | grey wanttitle=n min1=1
+		''')
+
+Result ('dpis-cln-15','dpis-cln',
+		'''
+	    put d1=0.005 unit1=km label2=distance unit2=km o2=4 d2=0.025 |
+		window min3=-15 n3=1 | grey wanttitle=n min1=1
+		''')
+#semb
+Result ('semb-15','weight',
+ 	    '''
+	    put d1=0.005 unit1=km unit3=km o3=4 d3=0.025 |
+	    window min2=-15 n2=1 | grey wanttitle=n min1=1 scalebar=y minval=0 maxval=1
+  	    ''')
+Result ('semb-0','weight',
+ 	    '''
+	    put d1=0.005 unit1=km unit3=km o3=4 d3=0.025 |
+	    window min2=0 n2=1 | grey wanttitle=n min1=1 scalebar=y minval=0 maxval=1
+   	    ''')
+
+Flow ('weight1', 'ddagn ddag2', 'crssemb dataSq=${SOURCES[1]} xapp=1 s1=0.2 s2=0.4 | smooth rect1=3 rect2=3')
+Flow ('ddag-clean1', 'ddag weight1','math x=${SOURCES[0]} y=${SOURCES[1]} output=x*y')
+# result clean
+Plot ('image-clean01','ddag-clean1',
+	  '''
+	  stack | 
+	  put d1=0.005 unit1=km label2=distance unit2=km o2=4 d2=0.025 |	
+	  grey wanttitle=n min1=1
+	  ''')
+Plot ('image-clean1','image-clean01 vline','Overlay')
+Plot ('dag-clean1','ddag-clean1',
+	  '''
+	  put d1=0.005 unit1=km unit3=km o3=4 d3=0.025 |
+	  window min3=7 n3=1 | grey wanttitle=n min1=1 screenratio=1.5
+	  d1num=30 o1num=-60 n1tic=5 pclip=99.5
+   	  ''')
+Result ('res-clean1','image-clean1 dag-clean1','SideBySideAniso')
+
+# WRONG VEL
+
+Flow ('fastvel','smooth','math output=input*0.9')
+Flow ('fdimage fddag','data fastvel',
+   	  '''
+	  dmigda vel=${SOURCES[1]}
+	  dag=${TARGETS[1]}
+	  ixo=4000 ixn=161 ixd=25
+	  izo=0 izn=601 izd=5
+	  dipn=121 dipo=-60 dipd=1
+	  ''')
+
+Flow ('fddagn','fddag','noise range=1e-6')
+Flow ('fddag2', 'fddagn', 'math output=input*input')
+xapp=7
+Flow ('fweight', 'fddagn fddag2', 'crssemb dataSq=${SOURCES[1]} xapp=%g s1=0.2 s2=0.4 | smooth rect1=3 rect2=3' % xapp)
+
+Flow ('fddag-clean', 'fddag fweight','math x=${SOURCES[0]} y=${SOURCES[1]} output=x*y')
+
+# result init
+Plot ('fimage-init0','fddag',
+		'''
+		stack | 
+		put d1=0.005 unit1=km label2=distance unit2=km o2=4 d2=0.025 |	
+		grey wanttitle=n min1=1
+		''')
+Plot ('fimage-init','fimage-init0 vline','Overlay')
+Plot ('fdag-init','fddag',
+	  '''
+	  put d1=0.005 unit1=km unit3=km o3=4 d3=0.025 |
+	  window min3=7 n3=1 | grey wanttitle=n min1=1 screenratio=1.5
+	  d1num=30 o1num=-60 n1tic=5 pclip=99.5
+   	  ''')
+
+Result ('fres-init','fimage-init fdag-init','SideBySideAniso')
+
+Plot ('fimage-clean0','fddag-clean',
+		'''
+		stack | 
+		put d1=0.005 unit1=km label2=distance unit2=km o2=4 d2=0.025 |	
+		grey wanttitle=n min1=1
+		''')
+Plot ('fimage-clean','fimage-clean0 vline','Overlay')
+
+Plot ('fdag-clean','fddag-clean',
+	  '''
+	  put d1=0.005 unit1=km unit3=km o3=4 d3=0.025 |
+	  window min3=7 n3=1 | grey wanttitle=n min1=1 screenratio=1.5
+	  d1num=30 o1num=-60 n1tic=5 pclip=99.5
+   	  ''')
+Result ('fres-clean','fimage-clean fdag-clean','SideBySideAniso')
+
+End()

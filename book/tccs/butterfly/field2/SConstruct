@@ -1,0 +1,54 @@
+from rsf.proj import *
+from rsf.prog import RSFROOT
+from rsf.recipes.beg import server
+
+# Download real data
+Fetch('samiss.rsf','butterfly',server)
+
+Result('samiss','grey label1=Time unit1=s label2=Offset unit2=km title=" " ')
+Flow('datacpx','samiss','rtoc')
+
+Nt=1500
+dt=0.004
+t0=0
+
+Nx=240
+dx=0.0125
+x0=0.262
+
+Ntau=Nt
+dtau=dt
+tau0=t0
+
+Np=800
+p0=0.4
+dp=(0.8-p0)/Np
+
+
+# Apply FFT in time
+Flow('fftdata','datacpx','fft3 axis=1 pad=1 | window n1=750 f1=750')
+#Result('fftreal','fftdata','real | grey title="real" ')
+#Result('fftimag','fftdata','imag | grey title="imag" ')
+Result('fftabs-f','fftdata','math output="abs(input)" | real | grey title=" " label1=Frequency unit1=Hz label2=Offset unit2=km')
+
+Flow('fftdatac','fftdata','window n1=300 f1=50')
+#Result('fftrealc','fftdatac','real | grey title="realc" ')
+#Result('fftimagc','fftdatac','imag | grey title="imagc" ')
+#Result('fftabsc','fftdatac','math output="abs(input)" | real | grey title="absc" ')
+
+# direct Radon / single integral (vscan)
+#Flow('smod','samiss','vscan half=n slowness=y nv=%d dv=%g v0=%g type=power weight=n extend=0 mute=0 str=0 | math output=input*%g' % (Np,dp,p0,Nt*Nx*dx))
+#Result('smod','grey label1=Time unit1=s label2=Slowness unit2=s/km title="smod" scalebar=y')
+
+# direct Radon / single integral (nearest integer interpolation)
+Flow('dimod-f','samiss','diradon2 ntau=%d dtau=%g tau0=%g np=%d dp=%g p0=%g | math output=input*%g' % (Ntau,dtau,tau0,Np,dp,p0,dx))
+Result('dimod-f','grey label1=Time unit1=s label2=Slowness unit2=s/km title=" " ')
+
+
+# Fast Radon
+Flow('bfio.bin',os.path.join(RSFROOT,'include','bfio.bin'),'/bin/cp $SOURCE $TARGET',stdin=0,stdout=-1)
+
+Flow('fmod-f','fftdatac bfio.bin','radon2 ntau=%d dtau=%g tau0=%g np=%d dp=%g p0=%g fi=1 EL=0 N=128 EPSx1=7 EPSx2=5 EPSk1=7 EPSk2=5 | math output=input*%g' % (Ntau,dtau,tau0,Np,dp,p0,2*dx/Nt))
+Result('fmod-f','real | grey label1=Time unit1=s label2=Slowness unit2=s/km title=" " ')
+
+End()

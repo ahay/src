@@ -1,0 +1,60 @@
+from rsf.proj import *
+
+def plot(title):
+    return '''
+    grey wantaxis1=n label1=Sample label2=Trace title="%s"
+    labelsz=12 titlesz=15 crowd1=0.9
+    ''' % title
+
+Flow('noiz',None,'make second=n n1=75 n2=25 t1=2')
+Plot('noiz',plot('Signal'))
+
+Flow('make',None,'make second=y n1=75 n2=25 t1=2 | put o1=0 d1=1 o2=0 d2=1')
+Plot('make',plot('Signal+Noise'))
+
+Flow('pq','make','twodip2 verb=y gauss=n')
+Flow('pq1','pq','window n3=1')
+Flow('pq2','pq','window f3=1')
+Flow('sn2','make pq1 pq2',
+     'planesignoi ndip=${SOURCES[1]} sdip=${SOURCES[2]} eps=1 verb=1')
+Plot('ss','sn2','window n3=1 | ' + plot('Est. Signal'))
+Plot('nn','sn2','window f3=1 | ' + plot('Est. Noise'))
+
+Result('sn2','noiz make ss nn','SideBySideAniso',vppen='txscale=2')
+
+Flow('text1','pq1',
+     'noise rep=y seed=2004 | trismooth2 dip=$SOURCE rect1=3 rect2=20')
+Plot('text1',plot('Noise Texture'))
+
+Flow('text2','pq2',
+     'noise rep=y seed=2004 | trismooth2 dip=$SOURCE rect1=3 rect2=20')
+Plot('text2',plot('Signal Texture'))
+
+Flow('sigs','make pq','pwdsigk dips=${SOURCES[1]} verb=y')
+Plot('sig1','sigs','window f3=1 | ' + plot('Est. Signal'))
+Plot('sig2','sigs','window n3=1 | ' + plot('Est. Noise'))
+
+Result('shape2','noiz make sig1 sig2','SideBySideAniso',vppen='txscale=2')
+
+Flow('rnoiz','make',
+     'noise rep=y type=n seed=1993 range=0.145 | smooth rect1=3')
+Flow('data','make rnoiz','add ${SOURCES[1]}')
+Plot('rnoiz','data',plot('signal+noise'))
+
+smooth = 'trismooth2 dip=${SOURCES[1]} rect1=3 rect2=20 | window'
+
+Flow('rnoiz1','rnoiz pq1',smooth)
+Flow('rnoiz2','rnoiz pq2',smooth)
+Flow('rnoiz12','rnoiz1 pq2',smooth)
+Flow('rnoiz21','rnoiz2 pq1',smooth)
+
+Flow('rsign','rnoiz1 rnoiz2 rnoiz12 rnoiz21',
+     'add scale=1,1,-0.5,-0.5 ${SOURCES[1:4]}')
+Plot('rsign',plot('estim. signal'))
+Plot('rresl','rsign rnoiz',
+     'add scale=1,-1 ${SOURCES[1]} | ' + plot('estim. noise'))
+
+Result('rshape','make rnoiz rsign rresl','SideBySideAniso',vppen='txscale=2')
+
+End()
+

@@ -1,0 +1,75 @@
+from rsf.proj import *
+import math
+
+Flow('fft','../Zomig/final_stack.rsf',
+     'put d2=110 d3=110 | fft1 | window max1=50 | transp plane=12 | transp plane=23')
+
+
+
+# Extended split-step migration
+# to run in parallel:
+#  ~/RSFSRC/Zomig1 $ export RSF_THREADS=4
+#  ~/RSFSRC/Zomig1 $ pscons mig_t.view
+
+Flow('mig','fft ../Zomig/slo.rsf',
+     '''
+     zomig3 ompnth=1 mode=m --readwrite=y verb=y
+     nrmax=1 slo=${SOURCES[1]} pmx=30 pmy=30
+     ''',split=[3,217],reduce='add')
+
+Result('mig',
+       '''
+       window j3=20 | 
+       grey title=Migration_depth_slices
+       label2=Depth    unit2=ft 
+       label1=Distance unit1=ft
+       ''')
+
+# ouput of migration is depth slizes.  transpose back to y,x,z 
+# (or z,x,y if you prefer fortran terminology)
+
+Flow('mig_z','mig',
+     'transp plane=23 | transp plane=12')
+
+Result('mig_z',
+       '''
+       window j3=20 | 
+       grey title=Migration transp=y
+       label2=Depth    unit2=ft 
+       label1=Distance unit1=ft
+       ''')
+
+
+Flow('mig_t','mig_z','depth2time dt=.002 nt=2049 velocity=../Zomig/Vint3Dz.rsf')
+
+Result('mig_t',
+	'''	
+	window j3=20 n1=1501 |
+	put d2=1 d3=20 |
+	grey title=migration_data_in_time
+       	label1=Time    unit1=s  
+       	label2=Trace unit2=num. gainpanel=a
+       ''')
+
+Fetch('filt_mig.sgy','teapot',server='http://s3.amazonaws.com',top='')
+Flow('filt_mig','filt_mig.sgy',
+     '''
+     sfsegyread 
+         tfile=filt_mig_hdr 
+	 tape=${SOURCES[0]} 
+	 hfile=filt_mig.asc 
+	 bfile=filt_mig.bin
+     | sfput n2=188 o2=1 n3=345 o3=1
+     ''',stdin=0)
+	
+Result('filt_mig',
+	'''
+	window j3=20 |
+	grey title=commercial_mig
+       	label1=Time     unit1=sec 
+       	label2=xline    unit2=count
+       ''')
+
+End()
+
+

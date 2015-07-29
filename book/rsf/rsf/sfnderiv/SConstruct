@@ -1,0 +1,73 @@
+from rsf.proj import *
+from math import pi
+
+n  = 1025
+k1 = int(n/2)+1 
+Flow('spike',None,'spike n1=%d k1=%d d1=1 o1=-%d'%(n,k1+2,k1+1))
+
+
+spectra='fft1 opt=y |math output="sqrt(input*conj(input))"|real|'
+plotderiv1='''graph  min2=0.0 max2=%g unit1=\'cycles/sample\' 
+            title="sfderiv: first derivatives"'''%(2*pi*0.5)
+
+plotderiv2='''graph  min2=0.0 max2=%g unit1=\'cycles/sample\' 
+            title="sfderiv: second derivatives"'''%(2*pi*0.5)**2
+
+plotnderiv1='''graph  min2=0.0 max2=%g unit1=\'cycles/sample\' 
+            title="sfnderiv: first derivatives"'''%(2*pi*0.5)
+
+plotnderiv2='''graph  min2=0.0 max2=%g unit1=\'cycles/sample\' 
+            title="sfnderiv: second derivatives"'''%(2*pi*0.5)**2
+
+
+#
+# sfderiv tests
+#
+orders=range(0,11,2)
+for order in orders:
+  Plot('spectra-deriv-1-%02d'%order,'spike',
+    '''
+    deriv order=%d scale=y|
+    '''%(order)+spectra+plotderiv1)
+
+  Plot('spectra-deriv-2-%02d'%order,'spike',
+    '''
+    deriv order=%d scale=y|
+    deriv order=%d scale=y|
+    '''%(order,order)+spectra+plotderiv2)
+
+#
+# sfnderiv tests
+#
+orders2=range(3,25,4)
+for order in orders2:
+  Plot('spectra-nderiv-1-%02d'%order,'spike',
+    '''
+    nderiv length=%d scale=y|
+    '''%(order)+spectra+plotnderiv1)
+  Plot('spectra-nderiv-2-%02d'%order,'spike',
+    '''
+    nderiv length=%d order=2 scale=y|
+    '''%(order)+spectra+plotnderiv2)
+
+
+Plot('ideal-1','spike',spectra+'math output="x1*(2*%g)"|'%pi
+                       +plotderiv1+' title=""')
+
+Plot('ideal-2','spike',spectra+'math output="(x1*2*%g)^2"|'%pi  
+                       +plotderiv2+' title=""')
+
+# collect results
+sp1  = map(lambda x: 'spectra-deriv-1-%02d'%x,orders)
+sp2  = map(lambda x: 'spectra-deriv-2-%02d'%x,orders)
+spn1 = map(lambda x: 'spectra-nderiv-1-%02d'%x,orders2)
+spn2 = map(lambda x: 'spectra-nderiv-2-%02d'%x,orders2)
+
+
+Result('all-deriv-1',sp1+['ideal-1'],'Overlay')
+Result('all-deriv-2',sp2+['ideal-2'],'Overlay')
+
+Result('all-nderiv-1',spn1+['ideal-1'],'Overlay')
+Result('all-nderiv-2',spn2+['ideal-2'],'Overlay')
+
+End()

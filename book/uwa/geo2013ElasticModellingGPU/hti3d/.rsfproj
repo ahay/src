@@ -1,0 +1,3 @@
+uses=['sfmath', 'sfscale', 'sfadd', 'sfput', 'sfpad', 'sfmodelcreate', 'sfsmooth', 'sfspike', 'sfricker1', 'sfcat', 'sftransp', 'sfwindow', 'sfgrey', 'sfewefd3d_gpu_p2p', 'sfbyte', 'sfgrey3']
+data=[]
+size= 1151293828

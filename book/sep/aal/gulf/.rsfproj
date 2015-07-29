@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfwindow', 'sfbandpass', 'sfput', 'sfpow', 'sfgrey', 'sfspike', 'sfcut', 'sfmath', 'sfspray', 'sfkirchnew', 'sfmig2', 'sfbox']
+data=['data/mig/Gulfnear.HH']
+size=   19212000

@@ -1,0 +1,35 @@
+from rsf.proj import *
+
+Fetch('pimp.HH','avo')
+Flow('pimp','pimp.HH','dd form=native')
+
+Plot('pimp','grey wanttitle=n wherexlabel=b label1=Time unit1=s label2=Distance unit2=km wheretitle=t')
+
+Plot('p-sea',None,'box x0=6.268333  y0=7.340000 label="seafloor"              xt=-1 yt=+1')
+Plot('p-bsr',None,'box x0=10.043333 y0=5.425000 label="BSR"                   xt=+1 yt=+1')
+Plot('p-hor',None,'box x0=7.218333  y0=3.465000 label="horizontal reflection" xt=-1 yt=-1')
+
+Result('pimp-ann','pimp p-sea p-bsr p-hor','Overlay')
+
+Fetch('simp.HH','avo')
+Flow('simp','simp.HH','dd form=native')
+
+Plot('simp','grey wanttitle=n wherexlabel=b label1=Time unit1=s label2=Distance unit2=km wheretitle=t')
+
+Plot('s-sea',None,'box x0=5.153333 y0=7.316667  label="seafloor"              xt=-1 yt=+1')
+Plot('s-bsr',None,'box x0=9.403334 y0=5.516667  label="BSR"                   xt=+1 yt=+1')
+Plot('s-hor',None,'box x0=10.043333 y0=3.601667 label="horizontal reflection" xt=-1 yt=-1')
+
+Result('simp-ann','simp s-sea s-bsr s-hor','Overlay')
+
+Flow('psmap','pimp simp','mul ${SOURCES[1]}')
+
+Plot('psmap','grey wanttitle=n wherexlabel=b label1=Time unit1=s label2=Distance unit2=km wheretitle=t')
+
+Plot('ps-sea',None,'box x0=7.146667 y0=7.363333 label="seafloor"              xt=-1 yt=+1')
+Plot('ps-bsr',None,'box x0=5.366667 y0=5.196667 label="BSR"                   xt=+1 yt=+1')
+Plot('ps-hor',None,'box x0=7.693333 y0=3.465000 label="horizontal reflection" xt=-1 yt=-1')
+
+Result('PSmap-ann','psmap ps-sea ps-bsr ps-hor','Overlay')
+
+End()

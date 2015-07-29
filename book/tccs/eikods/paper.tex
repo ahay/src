@@ -1,0 +1,615 @@
+\published{Geophysics, 78, no. 4, S211-S219, (2013)}
+
+\title{Kirchhoff migration using eikonal-based computation of traveltime source-derivatives}
+
+\author{Siwei Li and Sergey Fomel}
+
+%\ms{GEO-2012}
+
+\address{Bureau of Economic Geology \\
+John A. and Katherine G. Jackson School of Geosciences \\
+The University of Texas at Austin \\
+University Station, Box X \\
+Austin, TX 78713-8924}
+
+\lefthead{Li \& Fomel}
+\righthead{Kirchhoff with Traveltime Source-derivative}
+
+\maketitle
+
+\begin{abstract}
+The computational efficiency of Kirchhoff-type migration can be enhanced by employing accurate 
+traveltime interpolation algorithms. We address the problem of interpolating between a sparse source 
+sampling by using the derivative of traveltime with respect to the source location. We adopt a 
+first-order partial differential equation that originates from differentiating the eikonal equation 
+to compute the traveltime source-derivatives efficiently and conveniently. Unlike methods that rely 
+on finite-difference estimations, the accuracy of the eikonal-based derivative does not depend on 
+input source sampling. For smooth velocity models, the first-order traveltime source-derivatives 
+enable a cubic Hermite traveltime interpolation that takes into consideration the curvatures of 
+local wave-fronts and can be straight-forwardly incorporated into Kirchhoff anti-aliasing schemes. 
+We provide an implementation of the proposed method to first-arrival traveltimes by modifying the 
+fast-marching eikonal solver. Several simple synthetic models and a semi-recursive Kirchhoff migration 
+of the Marmousi model demonstrate the applicability of the proposed method.
+\end{abstract}
+
+\section{Introduction}
+
+Over the years, there have been significant efforts and progress in traveltime computations. The 
+quality of traveltimes has a direct influence on Kirchhoff-type migrations since it determines the 
+kinematic behaviors of the imaged wavefields. One can use either ray-tracing approaches or 
+finite-difference solutions of the eikonal equation. The first option naturally handles multi-arrivals 
+and can be extended to other wavefield approximations, such as Gaussian beams \cite[]{hill1,hill2,albertin,gray}, 
+but is at the same time usually subject to the necessities of ray-coordinate and migration-grid mapping 
+and irregular interpolation between rays in the presence of shadow zones in complex velocity media 
+\cite[]{sava}. Two popular methods from the second option are the \textit{fast-marching method} (FMM) 
+\cite[]{sethian1,sethian2} and the \textit{fast-sweeping method} (FSM) \cite[]{zhao}. They both rely 
+on an ordered update to recover the causality behind expanding wave-fronts in a general medium, and 
+are thus limited to first-arrival computations. Several works attempt to overcome the single-arrival 
+drawback of the finite-difference eikonal solvers, for example multi-phase computation \cite[]{engquist}, 
+phase-space escape equations \cite[]{fomel1}, and slowness marching \cite[]{symes}.
+
+In practice, traveltime tables can be pre-computed on coarse grids and saved on disk, then serve as 
+a dictionary when read by Kirchhoff migration algorithms. It is common to carry out a certain interpolation 
+in this process in order to satisfy the needs of depth migration for fine-gridded traveltime tables 
+at a large number of source locations \cite[]{mendes,vanelle,alkhalifah5}. Kirchhoff migrations with 
+traveltime tables computed on the fly face the same issue. During the traveltime computation stage, 
+accuracy requirements from eikonal solvers may lead to a fine model sampling. Combined with a large 
+survey, traveltime computation for each shot can be costly. Because all traveltime computations handle 
+one shot at a time, the overall cost increases linearly with the number of sources. Moreover, we need 
+to store a large amount of traveltimes out of a dense source sampling. Therefore a sparse source 
+sampling is preferred. In this paper, we try to address the problem of traveltime table interpolation 
+between sparse source samples. The traveltime table estimated with simple nearest-neighbor or linear 
+interpolation could not provide satisfying accuracy unless the velocity model has small variations. 
+One possible improvement is to include derivatives in interpolation. During ray tracing, traveltime 
+source-derivatives are directly connected to the slowness vector at the source and stay constant along 
+individual rays, thus could be outputted as a by-product of traveltimes. For finite-difference eikonal 
+solvers, such a convenience is not easily available. In these cases, we would like to avoid an extra 
+differentiation on traveltime tables along the source dimension to compute such derivatives \cite[]{vanelle}, 
+because its accuracy in turn relies on a dense source sampling and induces additional computations. 
+\cite{alkhalifah3} derived an equation for the traveltime perturbation with respect to the source 
+location changes. The governing equation is a first-order partial differential equation (PDE) that 
+describes traveltime source-derivatives in a relative coordinate moving along with the source. In 
+this paper, we show that the traveltime source-derivative desired by interpolation is related to this 
+relative-coordinate quantity by a simple subtraction with the slowness vector. Unlike a finite-difference 
+approach, traveltime source-derivatives computed by the PDE method are source-sampling independent. 
+The extra costs are rather inexpensive. In this paper, we apply this method to Kirchhoff migration 
+with first-arrival traveltimes computed by the FMM eikonal solver.
+
+The paper is organized as follows. In the first section, we review the theory and implementation of 
+the eikonal-based traveltime source-derivatives. Next, we use both simple and complex synthetic models 
+to demonstrate the accuracy of a cubic Hermite traveltime table interpolation using the source-derivatives, 
+and show effects of incorporating such an interpolation into Kirchhoff migration. We focus mainly on 
+the kinematics in these experiments by neglecting possible true-amplitude weights in Kirchhoff migration. 
+Finally, we discuss limitations and possible extensions of the proposed method. 
+
+\section{Theory and Implementation}
+
+We consider the isotropic eikonal equation:
+\begin{equation}
+\label{eq:eiko}
+\nabla T (\mathbf{x}) \cdot \nabla T (\mathbf{x}) = 
+\frac{1}{v^2 (\mathbf{x})} \equiv W (\mathbf{x})\;,
+\end{equation}
+where $\mathbf{x}$ is a point in space, $T(\mathbf{x})$ is the traveltime and $v(\mathbf{x})$ is the 
+velocity. For 2D models, $\mathbf{x}$ is a vector containing the depth and the inline position. 
+For 3D models, $\mathbf{x}$ also includes the crossline position. For conciseness, we define $W(\mathbf{x})$ 
+as slowness-squared. Equation \ref{eq:eiko} can be derived by inserting the ray-theory series 
+into the wave-equation and setting the coefficient of the leading-order term to zero \cite[]{chapman}. 
+We are interested in particular in point-source solutions of the eikonal equation, i.e. with the 
+initial condition $T(\mathbf{x_s}) = 0$ where $\mathbf{x_s}$ denotes the source location. 
+
+\subsection{Traveltime Source-derivative}
+
+The point-source traveltime $T(\mathbf{x})$ clearly depends on the source location $\mathbf{x_s}$. To 
+explicitly show such a dependency in the eikonal equation, we define a relative coordinate $\mathbf{q}$ 
+as
+\begin{equation}
+\label{eq:relative1}
+\mathbf{q = x - x_s}\;,
+\end{equation}
+and use $\hat{T}(\mathbf{q};\mathbf{x_s})$ to denote traveltime in the relative coordinates. After 
+inserting this definition into equation \ref{eq:eiko}, we obtain
+\begin{equation}
+\label{eq:insert}
+\nabla_{\mathbf{q}} \hat{T} \cdot \nabla_{\mathbf{q}} \hat{T} = W (\mathbf{q+x_s})\;.
+\end{equation}
+Here the differentiation $\nabla_{\mathbf{q}}$ \new{stands for gradient operator}\old{ is taken} in 
+the relative coordinate $\mathbf{q}$ \new{and is taken }with a fixed source location $\mathbf{x_s}$. 
+\new{In 3D, if $\mathbf{q} = (q_1,q_2,q_3)$ and denoting $\mathbf{e}_i$ with $i = \{1,2,3\}$ to be 
+the unit vector in depth, inline and crossline directions, respectively, then}
+\begin{eqnarray}
+\nabla_{\mathbf{q}} \equiv 
+\frac{\partial}{\partial q_1} \mathbf{e}_1 +
+\frac{\partial}{\partial q_2} \mathbf{e}_2 +
+\frac{\partial}{\partial q_3} \mathbf{e}_3\;.
+\end{eqnarray}
+Since we are interested in the traveltime derivative with respect to the source, i.e. 
+$\partial T / \partial \mathbf{x_s}$, we take directional derivative 
+$\partial / \partial \mathbf{x_s}$ to $\hat{T}(\mathbf{q};\mathbf{x_s})$ and apply the chain-rule 
+according to equation \ref{eq:relative1}:
+\begin{equation}
+\label{eq:chain}
+\frac{\partial T}{\partial \mathbf{x_s}} \equiv \frac{\partial \hat{T}}{\partial \mathbf{x_s}} 
+= \frac{\partial \hat{T}}{\partial \mathbf{x}} \frac{\partial \mathbf{x}}{\partial \mathbf{x_s}} 
++ \frac{\partial \hat{T}}{\partial \mathbf{q}} \frac{\partial \mathbf{q}}{\partial \mathbf{x_s}} 
+= \frac{\partial \hat{T}}{\partial \mathbf{x}} - \frac{\partial \hat{T}}{\partial \mathbf{q}}\;.
+\end{equation}
+Equation \ref{eq:chain} results in a vector that contains the traveltime source-derivatives in 
+depth, inline and crossline directions. \new{In accordance with $\partial / \partial \mathbf{x_s}$, 
+$\partial / \partial \mathbf{x}$ and $\partial / \partial \mathbf{q}$ are also directional 
+derivatives. }All numerical examples in this paper are based on a typical 2D acquisition, where we 
+assume a constant source depth and thus only the inline traveltime source-derivative is of interest. 
+The quantity $\partial \hat{T} / \partial \mathbf{q}$ coincides with the slowness vector of the 
+ray that originates from $\mathbf{x_s}$. For a finite-difference eikonal solver such as FMM and 
+FSM, it is usually estimated by an upwind scheme during traveltime computations at each grid point 
+and thus can be easily extracted. Applying $\partial / \partial \mathbf{x}$ to both sides of 
+equation \ref{eq:insert}, we find 
+\begin{equation}
+\label{eq:part}
+\nabla_{\mathbf{q}} \hat{T} \cdot 
+\nabla_{\mathbf{q}} \frac{\partial \hat{T}}{\partial \mathbf{x}} 
+= \frac{1}{2} \frac{\partial W}{\partial \mathbf{x}}\;.
+\end{equation}
+Equation \ref{eq:part} has the form of the linearized eikonal equation \cite[]{aldridge} and was 
+previously derived, in a slightly different notation, by \cite{alkhalifah3}. It implies that 
+$\partial \hat{T} / \partial \mathbf{x}$, as needed by equation \ref{eq:chain}, can be determined 
+along the characteristics of $\hat{T}$. Since the right-hand side contains a slowness-squared 
+derivative, the velocity model must be differentiable, as is usually required by traveltime 
+computations. The derivation also indicates that the accuracy of an eikonal-based traveltime 
+source-derivative is source-sampling independent but model-sampling dependent, as from equations 
+\ref{eq:chain} and \ref{eq:part} $\partial / \partial \mathbf{x_s}$ relies on 
+$\hat{T}$, $\partial / \partial \mathbf{q}$ and $\partial / \partial \mathbf{x}$. The accuracy 
+from a direct finite-difference estimation on $\partial / \partial \mathbf{x_s}$, in comparison, 
+is both source- and model-sampling dependent.
+
+Continuing applying differentiation and the chain-rule to equation \ref{eq:chain} will 
+result in higher-order traveltime source-derivatives. For example, the second-order 
+derivative reads:
+\begin{eqnarray}
+\frac{\partial^2 T}{\partial \mathbf{x_s^2}} \equiv 
+\frac{\partial^2 \hat{T}}{\partial \mathbf{x_s^2}} & = & 
+\frac{\partial}{\partial \mathbf{x}} \frac{\partial \hat{T}}{\partial \mathbf{x}} 
+\cdot \frac{\partial \mathbf{x}}{\partial \mathbf{x_s}} + 
+\frac{\partial}{\partial \mathbf{q}} \frac{\partial \hat{T}}{\partial \mathbf{x}} 
+\cdot \frac{\partial \mathbf{q}}{\partial \mathbf{x_s}} - 
+\frac{\partial}{\partial \mathbf{x}} \frac{\partial \hat{T}}{\partial \mathbf{q}} 
+\cdot \frac{\partial \mathbf{x}}{\partial \mathbf{x_s}} - 
+\frac{\partial}{\partial \mathbf{q}} \frac{\partial \hat{T}}{\partial \mathbf{q}} 
+\cdot \frac{\partial \mathbf{q}}{\partial \mathbf{x_s}} \nonumber \\
+& = & \frac{\partial^2 \hat{T}}{\partial \mathbf{x}^2} 
+- 2 \frac{\partial^2 \hat{T}}{\partial \mathbf{x} \partial \mathbf{q}} 
++ \frac{\partial^2 \hat{T}}{\partial \mathbf{q}^2}\;.
+\end{eqnarray}
+Further, differentiating equation \ref{eq:part} once more by $\mathbf{x}$ provides 
+\begin{eqnarray}
+\nabla_{\mathbf{q}} \frac{\partial \hat{T}}{\partial \mathbf{x}} \cdot 
+\nabla_{\mathbf{q}} \frac{\partial \hat{T}}{\partial \mathbf{x}} 
++ \nabla_{\mathbf{q}} \hat{T} \cdot 
+\nabla_{\mathbf{q}} \frac{\partial^2 \hat{T}}{\partial \mathbf{x}^2} 
+= \frac{1}{2} \frac{\partial^2 W}{\partial \mathbf{x}^2}\;.
+\end{eqnarray}
+It is easy to verify that any order of the traveltime source-derivative will require the 
+corresponding order of the slowness-squared derivative. An approximation based on Taylor 
+expansions of the traveltime around a fixed source location can make use of these derivatives. 
+For example, \cite{ursin} and \cite{bortfeld} introduced parabolic and hyperbolic traveltime 
+approximations with the first- and second-order derivatives. Notice that the need for slowness-squared 
+derivatives may cause instability unless the velocity model is sufficiently smooth. \cite{alkhalifah3} 
+also proved the following relationship between $\partial W/\partial \mathbf{x}$ and 
+$\partial \hat{T}/\partial \mathbf{q}$: 
+\begin{eqnarray}
+\nabla_{\mathbf{q}} \hat{T} \cdot 
+\nabla_{\mathbf{q}} \frac{\partial \hat{T}}{\partial \mathbf{(q+x_s)}} 
+= \frac{1}{2} \frac{\partial W}{\partial \mathbf{x}}\;,
+\end{eqnarray}
+which implies that the traveltime source-derivative can be computed from the given traveltime 
+tables only. However, the velocity smoothness is still implicitly assumed as the second-order spatial 
+derivatives of traveltimes appear in the equation. For this reason, we restrict our current implementation 
+to the first-order derivative only.
+
+In a ray-tracing eikonal solver, $\partial T / \partial \mathbf{x_s}$ is the slowness vector 
+of a particular ray at $\mathbf{x_s}$ and holds constant along the trajectory. As it may also require 
+irregular coordinate mappings, one may use the same strategy as for the traveltime tables. In this way, 
+there is no necessity for any additional effort. On the other hand, equations \ref{eq:chain} and 
+\ref{eq:part} and their second-order extensions provide important attributes for use in Gaussian beams, 
+which are commonly calculated by the dynamic ray tracing \cite[]{cerveny}. They might be alternatively 
+estimated by the eikonal-based source-derivative formulas but with the traveltime tables from a 
+finite-difference eikonal solver. However, this application is beyond the scope of this paper. In the 
+following sections, we consider only the source-derivative estimation from traveltimes computed by a 
+finite-difference eikonal solver.
+
+\subsection{Numerical Implementation}
+
+Equation \ref{eq:part} is a linear first-order PDE suitable for upwind numerical methods 
+\cite[]{franklin}. Since it does not change the non-linear nature of the eikonal equation, 
+the resulting traveltime source-derivative can be related to any branch of multi-arrivals, 
+if one supplies the corresponding traveltime in $\hat{T}$. The source-derivatives can be 
+computed either along with traveltimes or separately. In Appendix A, we describe a first-arrival 
+implementation based on a modification of FMM \cite[]{sethian1}.
+
+The first-order traveltime source-derivative enables a cubic Hermite interpolation 
+\cite[]{press}. Geometrically, such an interpolation is valid only when the selected 
+wave-front in the interpolation interval is smooth and continuous. For a 2D model and a 
+source interpolation along the inline direction only, the Hermite interpolation reads: 
+\begin{equation}
+\label{eq:Hermite}
+\begin{array}{lcl}
+T (z,x; z_s,x_s + \alpha \Delta x_s) 
+& = & (2\alpha^3-3\alpha^2+1)\,T (z,x; z_s,x_s) \\
+& + & (\alpha^3-2\alpha^2+\alpha)\,\frac{\partial T}{\partial x_s} (z,x; z_s,x_s) \\
+& + & (-2\alpha^3+3\alpha^2)\,T (z,x; z_s,x_s + \Delta x_s) \\
+& + & (\alpha^3-\alpha^2)\,\frac{\partial T}{\partial x_s} (z,x; z_s,x_s + \Delta x_s)\;,
+\end{array}
+\end{equation}
+where $\alpha \in [0,1]$ controls the source position to be interpolated between known 
+values at $(z_s,x_s)$ and $(z_s,x_s+\Delta x_s)$. For comparison, the linear interpolation 
+can be represented by:
+\begin{equation}
+\label{eq:linear}
+T (z,x; z_s,x_s + \alpha \Delta x_s) = 
+(1-\alpha)\,T (z,x; z_s,x_s) + \alpha\,T (z,x; z_s,x_s + \Delta x_s)\;.
+\end{equation}
+The linear interpolation fixes the subsurface image point $(z,x)$. A possible 
+improvement is to instead fix the vector that links the source with the image, such 
+that on the right-hand side the traveltimes are taken at shifted image locations:
+\begin{equation}
+\label{eq:shift}
+\begin{array}{lcl}
+T (z,x; z_s,x_s + \alpha \Delta x_s) 
+& = & (1-\alpha)\,T (z,x- \alpha \Delta x_s; z_s,x_s) \\
+& + & \alpha\,T (z,x + (1-\alpha) \Delta x_s; z_s,x_s + \Delta x_s)\;.
+\end{array}
+\end{equation}
+We will refer to scheme \ref{eq:shift} as shift interpolation. According to our definition 
+of the relative coordinate $\mathbf{q}$ in equation \ref{eq:relative1}, shift interpolation 
+amounts to a linear interpolation in $\hat{T} (\mathbf{q}; \mathbf{x_s})$. It is easy to verify 
+that, for a constant-velocity medium, both Hermite and shift interpolations are accurate, 
+while the linear interpolation is not. However, the accuracy of shift interpolation deteriorates 
+with increasing velocity variations, as it assumes that the wave-front remains invariant in 
+the relative coordinate. Equations \ref{eq:Hermite}-\ref{eq:shift} can be generalized to 3D by 
+cascading the inline and crossline interpolations (for example equation \ref{eq:linear} in 3D 
+case becomes bilinear interpolation). The interpolated source does not need to lie collinear 
+with source samples.
+
+The derivatives themselves can also be directly used for Kirchhoff anti-aliasing 
+\cite[]{lumley,abma,fomel2}. Equations \ref{eq:Hermite}, \ref{eq:linear} 
+and \ref{eq:shift} give rise to their corresponding source-derivative interpolations 
+after applying the following chain-rule to both sides: 
+\begin{equation}
+\label{eq:dinterp}
+\frac{\partial}{\partial (x_s + \alpha \Delta x_s)} = 
+\frac{\partial}{\partial \alpha} 
+\frac{\partial \alpha}{\partial (x_s + \alpha \Delta x_s)} = 
+\frac{1}{\Delta x_s} \frac{\partial}{\partial \alpha}\;.
+\end{equation}
+The anti-aliasing application is summarized in Appendix B.
+
+\section{Numerical Examples}
+
+\subsection{Constant-velocity-gradient Model}
+\inputdir{check}
+
+In a 2D medium of linearly changing velocities, $v(z,x) = v_0 + a x + b z$ where x is the 
+lateral position and z is the depth, the traveltimes and source-derivatives have analytical 
+solutions \cite[]{slotnick}. Figure~\ref{fig:model} shows the model used in our numerical test 
+and the analytical source-derivative for a source located at $(0,0)$ km. The domain is of 
+size 4km $\times$ 4km with grid spacing $0.01$ km in both directions. We solve for the traveltime 
+tables at five sources of uniform spacing $1$ km along the top domain boundary by FMM and 
+their associated source-derivatives using the method described in Appendix A. Figure~\ref{fig:diff} 
+compares the errors in computed source-derivative between the proposed approach and a centered 
+second-order finite-difference estimation for the same source shown in Figure~\ref{fig:model}. 
+The proposed method is sufficiently accurate except for the small region around the source. This 
+is due to the source singularity of the eikonal equation and can be improved by adaptive or 
+high-order upwind finite-difference methods \cite[]{qian} or by factoring the singularity 
+\cite[]{fomel4}. Since we are aiming at using the interpolated traveltime tables for migration 
+purposes and the reflection energy around the sources is usually low, these errors in current 
+implementation can be neglected. In Figure~\ref{fig:ierror}, we interpolate the traveltime 
+table for a source at location $(0,0.25)$ km from the nearby source samples at $(0,0)$ km and 
+$(0,1)$ km by the cubic Hermite, linear and shift interpolations. We use the eikonal-based 
+source-derivative in the cubic Hermite interpolation. The shift interpolation is not applicable 
+for some $\mathbf{q}$ and $\mathbf{x_s}$ if $\mathbf{x = q+x_s}$ is beyond the computational 
+domain. In these regions, we use a linear interpolation to fill the traveltime table. As expected, 
+the cubic Hermite interpolation achieves the best result, while its misfits near the source 
+are related to the errors in source-derivatives. The shift interpolation performs generally 
+better than the linear interpolation, especially in the regions close to the source where the 
+wave-fronts are simple.
+
+\plot{model}{width=0.95\textwidth}{(Left) a constant-velocity-gradient 
+model $v(z,x) = 2 + 0.5 x$ km/s and (right) its analytical traveltime 
+source-derivative for a source at origin $\mathbf{x_s} = (0,0)$ km.}
+\plot{diff}{width=0.95\textwidth}{Comparison of error in computed 
+source-derivative by (left) the proposed method and (right) a centered 
+second-order finite-difference estimation based on traveltime tables. 
+The maximum absolute errors are $0.15$ s/km and $0.56$ s/km, respectively.}
+\plot{ierror}{width=0.95\textwidth}{Traveltime interpolation error 
+of three different schemes: (top left) the analytical traveltime of 
+a source at location $(0,0.25)$ km; (top right) error of the cubic 
+Hermite interpolation; (bottom left) error of the linear interpolation; 
+(bottom right) error of the shift interpolation. Using derivatives 
+in interpolation enables a significantly higher accuracy. The $l2$ 
+norm of the error are $1.5$ s, $9.2$ s and $6.0$ s respectively.}
+
+The difference between a cubic Hermite interpolation and a linear or shift one is in the usage of 
+source-derivatives. In this regard, one may think of supplying the finite-difference estimated 
+derivatives to the interpolation. Indeed, a refined source sampling and higher-order differentiation 
+may lead to more accurate derivatives. However the additional computation is considerable. For the 
+same model in Figure~\ref{fig:model}, we carry out both a source sampling refinement experiment and 
+a model grid spacing refinement experiment. The results are shown in Figures~\ref{fig:sfddiff} and 
+\ref{fig:gfddiff}. Both figures are plotted for the traveltime at subsurface location $(1.5,-0.5)$ km 
+for the source at location $(0,0)$ km. Although the curves vary for different locations, the source 
+sampling refinement experiment suggests the general need for approximately three times finer 
+source-sampling than that of Figure~\ref{fig:diff} to achieve the same level of accuracy.
+
+\plot{sfddiff}{width=0.95\textwidth}{Source-sampling refinement 
+experiment. The plot shows, at a fixed model grid sampling of 
+$0.01$ km and increasing source sampling, the error in source-derivative 
+estimated by a first-order finite-difference (solid) and a centered 
+second-order finite-difference scheme (dotted) decrease. The 
+horizontal axis is the number of sources and the source sampling 
+is uniform. The vertical axis is the natural logarithm of the 
+absolute error. The flat line (dash) is from the proposed eikonal-based 
+method and is source-sampling independent.}
+\plot{gfddiff}{width=0.95\textwidth}{Gird-spacing refinement 
+experiment. The plot shows, at a fixed source sampling of $1$ km 
+and increasing model grid sampling, the error in source-derivative 
+estimated by the proposed eikonal-based method decreases. Meanwhile, 
+the errors of both first- and second-order finite-difference estimations 
+do not improve noticeably. The horizontal axis is the number of grid 
+points in both directions and the grid sampling is uniform. See 
+Figure~\ref{fig:sfddiff} for descriptions of the vertical axis and 
+the lines.}
+
+\inputdir{migration}
+
+Kirchhoff migration can use traveltime source-derivatives in two ways: for traveltime interpolation when 
+the source and receiver of a trace does not lie on the source grid of pre-computed traveltime tables, 
+and for anti-aliasing. Figure~\ref{fig:modl} shows a synthetic model of constant-velocity-gradient with 
+five dome-shaped reflectors. The model has a $0.01$ km grid spacing in both directions. We solve for 
+traveltimes and source-derivatives by the modified FMM introduced in Appendix A at 21 sparse shots of 
+uniform spacing 0.5 km, and migrate synthetic zero-offset data. The interpolation of source-derivative 
+for the anti-aliasing purpose follows the method described in Appendix B. 48 interpolations are carried 
+out within each sparse source sampling interval. Figures~\ref{fig:hzodmig} and \ref{fig:lzodmig} compare 
+the images obtained by three different interpolations and the effect of anti-aliasing. All images are 
+plotted at the same scale. We do not limit migration aperture for all cases and adopt the anti-aliasing 
+criteria suggested by \cite{abma} to filter the input trace before mapping a sample to the image, where 
+the source-derivative and receiver-derivative (in the zero-offset case they coincide) determine the filter 
+coefficients. As expected, the cubic Hermite interpolation with anti-aliasing leads to the most desirable 
+image. The image could be further improved by considering not only the kinematics predicted by the traveltimes 
+but also the amplitude factors \cite[]{dellinger,vanelle2}.
+
+\plot{modl}{width=0.95\textwidth}{Constant-velocity-gradient background 
+model $v(z,x) = 1.5 + 0.25 z + 0.25 x$ km/s with dome shaped reflectors.}
+\plot{hzodmig}{width=0.95\textwidth}{Zero-offset Kirchhoff migration 
+image with (top) the cubic Hermite interpolation and (bottom) the 
+shift interpolation.}
+\plot{lzodmig}{width=0.95\textwidth}{Zero-offset Kirchhoff migration 
+image with (top) the linear interpolation and (bottom) the cubic 
+Hermite interpolation without anti-aliasing.}
+
+\subsection{Marmousi Model}
+\inputdir{marm}
+
+The Marmousi model \cite[]{versteeg} has large velocity variations and is challenging for Kirchhoff 
+migration with first-arrivals \cite[]{geoltrain}. We apply a single-fold 2D triangular smoothing of 
+radius $20$ m to the original model (see Figure~\ref{fig:vel}) to remove only sharp velocity discontinuities 
+but retain the complex velocity structures. Because wave-fronts change shapes rapidly, the traveltime 
+interpolation may be subject to inaccurate source-derivatives and provide less satisfying accuracy 
+compared to that in a simple model. Although the derivative computation in the proposed eikonal-based 
+method is source-sampling independent, in practice we should limit the interpolation interval to be 
+sufficiently small, so that the traveltime curve could be well represented by a cubic spline. For the 
+smoothed Marmousi model, we use a sparse source sampling of $0.2$ km based on observations of the 
+horizontal width of major velocity structures. Figures~\ref{fig:vel} and \ref{fig:slice} compare the 
+traveltime interpolation errors of three methods as in Figure~\ref{fig:ierror} for a source located 
+at $(0,3.1)$ km from nearby source samples at $(0,3)$ km and $(0,3.2)$ km. Figure~\ref{fig:curve} plots 
+a reference traveltime curve for the fixed subsurface location $(2,3.3)$ km computed by a dense eikonal 
+solving of $4$ m source spacing against curves produced by the interpolations. While these comparisons 
+vary between different source intervals and subsurface locations, the cubic Hermite interpolation 
+out-performs the linear and the shift interpolations except for the source singularity region. However 
+in Figure~\ref{fig:vel} the errors are relatively large in the upper-left region. These errors occur 
+due to the collapse of overlapping branches of the traveltime field \cite[]{xu} that causes wave-front 
+discontinuities and undermines the assumptions of the proposed method.
+
+\plot{vel}{width=0.95\textwidth}{(Top) the smoothed Marmousi model. 
+The model has a $4$ m fine grid. (Bottom) the traveltime error by 
+the cubic Hermite interpolation.}
+\plot{slice}{width=0.95\textwidth}{The traveltime error by (top) 
+the linear interpolation and (bottom) the shift interpolation.}
+\plot{curve}{width=0.95\textwidth}{Traveltime interpolation for a 
+fixed subsurface location. Compare between the result from a dense 
+source sampling (solid blue), cubic Hermite interpolation (dotted 
+magenta), linear interpolation (dashed cyan) and shift interpolation 
+(dashed black). The $l2$ norm of the error (against the dense source 
+sampling results) of $49$ evenly interpolated sources between interval 
+$(0,3)$ km and $(0,3.2)$ km for all locations but the top $100$ m 
+source singularity region are $3.9$ s, $9.2$ s and $11.6$ s 
+respectively.}
+
+One strategy for imaging multi-arrival wavefields with first-arrival traveltimes is the semi-recursive 
+Kirchhoff migration \cite[]{bevc}. It breaks the image into several depth intervals, applies Kirchhoff 
+redatuming to the next interval, performs Kirchhoff migration from there, and so on. The small redatuming 
+depth effectively limits the maximum traveltime and the evolving of complex waveforms before the most 
+energetic arrivals separate from first-arrivals. Since Kirchhoff redatuming also relies on traveltimes 
+between datum levels, our method can be fully incorporated into the whole process. Again, for simplicity, 
+we do not consider amplitude factors during migration. We use the Marmousi dataset with a source/receiver 
+sampling of $25$ m. Due to the source and receiver reciprocity, the receiver side interpolations are 
+equivalent to those on the source side. Figure~\ref{fig:dmig0d} is the result of a Kirchhoff migration 
+with eikonal solvings at each source/receiver location, i.e. no interpolation performed. Only the upper 
+portion is well imaged. Figure~\ref{fig:dmig0} shows the image after employing the cubic Hermite 
+interpolation with a $0.2$ km sparse source/receiver sampling, which means $7$ source interpolations 
+within each interval. Even though a $7$ times speed-up is not attainable in practice due to the extra 
+computations in source-derivative and interpolation, we are still able to gain an approximately $5$-fold 
+cost reduction in traveltime computations, while keeping the image quality comparable between 
+Figures~\ref{fig:dmig0d} and \ref{fig:dmig0}. Next, following \cite{bevc}, we downward continue the data 
+to a depth of $1.5$ km in three datuming steps. The downward continued data are then Kirchhoff migrated 
+and combined with the upper portion of Figure~\ref{fig:dmig0}. We keep the same $0.2$ km sparse 
+source/receiver sampling whenever eikonal solvings are required in this process. Figure~\ref{fig:dmig2} 
+shows the image obtained by the semi-recursive Kirchhoff migration. The target zone at approximately 
+$(2.5,6.5)$ km appears better imaged.
+
+\plot{dmig0d}{width=0.95\textwidth}{Image of Kirchhoff migration with 
+first-arrivals (no interpolation).}
+\plot{dmig0}{width=0.95\textwidth}{Image of Kirchhoff migration with 
+first-arrivals and a sparse source/receiver sampling.}
+\plot{dmig2}{width=0.95\textwidth}{Image of semi-recursive Kirchhoff 
+migration with a three-step redatuming from top surface to $1.5$ km depth 
+and a $0.5$ km interval each time. The sparse source/receiver sampling 
+is the same as in Figure~\ref{fig:dmig0}.}
+
+\section{Discussion}
+
+The proposed approach could be implemented either along with a finite-difference eikonal solver or 
+separately. Our current implementation outputs both traveltime and source-derivative at the same time, 
+with a roughly 30\% extra cost per eikonal solve compared to a FMM solver without the source-derivative 
+functionality. An interpolation with these source-derivatives is superior to the ones without and thus 
+enables an accurate traveltime-table compression. For 3D datasets, as both inline and crossline 
+directions may benefit from the source-derivative and interpolation, the overall data compression could 
+be significant. For instance, interpolating $10$ shots within each sparse source sampling interval in 
+both inline and crossline directions leads to an approximately $100$-fold savings in traveltime storage. 
+The method could be further combined with an interpolation within each source, for example from a coarse 
+grid to a fine grid, for a greater data compression.
+
+While our implementation is for first-arrivals only, the governing equations are valid also for other 
+characteristic branches, for example the most energetic arrivals. However, an underlying assumption 
+of the proposed method is a continuous change in the wave-front of selected arrivals within individual 
+sources. For first-arrivals, this condition always holds valid. However, the most energetic wave-front 
+can be more complicated than that of first-arrival, for example only piece-wise continuous, which may 
+lead to a potential degradation in accuracy. For example, \cite{nichols} showed the most energetic 
+wave-fronts in the Marmousi model. Another assumption is that the traveltime source-derivatives are 
+continuous between nearby sources. This condition breaks down when multi-pathing takes place. \cite{vanelle} 
+suggested to smooth traveltimes around the discontinuities in order to overcome this limitation. In theory, 
+one can try to identify the discontinuities and only perform interpolation within individual continuous 
+pieces by using the eikonal-based source-derivatives. By doing so, one should be able to recover branch 
+jumping in interpolated traveltimes, but only for those locations within the identified continuous pieces. 
+For the discontinuities themselves as well as the gaps between them, additional eikonal solving may be 
+required. An efficient implementation of this strategy remains open for future research.
+
+\section{Conclusion}
+
+We have shown an application of computing traveltime source-derivatives in Kirchhoff migration. For 
+first-arrivals, a cubic Hermite traveltime interpolation using the first-order source-derivatives 
+speeds up computation and reduces storage without noticeably sacrificing accuracy. Anti-aliasing is 
+another direct application of traveltime source-derivatives that can be easily incorporated into 
+Kirchhoff migration.
+
+Generalization of the method to 3D is straightforward. The computed derivative attributes may 
+benefit other areas besides the kinematic-only Kirchhoff migration shown in this paper. An extension 
+to multi-arrival traveltimes needs further investigation.
+
+\section{Acknowledgments}
+
+We thank the editors, Samuel Gray, and three anonymous reviewers for constructive 
+suggestions that helped improving the quality of the manuscript. We thank Tariq Alkhalifah and 
+Alexander Vladimirsky for useful discussions and sponsors of the Texas Consortium for Computational 
+Seismology (TCCS) for financial support of this research. \new{This publication is authorized by 
+the Director, Bureau of Economic Geology, The University of Texas at Austin.}
+
+\append{FMM implementation of source-derivatives}
+
+The FMM is a non-iterative eikonal solver with $O(N \log N)$ complexity, 
+where $N$ is the total number of grid points of the discretized domain. 
+It relies on a heap data structure to keep the updating sequence, and 
+a local one-sided upwind finite-difference scheme for ensuring the 
+causality \cite[]{sethian1}. Consider in 3D a cubic domain discretized into Cartesian grids, 
+with uniform grid size of $(\Delta x,\Delta y,\Delta z)$. Let $\hat{T}_{i,j}^k$ 
+be the traveltime value at vertices $\mathbf{x}_{i,j}^k = (x_i,y_j,z_k)$ 
+and define difference operator $D_x^{\pm}$ for $x$ direction as 
+\begin{equation}
+\label{eq:upwind1}
+D_x^{\pm} \hat{T}_{i,j}^k = 
+\pm \frac{\hat{T}_{i \pm 1,j}^k - \hat{T}_{i,j}^k}{\Delta x}\;,
+\end{equation}
+The causality condition requires picking \old{a downwind}\new{an upwind} neighbor in all 
+directions at $\mathbf{x}_{i,j}^k$. 
+\begin{equation}
+\label{eq:upwind2}
+\hat{D}_x \hat{T}_{i,j}^k = 
+\max \left( D_x^- \hat{T}_{i,j}^k, -D_x^+ \hat{T}_{i,j}^k, 0 \right)\;.
+\end{equation}
+After similar definitions for $\hat{D}_y$ and $\hat{D}_z$, the local 
+upwind scheme in FMM for equation \ref{eq:insert} reads 
+\begin{equation}
+\label{eq:update}
+\left( \hat{D}_x \hat{T}_{i,j}^k \right)^2 +
+\left( \hat{D}_y \hat{T}_{i,j}^k \right)^2 +
+\left( \hat{D}_z \hat{T}_{i,j}^k \right)^2 = W_{i,j}^k\;.
+\end{equation}
+For $\partial \hat{T} / \partial \mathbf{x}$ in equation \ref{eq:part} 
+and $\partial \hat{T} / \partial \mathbf{q}$ in equation \ref{eq:chain}, 
+we can apply the same upwind strategy: 
+\begin{equation}
+\label{eq:solve1}
+\hat{D}_x \hat{T}_{i,j}^k \cdot 
+\hat{D}_x \left( \frac{\partial \hat{T}}{\partial \mathbf{x}} \right)_{i,j}^k +
+\hat{D}_y \hat{T}_{i,j}^k \cdot 
+\hat{D}_y \left( \frac{\partial \hat{T}}{\partial \mathbf{x}} \right)_{i,j}^k +
+\hat{D}_z \hat{T}_{i,j}^k \cdot 
+\hat{D}_z \left( \frac{\partial \hat{T}}{\partial \mathbf{x}} \right)_{i,j}^k =
+\frac{1}{2} \left( \frac{\partial W}{\partial \mathbf{x}} \right)_{i,j}^k\;,
+\end{equation}
+\begin{equation}
+\label{eq:solve2}
+\left( \frac{\partial \hat{T}}{\partial \mathbf{q}} \right)_{i,j}^k = 
+\hat{D}_\mathbf{q} \hat{T}_{i,j}^k,\,\,\mathbf{q} = (x,y,z)\;.
+\end{equation}
+where in equation \ref{eq:solve1} $\hat{D}_x$, $\hat{D}_y$ and $\hat{D}_z$ 
+are chosen according to $\hat{T}_{i,j}^k$, regardless of $\partial \hat{T} 
+/ \partial \mathbf{x}$. Finally, 
+\begin{equation}
+\label{eq:final}
+\left( \frac{\partial T}{\partial \mathbf{x_s}} \right)_{i,j}^k = 
+\left( \frac{\partial \hat{T}}{\partial \mathbf{x}} \right)_{i,j}^k - 
+\left( \frac{\partial \hat{T}}{\partial \mathbf{q}} \right)_{i,j}^k\;.
+\end{equation}
+To incorporate the computation of traveltime source-derivatives into 
+FMM, one only needs to add equations \ref{eq:solve1}, \ref{eq:solve2} and 
+\ref{eq:final} after \ref{eq:update}. An extra upwind sorting and 
+solving after pre-computing $\hat{T}$ is not necessary. The total complexity of 
+FMM with the auxiliary output of traveltime source-derivative remains $O(N \log N)$.
+
+\append{Interpolation of source-derivatives}
+
+Applying the chain-rule \ref{eq:dinterp} to equation \ref{eq:Hermite}, we arrive at the interpolation 
+equation for source-derivatives in the cubic Hermite scheme:
+\begin{equation}
+\label{eq:hdinterp}
+\begin{array}{lcl}
+\Delta x_s\,
+\frac{\partial T (z,x; z_s,x_s + \alpha \Delta x_s)}{\partial (x_s + \alpha \Delta x_s)} 
+& = & (6\alpha^2-6\alpha)\,T (z,x; z_s,x_s) \\
+& + & (3\alpha^2-4\alpha+1)\,\frac{\partial T}{\partial x_s} (z,x; z_s,x_s) \\
+& + & (-6\alpha^2+6\alpha)\,T (z,x; z_s,x_s + \Delta x_s) \\
+& + & (3\alpha^2-2\alpha)\,\frac{\partial T}{\partial x_s} (z,x; z_s,x_s + \Delta x_s)\;.
+\end{array}
+\end{equation}
+Analogously, the interpolation of source-derivatives in the linear scheme \ref{eq:linear} reads:
+\begin{equation}
+\label{eq:ldinterp}
+\begin{array}{lcl}
+\Delta x_s\,
+\frac{\partial T (z,x; z_s,x_s + \alpha \Delta x_s)}
+{\partial (x_s + \alpha \Delta x_s)} = 
+-T (z,x; z_s,x_s) + T (z,x; z_s,x_s + \Delta x_s)\;.
+\end{array}
+\end{equation}
+which is a simple first-order finite-difference estimation. Finally, in the case of shift scheme 
+\ref{eq:shift}, the partial derivative $\partial / \partial \alpha$ must be applied to the shifted 
+traveltime terms at the same time: 
+\begin{equation}
+\label{eq:sdinterp}
+\begin{array}{lcl}
+\Delta x_s\,
+\frac{\partial T (z,x; z_s,x_s + \alpha \Delta x_s)}
+{\partial (x_s + \alpha \Delta x_s)} 
+& = & -T (z,x- \alpha \Delta x_s; z_s,x_s) \\
+& - & (1-\alpha) \Delta x_s\,
+\frac{\partial T (z,x-\alpha \Delta x_s; z_s,x_s)}{\partial (x-\alpha \Delta x_s)} \\
+& + & T (z,x + (1-\alpha) \Delta x_s; z_s,x_s + \Delta x_s) \\
+& - & \alpha \Delta x_s\,
+\frac{\partial T (z,x+(1-\alpha) \Delta x_s; z_s,x_s+\Delta x_s)}
+{\partial (x+(1-\alpha) \Delta x_s)}\;.
+\end{array}
+\end{equation}
+The required spatial derivatives can be estimated from the traveltime table by means of 
+finite-differences, for example by using the upwind approximation \ref{eq:upwind2}.
+
+\bibliographystyle{seg}
+\bibliography{eikodsf}

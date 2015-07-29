@@ -1,0 +1,76 @@
+#########################################################
+# Setting up
+#########################################################
+
+from rsf.proj import *
+
+#########################################################
+# Obtaining the test data
+#########################################################
+
+Fetch('Txx.HH','septour')
+
+#########################################################
+# Displaying the data
+#########################################################
+
+Result('wiggle0','Txx.HH','wiggle')
+
+#########################################################
+# Windowing and plotting
+#########################################################
+
+Flow('windowed','Txx.HH','window n2=10 min1=0.4 max1=0.8')
+
+plotpar = '''
+transp=y poly=y yreverse=y pclip=100 nc=20 allpos=n 
+unit2=km unit1=s label1=Time label2=Offset 
+'''
+
+for plot in ('wiggle','contour','grey'):
+    Result(plot,'windowed',plot + plotpar)
+    
+#########################################################
+# Resampling
+#########################################################
+
+# decimate time axis by two
+Flow('subsampled','windowed','window j1=2')
+
+# sinc interpolation in the Fourier domain
+Flow('resampled','subsampled',
+     'fft1 ompnth=1 | pad n1=102 | fft1 inv=y opt=n ompnth=1 | window max1=0.8')
+
+Result('resampled','wiggle title=Resampled' + plotpar)
+
+#########################################################
+# Velocity analysis and NMO
+#########################################################
+
+Result('nmo','windowed',
+       '''
+       nmostretch v0=2.05 half=n |
+       wiggle pclip=100 max1=0.6 poly=y
+       ''')
+
+#########################################################
+# Advanced plotting
+#########################################################
+
+plotpar = plotpar+' min1=.4 max1=.8 max2=1. min2=.05 poly=n'
+
+Plot('grey','windowed',
+     'grey wheretitle=t wherexlabel=b' + plotpar)
+Plot('wiggle1','windowed',
+     'wiggle plotcol=0 plotfat=10' + plotpar)
+Plot('wiggle2','windowed',
+     'wiggle plotcol=7 plotfat=3' + plotpar)
+
+Result('overplot','grey wiggle1 wiggle2','Overlay')
+Result('sidebyside','grey wiggle2','SideBySideIso')
+
+#########################################################
+# Wrapping up
+#########################################################
+
+End()

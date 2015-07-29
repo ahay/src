@@ -1,0 +1,463 @@
+\published{Geophysics, 74, V17-V24, (2009)}
+\title{A 1-D time-varying median filter for seismic random, spike-like noise elimination}
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+
+\ms{GEO-2007-0338}
+
+\address{
+\footnotemark[1] College of Geo-exploration Science and Technology,\\
+Jilin University \\
+No.6 Xi minzhu street, \\
+Changchun, China, 130026 \\
+\footnotemark[2] Bureau of Economic Geology,\\
+John A. and Katherine G. Jackson School of Geosciences \\
+The University of Texas at Austin \\
+University Station, Box X \\
+Austin, TX, USA, 78713-8924}
+
+\author{Yang Liu\footnotemark[1]\footnotemark[2], Cai Liu\footnotemark[1], Dian Wang\footnotemark[1]}
+
+\footer{GEO-2007-0338}
+\lefthead{Liu etc.}
+\righthead{1-D time-varying median filter}
+\maketitle
+
+\begin{abstract}
+
+Random noise in seismic data affects the signal-to-noise ratio, 
+obscures details, and complicates identification of useful information. We 
+present a new method for reducing random, spike-like noise in seismic data. 
+The method is based on a 1-D stationary median filter (MF) -- the \emph{1-D 
+time-varying median filter} (TVMF). We design a threshold value that 
+controls the filter window according to characteristics of signal and 
+random, spike-like noise. In view of the relationship between seismic data 
+and the threshold value, we chose median filters with different time-varying 
+filter windows to eliminate random, spike-like noise. When comparing our 
+method with other common methods, e.g., the band-pass filter 
+and stationary MF, we found that 
+the TVMF strikes a balance between eliminating random noise and protecting 
+useful information. To demonstrate the feasibility of our method in reducing 
+seismic random, spike-like noise, we present results for one synthetic dataset. 
+Results of applying the method to seismic land data from Texas 
+demonstrate that the TVMF method is effective in practice. 
+
+\end{abstract}
+
+\section{Introduction}
+
+Random noise in prestack seismic data can come from various sources, such as
+wind motion, poorly planted geophones, or electrical noise, and some of this 
+seismic random noise invariably exhibits spike-like characteristics. Although 
+stacking can at least partly suppress random noise in prestack data, residual 
+random noise after stacking will decrease the accuracy of final data interpretation. 
+In recent years, several authors have developed effective methods of eliminating 
+random noise. For example, \cite{Gulunay00} used the noncausal prediction filter 
+for random-noise attenuation, \cite{Ristau01} compared several 
+adaptive filters, which they applied in an attempt to reduce random noise in 
+geophysical data. \cite{Karsli06}
+applied complex-trace analysis to seismic data for random-noise suppression,
+recommending it for low-fold seismic data, and some transform methods 
+were also used to eliminate seismic random noise, e.g., seislet transform \cite[]{Fomel06,Fomel08},
+discrete cosine transform \cite[]{Lu07}, and curvelet transform \cite[]{Neelamani08}.
+
+On the other hand, the median filter, a well-known method that can effectively suppress 
+spike-like noise, refers to nonlinear signal processing. 
+\cite{Bednar83} and \cite{Duncan95} found the method to be both simple and effective for seismic prospecting. 
+More recently, new median filters have been 
+proposed. \cite{Mi00} incorporated median-filter noise reduction into 
+standard Kirchhoff time migration. \cite{Zhang03} used a hyperbolic 
+median filter to suppress multiples. \cite{Liu06} advocated random-noise 
+attenuation using the 2-D multistage median filter (MLM).
+
+Because the median filter is a nonlinear filter, filter-window length needs 
+to be adjusted before its characteristics can be changed. The stationary filter, 
+on the other hand, maintains a fixed window length, retaining useful information and 
+random noise at the same scale. An unsuitable filter-window choice would therefore 
+end up in useful information being destroyed or noise remaining. Here we propose 
+a time-varying median filter that adjusts to different filter-window lengths by 
+threshold, making value judgments on useful information versus noise throughout 
+the process. We show that the time-varying window is more powerful than the 
+stationary window. 
+
+In this paper, a new nonlinear filter called the \emph{time-varying median filter} (TVMF) 
+is presented, which we designed by defining a threshold value. After adjustment 
+of the filter window in the time domain, this filter eliminates 
+random noise in seismic data. We compare TVMF with other common methods.
+We use numerical examples, along with synthetic and field data, to demonstrate 
+the validity of the proposed method in practice.
+
+\section{Theoretical basis}
+
+In contrast to useful information, random, spike-like noise in seismic data is 
+neither continuous nor correlative, and a 1-D stationary median filter, having 
+a large filter-window length, can easily remove such noise. However,
+signal can be damaged by such a filter.
+
+The 1-D TVMF is based on the 1-D stationary median filter. We propose to measure
+the local noise content of the data and to adjust the filter length adaptively.
+If a threshold value that judges random noise and estimates noise intensity can 
+be chosen, a filter having a large filter-window length can eliminate random noise 
+while processing useful information by using a small filter-window length. 
+Such a filter can thus effectively eliminate random noise while maximizing 
+preservation of a detailed structure of useful information. 
+
+ \subsection{1-D stationary median filter (MF)}
+
+The 2-D seismic record can be represented by the following data sequence:
+      \begin{equation}
+        \label{eq:eq1}
+          x_{i,j} \qquad (i=1,\cdots,m,\cdots,N_x;j=1,\cdots,n,\cdots,N_t)\;,
+      \end{equation}
+where $i$ is the spatial sample index, $j$ is the temporal sample index, and 
+$N_x$ and $N_t$ are the numbers of spatial and temporal samples. When filter-window 
+length, $C$, of the stationary median filter is defined (normally $C$ is odd), 
+the result after filtering at the point on the $m^{th}$ trace and the $n^{th}$ sample 
+can be found by
+
+1. Setting the center point at the $m^{th}$ trace and the $n^{th}$ sample, and 
+choosing $C$ samples in the $m^{th}$ trace,
+
+2. Sorting the $C$ samples from smaller to larger, and then
+
+3. Picking the center value, after sequencing, as the output at the point on the $m^{th}$ trace 
+and the $n^{th}$ sample.
+
+Repetition of the process on all data achieves 
+1-D stationary median filtering of the seismic record. The 1-D stationary median 
+filter can be expressed as $median[x_{i,j}]$.
+
+\subsection{Signal-to-noise ratio (SNR) estimation using the stack method}
+
+A simple definition of the SNR was introduced by \cite{Liu97}. Window $D$, a part 
+of the seismic record, can be chosen for SNR analysis: 
+      \begin{equation}
+        \label{eq:eq5}
+          D = [x_{i,j}]_{M \times N} \qquad (0< M \le N_x, 0< N \le N_t)\;.
+      \end{equation}
+Further assumptions are: waveform, amplitude, and phase of seismic 
+wavelet in window $D$ keep stable in respect to distance ``$i$''; noise is
+``zero mean'' randomly distributed, along with survey-line direction being independent 
+(decorrelated) of the signal, so that
+      \begin{equation}
+        \label{eq:eq6}
+          x_{i,j} = s_j + n_{i,j}\;
+      \end{equation}
+      \begin{equation}
+        \label{eq:eq7}
+          \sum_{i=1}^{M} n_{i,j} = 0\;,
+      \end{equation}
+where $s_j$ is amplitude of signal, and $n_{i,j}$ is amplitude of noise. These 
+assumptions generally imply a limitation to this method, but they 
+can be satisfied if the local window is chosen in the stable signal region of the 
+seismic section. So if the signal energy in the window is 
+      \begin{equation}
+        \label{eq:eq8}
+          E_S = M\sum_{j=1}^{N} s_{j}^2 = \frac{1}{M} \sum_{j=1}^{N}(\sum_{i=1}^{M}x_{i,j})^2\;,
+      \end{equation}
+the noise energy can be calculated by
+      \begin{equation}
+        \label{eq:eq9}
+          E_N = \sum_{j=1}^{N}\! \sum_{i=1}^{M}x_{i,j}^2 - E_S\;.
+      \end{equation}
+Finally, a decibel expression of the SNR is estimated as
+      \begin{equation}
+          SNR = \frac{E_S}{E_N} = 
+	  10\,\log_{10}{\left(\frac{\displaystyle\sum_{j=1}^{N}\big(\sum_{i=1}^{M}x_{i,j}\big)^2}{\displaystyle M\sum_{j=1}^{N}\! \sum_{i=1}^{M}x_{i,j}^2-\sum_{j=1}^{N}\big(\sum_{i=1}^{M}x_{i,j}\big)^2}\right)}\;.
+        \label{eq:eq10}
+      \end{equation}
+
+ \subsection{1-D time-varying median filter (TVMF)}
+
+Using the above definitions, a TVMF can be designed. We use the following three steps to determine its parameters:
+
+1. Choose the reference median filter length.
+
+At point $x_{m,n}$, where the filter-window length of the reference 
+median filter is chosen as $C$, output can be expressed as
+      \begin{equation}
+        \label{eq:eq2}
+          Y_{m,n}^C = median[x_{i,j}] \qquad (i=m;j=n-(C-1)/2,\cdots,n+(C-1)/2)\;,
+      \end{equation}
+where filter-window length $C$ is a large odd number 
+so that random noise could be eliminated as much as possible. $C$ is determined 
+by using the SNR estimation method, which will be discussed later.
+
+2. Choose the threshold value.
+
+Using the reference median filter with its large filter-window length, we processed 
+the seismic data first to find $Y_{m,n}^C$. Then we applied the absolute mean value 
+to calculate the threshold value, which is shown as
+      \begin{equation}
+          T = {\frac{1}{N_x \times N_t}}\,{\sum_{i=1}^{N_x}\! \sum_{j=1}^{N_t}|Y_{i,j}^C|}\;,
+        \label{eq:eq3}
+      \end{equation}
+We can evaluate random-noise data versus useful signal data by using the threshold 
+value. When $|Y_{i,j}^C|< T$, the point is judged to be random noise, whereas when 
+$|Y_{i,j}^C|\ge T$, the point should be signal data. We can therefore use the 
+threshold value as a judgment norm -- data in which $|Y_{i,j}^C|\ge T$ should be 
+processed by the median filter having windows smaller than $C$ to protect the 
+detailed signal structure. Data in which $|Y_{i,j}^C|< T$ should be processed 
+by the median filter having windows larger than $C$ to strengthen its ability to 
+eliminate random noise.
+
+3. Choose the time-varying filter windows.
+
+Choices involving time-varying windows abound after the threshold value has been 
+chosen. We can define four scales of windows. Detailed time-varying 
+window length $C_{i,j}$ is defined as 
+        \begin{equation}
+        \label{eq:eq4}
+          C_{i,j} = \left \{ \begin{array}{ll}
+                    C+\alpha, & \textrm{$0<|Y_{i,j}^C|<T/2$} \\
+                    C+\beta, & \textrm{$T/2<|Y_{i,j}^C|<T$} \\
+                    C-\gamma, & \textrm{$T \le |Y_{i,j}^C| <2T$}\\
+                    C-\delta, & \textrm{$|Y_{i,j}^C| \ge 2T$}
+                  \end{array} \right.\;,
+      \end{equation}
+where $\alpha$, $\beta$, $\gamma$, and $\delta$ are constant even numbers, and 
+$\alpha>\beta$ and $\delta>\gamma$. Specific values for these 
+parameters will be discussed in the next section. Using 
+the above definition, we distinguish between random noise 
+and useful signal, such that we can process 
+the seismic data using different filter scales.
+
+ \section{Synthetic data tests}
+
+To choose reference filter windows and time-varying filter windows, we analyzed the 
+characteristics of our TVMF formulation using synthetic data. Referring to the 
+velocity model (Table~\ref{tbl:table}), note the synthetic common-shot record with 
+a dominant frequency of 40 Hz shown in Figure~\ref{fig:model,noise0}a. A 5\%-density 
+white spike noise was then added to the model. Three different noise peaks (noise amplitude is half, one, 
+and two times the maximum value of the reflections, and the corresponding noise 
+intensity is 1/2, 1, and 2) were chosen to separately test the TVMF. Only noise with twice the 
+maximum value of the reflected wave is displayed in Figure~\ref{fig:model,noise0}b. Energy 
+attenuation has not been taken into account, nor has spherical spreading or AVO. 
+Here, the signal has been drowned out by noise.
+
+    \tabl{table}{Velocity model}
+    {
+      \begin{center}
+        \begin{tabular}{ccccc}
+          \hline
+          Stratum thickness~(m)  & 500  & 1739 & 2069 &  \\
+          Stratum velocity~(m/s) & 2500 & 3162 & 4138 & 4500 \\
+          \hline
+        \end{tabular}
+      \end{center}
+      }
+
+Definitions of signal energy (equation~\ref{eq:eq8}), noise energy 
+(equation~\ref{eq:eq9}), and SNR (equation~\ref{eq:eq10}) were used to analyze 
+characteristics of the reference median filter. We chose the stationary MF with 
+different filter-window lengths of from 3 to 19 points, comparing various signal 
+energies (Figure~\ref{fig:es,en,snr}a), noise energies (Figure~\ref{fig:es,en,snr}b), and the SNR's 
+(Figure~\ref{fig:es,en,snr}c) after filtering. To meet the assumptions 
+of the SNR model, we chose five traces near the zero offset, where seismic events 
+are approximately invariant across the five traces. Note that in the 
+figures, curves of the 
+three noise intensities (1/2, 1 and 2) appear to have similar tendencies. Both 
+signal energy and noise energy decrease as filter-window length increases, but the 
+SNR displays a wiggle shape. The energy levels 
+of signals are stable after filter-window length reaches 11 points, but the energy levels of noise 
+are stable after filter-window length reaches 15 points. And because the curves show a different 
+rate of descent, the SNR has a different tendency. It reaches 
+a peak at the 5-point filter window and decreases afterward 
+because signal energy attenuates faster than noise energy. The SNR then reaches the 
+minimum near 11 points, where the signal energy is stable, and next, the SNR improves 
+again because the noise energy still decreases. Finally, the SNR reaches stability, 
+however, the signal has been barely damaged.
+
+In the noisy model 
+(Figure~\ref{fig:model,noise0}b), the SNR is -10.7 dB. After stationary MF filtering, 
+even the minimum SNR remains much larger than -10.7 dB, illustrating that all 
+stationary median filters can improve the SNR in the noisy model. 
+We can select large filter windows of reference median 
+filters to keep noise energy to a minimum when threshold $T$ is well able to separate 
+signal from noise, but at the same time we can define time-varying filter windows on 
+the basis of reference filter windows so that the reference filter window will be 
+limited. Three basic principles should be satisfied:
+
+1. The reference filter window can be chosen as a large value to separate signal from 
+noise when noise energy is small.
+
+2. Time-varying filter windows at signal positions should be small values to 
+protect the signal when removing noise.
+
+3. Time-varying filter windows at noise positions should be large values to attenuate 
+noise energy.
+
+In Figure~\ref{fig:es,en,snr}, reference filter window $C$ should be larger than 
+the stable signal point (11 points), and time-varying filter windows
+$C-\gamma$ and $C-\delta$ at signal positions should be in the range of from 5 to 
+7 points in order to preserve signal energy. Time-varying filter windows $C+\alpha$
+and $C+\beta$ should be limited in range from 11 to 13 points in order to 
+attenuate noise energy and save calculation time. To meet all principles, $C$ can be 
+11 points, with $\alpha=2$, $\beta=0$, $\gamma=4$, and $\delta=6$. 
+After more tests on synthetic and real data it became clear that these filter 
+parameter choices work for most real data.
+ \inputdir{model}  
+  \multiplot{2}{model,noise0}{width=0.45\textwidth}{Synthetic model (a) and white-noise 
+model (b).} 
+  \inputdir{window}  
+  \multiplot{3}{es,en,snr}{width=0.45\textwidth}{Comparison of different noise levels 
+(Intensity (1/2, 1, and 2) is the amplitude ratio between noise and reflections). 
+Signal energy (a), noise energy (b), and SNR (c).} 
+
+We used the TVMF, with defined reference and time-varying filter windows, to process the 
+noise model (Figure~\ref{fig:model,noise0}b), the result of which is shown in Figure~\ref{fig:w11tvmf,noise1}a. 
+When assumptions can be met, the SNR estimation using the stack method can be 
+used to compare results. After TVMF processing, the SNR is 19.7 dB. To compare, we also 
+used the low-pass filter for preserving the 
+signal in the dominant frequency band (Figure~\ref{fig:w11tvmf,noise1}b, the SNR is -7.4 dB). After 
+TVMF processing, white spike noise attenuated well, but the result after 
+low-pass filtering became a signal with 
+band-limited noise, and a great deal of low-frequency noise remained. Next, we 
+also used the TVMF to process the band-limited noise model 
+(Figure~\ref{fig:w11tvmf,noise1}b). SNR analysis shows that the parameters of TVMF only change a little, so 
+the same parameters can be used for processing. The TVMF cannot 
+eliminate all band-limited noise, like white noise, but the 
+energy of the noise has been degraded. At the same time, the TVMF introduces 
+a few high-frequency noise components having low energy, but these can be easily 
+removed by using a high-cut filter. Figure~\ref{fig:cb11tvmf,c11mf}a shows the result after
+TVMF and high-cut filtering; the SNR is 0.5 dB. The low-pass filter does 
+nothing about band-limited noise. The 11-point 
+stationary MF (Figure~\ref{fig:cb11tvmf,c11mf}b, the SNR is -8.4 dB) 
+can be used to compare with the TVMF. The stationary MF can 
+remove most of the noise, but useful information is also destroyed. After comparing 
+the result of the TVMF with those of the stationary MF and the band-pass filter, 
+we conclude that the TVMF is superior when processing random, spike-like noise. 
+
+We can compare results of using different methods 
+by analyzing their spectra as well. We chose spectra of the trace at a distance of 4 km, 
+corresponding to the pertinent parts of Figures~\ref{fig:model,noise0}, 
+\ref{fig:w11tvmf,noise1}, and \ref{fig:cb11tvmf,c11mf}. Results in 
+Figure~\ref{fig:smodel,snoise0,snoise1,scb11tvmf} show that spectral values of random 
+noise are larger than those of the signal at every frequency and that reflected waves 
+have been masked by random noise (Figure~\ref{fig:smodel,snoise0,snoise1,scb11tvmf}b). The low-pass 
+filter can eliminate noise in the high-frequency band, but it does nothing in the 
+dominant-frequency band (Figure~\ref{fig:smodel,snoise0,snoise1,scb11tvmf}c). After the 
+band-limited model is processed by the TVMF using an 11-point reference filter window, most spectral 
+components in the dominant-frequency band can be recovered. An additional high-cut filter was used to remove
+high-frequency noise introduced by the TVMF (Figure~\ref{fig:smodel,snoise0,snoise1,scb11tvmf}d). The 
+corresponding time profile is shown in Figure~\ref{fig:cb11tvmf,c11mf}a.
+\inputdir{model}  
+  \multiplot{2}{w11tvmf,noise1}{width=0.45\textwidth}{Denoised result after 11-point TVMF 
+filtering (a) and denoised result (band-limited noise model) 
+after low-pass filtering (b).}
+  \multiplot{2}{cb11tvmf,c11mf}{width=0.45\textwidth}{Denoised band-limited 
+noise model using different methods (the result of Figure~\ref{fig:w11tvmf,noise1}b was input 
+to these tests); 11-point TVMF followed by a high-cut filter (a) and 11-point 
+stationary MF (b).} 
+  \multiplot{4}{smodel,snoise0,snoise1,scb11tvmf}{width=0.45\textwidth}{Comparison of amplitude 
+spectra (trace at distance of 4 km) before and after processing. Amplitude spectra  
+in Figure~\ref{fig:model,noise0}a (a), corresponding spectra in Figure~\ref{fig:model,noise0}b (b),
+corresponding spectra in 
+Figure~\ref{fig:w11tvmf,noise1}b (c), and corresponding spectra in Figure~\ref{fig:cb11tvmf,c11mf}a (d).}
+
+Given the result of model filtering, the TVMF can easily remove spike-like noise, especially 
+noise having a white spectrum. When the TVMF is used to attenuate band-limited, 
+spike-like noise, its filter ability decreases, although it can still work better than other 
+common methods.
+
+ \section{Processing of field data}
+
+A real-data example involves land prestack data from Texas 
+(Figure~\ref{fig:dragon1,band,11mf,11tvmf,diff}a), from which we show one common midpoint 
+gather that has 59 traces and an average group interval of 42 m. The sample frequency is 4 ms, and the sample number is 500. In 
+Figure~\ref{fig:dragon1,band,11mf,11tvmf,diff}a, noise is mainly random noise caused by the surface condition of this 
+area; the 60-Hz electrical 
+interference with high amplitude is especially serious. According to the amplitude spectra, 
+the dominant frequency of the real data is about 25 Hz; the 60-Hz electrical interference thus exhibits 
+high-frequency, spike-like characteristics when compared with the useful signal. In the time domain 
+(Figure~\ref{fig:dragon1,band,11mf,11tvmf,diff}a, especially at locations ``A,'' ``B,'' and ``C''), this spike-like 
+characteristic of electrical interference can also be observed. To meet the assumptions of SNR 
+estimation using the stack method, a rectangle region ``D'' that has 9 traces and 125 samples is chosen, and, after calculating, the SNR 
+in the original data is found to be -7.3 dB. First, we apply a low-pass filter to remove 
+the random noise (Figure~\ref{fig:dragon1,band,11mf,11tvmf,diff}b); the frequency is limited to 60 Hz. The 
+low-pass filter can partly eliminate random noise, and the corresponding 
+SNR is improved to 0.4 dB, but it cannot attenuate the noise in the dominant-frequency band. 
+We can thus still see lots of random noise after filtering. The 11-point stationary MF is also 
+used to compare with the TVMF, and the result is shown in Figure~\ref{fig:dragon1,band,11mf,11tvmf,diff}c. After processing, there is 
+still some spike-like noise left, and part of the signal has been attenuated. The SNR is 1.9 dB, and a larger 
+filter window will further destroy the useful signal. By 
+using the SNR analysis introduced in the theory section, we are choosing the parameters about the TVMF in window 
+``D.'' The TVMF with the same parameters as for the synthetic examples, $C=11$, $\alpha=2$, 
+$\beta=0$, $\gamma=4$, and $\delta=6$, is applied to the prestack data
+(Figure~\ref{fig:dragon1,band,11mf,11tvmf,diff}d). Figure~\ref{fig:dragon1,band,11mf,11tvmf,diff}e shows the difference section, in which the 
+processed data using the TVMF have been subtracted from the original data. After TVMF processing, 
+continuity of events and information of the reflected waves are all enhanced, and there is little 
+noise left. Note that the 60-Hz electrical interference in particular can be completely removed. 
+The SNR reaches 4.7 dB. In the difference section it can be seen that the TVMF eliminates 
+major spike-like noise and that there is little useful information beyond 
+the spike-like noise, showing that the TVMF can effectively eliminate spike-like noise and 
+protect useful information at the same time. Because the TVMF is based on the stationary MF that can 
+filter noise spikes, the TVMF can effectively eliminate spike-like noise. And because the TVMF 
+can separate useful information from spike-like noise, 
+it can protect useful information and perform better overall than other potential methods 
+in spike-like noise attenuation.
+  \inputdir{dragon}
+  \multiplot{5}{dragon1,band,11mf,11tvmf,diff}{width=0.45\textwidth}{Real land data (a), denoised 
+result after low-pass filtering (b), denoised result after stationary MF filter (c), denoised result after TVMF filtering (d), and 
+difference between original data and result after TVMF processing (e).}
+
+We chose a trace from the original data and corresponding traces in processed data and got the 
+amplitude spectra of four traces (Figure~\ref{fig:dspec,bspec,mfspec,fspec}). After 
+low-pass filtering, high-frequency noise can be removed thoroughly, but 
+some noise in the dominant-frequency band can remain; 
+electrical interference in particular must be eliminated by other methods (Figure~\ref{fig:dspec,bspec,mfspec,fspec}b). Stationary
+MF can eliminate enough noise, but spectra of useful signals have been distorted (Figure~\ref{fig:dspec,bspec,mfspec,fspec}c). 
+In Figure~\ref{fig:dspec,bspec,mfspec,fspec}d, the TVMF can attenuate noise in the entire frequency band and protect 
+the useful-information frequency components. 
+
+  \multiplot{4}{dspec,bspec,mfspec,fspec}{width=0.45\textwidth}{Comparison of amplitude 
+spectra (trace at distance of 1.8 km) before and after processing. Amplitude spectra in 
+Figure~\ref{fig:dragon1,band,11mf,11tvmf,diff}a (a), corresponding spectra in 
+Figure~\ref{fig:dragon1,band,11mf,11tvmf,diff}b (b), 
+corresponding spectra in Figure~\ref{fig:dragon1,band,11mf,11tvmf,diff}c (c), and corresponding 
+spectra in Figure~\ref{fig:dragon1,band,11mf,11tvmf,diff}d (d).} 
+
+Next we obtained stacked sections corresponding to Figure~\ref{fig:dragon1,band,11mf,11tvmf,diff}b 
+and \ref{fig:dragon1,band,11mf,11tvmf,diff}d; the stacking fold is 59. A rectangular region, ``H,'' was chosen 
+to calculate the local SNR. Events of the stacked section using low-pass 
+processing were discontinuous (Figure~\ref{fig:stack1,stack2}a), the SNR is -7.8 dB, 
+and the continuity of events in the stacked section using TVMF processing was improved, especially 
+at locations ``E,'' ``F,'' and ``G'' (Figure~\ref{fig:stack1,stack2}b), and the 
+corresponding SNR is -3.1 dB. Because the TVMF can eliminate spike-like noise 
+in prestack data, it is advantageous to apply to such data.
+
+  \multiplot{2}{stack1,stack2}{width=0.7\textwidth}{Stacked section of prestack 
+data after low-pass filtering (a) and corresponding section after TVMF processing (b).}
+
+ \section{Conclusion}
+
+We have proposed and tested the time-varying median filter 
+(TVMF) for attenuating 
+prestack random, spike-like noise. We used a signal-to-noise ratio estimation to design 
+the reference filter window and time-varying filter windows, in which the filter 
+can adapt filter-window length to meet the intensity of the random, spike-like noise.
+The ability of this method to eliminate random noise while protecting desired signal 
+further attests to the strength of the method.
+Our experiments show that in field data the TVMF can eliminate random noise enough to
+enhance the continuity of events. Spectral analysis also shows that the TVMF 
+can effectively suppress random, spike-like noise in the whole frequency band. Comparison 
+of different methods shows that the TVMF is more effective than the stationary 
+median filter for eliminating 
+spike-like noise, and it can enhance results of band-pass filtering by attenuating 
+spike-like noise within the pass band.
+
+\section{Acknowledgments}
+
+The authors gratefully acknowledge Sergey B. Fomel for his suggestions and help. We 
+thank Douglas W. McCowan for fruitful discussions. We sincerely thank assistant 
+editor Vladimir Grechka, associate editor Eric Verschuur, and three anonymous 
+reviewers for their constructive comments and suggestions. We also thank one 
+anonymous reviewer for his suggestion about the possibility of our method on marine 
+swell-noise attenuation. Thanks also to BGP International for financial support of 
+this work. This work is partly supported
+by The National Basic Research Program of China (973 Program: 2009CB219301).
+Publication authorized by the Director, Bureau of Economic Geology.
+
+\bibliographystyle{seg}
+\bibliography{paper}
+

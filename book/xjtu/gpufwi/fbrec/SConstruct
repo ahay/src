@@ -1,0 +1,44 @@
+from rsf.proj import *
+
+Flow('vel',None,
+     	'''
+     	math output=2000 n1=200 n2=200 d1=5 d2=5
+     	label1=x1 unit1=m label2=x2 unit2=m 
+     	''')
+
+
+Flow('wavf wavb','vel',
+	'''	
+	sffbrec back=${TARGETS[1]} csdgather=n fm=15 dt=0.001 ns=1 ng=200 nt=800
+	sxbeg=100 szbeg=100 jsx=37 jsz=0 gxbeg=0 gzbeg=1 jgx=1 jgz=0
+	''')
+
+
+Plot('wavf','grey gainpanel=all title=Forward scalebar=y color=j',view=1)
+Plot('wavb','grey gainpanel=all title=Backward scalebar=y color=j',view=1)
+
+Plot('snap1f','wavf',
+	'''
+	window n3=1 min3=0.28 |grey title="Forward:t=0.28s" label1=Depth unit1=km 
+	label2=Lateral unit2=km screenratio=1 
+	''')
+Plot('snap2f','wavf',
+	'''
+	window n3=1 min3=0.4 |grey title="Forward:t=0.4s" label1=Depth unit1=km 
+	label2=Lateral unit2=km screenratio=1 
+	''')
+
+Plot('snap1b','wavf',
+	'''
+	window n3=1 min3=0.28 |grey title="Backward:t=0.28s" label1=Depth unit1=km 
+	label2=Lateral unit2=km screenratio=1 
+	''')
+Plot('snap2b','wavf',
+	'''
+	window n3=1 min3=0.4 |grey title="Backward:t=0.4s" label1=Depth unit1=km 
+	label2=Lateral unit2=km screenratio=1
+	''')
+Result('fb','snap1f snap2f snap2b snap1b','TwoColumns')
+
+
+End()

@@ -1,0 +1,5 @@
+from rsf.proj import *
+
+Result('ellipse1', None,'ellipse',prefix=plprefix)
+
+End()

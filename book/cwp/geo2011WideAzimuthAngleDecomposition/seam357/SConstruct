@@ -1,0 +1,525 @@
+from rsf.proj import *
+import fdmod,encode,wei,adcig,polar
+import math
+
+par = {
+    'nt':2000,   'ot':0, 'dt':0.008, 'lt':'t',   'ut':'s',
+    'nx':1167,   'ox':0, 'dx':0.03,  'lx':'x',   'ux':'km',
+    'ny':1333,   'oy':0, 'dy':0.03,  'ly':'y',   'uy':'km',
+    'nz':1501,   'oz':0, 'dz':0.01,  'lz':'z',   'uz':'km',
+    'osx':3.050,         'dsx':0.6,  'lsx':'sx', 'usx':'km', # source x
+    'osy':3.025,         'dsy':0.6,  'lsy':'sy', 'usy':'km', # source y
+    'nrx':661,           'drx':0.03, 'lrx':'rx', 'urx':'km', # receiver x
+    'nry':661,           'dry':0.03, 'lry':'ry', 'ury':'km'  # receiver y
+    }
+parmig=par.copy()
+fdmod.param(par)
+
+par['orx']=-(par['nrx']-1)/2*par['drx']
+par['ory']=-(par['nry']-1)/2*par['dry']
+
+par['jx']=1
+par['jy']=1
+par['jz']=2
+par['nzmig']=300
+
+# migration parameters (padded domain)
+par['nypad']=70/par['jy']
+par['nxpad']=70/par['jx']
+par['hmx']=((par['nry']-1)/2/par['jy']+par['nypad'])
+par['hmy']=((par['nry']-1)/2/par['jy']+par['nypad'])
+par['nmx']=par['hmx']*2
+par['nmy']=par['hmy']*2
+
+# migration parameters
+par['nw']=160
+par['ow']=1
+par['jw']=2
+
+par['nrmax']=5
+par['tmx']=32
+par['tmy']=32
+wei.wempar(par)
+
+parmig['nx']=150
+parmig['ox']=18
+parmig['dx']=par['dx']*2
+parmig['ny']=150
+parmig['oy']=8.0
+parmig['dy']=par['dy']*2
+parmig['nz']=par['nzmig']
+parmig['dz']=par['dz']*par['jz']
+fdmod.param(parmig)
+
+# ------------------------------------------------------------
+section=' screenratio=0.375 screenht=5.0 min2=16 max2=32 max1=6'
+overlay=' screenratio=0.375 screenht=5.0 min1=16 max1=32 max2=6'
+
+# ------------------------------------------------------------
+def greyyx(custom,par):
+    return '''
+    grey title="" pclip=100 gainpanel=a
+    min1=%g max1=%g label1="\F2 %s\F3" unit1=%s
+    min2=%g max2=%g label2="\F2 %s\F3" unit2=%s
+    screenratio=%f screenht=10
+    %s
+    '''% (
+    par['ymax'],par['ymin'],par['ly'],par['uy'],
+    par['xmin'],par['xmax'],par['lx'],par['ux'],
+    1.0*par['ny']/par['nx'],
+    par['labelattr']+' '+par['labelrot']+' '+custom)
+
+def graphyx(custom,par):
+    return '''
+    dd type=complex |
+    graph title="" labelrot=n wantaxis=n yreverse=n
+    min2=%g max2=%g label2="\F2 %s\F3" unit2=%s
+    min1=%g max1=%g label1="\F2 %s\F3" unit1=%s
+    screenratio=%g screenht=10
+    %s
+    ''' % (
+    par['ymin'],par['ymax'],par['ly'],par['uy'],
+    par['xmin'],par['xmax'],par['lx'],par['ux'],
+    1.0*par['ny']/par['nx'],
+    par['labelattr']+' '+par['labelrot']+' '+custom)
+
+def greyzx(x,custom,par):
+    return '''
+    grey title="" pclip=100 gainpanel=a
+    min1=%g max1=%g label1="\F2 %s\F3" unit1=%s
+    min2=%g max2=%g label2="\F2 %s\F3" unit2=%s
+    screenratio=%g screenht=10
+    %s
+    ''' % (
+    par['zmin'],par['zmax'],par['lz'],par['uz'],
+    x-par['hmx']*par['drx']/2,
+    x+par['hmx']*par['drx']/2,par['lx'],par['ux'],
+    1.0*(par['nz']*par['dz'])/(par['nmx']*par['drx']/2),
+    par['labelattr']+' '+par['labelrot']+' '+custom)
+
+def graphzx(custom,par):
+    return '''
+    dd type=complex |
+    graph title="" labelrot=n wantaxis=n yreverse=y
+    min1=%g max1=%g label1="\F2 %s\F3" unit1=%s
+    min2=%g max2=%g label2="\F2 %s\F3" unit2=%s
+    screenratio=%g screenht=10
+    %s
+    ''' % (
+    par['zmin'],par['zmax'],par['lz'],par['uz'],
+    par['xmin'],par['xmax'],par['lx'],par['ux'],
+    1.0*(par['nmx']*par['drx']/2)/(par['nz']*par['dz']),
+    par['labelattr']+' '+par['labelrot']+' '+custom)
+
+# ------------------------------------------------------------
+# 2793 shots
+fdmod.boxarray('ss2793',
+               57,par['osy'],par['dsy'],
+               49,par['osx'],par['dsx'],par)
+Plot('ss2793',graphyx('plotfat=3 symbol=. plotcol=1',par))
+
+#  725 shots 
+fdmod.boxarray('ss0725',
+               29,par['osy'],par['dsy']*2,
+               25,par['osx'],par['dsx']*2,par)
+Plot('ss0725',graphyx('plotfat=3 symbol=. plotcol=2',par))
+
+#  357 shots 
+fdmod.boxarray('ss0357',
+               21,par['osy']+4*(2*par['dsy']),par['dsy']*2,
+               17,par['osx']+4*(2*par['dsx']),par['dsx']*2,par)
+Plot('ss0357',graphyx('plotfat=3 symbol=. plotcol=5',par))
+
+# ------------------------------------------------------------
+# index on the small grid (grid of 357 sources)
+par['migosx']=12
+par['migosy']=3
+par['mignsx']=4
+par['mignsy']=4
+par['migdsx']=1
+par['migdsy']=1
+par['nmig']=par['mignsx']*par['mignsy']
+
+xshot=range(par['migosx'],par['migosx']+par['mignsx']*par['migdsx'],par['migdsx'])
+yshot=range(par['migosy'],par['migosy']+par['mignsy']*par['migdsy'],par['migdsy'])
+
+nlist=[];
+xlist=[];
+ylist=[];
+for isx in range(par['mignsx']):
+    for isy in range(par['mignsy']):
+        xline = 9+2*(xshot[isx]-1)
+        yline = 9+2*(yshot[isy]-1)
+
+        N=1+20+4*(yline-1)+(20+4*(xline-1))*267
+        nlist.append(N);
+
+        x=par['osx']+(xline-1)*par['dsx']
+        y=par['osy']+(yline-1)*par['dsy']
+
+        xlist.append(x);
+        ylist.append(y);
+
+klist=len(nlist);
+for k in range(klist):
+    print "shot #",nlist[k]," @ {x,y}={",xlist[k],",",ylist[k],"}"
+
+# ------------------------------------------------------------
+for k in range(klist):
+    ktag = '-%06d' % nlist[k]
+
+    # shot position
+    fdmod.point('ss'+ktag,xlist[k],ylist[k],par)
+    Plot('ss'+ktag,graphyx('plotfat=10 symbol=. plotcol=6',par))
+
+    # receiver positions
+    fdmod.boxarray('rr'+ktag,
+               par['nry'],ylist[k]-(par['nry']-1)/2*par['dry'],par['dry'],
+               par['nrx'],xlist[k]-(par['nrx']-1)/2*par['drx'],par['drx'],par)
+    Plot('rr'+ktag,'put n2=%(nry)d n3=%(nrx)d | window j2=30 j3=5 |'%par+
+         graphyx('plotfat=1 symbol=. plotcol=2',par))
+
+    fdmod.boxarray('mm'+ktag,
+                   par['nmy'],ylist[k]-par['hmy']*par['dry']*par['jy'],par['dry']*par['jy'],
+                   par['nmx'],xlist[k]-par['hmx']*par['drx']*par['jx'],par['drx']*par['jx'],par)
+    Plot('mm'+ktag,'window j2=71 |'+
+         graphyx('plotfat=1 symbol=. plotcol=1',par))
+
+Plot('ss',map(lambda k: 'ss-%06d' % nlist[k],range(klist)),'Overlay')
+
+# ------------------------------------------------------------
+par['xcip']=23.45
+par['ycip']=11.425
+par['zcip']=2.380
+print "CIP @",par['xcip'],par['ycip'],par['zcip']
+
+ixcip=(par['xcip']-parmig['ox'])/(parmig['dx'])
+iycip=(par['ycip']-parmig['oy'])/(parmig['dy'])
+izcip=(par['zcip']-parmig['oz'])/(parmig['dz'])
+
+fdmod.point3d('cc',par['xcip'],par['ycip'],par['zcip'],par)
+Plot('cc',graphyx('plotfat=20 symbol=* plotcol=1',par))
+Plot('cczx',
+     'cc','window j1=2 |' +
+     fdmod.rrplot('plotfat=10 symbol=* plotcol=1'+overlay,par))
+
+# ------------------------------------------------------------
+# prepare for angle decomposition
+cco = {'n':181,'o':-91,'d':1}
+jc=15;
+jr=15;
+polar.ovl('ovl',jc,jr,'',cco)
+
+# reflector normal
+nx=0.08
+ny=0.17
+nz=1.00
+nn=math.sqrt(nx*nx+ny*ny+nz*nz)
+Flow('ncip',None,'spike nsp=3 n1=3 mag=%g,%g,%g k1=1,2,3'%(nx/nn,ny/nn,nz/nn))
+
+# ------------------------------------------------------------
+# smooth velocity for angle decomposition
+Flow('vpro','velo','window n1=1 min1=%(xcip)g n2=1 min2=%(ycip)g'%par)
+Flow('vsmo','vpro','smooth rect1=50')
+Result('vcomp','vpro vsmo','cat axis=2 space=n ${SOURCES[1]} | graph')
+
+Flow('velp','velo',
+     '''
+     window n1=1 min1=%(xcip)g n2=1 min2=%(ycip)g|
+     smooth rect1=50 | 
+     window n1=1 min1=%(zcip)g 
+     '''%par)
+Flow('vels','velp','scale rscale=0.5')
+Flow('vcip','velp vels','cat axis=2 space=n ${SOURCES[1]} | transp')
+
+# ------------------------------------------------------------
+# velocity
+velo="data/seam/vp.hh"
+Flow('velo',None,
+     'window j1=2 j2=2 j3=%d <%s'%(par['jz'],velo),local=1)
+
+Result('velo','transp plane=23 | transp plane=12 |'
+       +fdmod.ccut3d('|',parmig)
+       +'byte gainpanel=a pclip=99.9 allpos=y bias=1.5 |'
+       +fdmod.cgrey3d('frame1=%d frame2=%d frame3=%d color=E'%(izcip,ixcip,iycip)+par['labelrot0'] ,parmig))
+
+Plot('vslice','velo',
+     'window n3=1 f3=%d | transp |'%izcip+
+     'reverse which=1 | put o1=%g d1=-%g |'%(par['ymax'],2*par['dy']) +
+     greyyx('',par))
+Result('vpall',['vslice','ss2793','ss0725','ss0357','cc','ss'],'Overlay')
+Result('vpwin',['vslice',                  'ss0357','cc','ss'],'Overlay')
+for k in range(klist):
+    ktag = '-%06d' % nlist[k]
+    Result('vpmig'+ktag,['vslice','rr'+ktag,'ss0357','cc','ss'+ktag],'Overlay')
+
+# ------------------------------------------------------------
+# velocity slice
+Plot('vcut','velo',
+     'window n2=1 min2=%(ycip)g | transp |'%par
+     + fdmod.cgrey('pclip=100 color=E allpos=y bias=1.5'+section,par))
+Result('vcut',['vcut','cczx'],'Overlay')
+
+
+# ------------------------------------------------------------
+# slowness
+Flow('slow','velo','window n3=%(nzmig)d | math output="1/input"'%par)
+Plot('scut','slow',
+     'window n2=1 min2=%(ycip)g | transp |'%par
+     + fdmod.cgrey('pclip=99.9 color=j allpos=y bias=0.2'+section,par))
+Result('scut',['scut','cczx'],'Overlay')
+
+Flow('sxy','slow','window n3=1')
+Flow('syx','sxy','transp')
+
+# datuming slowness (0.015km up to the surface; v=1.49km/s)
+Flow('slod',None,
+     '''
+     spike nsp=1 mag=1.49
+     n1=%(nx)d o1=%(ox)g d1=%(dx)d
+     n2=%(ny)d o2=%(oy)g d2=%(dy)d
+     n3=2      o3=%(oz)g d3=0.015 |
+     math output="1/input"
+     ''' %par)
+
+# ------------------------------------------------------------
+# wavelet
+wavelet="data/seam/SEAM_wavelet-g_8ms.sgy"
+Flow(  'wavelet',wavelet,'segyread tape=$SOURCE tfile=/dev/null format=5',local=1)
+Result('wavelet','window n1=100 | graph title="" pclip=100 grid=y')
+
+Flow('wvl',None,
+     '''
+     spike nsp=1 mag=1
+     n1=%(nt)d d1=%(dt)g  o1=%(ot)g label1=%(lt)s  unit1=%(ut)s
+     k1=15 l1=15
+     '''%par)
+encode.time2freq('wvl','frq',par)
+
+# source data (frq)
+Flow('sfrq','frq',
+     '''
+     pad beg1=%d n1out=%d beg2=%d n2out=%d |
+     ''' %( (par['nrx']-1)/2/par['jx'],
+            (par['nrx']-1)/1/par['jx']+1,
+            (par['nry']-1)/2/par['jy'],
+            (par['nry']-1)/1/par['jy']+1) +
+     '''
+     put o1=%g d1=%g o2=%g d2=%g 
+     ''' %( par['orx'],
+            par['drx']*par['jx'],
+            par['ory'],
+            par['dry']*par['jy']))
+
+# ------------------------------------------------------------
+# data taper
+Flow('taper',None,
+     '''
+     spike nsp=1 mag=1
+     n1=%d k1=%d l1=%d
+     n2=%d k2=%d l2=%d
+     n3=%d |
+     smooth rect1=50 rect2=50 |
+     rtoc
+     ''' % (par['nmx'],51,par['nmx']-50,
+            par['nmy'],51,par['nmy']-50,
+            par['nw']) )
+
+# ------------------------------------------------------------
+# data
+for k in range(klist):
+    ktag = '-%06d' % nlist[k]
+#    print "SOURCE_0%d.sgy" %nlist[k]
+
+    # SEGY to RSF (input is IEEE format)
+    Flow(['data'+ktag,'head'+ktag],None,
+         'segyread tape=data/seam/SOURCE_0%d.sgy format=5 tfile=${TARGETS[1]}|'%nlist[k] +
+         '''
+         put                              label1=%(lt)s  unit1=%(ut)s
+         n2=%(nry)d o2=%(ory)g d2=%(dry)g label2=%(lry)s unit2=%(ury)s
+         n3=%(nrx)d o3=%(orx)g d3=%(drx)g label3=%(lrx)s unit3=%(urx)s |
+         window n1=%(nt)d j2=%(jy)d j3=%(jx)d |
+         transp plane=23 |
+         window f1=250 | pad beg1=250 |
+         bandpass flo=3 fhi=15
+         ''' %par,local=1)
+
+    Result('dcut'+ktag,
+           'data'+ktag,
+           '''
+           window n3=1 min3=0 |
+           grey title="" pclip=99
+           ''')
+
+    # receiver data (frq)
+    encode.time2freq('data'+ktag,'rfrq'+ktag,par)
+
+    Flow('rtap'+ktag,['rfrq'+ktag,'taper'],
+         '''
+         pad beg1=%(nxpad)d n1out=%(nmx)d beg2=%(nypad)d n2out=%(nmy)d |
+         math t=${SOURCES[1]} output="input*t" |
+         ''' %par +
+         '''
+         put o1=%g o2=%g
+         ''' % (xlist[k]-par['hmx']*par['drx']*par['jx'],
+                ylist[k]-par['hmy']*par['dry']*par['jy']))
+
+    Flow('stap'+ktag,['sfrq','taper'],
+         '''
+         pad beg1=%(nxpad)d n1out=%(nmx)d beg2=%(nypad)d n2out=%(nmy)d |
+         math t=${SOURCES[1]} output="input*t" |
+         ''' %par +
+         '''
+         put o1=%g o2=%g
+         ''' % (xlist[k]-par['hmx']*par['drx']*par['jx'],
+                ylist[k]-par['hmy']*par['dry']*par['jy']))
+
+# ------------------------------------------------------------
+# MIGRATION
+# ------------------------------------------------------------
+par['nhz']=0
+par['nhx']=20
+par['nhy']=20
+par['nht']=25
+par['dht']=par['dt']
+adcig.hparam(3.0,
+             2*par['nhx']+1,-par['nhx']*par['dx'] ,par['dx'],
+             2*par['nhy']+1,-par['nhy']*par['dy'] ,par['dy'],
+             2*par['nht']+1,-par['nht']*par['dht'],par['dht'],
+             par)
+
+for k in range(klist):
+    ktag = '-%06d' % nlist[k]
+    
+    # upward datuming (s - anticausal, r - causal)
+    wei.dtm('dfs'+ktag,'stap'+ktag,'slod','causal=n',par)
+    wei.dtm('dfr'+ktag,'rtap'+ktag,'slod','causal=y',par)
+
+    for i in (['s','r']):
+        Result('df'+i+ktag,
+               '''
+               window j1=2 j2=2 f3=20 n3=60 |
+               real |
+               transp plane=23 | transp plane=12 |
+               byte gainpanel=a pclip=99 |
+               ''' %parmig
+               + fdmod.cgrey3d('frame1=30 frame2=%d frame3=%d label1=f unit1=Hz'%(ixcip,iycip)+par['labelrot0'],parmig))
+
+    # ------------------------------------------------------------
+    # migration
+    # ------------------------------------------------------------
+    wei.hicmig('cic'+ktag,'eic'+ktag,'dfs'+ktag,'dfr'+ktag,'slow','cc','',par)
+    
+    # remap image on the slowness grid
+    Flow('cwn'+ktag,
+         ['cic'+ktag,'sxy','syx'],
+         '''
+         remap1 pattern=${SOURCES[1]} order=1 |
+         transp |
+         remap1 pattern=${SOURCES[2]} order=1 |
+         transp
+         ''')
+ 
+    Plot('ccut'+ktag,'cwn'+ktag,
+         'window n2=1 min2=%(ycip)g | transp |'%par
+         +fdmod.cgrey('pclip=99.9'+section,par))
+    Result('ccut'+ktag,['ccut'+ktag,'cczx'],'Overlay')
+    
+    # ------------------------------------------------------------
+    # angle decomposition
+    # ------------------------------------------------------------
+    Flow('pang'+ktag,['eic'+ktag,'ncip','vcip'],
+         'hic2ang adj=y verb=y anis=n nor=${SOURCES[1]} vel=${SOURCES[2]}')
+    polar.p2c('pang'+ktag,'cang'+ktag,cco)
+
+# ------------------------------------------------------------
+# CIC stack
+Flow('cstk',
+     map(lambda k: 'cwn-%06d' % nlist[k],range(klist)),
+     '''
+     cat axis=4 space=n ${SOURCES[1:%d]} |
+     transp plane=34 | transp plane=23 |
+     stack 
+     '''%len(range(klist)))
+Result('cstk','transp plane=23 | transp plane=12 |'
+       +fdmod.ccut3d('|',parmig)
+       +'byte gainpanel=a pclip=99.0 |'
+       +fdmod.cgrey3d('frame1=%d frame2=%d frame3=%d'%(izcip,ixcip,iycip)+par['labelrot0'],parmig))
+
+Plot('ccut','cstk',
+     'window n2=1 min2=%(ycip)g | transp |'%par
+     +fdmod.cgrey('pclip=99.0'+section,par))
+Result('ccut',['ccut','cczx'],'Overlay')
+
+# ------------------------------------------------------------
+# EIC stack
+Flow('estk',
+     map(lambda k: 'eic-%06d' % nlist[k],range(klist)),
+     '''
+     cat axis=5 space=n ${SOURCES[1:%d]} |
+     transp plane=45 | transp plane=34 | transp plane=23 |
+     stack
+     '''%len(range(klist)))
+Result('estk',
+	'byte gainpanel=a pclip=100 |'
+	+ 'window | transp plane=23 | transp plane=12 |'
+	+ adcig.hgrey(par['labelrot2'],par))
+
+# ------------------------------------------------------------
+# ADCIG stack
+Flow('pang',['estk','ncip','vcip'],
+     'hic2ang adj=y verb=y anis=n nor=${SOURCES[1]} vel=${SOURCES[2]}')
+polar.p2c('pang','cang',cco)
+
+Result('pang',polar.polplot('color=E pclip=100',par))
+Plot  ('cang',polar.carplot('color=E pclip=100',par))
+Result('cang',['cang','ovl'],'Overlay')
+
+# ------------------------------------------------------------
+Flow('cwn-byt',
+     map(lambda k:  'cwn-%06d' % nlist[k],range(klist)),
+     'cat axis=4 space=n ${SOURCES[1:%d]} | byte gainpanel=a pclip=99.0'%klist)
+Flow('eic-byt',
+     map(lambda k:  'eic-%06d' % nlist[k],range(klist)),
+     'cat axis=5 space=n ${SOURCES[1:%d]} | byte gainpanel=a pclip=99.9'%klist)
+Flow('pang-byt',
+     map(lambda k: 'pang-%06d' % nlist[k],range(klist)),
+     'cat axis=3 space=n ${SOURCES[1:%d]} | byte gainpanel=a pclip=99.9'%klist)
+Flow('cang-byt',
+     map(lambda k: 'cang-%06d' % nlist[k],range(klist)),
+     'cat axis=3 space=n ${SOURCES[1:%d]} | byte gainpanel=a pclip=100 '%klist)
+
+for k in range(klist):
+    ktag = '-%06d' % nlist[k]
+
+    # CIC
+    Result('cwn'+ktag,
+	   'cwn-byt',
+	   'window n4=1 f4=%d | transp plane=23 | transp plane=12 |'%k +
+	   fdmod.ccut3d('|',parmig) +
+           fdmod.cgrey3d('frame1=%d frame2=%d frame3=%d'%(izcip,ixcip,iycip)+par['labelrot0'],parmig))
+
+    # EIC
+    Result('eic'+ktag,
+           'eic-byt',
+	   'window n5=1 f5=%d | transp plane=23 | transp plane=12 |'%k +
+	   adcig.hgrey(par['labelrot2'],par))
+
+    # ADCIG (polar)
+    Result('pang'+ktag,
+           'pang-byt','window n3=1 f3=%d |'%k +
+           polar.polplot('color=E',par))
+
+    # ADCIG (Cartesian)
+    Plot  ('cang'+ktag,
+           'cang-byt','window n3=1 f3=%d |'%k +
+           polar.carplot('color=E',par))
+    Result('cang'+ktag,['cang'+ktag,'ovl'],'Overlay')
+    
+# ------------------------------------------------------------
+# ------------------------------------------------------------
+# ------------------------------------------------------------
+# ------------------------------------------------------------
+
+
+End()

@@ -1,0 +1,90 @@
+from rsf.proj import *
+from rsf.gallery import constant
+
+constant.get_zodata('data')
+Result('data','grey title="Zero Offset" ')
+
+Flow('vel','data','window n2=1 | math output=1')
+
+Flow('mig','data vel','kirchnew velocity=${SOURCES[1]} adj=1')
+
+constant.zo_image('mig')
+
+Flow('inv err','data vel','kirchinv velocity=${SOURCES[1]} niter=10 ps=1 err=${TARGETS[1]}')
+
+Result('inv','window min2=0 max2=1.5 | grey title="Kirchhoff Inversion" ')
+
+Flow('inv2','data vel mig','conjgrad kirchnew velocity=${SOURCES[1]} niter=10 ps=1 mod=${SOURCES[2]}')
+
+Result('inv2','window min2=0 max2=1.5 | grey title="Kirchhoff Inversion" ')
+
+Result('err',
+       '''
+       graph labelsz=10 titlesz=12 unit1= unit2=
+       title="Misfit error"
+       ''')
+
+# new codes test
+
+Flow('inv_sparse err_sparse','data vel',
+     '''
+     kirchinvs velocity=${SOURCES[1]} niter=2 liter=5 ps=1
+     err=${TARGETS[1]} verb=1
+     ''')
+
+Result('inv_sparse',
+       '''
+       window min2=0 max2=1.5 |
+       grey title="Kirchhoff Inversion with Sparsity Promotion"
+       ''')
+
+Result('err_sparse',
+       '''
+       graph labelsz=10 titlesz=12 unit1= unit2=
+       title="Misfit error KISP"
+       ''')
+
+# Impulse response
+
+constant.get_impulse('imp','data')
+
+Flow('imig','imp vel','kirchnew velocity=${SOURCES[1]} adj=1')
+
+constant.impulse_response('imig')
+
+Flow('iinv ierr','imp vel',
+     '''
+     kirchinv velocity=${SOURCES[1]} niter=5 ps=1 err=${TARGETS[1]}
+     ''')
+
+Flow('iinv_sparse ierr_sparse','imp vel',
+     '''
+     kirchinvs velocity=${SOURCES[1]} niter=2 liter=5 ps=1 verb=1
+     err=${TARGETS[1]}
+     ''')
+
+Result('iinv',
+       '''
+       window max1=3 |
+       grey title="Kirchhoff Inversion Impulse Response"
+       ''')
+
+Result('ierr',
+       '''
+       graph labelsz=10 titlesz=12
+       unit1= unit2= title="Misfit error"
+       ''')
+
+Result('iinv_sparse',
+       '''
+       window max1=3 |
+       grey title="Kirchhoff Inversion Impulse Response"
+       ''')
+
+Result('ierr_sparse',
+       '''
+       graph labelsz=10 titlesz=12 unit1= unit2=
+       title="Misfit error"
+       ''')
+
+End()

@@ -1,0 +1,138 @@
+from rsf.proj import *
+from rsf.recipes.beg import server as private
+
+head = 'jupiter_win.H@@'
+data = 'jupiter_win.H'
+
+Fetch([head,data],'jupiter',private)
+Flow('head',head,'dd form=native | window n1=4 f1=11')
+Flow('data',data,'dd form=native')
+
+Flow('cmpx','head','window n1=1 j2=10')
+Flow('cmpy','head','window n1=1 f1=1 j2=10')
+Flow('offset',head,'dd form=native | window n1=1 f1=15')
+
+Result('cmp-win','cmpx cmpy',
+       '''
+       cmplx ${SOURCES[:2]} |
+       graph label1="In-line midpoint" label2="Cross-line midpoint" 
+       symbol=x title="CMP distribution"
+       ''',stdin=0)
+
+Fetch('vnmo.H','jupiter',private)
+Flow('vnmo','vnmo.H','dd form=native')
+
+Flow('vel','vnmo head',
+     '''
+     transp memsize=500 | transp plane=23 memsize=500 |
+     enoint2 head=${SOURCES[1]} xkey=0 ykey=1 |
+     transp memsize=500
+     ''')
+Flow('nmo','data vel offset',
+     '''
+     spray axi2=2 n=1 |
+     nmo velocity=${SOURCES[1]} offset=${SOURCES[2]} slowness=y half=n |
+     window n1=250 f1=100
+     ''')
+Flow('dat','nmo head','transp memsize=500 | put head=${SOURCES[1]}')
+Flow('bin fold','dat',
+     '''
+     bin xkey=0 ykey=1 fold=${TARGETS[1]}
+     nx=282 x0=13584 dx=25 ny=94 y0=17372 dy=25
+     ''')
+
+Result('fold-win','fold',
+       '''
+       grey allpos=y pclip=100
+       transp=n yreverse=n scalebar=1
+       label1="In-line midpoint" label2="Cross-line midpoint"
+       wheretitle=t wherexlabel=b
+       title="Fold Map"
+       ''')
+
+def grey3(title):
+    return '''
+    transp memsize=500 plane=23 | transp memsize=500 |
+    byte gainpanel=all |
+    grey3 title="%s"
+    flat=y point1=0.75 point2=0.75
+    frame1=164 frame2=142 frame3=56
+    label1=Time label2="In-line" label3="Cross-line"
+    unit1=s unit2= unit3= 
+    ''' % title
+
+Result('bin-win','bin',grey3('Binning'))
+
+Flow('bank nh lag',None,
+     '''
+     splinebank pmax=4 np=400 nh=${TARGETS[1]} lag=${TARGETS[2]}
+     nt=100 niter=20 eps=0.0001
+     ''')
+
+Flow('spike',None,'spike n1=40 n2=40 nsp=2 k1=11,16 k2=8,3 mag=1,-1')
+Flow('input',None,'spike n1=40 n2=40 nsp=2 k1=31,28 k2=24,16 mag=1,-1')
+
+grey = 'grey pclip=100 wantaxis=n crowd=.85 gpow=.7'
+
+splin = []
+for t in (0,3,7,10):
+    tension = t*0.1
+    tens = 'tens%g' % t
+    lags = 'lags%g' % t
+    Flow([tens,lags],None,
+         'tspline tension=%g eps=5.e-3 lag=${TARGETS[1]}' % tension)
+    inp = 'inp%g' % t
+    div = 'div%g' % t
+    bak = 'bak%g' % t
+    Flow(inp,['spike','input',tens],
+         'helicon filt=${SOURCES[2]} | add ${SOURCES[1]}')
+    Flow(div,[inp,tens],'helicon div=1 filt=${SOURCES[1]}')
+    Flow(bak,[div,tens],'helicon div=1 adj=1 filt=${SOURCES[1]}')
+    Plot(inp,grey + ' clip=1 title="tension=%g" ' % tension)
+    Plot(div,grey + ' clip=1 title=input/filter')
+    Plot(bak,grey + ' title="(input/filter)/filter\'" ')
+    Plot(tens,[inp,div,bak],'SideBySideAniso')
+    splin.append(tens)
+
+Result('splin',splin,'OverUnderAniso',vppen='vpstyle=n txscale=4')
+
+Flow('smo2','dat tens0',
+     'invbin xkey=0 ykey=1 filt=${SOURCES[1]} nx=282 x0=13584 dx=25 ny=94 y0=17372 dy=25 niter=50')
+
+Result('smo2-win','smo2',grey3('Smoothing Preconditioning'))
+
+Flow('dip','smo2',
+     'dip niter=10 n4=0 rect1=5 rect2=5 rect3=5 verb=y')
+
+Flow('pch','dip',
+     'math output="0.5+0.5*(input/%g+1)*%d" | dd type=int' % (4,399))
+
+Flow('int4','dat bank pch',
+     '''
+     invbin xkey=0 ykey=1 interp=4 stat=n
+     filt=${SOURCES[1]} pch=${SOURCES[2]}
+     nx=282 x0=13584 dx=25 ny=94 y0=17372 dy=25 niter=50 |
+     postfilter2 nw=4
+     ''')
+
+Result('int4-win','int4',grey3('Plane-wave Preconditioning'))
+
+bins = []
+ints = []
+for slice in (132,164,196,228):
+    bin = 'bin%d' % slice
+    int = 'int%d' % slice
+    grey = '''
+    window n3=1 f3=%d |
+    grey crowd1=0.8 title="t=%g"
+    labelsz=18 titlesz=24 transp=n
+    ''' % (slice,0.4+slice*0.004)
+    Plot(bin,'bin',grey)
+    Plot(int,'int4',grey)
+    bins.append(bin)
+    ints.append(int)
+Plot('int',ints,'OverUnderAniso')
+Plot('bin',bins,'OverUnderAniso')
+Result('winslice','bin int','SideBySideAniso')
+
+End()

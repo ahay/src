@@ -1,0 +1,180 @@
+\title{Marmousi2 model}
+\author{Trevor Irons}
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\maketitle
+
+\noindent
+\textbf {Data Type:} \emph{Synthetic 2D elastic model}\\
+\textbf {Source:} \emph{Allied Geophysical Laboratories (AGL)}\\
+\textbf {Location:} \emph{http://www.agl.uh.edu/}\\
+\textbf {Format:} \emph{SEGY} \\
+\textbf{Date of origin:} \emph{Development occured from 2002-2005}\\
+
+\section{Introduction}
+The Marmousi2 dataset is an extension and elastic upgrade of the classic Marmousi model. It was created by Allied Geophysical 
+Laboratories (AGL).  The Marmousi2 model has enjoyed widespread use and has been particularily insightful in amplitude versus
+offset (AVO) analysis, impedance inversion, multiple attenuation, and multicomponent imaging.  AGL has publically released 
+the data for reasearch use around the world.   
+
+Table \ref{tbl:FILES} contains all the Marmousi2 files contained within the Madagascar repository.  
+
+\tabl{FILES}{A list of all files contained in the Marmousi2 repository}
+{
+\tiny
+\lstinputlisting[frame=single]{FILES}
+\normalsize
+}
+
+\section{model}
+The Marmousi2 model completely encapsulates the origional Marmousi model which was based on the Northern Quenguela Trough 
+in the Quanza Basin of Angola.  Lithologies include sandstones,shales, limestones and marls.    
+
+In total the Marmousi2 model is 3.5 km in depth and 17 km across.  The model contains 199 horizons which make the model 
+stratigraphicaly more complex than its predecessor.  Additionally the water layer was extended to 450 meters.   
+
+As Marmousi2 is an elastic model both shear and primary velocities must be defined across the entire model.  
+Additionally a density model is included.  
+The files \emph{vp\_marmousi-ii.segy}, \emph{vs\_marmousi-ii.segy}, and \emph{density\_marmousi-ii.segy} contain the velocity and 
+density models for Marmousi2.  These three files all share the same data spacing and their headers should be formatted similarily.
+This header format is shown in table \ref{tbl:modelHeader}
+
+\tabl{modelHeader}{Header information for Marmousi2 velocity and density models}
+{
+\begin{center}
+\begin{tabular}[t]{|llllll|}
+        \hline
+        n1=2801    &   o1=0 &   d1=0.001249    &    label1=Depth     &  unit1=km &  \\
+        n2=13601   &   o2=0 &   d2=0.001249    &    label2=Position  &  unit2=km &  \\
+        \hline
+\end{tabular}
+\end{center}
+}
+
+
+The file \emph{marmousi2\slash model\slash SConstruct} is a SCons script that fetches the three model files (VP, VS, and Density), 
+appends the header information as necessary and produces plots of the models.  This file is reproduced in table 
+\ref{tbl:modelSConstruct} and the models themselves are shown in figures \ref{fig:vp}, \ref{fig:vs}, and \ref{fig:density}.   
+
+\tabl{modelSConstruct}{SCons script generating images of the Marmousi2 model}
+{
+\tiny
+\lstinputlisting[frame=single]{model/SConstruct}
+\normalsize
+}
+
+\inputdir{model}
+\plot{vp}{width=\textwidth}{Marmousi2 P-wave velocity model}
+\plot{vs}{width=\textwidth}{Marmousi2 S-wave velocity model}
+\plot{density}{width=\textwidth}{Marmousi2 Density Model}
+
+\section{Shots}
+Three sets of data were collected over this model.  A near surface streamer survey, a vertical souding profile (VSP), and 
+an ocean bottom cable (OBC) survey.  Several sets of shot records are included in the Marmousi2 repository; 
+multicomponent OBC data found in \emph{obc\_vx\_\#.segy} and\emph{obc\_vz\_\#.segy},  
+reduced data from the OBC cable found in \emph{obc\_div\_v\_\#.segy} and \emph{obc\_curl\_v\_\#.segy}, and
+streamer cable data found in \emph{surface\_p\#.segy}.  Each of these files was split into components to make them more 
+managable.  The  \# symbol above corresponts to either part number 1 or 2. 
+
+In all cases the source was an airgun located on a ship at depth of 10 m.  The source began firing at 3 000 m along the horizontal x 
+coordinate and continued firing every 25 m until 14 975 m.  
+
+\subsection{OBC Surveys}
+The OBC cable was placed on the ocean floor at a depth of roughly 450 m.  Multicomponent phones were spaced every 12.32 m along the
+entire length of the model.  As the model is 2D only the x and z components of the wavefield were measured.  
+Marmousi2 OBC survey data should have header information configured as shown in table \ref{tbl:OBCheader}.
+
+\tabl{OBCheader}{Header information for Marmousi2 ocean bottom cable surveys}
+{
+\begin{tabular}[t]{|llllll|}
+        \hline
+        n1=2500    &   o1=0     &   d1=0.002    &    label1=Depth\ Z     &  unit1=s  &  \\
+        n2=1381    &   o2=0     &   d2=12.32    &    label2=Position\ X  &  unit2=m  &  \\
+	n3=480 	   &   o3=3000  &   d3=25	&    label3=Shot-Coord   &  unit2=m  &  \\
+        \hline
+\end{tabular}
+}
+
+
+\subsubsection{OBC Vz data}
+The file \emph{marmousi2\slash vz \slash SConstruct} contains a SCons script that fetches the Vz component
+data files from the OBC survey, concatinates the segments, appends the header making a 
+three axis file, (time, offset, and shot) and produces several plots of the data.  This file is reproduced in table 
+\ref{tbl:VzSConstruct}.  
+
+\tabl{VzSConstruct}{SCons script generating images of the Marmousi2 Vz data}
+{
+\tiny
+\lstinputlisting[frame=single]{vz/SConstruct}
+\normalsize
+}
+
+\subsubsection{OBC Vx data}
+Similar to the Vz data the file \emph{marmousi2 \slash vx \slash SConstruct} contains a list of rules that tell
+Madagascar to gather the Vx data files, append the header and produce plots of the data.  This script is reproduced 
+in table \ref{tbl:VxSConstruct}
+\tabl{VxSConstruct}{SCons script generating images of the Marmousi2 Vx data}
+{
+\tiny
+\lstinputlisting[frame=single]{vz/SConstruct}
+\normalsize
+}
+
+
+\subsubsection{OBC div data}
+The divergence operator was applied to the multicomponent OBC Pluto dataset.  These files are \emph{obc\_div\_v\_1.segy} and 
+\emph{obc\_div\_v\_2.segy}.  Taking the divergence separates out the acoustic component of the data.    
+
+The file \emph{marmousi2 \slash div \slash SConstruct} contains a list of rules that tell Madagascar to gather the 
+div data files, append the header and produce plots of the data.  This script is reproduced 
+in table \ref{tbl:divSConstruct} and a plot of shot 50 is shown in figure \ref{fig:divShot50}
+
+\tabl{divSConstruct}{SCons script generating images of the Marmousi2 Vx data}
+{
+\tiny
+\lstinputlisting[frame=single]{div/SConstruct}
+\normalsize
+}
+
+\inputdir{div}
+\plot{movie}{width=\textwidth}{Marmousi2 shot 50 of div data.}
+
+
+\subsubsection{OBC curl data}
+Similarily the curl operator was applied to the Pluto OBC data.  These files are \emph{obc\_curl\_v\_1.segy} and \emph{
+obc\_curl\_v\_2.segy}  These curl data contain only data generated by the elastic component of the field.  
+
+The file \emph{marmousi2 \slash curl \slash SConstruct} contains a list of rules that tell Madagascar to gather the 
+curl data files, append the header and produce plots of the data.  This script is reproduced 
+in table \ref{tbl:curlSConstruct}
+\tabl{curlSConstruct}{SCons script generating images of the Marmousi2 curl data}
+{
+\tiny
+\lstinputlisting[frame=single]{curl/SConstruct}
+\normalsize
+}
+
+\subsection{Streamer Surveys}
+The streamer survey was not traditional in the sense that it employed a 17 km long static streamer which spanned the entire
+model.  In total there were 1 361 single component hydrophones spaced every 12.5 m at a depth of 5 m.  This unrealistic geometry
+was chosen both for simplicity and to allow maximum utility of the data.  The table \ref{tbl:streamerHeader} outlines the 
+values that streamer data files headers should have.    
+
+\tabl{streamerHeader}{Header information for Marmousi2 streamer surveys}
+{
+\begin{tabular}[t]{|llllll|}
+        \hline
+        n1=2500    &   o1=0     &   d1=0.002    &    label1=Depth\ Z     &  unit1=s  &  \\
+        n2=1361    &   o2=0     &   d2=12.5     &    label2=Position\ X  &  unit2=m  &  \\
+	n3=480 	   &   o3=3000  &   d3=25	&    label3=Shot-Coord   &  unit2=m  &  \\
+        \hline
+\end{tabular}
+}
+
+\section{Finite Difference Modeling}
+Madagascar may be used to perform finite difference modeling of the wavefield and receiver data.  The tools to perform these tasks are
+found in the fdmod package.    
+
+Note, these processes are somewhat computationally intensive.  I performed the majority of these models on a machine with a 3 GHz 
+processor and 1.5 MB of RAM and most of the models took on the order of 3 hours to perform.     
+
+

@@ -1,0 +1,87 @@
+from rsf.proj import *
+
+Flow('time',None,
+     'math n1=200 d1=1 o1=1 output="(x1-1)*0.4" ')
+Flow('head','time',"window n1=41 | math output='exp(0.25*input)+11'")
+Flow('ideal','time',"math output='sin(input)*0.5'")
+Flow('alias','head',"math output='sin(input)*0.5' | put head=$SOURCE")
+
+doty = '''
+dots dots=0 connect=0 gaineach=0 constsep=1 strings=0 clip=1.2 label1=Sample
+'''
+
+Flow('data','alias','bin1 nx=200 dx=0.4 x0=0')
+Plot('data',doty + ' strings=1 d1=1 o1=1')
+Plot('ideal',doty + ' connect=1')
+Plot('both','data ideal','Overlay')
+Result('data','both data','SideBySideAniso')
+
+doty = doty + ' connect=1 d1=1 o1=1'
+
+name = 'if'
+title = ['Regularization','Preconditioning']
+for prec in [0,1]:
+    iters = []
+    res = name[prec] + 'm'
+    labels = ''
+    for niter in [1,5,10,25,250]:
+        iter = res + str(niter)
+        iters.append(iter)
+        Flow(iter,'alias',
+             'invbin1 nx=200 dx=0.4 x0=0 filter=1 prec=%d verb=%d niter=%d' % (prec,prec,niter))
+        labels = labels + 'iter=%d:' % niter
+        Plot(iter,doty + ' overlap=2 ')
+    Result(res,iters,
+           '''
+           cat axis=2 ${SOURCES[1:%d]} | %s connect=1 overlap=2
+           title=%s labels=%s labelsz=10 
+           ''' % (len(iters),doty,title[prec],labels))
+
+Result('im1','data im250','Overlay')
+Result('fm1','data fm250','Overlay')
+
+niter=250
+iter=5
+Result('early1','im%d fm%d fm%d' % (iter,iter,niter),
+       '''
+       cat axis=2 ${SOURCES[1:3]} | %s
+       labels=regul.%d:precon.%d:precon.%d labelsz=10
+       ''' % (doty,iter,iter,niter))
+
+for prec in [0,1]:
+    iters = []
+    error = name[prec] + 'e'
+    for niter in range(100):
+        iter = error + str(niter)
+        iters.append(iter)
+        Flow(iter,['alias',name[prec]+'m250'],
+             '''
+             invbin1 nx=200 dx=0.4 x0=0
+             filter=1 prec=%d niter=%d |
+             math refer=${SOURCES[1]} output="(input-refer)^2" |
+             stack axis=1 norm=no | math output="sqrt(input)"
+             ''' % (prec,niter+1))
+    Flow(error,iters,'cat axis=1 ${SOURCES[1:%d]}' % len(iters))
+
+Result('schwab1','ie fe',
+       '''
+       cat axis=2 ${SOURCES[1]} | put d1=1 o1=0 |
+       graph label1="Iterations" label2="Error"
+       symbol="md" symbolsz=7,7 
+       title="Model Residual Vector Length"
+       min2=0 min1=-1
+       ''')
+
+Flow('fm6','alias',
+     'invbin1 nx=200 dx=0.4 x0=0 filter=6 prec=y niter=250 eps=0.01')
+Plot('fm6',doty + ' overlap=2 ')
+Result('fm6','data fm6','Overlay')
+
+Flow('pm1','alias',
+     'invbin1 nx=200 dx=0.4 x0=0 filter=1 pef=y prec=y niter=250 eps=0.01')
+Plot('pm1',doty + ' overlap=2 ')
+Result('pm1','data pm1','Overlay')
+ 
+###########################################################################
+
+End()

@@ -1,0 +1,37 @@
+from rsf.proj import *
+    
+Fetch('wz.25.H','wz')
+Flow('data','wz.25.H',
+     'dd form=native | put label1=Time label2=Offset unit1=s unit2=km')
+
+pars = {
+    'perc':90,
+    'tpow':3.2,
+    'flo':20,
+    'rect':25
+    }
+
+Plot('data','grey title="Original Data"')
+Plot('gain','data',
+     '''
+     tpow tpow=%(tpow)g | 
+     grey pclip=%(perc)g title="Data with tpow=%(tpow)g pclip=%(perc)g"
+     ''' % pars)
+Result('gain','data gain','SideBySideAniso')
+
+Flow('filt','data','erf flo=%(flo)g rect=%(rect)g' % pars)
+Plot('filt',
+     '''
+     tpow tpow=%(tpow)g | 
+     grey pclip=%(perc)g title="High Pass"
+     ''' % pars)
+
+Result('filt','gain filt','SideBySideAniso')
+
+for case in ('data','filt'):
+    Flow('spec-'+case,case,'spectra')
+    Plot('spec-'+case,'grey title="FX spectrum" allpos=y')
+Result('spec','spec-data spec-filt','SideBySideAniso')
+
+
+End()

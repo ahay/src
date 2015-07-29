@@ -1,0 +1,748 @@
+\title{Reproducible computational experiments \\ using SCons}
+
+\lefthead{Fomel \& Hennenfent}
+\righthead{Reproducible research}
+
+\author{Sergey Fomel\/\footnotemark[1] and Gilles Hennenfent\/\footnotemark[2]}
+
+\footnotetext[1]{University of Texas at Austin, E-mail: sergey.fomel@beg.utexas.edu}
+\footnotetext[2]{Earth \& Ocean Sciences, University of British Columbia, E-mail: ghennenfent@eos.ubc.ca}
+
+\maketitle
+
+\begin{abstract}
+  SCons (from Software Construction) is a well-known open-source
+  program designed primarily for building software. In this paper, we
+  describe our method of extending SCons for managing data processing
+  flows and reproducible computational experiments. We demonstrate our
+  usage of SCons with a couple of simple examples.
+\end{abstract}
+
+\section{Introduction}
+
+This paper introduces an environment for reproducible computational
+experiments developed as part of the ``Madagascar'' software package.
+To reproduce the example experiments in this paper, you can download
+Madagascar from \url{http://www.ahay.org/}. At the moment, the
+main Madagascar interface is the Unix shell command line so that you
+will need a Unix/POSIX system (Linux, Mac OS X, Solaris, etc.) or Unix
+emulation under Windows (Cygwin, SFU, etc.)
+
+Our focus, however, is not only on particular
+tools we use in our research but also on the general philosophy of
+reproducible computations.
+
+\subsection{Reproducible research philosophy}
+
+Peer review is the backbone of scientific progress. From the ancient
+alchemists, who worked in secret on magic solutions to insolvable
+problems, the modern science has come a long way to become a social
+enterprise, where hypotheses, theories, and experimental results are
+openly published and verified by the community. By reproducing and
+verifying previously published research, a researcher can take new
+steps to advance the progress of science.
+
+Traditionally, scientific disciplines are divided into theoretical and
+experimental studies. Reproduction and verification of theoretical
+results usually requires only imagination (apart from pencils and
+paper), experimental results are verified in laboratories using
+equipment and materials similar to those described in the publication.
+
+During the last century, computational studies emerged as a new
+scientific discipline. Computational experiments are carried out on a
+computer by applying numerical algorithms to digital data. How
+reproducible are such experiments? On one hand, reproducing the result
+of a numerical experiment is a difficult undertaking. The reader needs
+to have access to precisely the same kind of input data, software and
+hardware as the author of the publication in order to reproduce the
+published result. It is often difficult or impossible to provide
+detailed specifications for these components. On the other hand, basic
+computational system components such as operating systems and
+file formats are getting increasingly standardized, and new components
+can be shared in principle because they simply represent digital
+information transferable over the Internet.
+
+The practice of software sharing has fueled the miraculously efficient
+development of Linux, Apache, and many other open-source software
+projects.  Its proponents often refer to this ideology as an analog of
+the scientific peer review tradition. Eric Raymond, a well-known
+open-source advocate, writes \cite[]{taoup}:
+\begin{quote}
+  Abandoning the habit of secrecy in favor of process transparency and
+  peer review was the crucial step by which alchemy became chemistry.
+  In the same way, it is beginning to appear that open-source
+  development may signal the long-awaited maturation of software
+  development as a discipline.
+\end{quote}
+While software development is trying to imitate science, computational
+science needs to borrow from the open-source model in order to sustain
+itself as a fully scientific discipline. In words of Randy LeVeque, a
+prominent mathematician \cite[]{randy},
+\begin{quote}
+  Within the world of science, computation is now rightly seen as a
+  third vertex of a triangle complementing experiment and
+  theory. However, as it is now often practiced, one can make a good
+  case that computing is the last refuge of the scientific scoundrel
+  [...]  Where else in science can one get away with publishing
+  observations that are claimed to prove a theory or illustrate the
+  success of a technique without having to give a careful description of
+  the methods used, in sufficient detail that others can attempt to
+  repeat the experiment? [...]  Scientific and mathematical journals are
+  filled with pretty pictures these days of computational experiments
+  that the reader has no hope of repeating. Even brilliant and well
+  intentioned computational scientists often do a poor job of presenting
+  their work in a reproducible manner. The methods are often very
+  vaguely defined, and even if they are carefully defined, they would
+  normally have to be implemented from scratch by the reader in order to
+  test them.
+\end{quote}
+
+In computer science, the concept of publishing and explaining computer
+programs goes back to the idea of \emph{literate programming} promoted
+by \cite{knuth} and expended by many other researchers
+\cite[]{thimbleby}. In his 2004 lecture on ``better programming'',
+Harold Thimbleby notes\footnote{\url{http://www.uclic.ucl.ac.uk/harold/}}
+\begin{quote}
+  We want ideas, and in particular programs, that work in one place to
+  work elsewhere. One form of objectivity is that published science
+  must work elsewhere than just in the author's laboratory or even
+  just in the author's imagination; this requirement is called
+  \emph{reproducibility}.
+\end{quote}
+
+\begin{comment}
+The quest for peer review and reproducibility is especially important
+for computational geosciences and computational geophysics in
+particular. The very first paper published in \emph{Geophysics} was
+titled ``Black magic in geophysical prospecting''
+\cite[]{GEO01-01-00010008,TLE02-03-00280031} and presented an account
+of different ``magical'' methods of oil explorations promoted by
+entrepreneurs in the early days of geophysical exploration industry.
+Although none of these methods exist today, it is not a secret that
+industrial practice is full of nearly magical tricks, often hidden
+besides a scientific appearance. Only a scrutiny of peer review and
+result verification can help us distinguish magic from science and
+advance the latter.
+\end{comment}
+
+Nearly ten years ago, the technology of reproducible research in
+geophysics was pioneered by Jon Claerbout and his students at the
+Stanford Exploration Project (SEP).  SEP's system of reproducible
+research requires the author of a publication to document creation of
+numerical results from the input data and software sources to let
+others test and verify the result reproducibility
+\cite[]{SEG-1992-0601,matt}.
+The discipline of reproducible research was also adopted and
+popularized in the statistics and wavelet theory community by
+\cite{donoho}. It is referenced in several popular wavelet theory
+books \cite[]{hubbard,mallat}. Pledges for reproducible research
+appear nowadays in fields as diverse as bioinformatics
+\cite[]{bioconductor}, 
+geoinformatics \cite[]{geo}, and computational
+wave propagation \cite[]{randy}. However, the adoption or reproducible
+research practice by computational scientists has been slow.
+Partially, this is caused by difficult and inadequate tools.
+
+\subsection{Tools for reproducible research}
+
+The reproducible research system developed at Stanford is based on
+``make \cite[]{make}'', a Unix software construction utility.
+Originally, SEP used ``cake'', a dialect of ``make''
+\cite[]{Nichols.sep.61.341,Claerbout.sep.67.145,Claerbout.sep.73.451,Claerbout.sep.77.427}.
+The system was converted to ``GNU make'', a more standard dialect, by
+\cite{Schwab.sep.89.217}.  The ``make'' program keeps track of
+dependencies between different components of the system and the
+software construction targets, which, in the case of a reproducible
+research system, turn into figures and manuscripts. The targets and
+commands for their construction are specified by the author in
+``makefiles'', which serve as databases for defining source and target
+dependencies. A dependency-based system leads to rapid development,
+because when one of the sources changes, only parts that depend on
+this source get recomputed.  \cite{donoho} based their system on
+MATLAB, a popular integrated development environment produced by
+MathWorks \cite[]{matlab}.  While MATLAB is an adequate tool for
+prototyping numerical algorithms, it may not be sufficient for
+large-scale computations typical for many applications in
+computational geophysics.
+
+``Make'' is an extremely useful utility employed by thousands of
+software development projects. Unfortunately, it is not
+well designed from the user experience prospective. ``Make'' employs
+an obscure and limited special language (a mixture of Unix shell
+commands and special-purpose commands), which often appears confusing
+to unexperienced users. According to Peter van der Linden, a software
+expert from Sun Microsystems \cite[]{linden},
+\begin{quote}
+  ``Sendmail'' and ``make'' are two well known programs that are
+  pretty widely regarded as originally being debugged into existence.
+  That's why their command languages are so poorly thought out and
+  difficult to learn. It's not just you -- everyone finds them
+  troublesome.
+\end{quote}
+The inconvenience of ``make'' command language is also in its limited
+capabilities.  The reproducible research system developed by
+\cite{matt} includes not only custom ``make'' rules but also an
+obscure and hardly portable agglomeration of shell and Perl scripts
+that extend ``make'' \cite[]{Fomel.sep.94.matt3}.
+
+Several alternative systems for dependency-checking software
+construction have been developed in recent years. One of the most
+promising new tools is SCons, enthusiastically endorsed by
+\cite{dubois}. The SCons initial design won the Software Carpentry
+competition sponsored by Los Alamos National Laboratory in 2000 in the
+category of ``a dependency management tool to replace make''.  Some of
+the main advantages of SCons are:
+\begin{itemize}
+\item SCons configuration files are Python scripts. Python is a modern
+  programming language praised for its readability, elegance,
+  simplicity, and power \cite[]{python1,python2}.
+  \cite{TLE21-03-02600267} recommend Python as the first programming
+  language for geophysics students.
+\item SCons offers reliable, automatic, and extensible dependency
+  analysis and creates a global view of all dependencies -- no more
+  ``make depend'', ``make clean'', or multiple build passes of
+  touching and reordering targets to get all of the dependencies.
+\item SCons has built-in support for many programming languages and
+  systems: C, C++, Fortran, Java, LaTeX, and others.
+\item While ``make'' relies on timestamps for detecting file changes
+  (creating numerous problems on platforms with different system
+  clocks), SCons uses by default a more reliable detection
+  mechanism employing MD5 signatures. It can detect changes not only
+  in files but also in commands used to build them.
+\item SCons provides integrated support for parallel builds.
+\item SCons provides configuration support analogous to the ``autoconf''
+  utility for testing the environment on different platforms.
+\item SCons is designed from the ground up as a cross-platform tool.
+  It is known to work equally well on both POSIX systems (Linux, Mac
+  OS X, Solaris, etc.) and Windows.
+\item The stability of SCons is assured by an incremental development
+  methodology utilizing comprehensive regression tests.
+\item SCons is publicly released under a liberal open-source license\footnote{As of time of this writing, SCons is in a beta version 0.96 approaching the 1.0 official release. See \url{http://www.scons.org/}.}
+\end{itemize}
+
+In this paper, we propose to adopt SCons as a new platform for
+reproducible research in scientific computing.
+
+\subsection{Paper organization}
+
+We first give a brief overview of ``Madagascar'' software package and
+define the different levels of user interactions. To demonstrate our
+adoption of SCons for reproducible research, we then describe a couple
+of simple examples of computational experiments and finally show how
+SCons helps us document our computational results.
+
+\section{Madagascar software package overview}
+%
+\inputdir{.}
+\plot{diag}{width=\textwidth}{caption}
+%
+``Madagascar'' is a multi-layered software package
+(Fig.~\ref{fig:diag}). Users can thus use it in different ways:
+%
+\begin{itemize}
+\item \textbf{command line}: ``Madagascar'' is first of all a
+  collection of command line programs. Most programs act as filters on
+  input data and can be chained in a Unix pipeline, e.g.
+\begin{verbatim}sfspike n1=200 n2=50 | sfnoise rep=y >noise.rsf\end{verbatim}\\
+Although these programs mainly focus at this point on geophysical
+applications, users can use the API (application programmer's
+interface) for writing their own software to manipulate Regularly
+Sampled Format (RSF) files, ``Madagascar'' file format. The main
+software language of ``Madagascar'' is C. Interfaces to other
+languages (C++, Fortran-77, Fortran-90, Python) are also provided.
+\item \textbf{processing flows}: ``Madagascar'' is also an environment
+  for reproducible numerical experiments in a very broad sense. These
+  numerical experiments (or ``computational recipes'') can be done not
+  only using ``Madagascar'' command line programs but also Matlab,
+  Mathematica, Python, or other seismic packages (e.g. SEP, Seismic
+  Unix). We adopted SCons for this part as we shall demonstrate later.
+\item \textbf{documentation}: the most upper layer of ``Madagascar''
+  and maybe the most critical for reproducible research is
+  documentation. ``Madagascar'' establishes a direct link between the
+  figures of a paper or a report and the codes that were used to
+  generate them. This layer uses SCons in combination with \LaTeX\ to
+  generate PDF, HTML, and MediaWiki files real easy and undoubtly
+  makes ``Madagascar'' an environment of choice for technology
+  transfer, report, thesis, and peer-reviewed publication writing.
+\end{itemize}
+
+\section{Example experiments}
+
+%
+The main \texttt{SConstruct} commands defined in our reproducible
+research environment are collected in Table~\ref{tbl:commands}.
+
+\tabl{commands}{Basic methods of an \texttt{rsf.proj} object.}{
+\begin{center}
+\begin{tabular}{|p{0.9\textwidth}|} \hline
+\noindent\texttt{Fetch(data\_file,dir[,ftp\_server\_info])}\\ \ \\
+\indent A rule to download \texttt{$<$data\_file$>$} from a specific
+directory \texttt{$<$dir$>$} of an FTP server
+\texttt{$<$ftp\_server\_info$>$}. \\
+\hline 
+\noindent\texttt{Flow(target[s],source[s],command[s][,stdin][,stdout])}\\ \ \\
+\indent A rule to generate \texttt{$<$target[s]$>$} from
+\texttt{$<$source[s]$>$} using \texttt{command[s]} \\
+\hline 
+\noindent\texttt{Plot(intermediate\_plot[,source],plot\_command)} or\\
+\texttt{Plot(intermediate\_plot,intermediate\_plots,combination})\\ \ \\
+\indent A rule to generate \texttt{$<$intermediate\_plot$>$} 
+in the working directory. \\
+\hline 
+\noindent\texttt{Result(plot[,source],plot\_command)} or\\ 
+\texttt{Result(plot,intermediate\_plots,combination})\\ \ \\
+\indent A rule to generate a final \texttt{$<$plot$>$} in
+the special \texttt{Fig} folder of the working directory. \\
+\hline 
+\noindent\texttt{End()} \\ \ \\
+\indent A rule to collect default targets. \\
+\hline 
+\end{tabular}
+\end{center}}
+
+These commands are defined in \texttt{\$PYTHONPATH/rsf/proj.py} where
+\texttt{RSFROOT} is the environmental variable to the Madagascar
+installation directory. The source of this file is in
+\href{http://sourceforge.net/p/rsf/code/HEAD/tree/trunk/framework/rsf/proj.py}{framework/rsf/proj.py}.
+
+\subsection{Example 1}
+
+To follow the first example, select a working project directory and
+copy the following code
+to a file named \texttt{SConstruct}\footnote{The source of this file is also accessible at \href{http://sourceforge.net/p/rsf/code/HEAD/tree/trunk/book/rsf/scons/easystart/SConstruct}{book/rsf/scons/easystart/SConstruct}.}.
+
+%
+\definecolor{frame}{rgb}{0.905,0.905,0.905}
+\lstset{language=Python,backgroundcolor=\color{frame},showstringspaces=false,numbers=left,numberstyle=\tiny}
+\lstinputlisting[frame=single]{easystart/SConstruct}
+
+This is our ``hello  world'' example that illustrates the basic use of
+some of the commands presented in Table~\ref{tbl:commands}. The plan
+for this experiment is simply to download data from a public data
+server, to convert it to an appropriate file format and to generate a
+figure for publication. But let us have a closer look at the
+\texttt{SConstruct} script and try to decorticate it.\\
+
+\lstinputlisting[firstline=1,lastline=1,frame=single]{easystart/SConstruct}
+%
+is a standard Python command that loads the Madagascar project
+management module \texttt{rsf.proj.py} which provides our extension to
+SCons.\\
+
+\lstinputlisting[firstline=4,lastline=4,frame=single]{easystart/SConstruct}
+%
+instructs SCons to connect to a public data server (the default server
+if no FTP server information is provided) and to fetch the data file
+\texttt{lena.img} from the \texttt{data/imgs} directory. 
+\begin{comment}
+Note that
+Madagascar expects a \texttt{data} folder on top of the specified
+directory (i.e.  \texttt{imgs}). In the directory where you have your
+SConstruct, running \texttt{scons lena.img} on the command line will
+download the file \texttt{lena.img}.  The equivalent command line is
+\begin{verbatim}
+bash$ wget http://www.ahay.org/data/imgs/lena.img
+\end{verbatim}
+\end{comment}
+%
+Try running ``\texttt{scons lena.img}'' on the command line. The successful output should look like
+\begin{verbatim}
+bash$ scons lena.img
+scons: Reading SConscript files ...
+scons: done reading SConscript files.
+scons: Building targets ...
+retrieve(["lena.img"], [])
+scons: done building targets.
+\end{verbatim}
+with the target file \texttt{lena.img} appearing in your directory.
+In the following examples, we will use \texttt{-Q} (quiet) option of
+\texttt{scons} to suppress the verbose output.
+
+\lstinputlisting[firstline=7,lastline=9,frame=single]{easystart/SConstruct}
+%
+prepares the Madagascar header file \texttt{lena.hdr} using the
+standard Unix command \texttt{echo}. 
+%
+\begin{verbatim}
+bash$ scons -Q lena.hdr
+echo n1=512 n2=513 in=lena.img data_format=native_uchar > lena.hdr
+\end{verbatim}
+%
+Since \texttt{echo} does not take a standard input, stdin is set to 0
+in the Flow command otherwise the first source is the standard input.
+Likewise, the first target is the standard output unless otherwise
+specified. 
+%Note the triple quotes used because the actual command is
+%broken into several lines in the SConstruct. 
+Note that
+\texttt{lena.img} is referred as \texttt{\$SOURCE} in the command. This
+allows us to change the name of the source file without changing the command.
+
+The data format of the \texttt{lena.img} image file is \texttt{uchar}
+(unsigned character), the image consists of 513 traces with 512
+samples per trace.  Our next step is to convert the image
+representation to floating point numbers and to window out the first
+trace so that the final image is a 512 by 512 square. The two
+transformations are conveniently combined into one with the help of a Unix pipe.
+
+\lstinputlisting[firstline=12,lastline=12,frame=single]{easystart/SConstruct}
+%
+\begin{verbatim}
+  bash$ scons -Q lena
+  scons: *** Do not know how to make target `lena'.  Stop.
+\end{verbatim}
+What happened? In the absence of the file suffix, the \texttt{Flow}
+command assumes that the target file suffix is ``\texttt{.rsf}''. Let us try again.
+\begin{verbatim}
+scons -Q lena.rsf
+< lena.hdr /RSF/bin/sfdd type=float | /RSF/bin/sfwindow f2=1 > lena.rsf
+\end{verbatim}
+Notice that Madagascar modules \texttt{sfdd} and \texttt{sfwindow} get
+substituted for the corresponding short names in the
+\texttt{SConstruct} file. The file \texttt{lena.rsf} is in a regularly
+sampled format\footnote{See \url{http://rsf.sourceforge.net/wiki/index.php/Format}} and can be examined, for example, with \texttt{sfin lena.rsf}\footnote{See \url{http://rsf.sourceforge.net/wiki/index.php/Programs\#sfin}.}.
+\begin{verbatim}
+bash$ sfin lena.rsf
+lena.rsf:
+    in="/datapath/lena.rsf@"
+    esize=4 type=float form=native
+    n1=512         d1=1           o1=0
+    n2=512         d2=1           o2=1
+        262144 elements 1048576 bytes
+\end{verbatim}
+In the last step, we will create a plot file for displaying the image
+on the screen and for including it in the publication.
+%
+\lstinputlisting[firstline=15,lastline=19,frame=single]{easystart/SConstruct}
+%
+Notice that we broke the long command string into multiple lines by
+using Python's triple quote syntax. All the extra white space will be
+ignored when the multiple line string gets translated into the command
+line.  The \texttt{Result} command has special targets associated with
+it. Try, for example, ``\texttt{scons lena.view}'' to observe the
+figure \texttt{Fig/lena.vpl} generated in a specially created
+\texttt{Fig} directory and displayed on the screen. The output should
+look like Figure~\ref{fig:lena}.
+%
+\inputdir{easystart} 
+\sideplot{lena}{height=.25\textheight}{The output of the first 
+numerical experiment.}
+%
+The reproducible script ends with\\
+%
+\lstinputlisting[firstline=22,lastline=22,frame=single]{easystart/SConstruct}
+
+Ready to experiment? Try some of the following:
+\begin{enumerate}
+\item Run \texttt{scons -c}. The \texttt{-c} (clean) option tells
+  SCons to remove all default targets (the \texttt{Fig/lena.vpl} image
+  file in our case) and also all intermediate targets that it generated. 
+\begin{verbatim}
+bash$ scons -c -Q
+Removed lena.img
+Removed lena.hdr
+Removed lena.rsf
+Removed /datapath/lena.rsf@
+Removed Fig/lena.vpl
+\end{verbatim}
+Run \texttt{scons} again, and the default target will be regenerated.
+\begin{verbatim}
+bash$ scons -Q
+retrieve(["lena.img"], [])
+echo n1=512 n2=513 in=lena.img data_format=native_uchar > lena.hdr
+< lena.hdr /RSF/bin/sfdd type=float | /RSF/bin/sfwindow f2=1 > lena.rsf
+< lena.rsf /RSF/bin/sfgrey title="Hello, World!" transp=n color=b \
+bias=128 clip=100 screenratio=1 > Fig/lena.vpl
+\end{verbatim}
+\item Edit your \texttt{SConstruct} file and change some of the
+  plotting parameters. For example, change the value of \texttt{clip}
+  from \texttt{clip=100} to \texttt{clip=50}. Run \texttt{scons} again
+  and observe that only the last part of the processing flow
+  (precisely, the part affected by the parameter change) is being run:
+\begin{verbatim}
+bash$ scons -Q view
+< lena.rsf /RSF/bin/sfgrey title="Hello, World!" transp=n color=b \
+bias=128 clip=50 screenratio=1 > Fig/lena.vpl
+/RSF/bin/xtpen Fig/lena.vpl
+\end{verbatim}
+  SCons is smart enough to recognize that your editing did not affect
+  any of the previous results in the data flow chain! Keeping track of
+  dependencies is the main feature that separates data processing and
+  computational experimenting with SCons from using linear shell
+  scripts.  For computationally demanding data processing, this
+  feature can save you a lot of time and can make your experiments
+  more interactive and enjoyable.
+\item A special parameter to SCons (defined in \texttt{rsf.proj.py})
+  can time the execution of each step in the processing flow. Try
+  running \texttt{scons TIMER=y}.
+\item The \texttt{rsf.proj} module has direct access to the database
+  that stores parameters of all Madagascar modules. Try running
+  \texttt{scons CHECKPAR=y} to see parameter checking enforced before
+  computations\footnote{This feature is new and experimental and may
+    not work properly yet}.
+\end{enumerate}
+
+The summary of our SCons commands is given in Table~\ref{tbl:proj}.
+
+\tabl{proj}{SCons commands and options defined in \texttt{rsf.proj}.}{
+\begin{center}
+\begin{tabular}{|p{0.9\textwidth}|}
+  \hline 
+  \noindent\texttt{scons $<$file$>$} \\ \ \\
+  \indent Generate \texttt{$<$file$>$} (usually requires \texttt{.rsf} suffix for \texttt{Flow} targets and \texttt{.vpl} suffix for \texttt{Plot} targets.) \\
+ \hline
+  \noindent\texttt{scons}\\ \ \\
+  \indent Generate default targets (usually 
+  figures specified in \texttt{Result}.) \\
+  \hline 
+  \noindent\texttt{scons view} or \texttt{scons $<$result$>$.view} \\ \ \\
+  \indent Generate \texttt{Result} figures and display them on the screen. \\
+  \hline 
+  \noindent\texttt{scons print} or \texttt{scons $<$result$>$.print} \\ \ \\
+  \indent Generate \texttt{Result} figures and print them. \\
+  \hline 
+  \noindent\texttt{scons lock} or \texttt{scons $<$result$>$.lock} \\ \ \\
+  \indent Generate \texttt{Result} figures and install them in a separate location. \\
+  \hline 
+  \noindent\texttt{scons test} or \texttt{scons $<$result$>$.test} \\ \ \\
+  \indent Generate \texttt{Result} figures and compare them with the corresponding ``locked'' figures stored in a separate location (regression testing). \\
+  \hline 
+  \noindent\texttt{scons $<$result$>$.flip} \\ \ \\
+  \indent Generate the \texttt{$<$result$>$} figure and compare it with the corresponding ``locked'' figure stored in a separate location by flipping between the two figures on the screen. \\
+  \\
+  \hline 
+  \noindent\texttt{scons TIMER=y ...} \\ \ \\
+  \indent Time the execution of each step in the processing flow (using the Unix \texttt{time} utility.) \\
+  \hline 
+  \noindent\texttt{scons CHECKPAR=y ...} \\ \ \\
+  \indent Check the names and values of all parameters supplied to Madagascar modules in the processing flows before executing anything (guards against incorrect input.) This option is new and experimental. \\
+  \hline 
+\end{tabular}
+\end{center}}
+
+\subsection{Example 2}
+\inputdir{rsfpy}
+
+The plan for this experiment is to add random noise to the test
+``Lena'' image and then to attempt removing it by low-pass filtering
+and by hard thresholding of coefficients in the Fourier domain. The
+result images are shown in Figure~\ref{fig:panel1}
+and~\ref{fig:panel2}.  
+
+\plot{panel1}{height=0.5\textheight}{Top left: original image. Top
+right: random noise added. Bottom left: original image spectrum in the
+Fourier ($F$-$X$) domain. Bottom right: noisy image spectrum in the
+Fourier ($F$-$X$) domain.}
+
+\plot{panel2}{height=0.25\textheight}{Left: denoising by low-pass
+filtering.  Right: denoising by hard thresholding in the Fourier
+domain.}
+
+Since the \texttt{SConstruct|} file is a Python script, we can also use all the
+flexibility and power of the Python language in our Madagascar
+reproducible scripts. A demo script is available in the
+\texttt{rsf/scons/rsfpy} subdirectory of the Madagascar \texttt{book}
+directory. Rather than commenting it line-by-line, we select some
+parts of interest.
+
+In the \texttt{SConstruct} script, we can declare
+Python variables
+
+\lstinputlisting[firstline=3,lastline=3,frame=single]{rsfpy/SConstruct}
+
+\noindent and use them later, for example, to define our customized plot
+command as a Python function
+
+\lstinputlisting[firstline=5,lastline=10,frame=single]{rsfpy/SConstruct}
+
+This Python function, named \texttt{grey()}, can then be called in Plot or Result
+commands, e.g.
+
+\lstinputlisting[firstline=48,lastline=48,frame=single]{rsfpy/SConstruct}
+
+We can define a Python dictionary, e.g.
+
+\lstinputlisting[firstline=34,lastline=35,frame=single]{rsfpy/SConstruct}
+
+\noindent and loop over its entries, e.g.
+
+\lstinputlisting[firstline=36,lastline=40,frame=single]{rsfpy/SConstruct}
+
+\noindent Note that the title of the plots is obtained by concatenating Python
+strings.
+
+Python strings can also be used to define sequences of commands used
+in several Flows, e.g.
+
+\lstinputlisting[firstline=65,lastline=67,frame=single]{rsfpy/SConstruct}
+
+Finally, in our Madagascar reproducible script, we may want the option
+to pass command line arguments when running SCons or use default
+values otherwise, e.g.
+
+\lstinputlisting[firstline=69,lastline=71,frame=single]{rsfpy/SConstruct}
+
+Running \texttt{scons} only, the default value set for fthr (i.e. 70)
+is used whereas running \texttt{scons fthr=68} set fthr to a command
+line specified value.
+
+This is by no mean an exhaustive list of options but, hopefully, it
+gives you a flavor of the powerful tool you have in hands. Enjoy!
+
+\begin{comment}
+\subsection{Useful SCons commands for reproducible scripts}
+
+On top of SCons standard options (\texttt{scons --help} for more
+details), Madagascar has its own SCons options. We already saw
+\texttt{scons plot.view} that displays \texttt{plot.vpl} (in the
+\texttt{Fig} folder) obtained in a Result command. \texttt{scons view}
+displays the result plots one after the other.
+
+It is also possible to check parameters for Madagascar programs in
+SCons Flow commands using the CHECKPAR option (\texttt{scons
+  CHECKPAR=y target}). Note that CHECKPAR is an experimental option
+and will be enhanced in the future to include parameter ranges and
+other safety checks.
+
+To time the execution of processing flows in a SConstruct use the
+TIMER option (\texttt{scons TIMER=y target}).
+
+\texttt{scons lock} is used to secure result plots and copy them from
+the \texttt{Fig} folder of your working directory to your
+\texttt{\$RSFFIGS} folder where \texttt{RSFFIGS} is the environmental
+variable to the directory where you want Madagascar to put your key
+Madagascar result plots. Note that this is a necessary step before
+creating a reproducible documentation. \texttt{scons plot.flip} runs
+\texttt{xtpen Fig/plot.vpl /locked/figures/plot.vpl} to flip between
+the new and locked figure. This is useful when detecting changes.
+\end{comment}
+
+\section{Creating reproducible documentation}
+%
+You are done with computational experiments and want to communicate
+them in a paper. SCons helps us create high-quality papers, where
+computational results (figures) are integrated with papers written in
+\LaTeX\. 
+The corresponding SCons extension is defined in  \texttt{\$PYTHONPATH/rsf/tex.py} where
+\texttt{RSFROOT} is the environmental variable to the Madagascar
+installation directory. The source of this file is in
+\href{http://sourceforge.net/p/rsf/code/HEAD/tree/trunk/framework/rsf/tex.py}{framework/rsf/tex.py}.
+We summarize the basic methods and commands in Tables~\ref{tbl:texcom} and~\ref{tbl:tex}.
+
+\tabl{texcom}{Basic methods of an \texttt{rsf.tex} object.}{
+\begin{center}
+\begin{tabular}{|p{0.9\textwidth}|} \hline
+  \noindent\texttt{Paper($<$paper\_name$>$,[,lclass][,use][,include][,options])}\\ \ \\
+  \indent A rule to compile \texttt{$<$paper\_name$>$.tex} \LaTeX\
+  document using the \LaTeX2e\ class specified in \texttt{lclass}
+  (default is \texttt{geophysics.cls} from the
+  \href{http://www.ahay.org/wiki/SEGTeX}{SEGTeX}
+  package) with additional options specified in \texttt{options},  
+  additional packages specified in \texttt{use},
+  and additional preamble specified in \texttt{include} \\
+  \hline
+  \noindent\texttt{End()} \\ \ \\
+  \indent A rule to collect default targets (referring to \texttt{paper.tex} document). \\
+  \hline 
+\end{tabular}
+\end{center}}
+
+\tabl{tex}{SCons commands defined in \texttt{rsf.tex}.}{
+\begin{center}
+\begin{tabular}{|p{0.9\textwidth}|}
+  \hline 
+  \noindent\texttt{scons}\\ \ \\
+  \indent Generate the default target (usually the PDF file \texttt{paper.pdf} from the source \LaTeX\ file \texttt{paper.tex}.) \\
+  \hline 
+  \noindent\texttt{scons pdf} or \texttt{scons $<$paper\_name$>$.pdf} \\ \ \\
+  \indent Generate PDF files from \LaTeX\ sources \texttt{paper.tex} or \texttt{$<$paper\_name$>$.tex}. \\
+  \hline 
+  \noindent\texttt{scons read} or \texttt{scons $<$paper\_name$>$.read} \\ \ \\
+  \indent Generate PDF files from \LaTeX\ sources \texttt{paper.tex} or \texttt{$<$paper\_name$>$.tex} and display them on the screen. \\
+  \hline 
+  \noindent\texttt{scons print} or \texttt{scons $<$paper\_name$>$.print} \\ \ \\
+  \indent Generate PDF files from \LaTeX\ sources \texttt{paper.tex} or \texttt{$<$paper\_name$>$.tex} and print them. \\
+  \hline 
+  \noindent\texttt{scons html} or \texttt{scons $<$paper\_name$>$.html} \\ \ \\
+  \indent Generate HTML files from \LaTeX\ sources \texttt{paper.tex} or \texttt{$<$paper\_name$>$.tex} using \LaTeX{toHTML}. 
+  The directory \texttt{$<$paper\_name$>$\_html} gets created. \\
+  \hline 
+  \noindent\texttt{scons install} or \texttt{scons $<$paper\_name$>$.install} \\ \ \\
+  \indent Generate PDF and HTML files from \LaTeX\ sources \texttt{paper.tex} or \texttt{$<$paper\_name$>$.tex} and  
+  install them in a separate location (used for publishing on a web site). \\
+  \hline 
+  \noindent\texttt{scons wiki} or \texttt{scons $<$paper\_name$>$.wiki} \\ \ \\
+  \indent Convert \LaTeX\ sources \texttt{paper.tex} or \texttt{$<$paper\_name$>$.tex} to the \texttt{MediaWiki} format  
+  (used for publishing on a Wiki web site). \\
+  \hline 
+\end{tabular}
+\end{center}}
+
+\begin{comment}
+A Madagascar reproducible paper is a paper written in \LaTeX\ and
+whose figures are either generated by Madagascar reproducible scripts
+or available for download, e.g.  this paper!  (\texttt{paper.tex}
+available in the \texttt{rsf/scons/} directory of Madagascar book
+section).
+
+The main SConstruct command set in our reproducible research
+environment and related to documentation is
+
+This command is defined in \texttt{\$RSFROOT/lib/rsftex.py}.
+\end{comment}
+
+\subsection{Example}
+
+This paper by itself is an example of a reproducible document. It is
+generated using the following \texttt{SConstruct} file which is place
+in the directory above the projects directories.
+
+\lstinputlisting[frame=single]{SConstruct}
+
+This \texttt{SConstruct} generates this paper but it can also compile
+\texttt{velan.tex} in the same directory. Note that there is no
+\texttt{Paper} command for \texttt{paper.tex} since it is the default
+documentation name. Optional \LaTeX\ packages and style used in
+\texttt{paper.tex} are passed in the End command.
+
+Let's now have a closer look at \texttt{paper.tex} to understand how
+the figures of the documentation are linked to the reproducible
+scripts that created them. First of all, note that \texttt{paper.tex}
+is not a regular \LaTeX\ document but only its body (no
+$\backslash$documentclass, $\backslash$usepackage, etc.). In our
+paper, Fig.~\ref{fig:lena} was created in the project folder
+\texttt{easystart} (sub-folder of our documentation folder) by the
+result plot \texttt{lena.vpl}. In the \LaTeX\ source code, it
+translates as\\
+
+\lstset{language=[LaTeX]TeX,backgroundcolor=\color{frame},showstringspaces=false,numbers=left,numberstyle=\tiny}
+\lstinputlisting[firstline=432,lastline=434,frame=single]{paper.tex}
+
+The $\backslash$inputdir command points to the project directory and
+the $\backslash$sideplot command calls \texttt{$<$result\_name$>$}. The
+\LaTeX\ tag of the figure is \texttt{fig:$<$result\_name$>$}. The
+first time the paper is compiled, the result file is automatically
+converted to the PDF file format. 
+% unless the VPL result file is updated and
+%locked in which case, the PDF file is also automatically updated at
+%the next paper compilation.
+
+\begin{comment}
+\subsection{Useful SCons commands for reproducible documentation}
+
+To actually compile this paper you first need to run and lock the
+\texttt{easystart} project. Go in the \texttt{easystart} folder and
+run \texttt{scons lock}. Go back to the documentation folder and run
+\texttt{scons pdf} (alternatively \texttt{scons
+  $<$paper\_name$>$.pdf}). Use \texttt{scons read} (alternatively
+\texttt{scons $<$paper\_name$>$.read}) or your favorite PDF reader to
+read this paper reproduced by yourself...
+\end{comment}
+
+\bibliographystyle{seg}
+\bibliography{SEG,SEP2,scons}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% End: 

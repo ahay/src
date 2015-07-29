@@ -1,0 +1,249 @@
+\lefthead{Vlad and Biondi}
+\righthead{Log-stretch AMO}
+\footer{SEP--110}
+\published{SEP Report, 110, 63-70 (2001)}
+\title{Effective AMO implementation in the log-stretch,
+frequency-wavenumber domain}
+
+\email{nick@sep.stanford.edu, biondo@sep.stanford.edu}
+%\keywords{AMO, DMO, azimuth moveout, log-stretch}
+\author{Ioan Vlad and Biondo Biondi}
+%\ABS{Short notes do not have abstracts}
+
+\shortpaper
+\maketitle
+\section{Introduction}
+Azimuth moveout (AMO), introduced by \cite{GEO63-02-05740588}, is used
+as part of the styling goal (in conjunction with a derivative as a
+roughener) in \cite{Biondi.sep.110.biondo1}. This paper describes the
+implementation of AMO for the above-stated purpose, with a historical
+background, proof, and discussion of pitfalls and practical steps.
+
+\section{The Azimuth Moveout}
+AMO is conceived as a
+cascade of forward and reverse dip moveout (DMO) operators. Thus, the
+accuracy and speed of the DMO operator used is highly
+important. Computing the DMO in the frequency domain is accurate and
+simple, but computationally expensive because the DMO operator is temporally
+nonstationary. The technique of logarithmic time-stretching,
+introduced by \cite{GPR30-06-08130828} increases the computational
+efficiency because the DMO operator is stationary in the log-stretch
+domain, and Fast Fourier Transforms can be used instead of slow
+Discrete Fourier Transforms. \cite{gardner}, \cite{GEO58-01-00470066} and
+\cite{GEO61-03-08150820} derived equivalent and accurate log-stretch,
+frequency-wavenumber DMO operators. The implementation of the AMO presented in
+this paper is based on the derivation and algorithm in
+\cite{GEO61-03-08150820}. 
+
+\section{The log-stretch, frequency-wavenumber AMO in 3D}
+Starting from the parametric DMO relations of \cite{GEO58-01-00470066},
+\cite{GEO61-03-08150820} derives an expression for a DMO applicable on
+2D NMO-ed data. In order to extend the expression to 3D, we only have
+to replace the product $kh$ between the wavenumber and half offset
+with the dot product of the same quantities, which are vectors in the
+case of 3D data. In order to perform AMO from the offset $\vec h_1$ to
+the offset $\vec h_2$, we need to cascade one forward DMO from offset
+$\vec h_1$ to zero offset with a reverse DMO from zero offset to
+offset $\vec h_2$. Thus, applying log-stretch, frequency-wavenumber
+AMO on a 3D cube of data $\left. {P\left( {t,m_x ,m_y } \right)}
+\right|_{\vec h_1 }$ in order to obtain $\left. {P\left( {t,m_x ,m_y }
+    \right)} \right|_{\vec h_2 }$ involves the following sequence of
+operations:
+\begin{enumerate}
+\item Apply log-stretch along the time axis on the $\left. {P\left( {t,m_x ,m_y } \right)} \right|_{\vec h_1 }$ cube, with the formula:
+\begin{equation}
+\label{eqn:logstretch}
+\tau  = \ln \left( {\frac{t}{{t_c }}} \right),
+\end{equation}
+where $t_c$ is the minimum cutoff time introduced to avoid taking the logarithm of zero. All samples from times smaller than $t_c$ are simply left untouched, the rest of the procedure will be applied to the cube $\left. {P\left( {t > t_c,m_x ,m_y } \right)} \right|_{\vec h_1 }$.
+\item 3D forward FFT of the $\left. {P\left( {\tau,m_x ,m_y } \right)} \right|_{\vec h_1 }$ cube. The 3D forward Fourier Transform is defined as follows:
+\begin{equation}
+\label{eqn:ft}
+P\left( {\Omega ,k_x ,k_y } \right) = \int {\int {\int {P\left( {\tau ,m_x ,m_y } \right)} } } \;e^{i\left( {\Omega \tau  - k_x m_x  - k_y m_y } \right)} d\tau \,dm_x {\kern 1pt} dm_y 
+\end{equation}
+It can be seen that the sign of the transform along the $\tau$-axis is opposite to that over the midpoint axes.
+\item For each element of the cube, perform the AMO shift:
+\begin{equation}
+\label{eqn:amo}
+ \left. {P\left( {\Omega ,k_x ,k_y } \right)} \right|_{\vec h_2 }  =
+ e^{i\left( {\Phi _1  - \Phi _2 } \right)} \left. {P\left( {\Omega
+ ,k_x ,k_y } \right)} \right|_{\vec h_1 } , where
+\end{equation}
+
+\begin{equation}
+\label{eqn:amophi}
+ \Phi _j  = \left\{ {\begin{array}{*{20}c}
+   {0,\quad for\;\vec k \cdot \vec h = 0}  \\
+   {\vec k \cdot \vec h,\quad for\;\Omega  = 0}  \\
+   {\frac{\Omega }{2}\left\{ {\sqrt {1 + \left( {\frac{{2\,\vec k \cdot \vec h}}{\Omega }} \right)^2 }  - 1 - \ln \left[ {\frac{{\sqrt {1 + \left( {\frac{{2\,\vec k \cdot \vec h}}{\Omega }} \right)^2 }  + 1}}{2}} \right]} \right\}\quad otherwise}  \\
+\end{array}\;} \right.,\quad
+\end{equation}
+
+\begin{equation}
+\label{eqn:amophi}
+where \; \vec k \cdot \vec h = k_x h_x  + k_y h_y \quad
+\end{equation}
+ and j can take the values 1 or 2.
+The frequency domain variables must have incorporated in their value a $2\pi$ constant (they are defined according to equation (\ref{eqn:ft}))
+\item Do reverse 3D FFT in order to obtain the $\left. {P\left( {\tau,m_x ,m_y } \right)} \right|_{\vec h_2 }$ cube.
+\item Do reverse log stretch along the time axis and affix to the top of the cube the slices from times smaller than $t_c$. The final result is a $\left. {P\left( {t,m_x ,m_y } \right)} \right|_{\vec h_2 }$ cube.
+\end{enumerate}
+\inputdir{impresp} 
+Figure \ref{fig:impresp1} shows the impulse response of the above
+described AMO.
+\plot{impresp1}{width=6in,height=4in}{AMO impulse response}
+
+\section{Stretching and aliasing}
+
+For the purpose of this discussion we define stretching of a
+single-dimension space as any transformation from one space to
+another that has the following property: at least an arbitrarily chosen sequence
+of two consecutive, equal in length, intervals in the input space is
+transformed into a sequence of two consecutive, $not$ equal in length,
+intervals in the output space. Stretching an x-space to a y-space will be denoted as 
+\begin{equation}
+\label{eqn:str}
+y = f(x)
+\end{equation}
+Two obvious examples of stretching are
+\[
+\begin{array}{l}
+ NMO:\;y = \sqrt {x^2  + \alpha } ,\;and \\ 
+ log-stretch:\;y = \log \left( {\frac{x}{\alpha }} \right), \\ 
+ \end{array}
+\]
+where $\alpha$ is a positive real number whose value does not matter
+for the purpose of this discussion. As it can be seen in
+Fig. \ref{fig:strali}, if we keep the same sampling rate ($\Delta y =
+\Delta x$), aliasing can occur when doing the reverse transformation,
+from x to y. In order to avoid aliasing, we need to compute $\Delta
+y_{\max }$, the largest accceptable sampling rate in the y
+domain. This can sometimes lead to a larger number of samples in the
+$y$ domain, and thus to larger computational expense. This can be
+limited to some extent if the signal in the $x$-space has been
+bandpassed, as is often the case with seismic data, with the largest
+frequency present in the data ($f_{\max}$) smaller than the Nyquist
+frequency given by the sampling rate ($f_{Ny}$). Thus, we can replace in our calculations $\Delta x$ with
+\[
+\Delta x_{\max }  = \frac{1}{{2f_{\max } }},
+\]
+which will result in a $\Delta y_{\max }$ larger than that computed using $\Delta x$, the sampling rate in the $x$ space.
+
+\inputdir{Matlab}
+\plot{strali}{width=6.5in}{Illustration of how aliasing can occur
+while stretching: if the same sampling rate is used for the $y$-space
+(lower plot) as for the $x$-space (upper plot), serious aliasing will
+occur when transforming back to $x$-space. This will not happen if the
+sampling rate in the $y$-space is smaller than or equal to $\Delta y_{\max }$}
+
+\inputdir{Pylab}
+\plot{pystrali}{width=6.5in}{Illustration of how aliasing can occur
+while stretching: if the same sampling rate is used for the $y$-space
+(lower plot) as for the $x$-space (upper plot), serious aliasing will
+occur when transforming back to $x$-space. This will not happen if the
+sampling rate in the $y$-space is smaller than or equal to $\Delta y_{\max }$}
+
+In order to compute $\Delta y_{\max }$, we will consider two points in the $x$ space, as seen in Fig. \ref{fig:strali}, such as
+\begin{equation}
+\label{eqn:xa}
+x_b  = x_a  + \Delta x_{\max } 
+\end{equation}
+and $y_a$ and $y_b$, the images of  $x_a$ and $x_b$ in the $y$ space. Thus,
+\[
+\Delta y = y_b  - y_a  = f_{(x_a  + \Delta x_{\max } )}  - f_{(x_a )} 
+\]
+The largest sampling rate in the $y$-space that will not result in aliasing is $\Delta y_{\max }$, the minimum possible value of $\Delta y$. Suppose there is a value $x_m$ that minimizes $\Delta y$. Then,
+\[
+\Delta y_{\max }  = \left. {\left[ {f_{(x + \Delta x_{\max } )}  - f_{(x)} } \right]} \right|_{x_m } 
+\]
+In particular, in the case of log-stretch, given by equation (\ref{eqn:logstretch}), if $t_m$ plays the role of $x_m$ from the equation above, then
+\begin{equation}
+\label{eqn:tempojunk}
+\Delta \tau _{\max }  = \left. {\left[ {\log \left( {\frac{{t + \Delta t_{\max } }}{{t_c }}} \right) - \log \left( {\frac{t}{{t_c }}} \right)} \right]} \right|_{t_m }  = \log \left( {1 + \frac{{\Delta t_{\max } }}{{t_m }}} \right)
+\end{equation}
+$\tau_{\max }$ will be minimum when $t_m$ is as large as possible,
+thus minimizing the expression under the logarithm. How large can $t_m$ get? Since the length of the seismic trace is limited to a value $t_{\max }$, 
+\[
+t_{\mathop{\rm m}\nolimits}   = t_{\max }  - \Delta t_{\max } 
+\]
+because $t_m$ is the equivalent of $x_a$ from eq. (\ref{eqn:xa}) and Fig. \ref{fig:strali}. Thus, we get
+\begin{equation}
+\label{eqn:deltataumax}
+\Delta \tau _{{\rm max}}  = \log \left( {\frac{{t_{\max } }}{{t_{\max }  - \Delta t_{\max } }}} \right)
+\end{equation}
+
+\section{F-K filtering}
+\inputdir{impresp}
+As it can be seen in Fig. \ref{fig:impresp2}, the impulse response of
+the AMO computed in the log-stretch, frequency-wavenumber domain has
+some artifacts: high amplitude, large saddle corners. Low temporal
+frequencies and high spatial slopes are also present. These artifacts can be eliminated easily
+using a f-k filter, which is described below.
+\plot{impresp2}{width=6in,height=4in}{AMO impulse response artifacts}
+
+Suppose we want to attenuate all spatial frequencies $k$ that are larger than a certain threshold $ k_{\max }$, where
+\begin{equation}
+\label{eqn:kdef}
+\begin{array}{l}
+ k = \sqrt {k_x^2  + k_y^2 } \quad and \\ 
+ k_{\max }  = \frac{{2\left| \omega  \right|}}{{v_{\min } }}, \\ 
+ \end{array}
+\end{equation}
+with $\omega$, $k_x$ and $k_y$ being the coordinates in the frequency-wavenumber domain (without logstretch), and $v$ being the minimum apparent velocity of the events that we want the filtered data cube to contain. Thus, the data cube will become:
+\begin{equation}
+\label{eqn:fkfilt}
+P_{filtered} \left( {\omega ,k_x ,k_y } \right) = \left\{ {\begin{array}{*{20}c}
+   {P\left( {\omega ,k_x ,k_y } \right)\quad if\quad k \le k_{\max } }  \\
+   {e^{ - \varepsilon \left( {k - k_{\max } } \right)^2 } P\left( {\omega ,k_x ,k_y } \right)\quad if\quad k > k_{\max } }  \\
+\end{array}} \right.
+\end{equation}
+Too small an $\varepsilon$ will result in an abrupt transition in the f-k domain, and thus ringing artifacts in the t-x domain. An $\varepsilon$ which is too big will result in no visible filtering of the targeted artifacts. Moreover, $\varepsilon$ depends on the choice of units and the number of samples for the $m_x$ and $m_y$ axes: since the exponential needs to be dimensionless, we have
+\[
+\varepsilon  = \frac{{\varepsilon _0 }}{{dk_x dk_y }}
+\]
+where
+\[
+dk_x  = \frac{1}{{n_x d_x }}\;and\,dk_y  = \frac{1}{{n_y d_y }}.
+\]
+Thus, the final expression of $\varepsilon$ is 
+\begin{equation}
+\label{eqn:epsi}
+\varepsilon  = \varepsilon _0 n_x d_x n_y d_y ,
+\end{equation}
+where $\varepsilon _0$ is a value that is hand-picked only once, and embedded in the code. This way, we will not have to change anything at all in the code or in the parameters in order to set $\varepsilon _0$, no matter what the units of the data cube may be. 
+
+The result of the filtering can be seen in Fig. \ref{fig:fkfilter}: 
+the slices through the cube are taken at exactly the same locations as
+those in Fig. \ref{fig:impresp2}, but now the artefacts are gone. 
+\plot{fkfilter}{width=6in,height=4in}{AMO impulse response after f-k filtering}
+\section{Cost-cutting avenues}
+The largest computational savings come from the use of FFTs for AMO,
+instead of slow Fourier integration necessary in the absence of
+log-stretch. Standard means of minimizing the CPU time and the amount of memory used
+to compute the AMO have also been employed. They include computing the AMO
+shift for only half of the elements of the cube in the complex domain,
+since the Fourier transform $F$ of a real function is Hermitian:
+\begin{equation}
+\label{eqn:fourierproperty}
+F(s)=F^{*}(-s)
+\end{equation}
+(where $s$ denotes the frequency domain variable and the star symbol
+denotes the complex conjugate). Another way of reducing computational
+expenses was through the use of RFFTW and FFTW type Fourier
+Transforms \cite[]{fftw}, adaptive to hardware architecture, and
+taking advantage of 
+the property stated in (\ref{eqn:fourierproperty}). Also, the code was
+divided into subroutines in such a way that some quantities
+were not computed unnecessarily several times when AMO was applied to
+more than one cube of data. Finally, shared memory parallelization
+with the OpenMP standard was applied to all the computationally
+intensive do loops in the code.
+
+\section{Conclusions}
+Azimuth moveout can be successfully implemented in the log-stretch,
+frequency-wavenumber domain. It is accurate,
+fast, and furthermore it does not have any characteristics that can
+result in coding difficulties. 
+
+\bibliographystyle{seg}
+\bibliography{AMO,SEP2,SEG}

@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sfwindow', 'sfscale', 'sfput', 'sffxdecon', 'sfadd', 'sfsimilarity', 'sfsimidenoise1', 'sfortho', 'sfgrey', 'sfdd', 'sfgraph']
+data=['PRIVATE', 'PRIVATE']
+size=   19292160

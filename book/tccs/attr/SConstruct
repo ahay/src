@@ -1,0 +1,15 @@
+from rsf.tex import *
+
+Paper('envelope',use='amsmath')
+
+#Paper('seg2006',lclass='segabs')
+
+#Command2('paper2.tex','paper.tex','cp $SOURCE $TARGET')
+
+#Paper('paper2',options='twocolumn')
+
+#Command2('paper-revised.tex','paper.tex','cp $SOURCE $TARGET')
+
+#Paper('paper-revised',options='manuscript,revised')
+
+End(color='pi si vec-sc-0') #options='manuscript')

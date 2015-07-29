@@ -1,0 +1,99 @@
+import os, sys, string
+sys.path.append('../../framework')
+import bldutil
+
+#############################################################################
+# MAIN LIBRARY
+#############################################################################
+src = 'kiss_fft kiss_fftr mt19937ar'
+
+src2 = '''
+aastretch adjnull alloc axa banded bigsolver blas box c99 causint
+ccdstep ccgstep cconjgrad ccopy cell celltrace cdstep cgstep chain
+clist cmatmult conjgrad conjprec copy cosft ctriangle ctrianglen
+decart deriv divn dottest doubint edge eno eno2 eno3 error fftlabel
+file files freqfilt freqfilt2 ftutil fzero gaussel getpar gmres
+grad2fill halfint helicon helix hilbert igrad1 igrad2 impl2 int1 int2
+int3 interp interp_spline irls komplex llist lsint2 mask math1
+matmult2 multidivn multidivnL1 neighbors omptools parallel point
+polydiv pqueue pweno randn recfilt repeat runge quantile quadratic
+sharpen sharpinv simtab slice spline stack stretch system tent2 timer
+tinysolver triangle triangle1 triangle2 trianglen tridiagonal vector
+wavelet weight weight2
+'''
+
+try: # distribution version
+    Import('env root libdir incdir')
+    env = env.Clone()
+except: # local version
+    env = bldutil.Debug()
+    root = None
+
+dynlib = ('-static-intel' not in env.get('LINKFLAGS',''))
+
+##############################################################################
+# INCLUDES
+##############################################################################
+sources  = map(lambda x: x+'.c',Split(src))
+includes = map(lambda x: x+'.h',
+               Split(src2)+Split(src)+Split('fblas lapack'))
+
+version = env.get('version','unknown')
+env.Prepend(CPPDEFINES=['RSF_VERSION=\'\"%s\"\'' % version])
+
+fftw = env.get('FFTW')
+if fftw:
+    env.Prepend(CPPDEFINES=['SF_HAS_FFTW'])
+    
+sobjs = []
+
+if dynlib:
+    dobjs = []
+
+for source in Split(src2):
+    env.RSF_Include(source,prefix='sf_')
+
+    obj = env.StaticObject(source+'.c')
+    env.Depends(obj,source+'.h')
+    sobjs.append(obj)
+    
+    if dynlib:
+        obj = env.SharedObject(source+'.c')
+        env.Depends(obj,source+'.h')
+        dobjs.append(obj)
+
+##############################################################################
+# MAIN LIBRARY
+##############################################################################
+        
+slib = env.StaticLibrary('rsf',sobjs+sources)
+
+if dynlib:
+    dlib = env.SharedLibrary('rsf',dobjs+sources,
+                             SHLIBPREFIX='libd')
+
+inc = env.Command('rsf.h',includes,Action(bldutil.__merge))
+
+env.Install('../../lib',slib)
+
+if dynlib:
+    env.Install('../../lib',dlib)
+
+env.Install('../../include',inc)
+
+if root:
+    env.Install(libdir,slib)
+    if dynlib:
+        env.Install(libdir,dlib)
+    env.Install(incdir,inc)
+
+############################################################################
+# TESTING
+############################################################################
+for file in Split('''
+                  banded cmatmult eno2 fft file gaussel getpar lsint2
+                  matmult2 quantile simtab triangle2 trianglen
+                  '''):
+    test = env.StaticObject('Test' + file + '.c')
+    prog = env.Program(file,[test,slib],
+                       PROGSUFFIX='.x',PROGPREFIX='Test')

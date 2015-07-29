@@ -1,0 +1,94 @@
+#plas: Vplot units used in this file
+e
+S s
+w -32760 -32760 32760 32760
+c 7
+f 0
+s 0
+F 0 0 0
+J 0 0
+w -32760 -32760 8190 32760
+z
+Test mapping of colors to grey levels for raster
+z
+
+C 0 0 0 0
+C 1 0 0 255
+C 2 255 0 0
+C 3 255 0 255
+C 4 0 255 0
+C 5 0 255 255
+C 6 255 255 0
+C 7 255 255 255
+C 8 0 0 0
+C 9 37 37 37
+C 10 73 73 73
+C 11 110 110 110
+C 12 146 146 146
+C 13 183 183 183
+C 14 219 219 219
+C 15 255 255 255
+R 0 0
+0 0
+5999 5999
+2 8
+     1  ------ lines 0 to 0
+1 2  -- start byte 0 in y_line 0
+0
+8
+     1  ------ lines 1 to 1
+1 2  -- start byte 0 in y_line 1
+1
+9
+     1  ------ lines 2 to 2
+1 2  -- start byte 0 in y_line 2
+2
+10
+     1  ------ lines 3 to 3
+1 2  -- start byte 0 in y_line 3
+3
+11
+     1  ------ lines 4 to 4
+1 2  -- start byte 0 in y_line 4
+4
+12
+     1  ------ lines 5 to 5
+1 2  -- start byte 0 in y_line 5
+5
+13
+     1  ------ lines 6 to 6
+1 2  -- start byte 0 in y_line 6
+6
+14
+     1  ------ lines 7 to 7
+1 2  -- start byte 0 in y_line 7
+7
+15
+f 6
+m 0 0
+d 0 6000
+d 6000 6000
+d 6000 0
+d 0 0
+z
+
+z
+Different colors map onto different levels of Grey.
+z
+The bars should be horizontal, subdivided into left and right halves,
+z
+color on the left, grey on the right.
+z
+On a black-and-white device, both halves of each bar
+z
+should be the same shade of grey.
+z
+The colors should be ordered from top to bottom
+z
+Black, Blue, Red, Magenta, Green, Cyan, Yellow, White.
+z
+Blue is the darkest primary, Red is intermediate, and Green is brightest.
+z
+This is how Black and White TV's do it.
+z
+

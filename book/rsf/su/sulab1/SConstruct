@@ -1,0 +1,9 @@
+from rsf.suproj import *
+
+Flow('plane',None,'suplane')
+Result('plane','suxwigb label1="Time (s)" label2=Trace')
+
+Flow('specfx','plane','suspecfx')
+Result('specfx','suxwigb label1="Frequency (Hz)" label2=Trace')
+
+End()

@@ -1,0 +1,62 @@
+import os, sys, re, string
+sys.path.append('../../framework')
+import bldutil
+
+waves = '''
+rtm wave wave24
+'''
+other = '''
+acd2d eacd2d vam
+'''
+
+try:  # distributed version
+    Import('env root pkgdir bindir')
+    env = env.Clone()
+except: # local version
+    env = bldutil.Debug()
+    root = None
+    SConscript('../../api/c/SConstruct')
+
+src = Glob('[a-z]*.c')
+
+env.Prepend(CPPPATH=['../../include'],
+            LIBPATH=['../../lib'],
+            LIBS=[env.get('DYNLIB','')+'rsf'])
+
+for source in src:
+    inc = env.RSF_Include(source,prefix='')
+    obj = env.StaticObject(source)
+    env.Depends(obj,inc)
+
+mains = Split(waves+other)
+for prog in mains:
+    sources = ['M' + prog]
+    bldutil.depends(env,sources,'M'+prog)
+    prog = env.Program(prog,map(lambda x: x + '.c',sources))
+    if root:
+        env.Install(bindir,prog)
+
+######################################################################
+# SELF-DOCUMENTATION
+######################################################################
+if root:
+    user = os.path.basename(os.getcwd())
+    main = 'sf%s.py' % user
+
+    # translate wi->par to par to enable selfdoc
+    env.Command('Mwavedoc.c','wavefun.c',
+                r'''
+    sed < $SOURCE 's/&(wi->\([^\)]*\))/\&\1/' | sed 's/wi->//g' > $TARGET
+                ''')
+
+
+    docs = map(lambda prog: env.Doc(prog,'M' + prog),
+               Split(other)+['wavedoc'])    
+    env.Depends(docs,'#/framework/rsf/doc.py')
+
+    alias = {}
+    for wave in Split(waves):
+        alias['sf'+wave] = 'sfwavedoc'
+    doc = env.RSF_Docmerge(main,docs,alias=alias)
+    env.Install(pkgdir,doc)
+#####################################################################

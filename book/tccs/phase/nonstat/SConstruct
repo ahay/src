@@ -1,0 +1,80 @@
+from rsf.proj import *
+
+# Make a trace with a Ricker wavelet
+
+Flow('ricker',None,'spike n1=1001 k1=501 | ricker1 frequency=20')
+
+# Phase rotation
+
+traces = []
+for a in range(-180,181,10):
+    ricker = 'ricker%d' % a
+    traces.append(ricker)
+    Flow(ricker,'ricker','envelope order=100 hilb=y phase=%d' % a)
+
+Flow('traces',traces,
+     'cat ${SOURCES[1:%d]} axis=2 | put o2=-180 d2=10' % len(traces))
+Result('traces','dots')
+
+# Nonstationary trace
+
+Flow('datum','traces','window n1=1 | math output="x1*0.01" ')
+Flow('shift','traces datum','datstretch datum=${SOURCES[1]}')
+
+Result('shift','dots')
+
+Flow('trace','shift',
+     'cut n2=2 | cut n2=2 f2=-2 | window j2=5 | stack norm=n')
+
+Result('trace','dots labels=Input')
+
+# Local skewness
+
+Flow('tsquare','trace',
+     'pad beg1=250 end1=250 | localskew rect=100 a0=-90 da=3 na=121 | window n1=1001 f1=250')
+Flow('tskew','trace tsquare',
+     '''
+     pad beg1=250 end1=250 | 
+     localskew rect=100 a0=-90 da=3 na=121 const=y inv=n |
+     window n1=1001 f1=250 |
+     mul ${SOURCES[1]}
+     ''')
+
+traces = []
+for a in range(-90,271,10):
+    ricker = 'rtrace%d' % a
+    traces.append(ricker)
+    Flow(ricker,'trace','envelope order=100 hilb=y phase=%d' % a)
+Flow('rtraces',traces,
+     'cat ${SOURCES[1:%d]} axis=2 | put o2=-90 d2=10 label2=Rotation' % len(traces))
+Result('rtraces','wiggle transp=y yreverse=y poly=y wanttitle=n pclip=100 zplot=0.7')
+
+
+Plot('tskew',
+     '''
+     grey color=j allpos=y title="Inverse Local Skewness" 
+     label2="Phase Rotation" Xunit2="\^o\_" 
+     ''')
+
+# Pick & Slice
+
+Flow('pick','tskew','pick vel0=-45 rect1=50')
+
+Plot('pick','graph plotcol=7 plotfat=5 transp=y yreverse=y min2=-90 max2=270 wanttitle=n pad=n wantaxis=n')
+
+Result('tskew','tskew pick','Overlay')
+
+# Phase rotation
+
+Flow('trace90','trace pick','phaserot phase=${SOURCES[1]}')
+Flow('trace0','trace90','envelope order=100 hilb=y phase=-90')
+
+Result('trace2','trace trace0',
+       '''
+       cat axis=2 ${SOURCES[1]} |
+       dots labels="Input:Phase-Corrected" yreverse=y
+       ''')
+
+Result('trace0','dots labels=Phase-Corrected')
+
+End()

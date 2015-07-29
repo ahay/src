@@ -1,0 +1,72 @@
+#! /usr/bin/env python
+
+if __name__ == "__main__":
+    import rsf.cluster
+    import sys,os,time
+
+    name = 'SConstruct'
+
+    if '-c' in sys.argv:
+        import os
+        if os.path.exists('pbs') and os.path.isdir('pbs'):
+            import shutil
+            print 'Removing... pbs directory'
+            shutil.rmtree('pbs')
+        if os.path.exists('HISTORY.txt'):
+            os.remove('HISTORY.txt')
+        print 'Cleaned.  Run scons -c or use trashrsf to remove files.'
+        sys.exit(0)
+    elif 'get' in sys.argv:
+        cwd = os.getcwd()
+        localdir   = os.environ.get('RSF_LOCAL_WORK',None)
+        clusterdir = os.environ.get('RSF_CLUSTER_WORK',None)
+        cluster    = os.environ.get('RSF_CLUSTER',None)
+        path       = cwd.split(localdir)
+        getdir     = os.path.join(clusterdir,path[1].lstrip('/'))
+        print 'Will try to get this directory: ', getdir
+        import subprocess as sp
+        print 'Getting HH files'
+        p = sp.Popen('scp %s:%s/*.hh .' % (cluster,getdir),shell=True)
+        p.wait()
+        print 'Getting Figures'
+        p = sp.Popen('scp -r %s:%s/Fig .' % (cluster,getdir),shell=True)
+        p.wait()
+        print 'Getting history'
+        p = sp.Popen('scp -r %s:%s/HISTORY.txt .' % (cluster,getdir), shell=True)
+        p.wait()
+    elif 'lock' in sys.argv:
+        import re
+        figs = os.environ.get('RSFFIGS',None)
+        if not figs: raise Exception('RSFFIGS not set?')
+        figdir = re.sub('.*\/((?:[^\/]+)\/(?:[^\/]+)\/(?:[^\/]+))$',
+                             figs+'/\\1',os.getcwd())
+        print 'Putting Figures in: ', figdir
+        try:
+            import shutil
+            if not os.path.exists(figdir):
+                os.makedirs(figdir)
+            print 'Individually copying...'
+            import glob
+            files = glob.glob('Fig/*.vpl')
+            for file in files:
+                print 'Copying... %s' % file
+                shutil.copy2(file,figdir)
+            if os.path.exists('HISTORY.txt'):
+                shutil.copy2('HISTORY.txt',figdir)
+        except:
+            print 'FAILURE to copy'
+    else:
+        if '-f' in sys.argv:
+            index = sys.argv.index('-f')
+            filename = sys.argv[index+1]
+            if os.path.exists(filename):
+                name = filename
+            else:
+                raise Exception('%s not found.' % filename)
+
+        rsf.cluster.CSCONS = True
+        execfile(name)
+
+        history = open('HISTORY.txt','w')
+        history.write('Executed - %s, on %s\n' % (time.strftime('%H:%M %m/%d/%Y',time.localtime()),os.uname()[1]))
+        history.close()

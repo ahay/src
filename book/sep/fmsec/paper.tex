@@ -1,0 +1,262 @@
+\lefthead{Rickett \& Fomel}
+\righthead{Second-order fast marching}
+\footer{SEP--100}
+%\keywords{traveltimes, eikonal}
+
+%\shortnote
+\published{SEP Report, 100, 287-292 (1999)}
+\title{A second-order fast marching eikonal solver}
+
+\email{james@sep.stanford.edu, sergey@sep.stanford.edu}
+\author{James Rickett and Sergey Fomel}
+
+\shortpaper
+\maketitle
+
+\section{Introduction}
+The fast marching method~\cite[]{sethian} is widely used for solving the
+eikonal equation in Cartesian coordinates.  
+The method's principal advantages are: stability,
+computational efficiency, and algorithmic simplicity. 
+Within geophysics, fast marching traveltime
+calculations~\cite[]{SEG-1997-1778} may be used 
+for 3-D depth migration or velocity analysis.
+
+\par
+Unfortunately, first-order implementations lead to inaccuracies in
+computed traveltimes, which may lead to poor image focusing for
+migration applications. In addition, first-order traveltimes are not
+accurate enough for reliable amplitude calculations.
+This has lead to the development of the fast marching method
+on non-Cartesian~\cite[]{Alkhalifah.sep.95.tariq5,Sun.sep.97.yalei2},
+and even unstructured~\cite[]{Fomel.sep.95.sergey3} grids. 
+These non-Cartesian formulations reduce inaccuracies, while
+retaining the fast marching method's characteristic stability and
+efficiency.  Unfortunately, the cost is the loss of algorithmic
+simplicity. 
+
+\par
+We implement a second-order fast marching eikonal solver, which
+reduces inaccuracies while retaining stability, efficiency {\em and}
+simplicity. 
+
+\section{Fast marching and the eikonal equation}
+Under a high frequency approximation, propagating wavefronts may be 
+described by the eikonal equation,
+\begin{equation} \label{eqn:eikonal}
+\left( \frac{\partial t}{\partial x} \right)^2 +
+\left( \frac{\partial t}{\partial y} \right)^2 +
+\left( \frac{\partial t}{\partial z} \right)^2 =s^2(x,y,z),
+\end{equation}
+where $t$ is the traveltime, $s$ is the slowness, and $x$, $y$ and $z$
+represent the spatial Cartesian coordinates.
+
+\par
+The fast marching method solves equation~(\ref{eqn:eikonal}) by
+directly mimicking the advancing wavefront.  
+Every point on the computational 
+grid is classified into three groups: 
+points behind the wavefront, whose traveltimes are known and fixed; 
+points on the wavefront, whose traveltimes have been calculated, but
+are not yet fixed; and points ahead of the wavefront.  
+The algorithm then proceeds as follows: 
+\begin{enumerate}
+\item Choose the point on the wavefront with the smallest traveltime. 
+\item Fix this traveltime.
+\item Advance the wavefront, so that this point is behind it, and
+adjacent points are either on the wavefront or behind it. 
+\item Update traveltimes for adjacent points on the wavefront by
+solving equation~(\ref{eqn:eikonal}) numerically.
+\item Repeat until every point is behind the wavefront. 
+\end{enumerate}
+
+
+\par
+The update procedure (step 4.) requires the solution of the following
+quadratic equation for $t$, 
+\begin{eqnarray} \label{eqn:numeikonal}
+\max(D_{ijk}^{-x} t, 0)^2+
+\min(D_{ijk}^{+x} t, 0)^2 & + & \nonumber \\
+\max(D_{ijk}^{-y} t, 0)^2+
+\min(D_{ijk}^{+y} t, 0)^2 & + & \nonumber \\
+\max(D_{ijk}^{-z} t, 0)^2+
+\min(D_{ijk}^{+z} t, 0)^2 & = & s_{ijk}
+\end{eqnarray}
+where $D_{ijk}^{-x}$ is a backward $x$ difference operator at
+grid point, $ijk$, $D_{ijk}^{+x}$ is a forward $x$ operator, and
+finite-difference operators in $y$ and $z$ are defined similarly. 
+The roots of the quadratic equation, $a t^2 + b t + c = 0$,
+can be calculated explicitly as
+\begin{equation} \label{eqn:quadratic}
+t = \frac{ -b \pm \sqrt{b^2 -4ac}}{2a}.
+\end{equation}
+Solving equation~(\ref{eqn:numeikonal}) amounts to accumulating
+coefficients $a$, $b$ and $c$ from its non-zero terms, and evaluating
+$t$ with equation~(\ref{eqn:quadratic}).
+
+\par
+If we choose a two-point finite-difference operator, such as
+\begin{eqnarray}
+& D_{ijk}^{-x} t & = \;
+\frac{t_{ijk}-t_{(i-1)jk}}{\Delta x} \\ 
+{\rm then} \;  &
+(D_{ijk}^{-x} t)^2 & = \;
+\alpha t_{ijk}^2 + \beta t_{ijk} + \gamma
+\end{eqnarray} 
+where 
+$\alpha = \frac{1}{\Delta x^2}$, 
+$\beta  = -2 t_{(i-1)jk} \alpha$ and  
+$\gamma = t_{(i-1)jk}^2 \alpha$.
+%%$\alpha = \frac{1}{\Delta x^2}$, 
+%%$\beta  = \frac{-2 t_{(i-1)jk}}{\Delta x^2}$ and 
+%%$\gamma = \frac{t_{(i-1)jk}^2 }{\Delta x^2}$.
+Coefficients $a$, $b$ and $c$ can now be calculated from 
+$a = \Sigma_l \alpha_l$,
+$b = \Sigma_l \beta_l$, and 
+$c = \Sigma_l \gamma_l - s^2$,
+where the summation index, $l$, refers to the six terms in
+equation~(\ref{eqn:numeikonal}) subject to the various min/max 
+conditions. 
+
+\par
+This two-point stencil, however, is only accurate to first-order.  
+If instead we choose a suitable three-point finite-difference
+stencil, we may expect the method to have second-order accuracy. For
+example, the second-order upwind stencil,
+\begin{eqnarray}
+& D_{ijk}^{-x} t & = \; \frac{3t_{ijk}-4t_{(i-1)jk} +
+t_{(i-2)jk}}{2 \Delta x} \\ {\rm gives} \;
+& (D_{ijk}^{-x} t)^2 & = \;
+\alpha' t_{ijk}^2 + \beta' t_{ijk} + \gamma'
+\end{eqnarray}
+\begin{eqnarray*}
+{\rm where \; this \; time \;} &
+\alpha' & = \; \frac{9}{4 \Delta x^2}, \\ [.1in] & 
+\beta'  & = \; \frac{-3 (4 t_{(i-1)jk}-t_{(i-2)jk})}{2 \Delta x^2}
+= -2 \alpha' t'_{(i-1)jk}, \\ &
+\gamma' & = \; \frac{(4 t_{(i-1)jk}-t_{(i-2)jk})^2}{4 \Delta x^2} 
+= \alpha' {t'}_{(i-1)jk}^2,
+\end{eqnarray*}
+\begin{eqnarray*}
+{\rm and} \; \; &
+{t'}_{(i-1)jk} & = \; \frac{1}{3}(4 t_{(i-1)jk}-t_{(i-2)jk}).
+\end{eqnarray*}
+Coefficients, $a$, $b$ and $c$ can be accumulated from $\alpha'$,
+$\beta'$ and $\gamma'$ as before, and if the traveltime, $t_{(i-2)jk}$ 
+is not available, first-order values may be substituted.
+
+%%Similarly, the third-order stencil,
+%%\begin{equation}
+%%D_{ijk}^{-x} t = \; \frac{11t_{ijk}-18t_{(i-1)jk} +
+%%9 t_{(i-2)jk} - 2 t_{(i-3)jk}}{6 \Delta x}
+%%\end{equation}
+%%\begin{eqnarray*}
+%%{\rm produces \;} &
+%%\alpha'' & = \; \left( \frac{11}{6 \Delta x}\right)^2, \\ [.1in] & 
+%%\beta''  & = -2 \alpha'' t''_{(i-1)jk}, \\ {\rm and \;} &
+%%\gamma'' & = \alpha'' {t''}_{(i-1)jk}^2,
+%%\end{eqnarray*}
+%%\begin{eqnarray*}
+%%{\rm where} \; \; &
+%%{t''}_{(i-1)jk} & = \; \frac{1}{11}(18 t_{(i-1)jk}-9t_{(i-2)jk}
+%%+2 t_{(i-3)jk}).
+%%\end{eqnarray*}
+
+\section{Accuracy}
+
+\inputdir{cvel}
+
+Figure~\ref{fig:circles} shows traveltime
+contour maps computed with the first and second-order fast marching
+methods on a sparse ($20 \times 20$) grid. 
+The large errors for waves propagating at 45$^\circ$ to the grid are
+visibly reduced by the second-order formulation.
+\plot{circles}{width=6in}{Traveltime contours in a constant
+velocity medium. The solid line shows the exact result. The dashed
+line shows the first-order (left panel) and second-order (right panel)
+fast marching results, calculated on a $20 \times 20$ grid.}
+
+\par
+Figure~\ref{fig:error} shows the average error as a function of grid
+spacing for the first and second-order solvers.  Not only is the
+second-order formulation more accurate at large grid spacing, but its
+accuracy increases more rapidly as grid spacing decreases. 
+Theory predicts the $\log-\log$ plots of average error against
+grid spacing to be a linear function with gradient of one for
+first-order methods, and two for second order methods. 
+In practice, the fast marching results come very close to these
+criteria up to the limits of machine precision.
+Figure~\ref{fig:error} demonstrates the superiority of the  
+second-order fast marching formulation.
+
+\par
+It is worth noting, at this point, that special treatment is required 
+at the source location, since the singularity in wavefront curvature
+will cause numerical errors to propagate into the traveltime
+solution.  We surround the source with a constant
+velocity box, within which we calculate traveltimes by ray-tracing.
+Errors are inversely proportional to the radius of this
+box. Therefore, if the radius of the box decrease with grid spacing, 
+errors will increase linearly, 
+reducing the accuracy of the method to first-order. 
+For full second-order accuracy, the box size should be independent of
+grid spacing.
+\plot{error}{width=6in}{Average error against grid spacing for a
+constant velocity model.  The solid line corresponds to the
+first-order eikonal solver, and the dashed line corresponds to the
+second-order solver.  The left panel has linear axes, whereas the
+right panel is a $\log-\log$ plot.}
+
+\inputdir{marm}
+
+\plot{marmousi}{width=6in}{Traveltime contours calculated through the
+Marmousi velocity model sampled at 4~m.  
+Solid line shows first-order results, and
+dashed line shows second-order results.}
+
+\section{Computational cost}
+
+\inputdir{.}
+
+The leading term in the computational cost of the fast marching
+algorithm comes from the first step: 
+choosing the point on the wavefront with the smallest traveltime. 
+Consequently, the cost should not depend strongly on the order of the 
+finite-difference stencil, but rather the sort algorithm used. 
+Heap sorting has a cost of $O(\log N)$, and so in principle, with this 
+algorithm, the fast marching method has a cost of $O( N \log N)$.
+
+\par
+The left panel of Figure~\ref{fig:times} shows a plot of CPU time
+against $N$ for the same models as Figure~\ref{fig:error}. 
+The time shown is elapsed (wall clock) time on a 300~MHz Pentium~II.  
+For the largest model computed here, the second-order code takes 11\%
+longer to run than the first-order code, and this percentage decreases
+as $N$ increases. 
+
+\par
+Because $\log N$ grows slowly compared to $N$, the plot of CPU time
+against $N$ is dominated by the linear term.  The right panel in
+Figure~\ref{fig:times} addresses this issue by showing CPU time
+divided by $N$ versus $N$.  On this graph, the $\log N$ behaviour is
+clearly visible.
+\plot{times}{width=6in}{Elapsed CPU time vs. the number of grid
+points, $N$, for first-order (solid line) and second order (dashed
+line) eikonal solvers. Left panel shows CPU time vs $N$. Right
+panel shows CPU time$/N$ vs $N$.}
+
+\section{Conclusions}
+We have shown that a second-order implementation of the fast marching
+eikonal solver produces traveltimes with a much higher accuracy than
+the first-order implementation.  What is more, the additional accuracy
+is acheived at only a marginal increase in cost.
+
+\par
+This second-order implementation should become the standard method for
+computing first-arrival traveltimes within SEP.
+
+\bibliographystyle{seg}  
+\bibliography{SEP2,SEG,fastmarch}
+
+
+

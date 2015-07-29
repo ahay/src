@@ -1,0 +1,147 @@
+\title{Amoco model}
+\author{Trevor Irons}
+\shortpaper
+\maketitle
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+
+\noindent
+\textbf {Data Type:} \emph{2D subset of a synthetic 3D acoustic model}\\
+\textbf {Source:} \emph{British Petroleum}\\
+\textbf {Location:} \emph{http://www.software.seg.org}\\
+\textbf {Format:} \emph{Native} \\
+\textbf{Date of origin:} \emph{Model was produced for an SEG convention presented in 1998}\\
+
+\section{Introduction}
+The Amoco dataset found within the Madagascar repository was created in 1997 and presented 
+formally at the talk \emph{Strike shooting, dip shooting, widepatch shooting -- Does prestack 
+migration care? A model study} given by John Etgen and Carl Regone at the 1998 SEG convention.  
+Its creators describe the model as the Carpatheans thrusting over the North Sea.  
+The model was specifically created to illustrate the limitation of Kirchhoff migration.  
+The model presented here is a single 2D line from the 3D model presented at the talk.  
+The information presented here was taken from the abstract to their paper which can be found at the SEG website.  
+
+The Madagascar Amoco repository contains all the files listed in table \ref{tbl:FILES}.  The repository contains several velocity models of varying smoothness as well as a shot record.   
+
+\tabl{FILES}{\emph{A list of files contained within the Madagascar amoco dataset repository}}
+{
+\tiny
+\lstinputlisting[frame=single]{FILES}
+\normalsize
+}
+
+\section{Model}
+This model is a 2D subset of a 3D model, however the model does not vary perpendicularly to this line.  The velocity model is 22 km across and 4 km in depth.
+
+The \emph{velmodel.hh} file did not need to be updated appreciably in this example.  However, the appropriate header settings are found in table \ref{tbl:modelHeader}.  Datums were spread every 12.5 meters to produce a 22km by 4 km grid.  
+ 
+\begin{center}
+\tabl{modelHeader}{\emph{Amoco unsmoothed velocity model header information}}
+{
+\begin{tabular}[t]{|clllllc|}
+        \hline
+          &  n1=321   &      d1=0.0125    &   o1=0        &       label1=Depth  &       unit1=km &  \\
+          &  n2=1761  &      d2=0.0125    &   o2=0        &       label2=Position &     unit2=km &  \\
+        \hline
+\end{tabular}
+}
+\end{center}
+
+A python \emph{SConstruct} script that fetches the data sets, appends the header slightly and plots the velocity 
+model can be found in Table \ref{tbl:modelSConstruct}.  An image of the velocity profile is found in Figure 
+\ref{fig:velmodel}. 
+
+\tabl{modelSConstruct}{\emph{Scons} script that generates RSF formatted Amoco velocity model}
+{
+\tiny
+\lstinputlisting[frame=single]{model/SConstruct}
+\normalsize
+}
+
+Typing Command \ref{eq:SCvel} within the \emph{amoco\slash model} directory runs the script.
+\begin{equation}\label{eq:SCvel} \texttt{bash-3.1\$\ scons\ view} \end{equation}
+
+\inputdir{model}
+\plot{velmodel}{width=\textwidth}{Amoco velocity model.}
+
+\section{Shots}
+A synthetic off-end survey was performed on the model.  Shots were fired every 50 meters along the model while 256 
+receivers with 25 meter spacing were pushed to the right.  Each receiver receiver recorded 384 time samples per shot 
+with gates every 9.9 milliseconds.  The header should be formatted as is shown in Table \ref{tbl:shotHeader} 
+
+\tabl{shotHeader}{Amoco shot header information}
+{
+\begin{tabular}[frame=single]{|lllll|}
+        \hline
+    n1=384  &       d1=0.0099  &    o1=0  &        label1=Time       &   unit1=s  \\
+    n2=256  &       d2=0.025   &    o2=0  &        label2=Offset  &   unit2=km   \\
+    n3=385  &       d3=0.05    &    o3=0  &        label3=Shot    &   unit3=km   \\
+        \hline
+\end{tabular}
+}
+
+The file \emph{amoco/shots/SConstruct} is presented in Table \ref{tbl:shotsSConstruct}.  This file fetches the shot 
+data, appends the header slightly and produces several images from the record.
+
+\tabl{shotsSConstruct}{\emph{Scons} script that generates \emph{RSF} formatted Amoco velocity model}
+{
+\tiny
+\lstinputlisting[frame=single]{shots/SConstruct}
+\normalsize
+}
+
+Typing Command \ref{eq:SCshot} within the \emph{amoco\slash shots} directory runs the script.
+\begin{equation}\label{eq:SCshot} \texttt{bash-3.1\$\ scons\ view} \end{equation}
+
+Several plots are produced.  Figures \ref{fig:zeroOne} and \ref{fig:zeroTwo} show the zero offset data acquired on the Amoco model.  The plots are split as the large velocity contrast between the left and right side of the model muddles the image when the gainpanel filter plots the data.  
+
+\inputdir{shots}
+\multiplot{2}{zeroOne,zeroTwo}{width=.45\textwidth}{Amoco zero offset shot data, plot (a) goes from 0 to 10.6 km and (b) goes from 10.6 to 20 km.  The plots were split as the large velocity contrast in the model makes it difficult to plot both sides on one scale.}
+\plot{shot40}{width=\textwidth}{Amoco shot number 280; the source is 14 km from origin}
+
+
+\section{FD Modeling}
+Madagascar can perform finite difference modeling on the Amoco Velocity model.  This is done using the function fdmod found within the program
+The raw velocity model needs to be formatted in a similar fashion to the Model Section of this paper.  
+
+For the purposes of this example a shot will be fired at 10 km along the horizontal coordinate and at a depth of 10 meters.  Receivers are 
+spread at a depth of 25 meters every 12.5 meters along the entire scope of the model.  This 22 km long receiver cable is impractical but useful for these 
+purposes.  Data is recorded on every receiver at time increments of 1 ms 5000 times resulting in 5 seconds of data.    
+
+An \emph{SConstruct} file located within \emph{amoco/fdmod/} properly formats the model and inputs necessary parameters to perform a shot on 
+the Amoco model.  This file is reproduced below in Table \ref{tbl:fdmodSConstruct}.
+
+\tabl{fdmodSConstruct}{\emph{Scons} script that performs a finite difference synthetic shot on the Amoco model.}
+{
+\tiny
+\lstinputlisting[frame=single]{fdmod/SConstruct}
+\normalsize
+}
+
+Typing Command \ref{eq:SCfdmod} within the \emph{amoco/fdmod/} directory runs the FD modeling script.
+\begin{equation}\label{eq:SCfdmod} \texttt{bash-3.1\$\ scons\ view} \end{equation}
+
+This script first constructs the survey acquisition geometry as was previously mentioned.  An image of the survey is created and presented
+in Figure \ref{fig:vel}.
+
+\inputdir{fdmod}
+\plot{vel}{width=\textwidth}{FD model geometry as performed on the Amoco velocity model.  The \emph{X} represents the shot while the smaller
+\emph{*} symbols represent receivers. The receivers extent along the right hand side although it is not clear in this image.}
+
+Firing the shot results the propagation of a wavefield which can be seen in the movie \emph{wfl.vpl} that is generated.  Typing 
+Command \ref{eq:viewMov} within the \emph{amoco/fdmod} directory displays the wavefield movie.
+
+\begin{equation}\label{eq:viewMov} \texttt{bash-3.1\$\ scons\ wfl.vpl} \end{equation}
+
+
+Four frames from this movie are presented in Figure \ref{fig:time5,time10,time15,time20}  illustrating the 
+propagation of the wavefield in the model.  
+
+\inputdir{fdmod}
+\multiplot{4}{time5,time10,time15,time20}{width=.45\textwidth}{Images of the propagating wavefield in the Amoco model generated by a finite 
+difference model.}
+
+
+The resulting data is then presented in the file \emph{dat.vpl}.  This plot is reproduced here in Figure \ref{fig:dat}.  This shot is 
+interesting as it clearly illustrates the different moveout witnessed on the two sides of the model.  
+
+\plot{dat}{width=\textwidth}{Data gathered by the receivers in the FD model survey.}  

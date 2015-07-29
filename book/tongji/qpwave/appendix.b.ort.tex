@@ -1,0 +1,141 @@
+\append{Pseudo-pure-mode qP-wave equation in orthorhombic media}
+
+One of the most common reasons for orthorhombic anisotropy in sedimentary basins is a combination of parallel 
+vertical fractures and vertically transverse isotropy in the background medium \cite[]{wild.crampin:1991,
+schoenberg.helbig:1997}.
+Vertically orthorhombic models have three mutually
+orthogonal planes of mirror symmetry that coincide with the coordinate planes $[x_{1},x_{2}]$, $[x_{1},x_{3}]$ and
+ $[x_{2},x_{3}]$. Here we assume $x_{1}$ axis is the x-axis (and used as the symmetry axis),
+ $x_{2}$ the y-axis, and $x_{3}$ the z-axis.
+Using the Thomsen-style notation for orthorhombic media \cite[]{tsvankin:1997b}:
+\begin{equation}
+\begin{split}
+v_{p0}&=\sqrt{\frac{C_{33}}{\rho}}, \\
+v_{s0}&=\sqrt{\frac{C_{55}}{\rho}}, \\
+\epsilon_{1}&=\frac{C_{22}-C_{33}}{2C_{33}}, \\
+\delta_{1}&=\frac{(C_{23}+C_{44})^2-(C_{33}-C_{44})^2}{2C_{33}(C_{33}-C_{44})}, \\
+\gamma_{1}&=\frac{C_{66}-C_{55}}{2C_{55}}, \\
+\epsilon_{2}&=\frac{C_{11}-C_{33}}{2C_{33}}, \\
+\delta_{2}&=\frac{(C_{13}+C_{55})^2-(C_{33}-C_{55})^2}{2C_{33}(C_{33}-C_{55})}, \\
+\gamma_{2}&=\frac{C_{66}-C_{44}}{2C_{44}}, \\
+\delta_{3}&=\frac{(C_{12}+C_{66})^2-(C_{11}-C_{66})^2}{2C_{11}(C_{11}-C_{66})}, 
+\end{split}
+\end{equation}
+	and
+\begin{equation}
+\begin{split}
+v_{px1}&=v_{p0}\sqrt{1+2\epsilon_{1}}, \\
+v_{px2}&=v_{p0}\sqrt{1+2\epsilon_{2}}, \\
+v_{sx1}&=v_{s0}\sqrt{1+2\gamma_{1}}, \\
+v_{sx2}&=v_{s0}\sqrt{1+2\gamma_{2}}, \\
+v_{pn1}&= v_{p0}\sqrt{1+2\delta_{1}}, \\
+v_{pn2}&= v_{p0}\sqrt{1+2\delta_{2}}, \\
+v_{pn3}&= v_{p0}\sqrt{1+2\delta_{3}},
+\end{split}
+\end{equation}
+the pseudo-pure-mode qP-wave equation (equation~\ref{eq:pseudo}) is rewritten as,
+\begin{equation}
+\label{eq:ort}
+\begin{split}
+\frac{\partial^2\overline{u}_x}{\partial t^2} &= {v_{px2}^2}\frac{\partial^2{\overline{u}_x}}{\partial x^2}
+                                              + {v_{sx1}^2}\frac{\partial^2{\overline{u}_x}}{\partial y^2}
+                                              + {v_{s0}^2}\frac{\partial^2{\overline{u}_x}}{\partial z^2}
+                                              + \sqrt{({v_{px2}^2}-{v_{sx1}^2})[(1+2\epsilon_{2}){v_{pn3}^2}-{v_{sx1}^2}]}
+                                                \frac{\partial^2{\overline{u}_y}}{\partial x^2} \\
+                                              &+ \sqrt{({v_{p0}^2}-{v_{s0}^2})({v_{pn2}^2}-{v_{s0}^2})}
+                                                \frac{\partial^2{\overline{u}_z}}{\partial x^2}, \\
+\frac{\partial^2\overline{u}_y}{\partial t^2} &= {v_{sx1}^2}\frac{\partial^2{\overline{u}_y}}{\partial x^2}
+                                              + {v_{px1}^2}\frac{\partial^2{\overline{u}_y}}{\partial y^2}
+                                              + {v_{s12}^2}\frac{\partial^2{\overline{u}_y}}{\partial z^2}
+                                              + \sqrt{({v_{px2}^2}-{v_{sx1}^2})[(1+2\epsilon_{2}){v_{pn3}^2}-{v_{sx1}^2}]}
+                                                \frac{\partial^2{\overline{u}_x}}{\partial y^2} \\
+                                              &+ \sqrt{({v_{p0}^2}-{v_{s12}^2})({v_{pn1}^2}-{v_{s12}^2}) }
+                                                \frac{\partial^2{\overline{u}_z}}{\partial y^2}, \\
+\frac{\partial^2\overline{u}_z}{\partial t^2} & = {v_{s0}^2}\frac{\partial^2{\overline{u}_z}}{\partial x^2}
+                                              + {v_{s12}^2}\frac{\partial^2{\overline{u}_z}}{\partial y^2}
+                                              + {v_{p0}^2}\frac{\partial^2{\overline{u}_z}}{\partial z^2}
+                                              + \sqrt{({v_{p0}^2}-{v_{s0}^2})({v_{pn2}^2}-{v_{s0}^2}) }
+                                                \frac{\partial^2{\overline{u}_x}}{\partial z^2} \\
+                                              &+ \sqrt{({v_{p0}^2}-{v_{s12}^2})({v_{pn1}^2}-{v_{s12}^2}) }
+                                                \frac{\partial^2{\overline{u}_y}}{\partial z^2},
+\end{split}
+\end{equation}
+where $v_{p0}$ represents the vertical velocity of qP-wave, $v_{s0}$ represents the vertical velocity of qS-waves polarized
+in the $x_{1}$ direction, $\epsilon_{1}$, $\delta_{1}$ and $\gamma_{1}$ represent the VTI parameters $\epsilon$, $\delta$
+ and $\gamma$ in the $[y,z]$ plane, $\epsilon_{2}$, $\delta_{2}$ and $\gamma_{2}$ represent the VTI parameters
+ $\epsilon$, $\delta$ and $\gamma$ in the $[x,z]$ plane, $\delta_{3}$ represents the VTI parameter $\delta$ 
+in the $[x,y]$ plane. $v_{px1}$ and $v_{px2}$  are the
+ horizontal velocities of qP-wave in the
+symmetry planes normal to the x- and y-axis, respectively.
+$v_{pn1}$, $v_{pn2}$ and $v_{pn3}$ 
+are the interval NMO velocities
+ in the three symmetry planes, and $v_{s12}=v_{s0}\sqrt{\frac{1+2\gamma_{1}}{1+2\gamma_{2}}}$.
+
+Setting $v_{s0}=0$, we further obtain the pseudo-acoustic coupled system in a vertically orthorhombic media,
+\begin{equation}
+\label{eq:ortA}
+\begin{split}
+\frac{\partial^2\overline{u}_x}{\partial t^2} &= v_{px2}^2\frac{\partial^2{\overline{u}_x}}{\partial x^2}
+                                              + (1+2\epsilon_{2})\sqrt{1+2\delta_{3}}{v_{p0}^2}
+                                                \frac{\partial^2{\overline{u}_y}}{\partial x^2} 
+                                              + \sqrt{1+2\delta_{2}}{v_{p0}^2}
+                                                \frac{\partial^2{\overline{u}_z}}{\partial x^2}, \\
+\frac{\partial^2\overline{u}_y}{\partial t^2} &= (1+2\epsilon_{2})\sqrt{1+2\delta_{3}}{v_{p0}^2}
+                                               \frac{\partial^2{\overline{u}_x}}{\partial y^2}
+                                             +(1+2\epsilon_{1}){v_{p0}^2}\frac{\partial^2{\overline{u}_y}}{\partial y^2} 
+                                             + \sqrt{1+2\delta_{1}}{v_{p0}^2}
+                                               \frac{\partial^2{\overline{u}_z}}{\partial y^2}, \\
+\frac{\partial^2\overline{u}_z}{\partial t^2} & = \sqrt{1+2\delta_{2}}{v_{p0}^2}
+                                               \frac{\partial^2{\overline{u}_x}}{\partial z^2} 
+                                             + \sqrt{1+2\delta_{1}}{v_{p0}^2}
+                                               \frac{\partial^2{\overline{u}_y}}{\partial z^2}
+                                             + {v_{p0}^2}\frac{\partial^2{\overline{u}_z}}{\partial z^2}.
+\end{split}
+\end{equation}
+Note that this equation does not contain any of the parameters $\gamma_{1}$ and $\gamma_{2}$ that describe
+ the shear-wave velocities in the directions of the x- and y-axis, respectively.
+ Evidently, kinematic signatures of qP-waves in pseudo-acoustic
+ orthorhombic media depend on just five anisotropic coefficients ($\epsilon_{1}$, $\epsilon_{2}$, $\delta_{1}$,
+ $\delta_{2}$ and $\delta_{3}$) and the vertical velocity $v_{p0}$.
+
+In the presence of dipping fracture, we need to extend the vertically orthorhombic
+ symmetry to a more complex form, i.e. orthorhombic media with tilted symmetry planes.
+ Similar to TTI media, we locally rotate the coordinate system to make use of the simple form of the pseudo-pure-mode wave equations
+ in vertically orthorhombic media. Since the physical properties are not symmetric in the local $[x_{1};x_{2}]$ plane, we need three angles
+ to describe the rotation \cite[]{zhang.zhang:2011}. Two angles, $\theta$ and $\varphi$, are used to define the vertical axis at each
+ spatial point as we did for the symmetry axis in TTI model. The third angle $\alpha$ is introduced to rotate the stiffness tensor 
+on the local  plane and to represent the orientation of the fracture system in a VTI background or the orientation of the first
+ fracture system of two orthogonal ones in an isotropic background.
+
+The second-order differential operators in the rotated coordinate system are expressed in 
+the same forms as in equation~\ref{eq:difoper}, but the rotation matrix is now given by,
+\begin{equation}
+\mathbf{R}=
+\begin{pmatrix}\cos{\varphi} & -\sin{\varphi} &0 \cr
+          \sin{\varphi} & \cos{\varphi} &0 \cr
+          0 & 0 & 1\end{pmatrix}
+\begin{pmatrix}\cos{\theta} & 0 & \sin{\theta} \cr
+          0 & 1 & 0 \cr
+          -\sin{\theta} & 0 & \cos{\theta}\end{pmatrix}
+\begin{pmatrix}\cos{\alpha}  &-\sin{\alpha} &0 \cr
+          \sin{\alpha} &\cos{\alpha} &0 \cr
+          0 & 0 & 1\end{pmatrix},
+\end{equation}
+where
+\begin{equation}
+\begin{split}
+r_{11}&=\cos{\theta}\cos{\varphi}\cos{\alpha}-\sin{\varphi}\sin{\alpha}, \\
+r_{12}&=-\cos{\theta}\cos{\varphi}\sin{\alpha}-\sin{\varphi}\cos{\alpha}, \\
+r_{13}&=\sin{\theta}\cos{\varphi},  \\
+r_{21}&=\cos{\theta}\sin{\varphi}\cos{\alpha}+\cos{\varphi}\sin{\alpha}, \\
+r_{22}&=-\cos{\theta}\sin{\varphi}\sin{\alpha}+\cos{\varphi}\cos{\alpha}, \\
+r_{23}&=\sin{\theta}\sin{\varphi}, \\
+r_{31}&=-\sin{\theta}\cos{\alpha}, \\
+r_{32}&=\sin{\theta}\sin{\alpha}, \\
+r_{33}&=\cos{\theta}.
+\end{split}
+\end{equation}
+Substituting the second-order differential operators into the rotated coordinate system for
+ those in the pseudo-pure-mode qP-wave equation
+of vertically orthorhombic media yields the pseudo-pure-mode qP-wave equation of 
+tilted orthorhombic media in the global Cartesian coordinates.

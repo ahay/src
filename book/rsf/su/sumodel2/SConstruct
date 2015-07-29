@@ -1,0 +1,79 @@
+from rsf.suproj import *
+
+xmax = 6
+zmax = 2
+
+layers = ((0,0,0,0),
+          (0.30,0.50,0.20,0.30),
+          (0.70,0.66,0.66,0.66),
+          (0.70,0.74,0.74,0.74),
+          (1.30,1.30,1.60,1.20),
+          (2,2,2,2))
+
+velocities = (0.44,
+              0.40,
+              0.30,
+              0.20)
+
+iedge = 0
+def edge(depths):
+    "convert an edge array into a trimodel form"
+    global iedge
+    iedge = iedge + 1
+    return '''
+    %d
+    xedge=%s
+    zedge=%s
+    sedge=0,0,0,0
+    ''' % (iedge,
+           ('0,2,4,6','3,3.5,4,6')[iedge==3 or iedge==4],
+           ','.join(map(str,depths)))
+
+ilayer = 0
+def fill(slowness):
+    "convert a slowness into a trimodel form"
+    global ilayer
+    ilayer = ilayer + 1
+    return '''
+    sfill=0.1,%g,0,0,%g,0,0
+    ''' % ((layers[ilayer][0]+layers[ilayer-1][0])/2,
+           slowness)
+
+Flow('model2',None,
+     '''
+     trimodel xmin=0 xmax=%g zmin=0 zmax=%g
+     kedge=1,2,3,4,5,6 %s
+     ''' % (xmax,zmax,
+            ' '.join(map(edge,layers)) + \
+                ' '.join(map(fill,velocities))))
+     
+Plot('model2',
+     '''
+     spsplot gedge=0.5 gtri=2.0 gmin=0 gmax=1
+     title="Earth Model - %d layers [M1]"
+     labelz="Depth (km)" labelx="Distance (km)"
+     dxnum=1.0 dznum=0.5 wbox=%g hbox=%g
+     ''' % (len(velocities),xmax,zmax))
+
+Result('model2','Merge')
+
+nxz=301
+
+Flow('ray2 outpar','model2',
+     '''
+     triray rayfile=$TARGET
+     nangle=10 fangle=-45 langle=-15
+     xs=4.5 zs=0.0 nxz=%d 
+     refseq=2,0 refseq=3,0 refseq=4,0 refseq=5,1
+     ''' % nxz,stdout=0)
+
+Plot('ray2',
+     '''
+     psgraph nplot=`cat outpar` n=%d hbox=%g wbox=%g
+     x1beg=0 x1end=%g x2beg=0 x2end=%g
+     d1num=0.5 d2num=1.0 style=seismic linegray=0
+     ''' % (nxz,zmax,xmax,zmax,xmax))
+
+Result('merge2','model2 ray2','Merge')
+
+End()

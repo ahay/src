@@ -1,0 +1,32 @@
+from rsf.proj import *
+
+Fetch('seismic.segy','viking')
+
+# Convert to RSF
+Flow('seismic tseismic','seismic.segy',
+     'segyread tfile=${TARGETS[1]}')
+
+# First 1000 traces
+Result('first','seismic',
+       'window n2=1000 | grey title="First 1000"')
+
+# Select a shot gather
+Flow('mask200','tseismic','window n1=1 f1=4 | mask min=200 max=200')
+Flow('shot200','seismic mask200','headerwindow mask=${SOURCES[1]}')
+
+Result('shot200i','shot200','grey title="Shot at ep=200" ')
+Result('shot200w','shot200',
+       'wiggle transp=y yreverse=y pclip=99 title="Shot at ep=200" ')
+
+# Source-receiver positions chart
+for key in ('sx','gx'):
+    Flow(key,'tseismic',
+         'window j2=2 | dd type=float | headermath output=%s/1000' % key)
+Result('chart','gx sx',
+       '''
+       cmplx ${SOURCES[1]} |
+       graph symbol=. title="Source-Reciever Chart" 
+       label1=gx label2=sx plotcol=6
+       ''')
+
+End()

@@ -1,0 +1,30 @@
+from rsf.proj import *
+
+def plot(title):
+    return 'grey crowd=.85  wantaxis=0 title="%s" ' % title
+
+Flow('make',None,'make n1=75 n2=25 t1=2')
+Plot('make',plot('signal'))
+
+Flow('noiz','make',
+     'noise rep=y type=n seed=1993 range=0.145 | smooth rect1=3')
+Flow('data','make noiz','add ${SOURCES[1]}')
+Plot('noiz','data',plot('signal+noise'))
+
+Flow('npef nlag','data','hpef a=4,1 lag=${TARGETS[1]}')
+Flow('spef slag','data','hpef a=7,3 lag=${TARGETS[1]}')
+
+eps = (1,4,0.25)
+
+for case in range(len(eps)):
+    sign,ss,nn = map(lambda x: x+str(case),['sign','ss','nn'])
+    Flow(sign,'data spef npef',
+         'signoi epsilon=%g sfilt=${SOURCES[1]} nfilt=${SOURCES[2]}' %
+         eps[case])
+    Plot(ss,sign,'window n3=1 f3=0 |' + plot('est. signal'))
+    Plot(nn,sign,'window n3=1 f3=1 |' + plot('est. noise'))
+
+Result('signoi','make noiz ss0 nn0','SideBySideAniso',vppen='txscale=3')
+Result('signeps','ss1 nn1 ss2 nn2','SideBySideAniso',vppen='txscale=3')
+
+End()

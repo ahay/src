@@ -1,0 +1,50 @@
+from rsf.suproj import *
+
+def plot(title,windowtitle):
+    return '''
+    suxwigb title="%s" windowtitle="%s" 
+    label1="Samples" label2="Trace" f1=1 d1=1 f2=1 d2=1
+    wbox=420 hbox=400 xbox=0 ybox=50
+    ''' % (title,windowtitle)
+
+amps=1,0,0,1	# In this demo, we try to kill a reflector of given slope
+
+###MODEL###
+# We make some simple data with suplane.  Note that in units of
+# trace/timesample the default slopes in suplane are 0, 1, 2, so
+# that the middle reflector is spatially just at Nyquist and the
+# the steepest reflector is spatially aliased.
+#
+# In this demo, we "fool the program" (see the sudipfilt self-doc)
+# by using nominal units in sudipfilt.  The data is created with
+# "physical" parameters of dt=4ms and (nominally) dx=d2=0.016km=16m:
+
+# First make the synthetic data for the dip filtering demo.
+# Assume that trace spacing is measured in km.
+Flow('data',None,'suplane | sushw key=d2 a=0.016')
+
+# Plot the model 
+Result('data',plot('Data: 3 sloping reflectors--Use dt=dx=1','Data'))
+
+zap = {'flat':   'slopes=-1.0,-0.5,0.5,1.0',
+       'middle': 'slopes=0.5,0.75,1.25,1.5',
+       'steep':  'slopes=1.5,1.75,2.25,2.5'}
+
+for event in zap.keys():
+    par = zap[event] + ' amps=1,0,0,1 bias=0'
+    Flow(event,'data','sudipfilt dt=1 dx=1 ' + par) 
+    Result(event,plot(par,'zap ' + event))
+
+# Failed because steep reflector is spatially aliased.  Here the
+# bias parameter can help (see the sudipfilt self-doc).  Look at
+# the F-K spectrum:
+
+Flow('specfk','data','suspecfk')
+Result('specfk',plot('F-K Spectrum of Data','F-K') + ' label1="Frequency" label2="K"')
+
+# Try again, biasing actual slope 2 to slope 0
+par = zap['steep'] + ' amps=1,0,0,1 bias=2'
+Flow('steep2','data','sudipfilt dt=1 dx=1 ' + par) 
+Result('steep2',plot('par','zap steep'))
+
+End()

@@ -1,0 +1,204 @@
+\hyphenation{re-cord-ed shift-ed Fou-rier Mo-ly-neux}
+
+\published{Geophysics, v. 78, T53-T58 (2013)}
+
+%\usepackage{amsmath,amssymb}
+%\usepackage{color}
+%\usepackage{dsfont}
+%\usepackage{subfigure}
+%\renewcommand\thesubfigure{\alph{subfigure}}
+%\usepackage{psfrag}
+
+\newcommand{\imag}{\mathrm{Im}}
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}} 
+\title{Automatic traveltime picking using the instantaneous traveltime}
+\author{Christos Saragiotis\footnotemark[1], Tariq Alkhalifah\footnotemark[1], 
+        and Sergey Fomel\footnotemark[2]}
+\lefthead{Saragiotis, Alkhalifah, \& Fomel}
+\righthead{Traveltime picking}
+%\footer{Traveltime picking}
+
+\address{
+\footnotemark[1]Physical Sciences and Engineering Division \\
+King Abdullah University of Science and Technology \\
+Thuwal 23955-6900 \\
+Saudi Arabia \\
+\footnotemark[2]Bureau of Economic Geology, \\
+John A.~and Katherine G.~Jackson School of Geosciences \\
+The University of Texas at Austin \\
+University Station, Box X \\
+Austin, TX 78713-8972 \\
+USA}
+
+
+%
+%\graphicspath{{images/}}
+%
+
+
+
+
+\maketitle
+
+\begin{abstract}
+Event picking is used in many steps of seismic processing. We present an automatic event picking method that is based on a new attribute of seismic signals, the instantaneous traveltime. The calculation of the instantaneous traveltime  consists of two separate but interrelated stages. First, a trace is mapped onto the time-frequency domain. Then the time-frequency representation is mapped back onto the time domain by an appropriate operation. The computed instantaneous traveltime equals the recording time at those instances at which there is a seismic event, a feature that is used to pick the events. 
+We analyze the concept of the instantaneous traveltime and demonstrate the application of our automatic picking method on dynamite and Vibroseis field data.
+\end{abstract}
+
+\section{Introduction}
+Event picking is an important step in seismic processing. It is used in static corrections, velocity analysis, seismic tomography, amplitude versus offset (AVO) analysis, and geological interpretation. By event, here, we mean a lineup on a number of traces of a seismic record that indicates the arrival of new seismic energy. The arrival of such new seismic energy is denoted by a discontinuity in the values of one or more  attributes that characterize the various layers of the subsurface.
+
+The recognition of seismic events is usually based on some measure of coherency or similarity from trace to trace \citep{marfurt98,bienati98}. The underlying assumption is that when a wave reaches the receiver line, it will produce approximately the same effect on all neighboring receivers. If the wave is strong enough to override other energy arriving at the same time, the traces will look similar during the interval in which this wave arrives. Therefore, coherence is considered a necessary condition for the recognition of any event. 
+
+Image processing techniques are also very popular for event picking \citep{bondar92}. Seismic sections are considered as images and seismic events can be thought of as edges on the seismic image. Edge detection or edge linking algorithms are therefore used to detect events usually after edge-preserving filtering \citep{bondar92} or multiresolution analysis \citep{maroni01} of the image. Other features used to recognize seismic events are amplitude standout, which refers to an increase in amplitude due to the arrival of coherent energy, wave signature, dip moveout and normal moveout \citep{garotta71}.
+
+
+In this paper, we propose a new methodology for automatic event picking based on a new attribute of seismic signals, which we call instantaneous traveltime. Our approach is based on the assumption that a recorded trace consists of the superposition of sufficiently concentrated signals that arrive at different times. A time-frequency decomposition allows the separation of those signals and the calculation of the traveltimes of different events within a trace. The computed traveltimes are initially time and frequency dependent but the dependency on the frequency is dropped by an appropriate operator. Testing this approach on simple synthetic and field data examples reveals its properties and shows promising results for automated seismic event picking.
+
+
+
+\section{Methodology}
+The approach utilizes a number of signal analysis techniques both in the time and frequency domains. We describe them below.
+\subsection{The mean and instantaneous traveltime attributes}
+We first define the quantity $\tau(\omega)$ for a signal $u(t)$ as 
+\begin{equation}\label{eq:tau_def}
+   \tau(\omega) := \imag\left\{\frac{\frac{dU(\omega)}{d\omega}}{U(\omega)}\right\},
+\end{equation}
+where $U$ is the Fourier transform of $u(t)$ and $\imag\{\,\}$ denotes the imaginary part. The rationale behind this seemingly arbitrary definition is that for the ideal case in which $u(t)$ is a delta function occurring at time $t_0$, i.e.\ $u(t)=a\delta(t-t_0)$, $\tau(\omega)$ equals the time of occurrence of the delta function for all frequencies, namely $\tau(\omega) = t_0$.
+
+If $u(t)$ is a band-limited delta function, then $\tau(\omega)$ does not equal $t_0$ but rather is approximately equal to $t_0$, within the bandwidth of $u(t)$ (see Figure \ref{fig:rick}). Consequently, the dependence of $\tau(\omega)$ on frequency can be dropped by simply averaging $\tau(\omega)$ within the bandwidth of $u(t)$. In the case that $u(t)$ is indeed a signal that signifies an event, such as the band-limited spike of Figure \ref{fig:rick}, averaging over the frequencies within the bandwidth of the signal yields a meaningful number, namely the time of occurrence of the event. On the other hand, if $u(t)$ is random noise or even insufficiently spiky, then $\tau(\omega)$ varies considerably with frequency (Figures \ref{fig:noiz}, \ref{fig:chrp}). In this case, averaging of $\tau(\omega)$ yields a meaningless number. This feature can be used to identify events in the seismic data. 
+
+\inputdir{syn}
+\multiplot{3}{rick,noiz,chrp}{width=0.55\linewidth}
+{Various signals (left) and their mean traveltimes as a function of frequency (right). (a) Band-limited spike. (b) Random noise. (c) Quasi-sinusoid (simulates Vibroseis harmonics).}
+
+
+The quantity $\tau(\omega)$ is essentially the derivative of the phase of $U(\omega)$ with respect to frequency, also referred to as group delay or envelope delay. In fact it has been used as such by \cite{stoffa74homo1} to compute a continuous phase curve and circumvent the phase-wrapping problem in homomorphic deconvolution. However, we prefer to use the term \emph{traveltime} for reasons that are explained below. 
+
+If we assume a signal consisting of two spikes at $t_1$ and $t_2$, respectively, i.e.,\ $u(t)= a_1\delta(t-t_1)+a_2\delta(t-t_2)$, we get 
+\begin{equation}
+   \imag\left\{\frac{\frac{dU}{d\omega}}{U}\right\} = \lambda_1 t_1 + \lambda_2t_2, 
+\end{equation}
+where $\lambda_1, \lambda_2$ are coefficients that depend on $\omega$, $a_1$, $a_2$ and $t_2-t_1$ and $\lambda_1+\lambda_2 = 1$. In general, for a signal $u(t)=\sum a_n\delta(t-t_n)$, then  
+\begin{equation}\label{eq:tau}
+   \tau(\omega) := \imag\left\{\frac{\frac{dU}{d\omega}}{U}\right\} = \sum_n \lambda_n(\omega) t_n, 
+\end{equation}
+where $\sum\lambda_n(\omega)=1$. In other words, $\tau(\omega)$ is a weighted sum of the times of arrivals of the different signals. By dropping the dependence on the frequency, we get the \emph{mean traveltime} of the arrivals of $u(t)$. We note that the calculation of the derivative $\frac{dU}{d\omega}$ can be unstable for sharp variations with frequency. It is therefore preferable to compute this quantity as the Fourier transform of $itu(t)$. In addition, it is generally a good idea to employ some kind of smooth division (for instance, like the one described by \cite{fomel07local}) when dividing $\frac{dU}{d\omega}$ over $U$ to avoid instability caused by small values of $U(\omega)$. 
+
+
+From the above discussion, it is clear that the mean traveltime attribute is not much of use, if it is to be computed on the whole trace. The Fourier transform used in equation \ref{eq:tau_def} performs an integration over the observed time interval. The localized temporal information is therefore lost. What is needed is a time-frequency transform to replace the Fourier transform in equation \ref{eq:tau_def} such that the traveltime attribute becomes localized in time as well. In this way, different arrivals are isolated from one another and the computed traveltimes are more accurate.  The \emph{instantaneous traveltime} $\tau(t)$ is therefore defined as
+\begin{equation}\label{eq:tau_tf}
+   \tau(t) := \mathcal S_\omega \left[\imag\left\{\frac{\frac{\partial U(t,\omega)}{\partial \omega}}{U(t,\omega)}\right\}\right],
+\end{equation}
+where $U(t,\omega)$ now denotes an appropriate time-frequency transform and $\mathcal S_\omega$ is an appropriate operator or mapping from the frequency domain into a single number. In the above definition, we intentionally let the time-frequency transform as well as the mapping $\mathcal S_\omega$ undefined as different transforms and/or operators may be more effective depending on the type of data under examination. We also note that only the forward transform is employed in equation~\ref{eq:tau_tf} and not the inverse. This allows for more flexibility on the choice of the transform used to capture the nonstationary behavior of the seismic traces as the transform need not have an inverse. 
+
+In the next two subsections, we discuss these two issues, namely the choices of the time-frequency transform and the mapping operator.
+
+\subsection{Time-frequency transform}
+In principle any time-frequency representation can be used for the calculation of the instantaneous traveltime. An obvious choice is the short-time Fourier transform. However the short-time Fourier transform suffers from the time-frequency resolution limitation and therefore the length of the window used for its calculation significantly depends on the frequency content of the windowed data. It is therefore not appropriate for our problem.  
+
+Another alternative is provided by \cite{liu11time-freq}. Their method essentially computes a series representation of a nonstationary, temporally bounded signal using the same basis functions as the Fourier series. 
+This series representation is therefore similar to the Fourier series, however, the series coefficients are allowed to be time-varying.
+
+In particular, if $\phi_k(t)=e^{ik\omega_0 t}$ denote the basis functions of the Fourier series expansion for a signal $s(t)$ with support $T=\frac{2\pi}{\omega_0}$, then $s(t)$ is represented as 
+\begin{equation}\label{eq:fs} 
+   s(t)\sim \sum_k c_k\phi_k(t), 
+\end{equation}
+where $c_k = \frac{\langle s,\phi_k\rangle}{\langle \phi_k,\phi_k\rangle}$ and $\langle x, y\rangle$ denotes the usual dot product of the $\mathds L_2$ space of functions with period $T$. 
+
+We note that equation \ref{eq:fs} is equivalent to the $\mathds L_2$-minimization problem: 
+\begin{equation}
+   \min_{\{c_k\}}\quad\int_T|s(t)-\sum_kc_k\phi_k(t)|^2\;dt.\label{eq:fs_coeffs}
+\end{equation}
+Instead of using equation \ref{eq:fs_coeffs} to calculate constant Fourier series coefficients, \citet{liu11time-freq} calculate time-varying coefficients, $c_k(t)$, which are the solution of the $\mathds L_2$-minimization problem: 
+\begin{equation}
+   \min_{\{c_k(t)\}}\quad\sum_k\int_T|s(t)-c_k(t)\phi_k(t)|^2\;dt.\label{eq:ltft_coeffs}
+\end{equation}
+Apart from the time-varying character of the coefficients, $c_k(t)$, in equation \ref{eq:ltft_coeffs}, equations \ref{eq:fs_coeffs} and \ref{eq:ltft_coeffs} are also different in another significant way: in equation \ref{eq:fs_coeffs}, the minimization is performed between the signal and its series representation, while in equation~\ref{eq:ltft_coeffs}, the minimization is performed between the signal and every frequency component separately.  
+
+The coefficients, $c_k(t)$, can be computed by solving the regularized least-squares problem: 
+\begin{equation}
+   \min_{\{c_k(t)\}}\quad\sum_k\int_T|s(t)-c_k(t)\phi_k(t)|^2\;dt + R(c_k(t)),\label{eq:ck_reg}
+\end{equation}
+where $R$ is the regularization operator \citep{liu11time-freq}. 
+Using such an approach enforces smoothness on the coefficients, $c_k(t)$, which ensures the solution of the underdetermined problem \ref{eq:ltft_coeffs} \citep{fomel07shaping}.
+
+
+
+\subsection{The mapping operator}
+To illustrate the effect the mapping operator has on the computation of the instantaneous traveltime, we use the simple synthetic signal shown in Figure~\ref{fig:syn}. This signal consists of three events at 0.4, 1.2 and 1.4 s. 
+Figures~\ref{fig:ltf0} and \ref{fig:tt0} depict the time frequency representation of the test signal using the formulation of equation~\ref{eq:ck_reg} and the computed $\tau$ as a function of time and frequency. It is evident that for a significant part of the frequency band, $\tau(t,\omega)$ is a smooth function of $\omega$; in fact, it is almost constant. In particular, the three curves at about 0.4, 1.2 and 1.4 s are contour lines of $\tau(t,\omega)=t$. This means that for this particular time-frequency transformation, the mapping operator can be a simple averaging operator. It would be prudent, however, to average $\tau(t,\omega)$ over the frequencies in the bandwidth of the signal. 
+
+\multiplot{3}{syn,ltf0,tt0}{width=0.55\linewidth}
+{(a) Synthetic signal. (b) Local $t-f$ representation of the synthetic signal. (c) $\tau(t,f)$ using the local $t-f$ map. Contour lines denote values where $\tau(t,f)=t$ and the transition through zero is from positive to negative values.\newline The dashed lines in (b) and (c) indicate the effective bandwidth (estimated using equation \ref{eq:inst_bw}).}\label{fig:syn_tf}
+
+
+For most data, the bandwidth of signals is varying with time. It therefore makes sense to estimate the effective bandwidth as a function of time. In order to choose the frequency band automatically, we suggest any data-driven criterion, such as an estimate of the instantaneous frequency or some weighted mean of the frequency. 
+An obvious choice is 
+\begin{equation}
+   \mu_\omega(t) = \frac{\displaystyle\int \omega|c(t,\omega)|\,d\omega}{\displaystyle\int|c(t,\omega)|\,d\omega},\label{eq:fmn}
+\end{equation}
+where $c(t,\omega)$ are the time- and frequency-varying coefficients of the time-frequency transform, which we call local frequency. Equation \ref{eq:fmn} has been used by \cite{lovell93instfreq} as an estimate of the instantaneous frequency \citep{taner79complex,barnes92calculation} or the dominant frequency \citep{liu11time-freq}. Similarly, we can define an estimate of the variance of the local frequency as
+\begin{equation}
+   \sigma_\omega^2(t) = \frac{\displaystyle\int (\omega-\mu_\omega(t))^2|c(t,\omega)|\,d\omega}{\displaystyle\int |c(t,\omega)|\,d\omega}\label{eq:fvar}
+\end{equation}
+Having estimated the local frequency, $\mu_\omega(t)$, and its variance, $\sigma_\omega^2(t)$, we may now estimate the effective bandwidth, $\mathrm{BW}(t)$, as 
+\begin{equation}
+   \mathrm{BW}(t) = [\mu_\omega(t)-\sigma_\omega(t),\mu_\omega(t)+\sigma_\omega(t)].\label{eq:inst_bw}
+\end{equation}
+In Figures \ref{fig:ltf0} and \ref{fig:tt0}, the dashed lines denote the effective bandwidth. 
+
+The result of the averaging operation is shown in Figure~\ref{fig:taut0}, in which $\tau(t,\omega)$ is averaged over the frequencies in its effective bandwidth. (Figure \ref{fig:syn0} is the same as Figure \ref{fig:syn} and shown here just to illustrate the agreement between the actual arrivals and the picked arrivals.) Parameter $\tau(t)$ equals the recording $t$ (dashed line) at the times of arrival of the spikes, namely at $t_1=0.3996$, 1.1991 and 1.3978 s. It should be noted that although there are actually no arrivals between two consecutive arrivals, $\tau(t)$ is not zero in that interval. This is due to the smooth division we employed, when dividing $\frac{dU}{d\omega}$ over $U$. Smooth division does not allow the result to vary erratically from sample to sample. 
+Figure \ref{fig:tau-t0} shows the difference $\tau(t)-t$. This difference equals 0 at the times of arrival of the two spikes. 
+However not all zeros of $\tau(t)-t$ are of interest; rather, only the zero crossings from positive to negative values yield valid traveltimes. Positive maxima of $\tau(t)-t$ (as in $t\approx0.3, 1.1, 1.3$) denote an imminent arrival of a signal. Let's assume a strong (compared to neighboring events) event at some time $t_0$. According to equation~\ref{eq:tau}, $\tau(t)$ is a weighted some of the times of arrivals around $t$. The closer $t$ is to the imminent arrival at $t_0>t$, the more the value of $\tau(t)$ will be biased towards the value $t_0$. Therefore $\tau(t)$ will be greater than $t$, i.e., $t<\tau(t)<t_0$. For $t>t_0$, the value of $\tau(t)$ will still be biased towards $t_0$, therefore $t_0<\tau(t)<t$. In fact, the higher the energy of the arriving signal at some time $t_0$ compared with that of neighboring events, the closer the value of $\tau(t_0)$ to $t_0$ will be. 
+Accordingly, an event is identified by the non-zero values of the function 
+\begin{equation}
+   d(t) = H\left(-\frac{d\tau}{dt}\right) \delta(t-\tau(t)),\label{eq:attr}
+\end{equation}
+where $H$ is the Heaviside step function and $\delta$ is the Dirac delta. This function is zero if $\tau(t)\neq t$ as imposed by the Dirac delta factor as well as if $\tau(t)=t$ but $\tau(t)$ is increasing as imposed by the Heaviside step factor.
+
+
+\multiplot{3}{syn0,taut0,tau-t0}{width=0.55\linewidth}
+{(a) Synthetic signal (sampling period is 4 ms). Arrivals are at 0.4, 1.2 and 1.4 s. 
+ (b) $\tau(t)$ after averaging over the frequencies in the effective bandwidth. The dashed line indicates the recording time. 
+ (c) $\tau(t)-t$. Zero crossings occur at 0.3996, 1.1991 and 1.3978 s.}%\label{fig:syn_tau}
+
+
+\section{Application to field data}
+We used the instantaneous traveltime attribute to pick events from two field datasets. 
+The first dataset is dataset 6 from \cite{yilmaz} shown in Figure \ref{fig:oz6}. This is a 48-trace shot gather with 100 m trace spacing and sampling interval 4 ms. The source used to acquire this dataset was dynamite. We applied the proposed method to the raw data without performing any type of preprocessing to evaluate our method's behavior and consistency across offsets in raw and noisy data. Indeed, there are more than one different refraction arrivals close to the first breaks like the strong linear event with a velocity of about 1.5 km/s, which looks like a refraction from a deeper layer, and two reflections at about 1.5 s and 2.7 s. The arrivals computed using the instantaneous traveltime attribute are shown as red spikes in the figure.
+
+In this application, we effectively applied an automatic picking tool to raw two-dimensional seismic data without imposing any consistency requirements over offset. Our objective was to measure the capability of this attribute in mapping reflections. 
+The figure shows that the instantaneous traveltime attribute misses many of the first breaks due to the complexity of the waveforms of the early arrivals. The proposed method is therefore not suitable for picking first breaks, although the instantaneous traveltime can be used for automatic first-break picking, if applied appropriately \citep{saragiotis12itime1st}. Nevertheless, the first reflection is clearly well picked at most traces as is the 1.5 km/s refraction. 
+The second reflection is picked only at traces 18 to 30.  
+Overall, the trends of the different arrivals are present in Figure~\ref{fig:oz6} despite the raw nature of the data. 
+
+The second dataset is dataset 2 from \cite{yilmaz} and is shown in Figure \ref{fig:oz2}. It is a 120-trace shot gather with 100 ft trace spacing and sampling interval 4ms. The source used to acquire this dataset is Vibroseis. Regarding this second dataset, we can make almost the same remarks as about the first one. Although the first breaks are identified, they are not accurately determined. As mentioned previously, first breaks can be identified accurately even in Vibroseis data \citep{saragiotis12itime1st}. However, other events are properly picked, including the reflections at about 1.5 and 1.8 s.
+
+We reiterate that for both datasets, picking is performed without any preprocessing of the data and by applying the method to each trace separately, without taking into account information from neighboring traces. Such information is expected to enhance the picking performance significantly and is the subject of ongoing research.
+
+Finally, the computational efficiency of the proposed method depends largely on the computational efficiency of the time-frequency transform and the operator that maps the time-frequency domain to the time domain. The algorithm by \citet{liu11time-freq} has the advantage of being easily parallelizable. Recently, efficient algorithms for computing time-frequency transforms, as for example in \citep{brown10generalized}, have been introduced. Such efficient algorithms are expected to increase the computational efficiency of the proposed method.   
+
+\inputdir{oz6}
+\plot{oz6}{width=\linewidth}{oz6}
+{Dataset 6 from \citep{yilmaz} and picked events (red). For displaying purposes, AGC has been applied on the data.}
+
+\inputdir{oz2}
+\plot{oz2}{width=\linewidth}
+{Dataset 2 from \citep{yilmaz} and picked events (red). For displaying purposes, AGC has been applied on the data.}\label{fig:oz2} 
+
+\section{Conclusions}
+We have presented a novel approach to automatic event picking in seismic data. This method does not require a specification of optimal empirical parameters, such as window lengths or reference waveforms. It is based on the instantaneous traveltime, a new attribute. The instantaneous traveltime is computed from the seismic data by first transforming the data into a time-frequency domain to capture the nonstationary behavior of the data. Then, the time-frequency representation of the data is mapped back onto the time domain. The time-frequency transform as well as the mapping operation may be chosen depending on the data at hand. Furthermore, the time-frequency transform need not have an exact inverse transform, a fact which allows for a wider range of choices on such transforms.
+
+We have applied this approach to synthetic and field data (dynamite and Vibroseis) to investigate the behavior of the algorithm. We find that its performance is promising. Although the presented method cannot be used for first-break picking per se, the instantaneous traveltime attribute can be used for such a task. To improve the accuracy of the proposed method, information on adjacent traces may be used to further constrain the event-picking and/or edge-linking algorithms. 
+
+
+\section{Acknowledgments}
+We would like to thank Yunseok Choi and Mohammed A.~Zuberi for useful discussions. We also thank the King Abdullah University of Science and Technology for its financial support. This work was partially funded by Saudi Aramco, under Project FSD-016/2010.
+
+
+% References
+\bibliographystyle{seg}  % style file is seg.bst
+\bibliography{itime}
+

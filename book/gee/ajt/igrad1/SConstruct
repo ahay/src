@@ -1,0 +1,14 @@
+from rsf.proj import *
+from rsf.recipes.bay import Bay
+
+Bay('bay',f2=500,n2=1600,f1=50,n1=1050)
+
+def plot(title):
+    return 'grey title="%s" pclip=99.9 gpow=.8 crowd=.85' % title
+
+Plot('bay',plot('Topographic map, Stanford area'))
+Plot('slope','bay','igrad | ' + plot('Southward slope'))
+Result('stangrad','bay slope','OverUnderAniso')
+
+###########################################################################
+End()

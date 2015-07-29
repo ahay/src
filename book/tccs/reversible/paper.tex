@@ -1,0 +1,473 @@
+\published{Journal of Geophysics and Engineering, 8, 477-486, (2011)}
+
+\title{A reversible transform for seismic data processing}
+
+\lefthead{Burnett \& Ferguson}
+\righthead{Reversible Seismic Transform}
+
+\author{William A. Burnett$^1$ and Robert J. Ferguson$^2$}
+\address{$^1$ John A. and Katherine G. Jackson School of Geosciences, The University of Texas at Austin, University Station, Box X, Austin, TX 78713-8972. \\
+$^2$ Department of Geoscience, University of Calgary, 2500 University Drive, N.W., Calgary, Canada T2N 1N4.}
+
+
+\begin{abstract}
+We use the nonstationary equivalent of the Fourier shift theorem to derive a general one-dimensional integral transform for the application and removal of certain seismic data processing steps.
+This transform comes from the observation that many seismic data processing steps can be viewed as nonstationary shifts.
+The continuous form of the transform is exactly reversible, and the discrete form provides a general framework for unitary and pseudounitary imaging operators.
+Any processing step which can be viewed as a nonstationary shift in any domain is a special case of this transform.  
+Nonstationary shifts generally produce coordinate distortions between input and output domains, and those that preserve amplitudes do not conserve the energy of the input signal.  
+The nonstationary frequency and time distortions and nonphysical energy changes inherent to such operations are predicted and quantified by this transform.
+Processing steps of this type are conventionally implemented using interpolation operators to map discrete data values between input and output coordinate frames.
+Although not explicitly derived to perform interpolation, the transform here assumes the Fourier basis to predict values of the input signal between sampling locations.
+We demonstrate how interpolants commonly used in seismic data processing and imaging approximate the proposed method.
+We find that our transform is equivalent to the conventional sinc-interpolant with no truncation.
+Once the transform is developed, we demonstrate its numerical implementation by matrix-vector multiplication.
+As an example, we use our transform to apply and remove normal moveout.
+\end{abstract}
+
+
+\maketitle
+
+\section{Introduction}
+It is well known that the Fourier transform has a variety of properties that make it useful for signal processing in geophysics \citep{yilmaz01}.
+The Fourier transform essentially rearranges the data an input function into its complex frequency components \citep{karl89}.
+This can be done because continuous functions and their discretely-sampled equivalents can be expressed in terms of the Fourier basis.
+The organization of data in the Fourier domain allows many otherwise complex operations to be applied easily.
+Properties described by the Faltung, Weiner-Khintchine, and shift theorems \citep{sneddon95} can exploit this organization because of another property, described by the inversion theorem \citep{sneddon95}, which states that the Fourier transform is exactly reversible.   
+
+Many individual seismic data processing steps also simply rearrange input data, and can therefore be viewed as transforms.
+Barring destructive processes such as muting or band-limited frequency filtering, even an entire data processing flow is itself simply transformations the input data into a corrected set.
+However, conventional methods used to perform processing steps of this type are usually not implemented as transforms.
+Instead, they are implemented with data-mapping algorithms that require interpolation \citep{harlan82}.
+
+Most conventional interpolation schemes contradict the primary assumption of the Fourier transform, as they do not assume the continuous equivalent of the recorded data is constructed with the Fourier basis.
+Instead, they assume some other basis in order to design efficient but approximate interpolants \cite[]{karl89}.
+These methods not only have the risk of immediately altering the data, but they are also inherently irreversible.
+Applying or removing processing steps in this way causes a small amount of information loss.
+With quantitative analysis methods as a goal of modern seismic data processing, it is important to preserve as much of the input information as possible during the flow.    
+
+In order to address the problem of data loss due to interpolation-based methods, we propose a reversible one-dimensional transform for the implementation of seismic data processing steps.  
+The proposed transform provides a general framework for unitary and pseudounitary operators common to seismic data processing and imaging \citep{biondi_claerbout85,claerbout92}.  This framework is developed in the context of nonstationary filtering \citep{margrave98}.
+Implementing imaging steps as reversible transforms does not require interpolation in the continuous case, and correctly assumes the Fourier basis in agreement with the Fourier transform for interpolation in the discrete case. Although several seismic data processing operations have been individually described by transforms of exactly this type \citep{margrave98,margrave_ferguson99,margrave01,claerbout92}, the transform here is the general form \citep{burnett07,burnett_ferguson08b}.
+
+Since the Fourier basis is used, the forward transform is theoretically exactly invertible.
+Just as the inversion theorem quantitatively justifies the Fourier domain as a valid processing domain, a reversible transform for data processing steps justifies the use of corrected data sets as if they are in valid processing domains themselves.
+Any processing step that can be viewed as a nonstationary shift can be easily implemented by this transform.
+Seismic imaging steps are naturally useful for separating signal from noise, so they offer familiar, exploitable organizations of data \citep{mcmechan_sun91,yu_etal05}.
+Therefore, the proposed reversible transform for seismic data processing offers a useful set of quantitatively valid domains in which to work.
+ 
+The general transform we derive is based on classical Fourier transform theory \citep{papoulis62,sneddon95}, and the theory of nonstationary filtering \citep{margrave98}.
+We first develop the general form for the forward data processing transform, and then derive the inverse of the transform.  Following the transform development, we implement the normal moveout correction as an example, and then we discuss how conventional interpolation methods relate to the proposed transform.
+
+\section{Theory}
+\label{sec:DPTt}
+Many conventional seismic imaging steps are special cases of nonstationary shifts, which can be performed simultaneously with the Fourier transform via nonstationary convolution or combination \citep{margrave98}.  This section shows how the nonstationary shift operator can be combined with the Fourier transform kernel to create a general data processing transform kernel.
+
+
+It is important to define a convention for the forward and inverse Fourier transform before proceeding.
+The shift-direction determined by the sign in a shifting exponential will reverse if the opposite sign convention for the Fourier transform is used.
+We use the forward Fourier transform convention,
+\begin{equation}
+\label{eq:FT}
+	F \left( \beta \right) = \int_{-\infty}^{\infty} \, f \left( p \right) \, e^{-i \, \beta \, p} \, dp,
+\end{equation}
+\noindent where $F(\beta )$ is the complex Fourier transform (commonly a function of frequency) of the input signal, $f(p)$ (commonly a function of time). 
+With the Fourier transform convention defined in equation~\ref{eq:FT}, a positive sign in the shifting exponential causes a backward shift of the input function. 
+The inverse Fourier transform, 
+\begin{equation}
+\label{eq:IFT}
+	g \left( q  \right) = \frac{1}{2\pi }\int_{-\infty}^{\infty} \, F \left( \beta \right) \, e^{i \, \beta \, q } \, d\beta ,
+\end{equation}
+\noindent 
+has an output function, $g(q)$, that is strictly different from the original input function.  A special property of the Fourier transform is that the input and output axes, $p$ and $q$, are identical, and $f(p)=g(q)$, meaning that the input function passes unchanged when put through both the forward and inverse Fourier transforms alone.  
+
+In general, any processing step that requires a mapping from an input coordinate that is a function of the output coordinate, to that output coordinate, can be viewed as a nonstationary shift by combination.  Examples of such processing steps include normal moveout (NMO), dip-moveout (DMO), and frequency-wavenumber (\textit{f-k}) migration.
+NMO is a nonstationary shift in the time-space domain, while \textit{f-k} migration performs a similar shift in the frequency-wavenumber domain. 
+To remain general though, it is better at this point to think in terms of input and output coordinates rather than input and output times, so that frequency, wavenumber, space, or time shifts can be admitted, depending on the desired domain.
+
+To emphasize that the input and output coordinates do not necessarily correspond to time, we use the above $p-q$ notation. A general nonstationary data processing shift in this notation is,
+\begin{equation}
+	\label{eq:Delta}
+	\Delta \left( q \right)=p\left( q \right)-q,
+\end{equation}
+where $p$ and $q$ are the input and output coordinates, respectively.
+Using these general coordinates, the nonstationary data processing shift applied to an input function, $f(p)$, is,
+\begin{equation}
+	\label{eq:FPT_full}
+	g \left( q \right) \equiv f \left( q + \Delta \left( q \right) \right) = \frac{1}{2 \, \pi} \, \int_{-\infty}^{\infty} \, F \left( \beta \right) \, e^{i \, \beta \, \Delta \left( q \right)} \, e^{i \, \beta \, q} \, d \beta,
+\end{equation}
+where $F(\beta )$ is the Fourier transform of $f(p)$, $\beta$ is the Fourier dual of $p$, and the output signal, $g(q)$ is the desired result of processing the input signal $f(p)$.  
+Unlike the Fourier transform, $p$ and $q$ are not identical, although they represent the same dimension. 
+The convenient form of $\Delta (q)$ allows the exponentials to be reduced by combining the Fourier transform kernel with the nonstationary shifting exponential. The result is a concise form of the forward data processing transform,
+\begin{equation}
+	\label{eq:FPT}
+	g \left( q \right) = \frac{1}{2 \, \pi} \int_{-\infty}^{\infty} F \left( \beta \right) \, e^{i \, \beta \, p \left( q \right)} \, d \beta,
+\end{equation}
+which confirms the desired result,
+\begin{equation}
+	\label{eq:FPT_result}
+	g \left( q \right) = f \left( p \right).
+\end{equation}
+
+The forward transform given in \ref{eq:FPT} is in the mixed-domain.
+For example, if the input function is defined over time, \ref{eq:FPT} takes the frequency spectrum of that input function, and outputs a new time series.
+This should not be alarming, as the Fourier transform itself is a mixed-domain transform.
+It may seem questionable how $p \left( q \right)$ is handled in the exponent.
+However, since the nonstationary shift is formulated here as a nonstationary combination, and the integration is over $\beta$, nothing new is needed to handle the relation between $p$ and $q$.
+
+Although nonstationary combination kinematically performs nonstationary shifts correctly, amplitudes are not changed, and therefore energy is not conserved between input and output traces.  
+Figure~\ref{fig:NSArea} demonstrates how the area under the input signal changes under a nonstationary combination shift.
+This nonphysical energy change within a trace is inherent to any processing step that applies or approximates a nonstationary shift.  
+Rayleigh's theorem (also known as Plancherel's theorem) states that the integral of the square of an input function must be the same as the integral of its squared Fourier transform \citep{karl89}.
+Physically, this means that energy should be conserved between the input and Fourier domains, and clearly, the forward data processing transform violates this.
+Although nonphysical in most cases, nonstationary combination provides exactly the type of shift desired for the NMO correction and many other seismic data processing steps.
+The well-known issue of NMO stretch \citep{barnes92} is a clear example of this type of energy change, where the seismic amplitudes remain unchanged after each trace has undergone the time-variant shift of the NMO correction.
+Relative to the input signal, this energy change means distortions in both the input and Fourier domains.
+These distortions are accounted for and handled by the inverse transform developed below, which relies on physically valid nonstationary convolution instead.
+
+\inputdir{.}
+\sideplot{NSArea}{width=3.5in}{Element area change caused by a nonstationary combination shift.
+The values of $f$ at $p_1$ and $p_2$ are mapped to $g$ at $q_1$ and $q_2$, respectively.
+Since $\Delta f$ does not equal $\Delta g$, the areas $A_f$ and $A_g$ are not equal.  Therefore, by Rayleigh's Theorem, energy is not conserved.
+Scaling $g \left( q \right)$ by $\alpha(q)$ makes the areas the same.}
+
+To quantify how the energy has been changed by the forward transform, take the ratio of areas of a shifted and unshifted rectangular element as in Figure~\ref{fig:NSArea}:
+\begin{equation}
+	\label{eq:NSArea}
+	\alpha \left( q \right) = \frac{\Delta p \left( \frac{f \left( p_1 \right) + f \left( p_2 \right)}{2} \right)}{\Delta q \left( \frac{g \left( q_1 \right) + g \left( q_2 \right)}{2} \right)}.
+\end{equation}
+Equation \ref{eq:FPT_result} shows that the shifted values of the input function are not changed.
+This corresponds to the height of the rectangular elements shown in Figure~\ref{fig:NSArea} remaining unchanged by the forward transform ($f(p_i)=g(q_i)$), giving,  
+\begin{equation}
+	\label{eq:Alpha_Area}
+	\alpha \left( q \right) = \frac{\Delta p}{\Delta q}.
+\end{equation}
+In the continuous limit, \ref{eq:Alpha_Area} goes to,
+\begin{equation}
+\alpha \left( q \right) =\frac{d p}{d q}.
+\label{eq:Alpha}
+\end{equation}
+The output function, $g \left( q \right)$, is of course distorted by different amounts for various $q$ since the applied shift is nonstationary.
+By scaling $g(q)$ by $\alpha (q)$ and integrating, we claim that the energy change can be accounted for via Rayleigh's theorem in the inverse transform.
+
+
+Now that there is a mechanism for removing amplitude distortions, the rest of the inverse transform development comes from removing the kinematic shift.
+The output function of the forward transform, $g \left( q \right)$, becomes the input function of the inverse transform.
+Since the forward shift is applied simultaneously with the inverse Fourier transform, the reverse shift should be applied simultaneously with the forward Fourier transform.  That is, the inverse data processing transform should naturally recover the original input spectrum, $F \left( \beta \right)$, rather than go directly back to the original input signal.  
+
+We first apply the Fourier transform to $g \left( q \right)$ in terms of its own coordinate, $q$, then reverse the nonstationary shift simultaneously,
+\begin{equation}
+	\label{eq:IFPT_d1}
+	G\left(\gamma \right) = \int_{-\infty}^{\infty} \, \alpha \left( q \right) g \left( q \right) \, e^{-i \, \gamma \, q} \, e^{-i \, \gamma \, \Delta \left( q \right)} \, dq \, ,
+\end{equation}
+where $\gamma $ is the Fourier dual of $q$, and $G(\gamma )$ is the desired uncorrected spectrum. 
+Two interesting simplifications come from \ref{eq:IFPT_d1}.  
+First, we can again exploit the convenient form of $\Delta (q)$ to reduce the exponential giving,
+\begin{equation}
+	\label{eq:IPT_full}
+	G \left( \gamma \right) = \int_{-\infty}^{\infty} \, \alpha \left( q \right) g \left( q \right) \, e^{-i \, \gamma \, p(q)} \, dq \, .
+\end{equation}
+Doing so forces integrating $p \left( q \right)$ in the exponential over $q$, which may at first seem like an unattractive approach, but we must do so to account for the nonphysical distortion caused by the forward transform.
+The second simplification helps, as the scaling function, $\alpha (q)=\frac{d p}{d q}$ conveniently acts as a change-of-integration-variable factor, giving,
+\begin{equation}
+  \label{eq:IPT_d2}
+  G\left( \gamma \right) = \int_{-\infty}^{\infty} g \left( q \right)e^{-i \, \gamma \, p\left( q \right)}dp .
+\end{equation}
+By Rayleigh's theorem, the energy change can be accounted for by scaling $g \left( q \right)$ by $\alpha \left( q \right)$ inside an integral over $q$.  This observation, combined with \ref{eq:FPT_result}, shows that \ref{eq:IPT_d2} is equivalent to a regular Fourier transform of $f(p)$.  Therefore, we can recover the unprocessed Fourier domain function--the goal of the mixed-domain general inverse data processing transform,
+\begin{equation}
+	\label{eq:IPT}
+	G\left( \gamma \right) = F\left( \beta \right).
+\end{equation}
+The original unprocessed input function can then be exactly recovered by a regular inverse Fourier transform:
+\begin{equation}
+h\left( q \right) = \frac{1}{2 \, \pi}\int_{-\infty}^{\infty}G \left( \gamma \right) e^{i \, \gamma \, q}d\gamma,
+\label{eq:IPT_IFT}
+\end{equation}
+\noindent where, $h(q)$ is the final unprocessed function of the inverse Fourier transform.  Equation \ref{eq:IPT_IFT} is just a regular inverse Fourier transform of $G(\gamma )$ over its own coordinate, $\gamma $.  Therefore, using \ref{eq:IPT}, it is clear that \ref{eq:IPT_IFT} is  equivalent to a regular IFT of $F(\beta )$ over $\beta $, and that the desired result of the inverse transform is confirmed:
+\begin{equation}
+h\left( q \right)=f\left( q \right).
+\label{eq:IPT_result}
+\end{equation}
+
+
+The kinematics of this general data processing transform are clear under nonstationary filtering theory.
+We claim that for any data processing step implemented by transform, the kinematics of the step can also be clearly understood, and that $\alpha \left( q \right)$ trivially predicts the amplitude corrections which are otherwise difficult to quantify using conventional filtering theory.  
+
+
+\section{Implementation}
+
+\label{sec:DPTa}
+Now that the general form of the transform has been developed, an appropriate method is needed to implement it.
+The method we review and discuss here is matrix vector multiplication.
+
+In order to computationally implement an integral transform, recognize that the input function can be viewed as a vector, or a one-dimensional array, and that the transform kernel can be viewed as a matrix, or a two-dimensional array.
+The output of a matrix vector multiplication is analogous to the output function of the integral, but it is another vector along a new coordinate axis.
+The important feature of matrix vector multiplication is that it can be used to simultaneously multiply and integrate two functions over an input index.
+This concept is certainly not new to engineering or geophysics, and many of its benefits have been explored in detail \citep{claerbout92}.
+
+Constructing a matrix operator for the forward and inverse data processing transform follows the same procedure one would use for any transform operator.  The general procedure is summarized here:
+\begin{enumerate}
+\item Identify the kernel of the transform and the input and output signals.
+\item Construct the discrete input and output axes based on the sampling interval and domain of the input signal.
+\item For an input signal of $N$-samples, initialize an empty matrix of size $N \times N$, and associate the matrix indices with the input and output axes.
+\item For each $\left( j, l \right)$ matrix (row,column) coordinate pair, calculate the kernel value and place it in the matrix.  
+\end{enumerate}
+
+The concise form of the forward data processing transform can be cast as a matrix vector multiplication following the above steps as:
+\begin{equation}
+	\label{eq:MVDPT}
+	g \left( q_j \right) = \sum _{l=1}^N \frac{e^{i \, \beta_l p \left( q_j \right)}}{2 \, \pi} \, F \left( \beta_l \right).
+\end{equation}
+A convenient feature of the data processing transform matrices is that they do not differ from the form of the Fourier transform matrices other than a distorted time axis.
+So by carefully matching the frequency axis, any standard FFT can be used together with the discrete data processing transform.
+
+The inverse data processing transform is more similar in form to the forward Fourier transform, in that it takes the series from the input domain and outputs a Fourier spectrum.
+Again following the procedure to construct a transform matrix, we cast the inverse data processing transform (\ref{eq:IPT_full}) as a matrix-vector multiplication:
+\begin{equation}
+	\label{eq:MVIDPT}
+	F \left( \beta _l \right) = \sum _{l=1}^N \frac{\left[ \alpha \left( q_l\right) e^{-i \, \beta_j \, p \left( q_l \right)} \right]}{2 \, \pi} \, f \left( p_l \right) ,
+\end{equation}
+with no summation over $l$ inside brackets.
+Again by carefully matching the frequency axis, a standard inverse fast Fourier transform (IFFT) can be applied to the output vector of equation~\ref{eq:MVIDPT} to recover the unprocessed input signal.  
+
+Although not necessary for implementation, it is insightful to separate the data processing transform matrices as a composition of a Fourier transform matrix with a shifting matrix.
+For a set of traces that are of the same length, the only part of the data processing transform matrix that changes from trace to trace is the shifting exponential.
+It is only because of the unique form of the shift itself that the exponentials reduce to a single transform exponential.
+Before this reduction, the Fourier transform matrices can be constructed separately from the forward and reverse shifting matrices for the same data.
+The construction of the Fourier transform matrices is well-known, and elements of the forward shift matrix, $\mathbf{A}$, are given by:
+\begin{equation}
+	\label{eq:FSM}
+	a_{jl} \equiv e^{i \, \omega_l \, \Delta_j} = e^{i \, \omega_l \left( p \left( q_j \right) - q_j \right)}.
+\end{equation}
+Elements of the reverse shifting matrix, $\mathbf{B}$, are then given by:
+\begin{equation}
+	\label{eq:RSM}
+	b_{jl} = \alpha \left( q_l \right) e^{-i \, \omega_j \, \left( p \left( q_l \right) - q_l \right)},
+\end{equation}
+with no summation over indices.
+This approach requires the Fourier matrices to be calculated only once for an input data set.
+For each trace in the given data set, the shifting matrix is computed and then combined with the Fourier matrix as a Hadamard (entry-wise) matrix product. 
+
+The inverse of the discrete data processing transform can be exactly formulated as in the continuous case.
+The discrete data processing transform has very similar form to the Fourier matrices, and its approximate inverse is easily calculated.
+From equations~\ref{eq:FSM} and \ref{eq:RSM}, we claim that the inverse matrix for each trace can be accurately approximated by the adjoint of the forward matrix, scaled by $\alpha(q_l)$.
+
+\section{NMO by Transform}
+\label{sec:Examples}
+
+\inputdir{nscnmo}
+
+\plot{data}{width=4.5in}{Synthetic CMP gather. Left: Velocity model. Four reflectors are placed in a background velocity that increases linearly with depth ($v(z)=7.0+z$ kft/s).  Right: CMP gather generated using the velocity model.  Arrival times predicted by Kirchhoff modeling are convolved with a 25 Hz Ricker wavelet.}
+
+\plot{nmomat}{width=4.5in}{The forward NMO transform matrix can be composed as the Hadamard (entry-wise) product of the inverse Fourier transform matrix (left) and the NMO forward shifting matrix for an example trace at $x=3,600$ ft (right).  The real part of each matrix is shown here.}
+
+\plot{inmomat}{width=4.5in}{The inverse NMO transform matrix can be composed as the Hadamard product of the forward Fourier transform matrix (left) and the NMO reverse shifting matrix for an example trace at $x=3,600$ ft (right).  The real part of each matrix is shown here.}
+
+\plot{nmo}{width=4.5in}{Reversible NMO applied to gather from Figure \ref{fig:data}.  Left: Semblance panel and picked velocity. Center: NMO-corrected gather. Right: Inverse NMO applied to gather.}
+
+\plot{stretch}{width=4.5in}{NMO applied to and removed from a single trace at $x=2,100$ ft. Input trace: thin-magenta line. NMO-corrected trace: thick-green line. Inverse NMO without $\alpha $: line of * symbols. Inverse NMO using $\alpha $: line of + symbols. The use of $\alpha $ allows one to recover the input trace by accounting for the non-physical energy distortion caused by forward NMO (NMO stretch).}
+
+The kinematics of the shift required for the NMO correction simply shift data values backwards from input time, $t_{x}$, to output time, $t_{0}$, where $t_{x}$ depends on $t_{0}$.  For ideal continuous data, the input and output times are both arbitrary, but for discrete field data, both must coincide exactly with a sampling time or values must be interpolated.  
+In the continuous case, this is exactly a nonstationary shift by combination as described by \cite{margrave98}, where for the NMO correction, the nonstationary shift is expressed as,
+\begin{equation}
+\label{eq:DeltaNMO}
+	\Delta_{NMO} \left( t_0 \right) = t_x \left( t_0 \right) - t_0,
+\end{equation}
+\citep{burnett_ferguson08a} with,
+\begin{equation}
+\label{eq:NMO}
+	t_x(t_0)=\sqrt{t_0^2+\frac{x^2}{v^2}},
+\end{equation}
+where, $x$ is the source-receiver offset, and $v$ is the normal moveout velocity.  
+It is the goal of the NMO correction to flatten each event to its associated zero-offset arrival time. The NMO correction can be clearly recognized as a nonstationary shift, where $t_x(t_0)$ is a special case of $p(q)$, and $t_0$ is a special case of $q$.  Direct substitution into \ref{eq:FPT} yields the forward NMO transform:
+\begin{equation}
+  g\left(t_0\right) =\frac{1}{2\pi }\int _{-\infty }^{\infty }F(\omega )e^{i \omega t_x(t_0)} d\omega ,
+\label{eq:NMOT}
+\end{equation}
+where $\omega $ is the Fourier dual of $t_x$.  This transform takes the frequency spectrum of an input seismic trace, $F(\omega )$, and directly outputs the NMO-corrected trace, $g(t_0)$.  
+Figure~\ref{fig:data} shows a synthetic common midpoint (CMP) gather generated using Kirchhoff modeling.
+We estimate a reasonable NMO velocity from the synthetic gather in Figure \ref{fig:data} using a semblance scan, and then apply the NMO transform to yield the result in Figure \ref{fig:nmo}.
+
+In the case of the NMO correction, the time distortion caused by the shift is well-known, and referred to as \textit{NMO stretch} \citep{buchholtz72,dunkin_levin73}. 
+Various authors have developed strategies for handling the effects of NMO stretch in practical seismic data processing \citep{miller92,perroud_tygel04,shatilo_aminzadeh00}. 
+NMO stretch manifests the most at far offsets and early times, where the NMO correction is the most severe.  
+The waveform of an event in this area is stretched to a longer period as the NMO correction is applied \cite[]{yilmaz01}.  
+The amplitude of that event is not affected, but its time distortion causes an alteration in its frequency content.  
+Specifically, the lower frequency content is boosted, and since the amplitude of the waveform is maintained, a nonphysical addition of energy to the input signal has occurred.   
+\cite{yilmaz01} quantifies the frequency distortion caused by NMO stretch in terms of $\Delta _{NMO}$ and $t_0$:
+
+\begin{equation}
+  \frac{\Delta f}{f}=\frac{\Delta _{NMO}}{t_0},
+\label{eq:NMOstretchYilmaz}
+\end{equation}
+
+\noindent where, \textit{f} is the dominant frequency of the input waveform.  This expression is derived from geometric arguments and assumes $t_0>>f^{-1}$ \citep{yilmaz01}.  Another approach to describing NMO stretch comes from analyzing the effects of the NMO correction in terms of instantaneous frequency \citep{barnes92}.  This approach provides excellent insight into the frequency distortion, and yields an exact expression for NMO stretch, $S$:
+
+\begin{equation}
+S=\frac{t_x}{t_0-\frac{x^2v'\left(t_0\right)}{v^3\left(t_0\right)}},
+\label{eq:Beta_barnes}
+\end{equation}
+
+\noindent where $v'$ is the derivative of \textit{v} with respect to time \citep{barnes92}.  This expression quantifies NMO stretch without approximations, and is not dependent only on the dominant frequency as in equation \ref{eq:NMOstretchYilmaz}.  It is valid for variable velocity models, and for a constant velocity model, the derivative of velocity goes to zero, and $S-1$ agrees with the approximation in equation \ref{eq:NMOstretchYilmaz}.  
+
+As equation~\ref{eq:Beta_barnes} suggests, NMO stretch is itself nonstationary, and therefore cannot be removed exactly using stationary filtering theory.  However, since the data processing transform takes advantage of nonstationary filtering, NMO stretch can be removed exactly.  Substituting the NMO variables, $\Delta_{NMO}$ and $\alpha_{NMO}\left( t_0\right) $ into \ref{eq:IPT_full}, gives the inverse NMO transform:
+
+\begin{equation}
+F(\omega )=\int _{-\infty }^{\infty }\alpha _{NMO}\left( t_0\right) g\left(t_0\right)e^{-i \omega t_x\left(t_0\right)}dt_0.
+\label{eq:INMOT_full}
+\end{equation}
+Here, insight into the role of $\alpha$ can finally be gained. $\alpha_{NMO}\left( t_0\right) $ is given as,
+
+\begin{equation}
+\alpha _{NMO}\left( t_0\right) \equiv \frac{\partial t_x}{\partial t_0}=\frac{t_0-\frac{x^2v'\left(t_0\right)}{v^3\left(t_0\right)}}{t_x}.
+\label{eq:Alpha_NMO}
+\end{equation}
+
+The inverse NMO transform does account for NMO stretch, and in fact, $\alpha_{NMO}=S^{-1}$ exactly.  Realizing that the two are equivalent leads to a straightforward (once nonstationary filtering is allowed) perspective on predicting and quantifying NMO stretch.  Further, Barnes (1992) proves, in terms of instantaneous power and energy spectra, that $S$, and therefore $\alpha_{NMO}\left( t_0\right) $ indeed describe the nonphysical energy change caused by the NMO correction.
+Figure \ref{fig:stretch} shows the application and removal of the NMO correction to a single trace.  
+Two cases are shown for inverse NMO: one where $\alpha $ is not included and one where it is.
+In the case where $\alpha $ is used, the amplitude is recovered correctly, whereas when $\alpha $ is not used, inverse NMO preserves the energy of the NMO-corrected trace, leading to too much energy in the recovered signal.
+It can be shown that $\alpha $ plays a similar role in accounting for nonphysical energy changes introduced by other imaging steps such as so-called ``Stolt stretch'' associated with Stolt migration \cite[]{burnett_ferguson08c}.
+
+
+The NMO transform acts as a map between the uncorrected spectrum and the NMO-corrected trace.  As such, the first step in implementing the forward NMO transform on a trace is to apply a standard forward Fourier transform to the input trace.  This gives the uncorrected spectrum, which becomes the input column vector for a matrix vector multiplication.  Following \ref{eq:MVDPT}, the discrete NMO transform is given as,
+
+\begin{equation}
+	\label{eq:MVNMOT}
+	g \left( \left[ t_{0}\right] _j \right) = \sum _{l=1}^N \frac{e^{i \, \omega_l p \left( t_{0,j} \right)}}{2 \, \pi} \, F \left( \omega_l \right).
+\end{equation}
+
+One can also decompose the forward NMO transform operator as the Hadamard product of the inverse Fourier transform matrix and the NMO shifting matrix following \ref{eq:FSM} (see Figure \ref{fig:nmomat}).  The frequency axis of the shifting operator must exactly match the frequency axis used for the forward Fourier transform, since it will simultaneously remove that Fourier transform as it NMO-corrects the data. The inverse NMO transform can also be implemented by matrix-vector multiplication by substituting $t_x$ and $\alpha _{NMO}$ into \ref{eq:MVIDPT}.  As seen in Figure \ref{fig:inmomat}, the full inverse NMO transform operator can be decomposed as the Hadamard product of the forward Fourier transform matrix and the NMO reverse shifting matrix.  
+We conclude this example by removing the NMO correction by transform, shown in Figure \ref{fig:nmo}.  
+Most of the gather is recovered nearly perfectly--only parts which were mapped to $t_0=0$ are not recovered well.
+
+\section{Relation to Interpolation}
+Casting a theoretically continuous input signal as a vector is a natural way to view recorded seismic data.
+The time-sampling interval of the recorded data determines the Nyquist frequency of the recorded signal \citep{gubbins04}, and it can be assumed that the data is frequency band-limited between zero and the Nyquist frequency \citep{gubbins04}.
+This means that the recorded signal is exactly determined by this small and discrete range of frequencies.
+No information is gained by using filters that operate on frequencies higher than the Nyquist frequency.
+This observation, combined with the Fourier sampling theorem, suggests that a continuous, but band-limited form of the recorded signal exists, and it is exactly described by the Fourier basis.
+This continuous form is not necessarily the same as the true continuous function that a seismometer attempts to record.
+Conventional processing algorithms estimate the values of this continuous function by assuming that the function behaves like some interpolant between samples.
+A repeatable and accurate approach to discrete data processing is to return the exact value of the band-limited continuous equivalent of the recorded signal at any desired input coordinate.
+The data processing transform does exactly this.
+
+The data processing transform is a special case of the nonstationary Fourier shift theorem.
+It follows then, for the continuous case, that data processing steps implemented by transform are effectively performing convolution with a shifting scaled Dirac delta function.
+The sifting property of the delta function justifies using convolution with a delta function to extract the exact values of a continuous input function at exact target times.
+This is the ideal way to apply data processing corrections in either transform or mapping approaches, but the discrete nature of seismic data prevents this.
+By showing that interpolation operators are approximations to the Dirac delta function, we suggest that any interpolation scheme can be viewed as an approximation to a continuous and exact nonstationary shift.
+
+The Dirac delta function can be formulated as the generalized limit of other more common functions \citep{papoulis62}.
+Two clear examples of this are boxcar (rectangle) and Gaussian functions, which both approach an impulse as their widths go to zero and their heights go to infinity \citep{papoulis62}.
+Take for example the boxcar function:
+\begin{equation}
+	\label{eq:boxcar}
+	r_{\epsilon} \left( t \right) = \left\{ \begin{array}{cc} \frac{1}{\epsilon} & |t| \leq \epsilon  \\
+ 0 & |t| > \epsilon 
+	\end{array}
+	\right..
+\end{equation} 
+As $\epsilon$ approaches zero, the width of the boxcar goes to zero, and the height goes to infinity (see Figure~\ref{fig:nearest}).
+As this occurs, the boxcar function approaches the Dirac delta function:
+\begin{equation}
+	\label{eq:delta_boxcar}
+	\lim_{\epsilon \to 0} \, r_{\epsilon} \left( t \right) = \delta \left( t \right).
+\end{equation} 
+The scaled boxcar function is used as an interpolant for nearest-neighbour interpolation, where the width of the boxcar is equal to the sampling interval.
+This is a poor choice in most cases, as nearest-neighbour interpolation in the time domain, for example, has the unwanted effect of multiplying the frequency spectrum by a sinc function.
+Conversely, nearest neighbour interpolation in the frequency domain introduces ringing into the time series.   
+
+Linear interpolation is equivalent to convolution with a scaled triangle function with a width equal to twice the sampling interval \citep{harlan82}.
+The triangle function also approaches the delta function as its width goes to zero and height goes to infinity:
+\begin{equation}
+	\label{eq:triangle}
+	\Lambda_{\epsilon} \left( t \right) = \left\{
+	\begin{array}{cc}
+	 \frac{1}{\epsilon} - \frac{|t|}{\epsilon^2} & |t| \leq \epsilon \\
+	 0 & |t| > \epsilon 
+	\end{array}
+	\right.,
+\end{equation} 
+\begin{equation}
+	\label{eq:delta_triangle}
+	\lim_{\epsilon \to 0} \, \Lambda_{\epsilon} \left( t \right) = \delta \left( t \right).
+\end{equation} 
+This behaviour can be seen in Figure~\ref{fig:linear}.  
+A more common interpolant used in seismic data processing is the sinc function.
+Data processing corrections implemented by sinc-interpolation algorithms effectively perform convolution of the input signal with a shifting scaled sinc-function.
+In the general continuous case, this has no clear justification, but for band-limited or discrete data, the purpose of the sinc-function becomes apparent.
+The Fourier transform of the sinc-function is a boxcar function over its own frequency content \citep{harlan82}.
+Since the ideal interpolant should not affect the frequency content of the data while it estimates an intermediate value, a sinc function with frequency content at least up to the Nyquist frequency of the input signal will be the ideal interpolant \citep{harlan82}.
+Computational efficiency is often increased by truncating the length of the sinc operator \citep{harlan82}, and tapering of the truncated sinc function is often performed \citep{rosenbaum_boudreaux81} to reduce the Gibbs phenomena ringing.     
+
+The sinc function is a very good choice for an interpolant as it attempts to respect the finite bandwidth of the recorded data.
+However, convolution with a sinc function is still an approximation to ideal continuous convolution with the delta function.
+For the following expression \citep{elliott_rao82}, as $\epsilon$ approaches infinity, the normalized sinc function approaches an impulse (See Figure~\ref{fig:sinc}):
+\begin{equation}
+	\label{eq:sinc_ep}
+	\mbox{sinc}_{\epsilon} \left( t \right) = \frac{\epsilon \, \sin{\pi \, \epsilon t}}{\pi \, \epsilon t},
+\end{equation} 
+\begin{equation}
+	\label{eq:delta_sinc}
+	\lim_{\epsilon \to \infty} \, \mbox{sinc}_{\epsilon} \left( t \right) = \delta \left( t \right).
+\end{equation} 
+There are more similarities between the narrowing sinc function and the Dirac delta function than just the shape of the pulse.
+When $\epsilon$ is less than infinity in \ref{eq:sinc_ep}, the side lobes of the sinc function mimic Gibbs phenomenon in Fourier transform theory \citep{papoulis62}.
+Since the Fourier transform of a sinc function is a boxcar function, one can also visualize how it approaches the delta function in the Fourier domain.
+As the sinc function narrows, its frequency content increases, and its boxcar Fourier transform broadens.
+When the sinc function finally becomes an impulse, its Fourier spectrum is an infinitely wide boxcar, which is simply a constant, just as the Fourier transform of the delta function.
+Applying a band-pass filter to a delta function yields a sinc function, and conversely, the sinc-function is a band-limited estimation of the Dirac delta function.
+Therefore, the sinc-function interpolant, \textit{before} truncation or tapering, respects the Fourier basis assumed by the Fourier transform, and is equivalent to processing by discrete nonstationary filtering.
+  
+The inverse to any processing step is exactly formulated here for the continuous case using the nonstationary version of the Fourier shift theorem.
+This is not surprising, as even the conventional procedure of mapping data directly between input and output times is exactly reversible assuming continuous data.
+Casting the integral kernel as a discrete matrix defined on the sampling intervals allows a precise method of approximating the exact continuous form assuming a Fourier basis.
+
+\section{Conclusions}
+Using the theory of nonstationary filtering, we have developed a general transform that applies and removes many common seismic data processing and imaging operations.  
+Any data processing or imaging step that can be viewed as a nonstationary shift in any domain is a special case of this transform.  
+We have provided a derivation of the general data processing transform and we have used NMO as a familiar example.
+
+Like the Fourier transform, the data processing transform is a mixed-domain transform.
+In the general case, the input data should be viewed as an image, and then a distorted version of that image is the desired output.
+The data processing transform moves data directly between the Fourier spectrum of the input image and the corrected image. 
+Regardless of the physical meaning of input and the Fourier coordinates, viewing the input and output data each as an image makes the general application of the transform to any processing step clear.
+The physical meaning of the transform coordinates and distortions can be defined only when discussing specific processing steps.
+
+Common nonstationary shifts in seismic data processing are often nonphysical, as they do not conserve the energy of a given input signal.  
+The general data processing transform predicts and quantifies the change in energy caused by such processing steps.  
+Processing artifacts such as NMO stretch associated with the NMO correction and Stolt stretch associated with Stolt and frequency-wavenumber migration are examples of this type of nonphysical energy change.  
+Under the framework of the general data processing transform, these effects are both special cases of, and are easily quantified by, the nonstationary scaling function $\alpha (q)$.  
+We have shown that the data processing transform is reversible by accounting for these energy changes while simultaneously reversing the kinematic shift applied by the forward transform.
+
+Rather than explicitly interpolating discrete data, the data processing transform assumes that the input signal behaves according to the Fourier basis between samples.  
+The Fourier transform itself predicts a continuous form of given discrete data, and the transform here performs a nonstationary shift on this continuous function.  
+Just as in the stationary case, nonstationary shifts can be viewed as convolution with a Dirac delta function.  
+We have demonstrated how common interpolants such as boxcar, triangle, and sinc functions approximate the delta function, but add assumptions about how the input signal behaves in between samples which may contradict the Fourier basis.  
+By analysis in both input and Fourier domains, we have shown that the use of an untruncated sinc function as an interpolant is equivalent to the discrete form of this transform.
+
+Having a reversible transform for seismic data processing allows the various stages of a processing flow to be viewed as valid processing domains.  
+For example, one may use this transform to apply a correction to the input data which organizes it into a format better suited for multiple attenuation, then perform multiple attenuation, and last transform back to the input domain with no residual effects of the correction itself.  
+Further, the discrete form of this general transform provides a straightforward framework for constructing and understanding the matrix operators associated with seismic imaging steps.  
+Future studies may be able to exploit symmetries of these operators to improve computational efficiency while mitigating interpolation artifacts.
+We anticipate a variety of future applications of the reversible transform using these concepts.
+
+\inputdir{delta}
+
+\sideplot{nearest}{width=2.5in}{Nearest-neighbour interpolant approaching $\delta \left( t \right)$.
+As $\epsilon$ approaches zero, the rectangle function defined by equation~\ref{eq:boxcar} approaches the Dirac delta function. Thin magenta line: $\epsilon =1.0$. Green line: $\epsilon =0.5$. Thick cyan line: $\epsilon =0.1$.}
+
+\sideplot{linear}{width=2.5in}{Linear interpolant approaching $\delta \left( t \right)$.
+As $\epsilon$ approaches zero, the triangle function defined by equation~\ref{eq:triangle} approaches the Dirac delta function. Thin magenta line: $\epsilon =1.0$. Green line: $\epsilon =0.5$. Thick cyan line: $\epsilon =0.1$.}
+
+\sideplot{sinc}{width=2.5in}{Sinc interpolant approaching $\delta \left( t \right)$.
+As $\epsilon$ approaches infinity, the sinc-function defined by equation~\ref{eq:sinc_ep} approaches the Dirac delta function. Magenta * line: $\epsilon =5.0$, Dotted green line: $\epsilon =2.5$. Solid cyan line: $\epsilon =0.5$.}
+
+
+\section{Acknowledgments}
+The authors thank the Jackson School of Geosciences and the EDGER Forum at The University of Texas at Austin, and the sponsors of CREWES at The Department of Geoscience, The University of Calgary for their support of this work.
+
+
+\bibliographystyle{seg}
+\bibliography{sources}

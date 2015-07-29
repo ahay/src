@@ -1,0 +1,3 @@
+uses=['sfspiral', 'sfput', 'sfve2d', 'sfcmplx', 'sfwindow', 'sftransp', 'sfgraph', 'sfcameron2d', 'sfgrey', 'sfirays', 'sft2diter', 'sfmath', 'sfadd', 'sftime2depth', 'sfcontour', 'sfdd']
+data=[]
+size=   25365000

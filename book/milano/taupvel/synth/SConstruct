@@ -1,0 +1,607 @@
+# SConstruct for slope tau p VTI processing of a Synthetic dataset
+from rsf.proj import *
+
+
+pl_Op=' labelsz=16 labelfat=6 titlesz=16 titlefat=6 crowd=0.7 '
+
+
+
+dtau=0.004
+dp=0.00225
+vN0=2
+vH0=2.2
+#vH0=2.3
+kN=0.080
+kH=0.050
+pi=3.14159
+v0=2.2;
+np=161;
+ntau=751;
+
+# Effective Velocity profiles and eta;
+color=1
+linefat=8
+Flow('vN',None,
+     '''
+     math output='%g-0.020 * sin(x1*%g)+%g*x1' n1=%g d1=0.004 o1=0 label1="\F10 t\F3" unit1="s" 
+     ''' %(vN0,pi,kN,ntau))
+
+Plot('vN','graph transp=y yreverse=y pad=n min2=1.8 max2=2.45 plotcol=%d wanttitle=n wantaxis=n plotfat=%d'%(color,linefat)+pl_Op )
+
+Flow('vH',None,
+     '''
+     math output='%g+0.030 * sin(x1*2/3*%g)+%g*x1' n1=%g d1=0.004 o1=0 label1="\F10 t\F3" unit1="s" 
+     ''' %(vH0,pi,kH,ntau))
+
+Plot('vH','graph transp=y yreverse=y pad=n min2=1.8 max2=2.45 plotcol=%d wanttitle=n wantaxis=n plotfat=%d'%(color,linefat)+pl_Op )
+
+#Flow('curv','dipx dip','math d=${SOURCES[1]} output="input+%g*d*d/(x1+%g)" ' % (dt,dt))
+Flow('eta','vN vH',
+     '''
+     math d=${SOURCES[1]} output=".5*( ((d*d)/(input*input)) -1)" label1="\F10 t\F3" unit1="s" 
+     ''')
+
+Plot('eta','graph transp=y yreverse=y pad=n min2=-0.5 max2=0.5 plotcol=%d wanttitle=n wantaxis=n plotfat=%d'%(color,linefat)+pl_Op)
+
+
+# COMPUTE ANALYTICALLY (FROM DIX) EXACT INTERVAL PROFILES
+Flow('vNintE vHintE etaintE','vN eta ',
+     '''
+     intervalVTI eta=${SOURCES[1]} vH_out=${TARGETS[1]} eta_out=${TARGETS[2]} interval=y
+     ''')
+
+Plot('vNintE','graph transp=y yreverse=y pad=n min2=1.8 max2=2.65 plotcol=%d wanttitle=n wantaxis=n plotfat=%d'%(color,linefat)+pl_Op)
+Plot('vHintE','graph transp=y yreverse=y pad=n min2=1.8 max2=2.65 plotcol=%d wanttitle=n wantaxis=n plotfat=%d'%(color,linefat)+pl_Op)
+Plot('etaintE','graph transp=y yreverse=y pad=n min2=-0.5 max2=0.5 plotcol=%d wanttitle=n wantaxis=n plotfat=%d'%(color,linefat)+pl_Op)
+Result('curves','vNintE vHintE etaintE','SideBySideAniso')
+
+# create synthetic data
+Flow('data','vN eta ',
+     '''
+     noise rep=y seed=2009 |
+     math output="input^3" |
+     ricker1 frequency=20 |
+     spray n=%g d=%g o=%g axis=2 |
+     itaupmo interval=n velocity=${SOURCES[0]} eta=${SOURCES[1]} |
+     put label2="p" unit2="s/km"
+     ''' %(np,dp,dp))
+Plot('data','grey title=data ' + pl_Op)
+
+# create synthetic data
+Flow('dataE','vNintE etaintE ',
+     '''
+     noise rep=y seed=2009 |
+     math output="input^3" |
+     ricker1 frequency=20 |
+     spray n=%g d=%g o=%g axis=2 |
+     itaupmo interval=y velocity=${SOURCES[0]} eta=${SOURCES[1]} |
+     put label2="p" unit2="s/km"
+     ''' %(np,dp,dp))
+Plot('dataE','grey title=data ' + pl_Op)
+
+Result('data','data dataE','SideBySideAniso')
+
+
+## COMPUTATION OF AN INITIAL SLOPES FIELD
+vN0=2.2
+vH0=2.4
+
+
+Flow('vN0','vN',
+     '''
+     math  output="%g*1" label1="\F10 t\F3" unit1="s" 
+     ''' %(vN0))
+Flow('vH0','vH',
+     '''
+     math  output="%g*1" label1="\F10 t\F3" unit1="s" 
+     ''' %(vH0))
+
+Flow('eta0','vN0 vH0','math vh=${SOURCES[1]} output=".5*(vh^2/input^2-1)"')
+
+Flow('vH0mat','vH0',
+    '''
+     spray n=%g d=%g o=%g axis=2  |		
+     put label2="p" unit2="s/km" 
+     ''' % (np,dp,dp))
+Flow('vN0mat','vN0',
+     '''
+     spray n=%g d=%g o=%g axis=2 |
+     put label2="p" unit2="s/km" 
+     ''' % (np,dp,dp))
+#Plot('vH0mat','grey color=j scalebar=y bias=2.2')
+#Plot('vN0mat','grey color=j scalebar=y bias=2.0')
+#Result('mat','vH0mat vN0mat','SideBySideAniso')
+
+a = dp/dtau
+
+
+# dip0 is in (tau,p)
+Flow('dip0','data vN0mat vH0mat',
+     '''
+     math vN=${SOURCES[1]} vH=${SOURCES[2]} output="%g*(-x1*vN^2*x2)/((1-x2^2*vH^2)^(1/2))/(1-x2^2*(vH^2-vN^2))^(3/2)"
+     ''' % a )
+
+# dip00 in (tau0,p)
+Flow('dip00','dip0 vN0 eta0 ',
+     '''
+     itaupmo velocity=${SOURCES[1]} eta=${SOURCES[2]}
+     ''')
+
+# slope estimation (dimensionless)
+Flow('dip','dataE dip0','dip idip=${SOURCES[1]} rect1=30 rect2=5 order=6 pmax=0')
+#Flow('dip','data','dip rect1=30 rect2=5 order=3 pmax=0 transp=y')
+Plot('dip','scale dscale=-1 | grey allpos=y color=j title="slope" scalebar=y bias=-1 ' + pl_Op)
+# scaled derivatives(dimensionless)
+
+Flow('dips','dataE dip0','dip both=y idip=${SOURCES[1]} rect1=30 rect2=5 order=6 pmax=0')
+Flow('dip12','dips','stack axis=3 scale=0.5,-0.5 norm=n')
+Plot('dip12','scale dscale=-1 | grey allpos=y color=j title="slope" scalebar=y bias=-1 ' + pl_Op)
+
+smoothdert = 30
+smoothderp = 2+4
+
+# Derivatives by deriv + smooth (preserves better b.c.)
+
+Flow('dipx','dip12','transp | deriv | smooth rect1=%d rect2=%d | transp'%(smoothderp,smoothdert))
+Flow('dipt','dip12','deriv')
+Flow('dipt2','dipt','smooth rect1=%d rect2=%d' %(smoothdert,smoothderp))
+
+plotcurv = 'scale dscale=-1 | grey clip=0.08 allpos=y minval=0 maxval=0.12 color=j scalebar=y ' + pl_Op
+
+Flow('curv','dip12 dipx dipt2',
+     'math dx=${SOURCES[1]} dt=${SOURCES[2]} output="input*dt+dx" ')
+Plot('curv',plotcurv + 'title="deriv+smooth"')
+
+# Derivatives by smoothderLS
+
+Flow('dipx1','dip12','transp | smoothderLS rect1=%d rect2=%d | transp'%(smoothderp,smoothdert/30))
+
+Flow('curv1','dip12 dipx1 dipt',
+     'math dx=${SOURCES[1]} dt=${SOURCES[2]} output="input*dt+dx" ')
+Plot('curv1',plotcurv + 'title="LS+shaping"')
+
+# Curvature from two slopes
+
+# Correction for changing from t to t0 dp/dt * dt/dx = dp/dt * p
+Flow('ppt','dip12 dipt','mul ${SOURCES[1]}')
+Flow('curv2','dips ppt','stack axis=3 norm=n | add ${SOURCES[1]}')
+Plot('curv2',plotcurv + 'title="FW&BW+deriv+smooth"')
+
+Result('curv','curv curv1 curv2','SideBySideAniso')
+
+Result('dataSyn','data dip curv','SideBySideAniso')
+
+# windowing of the data... take just the portion when curvature estimate is reliable enough
+#sfwindow < in.rsf > out.rsf verb=n squeeze=y j#=(1,...) d#=(d1,d2,...) min#=(o1,o2,,...) max#=(o1+(n1-1)*d1,o2+(n1-1)*d2,,...)
+pmin=0.05
+pmax=0.3
+Flow('datawin','dataE','window min2=%f max2=%f'%(pmin,pmax))
+Flow('dipwin','dip','window min2=%f max2=%f'%(pmin,pmax))
+Flow('reswin','datawin dipwin','pwd dip=${SOURCES[1]} order=6')
+
+Flow('dipwin2','dip12','window min2=%f max2=%f'%(pmin,pmax))
+Flow('curvwin','curv','window min2=%f max2=%f'%(pmin,pmax))
+Flow('curvwin2','curv2','window min2=%f max2=%f'%(pmin,pmax))
+Flow('diptwin','dipt','window min2=%f max2=%f'%(pmin,pmax))
+Flow('diptwin2','dipt2','window min2=%f max2=%f'%(pmin,pmax))
+
+Plot('datawin','grey title="data (a)" ' + pl_Op)
+Plot('dipwin','grey title="slope (b)"  color=j scalebar=y bias=-2 maxval=0 polarity=y' + pl_Op)
+Plot('reswin','grey title="residual (c)" clip=0.05' + pl_Op)
+
+
+Plot('curvwin','grey title="curvature (c)"  color=j scalebar=y bias=-.02 maxval=0 polarity=y ' + pl_Op + 'pclip=90')
+
+Plot('dipwin2','grey title="slope (b)"  color=j scalebar=y bias=-2 maxval=0 polarity=y' + pl_Op)
+Plot('curvwin2','grey title="curvature (c)"  color=j scalebar=y bias=-.02 maxval=0 polarity=y ' + pl_Op + 'pclip=90')
+
+Result('dataSynth','datawin dipwin curvwin','SideBySideAniso')
+Result('resSynth','datawin dipwin reswin','SideBySideAniso')
+
+Result('dataSynth2','datawin dipwin2 curvwin2','SideBySideAniso')
+
+# slope independent pNMO (isotropic)
+Flow('nmo vel2','datawin dipwin2 diptwin2','ptaupmo dip=${SOURCES[1]} dipt=${SOURCES[2]} vel2=${TARGETS[1]}') 
+Plot('nmo','grey title="ISO NMO (b)" grid2=y gridfat=3 gridcol=5 g2num=.5 ' + pl_Op)
+Result('nmoISOSyn','nmo','grey grid2=y gridfat=3 gridcol=5 title="" ' + pl_Op)
+#Plot('cos2','grey title="iso nmo" ')
+
+# slope independent pNMO (VTI)
+Flow('nmoVTI tau0','datawin dipwin2 curvwin','ptaupmoVTI dip=${SOURCES[1]} ddip=${SOURCES[2]} tau0=${TARGETS[1]}') 
+Plot('nmoVTI','grey title="VTI NMO (c)" grid2=y gridfat=3 gridcol=5  g2num=.5 ' + pl_Op)
+Result('nmoVTISyn','nmoVTI','grey title="" ' + pl_Op)
+
+Plot('tau01','tau0','contour nc=30 c0=0 dc=0.1 plotcol=5 plotfat=3 wanttitle=n wantaxis=n' +pl_Op)
+Plot('tau01k','tau0','contour nc=30 c0=0 dc=0.1 plotcol=7 plotfat=3 scalebar=y wanttitle=n wantaxis=n' +pl_Op)
+
+Plot('tau02','datawin tau01','Overlay')
+Plot('tau02k','tau0 tau01k','Overlay')
+
+# slope independent pNMO (VTI)
+Flow('nmoVTI1 tau01','datawin dipwin2 curvwin2 ','ptaupmoVTI dip=${SOURCES[1]} ddip=${SOURCES[2]} tau0=${TARGETS[1]}') 
+Plot('nmoVTI1','grey title="Oriented NMO (b)" ' + pl_Op)
+Result('nmoVTISyn1','nmoVTI1','grey grid2=y gridfat=3 gridcol=5 title="" ' + pl_Op)
+
+Result('dataNMO','datawin nmo nmoVTI  ','SideBySideAniso')
+
+tau0str="\F9 t\_\F3 0\^(\F9 t\F3 ,p) \F3 "
+Result('tau0','tau0','sfgrey color=j scalebar=y clip=1.4 bias=1.5 minval=0 maxval=3 title="'+tau0str+' (b)" ' + pl_Op)
+Plot('tau0','tau0','sfgrey color=j scalebar=y clip=1.4 bias=1.5 minval=0 maxval=3 title="'+tau0str+' (b)" ' + pl_Op)
+
+Result('dataNMO1','tau02 tau0 nmoVTI','SideBySideAniso')
+Result('dataNMO2','datawin tau02k nmoVTI','SideBySideAniso')
+
+Plot('nmoVTI2','nmoVTI','grey title="NMO (d)" ' + pl_Op)
+Result('dataSynth4','datawin dipwin2 curvwin2 nmoVTI','SideBySideAniso')
+
+
+# tau gradient of curvature 
+Flow('curvtwin','curvwin','deriv | smooth rect1=%d rect2=%d' % (smoothdert,smoothderp))
+Plot('diptwin2','grey title="slope der" label2="p" unit2="s/km" color=j scalebar=y bias=-0' +pl_Op)
+
+Plot('curvtwin','grey title="curvature der" label2="p" unit2="s/km" color=j scalebar=y bias=-0' +pl_Op)
+Result('derivt','diptwin2 curvtwin','SideBySideAniso')
+
+## VELOCITY ESTIMATION: EFFECTIVE VELOCITIES
+# MAPS
+Flow('vNmapE vHmapE etamapE','tau0 dipwin2 curvwin',
+     '''
+     pveltranVTI method=e velH=${TARGETS[1]} eta=${TARGETS[2]}
+     v0=1.8 dv=0.005 nv=131 nw=4 map=y
+     dip=${SOURCES[1]} curv=${SOURCES[2]} 
+     ''')
+
+Plot('vNmapE','grey color=j scalebar=y clip=.12 minval=1.8 maxval=2.4 bias=2.1 title="effective \F5 V\_N \^ \F3 (a)" ' + pl_Op)
+Plot('vHmapE','grey color=j scalebar=y clip=.09 minval=1.95 maxval=2.55 bias=2.25 title="effective \F5 V\_H \^ \F3 (b)" ' + pl_Op)
+Plot('etamapE','grey color=j scalebar=y clip=.045 minval=0.045 maxval=0.125 bias=0.085 title="effective \F9 h \F3 (c)" ' + pl_Op)
+Result('mapE','vNmapE vHmapE etamapE','SideBySideAniso')
+
+## Masking + Coherency plot
+
+Flow('vNeff','nmoVTI  vNmapE','map2coh  map=${SOURCES[1]} v0=1.8 dv=0.005 nv=131 min2=0.03')
+Flow('vHeff','nmoVTI  vHmapE','map2coh  map=${SOURCES[1]} v0=1.8 dv=0.005 nv=131 min2=0.1 ')
+Flow('etaeff','nmoVTI etamapE','map2coh  map=${SOURCES[1]} v0=-0.5 dv=0.01 nv=101 min2=0.1 ')
+
+
+
+Plot('vNeff','vNeff',
+    '''
+     envelope |
+     grey allpos=y label2=Velocity unit2=km/s
+     title="effective \F5 V\_N \^ \F3 (a)" 
+    ''' + pl_Op)
+
+Plot('vNeff2','vNeff vN','Overlay')
+
+Plot('vHeff','vHeff',
+    '''
+     envelope |
+     grey allpos=y label2=Velocity unit2=km/s
+     title="effective \F5 V\_H \^ \F3 (b)" 
+    ''' + pl_Op)
+
+Plot('vHeff2','vHeff vH','Overlay')
+
+Plot('etaeff','etaeff',
+    '''
+     envelope |
+     grey allpos=y label2='' unit2=''
+     title="effective \F9 h \F3 (c)" 
+    ''' + pl_Op)
+
+Plot('etaeff2','etaeff eta','Overlay')
+
+
+Result('eff-Syn','vNeff2 vHeff2 etaeff2','SideBySideAniso')
+
+## VELOCITY ESTIMATION: INTERVAL VELOCITIES
+## STRIPPING PROCESSING
+
+# maps
+
+Flow('vNmapS vHmapS etamapS','tau0 diptwin2 curvtwin ',
+     '''
+     pveltranVTI method=s velH=${TARGETS[1]} eta=${TARGETS[2]} 
+     v0=1.8 dv=0.005 nv=171 interval=y nw=4 map=y
+     dipt=${SOURCES[1]} curvt=${SOURCES[2]} 
+     ''')
+
+Plot('vNmapS','grey color=j scalebar=y clip=.25 minval=1 maxval=3 bias=2 title="interval \F5 V\_N \^ \F3 (a)" ' + pl_Op)
+Plot('vHmapS','grey color=j scalebar=y clip=.2 minval=1 maxval=3 bias=2.2 title="interval \F5 V\_H \^ \F3 (b)" ' + pl_Op)
+Plot('etamapS','grey color=j scalebar=y clip=.1 minval=0 maxval=0.25 bias=0.125 title="interval  \F9 h \F3 (c)" ' + pl_Op)
+Result('mapS','vNmapS vHmapS etamapS','SideBySideAniso')
+## Masking + Coherency plot
+
+Flow('vNint','nmoVTI  vNmapS','map2coh  map=${SOURCES[1]} v0=1.8 dv=0.005 nv=171 min2=0.03')
+Flow('vHint','nmoVTI  vHmapS','map2coh  map=${SOURCES[1]} v0=1.8 dv=0.005 nv=171 min2=0.15 ')
+Flow('etaint','nmoVTI etamapS','map2coh  map=${SOURCES[1]} v0=-0.5 dv=0.01 nv=101 min2=0.15 ')
+
+Plot('vNint','vNint',
+    '''
+     envelope |
+     grey allpos=y label2=Velocity unit2=km/s
+     title="interval \F5 V\_N \^ \F3 (a)" 
+    ''' + pl_Op)
+    
+
+Plot('vNint2','vNint vNintE','Overlay')
+
+Plot('vHint','vHint',
+    '''
+     envelope |
+     grey allpos=y label2=Velocity unit2=km/s
+     title="interval \F5 V\_H \^ \F3 (b)" 
+    ''' + pl_Op)
+
+Plot('vHint2','vHint vHintE','Overlay')
+
+Plot('etaint','etaint',
+    '''
+     envelope |
+     grey allpos=y label2='' unit2=''
+     title="interval \F9 h \F3 (c)" 
+    ''' + pl_Op)
+
+Plot('etaint2','etaint etaintE','Overlay')
+# DEBUG 
+#Plot('tempeff','grey tempeff label2="p" unit2="s/km" color=j scalebar=y clip=2.5')
+#Plot('tempint','grey tempint label2="p" unit2="s/km" color=j scalebar=y clip=2.5')
+Result('int-Syn','vNint2 vHint2 etaint2','SideBySideAniso')
+## DIX PROCESSING  #######################
+
+# maps
+
+Flow('vNmapD vHmapD etamapD','tau0 dipwin2 curvwin diptwin2 curvtwin ',
+     '''
+     pveltranVTI method=d velH=${TARGETS[1]} eta=${TARGETS[2]} 
+     v0=1.8 dv=0.005 nv=171 interval=y nw=4 map=y
+     dip=${SOURCES[1]} curv=${SOURCES[2]} dipt=${SOURCES[3]} curvt=${SOURCES[4]} 
+     ''')
+
+Plot('vNmapD','grey color=j scalebar=y clip=.25 minval=1 maxval=3 bias=2 title="interval \F5 V\_N \^ \F3 (a)" ' + pl_Op)
+Plot('vHmapD','grey color=j scalebar=y clip=.2 minval=1 maxval=3 bias=2.2 title="interval \F5 V\_H \^ \F3 (b)" ' + pl_Op)
+Plot('etamapD','grey color=j scalebar=y clip=.1 minval=0 maxval=0.25 bias=0.125 title="interval  \F9 h \F3 (c)" ' + pl_Op)
+Result('mapD','vNmapD vHmapD etamapD','SideBySideAniso')
+## Masking + Coherency plot
+
+Flow('vNint_dix','nmoVTI  vNmapD','map2coh  map=${SOURCES[1]} v0=1.8 dv=0.005 nv=171 min2=0.03')
+Flow('vHint_dix','nmoVTI  vHmapD','map2coh  map=${SOURCES[1]} v0=1.8 dv=0.005 nv=171 min2=0.12 ')
+Flow('etaint_dix','nmoVTI etamapD','map2coh  map=${SOURCES[1]} v0=-0.5 dv=0.01 nv=101 min2=0.12 ')
+
+
+Plot('vNint_dix','vNint_dix',
+    '''
+     envelope |
+     grey allpos=y label2=Velocity unit2=km/s
+     title="interval \F5 V\_N \^ \F3 (a)" 
+    ''' + pl_Op)
+
+Plot('vNint_dix2','vNint_dix vNintE','Overlay')
+
+Plot('vHint_dix','vHint_dix',
+    '''
+     envelope |
+     grey allpos=y label2=Velocity unit2=km/s
+     title="interval\F5 V\_H \^ \F3 (b)" 
+    ''' + pl_Op)
+
+Plot('vHint_dix2','vHint_dix vHintE','Overlay')
+
+Plot('etaint_dix','etaint_dix',
+    '''
+     envelope |
+     grey allpos=y label2='' unit2=''
+     title="interval \F9 h \F3 (c)" 
+    ''' + pl_Op)
+
+Plot('etaint_dix2','etaint_dix etaintE','Overlay')
+
+# DEBUG 
+Result('int_dix-Syn','vNint_dix2 vHint_dix2 etaint_dix2','SideBySideAniso')
+# Result('temp_dix','temp_dix','grey color=j bias=2.2 clip=2.8 scalebar=y')
+
+## CLAREBOUT-FOWLER PROCESSING  #######################
+
+Flow('tau0t','tau0','deriv | smooth rect1=%d rect2=%d' % (smoothdert,smoothderp))
+
+# maps
+
+Flow('vNmapF vHmapF etamapF','tau0 datawin tau0t diptwin2',
+     '''
+     pveltranVTI method=f velH=${TARGETS[1]} eta=${TARGETS[2]}
+     cmp=${SOURCES[1]} tau0t=${SOURCES[2]} dipt=${SOURCES[3]} 
+     v0=1.8 dv=0.005 nv=171 nw=4 map=y
+     ''')
+
+Plot('vNmapF','grey color=j scalebar=y clip=.25 minval=1 maxval=3 bias=2 title="interval \F5 V\_N \^ \F3 (a)" ' + pl_Op)
+Plot('vHmapF','grey color=j scalebar=y clip=.2 minval=1 maxval=3 bias=2.2 title="interval \F5 V\_H \^ \F3 (b)" ' + pl_Op)
+Plot('etamapF','grey color=j scalebar=y clip=.1 minval=0 maxval=0.25 bias=0.125 title="interval  \F9 h \F3 (c)" ' + pl_Op)
+Result('mapF','vNmapF vHmapF etamapF','SideBySideAniso')
+## Masking + Coherency plot
+
+Flow('vNint_fowler','nmoVTI  vNmapF','map2coh  map=${SOURCES[1]} v0=1.8 dv=0.005 nv=171 min2=0.07 max2=0.27')
+Flow('vHint_fowler','nmoVTI  vHmapF','map2coh  map=${SOURCES[1]} v0=1.8 dv=0.005 nv=171 min2=0.15 ')
+Flow('etaint_fowler','nmoVTI etamapF','map2coh  map=${SOURCES[1]} v0=-0.5 dv=0.01 nv=101 min2=0.15 ')
+
+
+Plot('vNint_fowler','vNint_fowler',
+    '''
+     envelope |
+     grey allpos=y label2=Velocity unit2=km/s
+     title="interval \F5 V\_N \^ \F3 (a)" 
+    ''' + pl_Op)
+
+Plot('vNint_fowler2','vNint_fowler vNintE','Overlay')
+
+Plot('vHint_fowler','vHint_fowler',
+    '''
+     envelope |
+     grey allpos=y label2=Velocity unit2=km/s
+     title="interval \F5 V\_H \^ \F3 (b)" 
+    ''' + pl_Op)
+
+Plot('vHint_fowler2','vHint_fowler vHintE','Overlay')
+
+Plot('etaint_fowler','etaint_fowler',
+    '''
+     envelope |
+     grey allpos=y label2='' unit2=''
+     title="interval \F9 h \F3 (c)" 
+    ''' + pl_Op)
+
+
+Plot('etaint_fowler2','etaint_fowler etaintE','Overlay')
+#Result('temp','tempeff tempint','SideBySideAniso')
+Result('int_fowler-Syn','vNint_fowler2 vHint_fowler2 etaint_fowler2','SideBySideAniso')
+
+
+#plot per Abstract EAGE!
+Plot('vNint4','vNint',
+    '''
+     envelope |
+     grey allpos=y label2=Velocity unit2=km/s
+     title="interval \F5 V\_N \^ \F3 (c)" 
+    ''' + pl_Op)
+    
+
+Plot('vNint42','vNint4 vNintE','Overlay')
+
+Plot('vHint4','vHint',
+    '''
+     envelope |
+     grey allpos=y label2=Velocity unit2=km/s
+     title="interval \F5 V\_H \^ \F3 (d)" 
+    ''' + pl_Op)
+
+Plot('vHint42','vHint4 vHintE','Overlay')
+Result('velocity4','vNeff2 vHeff2 vNint42 vHint42','SideBySideAniso')
+
+
+# PAINTING
+
+Flow('seed','tau0','window n2=1')
+Flow('t0paint','dipwin seed','pwpaint seed=${SOURCES[1]} verb=y')
+Plot('t0paint1','t0paint','contour nc=30 c0=0 dc=0.1 plotcol=5 plotfat=3 wanttitle=n wantaxis=n' + pl_Op)
+
+Result('t0paint','datawin t0paint1','Overlay')
+
+# FLATTENING
+Flow('flat','datawin t0paint','iwarp warp=${SOURCES[1]}')
+Plot('t0paint_con','t0paint','contour nc=30 c0=0 dc=0.1 plotcol=7 plotfat=6 scalebar=y wanttitle=n wantaxis=n' +pl_Op)
+
+
+Plot('nmoflat','flat','grey title="flattened (d)" label1="\F10 t\F3" grid2=y gridfat=3 gridcol=5  g2num=.5' + pl_Op)
+
+Plot('t0paintSyn','t0paint','sfgrey color=j scalebar=y clip=1.4 bias=1.5 minval=0 maxval=3 title="'+tau0str+' (c) " ' + pl_Op)
+Plot('t0paintSyn_new','t0paint','sfgrey color=j scalebar=y clip=1.4 bias=1.5 minval=0 maxval=3 title="painted \F9 t\_\F3 0 \^(c) " ' + pl_Op)
+
+Plot('t0paintSynw','t0paintSyn_new t0paint_con','Overlay')
+
+
+Result('flatSyn','t0paintSyn nmoflat','SideBySideAniso')
+
+Result('dataPsynth','datawin dipwin t0paintSyn nmoflat','SideBySideAniso')
+Result('dataPsynthw','datawin dipwin t0paintSynw nmoflat','SideBySideAniso')
+
+Flow('t0paintt','t0paint','deriv | smooth rect1=%d rect2=%d' % (smoothdert,smoothderp))
+
+
+Flow('vNint_painting vHint_painting etaint_painting','t0paint datawin t0paintt diptwin2',
+     '''
+     pveltranVTI method=f velH=${TARGETS[1]} eta=${TARGETS[2]}
+     cmp=${SOURCES[1]} tau0t=${SOURCES[2]} dipt=${SOURCES[3]} 
+     v0=1.8 dv=0.005 nv=171 nw=4 map=n
+     ''')
+Flow('vNmapP vHmapP etamapP','t0paint t0paintt diptwin2',
+     '''
+     pveltranVTI method=f velH=${TARGETS[1]} eta=${TARGETS[2]}
+     tau0t=${SOURCES[1]} dipt=${SOURCES[2]} 
+     v0=1.8 dv=0.005 nv=171 nw=4 map=y
+     ''')
+
+
+
+Plot('vNmapP','grey color=j scalebar=y clip=.25 minval=1 maxval=3 bias=2 title="interval \F5 V\_N \^ \F3 (a)" ' + pl_Op)
+Plot('vHmapP','grey color=j scalebar=y clip=.2 minval=1 maxval=3 bias=2.2 title="interval \F5 V\_H \^ \F3 (b)" ' + pl_Op)
+Plot('etamapP','grey color=j scalebar=y clip=.1 minval=0 maxval=0.25 bias=0.125 title="interval  \F9 h \F3 (c)" ' + pl_Op)
+Result('mapPsynth','vNmapP vHmapP etamapP','SideBySideAniso')
+
+Plot('vNint_painting',
+    '''
+     envelope |
+     grey allpos=y label2=Velocity unit2=km/s
+     title="interval \F5 V\_N \^ \F3 (a)" 
+    ''' + pl_Op)
+
+Plot('vNint2_painting','vNint_painting vNintE','Overlay')
+
+Plot('vHint_painting',
+    '''
+     envelope |
+     grey allpos=y label2=Velocity unit2=km/s
+     title="interval \F5 V\_H \^ \F3 (b)" 
+    ''' + pl_Op)
+
+Plot('vHint2_painting','vHint_painting vHintE','Overlay')
+
+Plot('etaint_painting',
+    '''
+     envelope |
+     grey allpos=y label2='' unit2=''
+     title="interval \F9 h \F3 (c)" 
+    ''' + pl_Op)
+
+
+Plot('etaint2_painting','etaint_painting etaintE','Overlay')
+#Result('temp','tempeff tempint','SideBySideAniso')
+Result('intPsynth','vNint2_painting vHint2_painting etaint2_painting','SideBySideAniso')
+Result('interval','vNint2_painting vHint2_painting','SideBySideAniso')
+
+## Masking
+
+Flow('vNint_painting_mask','flat  vNmapP','map2coh  map=${SOURCES[1]} v0=1.8 dv=0.005 nv=171 min2=0.07 max2=0.27')
+Flow('vHint_painting_mask','flat  vHmapP','map2coh  map=${SOURCES[1]} v0=1.8 dv=0.005 nv=171 min2=0.15 ')
+Flow('etaint_painting_mask','flat etamapP','map2coh  map=${SOURCES[1]} v0=-0.5 dv=0.01 nv=101 min2=0.15 ')
+
+Plot('vNint_painting_mask','vNint_painting_mask',
+    '''
+     envelope | math output="input^1" | 
+     grey allpos=y label2=Velocity unit2=km/s
+     title="interval \F5 V\_H \^ \F3 (b)" label1="\F10 t\F3" 
+    ''' + pl_Op)
+
+Plot('vNint2_painting_mask','vNint_painting_mask vNintE','Overlay')
+
+
+Plot('vHint_painting_mask','vHint_painting_mask',
+    '''
+     envelope | math output="input^1" | 
+     grey allpos=y label2=Velocity unit2=km/s
+     title="interval \F5 V\_H \^ \F3 (b)" label1="\F10 t\F3" 
+    ''' + pl_Op)
+
+Plot('vHint2_painting_mask','vHint_painting_mask vHintE','Overlay')
+
+Plot('etaint_painting_mask','etaint_painting_mask',
+    '''
+     envelope | math output="input^1" | 
+     grey allpos=y label2=Velocity unit2=km/s
+     title="interval \F9 h \F3 (c)" label1="\F10 t\F3" 
+    ''' + pl_Op)
+
+Plot('etaint2_painting_mask','etaint_painting_mask etaintE','Overlay')
+
+Result('intPmasksynth','vNint2_painting_mask vHint2_painting_mask etaint2_painting_mask','SideBySideAniso')
+Result('interval_mask','vNint2_painting_mask vHint2_painting_mask','SideBySideAniso')
+
+## Mesaure X/D in the dataset
+Flow('D','vN','math V=$SOURCE  output="x1/2*V" | spray n=%g d=%g o=%g axis=2 | window min2=%f max2=%f'%(np,dp,dp,pmin,pmax))
+
+Flow('X','dipwin t0paint vNintE','iwarp warp=${SOURCES[1]} | math output="(-1)*input*%f/%f"' %(dtau,dp))
+Flow('XD','X D','math D=${SOURCES[1]} output="input/(D+1e-6)"')
+Flow('theta','XD','math output="atan(input)/3.14*180" ')
+
+Result('XD','XD','grey wanttitle=n bias=0.75 clip=0.75 scalebar=y color=j minval=0.0 maxval=1.5')
+Result('theta','theta','grey wanttitle=n bias=22.5 clip=20 scalebar=y color=j minval=0.0 maxval=45.0')
+
+End()

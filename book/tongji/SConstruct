@@ -1,0 +1,10 @@
+from rsf.book import *
+
+Papers(copyr='Tongji University',
+       group='State Key Laboratory of Marine Geology',
+       authors = {'qpwave':'Jiubing Cheng and Wei Kang',
+                  'lrmode':'Jiubing Cheng and Sergey Fomel'},
+       )
+       
+End(use='amsmath,amsfonts')
+

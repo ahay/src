@@ -1,0 +1,90 @@
+from rsf.proj import *
+
+Plot('over_1',None,
+     '''
+     math n1=50 d1=10 o1=-290
+     output="sqrt(x1^2/4+200^2)/1000" |
+     add add=.05 | 
+     graph min2=0. max2=0.39 wantaxis=0 wanttitle= 
+     yreverse=1 plotfat=20 plotcol=5 pad=n
+     ''')
+
+Flow('fft',None,
+     'spike n1=8192 n2=50 n3=1 o1=0 d1=0.004 o2=0 d2=10 o3=0 d3=10 | fft1')
+Flow('pmod','fft',
+     '''
+     pmod seed=2015 phi=0.05 np=150 rc1=0.5 h1=200. rc2=0.5 h2=100. pmax=0.00045 v1=2000. v2=3000. |
+     fft1 inv=y
+     ''')
+Flow('xcor','pmod','corral nlags=100')
+
+n2 = 50
+for case in ('','1','5','p','2','65536','131072','262144'):
+     # Grab a common shot gather from the cube
+     raw = 'raw_csg' + case
+     Flow(raw,'xcor'+case,
+          '''
+          window n3=1 f3=29 min1=0. max1=0.39 |
+          put label2=Offset unit2=m o2=-290
+          ''')
+     csg = 'csg' + case
+     Flow(csg,raw,'halfint inv=y')
+
+     # Grab a zero-offset section from the cube
+     zero = 'zero' + case
+     Flow(zero,'xcor'+case,
+          '''
+          put n3=1 n2=%d | pad end2=%d |
+          put n3=%d n2=%d label3=Offset unit3=m |
+          window n2=1 | halfint inv=y | cut n1=2
+          ''' % (n2*n2,n2,n2,n2+1))
+     Plot(raw,'grey wanttitle=n')
+     Plot(csg,'grey wanttitle=n')
+     Plot(zero,'grey wanttitle=n')
+
+Plot('over_csg','csg over_1','Overlay')
+Result('first','raw_csg csg over_csg','SideBySideAniso')
+
+for q in (1,5):
+    # Generate the cube of cross-correlated traces
+    xcor = 'xcor%d' % q
+    Flow(xcor,'fft',
+         '''
+         pmod seed=2015 phi=0.05 np=%d rc1=0.5 h1=200. rc2=0.5 h2=100. pmax=0.0003 v1=2000. v2=3000. |
+         fft1 inv=y | 
+         corral nlags=100
+         ''' % q)
+     
+Result('build','raw_csg1 raw_csg5','SideBySideAniso')
+
+Flow('xcorp','fft',
+     '''
+     pmod seed=2015 np=150 rc1=0.5 h1=200. rc2=0.5 h2=100. type=3 pmax=0.00045 v1=2000. v2=3000. |
+     fft1 inv=y | 
+     corral nlags=100
+     ''')
+
+Result('point','csgp zerop','SideBySideAniso')
+
+Flow('xcor2','fft',
+     '''
+     pmod seed=2015 np=150 rc1=0.5 h1=200. rc2=0.5 h2=120. type=2 pmax=0.00033    v1=2000. v2=3000. |
+     fft1 inv=y | 
+     corral nlags=100
+     ''')
+
+Result('two','csg2','Overlay')
+
+for a in (65536,131072,262144):
+     xcor = 'xcor%d' % a
+     Flow(xcor,None,
+          '''
+          spike n1=%d n2=50 n3=1 o1=0 d1=0.004 o2=0 d2=10 o3=0 d3=10 | fft1 |
+          pmod seed=2015 np=150 rc1=0.05 h1=200. type=1 pmax=0.0004 v1=2000. |
+          fft1 inv=y | 
+          corral nlags=100
+          ''' % a)
+
+Result('many','csg65536 csg131072 csg262144','SideBySideAniso')
+
+End()

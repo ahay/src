@@ -1,0 +1,74 @@
+from rsf.proj import *
+
+Fetch('sean.HH','bp')
+
+def grey(title):
+    return 'grey title="%s" label2=Channel label1="Time (s)" ' % title
+
+Flow('sean','sean.HH',
+     'dd form=native | window n3=1 f3=3 n1=500 | bandpass fhi=50')
+Plot('sean',grey('Original')) 
+     
+Flow('sean2','sean','window j2=2')
+Plot('sean2',grey('Decimated'))
+
+Result('sean2','sean sean2','SideBySideAniso')
+
+def twodip2(extra):
+    return 'twodip2 order=2 nj1=2 nj2=2 eps=8 verb=y gauss=n ' + extra 
+
+# initial estimation
+Flow('pq','sean2',twodip2('niter=10'))
+# the second dip is aliased, throw it away and reestimate
+Flow('pq1','sean2 pq',twodip2('both=n dip1=${SOURCES[1]} dip2=${SOURCES[1]}'))
+# now estimate two dips again, starting from non-aliased ones
+Flow('pq2','sean2 pq pq1',twodip2('dip1=${SOURCES[1]} dip2=${SOURCES[2]}'))
+Flow('pq3','pq2','transp | spline n1=180 o1=0 d1=1 | transp')
+
+def twodip0(extra):
+    return 'twodip2 order=2 eps=8 verb=y gauss=n ' + extra 
+
+Flow('ppq','sean',twodip0('niter=10'))
+Flow('ppq1','sean ppq',twodip0('both=n dip1=${SOURCES[1]} dip2=${SOURCES[1]}'))
+Flow('ppq2','sean ppq ppq1',twodip0('dip1=${SOURCES[1]} dip2=${SOURCES[2]}'))
+
+Plot('dip1','pq2',
+     'window n3=1 | %s pclip=100 scalebar=y color=j' % grey('First Dip'))
+Plot('dip2','pq2',
+     'window f3=1 | %s pclip=100 scalebar=y color=j' % grey('Second Dip'))
+Result('sean2-dip','dip1 dip2','SideBySideIso')
+
+Plot('ddip1','ppq2',
+     'window n3=1 | %s pclip=100 scalebar=y color=j' % grey('First Dip'))
+Plot('ddip2','ppq2',
+     'window f3=1 | %s pclip=100 scalebar=y color=j' % grey('Second Dip'))
+Result('sean0-dip','ddip1 ddip2','SideBySideIso')
+
+Flow('separ','sean ppq2','pwdsigk dips=${SOURCES[1]} verb=y niter=200 eps=1')
+
+Flow('seans','sean','window n2=128')
+Flow('ppq2s','ppq2','window n2=128')
+
+Flow('separs','seans ppq2s','seisigk dips=${SOURCES[1]} verb=y niter=200 eps=0.1')
+
+Flow('pad mask','sean2','lpad jump=2 mask=${TARGETS[1]}')
+Result('sean3','pad',grey(' '))
+
+Flow('mis','pad mask pq3',
+     '''
+     planemis2 mask=${SOURCES[1]} dip=${SOURCES[2]} order=2 verb=y |
+     bandpass fhi=70
+     ''')
+Flow('err','mis sean','add scale=1,-1 ${SOURCES[1]}')
+Flow('int','mis err','cat ${SOURCES[1]} | byte')
+Plot('mis','int','window n3=1 | ' + grey('Interpolation Result'))
+Plot('err','int','window f3=1 | ' + grey('Interpolation Error'))
+Result('sean2-int','mis err','SideBySideIso')
+
+Plot('win','sean',
+     'window min1=2.5 max1=3.1 max2=120 | ' + grey('Original'))
+Plot('win2','mis',
+     'window min1=2.5 max1=3.1 max2=120 | ' + grey('Interpolated'))
+Result('sean2-close','win win2','SideBySideAniso')
+
+End()

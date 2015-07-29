@@ -1,0 +1,14 @@
+-rw-r--r--    1 root     root     155653444 2005-05-05 05:30 density_marmousi-ii.segy
+-rw-r--r--    1 root     root     155653444 2005-05-05 05:33 vp_marmousi-ii.segy
+-rw-r--r--    1 root     root     155653444 2005-05-05 05:36 vs_marmousi-ii.segy
+-rwxr-xr-x    1 root     root     4525264400 2005-05-05 07:06 obc_curl_v_1.segy
+-rw-r--r--    1 root     root     2262634000 2005-05-05 07:54 obc_curl_v_2.segy
+-rw-r--r--    1 root     root     4525264400 2005-05-05 09:30 obc_div_v_1.segy
+-rw-r--r--    1 root     root     2262634000 2005-05-05 10:18 obc_div_v_2.segy
+-rw-r--r--    1 root     root     4525264400 2005-05-05 11:50 obc_vx_1.segy
+-rw-r--r--    1 root     root     2262634000 2005-05-05 12:38 obc_vx_2.segy
+-rw-r--r--    1 root     root     3393949200 2005-05-05 13:45 obc_vz_1.segy
+-rw-r--r--    1 root     root     3393949200 2005-05-05 14:55 obc_vz_2.segy
+-rw-r--r--    1 root     root     4459728400 2005-05-05 16:27 surface_p1.segy
+-rw-r--r--    1 root     root     2229866000 2005-05-05 17:14 surface_p2.segy
+

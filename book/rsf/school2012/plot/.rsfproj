@@ -1,0 +1,3 @@
+uses=['sfmath', 'sfgraph', 'sfcmplx', 'sfdots', 'sfbox', 'sfgrey', 'sfcontour', 'sfspike', 'sfricker1', 'sfspray', 'sfinmo', 'sfwiggle', 'sfbyte', 'sfcubeplot', 'sfcontour3', 'sfcausint', 'sfcat']
+data=[]
+size=     910104

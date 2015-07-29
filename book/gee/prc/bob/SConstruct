@@ -1,0 +1,59 @@
+from rsf.proj import *
+
+Fetch('cmp.h','cmp')
+
+Flow('cmp','cmp.h','dd form=native')
+Plot('cmp',
+     'grey wherexlabel=b wheretitle=t title="CMP Gather" label1="Time (s)" ')
+
+def vscan(semblance):
+    return '''
+    vscan v0=1.5 dv=0.015 nv=91 semblance=%d half=n
+    ''' % semblance
+
+win = ' min1=0 max1=4 min2=1.5 max2=2.85'
+
+Flow('scan','cmp',vscan(1))
+Plot('scan',
+     '''
+     grey allpos=y wherexlabel=b wheretitle=t 
+     title="Semblance Scan" label2="Velocity (km/s)" label1="Time (s)"
+     ''' + win)
+
+Flow('stack','cmp',vscan(0))
+
+def graph(title):
+    return '''
+    graph yreverse=y transp=y
+    label1="Time (s)" label2="Velocity (km/s)"
+    title="%s"
+    ''' % title
+
+Flow('rms','scan','pick rect1=50 | window')
+Plot('rms',graph(' ') + ' pad=y plotcol=3 plotfat=10 wantaxis=n' + win)
+
+Flow('piks','scan','picks nt=8281 dt=100000')
+
+Plot('scan2',['scan','rms'],'Overlay')
+
+Flow('weight',['scan','rms'],'slice pick=${SOURCES[1]}')
+Plot('weight',graph('Weight') + ' label2=Semblance')
+
+Result('clapp',['cmp','scan2','weight'],'SideBySideAniso')
+
+rect = {'stiff': 30, 'flex': 3}
+
+for case in rect.keys():
+    case2 = case+'2'
+    Flow([case,case2],['rms','weight'],
+         'dix weight=${SOURCES[1]} vrmsout=${TARGETS[1]} rect1=%d' %
+         rect[case])
+    Plot(case,graph('Interval Velocity') + ' plotcol=3  plotfat=10')
+    Plot(case2,['rms',case2],
+         'cat axis=2 ${SOURCES[1]} | ' +
+         graph('RMS Velocity') +
+         ' dash=0,1')
+    Result(case,[case2,case],'SideBySideIso')
+
+###########################################################################
+End()

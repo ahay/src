@@ -1,0 +1,579 @@
+
+\published{Geophysics, 76, V69-V77, (2011)}
+\title{Seismic data interpolation beyond aliasing using regularized nonstationary autoregression}
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+
+%\ms{GEO-2010-0231-final}
+
+\address{
+\footnotemark[1] College of Geo-exploration Science and Technology,\\
+Jilin University \\
+No.6 Xi minzhu street, \\
+Changchun, China, 130026 \\
+\footnotemark[2] Bureau of Economic Geology,\\
+John A. and Katherine G. Jackson School of Geosciences \\
+The University of Texas at Austin \\
+University Station, Box X \\
+Austin, TX, USA, 78713-8924}
+
+\author{Yang Liu\footnotemark[1], Sergey Fomel\footnotemark[2]}
+
+\footer{GEO-2010-0231-final}
+\lefthead{Liu and Fomel}
+\righthead{Regularized nonstationary autoregression}
+\maketitle
+
+\begin{abstract}
+Seismic data are often inadequately or irregularly sampled along
+spatial axes. Irregular sampling can produce
+artifacts in seismic imaging results. We present a new approach to
+interpolate aliased seismic data based on adaptive prediction-error
+filtering (PEF) and regularized nonstationary autoregression. Instead
+of cutting data into overlapping windows (patching), a popular method
+for handling nonstationarity, we obtain smoothly nonstationary PEF
+coefficients by solving a global regularized least-squares
+problem. We employ shaping regularization to
+control the smoothness of adaptive PEFs. Finding the interpolated
+traces can be treated as another linear least-squares problem, which
+solves for data values rather than filter coefficients. Compared with
+existing methods, the advantages of the proposed method include an
+intuitive selection of regularization parameters and fast
+iteration convergence. Benchmark synthetic and
+field data examples show that the proposed technique can successfully
+reconstruct data with decimated or missing traces.
+
+\end{abstract}
+
+\section{Introduction}
+The regular and fine sampling along the time
+axis is common, whereas good spatial sampling is often more expensive
+or prohibitive and therefore is the main bottleneck for seismic
+resolution. Too large a spatial sampling interval may lead to
+aliasing problems that adversely affect the resolution
+of subsurface images. An alternative to expensive dense spatial
+sampling is interpolation of seismic traces. One important approach to
+trace interpolation is prediction interpolating methods
+\cite[]{GEO56-06-07850794}, which use low-frequency non-aliased data
+to extract antialiasing prediction-error filters (PEFs) and then
+interpolates high frequencies beyond aliasing. \cite{Claerbout92}
+extends Spitz's method using PEFs in the $t$-$x$
+domain. \cite{GEO64-05-14611467} proposes a half-step PEF scheme that
+makes the interpolation process more efficient. \cite{Huard96}
+and \cite{GEO67-04-12321239} extend $f$-$x$ trace interpolation to higher
+spatial dimensions. \cite{GEO68-01-03550369} introduces an algorithm
+similar to $f$-$x$ prediction filtering, which has an elegant
+representation in the $f$-$k$ domain. \cite{Curry06} uses
+multi-dimensional nonstationary PEFs to interpolate diffracted
+multiples. \cite{Naghizadeh09} propose an adaptive $f$-$x$
+interpolation using exponentially weighted recursive least
+squares. More recently, \cite{Naghizadeh10a} propose a prediction
+approach similar to Gulunay's method but using the curvelet transform
+instead of the Fourier transform. \cite{Abma05} compare the
+performance of several different interpolation methods.
+
+Correcting irregular spatial sampling is another application for
+seismic data interpolation algorithms. A variety of interpolation
+methods have been published in the recent years. One approach is to
+estimate the PEF on multiple rescaled copies of the irregular
+data \cite[]{Curry03}, where the data are rescaled with a number of
+progressively-larger bin sizes. \cite{Curry04} further improves the
+rescaling method by introducing multiple scales of the data where the
+location of the grid cells are varied in addition to the size of the
+cells. \cite{Curry08} use pseudo-primary data by crosscorrelating
+multiples and primaries to estimate nonstationary PEF and then
+interpolated missing near offsets. \cite{Naghizadeh10b} propose
+autoregressive spectral estimates to reconstruct aliased data and data
+with gaps.
+
+Seismic data are nonstationary. The standard PEF is designed under the
+assumption of stationary data and becomes less effective when this
+assumption is violated \cite[]{Claerbout92}.  Cutting data into
+overlapping windows (patching) is a common method to handle
+nonstationarity \cite[]{Claerbout10}, although it occasionally fails
+in the presence of variable 
+dips. \cite{Crawley99} propose smoothly-varying
+nonstationary PEFs with ``micropatches'' and radial smoothing, which
+typically produces better results than the rectangular patching
+approach. \cite{GEO67-06-19461960} develops a nonstationary plane-wave
+destruction (PWD) filter as an alternative to $t$-$x$ PEF
+\cite[]{Claerbout92} and applies the PWD operator to trace
+interpolation. The PWD method depends on the assumption of a small
+number of smoothly variable seismic dips. \cite{Curry03} uses
+Laplacian and radial rougheners to ensure a nonstationary PEF that
+varies smoothly in space, which specifies an appropriate
+regularization operator.
+
+In this paper, we use the two-step strategy, similar to that of
+\cite{Claerbout92} and \cite{Crawley99}, but calculate the
+adaptive PEF by using regularized nonstationary autoregression
+\cite[]{Fomel09} to handle both nonstationarity and
+aliasing. The key idea is the use of shaping regularization
+\cite[]{Fomel07} to constrain the spatial smoothness of filter
+coefficients. We provide an approach to nonstationary data
+interpolation, which has an intuitive selection of
+parameters and fast iteration
+convergence. We test the new method by using several benchmark
+synthetic examples. Results of applying the proposed method to a field
+data example demonstrate that it can
+be effective in trace interpolation problems, even in the presence of
+multiple strongly variable slopes.
+
+\section{Theory}
+
+A common constraint for interpolating missing seismic traces is to
+ensure that the interpolated data, after specified filtering, have
+minimum energy \cite[]{Claerbout92}. Filtering is equivalent to
+spectral multiplication. Therefore, specified filtering is a way of
+prescribing a spectrum for the interpolated data. A sensible choice is
+a spectrum of the recorded data, which can be captured by finding the
+data's PEF \cite[]{GEO56-06-07850794,Crawley00}. The PEF, also known
+as the autoregression filter, plays the role of the
+`inverse-covariance matrix' in statistical estimation theory. A signal
+is regressed on itself in the estimation of PEF. The PEF can be
+implemented in either $t$-$x$ (time-space) or $f$-$x$
+(frequency-space) domain.  Time-space PEFs are less likely to create
+spurious events in the presence of noise than $f$-$x$ PEFs
+\cite[]{Abma95,Crawley00}. When data interpolation is cast as an
+inverse problem, a PEF can be used to find missing data. This involves
+a two-step approach. In the first step, a PEF is
+estimated by minimizing the output of convolution of known
+data with an unknown PEF. In the second step, the
+missing data is found by minimizing the convolution of the recently
+calculated PEF with the unknown model, which is constrained where the
+data are known \cite[]{Curry04}.
+
+\subsection{Step 1: Adaptive PEF estimation}
+ \subsubsection{Regular trace interpolation} 
+
+An important property of PEFs is scale invariance, which allows
+estimation of PEF coefficients $A_n$ (including the leading ``$-1$''
+and prediction coefficients $B_n$) for incomplete aliased data
+$S(t,x)$ that include known traces
+$S_{known}(t,x_k)$ and unknown or zero traces
+$S_{zero}(t,x_z)$. For trace decimation, zero 
+traces interlace known traces. To avoid zeroes that influence filter
+estimation, we interlace the filter coefficients with zeroes. For
+example, consider a 2-D PEF with seven prediction coefficients:
+\begin{equation}
+   \begin{array}{ccccc}
+      B_3    &B_4    &B_5     &B_6     &B_7     \\
+      \cdot  &\cdot  &-1      &B_1     &B_2 \end{array}
+\label{eqn:noilace}
+\end{equation}
+Here, the horizontal axis is time, the vertical axis is space, and
+``$\cdot$'' denotes zero. Rescaling both time and spatial axes assumes
+that the dips represented by the original filter in
+equation~\ref{eqn:noilace} are the same as those represented by the
+scaled filter
+\cite[]{Claerbout92}:
+\begin{equation}
+   \begin{array}{ccccccccc} 
+   B_3 &\cdot &B_4 &\cdot &B_5 &\cdot &B_6 &\cdot &B_7 \\
+   \cdot &\cdot &\cdot &\cdot &\cdot &\cdot &\cdot &\cdot &\cdot \\
+   \cdot &\cdot &\cdot &\cdot &-1 &\cdot &B_1 &\cdot &B_2
+   \end{array}
+\label{eqn:ilacefil}
+\end{equation}
+For nonstationary situations, we can also assume locally stationary
+spectra of the data because trace decimation makes the space between
+known traces small enough, thus making adaptive PEFs locally
+scale-invariant. For estimating adaptive PEF coefficients,
+nonstationary autoregression allows coefficients $B_n$ to change with
+both $t$ and $x$. The new adaptive filter can look something like
+\begin{equation}
+   \begin{array}{ccccccccc} 
+     B_3(t,x) &\cdot &B_4(t,x) &\cdot &B_5(t,x) 
+                &\cdot &B_6(t,x) &\cdot &B_7(t,x)
+   \\ \cdot &\cdot &\cdot &\cdot &\cdot &\cdot &\cdot &\cdot &\cdot \\
+   \cdot &\cdot &\cdot &\cdot &-1 &\cdot &B_1(t,x) &\cdot &B_2(t,x)
+   \end{array}
+\label{eqn:ailacefil}
+\end{equation}
+In other words, prediction coefficients $B_n(t,x)$ are
+obtained by solving the least-squares problem,
+%{\setlength\arraycolsep{2pt}
+\begin{eqnarray}
+  \label{eq:pred2}
+\widehat{B_n}(t,x) &=& \arg\min_{B_n}\|S(t,x)-\sum_{n=1}^{N} 
+   B_n(t,x)S_n(t,x)\|_2^2 \nonumber \\
+  & & + \epsilon^2\, \sum_{n=1}^{N} \|\mathbf{D}[B_n(t,x)]\|_2^2\;,
+\end{eqnarray}
+where $S_n(t,x)$=$S(t-m\,i\,\Delta\,t,x-m\,j\,\Delta\,x)$, which
+represents the causal translation of $S(t,x)$, with time-shift index
+$i$ and spatial-shift index $j$ scaled by decimation interval
+$m$. Note that predefined constant $m$ uses the interlacing value as
+an interval; i.e., the shift interval equals 2 in
+equation~\ref{eqn:ailacefil}. Subscript $n$ is the general shift index
+for both time and space, and the total number of $i$ and $j$ is
+$N$. $\mathbf{D}$ is the regularization operator, and $\epsilon$ is a
+scalar regularization parameter.  All coefficients $B_n(t,x)$ are
+estimated simultaneously in a time/space variant manner. This approach
+was described by \cite{Fomel09} as regularized nonstationary
+autoregression (RNA). If $\mathbf{D}$ is a linear operator,
+least-squares estimation reduces to linear inversion
+\begin{equation}
+  \label{eq:inv}
+  \mathbf{b} = \mathbf{A}^{-1}\,\mathbf{d}\;,
+\end{equation}
+where 
+\begin{equation}
+  \label{eq:bvar}
+  \mathbf{b} = \left[\begin{array}{cccc}B_1(t,x) & B_2(t,x) & \cdots & B_N(t,x)\end{array}\right]^T\;,
+\end{equation}
+\begin{equation}
+  \label{eq:dvar}
+\mathbf{d} = \left[\begin{array}{cccc}S_1(t,x)\,S(t,x) & S_2(t,x)\,S(t,x) & \cdots & S_N(t,x)\,S(t,x)\end{array}\right]^T\;,
+\end{equation}
+and the elements of matrix $\mathbf{A}$ are
+\begin{equation}
+  \label{eq:aij}
+  A_{nk}(t,x) = S_n(t,x)\,S_k(t,x) + \epsilon^2\,\delta_{nk}\,\mathbf{D}^T\,\mathbf{D}\;.
+\end{equation}
+
+Shaping regularization \cite[]{Fomel07} incorporates a shaping
+(smoothing) operator $\mathbf{G}$ instead of $\mathbf{D}$ and
+provides better numerical properties than Tikhonov's
+regularization \cite[]{Tikhonov63} in
+equation~\ref{eq:pred2} \cite[]{Fomel09}.
+Inversion using shaping regularization takes the form
+\begin{equation}
+  \label{eq:rinv}
+  \mathbf{b} = \widehat{\mathbf{A}}^{-1}\,\widehat{\mathbf{d}}\;,
+\end{equation}
+where 
+\begin{equation}
+  \label{eq:dvar2}
+\widehat{\mathbf{d}} = \left[\begin{array}{cccc}\mathbf{G}\left[S_1(t,x)\,S(t,x)\right] & 
+\mathbf{G}\left[S_2(t,x)\,S(t,x)\right] & \cdots & 
+\mathbf{G}\left[S_N(t,x)\,S(t,x)\right]\end{array}\right]^T\;,
+\end{equation}
+the elements of matrix $\widehat{\mathbf{A}}$ are
+\begin{eqnarray}
+  \label{eq:raij}
+  \widehat{A}_{nk}(t,x) &=& \lambda^2\,\delta_{nk} + \mathbf{G}\left[S_n(t,x)\,S_k(t,x) - 
+    \lambda^2\,\delta_{nk}\right]\;,
+\end{eqnarray}
+and $\lambda$ is a scaling coefficient. One advantage of the shaping
+approach is the relative ease of controlling the selection of
+$\lambda$ and $\mathbf{G}$ in comparison with $\epsilon$ and
+$\mathbf{D}$. We define $\mathbf{G}$ as Gaussian smoothing with an
+adjustable radius, which is designed by repeated application of
+triangle smoothing \cite[]{Fomel07}, and choose $\lambda$ to be the
+mean value of $S_n(t,x)$.
+
+Coefficients $B_n(t,x_z)$ at zero traces $S_{zero}(t,x_z)$ get constrained
+(effectively smoothly interpolated) by regularization. The required
+parameters are the size and shape of the filter $B_n(t,x)$ and the
+smoothing radius in $\mathbf{G}$.
+
+\subsubsection{Missing data interpolation} 
+
+Irregular gaps occur in the recorded data for many different reasons,
+and prediction-error filters are known to be a powerful method for
+interpolating missing data. Missing data interpolation is a particular
+case of data regularization, where the input data are already given on
+a regular grid, and one needs to reconstruct only the missing values
+in empty bins \cite[]{Fomel01a}. One can use existing traces to
+directly estimate adaptive PEF coefficients instead of scaling the
+filter as in regular trace interpolation problem. However, finding the
+adaptive PEF needs to avoid using any regression equations that
+involve boundaries or missing data. This can be achieved by creating
+selection mask operator $K(t,x)$, a diagonal matrix with ones at the
+known data locations and zeros elsewhere, for both causal translations
+and input data \cite[]{Claerbout10}.
+
+Analogously to the stationary prediction-error filter
+(\ref{eqn:noilace}), adaptive PEF coefficients $B_n(t,x)$ use the
+unscaled format and appear as
+\begin{equation} \begin{array}{ccccc}
+B_3(t,x) &B_4(t,x) &B_5(t,x) &B_6(t,x) &B_7(t,x) \\ \cdot &\cdot &-1
+&B_1(t,x) &B_2(t,x) \end{array} \label{eqn:npef} \end{equation} The
+nonstationary coefficients $B_n(t,x)$ can be obtained by solving the
+least-squares problem
+\begin{eqnarray}
+  \label{eq:pred3}
+\widehat{B_n}(t,x) &=& \arg\min_{B_n}\|K(t,x)[S(t,x)-\sum_{n=1}^{N} 
+   B_n(t,x)S_n(t,x)]\|_2^2 \nonumber \\
+  & & + \epsilon^2\, \sum_{n=1}^{N} \|\mathbf{D}[B_n(t,x)]\|_2^2\;.
+\end{eqnarray}
+where $S_n(t,x)=S(t-i,x-j)$. By using shaping regularization, 
+adaptive PEF coefficients are smoothly filled at missing trace
+locations.
+
+\subsection{Step 2: Data interpolation with adaptive PEF}
+
+In the second step, a similar problem is solved, except that the
+filter is known, and the missing traces are unknown. In the
+decimated-trace interpolation problem, we squeeze (by throwing away
+alternate zeroed rows and columns) the filter in
+equation~\ref{eqn:ailacefil} to its original size
+and then formulate the least-squares problem,
+\begin{equation}
+  \label{eq:pred4}
+     \widehat{S}(t,x) = \arg\min_{S}\|S(t,x)-\sum_{n=1}^{N} 
+       \widehat{B_n}(t,x)S_n(t,x)\|_2^2\;,
+\end{equation}
+subject to
+\begin{equation}
+  \label{eq:pred5}
+      \widehat{S}(t,x_k) = S_{known}(t,x_k)\;,
+\end{equation}
+where $\widehat{S}(t,x)$ represents the interpolated output, and $i$
+and $j$ use the original shift as the interval; i.e., the shift
+interval equals 1.
+
+We carry out the minimization in
+equations~\ref{eq:pred2}, \ref{eq:pred3}, and \ref{eq:pred4} by the
+conjugate gradient method \cite[]{Hestenes52}. The constraint
+condition (equation~\ref{eq:pred5}) is used as the initial model and
+constrains the output by using the known traces for each iteration in
+the conjugate-gradient scheme. The computational cost is proportional to
+$N_{iter}\times N_{f}\times N_{t}\times N_{x}$, where $N_{iter}$
+is the number of iterations, $N_f$ is the filter size, and $N_t \times
+N_x$ is the data size. In our tests, $N_f$ and $N_{iter}$ were
+approximately equal to 100. Increasing the smoothing radius in shaping
+regularization decreases $N_{iter}$ in the filter estimation step.
+
+\section{Synthetic data tests}
+
+\subsection{Aliasing decimated-trace interpolation test}
+
+We start with a strongly aliased synthetic example from
+\cite{Claerbout09}. The sparse spatial sampling makes the gather
+severely aliased, especially at the far offset positions
+(Figure~\ref{fig:jaliasp,dealias,jamiss}a). For comparison, we used
+PWD \cite[]{GEO67-06-19461960} to interpolate the traces
+(Figure~\ref{fig:jaliasp,dealias,jamiss}b). Interpolation with PWD
+depends on dip estimation. In this example, the true dip is
+non-negative everywhere and is easily distinguished from the aliased
+one. Therefore, the PWD method recovers the interpolated traces
+well. However, in the more general case, an additional interpretation
+may be required to determine which of the dip components is
+contaminated by aliasing. According to the theory described in the
+previous section, the PEF-based methods use the lower (less aliased)
+frequencies to estimate PEF coefficients, and then interpolate the
+decimated traces (high-frequency information) by minimizing the
+convolution of the scale-invariant PEF with the unknown model, which
+is constrained where the data is known. We designed adaptive PEFs
+using 10 (time) $\times$ 2 (space) coefficients for each sample and a
+50-sample (time) $\times$ 2-sample (space) smoothing radius and then
+applied them so as to interpolate the aliased trace. The nonstationary
+autoregression algorithm effectively removes all spatial aliasing
+artifacts (Figure~\ref{fig:jaliasp,dealias,jamiss}c). The proposed
+method compares well with the PWD method. The CPU times, for single
+2.66GHz CPU used in this example, are 20 seconds for adaptive PEF
+estimation (step 1) and 2 seconds for data interpolation (step 2).
+
+\inputdir{alias}
+\multiplot{3}{jaliasp,dealias,jamiss}{width=0.45\columnwidth}{Aliased
+               synthetic data (a), trace interpolation with plane-wave
+               destruction (b), and trace interpolation with
+               regularized nonstationary autoregression (c). Three
+               additional traces were inserted between each of the
+               neighboring input traces.}
+
+\subsection{Abma decimated-trace interpolation tests}
+
+A benchmark example created by Raymond Abma (personal communication)
+shows a simple curved event
+(Figure~\ref{fig:jcurve,jcscov,jcacov}a). The challenge in this
+example is to account for both nonstationarity and
+aliasing. Figure~\ref{fig:jcurve,jcscov,jcacov}b shows the
+interpolated result using Claerbout's stationary $t$-$x$ PEF, which
+was estimated and applied in one big window, with each PEF coefficient
+$B_n$ constant at every data location. Note that the $t$-$x$ PEF
+method can recover the aliasing trace only in the dominant slope
+range. The trace-interpolating result using regularized nonstationary
+autoregression is shown in Figure~\ref{fig:jcurve,jcscov,jcacov}c. The
+adaptive PEF has 20 (time) $\times$ 3 (space) coefficients for each
+sample and a 20-sample (time) $\times$ 3-sample (space) smoothing
+radius. The proposed method eliminates all nonstationary aliasing and
+improves the continuity of the curved event.
+\inputdir{ray}
+\multiplot{3}{jcurve,jcscov,jcacov}{width=0.75\columnwidth}{Curve
+              model (a), trace interpolation with stationary PEF (b),
+              and trace interpolation with adaptive PEF (c).}
+
+\cite{Abma05} present a comparison of several algorithms used for
+trace interpolation. We chose the most challenging benchmark Marmousi
+example from Abma and Kabir to illustrate the performance of RNA
+interpolation. Figure~\ref{fig:jmarm,jmacov}a shows a zero-offset
+section of the Marmousi model, in which curved events violate the
+assumptions common for most trace-interpolating
+methods. Figure~\ref{fig:jmarm,jmacov}b shows that our method produces
+reasonable results for both curved and weak events and does not
+introduce any undesirable noise. The adaptive PEF parameters
+correspond to 7 (time) $\times$ 5 (space) coefficients for each sample
+and a 40-sample (time) $\times$ 30-sample (space) smoothing radius.
+
+
+ \multiplot{2}{jmarm,jmacov}{width=0.75\columnwidth}{Marmousi model
+                (a) and trace interpolation with regularized
+                nonstationary autoregression (b).}
+
+\subsection{Missing-trace interpolation test}
+
+A missing trace test is shown in Figure~\ref{fig:zero,jamiss}a and
+comes from decimated-trace interpolation result
+(Figure~\ref{fig:jcurve,jcscov,jcacov}c) after removing 70\% of
+randomly selected traces. The curved event makes it difficult to
+recover the missing traces. The interpolated result is shown in
+Figure~\ref{fig:zero,jamiss}b, which uses a regularized adaptive PEF
+with 4 (time) $\times$ 2 (space) coefficients for each sample and a
+50-sample (time) $\times$ 10-sample (space) smoothing radius. In the
+interpolated result, it is visually difficult to distinguish the
+missing trace locations, which is an evidence of successful
+interpolation. The filter size along space direction needs to be
+small in order to generate enough regression equations.
+
+\inputdir{misscurv}
+   \multiplot{2}{zero,jamiss}{width=0.75\columnwidth}{Curved model
+                 (Figure~\ref{fig:jcurve,jcscov,jcacov}c) with 70\%
+                 randomly selected traces removed (a) and trace
+                 interpolation with regularized nonstationary
+                 autoregression (b).}
+
+\section{Field Data Examples}
+We use a set of marine 2-D shot gathers from a deepwater Gulf of
+Mexico survey \cite[]{Crawley99,GEO67-06-19461960} to further
+test the proposed method. Figure~\ref{fig:sean,sean2} shows the data
+before and after subsampling in the offset direction. The shot gather
+has long-period multiples and complicated diffraction events caused by
+a salt body. Amplitudes of the events are not uniformly
+distributed. Subsampling by a factor of 2
+(Figure~\ref{fig:sean,sean2}b) causes visible aliasing of the steeply
+dipping events. We designed a nonstationary PEF, with 15 (time)
+$\times$ 5 (space) coefficients for each sample and a 50-sample (time)
+$\times$ 20-sample (space) smoothing radius to handle the variability
+of events. Figure~\ref{fig:samiss,serr} shows the interpolation result
+and the difference between interpolated traces and original traces
+plotted at the same clip value. The proposed method succeeds in the
+sense that it is hard to distinguish interpolated traces from the
+interpolation result alone. A close-up comparison between the original
+and interpolated traces (Figure~\ref{fig:win,win2}) shows some small
+imperfections. Some energy of the steepest events is partly
+missing. Coefficients of the adaptive PEF are illustrated in
+Figure~\ref{fig:sfcoe,smcoe}, which displays the first coefficient
+($B_1$) and the mean coefficient of $B_n$, respectively. The filter
+coefficients vary in time and space according to the curved
+events. The interpolated results are relatively insensitive to the
+smoothing parameters.
+\inputdir{sean}
+   \multiplot{2}{sean,sean2}{width=0.47\columnwidth}{A 2-D marine shot
+                gather. Original input (a) and input subsampled by a
+                factor of 2 (b).}
+
+   \multiplot{2}{samiss,serr}{width=0.47\columnwidth}{Shot gather
+                 after trace interpolation (adaptive PEF with 15
+                 $\times$ 5) (a) and difference between original
+                 gather (Figure~\ref{fig:sean,sean2}a) and
+                 interpolated result (Figure~\ref{fig:samiss,serr}a)
+                 (b).}
+
+   \multiplot{2}{win,win2}{width=0.47\columnwidth}{Close-up comparison
+                 of original data (a) and interpolated result by
+                 RNA (b).}
+
+   \multiplot{2}{sfcoe,smcoe}{width=0.47\columnwidth}{Adaptive PEF
+                 coefficients. First coefficient $B_1$ (a) and mean
+                 coefficient of $B_n$ (b).}
+
+For a missing-trace interpolation test
+(Figure~\ref{fig:zero,ramiss}a), we removed 40\% of randomly selected
+traces from the input data
+(Figure~\ref{fig:sean,sean2}a). Furthermore, the first five traces
+were also removed to simulate traces missing at near offset. The
+adaptive PEF can only use a small number of coefficients in the
+spatial direction because of a small number of fitting equations
+(where the adaptive PEF lies entirely on known data). However, it also
+limits the ability of the proposed method to interpolate dipping
+events. We used a nonstationary PEF with 4 (time) $\times$ 3 (space)
+coefficients for each sample and a 50-sample (time) $\times$ 10-sample
+(space) smoothing radius to handle the missing trace recovery. The
+result is shown in Figure~\ref{fig:zero,ramiss}b. By comparing the
+results with the original input (Figure~\ref{fig:sean,sean2}a), the
+missing traces are interpolated reasonably well except for weaker
+amplitude of the steeply dipping events.
+% which also appear in the
+%difference between interpolated traces and original traces
+%(Figure~\ref{fig:diff}).
+
+\inputdir{missing}
+   \multiplot{2}{zero,ramiss}{width=0.47\columnwidth}{Field data
+                 with 40\% randomly missing traces (a), and
+                 reconstructed data using RNA (b).}
+
+%    \plot{diff}{width=0.47\columnwidth}{Difference between original
+%                 gather (Figure~\ref{fig:sean,sean2}a) and
+%                 interpolated result (Figure~\ref{fig:zero,ramiss}b).}
+
+An extension of the method to 3-D is straightforward and follows a
+two-step least-squares method with 3-D adaptive PEF
+estimation. We use a set of shot gathers as the input data volume to
+further test our method (Figure~\ref{fig:sean3,zero3}a). We removed
+50\% of randomly selected traces and five near offset traces for all
+shots (Figure~\ref{fig:sean3,zero3}b). For comparison, we used
+PWD to recover the missing traces
+(Figure~\ref{fig:miss3,diff3,amiss3,adiff3}a). The PWD method produces
+a reasonable result after carefully estimating dip information, but
+the interpolated error is slightly larger in the diffraction
+locations. (Figure~\ref{fig:miss3,diff3,amiss3,adiff3}b). The additional
+direction provided more information for interpolation but also
+increased the number of zeros in the mask operator $K(t,x)$, which
+constrains enough fitting equations in equation~\ref{eq:pred3}. To use
+the available fitting equations for adaptive PEF estimation, we chose
+a smaller number of coefficients in the spatial direction. The
+proposed method is able to handle conflicting dips, although it does
+not appear to improve the dipping-event recovery compared to the 2-D
+case. This characteristic partly limits the application of RNA in 3-D
+case. We used a 3-D nonstationary PEF with 4 (time) $\times$ 2
+(space) $\times$ 2 (space) coefficients for each sample and a
+50-sample (time) $\times$ 10-sample (space) $\times$ 10-sample (space)
+smoothing radius was selected. Similar to the result in the 2-D
+example, Figure~\ref{fig:miss3,diff3,amiss3,adiff3}c shows the
+interpolation result, in which only steeply-dipping low-amplitude
+diffraction events with are lost
+(Figure~\ref{fig:miss3,diff3,amiss3,adiff3}d).
+
+   \multiplot{2}{sean3,zero3}{width=0.42\columnwidth}{A
+                3-D field data volume (a) and data with
+                50\% randomly missing traces (b).}
+
+   \multiplot{4}{miss3,diff3,amiss3,adiff3}{width=0.42\columnwidth}{
+                Reconstructed data volume using 3-D plane-wave
+                destruction (a), difference between original input
+                (Figure~\ref{fig:sean3,zero3}a) and interpolated
+                result (Figure~\ref{fig:miss3,diff3,amiss3,adiff3}a),
+                reconstructed data volume using 3-D regularized
+                nonstationary autogression (c), and difference between
+                original input (Figure~\ref{fig:sean3,zero3}a) and
+                interpolated result
+                (Figure~\ref{fig:miss3,diff3,amiss3,adiff3}c) (d).}
+
+
+\section{Conclusions}
+We have introduced a new approach to adaptive prediction-error
+filtering for seismic data interpolation. Our approach uses
+regularized nonstationary autoregression to handle time-space
+variation of nonstationary seismic data. We apply this method to
+interpolating seismic traces beyond aliasing and to reconstructing
+data with missing and decimated traces. Experiments with benchmark
+synthetic examples and field data tests show that the proposed filters
+can depict nonstationary signal variation and provide a useful
+description of complex wavefields having multiple curved events. These
+properties are useful for applications such as seismic data
+interpolation and regularization. Other possible applications may
+include seismic noise attenuation.
+
+\section{Acknowledgments}
+We are grateful to Raymond Abma for providing benchmark data sets. We
+thank Eric Verschuur, Bill Curry, and two anonymous reviewers for
+helpful suggestions, which improved the quality of the paper.
+
+This publication was authorized by the Director, Bureau of Economic
+Geology, The University of Texas at Austin.
+
+\bibliographystyle{seg}
+\bibliography{SEG,SEP2,seg2010}
+

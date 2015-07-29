@@ -1,0 +1,4 @@
+The Madagascar project trackers for
+* Bugs              https://sourceforge.net/p/rsf/bugs/
+* Feature Requests  https://sourceforge.net/p/rsf/feature-requests/
+

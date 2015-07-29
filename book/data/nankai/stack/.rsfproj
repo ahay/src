@@ -1,0 +1,3 @@
+uses=['sfsuread', 'sfwindow', 'sfgrey']
+data=['data/nankai/Nstack.su']
+size=   38341316

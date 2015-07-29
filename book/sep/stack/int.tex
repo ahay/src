@@ -1,0 +1,62 @@
+\section{Introduction}
+%%%%
+
+Integral (stacking) operators play an important role in seismic
+imaging and seismic data processing. The most common applications are
+common midpoint stacking, Kirchhoff migration, and dip moveout.  Other
+examples include (listed in random order) Kirchhoff datuming,
+back-projection tomography, slant stack, velocity transform, offset
+continuation, and azimuth moveout. The use of the integral methods
+increases in prestack three-dimensional processing because of their
+flexibility with respect to irregularities in the data geometry.
+\par
+An integral operator often is used to represent the forward modeling
+problem, and we invert it to solve for the model. In this paper, I
+consider two different approaches to inversion. The first is
+least-squares inversion, which requires constructing the adjoint
+counterpart of the modeling operator.  The second approach is
+asymptotic inversion, which aims at reconstructing the high-frequency
+(discontinuous) parts of the model. I compare the two approaches and
+introduce the notion of \emph{asymptotic pseudo-unitary} operator pair 
+that ties them together.
+\par
+In practice, least squares inversion is often applied as an iterative
+process \cite[]{GEO65-05-13641371}. The advantage of connecting it with
+the asymptotic inverse theory is the ability to speed up the
+iteration. This approach was used, in the context of seismic
+migration, by \cite{jin} and \cite{lambare}.  Asymptotic
+pseudo-unitary operators, introduced in this paper, provide a more
+universal theoretical tool. One can use them to construct an
+appropriate preconditioning operator for accelerating the convergence
+of the least-squares methods.
+\par
+The first part of this paper contains a formal definition of a
+stacking operator and reviews the theory of asymptotic inversion,
+following the fundamental results of \cite{beylkin} and
+\cite{goldin,Goldin.sep.67.171}.  According to this theory, the
+high-frequency asymptotic inverse of a stacking operator is also a
+stacking operator. To connect this theory with the theory of adjoint
+operators, I show that the adjoint of a stacking operator can also be
+included in the class of stacking operators.  The adjoint operator has
+the same summation path as the asymptotic inverse but a different
+weighting function.  These two results combine together to form the
+definition of asymptotic pseudo-unitary integral operators. I apply
+such operators to define a general preconditioning operator for
+least-squares inversion. While one can apply Beylkin's theory directly
+for constructing an appropriate asymptotic preconditioner,
+pseudo-unitary operators accomplish the job in a more straightforward
+and computationally attractive way.
+\par
+The second part of the paper addresses such examples of commonly used
+stacking operators as wave-equation datuming, migration, velocity
+transform, and offset continuation. The theory is specified for these
+particular applications and accompanied by numerical examples. The
+examples demonstrate the practical advantages of asymptotic
+pseudo-unitary operators.
+
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% TeX-master: t
+%%% End: 

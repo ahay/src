@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfwindow', 'sfbandpass', 'sfgrey', 'sfpad', 'sfnoise', 'sfmask', 'sfspray', 'sfmul', 'sftwodip2', 'sfmcaseislet', 'sfadd', 'sfmysnr']
+data=['data/bp/sean.HH']
+size=    6048000

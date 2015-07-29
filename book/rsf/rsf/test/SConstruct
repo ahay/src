@@ -1,0 +1,18 @@
+#
+# Setting up
+#
+from rsf.proj import *
+ 
+#
+# Make filter.rsf
+#
+Flow('filter',None,
+     'spike n1=1000 k1=300 | bandpass fhi=2 phase=1')
+ 
+#
+# Make filter.vpl
+#
+Result('filter',
+       'wiggle clip=0.02 title="Welcome to Madagascar"')
+
+End()

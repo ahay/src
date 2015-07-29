@@ -1,0 +1,131 @@
+from rsf.proj import *
+from math import *
+import os
+
+
+wf = 2*pi
+nt = 501
+dt = 0.004
+ot = 0
+nx = 501
+dx = 0.01
+ox = 0
+nw = 200
+dw = 0.0005
+ow = 0
+
+
+
+Flow('spike',None,
+     '''
+     spike n1=%d d1=%g o1=%g n2=%d d2=%g o2=%g nsp=1 k1=250 mag=1  p2=0| 
+     ricker1 frequency=15 | put unit2=km label2=Distance
+     ''' % (nt,dt,ot,nx,dx,ox))
+
+Flow('tsin','spike','window n1=1 | math output="0.5*sin(3*x1)"')
+
+Flow('sin','spike tsin',
+     'datstretch datum=${SOURCES[1]} | math output="input*(0.2*(x2-2.5)*(x2-2.5)+0.5)"')
+
+Result('sin','sin','window j2=5 | wiggle label2=Distance unit2=km transp=y yreverse=y poly=y  title="Signal" ')
+
+
+Flow('ft','sin','fft1 ')
+
+Flow('nft','nsin','fft1 ')
+Flow('nsin','sin','noise seed=2014 var=1.9e-3')
+Result('nsin','nsin','window j2=5 | wiggle label2=Distance unit2=km transp=y yreverse=y poly=y  title="Noisy Signal" ')
+
+Flow('mask','sin','math output="abs(input)" | mask min=0.00001 | dd type=float')
+
+
+nshifts = []
+for s in range(1,3):
+
+    nshift = 'nshift-%d' % s
+    Flow(nshift,'nft','window f2=%d | pad end2=%d' % (s,s)) 
+    nshifts.append(nshift)
+
+    nshift = 'nshift+%d' % s
+    Flow(nshift,'nft','window n2=%d | pad beg2=%d ' % (nx-s,s)) 
+    nshifts.append(nshift)
+
+
+Flow('nshifts',nshifts,'cat ${SOURCES[1:%d]} axis=3 | put o2=0 ' % len(nshifts))
+
+Flow('nflt1 npref1','nshifts nft',
+     'clpf match=${SOURCES[1]} pred=${TARGETS[1]} rect2=20 rect1=1 niter=5 verb=y')
+
+Flow('npre1','npref1','fft1 inv=y ')
+
+Result('npre1','npre1','window j2=5 | wiggle label2=Distance unit2=km transp=y yreverse=y poly=y  title="FX RNA1"')
+
+Flow('ndiff1','nsin npre1','math x=${SOURCES[1]} output="x-input"')
+
+Result('ndiff1','ndiff1',
+       '''
+       grey color=j pclip=98 label2=Distance unit2=km maxval=0.07 minval=-0.07 scalebar=y title="FX RNA" wheretitle=t wherexlabel=b
+       ''')
+
+Flow('nflt2 npref2','nshifts nft',
+     'clpf match=${SOURCES[1]} pred=${TARGETS[1]} rect2=20 rect1=3 niter=5 verb=y')
+
+Flow('npre2','npref2','fft1 inv=y ')
+
+Result('npre2','npre2','window j2=5 | wiggle label2=Distance unit2=km transp=y yreverse=y poly=y  title="FX RNA"')
+
+Flow('ndiff2','nsin npre2','math x=${SOURCES[1]} output="x-input"')
+
+Result('ndiff2','ndiff2',
+       '''
+       grey color=j pclip=98 label2=Distance unit2=km maxval=0.07 minval=-0.07 scalebar=y title="FX RNA2" wheretitle=t wherexlabel=b
+       ''')
+Result('npar2','nflt2','window n3=1 | real | grey label2=Distance unit2=km color=j title="Coef" wherexlabel=b  wheretitle=t  ')
+
+
+
+Flow('patch0','nsin','patch w=501,20 p=1,50 | patch inv=y weight=y ')
+
+Flow('patch','nsin','patch w=501,20 p=1,50  ')
+Flow('wpatch','patch','window')
+fxds = []
+mpas = []
+for nw in range(0,50):
+    data = 'data%d' % nw
+    fxd  = 'fx%d'   % nw
+    Flow(data,'wpatch','window n3=1 f3=%d' % nw)
+    Flow(fxd,data,'fxdecon lenf=2 n2w=20')
+    fxds.append(fxd)
+
+    lom = 'lom%d' %nw
+    lag = 'lag%d' %nw
+    mpa = 'mpa%d' %nw
+    Flow([lom, lag],data,'hpef niter=200 a=10,10 lag=${TARGETS[1]}')
+    Flow(mpa,[data,lom],'helicon filt=${SOURCES[1]}')
+    mpas.append(mpa)
+Flow('fxpatch',fxds,'cat ${SOURCES[1:%d]} axis=3 | transp plane=34 | patch inv=y weight=y' % len(fxds))
+Flow('mpapatch',mpas,'cat ${SOURCES[1:%d]} axis=3 | transp plane=34 | patch inv=y weight=y' % len(mpas))
+
+Result('fxpatch','fxpatch','window j2=5 | wiggle label2=Distance unit2=km transp=y yreverse=y poly=y  title="FX Decon"')
+Flow('fxdiff','nsin fxpatch','math x=${SOURCES[1]} output="x-input"')
+Result('fxdiff','fxdiff',
+       '''
+       grey color=j pclip=98 label2=Distance unit2=km maxval=0.07 minval=-0.07 scalebar=y title="FX Decon" wheretitle=t wherexlabel=b
+       ''')
+
+Result('mpapatch','mpapatch',
+       '''
+       grey pclip=98 label2=Distance unit2=km color=j 
+       maxval=0.07 minval=-0.07 title="TX PEF" wherexlabel=b  wheretitle=t scalebar=y
+       ''' )
+Result('tpefpatch','nsin mpapatch',
+       '''
+       math x=${SOURCES[1]} output="input-x" | 
+       window j2=5 | 
+       wiggle label2=Distance unit2=km transp=y yreverse=y poly=y  title="TX PEF"
+       ''')
+
+
+
+End()
+

@@ -1,0 +1,14 @@
+from rsf.tex import *
+
+#Paper('seg2005',lclass='segabs')
+
+#Paper('gilles')
+
+#Paper('tury')
+
+#Command2('paper-revised.tex','paper.tex','cp $SOURCE $TARGET')
+
+#Paper('paper-revised',options='manuscript,revised')
+
+End(color='synt svsc pnmo bvsc svin hdip ydip') #options='manuscript')
+

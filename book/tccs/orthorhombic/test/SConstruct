@@ -1,0 +1,144 @@
+from rsf.proj import *
+
+
+nt=1201
+dt=0.001
+
+
+Flow('source',None,
+     '''
+     spike n1=%d d1=%g k1=101 | 
+     ricker1 frequency=15
+     '''%(nt,dt))
+
+Flow('vc1t',None,
+     '''
+     spike n1=100 n2=256 n3=256 d1=0.025 d2=0.025 d3=0.025 o1=-3.175 o2=-3.175 o3=-3.175 unit1=km unit2=km unit3=km k1=3 k2=251 k3=126 |
+     math output=1.5
+     ''')
+Flow('vc2t',None,
+     '''
+     spike n1=100 n2=256 n3=256 d1=0.025 d2=0.025 d3=0.025 o1=-3.175 o2=-3.175 o3=-3.175 unit1=km unit2=km unit3=km k1=3 k2=251 k3=126 |
+     math output=1.6
+     ''')
+Flow('vc3t',None,
+     '''
+     spike n1=100 n2=256 n3=256 d1=0.025 d2=0.025 d3=0.025 o1=-3.175 o2=-3.175 o3=-3.175 unit1=km unit2=km unit3=km k1=3 k2=251 k3=126 |
+     math output=1.7
+     ''')
+Flow('vc1b',None,
+     '''
+     spike n1=156 n2=256 n3=256 d1=0.025 d2=0.025 d3=0.025 o1=-3.175 o2=-3.175 o3=-3.175 unit1=km unit2=km unit3=km k1=3 k2=251 k3=126 |
+     math output=3.5
+     ''')
+Flow('vc2b',None,
+     '''
+     spike n1=156 n2=256 n3=256 d1=0.025 d2=0.025 d3=0.025 o1=-3.175 o2=-3.175 o3=-3.175 unit1=km unit2=km unit3=km k1=3 k2=251 k3=126 |
+     math output=4.1
+     ''')
+Flow('vc3b',None,
+     '''
+     spike n1=156 n2=256 n3=256 d1=0.025 d2=0.025 d3=0.025 o1=-3.175 o2=-3.175 o3=-3.175 unit1=km unit2=km unit3=km k1=3 k2=251 k3=126 |
+     math output=4.2
+     ''')
+for par in ('1','2','3'):
+    Flow('vc'+par,['vc'+par+'t','vc'+par+'b'],'cat axis=1 ${SOURCES[1]}')
+Flow('mu',None,
+     '''
+     spike n1=256 n2=256 n3=256 d1=0.025 d2=0.025 d3=0.025 o1=-3.175 o2=-3.175 o3=-3.175 unit1=km unit2=km unit3=km k1=3 k2=251 k3=126 |
+     math output=1.0
+     ''')
+Flow('e2',None,
+     '''
+     spike n1=256 n2=256 n3=256 d1=0.025 d2=0.025 d3=0.025 o1=-3.175 o2=-3.175 o3=-3.175 unit1=km unit2=km unit3=km k1=3 k2=251 k3=126 |
+     math output=0.3
+     ''')
+Flow('e3',None,
+     '''
+     spike n1=256 n2=256 n3=256 d1=0.025 d2=0.025 d3=0.025 o1=-3.175 o2=-3.175 o3=-3.175 unit1=km unit2=km unit3=km k1=3 k2=251 k3=126 |
+     math output=0.1
+     ''')
+Flow('refl',None,
+     '''
+     spike n1=256 n2=256 n3=256 d1=0.025 d2=0.025 d3=0.025 o1=-3.175 o2=-3.175 o3=-3.175 unit1=km unit2=km unit3=km k1=128 k2=128 k3=128 |
+     smooth rect1=2 rect2=2 rect3=3 repeat=3
+     ''')
+
+# Lowrank decomposition
+Flow('fftc','vc1','fft1 pad=1 | fft3 axis=2 pad=1 | fft3 axis=3 pad=1')
+Flow('mid left right','vc1 fftc vc2 vc3 mu e2 e3',
+     '''
+     ortholr seed=2010 npk=10 eps=0.00001 dt=%g 
+     fft=${SOURCES[1]} velx=${SOURCES[2]} vely=${SOURCES[3]} 
+     mu=${SOURCES[4]} etax=${SOURCES[5]} etay=${SOURCES[6]} 
+     left=${TARGETS[1]} right=${TARGETS[2]}
+     ''' % dt)
+
+Flow('wavec snapsc','source refl left mid right',
+     '''
+     orthowave ref=${SOURCES[1]} left=${SOURCES[2]} mid=${SOURCES[3]} right=${SOURCES[4]} verb=y
+     snap=50 snaps=${TARGETS[1]}
+     ''')
+
+Result('wavec',
+       '''
+       byte gainpanel=all |
+       grey3 frame1=128 frame2=128 frame3=128 point1=0.4 point2=0.7
+       wanttitle=n label1=Z label2=X label3=Y flat=n
+       ''')
+
+Plot('snapsc2','snapsc',
+     '''
+     put n4=23 |
+     byte gainpanel=all |
+     grey4 frame1=128 frame2=128 frame3=128 point1=0.4 point2=0.7
+     wanttitle=n label1=Z label2=X label3=Y flat=n
+     ''')
+Flow('snapc','snapsc','window n4=1 f4=12')
+Result('wavexyt','snapc','window n1=1 f1=127 | grey screenratio=1 min1=-2.8 min2=-2.8 max1=2.8 max2=2.8 transp=n label1="X" unit1="km" label2="Y" unit2="km" title="Depth Slice at 0.6 s"  ')
+Result('wavexzt','snapc','window n3=1 f3=127 | grey screenratio=1 min1=-2.8 min2=-2.8 max1=2.8 max2=2.8 title="Y Slice at 0.6 s" label1="Z" unit1="km" label2="X" unit2="km"')
+Result('waveyzt','snapc','window n2=1 f2=127 | grey screenratio=1 min1=-2.8 min2=-2.8 max1=2.8 max2=2.8 label1="Z" unit1="km" label2="Y" unit2="km" title="X Slice at 0.6 s" ')
+Flow('seta1','mu','math output=45')
+Flow('seta2','mu','math output=45')
+Flow('seta','seta1 seta2','cat ${SOURCES[1]}  axis=4') 
+Flow('midr leftr rightr','vc1 fftc vc2 vc3 e2 e3 mu seta',
+     '''
+     ortlr seed=2010 npk=20 eps=0.00001 dt=%g 
+     fft=${SOURCES[1]} velx=${SOURCES[2]} vely=${SOURCES[3]} 
+     etax=${SOURCES[4]} etay=${SOURCES[5]} mu=${SOURCES[6]}
+     seta1=${SOURCES[7]} 
+     left=${TARGETS[1]} right=${TARGETS[2]} 
+     '''%dt)
+Flow('waver snapsr','source refl leftr midr rightr',
+     '''
+     orthowave ref=${SOURCES[1]} left=${SOURCES[2]} mid=${SOURCES[3]} right=${SOURCES[4]} verb=y 
+     snap=50 snaps=${TARGETS[1]}
+     ''')
+Result('waver',
+       '''
+       byte gainpanel=all |
+       grey3 frame1=128 frame2=128 frame3=128 point1=0.4 point2=0.7
+       wanttitle=n label1=Z label2=X label3=Y flat=n
+       ''')
+Flow('snapr','snapsr','window n4=1 f4=12')
+Result('wavexyr','snapr','window n1=1 f1=127 | grey screenratio=1 min1=-2.8 min2=-2.8 max1=2.8 max2=2.8 transp=n label1="X" unit1="km" label2="Y" unit2="km" title="Depth Slice at 0.6 s"  ')
+Result('wavexzr','snapr','window n3=1 f3=127 | grey screenratio=1 min1=-2.8 min2=-2.8 max1=2.8 max2=2.8 title="Y Slice at 0.6 s" label1="Z" unit1="km" label2="X" unit2="km"')
+Result('waveyzr','snapr','window n2=1 f2=127 | grey screenratio=1 min1=-2.8 min2=-2.8 max1=2.8 max2=2.8 label1="Z" unit1="km" label2="Y" unit2="km" title="X Slice at 0.6 s" ')
+Flow('midl leftl rightl','vc1 fftc vc2 vc3 mu e2 e3',
+     '''
+     orthollr seed=2010 npk=10 eps=0.00001 dt=%g 
+     fft=${SOURCES[1]} velx=${SOURCES[2]} vely=${SOURCES[3]} 
+     mu=${SOURCES[4]} etax=${SOURCES[5]} etay=${SOURCES[6]} 
+     left=${TARGETS[1]} right=${TARGETS[2]}
+     ''' % dt)
+
+Flow('wavel snapsl','source refl leftl midl rightl',
+     '''
+     orthowave ref=${SOURCES[1]} left=${SOURCES[2]} mid=${SOURCES[3]} right=${SOURCES[4]} verb=y
+     snap=50 snaps=${TARGETS[1]}
+     ''')
+Flow('snapl','snapsl','window n4=1 f4=12')
+Result('wavexyl','snapl','window n1=1 f1=127 | grey screenratio=1 min1=-2.8 min2=-2.8 max1=2.8 max2=2.8 transp=n label1="X" unit1="km" label2="Y" unit2="km" title="Depth Slice at 0.6 s"  ')
+Result('wavexzl','snapl','window n3=1 f3=127 | grey screenratio=1 min1=-2.8 min2=-2.8 max1=2.8 max2=2.8 title="Y Slice at 0.6 s" label1="Z" unit1="km" label2="X" unit2="km"')
+Result('waveyzl','snapl','window n2=1 f2=127 | grey screenratio=1 min1=-2.8 min2=-2.8 max1=2.8 max2=2.8 label1="Z" unit1="km" label2="Y" unit2="km" title="X Slice at 0.6 s" ')
+End()

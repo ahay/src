@@ -1,0 +1,134 @@
+from rsf.proj import*
+from rsf.recipes.beg import server as private
+
+def Grey(data,other): 
+	Result(data,'grey label2=Trace unit2="" label1=Time unit1="s" title="" wherexlabel=b wheretitle=t color=b %s scalebar=y labelsz=10'%other)
+
+def Wiggle(data,other): 
+	Result(data,'''
+				window j2=8 | wiggle transp=y yreverse=y 
+				label2=Trace unit2="" label1=Time unit1="s" 
+				title="" wherexlabel=b wheretitle=t poly=y 
+				wheretitle=t wherexlabel=b clip=0.15 labelsz=10 %s '''%other)
+
+
+###########################################################################
+## complex event 
+###########################################################################
+Flow('c',None,
+     '''
+     spike n1=512 n2=256 d2=1 o2=0 label2=Trace unit2=
+     nsp=4 k1=64,100,160,200 p2=1.5,-0.3,0,0.5 mag=1,1,1,1 |
+     ricker1 frequency=20 |
+     noise seed=2008 var=0
+     ''')
+
+Flow('cn','c',
+     '''
+     noise seed=2008 var=0.00125
+     ''')
+
+Flow('n','cn c','add scale=1,-1 ${SOURCES[1]}')
+Flow('cn-zero','n','math output=0')
+## fx decon
+Flow('cfx','cn','fxdecon lenf=10 verb=1 n2w=256 fmin=5 fmax=125')
+
+## Difference section
+Flow('cdifffx','cn cfx','add scale=1,-1 ${SOURCES[1]}')
+
+## fxdecon + simi
+Flow('csimi-fx','cn cfx','similarity other=${SOURCES[1]} niter=20 rect1=5 rect2=5')
+#Flow('csim-fx','cfx csimi-fx','simidenoise similarity=${SOURCES[1]} thr=0.15')
+Flow('csim-fx','cfx csimi-fx','sfsimidenoise1 similarity=${SOURCES[1]} s1=0.25 s2=0.5')
+
+# Orthogonolize
+Flow('cdifffx2 cfx2','cdifffx cfx','ortho rect1=25 rect2=25 sig=${SOURCES[1]} sig2=${TARGETS[1]}')
+
+
+
+Flow('low1','cdifffx cfx','low rect1=25 rect2=25 sig=${SOURCES[1]} sig2=${TARGETS[1]}')
+Flow('low2','cdifffx cfx','low rect1=20 rect2=20 sig=${SOURCES[1]} sig2=${TARGETS[1]}')
+Flow('low3','cdifffx cfx','low rect1=10 rect2=10 sig=${SOURCES[1]} sig2=${TARGETS[1]}')
+Flow('low4','cdifffx cfx','low rect1=5 rect2=5 sig=${SOURCES[1]} sig2=${TARGETS[1]}')
+Grey('low1','scalebar=y color=j clip=0.4 maxval=0.4 minval=-0.4 title="SR=25"')
+Grey('low2','scalebar=y color=j clip=0.4 maxval=0.4 minval=-0.4 title="SR=20"')
+Grey('low3','scalebar=y color=j clip=0.4 maxval=0.4 minval=-0.4 title="SR=10"')
+Grey('low4','scalebar=y color=j clip=0.4 maxval=0.4 minval=-0.4 title="SR=5"')
+
+## seislet thresholding
+Flow('cdip','cn','bandpass fhi=60 | dip rect1=10 rect2=10')
+Flow('cslet','cn cdip','seislet adj=y inv=y dip=${SOURCES[1]}')
+Flow('csletthr','cslet','threshold1 thr=40')
+Flow('cseis','csletthr cdip','seislet dip=${SOURCES[1]} adj=n inv=y |cut n1=25 |cut f1=475')
+
+## seislet + simi
+Flow('csimi-seis','cn cseis','similarity other=${SOURCES[1]} niter=20 rect1=5 rect2=5')
+Flow('csim-seis','cseis csimi-seis','simidenoise similarity=${SOURCES[1]} thr=0.8')
+#Flow('csim-seis','cfx csimi-seis','simidenoise1 similarity=${SOURCES[1]} s1=0.1 s2=0.15')
+
+Flow('csimi-difffx','cdifffx cfx','similarity other=${SOURCES[1]} niter=20 rect1=5 rect2=5')
+Flow('csim2-fx','cdifffx csimi-difffx cfx','simidenoise1 similarity=${SOURCES[1]} s1=0.1 s2=0.3 | add scale=1,1 ${SOURCES[2]}')
+
+Flow('cdiffsim2-fx','cn csim2-fx','add scale=1,-1 ${SOURCES[1]}')
+Flow('csimi-difffx2','cfx2 cdifffx2','similarity other=${SOURCES[1]} niter=20 rect1=5 rect2=5')
+
+#Flow('cdiffseis','cn cseis','add scale=1,-1 ${SOURCES[1]}')
+#Flow('cdiffsim-seis','cn csim-seis','add scale=1,-1 ${SOURCES[1]}')
+
+Wiggle('c','')
+Wiggle('cn','')
+Wiggle('cn-zero','')
+Wiggle('n','')
+Wiggle('cfx','')
+Wiggle('cfx2','')
+
+Wiggle('csim-fx','')
+Wiggle('csim2-fx','')
+
+
+Wiggle('cdifffx','')
+#Wiggle('cdiffsim-fx','')
+Wiggle('cdiffsim2-fx','')
+Wiggle('cdifffx2','')
+
+Grey('csimi-difffx','color=j scalebar=y clip=0.7 minval=0 maxval=0.7')
+Grey('csimi-difffx2','color=j scalebar=y clip=0.7 minval=0 maxval=0.7')
+
+## The following aims to display together
+#Wiggle('c','title="(a)"')
+#Wiggle('cn','title="(b)"')
+
+#Wiggle('cfx','title="(a)"')
+#Wiggle('csim-fx','title="(b)"')
+#Wiggle('cseis','title="(c)"')
+#Wiggle('csim-seis','title="(d)"')
+
+#Wiggle('cdifffx','title="(e)"')
+#Wiggle('cdiffsim-fx','title="(f)"')
+#Wiggle('cdiffseis','title="(g)"')
+#Wiggle('cdiffsim-seis','title="(h)"')
+
+#Grey('cdifffx','title="(e)"')
+#Grey('cdiffsim-fx','title="(f)"')
+#Grey('cdiffseis','title="(g)"')
+#Grey('cdiffsim-seis','title="(h)"')
+
+#Result('comp1','./Fig/cfx.vpl ./Fig/csim-fx.vpl ./Fig/cseis.vpl ./Fig/csim-seis.vpl','SideBySideAniso')
+#Result('comp2','./Fig/cdifffx.vpl ./Fig/cdiffsim-fx.vpl ./Fig/cdiffseis.vpl ./Fig/cdiffsim-seis.vpl','SideBySideAniso')
+#Result('comp3','./Fig/c.vpl ./Fig/cn.vpl','SideBySideAniso')
+#Result('comp','./Fig/comp1.vpl ./Fig/comp2.vpl','OverUnderIso')
+
+# compute SNR (may differ in different computers)
+Flow('c-diff1','c cn','add scale=1,-1 ${SOURCES[1]} ')
+Flow('c-snr1','c c-diff1','snr2 noise=${SOURCES[1]}')
+
+Flow('c-diff2','c cfx','add scale=1,-1 ${SOURCES[1]} ')
+Flow('c-snr2','c c-diff2','snr2 noise=${SOURCES[1]}')
+
+Flow('c-diff3','c csim-fx','add scale=1,-1 ${SOURCES[1]} ')
+Flow('c-snr3','c c-diff3','snr2 noise=${SOURCES[1]}')
+
+Flow('c-diff4','c cfx2','add scale=1,-1 ${SOURCES[1]} ')
+Flow('c-snr4','c c-diff4','snr2 noise=${SOURCES[1]}')
+
+End()

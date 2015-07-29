@@ -1,0 +1,152 @@
+\section{Simple weight operator (weight.c)}
+This weight operator is defined by
+\begin{gather*}
+	y = L_wx=wx,  \qquad\textrm{with}\quad y_t\leftarrow w_tx_t.
+\intertext{Its adjoint is}
+	x = L_w^*y=wy,\qquad\textrm{with}\quad x_t\leftarrow w_ty_t.
+\end{gather*}
+Note that for complex data the weight $w$ must still be real.
+
+There is also an in-place ($x\leftarrow L_wx$) version of the operator, which multiplies the input data with the square of $w$ i.e.
+\begin{gather*}
+	x = L_wx=w^2x,\qquad\textrm{ with}\quad x_t\leftarrow w_t^2x_t.
+\end{gather*}
+
+
+
+
+\subsection{{sf\_weight\_init}}\label{sec:sf_weight_init}
+Initializes the weights to be applied as linear operator, by assigning value to a static parameter.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_weight_init(w);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_weight_init(float *w1)
+/*< initialize >*/
+{
+    ..
+}
+\end{verbatim}
+
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt ]
+   \setlength\itemsep{0pt}
+   \item[w] values of the weights (\texttt{float*}).
+\end{desclist}
+
+
+
+
+\subsection{{sf\_weight\_lop}}\label{sec:sf_weight_lop}
+Applies the linear operator with the weights initialized by \texttt{sf\_weight\_init}.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_weight_lop (adj, add, nx, ny, x, y);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_weight_lop (bool adj, bool add, int nx, int ny, float* xx, float* yy)
+/*< linear operator >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt add]
+   \setlength\itemsep{0pt}
+   \item[adj] adjoint flag (\texttt{bool}). If \texttt{true}, then the adjoint is computed, i.e.~$x\leftarrow L_w^*y$ or $x\leftarrow x+L_w^*y$. 
+   \item[add] addition flag (\texttt{bool}). If \texttt{true}, then $y\leftarrow y+L_wx$ or $x\leftarrow x+L_w^*y$.  
+   \item[nx]  size of \texttt{x} (\texttt{int}). \texttt{nx} must equal \texttt{ny}. 
+   \item[ny]  size of \texttt{y} (\texttt{int}). \texttt{ny} must equal \texttt{nx}. 
+   \item[x]   input data or output (\texttt{float*}).
+   \item[y]   output or input data (\texttt{float*}).
+\end{desclist}
+
+
+
+
+\subsection{{sf\_cweight\_lop}}
+The same as \hyperref[sec:sf_weight_lop]{\texttt{sf\_weight\_lop}} but for complex data.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_cweight_lop (adj, add, nx, ny, x, y);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_cweight_lop (bool adj, bool add, int nx, int ny, 
+                     sf_complex* xx, sf_complex* yy)
+/*< linear operator >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt add]
+   \setlength\itemsep{0pt}
+   \item[adj] adjoint flag (\texttt{bool}). If \texttt{true}, then the adjoint is computed, i.e.~$x\leftarrow L_w^*y$ or $x\leftarrow x+L_w^*y$. 
+   \item[add] addition flag (\texttt{bool}). If \texttt{true}, then $y\leftarrow y+L_wx$ or $x\leftarrow x+L_w^*y$.  
+   \item[nx]  size of \texttt{x} (\texttt{int}). \texttt{nx} must equal \texttt{ny}. 
+   \item[ny]  size of \texttt{y} (\texttt{int}). \texttt{ny} must equal \texttt{nx}. 
+   \item[x]   input data or output (\texttt{sf\_complex*}).
+   \item[y]   output or input data (\texttt{sf\_complex*}).
+\end{desclist}
+
+
+
+
+\subsection{{sf\_weight\_apply}}\label{sec:sf_weight_apply}
+Creates a product of the weights squared and the input \texttt{x}.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_weight_apply (nx, x);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_weight_apply(int nx, float *xx)
+/*< apply weighting in place >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt nx]
+   \setlength\itemsep{0pt}
+   \item[nx] size of \texttt{x} (\texttt{int}). 
+   \item[x]  input data and output (\texttt{float*}).                   
+\end{desclist}
+
+
+
+
+\subsection{{sf\_cweight\_apply}}
+The same as the \hyperref[sec:sf_weight_apply]{\texttt{sf\_weight\_apply}} but for the complex numbers.
+
+\subsubsection*{Call}
+\begin{verbatim}sf_cweight_apply (nx, x);\end{verbatim}
+
+\subsubsection*{Definition}
+\begin{verbatim}
+void sf_cweight_apply(int nx, sf_complex *xx)
+/*< apply weighting in place >*/
+{
+   ...
+}
+\end{verbatim}
+
+\subsubsection*{Input parameters}
+\begin{desclist}{\tt }{\quad}[\tt nx]
+   \setlength\itemsep{0pt}
+   \item[nx] size of \texttt{x} (\texttt{int}). 
+   \item[x]  input data and output (\texttt{sf\_complex*}).        
+\end{desclist}
+
+
+
+
+

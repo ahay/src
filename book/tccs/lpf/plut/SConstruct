@@ -1,0 +1,49 @@
+from rsf.proj import *
+
+for case in ('ref','mod'):
+    sgy = 'pluto1.5_%s.sgy' % case
+    Fetch(sgy,'pluto')
+
+    Flow([case,case+'.asc',case+'.bin'],sgy,
+         '''
+         segyread tape=$SOURCE read=d
+         hfile=${TARGETS[1]} bfile=${TARGETS[2]} |
+         cut n1=50
+         ''',stdin=0)
+
+Flow('mod2','mod','window f1=100 | pad end1=100')
+
+grey = '''
+window max1=6 | 
+grey title="%s" label1="\F2 Time" unit1=s label2="\F2 Trace"
+wanttitle=n Xscreenht=7.68 Xscreenratio=0.5625 labelsz=5
+parallel2=n format2="%3.1f"
+'''
+
+Result('ref',grey)
+Result('mod',grey)
+
+nt = 1126
+
+shifts = ['mod']
+for s in range(1,11):
+    shift = 'shift-%d' % s
+    Flow(shift,'mod','window f1=%d | pad end1=%d' % (s,s))
+    shifts.append(shift)
+
+    shift = 'shift+%d' % s
+    Flow(shift,'mod','window n1=%d | pad beg1=%d' % (nt-s,s))
+    shifts.append(shift)
+Flow('shifts',shifts,'cat ${SOURCES[1:%d]}' % len(shifts))
+
+Flow('flt pre','shifts ref',
+     'lpf match=${SOURCES[1]} pred=${TARGETS[1]} rect1=20 rect2=10 niter=400')
+Flow('sig','ref pre','add scale=1,-1 ${SOURCES[1]}')
+
+Result('pre',grey)
+Result('sig',grey)
+
+Result('zero','flt','window n3=1 f3=10   | %s color=j bias=0.1 scalebar=y formatbar="%%3.3f" ' % grey)
+Result('csum','flt','stack axis=3 norm=n | %s color=j bias=0.0 scalebar=y formatbar="%%3.3f" ' % grey)
+
+End()

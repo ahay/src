@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfput', 'sfscale', 'sfgrey', 'sfagc', 'sfreverse', 'sfcat', 'sfdix', 'sftime2depth', 'sfwindow', 'sftransp', 'sfcameron2d', 'sfve2d', 'sfcmplx', 'sfgraph', 'sfpad', 'sfinttest2', 'sffft1', 'sfmath', 'sfzomig3']
+data=['data/masha/elf-npk.rsf', 'data/masha/elf-fmg.rsf', 'data/masha/elf-smb.rsf', 'data/masha/elf-stk2.rsf']
+size=  146248000

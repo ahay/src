@@ -1,0 +1,2 @@
+from rsf.tex import *
+End(lclass='geophysics',options='short')

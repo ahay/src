@@ -1,0 +1,32 @@
+from rsf.proj import *
+
+Fetch('marmvel.hh','marm')
+
+Flow('vel','marmvel.hh',
+	'''
+	dd form=native | window j1=3 j2=3 | 
+     	put label1=Depth  unit1=m label2=Lateral unit2=m
+	''')
+Result('vel',
+	'''
+	grey color=j mean=y title="Marmousi model" scalebar=y 
+	bartype=v barlabel="V" 	barunit="m/s"
+	''')
+
+Flow('shots','vel',
+	'''
+	sfmshots csdgather=n fm=15 amp=1 dt=0.001 ns=1 ng=767 nt=3900
+	sxbeg=16 szbeg=2 jsx=74 jsz=0 gxbeg=0 gzbeg=3 jgx=1 jgz=0
+	''')
+Result('shots','grey color=g title=shot label2= unit2=')
+
+Flow('lsimage imgrtm','shots vel',
+	'''
+	sflsprtm2d vel=${SOURCES[1]} imgrtm=${TARGETS[1]} verb=y niter=3
+	''')
+
+Plot('imgrtm','laplac| grey title="RTM image" ')
+Plot('lsimage','laplac| grey title="LSRTM image" ')
+Result('all','imgrtm lsimage','SideBySideAniso')
+
+End()

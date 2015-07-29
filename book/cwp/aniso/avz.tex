@@ -1,0 +1,410 @@
+\section{VERTICAL HETEROGENEITY}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Vertical heterogeneity is another reason for nonhyperbolic
+moveout. We start this section by reviewing well-known results for
+isotropic media. Although these results can be interpreted
+in terms of an effective anisotropy, we show that it has different properties
+than those for the VTI model. We then extend the theory to vertically heterogeneous
+VTI media and perform a comparative analysis of various three-parameter 
+nonhyperbolic approximations.
+
+\inputdir{Sage}
+
+\subsection{Vertically heterogeneous isotropic model} 
+%%%%%%%%%%%%%%%%%%%%%%
+Nonhyperbolicity of reflection moveout in vertically heterogeneous
+isotropic media has been extensively studied using the
+Taylor series expansion in the powers of the offset
+\cite[]{der,taner,GPR21-04-07830795}. The most important property of
+vertically heterogeneous media is that the ray parameter 
+\[
+p \equiv {{\sin{\psi}(z)} \over {V_z(z)}}
+\]
+does not change along
+any given ray (Snell's law). This fact leads to the explicit parametric
+relationships 
+\begin{eqnarray}
+t(p) & = & 2\,\int_{0}^{z}\,{{dz} \over {V_z(z)\,\cos{\psi(z)}}} =
+\int_{0}^{t_z}\,{{dt_z} \over {\sqrt{1 - p^2\,V_z^2(t_z)}}}\;,
+\label{eqn:tp} \\ 
+l(p) & = & 2\,\int_{0}^{z}\,{{dz}\,\tan{\psi(z)}} =
+\int_{0}^{t_z}\,{{p\,V_z^2(t_z)\,dt_z} \over 
+{\sqrt{1 - p^2\,V_z^2(t_z)}}}\;,
+\label{eqn:hp}
+\end{eqnarray}
+where
+\begin{equation}
+t_z = t(0) = 2\,\int_{0}^{z}\,{{dz} \over {V_z(z)}}\;.
+\label{eqn:tz}
+\end{equation}
+Straightforward differentiation of parametric equations (\ref{eqn:tp})
+and (\ref{eqn:hp}) yields the first four coefficients of the Taylor
+series expansion
+\begin{equation}
+t^2(l) = a_0 + a_1\,l^2 + a_2\,l^4 + a_3\,l^6 + \ldots
+\label{eqn:taylor}
+\end{equation}
+in the vicinity of the vertical zero-offset ray.  Series
+(\ref{eqn:taylor}) contains only even powers of the offset $l$ because
+of the reciprocity principle: the pure-mode reflection traveltime is an even
+function of the offset.  The Taylor series coefficients for the isotropic case
+are defined as follows:
+\begin{eqnarray}
+a_0 & = & t_z^2\;,
+\label{eqn:a0} \\
+a_1 & = & {1 \over V_{rms}^2}\;,
+\label{eqn:a1} \\
+a_2 & = & {{1 - S_2} \over {4\,t_z^2\,V_{rms}^4}}\;,
+\label{eqn:a2} \\
+a_3 & = & {{2\,S_2^2 -  S_2 - S_3} \over {8\,t_z^4\,V_{rms}^6}}\;,
+\label{eqn:a3}
+\end{eqnarray}
+where 
+\begin{eqnarray}
+V_{rms}^2 = M_1 \, ,
+\label{eqn:a31}
+\end{eqnarray}
+\begin{eqnarray}
+M_k & = & {1 \over t_z}\,\int_{0}^{t_z}\,V_z^{2k}(t)\,dt \qquad
+(k = 1, \, 2, \, \ldots)\;,
+\label{eqn:mk} \\
+S_k & = & {M_k \over {V_{rms}^{2k}}} \qquad (k = 2, \, 3, \, \ldots)\;.
+\label{eqn:sk}
+\end{eqnarray}
+Equation (\ref{eqn:a1}) shows that, at small offsets, the reflection
+moveout has a hyperbolic form with the normal-moveout velocity $V_n$
+equal to the root-mean-square velocity $V_{rms}$. At large offsets,
+however, the hyperbolic approximation is no longer accurate.  Studying
+the Taylor series expansion (\ref{eqn:taylor}), \cite{malov}
+introduced a three-parameter approximation for the reflection
+traveltime in vertically heterogeneous isotropic media.
+%\cite{malov,Sword.sep.51.313}. 
+His equation has the form of a
+shifted hyperbola \cite[]{castle,nmo}:
+\begin{equation}
+t(l) = \left(1 - {1 \over S}\right)\,t_0 + 
+{1 \over S} \sqrt{t_0^2 + S\,{l^2 \over V_n^2}}\;.
+\label{eqn:malovichko}
+\end{equation}
+\par
+If we set the zero-offset traveltime $t_0$ equal to the vertical
+traveltime $t_z$, the velocity $V_n$ equal to $V_{rms}$, and the {\em
+parameter of heterogeneity} $S$ equal to $S_2$, equation
+(\ref{eqn:malovichko}) guarantees the correct coefficients $a_0$, $a_1$, and
+$a_2$ in the Taylor series (\ref{eqn:taylor}). Note that the parameter $S_2$
+is related to the variance $\sigma^2$ of the squared velocity
+distribution, as follows:
+\begin{equation}
+\sigma^2 = M_2 - V_{rms}^4 = V_{rms}^4\,(S_2 -1)\;.
+\label{eqn:sigma2}
+\end{equation}
+According to equation (\ref{eqn:sigma2}), this parameter is always greater
+than unity (it equals 1 in homogeneous media). In many 
+practical cases, the value of $S_2$ lies between~$1$ and~$2$.  We can
+roughly estimate the accuracy of approximation (\ref{eqn:malovichko}) at
+large offsets by comparing the fourth term of its Taylor series with
+the fourth term of the exact traveltime expansion (\ref{eqn:taylor}).
+According to this estimate, the error of Malovichko's approximation is
+\begin{equation}
+{{\Delta t^2(l)} \over t^2(0)} = {1 \over 8} (S_3-S_2^2)\,
+\left({l \over {t_0\,V_n}}\right)^6\;.
+\label{eqn:malerror}
+\end{equation}
+As follows from the definition of the parameters $S_k$ 
+[equations~(\ref{eqn:sk})] and the Cauchy-Schwartz inequality, the expression
+(\ref{eqn:malerror}) is always nonnegative. 
+This means that the shifted-hyperbola approximation
+tends to overestimate traveltimes at large offsets. As the offset
+approaches infinity, the limit of this approximation is 
+\begin{equation}
+\lim_{l \rightarrow \infty} t^2(l) = {1 \over S}\,{l^2 \over V_n^2}\;.
+\label{eqn:Mhlimit}
+\end{equation}
+\par
+Equation (\ref{eqn:Mhlimit}) indicates that the effective horizontal
+velocity for Malovichko's approximation (the slope of the shifted
+hyperbola asymptote) differs from the normal-moveout velocity. One 
+can interpret this difference as evidence of some \emph{effective}
+depth-variant anisotropy. However, the anisotropy implied in
+equation (\ref{eqn:malovichko}) differs from the true anisotropy in a 
+homogeneous transversely isotropic medium [see equation (\ref{eqn:vg})]. 
+To reveal this difference, let us substitute
+the effective values $t(l) = {\sqrt{4\,z^2 + l^2} / {V_g(\psi)}}$,
+$~t_0 = {2\,z / V_z}$, $~l = 2\,z\,\tan{\psi}$, and $S = {V_x^2 / V_n^2}$ 
+into equation (\ref{eqn:malovichko}). After eliminating the
+variables $z$ and $l$, the result takes the form
+\begin{equation}
+{1 \over {V_g(\psi)}} = {1 \over V_z}\,\left\{
+\cos{\psi}\left(1 - {V_n^2 \over V_x^2}\right) +
+\sqrt{{V_z^2 \over V_x^2}\,\sin^2{\psi} +
+{V_n^4 \over V_x^4}\,\cos^2{\psi}}\right\}.
+\label{eqn:mal2vg}
+\end{equation}
+If the anisotropy is induced by vertical heterogeneity, $V_x \ge V_n \ge V_z$.  
+Those inequalities follow from the definitions of $V_{rms}$, $t_z$,
+$S_2$, and the Cauchy-Schwartz inequality. They reduce to equalities only
+when velocity is constant.  Linearizing expression
+(\ref{eqn:mal2vg}) with respect to Thomsen's anisotropic parameters $\delta$
+and $\epsilon$, we can transform it to the form analogous to
+that of equation (\ref{eqn:vgeta}):
+\begin{equation}
+V_g^2(\psi) = V_z^2\,\left[\,1 + 2\,\delta\,\sin^2{\psi} + 
+2\,\eta\,(1 - \cos{\psi})^2\right]\;.
+\label{eqn:vgvz}
+\end{equation}
+Figure \ref{fig:nmofrz1,nmofrz2} illustrates the difference between the VTI
+model and the effective anisotropy implied by the Malovichko approximation. 
+The differences are noticeable in both the shapes of the effective wavefronts
+(Figure \ref{fig:nmofrz1}) and the moveouts (Figure \ref{fig:nmofrz2}).
+
+\multiplot{2}{nmofrz1,nmofrz2}{width=2.8in,height=1.4in}{Comparison of the
+wavefronts (a) and moveouts (b) in the VTI (solid) and vertically
+inhomogeneous isotropic media (dashed). The values of the effective 
+vertical, horizontal, and NMO velocities are the same
+in both media and correspond to Thomsen's parameters $\epsilon = 0.2$ and
+$\delta = 0.1$.}
+%??? -- Label the plots with a and b. 
+%??? -- Remove the numbers from the b-plot.
+%??? -- Replace the dash-dotted line with dashed.}   
+
+\par
+In deriving equation (\ref{eqn:vgvz}), we have assumed the correspondence
+\begin{equation}
+S =  {V_x^2 \over V_n^2} = 
+{{1 + 2\,\epsilon} \over {1 + 2\,\delta}} \approx 1 + 2\,\eta\;.
+\label{eqn:sone}
+\end{equation}
+We could also have chosen the value of the parameter of heterogeneity $S$ that
+matches the coefficient $a_2$ given by equation (\ref{eqn:a2}) with
+the corresponding term in the Taylor series (\ref{eqn:TItaylor}).Then, the value of $S$ is \cite[]{GEO62-06-18391854}
+\begin{equation}
+S = 1 + 8\,\eta\;.
+\label{eqn:stwo}
+\end{equation}
+The difference between equations (\ref{eqn:sone}) and (\ref{eqn:stwo}) is an
+additional indicator of the fundamental difference between homogeneous 
+VTI and vertically heterogeneous isotropic media. The three-parameter 
+anisotropic approximation (\ref{eqn:TIapprox}) can match the
+reflection moveout in the isotropic model up to 
+the fourth-order term in the Taylor series expansion if the value of
+$\eta$ is chosen in accordance with equation (\ref{eqn:stwo}). We can
+estimate the error of such an approximation with an equation analogous
+to (\ref{eqn:malerror}): 
+\begin{equation}
+{{\Delta t^2(l)} \over t^2(0)} = {1 \over 8} (S_3-2 + 3\,S_2-2\,S_2^2)\,
+\left({l \over {t_0\,V_n}}\right)^6\;.
+\label{eqn:tsverror}
+\end{equation}
+The difference between the error estimates (\ref{eqn:malerror}) and
+(\ref{eqn:tsverror}) is
+\begin{equation}
+{{\Delta t^2(l)} \over t^2(0)} = {1 \over 8} (2 - S_2)\,(S_2-1)\,
+\left({l \over {t_0\,V_n}}\right)^6\;.
+\label{eqn:tsvmal}
+\end{equation}
+For usual values of 
+%the parameter of heterogeneity 
+$S_2$, which range from $1$ to $2$, the expression (\ref{eqn:tsvmal}) is 
+positive. This means that the anisotropic approximation
+(\ref{eqn:TIapprox}) overestimates traveltimes in the isotropic
+heterogeneous model even more than does the shifted hyperbola 
+(\ref{eqn:malovichko}) shown in Figure~\ref{fig:nmofrz2}. 
+Below, we examine which of the two approximations is more suitable when
+the model includes both vertical heterogeneity and anisotropy.
+
+\subsection{Vertically heterogeneous VTI model} 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+In a model that includes vertical heterogeneity and anisotropy, both
+factors influence bending of the rays. The weak anisotropy
+approximation, however, allows us to neglect the effect of anisotropy on ray
+trajectories and consider its influence on traveltimes only. This
+assumption is analogous to the linearization, conventionally done for
+tomographic inversion. Its application to weak anisotropy has been
+discussed by \cite{GEO61-06-18831894}. According to the
+linearization assumption, we can retain isotropic equation
+(\ref{eqn:hp}) describing the ray trajectories and rewrite equation
+(\ref{eqn:tp}) in the form
+\begin{equation}
+t(p) = 2\,\int_{0}^{z}\,{{dz} \over {V_g(z,\psi(z))\,\cos{\psi(z)}}}\;,
+\label{eqn:TItp} 
+\end{equation}
+where $V_g$ is the anisotropic group velocity, which varies both with the
+depth $z$ and with the ray angle $\psi$ and has the expression
+(\ref{eqn:vg}). Differentiation of the parametric traveltime equations
+(\ref{eqn:TItp}) and (\ref{eqn:hp}) and linearization with respect to Thomsen's
+anisotropic parameters shows that the general form of equations
+(\ref{eqn:a0})--(\ref{eqn:a3}) remains valid if we replace the definitions 
+of the root-mean-square velocity $V_{rms}$ and the parameters $M_k$ 
+by 
+\begin{eqnarray}
+V_{rms}^2 & = & {1 \over t_z}\,\int_{0}^{t_z}\,V_z^{2}(t)\,
+\left[1 + 2\,\delta(t)\right]\,dt\;,
+\label{eqn:TIvrms} \\
+M_k & = & {1 \over t_z}\,\int_{0}^{t_z}\,V_z^{2k}(t)\,
+\left[1 + 2\,\delta(t)\right]^{2k}\,\left[1 + 8\,\eta(t)\right]\,dt \qquad 
+(k = 2,3, \ldots)\;.
+\label{eqn:TImk} 
+%\\
+%S_k & = & {M_k \over {V_{rms}^{2k}}}\qquad (k = 2, 3, \ldots)\;.
+%\label{eqn:TIsk}
+\end{eqnarray}
+%??? Am I right removing this eq? It is the same as eq.(29). --
+In homogeneous media, expressions (\ref{eqn:TIvrms}) 
+and (\ref{eqn:TImk}) transform series (\ref{eqn:taylor}) with
+coefficients (\ref{eqn:a0})--(\ref{eqn:a3}) into the form equivalent to
+series (\ref{eqn:TItaylor}). Two important conclusions follow from 
+%the mathematical form of 
+equations (\ref{eqn:TIvrms}) and (\ref{eqn:TImk}). 
+First, if the mean value of the anisotropic coefficient $\delta$ 
+is less than zero, the presence of anisotropy can reduce the difference
+between the effective root-mean-square velocity and the effective vertical 
+velocity $\widehat{V}_z=z/t_z$. In this case, the influence of anisotropy
+and heterogeneity partially cancel each other, and the moveout curve
+may behave at small offsets as if the medium were homogeneous and
+isotropic. This behavior has been noticed by
+\cite{GEO58-10-14541467}. On the other hand, if the anellipticity
+coefficient $\eta$ is positive and different from zero, it can
+significantly increase the values of the heterogeneity parameters
+$S_k$ defined by equations~(\ref{eqn:sk}). Then, the nonhyperbolicity 
+of reflection moveouts at
+large offsets is stronger than that in isotropic media.
+\par
+To exemplify the general theory, let us consider a simple analytic
+model with constant anisotropic parameters and the vertical velocity
+linearly increasing with depth according to the equation
+\begin{equation}
+V_z(z) = V_z(0)\,(1 + \beta \,z) = V_z(0)\,e^{\kappa(z)}\;,
+\label{eqn:vzlin} 
+\end{equation}
+where $\kappa$ is the logarithm of the velocity change. In this case,
+the analytic expression for the RMS velocity $V_{rms}$ is found
+from equation (\ref{eqn:TIvrms}) to be
+\begin{equation}
+V_{rms}^2 = V_z^2(0)\,(1 + 2\,\delta)\,{{e^{2\kappa}-1}\over {2\,\kappa}}\;,
+\label{eqn:vrmslin} 
+\end{equation}
+while the mean vertical velocity is
+\begin{equation}
+\widehat{V}_z = {z \over t_z} = 
+V_z(0)\,{{e^{\kappa}-1}\over {\kappa}}\;,
+\label{eqn:hatvzlin} 
+\end{equation}
+where $\kappa=\kappa(z)$ is evaluated at the reflector depth.
+Comparing equations (\ref{eqn:vrmslin}) and (\ref{eqn:hatvzlin}), we can see 
+that the squared RMS velocity $V_{rms}^2$ equals to the squared mean velocity
+$\widehat{V}_z^2$ if
+\begin{equation}
+1 + 2\,\delta = {{2\,\left(e^\kappa - 1\right)} \over
+{\kappa\,\left(e^\kappa + 1\right)}}\;.
+\label{eqn:deltalin} 
+\end{equation}
+For small $\kappa$, the estimate of $\delta$ from equation
+(\ref{eqn:deltalin}) is
+\begin{equation}
+\delta \approx - {\kappa^2 \over 24}\;.
+\label{eqn:appdeltalin} 
+\end{equation}
+For example, if the vertical velocity near the reflector is twice
+that at the surface (i.e., $\kappa = \ln 2 \approx 0.69$), 
+having the anisotropic
+parameter $\delta$ as small as~$-0.02$ is sufficient to cancel out the
+influence of heterogeneity on the normal-moveout velocity.  The values of
+parameters $S_2$ and $S_3$, found from equations~(\ref{eqn:sk}), (\ref{eqn:TIvrms}) and~(\ref{eqn:TImk}), are
+\begin{eqnarray}
+S_2 & = & (1 + 8\,\eta)\,\kappa\,{{e^{2\kappa}+1} \over {e^{2\kappa} - 1}}\;,
+\label{eqn:lins2} \\
+S_3 & = & {4 \over 3}\,
+(1 + 8\,\eta)\,\kappa^2\,{{e^{4\kappa} + e^{2\kappa}+1} \over 
+{\left(e^{2\kappa} - 1\right)^2}}\;.
+\label{eqn:lins3}
+\end{eqnarray} 
+Substituting equations (\ref{eqn:lins2}) and (\ref{eqn:lins3}) into 
+the estimates (\ref{eqn:malerror}) and (\ref{eqn:tsverror}) and linearizing 
+them both in $\eta$ and in $\kappa$, we
+find that the error of anisotropic traveltime approximation
+(\ref{eqn:TIapprox}) in the linear velocity model is 
+\begin{equation}
+{{\Delta t^2(l)} \over t^2(0)} = 
+-{{\kappa^2\,(1 - 8\,\eta)} \over 12}\,
+\left({l \over {t_0\,V_n}}\right)^6\;,
+\label{eqn:lintsverr}
+\end{equation}
+while the error of the shifted-hyperbola approximation
+(\ref{eqn:malovichko}) is
+\begin{equation}
+{{\Delta t^2(l)} \over t^2(0)} = 
+\left({{\kappa^2\,(1 - 8\,\eta)} \over 24} - \eta\right)\,
+\left({l \over {t_0\,V_n}}\right)^6\;.
+\label{eqn:linmalerr}
+\end{equation}
+%??? Please put the correct sign into one of the previous two eqs. Otherwise,
+%eq.(53) does not seem correct -- that is why I thought it is incorrect. --
+Comparing 
+equations (\ref{eqn:lintsverr}) and (\ref{eqn:linmalerr}), we 
+conclude that if the medium is elliptically anisotropic $(\eta=0)$, 
+the shifted hyperbola can be twice as accurate as the anisotropic equation 
+(assuming the optimal choice of parameters). The accuracy of the latter,
+however, increases when the anellipticity coefficient $\eta$ grows and
+becomes higher than that of the shifted hyperbola if $\eta$ satisfies
+the approximate inequality 
+\begin{equation}
+\eta \geq {\kappa^2 \over {8\,(1 + \kappa^2)}}\;.
+\label{eqn:lineta}
+\end{equation}
+%??? -- I got from equations (\ref{eqn:lintsverr}) and (\ref{eqn:linmalerr})
+%\[
+%  \eta \geq {\kappa^2 \over {4\,(3 + 2\,\kappa^2)}}\;.
+%\]
+%Who is right?
+For instance, if $\kappa = \ln 2$, inequality~(\ref{eqn:lineta}) yields
+$\eta \geq 0.03$, a quite small value.
+
+%\begin{comment}
+%\subsection{Stolt Stretch}
+%%%%%%%%%%%%%%%%%%%%%
+%Stolt stretch
+%\cite{GEO43.01.00230048,Levin.sep.42.373,Claerbout.blackwell.85} is
+%a method of extending constant-velocity frequency-domain migration to
+%the case of a vertically variable velocity. The method consists of
+%stretching the time axis according to the equation
+%\begin{equation}
+%\tau(t_z)=
+%\left({{2 \over V_0^2}\,\int_0^{t_z}\,t\,V_{rms}^2(t)\,dt}\right)^{1/2}\;,
+%\label{eqn:ss} 
+%\end{equation}
+%double Fourier transform, and migration according to the dispersion
+%relation
+%\begin{equation}
+%\omega_m(k,\omega_0)=
+%\left(1-{1\over W}\right)\,\omega_0+
+%{{\mbox{sign}(\omega_0)}\over W}\,
+%\sqrt{\omega_0^2 - W\,V_0^2\,k_x^2}\;,
+%\label{eqn:sdispersion} 
+%\end{equation}
+%where $V_0$ is a constant frame velocity, $\omega_0$ and $\omega_m$
+%are the frequencies before and after the migration, corresponding to
+%the stretched time coordinate, $k_x$ is the wavenumber, and $W$ is a
+%constant parameter ($W=1$ in the constant velocity case). Fomel
+%\shortcite{Fomel.sep.84.61} has shown that the optimal choice of the
+%Stolt stretch parameter $W$ for a particular traveltime depth $t_z$ is
+%given by the expression
+%\begin{equation}
+%W=1-{{V_0^2\,\tau^2\left(t_z\right)} \over{V_{rms}^2\left(t_z\right) t_z^2}}\,
+%\left({{V^2\left(t_z\right)} \over {V_{rms}^2\left(t_z\right)}}
+%-S_2\left(t_z\right)
+%\right)\;\;.
+%\label{eqn:main} 
+%\end{equation}
+%This expression remains valid in the case of a vertically
+%heterogeneous VTI medium if the values of $V_{rms}$ and $S_2$ are
+%computed according to equations (\ref{eqn:TIvrms}) and
+%(\ref{eqn:TIsk}). The method of cascaded migrations
+%\cite{GEO52.05.06180643} can improve the performance of Stolt
+%migration in the case of variable velocity \cite{GEO53.07.08810893}.
+%However, this method affects only the isotropic part of the model and
+%cannot change the contribution of the anisotropic parameters.
+%Therefore, in the anisotropic case, it is important to incorporate
+%anisotropic parameters into the Stolt stretch correction.
+%\end{comment}
+
+

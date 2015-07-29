@@ -1,0 +1,41 @@
+from rsf.proj import *
+
+
+Flow('vel',None,
+     	'''
+     	math output=2.0 n1=200 n2=200 d1=0.005 d2=0.005
+     	label1=x1 unit1=km label2=x2 unit2=km 
+     	''')
+
+
+Flow('wavf wavb','vel','sfTesteb back=${TARGETS[1]} nb=30 nt=500 dt=0.001 ns=1 ng=200')
+
+
+Plot('wavf','grey gainpanel=all title=Forward scalebar=y color=j',view=1)
+Plot('wavb','grey gainpanel=all title=Backward scalebar=y color=j',view=1)
+
+Plot('snap1f','wavf',
+	'''
+	window n3=1 min3=0.2 |grey title="Forward:t=0.2s" label1=Depth unit1=km 
+	label2=Lateral unit2=km screenratio=1 color=j
+	''')
+Plot('snap2f','wavf',
+	'''
+	window n3=1 min3=0.35 |grey title="Forward:t=0.35s" label1=Depth unit1=km 
+	label2=Lateral unit2=km screenratio=1 color=j
+	''')
+
+Plot('snap1b','wavf',
+	'''
+	window n3=1 min3=0.2 |grey title="Backward:t=0.2s" label1=Depth unit1=km 
+	label2=Lateral unit2=km screenratio=1 color=j
+	''')
+Plot('snap2b','wavf',
+	'''
+	window n3=1 min3=0.35 |grey title="Backward:t=0.35s" label1=Depth unit1=km 
+	label2=Lateral unit2=km screenratio=1 color=j
+	''')
+Result('fb','snap1f snap2f snap2b snap1b','TwoColumns')
+
+
+End()

@@ -1,0 +1,402 @@
+from rsf.proj import *
+from rsf.recipes.m2d import *
+
+##########################################
+# Parameters
+##########################################
+
+par = {
+    # model
+    'den1': 1.2000,
+    'den2': 1.2000,
+    'vp1' : 4.0000,
+    'vp2' : 2.0000,
+    'vs1' : 1.5000,
+    'vs2' : 1.5000,
+
+    # geometry
+    'nx' : 601,
+    'nz' : 501,
+    'dx' : 0.01,
+    'dz' : 0.01,
+    'ox' : 0.0,
+    'oz' : 0.0,
+   
+    # source 
+    'nt'  : 601,
+    'dt'  : 0.0015,
+    'ot'  : 0.0,
+    'frq' : 12.5,
+    'bgnp': 100,
+    'spx' : 300,
+    'spz' : 150,
+    'gp'  : 250,
+
+    # lfd
+    'size'  : 6,
+    'bd'    : 33,
+    'frqcut': 1.0,
+    'pml'   : 30,
+
+    # plot
+    'snt'  : 400,
+
+}
+
+
+def sglfd2(Fwf, Frec, Fsrc, Fvel, Fden, par, prefix, suffix):
+    _pf = str(prefix)
+    sf_ = str(suffix)
+
+    Gx  =  '%sGx%s'  %(_pf, sf_)
+    sxx = '%ssxx%s' %(_pf, sf_)
+    sxz = '%ssxz%s' %(_pf, sf_)
+    Gz  =  '%sGz%s'  %(_pf, sf_)
+    szx = '%sszx%s' %(_pf, sf_)
+    szz = '%sszz%s' %(_pf, sf_)
+    vpml   = '%svel_pml%s' %(_pf, sf_) 
+    denpml = '%sden_pml%s' %(_pf, sf_) 
+ 
+    Flow(vpml,Fvel,
+         '''
+         expand left=%(bd)d right=%(bd)d 
+                top=%(bd)d  bottom=%(bd)d
+         '''%par) 
+    Flow(denpml,Fden,
+         '''
+         expand left=%(bd)d right=%(bd)d 
+                top=%(bd)d  bottom=%(bd)d
+         '''%par) 
+
+    
+    Flow([Gx,sxx,sxz],vpml,
+         '''
+         sfsglfdcx2_7 dt=%(dt)g eps=0.00001 npk=50 
+                      size=%(size)d sx=${TARGETS[1]} sz=${TARGETS[2]}
+                      wavnumcut=%(frqcut)g
+         '''%par)
+
+    Flow([Gz,szx,szz],vpml,
+         '''
+         sfsglfdcz2_7 dt=%(dt)g eps=0.0001 npk=150 
+                      size=%(size)d sx=${TARGETS[1]} sz=${TARGETS[2]}
+                      wavnumcut=%(frqcut)g
+         '''%par)
+
+    Flow([Fwf,Frec], [Fsrc,vpml,denpml,Gx,sxx,sxz,Gz,szx,szz],
+     '''
+     sfsglfd2pml rec=${TARGETS[1]} 
+                 vel=${SOURCES[1]} den=${SOURCES[2]}
+                 Gx=${SOURCES[3]} sxx=${SOURCES[4]} sxz=${SOURCES[5]}
+                 Gz=${SOURCES[6]} szx=${SOURCES[7]} szz=${SOURCES[8]}
+                 freesurface=n  verb=y
+                 spx=%(spx)d spz=%(spz)d pmlsize=%(pml)d snapinter=1 
+                 srcdecay=n  gp=%(gp)d srctrunc=0.2
+     ''' %par)
+
+def sglr2(Fwf, Frec, Fsrc, Fvel, Fden, par, prefix, suffix):
+    _pf = str(prefix)
+    sf_ = str(suffix)
+
+    fft = '%sfft%s' %(_pf, sf_)
+    rt  = '%srt%s'  %(_pf, sf_)
+    lt  = '%slt%s'  %(_pf, sf_)
+    
+    Flow(fft, Fvel, 'fft1 |fft3 axis=2 pad=1')
+
+    Flow([rt, lt], [Fvel, fft], 
+         '''
+         isolrsg2 seed=2010 dt=%(dt)g fft=${SOURCES[1]} left=${TARGETS[1]}
+         '''%par)
+
+    Flow([Fwf,Frec], [Fsrc, lt, rt, Fvel, Fden, fft],
+             '''
+             sfsglr2 verb=y             rec=${TARGETS[1]} 
+                     left=${SOURCES[1]} right=${SOURCES[2]} 
+                     vel=${SOURCES[3]}  den=${SOURCES[4]} 
+                     fft=${SOURCES[5]}  
+                     spx=%(spx)d spz=%(spz)d  gp=%(gp)d
+                     snapinter=1 
+             '''%par)
+
+
+
+
+
+
+######################################################
+# build 2-layer model
+######################################################
+
+Flow('vel1',None,
+     '''
+     spike n1=250 k1=98 n2=%(nx)d k2=98 d1=%(dz)g d2=%(dx)g|
+     math output=%(vp1)g
+     ''' %par)
+
+Flow('vel2',None,
+     '''
+     spike n1=251 k1=98 n2=%(nx)d k2=98 d1=%(dz)g d2=%(dx)g|
+     math output=%(vp2)g
+     '''%par)
+
+Flow('vel','vel1 vel2', 
+     '''
+     cat axis=1 ${SOURCES[1]}
+     ''')
+
+Flow('den1',None,
+     '''
+     spike n1=250 k1=98 n2=%(nx)d k2=98 d1=%(dz)g d2=%(dx)g|
+     math output=%(den1)g
+     '''%par)
+
+Flow('den2',None,
+     '''
+     spike n1=251 k1=98 n2=%(nx)d k2=98 d1=%(dz)g d2=%(dx)g|
+     math output=%(den2)g
+     '''%par)
+
+Flow('den','den1 den2', 'cat axis=1 ${SOURCES[1]}')
+
+Flow('velc','vel','math output=%(vp1)g' %par)
+
+Flow('denc','den','math output=%(den1)g' %par)
+
+###########################################################
+# theoretical Rpp
+###########################################################
+
+Flow('thrpp', None, 
+     '''
+     zoeppritz na=300 icoef=2
+               rho1=%(den1)g rho2=%(den2)g
+               vp1=%(vp1)g vp2=%(vp2)g
+               vs1=%(vs1)g vs2=%(vs2)g |
+     add scale=-1                     
+     ''' %par)
+
+Flow('thtpp', None, 
+     '''
+     zoeppritz na=300 icoef=2 refl=n
+               rho1=%(den1)g rho2=%(den2)g
+               vp1=%(vp1)g vp2=%(vp2)g
+               vs1=%(vs1)g vs2=%(vs2)g
+     ''' %par)
+
+
+############################################################
+# offset to angle 
+############################################################
+
+Flow('theta', None, 
+      '''
+      spike n1=%(nx)d d1=%(dx)g o1=%(ox)g |
+      math output="180.0*atan((x1-%(spx)d*%(dx)g)/((250.0-%(spz)d)*%(dz)g))/3.1415926"
+      '''%par)
+
+Flow('thetar', None, 
+      '''
+      spike n1=%(nx)d d1=%(dx)g o1=%(ox)g |
+      math output="atan((x1-%(spx)d*%(dx)g)/((250.0-%(spz)d)*%(dz)g))"
+      '''%par)
+
+############################################################
+# SGLFD Modeling
+############################################################
+
+# Gaussion source 
+Flow('srcp', None,
+         '''
+         spike n1=%(nt)d d1=%(dt)g |
+         math output="10000*exp(-5000.0*(x1-0.15)^2)"
+         '''%par)
+
+# Ricker source
+Flow('srcr', None,
+         '''
+         spike n1=%(nt)d d1=%(dt)g k1=%(bgnp)g |
+         ricker1 frequency=%(frq)g | 
+         scale axis=1 
+         '''%par)
+
+
+# incident wave (constant density)
+sglfd2('iwav', 'irec', 'srcp', 'velc', 'denc', par, 'i', '')
+Flow('isnap', 'iwav', 'window n3=1 f3=%(snt)d ' %par)     
+Flow('inc','iwav', 'window n1=1 f1=249 | transp plane=12')
+
+Result('iwav','window j3=20 | sfgrey title="" gainpanel=a screenratio=1')
+Result('inc','grey title="incident wave"  ')
+
+
+# Inc+Rfl+Trs wave (variable model)
+sglfd2('irtwav', 'irtrec', 'srcp', 'vel', 'den', par, 'irt', '')
+Flow('irtsnap', 'irtwav ', 'window n3=1 f3=%(snt)d ' %par)     
+Flow('incrfl','irtwav', 'window n1=1 f1=249  | transp plane=12')
+Flow('trs','irtwav', 'window n1=1 f1=251  | transp plane=12')
+
+Result('irtwav','window j3=20 | sfgrey title="" gainpanel=a screenratio=1')
+Result('incrfl','grey title="incident+reflection" ')
+
+# Rfl
+Flow('rfl','incrfl inc','math inc=${SOURCES[1]} output="input-inc"')
+Result('rfl','grey title="reflected wave"  ')
+
+#lfd Rpp
+Flow('inca','inc','math output="(input)" | sfstack max=y axis=1')
+Flow('reca','rfl','math output="(input)" | sfstack min=y axis=1')
+
+Flow('lfdrpp','inca reca','math reca=${SOURCES[1]} output="reca/input"')
+Flow('lfdrppc', 'theta lfdrpp ','cmplx ${SOURCES[1]}')
+
+#lfd Tpp
+Flow('trsa','trs','math output="abs(input)" | sfstack max=y axis=1')
+Flow('lfdtpp','inca trsa','math reca=${SOURCES[1]} output="reca/input"')
+Flow('lfdtppc', 'theta lfdtpp ','cmplx ${SOURCES[1]}')
+
+############################################################
+# Error
+############################################################
+#Flow('errlfdrpp','lfdrpp th')
+
+
+
+
+
+############################################################
+# SGLR Modeling
+############################################################
+
+# incident wave (constant density)
+sglr2('iwavlr', 'ireclr', 'srcp', 'velc', 'denc', par, 'i', 'lr')
+Flow('isnaplr', 'iwavlr', 'window n3=1 f3=%(snt)d ' %par)     
+Flow('inclr','iwavlr', 'window n1=1 f1=249 | transp plane=12')
+
+Result('iwavlr','window j3=20 | sfgrey title="" gainpanel=a screenratio=1')
+Result('inclr','grey title="incident wave"  ')
+
+# Inc+Rfl+Trs wave (variable model)
+sglr2('irtwavlr', 'irtreclr', 'srcp', 'vel', 'den', par, 'irt', 'lr')
+Flow('irtsnaplr', 'irtwavlr ', 'window n3=1 f3=%(snt)d ' %par)     
+Flow('incrfllr','irtwavlr', 'window n1=1 f1=249  | transp plane=12')
+Flow('trslr','irtwavlr', 'window n1=1 f1=251  | transp plane=12')
+
+Result('irtwavlr','window j3=20 | sfgrey title="" gainpanel=a screenratio=1')
+Result('incrfllr','grey title="incident+reflection" ')
+
+# Rfl
+Flow('rfllr','incrfllr inclr','math inc=${SOURCES[1]} output="input-inc"')
+Result('rfllr','grey title="reflected wave"  ')
+
+#lfd Rpp
+Flow('inclra','inclr','math output="(input)" | sfstack max=y axis=1')
+Flow('reclra','rfllr','math output="(input)" | sfstack min=y axis=1')
+
+Flow('lrrpp','inclra reclra','math reca=${SOURCES[1]} output="reca/input"')
+Flow('lrrppc', 'theta lrrpp ','cmplx ${SOURCES[1]}')
+
+#lfd Tpp
+Flow('trslra','trslr','math output="abs(input)" | sfstack max=y axis=1')
+Flow('lrtpp','inclra trslra','math reca=${SOURCES[1]} output="reca/input"')
+Flow('lrtppc', 'theta lrtpp ','cmplx ${SOURCES[1]}')
+
+
+#########################################################################
+# Rpp tpp plot
+#########################################################################
+
+
+
+# rpp plot
+setp = 'screenratio=0.6 screenht=8 labelsz=8 plotfat=7'
+
+Plot('lfdrppc',
+     '''graph  min1=0.0 max1=70.0 min2=-1.0 max2=0.0 
+               plotcol=3 dash=1  wanttitle=n wantaxis=n %s 
+     '''%setp)
+
+Plot('lrrppc',
+     '''graph  min1=0.0 max1=70.0 min2=-1.0 max2=0.0 
+               plotcol=5 dash=2  wanttitle=n wantaxis=n %s 
+     '''%setp)
+
+Plot('thrpp',
+     ''' graph label2="Reflection coefficient" 
+               min1=0.0 max1=70.0 min2=-1.0 max2=0.0 wanttitle=n %s
+     '''%setp)
+
+Result('rpp','thrpp lfdrppc lrrppc','Overlay')
+
+# tpp plot
+Plot('lfdtppc',
+     '''
+     graph min1=0.0 max1=70.0 min2=0.0 max2=1.0 
+           plotcol=3 dash=1  wanttitle=n wantaxis=n %s
+     '''%setp)
+
+Plot('lrtppc',
+     '''
+     graph min1=0.0 max1=70.0 min2=0.0 max2=1.0 
+           plotcol=5 dash=2  wanttitle=n wantaxis=n %s
+     '''%setp)
+
+Plot('thtpp',
+     '''
+     graph label2="Transmission coefficient" 
+           min1=0.0 max1=70.0 min2=0.0 max2=1.0 wanttitle=n %s
+    '''%setp)
+
+Result('tpp','thtpp lfdtppc lrtppc','Overlay')
+
+
+
+
+
+
+############################################################
+#  Geometry
+############################################################
+setpm = ''' label2="Depth" label1="Distance"
+            unit1="km" unit2="km" yreverse=y
+            min1=0 min2=0 max1=6 max2=5 
+            screenratio=0.83 screenht=8 labelsz=8 
+            wanttitle=n  wherexlabel=top'''
+
+Flow('modelz',None, 'spike n1=%(nx)d d1=%(dx)g o1=%(ox)g mag=2.5 ' %par)
+Flow('modelx',None, 'spike n1=%(nx)d d1=%(dx)g o1=%(ox)g | math output=x1 ' %par)
+Flow('model','modelx modelz' ,'cmplx ${SOURCES[1]}')
+
+Plot('model','sfgraph plotfat=4 plotcol=7 %s'%setpm)
+
+Flow('upz',None, 'spike n1=%(nx)d d1=%(dx)g o1=%(ox)g mag=2.45 | window j1=30 ' %par)
+Flow('upx',None, 'spike n1=%(nx)d d1=%(dx)g o1=%(ox)g | math output=x1 | window j1=30 ' %par)
+Flow('up','upx upz' ,'cmplx ${SOURCES[1]}')
+
+Plot('up','sfgraph symbol="o" symbolsz=4  %s'%setpm)
+
+Flow('downz',None, 'spike n1=%(nx)d d1=%(dx)g o1=%(ox)g mag=2.55 | window j1=30 ' %par)
+Flow('downx',None, 'spike n1=%(nx)d d1=%(dx)g o1=%(ox)g | math output=x1 | window j1=30 ' %par)
+Flow('down','downx downz' ,'cmplx ${SOURCES[1]}')
+
+Plot('down','sfgraph symbol="o" symbolsz=4  %s'%setpm)
+
+
+Flow('srcz',None, 'spike n1=1 mag=1.5 ' %par)
+Flow('srcx',None, 'spike n1=1 mag=3.0 ' %par)
+Flow('src','srcx srcz' ,'cmplx ${SOURCES[1]}')
+
+Plot('src','sfgraph symbol="*" symbolsz=8 plotcol=2 plotfat=6   %s'%setpm)
+
+
+
+
+Result('geo','model up down src','Overlay')
+
+End()
+
+
+
+
+
+

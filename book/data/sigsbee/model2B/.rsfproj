@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sfput', 'sfscale', 'sfgrey']
+data=['data/sigsbee/sigsbee2b_migration_velocity.segy', 'data/sigsbee/sigsbee2b_stratigraphy.segy', 'data/sigsbee/sigsbee2b_reflection_coefficients.segy']
+size=   43426080

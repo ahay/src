@@ -1,0 +1,52 @@
+from rsf.proj import *
+
+Flow('vel1',None,'spike n1=256 d1=10 | math output=2500')
+Flow('vel2',None,'spike n1=256 d1=10 | math output=3000')
+Flow('vel3',None,'spike n1=256 d1=10 | math output=3500')
+Flow('vel4',None,'spike n1=256 d1=10 | math output=4000')
+dt=0.001
+nt=500
+Flow('Mapp1 Mfd101','vel1',
+     '''
+     lfdp1 dt=0.001 eps=0.0001 npk=20 seed=2010
+     Mfd=${TARGETS[1]}
+     ''')
+Flow('Mapp2 Mfd102','vel2',
+     '''
+     lfdp1 dt=0.001 eps=0.0001 npk=20 seed=2010
+     Mfd=${TARGETS[1]}
+     ''')
+Flow('Mapp3 Mfd103','vel3',
+     '''
+     lfdp1 dt=0.001 eps=0.0001 npk=20 seed=2010
+     Mfd=${TARGETS[1]}
+     ''')
+Flow('Mapp4 Mfd104','vel4',
+     '''
+     lfdp1 dt=0.001 eps=0.0001 npk=20 seed=2010
+     Mfd=${TARGETS[1]}
+     ''')
+Flow('one','Mapp1','math output=1')
+Result('app','one Mapp1 Mapp2 Mapp3 Mapp4',
+       '''
+       cat ${SOURCES[1]} ${SOURCES[2]} ${SOURCES[3]} ${SOURCES[4]} axis=2 |
+       window n1=128 |
+       put o1=0 d1=0.7874 n1=128 |
+       graph dash=0,0,0,0,0 unit2= label2="v\_LFD\^/v" title="LFD" plotfat=7
+       label1="Frequency (% of the Nyquist)" unit1=" "
+       plotfat=5
+       ''')
+Result('fd10','one Mfd101 Mfd102 Mfd103 Mfd104',
+       '''
+       cat ${SOURCES[1]} ${SOURCES[2]} ${SOURCES[3]} ${SOURCES[4]} axis=2 |
+       window n1=128 |
+       put o1=0 d1=0.7874 n1=128 |
+       graph dash=0,0,0,0,0 unit2= label2="v\_FD\^/v" title="Conventional FD" plotfat=7
+       label1="Frequency (% of the Nyquist)" unit1=" "
+       plotfat=5 
+       ''')
+
+
+
+
+End()

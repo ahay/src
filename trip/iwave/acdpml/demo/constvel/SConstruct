@@ -1,0 +1,11 @@
+from rsf.proj import *
+
+Flow('csq',None,'spike n1=416 n2=400 d1=0.025 d2=0.025 o1=0 o2=0 | scale dscale=1.5')
+
+Flow('init',None,'spike nsp=1 mag=1 n1=416 n2=400 d1=0.025 d2=0.025 o1=0 o2=0 k1=200 k2=100| smooth rect1=4 rect2=4 repeat=4')
+
+Flow('movie',None,'spike n1=416 n2=400 n3=41 d1=0.025 d2=0.025 d3=0.15 o1=0 o2=0 o3=0.02 | sfput id1=0 id2=1 id3=2 dim=2 gdim=3 unit1=km unit2=km unit3=s label1="depth (km)" label2="distance (km)" label3="time (s)"| scale dscale=0.0')
+
+Flow('tmp',['init.rsf','csq.rsf'],'../../main/acdpml.x par=movie.par',stdin=0,stdout=0)
+
+Result('mv','movie','grey color=c clip=0.02 title="Constant velocity with PML" scalebar=y barreverse=y')

@@ -1,0 +1,71 @@
+from rsf.proj import *
+
+dx = 0.5
+
+for case in range(3):
+    letter = 'npc'[case]
+    velocity = 'g%s-velocity' % letter
+    Flow(velocity,None,
+         '''
+         math
+         o1=0.0 n1=751 d1=0.004 label1=z unit1=km
+         o2=4.0 n2=501 d2=0.008 label2=x unit2=km
+         label=Velocity unit=km/s
+         output="%g+(%g)*exp(-%g*((x1-1)^2+(x2-6)^2))"
+         ''' % ((3,2,2)[case],(-2,2,0)[case],1.0/(dx*dx)))
+    Result(velocity,
+           '''
+           grey allpos=y bias=1 wanttitle=n
+           wantscalebar=y bartype=h 
+           ''')
+    Plot(velocity,
+         'grey allpos=y bias=1 wanttitle=n')
+
+    rays = 'rays%d' % case
+    Flow(rays,velocity,
+         '''
+         rays2 dt=0.01 nt=1000 nr=101 a0=130 amax=230 zshot=0 yshot=6 sym=n |
+         reverse which=2
+         ''')
+    Plot(rays,
+         '''
+         window n1=131 n2=90 f2=5 |
+         graph min2=4 max2=8 min1=0 max1=3 transp=y yreverse=y plotcol=%d
+         title="Ray Tracing" wantaxis=n wheretitle=b wherexlabel=t
+         ''' % (7,0,0)[case])
+    Plot('o'+rays,[velocity,rays],'Overlay')
+    
+    hwt = 'hwt%d' % case
+    Flow(hwt,velocity,'hwt2d dt=0.01 nt=1001 ng=101 og=-50 dg=1 xsou=6 zsou=0')
+    Plot(hwt,
+         '''
+         window n2=131 n1=90 f1=5 |
+         transp |
+         graph min1=4 max1=8 min2=0 max2=3 yreverse=y plotcol=%d
+         title="Wavefront Tracing" wantaxis=n wheretitle=b wherexlabel=t
+         ''' % (7,0,0)[case])
+    Plot('o'+hwt,[velocity,hwt],'Overlay')
+    comp = 'g%s-velrw' % letter
+    Result(comp,['o'+rays,'o'+hwt],'SideBySideIso')
+
+
+    dif = 'g%s-diff' % letter
+    Flow(dif,[hwt,rays],
+         '''
+         dd type=float | put n1=2 n2=101 n3=1001 |
+         reverse which=1 | put n1=202 o1=-50 d1=1 n2=1001 n3=1 |
+         dd type=complex | transp |
+         add scale=1,-1 ${SOURCES[1]} |
+         window n1=81 n2=90 f2=5 |
+         math output="abs(input)" | real
+         ''')
+    Result(dif,
+           '''
+           grey allpos=y scalebar=y 
+           label1=Time unit1=s 
+           label2="Take-off Angle" unit2="\^o\_"
+           barlabel=Distance barunit=km
+           wanttitle=n
+           ''')
+
+End()

@@ -1,0 +1,127 @@
+\published{Interpretation, 3, no. 1, SF21-SF30, (2015)}
+
+\title{Carbonate reservoir characterization using seismic diffraction imaging}
+
+\author{Luke Decker, Xavier Janson, and Sergey Fomel}
+\righthead{Carbonate seismic diffraction imaging}
+\lefthead{Decker et al.}
+\footer{TCCS-8}
+
+\address{
+Bureau of Economic Geology \\
+John A. and Katherine G. Jackson School of Geosciences \\
+The University of Texas at Austin \\
+University Station, Box X \\
+Austin, TX 78713-8924 \\
+}
+
+\maketitle
+\begin{abstract}
+Although extremely prolific worldwide, carbonate reservoirs are challenging to characterize using traditional seismic reflection imaging techniques.  We use computational experiments with synthetic models to demonstrate the possibility seismic diffraction imaging has of overcoming common obstacles associated with seismic reflection imaging and aiding interpreters of carbonate systems.  Diffraction imaging  improves the horizontal resolution of individual voids in a karst reservoir model and identification of heterogeneous regions below the resolution of reflections in a reservoir scale model. 
+\end{abstract}
+
+\section{Introduction}
+Carbonate reservoirs contain a majority of remaining proven oil reserves, yet are much more difficult to evaluate than their \old{siliclastic}\new{siliciclastic} counterparts (\citealp{font,overview,eberli,intro}).  Many aspects of carbonate rocks make their seismic signature complex and difficult to interpret both qualitatively and quantitatively\old{ (Fontaine et al., 1987; Palaz and Marfurt, 1997; Eberli et al., 2004)}.  Because carbonate rocks \old{are} generally \new{have} \old{faster}\new{higher} \new{seismic velocities} than \old{siliclastics}\new{siliciclastics}, horizontal and vertical resolution is commonly low.
+\par
+Carbonate sediments are also more prone to complex, rapid \old{digenetic}\new{diagenetic} alteration\new{, where heat and pressure change rock chemistry,} after deposition and continuing through the burial process \cite[]{van}. These diagenetic processes \old{are complex and }significantly affect the acoustic properties of carbonate rocks. Postdepositional alteration such as karst processes\new{, where weathering creates steep sided valleys and cave networks in carbonate strata,} or dolimitization\new{, where calcium carbonate is replaced by calcium magnesium carbonate (dolomite),} can further complicate already heterogeneous deposits.  Carbonate heterogeneity exists at different scales.  Carbonates often posses larger-scale \old{vugs}\new{voids}, caves, and fracture networks, accompanied by small scale features such as microfractures, \old{intergrainular}\new{intergranular} porosity, and chemical alteration \cite[]{lucia}.
+\par
+The acoustic properties of carbonate rocks are not a simple function of mineralogy and porosity.  Recent advances in rock mechanics have shown that carbonate rocks' acoustic properties also depend on their pore type, size, shape, and distribution (\citealp{wang97,eberli};\old{Baechle et al., 2005; } \citealp{lud,weger2009}).  Heterogeneities in carbonates scatter seismic energy, attenuating high frequency signal and reducing resolution.  High impedance contrasts typically exist between carbonate structures and surrounding rocks, leading to a strong reflective interface that can generate multiple reflections.  Impedance contrasts for strata within the carbonate body tend to be relatively weak, and horizontal homogeneity means that reflections rarely have strong lateral \old{continuation} \new{continuity}.  
+\par
+Rock physics models developed for \old{siliclastics}\new{siliciclastics} often fail to effectively describe carbonate systems (\citealp{sayers,bae}). This makes relating velocities from core, sonic logs, and seismic very difficult, as these are sampled with different frequency waves.  As a result, seismic images of carbonate deposits are usually not easily interpreted, especially at the reservoir scale (1-5 km). In addition, because of the intertwined control factors on the seismic response of carbonates, quantitative interpretation of the seismic signal is even more challenging. \cite{janson2010} and \cite{janson2011} used outcrop analogues and synthetic models \old{have been successfully used} to better understand the seismic response of carbonate deposits.
+\par
+\old{The difficulties associated with reflection imaging encourage us to turn to seismic diffraction imaging.} \new{The difficulties associated with reflection imaging in carbonates encourage us to explore alternative imaging approaches, such as diffraction imaging.}  Seismic diffractions are a fundamentally different phenomenon than seismic reflections \cite[]{klem}.  They occur when \old{a seismic wave encounters a small scale feature and gets scattered} \new{seismc waves scatter from small-scale features}.  Diffractions may be caused by geologically significant features including voids, faults, fractures, karsts, pitchouts, salt flanks, and other small-scale heterogeneities (\citealp[]{harl, khadi, fomel2, moser, klokov}).  Rays \old{emanating from}\new{associated with} seismic diffractions take more diverse paths than those associated with reflection events, and thus can contain more information about the subsurface \cite[]{neidell}.  These more diverse ray paths enable super-resolution with seismic diffraction imaging \cite[]{khadi}.
+\par
+Seismic diffraction imaging can \old{potentially }highlight features commonly observed in carbonates, such as karsts, voids, and small scale heterogeneities, with high resolution.  These characteristics make seismic diffraction imaging well suited for use with carbonate imaging targets, where reflection resolution is typically limited.  In this paper, we use two synthetic models to illustrate how seismic diffraction imaging can better constrain void geometry and detect \old{heterogenous}\new{heterogeneous} zones that may not be immediately apparent in conventional reflection imaging.
+
+
+\section{Synthetic Models}
+\subsection{Ordovician Model}
+\par
+Our first synthetic model is based on the very deeply buried (5,500-6,500 m) Ordovician limestone strata in Northwest China's Tarim Basin, which features anomalous seismic amplitude bright spots. The amplitude bright spots correspond\old{s} to high-gamma-ray, low-velocity zones in wireline logs and have been interpreted by \cite{zeng} as paleokarst features. A geocellular model was built to study the seismic response of the paelokarst in detail\old{s} (\citealp{janson2010,zeng2}). The synthetic model uses the Ordovician unconformity surface (boundary between a basal Ordovician interval and an overlying Silurian siliciclastic interval) that was mapped from subsurface seismic data (Figure~\ref{fig:vp}). Collapsed paleocaves with cave sediments were modeled by randomly distributing low\old{-AI} \new{acoustic impedance (AI)} circular geobodies that measured 300 $\times$ 300 m in the horizontal dimension and 18 m in vertical dimension. The AI (approximated by acoustic velocity \new{using constant density}) is distributed using a sequential Gaussian simulation with parameters derived from a sonic log in the cored well (\citealp{janson2010,zeng,zeng2}).
+\inputdir{ordexample20hz}
+\plot{vp}{width=1.0\columnwidth}{Ordovician velocity model.}
+\par
+\subsection{Permo Triassic Khuff Model}
+\par
+Our second model examines rocks equivalent to the Permian-Triassic Khuff-A and -B reservoirs, which crop out near Buraydah in central Saudi Arabia. An outcrop-based geocellular model 600 m $\times$ 385 m $\times$ \old{some }30~m was built to investigate the effect of small-scale carbonate reservoir heterogeneities on subsurface flow models \cite[]{janson2013}. In addition, the 3D geological geocellular model was converted into a acoustic impedence (AI) model using laboratory velocity (Figure~\ref{fig:kvp}) and density (Figure~\ref{fig:kden}) measurement from outcrop plugs.  An average acoustic impedance value for each lithofacies present in the geological model was used to convert the lithofacies model into an impedance volume (Figure~\ref{fig:kai}) in order to maintain the realistic level and distribution of reservoir heterogeneities. Because of its limited size, the outcrop-based geocellular model was scaled up for seismic modeling by addition of a similar but simpler model of strata below it as well as acoustically constant buffer layers above and below to make the final model 110 m thick. 
+\inputdir{small-khuff}
+\multiplot{3}{kvp,kden,kai}{width=0.4\columnwidth}{Khuff synthetic model: (a) velocity; (b) density; (c) acoustic impedance}
+\section{Method}
+Seismic diffraction events carry much less energy than reflection events, requiring that they be separated to be utilized.  Several methods for seismic diffraction extraction exist (\citealp{harl,landa1987,kanasewich}; \old{ Landa and Keydar, 1998; }\citealp{khadi,landa,klokov}\old{; Decker et al., 2013}), including plane-wave destruction applied to common-offset data \cite[]{fomel2}.
+\par
+Plane-wave destruction (PWD) filters (\citealp{claer,fomel1}), determine \new{the} dominant slope \new{of seismic events} as they attempt to map data to adjacent traces.  Data not conforming to the local slope field is iteratively minimized.   Because reflection events appear planar in common-offset data while diffraction events appear hyperbolic, this residual will contain the set of diffractions along with random noise present in the data \cite[]{harl}. 
+\par
+\new{Zero offset data are modeled using methods described in the subsequent section.  }We use PWD to determine the dominant slope field of our modeled zero-offset data and remove the reflections that conform with local slope, providing us with zero-offset diffraction data.  Zero-offset ``conventional'' data containing diffractions and reflections as well as zero-offset diffraction data are migrated, providing our conventional and diffraction images respectively.  A workflow for the diffraction extraction and imaging process starting from common-offset data is displayed in Figure~\ref{fig:DD-PWD}.\new{  Plane-wave destruction of common-offset data may face difficulties extracting diffractions in regions with complex geometry or velocity structure }\cite[]{decker}\new{.  The synthetic models we use in this paper have small enough lateral velocity variations for this to not be an issue. If the wavefield is sufficiently complicated to prevent common-offset data plane-wave destruction from functioning properly other methods of separating diffractions exist, including plane-wave destruction of angle-migrated partial images }\cite[]{decker2014}.
+
+\inputdir{.}
+\plot{DD-PWD}{width=1.0\columnwidth}{Our diffraction imaging workflow} 
+\par
+Although we employ the same method of diffraction extraction on both the Orodovician and Khuff synthetic models, we adopt different methods of modeling and migration that are best suited for each model's scale and subsurface position.  Reverse-time migration (\citealp{zhang2009,fomel2013}) is used on the Ordovician model for greater accuracy while one-way wave-equation migration (\citealp{gazdag1984,kessinger1992}) is utilized on the reservoir-scale Khuff model to allow for upward continuation of modeled data through an overburden\old{,} to model the response of the interval at a geologically plausible depth.
+
+\section{Results}
+\subsection{Ordovician}
+\inputdir{ordexample20hz}
+\multiplot{2}{exp0,diffractions}{width=0.4\columnwidth}{ Modeled Ordovician zero-offset data: (a) conventional data; (b) separated diffraction data}
+
+We begin our experiment on the constant-density Ordovician synthetic velocity model, Figure~\ref{fig:vp}, by calculating reflectivity.  We transform this reflectivity to the time domain, convolve it with a 20 Hz ricker wavelet, and transform it back to the depth domain to create an idealized seismic reflectivity image.  \old{Forward modeling is operated on the idealized image using low-rank method in the time domain}\new{Zero-offset data is generated by performing time domain low-rank forward modeling on the idealized image} \cite[]{fomel2013}, providing us with conventional zero-offset data, Figure~\ref{fig:exp0}.
+\par
+Data slope\new{s} are calculated using PWD, and \old{reflections}\new{events} conforming with that slope are removed, providing the set of diffraction data shown in Figure~\ref{fig:diffractions}.  Conventional and diffraction data are migrated using low-rank RTM with a smoothed-slowness velocity field to provide a conventional image, shown in Figure~\ref{fig:exp0-mig}, and a diffraction image, shown in Figure~\ref{fig:diffractions-mig}.
+\par
+To highlight the improvement in horizontal feature resolution using diffraction imaging we take two depth slices from the images\old{.}\new{, which will be interpreted and discussed in the subsequent section.}  The depth slices represent the average of a 20 m interval centered around the target depth.  Depth slices of the conventional and diffraction images for the first depth, 0.55 km, are visible in Figures~\ref{fig:img2dstk-1} and \ref{fig:dif2dstk-1}.  We zoom in on an interesting region of these slices\new{ featuring the karst interface and several superimposed voids} to generate Figure~7.
+\par
+Conventional and diffraction image slices for the second depth, 0.7 km, are shown in Figure~8.  We zoom in on \old{an interesting part of these slices}\new{an area with several closely spaced voids}, creating Figure~9.
+
+\multiplot{2}{exp0-mig,diffractions-mig}{width=0.4\columnwidth}{Low-rank RTM smoothed-slowness images for Ordovician model: (a) conventional image; (b) seismic diffraction image}
+\multiplot{2}{img2dstk-1,dif2dstk-1}{width=0.4\columnwidth}{Ordovician depth slices from 0.55 km: (a) conventional image; (b) seismic diffraction image}
+\multiplot{2}{img2dstka-1,dif2dstka-1}{width=0.4\columnwidth}{Zoomed Ordovician depth slices from 0.55 km: (a) conventional image; (b) seismic diffraction image}
+\multiplot{2}{img2dstk-2,dif2dstk-2}{width=0.4\columnwidth}{Ordovician depth slices from 0.7 km: (a) conventional image; (b) seismic diffraction image}
+\multiplot{2}{img2dstkb-2,dif2dstkb-2}{width=0.4\columnwidth}{Zoomed Ordovician depth slices from 0.7 km: (a) conventional image; (b) seismic diffraction image}
+\par
+\subsection{Khuff}
+\inputdir{small-khuff}
+\par
+We use the Khuff synthetic model to illustrate how diffractions may be used to characterize features at the reservoir scale using higher frequency data.
+
+\multiplot{2}{zo-ovr,k-diffractions}{width=0.4\columnwidth}{Zero-offset Khuff data: (a) conventional; (b) diffraction}
+\multiplot{2}{zo-ovr-mig,k-diffractions-mig}{width=0.4\columnwidth}{Migrated Khuff images: (a) conventional; (b) diffraction}
+\multiplot{3}{zo-ovr-migI,k-diffractions-migI,aiI}{width=0.4\columnwidth}{Khuff \old{image} cross sections \old{with }for 150 m \old{Cross-Line}\new{crossline}: (a) conventional \new{image}; (b) diffraction \new{image; (c) acoustic impedance model}}
+\multiplot{3}{zo-ovr-migX,k-diffractions-migX,aiX}{width=0.4\columnwidth}{Khuff \old{image} cross sections \old{with }for 250 m \old{In-Line}\new{inline}: (a) conventional \new{image}; (b) diffraction \new{image; (c) acoustic impedance model}}
+\par
+The experiment begins with the Khuff velocity and density models, shown in Figures~\ref{fig:kvp} and \ref{fig:kden} respectively.  We multiply density and velocity data to obtain acoustic impedance (Figure~\ref{fig:kai}).  Reflectivity is calculated from this acoustic impedance, transformed to the time domain, convolved with a 100 Hz ricker wavelet, and transformed back to the depth domain to provide an idealized seismic reflection image.  We model the zero-offset reservoir response using one-way wave equation modeling \new{in the frequency domain} \cite[]{savartm}, and then upward continue the reservoir response through a 3 km thick overburden to generate the zero-offset data, shown in Figure~\ref{fig:zo-ovr}.
+\par
+We separate diffractions using PWD.  Data slope\new{s} are calculated and reflection events conforming to slope are removed, leaving zero-offset \old{diffraction} data \new{with primarily diffractions} (Figure~\ref{fig:k-diffractions}).
+\par
+Conventional and diffraction zero-offset data are then downward continued through the smoothed-slowness overburden, and then depth migrated through the smoothed-slowness reservoir.  This provides a conventional image (Figure~\ref{fig:zo-ovr-mig}) and a diffraction image (Figure~\ref{fig:k-diffractions-mig}).  We zoom in on a horizontal cross section along \old{Cross-Line}\new{crossline} 150 m for the conventional and diffraction images as well as the acoustic impedance of the synthetic model, creating Figure~12.  We also generate a cross section along \old{In-Line}\new{inline} 250 m (Figure~13).
+\par
+\section{Interpretation}
+The following analysis shows that seismic diffraction imaging can better highlight \new{small} features in synthetic models than reflection imaging.
+\par
+\subsection{Ordovician}
+\par
+Seismic diffraction imaging improves the resolution of voids present in time slices relative to seismic reflection imaging.  Examining the zoomed conventional and diffraction images from 0.55 km depth, Figures~\ref{fig:img2dstka-1} and \ref{fig:dif2dstka-1}, we notice that diffraction imaging enables us to tell that what appears as single shapes in the reflection image are actually superpositions of multiple void responses.  If we examine the features centered at \old{I}\new{i}nline 8.85 km, \old{C}\new{c}rossline 4.5 km; \old{I}\new{i}nline 10.15 km, \old{C}\new{c}rossline 4.25 km; and \old{I}\new{i}nline 10 km \old{C}\new{c}rossline 6.5 km in the conventional image, Figure~\ref{fig:img2dstka-1}, we see responses that ma\new{y} appear to \new{b}e single voids.  In the corresponding diffraction image, Figure~\ref{fig:dif2dstka-1}, these shapes separate into joined rings, which define the edges of two overlaying voids.
+\par
+The deeper slices from 0.7 km depth illustrate how diffraction imaging increases void edge resolution.  If we compare the voids visible in the zoomed image (Figure~9), using the diffraction image we are better able to tell where void edges are located; they are marked by the reverse of seismic polarity.  Additionally, diffraction imaging enables us to  see that the feature centered at \old{I}\new{i}nline 1.65 km, \old{C}\new{c}rossline 12.25 km is actually a superposition of two nearby voids.
+\par
+Therefore, using seismic diffraction imaging methods on the Ordovician model we are able to better distinguish between overlaying voids in depth slices, and better spatially locate void edges.
+
+\subsection{Khuff}
+\par
+Seismic diffractions in the Khuff model highlight two strata with increased heterogeneity that are not immediately apparent in the conventional image.
+\par
+If we examine the Khuff seismic diffraction image, Figure~\ref{fig:k-diffractions-mig} we notice that amongst a chaotic diffraction background, there are two upward sloping linear features which intersect the left side of the image cube's \old{In-Line}\new{inline} axis near depths of 3040 m and 3065 m, and the right side of the image cube's \old{In-Line}\new{inline} axis near 3030 m and 3055 m.  These layers correspond to the heterogeneous zones in the acoustic impedance model, Figure~\ref{fig:kai}.  These heterogeneous regions are lost in the reflection image, Figure~\ref{fig:zo-ovr-mig}, which features a series of parallel reflections.
+\par
+Examining the diffraction image cross sections, Figures~\ref{fig:k-diffractions-migI} and \ref{fig:k-diffractions-migX} provides a clearer view of the \old{heterogenous}\new{heterogeneous} layers\new{ visible in the acoustic impedance cross sections, Figures~\ref{fig:aiI} and \ref{fig:aiX}}, which remain less apparent in the corresponding conventional image cross sections, Figures~\ref{fig:zo-ovr-migI} and \ref{fig:zo-ovr-migX}.\new{  Although many of the features in the Khuff model are below diffraction resolution, the different scattering behavior and intensity is clearly helpful for detection of \old{heterogenous}\new{heterogeneous} regions.}
+\par
+The heterogeneous strata are also apparent in the Khuff seismic diffraction data, Figure~\ref{fig:k-diffractions}.  These strata, located where at the left edge of the cube's \old{In-Line}\new{inline} axis near Time 1.6 s and Time 1.618 s slope upward to the right, and are rich in hyperbolic diffractions.
+\par
+We can conclude that applying seismic diffraction imaging methods on the Khuff model enables us to more accurately determine regions of heterogeneity in a reservoir-scale model.
+
+\section{Conclusions}
+Using two synthetic models, we have investigated the potential of seismic diffraction imaging for aiding interpreters of carbonate systems.  We use the first model to demonstrate how seismic diffraction imaging can better constrain the edges of voids and distinguish between the superposition of overlaying features.  We use the second model to illustrate how diffraction imaging can detect reservoir-scale heterogeneous zones that might be indistinguishable in a conventional reflection image.  \new{The use of synthetic models is effective for comparing the differences between seismic diffraction and reflection imaging results, but a}\old{A}dditional case studies with field-data are required to verify the effectiveness of these promising methods on real carbonate systems.
+\section{Acknowledgments}
+We thank Shell for partial financial support of this work.  The computational experiments were completed using the Madagascar software package \cite[]{madagascar}\new{ and are reproducible in the Madagascar environment}.
+
+%\onecolumn
+
+\bibliographystyle{seg}
+\bibliography{diffract}

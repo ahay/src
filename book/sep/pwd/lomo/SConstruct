@@ -1,0 +1,65 @@
+from rsf.proj import *
+
+Flow('sigmoid',None,
+     '''
+     sigmoid d1=.004 n1=200 d2=.008 n2=200 |
+     smooth rect1=3 diff1=1 adj=1 | smooth rect1=3
+     ''')
+
+Flow('conflict',None,'conflict -')
+
+Fetch('WGstack.H','book/iee')
+Flow('dgulf','WGstack.H','dd form=native | window n1=1000 f2=1020 n2=200')
+
+Fetch('wz.27.H','wz')
+Flow('yc','wz.27.H','dd form=native | window n1=400 n2=64| tpow tpow=2')
+Flow('yc2','yc','window f2=21')
+Flow('yc27','yc yc2','window n2=20 | pad n2=21 | cat axis=2 ${SOURCES[1]}')
+
+order = {'sigmoid':2,  'conflict':1,  'dgulf':1, 'yc27':3}
+p0 =    {'sigmoid':0,  'conflict':0,  'dgulf':0, 'yc27':2}
+smoo =  {'sigmoid':3,  'conflict':1,  'dgulf':4, 'yc27':3}
+pclip = {'sigmoid':100,'conflict':100,'dgulf':96,'yc27':99.5}
+rect  = {'sigmoid':3,  'conflict':5,  'dgulf':10,'yc27':3}
+
+for case in order.keys():
+    dip = case + '-dip'
+    pwd = case + '-pwd'
+    txr = case + '-txr'
+
+    Plot(case,'grey title=INPUT')
+    Result(case,'grey title=INPUT screenratio=1.2')
+
+
+    Flow(dip,case,
+         'dip order=%d p0=%g verb=y niter=10 rect1=%d rect2=%d' %
+         (order[case],p0[case],rect[case],rect[case]))
+    Plot(dip,'grey title=DIP scalebar=y pclip=100')
+
+    Flow(pwd,[case,dip],
+         'pwd order=%d dip=${SOURCES[1]} | smooth rect1=%d' %
+         (order[case],smoo[case]))
+    Plot(pwd,'grey pclip=%g title=RESIDUAL' % pclip[case])
+
+    Result(pwd,'grey pclip=%g title=RESIDUAL  screenratio=1.2' % pclip[case])
+
+    Flow(txr,dip,
+         '''
+         noise rep=y seed=2004 | smooth rect1=3 |
+         pwspray reduce=gauss dip=$SOURCE ns=20 eps=0.01 |
+         smooth rect1=3
+         ''')
+    Plot(txr,'grey title=TEXTURE')
+    
+    Result(dip,[dip,pwd],'SideBySideAniso')
+    Result(txr,[case,txr],'SideBySideAniso')
+
+example = 'sigmoid'
+lom = 'lom-'+example
+lag = 'lag-'+example
+mpa = 'mpa-'+example
+Flow([lom,lag],example,'lopef a=7,2 w=20,8 lag=${TARGETS[1]}')
+Flow(mpa,[example,lom],'decon filt=${SOURCES[1]} rect1=3')
+Result(example+'-clae',mpa,'grey pclip=100 title=LOMOPLAN' % pclip)
+
+End()

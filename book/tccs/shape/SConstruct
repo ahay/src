@@ -1,0 +1,10 @@
+from rsf.tex import *
+
+#Paper('seg2005',use='newalg',lclass='segabs')
+
+#Command2('paper-revised.tex','paper.tex','cp $SOURCE $TARGET')
+#Paper('paper-revised',use='newalg',options='manuscript,revised')
+
+#Paper('summary',include=r'\thispagestyle{empty}',options='manuscript')
+
+End(use='newalg',color='lapinter gaussinter bei-fmg2 bei-dix bei-shp bei-shpw') #,options='manuscript')

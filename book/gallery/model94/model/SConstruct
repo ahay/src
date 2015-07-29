@@ -1,0 +1,17 @@
+from rsf.proj import *
+
+sys.path.append('..')
+import model94
+
+model94.get_vel('velocity')
+Result('velocity','grey color=j allpos=y bias=3.6 scalebar=y title=Model barreverse=y')
+
+model94.get_shots('shots')
+Result('shots','pow pow1=1 | byte gainpanel=all | grey3 frame1=500 frame2=200 frame3=100 title=Shots flat=n')
+
+Flow('no','shots','window n2=1 f2=241')
+Result('no','pow pow1=1 | sfgrey title="Near Offset" ')
+
+# add lowrank modeling with topography
+
+End()

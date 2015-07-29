@@ -1,0 +1,7 @@
+from rsf.tex import *
+
+Paper('slidesBeijing',
+      lclass='cwpslides',
+      use='multicol,color,overpic,listings,amsmath,amssymb,amsbsy')
+
+End(options='short')

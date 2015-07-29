@@ -1,0 +1,84 @@
+from rsf.proj import *
+
+####### Real data example
+
+Fetch('wz.08.H','wz')
+
+Flow('wz08','wz.08.H',
+     '''
+     dd form=native |
+     tpow tpow=1.5 | agc 
+     ''')
+
+Plot('wz08','grey title="Real cmp data"')
+
+Flow('wz08-L2 wz08-L2-vel','wz08',
+     '''
+     velinvww niter=30 ns=400 ds=3.0e-4 os=1.e-3 velout=${TARGETS[1]}
+     rwt=2. mwt=0. savevel=1
+     ''')
+
+Plot('wz08-L2-cmpinv','wz08-L2','grey title="Inversed cmp in LS"')
+Plot('wz08-L2-velinv','wz08-L2-vel','grey label2="Slowness (s/m)" title="LS Velocity spectrum"')
+Result('wz08-L2','wz08 wz08-L2-cmpinv wz08-L2-velinv','SideBySideAniso',vppen='txscale=2.')
+
+Flow('wz08-rw-IRLS wz08-rw-IRLS-vel','wz08',
+     '''
+     velinvww niter=30 ns=400 ds=3.0e-4 os=1.e-3 velout=${TARGETS[1]}
+     rwt=1. mwt=0. savevel=1 irls=1 nstep=2 srate=0.01
+     ''')
+
+Flow('wz08-mw-IRLS wz08-mw-IRLS-vel','wz08',
+     '''
+     velinvww niter=30 ns=400 ds=3.0e-4 os=1.e-3 velout=${TARGETS[1]}
+     rwt=2. mwt=1. savevel=1 irls=1 nstep=2 srate=0.01
+     ''')
+Flow('wz08-rmw-IRLS wz08-rmw-IRLS-vel','wz08',
+     '''
+     velinvww niter=30 ns=400 ds=3.0e-4 os=1.e-3 velout=${TARGETS[1]}
+     rwt=1. mwt=1. savevel=1 irls=1 nstep=2 srate=0.01
+     ''')
+
+Plot('wz08-cmpinv-rw-irls','wz08-rw-IRLS','grey title=" "')
+#Plot('wz08-rw-irls','wz08-cmpinv-rw-irls wz08-velinv-rw-irls','OverUnderAniso',vppen='txscale=1.0')
+Plot('wz08-cmpinv-mw-irls','wz08-mw-IRLS','grey title=" "')
+#Plot('wz08-mw-irls','wz08-cmpinv-mw-irls wz08-velinv-mw-irls','OverUnderAniso',vppen='txscale=1.0')
+Plot('wz08-cmpinv-rmw-irls','wz08-rmw-IRLS','grey title=" "')
+Result('wz08-IRLS','wz08-cmpinv-rw-irls wz08-cmpinv-mw-irls wz08-cmpinv-rmw-irls','SideBySideAniso',vppen='txscale=1.')
+#Plot('wz08-rmw-irls','wz08-cmpinv-rmw-irls wz08-velinv-rmw-irls','OverUnderAniso',vppen='txscale=1.0')
+Plot('wz08-velinv-rw-irls','wz08-rw-IRLS-vel','grey label2="Slowness (s^2/m^2)" title=" "')
+Plot('wz08-velinv-mw-irls','wz08-mw-IRLS-vel','grey label2="Slowness (s^2/m^2)" title=" "')
+Plot('wz08-velinv-rmw-irls','wz08-rmw-IRLS-vel','grey label2="Slowness (s^2/m^2)" title=" "')
+Result('wz08-IRLS-vel','wz08-velinv-rw-irls wz08-velinv-mw-irls wz08-velinv-rmw-irls','SideBySideAniso',vppen='txscale=2.')
+
+
+Flow('wz08-rw-CGG wz08-rw-CGG-vel','wz08',
+     '''
+     velinvww niter=30 ns=400 ds=3.0e-4 os=1.e-3 velout=${TARGETS[1]}
+     rwt=.5 mwt=0. savevel=1 irls=0 nstep=1 srate=0.01
+     ''')
+
+Flow('wz08-mw-CGG wz08-mw-CGG-vel','wz08',
+     '''
+     velinvww niter=30 ns=400 ds=3.0e-4 os=1.e-3 velout=${TARGETS[1]}
+     rwt=2. mwt=1.5 savevel=1 irls=0 nstep=1 srate=0.01
+     ''')
+Flow('wz08-rmw-CGG wz08-rmw-CGG-vel','wz08',
+     '''
+     velinvww niter=30 ns=400 ds=3.0e-4 os=1.e-3 velout=${TARGETS[1]}
+     rwt=.5 mwt=1.5 savevel=1 irls=0 nstep=1 srate=0.01
+     ''')
+
+Plot('wz08-cmpinv-rw-cgg','wz08-rw-CGG','grey title=" "')
+#Plot('wz08-rw-cgg','wz08-cmpinv-rw-cgg wz08-velinv-rw-cgg','OverUnderAniso',vppen='txscale=1.0')
+Plot('wz08-cmpinv-mw-cgg','wz08-mw-CGG','grey title=" "')
+#Plot('wz08-mw-cgg','wz08-cmpinv-mw-cgg wz08-velinv-mw-cgg','OverUnderAniso',vppen='txscale=1.0')
+Plot('wz08-cmpinv-rmw-cgg','wz08-rmw-CGG','grey title=" "')
+Result('wz08-CGG','wz08-cmpinv-rw-cgg wz08-cmpinv-mw-cgg wz08-cmpinv-rmw-cgg','SideBySideAniso',vppen='txscale=1.')
+#Plot('wz08-rmw-cgg','wz08-cmpinv-rmw-cgg wz08-velinv-rmw-cgg','OverUnderAniso',vppen='txscale=1.0')
+Plot('wz08-velinv-rw-cgg','wz08-rw-CGG-vel','grey label2="Slowness (s^2/m^2)" title=" "')
+Plot('wz08-velinv-mw-cgg','wz08-mw-CGG-vel','grey label2="Slowness (s^2/m^2)" title=" "')
+Plot('wz08-velinv-rmw-cgg','wz08-rmw-CGG-vel','grey label2="Slowness (s^2/m^2)" title=" "')
+Result('wz08-CGG-vel','wz08-velinv-rw-cgg wz08-velinv-mw-cgg wz08-velinv-rmw-cgg','SideBySideAniso',vppen='txscale=1.')
+
+End()

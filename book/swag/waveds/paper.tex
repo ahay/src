@@ -1,0 +1,636 @@
+\def\bea{\begin{eqnarray}}
+\def\eea{  \end{eqnarray}}
+
+\lefthead{Alkhalifah}
+\righthead{Source perturbation wave equation}
+\def\beq{\begin{equation}}
+\def\eeq{\end{equation}}
+\def\beqa{\begin{eqnarray}}
+\def\eeqa{\end{eqnarray}}
+
+\published{Geophysical Journal International, 183, 1324-1331, (2010)}
+
+\title{Acoustic wavefield evolution as function of source location perturbation}
+
+\input{macro}
+
+\email{tkhalfah@kacst.edu.sa}
+
+\author{Tariq Alkhalifah}
+
+\maketitle
+
+\begin{abstract}
+
+The wavefield is typically simulated for seismic exploration applications 
+through solving the wave equation for a specific seismic source location. The direct relation between the form (or shape) of the wavefield and 
+the source location can provide insights useful for velocity estimation and interpolation. As a result, I derive partial
+differential equations that relate changes in the 
+wavefield shape to
+perturbations in the source location, especially along the Earth's surface. These partial differential equations have the same structure as the wave equation 
+with a source function that depends on the background (original source) wavefield. The
+similarity in form implies that we can use familiar numerical methods to solve the perturbation equations, including finite difference and downward
+continuation. In fact, we can use the same Green's function to solve the wave equation and its source perturbations by simply incorporating
+source functions derived from the background field. The solutions of the perturbation equations represent the coefficients of a Taylor's series type expansion
+of the wavefield as a function of source location.
+As a result, we can speed up the wavefield calculation as we approximate the wavefield shape \geoulinm{for sources} in the vicinity of the original source.
+The new formula introduces changes to the background wavefield only in the presence of lateral velocity
+variation or in general terms velocity variations in the perturbation direction. 
+%The accuracy of the representation, as demonstrated on the Marmousi model,  is \geosout{kinematically} \geouline{generally} high, with some amplitude short comings %due to its approximation nature and
+%its dependence on derivatives of the velocity field.
+The \geoulinm{approach is} \geosoum{accuracy of the representation, as} demonstrated on the \geoulinm{smoothed} Marmousi model. \geosoum{,  is generally high, with some amplitude short comings due to its approximation nature and
+its dependence on derivatives of the velocity field.}
+\geosou2{Another form of the perturbation partial differential wave equation is independent of direct velocity derivatives, and thus,
+provide possibilities for wavefield continuation in complex media. The caveat here is that the medium complexity information
+is embedded in the wavefield and thus the wavefield shape evolution as a function of shift in the velocity or source can be extracted from the background wavefield
+and produce wavefield shapes for nearby sources.}
+
+\end{abstract}
+
+\section{Introduction}
+
+The wave equation is the central ingredient in simulating and 
+constraining wave propagation in a given medium.
+No other formulation, including the eikonal equation or ray tracing, can be as conclusive and 
+elaborate (includes most traveltime and amplitude 
+aspects) as does the full \geosout{two-way} elastic wave equation [\cite{aki}]. Thus, the wave equation has the near complete far-field description of the wave behavior for a given
+velocity function. To reduce the computational cost, $P$-wave propagation in the Earth's subsurface is approximately simulated  by
+numerically solving the acoustic wave equation. The wavefield in acoustic media is described by a scalar quantity. Kinematically, for
+$P$-waves in the far field of the source, the acoustic and
+elastic wave equations are similar; they both yield the same eikonal equation in isotropic media.
+
+\geoulin2{The first-order dependence of wavefields, and specifically the acoustic wave equation, on media parameters is described by the Born approximation. It is a single 
+scattering approximation, used in seismic applications to approximate the
+perturbed wavefield due to a small perturbation of the reference
+medium. It is also, in its inverse form, used to help infer medium parameters from observed wavefields} \cite[]{Born1,Born2}. In the spirit of the Born approximation, 
+the partial differential equations, introduced here, describe the wavefield shape first and second order dependence on a
+source location perturbation. Data evolution as a function of changes in acquisition parameters goes back to the development
+of normal moveout and the transformation of common-offset
+seismic gathers from one constant offset to another
+\cite[]{GPR30-06-08130828}. \cite{GEO61-06-18461858} identified offset
+continuation (OC) with a whole family of prestack continuation
+operators, such as shot continuation \cite[]{SEG-1993-0673}, dip
+moveout as a continuation to zero offset \cite[]{DMObook,GEO61-04-09470963}, and
+three-dimensional azimuth moveout \cite[]{GEO63-02-05740588}. Even residual \geoulin2{operators between different medium parameters or acquisition configurations}
+\geosou2{versions of these mapping equations} are described by
+\cite{GEO69-02-05540561} and \cite{GPR53-01-00010012}. All these methods
+are based on a geometrical optics development using constant velocity approximations.
+
+\begin{comment}
+The typical layout and design of seismic acquisition allows for high redundancy in coverage conveniently represented by the
+common midpoint fold, and this redundancy implies data dependency resulting in measurement 
+ connection that exists
+in the data space. In fact, under
+certain assumptions, this connection can be expressed in a concise
+mathematical form of a partial differential equation. The theoretical
+analysis of this equation allows us to explain and predict the data
+transformation between different sources. The partial differential equation, introduced here, describes the process of
+ source location perturbation. In fact, data evolution as a function of changes in acquisition parameters goes back to the development
+of normal moveout and the transformation of common-offset
+seismic gathers from one constant offset to another
+\cite[]{GPR30-06-08130828}. \cite{GEO61-06-18461858} identified offset
+continuation (OC) with a whole family of prestack continuation
+operators, such as shot continuation \cite[]{SEG-1993-0673}, dip
+moveout as a continuation to zero offset \cite[]{DMObook,GEO61-04-09470963}, and
+three-dimensional azimuth moveout \cite[]{GEO63-02-05740588}. Even residual versions of these mapping equations are presented by
+\cite{GPR53-01-00010012}, as well as, residuals between azimuths [\cite{GEO69-02-05540561}]. All these methods
+are based on a geometrical optics development using constant velocity approximations.
+\end{comment}
+
+\cite{tariqds} suggested a plane wave source perturbation expansion for the eikonal equation. Their approach rendered
+linearized forms of the eikonal \geouline{equation} capable of predicting the traveltime field for a shift in the source location
+represented by a shift in the velocity field in the opposite direction. The development here follows
+the same approach applied now to the wave equation. The major result in the eikonal application is the linearized forms of 
+the new perturbation equations extracted from the conventionally
+nonlinear eikonal partial differential equation.
+
+The source perturbation introduced here is based on a plane wave expansion around the source.
+For homogeneous or vertically inhomogeneous media, the wavefield calculated for 
+a source in any location along the horizontal surface is valid in all other locations, and as a result no modifications are needed. 
+For laterally inhomogeneous media, this statement is no longer true and the 
+difference in the wavefield 
+depends on the complexity of the lateral velocity variation. In this paper, I develop partial differential equations that approximately predict such changes, and thus,
+can be used to simulate wavefields \geoulinm{for sources} at other positions in the vicinity of the original source. Figure~\ref{fig:SourcePert2} illustrates the concept of wavefield evolution 
+as a function of source perturbation in which the wavefield evolves as a function of source
+location perturbation $l$ granted  that the velocity field changes laterally. In \geouline{Figure~\ref{fig:SourcePert2}}, the wavefield wavefront schematic reaction depicts 
+a general velocity 
+decrease with $l$. \geoulin2{In this paper, we consider source perturbation in the lateral direction, which adheres to our familiarity
+with surface seismic exploration applications.} However, equivalent perturbations may be applied in the depth direction as well,
+as \cite{tariqds} showed for the eikonal equation, which may have applications in datuming.
+\inputdir{XFig}
+\plot{SourcePert2}{width=4in}{Illustration of the evolution of the two-dimensional wavefield given by distance, $x$, and depth, $z$, as a function of the shift in the source location, $l$. The actual source shift is transformed to a new 3rd axis, where
+ the $x$ axis now describes the offset from the
+source.
+The dot in the middle on the surface represents the 
+source location.}
+
+\section{Theory}
+
+\sideplot{timedsS}{width=7in}{Illustration of the relation between the initial source location and a perturbed version given by a single source and
+image point locations. This is equivalent to a shift in the velocity field laterally by $l$.}
+
+
+\geouline{In this section, I derive partial differential equations that relate changes in the 
+wavefield shape to
+perturbations in the source location. We will start by taking derivatives of the wave equation with respect
+to lateral perturbation and then use the Taylor's series expansion to predict the wavefield form at another source.} 
+
+ In 3-D media, the acoustic wavefield $u$ is described as a function of $x$, $y$ and depth $z$ and is governed by a partial differential 
+ equation as a function of time $t$ given by,
+\beqa
+\frac{\partial^2 u}{\partial x^2}+
+\frac{\partial^2 u}{\partial y^2} + \frac{\partial^2 u}{\partial z^2} = w(x,y,z) \frac{\partial^2 u}{\partial t^2} +f(x,y,z,t),
+\label{eq:waveis}
+\eeqa
+where $w(x,y,z)$ is the sloth (slowness squared) as a function position. \geosou2{and should be slowly varying with respect to the wavelength for proper 
+amplitude description.} The source can be included as a function added to equation~(\ref{eq:waveis}) \geoulin2{given by $f(x,y,z,t)$},  defined usually at a point, or represented by the 
+wavefield $u(x,y,z,t)$ around time $t=0$ as an initial condition. 
+A change in the source location along the surface,\geoulin2{while keeping its source function stationary}, is equivalently represented, \geoulinm{in the far field,}
+ by shifting the velocity field laterally
+by the same amount in the opposite direction and thus can be represented by the following wave equation form:
+\beqa
+\frac{\partial^2 u}{\partial x^2}+
+\frac{\partial^2 u}{\partial y^2} + \frac{\partial^2 u}{\partial z^2}=w(x-l,y,z) \frac{\partial^2 u}{\partial t^2}+f(x,y,z,t),
+\label{eq:wavel}
+\eeqa
+ \geoulin2{where $f(x,y,z,t)$, in this case, is stationary and
+ independent of $l$}. A simple variable change of $x^{'}=x-l$ can demonstrate this assertion, where $x^{'}$ is replaced by $x$ to
+ simplify notation. For simplicity, I use the symbol $u$ to describe the new wavefield, as well. 
+ Figure~\ref{fig:timedsS} shows the depicts the relation for a single source and image point combination with the velocity shift.
+\geouline{To evaluate the wavefield response to lateral perturbations, 
+we take} the derivative of equation~(\ref{eq:wavel}) with respect to $l$, where the wavefield is
+dependent on the source location as well [$u(x,y,z,l,t)$], which yields:
+\beqa
+\frac{\partial^3 u}{\partial x^2 \partial l}+
+\frac{\partial^3 u}{\partial y^2 \partial l} + \frac{\partial^3 u}{\partial z^2 \partial l} = 
+-\frac{\partial w}{\partial x} \frac{\partial^2 u}{\partial t^2} + w \frac{\partial^3 u}{\partial t^2 \partial l}.
+\label{eq:wavedl}
+\eeqa
+Substituting $D_x=\frac{\partial u}{\partial l}$, where $l$ is the equivalent source shift (actual velocity shift) 
+in the $x$-direction, into equation~(\ref{eq:wavedl}), \geoulin2{and setting $l=0$, the location in which we evaluate the equation for the Taylor's series
+expansion}  yields:
+\beqa
+\frac{\partial^2 D_x}{\partial x^2}+
+\frac{\partial^2 D_x}{\partial y^2} + \frac{\partial^2 D_x}{\partial z^2} = 
+w(x,y,z) \frac{\partial^2 D_x}{\partial t^2} - \frac{\partial w}{\partial x} \frac{\partial^2 u}{\partial t^2},
+\label{eq:wavedlF}
+\eeqa
+which has the form of the wave equation with the last term on the right hand side acting as a source function. If this source function is zero given by, for example,
+ no lateral
+velocity variation ($\frac{\partial w}{\partial x}$=0), then $D_x$=0, and as expected there will be no change in the wavefield form 
+with a change in source position.
+
+Therefore, the wavefield for a source located at a distance $l$ from the source used to estimate the wavefield $u$ can be approximated
+ using the following Taylor's series expansion:
+\beqa
+u(x,y,z,l,t) \approx u(x,y,z,l=0,t) + D_x(x,y,z,t) l.
+\label{eq:Taylor1}
+\eeqa
+This result obviously has first-order accuracy represented by the first order Taylor's series expansion. For higher order accuracy, we take
+the derivative of equation~(\ref{eq:wavedl}) again with respect to $l$, which yields:
+\beqa
+\frac{\partial^4 u}{\partial x^2 \partial l^2}+
+\frac{\partial^4 u}{\partial y^2 \partial l^2} + \frac{\partial^4 u}{\partial z^2 \partial l^2} = \frac{\partial^2 w}{\partial x^2} \frac{\partial^2 u}{\partial t^2} 
+- 2 \frac{\partial w}{\partial x} \frac{\partial^3 u}{\partial t^2 \partial l} +
+w \frac{\partial^4 u}{\partial t^2 \partial l^2} .
+\label{eq:wavedl2}
+\eeqa
+
+Again, by substituting $D_{xx}=\frac{\partial^2 u}{\partial l^2}$, as well as, $D_x$ into  equation~(\ref{eq:wavedl2}) \geosout{and after some tedious math}, 
+\geoulin2{and setting $l=0$,} the
+second order perturbation equation is given by:
+\beqa
+\frac{\partial^2 D_{xx}}{\partial x^2}+
+\frac{\partial^2 D_{xx}}{\partial y^2} + \frac{\partial^2 D_{xx}}{\partial z^2} = w \frac{\partial^2 D_{xx}}{\partial t^2}  - 2 \frac{\partial w}{\partial x} \frac{\partial^2 D_x}{\partial t^2} 
++\frac{\partial^2 w}{\partial x^2} \frac{\partial^2 u}{\partial t^2}.
+\label{eq:wavedl2f}
+\eeqa
+
+Now, the wavefield for a source located at a distance $l$ from the original source  can be approximated
+using the following second-order Taylor's series expansion:
+\beqa
+u(x,y,z,l,t) \approx  u(x,y,z,l=0,t) + D_x(x,y,z,t) l + \frac{1}{2} D_{xx}(x,y,z,t) l^2.
+\label{eq:Taylor1}
+\eeqa
+
+\geosou2{Equations~(\ref{eq:wavedlF}) and~(\ref{eq:wavedl2f}) can be \geouline{written} \geosout{casted} in many forms and in the next section \geouline{I} \geosout{we} show a velocity-derivative independent version of them.}
+\geoulin2{Equations~(\ref{eq:wavedlF}) and~(\ref{eq:wavedl2f}) can be solved in many ways and in the next section I show some of the features gained by using an integral formulation given by the Green's function.}
+
+
+
+\begin{comment}
+
+\section{Avoiding the velocity derivatives}
+
+Since velocity fields used (or estimated) to represent the medium often includes discontinuities, their derivatives in the conventional sense do not exit.
+To somewhat resolve this weakness in the above formulations, we differentiate equation~(\ref{eq:wavel}) with respect to $x$ to obtain the following:
+\beqa
+\frac{\partial^3 u}{\partial x^3}+
+\frac{\partial^3 u}{\partial y^2 \partial x} + \frac{\partial^3 u}{\partial z^2 \partial x} = 
+\frac{\partial w}{\partial x} \frac{\partial^2 u}{\partial t^2} + w \frac{\partial^3 u}{\partial t^2 \partial x}.
+\label{eq:wavedld}
+\eeqa
+Adding this equation to equation~(\ref{eq:wavedl}) and inserting $D_x$ results in the following:
+\beqa
+\frac{\partial^2 D_x}{\partial x^2}+
+\frac{\partial^2 D_x}{\partial y^2} + \frac{\partial^2 D_x}{\partial z^2} = w(x,y,z) \frac{\partial^2 D_x}{\partial t^2} +
+f_x(x,y,z,t),
+\label{eq:wavedld2}
+\eeqa
+where
+\beqa
+f_x(x,y,z,t) = w \frac{\partial^3 u}{\partial x \partial t^2}-\frac{\partial}{\partial x} \left(\frac{\partial^2 u}{\partial x^2}+
+\frac{\partial^2 u}{\partial y^2} + \frac{\partial^2 u}{\partial z^2}\right),
+\label{eq:wavef}
+\eeqa
+which conveniently does not include direct velocity derivatives.
+
+Repeating this process for the second order formulation by differentiating equation~(\ref{eq:wavedld2}) twice, once with respect to $l$ and
+once with respect to $x$ and adding the two yields:
+\beqa
+\frac{\partial^2 D_{xx}}{\partial x^2}+
+\frac{\partial^2 D_{xx}}{\partial y^2} + \frac{\partial^2 D_{xx}}{\partial z^2} = w(x,y,z) \frac{\partial^2 D_{xx}}{\partial t^2}+f_{xx}(x,y,z,t),
+\label{eq:wavedld3}
+\eeqa
+where
+\beqa
+f_{xx}(x,y,z,t) = 2 w(x,y,z) \frac{\partial^3 D_x}{\partial x \partial t^2}- 2
+\frac{\partial}{\partial x} \left(\frac{\partial^2 D_x}{\partial x^2}+
+\frac{\partial^2 D_x}{\partial y^2} + \frac{\partial^2 D_x}{\partial z^2} \right) \nonumber \\
++
+w(x,y,z) \frac{\partial^4 u}{\partial x^2 \partial t^2}- \frac{\partial^2}{\partial x^2} \left(\frac{\partial^2 u}{\partial x^2}+
+\frac{\partial^2 u}{\partial y^2} + \frac{\partial^2 u}{\partial z^2} \right).
+\label{eq:wavef3}
+\eeqa
+Though $f_{xx}$ seems complicated many of its components are computed in the process of the conventional application of finite
+difference to the wave equation or its first-order perturbation equation, and thus,
+the computational cost is dramatically reduced. These equations, though do not include velocity derivatives explicitly, \geosout{they are} \geouline{have them} embedded in the extra derivative.
+However, since we typically seek solutions that are based on functions that are infinitely differentiable (like the Fourier representation), the new formulations
+can result in improvements in the prediction of the wavefield in complicated velocity models. \geouline{However, the new formulation
+is moderately more expensive to implement than the original one, in which velocity derivatives are evaluated once. In the
+new formulation, we evaluate the derivatives of the Laplacian of the background wavefield at each time step.}
+
+\end{comment}
+
+
+\section{The Green's function}
+
+The Green's function represents the response and behavior of the wavefield if the source was a point impulse given theoretically by
+the Dirac delta function. The function allows us to solve the wave equation using an integral formulation as we convolve the Green's function
+with a source function. The most complicated part of this
+type of solution of the wave equation is the construction of the Green's function. Kirchhoff modeling and migration is a special case of this type of integral
+solution and provides incredible speed upgrades over finite difference implementations with some loss in quality, because of the limitations
+in the calculation of the phase and amplitude components of the Green's function.
+
+Since Green's function \geosout{applied to} \geouline{for} the wave equation satisfies the following formula:
+\beqa
+\frac{\partial^2 G}{\partial x^2}+
+\frac{\partial^2 G}{\partial y^2} + \frac{\partial^2 G}{\partial z^2} = w(x,y,z) \frac{\partial^2 G}{\partial t^2} + \delta({\bf{x-x_0}}) \delta(t-t_0),
+\label{eq:Geq}
+\eeqa
+where $\delta$ is the Dirac delta function, with $\bf{x_0}$ ($x_0$,  $y_0$, $z_0$), and $t_0$ is the possible location and time of the source pulse,\geouline{ respectively}.
+The solution of equation~(\ref{eq:waveis}) with a source function $f({\bf{x_0}},t_0)$ is given by
+\beqa
+u(x,y,z,t) = \int \int G({\bf{x,x_0}},t,t_0) f({\bf{x_0}},t_0) d{\bf{x_0}} dt_0.
+\label{eq:Geqs}
+\eeqa
+In typical imaging applications, the Green's function is evaluated upfront and stored in tables for use in prestack modeling and migration.
+For source perturbations, these stored Green's functions can be used to approximate the wavefield for a shift in the source location 
+by using a source function that is based on Taylor's series expansion, without the need to modify the Green's function. Specifically, considering that in the 
+first-order perturbation
+equation~(\ref{eq:wavedlF}):
+\beqa
+f_l(x,y,z,t)= - \frac{\partial w}{\partial x} \frac{\partial^2 u}{\partial t^2},
+\label{eq:wavedlFa}
+\eeqa
+then since equation~(\ref{eq:wavedlF}) has the same form as the wave equation with the same velocity function,
+\beqa
+D_x(x,y,z,t) = \int \int G({\bf{x,x_0}},t,t_0) f_l({\bf{x_0}},t_0) d{\bf{x_0}} dt_0.
+\label{eq:Geqs2}
+\eeqa
+The same argument holds for the second-order perturbation equation~(\ref{eq:wavedl2f}) 
+with a slightly more complicated source function \geoulinm{given by}
+\beq
+f_{ll}({\bf{x_0}},t_0) = - 2 \frac{\partial w}{\partial x} \frac{\partial^2 D_x}{\partial t^2} 
++\frac{\partial^2 w}{\partial x^2} \frac{\partial^2 u}{\partial t^2}.
+\eeq
+Thus, the wavefield form can be approximated for a source perturbed
+a distance $l$ using
+\beqa
+u(x,y,z,l,t) \approx \int \int G({\bf{x,x_0}},t,t_0) \left(f({\bf{x_0}},t_0)+ f_l({\bf{x_0}},t_0) l + \frac{1}{2} f_{ll}({\bf{x_0}},t_0) l^2\right) d{\bf{x_0}} dt_0.
+\label{eq:Geqs3}
+\eeqa
+Thus, the wavefield corresponding to a certain source location can be directly evaluated using the background Green's function with a modified source function, and these
+modifications, unlike the conventional ones, are dependent on lateral velocity variations.
+\begin{comment}
+In other word,
+we need to obtain the phase shifts (traveltimes) for a single source once and that covers information for sources in the vicinity in a plane wave sense,
+which is equivalent to a dynamic expansion of the wavefield without the need to trace rays. This feature can not be 
+realized otherwise because conventionally as we use a new source we must modify the Green's function to adapt to the velocity structure.
+
+\geouline{The key feature here is that the Green's function required to compute any of the Taylor's series expansion
+coefficients is the same, and thus,} its traveltime and amplitude components are evaluated once for a single source
+and is applicable for sources in the vicinity. In the conventional case, the Green's function is evaluated once for each source and its applicability
+to other sources at the surface happens only when no lateral velocity variation is present.
+\end{comment}
+
+
+\section{The implementation}
+
+As we have seen earlier, the equations associated with the wavefield perturbation has a form
+similar to the wave equation. As a result, any of the methods typically used to solve the wave equation
+suffices for the perturbation partial differential equations. The most general and straightforward of these methods is the finite-difference approach.
+With proper space and time grid distribution this method provides acceptable solutions regardless of the complexity of the velocity model. \geosout{It's} \geouline{Its} only
+limitation is the relative slow execution speed.
+
+To apply the source perturbation, I first solve the original wave equation for a particular point source as a background field for the perturbation step. 
+In the process, we store the Laplacian evaluation as they are needed for the perturbation calculation. 
+\geoulin2{Using an initial condition of $D_x(x,z,t=0)$=0,} we can solve for $D_x$ using
+equation~(\ref{eq:wavedlF}) and add the solution to the original
+wavefield using equation~\ref{eq:Taylor1}, and thus, obtain a new wavefield shape approximating that for another
+source location. For higher-order accuracy, we also solve for $D_{xx}$ using
+equation~(\ref{eq:wavedl2f}) \geoulin2{with a similar initial condition, $D_{xx}(x,z,t=0)$=0,} and include it in the Taylor's series expansion
+with terms from the solutions of the original background source and $D_x$.
+
+To avoid potential problems with the storage requirement especially in 3D, we can 
+solve the wave equation and the corresponding 
+perturbation equations simultaneously, and thus, use the already evaluated derivatives (Laplacian) directly. 
+In this case, the cost of the perturbation finite difference application is similar to the 
+cost of solving the wave equation. Thus, the cost of the first and second order expansions to obtain the wavefield for other sources is equivalent to two
+and three times, respectively, of the cost of solving the wave equation for a single source. However, the information obtained approximates the wavefield for infinite 
+source possibilities in the vicinity of the original source.
+
+Since the perturbation equations have the same form as the wave equation they adhere to the same Courant-Friedrichs-Lewy (CFL) condition [\cite{CFL}]. Thus,
+the time step is constrained by the grid spacing, which in turn relies on velocity, based on the following formula:
+\beq
+\frac{\min(\Delta x, \Delta y, \Delta z)}{\Delta t} > \sqrt{3} v
+\eeq
+where $\Delta t$ is the time step interval and $\Delta x$, $\Delta y$,
+and $\Delta z$ are the grid spacing along the main axes and $v$ is the velocity.
+
+
+\section{Examples}
+
+I test the developed partial differential equations on two examples: a simple lens velocity model and the complex Marmousi model. In both cases, I compare
+the wavefields obtained from a direct finite difference solution of the wave equation for a particular source to that obtained by perturbing the solution
+from a nearby source using the first and second order approximations. In the Marmousi case, I also compare the resulting surface
+recorded synthetic data for all options.
+
+\subsection{A lens}
+
+\inputdir{svmod}
+
+Since the differential equation depends on velocity changes in the direction of the perturbation, we test the methodology on a model that 
+contains a lens anomaly in an otherwise homogeneous medium with a velocity of 2 km/s (Figure~\ref{fig:model}). 
+The lens apex is located at 600 meters laterally and 500 meters in depth with a velocity perturbation of
++250 m/s (or 12.5\%). The lens has a diameter of 300 meters. Using this model 
+we will test the accuracy of the first- and second-order perturbation  equations.
+\sideplot{model}{width=\textwidth}{A velocity model containing a lens in an otherwise homogeneous background
+with a velocity of 2 km/s.}
+
+For a source located at the surface 0.3 km from the origin, I apply a second-order in time and 
+fourth-order in space finite difference approximation to the wave equation as well as the perturbation equations
+to simulate a source 50 meters away from the original source position along the surface. A separate direct finite difference calculation using the wave equation is
+done for a source at 0.35 km location for comparison. Figure~\ref{fig:timeSide20} shows a snap shot at time 0.5 seconds of the wavefield 
+generated for the source at 0.35 km (left), as well as
+the snap shot at the same time for the perturbed wavefields using the first-order approximation (middle) and the second order approximation (right). All
+three wavefields look similar. 
+
+However, if we subtract the actual wavefield for the 0.3 km source from that of the 0.35 km one after we superpose the
+sources we obtain the 
+difference between the wavefields. This difference occurs only if there is lateral velocity variation. Since there are
+no lateral variations in the velocity field in Figure~\ref{fig:model} prior to wavefront from the source 
+crossing the lens
+we expect that the difference snapshot plots are zero.
+%As a result, Figure~\ref{fig:timeSide28} shows a 0.2 s snap shot of the difference (left) and 
+%compares that with the difference of the desired field (0.35 km source) with the perturbed ones using first order formulation (middle) and second-order
+%formulation (right). All three plots show a perfect match with the directly computed wavefield 
+%and no difference since at this time the wavefield has not encountered the velocity anomaly. 
+However,
+at time 0.3 s the difference, where the wavefront starts to interact with the lens as shown in Figure~\ref{fig:timeSide212},
+ appears as expected largest for the unperturbed case (left), while
+the differences for the perturbed case are much smaller, especially in the case of the second-order expansion. 
+\geoulin2{All three plots in Figure~\ref{fig:timeSide212} are displayed using the same range, for easy comparison, and this range
+is maintained for all Figures in this section.}
+\plot{timeSide20}{width=6in}{A snap shot at time 0.5 seconds of the wavefield obtained from solving the conventional wave equation using the velocity model
+in Figure~\protect\ref{fig:model} for a source
+located at surface at 0.35 km (left), a snap shot of the wavefield by perturbing the 0.3 km source wavefield to approximate the 0.35 km one 
+using the first order approximation (middle), and
+using the second order approximation (right).}
+
+%\plot{timeSide28}{width=6in}{A snap shot at time 0.2 seconds of the difference between the 0.35 km 
+%source wavefield and the 0.3 km source wavefield after superimposing the sources (left), 
+%the difference after using the first order perturbation on the 0.3 km source wavefield (middle), 
+%and after using the second-order perturbation on it (right).}
+
+\plot{timeSide212}{width=6in}{A snap shot at time 0.3 seconds of the difference between the 0.35 km 
+source wavefield and the 0.3 km source wavefield after superimposing the sources (left), 
+the difference after using the first order perturbation on the 0.3 km source wavefield (middle), 
+and after using the second-order perturbation on it (right). All three plots are displayed using the same range, for comparison purposes, and this range
+is maintained in all Figures corresponding to this lens example.}
+
+Figure~\ref{fig:timeSide220} shows a snap shot at 0.5 s (at the same time as wavefields shown in Figure~\ref{fig:timeSide20}) of the difference. Again,
+the second-order approximation shows less difference, and thus, a better match than the first order approximation and definitely the unperturbed wavefield. 
+In fact, in the unperturbed wavefield a clear polarity reversal at the anomaly apex is evident.
+
+\plot{timeSide220}{width=6in}{A snap shot at time 0.5 seconds of the difference between the 0.35 km 
+source wavefield and the 0.3 km source wavefield after superposing the sources (left), 
+the difference after using the first order perturbation on the 0.3 km source wavefield (middle), 
+and after using the second-order perturbation on it (right).}
+
+Clearly, the perturbation formulas help reduce the difference between the actual wavefield and the perturbed one. An even closer look suggests that most
+of the difference is amplitude related.
+
+\subsection{The Marmousi model}
+
+\inputdir{fdmod}
+
+The geometry of the Marmousi is based, somewhat, on
+a profile \geosout{through the North Quenguela} through the Cuanza basin \cite{versteeg93}. 
+The target zone is a reservoir located 
+at a depth of about 2500 m. The model contains many reflectors, steep dips, 
+and strong velocity variations in both the lateral and the vertical
+directions (with a minimum velocity of 1500 m/s and a maximum of 5500 m/s). However, the Marmousi
+model includes complex discontinuities that pose problems to the perturbation formulation. As a
+result, we smooth the velocity model to obtain the model in Figure~\ref{fig:medium} (right). 
+ \geoulin2{The point source considered here is a Ricker wavelet with a 15 Hz peak frequency.}
+\plot{medium}{width=6in}{The Marmousi velocity model (left) and a smoothed version of it (right).}
+
+Again using the fourth-order finite difference approximation in space and second order in time we solve the wave equation for a source
+located at the surface at lateral position 5 km, A snap shot of the resulting wavefield at time 1.2 s is shown in
+Figure~\ref{fig:timeSide248} (left). Solving the wave equation for a source located 25 meters away results in the snap shot of the
+wavefield at 1.2 s shown in Figure~\ref{fig:timeSide248} (middle). Superimposing the sources for the two fields and subtracting them yields the difference
+shown in Figure~\ref{fig:timeSide248} (right). All three snap shots are plotted at the same scale \geoulin2{(and this scale is maintained for all Figures
+in this section)} and thus the difference, which is totally due
+to lateral inhomogeneity, is relatively large. It is especially large for the parts of the wavefront that were exposed to large lateral variations in 
+the smoothed Marmousi model. This difference represents the wavefield we anticipate from the solution of new perturbation equation.
+\plot{timeSide248}{width=6in}{A snap shot of the wavefield obtained from solving the conventional wave equation in the smoothed Marmousi model for a source
+located at surface at 5 km (left) and at 5.025 km (middle). The difference between the two wavefields when we shift one of them to make the sources
+coincide is shown on the right. All three plots are displayed using the same range and this range
+is maintained in all Figures corresponding to Marmousi example.}
+
+Using the new perturbation partial differential equations, I predict this difference from the original wavefield with source at location 5 km. We then add
+  this difference
+to that original wavefield using equation~(\ref{eq:Taylor1}), which provides an approximate to the wavefield for a source located at 5.025 km. Figure~\ref{fig:timeSide348} shows
+a 1.2 s snap shot of the wavefield computed directly from a source at 5.025 km (left) and that obtained from the first-order perturbation expansion (middle), as well
+as, the difference between the two wavefields (right). Clearly, the difference is now less than that in Figure~\ref{fig:timeSide248}  in which perturbation was
+not used.
+\plot{timeSide348}{width=6in}{A snap shot of the wavefield obtained from solving the conventional wave equation in the smoothed Marmousi model for a source
+located at surface at 5.025 km (left), and the snap shot by perturbing the 5 km source wavefield to approximate the 5.025 km one 
+using the first-order equation (middle). 
+The difference between the two wavefields is shown on the right.}
+
+In fact, if we display the differences side by side along with that associated with the second-order perturbation approximation, Figure~\ref{fig:timeSide548} demonstrates
+that the difference decreases considerably for the higher-order perturbation approximation, shown on the right.
+\plot{timeSide548}{width=6in}{A snap shot of the difference between the 5 km source wavefield and the 5.025 km source wavefield (left), 
+the difference after using the first order perturbation (middle), and after using the second-order perturbation (right).}
+
+One of the main objectives of solving the wave equation is to simulate the behavior of the wavefield at the surface 
+(the measurement plane) as a function of time. Figure~\ref{fig:datdiffF} shows the difference between the 5.025 km source and the 5 km source common-shot gathers
+after superimposing the sources  (left) and compares
+it with difference between the 5.025 km source and first-order (middle) and the second order (right) perturbed versions. Clearly, the
+source gather extracted from using the perturbation equations better resemble the directly evaluated one than the source gather that does not include the perturbation. Specifically, most of the primary reflections in the section are seemingly well modeled by the perturbation approximation,
+as evidence by the small difference between the directly extracted gather and the perturbed one.
+\plot{datdiffF}{width=6in}{The difference between a shot gather for a source
+located at surface at 5.025 km and one located at 5 km after 
+superimposing the sources (left), the difference between a shot gather for a source
+located at surface at 5.025 km and one extracted from the expansion of the 5 km source location using the first-order perturbation approximation (middle),
+and using the second-order perturbation approximation (right) for the smoothed Marmousi model.}
+
+\begin{comment}
+\subsection{The sharp Marmousi model}
+
+\inputdir{fdmod2}
+Of course, we intuitively started with the smooth Marmousi model because of the clear limitation of the perturbation equation in handling discontinuous velocities
+and the original Marmousi model is swamped with discontinuities (left plot of Figure~\ref{fig:medium}). Nevertheless, to entertain our 
+curiosity we test the approach on the original unsmoothed Marmousi.
+
+Now with the unsmoothed Marmousi, we repeat the process in Figure~\ref{fig:timeSide248}.
+Using the fourth-order finite difference approximation we solve the wave equation for a source
+located at the surface at location 5 km, A snap shot of the resulting wavefield at time 1.2 s is shown in
+Figure~\ref{fig:timeSSide248} (left). Clearly, the wavefield now has more scattering than in the case of the smoothed Marmousi Figure~\ref{fig:timeSide248}.
+Solving the wave equation for a source located 25 meters away results in the snap shot of the
+wavefield at 1.2 s shown in Figure~\ref{fig:timeSSide248} (middle). Superimposing the sources for the two fields and subtracting the two wavefields yields the difference
+shown in Figure~\ref{fig:timeSSide248} (right). Clearly, because of the complex lateral velocity variation in the Marmousi, the difference is large. 
+\plot{timeSSide248}{width=6in}{A snap shot of the wavefield obtained from solving the conventional wave equation in the smoothed Marmousi model for a source
+located at surface at 5 km (left) and at 5.025 km (middle). The difference between the two wavefields when we shift one of them to make the sources
+coincide is shown on the right.}
+
+Figure~\ref{fig:timeSSide5F48}, similar to Figure~\ref{fig:timeSide548}, shows a snap shot at
+1.2 s of the wavefield difference for the unperturbed wavefield (left), the first-order perturbation approximation (middle), 
+and the second-order perturbation approximation (right).
+For this unsmoothed Marmousi the second order version has the worse results (biggest differences) as it relies on second order derivatives of the 
+unsmoothed velocity field. Nevertheless,
+the first order perturbation provided better results than the unperturbed version despite the discontinuities. This is a testament to the stability of the 
+approach.
+\plot{timeSSide5F48}{width=6in}{A snap shot of the difference between the 5 km source wavefield and the 5.25 km source wavefield (left), 
+the difference after using the first order perturbation (middle), and after using the second-order perturbation (right), this time for
+the original unsmoothed Marmousi model.}
+
+In the case of shot gathers, we observe similar behavior, as Figure~\ref{fig:datSdiffFF} shows that the difference for the unperturbed shot gather (left) is larger
+than the first order (middle) and less than the second order (right) perturbed versions. The discontinuities in the Marmousi model has clearly created 
+an environment for unstable second-order derivative evaluations. 
+\plot{datSdiffFF}{width=6in}{The difference between a shot gather for a source
+located at surface at 5.025 km and one located at 5 km after 
+superimposing the sources (left), the difference between a shot gather for a source
+located at surface at 5.025 km and one extracted from the expansion of the 5 km source location using the first-order perturbation approximation (middle),
+and using the second-order perturbation approximation (right) for
+the original unsmoothed Marmousi model.}
+
+\inputdir{fdmodnoV}
+To mitigate this limitation, especially for the second-order perturbation equation, which relies on second-order derivatives of velocity, I use 
+modified formulations of the perturbation partial differential equations~(\ref{eq:wavedld2}) and~(\ref{eq:wavedld3}) that do not include
+velocity derivatives. 
+Thus, we repeat the Marmousi wavefield extraction in Figure~\ref{fig:timeSSide5F48}, but using the modified equations, and get
+ the snap shots of the wavefield shown in Figure~\ref{fig:timeSSSide5F48}. Now the second-order expansion provides less difference with the 
+expected (directly generated) wavefield (right) then the first-order perturbation (middle) or the unperturbed one (left). 
+\plot{timeSSSide5F48}{width=6in}{A snap shot of the difference between the 5 km source wavefield and the 5.025 km source wavefield (left), 
+the difference after using the modified first-order perturbation (middle), and after using the modified second-order perturbation (right), this time for
+the original unsmoothed Marmousi model.}
+A similar observation can be extracted from comparing the common shot gathers as the modified perturbation equations provided better resemblance
+to the directly generated wavefield than the unperturbed wavefields. Avoiding numerical evaluation of second-order derivatives of a discontinuous 
+velocity field clearly helped in eliminating the source of instability in the wavefield perturbation. Figure~\ref{fig:datSSdiffFF} shows the 
+accuracy of the second-order perturbation expansion (right), when using the modified equations as the difference is small as compared with the
+modified first order or the unperturbed wavefield.
+\plot{datSSdiffFF}{width=6in}{The difference between a shot gather for a source
+located at surface at 5.025 km and one located at 5 km after 
+superimposing the sources (left), the difference between a shot gather for a source
+located at surface at 5.025 km and one extracted from the expansion of the 5 km source location using the modified first-order perturbation approximation (middle),
+and using the modified second-order perturbation approximation (right) for
+the original unsmoothed Marmousi model.}
+\end{comment}
+
+
+\section{Discussion}
+
+\inputdir{fdmodnoSS}
+The transformation of the wavefield's shape as a function of source location provides valuable information for many applications, and in particular interpolation,
+velocity estimation, and imaging. All three applications rely in one way or another on the relation between the wavefields and 
+the source location. To predict the content of a missing 
+shot (or receiver) gather, we usually rely on reflection slope information of nearby common shot gathers [\cite{GEO67-06-19461960}] to extend 
+the information to the missing locations. 
+For homogeneous and vertically inhomogeneous
+media, the process of interpolation is trivial as the common shot gathers are the same 
+regardless of surface position. The complication occurs when the velocity varies laterally and
+ differences, as we have seen above, can be large. Using these perturbation partial differential equations we can estimate
+the changes needed to fill in the gaps. This can be done as part of a finite-difference modeling or a reverse time migration process. 
+It also can be done using a point source to generate 
+the wavefield in a forward finite-difference approach or using a boundary condition, as typically the case for reverse time extrapolation of the receiver wavefields recored at the surface for the purpose of imaging. 
+The equations shown above have no source restrictions and their development are not based on a particular source.
+
+A major drawback of using conventional methods to solve the wave equation is that \geouline{typically} the velocity information and complexity \geosout{has} \geouline{have} \geosout{typically} no baring
+on the efficiency of obtaining such solutions. In the development here, the perturbed wavefields are only excited by lateral velocity variation and
+in the absence of such variations we do not need to evaluate the perturbations. This allows us to implement selective computations that depends on the wavefield
+complexity and isolate areas of contribution based on the velocity field.
+
+Nevertheless, the accuracy of the first and second order expansion approximations introduced here depends on the size of the source (or velocity) shift. Unlike, the
+traveltime version [\cite{tariqds}] the wavefield is highly \geoulin2{oscillatory} (sinusoidal components)and thus their Taylor's series approximation accuracy is dependent on the wavelength of the perturbed wavefield
+within the context of the lateral velocity complexity. \geoulin2{The accuracy here is synonymous to what we encounter using the Born approximation.
+However, unlike Born approximation, the source functions in equations~(\ref{eq:wavedlF}) and~(\ref{eq:wavedl2f}) depend on the lateral velocity variation, not the source perturbation.}
+Specifically, if the lateral velocity change induces perturbations in the wavefield that 
+exceeds a half wavelength, we will encounter aliasing in the construction. This issue effects, more frequently, large dips and large perturbations with
+respect to the wavelength. However, unlike conventional source or velocity perturbation developments, this wavefield shape perturbation approach is far more 
+stable and explicitly depends on the complexity of the lateral velocity variation as for the case of lateral homogeneity the approach is exact independent of 
+amount of perturbation.
+\plot{timeSSSide6F48}{width=6in}{A snap shot of the difference between the 5 km source wavefield 
+and the 5.05 km source wavefield (left), 
+and the 5.075 km source wavefield (middle), and the 5.1 km source wavefield (right) after using the modified second-order expansion
+for 50, 75 and 100 meters perturbations, respectively. The velocity model is
+the original smoothed Marmousi model.}
+Figure~\ref{fig:timeSSSide6F48} shows a 1.2 second snap shot of the differences between the wavefields obtained directly from a source and that obtained from nearby sources
+and perturbed a distance of 50 meters (left), 75 meters (middle), and 100 meters (right) for the smoothed Marmousi model using the second-order expansion. 
+As expected the difference (error) is larger for the bigger perturbation.
+Also, we can observe that the dipping parts of the wavefield have larger errors as the effective change is bigger. Of course, we have to remind our selves that 
+we are dealing with the Marmousi model, which is highly complex, and we can expect better results for smoother models. Also,
+we can observe that the difference is mainly manifested in the amplitude, where the kinematics (phase)  show little difference.
+
+\section{Conclusions}
+
+The transformation in the wavefield shape as a function of source location is directly related to the lateral velocity variation. Such transformation is
+described by partial differential equations that have forms similar to the conventional acoustic wave equation in which their solutions provide the coefficients
+needed for a Taylor's series type expansion. The source function, for the perturbation equation, depends
+on the background wavefield of the original source as well as lateral derivatives of the velocity of the medium. \geoulin2{As a result, 
+while the second order expansion, which requires solving two PDEs, provide the best approximation
+of the perturbation in generally smooth velocity models, as expected, and similar to the Born approximation,
+the accuracy of the approximation here reduces with the size of the source perturbation. However, unlike the Born approximation, the accuracy here depends only on the amount of lateral
+velocity variation, not on the velocity perturbation acting as a secondary source.}
+
+\geosou2{As a result, lateral discontinuities in the velocity
+model can impose problems in the evaluation. As a result, while the second order expansion, which requires solving two PDEs, provide the best approximation
+of the perturbation in generally smooth velocity models, the first order version provided the best result for the unsmoothed Marmousi.Another version of the 
+perturbation equations is independent of the velocity derivatives and dependent on higher order derivatives of the wavefield. These new equations yield good results
+for the unsmoothed Marmousi model in all cases.}
+
+
+\section{Acknowledgments}
+
+I thank Sergey Fomel for many useful discussions. I thank KAUST for its support.
+I also thank the editors and 
+the anonymous reviewers for their critical and helpful review of the paper.
+
+\bibliographystyle{seg}
+\bibliography{SEP2,SEG,paper}
+
+
+
+

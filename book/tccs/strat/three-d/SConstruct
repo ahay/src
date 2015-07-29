@@ -1,0 +1,346 @@
+from rsf.proj import *
+from rsf.recipes.beg import server as private
+
+Fetch('elf7_win.HH','total',private)
+
+Flow('win','elf7_win.HH','dd form=native')
+
+def cubeplot(title,clip='',extra=''):
+    return '''
+    window n1=194 min1=925 |
+    byte gainpanel=all %s bar=bar.rsf|
+    grey3 frame1=30 frame2=150 frame3=18 flat=y point2=0.839 point1=0.776
+    label1=Depth unit1=m label2=Inline unit2=m label3=Crossline unit3=m
+    title="%s" %s screenratio=0.7184 labelfat=4 font=2 titlefat=4 wanttitle=n scalebar=n bar=bar.rsf
+    ''' % (clip,title,extra)
+
+
+def dipplot(title,barlabel,barunit,clip='',extra=''):
+    return '''
+    window n1=194 min1=925 |
+    byte  gainpanel=all %s  bar=bar.rsf |
+    grey3 frame1=30 frame2=150 frame3=18 flat=y point2=0.839 point1=0.776
+    label1=Depth unit1=m label2=Inline unit2=m label3=Crossline unit3=m
+    title="%s" %s wanttitle=n bar=bar.rsf 
+    screenratio=0.7184 labelfat=4 font=2 titlefat=4 barlabel="%s" barunit="%s"
+    ''' % (clip,title,extra,barlabel,barunit)
+
+pad=25
+#Result('win',cubeplot(''))
+#Result('win',
+#	'''
+#	window n1=194 min1=925 |
+ #   	byte gainpanel=all bar=bar.rsf |
+  #  	grey3 frame1=30 frame2=150 frame3=18 flat=y point2=0.839 point1=0.776
+   # 	label1=Depth unit1=m label2=Inline unit2=m label3=Crossline unit3=m
+    #	wanttitle=n  screenratio=0.7184 labelsz=6  scalebar=y barlabel=Slope barunit=samples
+ 	#''')
+
+Result('win',cubeplot('Original section','','color=I'))
+#Plot('win',
+#	'''
+#	window n1=194 min1=925 |
+ #   	byte gainpanel=all bar=bar.rsf |
+  #  	grey3 frame1=30 frame2=150 frame3=18 flat=y point2=0.839 point1=0.776
+   # 	label1=Depth unit1=m label2=Inline unit2=m label3=Crossline unit3=m
+    #	wanttitle=n  screenratio=0.7184 labelsz=6  scalebar=y barlabel=Slope barunit=samples
+ 	#''')
+Plot('win',cubeplot('Original section','','color=I'))
+
+Flow('patch','win',
+     'pad beg1=25 end1=25 | patch p=1,4,1')
+Flow('mask','win',
+     '''
+     math output=1 | pad beg1=25 end1=25 |
+     patch p=1,4,1
+     ''')
+
+Flow('dip','patch mask',
+     'dip rect1=5 rect2=5 rect3=5 order=3 mask=${SOURCES[1]}',
+     split=[5,4,[0,1]])
+
+Flow('wdip1','dip','window n4=1 squeeze=n | patch inv=y weight=y dim=3')
+Flow('wdip2','dip','window f4=1 squeeze=n | patch inv=y weight=y dim=3')
+
+Result('wdip1',
+       dipplot('Inline Dip','Slope','samples','',
+               '''
+               color=j wanttitle=n scalebar=y                
+               '''))
+Result('wdip2',
+       dipplot('Crossline Dip','Slope','samples','',
+               '''
+               color=j wanttitle=n scalebar=y                
+               '''))
+#Result('wdip1',
+#	'''
+#	window n1=194 min1=925 |
+ #   	byte gainpanel=all bar=bar.rsf |
+  #  	grey3 frame1=30 frame2=150 frame3=18 flat=y point2=0.839 point1=0.776
+   # 	label1=Depth unit1=m label2=Inline unit2=m label3=Crossline unit3=m labelfat=4 font=2 titlefat=4
+    #	wanttitle=n  screenratio=0.7184 labelsz=6 color=j scalebar=y barlabel=Slope barunit=samples
+ 	#''')
+
+
+#Result('wdip2',
+#	'''
+#	window n1=194 min1=925 |
+ #   	byte gainpanel=all bar=bar.rsf |
+  #  	grey3 frame1=30 frame2=150 frame3=18 flat=y point2=0.839 point1=0.776
+   # 	label1=Depth unit1=m label2=Inline unit2=m label3=Crossline unit3=m labelfat=4 font=2 titlefat=4
+    #	wanttitle=n  screenratio=0.7184 labelsz=6 color=j scalebar=y barlabel=Slope barunit=samples
+ 	#''')
+
+#Result('wdip2',
+ #      cubeplot('Crossline Dip','',
+  #              '''
+   #             color=j wanttitle=n
+    #            barlabel="Crossline Dip"
+     #           '''))
+Flow('dips','wdip1 wdip2','cat axis=4 ${SOURCES[1]}')
+
+Result('dips',
+       dipplot(' Dip','Slope','samples','',
+                '''
+                color=j wanttitle=n scalebar=y
+                '''))
+
+
+paths = [2*[50,100,150,200,250],5*[18]+5*[36]]
+
+def plotpath(col,fat):
+    return '''
+    dd type=complex | window |
+    graph plotcol=%d plotfat=%d min1=0 max1=291 min2=0 max2=55
+    wantaxis=n wanttitle=n screenht=2.8 screenwd=14.6
+    ''' % (col,fat)
+
+pnames = map(lambda x,y: 'path-%d-%d' % (x,y),paths[0],paths[1])
+
+Flow('shift1','win','window f2=1')
+Flow('shift2','win','window f3=1')
+
+Flow('last1','win','window f2=291 squeeze=n')
+Flow('last2','win','window f3=55  squeeze=n')
+
+Flow('ref1','shift1 last1','cat axis=2 ${SOURCES[1]}')
+Flow('ref2','shift2 last2','cat axis=3 ${SOURCES[1]}')
+
+Flow('ref1s','ref1','add mode=p $SOURCE | stack axis=1 norm=n')
+Flow('ref2s','ref2','add mode=p $SOURCE | stack axis=1 norm=n')
+
+Flow('corr1','ref1 win','add mode=p ${SOURCES[1]} | stack axis=1 norm=n')
+Flow('corr2','ref2 win','add mode=p ${SOURCES[1]} | stack axis=1 norm=n')
+
+Flow('wins','win','add mode=p $SOURCE | stack axis=1 norm=n')
+
+Flow('wcos1','corr1 wins ref1s',
+     '''
+     math s1=${SOURCES[1]} s2=${SOURCES[2]} output="(s1*s2)/(input*input)"
+     ''')
+Flow('wcos2','corr2 wins ref2s',
+     '''
+     math s1=${SOURCES[1]} s2=${SOURCES[2]} output="(s1*s2)/(input*input)"
+     ''')
+
+Flow('wcos','wcos1 wcos2',
+     '''
+     cat axis=3 ${SOURCES[1]} |
+     smooth rect1=40 rect2=40 
+     ''')
+
+Flow('wtime2','wcos',
+       '''
+       mul $SOURCE | stack axis=3 norm=n |
+       put o1=0 d1=1 o2=0 d2=1 o3=0 d3=1 |
+       eikonal vel=n zshot=150 yshot=18
+       ''')
+
+Flow('wpick','dips wtime2',
+     'pwpaint2 cost=${SOURCES[1]} order=3 eps=1')
+Result('wpick',cubeplot('Relative Age','allpos=y') + ' color=j')
+
+# Contour3
+
+Flow('wcont','win',
+     '''
+     window n2=1 n3=1 f2=150 f3=18 | pad beg1=25 end1=35 | envelope | 
+     max1 | window n1=25 | real
+     ''')
+Plot('wcont','wpick wcont',
+     '''
+     window n1=194 min1=925 |
+     contour3 frame1=60 frame2=150 frame3=18 flat=y point2=0.839 point1=0.776
+     wanttitle=n wantaxis=n screenratio=0.7184 plotfat=5 cfile=${SOURCES[1]}
+     ''')
+Result('wcont','win wcont','Overlay')
+
+Flow('k1.p','wcont',
+     '''
+     math output="1.5+(input-612.5)/12.5" | 
+     dd type=int form=ascii format="%d," line=25 --out=$TARGET
+     ''',stdout=0)
+Command('k1.par','k1.p',
+        'printf "k1=" > $TARGET && cat $SOURCE >> $TARGET')
+Flow('spikes','k1.par',
+     '''
+     spike n1=244 nsp=16 par=$SOURCE | smooth rect1=2 repeat=2
+     ''',stdin=0)
+
+Flow('paint','dips spikes wtime2',
+     'pwpaint2 seed=${SOURCES[1]} cost=${SOURCES[2]} order=3')
+Flow('wpaint','paint win',
+     'window n1=194 min1=925 | add scale=7e9,1 ${SOURCES[1]}')
+Result('wpaint',cubeplot(' ','allpos=y','color=G'))
+
+Flow('byte','win','byte gainpanel=all')
+Flow('pick','wpick','window n1=194 min1=925')
+
+cons = []
+for i3 in range(56):
+    win = 'win%d' % i3
+    con = 'con%d' % i3
+    Plot(win,'byte',
+         '''
+         grey3 frame1=60 frame2=150 frame3=%d flat=y point2=0.839 point1=0.776
+         label1=Depth unit1=m label2=Inline unit2=m label3=Crossline unit3=m
+         wanttitle=n screenratio=0.7184 labelsz=6
+         ''' % i3)
+    Plot(con,'pick wcont',
+         '''
+         contour3 frame1=60 frame2=150 frame3=%d point2=0.839 point1=0.776
+         wanttitle=n wantaxis=n screenratio=0.7184 plotfat=5 cfile=${SOURCES[1]}
+         ''' % i3)
+    Plot('w'+con,[win,con],'Overlay')
+    cons.append('w'+con)
+Plot('cons',cons,'Movie')
+
+######################################################################################################### t0
+
+Flow('slowreal1','wpick','lineiko what=s')
+Result('slowreal1',cubeplot('','allpos=y','color=j')) 
+        
+
+Flow('t0real1','slowreal1','eikonal vel=n plane3=y plane2=y zshot=%g' % (925-pad*12.5))
+
+#Result('t0real1',dipplot('T0','allpos=y','color=j'))
+Result('t0real1',
+       dipplot('T0','Z0','m','allpos=y',
+               '''
+               color=j wanttitle=n scalebar=y                
+               '''))
+     
+Plot('t0real1','t0real1 wcont',
+      '''
+      window n1=194 min1=925 |
+      contour3 frame1=60 frame2=150 frame3=18 flat=y point2=0.839 point1=0.776
+      wanttitle=n wantaxis=n screenratio=0.7184 plotfat=5 cfile=${SOURCES[1]} plotcol=1
+      ''')
+
+Result('win-t0real1','win t0real1','Overlay')
+
+Flow('dip111','t0real1','backdire')
+Result('dip111',cubeplot('','allpos=y','color=j'))
+#Plot('dip111','dip111',
+      #'''
+     # window n1=194 min1=925 |
+     # grey3 color=j allpos=y scalebar=y frame1=60 frame2=150 frame3=18 flat=y point2=0.839 point1=0.776
+     # wanttitle=n wantaxis=n screenratio=0.7184 plotfat=5 cfile=${SOURCES[1]} plotcol=6
+     # ''')
+
+#Flow('azimuth','t0real1','backdireazi')
+#Result('azimuth',cubeplot('','allpos=y','color=j'))
+
+############################################################################################################ x0
+
+# Inline direction
+
+Flow('distreal1','t0real1','math output=x2')
+
+Flow('zeroreal1','t0real1','math output=0')
+
+Flow('x0real1','t0real1 distreal1 zeroreal1','lineiko what=i time=${SOURCES[1]} slow=${SOURCES[2]}')
+
+#Result('x0real1',cubeplot('','allpos=y','color=j'))
+Result('x0real1',
+       dipplot('X0','X0','m','allpos=y',
+               '''
+               color=j wanttitle=n scalebar=y                
+               '''))        
+Plot('x0real1','x0real1',
+      '''
+      window n1=194 min1=925 |
+      contour3 frame1=60 frame2=150 frame3=18 flat=y point2=0.839 point1=0.776
+      wanttitle=n wantaxis=n screenratio=0.7184 plotfat=5 plotcol=2
+      ''')
+Result('x0t01','win t0real1 x0real1','Overlay')
+
+############################################################################################################# y0
+
+# Crossline direction
+
+Flow('distreal2','t0real1','math output=x3')
+
+Flow('y0real2','t0real1 distreal2 zeroreal1','lineiko what=i time=${SOURCES[1]} slow=${SOURCES[2]}')
+
+#Result('y0real2',cubeplot('','allpos=n mean=y','color=j'))
+Result('y0real2',
+       dipplot('Y0','Y0','m','allpos=n mean=y',
+               '''
+               color=j wanttitle=n scalebar=y                
+               '''))        
+Plot('y0real2','y0real2',
+      '''
+      window n1=194 min1=925 |
+      contour3 frame1=60 frame2=150 frame3=18 flat=y point2=0.839 point1=0.776
+      wanttitle=n wantaxis=n screenratio=0.7184 plotfat=5 plotcol=4 nc=6 c0=3600 dc=200
+      ''')
+
+Result('coord','win t0real1 x0real1 y0real2','Overlay')
+
+
+################################################################################mapping from (t,x,y) to (t0,x0,y0)
+
+
+Flow('warpreal','t0real1 x0real1 y0real2',
+      '''
+      add add=%g |
+      cat axis=4 ${SOURCES[1:3]} 
+      ''' % (925-pad*12.5))
+
+Flow('win1','win warpreal','pad beg1=%d end1=%d | iwarp3 warp=${SOURCES[1]} eps=1'%(pad,pad))
+Result('win1',cubeplot('Warped','','color=I'))
+#Flow('curvaturemp','win1','curvature what=p')
+#Result('curvaturemp',cubeplot(''))
+#Flow('barcur','curvaturemp','bar')
+#Result('curvaturemp','curvaturemp barcur','scale dscale=-1 |'+ \
+ #      cubeplot(' most negative curvature','allpos=y',
+  #              '''
+   #             color=j wanttitle=n
+    #            barlabel="mp"
+     #           '''))
+
+
+
+###########################################################################Horizons
+
+
+
+###########################################################################Mapping back from (t0,x0,y0) to (t,x,y)
+
+Flow ('win2','win1 warpreal','iwarp3 warp=${SOURCES[1]} inv=n')
+Result('win2',cubeplot('Warped-back','','color=I'))
+
+#Flow ('curvaturemp1','curvaturemp warpreal','iwarp3 warp=${SOURCES[1]} inv=n')
+#Result('curvaturemp1',cubeplot('Warped back'))
+#Result('curvaturemp1','scale dscale=-1 | ' + \
+ #      cubeplot(' most positive curvature','allpos=y',
+  #              '''
+   #             color=j wanttitle=n
+    #            barlabel="mp"
+     #           '''))
+
+
+
+End()
+

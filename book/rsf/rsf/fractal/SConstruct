@@ -1,0 +1,77 @@
+from rsf.proj import *
+
+for a in (0,1):
+    fern = 'fern%d' % a 
+    Flow(fern,None,'fern n=100000 angle=%d seed=2006' % a)
+    Plot(fern,
+         '''
+         graph symbol=. plotcol=3 wantaxis=n
+         title="Fractal Fern %d" wheretitle=b
+         ''' % (2-a))
+
+Result('fern','fern1 fern0','SideBySideAniso')
+
+Flow('fern','fern0',
+     'put d1=1 o1=0 | spray axis=2 n=1 | spray axis=3 n=100 d=1 o=1')
+Flow('mask','fern',
+     '''
+     real |
+     math output="1000*x3-x1" |
+     mask min=0 |
+     dd type=float |
+     rtoc |
+     add mode=p $SOURCE
+     ''')
+Plot('fern','mask',
+     '''
+     graph min2=0 max2=10 min1=-3 max1=3
+     wantaxis=n title="Fractal Fern" symbol=. plotcol=4
+     ''')
+
+Flow('man',None,'mandelbrot n1=1000 n2=1250')
+
+Result('man','dd type=float | grey allpos=y transp=n color=h screenht=10 screenwd=12.5 title=Mandelbrot')
+
+x0   = -0.747835
+xmax = -0.745985
+y0   = 0.106252
+ymax = 0.108248
+
+Flow('spiral',None,'mandelbrot n1=1000 n2=1000 niter=5000 x0=%g y0=%g xmax=%g ymax=%g' % (x0,y0,xmax,ymax))
+Result('spiral','dd type=float | grey color=j bias=500 transp=n yreverse=n color=j title=Spiral')
+
+# ------------------------------------------------------------
+for k in range(0,61,2):
+    Flow('man'+str(k//2),None,'mandelbrot n1=1000 n2=1250 niter=%d' %k)
+    Plot('man'+str(k//2),'dd type=float | grey allpos=y transp=n color=h screenht=10 screenwd=12.5 title=%d' %k)
+
+allman = map(lambda x: 'man%d.vpl' % x,range(31))
+Plot('manit',allman,'Movie',view=1)
+
+# ------------------------------------------------------------
+for p in range(1,1000002,5000):
+    Flow('lorenz'+str(p//5000),None,'lorenz niter=%d' %p)
+    Plot('lorenz'+str(p//5000),
+         '''
+         window n2=1 f2=1 | 
+         graph min1=-20 max1=20 min2=5 max2=50 
+         screenht=10 screenwd=12.5 title=%d
+         ''' %p)
+lorenzs = map(lambda x: 'lorenz%d.vpl' % x,range(200))
+Plot('lorenzs',lorenzs,'Movie',view=1)
+Result('lorenzs','lorenz200','Overlay')
+
+# Generate animated vpl
+#allorenz =[]
+#for p in range(1,500000,5000):
+#    Flow('lorenz'+str(p//5000),None,'lorenz n=500000 niter=%d' %p)
+#    allorenz.append('lorenz'+str(p//5000))
+#Flow('allorenz',allorenz,'cat axis=3 ${SOURCES[1:%d]}' % 99)
+#Result('allorenz',
+#       '''
+#       window n2=1 f2=1 squeeze=n | 
+#       graph min1=-20 max1=20 min2=5 max2=50 screenht=10 
+#       screenwd=12.5 title="Lorenz attractor (X-Y plane)"
+#       ''')
+
+End()

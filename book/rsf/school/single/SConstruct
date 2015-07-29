@@ -1,0 +1,1329 @@
+##############################################################
+#### Interferometry/Imaging/Block_Scatterer
+#### Block Scatterer Model for validation
+#### of acoustic scattering reciprocity.
+#### Author: Ivan Vasconcelos
+##############################################################
+
+
+from rsf.proj import *
+import fdmod,gfield,rules
+
+par = {
+    'nx':501,  'ox':0, 'dx':0.004,  'lx':'x', 'ux':'km',
+    'nz':501,   'oz':0, 'dz':0.002,  'lz':'z', 'uz':'km',
+    'nt':2501,  'ot':0, 'dt':0.0004, 'lt':'t', 'ut':'s',
+    'kt':250,
+    'jsnap':200,
+    'nb':200,
+    'frq':30,
+    'ssou':'y',
+    }
+
+fdmod.param(par)
+
+par['kf']=0.624/par['dz'] + 1 # = 0.624
+par['kg']=1.0/par['dz'] + 1 # = 0.824
+par['kz']=0.770/par['dz'] + 1  # = 0.598
+par['kh']=0.448/par['dz'] + 1 # = 0.448
+par['oxf']=0.5/par['dx'] + 1 # = 0.500
+
+#par['kf']=1.25/2.*par['nz']
+#par['kg']=1.65/2.*par['nz']
+#par['kz']=0.60*par['nz']
+#par['kh']=0.90/2.*par['nz']
+#par['oxf']=0.5*par['nx']
+
+par['oxda']=0.742/par['dx'] + 1
+par['kxda']=0.752/par['dx'] + 1
+par['ozda']=0.492/par['dz'] + 1
+par['kzda']=0.504/par['dz'] + 1
+#par['oxda']=122 0.242/par['dx'] + 1
+#par['kxda']=127
+#par['ozda']=247
+#par['kzda']=252
+
+
+par['oxdb']=0.990/par['dx'] + 1
+par['kxdb']=1.010/par['dx'] + 1
+par['ozdb']=0.490/par['dz'] + 1
+par['kzdb']=0.510/par['dz'] + 1
+#par['oxdb']=373
+#par['kxdb']=377
+#par['ozdb']=247
+#par['kzdb']=252
+
+par['oxdc']=0.990/par['dx'] + 1
+par['kxdc']=1.010/par['dx'] + 1
+par['ozdc']=0.490/par['dz'] + 1
+par['kzdc']=0.510/par['dz'] + 1
+#par['oxdc']=249
+#par['kxdc']=253
+#par['ozdc']=177
+#par['kzdc']=182
+
+#par['frq']=45
+par['ssou']='n'
+par['vscale']=0
+par['hscale']=1
+
+# ------------------------------------------------------------
+# P velocity (km/s)
+Flow('vpb',None,
+     '''
+     spike nsp=6 mag=0.25,0.6,0.35,2,2,2 p2=-0.15,0.25,0.0,0.0,0.0,0.0
+     n1=%(nz)d,%(nz)d,%(nz)d,%(nz)d,%(nz)d,%(nz)d o1=%(oz)g,%(oz)d,%(oz)d,%(oz)d,%(oz)d,%(oz)d 
+     d1=%(dz)g,%(dz)d,%(dz)d,%(nz)d,%(nz)d,%(nz)d k1=%(kz)d,%(kf)d,%(kh)d,%(ozda)d,%(ozdb)d,%(ozdc)d 
+     l1=%(kg)d,%(nz)d,%(kf)d,%(kzda)d,%(kzdb)d,%(kzdc)d
+     n2=%(nx)d,%(nx)d,%(nx)d,%(nx)d,%(nx)d,%(nx)d o2=%(ox)g,%(ox)d,%(ox)d,%(ox)d,%(ox)d,%(ox)d 
+     d2=%(dx)g,%(dx)d,%(dx)d,%(dx)d,%(dx)d,%(dx)d k2=%(ox)d,%(ox)d,%(ox)d,%(oxda)d,%(oxdb)d,%(oxdc)d 
+     l2=%(nx)d,%(nx)d,%(nx)d,%(kxda)d,%(kxdb)d,%(kxdc)d |
+     add add=3.0 |
+     put label1=z label2=x unit1=km unit2=km
+     ''' % par)
+
+#
+Flow('vpbo',None,
+     '''
+     spike nsp=6 mag=0,0,0,0,-0.5,0 p2=-0.15,0.25,0.0,0.0,0.0,0.0
+     n1=%(nz)d,%(nz)d,%(nz)d,%(nz)d,%(nz)d,%(nz)d o1=%(oz)g,%(oz)d,%(oz)d,%(oz)d,%(oz)d,%(oz)d 
+     d1=%(dz)g,%(dz)d,%(dz)d,%(nz)d,%(nz)d,%(nz)d k1=%(kz)d,%(kf)d,%(kh)d,%(ozda)d,%(ozdb)d,%(ozdc)d 
+     l1=%(kg)d,%(nz)d,%(kf)d,%(kzda)d,%(kzdb)d,%(kzdc)d
+     n2=%(nx)d,%(nx)d,%(nx)d,%(nx)d,%(nx)d,%(nx)d o2=%(ox)g,%(ox)d,%(ox)d,%(ox)d,%(ox)d,%(ox)d 
+     d2=%(dx)g,%(dx)d,%(dx)d,%(dx)d,%(dx)d,%(dx)d k2=%(ox)d,%(ox)d,%(ox)d,%(oxda)d,%(oxdb)d,%(oxdc)d 
+     l2=%(nx)d,%(nx)d,%(nx)d,%(kxda)d,%(kxdb)d,%(kxdc)d |
+     add add=1.8 | smooth rect1=5 rect2=5 | 
+     put label1=z label2=x unit1=km unit2=km
+     ''' % par)
+
+# S velocity (km/s)
+Flow('vsb',None,
+     '''
+     spike nsp=6 mag=1.0,1.0,1.0,2.5,2.5,2.5 p2=-0.15,0.25,0.0,0.0,0.0,0.0
+     n1=%(nz)d,%(nz)d,%(nz)d,%(nz)d,%(nz)d,%(nz)d o1=%(oz)g,%(oz)d,%(oz)d,%(oz)d,%(oz)d,%(oz)d 
+     d1=%(dz)g,%(dz)d,%(dz)d,%(nz)d,%(nz)d,%(nz)d k1=%(kz)d,%(kf)d,%(kh)d,%(ozda)d,%(ozdb)d,%(ozdc)d 
+     l1=%(kg)d,%(nz)d,%(kf)d,%(kzda)d,%(kzdb)d,%(kzdc)d
+     n2=%(nx)d,%(nx)d,%(nx)d,%(nx)d,%(nx)d,%(nx)d o2=%(ox)g,%(ox)d,%(ox)d,%(ox)d,%(ox)d,%(ox)d 
+     d2=%(dx)g,%(dx)d,%(dx)d,%(dx)d,%(dx)d,%(dx)d k2=%(ox)d,%(ox)d,%(ox)d,%(oxda)d,%(oxdb)d,%(oxdc)d 
+     l2=%(nx)d,%(nx)d,%(nx)d,%(kxda)d,%(kxdb)d,%(kxdc)d |
+     add add=0.00001 |
+     put label1=z label2=x unit1=km unit2=km
+     ''' % par)
+#
+Flow('vsbo',None,
+     '''
+     spike nsp=6 mag=0,0,0,0,0,0 p2=-0.15,0.25,0.0,0.0,0.0,0.0
+     n1=%(nz)d,%(nz)d,%(nz)d,%(nz)d,%(nz)d,%(nz)d o1=%(oz)g,%(oz)d,%(oz)d,%(oz)d,%(oz)d,%(oz)d 
+     d1=%(dz)g,%(dz)d,%(dz)d,%(nz)d,%(nz)d,%(nz)d k1=%(kz)d,%(kf)d,%(kh)d,%(ozda)d,%(ozdb)d,%(ozdc)d 
+     l1=%(kg)d,%(nz)d,%(kf)d,%(kzda)d,%(kzdb)d,%(kzdc)d
+     n2=%(nx)d,%(nx)d,%(nx)d,%(nx)d,%(nx)d,%(nx)d o2=%(ox)g,%(ox)d,%(ox)d,%(ox)d,%(ox)d,%(ox)d 
+     d2=%(dx)g,%(dx)d,%(dx)d,%(dx)d,%(dx)d,%(dx)d k2=%(ox)d,%(ox)d,%(ox)d,%(oxda)d,%(oxdb)d,%(oxdc)d 
+     l2=%(nx)d,%(nx)d,%(nx)d,%(kxda)d,%(kxdb)d,%(kxdc)d |
+     add add=0.00001 |
+     put label1=z label2=x unit1=km unit2=km
+     ''' % par)
+
+# Density (kg/km^3)
+Flow('rob',None,
+     '''
+     spike nsp=6 mag=500000,500000,500000,1000000,1000000,1000000 p2=-0.15,0.25,0.0,0.0,0.0,0.0
+     n1=%(nz)d,%(nz)d,%(nz)d,%(nz)d,%(nz)d,%(nz)d o1=%(oz)g,%(oz)d,%(oz)d,%(oz)d,%(oz)d,%(oz)d 
+     d1=%(dz)g,%(dz)d,%(dz)d,%(nz)d,%(nz)d,%(nz)d k1=%(kz)d,%(kf)d,%(kh)d,%(ozda)d,%(ozdb)d,%(ozdc)d 
+     l1=%(kg)d,%(nz)d,%(kf)d,%(kzda)d,%(kzdb)d,%(kzdc)d
+     n2=%(nx)d,%(nx)d,%(nx)d,%(nx)d,%(nx)d,%(nx)d o2=%(ox)g,%(ox)d,%(ox)d,%(ox)d,%(ox)d,%(ox)d 
+     d2=%(dx)g,%(dx)d,%(dx)d,%(dx)d,%(dx)d,%(dx)d k2=%(ox)d,%(ox)d,%(ox)d,%(oxda)d,%(oxdb)d,%(oxdc)d 
+     l2=%(nx)d,%(nx)d,%(nx)d,%(kxda)d,%(kxdb)d,%(kxdc)d |
+     add add=2000000 |
+     put label1=z label2=x unit1=km unit2=km
+     ''' % par)
+
+#
+Flow('robo',None,
+     '''
+     spike nsp=6 mag=0,0,0,0,0,0 p2=-0.15,0.25,0.0,0.0,0.0,0.0
+     n1=%(nz)d,%(nz)d,%(nz)d,%(nz)d,%(nz)d,%(nz)d o1=%(oz)g,%(oz)d,%(oz)d,%(oz)d,%(oz)d,%(oz)d 
+     d1=%(dz)g,%(dz)d,%(dz)d,%(nz)d,%(nz)d,%(nz)d k1=%(kz)d,%(kf)d,%(kh)d,%(ozda)d,%(ozdb)d,%(ozdc)d 
+     l1=%(kg)d,%(nz)d,%(kf)d,%(kzda)d,%(kzdb)d,%(kzdc)d
+     n2=%(nx)d,%(nx)d,%(nx)d,%(nx)d,%(nx)d,%(nx)d o2=%(ox)g,%(ox)d,%(ox)d,%(ox)d,%(ox)d,%(ox)d 
+     d2=%(dx)g,%(dx)d,%(dx)d,%(dx)d,%(dx)d,%(dx)d k2=%(ox)d,%(ox)d,%(ox)d,%(oxda)d,%(oxdb)d,%(oxdc)d 
+     l2=%(nx)d,%(nx)d,%(nx)d,%(kxda)d,%(kxdb)d,%(kxdc)d |
+     add add=2000000 |
+     put label1=z label2=x unit1=km unit2=km
+     ''' % par)
+
+# Epsilon
+Flow('epsilon',None,
+     '''
+     spike nsp=1 mag=0
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g k1=%(kz)d l1=%(nz)d |
+     add add=0 |
+     put label1=z label2=x unit1=km unit2=km
+     ''' % par)
+
+# Delta
+Flow('delta',None,
+     '''
+     spike nsp=1 mag=0
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g k1=%(kz)d l1=%(nz)d |
+     add add=0 |
+     put label1=z label2=x unit1=km unit2=km
+     ''' % par)
+
+# ------------------------------------------------------------
+# random field
+
+
+
+# background velocities
+Flow('kk_scat',None,
+     '''
+     spike nsp=1 mag=-0.5
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g k1=%(ozdc)d l1=%(kzdc)d k2=%(oxdc)d l2=%(kxdc)d |
+     add add=0.0 | smooth rect1=5 rect2=5 |
+     put label1=z label2=x unit1=km unit2=km
+     ''' % par)
+
+#
+Flow('vpo',None,
+     '''
+     spike nsp=1 mag=0
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g k1=%(kz)d l1=%(nz)d |
+     add add=1.8 | 
+     put label1=z label2=x unit1=km unit2=km
+     ''' % par)
+
+Flow('vso',None,
+     '''
+     spike nsp=1 mag=0
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g k1=%(kz)d l1=%(nz)d |
+     add add=0.00001 |
+     put label1=z label2=x unit1=km unit2=km
+     ''' % par)
+#
+Flow('roo',None,
+     '''
+     spike nsp=1 mag=0
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g k1=%(kz)d l1=%(nz)d |
+     add add=2000000 |
+     put label1=z label2=x unit1=km unit2=km
+     ''' % par)
+#
+Flow('epso',None,
+     '''
+     spike nsp=1 mag=0
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g k1=%(kz)d l1=%(nz)d |
+     add add=0.0 |
+     put label1=z label2=x unit1=km unit2=km
+     ''' % par)
+#
+Flow('delo',None,
+     '''
+     spike nsp=1 mag=0
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g k1=%(kz)d l1=%(nz)d |
+     add add=0.0 |
+     put label1=z label2=x unit1=km unit2=km
+     ''' % par)
+
+# mask
+par['kzs']=0.45*par['nz'] + 1
+par['lzs']=0.75/par['dx'] + 1
+par['kxs']=0.7/par['dx'] + 1
+par['lxs']=1.3/par['dx'] + 1
+Flow('mask',None,
+     '''
+     spike nsp=1 mag=1
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=%(kzs)d l1=%(lzs)d 
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=%(kxs)d l2=%(lxs)d |
+     smooth rect1=30 rect2=30 repeat=3 |
+     put label1=z label2=x unit1=km unit2=km
+     ''' % par)
+	
+
+Result('mask',fdmod.cgrey('title="mask" wantscalebar=y',par))
+
+par['ff']=9.8 
+par['aa']=1.0   #6.3 # distribution shape parameter 'alpha'
+
+par['ru']=0.036 
+par['rv']=0.009
+
+gfield.execute('hh',112009,par)
+Result('hh',fdmod.cgrey('wantscalebar=y color=j',par))
+Flow('gg','hh mask','add mode=p ${SOURCES[1]}')
+Result('gg',fdmod.cgrey('wantscalebar=y color=j',par))
+Flow('kk','gg','add scale=0.75 | add add=1')
+Result('kk',fdmod.cgrey('wantscalebar=y bias=1.0 color=j',par))
+
+#--------------------------------------------------------------
+# Final velocity and density fields
+Flow('vp','vpbo kk','add mode=p ${SOURCES[1]}')
+Flow('vs','vsbo','cat')
+Flow('ro','rob kk','add mode=p ${SOURCES[1]}')
+Flow('vph','vpo kk_scat','add mode=a ${SOURCES[1]}')
+Flow('vsh','vso','cat')
+Flow('roh','roo','cat')
+
+
+# source/receiver positions
+#fdmod.point3('ss',
+#            par['ox']+(par['nx']/2*par['dx']),
+#            par['oz'],1,par)
+#fdmod.horizontal('rrt',par['dz'],par)
+#fdmod.horizontal('rrb',par['oz']+(par['nz']*par['dx']),par)
+#fdmod.vertical('rrl',par['dx'],par)
+#fdmod.vertical('rrr',par['ox']+(par['nx']*par['dx']),par)
+#Flow('rr','rrt rrr rrb rrl','cat ${SOURCES[1]} ${SOURCES[2]} ${SOURCES[3]}')
+#fdmod.boxarray('rr',par['nz'],par['oz'],par['dz'],par['nx'],par['ox'],par['dx'],par)
+
+# first receiver point
+par['sx'] = 0.6
+par['sz'] = 0.2
+fdmod.point3('ss',
+            par['sx'],
+            par['sz'],1,par)
+
+# second receiver point
+par['sx2'] = 1.2
+par['sz2'] = 0.25
+fdmod.point3('ss2',
+            par['sx2'],
+            par['sz2'],1,par)
+
+# 
+par['rz1']=0.10
+fdmod.horizontal('rr1',par['rz1'],par)
+
+par['rz2']=0.30
+fdmod.horizontal('rr2',par['rz2'],par)
+par['rz3']=0.45
+fdmod.horizontal('rr3',par['rz3'],par)
+par['rz4']=0.60
+fdmod.horizontal('rr4',par['rz4'],par)
+par['rz5']=0.75
+fdmod.horizontal('rr5',par['rz5'],par)
+par['rz6']=0.90
+fdmod.horizontal('rr6',par['rz6'],par)
+
+Flow('rr','rr1 rr2 rr3 rr4 rr5 rr6','cat axis=2 space=n ${SOURCES[1]} ${SOURCES[2]} ${SOURCES[3]} ${SOURCES[4]} ${SOURCES[5]}')
+
+# ------------------------------------------------------------
+# source/receiver coordinates
+Plot('rr1','window n1=2 | dd type=complex | window j2=10 | '
+     + fdmod.cgraph('wantscalebar=y symbol=x plotcol=1',par))
+Plot('rr2','window n1=2 | dd type=complex | window j2=10 | '
+     + fdmod.cgraph('wantscalebar=y symbol=x plotcol=1',par))
+Plot('rr3','window n1=2 | dd type=complex | window j2=10 | '
+     + fdmod.cgraph('wantscalebar=y symbol=x plotcol=1',par))
+Plot('rr4','window n1=2 | dd type=complex | window j2=10 | '
+     + fdmod.cgraph('wantscalebar=y symbol=x plotcol=1',par))
+Plot('rr5','window n1=2 | dd type=complex | window j2=10 | '
+     + fdmod.cgraph('wantscalebar=y symbol=x plotcol=1',par))
+Plot('rr6','window n1=2 | dd type=complex | window j2=10 | '
+     + fdmod.cgraph('wantscalebar=y symbol=x plotcol=1',par))
+Plot('rr','window n1=2 | dd type=complex | window j2=10 | '
+     + fdmod.cgraph('wantscalebar=y symbol=x plotcol=1',par))
+Plot('ss','window n1=2 | dd type=complex | window | '
+     + fdmod.cgraph('wantscalebar=y symbol=o plotcol=1',par))
+Plot('ss2','window n1=2 | dd type=complex | window | '
+     + fdmod.cgraph('wantscalebar=y symbol=o plotcol=1',par))
+
+# ------------------------------------------------------------
+# dipole source
+fdmod.wavelet('hor0',par['frq'],par)
+fdmod.wavelet('ver0',par['frq'],par)
+
+# Make wavelet for vertical dipole
+
+Flow('hor','hor0','add scale=0')
+Flow('ver','ver0','add scale=1')
+
+Flow('wave0','ver hor','cat axis=2 space=n ${SOURCES[1:2]}')
+Flow('wave','wave0',
+     '''
+     transp plane=12 |
+     transp plane=23 |
+     transp plane=12
+     ''')
+
+Plot('ver','wave','window n2=1 f2=0 | window n1=500 |' + fdmod.waveplot('title="Elastic vertical source"',par))
+Plot('hor','wave','window n2=1 f2=1 | window n1=500 |' + fdmod.waveplot('title="Elastic horizontal source"',par))
+Result('wave','hor ver','Movie')
+
+# Make wavelet for horizontal dipole
+
+Flow('horh','hor0','add scale=1')
+Flow('verh','ver0','add scale=0')
+
+Flow('wave0h','verh horh','cat axis=2 space=n ${SOURCES[1:2]}')
+Flow('waveh','wave0h',
+     '''
+     transp plane=12 |
+     transp plane=23 |
+     transp plane=12
+     ''')
+
+Plot('verh','waveh','window n2=1 f2=0 | window n1=500 |' + fdmod.waveplot('title="Elastic vertical source"',par))
+Plot('horh','waveh','window n2=1 f2=1 | window n1=500 |' + fdmod.waveplot('title="Elastic horizontal source"',par))
+Result('waveh','horh verh','Movie')
+
+# ------------------------------------------------------------
+Plot('vp',     fdmod.cgrey('wantscalebar=y allpos=y color=j bias=2.0    pclip=99.9 title="vp"',par))
+Plot('vs',     fdmod.cgrey('wantscalebar=y allpos=y color=j bias=0.0    pclip=96 title="vs"',par))
+Plot('vph',     fdmod.cgrey('wantscalebar=y allpos=y color=J bias=1.3    pclip=99.9 title="vph"',par))
+Plot('vsh',     fdmod.cgrey('wantscalebar=y allpos=y color=j bias=0.0    pclip=100 title="vsh"',par))
+Plot('roh',     fdmod.cgrey('wantscalebar=y allpos=y color=j bias=2000000   pclip=100 title="roh"',par))
+Plot('ro',     fdmod.cgrey('wantscalebar=y allpos=y color=j bias=1500000 pclip=100 title="density"',par))
+Plot('epsilon',fdmod.cgrey('wantscalebar=y allpos=y             pclip=100',par))
+Plot('delta',  fdmod.cgrey('wantscalebar=y allpos=y             pclip=100',par))
+
+Result('vp',     ['vp',     'ss','rr'],'Overlay')
+Result('vs',     ['vs',     'ss','rr'],'Overlay')
+Result('vph',     ['vph',     'ss','rr'],'Overlay')
+Result('vsh',     ['vsh',     'ss','rr'],'Overlay')
+Result('roh',     ['roh',     'ss','rr'],'Overlay')
+Result('ro',     ['ro',     'ss','rr'],'Overlay')
+Result('epsilon',['epsilon','ss','rr'],'Overlay')
+Result('delta',  ['delta',  'ss','rr'],'Overlay')
+
+fdmod.anisotropic('cc','vph','vsh','roo','epso','delo',par)
+fdmod.anisotropic('cchomo','vpo','vso','roo','epso','delo',par)
+
+#--------------------------------------------------------------------------------------------
+# vector-acoustic modeling - MAKING DATA
+#--------------------------------------------------------------------------------------------
+
+##
+# particle velocity field without free surface, 
+par['ssou']='y'
+rules.emodel('de','we','wave','cc','roo','ss','rr','ssou=%(ssou)s opot=n' % par,par)
+
+Flow('def','de',
+     '''put n1=%(nx)d d1=%(dx)g o1=%(ox)d n2=6 d2=1 o2=0 n3=2 d3=1 o3=0 n4=%(nt)d d4=%(dt)g o4=%(ot)d out=stdout
+     ''' % par )
+
+for i in range(2):
+    Flow('we'+str(i+1),'we',
+         '''
+         window n3=1 f3=%d |
+         window min1=%g max1=%g min2=%g max2=%g |
+         scale axis=123
+         ''' % (i,par['zmin'],par['zmax'],par['xmin'],par['xmax']))
+    
+    Plot('we'+str(i+1),
+         fdmod.wgrey('title=u%s pclip=99' % str(i+1),par),view=1)
+    Plot('def'+str(i+1),'def',
+         '''
+         window n3=1 f3=%d squeeze=n |
+         transp plane=34 | transp plane=23 | transp plane=12 |
+         window f1=%d | put o1=%g | pad end1=%d |
+         ''' % (i,par['kt'],par['ot'],par['kt'])
+         + fdmod.dgrey('title=u%s pclip=99 grid=y' %str(i+1),par),view=1)
+
+Flow(  'weall','we1 we2','cat axis=1 space=n ${SOURCES[1]}')
+Plot('weall',
+     '''
+     grey title="Vector components" wantaxis=y screenratio=%f screenht=8
+     gainpanel=a pclip=99
+     grid1=y grid2=y g1num=0.25 g2num=0.25
+     ''' % (2*par['ratio']),view=1)
+
+Flow('wall','we1 we2','cat axis=1 space=n ${SOURCES[1]}')
+Plot('wall',
+     '''
+     grey title="" wantaxis=y screenratio=%f screenht=10
+     gainpanel=a pclip=99
+     grid1=y grid2=y g1num=0.1 g2num=0.1
+     ''' % (3*par['ratio']),view=1)
+
+#
+#
+# vertical point-force with free surface, no scattering in the subsurface. Used to compute "THE ANSWER".
+rules.emodel('deo','weo','wave','cchomo','roo','ss','rr','ssou=%(ssou)s opot=n' % par,par)
+
+Flow('deof','deo',
+     '''put n1=%(nx)d d1=%(dx)g o1=%(ox)d n2=6 d2=1 o2=0 n3=2 d3=1 o3=0 n4=%(nt)d d4=%(dt)g o4=%(ot)d out=stdout
+     ''' % par )
+
+# get scattered waves
+Flow('desf','def deof','add ${SOURCES[1]} scale=1,-1  out=stdout')
+Flow('wes','we weo','add ${SOURCES[1]} scale=1,-1')
+
+for i in range(2):
+    Flow('weo'+str(i+1),'weo',
+         '''
+         window n3=1 f3=%d |
+         window min1=%g max1=%g min2=%g max2=%g |
+         scale axis=123
+         ''' % (i,par['zmin'],par['zmax'],par['xmin'],par['xmax']))
+    
+    Plot('weo'+str(i+1),
+         fdmod.wgrey('title=u%s pclip=99' % str(i+1),par),view=1)
+    Plot('deof'+str(i+1),'deof',
+         '''
+         window n3=1 f3=%d squeeze=n |
+         transp plane=34 | transp plane=23 | transp plane=12 |
+         window f1=%d | put o1=%g | pad end1=%d |
+         ''' % (i,par['kt'],par['ot'],par['kt'])
+         + fdmod.dgrey('title=u%s pclip=99 grid=y' %str(i+1),par),view=1)
+    Plot('desf'+str(i+1),'desf',
+         '''
+         window n3=1 f3=%d squeeze=n |
+         transp plane=34 | transp plane=23 | transp plane=12 |
+         window f1=%d | put o1=%g | pad end1=%d |
+         ''' % (i,par['kt'],par['ot'],par['kt'])
+         + fdmod.dgrey('title=u%s pclip=99 grid=y' %str(i+1),par),view=1)
+
+##
+# pressure fields
+par['ssou']='y'
+rules.emodel('dep','wep','wave','cc','roo','ss','rr','ssou=%(ssou)s opot=y' % par,par)
+
+Flow('depf','dep',
+     '''put n1=%(nx)d d1=%(dx)g o1=%(ox)d n2=6 d2=1 o2=0 n3=2 d3=1 o3=0 n4=%(nt)d d4=%(dt)g o4=%(ot)d out=stdout
+     ''' % par )
+
+for i in range(2):
+    Flow('wep'+str(i+1),'wep',
+         '''
+         window n3=1 f3=%d |
+         window min1=%g max1=%g min2=%g max2=%g |
+         scale axis=123
+         ''' % (i,par['zmin'],par['zmax'],par['xmin'],par['xmax']))
+    
+    Plot('wep'+str(i+1),
+         fdmod.wgrey('title=u%s pclip=99' % str(i+1),par),view=1)
+    Plot('depf'+str(i+1),'depf',
+         '''
+         window n3=1 f3=%d squeeze=n |
+         transp plane=34 | transp plane=23 | transp plane=12 |
+         window f1=%d | put o1=%g | pad end1=%d |
+         ''' % (i,par['kt'],par['ot'],par['kt'])
+         + fdmod.dgrey('title=u%s pclip=99 grid=y' %str(i+1),par),view=1)
+
+Flow(  'wepall','wep1 wep2','cat axis=1 space=n ${SOURCES[1]}')
+Plot('wepall',
+     '''
+     grey title="Vector components" wantaxis=y screenratio=%f screenht=8
+     gainpanel=a pclip=99
+     grid1=y grid2=y g1num=0.25 g2num=0.25
+     ''' % (2*par['ratio']),view=1)
+
+Flow('wpall','wep1 wep2','cat axis=1 space=n ${SOURCES[1]}')
+Plot('wpall',
+     '''
+     grey title="" wantaxis=y screenratio=%f screenht=10
+     gainpanel=a pclip=99
+     grid1=y grid2=y g1num=0.1 g2num=0.1
+     ''' % (3*par['ratio']),view=1)
+
+#
+#
+# vertical point-force with free surface, no scattering in the subsurface. Used to compute "THE ANSWER".
+rules.emodel('depo','wepo','wave','cchomo','roo','ss','rr','ssou=%(ssou)s opot=y' % par,par)
+
+Flow('depof','depo',
+     '''put n1=%(nx)d d1=%(dx)g o1=%(ox)d n2=6 d2=1 o2=0 n3=2 d3=1 o3=0 n4=%(nt)d d4=%(dt)g o4=%(ot)d out=stdout
+     ''' % par )
+
+# get scattered waves
+Flow('depsf','depf depof','add ${SOURCES[1]} scale=1,-1  out=stdout')
+Flow('weps','wep wepo','add ${SOURCES[1]} scale=1,-1')
+
+for i in range(2):
+    Flow('wepo'+str(i+1),'wepo',
+         '''
+         window n3=1 f3=%d |
+         window min1=%g max1=%g min2=%g max2=%g |
+         scale axis=123
+         ''' % (i,par['zmin'],par['zmax'],par['xmin'],par['xmax']))
+    
+    Plot('wepo'+str(i+1),
+         fdmod.wgrey('title=u%s pclip=99' % str(i+1),par),view=1)
+    Plot('depof'+str(i+1),'depof',
+         '''
+         window n3=1 f3=%d squeeze=n |
+         transp plane=34 | transp plane=23 | transp plane=12 |
+         window f1=%d | put o1=%g | pad end1=%d |
+         ''' % (i,par['kt'],par['ot'],par['kt'])
+         + fdmod.dgrey('title=u%s pclip=99 grid=y' %str(i+1),par),view=1)
+    Plot('depsf'+str(i+1),'depsf',
+         '''
+         window n3=1 f3=%d squeeze=n |
+         transp plane=34 | transp plane=23 | transp plane=12 |
+         window f1=%d | put o1=%g | pad end1=%d |
+         ''' % (i,par['kt'],par['ot'],par['kt'])
+         + fdmod.dgrey('title=u%s pclip=99 grid=y' %str(i+1),par),view=1)
+    
+
+## SECOND RECEIVER
+# particle velocity field without free surface, 
+par['ssou']='y'
+rules.emodel('der','wer','wave','cc','roo','ss2','rr','ssou=%(ssou)s opot=n' % par,par)
+
+Flow('derf','der',
+     '''put n1=%(nx)d d1=%(dx)g o1=%(ox)d n2=6 d2=1 o2=0 n3=2 d3=1 o3=0 n4=%(nt)d d4=%(dt)g o4=%(ot)d out=stdout
+     ''' % par )
+
+for i in range(2):
+    Flow('wer'+str(i+1),'wer',
+         '''
+         window n3=1 f3=%d |
+         window min1=%g max1=%g min2=%g max2=%g |
+         scale axis=123
+         ''' % (i,par['zmin'],par['zmax'],par['xmin'],par['xmax']))
+    
+    Plot('wer'+str(i+1),
+         fdmod.wgrey('title=u%s pclip=99' % str(i+1),par),view=1)
+    Plot('derf'+str(i+1),'derf',
+         '''
+         window n3=1 f3=%d squeeze=n |
+         transp plane=34 | transp plane=23 | transp plane=12 |
+         window f1=%d | put o1=%g | pad end1=%d |
+         ''' % (i,par['kt'],par['ot'],par['kt'])
+         + fdmod.dgrey('title=u%s pclip=99 grid=y' %str(i+1),par),view=1)
+
+Flow('werall','wer1 wer2','cat axis=1 space=n ${SOURCES[1]}')
+Plot('werall',
+     '''
+     grey title="Vector components" wantaxis=y screenratio=%f screenht=8
+     gainpanel=a pclip=99
+     grid1=y grid2=y g1num=0.25 g2num=0.25
+     ''' % (2*par['ratio']),view=1)
+
+Flow('wrall','wer1 wer2','cat axis=1 space=n ${SOURCES[1]}')
+Plot('wrall',
+     '''
+     grey title="" wantaxis=y screenratio=%f screenht=10
+     gainpanel=a pclip=99
+     grid1=y grid2=y g1num=0.1 g2num=0.1
+     ''' % (3*par['ratio']),view=1)
+
+#
+#
+# vertical point-force with free surface, no scattering in the subsurface. Used to compute "THE ANSWER".
+rules.emodel('deor','weor','wave','cchomo','roo','ss2','rr','ssou=%(ssou)s opot=n' % par,par)
+
+Flow('deorf','deor',
+     '''put n1=%(nx)d d1=%(dx)g o1=%(ox)d n2=6 d2=1 o2=0 n3=2 d3=1 o3=0 n4=%(nt)d d4=%(dt)g o4=%(ot)d out=stdout
+     ''' % par )
+
+# get scattered waves
+Flow('desrf','derf deorf','add ${SOURCES[1]} scale=1,-1  out=stdout')
+Flow('wesr','wer weor','add ${SOURCES[1]} scale=1,-1')
+
+for i in range(2):
+    Flow('weor'+str(i+1),'weor',
+         '''
+         window n3=1 f3=%d |
+         window min1=%g max1=%g min2=%g max2=%g |
+         scale axis=123
+         ''' % (i,par['zmin'],par['zmax'],par['xmin'],par['xmax']))
+    
+    Plot('weor'+str(i+1),
+         fdmod.wgrey('title=u%s pclip=99' % str(i+1),par),view=1)
+    Plot('deorf'+str(i+1),'deorf',
+         '''
+         window n3=1 f3=%d squeeze=n |
+         transp plane=34 | transp plane=23 | transp plane=12 |
+         window f1=%d | put o1=%g | pad end1=%d |
+         ''' % (i,par['kt'],par['ot'],par['kt'])
+         + fdmod.dgrey('title=u%s pclip=99 grid=y' %str(i+1),par),view=1)
+    Plot('desrf'+str(i+1),'desrf',
+         '''
+         window n3=1 f3=%d squeeze=n |
+         transp plane=34 | transp plane=23 | transp plane=12 |
+         window f1=%d | put o1=%g | pad end1=%d |
+         ''' % (i,par['kt'],par['ot'],par['kt'])
+         + fdmod.dgrey('title=u%s pclip=99 grid=y' %str(i+1),par),view=1)
+
+##
+# pressure fields
+par['ssou']='y'
+rules.emodel('depr','wepr','wave','cc','roo','ss2','rr','ssou=%(ssou)s opot=y' % par,par)
+
+Flow('deprf','depr',
+     '''put n1=%(nx)d d1=%(dx)g o1=%(ox)d n2=6 d2=1 o2=0 n3=2 d3=1 o3=0 n4=%(nt)d d4=%(dt)g o4=%(ot)d out=stdout
+     ''' % par )
+
+for i in range(2):
+    Flow('wepr'+str(i+1),'wepr',
+         '''
+         window n3=1 f3=%d |
+         window min1=%g max1=%g min2=%g max2=%g |
+         scale axis=123
+         ''' % (i,par['zmin'],par['zmax'],par['xmin'],par['xmax']))
+    
+    Plot('wepr'+str(i+1),
+         fdmod.wgrey('title=u%s pclip=99' % str(i+1),par),view=1)
+    Plot('deprf'+str(i+1),'deprf',
+         '''
+         window n3=1 f3=%d squeeze=n |
+         transp plane=34 | transp plane=23 | transp plane=12 |
+         window f1=%d | put o1=%g | pad end1=%d |
+         ''' % (i,par['kt'],par['ot'],par['kt'])
+         + fdmod.dgrey('title=u%s pclip=99 grid=y' %str(i+1),par),view=1)
+
+Flow('weprall','wepr1 wepr2','cat axis=1 space=n ${SOURCES[1]}')
+Plot('weprall',
+     '''
+     grey title="Vector components" wantaxis=y screenratio=%f screenht=8
+     gainpanel=a pclip=99
+     grid1=y grid2=y g1num=0.25 g2num=0.25
+     ''' % (2*par['ratio']),view=1)
+
+Flow('wprall','wepr1 wepr2','cat axis=1 space=n ${SOURCES[1]}')
+Plot('wprall',
+     '''
+     grey title="" wantaxis=y screenratio=%f screenht=10
+     gainpanel=a pclip=99
+     grid1=y grid2=y g1num=0.1 g2num=0.1
+     ''' % (3*par['ratio']),view=1)
+
+#
+#
+# vertical point-force with free surface, no scattering in the subsurface. Used to compute "THE ANSWER".
+rules.emodel('depor','wepor','wave','cchomo','roo','ss2','rr','ssou=%(ssou)s opot=y' % par,par)
+
+Flow('deporf','depor',
+     '''put n1=%(nx)d d1=%(dx)g o1=%(ox)d n2=6 d2=1 o2=0 n3=2 d3=1 o3=0 n4=%(nt)d d4=%(dt)g o4=%(ot)d out=stdout
+     ''' % par )
+
+# get scattered waves
+Flow('depsrf','deprf deporf','add ${SOURCES[1]} scale=1,-1 out=stdout')
+Flow('wepsr','wepr wepor','add ${SOURCES[1]} scale=1,-1')
+
+for i in range(2):
+    Flow('wepor'+str(i+1),'wepor',
+         '''
+         window n3=1 f3=%d |
+         window min1=%g max1=%g min2=%g max2=%g |
+         scale axis=123
+         ''' % (i,par['zmin'],par['zmax'],par['xmin'],par['xmax']))
+    
+    Plot('wepor'+str(i+1),
+         fdmod.wgrey('title=u%s pclip=99' % str(i+1),par),view=1)
+    Plot('deporf'+str(i+1),'deporf',
+         '''
+         window n3=1 f3=%d squeeze=n |
+         transp plane=34 | transp plane=23 | transp plane=12 |
+         window f1=%d | put o1=%g | pad end1=%d |
+         ''' % (i,par['kt'],par['ot'],par['kt'])
+         + fdmod.dgrey('title=u%s pclip=99 grid=y' %str(i+1),par),view=1)
+    Plot('depsrf'+str(i+1),'depsrf',
+         '''
+         window n3=1 f3=%d squeeze=n |
+         transp plane=34 | transp plane=23 | transp plane=12 |
+         window f1=%d | put o1=%g | pad end1=%d |
+         ''' % (i,par['kt'],par['ot'],par['kt'])
+         + fdmod.dgrey('title=u%s pclip=99 grid=y' %str(i+1),par),view=1)
+
+##
+## TRUE RESPONSE
+# pressure fields
+par['ssou']='y'
+rules.emodel('dept','wept','wave','cc','roo','ss2','ss','ssou=%(ssou)s opot=y' % par,par)
+
+Flow('deptf','dept',
+     '''cat  out=stdout
+     ''')
+
+for i in range(2):
+    Flow('wept'+str(i+1),'wept',
+         '''
+         window n3=1 f3=%d |
+         window min1=%g max1=%g min2=%g max2=%g |
+         scale axis=123
+         ''' % (i,par['zmin'],par['zmax'],par['xmin'],par['xmax']))
+    
+    Plot('wept'+str(i+1),
+         fdmod.wgrey('title=u%s pclip=99' % str(i+1),par),view=1)
+#    Result('deptf'+str(i+1),'deptf',
+#           '''
+#           window n3=1 f3=%d squeeze=n |
+#           transp plane=34 | transp plane=23 | transp plane=12 |
+#           window f1=%d | put o1=%g | pad end1=%d |
+#           ''' % (i,par['kt'],par['ot'],par['kt'])
+#           + fdmod.dgrey('title=u%s pclip=99 grid=y' %str(i+1),par))
+
+Flow('weptall','wept1 wept2','cat axis=1 space=n ${SOURCES[1]}')
+Plot('weptall',
+     '''
+     grey title="Vector components" wantaxis=y screenratio=%f screenht=8
+     gainpanel=a pclip=99
+     grid1=y grid2=y g1num=0.25 g2num=0.25
+     ''' % (2*par['ratio']),view=1)
+
+Flow('wptall','wept1 wept2','cat axis=1 space=n ${SOURCES[1]}')
+Plot('wptall',
+     '''
+     grey title="" wantaxis=y screenratio=%f screenht=10
+     gainpanel=a pclip=99
+     grid1=y grid2=y g1num=0.1 g2num=0.1
+     ''' % (3*par['ratio']),view=1)
+
+#
+#
+# vertical point-force with free surface, no scattering in the subsurface. Used to compute "THE ANSWER".
+rules.emodel('depot','wepot','wave','cchomo','roo','ss2','ss','ssou=%(ssou)s opot=y' % par,par)
+
+Flow('depotf','depot',
+     '''cat  out=stdout
+     ''')
+
+# get scattered waves
+Flow('depstf','deptf depotf','add ${SOURCES[1]} scale=1,-1 out=stdout')
+Flow('wepst','wept wepot','add ${SOURCES[1]} scale=1,-1')
+
+for i in range(2):
+    Flow('wepot'+str(i+1),'wepot',
+         '''
+         window n3=1 f3=%d |
+         window min1=%g max1=%g min2=%g max2=%g |
+         scale axis=123
+         ''' % (i,par['zmin'],par['zmax'],par['xmin'],par['xmax']))
+    
+    Plot('wepot'+str(i+1),
+         fdmod.wgrey('title=u%s pclip=99' % str(i+1),par),view=1)
+#    Result('depotf'+str(i+1),'depotf',
+#           '''
+#           window n3=1 f3=%d squeeze=n |
+#           transp plane=34 | transp plane=23 | transp plane=12 |
+#           window f1=%d | put o1=%g | pad end1=%d |
+#           ''' % (i,par['kt'],par['ot'],par['kt'])
+#           + fdmod.dgrey('title=u%s pclip=99 grid=y' %str(i+1),par))
+#    Result('depstf'+str(i+1),'depstf',
+#           '''
+#           window n3=1 f3=%d squeeze=n |
+#           transp plane=34 | transp plane=23 | transp plane=12 |
+#           window f1=%d | put o1=%g | pad end1=%d |
+#           ''' % (i,par['kt'],par['ot'],par['kt'])
+#           + fdmod.dgrey('title=u%s pclip=99 grid=y' %str(i+1),par))
+#
+Result('depstf',
+       ''' window min2=0 max2=0 min3=0 max3=1.0  squeeze=n |
+ 		   transp plane=13 | window min1=0.098 max1=1.0 | pad end1=250 | put o1=0 |
+		   wiggle pclip=100 poly=y screenht=10 screenratio=4 transp=y title="True" 
+		   labelrot=n wantaxis=y label1=%s unit1=%s yreverse=y
+       ''' % (par['lt'],par['ut']))
+Plot('depstf',
+       ''' window min2=0 max2=0 min3=0 max3=1.0  squeeze=n |
+ 		   transp plane=13 | window min1=0.098 max1=1.0 | pad end1=250 | put o1=0 |
+		   wiggle pclip=100 poly=y screenht=10 screenratio=4 transp=y title="True" 
+		   labelrot=n wantaxis=y label1=%s unit1=%s yreverse=y
+       ''' % (par['lt'],par['ut']))
+
+#
+Result('deptf',
+       ''' window min2=0 max2=0 min3=0 max3=1.0  squeeze=n |
+ 		   transp plane=13 | window min1=0.098 max1=1.0 | pad end1=250 | put o1=0 |
+		   wiggle pclip=100 poly=y screenht=10 screenratio=4 transp=y title="True" 
+		   labelrot=n wantaxis=y label1=%s unit1=%s yreverse=y
+       ''' % (par['lt'],par['ut']))
+Plot('deptf',
+       ''' window min2=0 max2=0 min3=0 max3=1.0  squeeze=n |
+ 		   transp plane=13 | window min1=0.098 max1=1.0 | pad end1=250 | put o1=0 |
+		   wiggle pclip=100 poly=y screenht=10 screenratio=4 transp=y title="True" 
+		   labelrot=n wantaxis=y label1=%s unit1=%s yreverse=y
+       ''' % (par['lt'],par['ut']))
+
+#
+Result('depotf',
+       ''' window min2=0 max2=0 min3=0 max3=1.0  squeeze=n |
+ 		   transp plane=13 | window min1=0.098 max1=1.0 | pad end1=250 | put o1=0 |
+		   wiggle pclip=100 poly=y screenht=10 screenratio=4 transp=y title="True" 
+		   labelrot=n wantaxis=y label1=%s unit1=%s yreverse=y
+       ''' % (par['lt'],par['ut']))
+Plot('depotf',
+       ''' window min2=0 max2=0 min3=0 max3=1.0  squeeze=n |
+ 		   transp plane=13 | window min1=0.098 max1=1.0 | pad end1=250 | put o1=0 |
+		   wiggle pclip=100 poly=y screenht=10 screenratio=4 transp=y title="True" 
+		   labelrot=n wantaxis=y label1=%s unit1=%s yreverse=y
+       ''' % (par['lt'],par['ut']))
+
+
+
+#####################################################################
+#### Interferometry 
+#####################################################################
+
+## Make frequency-domain data
+
+for i in range(6):
+	
+	Flow('def_w_'+str(i+1),'def','''
+        window min2=%d max2=%d min3=0 max3=0 squeeze=n | 
+        transp plane=41 | sfcausint |
+        pad beg1=2501 |
+        fft1 inv=n opt=y sym=n |
+        transp plane=42 
+        ''' % (i,i))
+	
+	Flow('depf_w_'+str(i+1),'depf','''
+        window min2=%d max2=%d min3=0 max3=0 squeeze=n | 
+        transp plane=41 | sfcausint | 
+        pad beg1=2501 |
+        fft1 inv=n opt=y sym=n |
+        transp plane=42 
+        ''' % (i,i))
+	
+	Flow('derf_w_'+str(i+1),'derf','''
+        window min2=%d max2=%d min3=0 max3=0 squeeze=n | 
+        transp plane=41 |  sfcausint |
+        pad beg1=2501 |
+        fft1 inv=n opt=y sym=n |
+        transp plane=42 
+        ''' % (i,i))
+	
+	Flow('deprf_w_'+str(i+1),'deprf','''
+        window min2=%d max2=%d min3=0 max3=0 squeeze=n | 
+        transp plane=41 | sfcausint |
+        pad beg1=2501 |
+        fft1 inv=n opt=y sym=n |
+        transp plane=42 
+        ''' % (i,i))
+	
+	Flow('depsrf_w_'+str(i+1),'depsrf','''
+        window min2=%d max2=%d min3=0 max3=0 squeeze=n | 
+        transp plane=41 | sfcausint |
+        pad beg1=2501 |
+        fft1 inv=n opt=y sym=n |
+        transp plane=42 
+        ''' % (i,i))
+	
+	Flow('deporf_w_'+str(i+1),'deporf','''
+        window min2=%d max2=%d min3=0 max3=0 squeeze=n | 
+        transp plane=41 | sfcausint |
+        pad beg1=2501 |
+        fft1 inv=n opt=y sym=n |
+        transp plane=42 
+        ''' % (i,i))
+	
+	Flow('desrf_w_'+str(i+1),'desrf','''
+        window min2=%d max2=%d min3=0 max3=0 squeeze=n | 
+        transp plane=41 | sfcausint |
+        pad beg1=2501 |
+        fft1 inv=n opt=y sym=n |
+        transp plane=42 
+        ''' % (i,i))
+	
+	
+	Flow('deorf_w_'+str(i+1),'deorf','''
+        window min2=%d max2=%d min3=0 max3=0 squeeze=n | 
+        transp plane=41 | sfcausint |
+        pad beg1=2501 |
+        fft1 inv=n opt=y sym=n |
+        transp plane=42 
+        ''' % (i,i))
+	
+	Flow('depsf_w_'+str(i+1),'depsf','''
+        window min2=%d max2=%d min3=0 max3=0 squeeze=n | 
+        transp plane=41 | sfcausint |
+        pad beg1=2501 |
+        fft1 inv=n opt=y sym=n |
+        transp plane=42 
+        ''' % (i,i))
+	
+	
+	Flow('depof_w_'+str(i+1),'depof','''
+        window min2=%d max2=%d min3=0 max3=0 squeeze=n | 
+        transp plane=41 | sfcausint |
+        pad beg1=2501 |
+        fft1 inv=n opt=y sym=n |
+        transp plane=42 
+        ''' % (i,i))
+	
+	
+	Flow('desf_w_'+str(i+1),'desf','''
+        window min2=%d max2=%d min3=0 max3=0 squeeze=n | 
+        transp plane=41 | sfcausint |
+        pad beg1=2501 |
+        fft1 inv=n opt=y sym=n |
+        transp plane=42 
+        ''' % (i,i))
+	
+	Flow('deof_w_'+str(i+1),'deof','''
+        window min2=%d max2=%d min3=0 max3=0 squeeze=n | 
+        transp plane=41 | sfcausint |
+        pad beg1=2501 |
+        fft1 inv=n opt=y sym=n |
+        transp plane=42 
+        ''' % (i,i))
+
+
+## Compute frequency-domain integrands
+
+
+## Analysis of TOP integral for FULL-FIELDS
+
+# Term: p_S(r_A) v_0^{*}(r_B)
+Flow('full_pAS_vB0_top',['deprf_w_1','def_w_1'],''' math y=${SOURCES[0]} x=${SOURCES[1]} output='y*(conj(x))' ''')
+
+Flow('full_pAS_vB0_topt','full_pAS_vB0_top',''' fft1 inv=y opt=y sym=y ''')
+
+# Term: v_S(r_A) p_0^{*}(r_B)
+Flow('full_vAS_pB0_top',['derf_w_1','depf_w_1'],''' math y=${SOURCES[0]} x=${SOURCES[1]} output='y*(conj(x))' ''')
+
+Flow('full_vAS_pB0_topt','full_vAS_pB0_top',''' fft1 inv=y opt=y sym=n ''')
+#
+Result('vph_top',     ['vph','ss','ss2','rr1'],'Overlay')
+Plot('vph_top',     ['vph','ss','ss2','rr1'],'Overlay')
+
+Result('full_pAS_vB0_topt',
+       '''grey title="top: p V*" pclip=99 grid=y 
+		   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
+       ''' % (par['lt'],par['ut'],par['lx'],par['ux']))
+Plot('full_pAS_vB0_topt',
+       '''window j1=5 | grey title="top: p V*" pclip=99 grid=y 
+		   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
+       ''' % (par['lt'],par['ut'],par['lx'],par['ux']))
+
+Result('full_vAS_pB0_topt',
+       ''' grey title="top: V p*" pclip=99 grid=y 
+		   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
+       ''' % (par['lt'],par['ut'],par['lx'],par['ux']))
+Plot('full_vAS_pB0_topt',
+       '''window j1=5 | grey title="top: V p*" pclip=99 grid=y 
+		   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
+       ''' % (par['lt'],par['ut'],par['lx'],par['ux']))
+
+Result('full_terms_top','vph_top full_pAS_vB0_topt full_vAS_pB0_topt','SideBySideAniso')
+
+
+# total top integrand and integration:
+
+Flow('full_Integrand_top','full_pAS_vB0_topt full_vAS_pB0_topt','add ${SOURCES[1]} scale=1,1')
+
+Result('full_Integrand_top',
+       ''' grey title="top: total integrand" pclip=99 grid=y 
+		   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
+       ''' % (par['lt'],par['ut'],par['lx'],par['ux']))
+Plot('full_Integrand_top',
+       ''' grey title="top: total integrand" pclip=99 grid=y 
+		   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
+       ''' % (par['lt'],par['ut'],par['lx'],par['ux']))
+
+# taper
+par['ktxs']=0.15/par['dx'] + 1
+par['ltxs']=1.85/par['dx'] + 1
+Flow('taper',None,
+     '''
+     spike nsp=1 mag=1
+     n1=5002 o1=-1.0004 d1=%(dt)g k1=1 l1=5002 
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=%(ktxs)d l2=%(ltxs)d |
+     smooth rect1=30 rect2=30 repeat=3 |
+     put label1=z label2=x unit1=km unit2=km
+     ''' % par)
+	
+
+Result('taper',fdmod.cgrey('title="taper" wantscalebar=y',par))
+
+Flow('full_Int_taper_top','full_Integrand_top taper','add ${SOURCES[1]} mode=p scale=1,-1')
+
+Result('full_Int_taper_top',
+       ''' grey title="top: total integrand (w/ taper)" pclip=99 grid=y 
+		   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
+       ''' % (par['lt'],par['ut'],par['lx'],par['ux']))
+Plot('full_Int_taper_top',
+       ''' grey title="top: total integrand (w/ taper)" pclip=99 grid=y 
+		   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
+       ''' % (par['lt'],par['ut'],par['lx'],par['ux']))
+
+# compute top contribution
+
+Flow('full_Contribution_top','full_Int_taper_top','stack axis=2')
+
+Result('full_Contribution_top',
+       ''' window min1=0 max1=1.0 | 
+		   wiggle pclip=100 poly=y screenht=10 screenratio=4 transp=y title="Top" 
+		   labelrot=n wantaxis=y label1=%s unit1=%s yreverse=y
+       ''' % (par['lt'],par['ut']))
+Plot('full_Contribution_top',
+       ''' window min1=0 max1=1.0 | 
+		   wiggle pclip=100 poly=y screenht=10 screenratio=4 transp=y title="Top" 
+		   labelrot=n wantaxis=y label1=%s unit1=%s yreverse=y
+       ''' % (par['lt'],par['ut']))
+
+Result('full_Cont_top','vph_top full_Int_taper_top full_Contribution_top','SideBySideAniso')
+
+## Analysis of TOP integral for SCATTERING
+
+# Term: p_S(r_A) v_0^{*}(r_B)
+Flow('pAS_vB0_top',['depsrf_w_1','deof_w_1'],''' math y=${SOURCES[0]} x=${SOURCES[1]} output='y*(conj(x))' ''')
+
+Flow('pAS_vB0_topt','pAS_vB0_top',''' fft1 inv=y opt=y sym=y ''')
+
+# Term: v_S(r_A) p_0^{*}(r_B)
+Flow('vAS_pB0_top',['desrf_w_1','depof_w_1'],''' math y=${SOURCES[0]} x=${SOURCES[1]} output='y*(conj(x))' ''')
+
+Flow('vAS_pB0_topt','vAS_pB0_top',''' fft1 inv=y opt=y sym=n ''')
+#
+#Result('vph_top',     ['vph','ss','ss2','rr1'],'Overlay')
+#Plot('vph_top',     ['vph','ss','ss2','rr1'],'Overlay')
+
+Result('pAS_vB0_topt',
+       ''' grey title="top: p_S V_0*" pclip=99 grid=y 
+		   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
+       ''' % (par['lt'],par['ut'],par['lx'],par['ux']))
+Plot('pAS_vB0_topt',
+       '''window j1=5 | grey title="top: p_S V_0*" pclip=99 grid=y 
+		   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
+       ''' % (par['lt'],par['ut'],par['lx'],par['ux']))
+
+Result('vAS_pB0_topt',
+       ''' grey title="top: v_S p_0*" pclip=99 grid=y 
+		   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
+       ''' % (par['lt'],par['ut'],par['lx'],par['ux']))
+Plot('vAS_pB0_topt',
+       '''window j1=5 | grey title="top: v_S p_0*" pclip=99 grid=y 
+		   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
+       ''' % (par['lt'],par['ut'],par['lx'],par['ux']))
+
+Result('terms_top','vph_top pAS_vB0_topt vAS_pB0_topt','SideBySideAniso')
+
+
+# total top integrand and integration:
+
+Flow('Integrand_top','pAS_vB0_topt vAS_pB0_topt','add ${SOURCES[1]} scale=1,1')
+
+Result('Integrand_top',
+       ''' grey title="top: total integrand" pclip=99 grid=y 
+		   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
+       ''' % (par['lt'],par['ut'],par['lx'],par['ux']))
+Plot('Integrand_top',
+       ''' grey title="top: total integrand" pclip=99 grid=y 
+		   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
+       ''' % (par['lt'],par['ut'],par['lx'],par['ux']))
+
+# taper
+Flow('Int_taper_top','Integrand_top taper','add ${SOURCES[1]} mode=p scale=1,1')
+
+Result('Int_taper_top',
+       ''' grey title="top: total integrand (w/ taper)" pclip=99 grid=y 
+		   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
+       ''' % (par['lt'],par['ut'],par['lx'],par['ux']))
+Plot('Int_taper_top',
+       ''' grey title="top: total integrand (w/ taper)" pclip=99 grid=y 
+		   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
+       ''' % (par['lt'],par['ut'],par['lx'],par['ux']))
+
+# compute top contribution
+
+Flow('Contribution_top','Int_taper_top','stack axis=2 | causint')
+
+Result('Contribution_top',
+       ''' window min1=0 max1=1.0 | 
+		   wiggle pclip=100 poly=y screenht=10 screenratio=4 transp=y title="Top" 
+		   labelrot=n wantaxis=y label1=%s unit1=%s yreverse=y
+       ''' % (par['lt'],par['ut']))
+Plot('Contribution_top',
+       ''' window min1=0 max1=1.0 | 
+		   wiggle pclip=100 poly=y screenht=10 screenratio=4 transp=y title="Top" 
+		   labelrot=n wantaxis=y label1=%s unit1=%s yreverse=y
+       ''' % (par['lt'],par['ut']))
+
+Result('Cont_top','vph_top Int_taper_top Contribution_top','SideBySideAniso')
+
+### Analysis of bottom integral contributions
+
+Flow('rrb','rr2 rr3 rr4 rr5 rr6','cat axis=2 space=n ${SOURCES[1]} ${SOURCES[2]} ${SOURCES[3]} ${SOURCES[4]}')
+Plot('rrb','window n1=2 | dd type=complex | window j2=10 | '
+     + fdmod.cgraph('wantscalebar=y symbol=x plotcol=1',par))
+
+Result('vph_bottom',     ['vph','ss','ss2','rrb'],'Overlay')
+Plot('vph_bottom',     ['vph','ss','ss2','rrb'],'Overlay')
+
+## SCATTERING terms...
+for i in range(5):
+	
+	# model and surface
+	Result('vph_bot_'+str(i+2),     ['vph','ss','ss2','rr'+str(i+2)],'Overlay')
+	Plot('vph_bot_'+str(i+2),     ['vph','ss','ss2','rr'+str(i+2)],'Overlay')
+	
+	# Term: p_S(r_A) v_0^{*}(r_B)
+	Flow('pAS_vB0_bot_'+str(i+2),['depsrf_w_'+str(i+2),'deof_w_'+str(i+2)],''' math x=${SOURCES[1]} output='input*(conj(x))' ''')
+
+	Flow('pAS_vB0_bott_'+str(i+2),'pAS_vB0_bot_'+str(i+2),''' fft1 inv=y opt=y sym=y ''')
+
+	# Term: v_S(r_A) p_0^{*}(r_B)
+	Flow('vAS_pB0_bot_'+str(i+2),['desrf_w_'+str(i+2),'depof_w_'+str(i+2)],''' math x=${SOURCES[1]} output='input*(conj(x))' ''')
+
+	Flow('vAS_pB0_bott_'+str(i+2),'vAS_pB0_bot_'+str(i+2),''' fft1 inv=y opt=y sym=n ''')
+	
+	# Plot terms
+	Result('pAS_vB0_bott_'+str(i+2),
+	       '''grey title="bottom #%d: p_S V_0*" pclip=99 grid=y 
+			   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
+	       ''' % (i+2,par['lt'],par['ut'],par['lx'],par['ux']))
+	Plot('pAS_vB0_bott_'+str(i+2),
+		   '''window j1=5 |  grey title="bottom #%d: p_S V_0*" pclip=99 grid=y 
+		   	   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
+		   ''' % (i+2,par['lt'],par['ut'],par['lx'],par['ux']))
+
+	Result('vAS_pB0_bott_'+str(i+2),
+	       ''' grey title="bottom #%d: v_S p_0*" pclip=99 grid=y 
+			   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
+	       ''' % (i+2,par['lt'],par['ut'],par['lx'],par['ux']))
+	Plot('vAS_pB0_bott_'+str(i+2),
+	       '''window j1=5 |  grey title="bottom #%d: v_S p_0*" pclip=99 grid=y 
+			   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
+	       ''' % (i+2,par['lt'],par['ut'],par['lx'],par['ux']))
+
+	Result('terms_bot_'+str(i+2),['vph_bot_'+str(i+2),'pAS_vB0_bott_'+str(i+2),'vAS_pB0_bott_'+str(i+2)],'SideBySideAniso')
+	
+	# sum terms
+	Flow('Integrand_bot_'+str(i+2),['pAS_vB0_bott_'+str(i+2),'vAS_pB0_bott_'+str(i+2)],'add ${SOURCES[1]} mode=a scale=1,-1')
+
+	Result('Integrand_bot_'+str(i+2),
+	       ''' grey title="bottom #%d: total integrand" pclip=99 grid=y 
+			   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
+	       ''' % (i+2,par['lt'],par['ut'],par['lx'],par['ux']))
+	Plot('Integrand_bot_'+str(i+2),
+	       ''' grey title="bottom #%d: total integrand" pclip=99 grid=y 
+			   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
+	       ''' % (i+2,par['lt'],par['ut'],par['lx'],par['ux']))
+	
+	# taper integrand
+	Flow('Int_taper_bot_'+str(i+2),['Integrand_bot_'+str(i+2),'taper'],'add ${SOURCES[1]} mode=p scale=1,-1')
+
+	Result('Int_taper_bot_'+str(i+2),
+	       ''' grey title="bottom #%d: total integrand (w/ taper)" pclip=99 grid=y 
+			   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
+	       ''' % (i+2,par['lt'],par['ut'],par['lx'],par['ux']))
+	Plot('Int_taper_bot_'+str(i+2),
+	       ''' grey title="bottom #%d: total integrand (w/ taper)" pclip=99 grid=y 
+			   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
+	       ''' % (i+2,par['lt'],par['ut'],par['lx'],par['ux']))
+	
+	# get final contribution
+	Flow('Contribution_bot_'+str(i+2),'Int_taper_bot_'+str(i+2),'stack axis=2')
+
+	Result('Contribution_bot_'+str(i+2),
+	       ''' window min1=0 max1=1.0 | 
+			   wiggle pclip=100 poly=y screenht=10 screenratio=4 transp=y title="Bottom #%d" 
+			   labelrot=n wantaxis=y label1=%s unit1=%s yreverse=y
+	       ''' % (i+2,par['lt'],par['ut']))
+	Plot('Contribution_bot_'+str(i+2),
+	       ''' window min1=0 max1=1.0 | 
+			   wiggle pclip=100 poly=y screenht=10 screenratio=4 transp=y title="Bottom #%d" 
+			   labelrot=n wantaxis=y label1=%s unit1=%s yreverse=y
+	       ''' % (i+2,par['lt'],par['ut']))
+	
+	Flow('Contribution_top_bot_'+str(i+2),['Contribution_top','Contribution_bot_'+str(i+2)],'cat ${SOURCES[1]} axis=2')
+	
+	Result('Contribution_top_bot_'+str(i+2),
+	       ''' window min1=0 max1=1.0 | 
+			   wiggle pclip=100 poly=y screenht=10 screenratio=4 transp=y title="Bottom #%d" 
+			   labelrot=n wantaxis=y label1=%s unit1=%s yreverse=y
+	       ''' % (i+2,par['lt'],par['ut']))
+	Plot('Contribution_top_bot_'+str(i+2),
+	       ''' window min1=0 max1=1.0 | 
+			   wiggle pclip=100 poly=y screenht=10 screenratio=4 transp=y title="Bottom #%d" 
+			   labelrot=n wantaxis=y label1=%s unit1=%s yreverse=y
+	       ''' % (i+2,par['lt'],par['ut']))
+
+	Result('Cont_bot_'+str(i+2),['vph_bot_'+str(i+2),'Int_taper_bot_'+str(i+2),'Contribution_top_bot_'+str(i+2)],'SideBySideAniso')
+
+#
+## FULL-FIELD terms...
+for i in range(5):
+	
+	# Term: p(r_A) v^{*}(r_B)
+	Flow('full_pAS_vB0_bot_'+str(i+2),['deprf_w_'+str(i+2),'def_w_'+str(i+2)],''' math x=${SOURCES[1]} output='input*(conj(x))' ''')
+
+	Flow('full_pAS_vB0_bott_'+str(i+2),'full_pAS_vB0_bot_'+str(i+2),''' fft1 inv=y opt=y sym=y ''')
+
+	# Term: v_S(r_A) p_0^{*}(r_B)
+	Flow('full_vAS_pB0_bot_'+str(i+2),['derf_w_'+str(i+2),'depf_w_'+str(i+2)],''' math x=${SOURCES[1]} output='input*(conj(x))' ''')
+
+	Flow('full_vAS_pB0_bott_'+str(i+2),'full_vAS_pB0_bot_'+str(i+2),''' fft1 inv=y opt=y sym=n ''')
+	
+	# Plot terms
+	Result('full_pAS_vB0_bott_'+str(i+2),
+	       ''' grey title="bottom #%d: p V*" pclip=99 grid=y 
+			   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
+	       ''' % (i+2,par['lt'],par['ut'],par['lx'],par['ux']))
+	Plot('full_pAS_vB0_bott_'+str(i+2),
+		   '''window j1=5 | grey title="bottom #%d: p V*" pclip=99 grid=y 
+		   	   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
+		   ''' % (i+2,par['lt'],par['ut'],par['lx'],par['ux']))
+
+	Result('full_vAS_pB0_bott_'+str(i+2),
+	       ''' grey title="bottom #%d: V p*" pclip=99 grid=y 
+			   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
+	       ''' % (i+2,par['lt'],par['ut'],par['lx'],par['ux']))
+	Plot('full_vAS_pB0_bott_'+str(i+2),
+	       '''window j1=5 | grey title="bottom #%d: V p*" pclip=99 grid=y 
+			   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
+	       ''' % (i+2,par['lt'],par['ut'],par['lx'],par['ux']))
+
+	Result('full_terms_bot_'+str(i+2),['vph_bot_'+str(i+2),'full_pAS_vB0_bott_'+str(i+2),'full_vAS_pB0_bott_'+str(i+2)],'SideBySideAniso')
+	
+	# sum terms
+	Flow('full_Integrand_bot_'+str(i+2),['full_pAS_vB0_bott_'+str(i+2),'full_vAS_pB0_bott_'+str(i+2)],'add ${SOURCES[1]} mode=a scale=1,1')
+
+	Result('full_Integrand_bot_'+str(i+2),
+	       ''' grey title="bottom #%d: total integrand" pclip=99 grid=y 
+			   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
+	       ''' % (i+2,par['lt'],par['ut'],par['lx'],par['ux']))
+	Plot('full_Integrand_bot_'+str(i+2),
+	       ''' grey title="bottom #%d: total integrand" pclip=99 grid=y 
+			   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
+	       ''' % (i+2,par['lt'],par['ut'],par['lx'],par['ux']))
+	
+	# taper integrand
+	Flow('full_Int_taper_bot_'+str(i+2),['full_Integrand_bot_'+str(i+2),'taper'],'add ${SOURCES[1]} mode=p scale=1,1')
+
+	Result('full_Int_taper_bot_'+str(i+2),
+	       ''' grey title="bottom #%d: total integrand (w/ taper)" pclip=99 grid=y 
+			   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
+	       ''' % (i+2,par['lt'],par['ut'],par['lx'],par['ux']))
+	Plot('full_Int_taper_bot_'+str(i+2),
+	       ''' grey title="bottom #%d: total integrand (w/ taper)" pclip=99 grid=y 
+			   labelrot=n wantaxis=y label1=%s unit1=%s label2=%s unit2=%s 
+	       ''' % (i+2,par['lt'],par['ut'],par['lx'],par['ux']))
+	
+	# get final contribution
+	Flow('full_Contribution_bot_'+str(i+2),'full_Int_taper_bot_'+str(i+2),'stack axis=2')
+
+	Result('full_Contribution_bot_'+str(i+2),
+	       ''' window min1=0 max1=1.0 | 
+			   wiggle pclip=100 poly=y screenht=10 screenratio=4 transp=y title="Bottom #%d" 
+			   labelrot=n wantaxis=y label1=%s unit1=%s yreverse=y
+	       ''' % (i+2,par['lt'],par['ut']))
+	Plot('full_Contribution_bot_'+str(i+2),
+	       ''' window min1=0 max1=1.0 | 
+			   wiggle pclip=100 poly=y screenht=10 screenratio=4 transp=y title="Bottom #%d" 
+			   labelrot=n wantaxis=y label1=%s unit1=%s yreverse=y
+	       ''' % (i+2,par['lt'],par['ut']))
+	
+	Flow('full_Contribution_top_bot_'+str(i+2),['full_Contribution_top','full_Contribution_bot_'+str(i+2)],'cat ${SOURCES[1]} axis=2')
+	
+	Result('full_Contribution_top_bot_'+str(i+2),
+	       ''' window min1=0 max1=1.0 | 
+			   wiggle pclip=100 poly=y screenht=10 screenratio=4 transp=y title="Bottom #%d" 
+			   labelrot=n wantaxis=y label1=%s unit1=%s yreverse=y
+	       ''' % (i+2,par['lt'],par['ut']))
+	Plot('full_Contribution_top_bot_'+str(i+2),
+	       ''' window min1=0 max1=1.0 | 
+			   wiggle pclip=100 poly=y screenht=10 screenratio=4 transp=y title="Bottom #%d" 
+			   labelrot=n wantaxis=y label1=%s unit1=%s yreverse=y
+	       ''' % (i+2,par['lt'],par['ut']))
+
+	Result('full_Cont_bot_'+str(i+2),['vph_bot_'+str(i+2),'full_Int_taper_bot_'+str(i+2),'full_Contribution_top_bot_'+str(i+2)],'SideBySideAniso')
+
+
+# ------------------------------------------------------------
+# ------------------------------------------------------------
+#rules.test('vp','vs','ro','epsilon','delta','ss','rr',par)
+# ------------------------------------------------------------
+# ------------------------------------------------------------
+
+End()

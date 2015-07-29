@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfscale', 'sfput', 'sfgrey', 'sfwindow', 'sfspray', 'sfcat', 'sfdepth2time', 'sfai2refl', 'sfricker1', 'sftime2depth', 'sftransp', 'sffft1', 'sffft3', 'sfisolr2', 'sffftexp0', 'sfcostaper', 'sfbyte', 'sfgrey3', 'sfmath', 'sfintbin']
+data=['data/marm/marmvel.hh', 'data/marm/marmrefl.hh', 'data/marm/ffd_data.rsf']
+size= 6018374416

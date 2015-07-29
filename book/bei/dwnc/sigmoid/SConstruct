@@ -1,0 +1,61 @@
+from rsf.proj import *
+
+Flow('mod',None,
+     '''
+     sigmoid n1=200 d2=0.008 n2=200 |
+     smooth rect1=3 diff1=1 adj=1 | smooth rect1=3
+     ''')
+
+Flow('vel',None,
+     '''
+     math n1=199 d1=0.004 o1=0.004 output='%g*x1' |
+     math output='%g * (sqrt((exp(input)-1)/input) - 1)' |
+     pad beg1=1 | math output='input+%g'
+     ''' % (0.5,1.5,1.5))
+
+def kirchhoff(adj):
+    return 'kirchnew adj=%d velocity=${SOURCES[1]}' % adj
+
+def phaseshift(adj,case):
+    return '''
+    pad n2=%d | cosft sign2=1 |
+    gazdag inv=%d velocity=${SOURCES[1]} nt=400 |
+    cosft sign2=-1 | window n2=%d
+    ''' % (2*200/(4-case)+1,1-adj,200/(4-case))
+
+for case in range(1,4):
+    mod = 'mod%d' % case        
+    Flow(mod,'mod','window j2=%d' % (4-case))
+    
+    dki = 'dki%d' % case
+    kir = 'kir%d' % case
+
+    Flow(dki,[mod,'vel'],kirchhoff(0))
+    Flow(kir,[dki,'vel'],kirchhoff(1))
+    Plot(dki,'grey title="Kirchhoff %d" labelsz=12' % case)
+    Plot(kir,'grey wanttitle=n')
+
+    dph = 'dph%d' % case
+    pha = 'pha%d' % case
+
+    Flow(dph,[mod,'vel'],phaseshift(0,case))
+    Flow(pha,[dph,'vel'],phaseshift(1,case))
+    Plot(dph,
+         'window n1=200 | grey title="Phaseshift %d" labelsz=12' % case)
+    Plot(pha,'grey wanttitle=n')
+
+    Plot(mod,[dki,dph],'SideBySideAniso')
+
+Result('comrecon','kir3 pha3','SideBySideAniso',vppen='txscale=1.5')
+
+Flow('mspec','mod3','spectra all=y | scale axis=1')
+Flow('pspec','pha3','spectra all=y | scale axis=1')
+Result('phaspec','mspec pspec',
+       '''
+       cat axis=2 ${SOURCES[1]} |
+       dots yreverse=1 labels="model:recon" label1=Frequency unit1=Hz dots=0
+       ''')
+
+Result('commod','mod3 mod2 mod1','OverUnderAniso',vppen='txscale=1.5')
+       
+End()

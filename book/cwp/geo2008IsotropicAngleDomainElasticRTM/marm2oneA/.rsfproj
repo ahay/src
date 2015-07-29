@@ -1,0 +1,3 @@
+uses=['sfmath', 'sfcat', 'sftransp', 'sfput', 'sfwindow', 'sfdd', 'sfgraph', 'sfsegyread', 'sfscale', 'sfmask', 'sfgrey', 'sfsmooth', 'sfspike', 'sfpad', 'sfricker1', 'sfspray', 'sfspline', 'sfunif2', 'sfadd', 'sfawefd2d', 'sfclip', 'sfbandpass', 'sfewefd2dtti', 'sfbyte', 'sfreverse', 'sfstack', 'sfxcor2d']
+data=['data/marm2/vp_marmousi-ii.segy', 'data/marm2/vs_marmousi-ii.segy', 'data/marm2/density_marmousi-ii.segy', 'data/marm2/vp_marmousi-ii.segy', 'data/marm2/vs_marmousi-ii.segy', 'data/marm2/density_marmousi-ii.segy', 'data/marm2/vp_marmousi-ii.segy', 'data/marm2/vs_marmousi-ii.segy', 'data/marm2/density_marmousi-ii.segy']
+size= 113798909212

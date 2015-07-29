@@ -1,0 +1,126 @@
+#########################################################
+# Setting up
+#########################################################
+
+from rsf.proj import *
+
+#########################################################
+# Calculating the test data
+#########################################################
+
+Flow('vrms',None,
+     'math d1=0.004 n1=1001 o1=0 output="x1*125+2000" ')
+
+Flow('synt','vrms',
+     '''
+     spike d1=0.004 n1=1001 o1=0 nsp=17 n2=128 d2=20 o2=0
+     label2=Offset unit2=m
+     k1=%s
+     mag=1,1,1,1,-1,1,1,-1,1,1,1,-1,1,1,-1,1,1 |
+     bandpass flo=4 fhi=20 |
+     inmo velocity=$SOURCE half=n
+     '''% string.join(map(str,range (100,916,48)),','), 
+     stdin=0)
+
+#########################################################
+# Displaying the data with grey
+#########################################################
+
+Result('synt',
+       'grey title="Grey model" screenratio=1.2 ')
+    
+#########################################################
+# Adding saltpepper random noise to data
+#########################################################
+
+Flow('noise','synt','saltpepper inten=2 seed=2013')
+
+#########################################################
+# Generating the temporary figure file about noisy data
+#########################################################
+
+Plot('noise','grey title="Noisy model"')
+Result('noise','grey title="Noisy model" screenratio=1.2')
+
+#########################################################
+# Excuting simple band-pass filtering and displaying
+#########################################################
+
+Result('band','noise',
+       '''
+       bandpass fhi=60 |
+       grey title="band-pass processing"
+       screenratio=1.2
+       ''')
+
+#########################################################
+# Advanced displaying
+#########################################################
+
+# plot black-white grey figure
+Plot('syntgrey','synt',
+     'grey title="Grey model" screenht=15 screenratio=1.2')
+
+# plot wiggle figure
+Plot('syntwiggle1','synt',
+     'wiggle yreverse=y transp=y poly=y \
+      title="Wiggle model" wheretitle=bottom \
+      wherexlabel=top screenht=15 screenratio=1.2')
+
+# plot color figure
+Plot('syntwiggle2','synt',
+     '''
+     grey color=j title="Color model"
+     screenht=15 screenratio=1.2
+     ''')
+
+Result('sidebyside',
+       'syntgrey syntwiggle1 syntwiggle2','SideBySideIso')
+
+#########################################################
+# Denoising by using classical median filter (MF)
+#########################################################
+
+Flow('median','noise','mf nfw=7 ')
+
+Plot('median','grey title="Result after median filter" ')
+
+#########################################################
+# Analyzing and comparing the amplitude spectra
+#########################################################
+
+Flow('nspec','noise',
+     '''
+     window n2=1 f2=64 |
+     spectra
+     ''')
+
+Plot('nspec',
+     '''
+     graph title="Amplitude spectra at 64th trace"
+     label1=Amplitude label2=Frequency 
+     unit1= unit2=Hz
+     ''')
+
+Flow('mspec','median',
+     '''
+     window n2=1 f2=64 |
+     spectra
+     ''')
+
+Plot('mspec',
+     '''
+     graph title="Amplitude spectra at 64th trace"
+     label1=Amplitude label2=Frequency 
+     unit1= unit2=Hz
+     ''')
+
+Result('compare',
+       'noise median nspec mspec','TwoRows', \
+       vppen='xsize=10 ysize=10')
+
+#########################################################
+# Wrapping up
+#########################################################
+
+End()

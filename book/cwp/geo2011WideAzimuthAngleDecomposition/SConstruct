@@ -1,0 +1,10 @@
+from rsf.tex import *
+
+
+End(lclass='geophysics',use='''amssymb,hyperref,
+          amsthm,amsmath,amsbsy,subfigure,latexsym,graphicx,
+          color,lineno,setspace,algorithmic,algorithm,
+          natbib,multirow,rotating''')
+
+
+

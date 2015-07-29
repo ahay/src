@@ -1,0 +1,285 @@
+from rsf.proj import *
+import rsf.recipes.fdmod as fdmod
+import rsf.recipes.stiff as stiff
+import wefd,marm2
+
+# ------------------------------------------------------------
+par = {
+    'nt':10000,'ot':0.00, 'dt':0.00025,  'lt':'Time',     'ut':'s',
+    'nx':1200, 'ox':5.00, 'dx':0.002498, 'lx':'Position', 'ux':'km',
+    'nz':500,  'oz':0.50, 'dz':0.002498, 'lz':'Depth',    'uz':'km',
+    'kt':200,
+    'frq':30,
+    'jsnap':500,
+    'jdata':5,
+    'nb':100,
+    'ng':1800,'dg':0.2,'og':-90,
+    'wclip':0.5,
+    'wweight':100
+    }
+fdmod.param(par)
+par['labelattr']=par['labelattr']+'''
+parallel2=n format2=%3.1f
+'''
+
+par['xsou']=6.75
+par['zsou']=par['oz']
+par['zrec']=0.50
+
+# taper params
+par['ltap']=101
+par['rtap']=par['nx']-100
+
+
+# ------------------------------------------------------------
+# source/receiver coordinates
+fdmod.point('ss',par['xsou'],par['zsou'],par)
+fdmod.horizontal('rr',par['zrec'],par)
+
+# image coordinates
+par['nqz']=par['nz']
+par['oqz']=par['oz']
+par['dqz']=par['dz']
+
+par['nqx']=par['nx']
+par['oqx']=par['ox']
+par['dqx']=par['dx']
+
+parq = par.copy()
+parq['xmin']=5.5
+parq['xmax']=7.5
+parq['zmin']=0.6
+parq['zmax']=par['oqz'] + (par['nqz']-1) * par['dqz']
+parq['ratio']=1.0*(parq['zmax']-parq['zmin'])/(parq['xmax']-parq['xmin'])
+parq['height']=parq['ratio']*14
+if(parq['height']>10): parq['height']=10
+
+
+
+fdmod.boxarray('qq',
+               par['nqz'],par['oqz'],par['dqz'],
+               par['nqx'],par['oqx'],par['dqx'],
+               par)
+
+Plot('ss','window       |' + fdmod.ssplot('symbol=* plotfat=15',par))
+Plot('rr','window j2=10 |' + fdmod.rrplot('symbol=o plotfat=15',par))
+Plot('qq','window j2=61 |' + fdmod.qqplot('',par))
+
+# ------------------------------------------------------------
+Fetch('vp_marmousi-ii.segy',"marm2")
+Fetch('vs_marmousi-ii.segy',"marm2")
+Fetch('density_marmousi-ii.segy',"marm2")
+
+for file in ('vp','vs','ro'):
+    if(file=='ro'):
+        ifile='density_marmousi-ii.segy'
+       
+    else:
+        ifile=file+'_marmousi-ii.segy'
+    
+    Flow(['z'+file,'t'+file,'./s'+file,'./b'+file],ifile,
+         '''
+         segyread tape=$SOURCE
+         tfile=${TARGETS[1]}
+         hfile=${TARGETS[2]}
+         bfile=${TARGETS[3]}
+         ''',stdin=0)
+    
+    Flow('_'+file,'z'+file,
+         '''
+         put
+         o1=0 d1=0.001249 label1=%(lz)s unit1=%(uz)s
+         o2=0 d2=0.001249 label2=%(lx)s unit2=%(ux)s |
+         window j1=2 j2=2
+         ''' % par)
+
+    if(file=='ro'):
+        Flow(file+'raw','_'+file,
+             '''window n1=%(nz)d n2=%(nx)d min1=%(oz)g min2=%(ox)g | 
+                scale rscale=1000000''' % par)
+    else:
+        Flow(file+'raw','_'+file,
+             'window n1=%(nz)d n2=%(nx)d min1=%(oz)g min2=%(ox)g' % par)
+
+# ------------------------------------------------------------
+Flow(  'wmask','vpraw','mask max=1.5 | dd type=float')
+Result('wmask',fdmod.cgrey('allpos=y',parq))
+
+Flow('rx','vpraw','math output="1.0+1.5*(input-1.5)/3" ')
+Flow('ro','roraw','math output=1.0')
+
+
+
+Flow('vp','vpraw','smooth rect1=35 rect2=35 repeat=5')
+Flow('vs','vp wmask',
+     'scale rscale=0.5 | math w=${SOURCES[1]} output="input*(1-w)"')
+
+#
+
+for file in (['vp', 'rx']):
+    Plot(file,fdmod.cgrey('allpos=y pclip=99  bias=1',par))
+Result('rx',['rx','rr','ss'],'Overlay')
+Result('vp',['vp','rr','ss'],'Overlay')
+# ------------------------------------------------------------
+# elastic stiffness tensor
+stiff.iso2d('co','vp','vs','ro',par)
+stiff.iso2d('cx','vp','vs','rx',par)
+
+# ------------------------------------------------------------
+fdmod.wavelet('wav0',par['frq'],par)
+
+# acoustic source
+Flow(  'wava','wav0','transp')
+Result('wava','transp |' + fdmod.waveplot('',par))
+
+# ------------------------------------------------------------
+# elastic source
+Flow('ver','wav0','math output=input*1' % par)
+Flow('hor','wav0','math output=input*0' % par)
+Flow('wave','ver hor',
+     '''
+     cat axis=2 space=n ${SOURCES[1:2]} |
+     transp plane=12 |
+     spray axis=1 n=1 o=%(ox)g d=%(dx)g
+     ''' % par)
+wefd.ewavelet('wave','',par)
+
+# ------------------------------------------------------------
+# direct arrival mask
+vptop=1.77
+tmin = (par['xsou']-par['xmin'])/vptop
+tmax = (par['xmax']-par['xsou'])/vptop
+marm2.dipline1('ml',
+                0.2+tmin,par['xmin'],
+                0.2,     par['xsou'],
+                0,1,
+                par['nt'],par['ot'],par['dt'],
+                par['nx'],par['ox'],par['dx'])
+marm2.dipline1('mr',
+                0.2,     par['xsou'],
+                0.2+tmax,par['xmax'],
+                0,1,
+                par['nt'],par['ot'],par['dt'],
+                par['nx'],par['ox'],par['dx'])
+Plot('mall','ml mr','cat axis=3 space=n ${SOURCES[1]} | grey gainpanel=a',
+     view=1)
+
+# ------------------------------------------------------------
+# mask for tapering (edges and direct arrival)
+Flow('ma','ml mr',
+     '''
+     spike nsp=1 mag=1.0
+     n1=%(nx)d o1=%(ox)g d1=%(dx)g k1=%(ltap)d l1=%(rtap)d
+     n2=%(nt)d o2=%(ot)g d2=%(dt)g |
+     smooth rect1=100 repeat=1 |
+     scale axis=123 |
+     transp |
+     add mode=p ${SOURCES[0]} |
+     add mode=p ${SOURCES[1]} |
+     transp |
+     smooth rect2=100 repeat=3 |
+     put label1=x label2=t unit1=km unit2=s
+     ''' % par)
+Flow('me','ma',
+     '''
+     spray axis=3 n=2 o=0 d=1 |
+     transp plane=23
+     ''')
+Result('ma','window j2=10 | transp|' + fdmod.dgrey('',par))
+
+# ------------------------------------------------------------
+# acoustic modeling
+fdmod.awefd('da','wa','wava','vp','rx','ss','rr','',par)
+fdmod.wom('wam','wa','vp',1.5,par)
+Plot('wam',          fdmod.wgrey('pclip=100',par),view=1)
+Result('da','window j2=10 | transp | bandpass flo=8 |'
+       +fdmod.dgrey('pclip=99 screenratio=2.5 labelsz=5 labelfat=2 wantaxis=n',par))
+
+# elastic modeling
+# displacement field
+fdmod.ewefd2('de','we','wave','cx','rx','ss','rr','ssou=y opot=n free=n',par)
+wefd.emovie('we','pclip=99',1, par)
+Flow('de_','de','window j3=8')
+wefd.edata ('de','de_','pclip=95 screenratio=2. n2tic=6 o2num=0 d2num=.5 xll=1.5',par)
+
+# potential field
+fdmod.ewefd2('df','wf','wave','cx','rx','ss','rr','ssou=y opot=y free=n ',par)
+wefd.emovie('wf','pclip=99',1, par)
+Flow('df_','df','window j3=8')
+wefd.edata ('df','df_','pclip=95 screenratio=2. n2tic=6 o2num=0 d2num=.5 xll=1.5',par)
+
+# mask direct arrival
+Flow(  'ea','da ma',
+       '''
+       transp | bandpass flo=10 | transp |
+       add mode=p ${SOURCES[1]}       
+       ''')
+Result('ea','window j2=10 | transp |'+fdmod.dgrey('pclip=99',par))
+
+Flow('ee','de me',
+     '''
+     add mode=p ${SOURCES[1]} |
+     transp plane=13 | bandpass flo=10 | transp plane=13
+     ''')
+wefd.edata ('ee','ee','pclip=99',par)
+
+# ------------------------------------------------------------
+# acoustic RTM
+wefd.artm('ia','wava','ea','vp','ro','ss','rr','qq','jdata=%(jdata)d '%par,par)
+Result(   'ia',
+          '''
+          bandpass flo=5 fhi=40 | 
+          transp | 
+          bandpass flo=5 fhi=40 | 
+          transp |
+          ''' + fdmod.cgrey('pclip=100 labelsz=8',par))
+
+
+# elastic RTM
+wefd.ewfld('ie','wave','ee','co','ro','ss','rr','qq',' opot=n jdata=%(jdata)d '%par,par)
+wefd.ecic('ie','ss','rr','cc','labelsz=12',par)
+wefd.ewfld('je','wave','ee','co','ro','ss','rr','qq',' opot=y jdata=%(jdata)d '%par,par)
+wefd.ecic('je','ss','rr','cc','labelsz=12',par)
+
+# -----------------------------------------------------------
+
+
+# ------------------------------------------------------------
+par['iclip']=0.5
+par['iweight']=100
+
+Flow('atmp','rx',
+     '''
+     window min1=%(oqz)g n1=%(nqz)d min2=%(oqx)g n2=%(nqx)d |
+     put o1=%(oqz)g o2=%(oqx)g |
+     scale axis=123
+     ''' %par)
+Flow('etmp','atmp','spray axis=3 n=4 o=0 d=1')
+
+# ------------------------------------------------------------
+Flow('iatmp','ia',
+     '''
+     bandpass flo=10 |
+     scale axis=123
+     ''')
+fdmod.iom('iam','iatmp','atmp',0.5,par)
+Result(   'iam', fdmod.cgrey('pclip=99.5 labelsz=8',par))
+
+# ------------------------------------------------------------
+clip=[99.5,99.5,99.5,99.5]
+for i in ('ie','je'):
+    Flow(i+'cut',i,
+         '''
+         window
+         min1=%(oqz)g n1=%(nqz)d
+         min2=%(oqx)g n2=%(nqx)d |
+         bandpass flo=5 fhi=40 | transp | bandpass flo=5 fhi=40 | transp
+    
+         ''' % par)
+    wefd.eimage(i+'all',i+'cut',' labelsz=12 yll=2 titlesz=20',par)
+
+
+
+
+End()
+

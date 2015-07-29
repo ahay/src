@@ -1,0 +1,32 @@
+from rsf.proj import *
+
+Flow('aamod',None,
+     '''
+     spike n1=100 d1=0.015 n2=20 d2=0.15 n3=1 n4=1
+     nsp=5 k1=50,83,14,65,30 label1=
+     k2=7,5,19,6,1 l2=7,5,19,13,20
+     mag=-1,1,1,0.3,0.3 p2=0,0,0,2,0
+     ''')
+
+for aal in range(2):
+    Flow('aad%d' % aal,'aamod',
+         '''
+         preconstkirch aal=%d inv=y vel=3 
+         ''' % aal)
+    Flow('aad%dh' % aal,'aad%d' % aal,'halfint inv=y adj=n')
+    Flow('aamig%d' % aal,'aad%dh' % aal,
+         '''
+         halfint inv=y adj=y |
+         preconstkirch aal=%d inv=n vel=3
+         ''' % aal)
+
+for dat in Split('aamod aad0 aad1 aad1h aamig0 aamig1'):
+    Result(dat,
+           '''
+           dots gaineach=0 dots=0 seemean=1 strings=1 
+           constsep=1 overlap=5.5 transp=1 
+           ''')
+
+Result('croshyp', None,'croshyp',prefix=plprefix)
+
+End()

@@ -1,0 +1,102 @@
+from rsf.proj import *
+import math, string, random
+
+random.seed(2004)
+
+# no random.shuffle in Python 1.5.2
+def shuffle(x):
+    for i in xrange(len(x)-1, 0, -1):
+        # pick an element in x[:i+1] with which to exchange x[i]
+        j = int(random.random() * (i+1))
+        x[i], x[j] = x[j], x[i]
+
+n1=128
+
+Flow('spike',None,'spike n1=%d o1=0 d1=1 label1=" " ' % n1)
+Flow('cos','spike','math output="cos(%g*x1)" ' % (2*math.pi*6/n1))
+Flow('sinc','spike',
+     'math output="%g*(x1+%g)" | math output="sin(input)/input" ' %
+     (12*math.pi/n1,1-0.001-n1//2))
+Flow('widebox',None,
+     'spike n1=%d o1=0 d1=1 nsp=2 k1=%d,%d mag=1,-1 | causint' %
+     (n1,n1//8+1,n1//8+3*n1//16))
+Flow('narrowbox',None,
+     'spike n1=%d o1=0 d1=1 nsp=2 k1=%d,%d mag=1,-1 | causint' %
+     (n1,n1//8+1,n1//8+n1//16))
+Flow('twin',None,
+     'spike n1=%d o1=0 d1=1 nsp=2 k1=1,%d' % (n1,1+3*n1//16))
+Flow('doublebox',None,
+     'spike n1=%d o1=0 d1=1 nsp=4 k1=1,%d,%d,%d mag=1,-1,1,-1 | causint' %
+     (n1,n1//16,1+3*n1//16,n1//16+3*n1//16))
+
+signals = Split('cos sinc widebox narrowbox twin doublebox')
+labels = 'cos:sinc:w box:n box:twin:2 box'
+
+combs = [
+    range(1,1+n1//2,4),
+    range(1,1+n1//4,4),
+    range(1,1+n1//2,8),
+    range(1,1+n1//4,8),
+    range(1,1+n1,32)
+    ]
+for case in range(len(combs)):
+    comb = combs[case]
+    name = 'comb%d' % case
+    Flow(name,None,
+         'spike n1=%d o1=0 d1=1 nsp=%d k1=%s' %
+         (n1,len(comb),string.join(map(str,comb),',')))
+    signals.append(name)
+    labels = labels + ':cmb%d' % (case+1)
+
+Flow('exponent','spike',
+     'math output="exp(-%g*(2*x1-%d))" ' % (8./n1,n1-2))
+Flow('gaussian','spike',
+     'math output="%g*(2*x1-%d)" | math output="exp(-input*input)" ' %
+     (8./n1,n1-2))
+
+Flow('white','spike','noise type=n seed=1990 | math output="2*(input-1)" ')
+Flow('colored','white','smooth rect1=3')    
+
+signals = signals + Split('exponent gaussian white colored')
+labels = labels + ':exp:gauss:rand:s ran'
+
+def dots(title):
+    return '''
+    dots dots=0 connect=0 overlap=.75 yreverse=1 labelsz=12
+    title="%s" 
+    ''' % title
+
+Flow('sig',signals,'cat axis=2 ${SOURCES[1:%d]}' % len(signals))
+Plot('sig',dots('Signals') + ' labels="%s" ' % labels)
+
+Flow('spec','sig','pad n1=%d | spectra | math output="input*input" ' % (2*n1))
+Plot('spec',dots('Spectra'))
+
+Flow('auto','spec','rtoc | fft1 inv=y | window n1=%d' % n1)
+Plot('auto',dots('Autocorrelations'))
+
+Result('autocor','sig auto','SideBySideAniso',vppen='yscale=0.85')
+Result('spectra','auto spec','SideBySideAniso',vppen='yscale=0.85')
+
+nsig = len(signals)
+rand = range(nsig)
+
+shuffle(rand)
+Flow('head1.asc',None,
+     'echo %s n1=%d esize=0 data_format=ascii_float in=$TARGET' %
+     (string.join(map(str,rand)),nsig))
+shuffle(rand)
+Flow('head2.asc',None,
+     'echo %s n1=%d esize=0 data_format=ascii_float in=$TARGET' %
+     (string.join(map(str,rand)),nsig))
+
+Plot('randauto',
+     'auto head2.asc','headersort head=${SOURCES[1]} |' + \
+     dots('Reordered Autocors'))
+Result('randauto','sig randauto','SideBySideAniso',vppen='yscale=0.85')
+Plot('randspec',
+     'spec head2.asc','headersort head=${SOURCES[1]} |' + \
+     dots('Reordered Spectra'))
+Result('randspec','auto randspec','SideBySideAniso',vppen='yscale=0.85')
+
+End()

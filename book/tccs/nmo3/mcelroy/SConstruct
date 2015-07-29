@@ -1,0 +1,478 @@
+from rsf.proj import *
+import math
+from rsf.recipes.beg import server as private
+
+segy = 'mcelroy.sgy'
+
+Fetch(segy,'chevron',private)
+
+Flow('mac tmac mac.asc mac.bin', segy,
+     '''
+     segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]} 
+     ep=228 
+     ''')
+
+# From mac.asc:
+
+#LINE# (IL) BYTES 9-12 (fldr)
+#TRACE# (XL) BYTES 13-16 (tracf)
+#X COOR. BYTES 73-76  (sx)  
+#Y COOR. BYTES 77-80  (sy)
+#INLINE SPACING:   55 FEET
+#CROSSLINE SPACING:   55 FEET
+#CMP DATUM CORRECTION - BYTES 225-228 
+#3D AZIMUTH - BYTES 229-232
+
+Flow('fhead','tmac','dd type=float')
+Flow('fold','mac fhead','window n1=1 f1=1000 | bin head=${SOURCES[1]} xkey=2 ykey=3 fold=$TARGET',stdout=0)
+
+Result('fold','grey allpos=y color=j title="Fold Map" label1=Inline unit1= label2=Crossline unit2= transp=n yreverse=n scalebar=y')
+
+# Window traces for inline and crossline 
+
+for case in ('fldr','tracf'):
+    Flow(case,'fhead','headermath output=%s | mask min=125 max=175' % case)
+Flow('mask','fldr tracf','add mode=p ${SOURCES[1]}',local=1)
+
+Flow('win','mac mask','headerwindow mask=${SOURCES[1]}',local=1)
+Flow('twin','fhead mask','headerwindow mask=${SOURCES[1]}',local=1)
+
+# Find offsets
+
+Flow('hx','twin','headermath output="(gx-sx)/1000" | put d1=1 o1=0 d2=1 o2=0',local=1)
+Flow('hy','twin','headermath output="(gy-sy)/1000" | put d1=1 o1=0 d2=1 o2=0',local=1)
+Flow('h','hx hy','math x=${SOURCES[0]} y=${SOURCES[1]} output="sqrt(x*x+y*y)"')
+
+# Supergather in absolute offset
+Flow('win2','win','transp memsize=1000')
+Flow('bin','win2 h','bin1 head=${SOURCES[1]} interp=2 nx=111 dx=0.05 x0=0.05',local=1)
+#     split=[2,1501,[0,1]])
+Flow('super','bin','transp')
+Result('super','grey title=Supergather label2=Offset unit2=km label1=Time unit1=s')
+
+
+# Unrotated coordinates
+Flow('hxy','hx hy','cat axis=1 ${SOURCES[1]}',local=1)
+Result('hxy','dd type=complex | graph symbol=x wanttitle=n plotcol=6',local=1)
+
+
+# Rotate coordinates
+az = 13.5
+az = az*math.pi/180
+cos = math.cos(az)
+sin = math.sin(az)
+Flow('rx','hx hy','math x=${SOURCES[0]} y=${SOURCES[1]} output="x*%g+y*%g" ' % (cos,sin),local=1)
+Flow('ry','hx hy','math x=${SOURCES[0]} y=${SOURCES[1]} output="-1*%g*x+y*%g" ' % (sin,cos),local=1)
+Flow('rxy','rx ry','cat axis=1 ${SOURCES[1]}',local=1)
+Result('rxy','dd type=complex | graph symbol=x wanttitle=n plotcol=6',local=1)
+
+# Supergather in x and y offsets  
+Flow('win1','win2','window min2=0.8 max2=1.8')
+
+Flow('bin2','win1 rxy',
+     'bin head=${SOURCES[1]} interp=2 xkey=0 nx=321 dx=0.025 x0=-4 ykey=1 ny=321 dy=0.025 y0=-4 ')
+
+Flow('super2','bin2',
+     '''
+     transp plane=23 | transp plane=12 |
+     fft1 | fft3 axis=2 | fft3 axis=3 |
+     dipfilter v1=-16.5 v2=-7.5 v3=7.5 v4=16.5 taper=2 pass=n dim=3 |
+     fft3 axis=3 inv=y | fft3 axis=2 inv=y | fft1 inv=y |
+     bandpass fhi=45 flo=8 | sfwindow min3=-3.7 max3=3.7 min2=-3.7 max2=3.7 |
+     put label2=Inline unit2=km label3=Crossline unit3=km
+     ''')
+
+#v1=-8.0 v2=-3.5 v3=3.5 v4=8.0
+
+Plot('super2',
+     'byte gainpanel=all | grey3 frame1=80 frame2=10 frame3=65 pclip=80 title="Input Supergather" grid=y',local=1)
+
+Result('supercube','super2',
+       '''
+       byte |
+       cubeplot point2=0.8 frame1=89 frame2=40 frame3=40
+       pclip=70 flat=n yll=0.95 titlesz=10 labelsz=8 parallel2=n 
+       label1=Time unit1=s label2=Offset unit2=km label3=Offset unit3=km title="Input supergather" labelfat=2 titlefat=2
+       format2=%s
+       ''' %'%3.1f')
+
+# Absolute offset of super2
+Flow('offset','super2','window n1=1 | math output="sqrt(x1*x1+x2*x2)" ')
+Result('offset','grey title=Offset allpos=y color=j scalebar=y')
+
+# Azimuth of super2
+Flow('azimuth','super2','window n1=1 | math output="%g*(x1&x2)" ' % (180/math.pi))
+Result('azimuth','grey title=Azimuth color=j scalebar=y')
+
+##Dips of super2
+patches=2
+patch3=patches*patches*patches
+
+Flow('pat','super2',
+     '''
+     patch p=%d,%d,%d verb=y w=300,45,45 
+     ''' % (patches,patches,patches))
+
+Flow('pat1','pat',
+     '''
+     put n4=%d n5=1 n6=1 
+     ''' % patch3 )
+
+tsmooth=2
+xsmooth=10
+ysmooth=10
+maxdip=20
+
+mindip=-1*maxdip
+Flow('patdipx','pat1',
+     '''
+     window squeeze=y |
+     dip rect1=%d rect2=%d rect3=%d order=3 n4=0
+     pmax=%g pmin=-%g
+     qmax=%g qmin=-%g
+     ''' % (tsmooth,xsmooth,xsmooth,maxdip,mindip,maxdip,mindip),split=[4,patch3],reduce='cat axis=4')
+Flow('patdipy','pat1',
+     '''
+     window squeeze=y |
+     dip rect1=%d rect2=%d rect3=%d order=3 n4=1
+     pmax=%g pmin=-%g
+     qmax=%g qmin=-%g
+     ''' % (tsmooth,ysmooth,ysmooth,maxdip,mindip,maxdip,mindip),split=[4,patch3],reduce='cat axis=4')
+
+Flow('dipxtemp','patdipx',
+     '''
+     put n4=%d n5=%d n6=%d
+     ''' % (patches,patches,patches))
+Flow('dipytemp','patdipy',
+     '''
+     put n4=%d n5=%d n6=%d
+     ''' % (patches,patches,patches))
+
+Flow('dipx','dipxtemp','patch inv=y weight=y dim=3 n0=501,75,75')
+Flow('dipy','dipytemp','patch inv=y weight=y dim=3 n0=501,75,75')
+
+Plot('dipx','byte gainpanel=all | grey3 title="Inline Slope" frame1=80 frame2=10 frame3=65 color=j')
+Plot('dipy','byte gainpanel=all | grey3 title="Crossline Slope" frame1=80 frame2=10 frame3=10 color=j')
+
+Result('superdip','super2 dipx dipy','SideBySideAniso',local=1)
+
+
+# Apply PNMO as residual NMO
+Flow('pnmod vpnmo','super2 dipy dipx','pnmo3d dipx=${SOURCES[1]} dipy=${SOURCES[2]} vel=${TARGETS[1]} | bandpass fhi=45 flo=8 ')
+Plot('pnmod','byte gainpanel=all | grey3 title="PNMOd" frame1=80 frame2=10 frame3=10')
+Result('super2-pnmo','super2 pnmod','SideBySideAniso',local=1)
+
+# Supergather in off and az 
+Flow('super21','super2','put n2=5625 n3=1 | window squeeze=y | transp')
+Flow('offset1','offset','put n2=5625 n1=1')
+Flow('azimuth1','azimuth','put n2=5625 n1=1')
+
+Flow('offaz','offset1 azimuth1','cat axis=1 ${SOURCES[1]}',local=1)
+Flow('pnmod1','pnmod','put n2=5625 n3=1 | transp',local=1)
+
+slopemag='sqrt(px*px+py*py)'
+Flow('pmag','dipx dipy','math px=${SOURCES[0]} py=${SOURCES[1]} output="%s"' % slopemag, local=1)
+
+Flow('dipx1','dipx','put n2=5625 n3=1 | window squeeze=y | transp')
+Flow('dipy1','dipy','put n2=5625 n3=1 | window squeeze=y | transp')
+Flow('pmag1','pmag','put n2=5625 n3=1 | window squeeze=y | transp')
+
+for cased in ('super21','pnmod1','dipy1','dipx1','pmag1'):
+    Flow(cased+'_bin3',[cased,'offaz'],
+         'bin head=${SOURCES[1]} interp=2 xkey=0 ykey=1 x0=0 dx=0.2 nx=25 y0=-180 dy=8 ny=45 interp=2',local=1)
+    Flow(cased+'_oa',cased+'_bin3','transp plane=23 | transp plane=12',local=1)
+
+    Plot(cased+'_oa',
+           'byte gainpanel=20 | grey3 frame1=200 frame2=24 frame3=22 wanttitle=n parallel2=n titlesz=15 labelsz=12',local=1)
+
+    for casep in ('wiggle','grey'):
+        Result(cased+'-aniso'+casep[0],cased+'_oa',
+             '''
+             window min1=0.9 max1=1.6 min2=3.6 max2=4.0 | stack |
+             %s transp=y yreverse=y poly=y pclip=97 color=j parallel2=n
+             title="Isotropic NMO" label1=Time unit1=s label2=Azimuth unit2="\^o\_"
+             labelfat=2 titlefat=2 xll=2 yll=1.5 yur=9 xur=6 format2=%s
+             ''' % (casep,'%3.1f'),local=1)
+
+## Result('anisow','super21_anisow pnmod1_anisow','SideBySideAniso',local=1)
+## Result('anisog','super21_anisog pnmod1_anisog','SideBySideAniso',local=1)
+## Result('aniso_dip','super21_anisow pmag1_anisog pnmod1_anisow','SideBySideAniso',local=1)
+
+##Dips of super21_oa
+patches=2
+patch3=patches*patches*patches
+
+Flow('patoa','super21_oa',
+     '''
+     patch p=%d,%d,%d verb=y w=300,15,30 
+     ''' % (patches,patches,patches))
+
+Flow('patoa1','patoa',
+     '''
+     put n4=%d n5=1 n6=1 
+     ''' % patch3 )
+
+tsmooth=20
+osmooth=7
+asmooth=10
+maxdip=1
+
+mindip=-1*maxdip
+Flow('patdipo','patoa1',
+     '''
+     window squeeze=y |
+     dip rect1=%d rect2=%d rect3=%d order=3 n4=0
+     pmax=%g pmin=-%g
+     qmax=%g qmin=-%g
+     ''' % (tsmooth,osmooth,osmooth,maxdip,mindip,maxdip,mindip),split=[4,patch3],reduce='cat axis=4')
+Flow('patdipa','patoa1',
+     '''
+     window squeeze=y |
+     dip rect1=%d rect2=%d rect3=%d order=3 n4=1
+     pmax=%g pmin=-%g
+     qmax=%g qmin=-%g
+     ''' % (tsmooth,asmooth,asmooth,maxdip,mindip,maxdip,mindip),split=[4,patch3],reduce='cat axis=4')
+
+Flow('dipotemp','patdipo',
+     '''
+     put n4=%d n5=%d n6=%d
+     ''' % (patches,patches,patches))
+Flow('dipatemp','patdipa',
+     '''
+     put n4=%d n5=%d n6=%d
+     ''' % (patches,patches,patches))
+na=45
+Flow('dipo','dipotemp','patch inv=y weight=y dim=3 n0=501,25,%d' % na)
+Flow('dipa','dipatemp','patch inv=y weight=y dim=3 n0=501,25,%d' % na)
+
+Plot('dipo','byte gainpanel=all | grey3 title="Offset Slope" frame1=200 frame2=24 frame3=22 color=j')
+Plot('dipa','byte gainpanel=all | grey3 title="Azimuth Slope" frame1=200 frame2=24 frame3=22 color=j')
+
+Result('dipoa','super21_oa dipo dipa','SideBySideAniso',local=1)
+
+Flow('pnmo_oa','super21_oa dipo','pnmo half=y dip=${SOURCES[1]} | bandpass fhi=45 flo=8')
+Plot('pnmo_oa_anisow','pnmo_oa',
+     '''
+     window min1=0.9 max1=1.6 min2=3.6 max2=4.0 | stack |
+     %s transp=y yreverse=y poly=y pclip=97
+     title="b.) Common Offset (3.6-4.0 km) Stack PNMO" label1=Time unit1=s label2=Azimuth unit2="\^o\_"    titlesz=15 labelsz=12
+     ''' % 'wiggle',local=1)
+## Result('anisow_oa','super21_anisow pnmo_oa_anisow','SideBySideAniso',local=1)
+
+# Select one crossline for stack
+Flow('cross','fhead','headermath output=fldr | mask min=150 max=150')
+
+Flow('line','mac cross','headerwindow mask=${SOURCES[1]}')
+Flow('tline','tmac cross','headerwindow mask=${SOURCES[1]}')
+
+Flow('bline','line tline','intbin xk=cdpt yk=tracf head=${SOURCES[1]}')
+
+Flow('stack','bline','stack')
+
+Result('stack','grey title=Stack')
+#########################################################################################
+######  Second Pass ####################################################################
+
+##Dips of pnmo_oa
+
+tsmooth=20
+osmooth=9
+asmooth=10
+maxdip=.10
+mindip=-1*maxdip
+
+Flow('patoa2','pnmo_oa',
+     '''
+     patch p=%d,%d,%d verb=y w=300,15,30 
+     ''' % (patches,patches,patches))
+
+Flow('patoa21','patoa2',
+     '''
+     put n4=%d n5=1 n6=1 
+     ''' % patch3 )
+
+Flow('patdipo2','patoa21',
+     '''
+     window squeeze=y |
+     dip rect1=%d rect2=%d rect3=%d order=3 n4=0
+     pmax=%g pmin=-%g
+     qmax=%g qmin=-%g
+     ''' % (tsmooth,osmooth,osmooth,maxdip,mindip,maxdip,mindip),split=[4,patch3],reduce='cat axis=4')
+Flow('patdipa2','patoa21',
+     '''
+     window squeeze=y |
+     dip rect1=%d rect2=%d rect3=%d order=3 n4=1
+     pmax=%g pmin=-%g
+     qmax=%g qmin=-%g
+     ''' % (tsmooth,asmooth,asmooth,maxdip,mindip,maxdip,mindip),split=[4,patch3],reduce='cat axis=4')
+
+Flow('dipotemp2','patdipo2',
+     '''
+     put n4=%d n5=%d n6=%d
+     ''' % (patches,patches,patches))
+Flow('dipatemp2','patdipa2',
+     '''
+     put n4=%d n5=%d n6=%d
+     ''' % (patches,patches,patches))
+
+Flow('dipo2','dipotemp2','patch inv=y weight=y dim=3 n0=501,25,%d' % na)
+Flow('dipa2','dipatemp2','patch inv=y weight=y dim=3 n0=501,25,%d' % na)
+
+Plot('dipo2','byte gainpanel=all | grey3 title="Offset Slope" frame1=200 frame2=24 frame3=22 color=j')
+Plot('dipa2','byte gainpanel=all | grey3 title="Azimuth Slope" frame1=200 frame2=24 frame3=22 color=j')
+
+Result('dipoa2','pnmo_oa_anisow dipo2 dipa2','SideBySideAniso',local=1)
+
+Flow('pnmo_oa2','pnmo_oa dipo2','pnmo half=y dip=${SOURCES[1]} | bandpass fhi=45 flo=8')
+Result('pnmo-oa2-anisow','pnmo_oa2',
+     '''
+     window min1=0.9 max1=1.6 min2=3.6 max2=4.0 | stack |
+     %s transp=y yreverse=y poly=y pclip=97
+     title="After PNMO" label1=Time unit1=s label2=Azimuth unit2="\^o\_"
+     parallel2=n labelfat=2 titlefat=2 xll=2 yll=1.5 yur=9 xur=6 format2=%s
+     ''' % ('wiggle','%3.1f'),local=1)
+## Result('anisow_oa2','super21_anisow pnmo_oa2_anisow','SideBySideAniso',local=1)
+#########################################################################################
+#########################################################################################
+######  Third Pass ####################################################################
+
+##Dips of pnmo_oa
+
+tsmooth=20
+osmooth=9
+asmooth=10
+maxdip=.10
+mindip=-1*maxdip
+
+Flow('patoa3','pnmo_oa2',
+     '''
+     patch p=%d,%d,%d verb=y w=300,15,30 
+     ''' % (patches,patches,patches))
+
+Flow('patoa31','patoa3',
+     '''
+     put n4=%d n5=1 n6=1 
+     ''' % patch3 )
+
+Flow('patdipo3','patoa31',
+     '''
+     window squeeze=y |
+     dip rect1=%d rect2=%d rect3=%d order=3 n4=0
+     pmax=%g pmin=-%g
+     qmax=%g qmin=-%g
+     ''' % (tsmooth,osmooth,osmooth,maxdip,mindip,maxdip,mindip),split=[4,patch3],reduce='cat axis=4')
+Flow('patdipa3','patoa31',
+     '''
+     window squeeze=y |
+     dip rect1=%d rect2=%d rect3=%d order=3 n4=1
+     pmax=%g pmin=-%g
+     qmax=%g qmin=-%g
+     ''' % (tsmooth,asmooth,asmooth,maxdip,mindip,maxdip,mindip),split=[4,patch3],reduce='cat axis=4')
+
+Flow('dipotemp3','patdipo3',
+     '''
+     put n4=%d n5=%d n6=%d
+     ''' % (patches,patches,patches))
+Flow('dipatemp3','patdipa3',
+     '''
+     put n4=%d n5=%d n6=%d
+     ''' % (patches,patches,patches))
+
+Flow('dipo3','dipotemp3','patch inv=y weight=y dim=3 n0=501,25,%d' % na)
+Flow('dipa3','dipatemp3','patch inv=y weight=y dim=3 n0=501,25,%d' % na)
+
+Flow('pmag3','dipo dipa','math px=${SOURCES[0]} py=${SOURCES[1]} output="%s"' % slopemag, local=1)
+
+Plot('dipo3','byte gainpanel=all | grey3 title="Offset Slope" frame1=200 frame2=24 frame3=22 color=j')
+Plot('dipa3','byte gainpanel=all | grey3 title="Azimuth Slope" frame1=200 frame2=24 frame3=22 color=j')
+
+Result('dipoa3','pnmo_oa_anisow dipo3 dipa3','SideBySideAniso',local=1)
+
+Flow('pnmo_oa3','pnmo_oa2 dipo3','pnmo half=y dip=${SOURCES[1]} | bandpass fhi=45 flo=8')
+Plot('pnmo_oa3_anisow','pnmo_oa3',
+     '''
+     window min1=0.9 max1=1.6 min2=3.6 max2=4.0 | stack |
+     %s transp=y yreverse=y poly=y pclip=97
+     title="After PNMO" label1=Time unit1=s label2=Azimuth unit2="\^o\_"  titlesz=15 labelsz=12
+     ''' % 'wiggle',local=1)
+Result('pmag3-anisow','pmag3',
+     '''
+     window min1=0.9 max1=1.6 min2=3.6 max2=4.0 |
+     stack |
+     grey transp=y yreverse=y pclip=99 color=j wheretitle=t wherexlabel=b parallel2=n
+     title="Slope magnitude" label1=Time unit1=s label2=Azimuth unit2="\^o\_"
+     labelfat=2 titlefat=2 xll=2 yll=1.5 yur=9 xur=6 format2=%s
+     '''%'%3.1f' ,local=1)
+#Result('anisow_oa3','super21_anisow pmag3_anisow pnmo_oa2_anisow','SideBySideAniso',local=1)
+########################
+## iter=6
+
+## pnmo_oa_prev='pnmo_oa'
+
+## for i in range(2,iter):
+##     patoa='patoa'+str(i)
+##     patoa1='patoa'+str(i)+'1'
+##     patdipo='patdipo'+str(i)
+##     patdipa='patdipa'+str(i)
+##     dipotemp='dipotemp'+str(i)
+##     dipatemp='dipatemp'+str(i)
+##     dipo='dipo'+str(i)
+##     dipa='dipa'+str(i)
+##     dipoa='dipoa'+str(i)
+##     pnmo_oa='pnmo_oa'+str(i+1)
+##     pnmo_oa_anisow=pnmo_oa+'_ansiow'
+##     anisow_oa='anisow_oa'+str(i)
+
+    
+##     Flow(patoa,pnmo_oa_prev,
+##          '''
+##          patch p=%d,%d,%d verb=y w=200,10,20 
+##          ''' % (patches,patches,patches))
+##     pnmo_oa_prev='pnmo_oa'+str(i)
+
+##     Flow(patoa1,patoa,
+##          '''
+##          put n4=%d n5=1 n6=1 
+##          ''' % patch3 )
+
+##     Flow(patdipo,patoa1,
+##          '''
+##          window squeeze=y |
+##          dip rect1=%d rect2=%d rect3=%d order=3 n4=0
+##          pmax=%g pmin=-%g
+##          qmax=%g qmin=-%g
+##          ''' % (tsmooth,osmooth,osmooth,maxdip,mindip,maxdip,mindip),split=[4,patch3],reduce='cat axis=4')
+##     Flow(patdipa,patoa1,
+##          '''
+##          window squeeze=y |
+##          dip rect1=%d rect2=%d rect3=%d order=3 n4=1
+##          pmax=%g pmin=-%g
+##          qmax=%g qmin=-%g
+##          ''' % (tsmooth,asmooth,asmooth,maxdip,mindip,maxdip,mindip),split=[4,patch3],reduce='cat axis=4')
+    
+##     Flow(dipotemp,patdipo,
+##          '''
+##          put n4=%d n5=%d n6=%d
+##          ''' % (patches,patches,patches))
+##     Flow(dipatemp,patdipa,
+##          '''
+##          put n4=%d n5=%d n6=%d
+##          ''' % (patches,patches,patches))
+    
+##     Flow(dipo,dipotemp,'patch inv=y weight=y dim=3 n0=501,25,%d' % na)
+##     Flow(dipa,dipatemp,'patch inv=y weight=y dim=3 n0=501,25,%d' % na)
+    
+##     Plot(dipo,'byte gainpanel=all | grey3 title="Offset Slope" frame1=200 frame2=24 frame3=22 color=j')
+##     Plot(dipa,'byte gainpanel=all | grey3 title="Azimuth Slope" frame1=200 frame2=24 frame3=22 color=j')
+    
+##     Result(dipoa,['pnmo_oa_anisow', dipo, dipa],'SideBySideAniso',local=1)
+    
+##     Flow(pnmo_oa,[pnmo_oa_prev, dipo],'pnmo half=y dip=${SOURCES[1]} | bandpass fhi=45 flo=8')
+##     Plot(pnmo_oa_anisow,pnmo_oa,
+##          '''
+##          window min1=0.9 max1=1.6 min2=3.6 max2=4.0 | stack |
+##          %s transp=y yreverse=y poly=y pclip=97
+##          title="After PNMO" label1=Time unit1=s label2=Azimuth unit2="\^o\_"    titlesz=15 labelsz=12
+##          ''' % 'wiggle',local=1)
+##     Result(anisow_oa,['super21_anisow', pnmo_oa_anisow],'SideBySideAniso',local=1)
+End()

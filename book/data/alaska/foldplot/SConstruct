@@ -1,0 +1,88 @@
+from rsf.proj import *
+import rsf.suproj as su
+
+segyread = '''
+segyread bfile=${TARGETS[1]} hfile=${TARGETS[2]}
+tape=$SOURCE endian=%d |
+segyclean
+''' % (1-su.little_endian())
+
+rawsegy=['L23535','L23536','L23537']
+for segy in rawsegy  :
+    Fetch(segy+'.SGY',
+	  server='http://certmapper.cr.usgs.gov',
+      	  top='nersl/NPRA/SEISMIC/1981/31_81',
+      	  dir='DMUX')
+    su.Flow([segy, segy+'.bin',  segy+'.asc'],
+            segy+'.SGY',segyread,stdin=0)
+
+# concatinate the input files
+su.Flow ('line', rawsegy,
+         'cat ${SOURCES}',stdin=0)
+
+# InterpText.py creates a text file with one line for each tract in 
+# line.su that has the key geometry headers like ep, sx, sy, cdp, ...
+# this file had dummy values like -999 or -999999 for dummy traces
+su.Flow ('hdrfile1.txt',map(lambda x: os.path.join('../line31-81/',x),
+                         Split('InterpText.py spnElev.txt recnoSpn.txt hdrfile.txt')),
+      '${SOURCES}',stdin=0)
+
+# convert the asci file header1.txt to binary (sushw requires binary input)
+su.Flow ('binary_hdrfile1.dat','hdrfile1.txt',
+     ''' 
+     a2b n1=13
+     ''')
+
+# merge the binary_header.dat into the headers of line.su
+# and throw way aux traces, noise records, and other "do not process"
+# traces.
+keys='ep,sx,sy,gx,gy,cdp,tracf,offset,' \
+      'selev,gelev,sstat,gstat,tstat'
+
+su.Flow('allshots','line binary_hdrfile1.dat',
+         '''
+         sushw 
+     	   infile=${SOURCES[1]}
+    	   key=%s |
+         sushw 
+     	   key=f1 
+    	   a=0 |
+         suwind 
+     	    key=cdp 
+    	    min=-999998 
+    	    max=999999 |
+         suwind 
+     	    key=ep 
+    	    min=-999998 
+    	    max=999999 |
+         suwind 
+     	    key=ep 
+	    reject=149
+         ''' % keys)
+
+Flow('rsfallshots trsfallshots','allshots.su',
+      'segyread su=y tfile=${TARGETS[1]}')
+
+Flow('ftrsfallshots','trsfallshots','dd type=float')
+
+Flow('folds','ftrsfallshots',
+    '''
+    fold
+    o1=-5200 n1=96  d1=110   label1=offset
+    o2=101   n2=636 d2=1     label2=cdp
+    o3=0     n3=1   d3=10000 label3=iline
+    ''')
+
+Result('folds','grey title=foldplot')
+
+Flow('fold','ftrsfallshots',
+    '''
+    window n1=1 |
+    bin fold=$TARGET head=$SOURCE
+    x0=-5200 nx=96  dx=110 xkey=11 
+    y0=101   ny=636 dy=1   ykey=5
+    ''',stdout=0)
+
+Result('fold','grey title=foldplot label1=offset label2=cdp')
+
+End()

@@ -1,0 +1,658 @@
+\published{Geophysics, 75, WB235-WB245, (2010)}
+\title{OC-seislet: seislet transform construction with differential offset continuation}
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+
+\ms{GEO-2009-0420}
+
+\address{
+\footnotemark[1] College of Geo-exploration Science and Technology,\\
+Jilin University \\
+No.6 Xi minzhu street, \\
+Changchun, China, 130026 \\
+\footnotemark[2] Bureau of Economic Geology,\\
+John A. and Katherine G. Jackson School of Geosciences \\
+The University of Texas at Austin \\
+University Station, Box X \\
+Austin, TX, USA, 78713-8924}
+
+\author{Yang Liu\footnotemark[1]\footnotemark[2] and Sergey Fomel\footnotemark[2]}
+
+\footer{GEO-2009-0420}
+\lefthead{Liu and Fomel}
+\righthead{OC-seislet transform}
+\maketitle
+
+\begin{abstract}
+
+ Many of the geophysical data analysis problems, such as signal-noise
+ separation and data regularization, are conveniently formulated in a
+ transform domain, where the signal appears sparse. Classic transforms
+ such as the Fourier transform or the digital wavelet transform, fail
+ occasionally in processing complex seismic wavefields, because of the
+ nonstationarity of seismic data in both time and space dimensions. We
+ present a sparse multiscale transform domain specifically tailored to
+ seismic reflection data. The new wavelet-like transform -- the
+ \emph{OC-seislet transform} -- uses a differential
+ offset-continuation (OC) operator that predicts prestack reflection
+ data in offset, midpoint, and time coordinates. It provides high
+ compression of reflection events. In the transform domain, reflection
+ events get concentrated at small scales. Its compression properties
+ indicate the potential of OC-seislets for applications such as
+ seismic data regularization or noise attenuation. Results of applying
+ the method to both synthetic and field data examples demonstrate that
+ the OC-seislet transform can reconstruct missing seismic data and
+ eliminate random noise even in structurally complex areas.
+\end{abstract}
+
+\section{Introduction}
+
+Digital wavelet transforms are excellent tools for multiscale data
+analysis. The wavelet transform is more powerful when compared with
+the classic Fourier transform, because it is better fitted for
+representing non-stationary signals. Wavelets provide a sparse
+representation of piecewise regular signals, which may include
+transients and singularities \cite[]{mallat}. In recent years, many
+wavelet-like transforms that explore directional characteristics of
+images \cite[]{Starck00,Do05,Pennec05,Velisavljevic05} were
+proposed. The curvelet transform in particular has found important
+applications in seismic imaging and data analysis
+\cite[]{douma,chauris,Herrmann2007Let}. \cite{Fomel06} and
+\cite{Fomel10} investigated the possibility of designing a
+wavelet-like transform tailored specifically to seismic data and
+introduced it under the name of the \emph{seislet transform}. Based on
+the digital wavelet transform (DWT), the seislet transform follows
+patterns of seismic events (such as local slopes in 2-D and
+frequencies in 1-D) when analyzing those events at different
+scales. The seislet transform's compression ability finds applications
+in common data processing tasks such as data regularization and noise
+attenuation. However, the problem of pattern detection limits its
+further applications. In 2-D, conflicting slopes at a single data
+point are difficult to detect reliably even using advanced methods
+\cite[]{Fomel02}. It is also difficult to estimate local slopes in the
+presence of strong noise. A similar situation occurs in the 1-D case,
+in which it is difficult to exactly represent a known seismic signal
+using a limited set of frequencies.
+\par
+Offset continuation is a process of seismic data transformation
+between different offsets
+\cite[]{Deregowski81,Bolondi82,Salvador82,GEO68-02-07180732}.
+Different types of dip moveout (DMO) operators \cite[]{Hale91} can be
+regarded as continuation to zero offset and derived as solutions to
+initial-value problems with the offset-continuation differential
+equation. In the shot-record domain, offset continuation transforms to
+shot continuation, which describes the process of transforming
+reflection seismic data along shot location
+\cite[]{GEO61-06-18461858,Spagnolini96,Fomel03a}. The 3-D analog is
+known as azimuth moveout or AMO
+\cite[]{GEO63-02-05740588,Fomel03b}. \cite{Bleistein00} developed
+ a general platform for Kirchhoff data mapping, which includes offset
+ continuation as a special case.
+\par
+In this paper, we propose to incorporate offset continuation as the
+prediction operator into the seislet transform. We design the
+transform in the log-stretch-frequency domain, where each frequency
+slice can be processed independently and in parallel. We expect the
+new seislet transform to perform better than the previously proposed
+seislet transform by plane-wave destruction, PWD-seislet transform
+\cite[]{Fomel10}, in cases of moderate velocity variations and complex
+structures that generate conflicting dips in the data.
+
+\section{Theoretical basis}
+
+OC-seislet transform follows the same construction strategy, the
+lifting scheme, as the PWD-seislet transform but employs the
+offset-continuation operator for prediction at each transform scale.
+
+\subsection {The lifting scheme for the seislet transform}
+
+The lifting scheme \cite[]{Sweldens95} provides a convenient approach
+for designing digital wavelet transforms. The general recipe is as
+follows:
+\begin{enumerate}
+\item Organize the input data as a sequence of records. For 
+      OC-seislet transform of 2-D seismic reflection data, the input
+      is in the `frequency'-`midpoint wavenumber'-`offset' domain
+      after the log-stretched NMO correction \cite[]{Bolondi82},
+      and the transform direction is offset.  
+\item Divide the data records (along the offset axis in the case of the 
+      OC-seislet transform) into even and odd components $\mathbf{e}$
+      and $\mathbf{o}$. This step works at one scale level.
+\item Find the residual difference $\mathbf{r}$ between the odd
+      component and its prediction from the even component: 
+   \begin{equation} 
+   \label{eq:c}
+  \mathbf{{r}} = \mathbf{{o}} - \mathbf{P[{e}]}\;, 
+  \end{equation}
+  where $\mathbf{P}$ is a \emph{prediction} operator. 
+  For example, one can obtain Cohen-Daubechies-Feauveau (CDF) 5/3
+  biorthogonal wavelets \cite[]{Cohen92} by defining the
+  prediction operator as a linear interpolation between two neighboring
+  samples,
+  \begin{equation}
+  \label{eq:p}
+  \mathbf{P[e]}_k = \left(\mathbf{e}_{k-1} + \mathbf{e}_{k}\right)/2\;,
+  \end{equation}
+   where $k$ is an index number at the current scale level.
+\item Find an approximation $\mathbf{c}$ of the data by updating
+  the even component:
+\begin{equation}
+    \label{eq:r}
+    \mathbf{{c}}  = \mathbf{{e}} + \mathbf{U[{r}]}\;,
+  \end{equation}
+where $\mathbf{U}$ is an \emph{update} operator. Constructing the
+update operator for CDF 5/3 biorthogonal wavelets aims at preserving 
+the running average of the signal
+  \cite[]{athome}:
+\begin{equation}
+  \label{eq:u}
+  \mathbf{U[r]}_k = \left(\mathbf{r}_{k-1} + \mathbf{r}_{k}\right)/4\;.
+\end{equation}
+\item The coarse approximation $\mathbf{{c}}$ becomes the new data,
+  and the sequence of steps is repeated on the new data
+    to calculate the transform coefficients at a coarser scale level.
+\end{enumerate}
+ 
+Next, we define new prediction and update operators using
+offset-continuation operators.
+
+\subsection{OC-seislet structure}
+
+We define the OC-seislet transform by specifying prediction and update
+operators with the help of the offset-continuation
+operator. Prediction and update operators for the OC-seislet transform
+are specified by modifying the biorthogonal wavelet construction in
+equations~\ref{eq:p} and \ref{eq:u} as follows
+\cite[]{Fomel06,Fomel10}:
+\begin{eqnarray}
+  \label{eq:sp}
+  \mathbf{P[e]}_k & = & 
+    \left(\mathbf{S}_k^{(+)}[\mathbf{e}_{k-1}] + 
+  \mathbf{S}_k^{(-)}[\mathbf{e}_{k}]\right)/2 \\
+  \label{eq:su}
+  \mathbf{U[r]}_k & = & 
+     \left(\mathbf{S}_k^{(+)}[\mathbf{r}_{k-1}] + 
+    \mathbf{S}_k^{(-)}[\mathbf{r}_{k}]\right)/4\;,
+\end{eqnarray}
+where $\mathbf{S}_k^{(+)}$ and $\mathbf{S}_k^{(-)}$ are operators that
+predict the data record (a common-offset section) by differential
+offset continuation from its left and right neighboring common-offset
+sections with different offsets. Offset continuation operators provide
+the physical connection between data records. The theory of offset
+continuation is reviewed in Appendix A.
+
+One can also employ a higher-order transform, for example, by using
+the template of the CDF 9/7 biorthogonal wavelet transform, which is
+used in JPEG-2000 compression \cite[]{Lian01}. There is only one
+stage (one prediction and one update) for the CDF 5/3 wavelet
+transform, but there are two cascaded stages and one scaling operation
+for CDF 9/7 wavelet transform. Prediction and update operators for a
+high-order OC-seislet transform are defined as follows: 
+\begin{equation}
+  \label{eq:seis01}
+  \mathbf{P}_1[\mathbf{e}]_k=(\mathbf{S}_k^{(+)}[\mathbf{e}_{k-1}]+
+  \mathbf{S}_k^{(-)}[\mathbf{e}_{k}]) \cdot {\alpha}\;,
+\end{equation}
+\begin{equation}
+  \label{eq:seis02}
+  \mathbf{U}_1[\mathbf{r}]_k=(\mathbf{S}_k^{(+)}[\mathbf{r}_{k-1}]+
+  \mathbf{S}_k^{(-)}[\mathbf{r}_{k}]) \cdot {\beta}\;,
+\end{equation}
+\begin{equation}
+  \label{eq:seis03}
+  \mathbf{P}_2[\mathbf{e}]_k=(\mathbf{S}_k^{(+)}[\mathbf{e}_{k-1}]+
+  \mathbf{S}_k^{(-)}[\mathbf{e}_{k}]) \cdot {\gamma}\;,
+\end{equation}
+\begin{equation}
+  \label{eq:seis04}
+  \mathbf{U}_2[\mathbf{r}]_k=(\mathbf{S}_k^{(+)}[\mathbf{r}_{k-1}]+
+  \mathbf{S}_k^{(-)}[\mathbf{r}_{k}]) \cdot {\delta}\;,
+\end{equation}
+where the subscripts $1$ and $2$ represent the first and the
+second stage. $\alpha$, $\beta$, $\gamma$, and $\delta$ are defined
+numerically as follows:
+\begin{eqnarray*}
+\alpha &=& -1.586134342, \\ 
+\beta  &=& -0.052980118, \\ 
+\gamma &=& 0.882911076, \\
+\delta &=& 0.443506852.
+\end{eqnarray*}
+One can combine equations~\ref{eq:c}, \ref{eq:r}, 
+\ref{eq:seis01}, and \ref{eq:seis02} to finish the first stage, and 
+repeatedly process the result by using equations~\ref{eq:c}, \ref{eq:r},
+\ref{eq:seis03}, and \ref{eq:seis04}. The scale normalization factors
+correspond to the CDF 9/7 biorthogonal wavelet transform
+\cite[]{Daubechies98}. Scaling and coefficients
+are as follows:
+\begin{equation}
+  \label{eq:cdf05} \mathbf{e}=\mathbf{e} \cdot K\;,
+\end{equation}
+\begin{equation}
+  \label{eq:cdf06}
+  \mathbf{o}=\mathbf{o} \cdot (1/K)\;,
+\end{equation} 
+where $K$= 1.230174105.
+ 
+We used the high-order version of OC-seislet transform to process the
+synthetic and field data examples used in this paper.
+
+\subsection{Simple example}
+
+Figure~\ref{fig:slice} shows a 2-D slice out of the benchmark French
+model \cite[]{French74}. We created a 2-D prestack dataset
+(Figure~\ref{fig:data,dinput}a) by Kirchhoff modeling. Three sections
+in Figure~\ref{fig:data,dinput}a show the time slice at time position
+0.6 s (top section), common-offset section at offset position of 0.2
+km (bottom-left section), and common-midpoint gather at midpoint
+position of 1.0 km (bottom-right section). The reflector with a round
+dome and corners creates complicated reflection events along both
+midpoint and offset axes. The inflection points of the reflector leads
+to traveltime triplications at some
+offsets. Figure~\ref{fig:data,dinput}b shows a preprocessed data cube
+in the $F$-$K$-offset domain after the log-stretched NMO correction
+and a double Fourier transform along the stretched time and midpoint
+axes. We apply the OC-seislet transform described above along the
+offset axis in Figure~\ref{fig:data,dinput}b. Thus, the offset axis
+becomes the scale axis. The cube of the transform coefficients is
+shown in Figure~\ref{fig:dfourier,dtran}b and should be compared with
+the corresponding Fourier transform along the offset direction in
+Figure~\ref{fig:dfourier,dtran}a. The OC-seislet transform
+coefficients get concentrated at small scales, which enables an
+effective compression. In contrast, the Fourier transform develops
+large coefficients at coarser scales but has small residual
+coefficients at fine scales. Figure~\ref{fig:compare} shows a
+comparison between the decay of coefficients (sorted from large to
+small) between the Fourier transform and the OC-seislet transform. A
+significantly faster decay of the OC-seislet coefficients is evident.
+
+\inputdir{french}
+   \plot{slice}{width=0.75\textwidth}{2-D slice out of the benchmark
+                 French model {\cite[]{French74}}.}
+
+   \multiplot{2}{data,dinput}{width=0.7\textwidth}{2-D synthetic
+                  prestack data in $t$-$x$-offset
+                  domain (a) and in $F$-$K$-offset domain (b).}
+
+   \multiplot{2}{dfourier,dtran}{width=0.7\textwidth}{Fourier
+                  transform (a) and OC-seislet transform (b) of the
+                  input data from Figure~\ref{fig:data,dinput}b
+                  along the offset axis.}
+
+    \plot{compare}{width=0.7\textwidth}{Transform coefficients sorted
+                  from large to small, normalized, and plotted on a
+                  decibel scale. Solid line: OC-seislet
+                  transform. Dashed line: Fourier transform.}
+
+\subsection{Iterative soft-thresholding}
+
+The proposed OC-seislet transform uses physical offset continuation to
+compress the reflection data after NMO and log-stretch transform of
+the time coordinate, followed by double Fourier transforms of the
+stretched time axis and midpoint axis. If seismic traces in the
+midpoint direction are missing, the Fourier transform may produce
+artifacts (spatial leakage) along the midpoint-wavenumber axis
+\cite[]{Zwartjes07}. Additionally, the missing seismic traces in
+the offset direction affect the continuity of predicted data. Once
+the OC-seislet transform is applied for predicting and compressing,
+the artifacts, discontinuity information, and random noise spread over
+different scales while the predictable reflection information gets
+compressed to large coefficients at small scales. A simple
+thresholding method can easily remove the small coefficients of
+artifacts. Finally, applying inverse OC-seislet transform, inverse
+FFTs both in time and midpoint axes, inverse log-stretch, and inverse
+NMO reconstructs the data while attenuating random noise, reducing
+artifacts along the midpoint axis, reconstructing continuity in the
+offset axis, and recovering main structural features without using any
+assumptions about structural continuity in the midpoint-offset-time
+domain. The key steps are shown in Figure~\ref{fig:denoise,jpocs}a.
+
+The idea of sparse transforms has been thoroughly explored in the
+literature, with application to Fourier and curvelet
+transforms. \cite{Liu04} proposed a Fourier-based minimum weighted
+norm interpolation (MWNI) algorithm with iterative inversion to
+perform multidimensional reconstruction of seismic
+wavefields. \cite{Xu05} suggested an iterative Fourier-based matching
+pursuit (antileakage Fourier transform) for seismic data
+regularization. \cite{Abma06} used a Fourier-based method with
+iterative thresholding to solve seismic data interpolation
+problems. \cite{Herrman08} presented a recovery method that exploits
+the curvelet frame. Missing data interpolation is a particular case of
+data regularization, where the input data are already given on a
+regular grid, and one needs to reconstruct only the missing values in
+empty bins \cite[]{Fomel01a}. For input data with nonuniform
+spatial sampling, one can bin the data to a regular grid first and
+then use the proposed method for filling empty bins. It is also
+possible to generalize the method for combining irregular data
+interpolation with a sparse transform \cite[]{Zwartjes07}. The
+thresholding iteration helps a sparse transform to recover the missing
+information. We adopt a similar thresholding strategy (fixed
+thresholding value for each iteration) with the OC-seislet
+transform. The key steps of the algorithm are illustrated
+schematically in Figure~\ref{fig:denoise,jpocs}b.
+
+\inputdir{XFig}
+
+   \multiplot{2}{denoise,jpocs}{width=0.9\textwidth}{Schematic
+              illustration of the thresholding
+              workflow. Denoising with a simple soft-thresholding
+              (a) and missing data interpolation with iterative
+              soft-thresholding (b).}
+
+ \section{Synthetic data tests}
+
+ We continue to use the synthetic model from Figure~\ref{fig:slice} to
+ test the proposed method. Figure~\ref{fig:noise} is the data with
+ normally-distributed random noise added. Figure~\ref{fig:input,tran}a
+ shows the datacube in the $F$-$K$-offset domain after the
+ log-stretched NMO correction and a double Fourier transform along the
+ stretched time axis and midpoint axis. We run the OC-seislet
+ transform in parallel on individual frequency
+ slices. Figure~\ref{fig:input,tran}b shows the OC-seislet
+ coefficients. All reflection information is concentrated in a small
+ scale range. However, since random noise cannot be predicted well by
+ the offset-continuation operator, it spreads throughout the whole
+ transform domain. The inverse Fourier transform both in time and
+ midpoint directions and the inverse log-stretch return the OC-seislet
+ coefficients to the time-midpoint-scale domain. The coefficients at
+ the zero scale represent stacking along the offset direction, which
+ is equivalent to the DMO stack (Figure~\ref{fig:ithr,inv-tran}b).
+
+ We use a soft-thresholding method to separate reflection and random
+ noise in the OC-seislet domain. Figure~\ref{fig:ithr,inv-tran}a
+ displays the result after the inverse OC-seislet transform. Compared
+ with Figure~\ref{fig:input,tran}a, data in the $F$-$K$-offset domain
+ contain only useful information. Figure~\ref{fig:nidwt,inver}b shows
+ the denoising result in the $t$-$x$-offset domain after the double
+ inverse Fourier transform, the inverse log-stretch and the inverse
+ NMO. All characteristics of reflection and diffraction events are
+ preserved well. For comparison, we used PWD-seislet transform and
+ soft-thresholding method with the same threshold values to process
+ the noisy data (Figure~\ref{fig:noise}). The result is shown in
+ Figure~\ref{fig:nidwt,inver}a. Because PWD-seislet transform is based
+ on the local dip information, a mixture of different dips from the
+ triplications makes it difficult to process the data in individual
+ common-midpoint gathers. The PWD-seislet transform compresses all
+ information along the local events slopes in each common-midpoint
+ gather. It separates reflection signal and noise but smears the
+ crossing events, especially at the far offset. The corresponding
+ signal-to-noise ratios for denoised results with PWD-seislet
+ transform and OC-seislet transform are 24.95 dB and 41.45 dB,
+ respectively. The differences (Figure~\ref{fig:diff1,diff2}) between
+ noisy data (Figure~\ref{fig:noise}) and denoised results with
+ PWD-seislet transform (Figure~\ref{fig:nidwt,inver}a) and OC-seislet
+ transform (Figure~\ref{fig:nidwt,inver}b) further
+ illustrate the effectiveness of the OC-seislet
+ transform.
+
+\inputdir{french}
+
+   \plot{noise}{width=0.7\textwidth}{2-D noisy data in
+                $t$-$x$-offset domain.}
+
+   \multiplot{2}{input,tran}{width=0.7\textwidth}{Noisy data in
+                  $F$-$K$-offset domain (a) and OC-seislet
+                  coefficients in $F$-$K$-scale domain (b).}
+
+   \multiplot{2}{ithr,inv-tran}{width=0.7\textwidth}{Thresholded data
+                 in $F$-$K$-offset domain (a) and OC-seislet
+                 coefficients in $t$-$x$-scale domain (b).}
+
+   \multiplot{2}{nidwt,inver}{width=0.7\textwidth}{Denoised result by
+		  different methods. PWD-seislet transform
+		  (a) and OC-seislet transform (b). (Compare with
+		  Figure~\ref{fig:data,dinput}.)}
+
+   \multiplot{2}{diff1,diff2}{width=0.7\textwidth}{Difference
+		  between noisy data (Figure~\ref{fig:noise}) and
+		  denoised results with different methods
+		  (Figure~\ref{fig:nidwt,inver}). PWD-seislet
+		  transform (a) and OC-seislet transform (b).}
+
+For a data regularization test, we remove 80\% of randomly selected
+traces (Figure~\ref{fig:czero,cinput}a) from the ideal data
+(Figures~\ref{fig:data,dinput}a). The complex dip information makes it
+extremely difficult to interpolate the data in individual
+common-offset gathers. The dataset is also non-stationary in the
+offset direction. Therefore, a simple offset interpolation scheme
+would also fail. Figure~\ref{fig:czero,cinput}b shows the data after
+NMO correction, log-stretch transform, and double Fourier
+transforms. The missing traces introduce spatial artifacts in
+midpoint-wavenumber axis and discontinuities along the offset
+direction. After the OC-seislet transform, the reflection information
+can be predicted and compressed. Meanwhile, the artifacts spread over
+the whole transform domain (Figure~\ref{fig:ctran,cithr}a). The simple
+soft-thresholding algorithm (i.e., the iterative strategy with
+only one iteration) removes most of the artifacts, and the inverse
+OC-seislet transform reconstructs the major reflection
+information according to the offset-continuation prediction
+(Figure~\ref{fig:ctran,cithr}b).
+
+\inputdir{frenchint}
+   \multiplot{2}{czero,cinput}{width=0.7\columnwidth}{Synthetic data
+                 with 80\% traces removed (a) and missing data in
+                 $F$-$K$-offset domain (b).}
+
+   \multiplot{2}{ctran,cithr}{width=0.7\columnwidth}{OC-seislet
+                 coefficients in $F$-$K$-scale domain (a) and
+                 data of iteration 1 after soft-thresholding in
+                 $F$-$K$-offset domain (b).}
+
+   \multiplot*{2}{four3pocs,cpocs}{width=0.7\columnwidth}{
+                 Interpolated results using iterative thresholding
+                 with different sparse transforms. 3-D Fourier
+                 transform (a) and OC-seislet transform (b). (Compare
+                 with Figure~\ref{fig:data,dinput})}
+
+One can also employ an iterative soft-thresholding strategy to
+implement missing data interpolation. This method recovers missing
+traces as long as seismic data are sparse enough in the transform
+domain. To demonstrate the superior sparseness of the OC-seislet
+coefficients, we compare the proposed method with the 3-D Fourier
+transform. Figure~\ref{fig:four3pocs,cpocs}a displays the interpolated
+result after a 3-D Fourier interpolation using iterative thresholding
+\cite[]{Abma06}. The Fourier transform cannot provide enough
+sparseness of coefficients for complex reflections and, therefore,
+fails in recovering all missing traces. The OC-seislet transform is
+based on a physical prediction, and provides a much sparser domain for
+both reflections and diffractions. Iterative thresholding succeeds in
+interpolating the missing traces (Figure~\ref{fig:four3pocs,cpocs}b).
+
+ \section{Field data tests} 
+
+ We use a historic marine dataset from the Gulf of Mexico
+ \cite[]{Claerbout08a} to evaluate the proposed method for both noise
+ attenuation and missing data interpolation problems. The input data
+ are shown in Figure~\ref{fig:bei,bei-tran}a. Near- and far- offset
+ information is completely missing. After log-stretched NMO and
+ Fourier transforms along time and midpoint axes convert the original
+ data from time-midpoint-offset domain to frequency-wavenumber-offset
+ domain, the OC-seislet transform compresses the predictable
+ information according to the physical connection between different
+ offsets. Unpredictable artifacts and reflections display different
+ tendencies: artifacts disperse throughout the whole transform domain
+ while reflections are compressed to a small scale range
+ (Figure~\ref{fig:bei,bei-tran}b). If we choose the significant
+ coefficients using soft-thresholding, the inverse processing steps
+ (including the inverse OC-seislet transform, the inverse FFTs both in
+ time and midpoint axes, and the inverse log-stretch NMO) effectively
+ remove incoherent artifacts from the data
+ (Figure~\ref{fig:bei-denoise,bei-diff}a). The difference between
+ input data (Figure~\ref{fig:bei,bei-tran}a) and denoised result
+ (Figure~\ref{fig:bei-denoise,bei-diff}a) is shown in
+ Figure~\ref{fig:bei-denoise,bei-diff}b. Most coherent events
+ including reflections and diffractions are well protected by the
+ proposed method thanks to the ability of the offset-continuation
+ operator to predict structurally complex wavefields. However, some
+ energy of the events is partly missing. To achieve a better result,
+ one may need to use a more accurate NMO velocity. Thus, denoising is
+ a naturally defined operation in the OC-seislet domain. The
+ soft-thresholding techniques eliminate only part of spatial aliasing
+ because of sparse offset sampling. Additional offset interpolation
+ can further remove spatial aliasing.
+
+\inputdir{bei}
+  \multiplot{2}{bei,bei-tran}{width=0.8\textwidth}{Marine data in
+               $t$-$x$-offset domain (a) and OC-seislet coefficients
+               in $F$-$K$-scale domain (b).}
+
+  \multiplot{2}{bei-denoise,bei-diff}{width=0.8\textwidth}{Denoised
+                result in $t$-$x$-offset domain (a) and difference
+                between input data (Figure~\ref{fig:bei,bei-tran}a)
+                and denoised result
+                (Figure~\ref{fig:bei-denoise,bei-diff}a) (b).}
+
+For a data regularization test, we removed 70\% of randomly selected
+traces from the input data (Figure~\ref{fig:bei-zero}). After applying
+the OC-seislet transform and iterative soft-thresholding, spatial
+artifacts and offset discontinuity in the transform domain coming from
+missing traces get attenuated. The interpolated result is shown in
+Figure~\ref{fig:bfour3pocs,bei-pocs}b. Missing traces have been
+interpolated well even where diffractions are present. For comparison,
+we applied 3-D Fourier transform with iterative soft-thresholding, as
+proposed by \cite{Abma06}. The same parameters of soft-thresholding
+for those in the OC-seislet transform were used.  The final result is
+shown in Figure~\ref{fig:bfour3pocs,bei-pocs}a. The Fourier transform
+fails to recover the missing information as accurately as the
+OC-seislet transform. Fundamentally, the Fourier coefficients are
+simply not sparse enough for this dataset. Figure~\ref{fig:fdmos,dmos}
+shows the comparison after DMO stacking. The result from 3-D Fourier
+transform displays obvious gaps which are caused by inperfect
+interpolation (Figure~\ref{fig:fdmos,dmos}a), while the OC-seislet
+transform and iterative soft-thresholding strategy provide a
+reasonably accurate result (Figure~\ref{fig:fdmos,dmos}b).
+
+\inputdir{fault}
+  \plot{bei-zero}{width=0.8\textwidth}{Marine data with 70\% traces removed.}
+
+  \multiplot{2}{bfour3pocs,bei-pocs}{width=0.8\textwidth}{Interpolated
+               results using iterative thresholding with different
+               transforms. 3-D Fourier transform (a) and OC-seislet
+               transform (b).}
+
+  \multiplot{2}{fdmos,dmos}{width=0.7\textwidth}{Stacking
+                of interpolated results corresponding
+                to Figure~\ref{fig:bfour3pocs,bei-pocs}. 3-D Fourier
+                transform (a) and OC-seislet transform (b).}
+		     
+ \section{Conclusions}
+
+ We have introduced the OC-seislet transform, a new domain for
+ analyzing prestack reflection data in offset, midpoint, and time
+ coordinates. Thanks to its physical basis, the new transform is
+ able to characterize and compress structurally complex seismic data
+ better than either the 3-D Fourier transform or the PWD-seislet
+ transform. The offset-continuation operator serves as a
+ transformational bridge between different offsets, which allows the
+ OC-seislet transform to compress all predictable reflections and
+ diffractions into small scales. In the new transform domain, random
+ noise spreads over different scales while the predictable reflection
+ seismic events get compressed to large coefficients at small
+ scales. Therefore, a thresholding approach is successful in
+ separating seismic signal and noise. Reconstructing missing seismic
+ data is a more difficult task, where iterative thresholding is
+ required to help the proposed OC-seislet transform recover the
+ missing seismic traces. Tests using both synthetic and field data
+ demonstrate that the proposed transform can succeed in handling
+ structurally complex data even in the presence of strong random
+ noise.
+
+\section{Acknowledgments}
+We thank BGP Americas for a partial financial support of this
+work. We thank Tamas Nemeth, Mauricio Sacchi, Sandra
+Tegtmeier-Last, and two anonymous reviewers for their constructive
+comments and suggestions. This publication was authorized by the
+Director, Bureau of Economic Geology, The University of Texas at
+Austin.
+
+\append{Review of differential offset continuation}
+
+In this appendix, we review the theory of differential offset
+continuation from \cite{Fomel03b,GEO68-02-07180732}. The partial
+differential equation for offset continuation (differential azimuth
+moveout) takes the form
+\begin{equation}
+\left( \mathbf{h}^T\,\mathbf{P}_{xx}\,\mathbf{h} - 
+  h^2\,{\partial^2 P \over \partial h^2} \right) \, = \, 
+h\,t_n \, {\partial^2 P \over {\partial t_n \,
+\partial h}} \;,
+\label{eqn:OCequation3} 
+\end{equation}
+where $P(\mathbf{x},\mathbf{h},t_n)$ is the seismic data in the
+midpoint-offset-time domain, $t_n$ is the time coordinate after the
+normal moveout (NMO) correction, $\mathbf{h}^T$ denotes the transpose
+of $\mathbf{h}$, and $\mathbf{P}_{xx}$ is the tensor of the
+second-order midpoint derivatives.
+
+A particularly efficient implementation of offset continuation results
+from a log-stretch transform of the time coordinate
+\cite[]{Bolondi82}, followed by a Fourier transform of the stretched
+time axis. After these transforms, the offset-continuation equation
+takes the form
+\begin{equation}
+\label{eqn:OC}
+\left( \mathbf{h}^T\,\Tilde{\mathbf{P}}_{xx}\,\mathbf{h} - 
+  h^2\,\frac{\partial^2 \Tilde{P}}{\partial h^2} \right) \, = \, 
+i\,\Omega\,h\,\frac{\partial \Tilde{P}}{\partial h} \;,
+\end{equation}
+where $\Omega$ is the dimensionless frequency corresponding to the
+stretched time coordinate and $\Tilde{P}
+(\mathbf{x},\mathbf{h},\Omega)$ is the transformed data. As in other
+frequency-space methods, equation~\ref{eqn:OC} can be applied
+independently and in parallel on different frequency slices.
+\par
+In the frequency-wavenumber domain, the extrapolation operator is
+defined by solving an initial-value problem for
+equation~\ref{eqn:OC}. The analytical solution takes the form
+\begin{equation}
+  \Tilde{\Tilde{P}}(\mathbf{k},\mathbf{h}_2,\Omega) = 
+  \Tilde{\Tilde{P}}(\mathbf{k},\mathbf{h}_1,\Omega)\,
+  \frac{Z_{\lambda}(\mathbf{k} \cdot \mathbf{h}_2)}{Z_{\lambda}(\mathbf{k} 
+  \cdot \mathbf{h}_1)}\;,
+\label{eqn:OKOC}
+\end{equation}
+where $\Tilde{\Tilde{P}}(\mathbf{k},\mathbf{h},\Omega)$ 
+is the double-Fourier-transformed
+data, $\lambda = (1 + i \Omega)/2$, $Z_\lambda$ is the special
+function defined as
+\begin{equation}
+Z_{\lambda}(x) = \Gamma(1-\lambda)\,\left(x \over 2\right)^{\lambda}\,
+J_{-\lambda}(x)=
+{}_0F_1\left(;1-\lambda;-\frac{x^2}{4}\right)\;,
+\label{eqn:z}
+\end{equation}
+$\Gamma$ is the gamma function, $J_{-\lambda}$ is the Bessel function,
+and ${}_0F_1$ is the confluent hypergeometric limit function \cite[]{ab}. The
+wavenumber $\mathbf{k}$ in equation~\ref{eqn:OKOC} corresponds to the
+midpoint $\mathbf{x}$ in the original data domain. In high-frequency
+asymptotics, the offset-continuation operator takes the form
+\begin{equation}
+  \Tilde{\Tilde{P}}(\mathbf{k},\mathbf{h}_2,\Omega) 
+  \approx \Tilde{\Tilde{P}}(\mathbf{k},\mathbf{h}_1,\Omega)\,
+\frac
+{F(\frac{2 \mathbf{k} \cdot \mathbf{h}_2}{\Omega})\,
+  \exp{\left[i\Omega\,\psi\left(\frac{2 \mathbf{k} \cdot \mathbf{h}_2}{\Omega}\right)
+    \right]}}
+{F(\frac{2 \mathbf{k} \cdot \mathbf{h}_1}{\Omega})\,
+ \exp{\left[i\Omega\,\psi\left(\frac{2 \mathbf{k} \cdot \mathbf{h}_1}{\Omega}\right)\right]}}\;,
+\label{eqn:AOKOC}
+\end{equation}
+where
+\begin{equation}
+F(\epsilon)=\sqrt{{1+\sqrt{1+\epsilon^2}} \over
+{2\,\sqrt{1+\epsilon^2}}}\,
+\exp\left({1-\sqrt{1+\epsilon^2}} \over 2\right)\;,
+\label{eqn:F}
+\end{equation}
+and
+\begin{equation}
+\psi(\epsilon)={1 \over 2}\,\left(1 - \sqrt{1+\epsilon^2} +
+\ln\left({1 + \sqrt{1+\epsilon^2}} \over 2\right)\right)\;.
+\label{eqn:psi}
+\end{equation}
+The phase function $\psi$ defined in equation~\ref{eqn:psi}
+corresponds to the analogous term in the exact-log DMO and AMO
+\cite[]{GEO55-05-05950607,GEO61-03-08150820,Biondi02}.
+
+\bibliographystyle{seg}
+\bibliography{SEG,SEP2,paper}
+

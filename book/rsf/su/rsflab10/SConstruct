@@ -1,0 +1,61 @@
+from rsf.proj import *
+from rsf.recipes.beg import server
+
+Fetch(['seismic3.su','newvelzx.bin'],'cwp',server)
+
+Flow('seismic3','seismic3.su',
+     '''
+     suread what=d suxdr=y |
+     costaper nw2=150 |
+     put d2=0.0125 label2=Midpoint unit2=km
+     ''')
+
+Flow('vel','newvelzx.bin',
+     '''
+     echo in=$SOURCE data_format=native_float 
+     n1=1500 d1=0.003  o1=0 label1=Depth    unit1=km
+     n2=2142 d2=0.0125 o2=0 label2=Distance unit2=km
+     label=Velocity unit=km/s | scale dscale=0.001
+     ''')
+Result('vel',
+       '''
+       grey color=j scalebar=y barreverse=y allpos=y bias=1.5
+       title="Velocity Model"
+       ''')
+
+# Fourier transform and transpose
+Flow('fft','seismic3',
+     'fft1 | window max1=80 | transp plane=12 | transp plane=23')
+
+# From velocity to slowness
+Flow('slo','vel','transp | transp plane=23 | math output=1/input')
+
+# Extended split-step migration
+Flow('mig','fft slo',
+     '''
+     zomig3 ompnth=1 mode=m --readwrite=y verb=y
+     nrmax=10 slo=${SOURCES[1]}
+     ''',split=[3,481,[0]],reduce='add')
+
+# Try it with sfomp
+Flow('mig_omp','fft slo',
+     '''
+     zomig3 ompnth=1 mode=m --readwrite=y verb=y
+     nrmax=10 slo=${SOURCES[1]}
+     ''',split=[3,'omp',[0]],reduce='add')
+
+# Try it with sfmpi
+Flow('mig_mpi','fft slo',
+     '''
+     zomig3 ompnth=1 mode=m --readwrite=y verb=y
+     nrmax=10 slo=${SOURCES[1]}
+     ''',split=[3,'mpi',[0]],reduce='add',np=11)
+
+Result('mig',
+       '''
+       window | grey title=Migration transp=n
+       label2=Depth    unit2=km 
+       label1=Distance unit1=km
+       ''')
+
+End()

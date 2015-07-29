@@ -1,0 +1,3 @@
+uses=['sfmath', 'sfgraph', 'sfintervalVTI', 'sfnoise', 'sfricker1', 'sfspray', 'sfitaupmo', 'sfput', 'sfgrey', 'sfdip', 'sfscale', 'sfstack', 'sftransp', 'sfderiv', 'sfsmooth', 'sfsmoothderLS', 'sfmul', 'sfadd', 'sfwindow', 'sfpwd', 'sfptaupmo', 'sfptaupmoVTI', 'sfcontour', 'sfpveltranVTI', 'sfmap2coh', 'sfenvelope', 'sfpwpaint', 'sfiwarp']
+data=[]
+size=   29264968

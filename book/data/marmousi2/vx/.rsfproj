@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sfput', 'sfcat', 'sfwindow', 'sfgrey']
+data=['data/marm2/obc_vx_1.segy', 'data/marm2/obc_vx_2.segy']
+size= 13257600000

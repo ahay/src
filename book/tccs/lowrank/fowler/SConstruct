@@ -1,0 +1,74 @@
+from rsf.proj import *
+
+Flow('top',None,'spike n1=253 n2=401 d1=15 d2=15 mag=1500')
+Flow('bot',None,'spike n1=147 n2=401 d1=15 d2=15 mag=4500')
+
+Flow('vel','top bot','cat axis=1 ${SOURCES[1]} | smooth rect1=3')
+
+Result('vel','grey screenratio=1 allpos=y bias=1500 title="Velocity Model" label1=Depth unit1=m label2=Distance unit2=m')
+
+nt=601
+dt=0.002
+
+#nt=301
+#dt=0.005
+
+Flow('source',None,
+     '''
+     spike n1=%d d1=%g k1=100 |
+     ricker1 frequency=15
+     '''%(nt,dt))
+Flow('source2',None,
+     '''
+     spike n1=%d d1=%g k1=200 |
+     ricker1 frequency=15
+     '''%(2*nt,0.5*dt))
+
+Result('source','graph  title="Source Wavelet" ')
+
+targets = ','.join(map(lambda x: '\'${TARGETS[%d]}\'' % x, range(5)))
+
+Flow('fft','vel','fft1 | fft3 axis=2 pad=1')
+Flow('right left','vel fft',
+     'isolr2 seed=2010 npk=30 eps=0.0001 dt=%g fft=${SOURCES[1]} left=${TARGETS[1]}' % dt)
+
+# CPU = 1.11 s (rank 3)
+
+Flow('refl',None,'spike n1=400 n2=401 d1=15 d2=15 k1=200 k2=201') # | bandpass fhi=0.016 | transp | bandpass fhi=0.016 | transp')
+
+Flow('fwave','source refl left right',
+     '''
+     fftwave2 ref=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]} verb=n snap=10 snaps=$TARGET
+     ''',stdout=0)
+
+# CPU = 9.44 s 
+
+Plot('fwave',
+     '''
+     grey screenratio=1 wanttitle=n label1=Depth unit1=m label2=Distance unit2=m gainpanel=all
+     ''',view=1)
+
+Result('fwave',
+       '''
+       window n3=1 min3=1.1 |
+       grey screenratio=1 title="Lowrank Approximation"
+       label1=Depth unit1=m label2=Distance unit2=m gainpanel=all
+       ''')
+
+Flow('fwavefd','source vel',
+     '''
+     fd2bs vel=${SOURCES[1]} dt=%g nt=%d isx=200 isz=201 nb=0 c=0.01 
+     '''%(dt,nt))
+
+# CPU = 3.6 s
+
+# ratio = 2.62
+
+Result('fwavefd',
+       '''
+       window n3=1 min3=1.1 |
+       grey screenratio=1 title="Finite Differences"
+       label1=Depth unit1=m label2=Distance unit2=m gainpanel=all
+       ''')
+
+End()

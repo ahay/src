@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sfdd', 'sfheadermath', 'sfwindow', 'sfmath', 'sfcat', 'sftransp', 'sfintbin', 'sfput', 'sfmutter', 'sfgrey']
+data=['data/sigsbee/sigsbee2a_nfs.sgy']
+size= 3051130672

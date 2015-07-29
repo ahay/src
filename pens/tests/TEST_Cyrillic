@@ -1,0 +1,44 @@
+e
+S s
+z
+Test of alternate fonts and ligatures.
+z
+
+z
+On a color device,
+z
+you should get "Glory to Labor!" in white on a red background.
+z
+Underneath, in yellow, the Russian alphabet, in order, in both cases.
+z
+Then some well known Russian words:
+z
+"Tchaikovsky Kolkhoz Chebyshev"
+z
+At the end of that line examples of breaking up ligatures,
+z
+and then on the next:
+z
+"Khrushchev lives!"
+z
+On a B+W device, all the text should contrast against the background.
+o 0 -1500
+F 11 2 0
+C 0 255 0 0
+E
+c 7
+f 12
+m 100 2800
+T 24 0
+Slava Trudu!
+c 6
+f 4
+m 200 1800
+T 10 0
+a b v g d e zh z i /i k l m n o p r\ns t u f kh ts ch sh shch /` y /' /e yu ya
+m 100 800
+T 10 0
+A B V G D E ZH Z I /I K L M N O P R\nS T U F KH TS CH SH SHCH /T Y /M /E YU YA
+m 100 0
+T 10 0
+CHa/ikovski/i Kolkhoz CHebyshev ts t\-s shch sh\-ch\nKHrushchev zhivet!\n

@@ -1,0 +1,6 @@
+MPI SEGYPP Unit Test 2
+create SEGYSpace, construct 2 Vectors in space
+assign const 1, 2 to these, execute axpy with a=1
+first vector should contain all samples = 3.0
+compute max and min
+mpitest2 result: max=3 min=3

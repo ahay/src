@@ -1,0 +1,26 @@
+from rsf.proj import *
+
+Fetch('alaska.H','alaska')
+
+Flow('smo','alaska.H','dd form=native | smooth rect1=2')
+
+def raster(title,label1,label2):
+    return '''
+    grey pclip=100 wheretitle=t wherexlabel=b
+    title="%s" label1="%s" label2="%s"
+    ''' % (title,label1,label2)
+
+Plot('tx','smo',raster('p(t,x)','sec','km'))
+
+Flow('tk','smo','rtoc | fft3 sign=1 | real')
+Plot('tk',raster('P(t,k\s60 \_x\^\s100 )','sec','1/km'))
+
+Flow('fx','smo','fft1 | real')
+Plot('fx',raster('P(\F10 w\F3 ,x)','1/sec','km'))
+
+Flow('fk','smo','fft1 | fft3 sign=1 | real')
+Plot('fk',raster('P(\F10 w\F3 ,k\s60 \_x\^\s100 )','1/sec','1/km'))
+
+Result('plane4','tx tk fx fk','TwoRows')
+
+End()

@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfput', 'sfscale', 'sfgrey']
+data=['data/Amoco/velsmooth.HH', 'data/Amoco/velmodel.hh']
+size=    2261124

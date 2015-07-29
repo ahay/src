@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfgrey', 'sfwindow']
+data=['data/ida/reftran.HH', 'data/ida/refvert.HH', 'data/ida/anis.AA']
+size=    3456000

@@ -1,0 +1,1437 @@
+%\def\SEPCLASSLIB{../../../../sepclasslib}
+\def\CAKEDIR{.}
+
+\title{Downward continuation}
+\author{Jon Claerbout}
+\maketitle
+\label{paper:dwnc}
+
+%{\em \today . This chapter is owned by JFC.}
+
+\section{MIGRATION BY DOWNWARD CONTINUATION}
+Given waves observed along the earth's surface,
+some well-known mathematical techniques
+that are introduced here
+enable us to extrapolate
+(\bx{downward continue})
+these waves down into the earth.
+Migration is a simple consequence of this extrapolation.
+
+\subsection{Huygens secondary point source}
+\inputdir{XFig}
+\par
+Waves on the ocean have wavelengths comparable
+to those of waves in seismic prospecting (15-500 meters),
+but ocean waves move slowly enough to be seen.
+Imagine a long harbor barrier parallel to the beach
+with a small entrance in the barrier for the passage of ships.
+This is shown in Figure~\ref{fig:storm}. %
+%\activeplot{storm}{width=5.9in}{NR}{
+\plot{storm}{width=5.0in}{
+        Waves going through a gap in a barrier
+        have semicircular wavefronts
+        (if the wavelengt h is long compared to the gap size).} %
+%\newslide
+A plane wave incident on the barrier from the open ocean
+will send a wave through the gap in the barrier.
+It is an observed fact that the wavefront in the harbor
+becomes a circle with the gap as its center.
+The difference between this beam of water waves
+and a light beam through a window
+is in the ratio of wavelength to hole size.
+\inputdir{phasemod}
+\par
+Linearity is a property of all low-amplitude waves
+(not those foamy, breaking waves near the shore).
+This means that two gaps in the harbor barrier
+make two semicircular wavefronts.
+Where the circles cross, the wave heights combine by simple linear addition.
+It is interesting to think of a barrier with many holes.
+In the limiting case of very many holes, the barrier disappears,
+being nothing but one gap alongside another.
+Semicircular wavefronts combine to make only the incident plane wave.
+Hyperbolas do the same.
+Figure~\ref{fig:stormhole} shows hyperbolas
+increasing in density from left to right. %
+\plot{stormhole}{width=6.0in,height=2.5in}{
+        A barrier with many holes (top).
+        Waves, $(x , t)$-space, seen beyond the barrier (bottom).
+        } %
+%\newslide
+All those waves at nonvertical angles must somehow combine
+with one another to extinguish all evidence of anything but the plane wave.
+\par
+\inputdir{vphyp}
+A Cartesian coordinate system has been superimposed
+on the ocean surface with  $x$  going along the beach
+and  $z$  measuring the distance from shore.
+For the analogy with reflection seismology,
+people are confined to the
+beach (the earth's surface) where they make
+measurements of wave height as a function of  $x$  and  $t$.
+From this data they can make inferences about
+the existence of gaps in the barrier out in the $(x , z)$-plane.  
+The first frame of
+Figure \ref{fig:dc} shows the arrival time at the beach
+of a wave from the ocean through a gap.
+\plot{dc}{width=6.0in,height=2in}{
+        The left frame shows the hyperbolic wave arrival time
+        seen at the beach. 
+        Frames to the right show arrivals
+        at increasing distances out in the water.
+        The $x$-axis is compressed
+        from Figure~\protect\ref{fig:storm}.
+        }
+%\newslide
+The earliest arrival occurs nearest the gap.
+What mathematical expression determines
+the shape of the arrival curve seen in the $(x , t)$-plane?
+\par
+The waves are expanding circles.
+An equation for a circle expanding with velocity  $v$  about
+a point  $( x_3 , z_3 )$  is
+\begin{equation}
+{ ( x - x_3 ) }^2\ \ +\ \ {( z - z_3 )}^2\ \ =\ \ 
+v^2 \, t^2
+\label{eqn:1.1}
+\end{equation}
+Considering  $t$  to be a constant,
+i.e.~taking a snapshot, equation~(\ref{eqn:1.1}) is that of a circle.
+Considering  $z$  to be a constant,
+it is an equation in the $(x , t)$-plane for a hyperbola.  
+Considered in the $(t , x , z)$-volume,
+equation~(\ref{eqn:1.1}) is that of a cone.
+Slices at various values of  $t$  show circles of various sizes.
+Slices of various values of  $z$  show various hyperbolas.
+Figure~\ref{fig:dc} shows four hyperbolas.
+The first is the observation made at the beach  $z_0 = 0$.  
+The second is a hypothetical set of observations at
+some distance  $z_1$  out in the water.
+The third set of observations is at  $z_2$,
+an even greater distance from the beach.
+The fourth set of observations is at  $z_3$,
+nearly all the way out to the barrier,
+where the hyperbola has degenerated to a point.
+All these hyperbolas are from a family of hyperbolas,
+each with the same asymptote.
+The asymptote refers to a wave that turns nearly 90$^\circ$ at the gap and
+is found moving nearly parallel to the shore at the
+speed  $dx/dt$  of a water wave.
+(For this water wave analogy it is presumed---incorrectly---that
+the speed of water waves is a constant independent of water depth).
+\par
+If the original incident wave was a positive pulse,
+the Huygens secondary source must consist of both positive
+and negative polarities to enable the destructive
+interference of all but the plane wave.
+So the Huygens waveform has a phase shift.
+In the next section,
+mathematical expressions will be found for the Huygens secondary source.
+Another phenomenon, well known to boaters,
+is that the largest amplitude of the Huygens semicircle
+is in the direction pointing straight toward shore.
+The amplitude drops to zero for waves moving parallel to the shore.
+In optics this amplitude drop-off with angle is called the
+{\em 
+obliquity factor.
+}
+
+\subsection{Migration derived from downward continuation}
+\par
+A dictionary gives many definitions for the word
+{\em  run.}
+They are related, but they are distinct.
+Similarly,
+the word
+{\em  migration}
+in geophysical prospecting has about
+four related but distinct meanings.
+The simplest is like the meaning of the word
+{\em  move.}
+When an object at some location in the $(x , z)$-plane
+is found at a different location at a later time  $t$,
+then we say it 
+{\em  moves.}
+Analogously, when a wave arrival (often called an %
+{\em  event%
+} )
+at some location in the $(x , t)$-space of geophysical observations
+is found at a different position for a different survey line
+at a greater depth  $z$, then we say it 
+{\em  migrates.}
+\par
+To see this more clearly,
+imagine the four frames of Figure~\ref{fig:dc}
+being taken from a movie.
+During the movie, the depth  $z$  changes
+beginning at the beach (the earth's surface)
+and going out to the storm barrier.
+The frames are superimposed in Figure \ref{fig:dcretard}(left).
+\sideplot{dcretard}{width=3in}{
+        Left shows a superposition of the hyperbolas
+        of Figure~\protect\ref{fig:dc}.
+        At the right the superposition incorporates a shift,
+        called retardation  $t' \,=\, t + z / v $,
+        to keep the hyperbola tops together.
+        }
+%\newslide
+Mainly what happens in the movie is that
+the event migrates upward toward  $t=0$.
+To remove this dominating effect of vertical translation
+we make another superposition,
+keeping the hyperbola tops all in the same place.
+Mathematically, the time $t$ axis is replaced by a so-called
+{\em  retarded}
+time axis  $t  '   = t + z/v$, shown in Figure \ref{fig:dcretard}(right).
+The second, more precise definition of
+{\em  migration}
+is the motion of an event in $ ( x , t  '   )$-space as  $z$  changes.
+After removing the vertical shift,
+the residual motion is mainly a shape change.
+By this definition, hyperbola tops, or horizontal layers, do not migrate.
+\par
+The hyperbolas in Figure~\ref{fig:dcretard} really extend to infinity,
+but the drawing cuts each one off at a time equal  $\sqrt{2}$  times
+its earliest arrival.
+Thus the hyperbolas shown depict only rays
+moving within 45$^\circ$ of the vertical.
+It is good to remember this,
+that the ratio of first arrival time on a hyperbola
+to any other arrival time
+gives the cosine of the angle of propagation.
+The cutoff on each hyperbola is a ray at 45$^\circ$.
+Notice that the end points of the hyperbolas on the drawing
+can be connected by a straight line.
+Also, the slope at the end of each hyperbola is the same.
+In physical space, the angle of any ray is
+$\tan \, \theta \,=\, dx /dz$.
+For any plane wave
+(or seismic event that is near a plane wave),
+the slope  $ v\,dt / dx$  is  $\sin \, \theta$,
+as you can see by considering a wavefront intercepting the earth's surface
+at angle  $\theta$.
+So, energy moving on a straight line in physical $(x , z)$-space
+migrates along a straight line in data $(x , t)$-space.
+As  $z$  increases, the energy of all angles comes together to a focus.
+The focus is the exploding reflector.
+It is the gap in the barrier.
+This third definition of migration is that it is the
+process that somehow pushes observational data---wave
+height as a function of  $x$  and  $t$ ---from the beach to the barrier.
+The third definition stresses not so much the motion itself,
+but the transformation from the beginning point to the ending point.
+\par
+To go further, a more general example is needed
+than the storm barrier example.
+The barrier example is confined to making Huygens sources
+only at some particular  $z$.
+Sources are needed at other depths as well.
+Then, given a wave-extrapolation process
+to move data to increasing  $z$  values,
+exploding-reflector images are constructed with
+\begin{equation}
+\hbox{Image}\ ( x , z )\ \eq\ \ \hbox{Wave}\ ( t=0 , x , z )
+\label{eqn:1.2}
+\end{equation}
+The fourth definition of migration also incorporates the definition of
+{\em  diffraction}
+as the opposite of migration.
+\begin{center}
+\begin{tabular}{ccc}
+  {\rm observations} & & {\rm model} \\
+  \begin{tabular}{|c|} \hline  
+  \\    \ $z = 0$ \ \\    \\  all$\ t$  \\ 
+  \\    \hline
+  \end{tabular}
+  &\begin{tabular}{c}
+    {\rm migration} \\ $\longrightarrow$ \\ $\longleftarrow$
+       \\ \rm{diffraction}  \\
+   \end{tabular}
+  &\begin{tabular}{|c|} \hline
+   \\    \ $t = 0$ \  \\    \\  all$\ z$  \\
+   \\   \hline
+   \end{tabular}
+\end{tabular}
+\end{center}
+\par\vspace{1.0\baselineskip}
+Diffraction
+\sx{diffraction}
+is sometimes regarded as the natural process that creates
+and enlarges hyperboloids.
+{\em  Migration}
+\sx{migration, defined}
+is the computer process that does the reverse.
+\par
+Another aspect of the use of the word
+{\em  migration}
+arises
+where the horizontal coordinate can be either shot-to-geophone midpoint  $y$,
+or offset  $h$.
+Hyperboloids can be downward continued
+in both the  $(y , t)$-  and the $(h , t)$-plane.
+In the $(y , t)$-plane this is called
+{\em  migration}
+or 
+{\em  imaging,}
+and in the  $(h , t)$-plane it is called
+{\em  \bx{focus}ing}
+or
+{\em 
+velocity analysis.
+}
+
+\section{DOWNWARD CONTINUATION}
+Given a vertically upcoming plane wave
+at the earth's surface,
+say $u(t,x,z=0)=u(t) {\rm const}(x)$,
+and an assumption that the earth's velocity is
+vertically stratified, i.e.~$v=v(z)$,
+we can presume that the upcoming wave down in the earth
+is simply time-shifted from what we see on the surface.
+(This assumes no multiple reflections.)
+Time shifting can be represented as a linear operator in the time domain
+by representing it as convolution with an impulse function.
+In the frequency domain, time shifting is simply multiplying
+by a complex exponential.
+This is expressed as
+\begin{eqnarray}
+u( t    ,z) &=& u(     t,z=0) \ast \delta( t+z/v) \\
+U(\omega,z) &=& U(\omega,z=0) \ e^{-i\omega z/v}
+\end{eqnarray}
+Sign conventions must be attended to,
+and that is explained more fully in chapter~\ref{paper:ft1}.
+
+\subsection{Continuation of a dipping plane wave.}
+Next consider a plane wave \bx{dip}ping at some angle $\theta$.
+It is natural to imagine continuing such a wave back along a ray.
+Instead, we will continue the wave straight down.
+This requires the assumption that the plane wave is a perfect one,
+namely that the same waveform is observed at all $x$.
+Imagine two sensors in a vertical well bore.
+They should record the same signal except for
+a time shift that depends on the angle of the wave.
+Notice that the arrival time difference between sensors
+at two different depths is greatest for vertically propagating waves,
+and the time difference drops to zero for horizontally propagating waves.
+So the time shift $\Delta t$ is $v^{-1} \cos\theta\,\Delta z$
+where $\theta$ is the angle between the wavefront and the earth's surface
+(or the angle between the well bore and the ray).
+Thus an equation to downward continue the wave is
+\begin{eqnarray}
+U( \omega , \theta ,z+\Delta z)
+ &=&
+U( \omega , \theta ,z) \ 
+ \exp ( \,  -i \omega \, \Delta t)
+                                                        \\
+U( \omega , \theta ,z+\Delta z)
+ &=&
+U( \omega , \theta ,z) \ 
+ \exp \left(
+         \,  -i \omega \,
+         {\Delta z \cos\theta \over v}\  
+\right)
+\label{eqn:dctheta}
+\end{eqnarray}
+Equation~(\ref{eqn:dctheta})
+is a downward continuation formula for any angle $\theta$.
+Following methods of chapter~\ref{paper:wvs} we can generalize
+the method to media where the velocity is a function of depth.
+Evidently we can apply equation~(\ref{eqn:dctheta})
+for each layer of thickness $\Delta z$,
+and allow the velocity vary with $z$.
+This is a well known approximation that handles the timing correctly
+but keeps the amplitude constant (since $|e^{i\phi}|=1$)
+when in real life,
+the amplitude should vary
+because of reflection and transmission coefficients.
+Suffice it to say that in practical earth imaging,
+this approximation is almost universally satisfactory.
+\par
+In a stratified earth,
+it is customary to eliminate the angle $\theta$ which is depth variable,
+and change it to the Snell's parameter $p$ which is constant for all depths.
+Thus the downward continuation equation for any Snell's parameter is
+\begin{equation}
+U( \omega , p,z+\Delta z)
+ \eq
+U( \omega , p,z) \ 
+ \exp \left( \,  -\  {i \omega \Delta z \over v(z) } \
+\sqrt{1-p^2v(z)^2}  \right)
+\label{eqn:dcp}
+\end{equation}
+\par
+It is natural to wonder where in real life
+we would encounter a \bx{Snell wave} that we could downward continue
+with equation~(\ref{eqn:dcp}).
+The answer is that any wave from real life
+can be regarded as a sum of waves propagating in all angles.
+Thus a field data set should first be decomposed
+into Snell waves of all values of $p$,
+and then equation~(\ref{eqn:dcp})
+can be used to downward continue each $p$,
+and finally the components for each $p$ could be added.
+This process akin to Fourier analysis.
+We now turn to Fourier analysis as a method of downward continuation
+which is the same idea but
+the task of decomposing data into Snell waves
+becomes the task of decomposing data into sinusoids along the $x$-axis.
+
+\subsection{Downward continuation with Fourier transform}
+
+\sx{Fourier downward continuation}
+\par
+One of the main ideas in Fourier analysis
+is that an impulse function
+(a delta function)
+can be constructed by the superposition of sinusoids
+(or complex exponentials).
+In the study of time series this construction is used for the
+{\em 
+impulse response
+}
+of a filter.
+In the study of functions of space,
+it is used to make a physical point source
+that can manufacture the downgoing waves
+that initialize the reflection seismic experiment.
+Likewise observed upcoming waves can be Fourier transformed over $t$ and $x$.
+
+\par
+Recall in chapter~\ref{paper:wvs}, a plane wave carrying
+an arbitrary waveform, specified by
+equation~(\ref{eqn:mvwv}).
+Specializing the arbitrary function to be
+the real part of the function  $ \exp [ - i \omega (t-t_0 ) ]$  gives
+\begin{equation}
+\hbox{moving cosine wave} \ \ =\ \  \cos
+\left[ \  \omega \left(  {x \over v }\  \sin \, \theta \ +\ 
+{z \over v }\  \cos \, \theta \ -\  t \   \right) \   \right]
+\label{eqn:2iei5}
+\end{equation}
+
+Using Fourier integrals on time functions we encounter the
+{\em  Fourier kernel}
+$\exp(-i\omega t)$.
+To use Fourier integrals on the
+space-axis  $x$  the spatial angular frequency must be defined.
+Since we will ultimately encounter many space axes
+(three for shot, three for geophone, also the midpoint and offset),
+the convention will be to use a
+subscript on the letter  $k$  to denote the
+axis being Fourier transformed.
+So  $ k_x $  is the angular spatial frequency on
+the $x$-axis and  $ \exp ( i k_x x ) $  is
+its Fourier kernel.
+For each axis and Fourier kernel there is the question of the 
+sign before the $i$.
+The sign convention used here is the one used in most physics books,
+namely, the one that agrees with equation~(\ref{eqn:2iei5}).
+Reasons for the choice are given in chapter~\ref{paper:ft1}.
+With this convention, a wave moves in the
+{\em  positive}
+direction along the space axes.
+Thus the Fourier kernel for  $(x , z , t)$-space
+will be taken to be
+\begin{equation}
+\hbox{Fourier kernel} \ =\  
+%\ \ =\ \ 
+e^{ i \, k_x x} \  e^{ i \, k_z z} \  e^{ - \, i \omega t} 
+\ = \ 
+\exp [ i ( k_x x  \ +\  k_z z \ -\  \omega t ) ]
+\label{eqn:2iei6}
+\end{equation}
+\par
+Now for the whistles, bells, and trumpets.
+Equating (\ref{eqn:2iei5}) to the real part of (\ref{eqn:2iei6}),
+physical angles and velocity are related to Fourier components.
+The Fourier kernel has the form of a plane wave.
+These relations should be memorized!
+\begin{equation}
+\vbox{\offinterlineskip
+  \def\tablerule{\noalign{\hrule}}
+  \hrule
+  \halign {&\vrule#&
+    \strut\quad\hfil#\quad\cr
+    height10pt &\multispan3 &\cr
+    &\multispan3 {\hfil\rm Angles and Fourier Components}\hfil&\cr
+    height10pt &\multispan3 &\cr
+    \tablerule
+    height10pt &\omit    &&\omit  &\cr
+    &$\sin \theta =\displaystyle {\strut v\ k_x \over \omega}$
+          &&$\cos \theta = \displaystyle {\strut v\ k_z \over \omega}$ &\cr
+   height10pt &\omit    &&\omit  &\cr
+  } 
+  \hrule}
+\label{eqn:sincos}
+\end{equation}
+\par\noindent
+A point in $(\omega,k_x,k_z)$-space is a plane wave.
+The one-dimensional Fourier kernel extracts frequencies.
+The multi-dimensional Fourier kernel extracts (monochromatic) plane waves.
+
+\par
+Equally important is what comes next.
+Insert the angle definitions into the familiar
+relation  $ \sin^2 \theta + \cos^2  \theta = 1 $.
+This gives a most important relationship:
+\begin{equation}
+k_x^2 \ +\  k_z^2 \ \ =\ \  { \omega^2   \over  v^2 }
+\label{eqn:wavedisp}
+\end{equation}
+The importance of (\ref{eqn:wavedisp}) is that it enables
+us to make the distinction between
+an arbitrary function and a chaotic function
+that actually is a wavefield.
+Imagine any function  $u(t,x,z)$.
+Fourier transform it to  $U(\omega , k_x , k_z ) $.
+Look in the  $ ( \omega , k_x , k_z ) $-volume for any nonvanishing
+values of  $U$.
+You will have a wavefield if and only if
+all nonvanishing $U$ have coordinates that satisfy (\ref{eqn:wavedisp}).
+Even better,
+in practice the $(t,x)$-dependence at $z=0$ is usually known,
+but the $z$-dependence is not.
+Then the $z$-dependence is found by assuming $U$ is a wavefield,
+so the $z$-dependence is inferred from (\ref{eqn:wavedisp}).
+\par
+Equation~(\ref{eqn:wavedisp}) also achieves fame as the
+``dispersion relation of the scalar \bx{wave equation},''
+a topic developed more fully in IEI.
+
+
+\par
+Given any $f(t)$ and its Fourier transform $F(\omega)$
+we can shift $f(t)$ by $t_0$
+if we multiply $F(\omega)$ by $e^{i\omega t_0}$.
+This also works on the $z$-axis.
+If we were given $F(k_z)$ we could shift it from the earth surface $z=0$
+down to any $z_0$ by multiplying by
+$e^{ik_z z_0}$.
+Nobody ever gives us $F(k_z)$,
+but from measurements on the earth surface $z=0$
+and double Fourier transform, we can compute $F(\omega,k_x)$.
+If we assert/assume that we have measured a wavefield, then we have
+$k_z^2 = \omega^2/v^2 - k_x^2$,
+so knowing $F(\omega,k_x)$ means we know $F(k_z)$.
+Actually, we know $F(k_z,k_x)$.
+Technically, we also know $F(k_z,\omega)$, but
+we are not going to use it in this book.
+
+\par
+We are almost ready to extrapolate waves from the surface into the earth
+but we need to know one more thing --- which square root do
+we take for $k_z$?
+That choice amounts to the assumption/assertion of upcoming or
+downgoing waves.
+With the exploding reflector model we have no downgoing waves.
+A more correct analysis has two downgoing waves to think about:
+First is the spherical wave expanding about the shot.
+Second arises when upcoming waves hit the surface and reflect back down.
+The study of multiple reflections requires these waves.
+
+
+\subsection{Linking Snell waves to Fourier transforms}
+To link \bx{Snell wave}s to Fourier transforms we merge
+equations~(\ref{eqn:5iei4a}) and~(\ref{eqn:5iei4b})
+with equations~(\ref{eqn:sincos})
+\begin{eqnarray}
+{k_x \over \omega} \eq
+{\partial t_0 \over \partial x} \ \ \ &=&\ \ \  { \sin \, \theta  \over v }
+                   \eq p
+\label{eqn:kxofvp}
+\\
+{k_z \over \omega} \eq
+{\partial t_0 \over \partial z} \ \ \ &=&\ \ \  { \cos \, \theta  \over v }
+                   \eq { \sqrt{1-p^2 v^2} \over v}
+\label{eqn:kzofvp}
+\end{eqnarray}
+
+\inputdir{.}
+The basic downward continuation equation for upcoming waves in Fourier space
+follows from equation~(\ref{eqn:dcp}) by eliminating $p$ by using
+equation~(\ref{eqn:kxofvp}).
+For analysis of real seismic data
+we introduce a minus sign because 
+equation~(\ref{eqn:kzofvp}) refers to downgoing waves
+and observed data is made from up-coming waves.
+\begin{equation}
+U( \omega , k_x ,z+\Delta z)
+ \eq
+U( \omega , k_x ,z) \ 
+ \exp \left( \, -\  {i \omega \Delta z \over v} \ 
+\sqrt{ 1  -\ {v^2k_x^2  \over \omega^2 }\  } \   \right)
+\label{eqn:dckxw}
+\end{equation}
+In Fourier space we delay signals by multiplying by
+$e^{i\omega \Delta t}$,
+analogously, equation~(\ref{eqn:dckxw}) says
+we downward continue signals into the earth
+by multiplying by $e^{i k_z \Delta z}$.
+Multiplication in the Fourier domain
+means convolution in time which can be depicted by the engineering diagram
+in Figure~\ref{fig:inout}.
+\plot{inout}{width=5.0in}{
+	Downward continuation of a downgoing wavefield.
+	}
+%\newslide
+\par
+Downward continuation is a product relationship
+in both the $\omega$-domain and the $k_x$-domain.
+Thus it is a convolution in both time and $x$.
+What does the filter look like in the time and space domain?
+It turns out like a cone, that is,
+it is roughly an impulse function
+of  $x^2+z^2 - v^2 t^2$.
+More precisely, it is the Huygens secondary wave source
+that was exemplified by ocean waves entering a gap through a storm barrier.
+Adding up the response of multiple gaps in
+the barrier would be convolution over  $x$.
+\inputdir{phasemod}
+\par
+A nuisance of using Fourier transforms in migration and modeling
+is that spaces become periodic.
+This is demonstrated in Figure~\ref{fig:diag}.
+Anywhere an event exits the frame at a side, top, or bottom boundary,
+the event immediately emerges on the opposite side.
+In practice, the unwelcome effect of periodicity
+is generally ameliorated by padding zeros around the data and the model.
+
+\plot{diag}{width=6.0in,height=2.5in}{
+        A reflectivity model on the left
+        and synthetic data using a Fourier method on the right.
+        }
+%\newslide
+
+\section{PHASE-SHIFT MIGRATION}
+\sx{migration!phase-shift}
+The phase-shift method of migration
+begins with a two-dimensional Fourier transform (2D-FT) of the dataset.
+(See chapter \ref{paper:ft1}.)
+This transformed data is downward continued
+with  $\exp(ik_z z)$  and subsequently evaluated
+at $t=0$ (where the reflectors explode).
+Of all migration methods,
+the phase-shift method
+most easily incorporates depth variation in velocity.
+The phase angle and obliquity function are correctly included,
+automatically.
+Unlike Kirchhoff methods,
+with the phase-shift method there is no danger of aliasing the operator.
+(Aliasing the data, however, remains a danger.)
+
+\par
+Equation~(\ref{eqn:dckxw}) referred to upcoming waves.
+However in the reflection experiment,
+we also need to think about downgoing waves.
+With the exploding-reflector concept of a zero-offset section,
+the downgoing ray goes along the same path as the upgoing ray,
+so both suffer the same delay.
+The most straightforward way of converting one-way propagation
+to two-way propagation is to multiply time everywhere by two.
+Instead, it is customary to divide velocity everywhere by two.
+Thus the Fourier transformed data values,
+are downward continued to a depth $\Delta z$ by multiplying by
+\begin{equation}
+e^{ i\,k_z \Delta z }
+\eq
+\exp \left(  \  - \ i \, {2\,\omega \over v }\ \sqrt{
+1 \ -\  { v^2\,k_x^2   \over 4\,\omega^2 } }
+\  \Delta z \right)
+\label{eqn:3.4}
+\end{equation}
+Ordinarily the time-sample interval $\Delta \tau$  for the output-migrated
+section is chosen equal to the time-sample rate
+of the input data (often 4 milliseconds).
+Thus, choosing the depth  $ \Delta z = (v/2) \Delta \tau $,
+the downward-extrapolation operator for a single time step $\Delta \tau$ is
+\begin{equation}
+C\eq
+\exp  \left( \  - \,i \, \omega \  \Delta \tau\,\sqrt{
+1 \ -\  { v^2\,k_x^2   \over 4\,\omega^2 } }
+\ \ \right)
+\label{eqn:3.5}
+\end{equation}
+Data will be multiplied many times by  $C$,  thereby downward
+continuing it by many steps of  $\Delta \tau$.
+
+\subsection{Pseudocode to working code}
+Next is the task of imaging.
+Conceptually, at each depth an inverse Fourier transform is followed
+by selection of its value at  $t = 0$.
+(Reflectors explode at  $t=0$).
+Since only the Fourier transform at one point,
+$t = 0$,
+is needed,
+other times need not be be computed.
+We know the $\omega =0$ Fourier component
+is found by the sum over all time,
+analogously, the $t=0$ component
+is found as the sum over all $\omega$.
+(This is easily shown by substituting $t=0$
+into the inverse Fourier integral.)
+Finally,
+inverse Fourier transform  $ k_x $  to  $x$.
+The migration process,
+computing the image from the upcoming wave  $u$,
+may be summarized in the following pseudo code:
+\par\noindent
+\def\eq{\quad =\quad}
+$$\vbox{
+\begin{tabbing}
+  $U(\omega, k_x, \tau = 0) = FT[u(t, x)]$                   \\
+  For \= $\tau = \Delta\tau, 2\Delta\tau$,
+         \ldots, end of time axis on seismogram   \\
+      \> For all \= $k_x$                        \\
+      \>         \> For all \= $\omega$            \\
+      \>         \>        \> $C =\ $exp$(-i\omega \Delta
+            \tau \sqrt{1 - v^2 k_x^2/ 4\omega^2})$   \\
+      \>         \>        \> $U(\omega, k_x, \tau) = 
+                               U(\omega, k_x, \tau - \Delta\tau ) \ast C$  \\
+      \> For all \= $k_x$                         \\
+      \>         \> Image$ (k_x, \tau) = 0$.        \\
+      \>         \> For all \= $\omega$            \\
+      \>         \>        \> Image$(k_x, \tau) = \ 
+                              $Image$(k_x, \tau) + U(\omega, k_x, \tau)$   \\
+      \> image$(x, \tau) = FT[$Image$(k_x, \tau)]$    \\
+\end{tabbing}
+}$$
+\par\noindent
+This pseudo code Fourier transforms a wavefield
+observed at the earth's surface $\tau =0$,
+and then it marches that wavefield down into the earth ($\tau>0$)
+filling up a three-dimensional function, $U(\omega, k_x, \tau)$.
+Then it selects $t=0$, the time of the exploding reflectors
+by summing over all frequencies $\omega$.
+(Mathematically,
+this is like
+finding the signal at $\omega =0$ by summing over all $t$).
+
+\par
+Turning from pseudocode to real code,
+an important practical reality
+is that computer memories are not big enough
+for the three-dimensional function $U(\omega, k_x, \tau)$.
+But it is easy to intertwine the downward continuation
+with the summation over $\omega$
+so a three-dimensional function need not be kept in memory.
+%This is done in the real code in subroutine {\tt phasemig()}.
+%\progdex{phasemig}{migration}
+%An aspect of the computation that was hidden in the pseudo code
+%That you can see in the real code
+%is that we must also handle negative frequencies.
+%When doing so, we use the signum function
+%$\sgn(\omega ) =\omega /|\omega |$ to choose the sign of $k_z$
+%so that $k_z$
+%reverses polarity when $\omega$ reverses polarity.
+%\progdex{signum}{sign function}
+
+\par
+Conjugate migration (modeling) proceeds in much the same way.
+Beginning from an upcoming wave that is zero at great depth,
+the wave is marched upward in steps
+by multiplication with  $\exp ( i k_z \Delta z )$.
+As each level in the earth is passed,
+exploding reflectors from that level are added into the upcoming wave.
+Pseudo code for modeling the upcoming wave  $u$  is
+\par\noindent
+$$\vbox{
+\begin{tabbing}
+Image$(k_x, z) = FT[$image$(x, z)]$    \\
+For \= all $\omega$ and all $k_x$    \\
+    \> $U(\omega, k_x) = 0$.         \\
+For all $\omega$ \{                  \\
+For all $k_x$ \{                     \\
+For $z = z_{\rm max}, z_{\rm max} -\Delta z, z_{\rm max} -2\Delta z
+         $, \ldots, $0$ \{           \\
+    \> $C = \exp(+i\Delta z\omega\sqrt{v^{-2} -
+            {k_x}^2/\omega^2})$          \\
+    \> $U(\omega, k_x) = U(\omega, k_x) \ast C $     \\
+    \> $U(\omega, k_x) = U(\omega, k_x)  + $Image$(k_x, z)$     \\
+    \> \} \} \}                      \\
+$u(t, x) = FT[U(\omega, k_x)]$       \\
+\end{tabbing}
+}$$
+\par\noindent
+%Some real code for this job is in subroutine {\tt phasemod()}.
+%\progdex{phasemod}{diffraction}
+
+\par
+The positive sign in the complex exponential is a combination of two negatives,
+the {\em  up}
+coming wave and the {\em  up}ward extrapolation.
+In principle,
+the three loops on  $\omega$, $k_x$, and  $z$  are interchangeable,
+however, since this tutorial program uses
+a velocity $v$ that is a constant function of depth,
+I speeded it by a large factor by putting the $z$-loop on the inside
+and pulling the complex exponential out of the inner loop.
+%Figure~\ref{fig:stormhole} was made with subroutine~\texttt{phasemod()} \vpageref{lst:phasemod}.
+
+\subsection{Kirchhoff versus phase-shift migration}
+\inputdir{sigmoid}
+In chapter~\ref{paper:krch}, we were introduced to the Kirchhoff
+migration and modeling method by means of subroutines
+\texttt{kirchslow()} \vpageref{lst:kirchslow} and \texttt{kirchfast()} \vpageref{lst:kirchfast}.
+From chapter~\ref{paper:ft1} we know that these routines should be
+supplemented by a $\sqrt{-i\omega}$
+filter such as subroutine \texttt{halfint()} \vpageref{lst:halfint}.
+Here, however,
+we will compare results of the unadorned subroutine \texttt{kirchfast()} \vpageref{lst:kirchfast}
+with our new programs.
+%, \texttt{phasemig()} \vpageref{lst:phasemig} and \texttt{phasemod()} \vpageref{lst:phasemod}.
+Figure~\ref{fig:comrecon} shows the result of modeling data and then migrating it.
+Kirchhoff and phase-shift migration methods both work well.
+As expected, the Kirchhoff method lacks some of the higher frequencies
+that could be restored by $\sqrt{-i\omega}$.
+Another problem is the irregularity of the shallow bedding.
+This is an operator aliasing problem
+addressed in chapter~\ref{paper:trimo}.
+
+\plot{comrecon}{width=6.00in,height=2.25in}{
+        Reconstruction after modeling.
+        Left is by the nearest-neighbor Kirchhoff method.
+        Right is by the phase shift method.
+        }
+%\newslide
+
+Figure~\ref{fig:phaspec} shows the temporal spectrum of the original sigmoid model,
+along with the spectrum of the reconstruction via phase-shift methods.
+We see the spectra are essentially identical
+with little growth of high frequencies
+as we noticed with the Kirchhoff method
+in Figure~\ref{fig:kirspec}.
+\sideplot{phaspec}{width=3.00in,height=1.5in}{
+        Top is the temporal spectrum of the model.
+        Bottom is the spectrum of the reconstructed model.
+        }
+%\newslide
+
+Figure~\ref{fig:commod} shows the effect of coarsening the space axis.
+Synthetic data is generated from an increasingly subsampled model.
+Again we notice that the phase-shift method of this chapter
+produces more plausible results than
+the simple Kirchhoff programs of chapter~\ref{paper:krch}.
+
+\plot{commod}{width=6.00in,height=6.75in}{
+        Modeling with increasing amounts of lateral subsampling.
+        Left is the nearest-neighbor Kirchhoff method.
+        Right is the phase-shift method.
+        Top has 200 channels,
+        middle has 100 channels,
+        and bottom has 50 channels.
+        }
+%\newslide
+
+
+\subsection{Damped square root}
+\sx{damped square root}
+The definition of $k_z$ as $k_z=\sqrt{\omega^2/v^2 - k_x^2}$
+obscures two aspects of $k_z$.
+First, which of the two square roots is intended,
+and second, what happens when $k_x^2 > \omega^2/v^2$.
+For both coding and theoretical work we
+need a definition of $ik_z$ that is valid
+for both positive and negative values of $\omega$
+and for all $k_x$.
+Define a function $R=ik_z(\omega,k_z)$ by
+\begin{equation}
+        R \eq ik_z \eq
+        \sqrt{(-i \omega + \epsilon)^2+k_x^2}
+\end{equation}
+It is important to know that for any $\epsilon >0$,
+and any real $\omega$ and  real $k_x$ that
+the real part $\Re R>0$ is positive.
+This means we can extrapolate waves safely
+with $e^{-Rz}$ for increasing $z$ or
+with $e^{+Rz}$ for decreasing $z$.
+To switch from downgoing to upcoming we use
+the complex conjugate $\overline{R}$.
+Thus we have disentangled the damping from the direction of propagation.
+%In life, waves damp as they propagate, but in imaging
+%we want damping even when we extrapolate backwards.
+%Imaging is not inversion.
+
+\par
+Let us see why $\Re R>0$ is positive
+for all real values of $\omega$ and $k_x$.
+Recall that for $\omega$ ranging between $\pm\infty$,
+$e^{i\omega\Delta t}$ rotates around the unit circle
+in the complex plane.
+Examine Figure \ref{fig:francis}
+which shows the complex functions:
+%\newslide
+\begin{enumerate}
+\item       $f(\omega)= \epsilon - i\omega$,
+\item       $ -i\hat\omega = (1+\epsilon) -e^{i\omega\Delta t}$,
+\item       $(-i \hat\omega)^2$,
+\item       $(ik_z)^2 =(-i \hat\omega)^2+k_x^2$, and
+\item       $ik_z = [(-i \hat\omega)^2+k_x^2]^{1/2}$
+\end{enumerate}
+\inputdir{complexkz}
+\plot{francis}{width=6.0in,height=1.15in}{
+  Some functions in the complex plane.
+}
+%\newslide
+The first two panels are explained by the first two functions.
+The first two functions and the first two panels look different
+but they become the same in the practical limit
+of $\epsilon\rightarrow 0$ and $\Delta t \rightarrow 0$.
+The left panel represents a time derivative in continuous time,
+and the second panel likewise
+in sampled time is for
+a ``causal finite-difference operator''
+representing a time derivative.
+Notice that the graphs look the same near $\omega = 0$.
+As we sample seismic data with increasing density,
+$\Delta t \rightarrow 0$,
+the frequency content shifts further away from the Nyquist frequency.
+Measuring $\omega$ in radians/sample,
+in the limit
+$\Delta t \rightarrow 0$, the physical energy is all near
+$\omega = 0$.
+
+\par
+The third panel in Figure \ref{fig:francis}
+shows $(-i \hat\omega)^2$ which is a cardioid that
+wraps itself close up to the negative imaginary axis without touching it.
+(To understand the shape near the origin, think about the square
+of the leftmost plane.  You may have seen examples
+of the negative imaginary axis being a branch cut.)
+In the fourth panel a small positive quantity $k_x^2$ is added which
+shifts the cardioid to the right a bit.
+Taking the square root gives the last panel
+which shows the curve in the right half plane
+thus proving
+the important result we need,
+that $\Re\; ik_z(\omega,k_z)>0$ for all real $\omega$.
+It is also positive for all real $k_x$ because
+any $k_x^2>0$ shifts the cardioid to the right.
+The additional issue of time causality in forward modeling
+is covered in IEI.
+\par
+\begin{comment}
+Luckily the Fortran {\tt csqrt()} function assumes the phase of
+the argument is between $\pm 180^\circ$
+exactly as we need here.
+Thus the square root itself will have a phase between $\pm 90^\circ$
+as we require.
+In applications, $\epsilon$
+would typically be chosen proportional to the maximum time on the data.
+Thus the mathematical expression $-i\omega + \epsilon$
+might be rendered in Fortran as 
+{\tt cmplx(qi,-omega)}
+where
+{\tt qi=1./tmax}
+and the whole concept implemented as in function~\texttt{eiktau()} \vpageref{lst:eiktau}.
+Do not set {\tt qi=0} because then the {\tt csqrt()} function
+cannot decipher positive from negative frequencies.
+
+\progdex{eiktau}{exp ikz}
+\end{comment}
+
+\par
+Finally, you might ask, why bother with all this careful theory
+connected with the damped square root.
+Why not simply abandon the evanescent waves?
+%as done by the ``{\tt if}'' statement in subroutines
+%{\tt phasemig()} and {\tt phasemod()}?
+There are several reasons:
+\begin{enumerate}
+\item
+The exploding reflector concept fails for evanescent waves
+(when $\omega^2 < v^2k_x^2$).
+Realistic modeling would have them damping with depth.
+Rather than trying to handle them correctly we will make a choice,
+either (1) to abandon evanescent waves effectively setting them to zero,
+or (2) we will take them to be damping.
+(You might notice that when we switch from downgoing to upgoing,
+a damping exponential switches to a growing exponential,
+but when we consider the adjoint of applying a damped exponential,
+that adjoint is also a damped exponential.)
+\par
+I'm not sure if there is a practical difference between
+choosing to damp evanescent waves or simply to set them to zero,
+but there should be a noticable difference on synthetic data:
+When a Fourier-domain amplitude drops abruptly
+from unity to zero, we can expect a time-domain signal
+that spreads widely on the time axis,
+perhaps dropping off slowly as $1/t$.
+We can expect a more concentrated pulse
+if we include the evanescent energy, even though it is small.
+I predict the following behavior:
+Take an impulse; diffract it and then migrate it.
+When evanescent waves have been truncated, I predict
+the impulse is turned into a ``butterfly'' whose wings
+are at the hyperbola asymptote.
+Damping the evanescent waves, I predict,
+gives us more of a ``rounded'' impulse.
+\item
+In a later chapter we will handle the $x$-axis by finite differencing
+(so that we can handle $v(x)$.
+There a stability problem will develop unless we begin
+from careful definitions as we are doing here.
+\item
+Seismic theory includes an abstract mathematical concept
+known as branch-line integrals.
+Such theory is most easily understood beginning from here.
+\end{enumerate}
+
+
+
+
+\subsection{Adjointness and ordinary differential equations}
+
+It is straightforward to adapt the simple programs
+%\texttt{phasemig()} \vpageref{lst:phasemig} and
+%\texttt{phasemod()} \vpageref{lst:phasemod}
+to depth variable velocity.
+As you might suspect, the two processes are adjoint to each other,
+and for reasons given at the end of chapter~\ref{paper:conj}
+it is desirable to code them to be so.
+With differential equations and their boundary conditions,
+the concept of adjoint is more subtle than previous examples.
+Thus, I postponed till here the development of adjoint code
+for phase-shift migration.
+This coding is a little strenuous,
+but it affords a review of many basic concepts,
+so we do so here. (Feel free to skip this section.)
+It is nice to have a high quality code for this fundamental operation.
+
+\par
+Many situations in physics are expressed by the differential equation
+\begin{equation}
+{du \over dz} \ - \  i \alpha \, u \eq s(z)
+\end{equation}
+In the migration application,
+$u(z)$ is the up-coming wave,
+$\alpha=-\sqrt{\omega^2 /v^2 - k_x^2}$,
+$s(z)$ is the exploding-reflector source.
+We take the medium to be layered
+($v$ constant in layers)
+so that $\alpha$ is constant in a layer,
+and we put the sources at the layer boundaries.
+Thus within a layer we have $du / dz - i \alpha \, u = 0$
+which has the solution 
+\begin{equation}
+u(z_k+\Delta z ) \eq u(z_k)\  e^{i \alpha \Delta z}
+\end{equation}
+For convenience, we use the ``\bx{delay operator}''
+in the $k$-th layer
+$Z_k= e^{-i \alpha \Delta z}$
+so the delay of upward propagation is expressed by
+$ u(z_k) = Z_k \, u(z_k+\Delta z )$.
+(Since $\alpha$ is negative for upcoming waves,
+$Z_k= e^{-i \alpha \Delta z}$
+has a positive exponent which represents delay.)
+Besides crossing layers, we must cross layer boundaries
+where the (reflection) sources add to the upcoming wave.
+Thus we have
+\begin{equation}
+u_{k-1} \eq Z_{k-1} u_k + s_{k-1}
+\label{eqn:modeling}
+\end{equation}
+Recursive use of equation~(\ref{eqn:modeling}) across a medium
+of three layers is expressed in matrix form as
+\begin{equation}
+\bold M \, \bold u \eq
+\left[
+        \begin{array}{cccc}
+                1  & -Z_0  & .    &  .    \\
+                .  &  1    & -Z_1 &  .    \\
+                .  &  .    & 1    & -Z_2  \\
+                .  &  .    &  .   &  1
+        \end{array}
+        \right] \ 
+\left[
+        \begin{array}{c}
+                u_0 \\
+                u_1 \\
+                u_2 \\
+                u_3
+        \end{array}
+        \right]
+\eq
+\left[
+        \begin{array}{c}
+                s_0 \\
+                s_1 \\
+                s_2 \\
+                s_3
+        \end{array}
+        \right]
+\eq \bold s
+\label{eqn:matrecur}
+\end{equation}
+
+A recursive solution begins at the bottom
+with $u_3=s_3$ and propagates upward.
+
+\par
+The adjoint (complex conjugate) of the delay operator $Z$
+is the time advance operator $\bar Z$.
+The adjoint of equation~(\ref{eqn:matrecur})
+is given by
+
+\begin{equation}
+\bold M' \, \tilde {\bold s}  \eq
+\left[
+        \begin{array}{cccc}
+                1         & .        &     .    &  .  \\
+                -\bar Z_0 & 1        &     .    &  .  \\
+                .         &-\bar Z_1 &     1    &  .  \\
+                .         & .        &-\bar Z_2 &  1
+        \end{array}
+        \right]
+\left[
+        \begin{array}{c}
+                \tilde s_0 \\
+                \tilde s_1 \\
+                \tilde s_2 \\
+                \tilde s_3
+                \end{array}
+        \right]
+\eq
+\left[
+        \begin{array}{c}
+                u_0 \\
+                u_1 \\
+                u_2 \\
+                u_3
+                \end{array}
+        \right] \ 
+\eq \bold u
+\label{eqn:toomuch}
+\end{equation}
+where $\tilde s(z)$ (summed over frequency) is the migrated image.
+The adjointness of equation~(\ref{eqn:matrecur}) and (\ref{eqn:toomuch})
+seems obvious,
+but it is not the elementary form we are familiar with
+because the matrix multiplies the {\em  output}
+(instead of multiplying the usual {\em  input}).
+To prove the adjointness, notice that
+equation~(\ref{eqn:matrecur}) 
+is equivalent to $\bold u = {\bold M}^{-1}\bold s$ whose
+adjoint, by definition,
+is $\tilde{\bold s} = ({\bold M}^{-1})' \bold u$
+which 
+is $\tilde{\bold s} = {(\bold M')}^{-1} \bold u$
+(because of the basic mathematical fact
+that the adjoint of an inverse is the inverse of the adjoint)
+which gives $\bold M' \tilde\bold s = \bold u$
+which is equation~(\ref{eqn:toomuch}).
+
+\par
+We observe the wavefield only on the surface $z=0$,
+so the adjointness of
+equations~(\ref{eqn:matrecur})
+and (\ref{eqn:toomuch})
+is academic because it relates the wavefield at all depths
+with the source at all depths.
+We need to truncate $\bold u$ to its first coefficient $u_0$
+since the upcoming wave is known only at the surface.
+This truncation changes the adjoint in a curious way.
+We rewrite equation~(\ref{eqn:matrecur})
+using a truncation operator $\bold T$ that is
+the row matrix $\bold T = [1,0,0,\cdots ]$ getting
+$\bold u_0 = \bold T\bold u = \bold T \bold M^{-1} \bold s$.
+Its adjoint is
+$\hat {\bold s} = (\bold M^{-1})' \bold T' \bold u_0'
+                = (\bold M')^{-1} \bold T' \bold u_0' $
+or
+$\bold M' \hat {\bold s} = \bold T'\bold u_0$
+which looks like
+\begin{equation}
+\bold M' \, \tilde {\bold s}  \eq
+\left[
+        \begin{array}{cccc}
+                1         & .        &     .    &  .  \\
+                -\bar Z_0 & 1        &     .    &  .  \\
+                .         &-\bar Z_1 &     1    &  .  \\
+                .         & .        &-\bar Z_2 &  1
+        \end{array}
+        \right]
+\left[
+        \begin{array}{c}
+                \tilde s_0 \\
+                \tilde s_1 \\
+                \tilde s_2 \\
+                \tilde s_3
+                \end{array}
+        \right]
+\eq
+\left[
+        \begin{array}{c}
+                u_0 \\
+                0 \\
+                0 \\
+                0
+                \end{array}
+        \right] \ 
+\label{eqn:conjrecur}
+\end{equation}
+The operator \ref{eqn:conjrecur} is a recursion
+\sx{recursion, downward continuation}
+beginning from $\tilde s_0 = u_0$
+and continuing downward with
+\begin{equation}
+\tilde s_k \eq \bar Z_{k-1} \  \tilde s_{k-1}
+\label{eqn:imaging}
+\end{equation}
+
+\par
+A final feature of the migration application
+is that the image is formed from $\tilde \bold s$
+by summing over all frequencies.
+Although I believe the mathematics above
+%and the code in subroutine \texttt{gazadj()} \vpageref{lst:gazadj},
+I ran the dot product test to be sure!
+%\progdex{gazadj}{phase shift mig.}
+\begin{comment}
+\noindent
+Finally, a few small details about the code.
+The loop on spatial frequency {\tt ikx}
+begins at {\tt ikx=2}.
+The reason for the 2, instead of a 1,
+is to omit the Nyquist frequency.
+If the Nyquist frequency were to be included,
+it should be divided into one half at positive Nyquist and one half
+at negative Nyquist, which would clutter the code
+without adding practical value.
+Another small detail is that the loop
+on temporal frequency {\tt iw}
+begins at {\tt iw=1+nt/2}
+which effectly omits negative frequencies.
+This is purely an economy measure.
+Including the negative frequencies would assure that the
+final image be real, no imaginary part.
+Omitting negative frequencies simply gives an imaginary part
+that can be thrown away,
+and gives the same real image, scaled by a half.
+The factor of two speed up makes these tiny compromises well worthwhile.
+\end{comment}
+
+\subsection{Vertical exaggeration example}
+\inputdir{vofz}
+To examine questions of \bx{vertical exaggeration}
+and spatial \bx{resolution}
+we consider a line of point scatters along
+a $45^\circ$ dipping line in $(x,z)$-space.
+We impose a linear velocity gradient such as
+that typically found in the Gulf of Mexico, i.e.~$v(z)=v_0+\alpha z$
+with $\alpha=1/2 s^{-1}$.
+Viewing our point scatterers as a function of traveltime depth,
+$\tau = 2\int_0^z dz/v(z)$
+in Figure~\ref{fig:sagmod}
+we see, as expected,
+that the points,
+although separated by equal intervals in $x$,
+are separated by shorter time intervals with increasing depth.
+The points are uniformly separated
+along a straight line in $(x,z)$-space,
+but they are nonuniformly separated along a {\em  curved} line
+in $(x,\tau)$-space.
+The curve is steeper near the earth's surface
+where $v(z)$ yields the greatest vertical exaggeration.
+Here the vertical exaggeration is about unity (no exageration)
+but deeper the vertical exaggeration is less than unity
+(horizontal exaggeration).
+
+\sideplot{sagmod}{width=3.00in}{
+        Points along a 45 degree slope as seen
+        as a function of traveltime depth.
+        }
+%\newslide
+
+Applying %subroutine \texttt{gazadj()} \vpageref{lst:gazadj}
+the points spray out into hyperboloids (like hyperbolas, but not exactly)
+shown in Figure~\ref{fig:sagdat}.
+The obvious feature of this synthetic data is that the hyperboloids
+appear to have different asymptotes.
+\sideplot{sagdat}{width=3.00in}{
+        The points of Figure~\protect\ref{fig:sagmod} diffracted
+        into hyperboloids.
+        }
+%\newslide
+In fact, there are no asymptotes because an asymptote
+is a ray going horizontal at a more-or-less constant depth,
+which will not happen in this model
+because the velocity increases steadily with depth.
+\par
+(I should get energetic and overlay these hyperboloids
+on top of the exact hyperbolas of the Kirchhoff method,
+to see if there are perceptible traveltime differences.)
+
+\subsection{Vertical and horizontal resolution}
+In principle, migration converts hyperbolas to points.
+In practice, a hyperbola does not collapse to a point,
+it collapses to a 
+{\em  focus.}
+A focus has measurable dimensions.
+Vertical resolution is easily understood.
+For a given frequency, higher velocity gives longer vertical wavelength
+and thus less resolution.
+When the result of migration is plotted as a function of
+traveltime depth $\tau$ instead of true depth $z$, however,
+enlargement of focus with depth is not visible.
+
+\par
+Horizontal resolution works a little differently.
+Migration is said to be ``good'' because it increases spatial \bx{resolution}.
+It squeezes a large hyperbola down to a tiny focus.
+Study the focal widths in Figure~\ref{fig:sagres}. %
+Notice the water-velocity focuses hardly broaden with depth.
+We expect some broadening with depth because the late
+hyperbolas are cut off at their sides and bottom
+(an aperture effect),
+but there is no broadening here
+because the periodicity of the Fourier domain
+means that events are not truncated but wrapped around.
+\plot{sagres}{width=6.00in,height=2.25in}{
+        Left is migration back to a focus
+        with a constant, water-velocity model.
+        Right is the same,
+        but with a Gulf of Mexico velocity,
+        i.e.~the hyperboloids of Figure~\protect\ref{fig:sagdat}
+        migrated back to focuses.
+	Observe focus broadening with depth.
+        }%
+%\newslide
+\par
+When the velocity increases with depth,
+wider focuses are found at increasing depth.
+Why is this?
+Consider each hyperbola to be made of many short plane wave segments.
+Migration moves all the little segments on top of each other.
+The sharpness of a focus cannot be narrower
+than the width of each of the many plane-wave segments
+that superpose to make the focus.
+The narrowest of these plane-wave segments
+is at the steepest part of a hyperbola asymptote.
+Deeper reflectors (which have later tops)
+have less steep asymptotes because
+of the increasing velocity.
+Thus deeper reflectors with faster RMS velocities have wider focuses
+so the deeper part of the image is more blurred.
+
+
+A second way to understand increased blurring with depth
+is from equation~(\ref{eqn:kxofvp}),
+that the horizontal frequency $k_x=\omega p = \omega v^{-1}\sin\theta$
+is independent of depth.
+The steepest possible angle occurs when $|\sin\theta| = 1$.
+Thus, considering all possible angles,
+the largest $|k_x|$ is $|k_x|=|\omega|/v(z)$.
+Larger values of horizontal frequency $|k_x|$
+could help us get narrower focuses,
+but the deeper we go (faster velocity we encounter),
+the more these high frequencies are lost
+because of the evanescent limit $|k_x|\le |\omega/v(z)|$.
+The limit is where the ray goes no deeper but bends around and
+comes back up again without ever reflecting.
+Any ray that does this many times is said to be a surface-trapped wave.
+It cannot sharpen a deep focus.
+
+%\par
+%When the velocity increases with depth,
+%wider focuses are found at increasing depth.
+%Why is this?
+%Deep waves travel fast and so they must have a long wavelength.
+%As a deeper wave comes up its wavelength shrinks,
+%but its horizontal component $k_x$
+%remains constant according to Snell's law
+%(equation~(\ref{eqn:kxofvp}))
+%so the horizontal component measured at the earth's surface
+%is exactly the same as at the bottom of the ray
+%where it is determined only by the frequency and the material velocity.
+%The sharpness of a focus cannot be narrower
+%than the width of each of the many plane-wave segments
+%that superpose to make the focus,
+%and the narrowest of these plane-wave segments is at the
+%the steepest part of a hyperbola asymptote.
+%The deeper hyperboloids (which have later tops) have less steep asymptotes
+%which is why deep focuses are wider.
+%
+%The depth of a scatterer is indicated by the hyperbola top.
+%The long wavelengths from great depth show up
+%as less-steep asymptotes on the deeper hyperboloids.
+
+\subsection{Field data migration}
+Application % of subroutine~\texttt{gazadj()} \vpageref{lst:gazadj}
+to the Gulf of Mexico data set processed in earlier chapters
+yields the result in Figure~\ref{fig:wgphase}.
+\plot{wgphase}{width=6.20in,height=8.5in}{
+        Phase shift migration of
+        Figure~\protect\ref{fig:agcstack}.
+%        Press button for movie to compare to stack and Kirchhoff migration of
+%        Figure~\protect\ref{vela/fig:wgstack}.
+        }
+%\newslide
+
+%\subsection{Downward continuation movie such as jfcmig}
+%This was Jim's idea and I don't see a way to build it
+%without doing something artificial.
+%This fits better in a finite-difference migration chapter.
+
+\begin{exer}
+\item
+Devise a mathematical expression for a plane wave
+that is an impulse function of time with a propagation angle of 15$^\circ$
+from the vertical $z$-axis in the plus  $z$  direction.
+Express the result in the domain of
+\item[{}] (a) $\ \ (t,x,z)$
+\item[{}] (b) $\ \ ( \omega ,x,z)$
+\item[{}] (c) $\ \ ( \omega , k_x , z)$
+\item[{}] (d) $\ \ ( \omega ,p,z)$
+\item[{}] (e) $\ \ ( \omega , k_x , k_z)$
+\item[{}] (f) $\ \ (      t , k_x , k_z)$
+
+                \todo{  %remove this temporarily to save two sheets of paper.
+\item
+Suppose that you are able to observe some shear waves at
+ordinary seismic frequencies.
+Is the spatial \bx{resolution} better, equal, or worse than usual?
+Why?
+\item
+Evolution of a wavefield with time is described by
+\begin{equation}
+p(x , z , t) \ =\ 
+\int  \int \  \left[\,P( k_x , k_z , t=0 )
+\, e^{ -i \omega ( k_x , k_z ) t } \right] \ 
+e^{ ik_x x + ik_z z }  dk_x \, dk_z 
+\end{equation}
+Let  $ P(k_x , k_z , 0  ) $  be constant, signifying a point
+source at the origin in  $(x , z)$-space.
+Let  $t$  be very large, meaning that
+phase = $ \phi = [ - \omega ( k_x , k_z ) \ +$
+$ k_x \  (x / t) \ +\  k_z \  (z /t) ] t $  in
+the integration is rapidly alternating with
+changes in  $ k_x $  and  $ k_z$.
+Assume that the only significant contribution
+to the integral comes when the phase is stationary,
+that is,
+where  $ \partial \phi / \partial k_x $  and
+$ \partial \phi / \partial k_z $  both vanish.
+Where is the energy in $(x , z , t)$-space?
+\item
+Downward continuation of a wave is expressed by
+\begin{equation}
+p(x , z , t) \ =\  \int \int \  \left[\,P( k_x , z=0 , \omega ) \  e^{
+ik_z ( \omega , k_x ) z } \right] \ 
+e^{{-i} \omega t + ik_x x } \  d \omega \, dk_x
+\end{equation}
+Let  $ P(k_x , 0 , \omega  ) $  be constant, signifying a point
+source at the origin in  $(x , t)$-space.
+Where is the energy in $(x , z , t)$-space?
+                     } %remove this temporarily to save two sheets of paper.
+\end{exer}
+
+%\iex{Exer/Intro}{assignment}
+%\iex{Exer/Shift}{assignment}
+%\iex{Exer/2Dft}{assignment}
+%\iex{Exer/Phasemod}{assignment}
+%\iex{Exer/Phasedown}{assignment}
+%\iex{Exer/Phasemig}{assignment}
+%\iex{Exer/Stolt1}{assignment}
+%\iex{Exer/Stolt2}{assignment}
+
+

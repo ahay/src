@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfkirchnew', 'sfagc', 'sfgrey']
+data=['data/midpts/beistack.HH', 'data/midpts/beivrms.HH']
+size=    2004000

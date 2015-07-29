@@ -1,0 +1,37 @@
+\begin{abstract}
+Seismic imaging based on single-scattering approximation 
+is based on analysis of the match between the 
+source and receiver wavefields at every image location.
+Wavefields at depth are functions of space and time and are
+reconstructed from surface data either by integral 
+methods (Kirchhoff migration) or by differential methods
+(reverse-time or wavefield extrapolation migration).
+Different methods can be used to analyze wavefield matching,
+of which cross-correlation is a popular option.
+Implementation of 
+a simple imaging condition requires time cross-correlation 
+of source and receiver wavefields, followed by extraction
+of the zero time lag.
+A generalized imaging condition operates by cross-correlation
+in both space and time, followed by image extraction at
+zero time lag. 
+Images at different spatial cross-correlation lags are indicators of
+imaging accuracy and are also used for image angle-decomposition.
+
+In this paper, we introduce an alternative prestack imaging condition
+in which we preserve multiple lags of the time cross-correlation.
+Prestack images are described as functions of 
+time-shifts as opposed to space-shifts
+between source and receiver wavefields.
+This imaging condition is applicable to migration by
+Kirchhoff, wavefield extrapolation or reverse-time techniques. 
+The transformation allows construction of
+common-image gathers presented as function of either
+time-shift or reflection angle at every location in space.
+Inaccurate migration velocity is revealed by angle-domain
+common-image gathers with non-flat events.
+Computational experiments using a synthetic dataset
+from a complex salt model
+demonstrate the main features of the method.
+\end{abstract}
+

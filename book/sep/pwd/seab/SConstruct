@@ -1,0 +1,29 @@
+from rsf.proj import *
+
+Fetch('apr18.h','seab')
+
+Flow('data','apr18.h','dd form=native')
+
+def grey(title):
+    return '''
+    window min1=-113.11 max1=-112.5736 min2=-16.1474 max2=-15.6086 |
+    grey crowd=0.8 transp=n yreverse=n
+    label1=longitude label2=latitude title="%s"
+    ''' % title
+
+Flow('bin','data',
+     '''window n1=1 f1=2 | math output='(2978-input)/387' |
+     bin head=$SOURCE niter=150 nx=160 ny=160 xkey=0 ykey=1''')
+Plot('bin',grey('Binned'))
+
+Flow('dip','bin','dip order=2 rect1=10 rect2=10 mask=$SOURCE')
+
+Flow('mis','bin dip','planemis2 order=2 dip=${SOURCES[1]} verb=y')
+Plot('mis',grey('Interpolated'))
+Result('seab','bin mis','SideBySideAniso')
+
+Flow('mis2','bin dip','pmshape2 rect1=3 rect2=10 dip=${SOURCES[1]}')
+Plot('mis2',grey('Interpolated'))
+Result('seab2','bin mis2','SideBySideAniso')
+
+End()

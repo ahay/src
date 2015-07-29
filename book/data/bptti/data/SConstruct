@@ -1,0 +1,16 @@
+from rsf.proj import *
+
+# Download from http://www.freeusp.org/2007_BP_Ani_Vel_Benchmark/
+
+for part in range(1,5):
+    sgy = 'Anisotropic_FD_Model_Shots_part%d.sgy' % part
+    Fetch(sgy+'.gz','BP',top=os.environ.get('DATAPATH'),server='local')
+    Flow(sgy,sgy+'.gz','gunzip -c $SOURCE',stdin=0)
+    
+    rsf = 'part%d' % part
+    Flow([rsf,'t'+rsf,rsf+'.asc',rsf+'.bin'],sgy,
+         '''
+         segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]}
+         ''')
+
+End()

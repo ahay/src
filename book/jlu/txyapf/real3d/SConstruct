@@ -1,0 +1,160 @@
+from rsf.proj import *
+from rsf.recipes.beg import server
+
+# Fetch data
+Fetch('image3d.rsf','cup',server)
+Flow('data','image3d','dd form=native')
+Result('data','data',
+       '''
+       put d1=0.004 |
+       byte gainpanal=e clip=2. |
+       grey3 frame1=85 frame2=47 frame3=254 point1=0.7 point2=0.45 
+       flat=y title="Orignal data" label2=X unit2=km label3=Y unit3=km
+       ''')
+
+
+Result('wi','data',
+       '''
+       put label2=X unit2=km label3=Y unit3=km|
+       window n2=1 f2=47  |
+       grey wanttitle=n pclip=90
+       ''')
+Result('wc','data',
+       '''
+       put  label2=X unit2=km label3=Y unit3=km|
+       window n3=1 f3=254  |
+       grey wanttitle=n pclip=90
+       ''')
+Result('wt','data',
+       '''
+       put  label2=X unit2=km label3=Y unit3=km|
+       window n1=1 f1=85  |
+       grey wanttitle=n pclip=90
+       ''')
+
+
+
+# Test patch
+### Patch  f=73*2/5
+Flow('patch','data','patch w=140,266,310 p=10,1,1')
+Flow('patch0','patch','patch inv=y weight=y dim=3')
+tpres = []
+tpre2ds = []
+
+for nwt in range(0,10):
+    fd     = 'fd-%d' % nwt
+
+    ### 3D
+    shiftsa= 'shiftsa-%d' % nwt
+    sh1    = 'sh1-%d' % nwt
+    shifts = 'shifts-%d' % nwt
+    flt    = 'flt-%d' % nwt
+    pre    = 'pre-%d' % nwt
+    tpre   = 'tpre-%d' % nwt
+    Flow(fd,'patch',
+         '''
+         window n4=1 f4=%d | fft1 |
+         transp plane=12  | transp plane=23 |
+         window n3=30
+         '''  % nwt )
+
+    Flow(shifts,fd,
+        '''
+        cshifts2 ns1=2 ns2=2 | transp plane=34 
+        ''' )
+
+    Flow([flt, pre],[shifts, fd],
+         '''
+         clpf match=${SOURCES[1]} pred=${TARGETS[1]} rect1=10 rect2=10 niter=10
+         ''')
+    Flow(tpre,pre,
+         'transp plane=23 | transp plane=12  | pad end1=43 | fft1 inv=y ')
+    tpres.append(tpre)
+
+    ### 2D
+    shifts2d = 'shift2d-%d' % nwt
+    flt2d = 'flt2d-%d' % nwt
+    pre2d = 'pre2d-%d' % nwt
+    tpre2d = 'tpre2d-%d' % nwt
+    Flow(shifts2d,fd,'shiftd2 ns=3 |transp plane=25 | window squeeze=y')
+
+    Flow([flt2d, pre2d],[shifts2d, fd],
+         'clpf match=${SOURCES[1]} pred=${TARGETS[1]} rect1=10 niter=10')
+
+    Flow(tpre2d,pre2d,
+         'transp plane=13 | transp plane=23 | pad end1=43 | fft1 inv=y')
+    tpre2ds.append(tpre2d)
+
+Flow('tpre1',tpres,
+     'cat ${SOURCES[1:%d]} axis=4 | patch inv=y weight=y dim=3' % len(tpres))
+Flow('tpre12d',tpre2ds,
+     'cat ${SOURCES[1:%d]} axis=4 | patch inv=y weight=y dim=3' % len(tpre2ds))
+
+Result('tpre1',
+       '''
+       put d1=0.004 |
+       byte gainpanal=e clip=2. |
+       grey3 frame1=85 frame2=47 frame3=254 point1=0.7 point2=0.45
+       flat=y title="f-x-y NRNA" label2=X unit2=km label3=Y unit3=km
+       ''')
+
+Flow('diff3d','data tpre1','add scale=1,-1 ${SOURCES[1]}')
+Result('diff3d',
+       '''
+       put d1=0.004 |
+       byte gainpanal=e clip=2. |
+       grey3 frame1=85 frame2=47 frame3=254 point1=0.7 point2=0.45
+       flat=y title="f-x-y NRNA difference" label2=X unit2=km label3=Y unit3=km
+       ''')
+
+# 3D t-x-y APF
+Flow('patch1','data','patch w=700,266,62 p=1,1,10')
+Flow('patch10','patch1','patch inv=y weight=y dim=3')
+Result('patch10','patch10',
+       '''
+       byte |
+       grey3 frame1=190 frame2=40 frame3=254 flat=n
+       wanttitle=n label2=X unit2=km label3=Y unit3=km
+       ''')
+
+patchs=[]
+for ny in range(0,10):
+    patch   = 'patch-%d' % ny
+    ### 3D
+    fltny  = 'fltny-%d' % ny
+    preny    = 'preny-%d' % ny
+    Flow(patch,'patch1',
+         '''
+         window n6=1 f6=%d
+         '''  % ny )
+
+    Flow([preny],patch,
+         '''
+         txrna3 a=5,2,2 rect1=20 rect2=10 rect3=10 niter=15
+         verb=y
+         ''')
+
+    patchs.append(preny)
+
+
+Flow('ppred3',patchs,
+     'cat ${SOURCES[1:%d]} axis=6 | patch inv=y weight=y dim=3' % len(patchs))
+Result('ppred3',
+       '''
+       put d1=0.004 |
+       byte gainpanal=e  clip=2. |
+       grey3 frame1=85 frame2=47 frame3=254 point1=0.7 point2=0.45
+       flat=y title="t-x-y APF" label2=X unit2=km label3=Y unit3=km
+       ''')
+
+Flow('diff3','data ppred3','add scale=1,-1 ${SOURCES[1]}')
+Result('diff3',
+       '''
+       put d1=0.004 |
+       byte gainpanal=e  clip=2. |
+       grey3 frame1=85 frame2=47 frame3=254 point1=0.7 point2=0.45
+       flat=y title="t-x-y APF difference" label2=X unit2=km label3=Y unit3=km
+       ''')
+
+End()
+

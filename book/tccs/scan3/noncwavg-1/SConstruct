@@ -1,0 +1,144 @@
+from rsf.proj import *
+from rsf.prog import RSFROOT
+
+Nt=1000
+dt=0.004
+t0=0
+
+Nx=400
+dx=0.025
+x0=-5
+
+Ny=Nx
+dy=dx
+y0=x0
+
+
+# nonconstant Vavg
+Flow('Vavg',None,'math n1=%d d1=%g o1=%g output="1/(1.5+0.25*x1)^2" ' % (Nt,dt,t0))
+Flow('Vcos',None,'math n1=%d d1=%g o1=%g output="0.06/(1.5+0.25*x1)^2*cos(2*(1.*sin(3*x1)))" ' % (Nt,dt,t0))
+Flow('Vsin',None,'math n1=%d d1=%g o1=%g output="0.06/(1.5+0.25*x1)^2*sin(2*(1.*sin(3*x1)))" ' % (Nt,dt,t0))
+Result('Vavg','graph transp=y yreverse=y min2=0.1 max2=0.5 plotfat=7 plotcol=4 pad=n title="Wavg (s\^2\_/km\^2\_)" label1=Time unit1=s')
+Result('Vcos','graph transp=y yreverse=y min2=-0.04 max2=0.04 plotfat=7 plotcol=4 pad=n title="Wcos (s\^2\_/km\^2\_)" label1=Time unit1=s wantaxis=n wanttitle=n')
+Result('Vsin','graph transp=y yreverse=y min2=-0.04 max2=0.04 plotfat=7 plotcol=4 pad=n title="Wsin (s\^2\_/km\^2\_)" label1=Time unit1=s wantaxis=n wanttitle=n')
+Plot('Vcos','graph transp=y yreverse=y min2=-0.04 max2=0.04 plotfat=7 plotcol=4 pad=n title="Wcos (s\^2\_/km\^2\_)" label1=Time unit1=s wantaxis=y wanttitle=y')
+Plot('Vsin','graph transp=y yreverse=y min2=-0.04 max2=0.04 plotfat=7 plotcol=4 pad=n title="Wsin (s\^2\_/km\^2\_)" label1=Time unit1=s wantaxis=y wanttitle=y')
+
+
+# construct original data
+Flow('vel','Vavg Vcos Vsin','cat axis=2 ${SOURCES[1:3]}')
+Flow('data','vel',
+     '''
+     window n2=1 |
+     noise seed=1999 rep=y |
+     math output="input^3" |
+     cut n1=100 | cut f1=999 |
+     ricker1 frequency=10 |
+     spray axis=2 n=%d d=%g o=%g label="Inline Offset" unit=km |
+     spray axis=3 n=%d d=%g o=%g label="Crossline Offset" unit=km |
+     inmo3_ort velocity=$SOURCE half=n |
+     put label1=Time unit1=s 
+     ''' % (Nx,dx,x0,Ny,dy,y0))
+Result('data','byte gainpanel=all | grey3 title=" " frame1=%d frame2=%d frame3=%d' % (Nt/2,200,Ny/2))
+
+# construct data after NMO
+Flow('Vavg0',None,'math n1=%d d1=%g o1=%g output="0.0" ' % (Nt,dt,t0))
+Flow('vel0','Vavg0 Vcos Vsin','cat axis=2 ${SOURCES[1:3]}')
+Flow('NMOdata','vel0',
+     '''
+     window n2=1 |
+     noise seed=1999 rep=y |
+     math output="input^3" |
+     cut n1=100 | cut f1=999 |
+     ricker1 frequency=10 |
+     spray axis=2 n=%d d=%g o=%g label="Inline Offset" unit=km |
+     spray axis=3 n=%d d=%g o=%g label="Crossline Offset" unit=km |
+     inmo3_ort velocity=$SOURCE half=n |
+     put label1=Time unit1=s 
+     ''' % (Nx,dx,x0,Ny,dy,y0))
+Result('NMOdata','byte gainpanel=all | grey3 title=" " frame1=%d frame2=%d frame3=%d' % (Nt/2,Nx/2,Ny/2))
+
+
+####################################################
+
+# compute NMOdata^2
+Flow('NMOdata_sq','NMOdata','math output="input^2" ')
+#Result('NMOdata_sq','byte gainpanel=all | grey3 title="NMOdata\^2" frame1=%d frame2=%d frame3=%d' % (Nt/2,Nx/2,Ny/2))
+
+
+# Apply FFT in time
+Flow('NMOfftdata','NMOdata','rtoc | fft3 axis=1 pad=1 | window n1=500 f1=500')
+#Result('NMOfftreal','NMOfftdata','real | grey title="NMOreal" ')
+
+Flow('NMOfftdatac','NMOfftdata','window n1=100 f1=0')
+#Result('NMOfftrealc','NMOfftdatac','real | grey title="NMOrealc" ')
+
+Flow('NMOfftdata_sq','NMOdata_sq','rtoc | fft3 axis=1 pad=1 | window n1=500 f1=500')
+#Result('NMOfftreal_sq','NMOfftdata_sq','real | grey title="NMOreal\^2" ')
+
+Flow('NMOfftdatac_sq','NMOfftdata_sq','window n1=150 f1=0')
+Result('NMOfftrealc_sq','NMOfftdatac_sq','real | grey title="NMOrealc\^2" ')
+
+
+Ntau=Nt
+dtau=dt
+tau0=t0
+
+Np=200
+p0=-0.04
+dp=(0.04-p0)/Np
+
+Nq=Np
+q0=p0
+dq=dp
+
+Ns=1
+s0=0.0
+ds=0.1
+
+# prepare to apply fast butterfly
+Flow('bfio.bin',os.path.join(RSFROOT,'include','bfio.bin'),'/bin/cp $SOURCE $TARGET',stdin=0,stdout=-1)
+
+# compute integral of d(t,x,y)
+Flow('NMOfmod','NMOfftdatac bfio.bin','radon34 ntau=%d dtau=%g tau0=%g np=%d dp=%g p0=%g nq=%d dq=%g q0=%g ns=%d ds=%g s0=%g fi=2 EL=0 N=32 EPSx1=7 EPSx2=5 EPSx3=5 EPSk1=7 EPSk2=5 EPSk3=5 | real | math output=input*%g' % (Ntau,dtau,tau0,Np,dp,p0,Nq,dq,q0,Ns,ds,s0,2*dx*dy/Nt))
+#Result('NMOfmod','byte gainpanel=all | grey3 title="NMOfmod" label1=Time unit1=s label2="Wcos" unit2="s\^2\_/km\^2" label3="Wsin" unit3="s\^2\_/km\^2" frame1=%d frame2=%d frame3=%d' % (Ntau/2,130,80))
+
+# compute integral of d(t,x,y)^2
+Flow('NMOfmod_sq','NMOfftdatac_sq bfio.bin','radon34 ntau=%d dtau=%g tau0=%g np=%d dp=%g p0=%g nq=%d dq=%g q0=%g ns=%d ds=%g s0=%g fi=2 EL=0 N=32 EPSx1=9 EPSx2=5 EPSx3=5 EPSk1=9 EPSk2=5 EPSk3=5 | real | math output=input*%g' % (Ntau,dtau,tau0,Np,dp,p0,Nq,dq,q0,Ns,ds,s0,2*dx*dy/Nt))
+#Result('NMOfmod_sq','byte gainpanel=all | grey3 title="NMOfmod\^2" label1=Time unit1=s label2="Wcos" unit2="s\^2\_/km\^2" label3="Wsin" unit3="s\^2\_/km\^2" frame1=%d frame2=%d frame3=%d' % (Ntau/2,130,80))
+
+# compute semblance
+Flow('NMOsemb-1','NMOfmod NMOfmod_sq','math output="input^2" | divn den=${SOURCES[1]} rect1=5 rect2=3 rect3=3 | math output="input/%g" ' %(Nx*dx*Ny*dy))
+Result('NMOsemb-1','byte gainpanel=all allpos=y | grey3 title=" " maxval=1 minval=0 color=j label1=Time unit1=s label2="Wcos" unit2="s\^2\_/km\^2\_" label3="Wsin" unit3="s\^2\_/km\^2\_" frame1=%d frame2=%d frame3=%d' % (650,87,130))
+
+
+# pick Vcos-2 and Vsin-2
+#Flow('NMOpik','NMOsemb-1','scale axis=3 | pick3 vel0=0.0 smooth=y rect1=20')
+#Flow('pik1','NMOpik','window f4=0 n4=1')
+#Flow('pik2','NMOpik','window f4=1 n4=1')
+
+Flow('pik1','NMOsemb-1','stack axis=3 | scale axis=2 | pick vel0=0.0 rect1=20')
+Flow('pik2','NMOsemb-1','stack axis=2 | scale axis=2 | pick vel0=0.0 rect1=20')
+
+Result('pik1','graph transp=y yreverse=y min2=-0.04 max2=0.04 plotfat=7 plotcol=3 pad=n title="Wcos (s\^2\_/km\^2\_)" label1=Time unit1=s wantaxis=n wanttitle=n')
+Result('pik2','graph transp=y yreverse=y min2=-0.04 max2=0.04 plotfat=7 plotcol=3 pad=n title="Wsin (s\^2\_/km\^2\_)" label1=Time unit1=s wantaxis=n wanttitle=n')
+Plot('pik1','graph transp=y yreverse=y min2=-0.04 max2=0.04 plotfat=5 plotcol=3 pad=n title="Wcos (s\^2\_/km\^2\_)" label1=Time unit1=s wantaxis=y wanttitle=y')
+Plot('pik2','graph transp=y yreverse=y min2=-0.04 max2=0.04 plotfat=5 plotcol=3 pad=n title="Wsin (s\^2\_/km\^2\_)" label1=Time unit1=s wantaxis=y wanttitle=y')
+Result('hu1','Vcos pik1','Overlay')
+Result('hu2','Vsin pik2','Overlay')
+
+# RMO using picked vel
+Flow('RMOpikvel','Vavg0 pik1 pik2','cat axis=2 ${SOURCES[1:3]}')
+Flow('RMOdata','NMOdata RMOpikvel','nmo3_ort velocity=${SOURCES[1]} half=n')
+#Result('RMOdata','byte gainpanel=all | grey3 title=" " frame1=%d frame2=%d frame3=%d' % (Nt/2,Nx/2,Ny/2))
+
+
+Result('NMOdatacut','NMOdata','window n1=400 f1=450 | byte gainpanel=all | grey3 title=" " frame1=%d frame2=%d frame3=%d' % (200,Nx/2,Ny/2))
+Result('RMOdatacut','RMOdata','window n1=400 f1=450 | byte gainpanel=all | grey3 title=" " frame1=%d frame2=%d frame3=%d' % (200,Nx/2,Ny/2))
+
+# Slow Radon compute integral of d(t,x,y)
+#Flow('smod','data','diradon34 ntau=%d dtau=%g tau0=%g np=%d dp=%g p0=%g nq=%d dq=%g q0=%g ns=%d ds=%g s0=%g fi=2 | math output=input*%g' % (Ntau,dtau,tau0,Np,dp,p0,Nq,dq,q0,Ns,ds,s0,dx*dy))
+#Result('smod','byte gainpanel=all | grey3 title="NMOsmod" label1=Time unit1=s label2=Wcos unit2="s\^2\_/km\^2\_" label3=Wsin unit3="s\^2\_/km\^2\_" frame1=%d frame2=%d frame3=%d movie=0' % (Ntau/2,74,68))
+
+End()
+

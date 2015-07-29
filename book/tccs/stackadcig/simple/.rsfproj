@@ -1,0 +1,3 @@
+uses=['sfspike', 'sfricker1', 'sfcut', 'sfnoise', 'sfput', 'sfwiggle', 'sfstack', 'sfspray', 'sfsimilarity', 'sfthreshold', 'sfgrey', 'sfmath']
+data=[]
+size=     346000

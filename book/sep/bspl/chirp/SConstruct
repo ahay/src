@@ -1,0 +1,99 @@
+from rsf.proj import *
+
+def alias(n1):
+    return '''
+    math n1=%d d1=%g o1=0 output='(4.*(x1-40)/80)^2' |
+    math output='0.5*cos(8*input)*exp(-input)'
+    ''' % (n1,80.0/(n1-1))
+
+def coord(n1):
+    return '''
+    math n1=%d d1=%g o1=0 output=x1
+    ''' % (n1,80.0/(n1-1))
+
+Flow('alias50',None,alias(50))
+Flow('alias500',None,alias(500))
+Plot('ideal','alias500','dots labelsz=14 labels=ideal')
+
+Flow('head50','alias50','math output=x1')
+Flow('push500','alias50 alias500 head50',
+     'bin1 pattern=${SOURCES[1]} head=${SOURCES[2]}')
+Plot('decim','push500',
+     'dots dots=2 connect=0 strings=1 labelsz=14 labels=decimated')
+
+Flow('coord500',None,coord(500))
+
+Result('chirp','ideal decim','OverUnderAniso')
+
+for size in (1,2,4,8):
+    for interp in ('lag','cub','spl','kai','mom'):
+        test = 'int%d_%s' % (size,interp)
+        Flow(test,'alias50 coord500 alias500',
+             '''
+             inttest1 interp=%s nw=%d coord=${SOURCES[1]} |
+             add scale=1,-1 ${SOURCES[2]} |
+             window f1=31 n1=438
+             ''' % (interp,size))
+
+        show = 'imp%d_%s' % (size,interp)
+        spec = 'spc%d_%s' % (size,interp)
+        if interp=='spl' or interp=='mom':
+            Flow(show,None,
+             '''
+             intshow interp=%s nw=%d x=0.7 |
+             pad n1=%d | reverse which=1 | pad n1=64 | reverse which=1 |
+             splinefilter nw=%d
+             ''' % (interp,size,32+size/2,(size,-size)[interp=='mom']))
+        else:
+            Flow(show,None,
+                 '''
+                 intshow interp=%s nw=%d x=0.7 |
+                 pad n1=%d | reverse which=1 | pad n1=64 | reverse which=1
+                 ''' % (interp,size,32+size/2))
+        Flow(spec,show,'spectra | scale dscale=8')
+
+def graph(title):
+    return 'cat axis=2 ${SOURCES[1]} | graph dash=1,0 title="%s" ' % title
+
+alias = {
+    'bin': ('1_lag', 'Nearest Neighbor'),
+    'lin': ('2_lag', 'Linear'),
+    'cub': ('4_cub', 'Cubic Convolution'),
+    'spl4': ('4_spl', 'Spline-4'),
+    'mom4': ('4_mom', 'Mom-4'),
+    'spl8': ('8_spl', 'Spline-8'),
+    'kai': ('8_kai', 'Sinc-8')
+    }
+
+def error(name):
+    first,second =Split(name)
+    Result(first+second,'int%s int%s' % (alias[first][0],alias[second][0]),
+           graph('%s vs %s' % (alias[first][1],alias[second][1])))
+    
+error('bin lin')
+error('lin cub')
+error('cub spl4')
+error('cub kai')
+error('kai spl8')
+error('spl4 mom4')
+
+def spec(name):
+    first,second =Split(name)
+    both = first+second
+    spec = 'spec'+both
+    Plot(both,'imp%s imp%s' % (alias[second][0],alias[first][0]),
+         '''
+         cat axis=2 ${SOURCES[1]} |
+         dots dots=2 connect=0 strings=1 labelsz=14 labels="%s:%s"
+         ''' % (alias[second][1],alias[first][1]))
+    Plot(spec,'spc%s spc%s' % (alias[first][0],alias[second][0]),
+         graph('Spectrum'))
+    Result(spec,[both,spec],'SideBySideAniso')
+
+spec('lin cub')
+spec('cub kai')
+spec('cub spl4')
+spec('kai spl8')
+spec('spl4 mom4')
+
+End()

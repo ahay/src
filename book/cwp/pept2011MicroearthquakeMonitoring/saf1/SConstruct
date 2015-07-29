@@ -1,0 +1,20 @@
+from rsf.proj import *
+import sys
+sys.path.append('..')
+import fdmod,saf
+
+xtarget=2.0
+ztarget=0.5
+par=saf.param(xtarget,ztarget)
+par['labelattr']=par['labelattr']+par['labelrot']
+# ------------------------------------------------------------
+# receivers
+saf.safodbh('rr',par)
+# sources
+saf.thrsou('ss','wav',par)
+
+# ------------------------------------------------------------
+# imaging
+saf.irandom('ss','wav','rr',4,par)
+
+End()

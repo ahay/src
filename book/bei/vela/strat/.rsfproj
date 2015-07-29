@@ -1,0 +1,3 @@
+uses=['sfspike', 'sfboxsmooth', 'sfmath', 'sfscale', 'sfspray', 'sfinmo', 'sfnmo', 'sfstack', 'sfcat', 'sfdots']
+data=[]
+size=      36984

@@ -1,0 +1,24 @@
+from rsf.suproj import *
+
+Fetch('seismic.segy','viking',server=os.environ.get('RSF_DATASERVER','http://www.ahay.org'))
+
+# Convert to SU
+Flow('seismic','seismic.segy',
+     '''
+     segyread endian=%d tape=$SOURCE verbose=1 | 
+     segyclean
+     ''' % (not little_endian()),stdin=0)
+
+# Select a shot gather
+Flow('shot200','seismic','suwind key=ep min=200 max=200')
+Result('shot200','suxwigb  title="Shot at ep=200" ')
+
+gains = ('tpow=1','tpow=2','jon=1')
+
+for case in range(3):
+    gain = 'gain%d' % case
+    opts = gains[case]
+    Result(gain,'shot200',
+           'sugain %s | suxwigb title="Shot at ep=200, %s" ' % (opts,opts))
+
+End()

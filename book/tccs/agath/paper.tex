@@ -1,0 +1,456 @@
+\published{Journal of Petroleum Exploration and Production Technology, 1, 11-16, (2011)}
+\title{Theory of 3-D angle gathers in wave-equation seismic imaging}
+\author{Sergey Fomel}
+
+\lefthead{Fomel}
+\righthead{3-D angle gathers}
+
+\maketitle
+
+\begin{abstract}
+  I present two methods for constructing angle gathers in 3-D seismic
+  imaging by downward extrapolation. Angles in angle gathers refer to
+  the scattering angle at the reflector and provide a natural access
+  to analyzing migration velocity and amplitudes. In the first method,
+  angle gathers are extracted at each downward-continuation step by
+  mapping transformations in constant-depth frequency slices. In the
+  second method, one extracts angle gathers after applying the imaging
+  condition by transforming local offset gathers in the depth domain.
+  The second approach generalizes previously published algorithms for
+  angle-gather construction in 2-D and common-azimuth imaging.
+%\keywords{Geophysics \and Seismic imaging \and Velocity analysis \and Amplitude
+% analysis}
+\end{abstract}
+
+\section{Introduction}
+
+Wave extrapolation provides an accurate method for seismic imaging in
+structurally complex areas \cite[]{biondi,etgen}. Wave
+extrapolation methods have several known advantages in comparison with
+direct methods such as Kirchhoff migration thanks to their ability to
+handle multi-pathing, strong velocity heterogeneities, and
+finite-bandwidth wave-propagation effects
+\cite[]{GEO66-05-16221640}.  However, velocity and amplitude analysis in the
+prestack domain are not immediately available for wave extrapolation
+methods. To overcome this limitation, several authors
+\cite[]{GEO55-09-12231234,SEG-1999-08240827,SEG-2000-08300833,GEO67-03-08830889,wu,SEG-2003-08890892,GEO68-03-10651074,cig,tsic}
+suggested methods for constructing angle gathers from downward-continued
+wavefields. Angles in angle gathers are generally understood as the reflection
+(scattering) angles at reflecting interfaces \cite[]{xu,hoop}. Angle gathers
+facilitate velocity analysis \cite[]{SEG-2001-08850888,stork} and can be used in
+principle for extracting angle-dependent reflectivity information directly at
+the target reflectors \cite[]{SEG-2001-02960299}. \cite{stolk} assert that
+angle gathers generated with wavefield extrapolation are genuinely free of
+artifacts documented for Kirchhoff-generated angle gathers \cite[]{symes,symes2}.
+
+There are two possible approaches to angle-gather construction with wavefield
+continuation. In the first approach, one generates gathers at each depth level
+converting offset-space-frequency planes into angle-space planes
+simultaneously with applying the imaging condition. The offset in this case
+refers to the local offset between source and receiver parts of the downward
+continued prestack data. Such a construction was suggested, for example, by
+\cite{SEG-1999-08240827}. This approach is attractive because of its
+localization in depth. However, the method of \cite{SEG-1999-08240827}
+produces gathers in the offset ray parameter as opposed to angle. As a result,
+the angle-domain information becomes structure-dependent: the output depends
+not only on the scattering angle but also on the structural dip.
+
+In the second approach, one converts migrated images in offset-depth domain to
+angle-depth gathers after imaging of all depth levels is completed.
+\cite{GEO68-03-10651074} suggested a simple Radon-transform procedure for
+extracting angle gathers from migrated images. The transformation is
+independent of velocity and structure. \cite{GEO67-03-08830889} adopted it
+for constructing angle gathers in the shot-gather migration.  \cite{new}
+demonstrate that the method of \cite{GEO68-03-10651074} is strictly valid
+in the 3-D case only in the absence of cross-line structural dips. They
+present an extension of this method for the common-azimuth approximation
+\cite[]{GEO61-06-18221832}.
+
+In this paper, I present a more complete analysis of the angle-gather
+construction in 3-D imaging by wavefield continuation. First, I show how to
+remove the structural dependence in the depth-slice approach. The improved
+mapping retains the velocity dependence but removes 
+the effect of the structure. Additionally, I extend the second, post-migration
+approach to a complete 3-D wide-azimuth situation.  Under the common-azimuth
+approximation, this formulation reduces to the result of \cite{newseg}
+and, in the absence of cross-line structure, it is equivalent to the Radon
+construction of \cite{GEO68-03-10651074}. 
+
+\section{Traveltime derivatives and dispersion relationships for a
+  3-D dipping reflector}
+%\inputdir{XFig}
+
+Theoretical analysis of angle gathers in downward continuation methods can be
+reduced to analyzing the geometry of reflection in the simple case of a
+dipping reflector in a locally homogeneous medium. Considering the reflection
+geometry in the case of a plane reflector is sufficient for deriving
+relationships for local reflection traveltime derivatives in the vicinity of a
+reflection point \cite[]{goldin}. Let the local reflection plane be described in
+$\{x,y,z\}$ coordinates by the general equation
+\begin{equation}
+  \label{eq:plane}
+  x\,\cos{\alpha} + y\,\cos{\beta} + z\,\cos{\gamma} = d\;,
+\end{equation}
+where the normal angles $\alpha$, $\beta$, and $\gamma$ satisfy
+\begin{equation}
+  \label{eq:norm}
+  \cos^2{\alpha} + \cos^2{\beta} + \cos^2{\gamma} = 1\;,
+\end{equation}
+The geometry of the reflection ray paths is depicted in
+Figure~\ref{fig:plane3b}.  The reflection traveltime measured on a
+horizontal surface above the reflector is given by the known expression
+\cite[]{LSC00-00-02680268,GEO36-03-05100516}
+\begin{equation}
+  \label{eq:ttime}
+  t(h_x,h_y) =
+  \frac{2}{v}\,\sqrt{D^2+h_x^2+h_y^2-
+    \left(h_x\,\cos{\alpha} + h_y\,\cos{\beta}\right)^2}\;,
+\end{equation}
+where $D$ is the length of the normal to the reflector from the
+midpoint (distance $MM'$ in Figure~\ref{fig:plane2b})
+\begin{equation}
+  \label{eq:dmm}
+  D = d - m_x\,\cos{\alpha} - m_y\,\cos{\beta}\;,
+\end{equation}
+$m_x$ and $m_y$ are the midpoint coordinates, $h_x$ and $h_y$ are the
+half-offset coordinates, and $v$ is the local propagation velocity.
+
+\inputdir{XFig}
+\plot{plane3b}{width=0.7\textwidth}{Reflection geometry in 3-D (a scheme).
+  $S$ and $R$ and the source and the receiver positions at the surface. $O$ is
+  the reflection point. $S'$ is the normal projection of the source to the
+  reflector. $S''$ is the ``mirror'' source. The cumulative length of the
+  incident and reflected rays is equal to the distance from $S''$ to $R$.}
+
+According to elementary geometrical considerations
+(Figures~\ref{fig:plane3b} and~\ref{fig:plane2b}), the reflection angle $\theta$
+is related to the previously introduced quantities by the equation
+\begin{equation}
+  \label{eq:theta}
+  \cos{\theta} = \frac{D}{\sqrt{D^2+h_x^2+h_y^2-
+      \left(h_x\,\cos{\alpha} + h_y\,\cos{\beta}\right)^2}}\;.
+\end{equation}
+
+\plot{plane2b}{width=0.7\textwidth}{Reflection geometry in the reflection
+  plane (a scheme). $M$ is the midpoint. As follows from the similarity of
+  triangles $S''SR$ and $S'SM$, the distance from $M$ to $S'$ is twice smaller
+  than the distance from $S''$ to $R$.}
+
+Explicitly differentiating equation~(\ref{eq:ttime}) with respect to the
+midpoint and offset coordinates and utilizing equation~(\ref{eq:theta})
+leads to the equations
+\begin{eqnarray}
+  \label{eq:tmx}
+  t_{m_x} & \equiv & \frac{\partial t}{\partial m_x} = 
+  -\frac{2}{v}\,\cos{\theta}\,\cos{\alpha}\;,
+  \\ \label{eq:tmy}
+  t_{m_y} & \equiv & \frac{\partial t}{\partial m_y} =
+  -\frac{2}{v}\,\cos{\theta}\,\cos{\beta}\;,
+  \\ \label{eq:thx}
+  t_{h_x} & \equiv & \frac{\partial t}{\partial h_x} = 
+  \frac{4}{v^2\,t}\,\left(h_x\,\sin^2{\alpha} - 
+    h_y\,\cos{\alpha}\,\cos{\beta}\right)\;,
+  \\ \label{eq:thy}
+  t_{h_y} & \equiv & \frac{\partial t}{\partial h_y} = 
+  \frac{4}{v^2\,t}\,\left(h_y\,\sin^2{\beta} - 
+    h_x\,\cos{\alpha}\,\cos{\beta}\right)\;.
+\end{eqnarray}
+
+Additionally, the traveltime derivative with respect to the depth of the
+observation surface is given by
+\begin{equation}
+  \label{eq:tz}
+  t_z \equiv \frac{\partial t}{\partial z} = 
+  -\frac{2}{v}\,\cos{\theta}\,\cos{\gamma}
+\end{equation}
+and is related to the previously defined derivatives by the double-square-root
+equation
+\begin{eqnarray}
+  \nonumber
+  - v\,t_z & = &  
+  \sqrt{1-
+    \frac{v^2}{4}\,\left(t_{m_x} - t_{h_x}\right)^2 - 
+    \frac{v^2}{4}\,\left(t_{m_y} - t_{h_y}\right)^2} \\
+  & + & 
+  \sqrt{1-
+    \frac{v^2}{4}\,\left(t_{m_x} + t_{h_x}\right)^2 - 
+    \frac{v^2}{4}\,\left(t_{m_y} + t_{h_y}\right)^2}\;.
+  \label{eq:dsr}
+\end{eqnarray}
+In the frequency-wavenumber domain, equation~(\ref{eq:dsr}) serves as the
+basis for 3-D shot-geophone downward-continuation imaging. In the Fourier
+domain, each $t_x$ derivative translates into $-k_x/\omega$ ratio, where $k_x$
+is the wavenumber corresponding to $x$ and $\omega$ is the temporal frequency.
+
+Equations~(\ref{eq:tmx}), (\ref{eq:tmy}), and~(\ref{eq:tz}) immediately
+produce the first important 3-D relationship for angle gathers
+\begin{equation}
+  \label{eq:theta3}
+  \cos{\theta} = 
+  \frac{v}{2\,\omega}\,\sqrt{
+  k_{m_x}^2 +
+  k_{m_y}^2 +
+  k_z^2}\;.
+\end{equation}
+Expressing the depth derivative with the help of the double-square-root
+equation~(\ref{eq:dsr}) and applying a number of algebraic transformations,
+one can turn equation~(\ref{eq:theta3}) into the dispersion relationship
+\begin{equation}
+\boxed{
+  \begin{gathered}
+    \left(k_{m_x}^2 + k_{m_y}^2\right)\,\frac{\sin^2{\theta}}{v^2} +
+    \left(k_{h_x}^2 + k_{h_y}^2\right)\,\frac{\cos^2{\theta}}{v^2}
+    =  \\
+    \frac{1}{4\,\omega^2}\,
+    \left(k_{m_x}\,k_{h_y} - k_{m_y}\,k_{h_x}\right)^2 
+    + 4\,\omega^2\,\,\frac{\cos^2{\theta}}{v^2}\,\frac{\sin^2{\theta}}{v^2}\;.
+  \end{gathered}
+}
+\label{eq:down3fk}
+\end{equation}
+For each reflection angle $\theta$ and each frequency $\omega$,
+equation~(\ref{eq:down3fk}) specifies the locations on the
+four-dimensional \new{($k_{m_x}$, $k_{m_y}$, $k_{h_x}$, $k_{h_y}$)}
+wavenumber hyperplane that contribute to the common-angle gather. In
+the 2-D case, equation~(\ref{eq:down3fk}) simplifies by setting
+$k_{h_y}$ and $k_y$ to zero. Using the notation $k_{m_x}=k_m$ and
+$k_{h_x}=k_h$, the 2-D equation takes the form
+\begin{equation}
+  \label{eq:down2fk}
+  k_m^2\,\sin^2{\theta} +
+  k_h^2\,\cos^2{\theta}
+  = \frac{4\,\omega^2}{v^2}\,\cos^2{\theta}\,\sin^2{\theta}
+\end{equation}
+and can be explicitly solved for $k_h$ resulting in the convenient 
+2-D dispersion relationship
+\begin{equation}
+  \label{eq:khdown2}
+  k_h = \frac{2\,\omega\,\sin{\theta}}{v}\,
+  \sqrt{1-\frac{4\,k_m^2\,v^2}{\omega^2\,\cos^2{\theta}}}\;.
+\end{equation}
+In the next section, I show that a similar simplification is also valid
+under the common-azimuth approximation. Equations~(\ref{eq:down3fk})
+and~(\ref{eq:khdown2}) describe an effective migration of the
+downward-continued data to the appropriate positions on midpoint-offset planes
+to remove the structural dependence from the local image gathers.
+
+Another important relationship follows from eliminating the local velocity $v$
+from equations~(\ref{eq:dsr}) and~(\ref{eq:theta3}). Expressing $v^2$ from
+equation~(\ref{eq:theta3}) and substituting the result in
+equation~(\ref{eq:dsr}), we arrive (after a number of algebraical
+transformations) to the frequency-independent equation
+\begin{equation}
+  \label{eq:post3fk}
+  \boxed{
+  \tan^2{\theta} = \frac{
+    k_z^2\,\left(k_{h_x}^2 + k_{h_y}^2\right) +
+    \left(k_{h_x}\,k_{m_x} + k_{h_y}\,k_{m_y}\right)^2}
+  {k_z^2\,\left(k_{m_x}^2 + k_{m_y}^2 + k_z^2\right)}\;.
+  }
+\end{equation}
+Equation~(\ref{eq:post3fk}) can be expressed in terms of ratios $k_{m_x}/k_z$
+and $k_{m_y}/k_z$, which correspond at the zero local offset to local
+structural dips ($z_{m_x}$ and $z_{m_y}$ partial derivatives), and ratios
+$k_{h_x}/k_z$ and $k_{h_y}/k_z$, which correspond to local offset slopes. \new{As shown by \cite{cig}, it can be also expressed as
+\begin{equation}
+  \label{eq:cig}
+  \tan^2{\theta} = \frac{k_{h_x}^2 + k_{h_y}^2 + k_{h_z}^2}{k_{m_x}^2 + k_{m_y}^2 + k_z^2}\;,
+\end{equation}
+where $k_{h_z}$ refers to the vertical offset between source and receiver wavefields \cite[]{SEG-2002-12841287}.}
+
+In the 2-D case, equation~(\ref{eq:post3fk}) simplifies to the form,
+independent of the structural dip:
+\begin{equation}
+  \label{eq:post2fk}
+  \tan{\theta} = \frac{k_h}{k_z}\;,
+\end{equation}
+which is the equation suggested by \cite{GEO68-03-10651074}.
+Equation~(\ref{eq:post2fk}) appeared previously in the theory of
+migration-inversion \cite[]{GEO50-12-24582472}.
+%I discuss a specialization
+%to the case of the common-azimuth approximation in Appendix B.
+
+\section{Common-azimuth approximation}
+
+Common-azimuth migration \cite[]{GEO61-06-18221832} is a downward continuation
+imaging method tailored for narrow-azimuth strea\-mer surveys that can be
+transformed to a single common azimuth with the help of azimuth moveout
+\cite[]{GEO63-02-05740588} Employing the common-azimuth approximation, one
+assumes the reflection plane stays confined in the acquisition azimuth.
+Although this assumption is strictly valid only in the case of constant
+velocity \cite[]{Vaillant.sep.103.louis1}, the modest azimuth variation in
+realistic situations justifies the use of the method \cite[]{naraz}. 
+ 
+To restrict equations of the previous section to the common-azimuth
+approximation, it is sufficient to set the cross-line offset $h_y$ to zero
+assuming the $x$ coordinate is oriented along the acquisition azimuth. In
+particular, from equations~(\ref{eq:thx}-\ref{eq:thy}), we obtain
+\begin{equation}
+  \label{eq:hxca}
+  h_x\,\sin{\alpha} = \frac{v\,t}{2}\,\sin{\theta}
+\end{equation}
+\begin{eqnarray}
+  \label{eq:thxca}
+  t_{h_x} &  = &
+  \frac{4\,h_x}{v^2\,t}\,\sin^2{\alpha} 
+  = \frac{2}{v}\,\sin{\theta}\,\sin{\alpha}\;,
+  \\ \label{eq:thyca}
+  t_{h_y} &  = & 
+  -\frac{4\,h_x}{v^2\,t}\,\cos{\alpha}\,\cos{\beta}
+  = - \frac{2}{v}\,\sin{\theta}\,\cot{\alpha}\,\cos{\beta}\;.
+\end{eqnarray}
+With the help of equations~(\ref{eq:tmx}), \old{(\ref{eq:tmx})}
+\new{(\ref{eq:tmy})}, and (\ref{eq:tz}), equation~(\ref{eq:thyca})
+transforms to the form
+\begin{eqnarray}
+  \nonumber
+  t_{h_y} & = & t_{m_y}\,\frac{\tan{\theta}}{\tan{\alpha}} \\
+  & = &
+  t_{m_y}\,\frac{
+    \sqrt{1-\frac{v^2}{4}\,\left(t_{m_x}+t_{h_x}\right)^2} -
+    \sqrt{1-\frac{v^2}{4}\,\left(t_{m_x}-t_{h_x}\right)^2}}
+  {\sqrt{1-\frac{v^2}{4}\,\left(t_{m_x}+t_{h_x}\right)^2} +
+    \sqrt{1-\frac{v^2}{4}\,\left(t_{m_x}-t_{h_x}\right)^2}}\;,
+  \label{eq:biondo}
+\end{eqnarray}
+suggested by \cite{GEO61-06-18221832}. Combining equations~(\ref{eq:tmx}),
+\old{(\ref{eq:tmx})} \new{(\ref{eq:tmy})}, (\ref{eq:tz}), and~(\ref{eq:thxca}) and transforming to the
+frequency-wavenumber domain, we obtain the common-azimuth dispersion
+relationship
+\begin{equation}
+  \label{eq:comaz}
+  \left(k_{h_x}^2 + k_{m_y}^2 + k_z^2\right)\,
+  \left(k_{m_x}^2 + k_{m_y}^2 + k_z^2\right) =
+  \frac{4\,\omega^2}{v^2}\,\left(k_{m_y}^2 + k_z^2\right)\;,
+\end{equation}
+which shows that, under the common-azimuth approximation and in a laterally
+homogeneous medium, 3-D seismic migration amounts to a cascade of a 
+2-D prestack migrations in the in-line direction and a 2-D zero-offset
+migration in the cross-line direction \cite[]{GEO61-02-04090421}.  
+
+Under the common-azimuth approximation, the angle-dependent
+relationship~(\ref{eq:down3fk}) takes the form
+\begin{equation}
+  \label{eq:down2ca}
+  k_{m_x}^2\,\sin^2{\theta} +
+  k_{h_x}^2\,\cos^2{\theta}
+  = \frac{4\,\omega^2}{v^2}\,\cos^2{\theta}\,\sin^2{\theta}\;,
+\end{equation}
+which is identical to the 2-D equation~(\ref{eq:down2fk}). This proves that
+under this approximation, one can perform the structural correction
+independently for each cross-line wavenumber.
+
+The post-imaging equation~(\ref{eq:post3fk}) transforms to the equation
+\begin{equation}
+  \label{eq:postcafk}
+  \tan^2{\theta} = \frac{k_{h_x}^2}{k_{m_y}^2 + k_z^2}\;,
+\end{equation}
+obtained previously by \cite{newseg}. In the absence of cross-line
+structural dips ($k_{m_y}=0$), it is equivalent to the 2-D
+equation~(\ref{eq:post2fk}).
+
+\section{Algorithm I: Angle gathers during downward continuation}
+%\inputdir{zslice}
+
+This algorithm follows from equation~(\ref{eq:down3fk}). It consists of the
+following steps, applied at each propagation depth $z$:
+\begin{enumerate} 
+\item Generate local offset gathers and transform them to the wavenumber
+  domain. In the double-square-root migration, the local offset wavenumbers
+  are immediately available. In the shot gather migration, local offsets are
+  generated by cross-correlation of the source and receiver wavefields
+  \cite[]{GEO67-03-08830889}.
+\item For each frequency $\omega$, transform the local offset wavenumbers
+  $\{k_{h_x},k_{h_y}\}$ into the angle coordinates $\sin{\theta}/v$ according
+  to equation~(\ref{eq:down3fk}). The angle coordinates depend on velocity but
+  do not depend on the local structural dip. In the 2-D case, each frequency
+  slice is simply the $\{k_m,k_h\}$ plane, and each angle coordinate
+  corresponds to a circle in that plane centered at the origin and described
+  by equation~(\ref{eq:down2fk}). Figure~\ref{fig:angle1} shows an example of
+  a 2-D frequency slice transformed to angles.
+\item Accumulate contributions from all frequencies to 
+  apply the imaging condition in time.
+\end{enumerate}
+
+\inputdir{zslice}
+\plot{angle1}{width=0.9\textwidth}{Constant-depth constant-frequency
+  slice mapped to reflection angles according to the 2-D version of 
+  Algorithm I. Zero offset wavenumber maps to zero (normal incidence)
+  angle. The top right corner is the evanescent region.}
+
+This algorithm is applicable for targets localized in depth. The local
+offset gathers need to be computed for all lateral locations, but
+there is no need to store them in memory, because conversion to angles
+happens on the fly. The algorithm outputs not angles directly, but
+velocity-dependent parameters $\sin{\theta}/v$. \cite{tariq} extend
+this algorithm to transversally-isotropic media.
+
+\section{Algorithm II: Post-migration angle gathers}
+%\inputdir{radon}
+
+The second algorithm follows from equation~(\ref{eq:post3fk}). It applies
+after the imaging has completed and consists of the following steps applied at
+each common-image location:
+\begin{enumerate}
+\item Generate and store local offset gathers.  In the double-square-root
+  migration, the local offsets are immediately available.  In the shot gather
+  migration, local offsets are generated by cross-correlation of the source
+  and receiver wavefields.
+\item Estimate the dominant local structural dips at the common image point by
+  using one of the available dip estimation methods: local slant stack,
+  plane-wave destruction, etc.
+\item After the imaging has completed, transform local-offset gathers into the
+  slant-stack domain either by slant-stacking in the $\{z,h_x,h_y\}$ physical
+  domain or by radial-trace construction in the $\{k_z,k_{h_x},k_{h_y}\}$
+  Fourier domain \cite[]{GEO68-03-10651074}.
+\item Using estimated dips, convert slant stacks into angles by applying
+  equation~(\ref{eq:post3fk}). The mapping from offset-depth slopes to angles
+  is illustrated in Figure~\ref{fig:angl45-45}.
+\end{enumerate}
+The last two steps can be combined into one. It is sufficient to compute the
+effective offset $\hat{h} = \sqrt{h_x^2+h_y^2+(h_x z_y - h_y z_x)^2}$ and
+apply the basic 2-D angle extraction algorithm to the effective offset gather.
+
+\inputdir{radon}
+\plot{angl45-45}{width=0.9\textwidth}{Mapping from the offset slope plane
+  to angles according to Algorithm II. Zero slopes map to zero
+  (normal-incidence) angle.}
+
+The second method is applicable to selected common-image gathers, which can be
+spread on a sparse grid. The local offset gathers need to be computed and
+stored at all depths. The method works independent of the velocity. The main
+disadvantage is the need to estimate local structural dips. In the
+common-azimuth approximation, only the cross-line dip is required
+\cite[]{newseg}. In the 2-D case (zero cross-line dip), the method is
+dip-independent \cite[]{GEO68-03-10651074}.
+
+\section{Discussion}
+
+\new{Since the first presentation of the 3-D angle-gather theory \cite[]{SEG-2004-10531056}, many new research results have appeared in the literature. By the end of 2000s, prestack 3-D reverse-time migration has become a standard tool for depth imaging in structurally-complex areas, and it is becoming feasible to generate 3-D angle gathers as part of routine processing \cite[]{exxon,western,veritas}. The most important new theoretical developments are the ability to extract angle information from time-shift angle gathers \cite[]{tsic,western}, the ability to extract not only reflection-angle but also azimuth information \cite[]{veritas}, and the extension of the angle-gather theory to anisotropy \cite[]{biondianis,tariq}.}
+
+\section{Conclusions}
+
+Angle gathers present a natural tool for analyzing velocities and
+amplitudes in wave-equation imaging. I have discussed two approaches
+for angle-gather construction. In the first approach, angle gather are
+constructed on the fly at different depth steps of the wave
+extrapolation process. In the second approach, angle gathers are
+extracted from the local-offset gathers after imaging has
+completed. The second method was previously presented for the 2-D case
+and for the case of a common-azimuth approximation. Both approaches
+have advantages and disadvantages. The preference depends on the
+application and the input data configuration.
+
+%Application examples will be included in the presentation.
+
+\section{Acknowledgments}
+
+I am grateful to Nanxun Dai, John Etgen, \fbox{Sergey Goldin}, and Paul Sava
+for enlightening discussions. 
+
+This publication is authorized by the Director, Bureau of Economic
+Geology, The University of Texas at Austin.
+
+\bibliographystyle{seg}
+\bibliography{SEG,SEP2,agath}
+

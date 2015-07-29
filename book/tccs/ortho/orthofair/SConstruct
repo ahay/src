@@ -1,0 +1,202 @@
+from rsf.proj import*
+from rsf.recipes.beg import server
+
+#######################################################################
+## parameters definition
+#######################################################################
+
+clip=1 #display percentage
+nfw=9
+
+#######################################################################
+## module definition
+#######################################################################
+def Grey(data,other): 
+	Result(data,'window f1=1000 n1=1500 | grey transp=y yreverse=y  %s label2=Trace unit2="" label1=Time unit1="s" title="" wherexlabel=b wanttitle=n labelsz=10 '%other)
+
+def Grey1(data,other): 
+	Result(data,'grey transp=y yreverse=y  %s label2=Trace unit2="" label1=Time unit1="s" title="" wherexlabel=b wanttitle=n labelsz=10 '%other)
+	
+def plot (other): 
+	return'''	
+	grey label2=Trace unit2="" label1=Time unit1="s" title="" wherexlabel=b   %s'
+	'''%other
+
+#######################################################################
+## data format conversion # segy->rsf
+#######################################################################
+for file in [
+         '2-SOURCE-simulated_receiver_gather_SEGY','1-SOURCE-simulated_receiver_gather_SEGY']:
+	 if file == '2-SOURCE-simulated_receiver_gather_SEGY':
+		file1='fairblended'
+	 elif file == '1-SOURCE-simulated_receiver_gather_SEGY':
+		file1='fairunblended'
+
+	 Fetch(file+'.sgy','fairfield',server)
+    	 Flow([file1,'t'+file1,file1+'.asc',file1+'.bin'],
+                file+'.sgy',
+                '''
+                segyread
+                tfile=${TARGETS[1]}
+                hfile=${TARGETS[2]}
+                bfile=${TARGETS[3]}
+                ''')
+    	 #Result(file1,file1,'grey clip=%g'%(clip))
+
+Flow('fairblended1','fairblended','window n2=201 | put o2=0 ')
+Flow('fairblended22','fairblended','window f2=201 | put o2=0 ') # This is what we want to use.
+Flow('fairunblended1','fairunblended','window n2=201 | put o2=0 ')
+Flow('fairunblended2','fairunblended','window f2=201 | put o2=0 ') # This is what we want to use.
+
+Flow('fair-noise','fairblended fairunblended','add scale=1,-1 ${SOURCES[1]}')
+Flow('fair-zero','fair-noise','math output=0')
+#######################################################################
+## read shottime 
+#######################################################################
+Flow('shottime1','tfairblended',
+	'''
+        dd type=float
+      	| headermath output="cdpx" | window n2=201 |transp
+	''')
+
+Flow('shottime2','tfairblended',
+	'''
+        dd type=float
+      	| headermath output="cdpx" | window f2=201 |transp
+	''')
+
+#######################################################################
+## mute data 1 
+#######################################################################
+## 
+Flow('fairblended1mutedown','fairblended1','mutter half=n t0=1 slope0=0.0224')
+Flow('fairblended1muteup','fairblended1','mutter half=n t0=0.4 slope0=0.016 | add scale=-1,1 ${SOURCES[0]}')
+Flow('fairblended1mutedir','fairblended1mutedown fairblended1muteup fairblended1','add scale=-1,-1,1 ${SOURCES[1:3]}')
+
+Flow('fairblended1mutedisp','fairblended1mutedown fairblended1mutedir fairblended1muteup','cat axis=2 ${SOURCES[1:3]}')
+Flow('fairblended1mute','fairblended1 fairblended1mutedir','add scale=1,-1 ${SOURCES[1]}')
+Flow('fairblended1mute-dir','fairblended1mute fairblended1mutedir','cat axis=2 ${SOURCES[1]}')
+
+#######################################################################
+## filtering using median filter and space-varying median filter
+#######################################################################
+## using median filter
+#Flow('fairdeblended2mf','fairblended2','transp | mf nfw=%d | transp'%nfw)
+#Flow('fairdeblended1mf','fairblended1mute fairblended1mutedir','transp | mf nfw=%d | transp | add scale=1,1 ${SOURCES[1]}'%nfw)
+#Flow('fairdeblended1mf','fairblended1','transp | mf nfw=%d | transp '%nfw)
+
+
+Flow('fairblended2','fairunblended2 fairunblended2 shottime1 shottime2','blend shot_time_in=${SOURCES[3]} shot_time_out=${SOURCES[2]} |add scale=1,1 ${SOURCES[1]}' )
+
+
+#######################################################################
+## filtering using fxdecon
+#######################################################################
+##
+#Flow('fairdeblended1fx','fairblended1','fxdecon n2w=201 lenf=100')
+#Flow('fairdeblended2fx','fairblended2','fxdecon n2w=201 lenf=201')
+Flow('fairdeblended2fx2','fairblended2','fxdecon n2w=201 lenf=20')
+
+## diff
+#Flow('fairdeblended2dif-fx','fairblended2 fairdeblended2fx','add scale=1,-1 ${SOURCES[1]}')
+Flow('fairdeblended2dif-fx2','fairblended2 fairdeblended2fx2','add scale=1,-1 ${SOURCES[1]}')
+
+#######################################################################
+## Similarity
+#######################################################################
+#Flow('fairsimi-fx','fairblended2 fairdeblended2fx','similarity other=${SOURCES[1]} niter=20 rect1=2 rect2=2')
+#Flow('fairdeblended2sim','fairdeblended2fx fairsimi-fx','sfsimidenoise1 similarity=${SOURCES[1]} s1=0.2 s2=0.2')
+#Flow('fairdeblended2dif-sim','fairblended2 fairdeblended2sim','add scale=1,-1 ${SOURCES[1]}')
+
+#######################################################################
+## Another approach using similarity
+Flow('fairdif-simi','fairdeblended2fx2 fairdeblended2dif-fx2','similarity other=${SOURCES[1]} niter=20 rect1=5 rect2=5')
+Flow('fairdifsim','fairdeblended2dif-fx2 fairdif-simi','sfsimidenoise1 similarity=${SOURCES[1]} s1=0.1 s2=0.2 | cut max1=7.5')
+Flow('fairdeblended2sim2','fairdifsim fairdeblended2fx2','add scale=1,1 ${SOURCES[1]}')
+Flow('fairdeblended2dif-sim2','fairblended2 fairdeblended2sim2','add scale=1,-1 ${SOURCES[1]}')
+Flow('fairdif-simi2','fairdeblended2sim2 fairdeblended2dif-sim2','similarity other=${SOURCES[1]} niter=20 rect1=5 rect2=5')
+
+# ortho
+Flow('fairdeblendeddif-ortho fairdeblended-ortho','fairdeblended2dif-fx2 fairdeblended2fx2','ortho rect1=25 rect2=25 sig=${SOURCES[1]} sig2=${TARGETS[1]}')
+Flow('fair-simi-ortho','fairdeblendeddif-ortho fairdeblended-ortho','similarity other=${SOURCES[1]} niter=20 rect1=5 rect2=5')
+
+#######################################################################
+## Ploting
+#######################################################################
+Grey('fairblended','scalebar=n clip=%f'%clip)
+Grey('fairunblended','scalebar=n clip=%f'%clip)
+Grey('fair-noise','scalebar=n clip=%f'%clip)
+Grey('fair-zero','scalebar=n clip=%f'%clip)  # used by presentation
+Grey('fairblended1','scalebar=n clip=%f'%clip)
+Grey('fairblended2','scalebar=n clip=%f'%clip)
+Grey('fairunblended1','scalebar=n clip=%f'%clip)
+Grey('fairunblended2','scalebar=n clip=%f'%clip)
+Grey('fairdeblendeddif-ortho','scalebar=n clip=%f'%clip)
+Grey('fairdeblended-ortho','scalebar=n clip=%f'%clip)
+
+
+#Grey('fairdeblended1fx','scalebar=n clip=%f'%clip)
+#Grey('fairdeblended2fx','scalebar=n clip=%f'%clip)
+Grey('fairdeblended2fx2','scalebar=n clip=%f'%clip)
+#Grey('fairdeblended2sim','scalebar=n clip=%f'%clip)
+Grey('fairdeblended2sim2','scalebar=n clip=%f'%clip)
+#Grey('fairdeblended2dif-fx','scalebar=n clip=%f'%clip)
+Grey('fairdeblended2dif-fx2','scalebar=n clip=%f'%clip)
+#Grey('fairdeblended2dif-sim','scalebar=n clip=%f'%clip)
+Grey('fairdeblended2dif-sim2','scalebar=n clip=%f'%clip)
+Grey('fairdif-simi','color=j scalebar=y clip=0.9 minval=0 maxval=0.9')
+Grey('fairdif-simi2','color=j scalebar=y clip=0.9 minval=0 maxval=0.9')
+Grey('fair-simi-ortho','color=j scalebar=y clip=0.9 minval=0 maxval=0.9')
+
+## Creating framebox
+x2=0
+y2=11.0
+w=200
+w2=4.7
+
+
+## frame2
+Flow('frame2.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	string.join(map(str,(x2,y2,x2+w,y2,x2+w,y2+w2,x2,y2+w2,x2,y2))))
+Plot('frame2','frame2.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=0 max1=200 min2=0 max2=16 pad=n plotfat=12 plotcol=3 
+	wantaxis=n wanttitle=n yreverse=y
+	''')
+
+Result('fairdeblended2dif-fx20','Fig/fairdeblended2dif-fx2.vpl frame2','Overlay')
+Result('fairdeblendeddif-ortho0','Fig/fairdeblendeddif-ortho.vpl frame2','Overlay')
+
+
+#Flow('fkfairunblended2','fairunblended2','cut f1=2501 | put d2=1 | fft1 | fft3 axis=2 pad=1')
+#Flow('fkfairblended2','fairblended2','cut f1=2501 |put d2=1 | fft1 | fft3 axis=2 pad1=1')
+#Flow('fkfairdeblended2mf','fairdeblended2mf','cut f1=2501 |put d2=1 | fft1 | fft3 axis=2 pad1=1')
+#Flow('fkfairdeblended2svmf','fairdeblended2svmf','cut f1=2501 | put d2=1 | fft1 | fft3 axis=2 pad1=1 ')
+#Result('fkfairunblended2','cabs | grey title="" label2="Normalized wavenumber" unit2="" color=j ')
+#Result('fkfairblended2','cabs | grey title="" label2="Normalized wavenumber" unit2="" color=j ')
+#Result('fkfairdeblended2mf','cabs | grey title="" label2="Normalized wavenumber" unit2="" color=j ')
+#Result('fkfairdeblended2svmf','cabs | grey title="" label2="Normalized wavenumber" unit2="" color=j ')
+
+#Result('fairL1','transp | grey label2=Trace unit2="" label1=Time unit1="s" title="" wherexlabel=b wanttitle=n scalebar=y color=j')
+#Result('fairL2','transp | grey label2=Trace unit2="" label1=Time unit1="s" title="" wherexlabel=b wanttitle=n scalebar=y color=j')
+
+## compute SNR (may differ in different computers)
+Flow('fair-diff1','fairunblended2 fairblended2','add scale=1,-1 ${SOURCES[1]} ')
+Flow('fair-snr1','fairunblended2 fair-diff1','snr2 noise=${SOURCES[1]}')
+
+Flow('fair-diff2','fairunblended2 fairdeblended2fx2','add scale=1,-1 ${SOURCES[1]} ')
+Flow('fair-snr2','fairunblended2 fair-diff2','snr2 noise=${SOURCES[1]}')
+
+Flow('fair-diff3','fairunblended2 fairdeblended2sim2','add scale=1,-1 ${SOURCES[1]} ')
+Flow('fair-snr3','fairunblended2 fair-diff3','snr2 noise=${SOURCES[1]}')
+
+Flow('fair-diff4','fairunblended2 fairdeblended-ortho','add scale=1,-1 ${SOURCES[1]} ')
+Flow('fair-snr4','fairunblended2 fair-diff4','snr2 noise=${SOURCES[1]}')
+
+## zoom
+Flow('fairdeblended2dif-fx2-zoom','fairdeblended2dif-fx2','window f1=2000 n1=500')
+Flow('fairdeblendeddif-ortho-zoom','fairdeblendeddif-ortho','window f1=2000 n1=500')
+Grey1('fairdeblended2dif-fx2-zoom','')
+Grey1('fairdeblendeddif-ortho-zoom','')
+End()

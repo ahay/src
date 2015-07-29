@@ -1,0 +1,448 @@
+\hyphenation{Fo-mel}
+
+\input{macro}
+
+\published{Geophysical Prospecting, 59, 422-431, (2011)}
+
+\righthead{Angle gathers for VTI media}
+\title{Angle gathers in wave-equation imaging for transversely isotropic media}
+
+\author{Tariq Alkhalifah, King Abdullah University for Science and Technology, \\
+       Sergey Fomel, The University of Texas at Austin}
+\maketitle
+
+\begin{abstract}
+  In recent years, wave-equation imaged data are often presented in common-image angle-domain gathers as a decomposition in scattering
+  angle at the reflector, which provide a natural access to analyzing
+  migration velocities and amplitudes. In the case of anisotropic
+  media, the importance of angle gathers is enhanced by the need to
+  properly estimate multiple anisotropic parameters for a proper
+  representation of the medium.  We extract angle gathers for each
+  downward-continuation step from converting offset-frequency
+  planes into angle-frequency planes simultaneously with applying the
+  imaging condition in a transversely isotropic \geoulin2{with a vertical symmetry axis} (VTI) medium. The
+  analytic equations, though cumbersome, are exact within the
+  framework of the acoustic approximation.  They are also easily
+  programmable and show that angle gather mapping in the case \geouline{of}
+  anisotropic media differs from its isotropic counterpart, with the difference
+  depending mainly on the strength of anisotropy. Synthetic examples demonstrate
+  the importance of including anisotropy in the angle gather generation as mapping of
+  the energy is negatively altered otherwise. In the case of a titled axis of symmetry (TTI), 
+the same VTI formulation is applicable but requires a rotation
+  of the wavenumbers.
+
+\end{abstract}
+
+\section{Introduction}
+
+Angle gathers have gained prominence as they provide  wave equation imaging methods with an outlet
+to perform velocity analysis. Angle gathers also alleviate the limitations that offset gathers have
+\geoulin2{in handling} \geosou2{with} multi pathing \cite[]{GEO55-09-12231234,SEG-2000-08300833,stolk}. An angle gather decomposition for 
+anisotropic media will allow us to export these features to the anisotropic world, \geouline{and this is especially important considering the
+number of parameters we need to deal with in anisotropic media and the prevalent multi-pathing that takes place in such media.}
+
+Downward wave extrapolation provides an accurate method of seismic
+imaging in structurally complex areas. Downward wave extrapolation is
+also naturally formulated to produce angle gathers
+\cite[]{GEO55-09-12231234,SEG-2000-08300833,GEO67-03-08830889,wu,GEO68-03-10651074,SEG-2003-08890892,new,coord}.
+ \cite{SEG-2004-10531056} showed that
+structural dependence can be removed in a depth-slice approach to
+extracting angle gathers. Specifically, one can generate gathers at
+each depth level, converting offset-space-frequency planes into
+angle-space planes and applying simultaneously the imaging
+condition. The improved mapping retains velocity dependence but
+removes the effect of the structure. Because of its
+ray-parameter-based (Fourier) formulation, this approach lends itself
+naturally to an anisotropic phase-velocity extension.
+
+Migration velocity analysis in anisotropic media remains a challenging
+ and open issue. Multiple parameters are needed to represent the
+ anisotropic model. For a transversely isotropic medium with vertical
+ axis of symmetry (VTI media), only NMO velocity ($v$) and the
+ non-elliptic parameter ($\eta$) predominantly influence imaging
+ \cite[]{GEO60-05-15501566,tariq-lat}. Vertical velocity ($v_z$)
+ controls mainly placement of the image in depth.  Nevertheless,
+ estimating even two parameters that can vary laterally and vertically
+ from image gathers is difficult. Angle gathers provide an opportunity
+ to use residual moveout \geosout{and amplitude information} to help update
+ anisotropic parameters. \cite{biondianis} suggested an approach to
+ extracting angle gathers in anisotropic media from post-migration
+ data. Biondi's formulation is based on numerical calculation of angle gathers and relies on ray information that is hard to examine analytically. 
+
+In this paper, we develop an analytical formulation for extracting
+angle gathers in VTI \geouline{2D} media.  We use the depth-slice approach to angle
+gathers as a platform for the extension \geoulin2{to VTI.} Angle gather mapping depends
+strongly on anisotropic parameters. We analyze this dependency using
+numerical computations. Next, \geoulin2{we} show synthetic data examples that confirm the theoretical analysis. Finally, we explain the possible extension of our approach to TTI (tilted transversely isotropic) media.
+\geouline{An extension to 3D can be achieved along the lines of} \cite{SEG-2004-10531056}.
+
+\section{The depth slice approach for VTI media}
+\inputdir{XFig}
+
+Relations between image coordinates and reflection (scattering) angles
+at reflecting interfaces can be extracted by analyzing the geometry of
+reflections in the simple case of a dipping reflector in a locally
+homogeneous medium \cite[]{SEG-2004-10531056}.  The geometry of the
+reflection ray paths in 2-D is depicted in Figure~\ref{fig:raysr}.
+
+\multiplot{2}{raysr,rayparameters}{width=0.45\textwidth}{ (a) A schematic plot showing angle $\theta$. Although the model depicts a homogeneous setting, the
+development will rely on the ray parameters defined in the immediate
+vicinity of the the reflection point, as shown in b.  
+(b) A schematic plot depicting the relation between the source and receiver ray-parameter vectors ($\mathbf{p}_s$ and $\mathbf{p}_g$)
+ and the offset and midpoint vectors ($\mathbf{p}_h$ and $\mathbf{p}_m$)}
+According to elementary rules of geometry for the ray configuration in
+Figures~\ref{fig:raysr} and~\ref{fig:rayparameters}, with the
+wavenumber vector given by $\mathbf{k} =\omega\,\mathbf{p}$ as it relates to the
+ray-parameter vector for a given angular frequency $\omega$, \geosou2{reflection} \geoulin2{opening (scattering)}
+\geouline{phase} angle $\theta$ is represented by the following relation \cite[]{SEG-2004-10531056,coord}
+\begin{equation}
+  \label{eq:theta}
+  k_{\text{hx}}^2+k_{\text{hz}}^2 = k_s^2+k_r^2 - 2 k_r k_s \cos (\theta )\;,
+\end{equation}
+where $k_{\text{hx}}$ and $k_{\text{hz}}$ are horizontal and vertical components of the offset
+wave number, and $k_s$ and $k_r$ are source and receiver wavenumber amplitudes related to their components as follows:
+$k_s^2 \equiv k_{\text{sx}}^2+k_{\text{sz}}^2$,
+$k_r^2 \equiv k_{\text{rx}}^2+k_{\text{rz}}^2$,
+with
+$k_{\text{hx}} \equiv k_{\text{rx}} - k_{\text{sx}}$,
+$k_{\text{mx}} \equiv k_{\text{rx}} + k_{\text{sx}}$,
+as suggested by Figure~\ref{fig:rayparameters}, where $k_{\text{mx}}$ is the horizontal component of the midpoint wavenumber.
+
+To complete the system of equations necessary to relate angle $\theta$ to midpoint and offset \geoulin2{horizontal} 
+wavenumbers, we use the dispersion
+relation developed by \cite{GEO63-02-06230631} to define each of $k_{\text{sz}}$ and $k_{\text{rz}}$ as follows:
+\begin{eqnarray}
+  \label{eq:kzs}
+  k_{\text{sz}}^2  \equiv & (\omega \frac{\partial t_{\text{s}}}{\partial z})^2=\frac{\omega ^2}{v_z^2}-\frac{v^2 \omega ^2
+   \left(k_{\text{hx}}-k_{\text{mx}}\right){}^2}{2 v_z^2 \left(2 \omega ^2-v^2 \eta 
+   \left(k_{\text{hx}}-k_{\text{mx}}\right){}^2\right)}\;,
+  \\ \label{eq:kzr}
+  k_{\text{rz}}^2  \equiv & (\omega \frac{\partial t_{\text{r}}}{\partial z})^2=\frac{\omega ^2}{v_z^2}-\frac{v^2 \omega ^2
+   \left(k_{\text{hx}}+k_{\text{mx}}\right){}^2}{2 v_z^2 \left(2 \omega ^2-v^2 \eta 
+   \left(k_{\text{hx}}+k_{\text{mx}}\right){}^2\right)}\;,
+\end{eqnarray}
+\geoulin2{where $v$ is the NMO velocity. Using equation~(\ref{eq:theta}) in its expanded form and} after some manipulation 
+and collecting terms with the same power of  $\cos \theta$, we end up with the following quadratic equation:
+\begin{equation}
+  \label{eq:quad}
+  a \cos ^4(\theta )+b \cos ^2(\theta )+c=0,
+\end{equation}
+with solutions given by
+\begin{equation}
+ \theta =  \cos^{-1}\left(\pm \sqrt{\frac{-b\pm \sqrt{b^2-4 a
+   c}}{2 a}}\right)\;.
+  \label{eq:sol}
+\end{equation}
+Analytical representation of the coefficients is shown in
+Table~\ref{tbl:equations}.  The four solutions of
+equation~(\ref{eq:sol}) are controlled by the sign of the offset
+wavenumber and its magnitude compared with the midpoint wavenumber.
+In the frequency-wavenumber domain, equation~(\ref{eq:sol}) can be
+used to map offset \geoulin2{(horizontal)} wavenumbers to angle gathers for a specific
+frequency, midpoint \geoulin2{(horizontal)} wavenumber, and depth slice. A description of an
+algorithm to use with the mapping equation, in the case of an isotropic
+medium, is given by \cite{SEG-2004-10531056}.
+
+Setting $\eta=0$ yields mapping for elliptical anisotropy with
+coefficients of equation~(\ref{eq:sol}) given by
+Table~\ref{tbl:equationsE}. The coefficients are represented by much
+simpler formulas. In the isotropic case, $\eta=0$ and $v_z=v$,
+Table~\ref{tbl:equations} reduces to Table~\ref{tbl:equationsI} and,
+if substituted into the mapping formula of equation~(\ref{eq:sol}), is
+equivalent to the corresponding mapping equation of
+\cite{SEG-2004-10531056}.
+
+\section{Numerical tests: The anisotropy influence}
+\inputdir{Math}
+
+Using equation~(\ref{eq:sol}) we evaluated angle gathers as a function
+of offset and midpoint wavenumbers for a given frequency. We tested
+such mapping for various models using different strengths of
+anisotropy as we varied $\eta$, $v_z$, and the NMO velocity $v$.
+
+Figures~\ref{fig:AnglesEta0}-\ref{fig:AnglesEta} show contour
+density plots of angle \geosout{gathers} as a function of offset and
+midpoint wavenumbers, for a 60-Hz frequency slice. \geosout{ and a single depth
+step during downward continuation.} In Figure~\ref{fig:AnglesEta0} the
+medium is isotropic, with a velocity of 2 km/s. Clearly, for
+$k_{\text{hx}}=0$, the angle is zero regardless of the midpoint
+wavenumber, which is expected, because for zero-offset the scattering or
+opening angle is equal to zero. Also, we observe that angles
+decrease with dip \geouline{(or $k_{mx}$)} for a given offset wavenumber, which is also
+expected, because for any offset a scattering angle becomes zero in the case of a
+vertical reflector. \geouline{The areas given in white in the Figures~\ref{fig:AnglesEta0}-\ref{fig:Anglesdiffv} 
+\geosou2{and throughout} correspond to regions where the 
+$k_{sz}$ or $k_{rz}$ become complex, and thus represent evanescent waves.}
+\sideplot{AnglesEta0}{width=0.8\textwidth}{Constant-depth constant-frequency (60 Hz)
+  slice mapped to \geosou2{reflection} \geoulin2{opening} angles for an isotropic medium with velocity equal to 2~km/s. 
+Zero-offset wavenumber maps to zero (normal incidence)
+  angle. The four blank corners represent evanescent regions. \geoulin2{Negative angles correspond to a switch in the source-receiver direction,
+and thus, the result is symmetric based on the principal of reciprocity}}
+
+In anisotropic media, as illustrated in Figure~\ref{fig:AnglesEta},
+for $\eta$ equal to 0.1 and 0.3,
+the angles decrease with dip for a constant offset wavenumber faster
+than in the isotropic case. \geouline{In the example, considering that} \geosout{Considering that} $v_z$ is lower in the
+anisotropic models, the higher horizontal velocities given by the
+larger $\eta$ resulted in smaller scattering angles because reflection
+occurs more \geosout{toward the} updip \geosout{side} for larger $\eta$.
+\sideplot{AnglesEta}{width=0.9\textwidth}{Constant-depth constant-frequency (60 Hz)
+  slice mapped to \geosou2{reflection} \geoulin2{opening} angles as in Figure~\protect{\ref{fig:AnglesEta0}}, but
+for a VTI model with $v_z$=1.8 km/s, $v$=2 km/s, and $\eta=0.1$ (left) and $\eta=0.3$ (right).}
+
+%\sideplot{AnglesEta3}{width=0.45\textwidth}{Constant-depth constant-frequency (60 Hz)
+%  slice mapped to reflection angles as in Figure~\protect\ref{fig:AnglesEta0}, but
+%for a more extreme VTI model with the $v_z$=1800 m/s, $v$=2 km/s, and $\eta=0.3$.}
+Whereas the influence of $\eta$ is clearly \geouline{large}, the
+change in vertical velocity has a minor influence on the angles as a
+function of the midpoint wavenumber (or dip), as demonstrated by the
+difference plot in Figure~\ref{fig:Anglesdiffvz}. A 0.6~km/s
+difference in vertical velocity of an elliptical isotropic model with $\eta$=0 (left) and a VTI model with
+$\eta$=0.3 resulted in differences mainly in the offset wavenumber
+direction, because depth change caused by the different vertical
+velocity provides variations in angles with offset.
+
+\sideplot{Anglesdiffvz}{width=0.9\textwidth}{Left: The difference between 
+\geosou2{reflection} \geoulin2{opening} angles for an elliptical anisotropic model 
+ with $v_z$=1.8 km/s, $v$=2 km/s and that of a similar
+model, with $v_z$=1.2 km/s. Right: The difference between\geosou2{reflection} \geoulin2{opening} angles for a VTI model 
+of Figure~\protect\ref{fig:AnglesEta} (right) for
+$v_z$=1.8 km/s, $v$=2 km/s, and $\eta=0.3$ and that of a similar
+model, with $v_z$=1.2 km/s.}
+In comparison, if we change the NMO velocity, $v$, the angles hardly
+change at all, especially around small dips and small offsets. This
+fact is evident in Figure~\ref{fig:Anglesdiffv}, where we change
+NMO velocity 0.6 km/s, and the general difference is small until we get
+to large offset and midpoint wavenumbers. This difference implies that
+the mapping is practically NMO-velocity independent. This is the case for $\eta=0$ (left) and $\eta=0.3$ (right)
+in Figure~\ref{fig:Anglesdiffv}, which implies, \geosout{among other things} that for a given elliptical anisotropic model
+one can find an isotropic model that produces similar mapping granted that the velocity of the isotropic model
+is equal to the vertical velocity for the elliptical anisotropy.
+\plot{Anglesdiffv}{width=0.9\textwidth}{Left: The difference between reflection angles for an elliptical anisotropic model 
+ with $v_z$=1.8 km/s, $v$=2 km/s and that of a similar
+model, with $v$=1.4 km/s. Right: The difference between reflection angles for a VTI model 
+of Figure~\protect\ref{fig:AnglesEta} (right) for
+$v_z$=1.8 km/s, $v$=2 km/s, and $\eta=0.3$ and that of a similar
+model, with $v$=1.4 km/s.}
+
+%\sideplot{AnglesEta0vdiff}{width=0.45\textwidth}{Difference between reflection angles for the isotropic model given in Figure~\protect\ref{fig:AnglesEta0} for
+%$v=v_z$=2 km/s, and that for $v$=2 km/s and $v_z$=1400 m/s (elliptical anisotropy, $\eta=0$).}
+
+\section{Synthetic Example}
+\inputdir{synth}
+
+In the following example, we use a homogeneous model for simplicity, although nothing in the development requires that.
+It is convenient so we can isolate the anisotropy influence on angle gathers decomposition. \geouline{To follow convention, we display angle gathers in the following examples using 
+half the opening (or scattering) angle ($=\frac{\theta}{2}$)}.
+We consider the reflector model in Figure~\ref{fig:ref}, which is
+made up of a number of dome-like anticlines. This model allows us to focus on an angle gather located at 8 km that includes many dips. For a velocity of 2 km/s
+and $\eta=0.2$, we generate the prestack synthetic dataset shown in Figure~\ref{fig:adata}. We use Kirchhoff modeling to obtain the synthetic data \cite[]{GEO60-04-11391150}. 
+\geouline{As
+a reference, we show in Figure~\ref{fig:agath} the isotropic migration of the isotropic version of the data. 
+In this figure, we observe the extension of reflections that are acquired with a limited offset in the angle representation.}
+
+Conventional phase shift downward continuation requires that no lateral velocity variation is present. Since the synthetic model has no lateral (or even vertical) velocity
+variation, we use a VTI version of the DSR (double-square-root) phase-shift migration \cite[]{GEO65-04-11791194} to migrate the data. However, prior to applying the zero-time imaging condition we map the offset wavenumbers 
+to angle, and thus, obtain angle gathers. Figure~\ref{fig:agath2} shows the isotropically migrated section at near zero angle. It also shows on the right hand side the 
+angle gather for an isotropic angle
+gather mapping. Clearly, the angle gather includes residuals resulting from ignoring anisotropy. \geouline{These residuals start at the top with deviations at large
+angles with a fourth-order moveout (known as nonhyperbolic)
+often associated with the semi-horizontal 
+reflectors to second-order strong deviations typically associated with dipping reflectors} \cite[]{GEO60-05-15501566}. The top plot in Figure~\ref{fig:agath2} is 
+a slice of a constant depth of 2 km and includes some residual information spanning other angle gathers.
+
+If we downward continue using an anisotropic phase-shift
+migration followed by an isotropic angle gather mapping, 
+we image the data accurately as shown in Figure~\ref{fig:agath3}. Even the angle gathers, despite using an isotropic mapping,
+show no residuals as we have imaged that data accurately. However, though not immediately obvious, most of the migrated energy is mapped to the wrong angle.
+On the other hand, an anisotropic mapping of angle gathers places reflections at their true angles (Figure~\ref{fig:agath4}). This fact can be realized from comparing
+the extension of angle gathers of Figures~\ref{fig:agath3} and~\ref{fig:agath4}. The lower-than-actual horizontal velocity treatment in the isotropic mapping
+places energy at smaller reflection angle values. This phenomenon can be directly attributed to the difference between phase and group velocities. Specifically, for
+horizontal reflections, the isotropic angle gathers map phase angles (ignoring the difference), while anisotropic ones map
+ray angles. When the horizontal velocity is higher in a VTI medium, the ray angle, measured from vertical, tend to be higher than the phase angle.
+
+\begin{comment}
+Finally, a mix of isotropic downward continuation
+and anisotropic angle-gathers mapping reveals more of the features of the new mapping equation. Figure~\ref{fig:agath55} displays the result and
+clearly the angle gather is different than that shown in Figure~\ref{fig:agath2} with the isotropic mapping. For one moveouts are clearly more stretched out over 
+angles.
+\end{comment}
+
+\plot{ref}{width=0.9\textwidth}{ A reflector model containing 5 reflections in a dome like formation.
+	We focus on angle gathers at location 8 km, at which several reflection dips are represented.}
+
+\plot{adata}{width=0.9\textwidth}{Prestack synthetic data generated using Kirchhoff modeling for a VTI model with velocity (NMO and vertical) equal 2 km/s and $\eta=0.2$.}
+
+\plot{agath}{width=0.9\textwidth}{Migrated section after an isotropic migration with velocity of 2 km/s of an equivalent isotropic
+ synthetic data. The angle gathers obtained using an isotropic mapping at 8 km location is displayed on the right. 
+The top section shows a depth slice as a function of angle gather at 
+depth 2 km.}
+
+\plot{agath2}{width=0.9\textwidth}{Migrated section after an isotropic migration with velocity of 2 km/s of the VTI synthetic data in Figure~\protect\ref{fig:adata}.
+Again, the angle gathers obtained using an isotropic mapping at 8 km location is displayed on the right, and 
+the top section shows a depth slice as a function of angle gather at 
+depth 2 km.}
+
+\plot{agath3}{width=0.9\textwidth}{Migrated section after a VTI migration with velocity of 2 km/s and $\eta$=0.2 of the VTI synthetic data in Figure~\protect\ref{fig:adata}.
+Again, the angle gathers obtained using an isotropic mapping at 8 km location is displayed on the right, 
+and the top section shows a depth slice as a function of angle gather at 
+depth 2 km.}
+
+\plot{agath4}{width=0.9\textwidth}{Migrated section after a VTI migration with velocity of 2 km/s and $\eta$=0.2 of the VTI synthetic data in Figure~\protect\ref{fig:adata}.
+The angle gathers obtained, now, using the VTI mapping at 8 km location is displayed on the right. The top section shows a depth slice as a function of angle gather at 
+depth 2 km.}
+
+\begin{comment}
+\plot{agath55}{width=0.9\textwidth}{Migrated section after an isotropic migration with velocity of 2 km/s of the VTI synthetic data in Figure~\protect\ref{fig:adata}.
+The angle gathers obtained using the VTI mapping  at 8 km location is display on the right. The top section shows a depth slice as a function of angle gather at 
+depth 2 km.}
+\end{comment}
+
+\geouline{This synthetic test the importance of anisotropic angle gather mapping to place reflections at their true
+scattering angles.} In practice, the velocity model building process uses residuals along angle gathers to estimate the required velocity update.
+Proper definition of the angle gather residuals will simplify the update process. This is especially true if the update is based on reflection tomography. 
+
+
+\section{The TTI case}
+
+
+In the case of a tilt in the angle of symmetry of the TI (TTI) medium, the dispersion relations~\ref{eq:kzs} and~\ref{eq:kzr}
+must be altered to reflect the tilt. Specifically, the wavenumbers should be transformed
+to the direction of the tilt. In fact, at the reflection point all equations used to develop the mapping in equation~(\ref{eq:quad}) 
+hold regardless of the direction of tilt. This implies that the
+quadratic solution~(\ref{eq:sol}) applies with $a$, $b$, and $c$ given by Table 1 granted that the wavenumbers are transformed in the direction of the tilt.
+Considering that $\phi$ is the tilt angle measured from vertical in 2-D, the horizontal (conventional) wavenumbers given by the surface-recorded data
+are given by 
+\begin{equation}
+k_{sc} \equiv k_{sx} \cos\phi - k_{sz} \sin\phi,
+  \label{eq:kst}
+\end{equation}
+and
+\begin{equation}
+k_{rc} \equiv k_{rx} \cos\phi - k_{rz} \sin\phi.
+\label{eq:krt}
+\end{equation}
+\inputdir{Math}
+\geouline{where $k_{sx}$ and $k_{rx}$ now correspond to the normal-to-the-tilt wavenumber direction and they are related to $k_{sz}$ and $k_{rz}$ (tilt direction wavenumbers), 
+respectively using equations~\ref{eq:kzs} and~\ref{eq:kzr}.}
+\geouline{Based on the above equations, to solve for $k_{sx}$ and $k_{rx}$ needed for the angle gather mapping, we are required to solve a quartic equation that can be represented, with pain, analytically 
+or solved numerically. Alternatively, the formulations for a transversely isotropic medium with tilt constrained to the dip (DTI), introduced by} \cite{tariq-sava}, \geouline{is 
+simpler than those introduced here for a general TI medium, and thus can be used at the velocity model building stage. However, when the assumption of the tilt being normal to the reflector dip
+fails, for example at salt
+flank reflections where the tilt is generally not normal to the Salt flank, we will need a general formulation similar to the one developed here.}
+
+\section{Conclusions}
+
+We have developed analytical relationships to generate angle gathers
+using wave-equation migration in VTI media. These relations are based
+on an approach for generating gathers at each depth level by
+converting offset-space-frequency planes into angle-space planes while
+simultaneously applying the imaging condition. Although the angle
+gathers depend on medium parameters, they are
+independent of the structure, which provides an opportunity for a
+simple and practical implementation.  Comparing the mapping equation
+for VTI media with those for the isotropic case demonstrates the large
+influence that the anisotropy parameter $\eta$ has on the mapping
+process. On the other hand, the influence of vertical velocity is
+confined to the offset direction, and the influence of NMO velocity is
+small.
+Synthetic data applications demonstrate the importance of accurate mapping of energy
+in the angle domain. In the case of a TTI medium, the required modification to the mapping equations
+is given by the transformation of the wavenumbers in the dispersion relation 
+to the direction of of the symmetry axis and, as a result, a similar analytic mapping
+exists.
+
+\section{Acknowledgments}
+
+We are grateful to KACST, KAUST, and the Bureau of Economic Geology, University of Texas at
+  Austin for their support. We thank Gilles Lambare, Jeff Shragge and Jun Cao for their critical and helpful review of the paper.
+
+\tabl{equations}{Exact analytical equations for the coefficients of equation~(\ref{eq:quad}).}
+ {
+    \begin{center}
+     \begin{tabular}{|c|c|}
+      \hline $a$ &
+      $\begin{array}{c} \frac{1}{2} \left(k_h^2-k_m^2\right)^4 \left(v^2 \eta 
+   \left(k_h-k_m\right)^2-2 \omega ^2\right)^3\,
+   \left(v^2 (4 \eta +1) \left(k_h-k_m\right)^2-4 \omega ^2\right)^2\,
+   \left(v^2 \eta \left(k_h+k_m\right)^2-2 \omega ^2\right)^4 \\
+   \left[v_z^4 \left(k_h^2-k_m^2\right)^2 \left(-2 v^2 \eta  k_h^2 \left(v^2 \eta k_m^2+2 \omega ^2\right) +v^4 \eta ^2 k_h^4+\left(v^2 \eta  k_m^2-2
+   \omega ^2\right)^2\right) \right. \\ 
+   \left. +4 \omega ^4 \left(2 v^2 (4 \eta +1) k_h^2 \left(v^2 (4 \eta +1) k_m^2+4 \omega ^2\right) 
+    -v^4 (4 \eta +1)^2  k_h^4-\left(v^2 (4 \eta +1) k_m^2-4 \omega ^2\right)^2\right)\right]^2\end{array}$ \\
+    \hline $b$ & 
+    $\begin{array}{c} \left(k_h^2-k_m^2\right)^4 \left(-\left(v^2 \eta \left(k_h-k_m\right)^2 -2 \omega ^2\right)^3\right)  
+    \left(v^2 (4 \eta +1) \left(k_h-k_m\right)^2-4 \omega ^2\right)^2 \left(v^2 \eta \left(k_h+k_m\right)^2-2 \omega ^2\right)^4 \\  
+    \left[v_z^4 \left(k_h^2-k_m^2\right)^2 \left(-2 v^2 \eta  k_h^2 \left(v^2 \eta k_m^2+2 \omega ^2\right) +v^4 \eta ^2 k_h^4  +\left(v^2 \eta  k_m^2-2
+       \omega ^2\right)^2\right) \right. \\ \left.
+      +4 \omega ^4 \left(-2 v^2 (4 \eta +1) k_h^2
+       \left(v^2 (4 \eta +1) k_m^2+4 \omega ^2\right) +v^4 (4 \eta +1)^2 k_h^4+\left(v^2 (4 \eta +1) k_m^2-4 \omega ^2\right)^2\right)\right] \\
+   \left(\left(k_h-k_m\right)^2 \left(v_z^2 \left(v^2 \eta  \left(k_h-k_m\right)^2-2 \omega ^2\right) +2 v^2 (4 \eta +1) \omega^2\right) -8 \omega ^4\right) \\
+   \left(\left(k_h+k_m\right)^2 \left(v_z^2 \left(v^2 \eta  \left(k_h+k_m\right)^2-2 \omega ^2\right) +2 v^2 (4 \eta +1) \omega^2\right) -8 \omega ^4\right)\end{array}$ \\
+   \hline $c$ &
+      $\begin{array}{c} \frac{1}{2} \left(k_h^2-k_m^2\right)^4 \left(v^2 \eta \left(k_h-k_m\right)^2-2 \omega ^2\right)^3 
+      \left(v^2 (4 \eta +1) \left(k_h-k_m\right)^2-4 \omega ^2\right)^2 \left(v^2 \eta \left(k_h+k_m\right)^2-2 \omega ^2\right)^4 \\ 
+      \left[v_z^4 \left(k_h^2-k_m^2\right)^2 \left(-2 v^2 \eta  k_h^2 \left(v^2 \eta k_m^2+2 \omega ^2\right) 
+      + v^4 \eta ^2 k_h^4 + \left(v^2 \eta  k_m^2-2 \omega ^2\right)^2\right) \right. \\ \left. 
+      +4 \omega ^4 \left(2 v^2 (4 \eta +1) k_h^2 \left(v^2 (4 \eta +1) k_m^2+4 \omega ^2\right) 
+      -v^4 (4 \eta +1)^2 k_h^4-\left(v^2 (4 \eta +1) k_m^2-4 \omega^2\right)^2\right)\right]^2\end{array}$ \\
+    \hline
+    \end{tabular} 
+   \end{center}
+} 
+
+\tabl{equationsE}{Exact analytical equations for the coefficients of equation~(\ref{eq:quad}) in the case of elliptic anisotropy ($\eta=0$).}
+ {
+    \begin{center}
+     \begin{tabular}{|c|c|}
+      \hline $a$ &
+      $\begin{array}{c} -\left(k_h^2-k_m^2\right){}^4 \left(v k_h-v k_m+2 \omega
+   \right){}^2 \left(-v k_h+v k_m+2 \omega \right){}^2 \\
+\left(-2 k_h^2 \left(k_m^2
+   \left(v^4-v_z^4\right)+4 v^2 \omega ^2\right)+k_h^4 \left(v^4-v_z^4\right)+\left(v^2
+   k_m^2-4 \omega ^2\right){}^2-k_m^4 v_z^4\right){}^2 \end{array}$ \\
+    \hline $b$ & 
+    $\begin{array}{c} 2 \left(k_h^2-k_m^2\right){}^4 \left(v k_h-v k_m+2 \omega
+   \right){}^2 \left(-v k_h+v k_m+2 \omega \right){}^2 \left(4 \omega
+   ^2-\left(v^2-v_z^2\right) \left(k_h-k_m\right){}^2\right) \\
+\left(4 \omega
+   ^2-\left(v^2-v_z^2\right) \left(k_h+k_m\right){}^2\right) \\
+\left(-2 k_h^2 \left(k_m^2
+   \left(v^4+v_z^4\right)+4 v^2 \omega ^2\right)+k_h^4 \left(v^4+v_z^4\right)+\left(v^2
+   k_m^2-4 \omega ^2\right){}^2+k_m^4 v_z^4\right) \end{array}$ \\
+   \hline $c$ &
+      $\begin{array}{c} -\left(k_h^2-k_m^2\right){}^4 \left(v k_h-v k_m+2 \omega
+   \right){}^2 \left(-v k_h+v k_m+2 \omega \right){}^2 \\
+\left(-2 k_h^2 \left(k_m^2
+   \left(v^4-v_z^4\right)+4 v^2 \omega ^2\right)+k_h^4 \left(v^4-v_z^4\right)+\left(v^2
+   k_m^2-4 \omega ^2\right){}^2-k_m^4 v_z^4\right){}^2 \end{array}$ \\
+    \hline
+    \end{tabular} 
+   \end{center}
+}
+
+\tabl{equationsI}{Exact analytical equations for the coefficients of equation~(\ref{eq:quad}) in the case of isotropy ($\eta=0$, $v_z=v$).}
+ {
+    \begin{center}
+     \begin{tabular}{|c|c|}
+      \hline $a$ &
+      $\begin{array}{c} -\left(k_h^2-k_m^2\right){}^4 \left(v k_h-v k_m+2 \omega
+   \right){}^2 \left(-v k_h+v k_m+2 \omega \right){}^2 \left(v^2
+   \left(k_h^2+k_m^2\right)-2 \omega ^2\right){}^2 \end{array}$ \\
+    \hline $b$ & 
+    $\begin{array}{c} \left(k_h^2-k_m^2\right){}^4 \left(v k_h-v k_m+2 \omega
+   \right){}^2 \left(-v k_h+v k_m+2 \omega \right){}^2 \\
+	\left(v^2 \left(-2 k_h^2 \left(v^2
+   k_m^2+2 \omega ^2\right)+v^2 k_h^4+v^2 k_m^4-4 \omega ^2 k_m^2\right)+8 \omega
+   ^4\right) \end{array}$ \\
+   \hline $c$ &
+      $\begin{array}{c} -\left(k_h^2-k_m^2\right){}^4 \left(v k_h-v k_m+2 \omega
+   \right){}^2 \left(-v k_h+v k_m+2 \omega \right){}^2 \left(v^2
+   \left(k_h^2+k_m^2\right)-2 \omega ^2\right){}^2 \end{array}$ \\
+    \hline
+    \end{tabular} 
+   \end{center}
+} 
+
+\bibliographystyle{seg}
+\bibliography{SEG,SEP2,agath}

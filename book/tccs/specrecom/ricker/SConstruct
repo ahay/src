@@ -1,0 +1,87 @@
+from rsf.proj import *
+import math
+
+par = {
+    'nt':1000, 'dt':0.004,'ot':0,   'lt':'t','ut':'s',
+    'kt':100,    # wavelet delay
+    }
+freqs = (10,20,50)
+nc = len(freqs) # number of components
+# wavelet
+for c in range(nc):
+    par['f'] = freqs[c]
+    wave = 'wave%d' % c
+    Flow(wave,None,
+         '''
+         spike nsp=1 mag=1 n1=%(nt)d d1=%(dt)g o1=%(ot)g k1=%(kt)d |
+         ricker1 frequency=%(f)g | scale axis=123 |
+         put label1=t label2=x label3=y | transp
+         ''' % par)
+    Plot(wave,
+         '''
+         window |
+         window n1=200 |
+         graph title="Ricker Wavelet of %(f)g Hz" plotfat=6 label1="t" label2= unit2= font=2
+         labelsz=10 titlesz=16 labelfat=2 titlefat=4 wantaxis2=n
+         ''' % par)
+
+Flow('waves','wave0 wave1 wave2','add ${SOURCES[1:%d]}' % nc)
+Plot('waves',
+     '''
+     window | window n1=200 |
+     wiggle poly=y title="Wavelet with %g, %g and %g Hz Ricker Component" pclip=100
+     plotfat=6 plotcol=7 label1="Time" label2="Amplitude" unit2= font=2 labelsz=10 titlesz=16 titlefat=4 labelfat=2
+     min2=-0.5 max2=1
+     ''' % freqs)
+Flow('spec0','waves','transp | spectra')
+Plot('spec0',
+     '''
+     graph labelsz=10 titlesz=16 wanttitle=n plotcol=7 plotfat=5 label1="Frequency" unit1="Hz" label2="Amplitude" unit2=
+     min1=0 max1=120 min2=0 max2=0.5 labelfat=2 font=2
+     ''')
+Flow('ricker0 ma1 ma2', 'spec0', 'rickerfit n=%d verb=y ma1=${TARGETS[1]} ma2=${TARGETS[2]}' % nc)
+Plot('ricker0',
+     '''
+     graph symbol=o labelsz=10 titlesz=16 symbolsz=10 plotfat=12 plotcol=2 title="Wavelet Spectrum and Its Estimation" label2="" label1="" unit2= unit1=
+     min1=0 max1=120 min2=0 max2=0.5 font=2 titlefat=4 labelfat=2
+     ''')
+Plot('spectrum', 'ricker0 spec0', 'Overlay')
+
+for c in range(nc):
+    comp = 'comp%d' % c
+    freq = 'freq%d' % c
+    ampl = 'ampl%d' % c
+    Flow(freq,'ma1','window n1=1 f1=%d | spray axis=1 n=501 d=0.25 o=0' % c)
+    Flow(ampl,'ma2','window n1=1 f1=%d | spray axis=1 n=501 d=0.25 o=0' % (c))
+    Flow(comp,[freq,ampl],'math m2=${SOURCES[0]} a=${SOURCES[1]} output="a*exp(-x1*x1/m2)*x1*x1/m2" ')
+    Flow('c'+comp,comp,'rtoc')
+    dcmp = 'dcmp%d' % c
+    Flow(dcmp,['waves','c'+comp],'window | fft1 | math c=${SOURCES[1]} output="c*exp(I*arg(input))" | fft1 inv=y')
+    Plot(dcmp,
+         '''
+         window |
+         window n1=200 |
+         graph title="Ricker Wavelet" plotfat=6 label1="t" label2= unit2= font=2
+         labelsz=10 titlesz=16 labelfat=2 titlefat=4 wanttitle=n wantaxis2=n
+         symbol=o plotcol=5 symbolsz=10
+         ''')
+    Plot(comp,
+         '''
+         window |
+         window n1=480 |
+         graph title="Ricker Wavelet Spectrum" plotfat=6 label1="Frequency" unit1=Hz label2= unit2= font=2
+         labelsz=10 titlesz=16 labelfat=2 titlefat=4 wanttitle=y
+         min1=0 min2=0 max1=120 max2=0.5
+         ''')
+
+Plot('rkspec','comp0 comp1 comp2','Overlay')
+
+Result('rk','waves spectrum rkspec','OverUnderAniso')
+
+Plot('rk0','wave0 dcmp0','Overlay')
+Plot('rk1','wave1 dcmp1','Overlay')
+Plot('rk2','wave2 dcmp2','Overlay')
+
+Result('rickers','rk0 rk1 rk2','SideBySideAniso')
+
+End()

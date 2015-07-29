@@ -1,0 +1,130 @@
+from rsf.proj import *
+from math import *
+from string import *
+
+# ------------------------------------------------------------
+# Set Up a Synthetic Data
+# ------------------------------------------------------------
+##################################
+# Make a reflector model 
+##################################
+alpha = pi/6
+a = tan(alpha)
+Flow('refl',None,
+     '''
+     math n1=501 o1=0 d1=0.01 output="sqrt(0.25+(x1*%g)^2)" 
+     ''' % a )
+Flow('model','refl',
+     '''
+     unif2 n1=201 d1=0.01 v00=1,1.5 |
+     put label1=Depth unit1=km label2=Lateral unit2=km  
+     ''')
+
+# Plot model
+Result('model',
+       '''
+       window n2=501 |
+       grey color=j allpos=y title=Model bias=1 scalebar=y 
+       barreverse=y barlabel=Velocity barunit=km/s 
+       ''')
+
+# Reflector dip
+Flow('dip','refl','math output="%g*x1/input" ' % (a*a))
+
+##################################
+# Kirchoff modeling
+##################################
+Flow('shot','refl dip',
+     '''
+     kirmod 
+     ns=8 s0=1 ds=0.5 
+     nt=1501 dt=0.004
+     nh=201 dh=0.02 h0=-0.5
+     twod=y vel=1 freq=20
+     dip=${SOURCES[1]} verb=y
+     ''')
+
+for i in range(8):
+    shotx='shot'+str(i)
+    Result(shotx,'shot',
+           '''
+           window n3=1 f3=%d |
+           grey title="Shot at %g km" 
+           label1=Time unit1=s label2=Offset unit2=km
+           labelsz=10 titlesz=15 grid=y
+           ''' % (i,(i+1)*0.5))
+
+Flow('shots','shot','put o3=1 d3=0.5')
+
+# ------------------------------------------------------------
+# Migration
+# ------------------------------------------------------------
+##################################
+# Prepare wavefields
+##################################
+
+# Reciever wavefield
+
+Flow('rfft','shots',
+     '''
+     fft1 | window max1=50 |
+     spray axis=3 n=1 o=0 d=1 |
+     spray axis=5 n=1 o=0 d=1
+     ''')
+
+# Shot wavefield
+
+Flow('sfft',None,
+     'spike k1=1 n1=1501 | fft1 | window max1=50')
+
+# Synthesize shot/receiver wavefields for 3-D SR migration
+
+Flow('rwav swav','rfft sfft',
+
+     '''
+     srsyn nx=501 dx=0.01 ox=0 
+     wav=${SOURCES[1]} swf=${TARGETS[1]}
+     ''')
+
+# Transpose to correct axis order
+
+Flow('rtra','rwav','transp plane=12 | transp plane=23')
+Flow('stra','swav','transp plane=12 | transp plane=23')
+
+##################################
+# Prepare slowness
+##################################
+
+Flow('slow','model',
+     '''
+     window |
+     math "output=1/input" |
+     transp |
+     spray axis=2 n=1 o=0 d=0.01 |
+     put label2=y unit2="" 
+     ''')
+
+##################################
+# Actual migration
+##################################
+
+Flow('img cig','stra rtra slow',
+     '''
+     srmig3 --readwrite=y verb=y nrmax=1 dtmax=5e-05
+     cig=${TARGETS[1]}
+     tmx=16 itype=o rwf=${SOURCES[1]} slo=${SOURCES[2]}
+     ''')
+
+##################################
+# Display result
+##################################
+
+Flow('img2','img',
+     '''
+     window | transp | 
+     put label1=Depth unit1=km label2=Lateral unit2=km
+     ''')
+
+Result('img','img2','grey title=Image')
+
+End()

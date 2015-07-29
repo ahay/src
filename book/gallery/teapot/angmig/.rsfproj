@@ -1,0 +1,3 @@
+uses=['sfdd', 'sftransp', 'sflinear', 'sfgraph', 'sfdix', 'sfwindow', 'sfgrey', 'sfbandpass', 'sfspray', 'sfbyte', 'sfgrey3', 'sftime2depth', 'sfput', 'sfmath', 'sffft1', 'sfreal', 'sfzomig3', 'sfdepth2time', 'sfsegyread', 'sftmigda']
+data=['teapot/final_stack.rsf', 'teapot/filt_mig.sgy']
+size=  533166192

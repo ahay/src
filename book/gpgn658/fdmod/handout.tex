@@ -1,0 +1,130 @@
+\author{Isaac Newton}
+\title{GPGN658: Seismic migration}{FD modeling}
+
+% ------------------------------------------------------------
+In this homework, you will write code for time-domain acoustic
+finite-differences modeling. This is one of the most basic programs
+employed in seismic imaging. I used in class for this program the name
+of ``Hello World!'' of seismic imaging. Everyone involved in seismic
+imaging should write this program once in their life. This is what you
+will do in this homework.
+
+Your assignment is to modify an acoustic finite-differences modeling
+program and compute wavefields and data recorded on the surface. You
+will use the constant-density and the variable-density acoustic
+wave-equations.
+
+% ------------------------------------------------------------
+
+\section{Prerequisites}
+
+Log into your class account and prepare for the assignment:
+
+\begin{enumerate}
+
+\item Update the Madagascar library and 
+
+\texttt{cd \$RSF/book/gpgn658/fdmod}.
+
+You should have in your directory the
+following files:
+
+\texttt{fdmod/SConstruct} \\
+\texttt{fdmod/handout.tex} \\
+\texttt{fdmod/exercise/SConstruct} \\
+\texttt{fdmod/exercise/AFDM.c} \\
+\texttt{fdmod/exercise/fdutil.c} \\
+\texttt{fdmod/exercise/fdutil.h} \\
+\texttt{fdmod/exercise/omputil.c} \\
+\texttt{fdmod/exercise/omputil.h}
+
+\item 
+Open the file \texttt{handout.tex} in your favorite text editor and
+change the author name at the top of the file.
+
+\item 
+\texttt{cd exercise} \par
+to change directory to the programming exercise.
+
+\item 
+Run \texttt{scons view} to build all targets described in the
+\texttt{SConstruct} file. Watch for figures popping-up on your screen.
+Close each figure by typing \texttt{q} with the cursor inside the
+window.
+
+You will notice that before execution, the program \texttt{AFDM.c} is
+compiled and run to produce results. This is the program that you will
+modify in this exercise. All compilation rules are pre-defined in the
+\texttt{SConstruct} file and you do not need to modify those.
+
+\item
+Run \texttt{scons lock} to prepare your figures to be included in the
+main document.
+
+\item 
+\texttt{cd gpgn658/fdmod} and run \texttt{scons read} to build and 
+read your answer. The following figures are included in your document:
+the source wavelet (Figure~\ref{fig:wava}), the velocity
+(Figure~\ref{fig:vp}),the density (Figure~\ref{fig:ro}), the
+wavefields at a fixed propagation time (Figure~\ref{fig:wa}), and the
+data recorded at the surface (Figure~\ref{fig:da}).
+
+% ------------------------------------------------------------
+\inputdir{exercise}
+% ------------------------------------------------------------
+\sideplot{wava}{width=\textwidth}{Source wavelet.}
+\sideplot{vp}{width=\textwidth}{Velocity model.}
+\sideplot{ro}{width=\textwidth}{Density model.}
+\sideplot{wa}{width=\textwidth}{Wavefield.}
+\sideplot{da}{width=\textwidth}{Data.}
+
+\end{enumerate}
+% ------------------------------------------------------------
+\section{Exercise}
+
+\begin{enumerate}
+\item 
+\texttt{cd exercise} to begin your exercise.
+
+\item 
+The program \texttt{AFDM.c} implements time-domain finite-differences
+modeling for the constant-density acoustic wave-equation. Your task is
+to add the density term to this program. Refer to the course slides
+for details about what needs to be added and where. Add comments in
+the code to indicate your modifications.
+
+\item 
+Run \texttt{scons view} after your code is modified. All figures are
+rebuilt with your new code and displayed on screen.
+
+\item 
+Run \texttt{scons lock} once you are satisfied with your results. All
+figures are copied to the storage directory.
+
+\item 
+Add comments to this document indicating the changes to the simulated
+data and wavefields. Are your results expected? Describe the data and
+wavefield figures indicating what the various events represent.
+
+\item 
+\texttt{cd gpgn658/fdmod}, run \texttt{scons handout.read} to build 
+your answer. A PDF file is constructed using your newly created
+figures and modifications to the text. The modified code is
+automatically added to the document.
+
+\end{enumerate}
+
+% ------------------------------------------------------------
+\section{Wrap-up}
+
+After you are satisfied that your document looks ok,
+print it from the PDF viewer and bring it to class.
+
+% ------------------------------------------------------------
+\newpage
+\section{AFDM.c}
+\tiny
+\lstinputlisting{exercise/AFDM.c}
+\normalsize
+
+

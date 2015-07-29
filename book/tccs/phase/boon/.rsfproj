@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sfput', 'sfgrey', 'sfwindow', 'sfenvelope', 'sfcat', 'sfwiggle', 'sfadd', 'sffocus', 'sfsimilarity', 'sfmath', 'sfscale', 'sfpick', 'sfgraph', 'sfslice', 'sfmul', 'sftransp', 'sfbyte', 'sfgrey3']
+data=['data/boonsville/boonsvillel249.sgy']
+size= 1082263580

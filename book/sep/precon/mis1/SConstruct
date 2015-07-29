@@ -1,0 +1,55 @@
+from rsf.proj import *
+
+Flow('one',None,'spike n1=1 label1=" " ')
+
+Flow('lag1','one','dd type=int    | put n=10')
+Flow('lag2','lag1','scale dscale=2| put n=10')
+
+Flow('oscil',['one','lag1'],'put a0=1 lag=${SOURCES[1]}')
+Flow('lines','oscil','scale dscale=-1')
+#Flow('best',['lines','lag2'],'put a0=1 lag=${SOURCES[1]}')
+
+input = [0,0,0,0,0.5,0,1,0.5,1,0,0,0,0,0,0]
+n1 = len(input)
+
+Flow('in0.asc',None,'echo %s in=$TARGET n1=%d esize=0 data_format=ascii_float' %
+     (string.join(map(str,input),' '),n1))
+Flow('in','in0.asc','dd form=native')
+
+Flow('imp',None,'spike n1=%d k1=1 label1=" "' % n1)
+
+def dots(n):
+    return '''cat axis=2 ${SOURCES[1:%d]} |
+    dots dots=2 connect=0 gaineach=0 overlap=1.30 labelsz=16''' % n
+
+def miss(prec,niter):
+    return '''
+    miss filt=${SOURCES[1]} prec=%d niter=%d padin=2 padout=2
+    ''' % (prec,niter)
+
+name = 'ms'
+filters = ['lines','oscil'] # ,'best']
+
+for filt in filters:
+    Flow(filt+'pad',['imp',filt],'helicon filt=${SOURCES[1]}')
+    for prec in [0,1]:
+        res = name[prec]+filt       
+        Flow(res,['in',filt],miss(prec,10))
+        Plot(res+'3',[filt+'pad',res,'in'],
+             dots(3) + ' labels=filter:interp:given')
+        iters = []
+        for niter in range(1,5):
+            iter = res + str(niter)
+            iters.append(iter)
+            Flow(iter,['in',filt],miss(prec,niter))
+        Plot(res+'4',iters,dots(4) +
+             ' overlap=1 yreverse=1 labels=iter=1:=2:=3:=4')
+        Plot(res,[res+'3',res+'4'],'SideBySideAniso')
+
+for prec in [0,1]:
+    Result(name[prec]+'all',
+           map(lambda filt: name[prec]+filt, filters),'OverUnderAniso')
+
+###############################################################################
+
+End()

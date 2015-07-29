@@ -1,0 +1,47 @@
+# Author: G. Hennenfent
+#         Seismic Laboratory for Imaging and Modeling
+#         Department of Earch & Ocean Sciences
+#         The University of British Columbia
+#         
+# Date  : November, 07
+
+from rsf.tex import *
+import os
+
+SConscript('Fig/SConstruct')
+
+# make color of figures a cmd line option
+color = int(ARGUMENTS.get('color', 1))
+os.environ['PSTEXPENOPTS'] = 'color=%(color)d fat=5 famult=5 invras=y'%vars()
+ 
+# make LaTeX class a cmd line option
+latexc = ARGUMENTS.get('lclass', 'geophysics')
+
+# include a few LaTeX packages
+packages = '''
+amsmath,
+amsfonts,
+amssymb,
+amsthm,
+hyperref,
+color
+'''
+
+# for backward compatibility with old SEGTeX versions
+newcmds = '''
+\\renewcommand{\\vector}[1]{\\ensuremath{\\mathbf{\\MakeLowercase{#1}}}}
+\\newcommand{\\half}{\\textstyle \\frac{1}{2}}
+\\newcommand{\\SortNoop}[1]{}
+\\newtheorem{res}{Result}
+\hyphenation{herr-mann}
+'''
+
+final = ARGUMENTS.get('final', 0)
+if int(final) is 1:
+    End(lclass=latexc,use=packages,options="manuscript",include=newcmds)
+elif int(final) is 2:
+    End(lclass=latexc,use=packages,options="twocolumn",include=newcmds)
+elif int(final) is 3:
+    End(lclass=latexc,use=packages,options="manuscript,revised",include=newcmds)
+else:
+    End(lclass=latexc,use=packages,include=newcmds)

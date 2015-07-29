@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfwindow', 'sfmig3', 'sfput', 'sfmigsteep3', 'sfadd', 'sftransp', 'sfgrey']
+data=['data/mig/trace.HH']
+size=  120002512

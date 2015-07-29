@@ -1,0 +1,68 @@
+\def\EOP{\textbf{extrapolation operator}}
+\def\IOP{\textbf{imaging operator}}
+\def\SOP{\textbf{scattering operator}}
+
+\def\EOPzo{\textit{ \reqs{PHS-ZO}, \ren{SSR-ZO} }}
+\def\EOPsr{\textit{ \reqs{PHSs-SR},\ren{PHSr-SR},\ren{SSR-SR} }}
+\def\EOPss{\textit{ \reqs{PHS-SS}, \ren{DSR} }}
+
+\def\IOPzo{\textit{ \req{IMC-ZO} }}
+\def\IOPsr{\textit{ \req{IMC-SR} }}
+\def\IOPss{\textit{ \req{IMC-SS} }}
+
+\def\SOPzo{\textit{ \reqs{ZOFSOP}, \ren{ZOASOP} }}
+\def\SOPsr{\textit{ \reqs{SRFSOPs},\ren{SRFSOPr},\ren{SRASOPs},\ren{SRASOPr} }}
+\def\SOPss{\textit{ \reqs{SSFSOP}, \ren{SSASOPs},\ren{SSASOPr} }}
+
+% ------------------------------------------------------------
+\section{Summary of operators}
+
+All wave-equation migration velocity analysis operators described in
+the preceding sections are similar in that they relate perturbations
+of the image with perturbations of the (slowness) model. In all cases,
+this velocity estimation procedure takes advantage of features of
+migrated images which indicate incorrect imaging. The imaging
+inaccuracies can have several causes, i.e. incorrect downward
+continuation, irregular illumination, limited acquisition aperture
+etc., but the wave-equation MVA operators translate all inaccuracies
+in model updates. This feature, however, is a fundamental limitation
+of all migration velocity analysis techniques and we do not expand on
+this topic further.
+
+Since the migration velocity analysis operators link image
+perturbations with slowness perturbations, they are all composed of
+several common parts, but with implementations that are specific for
+each imaging configuration. Thus, a wave-equation MVA operator is
+composed of an extrapolation operator (for wavefield reconstruction
+from recorded data), an imaging operator (for image construction from
+reconstructed wavefields) and a scattering operator (for relating
+wavefield perturbations to slowness perturbations). The following
+table summarizes the wave-equation MVA operator components in
+different imaging configurations, as described in detail in the
+preceding sections.
+
+% ------------------------------------------------------------
+\begin{center}
+\tiny
+%\begin{singlespace}
+\begin{table*}
+\begin{tabular} { c || ccc | c | c | } 
+                        & \multicolumn{3}{c|}{\EOP}                    & \IOP                       & \SOP           \\
+\cline{2-6}
+                        & equation & velocity & extrapolation     & type                       & equation       \\ \hline \hline
+\textbf{zero-offset}    & SSR      & half     & backward               & zero time                  & linearized SSR \\
+\cline{2-6}
+                        & \multicolumn{3}{c|}{\EOPzo}                  & \IOPzo                     & \SOPzo         \\ \hline \hline
+\textbf{survey-sinking} & DSR      & full     & backward               & zero time                  & linearized DSR \\
+                        &          &          &                        & implicit cross-corr. &                \\ 
+                        & \multicolumn{3}{c|}{\EOPss}                  & \IOPss                     & \SOPss         \\ \hline \hline
+\textbf{shot-record}    & SSR      & full     & forward       & zero time                  & linearized SSR \\
+                        &          &          & backward     & explicit cross-corr. &                \\
+\cline{2-6}
+                        & \multicolumn{3}{c|}{\EOPsr}                  & \IOPsr                     & \SOPsr         \\
+\end{tabular}
+%\end{singlespace}
+\end{table*}
+\end{center}
+% ------------------------------------------------------------
+

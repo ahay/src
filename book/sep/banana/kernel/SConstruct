@@ -1,0 +1,36 @@
+from rsf.proj import *
+
+def sensitivity(mode):
+    return '''
+    sensitivity mode=%d
+    nx=201 dx=0.01 ox=0. 
+    ny=101 dy=0.01 oy=-0.5
+    nz=201 dz=0.01 oz=0.
+    sx=0.2 sy=0. sz=0. 
+    rx=1.8 ry=0. rz=1.8
+    v0=1.5 vgrad=0.8
+    ''' % mode
+
+def plot(name,cross,depth,pclip=99):
+    Plot(cross,'grey wanttitle=n pclip=%d screenratio=1. label1=Z unit1=km label2=X unit2=km' % pclip)
+    Plot(depth,'grey wanttitle=n pclip=%d screenratio=2. label2=Y unit2=km' % pclip)
+    Result(name,[cross,depth],'SideBySideIso')
+
+Flow('ray',None,sensitivity(3))
+Flow('ray1','ray','window n2=1 min2=0 | transp')
+Flow('ray2','ray','window n1=1 min1=1 | transp')
+
+plot('RayKernel','ray1','ray2',pclip=100)
+
+for t in (2,8):
+    dt = 0.001*t
+
+    banana = 'banana%d' % t
+    pancak = 'pancak%d' % t
+
+    Flow(banana,None,sensitivity(6)+' ny=1 oy=0 dt=%g | transp plane=23 | transp plane=12' % dt)
+    Flow(pancak,None,sensitivity(6)+' nx=1 ox=1 dt=%g | transp plane=13' % dt)
+
+    plot('BananaPancake%d' % t,banana,pancak)
+
+End()

@@ -1,0 +1,64 @@
+from rsf.proj import *
+
+sys.path.append('..')
+import overthrust
+
+# 2-D velocity
+overthrust.getvel2D('vel2')
+
+# lowrank decomposition
+Flow('fft2','vel2','transp | fft1 | fft3 axis=2 pad=1')
+Flow('right2 left2','vel2 fft2',
+     '''
+     transp | scale dscale=0.5 |
+     isolr2 seed=2012 dt=0.002 fft=${SOURCES[1]} left=${TARGETS[1]} 
+     ''')
+
+# 2-D exploding-reflector data
+Fetch('otexp2.rsf','overthrust')
+Flow('exp2','otexp2.rsf','dd form=native')
+
+# migration
+Flow('mig2','exp2 left2 right2',
+     '''
+     reverse which=1 |
+     transp |
+     fftexp0 mig=y
+     left=${SOURCES[1]} right=${SOURCES[2]}
+     nz=187 dz=0.025
+     ''')
+
+Result('mig2','grey title="Zero-Offset Migration" unit2=km')
+
+# 3-D velocity
+overthrust.getvel('vel3')
+
+# lowrank decomposition
+Flow('over3','vel3',
+     'window j2=2 j3=2 | transp plane=12 memsize=1000 | transp plane=23 memsize=1000')
+Flow('fft3','over3','fft1 | fft3 axis=2 pad=1 | fft3 axis=3 pad=1')
+Flow('right3 left3','over3 fft3',
+     'scale dscale=0.5 | isolr3 seed=2012 dt=0.002 fft=${SOURCES[1]} left=${TARGETS[1]}')
+
+# 3-D exploding-reflector data
+Fetch('otexp3.rsf','overthrust')
+Flow('exp3','otexp3.rsf','dd form=native')
+
+Flow('mig3','exp3 left3 right3',
+     '''
+     reverse which=4 |
+     fftexp3 mig=y
+     left=${SOURCES[1]} right=${SOURCES[2]}
+     nz=187 dz=0.025
+     ''')
+
+Result('mig3',
+       '''
+       byte gainpanel=all |
+       transp plane=12 memsize=1000 | transp plane=23 memsize=1000 |
+       grey3 frame1=200 frame2=200 frame3=80
+       title="Zero-Offset Migration"
+       point1=0.81 point2=0.81 screenratio=1 
+       ''')
+
+End()

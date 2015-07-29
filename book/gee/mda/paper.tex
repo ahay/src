@@ -1,0 +1,3724 @@
+% copyright (c) 1997 Jon Claerbout
+\long\def\HIDE#1{#1}
+
+\title{Multidimensional autoregression}
+\author{Jon Claerbout}
+\maketitle
+\label{paper:mda}
+
+% INTRODUCTION to chapter MDA.
+
+Occam's razor says we should try understand the world by the simplest explanation.
+So, how do we decompose a complicated thing into its essential parts?
+That's far too difficult a question, but the word ``covariance'' points the way.
+If things are found statistically connected (covary), the many might be explainable by a few.
+For example a one-dimensional waveform can excite a wave equation filling a 3-D space.
+The values in that space will have a lot of covariance.
+In this chapter we take multidimensional spaces full of numbers
+and answer the question,
+``what causal differential (difference) equation might have created these numbers?''
+Our answer here, an autoregressive filter, does the job imperfectly,
+but it is a big step away from complete ignorance.
+As the book progresses we find three kinds of uses:
+(1) filling in missing data and uncontrolled parts of models,
+(2) preparing residuals for data fitting,
+(3) providing ``prior'' models for preconditioning an estimation.
+
+\par
+Recall that residuals (and preconditioning variables) should be
+Independent, and Identically Distributed (IID).
+In practice the ``ID'' means all residuals should have the same variance,
+and the preceding ``I'' means likewise in Fourier space (whiteness).
+This is the ``I'' chapter.
+Conceptually we might jump in and out of Fourier space,
+but here we learn processes in physical space
+that whiten in Fourier space.
+In earlier chapters we transformed from a physical space
+to something more like an IID space when we said,
+``Topography is smooth, so let us estimate and view instead its derivative.''
+
+\par
+The branch of mathematics introduced here is young.
+Physicists seem to know nothing of it,
+perhaps because it begins with time not being a continuous variable.
+About 100 years ago people looked at market prices
+and wondered why they varied from day to day.
+To try to make money from the market fluctuations
+they schemed to try to predict prices.
+That is a good place to begin.
+The subject is known as ``\bx{time-series analysis}.''
+In this chapter we define the {\it \bx{autoregression}} filter,
+also known as the \bx{prediction-error filter} (\bx{PEF}).
+It gathers statistics for us.
+It gathers not the autocorrelation or the spectrum directly
+but it gathers them indirectly
+as the inverse of the amplitude spectrum of its input.
+Although time-series analysis is a one dimensional study,
+we naturally use the helix to broaden it to multidimensional space.
+The PEF leads us to the ``inverse-covariance matrix'' of statistical estimation theory.
+Theoreticians tell us we need this before we can properly find a solution.
+Here we see how to go after it.
+
+
+%\HIDE{
+\subsection{Time domain versus frequency domain}
+\par
+In the simplest applications, solutions can be most easily found
+in the frequency domain.
+When complications arise,
+it is better to use the time domain,
+to directly apply the convolution operator
+and the method of least squares.
+
+\par
+A first complicating factor in the frequency domain is a required boundary
+in the time domain, such as that between past and future,
+or requirements that a filter be nonzero in a stated time interval.
+Another factor that attracts us to the time domain
+rather than the frequency domain is \bx{weighting function}s.
+\par
+Weighting functions
+are appropriate whenever a signal or image amplitude varies
+from place to place.
+Much of the literature on \bx{time-series analysis}
+applies to the limited case of uniform weighting functions.
+Such time series are said to be ``stationary.''
+This means that their statistical properties do not change in time.
+In real life, particularly in the analysis of echoes,
+signals are never stationary in time and space.
+A \bx{stationarity} assumption is a reasonable starting assumption,
+but we should know how to go beyond it
+so we can take advantage of the many opportunities that do arise.
+In order of increasing difficulty in the frequency domain are
+the following complications:
+\begin{enumerate}
+\item A time boundary such as between past and future.
+\item More time boundaries such as delimiting a filter.
+\item More time boundaries such as erratic locations of missing data.
+\item Nonstationary signal, i.e., time-variable weighting.
+\item Time-axis stretching such as normal moveout.
+\end{enumerate}
+
+\par
+We will not have difficulty with any of these complications here,
+because we will stay in the time domain
+and set up and solve optimization applications by use of
+the conjugate-direction method.
+Thus we will be able to cope with great complexity in goal formulation
+and get the right answer without approximations.
+By contrast, analytic or partly analytic methods
+can be more economical, but they generally solve
+somewhat different applications than those given to us by nature.
+
+\section{SOURCE WAVEFORM, MULTIPLE REFLECTIONS}
+\sx{source waveform}
+\sx{multiple reflection}
+Here we devise a simple mathematical model
+for deep \bx{water bottom} multiple reflections.\footnote{
+                For this short course I am omitting here many interesting
+                examples of multiple reflections
+                shown in my 1992 book, PVI.
+                }
+There are two unknown waveforms,
+the source waveform $S(\omega )$
+and the ocean-floor reflection $F(\omega )$.
+The water-bottom primary reflection $P(\omega )$
+is the convolution of the source waveform
+with the water-bottom response; so $P(\omega )=S(\omega )F(\omega )$.
+The first multiple reflection $M(\omega )$ sees the same source waveform,
+the ocean floor, a minus one for the free surface, and the ocean floor again.
+Thus the observations $P(\omega )$ and $M(\omega )$
+as functions of the physical parameters are
+\begin{eqnarray}
+P(\omega )&=&S(\omega )\,F(\omega )      \label{eqn:PP} \\
+M(\omega )&=&-S(\omega )\,F(\omega )^2   \label{eqn:MM}
+\end{eqnarray}
+Algebraically the solutions of equations
+(\ref{eqn:PP}) and
+(\ref{eqn:MM}) are
+\begin{eqnarray}
+F(\omega )&=& - M(\omega )/P(\omega )   \label{eqn:FF} \\
+S(\omega )&=& - P(\omega )^2/M(\omega ) \label{eqn:SS}
+\end{eqnarray}
+
+\par
+These solutions can be computed in the Fourier domain
+by simple division.
+The difficulty is that the divisors in
+equations~(\ref{eqn:FF}) and~(\ref{eqn:SS})
+can be zero, or small.
+This difficulty can be attacked by use of a positive number $\epsilon$
+to \bx{stabilize} it.
+For example, multiply equation~(\ref{eqn:FF}) on top and bottom
+by $P(\omega )\T$ and add $\epsilon >0$ to the denominator.
+This gives
+\begin{equation}
+F(\omega )\eq
+- \ \frac{M(\omega ) P\T(\omega )}{P(\omega )P(\omega )\T + \epsilon}
+\label{eqn:epsilon}
+\end{equation}
+where $ P\T(\omega )$ is the complex conjugate of $P(\omega )$.
+Although the $\epsilon$ stabilization seems nice,
+it apparently produces a nonphysical model.
+For $\epsilon$ large or small, the time-domain response
+could turn out to be of much greater duration than is physically reasonable. 
+This should not happen with perfect data, but in real life,
+data always has a limited spectral band of good quality.
+
+\par
+Functions that are rough in the frequency domain will be long in
+the time domain. 
+This suggests making a short function in the time domain
+by local smoothing in the frequency domain.
+Let the notation $< \cdots >$ denote smoothing by local averaging.
+Thus,
+to specify filters whose time duration is not unreasonably long,
+we can revise equation~(\ref{eqn:epsilon}) to
+\begin{equation}
+F(\omega )\eq
+- \ \frac{<M(\omega ) P\T(\omega )>}{<P(\omega )P\T(\omega )  >}
+\label{eqn:smoothit}
+\end{equation}
+where
+instead of deciding a size for $\epsilon$ we need to decide how much smoothing.
+I find that smoothing has a simpler physical interpretation than choosing 
+$\epsilon$.
+The goal of finding the filters $F(\omega )$ and $S(\omega )$ is to
+best model the multiple reflections so that they can
+be subtracted from the data,
+and thus enable us to see what primary reflections
+have been hidden by the multiples.
+
+\par
+These frequency-duration difficulties do not arise in a time-domain formulation.
+Unlike in the frequency domain,
+in the time domain it is easy and natural
+to limit the duration and location
+of the nonzero time range of $F(\omega)$ and $S(\omega)$.
+First express
+(\ref{eqn:FF}) as
+\begin{equation}
+0 \eq P(\omega )F(\omega ) +M(\omega )  
+\label{eqn:floor}
+\end{equation}
+
+\par
+To imagine equation (\ref{eqn:floor})
+as a fitting goal in the time domain,
+instead of scalar functions of $\omega$,
+think of vectors with components as a function of time.
+Thus $\bold f$ is a column vector
+containing the unknown sea-floor filter,
+$\bold m$ 
+contains the ``multiple'' portion of a seismogram,
+and $\bold P$ is a matrix of down-shifted columns,
+each column being the ``primary''.
+\begin{equation}
+\bold 0 \quad\approx\quad
+\bold r \eq
+\left[
+\begin{array}{c}
+  r_1 \\
+  r_2 \\
+  r_3 \\
+  r_4 \\
+  r_5 \\
+  r_6 \\
+  r_7 \\
+  r_8
+  \end{array} \right]
+  \eq
+\left[
+\begin{array}{ccc}
+  p_1 & 0   & 0    \\
+  p_2 & p_1 & 0    \\
+  p_3 & p_2 & p_1  \\
+  p_4 & p_3 & p_2  \\
+  p_5 & p_4 & p_3  \\
+  p_6 & p_5 & p_4  \\
+  0   & p_6 & p_5  \\
+  0   & 0   & p_6
+  \end{array} \right]
+\; \left[
+\begin{array}{c}
+  f_1 \\
+  f_2 \\
+  f_3 \end{array} \right]
+\ +\ 
+\left[
+\begin{array}{c}
+  m_1 \\
+  m_2 \\
+  m_3 \\
+  m_4 \\
+  m_5 \\
+  m_6 \\
+  m_7 \\
+  m_8
+  \end{array} \right]
+\label{eqn:findmult}
+\end{equation}
+
+%\par
+%To minimize $\bold r\T\bold r$,
+%we could use the conjugate-direction subroutine \texttt{cgmeth()} \vpageref{lst:cgmeth},
+%but we would remove its call to
+%the matrix multiply subroutine
+%and replace it by a convolution subroutine
+%with boundary conditions of our choice.
+%%}% end HIDE
+
+
+\section{TIME-SERIES AUTOREGRESSION}
+Given $y_t$ and $y_{t-1}$, you might like to predict $y_{t+1}$.
+Earliest application of the ideas in this chapter
+came in the predictions of markets.
+Prediction of a signal from its past is called ``\bx{autoregression}'',
+because a signal is regressed on itself ``auto''.
+To find the scale factors you would optimize the fitting goal below,
+for the \bx{prediction filter} $(f_1,f_2)$:
+\sx{filter ! prediction}
+\begin{equation}
+\bold 0
+\quad \approx \quad
+\bold r \eq
+\left[ 
+\begin{array}{ccc}
+  y_1 & y_0 \\
+  y_2 & y_1  \\
+  y_3 & y_2  \\
+  y_4 & y_3  \\
+  y_5 & y_4  \end{array} \right] 
+\; \left[ 
+\begin{array}{c}
+  f_1 \\ 
+  f_2 \end{array} \right]
+\ -\ 
+\left[ 
+\begin{array}{c}
+  y_2 \\ 
+  y_3 \\ 
+  y_4 \\ 
+  y_5 \\ 
+  y_6 \end{array} \right] 
+  \label{eqn:simplepe}
+\end{equation}
+(In practice, of course the system of equations would be
+much taller, and perhaps somewhat wider.)
+A typical row in the matrix (\ref{eqn:simplepe})
+says that $y_{t+1} \approx y_t f_1 + y_{t-1} f_2$
+hence the description of $f$ as a ``prediction'' filter.
+The error in the prediction is simply the residual.
+Define the residual to have opposite polarity
+and merge the column vector into the matrix, so you get
+\begin{equation}
+\left[ 
+\begin{array}{c}
+  0 \\ 
+  0 \\ 
+  0 \\ 
+  0 \\ 
+  0 \end{array} \right] 
+\quad \approx \quad
+\bold r \eq
+\left[ 
+\begin{array}{ccc}
+  y_2 & y_1 & y_0 \\
+  y_3 & y_2 & y_1  \\
+  y_4 & y_3 & y_2  \\
+  y_5 & y_4 & y_3  \\
+  y_6 & y_5 & y_4  \end{array} \right] 
+\; \left[ 
+\begin{array}{c}
+  1 \\ 
+  -f_1 \\ 
+  -f_2 \end{array} \right]
+  \label{eqn:simplepef}
+\end{equation}
+which is a standard form for autoregressions and prediction error.
+\par
+\bxbx{Multiple reflections}{multiple reflection}
+are predictable.
+It is the unpredictable part of a signal,
+the prediction residual,
+that contains the primary information.
+The output of the filter
+$(1,-f_1, -f_2) = (a_0, a_1, a_2)$
+is the unpredictable part of the input.
+This filter is a simple example of
+a ``prediction-error'' (PE) filter.
+\sx{prediction-error filter}
+\sx{filter ! prediction-error}
+It is one member of a family of filters called ``error filters.''
+\par
+The error-filter family are filters with one coefficient constrained
+to be unity and various other coefficients constrained to be zero.
+Otherwise, the filter coefficients are chosen to have minimum power output.
+Names for various error filters follow:
+
+\begin{tabular}{ll}
+  $(1, a_1,a_2,a_3, \cdots ,a_n)$  &
+  \bxbx{prediction-error (PE) filter}{prediction-error filter}    \\
+  $(1, 0, 0, a_3,a_4,\cdots ,a_n)$ &
+  gapped PE filter with a gap \\
+  $(a_{-m}, \cdots, a_{-2}, a_{-1}, 1, a_1, a_2, a_3, \cdots ,a_n)$ &
+  \bxbx{interpolation-error (IE) filter}{interpolation-error filter}
+\end{tabular}
+\sx{filter ! prediction-error}
+\sx{filter ! interpolation-error}
+
+\par
+%\begin{notforlecture}
+We introduce a
+\bx{free-mask matrix} $\bold K$
+which ``passes'' the freely variable coefficients in the filter
+and ``rejects'' the constrained coefficients
+(which in this first example is merely the first coefficient $a_0=1$).
+\begin{equation}
+\bold K \eq
+\left[
+\begin{array}{cccccc}
+  0   & .   & .    \\
+  .   & 1   & .    \\
+  .   & .   & 1    
+  \end{array} \right]
+\label{eqn:pefconstraint}
+\end{equation}
+\par
+To compute a simple prediction error filter $\bold a =(1, a_1, a_2)$
+with the CD method,
+we write
+(\ref{eqn:simplepe}) or
+(\ref{eqn:simplepef}) as
+\begin{equation}
+\bold 0
+\quad \approx \quad
+\bold r \eq
+\left[ 
+\begin{array}{ccc}
+  y_2 & y_1 & y_0 \\
+  y_3 & y_2 & y_1  \\
+  y_4 & y_3 & y_2  \\
+  y_5 & y_4 & y_3  \\
+  y_6 & y_5 & y_4  \end{array} \right] 
+\;
+\left[ 
+\begin{array}{ccc}
+    0   & \cdot & \cdot \\
+  \cdot &   1   & \cdot \\
+  \cdot & \cdot &   1   
+  \end{array} \right] 
+\;
+\left[ 
+\begin{array}{c}
+  1 \\ 
+  a_1 \\ 
+  a_2 \end{array} \right]
+  \ +\ 
+\left[ 
+\begin{array}{c}
+  y_2 \\ 
+  y_3 \\ 
+  y_4 \\ 
+  y_5 \\ 
+  y_6 \end{array} \right] 
+  \label{eqn:stdpef}
+\end{equation}
+Let us move from this specific fitting goal to the general case.
+(Notice the similarity of the free-mask matrix $\bold K$
+in this filter estimation application with the
+free-mask matrix $\bold J$ in missing data goal (\ref{eqn:migraine}).)
+The fitting goal is,
+\begin{eqnarray}
+\bold 0  &\approx & \bold Y                          \bold a            \\
+\bold 0  &\approx & \bold Y(\bold I-\bold K+\bold K) \bold a            \\
+\bold 0  &\approx & \bold Y\bold K\bold a +\bold Y(\bold I-\bold K)\bold a \\
+\bold 0  &\approx & \bold Y\bold K\bold a +\bold Y \bold a_0 \\
+\bold 0  &\approx & \bold Y\bold K\bold a +\bold y           \\
+                                        \bold 0  \quad\approx\quad
+\bold r  &=       & \bold Y\bold K\bold a +\bold r_0
+\label{eqn:pefregression}
+\end{eqnarray}
+which means we initialize the residual with
+$ \bold r_0 = \bold y$.
+and then iterate with
+\begin{eqnarray}
+\Delta \bold a    &\longleftarrow& \bold K\T \bold Y\T\        \bold r \\
+\Delta \bold r    &\longleftarrow& \bold Y  \bold K \ \Delta \bold a 
+\end{eqnarray}
+
+%Bringing this all together gives us subroutine \texttt{gdecon()}.
+%\moddex{gdecon}{gapped decon filt}
+
+%\end{notforlecture}
+
+\section{PREDICTION-ERROR FILTER OUTPUT IS WHITE}
+In Chapter \ref{paper:prc} we learned that least squares residuals
+should be IID (Independent, Identically Distributed)
+which in practical terms means in both Fourier space and physical
+space they should have a uniform variance.
+Further, not only should residuals have the IID property,
+but we should choose a preconditioning transformation
+so that our unknowns have the same IID nature.
+It is easy enough to achieve flattening in physical space
+by means of weighting functions.
+Here we see that Prediction-error filters (PEFs) enable
+us to flatten in fourier space.
+\par
+	\boxit{
+	PEFs transform signals and images to whiteness.
+	Residuals and preconditioned models should be white.
+	}
+
+
+\subsubsection{The relationship between spectrum and PEF}
+Knowledge of an autocorrelation function
+is equivalent to knowledge of a spectrum.
+The two are simply related by Fourier transform.
+A spectrum or an autocorrelation function encapsulates
+an important characteristic of a signal or an image.
+Generally the spectrum changes slowly from place to place
+although it could change rapidly.
+Of all the assumptions we could make to fill empty bins,
+one that people usually find easiest to agree with is that
+the spectrum should be the same
+in the empty-bin regions as where bins are filled.
+In practice we deal with neither the spectrum
+nor its autocorrelation but with a third object.
+This third object is the Prediction Error Filter (PEF),
+the filter in equation (\ref{eqn:simplepef}).
+
+\par
+Take equation  (\ref{eqn:simplepef}) for $\bold r$ and multiply it
+by the adjoint $\bold r\T$ getting a quadratic form in the PEF
+coefficients.  Minimizing this quadratic form determines the PEF.
+This quadratic form depends only on the autocorrelation
+of the original data $y_t$, not on the data $y_t$ itself.
+Clearly the PEF is unchanged if the data has its polarity reversed
+or its time axis reversed.
+Indeed, we'll see here that knowledge of the PEF
+is equivalent to knowledge of the autocorrelation or the spectrum.
+
+
+\subsubsection{Undoing convolution in nature}
+\inputdir{XFig}
+Prediction-error filtering is called
+``\bx{blind deconvolution}''.
+In the exploration industry it is simply called ``\bx{deconvolution}''.
+This word goes back to very basic models and concepts.
+In this model one envisions
+a random white-spectrum excitation function $\bold x$
+existing in nature, and this excitation function
+is somehow filtered by unknown natural processes,
+with a filter operator $\bold B$
+producing an {\it output} $\bold y$ in nature
+that becomes the {\it input} $\bold y$
+to our computer programs.
+This is sketched in Figure \ref{fig:systems}.
+\sideplot{systems}{width=3in,height=1in}{
+  Flow of information from nature,
+  to observation, into computer.
+}
+Then we design a prediction-error filter $\bold A$ on $\bold y$,
+which yields a white-spectrum residual $\bold r$.
+Because $\bold r$ and $\bold x$ theoretically have the same spectrum,
+the tantalizing prospect is that maybe $\bold r$ equals $\bold x$,
+meaning that the PEF $\bold A$ has {\it deconvolved}
+the unknown convolution $\bold B$.
+
+\subsubsection{Causal with causal inverse}
+Theoretically, a PEF is a causal filter with a causal inverse.
+This adds confidence to the likelihood that deconvolution
+of natural processes with a PEF might get the correct phase spectrum
+as well as the correct amplitude spectrum.
+Naturally, the PEF does not give the correct phase to an ``all-pass'' filter.
+That is a filter with a phase shift but a constant amplitude spectrum.
+(I think most migration operators are in this category.)
+
+\par
+Theoretically we should be able to use a PEF
+in either convolution or polynomial division.
+There are some dangers though,
+mainly connected with dealing with data in small windows.
+Truncation phenomena might give us PEF estimates
+that are causal, but whose inverse is not,
+so they cannot be used in polynomial division.
+This is a lengthy topic in the classic literature.
+This old, fascinating subject is examined in my books, FGDP and PVI.
+A classic solution is one by John Parker Burg.
+We should revisit the Burg method in light of the helix.
+
+\subsubsection{PEF output tends to whiteness}
+The most important property of a \bx{prediction-error filter}
+or \bx{PEF} is that
+its output tends to a \bx{white spectrum} (to be proven here).
+No matter what the input to this filter,
+its output tends to whiteness as the number of the coefficients
+$n \rightarrow \infty$ tends to infinity.
+Thus, the \bx{PE filter} adapts itself to the input
+by absorbing all its \bx{color}.
+This has important statistical implications and
+important geophysical implications.
+
+\subsubsection{Spectral estimation}
+\par
+The PEF's output being white leads to an important consequence:
+To specify a spectrum,
+we can give the spectrum (of an input) itself,
+give its autocorrelation,
+or give its PEF coefficients.
+Each is transformable to the other two.
+Indeed, an effective mechanism of spectral estimation,
+developed by John P.~\bx{Burg} and described
+in \bx{FGDP},
+is to compute a PE filter and look at the inverse of its spectrum.
+
+\subsubsection{Short windows}
+\par
+The power of a PE filter is that a short filter can often extinguish,
+and thereby represent, the information in a long resonant filter.
+If the input to the PE filter is a sinusoid,
+it is exactly predictable by a three-term recurrence relation,
+and all the color is absorbed by a three-term PE filter (see exercises).
+Burg's spectral estimation is especially effective in short windows.
+
+\subsubsection{Weathered layer resonance}
+\par
+That the output spectrum of a PE filter is \bx{white} is also
+useful geophysically.
+Imagine the reverberation of the \bx{soil} layer,
+highly variable from place to place,
+as the resonance between the surface and shallow
+more-consolidated soil layers
+varies rapidly with surface location
+because
+of geologically recent fluvial activity.
+The spectral \bx{color} of this erratic variation on surface-recorded
+seismograms is compensated for by a PE filter.
+Usually we do not want PE-filtered seismograms to be white,
+but once they all have the same spectrum,
+it is easy to postfilter them to any desired spectrum.
+
+
+
+
+
+\subsection{PEF whiteness proof in 1-D}
+\par
+\label{mda/'white_proof'}
+The basic idea of least-squares fitting
+is that the residual is orthogonal to the fitting functions.
+Applied to the PE filter, this idea means
+that the output of a PE filter is orthogonal to lagged inputs.
+The \bx{orthogonality} applies only for lags in the past,
+because prediction knows only the past while it aims to the future.
+What we want to show here is different,
+namely, that the output is uncorrelated with {\it itself}
+(as opposed to the input) for lags in {\it both} directions;
+hence the output spectrum is \bx{white}.
+
+\par
+In (\ref{eqn:tworegrs}) are two separate and independent autoregressions,
+$\bold 0\approx\bold Y_a\bold a$
+for finding the filter $\bold a$,
+and
+$\bold 0\approx\bold Y_b\bold b$
+for finding the filter $\bold b$.
+By noticing that the two matrices are really the same
+(except a row of zeros on the bottom of
+$\bold Y_a$
+is a row in the top of
+$\bold Y_b$)
+we realize that the two regressions must result in the same filters
+$\bold a =\bold b$,
+and the residual $\bold r_b$ is a shifted version of $\bold r_a$.
+In practice, I visualize the matrix being a thousand components tall
+(or a million)
+and a hundred components wide.
+\begin{equation}
+\bold 0
+\ \approx\ \bold r_a \ =\ 
+        \left[ 
+        \begin{array}{ccc}
+          y_1 & 0   & 0    \\
+          y_2 & y_1 & 0    \\
+          y_3 & y_2 & y_1  \\
+          y_4 & y_3 & y_2  \\
+          y_5 & y_4 & y_3  \\
+          y_6 & y_5 & y_4  \\
+          0   & y_6 & y_5  \\
+          0   & 0   & y_6  \\
+          0   & 0   & 0  
+          \end{array} \right] 
+        \; \left[ 
+        \begin{array}{c}
+          1   \\ 
+          a_1 \\ 
+          a_2 \end{array} \right]
+\ ; \quad\quad
+\bold 0
+\ \approx\ \bold r_b \ =\ 
+        \left[ 
+        \begin{array}{ccc}
+          0   & 0   & 0    \\
+          y_1 & 0   & 0    \\
+          y_2 & y_1 & 0    \\
+          y_3 & y_2 & y_1  \\
+          y_4 & y_3 & y_2  \\
+          y_5 & y_4 & y_3  \\
+          y_6 & y_5 & y_4  \\
+          0   & y_6 & y_5  \\
+          0   & 0   & y_6 
+          \end{array} \right] 
+        \; \left[ 
+        \begin{array}{c}
+          1   \\ 
+          b_1 \\ 
+          b_2 \end{array} \right]
+\label{eqn:tworegrs}
+\end{equation}
+When the energy $\bold r\T\bold r$
+of a residual has been minimized,
+the residual $\bold r$ is orthogonal to the fitting functions.
+For example, choosing $a_2$ to minimize
+$\bold r\T\bold r$
+gives
+$0=\partial\bold r\T\bold r/\partial a_2=2\bold r\T\partial\bold r/\partial a_2$.
+This shows that $\bold r\T$ is perpendicular to $\partial \bold r / \partial a_2$
+which is the rightmost column of the $\bold Y_a$ matrix.
+Thus the vector $\bold r_a$
+is orthogonal to all the columns in the $\bold Y_a$ matrix
+except the first (because we do not minimize with respect to $a_0$).
+
+\par
+Our goal is a different theorem that is imprecise when applied
+to the three coefficient filters displayed in (\ref{eqn:tworegrs}),
+but becomes valid as the filter length tends to infinity
+$\bold a = (1,a_1, a_2, a_3,\cdots)$
+and the matrices become infinitely wide.
+Actually, all we require is the last component in $\bold b$,
+namely $b_n$ tend to zero.
+This generally happens because as $n$ increases,
+$y_{t-n}$ becomes a weaker and weaker predictor of $y_t$.
+
+Here's a mathematical fact we soon need:
+For any vectors $\bold u$ and $\bold v$,
+if
+$\bold r\cdot\bold u=\bold 0$
+and
+$\bold r\cdot\bold v=\bold 0$,
+then
+$\bold r\cdot(\bold u + \bold v)=\bold 0$
+and
+$\bold r\cdot(6\bold u - 3\bold v)=\bold 0$
+and
+$\bold r\cdot(a_1\bold u + a_2\bold v)=\bold 0$
+for any
+$a_1$
+and
+$a_2$.
+\par
+The matrix $\bold Y_a$ contains
+all of the columns that are found in $\bold Y_b$
+except the last (and the last one is not important).
+This means that $\bold r_a$ is not only orthogonal to all
+of $\bold Y_a$'s columns (except the first)
+but $\bold r_a$ is also orthogonal to all of
+$\bold Y_b$'s columns except the last.
+Although $\bold r_a$ isn't really perpendicular to the last column
+of $\bold Y_b$, it doesn't matter because that column
+has hardly any contribution to $\bold r_b$
+since $|b_n|<<1$.
+Because $\bold r_a$ is (effectively)
+orthogonal to all the components of $\bold r_b$,
+$\bold r_a$ is also orthogonal to $\bold r_b$ itself.
+%(For any $\bold u$ and $\bold v$, if
+%$\bold r\cdot \bold u=0$ and
+%$\bold r\cdot \bold v=0$ then
+%$\bold r\cdot (\bold u+ \bold v)=0$ and also
+%$\bold r\cdot (a_1\bold u + a_2\bold v)=0$).
+\par
+Here is a detail:
+In choosing the example of equation (\ref{eqn:tworegrs}),
+I have shifted the two fitting problems by only one lag.
+We would like to shift by more lags and get the same result.
+For this we need more filter coefficients.
+By adding many more filter coefficients we are adding many more columns
+to the right side of $\bold Y_b$.
+That's good because we'll be needing to neglect more columns
+as we shift $\bold r_b$ further from $\bold r_a$.
+Neglecting these columns is commonly justified by the experience
+that ``after short range regressors have had their effect,
+long range regressors generally find little remaining to predict.''
+(Recall that the damped harmonic oscillator from physics,
+the finite difference equation that predicts the future from the past,
+uses only two lags.)
+
+\par
+Here is the main point:
+Since $\bold r_b$ and $\bold r_a$ both contain the same signal $\bold r$
+but time-shifted,
+the orthogonality at all shifts means that the autocorrelation
+of $\bold r$
+vanishes at all lags.
+An exception, of course, is at zero lag.
+The autocorrelation does not vanish there
+because $\bold r_a$ is not orthogonal to its first column
+(because we did not minimize with respect to $a_0$).
+\par
+As we redraw
+$\bold 0\approx\bold r_b =\bold Y_b\bold b$
+for various lags,
+we may shift the columns only downward
+because shifting them upward would bring in the first column
+of $\bold Y_a$ and the residual $\bold r_a$ is not orthogonal to that.
+Thus we have only proven that
+one side of the autocorrelation of $\bold r$ vanishes.
+That is enough however, because autocorrelation functions
+are symmetric, so if one side vanishes, the other must also.
+\par
+If $\bold a$ and $\bold b$ were two-sided
+filters like $(\cdots ,b_{-2}, b_{-1}, 1, b_1, b_2, \cdots)$
+the proof would break.
+If $\bold b$ were two-sided, $\bold Y_b$ would catch the 
+nonorthogonal column of $\bold Y_a$.
+Not only is $\bold r_a$ not proven to be perpendicular
+to the first column of $\bold Y_a$,
+but it cannot be orthogonal to it
+because a signal cannot be orthogonal to itself.
+\par
+The implications of this theorem are far reaching.
+The residual $\bold r$,
+a convolution of $\bold y$
+with $\bold a$ has an
+autocorrelation that is an impulse function.
+The Fourier transform of an impulse is a constant.
+Thus the spectrum of the residual is ``white''.
+Thus $\bold y$ and $\bold a$ have mutually inverse spectra.
+\par
+\boxit{ Since the output of a PEF is white,
+	the PEF itself has a spectrum inverse to its input.
+	}
+
+\par
+An important application of the PEF
+is in missing data interpolation.
+We'll see examples later in this chapter.
+My third book,
+PVI\footnote{
+	\url{http://sepwww.stanford.edu/sep/prof/pvi/toc_html/index.html}
+	}
+has many
+examples\footnote{
+	\url{http://sepwww.stanford.edu/sep/prof/pvi/tsa/paper_html/node1.html}
+	}
+in one dimension with both synthetic data and field data
+including the \texttt{gap} parameter.
+Here we next extend these ideas to two (or more) dimensions.
+
+
+
+\subsection{Simple dip filters}
+\sx{filter ! multidimensional}
+\sx{convolution ! two-dimensional}
+Convolution in two dimensions is just like convolution
+in one dimension except that convolution is done on two axes.
+The input and output data are planes of numbers
+and the filter is also a plane.
+A two-dimensional filter \sx{filter ! two-dimensional} is
+a small plane of numbers that
+is convolved over a big data plane of numbers.
+\par
+Suppose the data set is a collection of seismograms
+uniformly sampled in space.
+In other words, the data is numbers in a $(t,x)$-plane.
+For example, the following filter
+destroys any wavefront
+aligned along the direction of a line containing both the ``+1''
+and the ``$-1$''.
+\begin{equation}
+   \begin{array}{cc}
+        -1     &\cdot  \\
+        \cdot  &\cdot  \\
+        \cdot  &1      \end{array}
+\label{eqn:leftwave}
+\end{equation}
+The next filter destroys a wave with a slope
+in the opposite direction:
+\begin{equation}
+   \begin{array}{cc}
+        \cdot  &1     \\
+        -1     &\cdot  \end{array}
+\label{eqn:ritewave}
+\end{equation}
+To convolve the above two filters,
+we can reverse either on (on both axes) and correlate them,
+so that you can get
+\begin{equation}
+        \begin{array}{ccc}
+              \cdot &  -1  &\cdot      \\
+                 1  &\cdot &\cdot      \\
+              \cdot &\cdot &  1        \\
+              \cdot &  -1  &\cdot      \end{array}
+\label{eqn:twowave}
+\end{equation}
+which destroys waves of both slopes.
+\par
+A \bx{two-dimensional filter}
+\sx{filter ! two-dimensional}
+that can be a \bx{dip-rejection filter} like (\ref{eqn:leftwave}) or (\ref{eqn:ritewave}) is
+\sx{filter ! dip-rejection}
+\begin{equation}
+   \begin{array}{cc}
+        a & \cdot  \\
+        b & \cdot  \\
+        c &   1    \\
+        d & \cdot  \\
+        e & \cdot
+        \end{array}
+%       a     &b     &c    &d     &e        \\
+%       \cdot &\cdot &1    &\cdot &\cdot
+\label{eqn:onedip}
+\end{equation}
+where the coefficients
+$(a,b,c,d,e)$
+are to be estimated by least squares in order
+to minimize the power out of the filter.
+(In the filter table,
+the time axis runs vertically.)
+\par
+Fitting the filter to two neighboring traces
+that are identical but for a time shift, we see that
+the filter coefficients $(a,b,c,d,e)$ should turn out to be
+something like $(-1,0,0,0,0)$ or
+$(0,0,-.5,-.5, 0)$,
+depending on the dip (stepout) of the data.
+But if the two channels are not fully coherent, we expect to see
+something like
+$(-.9,0,0,0,0)$ or
+$(0,0,-.4,-.4,0)$.
+To find filters such as (\ref{eqn:twowave}),
+we adjust coefficients to minimize the power out
+of filter shapes, as in
+\begin{equation}
+        \begin{array}{ccccc}
+                v  & a & \cdot \\
+                w  & b & \cdot \\
+                x  & c &   1    \\
+                y  & d & \cdot \\
+                z  & e & \cdot 
+%                v  &  w   &   x  &   y  &   z      \\
+%                a  &  b   &   c  &   d  &   e     \\
+%             \cdot &\cdot &   1  &\cdot &\cdot
+        \end{array}
+\end{equation}
+\par
+With 1-dimensional filters,
+we think mainly of power spectra,
+and with 2-dimensional filters
+we can think of temporal spectra and spatial spectra.
+What is new, however,
+is that in two dimensions we can think of dip spectra
+(which is when a 2-dimensional spectrum has a particularly common form,
+namely when energy organizes on radial lines in the $(\omega,k_x)$-plane).
+% A line of energy in the $(\omega,k_x)$-plane
+% when seen as a function of $\omega$ for a fixed $k_x$ is an impulse.
+% Fourier transforming $k_x$ to $x$ and then at fixed $x$
+% at a function of $\omega$ we do not see sinusoids.
+As a short (three-term) 1-dimensional filter can devour a sinusoid,
+we have seen that simple 2-dimensional filters can devour
+a small number of dips.
+
+\subsection{PEF whiteness proof in 2-D}
+\inputdir{whitepruf}
+\par
+\sx{whiteness ! multidimensional}
+A well-known property (see FGDP or PVI)
+of a 1-D PEF is that its energy clusters immediately after the
+impulse at zero delay time.
+Applying this idea to
+the helix in Figure %\CHAPFIG{hlx}{sergey-helix}
+shows us that we can consider a 2-D PEF
+to be a small halfplane % like
+%\CHAPEQN{hlx}{2dpef}
+with an impulse along a side.
+These shapes are what we see here in
+Figure~\ref{fig:whitepruf}.
+
+\sideplot{whitepruf}{height=2.0in}{
+  A 2-D whitening filter template, and itself lagged.
+  At output locations ``A'' and ``B,'' the filter coefficient
+  is constrained to be ``1''.
+  When the semicircles are viewed as having infinite radius,
+  the B filter is contained in the A filter.
+  Because the output at A is orthogonal to all its inputs,
+  which include all inputs of B,
+  the output at A is orthogonal to the output of B.
+}
+
+\par
+Figure~\ref{fig:whitepruf} shows the input plane with a 2-D filter on top
+of it at two possible locations.
+The filter shape is a semidisk,
+which you should imagine being of
+infinitely large radius.
+Notice that semidisk A includes all the points in B.
+The output of disk A will be shown to be orthogonal to the output
+of disk B.
+Conventional least squares theory says that the coefficients of the filter
+are designed so that the output of the filter
+is orthogonal to each of the inputs to that filter
+(except for the input under the ``1,''
+because any nonzero signal cannot be orthogonal to itself).
+Recall that if a given signal is orthogonal to each in a given group of signals,
+then the given signal is orthogonal
+to all linear combinations within that group.
+The output at B is a linear combination of members
+of its input group,
+which is included in the input group of A,
+which are already orthogonal to A.
+Therefore the output at B is orthogonal to the output at A.
+In summary,
+\par            % don't remove this line
+\begin{tabular}{lll}
+residual     & $\perp$ &  fitting function \\
+output at A  & $\perp$ &  each input to A \\
+output at A  & $\perp$ &  each input to B \\
+output at A  & $\perp$ &  linear combination of each input to B \\
+output at A  & $\perp$ &  output at B
+\end{tabular}
+\par            % don't remove this line
+\noindent
+The essential meaning is that
+a particular lag of the output \bx{autocorrelation} function vanishes.
+
+\par
+Study Figure~\ref{fig:whitepruf} to see for what lags
+all the elements of the B filter are wholly contained in the A filter.
+These are the lags
+where we have shown the output autocorrelation to be vanishing.
+Notice another set of lags where we have proven nothing
+(where B is moved to the right of A).
+Autocorrelations are centrosymmetric,
+which means that the value at any lag
+is the same as the value at the negative of that lag,
+even in 2-D and 3-D where the lag is a vector quantity.
+Above we have shown that a halfplane of autocorrelation values vanishes.
+By the centrosymmetry, the other half must vanish too.
+Thus the autocorrelation of the PEF output is an impulse function,
+so its 2-D spectrum is white.
+\sx{white 2-D spectrum}
+\sx{spectrum ! white 2-D}
+
+\par
+The helix tells us why the proper filter form
+is not a square with the ``1'' on the corner.
+Before I discovered the helix, I understood it another way
+(that I learned from John P. Burg):
+For a spectrum to be white,
+{\it all}
+nonzero autocorrelation lags must be zero-valued.
+If the filter were a quarter-plane,
+then the symmetry of autocorrelations
+would only give us vanishing in another quarter,
+so there would be two remaining quarter-planes
+where the autocorrelation was not zero.
+
+\par
+Fundamentally,
+the white-output theorem requires a
+one-dimensional ordering to the values in a plane or volume.
+The filter must contain a halfplane of values
+so that symmetry gives the other half.
+
+\par
+You will notice some nonuniqueness.
+We could embed the helix
+with a $90^\circ$ rotation
+in the original physical application.
+Besides the difference in side boundaries,
+the 2-D PEF would have a different orientation.
+Both PEFs should have an output that tends to whiteness as
+the filter is enlarged.
+It seems that we could design whitening autoregression filters
+for $45^\circ$ rotations also,
+and we could also design them for hexagonal coordinate systems.
+In some physical applications,
+you might find the nonuniqueness unsettling.
+Does it mean the ``final solution'' is nonunique?
+Usually not, or not seriously so.
+Recall even in one dimension, the time reverse of a PEF
+has the same spectrum as the original PEF.
+When a PEF is used for regularizing a fitting application,
+it is worth noticing that the quadratic form minimized
+is the PEF times its adjoint so the phase drops out.
+Likewise, a missing data restoration also amounts to minimizing
+a quadratic form so the phase again drops out.
+
+\section{Basic blind deconvolution}
+Here are the basic definitions of blind deconvolution:
+If a model $m_t$ (with FT $M$) is made of random numbers
+and convolved with a ``source waveform'' (having FT) $F^{-1}$
+it creates data $D$.  From data $D$ you find the model $M$
+by $M=FD$.   Trouble is, you typically do not know $F$ and need to estimate (guess) it
+hence the word ``blind.''
+\par
+Suppose we have many observations or many channels of $D$ so we label them $D_j$.
+We can define a model $M_j$ as
+\begin{eqnarray}
+M_j &=& \frac{D_j}{ \sqrt{\sum_j D^\ast D}}
+\end{eqnarray}
+so blind deconvolution removes the average spectrum.
+\par
+Sometimes we have only a single signal $D$ but it is quite long.
+Because the signal is long, the magnitude of its Fourier transform is rough,
+so we smooth it over frequency, and denote it thus:
+\begin{eqnarray}
+M &=& \frac{D}{ \sqrt{\ll D^\ast D\gg}}
+\end{eqnarray}
+Smoothing the spectrum makes the time function shorter.
+Indeed, the amount of smoothing may be chosen by the amount of shortness wanted.
+\par
+These preliminary models are the most primative forms of deconvolved data.
+They deal only with the amplitude spectrum.
+Most deconvolutions involve also the phase.
+The generally chosen phase is one with a causal filter.
+A casual filter $f_t$ (vanishes before $t=0$)
+with FT $F$ is chosen so that $M=FD$ is white.
+Finding this filter is a serious undertaking,
+normally done in a one-dimensional space.
+Here, taking advantage of the helix, we do it in space of any number of dimensions.
+
+\par
+For reasons explained later,
+this is equivalent to minimizing the energy output of a filter beginning with a one, $(1,f_1,f_2,f_3,\cdots)$.
+The inverse of this filter $1/F$ is often called ``the impulse response'', or ``the source waveform''.
+Whether it actually is a source waveform depends
+on the physical setup as well as some mathematical assumptions we will learn.
+
+
+\subsection{Examples of modeling and deconvolving with a 2-D PEF }
+\inputdir{morgan}
+Here we examine elementary signal-processing applications of
+2-D prediction-error filters (PEFs)
+on both everyday 2-D textures and on seismic data.
+Some of these textures are easily modeled with
+prediction-error filters (PEFs) while others are not.
+All figures used the same $10\times 10$ filter shape.
+No attempt was made to optimize filter size
+or shape or any other parameters.
+
+\par
+Results in Figures
+\ref{fig:granite}-\ref{fig:WGstack}
+are shown with various familiar textures\footnote{
+	I thank Morgan Brown for finding these textures.
+	}
+on the left
+as training data sets.
+From these training data sets,
+a prediction-error filter (PEF) is estimated
+using module \texttt{pef} \vpageref{lst:pef}.
+The center frame is simulated data made by deconvolving
+(polynomial division) random numbers by the estimated PEF.
+The right frame is the more familiar process,
+convolving the estimated PEF on the training data set.
+
+\plot{granite}{width=6.0in,height=1.75in}{
+  Synthetic granite matches the training image quite well.
+  The prediction error (PE) is large at grain boundaries
+  so it almost seems to outline the grains.
+  % The PE might be more interesting if I plotted its absolute value.
+}
+
+\par
+Theoretically, the right frame tends towards a white spectrum.
+Earlier you could notice
+the filter size by knowing that the output
+was taken to be zero where the filter is only partially on the data.
+This was annoying on real data where we didn't want to throw
+away any data around the sides.
+Now the filtering is done without a call to the boundary module
+so we have typical helix wraparound.
+
+\plot{wood}{width=6.0in,height=1.75in}{
+  Synthetic wood grain has too little white.
+  This is because of the nonsymmetric brightness histogram of natural wood.
+  Again, the PEF output looks random as expected.
+}
+
+\plot{herr}{width=6.0in,height=1.75in}{
+  A banker's suit (left).  A student's suit (center).  My suit (right).
+  The prediction error is large where the weave changes direction.
+}
+
+\plot{fabric}{width=6.0in,height=1.70in}{
+  Basket weave.
+  The simulated data fails to segregate the two dips into a checkerboard pattern.
+  The PEF output looks structured perhaps because the filter is too small.
+}
+
+\plot{brick}{width=6.0in,height=1.70in}{
+  Brick.
+  Synthetic brick edges are everywhere
+  and do not enclose blocks containing a fixed color.
+  PEF output highlights the mortar.
+}
+
+\plot{ridges}{width=6.0in,height=1.70in}{
+  Ridges.
+  A spectacular failure of the stationarity assumption.
+  All dips are present but in different locations.
+  Never-the-less,
+  the ridges have been sharpened by the deconvolution.
+}
+
+\plot{WGstack}{width=6.0in,height=3.5in}{
+  Gulf of Mexico seismic section, modeled, and deconvolved.
+  Do you see any drilling prospects in the simulated data?
+  In the deconvolution, the strong horizontal layering
+  is suppressed giving a better view of the hyperbolas.
+  The decon filter is the same $10\times 10$ used on the everyday textures.
+}
+
+
+\par
+Since a PEF tends to the inverse of the spectrum of its input,
+results similar to these could probably be found
+using Fourier transforms, smoothing spectra, etc.
+We used PEFs because of their flexibility.
+The filters can be any shape.
+They can dodge around missing data, or we can use them
+to estimate missing data.
+We avoid periodic boundary assumptions inherent to FT.
+The PEF's are designed only internal to known data, not off edges
+so they are readily adaptable to nonstationarity.
+Thinking of these textures as seismic time slices,
+the textures could easily be required to pass thru specific
+values at well locations.  
+
+
+
+\subsection{Seismic field data examples}
+\inputdir{pefex}
+\par
+Figures~\ref{fig:specdecon}-\ref{fig:zof}
+are based on exploration seismic data from the Gulf of Mexico deep water.
+A ship carries an air gun and tows a streamer with some hundreds of geophones.
+First we look at a single pop of the gun.
+We use all the hydrophone signals to create a single 1-D PEF for the time axis.
+This changes the average temporal frequency spectrum
+as shown in Figure~\ref{fig:specdecon}.
+\plot{specdecon}{width=6in,height=2in}{
+  $\omega$ spectrum of a shot gather
+  of Figure~\ref{fig:decon0}
+  before and after 1-D decon
+  with a 30 point filter.
+}
+Signals from 60 Hz to 120 Hz are boosted substantially.
+The raw data has evidently been prepared
+with strong filtering against signals below about 8 Hz.
+The PEF attempts to recover these signals, mostly unsuccessfully,
+but it does boost some energy near the 8 Hz cutoff.
+Choosing a longer filter would flatten the spectrum further.
+The big question is, ``Has the PEF improved the appearance of the data?''
+
+\par
+The data itself from the single pop,
+both before and after PE-filtering is shown in
+Figure~\ref{fig:decon0}.
+For reasons of aesthetics of human perception
+I have chosen to display a mirror image of the PEF'ed data.
+To see a blink movie of superposition of
+before-and-after images you need the electronic book.
+We notice that signals of high temporal frequencies
+indeed have the expected hyperbolic behavior in space.
+Thus, these high-frequency signals are wavefields, not mere random noise.
+
+\plot{decon0}{width=6in,height=8.4in}{
+  Raw data with its mirror.
+  Mirror had 1-D PEF applied, 30 point filter.
+}
+
+\par
+Given that all visual (or audio) displays have a bounded range
+of amplitudes, increasing the frequency content (bandwidth)
+means that we will need to turn down the amplification
+so we do not wish to increase the bandwidth unless we are adding signal.
+
+\par
+\boxit{Increasing the spectral bandwidth
+	always requires us to diminish the gain.}
+
+\par
+The same ideas but with a two-dimensional PEF are in
+Figure~\ref{fig:decon1} (the same data but with more of
+it squeezed onto the page.)
+As usual,
+the raw data is dominated by events arriving later at greater distances.
+After the PEF, we tend to see equal energy in dips in all directions.
+We have strongly enhanced the ``backscattered'' energy,
+those events that arrive later at {\it shorter} distances.
+\plot{decon1}{width=6in,height=8.4in}{
+  A 2-D filter (here $20\times 5$) brings out the backscattered energy.
+}
+
+\par
+Figure~\ref{fig:zof} shows
+echos from the all shots, the nearest receiver on each shot.
+This picture of the earth is called a ``near-trace section.''
+This earth picture shows us why there is so much backscattered energy in
+Figure~\ref{fig:decon1} (which is located at the left side of
+Figure~\ref{fig:zof}).
+The backscatter comes from any of the many of near-vertical faults.
+\par
+We have been thinking of the PEF as a tool
+for shaping the spectrum of a display.
+But does it have a physical meaning?
+What might it be?
+Referring back to the beginning of the chapter we are inclined to
+regard the PEF as the convolution of the source waveform with
+some kind of water-bottom response.
+In Figure~\ref{fig:decon1} we used many different shot-receiver
+separations.  Since each different separation has a different
+response (due to differing moveouts) the water bottom reverberation
+might average out to be roughly an impulse.
+Figure~\ref{fig:decon1} is a different story.
+Here for each shot location, the distance to the receiver is constant.
+Designing a single channel PEF we can expect the PEF to contain
+both the shot waveform and the water bottom layers because
+both are nearly identical in all the shots.
+We would rather have a PEF that represents only the shot waveform
+(and perhaps a radiation pattern).
+
+\plot{zof}{width=6in,height=8.4in}{
+  Raw data, near-trace section (top).
+  Filtered with a two-channel PEF (bottom).
+  The movie has other shaped filters.
+}
+
+\par
+Let us consider how we might work
+to push the water-bottom reverberation out of the PEF.
+This data is recorded in water 600 meters deep.
+A consequence is that the sea bottom is made of fine-grained sediments
+that settled very slowly and rather similarly from place to place.
+In shallow water the situation is different.
+The sands near estuaries are always shifting.
+Sedimentary layers thicken and thin.
+They are said to ``on-lap and off-lap.''
+Here I do notice where the water bottom is sloped
+the layers do thin a little.
+To push the water bottom layers out of the PEF
+our idea is to base its calculation not on the raw data,
+but on the spatial prediction error of the raw data.
+On a perfectly layered earth
+a perfect spatial prediction error filter would zero all traces
+but the first one.
+Since a 2-D PEF includes spatial prediction as well as temporal
+prediction, we can expect it to contain much less of the sea-floor
+layers than the 1-D PEF.
+If you have access to the electronic book, you can blink
+the figure back and forth with various filter shapes.
+
+
+
+
+
+\section{PEF ESTIMATION WITH MISSING DATA}
+\par
+If we are not careful,
+our calculation of the PEF
+%, \texttt{gdecon()} \vpageref{lst:gdecon} and \texttt{rnpef1()},
+could have the pitfall that it would try to use the missing
+data to find the PEF, and hence it would get the wrong PEF.
+To avoid this pitfall,
+imagine a PEF finder that uses weighted least squares
+where the weighting function vanishes on
+those fitting equations that involve missing data.
+The weighting would be unity elsewhere.
+Instead of weighting bad results by zero,
+we simply will not compute them.
+The residual there will be initialized to zero and
+never changed.
+Likewise for the adjoint,
+these components of the residual will never contribute to a gradient.
+So now we need a convolution program that
+produces no outputs where missing inputs would spoil it.
+
+\par
+Recall there are two ways of writing convolution,
+equation (\ref{eqn:contran1})
+when we are interested in finding the filter
+{\em inputs}, and
+equation (\ref{eqn:contran2})
+when we are interested in finding the
+{\em filter itself}.
+We have already coded
+equation (\ref{eqn:contran1}),
+operator
+\texttt{helicon} \vpageref{lst:helicon}.
+That operator was useful in missing data applications.
+Now we want to find a prediction-error filter
+so we need the other case,
+equation (\ref{eqn:contran2}),
+and we need to ignore the outputs
+that will be broken because of missing inputs.
+The operator module
+\texttt{hconest} does the job.
+
+\opdex{hconest}{helix convolution, adjoint is the filter}{44}{53}{user/gee}
+
+%\par
+%Now identify the broken regression equations,
+%those that use missing data.
+%Suppose that $y_2$ and $y_3$ were missing
+%or bad data values in the fitting goal (\ref{eqn:exmiss}).
+%That would spoil the
+%2nd, 3rd, 4th, and 5th fitting equations.
+%Thus we would want to be sure that
+%$w_2$, $w_3$, $w_4$ and $w_5$ were zero.
+%(We'd still be left enough equations to find $(a_2,a_3)$.)
+
+\par
+
+%\begin{equation}
+%\bold 0
+%\ \approx\ \bold W \bold r \ =\ 
+%\left[
+%        \begin{array}{cccccccc}
+%          w_1& . & . & . & . & . & . & .  \\
+%           . &w_2& . & . & . & . & . & .  \\
+%           . & . &w_3& . & . & . & . & .  \\
+%           . & . & . &w_4& . & . & . & .  \\
+%           . & . & . & . &w_5& . & . & .  \\
+%           . & . & . & . & . &w_6& . & .  \\
+%           . & . & . & . & . & . &w_7& .  \\
+%           . & . & . & . & . & . & . &w_8
+%          \end{array}
+%\right]
+%        \left[ 
+%        \begin{array}{ccc}
+%          y_1 & 0   & 0    \\
+%          y_2 & y_1 & 0    \\
+%          y_3 & y_2 & y_1  \\
+%          y_4 & y_3 & y_2  \\
+%          y_5 & y_4 & y_3  \\
+%          y_6 & y_5 & y_4  \\
+%          0   & y_6 & y_5  \\
+%          0   & 0   & y_6
+%          \end{array} \right] 
+%        \; \left[ 
+%        \begin{array}{c}
+%          1   \\ 
+%          a_1 \\ 
+%          a_2 \end{array} \right]
+%%\right)
+%\label{eqn:exmiss}
+%\end{equation}
+%
+%What algorithm will enable us to identify the regression equations
+%that have become defective, now that $y_2$ and $y_3$ are missing?
+%Examine this calculation:
+%\begin{equation}
+%\left[
+%        \begin{array}{c}
+%          m_1 \\
+%          m_2 \\
+%          m_3 \\
+%          m_4 \\
+%          m_5 \\
+%          m_6 \\
+%          m_7 \\
+%          m_8 
+%          \end{array}
+%
+%\right]
+%\eq
+%\left[
+%        \begin{array}{c}
+%          0 \\
+%          1 \\
+%          2 \\
+%          2 \\
+%          1 \\
+%          0 \\
+%          0 \\
+%          0 
+%          \end{array}
+%\right]
+%\eq
+%        \left[ 
+%        \begin{array}{ccc}
+%          0   & 0   & 0    \\
+%          1   & 0   & 0    \\
+%          1   & 1   & 0    \\
+%          0   & 1   & 1    \\
+%          0   & 0   & 1    \\
+%          0   & 0   & 0    \\
+%          0   & 0   & 0    \\
+%          0   & 0   & 0  
+%          \end{array} \right] 
+%        \; \left[ 
+%        \begin{array}{c}
+%          1   \\ 
+%          1 \\ 
+%          1 \end{array} \right]
+%%\right)
+%\label{eqn:twomissing}
+%\end{equation}
+%The value of $m_i$ tells us how many inputs are missing
+%from the calculation of the residual $r_i$.
+%Where none are missing, we want unit weights $w_i=1$.
+%Where any are missing, we want zero weights $w_i=0$.
+%
+%\par
+%From this example we recognize a general method
+%for identifying defective regression equations
+%and weighting them by zero:
+%Prepare a vector like $\bold y$ with ones where data is missing
+%and zeros where the data is known.
+%Prepare a vector like $\bold a$ where all values are ones.
+%These are the vectors we put in
+%equation (\ref{eqn:twomissing})
+%to find the $m_i$ and hence the needed weights $w_i$.
+%It is all done in module \texttt{misinput}.
+%%\vpageref{lst:misinput}.
+%\moddex{misinput}{mark bad regression equations}
+%
+
+\par
+We are seeking a prediction error filter $(1,a_1,a_2)$
+but some of the data is missing.
+The data is denoted $\bold y$ or $y_i$ above and $x_i$ below.
+Because some of the  $x_i$ are missing,
+some of the regression equations in (\ref{eqn:exmiss}) are worthless.
+When we figure out which are broken, we will put zero weights on those equations.
+
+
+\begin{equation}
+\bold 0
+ \approx\ \bold r = \bold W \bold X \bold a =
+\left[
+        \begin{array}{cccccccc}
+          w_1& . & . & . & . & . & . & .  \\
+           . &w_2& . & . & . & . & . & .  \\
+           . & . &w_3& . & . & . & . & .  \\
+           . & . & . &w_4& . & . & . & .  \\
+           . & . & . & . &w_5& . & . & .  \\
+           . & . & . & . & . &w_6& . & .  \\
+           . & . & . & . & . & . &w_7& .  \\
+           . & . & . & . & . & . & . &w_8
+          \end{array}
+\right]
+        \left[
+        \begin{array}{ccc}
+          x_1 & 0   & 0    \\
+          x_2 & x_1 & 0    \\
+          x_3 & x_2 & x_1  \\
+          x_4 & x_3 & x_2  \\
+          x_5 & x_4 & x_3  \\
+          x_6 & x_5 & x_4  \\
+          0   & x_6 & x_5  \\
+          0   & 0   & x_6
+          \end{array} \right]
+        \left[
+        \begin{array}{c}
+          1   \\
+          a_1 \\
+          a_2 \end{array} \right]
+\label{eqn:exmiss}
+\end{equation}
+
+\par
+Suppose that $x_2$ and $x_3$ were missing or known bad.
+That would spoil the 2nd, 3rd, 4th, and 5th fitting equations
+in (\ref{eqn:exmiss}).
+In principle, we want $w_2$, $w_3$, $w_4$ and $w_5$ to be zero.
+In practice, we simply want those components of $\bold r$ to be zero.
+
+\par
+What algorithm will enable us to identify the regression equations
+that have become defective, now that $x_2$ and $x_3$ are missing?
+Take filter coefficients $(a_0, a_1, a_2,\ldots)$ to be all ones.
+Let $\bold d_{\rm free}$ be a vector like $\bold x$ but containing 1's for
+the missing (or ``freely adjustable'') data values and 0's for
+the known data values.
+Recall our very first definition of filtering showed we can put
+the filter in a vector and the data in a matrix or vice versa.
+Thus $\bold X \bold a$ above gives the same result as $\bold A \bold x$ below.
+
+
+
+\begin{equation}
+\left[
+        \begin{array}{c}
+          m_1 \\
+          m_2 \\
+          m_3 \\
+          m_4 \\
+          m_5 \\
+          m_6 \\
+          m_7 \\
+          m_8
+          \end{array}
+\right]
+\eq
+\left[
+        \begin{array}{c}
+          0 \\
+          1 \\
+          2 \\
+          2 \\
+          1 \\
+          0 \\
+          0 \\
+          0
+          \end{array}
+\right]
+\eq
+        \left[
+        \begin{array}{cccccc}
+          1   & 0   & 0 &0 &0  &0 \\
+          1   & 1   & 0 &0 &0  &0 \\
+          1   & 1   & 1 &0 &0  &0 \\
+          0   & 1   & 1 &1 &0  &0 \\
+          0   & 0   & 1 &1 &1  &0 \\
+          0   & 0   & 0 &1 &1  &1 \\
+          0   & 0   & 0 &0 &1  &1 \\
+          0   & 0   & 0 &0 &0  &1   
+          \end{array} \right]
+        \; \left[
+        \begin{array}{c}
+          0 \\
+          1 \\
+          1 \\
+          0 \\
+          0 \\
+          0 \end{array} \right]
+\eq
+	\bold A \bold d_{\rm free}
+\label{eqn:twomissing}
+\end{equation}
+\par
+The numeric value of each $m_i$ tells us how many of its inputs are missing.
+Where none are missing, we want unit weights $w_i=1$.
+Where any are missing, we want zero weights $w_i=0$.
+The desired residual under partially missing inputs is computed
+by module \texttt{misinput}
+\vpageref{lst:misinput}.
+\moddex{misinput}{mark bad regression equations}{23}{56}{user/gee}
+
+
+
+
+\subsection{Internal boundaries to multidimensional convolution }
+\sx{convolution ! two-dimensional}
+
+\par
+Sometimes we deal with small patches of data.
+In order that boundary phenomena not dominate
+the calculation intended in the central region,
+we need to take care that
+input data is not assumed to be zero
+beyond the interval that the data is given.
+
+\par
+The two little triangular patches of zeros in
+the convolution matrix in equation (\ref{eqn:exmiss})
+describe end conditions where it is assumed that the data $y_t$
+vanishes before $t=1$ and after $t=6$.
+Alternately we might not wish to make that assumption.
+Thus the triangles filled with zeros could be regarded as missing data.
+In this one-dimensional example,
+it is easy to see that the filter, say
+\verb#yy->mis#
+should be set to \texttt{true} at the ends so no output
+would ever be computed there.
+We would like to find a general multidimensional algorithm
+to correctly specify
+\verb#yy->mis#
+around the multidimensional boundaries.
+This proceeds like the missing data algorithm,
+i.e. we apply a filter of all ones to a data space template that is taken
+all zeros except ones at the locations of missing data,
+in this case $y_0,y_{-1}$ and $y_7,y_8$.
+This amounts to surrounding the original data set with some missing data.
+We need padding the size of the filter on all sides.
+The padded region would be filled
+with ones (designating missing inputs).
+Where the convolution output is nonzero, there
+\verb#yy->mis# is set to \texttt{true}
+denoting an output with missing inputs.
+
+\inputdir{XFig}
+\par
+The two-dimensional case is a little more cluttered than the 1-D case
+but the principle is about the same.
+Figure \ref{fig:rabdomain} shows a larger input domain,
+a $5\times 3$ filter, and a smaller output domain.
+\sideplot{rabdomain}{width=1.5in}{
+  Domain of inputs and outputs of a two-dimensional filter like a PEF.
+}
+There are two things to notice.
+First, sliding the filter everywhere inside the outer box,
+we get outputs (under the 1 location) only in the inner box.
+Second, (the adjoint idea) crosscorrelating the inner and outer boxes gives
+us the $3\times 5$ patch of information
+we use to build the filter coefficients.
+We need to be careful not to assume
+that signals vanish outside the region where they are defined.
+In a later chapter we will break data spaces into overlapping patches,
+separately analyze the patches, and put everything back together.
+We do this because crosscorrelations change with time
+and they are handled as constant in short time windows.
+There we must be particularly careful that zero signal values not be presumed
+outside of the small volumes;
+otherwise the many edges and faces of the many small volumes
+can overwhelm the interior that we want to study.
+
+\par
+In practice, the input and output are allocated equal memory,
+but the output residual is initialized to zero everywhere
+and then not computed
+except where shown in figure \ref{fig:rabdomain}.
+Below is module \texttt{bound}
+to build a selector for filter outputs that should 
+never be examined or even computed
+(because they need input data from outside the given data space).
+Inputs are a filter \texttt{aa}
+and the size of its cube \texttt{na = (na(1),na(2),...)}.
+Also input are two cube dimensions,
+that of the data last used by the filter \texttt{nold} and
+that of the filter's next intended use \texttt{nd}.
+(\texttt{nold} and \texttt{nd} are often the same).
+Module \texttt{bound}
+begins by defining a bigger data space with room for a filter
+surrounding the original data space \texttt{nd} on all sides.
+It does this by the line \texttt{nb=nd+2*na}.
+Then we allocate two data spaces
+\texttt{xx} and \texttt{yy} of the bigger size \texttt{nb}
+and pack many ones
+in a frame of width \texttt{na} around the outside of \texttt{xx}.
+The filter \texttt{aa} is also filled with ones.
+The filter \texttt{aa} must be regridded for the bigger \texttt{nb}
+data space (regridding merely changes the lag values of the ones).
+Now we filter the input \texttt{xx} with \texttt{aa} getting \texttt{yy}.
+Wherever the output is nonzero,
+we have an output that has been affected by the boundary.
+Such an output should not be computed.
+Thus we allocate the logical mask \verb#aa->mis#
+(a part of the helix filter definition
+in module \texttt{helix} \vpageref{lst:helix})
+and wherever we see a nonzero value of \texttt{yy}
+in the output,
+we designate the output as depending on missing inputs by setting
+\verb#aa->mis# to \texttt{true}.
+\moddex{bound}{out of bounds dependency}{28}{73}{user/gee}
+
+\par
+In reality one would set up the boundary conditions
+with module
+\texttt{bound}
+before identifying locations of missing data
+with module
+\texttt{misinput}.
+Both modules are based on the same concept,
+but the boundaries are more cluttered and confusing
+which is why we examined them later.
+
+
+\subsection{Finding the prediction-error filter}
+\sx{filter ! prediction-error}
+
+\par
+The first stage of the least-squares estimation
+is computing the
+\bx{prediction-error filter}.
+The second stage will be using it to find the missing data.
+The input data space contains a mixture of known data values
+and missing unknown ones.
+For the first stage of finding the filter,
+we generally have many more fitting equations than we need
+so we can proceed by ignoring the fitting equations
+that involve missing data values.
+We ignore them everywhere that the missing inputs hit the filter.
+
+\par
+The codes here do not address the difficulty that maybe
+too much data is missing so that all weights are zero.
+To add stabilization we could supplement the data volume
+with a ``training dataset''
+or by a ``prior filter''.
+With things as they are,
+if there is not enough data to specify a prediction-error filter,
+you should encounter the error exit from \texttt{cgstep()} 
+\vpageref{lst:cgstep}.
+\moddex{pef}{estimate PEF on a helix}{25}{35}{user/gee}
+
+%Results are shown in Figures
+%\ref{fig:wood-hole}- \ref{fig:brick-hole}.
+%Here again, the PEF is carefully designed using
+%module \texttt{bound} \vpageref{lst:bound}
+%so that no filter outputs are used where the filter
+%is only partway on the data.
+%After the PEF was designed, it is applied with the
+%more cavalier helix treatment of boundaries
+%so although you cannot see the frame of excluded outputs,
+%you can see what happens as the filter is climbing onto the data.
+%\activeplot{wood-hole}{width=6.0in,height=1.75in}{} {
+%	Hole in wood.
+%	}
+%\activeplot{herr-hole}{width=6.0in,height=1.75in}{} {
+%	Hole in herringbone.
+%	}
+%\activeplot{brick-hole}{width=6.0in,height=1.75in}{} {
+%	Hole in brick.
+%	}
+
+
+
+\section{TWO-STAGE LINEAR LEAST SQUARES}
+\sx{Two-stage linear least squares}
+\sx{two-stage ! least squares}
+In Chapter \ref{paper:iin} and
+Chapter    \ref{paper:prc}
+we filled empty bins
+by minimizing the energy output from the filtered mesh.
+In each case there was arbitrariness in the choice of the filter.
+Here we find and use the optimum filter, the PEF.
+
+\par
+%We will develop code in which \bx{missing data}
+%in a training dataset
+%is restored by a two-stage linear least squares process.
+%Since we are using a helix,
+%the training volume could be a line, a plane, a volume, or a hypervolume.
+%In the first stage,
+%we fit a prediction-error filter (PEF) to the given plane.
+%Fitting equations that involve empty bins
+%are weighted to zero
+%so they have no effect on the answer, the PEF.
+The first stage is that of the previous section,
+finding the optimal PEF while
+carefully avoiding using any regression equations
+that involve boundaries or missing data.
+For the second stage, we take the PEF as known and
+find values for the empty bins so that
+the power out of the prediction-error filter is minimized.
+To do this we find missing data with
+module \texttt{mis2()} \vpageref{lst:mis2}.
+
+\par
+This two-stage method avoids the nonlinear problem
+we would otherwise face if we included the fitting
+equations containing both free data values and free filter values.
+Presumably, after
+two stages of linear least squares
+we are close enough to the final solution
+that we could switch over to the full nonlinear setup
+described near the end of this chapter.
+
+\inputdir{hole}
+\par
+The synthetic data in Figure \ref{fig:hole}
+is a superposition of two plane waves of different directions,
+each with a random (but low-passed) waveform.
+After punching a hole in the data,
+we find that the lost data is pleasingly restored,
+though a bit weak near the side boundary.
+This imperfection could result
+from the side-boundary behavior of the operator
+or from an insufficient number of missing-data iterations.
+\plot{hole}{width=6in,height=2.5in}{
+  Original data (left), with a zeroed hole, restored,
+  residual selector (right).
+}
+\par
+The residual selector in Figure \ref{fig:hole}
+shows where the filter output has valid inputs.
+From it you can deduce the size and shape of the filter,
+namely that it matches up with Figure \ref{fig:rabdomain}.
+The ellipsoidal hole in the residual selector is larger
+than that in the data because we lose regression equations
+not only at the hole,
+but where any part of the filter overlaps the hole.
+
+\par
+The results in Figure \ref{fig:hole} are essentially perfect
+representing the fact that that synthetic example
+fits the conceptual model perfectly.
+Before we look at the many examples
+in Figures
+\ref{fig:herr-hole-fillr}-\ref{fig:WGstack-hole-fillr}
+we will examine another gap-filling strategy.
+
+
+
+
+\subsection{Adding noise (Geostat)}
+\inputdir{morgan}
+\sx{geostatistics}
+In chapter \ref{paper:iin} we restored missing data
+by adopting the philosopy of minimizing the energy in filtered output.
+In this chapter we learned about an optimum filter
+for this task, the prediction-error filter (PEF).
+Let us name this method the ``minimum noise'' method
+of finding missing data.
+
+\par
+A practical application with the minimum-noise method is evident
+in a large empty hole such as 
+in Figures \ref{fig:herr-hole-fillr}-
+\ref{fig:brick-hole-fillr}.
+In such a void the interpolated data diminishes greatly.
+Thus we have not totally succeeded in the goal of
+``hiding our data acquisition footprint''
+which we would like to do if we are trying to make
+pictures of the earth and not pictures of our
+data acquisition footprint.
+
+\par
+What we will do next is useful in some applications but not in others.
+Misunderstood or misused it is rightly controversial.
+We are going to fill the empty holes
+with something that looks like the original data but really isn't.
+I will distinguish the words ``\bx{synthetic data}''
+(that derived from a physical model)
+from ``\bx{simulated data}'' (that manufactured from a statistical model).
+We will fill the empty holes with simulated data
+like what you see in the center panels of Figures
+\ref{fig:granite}-\ref{fig:WGstack}.
+We will add just enough of that ``wall paper noise'' to keep
+the variance constant as we move into the void.
+
+\par
+Given some data $\bold d$, we use it in a filter operator $\bold D$,
+and as described with equation (\ref{eqn:exmiss}) we build
+a weighting function $\bold W$ that throws out the
+broken regression equations (ones that involve missing inputs).
+Then we find a PEF $\bold a$ by using this regression.
+\begin{equation}
+	\bold 0
+\quad\approx\quad
+	\bold r
+\quad = \quad
+	\bold W \bold D \bold a
+\end{equation}
+Because of the way we defined $\bold W$,
+the ``broken'' components of $\bold r$ vanish.
+We need to know the variance $\sigma$ of the nonzero terms.
+It can be expressed mathematically in a couple different ways.
+Let $\bold 1$ be a vector filled with ones and let
+$\bold r^2$ be a vector containing the squares of the components of $\bold r$.
+\begin{equation}
+\sigma
+\quad = \quad
+	\sqrt{ {1\over N} \sum_i^N \,r_i^2 }
+\quad = \quad
+	\sqrt{
+		\bold 1' \bold W \bold r^2
+	\over
+		\bold 1' \bold W \bold 1 
+	}
+\end{equation}
+Let us go to a random number generator
+and get a noise vector $\bold n$
+filled with random numbers of variance $\sigma$.
+We'll call this the ``added random noise''.
+Now we solve this new regression for
+the data space $\bold d$ (both known and missing)
+\begin{equation}
+\bold 0
+\quad\approx\quad
+\bold r
+\quad = \quad
+\bold A \bold d   \ - \  \bold n
+\label{eqn:noiseeverywhere}
+\end{equation}
+\par\noindent
+keeping in mind that known data is constrained
+(as detailed in chapter \ref{paper:iin}).
+
+\par
+To understand why this works,
+consider first the training image, a region of known data.
+Although we might think that the data defines the white noise
+residual by $\bold r=\bold A\bold d$, we can also imagine that the white noise
+determines the data by $\bold d=\bold A^{-1}\bold r$.
+Then consider a region of wholly missing data.  This data
+is determined by $\bold d=\bold A^{-1}\bold n$.
+Since we want the data variance to be the same in known and unknown
+locations, naturally we require the variance of $\bold n$
+to match that of $\bold r$.
+
+\par
+A very minor issue remains.
+Regression equations may have all of their required input data,
+some of it, or none of it.
+Should the $\bold n$ vector add noise to every regression equation?
+First, if a regression equation has all its input data
+that means there are no free variables so it doesn't matter
+if we add noise to that regression equation because the constraints
+will overcome that noise.
+I don't know if I should worry about how
+{\it many}
+inputs are missing for each regression equation.
+
+%We could choose to add noise only to those regression equations
+%that have all their inputs.
+%Then we'd be fitting
+%$\bold 0 \approx\ \bold r = \bold A \bold d    - (\bold I -\bold W)  \bold n$.
+%I feel, however, that equation
+%(\ref{eqn:noiseeverywhere}) would be slightly better.
+%The difference would be most apparent when the PEF was allocated
+%more space than it required.
+%Then we might see a halo of dimness just inside the rim of the void.
+
+\par
+It is fun making all this interesting ``wall paper''
+noticing where it is successful and where it isn't.
+We cannot help but notice that it seems to work better with
+the genuine geophysical data than
+it does with many of the highly structured patterns.
+Geophysical data is expensive to acquire.
+Regrettably, we have uncovered a technology
+that makes counterfeiting much easier.
+
+%\par
+%Plan to include figures here named.
+%\begin{verbatim}
+%herr-hole-fill
+%brick-hole-fill
+%ridges-hole-fill
+%WGstack-hole-fill
+%seabeam-hole-fill  <<<< New?!
+%\end{verbatim}  XX
+
+Examples are in Figures
+\ref{fig:herr-hole-fillr}-\ref{fig:WGstack-hole-fillr}.
+In the electronic book, the right-side panel of each figure is a movie,
+each panel being derived from different random numbers.
+
+\plot{herr-hole-fillr}{width=6.0in,height=1.75in}{
+  The herringbone texture is a patchwork of two textures.
+  We notice that data missing from the hole tends
+  to fill with the texture at the edge of the hole.
+  The spine of the herring fish, however, is not modeled at all.
+}
+\plot{brick-hole-fillr}{width=6.0in,height=1.75in}{
+  The brick texture has a mortar part
+  (both vertical and horizontal joins) and a brick surface part.
+  These three parts enter the empty area
+  but do not end where they should.
+}
+\plot{ridges-hole-fillr}{width=6.0in,height=1.75in}{
+  The theoretical model
+  is a poor fit to the ridge data
+  since the prediction must try to match ridges
+  of all possible orientations.
+  This data requires a broader theory which incorporates
+  the possibility of nonstationarity (space variable slope).
+}
+\plot{WGstack-hole-fillr}{width=6.0in,height=3.5in}{
+  Filling the missing seismic data.
+  The imaging process known as ``migration'' would
+  suffer diffraction artifacts in the gapped data
+  that it would not suffer on the restored data.
+}
+
+\par
+The seismic data in
+Figure \ref{fig:WGstack-hole-fillr}
+illustrates a fundamental principle:
+In the restored hole we do not see the same spectrum
+as we do on the other panels.
+This is because the hole is filled,
+not with all frequencies (or all slopes) but with those
+that are most predictable.
+The filled hole is devoid of the unpredictable noise
+that is a part of all real data.
+
+\begin{comment}
+\par
+Figure \ref{fig:channel-elita} is
+an interesting seismic image showing ancient river channels now deeply buried.
+Such river channels are often filled with sand,
+hence are good petroleum prospects.
+Prediction error methodology fails to simulate these channels.
+We can give the reason that the channels are not statistically stationary.
+The methodology also fails to extrapolate them very far from a known
+region into a hidden region.
+
+\plot{channel-elita}{width=6.0in,height=6.0in}{
+	Upper left shows an interesting seismic image with
+	ancient river channels now deeply buried.
+	In the upper right a portion of the image is removed.
+	Lower left attempts to fill the gap
+	using a prediction-error filter
+	continuing channels into the gap.
+	Data are poorly continued.
+	This image may be thought of as the mean of
+	a random variable.
+	Lower right fills the gap by the ``geostat'' technique
+	adding noise of an appropriate variance and covariance while
+	matching the boundary conditions.
+	The synthetic data added there
+	shows no interesting channels,
+	though it might replicate some channel trends
+	from the fitting region.
+	The methodology cannot cope with the nonstationarity.}
+\end{comment}
+
+%\newslide
+\subsection{Inversions with geostat}
+\inputdir{geostat}
+%Figures
+%\ref{fig:manywood}
+%and
+%\ref{fig:bobsea}
+%show synthetic and real surveys
+%containing regions where no data was recorded.
+%The PEF method of this book produces the extrapolated image in the upper right.
+%Notice that far from known data,
+%the extrapolated data is weak.
+%This is a result of a ``minimum variance'' calculation.
+%Notice the weak interpolated data also has a different spectrum
+%than the known data.
+%It lacks the short wavelength fuzz.
+%That's because the short wavelengths cannot be extrapolated long distances.
+%\par
+%There is a simple way to acquire short wavelength fuzz at long distances
+%by adding random fuzz of the proper spatial spectrum.
+In geophysical estimation (inversion) we use model styling
+(regularization) to handle the portion of the model that
+is not determined by the data.
+This results in the addition of minimal noise.
+Alternately, like in Geostatistics,
+we could make an assumption of statistical stationarity
+and add much more noise so the signal variance in poorly determined
+regions matches that in well determined regions.
+Here is how to do this.
+Given the usual data fitting and model styling goals
+\begin{eqnarray}
+\bold 0 &\approx& \bold L \bold m -\bold d
+\\
+\bold 0 &\approx& \bold A \bold m
+\end{eqnarray}
+We introduce a sample of random noise $\bold n$ and fit instead
+these regressions
+\begin{eqnarray}
+\bold 0 &\approx& \bold L \bold m -\bold d
+\\
+\bold 0 &\approx& \bold A \bold m -\bold n
+\end{eqnarray}
+Of course you get a different solution for each different
+realization of the random noise.
+You also need to be a little careful to use noise $\bold n$
+of the appropriate variance.
+Figure \ref{fig:bobsea} shows a result on the SeaBeam data.
+\plot{bobsea}{width=6in,height=6in}{
+  Top left is binned data.
+  Top right extends the data with a PEF.
+  The bottom two panels add appropriately
+  colored random noise in the regions of missing data.
+}
+\bx{Bob Clapp} developed this idea at SEP and also
+applied it to interval velocity estimation,
+the example of Figures \ref{fig:clapp}-\ref{fig:flex}.
+
+
+\subsection{Infill of 3-D seismic data from a quarry blast}
+\inputdir{miss3}
+Finding \bx{missing data} (filling empty bins) requires use of a filter.
+Because of the helix, the codes work in spaces of all dimensions.
+\par
+An open question is how many conjugate-direction iterations
+are needed in missing-data programs.
+When estimating filters, I set the \bx{iteration count} {\tt niter}
+at the number of free filter parameters.
+Theoretically, this gives me the exact solution
+but sometimes I run double the number of iterations to be sure.
+The missing-data estimation, however is a completely different story.
+The number of free parameters in the missing-data estimation,
+could be very large.
+This often implies impractically long compute times for the exact solution.
+In practice I experiment carefully with
+\texttt{niter} and hope for the best.
+I find that where gaps are small, they fill in quickly.
+Where the gaps are large, they don't, and more iterations are required.
+Where the gaps are large is where we must experiment with preconditioning.
+\par
+\sx{quarry blast}
+Figure~\ref{fig:passfill} shows an example of
+replacing missing data by values predicted from a 3-D PEF.
+The data was recorded at \bx{Stanford University}
+with a $13\times 13$ array of independent recorders.
+The figure shows 12 of the 13 lines each of length 13.
+Our main goal was to measure the ambient night-time noise.
+By morning about half the recorders had dead batteries
+but the other half recorded a wave from a quarry blast.
+The raw data was distracting to look at
+because of the many missing traces
+so I interpolated it with a small 3-D filter.
+That filter was a PEF.
+\plot{passfill}{width=6in,height=3.0in}{
+  The left 12 panels are the inputs.
+  The right 12 panels are outputs.
+}
+
+\subsection{Imposing prior knowledge of symmetry}
+\sx{symmetry in time}
+\label{prior knowledge of symmetry}
+\sx{reversing a signal}
+Reversing a signal in time
+does not change its autocorrelation.
+In the analysis of stationary time series,
+it is well known (\bx{FGDP}) that the filter
+for predicting forward in time
+should be the same as that for ``predicting'' backward in time
+(except for time reversal).
+When the data samples are short, however,
+a different filter may be found for predicting forward than for backward.
+Rather than average the two filters directly,
+the better procedure
+is to find the filter that minimizes the sum of power in two residuals.
+One is a filtering of the original signal,
+and the other is a filtering of a time-reversed signal,
+as in equation (\ref{eqn:reverse}),
+where the top half of the equations represent prediction-error
+predicting forward in time and the second half is prediction backward.
+\begin{equation}
+\left[
+\begin{array}{c}
+  r_1 \\
+  r_2 \\
+  r_3 \\
+  r_4 \\   \hline
+  r_5 \\
+  r_6 \\
+  r_7 \\
+  r_8
+  \end{array} \right]
+\eq
+\left[
+\begin{array}{ccc}
+  y_3 & y_2 & y_1  \\
+  y_4 & y_3 & y_2  \\
+  y_5 & y_4 & y_3  \\
+  y_6 & y_5 & y_4  \\   \hline
+  y_1 & y_2 & y_3  \\
+  y_2 & y_3 & y_4  \\
+  y_3 & y_4 & y_5  \\
+  y_4 & y_5 & y_6 
+  \end{array} \right]
+\; \left[
+\begin{array}{c}
+  1   \\
+  a_1 \\
+  a_2 \end{array} \right]
+\label{eqn:reverse}
+\end{equation}
+To get the bottom rows from the top rows,
+we simply reverse the order of all the components within each row.
+That reverses the input time function.
+(Reversing the order within a column would reverse the output time function.)
+Instead of the matrix being diagonals tipping $45^\circ$ to the right,
+they tip to the left.
+We could make this matrix from our old
+familiar convolution matrix
+and a time-reversal matrix
+$$
+\left[
+\begin{array}{cccc}
+ 0 & 0 & 0 & 1  \\
+ 0 & 0 & 1 & 0  \\
+ 0 & 1 & 0 & 0  \\
+ 1 & 0 & 0 & 0 
+\end{array}
+\right]
+$$
+
+\par
+It is interesting to notice how time-reversal symmetry applies
+to Figure \ref{fig:hole}.
+First of all, with time going both forward and backward
+the residual space gets twice as big.
+The time-reversal part gives a selector
+for Figure \ref{fig:hole} with
+a gap along the right edge instead of the left edge.
+Thus, we have acquired a few new regression equations.
+
+\par
+Some of my research codes include these symmetries,
+but I excluded them here.
+Nowhere did I see that the reversal symmetry made noticeable difference
+in results,
+but in coding, it makes a noticeable clutter by
+expanding the residual to a two-component {\it residual array}.
+
+\par
+Where a data sample grows exponentially towards the boundary,
+I expect that extrapolated data would diverge too.
+You can force it to go to zero (or any specified value)
+at some distance from the body of the known data.
+To do so, surround the body of data by missing data and surround that
+by specification of ``enough'' zeros.
+``Enough'' is defined by the filter length.
+
+
+\subsection{Hexagonal coordinates}
+\par
+In a two-dimensional plane it seems
+that the one-sidedness of the PEF could
+point in any direction.
+Since we usually have a rectangular mesh, however,
+we can only do the calculations along the axes
+so we have only two possibilities,
+the helix can
+wrap around the 1-axis,
+or it can
+wrap around the 2-axis.
+
+\par
+Suppose you acquire data on a hexagonal mesh as below
+\par\noindent
+%\scriptsize
+\begin{verbatim}
+                . . . . . . . . . . . . . . . .
+                 . . . . . . . . . . . . . . . .
+                . . . . . . . . . . . . . . . .
+                 . . . . . . . . . . . . . . . .
+                . . . . . . . . . . . . . . . .
+                 . . . . . . . . . . . . . . . .
+                . . . . . . . . . . . . . . . .
+                 . . . . . . . . . . . . . . . .
+                . . . . . . . . . . . . . . . .
+                 . . . . . . . . . . . . . . . .
+                . . . . . . . . . . . . . . . .
+                 . . . . . . . . . . . . . . . .
+\end{verbatim}
+%\normalsize
+\par\noindent
+and some of the data values are missing.
+How can we apply the methods of this chapter?
+The solution is to append the given data by more missing data
+shown by the commas below.
+\par\noindent
+%\scriptsize
+\begin{verbatim}
+                 . . . . . . . . . . . . . . . . , , , , , ,
+                . . . . . . . . . . . . . . . . , , , , , ,
+               , . . . . . . . . . . . . . . . . , , , , ,
+              , . . . . . . ._._._._._._. . . . , , , , ,
+             , , . ._._._._/_/ . . . . / . . . . , , , ,
+            , , . / . . . . . . . . . / . . . . , , , ,
+           , , , / . . . . . . . . . / . . . . . , , ,
+          , , , /_._._._._._._._._._/ . . . . . , , ,
+         , , , , . . . . . . . . . . . . . . . . , ,
+        , , , , . . . . . . . . . . . . . . . . , ,
+       , , , , , . . . . . . . . . . . . . . . . ,
+      , , , , , . . . . . . . . . . . . . . . . ,
+     , , , , , , . . . . . . . . . . . . . . . . 
+\end{verbatim}
+%\normalsize
+\par\noindent
+Now we have a familiar two-dimensional coordinate system
+in which we can find missing values,
+as well as perform signal and noise separations
+as described in a later chapter.
+
+
+
+%\section{SEABEAM: FILLING THE EMPTY BINS WITH A PEF}
+%\sx{seabeam}
+%Recall the Seabeam data of Figure \ref{prc/fig:seabin90}.
+%In chapter \ref{prc/paper:prc}
+%we filled empty bins minimizing the output of Laplace's operator,
+%getting Figure \ref{prc/fig:prcfill}.
+%
+%\par
+%The problem with the Laplacian operator as an interpolator
+%is that it smears information uniformly in all directions.
+%From Figure \ref{prc/fig:prcfill} we see
+%that we need an anisotropic interpolation
+%oriented along the regional trends.
+%What we need is a PEF in place of the Laplacian.
+%To get it,
+%we apply module \texttt{pef} \vpageref{lst:pef}.
+%After binning the data and finding this PEF,
+%we do a second stage of linear-least-squares optimization
+%with \texttt{mis2} \vpageref{lst:mis2}, as we did for Figure 
+%\ref{fig:hole},
+%and
+%we obtain the pleasing result in Figure \ref{fig:seapef90}.
+%\activeplot{seapef90}{width=6.0in,height=3.0in}{ER}{
+%        Depth of the ocean interpolated with a PEF.
+%        }
+
+
+%\section{DEBURST}
+%\par
+%We can use the same technique to throw out fitting equations
+%from defective data that we use for missing data.
+%Recall the theory and discussion leading up to 
+%Figure \ref{rbst/fig:burst90}.
+%There we identified defective data by its lack
+%of continuity.  We used the fitting equations
+%$0\approx w_i (y_{i+1} -2y_i + y_{i-1})$
+%where the weights $w_i$ were chosen
+%to be approximately the inverse
+%to the residual $(y_{i+1} -2y_i + y_{i-1})$ itself.
+%\par
+%Here we will first use the second derivative
+%(Laplacian in 1-D) to throw out bad points,
+%while we determine the PEF.
+%Having the PEF, we use it to fill in the missing data.
+%
+%\moddex{pefest}{estimate PEF in 1-D avoiding bad data}
+%The result of this ``PEF-deburst'' processing
+%is shown in Figure \ref{fig:pefdeburst90}.
+%\activeplot{pefdeburst90}{width=6.0in,height=3in}{ER}{
+%        Top is synthetic data with noise spikes and bursts.
+%        (Some bursts are fifty times larger than shown.)
+%        Next is after running medians.
+%        Next is Laplacian filter Cauchy deburst processing.
+%        Last is PEF-deburst processing.
+%        }
+%\par
+%Given the PEF that comes out of \texttt{pefest1()}, subroutine
+%\texttt{fixbad1()} below convolves it with the data and looks for
+%anomalous large outputs.  For each that is found, the input data is
+%declared defective and set to zero.  Then subroutine \texttt{mis1()}
+%\vpageref{lst:mis2} is invoked to replace the zeroed values by
+%reasonable ones.
+%\moddex{fixbad}{restore damaged data}
+%
+%
+%
+%\subsection{Potential seismic applications of two-stage infill}
+%Two-stage data infill has many applications
+%that I have hardly begun to investigate.
+%\par {\bf Shot continuation}
+%is an obvious task for a data-cube extrapolation program.
+%There are two applications of shot-continuation.
+%First is the obvious one of repairing holes in data
+%in an unobtrusive way.
+%Second is to cooperate with reflection tomographic studies
+%such as that proposed by Matthias \bx{Schwab}.
+%\par {\bf Offset continuation} is a well-developed topic because
+%of its close link with \bx{dip moveout} (\bx{DMO}).
+%DMO is heavily used in the industry.
+%I do not know how the data-cube extrapolation code I
+%am designing here would fit into DMO and stacking,
+%but because these are such important processes,
+%the appearance of a fundamentally new tool like
+%this should be of interest.
+%It is curious that the DMO operator is traditionally
+%derived from theory, and the theory requires the
+%unknown velocity function of depth, whereas here
+%I propose estimating the offset continuation operator
+%directly from the data itself, without the need of a velocity model.
+%\par
+%Obviously, one application is to extrapolate off the sides of a
+%\bx{constant-offset section}.
+%This would reduce migration semicircles
+%at the survey's ends.
+%\par
+%Another application is to extrapolate off the
+%\bx{cable ends}
+%of a common-midpoint gather or
+%a common shot point gather.
+%This could enhance
+%the prediction of
+%multiple reflections
+%or reduce artifacts in velocity analysis.
+%\par
+%Obviously, the methodology and code in this chapter
+%is easily extendable to four dimensions (prestack 3-D data).
+%%The application that drove me to putting the code in its
+%%present form is extending \bx{Kjartansson}-style \bx{tomography}.
+%%
+%
+
+
+
+
+
+\section{BOTH MISSING DATA AND UNKNOWN FILTER}
+\inputdir{misif}
+\sx{missing data}
+\sx{filter ! unknown}
+Recall the missing-data figures beginning with Figure~\ref{fig:mlines}.
+There the filters were taken as known,
+and the only unknowns were the missing data.
+Now, instead of having a predetermined filter,
+we will solve for the filter along with the missing data.
+The principle we will use is that the output power is minimized
+while the filter is constrained to have one nonzero coefficient
+(else all the coefficients would go to zero).
+We will look first at some results and then see how they were found.
+
+\sideplot{man1}{width=2.2in}{
+  Top is known data.
+  Middle includes the interpolated values.
+  Bottom is the filter with the leftmost point constrained
+  to be unity
+  and other points chosen to minimize output power.
+}
+\par
+In Figure~\ref{fig:man1} the filter is constrained
+to be of the form $(1,a_1,a_2)$.
+The result is pleasing in that the interpolated traces
+have the same general character as the given values.
+The filter came out slightly different from the $(1,0,-1)$
+that I guessed and tried in Figure~\ref{fig:mbest90}.
+Curiously, constraining the filter to be of the form $(a_{-2},a_{-1},1)$
+in Figure~\ref{fig:man3}
+yields the same interpolated missing data as in Figure~\ref{fig:man1}.
+I understand that the sum squared of the coefficients
+of $A(Z)P(Z)$ is the same as that of $A(1/Z)P(Z)$, but I
+do not see why that would imply the same interpolated data;
+never the less, it seems to.
+\sideplot{man3}{width=2.2in}{
+  The filter here had its rightmost point constrained
+  to be unity---i.e., this filtering amounts to
+  backward prediction.
+  The interpolated data seems to be identical
+  to that of forward prediction.
+}
+
+%\begin{notforlecture}
+\subsection{Objections to interpolation error}
+\par
+In any data interpolation or extrapolation,
+we want the extended data to behave like the original data.
+And, in regions where there is no observed data,
+the extrapolated data should drop away in a fashion
+consistent with its \bx{spectrum} determined from the known region.
+
+\par
+My basic idea is that the spectrum of the missing data
+should match that of the known data.
+This is is the idea that the spectrum should be unchanging
+from a known region to an unknown region.
+A technical word to express the idea
+of spectra not changing is ``\bx{stationary}.''
+This happens with the PEF (one-sided filter)
+because its spectrum tends to the inverse of that of the known data
+while that of the unknown data
+tends to the inverse of that of the PEF.
+Thus the spectrum of the missing data
+is the ``inverse of the inverse'' of the spectrum of the known.
+The PEF enables us to fill in the missing area with
+the spectral shape of the known area.
+(In regions far away or unpredictable,
+the spectral shape may be the same, but the energy drops to zero.)
+
+
+\par
+On the other hand,
+the \bx{interpolation-error filter},
+\sx{filter ! interpolation-error}
+a filter like $(a_{-2}, a_{-1}, 1, a_1, a_2)$,
+should fail to do the job because it has the wrong spectrum.
+(I am stating this fact without proof).
+
+\par
+To confirm and show these concepts,
+I prepared synthetic data consisting of a fragment of a damped exponential,
+and off to one side of it an impulse function.
+Most of the energy is in the damped exponential.
+Figure~\ref{fig:syn1} shows that the spectrum and the extended data
+are about what we would expect.
+From the extrapolated data,
+it is impossible to see where the given data ends.
+
+\sideplot{syn1}{width=3.2in,height=1.8in}{
+  Top is synthetic data with missing portions.
+  Middle includes the interpolated values.
+  Bottom is the filter,
+  a {\it prediction-error} filter
+  which may look symmetric but is not quite.
+}
+
+For comparison, I prepared
+Figure~\ref{fig:syn3}.
+It is the same as
+Figure~\ref{fig:syn1},
+except that the filter is constrained in the middle.
+Notice that the extended data does {\it not} have the spectrum
+of the given data---the wavelength is much shorter.
+The boundary between real data and extended data
+is not nearly as well hidden as in
+Figure~\ref{fig:syn1}.
+
+\sideplot{syn3}{width=3.2in,height=1.8in}{
+  Top is the same synthetic data.
+  Middle includes the interpolated values.
+  Bottom is the filter,
+  an {\it interpolation-error} filter.
+}
+
+\subsection{Packing both missing data and filter into a vector}
+\inputdir{levint}
+\sx{missing data}
+Now let us examine the theory and coding behind the above examples.
+Define a roughening filter $A(\omega )$ and a data signal $Y(\omega )$
+at some stage of interpolation.
+The fitting goal is
+$0 \approx A(\omega ) Y(\omega )$
+where the filter $A(\omega )$ has
+at least one time-domain coefficient constrained to be nonzero
+and the data contains both known and missing values.
+Think of perturbations $\Delta A$ and $\Delta Y$.
+We neglect the nonlinear term $\Delta A\,\Delta Y$ as follows:
+\begin{eqnarray}
+0 &\approx & (A \ +\ \Delta A)( Y\ +\ \Delta Y) \\
+0 &\approx &
+        A\,\Delta Y   \ +\ 
+        Y\,\Delta A   \ +\ 
+        AY
+        \ +\ 
+        \Delta A\, \Delta Y                             \\
+        0
+        &\approx & 
+        A\,\Delta Y   \ +\ 
+        Y\,\Delta A   \ +\ 
+        AY
+\label{eqn:nlreg}
+\end{eqnarray}
+
+
+\par
+Let us use matrix algebraic notation to rewrite the fitting goals
+(\ref{eqn:nlreg}).
+For this we need mask matrices
+\sx{mask matrix}
+(diagonal matrices with ones on the diagonal 
+where variables are free and zeros where they are constrained
+i.e., where $\Delta  a_i=0$ and $\Delta  y_i=0$).
+The free-mask matrix for missing data is denoted $\bold J$
+and that for the PE filter is $\bold K$.
+The fitting goal (\ref{eqn:nlreg}) becomes
+\begin{equation}
+\bold 0
+\quad \approx \quad
+\bold A \bold J \Delta \bold y
++
+\bold Y \bold K \Delta \bold a
++
+( \bold A \bold y   {\rm \ or \  }
+  \bold Y \bold a )
+\label{eqn:nlreg2}
+\end{equation}
+Defining the original residual as
+$\bar {\bold r} = \bold A\bold y$ this becomes
+\begin{equation}
+ \bold 0
+ \quad\approx\quad
+ \left[
+ \begin{array}{cc}
+   \bold A \bold J   &   \bold Y \bold K 
+ \end{array}
+ \right]
+ \
+ \left[
+ \begin{array}{c}
+   \Delta \bold y \\
+   \Delta \bold a
+ \end{array}
+ \right]
+ \ +\ \bar {\bold r}
+\end{equation}
+
+\par
+For a 3-term filter and a 7-point data signal,
+the fitting goal~(\ref{eqn:nlreg2}) becomes
+\begin{equation}
+\left[ 
+\begin{array}{cccccccccc}
+   a_0& .  & .   & .   & .   & .   & .  & y_0 & .   & .   \\
+   a_1& a_0& .   & .   & .   & .   & .  & y_1 & y_0 & .   \\
+   a_2& a_1&  a_0& .   & .   & .   & .  & y_2 & y_1 & y_0 \\
+   .  & a_2&  a_1&  a_0& .   & .   & .  & y_3 & y_2 & y_1 \\
+   .  & .  &  a_2&  a_1&  a_0& .   & .  & y_4 & y_3 & y_2 \\
+   .  & .  & .   &  a_2&  a_1&  a_0& .  & y_5 & y_4 & y_3 \\
+   .  & .  & .   & .   &  a_2&  a_1& a_0& y_6 & y_5 & y_4 \\
+   .  & .  & .   & .   & .   &  a_2& a_1& .   & y_6 & y_5 \\
+   .  & .  & .   & .   & .   &  .  & a_2& .   & .   & y_6
+  \end{array} \right] 
+  \ 
+\left[
+\begin{array}{cc}
+  \bold J & \bold 0 \\
+  \bold 0 & \bold K
+ \end{array} \right]
+  \ 
+\left[ 
+        \begin{array}{c}
+          \Delta y_0 \\ 
+          \Delta y_1 \\ 
+          \Delta y_2 \\ 
+          \Delta y_3 \\ 
+          \Delta y_4 \\ 
+          \Delta y_5 \\ 
+          \Delta y_6 \\
+          \hline
+          \Delta a_0 \\
+          \Delta a_1 \\
+          \Delta a_2
+        \end{array}
+\right] 
+\ + \ 
+\left[ 
+\begin{array}{c}
+\bar  r_0   \\
+\bar  r_1   \\
+\bar  r_2   \\
+\bar  r_3   \\
+\bar  r_4   \\
+\bar  r_5   \\
+\bar  r_6   \\
+\bar  r_7   \\
+\bar  r_8
+  \end{array} \right] 
+\quad \approx \   \bold 0
+\label{eqn:bigmissif}
+\end{equation}
+%where $\bold r =  \bold A \bold y$.
+Recall that
+$\bar r_t$ is the convolution of $a_t$ with $y_t$,
+namely,
+$\bar r_0=y_0 a_0$ and
+$\bar r_1=y_0 a_1 + y_1 a_0$, etc.
+To optimize this fitting goal we first initialize
+$ \bold a= (1,0,0,\cdots )$
+and then put zeros in for missing data in $ \bold y$.
+Then we iterate over equations (\ref{eqn:progfirst}) to (\ref{eqn:proglast}).
+
+
+\begin{equation}
+ \bold r 
+ \quad\longleftarrow\quad
+ \bold A \bold y 
+\label{eqn:progfirst}
+\end{equation}
+\begin{equation}
+        \left[
+        \begin{array}{c}
+        \Delta \bold y \\
+        \Delta \bold a
+        \end{array}
+        \right]
+ \quad\longleftarrow\quad
+        \left[
+        \begin{array}{c}
+        \bold J\T \bold A\T \\
+        \bold K\T \bold Y\T
+        \end{array}
+        \right]
+        \
+        \bold r
+\end{equation}
+
+\begin{equation}
+ \Delta \bold r
+ \quad\longleftarrow\quad
+ \left[
+ \begin{array}{cc}
+   \bold A \bold J   &   \bold Y \bold K 
+ \end{array}
+ \right]
+ \
+ \left[
+ \begin{array}{c}
+   \Delta \bold y \\
+   \Delta \bold a
+ \end{array}
+ \right]
+\end{equation}
+
+\begin{eqnarray}
+\bold y &\longleftarrow& {\rm cgstep}( \bold y, \Delta \bold y) \\ 
+\bold a &\longleftarrow& {\rm cgstep}( \bold a, \Delta \bold a)
+\label{eqn:proglast}
+\end{eqnarray}
+\par\noindent
+This is the same idea as all the linear fitting goals we have been solving,
+except that now we recompute
+the residual $\bold r$ inside the iteration loop
+so that as convergence is achieved ({\it if} it is achieved),
+the neglected nonlinear term $\Delta A \Delta Y$ tends to zero.
+
+\par
+My initial research proceeded by linearization like (\ref{eqn:nlreg}).
+Although I ultimately succeeded,
+I had enough difficulties that
+I came to realize that linearization is dangerous.
+When you start ``far enough'' from the correct solution
+the term $ \Delta A\, \Delta Y $
+might not actually be small enough.
+You don't know how small is small,
+because these are not scalars but operators.
+Then the solution may not converge to the minimum you want.
+Your solution will depend on where you start from.
+I no longer exhibit the nonlinear solver \texttt{missif}
+until I find a real data example where it produces noticeably better results
+than multistage linear-least squares.
+
+
+\par
+The alternative to linearization is two-stage linear least squares.
+In the first stage you estimate the PEF;
+in the second you estimate the missing data.
+If need be, you can re-estimate the PEF using all the data
+both known and missing (downweighted if you prefer).
+
+\par
+If you don't have enough regression equations
+because your data is irregularly distributed,
+then you can use binning.
+Still not enough?  Try coarser bins.
+The point is that nonlinear solvers will not work unless you
+begin close enough to the solution,
+and the way to get close is by arranging first to
+solve a sensible (though approximate) linearized problem.
+Only as a last resort, after you have gotten as near as you can,
+should you use the nonlinear least-squares techniques.
+
+%\par
+%A solver subroutine needs
+%to \bx{pack} both unknowns into a single vector
+%{\tt x() =} $(\Delta Y,\Delta A)$
+%before calling the conjugate-direction program.
+%Likewise, the resulting filter and data coming out must be unpacked.
+%Also, the \bx{gradient} now has two contributions,
+%one from $A\,\Delta Y$ and one from $Y\,\Delta A$,
+%and these must be combined.
+%The subroutine \texttt{misif()},
+%which makes 
+%Figures~\ref{fig:misif} through \ref{fig:center},
+%effectively combines \texttt{pef1()} \vpageref{lst:pef1} and \texttt{mis1()} \vpageref{lst:mis1}.
+%A new aspect is that, to avoid accumulation of errors
+%from the neglect of the \bx{nonlinear} product $\Delta A\,\Delta Y$,
+%this subroutine recalculates the residual inside the iteration loop
+%instead of only once at the beginning.
+%We gather the above ideas into subroutine \texttt{misif()} \vpageref{lst:misif}.
+%\progdex{misif}{missing input and filter}
+%
+%\par
+%There is a danger that {\tt misif()}
+%might converge very slowly or fail if {\tt aa()} and {\tt yy()}
+%are much out of scale with each other.
+%Until now, I have found it best to \bx{prescale}
+%the data to a maximum value of unity
+%(as the filter is constrained to have its first value being +1).
+%
+%\begin{exer}
+%\item
+%Two filters, $\bold a$ and $\bold b$,
+%are convolved on a time series $\bold x$
+%to produce the output
+%$\bold y=\bold a\ast \bold b\ast \bold x$ or
+%$\bold y=\bold b\ast \bold a\ast \bold x$.
+%Linearize to express $\Delta \bold y$
+%as a function of $\Delta \bold a$ and $\Delta \bold b$.
+%Describe the adjoint relation that gives
+%$\Delta \bold a$ and $\Delta \bold b$
+%as a function of $\Delta \bold y$.
+%\end{exer}
+
+
+\section{LEVELED INVERSE INTERPOLATION}
+\sx{leveled inverse interpolation}
+\sx{interpolation ! inverse}
+Eighteenth- and nineteenth- century mathematics literature gives us
+many methods of interpolating functions.
+These classical methods are generally based on polynomials.
+The user specifies some order of polynomial
+and the theory works out the coefficients.
+Today our interest is in both interpolating and extrapolating wavefields
+(which are solutions to low order differential equations)
+and we use methods that
+are much better behaved than polynomials when extrapolating data,
+methods which behave acceptably when faced with contradictory data values,
+and methods which also apply in two and three dimensions.
+\par
+In Chapter \ref{paper:iin},
+subroutine \texttt{invint1()} \vpageref{lst:invint2}
+solved the problem of inverse linear interpolation,
+which is,
+given scattered data points,
+to find a function on a uniform mesh
+from which linear interpolation gives the scattered data points.
+To cope with regions having no data points,
+the subroutine requires an input roughening filter.
+This is a bit like specifying a differential equation
+to be satisfied between the data points.
+The question is, how should we choose a roughening filter?
+The importance of the roughening filter
+grows as the data gets sparser or as the mesh is refined.
+\par
+Figures \ref{fig:man1}-\ref{fig:syn3} suggest that the choice
+of the roughening filter need not be subjective,
+nor a priori,
+but that the prediction-error filter (PEF) is the ideal roughening filter.
+Spectrally, the PEF tends to the inverse of its input
+hence its output tends to be ``level''.
+Missing data that is interpolated with this ``leveler''
+tends to have the spectrum of given data.
+%
+%Again, the user specifies the order.
+%In the tests below, I specified the order by having the
+%PEF have from 3-20 coefficients and I saw little systematic change
+%in quality of results as the order of the PEF was varied.
+%
+\subsection{Test results for leveled inverse interpolation }
+Figures \ref{fig:subsine3} and \ref{fig:subsine5}
+show the same example as in Figures
+\ref{fig:im1-2+1} and
+\ref{fig:im1-1a}.
+What is new here is that the proper PEF
+is not given but is determined from the data.
+Figure \ref{fig:subsine3} was made with a three-coefficient filter $(1,a_1,a_2)$ and
+Figure \ref{fig:subsine5} was made with a five-coefficient filter
+$(1,a_1,a_2,a_3,a_4)$.
+The main difference in the figures is where the data is sparse.
+%The three-coefficient filter can fit only a single sinusoid and it does that.
+%The five-coefficient filter can fit only two sinusoids and
+%it does something like that, a high-frequency sinusoid on the left
+%and a lower one on the right.
+The data points in Figures
+\ref{fig:im1-2+190},
+\ref{fig:subsine3} and
+\ref{fig:subsine5} are samples from a sinusoid.
+\sideplot{subsine3}{width=3in,height=1.5in}{
+  Interpolating with a three-term filter.
+  The interpolated signal is fairly monofrequency.
+}
+\sideplot{subsine5}{width=3in,height=1.5in}{
+  Interpolating with a five term filter.
+  % A low frequency component grows towards the right.
+}
+\par
+        Comparing Figures
+        \ref{fig:im1-2+1} and
+        \ref{fig:im1-1a} to
+        Figures \ref{fig:subsine3} and \ref{fig:subsine5}
+        we conclude that by finding and imposing
+        the prediction-error filter
+        while finding the model space,
+        we have interpolated beyond \bx{aliasing} in data space.
+\par
+\boxit{
+	Sometimes PEFs enable us to interpolate beyond aliasing.
+        }
+%\par
+%Now we switch to other analytic functions as a source of data,
+%damped sinusoids and sums of sinusoids
+%and we use a slightly different plot format.
+%Figures \FIG{il.1.10}--\FIG{il.3.20}
+%show an analytic function with large dots superposed at locations
+%chosen by a random number generator.
+%The random numbers are required to lie in the middle half of the signal.
+%The model estimated from data at the large dots is shown by the vertical lines.
+%Notice that the fit is generally good but diminishes in quality
+%away from the center of the plot
+%as expected (and required) by the theory.
+%\par
+%\Activesideplot{il.1.10}{width=3in,height=1.5in}{levint}{
+%       The continuous function is a step function times a damped sinusoid.
+%       Press button for movie showing the estimated curve
+%       as a function of iteration.
+%       }
+%\Activesideplot{il.2.15}{width=3in,height=1.5in}{levint}{
+%       The continuous function is a sum of two sinusoids.
+%       Press button for movie.
+%       }
+%\Activesideplot{il.2.10}{width=3in,height=1.5in}{levint}{
+%       The continuous function is a sum of two sinusoids
+%       like the previous figure but sampled fewer places.
+%       See movie.
+%       }
+%\Activesideplot{il.3.20}{width=3in,height=1.5in}{levint}{
+%       The sinusoids have a higher frequency.
+%       See movie.
+%       }
+%
+%
+\subsection{Analysis for leveled inverse interpolation }
+Here we see how the interpolation beyond aliasing was done.
+\sx{interpolation ! beyond aliasing}
+The first ``statement of wishes'' is that the observational data $\bold d$
+should result from a linear interpolation $\bold L$ of the uniformly sampled
+model space $\bold m$; that is,
+$ \bold 0 \approx \bold L \bold m - \bold d $.
+Expressing this as a change $\Delta \bold m$ gives the fitting goal
+in terms of the model change, 
+$\bold 0 \approx\bold L \Delta\bold m+(\bold L \bold m-\bold d)=\bold L \Delta\bold m + \bold r $.
+The second wish is really an assertion
+that a good way to find missing parts of a function
+(the model space)
+is to solve for the function and its PEF at the same time.
+We are merging the fitting goal
+(\ref{eqn:tworegexam}) for irregularly sampled data with the fitting goal
+(\ref{eqn:bigmissif}) for finding the prediction-error filter.
+\par
+\begin{eqnarray}
+\label{eqn:nirvana1}
+\bold 0 &\approx& \bold r_d \eq
+\bold L \Delta \bold m + (\bold L \bold m - \bold d) \\
+\label{eqn:nirvana2}
+\bold 0 &\approx& \bold r_m \eq
+\bold A         \Delta \bold m +
+\bold M \bold K \Delta \bold a +
+(\bold A\bold m \ {\rm or}\
+ \bold M\bold a)
+\end{eqnarray}
+Writing this out in full for 3 data points
+and 6 model values on a uniform mesh
+and a PEF of 3 terms,
+we have
+\begin{equation}
+\left[ 
+\begin{array}{cccccc|ccc}
+   .8 & .2 & .   & .   & .   & .  &     &     &     \\
+   .  & .  & 1   & .   & .   & .  &     &     &     \\
+   .  & .  & .   & .   & .5  & .5 &     &     &     \\
+   \hline
+   a_0& .  & .   & .   & .   & .   & m_0 & .   & .   \\
+   a_1& a_0& .   & .   & .   & .   & m_1 & m_0 & .   \\
+   a_2& a_1&  a_0& .   & .   & .   & m_2 & m_1 & m_0 \\
+   .  & a_2&  a_1&  a_0& .   & .   & m_3 & m_2 & m_1 \\
+   .  & .  &  a_2&  a_1&  a_0& .   & m_4 & m_3 & m_2 \\
+   .  & .  & .   &  a_2&  a_1&  a_0& m_5 & m_4 & m_3 \\
+   .  & .  & .   & .   &  a_2&  a_1& .   & m_5 & m_4 \\
+   .  & .  & .   & .   & .   &  a_2& .   &  .  & m_5 
+  \end{array} \right] 
+  \ 
+\left[
+\begin{array}{rr}
+  \bold I & \bold 0 \\
+  \bold 0 & \bold K
+ \end{array} \right]
+  \ 
+\left[ 
+        \begin{array}{c}
+          \Delta m_0 \\ 
+          \Delta m_1 \\ 
+          \Delta m_2 \\ 
+          \Delta m_3 \\ 
+          \Delta m_4 \\ 
+          \Delta m_5 \\ 
+          \Delta m_6 \\
+          \hline
+          \Delta a_0 \\
+          \Delta a_1 \\
+          \Delta a_2
+        \end{array}
+\right] 
+\ +\ 
+\left[ 
+\begin{array}{c}
+  r_{d0} \\ 
+  r_{d1} \\ 
+  r_{d2} \\ 
+  \hline
+  r_{m0}   \\
+  r_{m1}   \\
+  r_{m2}   \\
+  r_{m3}   \\
+  r_{m4}   \\
+  r_{m5}   \\
+  r_{m6}   \\
+  r_{m7}
+  \end{array} \right] 
+\quad \approx \ \bold 0
+\label{eqn:biglevint}
+\end{equation}
+where $r_m$ is the convolution of the filter $a_t$ and the model $m_t$,
+where $r_d$ is the data misfit $ \bold r = \bold L\bold m - \bold d $,
+and where $\bold K$ was defined in equation~(\ref{eqn:pefconstraint}).
+\sx{fitting goal ! nonlinear}
+\par
+Before you begin to use this \bx{nonlinear fitting goal},
+you need some starting guesses for $\bold m$ and $\bold a$.
+The guess $\bold m = 0$ is satisfactory (as explained later).
+For the first guess of the filter, I suggest you load it up with 
+$\bold a = (1,-2,1)$ as I did for the examples here.
+%
+%Then,
+%to begin the iteration loop in subroutine \texttt{levint1()},
+%we compute the two components of the residual vector,
+%$\bold r_d = \bold L \bold m - \bold d $ and
+%$\bold r_m = \bold A \bold m$.
+%Next, the steps are the ones of usual CD,
+%using the adjoint operator on the residuals to find the gradient direction:
+%\begin{equation}
+%       \left[
+%       \begin{array}{c}
+%       \Delta \bold m \\
+%       \Delta \bold a
+%       \end{array}
+%       \right]
+% \quad\longleftarrow\quad
+%       \left[
+%       \begin{array}{cc}
+%       \bold L\T  &  \bold A\T \\
+%       \bold 0   &  \bold K\T \bold M\T
+%       \end{array}
+%       \right]
+%       %
+%       \left[
+%       \begin{array}{c}
+%       \bold r_d \\
+%       \bold r_m
+%       \end{array}
+%       \right]
+%\end{equation}
+%Besides using the usual constraints on filters and known data,
+%I do not permit the filter to change in an early group of iterations
+%while the missing data is roughed in.
+%Because this is a nonlinear goal,
+%you might fear significant dependence on the starting value of $\bold m$.
+%Restraining the filter to be unchanging $\Delta\bold a=\bold 0$ in early iterations
+%changes the goal to a linear one in those early iterations
+%and I found the bad effects of very poor starting guesses
+%were strongly diminished by this restraint.
+%
+%\par
+%Then,
+%using
+%$\Delta \bold m$ and 
+%$\Delta \bold a$,
+%we find the implied changes in the residual:
+%\begin{equation}
+%       \left[
+%       \begin{array}{c}
+%       \Delta \bold r_d \\
+%       \Delta \bold r_m
+%       \end{array}
+%       \right]
+% \quad\longleftarrow\quad
+%       \left[
+%       \begin{array}{cc}
+%       \bold L  &  \bold 0           \\
+%       \bold A  &  \bold M \bold K
+%       \end{array}
+%       \right]
+%       %
+%       \left[
+%       \begin{array}{c}
+%       \Delta \bold m \\
+%       \Delta \bold a
+%       \end{array}
+%       \right]
+%\end{equation}
+%Finally, as ever, we use subroutine \texttt{cgplus()} \vpageref{lst:cgplus}
+%for selecting the step size and updating the solution.
+%
+%\progdex{levint1}{level inverse interp}
+%
+%\subsection{Unresolved computational issues}
+%Theory offers little assurance about the behavior of nonlinear
+%optimization goals such as we optimize here.
+%I breathed a sigh of relief
+%when my first code gave satisfactory results.
+%After it worked, I stressed it
+%with inappropriate scaling, too long filters,
+%insufficient data, etc, to see what happens.
+%
+%\par
+%First, (limited) experience showed
+%that the data should be scaled to about a maximum value of unity
+%(not unlike the constrained filter coefficient).
+%Second, notice that the linear interpolation operator $\bold L$
+%is devoid of physical dimensions and is about unit scale.
+%Likewise, the PEF is dimensionless and begins with a ``1.0''.
+%Thus the operators seem about the same scale.
+%Third, I investigated revising operator scales
+%by beginning the PEF with an $\epsilon$ instead of a ``1.0''.
+%I found unsatisfactory convergence when $\epsilon$ got
+%outside the range $0.2< \epsilon < 2.0$,
+%and fairly consistent behavior inside that range,
+%so I set $\epsilon = 1.0$ and turned my attention elsewhere.
+%%\par
+%%Generally, iterative matrix methods 
+%%converge fastest when variables are scaled
+%%so that each matrix column has the same energy.
+%%Here we think of the partitioned operator
+%%with one ``column'' pertaining to the unknown filter
+%%and one ``column'' to the unknown model.
+%%These ``columns'' are out of scale in two senses.
+%%First, each spans a much different number of ordinary columns.
+%%Second, the signal could have physical dimensions
+%%while the PEF is dimensionless.
+%%I experimented with scale and
+%%was disappointed to discover that different data scales
+%%often led to different final answers.
+%%The problem was worst when the number of data points were few
+%%or when data points happened to lie at unhelpful locations.
+%%It happened that my test cases, data values scaled to a maximum of unity,
+%%had about an ideal scale, and pushing the scale away by
+%%a factor of 10 would give disappointing results on difficult cases
+%%(those with small numbers of data points.)
+%%In summary,
+%
+%\par
+%I experimented with variable numbers of filter coefficients,
+%and took values of {\tt na} between 3 and 20.
+%I was pleased to discover only moderate sensitivity of the solution
+%to the filter size and I plan to do most future work with 3-5 coefficients.
+%
+%\par
+%Because the goal is nonlinear,
+%there is no assurance that the recursion
+%will converge to a global solution
+%and I cannot know whether the solutions shown in the figures
+%correspond to global solutions.
+%My experience, however,
+%was that where there were ``enough'' data samples,
+%the convergence was unequivocal,
+%and seemed insensitive to
+%{\tt niter}, {\tt na}, and $\epsilon$.
+%Where there were not ``enough'' data samples,
+%results seemed dependent on those variables.
+%
+%\par
+%Also because the goal is nonlinear,
+%the required \bx{iteration count} is not known.
+%I started by using double that required by the linear theory,
+%but as I watched movies of the interpolated signal
+%as a function of iteration, I saw convergence
+%was generally much more rapid,
+%especially where there were enough data points.
+%I changed the default number of iterations
+%to one and a half iterations per unknown.
+%These plots required less than a second of computer time
+%so I had little motivation to take advantage of the fact
+%that most of the ``action'' is in the first ten iterations.
+%Efficiency will be a much bigger issue with 2-D and 3-D models,
+%and then we may return to 1-D to gain rapid experience
+%with convergence issues.
+%
+%\par
+%Because ``most physical functions are smooth,'' I tried initializing
+%the PE filter to $(1,-2,1)$, but this improved first guess
+%had little effect beyond the first iteration.
+%To successfully impose this prior knowledge,
+%I added the constraint that the PE filter
+%begin at $(1,-2,1)$ and not change $\Delta \bold a = \bold 0$
+%in the early iterations,
+%while the model $\bold m$ accommodates itself to this prior filter.
+%Because linear theory applies during these early iterations,
+%we can hope that it brings us to a reasonably good position
+%before nonlinear theory takes over.
+%
+%\par
+%I experimented by running first to completion with $(1,-1)$ or $(1,-.5,-.5)$.
+%This failed because these filters introduced high frequencies
+%(such as corners)
+%that surprisingly would not melt away
+%when the filter coefficients were set free.
+%This reminds us that local minima are a reality and could mean
+%(1) it got stuck in a local minimum, or
+%(2) that we really do not seek the global minimum sum of squares,
+%but we want a local minimum near a smooth solution.
+%This phenomena appears again in experiments in 2-D in Chapter \ref{lal/paper:lal},
+%where after many iterations with the Laplacian filter,
+%the wavefield ``froze'' and would not move when the filter
+%was restarted from an impulse.  This puzzle requires further study.
+%Perhaps $\epsilon$ holds the key.
+%
+
+\subsection{Seabeam: theory to practice}
+I provide here a more fundamental theory for dealing with
+the Seabeam data.
+I originally approached the data in this more fundamental way,
+but with time, I realized that I paid a high price in
+code complexity, computational speed, and reliability.
+The basic problem is that the elegant theory
+requires a good starting model
+which can only come from the linearized theory.
+I briefly recount the experience here,
+because the fundamental theory is interesting
+and because in other applications,
+you will face the challenge of sorting out
+the fundamental features from the essential features.
+\par
+\sx{linear interpolation instead of binning}
+The linear-interpolation operator
+carries us from a uniform mesh to irregularly distributed data.
+Fundamentally we seek to solve the inverse problem to go
+the other direction.
+A nonlinear approach to filling in the missing data is suggested by
+the one-dimensional examples in Figures
+\ref{fig:subsine3}--\ref{fig:subsine5},
+where the PEF and the missing data are estimated simultaneously.
+The nonlinear approach has the advantage that it allows for
+completely arbitrary data positioning,
+whereas the two-stage linear approach
+forces the data to be on a uniform mesh
+and requires there not be too many empty mesh locations.
+
+\par
+For the 2-D nonlinear application,
+we follow the same approach we used in one dimension,
+equations
+(\ref{eqn:nirvana1}) and
+(\ref{eqn:nirvana2}),
+except that the filtering and the linear interpolations
+are two dimensional.
+
+\par
+I have had considerable experience with this problem on this data set
+and I can report that bin filling is easier
+and works much more quickly and reliably.
+Eventually I realized that the best way to start
+the nonlinear iteration (\ref{eqn:nirvana1}-\ref{eqn:nirvana2}) is with
+the final result of bin filling.
+Then I learned that the extra complexity
+of the nonlinear iteration (\ref{eqn:nirvana1}-\ref{eqn:nirvana2})
+offers little apparent improvement to the quality of the
+SeaBeam result.
+(This is not to say that we should not try more variations on the idea).
+\par
+Not only did I find the binning method faster,
+but I found it to be {\it much}
+faster (compare a minute to an hour).
+The reasons for being faster (most important first) are,
+\begin{enumerate}
+\item Binning reduces the amount of data handled in each iteration
+        by a factor of the average number of points per bin.
+\item The 2-D linear interpolation operator adds many operations per data point.
+\item Using two fitting goals seems to require more iterations.
+\end{enumerate}
+(Parenthetically,
+I later found that helix preconditioning speeds the Seabeam interpolation
+from minutes to seconds.)
+\par
+The most serious criticism of the nonlinear approach
+is that it does not free us from the linearized approaches.
+We need them to get a ``close enough'' starting solution
+to the nonlinear problem.
+I learned that the iteration (\ref{eqn:nirvana1}-\ref{eqn:nirvana2}),
+like most nonlinear sequences,
+behaves unexpectedly and badly
+when you start too far from the desired solution.
+For example, I often began from the assumed PEF being a Laplacian
+and the original map being fit from that.
+Oddly, from this starting location I sometimes found myself stuck.
+The iteration (\ref{eqn:nirvana1}-\ref{eqn:nirvana2}) would not move towards the map
+we humans consider a better one.
+\par
+Having said all those bad things about iteration
+(\ref{eqn:nirvana1}-\ref{eqn:nirvana2}), I must hasten to add that
+with a different type of data set, you might find the results of
+(\ref{eqn:nirvana1}-\ref{eqn:nirvana2}) to be significantly better.
+
+%In an application where the noise is not random,
+%such as the Galilee and Geosat applications found elsewhere
+%in this book, we need noise filters, and they are not a part
+%of the missing data framework.
+%To speed you along in such a quest,
+%I offer you subroutine \texttt{levint2()},
+%but I leave it in the library,
+%to be exhibited with some data set where it turns out to be more helpful.
+%\par
+%On the other hand, we implied above that the two-stage linear approach
+%could not work if there were too many empty mesh locations,
+%because too many of the PEF fitting equations might be lost.
+%This implies a resolution limitation.
+%In fact, the situation need not be so restrictive.
+%A later section describes ``scale invariance'' more fully.
+%Simply stated, scale invariance means that
+%the estimated map has objects with characteristic slopes
+%but not with characteristic size.
+%Figures \ref{fig:seabin}--\ref{fig:seapef} fit that description.
+%Where we believe it appropriate to assume scale invariance,
+%there the PEF can be determined on a coarse mesh
+%(which has few empty bins) and applied on a fine mesh
+%that has high resolution.
+%This, as we'll see,
+%also overcomes a spatial aliasing limitation,
+%widely believed to be an absolute limitation,
+%but actually only a limitation to fields that have no scale
+%invariance.
+
+
+
+\subsection{Risky ways to do nonlinear optimization}
+\sx{fitting goal ! nonlinear}
+\sx{nonlinear optimization}
+I have noticed that some geophysicists
+have adopted a risky method of nonlinear optimization,
+which is not advocated in the professional optimization literature.
+This risky method is to linearize a goal
+(with a multiparameter model space),
+then optimize the linearized goal,
+then relinearize, etc.
+The safer method is to relinearize after each step of CD.
+\par
+An instructive example
+I learned about many years ago was earthquake epicenter location.
+Model space is latitude, longitude, and origin time.
+When people added a new variable, the depth,
+the solutions went wild
+until they learned to restrict the depth to zero
+until the other three parameters were stabilized.
+Apparently the instability stems from the fact 
+that depth and origin time affect distant receivers in a similar way.
+%In another case, a student had difficulty
+%trying to remake Figure~\ref{fig:exp} by the risky method.
+%Now you have been warned.
+
+\subsection{The bane of PEF estimation}
+This is the place where I would like to pat myself on the back
+for having ``solved'' the problem of missing data.
+Actually,
+an important practical problem remains.
+I've been trying to coax younger,
+more energetic people to think about it.
+The problem arises when there is too much missing data.
+\par
+\boxit{The bane of PEF estimation is too much missing data.}
+\par\noindent
+Then {\em all} the regression equations disappear.
+The nonlinear methods are particularly bad
+because if they don't have a good enough starting location,
+they can and do go crazy.
+My only suggestion is to begin with a linear PEF estimator.
+Shrink the PEF and
+coarsen the mesh in model space
+until you do have enough equations.
+Starting from there,
+hopefully you can refine this crude solution
+without dropping into a local minimum.
+\par
+Another important practical problem remains,
+that of nonstationarity.
+We'll see the beginnings of the solution
+to that problem in chapter \ref{paper:pch}.
+
+
+
+\section{MULTIVARIATE SPECTRUM}
+A common \bx{spectrum} is the Fourier spectrum.
+More fundamentally,
+a spectrum is a decomposition
+of a model space or data space into components.
+The components are in some sense independent; more specifically,
+the components are orthogonal to one another.
+Another well-known spectrum
+is provided by eigenvectors and eigenvalues.
+In statistical signal processing
+we handle a third type of spectrum, the multivariate spectrum.
+\par
+Working in an optimization application,
+we begin from residuals between theory and practice.
+These residuals can be scaled to make new optimization residuals
+before we start minimizing their energy.
+What scaling should we use?
+The scaling can be a simple weighting function or a filter.
+A filter is simply a weighting function in Fourier space.
+\par
+The basic idea of common sense,
+which also comes to us
+as results proven by Gauss
+or from the theory of statistical signal processing,
+is this:
+The optimization residuals should be roughly of equal scale.
+This makes sense because squaring magnifies scale,
+and anything small will be ignored while anything large will dominate.
+Scaling optimization residuals to be in a common range makes
+them all equally influential on the final solution.
+Not only should optimization residuals be of like scale in physical space,
+they should be of like scale in Fourier space
+or eigenvector space,
+or any other space that we might use to represent the optimization residuals.
+This implies that the optimization residuals should be uncorrelated.
+If the optimization residuals were correlated,
+they would have a spectrum that was not white.
+Not white means of differing sizes in Fourier space.
+Residuals should be the same size as one another in physical space,
+likewise in Fourier space.
+Thus the optimization residuals should be orthogonal
+and of unit scale, much like Fourier components
+or as eigenvectors are orthonormal.
+\par
+Let us approach the problem backwards.
+Suppose we have two random variables
+that we take to be the ideal optimization residuals $x_1$ and $x_2$.
+In reality the two may be few or trillions.
+In the language of statistics,
+the optimization residuals are expected to have zero mean,
+an idea that is formalized by writing
+$E(x_1)=0$
+and 
+$E(x_2)=0$.
+Likewise these ideal optimization residuals have equal energy,
+$E(x_1^2)=1$
+and 
+$E(x_2^2)=1$.
+Finally, these two optimization residuals are uncorrelated,
+a condition which is written as $E(x_1 x_2)=0$.
+The expectation symbol $E()$ is like a summation
+over many instances of the random variable.
+\par
+Now suppose there exists a transformation $\bold B$
+from these ideal optimization residuals
+to two experimental residuals $y_1$ and $y_2$, say
+$\bold y = \bold B \bold x$ where
+\begin{equation}
+  \left[
+    \begin{array}{l}
+      y_1 \\
+      y_2
+    \end{array}
+  \right]
+  \eq
+  \left[
+    \begin{array}{lr}
+      b_{11} & b_{12}\\
+      b_{21} & b_{22}
+    \end{array}
+  \right]
+  \left[
+    \begin{array}{l}
+      x_1 \\
+      x_2
+    \end{array}
+  \right]
+\end{equation}
+The experimental residuals $y_1$ and $y_2$ are
+likely to be neither orthogonal nor equal in energy.
+From the column vector $\bold y$,
+the experimenter can form a square matrix.
+Let us also allow the experimenter to write the symbol $E()$
+to denote summation over many trials or over many sections
+of data, ranges over time or space,
+over soundings or over receiver locations.
+The experimenter writes
+\begin{eqnarray}
+\bold R &=& E ( \bold y \bold y\T ) \\
+\bold R &=& E ( \bold B \bold x \bold x\T \bold B\T )
+\end{eqnarray}
+Given a random variable $r$,
+the expectation of $2r$ is simply $E(2r)=2E(r)$.
+The $E()$ symbol is a summation on random variables,
+but constants like the coefficients of $\bold B$ pass
+right through it.  Thus,
+\begin{eqnarray}
+\bold R &=&   \bold B\ E(\bold x \bold x\T)\ \bold B\T \\
+\bold R &=&   \bold B\
+  E \left(
+      \left[
+        \begin{array}{l}
+          x_1 \\
+          x_2
+        \end{array}
+      \right]
+      \left[
+        \begin{array}{ll}
+          x_1 & x_2
+        \end{array}
+      \right]
+  \right)
+\bold B\T
+                        \\
+\bold R &=&   \bold B
+      \left[
+        \begin{array}{ll}
+          E(x_1 x_1) & E(x_1 x_2)\\
+          E(x_2 x_1) & E(x_2 x_2)
+        \end{array}
+      \right]
+\bold B\T
+                        \\
+\bold R &=&   \bold B \bold B\T
+\end{eqnarray}
+\par
+Given a matrix $\bold R$,
+there is a simple well-known method
+called the \bx{Cholesky factorization} method that will factor $\bold R$
+into two parts like $\bold B$ and $\bold B\T$.
+The method creates for us either an upper or a lower triangular
+matrix (our choice) for $\bold B$.
+You can easily reinvent the Cholesky method
+if you multiply
+the symbols for two triangular matrices like
+$\bold B$ and $\bold B\T$ and notice the procedure that
+works backwards from $\bold R$ to $\bold B$.
+The experimenter seeks not $\bold B$, however, but its inverse,
+the matrix that takes us from the experimental residuals
+to the ideal optimization residuals
+that are uncorrelated and of equal energies.
+The Cholesky factorization costs $N^3$ computations,
+which is about the same as the cost of the matrix inversion
+of $\bold R$ or $\bold B$.
+For geophysical maps and other functions on Cartesian spaces,
+the Prediction Error Filter (PEF) accomplishes the same
+general goal and has the advantage that we have already
+learned how to perform the operation using operators
+instead of matrices.
+\par
+\boxit{
+        The multivariate spectrum of experimental residuals
+        $\bold y$
+        is the matrix
+        $\bold R = E ( \bold y \bold y\T)$.
+        For optimum model finding,
+        the experimental residuals (squared)
+        should be weighted inversely
+        (matrix inverse) by their multivariate spectrum.
+        }
+%
+\par
+If I were a little stronger at analysis (or rhetoric)
+I would tell you that
+the optimizers preconditioned variable $\bold p$
+is the statisticians IID (Independent Identically Distributed) random variable.
+For stationary (statistically constant) signals and images,
+$\bold A_m$
+is the model-space PEF.
+Echo soundings and
+\bx{interval velocity}
+have statistical properties
+that change with depth.
+There $\bold A_m$
+is a diagonal weighting matrix
+(perhaps before or after a PEF).
+
+
+
+\subsection{What should we optimize?}
+Least-squares applications often present themselves as fitting goals such as
+\begin{eqnarray}
+\bold 0 &\approx&  \bold F \bold m - \bold d\\
+\bold 0 &\approx&          \bold m
+\end{eqnarray}
+To balance our possibly contradictory goals we need weighting functions.
+The quadratic form that we should minimize is
+\begin{equation}
+\min_m \quad
+(\bold F \bold m - \bold d)\T
+\bold A\T_n \bold A_n
+(\bold F \bold m - \bold d)
+         +
+         \bold m\T \bold A\T_m \bold A_m \bold m
+\end{equation}
+where $\bold A\T_n \bold A_n$ is the inverse multivariate spectrum of the noise
+(data-space residuals) and
+$\bold A\T_m \bold A_m$ is the inverse multivariate spectrum of the model.
+In other words,
+$\bold A_n$ is a leveler on the data fitting error and
+$\bold A_m$ is a leveler on the model.
+There is a curious unresolved issue:
+What is the most suitable constant scaling ratio
+of $\bold A_n$ to $\bold A_m$?
+%
+\subsection{Confusing terminology for data covariance}
+Confusion often stems from the mean of the data $E(\bold d)$.
+\par
+An experimentalist would naturally believe that
+the expectation of the data
+is solely a function of the data,
+that it can be estimated by averaging data.
+\par
+On the other hand, a theoretician's idea
+of the expectation of the observational data $E(\bold d)$
+is that it is the theoretical data $\bold F\bold m$,
+that the expectation of the data
+$E(\bold d)=\bold F\bold m $ is a function of the model.
+The theoretician thinks this way because of the idea
+of noise $\bold n=\bold F\bold m-\bold d$ as having zero mean.
+\par
+Seismological data is highly complex but also highly reproducible.
+In studies like seismology,
+the world is deterministic but more complicated than our ability to model.
+Thus, as a practical matter,
+the discrepancy between observational data and theoretical data
+is more realistically attributed to the theoretical data.
+It is not adequately modeled and computed.
+\par
+This superficial difference in viewpoint becomes submerged
+to a more subtle level
+by statistical textbooks that usually define weighting functions
+in terms of variances instead of spectra.
+This is particularly confusing with the noise spectrum
+$(\bold A_n\T \bold A_n)^{-1}$.
+It is often referred to as the ``\bx{data covariance}''
+defined as $E[(\bold d-E(\bold d))(\bold d-E(\bold d))\T]$.
+Clearly, the noise spectrum is the same as the data covariance
+only if we accept the theoretician's definition
+that $E(\bold d)=\bold F\bold m$.
+\par
+There is no ambiguity and no argument
+if we drop the word ``variance'' and use the word ``spectrum''.
+Thus,
+(1) the ``inverse \bx{noise spectrum}''
+is the appropriate weighting for data-space residuals;
+and (2) the ``inverse \bx{model spectrum}''
+is the appropriate model-space weighting.
+Theoretical expositions generally require
+these spectra to be given as ``\bx{prior information}.''
+In this book we see how,
+when the model space is a map,
+we can solve for the ``prior information''
+along with everything else.
+
+\par
+The statistical words ``covariance matrix'' are suggestive and appealing,
+but I propose not to use them
+because of the ambiguity of $E(\bold d)$.
+For example, we understand that people who say ``data covariance''
+intend the ``multivariate noise spectrum''
+but we cannot understand their meaning of ``model covariance''.
+They should intend the ``multivariate model spectrum''
+but that implies that $E(\bold m)=\bold 0$,
+which seems wrong.
+Avoiding the word ``covariance'' avoids the problem.
+%\end{notforlecture}
+
+\subsection{Hermeneutics}
+\boxit{
+	In seismology the data is usually better than the theory.
+	}
+\par
+Hermeneutics is the
+study of the methodological principles of interpretation.
+Historically, it refers to bible study.
+Never-the-less, it seems entirely appropriate for Geophysical Estimation.
+If Albert's book is ``Inverse Problem Theory'' and mine is
+``Inverse Problem Practice'', and if
+the difference between theory and practice is smaller in theory
+than it is in practice,
+then there are two fundamental questions:
+\begin{enumerate}
+\item In theory, what is the difference between theory and practice?
+	In theory, the difference is data error.
+\item In practice, what is the difference between theory and practice?
+	One suggestion is that the discrepancy is entirely due
+	to inadequate modeling.
+	It is well known that geophysical data is highly repeatable.
+	The problem is that the modeling neglects far too much.
+\end{enumerate}
+
+\par
+Here is a perspective drawn from analysis of the human genome:
+``The problem is that
+it is possible to use empirical data to calibrate a model
+that generates simulated data that
+is similar to the empirical data.
+The point of using such a calibrated model
+is to be able to show how strange certain regions are
+if they don't fit the simulated distribution,
+which is based on the empirical distribution.''
+In other words, ``inversion'' is just the process of calibrating a model.
+To learn something new we study the {\it failures} of such models.
+
+
+
+\clearpage
+

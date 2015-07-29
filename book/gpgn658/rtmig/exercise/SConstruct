@@ -1,0 +1,106 @@
+## 
+ # GPGN 658 - Homework 3
+ ##
+from rsf.proj import *
+import fdm
+
+# ------------------------------------------------------------
+par = {
+    'nt':1200, 'ot':0, 'dt':0.001, 'lt':'t', 'ut':'s',     
+    'nx':401,  'ox':0, 'dx':0.005, 'lx':'x', 'ux':'km',
+    'nz':201,  'oz':0, 'dz':0.005, 'lz':'z', 'uz':'km',
+    'kt':50,
+    'nb':100, 
+    'jsnap':50,
+    'jdata':1
+    }
+fdm.param(par)
+
+par['xk']=50
+par['xl']=par['nx']-50
+
+par['xsou']=par['ox']+par['nx']/2*par['dx']
+par['zsou']=par['oz']
+
+# ------------------------------------------------------------
+# wavelet
+fdm.wavelet('wav_',35,par)
+Flow(  'wav', 'wav_','transp')
+Result('wav','window n2=500 |' + fdm.waveplot('',par))
+
+# ------------------------------------------------------------
+# sources coordinates
+fdm.point('ss',par['xsou'],par['zsou'],par) 
+Plot('ss',fdm.ssplot('',par))
+
+# receivers coordinates
+fdm.horizontal('rr',0,par) 
+Plot('rr',fdm.rrplot('',par))
+
+# ------------------------------------------------------------
+# velocity
+Flow('vo',None,
+     '''
+     math output="2.0+0.25*x1"
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g
+     ''' % par)
+
+Plot(  'vo',fdm.cgrey('allpos=y bias=2.0 pclip=100',par))
+Result('vo',['vo','ss','rr'],'Overlay')
+
+# ------------------------------------------------------------
+# density
+Flow('ra',None,
+     '''
+     spike nsp=2 mag=+0.5,-0.5
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=101,151 l1=%(nz)d,%(nz)d
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=1,201   l2=200,%(nx)d |
+     add add=2
+     ''' % par)
+Plot(  'ra',fdm.cgrey('allpos=y bias=1.5 pclip=100',par))
+Result('ra',['ra','ss','rr'],'Overlay')
+
+Flow('rb','ra','math output=1')
+
+# ------------------------------------------------------------
+# edge taper
+Flow('taper',None,
+     '''
+     spike nsp=1 mag=1
+     n1=%(nx)d d1=%(dx)g o1=%(ox)g k1=%(xk)d l1=%(xl)d
+     n2=%(nt)d d2=%(dt)g o2=%(ot)g |
+     smooth rect1=50 |
+     window j2=%(jdata)d
+     ''' % par)
+Result('taper','transp |'+fdm.dgrey('pclip=99',par))
+
+# ------------------------------------------------------------
+# finite-differences modeling
+fdm.awefd2d('dd','ww','wav','vo','ra','ss','rr','free=n',par)
+fdm.awefd2d('do','wo','wav','vo','rb','ss','rr','free=n',par)
+
+Result('ww',fdm.cgrey('pclip=99',par))
+Result('wo',fdm.cgrey('pclip=99',par))
+
+# receiver data
+Flow(  'dr0','dd taper','window | add mode=p ${SOURCES[1]}')
+Result('dr0','transp |' + fdm.dgrey('pclip=99',par))
+
+# receiver data
+Flow(  'dr1','dd do taper','add ${SOURCES[1]} scale=1,-1 | add mode=p ${SOURCES[2]}')
+Result('dr1','transp |' + fdm.dgrey('pclip=99',par))
+
+# ------------------------------------------------------------
+## 
+ # Here add rules for your assignment.
+ #
+ # use Flow()
+ # use Result()
+ #
+ # find Madagascar programs using the command "sfdoc -k ."
+ # find the documentation of Madagascar programs by typing the program name
+ ##
+
+
+End()

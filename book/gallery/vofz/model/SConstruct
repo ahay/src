@@ -1,0 +1,20 @@
+from rsf.proj import *
+from rsf.gallery import vofz
+
+vofz.get_velocity('vel')
+
+Result('model','vel-model','Overlay')
+
+vofz.zero_offset('zoff')
+
+Result('zoff','grey title="Zero-Offset" ')
+
+vofz.cmps('cmp')
+
+Result('cmp','byte gainpanel=all | transp plane=23 | grey3 flat=n title=CMPs frame1=750 frame3=50 frame2=150 point1=0.7 point2=0.7')
+
+vofz.shots('shot')
+
+Result('shot','byte gainpanel=150 | grey3 flat=n title=Shots frame1=750 frame2=50 frame3=150')
+
+End()

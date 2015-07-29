@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sfscale', 'sfput', 'sfmath', 'sfgrey', 'sfwindow', 'sftti2delrsep', 'sftti2delrdecomp2p']
+data=['pub/datasets/2D/Hess_VTI/timodel_vp.segy.gz', 'pub/datasets/2D/Hess_VTI/timodel_delta.segy.gz', 'pub/datasets/2D/Hess_VTI/timodel_epsilon.segy.gz']
+size=  227256000

@@ -1,0 +1,94 @@
+from rsf.proj import *
+
+yshot=0.2
+zshot=0.2
+v0=1.5
+v00=1.55
+dvdx=0.5
+dvdz=0.7
+dl=0.1
+
+contour = '''
+contour c0=0. dc=0.05 nc=25 max1=1. max2=1. wanttitle=n
+label1=Depth label2=Lateral screenratio=1. labelsz=12 screenht=14
+'''
+grey = '''
+grey wanttitle=n polarity=n
+label1=Depth label2=Lateral screenratio=1. labelsz=12 screenht=14 bias=1.5
+'''
+
+grey2 = '''
+grey wanttitle=n
+label1=Depth label2=Lateral screenratio=1. labelsz=12 screenht=14
+clip=0.01 maxval=0.01 minval=0 barreverse=n scalebar=y barlabel="Time (s)"
+'''
+grey3 = '''
+grey wanttitle=n
+label1=Depth label2=Lateral screenratio=1. labelsz=12 screenht=14
+clip=0.0005 maxval=0.0005 clip=100 maxval=100 minval=0 barreverse=n scalebar=y barlabel="Time Error (%)"
+'''
+
+samples = (1,2,4,8,10,15,20,30,40,50,80,100)
+
+Flow('const',None,
+     'spike n1=2000 n2=2000 d1=0.0005 d2=0.0005 unit1=km unit2=km mag=1')
+     
+Flow('vel',None,'makevel v000=%g dvdx2=%g dvdx1=%g n1=2000 n2=2000 d1=0.0005 d2=0.0005 vlens=0.5 x1lens=0.5 x2lens=0.6 dlens=0.2 tlens=0.2' % (v0,dvdx,dvdz))
+Plot('vel','window j1=5 j2=5 | ' + grey)
+
+Flow('vel2',None,'makevel v000=%g dvdx2=%g dvdx1=%g n1=2000 n2=2000 d1=0.0005 d2=0.0005 oo2=%g vlens=0.5 x1lens=0.5 x2lens=0.5 dlens=0.2 tlens=0.2' % (v00,dvdx,dvdz,-dl))
+Plot('vel2','window j1=5 j2=5 | ' + grey)
+#Result('vell','vel vel2','SideBySideIso')
+
+Flow('eiko1','vel',
+         '''
+         window j1=10 j2=10 |
+         eikonal order=%d zshot=%g yshot=%g br1=0.05 br2=0.05
+         ''' % (2,zshot,yshot))
+
+Flow('eiko2','vel2',
+         '''
+         window j1=10 j2=10 |
+         eikonal order=%d zshot=%g yshot=%g br1=0.05 br2=0.05
+         ''' % (2,zshot,yshot))
+
+Flow('eikDiff',['eiko2','eiko1'],'difference subtracter=${SOURCES[1]} | math output="abs(input)"')
+
+Plot('eiko1','eiko1',
+         '''
+         %s dash=0 wantaxis=n
+         ''' % (contour))
+
+Plot('eiko2','eiko2',
+         '''
+         %s dash=0 wantaxis=n
+         ''' % (contour))
+
+for sorder in (1,2,3):
+  eikods = 'eikods%d' % sorder
+  eikodsv = 'eikodsv%d' % sorder
+  const1 = 'const1%d' % sorder
+  const2 = 'const2%d' % sorder
+  const3 = 'const3%d' % sorder
+  const4 = 'const4%d' % sorder
+  Flow(eikods,'vel',
+         '''
+         window j1=10 j2=10 |
+         eikds order=%d zshot=%g yshot=%g sorder=%d br1=0.05 br2=0.05 btime=n dl=%g
+         ''' % (2,zshot,yshot,sorder,dl))
+
+  Plot(eikodsv,eikods,
+         '''
+         %s dash=1 wantaxis=n
+         ''' % (contour))
+  Plot(const1,['vel','eiko1',eikodsv],'Overlay')
+  Plot(const2,['vel2','eiko2',eikodsv],'Overlay')
+  Plot(const3,eikods,'difference subtracter=%s | math output="abs(input)" | %s ' % ('eiko2.rsf',grey2))
+  Plot(const4,[eikods,'eiko2','eikDiff'],'difference subtracter=${SOURCES[1]} | math xx=${SOURCES[2]} output="100*abs(input)/xx" | %s ' % grey3)
+
+Result('circ1','const11 const21 const31','SideBySideIso')
+Result('circ2','const12 const22 const32','SideBySideIso')
+Result('circ3','const13 const23 const33','SideBySideIso')
+Result('circ4','const41 const42 const43','SideBySideIso')
+
+End()

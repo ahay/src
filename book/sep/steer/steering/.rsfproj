@@ -1,0 +1,3 @@
+uses=['sfspike', 'sfplane', 'sfgrey', 'sfwiggle', 'sfspectra', 'sfgraph']
+data=[]
+size=      21600

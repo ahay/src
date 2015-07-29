@@ -1,0 +1,15 @@
+#!/bin/csh
+#$ -N shot_1 
+#$ -pe 1way 276 
+#$ -q normal
+#$ -o shot_1.o$JOB_ID
+#$ -l h_rt=24:00:00
+#$ -V
+#$ -cwd
+#   <------ You MUST Specify a Project String ----->
+#$ -A TCCS 
+
+
+setenv OMP_NUM_THREADS 12 
+
+ibrun tacc_affinity $RSFROOT/bin/sfffdshot  source=sourceshot.rsf vel=velt.rsf dt=0.00025 nt=18001 sht=0  isz=2 nbt=75 nbb=74 nbl=100 nbr=99 ct=0.005 cb=0.005 cl=0.004 cr=0.004 geo=geoshot_1.rsf irz=3  err=0.000001 factor=1.0 ax=2 az=2 jm=16  tskip=0 jr=5 out=stdout 

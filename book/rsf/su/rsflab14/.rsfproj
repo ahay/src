@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sfdd', 'sfheadermath', 'sfheadersort', 'sfpow', 'sfmask', 'sfheaderwindow', 'sfwiggle', 'sfcat', 'sfgraph']
+data=['PRIVATE']
+size=  767176300

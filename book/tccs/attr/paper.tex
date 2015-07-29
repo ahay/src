@@ -1,0 +1,452 @@
+\published{Geophysics, 72, no. 3, A29-A33, (2007)}
+\title{Local seismic attributes}
+
+\author{Sergey Fomel}
+
+%\ms{LETTER GEO-2006-0339}
+
+\lefthead{Fomel}
+\righthead{Local seismic attributes}
+
+\address{Bureau of Economic Geology, \\
+John A. and Katherine G. Jackson School of Geosciences \\
+The University of Texas at Austin \\
+University Station, Box X \\
+Austin, TX 78713-8972}
+
+\maketitle
+
+\begin{abstract}
+  Local seismic attributes measure seismic signal characteristics not
+  instantaneously at each signal point and not globally across a data
+  window but locally in the neighborhood of each point. I define local
+  attributes with the help of regularized inversion and demonstrate
+  their usefulness for measuring local frequencies of seismic signals
+  and local similarity between different datasets\old{, and local
+    focusing of a seismic image}. I use shaping regularization for
+  controlling the locality and smoothness of local attributes. A
+  multicomponent image registration example from a nine-component land
+  survey illustrates practical applications of local attributes for
+  measuring \old{frequency and phase} differences between registered
+  images.
+\end{abstract}
+
+\section{Introduction}
+
+\emph{Seismic attribute} is defined by \cite{EDG00-00-03840384} as a
+``measurement derived from seismic data''. Such a broad definition
+allows for many uses and abuses of the term. Countless attributes have
+been introduced in the practice of seismic exploration,
+\cite[]{TLE15-10-10901090,TLE16-05-04450456}, 
+which led \cite{TLE21-10-09940994} to talk about ``attribute
+explosion''.  Many of these attributes play an exceptionally important
+role in interpreting and analyzing seismic data \cite[]{marfurt}.
+
+In this paper, I consider \old{three} \new{two} particular attribute applications:
+\begin{enumerate}
+\item \emph{Measuring local frequency content in a seismic image}
+  is important both for studying the phenomenon of seismic wave
+  attenuation and for processing of attenuated signals.
+\item \emph{Measuring local similarity between two seismic images} is
+  useful for seismic monitoring, registration of multicomponent data,
+  and analysis of velocities and amplitudes.
+\old{\emph{Measuring local focusing of a seismic image} is needed for
+  phase correction and diffraction velocity analysis.}
+\end{enumerate}
+
+Some of the best known seismic attributes are instantaneous attributes
+such as instantaneous phase or instantaneous dip
+\cite[]{GEO44-06-10411063,GEO57-11-15201524,GEO58-03-04190428}. 
+Such
+attributes measure seismic frequency characteristics as being attached
+instantaneously to each signal point. This measure is notoriously
+noisy and may lead to unphysical values such as negative frequencies
+\cite[]{TLE10-07-00260032}.
+
+In this paper, I introduce a concept of \emph{local attributes}. Local
+attributes measure signal characteristics not instantaneously at each
+data point but in a local neighborhood around the point. According to
+the Fourier uncertainty principle, frequency is essentially an
+uncertain characteristic when applied to a local region in the time
+domain. Therefore, local frequency is more physically meaningful than
+instantaneous frequency. The idea of locality extends from local
+frequency to other attributes, such as the correlation coefficient
+between two different datasets, that are conventionally evaluated in
+sliding windows.
+
+The paper starts with reviewing the definition of instantaneous
+frequency. I modify this definition to that of local frequency by
+recognizing it as a form of regularized inversion and by changing
+regularization to constrain the continuity and smoothness of the
+output. The same idea is extended next to define local correlation \old{and
+local focusing measures}. I illustrate a practical application of local
+attributes using an example from multicomponent seismic image
+registration in a nine-component land survey.
+
+%I start the paper with a review of the instantenous attribute
+%construction.  Next, I show how the mathematical definition and
+%numerical implementation of local attributes follow from a
+%generalization of the instantaneous formulation. The key idea is to
+%define the instantaneous attribute construction as an inverse problem
+%and to reformulate it by applying the method of
+%regularization. The idea is extended... and applied...
+
+\section{Measuring local \old{frequency content} \new{frequencies}}
+
+\old{I start by reviewing the definition of instantaneous
+frequency. This definition will get modified and extended in the later
+discussion.}
+
+\subsection{Definition of instantaneous frequency}
+
+Let $f(t)$ represent seismic trace as a function of time $t$. The
+corresponding complex trace $c(t)$ is defined as
+\begin{equation}
+  c(t) = f(t) + i\,h(t)\;,
+  \label{eq:complex}
+\end{equation}
+where $h(t)$ is the Hilbert transform of the real trace $f(t)$. One
+can also represent the complex trace in terms of the envelope $A(t)$
+and the instantaneous phase $\phi(t)$, as follows:
+\begin{equation}
+  \label{eq:polar}
+  c(t) = A(t)\,e^{i\,\phi(t)}\;.
+\end{equation}
+By definition, instantaneous frequency is the time derivative of the
+instantaneous phase \cite[]{GEO44-06-10411063}
+\begin{equation}
+  \label{eq:instant}
+  \omega(t) = \phi'(t) = \mathit{Im}\left[\frac{c'(t)}{c(t)}\right]
+  = \frac{f(t)\,h'(t) - f'(t)\,h(t)}{f^2(t) + h^2(t)}\;.
+\end{equation}
+Different numerical realizations of equation~\ref{eq:instant} produce
+slightly different algorithms \cite[]{GEO57-11-15201524}.
+
+Note that the definition of instantaneous frequency calls for division
+of two signals. In a linear algebra notation,
+\begin{equation}
+  \label{eq:vecif}
+  \mathbf{w} = \mathbf{D}^{-1}\,\mathbf{n}\;,
+\end{equation}
+where $\mathbf{w}$ represents the vector of instantaneous frequencies
+$\omega(t)$, $\mathbf{n}$ represents the numerator in
+equation~\ref{eq:instant}, and $\mathbf{D}$ is a diagonal operator
+made from the denominator of equation~\ref{eq:instant}. A recipe for
+avoiding division by zero is adding a small constant~$\epsilon$ to the
+denominator \cite[]{nowack}. Consequently, equation~\ref{eq:vecif}
+transforms to
+\begin{equation}
+  \label{eq:vecife}
+  \mathbf{w}_{inst} = \left(\mathbf{D}+\epsilon\,\mathbf{I}\right)^{-1}\,\mathbf{n}\;,
+\end{equation}
+where $\mathbf{I}$ stands for the identity operator. Stabilization by
+$\epsilon$ does not, however, prevent instantaneous frequency from
+being a noisy and unstable attribute. \new{The main reason for that is
+the extreme locality of the instantaneous frequency measurement, governed
+only by the phase shift between the signal and its Hilbert transform.}
+
+Figure~\ref{fig:sign} shows three test signals for comparing frequency
+attributes. The first signal is a synthetic chirp function with
+linearly varying frequency. Instantaneous frequency shown in
+Figure~\ref{fig:inst} correctly estimates the modeled frequency trend.
+The second signal is a piece of a synthetic seismic trace obtained by
+convolving a 40-Hz Ricker wavelet with synthetic reflectivity. The
+instantaneous frequency (Figure~\ref{fig:inst}b) shows many variations
+and appears to contain detailed information. However, this information
+is useless for characterizing the dominant frequency content of the
+data, which remains unchanged due to stationarity of the seismic
+wavelet. The last test example (Figure~\ref{fig:sign}c) is a real
+trace extracted from a seismic image.  The instantaneous frequency
+(Figure~\ref{fig:inst}c) appears noisy and even contains physically
+unreasonable negative values. Similar behavior was described by
+\cite{TLE10-07-00260032}.
+
+\inputdir{attr}
+\begin{comment}
+\plot{sign}{width=0.8\columnwidth}{Test signals for comparing
+  frequency attributes. a: Synthetic chirp signal
+  with linear frequency change, b: Synthetic seismic trace from
+  convolution of a synthetic reflectivity with a Ricker wavelet, c:
+  real seismic trace from a marine survey.}
+\end{comment}
+\plot{inst}{width=0.8\columnwidth}{Instantaneous frequency of test
+  signals from Figure~\ref{fig:sign}.}
+\plot{locl}{width=0.8\columnwidth}{Local frequency of test signals
+  from Figure~\ref{fig:sign}.}
+\subsection{Definition of local frequency}
+
+The definition of the local frequency attribute starts by recognizing
+equation~\ref{eq:vecife} as a regularized form of linear
+inversion. Changing regularization from simple identity to a more
+general regularization operator~$\mathbf{R}$ provides the definition
+for local frequency as follows:
+\begin{equation}
+  \label{eq:reg}
+  \mathbf{w}_{loc} = 
+  \left(\mathbf{D}+\epsilon\,\mathbf{R}\right)^{-1}\,\mathbf{n}\;,
+\end{equation}
+The role of the regularization operator is ensuring continuity and
+smoothness of the local frequency measure. A different approach to
+regularization \old{is} follows from the shaping method
+\cite[]{shape2}. Shaping regularization operates with a smoothing
+(shaping) operator $\mathbf{S}$ by incorporating it into the inversion
+scheme as follows:
+\begin{equation}
+  \label{eq:shp}
+  \mathbf{w}_{loc} = \left[\lambda^2\,\mathbf{I} + 
+    \mathbf{S}\,\left(\mathbf{D} - \lambda^2\,\mathbf{I}\right)\right]^{-1}\,
+  \mathbf{S}\,\mathbf{n}\;,
+\end{equation}
+Scaling by $\lambda$ preserves physical dimensionality and enables
+fast convergence when inversion is implemented by an iterative method.
+A natural choice for $\lambda$ is the least-squares norm of
+$\mathbf{D}$.
+
+Figure~\ref{fig:locl} shows the results of measuring local frequency
+in the test signals from Figure~\ref{fig:sign}. I used the shaping
+regularization formulation~\ref{eq:shp} with the shaping
+operator~$\mathbf{S}$ defined as a triangle smoother. The chirp signal
+frequency (Figure~\ref{fig:locl}a) is correctly recovered.  The
+dominant frequency of the synthetic signal (Figure~\ref{fig:locl}b) is
+correctly estimated to be stationary at 40~Hz. The local frequency of
+the real trace (Figure~\ref{fig:locl}c) appears to vary with time
+\old{with} \new{according to} the general frequency attenuation trend.
+
+\new{This example highlights some advantages of the local attribute
+method in comparison with the sliding window approach:
+\begin{itemize}
+\item Only one parameter (the smoothing radius) needs to be specified
+as opposed to several (window size, overlap, and taper) in the
+windowing approach. The smoothing radius directly reflects the
+locality of the measurement.
+\item The local attribute approach continues the measurement smoothly
+through the regions of absent information such as the zero amplitude
+regions in the synthetic example, where the signal phase is
+undefined. This effect is impossible to achieve in the windowing
+approach unless the window size is always larger than the information
+gaps in the signal.
+\end{itemize}}
+
+\inputdir{vecta}
+\begin{comment}
+\multiplot{2}{pp,ss}{width=0.45\columnwidth}{PP (a) and SS (b) images
+from a nine-component land survey.}
+\multiplot{2}{pi,si}{width=0.45\columnwidth}{Local
+  frequency attribute of PP (a) and warped SS (b) images.}
+\end{comment}
+
+Figure~\ref{fig:pp,ss} shows seismic images from compressional (PP)
+and shear (SS) reflections obtained by processing a land
+nine-component survey. Figure~\ref{fig:pi,si} shows local frequencies
+measured in PP and SS images after warping the SS image into PP time.
+The term ``image warping'' comes from medical imaging \cite[]{wolberg}
+and refers, in this case, to squeezing the SS image to PP reflection
+time to make the two images display in the same coordinate system. We
+can observe a general decay of frequency with time caused by seismic
+attenuation. After mapping (squeezing) to PP time, the SS image
+frequency appears higher in the shallow part of the image because of a
+relatively low S-wave velocity but lower in the deeper part of the
+image because of the apparently stronger attenuation of shear waves. A
+low-frequency anomaly in the PP image might be indicative of gas
+presence. Identifying and balancing non-stationary frequency
+variations of multicomponent images is an essential part of the
+multistep image registration technique
+\cite[]{SEG-2003-07810784,warp}.
+
+\section{Measuring local similarity}
+
+\old{Suppose that our task is} \new{Consider the task of} measuring
+similarity between two different signals $a(t)$ and $b(t)$. One can
+define similarity as a global correlation coefficient and then,
+perhaps, measure it in sliding windows across the signal. The local
+construction from the previous section suggests approaching this
+problem in a more elegant way.
+
+\subsection{Definition of global correlation}
+
+Global correlation coefficient between $a(t)$ and $b(t)$ can be
+defined as the functional
+\begin{equation}
+  \label{eq:glocor}
+  \gamma = \frac{<a(t),b(t)>}{\sqrt{<a(t),a(t)>\,<b(t),b(t)>}}\;,
+\end{equation}
+where $<x(t),y(t)>$ denotes the dot product between two signals:
+\[
+  <x(t),y(t)> = \int x(t)\,y(t)\,d t\;.
+\]
+According to \old{the} definition~\ref{eq:glocor}, the correlation
+coefficient of two identical signals is equal to one, and the
+correlation of two signals with opposite polarity is minus one. In all
+the other cases, the correlation will be less then one in magnitude
+thanks to the Cauchy-Schwartz inequality. 
+\old{A more general Jensen
+inequality may lead to other possible similarity measures
+\mbox{\cite[]{pvi}}. The correlation coefficient is particularly convenient
+in practice because it is insensitive to amplitude fluctuations and
+missing data.}
+
+The global measure~\ref{eq:glocor} is inconvenient because it
+supplies only one number for the whole signal. The goal of local
+analysis is to turn the functional into an operator and to produce
+local correlation as a variable function $\gamma(t)$ that identifies
+local changes in the signal similarity.
+
+\subsection{Definition of local correlation}
+
+In a linear algebra notation, the squared correlation coefficient
+$\gamma$ from equation~\ref{eq:glocor} can be represented as a
+product of two least-squares inverses
+\begin{eqnarray}
+  \label{eq:g}
+  \gamma^2 & = & \gamma_1\,\gamma_2\;, \\
+  \label{eq:g1}
+  \gamma_1 & = & \left(\mathbf{a}^T\,\mathbf{a}\right)^{-1}\,\left(\mathbf{a}^T\,\mathbf{b}\right)\;, \\
+  \label{eq:g2}
+  \gamma_2 & = & \left(\mathbf{b}^T\,\mathbf{b}\right)^{-1}\,\left(\mathbf{b}^T\,\mathbf{a}\right)\;, 
+\end{eqnarray}
+where $\mathbf{a}$ is a vector notation for $a(t)$, $\mathbf{b}$ is a
+vector notation for $b(t)$, and $\mathbf{x}^T\,\mathbf{y}$ denotes the
+dot product operation. Let $\mathbf{A}$ be a diagonal operator
+composed from the elements of $\mathbf{a}$ and $\mathbf{B}$ be a
+diagonal operator composed from the elements of $\mathbf{b}$.
+Localizing equations~\ref{eq:g1}-\ref{eq:g2} amounts to adding
+regularization to inversion. Scalars $\gamma_1$ and $\gamma_2$ turn
+into vectors $\mathbf{c}_1$ and $\mathbf{c}_2$ defined\old{ as \\
+\parbox{\textwidth}{
+\begin{eqnarray}
+  \label{eq:c1}
+  \mathbf{c}_1 & = & \left(\mathbf{A}^T\,\mathbf{A}+\epsilon_1^2\,\mathbf{R}\right)^{-1}\,\mathbf{A}^T\,\mathbf{b}\;, \\
+  \label{eq:c2}
+  \mathbf{c}_2 & = & \left(\mathbf{B}^T\,\mathbf{B}+\epsilon_2^2\,\mathbf{R}\right)^{-1}\,\mathbf{B}^T\,\mathbf{a}
+\end{eqnarray}} 
+or}, using shaping regularization \old{with $\mathbf{S}=\mathbf{H}\,\mathbf{H}^T$}, \new{as}
+\begin{eqnarray}
+  \label{eq:c1s}
+  \mathbf{c}_1 & = & 
+  \left[\lambda^2\,\mathbf{I} + 
+    \mathbf{S}\,\left(\mathbf{A}^T\,\mathbf{A} - \lambda^2\,\mathbf{I}\right)\right]^{-1}\,
+  \mathbf{S}\,\mathbf{A}^T\,\mathbf{b}\;, \\
+  \label{eq:c2s}
+  \mathbf{c}_2 & = & 
+    \left[\lambda^2\,\mathbf{I} + 
+      \mathbf{S}\,\left(\mathbf{B}^T\,\mathbf{B} - \lambda^2\,\mathbf{I}\right)\right]^{-1}\,
+    \mathbf{S}\,\mathbf{B}^T\,\mathbf{a}\;.
+\end{eqnarray}
+To define a local similarity measure, I apply the component-wise
+product of vectors $\mathbf{c}_1$ and $\mathbf{c}_2$. It is
+interesting to note that, if one applies an iterative
+conjugate-gradient inversion for computing the inverse operators in
+equations~\ref{eq:c1s} and~\ref{eq:c2s}, the output of the first
+iteration will be the smoothed product of the two signals
+$\mathbf{c}_1 = \mathbf{c}_2 = \mathbf{S}\,\mathbf{A}^T\,\mathbf{b}$,
+which is equivalent, with an appropriate choice of $\mathbf{S}$\old{ as a
+Gaussian filter}, to the algorithm of fast local cross-correlation
+proposed by \cite{hale}.
+
+The local similarity attribute is useful for solving the problem of
+multicomponent image registration. After an initial registration using
+interpreter's ``nails'' \cite[]{TLE23-12-12701281} or velocities from
+seismic processing, a useful registration indicator is obtained by
+squeezing and stretching the warped shear-wave image while measuring
+its local similarity to the compressional image. Such a technique was
+named \emph{residual $\gamma$ scan} and proposed by \cite{warp}.
+Figure~\ref{fig:vec-sc-0} shows a residual scan for registration of
+multicomponent images from Figure~\ref{fig:pp,ss}. Identifying and
+picking points of high local similarity enables multicomponent
+registration with high-resolution accuracy. The registration result is
+visualized in Figure~\ref{fig:vec-in0-0,vec-in1-1}, which shows
+interleaved traces from PP and SS images before and after
+registration. The alignment of main seismic events is an indication of
+successful registration.
+
+\begin{comment}
+\plot{vec-sc-0}{width=0.9\columnwidth}{Residual warping scan for
+  multicomponent PP/SS registration computed with the help of the
+  local similarity attribute. Picking maximum similarity trends
+  enables multicomponent registration.}
+
+\multiplot{2}{vec-in0-0,vec-in1-1}{width=0.45\columnwidth}{Interleaved
+  traces from PP and warped SS images before (a) and after (b)
+  multicomponent registration. The checkerboard pattern on major
+  seismic events in (a) disappears in (b) which is an indication of
+  successful registration.}
+\end{comment}
+
+%I illustrate an application of local correlation by considering the
+%problem of multicomponent data
+%registration. Figure~\ref{fig:s1cube,s2cube} shows two converted-wave
+%images of a fractured reservoir in Colombia obtained by separating
+%fast and slow shear-wave components. The time differences between the
+%two images are indicative of velocity differences, which are caused by
+%azimuthal anisotropy associated with fracturing.
+
+%inputdir{harken}
+%\multiplot{2}{s1cube,s2cube}{width=0.9\columnwidth}{Fast (a) and Slow (b) converted-wave images of a fractured reservoir.}
+%\plot{scan2}{width=\columnwidth}{here}
+%\plot{hinter}{width=\columnwidth}{here}
+%\plot{wcube}{width=\columnwidth}{here}
+%\plot{frac}{width=\columnwidth}{here}
+
+\old{%\section{Measuring local image focusing}
+A focused seismic signal has its energy concentrated at certain
+locations instead of being widely spread. How can one define an
+attribute for measuring the degree of focusing? It is actually easier
+to define the opposite measure. We can take the definition of the
+correlation coefficient from equation~\ref{eq:glocor} and measure
+the correlation between the squared signal and a constant. Large
+correlation means poor focusing. Therefore, the focusing measure
+will be the reverse of the correlation with the constant or \\
+\parbox{\textwidth}{
+\begin{equation}
+  \label{eq:gfocus}
+  \phi = 
+  \left(\frac{\displaystyle \sqrt{<a^2(t),a^2(t)>\,<e(t),e(t)>}}{\displaystyle <a^2(t),e(t)>}\right)^2 =
+  \frac{\displaystyle N_t\,\int a^4(t)\, dt}{\displaystyle \left(\int a^2(t)\, dt\right)^2}\;,
+\end{equation}}
+where $e(t)$ is a unit signal, and $N_t = \int dt$. The global
+focusing measure~\ref{eq:gfocus} is the varimax norm of
+\mbox{\cite{wiggins}} related to kurtosis of a zero-mean signal.  Varimax was
+used by \mbox{\cite{wiggins}} in minimum-entropy deconvolution and by
+\mbox{\cite{GEO52-01-00510059}} for automatic zero-phase correction.
+While the global focusing attribute~\ref{eq:gfocus} measures total
+focusing inside a data window, its localization produces a continuous
+measure reflecting local changes in signal focusing. To define a local
+focusing attribute, I use equations \ref{eq:c1s}-\ref{eq:c2s} again
+substituting the squared signal for $\mathbf{a}$; a constant signal
+for $\mathbf{b}$, and taking the inverse of the component-wise product
+of $\mathbf{c}_1$ and $\mathbf{c}_2$. The inverted operator in
+equation~\ref{eq:c2s} reduces to an identity, and thus only one
+inversion is required.
+The local focusing attribute defined here finds an application in
+migration velocity analysis by diffraction imaging.}
+
+\section{Conclusions}
+
+I have introduced a concept of local seismic attributes and specified
+it for such attributes as local frequency and local similarity\old{, and local
+focusing}. Local attributes measure signal characteristics not
+instantaneously at each signal point and not globally across a data
+window but locally in the neighborhood of each point. They find
+applications in different steps of multicomponent seismic image
+registration. One can extend the idea of local attributes to other
+applications.
+
+\section{Acknowledgments}
+
+I would like to thank Bob Hardage, Milo Backus, and Bob Graebner for
+introducing me to the problem of multicomponent data registration and
+for many useful discussions. The data example was kindly provided by
+Vecta. This work was partially supported by the U.S. Department of
+Energy through Program DE-PS26-04NT42072 and is authorized for
+publication by the Director, Bureau of Economic Geology, The
+University of Texas at Austin.
+
+%\plot{vec-gamma2-1}{width=\columnwidth}{Average $V_P/V_S$ ratio from multicomponent registration.} 
+
+\bibliographystyle{seg}
+\bibliography{SEG2005,attr}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% End: 

@@ -1,0 +1,5 @@
+from rsf.tex import *
+
+End(use='color,amsmath,pifont,multirow',color='ALL')
+
+

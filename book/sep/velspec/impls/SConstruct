@@ -1,0 +1,71 @@
+from rsf.proj import *
+
+Flow('spike',None,
+     '''
+     spike
+     n1=256
+     n2=256
+     d1=0.004
+     d2=0.008 nsp=3
+     k1=100,150,200
+     k2=100,150,200 |
+     bandpass flo=10 fhi=50
+     ''')
+
+ffts = []
+for pad in (256,512):
+    spike = 'spike%d' % pad
+    Flow(spike,'spike','pad n2=%d' % pad)
+    for dv in (1,-1):
+        fft = 'fft%d-%d' % (dv,pad)
+        ffts.append(fft)
+        Flow(fft,spike,
+             '''
+             cosft sign2=1 | 
+             vczo pad=%d pad2=%d nv=1 dv=%d v0=%g |
+             window | cosft sign2=-1 | window n2=256
+         ''' % (pad,(pad,2*pad)[pad==512],2*dv,(2.0001,0.0001)[dv==1]))
+        Plot(fft,'grey title="t^2-FFT impulse response, dv=%d km/s"' % dv)
+Result('fft-imp',ffts,'TwoRows')
+
+ffts = []
+for pad in (256,512):
+    spike = 'spike%d' % pad
+    for dv in (1,-1):
+        fft = 'foc%d-%d' % (dv,pad)
+        ffts.append(fft)
+        Flow(fft,spike,
+             '''
+             diffoc pad=%d pad2=%d v=%g v0=%g | window n2=256
+             ''' % (pad,(pad,2*pad)[pad==512],(0.0001,2.0001)[dv==1],(2.0001,0.0001)[dv==1]))
+        Plot(fft,'grey title="t^2-FFT impulse response, dv=%d km/s"' % dv)
+Result('foc-imp',ffts,'TwoRows')
+
+for adj in (0,1):
+    fd = 'fd%d' % adj
+    Flow(fd,'spike512',
+         'velcon vel=1 v0=0 nv=3000 inv=%d adj=%d | window n2=256' % (adj,1-adj))
+    Plot(fd,
+         'grey title="Finite-diff impulse response, dv=%d km/s" ' % (1-2*adj))
+Result('fd-imp','fd0 fd1','SideBySideIso')
+
+
+Flow('chebft','spike','t2chebstretch nout=257 | pad n2=257 | cosft sign1=1 sign2=1')
+
+chebs = []
+for pad in (256,512):
+    for dv in (1,-1):
+        cheb = 'cheb%d-%d' % (dv,pad)
+        chebs.append(cheb)
+        Flow(cheb,'spike',
+             '''
+             t2chebstretch nout=257 | pad n2=%d |
+             cosft sign1=1 sign2=1 |
+             chebvc vel=%g nv=3000 |
+             cosft sign2=-1 sign1=-1 |
+             window n2=256 | t2chebstretch inv=1
+         ''' % (pad+1,dv))
+        Plot(cheb,'grey title="Chebyshev impulse response, dv=%g km/s" ' % dv)
+Result('cheb-impl',chebs,'TwoRows')
+
+End()

@@ -1,0 +1,38 @@
+import os, sys
+
+try:
+    import bldutil
+    glob_build = True # scons command launched in RSFSRC
+    srcroot = '../..' # cwd is RSFSRC/build/user/psava
+    Import('env bindir libdir pkgdir')
+    env = env.Clone()
+except:
+    glob_build = False # scons command launched in the local directory
+    srcroot = os.environ.get('RSFSRC', '../..')
+    sys.path.append(os.path.join(srcroot,'framework'))
+    import bldutil
+    env = bldutil.Debug() # Debugging flags for compilers
+    bindir = libdir = pkgdir = None
+    SConscript(os.path.join(srcroot,'su/lib/SConstruct'))
+
+targets = bldutil.UserSconsTargets()
+
+# C mains
+targets.c = '''
+camig3 ewefd2d hic2ang ic laps2d lwefd2d sic3d srmig3 srmod3 wdf wei
+wigner xcor2d zomig3
+'''
+
+# Python targets
+targets.py = '''
+corop
+pwave3d
+ocor3d
+findmax
+'''
+
+dynlib = env.get('DYNLIB','')
+
+env.Prepend(LIBS=[dynlib+'su'])
+
+targets.build_all(env, glob_build, srcroot, bindir, libdir, pkgdir)

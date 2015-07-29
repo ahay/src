@@ -1,0 +1,110 @@
+from rsf.proj import *
+
+# Make a trace with a Ricker wavelet
+
+Flow('ricker',None,'spike n1=1001        k1=501              | ricker1 frequency=25')
+Flow('ricker2',None,'spike n1=1001 nsp=2 k1=500,505          | ricker1 frequency=25')
+Flow('ricker1',None,'spike n1=1001 nsp=2 k1=500,505 mag=1,-1 | ricker1 frequency=25')
+Flow('ricker3',None,'spike n1=1001 nsp=2 k1=500,525          | ricker1 frequency=25')
+Flow('ricker4',None,'spike n1=1001 nsp=2 k1=500,540 mag=1,-1 | ricker1 frequency=25')
+Flow('noise','ricker2','noise seed=2012 var=0.0001')
+
+for case in Split('ricker ricker2 ricker3 ricker4 ricker1 noise'):
+
+    # Phase rotation
+
+    traces = []
+    for a in range(-180,181,10):
+        ricker = '%s-%d' % (case,a)
+        traces.append(ricker)
+        Flow(ricker,case,'envelope order=100 hilb=y phase=%d' % a)
+
+    rots = case + '-all'
+
+    Flow(rots,traces,
+         '''
+         cat ${SOURCES[1:%d]} axis=2 |
+         put o2=-180 d2=10 o1=-1.8 |
+         window min1=0 max1=0.4
+         ''' % len(traces))
+    Result(rots,
+           '''
+           wiggle poly=y transp=y yreverse=y
+           label2=Degree unit2="\^o\_"
+           title="Phase Rotations" wanttitle=n
+           ''')
+
+
+    # Local focusing measure 
+    focus = case + '-foc'
+
+    Flow(focus,rots,'focus rect1=1000')
+    Flow(focus+'1',focus,'stack axis=1')
+     
+    # Correlation with envelope
+    envelope = case + '-env'
+    envcorr = envelope + '-corr'
+
+    Flow(envelope,rots,'envelope order=100')
+    Flow(envcorr,[rots,envelope],
+         'similarity other=${SOURCES[1]} rect1=1000')
+    Flow(envcorr+'1',envcorr,'stack axis=1')
+
+    Result(envcorr,[focus+'1',envcorr+'1'],
+           '''
+           math output=1/input |
+           cat axis=2 ${SOURCES[1]} |
+           scale axis=1 |
+           graph wanttitle=n dash=1,0 label1=Degree unit1="\^o\_"
+           label2="Normalized Amplitude" plotfat=4
+           ''')
+
+    Result(envcorr+'-inv',[envcorr+'1',focus+'1'],
+           '''
+           math output=1/input |
+           cat axis=2 ${SOURCES[1]} |
+           scale axis=1 |
+           graph wanttitle=n dash=0,1 label1=Degree unit1="\^o\_"
+           label2="Normalized Amplitude" plotfat=4
+           ''')
+
+    # Skewness = Correlation with square * Kurtosis
+    square = case + '-sq'
+    sqcorr = square + '-corr'
+
+    Flow(square,rots,'mul $SOURCE')
+    Flow(sqcorr,[rots,square],
+         'similarity other=${SOURCES[1]} rect1=1000')
+    Flow(sqcorr+'1',[sqcorr,focus+'1'],'stack axis=1 | div ${SOURCES[1]}')
+
+    Result(sqcorr,[focus+'1',sqcorr+'1'],
+           '''
+           math output=1/input |
+           cat axis=2 ${SOURCES[1]} |
+           scale axis=1 |
+           graph wanttitle=n dash=1,0 label1=Degree unit1="\^o\_"
+           label2="Normalized Amplitude" plotfat=4
+           ''')
+
+    Result(sqcorr+'-inv',[sqcorr+'1',focus+'1'],
+           '''
+           math output=1/input |
+           cat axis=2 ${SOURCES[1]} |
+           scale axis=1 |
+           graph wanttitle=n dash=0,1 label1=Degree unit1="\^o\_"
+           label2="Normalized Amplitude" plotfat=4
+           ''')
+
+    Result(case,[case,case+'-90'],
+           '''
+           cat axis=2 ${SOURCES[1]} |
+           put o1=-1.8 | window min1=0 max1=0.4 |
+           grey color=G title="Which would you rather interpret?" 
+           ''')
+
+    # Sum of signal cubed
+    scubed = case + '-scubed'
+    Flow(scubed,rots,'math output="input^3" | stack axis=1 | math output="input*input" | scale axis=1')
+    Result(scubed,'graph wanttitle=%s label1=Degree unit1="\^o\_" label2="Normalized Amplitude" plotfat=4' % case)
+
+End()

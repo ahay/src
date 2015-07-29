@@ -1,0 +1,3 @@
+uses=['sfsigmoid', 'sfsmooth', 'sfmath', 'sfpad', 'sfkirchnew', 'sfgrey', 'sfkirchinv', 'sfcat', 'sfgraph', 'sfadd']
+data=[]
+size=     800880

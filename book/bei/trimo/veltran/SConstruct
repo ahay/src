@@ -1,0 +1,39 @@
+from rsf.proj import *
+
+v0 = 0.25 	 
+v1 = 100 	 
+dv = (v1-v0)/34 	 
+s02 = 1/(v0+dv)**2 	 
+
+dots = '''
+dots gaineach=0 dots=0 seemean=1 strings=1 
+constsep=1 overlap=5.5 transp=1 
+'''
+	  	 
+Flow('mod0',None, 	 
+     ''' 	 
+     spike 	 
+     n1=75 o1=0    d1=0.05333333 label1= 	 
+     n2=35 o2=0.01 d2=0.11735294 label2=Slowness unit2=km/s 	 
+     nsp=3 k1=19,35,49 k2=29,7,2 mag=3,1,2 | 	 
+     put v0=%g dv=%g 	 
+     ''' % (v0,dv)) 	 
+Flow('aacdp','mod0','veltran adj=n anti=0.25 s02=%g nx=30 x0=0.2 dx=0.148275862 pull=y' % s02)
+Result('aacdp',dots)
+
+Flow('mod',None, 	 
+     ''' 	 
+     spike 	 
+     n1=75 o1=0    d1=0.05333333 label1= 	 
+     n2=35 o2=0.01 d2=0.11735294 label2=Slowness unit2=km/s 	 
+     nsp=6 k1=19,35,7,56,71,49 k2=29,7,7,7,7,2 mag=3,1,1,1,1,2 | 	 
+     put v0=%g dv=%g 	 
+     ''' % (v0,dv))
+Plot('mod',dots)
+
+for anti in range(2):
+    dat = 'dat%d' % anti
+    Flow(dat,'mod','veltran adj=n anti=%d nx=40 x0=-1 dx=0.141025641 pull=y' % anti)
+    Plot(dat,dots)
+
+End()

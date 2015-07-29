@@ -1,0 +1,1020 @@
+%\shortnote
+
+\published{Geophysics, 67, 1946-1960 (2002)}
+
+\lefthead{Fomel}
+\righthead{Plane-wave destructors}
+\footer{SEP--105}
+
+\title{Applications of plane-wave destruction filters}
+
+\email{sergey@sep.stanford.edu}
+%\keywords{}
+
+\author{Sergey Fomel}
+
+\maketitle
+
+\begin{abstract}
+  Plane-wave destruction filters originate from a local plane-wave
+  model for characterizing seismic data. These filters can be thought
+  of as a $T$-$X$ analog of $F$-$X$ prediction-error filters and as an
+  alternative to $T$-$X$ prediction-error filters. The filters are
+  constructed with the help of an implicit finite-difference scheme
+  for the local plane-wave equation.  On several synthetic and
+  real-data examples, I demonstrate that finite-difference plane-wave
+  destruction filters perform well in applications such as fault
+  detection, data interpolation, and noise attenuation.
+\end{abstract}
+
+\section{Introduction}
+
+Plane-wave destruction filters, introduced by
+\cite{Claerbout.blackwell.92}, serve the purpose of characterizing
+seismic images by a superposition of local plane waves.  They are
+constructed as finite-difference stencils for the plane-wave
+differential equation. In many cases, a local plane-wave model is a
+very convenient representation of seismic data. Unfortunately, early
+experiences with applying plane-wave destructors for interpolating
+spatially aliased data
+\cite[]{Nichols.sep.65.271,Claerbout.blackwell.92} demonstrated their
+poor performance in comparison with that of industry-standard $F$-$X$
+prediction-error filters \cite[]{GEO56-06-07850794}.
+\par
+For each given frequency, an $F$-$X$ prediction-error filter (PEF) can
+be thought of as a $Z$-transform polynomial. The roots of the
+polynomial correspond precisely to predicted plane waves
+\cite[]{SEG-1984-S10.1}.  Therefore, $F$-$X$ PEFs simply represent a
+spectral (frequency-domain) approach to plane-wave
+destruction\footnote{The filters are designed to \emph{destruct} local
+  plane waves. However, in applications such as data interpolation,
+  they are often used to \emph{reconstruct} the missing parts of
+  local waves. The choice of terminology should not confuse the
+  reader.}  This powerful and efficient approach is, however, not
+theoretically adequate when the plane-wave slopes or the boundary
+conditions vary both spatially and temporally. In practice, this 
+limitation is addressed by breaking the data into windows and assuming
+that the slopes are stationary within each window.
+\par
+Multidimensional $T$-$X$ prediction-error filters
+\cite[]{Claerbout.blackwell.92,gee} share the same purpose of predicting
+local plane waves. They work well with spatially aliased data and
+allow for both temporal and spatial variability of the slopes.  In
+practice, however, $T$-$X$ filters appear as very mysterious objects,
+because their construction involves many non-intuitive parameters. The
+user needs to choose a raft of parameters, such as the number of
+filter coefficients, the gap and the exact shape of the filter, the
+size, number, and shape of local patches for filter estimation, the
+number of iterations, and the amount of regularization. Recently
+developed techniques for handling non-stationary PEFs
+\cite[]{SEG-1999-11541157} performed well in
+a variety of applications \cite[]{Crawley.sepphd.104,SEG-2001-13051308}, but the large
+number of adjustable parameters still requires a significant level of
+human interaction and remains the drawback of the method.
+\par
+\cite{SEG-1998-1851} have recently revived the original
+plane-wave destructors for preconditioning tomographic problems with a
+predefined dip field \cite[]{Clapp.sepphd.106}. The filters were named
+\emph{steering filters} because of their ability to steer the solution
+in the direction of the local dips. The name is also reminiscent of
+\emph{steerable filters} used in medical image processing \cite[]{steer0,steer}.
+\par
+In this paper, I revisit Claerbout's original technique of
+finite-difference plane-wave destruction. First, I develop an approach
+for increasing the accuracy and dip bandwidth of the method.  Applying
+the improved filter design to several data regularization problems, I
+discover that the finite-difference filters often perform as well as,
+or even better than, $T$-$X$ PEFs.  At the same time, they keep the
+number of adjustable parameters to a minimum, and the only estimated quantity 
+has a clear physical meaning of the local plane-wave slope. 
+No local windows are required, because the slope is estimated as a 
+smoothly variable continuous function of the data coordinates.
+\par
+Conventional methods for estimating plane-wave slopes are based on
+picking maximum values of stacking semblance and other cumulative
+coherency measures \cite[]{GEO36-03-04820497}. The differential approach
+to slope estimation, employed by plane-wave destruction filters, is
+related to the differential semblance method \cite[]{GEO56-05-06540663}.
+Its theoretical superiority to conventional semblance measures for the
+problem of local plane wave detection has been established by
+\cite{symes} and \cite{kim}.
+
+\section{High-order plane-wave destructors}
+
+Following the physical model of local plane waves, we can define the
+mathematical basis of the plane-wave destruction filters as the local
+plane differential equation
+\begin{equation}
+  \frac{\partial P}{\partial x} + 
+  \sigma\,\frac{\partial P}{\partial t} = 0\;,
+  \label{eqn:pde}
+\end{equation}
+where $P(t,x)$ is the wave field, and $\sigma$ is the local slope, which may
+also depend on $t$ and $x$. In the case of a constant slope,
+equation~(\ref{eqn:pde}) has the simple general solution
+\begin{equation}
+  P(t,x) = f(t - \sigma x)\;,
+  \label{eqn:plane}
+\end{equation}
+where $f(t)$ is an arbitrary waveform. Equation~(\ref{eqn:plane}) is
+nothing more than a mathematical description of a plane wave.
+\par
+If we assume that the slope $\sigma$ does not depend on $t$, we can
+transform equation~(\ref{eqn:pde}) to the frequency domain, where it
+takes the form of the ordinary differential equation
+\begin{equation}
+  {\frac{d \hat{P}}{d x}} +
+  i \omega\,\sigma\, \hat{P} = 0
+  \label{eqn:ode}
+\end{equation}
+and has the general solution
+\begin{equation}
+  \hat{P} (x) = \hat{P} (0)\,e^{i \omega\,\sigma x}\;,
+  \label{eqn:px}
+\end{equation}
+where $\hat{P}$ is the Fourier transform of $P$. The complex
+exponential term in equation~(\ref{eqn:px}) simply represents a shift
+of a $t$-trace according to the slope $\sigma$ and the trace separation
+$x$. 
+
+In the frequency domain, the operator for transforming the trace at
+position $x-1$ to the neighboring trace\footnote{For simplicity, it is
+  assumed that $x$ takes integer values that correspond to trace
+  numbering.} and at position $x$ is a multiplication by $e^{i
+  \omega\,\sigma}$. In other words, a plane wave can be perfectly
+predicted by a two-term prediction-error filter in the $F$-$X$ domain:
+\begin{equation}
+  a_0 \, \hat{P} (x) + a_1\, \hat{P} (x-1) = 0\;,
+  \label{eqn:pef}
+\end{equation}
+where $a_0 = 1$ and $a_1 = - e^{i \omega\,\sigma}$. The goal of
+predicting several plane waves can be accomplished by cascading
+several two-term filters. In fact, any $F$-$X$ prediction-error
+filter represented in the $Z$-transform notation as
+\begin{equation}
+  A(Z_x) = 1 + a_1 Z_x + a_2 Z_x^2 + \cdots + a_N Z_x^N
+  \label{eqn:pef2}
+\end{equation}
+can be factored into a product of two-term filters:
+\begin{equation}
+  A(Z_x) = \left(1 - \frac{Z_x}{Z_1}\right)\left(1 - \frac{Z_x}{Z_2}\right)
+  \cdots\left(1 - \frac{Z_x}{Z_N}\right)\;,
+  \label{eqn:pef3}
+\end{equation}
+where $Z_1,Z_2,\ldots,Z_N$ are the zeroes of
+polynomial~(\ref{eqn:pef2}). According to equation~(\ref{eqn:pef}),
+the phase of each zero corresponds to the slope of a local plane wave
+multiplied by the frequency. Zeroes that are not on the unit circle
+carry an additional amplitude gain not included in
+equation~(\ref{eqn:ode}).
+\par
+In order to incorporate time-varying slopes, we need to return to
+the time domain and look for an appropriate analog of the phase-shift
+operator~(\ref{eqn:px}) and the plane-prediction
+filter~(\ref{eqn:pef}). An important property of plane-wave
+propagation across different traces is that the total energy of the
+propagating wave stays invariant throughout the process: the energy of 
+the wave at one trace is completely transmitted to the next trace.
+ This property
+is assured in the frequency-domain solution~(\ref{eqn:px}) by the fact
+that the spectrum of the complex exponential $e^{i \omega\,\sigma}$ is
+equal to one.  In the time domain, we can reach an equivalent effect
+by using an all-pass digital filter. In the $Z$-transform notation,
+convolution with an all-pass filter takes the form
+\begin{equation}
+\hat{P}_{x+1}(Z_t) = \hat{P}_{x} (Z_t) \frac{B(Z_t)}{B(1/Z_t)}\;,
+\label{eqn:allpass}
+\end{equation}
+where $\hat{P}_x (Z_t)$ denotes the $Z$-transform of the corresponding
+trace, and the ratio $B(Z_t)/B(1/Z_t)$ is an all-pass digital filter
+approximating the time-shift operator~$e^{i \omega \sigma}$. In
+finite-difference terms, equation~(\ref{eqn:allpass}) represents an
+implicit finite-difference scheme for solving equation~(\ref{eqn:pde})
+with the initial conditions at a constant $x$.  The coefficients of
+filter $B(Z_t)$ can be determined, for example, by fitting the filter
+frequency response at low frequencies to the response of the
+phase-shift operator. The Taylor series technique (equating the
+coefficients of the Taylor series expansion around zero frequency)
+yields the expression
+\begin{equation}
+  B_3(Z_t) = 
+  \frac{(1-\sigma)(2-\sigma)}{12}\,Z_t^{-1} + 
+  \frac{(2+\sigma)(2-\sigma)}{6} +
+  \frac{(1+\sigma)(2+\sigma)}{12}\,Z_t
+  \label{eqn:b3}
+\end{equation}
+for a three-point centered filter $B_3(Z_t)$ and the expression
+\begin{eqnarray}
+  B_5(Z_t) & = &  
+  \frac{(1-\sigma)(2-\sigma)(3-\sigma)(4-\sigma)}{1680}\,Z_t^{-2} +
+  \frac{(4-\sigma)(2-\sigma)(3-\sigma)(4+\sigma)}{420}\,Z_t^{-1} + 
+  \nonumber \\
+  & & 
+  \frac{(4-\sigma)(3-\sigma)(3+\sigma)(4+\sigma)}{280} + 
+  \nonumber \\
+  & & 
+  \frac{(4-\sigma)(2+\sigma)(3+\sigma)(4+\sigma)}{420}\,Z_t +
+  \frac{(1+\sigma)(2+\sigma)(3+\sigma)(4+\sigma)}{1680}\,Z_t^2
+  \label{eqn:b5}
+\end{eqnarray} 
+for a five-point centered filter $B_5(Z_t)$. The derivation of
+equations~(\ref{eqn:b3}-\ref{eqn:b5}) is detailed in the appendix. It
+is easy to generalize these equations to longer filters.
+
+\inputdir{Sage}
+
+Figure~\ref{fig:phase} shows the phase of the all-pass filters
+$B_3(Z_t)/B_3(1/Z_t)$ and $B_5(Z_t)/B_5(1/Z_t)$ for two values of the
+slope $\sigma$ in comparison with the exact linear function of
+equation~(\ref{eqn:px}).  As expected, the phases match the exact line
+at low frequencies, and the accuracy of the approximation increases
+with the length of the filter.
+
+\plot{phase}{width=6in}{Phase of the implicit
+  finite-difference shift operators in comparison with the exact
+  solution. The left plot corresponds to the slope of 
+  $\sigma=0.5$, the right plot
+  to $\sigma=0.8$.}
+\par
+Taking both dimensions into consideration,
+equation~(\ref{eqn:allpass}) transforms to the prediction equation
+analogous to~(\ref{eqn:pef}) with the 2-D prediction filter
+\begin{equation}
+  A(Z_t,Z_x) = 1 - Z_x \frac{B(Z_t)}{B(1/Z_t)}\;.
+  \label{eqn:2dpef}
+\end{equation}
+In order to characterize several plane waves, we can cascade several
+filters of the form~(\ref{eqn:2dpef}) in a manner similar to that of
+equation~(\ref{eqn:pef3}). In the examples of this paper, I use a
+modified version of the filter $A(Z_t,Z_x)$, namely the filter
+\begin{equation}
+  \label{eqn:2dpef2}
+  C(Z_t,Z_x) = A(Z_t,Z_x) B(1/Z_t) = B(1/Z_t) - Z_x B(Z_t)\;,
+\end{equation}
+which avoids the need for polynomial division. In case of the 3-point
+filter~(\ref{eqn:b3}), the 2-D filter~(\ref{eqn:2dpef2}) has exactly
+six coefficients. It consists of two columns, each column having three
+coefficients and the second column being a reversed copy of the first
+one. When filter~(\ref{eqn:2dpef2}) is used in data regularization
+problems, it can occasionally cause undesired high-frequency
+oscillations in the solution, resulting from the near-Nyquist zeroes
+of the polynomial $B(Z_t)$. The oscillations are easily removed in
+practice with appropriate low-pass filtering.
+\par
+In the next section, I address the problem of estimating the local
+slope $\sigma$ with filters of form~(\ref{eqn:2dpef2}). Estimating
+the slope is a necessary step for applying the finite-difference
+plane-wave filters on real data.
+
+\section{Slope estimation}
+
+Let us denote by $\mathbf{C}(\mathbf{\sigma})$ the operator of convolving the
+data with the 2-D filter $C(Z_t,Z_x)$ of equation~(\ref{eqn:2dpef2}),
+assuming the local slope $\mathbf{\sigma}$ is known. In order to determine 
+the slope, we can define the least-squares goal
+\begin{equation}
+  \label{eqn:ls}
+  \mathbf{C}(\mathbf{\sigma}) \, \mathbf{d} \approx 0\;,
+\end{equation}
+where $\mathbf{d}$ is the known data and the approximate equality
+implies that the solution is found by minimizing the power of the
+left-hand side. Equations~(\ref{eqn:b3}) and~(\ref{eqn:b5}) show that
+the slope $\mathbf{\sigma}$ enters in the filter coefficients in an
+essentially non-linear way. However, one can still apply the linear
+iterative optimization methods by an analytical linearization of
+equation~(\ref{eqn:ls}). The linearization (also known as the Gauss-Newton
+iteration) implies solving the linear system
+\begin{equation}
+  \label{eqn:linit}
+  \mathbf{C}'(\mathbf{\sigma}_0) \, \Delta \mathbf{\sigma} \,
+  \mathbf{d}  + \mathbf{C}(\mathbf{\sigma}_0) \, \mathbf{d} \approx 0
+\end{equation}
+for the slope increment $\Delta \mathbf{\sigma}$. Here $\mathbf{\sigma}_0$
+is the initial slope estimate, and $\mathbf{C}'(\mathbf{\sigma})$ is a
+convolution with the filter, obtained by differentiating the filter
+coefficients of $\mathbf{C}(\mathbf{\sigma})$ with respect to
+$\mathbf{\sigma}$. After system~(\ref{eqn:linit}) is solved, the initial
+slope $\mathbf{\sigma}_0$ is updated by adding $\Delta \mathbf{\sigma}$ to
+it, and one can solve the linear problem again. Depending on the
+starting solution, the method may require several non-linear
+iterations to achieve an acceptable convergence. 
+\par
+The slope $\sigma$ in equation~(\ref{eqn:linit}) does not have to be
+constant. We can consider it as varying in both time and space
+coordinates.  This eliminates the need for local windows but may lead
+to undesirably rough (oscillatory) local slope estimates.  Moreover,
+the solution will be undefined in regions of unknown or constant data,
+because for these regions the local slope is not constrained.  Both
+these problems are solved by adding a regularization (styling) goal to
+system~(\ref{eqn:linit}). The additional goal takes the form
+\begin{equation}
+  \label{eqn:regs}
+  \epsilon \mathbf{D} \, \Delta \mathbf{\sigma} \approx 0\;,
+\end{equation}
+where $\mathbf{D}$ is an appropriate roughening operator and $\epsilon$
+is a scaling coefficient. For simplicity, I chose $\mathbf{D}$ to be the
+gradient operator. More efficient and sophisticated helical
+preconditioning techniques are available 
+\cite[]{GEO63-05-15321541,Fomel.sepphd.107,fandc}.
+\par
+In theory, estimating two different slopes $\mathbf{\sigma}_1$ and
+$\mathbf{\sigma}_2$ from the available data is only marginally more
+complicated than estimating a single slope. The convolution operator
+becomes a cascade of $\mathbf{C}(\mathbf{\sigma}_1)$ and
+$\mathbf{C}(\mathbf{\sigma}_2)$, and the linearization yields
+\begin{equation}
+  \label{eqn:lin2}
+  \mathbf{C}'(\mathbf{\sigma}_1) \, \mathbf{C}(\mathbf{\sigma}_2) \, 
+  \Delta \mathbf{\sigma}_1\, \mathbf{d} + \mathbf{C}(\mathbf{\sigma}_1) \, 
+  \mathbf{C}'(\mathbf{\sigma}_2) \,
+  \Delta \mathbf{\sigma}_2 \, \mathbf{d} + \mathbf{C}(\mathbf{\sigma}_1) \,
+  \mathbf{C}(\mathbf{\sigma}_2) \, \mathbf{d} \approx 0\;.
+\end{equation}
+The regularization condition should now be applied to both $\Delta
+\mathbf{\sigma}_1$ and $\Delta \mathbf{\sigma}_2$:
+ \begin{eqnarray}
+  \label{eqn:reg1}
+  \epsilon \mathbf{D} \, \Delta \mathbf{\sigma}_1 & \approx & 0\;; \\
+  \label{eqn:reg2}
+  \epsilon \mathbf{D} \, \Delta \mathbf{\sigma}_2 & \approx & 0\;.
+\end{eqnarray}
+The solution will obviously depend on the initial values of
+$\mathbf{\sigma}_1$ and $\mathbf{\sigma}_2$, which should not be equal to
+each other. System~(\ref{eqn:lin2}) is generally underdetermined,
+because it contains twice as many estimated parameters as equations:
+The number of equations corresponds to the grid size of the data
+$\mathbf{d}$, while characterizing variable slopes $\sigma_1$ and
+$\sigma_2$ on the same grid involves two gridded functions.  However,
+an appropriate choice of the starting solution and the additional
+regularization~(\ref{eqn:reg1}-\ref{eqn:reg2}) allow us to arrive at a
+practical solution.
+\par
+The application examples of the next section demonstrate that when the
+system of equations~(\ref{eqn:linit}-\ref{eqn:regs})
+or~(\ref{eqn:lin2}-\ref{eqn:reg2}) are optimized in the least-squares
+sense in a cycle of several linearization iterations, it leads to
+smooth and reliable slope estimates. The regularization
+conditions~(\ref{eqn:regs}) and~(\ref{eqn:reg1}-\ref{eqn:reg2}) assure
+a smooth extrapolation of the slope to the regions of unknown or
+constant data.
+
+\section{Application examples}
+
+In this section, I examine the performance of the finite-difference
+plane-destruction filters on several test applications. The general
+framework for applying these filters consists of the two steps:
+\begin{enumerate}
+\item Estimate the dominant local slope (or a set of local slopes)
+  from the data. This step follows the least-squares optimization
+  embedded in equations~(\ref{eqn:linit}) or~(\ref{eqn:lin2}). Thanks
+  to the general regularization technique of
+  equations~(\ref{eqn:regs} ) and~(\ref{eqn:reg1}-\ref{eqn:reg2}),
+  locally smooth slope estimates are obtained without any need for
+  breaking the data into local windows. Of course, local windows can
+  be employed for other purposes (parallelization, memory management,
+  etc.) Selecting appropriate initial values for the local slopes can
+  speed up the computation and steer it towards desirable results.
+  It is easy to incorporate additional constraints on the local 
+  slope values.
+\item Using the estimated slope, apply non-stationary plane-wave
+  destruction filters for the particular application purposes. In the
+  fault detection application, we simply look at the output of
+  plane-wave destruction.  In the interpolation application, the
+  filters are used to constrain the missing data. In the noise
+  attenuation application, they characterize the coherent 
+  signal and noise components in the data.
+\end{enumerate}
+A description of these particular applications follows next.
+
+\subsection{Fault detection}
+
+\inputdir{lomo}
+
+The use of prediction-error filters in the problem of detecting local
+discontinuities was suggested by \cite{SEG-1994-1572,gee}, and
+further refined by \cite{schwabSEG} and
+\cite{Schwab.sepphd.99}. \cite{SEG-1998-0653} used simple
+plane-destruction filters in a similar setting to compute coherency
+attributes.
+\par
+To test the performance of the improved plane-wave destructors, I
+chose several examples from \cite{gee}.
+Figure~\ref{fig:sigmoid-txr} introduces the first example. The left
+plot of the figure shows a synthetic model, which resembles
+sedimentary layers with a plane unconformity and a curvilinear fault.
+The model contains 200 traces of 200 samples each.
+The right plot shows the corresponding \emph{texture}
+\cite[]{EAE-1999-1009}, obtained by convolving a field of random
+numbers with the inverse of plane-wave destruction filters. The
+inverses are constructed using helical filtering techniques
+\cite[]{GEO63-05-15321541,Fomel.sepphd.107}. Texture plots allow us to
+quickly access the ability of the destruction filters to characterize
+the main locally plane features in the data.  The dip field was
+estimated by the linearization method of the previous section. The dip
+field itself and the prediction residual [the left-hand side of
+equation~(\ref{eqn:ls})] are shown in the left and right plots of
+Figure~\ref{fig:sigmoid-dip} respectively. We observe that the
+texture plot does reflect the dip structure of the input data, which
+indicates that the dip field was estimated correctly. The fault and
+unconformity are clearly visible both in the dip estimate and in the
+residual plots. Anywhere outside the slope discontinuities and the
+boundaries, the residual is close to zero.  Therefore, it can be used
+directly as a fault detection measure.  Comparing the residual plot in
+Figure~\ref{fig:sigmoid-dip} with the analogous plot of
+\cite{SEG-1994-1572,gee}, reproduced in
+Figure~\ref{fig:sigmoid-clae}, establishes a superior performance of
+the improved finite-difference destructors in comparison with that of
+the local $T$-$X$ prediction-error filters.
+
+\plot{sigmoid-txr}{width=6in,height=3.5in}{Synthetic sedimentary
+  model. Left plot: Input data. Right plot: Its texture. The texture is
+  computed by convolving a field number with the inverse of plane-wave destruction 
+  filters. It highlights the position of estimated local plane waves.}
+\plot{sigmoid-dip}{width=6in,height=3.5in}{Synthetic sedimentary
+  model. Left plot: Estimated dip field. Right plot: Prediction
+  residual. Large absolute residual indicates the location of faults.}  
+\sideplot{sigmoid-clae}{width=2.7in,height=3.5in}{Prediction
+  residual of the 11-point prediction-error filter estimated in local
+  20x6 windows (reproduced from \cite[]{gee}).To be compared with the
+  right plot in Figure~\ref{fig:sigmoid-dip}.}
+\par
+The left plot in Figure~\ref{fig:conflict-txr} introduces a simpler
+synthetic test. The model is composed of linear events with two
+conflicting slopes. A regularized dip field estimation attempts to
+smooth the estimated dip in the places where it is not constrained by
+the data (the left plot of Figure~\ref{fig:conflict-dip}.) The effect
+of smoothing is clearly seen in the texture image (the right plot in
+Figure~\ref{fig:conflict-txr}). The corresponding residual (the right
+plot of Figure~\ref{fig:conflict-dip}) shows suppressed linear events
+and highlights the places of their intersection. Residuals are large at 
+intersections because a single dominant dip model fails to adequately
+represent both conflicting dips.
+
+\plot{conflict-txr}{width=6in,height=3.5in}{Conflicting dips
+  synthetic. Left plot: Input data. Right plot: Its texture.}
+\plot{conflict-dip}{width=6in,height=3.5in}{Conflicting dips
+  synthetic. Left plot: Estimated dip field. Right plot: Prediction
+  residual.Large absolute residual indicates the location of
+  conflicting dips.}
+
+%\begin{comment}
+\par
+The left plot in Figure~\ref{fig:yc27-txr} shows a real shot gather:
+a portion of \cite{yilmaz} data set 27. The initial dip in the dip
+estimation program was set to zero. Therefore, the texture image (the
+right plot in Figure~\ref{fig:yc27-txr}) contains zero-dipping plane
+waves in the places of no data. Everywhere else the dip is accurately
+estimated from the data. The data contain a missing trace at about
+0.7~km offset and a slightly shifted (possibly mispositioned) trace at
+about 1.1~km offset. The mispositioned trace is clearly visible in the
+dip estimate (the left plot in Figure~\ref{fig:yc27-dip}), and the
+missing trace is emphasized in the residual image (the right plot in
+Figure~\ref{fig:yc27-dip}). Additionally, the residual image reveals
+the forward and back-scattered surface waves, hidden under more
+energetic reflections in the input data.
+
+\plot{yc27-txr}{angle=90,totalheight=8.7in,width=5.075in}{Real 
+  shot gather. Left plot: Input data. Right plot: Its texture.}
+\plot{yc27-dip}{angle=90,totalheight=8.7in,width=5.075in}{Real 
+  shot gather. Left plot: Estimated dip field. Right plot: 
+  Prediction residual. The residual highlights surface waves 
+  hidden under dominant reflection events in the original data.}
+\par
+%\end{comment}
+
+Figure~\ref{fig:dgulf-txr} shows a stacked time section from the Gulf of
+Mexico and its corresponding texture. The texture plot demonstrates
+that the estimated dip (the left plot of Figure~\ref{fig:dgulf-dip})
+reflects the dominant local dip in the data. After the plane waves
+with the dominant dip are removed, many hidden diffractions appear in the
+residual image (the right plot in Figure~\ref{fig:dgulf-dip}.) The
+enhanced diffraction events can be used, for example, for 
+estimating the medium velocity \cite[]{GEO49-11-18691880}.
+
+\plot{dgulf-txr}{angle=90,totalheight=8.7in,width=5.075in}{Time
+  section from the Gulf of Mexico. Left plot: Input data. Right plot:
+  Its texture. The texture plot shows dominant local dips estimated
+  from the data.}
+\plot{dgulf-dip}{angle=90,totalheight=8.7in,width=5.075in}{Time
+  section from the Gulf of Mexico. Left plot: Estimated dip field.
+  Right plot: Prediction residual.The residual highlights diffraction events
+  hidden under dominant reflections in the original data. }
+\par
+Overall, the examples of this subsection show that the
+finite-difference plane-wave destructors provide a reliable tool for
+enhancement of discontinuities and conflicting slopes in seismic
+images. The estimation step of the fault detection procedure produces
+an image of the local dominant dip field, which may have its own
+interpretational value. An extension to 3-D is possible, as outlined
+by \cite{Schwab.sepphd.99}, \cite{Clapp.sepphd.106}, and
+\cite{Fomel.sepphd.107}.
+
+\begin{comment}
+\subsection{Gap interpolation}
+
+\inputdir{hole}
+
+Irregular gaps occur in the recorded data for many different reasons,
+and prediction-error filters are known as a powerful method for
+interpolating them. Interpolating irregularly spaced data also reduces
+to gap interpolation after binning. 
+\par
+Figure~\ref{fig:hole0} shows a simple synthetic example of gap
+interpolation from \cite{gee}.  The input data has a large
+elliptic gap cut out from a two plane-wave model. I estimate both dip
+components from the input data by using the method of
+equations~(\ref{eqn:lin2}-\ref{eqn:reg2}). The initial values for the
+two local dips were 1 and 0, and the estimated values are close to the
+true dips of 2 and -1 (two middle plots in Figure~\ref{fig:hole0}.)
+Although the estimation program did not make any assumption about dip
+being constant, it correctly estimated nearly constant values with the
+help of regularization equations~(\ref{eqn:reg1}-\ref{eqn:reg2}). The
+rightmost plot in Figure~\ref{fig:hole0} shows the result of gap
+interpolation with a two-plane local plane-wave destructor. The result
+is nearly perfect and compares favorably with the analogous result of
+the $T$-$X$ PEF technique \cite[]{gee}.
+
+\plot{hole0}{width=6in,height=3.5in}{Synthetic gap interpolation
+  example. From left to right: original data, input data, first
+  estimated dip, second estimated dip, interpolation output.}
+\par
+Figure~\ref{fig:seab} is another benchmark gap interpolation example
+from \cite{gee}. The data are ocean depth measurements from one
+day SeaBeam acquisition. The data after normalized binning are shown
+in the left plot of Figure~\ref{fig:seab}. From the known part of the
+data, we can partially see a certain elongated and faulted structure
+on the ocean floor. Estimating a smoothed dominant dip in the data and
+interpolating with the plane-wave destruction filters produces the
+image in the right plot of Figure~\ref{fig:seab}. The V-shaped
+acquisition pattern is somewhat visible in the interpolation result,
+which might indicate the presence of a fault. Otherwise, the result
+is both visually pleasing and fully agreeable with the data.
+\cite{Clapp.sep.105.bob3} shows on the same data example how to
+obtain multiple statistically equivalent realizations of the
+interpolated data.
+
+\inputdir{seab}
+
+\plot{seab}{width=6in,height=3.5in}{Depth of the ocean from SeaBeam
+  measurements.  Left plot: after binning. Right plot: after binning
+  and gap interpolation.}
+\par
+A 3-D interpolation example is shown in Figure~\ref{fig:passfill}. The
+input data resulted from a passive seismic experiment
+\cite[]{Cole.sepphd.86} and originally contained many gaps because of
+instrument failure. I interpolated the 3-D gaps with a pair of two
+orthogonal plane-wave destructors in the manner proposed by
+\cite{Schwab.sep.84.271} for $T$-$X$ prediction filters. The
+interpolation result shows a visually pleasing continuation of locally
+plane events through the gaps. It compares favorably with an analogous
+result of a stationary $T$-$X$ PEF.
+
+\inputdir{blast}
+
+\plot{passfill}{width=6in,height=3.5in}{3-D gap interpolation in
+  passive seismic data. The left 12 panels are slices of the input
+  data.  The right 12 panels are the corresponding slices in the
+  interpolation output.}
+\par
+We can conclude that plane-wave destructors provide an effective
+method of gap filling and missing data interpolation.
+\end{comment}
+
+\subsection{Trace interpolation beyond aliasing}
+
+\inputdir{alias}
+
+\cite{GEO56-06-07850794} popularized the application of
+prediction-error filters to regular trace interpolation and showed how
+the spatial aliasing restriction can be overcome by scaling the
+lower frequencies of $F$-$X$ PEFs. An analogous technique for $T$-$X$
+filters was developed by \cite{Claerbout.blackwell.92,gee} and
+was applied for 3-D interpolation with non-stationary PEFs by
+\cite{Crawley.sepphd.104}. The $T$-$X$ technique implies
+stretching the filter in all directions so that its dip spectrum is
+preserved while the coefficients are estimated at alternating
+traces. After the filter is estimated, it is scaled back and used for
+interpolating missing traces between the known ones.  A very
+similar method works for finite-difference plane wave destructors,
+only we need to take special care of the aliased dips at the dip
+estimation stage.
+
+A simple synthetic example of interpolation beyond aliasing is shown
+in Figure~\ref{fig:aliasp0}. The input data are clearly aliased and
+non-stationary. To take the aliasing into account, I estimate the two
+dips present in the data with the slope estimation technique of
+equations~(\ref{eqn:lin2}) and~(\ref{eqn:reg1}-\ref{eqn:reg2}). The
+first dip corresponds to the true slope, while the second dip
+corresponds to the aliased dip component. In this example, the true
+dip is non-negative everywhere and is easily distinguished from the
+aliased one. In the more general case, an additional interpretation
+may be required to determine which of the dip components is
+contaminated by aliasing.  Throwing away the aliased dip and
+interpolating intermediate traces with the true dip produces the
+accurate interpolation result shown in the right plot of
+Figure~\ref{fig:aliasp0}. Three additional traces were inserted between
+each of the neighboring input traces.
+
+\plot{aliasp0}{width=5.5in,height=2.75in}{Synthetic example of
+  interpolation beyond aliasing with plane-wave destruction filters.
+  Left: input aliased data, right: interpolation output.Three
+  additional traces were inserted between each of the neighboring
+  input traces.}
+
+\inputdir{sean}
+
+\par
+Figure~\ref{fig:sean2} shows a marine 2-D shot gather from a deep
+water Gulf of Mexico survey before and after subsampling in the offset
+direction. The data are similar to those used by
+\cite{Crawley.sepphd.104}. The shot gather has long-period
+multiples and complicated diffraction events caused by a salt body.
+The amplitudes of the hyperbolic events are not as uniformly
+distributed as in the synthetic case of Figure~\ref{fig:aliasp0}.
+Subsampling by a factor of two (the right plot in
+Figure~\ref{fig:sean2}) causes clearly visible aliasing in the
+steeply dipping events.  The goal of the experiment is to interpolate
+the missing traces in the subsampled data and to compare the result
+with the original gather shown in the left plot of
+Figure~\ref{fig:sean2}.
+
+\plot{sean2}{angle=90,totalheight=8.69in,width=5.056in}{2-D marine 
+  shot gather. 
+  Left: original.  Right: subsampled by a factor of two in the offset
+  direction.}
+\par
+A straightforward application of the dip estimation
+equations~(\ref{eqn:lin2}-\ref{eqn:reg2}) applied to aliased data can
+easily lead to erroneous aliased dip estimation because the aliased dip
+may get picked instead of the true dip. In order to avoid
+this problem, I chose a slightly more complex strategy. The algorithm for trace
+interpolation of aliased data consists of the following steps:
+\begin{enumerate}
+\item Applying Claerbout's $T$-$X$ methodology, stretch a two-dip
+  plane-wave destruction filter and estimate the dips from decimated
+  data. 
+\item The second estimated dip will be degraded by aliasing. Ignore
+  this initial second-dip estimate.
+\item Estimate the second dip component again by fixing the first dip
+  component and using it as the initial estimate of the second
+  component. This trick prevents the nonlinear estimation algorithm
+  from picking the wrong (aliased) dip in the data.
+\item Downscale the estimated two-dip filter and use it for
+  interpolating missing traces.
+\end{enumerate}
+The two estimated dip components are shown in
+Figure~\ref{fig:sean2-dip}. The first component contains only positive
+dips. The second component coincides with the first one in the areas
+where only a single dip is present in the data. In other areas, it
+picks the complementary dip, which has a negative value for
+back-dipping hyperbolic diffractions.
+
+\plot{sean2-dip}{angle=90,totalheight=8.69in,width=5.056in}{Two components
+  of the
+  estimated dip field for the decimated 2-D marine shot gather.}
+\par
+Figure~\ref{fig:sean2-int} shows the interpolation result and the
+difference between the interpolated traces and the original traces,
+plotted at the same clip value. The method succeeded in the sense that
+it is impossible to distinguish interpolated traces from the
+interpolation result alone. However, it is not ideal, because some of
+the original energy is missing in the output. A close-up comparison
+between the original and the interpolated traces in
+Figure~\ref{fig:sean2-close} shows that imperfection in more detail.
+Some of the steepest events in the middle of the section are poorly
+interpolated, and in some of the other places, the second dip
+component is continued instead of the first one.
+
+\plot{sean2-int}{angle=90,totalheight=8.69in,width=5.056in}{Left: 
+  2-D marine shot
+  gather after trace interpolation. Right: Difference between the
+  interpolated and the original gather. The error is zero at the location of
+  original traces and fairly random at the location of inserted traces.}
+\plot{sean2-close}{angle=90,totalheight=8.69in,width=5.056in}{Close-up 
+  comparison of
+  the interpolated (right) and the original data (left).}
+\par
+One could improve the interpolation result considerably  by including
+another dimension. To achieve a better result, we can use a pair of
+plane-wave destructors, one predicting local plane waves in the offset
+direction and the other predicting local plane waves in the shot
+direction.
+
+\subsection{Signal and noise separation}
+
+\inputdir{signoi}
+
+Signal and noise separation and noise attenuation are yet another
+important application of plane-wave prediction filters. A random noise
+attention has been successfully addressed by
+\cite{SEG-1984-S10.1}, \cite{SEG-1986-POS2.10},
+\cite{GEO60-06-18871896}, \cite{SEG-1995-0711}, and others. A
+more challenging problem of coherent noise attenuation has only recently
+joined the circle of the prediction technique applications
+\cite[]{TLE18-01-00550058,morganSEG,SEG-2001-13051308}.
+\par
+The problem has a very clear interpretation in terms of the local dip
+components. If two components, $\mathbf{s}_1$ and $\mathbf{s}_2$ are
+estimated from the data, and we can interpret the first component as
+signal, and the second component as noise, then the signal and noise
+separation problem reduces to solving the least-squares system
+\begin{eqnarray}
+  \label{eqn:sn1}
+  \mathbf{C}(\mathbf{s}_1) \mathbf{d}_1 & \approx & 0 \;, \\
+  \label{eqn:sn2}
+  \epsilon \mathbf{C}(\mathbf{s}_2) \mathbf{d}_2 & \approx & 0 \;
+\end{eqnarray}
+for the unknown signal and noise components $\mathbf{d}_1$ and
+$\mathbf{d}_2$ of the input data $\mathbf{d}$:
+\begin{equation}
+  \label{eqn:dsn}
+  \mathbf{d}_1 + \mathbf{d}_2 = \mathbf{d}.
+\end{equation}
+The scalar parameter $\epsilon$ in equation~(\ref{eqn:sn2}) reflects
+the signal to noise ratio. We can combine equations~(\ref{eqn:sn1}-\ref{eqn:sn2})
+and~(\ref{eqn:dsn}) in the explicit system for the
+noise component $\mathbf{d}_2$:
+\begin{eqnarray}
+  \label{eqn:s1}
+  \mathbf{C}(\mathbf{s}_1) \mathbf{d}_2 & \approx & 
+  \mathbf{C}(\mathbf{s}_1) \mathbf{d}\;, \\
+  \label{eqn:s2}
+  \epsilon \mathbf{C}(\mathbf{s}_2) \mathbf{d}_2 & \approx & 0 \;.
+\end{eqnarray}
+\par
+Figure~\ref{fig:sn2} shows a simple example of the described approach.
+I estimated two dip components from the input synthetic data and
+separated the corresponding events by solving the least-squares
+system~(\ref{eqn:s1}-\ref{eqn:s2}). The separation result is visually
+perfect.
+
+\plot{sn2}{width=4.8in,height=2.8in}{Simple example of dip-based single
+  and noise separation. From left to right: ideal signal, input data,
+  estimated signal, estimated noise.}
+\par
+
+\inputdir{dune}
+
+Figure~\ref{fig:dune-dat} presents a significantly more complicated
+case: a receiver line from of a 3-D land shot gather from Saudi
+Arabia, contaminated with three-dimensional ground-roll, which appears 
+hyperbolic in the cross-section.
+The same dataset has been used previously by \cite{morganSEG}.
+The ground-roll noise and the reflection events have a significantly
+different frequency content, which might suggest separating
+them on the base of frequency alone. The result of frequency-based
+separation, shown in Figure~\ref{fig:dune-exp} is, however, not ideal:
+part of the noise remains in the estimated signal after the
+separation. Changing the $\epsilon$ parameter in
+equation~(\ref{eqn:s2}) could clean up the signal estimate, but it
+would also bring some of the signal into the subtracted noise. A
+better strategy is to separate the events by using both the difference
+in frequency and the difference in slope. For that purpose, I adopted
+the following algorithm:
+\begin{enumerate}
+\item Use a frequency-based separation (or, alternatively, a simple
+  low-pass filtering) to obtain an initial estimate of the ground-roll
+  noise.
+\item Select a window around the initial noise. The further
+  separation will happen only in that window.
+\item Estimate the noise dip from the initial noise estimate.
+\item Estimate the signal dip in the selected data window as the
+  complimentary dip component to the already known noise dip.
+\item Use the signal and noise dips together with the signal and noise
+  frequencies to perform the final separation. This is
+  achieved by cascading single-dip plane-wave destruction filters with
+  local 1-D three-coefficient PEFs aimed at destroying a particular
+  frequency.
+\end{enumerate}
+The separation result is shown in Figure~\ref{fig:dune-sn}. The
+separation goal has been fully achieved: the estimated ground-roll noise is
+free of the signal components, and the estimated signal is free of the
+noise.
+
+
+\plot{dune-dat}{width=6in,height=3.5in}{Ground-roll-contaminated data
+  from Saudi Arabian sand dunes. A reciever cable out of a 3-D shot gather.
+  }
+
+\plot{dune-exp}{width=6in,height=7in}{Signal and noise separation
+  based on frequency. Top: estimated signal. Bottom: estimated noise.}
+
+\plot{dune-sn}{width=6in,height=7in}{Signal and noise separation based
+  on both apparent dip and frequency in the considered receiver cable. 
+  Top: estimated signal. Bottom: estimated
+  noise.}
+\par
+
+\begin{comment}
+The left plot in Figure~\ref{fig:ant-dat} shows another test example:
+a shot gather from \cite{yilmaz}, which is contaminated by nearly
+linear low-velocity noise. In this case, a simple dip-based separation
+was sufficient for achieving a good result. The algorithm proceeds as
+follows:
+\begin{enumerate}
+\item Bandpass the original data with an appropriate low-pass filter
+  to obtain an initial noise estimate (the right plot in
+  Figure~\ref{fig:ant-dat}.) 
+\item Estimate the local noise dip from the initial noise model.
+\item Estimate the signal dip from the input data as the complimentary
+  dip component to the already known noise dip.
+\item Estimate the noise by an iterative optimization of
+  system~(\ref{eqn:s1}-\ref{eqn:s2}) and subtract it from the data to
+  get the signal estimate.
+\end{enumerate}
+Figure~\ref{fig:ant-sn} shows the separation result. The signal and
+noise components are accurately separated.
+
+%\plot{ant-dat}{angle=90,totalheight=8.7in,width=5.075in}{Left: Input
+%  noise-contaminated shot gather. Right: Result of low-pass
+%  filtering. The filtered data is is used as a noise model to estimate
+%  the noise dip.}
+
+%\plot{ant-sn}{angle=90,totalheight=8.7in,width=5.075in}{Signal and
+%  noise separation based on dip. Left: estimated signal. Right:
+%  estimated noise.}
+\par
+\end{comment}
+
+The examples in this subsection show that when the signal and noise
+components have distinctly different local slopes, we can
+successfully separate them with plane-wave destruction filters.
+
+\section{Conclusions}
+
+Plane-wave destruction filters with an improved finite-difference
+design can be a valuable tool in processing multidimensional seismic
+data. On several examples, I showed their good performance in such
+problems as fault detection, missing data interpolation, and noise
+attenuation. Although only 2-D examples were demonstrated, it
+is straightforward to extend the method to 3-D applications by
+considering two orthogonal plane-wave slopes.
+\par
+The similarities
+and differences between plane-wave destructors and $T$-$X$
+prediction-error filters can be summarized as follows:
+\par
+\noindent Similarities:
+\begin{itemize}
+\item Both types of filters operate in the original time-and-space
+  domain of recorded data.
+\item Both filters aim to predict local plane-wave events in the data.
+\item In most problems, one filter type can be replaced by the other,
+  and certain techniques, such as Claerbout's trace interpolation
+  method, are common for both approaches.
+\end{itemize}
+Differences:
+\begin{itemize}
+\item The design of plane-wave destructors is purely deterministic and
+  follows the plane-wave differential equation. The design of $T$-$X$
+  PEF has statistical roots in the framework of the maximum-entropy
+  spectral analysis \cite[]{Burg.sepphd.6}. In principle, $T$-$X$ PEF
+  can characterize more complex signals than local plane waves.
+\item In the case of PEF, we estimate filter coefficients. In the
+  case of plane-wave destructors, the estimated quantity is the local
+  plane-wave slope.  Several important distinctions follow from that
+  difference:
+\begin{itemize}
+\item The filter-estimation problem is linear. The slope estimation
+  problem, in the case of the improved filter design, is non-linear,
+  but allows for an iterative linearization. In general, non-linearity
+  is an undesirable feature because of local minima and the dependence
+  on initial conditions. However, we can sometimes use it creatively.
+  For example, it helped to avoid aliased dips in the trace
+  interpolation example.
+\item Non-stationarity is handled gracefully in the local slope
+  estimation. No local windows are required to produce a smoothly
+  varying estimate of the local slope. This is a much more difficult
+  issue for PEFs because of the largely under-determined problem.
+\item Local slope has a clearly interpretable physical meaning, which
+  allows for easy quality control of the results. The coefficients
+  of $T$-$X$ PEFs are much more difficult to interpret.
+\end{itemize}
+\item The efficiency of the two approaches is difficult to compare.
+  Plane-wave destructors are generally more efficient to apply because
+  of the small number of filter coefficients. However, they
+  may require more computation at the estimation stage because of the
+  non-linearity problem.
+\end{itemize}
+
+\section{Acknowledgments}
+This work was partially accomplished at
+the Stanford Exploration Project (SEP).
+
+I would like to thank Jon Claerbout, Robert Clapp, Matthias Schwab, and
+other SEP members for developing and maintaining the reproducible
+research technology, which helped this research. 
+
+Suggestions from two anonymous reviewers helped to improve the paper.
+
+\bibliographystyle{seg}
+\bibliography{SEP2,SEG,wave}
+
+\newpage
+
+\append{Determining filter coefficients by Taylor expansion}
+
+This appendix details the derivation of equations~(\ref{eqn:b3})
+and~(\ref{eqn:b5}). The main idea to match the frequency responses 
+of the approximate plane-wave filters to the response of the exact 
+phase-shift operator at low frequencies.
+
+The Taylor series expansion of the phase-shift operator $e^{i \omega
+  \sigma}$ around the zero frequency $\omega=0$ takes the form
+\begin{equation}
+  e^{i \omega \sigma} \approx 1 + i\, \,\sigma\,\omega - 
+  \frac{\sigma^2\,\omega^2}{2} - i\, \frac{\sigma^3\,\omega^3}{6} +
+  \mbox{O}\left(\omega^4\right)
+  \label{eq:eseries}
+\end{equation}
+The Taylor expansion of the six-point implicit finite-difference operator 
+takes the form
+\begin{eqnarray}
+  \nonumber
+\frac{B_3(Z_t)}{B_3(1/Z_t)} & = &
+\frac
+{b_{-1}\,Z_t^{-1} + b_0 + b_1\,Z_t}
+{b_1\,Z_t + b_0 + b_{-1}\,Z_t^{-1}} = 
+\frac
+{b_{-1}\,e^{-i \omega} + b_0 + b_1\,e^{i \omega}}
+{b_1\,e^{-i \omega} + b_0 + b_{-1}\,e^{i \omega}} \\
+\nonumber
+ & \approx &
+1 - \frac{2\,i \,\left( b_{-1} - b_1 \right) \,\omega}{b_0 + b_{-1} + b_1} - 
+  \frac{2\,\left( b_{-1} - b_1 \right)^2\,\omega^2}
+  {\left( b_0 + b_{-1} + b_1 \right)^2} \\
+& &  + 
+  \frac{i\,
+     \left( b_{-1} - b_1 \right) \,
+     \left[ b_0^2 - b_0\,\left( b_{-1} + b_1 \right) 
+       4\,\left( b_{-1}^2 - 4\,b_{-1}\,b_1 + 
+          {b_1}^2 \right)  \right] \,\omega^3}
+    {3\,\left(b_0 + b_{-1} + b_1\right)^3} + \ldots
+\label{eq:bseries}
+\end{eqnarray}
+Matching the corresponding terms of expansions~(\ref{eq:eseries}) 
+and~(\ref{eq:bseries}), we arrive at the system of nonlinear equations
+\begin{eqnarray}
+  \sigma & = & \frac{2\,\left( b_1 - b_{-1} \right) }
+  {b_0 + b_{-1} +b_1} 
+  \label{eq:sys1} \\
+  \sigma^2 & = & \frac{4\,\left( b_1 - b_{-1} \right)^2}
+  {\left(b_0 + b_{-1} +b_1 \right)^2} \label{eq:sys2}
+  \\
+  \sigma^3 & = & \frac{2\,\left( b_1 - b_{-1} \right) \,
+    \left[ b_0^2 - b_0\,\left( b_{-1} +b_1 \right)  + 
+         4\,\left( b_{-1}^2 - 4\,b_{-1}\,b_1 + 
+            b_1^2 \right)  \right] }
+      {\left(b_0 + b_{-1} + b_1 \right)^3}
+      \label{eq:sys3}
+\end{eqnarray}
+System~(\ref{eq:sys1}-\ref{eq:sys3}) does not uniquely constrain the
+filter coefficients $b_{-1}$, $b_0$, and $b_1$ because
+equation~(\ref{eq:sys2}) simply follows from~(\ref{eq:sys1}) andb
+ecause all the coefficients can be multiplied simultaneously by an
+arbitrary constant without affecting the ratios in
+equation~(\ref{eq:bseries}). I chose an additional constraint in the 
+form
+\begin{equation}
+  \label{eq:b0}
+  B_3(1) = b_{-1} + b_0 + b_1 = 1\;,
+\end{equation}
+which ensures that the filter $B_3(Z_t)$ does not alter the zero
+frequency component. System~(\ref{eq:sys1}-\ref{eq:sys3}) with the
+additional constraint~(\ref{eq:b0}) resolves uniquely to
+the coefficients of filter~(\ref{eqn:b3}) in the main text:
+\begin{eqnarray}
+   b_{-1} & = & \frac{(1-\sigma)(2-\sigma)}{12}\;;   
+   \label{eq:sol1}
+   \\
+  b_0 & = & \frac{(2+\sigma)(2-\sigma)}{6}\;; 
+  \label{eq:sol2}
+  \\
+  b_1 & = & \frac{(1+\sigma)(2+\sigma)}{12}\;.
+  \label{eq:sol3}
+\end{eqnarray}
+
+The $B_5$ filter of equation~(\ref{eqn:b5}) is constructed in a
+completely analogous way, using longer Taylor expansions to constrain
+the additional coefficients. Generalization to longer filters is
+straightforward.
+
+The technique of this appendix aims at matching the filter responses
+at low frequencies. One might construct different filter families by
+employing other criteria for filter design (least squares fit, 
+equiripple, etc.)
+
+%\plot{name}{width=6in,height=}{caption}
+%\sideplot{name}{height=1.5in,width=}{caption}
+%
+%\begin{equation}
+%\label{eqn:}
+%\end{equation}
+%
+%\ref{fig:}
+%(\ref{eqn:})
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% End: 

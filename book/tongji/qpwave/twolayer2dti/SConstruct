@@ -1,0 +1,169 @@
+from rsf.proj import *
+
+par = dict(
+    nx=401,
+    nz=401,
+    dx=0.005,
+    dz=0.005,
+    x0=0.0,
+    z0=0.0,
+
+    ns=601,
+    dt=0.0005,
+
+    vp0_1=2500,
+    vs0_1=1200,
+    eps_1=0.25,
+    del_1=-0.25,
+    the_1=0.0,
+
+    vp0_2=3600,
+    vs0_2=1800,
+    eps_2=0.2,
+    del_2=0.1,
+    the_2=30.0,
+
+    seed=2012,
+    eps=1.e-6,
+    npk=30,
+
+    isep1=0,
+    isep2=1,
+    ihomo=0,
+    tapertype="T",
+    nstep=2
+    )
+
+# =================================================================================
+Flow(['vp0','vs0','epsi','del','the'], None,
+     '''
+         twolayer2dti
+         vs0=${TARGETS[1]}
+         epsi=${TARGETS[2]}
+         del=${TARGETS[3]}
+         the=${TARGETS[4]}
+         nx=%d
+         nz=%d
+         dx=%g
+         dz=%g
+         vp0_1=%g
+         vs0_1=%g
+         eps_1=%g
+         del_1=%g
+         the_1=%g
+         vp0_2=%g
+         vs0_2=%g
+         eps_2=%g
+         del_2=%g
+         the_2=%g
+         ''' % (par['nx'],par['nz'],par['dx'],par['dz'],
+                par['vp0_1'],par['vs0_1'],par['eps_1'],par['del_1'],par['the_1'],
+                par['vp0_2'],par['vs0_2'],par['eps_2'],par['del_2'],par['the_2'])
+    )
+
+# =================================================================================
+# Forward modeling using original elastic wave eq.
+# =================================================================================
+
+name1='''
+Elasticx Elasticz
+'''
+
+Flow(['Elasticx',      'Elasticz'],
+         'vp0  vs0  epsi del the',
+         '''
+         tti2desep
+         vp0=${SOURCES[0]}
+         vs0=${SOURCES[1]}
+         epsi=${SOURCES[2]}
+         del=${SOURCES[3]}
+         the=${SOURCES[4]}
+         Elasticz=${TARGETS[1]}
+         ns=%d
+         dt=%g
+         isep=%d
+         ihomo=%d
+         tapertype=%s
+         nstep=%d
+         ''' % (par['ns'],par['dt'],par['isep1'],par['ihomo'],par['tapertype'],par['nstep'])
+    )
+
+Flow('interface','Elasticx',
+     '''
+     math output="(%d-1)*%g*7/12"
+     ''' % (par['nz'],par['dz'])
+    )
+
+Plot('interface',
+     '''
+     graph yreverse=y transp=n color=c pad=n plotfat=1
+     min1=0 max1=2 label1=n
+     min2=0 max2=2 label1=n
+     wanttitle=n wantaxis=n screenratio=1.
+     '''
+     )
+
+for qq in Split(name1):
+        Plot(qq,
+        '''
+        grey polarity=n scalebar=n screenratio=1. wanttitle=n
+        axisfat=5 axiscol=7 labelsz=10
+        ''')
+
+for qq in Split(name1):
+    Result(qq+'Interf',[qq,'interface'],'Overlay')
+
+# =================================================================================
+# Having Taper for operators in spatial domain
+# =================================================================================
+name3='''
+PseudoPurePx PseudoPurePz PseudoPureP
+'''
+
+name5='''
+PseudoPureSepP
+'''
+
+Flow(['PseudoPurePx',  'PseudoPurePz',
+      'PseudoPureSepPx',   'PseudoPureSepPz',
+      'PseudoPureP',  'PseudoPureSepP'],
+         'vp0  vs0  epsi del the',
+         '''
+         tti2dpseudoplrsep
+         vp0=${SOURCES[0]}
+         vs0=${SOURCES[1]}
+         epsi=${SOURCES[2]}
+         del=${SOURCES[3]}
+         the=${SOURCES[4]}
+         PseudoPurePz=${TARGETS[1]}
+         PseudoPureSepPx=${TARGETS[2]}
+         PseudoPureSepPz=${TARGETS[3]}
+         PseudoPureP=${TARGETS[4]}
+         PseudoPureSepP=${TARGETS[5]}
+         ns=%d
+         dt=%g
+         eps=%g
+         seed=%d
+         npk=%d
+         ''' % (par['ns'],par['dt'],par['eps'],par['seed'],par['npk'])
+    )
+
+for qq in Split(name3):
+        Plot(qq,
+        '''
+        grey polarity=n scalebar=n screenratio=1. wanttitle=n
+        axisfat=5 axiscol=7 labelsz=10
+        ''')
+for qq in Split(name3):
+        Result(qq+'Interf',[qq,'interface'],'Overlay')
+
+for qq in Split(name5):
+        Plot(qq,
+        '''
+        grey polarity=n scalebar=n screenratio=1. wanttitle=n
+        axisfat=5 axiscol=7 labelsz=10
+        ''')
+for qq in Split(name5):
+        Result(qq+'Interf',[qq,'interface'],'Overlay')
+
+End()

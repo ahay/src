@@ -1,0 +1,367 @@
+from rsf.proj import *
+from rsf.recipes.m1d import *
+
+# ------------------------------------------------------------------------------
+nn = 16
+mode = 'fre'  #'et' 'ea' 'em' 'fre'
+spmin = 0.0
+spmax = 5.0
+recmin = 0.6
+recmax = 1.0
+# ------------------------------------------------------------------------------
+model = {
+    'X' :   5,    # meter
+    'T' :   1.0,
+    'dx':   0.01,
+    'dt':   0.0008,
+    'SelT': 0.6,         # selected time for snapshot show 
+    'snpintvl': 1.0,     # nterval of snapshot output
+    'size'    : 12,      # FD order
+    'frqcut'  : 0.6,
+    'pml'     : 240,
+    'vel'     : '2.1+0.1*x1*x1',    #2.1+0.1*x1*x1
+    'dvel'    : '0.2*x1',    # 0.2*x1
+    'den'     : '2'
+    }
+
+# source & receiver
+srp = {
+     'bgn'   : 0.15,     # s, time of maximum ricker
+     'frq'   : 5.5,     # source domain frequence
+     'srcmms'  : 'y',      # point source
+     'inject': 'y',      # if y, inject; if n, Initiate conditon
+     'slx'   : 0.5,   # source location (x), meter
+     'gdep'  : 2.5      # receiver location (z), meter
+     }
+
+# ------------------------------------------------------------------------------
+
+def modeling(errpar, ipar, mode, idn):
+    dx  = ipar['dx']
+    dt  = ipar['dt']
+    
+    if mode == 'et':
+        _pf = 't'
+        var = ipar['dt']
+    elif mode == 'em':
+        _pf = 'm'
+        var = ipar['dx']
+    elif mode == 'ea':
+        _pf = 'a'
+        var = ipar['dt']+ipar['dx']
+    elif mode == 'fre':
+        _pf = 'f'
+        var = ipar['frq']
+
+    # build model
+    vel = '%svel%d'  %(_pf, idn)
+    dvel = '%sdvel%d' %(_pf, idn)
+    den = '%sden%d'  %(_pf, idn)
+    velhf = vel+'hf'
+    dvelhf= dvel+'hf'
+    denhf = den+'hf'
+
+    vel_pml = vel+'_pml'
+    den_pml = den+'_pml'
+    buildmodel(ipar, den, vel, dvel, ipar['den'], ipar['vel'], ipar['dvel'])
+
+    # build source
+    srcp    = '%ssrcp%d'    %(_pf, idn)
+    srcd    = '%ssrcd%d'    %(_pf, idn)
+    presrc  = '%spresrc%d'  %(_pf, idn)
+    velsrc  = '%svelsrc%d'  %(_pf, idn)
+    preinit = '%spreinit%d' %(_pf, idn)
+    velinit = '%svelinit%d' %(_pf, idn)
+    mms     = '%smms%d'     %(_pf, idn)
+
+    #analytic solution
+    if ipar['inject'] == 'n' :
+        aslt = '%saslt%d' %(_pf, idn)
+        analyticslt(aslt, ipar, float(ipar['vel']), _pf, idn)
+    
+    
+    mmsfiles = {}
+    if ipar['srcmms'] == 'y' :
+        buildsrcd(ipar,  srcd, _pf, idn)
+        buildmms(ipar, mms, presrc, velsrc, preinit, velinit, vel, dvel, den, velhf, dvelhf, denhf)
+        mmsfiles = {'presrc' : presrc,  'velsrc' :velsrc, 
+                    'preinit': preinit, 'velinit':velinit}
+        mgraph(mms,'MMSSLT-%s-%g'%(mode,var))
+        
+        mmssnap = '%smmssnap%d' %(_pf, idn)
+        Flow(mmssnap, mms, 'window n2=1 f2=%(snt)d ' %ipar)
+        graph(spmin, spmax, mmssnap,"MMS-Snap-%s-%g" %(mode,var))
+        mmsrec = '%smmsrec%d' %(_pf, idn)
+        Flow(mmsrec, mms, 'window n1=1 f1=%(gp)d' %ipar)
+        graph(recmin, recmax, mmsrec,"MMS-Rec-%s-%g" %(mode,var))
+    
+        
+    
+    buildsrcp(ipar, srcp)
+    
+    # build ic
+    ic = '%sic%d'   %(_pf, idn)
+    buildic(ipar, ic)
+    
+    # lr
+    lrw = '%slrwav%d' %(_pf, idn)
+    lrr = '%slrrec%d' %(_pf, idn)
+    lrs = '%slrsnap%d' %(_pf, idn)
+    lrmodel(lrw, lrr, srcp, ic, vel, den, mmsfiles, ipar, _pf, idn)
+    mgraph(lrw,'LR-%s-%g'%(mode,var))
+    Flow(lrs, lrw, 'window n2=1 f2=%(snt)d ' %ipar)
+    graph(13.5, 14.5, lrs,"LR-Rec-%s-%g" %(mode,var))
+    graph(recmin, recmax, lrr,"LR-Rec-%s-%g" %(mode,var))
+
+    # lfd
+    lfdw = '%slfdwav%d' %(_pf, idn)
+    lfdr = '%slfdrec%d' %(_pf, idn)
+    lfds = '%slfdsnap%d' %(_pf, idn)
+    lfdmodel(lfdw, lfdr, srcp, ic , vel_pml, den_pml, mmsfiles, ipar, _pf, idn)
+    mgraph(lfdw,'LFD-%s-%g'%(mode,var))
+    Flow(lfds, lfdw, 'window n2=1 f2=%(snt)d ' %ipar)
+    graph(spmin, spmax, lfds,"LFD-Rec-%s-%g" %(mode,var))
+    graph(recmin, recmax, lfdr,"LFD-Rec-%s-%g" %(mode,var))
+
+    # fd
+    fdw = '%sfdwav%d' %(_pf, idn)
+    fdr = '%sfdrec%d' %(_pf, idn)
+    fds = '%sfdsnap%d' %(_pf, idn)
+    fdmodel(fdw, fdr, srcp, ic, vel_pml, den_pml, mmsfiles, ipar)
+    mgraph(fdw,'FD-%s-%g'%(mode,var))
+    Flow(fds, fdw, 'window n2=1 f2=%(snt)d ' %ipar)
+    graph(spmin, spmax, fds,"FD-Rec-%s-%g" %(mode,var))
+    graph(recmin, recmax, fdr,"FD-Rec-%s-%g" %(mode,var))
+    #plot snap
+    snap = '%ssnap%d' %(_pf, idn)
+    if ipar['srcmms'] == 'y' and ipar['inject']=='y' :
+        snaplist=[mmssnap, lrs, lfds, fds]
+    elif ipar['inject']=='n':
+        snaplist=[aslt, lrs, lfds, fds]
+    else :
+        snaplist=[lrs, lfds, fds]
+    snapplot(snap, snaplist, spmin,spmax )
+
+    #plot record
+    recplot = '%srec%d' %(_pf, idn)
+    if ipar['srcmms'] == 'y' and ipar['inject']=='y' :
+        reclist=[mmsrec, lrr, lfdr, fdr]
+    elif ipar['inject']=='n':
+        reclist=[lrr, lfdr, fdr]
+    else :
+        reclist=[lrr, lfdr, fdr]
+    cat(recplot+'_',reclist,2)
+    Flow(recplot,recplot+'_','put label2="Amplitude" unit2=""')
+    graph(recmin,recmax,recplot,recplot)
+    
+    # err
+    if ipar['srcmms'] == 'n' and ipar['inject']=='y':
+        lrwav0 = '%slrsnap0' %_pf
+        bmk = '%sbanckmark%d' %(_pf, idn)
+        if mode == 'et':
+            sample(bmk,lrwav0, idn, 2)
+        elif mode == 'em':
+            sample(bmk,lrwav0, idn, 1)
+        elif mode == 'ea':
+            sample(bmk,lrwav0, idn, 3)
+        elif mode == 'fre':
+            bmk = lrwav0
+        else:
+            print "Error of mode!"
+            emit
+    elif ipar['inject']=='n' :
+        bmk = aslt
+    elif ipar['srcmms'] == 'y' and ipar['inject']=='y'  :
+        bmk = mmssnap
+            
+        
+    lre  = '%slrerr%d' %(_pf, idn)
+    err(lre, lrs, bmk)
+    
+    lfde = '%slfderr%d' %(_pf, idn)
+    err(lfde, lfds, bmk)
+    
+    fde  = '%sfderr%d' %(_pf, idn)
+    err(fde, fds, bmk)
+
+    if errpar == {}:
+        errpar['%slr'  %_pf] = [lre]
+        errpar['%slfd' %_pf] = [lfde]
+        errpar['%sfd'  %_pf] = [fde]
+    else:
+        errpar['%slr'  %_pf].append(lre)
+        errpar['%slfd' %_pf].append(lfde)
+        errpar['%sfd'  %_pf].append(fde)
+# ------------------------------------------------------------------------------
+def sample(fout, fin, smp, axis):
+    jj = 2**smp
+    if axis == '1' or axis == 1 :
+        Flow(fout, fin, 
+             '''
+              window j1=%d 
+             ''' %jj)
+    elif axis == '2' or axis == 2:
+        Flow(fout, fin, 
+             '''
+              window j2=%d 
+             ''' %jj)
+    elif axis == '3' or axis == 3:
+        Flow(fout, fin, 
+             '''
+              window j1=%d j2=%d 
+             ''' %(jj,jj))
+
+#def snapplot():
+
+
+def err(fout, fin, banchmark):
+    Flow(fout, [fin, banchmark],
+          '''
+           add ${SOURCES[1]} scale=1,-1 |  
+           stack axis=1 rms=y  |
+           stack axis=1 rms=y  | 
+           math output="(input)"
+           ''')
+
+def cat(fout, flist, axis):
+    ni = len(flist)
+    src = ""
+    for ii in range(1,ni):
+        src += "${SOURCES[%d]} " %ii
+    Flow(fout, flist, 'cat %s axis=%d ' %(src,axis))
+
+def errcur(errc, err, par, mode, nn):
+    dx = par['dx']
+    dt = par['dt']
+    frq = par['frq']
+
+    if mode == 'et':
+        _pf = 't'
+        axis = '%sax' %_pf
+        Flow(axis, None,                                                                               
+             '''                                                                                         
+             spike n1=%d o1=0.0 d1=1.0 |
+             put label1="dt" unit1="ms" |   
+             math output="(%g*(x1+1))*1000"                                                                                                    
+             '''%(nn, dt))
+        #math output="(%g*(2.0^x1))*1000" 
+    elif mode == 'em':
+        _pf = 'm'
+        axis = '%sax' %_pf
+        Flow(axis, None,                                                                               
+             '''                                                                                         
+             spike n1=%d o1=0.0 d1=1.0 |  
+             put label1="dx" unit1="m" |
+             math output="(%g*(x1+1))*1000"                                                              
+             '''%(nn, dx))
+        #math output="(%g*(2.0^x1))"  
+    elif mode == 'ea':
+        _pf = 'a'
+        axis = '%sax' %_pf
+        Flow(axis, None,                                                                               
+             '''                                                                                         
+             spike n1=%d o1=0.0 d1=1.0 |
+             put label1="dx" unit1="m" |                                                    
+             math output="(%g*(x1+1))*1000"                                                              
+             '''%(nn, dx))
+    elif mode == 'fre':
+        _pf = 'f'
+        axis = '%sax' %_pf
+        Flow(axis, None,                                                                               
+             '''                                                                                         
+             spike n1=%d o1=0.0 d1=1.0 |
+             put label1="Frequency" unit1="Hz" |           
+             math output="(%g+x1*2.5)"                                                    
+             '''%(nn, frq))
+    else :
+        axis = ''
+        
+        
+    Flow(errc,[axis,err],'cmplx ${SOURCES[1]} | put label2="Error(RMS)"')
+        
+# ------------------------------------------------------------------------------
+def mgraph(fin, title):
+    Plot(fin, 
+           '''
+           put label1 = "depth" unit1="m" label2="Amplitude" unit2="" |
+           window j2=50 squeeze=n |
+           transp plane=23| 
+           graph grid1=y grid2=y  max2=1.0 min2=-1.0 title=%s  
+           '''%(str(title)))
+
+def graph(min1, max1, fin, title):
+    Plot(fin, 
+           '''
+           graph grid1=n grid2=n g2num=0.25 g1num=0.1
+                 wanttitle=n 
+                 plotcol=7,6,3,5 dash=0,1,2,3,5
+                 min1=%g max1=%g min2=-0.6 max2=1.2 
+                 screenratio=0.618 screenht=8 plotfat=4
+           '''%(float(min1),float(max1))) 
+
+def snapplot(fout, flist, min2, max2):
+    cat(fout,flist,2)
+    graph(min2,max2,fout,fout)
+
+    
+# ------------------------------------------------------------------------------
+
+par0 = setpar(model, srp)
+par = par0
+
+errlist = {}
+dx0 = model['dx']
+dt0 = model['dt']
+frq0 = srp['frq']
+for ii in range(0, nn):
+    modeling(errlist, par, mode, ii)
+    if mode == 'et' :
+        #model['dt'] = model['dt']*2
+        model['dt'] = model['dt']+dt0
+    elif mode == 'em':
+     #   model['dx'] = model['dx']*2
+         model['dx'] = model['dx']+dx0
+    elif mode == 'ea':
+        model['dt'] = model['dt']+dt0
+        model['dx'] = model['dx']+dx0
+    elif mode == 'fre':
+        srp['frq'] = srp['frq']+2.5
+        
+    
+    par = setpar(model, srp)
+
+lcur = []
+keys = errlist.keys()
+for key in sorted(keys,reverse=True):
+    cat(key, errlist[key][0:nn], 1)
+    Flow(key+'s',key,'sfsmooth rect1=2')
+    errcur(key+'c', key+'s', par0, mode, nn)
+    lcur += [key+'c']
+    
+cat(mode,lcur, 2)
+Result(mode,
+       '''
+       graph min2=-0.001 max2=0.03 max1=40.5 min1=5 
+             wanttitle=n grid1=n grid2=n g2num=0.01
+             screenratio=0.6  screenht=8
+             labelsz=8
+             plotfat=4 plotcol=6,3,5  dash=3,2,0 
+       ''') 
+
+print errlist.keys()
+
+
+Result('frec15', 
+     '''
+     graph grid1=n grid2=n g2num=0.25 g1num=0.1
+           wanttitle=n 
+           plotcol=7,6,3,5 dash=0,1,2,3,5
+           min1=%g max1=%g min2=-0.6 max2=1.2 
+           screenratio=0.618 screenht=8 plotfat=4
+     '''%(float(recmin),float(recmax)))
+
+
+
+
+
+End()

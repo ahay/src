@@ -1,0 +1,55 @@
+\section{Riemannian wavefield extrapolation}
+Riemannian wavefield extrapolation \cite[]{SavaFomel.geo.rwe} generalizes solutions to the Helmholtz equation of the acoustic wave-equation
+\beq \label{eqn:helmholtz}
+\DEL \UU=-\ww^2 s^2 \UU \;,
+\eeq 
+to non-Cartesian coordinate systems, such that extrapolation is not performed strictly in the downward direction. In \req{helmholtz}, $s$ is slowness, $\ww$ is temporal frequency, and $\UU$ is a monochromatic acoustic wave.
+\par
+Assume that we describe the physical space in Cartesian coordinates $x$, $y$ and $z$, and that we describe a Riemannian coordinate system using coordinates $\qx$, $\qy$ and $\qz$ related through a generic mapping
+\bea \label{eqn:mapx}
+x&=&x\lp \qx,\qy,\qz \rp \;,
+\\    \label{eqn:mapy}
+y&=&y\lp \qx,\qy,\qz \rp \;,
+\\    \label{eqn:mapz}
+z&=&z\lp \qx,\qy,\qz \rp \;,
+\eea
+which allows us to compute derivatives of the Cartesian coordinates relative to the Riemannian coordinates.
+\par
+Following the derivation of \cite{SavaFomel.geo.rwe}, the acoustic wave-equation in Riemannian coordinates can be written as:
+\beq \label{eqn:rwekinematic}
+\czz \dtwo{\UU}{\qz} +
+\cxx \dtwo{\UU}{\qx} + 
+\cyy \dtwo{\UU}{\qy} +
+\cxy \mtwo{\UU}{\qx}{\qy} = - \lp \ww s \rp^2 \UU \;.
+\eeq
+where coefficients $c_{ij}$ are spatially-variable functions of the coordinate system and can be computed numerically for any given coordinate system using the mappings \ren{mapx}-\ren{mapz}.
+\par
+The acoustic wave-equation in Riemannian coordinates \ren{rwekinematic} ignores the influence of first order terms present in a more general acoustic wave-equation in Riemannian coordinates. This approximation is justified by the fact that, according to the theory of characteristics for second-order hyperbolic equations \cite[]{courant}, the first-order terms affect only the amplitude of the propagating waves.
+\par
+From \req{rwekinematic} we can derive a dispersion relation of the acoustic wave-equation in Riemannian coordinates
+\beq \label{eqn:rwedispersion}
+- \czz \kqz^2
+- \cxx \kqx^2
+- \cyy \kqy^2
+- \cxy \kqx\kqy = - \lp \ww s \rp^2 \;,
+\eeq
+where $\kqz$, $\kqx$ and $\kqy$ are wavenumbers associated with the Riemannian coordinates $\qz$, $\qx$ and $\qy$. For one-way wavefield extrapolation, we need to solve the quadratic \req{rwedispersion} for the wavenumber of the extrapolation direction $\kqz$, and select the solution with the appropriate sign for the desired extrapolation direction:
+\beq \label{eqn:rweoneway3d}
+\kqz = 
+\sqrt{
+\frac{\lp\ww s\rp^2}{\czz}
+- \frac{\cxx}{\czz}\kqx^2
+- \frac{\cyy}{\czz}\kqy^2
+- \frac{\cxy}{\czz}\kqx\kqy 
+}\;.
+\eeq
+ The coordinate system coefficients $c_{ij}$ and the extrapolation slowness $s$ can be combined to form a reduced set of parameters. In 2D, for example, all coordinate-system coefficients can be represented by 2 parameters, $a$ and $b$. Further extensions and implementation details of \req{rweoneway3d} are described by \cite{SavaFomel.gp.rwehigh}.
+\par
+Extrapolation using \req{rweoneway3d} implies that the coefficients defining the medium and coordinate system are not changing spatially. In this case, we ca perform extrapolation using a simple phase-shift operation
+\beq
+\UU_{\tt+\Delta\tt} = \UU_{\tt} e^{i \kt \Delta\tt} \;,
+\eeq
+where $\UU_{\qt+\Delta\qt}$ and $\UU_{\qt}$ represent the acoustic wavefield at two successive extrapolation steps, and $\kt$ is the extrapolation wavenumber defined by \req{rweoneway3d}.
+\par
+For media with variability of the coefficients $c_{ij}$ due to either velocity variation or focusing/defocusing of the coordinate system, we cannot use in extrapolation the wavenumber computed directly using \req{rweoneway3d}. Like for the case of extrapolation in Cartesian  coordinates, we can approximate the wavenumber $\kt$ using series expansions relative to coefficients $c_{ij}$ present in the dispersion relation \ren{rweoneway3d}. Such approximations can be implemented in the space-domain, in the Fourier domain or in mixed space-Fourier domains \cite[]{SavaFomel.gp.rwehigh}.
+

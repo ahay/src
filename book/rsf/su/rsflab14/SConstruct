@@ -1,0 +1,38 @@
+from rsf.proj import *
+
+Fetch('seismic.segy','viking')
+
+# Convert to RSF
+Flow('seismic tseismic','seismic.segy',
+     'segyread tfile=${TARGETS[1]}')
+
+for key in ('cdp','offset'):
+    Flow(key,'tseismic',
+         'dd type=float | headermath output=%s' % key)
+
+# Sort and gain
+Flow('cdps','seismic cdp',
+     'headersort head=${SOURCES[1]} | pow pow1=2')
+
+# Capture a single CMP
+Flow('cdpmask','cdp','mask min=265 max=265')
+Flow('cdp265','seismic cdpmask',
+     'headerwindow mask=${SOURCES[1]}')
+Flow('offset265','offset cdpmask',
+     'headerwindow mask=${SOURCES[1]}')
+Result('cdp','cdp265 offset265',
+       '''
+       pow pow1=2 |
+       wiggle transp=y yreverse=y pclip=99 title="CMP at 265"
+       xpos=${SOURCES[1]} label2=Offset unit2=m poly=y
+       ''')
+
+# Stacking chart
+Result('chart','cdp offset',
+       '''
+       cat axis=1 ${SOURCES[1]} | dd type=complex |
+       graph symbol=. plotcol=3 title="Stacking Chart"
+       label1=CMP label2=Offset unit1=m unit2=m
+       ''')
+
+End()

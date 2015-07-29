@@ -1,0 +1,2146 @@
+%\def\Xactiveplot#1#2#3#4{}
+%\def\Xactivesideplot#1#2#3#4{}
+
+\title{The helical coordinate}
+\author{Jon Claerbout}
+\maketitle
+\label{paper:hlx}
+
+For many years, it has been true that
+our most powerful signal-analysis techniques
+are in {\em  one}-dimensional space,
+while our most important applications are in {\em  multi\,}dimensional space.
+The helical coordinate system makes a giant step
+toward overcoming this difficulty.
+
+\par
+Many geophysical map estimation applications appear to be multidimensional,
+but in reality they are one-dimensional.
+To see the tip of the iceberg, consider this example:
+On a 2-dimensional Cartesian mesh, the function
+$
+\begin{array}{|r|r|r|r|}
+        \hline
+        0 & 0 & 0 &0 \\
+        \hline
+        0 & 1 & 1 &0 \\
+        \hline
+        0 & 1 & 1 &0 \\
+        \hline
+        0 & 0 & 0 &0 \\
+        \hline
+\end{array}
+$
+\par\noindent
+has the autocorrelation
+$
+\begin{array}{|r|r|r|} \hline
+        1 & 2 & 1\\
+        \hline
+        2 & 4 & 2\\
+        \hline
+        1 & 2 & 1
+        \\ \hline
+\end{array}
+$.
+
+\par\noindent
+Likewise, on a 1-dimensional cartesian mesh,
+\par\noindent
+the function $
+%\mathcal{B} =
+\begin{array}{|r|r|r|r|r|r|r|r|r|r|r|r|r|} \hline
+ 1&1&0&0& \cdots& 0& 1&1
+        \\ \hline
+\end{array}
+$
+\par\noindent
+has the autocorrelation
+$ %\mathcal{R} =
+\begin{array}{|r|r|r|r|r|r|r|r|r|r|r|r|r|r|r|r|r|r|r|} \hline
+ 1&2&1&0&\cdots&0&2&4&2&0&\cdots&1&2&1
+        \\ \hline
+\end{array}
+$.
+
+
+%\par\noindent
+%the function $ \bold b = ( 1,1,0,0, \cdots, 0, 1,1) $
+%\par\noindent
+%has the autocorrelation
+%$ \bold r = ( 1,2,1,0,\cdots,0,2,4,2,0,\cdots,1,2,1)$.
+
+\par\noindent
+Observe the numbers in the 1-dimensional world are identical
+with the numbers in the 2-dimensional world.
+This correspondence is no accident.
+
+
+\section{FILTERING ON A HELIX}
+\inputdir{helicon}
+Figure \ref{fig:diamond} shows some 2-dimensional shapes
+that are convolved together.
+The left panel shows an impulse response function,
+the center shows some impulses,
+and the right shows the superposition of responses.
+\plot{diamond}{width=\textwidth,height=.33\textwidth}{
+  Two-dimensional convolution
+  as performed in one dimension
+  by module
+  \texttt{helicon} %\vpageref{lst:helicon}
+}
+
+\par
+A surprising, indeed amazing, fact is that
+Figure \ref{fig:diamond} was not computed with a 2-dimensional
+convolution program.
+It was computed with a 1-dimensional computer program.
+It could have been done with anybody's 1-dimensional convolution program,
+either in the time domain or in the Fourier domain.
+This magical trick is done with the helical coordinate system.
+
+\par
+A basic idea of filtering, be it in one dimension, two dimensions, or more,
+is that you have some filter coefficients and some sampled data;
+you pass the filter over the data; 
+and at each location you find an output by crossmultiplying
+the filter coefficients times the underlying data and summing the products.
+
+\par
+The helical coordinate system is much simpler than you might imagine.
+Ordinarily, a plane of data is thought of as a collection of columns,
+side by side.
+Instead, imagine the columns stored ``end-to-end,''
+and then coiled around a cylinder.
+The concatenated columns make a helix.
+This arrangement is Fortran's way of storing 2-D arrays in 1-dimensional memory,
+and it is exactly what we need for this helical mapping.
+Seismologists sometimes use the word ``supertrace''
+to describe a collection of seismograms stored end-to-end.
+
+\inputdir{.}
+
+Figure \ref{fig:sergey-helix} shows a helical mesh for 2-D data on a cylinder.
+Darkened squares depict a 2-D filter
+shaped like the Laplacian operator $\partial_{xx}+\partial_{yy}$.
+The input data, the filter, and the output data are all on helical meshes,
+all of which could be unrolled into linear strips.
+A compact 2-D filter like a Laplacian
+on a helix is a sparse 1-D filter with long empty gaps.
+
+\plot{sergey-helix}{width=\textwidth,bb=210 155 630 390}{
+  Filtering on a helix.
+  The same filter coefficients overlay the same data values
+  if the 2-D coils are unwound into 1-D strips.
+  (\emph{Mathematica} drawing by Sergey Fomel)
+}
+
+\par
+Because the values output from filtering can be computed
+in any order, we can slide the filter coil
+over the data coil in any direction.
+The order that you produce the outputs is irrelevant.
+You could compute the results in parallel.
+We could, however, slide the filter over the data in the screwing order
+that a nut passes over a bolt.
+The screw order is the same order that would be used
+if we were to unwind the coils into 1-dimensional strips
+and convolve the strips across one another.
+The same filter coefficients overlay the same data values
+if the 2-D coils are unwound into 1-D strips.
+The helix idea allows us to obtain the same convolution output
+in either of two ways, a 1-dimensional way or a 2-dimensional way.
+I used the 1-dimensional way to compute the obviously 2-dimensional
+result in Figure \ref{fig:diamond}.
+
+
+
+\subsection{Review of 1-D recursive filters}
+Convolution is the operation we do on polynomial coefficients
+when we multiply polynomials.
+Deconvolution is likewise for polynomial division.
+Often, these ideas are described
+as polynomials in the variable $Z$.
+Take $X(Z)$ to denote the polynomial
+with coefficients being samples of input data,
+and let $A(Z)$ likewise denote the filter.
+The convention I adopt here is that the first coefficient
+of the filter has the value +1, so the filter's polynomial
+is $A(Z) = 1 + a_1Z + a_2Z^2 + \cdots$.
+To see how to convolve, we now identify the coefficient
+of $Z^k$ in the product $Y(Z)=A(Z)X(Z)$.
+The usual case ($k$ larger than the number $N_a$ of filter coefficients) is:
+\begin{equation}
+y_k \quad=\quad x_k + \sum_{i=1}^{N_a} a_i x_{k-i}
+\label{eqn:convolution}
+\end{equation}
+Convolution computes $y_k$ from $x_k$, whereas, deconvolution
+(also called back substitution) does the reverse.
+Rearranging (\ref{eqn:convolution}); we get:
+\begin{equation}
+x_k \quad=\quad y_k - \sum_{i=1}^{N_a} a_i x_{k-i}
+\label{eqn:deconvolution}
+\end{equation}
+where now, we are finding the output $x_k$ from 
+its past outputs $x_{k-i}$ and the present input $y_k$.
+We see that the deconvolution process is essentially
+the same as the convolution process,
+except that the filter coefficients
+are used with opposite polarity;
+and the coefficients are applied to the past {\em  outputs}
+instead of the past {\em  inputs}.
+Needing past outputs is why deconvolution must be done sequentially
+while convolution can be done in parallel.
+
+
+
+\subsection{Multidimensional deconvolution breakthrough}
+Deconvolution (polynomial division)
+can undo convolution (polynomial multiplication).
+A magical property of the helix is that we can consider
+1-D convolution to be the same as 2-D convolution.
+Consequently, a second magical property:
+We can use 1-D
+ {\em  de}convolution to undo convolution,
+whether that convolution was 1-D or 2-D.
+Thus, we have discovered how to undo 2-D convolution.
+We have discovered that 2-D deconvolution on a helix
+is equivalent to        1-D deconvolution.
+The helix enables us to do multidimensional deconvolution.
+\par
+Deconvolution is recursive filtering.
+Recursive filter outputs cannot be computed in parallel,
+but must be computed sequentially
+as in one dimension, namely,
+in the order that the nut
+screws on the bolt.  
+\par
+Recursive filtering sometimes solves big problems with astonishing speed.
+It can propagate energy rapidly for long distances.
+Unfortunately, recursive filtering can also be unstable.
+The most interesting case, near resonance, is also near instability.
+There is a large literature and extensive technology
+about recursive filtering in one dimension.
+The helix allows us to apply that technology to two (and more) dimensions.
+It is a huge technological breakthrough.
+\par
+In 3-D, we simply append one plane after
+another (like a 3-D Fortran array).
+It is easier to code than to explain or visualize
+a spool or torus wrapped with string, etc.
+
+
+
+\subsection{Examples of simple 2-D recursive filters}
+Let us associate $x$- and $y$-derivatives with
+a finite-difference stencil or template.
+(For simplicity, take $\Delta x=\Delta y=1$.)
+\begin{equation}
+ \frac{\partial }{ \partial x } \eq
+ \begin{array}{|c|c|} \hline
+   1    & -1
+   \\ \hline
+ \end{array}
+ \label{eqn:partialx}
+\end{equation}
+\begin{equation}
+ \frac{\partial }{ \partial y } \eq
+  \begin{array}{|r|} \hline
+    1  \\
+    \hline
+    -1
+    \\ \hline
+  \end{array}
+  \label{eqn:partialy}
+\end{equation}
+Convolving a data plane with
+the stencil (\ref{eqn:partialx})
+forms the $x$-derivative of the plane.
+Convolving a data plane with
+the stencil (\ref{eqn:partialy})
+forms the $y$-derivative of the plane.
+On the other hand,
+{\it deconvolving}
+with (\ref{eqn:partialx}) integrates data along the $x$-axis for each $y$.
+Likewise, deconvolving
+with (\ref{eqn:partialy}) integrates data along the $y$-axis for each $x$.
+Next, we look at a fully 2-dimensional operator
+(like the cross derivative $\partial_{xy}$).
+
+\inputdir{helicon}
+
+\par
+A nontrivial 2-dimensional convolution stencil is:
+\par
+\begin{equation}
+        \begin{array}{|r|r|}   \hline
+                0    & -1/4 \\
+                \hline
+                1    & -1/4 \\
+                \hline
+                -1/4 & -1/4
+                \\ \hline
+        \end{array}
+\label{eqn:filterfour}
+\end{equation}
+We convolve and deconvolve a data plane with this operator.
+Although everything is shown on a plane,
+the actual computations are done in one dimension
+with equations
+(\ref{eqn:convolution}) and
+(\ref{eqn:deconvolution}).
+Let us manufacture the simple data plane
+shown on the left in Figure \ref{fig:wrap-four}.
+Beginning with a zero-valued plane, we add
+in a copy of the filter (\ref{eqn:filterfour})
+near the top of the frame.
+Nearby, add another copy with opposite polarity.
+Finally, add some impulses near the bottom boundary.
+The second frame in Figure \ref{fig:wrap-four} is the result
+of deconvolution by the filter (\ref{eqn:filterfour})
+using the 1-dimensional equation (\ref{eqn:deconvolution}).
+Notice that deconvolution
+turns the filter into an impulse,
+while it turns the impulses
+into comet-like images.
+The use of a helix is evident
+by the comet images wrapping around the vertical axis.
+
+\plot{wrap-four}{width=.65\textwidth,height=.33\textwidth} { 
+  Illustration of 2-D deconvolution.
+  Left is the input.
+  Right is after deconvolution with
+  the filter (\protect\ref{eqn:filterfour})
+  as preformed by
+  by module
+  \texttt{polydiv} %\vpageref{lst:polydiv}
+}
+
+The filtering in Figure \ref{fig:wrap-four}
+ran along a helix from left to right.
+Figure \ref{fig:back-four}
+shows a second filtering running from right to left.
+Filtering in the reverse direction is the adjoint.
+After deconvolving both ways, we have accomplished a symmetrical smoothing.
+The final frame undoes the smoothing to bring us exactly back
+to where we started.
+The smoothing was done with two passes of {\it deconvolution},
+and it is undone by two passes of {\it convolution}.
+No errors, and no evidence remains at any of the boundaries
+where we have wrapped and truncated.
+
+\plot{back-four}{width=.65\textwidth,height=.33\textwidth}{ 
+  Recursive filtering backward (leftward on the space axis)
+  is done by the {\em  adjoint} of 2-D deconvolution.
+  Here we see that 2-D {\it deconvolution} compounded with its adjoint
+  is exactly inverted by 2-D {\it convolution} and its adjoint.
+}
+
+%\begin{notforlecture}
+\par
+Chapter \ref{paper:prc} explains the important practical role
+to be played by a multidimensional operator for which
+we know the exact inverse.  
+Other than multidimensional Fourier transformation,
+transforms based on polynomial multiplication and division
+on a helix are the only known easily invertible linear operators.
+
+%\par
+%I found myself with a powerful convolution/deconvolution
+%program, but I did not have a bag full of 2-D filters.
+%Further, I knew that a great number of filters are unstable
+%for deconvolution.
+%I recalled a variant of Rouch$\acute{\rm e}$'s theorem
+%that if the sum of the absolute values of the filter coefficients
+%after the onset pulse is less than the pulse,
+%then the filter is ``positive real,''
+%hence ``minimum phase,'' hence stable in polynomial division.
+%Ironically, it is the ``almost unstable'' filters
+%that hold the greatest interest,
+%because they are the ones that move energy long distances.
+%To make long impulse-responses of deconvolution,
+%I chose all the adjustable filter coefficients to be negative
+%and to sum to $-1$,
+%as does (\ref{eqn:filterfour}).
+%For damping, I took the absolute value of the sum to be
+%a little less than $1$.
+
+\par
+In seismology we often have occasion to steer summation along beams.
+Such an impulse response is shown in Figure \ref{fig:dip}.
+
+\plot{dip}{width=\textwidth,height=.3\textwidth}{ 
+	Useful for directional smoothing is a simulated dipping seismic arrival,
+	made by combining a simple low-order 2-D filter with its adjoint.
+}
+
+Of special interest are filters that destroy plane waves.  The inverse
+of such a filter creates plane waves.  Such filters are like wave
+equations.  A filter that creates two plane waves is illustrated in
+figure \ref{fig:wrap-waves}.
+
+\plot{wrap-waves}{width=.8\textwidth,height=.4\textwidth}{ 
+        A simple low-order 2-D filter with inverse
+        containing plane waves of two different dips.
+        One is spatially aliased.
+}
+
+
+\subsection{Coding multidimensional convolution and deconvolution}
+Let us unroll the filter helix seen previously in Figure \ref{fig:sergey-helix},
+and see what we have.
+Start from the idea that a 2-D filter is generally made
+from a cluster of values near one another in two dimensions
+similar to the Laplacian operator in the figure.
+We see that in the helical approach,
+a 2-D filter is a 1-D filter containing some long intervals of zeros.
+These intervals complete the length of a single 1-D seismogram.
+
+\par
+Our program for 2-D convolution with a 1-D convolution program,
+could convolve with the somewhat long 1-D strip,
+but it is much more cost effective to ignore the many zeros,
+which is what we do.
+We do not multiply by the backside zeros, nor do we even store those zeros in memory.
+Whereas, an ordinary convolution program would do time shifting
+by a code line like {\tt iy=ix+lag},
+Module
+\texttt{helicon} %\vpageref{lst:helicon}
+ignores the many zero filter values on backside of the tube
+by using the code {\tt iy=ix+lag[ia]}
+where a counter {\tt ia} ranges over the nonzero filter coefficients.
+Before operator {\tt helicon} is invoked,
+we need to prepare two lists,
+one list containing nonzero filter coefficients {\tt flt[ia]},
+and the other list containing the corresponding lags {\tt lag[ia]}
+measured to include multiple wraps around the helix.
+For example, the 2-D Laplace operator
+can be thought of as the 1-D filter:
+\begin{equation}
+\label{eqn:2dlapfil}
+\begin{array}{|r|r|r|r|r|r|r|r|r|r|r|r|r|r|r|} \hline
+1&0&\cdots&0&1&-4&1&0& \cdots&0&1
+\\ \hline
+\end{array}
+%
+\quad
+\rightarrow{\rm helical \; boundaries}
+\quad
+\begin{array}{|r|r|r|}  \hline
+& 1 & \\
+\hline
+1 & -4 & 1\\
+\hline
+& 1 & \\
+\hline
+\end{array}
+\end{equation}
+%
+%
+%\begin{equation}
+%\label{eqn:2dlapfil}
+%\left[ \begin{array}{ccc}
+%& 1 & \\ 1 & -4 & 1\\ & 1 &
+%\end{array} \right]
+%\xrightarrow{\rm helical \; boundary \; conditions}
+%(1,\,0, \; ... \; 0,\,1,\,-4,\,1,\,0, \; ... \; 0,\,1).
+%\end{equation}
+%
+The first filter coefficient in equation (\ref{eqn:2dlapfil})
+is $+1$ as implicit to module {\tt helicon}.
+To apply the Laplacian on a 1,000 $\times$ 1,000 mesh
+requires the filter inputs:
+\par\noindent
+\footnotesize
+\begin{verbatim}
+                i    lag[i]   flt[i]
+               ---   ------   -----
+                0      999      1
+                1     1000     -4
+                2     1001      1
+                3     2000      1
+\end{verbatim}
+\normalsize
+
+\par
+Here, we choose to use
+``declaration of a type'',
+a modern computer language feature that is absent from Fortran 77.
+Fortran 77 has the built in complex arithmetic type.
+In module \texttt{helix},
+we define a type \texttt{filter}, actually, a helix filter.
+After making this definition, it is used by many programs.
+The helix filter consists of three vectors,
+a real valued vector of filter coefficients,
+an integer valued vector of filter lags,
+and an optional vector
+that has logical values ``\texttt{true}''~for
+output locations that are not computed
+(either because of boundary conditions or because of missing inputs).
+The filter vectors are the size of the nonzero filter coefficients
+(excluding the leading 1.), while the logical vector is long
+and relates to the data size.
+The \texttt{helix} module allocates and frees memory for a helix filter.
+%By default, the logical vector is not allocated but
+%is set to \texttt{null}
+%with the \texttt{nullify} operator and ignored.
+\moddex{helix}{definition for helix-type filters}{30}{36}{api/c}
+\par
+For those of you with no C  experience,
+the ``\verb#->#'' appearing in the helix module denotes a pointer.
+Fortran 77 has no pointers (or everything is a pointer).
+%The C, C++, and Java languages use ``\texttt{.}'' to denote pointers.
+%C and C++ also have a second type of pointer denoted by ``\texttt{->}''.
+The behavior of pointers is somewhat different in each language.
+In C, pointer behavior is straightforward.
+In module \texttt{helicon} %\vpageref{lst:helicon}
+you see the expression
+\verb#aa->flt[ia]#.
+It refers to the filter named \texttt{aa}.
+Any filter defined by the \texttt{helix} module
+contains three vectors, one of which is named \texttt{flt}.
+The second component of the \texttt{flt} vector
+in the \texttt{aa} filter
+is referred to as
+\verb#aa->flt[1]# which
+in the foregoing example refers to the value 4.0
+in the center of the Laplacian operator.
+For data sets like above with 1,000 points on the 1-axis,
+this value 4.0 occurs after 1,000 lags,
+thus \verb#aa->lag[1]=1000#.
+
+\par
+Our first convolution operator
+\texttt{tcai1}
+%\vpageref{lst:tcai1}
+was limited to one dimension and a particular choice of end conditions.
+With the helix and C pointers,
+the operator
+\texttt{helicon} %\vpageref{lst:helicon}
+is a {\it multidimensional} filter
+with considerable flexibility (because of the \texttt{mis} vector)
+to work around boundaries and missing data.
+\opdex{helicon}{helical convolution}{35}{54}{api/c}
+The code fragment
+\verb#aa->lag[ia]#
+corresponds to 
+\texttt{b-1}
+in \texttt{tcai1}.
+% \vpageref{lst:tcai1}.
+
+
+\par
+Operator {\tt helicon} did the convolution job for Figure \ref{fig:diamond}.
+As with
+\texttt{tcai1},
+%\vpageref{lst:tcai1}
+the adjoint of helix filtering is reversing the screw---filtering backwards.
+
+
+\par
+The companion to convolution is deconvolution.
+The module \texttt{polydiv} 
+%\vpageref{lst:polydiv}
+is essentially the same as
+\texttt{polydiv1} 
+%\vpageref{lst:polydiv1},
+but here it was coded using
+our new \texttt{filter} type in
+module \texttt{helix} 
+%\vpageref{lst:polydiv1}
+which simplifies our many future uses of
+convolution and deconvolution.
+Although convolution allows us to work around missing input values,
+deconvolution does not
+(any input affects all subsequent outputs),
+so \texttt{polydiv} never references \verb#aa->mis[ia]#.
+\opdex{polydiv}{helical deconvolution}{39}{70}{api/c}
+
+
+
+\section{KOLMOGOROFF SPECTRAL FACTORIZATION}
+\sx{Kolmogoroff}
+\sx{spectral factorization ! Kolmogoroff}
+Spectral factorization addresses a deep mathematical problem not solved
+by mathematicians until 1939.
+Given any spectrum $|F(\omega)|$,
+find a causal time function $f(t)$ with this spectrum.
+A causal time function is one that vanishes at negative time $t<0$.
+We mix spectral factorization with the helix idea to find many applications
+in geophysical image estimation.
+\par
+The most abstract method of spectral factorization is of the Russian mathematician A.N.Kolmogoroff.
+I include it here, because it is by far the fastest,
+so much so that giant problems become practical,
+such as the solar physics example coming up.
+\par
+Given that $C(\omega)$ Fourier transforms to a causal function of time,
+it is next proven that $e^C$ Fourier transforms to a causal function of time.
+Its filter inverse is $e^{-C}$.
+Grab yourself a cup of coffee
+and hide yourself away in a quiet place
+while you focus on the proof in the next paragraph.
+\par
+A causal function $c_\tau$ vanishes at negative $\tau$.
+Its $Z$ transform $C(Z) = c_0 + c_1 Z + c_2 Z^2 + c_3 Z^3 +\cdots$,
+with $Z=e^{i\omega\Delta t}$ is really a Fourier sum.
+Its square $C(Z)^2$
+convolves a causal with itself so it is causal.
+Each power of $C(Z)$ is causal, therefore,
+$e^C=1+C+C^2/2+\cdots$, a sum of causals, is causal.
+The time-domain coefficients for $e^C$ could be computed
+putting polynomials into power series or computed faster with Fourier transforms 
+(by understanding $C(Z=e^{i\omega\Delta t})$ as an FT.)
+By the same reasoning,
+the wavelet $e^C$ has inverse $e^{-C}$ which is also causal.
+A causal with a causal inverse is said to be ``minimum phase.''
+The filter $1-Z/2$ with inverse $1+Z/2+Z^2/4+\cdots$ is minimum phase
+because both are causal,
+and they multiply to make the impulse ``1'',
+so are mutually inverse.
+The delay filter $Z^5$ has the noncausal inverse $Z^{-5}$ which is not causal
+(output before input).
+\par
+The next paragraph defines ``Kolmogoroff spectral factorization.''
+It arises in applications where one begins with an energy spectrum $|r|^2$
+and factors it into an $r e^{i\phi}$ times its conjugate.
+The inverse Fourier transform of that  $r e^{i\phi}$ is causal.
+\par
+Relate amplitude $r=r(\omega)$ and phase $\phi=\phi(\omega)$
+to a causal time function $c_\tau$.
+
+\par
+%\LARGE
+\begin{eqnarray}
+|r|e^{i\phi} &=&
+e^{\ln|r|}e^{i\phi} \ =\
+e^{\ln\,|r| + i\phi} \ =\  
+e^{c_0+c_1Z+c_2Z^2+c_3Z^3+\cdots} \ =\ 
+e^{\sum_{\tau=0} c_\tau Z^\tau}
+%\ =\ \exp \left( \sum_{\tau=0} c_\tau Z^\tau\right)
+\end{eqnarray}
+\par\noindent
+%\normalsize
+Given a spectrum $r(\omega)$, we find a filter with that spectrum.
+Because $r(\omega)$ is a real even function of $\omega$, so is its logarithm.
+Let the inverse Fourier transform of $\ln |r(\omega)|$ be $u_\tau$,
+where $u_\tau$ is a real even function of time.
+Imagine a real odd function of time $v_\tau$.
+\begin{eqnarray}
+|r|e^{i\phi} &=& e^{\ln\,|r| + i\phi} \ =\  e^{\sum_\tau (u_\tau+v_\tau) Z^\tau}
+\end{eqnarray}
+The phase $\phi(\omega)$ transforms to $v_\tau$.
+We can assert causality
+by choosing $v_\tau$ so that $u_\tau+v_\tau=0$ $ (=c_\tau)$ for all negative $\tau$.
+This choice defines $v_\tau$ at negative $\tau$.
+Since $v_\tau$ is odd, it is also known at positive lags.
+More simply,
+$v_\tau$ is created when $u_\tau$ is multiplied by a step function of size 2.  
+This causal exponent
+$(c_0,c_1,\cdots)$
+creates a causal filter $|r|e^{i\phi}$
+with the specified spectrum $r(\omega)$.
+
+\par
+We easily manufacture an inverse filter by changing the polarity of the $c_\tau$.
+This filter is also causal by the same reasoning.
+Thus, these filters are causal with a causal inverse.
+Such filters are commonly called ``minimum phase.''
+
+\par
+Spectral factorization arises in a variety of contexts. Here is one:
+Rain drops showering on a tin roof create for you a signal
+with a spectrum you can compute,
+but what would be the sound of a single drop,
+the wavelet of a single drop?
+Spectral factorization gives the answer.
+Divide this wavelet out from the data
+to get a record of impulses, one for each rain drop (theoretically!).
+Similarly, the boiling surface of the sun is coming soon.
+
+\begin{comment}
+
+\subsection{Kolmogoroff code}
+\sx{Kolmogoroff code}
+\footnotesize
+\begin{verbatim}
+subroutine kolmogoroff( n, cx)  # Spectral factorization.
+integer              i, n         # input:  cx = amplitude spectrum
+complex              cx(n)        # output: cx = FT of min phase wavelet
+do i= 1, n                     
+        cx(i) = clog( cx(i) )
+call ftu( -1., n, cx)
+do i= 2, n/2 {                   # Make it causal changing only the odd part.
+        cx(i)     = cx(i) * 2.
+        cx(n-i+2) = 0.
+        }
+call ftu( +1., n, cx)
+do i= 1, n
+        cx(i) = cexp( cx(i))
+return; end
+\end{verbatim}
+\normalsize
+\par\noindent
+Everyone has their own favorite Fourier transform code, so why am I offering mine?
+\sx{fourier transform code}
+Because you MUST get the scale factors correct.
+Few worries if you accidentally replace $e^C$ by $2e^C$,
+because your humble plotting program might do that.
+But, if you accidentally replace $e^C$ by $e^{2C}$,
+you have squared it!
+\par
+\footnotesize
+\begin{verbatim}
+subroutine ftu( signi, nx, cx )	          # Fourier transform
+#   complex Fourier transform with traditional scaling (FGDP)
+#
+#               1         nx          signi*2*pi*i*(j-1)*(k-1)/nx
+#   cx(k)  =  -------- * sum cx(j) * e
+#              scale     j=1             for k=1,2,...,nx=2**integer
+#
+#  scale=1 for forward transform signi=1, otherwise scale=1/nx
+integer nx, i, j, k, m, istep
+real    signi, arg
+complex cx(nx), cmplx, cw, cdel, ct
+i=1;  while( i<nx) i=2*i
+if( i != nx )    call erexit('ftu: nx not a power of 2')
+do i= 1, nx
+        if( signi<0.)
+                cx(i) = cx(i) / nx
+j = 1;  k = 1
+do i= 1, nx {
+        if (i<=j) { ct = cx(j); cx(j) = cx(i); cx(i) = ct }
+        m = nx/2
+        while (j>m && m>1) { j = j-m; m = m/2 }         # "&&" means .AND.
+        j = j+m
+        }
+repeat {
+        istep = 2*k;   cw = 1.;   arg = signi*3.14159265/k
+        cdel = cmplx( cos(arg), sin(arg))
+        do m= 1, k {
+                do i= m, nx, istep
+                        { ct=cw*cx(i+k);  cx(i+k)=cx(i)-ct;  cx(i)=cx(i)+ct }
+                cw = cw * cdel
+                }
+        k = istep
+        if(k>=nx) break
+        }
+return; end
+\end{verbatim}
+\normalsize
+\par\noindent
+The \texttt{ftu} fast Fourier transform code
+has a restriction that the data length must be a power of 2.
+Zero time and frequency are the first point in the vector,
+then positive times, and then negative times.
+
+\par
+It is an exercise for the student to show that
+a complex-valued time function has
+a positive spectrum that is nonsymmetrical in frequency,
+but it may be factored with the same code.
+
+\end{comment}
+
+\subsection{Constant Q medium}
+\inputdir{futterman}
+\sx{Q, constant Q medium}
+From the absorption law of a material, spectral factorization yields its impulse response.
+The most basic absorption law is the {\em constant Q} model.
+According to it, for a downgoing wave,
+the absorption is proportional to the frequency $\omega$,
+proportional to time in the medium $z/v$,
+and inversely proportional to the ``quality'' $Q$ of the medium.
+Altogether, the spectrum of a wave passing through a thickness $z$ is changed by the factor
+$ e^{-|\omega|\tau} = e^{-|\omega|(z/v)/Q} $.
+This frequency function is plotted in the top line of Figure \ref{fig:futterman}.
+\sx{Futterman}
+\plot{futterman}{width=\textwidth,height=.41\textwidth}{
+        Autocorrelate the bottom signal to get the middle, then Fourier transform it to get the top.
+        Spectral factorization works the other way, from top to bottom.
+        }
+
+%\end{notforlecture}
+\par
+
+The middle function in Figure \ref{fig:futterman}
+is the autocorrelation giving on top
+the spectrum
+$e^{-|\omega|\tau}$.
+The third function is the factorization.
+An impulse entering the medium comes out with this shape.
+There is no physics in this analysis,
+only mathematics that assumes the broadened pulse
+is causal with an abrupt arrival.
+The short wavelengths are concentrated near the sharp corner,
+while the long wavelengths are spread throughout.
+A physical system could cause the pulse to spread further
+(effectively by an additional all-pass filter),
+but physics cannot make it more compact.
+\par
+All distances from the source see the same shape, but stretched
+in proportion to distance.
+The apparent $Q$ is
+the traveltime to the source divided by the width of the pulse.
+
+
+\subsection{Causality in two dimensions}
+\sx{filter ! causal in 2-D}
+Our foundations,
+the basic convolution-deconvolution pair
+(\ref{eqn:convolution}) and
+(\ref{eqn:deconvolution})
+are applicable only to filters with all coefficients {\it after} zero lag.
+Filters of physical interest generally concentrate coefficients near zero lag.
+Requiring causality in 1-D and concentration in 2-D leads to shapes such as these:
+\begin{equation}
+\label{eqn:2dpef}
+\begin{array}{ccccc}
+        \begin{array}{ccc}
+                h  & c &   0 \\
+                p  & d &   0 \\
+                q  & e &  \bold 1    \\
+                s  & f &   a \\
+                u  & g &   b
+        \end{array}
+        &\quad=\quad&
+        \begin{array}{ccc}
+                h  & c &  \cdot   \\
+                p  & d &  \cdot   \\
+                q  & e &  \cdot    \\
+                s  & f &   a \\
+                u  & g &   b
+        \end{array}
+         &\quad +\quad&
+        \begin{array}{ccc}
+                \cdot &\cdot &   0 \\
+                \cdot &\cdot &   0 \\
+                \cdot &\cdot &  \bold 1    \\
+                \cdot &\cdot &  \cdot    \\
+                \cdot &\cdot &  \cdot  
+        \end{array}
+  \\
+  \\
+        {\rm 2-D \ filter}
+           &=&
+        {\rm variable}
+          &\quad +\quad&
+        {\rm constrained}
+\end{array}
+\end{equation}
+where $a,b,c,...,u$ are coefficients we find by least squares.
+\par
+The complete story is rich in mathematics and in concepts;
+but to sum up, filters fall into two categories according to the
+numerical values of their coefficients.
+There are filters for which equations
+(\ref{eqn:convolution}) and
+(\ref{eqn:deconvolution})
+work as desired and expected.
+These filters are called ``minimum phase.''
+There are also filters for which
+equation~(\ref{eqn:deconvolution}) is a disaster numerically,
+the feedback process diverging to infinity.
+\par
+Divergent cases correspond to physical processes
+that are not simply described by initial conditions
+but require also reflective boundary conditions,
+so information flows backward, i.e., anticausally.
+Equation (\ref{eqn:deconvolution})
+only allows for initial conditions.
+\par
+I oversimplify by trying to collapse an entire book 
+{\em FGDP} (Fundamentals of Geophysical Data Processing)
+into a few sentences by saying here that
+for any fixed 1-D spectrum there exist many filters.
+Of these, only one has
+stable polynomial division.
+That filter has its energy compacted
+as soon as possible after the ``1.0'' at zero lag.
+
+\par
+%Which side of the little rectangular patch of coefficients
+%we choose to place the 1.0 is rather arbitrary.
+%The important matter is that as a matter of principle,
+%the 1.0 is expected to lie along one side of the little patch.
+%We never put the ``1'' at the corner of a patch
+%because that would be excluding locations near the ``1'' that
+%could be correlated with it.
+%It is important that beyond the 1.0 (in whatever direction that may be)
+%the filter coefficients must be zero because in one dimension,
+%these coefficients lie before zero lag.
+
+
+\subsection{Causality in three dimensions}
+\inputdir{XFig}
+\sx{causality in 3-D}
+\sx{filter ! causal in 3-D}
+The top plane in Figure~\ref{fig:3dpef} 
+is the 2-D filter seen in equation (\ref{eqn:2dpef}).
+Geometrically, the 3-dimensional generalization of a helix,
+Figure~\ref{fig:3dpef} shows a causal filter in three dimensions.
+Think of the little cubes as packed with the string of the causal 1-D function.
+Under the ``1'' is packed with string, but none above it.
+Behind the ``1'' is packed with string, but none in front of it.
+The top plane can be visualized as the area around the end of the 1-D string.
+Above the top plane are zero-valued anticausal filter coefficients.
+
+This 3-D cube is like the usual Fortran packing of a 3-D array
+with one confusing difference.   The starting location where the ``1''
+is located is not at the Fortran (1,1,1) location.
+Details of indexing are essential,
+but complicated, and found near the end of this chapter.
+\par
+\sideplot{3dpef}{width=.76\textwidth}{
+        A 3-D causal filter at the starting end of a 3-D helix.
+	}
+The ``1'' that defines the end of the 1-dimensional filter
+becomes in 3-D a point of central symmetry.
+Every point inside a 3-D filter has a mate opposite the ``1'' that is outside the filter.
+Altogether they fill the whole space leaving no holes.
+From this you may deduce that the ``1'' must lie
+on the side of a face
+as shown in Figure \ref{fig:3dpef}.
+It cannot lie on the corner of a cube.
+It cannot be at the Fortran of \texttt{f(1,1,1)}.
+If it were there, the filter points inside
+with their mirror points outside would not full the entire space.
+It could not represent all possible 3-D autocorrelation functions.
+
+
+\subsection{Blind deconvolution and the solar cube}
+\inputdir{solar}
+\sx{deconvolution ! solar cube}
+\sx{solar cube}
+An area of applications that leads directly to spectral factorization
+is ``blind deconvolution.''
+Here, we begin with a signal.
+We form its spectrum and factor it.
+We could simply inspect the filter and interpret it,
+or we might deconvolve it out from the original data.
+This topic deserves a fuller exposition, say for example
+as defined in some of my earlier books.
+Here, we inspect a novel example that incorporates the helix.
+\par
+Solar physicists have learned how to measure
+the seismic field of the sun surface.  It is chaotic.
+If you created an impulsive explosion on the surface of the sun,
+what would the response be?
+James Rickett and I applied the helix idea along with Kolmogoroff
+spectral factorization to find the impulse response of the sun.
+Figure \ref{fig:solar} shows a raw data cube and the derived impulse response.
+The sun is huge, so the distance scale is in megameters (Mm).
+The United States is 5-Mm wide.
+Vertical motion of the sun is measured with a videocamera-like device
+that measures vertical motion by an optical doppler shift.
+From an acoustic/seismic point of view,
+the surface of the sun is a very noisy place.
+The figure shows time in kiloseconds (Ks).
+We see roughly 15 cycles in 5 Ks which is 1 cycle in roughly 333 seconds.
+Thus, the sun seems to oscillate vertically with roughly a 5-minute period.
+The top plane of the raw data
+in Figure \ref{fig:solar} (left panel)
+happens to have a sun spot in the center.
+The data analysis here is not affected by the sun spot, so please ignore it.
+\plot{solar}{width=\textwidth,height=.65\textwidth}{
+	Raw seismic data on the sun (left).
+	Impulse response of the sun (right)
+	derived by Helix-Kolmogoroff spectral factorization.
+	}
+\par
+The first step of the data processing is
+to transform the raw data to its spectrum.
+With the helix assumption, computing the spectrum is
+virtually the same thing in 1-D space as in 3-D space.
+The resulting spectrum was passed to Kolmogoroff spectral factorization code,
+a 1-D code.
+The resulting impulse response is on the right side of 
+Figure \ref{fig:solar}.
+The plane we see on the right top is not lag time $\tau=0$;
+it is lag time $\tau=3$ Ks.
+It shows circular rings, as ripples on a pond.
+Later lag times (not shown) would be the larger circles of expanding waves.
+The front and side planes show tent-like shapes.
+\par
+The slope of the tent gives the (inverse) velocity of the wave
+(as seen on the surface of the sun).
+The horizontal velocity we see on the sun surface turns out
+(by Snell's law)
+to be the same as that at the bottom of the ray.
+On the front face at early times we see the low-velocity (steep) wavefronts
+and at later times we see the faster waves.
+Later arrivals reach more deeply into the sun
+except when they are late because they are ``multiple reflections,''
+diving waves that bend back upward reaching the surface,
+then bouncing down again.
+
+%\par
+%Look carefully, and you can see two (or even three!) tents inside one another.
+%These ``inside tents'' are the waves that have bounced once (or more!)
+%from the surface of the sun.
+%When a ray goes down and back up to the sun surface,
+%it reflects and takes off again with the same ray shape.
+%The result is that a given slope on the traveltime curve
+%can be found again at twice the distance at twice the time.
+%Likewise on the top (at $\tau=$ 3 Ks),
+%the larger ring, longer wavelength, is the deeper going first arrival,
+%while the inner ring has bounced once from the sun surface.
+
+\par
+Multiple reflections from the sun surface are seen
+on the front face of the cube with the same slope,
+but double the time and distance.
+On the top face, the first multiple reflection
+is the inner ring with the shorter wavelengths.
+
+Very close to $t=0$ see horizontal waveforms
+extending only a short distance from the origin.
+These are electromagnetic waves of essentially infinite velocity.
+
+
+
+
+\section{FACTORED LAPLACIAN == HELIX DERIVATIVE}
+\sx{Laplacian, factored}
+I had learned spectral factorization as a method for single seismograms.
+After I learned it,
+every time I saw a positive function
+I would wonder if it made sense to factor it.
+When total field
+magnetometers were invented,
+I found it as a way to deduce vertical and horizontal
+\bxbx{magnetic}
+components.
+A few pages back, you saw how to use factorization
+to deduce the waveform passing through an absorptive medium.
+Then, we saw how the notion of ``impulse response''
+applies not only to signals,
+but allows use of random noise on the sun
+to deduce the 3-D impulse response there.
+But the most useful application of spectral factorization so far
+is what comes next, factoring the Laplace operator, $-\nabla^2$.
+Its Fourier transform $-((ik_x)^2+(ik_y)^2) \ge 0$ is positive, so it is a spectrum.
+The useful tool we uncover I dub the ``helix derivative.''
+\par
+The signal:
+\begin{equation}
+\label{eqn:2dlapin1d}
+\bold r \eq
+-\nabla^2
+\eq
+\begin{array}{|r|r|r|r|r|r|r|r|r|r|r|r|r|r|r|} \hline
+-1&0&\cdots&0&-1&4&-1&0& \cdots&0&-1
+\\ \hline
+\end{array}
+\end{equation}
+is an autocorrelation function, because
+it is symmetrical about the ``4,''
+and the Fourier transform of $-\nabla^2$ is $-((ik_x)^2+(ik_y)^2) \ge 0$,
+which is positive for all frequencies $(k_x,k_y)$.
+Kolmogoroff spectral-factorization gives this wavelet $\bold h $:
+\begin{equation}
+\label{eqn:2dlapin1dhalf}
+{\bold h}
+\eq
+\begin{array}{|r|r|r|r|r|r|r|r|r|r|r|r|r|r|r|}
+\hline
+1.791&-.651&-.044&-.024&\cdots&\cdots&-.044&-.087&-.200&-.558 \\
+\hline
+\end{array}
+\end{equation}
+In other words,
+the autocorrelation of
+(\ref{eqn:2dlapin1dhalf}) is
+(\ref{eqn:2dlapin1d}).
+This fact is not obvious from the numbers,
+because the computation requires a little work,
+but dropping all the small numbers
+allows you a rough check.
+\par
+In this book section only, 
+I use abnormal notation for bold letters.
+Here
+$\bold h$, $\bold r$ are signals,
+while
+$\bold H$ and $\bold R$ are images,
+being neither matrices or vectors.
+Recall from Chapter \ref{paper:ajt} that a filter is a signal
+packed into a matrix to make a filter operator.
+\par
+Let the time reversed version of
+$\bold h$
+be denoted
+$\bold h\T$.
+This notation is consistent with an idea from
+Chapter \ref{paper:ajt} that the adjoint of a filter matrix
+is another filter matrix with a reversed filter.
+In engineering, it is conventional to use the asterisk symbol
+``$\ast$'' to denote convolution.
+Thus, the idea that the autocorrelation of a 
+signal $\bold h$
+is a convolution of the
+signal $\bold h$
+with its time reverse (adjoint)
+can be written as
+$ {\bold h}\T \ast {\bold h} = {\bold h} \ast {\bold h}\T = {\bold r}$.
+\par
+Wind the signal $\bold r$ around a
+vertical-axis helix to see its 2-dimensional shape $\bold R$:
+\begin{equation}
+\bold r
+\quad
+\rightarrow{\rm helical \; boundaries}
+\quad
+\begin{array}{|r|r|r|}  \hline
+& -1 & \\
+\hline
+-1 & 4 & -1\\
+\hline
+& -1 & \\
+\hline
+\end{array}
+\eq
+\bold R
+\label{eqn:lap2d}
+\end{equation}
+This 2-D image (which can be packed into a filter operator)
+is the negative of the finite-difference representation
+of the Laplacian operator, generally denoted
+$\nabla^2 = \frac{\partial^2}{ \partial x^2} + \frac{\partial^2}{ \partial y^2} $.
+Now for the magic:
+Wind the signal $\bold h$ around the same helix
+to see its 2-dimensional shape $\bold H$
+\begin{equation}
+\label{eqn:lapfac}
+ {\bold H}
+\eq
+    \begin{array} {|r|r|r|r|r|r|r|r|r|} \hline
+             &      &       &       & 1.791 &  -.651 & -.044  & -.024& \cdots \\
+	     \hline 
+      \cdots &-.044 & -.087 & -.200 & -.558 &        &        &      &
+     \\ \hline
+    \end{array}
+\end{equation}
+In the representation (\ref{eqn:lapfac}), we see the coefficients diminishing
+rapidly away from maximum value 1.791.
+My claim is that the 2-dimensional autocorrelation of (\ref{eqn:lapfac})
+is (\ref{eqn:lap2d}).
+You verified this idea previously when the numbers were all ones.
+You can check it again in a few moments
+if you drop the small values, say 0.2 and smaller.
+\par
+Physics on a helix can be viewed through the eyes
+of matrices and numerical analysis.
+This presentation is not easy, 
+because the matrices are so huge.
+Discretize the $(x,y)$-plane to an $N\times M$ array,
+and pack the array into a vector of $N\times M$ components.
+Likewise, pack minus the Laplacian operator $-(\partial_{xx}+\partial_{yy})$
+into a matrix.
+For a $4\times 3$ plane, that matrix is shown in equation (\ref{eqn:huge}).
+\begin{equation}
+\label{eqn:huge}
+-\ \nabla^2 \eq
+\left[
+\begin{array}{rrrr|rrrr|rrrr}
+  4 & -1 & \cdot & \cdot 
+& -1 & \cdot & \cdot & \cdot 
+& \cdot & \cdot & \cdot & \cdot  \\
+  -1  &   4  &   -1     &  \cdot 
+&  \cdot &-1 & \cdot  & \cdot 
+& \cdot  &  \cdot  &  \cdot &  \cdot    \\
+\cdot & -1  &   4  & -1  
+&  \cdot  &  \cdot &-1  &  \cdot 
+&  \cdot  &  \cdot  &  \cdot  &  \cdot   \\
+\cdot &  \cdot & -1 &   4  
+&  h  &  \cdot  &  \cdot &-1 
+&  \cdot  &  \cdot  &  \cdot  &  \cdot  \\
+\hline
+  -1  &  \cdot  &  \cdot  &  h 
+&   4   &  -1   &  \cdot  &  \cdot 
+& -1  &  \cdot  &  \cdot &  \cdot 
+\\
+   \cdot &-1 & \cdot  &  \cdot 
+& -1  &   4  &   -1     &  \cdot 
+&  \cdot &-1 & \cdot  &  \cdot 
+\\
+  \cdot  &  \cdot &-1  &  \cdot 
+&  \cdot &   -1     &   4   & -1  
+& \cdot  &  \cdot &-1  &  \cdot 
+\\
+  \cdot  &  \cdot  &  \cdot &-1 
+& \cdot  &  \cdot  & -1  &   4  
+& h  &  \cdot  &  \cdot &-1 
+\\
+\hline
+  \cdot  &  \cdot  &  \cdot  &  \cdot 
+& -1  &  \cdot  &  \cdot  &  h 
+&   4   &  -1   &  \cdot  &  \cdot 
+\\
+  \cdot  &  \cdot  &  \cdot  &  \cdot 
+&  \cdot &-1 & \cdot  &  \cdot 
+& -1  &   4  &   -1     &  \cdot 
+\\
+  \cdot  &  \cdot  &  \cdot  &  \cdot 
+& \cdot  &  \cdot &-1  &  \cdot 
+&  \cdot &   -1     &   4   & -1  
+\\
+  \cdot  &  \cdot  &  \cdot  &  \cdot 
+& \cdot  &  \cdot  &  \cdot &-1 
+& \cdot  &  \cdot  & -1  &   4  
+\end{array}
+\right]
+\end{equation}
+\par\noindent
+The 2-dimensional matrix of coefficients for the Laplacian operator
+is shown in (\ref{eqn:huge}),
+where 
+on a Cartesian space, $h=0$,
+and in the helix geometry, $h=-1$.
+(A similar partitioned matrix arises from packing
+a cylindrical surface into a $4\times3$ array.)
+Notice that the partitioning becomes transparent for the helix, $h=-1$.
+With the partitioning thus invisible, the matrix
+simply represents 1-dimensional convolution
+and we have an alternative analytical approach,
+1-dimensional Fourier transform.
+We often need to solve sets of simultaneous equations
+with a matrix similar to (\ref{eqn:huge}).
+The method we use is triangular factorization.
+\par
+Although the autocorrelation $\bold r$ has mostly zero values,
+the factored autocorrelation $\bold a$ has a great number of nonzero terms.
+Fortunately, 
+the coefficients seem to be shrinking rapidly towards a gap in the middle,
+so truncation (of those middle coefficients) seems reasonable.
+I wish I could show you a larger matrix, but all I can do is to pack
+the signal $\bold a$ into shifted columns of
+a lower triangular matrix $\bold A$ like this:
+\begin{equation}
+\bold A \ = \ \ 
+\left[
+\begin{array}{rrrrrrrrrrrr}
+   1.8& \cdot& \cdot& \cdot& \cdot& \cdot& \cdot& \cdot& \cdot& \cdot& \cdot& \cdot\\
+   -.6&   1.8& \cdot& \cdot& \cdot& \cdot& \cdot& \cdot& \cdot& \cdot& \cdot& \cdot\\
+\ddots&   -.6&   1.8& \cdot& \cdot& \cdot& \cdot& \cdot& \cdot& \cdot& \cdot& \cdot\\
+   -.2&\ddots&   -.6&   1.8& \cdot& \cdot& \cdot& \cdot& \cdot& \cdot& \cdot& \cdot\\
+   -.6&   -.2&\ddots&   -.6&   1.8& \cdot& \cdot& \cdot& \cdot& \cdot& \cdot& \cdot\\
+ \cdot&   -.6&   -.2&\ddots&   -.6&   1.8& \cdot& \cdot& \cdot& \cdot& \cdot& \cdot\\
+ \cdot& \cdot&   -.6&   -.2&  \ddots& -.6&   1.8& \cdot& \cdot& \cdot& \cdot& \cdot\\
+ \cdot& \cdot& \cdot&   -.6&  -.2& \ddots&   -.6&   1.8& \cdot& \cdot& \cdot& \cdot\\
+ \cdot& \cdot& \cdot& \cdot&  -.6&    -.2&\ddots&   -.6&   1.8& \cdot& \cdot& \cdot\\
+ \cdot& \cdot& \cdot& \cdot& \cdot&   -.6&   -.2&\ddots&   -.6&   1.8& \cdot& \cdot\\
+ \cdot& \cdot& \cdot& \cdot& \cdot& \cdot&   -.6&   -.2&\ddots&   -.6&   1.8& \cdot\\
+ \cdot& \cdot& \cdot& \cdot& \cdot& \cdot& \cdot&   -.6&   -.2&\ddots&   -.6&  1.8
+\end{array}
+\right]
+\label{eqn:lapfacmat}
+\end{equation}
+If you allow me some truncation approximations,
+I now claim that the Laplacian represented by the
+matrix in equation (\ref{eqn:huge})
+is factored into two parts
+$-\nabla^2 =\bold A\T\bold A$,
+which are upper and lower triangular matrices
+whose product forms the autocorrelation seen in equation~(\ref{eqn:huge}).
+Recall that triangular matrices
+allow quick solutions of simultaneous equations by backsubstitution,
+which is what we are doing with our
+deconvolution program.
+\par
+Spectral factorization produces not merely a causal wavelet
+with the required autocorrelation.
+It produces one that is stable in deconvolution.
+Using $\bold H$ in 1-dimensional polynomial division,
+we can solve many formerly difficult problems very rapidly.
+Consider the Laplace equation with sources (Poisson's equation).
+Polynomial division and its reverse (adjoint) gives us
+$\bold p =(\bold q/\bold H)/\bold H\T$,
+which means we have solved
+$\nabla^2 \bold p = -\bold q$
+by using polynomial division on a helix.
+Using the 7 coefficients shown,
+the cost is 14 multiplications
+(because we need to run both ways) per mesh point.
+An example is shown in Figure \ref{fig:lapfac}.
+\inputdir{helicon}
+\plot{lapfac}{width=\textwidth,height=.33\textwidth}{
+        Deconvolution by a filter with autocorrelation
+        being the 2-dimensional Laplacian operator.
+        Amounts to solving the Poisson equation.
+        Left is $\bold q$;
+        Middle is $\bold q/\bold H$;
+        Right is $(\bold q/\bold H)/\bold H\T$.
+	}
+\par
+Figure \ref{fig:lapfac90} contains both the helix derivative and its inverse.
+Contrast those filters to the $x$- or $y$-derivatives (doublets) and their inverses
+(axis-parallel lines in the $(x,y)$-plane).
+Simple derivatives are highly directional,
+whereas, the helix derivative is only slightly directional
+achieving its meagre directionality entirely from its phase spectrum.
+\section{HELIX LOW-CUT FILTER}
+\sx{filter ! helix low-cut}
+\inputdir{helocut}
+Because the autocorrelation of $\bold H$ is
+$\bold H\T \ast \bold H = \bold R =-\nabla^2$
+is a second derivative,
+the operator $\bold H$ must be something like a first derivative.
+As a geophysicist, I found it natural to compare
+the operator $\frac{\partial}{\partial y}$
+with $\bold H$ by applying \
+the helix derivative $\bold H$
+to a local topographic map.
+The result shown in
+Figure \ref{fig:helocut}
+is that $\bold H$ enhances drainage patterns whereas
+$\frac{\partial}{\partial y}$ enhances mountain ridges.
+\plot{helocut}{width=\textwidth,height=1.4\textwidth}{
+        Topography, helical derivative, slope south.
+	}
+\par
+The operator $\bold H$ has
+curious similarities and differences
+with the familiar gradient and divergence operators.
+In 2-dimensional physical space,
+the gradient maps one field to {\em two} fields
+(north slope and east slope).
+The factorization of $-\nabla^2$ with the helix
+gives us the operator $\bold H$
+that maps one field to {\em  one} field.
+Being a one-to-one transformation
+(unlike gradient and divergence),
+the operator $\bold H$ is potentially invertible
+by deconvolution (recursive filtering).
+\par
+I have chosen the name
+%\footnote{
+%        Any fact this basic should be named in some earlier field
+%        of mathematics or theoretical physics.
+%        Admittedly, the concept exists on an infinite cartesian plane
+%        without a helix, but all my codes in a finite space involve the helix,
+%        and the helix concept led me to it.
+%        }
+``helix derivative''
+or ``helical derivative'' for the operator $\bold H$.
+A flag pole has a narrow shadow behind it.
+The helix integral (middle frame of Figure \ref{fig:lapfac90})
+and the helix derivative (left frame)
+show shadows with an angular bandwidth approaching $180^\circ$.
+\par
+Our construction makes $\bold H$ have the energy spectrum $k_x^2+k_y^2$,
+so the magnitude of the Fourier transform is $\sqrt{k_x^2+k_y^2}$.
+It is a cone
+centered at the origin with there the value zero.
+By contrast, the components of the ordinary gradient
+have amplitude responses $|k_x|$ and $|k_y|$
+that are lines of zero across the
+$(k_x,k_y)$-plane.
+\par
+The rotationally invariant cone in the Fourier domain
+contrasts sharply with the nonrotationally invariant
+helix derivative in $(x,y)$-space.
+The difference must arise from the phase spectrum.
+The factorization (\ref{eqn:lapfac})
+is nonunique because causality
+associated with the helix mapping
+can be defined along either $x$- or $y$-axes;
+thus the operator 
+(\ref{eqn:lapfac})
+can be rotated or reflected.
+\par
+In practice, we often require an isotropic filter.
+Such a filter is a function of $k_r=\sqrt{k_x^2 + k_y^2}$.
+It could be represented as a sum of helix derivatives to integer powers.
+
+\par
+If you want to see some tracks on the side of a hill,
+you want to subtract the hill and see only the tracks.
+Usually, however, you do not have a very good model for the hill.
+As an 
+expedient, you could apply a low-cut filter to remove all
+slowly variable functions of altitude.
+In Chapter \ref{paper:ajt} we found the Sea of Galilee
+in Figure \ref{fig:galbin} to be too smooth for viewing pleasure,
+so we made the roughened versions
+in Figure \ref{fig:galocut},
+%using a filter based on equation (\ref{eqn:lowcut}),
+a 1-dimensional filter that we could apply
+over the $x$-axis or the $y$-axis.
+In Fourier space, such a filter has a response function of $k_x$
+or a function of $k_y$.
+The isotropy of physical space tells us
+it would be more logical to design a filter that
+is a function of
+$k_x^2+k_y^2$.
+In Figure \ref{fig:helocut} we saw that the helix derivative
+$\bold H$
+does a nice job.
+The Fourier magnitude of its impulse response is $k_r=\sqrt{k_x^2+k_y^2}$.
+There is a little anisotropy connected with phase (which way should
+we wind the helix, on $x$ or $y$?), but it is
+not nearly so severe as that of either component of the gradient,
+the two components having wholly different spectra,
+amplitude $|k_x|$ or $|k_y|$.
+
+\subsection{Improving low-frequency behavior}
+\par
+\inputdir{helgal}
+It is nice having the 2-D helix derivative,
+but we can imagine even nicer 2-D low-cut filters.
+In 1-D, we designed a filter with an adjustable parameter,
+a cutoff frequency.
+In 1-D, we compounded
+a first derivative (which destroys low frequencies)
+with a leaky integration (which undoes the derivative at all other frequencies).
+The analogous filter in 2-D would be
+$-\nabla^2 /(-\nabla^2 + k_0^2)$,
+which would first be expressed as a finite difference
+$ (-Z^{-1} + 2.00 - Z) / (-Z^{-1} + 2.01 - Z)$
+and then factored as we did the helix derivative.
+\plot{helgal}{width=\textwidth,height=.61\textwidth}{
+        Galilee roughened by gradient and
+        by helical derivative.
+	}
+\par
+We can visualize a plot of the magnitude of the 2-D
+Fourier transform of the filter equation (\ref{eqn:lapfac}).
+It is a 2-D function of $k_x$ and $k_y$ and it should
+resemble $k_r=\sqrt{k_x^2+k_y^2}$.
+%It does look like this even when the filter (\ref{eqn:lapfac}) has been truncated.
+The point of the cone $k_r=\sqrt{k_x^2+k_y^2}$ becomes
+rounded by the filter truncation, so
+$k_r$ does not reach zero at the origin of the $(k_x,k_y)$-plane.
+We can force it to vanish at zero frequency
+by subtracting .183 from the lead coefficient 1.791.
+I did not do that subtraction in Figure
+\ref{fig:helgal},
+which explains the whiteness in the middle of the lake.
+I gave up on playing with both $k_0$ and filter length;
+and now, merely play with the sum of the filter coefficients.
+\subsection{Filtering mammograms}
+\inputdir{mam}
+\sx{mammogram filtering}
+\sx{filtering mammograms}
+\sideplot{mam}{width=.8\textwidth,height=1.0\textwidth}{
+	Mammogram (medical X-ray).
+	The cancer is the ``spoked wheel.''
+	(I apologize for the inability of paper publishing technology
+	to exhibit a clear grey image.)
+	The tiny white circles are metal foil used for navigation.
+	The little halo around a circle exhibits the impulse
+	response of the helix derivative.	}
+
+\par
+I prepared a half dozen medical X-rays like Figure 
+\ref{fig:mam}.
+The doctor brought her young son to my office one evening
+to evaluate the results.
+In a dark room, I would show the original X-ray on a big screen
+and then suddenly switch to the helix derivative.
+Every time I did this, her son would exclaim ``Wow!''
+The doctor was not so easily impressed, however.
+She was not accustomed to the unfamiliar image.
+Fundamentally, the helix derivative applied to her data
+does compress the dynamic range making weaker features more readily discernible.
+We were sure of this from theory and 
+various geophysical examples.
+The subjective problem was her unfamiliarity with our display.
+I found that I could always spot anomalies more quickly
+on the filtered display, but then I would feel more comfortable
+when I would discover those same anomalies also present
+(though less evident) in the original data.
+Retrospectively, I felt the doctor would likely have been equally impressed
+had I used a spatial low-cut filter instead of the helix derivative.
+This simpler filter would have left the details of her image unchanged
+(above the cutoff frequency), altering only the low frequencies,
+thereby allowing me to increase the gain.
+
+%\par
+%As we set out, keep in mind that many applications call for
+%isotropic filters
+%(because physics often tells us there is no prefered orientation).
+%This requires us to build upon the operator $-\nabla^2$,
+%because all isotropic functions are functions of it.
+%It might look anisotropic (because rotating
+%$45^\circ$ the finite difference representation of $-\nabla^2$
+%seems to change it),
+%but in Fourier space
+%the well sampled data is at low frequencies,
+%and the FT of $-\nabla^2$ is the isotropic expression
+%$k_x^2+k_y^2$ which is independent of coordinate rotation.
+%
+%\par
+%Recall the one-dimensional causal lowcut filters (\ref{ajt/eqn:lowcut})
+%that we invented earlier.
+%Applying one of these to its time reverse gives 
+%an expression recognizable as a low-cut filter.
+%\begin{equation}
+%{1-Z^{-1}\over 1-\rho Z^{-1}}\ \ 
+%{1-Z     \over 1-\rho Z     }
+%\quad\approx\quad
+%{\omega^2 \over \omega^2 + \omega_0^2}
+%\label{eqn:lofac}
+%\end{equation}
+%As you look at this expression,
+%think of the numerator and denominator
+%as expressions that could be sent to a spectral factorization module.
+%For example, in 1-D the numerator
+%is the autocorrelation $(-1,2,-1)$.
+%The denominator is an autocorrelation like $(-1,2.05,-1)$.
+%These two autocorrelations can be factored
+%by Kolmogoroff or Burg-Wilson methods.
+%Equation
+%(\ref{eqn:lofac}) shows them as already factored.
+%In two dimensions we can use the same approach.
+%The factor of the numerator is the helix derivative
+%and the factor of the
+%denominator being found likewise.
+
+%\par
+%The difficulty with medical x-rays is the large required range of amplitude.
+%Part of the image is wholly dark and part wholly light.
+%With mammograms, the helix filter ``worked'' because it cut out
+%the very low spatial frequencies that amount to a background noise
+%on the details.
+%A less desireable aspect of the helix derivative is that it alters
+%the spectrum at high frequencies making the image less familiar
+%to long-time practitioners.
+%What we really need here is not the helix derivative but a 2-D low-cut filter.
+
+\par
+First, I had a problem preparing Figure \ref{fig:mam}.
+It shows the application of the helix derivative
+to a medical X-ray.
+The problem was that the original X-ray was all positive
+values of brightness, so there was a massive amount of
+spatial low frequency present.
+Obviously, an $x$-derivative or a $y$-derivative would
+eliminate the low frequency, but the helix derivative did not.
+This unpleasant surprise arises
+because the filter in equation
+(\ref{eqn:lapfac})
+was truncated after a finite number of terms.
+Adding up the terms actually displayed in equation
+(\ref{eqn:lapfac}),
+the sum comes to .183, whereas, theoretically the sum of all the terms should be zero.
+From the ratio of .183/1.791,
+we can say the filter pushes zero-frequency amplitude 90\% of the way to zero value.
+When the image contains very much zero-frequency amplitude,
+more coefficients are needed.
+I did use more, but simply removing the mean saved me
+from needing a costly number of filter coefficients.
+
+\inputdir{mam}
+
+\par
+A final word about the doctor.
+As she was about to leave my office she suddenly asked
+if I had scratched one of her X-rays.
+We were looking at the helix derivative,
+and it did seem to show a big scratch.
+What should have been a line was broken into a string of dots.
+I apologized in advance and handed her the original film negatives,
+which she proceeded to inspect.
+``Oh,'' she said,
+``Bad news. There are calcification nodules along the ducts.''
+So, the scratch was not a scratch,
+instead an important detail had not been noticed on the original X-ray.
+Times have changed since then.
+Nowadays, mammography has become digital;
+and appropriate filtering is defaulted in the presentation.
+\par
+In preparing an illustration for here,
+I learned one more lesson.
+The scratch was a small part of a big image,
+so I enlarged a small portion of the mammogram for display here.
+The very process of selecting a small portion
+followed by scaling the amplitude
+between maximum and minimum darkness of printer ink
+had the effect enhancing the visibility of the scratch on
+the mammogram.
+Now, Figure \ref{fig:scratch} shows the two calcification nodule strings
+perhaps even clearer than on the helix derivative.
+\plot{scratch}{width=\textwidth,height=.5\textwidth}{
+        Not a scratch.
+        Reducing the $(x,y)$-space range of the illustration
+	allowed boosting the gain,
+	thus making the nonscratch more prominent.
+	Find both strings of calcification nodules.
+}
+
+
+
+
+
+
+\section{SUBSCRIPTING A MULTIDIMENSIONAL HELIX}
+Basic utilities transform back and forth between
+multidimensional matrix coordinates and helix coordinates.
+The essential module used repeatedly in applications
+later in this book is
+\texttt{createhelix}.
+% \vpageref{lst:createhelix}.
+We begin here from its intricate underpinnings.
+
+\par
+Fortran77 has a concept of a multidimensional array being equivalent
+to a 1-dimensional array.
+Given that the hypercube specification
+\texttt{nd=(n1,n2,n3,...)} defines the storage
+\texttt{dimension} of a data array,
+we can refer to a data element as either
+\texttt{dd(i1,i2,i3,...)} or 
+\texttt{dd( i1 +n1*(i2-1) +n1*n2*(i3-1) +...)}.
+The helix says to refer to the multidimensional data
+by its equivalent 1-dimensional index
+(sometimes called its vector subscript or linear subscript).
+
+\par
+The filter, however, is a much more complicated story than the data:
+First, we require all filters to be causal.
+In other words, the Laplacian does not fit very well,
+because it is intrinsically noncausal.
+If you really want noncausal filters,
+you need to provide your own time shifts outside the tools supplied here.
+Second, a filter is usually a small hypercube, say
+\texttt{aa(a1,a2,a3,...)}
+and would often be stored as such.
+For the helix we must store it in a special 1-dimensional form.
+Either way, the numbers
+\texttt{na= (a1,a2,a3,...)}
+specify the dimension of the hypercube.
+In cube form, the entire cube could be indexed
+multidimensionally as \texttt{aa(i1,i2,...)} or it could be indexed
+1-dimensionally as \texttt{aa(ia,1,1,...)} or sometimes
+\begin{comment}
+\footnote{
+        Some programming minutia:
+        Fortran77 does not allow you to refer to an array
+        by both its cartesian coordinates
+        and its linear subscript in the same subroutine.
+        To access it both ways, you need a subroutine call,
+        or you dimension it as 
+        \texttt{data(n1,n2,...)}
+        and then you refer to it as
+        \texttt{data(id,1,1,...)}.
+        Fortran90 follows the same rule outside modules.
+        Where modules use other modules,
+        the compiler does not allow you to refer
+        to data both ways,
+        unless the array is declared as
+        \texttt{allocatable}.
+        }
+\end{comment}
+\texttt{aa[ia]} by letting \texttt{ia} cover a large range.
+When a filter cube is stored in its normal ``tightly packed'' form,
+the formula for computing
+its 1-dimensional index
+\texttt{ia} is:
+\begin{verbatim}
+  ia = i1 +a1*i2 +a1*a2*i3 + ...
+\end{verbatim}
+When the filter cube is stored in an array
+with the same dimensions as the data,
+\texttt{data[n3][n2][n1]},
+the formula for \texttt{ia} is:
+\begin{verbatim}
+  ia = i1 +n1*i2 +n1*n2*i3 + ...
+\end{verbatim}
+
+\par
+%The fortran compiler knows how to convert from the multidimensional
+%cartesian indices to the linear index.
+%We will need to do that, as well as the converse.
+The following module \texttt{decart} contains
+two subroutines that
+explicitly provide us the transformations
+between the linear index
+\texttt{i}
+and the multidimensional indices
+\texttt{ii= (i1,i2,...)}.
+The two subroutines have the logical names
+\texttt{cart2line} and
+\texttt{line2cart}.
+\moddex{decart}{helical-cartesian coordinate conversion}{29}{57}{api/c}
+
+\par
+The Fortran linear index is closely related to the helix.
+There is one major difference, however,
+and that is the origin of the coordinates.
+To convert from the linear index
+to the helix lag coordinate,
+we need to subtract the Fortran linear index of the ``1.0''
+usually taken at
+\texttt{center= (1+a1/2, 1+a2/2, ..., 1)}.
+(On the last dimension, there is no shift, because nobody stores the
+volume of zero values that would occur before the 1.0.)
+The \texttt{decart} module fails for negative subscripts.
+Thus, we need to be careful to avoid thinking of the filter's 1.0 
+(shown in Figure \ref{fig:3dpef})
+as the origin of the multidimensional coordinate system
+although the 1.0 is the origin in the 1-dimensional coordinate system.
+
+\par
+Even in 1-D
+(see the matrix in equation (\ref{eqn:contran1})),
+to define a filter {\it operator}, we need to know
+not only filter coefficients and a filter length,
+but we also need to know the data length.
+To define a multidimensional filter using the helix idea,
+besides the properties intrinsic to the filter,
+also the circumference of the helix,
+i.e., the length on the 1-axis of the data's hypercube
+as well as the other dimensions
+\texttt{nd=(n1,n2,...)}
+of the data's hypercube.
+
+\par
+Thinking about convolution on the helix,
+it is natural to think about the filter and data being stored
+in the same way, that is, by reference to the data size.
+Such storeage would waste so much space, however,
+that our helix filter module
+\texttt{helix} 
+%\vpageref{lst:helix}
+instead stores the filter coefficients in one vector
+and the lags in another.
+The \texttt{i}-th coefficient value
+of the filter goes in  \verb#aa->flt[i]# and
+the \texttt{i}-th lag \texttt{ia[i]} goes in \verb#aa->lag[i]#.
+The lags are the same as the Fortran linear index
+except for the overall shift of the 1.0 of a cube of 
+data dimension \texttt{nd}.
+Our module for convolution on a helix,
+\texttt{helicon}. % \vpageref{lst:helicon},
+has already an implicit
+``1.0'' at the filter's zero lag, so we do not store it.
+(It is an error to do so.)
+
+%\par
+%A helix subscript is similar to a Fortran vector subscript.
+%To convert, we need to keep track of the data size as mentioned above,
+%and we need to shift to lag zero the filter's 1.0
+%labeled ``A'' in the example below.
+%Logic for identifying the first point A on the starting end of the helix
+%and those that lie before the first point (and are hence off the helix) is
+%\par\noindent\footnotesize
+%\begin{verbatim}
+%      . . . . .      . . B . .      C C C C C       D D . . .        0 0 0 . .
+%      . . . . .      . . B . .      C C C C C       D D . . .        0 0 0 . .
+%      . . A . .      . . B . .      . . . . .       D D . . .   =    0 0 0 . .
+%      . . . . .      . . B . .      . . . . .       D D . . .        0 0 . . .
+%      . . . . .      . . B . .      . . . . .       D D . . .        0 0 . . .
+%      
+%             Cube locations for (h <= 0) are A | (B & C) | D.
+%\end{verbatim}
+%\par\noindent\normalsize
+%These are locations for which we will not have adjustable filter values
+%because the filter lags are zero or negative.
+%Using this logic in multidimensional space,
+
+\par
+Module
+\texttt{createhelix} 
+%\vpageref{lst:createhelix}
+allocates memory for a helix filter and builds
+filter lags along the helix from the hypercube description.
+The hypercube description is not the literal cube
+seen in Figure~\ref{fig:3dpef} but
+some integers specifying that cube:
+the data cube dimensions            \texttt{nd},
+likewise the filter cube dimensions \texttt{na},
+the parameter \texttt{center} identifying
+the location of the filter's ``1.0'',
+and a \texttt{gap} parameter used in a later chapter.
+To find the lag table,
+module \texttt{createhelix} %\vpageref{lst:createhelixmod}
+first finds the
+Fortran linear index of the \texttt{center} point on the filter hypercube.
+Everything before that has negative lag on the helix and can be ignored.
+(Likewise, in a later chapter, we see a \texttt{gap} parameter
+that effectively sets even more filter coefficients to zero
+so those extra lags can also be ignored.)
+Then, it sweeps from the center point over the rest of the filter hypercube
+calculating for a data-sized cube \texttt{nd},
+the Fortran linear index of each filter element.
+\moddex{createhelix}{constructing helix filter in N-D}{36}{80}{user/gee}
+Near
+the end of the code you see the calculation of a parameter \texttt{lag0d},
+which is the count of the number of zeros that
+a data-sized Fortran array would store
+in a filter cube preceding the filter's 1.0.
+We need to subtract this shift
+from the filter's Fortran linear index to get the lag on the helix.
+
+\par
+A filter can be represented literally as a multidimensional cube
+like equation (\ref{eqn:2dpef}) shows us in two dimensions
+or like Figure~\ref{fig:3dpef} shows us in three dimensions.
+Unlike the helical form, in literal cube form,
+the zeros preceding the ``1.0'' are explicitly present,
+so \texttt{lag0} needs to be added back in to get the Fortran subscript.
+To convert a helix filter \texttt{aa} to Fortran's multidimensional hypercube
+\texttt{cube(n1,n2,...)} is
+module \texttt{boxfilter}: %\vpageref{lst:boxfilter}.
+\moddex{boxfilter}{Convert helix filter to (n1,n2,...)}{24}{48}{user/gee}
+The \texttt{boxfilter} module is normally used
+to display or manipulate a filter
+that was estimated in helical form
+(usually estimated by the least-squares method).
+
+\begin{comment}
+\par
+The inverse process to \texttt{boxfilter} is to
+convert a Fortran hypercube to a helix filter.
+For this we have module \texttt{unbox}. %\vpageref{lst:unbox}.
+It abandons all zero-valued coefficients
+such as those that should be zero before the box's 1.0.
+It abandons the ``1.0'' as well, because it is implicitly present
+in the helix convolution module \texttt{helicon} \vpageref{lst:helicon}.
+\moddex{unbox}{Convert hypercube filter to helix}
+An example of using \texttt{unbox} would be copying some numbers,
+such as the factored Laplacian in equation (\ref{eqn:lapfac})
+into a cube and then converting it to a helix.
+\end{comment}
+
+\par
+A reasonable arrangement for a small 3-D filter is 
+\texttt{na=\{5,3,2\}}
+and
+\texttt{center=\{3,2,1\}}.
+Using these arguments, I used 
+\texttt{createhelix} 
+%\vpageref{lst:createhelix} 
+to create a filter.
+I set all the helix filter coefficients to 2.
+Then I used module \texttt{boxfilter} 
+%\vpageref{lst:boxfilter}
+to put it in a convenient form for display.
+%After this conversion, the coefficient \texttt{aa[0][1][2]} is 1, not 2.
+Finally, I printed it:
+\par\noindent
+\footnotesize
+\begin{verbatim}
+          0.000  0.000  0.000  0.000  0.000
+          0.000  0.000  1.000  2.000  2.000
+          2.000  2.000  2.000  2.000  2.000
+          ---------------------------------
+          2.000  2.000  2.000  2.000  2.000
+          2.000  2.000  2.000  2.000  2.000
+          2.000  2.000  2.000  2.000  2.000
+\end{verbatim}
+\normalsize
+\par\noindent
+%using \texttt{printn} \vpageref{lst:print}:
+%\moddex{print}{print out helix filter coefficients}
+
+\par
+Different data sets have different sizes.
+To convert a helix filter from one data size to another,
+we could drop the filter into a cube with module \texttt{cube}.
+Then, we could extract it with module \texttt{unbox}
+specifying any data set size we wish.
+Instead, we use module
+\texttt{regrid} %\vpageref{lst:regrid}
+prepared by Sergey Fomel
+which does the job without reference to an underlying filter cube.
+He explains his \texttt{regrid} module thus:
+        \begin{quotation}
+        Imagine a filter being cut out of a piece of paper and
+        glued on another paper, which is then rolled to form a helix.
+\par            % change this to a blank line and POOF! paragraph disappears.
+        We start by picking a random point (let us call it
+        \texttt{rand}) in the
+        cartesian grid and placing the filter so that its center
+        (the leading 1.0) is on top of that point.
+        \texttt{rand} should be larger than (or equal to)
+        \texttt{center} and
+        smaller than \texttt{min (nold, nnew)},
+        otherwise the filter might stick outside the grid
+        (our piece of paper.)
+        \texttt{rand=nold/2} will do (assuming the filter is small),
+        although nothing should change
+        if you replace \texttt{nold/2} with a random integer array
+        between \texttt{center} and \texttt{nold - na}.
+\par
+        The linear coordinate of \texttt{rand} is \texttt{h0}
+        on the old helix and \texttt{h1} on the new helix.
+        Recall that the helix lags \verb#aa->lag#
+        are relative to the center.
+        Therefore, we need to add \texttt{h0}
+        to get the absolute helix coordinate (\texttt{h}).
+        Likewise, we need to subtract \texttt{h1}
+        to return to a relative coordinate system.
+        \end{quotation}
+
+\moddex{regrid}{Convert filter to different data size}{24}{43}{user/gee}
+
+\section{INVERSE FILTERS AND OTHER FACTORIZATIONS}
+\sx{filter ! inverse}
+\sx{filter ! stress-strain}
+Mathematics sometimes seems a mundane subject,
+like when it does the ``accounting'' for an engineer.
+Other times,
+as with the study of causality and spectral factorization,
+it brings unexpected amazing new concepts into our lives.
+There are many little-known, fundamental ideas here;
+a few touched on next.
+\par
+Start with an example.  Consider a mechanical object.
+We can strain it and watch it stress or we can stress it and watch it strain.
+We feel knowledge of the present and past stress history is all we need
+to determine the present value of strain.
+Likewise, the converse, history of strain should tell us the stress.
+We could say there is a filter that takes us from stress to strain;
+likewise,
+another filter takes us from strain to stress.
+What we have here is a pair of filters that are mutually inverse
+under convolution.
+In the Fourier domain, one is literally the inverse of the other.
+What is remarkable is that in the time domain, both are causal.
+They both vanish before zero lag $\tau=0$.
+\par
+Not all causal filters have a causal inverse.
+The best known name for one that does is ``minimum-phase filter.''
+Unfortunately, this name is not suggestive of
+the fundamental property of interest,
+``causal with a causal (convolutional) inverse.''
+I could call it CCI.
+\sx{filter ! CCI casual with causal inverse}
+An example of a causal filter without a causal inverse is the unit
+delay operator---with $Z$-transforms, the operator $Z$.
+If you delay something, you cannot get it back without seeing into the future,
+which you are not allowed to do.
+Mathematically, $1/Z$ cannot be expressed as a polynomial
+(actually, a convergent infinite series) in positive powers of $Z$.
+\par
+Physics books do not tell us where to expect to find
+transfer functions that are CCI.
+I think I know why they do not.
+Any causal filter has a ``sharp edge'' at zero time lag where it switches
+from nonresponsiveness to responsiveness.
+The sharp edge might cause the spectrum to be large at infinite frequency.
+If so, the inverse filter is small at infinite frequency.
+Either way,
+one of the two filters is unmanageable with Fourier transform theory,
+which
+(you might have noticed in the mathematical fine print)
+requires signals (and spectra) to have finite energy.
+Finite energy means the function must get really small in that immense space
+on the $t$-axis and the $\omega$ axis.
+It is impossible for a function to be small and its inverse be small.
+These imponderables become manageable in the world of Time Series Analysis
+(discretized time axis).
+\subsection{Uniqueness and invertability}
+\sx{filter ! non-minimum phase}
+Interesting questions arise when we are given a spectrum
+and find ourselves asking how to find a filter that has that spectrum.
+Is the answer unique?  We will see it is not unique.
+Is there always an answer that is causal?
+Almost always, yes.
+Is there always an answer that is causal with a causal inverse (CCI)?
+Almost always, yes.
+\par
+Let us have an example.
+Consider a filter like the familiar time derivative $(1,-1)$, except
+let us down weight the $-1$ a tiny bit, say $(1,-\rho)$ where $0<<\rho<1$.
+Now,
+the filter $(1,-\rho)$
+has a spectrum $(1-\rho Z)(1-\rho/Z)$ with autocorrelation
+coefficients $(-\rho, 1+\rho^2,-\rho)$ that look a lot like a second derivative,
+but it is a tiny bit bigger in the middle.
+Two different waveforms, $(1,-\rho)$ and its time reverse
+both have the same autocorrelation.
+In principle,
+spectral factorization could give us both $(1,-\rho)$ and $(\rho,-1)$,
+but we always want only the one that is CCI,
+which is the one we get from Kolmogoroff.
+The bad one is weaker on its first pulse.
+Its inverse is not causal.
+Following are two expressions for the filter inverse to $(\rho,-1)$,
+the first divergent
+(filter coefficients at infinite lag are infinitely strong),
+the second convergent but noncausal.
+\begin{eqnarray}
+\frac{1}{ \rho -Z} &=& \frac{ 1}{\rho}\ ( 1 +Z/\rho +Z^2/\rho^2+ \cdots)
+\\
+\frac{1}{ \rho -Z} &=& \frac{-1}{ Z}\ ( 1 + \rho/Z + \rho^2/Z^2 + \cdots)
+\end{eqnarray}
+(Please multiply each equation by $\rho -Z$, and see it reduce to $1=1$.)
+\par
+We begin with a power spectrum,
+and our goal is to find a CCI filter with that spectrum.
+If we input to the filter an infinite sequence of random numbers
+(white noise),
+we should output something with the original power spectrum.
+\par
+We easily inverse Fourier transform the square root of the power spectrum,
+getting a symmetrical time function, but
+we need a function that vanishes before $\tau=0$.
+On the other hand,
+if we already had a causal filter with the correct spectrum
+we could manufacture many others.
+To do so,
+all we need is a family of delay operators for convolution.
+A pure delay filter does not change the spectrum of anything---same for frequency-dependent delay operators.
+Here is an example of a frequency-dependent delay operator:
+First,
+convolve with (1,2) and then deconvolve with (2,1).
+Both these have the same amplitude spectrum,
+so the ratio has a unit amplitude (and nontrivial phase).
+If you multiply $(1+2Z)/(2+Z)$, by its Fourier conjugate
+(replace $Z$ by $1/Z$) the resulting spectrum is 1 for all $\omega$.
+\par
+Anything with a nature to delay is death to CCI.
+The CCI has its energy as close as possible to $\tau=0$.
+More formally, my first book,
+{\em FGDP}
+proves the CCI filter
+has for all time $\tau$ more energy between $t=0$ and $t=\tau$
+than any other filter with the same spectrum.
+\par
+Spectra can be factorized by an amazingly wide variety of techniques,
+each of which gives you a different insight into this strange beast.
+Spectra can be factorized by factoring polynomials, inserting power series
+into other power series, solving least squares problems,
+and by taking logarithms and exponentials in the Fourier domain.
+I have coded most of of these methods,
+and find each seemingly unrelated to the others.
+\par
+Theorems in Fourier analysis can be interpreted physically in two
+different ways, one as given, and the other with time and frequency reversed.
+For example, convolution in one domain amounts to multiplication in the other.
+If we express the CCI concept with reversed domains,
+instead of saying the ``energy comes as quick as possible after $\tau=0,$''
+we would say ``the frequency function is as close to $\omega=0$ as possible.''
+In other words, it is minimally wiggly with time.
+Most applications of spectral factorization begin with a spectrum,
+a real, positive function of frequency.
+I once recognized the opposite case
+and achieved minor fame by starting with a real, positive function of space,
+a total \bx{magnetic} field $\sqrt{H_x^2 +H_z^2}$ measured along the $x$-axis;
+and I reconstructed the magnetic field components $H_x$ and $H_z$
+that were minimally wiggly in space ({\em FGDP}, page 61).
+
+\subsection{Cholesky decomposition}
+\sx{Cholesky decomposition}
+Conceptually,
+the simplest computational method of spectral factorization
+might be ``Cholesky decomposition.''
+For example, the matrix of (\ref{eqn:lapfacmat})
+could have been found by Cholesky factorization of (\ref{eqn:huge}).
+The Cholesky algorithm takes a positive-definite matrix
+$\bold Q$ and factors it into a triangular matrix
+times its transpose,
+say $\bold Q = \bold T\T \, \bold T$.
+%Equation (\ref{ajt/eqn:polydiv}) is an example of a banded triangular matrix.
+\par
+It is easy to reinvent the Cholesky factorization algorithm.
+To do so,
+simply write all the components of a $3\times 3$ triangular matrix
+$\bold T$ and then explicitly multiply these elements
+times the transpose matrix $\bold T\T$.
+You then find you have everything you need
+to recursively build the elements of $\bold T$
+from the elements of $\bold Q$.
+Likewise,
+for a $4\times 4$ matrix, etc.
+\par
+The $1\times 1$ case shows that the Cholesky algorithm requires square roots.
+Matrix elements are not always numbers.
+Sometimes,
+matrix elements are polynomials,
+such as $Z$-transforms.
+To avoid square roots,
+there is a variation
+of the Cholesky method.
+In this variation, we factor $\bold Q$ into
+$\bold Q=\bold T\T\bold D\bold T$,
+where $\bold D$ is a diagonal matrix.
+\par
+Once a matrix has been factored into upper and lower triangles,
+solving simultaneous equations
+is simply a matter of two back substitutions:
+(We looked at a special case of back substitution
+with Equation
+(\ref{eqn:polydiv}).)
+For example, we often encounter simultaneous equations of the form
+$\bold B\T \, \bold B\bold m=\bold B\T\, \bold d$.
+Suppose the positive-definite matrix
+$\bold B\T\, \bold B$ has been factored into triangle form
+$\bold T\T\, \bold T\bold m=\bold B\T\, \bold d$.
+To find 
+$\bold m$,
+first backsolve
+$\bold T\T\, \bold x=\bold B\T\, \bold d$
+for the vector
+$\bold x$.
+Then,
+we backsolve
+$\bold T\bold m=\bold x$.
+When
+$\bold T$
+happens to be a band matrix,
+then the first back substitution is filtering down a helix,
+and the second is filtering back up it.
+Polynomial division is a special case of back substitution.
+\par
+Poisson's equation
+$\nabla^2 \bold p = -\bold q$
+requires boundary conditions,
+that we can honor when we filter starting from both ends.
+We cannot simply solve Poisson's equation as
+an initial-value problem.
+We could insert the Laplace operator
+into the polynomial division program,
+but the solution would diverge.
+
+%  O M I T T I N G   T H I S  P A R A G R A P H  S A V E S  two sheets of paper.
+%\par
+%Being a matrix method, the Cholesky method of factorization
+%has a cost proportional to the cube of the size of the matrix.
+%Because our applications are very large,
+%and because the Cholesky method
+%does not produce a useful result if we stop part way to completion,
+%we look further.
+%The Cholesky method is a powerful method,
+%but it does more than we require.
+%The Cholesky method does not require band matrices,
+%yet these matrices are what we very often find in applications;
+%so,
+%we seek methods that take advantage of the special properties
+%of band matrices.
+
+\subsection{Toeplitz methods}
+\sx{Toeplitz methods}
+Band matrices are often called Toeplitz matrices.
+In the subject of Time Series Analysis are found
+spectral factorization methods that require computations
+proportional to the dimension of the matrix squared.
+These calculations can often be terminated early with a reasonable partial result.
+Two Toeplitz methods, the Levinson method
+and the Burg method,
+are described in my first textbook, {\em FGDP}.
+Our interest is multidimensional data sets,
+so
+the matrices of interest are truely huge and the cost
+of Toeplitz methods is proportional to the square of the matrix size.
+Thus, before we find Toeplitz methods
+especially useful, we may need to find
+ways to take advantage of the sparsity of our filters.
+
+%                 R E M O V E    to save two sheets of paper in book.
+%\begin{exer}
+%\item
+%Observe the matrix
+%(\ref{eqn:contran1})
+%that corresponds to
+%subroutine
+%\texttt{tcai1}.
+%What is the matrix corresponding to
+%\texttt{helicon}?
+%\end{exer}
+
+\clearpage
+

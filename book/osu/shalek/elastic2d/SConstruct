@@ -1,0 +1,202 @@
+###############################################################
+# Created by Kyle Shalek
+# Oct. 2009
+# 2D elastice finite difference modeling
+###############################################################
+from rsf.proj import *
+from rsf.recipes import fdmod,stiffness
+
+# ------------------------------------------------------------
+par = {
+    'nx':151, 'ox':0, 'dx':0.002,  'lx':'x', 'ux':'km',
+    'ny':151, 'oy':0, 'dy':0.002,  'ly':'y', 'uy':'km',
+    'nz':151, 'oz':0, 'dz':0.002,  'lz':'z', 'uz':'km',
+    'nt':2001, 'ot':0, 'dt':0.0002, 'lt':'t', 'ut':'s',
+    'kt':100,
+    'jsnap':100,
+    'height':10,
+    'nb':20,
+    'frq':45,
+    'nbell':5
+    }
+fdmod.param(par)
+par['nframe']=5
+par['iframe']=4
+par['dabc']='y'
+#-------------------------------------------------------------
+def arr2str(array,sep=' '):
+    return string.join(map(str,array),sep)
+#-------------------------------------------------------------
+# Create Layers
+layers = ((0.01,0.01,0.01,0.01,0.01),
+	  (0.15,0.15,0.15,0.15,0.15),
+	  (0.25,0.25,0.25,0.25,0.25))
+
+n1 = len(layers[0])
+n2 = len(layers)
+
+layers1 = string.join(map(arr2str,layers),' ')
+
+Flow('layers',None,
+     '''
+     echo %s
+     n1=%g n2=%g o1=%g d1=%g
+     data_format=ascii_float in=$TARGET     
+     ''' % (layers1,n1,n2,par['ox'],par['dx'] ))
+
+# ------------------------------------------------------------
+# Thomsen parameters
+
+# Velocity (Vp) in km/s
+vp =(  2, 
+	2, 
+	6, 
+	2)
+vp1= arr2str(vp,',')
+
+#Velocity (Vs) in km/s
+vs = (1,
+      1,
+      4,
+      1)
+vs1=arr2str(vs,',')
+
+# Density in g/cc, converted to kg/ckm
+rho = (2*1000000000000,
+       2*1000000000000,
+       6*1000000000000,
+       2*1000000000000)
+rho1=arr2str(rho,',')
+
+#-----------------------------------------------------------
+Flow('vp-2d','layers',
+     '''
+     spline o1=%g d1=%g n1=%d |
+     unif2 o1=%g d1=%g n1=%d v00=%s |
+     dd form=native |
+     put label1=%s label2=%s unit1=%s unit2=%s
+     ''' % (par['ox'],par['dx'],par['nx'],
+	    par['oz'],par['dz'],par['nz'],vp1,
+	    par['lz'],par['lx'],par['uz'],par['ux']))
+
+Flow('vs-2d','layers',
+     '''
+     spline o1=%g d1=%g n1=%d |
+     unif2 o1=%g d1=%g n1=%d v00=%s |
+     dd form=native |
+     put label1=%s label2=%s unit1=%s unit2=%s
+     ''' % (par['ox'],par['dx'],par['nx'],
+	    par['oz'],par['dz'],par['nz'],vs1,
+	    par['lz'],par['lx'],par['uz'],par['ux']))
+
+Flow('ro-2d','layers',
+     '''
+     spline o1=%g d1=%g n1=%d |
+     unif2 o1=%g d1=%g n1=%d v00=%s |
+     dd form=native |
+     put label1=%s label2=%s unit1=%s unit2=%s
+     ''' % (par['ox'],par['dx'],par['nx'],
+	    par['oz'],par['dz'],par['nz'],rho1,
+	    par['lz'],par['lx'],par['uz'],par['ux']))
+
+# ------------------------------------------------------------
+par['kz']=2./3.*par['nz']
+
+# ------------------------------------------------------------
+fdmod.wavelet('wav_',par['frq'],par)
+
+# ------------------------------------------------------------
+# elastic source
+# ------------------------------------------------------------
+Flow('souz','wav_','math output=input*1')
+Flow('soux','wav_','math output=input*0')
+
+Flow('wave-2d',['souz','soux'],
+     '''
+     cat axis=2 space=n ${SOURCES[1:2]} |
+     transp plane=12 |
+     transp plane=23 |
+     transp plane=12
+     ''')
+fdmod.ewavelet('wave-2d','',par)
+
+# ------------------------------------------------------------
+# source/receiver coordinates
+# ------------------------------------------------------------
+
+xsou=par['ox']+(par['nx']/2*par['dx']);
+#zsou=par['oz']+(par['nx']/8*par['dx']);
+zsou=0.03
+
+fdmod.point('ss-2d',xsou,zsou,par)
+fdmod.horizontal('rr-2d',zsou,par)
+#fdmod.point('rr-2d',xsou,zsou,par)
+Plot('rr-2d',fdmod.rrplot('title="Receiver Line" wheretitle=b',par))
+Plot('ss-2d',fdmod.ssplot('title="Source" wheretitle=b',par))
+
+# ------------------------------------------------------------
+Plot('vp-2d',fdmod.cgrey('allpos=y bias=2.0',par))
+Plot('vs-2d',fdmod.cgrey('allpos=y bias=1.0 title="Vs"',par))
+Plot('ro-2d',fdmod.cgrey('allpos=y bias=2.0 title="Rho"',par))
+Result('vp-2d-s','vp-2d ss-2d','Overlay')
+Result('vp-2d-r','vp-2d rr-2d','Overlay')
+#Result('vs-2d','vs-2d ss-2d','Overlay')
+#Result('ro-2d','ro-2d ss-2d','Overlay')
+
+stiffness.iso2d('Ic-2d','vp-2d','vs-2d','ro-2d',par)
+
+# ------------------------------------------------------------
+# 2D elastic modeling
+stiffness.cplot2d('Ic-2d',1,1,par)
+
+fdmod.ewefd2d('Id-2d','Iw-2d','wave-2d','Ic-2d','ro-2d','ss-2d','rr-2d','ssou=n opot=n',par)
+fdmod.emovie( 'Iw-2d-movie','Iw-2d',par['nframe'],'pclip=99.9 color=j',2,par)
+
+Result('Id-2d','window n2=1 | transp |' + fdmod.dgrey('title="Model Response" ',par))
+
+
+"""
+#--------------------------------------------------------------
+# Ewefd modeling
+Flow('Id-2d Iw-2d','wave-2d Ic-2d ro-2d ss-2d rr-2d ',
+     '''
+     ewefd2d nbell=5 jsnap=10 dabc=y ssou=n opot=n nb=20 ompchunk=1 ompnth=0 verb=y free=n snap=y
+     ccc=${SOURCES[1]}
+     den=${SOURCES[2]}     
+     sou=${SOURCES[3]}
+     rec=${SOURCES[4]}
+     wfl=${TARGETS[1]}         
+     ''')
+"""
+# Movie of wave
+Plot('Iw-2d',
+	'''
+	window n3=1 |
+	grey color=j scalebar=y barlabel='Amplitude' barlabelsz=6
+	gainpanel=all title=Wave 
+	label1=Depth unit1=km label2=Lateral unit2=km 
+	''',view=1)
+
+Result('Id-2d-1','Id-2d',
+	'''
+	window n2=1 | 
+	transp |	
+	grey color=j
+	gainpanel=all title=data 
+	label1=time unit1=s label2=Lateral unit2=km 
+	''')
+
+"""
+
+Flow('Id-2d-1','Id-2d','dd form=native line=2 format=float')
+	
+Result('Id-2d-trace','Id-2d-1',
+	'''
+	spline o1=0 d1=0.0002 n1=2001 |
+	spline o2=0 d2=0.0002 n2=2001 |
+	wiggle label1=Time unit1=s label2=Amplitude unit2='' title='Vertical Trace with Source' 
+	''')
+"""
+
+End()
+#############################################################################

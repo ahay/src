@@ -1,0 +1,7 @@
+sinc(x)=sin(pi*x)/(pi*x)
+psinc=plot(sinc(x),x,-6,6,thickness=3,aspect_ratio=12/golden_ratio)
+w=var('w')
+sincf(w)=heaviside(w+pi)-heaviside(w-pi)
+wsinc=plot(sincf(w),w,-2*pi,2*pi,ymin=-0.2,thickness=3,color='red',aspect_ratio=4*pi/golden_ratio,ticks=[[-pi,pi],None])
+both=graphics_array([psinc,wsinc])
+both.save(frame=true,tick_formatter='latex',fontsize=12,filename='junk_sage.pdf')

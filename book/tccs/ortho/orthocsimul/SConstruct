@@ -1,0 +1,99 @@
+from rsf.proj import* 
+
+pc=99 #display percentage
+nfw=11
+
+def Grey(data,other): 
+	Result(data,'grey label2=Trace unit2="" label1=Time unit1="s" title="" wherexlabel=b wheretitle=t color=b labelsz=10 %s scalebar=y'%other)
+
+def Wig(data,other): 
+	Result(data,'''
+				window j2=8 | window f2=1| wiggle transp=y yreverse=y 
+				label2=Trace unit2="" label1=Time unit1="s" 
+				title="" wherexlabel=b wheretitle=t poly=y 
+				wheretitle=t wherexlabel=b clip=0.1 labelsz=10 %s'''%other)
+
+##########################################
+#    Make synthetic data
+##########################################
+Flow('huo',None,
+     '''
+     spike n1=600 n2=256 d2=1 o2=0 label2=Trace unit2=
+     nsp=4 k1=40,90,200,250 p2=0,0,0.9,0.9 mag=1,1,0.9,0.9 |
+     ricker1 frequency=20 |
+     noise seed=2008 var=0
+     ''')
+
+## Apply dithering
+Flow('dither','huo',
+     '''
+     window n1=1 |
+     noise rep=y seed=122011 var=0.5 | math output="1000*input"
+     ''')
+Flow('shottime1','huo','window n1=1 | math output=3*1000*x1')
+Flow('shottime2','shottime1 dither','add scale=1,1 ${SOURCES[1]}')
+
+
+## Blend 
+Flow('huos','huo huo shottime1 shottime2','blend shot_time_in=${SOURCES[3]} shot_time_out=${SOURCES[2]} |add scale=1,1 ${SOURCES[1]}' )
+Flow('huo-noise','huos huo','add scale=1,-1 ${SOURCES[1]}')
+Flow('huos-zero','huos','math output=0')
+
+Flow('huos-mf','huos','transp  | tsmf nfw=%d | transp'%nfw)
+Flow('huosdiff-mf','huos huos-mf','add scale=1,-1 ${SOURCES[1]}')
+
+# similarity
+Flow('huos-simi','huosdiff-mf huos-mf','similarity other=${SOURCES[1]} niter=20 rect1=5 rect2=5')
+Flow('huossim-mf','huosdiff-mf huos-simi huos-mf','simidenoise1 similarity=${SOURCES[1]} s1=0.2 s2=0.3 | add scale=1,1 ${SOURCES[2]}')
+Flow('huosdiffsim-mf','huos huossim-mf','add scale=1,-1 ${SOURCES[1]}')
+Flow('huos-simi2','huosdiffsim-mf huossim-mf','similarity other=${SOURCES[1]} niter=20 rect1=5 rect2=5')
+
+# projection
+Flow('huos-proj','huosdiff-mf huos-mf','divn den=${SOURCES[1]} niter=20 rect1=5 rect2=5')
+Flow('huosproj-mf','huos-mf huos-proj huosdiff-mf','mul ${SOURCES[1]} | add scale=-1,1 ${SOURCES[2]}')
+
+Wig('huosproj-mf','')
+
+# Orthogonolize
+Flow('huosdiff-ortho huos-ortho','huosdiff-mf huos-mf','ortho rect1=2 rect2=2 eps=0.1 sig=${SOURCES[1]} sig2=${TARGETS[1]}')
+Flow('huos-simi-ortho','huosdiff-ortho huos-ortho','similarity other=${SOURCES[1]} niter=20 rect1=5 rect2=5')
+
+
+Flow('huos-noise-simi','huo huo-noise','similarity other=${SOURCES[1]} niter=20 rect1=20 rect2=20')
+
+Wig('huossim-mf','')
+Flow('test','huos-proj huos-simi','cat ${SOURCES[1]}')
+Grey('test','color=j')
+
+Wig('huo','')
+Wig('huos','')
+Wig('huos-zero','')
+Wig('huo-noise','')
+Wig('huos-mf','')
+Wig('huosdiff-mf','')
+Wig('huosdiff-ortho','')
+Wig('huos-ortho','')
+
+Grey('huos-simi','scalebar=y color=j clip=0.7 minval=0 maxval=0.7' )
+Grey('huos-simi-ortho','scalebar=y color=j clip=0.7 minval=0 maxval=0.7' )
+Grey('huos-noise-simi','scalebar=y color=j clip=0.7 minval=0 maxval=0.7' )
+
+#Wig('huossim-mf','')
+Wig('huosdiffsim-mf','')
+Grey('huos-simi2','scalebar=y color=j clip=0.7 minval=0 maxval=0.7' )
+
+## compute SNR (may differ in different computers)
+Flow('huo-diff1','huo huos','add scale=1,-1 ${SOURCES[1]} ')
+Flow('huo-snr1','huo huo-diff1','snr2 noise=${SOURCES[1]}')
+
+Flow('huo-diff2','huo huos-mf','add scale=1,-1 ${SOURCES[1]} ')
+Flow('huo-snr2','huo huo-diff2','snr2 noise=${SOURCES[1]}')
+
+Flow('huo-diff3','huo huossim-mf','add scale=1,-1 ${SOURCES[1]} ')
+Flow('huo-snr3','huo huo-diff3','snr2 noise=${SOURCES[1]}')
+
+
+Flow('huo-diff4','huo huos-ortho','add scale=1,-1 ${SOURCES[1]} ')
+Flow('huo-snr4','huo huo-diff4','snr2 noise=${SOURCES[1]}')
+
+End()

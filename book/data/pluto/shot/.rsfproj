@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sfput', 'sfcat', 'sfwindow', 'sfgrey']
+data=['data/pluto/P15shots150f_endon_0ph-1stHlf.SEGY', 'data/pluto/P15shots150f_endon_0ph-2ndHlf.SEGY']
+size= 2188043200

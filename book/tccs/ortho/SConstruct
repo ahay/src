@@ -1,0 +1,8 @@
+from rsf.tex import*
+
+
+End(use='amsmath,listings',color='ALL',
+    include=r'''
+\DeclareRobustCommand{\dlo}[1]{\ifthenelse{\boolean{@revd}}{}{}}
+\DeclareRobustCommand{\wen}[1]{\ifthenelse{\boolean{@revd}}{\textcolor{black}{#1}}{#1}}
+''')

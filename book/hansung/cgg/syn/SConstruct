@@ -1,0 +1,158 @@
+from rsf.proj import *
+
+###############################################################
+#####   Synthetic data generatiion
+
+Flow('wavelet',None,
+     '''
+     spike nsp=1 d1=0.004 n1=32 k1=15 | ricker1 frequency=30 | scale dscale=10.
+     ''')
+
+# Result('wavelet','graph title="Ricker wavelet (30 Hz)"')
+
+Flow('spike',None,
+     '''
+     spike n1=256 n2=128 d1=0.004 d2=4.e-9 o2=4.e-8
+     nsp=3 k1=30,80,140 k2=80,60,40
+     ''')
+
+# Result('spike','grey pclip=100')
+
+#
+#prog = Program('Mvelxf.f90')
+#
+#Flow('syn_cmp','spike wavelet  %s' % prog[0],
+#     '''
+#     ./${SOURCES[2]} adj=0 nx=128 dx=12.5 ox=-800. | conv filt=${SOURCES[1]} lag=0
+#     ''')
+
+Flow('syn_cmp','spike wavelet',
+     '''
+     velxf adj=0 nx=128 dx=12.5 ox=-800. | conv filt=${SOURCES[1]} lag=0 | math output='-1.*input' | scale axis=12
+     ''')
+
+# Result('syn_cmp','grey pclip=100 title="Synthetic CMP data"')
+
+Flow('noise0',None,
+     '''
+     spike n1=256 n2=128 k1=10,11,240,241,140,141 k2=10,10,10,10,40,40 nsp=6
+     ''')
+
+Flow('noise1',None,
+     '''
+     spike n1=256 n2=128 | noise type=1 seed=2011 | scale axis=12
+     ''')
+
+Flow('noise2',None,
+     '''
+     spike n1=256 | noise type=1 seed=2012 | pad n2=100 | reverse which=2 | pad n2=128 | scale axis=12
+     ''')
+
+Flow('syn_data','syn_cmp noise0 noise1 noise2',
+     '''
+     add ${SOURCES[1]}  ${SOURCES[2]} ${SOURCES[3]} scale=1.,10.,0.2,2.
+     ''')
+
+Plot('raster','syn_data','grey title="synthetic cmp in raster"')
+Plot('wiggle','syn_data','wiggle transp=y yreverse=1 wheretitle="b" wherexlabel="t" poly=y title="synthetic cmp in wiggle"')
+Result('syn-data','raster wiggle','SideBySideAniso', vppen='txscale=1.5')
+
+######################################################################
+####### Best fitting cmp using L2 norm inversion criteria
+
+Flow('syn_L2 syn_L2_vel','syn_data',
+     '''
+     velinvww niter=30 ns=200 ds=4.0e-9 os=4.e-8 velout=${TARGETS[1]}
+     rwt=2. mwt=0. savevel=1
+     ''')
+
+Plot('cmpinv','syn_L2','grey title="Remodelled cmp in LS sense"')
+Plot('velinv','syn_L2_vel','grey label2=Slowness unit2=s/m title="LS Velocity spectrum"')
+Result('syn-L2','cmpinv velinv','SideBySideAniso',vppen='txscale=1.5')
+
+######################################################################
+####### Best fitting cmp using IRLS norm inversion criteria
+
+Flow('syn_rw_IRLS','syn_data',
+     '''
+     velinvww niter=20 ns=200 ds=4.0e-9 os=4.e-8 velout=syn_rw_IRLS_vel.rsf 
+     rwt=1. mwt=0. savevel=1 irls=1 nstep=2 huber=0 srate=0.01
+     ''')
+
+Flow('syn_mw_IRLS','syn_data',
+     '''
+     velinvww niter=20 ns=200 ds=4.0e-9 os=4.e-8 velout=syn_mw_IRLS_vel.rsf 
+     rwt=2. mwt=1. savevel=1 irls=1 nstep=2 huber=0 srate=0.01
+     ''')
+
+Flow('syn_rmw_IRLS','syn_data',
+     '''
+     velinvww niter=20 ns=200 ds=4.0e-9 os=4.e-8 velout=syn_rmw_IRLS_vel.rsf 
+     rwt=1. mwt=1. savevel=1 irls=1 nstep=2 huber=0 srate=0.01
+     ''')
+
+Plot('cmpinv_rw_irls','syn_rw_IRLS','grey title=" "')
+Plot('velinv_rw_irls','syn_rw_IRLS_vel','grey label2="Slowness (s^2/m^2)" title=" "')
+Plot('syn_rw_irls','cmpinv_rw_irls velinv_rw_irls','OverUnderAniso',vppen='txscale=1.0')
+Plot('cmpinv_mw_irls','syn_mw_IRLS','grey title=" "')
+Plot('velinv_mw_irls','syn_mw_IRLS_vel','grey label2="Slowness (s^2/m^2)" title=" "')
+Plot('syn_mw_irls','cmpinv_mw_irls velinv_mw_irls','OverUnderAniso',vppen='txscale=1.0')
+Plot('cmpinv_rmw_irls','syn_rmw_IRLS','grey title=" "')
+Plot('velinv_rmw_irls','syn_rmw_IRLS_vel','grey label2="Slowness (s^2/m^2)" title=" "')
+Plot('syn_rmw_irls','cmpinv_rmw_irls velinv_rmw_irls','OverUnderAniso',vppen='txscale=1.0')
+
+Result('syn-IRLS','syn_rw_irls syn_mw_irls syn_rmw_irls','SideBySideAniso',vppen='txscale=1.')
+
+######################################################################
+####### Best fitting cmp using CGG norm inversion criteria
+
+Flow('syn_rw_CGG','syn_data',
+     '''
+     velinvww niter=30 ns=200 ds=4.0e-9 os=4.e-8 velout=syn_rw_CGG_vel.rsf
+     rwt=1. mwt=0.  savevel=1 srate=0.01
+     ''')
+
+Flow('syn_mw_CGG','syn_data',
+     '''
+     velinvww niter=30 ns=200 ds=4.0e-9 os=4.e-8 velout=syn_mw_CGG_vel.rsf
+     rwt=2. mwt=1.5  savevel=1 srate=0.01
+     ''')
+
+Flow('syn_rmw_CGG','syn_data',
+     '''
+     velinvww niter=30 ns=200 ds=4.0e-9 os=4.e-8 velout=syn_rmw_CGG_vel.rsf
+     rwt=1. mwt=1.5  savevel=1 srate=0.01
+     ''')
+
+Plot('cmpinv_rw_cgg','syn_rw_CGG','grey title=" "')
+Plot('velinv_rw_cgg','syn_rw_CGG_vel','grey label2="Slowness (s^2/m^2)" title=" "')
+Plot('syn_rw_cgg','cmpinv_rw_cgg velinv_rw_cgg','OverUnderAniso',vppen='txscale=1.0')
+Plot('cmpinv_mw_cgg','syn_mw_CGG','grey title=" "')
+Plot('velinv_mw_cgg','syn_mw_CGG_vel','grey label2="Slowness (s^2/m^2)" title=" "')
+Plot('syn_mw_cgg','cmpinv_mw_cgg velinv_mw_cgg','OverUnderAniso',vppen='txscale=1.0')
+Plot('cmpinv_rmw_cgg','syn_rmw_CGG','grey title=" "')
+Plot('velinv_rmw_cgg','syn_rmw_CGG_vel','grey label2="Slowness (s^2/m^2)" title=" "')
+Plot('syn_rmw_cgg','cmpinv_rmw_cgg velinv_rmw_cgg','OverUnderAniso',vppen='txscale=1.0')
+
+Result('syn-CGG','syn_rw_cgg syn_mw_cgg syn_rmw_cgg','SideBySideAniso',vppen='txscale=1.')
+
+######################################################################
+####### Differences between the original and Best fitting cmp
+
+Flow('syn_diff_IRLS','syn_data syn_rmw_IRLS',
+     '''
+     math x=${SOURCES[0]} y=${SOURCES[1]} output='y-x'
+     ''')
+
+Flow('syn_diff_CGG','syn_data syn_rmw_CGG',
+     '''
+     math x=${SOURCES[0]} y=${SOURCES[1]} output='y-x'
+     ''')
+
+Plot('diff1','syn_diff_IRLS','grey title=" "')
+Plot('diff2','syn_diff_CGG','grey title=" "')
+Result('syn-diff','diff1 diff2','SideBySideAniso',vppen='txscale=1.5')
+
+######################################################################
+
+End()

@@ -1,0 +1,11 @@
+from rsf.proj import *
+
+for n in (100,10000):
+    lines = 'lines%d' % n
+    Flow(lines,None,'randline seed=2000 n1=100 n2=100 lines=%d' % n)
+    Result(lines,'grey title="%d random lines" screenratio=1' % n)
+
+Flow('randpt','lines100','noise rep=y seed=2000 type=n')
+Result('randpt','grey title="10000 random points" screenratio=1')
+
+End()

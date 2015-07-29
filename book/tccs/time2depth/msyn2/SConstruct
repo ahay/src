@@ -1,0 +1,69 @@
+from rsf.proj import *
+import zomig
+
+xmax=20.0
+zmax=3.0
+
+nz=500
+dz=zmax/(nz-1)
+
+# Exact interval velocity - spiral model
+
+Flow('ve',None,
+     '''
+     spiral xmax=%g ymax=%g ny=%d |
+     put label= unit=km/s
+     ''' % (xmax,zmax,nz))
+
+def zgrey(title):
+    return '''
+    window min1=5 max1=14 max2=2 |
+    grey color=j allpos=y bias=2 clip=1.2
+    title="%s" scalebar=y bartype=v barreverse=y
+    label1="\F2 Lateral position" unit1=km barlabel="\F2 "
+    label2="\F2 Depth" unit2=km parallel2=n formatbar="%%3.1f"
+    screenwd=9 screenht=2 transp=n 
+    labelsz=6 minval=2 maxval=3.2 
+    wanttitle=n
+    ''' % title
+
+Plot('ve',zgrey('Interval Velocity'))
+Result('ve','Overlay')
+
+# Forward problem
+
+Flow('vd x z','ve','ve2d nt=1001 dt=0.002 x=${TARGETS[1]} z=${TARGETS[2]} | put label2=Time unit2=s')
+Flow('xz','x z','cmplx ${SOURCES[1]}')
+
+Plot('xz',
+     '''
+     window j1=2 | transp |
+     graph min1=5 max1=14 min2=0 max2=2 plotcol=7 wanttitle=n scalebar=y
+     screenwd=9 screenht=2 yreverse=y wantaxis=n
+     ''')
+
+Result('ve2','ve xz','Overlay')
+
+Flow('vf x0 t0','vd','cameron2d method=cheb nz=%d dz=%g x0=${TARGETS[1]} t0=${TARGETS[2]} | put label2=Depth unit2=km' % (nz,dz))
+
+Plot('vf',zgrey('Estimated Interval Velocity'))
+Result('vf','Overlay')
+
+Result('vd',
+       '''
+       window min1=5 max1=14 |
+       grey color=j allpos=y scalebar=y bias=2 barreverse=y
+       barlabel=Velocity barunit=km/s bartype=v pclip=100 transp=n
+       label1="Lateral position" unit1=km parallel2=n
+       wanttitle=y title="Dix Velocity (in Time)" minval=2
+       ''')
+
+Result('vd2','vd',
+       '''
+       transp | time2depth velocity=$SOURCE nz=%d dz=%g z0=0 intime=y |
+       put label1=Depth unit1=km | transp | 
+       ''' % (nz,dz) + zgrey('Dix Velocity in Depth'))
+
+Result('vf2','vf xz','Overlay')
+
+End()
