@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfwindow', 'sfadd', 'sfput', 'sfgrey', 'sfspray', 'sfmath', 'sfdatstretch', 'sftransp', 'sfstack']
-data=['data/hall/horizon.asc']
-size=  303378012

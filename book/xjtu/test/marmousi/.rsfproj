@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfwindow', 'sfput', 'sfgrey', 'sfdepth2time', 'sfai2refl', 'sfricker1', 'sftime2depth', 'sfmath', 'sfrtm2d', 'sflsrtm2d']
-data=['data/marm/marmvel.hh']
-size=   11523408

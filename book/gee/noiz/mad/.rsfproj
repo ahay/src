@@ -1,3 +1,0 @@
-uses=['sfcp', 'sfdd', 'sfrm', 'sfcat', 'sfwindow', 'sfscale', 'sfpad', 'sfadd', 'sfmath', 'sfmask', 'sfheaderwindow', 'sfput', 'sfwiggle', 'sfbin', 'sfgrey', 'sfwilson', 'sfhelicon', 'sfigrad', 'sfinvbin']
-data=['data/geosat/a.int.HH', 'data/geosat/d.int.HH', 'data/geosat/gma.int.HH', 'data/geosat/gmd.int.HH']
-size=   56994896

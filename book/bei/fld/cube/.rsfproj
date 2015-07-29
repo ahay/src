@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfwindow', 'sfbyte', 'sfgrey3']
-data=['data/shots/shots.hh']
-size=     672000

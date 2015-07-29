@@ -1,3 +1,0 @@
-uses=['sfspike', 'sfricker1', 'sfscale', 'sfnoise', 'sfgraph', 'sfwcorr', 'sfsimilarity']
-data=[]
-size=      10680

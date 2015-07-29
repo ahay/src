@@ -1,3 +1,0 @@
-uses=['sfsegyread', 'sfput', 'sfmutter', 'sftransp', 'sfsmooth', 'sfdmigda', 'sfbandpass', 'sfstack', 'sfgrey', 'sfwindow']
-data=['datasets/2D/1997_2.5D/model.segy', '/pub/datasets/2D/1997_2.5D/1997_2.5D_shots.segy.gz']
-size= 1503604044

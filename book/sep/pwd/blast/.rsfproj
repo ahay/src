@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfwindow', 'sfmath', 'sfmask', 'sfdip', 'sfplanemis3', 'sfbandpass', 'sfpwd', 'sfbyte', 'sfgrey']
-data=['data/blast/blast.46.H']
-size=     557700

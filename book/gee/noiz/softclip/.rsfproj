@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfwindow', 'sfpow', 'sfmath', 'sfwiggle']
-data=['data/wz/wz.25.H']
-size=     290000

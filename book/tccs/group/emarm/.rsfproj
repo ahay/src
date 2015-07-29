@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfscale', 'sfgrey', 'sfwindow', 'sfeikonalvti', 'sfcontour']
-data=['data/marm/marmvx.HH', 'data/marm/marmvz.HH', 'data/marm/marmeta.HH']
-size=    3537600

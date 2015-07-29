@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfgrey', 'sfnmostretch', 'sfradon', 'sfmutter', 'sfcat', 'sfadd', 'sfvscan']
-data=['data/cant12/cmp1.rsf']
-size=   21912000

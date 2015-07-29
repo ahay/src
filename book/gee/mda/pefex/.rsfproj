@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfmath', 'sfmutter', 'sfhpef', 'sfhelicon', 'sfwindow', 'sftpow', 'sfgrey', 'sfreverse', 'sfspectra', 'sfgraph']
-data=['data/gom/gomshot.h', 'data/gom/gomnearoffset.H']
-size=    7979296

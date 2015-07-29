@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfwindow', 'sfput', 'sfscale', 'sfmath', 'sfcat', 'sflpf', 'sfadd', 'sfgrey', 'sfhpef', 'sfhelicon', 'sfnoise']
-data=['data/hall/horizon.asc', 'data/ctscan/slice.rsf', 'data/ying/mod.dat', 'data/ying/your.dat']
-size=   85649344

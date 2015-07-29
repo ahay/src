@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfwindow', 'sfgrey', 'sfhpef', 'sfnoise', 'sfhelicon', 'sfattr', 'sfhole', 'sfmiss', 'sfadd']
-data=['data/textures/granite.h', 'data/textures/wood.h', 'data/textures/herr.h', 'data/textures/brick.h', 'data/textures/ridges.h', 'data/textures/fabric.h', 'data/book/iee/WGstack.H']
-size=    3112248

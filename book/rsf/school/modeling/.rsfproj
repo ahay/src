@@ -1,3 +1,0 @@
-uses=['sfsegyread', 'sfput', 'sfgrey', 'sfwindow', 'sfadd', 'sftransp', 'sfsinc', 'sfspike', 'sfricker1', 'sfpad', 'sfmath', 'sfcat', 'sfawefd2d', 'sfsmooth', 'sfcp', 'sfewefd2d']
-data=['pub/datasets/2D/2004_BP_Vel_Benchmark/vel_z6.25m_x12.5m_exact.segy.gz', 'pub/datasets/2D/2004_BP_Vel_Benchmark/density_z6.25m_x12.5m.segy.gz']
-size= 2555679256

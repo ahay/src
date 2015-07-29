@@ -1,3 +1,0 @@
-uses=['sfsegyread', 'sfput', 'sfwindow', 'sfgrey', 'sfdd', 'sfgraph', 'sfspectra', 'sfscale', 'sftimefreq', 'sfsmooth', 'sfmath', 'sfstack', 'sfcat', 'sfdivn', 'sfst', 'sfreal']
-data=['PRIVATE']
-size=  457683432

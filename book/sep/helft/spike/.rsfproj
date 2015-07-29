@@ -1,3 +1,0 @@
-uses=['sfspike', 'sfgrey', 'sfdd', 'sfput', 'sfpad', 'sfrtoc', 'sffft3', 'sftransp', 'sfwindow', 'sfcat', 'sfadd', 'sfreal', 'sfmath']
-data=['data/vsp/schlum.HH']
-size=   84066360

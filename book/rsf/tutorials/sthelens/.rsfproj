@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfclip2', 'sfgrey', 'sflapfill', 'sfscale', 'sfremap1', 'sftransp', 'sfwindow', 'sfplsurf', 'sfadd']
-data=['agile-geoscience/notebooks/master/data/st-helens_before.txt', 'agile-geoscience/notebooks/master/data/st-helens_after.txt']
-size=   18895776

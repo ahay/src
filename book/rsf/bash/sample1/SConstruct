@@ -1,6 +1,0 @@
-from rsf.proj import *
-
-Flow('cos',None,'math n1=101 d1=0.1 output="cos(x1)"')
-Result('cos','graph label1=x title="cos(x)"')
-
-End()

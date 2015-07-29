@@ -1,3 +1,0 @@
-uses=['sfmath', 'sfburstnoise', 'sfdespike', 'sfdeburst', 'sfpefdeburst', 'sfcat', 'sfclip', 'sfdots']
-data=[]
-size=       5000

@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfwindow', 'sfsmooth', 'sftransp', 'sfreverse', 'sfwilson', 'sfgrey', 'sfhelicon']
-data=['data/mammogram/jbreast1.asci', 'data/mammogram/jbreast5.asci']
-size=     815908

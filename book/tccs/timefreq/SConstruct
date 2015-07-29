@@ -1,6 +1,0 @@
-from rsf.tex import *
-
-End(color='''
-          proj-0 st-0 proj-0-30 st-1 proj-1 spec st-6 proj-6 lcf-6 st-2 proj-2 tf-l tf-s
-          s1 s2 s3 l1 l2 l3 lcf-l chev flats spec
-          ''')

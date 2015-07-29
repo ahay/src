@@ -1,3 +1,0 @@
-uses=['sfspike', 'sfpad', 'sfricker1', 'sfwindow', 'sfscale', 'sfput', 'sfmath', 'sfcat', 'sftransp', 'sfgraph', 'sfsegyread', 'sfspline', 'sfsmooth', 'sfewefd2d_gpu', 'sfewefd2d_omp', 'sfgrey', 'sfbyte']
-data=[]
-size= 19082832800

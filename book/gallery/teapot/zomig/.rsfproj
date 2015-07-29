@@ -1,3 +1,0 @@
-uses=['sfdd', 'sftransp', 'sflinear', 'sfgraph', 'sfdix', 'sfwindow', 'sfgrey', 'sfbandpass', 'sfspray', 'sfbyte', 'sfgrey3', 'sftime2depth', 'sfput', 'sfmath', 'sffft1', 'sfreal', 'sfzomig3', 'sfdepth2time']
-data=['teapot/final_stack.rsf']
-size= 2909360840

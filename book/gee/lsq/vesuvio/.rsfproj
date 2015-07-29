@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfmath', 'sfreal', 'sfimag', 'sfgrey', 'sfwindow', 'sfboxsmooth', 'sfcmplx', 'sfungrad', 'sfcontour', 'sfiwarp', 'sfwiggle', 'sfrtoc']
-data=['data/vesuvio/vesuvio.H']
-size=   20328324

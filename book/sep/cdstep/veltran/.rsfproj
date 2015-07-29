@@ -1,3 +1,0 @@
-uses=['sfdd', 'sftpow', 'sfmutter', 'sfgrey', 'sfcgscan', 'sfwindow', 'sfscale', 'sfgraph', 'sfbox', 'sfadd']
-data=['data/rad/cmp807_raw.HH']
-size=    1440120

@@ -1,8 +1,0 @@
-from rsf.book import *
-
-Papers(copyr='Hansung University',
-       group='Hansung University',
-       line='Selected papers',
-       fig=('cgg/syn','syn_CGG','width=\\textwidth'))
-
-End(use='algorithmic,algorithm')

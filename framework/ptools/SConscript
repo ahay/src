@@ -1,4 +1,0 @@
-Import('env bindir')
-
-env.Install(bindir,
-       Split('pscons sfbatch sfkill sftop slurm_nodelist2rsf_cluster runonnode'))

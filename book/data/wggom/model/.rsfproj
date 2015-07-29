@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfwindow', 'sfgrey']
-data=['data/gom/gom.velo.hh']
-size=    3680000

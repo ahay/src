@@ -1,3 +1,0 @@
-uses=['sfmath', 'sfgraph', 'sfcmplx', 'sfdots', 'sfbox', 'sfgrey', 'sfcontour', 'sfspike', 'sfricker1', 'sfspray', 'sfinmo', 'sfwiggle', 'sfbyte', 'sfcubeplot', 'sfcontour3', 'sfplsurf']
-data=[]
-size=     632604

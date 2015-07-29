@@ -1,3 +1,0 @@
-uses=['sfspike', 'sfricker1', 'sfadd', 'sfnoise', 'sfbandpass', 'sfput', 'sfwindow', 'sfwiggle', 'sfmath', 'sfcut', 'sfspray', 'sfinmo', 'sfcat', 'sfgrey', 'sfvscan', 'sfpick', 'sfgraph', 'sfclip', 'sfbyte', 'sfgrey3', 'sfdiplet', 'sftransp', 'sfdd']
-data=['PRIVATE']
-size=  125702144

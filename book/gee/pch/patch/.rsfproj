@@ -1,3 +1,0 @@
-uses=['sfspike', 'sfparcel', 'sfthplot', 'sftentwt', 'sfocparcel', 'sfoctentwt', 'sfidempatch', 'sfwindow']
-data=[]
-size=      66544

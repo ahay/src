@@ -1,6 +1,0 @@
-try: # distribution version
-    Import('env root')
-    env = env.Clone()
-except: # local version
-    root = None
-

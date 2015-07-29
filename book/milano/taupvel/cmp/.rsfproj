@@ -1,3 +1,0 @@
-uses=['sfwindow', 'sfscale', 'sfgraph', 'sfmath', 'sfpad', 'sfgrey', 'sfput', 'sfradon', 'sfmutter', 'sfspray', 'sfitaupmo', 'sfdip', 'sfstack', 'sftransp', 'sfderiv', 'sfsmooth', 'sfptaupmo', 'sfptaupmoVTI', 'sfcontour', 'sfpveltranVTI', 'sfenvelope', 'sfpick', 'sfremap1', 'sfpwpaint', 'sfiwarp', 'sfmap2coh', 'sfdivn', 'sftaupmo']
-data=['PRIVATE', 'PRIVATE', 'PRIVATE', 'PRIVATE', 'PRIVATE', 'PRIVATE']
-size=   99199760
