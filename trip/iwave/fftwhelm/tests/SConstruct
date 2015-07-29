@@ -1,0 +1,370 @@
+#############################################################################
+###################### COMMON DEFINITIONS - DO NOT ALTER ####################
+#############################################################################
+from rsf.proj import *
+from batch import getFlowSignature
+from batch import getThreads
+import os
+
+WORKPATH        = os.getenv('DATAPATH')
+# todo: WORKPATH should be checked
+#Decider('timestamp-match')
+#############################################################################
+###################### END COMMON DEFINITIONS ###############################
+#############################################################################
+
+penv = {'stampede' :  { 'batch' : 'slurm',
+                        'queue' : 'normal',
+                        'acct'  : 'FDTD3D-Cont',
+                        'mail'  : 'yh15@caam.rice.edu',
+                        'bcmd'  : '/usr/bin/sbatch',
+                        'local' : '',
+                        'suffix': 'bat', },
+         'davinci' :  { 'batch' : 'pbs',
+                        'queue' : 'trip',
+                        'acct'  : 'yh15',
+                        'mail'  : 'huangyinmsn@hotmail.com',
+                        'bcmd'  : '/usr/bin/qsub',
+                        'local' : '',
+                        'suffix': 'pbs', },
+       }
+
+######################## LOCAL DEFINITIONS ##################################
+
+######## abbreviations for commands used in flows - put these first, if
+######## you use abbreviations. Note that Madagascar commands do not 
+######## require abbreviations 
+# Example:
+#          CWPROOT         = os.getenv('CWPROOT')
+#          ...
+#          sunull          = os.path.join(CWPROOT,'bin/sunull')
+CWPROOT         = os.getenv('CWPROOT')
+sunull          = os.path.join(CWPROOT,'bin/sunull')
+sushw           = os.path.join(CWPROOT,'bin/sushw')
+suchw           = os.path.join(CWPROOT,'bin/suchw')
+sugain          = os.path.join(CWPROOT,'bin/sugain')
+suwind          = os.path.join(CWPROOT,'bin/suwind')
+suwaveform      = os.path.join(CWPROOT,'bin/suwaveform')
+supsimage       = os.path.join(CWPROOT,'bin/supsimage')
+sutxtaper       = os.path.join(CWPROOT,'bin/sutxtaper')
+RSFBIN          = os.getenv('RSFROOT') + '/bin/'
+stdmdl          = os.path.join(RSFBIN,'sfstandardmodel')
+IWAVE           = os.getenv('IWAVE')
+towed_array     = os.path.join(IWAVE,'trace/main/towed_array.x')
+acd             = os.path.join(IWAVE,'acdpml/main/acdpml.x')
+dso             = os.path.join(IWAVE,'acd/main/dso.x')
+helm            = os.path.join(IWAVE,'grid/main/helm.x')
+helmfftw        = os.path.join(IWAVE,'fftwhelm/main/GridHelmFFTW.x')
+helmadj         = os.path.join(IWAVE,'fftwhelm/main/HelmAdjTest.x')
+mute            = os.path.join(IWAVE,'acd/main/mute.x')
+tapermute       = os.path.join(IWAVE,'acd/main/tapernmute.x')
+window          = os.path.join(IWAVE,'acd/main/window.x')
+acdcgne         = os.path.join(IWAVE,'acdpml/main/acdpmlcgne.x')
+MPIROOT         = os.getenv('MPIROOT')
+mpirun          = os.path.join(MPIROOT,'bin/mpirun')
+
+######### original dimensions
+N1_0=751
+N2_0=2301
+DX_0=4
+
+######### number of grid pts in PML layer
+PML = 40
+######### subsample factor
+SUBS = 6
+######### window depth for reflectivity
+ZW = 200
+
+N1=int((N1_0-1)/SUBS) + 1
+N2=int((N2_0-1)/SUBS) + 1
+DX=SUBS*DX_0
+NDW = int(ZW/DX)
+
+SDX=str(DX)
+
+######### fetch list - non-reproducible data fetched from web archive.
+# the format for this dictionary is 
+#    filename : [<subdir of "data" directory in archive>, <archive URL>]
+# Example: 
+fetches = {
+           'velocity.HH' : ['marmousi', 'http://www.trip.caam.rice.edu'],
+          }
+#fetches = {}
+for file in fetches.keys():
+    Fetch(file, fetches[file][0],server=fetches[file][1])
+
+# csq
+Flow('velorig', 'velocity.HH', 'dd form=native')
+Flow('vel','velocity.HH','dd form=native | window j1=' + str(SUBS) + ' j2=' + str(SUBS))
+
+Flow('csq','vel','add mode=p < vel.rsf vel.rsf | put id1=0 id2=1 dim=2 gdim=2 ')
+
+####### add pml layers to the original model
+#Flow('rext','csqbase', 'window f2=' + str(N2-1) + ' n2=1 | spray axis=2 d=' + SDX +' n='+str(PML) + '|put o3=0 n3=1 d3=1 n4=1 o4=0 d4=1')
+#Flow('lext','csqbase', 'window f2=0 n2=1 | spray axis=2 d=' + SDX +' n='+str(PML) + '| put o2=' + str(-PML*DX) + ' o3=0 n3=1 d3=1 n4=1 o4=0 d4=1')
+#Flow('rcsq',['csqbase', 'rext'],'cat axis=2 d=' + SDX + ' csqbase.rsf rext.rsf',stdin=0)
+#Flow('lcsq',['lext', 'rcsq'],'cat axis=2 d=' + SDX + ' lext.rsf rcsq.rsf',stdin=0)
+#Flow('sext','lcsq', 'window f1='+ str(N1-1) + ' n1=1 | spray axis=1 d=' + SDX + ' n='+str(PML))
+#Flow('next','lcsq', 'window f1=0 n1=1 | spray axis=1 d=' + SDX + ' n='+str(PML) + '|put o1=' + str(-PML*DX) + ' n3=1 n4=1 n5=1 n6=1 d3=1 d4=1 d5=1 d6=1 o3=0 o4=0 o5=0 o6=0')
+#
+## csq for freesurface case
+#Flow('csq',['sext', 'lcsq'],'cat axis=1 d=' + SDX + ' lcsq.rsf sext.rsf | sfput o2=0.0 ',stdin=0)
+## csq for pml at the top of the model
+#Flow('csq_2',['next', 'csq'],'cat axis=1 d=' + SDX + '  next.rsf csq.rsf',stdin=0)
+#
+Flow('csqsm','csq','smooth rect1=10 rect2=10 repeat=2')
+Flow('csqsm2','csq','smooth rect1=5 rect2=5 repeat=2')
+
+Flow('dcsq', ['csq', 'csqsm2'],'add mode=a scale=1,-1 < csq.rsf csqsm2.rsf |window f1=' + str(NDW) + '|pad beg1=' + str(NDW))
+#
+#Flow('csq_2sm','csq_2','smooth rect1=10 rect2=10 repeat=2')
+#Flow('csq_2sm2','csq_2','smooth rect1=5 rect2=5 repeat=2')
+#Flow('dcsq_2', ['csq_2', 'csq_2sm2'],'add mode=a scale=1,-1 < csq_2.rsf csq_2sm2.rsf | window f1=' + str(PML+NDW) + '|pad beg1=' + str(PML+NDW))
+Flow('ecsq','csq','spray axis=3 n=14 d=1.0 o=0.0 | put dim=2 gdim=3 id1=0 id2=1 id3=2')
+Flow('csq1d','csq','sfwindow f1=100 n1=1 | put dim=1 gdim=1')
+Flow('dcsq1d','dcsq','sfwindow f1=100 n1=1 | put dim=1 gdim=1')
+
+# create base wavelet (just time series, without source position
+# information) via suwaveform
+
+# add source coordinates from hdrfile to source AND receiver 
+# coordinates from wavelet to create "dressed" wavelet for array
+# source option in iwave. Note that iwave reads a source GATHER by
+# detecting new source coordinates (sx, sy, selev) but assigns source
+# trace GRID POSITIONS in the array by receiver coordinates (gx, gy, 
+# gelev). The towed array app sets these coordinates up so that each 
+# shot may have an array of sources, with the source traces in the 
+# same position relative to the data source coordinates - hence 
+# "towed_array".
+
+# use naming convention: time series stored in wavelet_base, 
+# headers for experiment foo stored in hdrfoo.su, wavelet in
+# waveletfoo.su
+
+
+exe_serial  = {}
+
+jobs = [
+  { 'job': 'helmfftw1D_00',
+    'pre': 'sfadd < csq1d.rsf scale=0.0 > s00csq1d.rsf',
+    'src': ['csq1d.rsf'],
+    'tgt': ['s00csq1d.rsf'],
+    'cmd': helmfftw + ' ' +
+         ' weight0=100 weight1=100 power=-0.5 datum=0 ' +
+         ' sbc0=0 ebc0=0 in=csq1d.rsf out=s00csq1d.rsf ' +
+         ' partask='+getThreads(exe_serial),
+    'exe': exe_serial
+  },
+  { 'job': 'helmfftw2D_0000p0',
+    'pre': 'sfadd < csq.rsf scale=0.0 > s0000p0csq.rsf',
+    'src': ['csq.rsf'],
+    'tgt': ['s0000p0csq.rsf'],
+    'cmd': helmfftw + ' ' +
+         ' weight0=100 weight1=100 power=0 datum=0 ' +
+         ' sbc0=0 sbc1=0 ebc0=0 ebc1=0 in=csq.rsf out=s0000p0csq.rsf ' +
+         ' partask='+getThreads(exe_serial),
+    'exe': exe_serial
+  },
+  { 'job': 'helmfftw2D_1000p0',
+    'pre': 'sfadd < csq.rsf scale=0.0 > s1000p0csq.rsf',
+    'src': ['csq.rsf'],
+    'tgt': ['s1000p0csq.rsf'],
+    'cmd': helmfftw + ' ' +
+         ' weight0=100 weight1=100 power=0 datum=0 ' +
+         ' sbc0=1 sbc1=0 ebc0=0 ebc1=0 in=csq.rsf out=s1000p0csq.rsf ' +
+         ' partask='+getThreads(exe_serial),
+    'exe': exe_serial
+  },
+  { 'job': 'helmfftw2D_0000',
+    'pre': 'sfadd < csq.rsf scale=0.0 > s0000csq.rsf',
+    'src': ['csq.rsf'],
+    'tgt': ['s0000csq.rsf'],
+    'cmd': helmfftw + ' ' +
+         ' weight0=100 weight1=100 power=-0.5 datum=0 ' +
+         ' sbc0=0 sbc1=0 ebc0=0 ebc1=0 in=csq.rsf out=s0000csq.rsf ' +
+         ' partask='+getThreads(exe_serial),
+    'exe': exe_serial
+  },
+  { 'job': 'helmfftw2D_1000',
+    'pre': 'sfadd < csq.rsf scale=0.0 > s1000csq.rsf',
+    'src': ['csq.rsf'],
+    'tgt': ['s1000csq.rsf'],
+    'cmd': helmfftw + ' ' +
+         ' weight0=500 weight1=500 power=-0.5 datum=100 ' +
+         ' sbc0=1 sbc1=0 ebc0=0 ebc1=0 in=csq.rsf out=s1000csq.rsf ' +
+         ' partask='+getThreads(exe_serial),
+    'exe': exe_serial
+  },
+  { 'job': 'helmadjtest',
+    'pre': 'sfadd < csq.rsf scale=0.0 > csqoutx.rsf && ' + 
+         ' sfadd < csq.rsf scale=0.0 > csqouty.rsf',
+    'src': ['csq.rsf'],
+    'tgt': ['csqoutx.rsf','csqouty.rsf','adjrpt.txt'],
+    'cmd': helmadj + ' ' +
+         ' weight0=100 weight1=100 power=0 datum=0 ' +
+         ' sbc0=0 sbc1=0 ebc0=0 ebc1=0 inx=csq.rsf outx=csqoutx.rsf ' +
+         ' iny=dcsq.rsf outy=csqouty.rsf outfile=adjrpt.txt' +
+         ' partask='+getThreads(exe_serial),
+    'exe': exe_serial
+  },
+  { 'job': 'helmadjtest0',
+    'pre': 'sfadd < csq.rsf scale=0.0 > csqoutx0.rsf && ' + 
+         ' sfadd < csq.rsf scale=0.0 > csqouty0.rsf',
+    'src': ['csq.rsf'],
+    'tgt': ['csqoutx0.rsf','csqouty0.rsf','adjrpt0.txt'],
+    'cmd': helmadj + ' ' +
+         ' weight0=100 weight1=100 power=-0.25 datum=400 ' +
+         ' sbc0=0 sbc1=0 ebc0=0 ebc1=0 inx=csq.rsf outx=csqoutx0.rsf ' +
+         ' iny=dcsq.rsf outy=csqouty.rsf outfile=adjrpt0.txt' +
+         ' partask='+getThreads(exe_serial),
+    'exe': exe_serial
+  },
+  { 'job': 'helmadjtest1',
+    'pre': 'sfadd < csq.rsf scale=0.0 > csqoutx1.rsf && ' + 
+         ' sfadd < csq.rsf scale=0.0 > csqouty1.rsf',
+    'src': ['csq.rsf'],
+    'tgt': ['csqoutx1.rsf','csqouty1.rsf','adjrpt1.txt'],
+    'cmd': helmadj + ' ' +
+         ' weight0=500 weight1=500 power=-0.5 datum=400 ' +
+         ' sbc0=1 sbc1=0 ebc0=0 ebc1=0 inx=csq.rsf outx=csqoutx1.rsf ' +
+         ' iny=dcsq.rsf outy=csqouty1.rsf outfile=adjrpt1.txt' +
+         ' partask='+getThreads(exe_serial),
+    'exe': exe_serial
+  },
+  { 'job': 'helmadjtest2',
+    'pre': 'sfadd < csq.rsf scale=0.0 > csqoutx2.rsf && ' + 
+         ' sfadd < csq.rsf scale=0.0 > csqouty2.rsf',
+    'src': ['csq.rsf'],
+    'tgt': ['csqoutx2.rsf','csqouty2.rsf','adjrpt2.txt'],
+    'cmd': helmadj + ' ' +
+         ' weight0=100 weight1=100 power=-0.5 datum=0 ' +
+         ' sbc0=1 sbc1=1 ebc0=0 ebc1=0 inx=csq.rsf outx=csqoutx2.rsf ' +
+         ' iny=dcsq.rsf outy=csqouty2.rsf outfile=adjrpt2.txt' +
+         ' partask='+getThreads(exe_serial),
+    'exe': exe_serial
+  },
+  { 'job': 'helmadjtest3',
+    'pre': 'sfadd < csq.rsf scale=0.0 > csqoutx3.rsf && ' + 
+         ' sfadd < csq.rsf scale=0.0 > csqouty3.rsf',
+    'src': ['csq.rsf'],
+    'tgt': ['csqoutx3.rsf','csqouty3.rsf','adjrpt3.txt'],
+    'cmd': helmadj + ' ' +
+         ' weight0=100 weight1=100 power=-0.5 datum=0 ' +
+         ' sbc0=0 sbc1=0 ebc0=1 ebc1=1 inx=csq.rsf outx=csqoutx3.rsf ' +
+         ' iny=dcsq.rsf outy=csqouty3.rsf outfile=adjrpt3.txt' +
+         ' partask='+getThreads(exe_serial),
+    'exe': exe_serial
+  },
+  { 'job': 'helmadjtest4',
+    'pre': 'sfadd < csq.rsf scale=0.0 > csqoutx4.rsf && ' + 
+         ' sfadd < csq.rsf scale=0.0 > csqouty4.rsf',
+    'src': ['csq.rsf'],
+    'tgt': ['csqoutx4.rsf','csqouty4.rsf','adjrpt4.txt'],
+    'cmd': helmadj + ' ' +
+         ' weight0=100 weight1=100 power=-0.5 datum=0 ' +
+         ' sbc0=1 sbc1=1 ebc0=1 ebc1=1 inx=csq.rsf outx=csqoutx4.rsf ' +
+         ' iny=dcsq.rsf outy=csqouty4.rsf outfile=adjrpt4.txt' +
+         ' partask='+getThreads(exe_serial),
+    'exe': exe_serial
+  },
+  { 'job': 'helmfftw2D_1000adj',
+    'pre': 'sfadd < csq.rsf scale=0.0 > s1000csqadj.rsf',
+    'src': ['csq.rsf'],
+    'tgt': ['s1000csqadj.rsf'],
+    'cmd': helmfftw + ' ' +
+         ' weight0=100 weight1=100 power=-0.5 datum=0 ' +
+         ' sbc0=1 sbc1=0 ebc0=0 ebc1=0 in=s1000csq.rsf out=s1000csqadj.rsf ' +
+         ' adjoint=1 partask='+getThreads(exe_serial),
+    'exe': exe_serial
+  },
+  { 'job': 'helmfftw2D_0100',
+    'pre': 'sfadd < csq.rsf scale=0.0 > s0100csq.rsf',
+    'src': ['csq.rsf'],
+    'tgt': ['s0100csq.rsf'],
+    'cmd': helmfftw + ' ' +
+         ' weight0=100 weight1=100 power=-0.5 datum=0 ' +
+         ' sbc0=0 sbc1=0 ebc0=1 ebc1=0 in=csq.rsf out=s0100csq.rsf ' +
+         ' partask='+getThreads(exe_serial),
+    'exe': exe_serial
+  },
+  { 'job': 'helmfftw2D_0011',
+    'pre': 'sfadd < csq.rsf scale=0.0 > s0011csq.rsf',
+    'src': ['csq.rsf'],
+    'tgt': ['s0011csq.rsf'],
+    'cmd': helmfftw + ' ' +
+         ' weight0=100 weight1=100 power=-0.5 datum=0 ' +
+         ' sbc0=0 sbc1=1 ebc0=0 ebc1=1 in=csq.rsf out=s0011csq.rsf ' +
+         ' partask='+getThreads(exe_serial),
+    'exe': exe_serial
+  },
+  { 'job': 'helmfftw2D_0111',
+    'pre': 'sfadd < csq.rsf scale=0.0 > s0111csq.rsf',
+    'src': ['csq.rsf'],
+    'tgt': ['s0111csq.rsf'],
+    'cmd': helmfftw + ' ' +
+         ' weight0=100 weight1=100 power=-0.5 datum=0 ' +
+         ' sbc0=0 sbc1=1 ebc0=1 ebc1=1 in=csq.rsf out=s0111csq.rsf ' +
+         ' partask='+getThreads(exe_serial),
+    'exe': exe_serial
+  },
+  { 'job': 'helmfftw3D_000000',
+    'pre': 'sfadd < ecsq.rsf scale=0.0 > s000000csq.rsf',
+    'src': ['ecsq.rsf'],
+    'tgt': ['s000000csq.rsf'],
+    'cmd': helmfftw + ' ' +
+         ' weight0=100 weight1=100 power=-0.5 datum=0 ' +
+         ' sbc0=0 sbc1=0 sbc2=0 ebc0=0 ebc1=0 ebc2=0 ' +
+         ' in=ecsq.rsf out=s000000csq.rsf ' +
+         ' partask='+getThreads(exe_serial),
+    'exe': exe_serial
+  },
+  { 'job': 'helmfftw3D_01000',
+    'pre': 'sfadd < ecsq.rsf scale=0.0 > s010000csq.rsf',
+    'src': ['ecsq.rsf'],
+    'tgt': ['s010000csq.rsf'],
+    'cmd': helmfftw + ' ' +
+         ' weight0=100 weight1=100 power=-0.5 datum=0 ' +
+         ' sbc0=0 sbc1=0 sbc2=0 ebc0=1 ebc1=0 ebc2=0 ' +
+         ' in=ecsq.rsf out=s010000csq.rsf ' +
+         ' partask='+getThreads(exe_serial),
+    'exe': exe_serial
+  },
+  { 'job': 'helmfftw3D_00011',
+    'pre': 'sfadd < ecsq.rsf scale=0.0 > s000011csq.rsf',
+    'src': ['ecsq.rsf'],
+    'tgt': ['s000011csq.rsf'],
+    'cmd': helmfftw + ' ' +
+         ' weight0=100 weight1=100 power=-0.5 datum=0 ' +
+         ' sbc0=0 sbc1=0 sbc2=1 ebc0=0 ebc1=0 ebc2=1 ' +
+         ' in=ecsq.rsf out=s000011csq.rsf ' +
+         ' partask='+getThreads(exe_serial),
+    'exe': exe_serial
+  }
+]
+
+
+
+
+
+# loop for jobs defined in jobs dictionary
+for i in range(len(jobs)):
+    sig = getFlowSignature(jobs[i]['job']+'.work',jobs[i], penv)
+    if sig == None:
+        print 'Error return from iwave.getFlowSignature - cannot set up job = ' + i
+    else:
+#       print 'sig.cmd = ' + sig['cmd'] + '\n'
+#       print 'sig.src = ' + ' '.join(sig['src']) + '\n'
+#       print 'sig.tgt = ' + ' '.join(sig['tgt']) + '\n'
+        t=Flow(sig['dir'],None,sig['wcd'],stdin=0,stdout=0)
+        Flow(sig['tgt'], sig['src'] + [sig['dir']], sig['cmd'], stdin=0, stdout=0)
+        Clean(t,sig['dir'])
+
+#Result('csq', 'csq', 'put label1=Depth unit1=m label2=Distance unit2=m label="V\_p\^2" unit="m\^2/ms\^2" | grey color=e mean=y title="Marmousi Model"  labelfat=4 font=2 titlefat=4') # screenratio=0.55')
+#Result('s0000csq', 's0000csq', 'put label1=Depth unit1=m label2=Distance unit2=m label="V\_p\^2" unit="m\^2/ms\^2" | grey color=e mean=y title="with even bc on all sides"  labelfat=4 font=2 titlefat=4') # screenratio=0.55')
+#Result('s0011csq', 's0011csq', 'put label1=Depth unit1=m label2=Distance unit2=m label="V\_p\^2" unit="m\^2/ms\^2" | grey color=e mean=y title="with even bc on z and odd on x"  labelfat=4 font=2 titlefat=4') # screenratio=0.55')
+#Result('s1000csq', 's1000csq', 'put label1=Depth unit1=m label2=Distance unit2=m label="V\_p\^2" unit="m\^2/ms\^2" | grey color=e mean=y title="odd bc on top, even on other sides"  labelfat=4 font=2 titlefat=4') # screenratio=0.55')
+
+
+
+End()
+

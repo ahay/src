@@ -1,0 +1,40 @@
+
+/*************************************************
+ *            BEGIN RVL UNIT TEST 3              *
+ * Purpose: direct test of StdProductDC          *
+ * behaviour (as opposed to indirect tests       *
+ * via ProductSpace in UT4). Also tests          *
+ * value extraction (method getValue) and        *
+ * retention in UnaryFOScalarRedn class.         *
+ *************************************************/
+
+1. Construct RnArray<float>s of lengths 5 and 10 
+
+2. Construct RVLAssignConst, val = 2
+
+3. Construct StdProductDataContainer p, push RnArrays onto 
+   so that it has size 2
+
+4. Assign val = 2 to all components of the StdProductDC
+   by evaluation of the FO constructed in step 2
+
+5. Construct another RVLAssignConst<float>, val = 3
+
+6. Build two more RnArrays of lengths 5, 10 resp., 
+   another StdProductDC q, and push the RnArrays onto
+   q, so that it also has length 2 and components compatible
+   with those of p
+
+7. Evaluate the FO constructed in step 5 on q, so that all
+   components have value 3
+
+8. Construct RVLL2innerProd FO
+
+9. Evaluate RVLL2innerProd on p, q
+
+10. Extract value of inner product, using getValue method of
+    UnaryFOScalarRedn class - value = 90, should = 90
+
+/*************************************************
+ *              END RVL UNIT TEST 3              *
+ *************************************************/

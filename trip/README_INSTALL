@@ -1,0 +1,32 @@
+      *** Installation of TRIP Software in Madagascar ***
+
+1. Global Install
+
+TRIP software installs as part of a global Madagascar install, with
+the standard conventions - commands begin with "sf..." and move to
+the Madagascar bin directory defined at configuration.
+
+2. Local install
+
+It is also possible to build the TRIP packages locally, either all of
+them together by executing "scons" in this directory, or individually
+by executing "scons" in the package root (iwave, rvl,...). Locally
+built executables are stored with their source in main subdirs, with
+suffix .x.
+
+Default options for local build are -g and no optimization.
+
+To build with other options (higher optimization level, MPI, ...)
+create a file named config.py defining these options, after the
+fashion of the RSFSRC/config.py file. Note that only C/C++ related
+options are relevant. The admin subdirectory contains several
+examples. For MPI, the example config.pys presume that the MPI bin
+directory has been placed in your path.
+
+Place config.py (the name is important!) in this directory (i.e. in
+RSFSRC/trip), then scons.
+
+More control is possible by building at the package level, including
+creation of documentation and testing. Please see the TRIP software
+web page (www.trip.caam.rice.edu/software/software.html) for more
+details.

@@ -1,0 +1,20 @@
+\form#0:$count \geq maxcount$
+\form#1:$x > maxval$
+\form#2:$x < minval$
+\form#3:$f(x) < tol$
+\form#4:$f(x,y) < tol$
+\form#5:$f(x,y,z) < tol$
+\form#6:$\|\|x\|\| < tol$
+\form#7:$\|\|x\|\|^{2} < tol$
+\form#8:$\|\|x - y\|\| < tol$
+\form#9:$\|\|x - y\|\|^{2} < tol$
+\form#10:$\left< x, y \right> < tol$
+\form#11:$\| \left< x , y \right> \| < tol$
+\form#12:\[ \|\|\nabla f(x)\|\| <= tol \]
+\form#13:$tol^2$
+\form#14:$\|x - x0\| < r$
+\form#15:$ x \leftarrow x0 + \frac{r}{\|x-x_0\|}(x-x_0) $
+\form#16:$x-x_0$
+\form#17:$\|x\| < r$
+\form#18:$ x \leftarrow \frac{r}{\|x\|}x $
+\form#19:$x$

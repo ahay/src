@@ -1,0 +1,58 @@
+/*************************************************
+ *            BEGIN RVL UNIT TEST 5              *
+ * Test of Functional, CheckGradient and other   *
+ * methods - Functional implements               *
+ *          f(x) = (|x|^2)^2                     *
+ *************************************************/
+
+1. construct 5D RnSpace, random input Vector x, write out:
+
+Vector Object
+member of space:
+RnSpace: simple dense vector space
+dimension = 5
+data container:
+RnArray Local Data Container object
+length = 5
+samples: 
+data[0] = 0.108797
+data[1] = 0.728763
+data[2] = 0.109489
+data[3] = 0.131133
+data[4] = 0.924143
+
+2. compute value of f(x) = 2.03392
+   compare to result of independent computation
+   using RVL::Vector::inner = 2.03392
+
+3. construct random direction vector:
+Vector Object
+member of space:
+RnSpace: simple dense vector space
+dimension = 5
+data container:
+RnArray Local Data Container object
+length = 5
+samples: 
+data[0] = 0.312103
+data[1] = 0.523156
+data[2] = 0.26092
+data[3] = 0.851918
+data[4] = 0.940463
+
+4. check gradient against finite difference approximation
+   of directional derivative in direction p, using checkGradient.
+   output: last column should converge to 2.0, indicating 2nd
+   order convergence of centered diff. approx. to dir.  deriv.,
+   computed as inner product of gradient and direction.
+   convergence will start to degrade as relative error gets close
+   to level of 32 bit machine precision, i.e. 10^{-5 or 6}.
+   precise specs: success if convergence rate estimate >= 1.95
+   test history reported in ut5.aux
+
+GradientTest returned true - success
+--- see report in testsrc/ut5/ut5.out
+
+/*************************************************
+ *              END RVL UNIT TEST 5              *
+ *************************************************/

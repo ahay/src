@@ -1,0 +1,31 @@
+from rsf.proj import *
+import os
+
+CWPROOT         = os.getenv('CWPROOT')
+sunull          = os.path.join(CWPROOT,'bin/sunull')
+sushw           = os.path.join(CWPROOT,'bin/sushw')
+suchw           = os.path.join(CWPROOT,'bin/suchw')
+sugain          = os.path.join(CWPROOT,'bin/sugain')
+suwaveform      = os.path.join(CWPROOT,'bin/suwaveform')
+suspike         = os.path.join(CWPROOT,'bin/suspike')
+sufilter        = os.path.join(CWPROOT,'bin/sufilter')
+RSFSRC          = os.getenv('RSFSRC')
+stdmdl          = os.path.join(RSFSRC,'trip/iwave/demo/main/standardmodel.x')
+towed_array     = os.path.join(RSFSRC,'trip/iwave/trace/main/towed_array.x')
+
+tests = ['asg_setup_test']
+
+works = [];
+for test in tests:
+    works = works + [test + '.work']
+    Flow([test + '.work'], None,
+           '''
+           export CWPROOT='''+os.getenv('CWPROOT') + 
+	   '; ../../main/' + test + 
+	   '.x >& report.txt; cd ..',
+	   stdin=-1,stdout=-1,workdir=test + '.work')
+
+cmd = '/bin/rm -rf report.txt; echo "*** IWAVE GTEST REPORT ">> report.txt; date >> report.txt; echo " ">>report.txt; echo "===================================================" >> report.txt;  echo " ">>report.txt; cat ' + ".work/report.txt >> report.txt;  echo \" \">>report.txt; echo =================================================== >> report.txt; cat ".join(tests) + ".work/report.txt >> report.txt"
+
+t=Flow(['report.txt'], works, cmd, stdin=-1, stdout=-1)
+Clean(t,'report.txt')

@@ -1,0 +1,8 @@
+from rsf.proj import *
+
+#Flow('csq_spike',None,'spike n1=416 d1=2.500000e+01 o1=0.000000e+00 n2=800 d2=2.500000e+01 o2=0.000000e+00 k1=100 k2=100 nspike=1 | put gdim=2 dim=2 id1=0 id2=1')
+Flow('csq_spike',None,'spike n1=91 d1=2.000000e+01 o1=0.000000e+00 n2=391 d2=2.000000e+01 o2=0.000000e+00 k1=25 k2=190 nspike=1 | put gdim=2 dim=2 id1=0 id2=1')
+
+Flow('uc_spike.rsf',None,'spike n1=416 d1=2.500000e+01 o1=0.000000e+00 n2=800 d2=2.500000e+01 o2=0.000000e+00 n3=1 d3=1.000000e+00 o3=0.000000e+00 k1=6 k2=4 nspike=1 | put gdim=3 dim=2 id1=0 id2=1 id3=2')
+
+Flow('ucbd_spike.rsf',None,'spike n1=416 d1=2.500000e+01 o1=0.000000e+00 n2=800 d2=2.500000e+01 o2=0.000000e+00 n3=1 d3=1.000000e+00 o3=1.000000e+00 k1=5 k2=4 nspike=1 | put gdim=3 dim=2 id1=0 id2=1 id3=2')
