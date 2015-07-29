@@ -1,3 +1,0 @@
-uses=['sfmath', 'sfwindow', 'sfgraph', 'sfnoise', 'sfhistogram', 'sfdd', 'sfscale']
-data=[]
-size=    2560000

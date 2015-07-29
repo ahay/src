@@ -1,3 +1,0 @@
-uses=['sfspike', 'sfbandpass', 'sfcosft', 'sfvczo', 'sfwindow', 'sfgrey']
-data=[]
-size=     266256

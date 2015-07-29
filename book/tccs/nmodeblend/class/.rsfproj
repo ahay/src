@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfspline', 'sfmath', 'sfcat', 'sfgraph', 'sfwindow', 'sfgrey', 'sfderiv', 'sfkirmod', 'sfpow', 'sfput', 'sfnoise', 'sfbyte', 'sftransp', 'sfgrey3', 'sfcmp2shot', 'sfshot2cmp', 'sfreverse', 'sfspray', 'sfdatstretch', 'sfadd']
-data=[]
-size=  634518296

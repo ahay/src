@@ -1,3 +1,0 @@
-uses=['sfmath', 'sffbrec', 'sfgrey', 'sfwindow']
-data=[]
-size=  256160000

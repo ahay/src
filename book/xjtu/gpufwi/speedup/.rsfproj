@@ -1,3 +1,0 @@
-uses=['sfmath', 'sfcat', 'sfput', 'sfgrey', 'sfgenshots', 'sfmodeling2d', 'sfadd', 'sfgraph', 'sfbox']
-data=[]
-size=  194969712

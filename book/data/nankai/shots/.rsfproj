@@ -1,3 +1,0 @@
-uses=['sfsuread', 'sfwindow', 'sfintbin', 'sfdd', 'sfstack', 'sfgraph', 'sfheaderwindow', 'sfwiggle', 'sfspectra', 'sfgrey', 'sfbandpass', 'sfpow', 'sfvscan', 'sfmutter', 'sfpick', 'sfnmo', 'sfput', 'sfcosft', 'sfpad', 'sfstolt', 'sfvczo', 'sftransp', 'sfbyte', 'sfgrey3', 'sfslice', 'sfdip', 'sfpwspray', 'sfadd', 'sfmath', 'sfclip', 'sfscale']
-data=['data/nankai/Nshots.su']
-size= 1697702588

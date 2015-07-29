@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfscale', 'sfput', 'sfwindow', 'sftransp', 'sffft1', 'sffft3', 'sfisolr2', 'sfreverse', 'sffftexp0', 'sfgrey', 'sfisolr3', 'sffftexp3', 'sfbyte', 'sfgrey3']
-data=['PRIVATE', 'data/overthrust/otexp2.rsf', 'data/overthrust/otexp3.rsf']
-size= 3331891048

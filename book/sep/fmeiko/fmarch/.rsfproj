@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfadd', 'sfwindow', 'sfeikonal', 'sfput', 'sfremap1', 'sftransp', 'sfscale', 'sfgrey', 'sfcontour']
-data=['data/segeage/salt_slow_desp.HH']
-size=  434380024

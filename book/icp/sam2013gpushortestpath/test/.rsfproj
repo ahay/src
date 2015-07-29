@@ -1,3 +1,0 @@
-uses=['sfmath', 'sfgrey', 'sfgpurayt', 'sfwindow', 'sfgraph', 'sftransp']
-data=[]
-size=  176685060

@@ -1,6 +1,0 @@
-from rsf.proj import *
-
-Result('headray',None,'headray',prefix=plprefix)
-
-###########################################################################
-End()

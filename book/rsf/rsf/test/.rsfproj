@@ -1,3 +1,0 @@
-uses=['sfspike', 'sfbandpass', 'sfwiggle']
-data=[]
-size=       4000

@@ -1,9 +1,0 @@
-from rsf.book import *
-
-papers = map(lambda x: 'hw%d' % x,range(1,7))
-
-Book(title='\\Large{GEO391} \\\\ Multidimensional Data Analysis in Geosciences \\\\ Homework Assignments',
-     author='Sergey Fomel',
-     chapters=papers)
-
-End(options='book',use='hyperref,listings,newalg')

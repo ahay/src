@@ -1,3 +1,0 @@
-uses=['sfdd', 'sftransp', 'sfwindow', 'sfpreconstkirch', 'sfcat', 'sfhalfint', 'sfpad', 'sfcosft', 'sfput', 'sffourvc', 'sfmul', 'sfclip2', 'sfdivn', 'sfstack', 'sfgrey', 'sfscale', 'sfpick', 'sfslice', 'sfagc', 'sfcontour', 'sfdip', 'sfpwdsigk', 'sfadd', 'sfbyte', 'sfdix', 'sfspray', 'sfdixshape', 'sfwiggle']
-data=['data/midpts/beinew.HH']
-size= 1778125056

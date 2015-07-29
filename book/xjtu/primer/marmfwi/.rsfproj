@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfwindow', 'sfput', 'sfgrey', 'sfgenshots', 'sfsmooth', 'sfgpufwi', 'sfgraph']
-data=['data/marm/marmvel.hh']
-size=  875000936

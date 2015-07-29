@@ -1,3 +1,0 @@
-uses=['sfmath', 'sfgraph', 'sfderiv', 'sfcp', 'sfscale']
-data=[]
-size=      25120

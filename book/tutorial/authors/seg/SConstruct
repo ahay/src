@@ -1,9 +1,0 @@
-from rsf.tex import *
-
-Paper('segabs',
-      lclass='segabs',
-      options='notimes',
-      use='natbib,graphicx,color,listings,amsmath,amssymb,amsbsy')
-
-Paper('segcut',lclass='article',use='pdfpages')
-End(use='color')

@@ -1,3 +1,0 @@
-uses=['sfspike', 'sfnoise', 'sfthreedcube']
-data=[]
-size=    1000000

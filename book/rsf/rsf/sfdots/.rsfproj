@@ -1,3 +1,0 @@
-uses=['sfmath', 'sfnoise', 'sfmask', 'sftransp', 'sfheadercut', 'sfwindow', 'sfdots']
-data=[]
-size=       1212

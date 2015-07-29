@@ -1,8 +1,0 @@
-from rsf.tex import *
-
-Paper('segabs_graphrayt',use='algorithm,algorithmic')
-
-End()
-
-
-

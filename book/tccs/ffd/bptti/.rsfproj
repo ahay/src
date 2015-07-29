@@ -1,3 +1,0 @@
-uses=['sfsegyread', 'sfput', 'sftransp', 'sfwindow', 'sfgrey', 'sfscale', 'sfmath', 'sfspike', 'sfricker1', 'sfgraph', 'sfffdantti4b_smsr']
-data=['LOCAL']
-size= 32276997904

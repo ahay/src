@@ -1,7 +1,0 @@
-box(x)=heaviside(x+1/2)-heaviside(x-1/2)
-pbox=plot(box(x),x,-2,2,thickness=3,aspect_ratio=4/golden_ratio)
-w=var('w')
-nnf(w)=integrate(cos(w*x),(x,-1/2,1/2))
-wbox=plot(nnf(w),w,-2*pi,2*pi,thickness=3,color='red',aspect_ratio=4*pi/golden_ratio,ticks=[[-pi,pi],None])
-both=graphics_array([pbox,wbox])
-both.save(frame=true,tick_formatter='latex',fontsize=12,filename='junk_sage.pdf')

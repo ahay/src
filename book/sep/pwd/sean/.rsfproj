@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfwindow', 'sfbandpass', 'sfgrey', 'sftwodip2', 'sftransp', 'sfspline', 'sfpwdsigk', 'sfseisigk', 'sflpad', 'sfplanemis2', 'sfadd', 'sfcat', 'sfbyte']
-data=['data/bp/sean.HH']
-size=    6120000
