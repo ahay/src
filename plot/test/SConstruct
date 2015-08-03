@@ -53,6 +53,7 @@ if root:
 	docs = map(lambda prog: env.Doc(prog,rsfprefix='vp'),mains)
 	docalias = {'vpreflexpt':'vpreflector',
 		    'vpreflkine':'vpreflector'}
+	env.Depends(docs,'#/framework/rsf/doc.py')
 	doc = env.RSF_Docmerge(main,docs,alias=docalias)
 
 	env.Install('../../framework/rsf',doc)

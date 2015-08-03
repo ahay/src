@@ -48,6 +48,8 @@ In the reproducible documents collection:
 
 In documentation:
 
+* Fixed file names in selfdocs
+
 In APIs:
 
 In the Python package:

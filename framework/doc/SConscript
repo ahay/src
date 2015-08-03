@@ -43,6 +43,7 @@ python = sys.executable
 env.Command(htm,docs,
             '%s $SOURCE -w %s -r %s -v %s' % (python,htmdir,
                                               repository,version))
+env.Depends(htm,'#/framework/rsf/doc.py')
 env.Command(txt,docs,'%s $SOURCE -t %s' % (python,txtdir))
 env.Command(spc,docs,'%s $SOURCE -s %s' % (python,spcdir))
 env.Command(man,docs,'%s $SOURCE -g %s' % (python,mn1dir))

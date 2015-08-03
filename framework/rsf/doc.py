@@ -142,7 +142,8 @@ def selfdoc(target=None,source=None,env=None):
     rsfsuffix = env.get('rsfsuffix','rsf')
     lang = env.get('lang','c')
     known_version = env.get('version','unknown')
-    getprog(src,doc,lang,rsfprefix,rsfsuffix,known_version=known_version)
+    strip = env.get('strip',None)
+    getprog(src,doc,lang,rsfprefix,rsfsuffix,known_version=known_version,strip=strip)
     doc.close()
     return 0
 
@@ -866,10 +867,15 @@ chars['c'] = ' '
 
 
 def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
-            rsfplotprefix='vp',rsfplotsuffix='vpl',known_version='unknown'):
+            rsfplotprefix='vp',rsfplotsuffix='vpl',known_version='unknown',strip = None):
     global comment, param, params, param2, params2, \
            synopsis, stringpar, inpout, version
-    name = rsfprefix + re.sub('^[MX_]','',os.path.basename(file))
+    name = re.sub('^[MX_]','',os.path.basename(file))
+    if strip: # remove leading characters in the file name
+        source = os.path.join(os.path.dirname(file),name)
+    else:
+        source = file
+    name = rsfprefix + name
     if lang[:2] == 'py':
         name = re.sub('\.py$','',name)
     elif lang[0] =='f':
@@ -887,10 +893,10 @@ def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
         first = '\n'.join(map(lambda x: x.lstrip(chars[lang]),tops))
     else:
         desc = None
-    prog = rsfprog(name,file,desc)
-    file = re.sub('^[^\/]*\/','',file)
+    prog = rsfprog(name,source,desc)
+    source = re.sub('^[^\/]*\/','',source)
     out.write("%s = rsf.doc.rsfprog('%s','%s','''%s''')\n" %
-              (cname,name,file,desc))
+              (cname,name,source,desc))
     files = inpout[lang].findall(text)
     snps = name
     valid = {}

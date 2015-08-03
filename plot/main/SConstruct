@@ -54,6 +54,7 @@ if root:
     main = 'sfplot.py'
 
     docs = map(env.Doc,mains)
+    env.Depends(docs,'#/framework/rsf/doc.py')
     doc = env.RSF_Docmerge(main,docs,alias=docalias)
 
     env.Install('../../framework/rsf',doc)

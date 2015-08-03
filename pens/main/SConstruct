@@ -275,7 +275,7 @@ if root:
             env.Command('Msfpen.c',[pen+'.c','init_vplot.c'],
                     'cat $SOURCES > $TARGET')
     
-    docs = map(lambda prog: env.Doc(prog,'M'+prog),pens)
+    docs = map(lambda prog: env.Doc(prog,'M'+prog,strip=1),pens)
     env.Depends(docs,'#/framework/rsf/doc.py')
     doc = env.RSF_Docmerge(main,docs,alias=docalias)
 
