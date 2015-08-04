@@ -4,18 +4,18 @@ import bldutil
 
 progs = '''
 abalance analytical angle angle2 approx arrival bdix bil1 bilat2 blur
-cfftwave1 cdivn cflow chebvc clpf cltft constperm constpermh constpermh1
-cosftwave1 cpef deblur distance divn dix dpeiko eikonal eikonalvti
-eno2 erf exgr fft2 fftexp0 fftexp1 fftexp3 fftone ffttest fftwave1
-fftwave2 fftwave3 findmin2 focus fpow freqest gaussmooth gbeamform
-imray interf interp2 interpt iphase kron lfftexp0 localskew locov lpf
-lsfit median mffit mig3 miss3 nconv nsmooth nsmooth1 ocparcel octentwt
-odip2 ofilp ofsemb opwd2 ortho patch phaserot pick pick3 plane poly
-polyfit regr rdiv rect1 reshape riesz rsin seislet1 semblance shape
-shapeagc shapefill shearer shift1 similarity similarity2 simenv
-smoothderw smoothreg smspray taupfit thin timecont timefreq tomo tree
-trace2 tristack tristack2 twofreq2 var2 velcon velinv vidattr vofzperm
-warp1 warpadd warpscan zero zmarch ztrace
+cfftwave1 cdivn cflow chebvc clpf cltft constperm constpermh
+constpermh1 cosftwave1 cpef deblur distance divn dix dpeiko eikonal
+eikonalvti eno2 erf exgr fft2 fftexp0 fftexp1 fftexp3 fftone ffttest
+fftwave1 fftwave2 fftwave3 findmin2 focus fpow freqest gaussmooth
+gbeamform imray interf interp2 interpt iphase kron lfftexp0 localskew
+locov lpf lsfit median mffit mig3 miss3 nconv nnint nsmooth nsmooth1
+ocparcel octentwt odip2 ofilp ofsemb opwd2 ortho patch phaserot pick
+pick3 plane poly polyfit regr rdiv rect1 reshape riesz rsin seislet1
+semblance shape shapeagc shapefill shearer shift1 similarity
+similarity2 simenv smoothderw smoothreg smspray taupfit thin timecont
+timefreq tomo tree trace2 tristack tristack2 twofreq2 var2 velcon
+velinv vidattr vofzperm warp1 warpadd warpscan zero zmarch ztrace
 '''
 
 ccprogs = 'anisolr2 isolr2 isolr3 lrvc0 permlr1 permlr2 permlr3'

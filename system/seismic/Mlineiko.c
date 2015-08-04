@@ -19,8 +19,6 @@
 
 #include <rsf.h>
 
-#include "upgrad.h"
-
 int main(int argc, char* argv[])
 {
     bool adj, inv, squared;
@@ -29,7 +27,7 @@ int main(int argc, char* argv[])
     double err;
     char key[4];
     const char *what;
-    upgrad upg;
+    sf_upgrad upg;
     sf_file dtime, time, slow, mask, time0;
     
     sf_init(argc,argv);
@@ -51,7 +49,7 @@ int main(int argc, char* argv[])
     if (!sf_getbool("squared",&squared)) squared=true;
     /* if slowness is squared */
 
-    upg = upgrad_init(dim,n,d);
+    upg = sf_upgrad_init(dim,n,d);
 
     t = sf_floatalloc(nt);
     s = sf_floatalloc(nt);
@@ -60,8 +58,8 @@ int main(int argc, char* argv[])
 
     switch (what[0]) {
 	case 's': /* slowness squared */
-	    upgrad_set(upg,t);
-	    upgrad_forw(upg,t,s); /* s = grad(t)*grad(t) */
+	    sf_upgrad_set(upg,t);
+	    sf_upgrad_forw(upg,t,s); /* s = grad(t)*grad(t) */
 
 	    sf_floatwrite(s,nt,dtime);
 	    break;
@@ -81,19 +79,19 @@ int main(int argc, char* argv[])
 	    sf_floatread(t0,nt,time0);
 	    sf_fileclose(time0);
 	    
-	    upgrad_set(upg,t0);
+	    sf_upgrad_set(upg,t0);
 	    
 	    if (inv) {
 		if (adj) {
-		    upgrad_inverse(upg,s,t,NULL);
+		    sf_upgrad_inverse(upg,s,t,NULL);
 		} else {
-		    upgrad_solve(upg,t,s,NULL);
+		    sf_upgrad_solve(upg,t,s,NULL);
 		}
 	    } else {
 		if (adj) {
-		    upgrad_adj(upg,s,t);
+		    sf_upgrad_adj(upg,s,t);
 		} else {
-		    upgrad_forw(upg,t,s);
+		    sf_upgrad_forw(upg,t,s);
 		}
 	    }
 
@@ -105,12 +103,12 @@ int main(int argc, char* argv[])
 	    sf_floatread(t0,nt,time0);
 	    sf_fileclose(time0);
 
-	    upgrad_set(upg,t);
-	    upgrad_forw(upg,t0,s); /* s = grad(t0)*grad(t) */
+	    sf_upgrad_set(upg,t);
+	    sf_upgrad_forw(upg,t0,s); /* s = grad(t0)*grad(t) */
 
 	    if (!squared) {
 		ds = sf_floatalloc(nt);
-		upgrad_forw(upg,t,ds);
+		sf_upgrad_forw(upg,t,ds);
 		for (it=0; it < nt; it++) {
 		    s[it] /= sqrtf(ds[it]);
 		}
@@ -135,18 +133,18 @@ int main(int argc, char* argv[])
 	    sf_floatread(s,nt,slow);
 	    sf_fileclose(slow);
 
-	    upgrad_set(upg,t);
+	    sf_upgrad_set(upg,t);
 
 	    if (!squared) {
 		ds = sf_floatalloc(nt);
-		upgrad_forw(upg,t,ds);
+		sf_upgrad_forw(upg,t,ds);
 		for (it=0; it < nt; it++) {
 		    s[it] *= sqrtf(ds[it]);
 		}
 		free(ds);
 	    }
 
-	    upgrad_solve(upg,s,t,t0); /* solve for t */
+	    sf_upgrad_solve(upg,s,t,t0); /* solve for t */
 	    
 	    sf_floatwrite(t,nt,dtime);
 	    break;
@@ -178,14 +176,14 @@ int main(int argc, char* argv[])
 	    sf_fileclose(slow);
 	    
 	    for (iter=0; iter < niter; iter++) {
-		upgrad_set(upg,t);
-		upgrad_forw(upg,t,ds);
+		sf_upgrad_set(upg,t);
+		sf_upgrad_forw(upg,t,ds);
 		
 		for (it=0; it < nt; it++) {
 		    ds[it] = m[it]? sqrtf(ds[it])*s[it]-ds[it]:0.0;
 		}
 		
-		upgrad_solve(upg,ds,dt,NULL);
+		sf_upgrad_solve(upg,ds,dt,NULL);
 		
 		for (it=0; it < nt; it++) {
 		    t[it] += dt[it];

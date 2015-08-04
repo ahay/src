@@ -16,17 +16,22 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-#include <rsf.h>
 
-#ifndef _upgrad_h
+#include "error.h"
+#include "alloc.h"
+#include "decart.h"
 
-typedef struct Upgrad *upgrad;
+#include "upgrad.h"
+
+#ifndef _sf_upgrad_h
+
+typedef struct Sf_Upgrad *sf_upgrad;
 /* abstract data type */
 /*^*/
 
 #endif
 
-struct Upgrad {
+struct Sf_Upgrad {
     int *order;
     unsigned char **update;
     float **ww;
@@ -50,12 +55,12 @@ static int fermat(const void *a, const void *b)
     return -1;
 }
 
-upgrad upgrad_init(int mdim        /* number of dimensions */,
+sf_upgrad sf_upgrad_init(int mdim        /* number of dimensions */,
 		   const int *mm   /* [dim] data size */,
 		   const float *d  /* [dim] data sampling */)
 /*< initialize >*/
 {
-    upgrad upg;
+    sf_upgrad upg;
     int i;
 
     if (mdim > 3) sf_error("%s: dim=%d > 3",__FILE__,mdim);
@@ -70,7 +75,7 @@ upgrad upgrad_init(int mdim        /* number of dimensions */,
 		dd[i] = 1.0/(d[i]*d[i]);
     }
 
-    upg = (upgrad) sf_alloc(1,sizeof(*upg));
+    upg = (sf_upgrad) sf_alloc(1,sizeof(*upg));
 
     upg->update = sf_ucharalloc2(2,nt);
     upg->ww = sf_floatalloc2(ndim+1,nt);
@@ -79,7 +84,7 @@ upgrad upgrad_init(int mdim        /* number of dimensions */,
     return upg;
 }
 
-void upgrad_set(upgrad upg, const float *r0 /* reference */)
+void sf_upgrad_set(sf_upgrad upg, const float *r0 /* reference */)
 /*< supply reference >*/
 {
     int i, m, it, jt, ii[3], a, b;
@@ -122,7 +127,7 @@ void upgrad_set(upgrad upg, const float *r0 /* reference */)
     }
 }
 
-void upgrad_close(upgrad upg)
+void sf_upgrad_close(sf_upgrad upg)
 /*< free allocated storage >*/
 {
     free(*(upg->ww));
@@ -133,7 +138,7 @@ void upgrad_close(upgrad upg)
     free(upg);
 }
 
-void upgrad_solve(upgrad upg,
+void sf_upgrad_solve(sf_upgrad upg,
 		  const float *rhs /* right-hand side */, 
 		  float *x         /* solution */,
 		  const float *x0  /* initial solution */)
@@ -166,7 +171,7 @@ void upgrad_solve(upgrad upg,
     }
 }
 
-void upgrad_inverse(upgrad upg,
+void sf_upgrad_inverse(sf_upgrad upg,
 		    float *rhs       /* right-hand side */,
 		    const float *x   /* solution */,
 		    const float *x0  /* initial solution */)
@@ -204,7 +209,7 @@ void upgrad_inverse(upgrad upg,
     }
 }
 
-void upgrad_forw(upgrad upg,
+void sf_upgrad_forw(sf_upgrad upg,
 				 const float *x /* solution */,
 				 float *rhs     /* right-hand side */)
 /*< forward operator >*/
@@ -231,7 +236,7 @@ void upgrad_forw(upgrad upg,
     }
 }
 
-void upgrad_adj(upgrad upg,
+void sf_upgrad_adj(sf_upgrad upg,
 				float *x         /* solution */,
 				const float *rhs /* right-hand side */)
 /*< adjoint operator >*/

@@ -19,12 +19,11 @@
 
 #include <rsf.h>
 
-#include "upgrad.h"
 #include "ftoper.h"
 
 static int *n, ns, **m;
 static float *d, *tempr, *tempx;
-static upgrad *upglist;
+static sf_upgrad *upglist;
 
 void ftoper_init(int *nn /* dimension */,
 		 float *dd /* sampling */,
@@ -39,10 +38,10 @@ void ftoper_init(int *nn /* dimension */,
     ns = nshot;
     m = mm;
 
-    upglist = (upgrad *)malloc(ns*sizeof(upgrad));
+    upglist = (sf_upgrad *) sf_alloc(ns,sizeof(sf_upgrad));
 
     for (is=0; is < ns; is++) {
-	upglist[is] = upgrad_init(2,n,d);
+	upglist[is] = sf_upgrad_init(2,n,d);
     }
 
     tempr = sf_floatalloc(n[0]*n[1]*n[2]);
@@ -55,7 +54,7 @@ void ftoper_set(float **t /* time */)
     int is;
 
     for (is=0; is < ns; is++) {
-	upgrad_set(upglist[is],t[is]);
+	sf_upgrad_set(upglist[is],t[is]);
     }
 }
 
@@ -65,7 +64,7 @@ void ftoper_close(void)
     int is;
 
     for (is=0; is < ns; is++) {
-	upgrad_close(upglist[is]);
+	sf_upgrad_close(upglist[is]);
     }
 
     free(upglist);
@@ -88,7 +87,7 @@ void ftoper_oper(bool adj, bool add, int nx, int nr, float *x, float *r)
 		}
 	    }
 
-	    upgrad_inverse(upglist[is],tempx,tempr,NULL);
+	    sf_upgrad_inverse(upglist[is],tempx,tempr,NULL);
 
 	    for (i=0; i < n[0]*n[1]*n[2]; i++) {
 		x[i] += tempx[i];
@@ -96,7 +95,7 @@ void ftoper_oper(bool adj, bool add, int nx, int nr, float *x, float *r)
 	}
     } else {
 	for (is=0; is < ns; is++) {
-	    upgrad_solve(upglist[is],x,tempx,NULL);
+	    sf_upgrad_solve(upglist[is],x,tempx,NULL);
 
 	    for (k=0; k < n[1]*n[2]; k++) {
 		tempr[k*n[0]] = (m[is][k]==1)? tempx[k*n[0]]: 0.;

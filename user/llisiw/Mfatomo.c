@@ -19,7 +19,6 @@
 
 #include <rsf.h>
 
-#include "upgrad.h"
 #include "fastmarch.h"
 #include "fatomo.h"
 
