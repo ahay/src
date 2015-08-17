@@ -165,7 +165,7 @@ To use these techniques, please cite the following:
     attenuation using snapshots and saved boundaries, Technical report 
      No 83 - SEISCOPE project, University Joseph Fourier
 [2] Pengliang Yang, Romain Brossier, Jean Virieux, Boundary reconstruction 
-    aftersignificant downsampling, Technical report No 84 - SEISCOPE project
+    after significant downsampling, Technical report No 84 - SEISCOPE project
     University Joseph Fourier
 
 
@@ -183,7 +183,7 @@ my codes, you may need:
  1) check with ./configure to make sure all programming environments have 
 been well installed, especiall for FFTW, gcc, gfortran and CUDA;
  2) then, use 
-	./configure API=c,fortran-90 --prefix=$RSFROOT
+	./configure API=c,f90 --prefix=$RSFROOT
 to install Madagascar.
 
 I try my best to make my code self-contained. I believe it brings 
