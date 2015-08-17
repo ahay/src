@@ -25,10 +25,10 @@
 !!$      Reverse propagation of viscoacoustic forward wavefield with Maxwell 
 !!$      attenuation using snapshots and saved boundaries, Technical report 
 !!$	 No 83 - SEISCOPE project, University Joseph Fourier
-!!$  [2] Pengliang Yang, Romain Brossier,and  Jean Virieux, Boundary reconstruction 
-!!$      aftersignificant downsampling, Technical report No 84 - SEISCOPE project
+!!$  [2] Pengliang Yang, Romain Brossier, Jean Virieux, Boundary reconstruction 
+!!$      aftersignificant downsampling, Technical report No 84- SEISCOPE project
 !!$      University Joseph Fourier
-program mexwell_cpml24_backward
+program mexwell_cpml24_fb ! forward-backward propagation
   use rsf
   implicit none
 
@@ -198,7 +198,7 @@ program mexwell_cpml24_backward
            vxsnap(:,:,isnap)=vx       
         endif
      endif
-     
+
      if (snapmovie.or.(it==kt))then
      	call window2d(v0, p, nz, nx, nb);
        	call rsf_write(Fw1,v0)
@@ -271,13 +271,13 @@ program mexwell_cpml24_backward
   endif
 
   call exit(0)
-end program mexwell_cpml24_backward
+end program mexwell_cpml24_fb
 
 !------------------------------------------------------------------------------
 ! check the CFL/stability condition is satisfied or not
 subroutine check_sanity(vpmax,dt,dx,dz)
   implicit none
-  
+
   real::vpmax,dt,dx,dz
   real,parameter::c1=+1.196289062500000
   real,parameter::c2=-0.079752604166667
@@ -292,7 +292,7 @@ subroutine check_sanity(vpmax,dt,dx,dz)
      call exit(0)
   else
      write(0,*)'CFL=',CFL
-  endif  
+  endif
 end subroutine check_sanity
 
 !------------------------------------------------------------------------------
@@ -411,13 +411,13 @@ subroutine cpmlcoeff_init(cosfunc,bb,aa,vpmax,dx,dt,fm,nb)
   real::x,L,d0,d,alpha_max,alpha,r
   real,parameter::Rc=1.e-4
   real,parameter::pi=4.*atan(1.)
-  
+
   L=nb*dx
   d0=-3.*log(Rc)*vpmax/(2.*L)
   alpha_max=pi*fm
   if(cosfunc) then 
-	d0=4.*pi*fm
-	alpha_max=0.
+     d0=4.*pi*fm
+     alpha_max=0.
   endif
   do ib=1,nb
      x=(nb-ib+1)*dx     
@@ -504,7 +504,7 @@ end subroutine update_cpml_vzvx
 !------------------------------------------------------------------------------
 subroutine update_cpml_pzpx(p,vz,vx,conv_vz,conv_vx,rho,vv,bb,aa,idz,idx,dt,nz,nx,nb)
   implicit none
-  
+
   integer::nz,nx,nb
   real::idz,idx,dt
   real,dimension(nb)::bb,aa
@@ -562,7 +562,7 @@ subroutine update_cpml_pzpx(p,vz,vx,conv_vz,conv_vx,rho,vv,bb,aa,idz,idx,dt,nz,n
         p(i1,i2)=p(i1,i2)-dt*tmp*conv_vz(ib,i2,2)
      enddo
   enddo
-  
+
   !update px
   do i1=1,nzpad
      do i2=1,nb !left
@@ -605,7 +605,7 @@ subroutine add_sources(p, dt, wlt, sz, sx, nzpad, nxpad,wlt_actual)
   integer::sz,sx,nzpad, nxpad
   real::dt,wlt,wlt_actual
   real,dimension(nzpad, nxpad)::p
-  
+
   wlt_actual=dt*wlt
 
   p(sz,sx)=p(sz,sx)+wlt_actual
@@ -614,14 +614,14 @@ end subroutine add_sources
 !-------------------------------------------------------------------------------
 subroutine boundary_rw(v2b,bvz,bvx,vz,vx,nz,nx,nb)
   implicit none
-  
+
   logical::v2b !v to bourndary or reverse
   integer::nz,nx,nb
   real,dimension(nz+2*nb,nx+2*nb)::vz,vx
   real::bvz(3,nx,2),bvx(nz,3,2)
 
   integer::i1,i2
-  
+
   if(v2b) then !v to bourndary
      do i2=1,nx
         do i1=1,3

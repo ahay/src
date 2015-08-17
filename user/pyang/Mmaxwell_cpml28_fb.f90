@@ -24,7 +24,7 @@
 !!$  [2] Pengliang Yang, Romain Brossier, Jean Virieux, Boundary reconstruction 
 !!$      aftersignificant downsampling, Technical report No 84- SEISCOPE project
 !!$      University Joseph Fourier
-program mexwell_cpml28_backward
+program mexwell_cpml28_fb !forward-backward propagate
   use rsf
   implicit none
 
@@ -169,7 +169,7 @@ program mexwell_cpml28_backward
      endif
      call add_sources(p, dt, wlt(it), sz, sx, nzpad, nxpad, wltf(it))
      call boundary_rw(.true.,bvz(:,:,:,it),bvx(:,:,:,it),vz,vx,nz,nx,nb)
-     
+
      call window2d(v0, p, nz, nx, nb);
      call rsf_write(Fw1,v0)
      call compute_energy(ef(it),vz(nb+1:nb+nz,nb+1:nb+nx),&
@@ -226,13 +226,13 @@ program mexwell_cpml28_backward
   deallocate(wltb)
 
   call exit(0)
-end program mexwell_cpml28_backward
+end program mexwell_cpml28_fb
 
 !--------------------------------------------------------------------------------
 ! check the CFL/stability condition is satisfied or not
 subroutine check_sanity(vpmax,dt,dx,dz)
   implicit none
-  
+
   real::vpmax,dt,dx,dz
   real,parameter::c1=+1.196289062500000
   real,parameter::c2=-0.079752604166667
@@ -249,7 +249,7 @@ subroutine check_sanity(vpmax,dt,dx,dz)
      call exit(0)
   else
      write(0,*)'CFL=',CFL
-  endif  
+  endif
 end subroutine check_sanity
 
 !------------------------------------------------------------------------------
@@ -368,7 +368,7 @@ end subroutine step_forward_p
 
 subroutine cpmlcoeff_init(bndr,dx,nb)
   implicit none
-  
+
   integer::nb
   real::dx
   real,dimension(nb)::bndr
@@ -376,7 +376,7 @@ subroutine cpmlcoeff_init(bndr,dx,nb)
   integer::ib
   real::x,L,d0
   real,parameter::Rc=1.e-4
-  
+
   L=nb*dx
   d0=-3.*log(Rc)/(2.*L*L*L)
 
@@ -472,7 +472,7 @@ end subroutine update_cpml_vzvx
 !------------------------------------------------------------------------------
 subroutine update_cpml_pzpx(p,vz,vx,conv_vz,conv_vx,rho,vv,bndr,idz,idx,dt,nz,nx,nb)
   implicit none
-  
+
   integer::nz,nx,nb
   real::idz,idx,dt
   real,dimension(nb)::bndr
@@ -544,7 +544,7 @@ subroutine update_cpml_pzpx(p,vz,vx,conv_vz,conv_vx,rho,vv,bndr,idz,idx,dt,nz,nx
         p(i1,i2)=p(i1,i2)-dt*tmp*conv_vz(ib,i2,2)
      enddo
   enddo
-  
+
   !update px
   do i1=1,nzpad
      do i2=1,nb !left
@@ -595,14 +595,14 @@ end subroutine add_sources
 !-------------------------------------------------------------------------------
 subroutine boundary_rw(v2b,bvz,bvx,vz,vx,nz,nx,nb)
   implicit none
-  
+
   logical::v2b !v to bourndary or reverse
   integer::nz,nx,nb
   real,dimension(nz+2*nb,nx+2*nb)::vz,vx
   real::bvz(7,nx,2),bvx(nz,7,2)
 
   integer::i1,i2
-  
+
   if(v2b) then !v to bourndary
      do i2=1,nx
         do i1=1,7

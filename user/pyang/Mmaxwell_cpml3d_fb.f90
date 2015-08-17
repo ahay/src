@@ -28,7 +28,7 @@
 !!$  [2] Pengliang Yang, Romain Brossier, Jean Virieux, Boundary reconstruction 
 !!$      aftersignificant downsampling, Technical report No 84- SEISCOPE project
 !!$      University Joseph Fourier
-program mexwell_cpml3d_fb
+program mexwell_cpml3d_fb !3d forward-backward propagation
   use rsf
   implicit none
 

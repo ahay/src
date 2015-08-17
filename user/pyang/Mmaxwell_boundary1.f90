@@ -1,8 +1,5 @@
 !  Backward reconstruction based upon Maxwell attenuation model and CPML BC
-!  It is shown that even with attenuation (moderate), reverse reconstruction 
-!  is still a feasible way to build the incident wavefield, using boundary 
-!  saving scheme. Allowing for the heavy burden of the boundary saving in 3D, 
-!  we prefer 4-th order FD in space.
+!  Here we use boundary saving scheme with 1 layer for every state variable.
 !
 !!$  Copyright (C) 2015 University Joseph Fourier, Grenoble (Pengliang Yang)
 !!$  

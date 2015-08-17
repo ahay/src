@@ -1,8 +1,6 @@
 !  Backward reconstruction based upon Maxwell attenuation model and CPML BC
-!  It is shown that even with attenuation (moderate), reverse reconstruction 
-!  is still a feasible way to build the incident wavefield, using boundary 
-!  saving scheme. Allowing for the heavy burden of the boundary saving in 3D, 
-!  we prefer 4-th order FD in space.
+!  Here we use 2 layers for each state variable to do wavefield reconstruction
+!  using saved boundaries.
 !
 !!$  Copyright (C) 2015 University Joseph Fourier, Grenoble (Pengliang Yang)
 !!$  
@@ -25,8 +23,8 @@
 !!$      Reverse propagation of viscoacoustic forward wavefield with Maxwell 
 !!$      attenuation using snapshots and saved boundaries, Technical report 
 !!$	 No 83 - SEISCOPE project, University Joseph Fourier
-!!$  [2] Pengliang Yang, Romain Brossier,and  Jean Virieux, Boundary reconstruction 
-!!$      aftersignificant downsampling, Technical report No 84 - SEISCOPE project
+!!$  [2] Pengliang Yang, Romain Brossier, Jean Virieux, Boundary reconstruction 
+!!$      aftersignificant downsampling, Technical report No 84- SEISCOPE project
 !!$      University Joseph Fourier
 program mexwell_boundary2
   use rsf
