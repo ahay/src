@@ -19,7 +19,16 @@
 !!$  You should have received a copy of the GNU General Public License
 !!$  along with this program; if not, write to the Free Software
 !!$  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-program mexwell_boundary
+!!$
+!!$  References: 
+!!$  [1] Pengliang Yang, Romain Brossier, Ludovic Metivier and  Jean Virieux,
+!!$      Reverse propagation of viscoacoustic forward wavefield with Maxwell 
+!!$      attenuation using snapshots and saved boundaries, Technical report 
+!!$	 No 83 - SEISCOPE project, University Joseph Fourier
+!!$  [2] Pengliang Yang, Romain Brossier,and  Jean Virieux, Boundary reconstruction 
+!!$      aftersignificant downsampling, Technical report No 84 - SEISCOPE project
+!!$      University Joseph Fourier
+program mexwell_boundary1
   use rsf
   implicit none
 
@@ -164,26 +173,20 @@ program mexwell_boundary
      if (order1) then ! scheme 1, 1st order accuracy, default
         call step_forward_v(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
         call update_cpml_vzvx(p,vz,vx,conv_pz,conv_px,rho,vv,bb,aa,idz,idx,dt,nz,nx,nb)
-        call boundary_rw_v(.true.,bvz(:,:,:,it),bvx(:,:,:,it),vz,vx,nz,nx,nb)
-
         call step_forward_p(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
         call update_cpml_pzpx(p,vz,vx,conv_vz,conv_vx,rho,vv,bb,aa,idz,idx,dt,nz,nx,nb)
-        call boundary_rw_p(.true.,bpz(:,:,:,it),bpx(:,:,:,it),p,nz,nx,nb)
-
         if(attenuating) call apply_attenuation(p, eta, rho, vv, dt, nzpad, nxpad)
      else ! scheme 2, 2nd order accuracy
         if(attenuating) call apply_attenuation(p, eta, rho, vv, 0.5*dt, nzpad, nxpad)
         call step_forward_v(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
         call update_cpml_vzvx(p,vz,vx,conv_pz,conv_px,rho,vv,bb,aa,idz,idx,dt,nz,nx,nb)
-        call boundary_rw_v(.true.,bvz(:,:,:,it),bvx(:,:,:,it),vz,vx,nz,nx,nb)
-
         call step_forward_p(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
         call update_cpml_pzpx(p,vz,vx,conv_vz,conv_vx,rho,vv,bb,aa,idz,idx,dt,nz,nx,nb)
-        call boundary_rw_p(.true.,bpz(:,:,:,it),bpx(:,:,:,it),p,nz,nx,nb)
-
         if(attenuating) call apply_attenuation(p, eta, rho, vv, 0.5*dt, nzpad, nxpad)
      endif
      call add_sources(p, dt, wlt(it), sz, sx, nzpad, nxpad, wltf(it))
+     call boundary_rw_v(.true.,bvz(:,:,:,it),bvx(:,:,:,it),vz,vx,nz,nx,nb)
+     call boundary_rw_p(.true.,bpz(:,:,:,it),bpx(:,:,:,it),p,nz,nx,nb)
 !     call boundary_rw(.true.,bvz(:,:,:,it),bvx(:,:,:,it),vz,vx,nz,nx,nb)
      if(nsnap>0) then !save snapshots for re-initialization in backward reconstruction
         if ((isnap<nsnap).and.(it==(isnap+1)*snap_interval)) then
@@ -205,6 +208,8 @@ program mexwell_boundary
 
   !backward reconstruction
   do it=nt,1,-1
+     call boundary_rw_p(.false.,bpz(:,:,:,it),bpx(:,:,:,it),p,nz,nx,nb)
+     call boundary_rw_v(.false.,bvz(:,:,:,it),bvx(:,:,:,it),vz,vx,nz,nx,nb)
 !     call boundary_rw(.false.,bvz(:,:,:,it),bvx(:,:,:,it),vz,vx,nz,nx,nb)
      call compute_energy(eb(it),vz(nb+1:nb+nz,nb+1:nb+nx),&
           vx(nb+1:nb+nz,nb+1:nb+nx),p(nb+1:nb+nz,nb+1:nb+nx),&
@@ -224,15 +229,11 @@ program mexwell_boundary
      call add_sources(p, -dt, wlt(it), sz, sx, nzpad, nxpad, wltb(it))
      if (order1) then ! scheme 1, 1st order accuracy, default
         if(attenuating) call apply_attenuation(p, eta, rho, vv, -dt, nzpad, nxpad)
-        call boundary_rw_p(.false.,bpz(:,:,:,it),bpx(:,:,:,it),p,nz,nx,nb)
         call step_forward_p(p, vz, vx, vv, rho, -dt, idz, idx, nzpad, nxpad)
-        call boundary_rw_v(.false.,bvz(:,:,:,it),bvx(:,:,:,it),vz,vx,nz,nx,nb)
         call step_forward_v(p, vz, vx, vv, rho, -dt, idz, idx, nzpad, nxpad)
      else ! scheme 2, 2nd order accuracy
         if(attenuating) call apply_attenuation(p, eta, rho, vv, -0.5*dt, nzpad, nxpad)
-        call boundary_rw_p(.false.,bpz(:,:,:,it),bpx(:,:,:,it),p,nz,nx,nb)
         call step_forward_p(p, vz, vx, vv, rho, -dt, idz, idx, nzpad, nxpad)
-        call boundary_rw_v(.false.,bvz(:,:,:,it),bvx(:,:,:,it),vz,vx,nz,nx,nb)
         call step_forward_v(p, vz, vx, vv, rho, -dt, idz, idx, nzpad, nxpad)
         if(attenuating) call apply_attenuation(p, eta, rho, vv,-0.5*dt, nzpad, nxpad)
      endif
@@ -269,7 +270,7 @@ program mexwell_boundary
   endif
 
   call exit(0)
-end program mexwell_boundary
+end program mexwell_boundary1
 
 !------------------------------------------------------------------------------
 ! check the CFL/stability condition is satisfied or not
@@ -621,7 +622,7 @@ subroutine boundary_rw(v2b,bvz,bvx,vz,vx,nz,nx,nb)
      do i1=1,nz
         do i2=1,3
            bvx(i1,i2,1)=vx(i1+nb,i2+nb-2)
-           bvx(i1,i2,2)=vx(i1+nb,i2+nz+nb-2)
+           bvx(i1,i2,2)=vx(i1+nb,i2+nx+nb-2)
         enddo
      enddo
   else !boundary to v
@@ -634,7 +635,7 @@ subroutine boundary_rw(v2b,bvz,bvx,vz,vx,nz,nx,nb)
      do i1=1,nz
         do i2=1,3
            vx(i1+nb,i2+nb-2)=bvx(i1,i2,1)
-           vx(i1+nb,i2+nz+nb-2)=bvx(i1,i2,2)
+           vx(i1+nb,i2+nx+nb-2)=bvx(i1,i2,2)
         enddo
      enddo
   endif
@@ -658,7 +659,7 @@ subroutine boundary_rw_v(v2b,bvz,bvx,vz,vx,nz,nx,nb)
      enddo
      do i1=1,nz
            bvx(i1,1,1)=vx(i1+nb,nb+1)
-           bvx(i1,1,2)=vx(i1+nb,nz+nb)
+           bvx(i1,1,2)=vx(i1+nb,nx+nb)
      enddo
   else !boundary to v
      do i2=1,nx
@@ -667,7 +668,7 @@ subroutine boundary_rw_v(v2b,bvz,bvx,vz,vx,nz,nx,nb)
      enddo
      do i1=1,nz
            vx(i1+nb,nb+1)=bvx(i1,1,1)
-           vx(i1+nb,nz+nb)=bvx(i1,1,2)
+           vx(i1+nb,nx+nb)=bvx(i1,1,2)
      enddo
   endif
 end subroutine boundary_rw_v

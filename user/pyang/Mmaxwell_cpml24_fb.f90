@@ -19,12 +19,21 @@
 !!$  You should have received a copy of the GNU General Public License
 !!$  along with this program; if not, write to the Free Software
 !!$  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+!!$
+!!$  References: 
+!!$  [1] Pengliang Yang, Romain Brossier, Ludovic Metivier and  Jean Virieux,
+!!$      Reverse propagation of viscoacoustic forward wavefield with Maxwell 
+!!$      attenuation using snapshots and saved boundaries, Technical report 
+!!$	 No 83 - SEISCOPE project, University Joseph Fourier
+!!$  [2] Pengliang Yang, Romain Brossier,and  Jean Virieux, Boundary reconstruction 
+!!$      aftersignificant downsampling, Technical report No 84 - SEISCOPE project
+!!$      University Joseph Fourier
 program mexwell_cpml24_backward
   use rsf
   implicit none
 
-  logical :: order1,attenuating
-  integer :: ib, it, nt, nz, nx, nb, sx, sz, nxpad, nzpad
+  logical :: order1,attenuating,snapmovie
+  integer :: ib, it, kt, nt, nz, nx, nb, sx, sz, nxpad, nzpad
   integer :: nsnap, isnap, snap_interval
   real  :: dt, dz, dx, fm, tmp, idx, idz
   real*8, parameter::PI=4.*atan(1.)
@@ -57,27 +66,33 @@ program mexwell_cpml24_backward
 
   call from_par("nb", nb, 30) ! thinkness of sponge ABC
   call from_par("nt", nt, 1000) !number of time steps
+  call from_par("kt", kt, 500) !index of snapshot 
   call from_par("dt", dt, 0.001) ! time sampling interval
   call from_par("fm", fm, 20.) ! domainant frequency for ricker wavelet
   call from_par("nsnap", nsnap, 0) ! number of snapshots for re-initialization
   call from_par("order1",order1,.true.) ! 1st order or 2nd order accuracy
   call from_par("attenuating",attenuating,.true.) ! add attenuation or not
+  call from_par("snapmovie",snapmovie,.false.) ! record snapshots as a series of movie
 
   call to_par(Fw1,"n1",nz)
   call to_par(Fw1,"n2",nx)
   call to_par(Fw1,"d1",dz)
   call to_par(Fw1,"d2",dx)
-  call to_par(Fw1,"n3",nt)
-  call to_par(Fw1,"o3",0)
-  call to_par(Fw1,"d3",dt)
+  if(snapmovie) then
+     call to_par(Fw1,"n3",nt)
+     call to_par(Fw1,"o3",0)
+     call to_par(Fw1,"d3",dt)
+  endif
 
   call to_par(Fw2,"n1",nz)
   call to_par(Fw2,"n2",nx)
   call to_par(Fw2,"d1",dz)
   call to_par(Fw2,"d2",dx)
-  call to_par(Fw2,"n3",nt)
-  call to_par(Fw2,"o3",(nt-1)*dt)
-  call to_par(Fw2,"d3",-dt)
+  if (snapmovie) then
+     call to_par(Fw2,"n3",nt)
+     call to_par(Fw2,"o3",(nt-1)*dt)
+     call to_par(Fw2,"d3",-dt)
+  endif
 
   call to_par(Fef,"n1",nt)
   call to_par(Fef,"o1",0)
@@ -146,8 +161,7 @@ program mexwell_cpml24_backward
   call expand2d(rho, v0, nz, nx, nb)
   call rsf_read(Feta, v0)
   call expand2d(eta, v0, nz, nx, nb)
-  !generate coefficients for the absorbing boundary
-  call cpmlcoeff_init(bb,aa,maxval(vv),dx,dt,fm,nb)
+  call cpmlcoeff_init(.true.,bb,aa,maxval(vv),dx,dt,fm,nb)
   p=0.
   vx=0.
   vz=0.
@@ -184,9 +198,11 @@ program mexwell_cpml24_backward
            vxsnap(:,:,isnap)=vx       
         endif
      endif
-
-     call window2d(v0, p, nz, nx, nb);
-     call rsf_write(Fw1,v0)
+     
+     if (snapmovie.or.(it==kt))then
+     	call window2d(v0, p, nz, nx, nb);
+       	call rsf_write(Fw1,v0)
+     endif
      call compute_energy(ef(it),vz(nb+1:nb+nz,nb+1:nb+nx),&
           vx(nb+1:nb+nz,nb+1:nb+nx),p(nb+1:nb+nz,nb+1:nb+nx),&
           rho(nb+1:nb+nz,nb+1:nb+nx),vv(nb+1:nb+nz,nb+1:nb+nx),nz,nx)
@@ -200,9 +216,10 @@ program mexwell_cpml24_backward
      call compute_energy(eb(it),vz(nb+1:nb+nz,nb+1:nb+nx),&
           vx(nb+1:nb+nz,nb+1:nb+nx),p(nb+1:nb+nz,nb+1:nb+nx),&
           rho(nb+1:nb+nz,nb+1:nb+nx),vv(nb+1:nb+nz,nb+1:nb+nx),nz,nx)
-
-     call window2d(v0, p, nz, nx, nb)
-     call rsf_write(Fw2,v0)
+     if(snapmovie .or.(it==kt))then
+     	call window2d(v0, p, nz, nx, nb)
+     	call rsf_write(Fw2,v0)
+     endif
      if(nsnap>0) then !save snapshots for re-initialization in backward reconstruction
         if((isnap>0).and.(it==isnap*snap_interval)) then
            p=psnap(:,:,isnap)
@@ -382,9 +399,10 @@ end subroutine step_forward_p
 
 !------------------------------------------------------------------------------
 ! initialize PML damping profile
-subroutine cpmlcoeff_init(bb,aa,vpmax,dx,dt,fm,nb)
+subroutine cpmlcoeff_init(cosfunc,bb,aa,vpmax,dx,dt,fm,nb)
   implicit none
-  
+
+  logical::cosfunc
   integer::nb
   real::dt,fm,dx,vpmax
   real,dimension(nb)::bb,aa
@@ -392,18 +410,26 @@ subroutine cpmlcoeff_init(bb,aa,vpmax,dx,dt,fm,nb)
   integer::ib
   real::x,L,d0,d,alpha_max,alpha,r
   real,parameter::Rc=1.e-4
+  real,parameter::pi=4.*atan(1.)
   
   L=nb*dx
   d0=-3.*log(Rc)*vpmax/(2.*L)
-  alpha_max=4.*atan(1.)*fm
-
+  alpha_max=pi*fm
+  if(cosfunc) then 
+	d0=4.*pi*fm
+	alpha_max=0.
+  endif
   do ib=1,nb
-     x=(nb-ib+1)*dx     !x=1.-cos(0.5*(nb-ib)*PI/nb)
+     x=(nb-ib+1)*dx     
      r=x/L ! ratio of x over L
-     d=d0*r**2; alpha=alpha_max*r
+     d=d0*r**2; 
+     alpha=alpha_max*r
+     !use cosine damping profile allowing for end derivatives=0
+     if(cosfunc) d=d0*(1.-cos(0.5*pi*r)) 
      bb(ib)=exp(-(d+alpha)*dt)
      aa(ib)=d*(bb(ib)-1.)/(d+alpha)
   enddo
+
 end subroutine cpmlcoeff_init
 
 !------------------------------------------------------------------------------
@@ -606,7 +632,7 @@ subroutine boundary_rw(v2b,bvz,bvx,vz,vx,nz,nx,nb)
      do i1=1,nz
         do i2=1,3
            bvx(i1,i2,1)=vx(i1+nb,i2+nb-2)
-           bvx(i1,i2,2)=vx(i1+nb,i2+nz+nb-2)
+           bvx(i1,i2,2)=vx(i1+nb,i2+nx+nb-2)
         enddo
      enddo
   else !boundary to v
@@ -619,7 +645,7 @@ subroutine boundary_rw(v2b,bvz,bvx,vz,vx,nz,nx,nb)
      do i1=1,nz
         do i2=1,3
            vx(i1+nb,i2+nb-2)=bvx(i1,i2,1)
-           vx(i1+nb,i2+nz+nb-2)=bvx(i1,i2,2)
+           vx(i1+nb,i2+nx+nb-2)=bvx(i1,i2,2)
         enddo
      enddo
   endif

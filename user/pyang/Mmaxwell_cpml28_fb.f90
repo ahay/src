@@ -15,6 +15,15 @@
 !!$  You should have received a copy of the GNU General Public License
 !!$  along with this program; if not, write to the Free Software
 !!$  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+!!$
+!!$  References: 
+!!$  [1] Pengliang Yang, Romain Brossier, Ludovic Metivier and  Jean Virieux,
+!!$      Reverse propagation of viscoacoustic forward wavefield with Maxwell 
+!!$      attenuation using snapshots and saved boundaries, Technical report 
+!!$	 No 83 - SEISCOPE project, University Joseph Fourier
+!!$  [2] Pengliang Yang, Romain Brossier, Jean Virieux, Boundary reconstruction 
+!!$      aftersignificant downsampling, Technical report No 84- SEISCOPE project
+!!$      University Joseph Fourier
 program mexwell_cpml28_backward
   use rsf
   implicit none
@@ -604,7 +613,7 @@ subroutine boundary_rw(v2b,bvz,bvx,vz,vx,nz,nx,nb)
      do i1=1,nz
         do i2=1,7
            bvx(i1,i2,1)=vx(i1+nb,i2+nb-4)
-           bvx(i1,i2,2)=vx(i1+nb,i2+nz+nb-4)
+           bvx(i1,i2,2)=vx(i1+nb,i2+nx+nb-4)
         enddo
      enddo
   else !boundary to v
@@ -617,7 +626,7 @@ subroutine boundary_rw(v2b,bvz,bvx,vz,vx,nz,nx,nb)
      do i1=1,nz
         do i2=1,7
            vx(i1+nb,i2+nb-4)=bvx(i1,i2,1)
-           vx(i1+nb,i2+nz+nb-4)=bvx(i1,i2,2)
+           vx(i1+nb,i2+nx+nb-4)=bvx(i1,i2,2)
         enddo
      enddo
   endif

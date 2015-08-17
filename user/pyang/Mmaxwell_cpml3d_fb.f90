@@ -19,7 +19,16 @@
 !!$  You should have received a copy of the GNU General Public License
 !!$  along with this program; if not, write to the Free Software
 !!$  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-program mexwell_cpml2_backward
+!!$
+!!$  References: 
+!!$  [1] Pengliang Yang, Romain Brossier, Ludovic Metivier and  Jean Virieux,
+!!$      Reverse propagation of viscoacoustic forward wavefield with Maxwell 
+!!$      attenuation using snapshots and saved boundaries, Technical report 
+!!$	 No 83 - SEISCOPE project, University Joseph Fourier
+!!$  [2] Pengliang Yang, Romain Brossier, Jean Virieux, Boundary reconstruction 
+!!$      aftersignificant downsampling, Technical report No 84- SEISCOPE project
+!!$      University Joseph Fourier
+program mexwell_cpml3d_fb
   use rsf
   implicit none
 
@@ -27,13 +36,13 @@ program mexwell_cpml2_backward
   integer :: ib, it, kt, nt, nz, nx, ny, nb, sz, sx, sy, nzpad, nxpad, nypad
   real  :: dt, dz, dx, dy, fm, tmp, idz, idx, idy
   real*8, parameter::PI=4.*atan(1.)
-  real, dimension(:), allocatable :: wlt,bb,aa
+  real, dimension(:), allocatable :: wlt,bb,aa,ef,eb
   real, dimension(:,:,:), allocatable :: v0, vv, rho, eta
   real, dimension(:,:,:), allocatable :: p, vz, vx, vy
   real, dimension(:,:,:,:),allocatable :: conv_pz,conv_px,conv_py
   real, dimension(:,:,:,:),allocatable :: conv_vz,conv_vx,conv_vy
   real, dimension(:,:,:,:,:),allocatable:: bvz, bvx, bvy
-  type(file) :: Fv, Fw1, Fw2, Frho, Feta  ! I/O files 
+  type(file) :: Fv, Fw1, Fw2, Frho, Feta, Fef,Feb  ! I/O files 
 
   call sf_init() ! initialize Madagascar
 
@@ -43,6 +52,8 @@ program mexwell_cpml2_backward
   Feta=rsf_input("eta")   ! Pascal
   Fw1 =rsf_output("out")  ! output forward wavefield 
   Fw2 =rsf_output("back") ! output backward reconstructed wavefield
+  Fef=rsf_output("ef")    ! energy in forward modeling
+  Feb=rsf_output("eb")    ! energy in backward reconstruction
 
   ! Read/Write axes
   call from_par(Fv,"n1",nz) ! velocity model: nz
@@ -57,9 +68,20 @@ program mexwell_cpml2_backward
   call from_par("kt", kt, 500) ! recording time of snapshot
   call from_par("dt", dt, 0.001) ! time sampling interval
   call from_par("fm", fm, 20.) ! domainant frequency for ricker wavelet
-
   call from_par("order1",order1,.true.) ! 1st order or 2nd order accuracy
   call from_par("attenuating",attenuating,.true.) ! add attenuation or not
+
+  call to_par(Fef,"n1",nt)
+  call to_par(Fef,"o1",0)
+  call to_par(Fef,"d1",dt)
+  call to_par(Fef,"n2",1)
+  call to_par(Fef,"n3",1)
+
+  call to_par(Feb,"n1",nt)
+  call to_par(Feb,"o1",0)
+  call to_par(Feb,"d1",dt)
+  call to_par(Feb,"n2",1)
+  call to_par(Fef,"n3",1)
 
   idz=1./dz
   idx=1./dx
@@ -91,6 +113,8 @@ program mexwell_cpml2_backward
   allocate(bvz(3,nx,ny,2,nt))
   allocate(bvx(nz,3,ny,2,nt))
   allocate(bvy(nz,nx,3,2,nt))
+  allocate(ef(nt))
+  allocate(eb(nt))
 
   !generate ricker wavelet with a delay
   do it=1,nt  
@@ -141,11 +165,25 @@ program mexwell_cpml2_backward
         call window3d(v0, p, nz, nx, ny, nb)
         call rsf_write(Fw1,v0)
      endif
+     call compute_energy(ef(it),vz(nb+1:nb+nz,nb+1:nb+nx,nb+1:nb+ny),&
+          vx(nb+1:nb+nz,nb+1:nb+nx,nb+1:nb+ny),&
+          vy(nb+1:nb+nz,nb+1:nb+nx,nb+1:nb+ny),&
+          p(nb+1:nb+nz,nb+1:nb+nx,nb+1:nb+ny),&
+          rho(nb+1:nb+nz,nb+1:nb+nx,nb+1:nb+ny),&
+          vv(nb+1:nb+nz,nb+1:nb+nx,nb+1:nb+ny),nz,nx,ny)
   enddo
+  call rsf_write(Fef,ef) ! store forward energy history
 
   !backward reconstruction
   do it=nt,1,-1     
      call boundary_rw(.false.,bvz(:,:,:,:,it),bvx(:,:,:,:,it),bvy(:,:,:,:,it),vz,vx,vy,nz,nx,ny,nb)
+     call compute_energy(ef(it),vz(nb+1:nb+nz,nb+1:nb+nx,nb+1:nb+ny),&
+          vx(nb+1:nb+nz,nb+1:nb+nx,nb+1:nb+ny),&
+          vy(nb+1:nb+nz,nb+1:nb+nx,nb+1:nb+ny),&
+          p(nb+1:nb+nz,nb+1:nb+nx,nb+1:nb+ny),&
+          rho(nb+1:nb+nz,nb+1:nb+nx,nb+1:nb+ny),&
+          vv(nb+1:nb+nz,nb+1:nb+nx,nb+1:nb+ny),nz,nx,ny)
+
      if(it==kt) then ! record snapshot at it=kt
         call window3d(v0, p, nz, nx, ny, nb)
         call rsf_write(Fw2,v0)
@@ -162,6 +200,7 @@ program mexwell_cpml2_backward
         if(attenuating) call apply_attenuation(p, eta, rho, vv,-0.5*dt, nzpad, nxpad, nypad)
      endif
   enddo
+  call rsf_write(Feb,eb) ! store forward energy history
 
   deallocate(wlt)
   deallocate(bb)
@@ -183,15 +222,17 @@ program mexwell_cpml2_backward
   deallocate(bvz)
   deallocate(bvx)
   deallocate(bvy)
+  deallocate(ef)
+  deallocate(eb)
 
   call exit(0)
-end program mexwell_cpml2_backward
+end program mexwell_cpml3d_fb
 
 !------------------------------------------------------------------------------
 ! check the CFL/stability condition is satisfied or not
 subroutine check_sanity(vpmax,dt,dz,dx,dy)
   implicit none
-  
+
   real::vpmax,dt,dx,dz,dy
   real,parameter::c1=1.125
   real,parameter::c2=-1./24.
@@ -206,7 +247,7 @@ subroutine check_sanity(vpmax,dt,dz,dx,dy)
      call exit(0)
   else
      write(0,*)'CFL=',CFL
-  endif  
+  endif
 end subroutine check_sanity
 
 !------------------------------------------------------------------------------
@@ -287,7 +328,7 @@ subroutine step_forward_v(p, vz, vx, vy, vv, rho, dt, idz, idx, idy, nzpad, nxpa
 
   real,parameter::c1=1.125
   real,parameter::c2=-1./24.
-  
+
   do i3=2,nypad-2
      do i2=2,nxpad-2
         do i1=2,nzpad-2
@@ -318,7 +359,7 @@ subroutine step_forward_p(p, vz, vx, vy, vv, rho, dt, idz, idx, idy, nzpad, nxpa
 
   real,parameter::c1=1.125
   real,parameter::c2=-1./24.
-  
+
   do i3=3,nzpad-1
      do i2=3,nxpad-1
         do i1=3,nzpad-1
@@ -340,7 +381,7 @@ end subroutine step_forward_p
 ! initialize PML damping profile
 subroutine cpmlcoeff_init(bb,aa,vpmax,dx,dt,fm,nb)
   implicit none
-  
+
   integer::nb
   real::dt,fm,dx,vpmax
   real,dimension(nb)::bb,aa
@@ -348,7 +389,7 @@ subroutine cpmlcoeff_init(bb,aa,vpmax,dx,dt,fm,nb)
   integer::ib
   real::x,L,d0,d,alpha_max,alpha,r
   real,parameter::Rc=1.e-4
-  
+
   L=nb*dx
   d0=-3.*log(Rc)*vpmax/(2.*L)
   alpha_max=4.*atan(1.)*fm
@@ -473,7 +514,7 @@ end subroutine update_cpml_vzvxvy
 !------------------------------------------------------------------------------
 subroutine update_cpml_pzpxpy(p, vz, vx, vy, conv_vz, conv_vx, conv_vy, rho, vv, bb, aa, idz, idx, idy, dt, nz, nx, ny, nb)
   implicit none
-  
+
   integer::nz,nx,ny,nb
   real::idz,idx,idy,dt
   real,dimension(nb)::bb,aa
@@ -489,7 +530,7 @@ subroutine update_cpml_pzpxpy(p, vz, vx, vy, conv_vz, conv_vx, conv_vy, rho, vv,
   nzpad=nz+2*nb
   nxpad=nx+2*nb
   nypad=ny+2*nb
-  
+
   !update conv_vz
   do i3=1,nypad
      do i2=1,nxpad
@@ -593,7 +634,7 @@ subroutine apply_attenuation(p, eta, rho, vv, dt, nzpad, nxpad,nypad)
   integer::nzpad,nxpad,nypad
   real::dt
   real, dimension(nzpad,nxpad,nypad)::p, eta, rho, vv
-  
+
   do i3=1,nypad
      do i2=1,nxpad
         do i1=1,nzpad
@@ -620,14 +661,14 @@ end subroutine add_sources
 !-------------------------------------------------------------------------------
 subroutine boundary_rw(v2b, bvz, bvx, bvy, vz, vx, vy, nz, nx, ny, nb)
   implicit none
-  
+
   logical::v2b !v to bourndary or reverse
   integer::nz,nx,ny,nb
   real,dimension(nz+2*nb,nx+2*nb,ny+2*nb)::vz,vx,vy
   real::bvz(3,nx,ny,2),bvx(nz,3,ny,2),bvy(nz,nx,3,2)
 
   integer::i1,i2,i3
-  
+
   if(v2b) then !v to bourndary
      do i3=1,ny
         do i2=1,nx
@@ -641,7 +682,7 @@ subroutine boundary_rw(v2b, bvz, bvx, bvy, vz, vx, vy, nz, nx, ny, nb)
         do i1=1,nz
            do i2=1,3
               bvx(i1,i2,i3,1)=vx(i1+nb,i2+nb-2,i3+nb)
-              bvx(i1,i2,i3,2)=vx(i1+nb,i2+nz+nb-2,i3+nb)
+              bvx(i1,i2,i3,2)=vx(i1+nb,i2+nx+nb-2,i3+nb)
            enddo
         enddo
      enddo
@@ -649,7 +690,7 @@ subroutine boundary_rw(v2b, bvz, bvx, bvy, vz, vx, vy, nz, nx, ny, nb)
         do i1=1,nz
            do i3=1,3
               bvy(i1,i2,i3,1)=vy(i1+nb,i2+nb,i3+nb-2)
-              bvy(i1,i2,i3,2)=vy(i1+nb,i2+nb,i3+nz+nb-2)
+              bvy(i1,i2,i3,2)=vy(i1+nb,i2+nb,i3+ny+nb-2)
            enddo
         enddo
      enddo
@@ -666,7 +707,7 @@ subroutine boundary_rw(v2b, bvz, bvx, bvy, vz, vx, vy, nz, nx, ny, nb)
         do i1=1,nz
            do i2=1,3
               vx(i1+nb,i2+nb-2,i3+nb)=bvx(i1,i2,i3,1)
-              vx(i1+nb,i2+nz+nb-2,i3+nb)=bvx(i1,i2,i3,2)
+              vx(i1+nb,i2+nx+nb-2,i3+nb)=bvx(i1,i2,i3,2)
            enddo
         enddo
      enddo
@@ -680,4 +721,16 @@ subroutine boundary_rw(v2b, bvz, bvx, bvy, vz, vx, vy, nz, nx, ny, nb)
      enddo
   endif
 end subroutine boundary_rw
+
+
+!-------------------------------------------------------------------------------
+subroutine compute_energy(e,vz,vx,vy,p,rho,vv,nz,nx,ny)
+  implicit none
+
+  integer::nz,nx,ny
+  real::e
+  real,dimension(nz,nx,ny)::rho,vv,p,vz,vx,vy
+
+  e=0.5*sum((vz*vz+vx*vx+vy*vy)*rho+p*p/(rho*vv*vv))
+end subroutine compute_energy
 

@@ -19,12 +19,21 @@
 !!$  You should have received a copy of the GNU General Public License
 !!$  along with this program; if not, write to the Free Software
 !!$  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-program mexwell_boundary
+!!$
+!!$  References: 
+!!$  [1] Pengliang Yang, Romain Brossier, Ludovic Metivier and  Jean Virieux,
+!!$      Reverse propagation of viscoacoustic forward wavefield with Maxwell 
+!!$      attenuation using snapshots and saved boundaries, Technical report 
+!!$	 No 83 - SEISCOPE project, University Joseph Fourier
+!!$  [2] Pengliang Yang, Romain Brossier,and  Jean Virieux, Boundary reconstruction 
+!!$      aftersignificant downsampling, Technical report No 84 - SEISCOPE project
+!!$      University Joseph Fourier
+program mexwell_boundary2
   use rsf
   implicit none
 
-  logical :: order1,attenuating
-  integer :: ib, it, nt, nz, nx, nb, sx, sz, nxpad, nzpad
+  logical :: order1,attenuating, snapmovie
+  integer :: ib, it, kt, nt, nz, nx, nb, sx, sz, nxpad, nzpad
   integer :: nsnap, isnap, snap_interval
   real  :: dt, dz, dx, fm, tmp, idx, idz
   real*8, parameter::PI=4.*atan(1.)
@@ -58,26 +67,32 @@ program mexwell_boundary
   call from_par("nb", nb, 30) ! thinkness of sponge ABC
   call from_par("nt", nt, 1000) !number of time steps
   call from_par("dt", dt, 0.001) ! time sampling interval
+  call from_par("kt", kt, 500) !index of snapshot 
   call from_par("fm", fm, 20.) ! domainant frequency for ricker wavelet
   call from_par("nsnap", nsnap, 0) ! number of snapshots for re-initialization
   call from_par("order1",order1,.true.) ! 1st order or 2nd order accuracy
   call from_par("attenuating",attenuating,.true.) ! add attenuation or not
+  call from_par("snapmovie",snapmovie,.false.) ! record snapshots as a series of movie
 
   call to_par(Fw1,"n1",nz)
   call to_par(Fw1,"n2",nx)
   call to_par(Fw1,"d1",dz)
   call to_par(Fw1,"d2",dx)
-  call to_par(Fw1,"n3",nt)
-  call to_par(Fw1,"o3",0)
-  call to_par(Fw1,"d3",dt)
+  if(snapmovie) then
+     call to_par(Fw1,"n3",nt)
+     call to_par(Fw1,"o3",0)
+     call to_par(Fw1,"d3",dt)
+  endif
 
   call to_par(Fw2,"n1",nz)
   call to_par(Fw2,"n2",nx)
   call to_par(Fw2,"d1",dz)
   call to_par(Fw2,"d2",dx)
-  call to_par(Fw2,"n3",nt)
-  call to_par(Fw2,"o3",(nt-1)*dt)
-  call to_par(Fw2,"d3",-dt)
+  if(snapmovie) then
+     call to_par(Fw2,"n3",nt)
+     call to_par(Fw2,"o3",(nt-1)*dt)
+     call to_par(Fw2,"d3",-dt)
+  endif
 
   call to_par(Fef,"n1",nt)
   call to_par(Fef,"o1",0)
@@ -163,23 +178,21 @@ program mexwell_boundary
   do it=1,nt
      if (order1) then ! scheme 1, 1st order accuracy, default
         call step_forward_v(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
-        call boundary_rw_v(.true.,bvz(:,:,:,it),bvx(:,:,:,it),vz,vx,nz,nx,nb)
         call update_cpml_vzvx(p,vz,vx,conv_pz,conv_px,rho,vv,bb,aa,idz,idx,dt,nz,nx,nb)
         call step_forward_p(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
-        call boundary_rw_p(.true.,bpz(:,:,:,it),bpx(:,:,:,it),p,nz,nx,nb)
         call update_cpml_pzpx(p,vz,vx,conv_vz,conv_vx,rho,vv,bb,aa,idz,idx,dt,nz,nx,nb)
         if(attenuating) call apply_attenuation(p, eta, rho, vv, dt, nzpad, nxpad)
      else ! scheme 2, 2nd order accuracy
         if(attenuating) call apply_attenuation(p, eta, rho, vv, 0.5*dt, nzpad, nxpad)
         call step_forward_v(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
-        call boundary_rw_v(.true.,bvz(:,:,:,it),bvx(:,:,:,it),vz,vx,nz,nx,nb)
         call update_cpml_vzvx(p,vz,vx,conv_pz,conv_px,rho,vv,bb,aa,idz,idx,dt,nz,nx,nb)
         call step_forward_p(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
-        call boundary_rw_p(.true.,bpz(:,:,:,it),bpx(:,:,:,it),p,nz,nx,nb)
         call update_cpml_pzpx(p,vz,vx,conv_vz,conv_vx,rho,vv,bb,aa,idz,idx,dt,nz,nx,nb)
         if(attenuating) call apply_attenuation(p, eta, rho, vv, 0.5*dt, nzpad, nxpad)
      endif
      call add_sources(p, dt, wlt(it), sz, sx, nzpad, nxpad, wltf(it))
+     call boundary_rw_v(.true.,bvz(:,:,:,it),bvx(:,:,:,it),vz,vx,nz,nx,nb)
+     call boundary_rw_p(.true.,bpz(:,:,:,it),bpx(:,:,:,it),p,nz,nx,nb)
      if(nsnap>0) then !save snapshots for re-initialization in backward reconstruction
         if ((isnap<nsnap).and.(it==(isnap+1)*snap_interval)) then
            isnap=isnap+1
@@ -189,8 +202,10 @@ program mexwell_boundary
            vxsnap(:,:,isnap)=vx       
         endif
      endif
-     call window2d(v0, p, nz, nx, nb);
-     call rsf_write(Fw1,v0)
+     if(snapmovie.or. (it==kt)) then
+     	call window2d(v0, p, nz, nx, nb);
+       	call rsf_write(Fw1,v0)
+     endif
      call compute_energy(ef(it),vz(nb+1:nb+nz,nb+1:nb+nx),&
           vx(nb+1:nb+nz,nb+1:nb+nx),p(nb+1:nb+nz,nb+1:nb+nx),&
           rho(nb+1:nb+nz,nb+1:nb+nx),vv(nb+1:nb+nz,nb+1:nb+nx),nz,nx)
@@ -200,12 +215,17 @@ program mexwell_boundary
 
   !backward reconstruction
   do it=nt,1,-1
+     call boundary_rw_p(.false.,bpz(:,:,:,it),bpx(:,:,:,it),p,nz,nx,nb)
+     call boundary_rw_v(.false.,bvz(:,:,:,it),bvx(:,:,:,it),vz,vx,nz,nx,nb)
+
      call compute_energy(eb(it),vz(nb+1:nb+nz,nb+1:nb+nx),&
           vx(nb+1:nb+nz,nb+1:nb+nx),p(nb+1:nb+nz,nb+1:nb+nx),&
           rho(nb+1:nb+nz,nb+1:nb+nx),vv(nb+1:nb+nz,nb+1:nb+nx),nz,nx)
 
-     call window2d(v0, p, nz, nx, nb)
-     call rsf_write(Fw2,v0)
+     if(snapmovie.or.(it==kt)) then
+     	call window2d(v0, p, nz, nx, nb)
+     	call rsf_write(Fw2,v0)
+     endif
      if(nsnap>0) then !save snapshots for re-initialization in backward reconstruction
         if((isnap>0).and.(it==isnap*snap_interval)) then
            p=psnap(:,:,isnap)
@@ -218,15 +238,11 @@ program mexwell_boundary
      call add_sources(p, -dt, wlt(it), sz, sx, nzpad, nxpad, wltb(it))
      if (order1) then ! scheme 1, 1st order accuracy, default
         if(attenuating) call apply_attenuation(p, eta, rho, vv, -dt, nzpad, nxpad)
-        call boundary_rw_p(.false.,bpz(:,:,:,it),bpx(:,:,:,it),p,nz,nx,nb)
         call step_forward_p(p, vz, vx, vv, rho, -dt, idz, idx, nzpad, nxpad)
-        call boundary_rw_v(.false.,bvz(:,:,:,it),bvx(:,:,:,it),vz,vx,nz,nx,nb)
         call step_forward_v(p, vz, vx, vv, rho, -dt, idz, idx, nzpad, nxpad)
      else ! scheme 2, 2nd order accuracy
         if(attenuating) call apply_attenuation(p, eta, rho, vv, -0.5*dt, nzpad, nxpad)
-        call boundary_rw_p(.false.,bpz(:,:,:,it),bpx(:,:,:,it),p,nz,nx,nb)
         call step_forward_p(p, vz, vx, vv, rho, -dt, idz, idx, nzpad, nxpad)
-        call boundary_rw_v(.false.,bvz(:,:,:,it),bvx(:,:,:,it),vz,vx,nz,nx,nb)
         call step_forward_v(p, vz, vx, vv, rho, -dt, idz, idx, nzpad, nxpad)
         if(attenuating) call apply_attenuation(p, eta, rho, vv,-0.5*dt, nzpad, nxpad)
      endif
@@ -263,7 +279,7 @@ program mexwell_boundary
   endif
 
   call exit(0)
-end program mexwell_boundary
+end program mexwell_boundary2
 
 !------------------------------------------------------------------------------
 ! check the CFL/stability condition is satisfied or not
@@ -595,46 +611,6 @@ subroutine add_sources(p, dt, wlt, sz, sx, nzpad, nxpad,wlt_actual)
 end subroutine add_sources
 
 !-------------------------------------------------------------------------------
-subroutine boundary_rw(v2b,bvz,bvx,vz,vx,nz,nx,nb)
-  implicit none
-  
-  logical::v2b !v to bourndary or reverse
-  integer::nz,nx,nb
-  real,dimension(nz+2*nb,nx+2*nb)::vz,vx
-  real::bvz(3,nx,2),bvx(nz,3,2)
-
-  integer::i1,i2
-  
-  if(v2b) then !v to bourndary
-     do i2=1,nx
-        do i1=1,3
-           bvz(i1,i2,1)=vz(i1+nb-2,i2+nb)
-           bvz(i1,i2,2)=vz(i1+nz+nb-2,i2+nb)
-        enddo
-     enddo
-     do i1=1,nz
-        do i2=1,3
-           bvx(i1,i2,1)=vx(i1+nb,i2+nb-2)
-           bvx(i1,i2,2)=vx(i1+nb,i2+nz+nb-2)
-        enddo
-     enddo
-  else !boundary to v
-     do i2=1,nx
-        do i1=1,3
-           vz(i1+nb-2,i2+nb)=bvz(i1,i2,1)
-           vz(i1+nz+nb-2,i2+nb)=bvz(i1,i2,2)
-        enddo
-     enddo
-     do i1=1,nz
-        do i2=1,3
-           vx(i1+nb,i2+nb-2)=bvx(i1,i2,1)
-           vx(i1+nb,i2+nz+nb-2)=bvx(i1,i2,2)
-        enddo
-     enddo
-  endif
-end subroutine boundary_rw
-
-!-------------------------------------------------------------------------------
 subroutine boundary_rw_v(v2b,bvz,bvx,vz,vx,nz,nx,nb)
   implicit none
   
@@ -648,27 +624,27 @@ subroutine boundary_rw_v(v2b,bvz,bvx,vz,vx,nz,nx,nb)
   if(v2b) then !v to bourndary
      do i2=1,nx
         do i1=1,2
-           bvz(i1,i2,1)=vz(i1+nb-1,i2+nb)
-           bvz(i1,i2,2)=vz(i1+nz+nb,i2+nb)
+           bvz(i1,i2,1)=vz(i1+nb,i2+nb)
+           bvz(i1,i2,2)=vz(nz+nb-2+i1,i2+nb)
         enddo
      enddo
      do i1=1,nz
         do i2=1,2
-           bvx(i1,i2,1)=vx(i1+nb,i2+nb-1)
-           bvx(i1,i2,2)=vx(i1+nb,i2+nz+nb)
+           bvx(i1,i2,1)=vx(i1+nb,i2+nb)
+           bvx(i1,i2,2)=vx(i1+nb,nx+nb-2+i2)
         enddo
      enddo
   else !boundary to v
      do i2=1,nx
         do i1=1,2
-           vz(i1+nb-1,i2+nb)=bvz(i1,i2,1)
-           vz(i1+nz+nb,i2+nb)=bvz(i1,i2,2)
+           vz(i1+nb,i2+nb)=bvz(i1,i2,1)
+           vz(nz+nb-2+i1,i2+nb)=bvz(i1,i2,2)
         enddo
      enddo
      do i1=1,nz
         do i2=1,2
-           vx(i1+nb,i2+nb-1)=bvx(i1,i2,1)
-           vx(i1+nb,i2+nz+nb)=bvx(i1,i2,2)
+           vx(i1+nb,i2+nb)=bvx(i1,i2,1)
+           vx(i1+nb,nx+nb-2+i2)=bvx(i1,i2,2)
         enddo
      enddo
   endif
@@ -689,27 +665,27 @@ subroutine boundary_rw_p(p2b,bpz,bpx,p,nz,nx,nb)
   if(p2b) then !v to bourndary
      do i2=1,nx
         do i1=1,2
-           bpz(i1,i2,1)=p(i1+nb-2,i2+nb)
-           bpz(i1,i2,2)=p(i1+nz+nb-1,i2+nb)
+           bpz(i1,i2,1)=p(i1+nb,i2+nb)
+           bpz(i1,i2,2)=p(nz+nb-2+i1,i2+nb)
         enddo
      enddo
      do i1=1,nz
         do i2=1,2
-           bpx(i1,i2,1)=p(i1+nb,i2+nb-2)
-           bpx(i1,i2,2)=p(i1+nb,i2+nz+nb-1)
+           bpx(i1,i2,1)=p(i1+nb,i2+nb)
+           bpx(i1,i2,2)=p(i1+nb,nx+nb-2+i2)
         enddo
      enddo
   else !boundary to v
      do i2=1,nx
         do i1=1,2
-           p(i1+nb-2,i2+nb)=bpz(i1,i2,1)
-           p(i1+nz+nb-1,i2+nb)=bpz(i1,i2,2)
+           p(i1+nb,i2+nb)=bpz(i1,i2,1)
+           p(nz+nb-2+i1,i2+nb)=bpz(i1,i2,2)
         enddo
      enddo
      do i1=1,nz
         do i2=1,2
-           p(i1+nb,i2+nb-2)=bpx(i1,i2,1)
-           p(i1+nb,i2+nz+nb-1)=bpx(i1,i2,2)
+           p(i1+nb,i2+nb)=bpx(i1,i2,1)
+           p(i1+nb,nx+nb-2+i2)=bpx(i1,i2,2)
         enddo
      enddo
   endif
