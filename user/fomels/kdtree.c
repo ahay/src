@@ -32,14 +32,14 @@ typedef struct kd_Node *kd_node;
 
 #endif
  
-static float dist(kd_node a, kd_node b, int dim)
+static float dist(const float *a, const float *b, int dim)
 {
     float t, d;
     int j;
 
     d = 0.0f;
     for (j=0; j < dim; j++) {
-        t = a->x[j] - b->x[j];
+        t = a[j] - b[j];
         d += t * t;
     }
     return d;
@@ -104,7 +104,13 @@ static kd_node make_tree(kd_node t, int len, int i, int dim)
     return n;
 }
 
-kd_node tree(float **data /* [len][dim] */, int len, int dim)
+float *kd_coord(kd_node n)
+/*< node coordinates >*/
+{
+    return n->x;
+}
+
+kd_node kd_tree(float **data /* [len][dim] */, int len, int dim)
 /*< make a k-D tree >*/
 {
     kd_node n;
@@ -134,19 +140,19 @@ void free_tree(kd_node n, int len)
     free(n);
 }
 
-void nearest(kd_node root, kd_node nd, int i, int dim,
-	     kd_node *best, float *best_dist)
+void kd_nearest(kd_node root, float* x, int i, int dim,
+		kd_node *best, float *best_dist)
 /*< find the nearest point in k-D tree >*/
 {
     float d, dx, dx2;
  
     if (NULL == root) return;
     
-    d = dist(root, nd, dim);
-    dx = root->x[i] - nd->x[i];
+    d = dist(root->x, x, dim);
+    dx = root->x[i] - x[i];
     dx2 = dx * dx;
   
-    if (!*best || d < *best_dist) {
+    if (d < *best_dist) {
         *best_dist = d;
         *best = root;
     }
@@ -155,7 +161,7 @@ void nearest(kd_node root, kd_node nd, int i, int dim,
  
     i = (i + 1) % dim;
  
-    nearest(dx > 0 ? root->prev : root->next, nd, i, dim, best, best_dist);
+    kd_nearest(dx > 0 ? root->prev : root->next, x, i, dim, best, best_dist);
     if (dx2 >= *best_dist) return;
-    nearest(dx > 0 ? root->next : root->prev, nd, i, dim, best, best_dist);
+    kd_nearest(dx > 0 ? root->next : root->prev, x, i, dim, best, best_dist);
 }

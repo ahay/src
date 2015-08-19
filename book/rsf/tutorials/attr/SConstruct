@@ -1,0 +1,27 @@
+from rsf.proj import *
+
+trace = [0,1,3,0,-2,-5,-2,2,5,0,-1,1,0,2,4,1,-3,-5,-1,0]
+nt = len(trace)
+
+Flow('trace.asc',None,'echo %s n1=%d o1=0 d1=1 data_format=ascii_int in=$TARGET' % (' '.join(map(str,trace)),nt))
+Flow('trace','trace.asc','dd type=float form=native')
+
+graph = 'graph wanttitle=n min2=-6 max2=6 min1=-0.5 max1=%g screenht=7 screenwd=28 ' % (nt-0.5)
+
+Flow('ctrace','trace','math output=x1 | cmplx $SOURCE')
+
+Plot('ctrace',graph + ' symbol=o symbolsz=8 plotcol=7')
+Plot('lines','ctrace','math output=x1 | cat axis=2 $SOURCE | transp | %s plotcol=7' % graph)
+Plot('zero','trace','math output=0 | %s plotcol=7' % graph)
+Plot('trace','zero lines ctrace','Overlay')
+
+d1 = (nt-1.0)/20000
+
+Flow('linear','trace','remap1 order=2 n1=20000 d1=%g o1=0' % d1)
+Flow('spline','trace linear','spline pattern=${SOURCES[1]}')
+
+Plot('spline','linear spline','cat axis=2 ${SOURCES[1]} | %s plotcol=6,5' % graph)
+
+Result('trace','trace spline','Overlay')
+
+End()
