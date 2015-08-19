@@ -1,0 +1,41 @@
+from rsf.proj import *
+from rsf.prog import RSFROOT
+
+#############################################
+#  DOWLOAD DATA
+#############################################
+
+
+#Fetch('lena.img','imgs')
+Flow('lena','lena.img',
+     '''
+     echo n1=512 n2=513 in=$SOURCE data_format=native_uchar |
+     dd type=float |
+     window f2=1
+     ''',stdin=0)
+
+Result('lena','grey transp=n allpos=y title="Lena" screenratio=1 wantaxis=n')
+
+#############################################
+# INITIALIZATION FOR MATLAB
+#############################################
+matlab         = WhereIs('matlab')
+matROOT = '../Matfun'
+matfun = 'clip'
+matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
+
+if not matlab:
+    sys.stderr.write('\nCannot find Matlab.\n')
+    sys.exit(1)
+
+Flow('spike',None,'spike n1=10 d1=1 n2=1 nsp=1 k1=5')
+
+Flow('clip',[os.path.join(matROOT,matfun+'.m'),'spike'],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s -nosplash -nojvm -r
+     "addpath %(matROOT)s;
+     %(matfun)s('${SOURCES[1]}','${TARGET}',0.5);
+     quit"
+     '''%vars(),stdin=0,stdout=-1)
+
+
+End()
