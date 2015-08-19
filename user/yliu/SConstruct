@@ -13,7 +13,7 @@ mvo mvo1 nmradon nmult nonloc oclet oshift1 pwcsemb pwd2 pwsfault
 pwsfault3 pwsmooth3 radonoper reversval rtft saltpepper sclet seisavf
 seisbreg2 seishrink seismis2 seispocs seisreg2 seisxwell sharpsimi snr
 sphase st stft svd svddenoise swell testapef testcasoper testmatch
-threshold2 threshold3 tvmf txrna txrna2 txrna3 v2d variogram
+threshold2 threshold3 tslread tvmf txrna txrna2 txrna3 v2d variogram
 variogram2 vconvert wavemis2 winscan wmf zcwt
 '''
 
