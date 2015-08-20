@@ -1,4 +1,4 @@
-/* Convert a TSL (MT, V5-2000 of Phoenix Geophysics) dataset to RSF. */
+/* Convert a TSL/TSH (MT, V5-2000 of Phoenix Geophysics) dataset to RSF. */
 /*
   Copyright (C) 2015 Jilin University
   
@@ -36,9 +36,10 @@ int main (int argc, char* argv[])
     unsigned char *data;  /* equipment info   */
     short int sid;        /* equipment number */
     short int num;        /* scan number      */
-    int i, j, format, channel, TSL_HEADER_BYTE=16;
+    int i, j, k, ic;
+    int format, channel, TSL_HEADER_BYTE=16, dbit, length;
     float temp;
-    char stu1, stu2, stu3;
+    char stu[TSL_DATA_BYTE];
     char *filename;
     FILE *file;    
     sf_file out;
@@ -66,6 +67,11 @@ int main (int argc, char* argv[])
 
     data=(unsigned char*)malloc(TSL_HEADER_BYTE);
     /* allocate data space */
+
+    if(data==NULL) {
+	sf_warning("Data space is null");
+	exit (0);
+    }
     
     for(i=0;i<TSL_HEADER_BYTE;i++) {
 	
@@ -133,22 +139,23 @@ int main (int argc, char* argv[])
 	    /* Bit pattern sign */
 	}	
     }
+
+    dbit = TSL_DATA_BYTE*channel;
+    length = TSL_HEADER_BYTE+channel*TSL_DATA_BYTE*num;
+
     sf_warning("Record starts at %d0%d. %d. %d, %d: %d: %d",data[7],
 	       data[5],data[4],data[3],data[2],data[1],data[0]);
 
-    fseek(file,0L,SEEK_END);             /*  seek end of file */
-    flen=ftell(file);                    /*  file bit size    */
-    flen=flen/(TSL_HEADER_BYTE+channel*TSL_DATA_BYTE*num);
-    /*  record number   */
+    fseek(file,0L,SEEK_END);
+    /*  seek end of file  */
+    flen=ftell(file);
+    /*  bit size of file  */
+    flen=flen/(length);
+    /*  record number     */
     
-    if(data==NULL) {
-	sf_warning("Data space is null");
-	exit (0);
-    }
- 
     sf_putint(out,"n1",flen*num);
     sf_putfloat(out,"o1",0.);
-    sf_putfloat(out,"d1",1./24.);
+    sf_putfloat(out,"d1",1./num);
     sf_putstring(out,"label1","Time");
     sf_putstring(out,"unit1","s");
     sf_putint(out,"n2",channel);
@@ -156,38 +163,21 @@ int main (int argc, char* argv[])
     sf_putfloat(out,"d2",1.);
     sf_putstring(out,"label2","Channel");
     sf_putstring(out,"unit2","Sample");
-        
-    for(j=0;j<flen;j++) {
-        for(i=0;i<num;i++) {
-	    fseek(file,(16+i*6)+160*j,SEEK_SET); 
-	    fread(&stu1,1,1,file);
-	    s.byte[0]=stu1;
-	    fseek(file,(16+(i*6+1))+160*j,SEEK_SET);
-	    fread(&stu2,1,1,file);
-	    s.byte[1]=stu2;
-	    fseek(file,(16+(i*6+2))+160*j,SEEK_SET);
-	    fread(&stu3,1,1,file);
-	    s.byte[2]=stu3;
-	    temp=(float) s.t.data;
 
-	    sf_floatwrite(&temp,1,out);	    
+    for(ic=0;ic<channel;ic++) {
+	for(j=0;j<flen;j++) {
+	    for(i=0;i<num;i++) {
+		for(k=0;k<TSL_DATA_BYTE;k++) {
+		    fseek(file,(TSL_HEADER_BYTE+i*dbit+ic*TSL_DATA_BYTE+k)+
+			  length*j,SEEK_SET); 
+		    fread(&stu[k],1,1,file);
+		    s.byte[k]=stu[k];
+		}
+		temp=(float) s.t.data;
+		sf_floatwrite(&temp,1,out);	    
+	    }
 	}
     }
-    for(j=0;j<flen;j++) {
-        for(i=0;i<num;i++) {
-	    fseek(file,(16+i*6+3)+160*j,SEEK_SET); 
-	    fread(&stu1,1,1,file);
-	    s.byte[0]=stu1;
-	    fseek(file,(16+(i*6+4))+160*j,SEEK_SET);
-	    fread(&stu2,1,1,file);
-	    s.byte[1]=stu2;
-	    fseek(file,(16+(i*6+5))+160*j,SEEK_SET);
-	    fread(&stu3,1,1,file);
-	    s.byte[2]=stu3;
-	    temp=(float) s.t.data;
 
-	    sf_floatwrite(&temp,1,out);	    
-	}
-    }    
     exit (0);
 }
