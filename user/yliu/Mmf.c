@@ -1,7 +1,7 @@
 /* 1D median filtering. 
 
 January 2015 program of the month:
-http://ahay.org/rsflog/index.php?/archives/425-Program-of-the-month-sfmf.html
+http://ahay.org/blog/2015/01/30/program-of-the-month-sfmf/
 */
 /*
   Copyright (C) 2007 University of Texas at Austin

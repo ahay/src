@@ -1,7 +1,7 @@
 /* Half-order integration or differentiation. 
 
 December 2012 program of the month:
-http://ahay.org/rsflog/index.php?/archives/317-Program-of-the-month-sfhalfint.html
+http://ahay.org/blog/2012/12/23/program-of-the-month-sfhalfint/
 */
 /*
   Copyright (C) 2004 University of Texas at Austin

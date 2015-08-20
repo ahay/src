@@ -1,7 +1,7 @@
 /* 2-D synthetic model from J.F.Claerbout. 
 
 October 2014 program of the month:
-http://ahay.org//rsflog/index.php?/archives/404-Program-of-the-month-sfsigmoid.html
+http://ahay.org/blog/2014/10/08/program-of-the-month-sfsigmoid/
 */
 /*
   Copyright (C) 2004 University of Texas at Austin

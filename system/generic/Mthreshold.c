@@ -1,7 +1,7 @@
 /* Soft thresholding. 
 
 November 2014 program of the month:
-http://ahay.org/rsflog/index.php?/archives/409-Program-of-the-month-sfthreshold.html
+http://ahay.org/blog/2014/11/12/program-of-the-month-sfthreshold/
 */
 /*
   Copyright (C) 2004 University of Texas at Austin

@@ -5,7 +5,7 @@ Takes: > plot.vpl
 Run "sfdoc stdplot" for more parameters.
 
 December 2011 program of the month:
-http://ahay.org/rsflog/index.php?/archives/277-Programs-of-the-month-sfcontour.html
+http://ahay.org/blog/2011/12/03/programs-of-the-month-sfcontour/
 */
 /*
   Copyright (C) 2004 University of Texas at Austin

@@ -1,7 +1,7 @@
 /* Fast marching eikonal solver (3-D). 
 
 June 2014 program of the month:
-http://ahay.org/rsflog/index.php?/archives/392-Program-of-the-month-sfeikonal.html
+http://ahay.org/blog/2014/06/11/program-of-the-month-sfeikonal/
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
