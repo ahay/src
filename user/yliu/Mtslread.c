@@ -1,4 +1,4 @@
-/* Convert a TSL/TSH (MT, V5-2000 of Phoenix Geophysics) dataset to RSF. */
+/* Convert a TSL (MT, V5-2000 of Phoenix Geophysics) dataset to RSF. */
 /*
   Copyright (C) 2015 Jilin University
   
@@ -33,16 +33,17 @@ union {
 int main (int argc, char* argv[])
 {
     long flen;
-    unsigned char *data;  /* equipment info   */
-    short int sid;        /* equipment number */
-    short int num;        /* scan number      */
+    unsigned char *data, head, ch;
+    short int sid, tsid;
+    short int num, tnum; 
     int i, j, k, ic;
-    int format, channel, TSL_HEADER_BYTE=16, dbit, length;
+    int TSL_HEADER_BYTE=16, dbit, length, channel=2, thead;
+    bool format;
     float temp;
     char stu[TSL_DATA_BYTE];
     char *filename;
     FILE *file;    
-    sf_file out;
+    sf_file out, tfile;
     
     sf_init (argc, argv); 
     out = sf_output("out");
@@ -54,17 +55,22 @@ int main (int argc, char* argv[])
 	sf_error("Cannot open \"%s\" for reading:",filename);
     }
     
-    if (!sf_getint("format",&format)) format=0;
-    /* data format: [0] (TSH,TSL) or [1] (TSn) */
+    if (!sf_getbool("format",&format)) format=false;
+    /* data format: [false] (TSL,TSH: 16) or [true] (TSn: 32) */
     
-    if (0==format) {
+    if (!format) {
 	TSL_HEADER_BYTE=16;
-    } else if (1==format) {
-	TSL_HEADER_BYTE=32;
     } else {
-	sf_error("wrong format=%d",format);
+	TSL_HEADER_BYTE=32;
     }
-
+    
+    if (NULL != sf_getstring("tfile")) {
+	tfile = sf_output("tfile");
+	sf_settype(tfile,SF_INT);	
+    } else {
+	tfile = NULL;
+    }
+    
     data=(unsigned char*)malloc(TSL_HEADER_BYTE);
     /* allocate data space */
 
@@ -118,14 +124,21 @@ int main (int argc, char* argv[])
 	}
 	if(i==12) {
 	    fseek(file,i,SEEK_SET);
-	    fread(&channel,1,1,file);
+	    fread(&ch,1,1,file);
+	    channel=(int) ch;
 	}
 	if(i==13) {
 	    fseek(file,i,SEEK_SET);
 	    fread(&data[11],1,1,file);
-	    /* Data format: [0] (TSn) or [1] (TSH,TSL) */
-	    if (format != data[11]) {
-		sf_error("wrong input parameter [format=%d]!",format);
+	    /* tag: [32] (TSn) or [0] (TSH,TSL) */
+	    if (!format) {
+		if(data[11]!=0) {
+		    sf_error("wrong input parameter [format=false]!");
+		}
+	    } else {
+		if(data[11]!=32) {
+		    sf_error("wrong input parameter [format=true]!");
+		}
 	    }
 	}
 	if(i==14) {
@@ -164,12 +177,199 @@ int main (int argc, char* argv[])
     sf_putstring(out,"label2","Channel");
     sf_putstring(out,"unit2","Sample");
 
+    if (NULL != tfile) {
+
+	sf_putint(tfile,"n2",flen*num);
+	sf_putfloat(tfile,"o2",0.);
+	sf_putfloat(tfile,"d2",1./num);
+	sf_putstring(tfile,"label2","Time");
+	sf_putstring(tfile,"unit2","s");
+	if (!format) {
+	    sf_putint(tfile,"n1",TSL_HEADER_BYTE-2);
+	} else {
+	    sf_putint(tfile,"n1",TSL_HEADER_BYTE-6);
+	}
+	sf_putint(tfile,"o1",0);
+	sf_putint(tfile,"d1",1);
+	sf_putstring(tfile,"label1","Tag");
+	sf_putstring(tfile,"unit1","Sample");
+	
+	
+	/* write header file */
+	for(i=0;i<flen;i++) {
+	    sf_warning("header slice %d of %d;",i+1,flen);	    
+	    for(j=0;j<num;j++) {
+		for(k=0;k<TSL_HEADER_BYTE;k++) {
+		    if(k==0) {
+			fseek(file,i*length+k,SEEK_SET);
+			fread(&head,1,1,file);
+			thead=(int) head;
+			sf_intwrite(&thead,1,tfile);
+		    }
+		    if(k==1) {
+			fseek(file,i*length+k,SEEK_SET);
+			fread(&head,1,1,file);
+			thead=(int) head;
+			sf_intwrite(&thead,1,tfile);	
+		    }
+		    if(k==2) {
+			fseek(file,i*length+k,SEEK_SET);
+			fread(&head,1,1,file);
+			thead=(int) head;
+			sf_intwrite(&thead,1,tfile);	
+		    }
+		    if(k==3) {
+			fseek(file,i*length+k,SEEK_SET);
+			fread(&head,1,1,file);
+			thead=(int) head;
+			sf_intwrite(&thead,1,tfile);	
+		    }
+		    if(k==4) {
+			fseek(file,i*length+k,SEEK_SET);
+			fread(&head,1,1,file);
+			thead=(int) head;
+			sf_intwrite(&thead,1,tfile);	
+		    }
+		    if(k==5) {
+			fseek(file,i*length+k,SEEK_SET);
+			fread(&head,1,1,file);
+			thead=(int) head;
+			sf_intwrite(&thead,1,tfile);	
+		    }
+		    if(k==6) {
+			fseek(file,i*length+k,SEEK_SET);
+			fread(&head,1,1,file);
+			thead=(int) head;
+			sf_intwrite(&thead,1,tfile);	
+		    }
+		    if(k==7) {
+			fseek(file,i*length+k,SEEK_SET);
+			fread(&head,1,1,file);
+			thead=(int) head;
+			sf_intwrite(&thead,1,tfile);	
+		    }
+		    if(k==8) {
+			fseek(file,i*length+k,SEEK_SET);
+			fread(&tsid,2,1,file);
+			thead=(int) tsid;
+			sf_intwrite(&thead,1,tfile);	
+		    }
+		    if(k==10) {
+			fseek(file,i*length+k,SEEK_SET);
+			fread(&tnum,2,1,file);
+			thead=(int) tnum;
+			sf_intwrite(&thead,1,tfile);	
+		    }
+		    if(k==12) {
+			fseek(file,i*length+k,SEEK_SET);
+			fread(&head,1,1,file);
+			thead=(int) head;
+			sf_intwrite(&thead,1,tfile);	
+		    }
+		    if(k==13) {
+			fseek(file,i*length+k,SEEK_SET);
+			fread(&head,1,1,file);
+			thead=(int) head;
+			sf_intwrite(&thead,1,tfile);	
+		    }
+		    if(k==14) {
+			fseek(file,i*length+k,SEEK_SET);
+			fread(&head,1,1,file);
+			thead=(int) head;
+			sf_intwrite(&thead,1,tfile);	
+		    }
+		    if(k==15) {
+			fseek(file,i*length+k,SEEK_SET);
+			fread(&head,1,1,file);
+			thead=(int) head;
+			sf_intwrite(&thead,1,tfile);	
+		    }
+
+		    if(format) {
+			if(k==16) {
+			    fseek(file,i*length+k,SEEK_SET);
+			    fread(&head,1,1,file);
+			    thead=(int) head;
+			    sf_intwrite(&thead,1,tfile);	
+			}
+			if(k==17) {
+			    fseek(file,i*length+k,SEEK_SET);
+			    fread(&head,1,1,file);
+			    thead=(int) head;
+			    sf_intwrite(&thead,1,tfile);	
+			}
+			if(k==18) {
+			    fseek(file,i*length+k,SEEK_SET);
+			    fread(&tnum,2,1,file);
+			    thead=(int) tnum;
+			    sf_intwrite(&thead,1,tfile);	
+			}
+			if(k==20) {
+			    fseek(file,i*length+k,SEEK_SET);
+			    fread(&head,1,1,file);
+			    thead=(int) head;
+			    sf_intwrite(&thead,1,tfile);	
+			}
+			if(k==21) {
+			    fseek(file,i*length+k,SEEK_SET);
+			    fread(&head,1,1,file);
+			    thead=(int) head;
+			    sf_intwrite(&thead,1,tfile);	
+			}
+			if(k==22) {
+			    fseek(file,i*length+k,SEEK_SET);
+			    fread(&thead,4,1,file);
+			    sf_intwrite(&thead,1,tfile);	
+			}
+			if(k==26) {
+			    fseek(file,i*length+k,SEEK_SET);
+			    fread(&head,1,1,file);
+			    thead=(int) head;
+			    sf_intwrite(&thead,1,tfile);	
+			}
+			if(k==27) {
+			    fseek(file,i*length+k,SEEK_SET);
+			    fread(&head,1,1,file);
+			    thead=(int) head;
+			    sf_intwrite(&thead,1,tfile);	
+			}			
+			if(k==28) {
+			    fseek(file,i*length+k,SEEK_SET);
+			    fread(&head,1,1,file);
+			    thead=(int) head;
+			    sf_intwrite(&thead,1,tfile);	
+			}
+			if(k==29) {
+			    fseek(file,i*length+k,SEEK_SET);
+			    fread(&head,1,1,file);
+			    thead=(int) head;
+			    sf_intwrite(&thead,1,tfile);	
+			}
+			if(k==30) {
+			    fseek(file,i*length+k,SEEK_SET);
+			    fread(&head,1,1,file);
+			    thead=(int) head;
+			    sf_intwrite(&thead,1,tfile);	
+			}
+			if(k==31) {
+			    fseek(file,i*length+k,SEEK_SET);
+			    fread(&head,1,1,file);
+			    thead=(int) head;
+			    sf_intwrite(&thead,1,tfile);	
+			}
+		    } 
+		}
+	    }   
+	}
+    }
+
+    /* write data file */
     for(ic=0;ic<channel;ic++) {
-	for(j=0;j<flen;j++) {
-	    for(i=0;i<num;i++) {
+	for(i=0;i<flen;i++) {
+	    for(j=0;j<num;j++) {
 		for(k=0;k<TSL_DATA_BYTE;k++) {
-		    fseek(file,(TSL_HEADER_BYTE+i*dbit+ic*TSL_DATA_BYTE+k)+
-			  length*j,SEEK_SET); 
+		    fseek(file,(TSL_HEADER_BYTE+j*dbit+ic*TSL_DATA_BYTE+k)+
+			  length*i,SEEK_SET); 
 		    fread(&stu[k],1,1,file);
 		    s.byte[k]=stu[k];
 		}
