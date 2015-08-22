@@ -1,7 +1,7 @@
 /* Interpolation from a regular grid in 1-D. 
 
 January 2014 program of the month:
-http://ahay.org/rsflog/index.php?/archives/373-Program-of-the-month-sfinttest1.html
+http://ahay.org/blog/2014/01/09/program-of-the-month-sfinttest1/
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
