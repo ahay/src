@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfwindow', 'sfgrey', 'sfspike']
+data=['data/imgs/lena.img']
+size=    1048576

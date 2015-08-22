@@ -2,11 +2,11 @@ from rsf.proj import *
 from rsf.prog import RSFROOT
 
 #############################################
-#  DOWLOAD DATA
+#  DOWNLOAD DATA
 #############################################
 
 
-#Fetch('lena.img','imgs')
+Fetch('lena.img','imgs')
 Flow('lena','lena.img',
      '''
      echo n1=512 n2=513 in=$SOURCE data_format=native_uchar |

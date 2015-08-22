@@ -5,7 +5,7 @@ import bldutil
 progs = '''
 abalance analytical angle angle2 approx arrival bdix bil1 bilat2 blur
 cfftwave1 cdivn cflow chebvc clpf cltft constperm constpermh
-constpermh1 cosftwave1 cpef deblur distance divn dix dpeiko eikonal
+constpermh1 cosftwave1 cpef cr deblur distance divn dix dpeiko eikonal
 eikonalvti eno2 erf exgr fft2 fftexp0 fftexp1 fftexp3 fftone ffttest
 fftwave1 fftwave2 fftwave3 findmin2 focus fpow freqest gaussmooth
 gbeamform imray interf interp2 interpt iphase kdtree kron lfftexp0
