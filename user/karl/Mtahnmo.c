@@ -269,8 +269,21 @@ int main(int argc, char* argv[])
       intlin(numtnmo,tnmo,vnmo,vnmo[0],vnmo[numvnmo-1],1,&t0,&v0);
       local_sloth[indx_time]=1.0/(v0*v0);
     }    
-  }
-    
+  } 
+  /* kls
+     previous if(1==1) clause if for it no input velocity file
+     need to add else { set up the input velocity file (ie open the file(
+     inside the trace loop need to get iline and xline form trace heder
+     and use that to read the velocity at (iline,xline) into local_sloth
+     then compute local_sloth as 1/(v*v)
+
+     will need to get input velocity shape:
+       if (!sf_histint(invelocity,"n1",&n1_velocity))
+          sf_error("input velocity file does not define n1");
+     test n1_velocity!=n1_trace error
+     and do the same for d1, o2, d2, etc 
+   */
+
   if(verbose>0)fprintf(stderr,"allocate arrays for the trace loop\n");
   r_index_tx_of_it0=sf_floatalloc(n1_traces);
   r_index_t0_of_itx=sf_floatalloc(n1_traces);
