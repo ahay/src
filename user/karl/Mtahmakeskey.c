@@ -31,7 +31,7 @@ EXAMPLE:
 sftahread \\
    verbose=1 \\
    input=npr3_gathers.rsf \\
-| sftahmakeskey key=iline,xline skey=cdpt verbose=1 \\
+| sftahmakeskey pkey=iline,xline skey=cdpt verbose=1 \\
 | sftahwrite \\
    verbose=1                         \\
    label2="cdpt"  o2=1 n2=24  n2=1   \\
@@ -50,12 +50,12 @@ sftahmakeskey creates the cdpt header and sftahwrite creates a 4
 dimensional file.
 
 PARAMETERS
-   strings key= no default
+   strings pkey= no default
 
         list of header keys to monitor to determine when to break 
 	between gathers.  A gather is a sequence of traces with the 
-	same value for all the header keys.  Stack summs traces in 
-	the gather, divides by the fold, and outputs the stack trace.c
+	same value for all the headers in pkey.  sftahmakeskey counts the 
+        traces and put the trace counter in the skey header word.
 */
 
 /*
@@ -136,17 +136,19 @@ int main(int argc, char* argv[])
   if(verbose>0)fprintf(stderr,"call list of keys\n");
  
   list_of_keys=sf_getnstring("pkey",&numkeys);
+  /* List of the primary keys monitored to determine gathers. */
+
   if(list_of_keys==NULL)
     sf_error("The required parameter \"pkey\" was not found.");
   /* I wanted to use sf_getstrings, but it seems to want a colon seperated
      list of keys (eg key=offset:ep:fldr:cdp) and I wanted a comma seperated
      list of keys (eg key=offset:ep:fldr:cdp).
-  numkeys=sf_getnumpars("key");
+  numkeys=sf_getnumpars("pkey");
   if(numkeys==0)
-    sf_error("The required parameter \"key\" was not found.");
+    sf_error("The required parameter \"pkey\" was not found.");
   fprintf(stderr,"alloc list_of_keys numkeys=%d\n",numkeys);
   list_of_keys=(char**)sf_alloc(numkeys,sizeof(char*)); 
-  sf_getstrings("key",list_of_keys,numkeys);
+  sf_getstrings("pkey",list_of_keys,numkeys);
   */
   /* print the list of keys */
   if(verbose>1){
