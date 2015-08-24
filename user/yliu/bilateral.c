@@ -24,7 +24,7 @@
 #include "bilateral.h"
 
 float bilateral(float *trace    /* input */,
-		float ns        /* spray radius */,
+		int ns          /* spray radius */,
 		float ax        /* range radius */,
 		float bx        /* domain radius */,
 		int n           /* sample number */,
@@ -32,30 +32,44 @@ float bilateral(float *trace    /* input */,
 		bool gauss      /* flag of Gaussian weight */)
 /*< get a bilateral-weighted value >*/
 {   
-    int i1, irep, is;
+    int i1, i2, irep, is;
     float *output, t, norm;
 
-    output = sf_floatalloc(n);
+    output = sf_floatalloc(2*ns+1);
 
     for (irep=0; irep < niter; irep++) {
-	for (i1=0; i1 < n; i1++) {
+/*	for (i1=0; i1 < n; i1++) {
 	    output[i1] = trace[i1];
 	}		
-	/* loop over samples */
+*/	/* loop over samples */
 	for (i1=0; i1 < n; i1++) {	    
 	    t = 0.;
 	    norm = 0.;
+	    /* loop over samples */
+	    for (i2=-ns; i2<= ns; i2++) {
+		if (i1+i2 >= 0 && i1+i2 < n) {
+		    output[ns+i2]=trace[i1+i2];
+		} else {
+		    output[ns+i2]=0.;
+		}
+	    }	    
 	    /* accumulate shifts */
 	    for (is=-ns; is <= ns; is++) {
-		if (i1+is >= 0 && i1+is < n) {
-		    if (gauss) {
-			t += output[i1+is]*expf(-0.5*is*is/(ax*ax+FLT_EPSILON))*expf(-0.5*(output[i1+is]-output[i1])*(output[i1+is]-output[i1])/(bx*bx+FLT_EPSILON));
-			norm += expf(-0.5*is*is/(ax*ax+FLT_EPSILON))*expf(-0.5*(output[i1+is]-output[i1])*(output[i1+is]-output[i1])/(bx*bx+FLT_EPSILON));
-		    } else {
-			t += output[i1+is]*(1.-fabsf(1.*is)/(ns+FLT_EPSILON))*expf(-bx*(output[i1+is]-output[i1])*(output[i1+is]-output[i1]));
-			norm += (1.-fabsf(1.*is)/(ns+FLT_EPSILON))*expf(-bx*(output[i1+is]-output[i1])*(output[i1+is]-output[i1]));
-		    }
-		} 
+		if (gauss) {
+		    t += output[ns+is]*expf(-0.5*is*is/(ax*ax+FLT_EPSILON))
+			*expf(-0.5*(output[ns+is]-output[ns])
+			      *(output[ns+is]-output[ns])/(bx*bx+FLT_EPSILON));
+		    norm += expf(-0.5*is*is/(ax*ax+FLT_EPSILON))*
+			expf(-0.5*(output[ns+is]-output[ns])
+			     *(output[ns+is]-output[ns])/(bx*bx+FLT_EPSILON));
+		} else {
+		    t += output[ns+is]*(1.-fabsf(1.*is)/(ns+FLT_EPSILON))
+			*expf(-bx*(output[ns+is]-output[ns])
+			      *(output[ns+is]-output[ns]));
+		    norm += (1.-fabsf(1.*is)/(ns+FLT_EPSILON))
+			*expf(-bx*(output[ns+is]-output[ns])
+			      *(output[ns+is]-output[ns]));
+		}	
 	    }
 	    /* Normalize */
 	    trace[i1] = t / (norm+FLT_EPSILON);
