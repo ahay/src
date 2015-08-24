@@ -3,7 +3,7 @@
 Each initial trace is followed by "jump" zero traces, the same for planes.
 
 March 2014 program of the month:
-http://ahay.org/rsflog/index.php?/archives/377-Program-of-the-math-sflpad.html
+http://ahay.org/blog/2014/03/11/program-of-the-month-sflpad/
 */
 /*
 Copyright (C) 2004 University of Texas at Austin

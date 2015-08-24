@@ -10,7 +10,7 @@ If called "bar", outputs scalebar data.
 Run "sfdoc stdplot" for more parameters.
 
 March 2015 program of the month:
-http://www.ahay.org/rsflog/index.php?/archives/429-Program-of-the-month-sfgrey.html
+http://ahay.org/blog/2015/03/04/program-of-the-month-sfgrey/
 */
 /*
   Copyright (C) 2004 University of Texas at Austin

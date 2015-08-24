@@ -1,7 +1,7 @@
 /* Multidimensional convolution and deconvolution by helix transform. 
 
 May 2014 program of the month:
-http://ahay.org/rsflog/index.php?/archives/387-Program-of-the-math-sfhelicon.html
+http://ahay.org/blog/2014/05/13/program-of-the-month-sfhelicon/
 */
 /*
   Copyright (C) 2004 University of Texas at Austin

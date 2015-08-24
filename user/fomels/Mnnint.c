@@ -85,10 +85,13 @@ int main (int argc,char* argv[])
 
     if (SF_FLOAT != sf_gettype(coord)) sf_error("Need float input");
     if(!sf_histint(coord,"n2",&np)) sf_error("No n2= in input");
-    if(!sf_histint(coord,"n1",&ndim) || ndim != 2)  sf_error("Need n1=2 in input");
+    if(!sf_histint(coord,"n1",&ndim) || ndim > 3)  sf_error("Need n1 <= 3 in input");
 
-    pts = sf_floatalloc2 (ndim,np);
-    sf_floatread(pts[0],np*ndim,coord);
+    pts = sf_floatalloc2 (3,np);
+    for (ip=0; ip < np; ip++) {
+	sf_floatread(pts[ip],ndim,coord);
+	pts[ip][2] = 0.0f;
+    }
     
     n123 = n1*n2;
 
@@ -120,7 +123,7 @@ int main (int argc,char* argv[])
 	     0.,o2,o1,
 	     1.,d2,d1,
 	     order);
-	
+
     /* 2. binning */
     sf_int2_init (pts, o1,o2,d1,d2,n1,n2, sf_lin_int, 2, np);
     h = sf_floatalloc(np);
@@ -152,20 +155,20 @@ int main (int argc,char* argv[])
 
     vor = sf_floatalloc(n123);
 
-    upg = sf_upgrad_init(ndim,n,d);
+    upg = sf_upgrad_init(2,n,d);
 
     sf_upgrad_set(upg,dd);
     sf_upgrad_solve(upg,vv,vor,bin); 
-
+	
     /* 4. smoothing */
 
     rect[0] = dd; shift[0] = pp;
     rect[1] = dd; shift[1] = pp;
 
-    ntrianglen_init(ndim,box,n,rect,shift,1);
-    ntrianglen_lop(false,false,n1,n1,vor,bin);
+    ntrianglen_init(2,box,n,rect,shift,1);
+    ntrianglen_lop(false,false,n123,n123,vor,bin);
 	    
-    sf_floatwrite(bin,n123,grid);
+    sf_floatwrite(bin,n123,grid); 
 
     exit (0);
 }

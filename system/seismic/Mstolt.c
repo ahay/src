@@ -3,7 +3,7 @@
 Requires the input to be cosine-transformed over the lateral axes.
 
 August 2014 program of the month:
-http://ahay.org/rsflog/index.php?/archives/399-Program-of-the-month-sfstolt.html
+http://ahay.org/blog/2014/08/03/program-of-the-month-sfstolt/
 */
 /*
   Copyright (C) 2004 University of Texas at Austin

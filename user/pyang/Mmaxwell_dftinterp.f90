@@ -1,5 +1,4 @@
-!  Backward reconstruction based upon Maxwell attenuation model and CPML BC
-!  Here we use boundary saving scheme with 1 layer for every state variable.
+!  Backward reconstruction based on DFT and inverse DFT
 !
 !!$  Copyright (C) 2015 University Joseph Fourier, Grenoble (Pengliang Yang)
 !!$  
@@ -25,22 +24,22 @@
 !!$  [2] Pengliang Yang, Romain Brossier,and  Jean Virieux, Boundary reconstruction 
 !!$      aftersignificant downsampling, Technical report No 84 - SEISCOPE project
 !!$      University Joseph Fourier
-program mexwell_boundary1
+program mexwell_dftinterp
   use rsf
   implicit none
 
   logical :: order1,attenuating
-  integer :: ib, it, nt, nz, nx, nb, sx, sz, nxpad, nzpad
-  integer :: nsnap, isnap, snap_interval
-  real  :: dt, dz, dx, fm, tmp, idx, idz
+  integer :: ib, it, nt, mt, nz, nx, nb, sx, sz, nxpad, nzpad
+  integer :: nsnap, isnap, snap_interval,r
+  real  :: dt, dz, dx, fm, tmp, idx, idz, dtb
   real*8, parameter::PI=4.*atan(1.)
-  real, dimension (:),   allocatable :: wlt,bb,aa,ef,eb, wltf,wltb
+  real, dimension (:),   allocatable :: wlt,bb,aa,ef,eb, trf, trb
   real, dimension (:,:), allocatable :: v0, vv, rho, eta
   real, dimension (:,:), allocatable :: p, vz, vx
   real, dimension(:,:,:),allocatable :: conv_pz,conv_px,conv_vz,conv_vx
-  real, dimension(:,:,:,:),allocatable::bvz, bvx, bpz, bpx
+  complex, dimension(:,:,:,:),allocatable::bvz, bvx
   real, dimension(:,:,:),allocatable:: psnap, vzsnap, vxsnap
-  type(file) :: Fv, Fw1, Fw2, Frho, Feta, Fef,Feb, Fwltf,Fwltb  ! I/O files 
+  type(file) :: Fv, Fw1, Fw2, Frho, Feta, Fef,Feb,Ftrf,Ftrb ! I/O files 
 
   call sf_init() ! initialize Madagascar
 
@@ -52,8 +51,8 @@ program mexwell_boundary1
   Feta=rsf_input("eta")   ! Pascal
   Fef=rsf_output("ef")    ! energy (kinematic+deformation) when forward modeling
   Feb=rsf_output("eb")    ! energy (kinematic+deformation) when back-reconstruction
-  Fwltf=rsf_output("wltf") ! wavelet in forward modeling
-  Fwltb=rsf_output("wltb") ! wavelet in backward reconstruction
+  Ftrf=rsf_output("trf")  ! trf
+  Ftrb=rsf_output("trb")  ! trb
 
   ! Read/Write axes
   call from_par(Fv,"n1",nz) ! velocity model: nz
@@ -64,6 +63,7 @@ program mexwell_boundary1
   call from_par("nb", nb, 30) ! thinkness of sponge ABC
   call from_par("nt", nt, 1000) !number of time steps
   call from_par("dt", dt, 0.001) ! time sampling interval
+  call from_par("dtb", dtb, dt) ! dt for boundary saving
   call from_par("fm", fm, 20.) ! domainant frequency for ricker wavelet
   call from_par("nsnap", nsnap, 0) ! number of snapshots for re-initialization
   call from_par("order1",order1,.true.) ! 1st order or 2nd order accuracy
@@ -95,15 +95,10 @@ program mexwell_boundary1
   call to_par(Feb,"d1",dt)
   call to_par(Feb,"n2",1)
 
-  call to_par(Fwltf,"n1",nt)
-  call to_par(Fwltf,"o1",0)
-  call to_par(Fwltf,"d1",dt)
-  call to_par(Fwltf,"n2",1)
-
-  call to_par(Fwltb,"n1",nt)
-  call to_par(Fwltb,"o1",0)
-  call to_par(Fwltb,"d1",dt)
-  call to_par(Fwltb,"n2",1)
+  call to_par(Ftrf,"n1",nt)
+  call to_par(Ftrf,"o1",0)
+  call to_par(Ftrf,"d1",dt)
+  call to_par(Ftrf,"n2",1)
 
   idx=1./dx
   idz=1./dz
@@ -111,6 +106,15 @@ program mexwell_boundary1
   nxpad=nx+2*nb
   sx=nxpad/2
   sz=nzpad/2
+  r=nint(dtb/dt)
+  if(mod(nt,r)==0) then
+     write(0,*) 'store boundary every m step: m=', r
+     mt=nt/r !N=nt;M=mt; M=N/m
+  else
+     write(0,*) 'dt for boundary saving is chosen inappropriately.'
+     call exit(0)
+  endif
+
 
   allocate(wlt(nt))
   allocate(bb(nb))
@@ -126,20 +130,18 @@ program mexwell_boundary1
   allocate(conv_px(nzpad,nb,2))
   allocate(conv_vz(nb,nxpad,2))
   allocate(conv_vx(nzpad,nb,2))
-  allocate(bvz(1,nx,2,nt))
-  allocate(bvx(nz,1,2,nt))
-  allocate(bpz(1,nx,2,nt))
-  allocate(bpx(nz,1,2,nt))
+  allocate(bvz(3,nx,2,mt/2+1))
+  allocate(bvx(nz,3,2,mt/2+1))
   allocate(ef(nt))
   allocate(eb(nt))
-  allocate(wltf(nt))
-  allocate(wltb(nt))
   if(nsnap>0) then !using snapshot strategy
      allocate(psnap(nzpad,nxpad,nsnap))
      allocate(vzsnap(nzpad,nxpad,nsnap))
      allocate(vxsnap(nzpad,nxpad,nsnap))
      snap_interval=int(nt/(nsnap+1))
   endif
+  allocate(trf(nt))
+  allocate(trb(nt))
 
   !generate ricker wavelet with a delay
   do it=1,nt  
@@ -154,7 +156,6 @@ program mexwell_boundary1
   call expand2d(rho, v0, nz, nx, nb)
   call rsf_read(Feta, v0)
   call expand2d(eta, v0, nz, nx, nb)
-  !generate coefficients for the absorbing boundary
   call cpmlcoeff_init(bb,aa,maxval(vv),dx,dt,fm,nb)
   p=0.
   vx=0.
@@ -163,6 +164,9 @@ program mexwell_boundary1
   conv_px=0.
   conv_vz=0.
   conv_vx=0.
+  bvx=0.
+  bvz=0.
+  trf=0.
 
   !forward modeling
   if(nsnap>0) isnap=0
@@ -181,10 +185,11 @@ program mexwell_boundary1
         call update_cpml_pzpx(p,vz,vx,conv_vz,conv_vx,rho,vv,bb,aa,idz,idx,dt,nz,nx,nb)
         if(attenuating) call apply_attenuation(p, eta, rho, vv, 0.5*dt, nzpad, nxpad)
      endif
-     call add_sources(p, dt, wlt(it), sz, sx, nzpad, nxpad, wltf(it))
-     call boundary_rw_v(.true.,bvz(:,:,:,it),bvx(:,:,:,it),vz,vx,nz,nx,nb)
-     call boundary_rw_p(.true.,bpz(:,:,:,it),bpx(:,:,:,it),p,nz,nx,nb)
-!     call boundary_rw(.true.,bvz(:,:,:,it),bvx(:,:,:,it),vz,vx,nz,nx,nb)
+     call add_sources(p, dt, wlt(it), sz, sx, nzpad, nxpad)
+
+     !boundary saving by computing the Fourier coefficients on the fly
+     if(mod(it-1,r)==0) call boundary_interp(.true.,bvz,bvx,vz,vx,nz,nx,nb,it,nt,mt)
+
      if(nsnap>0) then !save snapshots for re-initialization in backward reconstruction
         if ((isnap<nsnap).and.(it==(isnap+1)*snap_interval)) then
            isnap=isnap+1
@@ -194,6 +199,9 @@ program mexwell_boundary1
            vxsnap(:,:,isnap)=vx       
         endif
      endif
+     
+     trf(it)=p(nb+nz/2,nb+nx+2)
+
      call window2d(v0, p, nz, nx, nb);
      call rsf_write(Fw1,v0)
      call compute_energy(ef(it),vz(nb+1:nb+nz,nb+1:nb+nx),&
@@ -201,13 +209,15 @@ program mexwell_boundary1
           rho(nb+1:nb+nz,nb+1:nb+nx),vv(nb+1:nb+nz,nb+1:nb+nx),nz,nx)
   enddo
   call rsf_write(Fef,ef) ! store forward energy history
-  call rsf_write(Fwltf,wltf) ! store wavelet series during forward modeling
+  call rsf_write(Ftrf,trf)
 
   !backward reconstruction
   do it=nt,1,-1
-     call boundary_rw_p(.false.,bpz(:,:,:,it),bpx(:,:,:,it),p,nz,nx,nb)
-     call boundary_rw_v(.false.,bvz(:,:,:,it),bvx(:,:,:,it),vz,vx,nz,nx,nb)
-!     call boundary_rw(.false.,bvz(:,:,:,it),bvx(:,:,:,it),vz,vx,nz,nx,nb)
+     !reconstruct the boundary wavefield by Fourier interpolation
+     call boundary_interp(.false.,bvz,bvx,vz,vx,nz,nx,nb,it,nt,mt)
+
+     trb(it)=p(nb+nz/2,nb+nx-2)
+
      call compute_energy(eb(it),vz(nb+1:nb+nz,nb+1:nb+nx),&
           vx(nb+1:nb+nz,nb+1:nb+nx),p(nb+1:nb+nz,nb+1:nb+nx),&
           rho(nb+1:nb+nz,nb+1:nb+nx),vv(nb+1:nb+nz,nb+1:nb+nx),nz,nx)
@@ -223,7 +233,7 @@ program mexwell_boundary1
            isnap=isnap-1
         endif
      endif
-     call add_sources(p, -dt, wlt(it), sz, sx, nzpad, nxpad, wltb(it))
+     call add_sources(p, -dt, wlt(it), sz, sx, nzpad, nxpad)
      if (order1) then ! scheme 1, 1st order accuracy, default
         if(attenuating) call apply_attenuation(p, eta, rho, vv, -dt, nzpad, nxpad)
         call step_forward_p(p, vz, vx, vv, rho, -dt, idz, idx, nzpad, nxpad)
@@ -236,7 +246,7 @@ program mexwell_boundary1
      endif
   enddo
   call rsf_write(Feb,eb) !store backward energy history
-  call rsf_write(Fwltb,wltb) !store wavelet series during backward reconstruction  
+  call rsf_write(Ftrb,trb)
 
   deallocate(wlt)
   deallocate(bb)
@@ -256,24 +266,22 @@ program mexwell_boundary1
   deallocate(conv_vx)
   deallocate(bvz)
   deallocate(bvx)
-  deallocate(bpz)
-  deallocate(bpx)
-  deallocate(wltf)
-  deallocate(wltb)
   if(nsnap>0) then
      deallocate(psnap)
      deallocate(vzsnap)
      deallocate(vxsnap)
   endif
+  deallocate(trf)
+  deallocate(trb)
 
   call exit(0)
-end program mexwell_boundary1
+end program mexwell_dftinterp
 
 !------------------------------------------------------------------------------
 ! check the CFL/stability condition is satisfied or not
 subroutine check_sanity(vpmax,dt,dx,dz)
   implicit none
-  
+
   real::vpmax,dt,dx,dz
   real,parameter::c1=+1.196289062500000
   real,parameter::c2=-0.079752604166667
@@ -288,7 +296,7 @@ subroutine check_sanity(vpmax,dt,dx,dz)
      call exit(0)
   else
      write(0,*)'CFL=',CFL
-  endif  
+  endif
 end subroutine check_sanity
 
 !------------------------------------------------------------------------------
@@ -397,7 +405,7 @@ end subroutine step_forward_p
 ! initialize PML damping profile
 subroutine cpmlcoeff_init(bb,aa,vpmax,dx,dt,fm,nb)
   implicit none
-  
+
   integer::nb
   real::dt,fm,dx,vpmax
   real,dimension(nb)::bb,aa
@@ -405,7 +413,7 @@ subroutine cpmlcoeff_init(bb,aa,vpmax,dx,dt,fm,nb)
   integer::ib
   real::x,L,d0,d,alpha_max,alpha,r
   real,parameter::Rc=1.e-4
-  
+
   L=nb*dx
   d0=-3.*log(Rc)*vpmax/(2.*L)
   alpha_max=4.*atan(1.)*fm
@@ -491,7 +499,7 @@ end subroutine update_cpml_vzvx
 !------------------------------------------------------------------------------
 subroutine update_cpml_pzpx(p,vz,vx,conv_vz,conv_vx,rho,vv,bb,aa,idz,idx,dt,nz,nx,nb)
   implicit none
-  
+
   integer::nz,nx,nb
   real::idz,idx,dt
   real,dimension(nb)::bb,aa
@@ -549,7 +557,7 @@ subroutine update_cpml_pzpx(p,vz,vx,conv_vz,conv_vx,rho,vv,bb,aa,idz,idx,dt,nz,n
         p(i1,i2)=p(i1,i2)-dt*tmp*conv_vz(ib,i2,2)
      enddo
   enddo
-  
+
   !update px
   do i1=1,nzpad
      do i2=1,nb !left
@@ -586,126 +594,19 @@ subroutine apply_attenuation(p, eta, rho, vv, dt, nzpad, nxpad)
 end subroutine apply_attenuation
 
 !-------------------------------------------------------------------------------
-subroutine add_sources(p, dt, wlt, sz, sx, nzpad, nxpad,wlt_actual)
+subroutine add_sources(p, dt, wlt, sz, sx, nzpad, nxpad)
   implicit none
 
   integer::sz,sx,nzpad, nxpad
-  real::dt,wlt,wlt_actual
+  real::dt,wlt
   real,dimension(nzpad, nxpad)::p
-  
-  wlt_actual=dt*wlt
 
-  p(sz,sx)=p(sz,sx)+wlt_actual
+  p(sz,sx)=p(sz,sx)+dt*wlt
 end subroutine add_sources
 
 !-------------------------------------------------------------------------------
-subroutine boundary_rw(v2b,bvz,bvx,vz,vx,nz,nx,nb)
-  implicit none
-  
-  logical::v2b !v to bourndary or reverse
-  integer::nz,nx,nb
-  real,dimension(nz+2*nb,nx+2*nb)::vz,vx
-  real::bvz(3,nx,2),bvx(nz,3,2)
-
-  integer::i1,i2
-  
-  if(v2b) then !v to bourndary
-     do i2=1,nx
-        do i1=1,3
-           bvz(i1,i2,1)=vz(i1+nb-2,i2+nb)
-           bvz(i1,i2,2)=vz(i1+nz+nb-2,i2+nb)
-        enddo
-     enddo
-     do i1=1,nz
-        do i2=1,3
-           bvx(i1,i2,1)=vx(i1+nb,i2+nb-2)
-           bvx(i1,i2,2)=vx(i1+nb,i2+nx+nb-2)
-        enddo
-     enddo
-  else !boundary to v
-     do i2=1,nx
-        do i1=1,3
-           vz(i1+nb-2,i2+nb)=bvz(i1,i2,1)
-           vz(i1+nz+nb-2,i2+nb)=bvz(i1,i2,2)
-        enddo
-     enddo
-     do i1=1,nz
-        do i2=1,3
-           vx(i1+nb,i2+nb-2)=bvx(i1,i2,1)
-           vx(i1+nb,i2+nx+nb-2)=bvx(i1,i2,2)
-        enddo
-     enddo
-  endif
-end subroutine boundary_rw
-
-!-------------------------------------------------------------------------------
-subroutine boundary_rw_v(v2b,bvz,bvx,vz,vx,nz,nx,nb)
-  implicit none
-  
-  logical::v2b !v to bourndary or reverse
-  integer::nz,nx,nb
-  real,dimension(nz+2*nb,nx+2*nb)::vz,vx
-  real::bvz(1,nx,2),bvx(nz,1,2)
-
-  integer::i1,i2
-  
-  if(v2b) then !v to bourndary
-     do i2=1,nx
-           bvz(1,i2,1)=vz(nb+1,i2+nb)
-           bvz(1,i2,2)=vz(nz+nb,i2+nb)
-     enddo
-     do i1=1,nz
-           bvx(i1,1,1)=vx(i1+nb,nb+1)
-           bvx(i1,1,2)=vx(i1+nb,nx+nb)
-     enddo
-  else !boundary to v
-     do i2=1,nx
-           vz(nb+1,i2+nb)=bvz(1,i2,1)
-           vz(nz+nb,i2+nb)=bvz(1,i2,2)
-     enddo
-     do i1=1,nz
-           vx(i1+nb,nb+1)=bvx(i1,1,1)
-           vx(i1+nb,nx+nb)=bvx(i1,1,2)
-     enddo
-  endif
-end subroutine boundary_rw_v
-
-
-!-------------------------------------------------------------------------------
-subroutine boundary_rw_p(p2b,bpz,bpx,p,nz,nx,nb)
-  implicit none
-  
-  logical::p2b !v to bourndary or reverse
-  integer::nz,nx,nb
-  real,dimension(nz+2*nb,nx+2*nb)::p
-  real::bpz(1,nx,2),bpx(nz,1,2)
-
-  integer::i1,i2
-  
-  if(p2b) then !v to bourndary
-     do i2=1,nx
-           bpz(1,i2,1)=p(nb+1,i2+nb)
-           bpz(1,i2,2)=p(nz+nb,i2+nb)
-     enddo
-     do i1=1,nz
-           bpx(i1,1,1)=p(i1+nb,nb+1)
-           bpx(i1,1,2)=p(i1+nb,nz+nb)
-     enddo
-  else !boundary to v
-     do i2=1,nx
-           p(nb+1,i2+nb)=bpz(1,i2,1)
-           p(nz+nb,i2+nb)=bpz(1,i2,2)
-     enddo
-     do i1=1,nz
-           p(i1+nb,nb+1)=bpx(i1,1,1)
-           p(i1+nb,nz+nb)=bpx(i1,1,2)
-     enddo
-  endif
-end subroutine boundary_rw_p
-
-
-!-------------------------------------------------------------------------------
 subroutine compute_energy(e,vz,vx,p,rho,vv,nz,nx)
+  !compute the sum of kinematic energy and deformation/potential energy
   implicit none
 
   integer::nz,nx
@@ -715,3 +616,58 @@ subroutine compute_energy(e,vz,vx,p,rho,vv,nz,nx)
   e=0.5*sum((vz*vz+vx*vx)*rho+p*p/(rho*vv*vv))
 end subroutine compute_energy
 
+!-------------------------------------------------------------------------------
+subroutine boundary_interp(v2b,bvz,bvx,vz,vx,nz,nx,nb,it,nt,mt)
+  !interpolate the boundary elements by DFT and its inverse
+  implicit none
+
+  logical::v2b !v to bourndary or reverse
+  integer::nz,nx,nb,mt,nt,it
+  real,dimension(nz+2*nb,nx+2*nb)::vz,vx
+  complex::bvz(3,nx,2,mt/2+1),bvx(nz,3,2,mt/2+1)
+  real*8::pi=4.*atan(1.)
+
+  ! n=it; n'=itt;
+  ! N=nt; N'=mt;
+  integer::i1,i2,ik,r
+  complex::factor(mt/2+1)
+  r=nt/mt
+
+  if(v2b) then !v to bourndary
+     do ik=1,mt/2+1
+        !complex exponential factor
+        factor(ik)=exp(cmplx(0,-2.*pi*(ik-1)*(it-1)/nt))
+     enddo
+     do i2=1,nx
+        do i1=1,3
+           bvz(i1,i2,1,:)=bvz(i1,i2,1,:)+vz(i1+nb-2,i2+nb)*factor
+           bvz(i1,i2,2,:)=bvz(i1,i2,2,:)+vz(i1+nz+nb-2,i2+nb)*factor
+        enddo
+     enddo
+     do i1=1,nz
+        do i2=1,3
+           bvx(i1,i2,1,:)=bvx(i1,i2,1,:)+vx(i1+nb,i2+nb-2)*factor
+           bvx(i1,i2,2,:)=bvx(i1,i2,2,:)+vx(i1+nb,i2+nx+nb-2)*factor
+        enddo
+     enddo
+  else !boundary to v
+     do ik=1,mt/2+1
+        factor(ik)=exp(cmplx(0,2.*pi*(ik-1)*(it-1)/nt))/mt
+     enddo
+     factor(1)=0.5*factor(1)
+     !handle the case mt is an even number
+     if(mod(mt,2)==0) factor(mt/2+1)=0.5*factor(mt/2+1)
+     do i2=1,nx
+        do i1=1,3
+           vz(i1+nb-2,i2+nb)=2.*real(sum(bvz(i1,i2,1,:)*factor))
+           vz(i1+nz+nb-2,i2+nb)=2.*real(sum(bvz(i1,i2,2,:)*factor))
+        enddo
+     enddo
+     do i1=1,nz
+        do i2=1,3
+           vx(i1+nb,i2+nb-2)=2.*real(sum(bvx(i1,i2,1,:)*factor))
+           vx(i1+nb,i2+nx+nb-2)=2.*real(sum(bvx(i1,i2,2,:)*factor))
+        enddo
+     enddo
+  endif
+end subroutine boundary_interp

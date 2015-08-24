@@ -149,27 +149,41 @@ technique.
 
 16) Forward modeling based upon Mexwell attenuation model
 Main:		Mmaxwell_cpml1.c, 
-		Mmaxwell_cpml24_backward.f90, Mmaxwell_cpml28_backward.f90
-		Mmaxwell_sponge1.c, Mmaxwell_sponge2_backward.f90
-		Mmaxwell_direct_backward.f90, Mmaxwell_cpml3d.f90
+		Mmaxwell_cpml24_fb.f90, Mmaxwell_cpml28_fb.f90
+		Mmaxwell_sponge1.c, Mmaxwell_sponge2_fb.f90
+		Mmaxwell_direct_fb.f90, Mmaxwell_cpml3d_fb.f90
+		Mmaxwell_dftinterp.f90 New wavefield reconstruction scheme!
 Test file:	/book/xjtu/test/maxwell/SConstruct
-Note: We are using Maxwell body to incorporate attenuation.
+Note: 1. We are using Maxwell body to incorporate attenuation.
+      2. We designed a snapshot strategy do reverse reconstruction of 
+	viscoacoustic wavefield in a stable way.
+      3. We propsed a DFT interpolation algorithm to do wavefield 
+	reconstruction from the significantly downsampled boundaries. 
+To use these techniques, please cite the following:
+[1] Pengliang Yang, Romain Brossier, Ludovic Metivier and  Jean Virieux,
+    Reverse propagation of viscoacoustic forward wavefield with Maxwell 
+    attenuation using snapshots and saved boundaries, Technical report 
+     No 83 - SEISCOPE project, University Joseph Fourier
+[2] Pengliang Yang, Romain Brossier, Jean Virieux, Boundary reconstruction 
+    after significant downsampling, Technical report No 84 - SEISCOPE project
+    University Joseph Fourier
+
 
 ===================================================================
 Postscript:
 
 I was pursuing my PhD degree in Xi'an Jiaotong University, China. During 
-the PhD program, I was sponsored by China Scholarship Council (SCC) to 
+the PhD program, I was sponsored by China Scholarship Council (CSC) to 
 do one year visiting research at The University of Texas at Austin, US.
 I coded a lot of matlab to validate my algorithms and began my C/C++ and 
 CUDA. In UT Austin, I learned MPI and OpenMP to do parallel programming.
 Since June 1, 2015, I moved to University Joseph Fourier-Grenoble, where
-I was requested to do all programming with Fortran. Thus, to compile my codes,
-you need:
+I was requested to do all programming with Fortran. Therefore, to compile 
+my codes, you may need:
  1) check with ./configure to make sure all programming environments have 
 been well installed, especiall for FFTW, gcc, gfortran and CUDA;
  2) then, use 
-	./configure API=c,fortran-90 --prefix=$RSFROOT
+	./configure API=c,f90 --prefix=$RSFROOT
 to install Madagascar.
 
 I try my best to make my code self-contained. I believe it brings 

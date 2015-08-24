@@ -3,7 +3,7 @@
 Outputs complex numbers (time,amplitude) 
 
 September 2014 program of the month:
-http://ahay.org/rsflog/index.php?/archives/403-Program-of-the-month-sfmax1.html
+http://ahay.org/blog/2014/09/24/program-of-the-month-sfmax1/
 */
 /*
   Copyright (C) 2007 University of Texas at Austin

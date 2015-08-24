@@ -1,0 +1,22 @@
+from rsf.proj import *
+
+color='cube1_0-1.csv'
+
+Fetch(color,'1508_Mapping_and_validating_lineaments',
+      server='https://raw.githubusercontent.com',
+      top='seg/tutorials/master')
+
+# import Bouguer gravity residual map
+Fetch('continued.txt','1508_Mapping_and_validating_lineaments',
+      server='https://raw.githubusercontent.com',
+      top='seg/tutorials/master')
+
+Flow('continued','continued.txt',
+     '''
+     echo n1=81 n2=81 data_format=ascii_float in=$SOURCE |
+     dd form=native
+     ''')
+
+Result('continued','grey title="Bouguer anomaly" screenratio=1 scalebar=y')
+
+End()

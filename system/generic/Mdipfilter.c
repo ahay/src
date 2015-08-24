@@ -1,7 +1,7 @@
 /* Filter data based on dip in 2-D or 3-D.
 
 February 2014 program of the month:
-http://ahay.org/rsflog/index.php?/archives/374-Program-of-the-month-sfdipfilter.html
+http://ahay.org/blog/2014/02/06/program-of-the-month-sfdipfilter/
 */
 /*
 Copyright (C) 2004 University of Texas at Austin

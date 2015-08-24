@@ -40,9 +40,11 @@ mpigpufwi
 ######################################################################
 # 6. F90 main programs
 f90_progs = '''
-maxwell_direct_backward maxwell_sponge2_backward maxwell_cpml28_backward
-maxwell_cpml24_backward maxwell_cpml3d maxwell_boundary1 maxwell_boundary2 
+maxwell_direct_fb maxwell_sponge2_fb maxwell_cpml28_fb maxwell_cpml24_fb
+maxwell_cpml3d_fb maxwell_boundary1 maxwell_boundary2
+maxwell_dftinterp demofftw3 
 '''
+#gmb
 
 
 ######################################################################
@@ -76,6 +78,8 @@ env.Prepend(CPPPATH=['../../include'],
 fftw = env.get('FFTW') 		#fftw = env.get('FFTWOMP')
 if fftw:
     env.Prepend(CPPDEFINES=['SF_HAS_FFTW'])
+    if not isinstance(fftw,bool):
+        env.Append(LIBS=['fftw3'])
 
 # suitesparse settings
 sparsepath = env.get('SPARSEPATH')
