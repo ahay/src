@@ -38,10 +38,6 @@ float bilateral(float *trace    /* input */,
     output = sf_floatalloc(2*ns+1);
 
     for (irep=0; irep < niter; irep++) {
-/*	for (i1=0; i1 < n; i1++) {
-	    output[i1] = trace[i1];
-	}		
-*/	/* loop over samples */
 	for (i1=0; i1 < n; i1++) {	    
 	    t = 0.;
 	    norm = 0.;
