@@ -81,7 +81,7 @@ sfgrey.
 /*
    Program change history:
    date       Who             What
-   11/14/2013 Karl Schleicher Original program based on Mtahgethw.c
+   08/26/2015 Karl Schleicher Original program based on Mtahnmo.c
 */
 #include <string.h>
 #include <rsf.h>
@@ -105,22 +105,15 @@ int main(int argc, char* argv[])
   float* intrace=NULL;
   float o1;
   float d1;
-  int indx_offset;
-  float* local_sloth=NULL;
-  float v0;
+  int indx_sstat;
+  int indx_gstat;
   int indx_time;
-  float offset;
-  float offset2;
-  float* r_index_tx_of_it0=NULL;
-  float* r_index_t0_of_itx=NULL;
-  int start_indx_nmo;
-  int start_indx_nmo_tx;
+  float* tin_of_tout=NULL;
   float* outtrace=NULL;
-  float itrace=0;
-  float nmostretch;
-  char* offsetname;
-  float lmute;
-  bool inv;
+  int itrace;
+  float tstat;
+  int static_sign;
+
   /******************************************************/
   /* code block for standard tah Trace And Header setup */
   /******************************************************/
@@ -171,9 +164,10 @@ int main(int argc, char* argv[])
   /* add to the history file                                */
   /**********************************************************/
 
+  if(!sf_getint("sign",&static_sign))static_sign=1;
+
   /* put the history from the input file to the output */
   sf_fileflush(out,in);
-
 
   /********************************************************/
   /* continue initialization specific to this tah program */
@@ -190,29 +184,12 @@ int main(int argc, char* argv[])
   /* segy_init gets the list header keys required by segykey function  */
   segy_init(n1_headers,in);
   /* get index to keys I will be using */
-  if(NULL==(offsetname=sf_getstring("offset")))offsetname="offset";
-  indx_offset=segykey(offsetname);
+  indx_sstat=segykey("sstat");
+  indx_gstat=segykey("gstat");
   /* kls what other header keys do I use?  inline? xline? cdp? */
 
-  /* get the parameter for the maximum nmo stretch. */
-  if (!sf_getfloat("str",&nmostretch)) nmostretch=0.5;
-  /* maximum stretch allowed */
-
-  if (!sf_getfloat("lmute",&lmute)) lmute=12.*d1; 
-  /* length of the mute zone in seconds */
-  if(verbose>0)  fprintf(stderr,"lmute=%f seconds.\n",lmute);
-  lmute/=d1;
-  if(!sf_getbool("inv",&inv)) inv=false;
-  /* if y, do inverse nmo.  Otherwise forward nmo */ 
-   
-  if(verbose>0){
-    if(inv)fprintf(stderr,"inv=true\n");
-    else fprintf(stderr,"inv=false\n");
-  }
-   
   if(verbose>0)fprintf(stderr,"allocate arrays for the trace loop\n");
-  r_index_tx_of_it0=sf_floatalloc(n1_traces);
-  r_index_t0_of_itx=sf_floatalloc(n1_traces);
+  tin_of_tout=sf_floatalloc(n1_traces);
   outtrace         =sf_floatalloc(n1_traces);
   
 
@@ -244,26 +221,23 @@ int main(int argc, char* argv[])
        ints8r(nt, dt, tmin, intrace.data,
               0.0, 0.0, nt, t, outtrace.data);
     */	
-	
+
+    /* it would be computationally faster to convolve the interp filter 
+       to the trace, but this is easy copy of sustatic.  Cost of ints8r
+       should no be too bad and I want to get initial code up quickly */
+    itrace=0;
     for(indx_time=0; indx_time<n1_traces; indx_time++){
-      float tx, t0;
-      t0=indx_time*d1+o1;
-      tx=sqrt(t0+tstat)
-      r_index_tx_of_it0[indx_time]=(tx-o1)/d1;
+      tin_of_tout[indx_time]=indx_time*d1+static_sign*tstat/1000;
       if(itrace==0 && verbose>4){
-	fprintf(stderr,"indx_time=%d, tx=%f, sloth=%g, offset=%f, t0=%f\n",
-		        indx_time   , tx   , local_sloth[indx_time]  ,
-                                                       offset   , t0);
+	fprintf(stderr,"tin_of_tout[%d]=%f\n",
+		indx_time   , tin_of_tout[indx_time]);
       }
     }
-    ints8r(n1_traces,1.0,0,
+    ints8r(n1_traces,d1,0,
 	   intrace,0.0,0.0,
-	   n1_traces-start_indx_nmo,&r_index_tx_of_it0[start_indx_nmo],
-	   &outtrace[start_indx_nmo]);
-    /* zero above the start time */
-    for(indx_time=0; indx_time<start_indx_nmo; indx_time++){
-      outtrace[indx_time]=0.0;
-    }
+	   n1_traces,tin_of_tout,
+	   outtrace);
+
     /***************************/
     /* write trace and headers */
     /***************************/
