@@ -115,17 +115,16 @@
 
 #include "tahsub.h"
 
-typedef struct Agc_struct *agc_struct;
-struct Agc_struct{
+typedef struct agc_struct {
   float* agc_scalar;
   float* agc_power;
   float* agc_fold;
   int agc_nt;
-};
+}AGC_STRUCT;
 
-agc_struct agc_init(int nt){
-  agc_struct agc_structure;
-  agc_structure=(agc_struct) sf_alloc(1,sizeof(*agc_structure));
+AGC_STRUCT* agc_init(int nt){
+  AGC_STRUCT* agc_structure;
+  agc_structure=(AGC_STRUCT*) sf_alloc(1,sizeof(AGC_STRUCT));
   agc_structure->agc_scalar=(float*)sf_alloc(nt,sizeof(float));
   agc_structure->agc_power=(float*)sf_alloc(nt,sizeof(float));
   agc_structure->agc_fold=(float*)sf_alloc(nt,sizeof(float));
@@ -133,14 +132,14 @@ agc_struct agc_init(int nt){
   return agc_structure;
 }
 
-void agc_close(agc_struct agc_structure){
+void agc_close(AGC_STRUCT* agc_structure){
   free(agc_structure->agc_scalar);
   free(agc_structure->agc_power );
   free(agc_structure->agc_fold  );
   free(agc_structure);
 }
 
-void agc_apply(agc_struct agc_structure,float* indata,float* outdata,
+void agc_apply(AGC_STRUCT* agc_structure,float* indata,float* outdata,
 	       int lenagc,int nt){
   int half_lenagc=lenagc/2;
   int itime;
@@ -231,8 +230,9 @@ int main(int argc, char* argv[])
     int itime_start;
     int itime_stop;
     int indx_taper;
-    agc_struct agc_structure;
-    int lenagc=500;
+    AGC_STRUCT* agc_structure;
+    float wagc;
+    int lenagc;
 
     /*****************************/
     /* initialize verbose switch */
@@ -328,11 +328,20 @@ int main(int argc, char* argv[])
     }
     indx_of_offset=segykey("offset");
     */
+    
     if (!sf_histfloat(in,"d1",&d1))
 	sf_error("input data does not define d1");
     if (!sf_histfloat(in,"o1",&o1))
 	sf_error("input data does not define o1");
 
+   if(!sf_getfloat("wagc",&wagc)){
+      sf_error("wagc is a required parameter in sftahagc");
+    }
+   /* \n
+      length of the agc window in seconds
+   */
+   lenagc=wagc/d1+1.5;
+ 
     /* initialize the agc structures */
     agc_structure=agc_init(n1_traces);
     /***************************/
