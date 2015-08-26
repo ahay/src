@@ -34,6 +34,8 @@ tahremoveclick
 tahgain
 tahfilter
 tahagc
+tahpef
+tahstatic
 '''
 
 env.Prepend(CPPPATH=[RSFSRC+'/include'],
