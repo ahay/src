@@ -1,7 +1,7 @@
 /* 1-D ENO interpolation. 
 
 November 2013 program of the month:
-http://ahay.org/rsflog/index.php?/archives/364-Program-of-the-month-sfremap1.html
+http://ahay.org/blog/2013/11/03/program-of-the-month-sfremap1/
 */
 /*
   Copyright (C) 2004 University of Texas at Austin

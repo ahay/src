@@ -1,7 +1,7 @@
 /* Apply power gain. 
 
 March 2013 program of the month:
-http://www.ahay.org/rsflog/index.php?/archives/327-Program-of-the-month-sfpow.html
+http://www.ahay.org/blog/2013/03/10/program-of-the-month-sfpow/
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
