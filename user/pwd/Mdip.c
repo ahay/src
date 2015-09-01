@@ -3,7 +3,7 @@
 The output is dimensionless (stepout in time measured in time samples). 
 
 June 2012 program of the month:
-http://ahay.org/rsflog/index.php?/archives/295-Program-of-the-month-sfdip.html
+http://ahay.org/blog/2012/06/02/program-of-the-month-sfdip/
 */
 /*
   Copyright (C) 2004 University of Texas at Austin

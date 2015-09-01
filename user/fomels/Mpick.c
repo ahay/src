@@ -11,7 +11,7 @@ Reproducible version in RSFSRC/book/tccs/avo
 http://ahay.org/RSF/book/tccs/avo/paper_html/
 
 August 2012 program of the month:
-http://ahay.org/rsflog/index.php?/archives/302-Program-of-the-month-sfpick.html
+http://ahay.org/blog/2012/08/01/program-of-the-month-sfpick/
 */
 
 /*
