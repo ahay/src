@@ -1,7 +1,7 @@
 /* Add random noise to the data.
 
 July 2011 program of the month:
-http://ahay.org/rsflog/index.php?/archives/262-Program-of-the-month-sfnoise.html
+http://ahay.org/blog/2011/07/03/program-of-the-month-sfnoise/
 */
 /*
   Copyright (C) 2004 University of Texas at Austin

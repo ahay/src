@@ -160,7 +160,9 @@ class Canvas(wx.Window):
         return (x,y)
     def DrawPicks(self,i3):
         for pick in picks[i3].values():
-            (x,y) = self.UnscalePick(pick)
+            (x,y) = self.UnscalePick(pick[0])
+            self.dc.SetPen(self.pen)
+            self.dc.SetBrush(pick[1])
             self.dc.DrawCircle(x,y,r)
     def SetColor(self,color):
         self.brush = wx.Brush(color)
@@ -178,7 +180,7 @@ class Canvas(wx.Window):
             #canvas.tag_bind(tag,'<B2-Motion>',movepick)
             #canvas.tag_bind(tag,'<ButtonRelease-2>',movedpick)
             #canvas.tag_bind(tag,'<Button-3>',deletepick)
-            picks[i3][tag]=self.ScalePick(x,y)
+            picks[i3][tag]=[self.ScalePick(x,y),self.brush]
         event.Skip()
     def SelectPick(self,event):
         print event.GetPositionTuple()
@@ -267,7 +269,7 @@ def cleanup():
     global ppms, picks
     for i in range(n3):
         for pick in picks[i].values():
-            sys.stdout.write('%g\t%g\t%d\n' % pick)
+            sys.stdout.write('%g\t%g\t%d\n' % pick[0])
     for ppm in ppms:
         if os.path.isfile(ppm):
             os.unlink(ppm)
