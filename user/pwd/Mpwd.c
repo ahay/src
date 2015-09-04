@@ -1,7 +1,7 @@
 /* 3-D plane wave destruction. 
 
 February 2013 program of the month:
-http://www.ahay.org/rsflog/index.php?/archives/321-Program-of-the-month-sfpwd.html
+http://ahay.org/blog/2013/02/09/program-of-the-month-sfpwd/
 */
 /*
   Copyright (C) 2004 University of Texas at Austin

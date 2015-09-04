@@ -1,7 +1,7 @@
 /* Time-space-domain Radon transform (slant stack) 
 
 April 2015 program of the month:
-http://ahay.org/rsflog/index.php?/archives/443-Program-of-the-month-sfslant.html
+http://ahay.org/blog/2015/04/21/program-of-the-month-sfslant/
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
