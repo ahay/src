@@ -34,7 +34,7 @@
 /*^*/
 
 static char command[SF_CMDLEN], splitcommand[SF_CMDLEN], **inames=NULL, **onames=NULL;
-static char ***inpnames=NULL, ***outnames=NULL, buffer[BUFSIZ], nkey[5];
+static char ***inpnames=NULL, buffer[BUFSIZ], nkey[5];
 static off_t size1, size2;
 static int inpargc, outargc;
 

@@ -56,8 +56,8 @@ static int fermat(const void *a, const void *b)
 }
 
 sf_upgrad sf_upgrad_init(int mdim        /* number of dimensions */,
-		   const int *mm   /* [dim] data size */,
-		   const float *d  /* [dim] data sampling */)
+			 const int *mm   /* [dim] data size */,
+			 const float *d  /* [dim] data sampling */)
 /*< initialize >*/
 {
     sf_upgrad upg;
@@ -70,9 +70,9 @@ sf_upgrad sf_upgrad_init(int mdim        /* number of dimensions */,
 
     nt = 1;
     for (i=0; i < ndim; i++) {
-		ss[i] = nt;
-		nt *= nn[i];
-		dd[i] = 1.0/(d[i]*d[i]);
+	ss[i] = nt;
+	nt *= nn[i];
+	dd[i] = 1.0/(d[i]*d[i]);
     }
 
     upg = (sf_upgrad) sf_alloc(1,sizeof(*upg));
@@ -95,35 +95,35 @@ void sf_upgrad_set(sf_upgrad upg, const float *r0 /* reference */)
 
     /* sort from small to large traveltime */
     for (it = 0; it < nt; it++) {
-		upg->order[it] = it;
+	upg->order[it] = it;
     }
     qsort(upg->order, nt, sizeof(int), fermat);
      
     for (it = 0; it < nt; it++) {
-		jt = upg->order[it];
+	jt = upg->order[it];
 
-		sf_line2cart(ndim,nn,jt,ii);
-		up = upg->update[it];
-		up[0] = up[1] = 0;
-		t = t0[jt];
-		upg->ww[it][ndim] = 0.;
-		for (i=0, m=1; i < ndim; i++, m <<= 1) {
-			a = jt-ss[i];
-			b = jt+ss[i];
-			if ((ii[i] == 0) || 
-				(ii[i] != nn[i]-1 && 1==fermat(&a,&b))) {
-				up[1] |= m;
-				t2 = t0[b];
-			} else {
-				t2 = t0[a];
-			}
+	sf_line2cart(ndim,nn,jt,ii);
+	up = upg->update[it];
+	up[0] = up[1] = 0;
+	t = t0[jt];
+	upg->ww[it][ndim] = 0.;
+	for (i=0, m=1; i < ndim; i++, m <<= 1) {
+	    a = jt-ss[i];
+	    b = jt+ss[i];
+	    if ((ii[i] == 0) || 
+		(ii[i] != nn[i]-1 && 1==fermat(&a,&b))) {
+		up[1] |= m;
+		t2 = t0[b];
+	    } else {
+		t2 = t0[a];
+	    }
 
-			if (t2 < t) {
-				up[0] |= m;
-				upg->ww[it][i] = (t-t2)*dd[i];
-				upg->ww[it][ndim] += upg->ww[it][i];
-			}	    
-		}
+	    if (t2 < t) {
+		up[0] |= m;
+		upg->ww[it][i] = (t-t2)*dd[i];
+		upg->ww[it][ndim] += upg->ww[it][i];
+	    }	    
+	}
     }
 }
 
@@ -139,9 +139,9 @@ void sf_upgrad_close(sf_upgrad upg)
 }
 
 void sf_upgrad_solve(sf_upgrad upg,
-		  const float *rhs /* right-hand side */, 
-		  float *x         /* solution */,
-		  const float *x0  /* initial solution */)
+		     const float *rhs /* right-hand side */, 
+		     float *x         /* solution */,
+		     const float *x0  /* initial solution */)
 /*< inverse operator >*/
 {
     int it, jt, i, m, j;
@@ -149,32 +149,32 @@ void sf_upgrad_solve(sf_upgrad upg,
     float num, den;
    
     for (it = 0; it < nt; it++) {
-		jt = upg->order[it];
+	jt = upg->order[it];
 
 	num = rhs[jt];
 	up = upg->update[it];
 	den = upg->ww[it][ndim]; /* denominator */
 
-		if (den == 0.) { /* at the source, use boundary conditions */
-			x[jt] = (NULL != x0)? x0[jt]: 0.;
-			continue;
-		}
+	if (den == 0.) { /* at the source, use boundary conditions */
+	    x[jt] = (NULL != x0)? x0[jt]: 0.;
+	    continue;
+	}
 
-		for (i=0, m=1; i < ndim; i++, m <<= 1) {
-			if (up[0] & m) {
-				j = (up[1] & m)? jt+ss[i]:jt-ss[i];		
-				num += upg->ww[it][i]*x[j];		
-			}
-		}
+	for (i=0, m=1; i < ndim; i++, m <<= 1) {
+	    if (up[0] & m) {
+		j = (up[1] & m)? jt+ss[i]:jt-ss[i];		
+		num += upg->ww[it][i]*x[j];		
+	    }
+	}
 	
-		x[jt] = num/den;
+	x[jt] = num/den;
     }
 }
 
 void sf_upgrad_inverse(sf_upgrad upg,
-		    float *rhs       /* right-hand side */,
-		    const float *x   /* solution */,
-		    const float *x0  /* initial solution */)
+		       float *rhs       /* right-hand side */,
+		       const float *x   /* solution */,
+		       const float *x0  /* initial solution */)
 /*< adjoint of inverse operator >*/
 {
     int it, jt, i, m, j;
@@ -182,36 +182,36 @@ void sf_upgrad_inverse(sf_upgrad upg,
     float den, w;
 
     for (it = 0; it < nt; it++) {
-		rhs[it] = 0.;
+	rhs[it] = 0.;
     }
    
     for (it = nt-1; it >= 0; it--) {
-		jt = upg->order[it];
+	jt = upg->order[it];
 
-		rhs[jt] += x[jt];
+	rhs[jt] += x[jt];
 
-		up = upg->update[it];
-		den = upg->ww[it][ndim];
+	up = upg->update[it];
+	den = upg->ww[it][ndim];
 
-		if (den == 0.) { /* at the source, use boundary conditions */
-			rhs[jt] = (NULL != x0)? x0[jt]: 0.;
-		} else {
-			rhs[jt] = rhs[jt]/den;
-		}
+	if (den == 0.) { /* at the source, use boundary conditions */
+	    rhs[jt] = (NULL != x0)? x0[jt]: 0.;
+	} else {
+	    rhs[jt] = rhs[jt]/den;
+	}
 
-		for (i=0, m=1; i < ndim; i++, m <<= 1) {
-			if (up[0] & m) {
-				j = (up[1] & m)? jt+ss[i]:jt-ss[i];
-				w = upg->ww[it][i]*rhs[jt];
-				rhs[j] += w;
-			}
-		}
+	for (i=0, m=1; i < ndim; i++, m <<= 1) {
+	    if (up[0] & m) {
+		j = (up[1] & m)? jt+ss[i]:jt-ss[i];
+		w = upg->ww[it][i]*rhs[jt];
+		rhs[j] += w;
+	    }
+	}
     }
 }
 
 void sf_upgrad_forw(sf_upgrad upg,
-				 const float *x /* solution */,
-				 float *rhs     /* right-hand side */)
+		    const float *x /* solution */,
+		    float *rhs     /* right-hand side */)
 /*< forward operator >*/
 {
     int it, jt, i, m, j;
@@ -219,26 +219,53 @@ void sf_upgrad_forw(sf_upgrad upg,
     float num, x2;
    
     for (it = 0; it < nt; it++) {
-		jt = upg->order[it];
+	jt = upg->order[it];
 
-		x2 = x[jt];
-		up = upg->update[it];
-		num = 0.;
+	x2 = x[jt];
+	up = upg->update[it];
+	num = 0.;
 
-		for (i=0, m=1; i < ndim; i++, m <<= 1) {
-			if (up[0] & m) {
-				j = (up[1] & m)? jt+ss[i]:jt-ss[i];		
-				num += upg->ww[it][i]*(x2-x[j]);		
-			}
-		}
+	for (i=0, m=1; i < ndim; i++, m <<= 1) {
+	    if (up[0] & m) {
+		j = (up[1] & m)? jt+ss[i]:jt-ss[i];		
+		num += upg->ww[it][i]*(x2-x[j]);		
+	    }
+	}
 	
-		rhs[jt] = num;
+	rhs[jt] = num;
+    }
+}
+
+void sf_upgrad_grad(sf_upgrad upg,
+		    const float *x /* input */,
+		    float **grad   /* gradient */)
+/*< forward operator >*/
+{
+    int it, jt, i, m, j;
+    unsigned char *up;
+    float num, x2;
+   
+    for (it = 0; it < nt; it++) {
+	jt = upg->order[it];
+
+	x2 = x[jt];
+	up = upg->update[it];
+	num = 0.;
+
+	for (i=0, m=1; i < ndim; i++, m <<= 1) {
+	    if (up[0] & m) {
+		j = (up[1] & m)? jt+ss[i]:jt-ss[i];		
+		grad[i][jt] = x2-x[j];		
+	    } else {
+		grad[i][jt] = 0.0f;
+	    }
+	}
     }
 }
 
 void sf_upgrad_adj(sf_upgrad upg,
-				float *x         /* solution */,
-				const float *rhs /* right-hand side */)
+		   float *x         /* solution */,
+		   const float *rhs /* right-hand side */)
 /*< adjoint operator >*/
 {
     int it, jt, i, m, j;
@@ -246,21 +273,50 @@ void sf_upgrad_adj(sf_upgrad upg,
     float w;
 
     for (it = 0; it < nt; it++) {
-		x[it] = 0.;
+	x[it] = 0.;
     }
    
     for (it = nt-1; it >= 0; it--) {
-		jt = upg->order[it];
-		up = upg->update[it];
+	jt = upg->order[it];
+	up = upg->update[it];
 
-		for (i=0, m=1; i < ndim; i++, m <<= 1) {
-			if (up[0] & m) {
-				j = (up[1] & m)? jt+ss[i]:jt-ss[i];
-				w = upg->ww[it][i]*rhs[jt];
+	for (i=0, m=1; i < ndim; i++, m <<= 1) {
+	    if (up[0] & m) {
+		j = (up[1] & m)? jt+ss[i]:jt-ss[i];
+		w = upg->ww[it][i]*rhs[jt];
 
-				x[jt] += w;
-				x[j]  -= w;
-			}
-		}
+		x[jt] += w;
+		x[j]  -= w;
+	    }
+	}
+    }
+}
+
+void sf_upgrad_grad_adj(sf_upgrad upg,
+			float *x     /* output */,
+			float **grad /* gradient */)
+/*< adjoint gradient operator >*/
+{
+    int it, jt, i, m, j;
+    unsigned char *up;
+    float w;
+
+    for (it = 0; it < nt; it++) {
+	x[it] = 0.;
+    }
+   
+    for (it = nt-1; it >= 0; it--) {
+	jt = upg->order[it];
+	up = upg->update[it];
+
+	for (i=0, m=1; i < ndim; i++, m <<= 1) {
+	    if (up[0] & m) {
+		j = (up[1] & m)? jt+ss[i]:jt-ss[i];
+		w = grad[i][jt];
+
+		x[jt] += w;
+		x[j]  -= w;
+	    }
+	}
     }
 }
