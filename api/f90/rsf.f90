@@ -825,7 +825,7 @@ contains
 
     write(0,*) AA%n,AA%o,AA%d
   end subroutine raxa
-  
+
   !------------------------------------------------------------
 
   subroutine rsf_fileflush(hist, hist_src)
@@ -838,6 +838,16 @@ contains
       call sf_fileflush(hist%tag, M_NULL)
     end if
   end subroutine rsf_fileflush
+
+  !------------------------------------------------------------
+
+  subroutine rsf_seek(hist, offset, whence)
+    type(file) :: hist
+    integer(kind=OFFKIND) :: offset
+    integer :: whence
+    call sf_seek(hist%tag, offset, whence)
+  end subroutine rsf_seek
+
   
 end module RSF
 
