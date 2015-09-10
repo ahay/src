@@ -3,12 +3,16 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-isaac0 isaac1 isaac2 isaac3 kirmod_newton rotater mpikirmodnewton
+fdtti3delasticcij fdort3delasticcij
+isaac0 isaac1 isaac2 isaac3 kirmod_newton mpikirmodnewton nmo3gmaprep
+rotater
 '''
 #iwarpsh stolthhlin radialhlin nmo3gmaprep 
-ccprogs = ''' tti3delrdecompPmod tti3delrdecompSmod tti3delrdecompSVmod tti3delrdecompSHmod    
-'''
 
+ccprogs = ''' 
+''' 
+
+decomp = ['rickerjb.o','eigen3x3.o','decomplowrank.o','fdcoef.o','fwportelasticcij.o','fwpttielasticcij.o','kykxkztaper.o','puthead.o','vmodel.o','zero.o']
 
 try:  # distributed version
     Import('env root pkgdir bindir')
@@ -18,11 +22,27 @@ except: # local version
     root = None
     SConscript('../../api/c/SConstruct')
 
+##############################################################################
+# Compiling 
+##############################################################################
+
+src = Glob('[a-z]*.c')
+underscore_inc = Glob('_[a-z]*.h')
+objs = []
+
+##############################################################################
+# ADD FFTW3 LIB
+##############################################################################
+
+fftw = env.get('FFTW')
+if fftw:
+    env.Prepend(CPPDEFINES=['SF_HAS_FFTW'])
+    if not isinstance(fftw,bool):
+        env.Append(LIBS=['fftw3_threads','fftw3'])
+
 ########################################################################
 # C progs and MPI
 ########################################################################
-
-src = Glob('[a-z]*.c')
 
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
@@ -33,6 +53,9 @@ for source in src:
     if not source in Glob('mpi*.c'):
         obj = env.StaticObject(source)
         env.Depends(obj,inc)
+        env.Depends(obj,underscore_inc)
+	if obj[0].name in decomp:
+        	objs.append(obj)
 
 mpicc = env.get('MPICC')
 
@@ -47,6 +70,31 @@ for prog in mains:
             prog = env.RSF_Place('sf'+prog,None,var='MPICC',package='mpi')
     else:
         prog = env.Program(prog,map(lambda x: x + '.c',sources))
+    if root:
+        env.Install(bindir,prog)
+
+########################################################################
+# C++ progs 
+########################################################################
+
+if 'c++' in env.get('API',[]):
+    lapack = env.get('LAPACK')
+else:
+    lapack = None
+
+if lapack:
+    libsxx = [env.get('DYNLIB','')+'rsf++','vecmatop']
+    if not isinstance(lapack,bool):
+        libsxx.extend(lapack)
+    env.Prepend(LIBS=libsxx)
+
+ccmains = Split(ccprogs)
+for prog in ccmains:
+    sources = ['M' + prog]
+    if lapack:
+        prog = env.Program(prog,map(lambda x: x + '.cc',sources)+objs)
+    else:
+        prog = env.RSF_Place('sf'+prog,None,var='LAPACK',package='lapack')
     if root:
         env.Install(bindir,prog)
 
