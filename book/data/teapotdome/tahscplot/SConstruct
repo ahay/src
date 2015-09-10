@@ -32,7 +32,7 @@ Result('s_lapfill_amp',
 	''')
 
 Flow('s_trishape','../tahscscale/sxyamp_st1500.rsf s_bin_amp',
-     'sftrishape pattern=${SOURCES[1]} niter=20 rest1=10 rect2=10')
+     'sftrishape pattern=${SOURCES[1]} niter=20 rect1=10 rect2=10')
 
 Result('s_trishape',
 	'''

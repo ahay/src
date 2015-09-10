@@ -3,11 +3,12 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-fdtti3delasticcij fdort3delasticcij
-isaac0 isaac1 isaac2 isaac3 kirmod_newton mpikirmodnewton nmo3gmaprep
+fdort3delasticcij
+isaac0 isaac1 isaac2 isaac3 kirmod_newton mpikirmodnewton 
 rotater
 '''
 #iwarpsh stolthhlin radialhlin nmo3gmaprep 
+#fdtti3delasticcij nmo3gmaprep
 
 ccprogs = ''' 
 ''' 
