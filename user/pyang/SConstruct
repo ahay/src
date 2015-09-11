@@ -41,10 +41,10 @@ mpigpufwi
 # 6. F90 main programs
 f90_progs = '''
 maxwell_direct_fb maxwell_sponge2_fb maxwell_cpml28_fb maxwell_cpml24_fb
-maxwell_cpml3d_fb maxwell_boundary1 maxwell_boundary2
-maxwell_dftinterp demofftw3 
+maxwell_cpml3d_fb maxwell_boundary1 maxwell_boundary2 maxwell_dftinterp
+demofftw3 
 '''
-#gmb
+#gmb maxwell_polyinterp gmb_va maxwell_cpml24_fbr polyinterp_test
 
 
 ######################################################################
