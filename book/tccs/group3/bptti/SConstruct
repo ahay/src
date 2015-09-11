@@ -190,7 +190,7 @@ if type == 0:
 
 	Flow('wavets1','source refl left1 right1',
      	'''
-     	fftwave2taper taper=4 thresh=0.94 cmplx=y pad1=2 ref=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]} verb=y snap=1 snaps=$TARGET
+     	fftwave2 taper=4 thresh=0.94 cmplx=y pad1=2 ref=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]} verb=y snap=1 snaps=$TARGET
      	''',stdout=0)
 
 # Acoustic approximation
@@ -202,7 +202,7 @@ if type == 0:
 
 	Flow('wavets2','source refl left2 right2 ',
      	'''
-     	fftwave2taper taper=4 thresh=0.94 cmplx=y pad1=2 ref=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]} verb=y snap=1 snaps=$TARGET
+     	fftwave2 taper=4 thresh=0.94 cmplx=y pad1=2 ref=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]} verb=y snap=1 snaps=$TARGET
      	''',stdout=0)
 
 # One-step##################################################################

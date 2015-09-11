@@ -19,6 +19,8 @@ To the reproducible documents collection:
   (Brown, Claerbout, and Fomel)
 * tccs/vscan: Velocity analysis using similarity-weighted semblance
   (Chen, Liu, and Chen)
+* tccs/group3: On anelliptic approximations for qP velocities in TI
+  and orthorhombic media (Sripanich and Fomel)
 
 To SCons:
 
