@@ -46,7 +46,7 @@ void conjgrad(normal_operator oper /* operator to invert */,
     cs = sf_floatalloc(nd);
 
     for (ix=0; ix < nd; ix++) {
-	x[ix] = x0[ix];
+	x[ix] = (NULL != x0)? x0[ix]: 0.0f;
     }
     oper(nd,x,g);
     for (ix=0; ix < nd; ix++) {
@@ -71,11 +71,16 @@ void conjgrad(normal_operator oper /* operator to invert */,
 	    }
         } else {
             beta = gn/gnp;
-	    cblas_saxpy(nd,beta,s,1,g,1);
-	    cblas_sswap(nd,s,1,g,1);
 
-	    cblas_saxpy(nd,beta,cs,1,cg,1);
+            /* cs = cg + cs*beta */
+	    cblas_saxpy(nd,beta,cs,1,cg,1); 
 	    cblas_sswap(nd,cs,1,cg,1);
+
+	    memcpy(cg,g,nd*sizeof(float));
+
+	    cblas_saxpy(nd,beta,s,1,cg,1); /* s = g + s*beta */
+	    cblas_sswap(nd,s,1,cg,1);
+
 	}
         gnp = gn;
 
