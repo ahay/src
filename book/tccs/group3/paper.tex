@@ -1,5 +1,5 @@
 \title{On anelliptic approximations for qP velocities in TI and orthorhombic media}
-\author{Yanadet Sripanich and Sergey Fomel}
+\author{Yanadet Sripanich and Sergey Fomel, The University of Texas at Austin}
 
 \address{
 Bureau of Economic Geology \\
@@ -12,7 +12,6 @@ Austin, TX 78713-8924
 
 \righthead{qP velocities approximations}
 \lefthead{Sripanich \& Fomel}
-\footer{TCCS-9}
 
 \begin{abstract}
 Anelliptic approximations for phase and group velocities of qP waves in transversely isotropic (TI) media have been widely applied in various seismic data processing and imaging tasks. 
@@ -33,7 +32,7 @@ where qP waves often exhibit strong anellipticity} \cite[]{grechkabook,tsvankinb
 In recent years, it has been recognized that transverse isotropy may not be sufficient to characterize the actual media encountered in \old{seismic experiments} \new{many regions of the world} and as a result, orthorhombic anisotropy has become a significant topic of interest \cite[e.g.][]{tsvankinortho,tsvankinbook,bakulin2,xu,vascon,grechkabook,fowlerortho,thomsenbook}. 
 One important example of an orthorhombic medium is a sedimentary basin exhibiting parallel vertical cracks embedded in a background medium 
 with vertical transverse isotropy \cite[]{helbig,tsvankinortho,tsvankinbook,grechkabook}. 
-In such \new{a} medium, \new{three-dimensional} anellipticity remains an important characteristic of elastic wave propagation.\old{Moreover,}\cite{tsvankinortho,tsvankinbook} \old{observed}\new{pointed out} that the elastic wave propagation in TI media resembles the \old{in-plane}elastic wave propagation \new{in the symmetry plane} of orthorhombic media. This observation enables an accurate description of orthorhombic anellipticity using only a limited number of parameters \old{and the concept}\new{by extending the approach} used to approximate anellipticity in TI media.
+In such \old{a medium} \new{media}, \new{three-dimensional} anellipticity remains an important characteristic of elastic wave propagation.\old{Moreover,}\cite{tsvankinortho,tsvankinbook} \old{observed}\new{pointed out} that the elastic wave propagation in TI media resembles the \old{in-plane}elastic wave propagation \new{in the symmetry plane} of orthorhombic media. This observation enables an accurate description of orthorhombic anellipticity using only a limited number of parameters \old{and the concept}\new{by extending the approach} used to approximate anellipticity in TI media.
 
 The exact expressions for qP phase and group velocities in TI media involve four independent parameters \cite[]{gass,berryman}. 
 \cite{alkatsvankin} \new{and \cite{alkavti}} showed that three combinations of those four parameters are sufficient to describe qP wave propagation with high accuracy. Although the exact expression of phase velocity in terms of phase angle is known, the exact expression for group velocity 
@@ -71,7 +70,7 @@ q_3 & = & \frac{c_{55}(c_{33}-c_{55})+(c_{55}+c_{13})^2}{c_{11}(c_{33}-c_{55})}~
 \end{eqnarray}
 Equations~\ref{eq:qh} and~\ref{eq:qv} were derived previously by \cite{md}. Thomsen's parameters and the parameter $\eta$ used by \cite{alkatsvankin} are related to $q_1$ and $q_3$ by the conversion shown in Table~\ref{tbl:ticonversion}. Table~\ref{tbl:tischeme} shows a comparison between parameterization schemes for anisotropic parameters in TI media. Uncertainty analysis for different choices of anisotropic parameters in TI media is discussed in Appendix A.}
 
-\tabl{ticonversion}{Conversion table between anelliptic parameters, Thomsen's parameters \cite[]{thomsen} and the time-processing parameter $\eta$ \cite[]{alkatsvankin}. $R=V^2_{S0}/V^2_{P0}$ denotes the ratio between vertical qP-wave and qS-wave. }
+\tabl{ticonversion}{Conversion table between anelliptic parameters, Thomsen's parameters \cite[]{thomsen} and the time-processing parameter $\eta$ \cite[]{alkatsvankin}. $R=V^2_{S0}/V^2_{P0}$ denotes the ratio between vertical velocity squared of qP-wave and qS-wave. }
 {
 \centering
       	   \begin{tabular}{c c}
@@ -107,13 +106,12 @@ Therefore, if $a=1$ and $b=0$, $R=0$. This result agrees with that of \cite{fome
 \end{equation}
 A similar condition is discussed by \cite{fowlervti}.}
 
-\inputdir{.}
 \multiplot{3}{qshalelegnew,qsandlegnew,qcarbonateleg}{width= 0.45\textwidth}{Relationship between $q_1$ and $q_3$ in different lithology. 
 Data are obtained from various publications on laboratory measurements. Dashed line indicates graph of $q_1=q_3$ in each case. }
 %The parameters for Greenhorn shales are $c_{11}=14.47$ $ km^2/s^2$, $c_{33}=9.57$ $ km^2/s^2$, $c_{55}=2.28$ $ km^2/s^2$, 
 %and $c_{13}=4.51$ $ km^2/s^2$.
 
-\new{Because the in-plane qP-wave propagation in orthorhombic behaves identically to the case of TI media \cite[]{tsvankinbook}, we can extend the Muir-Dellinger parameters from 2D to 3D appropriately for studies of orthorhombic media. The full set of parameters in 3D includes $w_1$, $w_2$, $w_3$, $q_{21}$, $q_{31}$, $q_{12}$, $q_{32}$, $q_{13}$, and $q_{23}$, where $w_i$ denotes the velocity squared in the $n_i$ direction and $q_{ij}$ denotes the anelliptic parameters derived from fitting the phase velocity curvatures along the $n_i$ axis in the symmetry plane defined by the $n_j$ axis (Figure~\ref{fig:fittingnotation}). For example, in plane [$n_1$,$n_3$], we consider $q_{12}$ and $q_{32}$ because we can find $q$ either by fitting along $n_1$ or $n_3$ axis with $n_2$ as the axis defining the symmetry plane. The expressions for the anelliptic parameters are as follows:
+\new{Because the in-plane qP-wave propagation in orthorhombic media behaves identically to the case of TI media \cite[]{tsvankinbook}, we can extend the Muir-Dellinger parameters from 2D to 3D appropriately for studies of orthorhombic media. The full set of parameters in 3D includes $w_1$, $w_2$, $w_3$, $q_{21}$, $q_{31}$, $q_{12}$, $q_{32}$, $q_{13}$, and $q_{23}$, where $w_i$ denotes the velocity squared in the $n_i$ direction and $q_{ij}$ denotes the anelliptic parameters derived from fitting the phase velocity curvatures along the $n_i$ axis in the symmetry plane defined by the $n_j$ axis (Figure~\ref{fig:fittingnotation}). For example, in plane [$n_1$,$n_3$], we consider $q_{12}$ and $q_{32}$ because we can find $q$ either by fitting along $n_1$ or $n_3$ axis with $n_2$ as the axis defining the symmetry plane. The expressions for the anelliptic parameters are as follows:
 \begin{eqnarray}
 q_{21} & = & \frac{c_{44}(c_{22}-c_{44})+(c_{44}+c_{23})^2}{c_{33}(c_{22}-c_{44})}~, \\
 q_{31} & = & \frac{c_{44}(c_{33}-c_{44})+(c_{44}+c_{23})^2}{c_{22}(c_{33}-c_{44})}~, \\
@@ -125,7 +123,7 @@ q_{23} & = & \frac{c_{66}(c_{22}-c_{66})+(c_{66}+c_{12})^2}{c_{11}(c_{22}-c_{66}
 }
 \new{Expressions for $q_{12}$ and $q_{32}$ are equivalent to expressions for $q_1$ and $q_3$ in equations~\ref{eq:qh} and~\ref{eq:qv}. For subscript convention on Muir-Dellinger parameters and associating expressions in 3D, we reserve $i$, $j$, and $k$ specifically to indicate the fitting location in each symmetry plane. The summation convention for repeating indices is not assumed. Alternatively, we adopt the notation that, for each combination of $i$, $j$, and $k$, the first digit indicates the index of the fitting axis and the second digit indicates the index of the axis defining the symmetry plane.  Therefore, in our notation, $i$, $j$, and $k$ are integers between 1 and 3 and in each expression, they must be different from one another. This set of $q_{ij}$ parameters may also be considered as elements of a 3$\times$3 matrix with the diagonal elements of this matrix absent. Table~\ref{tbl:orthoscheme} shows a comparison between parameterization schemes for anisotropic parameters in orthorhombic media.}
 
-\tabl{orthoscheme}{Comparison of parameterization schemes for qP-wave anisotropic parameters and the assumption for acoustic approximation.}
+\tabl{orthoscheme}{Comparison of parameterization schemes for qP-wave anisotropic parameters and the assumption for acoustic approximation \new{in orthorhombic media}.}
 {
 \centering
      	     \begin{tabular}{c c c c}
@@ -399,11 +397,11 @@ As a result, the moveout approximation depends on $t_0$, $V_{nmo}$, and $Q_3$.}
 
 \new{For small offsets, the Taylor expansion of equation~\ref{eq:timoveout} is
 \begin{equation}
-t^2(x) \approx t^2_0 +\frac{x^2}{V^2_{nmo}} -\frac{1-2S_3(Q_1+1)+Q_3(4S_3+Q_3-2)}{2S_3Q_3^2t0^2V^4_{nmo}} x^4 ~,
+t^2(x) \approx t^2_0 +\frac{x^2}{V^2_{nmo}} -\frac{1-2S_3(Q_1+1)+Q_3(4S_3+Q_3-2)}{2S_3Q_3^2t_0^2V^4_{nmo}} x^4 ~,
 \end{equation}
 which reduces to the expression given by \cite{fomel} by setting $Q_1=Q_3$. The asymptote of this expression for unbounded offset $x$ is given by
 \begin{equation}
-\frac{1}{Q_3 V^2_{nmo}} = \frac{1}{w^2_1}~,
+\frac{1}{Q_3 V^2_{nmo}} = \frac{1}{w_1}~,
 \end{equation}
 which is the horizontal velocity squared.}
 
@@ -444,21 +442,6 @@ Additionally, Tables~\ref{tbl:tirephase} and \ref{tbl:tiregroup} show the RMS re
 where $\psi$ denotes phase or group angle as appropriate.} In all comparisons, we apply the relationships shown in Figure~\ref{fig:qshalelegnew,qsandlegnew,qcarbonateleg} to reduce the number of parameters from four to three.
 For each model, the best-performing approximation is denoted in \new{red and} bold. The proposed approximations appear to be the most accurate in nearly all of the cases.
 
-\tabl{tisample}{\old{Elastic parameters from laboratory measurements in rock samples} \new{Normalized stiffness tensor coefficients (in $km^2$/$s^2$) from different TI samples}: 1 is from \cite{jw}, 2 and 3 are from \cite{wang}, 4 and 5 are from \cite{thomsen}, and 6 is from \cite{vernik}.}
-{
-\centering
-     	     \begin{tabular}{|l|c|c|c|c|c|c|c|c|}
-     	     \hline Shales sample & $ c_{11}$ & $ c_{33}$ & $ c_{13}$ & $ c_{55} $ & $ V_{P0}$ & $ V_{S0}$ & $ \epsilon $ & $ \delta $\\ 
-     	     \hline 1. Greenhorn  & 14.47 & 9.57 & 4.51 & 2.28 & 3.094 & 1.510 & 0.256 & -0.0505\\
-     	     \hline 2. Hard (brine) & 20.89 & 13.89 & 3.048 & 5.655 & 3.727 & 2.378 & 0.252 & 0.0347\\
-     	     \hline 3. North Sea (brine) & 7.292 & 5.248 & 1.578 & 1.798 & 2.291 & 1.341 & 0.195 & -0.0139\\
-     	     \hline 4. Dog Creek & 5.098 & 3.5163 & 2.4832 & 0.6823 & 1.875 & 0.826 & 0.225 & 0.0998\\
-     	     \hline 5. Mesaverde & 17.653 & 14.055 & 1.3391 & 6.87 & 3.749 & 2.621 & 0.128 & 0.0781\\
-     	     \hline 6. North Sea (dry) & 22.051 & 14.90 & 5.336 & 4.928 & 3.860 & 2.220 & 0.240 & 0.0199\\
-      \hline
-    \end{tabular}
-}
-
 %\tabl{tisamplethomsen}{Thomsen parameters for samples in Table~\ref{tbl:tisample}. Velocities are given in $km$/$s$. }
 %{
 %\centering
@@ -492,7 +475,6 @@ For each model, the best-performing approximation is denoted in \new{red and} bo
 \tabl{tiregroup}{RMS relative error (\%) from $0$-$90\,^{\circ}$ of group-velocity approximations by \cite{alkatsvankin}, \cite{fomel}, \cite{farra} (second-order) and of the proposed three-parameter approximation for transversally-isotropic elastic models from Table~\ref{tbl:tisample}. Bold red highlight indicates the best-performing approximation. In all the cases, except samples 4 and 5, the proposed approximation appears to be the most accurate.}
 {
 \centering
-\resizebox{\textwidth}{!}{
      	     \begin{tabular}{|c|c|c|c|c|}
      	     \hline Sample & \cite{alkatsvankin} & \cite{fomel} & \cite{farra} & Proposed\\ 
      	     \hline 1 & 1.0149 & 0.1210 & 0.2530 & \textcolor{red}{\textbf{0.0801}}\\
@@ -502,7 +484,22 @@ For each model, the best-performing approximation is denoted in \new{red and} bo
      	     \hline 5 & \textcolor{red}{\textbf{0.0188}} & 0.0540 & 0.0194 & 0.0202\\
      	     \hline 6 & 0.4258 & 0.1541 & 0.1412 & \textcolor{red}{\textbf{0.0084}}\\
       \hline
-    \end{tabular}}
+    \end{tabular}
+}
+
+\tabl{tisample}{\old{Elastic parameters from laboratory measurements in rock samples} \new{Normalized stiffness tensor coefficients (in $km^2$/$s^2$) from different TI samples}: 1 is from \cite{jw}, 2 and 3 are from \cite{wang}, 4 and 5 are from \cite{thomsen}, and 6 is from \cite{vernik}.}
+{
+\centering
+     	     \begin{tabular}{|l|c|c|c|c|c|c|c|c|}
+     	     \hline Shales sample & $ c_{11}$ & $ c_{33}$ & $ c_{13}$ & $ c_{55} $ & $ V_{P0}$ & $ V_{S0}$ & $ \epsilon $ & $ \delta $\\ 
+     	     \hline 1. Greenhorn  & 14.47 & 9.57 & 4.51 & 2.28 & 3.094 & 1.510 & 0.256 & -0.0505\\
+     	     \hline 2. Hard (brine) & 20.89 & 13.89 & 3.048 & 5.655 & 3.727 & 2.378 & 0.252 & 0.0347\\
+     	     \hline 3. North Sea (brine) & 7.292 & 5.248 & 1.578 & 1.798 & 2.291 & 1.341 & 0.195 & -0.0139\\
+     	     \hline 4. Dog Creek & 5.098 & 3.5163 & 2.4832 & 0.6823 & 1.875 & 0.826 & 0.225 & 0.0998\\
+     	     \hline 5. Mesaverde & 17.653 & 14.055 & 1.3391 & 6.87 & 3.749 & 2.621 & 0.128 & 0.0781\\
+     	     \hline 6. North Sea (dry) & 22.051 & 14.90 & 5.336 & 4.928 & 3.860 & 2.220 & 0.240 & 0.0199\\
+      \hline
+    \end{tabular}
 }
 
 \multiplot{3}{vtiphaseplotlegnew,vtigroupplotleg1new,vtigroupplotleg2new}{width= 0.55\textwidth}{Relative error plots using Greenhorn Shale measurements.
@@ -519,7 +516,7 @@ v^2_{phase} = 2\sqrt{\frac{-d}{3}}\cos(\frac{\nu}{3})-\frac{a}{3} ~,\\
 where
 \begin{eqnarray}
 \nonumber
-\nu & = & \arccos \left(\frac{-q}{2\sqrt{(d/3)^3}}\right)~,\\
+\nu & = & \arccos \left(\frac{-q}{2\sqrt{(-d/3)^3}}\right)~,\\
 \nonumber
 q & = & 2\left(\frac{a}{3}\right)^3 - \frac{ab}{3}+c~,~~~d~~=~~-\frac{a^2}{3} + b~,\\
 \nonumber
@@ -632,7 +629,7 @@ Since the Christoffel equation in the three symmetry planes is similar to that i
  \nonumber
  	  &   & - W_k(Q_{kj}^2-2Q_{ij}Q_{kj}+Q_{ij}(Q_{ij}(Q_{ij}-1)^2+2)-1)]~.
 \end{eqnarray}
-where \old{$p=4,5,6$ when $j=1,2,3$ respectively} \new{$p=j+3$}. \new{Recall that the indices $ij \ne ji$ and therefore, there are six expressions corresponsing to each formula from equations~\ref{eq:qij}-\ref{eq:Sij}.} Equations~\ref{eq:mshphaseortho} and \ref{eq:mshgrouportho} amount to the nine-parameter approximations for both velocities where the required parameters include $w_1$, $w_2$, $w_3$, $q_{21}$, $q_{31}$, $q_{12}$, $q_{32}$, $q_{13}$, and $q_{23}$ for equation~\ref{eq:mshphaseortho} or their reciprocals, $W_1$, $W_2$, $W_3$, $Q_{21}$, $Q_{31}$, $Q_{12}$, $Q_{32}$, $Q_{13}$, and $Q_{23}$ for equation~\ref{eq:mshgrouportho}. However, these nine parameters can be \new{easily} reduced to six using the linear relationships between $q_{ij}$ and $q_{kj}$ for different lithologies from the \old{previous section for}\new{previous discussion on} TI media (Figure~\ref{fig:qshalelegnew,qsandlegnew,qcarbonateleg}).
+where \old{$p=4,5,6$ when $j=1,2,3$ respectively} \new{$p=j+3$}. \new{Recall that the indices $ij \ne ji$ and therefore, there are six expressions corresponding to each formula from equations~\ref{eq:qij}-\ref{eq:Sij}.} Equations~\ref{eq:mshphaseortho} and \ref{eq:mshgrouportho} amount to the nine-parameter approximations for both velocities where the required parameters include $w_1$, $w_2$, $w_3$, $q_{21}$, $q_{31}$, $q_{12}$, $q_{32}$, $q_{13}$, and $q_{23}$ for equation~\ref{eq:mshphaseortho} or their reciprocals, $W_1$, $W_2$, $W_3$, $Q_{21}$, $Q_{31}$, $Q_{12}$, $Q_{32}$, $Q_{13}$, and $Q_{23}$ for equation~\ref{eq:mshgrouportho}. However, these nine parameters can be \new{easily} reduced to six using the linear relationships between $q_{ij}$ and $q_{kj}$ for different lithologies from the \old{previous section for}\new{previous discussion on} TI media (Figure~\ref{fig:qshalelegnew,qsandlegnew,qcarbonateleg}).
 \old{Note that our anelliptic parameters $q_{ij}$ relate to parameters proposed by Tsvankin (1997, 2012) and Alkhalifah (2003) by
 where $j=1$ and $2$ for planes [$n_2$,$n_3$] and [$n_1$,$n_3$] respectively.}\new{Similar conversion rules apply for anisotropic parameters in each symmetry plane and are summarized in Table~\ref{tbl:ticonversion}. Note that the required independent parameters for the group-velocity approximations derived based on Muir-Dellinger approach can be found in a one-to-one relationship simply from the reciprocals of the required parameters for phase-velocity approximations as mentioned before. Therefore, phase- and group-velocity approximations derived on the basis of this approach require exactly the same number of parameters.}
 
@@ -698,13 +695,13 @@ t^2(x) & \approx &t^2_0 +\frac{x^2}{V^2_{nmo_2}} + \frac{y^2}{V^2_{nmo_1}} - \\
 \end{eqnarray}
 The asymptote of this expression for unbounded offsets $x$ and $y$ is given by
 \begin{equation}
-\frac{1}{Q_{32} V^2_{nmo_2}} = \frac{1}{w^2_1}~~~\mbox{and}~~~\frac{1}{Q_{31} V^2_{nmo_1}} = \frac{1}{w^2_2}~,
+\frac{1}{Q_{32} V^2_{nmo_2}} = \frac{1}{w_1}~~~\mbox{and}~~~\frac{1}{Q_{31} V^2_{nmo_1}} = \frac{1}{w_2}~,
 \end{equation}
 which denote the horizontal velocities squared along $N_1$ and $N_2$ directions respectively.}
 
 \subsection{Examples}
 
-To evaluate the accuracy of the proposed approximations, we produce relative error plots and tables, using several sets of normalized stiffness tensor measurements summarized in Table~\ref{tbl:sample}\new{, which can be converted to any parameterization scheme (Tables~\ref{tbl:orthoscheme})}. The error plots in Figures~\ref{fig:phaseweak90leglow,phaseweakleglow}-\ref{fig:groupmshappq90leglownew,groupmshappqleglownew} are generated using the standard model \cite[]{helbig} and are presented as both 3D surfaces and sterographic projections with $\theta$ (or $\Theta$) changing radially and $\phi$ (or $\Phi$) changing azimuthally. The standard model assumes a shale background with \old{two sets}\new{a set} of parallel vertical cracks; therefore, we use the following relationship between anelliptic parameters in shales: $q_1 = 0.83734 q_3 +0.1581$\old{from the previous section} to reduce the number of parameters in the vertical [$n_1$,$n_3$] and [$n_2$,$n_3$] planes. \old{Because the anisotropy in the horizontal plane [$n_1$,$n_2$] corresponds to fractures,}\new{The anisotropy in the horizontal plane [$n_1$,$n_2$], on the other hand, corresponds to a different cause, which in this case is assumed to be vertical fractures. Because we \old{do not have}\new{do not know} a \new{proper} relationship between anelliptic parameters for such feature,} we resort to the previously used assumption of $q_{13}=q_{23}$. Tables~\ref{tbl:rephase} and \ref{tbl:regroup} show RMS relative error results of our approximations in comparison with results from some of the previously suggested approximations \new{, which are computed based on
+To evaluate the accuracy of the proposed approximations, we produce relative error plots and tables, using several sets of normalized stiffness tensor measurements summarized in Table~\ref{tbl:sample}\new{, which can be converted to any parameterization scheme (Table~\ref{tbl:orthoscheme})}. The error plots in Figures~\ref{fig:phaseweak90leglow,phaseweakleglow}-\ref{fig:groupmshtrueq90leglow,groupmshtrueqleglow} are generated using the standard model \cite[]{helbig} and are presented as both 3D surfaces and sterographic projections with $\theta$ (or $\Theta$) changing radially and $\phi$ (or $\Phi$) changing azimuthally. The standard model assumes a shale background with \old{two sets}\new{a set} of parallel vertical cracks; therefore, we use the following relationship between anelliptic parameters in shales: $q_1 = 0.83734 q_3 +0.1581$\old{from the previous section} to reduce the number of parameters in the vertical [$n_1$,$n_3$] and [$n_2$,$n_3$] planes. \old{Because the anisotropy in the horizontal plane [$n_1$,$n_2$] corresponds to fractures,}\new{The anisotropy in the horizontal plane [$n_1$,$n_2$], on the other hand, corresponds to a different cause, which in this case is assumed to be vertical fractures. Because we \old{do not have}\new{do not know} a \new{proper} relationship between anelliptic parameters for such feature,} we resort to the previously used assumption of $q_{13}=q_{23}$. Tables~\ref{tbl:rephase} and \ref{tbl:regroup} show RMS relative error results of our approximations in comparison with results from some of the previously suggested approximations \new{, which are computed based on
 \begin{equation}  
 \mbox{RMS error} = \sqrt{\sum_{\psi_1=0}^{90} \sum_{\psi_2=0}^{90} (v_{exact}(\psi_1,\psi_2)-v_{approx}(\psi_1,\psi_2))^2}~,
 \end{equation}
@@ -745,14 +742,14 @@ where $\psi_1$ and $\psi_2$ denote the zenith and azimuthal phase or group angle
      	     \hline Sample & \cite{tsvankinortho} & \cite{alkaortho} & Proposed\\ 
      	     \hline 1 & 0.5787 & 0.1742 & \textcolor{red}{\textbf{0.1029}}\\
      	     \hline 2 & 0.5918 & 0.0645 & \textcolor{red}{\textbf{0.0275}}\\
-     	     \hline 3 & 0.7104 & 0.0952 & \textcolor{red}{\textbf{0.0637}}\\
+     	     \hline 3 & 0 .7104 & 0.0952 & \textcolor{red}{\textbf{0.0637}}\\
      	     \hline 4 & 0.8960 & 0.1382 & \textcolor{red}{\textbf{0.0293}}\\
      	     \hline 5 & 1.0736 & 0.3274 & \textcolor{red}{\textbf{0.2084}}\\
       \hline
     \end{tabular}
 }
 
-\tabl{regroup}{RMS relative error (\%) from $0$-$90\,^{\circ}$ (both $\Theta$ and $\Phi$) of orthorhombic group-velocity approximations by\cite{xu} and \cite{vascon}, and of proposed six-parameter approximation. Bold red highlight indicates the best-performing approximation. In all cases, the proposed approximation appears to be more accurate.}
+\tabl{regroup}{RMS relative error (\%) from $0$-$90\,^{\circ}$ (both $\Theta$ and $\Phi$) of orthorhombic group-velocity approximations by \cite{xu} and \cite{vascon}, and of proposed six-parameter approximation. Bold red highlight indicates the best-performing approximation. In all cases, the proposed approximation appears to be more accurate.}
 {
 \centering
      	     \begin{tabular}{|c|c|c|c|c|}
@@ -840,7 +837,7 @@ d) Absolute error of the proposed phase-velocity approximation (nine-parameter).
 
 \new{Our choice of Muir-Dellinger parametrization leads naturally to a four-parameter velocity approximation in TI media and a nine-parameter approximation in orthorhombic media. The approximations are improved by shifted-hyperboloid functional form. Although highly accurate, these approximations require the same number of parameters as the exact expressions. The benefits of their introduction may not be apparent in the case of phase velocity but are apparent in the consideration of group-velocity approximations because the exact expressions for group velocity in both types of media can be prohibitively complex and cannot be expressed easily in terms of group angle. As observed by previous researchers, the sufficient number of parameters to describe qP wave propagation in TI and orthorhombic media is smaller: three and six respectively. Therefore, we apply the novel relationships between anisotropic parameters summarized in Figure~\ref{fig:qshalelegnew,qsandlegnew,qcarbonateleg} to effectively reduce the number of parameters from the proposed four- and nine-parameter approximations to three- and six-parameter approximations respectively.}
 
-\new{Apart from the functional form proposed in this paper, many other forms of phase-velocity and group-velocity approximations, especially in TI media, have been extensively investigated in the past \cite[e.g.][]{alkatsvankin,tsvankinvti,alkavti,alkavti2,alkavti3,stopin,zhang,daley,ursin,fomelstovas,stovas2010,aleixo,farra,hao}. While some of them are based on physical assumptions, others are derived purely from mathematical arguments. 
+\new{Apart from the functional form proposed in this paper, many other forms of phase-velocity and group-velocity approximations, especially in TI media, have been extensively investigated in the past \cite[e.g.][]{alkatsvankin,tsvankinvti,menschraso,psencikgajewski98,alkavti,alkavti2,alkavti3,farrahighorder,stopin,zhang,farrapsencikhighorder,daley,ursin,fomelstovas,stovas2010,aleixo,farra,hao}. While some of them are based on physical assumptions, others are derived purely from mathematical arguments. 
 %The former, although provides a justifiable link to the actual physical phenomena obeserved, often leads to lower accurate results. On the other hand, the latter often leads to higher accurate results but lacks the robust physical relation and/or the compactness of expressions. 
 Our proposed approximation is an alternative, which provides both accuracy and connection with the physical wave phenomena. They are based on the original Muir-Dellinger approximatons \cite[]{md,mdk}, which were derived on the basis of perturbation from ellipitical group-velocity surfaces.\old{This claim is further supported by the discovery of the strongly linear relationships between the proposed anelliptic parameters in various lithologies (Figure~\ref{fig:qshalelegnew,qsandlegnew,qcarbonateleg}).} The primary advantage of the Muir-Dellinger parameterization is the ease of conversion between the phase- and group-velocity approximations (e.g. equations~\ref{eq:mshphase} and~\ref{eq:mshgroup}), which provides practical convenience. Alternative highly accurate form for phase- and group-velocity approximations is the generalized moveout approximation \cite[]{fomelstovas}, which was recently applied to anisotropic velocity approximations by \cite{hao} and \cite{zonegma}.}
 
@@ -859,14 +856,9 @@ The proposed orthorhombic phase-velocity approximation \new{maintains the algebr
 We thank the sponsors of the Texas Consortium for Computational Seismology (TCCS) for financial support.
 
 
-%\newpage
-\bibliographystyle{seg}
-\bibliography{seg2014}
-
-\appendix
-\section{Appendix A: Uncertainty Analysis}
-\inputdir{.}
-\new{In this appedix, we study the variation of the phase-velocity expression in TI media with respect to different choices of parameters, particularly Thomsen's parameters and the proposed Muir-Dellinger parameters. To study resolution, we use the general formula,
+\new{\append{Uncertainty Analysis}}
+\inputdir{../group3}
+\new{In this appendix, we study the variation of the phase-velocity expression in TI media with respect to different choices of parameters, particularly Thomsen's parameters and the proposed Muir-Dellinger parameters. To study resolution, we use the general formula,
 \begin{equation}
 \label{eq:sens}
 R_{ij} = \int_0^{\pi/2} \frac{\partial V^2}{\partial m_i} \frac{\partial V^2}{\partial m_j} d\theta~,
@@ -926,8 +918,12 @@ where $\mathbf{x}$ denotes the vector of parameter variations: [$\Delta V_{P0}$,
 
 %The dependencies between different parameters can be illustrated through the magnitude of deviation from a sphere the ellipsoid is. The larger the deviation, the higher the dependency. Note that the size of the ellipsoids is of no importance because one can always resize the ellipsoid by varying $\Delta V^2$ as desired.
 
-\multiplot{2}{thomsenmatrix,zonematrix}{width=0.4\textwidth}{Ellipsoids obtained from the quadratic form of $\mathbf{\tilde{V}}_{ij}$ in the case of a) Thomsen parameters  b) anelliptic parameters.}
+\multiplot{2}{thomsenmatrix,zonematrix}{width=0.4\textwidth}{Ellipsoids obtained from the quadratic form of $\tilde{R}_{ij}$ in the case of a) Thomsen parameters  b) anelliptic parameters.}
 
+
+\newpage
+\bibliographystyle{seg}
+\bibliography{seg2014}
 
 
 
