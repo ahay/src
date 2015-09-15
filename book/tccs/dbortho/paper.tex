@@ -1,0 +1,179 @@
+\published{IEEE Geoscience and Remote Sensing Letters, 2015, doi: 10.1109/LGRS.2015.2463815}
+
+\title{Iterative deblending with multiple constraints based on shaping regularization}
+\author{Yangkang Chen}
+% and local similarity
+%\author{Yangkang Chen$^*$ and Sergey Fomel, The University of Texas at Austin}
+\address{
+Bureau of Economic Geology \\
+John A. and Katherine G. Jackson School of Geosciences \\
+The University of Texas at Austin \\
+University Station, Box X \\
+Austin, TX 78713-8924 \\
+}
+
+\lefthead{Chen}
+\righthead{Deblending with multiple constraints}
+\maketitle
+
+\begin{abstract}
+It has been shown previously that blended simultaneous-source data can be successfully separated using an iterative seislet thresholding algorithm. In this paper, I combine the iterative seislet thresholding with the local orthogonalization technique via the shaping regularization framework. During the iterations, the deblended data and its blending noise section are not orthogonal to each other, indicating that the noise section contains significant coherent useful energy. Although the leakage of useful energy can be retrieved by updating the deblended data from the data misfit during many iterations, I propose to accelerate the retrieval of leakage energy using iterative orthogonalization. It is the first time that multiple constraints are applied in an underdetermined deblending problem and the new proposed framework can overcome the drawback of low-dimensionality constraint in the traditional 2D deblending problem. Simulated synthetic and field data examples show superior performance of the proposed approach.
+\end{abstract}
+
+\section{keywords}
+Simultaneous sources, deblending, seislet thresholding, local orthogonalization, inversion with multiple constraints
+
+\section{Introduction}
+Modern seismic acquisition requires a high-density, wide-azimuth coverage for improving the subsurface illumination. Large acquisition systems require a highly efficient acquisition deployment. The principal purpose of simultaneous source acquisition is to accelerate the acquisition of a large-density seismic dataset, which can save acquisition cost and increase data quality. The benefits are compromised by the intense interference between different shots \cite{beasleycj1998,berkhout2008,abma2009}. Fig \ref{fig:demo} shows a demonstration of the marine multi-source acquisition (two sources involved). The two sources shoot with a small random time dithering and thus will cause strong interference to the other source. The shooting time of each shot (shot schedules) are predefined in a separation-guided fashion and should be recorded correctly in order to formulated the inverse problem for source separation.
+\inputdir{./}
+\plot{demo}{width=0.8\columnwidth}{A demonstration of the marine two-source acquisition.}
+
+One approach to solve the problem caused by interference is by a first-separate and second-process strategy \cite{beasleycj1998,berkhout2008,abma2009,yangkang20142}, which is also called deblending. Another way is by direct imaging and inversion of the blended data by attenuating the interference during the inversion process \cite{berkhout2008,verschuur2011,zhiguang2014,yangkang2015image}. 
+
+There are generally two types of deblending approaches that have been investigated in the literature: (1) treating deblending as a noise filtering or attenuation problem \cite{mediandeblend,yangkang2014nmo,yangkang2014svmf,qushan2015}, (2) treating deblending as an inversion problem \cite{abma2010,yangkang20142,jinkun2015}.  %For the filtering based approaches, most of the approaches are based on median filter. 
+Most of the filtering based approaches are based on median filtering (MF). \cite{mediandeblend} used a multidirectional vector median filter  after resorting the data into common midpoint gathers. \cite{yangkang2014nmo} proposed using the common midpoint domain for deblending using a simple MF, because of the better coherency of useful signals than that in other domains and also because the useful near-offset events follow the hyperbolic assumption and can thus be flattened using normal moveout (NMO) correction.  \cite{yangkang2014svmf} proposed a type of MF with spatially varying window length. The space-varying median filter (SVMF) does not require the events to be flattened.  For inversion based approaches, the ill-posed property of the inversion problem requires some constraint to regularize the inversion problem.  \cite{akerberg2008} used sparsity constraints in the Radon domain to regularize the inversion. \cite{abma2010} proposed using $f-k$ domain sparsity as a constraint.  \cite{bagaini2012} compared two separation techniques for the dithered slip-sweep (DSS) data using the sparse inversion method and f-x predictive filtering \cite{canales,yangkang2014,shuwei2015}, and pointed out the advantage of the inversion methods over the filtering based approaches. In order to deal with the aliasing problem, \cite{proj} proposed the alternating projection method (APM), which chooses corrective projections to exploit data characteristics and appears to be less sensitive to aliasing than other approaches. %The convergence properties and the algorithmic aspects of inversion based methods discussed by \cite{panagiotis20122} and \cite{araz2012}, respectively. 
+
+Currently, deblending is the crucial subject for obtaining a successful marine simultaneous-source acquisition. While the industry has obtained encouraging success in 3D deblending problem (e.g. OBN based 3D acquisition), the 2D deblending problem (e.g. marine towed-streamer acquisition) is still in trouble mainly because of the limited constraints that one can put onto the inversion problem.  \cite{yangkang20142} proposed a general iterative deblending framework via shaping regularization \cite{fomel2007shape}. The constraint for the ill-posed inversion problem is applied via the shaping operator which amounts to thresholding in the transformed domain. In this paper, I propose a new iterative deblending approach based on shaping regularization. Instead of simply enforcing the sparsity constraint in the sparse transform domain, I propose to use iterative orthogonalization to compensate the energy loss during the sparsity-constrained inversion. I iteratively threshold each deblended data in the seislet transform domain \cite{seislet}  and orthogonalize the deblended data and blending interference in order to mitigate the energy loss during each iteration. The proposed approach differs from the conventional deblending approaches by applying multiple constraints based on the shaping regularization framework.  I apply this approach to both synthetic and field data example and demonstrate its superior performance in obtaining more precise deblended results.% of the proposed approach.
+
+\section{Method}
+\subsection{Deblending via shaping regularization}
+The blending process can be summarized as the following equation: 
+\begin{equation}
+\label{eq:blend}
+\mathbf{d}=\Gamma\mathbf{m},
+\end{equation}
+where $\mathbf{d}$ is the blended data, $\Gamma$ is the blending operator, and $\mathbf{m}$ is the unblended data.
+The formulation of $\Gamma$ has been introduced in \cite{arazthesis} in detail. When considered in time domain, $\Gamma$ corresponds to blending different shot records onto one receiver record according to the shot schedules of different shots. Deblending amounts to inverting equation \ref{eq:blend} and recovering $\mathbf{m}$ from $\mathbf{d}$.
+
+%The deblending process refers to solving equation \ref{eq:blend} for $\mathbf{m}$. One approximation of the solution would be simply approximating the inverse of $\Gamma$ by its adjoint $\Gamma^T$:
+%\begin{equation}
+%\label{eq:deblend}
+%\hat{\mathbf{m}}_{pseudo}=\Gamma^T\mathbf{d}.
+%\end{equation} 
+%Equation \ref{eq:deblend} refers the commonly known \emph{pseudo-deblending}, \emph{passive separation}, and \emph{combing}. The three terms are widely used in the literature to denote the same process.
+
+%There have been many methods in the literature for seeking the true solution of equation \ref{eq:blend} based on inversion. 
+Because of the ill-posed property of this problem, all inversion methods require some constraints. 
+
+\cite{yangkang20142} proposed a general iterative deblending framework via shaping regularization \cite{fomel2007shape,fomel2008nonshape}. The iterative deblending is expressed as:
+\begin{equation}
+\label{eq:iter}
+\mathbf{m}_{n+1} = \mathbf{S}[\mathbf{m}_n+\mathbf{B}[\mathbf{d}-\Gamma\mathbf{m}_n]],
+\end{equation}
+where $\mathbf{S}$ is the shaping operator, which provides some constraints on the model, and $\mathbf{B}$ is the backward operator, which approximates the inverse of $\Gamma$. The shaping regularization framework offers us much freedom in constraining an under-determined problem by allowing different types of constraints.  In this paper, the backward operator is simply chosen as $\lambda\Gamma^*$, where $\lambda$ is a scale coefficient closely related with the blending fold, and $\Gamma^*$ stands for the adjoint operator of $\Gamma$ (or the pseudo-deblending operator). For example, $\lambda$ can be optimally chosen as $1/2$ in a two-source dithering configuration \cite{yangkang20142,arazthesis}. In the next two sections, I will first introduce the conventional way for choosing the $\mathbf{S}$ and then propose a novel way for designing the $\mathbf{S}$. 
+
+\subsection{Iterative seislet thresholding}
+When $\mathbf{S}=\mathbf{A}^{-1}\mathbf{T}_{\tau}\mathbf{A}$, the iterative framework refers to the iterative seislet thresholding:
+\begin{equation}
+\label{eq:seis}
+\mathbf{m}_{n+1} = \mathbf{A}^{-1}\mathbf{T}_{\tau_n}\mathbf{A}[\mathbf{m}_n+\lambda\Gamma^*[\mathbf{d}-\Gamma\mathbf{m}_n]],
+\end{equation}
+where $\mathbf{T}_{\tau_n}$ denotes a thresholding operator with a threshold $\tau_n$, $\mathbf{A}$ and $\mathbf{A}^{-1}$ are a pair of forward and inverse seislet transforms. 
+
+$\mathbf{T}_{\tau}$ can be either a soft-thresholding operator:
+\begin{equation}
+\label{eq:soft}
+\mathbf{T}^s_{\tau}(x) = \left\{ \begin{array}{ll} (|x|-\tau)*sign(x) &\text{for} \quad |x|\ge\tau \\
+0 &\text{for} \quad |x|<\tau
+\end{array}\right.,
+\end{equation}
+
+or a hard thresholding operator:
+\begin{equation}
+\label{eq:hard}
+\mathbf{T}^h_{\tau}(x) = \left\{ \begin{array}{ll} x &\text{for} \quad |x|\ge\tau \\
+0 &\text{for} \quad |x|<\tau
+\end{array}\right. .
+\end{equation}
+In this paper, all the examples are based on soft thresholding. I iteratively decrease the threshold $\tau$ in the seislet domain during the iterations. 
+
+\subsection{Extra constraint: iterative orthogonalization}
+Let
+\begin{equation}
+\label{eq:tildem}
+\tilde{\mathbf{m}}_n=\mathbf{A}^{-1}\mathbf{T}_{\tau_n}\mathbf{A}[\mathbf{m}_n+\lambda\Gamma^*[\mathbf{d}-\Gamma\mathbf{m}_n]],
+\end{equation}
+where $\tilde{\mathbf{m}}_n$ denotes the deblended data after $n$th iteration. The blending noise section after $n$th iteration can be expressed as $\Gamma^*\mathbf{d}-\tilde{\mathbf{m}}_n$. During the iterations, the blending noise section will contain coherent signal. I propose to iteratively orthogonalize the deblended data and its corresponding noise section, using local signal-and-noise orthogonalization \cite{yangkang2015ortho}. The orthogonalization problem can be expressed as a regularized inversion problem:
+
+\begin{equation}
+\label{eq:simple}
+\min_{\mathbf{w}_n} \parallel \overbrace{\Gamma^*\mathbf{d} - \tilde{\mathbf{m}}_n}^{blending\quad noise} - \mathbf{w}_n\circ \overbrace{\tilde{\mathbf{m}}_n}^{deblended\quad signal} \parallel_2^2 + \mathbf{R}(\mathbf{w}),
+\end{equation}
+where $\mathbf{w}_n$ is the local orthogonalization weight (LOW), $\mathbf{a}\circ\mathbf{b}=diag(\mathbf{a})\mathbf{b}=diag(\mathbf{b})\mathbf{a}$, which denotes Hadamard (or Schur) product, and $diag(\cdot)$ denotes the diagonal matrix composed of an input vector. $\mathbf{R}$ denotes a smoothing regularization operator. When using equation \ref{eq:simple}, I assume that the signal and blending noise do not correlate with each other. The weighting vector $\mathbf{w}$ can be solved using shaping regularization \cite{fomel2007shape} with a local-smoothness constraint:
+\begin{equation}
+\label{eq:shape}
+\mathbf{w}_n = [\lambda^2\mathbf{I} + \mathcal{T}(\mathbf{M}^T\mathbf{M}-\lambda^2\mathbf{I})]^{-1}\mathcal{T}\mathbf{M}^T(\Gamma^*\mathbf{d}-\tilde{\mathbf{m}}_n),
+\end{equation}
+where $\mathcal{T}$ is a triangle smoothing operator, $\mathbf{M}=diag(\tilde{\mathbf{m}}_n)$, and $\lambda$ is a scaling parameter. The orthogonalized deblended data can be expressed as:
+\begin{equation}
+\label{eq:ortho0}
+\mathbf{m}_{n+1}=\mathbf{w}_n \circ \tilde{\mathbf{m}}_n + \tilde{\mathbf{m}}_n.
+\end{equation}
+%\subsection{Iterative orthogonalization and seislet thresholding}
+Combining equations \ref{eq:seis} and \ref{eq:ortho0} I obtain the following iterative framework using the proposed iterative orthogonalization and seislet thresholding:
+\begin{equation}
+\label{eq:ortho}
+\begin{split}
+\mathbf{m}_{n+1}&=\mathbf{w}_n \circ \mathbf{A}^{-1}\mathbf{T}_{\tau_n}\mathbf{A}[\mathbf{m}_n+\lambda\Gamma^*[\mathbf{d}-\Gamma\mathbf{m}_n]]+\\
+&\mathbf{A}^{-1}\mathbf{T}_{\tau_n}\mathbf{A}[\mathbf{m}_n+\lambda\Gamma^*[\mathbf{d}-\Gamma\mathbf{m}_n]].
+\end{split}
+\end{equation}
+The iterative orthogonalization and seislet thresholding framework corresponds to an iterative shaping framework with two projections: thresholding in the seislet transform domain, and the orthogonalization between the deblended data and blending noise. It should be mentioned that the proposed approach can work robust in the case that inappropriate threshold parameters are selected because of an extra denoising compensation during each iteration that minimize the useful energy damages. 
+
+\inputdir{hyper}
+\multiplot{2}{h1-1,hs-1}{width=0.45\textwidth}{Simulated synthetic example. (a) Unblended data. (b) Blended data.}
+
+\multiplot{4}{hdbor1-1,hdbst1-1,hdbft1-1,hdbfx1-1}{width=0.45\textwidth}{Simulated synthetic example. (a) Deblended data using the proposed approach. (b) Deblended data using seislet domain thresholding. (c) Deblended data using $f-k$ domain thresholding. (d) Deblended data using $f-x$ deconvolution.}
+
+
+\multiplot{4}{heor1,hest1,heft1,hefx1}{width=0.45\textwidth}{Simulated synthetic example. (a) Estimation error section using the proposed approach. (b) Estimation error section using seist domain thresholding. (c) Estimation error section using $f-k$ domain thresholding. (d) Estimation error section using $f-x$ deconvolution.}
+
+\multiplot{6}{h1-z,hs-z,hdbor1-z-0,hdbst1-z-0,hdbft1-z,hdbfx1-z}{width=0.45\textwidth}{Zoomed section comparisons of the simulated synthetic example. (a) Unblended data. (b) Blended data. (c) Deblended data using the proposed approach. (d) Deblended data using seislet domain thresholding. (e) Deblended data using $f-k$ domain thresholding. (f) Deblended data using $f-x$ deconvolution.}
+
+\multiplot{2}{hsnrsa,htc}{width=0.45\textwidth}{(a) Comparison of signal-to-noise ratio of the simulated synthetic example. "@" refers to the proposed approach. "+" refers to seislet thresholding. "*" refers to $f-x$ deconvolution. "o" refers to $f-k$ thresholding. (b) Comparison of the amplitude between 1.35s and 1.38s of the 25th trace in the simulated synthetic data example. Black solid line denotes the unblended trace (true trace). Blue double dot line corresponds to the proposed approach. Red dot dash line corresponds to seislet thresholding. Green dash line corresponds to $f-k$ thresholding. Yellow long dash line corresponds to $f-x$ deconvolution.}
+
+%\begin{figure}[htb!]
+%  \centering
+%    \includegraphics[width=0.8\columnwidth]{hyper/Fig/hsnrsa}
+%	\caption{Comparison of signal-to-noise ratio of the simulated synthetic example. "@" refers to the proposed approach. "+" refers to seislet thresholding. "*" refers to $f-x$ deconvolution. "o" refers to $f-k$ thresholding.}
+%   \label{fig:hsnrsa}
+%\end{figure}
+
+
+%\begin{figure}[htb!]
+%  \centering
+%    \includegraphics[width=0.8\columnwidth]{hyper/Fig/htc}
+%	\caption{Comparison of the amplitude between 1.35s and 1.38s of the 25th trace in the simulated synthetic data example. Black solid line denotes the unblended trace (true trace). Blue double dot line corresponds to the proposed approach. Red dot dash line corresponds to seislet thresholding. Green dash line corresponds to $f-k$ thresholding. Yellow long dash line corresponds to $f-x$ deconvolution.}
+%   \label{fig:htc}
+%\end{figure}
+
+
+\section{Examples}
+I first use a simulated synthetic example to demonstrate the performance of the proposed approach. I use the dithering approach following \cite{yangkang20142} to blend two sources in the common receiver domain. Fig \ref{fig:h1-1} shows the unblended data. Fig \ref{fig:hs-1} shows the blended data. I compare four approaches: $f-k$ thresholding, $f-x$ deconvolution, seislet thresholding, and the proposed approach. Both $f-k$ thresholding and seislet thresholding assumes that the seismic data is composed of local plane-wave components and is sparse in the transform domains \cite{sanyi2015}.  Fig \ref{fig:hdbor1-1,hdbst1-1,hdbft1-1,hdbfx1-1} 
+shows the deblended data using the four methods. The proposed approach and the seislet thresholding obtain significantly better results. Fig \ref{fig:heor1,hest1,heft1,hefx1} shows the deblending error sections (difference between the deblended data and unblended data) using four different approaches. It confirms the fact that the proposed approach obtains the least deblending error, which is followed by the seislet thresholding.  Fig \ref{fig:h1-z,hs-z,hdbor1-z-0,hdbst1-z-0,hdbft1-z,hdbfx1-z} shows the zoomed sections from each figures in Figs \ref{fig:h1-1,hs-1} and \ref{fig:hdbor1-1,hdbst1-1,hdbft1-1,hdbfx1-1}.
+The zoomed regions are highlighted by the frameboxes in Figs \ref{fig:h1-1,hs-1} and \ref{fig:hdbor1-1,hdbst1-1,hdbft1-1,hdbfx1-1}. One can see the highlighted difference from the zoomed sections. Fig \ref{fig:hsnrsa} shows the convergence diagrams in terms of the signal-to-noise ratio (SNR). The definition of SNR follows \cite{wencheng2015asa}: 
+\begin{equation}
+\label{eq:diff}
+SNR_n=10\log_{10}\frac{\Arrowvert \mathbf{m} \Arrowvert_2^2}{\Arrowvert \mathbf{m}-\mathbf{m}_n\Arrowvert_2^2},
+\end{equation}
+where $\mathbf{m}$ is the unblended data, $SNR_n$ denotes the SNR after $n$th iteration. 
+The convergence shows that while seislet thresholding can obtain very high SNR (around 24 dB), the proposed approach can obtain the highest SNR (above 30 dB). The proposed approach can also greatly accelerate the convergence. As shown in Fig \ref{fig:hsnrsa}, it only takes around 15 iterations to achieve 25 dB, while the seislet thresholding takes more than 40 iterations to achieve a similar SNR.
+
+Fig \ref{fig:htc} shows the amplitude difference between 1.35s and 1.38s of the 25th trace in the simulated synthetic data example, as highlighted by the blue dash trace in Figs \ref{fig:h1-1,hs-1} and \ref{fig:hdbor1-1,hdbst1-1,hdbft1-1,hdbfx1-1}. The black solid line denotes the unblended trace (true trace). The blue double dot line corresponds to the proposed approach. The red dot dash line corresponds to seislet thresholding. The green dash line corresponds to $f-k$ thresholding. The yellow long dash line corresponds to $f-x$ deconvolution. The blue double dot line is the closest one to the black solid line. The red dot dash line is the second closest one to the black solid line. I conclude that, even though seislet thresholding can obtain a good deblending result, the proposed approach can further improve the performance. This superior performance is the same in all the profile. Here I only show a small portion of the trace in order to make the comparison clearer.
+
+\inputdir{./}
+\multiplot{6}{field,slet,ortho,fields,slet-e,ortho-e}{width=0.29\textwidth}{Simulated field data example. (a) Unblended data. (b) Deblended data using iterative seislet thresholding. (c) Deblended data using the proposed approach. (d) Blended data. (e) Estimation error using iterative seislet thresholding. (f) Estimation error using the proposed approach.}
+ 
+Fig \ref{fig:field,slet,ortho,fields,slet-e,ortho-e} shows the deblending performance of the proposed approach on a simulated field data example. Figs \ref{fig:field} and \ref{fig:fields} show the unblended and blended data, respectively. Figs \ref{fig:slet} and \ref{fig:ortho} show the deblended data using seislet thresholding and the proposed approaches, respectively. Figs \ref{fig:slet-e} and \ref{fig:ortho-e} show the estimation error sections using the two approaches. This example also shows that the proposed orthogonalization can improve the deblending performance of the traditional seislet thresholding.
+
+I do not use local windows \cite{sanyi2011} for all the aforementioned approaches and examples. Please note that when applied in local windows, all the approaches will work better. However, the seislet thresholding and the proposed approach does not need the local processing step and thus can be more convenient to implement. The limitation of the proposed approach is somewhat similar to the traditional iterative seislet thresholding approach, that is to say, the local slope need to be estimated correctly during the iterations and the data structure should not be too complicated. However, the orthogonalization can be combined with any existing iterative deblending approach and a combination of the orthogonalization strategy with other robust deblending approach can be a future investigation. 
+
+
+\section{Conclusion}
+I have proposed a novel iterative deblending approach with multiple constraints: iterative orthogonalization and seislet thresholding. The principle of the proposed approach is to iteratively retrieve the leakage energy in the blending noise section after seislet thresholding during the iterations, using local orthogonalization. Because of the iterative orthogonalization, the data misfit during the iterations can be decreased significantly and thus the convergence can be accelerated. The final deblended performance can also be improved using the proposed approach, compared with that of seislet thresholding. Simulated synthetic and field data examples show a successful performance of the proposed approach. 
+
+\section{Acknowledgement}
+I would like to thank Ray Abma, Min Zhou, Sergey Fomel, Shuwei Gan, Shan Qu, Lele Zhang, Zhaoyu Jin, Jiang Yuan, Araz Mahdad, Josef Paffenholz, David Hays, Paul Docherty, and Craig Beasley for helpful discussions on the topic of deblending. I would specifically thank Sanyi Yuan, Sergey Fomel, Yanadet Sripanich, and three anonymous reviewers for grammar checks and constructive suggestions that help improve the manuscript greatly. The research is supported by Texas Consortium for Computational Seismology (TCCS). 
+
+\bibliographystyle{seg}
+\bibliography{simul}
