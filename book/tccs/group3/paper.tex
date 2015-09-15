@@ -1,5 +1,7 @@
+\published{Geophysics, 80, C89-C105, (2015)}
+
 \title{On anelliptic approximations for qP velocities in TI and orthorhombic media}
-\author{Yanadet Sripanich and Sergey Fomel, The University of Texas at Austin}
+\author{Yanadet Sripanich and Sergey Fomel}
 
 \address{
 Bureau of Economic Geology \\
@@ -12,6 +14,7 @@ Austin, TX 78713-8924
 
 \righthead{qP velocities approximations}
 \lefthead{Sripanich \& Fomel}
+\footer{TCCS-9}
 
 \begin{abstract}
 Anelliptic approximations for phase and group velocities of qP waves in transversely isotropic (TI) media have been widely applied in various seismic data processing and imaging tasks. 
@@ -856,8 +859,9 @@ The proposed orthorhombic phase-velocity approximation \new{maintains the algebr
 We thank the sponsors of the Texas Consortium for Computational Seismology (TCCS) for financial support.
 
 
-\new{\append{Uncertainty Analysis}}
-\inputdir{../group3}
+\appendix
+\section{Appendix A: Uncertainty Analysis}
+\inputdir{.}
 \new{In this appendix, we study the variation of the phase-velocity expression in TI media with respect to different choices of parameters, particularly Thomsen's parameters and the proposed Muir-Dellinger parameters. To study resolution, we use the general formula,
 \begin{equation}
 \label{eq:sens}
@@ -921,7 +925,7 @@ where $\mathbf{x}$ denotes the vector of parameter variations: [$\Delta V_{P0}$,
 \multiplot{2}{thomsenmatrix,zonematrix}{width=0.4\textwidth}{Ellipsoids obtained from the quadratic form of $\tilde{R}_{ij}$ in the case of a) Thomsen parameters  b) anelliptic parameters.}
 
 
-\newpage
+%\newpage
 \bibliographystyle{seg}
 \bibliography{seg2014}
 
