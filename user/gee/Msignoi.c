@@ -24,7 +24,7 @@
 
 int main(int argc, char* argv[])
 {
-    bool spitz, verb;
+    bool spitz, prec, verb;
     int niter, sa, na, j, dim, nx, n[SF_MAX_DIM], m[SF_MAX_DIM];
     float *dd, *ss, eps, na0, sa0;
     char varname[6], *lagfile;
@@ -98,13 +98,20 @@ int main(int argc, char* argv[])
     if (!sf_getbool("spitz",&spitz)) spitz=false;
     /* if use Spitz method */
 
+    if (!sf_getbool("prec",&prec)) prec=false;
+    /* if use preconditioning with Spitz */
+
     if (!sf_getbool("verb",&verb)) verb=false;
     /* verbosity flag */
 
     signoi_init (naa, saa, niter, nx, eps, verb);
 
     if (spitz) {
-	signoi2_lop  (false,false,nx,nx,dd,ss);
+	if (prec) {
+	    signoi1_lop  (false,false,nx,nx,dd,ss);
+	} else {
+	    signoi2_lop  (false,false,nx,nx,dd,ss);
+	}
     } else {
 	signoi_lop  (false,false,nx,nx,dd,ss);
     }
@@ -121,4 +128,3 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id$	 */
