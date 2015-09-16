@@ -1,16 +1,14 @@
-\title{Guide to RSF format}
-\email{sergey.fomel@beg.utexas.edu}
-\author{Sergey Fomel}
-\lefthead{Fomel}
-\righthead{RSF format}
+\chapter{Guide to RSF format}
+%\email{sergey.fomel@beg.utexas.edu}
+%\author{Sergey Fomel}
+%\lefthead{Fomel}
+%\righthead{RSF format}
 
-\maketitle
+%\maketitle
 
-\begin{abstract}
-
-  This guide explains the RSF file format.
-
-\end{abstract}
+Madagascar programs operate on files using a universal file format
+called RSF (from Regularly Sampled Format). This chapter explains both
+the design of this format and the rational behind it.
 
 \section{Principles}
 
@@ -181,33 +179,33 @@ machine_name datapath=/path/to_file/
   \end{itemize}
 \end{enumerate}
 
-Examples:
-\begin{itemize}
-\item \ \\
+Here are some examples:
+\begin{description}
+\item[Example 1] \ \\
 \begin{verbatim}
 bash$ sfspike n1=10 out=test1 > spike.rsf
 bash$ grep in spike.rsf
         in="test1"
 \end{verbatim}
-\item \ \\
+\item[Example 2] \ \\
 \begin{verbatim}
 bash$ sfspike n1=10 datapath=/tmp/ > spike.rsf
 bash$ grep in spike.rsf
         in="/tmp/spike.rsf@"
 \end{verbatim}
-\item \ \\
+\item[Example 3] \ \\
 \begin{verbatim}
 bash$ DATAPATH=/tmp/ sfspike n1=10 > spike.rsf
 bash$ grep in spike.rsf
         in="/tmp/spike.rsf@"
 \end{verbatim}
-\item \ \\
+\item[Example 4] \ \\
 \begin{verbatim}
 bash$ sfspike n1=10 datapath=/tmp/ > /tmp/spike.rsf
 bash$ grep in /tmp/spike.rsf
 in="/tmp/sfspikejcARVf"
 \end{verbatim}
-\end{itemize}
+\end{description}
 
 \subsubsection{Packing header and data together}
 
@@ -312,13 +310,13 @@ dimensions of the cube are defined with parameters \texttt{n1},
 Additionally, the grid sampling can be given by parameters
 \texttt{d1}, \texttt{d2}, \texttt{d3}, etc. The axes origins are given
 by parameters \texttt{o1}, \texttt{o2}, \texttt{o3}, etc. Optionally,
-you can also supply the axis label strings \texttt{label1},
-\texttt{label2}, \texttt{label3}, etc., and axis units strings
+you can also supply the axis label strings: \texttt{label1},
+\texttt{label2}, \texttt{label3}, etc., and axis units strings:
 \texttt{unit1}, \texttt{unit2}, \texttt{unit3}, etc. 
 
 \section{Compatibility with other file formats}
 
-It is possible to exchange RSF-formatted data with other popular data formats.
+It is possible to exchange RSF-formatted data with several other popular data formats.
 
 \subsection{Compatibility with SEPlib}
 
@@ -349,7 +347,7 @@ connection from the receiving program. RSF passes data through regular Unix
 pipes.
 \item SEP3D is an extension of SEPlib for operating with irregularly sampled
   data \cite[]{Biondi.sep.92.343}. There is no equivalent of it in RSF for
-  the reasons explained in the beginning of this guide. Operations with
+  the reasons explained in the beginning of this chapter. Operations with
   irregular datasets are supported through the use of auxiliary input files
   that represent the geometry information.
 \end{enumerate}
@@ -474,7 +472,7 @@ file.rsf:
         6 elements 24 bytes
 \end{verbatim}
 
-Convert from RSF to ASCII is equally simple:
+Converting from RSF to ASCII is equally simple:
 \begin{verbatim}
 bash$ sfdd form=ascii out=file.asc < file.rsf > /dev/null
 bash$ cat file.asc
@@ -497,25 +495,5 @@ bash$ cat file.asc
 4.8 9.1 7.3
 \end{verbatim}
 
-\section{Other documentation}
-
-This note should give you a general understanding of the RSF file
-format. Other relevant documentation is 
-\begin{itemize}
-\item \href{http://www.reproducibility.org/RSF/book/rsf/rsf/paper_html/}{Introduction to RSF}
-\item \href{http://www.reproducibility.org/RSF/book/rsf/rsf/install_html/}{Installation instructions}
-\item \href{http://www.reproducibility.org/RSF/}{Self-documentation reference for RSF programs}
-\item A \href{http://www.reproducibility.org/RSF/book/rsf/rsf/prog_html/}{guide to RSF programs}
-\item A \href{http://www.reproducibility.org/RSF/book/rsf/rsf/api_html/}{guide to RSF programming interface}
-\item A \href{http://www.reproducibility.org/RSF/book/rsf/rsf/demo_html/}{guide to programming with RSF}
-\item A \href{http://www.reproducibility.org/RSF/book/rsf/rsf/tour_html/}{tour of RSF software}
-\item A \href{http://www.reproducibility.org/RSF/book/rsf/scons/paper_html/}{guide to SCons interface for reproducible computations}
-\end{itemize}
-
 \bibliographystyle{seg}
-\bibliography{intro,SEG,SEP2}
-
-%%% Local Variables: 
-%%% mode: latex
-%%% TeX-master: t
-%%% End: 
+\bibliography{format,SEG,SEP2}
