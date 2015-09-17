@@ -95,7 +95,10 @@ int main(int argc, char* argv[])
   sf_file output=NULL, outheaders=NULL;
   char* output_filename=NULL;
   char* outheaders_filename=NULL;
-  
+  bool mode_is_seq;
+  char* modestring;
+  int num_traces;
+
   sf_init (argc,argv);
 
    /*****************************/
@@ -195,66 +198,85 @@ int main(int argc, char* argv[])
   sf_putstring(outheaders,"label1","none"    );
   sf_putstring(outheaders,"unit1" ,"none"    );
   
-  dim_output=1;
-  for (iaxis=1; iaxis<SF_MAX_DIM; iaxis++){
-    label_argparmread=n_argparmread=o_argparmread=d_argparmread=false;
-    sprintf(parameter,"label%d",iaxis+1);
-    fprintf(stderr,"try to read %s\n",parameter);
-    if ((label[iaxis]=sf_getstring(parameter))) {
-      /*(label#=(2,...)  name of each of the axes. 
-	   label1 is not changed from input. Each label must be a 
-	   header key like cdp, cdpt, or ep.  The trace header 
-	   values are used to define the output trace location in
-	   the output file. )*/
-      fprintf(stderr,"got %s=%s\n",parameter,label[iaxis]);
-      sf_putstring(output    ,parameter,label[iaxis]);
-      sf_putstring(outheaders,parameter,label[iaxis]);
-      label_argparmread=true;
-    }
-    sprintf(parameter,"n%d",iaxis+1);
-    fprintf(stderr,"try to read %s\n",parameter);
-    if (sf_getlargeint  (parameter,&n_output[iaxis])) {
-      /*( n#=(2,...) number of locations in the #-th dimension )*/ 
-      fprintf(stderr,"got %s=%lld\n",parameter,(long long) n_output[iaxis]);
-      sf_putint(output    ,parameter,n_output[iaxis]);
-      sf_putint(outheaders,parameter,n_output[iaxis]);
-      n_argparmread=true;
-    }
-    sprintf(parameter,"o%d",iaxis+1);
-    if (sf_getfloat(parameter,&o_output[iaxis])) {
-      /*( o#=(2,...) origin of the #-th dimension )*/ 
-      sf_putfloat(output    ,parameter,o_output[iaxis]);
-      sf_putfloat(outheaders,parameter,o_output[iaxis]);
-      o_argparmread=true;
-    }
-    sprintf(parameter,"d%d",iaxis+1);
-    if (sf_getfloat(parameter,&d_output[iaxis])) {
-      /*( d#=(2,...) delta in the #-th dimension )*/ 
-      sf_putfloat(output    ,parameter,d_output[iaxis]);
-      sf_putfloat(outheaders,parameter,d_output[iaxis]);
-      d_argparmread=true;
-    }
-    if(!label_argparmread && !n_argparmread && 
-       !    o_argparmread &&  !d_argparmread){
-      /* none of the parameter were read
-	 you read all the parameters in the previous iteration
-	 compute the output dimension and exit the loop */
-      dim_output=iaxis;
-      break;
-    }
-    if(label_argparmread && n_argparmread && o_argparmread && d_argparmread){
-      /* all the parameters for thisi axis were read.  loop for next iaxis */
-      if(verbose>0){
-	fprintf(stderr,"label, n, i, and d read for iaxis%d\n",iaxis+1);
+  if((modestring=sf_getstring("mode"))==NULL)modestring="mapped";
+  if(strcmp(modestring,"mapped")!=0 && strcmp(modestring,"seq")!=0){
+    fprintf(stderr,"parameter mode in sftahwrite must be mapped of seg\n");
+    fprintf(stderr,"mode=%s\n",modestring);
+    sf_error("stopping because mode is illegal value\n");
+  }
+  mode_is_seq=!strcmp(modestring,"seq");
+  if(mode_is_seq){
+    dim_output=2;
+    sf_putstring(output    ,"label2","trace");
+    sf_putstring(outheaders,"label2","trace");
+    sf_putint(output    ,"n2",1);
+    sf_putint(outheaders,"n2",1);
+    sf_putint(output    ,"o2",1);
+    sf_putint(outheaders,"o2",1);
+    sf_putint(output    ,"d2",1);
+    sf_putint(outheaders,"d2",1);
+  } else {
+    dim_output=1;
+    for (iaxis=1; iaxis<SF_MAX_DIM; iaxis++){
+      label_argparmread=n_argparmread=o_argparmread=d_argparmread=false;
+      sprintf(parameter,"label%d",iaxis+1);
+      fprintf(stderr,"try to read %s\n",parameter);
+      if ((label[iaxis]=sf_getstring(parameter))) {
+	/*(label#=(2,...)  name of each of the axes. 
+	  label1 is not changed from input. Each label must be a 
+	  header key like cdp, cdpt, or ep.  The trace header 
+	  values are used to define the output trace location in
+	  the output file. )*/
+	fprintf(stderr,"got %s=%s\n",parameter,label[iaxis]);
+	sf_putstring(output    ,parameter,label[iaxis]);
+	sf_putstring(outheaders,parameter,label[iaxis]);
+	label_argparmread=true;
       }
-    } else {
-      sf_warning("working on iaxis=%d. Program expects to read\n",iaxis+1);
-      sf_warning("label%d, n%d, i%d, and d%d from command line.\n",
-		 iaxis+1,iaxis+1,iaxis+1,iaxis+1);
-      if(!label_argparmread) sf_error("unable to read label%d\n",iaxis+1); 
-      if(!n_argparmread    ) sf_error("unable to read n%d    \n",iaxis+1); 
-      if(!o_argparmread    ) sf_error("unable to read o%d    \n",iaxis+1); 
-      if(!d_argparmread    ) sf_error("unable to read d$d    \n",iaxis+1); 
+      sprintf(parameter,"n%d",iaxis+1);
+      fprintf(stderr,"try to read %s\n",parameter);
+      if (sf_getlargeint  (parameter,&n_output[iaxis])) {
+	/*( n#=(2,...) number of locations in the #-th dimension )*/ 
+	fprintf(stderr,"got %s=%lld\n",parameter,(long long) n_output[iaxis]);
+	sf_putint(output    ,parameter,n_output[iaxis]);
+	sf_putint(outheaders,parameter,n_output[iaxis]);
+	n_argparmread=true;
+      }
+      sprintf(parameter,"o%d",iaxis+1);
+      if (sf_getfloat(parameter,&o_output[iaxis])) {
+	/*( o#=(2,...) origin of the #-th dimension )*/ 
+	sf_putfloat(output    ,parameter,o_output[iaxis]);
+	sf_putfloat(outheaders,parameter,o_output[iaxis]);
+	o_argparmread=true;
+      }
+      sprintf(parameter,"d%d",iaxis+1);
+      if (sf_getfloat(parameter,&d_output[iaxis])) {
+	/*( d#=(2,...) delta in the #-th dimension )*/ 
+	sf_putfloat(output    ,parameter,d_output[iaxis]);
+	sf_putfloat(outheaders,parameter,d_output[iaxis]);
+	d_argparmread=true;
+      }
+      if(!label_argparmread && !n_argparmread && 
+	 !    o_argparmread &&  !d_argparmread){
+	/* none of the parameter were read
+	   you read all the parameters in the previous iteration
+	   compute the output dimension and exit the loop */
+	dim_output=iaxis;
+	break;
+      }
+      if(label_argparmread && n_argparmread && o_argparmread && d_argparmread){
+	/* all the parameters for thisi axis were read.  loop for next iaxis */
+	if(verbose>0){
+	  fprintf(stderr,"label, n, i, and d read for iaxis%d\n",iaxis+1);
+	}
+      } else {
+	sf_warning("working on iaxis=%d. Program expects to read\n",iaxis+1);
+	sf_warning("label%d, n%d, i%d, and d%d from command line.\n",
+		   iaxis+1,iaxis+1,iaxis+1,iaxis+1);
+	if(!label_argparmread) sf_error("unable to read label%d\n",iaxis+1); 
+	if(!n_argparmread    ) sf_error("unable to read n%d    \n",iaxis+1); 
+	if(!o_argparmread    ) sf_error("unable to read o%d    \n",iaxis+1); 
+	if(!d_argparmread    ) sf_error("unable to read d$d    \n",iaxis+1); 
+      }
     }
   }
   
@@ -284,13 +306,15 @@ int main(int argc, char* argv[])
   /* the list header keys (including any extras) and get the index into 
      the header vector */
   segy_init(n1_headers,in);
-  indx_of_keys=sf_intalloc(dim_output);
-  for (iaxis=1; iaxis<dim_output; iaxis++){
-    /* kls need to check each of these key names are in the segy header and
-       make error message for invalid keys.  Of does segykey do this? NO, just
-       segmentation fault. */
-    if(verbose>0)fprintf(stderr,"get index of key for %s\n",label[iaxis]); 
-    indx_of_keys[iaxis]=segykey(label[iaxis]);
+  if(!mode_is_seq){
+    indx_of_keys=sf_intalloc(dim_output);
+    for (iaxis=1; iaxis<dim_output; iaxis++){
+      /* kls need to check each of these key names are in the segy header and
+	 make error message for invalid keys.  Of does segykey do this? NO, just
+	 segmentation fault. */
+      if(verbose>0)fprintf(stderr,"get index of key for %s\n",label[iaxis]); 
+      indx_of_keys[iaxis]=segykey(label[iaxis]);
+    }
   }
 
   sf_fileflush(output,in);
@@ -342,8 +366,10 @@ int main(int argc, char* argv[])
   /* start trace loop        */
   /***************************/
   fprintf(stderr,"start trace loop\n");
+  num_traces=0;
   while (0==get_tah(intrace, fheader, n1_traces, n1_headers, in)){
-    if(verbose>1){
+    num_traces++;
+    if(verbose>1 && !mode_is_seq){
       for(iaxis=2; iaxis<dim_output; iaxis++){
 	fprintf(stderr,"label[%d]=%s",
 		iaxis,label[iaxis]);
@@ -354,18 +380,56 @@ int main(int argc, char* argv[])
       }
       fprintf(stderr,"\n");
     }
-    tahwritemapped(verbose,intrace, fheader, 
-		   n1_traces, n1_headers,
-		   output, outheaders,
-		   typehead, output_axa_array,
-		   indx_of_keys, dim_output,
-		   n_output,n_outheaders);
+    /* write either mapped or sequential files */
+    if(!mode_is_seq){
+      /* mapped output file */
+      if(0)fprintf(stderr,"call tahwritemapped\n");
+      tahwritemapped(verbose,intrace, fheader, 
+         	      n1_traces, n1_headers,
+		      output, outheaders,
+		      typehead, output_axa_array,
+		      indx_of_keys, dim_output,
+		      n_output,n_outheaders);
+    } else {
+      /* seq output file */
+      if(0)fprintf(stderr,"call tahwriteseq\n");
+      tahwriteseq(verbose,intrace, fheader, 
+		  n1_traces, n1_headers,
+		  output, outheaders,
+		  typehead);
+    }
     /**********************************************/
     /* write trace and headers to the output pipe */
     /**********************************************/
     put_tah(intrace, fheader, n1_traces, n1_headers, out);
   }
+  fprintf(stderr,"test mode_is_seq\n");
+  if(mode_is_seq){
+    FILE *myoutputfile;
+    fprintf(stderr,"write n2=%d\n",num_traces);
 
+    myoutputfile=fopen(output_filename,"a");
+    fprintf(myoutputfile,"        n2=%d\n",num_traces);
+    fclose(myoutputfile);
+
+    myoutputfile=fopen(outheaders_filename,"a");
+    fprintf(myoutputfile,"        n2=%d\n",num_traces);
+    fclose(myoutputfile);
+    
+    /* 
+       The code above works, but it is a bit of a cludge.
+       Unfortunately the following does not work because the files
+       are already closed */
+    /*
+
+    sf_putint(output    ,"n2",num_traces);
+    sf_putint(outheaders,"n2",num_traces);
+    fprintf(stderr,"flush output and outputheaders\n");
+    sf_fileflush(output,in);
+    sf_fileflush(outheaders,in);
+    */
+  }
+  fprintf(stderr,"exit\n");
   exit(0);
 }
 
