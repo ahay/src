@@ -267,7 +267,11 @@ int main(int argc, char* argv[])
 	for(indx_time=imute_start, indx_taper=0; 
 	    indx_time<imute_start+ntaper && indx_time<n1_traces; 
 	    indx_time++, indx_taper++){
-	    intrace[indx_time]+=taper[indx_taper]*intrace[indx_time];
+	  /* fprintf(stderr,"indx_time=%d,indx_taper=%d,intrace[indx_time]=%f,taper[indx_taper]=%f\n",
+		          indx_time    ,indx_taper  ,intrace[indx_time]   ,taper[indx_taper]);
+	  */
+	    intrace[indx_time]*=taper[indx_taper];
+	  
 	}
 
 	put_tah(intrace, fheader, n1_traces, n1_headers, out);
