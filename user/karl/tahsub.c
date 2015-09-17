@@ -295,3 +295,23 @@ void tahwritemapped(int verbose, float* trace, void* iheader,
     }
   }
 }
+
+void tahwriteseq(int verbose, float* trace, void* iheader, 
+		 int n1_traces, int n1_headers,
+		 sf_file output,sf_file outheaders,
+		 sf_datatype typehead)
+/*< tah write seq >*/
+{
+
+  /* write trace and header to the output files.  LIke tahwritemapped, but  
+     no seeks;  just write to the next location */
+
+  sf_floatwrite(trace,n1_traces,output);
+  
+  if(SF_INT == typehead) sf_intwrite  ((int  *)iheader,n1_headers,outheaders);
+  else                   sf_floatwrite((float*)iheader,n1_headers,outheaders);
+  if(verbose>2){
+      fprintf(stderr,"trace and header written to output file\n");
+  }
+}
+
