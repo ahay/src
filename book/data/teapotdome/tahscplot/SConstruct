@@ -32,7 +32,7 @@ Result('s_lapfill_amp',
 	''')
 
 Flow('s_trishape','../tahscscale/sxyamp_st1500.rsf s_bin_amp',
-     'sftrishape pattern=${SOURCES[1]} niter=20 rest1=10 rect2=10')
+     'sftrishape pattern=${SOURCES[1]} niter=20 rect1=5 rect2=5')
 
 Result('s_trishape',
 	'''
@@ -69,7 +69,7 @@ Result('g_lapfill_amp',
 	''')
 
 Flow('g_trishape','../tahscscale/gxyamp_st1500.rsf s_bin_amp',
-     'sftrishape pattern=${SOURCES[1]} niter=20 rest1=10 rect2=10')
+     'sftrishape pattern=${SOURCES[1]} niter=20 rect1=5 rect2=5')
 
 #<../tahscscale/gxyamp_st1500.rsf sfwindow n1=1 f1=2 | sfattr
 #     max =       6.27922 at 79 
@@ -94,7 +94,7 @@ Result('g_trishape',
 Flow('s_lintshape',
      '../tahscscale/sxyamp_st1500.rsf',
      '''
-     ../../../../user/karl/sflintshape2d \
+     sflintshape2d \
         verbose=1 \
         xmin=788150000 xmax=809380000 nx=194 dx=110000 \
 	ymin=939180000 ymax=977020000 ny=345 dy=110000 
@@ -109,7 +109,7 @@ Result('s_lintshape',
 Flow('g_lintshape',
      '../tahscscale/gxyamp_st1500.rsf',
      '''
-     ../../../../user/karl/sflintshape2d \
+     sflintshape2d \
         verbose=1 \
         xmin=788150000 xmax=809380000 nx=194 dx=110000 \
 	ymin=939180000 ymax=977020000 ny=345 dy=110000 
@@ -122,8 +122,8 @@ Result('g_lintshape',
 	| grey title="g_lintshape2d group scalar" color=j
 	''')
 
-Flow('shotcat','s_bin_amp.rsf s_trishape.rsf s_lintshape.rsf',
-     'cat s_trishape.rsf s_lintshape.rsf')
+Flow('shotcat','s_bin_amp.rsf s_lapfill_amp.rsf s_trishape.rsf s_lintshape.rsf',
+     'cat s_lapfill_amp.rsf s_trishape.rsf s_lintshape.rsf')
 Result('shotcat',
 	'''
 	sfclip2 lower=0.34461  upper=2.46485 
@@ -131,8 +131,8 @@ Result('shotcat',
 	| grey title="shotcat" color=j
 	''')
 
-Flow('groupcat','g_bin_amp.rsf g_trishape.rsf g_lintshape.rsf',
-     'cat g_trishape.rsf g_lintshape.rsf')
+Flow('groupcat','g_bin_amp.rsf g_lapfill_amp.rsf g_trishape.rsf g_lintshape.rsf',
+     'cat g_lapfill_amp.rsf g_trishape.rsf g_lintshape.rsf')
 Result('groupcat',
 	'''
 	sfclip2 lower=0.34461  upper=2.46485 
