@@ -1,7 +1,7 @@
 /* Automatic gain control. 
 
 October 2011 program of the month:
-http://ahay.org/rsflog/index.php?/archives/271-Program-of-the-month-sfagc.html
+http://ahay.org/blog/2011/10/01/program-of-the-month-sfagc/
 */
 /*
   Copyright (C) 2004 University of Texas at Austin

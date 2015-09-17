@@ -3,6 +3,8 @@
   viscoacoustic and viscoelastic wave equation, where the wavefield 
   reconstruction method using saved boundaries fails. Here, we only
   demonstrate how to implement it in acoustic media without dissipation.
+Note the backpropagation operator should be the adjoint of forward modeling!
+Here we just use forward modeling operator for the time being!
 */
 /*
   Copyright (C) 2015 Xi'an Jiaotong University (Pengliang Yang)
@@ -600,8 +602,8 @@ int main(int argc, char* argv[])
     for(ib=nob-1,ic=noc-1,it=nt-1; it>-1; it--){
       buffer_remodeling(sp, sr, svz, svx, vv, rho, tau, tauo, bndr, wlt, buffer, checkpt, &ib, &ic, sxz, is, it);
 
-	//the backpropagation operator should be the adjoint of forward modeling!
-	//here we just use forward modeling operator for the time being
+      //the backpropagation operator should be the adjoint of forward modeling!
+      //here we just use forward modeling operator for the time being
       add_source(gxz, gp, ng, dcal[it], true);
       step_forward(gp, gr, gvz, gvx, vv, rho, tau, tauo);
       apply_sponge(gp, bndr);

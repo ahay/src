@@ -29,8 +29,8 @@ This operation is adjoint to sfspray.
 
 int main(int argc, char* argv[])
 {
-    int j, n2, i2, ni, *fold = NULL, axis, ndims[SF_MAX_DIM],dim,lim;
-    off_t i, n, i3, n3;
+    int j, ni, *fold = NULL, axis, ndims[SF_MAX_DIM],dim,lim;
+    off_t i, n, i2, i3, n2, n3;
     sf_file in, out;
     char key1[7], *prog;
     bool norm, rms, min=false, max=false, prod=false,all=false;
@@ -84,7 +84,7 @@ int main(int argc, char* argv[])
       }
     }else{
       sprintf(key1,"n%d",axis);
-      if (!sf_histint(in,key1,&n2)) sf_error("No %s= in input",key1);
+      if (!sf_histint(in,key1,(int *)&n2)) sf_error("No %s= in input",key1);
       n3 = sf_unshiftdim(in,out,axis);
     }
     if (n2 < 100) {

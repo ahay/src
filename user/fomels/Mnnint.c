@@ -28,7 +28,7 @@ int main (int argc,char* argv[])
 {
     int i, ip, n1, n2, np, ndim, order, n123, *pp, n[2], box[2], *shift[2], b;
     float o1, o2, d1, d2, slow, *dd, **pts, *vv, *h, *bin, *vor, d[2], *rect[2];
-    bool isvel;
+    bool isvel, dist, voro;
     sf_upgrad upg;
     sf_file coord, ord, grid, vel;
 
@@ -124,6 +124,14 @@ int main (int argc,char* argv[])
 	     1.,d2,d1,
 	     order);
 
+    if (!sf_getbool("dist",&dist)) dist=false;
+    /* if output distance */
+    
+    if (dist) {
+	sf_floatwrite(dd,n123,grid); 
+	exit(0);
+    }
+
     /* 2. binning */
     sf_int2_init (pts, o1,o2,d1,d2,n1,n2, sf_lin_int, 2, np);
     h = sf_floatalloc(np);
@@ -159,6 +167,14 @@ int main (int argc,char* argv[])
 
     sf_upgrad_set(upg,dd);
     sf_upgrad_solve(upg,vv,vor,bin); 
+
+    if (!sf_getbool("voro",&voro)) voro=false;
+    /* if output Voronoi diagram */
+    
+    if (voro) {
+	sf_floatwrite(vor,n123,grid); 
+	exit(0);
+    }
 	
     /* 4. smoothing */
 

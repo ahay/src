@@ -1,7 +1,7 @@
 /* Time-to-depth conversion in V(z). 
 
 July 2013 program of the month:
-http://www.ahay.org/rsflog/index.php?/archives/345-Program-of-the-month-sftime2depth.html
+http://www.ahay.org/blog/2013/07/01/program-of-the-month-sftime2depth/
 */
 /*
   Copyright (C) 2004 University of Texas at Austin

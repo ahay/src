@@ -1,7 +1,7 @@
 /* Convert acoustic impedance to reflectivity. 
 
 August 2013 program of the month:
-http://www.ahay.org/rsflog/index.php?/archives/350-Program-of-the-month-sfai2refl.html
+http://www.ahay.org/blog/2013/08/02/program-of-the-month-sfai2refl/
 */
 /*
   Copyright (C) 2004 University of Texas at Austin

@@ -1,7 +1,7 @@
 /* Multi-dimensional triangle smoothing. 
 
 January 2012 program of the month:
-http://ahay.org/rsflog/index.php?/archives/280-Program-of-the-month-sfsmooth.html
+http://ahay.org/blog/2012/01/01/program-of-the-month-sfsmooth/
 */
 /*
   Copyright (C) 2004 University of Texas at Austin

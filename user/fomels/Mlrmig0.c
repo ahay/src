@@ -85,6 +85,8 @@ int main(int argc, char* argv[])
 	for (iz=0; iz < nz; iz++) {
 	    i = iz+ix*nz;  /* original grid */
 	    j = iz+ix*nz2; /* padded grid */
+
+	    c = 0.0f;
 		
 	    for (im = 0; im < m2; im++) {
 		c += crealf(lt[im][i])*wave[im][j];

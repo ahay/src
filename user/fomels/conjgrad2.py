@@ -57,4 +57,5 @@ if __name__ == "__main__":
     y2 = matmult[x]
     print x[:]
     print y2[:]
+    print d[:]
 

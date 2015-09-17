@@ -124,7 +124,7 @@ kd_node kd_tree(float **data /* [len][dim] */, int len, int dim)
 	    n[i].x[j] = data[i][j];
 	}
     }
-    make_tree(n, len, 0, dim);
+    n = make_tree(n, len, 0, dim);
 
     return n;
 }

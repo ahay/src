@@ -1,0 +1,499 @@
+\chapter{Guide to RSF format}
+%\email{sergey.fomel@beg.utexas.edu}
+%\author{Sergey Fomel}
+%\lefthead{Fomel}
+%\righthead{RSF format}
+
+%\maketitle
+
+Madagascar programs operate on files using a universal file format
+called RSF (from Regularly Sampled Format). This chapter explains both
+the design of this format and the rational behind it.
+
+\section{Principles}
+
+The main design principle behind the RSF file format is KISS (``Keep It
+Simple, Stupid!''). The RSF format is borrowed from the SEPlib data format
+originally designed at the Stanford Exploration Project
+\cite[]{Claerbout.sep.70.413}. The format is made as simple as possible for
+maximum convenience, transparency and flexibility.
+
+According to the Unix tradition, common file formats should be in a readable
+textual form so that they can be easily examined and processed with universal
+tools.  \cite{taoup} writes:
+\begin{quote}
+  To design a perfect anti-Unix, make all file formats binary and opaque, and
+  require heavyweight tools to read and edit them.
+\end{quote}
+\begin{quote}
+  If you feel an urge to design a complex binary file format, or a complex
+  binary application protocol, it is generally wise to lie down until the
+  feeling passes.
+\end{quote}
+
+Storing large-scale datasets in a text format may not be economical. RSF
+chooses the next best thing: it allows data values to be stored in a binary
+format but puts all data attributes in text files that can be read by humans
+and processed with universal text-processing utilities.
+
+\subsection{Example}
+\inputdir{format}
+
+Let us first create some synthetic RSF data.
+\begin{verbatim}
+bash$ sfmath n1=1000 output='sin(0.5*x1)' > sin.rsf
+\end{verbatim}
+
+Open and read the file \texttt{sin.rsf}.
+\begin{verbatim}
+bash$ cat sin.rsf
+sfmath  rsf/rsf/rsftour:        fomels@egl      Sun Jul 31 07:18:48 2005
+
+        o1=0
+        data_format="native_float"
+        esize=4
+        in="/tmp/sin.rsf@"
+        x1=0
+        d1=1
+        n1=1000
+\end{verbatim}
+The file contains nine lines with simple readable text. The first line
+shows the name of the program, the working directory, the user and
+computer that created the file and the time it was created (that
+information is recorded for accounting purposes). Other lines contain
+parameter-value pairs separated by the ``='' sign. The ``in''
+parameter points to the location of the binary data. Before we discuss
+the meaning of parameters in more detail, let us plot the data.
+\begin{verbatim}
+bash$ < sin.rsf  sfwiggle title='One Trace' | sfpen
+\end{verbatim}
+On your screen, you should see a plot similar to Figure~\ref{fig:sin1}.
+
+\plot{sin1}{width=5in}{An example sinusoid plot.}
+ 
+Suppose you want to reformat the data so that instead of one trace of a
+thousand samples, it contains twenty traces with fifty samples each. Try
+running
+\begin{verbatim}
+bash$ < sin.rsf sed 's/n1=1000/n1=100 n2=10/' > sin10.rsf 
+bash$ < sin10.rsf sfwiggle title=Traces | sfpen
+\end{verbatim}
+or (using pipes)
+\begin{verbatim}
+bash$ < sin.rsf sed 's/n1=1000/n1=50 n2=20/' | sfwiggle title=Traces | sfpen
+\end{verbatim}
+On your screen, you should see a plot similar to Figure~\ref{fig:sin2}.
+
+\plot{sin2}{width=5in}{An example sinusoid plot, with data reformatted to twenty traces.}
+
+What happened? We used \texttt{sed}, a standard Unix line editing utility to
+change the parameters describing the data dimensions. Because of the
+simplicity of this operation, there is no need to create specialized data
+formatting tools or to make the \texttt{sfwiggle} program accept additional
+formatting parameters. Other general-purpose Unix tools that can be applied on
+RSF files include \texttt{cat}, \texttt{echo}, \texttt{grep}, etc. 
+
+An alternative way to obtain the previous result is to run
+\begin{verbatim}
+bash$ ( cat sin.rsf; echo n1=50 n2=20 ) > sin10.rsf 
+bash$ < sin10.rsf sfwiggle title=Traces | sfpen
+\end{verbatim}
+In this case, the \texttt{cat} utility simply copies the contents of the
+previous file, and the \texttt{echo} utility appends new line ``\texttt{n1=50
+  n2=20}''. A new value of the \texttt{n1} parameter overwrites the old value
+of \texttt{n1=1000}, and we achieve the same result as before.
+
+Of course, one could also edit the file by hand with one of the general
+purpose text editors. For recording the history of data processing, it is
+usually preferable to be able to process files with non-interactive tools.
+
+\section{Header and Data files}
+
+A simple way to check the layout of an RSF file is with the \texttt{sfin}
+program.
+\begin{verbatim}
+bash$ sfin sin10.rsf
+sin10.rsf:
+    in="/tmp/sin.rsf@"
+    esize=4 type=float form=native
+    n1=50          d1=1           o1=0
+    n2=20          d2=?           o2=?
+        1000 elements 4000 bytes
+\end{verbatim}
+The program reports the following information: the location of the data file
+(\texttt{/tmp/sin.rsf\@}), the element size (4 bytes), the element
+type (floating point), the element form (native), the hypercube dimensions
+($50 \times 20$), axis scaling (1 and unspecified), and axis origin (0 and
+unspecified). It also checks the total number of elements and bytes in the
+data file.
+
+Let us examine this information in detail. First, we can verify that the data
+file exists and contains the specified number of bytes:
+\begin{verbatim}
+bash$ ls -l /tmp/sin.rsf@
+-rw-r--r--  1 sergey users 4000 2004-10-04 00:35 /tmp/sin.rsf@
+\end{verbatim}
+4000 bytes in this file are required to store $50 \times 20$ floating-point
+4-byte numbers in a binary form. Thus, the data file contains nothing but the
+raw data in a contiguous binary form.
+
+\subsection{Datapath}
+
+How did the RSF program (\texttt{sfmath}) decide where to put the data file?
+In the order of priority, the rules for selecting the data file name and the
+data file directory are as follows:
+\begin{enumerate}
+\item Check \texttt{out=} parameter on the command line. The parameter
+  specifies the output data file location explicitly.
+\item Specify the path and the file name separately. 
+  \begin{itemize}
+  \item The rules for the path
+  selection are:
+  \begin{enumerate}
+  \item Check \texttt{datapath=} parameter on the command line. The parameter
+    specifies a string to prepend to the file name. The string may contain the
+    file directory.
+  \item Check \texttt{DATAPATH} environmental variable. It has the same meaning
+    as the parameter specified with \texttt{datapath=}.
+  \item Check for \texttt{.datapath} file in the current directory. The file may
+    contain a line 
+\begin{verbatim}
+datapath=/path/to_file/
+\end{verbatim}
+    or
+\begin{verbatim}
+machine_name datapath=/path/to_file/
+\end{verbatim}
+    if you indent to use different paths on different platforms.
+  \item Check for \texttt{.datapath} file in the user home directory.
+  \item Put the data file in the current directory (similar to \texttt{datapath=./}).
+  \end{enumerate}
+  \item The rules for the filename selection are:
+    \begin{enumerate}
+    \item If the output RSF file is in the current directory, the name of the
+      data file is made by appending \@.
+    \item If the output file is not in the current directory or if it is
+    created temporarily by a program, the name is made by appending random
+    characters to the name of the program and selected to be unique.
+  \end{enumerate}
+  \end{itemize}
+\end{enumerate}
+
+Here are some examples:
+\begin{description}
+\item[Example 1] \ \\
+\begin{verbatim}
+bash$ sfspike n1=10 out=test1 > spike.rsf
+bash$ grep in spike.rsf
+        in="test1"
+\end{verbatim}
+\item[Example 2] \ \\
+\begin{verbatim}
+bash$ sfspike n1=10 datapath=/tmp/ > spike.rsf
+bash$ grep in spike.rsf
+        in="/tmp/spike.rsf@"
+\end{verbatim}
+\item[Example 3] \ \\
+\begin{verbatim}
+bash$ DATAPATH=/tmp/ sfspike n1=10 > spike.rsf
+bash$ grep in spike.rsf
+        in="/tmp/spike.rsf@"
+\end{verbatim}
+\item[Example 4] \ \\
+\begin{verbatim}
+bash$ sfspike n1=10 datapath=/tmp/ > /tmp/spike.rsf
+bash$ grep in /tmp/spike.rsf
+in="/tmp/sfspikejcARVf"
+\end{verbatim}
+\end{description}
+
+\subsubsection{Packing header and data together}
+
+While the header and data files are separated by default, it is also possible
+to pack them together into one file. To do that, specify the program's
+``\texttt{out}'' parameter as \texttt{out=stdout}. Example:
+\begin{verbatim}
+bash$ sfspike n1=10 out=stdout > spike.rsf
+bash$ grep in spike.rsf
+Binary file spike.rsf matches
+bash$ sfin spike.rsf
+spike.rsf:
+    in="stdin"
+    esize=4 type=float form=native
+    n1=10          d1=0.004       o1=0          label1="Time" unit1="s"
+        10 elements 40 bytes
+bash$ ls -l spike.rsf
+-rw-r--r--  1 sergey users 196 2004-11-10 21:39 spike.rsf
+\end{verbatim}
+If you examine the contents of \texttt{spike.rsf}, you will find that it
+starts with the text header information, followed by special
+symbols, followed by binary data. 
+
+Packing headers and data together may not be a good idea for data processing
+but it works well for storing data: it is easier to move the packed file
+around than to move two different files (header and binary) together while
+remembering to preserve their connection. Packing header and data together is
+also the current mechanism used to push RSF files through Unix pipes.
+
+\subsection{Type}
+
+The data stored with RSF can have different types: character, unsigned
+character, integer, floating point, or complex. By default, single precision
+is used for numbers (\texttt{int} and \texttt{float} data types in the C
+programming language). The number of bytes required for represent these
+numbers may depend on the platform.
+
+\subsection{Form}
+
+The data stored with RSF can also be in a different form: ASCII, native
+binary, and XDR binary. Native binary is often used by default. It is the
+binary format employed by the machine that is running the application. On
+Linux-running PC, the native binary format will typically correspond to the
+so-called little-endian byte ordering. On some other platform, it might be
+big-endian ordering. XDR is a binary format designed by Sun for exchanging
+files over network. It typically corresponds to big-endian byte ordering. It
+is more efficient to process RSF files in the native binary format but, if you
+intend to access data from different platforms, it might be a good idea to
+store the corresponding file in an XDR format. RSF also allows for an ASCII
+(plain text) form of data files. 
+
+Conversion between different types and forms is accomplished with
+\texttt{sfdd} program. Here are some examples. First, let us create synthetic
+data.
+\begin{verbatim}
+bash$ sfmath n1=10 output='10*sin(0.5*x1)' > sin.rsf
+bash$ sfin sin.rsf
+sin.rsf:
+    in="/tmp/sin.rsf@"
+    esize=4 type=float form=native
+    n1=10          d1=1           o1=0
+        10 elements 40 bytes
+bash$ < sin.rsf sfdisfil
+   0:             0        4.794        8.415        9.975        9.093
+   5:         5.985        1.411       -3.508       -7.568       -9.775
+\end{verbatim}
+Converting the data to the integer type:
+\begin{verbatim}
+bash$ < sin.rsf sfdd type=int > isin.rsf
+bash$ sfin isin.rsf
+isin.rsf:
+    in="/tmp/isin.rsf@"
+    esize=4 type=int form=native
+    n1=10          d1=1           o1=0
+        10 elements 40 bytes
+bash$ < isin.rsf sfdisfil
+   0:    0    4    8    9    9    5    1   -3   -7   -9
+\end{verbatim}
+Converting the data to the ASCII form:
+\begin{verbatim}
+bash$ < sin.rsf sfdd form=ascii > asin.rsf
+bash$ < asin.rsf sfdisfil
+   0:             0        4.794        8.415        9.975        9.093
+   5:         5.985        1.411       -3.508       -7.568       -9.775
+bash$ sfin asin.rsf
+asin.rsf:
+    in="/tmp/asin.rsf@"
+    esize=0 type=float form=ascii
+    n1=10          d1=1           o1=0
+        10 elements
+bash$ cat /tmp/asin.rsf@
+0 4.79426 8.41471 9.97495 9.09297 5.98472 1.4112 -3.50783
+-7.56803 -9.7753
+\end{verbatim}
+
+\subsection{Hypercube}
+
+While RSF stores binary data in a contiguous 1-D array, the conceptual
+data model is a multidimensional hypercube. By convention, the
+dimensions of the cube are defined with parameters \texttt{n1},
+\texttt{n2}, \texttt{n3}, etc.  The fastest axis is \texttt{n1}.
+Additionally, the grid sampling can be given by parameters
+\texttt{d1}, \texttt{d2}, \texttt{d3}, etc. The axes origins are given
+by parameters \texttt{o1}, \texttt{o2}, \texttt{o3}, etc. Optionally,
+you can also supply the axis label strings: \texttt{label1},
+\texttt{label2}, \texttt{label3}, etc., and axis units strings:
+\texttt{unit1}, \texttt{unit2}, \texttt{unit3}, etc. 
+
+\section{Compatibility with other file formats}
+
+It is possible to exchange RSF-formatted data with several other popular data formats.
+
+\subsection{Compatibility with SEPlib}
+
+RSF is mostly compatible with its predecessor, the SEPlib file format.
+However, there are several important differences:
+\begin{enumerate}
+\item SEPlib program typically use the element size (\texttt{esize=}
+parameter) to distinguish between different data types:
+\texttt{esize=4} corresponds to floating point data, while
+\texttt{esize=8} corresponds to complex data. The typical type
+handling mechanism in RSF is different: RSF looks at
+\texttt{data\_format=} to determine the data type.
+\item The default data form in SEPlib programs is
+typically XDR and not native as it is in RSF. 
+\item It is possible to pipe the
+output of RSF programs to SEPlib:
+\begin{verbatim}
+bash$ sfspike n1=1 | Attr want=min
+minimum value = 1 at 1
+\end{verbatim}
+However, piping the output of SEPlib programs to RSF (or, for that matter, any
+other non-SEPlib programs) will result in an unterminated process. Do not try
+\begin{verbatim}
+bash$ Spike n1=1 | sfattr want=ming
+\end{verbatim}
+That happens because SEPlib uses sockets for piping and expects a socket
+connection from the receiving program. RSF passes data through regular Unix
+pipes.
+\item SEP3D is an extension of SEPlib for operating with irregularly sampled
+  data \cite[]{Biondi.sep.92.343}. There is no equivalent of it in RSF for
+  the reasons explained in the beginning of this chapter. Operations with
+  irregular datasets are supported through the use of auxiliary input files
+  that represent the geometry information.
+\end{enumerate}
+
+\subsection{Reading and writing SEG-Y and SU files}
+
+The SEG-Y format is based on the proposal of \cite{GEO40-02-03440352}.
+It was revised in 2002\footnote{See \url{http://seg.org/publications/tech-stand/seg_y_rev1.pdf}.}. The
+SU format is a modification of SEG-Y used in Seismic Unix
+\cite[]{TLE16-07-10451049}.
+
+To convert files from SEG-Y or SU format to RSF, use the \texttt{sfsegyread}
+program. Let us first manufacture an example file using SU utilities
+\cite[]{su}:
+\begin{verbatim}
+bash$ suplane > plane.su
+bash$ segyhdrs < plane.su | segywrite tape=plane.segy
+\end{verbatim}
+To convert it to RSF, use either
+\begin{verbatim}
+bash$ sfsuread < plane.su tfile=tfile.rsf endian=0 > plane.rsf
+\end{verbatim}
+or
+\begin{verbatim}
+bash$ sfsegyread < plane.segy tfile=tfile.rsf \
+hfile=hfile bfile=bfile > plane.rsf
+\end{verbatim}
+The endian flag is needed if the SU file originated from a little-endian
+machine such as Linux PC.
+
+Several files are generated. The standard output contains an RSF file with the
+data (32 traces with 64 samples each):
+\begin{verbatim}
+bash$ sfin plane.rsf
+plane.rsf:
+    in="/tmp/plane.rsf@"
+    esize=4 type=float form=native
+    n1=64          d1=0.004       o1=0
+    n2=32          d2=?           o2=?
+        2048 elements 8192 bytes
+\end{verbatim}
+The contents of this file are displayed in Figure~\ref{fig:plane}.
+The \texttt{tfile} is an RSF integer-type file with the trace headers (32
+headers with 71 traces each):
+\begin{verbatim}
+bash$ sfin tfile.rsf
+tfile.rsf:
+    in="/tmp/tfile.rsf@"
+    esize=4 type=int form=native
+    n1=71          d1=?           o1=?
+    n2=32          d2=?           o2=?
+        2272 elements 9088 bytes
+\end{verbatim}
+The contents of trace headers can be quickly examined with the 
+\texttt{sfheaderattr} program.
+The \texttt{hfile} is the ASCII header file for the whole record.
+\begin{verbatim}
+bash$ head -c 242 hfile
+C      This tape was made at the
+C                                                                              
+C      Center for Wave Phenomena                         
+\end{verbatim}
+The  \texttt{bfile} is the binary header file.
+
+\plot{plane}{width=5in}{The output of \texttt{suplane}, converted to RSF and
+  displayed with \texttt{sfwiggle}.}
+
+To convert files back from RSF to SEG-Y or SU, use the \texttt{sfsegywrite}
+program and reverse the input and output:
+\begin{verbatim}
+bash$ sfsuwrite > plane.su tfile=tfile.rsf endian=0 < plane.rsf
+\end{verbatim}
+or
+\begin{verbatim}
+bash$ sfsegywrite > plane.segy tfile=tfile.rsf \
+hfile=hfile bfile=bfile < plane.rsf
+\end{verbatim}
+
+If \texttt{hfile=} and \texttt{bfile=} are not supplied to
+\texttt{sfsegywrite}, the corresponding headers will be either picked
+from the default locations (files named \texttt{header} and
+\texttt{binary}) or generated on the fly. The trace header file can be
+generated with \texttt{sfsegyheader}. Here is an example:
+\begin{verbatim}
+bash$ sfheadermath < plane.rsf output=N+1 | sfdd type=int > tracl.rsf
+bash$ sfsegyheader < plane.rsf tracl=tracl.rsf > tfile.rsf
+bash$ sfsegywrite  < plane.rsf tfile=tfile.rsf > plane.segy
+\end{verbatim}
+
+
+\subsection{Reading and writing ASCII files}
+
+Reading and writing ASCII files can be accomplished with the \texttt{sfdd}
+program. For example, let us take an ASCII file with numbers
+\begin{verbatim}
+bash$ cat file.asc
+1.0 1.5 3.0
+4.8 9.1 7.3
+\end{verbatim}
+Converting it to RSF is as simple as
+\begin{verbatim}
+bash$ echo in=file.asc n1=3 n2=2 data_format=ascii_float > file.rsf
+bash$ sfin file.rsf
+file.rsf:
+    in="file.asc"
+    esize=0 type=float form=ascii
+    n1=3           d1=?           o1=?
+    n2=2           d2=?           o2=?
+        6 elements
+\end{verbatim}
+For more efficient input/output operations, it might be advantageous to
+convert the data type to native binary, as follows:
+\begin{verbatim}
+bash$ echo in=file.asc n1=3 n2=2 data_format=ascii_float | \
+sfdd form=native > file.rsf
+bash$ sfin file.rsf
+file.rsf:
+    in="/tmp/file.rsf@"
+    esize=4 type=float form=native
+    n1=3           d1=?           o1=?
+    n2=2           d2=?           o2=?
+        6 elements 24 bytes
+\end{verbatim}
+
+Converting from RSF to ASCII is equally simple:
+\begin{verbatim}
+bash$ sfdd form=ascii out=file.asc < file.rsf > /dev/null
+bash$ cat file.asc
+1 1.5 3 4.8 9.1 7.3
+\end{verbatim}
+You can use the \texttt{line=} and \texttt{format=} parameters in
+\texttt{sfdd} to control the ASCII formatting:
+\begin{verbatim}
+bash$ sfdd form=ascii out=file.asc \
+line=3 format="%3.1f " < file.rsf > /dev/null
+bash$ cat file.asc
+1.0 1.5 3.0
+4.8 9.1 7.3
+\end{verbatim}
+An alternative is to use \texttt{sfdisfil}.
+\begin{verbatim}
+bash$ sfdisfil > file.asc col=3 format="%3.1f " number=n < file.rsf
+bash$ cat file.asc
+1.0 1.5 3.0
+4.8 9.1 7.3
+\end{verbatim}
+
+\bibliographystyle{seg}
+\bibliography{format,SEG,SEP2}

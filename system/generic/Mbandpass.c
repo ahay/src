@@ -1,7 +1,7 @@
 /* Bandpass filtering. 
 
 November 2012 program of the month:
-http://ahay.org/rsflog/index.php?/archives/313-Program-of-the-month-sfbandpass.html
+http://ahay.org/blog/2012/11/03/program-of-the-month-sfbandpass/
 */
 /*
   Copyright (C) 2004 University of Texas at Austin

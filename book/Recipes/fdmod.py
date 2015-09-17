@@ -1294,6 +1294,44 @@ def wom(wom,wfld,velo,vmean,par):
         '''%(M8R,wtmp,vtmp),
         stdin=0,
         stdout=0)
+# ------------------------------------------------------------
+# 3D wavefield snapshot-over-model plot
+def wsom3d(wsom,wfld,velo,vmean,par):
+    M8R='$RSFROOT/bin/sf'
+    DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
+
+    if(not par.has_key('wweight')): par['wweight']=1
+
+    wtmp = wfld + 'tmp'+myid(16)
+    vtmp = wfld + 'vel'+myid(16)
+
+    Flow(wsom,[velo,wfld],
+        '''
+        %sscale < ${SOURCES[1]} axis=123 >%s datapath=%s/;
+        '''%(M8R,wtmp,DPT) 
+    +
+        '''
+        %sadd < ${SOURCES[0]} add=-%g |
+        scale axis=123 |
+        spray axis=4 n=1 o=%g d=%g
+        >%s datapath=%s/;
+        '''%(M8R,vmean,
+             par['ot'],
+             par['dt'],
+             vtmp,DPT) 
+    +
+        '''
+        %sadd scale=1,%g <%s %s >${TARGETS[0]};
+        '''%(M8R,par['wweight'],vtmp,wtmp) 
+    +
+        '''
+        %srm %s %s
+        '''%(M8R,wtmp,vtmp),
+        stdin=0,
+        stdout=0)
+
+
+
 
 # ------------------------------------------------------------
 # (elastic) wavefield-over-model

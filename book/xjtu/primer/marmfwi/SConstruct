@@ -18,7 +18,7 @@ Flow('shots','vel',
 	sfgenshots csdgather=n fm=10 amp=1 dt=0.0015 ns=21 ng=767 nt=2800
 	sxbeg=4 szbeg=2 jsx=37 jsz=0 gxbeg=0 gzbeg=3 jgx=1 jgz=0
 	''')
-Result('shots','grey color=g title=shot label2= unit2=')
+Plot('shots','grey color=g title=shot label2= unit2=',view=1)
 
 
 Plot('shot4','shots','window n3=1 f3=4| grey color=g title=shot4 label2=Lateral unit2=m')

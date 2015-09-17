@@ -1,72 +1,59 @@
-import os, sys, re, string
-RSF_src_root = '/home/mlai/RSFSRC'
+import os, sys
 
-sys.path.append(os.path.join(RSF_src_root,'framework'))
-#sys.path.append('../../framework')
-import bldutil
-
-progs = '''
-'''
-
-ccprogs = ''' utilities 
-'''
-
-
-try:  # distributed version
-    Import('env root pkgdir bindir')
-    env = env.Clone()
-except: # local version
-    env = bldutil.Debug()
-    root = None
-    
-    #SConscript('../../api/c/SConstruct')
-    SConscript(os.path.join(RSF_src_root,'api/c/SConstruct'))
-
-########################################################################
-# C progs and MPI
-########################################################################
-
-src = Glob('[a-z]*.c')
-
-#env.Prepend(CPPPATH=['../../include'],
-#            LIBPATH=['../../lib'],
-#            LIBS=[env.get('DYNLIB','')+'rsf'])
-
-env.Prepend(CPPPATH=[os.path.join(RSF_src_root,'include')],
-            LIBPATH=[os.path.join(RSF_src_root,'lib')],
-            LIBS=[env.get('DYNLIB','')+'rsf'])
-
-for source in src:
-    inc = env.RSF_Include(source,prefix='')
-    if not source in Glob('mpi*.c'):
-        obj = env.StaticObject(source)
-        env.Depends(obj,inc)
-
-mpicc = env.get('MPICC')
-
-mains = Split(progs)
-for prog in mains:
-    sources = ['M' + prog]
-    bldutil.depends(env,sources,'M'+prog)
-    if prog[:3] == 'mpi':
-        if mpicc:
-            prog = env.Program(prog,map(lambda x: x + '.c',sources),CC=mpicc)
-        else:
-            prog = env.RSF_Place('sf'+prog,None,var='MPICC',package='mpi')
+try:
+    import bldutil
+    glob_build = True # scons command launched in RSFSRC
+    srcroot = '../..' # cwd is RSFSRC/build/user/ivlad
+    Import('env bindir libdir pkgdir')
+except:
+    print "scons command launched in the local directory"
+    glob_build = False # scons command launched in the local directory
+    srcroot = os.environ.get('RSFSRC', '../..')
+    sys.path.append(os.path.join(srcroot,'framework'))
+    import bldutil
+    # Allow user to link against already-compiled rsflib instead of
+    # building a new one in api/c (an action for which he may lack
+    # write permissions or simply time):
+    debug = ARGUMENTS.get('debug', 'y')
+    if debug == 'y':
+        env = bldutil.Debug() # Debugging flags for compilers
     else:
-        prog = env.Program(prog,map(lambda x: x + '.c',sources))
-    if root:
-        env.Install(bindir,prog)
+        env = Environment()
+        import configure
+        opts = configure.options(os.path.join(srcroot,'config.py'))
+        opts.Update(env)
+        # print env.Dump()
+    bindir = libdir = pkgdir = None
 
-########################################################################
-# SELF-DOCUMENTATION
-######################################################################
-if root:
-    user = os.path.basename(os.getcwd())
-    main = 'sf%s.py' % user
-    
-    docs = map(lambda prog: env.Doc(prog,'M' + prog),mains) 
-    env.Depends(docs,'#/framework/rsf/doc.py')	
+targets = bldutil.UserSconsTargets()
 
-    doc = env.RSF_Docmerge(main,docs)
-    env.Install(pkgdir,doc)
+# C mains
+targets.c = '''
+'''
+
+# F90 mains
+targets.f90 = '''
+'''
+
+# Python mains that do not need SWIG+numpy
+targets.py = '''
+medianbalance
+'''
+
+# scatterplot
+
+# Python modules that do not need SWIG+numpy
+targets.py_modules = '''median_balance
+                        file_operation
+                        math_operation
+                        miscellaneous_helper
+                        plot_helper
+                        test_file_operation
+                        test_math_operation
+                        test_miscellaneous_helper'''
+
+
+
+
+
+targets.build_all(env, glob_build, srcroot, bindir, libdir, pkgdir)

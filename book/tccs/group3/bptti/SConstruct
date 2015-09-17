@@ -1,0 +1,374 @@
+from rsf.proj import *
+
+# Download from http://www.freeusp.org/2007_BP_Ani_Vel_Benchmark/
+tgz = 'ModelParams.tar.gz'
+
+Fetch(tgz,'BP',top=os.environ.get('DATAPATH'),server='local')
+
+pars = Split('epsilon delta vp theta')
+
+sgy = {}
+for par in pars:
+    sgy[par] = os.path.join('ModelParams',par.capitalize() + '_Model.sgy')
+
+Flow(sgy.values(),tgz,'zcat $SOURCE | tar -xvf -',stdin=0,stdout=-1)
+
+units = {
+        'epsilon':'',
+        'delta':'',
+        'vp':'km/s',
+        'theta':'degrees'
+}
+for par in pars:
+    Flow([par,par+'.asc',par+'.bin'],sgy[par],
+         '''
+         segyread hfile=${TARGETS[1]} bfile=${TARGETS[2]} read=d |
+         put
+         o2=0 d2=0.00625 label2=Distance unit2=km
+         o1=0 d1=0.00625 label1=Depth unit1=km %s |
+          transp plane=12 
+         ''' % ('','| scale dscale=0.001')[par=='vp'])
+    Result(par,
+           '''
+           window j1=8 j2=2 |
+           grey color=j barlabel=%s scalebar=y
+           screenwd=12.595 screenht=1.8
+           labelsz=4 titlesz=5 barreverse=y
+           wanttitle=n allpos=%d bias=%g barunit=%s
+           parallel2=n transp=n
+           ''' % (par.capitalize(),
+                  par != 'theta',
+                  (0,1.5)[par=='vp'],
+                  units[par]))
+
+# Assume vs is half vp
+Flow('vs','vp',
+     '''
+     math output="0.5*input"
+     ''')
+Flow('vx','vp epsilon',
+     '''
+     math e=${SOURCES[1]} output="input*sqrt(1+2*e)"
+     ''')
+Flow('eta','epsilon delta',
+     '''
+     math e=${SOURCES[0]} d=${SOURCES[1]} output="(e-d)/(1+2*d)"
+     ''')
+for par in ('vx','eta'):
+    Result(par,
+           '''
+           window j1=8 j2=2 |
+           grey color=j barlabel=%s scalebar=y
+           screenwd=12.595 screenht=1.8
+           labelsz=4 titlesz=6 barreverse=y
+           wanttitle=y allpos=%d bias=%g barunit=%s
+           parallel2=n transp=n title=%s
+           ''' % (par.capitalize(),
+                  par != 'theta',
+                  (0,1.5)[par=='vx'],
+                  ('','km/s')[par=='vx'],
+                  par.capitalize()))
+
+# Time
+nt=4300
+dt=0.001
+
+# Real source
+Flow('source',None,
+     '''
+     spike n1=%d d1=%g k1=200 | 
+     ricker1 frequency=15
+     '''%(nt,dt))
+Result('source','graph  title="Source Wavelet" ')
+
+
+# Complex source
+dtt=0.0005
+factor=dt/dtt
+ntt=(nt-1)*factor+1
+ktt=0.1/dtt+1
+
+#i/(2*phi)=i/(2|omega|)=i/2 * (hilb) [(int)source] 
+Flow('source1',None,
+     '''
+     spike n1=%d d1=%g k1=%d |  ricker1 frequency=15
+     '''%(ntt,dtt,ktt))
+Flow('real','source1','math "output=0"')
+Flow('imag','source1','envelope hilb=y | halfint | halfint | math output="input/2" ')
+
+Flow('csource1','real imag','cmplx ${SOURCES[1]}')
+Flow('csource','csource1','window j1=%d'% factor)
+
+# Parameter define
+name = {'vp':'V\_z\^','vx':'V\_x\^','eta':'\F10 h\F3 ','theta':'\F10 q\F3 ','theta0':'\F10 q\F3 ','vs':'V\_s\^','q1':'q\_1\^','q3':'q\_3\^'}
+
+Flow('theta0','theta','smooth rect1=100 rect2=100')
+
+for par in ('vp','vx','eta','theta','theta0','vs'):
+    Flow(par+'end2',par,'window j1=2 j2=2 | window  n1=2048 f1=2761 n2=900 | transp')
+    Result(par+'end2',
+           '''
+           grey color=j barlabel="%s" scalebar=y
+           screenwd=10.24 screenht=4.5
+           labelsz=4 titlesz=5 barreverse=y
+           wanttitle=n allpos=%d bias=%g barunit=%s
+           title=%s
+           ''' % (name[par],
+                  par != 'theta' and par != 'theta0',
+                  (0,1.5)[par=='vp' or par=='vx'],
+                  ('','km/s')[par=='vp' or par=='vx'],
+                  par.capitalize()))
+
+# Calculate and plot q1 and q3
+Flow('c33','vpend2','''math output='input*input' ''')
+Flow('c11','vxend2','''math output='input*input' ''')
+Flow('c55','vsend2','''math output='input*input' ''')
+Flow('c13','etaend2 c11 c33 c55','''
+    math c11=${SOURCES[1]} c33=${SOURCES[2]} c55=${SOURCES[3]} 
+    output='sqrt((c11*(c33-c55))/(1+2*input))-c55' 
+    ''')
+Flow('q1','c11 c13 c33 c55',''' 
+    math c13=${SOURCES[1]} c33=${SOURCES[2]} c55=${SOURCES[3]}
+    output='(c55*(input-c55)+(c55+c13)*(c55+c13))/(c33*(input-c55))'
+    ''')
+Flow('q3','c11 c13 c33 c55',''' 
+    math c13=${SOURCES[1]} c33=${SOURCES[2]} c55=${SOURCES[3]}
+    output='(c55*(c33-c55)+(c55+c13)*(c55+c13))/(input*(c33-c55))'
+    ''')
+for par in ('q1','q3'):
+    Result(par,
+           '''
+           grey color=j barlabel="%s" scalebar=y
+           screenwd=10.24 screenht=4.5
+           labelsz=4 titlesz=5 barreverse=y
+           wanttitle=n allpos=n bias=1.15
+	   ''' % (name[par]))
+
+Flow('refl',None,
+     '''
+     spike n1=920 d1=0.0125 o1=-0.25 n2=2048 d2=0.0125 o2=34.5125 k1=23 k2=1024 | 
+     smooth rect1=2 rect2=2 repeat=3 | window f1=20
+     ''')
+
+Flow('fft','vpend2','rtoc | fft3 axis=1 pad=2 | fft3 axis=2 pad=1')
+Flow('taper','fft',
+     '''
+     real | math output="x1*x1+x2*x2" | mask max=900 | 
+     dd type=float | smooth rect1=50 rect2=50 repeat=5  
+     ''')
+Result('taper','grey title="Wavenumber Taper" screenratio=1 allpos=y')
+Flow('ktaper','taper','rtoc')
+
+# Type of method 0 for two-step and others for one-step
+type = 0
+
+# Two-step##################################################################
+if type == 0:
+# Exact
+	Flow('right0 left0','vpend2 vxend2 etaend2 theta0end2 fft vsend2',
+     	'''
+     	anisolr2 seed=2013 dt=%g velx=${SOURCES[1]} eta=${SOURCES[2]} theta=${SOURCES[3]} 
+     	fft=${SOURCES[4]} vels=${SOURCES[5]} left=${TARGETS[1]} npk=60 eps=1e-5 approx=0
+     	''' % dt)
+
+#	Flow('wavets0','source refl left0 right0',
+#     	'''
+#     	fftwave2taper taper=4 thresh=0.94 cmplx=y pad1=2 ref=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]} verb=y snap=1 snaps=$TARGET
+#     	''',stdout=0)
+
+	Flow('wavets0','source refl left0 right0',
+     	'''
+     	fftwave2 taper=4 thresh=0.94 cmplx=y pad1=2 ref=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]} verb=y snap=1 snaps=$TARGET
+     	''',stdout=0)
+
+# Zone approximation
+	Flow('right1 left1','vpend2 vxend2 etaend2 theta0end2 fft vsend2',
+     	'''
+     	anisolr2 seed=2013 dt=%g velx=${SOURCES[1]} eta=${SOURCES[2]} theta=${SOURCES[3]} 
+     	fft=${SOURCES[4]} vels=${SOURCES[5]} left=${TARGETS[1]} npk=60 eps=1e-5 approx=1 relation=3
+     	''' % dt)
+
+	Flow('wavets1','source refl left1 right1',
+     	'''
+     	fftwave2 taper=4 thresh=0.94 cmplx=y pad1=2 ref=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]} verb=y snap=1 snaps=$TARGET
+     	''',stdout=0)
+
+# Acoustic approximation
+	Flow('right2 left2','vpend2 vxend2 etaend2 theta0end2 fft vsend2',
+     	'''
+     	anisolr2 seed=2013 dt=%g velx=${SOURCES[1]} eta=${SOURCES[2]} theta=${SOURCES[3]} 
+     	fft=${SOURCES[4]} vels=${SOURCES[5]} left=${TARGETS[1]} npk=60 eps=1e-5
+     	''' % dt)
+
+	Flow('wavets2','source refl left2 right2 ',
+     	'''
+     	fftwave2 taper=4 thresh=0.94 cmplx=y pad1=2 ref=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]} verb=y snap=1 snaps=$TARGET
+     	''',stdout=0)
+
+# One-step##################################################################
+# Exact
+else:
+	Flow('cright0 cleft0','vpend2 vxend2 etaend2 theta0end2 fft vsend2',
+     	'''
+     	canisolr2 seed=2013 dt=%g velx=${SOURCES[1]} eta=${SOURCES[2]} theta=${SOURCES[3]} 
+     	fft=${SOURCES[4]} vels=${SOURCES[5]} left=${TARGETS[1]} npk=60 eps=1e-4 approx=0
+     	''' % dt)
+
+	Flow('waveos0','csource refl cleft0 cright0',
+     	'''
+     	cfftwave2 cmplx=n pad1=2 ref=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]} verb=y
+     	''')
+
+# Zone approximation
+	Flow('cright1 cleft1','vpend2 vxend2 etaend2 theta0end2 fft vsend2',
+     	'''
+     	canisolr2 seed=2013 dt=%g velx=${SOURCES[1]} eta=${SOURCES[2]} theta=${SOURCES[3]} 
+     	fft=${SOURCES[4]} vels=${SOURCES[5]} left=${TARGETS[1]} npk=60 eps=1e-4 approx=1 relation=3
+     	''' % dt)
+
+	Flow('waveos1','csource refl cleft1 cright1',
+     	'''
+     	cfftwave2 cmplx=n pad1=2 ref=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]} verb=y
+     	''')
+
+# Acoustic approximation
+	Flow('cright2 cleft2','vpend2 vxend2 etaend2 theta0end2 fft vsend2',
+     	'''
+     	canisolr2 seed=2013 dt=%g velx=${SOURCES[1]} eta=${SOURCES[2]} theta=${SOURCES[3]} 
+     	fft=${SOURCES[4]} vels=${SOURCES[5]} left=${TARGETS[1]} npk=60 eps=1e-4
+     	''' % dt)
+
+	Flow('waveos2','csource refl cleft2 cright2',
+     	'''
+     	cfftwave2 cmplx=n pad1=2 ref=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]} verb=y
+     	''')
+
+# Clipping parameters
+par = dict(
+	c1299_1=2.87e-7,
+	c1299_2=3.79e-7,
+	c2299_1=1.88e-5,
+	c2299_2=2.53e-5,
+	c3299_1=9.9e-5,
+	c3299_2=0.000148,
+	c4299_1=0.00019,
+	#c4299_2=0.000311784
+	c4299_2=0.002	
+)
+
+
+# 0=exact, 1=zone, 2=acoustic (default)
+for f3 in (1299,2299,3299,4299):
+	F3=str(f3)
+	if type==0:
+		for case in range(3):
+			Flow('snapts%d-%d' % (f3,case),'wavets%d ktaper' % case,
+ 	           	''' 
+ 	           	window n3=1 f3=%d | 
+ 	           	rtoc | fft3 axis=1 pad=2 | fft3 axis=2 pad=1 | 
+ 	           	math t=${SOURCES[1]} output="t*input" |
+ 	           	fft3 axis=2 inv=y | fft3 axis=1 inv=y | real''' % f3)
+			Result('snapts%d-%d' % (f3,case),
+		   	'''
+ 	           	grey label1=Depth label2=Distance wanttitle=n min2=38 max2=56
+ 	           	unit1=km unit2=km screenwd=14.41 screenht=9 clip=0.015
+ 	           	''')
+			if case > 0:
+				Case=str(case)
+				if case == 1:
+					method = 'proposed approximation'
+				else:
+					method = 'acoustic approximation'
+                        	Flow('errorts%d-%d' % (f3,case),'snapts%d-0 snapts%d-%d' % (f3,f3,case),'add scale=-1,1 ${SOURCES[1]}')
+				Result('errorts%d-%d' % (f3,case),
+ 	        	 	 ''' 
+ 	        	   	grey label1=Depth label2=Distance wanttitle=n min2=38 max2=56
+ 	        	   	unit1=km unit2=km screenwd=14.41 screenht=9 clip=%g 
+			   	scalebar=y allpos=y barlabel="Absolute Error" title="Amplitude error of the %s"
+			   	labelfat=6 titlefat=6 labelsz=9 titlesz=10 maxval=%g minval=0.0 
+ 	        	   	''' % (par['c'+F3+'_'+Case],method, par['c'+F3+'_'+Case]) )
+	else:
+		for case in range(3):
+			Flow('snapos%d-%d' % (f3,case),'waveos%d' % case,
+ 	           	''' 
+ 	           	window n3=1 f3=%d''' % f3)
+			Result('snapos%d-%d' % (f3,case),
+		   	'''
+ 	           	grey label1=Depth label2=Distance wanttitle=n min2=38 max2=56
+ 	           	unit1=km unit2=km screenwd=14.41 screenht=9
+ 	           	''')
+			if case > 0:
+				Case=str(case)
+				if case == 1:
+					method = 'proposed approximation'
+				else:
+					method = 'acoustic approximation'
+                        	Flow('erroros%d-%d' % (f3,case),'snapos%d-0 snapos%d-%d' % (f3,f3,case),'add scale=-1,1 ${SOURCES[1]}')
+				Result('erroros%d-%d' % (f3,case),
+ 	        	 	 ''' 
+ 	        	   	grey label1=Depth label2=Distance wanttitle=n min2=38 max2=56
+ 	        	   	unit1=km unit2=km screenwd=14.41 screenht=9 clip=%g 
+			   	scalebar=y allpos=y barlabel="Absolute Error" title="Amplitude error of the %s"
+			   	labelfat=6 titlefat=6 labelsz=9 titlesz=10 maxval=%g minval=0.0 
+ 	        	   	''' % (par['c'+F3+'_'+Case],method, par['c'+F3+'_'+Case]) )
+# Sum wavefield and error for one plot
+if type==0:
+	Flow('snaptssum-0','snapts1299-0 snapts2299-0 snapts3299-0 snapts4299-0','add ${SOURCES[1:-1]}')
+	Flow('snaptssum-1','snapts1299-1 snapts2299-1 snapts3299-1 snapts4299-1','add ${SOURCES[1:-1]}')
+	Flow('snaptssum-2','snapts1299-2 snapts2299-2 snapts3299-2 snapts4299-2','add ${SOURCES[1:-1]}')
+	Flow('errortssum-1','errorts1299-1 errorts2299-1 errorts3299-1 errorts4299-1','add ${SOURCES[1:-1]}')
+	Flow('errortssum-2','errorts1299-2 errorts2299-2 errorts3299-2 errorts4299-2','add ${SOURCES[1:-1]}')
+        Result('snaptssum-0',
+        '''
+        grey label1=Depth label2=Distance wanttitle=n min2=38 max2=56
+        unit1=km unit2=km screenwd=14.41 screenht=9 clip=%g
+        scalebar=n title="Exact phase velocity"
+        labelfat=6 titlefat=6 labelsz=9 titlesz=10 maxval=%g minval=0.0
+	''' % (0.015,0.015))
+	Result('snaptssum-1',
+        '''
+        grey label1=Depth label2=Distance wanttitle=n min2=38 max2=56
+        unit1=km unit2=km screenwd=14.41 screenht=9 clip=%g
+        scalebar=n title="Proposed approximation"
+        labelfat=6 titlefat=6 labelsz=9 titlesz=10 maxval=%g minval=0.0
+	''' % (0.015,0.015))
+	Result('snaptssum-2',
+        '''
+        grey label1=Depth label2=Distance wanttitle=n min2=38 max2=56
+        unit1=km unit2=km screenwd=14.41 screenht=9 clip=%g
+        scalebar=n title="Acoustic approximation"
+        labelfat=6 titlefat=6 labelsz=9 titlesz=10 maxval=%g minval=0.0
+	''' % (0.015,0.015))
+	Result('errortssum-1',
+        '''
+        grey label1=Depth label2=Distance wanttitle=n min2=38 max2=56
+        unit1=km unit2=km screenwd=14.41 screenht=9 clip=%g
+        scalebar=y allpos=y barlabel="Absolute Error" title="Amplitude error of the proposed approximation"
+        labelfat=6 titlefat=6 labelsz=9 titlesz=10 maxval=%g minval=0.0
+	''' % (par['c4299_2'],par['c4299_2']))
+        Result('errortssum-2',
+        '''
+        grey label1=Depth label2=Distance wanttitle=n min2=38 max2=56
+        unit1=km unit2=km screenwd=14.41 screenht=9 clip=%g
+        scalebar=y allpos=y barlabel="Absolute Error" title="Amplitude error of the acoustic approximation"
+        labelfat=6 titlefat=6 labelsz=9 titlesz=10 maxval=%g minval=0.0
+        ''' % (par['c4299_2'],par['c4299_2']))
+else:
+	Flow('errorossum-1','erroros1299-1 erroros2299-1 erroros3299-1 erroros4299-1','add ${SOURCES[1:-1]}')
+	Flow('errorossum-2','erroros1299-2 erroros2299-2 erroros3299-2 erroros4299-2','add ${SOURCES[1:-1]}')
+        Result('errorossum-1',
+        '''
+        grey label1=Depth label2=Distance wanttitle=n min2=38 max2=56
+        unit1=km unit2=km screenwd=14.41 screenht=9 clip=%g
+        scalebar=y allpos=y barlabel="Absolute Error" title="Amplitude error of the proposed approximation"
+        labelfat=6 titlefat=6 labelsz=9 titlesz=10 maxval=%g minval=-0.0
+        ''' % (par['c4299_2'],par['c4299_2']))
+        Result('errorossum-2',
+        '''
+        grey label1=Depth label2=Distance wanttitle=n min2=38 max2=56
+        unit1=km unit2=km screenwd=14.41 screenht=9 clip=%g
+        scalebar=y allpos=y barlabel="Absolute Error" title="Amplitude error of the acoustic approximation"
+        labelfat=6 titlefat=6 labelsz=9 titlesz=10 maxval=%g minval=0.0
+        ''' % (par['c4299_2'],par['c4299_2']))
+
+End()

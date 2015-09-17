@@ -3,7 +3,7 @@
 Input and output are complex data. The input is padded by factor pad.
 
 July 2012 program of the month:
-http://ahay.org/rsflog/index.php?/archives/298-Program-of-the-month-sffft3.html
+http://ahay.org/blog/2012/07/02/program-of-the-month-sffft3/
 */
 /*
   Copyright (C) 2004 University of Texas at Austin

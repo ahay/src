@@ -3,7 +3,7 @@
 Inverse of sfvelmod.
 
 May 2013 program of the month:
-http://www.ahay.org/rsflog/index.php?/archives/338-Program-of-the-month-sfvscan.html
+http://www.ahay.org/blog/2013/05/04/program-of-the-month-sfvscan/
 */
 /*
   Copyright (C) 2004 University of Texas at Austin

@@ -7,7 +7,7 @@ If inv=n, the number of output dimensions is twice the number of input dimension
 If inv=y, the number of output dimensions is half the number of input dimensions.
 
 September 2013 program of the month:
-http://ahay.org/rsflog/index.php?/archives/357-Program-of-the-month-sfpatch.html
+http://ahay.org/blog/2013/09/14/program-of-the-month-sfpatch/
 */
 /*
   Copyright (C) 2004 University of Texas at Austin

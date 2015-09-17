@@ -32,13 +32,14 @@ program mexwell_cpml24_fb ! forward-backward propagation
   use rsf
   implicit none
 
-  logical :: order1,attenuating,snapmovie
+  logical :: attenuating,snapmovie
   integer :: ib, it, kt, nt, nz, nx, nb, sx, sz, nxpad, nzpad
-  integer :: nsnap, isnap, snap_interval
-  real  :: dt, dz, dx, fm, tmp, idx, idz
+  integer :: nsnap, isnap, jsnap
+  real  :: dt, dz, dx, amp, fm, vmax,tmp, idx, idz
   real*8, parameter::PI=4.*atan(1.)
+  integer,dimension(:),  allocatable :: i1min,i2min,i1max,i2max
   real, dimension (:),   allocatable :: wlt,bb,aa,ef,eb, wltf,wltb
-  real, dimension (:,:), allocatable :: v0, vv, rho, eta
+  real, dimension (:,:), allocatable :: v0, vv, rho, eta,kappa
   real, dimension (:,:), allocatable :: p, vz, vx
   real, dimension(:,:,:),allocatable :: conv_pz,conv_px,conv_vz,conv_vx
   real, dimension(:,:,:,:),allocatable::bvz, bvx
@@ -68,9 +69,9 @@ program mexwell_cpml24_fb ! forward-backward propagation
   call from_par("nt", nt, 1000) !number of time steps
   call from_par("kt", kt, 500) !index of snapshot 
   call from_par("dt", dt, 0.001) ! time sampling interval
+  call from_par("amp", amp, 1.) ! maximum amplitude for ricker wavelet
   call from_par("fm", fm, 20.) ! domainant frequency for ricker wavelet
   call from_par("nsnap", nsnap, 0) ! number of snapshots for re-initialization
-  call from_par("order1",order1,.true.) ! 1st order or 2nd order accuracy
   call from_par("attenuating",attenuating,.true.) ! add attenuation or not
   call from_par("snapmovie",snapmovie,.false.) ! record snapshots as a series of movie
 
@@ -121,6 +122,10 @@ program mexwell_cpml24_fb ! forward-backward propagation
   sx=nxpad/2
   sz=nzpad/2
 
+  allocate(i1min(nt))
+  allocate(i2min(nt))
+  allocate(i1max(nt))
+  allocate(i2max(nt))
   allocate(wlt(nt))
   allocate(bb(nb))
   allocate(aa(nb))
@@ -128,6 +133,7 @@ program mexwell_cpml24_fb ! forward-backward propagation
   allocate(vv(nzpad,nxpad))
   allocate(rho(nzpad,nxpad))
   allocate(eta(nzpad,nxpad))
+  allocate(kappa(nzpad,nxpad))
   allocate(p(nzpad,nxpad))
   allocate(vz(nzpad,nxpad))
   allocate(vx(nzpad,nxpad))
@@ -145,23 +151,26 @@ program mexwell_cpml24_fb ! forward-backward propagation
      allocate(psnap(nzpad,nxpad,nsnap))
      allocate(vzsnap(nzpad,nxpad,nsnap))
      allocate(vxsnap(nzpad,nxpad,nsnap))
-     snap_interval=int(nt/(nsnap+1))
+     jsnap=int(nt/(nsnap+1)) ! jump interval of snaps
   endif
 
   !generate ricker wavelet with a delay
   do it=1,nt  
      tmp=PI*fm*(it*dt-1.0/fm)
      tmp=tmp*tmp
-     wlt(it)=1000.*(1.0-2.0*tmp)*exp(-tmp)
+     wlt(it)=amp*(1.0-2.0*tmp)*exp(-tmp)
   enddo
   call rsf_read(Fv,v0)
-  call check_sanity(maxval(v0),dt,dx,dz)
+  vmax=maxval(v0)
+  call check_sanity(vmax,dt,dx,dz)
+  call computing_box(vmax,dz,dx,dt,sz,sx,nzpad,nxpad,nt,i1min,i1max,i2min,i2max) 
   call expand2d(vv, v0, nz, nx, nb)
   call rsf_read(Frho,v0)
   call expand2d(rho, v0, nz, nx, nb)
   call rsf_read(Feta, v0)
   call expand2d(eta, v0, nz, nx, nb)
-  call cpmlcoeff_init(.true.,bb,aa,maxval(vv),dx,dt,fm,nb)
+  call cpmlcoeff_init(.true.,bb,aa,vmax,dx,dt,fm,nb)
+  kappa=rho*vv*vv
   p=0.
   vx=0.
   vz=0.
@@ -173,26 +182,17 @@ program mexwell_cpml24_fb ! forward-backward propagation
   !forward modeling
   if(nsnap>0) isnap=0
   do it=1,nt
-     if (order1) then ! scheme 1, 1st order accuracy, default
-        call step_forward_v(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
-        call update_cpml_vzvx(p,vz,vx,conv_pz,conv_px,rho,vv,bb,aa,idz,idx,dt,nz,nx,nb)
-        call step_forward_p(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
-        call update_cpml_pzpx(p,vz,vx,conv_vz,conv_vx,rho,vv,bb,aa,idz,idx,dt,nz,nx,nb)
-        if(attenuating) call apply_attenuation(p, eta, rho, vv, dt, nzpad, nxpad)
-     else ! scheme 2, 2nd order accuracy
         if(attenuating) call apply_attenuation(p, eta, rho, vv, 0.5*dt, nzpad, nxpad)
-        call step_forward_v(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
-        call update_cpml_vzvx(p,vz,vx,conv_pz,conv_px,rho,vv,bb,aa,idz,idx,dt,nz,nx,nb)
-        call step_forward_p(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
-        call update_cpml_pzpx(p,vz,vx,conv_vz,conv_vx,rho,vv,bb,aa,idz,idx,dt,nz,nx,nb)
+        call step_forward_v(p, vz, vx, rho, dt, idz, idx, nzpad, nxpad,i1min(it),i2min(it),i1max(it),i2max(it))
+        call update_cpml_vzvx(p,vz,vx,conv_pz,conv_px,rho,bb,aa,idz,idx,dt,nz,nx,nb)
+        call step_forward_p(p, vz, vx, kappa, dt, idz, idx, nzpad, nxpad,i1min(it),i2min(it),i1max(it),i2max(it))
+        call update_cpml_pzpx(p,vz,vx,conv_vz,conv_vx,kappa,bb,aa,idz,idx,dt,nz,nx,nb)
         if(attenuating) call apply_attenuation(p, eta, rho, vv, 0.5*dt, nzpad, nxpad)
-     endif
      call add_sources(p, dt, wlt(it), sz, sx, nzpad, nxpad, wltf(it))
      call boundary_rw(.true.,bvz(:,:,:,it),bvx(:,:,:,it),vz,vx,nz,nx,nb)
      if(nsnap>0) then !save snapshots for re-initialization in backward reconstruction
-        if ((isnap<nsnap).and.(it==(isnap+1)*snap_interval)) then
+        if ((isnap<nsnap).and.(it==(isnap+1)*jsnap)) then
            isnap=isnap+1
-           !write(0,*)"isnap=",isnap
            psnap(:,:,isnap)=p
            vzsnap(:,:,isnap)=vz
            vxsnap(:,:,isnap)=vx       
@@ -221,29 +221,26 @@ program mexwell_cpml24_fb ! forward-backward propagation
      	call rsf_write(Fw2,v0)
      endif
      if(nsnap>0) then !save snapshots for re-initialization in backward reconstruction
-        if((isnap>0).and.(it==isnap*snap_interval)) then
+        if((isnap>0).and.(it==isnap*jsnap)) then
            p=psnap(:,:,isnap)
            vz=vzsnap(:,:,isnap)
            vx=vxsnap(:,:,isnap)
-           !write(0,*)"isnap=",isnap
            isnap=isnap-1
         endif
      endif
      call add_sources(p, -dt, wlt(it), sz, sx, nzpad, nxpad, wltb(it))
-     if (order1) then ! scheme 1, 1st order accuracy, default
-        if(attenuating) call apply_attenuation(p, eta, rho, vv, -dt, nzpad, nxpad)
-        call step_forward_p(p, vz, vx, vv, rho, -dt, idz, idx, nzpad, nxpad)
-        call step_forward_v(p, vz, vx, vv, rho, -dt, idz, idx, nzpad, nxpad)
-     else ! scheme 2, 2nd order accuracy
         if(attenuating) call apply_attenuation(p, eta, rho, vv, -0.5*dt, nzpad, nxpad)
-        call step_forward_p(p, vz, vx, vv, rho, -dt, idz, idx, nzpad, nxpad)
-        call step_forward_v(p, vz, vx, vv, rho, -dt, idz, idx, nzpad, nxpad)
+        call step_forward_p(p, vz, vx, kappa, -dt, idz, idx, nzpad, nxpad,i1min(it),i2min(it),i1max(it),i2max(it))
+        call step_forward_v(p, vz, vx, rho, -dt, idz, idx, nzpad, nxpad,i1min(it),i2min(it),i1max(it),i2max(it))
         if(attenuating) call apply_attenuation(p, eta, rho, vv,-0.5*dt, nzpad, nxpad)
-     endif
   enddo
   call rsf_write(Feb,eb) !store backward energy history
   call rsf_write(Fwltb,wltb) !store wavelet series during backward reconstruction  
 
+  deallocate(i1min)
+  deallocate(i2min)
+  deallocate(i1max)
+  deallocate(i2max)
   deallocate(wlt)
   deallocate(bb)
   deallocate(aa)
@@ -253,6 +250,7 @@ program mexwell_cpml24_fb ! forward-backward propagation
   deallocate(vv)
   deallocate(rho)
   deallocate(eta)
+  deallocate(kappa)
   deallocate(p)
   deallocate(vz)
   deallocate(vx)  
@@ -344,59 +342,6 @@ subroutine window2d(tgt, src, nz, nx, nb)
   enddo
 end subroutine window2d
 
-!-------------------------------------------------------------------------------
-subroutine step_forward_v(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
-  implicit none
-
-  integer::i1, i2
-  real::tmp,diff1,diff2
-
-  integer:: nzpad, nxpad
-  real::idz,idx,dt
-  real,dimension(nzpad,nxpad)::p, vz, vx, vv, rho
-
-  real,parameter::c1=1.125
-  real,parameter::c2=-1./24.
-
-  do i2=2,nxpad-2
-     do i1=2,nzpad-2
-        diff1=c1*(p(i1+1,i2)-p(i1,i2))&
-             +c2*(p(i1+2,i2)-p(i1-1,i2))
-        diff2=c1*(p(i1,i2+1)-p(i1,i2))&
-             +c2*(p(i1,i2+2)-p(i1,i2-1))
-        vz(i1,i2)=vz(i1,i2)-dt*idz*diff1/rho(i1,i2)
-        vx(i1,i2)=vx(i1,i2)-dt*idx*diff2/rho(i1,i2)
-     enddo
-  enddo
-end subroutine step_forward_v
-
-!------------------------------------------------------------------------------
-subroutine step_forward_p(p, vz, vx, vv, rho, dt, idz, idx, nzpad, nxpad)
-  implicit none
-
-  integer::i1, i2
-  real::tmp,diff1,diff2
-
-  integer:: nzpad, nxpad
-  real::idz,idx,dt
-  real,dimension(nzpad,nxpad)::p, vz, vx, vv, rho
-
-  real,parameter::c1=1.125
-  real,parameter::c2=-1./24.
-
-  do i2=3,nxpad-1
-     do i1=3,nzpad-1
-        tmp=vv(i1,i2)
-        tmp=rho(i1,i2)*tmp*tmp
-        diff1=c1*(vz(i1,i2)-vz(i1-1,i2))&
-             +c2*(vz(i1+1,i2)-vz(i1-2,i2))
-        diff2=c1*(vx(i1,i2)-vx(i1,i2-1))&
-             +c2*(vx(i1,i2+1)-vx(i1,i2-2))
-        p(i1,i2)=p(i1,i2)-dt*tmp*(idz*diff1+idx*diff2)
-     enddo
-  enddo
-end subroutine step_forward_p
-
 !------------------------------------------------------------------------------
 ! initialize PML damping profile
 subroutine cpmlcoeff_init(cosfunc,bb,aa,vpmax,dx,dt,fm,nb)
@@ -410,7 +355,7 @@ subroutine cpmlcoeff_init(cosfunc,bb,aa,vpmax,dx,dt,fm,nb)
   integer::ib
   real::x,L,d0,d,alpha_max,alpha,r
   real,parameter::Rc=1.e-4
-  real,parameter::pi=4.*atan(1.)
+  real,parameter::PI=4.*atan(1.)
 
   L=nb*dx
   d0=-3.*log(Rc)*vpmax/(2.*L)
@@ -425,21 +370,82 @@ subroutine cpmlcoeff_init(cosfunc,bb,aa,vpmax,dx,dt,fm,nb)
      d=d0*r**2; 
      alpha=alpha_max*r
      !use cosine damping profile allowing for end derivatives=0
-     if(cosfunc) d=d0*(1.-cos(0.5*pi*r)) 
+     if(cosfunc) d=d0*(1.-cos(0.5*PI*r)) 
      bb(ib)=exp(-(d+alpha)*dt)
      aa(ib)=d*(bb(ib)-1.)/(d+alpha)
   enddo
-
 end subroutine cpmlcoeff_init
 
+!-------------------------------------------------------------------------------
+subroutine step_forward_v(p,vz,vx,rho,dt,idz,idx,nzpad,nxpad,i1min,i2min,i1max,i2max)
+  implicit none
+
+  integer::i1, i2, i1start,i2start,i1end,i2end
+  real::tmp,diff1,diff2
+
+  integer:: nzpad, nxpad,i1min,i1max,i2min,i2max
+  real::idz,idx,dt
+  real,dimension(nzpad,nxpad)::p, vz, vx, rho
+
+  real,parameter::c1=1.125
+  real,parameter::c2=-1./24.
+
+  i1start=i1min+1
+  i1end=i1max-2
+  i2start=i2min+1
+  i2end=i2max-2
+
+  do i2=i2start,i2end
+     do i1=i1start,i1end
+        diff1=c1*(p(i1+1,i2)-p(i1,i2))&
+             +c2*(p(i1+2,i2)-p(i1-1,i2))
+        diff2=c1*(p(i1,i2+1)-p(i1,i2))&
+             +c2*(p(i1,i2+2)-p(i1,i2-1))
+        vz(i1,i2)=vz(i1,i2)+dt*idz*diff1/rho(i1,i2)
+        vx(i1,i2)=vx(i1,i2)+dt*idx*diff2/rho(i1,i2)
+     enddo
+  enddo
+end subroutine step_forward_v
+
 !------------------------------------------------------------------------------
-subroutine update_cpml_vzvx(p,vz,vx,conv_pz,conv_px,rho,vv,bb,aa,idz,idx,dt,nz,nx,nb)
+subroutine step_forward_p(p,vz,vx,kappa,dt,idz,idx,nzpad,nxpad,i1min,i2min,i1max,i2max)
+  implicit none
+
+  integer::i1, i2,i1start,i1end,i2start,i2end
+  real::tmp,diff1,diff2
+
+  integer:: nzpad, nxpad,i1min,i1max,i2min,i2max
+  real::idz,idx,dt
+  real,dimension(nzpad,nxpad)::p, vz, vx, kappa
+
+  real,parameter::c1=1.125
+  real,parameter::c2=-1./24.
+
+  i1start=i1min+2
+  i1end=i1max-1
+  i2start=i2min+2
+  i2end=i2max-1
+
+  do i2=i2start,i2end
+     do i1=i1start,i1end
+        diff1=c1*(vz(i1,i2)-vz(i1-1,i2))&
+             +c2*(vz(i1+1,i2)-vz(i1-2,i2))
+        diff2=c1*(vx(i1,i2)-vx(i1,i2-1))&
+             +c2*(vx(i1,i2+1)-vx(i1,i2-2))
+        p(i1,i2)=p(i1,i2)+dt*kappa(i1,i2)*(idz*diff1+idx*diff2)
+     enddo
+  enddo
+end subroutine step_forward_p
+
+
+!------------------------------------------------------------------------------
+subroutine update_cpml_vzvx(p,vz,vx,conv_pz,conv_px,rho,bb,aa,idz,idx,dt,nz,nx,nb)
   implicit none
 
   integer::nz,nx,nb
   real::idz,idx,dt
   real,dimension(nb)::bb,aa
-  real,dimension(nz+2*nb,nx+2*nb)::p,vz,vx,rho,vv
+  real,dimension(nz+2*nb,nx+2*nb)::p,vz,vx,rho
   real::conv_pz(nb,nx+2*nb,2),conv_px(nz+2*nb,nb,2)
 
   integer::nzpad,nxpad,i1,i2,ib
@@ -454,12 +460,14 @@ subroutine update_cpml_vzvx(p,vz,vx,conv_pz,conv_px,rho,vv,bb,aa,idz,idx,dt,nz,n
         diff1=c1*(p(i1+1,i2)-p(i1,i2)) &
              +c2*(p(i1+2,i2)-p(i1-1,i2))
         conv_pz(i1,i2,1)=bb(i1)*conv_pz(i1,i2,1)+aa(i1)*diff1*idz
+        vz(i1,i2)=vz(i1,i2)+dt*conv_pz(i1,i2,1)/rho(i1,i2)
      enddo
      do i1=nz+nb+1,nzpad-2 !bottom
         ib=nzpad-i1+1
         diff1=c1*(p(i1+1,i2)-p(i1,i2)) &
              +c2*(p(i1+2,i2)-p(i1-1,i2))
         conv_pz(ib,i2,2)=bb(ib)*conv_pz(ib,i2,2)+aa(ib)*diff1*idz
+        vz(i1,i2)=vz(i1,i2)+dt*conv_pz(ib,i2,2)/rho(i1,i2)
      enddo
   enddo
 
@@ -469,46 +477,26 @@ subroutine update_cpml_vzvx(p,vz,vx,conv_pz,conv_px,rho,vv,bb,aa,idz,idx,dt,nz,n
         diff2=c1*(p(i1,i2+1)-p(i1,i2))&
              +c2*(p(i1,i2+2)-p(i1,i2-1)) 
         conv_px(i1,i2,1)=bb(i2)*conv_px(i1,i2,1)+aa(i2)*diff2*idx
+        vx(i1,i2)=vx(i1,i2)+dt*conv_px(i1,i2,1)/rho(i1,i2)
      enddo
      do i2=nx+nb+1,nxpad-2 !right
         ib=nxpad-i2+1
         diff2=c1*(p(i1,i2+1)-p(i1,i2)) &
              +c2*(p(i1,i2+2)-p(i1,i2-1))
         conv_px(i1,ib,2)=bb(ib)*conv_px(i1,ib,2)+aa(ib)*diff2*idx
-     enddo
-  enddo
-
-  !update vz
-  do i2=1,nxpad
-     do i1=1,nb !top
-        vz(i1,i2)=vz(i1,i2)-dt*conv_pz(i1,i2,1)/rho(i1,i2)
-     enddo
-     do i1=nz+nb+1,nzpad !bottom
-        ib=nzpad-i1+1
-        vz(i1,i2)=vz(i1,i2)-dt*conv_pz(ib,i2,2)/rho(i1,i2)
-     enddo
-  enddo
-
-  !update vx
-  do i1=1,nzpad
-     do i2=1,nb !left
-        vx(i1,i2)=vx(i1,i2)-dt*conv_px(i1,i2,1)/rho(i1,i2)
-     enddo
-     do i2=nx+nb+1,nxpad !right
-        ib=nxpad-i2+1
-        vx(i1,i2)=vx(i1,i2)-dt*conv_px(i1,ib,2)/rho(i1,i2)
+        vx(i1,i2)=vx(i1,i2)+dt*conv_px(i1,ib,2)/rho(i1,i2)
      enddo
   enddo
 end subroutine update_cpml_vzvx
 
 !------------------------------------------------------------------------------
-subroutine update_cpml_pzpx(p,vz,vx,conv_vz,conv_vx,rho,vv,bb,aa,idz,idx,dt,nz,nx,nb)
+subroutine update_cpml_pzpx(p,vz,vx,conv_vz,conv_vx,kappa,bb,aa,idz,idx,dt,nz,nx,nb)
   implicit none
 
   integer::nz,nx,nb
   real::idz,idx,dt
   real,dimension(nb)::bb,aa
-  real,dimension(nz+2*nb,nx+2*nb)::p,vz,vx,rho,vv
+  real,dimension(nz+2*nb,nx+2*nb)::p,vz,vx,kappa
   real::conv_vz(nb,nx+2*nb,2),conv_vx(nz+2*nb,nb,2)
 
   integer::i1,i2,ib,nzpad,nxpad
@@ -526,12 +514,14 @@ subroutine update_cpml_pzpx(p,vz,vx,conv_vz,conv_vx,rho,vv,bb,aa,idz,idx,dt,nz,n
         diff1=c1*(vz(i1,i2)-vz(i1-1,i2))&
              +c2*(vz(i1+1,i2)-vz(i1-2,i2))
         conv_vz(i1,i2,1)=bb(i1)*conv_vz(i1,i2,1)+aa(i1)*diff1*idz
+        p(i1,i2)=p(i1,i2)+dt*kappa(i1,i2)*conv_vz(i1,i2,1)
      enddo
      do i1=nz+nb+1,nzpad-1 !bottom
         ib=nzpad-i1+1
         diff1=c1*(vz(i1,i2)-vz(i1-1,i2))&
              +c2*(vz(i1+1,i2)-vz(i1-2,i2))
         conv_vz(ib,i2,2)=bb(ib)*conv_vz(ib,i2,2)+aa(ib)*diff1*idz
+        p(i1,i2)=p(i1,i2)+dt*kappa(i1,i2)*conv_vz(ib,i2,2)
      enddo
   enddo
 
@@ -541,38 +531,14 @@ subroutine update_cpml_pzpx(p,vz,vx,conv_vz,conv_vx,rho,vv,bb,aa,idz,idx,dt,nz,n
         diff2=c1*(vx(i1,i2)-vx(i1,i2-1))&
              +c2*(vx(i1,i2+1)-vx(i1,i2-2))
         conv_vx(i1,i2,1)=bb(i2)*conv_vx(i1,i2,1)+aa(i2)*diff2*idx
+        p(i1,i2)=p(i1,i2)+dt*kappa(i1,i2)*conv_vx(i1,i2,1)
      enddo
      do i2=nx+nb+1,nxpad-1 !right
         ib=nxpad-i2+1
         diff2=c1*(vx(i1,i2)-vx(i1,i2-1))&
              +c2*(vx(i1,i2+1)-vx(i1,i2-2))
         conv_vx(i1,ib,2)=bb(ib)*conv_vx(i1,ib,2)+aa(ib)*diff2*idx
-     enddo
-  enddo
-
-  !update pz
-  do i2=1,nxpad
-     do i1=1,nb !top
-        tmp=vv(i1,i2);        tmp=rho(i1,i2)*tmp*tmp
-        p(i1,i2)=p(i1,i2)-dt*tmp*conv_vz(i1,i2,1)
-     enddo
-     do i1=nz+nb+1,nzpad !bottom
-        ib=nzpad-i1+1
-        tmp=vv(i1,i2);        tmp=rho(i1,i2)*tmp*tmp
-        p(i1,i2)=p(i1,i2)-dt*tmp*conv_vz(ib,i2,2)
-     enddo
-  enddo
-
-  !update px
-  do i1=1,nzpad
-     do i2=1,nb !left
-        tmp=vv(i1,i2);        tmp=rho(i1,i2)*tmp*tmp
-        p(i1,i2)=p(i1,i2)-dt*tmp*conv_vx(i1,i2,1)
-     enddo
-     do i2=nx+nb+1,nxpad !right
-        ib=nxpad-i2+1
-        tmp=vv(i1,i2);        tmp=rho(i1,i2)*tmp*tmp
-        p(i1,i2)=p(i1,i2)-dt*tmp*conv_vx(i1,ib,2)
+        p(i1,i2)=p(i1,i2)+dt*kappa(i1,i2)*conv_vx(i1,ib,2)
      enddo
   enddo
 end subroutine update_cpml_pzpx
@@ -661,3 +627,31 @@ subroutine compute_energy(e,vz,vx,p,rho,vv,nz,nx)
 
   e=0.5*sum((vz*vz+vx*vx)*rho+p*p/(rho*vv*vv))
 end subroutine compute_energy
+
+!-------------------------------------------------------------------------------
+subroutine computing_box(vmax,dz,dx,dt,sz,sx,nzpad,nxpad,nt,i1min,i1max,i2min,i2max)
+  implicit none
+
+  real:: vmax,dz,dx,dt
+  integer::sz,sx,nzpad,nxpad,ishift,it,nt
+  integer::i1min(nt),i2min(nt),i1max(nt),i2max(nt)
+
+  real::distpdt,dzpdt,dxpdt
+
+  ishift=3
+  distpdt=vmax*dt
+  dzpdt=distpdt/dz
+  dxpdt=distpdt/dx
+
+  i1min(1)=sz-ishift
+  i1max(1)=sz+ishift
+  i2min(1)=sx-ishift
+  i2max(1)=sx+ishift
+
+  do it=2,nt
+     i1min(it)=max(nint(i1min(1)-it*dzpdt),1)
+     i2min(it)=max(nint(i1min(1)-it*dxpdt),1)
+     i1max(it)=min(nint(i1max(1)+it*dzpdt),nzpad)
+     i2max(it)=min(nint(i2max(1)+it*dxpdt),nxpad)
+  enddo
+end subroutine computing_box

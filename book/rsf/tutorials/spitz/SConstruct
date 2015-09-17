@@ -29,7 +29,7 @@ Flow('npef nlag','noise','hpef a=1,2 lag=${TARGETS[1]}')
 # Separate signal and noise
 
 Flow('signoi','data dpef npef',
-     'signoi epsilon=1 sfilt=${SOURCES[1]} nfilt=${SOURCES[2]} spitz=y verb=y niter=200')
+     'signoi epsilon=0.75 sfilt=${SOURCES[1]} nfilt=${SOURCES[2]} spitz=y prec=y verb=y niter=200')
 
 Flow('signal2','signoi','window n3=1')
 Flow('noise2', 'signoi','window f3=1')
@@ -42,26 +42,6 @@ for case in Split('signal2 noise2'):
 Result('signoi','data signal2 noise2','SideBySideAniso')
 Result('gsignoi','gdata gsignal2 gnoise2','SideBySideAniso')
 
-# F-X domain
-############
-
-Flow('fdata','data','fft1')
-
-# Take a frequency slice
-
-Flow('fslice','fdata','window n1=1 min1=1')
-
-# apply shifts in space
-
-Flow('fshift','fslice','shift1 ns=5')
-
-# find PEF
-
-Flow('fpef','fshift fslice','clpf match=${SOURCES[1]} rect1=1000 | stack axis=1')
-
-# find polynomial roots
-
-Flow('fpoly','fpef','window n1=1 | math output=-1 | cat axis=1 $SOURCE')
-Flow('froots','fpoly','roots verb=n niter=200 sort=p')
+# Extend to avoid edge effects??
 
 End()

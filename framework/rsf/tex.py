@@ -840,7 +840,7 @@ class TeXPaper(Environment):
         kw.update({'tools':[]})
         apply(Environment.__init__,(self,),kw)
         rsf.conf.set_options(self)
-        sourceforge = 'http://sourceforge.net/p/rsf/code/HEAD/tree/trunk'
+#        sourceforge = 'http://sourceforge.net/p/rsf/code/HEAD/tree/trunk'
         github = 'https://github.com/ahay/src/blob/master/'
         self.Append(ENV={'XAUTHORITY':
                          os.path.join(os.environ.get('HOME'),'.Xauthority'),

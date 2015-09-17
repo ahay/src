@@ -34,10 +34,10 @@ program mexwell_cpml3d_fb !3d forward-backward propagation
 
   logical :: order1,attenuating
   integer :: ib, it, kt, nt, nz, nx, ny, nb, sz, sx, sy, nzpad, nxpad, nypad
-  real  :: dt, dz, dx, dy, fm, tmp, idz, idx, idy
+  real  :: dt, dz, dx, dy, fm,amp,vpmax, tmp, idz, idx, idy
   real*8, parameter::PI=4.*atan(1.)
   real, dimension(:), allocatable :: wlt,bb,aa,ef,eb
-  real, dimension(:,:,:), allocatable :: v0, vv, rho, eta
+  real, dimension(:,:,:), allocatable :: v0, vv, rho,kappa, eta
   real, dimension(:,:,:), allocatable :: p, vz, vx, vy
   real, dimension(:,:,:,:),allocatable :: conv_pz,conv_px,conv_py
   real, dimension(:,:,:,:),allocatable :: conv_vz,conv_vx,conv_vy
@@ -68,6 +68,7 @@ program mexwell_cpml3d_fb !3d forward-backward propagation
   call from_par("kt", kt, 500) ! recording time of snapshot
   call from_par("dt", dt, 0.001) ! time sampling interval
   call from_par("fm", fm, 20.) ! domainant frequency for ricker wavelet
+  call from_par("amp", amp, 1.) ! maximum amplitude of ricker wavelet
   call from_par("order1",order1,.true.) ! 1st order or 2nd order accuracy
   call from_par("attenuating",attenuating,.true.) ! add attenuation or not
 
@@ -99,6 +100,7 @@ program mexwell_cpml3d_fb !3d forward-backward propagation
   allocate(v0(nz,nx,ny))
   allocate(vv(nzpad,nxpad,nypad))
   allocate(rho(nzpad,nxpad,nypad))
+  allocate(kappa(nzpad,nxpad,nypad))
   allocate(eta(nzpad,nxpad,nypad))
   allocate(p(nzpad,nxpad,nypad))
   allocate(vz(nzpad,nxpad,nypad))
@@ -122,16 +124,16 @@ program mexwell_cpml3d_fb !3d forward-backward propagation
      tmp=tmp*tmp
      wlt(it)=(1.0-2.0*tmp)*exp(-tmp)
   enddo
-  !generate coefficients for the absorbing boundary
   call rsf_read(Fv,v0)
-  call check_sanity(maxval(v0),dt,dz,dx,dy)
+  vpmax=maxval(v0)
+  call check_sanity(vpmax,dt,dz,dx,dy)
   call expand3d(vv, v0, nz, nx, ny, nb)
   call rsf_read(Frho,v0)
   call expand3d(rho, v0, nz, nx, ny, nb)
   call rsf_read(Feta, v0)
   call expand3d(eta, v0, nz, nx, ny, nb)
-  !generate coefficients for the absorbing boundary
-  call cpmlcoeff_init(bb,aa,maxval(vv),dx,dt,fm,nb)
+  call cpmlcoeff_init(bb,aa,vpmax,dx,dt,fm,nb)
+  kappa=rho*vv*vv
   p=0.
   vx=0.
   vz=0.
@@ -146,17 +148,17 @@ program mexwell_cpml3d_fb !3d forward-backward propagation
   !forward modeling
   do it=1,nt
      if (order1) then ! scheme 1, 1st order accuracy, default
-        call step_forward_v(p, vz, vx, vy, vv, rho, dt, idz, idx, idy, nzpad, nxpad, nypad)
-        call update_cpml_vzvxvy(p, vz, vx, vy, conv_pz, conv_px, conv_py, rho, vv, bb, aa, idz, idx, idy, dt, nz, nx, ny, nb)
-        call step_forward_p(p, vz, vx, vy, vv, rho, dt, idz, idx, idy, nzpad, nxpad, nypad)
-        call update_cpml_pzpxpy(p, vz, vx, vy, conv_vz, conv_vx, conv_vy, rho, vv, bb, aa, idz, idx, idy, dt, nz, nx, ny, nb)
+        call step_forward_v(p, vz, vx, vy, rho, dt, idz, idx, idy, nzpad, nxpad, nypad)
+        call update_cpml_vzvxvy(p, vz, vx, vy, conv_pz, conv_px, conv_py, rho, bb, aa, idz, idx, idy, dt, nz, nx, ny, nb)
+        call step_forward_p(p, vz, vx, vy, kappa, dt, idz, idx, idy, nzpad, nxpad, nypad)
+        call update_cpml_pzpxpy(p, vz, vx, vy, conv_vz, conv_vx, conv_vy, kappa, bb, aa, idz, idx, idy, dt, nz, nx, ny, nb)
         if(attenuating) call apply_attenuation(p, eta, rho, vv, dt, nzpad, nxpad, nypad)
      else !2nd order scheme
         if(attenuating) call apply_attenuation(p, eta, rho, vv, 0.5*dt, nzpad, nxpad, nypad)
-        call step_forward_v(p, vz, vx, vy, vv, rho, dt, idz, idx, idy, nzpad, nxpad, nypad)
-        call update_cpml_vzvxvy(p, vz, vx, vy, conv_pz, conv_px, conv_py, rho, vv, bb, aa, idz, idx, idy, dt, nz, nx, ny, nb)
-        call step_forward_p(p, vz, vx, vy, vv, rho, dt, idz, idx, idy, nzpad, nxpad, nypad)
-        call update_cpml_pzpxpy(p, vz, vx, vy, conv_vz, conv_vx, conv_vy, rho, vv, bb, aa, idz, idx, idy, dt, nz, nx, ny, nb)
+        call step_forward_v(p, vz, vx, vy, rho, dt, idz, idx, idy, nzpad, nxpad, nypad)
+        call update_cpml_vzvxvy(p, vz, vx, vy, conv_pz, conv_px, conv_py, rho, bb, aa, idz, idx, idy, dt, nz, nx, ny, nb)
+        call step_forward_p(p, vz, vx, vy, kappa, dt, idz, idx, idy, nzpad, nxpad, nypad)
+        call update_cpml_pzpxpy(p, vz, vx, vy, conv_vz, conv_vx, conv_vy, kappa, bb, aa, idz, idx, idy, dt, nz, nx, ny, nb)
         if(attenuating) call apply_attenuation(p, eta, rho, vv, 0.5*dt, nzpad, nxpad, nypad)
      endif
      call add_sources(p, dt, wlt(it), sz, sx, sy, nzpad, nxpad, nypad)
@@ -170,7 +172,7 @@ program mexwell_cpml3d_fb !3d forward-backward propagation
           vy(nb+1:nb+nz,nb+1:nb+nx,nb+1:nb+ny),&
           p(nb+1:nb+nz,nb+1:nb+nx,nb+1:nb+ny),&
           rho(nb+1:nb+nz,nb+1:nb+nx,nb+1:nb+ny),&
-          vv(nb+1:nb+nz,nb+1:nb+nx,nb+1:nb+ny),nz,nx,ny)
+          kappa(nb+1:nb+nz,nb+1:nb+nx,nb+1:nb+ny),nz,nx,ny)
   enddo
   call rsf_write(Fef,ef) ! store forward energy history
 
@@ -182,7 +184,7 @@ program mexwell_cpml3d_fb !3d forward-backward propagation
           vy(nb+1:nb+nz,nb+1:nb+nx,nb+1:nb+ny),&
           p(nb+1:nb+nz,nb+1:nb+nx,nb+1:nb+ny),&
           rho(nb+1:nb+nz,nb+1:nb+nx,nb+1:nb+ny),&
-          vv(nb+1:nb+nz,nb+1:nb+nx,nb+1:nb+ny),nz,nx,ny)
+          kappa(nb+1:nb+nz,nb+1:nb+nx,nb+1:nb+ny),nz,nx,ny)
 
      if(it==kt) then ! record snapshot at it=kt
         call window3d(v0, p, nz, nx, ny, nb)
@@ -191,12 +193,12 @@ program mexwell_cpml3d_fb !3d forward-backward propagation
      call add_sources(p, -dt, wlt(it), sz, sx, sy, nzpad, nxpad, nypad)
      if (order1) then ! scheme 1, 1st order accuracy, default
         if(attenuating) call apply_attenuation(p, eta, rho, vv, -dt, nzpad, nxpad, nypad)
-        call step_forward_p(p, vz, vx, vy, vv, rho, -dt, idz, idx, idy, nzpad, nxpad, nypad)
-        call step_forward_v(p, vz, vx, vy, vv, rho, -dt, idz, idx, idy, nzpad, nxpad, nypad)
+        call step_forward_p(p, vz, vx, vy, kappa, -dt, idz, idx, idy, nzpad, nxpad, nypad)
+        call step_forward_v(p, vz, vx, vy, rho, -dt, idz, idx, idy, nzpad, nxpad, nypad)
      else !2nd order scheme
         if(attenuating) call apply_attenuation(p, eta, rho, vv, -0.5*dt, nzpad, nxpad,nypad)
-        call step_forward_p(p, vz, vx, vy, vv, rho, -dt, idz, idx, idy, nzpad, nxpad, nypad)
-        call step_forward_v(p, vz, vx, vy, vv, rho, -dt, idz, idx, idy, nzpad, nxpad, nypad)
+        call step_forward_p(p, vz, vx, vy, kappa, -dt, idz, idx, idy, nzpad, nxpad, nypad)
+        call step_forward_v(p, vz, vx, vy, rho, -dt, idz, idx, idy, nzpad, nxpad, nypad)
         if(attenuating) call apply_attenuation(p, eta, rho, vv,-0.5*dt, nzpad, nxpad, nypad)
      endif
   enddo
@@ -208,6 +210,7 @@ program mexwell_cpml3d_fb !3d forward-backward propagation
   deallocate(v0)
   deallocate(vv)
   deallocate(rho)
+  deallocate(kappa)
   deallocate(eta)
   deallocate(p)
   deallocate(vz)
@@ -316,15 +319,15 @@ subroutine window3d(tgt, src, nz, nx, ny, nb)
 end subroutine window3d
 
 !-------------------------------------------------------------------------------
-subroutine step_forward_v(p, vz, vx, vy, vv, rho, dt, idz, idx, idy, nzpad, nxpad, nypad)
+subroutine step_forward_v(p, vz, vx, vy, rho, dt, idz, idx, idy, nzpad, nxpad, nypad)
   implicit none
 
   integer::i1, i2, i3
-  real::tmp,diff1,diff2,diff3
+  real::diff1,diff2,diff3
 
   integer:: nzpad, nxpad, nypad
   real::idz,idx,idy, dt
-  real,dimension(nzpad,nxpad,nypad)::p, vz, vx, vy, vv, rho
+  real,dimension(nzpad,nxpad,nypad)::p, vz, vx, vy, rho
 
   real,parameter::c1=1.125
   real,parameter::c2=-1./24.
@@ -347,15 +350,15 @@ subroutine step_forward_v(p, vz, vx, vy, vv, rho, dt, idz, idx, idy, nzpad, nxpa
 end subroutine step_forward_v
 
 !------------------------------------------------------------------------------
-subroutine step_forward_p(p, vz, vx, vy, vv, rho, dt, idz, idx, idy, nzpad, nxpad, nypad)
+subroutine step_forward_p(p, vz, vx, vy, kappa, dt, idz, idx, idy, nzpad, nxpad, nypad)
   implicit none
 
   integer::i1, i2,i3
-  real::tmp,diff1,diff2,diff3
+  real::diff1,diff2,diff3
 
   integer:: nzpad, nxpad, nypad
   real::idz,idx,idy,dt
-  real,dimension(nzpad,nxpad,nypad)::p, vz, vx, vy, vv, rho
+  real,dimension(nzpad,nxpad,nypad)::p, vz, vx, vy, kappa
 
   real,parameter::c1=1.125
   real,parameter::c2=-1./24.
@@ -363,15 +366,13 @@ subroutine step_forward_p(p, vz, vx, vy, vv, rho, dt, idz, idx, idy, nzpad, nxpa
   do i3=3,nzpad-1
      do i2=3,nxpad-1
         do i1=3,nzpad-1
-           tmp=vv(i1,i2,i3)
-           tmp=rho(i1,i2,i3)*tmp*tmp
            diff1=c1*(vz(i1,i2,i3)-vz(i1-1,i2,i3))&
                 +c2*(vz(i1+1,i2,i3)-vz(i1-2,i2,i3))
            diff2=c1*(vx(i1,i2,i3)-vx(i1,i2-1,i3))&
                 +c2*(vx(i1,i2+1,i3)-vx(i1,i2-2,i3))
            diff3=c1*(vy(i1,i2,i3)-vy(i1,i2,i3-1))&
                 +c2*(vy(i1,i2,i3+1)-vy(i1,i2,i3-2))
-           p(i1,i2,i3)=p(i1,i2,i3)-dt*tmp*(idz*diff1+idx*diff2+idy*diff3)
+           p(i1,i2,i3)=p(i1,i2,i3)-dt*kappa(i1,i2,i3)*(idz*diff1+idx*diff2+idy*diff3)
         enddo
      enddo
   enddo
@@ -405,17 +406,17 @@ end subroutine cpmlcoeff_init
 
 
 !------------------------------------------------------------------------------
-subroutine update_cpml_vzvxvy(p, vz, vx, vy, conv_pz, conv_px, conv_py, rho, vv, bb, aa, idz, idx, idy, dt, nz, nx, ny, nb)
+subroutine update_cpml_vzvxvy(p, vz, vx, vy, conv_pz, conv_px, conv_py, rho, bb, aa, idz, idx, idy, dt, nz, nx, ny, nb)
   implicit none
 
   integer::nz,nx,ny,nb
   real::idz,idx,idy,dt
   real,dimension(nb)::bb,aa
-  real,dimension(nz+2*nb,nx+2*nb,ny+2*nb)::p,vz,vx,vy,rho,vv
+  real,dimension(nz+2*nb,nx+2*nb,ny+2*nb)::p,vz,vx,vy,rho
   real::conv_pz(nb,nx+2*nb,ny+2*nb,2),conv_px(nz+2*nb,nb,ny+2*nb,2),conv_py(nz+2*nb,nx+2*nb,nb,2)
 
   integer::nzpad,nxpad,nypad,i1,i2,i3,ib
-  real*8::b,diff1,diff2,diff3
+  real*8::diff1,diff2,diff3
 
   real,parameter::c1=1.125
   real,parameter::c2=-1./24.
@@ -424,87 +425,56 @@ subroutine update_cpml_vzvxvy(p, vz, vx, vy, conv_pz, conv_px, conv_py, rho, vv,
   nxpad=nx+2*nb
   nypad=ny+2*nb
 
-  !update conv_pz
+  !update conv_pz,vz
   do i3=1,nypad
      do i2=1,nxpad
         do i1=2,nb !top
            diff1=c1*(p(i1+1,i2,i3)-p(i1,i2,i3)) &
                 +c2*(p(i1+2,i2,i3)-p(i1-1,i2,i3))
            conv_pz(i1,i2,i3,1)=bb(i1)*conv_pz(i1,i2,i3,1)+aa(i1)*diff1*idz
+           vz(i1,i2,i3)=vz(i1,i2,i3)-dt*conv_pz(i1,i2,i3,1)/rho(i1,i2,i3)
         enddo
         do i1=nz+nb+1,nzpad-2 !bottom
            ib=nzpad-i1+1
            diff1=c1*(p(i1+1,i2,i3)-p(i1,i2,i3)) &
                 +c2*(p(i1+2,i2,i3)-p(i1-1,i2,i3))
            conv_pz(ib,i2,i3,2)=bb(ib)*conv_pz(ib,i2,i3,2)+aa(ib)*diff1*idz
+           vz(i1,i2,i3)=vz(i1,i2,i3)-dt*conv_pz(ib,i2,i3,2)/rho(i1,i2,i3)
         enddo
      enddo
   enddo
-  !update conv_px
+  !update conv_px,vx
   do i3=1,nypad
      do i1=1,nzpad
         do i2=2,nb !left
            diff2=c1*(p(i1,i2+1,i3)-p(i1,i2,i3))&
                 +c2*(p(i1,i2+2,i3)-p(i1,i2-1,i3)) 
            conv_px(i1,i2,i3,1)=bb(i2)*conv_px(i1,i2,i3,1)+aa(i2)*diff2*idx
+           vx(i1,i2,i3)=vx(i1,i2,i3)-dt*conv_px(i1,i2,i3,1)/rho(i1,i2,i3)
         enddo
         do i2=nx+nb+1,nxpad-2 !right
            ib=nxpad-i2+1
            diff2=c1*(p(i1,i2+1,i3)-p(i1,i2,i3)) &
                 +c2*(p(i1,i2+2,i3)-p(i1,i2-1,i3))
            conv_px(i1,ib,i3,2)=bb(ib)*conv_px(i1,ib,i3,2)+aa(ib)*diff2*idx
+           vx(i1,i2,i3)=vx(i1,i2,i3)-dt*conv_px(i1,ib,i3,2)/rho(i1,i2,i3)
         enddo
      enddo
   enddo
-  !update conv_py
+  !update conv_py,vy
   do i2=1,nxpad
      do i1=1,nzpad
         do i3=2,nb
            diff3=c1*(p(i1,i2,i3+1)-p(i1,i2,i3))&
                 +c2*(p(i1,i2,i3+2)-p(i1,i2,i3-1))
            conv_py(i1,i2,i3,1)=bb(i3)*conv_py(i1,i2,i3,1)+aa(i3)*diff3*idy
+           vy(i1,i2,i3)=vy(i1,i2,i3)-dt*conv_py(i1,i2,i3,1)/rho(i1,i2,i3)
         enddo
         do i3=ny+nb+1,nypad-2
            ib=nypad-i3+1
            diff3=c1*(p(i1,i2,i3+1)-p(i1,i2,i3))&
                 +c2*(p(i1,i2,i3+2)-p(i1,i2,i3-1))
            conv_py(i1,i2,ib,2)=bb(ib)*conv_py(i1,i2,ib,2)+aa(ib)*diff3*idy
-        enddo
-     enddo
-  enddo
-
-  !update vz         
-  do i3=1,nypad
-     do i2=1,nxpad
-        do i1=1,nb !top
-           vz(i1,i2,i3)=vz(i1,i2,i3)-dt*conv_pz(i1,i2,i3,1)/rho(i1,i2,i3)
-        enddo
-        do i1=nz+nb+1,nzpad !bottom
-           ib=nzpad-i1+1
-           vz(i1,i2,i3)=vz(i1,i2,i3)-dt*conv_pz(ib,i2,i3,2)/rho(i1,i2,i3)
-        enddo
-     enddo
-  enddo
-  !update vx
-  do i3=1,nypad
-     do i1=1,nzpad
-        do i2=1,nb !left
-           vx(i1,i2,i3)=vx(i1,i2,i3)-dt*conv_px(i1,i2,i3,1)/rho(i1,i2,i3)
-        enddo
-        do i2=nx+nb+1,nxpad !right
-           ib=nxpad-i2+1
-           vx(i1,i2,i3)=vx(i1,i2,i3)-dt*conv_px(i1,ib,i3,2)/rho(i1,i2,i3)
-        enddo
-     enddo
-  enddo
-  !update vy
-  do i2=1,nxpad
-     do i1=1,nzpad
-        do i3=1,nb
-           vy(i1,i2,i3)=vy(i1,i2,i3)-dt*conv_py(i1,i2,i3,1)/rho(i1,i2,i3)
-        enddo
-        do i3=ny+nb+1,nypad
-           ib=nypad-i3+1
            vy(i1,i2,i3)=vy(i1,i2,i3)-dt*conv_py(i1,i2,ib,2)/rho(i1,i2,i3)
         enddo
      enddo
@@ -512,17 +482,17 @@ subroutine update_cpml_vzvxvy(p, vz, vx, vy, conv_pz, conv_px, conv_py, rho, vv,
 end subroutine update_cpml_vzvxvy
 
 !------------------------------------------------------------------------------
-subroutine update_cpml_pzpxpy(p, vz, vx, vy, conv_vz, conv_vx, conv_vy, rho, vv, bb, aa, idz, idx, idy, dt, nz, nx, ny, nb)
+subroutine update_cpml_pzpxpy(p, vz, vx, vy, conv_vz, conv_vx, conv_vy, kappa, bb, aa, idz, idx, idy, dt, nz, nx, ny, nb)
   implicit none
 
   integer::nz,nx,ny,nb
   real::idz,idx,idy,dt
   real,dimension(nb)::bb,aa
-  real,dimension(nz+2*nb,nx+2*nb,ny+2*nb)::p,vz,vx,vy,rho,vv
+  real,dimension(nz+2*nb,nx+2*nb,ny+2*nb)::p,vz,vx,vy,kappa
   real::conv_vz(nb,nx+2*nb,ny+2*nb,2),conv_vx(nz+2*nb,nb,ny+2*nb,2),conv_vy(nz+2*nb,nx+2*nb,nb,2)
 
   integer::i1,i2,i3,ib,nzpad,nxpad,nypad
-  real*8::diff1,diff2,diff3,b,tmp
+  real*8::diff1,diff2,diff3
 
   real,parameter::c1=1.125
   real,parameter::c2=-1./24.
@@ -531,94 +501,57 @@ subroutine update_cpml_pzpxpy(p, vz, vx, vy, conv_vz, conv_vx, conv_vy, rho, vv,
   nxpad=nx+2*nb
   nypad=ny+2*nb
 
-  !update conv_vz
+  !update conv_vz,p
   do i3=1,nypad
      do i2=1,nxpad
         do i1=3,nb !top
            diff1=c1*(vz(i1,i2,i3)-vz(i1-1,i2,i3))&
                 +c2*(vz(i1+1,i2,i3)-vz(i1-2,i2,i3))
            conv_vz(i1,i2,i3,1)=bb(i1)*conv_vz(i1,i2,i3,1)+aa(i1)*diff1*idz
+           p(i1,i2,i3)=p(i1,i2,i3)-dt*kappa(i1,i2,i3)*conv_vz(i1,i2,i3,1)
         enddo
         do i1=nz+nb+1,nzpad-1 !bottom
            ib=nzpad-i1+1
            diff1=c1*(vz(i1,i2,i3)-vz(i1-1,i2,i3))&
                 +c2*(vz(i1+1,i2,i3)-vz(i1-2,i2,i3))
            conv_vz(ib,i2,i3,2)=bb(ib)*conv_vz(ib,i2,i3,2)+aa(ib)*diff1*idz
+           p(i1,i2,i3)=p(i1,i2,i3)-dt*kappa(i1,i2,i3)*conv_vz(ib,i2,i3,2)
         enddo
      enddo
   enddo
-  !update conv_vx
+  !update conv_vx,p
   do i3=1,nypad
      do i1=1,nzpad
         do i2=3,nb !left
            diff2=c1*(vx(i1,i2,i3)-vx(i1,i2-1,i3))&
                 +c2*(vx(i1,i2+1,i3)-vx(i1,i2-2,i3))
            conv_vx(i1,i2,i3,1)=bb(i2)*conv_vx(i1,i2,i3,1)+aa(i2)*diff2*idx
+           p(i1,i2,i3)=p(i1,i2,i3)-dt*kappa(i1,i2,i3)*conv_vx(i1,i2,i3,1)
         enddo
         do i2=nx+nb+1,nxpad-1 !right
            ib=nxpad-i2+1
            diff2=c1*(vx(i1,i2,i3)-vx(i1,i2-1,i3))&
                 +c2*(vx(i1,i2+1,i3)-vx(i1,i2-2,i3))
            conv_vx(i1,ib,i3,2)=bb(ib)*conv_vx(i1,ib,i3,2)+aa(ib)*diff2*idx
+           p(i1,i2,i3)=p(i1,i2,i3)-dt*kappa(i1,i2,i3)*conv_vx(i1,ib,i3,2)
         enddo
      enddo
   enddo
-  !update conv_vy
+  !update conv_vy,p
   do i2=1,nxpad
      do i1=1,nzpad
         do i3=3,nb
            diff3=c1*(vy(i1,i2,i3)-vy(i1,i2,i3-1))&
                 +c2*(vy(i1,i2,i3+1)-vy(i1,i2,i3-2))
            conv_vy(i1,i2,i3,1)=bb(i3)*conv_vy(i1,i2,i3,1)+aa(i3)*diff3*idy
+           p(i1,i2,i3)=p(i1,i2,i3)-dt*kappa(i1,i2,i3)*conv_vy(i1,i2,i3,1)
         enddo
         do i3=ny+nb+1,nypad-1
            ib=nypad-i3+1
            diff3=c1*(vy(i1,i2,i3)-vy(i1,i2,i3-1))&
                 +c2*(vy(i1,i2,i3+1)-vy(i1,i2,i3-2))
            conv_vy(i1,i2,ib,2)=bb(ib)*conv_vy(i1,i2,ib,2)+aa(ib)*diff3*idy
-        enddo
-     enddo
-  enddo
-
-  !update pz
-  do i3=1,nypad
-     do i2=1,nxpad
-        do i1=1,nb !top
-           tmp=vv(i1,i2,i3);        tmp=rho(i1,i2,i3)*tmp*tmp
-           p(i1,i2,i3)=p(i1,i2,i3)-dt*tmp*conv_vz(i1,i2,i3,1)
-        enddo
-        do i1=nz+nb+1,nzpad !bottom
-           ib=nzpad-i1+1
-           tmp=vv(i1,i2,i3);        tmp=rho(i1,i2,i3)*tmp*tmp
-           p(i1,i2,i3)=p(i1,i2,i3)-dt*tmp*conv_vz(ib,i2,i3,2)
-        enddo
-     enddo
-  enddo
-  !update px
-  do i3=1,nypad
-     do i1=1,nzpad
-        do i2=1,nb !left
-           tmp=vv(i1,i2,i3);        tmp=rho(i1,i2,i3)*tmp*tmp
-           p(i1,i2,i3)=p(i1,i2,i3)-dt*tmp*conv_vx(i1,i2,i3,1)
-        enddo
-        do i2=nx+nb+1,nxpad !right
-           ib=nxpad-i2+1
-           tmp=vv(i1,i2,i3);        tmp=rho(i1,i2,i3)*tmp*tmp
-           p(i1,i2,i3)=p(i1,i2,i3)-dt*tmp*conv_vx(i1,ib,i3,2)
-        enddo
-     enddo
-  enddo
-  !update py
-  do i2=1,nxpad
-     do i1=1,nzpad
-        do i3=1,nb
-           tmp=vv(i1,i2,i3);        tmp=rho(i1,i2,i3)*tmp*tmp
-           p(i1,i2,i3)=p(i1,i2,i3)-dt*tmp*conv_vy(i1,i2,i3,1)
-        enddo
-        do i3=ny+nb+1,nypad
-           ib=nypad-i3+1
-           tmp=vv(i1,i2,i3);        tmp=rho(i1,i2,i3)*tmp*tmp
-           p(i1,i2,i3)=p(i1,i2,i3)-dt*tmp*conv_vy(i1,i2,ib,2)
+           p(i1,i2,i3)=p(i1,i2,i3)-dt*kappa(i1,i2,i3)*conv_vy(i1,i2,ib,2)
         enddo
      enddo
   enddo
@@ -724,13 +657,13 @@ end subroutine boundary_rw
 
 
 !-------------------------------------------------------------------------------
-subroutine compute_energy(e,vz,vx,vy,p,rho,vv,nz,nx,ny)
+subroutine compute_energy(e,vz,vx,vy,p,rho,kappa,nz,nx,ny)
   implicit none
 
   integer::nz,nx,ny
   real::e
-  real,dimension(nz,nx,ny)::rho,vv,p,vz,vx,vy
+  real,dimension(nz,nx,ny)::rho,kappa,p,vz,vx,vy
 
-  e=0.5*sum((vz*vz+vx*vx+vy*vy)*rho+p*p/(rho*vv*vv))
+  e=0.5*sum((vz*vz+vx*vx+vy*vy)*rho+p*p/kappa)
 end subroutine compute_energy
 

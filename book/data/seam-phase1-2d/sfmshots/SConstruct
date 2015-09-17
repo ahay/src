@@ -51,7 +51,7 @@ Flow('mshots1','vel',
 	nb=30
      ''')
 
-Result('mshots1','grey')
+Plot('mshots1','grey title=Shots',view=1)
 # could display 16 shots every km
 Result('seam','../fetch/shots.rsf',
        '''

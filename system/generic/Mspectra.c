@@ -1,7 +1,7 @@
 /* Frequency spectra. 
 
 March 2012 program of the month:
-http://ahay.org/rsflog/index.php?/archives/285-Program-of-the-month-sfspectra.html
+http://ahay.org/blog/2012/03/18/program-of-the-month-sfspectra/
 */
 /*
   Copyright (C) 2004 University of Texas at Austin

@@ -45,6 +45,12 @@ Plot('nn1','sign1',nplot(1))
 
 Result('signoi1','make2 noiz ss1 nn1','SideBySideAniso',vppen='txscale=3')
 
+Flow('sign0','data spef npef',signoi(1) + ' spitz=y prec=y niter=100')
+Plot('ss0','sign0',splot(0))
+Plot('nn0','sign0',nplot(1))
+
+Result('signoi0','make2 noiz ss0 nn0','SideBySideAniso',vppen='txscale=3')
+
 Flow('plane1',None,'make second=n n1=75 n2=25 t1=2')
 Plot('plane1',plot('GEE'))
 Plot('plane2','plane1',plot('Spitz'))

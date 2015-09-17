@@ -1,7 +1,7 @@
 /* Causal integration on the first axis. 
 
 December 2013 program of the month:
-http://ahay.org/rsflog/index.php?/archives/370-Program-of-the-month-sfcausint.html
+http://ahay.org/blog/2013/12/01/program-of-the-month-sfcausint/
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
