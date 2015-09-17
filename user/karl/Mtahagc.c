@@ -163,9 +163,13 @@ void agc_apply(AGC_STRUCT* agc_structure,float* indata,float* outdata,
     thispower=0;
     /* sum the right half window to get started */
     for(itime=0; itime<half_lenagc; itime++){
-      thispower+=indata[itime]*indata[itime];
-      thisfold++;
+      rightamp=indata[itime];
+      if(rightamp!=0.0){
+	thispower+=rightamp*rightamp;
+	thisfold++;
+      }
     }
+
     for(itime=0; itime<nt; itime++){
       /* in the middle as the window moves right, add the a point on the
 	 right and subtract an old point on the left.  Test so points
@@ -179,7 +183,7 @@ void agc_apply(AGC_STRUCT* agc_structure,float* indata,float* outdata,
 	}
       }
       if(itime-half_lenagc-1>=0){
-	leftamp=indata[itime-half_lenagc];
+	leftamp=indata[itime-half_lenagc-1];
 	if(leftamp!=0.0){
 	  thispower-=leftamp*leftamp;
 	  thisfold--;
@@ -188,7 +192,7 @@ void agc_apply(AGC_STRUCT* agc_structure,float* indata,float* outdata,
       agc_structure->agc_power[itime]=thispower;
       agc_structure->agc_fold[itime]=thisfold;
       if (thisfold>=half_lenagc){
-	agc_structure->agc_scalar[itime]=thisfold/thispower;
+	agc_structure->agc_scalar[itime]=sqrt(thisfold/thispower);
 	outdata[itime]=sqrt(thisfold/thispower)*indata[itime];
       } else {
 	/* fprintf(stderr,"itime=%d,thisfold=%f,half_lenagc=%d\n",
@@ -196,6 +200,7 @@ void agc_apply(AGC_STRUCT* agc_structure,float* indata,float* outdata,
 	agc_structure->agc_scalar[itime]=0.0;
 	outdata[itime]=0.0;
       }
+      /*outdata[itime]=agc_structure->agc_scalar[itime];*/
     }
   }
 }
