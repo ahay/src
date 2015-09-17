@@ -1,0 +1,319 @@
+from rsf.proj import *
+
+# typical basic preprocessing is:
+#   gain - appoy spreading correction
+# surface consistant scaling
+#   predecon mute
+#   decon (surface consistant)
+#   spectral whitening (zero phase)
+#   relative static
+#   nmo
+#   mean static
+#   residual static (surface consistant)
+#   stack with mute
+
+#Flow('npr3_field_hdr.rsf','../fetch/npr3_field_hdr.rsf','sfcp')
+#Flow('npr3_field.rsf','../fetch/npr3_field.rsf','sfwindow n1=2047')
+
+Flow(['rawshot.rsf','rawshot_hdr.rsf'],
+     ['../fetch/npr3_field.rsf','../fetch/npr3_field_hdr.rsf'],
+     '''
+     sftahsort verbose=1 input=${SOURCES[0]} sort='fldr:214,254,10 tracf'
+     | sftahwindow ns=2047
+     | sftahgain 
+       tpow=2
+     | sftahwrite 
+        verbose=1                           
+        label2="tracf" o2=1 n2=1063 d2=1   
+        label3="fldr" o3=214 n3=5 d3=10   
+        output=${TARGETS[0]}
+        outheaders=${TARGETS[1]} 
+     ''',stdout=0,stdin=0)
+
+Result('rawshot',
+       '''
+       grey title='shot with tpow'
+       ''')
+
+Result('rawshotzoom','rawshot',
+       '''
+       sfwindow min1=0 max1=2 min2=440 max2=650 min3=214 max3=214 \
+       | sfgrey color=i title='shot with tpow' \
+         pclip=99.5
+       ''')
+
+
+Flow(['preshot.rsf','preshot_hdr.rsf'],
+     ['../fetch/npr3_gathers.rsf','../fetch/npr3_gathers_hdr.rsf'],
+     '''
+     sftahsort verbose=1 input=${SOURCES[0]} sort='fldr:214,254,10 tracf'
+     | sftahwrite 
+        verbose=1                           
+        label2="tracf" o2=1 n2=1063 d2=1   
+        label3="fldr" o3=214 n3=5 d3=10   
+        output=${TARGETS[0]}
+        outheaders=${TARGETS[1]} 
+     ''',stdout=0,stdin=0)
+
+Result('preshot',
+       '''
+       grey title='preprocessed shot'
+       ''')
+Result('preshotzoom','preshot',
+       '''
+       sfwindow min2=250 max2=275 min3=254 max3=254 | sfwiggle title='preprocessed shot' pclip=99.5 transp=y yreverse=y
+       ''')
+Flow('preshot.txt',
+     ['../fetch/npr3_gathers.rsf','../fetch/npr3_gathers_hdr.rsf'],
+     '''
+     sftahsort verbose=0 input=${SOURCES[0]} sort='fldr:214,214,10 tracf'
+     | sftahgethw key=fldr,tracf,sx,sy,gx,gy
+     ''',stdin=0)
+
+Flow('preshot1.txt',
+     ['../fetch/npr3_gathers.rsf','../fetch/npr3_gathers_hdr.rsf'],
+     '''
+     sftahsort verbose=0 input=${SOURCES[0]} sort='tracf:500,500 fldr'
+     | sftahgethw key=fldr,sx,sy,selev
+     ''',stdin=0)
+Flow('preshot2.txt',
+     ['../fetch/npr3_gathers.rsf','../fetch/npr3_gathers_hdr.rsf'],
+     '''
+     sftahsort verbose=0 input=${SOURCES[0]} sort='tracf fldr:430,430'
+     | sftahgethw key=tracf,gx,gy,gelev
+     ''',stdin=0)
+
+# kls a 40 point predecon mute leave artifacts after decon, but 80 looks OK
+
+Flow(	['agcshot.rsf','agcshot_hdr.rsf',
+	 'tahstaticshot.rsf','tahstaticshot_hdr.rsf'],
+	['rawshot.rsf','rawshot_hdr.rsf'],
+     '''
+     sftahsort verbose=0 input=${SOURCES[0]} sort='fldr:214,254,10 tracf'
+     | sftahmute 
+       tmute=-.200,-.050,.200,3.00 
+       xmute=0,880,1760,18000 
+       ntaper=80 
+     | sftahpef 
+       verbose=1 minlag=.002 maxlag=.1  pnoise=.01 mincorr=0 maxcorr=3 
+     | sftahagc
+       wagc=1.000 verbose=1
+     | sftahwrite 
+        verbose=1                           
+        label2="tracf" o2=1 n2=1063 d2=1   
+        label3="fldr" o3=214 n3=5 d3=10   
+        output=${TARGETS[0]}
+        outheaders=${TARGETS[1]} 
+     | sftahstatic sign=-1 
+     | sftahwrite 
+        verbose=1                           
+        label2="tracf" o2=1 n2=1063 d2=1   
+        label3="fldr" o3=214 n3=5 d3=10   
+        output=${TARGETS[2]}
+        outheaders=${TARGETS[3]} 
+     ''',stdout=0,stdin=0)
+
+Result('agcshot',
+       '''
+       grey title='shot with tpow, pef and agc'
+       ''')
+
+Result('agcshotzoom','agcshot',
+       '''
+       sfwindow min1=0 max1=2 min2=440 max2=650 min3=214 max3=214 \
+       | sfgrey color=i title='shot with tpow, pef and agc' \
+         pclip=99.5 transp=y yreverse=y
+       ''')
+
+
+Result('tahstaticshot',
+       '''
+       grey title='shot with tpow, tahpef and tahstatic'
+       ''')
+
+Result('tahstaticshotzoom','tahstaticshot',
+       '''
+       sfwindow min1=0 max1=2 min2=440 max2=650 min3=214 max3=214 \
+       | sfgrey color=i title='shot with tpow, pef agc static' \
+         pclip=99.5 transp=y yreverse=y
+       ''')
+
+
+
+
+
+
+Flow(['tpowstack141.rsf','tpowstack141_hdr.rsf'],
+     ['../fetch/npr3_field.rsf','../fetch/npr3_field_hdr.rsf'],
+     '''
+     sftahsort verbose=1 input=${SOURCES[0]} sort='iline:141,141 xline offset'
+     | sftahwindow ns=2047
+     | sftahgain 
+       tpow=2
+     | sftahmute 
+       tmute=0.0,3.3 
+       xmute=0,18000  
+       ntaper=40 
+     | sftahnmo 
+       verbose=1  
+       tnmo=0.00,.479,.637,.792,.877,1.009,1.104,1.19458,1.615,3.010 
+       vnmo=9132.86,10553.29,10921.60,10791.97,11074.19,11649.54,11807.96,12325.03,14410.47,17216.64 
+     | sftahstack key=iline,xline verbose=1 ntaper=40
+     | sftahwrite 
+        verbose=1                           
+        label2="xline" o2=1 n2=188 d2=1   
+        label3="iline" o3=141 n3=1 d3=1   
+        output=${TARGETS[0]}
+        outheaders=${TARGETS[1]} 
+     ''',stdout=0,stdin=0)
+Result('tpowstack141',
+       '''
+       window n1=1000 
+       | grey title='141 stack with tpow' clip=.01 polarity=y
+       ''')
+
+Flow(['mutepefagcstack141.rsf','mutepefagcstack141_hdr.rsf'],
+     ['../fetch/npr3_field.rsf','../fetch/npr3_field_hdr.rsf'],
+     '''
+     sftahsort verbose=1 input=${SOURCES[0]} sort='iline:141,141 xline offset'
+     | sftahwindow ns=2047
+     | sftahgain 
+       tpow=2
+     | sftahmute 
+       tmute=0.0,3.3 
+       xmute=0,18000 
+       ntaper=40 
+     | sftahpef 
+       verbose=1 minlag=.002 maxlag=.1  pnoise=.01 mincorr=0 maxcorr=3
+     | sftahagc 
+       wagc=1.000 verbose=1 
+     | sftahnmo 
+       verbose=1  
+       tnmo=0.00,.479,.637,.792,.877,1.009,1.104,1.19458,1.615,3.010 
+       vnmo=9132.86,10553.29,10921.60,10791.97,11074.19,11649.54,11807.96,12325.03,14410.47,17216.64 
+     | sftahstack key=iline,xline verbose=1 ntaper=40
+     | sftahwrite 
+        verbose=1                           
+        label2="xline" o2=1 n2=188 d2=1   
+        label3="iline" o3=141 n3=1 d3=1   
+        output=${TARGETS[0]}
+        outheaders=${TARGETS[1]} 
+     ''',stdout=0,stdin=0)
+Result('mutepefagcstack141',
+       '''
+       window n1=1000 
+       | grey title='141 stack with tpow, tahpef and tahagc' clip=.94 polarity=y
+       ''')
+
+Flow(['mutepefagcstaticstack141.rsf','mutepefagcstaticstack141_hdr.rsf'],
+     ['../fetch/npr3_field.rsf','../fetch/npr3_field_hdr.rsf'],
+     '''
+     sftahsort verbose=1 input=${SOURCES[0]} sort='iline:141,141 xline offset'
+     | sftahwindow ns=2047
+     | sftahgain 
+       tpow=2
+     | sftahmute 
+       tmute=-0.300,3.0 
+       xmute=0,18000 
+       ntaper=75 
+     | sftahpef 
+       verbose=1 minlag=.002 maxlag=.1  pnoise=.01 mincorr=0 maxcorr=3 
+     | sftahagc 
+       wagc=1.000 verbose=1  
+     | sftahmute 
+       tmute=0.0,3.3 
+       xmute=0,18000 
+       ntaper=75 
+     | sftahstatic sign=-1   
+     | sftahnmo 
+       verbose=1  
+       tnmo=0.00,.479,.637,.792,.877,1.009,1.104,1.19458,1.615,3.010 
+       vnmo=9132.86,10553.29,10921.60,10791.97,11074.19,11649.54,11807.96,12325.03,14410.47,17216.64 
+     | sftahstack key=iline,xline verbose=1 ntaper=75
+     | sftahwrite 
+        verbose=1                           
+        label2="xline" o2=1 n2=188 d2=1   
+        label3="iline" o3=141 n3=1 d3=1   
+        output=${TARGETS[0]}
+        outheaders=${TARGETS[1]} 
+     ''',stdout=0,stdin=0)
+Result('mutepefagcstaticstack141',
+       '''
+       window n1=1000 
+       | grey title='141 shot with tpow, tahpef, agc, tahstatic' clip=.94 polarity=y
+       ''')
+
+Flow(['muteagcstaticstack141.rsf','muteagcstaticstack141_hdr.rsf'],
+     ['../fetch/npr3_field.rsf','../fetch/npr3_field_hdr.rsf'],
+     '''
+     sftahsort verbose=1 input=${SOURCES[0]} sort='iline:141,141 xline offset'
+     | sftahwindow ns=2047
+     | sftahgain 
+       tpow=2
+     | sftahmute 
+       tmute=0.0,3.3 
+       xmute=0,18000 
+       ntaper=40 
+     | sftahagc 
+       wagc=1.000 verbose=1 
+     | sftahstatic sign=-1   
+     | sftahnmo 
+       verbose=1  
+       tnmo=0.00,.479,.637,.792,.877,1.009,1.104,1.19458,1.615,3.010 
+       vnmo=9132.86,10553.29,10921.60,10791.97,11074.19,11649.54,11807.96,12325.03,14410.47,17216.64 
+     | sftahstack key=iline,xline verbose=1 ntaper=40
+     | sftahwrite 
+        verbose=1                           
+        label2="xline" o2=1 n2=188 d2=1   
+        label3="iline" o3=141 n3=1 d3=1   
+        output=${TARGETS[0]}
+        outheaders=${TARGETS[1]} 
+     ''',stdout=0,stdin=0)
+Result('muteagcstaticstack141',
+       '''
+       window n1=1000 
+       | grey title='141 shot with tpow, agc, tahstatic' clip=.94 polarity=y
+       ''')
+
+
+
+
+
+
+Flow(	['mutepefagcstaticcdps.rsf','muteagcpefcdps_hdr.rsf'],
+        ['../fetch/npr3_field.rsf','../fetch/npr3_field_hdr.rsf'],
+     '''
+     sftahsort verbose=0 input=${SOURCES[0]} sort='iline:141,141 xline:170,180 offset'
+     | sftahwindow ns=2047
+     | sftahmakeskey pkey=dt skey=tracl
+     | sftahgain 
+       tpow=2
+     | sftahmute 
+       tmute=0.0,3.3 
+       xmute=0,18000 
+       ntaper=75 
+     sftahagc 
+       wagc=1.000 verbose=1 
+     | sftahpef 
+       verbose=1 minlag=.002 maxlag=.1  pnoise=.01 mincorr=0 maxcorr=3
+     | sftahagc 
+       wagc=1.000 verbose=1 
+     | sftahstatic sign=-1   
+     | sftahnmo 
+       verbose=1  
+       tnmo=0.00,.479,.637,.792,.877,1.009,1.104,1.19458,1.615,3.010 
+       vnmo=9132.86,10553.29,10921.60,10791.97,11074.19,11649.54,11807.96,12325.03,14410.47,17216.64 
+     | sftahwrite 
+        verbose=1                           
+        label2="tracl" o2=1 n2=1063 d2=1   
+        output=${TARGETS[0]}
+        outheaders=${TARGETS[1]} 
+     ''',stdout=0,stdin=0)
+
+Result('mutepefagcstaticcdps',
+       '''
+       window min1=0 max1=4 max2=82 | wiggle title='shot with muteagcpef' transp=y yreverse=y
+       ''')
+
+
+End()
