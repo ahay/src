@@ -1,17 +1,7 @@
-\title{Guide to Madagascar programs}
-\email{sergey.fomel@beg.utexas.edu}
-\author{Sergey Fomel}
-\lefthead{Fomel}
-\righthead{Madagascar programs}
-
-\maketitle
-
-\begin{abstract}
+\chapter{Running Madagascar programs on the command line}
 
 This guide introduces some of the most used \texttt{madagascar} programs and illustrates their
 usage with examples.
-
-\end{abstract}
 
 \section{Main programs}
 
@@ -46,28 +36,6 @@ In both cases, the size and shape of \texttt{data1.rsf} and
 message is printed out if the the axis sampling parameters (such as
 \texttt{o1} or \texttt{d1}) in these files are different.
 
-\subsubsection{Implementation: \href{http://sourceforge.net/p/rsf/code/HEAD/tree/trunk/system/main/add.c}{system/main/add.c}}
-
-The first input file is either in the list or in the standard input.
-\moddex{add}{add}{103}{111}{system/main}
-
-Collect input files in the \texttt{in} array from all command-line
-parameters that don't contain an ``\texttt{=}'' sign. The total number
-of input files is \texttt{nin}.
-\moddex{add}{add}{112}{118}{system/main}
-
-A helper function \texttt{check\_compat} checks the compatibility of
-input files.
-\moddex{add}{add}{424}{467}{system/main}
-
-Finally, we enter the main loop, where the input data are getting read
-buffer by buffer and combined in the total product depending on the
-data type.  
-\moddex{add}{add}{183}{203}{system/main}
-
-The data combination program for floating point numbers is
-\texttt{add\_float}.  
-\moddex{add}{add}{264}{305}{system/main}
 
 \noindent\doublebox{\parbox{\textwidth}{
 \input{sfattr}
@@ -87,23 +55,6 @@ $\frac{1}{n-1}\,\left[\sum\limits_{i=0}^n d_i^2 - \frac{1}{n}\left(\sum\limits_{
 deviation is the square root of the variance. Using \texttt{sfattr}
 is a quick way to see the distribution of data values and check it for
 anomalies.
-
-\subsubsection{Implementation: \href{http://sourceforge.net/p/rsf/code/HEAD/tree/trunk/system/main/attr.c}{system/main/attr.c}}
-
-Computations start by finding the input data (\texttt{in}) size
-(\texttt{nsiz}) and dimensions (\texttt{dim}).
-\moddex{attr}{attr}{81}{84}{system/main}
-
-In the main loop, we read the input data buffer by buffer.
-\moddex{attr}{attr}{100}{122}{system/main}
-
-The data attributes are accumulated in corresponding double-precision
-variables. 
-\moddex{attr}{attr}{146}{147}{system/main}
-
-Finally, the attributes are reduced and printed out.
-\moddex{attr}{attr}{180}{187}{system/main}
-\moddex{attr}{attr}{194}{203}{system/main}
 
 \noindent\doublebox{\parbox{\textwidth}{
 \input{sfcat}
@@ -153,33 +104,6 @@ bash$ sfcat one.rsf two.rsf > three.rsf
 sfcat: n2 mismatch: need 3
 \end{verbatim}
 
-\subsubsection{Implementation: \href{http://sourceforge.net/p/rsf/code/HEAD/tree/trunk/system/main/cat.c}{system/main/cat.c}}
-
-The first input file is either in the list or in the standard input.
-\moddex{cat}{cat}{64}{69}{system/main}
-
-Everything on the command line that does not contain a ``='' sign is
-treated as a file name, and the corresponding file object is added to the list.
-\moddex{cat}{cat}{71}{77}{system/main}
-
-As explained above, if the \texttt{space=} parameter is not set, it is
-inferred from the program name: \texttt{sfmerge} corresponds to
-\texttt{space=y} and \texttt{sfcat} corresponds to \texttt{space=n}.
-\moddex{cat}{cat}{99}{112}{system/main}
-
-Find the axis for the merging (from the command line \texttt{axis=}
-argument) and figure out two sizes: \texttt{n1} for everything after
-the axis and \texttt{n2} for everything before the axis.
-\moddex{cat}{cat}{132}{137}{system/main}
-
-In the output, the selected axis will get extended.
-\moddex{cat}{cat}{149}{163}{system/main}
-
-The rest is simple: loop through the datasets reading and writing the
-data in buffer-size chunks and adding extra empty chunks if
-\texttt{space=y}.
-\moddex{cat}{cat}{184}{200}{system/main}
-
 \noindent\doublebox{\parbox{\textwidth}{
 \input{sfcmplx}
 }}
@@ -207,14 +131,6 @@ cmplx.rsf:
     n2=3           d2=0.1         o2=0          label2="Distance" unit2="km"
         6 elements 48 bytes
 \end{verbatim}
-
-\subsubsection{Implementation: \href{http://sourceforge.net/p/rsf/code/HEAD/tree/trunk/system/main/cmplx.c}{system/main/cmplx.c}}
-
-The program flow is simple. First, get the names of the input files.
-\moddex{cmplx}{cmplx}{41}{57}{system/main}
-
-The main part of the program reads the real and imaginary parts buffer by buffer and assembles and writes out the complex input. 
-\moddex{cmplx}{cmplx}{81}{91}{system/main}
 
 \noindent\doublebox{\parbox{\textwidth}{
     \input{sfconjgrad}
@@ -302,9 +218,6 @@ norm value = 5.73563
 In 10 iterations, the misfit decreased by an order of magnitude. The
 result can be improved by running the program for more iterations.
 
-\subsubsection{Implementation: \href{http://sourceforge.net/p/rsf/code/HEAD/tree/trunk/system/main/conjgrad.c}{system/main/conjgrad.c}}
-
-
 \noindent\doublebox{\parbox{\textwidth}{
 \input{sfcp}
 }}
@@ -330,16 +243,6 @@ two.rsf:
     n2=3           d2=0.1         o2=0          label2="Distance" unit2="km"
         6 elements 24 bytes
 \end{verbatim}
-
-\subsubsection{Implementation: \href{http://sourceforge.net/p/rsf/code/HEAD/tree/trunk/system/main/cp.c}{system/main/cp.c}}
-
-First, we look for the two first command-line arguments that don't
-have the ``='' character in them and consider them as the names of the
-input and the output files.  
-\moddex{cp}{cp}{47}{58}{system/main}
-
-Next, we use library functions \verb#sf_cp# and \verb#sf_mv# to do the actual work.
-\moddex{cp}{cp}{66}{68}{system/main}
 
 \noindent\doublebox{\parbox{\textwidth}{
 \input{sfcut}
@@ -515,18 +418,6 @@ bash$ ( sfspike n1=100 | sfget n1 d1 o1; echo "o1+(n1-1)*d1" ) | bc
 .396
 \end{verbatim}
 See also \texttt{sfput}.
-
-
-\subsubsection{Implementation: \href{http://rsf.svn.sourceforge.net/viewvc/rsf/trunk/system/main/get.c?view=markup}{system/main/get.c}}
-
-The implementation is trivial. Loop through all command-line parameters that contain 
-the ``='' character.
-\moddex{get}{get}{41}{43}{system/main}
-
-Get the parameter value (as string) and output it as either
-\texttt{key=value} or \texttt{value}, depending on the
-\texttt{parform} parameter.  
-\moddex{get}{get}{44}{50}{system/main}
 
 \noindent\doublebox{\parbox{\textwidth}{
     \input{sfheadercut}
@@ -1506,8 +1397,3 @@ bash$ sfin slice.rsf slice.rsf:
 
 \bibliographystyle{seg}
 \bibliography{SEG}
-
-%%% Local Variables: 
-%%% mode: latex
-%%% TeX-master: t
-%%% End: 

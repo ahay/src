@@ -99,6 +99,7 @@ class Canvas(wx.Window):
         self.black = wx.Brush('black')
         self.Bind(wx.EVT_PAINT,self.OnPaint)
         self.Bind(wx.EVT_LEFT_DOWN,self.OnClick)
+        self.Bind(wx.EVT_RIGHT_DOWN,self.Delete)
         
         self.SetFrame()
 
@@ -175,15 +176,19 @@ class Canvas(wx.Window):
             npick += 1
             tag = 'pick%d' % npick
             self.dc.DrawCircle(x,y,r)
-            #pick.Bind(wx.EVT_LEFT_DOWN,self.SelectPick)
             #canvas.tag_bind(tag,'<ButtonPress-2>',selectpick)
             #canvas.tag_bind(tag,'<B2-Motion>',movepick)
             #canvas.tag_bind(tag,'<ButtonRelease-2>',movedpick)
-            #canvas.tag_bind(tag,'<Button-3>',deletepick)
             picks[i3][tag]=[self.ScalePick(x,y),self.brush]
         event.Skip()
-    def SelectPick(self,event):
-        print event.GetPositionTuple()
+    def Delete(self,event):
+        x,y = event.GetPositionTuple()
+        for p in picks[i3].keys():
+            xp,yp = self.UnscalePick(picks[i3][p][0])
+            if (x-xp)*(x-xp)+(y-yp)*(y-yp) < 4:
+                del picks[i3][p]
+                self.Redraw(i3)
+                break
         event.Skip()
         
 class MainFrame(wx.Frame):
