@@ -4,7 +4,7 @@
 
 #include "pcg.h"
 
-static float tmp[5], **a;
+static float tmp[5], **a, *w;
 
 void matmult_lop (bool adj, bool add, 
 		  int nx, int ny, float* x, float*y) 
@@ -27,12 +27,29 @@ static void normal(int n, const float *inp, float *out)
     matmult_lop(true,false,4,5,out,tmp);
 }
 
+static void weight(int n, const float *inp, float *out)
+{
+    int i;
+
+    for (i=0; i < n; i++) {
+	out[i] = w[i]*inp[i];
+    }
+}
+
 int main (void) 
 {
     float x[4], y[5], d[4];
     int i,j;
 
     a = sf_floatalloc2(4,5);
+    w = sf_floatalloc(4);
+    sf_randn (4,w);
+
+    printf ("w = ");
+    for (i=0; i < 4; i ++) {
+	printf (" %12.8f",w[i]);
+    }
+    printf ("\n");
 
     a[0][0] = 1.; a[0][1] = 1.;	a[0][2] = 1.; a[0][3] = 0.;
     a[1][0] = 1.; a[1][1] = 2.;	a[1][2] = 0.; a[1][3] = 0.;
@@ -58,7 +75,15 @@ int main (void)
 
     matmult_lop(true,false,4,5,d,y);
 
-    conjgrad(normal, 4, d, NULL, x, 7, 0.0);
+    conjgrad(normal, NULL, 4, d, NULL, x, 6, 0.0);
+
+    printf ("x = ");
+    for (i=0; i < 4; i ++) {
+	printf (" %12.8f",x[i]);
+    }
+    printf ("\n");
+
+    conjgrad(normal, weight, 4, d, NULL, x, 6, 0.0);
 
     printf ("x = ");
     for (i=0; i < 4; i ++) {

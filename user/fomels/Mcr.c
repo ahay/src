@@ -49,7 +49,7 @@ int main(int argc, char* argv[])
 
     /* Run PCG */
     cr_init(nr,nc);
-    conjgrad(cr_apply,nx,x,x,x,niter,tol);
+    conjgrad(cr_apply,NULL,nx,x,x,x,niter,tol);
     
     /* write output */
     sf_floatwrite(x,nr,row_out);
