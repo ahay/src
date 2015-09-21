@@ -2,7 +2,7 @@ This directory will collect materials for a comprehensive Madagascar documentati
 
 ##Chapter list
 
-1. Introduction
+1. **intro** Introduction
 2. **shell** Running Madagascar programs on the command line
 3. **format** Guide to RSF format
 4. Vplot graphics
