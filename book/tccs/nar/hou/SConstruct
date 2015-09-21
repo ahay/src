@@ -111,7 +111,7 @@ Result('freqs',
 
 Flow('comps','freqs',
      'rtoc | math output="exp(I*input*(x1+0.5)*%g)" ' % pi2 )
-s
+
 Flow('cwht cfit','comps ctrace',
      'clpf match=${SOURCES[1]} rect1=40 pred=${TARGETS[1]}')
 
