@@ -85,7 +85,7 @@ float powerpeno (float x, float y, int p /* power order */)
     d = x-y;
     mins = ((fabs(y) >= fabs(x)) ? SF_SIG(x) : SF_SIG(y));
     power = 0.0;
-    if (fabs(s) > 0.0) power = 0.5*s*(1.0-fabsf(pow(d/s,p)));
+    if (fabs(s) > 0.0) power = 0.5*s*(1.0-fabsf(powf(d/s,p)));
     return (mins * power);
 }
 

@@ -53,8 +53,8 @@ ntriangle ntriangle_init (int nbox /* maximum triangle length */,
     tr = (ntriangle) sf_alloc(1,sizeof(*tr));
 
     tr->nx = ndat;
-    tr->nb = nbox;
-    tr->np = ndat + 2*nbox;
+    tr->nb = nbox+1;
+    tr->np = ndat + 2*(nbox+1);
     
     tr->tmp = sf_floatalloc(tr->np);
 
@@ -148,7 +148,7 @@ static void triple (int o, int d, int nx, int nb,
     float tt, wt, wt1;
 
     for (i=0; i < nx; i++) {
-	tt = t[i];
+	tt = t[i]+1.0f;
 	nt = floorf(tt);
 	nt1 = nt+1;
 	ns = nb + s[i];
@@ -173,7 +173,7 @@ static void triple2 (int o, int d, int nx, int nb,
     }
 
     for (i=0; i < nx; i++) {
-	tt = t[i];
+	tt = t[i]+1.0f;
 	nt = floorf(tt);
 	nt1 = nt+1;
 	ns = nb + s[i];

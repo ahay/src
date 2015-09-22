@@ -237,11 +237,11 @@ kiss_fft_cpx sf_csqrtf (kiss_fft_cpx c)
 	/* Use the identity   2  Re res  Im res = Im x
 	   to avoid cancellation error in  d +/- Re x.  */
 	if (c.r > 0) {
-	    r = sqrtf (0.5 * d + 0.5 * c.r);
-	    s = (0.5 * c.i) / r;
+	    r = sqrtf (0.5f * d + 0.5f * c.r);
+	    s = (0.5f * c.i) / r;
         } else {
-	    s = sqrtf (0.5 * d - 0.5 * c.r);
-	    r = fabsf ((0.5 * c.i) / s);
+	    s = sqrtf (0.5f * d - 0.5f * c.r);
+	    r = fabsf ((0.5f * c.i) / s);
         }
 	v.r = r;
 	v.i = copysignf (s, c.i);
@@ -467,8 +467,8 @@ kiss_fft_cpx sf_catanf(kiss_fft_cpx z)
     z.i += 1.0;
     
     z2 = sf_clogf(sf_cdiv(z,z2));
-    z.r = -0.5*z2.i;
-    z.i = 0.5*z2.r; 
+    z.r = -0.5f*z2.i;
+    z.i = 0.5f*z2.r; 
     /* signs? */
 
     return z;
