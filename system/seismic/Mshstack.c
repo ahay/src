@@ -19,12 +19,13 @@
 #include <rsf.h>
 
 #include "inmo.h"
+#include "bandpass.h"
 
 int main (int argc, char* argv[])
 {
     bool half, slow;
-    int ix,ih, nd, it,nt,nx, nh, CDPtype, jump, niter, restart;
-    float dt, t0, h0, dh, eps, dy, tol;
+    int ix,ih, nd, it,nt,nx, nh, CDPtype, jump, niter, restart, nplo, nphi;
+    float dt, t0, h0, dh, eps, dy, tol, flo, fhi;
     float *trace, *trace2, *vel, *off, **gather, **dense;
     sf_file cmp, stack, velocity, offset;
 
@@ -94,7 +95,41 @@ int main (int argc, char* argv[])
     if (!sf_getfloat("tol",&tol)) tol=1e-5;
     /* GMRES tolerance */
 
+    if (!sf_getfloat("flo",&flo)) {
+	/* Low frequency in band, default is 0 */
+	flo=0.;
+    } else if (0. > flo) {
+	sf_error("Negative flo=%g",flo);
+    } else {
+	flo *= dt;
+    }
+
+    if (!sf_getfloat("fhi",&fhi)) {
+	/* High frequency in band, default is Nyquist */	
+	fhi=0.5;
+    } else {
+	fhi *= dt;	
+	if (flo > fhi) 
+	    sf_error("Need flo < fhi, "
+		     "got flo=%g, fhi=%g",flo/dt,fhi/dt);
+	if (0.5 < fhi)
+	    sf_error("Need fhi < Nyquist, "
+		     "got fhi=%g, Nyquist=%g",fhi/dt,0.5/dt);
+    }
+
+    if (!sf_getint("nplo",&nplo)) nplo = 6;
+    /* number of poles for low cutoff */
+    if (nplo < 1)  nplo = 1;
+    if (nplo > 1)  nplo /= 2; 
+
+    if (!sf_getint("nphi",&nphi)) nphi = 6;
+    /* number of poles for high cutoff */
+    if (nphi < 1)  nphi = 1;
+    if (nphi > 1)  nphi /= 2;
+
     nd = (nt-1)*jump+1;
+
+    bandpass_init(nd,flo,fhi,nplo,nphi);
     
     sf_putint(stack,"n1",nd);
     sf_putfloat(stack,"d1",dt/jump);
@@ -120,6 +155,8 @@ int main (int argc, char* argv[])
 	/* apply backward operator */
 	interpolate(gather, dense);
 	nmostack(dense,trace);
+	/* apply shaping */
+	bandpass(trace);
 	
 	sf_gmres_init(nd,restart);
 

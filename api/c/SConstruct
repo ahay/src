@@ -8,7 +8,7 @@ import bldutil
 src = 'kiss_fft kiss_fftr mt19937ar'
 
 src2 = '''
-aastretch adjnull alloc axa banded bigsolver blas box c99 causint
+aastretch adjnull alloc axa banded bigsolver blas box butter c99 causint
 ccdstep ccgstep cconjgrad ccopy cell celltrace cdstep cgstep chain
 clist cmatmult conjgrad conjprec copy cosft ctriangle ctrianglen
 decart deriv divn dottest doubint edge eno eno2 eno3 error fftlabel

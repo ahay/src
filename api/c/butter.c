@@ -20,40 +20,43 @@
 /* Implementation is inspired by D. Hale and J.F. Claerbout, 1983, Butterworth
  * dip filters: Geophysics, 48, 1033-1038. */
     
-#include <rsf.h>
+#include "_bool.h"
 /*^*/
 
 #include "butter.h"
+#include "_defs.h"
+#include "c99.h"
+#include "alloc.h"
 
-#ifndef _butter_h
+#ifndef _sf_butter_h
 
-typedef struct Butter *butter;
+typedef struct Sf_Butter *sf_butter;
 /* abstract data type */
 /*^*/
 
 #endif
 
-struct Butter {
+struct Sf_Butter {
     bool low;
     int nn;
     float **den, mid;
 };
 
 
-butter butter_init(bool low     /* low-pass (or high-pass) */, 
+sf_butter sf_butter_init(bool low     /* low-pass (or high-pass) */, 
 		   float cutoff /* cut off frequency */, 
 		   int nn       /* number of poles */)
 /*< initialize >*/
 {
     int j;
     float arg, ss, sinw, cosw, fact;
-    butter bw;
+    sf_butter bw;
 
     arg = 2.*SF_PI*cutoff;
     sinw = sinf(arg);
     cosw = cosf(arg);
 
-    bw = (butter) sf_alloc (1,sizeof(*bw));
+    bw = (sf_butter) sf_alloc (1,sizeof(*bw));
     bw->nn = nn;
     bw->low = low;
     bw->den = sf_floatalloc2(2,(nn+1)/2);
@@ -83,7 +86,7 @@ butter butter_init(bool low     /* low-pass (or high-pass) */,
     return bw;
 }
 
-void butter_close(butter bw)
+void sf_butter_close(sf_butter bw)
 /*< Free allocated storage >*/
 {
     free(bw->den[0]);
@@ -91,7 +94,7 @@ void butter_close(butter bw)
     free(bw);
 }
 
-void butter_apply (const butter bw, int nx, float *x /* data [nx] */)
+void sf_butter_apply (const sf_butter bw, int nx, float *x /* data [nx] */)
 /*< filter the data (in place) >*/
 {
     int ix, j, nn;
@@ -124,6 +127,19 @@ void butter_apply (const butter bw, int nx, float *x /* data [nx] */)
 		(x0 - 2*x1 + x2 - d1 * y1 - d2 * y2)*d0;
 	    y2 = y1; x[ix] = y1 = y0;
 	}
+    }
+}
+
+void sf_reverse (int n1, float* trace)
+/*< reverse a trace >*/
+{
+    int i1;
+    float t;
+
+    for (i1=0; i1 < n1/2; i1++) { 
+        t=trace[i1];
+        trace[i1]=trace[n1-1-i1];
+        trace[n1-1-i1]=t;
     }
 }
 

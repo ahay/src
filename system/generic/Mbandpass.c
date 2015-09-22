@@ -23,17 +23,13 @@ http://ahay.org/blog/2012/11/03/program-of-the-month-sfbandpass/
 
 #include <rsf.h>
 
-#include "butter.h"
-
-static void reverse (int n1, float* trace);
-
 int main (int argc, char* argv[]) 
 {
     bool phase, verb;
     int i2, n1, n2, nplo, nphi;
     float d1, flo, fhi, *trace;
     const float eps=0.0001;
-    butter blo=NULL, bhi=NULL;
+    sf_butter blo=NULL, bhi=NULL;
     sf_file in, out;
 
     sf_init (argc, argv); 
@@ -89,52 +85,41 @@ int main (int argc, char* argv[])
 
     trace = sf_floatalloc(n1);
 
-    if (flo > eps)     blo = butter_init(false, flo, nplo);
-    if (fhi < 0.5-eps) bhi = butter_init(true,  fhi, nphi);
+    if (flo > eps)     blo = sf_butter_init(false, flo, nplo);
+    if (fhi < 0.5-eps) bhi = sf_butter_init(true,  fhi, nphi);
 
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(trace,n1,in);
 
 	if (NULL != blo) {
-	    butter_apply (blo, n1, trace); 
+	    sf_butter_apply (blo, n1, trace); 
 
 	    if (!phase) {
-		reverse (n1, trace);
-		butter_apply (blo, n1, trace); 
-		reverse (n1, trace);	
+		sf_reverse (n1, trace);
+		sf_butter_apply (blo, n1, trace); 
+		sf_reverse (n1, trace);	
 	    }
 	}
 
 	if (NULL != bhi) {
-	    butter_apply (bhi, n1, trace); 
+	    sf_butter_apply (bhi, n1, trace); 
 
 	    if (!phase) {
-		reverse (n1, trace);
-		butter_apply (bhi, n1, trace); 
-		reverse (n1, trace);		
+		sf_reverse (n1, trace);
+		sf_butter_apply (bhi, n1, trace); 
+		sf_reverse (n1, trace);		
 	    }
 	}
  
 	sf_floatwrite(trace,n1,out);
     }
 
-    if (NULL != blo) butter_close(blo);
-    if (NULL != bhi) butter_close(bhi);
+    if (NULL != blo) sf_butter_close(blo);
+    if (NULL != bhi) sf_butter_close(bhi);
 
     free(trace);
     sf_fileclose(out);
     free(out);
 
     exit (0);
-}
-
-static void reverse (int n1, float* trace) {
-    int i1;
-    float t;
-
-    for (i1=0; i1 < n1/2; i1++) { 
-        t=trace[i1];
-        trace[i1]=trace[n1-1-i1];
-        trace[n1-1-i1]=t;
-    }
 }
