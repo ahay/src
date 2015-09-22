@@ -112,9 +112,11 @@ void sf_upgrad_set(sf_upgrad upg, const float *r0 /* reference */)
 	    b = jt+ss[i];
 	    if ((ii[i] == 0) || 
 		(ii[i] != nn[i]-1 && 1==fermat(&a,&b))) {
+		if (b < 0 || b >= nt) continue;
 		up[1] |= m;
 		t2 = t0[b];
 	    } else {
+		if (a < 0 || a >= nt) continue;
 		t2 = t0[a];
 	    }
 
