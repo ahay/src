@@ -8,4 +8,6 @@ inp = m8r.input("in")
 n1 = m8r.histint(inp,"n1")
 n2 = m8r.leftsize(inp,1)
 
-print(n2)
+clip = m8r.get("clip")
+
+print(clip)

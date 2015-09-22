@@ -1,13 +1,15 @@
 from rsf.proj import *
 from rsf.prog import RSFROOT
 
+libpath = os.path.join(RSFROOT,lib)
+
 Flow('test.attr','clip.jl',
      '''
      spike n1=1000 n2=100 n3=10 nsp=1 k1=500 |  
-     PYTHONPATH=%s LD_LIBRARY_PATH=%s %s 
+     JULIA_LOAD_PATH=%s LD_LIBRARY_PATH=%s %s 
      ./$SOURCE clip=0.5 | attr
-     ''' % (os.environ.get('JULIA_LOAD_PATH',os.path.join(RSFROOT,lib)),
-            os.environ.get('LD_LIBRARY_PATH',''),
+     ''' % (os.environ.get('JULIA_LOAD_PATH',libpath),
+            os.environ.get('LD_LIBRARY_PATH',libpath),
             WhereIs('julia'),stdin=0)
 
 End()

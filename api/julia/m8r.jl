@@ -28,4 +28,10 @@ function leftsize(file::File,dim::Int)
 	 ccall((:sf_leftsize,"libdrsf"),Culonglong,(Ptr{Uint8},Cint),file.rsf,dim)
 end
 
+function getfloat(name::ASCIIString)
+	 val = Cfloat[0]
+	 ccall((:sf_getfloat,"libdrsf"),Bool,(Ptr{Uint8},Ptr{Cfloat}),name,val)
+	 return val[]
+end
+
 end
