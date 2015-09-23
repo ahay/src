@@ -117,7 +117,7 @@ int main (int argc,char* argv[])
     }
     
     /* 1. find distance */
-    distance_init (1,n2,n1);  
+    distance_init (1,n2,n1,np);  
     distance(np,pts,dd,vv,pp,
 	     1,n2,n1,
 	     0.,o2,o1,

@@ -21,7 +21,7 @@
 
 #include "distance.h"
 
-void distance_init (int n3,int n2,int n1) 
+void distance_init (int n3,int n2,int n1, int np) 
 /*< Initialize data dimensions >*/
 {
     int maxband;
@@ -31,7 +31,7 @@ void distance_init (int n3,int n2,int n1)
     if (n2 > 1) maxband += 2*n1*n3;
     if (n3 > 1) maxband += 2*n1*n2;
 
-    sf_pqueue_init (10*maxband);
+    sf_pqueue_init (SF_MAX(10*maxband,np));
 }
 
 void distance (int np         /* number of points */, 

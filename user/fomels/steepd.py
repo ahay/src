@@ -20,7 +20,7 @@
 import rsf.api as rsf
 
 def steepd(oper,dat,x0,niter):
-    'Steepest-gradient algorithm for minimizing |oper x - dat|^2'
+    'Steepest-gradient for minimizing |oper x - dat|^2'
     x = x0
     R = oper(adj=0)[x]-dat      
     for iter in range(niter):
