@@ -101,20 +101,20 @@ int main (int argc, char* argv[])
     } else if (0. > flo) {
 	sf_error("Negative flo=%g",flo);
     } else {
-	flo *= dt;
+	flo *= (dt/jump);
     }
 
     if (!sf_getfloat("fhi",&fhi)) {
 	/* High frequency in band, default is Nyquist */	
 	fhi=0.5;
     } else {
-	fhi *= dt;	
+	fhi *= (dt/jump);	
 	if (flo > fhi) 
 	    sf_error("Need flo < fhi, "
-		     "got flo=%g, fhi=%g",flo/dt,fhi/dt);
+		     "got flo=%g, fhi=%g",flo/(dt/jump),fhi/(dt/jump));
 	if (0.5 < fhi)
 	    sf_error("Need fhi < Nyquist, "
-		     "got fhi=%g, Nyquist=%g",fhi/dt,0.5/dt);
+		     "got fhi=%g, Nyquist=%g",fhi/(dt/jump),0.5/(dt/jump));
     }
 
     if (!sf_getint("nplo",&nplo)) nplo = 6;
