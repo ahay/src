@@ -22,6 +22,7 @@
 
 #include "signoi.h"
 #include "helicon2.h"
+#include "heldiv.h"
 
 static bool verb;
 static int niter, nd;
@@ -102,6 +103,25 @@ void signoi1_lop (bool adj, bool add, int n1, int n2,
     nn++;
     ss++;
 }
+
+void signoi3_lop (bool adj, bool add, int n1, int n2, 
+		 float *data, float *sign)
+   /*< alternative linear operator >*/
+{
+    sf_helicon_init (nn);
+    heldiv_init (nd, nn, ss); 
+
+    sf_adjnull(adj,add,n1,n2,data,sign);
+
+    sf_helicon_lop (false, false, n1, n1, data, dd);
+    sf_solver_prec(sf_helicon_lop, sf_cgstep, heldiv_lop, 
+		   nd, nd, nd, sign, dd, niter, eps, 
+		   "verb", verb, "end");
+    sf_cgstep_close();
+    
+    nn++;
+    ss++;
+} 
 
 void signoi_close(void)
 /*< free allocated storage >*/

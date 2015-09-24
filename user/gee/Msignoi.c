@@ -108,7 +108,7 @@ int main(int argc, char* argv[])
 
     if (spitz) {
 	if (prec) {
-	    signoi1_lop  (false,false,nx,nx,dd,ss);
+	    signoi3_lop  (false,false,nx,nx,dd,ss);
 	} else {
 	    signoi2_lop  (false,false,nx,nx,dd,ss);
 	}
