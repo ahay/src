@@ -18,6 +18,11 @@ function input(tag::ASCIIString)
 	 File(tag,rsf)
 end
 
+function output(tag::ASCIIString)
+	 rsf = ccall((:sf_output,"libdrsf"),Ptr{Uint8},(Ptr{Uint8},),tag)
+	 File(tag,rsf)
+end
+
 function histint(file::File,name::ASCIIString)
 	 val = Cint[0]
 	 ccall((:sf_histint,"libdrsf"),Bool,(Ptr{Uint8},Ptr{Uint8},Ptr{Cint}),file.rsf,name,val)
@@ -34,8 +39,12 @@ function getfloat(name::ASCIIString)
 	 return val[]
 end
 
-function floatread(arr::Array,size::Int,file::File)
-	 ccall((:sf_floatread,"libdrsf"),Void,(Ptr{CFloat},Csize_t,Ptr{Uint8}),arr,size,file.rsf)
+function floatread(arr::Array{Float32,1},size::Int32,file::File)
+	 ccall((:sf_floatread,"libdrsf"),Void,(Ptr{Cfloat},Csize_t,Ptr{Uint8}),arr,size,file.rsf)
+end
+
+function floatwrite(arr::Array{Float32,1},size::Int32,file::File)
+	 ccall((:sf_floatwrite,"libdrsf"),Void,(Ptr{Cfloat},Csize_t,Ptr{Uint8}),arr,size,file.rsf)
 end
 
 end

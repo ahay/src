@@ -1,17 +1,16 @@
-import sys, os, string, re
+import sys, os
 sys.path.append('../../framework')
 import bldutil
 
 modules = ['m8r']
 
 try: # distribution version
-    Import('env root libdir incdir pkgdir bindir')
+    Import('env root libdir incdir')
     env = env.Clone()
 except: # local version
     env = bldutil.Debug()
     root = None
 
 if root:
-    juliadir = os.path.dirname(libdir)
     for module in modules:
-        env.Install(juliadir,module+'.jl')
+        env.Install(libdir,module+'.jl')

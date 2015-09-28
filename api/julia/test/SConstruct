@@ -1,7 +1,7 @@
 from rsf.proj import *
 from rsf.prog import RSFROOT
 
-libpath = os.path.join(RSFROOT,lib)
+libpath = os.path.join(RSFROOT,'lib')
 
 Flow('test.attr','clip.jl',
      '''
