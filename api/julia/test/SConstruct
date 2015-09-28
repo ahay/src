@@ -10,7 +10,7 @@ Flow('test.attr','clip.jl',
      ./$SOURCE clip=0.5 | attr
      ''' % (os.environ.get('JULIA_LOAD_PATH',libpath),
             os.environ.get('LD_LIBRARY_PATH',libpath),
-            WhereIs('julia'),stdin=0)
+            WhereIs('julia')),stdin=0)
 
 End()
 

@@ -34,4 +34,8 @@ function getfloat(name::ASCIIString)
 	 return val[]
 end
 
+function floatread(arr::Array,size::Int,file::File)
+	 ccall((:sf_floatread,"libdrsf"),Void,(Ptr{CFloat},Csize_t,Ptr{Uint8}),arr,size,file.rsf)
+end
+
 end
