@@ -24,24 +24,36 @@
 int main (int argc, char* argv[])
 {
     bool half, slow;
-    int ix,ih, nd, it,nt,nx, nh, CDPtype, jump, niter, restart, nplo, nphi;
+    int ih,ix,it,nt,nx,nd,nh, CDPtype, jump, niter, restart, nplo, nphi, ni, axis,lim,j;
+    off_t n, n3;
     float dt, t0, h0, dh, eps, dy, tol, flo, fhi;
     float *trace, *trace2, *vel, *off, **gather, **dense;
+    char key1[7];
     sf_file cmp, stack, velocity, offset;
 
     sf_init (argc,argv);
     cmp = sf_input("in");
     velocity = sf_input("velocity");
     stack = sf_output("out");
-
+    
+    axis = 2; 
+    lim = axis-1;
+  
+    n = 1;
+    for (j=0; j < lim; j++) {
+      sprintf(key1,"n%d",j+1);
+	    if (!sf_histint(cmp,key1,&ni)) break;
+	    n *= ni;
+    }
+  
+    n3 = sf_unshiftdim(cmp,stack,axis);
+ 
     if (SF_FLOAT != sf_gettype(cmp)) sf_error("Need float input");
     if (!sf_histint(cmp,"n1",&nt)) sf_error("No n1= in input");
     if (!sf_histfloat(cmp,"d1",&dt)) sf_error("No d1= in input");
     if (!sf_histfloat(cmp,"o1",&t0)) sf_error("No o1= in input");
 
     if (!sf_histint(cmp,"n2",&nh)) sf_error("No n2= in input");
-    
-    sf_putint(stack,"n2",1);
 
     off = sf_floatalloc(nh);
 
@@ -126,8 +138,13 @@ int main (int argc, char* argv[])
     /* number of poles for high cutoff */
     if (nphi < 1)  nphi = 1;
     if (nphi > 1)  nphi /= 2;
-
-    nd = (nt-1)*jump+1;
+    
+    if(nt % 2 == 0) {
+	nd = nt*jump;
+    }
+    else {
+	nd = (nt-1)*jump+1;
+    }
 
     bandpass_init(nd,flo,fhi,nplo,nphi);
     
@@ -141,7 +158,7 @@ int main (int argc, char* argv[])
 
     vel = sf_floatalloc(nd);
 
-    for (ix = 0; ix < nx; ix++) { /* loop over midpoint */
+    for (ix = 0; ix < nx; ix++) { /* loop over midpoint nx*/
 	sf_floatread (vel,nd,velocity);	
 	
 	inmo_init(vel, off, nh, 
