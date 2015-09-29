@@ -23,6 +23,7 @@
 
 int main(int argc, char* argv[])
 {
+    bool prec;
     int nr, nc, nx, niter;
     float *x, tol;
     sf_file row_in, col_in, row_out, col_out;
@@ -37,6 +38,8 @@ int main(int argc, char* argv[])
     if (!sf_histint(row_in,"n1",&nr)) sf_error("No n1= in input");
     if (!sf_histint(col_in,"n1",&nc)) sf_error("No n1= in input");
 
+    sf_putint(col_out,"n1",nc);
+
     nx = nr+nc;
     x = sf_floatalloc(nx);
 
@@ -46,10 +49,11 @@ int main(int argc, char* argv[])
 
     if (!sf_getint("niter",&niter)) niter=10; /* number of iterations */
     if (!sf_getfloat("tol",&tol)) tol=0.0f;   /* CG tolerance */
+    if (!sf_getbool("prec",&prec)) prec=true; /* If apply preconditioning */
 
     /* Run PCG */
     cr_init(nr,nc);
-    conjgrad(cr_apply,NULL,nx,x,x,x,niter,tol);
+    conjgrad(cr_apply,prec? cr_prec:NULL,nx,x,x,x,niter,tol);
     
     /* write output */
     sf_floatwrite(x,nr,row_out);
