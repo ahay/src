@@ -43,6 +43,16 @@ def get_zodata(data):
          vel=1 verb=y | window | put label2=Distance unit2=km
          ''',split=[1,n1], reduce='add')
 
+def get_cmps(data):
+    Flow(data,'refl rdip ampl',
+         '''
+         kirmod cmp=y dip=${SOURCES[1]} refl=${SOURCES[2]}
+         nh=201 dh=0.01  h0=0 twod=y
+         ns=351 ds=0.01 s0=-1
+         freq=10 dt=0.004 nt=1500
+         vel=1 verb=y | put label2=Offset unit2=km label3=Midpoint unit3=km
+         ''',split=[1,n1], reduce='add')
+
 def get_impulse(imp,data):
     Flow(imp,data,'spike k1=501 k2=175 | ricker1 frequency=10')
 

@@ -26,12 +26,12 @@
 int main(int argc, char* argv[])
 {
     int m[2], n, n3, nd1, nd2, nd, nw, i3, two;
-    float **mm=NULL, **coord=NULL, *z=NULL, *tmp=NULL;
+    float **mm, **coord, *z, *tmp=NULL;
     float o1,o2, oo1,oo2, d1,d2, dd1,dd2, kai;
-    char *intp=NULL;
-    sf_interpolator interp=NULL;
+    char *intp;
+    sf_interpolator interp;
     sf_bands spl1=NULL, spl2=NULL;
-    sf_file in=NULL, out=NULL, crd=NULL;
+    sf_file in, out, crd;
 
     sf_init (argc,argv);
     in = sf_input("in");
@@ -46,25 +46,25 @@ int main(int argc, char* argv[])
     if (!sf_histint(crd,"n1",&two) || 2 != two) 
 	sf_error("Need n1=2 in coord");
     if (!sf_histint(crd,"n2",&nd1)) sf_error("No n2= in coord");
-    if (!sf_histint(crd,"n3",&nd2)) sf_error("No n3= in coord");
+    if (!sf_histint(crd,"n3",&nd2)) nd2=1;
     nd = nd1*nd2;
     sf_putint(out,"n1",nd1);
     sf_putint(out,"n2",nd2);
 
     if (!sf_histfloat(in,"d1",&d1))   sf_error("No d1= in input");
-    if (!sf_histfloat(crd,"d2",&dd1)) sf_error("No d2= in coord");
+    if (!sf_histfloat(crd,"d2",&dd1)) dd1=d1;
     sf_putfloat(out,"d1",dd1);
 
     if (!sf_histfloat(in,"d2",&d2))   sf_error("No d2= in input");
-    if (!sf_histfloat(crd,"d3",&dd2)) sf_error("No d3= in coord");
+    if (!sf_histfloat(crd,"d3",&dd2)) dd2=d2;
     sf_putfloat(out,"d2",dd2);
 
     if (!sf_histfloat(in,"o1",&o1))   sf_error("No o1= in input");
-    if (!sf_histfloat(crd,"o2",&oo1)) sf_error("No o2= in coord");
+    if (!sf_histfloat(crd,"o2",&oo1)) oo1=o1;
     sf_putfloat(out,"o1",oo1);
 
     if (!sf_histfloat(in,"o2",&o2))   sf_error("No o2= in input");
-    if (!sf_histfloat(crd,"o3",&oo2)) sf_error("No o3= in coord");
+    if (!sf_histfloat(crd,"o3",&oo2)) oo2=o2;
     sf_putfloat(out,"o2",oo2);
 
     intp = sf_getstring("interp");
@@ -85,6 +85,7 @@ int main(int argc, char* argv[])
 		sinc_init('l', 0.);
 		interp = sinc_int;
 	    } else {
+		interp = NULL;
 		sf_error("%s interpolator is not implemented",intp);
 	    }
 	    break;
@@ -95,6 +96,7 @@ int main(int argc, char* argv[])
 		sinc_init('c', 0.);
 		interp = sinc_int;
 	    } else {
+		interp = NULL;
 		sf_error("%s interpolator is not implemented",intp);
 	    }
 	    break;
@@ -118,6 +120,7 @@ int main(int argc, char* argv[])
 	    interp = sf_lin_int;
 	    break;
 	default:
+	    interp = NULL;
 	    sf_error("%s interpolator is not implemented",intp);
 	    break;
     }
