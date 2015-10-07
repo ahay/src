@@ -25,7 +25,7 @@
 int main(int argc, char* argv[])
 {
 	int i3, n3, ix, nx, iz, nz;
-	int nx2, nz2, scale;
+	int nx2, nz2, scalex, scalez;
 	float dx, dz;
 	float **a, **b;
 	sf_file in, out;
@@ -35,21 +35,22 @@ int main(int argc, char* argv[])
 	in=sf_input("in");
 	out=sf_output("out");
 
-	if(!sf_getint("scale", &scale)) sf_error("Need scale=");
+	if(!sf_getint("scalex", &scalex)) sf_error("Need scalex=");
+	if(!sf_getint("scalez", &scalez)) sf_error("Need scalez=");
 
 	if(!sf_histint(in, "n1", &nz)) sf_error("No n1= in input");
 	if(!sf_histfloat(in, "d1", &dz)) sf_error("No d1= in input");
 	if(!sf_histint(in, "n2", &nx)) sf_error("No n2= in input");
 	if(!sf_histfloat(in, "d2", &dx)) sf_error("No d2= in input");
 
-	nx2=(nx-1)*scale+1;
-	nz2=(nz-1)*scale+1;
+	nx2=(nx-1)*scalex+1;
+	nz2=(nz-1)*scalez+1;
 	n3=sf_leftsize(in, 2);
 
 	sf_putint(out, "n1", nz2);
-	sf_putfloat(out, "d1", dz/scale);
+	sf_putfloat(out, "d1", dz/scalez);
 	sf_putint(out, "n2", nx2);
-	sf_putfloat(out, "d2", dx/scale);
+	sf_putfloat(out, "d2", dx/scalex);
 
 	a=sf_floatalloc2(nz, nx);
 	b=sf_floatalloc2(nz2, nx2);
@@ -67,7 +68,7 @@ int main(int argc, char* argv[])
 #pragma omp parallel for private(ix, iz)
 		for(ix=0; ix<nx; ix++){
 			for(iz=0; iz<nz; iz++){
-				b[ix*scale][iz*scale]=a[ix][iz];
+				b[ix*scalex][iz*scalez]=a[ix][iz];
 			}
 		}
 
