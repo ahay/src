@@ -63,7 +63,13 @@ void fwportelastic3d(float dt2,float***p1,float***p2,float***p3,float***q1,float
     zero3float(rz_tmp,nzpad,nxpad,nypad);	
 
 #ifdef _OPENMP
-#pragma omp parallel for default(shared) private(i,j,k,l)
+#pragma omp parallel for private(i,j,k,l)				\
+    schedule(dynamic)							\
+    shared(p2,q2,r2,							\
+	   px_tmp,pz_tmp,						\
+	   qx_tmp,qz_tmp,						\
+	   rx_tmp,rz_tmp,						\
+	   coeff_1dx,coeff_1dy,coeff_1dz,nxpad,nypad,nzpad,dx,dy,dz)
 #endif
     for(k=0;k<nypad;k++)
 	for(i=0;i<nxpad;i++)
@@ -82,9 +88,15 @@ void fwportelastic3d(float dt2,float***p1,float***p2,float***p3,float***q1,float
 		    }
 		}
 
-
 #ifdef _OPENMP
-#pragma omp parallel for default(shared) private(i,j,k,l,hpy, hqy, hry, hpx, hqx, hrx, hpz, hqz, hrz, px2, py2, pz2, qx2, qy2, qz2, rx2, ry2, rz2, qxy1, rxz1, pxy1, ryz1, pxz1, qyz1, a11,a22,a33,a12,a13,a23,a44,a55,a66,phix,phiy,phiz,cosphix,cosphiy,cosphiz,sinphix,sinphiy,sinphiz,r11,r12,r13,r21,r22,r23,r31,r32,r33, pxy,qxy,rxy,pxz,qxz,rxz,pyz,qyz,ryz)
+#pragma omp parallel for private(i,j,k,l,hpy, hqy, hry, hpx, hqx, hrx, hpz, hqz, hrz, px2, py2, pz2, qx2, qy2, qz2, rx2, ry2, rz2, qxy1, rxz1, pxy1, ryz1, pxz1, qyz1) \
+    schedule(dynamic)							\
+    shared(p1,p2,p3,q1,q2,q3,r1,r2,r3,					\
+	   px_tmp,pz_tmp,						\
+	   qx_tmp,qz_tmp,						\
+	   rx_tmp,rz_tmp,						\
+	   coeff_1dx,coeff_1dy,coeff_1dz,coeff_2dx,coeff_2dy,coeff_2dz,	\
+	   c11,c22,c33,c12,c13,c23,c44,c55,c66,phaix,phaiy,phaiz,dt2)
 #endif
     for(k=0;k<nypad;k++)
 	for(i=0;i<nxpad;i++)

@@ -129,6 +129,34 @@ void puthead3x(sf_file Fo, int n1, int n2, int n3, float d1, float d2, float d3,
         sf_putstring(Fo,"unit3","km");
 }
 
+
+void puthead4x(sf_file Fo, int n1, int n2, int n3, int n4, float d1, float d2, float d3, float d4, float o1, float o2, float o3, float o4)
+/*<  put head for (y,x,z,t) domain float-type 3D data sets>*/
+{
+        /* Read/Write axes */
+        sf_putint(Fo,"n1",n1);
+        sf_putint(Fo,"n2",n2);
+        sf_putint(Fo,"n3",n3);
+        sf_putint(Fo,"n4",n4);
+        sf_putfloat(Fo,"d1",d1);
+        sf_putfloat(Fo,"d2",d2);
+        sf_putfloat(Fo,"d3",d3);
+        sf_putfloat(Fo,"d4",d4);
+        sf_putfloat(Fo,"o1",o1);
+        sf_putfloat(Fo,"o2",o2);
+        sf_putfloat(Fo,"o3",o3);
+        sf_putfloat(Fo,"o4",o4);
+        sf_putstring(Fo,"label1","z");
+        sf_putstring(Fo,"label2","x");
+        sf_putstring(Fo,"label3","y");
+        sf_putstring(Fo,"label4","t");
+        sf_putstring(Fo,"unit1","km");
+        sf_putstring(Fo,"unit2","km");
+        sf_putstring(Fo,"unit3","km");
+        sf_putstring(Fo,"unit4","s");
+}
+
+
 void puthead3kx(sf_file Fo, int n1, int n2, int n3, float d1, float d2, float d3, float o1, float o2, float o3)
 /*<  put head for (ky,kx,kz) domain float-type 3D data sets>*/
 {
