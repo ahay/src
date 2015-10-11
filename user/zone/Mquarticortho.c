@@ -1,4 +1,4 @@
-/* Interval quartic coefficients estimation
+/* Interval quartic coefficients estimation for aligned orthorhombic layers
 */
 /*
  Copyright (C) 2009 University of Texas at Austin
@@ -22,40 +22,26 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include "gendix.h"
 
 
 /* Main program------------------------------------------------------------------------------------------*/
 int main(int argc, char* argv[])
 {
-	int nz,nx,ny,nlayer;
-	float dx,ox,dy,oy,dz,oz;
-	float **eff,*twtime, **inverted, ***mod;
+	int nlayer;
+	float **eff,*twtime, **inverted;
 
-	sf_file model, inv, ef, efft;
+	sf_file inv, ef, efft;
 	
 	sf_init(argc,argv); /* initialize - always call first */
 	
 	/* Set input-----------------------------------------------------------------------------------------*/
-	model = sf_input("in"); /* reflector model*/
-	if (!sf_histint(model,"n1",&nz)) sf_error("No n1= in input");
-	if (!sf_histint(model,"n2",&nx)) sf_error("No n2= in input");
-	if (!sf_histint(model,"n2",&ny)) sf_error("No n2= in input");
-	
-	if (!sf_histfloat(model,"o1",&oz)) oz=0.;
-	if (!sf_histfloat(model,"o2",&ox)) ox=0.;
-	if (!sf_histfloat(model,"o3",&oy)) oy=0.;
-	
-	if (!sf_histfloat(model,"d1",&dz)) dz=1.;
-	if (!sf_histfloat(model,"d2",&dx)) dx=1.;
-	if (!sf_histfloat(model,"d3",&dy)) dy=1.;
-	
-	ef = sf_input("eff"); /* effective parameters at the bottom of each layer*/
+	ef = sf_input("in"); /* effective parameters at the bottom of each layer*/
 	efft = sf_input("twtime"); /* effective two-way traveltime at the bottom of each layer*/
 	
-	if (!sf_histint(thickness,"n1",&nlayer)) sf_error("No n1= in thickness");
-	
 	/* Allocate space-------------------------------------------------------------------------------------*/
-	mod = sf_floatalloc3(nz,nx,ny); /* model*/
+	sf_histint(ef,"n2",&nlayer);
+	
 	eff = sf_floatalloc2(8,nlayer);
 	inverted = sf_floatalloc2(8,nlayer);
 	twtime = sf_floatalloc(nlayer);
