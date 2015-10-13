@@ -26,8 +26,8 @@
 
 int main (int argc,char* argv[]) 
 {
-    int i, ip, n1, n2, np, ndim, order, n123, *pp, n[2], box[2], *shift[2], b;
-    float o1, o2, d1, d2, slow, *dd, **pts, *vv, *h, *bin, *vor, d[2], *rect[2];
+    int i, ip, n1, n2, np, ndim, order, n123, *pp, n[2], box[2], **shift, b;
+    float o1, o2, d1, d2, slow, *dd, **pts, *vv, *h, *bin, *vor, d[2], **rect;
     bool isvel, dist, voro;
     sf_upgrad upg;
     sf_file coord, ord, grid, vel;
@@ -133,7 +133,7 @@ int main (int argc,char* argv[])
     }
 
     /* 2. binning */
-    sf_int2_init (pts, o1,o2,d1,d2,n1,n2, sf_lin_int, 2, np);
+    sf_int2_init (pts, o1,o2,d1,d2,n1,n2, sf_bin_int, 1, np);
     h = sf_floatalloc(np);
 
     for (ip=0; ip<np; ip++) {
@@ -153,7 +153,6 @@ int main (int argc,char* argv[])
 	/* normalize by the fold */
 	if (vv[i] > FLT_EPSILON) bin[i] /=vv[i];
 	vv[i]=0.0f;
-	pp[i]=0;
 	b = ceilf(dd[i]);
 	if (b > box[0]) box[0] = b;
     }
@@ -178,8 +177,14 @@ int main (int argc,char* argv[])
 	
     /* 4. smoothing */
 
-    rect[0] = dd; shift[0] = pp;
-    rect[1] = dd; shift[1] = pp;
+    rect = sf_floatalloc2(n123,2);
+    shift = sf_intalloc2(n123,2);
+    
+    for (i=0; i < n123; i++) {
+	rect[0][i] = 1.0f+dd[i]/d1;
+	rect[1][i] = 1.0f+dd[i]/d2;
+	shift[0][i] = shift[1][i] = 0;
+    }
 
     ntrianglen_init(2,box,n,rect,shift,1);
     ntrianglen_lop(false,false,n123,n123,vor,bin);
