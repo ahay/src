@@ -26,7 +26,7 @@
 
 int main (int argc,char* argv[]) 
 {
-    int i, ip, n1, n2, np, ndim, order, n123, *pp, n[2], box[2], **shift, b;
+    int i, j, ip, n1, n2, np, ndim, order, n123, *pp, n[2], box[2], **shift, b;
     float o1, o2, d1, d2, slow, *dd, **pts, *vv, *h, *bin, *vor, d[2], **rect;
     bool isvel, dist, voro;
     sf_upgrad upg;
@@ -148,15 +148,11 @@ int main (int argc,char* argv[])
     
     sf_int2_lop (true,false,n123,np,bin,h);
     
-    box[0] = 1;
     for (i=0; i < n123; i++) {
 	/* normalize by the fold */
 	if (vv[i] > FLT_EPSILON) bin[i] /=vv[i];
-	vv[i]=0.0f;
-	b = ceilf(dd[i]);
-	if (b > box[0]) box[0] = b;
+	vv[i]=0.0f;	
     }
-    box[1] = box[0];
 
     /* 3. voronoi interpolation */
 
@@ -179,11 +175,15 @@ int main (int argc,char* argv[])
 
     rect = sf_floatalloc2(n123,2);
     shift = sf_intalloc2(n123,2);
-    
-    for (i=0; i < n123; i++) {
-	rect[0][i] = 1.0f+dd[i]/d1;
-	rect[1][i] = 1.0f+dd[i]/d2;
-	shift[0][i] = shift[1][i] = 0;
+
+    for (j=0; j < 2; j++) {
+	box[j] = 1;
+	for (i=0; i < n123; i++) {
+	    rect[j][i] = 1.0f+dd[i]/d[j];
+	    b = ceilf(rect[j][i]);
+	    if (b > box[j]) box[j] = b;
+	    shift[j][i] = 0;
+	}
     }
 
     ntrianglen_init(2,box,n,rect,shift,1);

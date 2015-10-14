@@ -31,7 +31,7 @@ void distance_init (int n3,int n2,int n1, int np)
     if (n2 > 1) maxband += 2*n1*n3;
     if (n3 > 1) maxband += 2*n1*n2;
 
-    sf_pqueue_init (SF_MAX(10*maxband,np));
+    sf_pqueue_init (100*SF_MAX(maxband,np));
 }
 
 void distance (int np         /* number of points */, 

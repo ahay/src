@@ -6,6 +6,9 @@ n3 correspond to two selected keys from the header file.
 If inv=y, the input is 3-D, and the output is 2-D.
 
 if xkey < 0, the first axis indexes traces in a gather like cdpt.
+
+June 2015 program of the month:
+http://ahay.org/blog/2015/06/10/program-of-the-month-sfintbin/
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
