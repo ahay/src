@@ -54,7 +54,7 @@ void nnshape_init(bool sym1, int nd1, int n11, int n21,
     sf_int2_init (xy, o1, o2, d1, d2, n1, n2, sf_lg_int, nw, nd);
 
     d = sf_floatalloc(nd);
-    if (sym) m = sf_floatalloc(n12);
+    m = sf_floatalloc(n12);
 
     fold = sf_floatalloc(n12);
     bin = sf_floatalloc(n12);
@@ -104,7 +104,7 @@ void nnshape_close(void)
 
     sf_int2_close();
     free(d);
-    if (sym) free(m);
+    free(m);
     free(fold);
     free(bin);
     free(zero);

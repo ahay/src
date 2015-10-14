@@ -23,10 +23,9 @@
 int main(int argc, char* argv[])
 {
     bool sym;
-    float g1, g2, o3, g3, o1,d1, o2,d2, tol;
-    int nd, n1, n2, n12, id, i, three, iter, niter, rect1, rect2, nw;
+    float o1,d1, o2,d2, tol;
+    int nd, n1, n2, n12, niter, rect1, rect2, nw;
     float **xy, *z, *m, *m2, *d;
-    float xi, dx, dy, dz;
     sf_file in, out, coord, pattern;
 
     sf_init(argc,argv);
