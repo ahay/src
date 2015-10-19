@@ -49,11 +49,12 @@ int main(int  argc,char **argv)
 
     int   i,j,k,im,jm,it,it1,it2,its,depth;
 	int   nth, rank;
-    float t;
+    float t,f0;
     float fx,fy,fz,dt2;
 
     float ***c11, ***c22, ***c33, ***c12, ***c13, ***c23, ***c44, ***c55, ***c66;
     float ***phaix, ***phaiy, ***phaiz;
+    const char *source;
     bool mig;
     
     sf_init(argc,argv);
@@ -62,9 +63,11 @@ int main(int  argc,char **argv)
     sf_file Fo1, Fo2, Fo3;
     sf_file snapx, snapy, snapz;
 
-    float f0=50;         // main frequency of the wavelet(usually 30Hz)
-    float t0=0.04;       // time delay of the wavelet(if f0=30Hz, t0=0.04s)*/
+    float t0=0.01;       // time delay of the wavelet(if f0=30Hz, t0=0.04s)*/
     float A=1.0;           // the amplitude of wavelet 
+    if (!sf_getfloat("freq",&f0)) f0=40.0;    // main frequency of the wavelet(usually 30Hz)
+    source = sf_getstring("source"); // source location
+    if (NULL == (source = sf_getstring("source"))) source="m";
 
     clock_t t1, t2, t3;
     float   timespent;
@@ -265,10 +268,23 @@ int main(int  argc,char **argv)
     }
 
     /* source definition */
-    isy=nypad/2;
-    isx=nxpad/2;
-    isz=bd+(nzpad-2*bd)/4;
-/*    isz=bd;*/
+     switch(source[0])  {
+        case 'm':
+            isy=nypad/2;
+            isx=nxpad/2;
+            isz=nzpad/2;
+            break;
+        case 'f':
+            isy=nypad/2;
+            isx=nxpad/2;
+            isz=bd+(nzpad-2*bd)/4;
+            break;
+        case 's':
+            isy=nypad/2;
+            isx=nxpad/2;
+            isz=bd;
+            break;
+     }
 
     dt2=dt*dt;
 
@@ -312,23 +328,23 @@ int main(int  argc,char **argv)
              }
          } else { // inject source
          /* source Type 0: oriented 45 degree to vertical and 45 degree azimuth: Yan & Sava (2012) */
-/*         p2[isy][isx][isz]+=Ricker(t, f0, t0, A);  // x-component*/
-/*         q2[isy][isx][isz]+=Ricker(t, f0, t0, A);  // y-component*/
-/*         r2[isy][isx][isz]+=Ricker(t, f0, t0, A);  // z-component*/
+             p2[isy][isx][isz]+=Ricker(t, f0, t0, A);  // x-component
+             q2[isy][isx][isz]+=Ricker(t, f0, t0, A);  // y-component
+             r2[isy][isx][isz]+=Ricker(t, f0, t0, A);  // z-component
 
              // 3D exploding force source (e.g., Wu's PhD
 
-               for(k=-1;k<=1;k++)
-               for(i=-1;i<=1;i++)
-               for(j=-1;j<=1;j++)
-               {
-                if(fabs(i)+fabs(j)+fabs(k)==3)
-                {
-                     p2[isy+k][isx+i][isz+j]+=i*Ricker(t, f0, t0, A);  // x-component
-                     q2[isy+k][isx+i][isz+j]+=k*Ricker(t, f0, t0, A);  // y-component
-                     r2[isy+k][isx+i][isz+j]+=j*Ricker(t, f0, t0, A);  // z-component
-                }
-               }
+/*               for(k=-1;k<=1;k++)*/
+/*               for(i=-1;i<=1;i++)*/
+/*               for(j=-1;j<=1;j++)*/
+/*               {*/
+/*                if(fabs(i)+fabs(j)+fabs(k)==3)*/
+/*                {*/
+/*                     p2[isy+k][isx+i][isz+j]+=i*Ricker(t, f0, t0, A);  // x-component*/
+/*                     q2[isy+k][isx+i][isz+j]+=k*Ricker(t, f0, t0, A);  // y-component*/
+/*                     r2[isy+k][isx+i][isz+j]+=j*Ricker(t, f0, t0, A);  // z-component*/
+/*                }*/
+/*               }*/
          }
          
          if (!mig) { // Modelling
