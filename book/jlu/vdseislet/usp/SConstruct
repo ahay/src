@@ -1,0 +1,308 @@
+from rsf.proj import * 
+
+#################### 
+# Fetch the dataset
+####################
+tgz = '2D_Land_data_2ms.tgz'
+Fetch(tgz,
+      server='http://www.freeusp.org',
+      top='RaceCarWebsite/TechTransfer/Tutorials/Processing_2D',
+      dir='Data')
+files = map(lambda x: 'Line_001.'+x,Split('TXT SPS RPS XPS sgy'))
+Flow(files,tgz,
+     'gunzip -c $SOURCE | tar -xvf -',stdin=0,stdout=-1)
+
+######################## 
+# Convert to RSF format
+########################
+Flow('line tline','Line_001.sgy','segyread tfile=${TARGETS[1]}')
+Result('first','line',
+       '''
+       window n2=1000 |
+       agc rect1=250 rect2=100 |
+       grey title="First 1000 traces"
+       ''')
+
+##############################
+# Convert to regular geometry
+##############################
+Flow('lines','line',
+     '''
+     intbin xk=cdpt yk=fldr | window f2=2 |
+     put
+     label3=Source d3=0.05  o3=688  unit3=km
+     label2=Offset d2=0.025 o2=-3.5 unit2=km
+     label1=Time unit1=s
+     ''')
+
+Result('lines',
+       '''
+       transp memsize=1000 plane=23 |
+       byte gainpanel=each |
+       grey3 frame1=500 frame2=100 frame3=120 flat=n
+       title="Raw Data"
+       ''')
+
+###################
+# First break mute
+##################
+# Select 4 shots every tenth sequential shot
+Flow('inpmute','lines',
+     '''
+     window f3=198 j3=10 n3=4 
+     ''')
+Result('inpmute',
+       '''
+       put n2=1128 n3=1 |
+       agc rect1=50 rect2=20 | grey wanttitle=n
+       ''')
+
+# Select muting parameter for background noise
+Flow('outmute','inpmute',
+     '''
+     mutter t0=0.1 v0=5.2
+     ''')
+Result('outmute',
+       '''
+       put n2=1128 n3=1 |
+       agc rect1=50 rect2=20 | grey wanttitle=n
+       ''')
+
+# First break muting for all shots
+Flow('mutes','lines',
+     '''
+     mutter t0=0.1 v0=5.2 | 
+     transp memsize=1000 plane=23
+     ''' )
+
+###########################
+# Subsampling all shots to 4ms
+###########################
+Flow('subsample','mutes',
+     'bandpass flo=3 fhi=125 nphi=8 | window j1=2')
+Flow('subshot198','subsample','window n2=1 f2=198')
+Plot('subshot198','grey title="Subsampled 198" labelfat=4 titlefat=4')
+# Spectra
+Flow('subspec198','subshot198','spectra2')
+Plot('subspec198',
+     '''
+     grey color=j yreverse=n title="Spectra 198" bias=0.08
+     label1=Frequency unit1=Hz label2=Wavenumber unit2=1/km
+      labelfat=4 titlefat=4
+     ''')
+Result('output198','subshot198 subspec198','SideBySideAniso')
+
+###########################
+# Ground roll removal
+###########################
+Flow('ltfts','subsample',
+     '''
+     ltft rect=20 verb=n nw=50 dw=2 niter=50
+     ''',split=[3,282],reduce="cat axis=4")
+Flow('thresholds','ltfts',
+     '''
+     transp plane=24 memsize=1000 | threshold2 pclip=25 verb=y  |
+     transp plane=24 memsize=1000
+     ''',split=[3,251])
+Flow('noises','thresholds',
+     '''
+      ltft inv=y verb=n | transp plane=23 memsize=1000 | 
+      mutter t0=-0.5 v0=0.7 | transp plane=23 memsize=1000
+      ''')
+Flow('signals','subsample noises','add scale=1,-1 ${SOURCES[1]}')
+
+## Flow('signals.H','signals','dd form=xdr out=stdout')
+## Flow('signals','signals.H','dd form=native')
+############################
+# Initial velocity analysis
+############################
+Flow('cmps','signals',
+     '''
+     transp memsize=1000 plane=23 |
+     mutter v0=3. |
+     shot2cmp half=n | put o2=-1.75 d2=0.05 label2="Half-offset" |
+     window f2=3 n2=64
+     ''')
+Result('cmps',
+       '''
+       mutter v0=2 hyper=y |
+       transp plane=23 memsize=1000 | window j2=2 |
+       byte gainpanel=each | 
+       grey3 frame1=500 frame3=32 frame2=321 flat=y point1=0.7 point2=0.7 
+       title="CMP gathers" label3=Offset label2=Midpoint
+       font=2 labelsz=6 labelfat=4 titlesz=8 titlefat=4
+       ''')
+
+# Set up velocity scan parameters
+v0 = 1.0
+dv = 0.025
+nv = 150
+
+# Velocity scanning for all CMP gathers
+Flow('scn','cmps',
+     '''
+     vscan semblance=y v0=%g nv=%d dv=%g half=y str=0 |
+     mutter v0=0.9 t0=-4.5 inner=y
+     ''' % (v0,nv,dv),split=[3,1285])
+
+Flow('vel','scn','pick rect1=15 rect2=25 gate=100 an=10 | window')
+Result('vel',
+       '''
+       grey title="NMO Velocity" 
+       label1="Time" label2="Lateral"
+       color=j scalebar=y allpos=y bias=2.1 %g barlabel="Velocity"
+       barreverse=y o2num=1 d2num=1 n2tic=3 labelfat=4 font=2 titlefat=4
+       font=2 labelsz=6 labelfat=4 titlesz=8 titlefat=4
+       ''' % (v0+0.5*nv*dv))
+
+
+Flow('vdip','vel',
+     '''
+     v2d n=64 d=0.05 o=-1.6 mute=y half=y v0=2.
+     ''')
+
+Result('vdip',
+       '''
+       put d2=0.05 o2=-1.6 |
+       mutter v0=1.5 half=y |
+       byte gainpanel=a bar=bar.rsf | 
+       transp plane=23 memsize=1000 | window j2=2 |
+       grey3 frame1=500 frame3=20 frame2=321 flat=y bar=bar.rsf
+       title="VD dips" point1=0.7 point2=0.7
+       label3=Offset label2=Midpoint scalebar=y color=I 
+       barlabel=Slope barunit=samples minval=-5 maxval=5
+       font=2 labelsz=6 labelfat=4 titlesz=8 titlefat=4
+       ''')
+
+Flow('vdseis','cmps vdip',
+     '''
+     seislet dip=${SOURCES[1]} type=b verb=y adj=y inv=y unit=y
+     ''')
+Result('vdseis',
+       '''
+       byte gainpanel=e | put d2=1 o2=1 |
+       window j3=2 | transp plane=23 memsize=1000 |
+       grey3 frame1=500 frame3=0 frame2=321 flat=y
+       title="VD-seislet coefficients" point1=0.7 point2=0.7
+       label3=Scale unit3= label2=Midpoint
+       font=2 labelsz=6 labelfat=4 titlesz=8 titlefat=4
+       ''')
+
+########################
+# Thresholding
+########################
+Flow('thr','vdseis','threshold2 pclip=5')
+Flow('cut','vdseis','cut f2=8')
+Result('cut',
+       '''
+       byte gainpanel=each | window j3=2 |
+       grey3 frame1=500 frame2=1 frame3=321 flat=y
+       title="VD-seislet coefficients" point1=0.7 point2=0.3
+       label2=Offset label3=Midpoint 
+       ''')
+
+# Inverse VD-seislet transform
+Flow('vddenoise','cut vdip',
+     '''
+     seislet dip=${SOURCES[1]} type=b verb=y inv=y unit=y eps=0.1 |
+     mutter v0=1.5 half=y
+     ''')
+Result('vddenoise',
+       '''
+       transp plane=23 memsize=1000 | window j2=2 |
+       byte gainpanel=each | 
+       grey3 frame1=500 frame3=32 frame2=321 flat=y point1=0.7 point2=0.7 
+       title="Denoised gathers" point1=0.7 label3=Offset label2=Midpoint
+       font=2 labelsz=6 labelfat=4 titlesz=8 titlefat=4
+       ''')
+
+#################
+# smooth + PWD-seislet
+#################
+## Flow('smooth','cmps','smooth rect1=20 rect2=2 rect3=1')
+Flow('smooth','cmps','bandpass flo=15 | smooth rect1=20 rect2=2 rect3=1')
+
+Result('smooth',
+       '''
+       mutter v0=2 hyper=y |
+       transp plane=23 memsize=1000 | window j2=2 |
+       byte gainpanel=each | 
+       grey3 frame1=500 frame3=32 frame2=321 flat=y point1=0.7 point2=0.7 
+       title="Smoothed CMP gathers" label3=Offset label2=Midpoint
+       font=2 labelsz=6 labelfat=4 titlesz=8 titlefat=4
+       ''')
+Flow('pwdip','smooth',
+     '''
+     dip rect1=100 rect2=3 rect3=50 n4=0 verb=y
+     ''')
+
+Result('pwdip',
+       '''
+       put d2=0.05 o2=-1.6 |
+       mutter v0=1.5 half=y |
+       byte gainpanel=a bar=bar.rsf | 
+       transp plane=23 memsize=1000 | window j2=2 |
+       grey3 frame1=500 frame3=20 frame2=321 flat=y bar=bar.rsf
+       title="PWD dips" point1=0.7 point2=0.7
+       label3=Offset label2=Midpoint scalebar=y color=I 
+       barlabel=Slope barunit=samples minval=-5 maxval=5
+       font=2 labelsz=6 labelfat=4 titlesz=8 titlefat=4
+       ''')
+
+Flow('pwdseis','cmps pwdip',
+     '''
+     seislet dip=${SOURCES[1]} type=b verb=y adj=y inv=y unit=y
+     ''')
+Result('pwdseis',
+       '''
+       byte gainpanel=e | put d2=1 o2=1 |
+       window j3=2 | transp plane=23 memsize=1000 |
+       grey3 frame1=500 frame3=0 frame2=321 flat=y
+       title="PWD-seislet coefficients" point1=0.7 point2=0.7
+       label3=Scale unit3= label2=Midpoint
+       font=2 labelsz=6 labelfat=4 titlesz=8 titlefat=4
+       ''')
+
+Flow('pwdcut','pwdseis','cut f2=8')
+Flow('pwdenoise','pwdcut pwdip',
+     '''
+     seislet dip=${SOURCES[1]} type=b verb=y inv=y unit=y eps=0.1 |
+     mutter v0=1.5 half=y
+     ''')
+Result('pwdenoise',
+       '''
+       transp plane=23 memsize=1000 | window j2=2 |
+       byte gainpanel=each | 
+       grey3 frame1=500 frame3=32 frame2=321 flat=y point1=0.7 point2=0.7 
+       title="Denoised gathers using PWD seislet"
+       point1=0.7 label3=Offset label2=Midpoint
+       font=2 labelsz=6 labelfat=4 titlesz=8 titlefat=4
+       ''')
+
+#################
+# Brute stacking
+#################
+# NMO
+Flow('nmo','vddenoise vel',
+     '''
+     nmo velocity=${SOURCES[1]} half=y
+     ''')
+
+Result('nmo',
+       '''
+       byte gainpanel=each | window j3=2 |
+       grey3 frame1=500 frame2=36 frame3=321 flat=n
+       title="NMOed Data" point1=0.7
+       label2=Offset label3=Midpoint
+       ''')
+
+# Brute stacking
+Flow('bstack','nmo','stack')
+Result('bstack',
+       '''
+       agc rect1=50 |
+       grey title="Brute stacking" labelfat=4 font=2 titlefat=4
+       ''')
+
+
+End()

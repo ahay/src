@@ -23,6 +23,8 @@ To the reproducible documents collection:
   and orthorhombic media (Sripanich and Fomel)
 * tccs/dbortho: Iterative deblending with multiple constraints based
   on shaping regularization (Chen)
+* lju/vdseislet: Signal and noise separation in prestack seismic data
+  using velocity-dependent seislet transform (Liu, Fomel, and Liu)
 
 To SCons:
 
