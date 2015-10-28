@@ -10,7 +10,7 @@ zerotrace hilbert cdivdir cabs cemd1 cemd2 snr2 snr3 snrcyk preerror
 threshold1 tsmf fxdecon simidenoise bin2rsf rsf2bin halfthr hradon
 suplane simidenoise1 rmtrace prekirch psmig pocssemb afd2d
 prekirchsr simpostkirch presr nlm1 nlm2 dblendseis svmf genshotscyk 
-afd2domp low addtrace matlr pnmomf expd atdfd2d elrsfd2d 
+afd2domp low addtrace matlr pnmomf expd
 '''
 ccprogs = 'diffcxx'
 
@@ -52,6 +52,7 @@ lapack = env.get('LAPACK')
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
             LIBS=[dynpre+'rsfpwd',dynpre+'rsf'])
+env.Prepend(LIBS='fftw3')
 
 for source in src:
     inc = env.RSF_Include(source,prefix='')
