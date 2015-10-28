@@ -10,13 +10,17 @@ zerotrace hilbert cdivdir cabs cemd1 cemd2 snr2 snr3 snrcyk preerror
 threshold1 tsmf fxdecon simidenoise bin2rsf rsf2bin halfthr hradon
 suplane simidenoise1 rmtrace prekirch psmig pocssemb afd2d
 prekirchsr simpostkirch presr nlm1 nlm2 dblendseis svmf genshotscyk 
-afd2domp low addtrace matlr pnmomf expd 
+afd2domp low addtrace matlr pnmomf expd atdfd2d elrsfd2d 
 '''
 ccprogs = 'diffcxx'
 
 # mutter3
 
 mpiprogs='petsctest'
+
+cprogs = '''
+crtm 
+'''
 
 tprogs='''
 clapack cblas csolver eno1 eno2 eno3 spline fft2
@@ -133,6 +137,35 @@ for prog in mpimains:
         if root:
            env.Install(bindir,prog)
 
+######################################################################
+# compiling CUDA programs
+######################################################################
+CTP = env.get('CUDA_TOOLKIT_PATH')
+NVCC = env.get('NVCC')
+
+cuda_mains = Split(cprogs)
+for prog in cuda_mains:
+    if CTP and NVCC:
+        cfile = env.Command('CUDA'+prog+'.c','M'+prog+'.cu','cp $SOURCE $TARGET')
+        cc = env.get('CC')
+        cflags = '--x=cu -O'
+        ldflags = '-lcublas -lcufft -lcusparse'
+        if string.rfind(cc,'icc') >= 0:
+            cflags = cflags + ' -ccbin=%s' % cc
+            ldflags = '-ccbin=%s' % cc
+        prog = env.Program(prog,cfile,
+                           CC=NVCC,
+                           LINKFLAGS=ldflags,
+                           CFLAGS=cflags)
+    else:
+        prog = env.RSF_Place('sf'+prog,None,
+                             message='''
+                             Please check if CUDA is not missing and is installed correctly.
+                             Rerun Madagascar installation after it has been fixed.
+                             ''')
+    if root:
+        env.Install(bindir,prog)
+        
 ######################################################################
 # Compiling testing programs
 ######################################################################
