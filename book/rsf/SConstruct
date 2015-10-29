@@ -6,10 +6,7 @@ Papers(copyr='Madagascar Community',
        school2012/tutorial.tex
        school/articleWSI.tex
        school2009/paper.tex
-       rsf/prog.tex
-       rsf/format.tex
        rsf/tour.tex
-       rsf/api.tex
        rsf/demo.tex
        scons/paper.tex
        '''),
