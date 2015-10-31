@@ -52,7 +52,7 @@ lapack = env.get('LAPACK')
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
             LIBS=[dynpre+'rsfpwd',dynpre+'rsf'])
-env.Prepend(LIBS='fftw3')
+#env.Prepend(LIBS='fftw3')
 
 for source in src:
     inc = env.RSF_Include(source,prefix='')
