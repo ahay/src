@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-'Show data with zoom'
+'Simple interactive picking'
 
 ##   Copyright (C) 2010 University of Texas at Austin
 ##  
