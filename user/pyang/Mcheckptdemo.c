@@ -35,7 +35,7 @@ static float dz, dx, _dz, _dx, dt, fm;
 
 
 typedef struct {
-  int no;// number/index of the checkpoint in time axis
+  int no;// number/index of the checkpoint in time coordinate
   float **p;// p is redundant since we have px and pz: p=px+pz
   float **px;
   float **pz;
