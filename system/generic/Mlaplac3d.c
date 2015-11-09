@@ -1,4 +1,4 @@
-/* 2-D finite-difference Laplacian operation. */
+/* 3-D finite-difference Laplacian operation. */
 /*
   Copyright (C) 2004 University of Texas at Austin
   Copyright (C) 2014 Colorado School of Mines

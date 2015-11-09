@@ -24,8 +24,8 @@ int main(int argc, char* argv[])
 {
     bool sym;
     float o1,d1, o2,d2, tol;
-    int nd, n1, n2, n12, niter, rect1, rect2, nw;
-    float **xy, *z, *m, *m2, *d;
+    int nd, n1, n2, n12, niter, nmem, rect1, rect2, nw;
+    float **xy, *z, *m, *d;
     sf_file in, out, coord, pattern;
 
     sf_init(argc,argv);
@@ -69,6 +69,9 @@ int main(int argc, char* argv[])
     if (!sf_getint("niter",&niter)) niter=10;
     /* number of iterations */
 
+    if (!sf_getint("niter",&nmem)) nmem=niter;
+    /* GMRES memory */
+
     xy = sf_floatalloc2(2,nd);
     sf_floatread(xy[0],nd*2,coord);
 
@@ -86,7 +89,7 @@ int main(int argc, char* argv[])
     
     nnshape_init(sym,nd, n1,n2, o1,o2, d1,d2, 
 		 rect1,rect2, nw, 2, xy);
-    sf_gmres_init(n12,niter); 
+    sf_gmres_init(n12,nmem); 
  
     z = sf_floatalloc (n12);
     m = sf_floatalloc (n12);

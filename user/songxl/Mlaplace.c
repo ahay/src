@@ -1,4 +1,4 @@
-/* 2-D Fourier finite-difference wave extrapolation */
+/* 2-D finite-difference Laplacian */
 /*
   Copyright (C) 2009 University of Texas at Austin
   
