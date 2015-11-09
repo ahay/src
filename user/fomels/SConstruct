@@ -146,7 +146,7 @@ for conv in ('byte2tif','tif2byte'):
     if root:
         env.Install(bindir,prog)
 
-for prog in Split('agrid burg cburg cosft3 grid1 ntriangle1 pcg smspray spray'):
+for prog in Split('agrid burg cburg chebyshev cosft3 grid1 ntriangle1 pcg smspray spray'):
     sources = ['Test' + prog,prog]
     bldutil.depends(env,sources,prog)
     sources = map(lambda x: x + '.o',sources)
