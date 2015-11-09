@@ -11,8 +11,9 @@ istinterp istpad istseislet lsrtm2d lsprtm2d lsinterp2d
 mwni2d myradon2 mythresh mshots mcaseislet modeling2d mysnr
 pocs3d pocs pocsseislet rtm2d rtmadcig rtmva2d
 Testfd2d Testfd3d Testeb Testelastic2d Testaniso Testspml
-viscoa2d viscoe2d maxwell_sponge1 maxwell_cpml1 
+viscoa2d viscoe2d
 '''
+# maxwell_sponge1 maxwell_cpml1 
 
 ######################################################################
 # 2. C++ main programs
@@ -38,13 +39,15 @@ mpigpufwi
 '''
 
 ######################################################################
-# 6. F90 main programs
+# 6. Fortran 90 main programs
 f90_progs = '''
-maxwell_direct_fb maxwell_sponge2_fb maxwell_cpml28_fb maxwell_cpml24_fb
-maxwell_cpml3d_fb maxwell_boundary1 maxwell_boundary2 maxwell_dftinterp
-demofftw3 
+demofftw3
 '''
-#gmb maxwell_polyinterp gmb_va maxwell_cpml24_fbr polyinterp_test
+#maxwell_direct_fb maxwell_sponge2_fb maxwell_cpml28_fb maxwell_cpml24_fb
+#maxwell_cpml3d_fb maxwell_boundary1 maxwell_boundary2 maxwell_dftinterp 
+#maxwell_polyinterp maxwell_bsplineinterp maxwell_ksincinterp
+#dftinterp1d polyinterp1d bsplineinterp1d ksincinterp1d
+#gmbva gmbva_rev2
 
 
 ######################################################################
