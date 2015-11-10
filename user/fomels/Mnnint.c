@@ -26,7 +26,7 @@
 
 int main (int argc,char* argv[]) 
 {
-    int i, j, ip, n1, n2, np, ndim, order, n123, *pp, n[2], box[2], **shift, b;
+    int i, j, ip, n1, n2, np, ndim, order, n123, *pp, n[2], box[2], **shift, b, repeat;
     float o1, o2, d1, d2, slow, *dd, **pts, *vv, *h, *bin, *vor, d[2], **rect;
     bool isvel, dist, voro;
     sf_upgrad upg;
@@ -173,20 +173,22 @@ int main (int argc,char* argv[])
 	
     /* 4. smoothing */
 
+    if (!sf_getint("repeat",&repeat)) repeat=1;
+
     rect = sf_floatalloc2(n123,2);
     shift = sf_intalloc2(n123,2);
 
     for (j=0; j < 2; j++) {
 	box[j] = 1;
 	for (i=0; i < n123; i++) {
-	    rect[j][i] = 1.0f+dd[i]/d[j];
+	    rect[j][i] = 1.0f+dd[i]/d[j]/repeat;
 	    b = ceilf(rect[j][i]);
 	    if (b > box[j]) box[j] = b;
 	    shift[j][i] = 0;
 	}
     }
 
-    ntrianglen_init(2,box,n,rect,shift,1);
+    ntrianglen_init(2,box,n,rect,shift,repeat);
     ntrianglen_lop(false,false,n123,n123,vor,bin);
 	    
     sf_floatwrite(bin,n123,grid); 
