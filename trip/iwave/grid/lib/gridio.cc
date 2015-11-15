@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #include "gridio.h"
 
 // UPDATE - if set, rsfwrite scales output, rsfread performs saxpy

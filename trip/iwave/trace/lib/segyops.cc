@@ -1,5 +1,9 @@
 #include "segyops.hh"
 
+#ifndef M_PI
+#define M_PI		3.14159265358979323846
+#endif
+
 float mutefun(float t) {
     t = MIN(1.0f,MAX(t,0.0f));
     return 3*t*t-2*t*t*t;
