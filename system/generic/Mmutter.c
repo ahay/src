@@ -5,6 +5,9 @@ The weight is zero for t <       (x-x0) * slope0
 The weight is one  for t >  tp + (x-x0) * slopep
 
 The signs are reversed for inner=y.
+
+July 2015 program of the month:
+http://ahay.org/blog/2015/07/10/program-of-the-month-sfmutter/
 */
 /*
   Copyright (C) 2004 University of Texas at Austin

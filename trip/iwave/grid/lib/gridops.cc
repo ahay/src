@@ -1,4 +1,9 @@
 #include "gridops.hh"
+
+#ifndef M_PI
+#define M_PI		3.14159265358979323846
+#endif
+
 float cosfun3(float t){
     return 0.5 + cos(M_PI * t)/2.0f;
 }

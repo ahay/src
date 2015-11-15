@@ -245,14 +245,13 @@ void sf_upgrad_grad(sf_upgrad upg,
 {
     int it, jt, i, m, j;
     unsigned char *up;
-    float num, x2;
+    float x2;
    
     for (it = 0; it < nt; it++) {
 	jt = upg->order[it];
 
 	x2 = x[jt];
 	up = upg->update[it];
-	num = 0.;
 
 	for (i=0, m=1; i < ndim; i++, m <<= 1) {
 	    if (up[0] & m) {

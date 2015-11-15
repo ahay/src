@@ -1,5 +1,9 @@
-
 #include "traceio.h"
+
+#ifndef M_PI
+#define M_PI		3.14159265358979323846
+#endif
+
 //#define IWAVE_VERBOSE
 /* axis indices throughout: 0=z, 1=x, 2=y */
 
