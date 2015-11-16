@@ -1,0 +1,14 @@
+from rsf.tex import *
+import os
+
+#Paper('frac',lclass='geophysics',options='manuscript',color='vel q cross')
+#Paper('frac',lclass='segabs',color='vel q cross')
+#Paper('frac',lclass='geophysics',options='manuscript',use='amsmath',color='vel q cross')
+#End()
+#End(lclass='geophysics',options='manuscript',use='amsmath',color='vel q visacu comacu cross',hires='snap-0 snap-1 snap-3 snap-4')
+
+Command2('revised.tex','paper.tex','cp $SOURCE $TARGET')
+
+Paper('revised',options='manuscript,revised')
+
+End(lclass='geophysics',options='manuscript',use='amsmath',color='vel q visacu comacu comacu-n cross',hires='snap-0 snap-1 snap-3 snap-4 vel q visacu comacu comacu-n cross acudata visdata visdata-n')
