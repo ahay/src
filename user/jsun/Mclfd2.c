@@ -78,11 +78,11 @@ int main(int argc, char* argv[])
     s1 = sf_intalloc(LEN);
     s2 = sf_intalloc(LEN);
 
-    for (int ix=0; ix<SIZE; ix++) stmp[ix]= ix - (SIZE-1)/2;
+    for (ix=0; ix<SIZE; ix++) stmp[ix]= ix - (SIZE-1)/2;
 
     ik = 0;
-    for (int ix=0; ix<SIZE; ix++){
-        for (int iz=0; iz<SIZE; iz++){
+    for (ix=0; ix<SIZE; ix++){
+        for (iz=0; iz<SIZE; iz++){
             if((stmp[ix] == 0) || (stmp[iz] == 0)) {
                 s1[ik]=stmp[iz];
                 s2[ik]=stmp[ix];

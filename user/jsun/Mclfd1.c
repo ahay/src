@@ -71,16 +71,16 @@ int main(int argc, char* argv[])
     s1 = sf_intalloc(LEN);
 
     if (cpxexp) {
-        //for (int iz=0; iz<LEN/2; iz++) s1[iz]= iz - (LEN/2-1);
-        //for (int iz=LEN/2; iz<LEN; iz++) s1[iz]= iz - LEN/2;
-        //for (int iz=0; iz<LEN; iz++) s1[iz]= (iz%2==0) ? iz/2 : -iz/2;
-        for (int iz=0; iz<LEN; iz++) s1[iz]= (iz%2==0) ? iz/2-(LEN/2-1) : -(iz/2-(LEN/2-1));
+        //for (iz=0; iz<LEN/2; iz++) s1[iz]= iz - (LEN/2-1);
+        //for (iz=LEN/2; iz<LEN; iz++) s1[iz]= iz - LEN/2;
+        //for (iz=0; iz<LEN; iz++) s1[iz]= (iz%2==0) ? iz/2 : -iz/2;
+        for (iz=0; iz<LEN; iz++) s1[iz]= (iz%2==0) ? iz/2-(LEN/2-1) : -(iz/2-(LEN/2-1));
         LEN2 = LEN/2;
     } else {
-        for (int iz=0; iz<LEN; iz++) s1[iz]= iz;
+        for (iz=0; iz<LEN; iz++) s1[iz]= iz;
         LEN2 = LEN;
     }
-    for (int iz=0; iz<LEN; iz++) sf_warning("s1=%d",s1[iz]); 
+    for (iz=0; iz<LEN; iz++) sf_warning("s1=%d",s1[iz]); 
     
     for (iz=0; iz < nz; iz++) {
         cur[iz] = wav[iz];
