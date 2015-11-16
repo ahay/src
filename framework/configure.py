@@ -748,6 +748,7 @@ def ffmpeg(context):
         context.env['CPPPATH'] = oldpath + [ffmpegpath]
     else:
         for top in ('/usr/include','/usr/local/include',
+                    '/usr/include/x86_64-linux-gnu/',
                     '/sw/include','/opt/local/include',
                     '/usr/include/ffmpeg'):
             ffmpegpath = os.path.join(top,'ffmpeg')
