@@ -18,7 +18,8 @@ ccprogs = 'tilr2 ortholr3 cortholr3 cisolr2 cisolr2rev cisolr3 ctilr2 cisolr2gra
 # eiktest eiktest2 cisolr1eik eiksol cfraclr2 rfraclr2 cisolr2twostep
 # cisolr2hyb icisolr2
 
-mpi_progs = 'mpilsrtm mpiewertm mpirtmop mpilsrtmgmres mpircvrtm mpiqrtm mpiwave2kiss mpiwave2 mpiwave3 mpiwave3kiss mpifftexp1 mpifftexp1kiss'
+mpi_progs = 'mpilsrtm mpiewertm mpirtmop mpilsrtmgmres mpircvrtm mpiqrtm'
+#mpiwave2 mpiwave3 mpifftexp1 mpiwave2kiss mpiwave3kiss mpifftexp1kiss
 
 pyprogs = 'fft'
 pymods = ''
@@ -62,7 +63,8 @@ for prog in mpi_mains:
     bldutil.depends(env,sources,'M'+prog)
     if mpicc:
         env.StaticObject('M'+prog+'.c',CC=mpicc)
-        prog = env.Program(prog,map(lambda x: x + '.o',sources),CC=mpicc,LIBS=env.get('LIBS')+['fftw3f_mpi'])
+        #prog = env.Program(prog,map(lambda x: x + '.o',sources),CC=mpicc,LIBS=env.get('LIBS')+['fftw3f_mpi'])
+        prog = env.Program(prog,map(lambda x: x + '.o',sources),CC=mpicc)
     else:
         prog = env.RSF_Place('sf'+prog,None,var='MPICC',package='mpi')
     if root:
