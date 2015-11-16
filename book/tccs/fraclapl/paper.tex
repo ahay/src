@@ -1,0 +1,196 @@
+\title{Viscoacoustic modeling and imaging using low-rank approximation}
+\author{Junzhe Sun$^{*}$, Tieyuan Zhu, and Sergey Fomel, the University of Texas at Austin}
+\maketitle
+
+\address{
+\footnotemark[1]Bureau of Economic Geology \\
+John A. and Katherine G. Jackson School of Geosciences \\
+The University of Texas at Austin \\
+University Station, Box X \\
+Austin, TX 78713-8924 \\
+}
+
+\footnote{Parts of this paper were presented at 2014 SEG meeting}
+
+\righthead{Low-rank viscoacoustic wave extrapolation}
+
+\begin{abstract}
+%We model attenuation effects on wave propagation by using a constant-$Q$ wave equation, which includes decoupled fractional Laplacians which account separately for amplitude loss and velocity dispersion. A constant-$Q$ wave equation leads to a mixed-domain wave extrapolation operator, which can be accurately handled by a low-rank symbol approximation. Applying low-rank approximation on the mixed domain symbol allows for an arbitrarily variable fractional power of the wavenumber. We propose to compensate for attenuation effects using least-squares RTM and compare it against the $Q$-compensated RTM.
+%The decoupled Laplacians make it convennient to compensate for amplitude loss correctly while keeping the velocity dispersion unchanged during time-reversal wave propagation, such as that used in reverse-time migration. 
+A constant-$Q$ wave equation involving fractional Laplacians was recently introduced for viscoacoustic modeling and imaging. This fractional wave equation has a convenient mixed-domain \new{space-wavenumber }formulation, which involves the fractional-Laplacian operators with a spatially varying power. We propose to apply low-rank approximation to the mixed-domain symbol, which enables a space-variable attenuation specified by the variable fractional power of the Laplacians. Using the proposed \new{approximation }scheme, we formulate the framework of the $Q$-compensated reverse-time migration ($Q$-RTM) for attenuation compensation. Numerical examples using synthetic data demonstrate the improved accuracy of using low-rank wave extrapolation with a constant-$Q$ fractional-Laplacian wave equation for seismic modeling \new{and migration }in attenuating media. Low-rank $Q$-RTM \old{using}\new{applied to} viscoacoustic data is capable of producing \old{high-quality }images comparable \new{in quality} with those produced \new{by conventional RTM }from acoustic data.
+\end{abstract}
+
+\section{Introduction}
+Modeling seismic wave propagation in attenuating media accounts for the effective anelastic characteristics of the real Earth \cite[]{carc07}. Numerous studies have shown that many of the hydrocarbon prospecting areas, such as those where \old{a gas accumulation is}\new{gas accumulations are} present, \old{highly}\new{strongly} attenuate seismic waves \cite[]{dvorkin06}. Seismic attenuation can be expressed as a combined effect of energy loss and velocity dispersion. 
+
+%The common approaches to modeling seismic wave propagation in attenuating media can be categorized into two types. One approach introduces complex velocity in order to implement attenuation effects in the frequency domain \cite[]{aki,liao96,stekl98}. The other approach incorporates the quality factor, $Q$, in the time-domain wave equation. 
+Attenuation effects can be modeled by incorporating the quality factor, $Q$, in the time-domain wave equation. One of the classic approaches involves a superposition of mechanical elements (e.g., Maxwell and standard linear solid elements) to characterize $Q$, and is known as approximate constant-$Q$ models \cite[]{liu76,blanch95,carc07,zhu13a}. The approximate constant-$Q$ approach suffers from large computational and memory requirements. \cite{kja79} initially proposed a constant-$Q$ model that assumes a linear relationship between the attenuation coefficient and frequency. This model was proven accurate in capturing \old{constant-$Q$}\new{a nearly constant $Q$} behavior within the seismic frequency band. However, early implementations of \old{this}\new{the constant-$Q$} model involved a fractional time derivative, which \old{requires calculating the}\new{required storing the whole} history of the wavefield \cite[]{caputo71}. This requirement rendered the memory cost too high for practical applications, even when the fractional operator was truncated after a certain time period \cite[]{pod99,carc02,carc09}. To overcome this issue, fractional-Laplacian operators \cite[]{chenholm04} have been introduced to approximate the constant-$Q$ viscoacoustic wave equation \cite[]{carc10,zhu14a}. The fractional-Laplacian approach is attractive because it can be conveniently formulated in the wavenumber domain using Fourier transforms and without introducing any extra \new{equations or }variables \cite[]{carc10}. Using this approach, \cite{zhu14a} developed a decoupled wave equation that accounts separately for amplitude attenuation and phase dispersion effects, thus allowing for correct compensation for both factors \new{during back propagation }by reversing the sign of the attenuation operator and keeping the sign of the dispersion operator unchanged \old{during back propagation }\cite[]{zhu14c}.
+
+\cite{zhu14b} further proposed to use the fractional-Laplacian $Q$-compensated wave equation for reverse-time migration. \cite{zhang10} applied an analogous approach derived from normalization transforms. Alternative strategies for compensating for attenuation in seismic migration include methods based on one-way wave-equation migration (WEM) and its dispersion relation \cite[]{valenciano12}, as well as methods based on Kirchhoff migration and reverse-time migration (RTM), with time-variant $Q$ filters \cite[]{cavalca13}. \cite{dutta14} used least-squares RTM \old{(LSRTM) }for attenuation compensation based on standard linear solid (SLS) model and its adjoint operator \cite[]{blanchsymes}, with a simplified stress-strain relation, which incorporated \old{only one}\new{a single} relaxation mechanism \cite[]{rob94,blanch95}.
+
+The fractional-Laplacian approach was previously implemented using either a pseudo-spectral method, by \old{taking the average of}\new{averaging} the fractional power of the Laplacian operator as an approximation \cite[]{zhu14a}, or a finite-difference approach \cite[]{lin09}. In this paper, we propose to apply a low-rank approximation scheme \cite[]{lowrank,myself1} to implement decoupled fractional Laplacians of \cite{zhu14a} in wave extrapolation, with the goal of accurately capturing spatially-varying fractional power. The advantage of the low-rank approach is its ability to \new{directly }approximate the mixed-domain wave extrapolation operator with a separable representation, \old{thus reducing the computational cost}\new{which minimizes the number of fast Fourier transforms (FFTs) per time step}. Additionally, we derive the adjoint of the forward modeling operator, which correctly compensates for velocity dispersion but not amplitude loss. The proposed operator and its adjoint can be used in least-squares RTM to recover the true reflectivity of the attenuating medium through iterations of migration and modeling \cite[]{me14a}. In this paper, we \old{use}\new{implement $Q$-RTM using} an operator that compensates for amplitude loss during back propagation of the viscoacoustic data \cite[]{zhu14b}. When used with the cross-correlation imaging condition, the attenuation-compensated operator is capable of producing images with \old{better}\new{improved} illumination in the attenuating zone. We apply the low-rank $Q$-RTM to \old{a }synthetic \new{data generated from a }constant-$Q$ model to demonstrate the effectiveness of attenuating compensation by the proposed method.
+
+\section{Theory}
+A constant-$Q$ model assumes that the attenuation coefficient is linear in frequency \cite[]{kja79}. 
+%Even though some field and laboratory data have shown evidence for frequency-dependent $Q$ media \cite[]{kan83, sams97, batzle06}, a constant-$Q$ model is usually adequate in the seismic range of frequencies. 
+The time-domain viscoacoustic wave equation for constant-$Q$ model can be written as \cite[]{carc02}
+\begin{equation}
+ \label{eq:caputo}
+ \frac{\partial^{2-2\gamma} P}{\partial t^{2-2\gamma}} = c^2\omega_0^{-2\gamma}\nabla^2 P \;,
+\end{equation}
+where $\mathbf{x}$ is the spatial coordinate vector, $P(\mathbf{x},t)$ is the pressure wavefield, 
+\begin{equation}
+\gamma(\mathbf{x})=\arctan(1/Q(\mathbf{x}))/\pi
+\end{equation}
+is a dimensionless parameter, $\nabla^2$ is the Laplacian operator,\old{ and}
+\begin{equation}
+c^2(\mathbf{x})=c_0^2(\mathbf{x})\cos^2(\pi\gamma(\mathbf{x})/2) \; ,
+\end{equation}
+\old{where}\new{and} $c_0(\mathbf{x})$ is the velocity model defined at the reference frequency $\omega_0$. When $Q$ is finite, \new{$\gamma$ is greater than zero, and }the wave equation involves a fractional time derivative. 
+
+In a homogeneous medium, \old{substituting}\new{considering} the plane-wave solution $e^{(i\omega t - i\tilde{\mathbf{k}}\cdot\mathbf{x})}$\old{ into equation~\ref{eq:caputo}}, where $\omega$ is the angular frequency and $\tilde{\mathbf{k}}$ is the complex wavenumber vector\new{ and substituting it into equation~\ref{eq:caputo}}, leads to the dispersion relation
+\begin{equation}
+  \label{eq:disp1}
+  \frac{\omega^2}{c^2} = (i)^{2\gamma} \omega_0^{-2\gamma}\omega^{2\gamma}\tilde{\mathbf{k}}^2 \;.
+\end{equation}
+
+Starting from equation~\ref{eq:disp1}, \cite{zhu14a} derived the following approximate dispersion relation\old{ with decoupled Laplacians}:
+\begin{equation}
+  \label{eq:dispfrac1}
+  \frac{\omega^2}{c^2} = -\old{\beta_1 }\eta |\mathbf{k}|^{2\gamma +2} - i \old{\beta_2 }\omega\tau |\mathbf{k}|^{2\gamma +1} \;, 
+\end{equation}
+which corresponds to the following constant-$Q$ wave equation\new{ with fractional Laplacians}:
+\begin{eqnarray}
+  \label{eq:frac1}
+ \frac{1}{c^2}\frac{\partial^2 P}{\partial t^2} = \nabla^2 P + \old{\beta_1} \{ \eta (-\nabla^2)^{\gamma+1} - \nabla^2 \} P
++ \old{\beta_2} \tau \frac{\partial}{\partial t}(-\nabla^2)^{\gamma+1/2} P \; ,
+\end{eqnarray}
+where $\eta = -c_0^{2\gamma}\omega_0^{-2\gamma}\cos(\pi \gamma)$ and $\tau = -c_0^{2\gamma-1}\omega_0^{-2\gamma}\sin(\pi \gamma)$. \old{Setting $\beta_1=1$ and $\beta_2=1$ leads to the constant-$Q$ wave equation.} Note that both $c_0$\old{, the phase velocity,}\new{ (the phase velocity)} and $\gamma$ \old{in the fractional power}\new{(the fractional power)} can be heterogeneous (depending on $\mathbf{x}$). Solving for $\omega$ in equation~\ref{eq:dispfrac1} yields:
+\begin{equation}
+  \label{eq:omega}
+  \omega = \frac{-ip_1 + p_2}{2} \; ,
+\end{equation}
+where:
+\begin{eqnarray}
+  \label{eq:p1}
+  p_1 &=& \tau c^2|\mathbf{k}|^{2\gamma+1} \; , \\
+  \label{eq:p2}
+  p_2 &=& \sqrt{-\tau^2c^4|\mathbf{k}|^{4\gamma+2}-4\eta c^2|\mathbf{k}|^{2\gamma+2}} \;.
+\end{eqnarray}
+The phase function $\phi (\mathbf{x},\mathbf{k},\Delta t)$ that determines the phase shift of wavefield \old{when propagating}\new{for propagation} in time is then defined as
+\begin{equation}
+  \label{eq:phasefunc}
+  \phi_1 (\mathbf{x},\mathbf{k},\Delta t) = \mathbf{k} \cdot \mathbf{x} + \frac{-ip_1 + p_2}{2}\,\Delta t
+\end{equation}
+and can be supplied to the low-rank one-step wave extrapolation algorithm \cite[]{myself1}.
+%In practice, the sign before $p_2$ is chosen positive because it corresponds to the correct branch of the solution. 
+
+\old{When back propagating the wavefield}\new{To compensate for attenuation}, reversing the sign of \old{$\beta_2$}\new{the second term on the right hand side of equation~\ref{eq:dispfrac1}} can amplify the amplitude, while \old{$\beta_1$}\new{the other term} must be kept unchanged to counteract the dispersion effects\new{ \cite[]{zhu14c}}. \old{The}\new{Thus, the} attenuation-compensated constant-$Q$ wave equation \old{amounts}\new{corresponds} to the dispersion relation:
+\begin{equation}
+  \label{eq:dispfrac2}
+  \frac{\omega^2}{c^2} = -\eta |\mathbf{k}|^{2\gamma +2} + i\omega\tau |\mathbf{k}|^{2\gamma +1} \; ,
+\end{equation}
+which defines the complex-conjugate phase function:
+\begin{equation}
+  \label{eq:phasefunc2}
+  \phi_2 (\mathbf{x},\mathbf{k},\Delta t) = \bar{\phi_1} (\mathbf{x},\mathbf{k},\Delta t) = \mathbf{k} \cdot \mathbf{x} + \frac{ip_1 + p_2}{2}\,\Delta t \; .
+\end{equation}
+Both $\phi_1$ and $\phi_2$ involve the fractional power of wavenumber, and depend on both $\mathbf{x}$ and $\mathbf{k}$, the Fourier transform pair. The low-rank one-step wave extrapolation operator \cite[]{myself1} provides a convenient way to utilize the phase function to extrapolate a viscoacoustic wavefield, while allowing $\gamma(\mathbf{x})$, the fractional power coefficient, to vary in space. The one-step mixed-domain operator has the form of the following Fourier integral operator:
+\begin{equation}
+  \label{eq:exp}
+  P(\mathbf{x},t+\Delta t) = \int \hat{P}(\mathbf{k},t)\,e^{i\,\phi(\mathbf{x},\mathbf{k},\Delta t)}\,d\mathbf{k}\;,
+\end{equation}
+where $\hat{P}$ is the spatial Fourier transform of $P$.
+Its adjoint form can be expressed as
+\begin{equation}
+  \label{eq:expadj}
+  \hat{P}(\mathbf{k},t) = \int P(\mathbf{x},t+\Delta t)\,e^{-i\,\bar{\phi}(\mathbf{x},\mathbf{k},\Delta t)}\,d\mathbf{x}\; ,
+\end{equation}
+where $\bar{\phi}$ denotes the complex conjugate of $\phi$. \old{To make the computation feasible, we apply low-rank decomposition proposed by Fomel et al. (2013) to approximate the wave extrapolation symbol.} Substituting equation~\ref{eq:phasefunc} into equation~\ref{eq:exp}, we can write the forward extrapolation operator explicitly as
+\begin{eqnarray}
+  \label{eq:expfor}
+  P(\mathbf{x},t+\Delta t) = \int \hat{P}(\mathbf{k},t)\,e^{i\,\phi_1(\mathbf{x},\mathbf{k},\Delta t)}\,d\mathbf{k}
+  = \int \hat{P}(\mathbf{k},t)\,e^{i\mathbf{k} \cdot \mathbf{x} + (p_1 + ip_2)\,\Delta t/2}\,d\mathbf{k} \; .
+\end{eqnarray}
+The corresponding adjoint operator \old{acquires}\new{takes} the form:
+\begin{eqnarray}
+  \label{eq:expadj}
+  \hat{P}_{adj}(\mathbf{k},t) = \int P(\mathbf{x},t+\Delta t)\,e^{-i\,\bar{\phi_1}(\mathbf{x},\mathbf{k},\Delta t)}\,d\mathbf{x}
+  = \int P(\mathbf{x},t+\Delta t)\,e^{-i\mathbf{k} \cdot \mathbf{x} + (p_1 - ip_2)\,\Delta t/2}\,d\mathbf{x} \; .
+\end{eqnarray}
+\new{To make the computation feasible, we apply low-rank decomposition proposed by \cite{lowrank} to approximate the wave extrapolation symbol in equations~\ref{eq:expfor} and \ref{eq:expadj}.}
+
+Note that the adjoint operator compensates for velocity dispersion. Because the sign of $p_1$ remains unchanged, the amplitude of waves will be attenuated during backward propagation using equation~\ref{eq:expadj}. This means that the adjoint operator \old{is not}\new{may not be} well suited for RTM because the backward wavefield would be attenuated twice. However, the adjoint operator can be supplied into the framework of least-squares RTM which can \new{then }iteratively recover the amplitude loss caused by viscoacoustic attenuation \cite[]{me14a}.
+
+An alternative strategy for backward wave propagation is to try compensating for the full attenuation effect (both amplitude loss and velocity dispersion) using the operator
+\begin{equation}
+  \label{eq:expforc}
+  P_{comp}(\mathbf{x},t+\Delta t) = \int \hat{P}(\mathbf{k},t)\,e^{i\,\phi_2(\mathbf{x},\mathbf{k},\Delta t)}\,d\mathbf{k}
+  = \int \hat{P}(\mathbf{k},t)\,e^{i\mathbf{k} \cdot \mathbf{x} + (-p_1 + ip_2)\,\Delta t/2}\,d\mathbf{k} \; ,
+\end{equation}
+which is the adjoint of
+\begin{equation}
+  \label{eq:expbackc}
+  \hat{P}_{comp}(\mathbf{k},t) = \int P(\mathbf{x},t+\Delta t)\,e^{-i\,\bar{\phi_2}(\mathbf{x},\mathbf{k},\Delta t)}\,d\mathbf{x}
+  = \int P(\mathbf{x},t+\Delta t)\,e^{-i\mathbf{k} \cdot \mathbf{x} + (-p_1 - ip_2)\,\Delta t/2}\,d\mathbf{x} \; .
+\end{equation}
+\old{Operator~\ref{eq:expforc}}\new{In application to RTM, operator in equation~\ref{eq:expforc}} has an exponentially growing term which \old{amplifies}\new{can amplify} the energy in the \new{forward-propagated }source wavefield\old{: $S^{comp}(\mathbf{x},t) = S(\mathbf{x},t)\,e^{p[F(\mathbf{x})]}$, where $p[F(\mathbf{x})]$ is the amplitude amplification coefficient that depends on the forward-propagation wave path $F(\mathbf{x})$}. In the same manner, \old{operator~\ref{eq:expbackc} compensates}\new{operator in equation~\ref{eq:expbackc} can compensate} for the amplitude loss in the \new{backward-propagated }receiver wavefield\old{: $R^{comp}(\mathbf{x},t) = R(\mathbf{x},t)\,e^{p[B(\mathbf{x})]}$, where $p[B(\mathbf{x})]$ is the amplitude compensation coefficient that depends on the backward-propagation wave path $B(\mathbf{x})$}. In order to avoid magnifying high-frequency components during \old{backward }wave propagation, we employ a low-pass Tukey filter for the attenuation and dispersion operators in the wavenumber domain \cite[]{zhu14b}. A complex-valued imaging condition that compensates for both velocity dispersion and amplitude loss can be obtained by cross-correlating the source and receiver wavefields modeled by equations~\ref{eq:expforc} and \ref{eq:expbackc} \cite[]{zhu14b}\old{: $I_{comp}(\mathbf{x}) = \sum\limits_s \sum\limits_t\bar{S}_s(\mathbf{x},t)\,R_s(\mathbf{x},t)\,e^{p[F(\mathbf{x})]+p[B(\mathbf{x})]}$}.
+
+\old{The viscoacoustic data (receiver wavefield)}\new{In this way, the migrated viscoacoustic data} gets corrected for attenuation due to viscoacoustic material encountered along the wave path. As will be demonstrated in the numerical examples, $Q$-compensated RTM is capable of enhancing illumination in areas where attenuating material is present. For a more accurate compensation of attenuation, operators~\ref{eq:expforc} and \ref{eq:expbackc} can be used to design a preconditioner in iterative least-squares RTM.
+
+\section{Numerical Examples}
+
+%\subsection{Different $Q$ model}
+
+%Our first example compares viscoacoustic wave propagation in different $Q$ media \cite[]{zhu14a}. The model is homogeneous with a velocity of $2164\;m/s$. An explosive source is located in the center of the model, and is a Ricker wavelet with $100\;Hz$ peak frequency. For the constant-$Q$ model, we prescribe a reference velocity $c_0=2164\;m/s$ at a high frequency of $1500\;Hz$. Wavefields are propagated using four different values of $Q$, and snapshots are taken at $t=180\;ms$ as shown by Figure~\ref{fig:comp}. The four quadrants corresponds to four different $Q$s. It can be observed that smaller $Q$ leads to stronger attenuation effects, including amplitude loss and velocity dispersion (delayed phases).
+
+%\inputdir{diffq}
+%\plot{comp}{width=0.4\textwidth}{Viscoacoustic wave propagation snapshots in a homogeneous medium taken at $t=180\;ms$. Upper left quadrant has $Q=100$; upper right quadrant has $Q=30$; lower left quadrant has $Q=10$; lower right quadrant has $Q=4$.}
+
+\subsection{Two-layer model}
+
+\old{Our first example is chosen}\new{The purpose of our first example is} to investigate the accuracy of the solution of the constant-$Q$ wave equation using the proposed low-rank scheme, in the presence of a sharp contrast in both velocity and $Q$. We use an isotropic two-layer model with $v=1800\;m/s$ in the top layer and $v=3600\;m/s$ in the bottom layer. The model is discretized on a $200 \times 200$ grid, with a spatial sampling of $8\;m$ along both $X$ and $Z$ directions. An explosive source with a peak frequency of $50\;Hz$ is located at the center. The reference frequency is $\omega_0=1500\;Hz$. Wavefield snapshots are taken at $t=330\;ms$. Figure~\ref{fig:snap-0} shows the acoustic case, in which the model has \new{the }velocity discontinuity but no attenuation ($Q=\infty$). For comparison, Figure~\ref{fig:snap-1} demonstrates the effect of homogeneous attenuation where $Q=30$. Both velocity dispersion and amplitude loss can be observed. In Figure~\ref{fig:snap-3}, we set $Q=30$ in the top layer and $Q=100$ in the bottom layer. The transmitted arrival exhibits less attenuation \old{effect }compared with that in Figure~\ref{fig:snap-1}. In Figure~\ref{fig:snap-4}, both velocity and $Q$ remain the same as those in Figure~\ref{fig:snap-3}; however, the fractional power of Laplacians, $\gamma$, is taken to be the averaged value, which corresponds to the original implementation by \cite{zhu14a}. To compare the results modeled by the two strategies, a middle trace at $x=800\;m$ is extracted from both wavefield snapshots (Figures~\ref{fig:snap-3} and \ref{fig:snap-4}). Figure~\ref{fig:cross} shows the two traces, along with their difference. Errors caused by using a constant $\gamma$ instead of a spatially varying $\gamma$ can be easily observed.
+
+\inputdir{twolayer}
+\multiplot{4}{snap-0,snap-1,snap-3,snap-4}{width=0.45\textwidth}{Viscoacoustic wave propagation in a two-layer model: (a) acoustic modeling with $v=1800\;m/s$ in top layer and $v=3600\;m/s$ in bottom layer; (b) same velocity as (a), homogeneous $Q=30$; (c) same velocity as (a), $Q=30$ in top layer and $Q=100$ in bottom layer; (d) wavefield propagated using \new{a constant }averaged fractional power $\gamma$ using same model as (c).}
+
+\plot{cross}{width=0.9\textwidth}{Traces at $x=800\;m$ extracted from wavefield snapshots and their difference. Red, long-dashed line corresponds to averaged $\gamma$; blue, solid line corresponds to variable $\gamma$; black, shot-dashed line is their difference.}
+
+\subsection{Marmousi Q model}
+
+\inputdir{marmq}
+\multiplot{2}{vel,q}{width=0.7\textwidth}{Marmousi velocity/attenuation ($Q$) model. (a) Marmousi velocity model; (b) Marmousi $Q$ model.}
+\multiplot{3}{acudata,visdata,visdata-n}{width=0.45\textwidth}{Common-shot gathers used for RTM and $Q$-RTM at $X=6025\;m$. A total length of $8\;s$ has been recorded, while only the first $5\;s$ is displayed. (a) Acoustic data; (b) viscoacoustic data. (c) viscoacoustic data with added random noise (SNR = $0.9$). The right panel shows a trace extracted from $X=4375\;m$.}
+\multiplot{3}{visacu,comacu,comacu-n}{width=0.45\textwidth}{A portion of RTM images obtained using different approaches. (a) acoustic RTM image using viscoacoustic data; (b) $Q$-RTM image using viscoacoustic data; (c) $Q$-RTM image using viscoacoustic data with added noise. The right panel compares the trace at $X=6875\;m$ from the corresponding image with the reference image obtained by applying acoustic RTM on acoustic data. Blue solid line refers to the reference image; black solid line refers to the non-compensated image; red dashed line refers to the compensated image; pink dashed line refers to the compensated image using noisy data.}
+%\multiplot{3}{acuimg,visimg,comimg}{width=0.45\textwidth}{RTM images obtained using different approaches. (a) acoustic RTM image using acoustic data; (b) acoustic RTM image using viscoacoustic data; (c) $Q$-compensated RTM image using viscoacoustic data.}
+%\multiplot{2}{compare4,compare3}{width=0.45\textwidth}{Traces comparison extracted from different images at 6875m. Acoustic RTM using acoustic data is used as the reference trace. (a) Reference trace (blue solid line) v.s. trace from conventional RTM (black dashed line); (c) Reference trace (blue) v.s trace from $Q$-compensated RTM (red dashed line).}
+
+In the second example, we use a synthetic attenuation model to \old{demonstrate}\new{investigate} the effect of $Q$ compensation in RTM. Figure~\ref{fig:vel} shows the Marmousi velocity model. We build a corresponding $Q$ model (Figure~\ref{fig:q}) on the same grid. The model features three highly attenuative zones in the shallow \old{area}\new{parts} of the model\old{---a pattern commonly caused in reality by the presence of a gas accumulation}. \new{This kind of an attenuation patter can be caused in reality by the presence of a gas accumulation. }The model is discretized on a $241 \times 961$ grid with a spacing of $12.5\;m$ in both horizontal and vertical directions. A total of 64 shots with a \new{horizontal }spacing of $187.5\;m$ \old{are}\new{were} used, starting from $25\;m$, and the source is a Ricker wavelet with a peak frequency of $20\;Hz$. Receivers have a spacing of $12.5\;m$, starting from $0\;m$ and ending at $12000\;m$. For simplicity of modeling, both sources and receivers are located at $-62.5\;m$ depth. \new{The data have a temporal sampling of $2\;ms$, with a total length of $8\;s$. }First, acoustic modeling is used to generate acoustic data \new{(Figure~\ref{fig:acudata})}, and then viscoacoustic modeling is used to generate viscoacoustic data \new{(Figure~\ref{fig:visdata})}, accounting for seismic attenuation during wave propagation. We first apply acoustic RTM on the (non-attenuated) acoustic data to generate a reference image.
+%Figure~\ref{fig:acuimg} is the seismic image generated by applying acoustic RTM to the acoustic data. In the acoustic image, all reflectors, such as the parallel normal faults and anticlines, can be observed clearly. 
+The image generated by non-compensated RTM using viscoacoustic data (Figure~\ref{fig:visacu}) suffers from a lack of illumination within and below the attenuative \old{gas accumulation}\new{region}. Using the proposed $Q$-RTM according to equations~\ref{eq:expforc} and \ref{eq:expbackc} (Figure~\ref{fig:comacu}), the amplitude of the parallel normal faults and anticline structures has been recovered to a large extent, and image resolution inside and below gas has been greatly enhanced. \new{The Tukey filter is applied with a cutoff frequency of $100\;Hz$ with a taper ratio of $0.4$. }We extract the trace at $X=6875\;m$ from the three images, and use the acoustic RTM image \old{(using acoustic data)}\new{from migrating acoustic data} as a reference (also shown in Figures~\ref{fig:visacu} and \ref{fig:comacu}). The comparison shows that the conventional RTM \new{applied to viscoacoustic data }suffers from \new{the effects of }phase rotation and amplitude attenuation, especially in the deeper part of the image, while the $Q$-compensated image highly resembles the non-attenuated acoustic image in both amplitude and phase. \new{To test the sensitivity of the proposed method to noise in the data, we add Gaussian random noise to the viscoacoustic data with a signal-to-noise ratio (SNR) of $0.9$ \new{(Figure~\ref{fig:visdata-n})}. Applying $Q$-RTM to the noisy data leads to a slightly noisier image (Figure~\ref{fig:comacu-n}). However, migration remains stable and all the reflectors remain well-\old{illuminated}\new{imaged}.}
+
+\new{
+\section{Discussion}
+For both acoustic RTM and $Q$-RTM in the Marmousi example, with a time step size of $2\;ms$, we used the low-rank approximation with a rank of $4$, corresponding to $5$ complex-to-complex FFTs per time step (with one additional forward FFT). Therefore, both methods had the same computational cost. A pseudo-spectral method would require $4$ real-to-complex FFTs per time step to calculate the two fractional Laplacians in the second-order wave equation (equation~\ref{eq:frac1}). On the other hand, the SLS model with $L$ relaxation mechanisms would require to solve $3+L$ equations in the $2D$ case or $4+L$ equations in the $3D$ case \cite[]{zhu13a}, and has an effective cost of $4$ real-to-complex FFTs per time step when implemented using a pseudo-spectral method. However, a pseudo-spectral implementation poses a strict limit on time step size due to its finite-difference approximation of time derivatives, and thus may require a larger number of time steps to propagate the same length of time compared with the proposed method \cite[]{myself1}.
+}
+%\subsection{BP gas-cloud model}
+
+%\inputdir{bp}
+%\multiplot{2}{vel,q}{width=0.45\textwidth}{A portion of BP 2004 velocity/$Q$ model. (a) BP gas-cloud velocity model; (b) BP gas-cloud $Q$ model.}
+%\multiplot{3}{acuimg,visimg,comimg}{width=0.45\textwidth}{RTM images obtained using different approaches. (a) acoustic RTM image using acoustic data; (b) viscoacoustic RTM image using viscoacoustic data; (c) $Q$-compensated RTM image using viscoacoustic data.}
+
+%In the second example, we use a synthetic attenuation model to demonstrate the effect of $Q$ compensation in RTM. Figures~\ref{fig:vel} and \ref{fig:q} show a portion of BP 2004 velocity model \cite[]{bp2004} and the corresponding $Q$ model used previously by \cite{zhu14b}. The model features a low-velocity and high-attenuation area in the central-top zone---a pattern commonly caused by the presence of a gas chimney. The model is discretized on a $161 \times 398$ grid with a spacing of $12.5\;m$ in both horizontal and vertical directions. A total of 16 shots with a spacing of $325\;m$ are used, starting from $12.5\;m$, and the source is a Ricker wavelet with a peak frequency of $22.5\;Hz$. Receivers have a spacing of $12.5\;m$, starting from $0\;m$ and ending at $4962.5\;m$. Both sources and receivers are located at zero depth. First, acoustic modeling is used to generate acoustic data, and then viscoacoustic modeling is used to generate viscoacoustic data, accounting for seismic attenuation during wave propagation. Figure~\ref{fig:acuimg} is the seismic image generated by applying acoustic RTM to the acoustic data. In the acoustic image, all reflectors, such as the anticline below the gas chimney, can be observed clearly. In contrast, the image generated by non-compensated RTM using viscoacoustic data (Figure~\ref{fig:visimg}), suffers from a lack of illumination below the gas accumulation. Using the $Q$-compensated RTM according to equations~\ref{eq:expforc} and \ref{eq:expbackc} (Figure~\ref{fig:comimg}), the amplitude of the anticlinal structures has been recovered to a large extent, and image resolution inside and below gas has been greatly enhanced. The compensated image highly resembles the acoustic image in terms of both amplitude and phase.
+%Figure~\ref{fig:invimg} demonstrates the result produced by LSRTM using the viscoacoustic kernel. Not only is the amplitude below the high attenuation zone correctly restored, but the phase is corrected as well. Remarkably, the illumination along the horizontal direction has also become uniform thanks to the power of least-squares inversion. The image produced by LSRTM is close to being true amplitude. The least-squares approach is accurate and more stable compared with the $Q$-compensated RTM, but comes at a cost of multiple conjugate-gradient iterations.
+
+\section{Conclusions}
+We introduce \new{a }low-rank viscoacoustic wave extrapolation \old{operator}\new{method} based on the constant-$Q$ wave equation with decoupled fractional Laplacians. The proposed \old{operator}\new{numerical method} can handle an arbitrarily variable fractional power of the wavenumber, and thus is capable of modeling wave propagation in attenuating media with high accuracy. Using a sign reversal, we formulate a Q-compensated operator \old{that corrects}\new{for reverse-time migration to correct} for velocity dispersion and amplitude attenuation at the same time. \old{We apply the proposed operators for modeling and reverse-time migration of viscoacoustic data.} Synthetic experiments show that the proposed method \new{applied to viscoacoustic data }produces \old{high-quality} subsurface images that are comparable \new{in quality }with the \old{result}\new{results} obtained by acoustic RTM \old{using}\new{applied to} acoustic data.
+
+%We also propose an iterative LSRTM strategy to compensate for seismic attenuation during imaging. Both $Q$-compensated RTM and LSRTM improve the image quality. Comparing the two approaches, we found that Q-compensating LSRTM is more stable and produces images with better illumination, though requiring additional computational cost. Our future research will focus on speeding up LSRTM by using preconditioning.
+
+\section{Acknowledgments}
+We thank Associate Editor Joakim Blanch, Yu Zhang and one anonymous reviewer for their constructive comments. We thank the sponsors of the Texas Consortium for Computation Seismology (TCCS) for financial support. The first author \old{is}\new{was} additionally supported by the Statoil Fellows Program at the University of Texas at Austin. The second author \old{is}\new{was} supported by the Jackson School Distinguished Postdoctoral Fellowship at the University of Texas at Austin.  We thank TACC (Texas Advanced Computing Center) for providing computational resources used in this study.
+
+\newpage
+
+\bibliographystyle{seg}
+\bibliography{frac}
