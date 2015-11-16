@@ -13,7 +13,7 @@ progs = 'fftwave1dd cfftwave1dd cfftwave1in fftwave2p fftwave3p cfftwave2 cfftwa
 # cfftwave2tt lasthope cfftwave2one waveadjtest cfftwave2abc fftwave2abc
 # pawave2 cpawave2 cpswave2 icfftwave2 cfftwave1dtest
 
-ccprogs = 'tilr2 ortholr3 cortholr3 cisolr2 cisolr2rev cisolr3 ctilr2 cisolr2grad cisolr2abc cisolr2abc1 cisolr1 canisolr2 canisolr2abc fraclr2 fraclr2test tilrzone ortholrzone zortholr3 zanisolr2 zanisolr2abc clfdc1 clfdc2 clfdc1-bak '
+ccprogs = 'tilr2 ortholr3 cortholr3 cisolr2 cisolr2rev cisolr3 ctilr2 cisolr2grad cisolr2abc cisolr2abc1 cisolr1 canisolr2 canisolr2abc fraclr2 fraclr2test tilrzone ortholrzone zortholr3 zanisolr2 zanisolr2abc clfdc1 clfdc2 clfdc1-bak'
 # abclr2 isolr2sta isolr2abc  cfraclr2
 # eiktest eiktest2 cisolr1eik eiksol cfraclr2 rfraclr2 cisolr2twostep
 # cisolr2hyb icisolr2
@@ -37,7 +37,7 @@ env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
             LIBS=[env.get('DYNLIB','')+'rsf'])
 
-fftw = env.get('FFTW')
+fftw = env.get('FFTWOMP')
 if fftw:
     env.Prepend(CPPDEFINES=['SF_HAS_FFTW'])
 
@@ -56,13 +56,12 @@ for prog in mains:
 
 mpicc = env.get('MPICC')
 mpi_mains = Split(mpi_progs)
-#env.Append(LIBS=['fftw3f_mpi'])
 for prog in mpi_mains:
     sources = ['M' + prog]
     bldutil.depends(env,sources,'M'+prog)
     if mpicc:
         env.StaticObject('M'+prog+'.c',CC=mpicc)
-        prog = env.Program(prog,map(lambda x: x + '.o',sources),CC=mpicc,LIBS=env.get('LIBS')+['fftw3f_mpi'])
+        prog = env.Program(prog,map(lambda x: x + '.o',sources),CC=mpicc)
     else:
         prog = env.RSF_Place('sf'+prog,None,var='MPICC',package='mpi')
     if root:

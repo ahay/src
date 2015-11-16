@@ -46,9 +46,9 @@ int cfft3_init(int pad1           /* padding on the first axis */,
 
 #ifdef SF_HAS_FFTW
 #ifdef _OPENMP
-    fftw_init_threads();
+    fftwf_init_threads();
     sf_warning("Using threaded FFTW3! %d\n",omp_get_max_threads());
-    fftw_plan_with_nthreads(omp_get_max_threads());
+    fftwf_plan_with_nthreads(omp_get_max_threads());
 #endif
 #else
     int i2, i3;
@@ -248,7 +248,7 @@ void cfft3_finalize()
 {
 #ifdef SF_HAS_FFTW
 #ifdef _OPENMP
-    fftw_cleanup_threads();
+    fftwf_cleanup_threads();
 #endif
     fftwf_destroy_plan(cfg);
     fftwf_destroy_plan(icfg);
