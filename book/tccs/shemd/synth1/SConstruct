@@ -1,0 +1,87 @@
+from rsf.proj import*
+from rsf.prog import RSFROOT
+from rsf.recipes.beg import server as private
+
+def Grey(data,other): 
+	Result(data,'put d1=0.002 d2=1 o1=0 o2=0 | window j2=2 | wiggle grid=n poly=y transp=y yreverse=y clip=0.55  label2=Trace  unit2="" label1=Time unit1="s" title="" wherexlabel=t scalebar=n wheretitle=b   %s'%other)
+
+def Greyzoom(data,other): 
+	Result(data,'put d1=0.002 d2=1 o1=1.5 o2=0 | window j2=2 | wiggle grid=n poly=y transp=y yreverse=y clip=0.55 label2=Trace unit2="" label1=Time unit1="s" title="" wherexlabel=t scalebar=n  wheretitle=b  %s'%other)
+
+########################################################################
+# INITIALIZATION
+########################################################################
+matlab         = WhereIs('matlab')
+matROOT = '../matfun'
+matfun = 'synth1'
+matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
+
+if not matlab:
+    sys.stderr.write('\nCannot find Matlab.\n')
+    sys.exit(1)
+
+############################################################
+## generate and process synthetic data
+############################################################
+Flow('clean linear linear-fxmssa0 linear-fxemd0 linear-fxemdmssa0',[os.path.join(matROOT,matfun+'.m')],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${TARGETS[0]}','${TARGETS[1]}','${TARGETS[2]}','${TARGETS[3]}','${TARGETS[4]}');quit"
+     '''%vars(),stdin=0,stdout=-1)
+
+
+Flow('linear-fxemd-noise0','linear linear-fxemd0',' add scale=1,-1 ${SOURCES[1]}')
+Flow('linear-fxmssa-noise0','linear linear-fxmssa0',' add scale=1,-1 ${SOURCES[1]}')
+Flow('linear-fxemdmssa-noise0','linear linear-fxemdmssa0',' add scale=1,-1 ${SOURCES[1]}')
+
+Grey('linear','title="Noisy"')
+Grey('clean','title="Clean"')
+Grey('linear-fxmssa0','title="SSA"')
+Grey('linear-fxemd0','title="EMD"')
+Grey('linear-fxemdmssa0','title="EMD & SSA"')
+
+Grey('linear-fxmssa-noise0','title="SSA"')
+Flow('linear-fxemd-noise','linear-fxemd-noise0','cp')
+Grey('linear-fxemd-noise','title="EMD"')
+Grey('linear-fxemdmssa-noise0','title="EMD & SSA"')
+
+## Creating framebox2
+x=110
+y=0.5
+w=280
+w1=0.9
+
+Flow('frame.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	string.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame','frame.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=0 max1=471 min2=0 max2=2.048 pad=n plotfat=15 plotcol=2 
+	wantaxis=n wanttitle=n yreverse=y 
+	''')
+Result('linear-fxemd-noise0','Fig/linear-fxemd-noise.vpl frame','Overlay')
+
+Flow('trace1','clean','window n2=1 f2=25')
+Flow('trace2','linear','window n2=1 f2=25')
+Flow('trace3','linear-fxemd0','window n2=1 f2=25')
+Flow('trace4','linear-fxmssa0','window n2=1 f2=25')
+Flow('trace5','linear-fxemdmssa0','window n2=1 f2=25')
+Flow('traces','trace1 trace2 trace3 trace4 trace5','cat axis=2 ${SOURCES[1:5]} | reverse which=2')
+Result('traces','dots title="Amplitude comparison" labels=EMD\&SSA:SSA:EMD:Noisy:Clean')
+
+
+
+# compute SNR
+Flow('linear-diff','clean linear','add scale=1,-1 ${SOURCES[1]} ')
+Flow('linear-snr','clean linear-diff','snr2 noise=${SOURCES[1]}')
+
+Flow('linear-diff-emd','clean linear-fxemd0','add scale=1,-1 ${SOURCES[1]} ')
+Flow('linear-snr-emd','clean linear-diff-emd','snr2 noise=${SOURCES[1]}')
+
+Flow('linear-diff-mssa','clean linear-fxmssa0','add scale=1,-1 ${SOURCES[1]} ')
+Flow('linear-snr-mssa','clean linear-diff-mssa','snr2 noise=${SOURCES[1]}')
+
+Flow('linear-diff-emdmssa','clean linear-fxemdmssa0','add scale=1,-1 ${SOURCES[1]} ')
+Flow('linear-snr-emdmssa','clean linear-diff-emdmssa','snr2 noise=${SOURCES[1]}')
+
+
+End()
