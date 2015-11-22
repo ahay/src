@@ -1,0 +1,13 @@
+from rsf.tex import*
+os.environ['PSTEXPENOPTS']='color=y fat=3 fatmult=1.5'
+
+## add pdflatex into default PATH
+import sys
+env=Environment()
+if sys.platform == 'darwin':
+    env['ENV']['PATH'] = ':'.join(['/opt/local/bin',env['ENV']['PATH']])
+
+
+Paper('ieee_groll_final',lclass='IEEEtran',options='10pt',use='cite,ifthen,seg,color,graphicx,subfigure,amsmath')
+
+End(use='listings,amsmath')
