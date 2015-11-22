@@ -1,0 +1,265 @@
+from rsf.proj import *
+
+def Grey3(data,other):
+	Result(data,
+       '''
+       byte clip=0.0024 |
+       transp plane=23 |window min2=0 max2=8 |
+       grey3 flat=y frame1=750 frame2=100 frame3=10 
+       title=Data point1=0.8 point2=0.8 %s title=
+       '''%other)
+
+def Greycmg(data,other):
+	Result(data,
+       '''
+       byte clip=0.0024 |
+       transp plane=23 |window min2=0 max2=8 |
+       grey3 flat=y frame1=750 frame2=100 frame3=10
+       title=Data point1=0.8 point2=0.8 %s title=
+       '''%other)
+
+def Greycmg1(data,other):
+	Result(data,
+       '''
+       byte |      
+       grey3 flat=y frame1=750 frame2=50 frame3=20
+       title=Data point1=0.8 point2=0.8 %s title=
+       '''%other)
+
+
+def Vel(data,other):
+	Result(data,
+     '''
+     grey color=j allpos=y bias=1.5 clip=0.7
+     scalebar=y barreverse=y barunit=km/s
+     label2=Midpoint unit2=km label1=Time unit1=s
+     title="NMO Velocity"  %s
+     '''%other )
+
+def Pick3(data,other):
+	Result(data,
+       '''
+       byte allpos=y gainpanel=all |
+       transp plane=23 |
+       grey3 flat=n frame1=750 frame2=100 frame3=25 
+       label1=Time unit1=s color=j framelabelcol=VP_BLACK
+       label3=Velocity unit3=km/s 
+       label2=Midpoint unit2=km
+       title="Velocity Scan" point1=0.8 point2=0.8 %s
+       '''%other)
+
+def Greymig(data,other):
+	Result(data,
+       '''
+		window max1=5 min2=2.5 max2=7.5 |
+       grey title="Prestack Kirchhoff Time Migration" 
+	   label1=Depth unit1=km screenratio=1 %s
+       '''%other)
+
+
+def Greyzoom(data,other):
+	Result(data,
+		'''
+		grey wanttitle=n clip=0.0024 min2=3.0 max2=5.5 min1=2.0 max1=4.0 wherexlabel=b %s
+		'''%other)
+
+labels=[]
+# Generate a reflector model
+
+layers = (
+     ((0,2),(3.5,2),(4.5,2.5),(5,2.25),
+       (5.5,2),(6.5,2.5),(10,2.5)),
+     ((0,2.5),(10,3.5)),
+     ((0,3.2),(3.5,3.2),(5,3.7),
+       (6.5,4.2),(10,4.2)),
+     ((0,4.5),(10,4.5))
+)
+
+nlays = len(layers)
+for i in range(nlays):
+     inp = 'inp%d' % i
+     Flow(inp+'.asc',None,
+          '''
+          echo %s in=$TARGET
+          data_format=ascii_float n1=2 n2=%d
+          ''' % \
+          (' '.join(map(lambda x: ' '.join(map(str,x)),
+                           layers[i])),len(layers[i])))
+
+dim1 = 'o1=0 d1=0.001 n1=10001'
+
+Flow('lay1','inp0.asc',
+     'dd form=native | spline %s fp=0,0' % dim1)
+Flow('lay2',None  ,
+     'math %s output="2.5+x1*0.1" '      % dim1)
+Flow('lay3','inp2.asc',
+     'dd form=native | spline %s fp=0,0' % dim1)
+Flow('lay4',None  ,'math %s output=4.5'  % dim1)
+
+Flow('lays','lay1 lay2 lay3 lay4',
+     'cat axis=2 ${SOURCES[1:4]}')
+
+graph = '''
+graph min1=2.5 max1=7.5 min2=0 max2=5
+yreverse=y wantaxis=n wanttitle=n screenratio=1
+'''
+Plot('lays0','lays',graph + ' plotfat=10 plotcol=0')
+Plot('lays1','lays',graph + ' plotfat=2 plotcol=7')
+Plot('lays2','lays',graph + ' plotfat=2')
+
+# Velocity
+
+Flow('vofz',None,
+     '''
+     math output="1.5+0.36*x1"
+     d2=0.01 n2=1001 d1=0.01 n1=501
+     label1=Depth unit1=km
+     label2=Distance unit2=km
+     label=Velocity unit=km/s
+     ''')
+Plot('vofz',
+     '''
+     window min2=2.5 max2=7.5 |
+     grey color=j allpos=y bias=1.5
+     title=Model screenratio=1
+     ''')
+
+Result('model','vofz lays0 lays1','Overlay')
+
+# Model data
+
+Flow('dips','lays','deriv scale=y')
+Flow('modl','lays dips',
+     '''
+     kirmod cmp=y dip=${SOURCES[1]} 
+     nh=51  dh=0.1  h0=0
+     ns=201 ds=0.05 s0=0
+     freq=10 dt=0.004 nt=1501
+     vel=1.5 gradz=0.36 verb=y |
+     pow pow1=1 |
+     put d2=0.05 
+     label1=Time        unit1=s
+     label2=Half-Offset unit2=km 
+     label3=Midpoint    unit3=km 
+     ''',split=[1,10001], reduce='add')
+
+# Add random noise
+#Flow('data','modl','noise var=1e-6 seed=101013')
+Flow('data','modl','noise var=1e-20 seed=101013')
+Grey3('data','title="Data (Orignal)"')
+
+Flow('data-csg','data','cmp2shot positive=y')
+Grey3('data-csg','title="Data (CSG)"')
+
+Flow('data-cmg','data-csg','shot2cmp positive=y | window n3=201 f3=50 | put o3=0')
+Grey3('data-cmg','title="Data (CMG)"')
+
+## Suppose source2 has nearly the same feature as source1
+
+#for i in range(151):
+Flow('data-r','data-csg','reverse which=2')
+Grey3('data-r','title=source2')
+
+Flow('dithert',None,'math output=1 n1=251 n2=1 | noise rep=y seed=201313 var=2 | spray axis=2 n=51 | transp ')
+Flow('ditherx',None,'math output=1 n1=251 n2=1 | noise rep=y seed=201313 var=0 | spray axis=2 n=1501 | transp ')
+
+Flow('datt','data-r dithert','datstretch inv=y datum=${SOURCES[1]}')
+Flow('datx','datt ditherx','transp plane=12 | datstretch inv=y datum=${SOURCES[1]} |transp plane=12')
+
+## Blending
+Flow('datas-csg','data-csg datx','add scale=1,1 ${SOURCES[1]}')
+Grey3('datas-csg','title="Blended(CSG)" ')
+
+Flow('data-b','datas-csg','shot2cmp positive=y | window n3=201 f3=50 | put o3=0')
+Grey3('data-b','title="Blended data (CMG)"')
+
+Flow('data-b-cmg','data-b','cp')
+Greycmg('data-b-cmg','title="Data (Blended) CMG"')
+
+nfw=7
+##########################################
+## SVMF in Common midpoint gather
+##########################################
+Flow('data-b-svmf-cmg','data-b','nmostretch inv=n v0=2 half=y | transp plane=12 | tsmf nfw=%d | transp plane=12 | nmostretch inv=y v0=2 half=y '%nfw)
+Greycmg('data-b-svmf-cmg','title="Data (Deblended - SVMF - CMG)"')
+Flow('data-b-nmo','data-b','nmostretch inv=n v0=2 half=y ')
+Greycmg('data-b-nmo','title="NMO CMG"')
+
+Flow('data-b-svmf-csg','data-b-svmf-cmg','cmp2shot positive=y')
+Grey3('data-b-svmf-csg','title="Data (CSG)" ')
+
+nfw=7
+##########################################
+## SVMF in common offset gather
+##########################################
+Flow('data-b-svmf-cog','data-b','transp plane=23 | transp plane=12| tsmf nfw=%d | transp plane=12 | transp plane=23'%nfw)
+Grey3('data-b-svmf-cog','title="Data (Deblended - SVMF - COG)"')
+
+##########################################
+## MF in Common midpoint gather
+##########################################
+Flow('data-b-mf-cmg','data-b','nmostretch inv=n v0=2.5 half=y | transp plane=12 | mf nfw=%d | transp plane=12 | nmostretch inv=y v0=2.5 half=y'%nfw)
+Greycmg('data-b-mf-cmg','title="Data (Deblended - MF - CMG)"')
+
+nfw=7
+##########################################
+## MF in common offset gather
+##########################################
+Flow('data-b-mf-cog','data-b','transp plane=23 | transp plane=12| mf nfw=%d | transp plane=12 | transp plane=23'%nfw)
+Grey3('data-b-mf-cog','title="Data (Deblended - MF - COG)"')
+
+Flow('data-b-svmf-cmg-zoom','data-b-svmf-cmg','window n2=1 f2=10 f1=500 n1=500 n3=50 f3=60')
+Flow('data-b-svmf-cog-zoom','data-b-svmf-cog','window n2=1 f2=10 f1=500 n1=500 n3=50 f3=60')
+Greyzoom('data-b-svmf-cmg-zoom','')
+Greyzoom('data-b-svmf-cog-zoom','')
+
+
+### Stacking test
+Flow('vscan-b','data-b',
+     'vscan v0=1.5 dv=0.02 nv=51 semblance=y',
+     split=[3,201], reduce='cat')
+Flow('vnmo-b','vscan-b','pick rect1=100 rect2=10')
+Flow('nmo-b','data-b vnmo-b','nmo velocity=${SOURCES[1]}')
+Flow('stack-b','nmo-b','stack')
+
+Flow('vscan-db','data-b-svmf-cmg',
+     'vscan v0=1.5 dv=0.02 nv=51 semblance=y',
+     split=[3,201], reduce='cat')
+Flow('vnmo-db','vscan-db','pick rect1=100 rect2=10')
+Flow('nmo-db','data-b-svmf-cmg vnmo-db','nmo velocity=${SOURCES[1]}')
+Flow('stack-db','nmo-db','stack')
+
+Result('stack-b',
+		'''
+		grey wanttitle=n clip=0.0024 min2=0 max2=8 wherexlabel=b %s
+		''')
+Result('stack-db',
+		'''
+		grey wanttitle=n clip=0.0024 min2=0 max2=8 wherexlabel=b %s
+		''')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+End()

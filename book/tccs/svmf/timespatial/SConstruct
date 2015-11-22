@@ -1,0 +1,58 @@
+from rsf.proj import* 
+
+pc=99 #display percentage
+nfw=11
+
+def Grey(data,other): 
+	Result(data,'grey label2=Position unit2="km" label1=Time unit1="s" title="" wherexlabel=b scalebar=y color=g wheretitle=t %s'%other)
+
+def Wig(data,other):
+	Result(data,'window j2=4 | wiggle  label2=Trace unit2= label1=Time unit1="s" transp=y yreverse=y poly=y clip=0.1 wanttitle=n')
+
+##########################################
+#    Make synthetic data
+##########################################
+Flow('huo',None,
+     '''
+     spike n1=600 n2=256 d2=1 o2=0 label2=Trace unit2=
+     nsp=4 k1=40,90,200,250 p2=0,0,0.8,0.8 mag=1,1,1,1 |
+     ricker1 frequency=20 |
+     noise seed=2008 var=0
+     ''')
+#     nsp=4 k1=40,90,200,250 p2=0,0,1,1 mag=1,1,1,1 |
+
+## Apply dithering
+Flow('dither','huo',
+     '''
+     window n1=1 |
+     noise rep=y seed=122011 var=0.1 | math output="1000*input"
+     ''')
+Flow('shottime1','huo','window n1=1 | math output=3*1000*x1')
+Flow('shottime2','shottime1 dither','add scale=1,1 ${SOURCES[1]}')
+
+
+## Blend 
+Flow('huos','huo huo shottime1 shottime2','blend shot_time_in=${SOURCES[3]} shot_time_out=${SOURCES[2]} |add scale=1,1 ${SOURCES[1]}' )
+
+nfw=11
+Flow('huos-tmf','huos','mf nfw=%d '%nfw)
+nfw=11
+Flow('huos-xmf','huos','transp | mf nfw=%d | transp'%nfw)
+Flow('huos-svmf','huos','transp  | tsmf nfw=%d | transp'%nfw)
+
+
+Wig('huo','')
+Wig('huos','')
+Wig('huos-tmf','')
+Wig('huos-xmf','')
+Wig('huos-svmf','')
+
+Flow('huoscomp','huos huos-tmf huos-xmf huos-svmf','cat axis=2 ${SOURCES[1:4]}')
+Wig('huoscomp','screenratio=0.44')
+
+
+
+
+
+
+End()
