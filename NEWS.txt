@@ -27,6 +27,7 @@ To the reproducible documents collection:
   using velocity-dependent seislet transform (Liu, Fomel, and Liu)
 * tccs/fraclapl: Viscoacoustic modeling and imaging using low-rank
   approximation (Sun, Zhu, and Fomel)
+* tccs/svmf: Deblending using a space-varying median filter (Chen)
 
 To SCons:
 

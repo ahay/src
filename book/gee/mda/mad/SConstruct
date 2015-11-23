@@ -17,8 +17,6 @@ for dat in ('a','d'):
     tri = dat+'tri'
     xy = dat+'xy'
     z = dat+'z'
-    dz = dat+'dz'
-    dzm = dat+'dzm'
     mask = dat+'mask'
     
     Flow(tri,['gm'+dat,dat],
@@ -26,18 +24,11 @@ for dat in ('a','d'):
     Flow(xy,tri,'window n1=2 | scale dscale=1.e-6')
     Flow(z,tri,'window n1=1 f1=2 squeeze=n | dd type=float')
 
-    # filter out jumps in z
-    Flow(dz,z,
+    # ignore values with small altitude
+    Flow(mask,z,
          '''
-         window f2=1 squeeze=n | pad end2=1 | add scale=1,-1 $SOURCE |
-         math output="abs(input)" | mask max=%g
-         ''' % mdz)
-    Flow(dzm,dz,
-         '''
-         window f2=1 squeeze=n | pad end2=1 | add $SOURCE
+         math output="abs(input)" | mask min=0.00001
          ''')
-    
-    Flow(mask,[z,dzm],'mask min=0.00001 | add ${SOURCES[1]} mode=p')
     Flow(dat+'tris',[xy,z,mask],
          'cat axis=1 ${SOURCES[1]} | headerwindow mask=${SOURCES[2]}')
 

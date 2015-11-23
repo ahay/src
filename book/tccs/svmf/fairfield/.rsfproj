@@ -1,3 +1,3 @@
 uses=['sfsegyread', 'sfwindow', 'sfput', 'sfdd', 'sfheadermath', 'sftransp', 'sfmutter', 'sfadd', 'sfcat', 'sfmf', 'sftsmf', 'sfsimilarity', 'sfscale', 'sfsvmf', 'sfgrey', 'sfgraph', 'sfsegywrite', 'sfcut', 'sffft1', 'sffft3', 'sfcabs']
-data=[]
+data=['PRIVATE', 'PRIVATE']
 size=  174152688
