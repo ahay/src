@@ -15,7 +15,7 @@ def Greyzoom(data,other):
 # INITIALIZATION
 ########################################################################
 matlab         = WhereIs('matlab')
-matROOT = '../matfun'
+matROOT = '../Matfun'
 matfun = 'field'
 matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
 
