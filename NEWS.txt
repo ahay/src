@@ -28,6 +28,9 @@ To the reproducible documents collection:
 * tccs/fraclapl: Viscoacoustic modeling and imaging using low-rank
   approximation (Sun, Zhu, and Fomel)
 * tccs/svmf: Deblending using a space-varying median filter (Chen)
+* tccs/shemd: Random noise attenuation by a selective hybrid approach
+  using f-x empirical mode decomposition (Chen, Gan, Liu, Yuan,
+  Zhang, and JIn)
 
 To SCons:
 

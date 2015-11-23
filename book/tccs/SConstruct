@@ -31,7 +31,8 @@ Papers(copyr='The University of Texas at Austin',
                 'sglowrank': 'Gang Fang, Sergey Fomel, Qizhen Du, and Jingwei Hu',
                 'nmodeblend': 'Yangkang Chen, Jiang Yuan, Zhaoyu Jin, Keling Chen, and Lele Zhang',
                 'synwav': 'Yangkang Chen, Tingting Liu, Xiaohong Chen, Jingye Li, and Erying Wang',
-                'vscan': 'Yangkang Chen, Tingting Liu, and Xiaohong Chen'
+                'vscan': 'Yangkang Chen, Tingting Liu, and Xiaohong Chen',
+                'shemd': 'Yangkang Chen, Shuwei Gan, Tingting Liu, Jiang Yuan, Yizhuo Zhang, and Zhaoyu Jin',
                 },
        fig=('diffr/chan3d','pwmig','width=\\textwidth'))
 
