@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfwindow', 'sfput', 'sfpow', 'sfcut', 'sfmath', 'sfmedian', 'sfbandpass', 'sfgrey', 'sfadd', 'sfmutter', 'sfortho', 'sfcat', 'sfsimilarity', 'sfspike', 'sfdottest', 'sfconjgrad', 'sfgraph', 'sfbox', 'sfspectra']
+data=['data/wz/wz.25.H']
+size=   13304080
