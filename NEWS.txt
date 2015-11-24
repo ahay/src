@@ -30,7 +30,10 @@ To the reproducible documents collection:
 * tccs/svmf: Deblending using a space-varying median filter (Chen)
 * tccs/shemd: Random noise attenuation by a selective hybrid approach
   using f-x empirical mode decomposition (Chen, Gan, Liu, Yuan,
-  Zhang, and JIn)
+  Zhang, and JIn) 
+* tccs/orthogroll: Ground-roll noise attenuation using a simple and
+  effective approach based on local bandlimited orthogonalization
+  (Chen, Jiao, Ma, Chen, Zhou, and Gan)
 
 To SCons:
 

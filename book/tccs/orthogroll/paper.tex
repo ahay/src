@@ -1,26 +1,28 @@
 \title{Ground-roll noise attenuation using a simple and effective approach based on local bandlimited orthogonalization}
 \renewcommand{\thefootnote}{\fnsymbol{footnote}}
-\author{\IEEEauthorblockN{Yangkang Chen$^1$, Shebao Jiao$^2$, Jianwei Ma$^3$, Hanming Chen$^2$, Yatong Zhou$^4$, and Shuwei Gan$^2$}\\
-$^1$\IEEEauthorblockA{Jackson School of Geosciences,
+\author{Yangkang Chen$^1$, Shebao Jiao$^2$, Jianwei Ma$^3$, Hanming Chen$^2$, Yatong Zhou$^4$, and Shuwei Gan$^2$}
+
+\address{$^1$ Jackson School of Geosciences,
 The University of Texas at Austin,
 University Station, Box X,
 Austin, TX 78713-8924, USA,
-Email: ykchen@utexas.edu}\\
-$^2$\IEEEauthorblockA{State Key Laboratory of Petroleum Resources and Prospecting, 
+Email: ykchen@utexas.edu \\
+$^2$ State Key Laboratory of Petroleum Resources and Prospecting, 
 China University of Petroleum, 
 Fuxue Road 18th,
 Beijing, China, 102200, 
-Email: gsw19900128@126.com \& huichanming@126.com} \\
-$^3$ \IEEEauthorblockA{Department of Mathematics,
+Email: gsw19900128@126.com \& huichanming@126.com \\
+$^3$ Department of Mathematics,
 Harbin Institute of Technology,
 Harbin, China, 
-jma@hit.edu.cn}\\
-$^4$\IEEEauthorblockA{School of Electronic and Information Engineering,
+jma@hit.edu.cn \\
+$^4$ School of Electronic and Information Engineering,
 Hebei University of Technology,
 Xiping Road No. 5340, Beichen District,
 Tianjin, China, 300401,
-zyt@hebut.edu.cn}\\
+zyt@hebut.edu.cn 
 }
+
 \maketitle
 %512375919@qq.com
 
@@ -39,9 +41,9 @@ zyt@hebut.edu.cn}\\
 Bandpass filtering is a common way to estimate ground-roll noise on land seismic data, because of the relatively low frequency content of ground-roll. However, there is usually a frequency overlap between ground-roll and the desired seismic reflections that prevents bandpass filtering alone from effectively removing ground-roll without also harming the desired reflections. We apply a bandpass filter with a relatively high upper bound to provide an initial, imperfect separation of ground-roll and reflection signal. We then apply a technique called 'local orthogonalization' to improve the separation. The procedure is easily implemented, since it involves only bandpass filtering and a regularized division of the initial signal and noise estimates. We demonstrate the effectiveness of the method on an open-source set of field data.
 \end{abstract}
 
-\begin{keywords}
-Ground-roll noise, bandpass filtering, local orthogonalization, regularized division
-\end{keywords}
+%\begin{keywords}
+%Ground-roll noise, bandpass filtering, local orthogonalization, regularized division
+%\end{keywords}
 
 \section{Introduction} 
 Ground-roll noise is a type of coherent seismic noise, with a high amplitude, low frequency, and low velocity. It is often the strongest mode of coherent noise for land seismic surveys. Ocean bottom node (OBN) based marine seismic surveys may also contain this type of noise \cite{yangkang20142}. Ground-roll noise is a type of source-generated noise and can be scattered by near-surface heterogeneities.  The ground-roll noise often masks the shallow reflections at short offset, and deep reflections at larger offset \cite{claerbout1983,saatilar1988,henley2003}, and must be removed before the subsequent processing tasks. Instead of being incoherent along the spatial direction like random noise \cite{wencheng2015asa,yangkang2015}, the ground-roll noise is usually coherent along the spatial dimension, which can assist in its removal using simple signal processing methods.  There has been a lot of research about removing ground-roll noise published in the literature, and many researchers have proposed different methods for handling the ground-roll noise problem \cite{shieh1990,brown2000}. Most of the ground-roll noise removal approaches either fail to remove all the ground-roll noise or remove much useful primary reflection energy. An efficient and effective technique for removing ground-roll noise is always in demand. 
@@ -109,13 +111,12 @@ Then, we solve the least-squares problem \ref{eq:localortho} with the help of sh
 where $\mathcal{T}$ is a triangle smoothing operator and $\lambda$ is a scaling parameter set as $\lambda  = \Arrowvert\mathbf{S}_0^T\mathbf{S}_0\Arrowvert_2$ \cite{fomel2007localattr}. The triangle smoothing operator was introduced in detail in \cite{fomel2007shape}. It should be mentioned that solution of equation \ref{eq:localortho} corresponds to a regularized division (an element-wise division between two vectors can be treated as an inverse problem with some constraints in order to ensure the stability) between the two vectors $\mathbf{n}_0$ and $\mathbf{s}_0$ and it can be solved using any regularization approach, not limited to the shaping regularization strategy shown in equation \ref{eq:shape}. Thus it is fairly convenient to implement the local orthogonalization between initial signal and noise. A more detailed mathematical description about the local orthogonalization methodology can be found in \cite{yangkang2015ortho} and a demonstration about the physical meaning of orthogonalization can be found in the Appendix A in \cite{yangkang2015ortho}. 
 
 \subsection{Local bandlimited orthogonalization}
+\inputdir{.}
+
 The basic principle of the proposed approach is to first apply a simple bandpass filter to the raw common shot gather in order to obtain an initial guess of primary reflections and ground-roll noise. Then we orthogonalize the initial guess for primary reflections and ground-roll noise to obtain a signal compensated primary reflection gather, and a signal-free ground-roll noise section. In order to make the local orthogonalization robust, we need first use a relative high LBF such that all the ground-roll noise is removed initially. This proposed workflow for attenuating ground-roll noise is termed \emph{local bandlimited orthogonalization}. The detailed workflow of the proposed approach is shown in Figure \ref{fig:flowchart}. As we can see, the total workflow of the proposed approach is fairly convenient to implement, because there are only two steps involved in the processing. First, we apply a conventional bandpass filter. Second, local signal-and-noise orthogonalization is applied. As we stated in the last section, the local signal-and-noise orthogonalization is no more than solving a regularized division problem (equations \ref{eq:eq2} and \ref{eq:localortho}). Thus, the proposed approach can be conveniently implemented by the industry. In the next section, we will use a typical dataset for demonstrating the effective performance of the proposed approach.
-\begin{figure}[htb!]
-  \centering
-    \includegraphics[width=0.8\columnwidth]{Fig/flowchart}
-	\caption{Workflow of the proposed ground-roll noise attenuation approach based on local bandlimited orthogonalization.}
-   \label{fig:flowchart}
-\end{figure}
+
+\plot{flowchart}{width=0.8\columnwidth}{Workflow of the proposed ground-roll noise attenuation approach based on local bandlimited orthogonalization.}
+
 \section{Example}
 The dataset that we use to demonstrate the effectiveness of our proposed denoising approach is \wen{an open-source dataset, which has been widely used in the geophysics community \cite{yilmaz1987,carson2006}.} \dlo{borrowed from  and }\wen{This data }is referred to as the OZ-25 dataset \cite{carson2006}. \wen{One can easily download it either from the Seismic Unix (SU) website ($http://www.cwp.mines.edu/cwpcodes/$) or from the Madagascar software website ($www.ahay.org$, \cite{mada2013}).} The raw data in common shot domain is shown in Figure \ref{fig:field}. \wen{The temporal sampling rate is 0.002s and the spatial sampling rate is 0.05km. The shot location is located at the middle of the receiver array, thus the shot record has a symmetric form. There are 81 traces (receivers) in the shot record and the offset ranges from -2km to 2km.} The OZ-25 dataset is a typical dataset suitable for testing the ground-roll noise attenuation performance because of several reasons. First,  there is a large amount of ground-roll noise contaminating this dataset. It is obvious that most of the primary reflections are covered by this coherent ground-roll noise. Secondly, the reflections are highly non-stationary. We can clearly see that the amplitudes of the reflections are variable in the range of the whole gather. 
 %Because of the large amplitude range of primary reflections, it can be effectively used to test the primary reflections preservation properties of a certain denoising algorithm.   
@@ -130,87 +131,27 @@ Figure \ref{fig:zoomb-1,zoomb-2,zoomb-ortho,zoomb-3} shows the zoomed noise sect
 
 Figure \ref{fig:field-fs} shows a comparison of the average spectrum of all the traces for different data. The black solid line denotes the average spectrum of raw data. The green line corresponds to the proposed approach. The red line corresponds to the high-pass filtering with $fl=25$ Hz. The pink line corresponds to the high-pass filtering with $fl=10$ Hz. Blue corresponds to the adaptive subtraction method. We can see obviously that there is a removal of ground-roll noise spectrum from the black and yellow lines to the green line.  There is also a spectrum boost of the primary reflections between red and green. There exists several spectral notches for the blue spectrum, which indicates that there is still an overlap of reflections and ground-roll noise after applying the adaptive subtraction method.
 
+\inputdir{field}
+
+\plot{field}{width=.42\columnwidth}{Raw OZ-25 field data, borrowed from \cite{carson2006}.}
+
+\multiplot{4}{field-1-0,dif-1-0,field-2-0,dif-2-0}{width=0.40\columnwidth}{(a) Bandpass filtered data (fl=25 Hz). (b) Difference section corresponding to (a). (c) Bandpass filtered data (fl=10 Hz). (d) Difference section corresponding to (c).}
+
+\multiplot{4}{field-ortho-0,dif-ortho-0,field-3-0,dif-3-0}{width=0.40\columnwidth}{(a) Denoised data using the proposed approach. (b) Noise section corresponding to (a). (c) Denoised data using the adaptive subtraction approach. (d) Noise section corresponding to (c).}
+
+\multiplot{4}{zooma-1,zooma-2,zooma-ortho,zooma-3}{width=0.35\columnwidth}{(a)-(d) Zoomed denoised section comparisons for frame box A (as shown in Figures \ref{fig:field-1-0},\ref{fig:field-2-0} , \ref{fig:field-ortho-0}, and \ref{fig:field-3-0}, respectively). Note the primary reflections recovery from (a) to (c) and the noise decrease from (b) to (c). There is obvious residual ground-roll noise existing in (d).}
+
+\multiplot{4}{zoomb-1,zoomb-2,zoomb-ortho,zoomb-3}{width=0.35\columnwidth}{(a)-(d) Zoomed noise section comparisons for frame box B (as shown in Figures \ref{fig:dif-1-0},\ref{fig:dif-2-0}, \ref{fig:dif-ortho-0}, and \ref{fig:dif-3-0}, respectively). Note the decrease of primary reflections from (a) to (c) and the increase of noise removal from (b) to (c). (c) and (d) are very similar in this zoomed region.}
+
+\plot{field-fs}{width=0.8\columnwidth}{Comparisons of the average spectrum of all the traces. The black line denotes the average spectrum of raw data. The green line corresponds to the proposed approach. The red line corresponds to $fl=25$ Hz. The pink line corresponds to $fl=10$ Hz. The blue line corresponds to the adaptive subtraction method. Note the removal of ground-roll noise spectrum from the black and pink lines to the green line, and the primary reflections spectrum boost from the red line to the green line. There exists several spectrum notches in the blue line, indicating a mixture of useful reflections and ground-roll noise after applying the adaptive subtraction method. }
+
 \section{Conclusions}
 We have proposed a novel local bandlimited  orthogonalization approach for removing highly non-stationary ground-roll noise, which can remove most ground-roll noise without harming the useful primary reflections. We orthogonalize the initial guess of primary reflections and ground-roll noise using local signal-and-noise orthogonalization. The initial guess of primary reflections and ground-roll noise are bandlimited data from a common bandpass filtering with a relatively high LBF such that all the ground-roll noise is removed during the initial guess. The proposed approach can solve the frequency-overlap problem when applying a simple bandpass filtering. The proposed approach can guarantee that the least amount of useful primary reflections is lost in the noise section. The procedure of the proposed approach is fairly convenient to implement because only a bandpass filtering and a regularized division between the initially denoised signal and initial noise are used. We have used an open-source field dataset to demonstrate the successful performance of the proposed approach in real data processing. 
-
-
-\begin{figure}[htb!]
-  \centering
-    \includegraphics[width=.42\columnwidth]{field/Fig/field}
-	\caption{Raw OZ-25 field data, borrowed from \cite{carson2006}.}
-   \label{fig:field}
-\end{figure}
-
-\begin{figure}[htb!]
-  \centering
-    \subfigure[]{\includegraphics[width=0.40\columnwidth]{field/Fig/field-1-0}
-    \label{fig:field-1-0}}
-    \subfigure[]{\includegraphics[width=0.40\columnwidth]{field/Fig/dif-1-0}
-    \label{fig:dif-1-0}}   
-    \subfigure[]{\includegraphics[width=0.40\columnwidth]{field/Fig/field-2-0}
-    \label{fig:field-2-0}}
-    \subfigure[]{\includegraphics[width=0.40\columnwidth]{field/Fig/dif-2-0}
-    \label{fig:dif-2-0}}         
-	\caption{(a) Bandpass filtered data (fl=25 Hz). (b) Difference section corresponding to (a). (c) Bandpass filtered data (fl=10 Hz). (d) Difference section corresponding to (c).}
-   \label{fig:field-1-0,dif-1-0,field-2-0,dif-2-0}
-\end{figure}
-
-\begin{figure}[htb!]
-  \centering
-    \subfigure[]{\includegraphics[width=0.40\columnwidth]{field/Fig/field-ortho-0}
-    \label{fig:field-ortho-0}}
-    \subfigure[]{\includegraphics[width=0.40\columnwidth]{field/Fig/dif-ortho-0}
-    \label{fig:dif-ortho-0}}   
-    \subfigure[]{\includegraphics[width=0.40\columnwidth]{field/Fig/field-3-0}
-    \label{fig:field-3-0}}
-    \subfigure[]{\includegraphics[width=0.40\columnwidth]{field/Fig/dif-3-0}
-    \label{fig:dif-3-0}}         
-	\caption{(a) Denoised data using the proposed approach. (b) Noise section corresponding to (a). (c) Denoised data using the adaptive subtraction approach. (d) Noise section corresponding to (c).}
-   \label{fig:field-ortho-0,dif-ortho-0,field-3-0,dif-3-0}
-\end{figure}
-
-\begin{figure}[htb!]
-  \centering
-    \subfigure[]{\includegraphics[width=0.35\columnwidth]{field/Fig/zooma-1}
-    \label{fig:zooma-1}}
-    \subfigure[]{\includegraphics[width=0.35\columnwidth]{field/Fig/zooma-2}
-    \label{fig:zooma-2}}   
-    \subfigure[]{\includegraphics[width=0.35\columnwidth]{field/Fig/zooma-ortho}
-    \label{fig:zooma-ortho}}
-    \subfigure[]{\includegraphics[width=0.35\columnwidth]{field/Fig/zooma-3}
-    \label{fig:zooma-3}}         
-	\caption{(a)-(d) Zoomed denoised section comparisons for frame box A (as shown in Figures \ref{fig:field-1-0},\ref{fig:field-2-0} , \ref{fig:field-ortho-0}, and \ref{fig:field-3-0}, respectively). Note the primary reflections recovery from (a) to (c) and the noise decrease from (b) to (c). There is obvious residual ground-roll noise existing in (d).}
-   \label{fig:zooma-1,zooma-2,zooma-ortho,zooma-3}
-\end{figure}
-
-
-\begin{figure}[htb!]
-  \centering
-    \subfigure[]{\includegraphics[width=0.35\columnwidth]{field/Fig/zoomb-1}
-    \label{fig:zoomb-1}}
-    \subfigure[]{\includegraphics[width=0.35\columnwidth]{field/Fig/zoomb-2}
-    \label{fig:zoomb-2}}   
-    \subfigure[]{\includegraphics[width=0.35\columnwidth]{field/Fig/zoomb-ortho}
-    \label{fig:zoomb-ortho}}
-    \subfigure[]{\includegraphics[width=0.35\columnwidth]{field/Fig/zoomb-3}
-    \label{fig:zoomb-3}}         
-	\caption{(a)-(d) Zoomed noise section comparisons for frame box B (as shown in Figures \ref{fig:dif-1-0},\ref{fig:dif-2-0}, \ref{fig:dif-ortho-0}, and \ref{fig:dif-3-0}, respectively). Note the decrease of primary reflections from (a) to (c) and the increase of noise removal from (b) to (c). (c) and (d) are very similar in this zoomed region.}
-   \label{fig:zoomb-1,zoomb-2,zoomb-ortho,zoomb-3}
-\end{figure}
-
-\begin{figure}[htb!]
-  \centering
-    \includegraphics[width=0.8\columnwidth]{field/Fig/field-fs}
-	\caption{Comparisons of the average spectrum of all the traces. The black line denotes the average spectrum of raw data. The green line corresponds to the proposed approach. The red line corresponds to $fl=25$ Hz. The pink line corresponds to $fl=10$ Hz. The blue line corresponds to the adaptive subtraction method. Note the removal of ground-roll noise spectrum from the black and pink lines to the green line, and the primary reflections spectrum boost from the red line to the green line. There exists several spectrum notches in the blue line, indicating a mixture of useful reflections and ground-roll noise after applying the adaptive subtraction method. }
-   \label{fig:field-fs}
-\end{figure}
-
-
 
 \section{Acknowledgments}
 We would like to thank Qun Luo, Shan Qu, Jiang Yuan, and two anonymous reviewers for constructive suggestions that improved the manuscript greatly. Yangkang Chen appreciates Sergey Fomel for the inspiring discussions about local orthogonalization. The paper is reproducible within the Madagascar open-source platform \cite{mada2013}. We are grateful to developers of the Madagascar software package for providing corresponding codes for testing the algorithms and preparing the figures. This work is partially supported by the Natural Science Fund of China (grant nos.:91330108, 41374121, and 61327013), the fundamental Research Funds for the Central Universities (grant no.: HIT.BRETIV.201314), the Program for New Century Excellent Talents in University (grant no.: NCET-11-0804), the China Postdoctoral Science Foundation (grant no.: 2014M561053), the Natural Science Foundation of Hebei Province (grant no.: F2013202254), and the Texas Consortium for Computational Seismology (TCCS).
 
-\bibliographystyle{IEEEtran}
+\bibliographystyle{seg}
 \bibliography{groll}
 
 
