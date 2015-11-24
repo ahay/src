@@ -34,6 +34,7 @@ Papers(copyr='The University of Texas at Austin',
                 'vscan': 'Yangkang Chen, Tingting Liu, and Xiaohong Chen',
                 'shemd': 'Yangkang Chen, Shuwei Gan, Tingting Liu, Jiang Yuan, Yizhuo Zhang, and Zhaoyu Jin',
                 'orthogroll': 'Yangkang Chen, Shebao Jiao, Jianwei Ma, Hanming Chen, Yatong Zhou, and Shuwei Gan',
+                'intshape': 'Yangkang Chen, Lele Zhang, and Le-wei Mo'
                 },
        fig=('diffr/chan3d','pwmig','width=\\textwidth'))
 

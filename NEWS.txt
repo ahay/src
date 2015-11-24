@@ -34,6 +34,8 @@ To the reproducible documents collection:
 * tccs/orthogroll: Ground-roll noise attenuation using a simple and
   effective approach based on local bandlimited orthogonalization
   (Chen, Jiao, Ma, Chen, Zhou, and Gan)
+* tccs/intshape: Seismic data interpolation using nonlinear shaping
+  regularization (Chen, Zhang, and Mo)
 
 To SCons:
 
