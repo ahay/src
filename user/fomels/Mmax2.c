@@ -26,7 +26,7 @@ static bool not_max(float **dat, int i2, int i1)
     d = dat[i2][i1];
     for (k2=-1; k2 <= 1; k2++) {
 	for (k1=-1; k1 <= 1; k1++) {
-	    if (k2 && k1 && dat[i2+k2][i1+k1] > d) return true;
+	    if ((k1 || k2) && dat[i2+k2][i1+k1] >= d) return true;
 	}
     }
     return false;
@@ -34,7 +34,7 @@ static bool not_max(float **dat, int i2, int i1)
 
 int main(int argc, char* argv[])
 {
-    int n1, n2, n3, n12, i1, i2, i3, np;
+    int n1, n2, n3, n12, i1, i2, i3, np, ip;
     float o1, o2, d1, d2;
     float **pick, **slice, **slice2;
     sf_file in, out;
@@ -50,10 +50,10 @@ int main(int argc, char* argv[])
 
     if (!sf_histfloat(in,"d1",&d1)) d1=1.;
     if (!sf_histfloat(in,"o1",&o1)) o1=0.;
-    if (!sf_histfloat(in,"d2",&d1)) d2=1.;
-    if (!sf_histfloat(in,"o2",&o1)) o2=0.;
+    if (!sf_histfloat(in,"d2",&d2)) d2=1.;
+    if (!sf_histfloat(in,"o2",&o2)) o2=0.;
 
-    if (!sf_getint("np",&np)) np=n1;
+    if (!sf_getint("np",&np)) np=n12;
     /* maximum number of picks */
 
     sf_putint(out,"n1",3);
@@ -78,12 +78,28 @@ int main(int argc, char* argv[])
 		slice2[i2+1][i1+1] = slice[i2][i1];
 	    }
 	}
+	ip=0;
 	for (i2=0; i2 < n2; i2++) {
 	    for (i1=0; i1 < n1; i1++) {
 		/* check for local maxima on a grid */
 		if (not_max(slice2,i2+1,i1+1)) continue;
+		pick[ip][0]=o1+i1*d1;
+		pick[ip][1]=o2+i2*d2;
+		pick[ip][2]=slice[i2][i1];
+		ip++;
 		/* now try to locate it more precisely */
 	    }
+	}
+	if (0==ip) {
+	    pick[ip][0]=o1-d1;
+	    pick[ip][1]=o2-d2;
+	    pick[ip][2]=0.0f;
+	    ip++;
+	}
+	for (i1=ip; i1 < np; i1++) {
+	    pick[i1][0]=pick[ip-1][0];
+	    pick[i1][1]=pick[ip-1][1];
+	    pick[i1][2]=0.0f;
 	}
 
 	sf_floatwrite(pick[0],np*3,out);
