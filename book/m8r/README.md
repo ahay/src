@@ -8,7 +8,7 @@ This directory will collect materials for a comprehensive Madagascar documentati
 4. Vplot graphics
 5. **scons** Building Madagascar workflows using SCons
 6. **api** Developing Madagascar programs
-7. Parallel processing in Madagascar
+7. **parallel** Parallel processing in Madagascar
 8. Python interface to Madagascar
 9. Migration gallery
 10. Seismic field data processing
