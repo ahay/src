@@ -62,6 +62,28 @@ int main(int argc, char* argv[])
 
 
 
+
+    scale = 1./nt;               /* time summation scaling */
+    nslice = nz*nx*sizeof(float); /* wavefield slice */
+
+    /*------------------------------------------------------------*/
+    /* setup output */
+    if(adj) {
+	Fimg = sf_input ( "in"); /*  read img */
+
+	Fwfl = sf_output("out"); /* write wfl */
+	sf_oaxa(Fwfl,az,1);
+	sf_oaxa(Fwfl,ax,2);
+	sf_oaxa(Fwfl,at,3);
+    } else {
+	Fwfl = sf_input ( "in"); /*  read wfl */
+
+
+	Fimg = sf_output("out"); /* write img */
+	sf_oaxa(Fimg,az,1);
+	sf_oaxa(Fimg,ax,2);
+	sf_oaxa(Fimg,aa,3);
+
     /* Check that wavefields have the same dimensions: */
     az2 = sf_iaxa(Fwfl,1); 
     ax2 = sf_iaxa(Fwfl,2);
@@ -80,25 +102,11 @@ int main(int argc, char* argv[])
     }
 
     
-    scale = 1./nt;               /* time summation scaling */
-    nslice = nz*nx*sizeof(float); /* wavefield slice */
 
-    /*------------------------------------------------------------*/
-    /* setup output */
-    if(adj) {
-	Fimg = sf_input ( "in"); /*  read img */
 
-	Fwfl = sf_output("out"); /* write wfl */
-	sf_oaxa(Fwfl,az,1);
-	sf_oaxa(Fwfl,ax,2);
-	sf_oaxa(Fwfl,at,3);
-    } else {
-	Fwfl = sf_input ( "in"); /*  read wfl */
 
-	Fimg = sf_output("out"); /* write img */
-	sf_oaxa(Fimg,az,1);
-	sf_oaxa(Fimg,ax,2);
-	sf_oaxa(Fimg,aa,3);
+
+
     }
     /*------------------------------------------------------------*/
 
