@@ -54,10 +54,9 @@ static kiss_fft_cpx **tmp, *ctrace2;
 static sf_complex *trace2;
 #endif
 
-int cfft2_init(int pad1           /* padding on the first axis */,
+static int cfft2_init(int pad1           /* padding on the first axis */,
 	       int nx,   int ny   /* input data size */, 
 	       int *nx2, int *ny2 /* padded data size */)
-/*< initialize >*/
 {
 
 #ifdef SF_HAS_FFTW
@@ -794,17 +793,17 @@ int main(int argc, char* argv[])
     /*Set I/O file*/
     if (adj) { /* migration */
       if (wantrecord) {
-	Frcd = sf_input("input"); /*record from elsewhere*/
+	Frcd = sf_input("--input"); /*record from elsewhere*/
 	Fsrc  = sf_input("src");   /*source wavelet*/      
       } else {
 	Frcd = sf_output("rec"); /*record produced by forward modeling*/
-	Fsrc = sf_input("input");   /*source wavelet*/
+	Fsrc = sf_input("--input");   /*source wavelet*/
       }
 
-      Fimg  = sf_output("output");
+      Fimg  = sf_output("--output");
     } else { /* modeling */
-      Fimg = sf_input("input");
-      Frcd = sf_output("output");
+      Fimg = sf_input("--input");
+      Frcd = sf_output("--output");
       Fsrc  = sf_input("src");   /*source wavelet*/      
     }
 

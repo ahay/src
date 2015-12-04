@@ -187,12 +187,15 @@ Flow([Fbright,Fbleft],[Ffvelabc,Ffft],
 # 4. Numerical test for the incomplete data case
 # ##############################################
 
-# ## Model the data
-# <ref.rsf sflrrtm src=csource.rsf tmpwf=tmpwf.rsf vel=vel_ext.rsf left=left.rsf right=right.rsf leftb=bleft.rsf rightb=bright.rsf verb=y pad1=1 spz=10 gpz=10 gpl=901 snapinter=1 top=50 bot=50 lft=50 rht=50 rectz=2 rectx=2 repeat=2 srctrunc=0.4 wantwf=n wantrecord=y illum=n roll=n adj=n fm=y shtbgn=0 shtend=900 shtint=60 >shots16.rsf
-# Note that we did't use the borning modeling, even though we regard reflectivity as input.
-# The argument "fm=y" will let the program to perform forward modeling.
+# Run this on a cluster
 
-Flow('shots16','shots16.hh','cp')
+Flow('shots16','ref csource vel_ext left right bleft bright',
+     '''
+     mpilrrtm src=${SOURCES[1]} vel=${SOURCES[2]} left=${SOURCES[3]} right=${SOURCES[4]} 
+     leftb=${SOURCES[5]} rightb=${SOURCES[6]} verb=y pad1=1 spz=10 gpz=10 gpl=901 snapinter=1 
+     top=50 bot=50 lft=50 rht=50 rectz=2 rectx=2 repeat=2 srctrunc=0.4 wantwf=n 
+     wantrecord=y illum=n roll=n adj=n fm=y shtbgn=0 shtend=900 shtint=60 
+     ''',np=8)
 
 # ## Mute direct wave
 real=[]
@@ -244,13 +247,23 @@ Result('synshots16',
 	labelsz=9 screenratio=0.6
 	''')
 
-# ## RTM of incomplete data
-# <zero16.rsf sflrrtm src=csource.rsf tmpwf=tmpwf.rsf vel=vel_ext.rsf left=left.rsf right=right.rsf leftb=bleft.rsf rightb=bright.rsf verb=y pad1=1 spz=10 gpz=10 gpl=901 snapinter=1 top=50 bot=50 lft=50 rht=50 rectz=2 rectx=2 repeat=2 srctrunc=0.4 wantwf=n wantrecord=y illum=n roll=n adj=y fm=n shtbgn=0 shtend=900 shtint=60 incom=y mask=mask.rsf>inimg16.rsf
+## RTM of incomplete data
 
-Flow('inimg16','inimg16.hh','cp')
+Flow('inimg16','zero16 csource vel_ext left right bleft bright mask',
+     '''
+     mpilrrtm src=${SOURCES[1]} vel=${SOURCES[2]} left=${SOURCES[3]} right=${SOURCES[4]} 
+     leftb=${SOURCES[5]} rightb=${SOURCES[6]} verb=y pad1=1 spz=10 gpz=10 gpl=901 
+     snapinter=1 top=50 bot=50 lft=50 rht=50 rectz=2 rectx=2 repeat=2 srctrunc=0.4 
+     wantwf=n wantrecord=y illum=n roll=n adj=y fm=n shtbgn=0 shtend=900 shtint=60 
+     incom=y mask=${SOURCES[7]} 
+     ''',np=8)
 
 # ## LSRTM of incomplete data
 # <zero16.rsf sfcconjgrad sflrrtm mod=inimg16.rsf incom=y mask=mask.rsf src=csource.rsf tmpwf=tmpwf.rsf vel=vel_ext.rsf left=left.rsf right=right.rsf leftb=bleft.rsf rightb=bright.rsf verb=n pad1=1 spz=10 gpz=10 gpl=901 snapinter=1 top=50 bot=50 lft=50 rht=50 rectz=2 rectx=2 repeat=2 srctrunc=0.4 wantwf=n wantrecord=y illum=n roll=n shtbgn=0 shtend=900 shtint=60>incg20.rsf niter=20
+
+#Flow('incg20','zero16 csource vel_ext left right bleft bright mask',
+#     '''
+#     cconjgrad lrrtm
 
 # ## LSRTM of complete data for comparison
 # <muteshots16.rsf sfcconjgrad sflrrtm mod=inimg16.rsf src=csource.rsf tmpwf=tmpwf.rsf vel=vel_ext.rsf left=left.rsf right=right.rsf leftb=bleft.rsf rightb=bright.rsf verb=n pad1=1 spz=10 gpz=10 gpl=901 snapinter=1 top=50 bot=50 lft=50 rht=50 rectz=2 rectx=2 repeat=2 srctrunc=0.4 wantwf=n wantrecord=y illum=n roll=n shtbgn=0 shtend=900 shtint=60>benchmark20.rsf niter=20
