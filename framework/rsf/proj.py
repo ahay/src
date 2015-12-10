@@ -361,26 +361,46 @@ class Project(Environment):
         # self.jobs is the number of jobs
         # self.ip is the current CPU
 
-        # Esteban Diaz comment: ediazpan@mines.edu        
-        # This bit of the code conflicts with our configuration at mines
-        # maybe the file could be named hosts-(uname).txt 
-        # In our cluster config, we have several sconstructs that 
-        # try to write the same file. Hence, it produces problems. 
+        # Karl Schleicher kls.  I'll move hosts.txt back to the current working 
+        # directory.  This method of pscons rsh to remote nodes only works
+        # for one pscons in the current working directory, otherwise the 
+        # multiple tasks will write to the same file and make a mess! 
+        # Esteban noticed this in December 2015.
 
-        #self.hosts = self.path + 'hosts.txt'
-        #if (os.path.isfile(self.hosts)):
-        #    os.unlink(self.hosts)
-        #hosts_fd=open(self.hosts,'w')
-        #hosts_fd.write("numnodes %4d\n"%len(self.nodes))
-        #hosts_fd.write("host                                    state\n") 
-        #for host in self.nodes:
-        #    hosts_fd.write(string.ljust(host,40)+string.ljust("notrunning",10)+"\n")
-        #hosts_fd.close()
+        # kls Karl Schleicher This can be trapped by making sure no hosts.txt
+        # already exists and exiting with an error.  hosts.txt will need to be
+        # deleted at the end.  That will be a project for another day!
+        # YOu cannot append pid to hosts.txt, or the next time you run, 
+        # the command wil be different and scons wilL think it needs to be 
+        # rerun.
+
+        self.hosts = self.cwd + '/hosts.txt'
+        print "using %s to keep track of nodes in use by pscons."%self.hosts
+        print "Only one pscons using remote hosts can be run in directory"
+        # I would like to delete hosts.txt file at end of scons.  Cannot just
+        # delete in def End(self).  Need to do after all the scons command
+        # complete. kls
+        if (os.path.isfile(self.hosts)):
+            # would like to delete at end and make error message here it exists.
+            os.unlink(self.hosts)
+        hosts_fd=open(self.hosts,'w')
+        hosts_fd.write("numnodes %4d\n"%len(self.nodes))
+        hosts_fd.write("host                                    state\n") 
+        for host in self.nodes:
+            hosts_fd.write(string.ljust(host,40)+string.ljust("notrunning",10)+"\n")
+        hosts_fd.close()
 
         for key in self['ENV'].keys():
             # quote the env values because stampede has env variable 
             # SLURM_NODE_ALIASES=(null)  This makes problems in the ssh to nodes.
-            self.environ = self.environ + " %s='%s'" % (key,self['ENV'][key])
+            # on stampeed there are many env keys starting with SLURM_ or
+            # TACC_ that include list of nodes or queue_job_number.  There
+            # will make pscons rerun the tasks.  Some are harmless but 
+            # clutter the printed job output.  They can be safely removed
+            if (key[:6]!='SLURM_' and 
+               key[:5]!='TACC_' and 
+               key[:12]!='_ModuleTable'):
+               self.environ = self.environ + " %s='%s'" %(key,self['ENV'][key])
 
 
     def __Split(self,split,reduction,
@@ -543,12 +563,17 @@ class Project(Environment):
         if remote:
             command = re.sub('"','\\"',command)
             if self.raddenv:
-                command = string.join([self.runonnode,self.hosts,'\"',self.raddenv,
+                # runonnode cans to use hosts.txt to avoid pscond reruns
+                #command = string.join([self.runonnode,self.hosts,'\"',self.raddenv,
+                #                      '; cd ',self.cwd,';',command,'\"'])
+                command = string.join([self.runonnode,'\"',self.raddenv,
                                        '; cd ',self.cwd,';',command,'\"'])
             else:
-                command = string.join([self.runonnode,self.hosts,
-                                       '\"cd ',self.cwd,';',command,'\"'])
-                        
+                # runonnode cans to use hosts.txt to avoid pscond reruns
+                #command = string.join([self.runonnode,self.hosts,
+                #                       '\"cd ',self.cwd,';',command,'\"'])
+                command = string.join([self.runonnode,
+                                       '\"cd ',self.cwd,';',command,'\"'])        
         targets = []
         for file in tfiles:
             if (not re.search(suffix + '$',file)) and ('.' not in file):
@@ -637,6 +662,9 @@ class Project(Environment):
             self.Alias('test',self.test)
         else:
             self.Echo('test',None,err='Nothing to test')
+        # this will delete file while scons is running
+        #if (os.path.isfile(self.hosts)):
+        #    os.unlink(self.hosts)
     def Info(self,target=None,source=None,env=None):
         'Store project information in a file'
         infofile = str(target[0])
