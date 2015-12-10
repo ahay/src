@@ -4,5 +4,11 @@ from rsf.gallery import constant
 constant.get_zodata('data')
 Result('data','grey title="Zero Offset" ')
 
+constant.get_cmps('cmps')
+Result('cmps',
+       '''
+       byte gainpanel=all | transp plane=23 |
+       grey3 flat=n frame1=800 frame2=100 frame3=50 title=CMPs point1=0.8 point2=0.8
+       ''')
 
 End()

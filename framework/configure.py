@@ -748,6 +748,7 @@ def ffmpeg(context):
         context.env['CPPPATH'] = oldpath + [ffmpegpath]
     else:
         for top in ('/usr/include','/usr/local/include',
+                    '/usr/include/x86_64-linux-gnu/',
                     '/sw/include','/opt/local/include',
                     '/usr/include/ffmpeg'):
             ffmpegpath = os.path.join(top,'ffmpeg')
@@ -1079,6 +1080,8 @@ def mpi(context):
             path += ':/usr/lib64/openmpi/bin/'
     mpicc = context.env.get('MPICC',WhereIs('mpicc', path))
     if mpicc:
+        if plat['OS'] == 'cygwin':
+            mpicc = mpicc + ' -D__STRICT_ANSI__'
         context.Result(mpicc)
         context.Message("checking if %s works ... " % mpicc)
         # Try linking with mpicc instead of cc
@@ -1854,7 +1857,9 @@ def cxx(context):
 
             if CXX[-3:]=='g++':
                 oldflag = context.env.get('CXXFLAGS')
-                for flag in ['-Wall -pedantic']:
+                for flag in ['-std=c++11 -U__STRICT_ANSI__ -Wall -pedantic',
+                             '-std=c++0x -U__STRICT_ANSI__ -Wall -pedantic',
+                             '-Wall -pedantic']:
                     context.Message("checking if %s accepts '%s' ... " % (CXX,flag))
                     context.env['CXXFLAGS'] = oldflag + ' ' + flag
                     res = context.TryCompile(text,'.cc')

@@ -70,11 +70,16 @@ if env.get('SWIG') and env.get('NUMPY'):
         wrap = env.CFile(module,module+'.i',SWIGFLAGS='-python')
         env.Depends(wrap,'numpy.i')
 
-        python = env.LoadableModule(module,wrap[0],
-                                    LDMODULEPREFIX='_c_',
-                                    LDMODULESUFFIX=ldmsuffix,
-                                    FRAMEWORKSFLAGS='-flat_namespace '
-                                    '-undefined suppress')
+        if env['PLATFORM'] == 'cygwin':
+            python = env.SharedLibrary(module,wrap[0],
+                                       SHLIBPREFIX='_c_',
+                                       SHLIBSUFFIX=ldmsuffix)
+        else:
+            python = env.LoadableModule(module,wrap[0],
+                                        LDMODULEPREFIX='_c_',
+                                        LDMODULESUFFIX=ldmsuffix,
+                                        FRAMEWORKSFLAGS='-flat_namespace '
+                                        '-undefined suppress')
 
         pfiles = [python,wrap[1],module+'.py']
         env.Install('../../lib',pfiles)

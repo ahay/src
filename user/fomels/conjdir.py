@@ -22,7 +22,7 @@ import rsf.api as rsf
 random = rsf.noise(rep=1,type=0)
 
 def conjdir(oper,dat,x0,niter):
-    'Conjugate-directions algorithm for minimizing |A x - dat|^2'
+    'Conjugate-directions for minimizing |oper x - dat|^2'
     x = x0
     R = oper(adj=0)[x]-dat      
     s,S,Sn=[],[],[]

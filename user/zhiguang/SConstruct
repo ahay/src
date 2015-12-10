@@ -3,8 +3,8 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-edgetaper ctscigadj ctscigder ctshift fftfwi_sparse_2d
-firstpick pad2 padzero postrtm2d sgfdewe2d
+ctscigadj ctscigder ctshift fftfwi_sparse_2d
+pad2 padzero postrtm2d sgfdewe2d
 upsamp1
 '''
 

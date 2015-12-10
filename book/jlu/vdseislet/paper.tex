@@ -1,0 +1,697 @@
+\published{Geophysics, 80, no. 6, WD117-WD128, (2015)}
+ 
+\title{Signal and noise separation in prestack seismic data using velocity-dependent seislet transform}
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+
+\address{
+\footnotemark[1] College of Geo-exploration Science and Technology,\\
+Jilin University \\
+No.938 Xi minzhu street, \\
+Changchun, China, 130026 \\
+\footnotemark[2] Bureau of Economic Geology,\\
+John A. and Katherine G. Jackson School of Geosciences \\
+The University of Texas at Austin \\
+University Station, Box X \\
+Austin, TX, USA, 78713-8924}
+
+\author{Yang Liu\footnotemark[1], Sergey Fomel\footnotemark[2], Cai Liu\footnotemark[1]}
+
+\footer{TCCS-10}
+\lefthead{Liu et al.}
+\righthead{VD-seislet transform}
+\maketitle
+
+\begin{abstract}
+The seislet transform is a wavelet-like transform that analyzes
+seismic data by following varying slopes of seismic events across
+different scales and provides a multiscale orthogonal basis for
+seismic data. It generalizes the discrete wavelet transform (DWT) in
+the sense that DWT in the lateral direction is simply the seislet
+transform with a zero slope. Our earlier work used plane-wave
+destruction (PWD) to estimate smoothly varying slopes.  However, PWD
+operator can be sensitive to strong noise interference, which makes
+the seislet transform based on PWD (PWD-seislet transform)
+occasionally fail in providing a sparse multiscale representation for
+seismic field data. We adopt a new velocity-dependent (VD) formulation
+of the seislet transform, where the normal moveout equation serves as
+a bridge between local slope patterns and conventional moveout
+parameters in the common-midpoint (CMP) domain. The velocity-dependent
+(VD) slope has better resistance to strong random noise, which
+indicates the potential of VD seislets for random noise attenuation
+under 1D earth assumption. Different slope patterns for primaries and
+multiples further enable a VD-seislet frame to separate primaries from
+multiples when the velocity models of primaries and multiples are well
+disjoint. Results of applying the method to synthetic and field-data
+examples demonstrate that the VD-seislet transform can help in
+eliminating strong random noise. Synthetic and field-data tests also
+show the effectiveness of the VD-seislet frame for separation of
+primaries and pegleg multiples of different orders.
+\end{abstract}
+
+\section{Introduction}
+Signal and noise separation is a persistent problem in seismic
+exploration. Sometimes noise is divided into random noise and coherent
+noise.  Many authors have developed effective methods of eliminating
+random noise. \cite{Ristau01} compared several adaptive filters, which
+they applied in an attempt to reduce random noise in geophysical
+data. \cite{Karsli06} applied complex-trace analysis to seismic data
+for random-noise suppression, recommending it for low-fold seismic
+data.  Some transform methods were also used to deal with seismic
+random noise, e.g., the discrete cosine transform \cite[]{Lu07}, the
+curvelet transform \cite[]{Neelamani08}, and the seislet transform
+\cite[]{Fomel10a}. If seismic events are planar (lines in
+2D data and planes in 3D data) or locally planar, one can predict
+seismic events by using prediction techniques in the $f$-$x$ domain
+\cite[]{Canales84,Sacchi01,Liu13} or the $t$-$x$ domain
+\cite[]{Claerbout92,Fomel02,Sacchi09,Liu15}.
+
+Multiple reflections are one kind of coherent noise, especially in
+marine environments. Wave-equation based algorithms for attenuating
+multiples have rapidly developed since 1990s and usually consist of
+two steps, namely multiple prediction
+\cite[]{Verschuur92,Berkhout97,Weglein97} and 
+adaptive subtraction
+\cite[]{GEO68-01-03460354,Guitton04,Fomel09a}.
+However, these algorithms need to calculate a full wavefield, which is
+\old{occasionally} \new{often} a computational bottleneck for their application,
+especially in the 3D case. Another popular class of demultiple
+techniques is based on variants of the Radon transform
+\cite[]{Foster92}. Several revised Radon transforms have been proposed 
+for multiple attenuation
+\cite[]{Hunt96,Zhou96,Wang03,Hargreaves03}. Radon-transform based 
+methods often fail to provide accurate separation because of their
+non-sparsity in characterizing seismic data, although they can be
+improved by high-resolution methods
+\cite[]{Sacchi95,Herrmann00,Trad03}. Despite their usual
+classification as noise, multiples can penetrate deeply enough into
+the subsurface to illuminate the prospect zone. In this sense,
+multiples can also be viewed as a viable signal, rather than noise
+\cite[]{Reiter91,Youn01,Berkhout06}. \cite{Brown05} proposed a
+least-squares joint imaging of pegleg multiples and primaries and
+discussed separation of pegleg multiples and primaries in prestack
+data.
+
+In seismic data analysis, it is common to represent signals as sums of
+plane waves by using multidimensional Fourier
+transforms. The discrete
+wavelet transform (DWT) is often preferred to the Fourier transform
+for characterizing digital images, because of its ability to localize
+events in both time and frequency domains
+\cite[]{ripples,mallat}. However, DWT may not be optimal for
+describing data that consist of plane waves. Wavelet-like transforms
+that explore directional characteristics of images have found
+important applications in seismic imaging and data
+analysis \cite[]{Chauris08,Herrmann08b}. \cite{Fomel06} investigated
+the possibility of designing a wavelet-like transform tailored
+specifically to seismic data and introduced it as the seislet
+transform. \cite{Fomel10a} further \old{improved} \new{developed} the seislet framework and
+proposed additional applications. The original 2D seislet transform
+utilizes local data slopes estimated by plane-wave destruction (PWD)
+filters \cite[]{Fomel02,Chen13a,Chen13b}. However, a PWD operator can
+be sensitive to strong interference, which makes the seislet transform
+based on PWD (PWD-seislet transform) occasionally fail in
+characterizing noisy signals.
+
+In this paper, we develop a velocity-dependent (VD) concept
+\cite[]{Liu13}, where local slopes in prestack data are evaluated from
+moveout parameters estimated by conventional velocity-analysis
+techniques. We implement a VD-seislet transform and propose its
+application for signal and noise separation. We expect the new
+VD-seislet transform to provide better compression ability for
+reflection events away from interference of strong random noise. We
+also provide an application of VD-seislet transform for separating
+primaries from pegleg multiples of different orders. We test the
+performance of VD-seislet transform using synthetic and field data.
+
+\section{Theory}
+
+\subsection{Review of seislets}
+The seislet transform was introduced by \cite{Fomel06} and extended by
+\cite{Fomel10a} and \cite{Liu10}. The seislet construction is based on 
+the discrete wavelet transform (DWT) combined with seismic data
+patterns, such as \new{local} slopes or frequencies. \cite{Fomel02} developed a
+local plane-wave destruction (PWD) operation to predict local
+plane-wave events, where an all-pass digital filter is used to
+approximate the time shift between two neighboring traces. The inverse
+operation, plane-wave construction \cite[]{Fomel06b,Fomel10b},
+predicts a seismic trace from its neighbors by following locally
+varying slopes of seismic events and has been used for designing a
+PWD-seislet transform, which is a particular kind of the seislet
+transforms \old{with} \new{based on} slope pattern\new{s}. \cite{Liu13} proposed a
+velocity-dependent (VD) slope as a pattern in VD-seislet transform,
+where the normal moveout (NMO) equation serves as a bridge between
+local slopes and scanned NMO velocities.
+
+To define seislet transform, \old{one can} \new{we} follow the general recipe of the
+lifting scheme for the discrete wavelet transform, as described by
+\cite{athome}. The construction is reviewed in Appendix A. 
+Designing pattern-based prediction operator $\mathbf{P}$ and update
+operator $\mathbf{U}$ for seismic data is key in the seislet
+framework. In the seislet transform, the basic data components can be
+different, e.g., traces or common-offset gathers, and the prediction
+and update operators shift components according to different patterns.
+
+The prediction and update operators for a simple seislet transform are
+defined by modifying the biorthogonal wavelet construction in
+equations from Appendix A as follows:
+\begin{eqnarray}
+  \label{eq:sp}
+  \mathbf{P[e]}_k & = & \left(\mathbf{R}_k^{(+)}[\mathbf{e}_{k-1}] + 
+  \mathbf{R}_k^{(-)}[\mathbf{e}_{k}]\right)/2 \\
+  \label{eq:su}
+  \mathbf{U[r]}_k & = & \left(\mathbf{R}_k^{(+)}[\mathbf{r}_{k-1}] + 
+    \mathbf{R}_k^{(-)}[\mathbf{r}_{k}]\right)/4\;,
+\end{eqnarray}
+where $\mathbf{e}_k$ is even components of data at the $k$th transform
+scale, $\mathbf{r}_k$ is residual difference between the odd component
+of data $\mathbf{o}$ and its prediction from the even component at the
+$k$th transform scale, \old{the details are shown in Appendix A,} and
+$\mathbf{R}_k^{(+)}$ and $\mathbf{R}_k^{(-)}$ are operators that
+predict a component from its left and right neighbors correspondingly
+by shifting them according to their patterns. \new{The details are
+explained in Appendix A.}
+
+To get the relationship between prediction operator
+$\mathbf{R}_k$ and slope pattern $\sigma$, the plane-wave destruction 
+operation \cite[]{Fomel02} can be defined in a linear operator notation as
+\begin{equation}
+  \label{eq:pwd}
+  \mathbf{d} = \mathbf{D(\sigma)\,s}\;,
+\end{equation}
+where seismic section $\mathbf{s} = \left[\mathbf{s}_1 \; 
+\mathbf{s}_2 \; \ldots \; \mathbf{s}_N\right]^T$ is a collection of traces, \new{and}
+$\mathbf{d}$ is the destruction residual. \old{and the expression of the
+nonstationary plane-wave destruction operator $\mathbf{D}$ can be
+found in \cite{Fomel02}.} The general structure of $\mathbf{D}$ is
+defined as follows \cite[]{Fomel06b,Fomel10b}
+\begin{equation}
+  \label{eq:d}
+  \mathbf{D(\sigma)} =
+  \left[\begin{array}{ccccc}
+      \mathbf{I} & 0 & 0 & \cdots & 0 \\
+      - \mathbf{R}_{1,2}(\sigma_1) & \mathbf{I} & 0 & \cdots & 0 \\
+      0 & - \mathbf{R}_{2,3}(\sigma_2) & \mathbf{I} & \cdots & 0 \\
+      \cdots & \cdots & \cdots & \cdots & \cdots \\
+      0 & 0 & \cdots & - \mathbf{R}_{N-1,N}(\sigma_{N-1}) & \mathbf{I} \\
+    \end{array}\right]\;,
+\end{equation}
+where $\mathbf{I}$ stands for the identity operator, $\sigma_i$ is
+local slope pattern, and $\mathbf{R}_{i,j}(\sigma_i)$ is an operator
+for prediction of trace $j$ from trace $i$ according to the slope
+pattern $\sigma_i$. A trace is predicted by shifting it according to
+the local seismic event slopes. Prediction of a trace
+from a distant neighbor can be accomplished by simple recursion, i.e.,
+predicting trace $k$ from trace $1$ is simply
+\begin{equation}
+  \label{eq:pred}
+  \mathbf{R}_{1,k} = \mathbf{R}_{k-1,k}\,
+  \cdots\,\mathbf{R}_{2,3}\,\mathbf{R}_{1,2}\;.
+\end{equation}
+If $\mathbf{s}_r$ is a reference trace, then the prediction of trace
+$\mathbf{s}_k$ is $\mathbf{R}_{r,k} \mathbf{s}_r$.
+
+The predictions need to operate at different scales, which, in this
+case, mean different separation distances between the data elements,
+e.g., traces in PWD-seislet transform. Equations~\ref{eq:sp} and
+\ref{eq:su}, in combination with the forward and inverse lifting
+schemes, provide a complete definition of the seislet framework. For
+different kinds of slope-based seislets, one needs to define the
+corresponding slope pattern $\sigma$.
+
+\subsection{VD-slope pattern for primary reflections}
+The kinematic description of a seismic event is an essential step for
+several developments in seismic data processing. Local slope is
+one important kinematic pattern for seismic data in the time-space
+domain. PWD provides a constructive algorithm for estimating local slopes
+\cite[]{Claerbout92,Fomel02,Schleicher09,Chen13a,Chen13b} and can 
+combine with a seislet framework to implement the PWD-seislet. Local
+slant stack \cite[]{Ottolini83} is another standard tool for
+calculating slopes.
+
+Under 1D earth assumption, one can consider the classic 
+hyperbolic model of primary reflection moveouts at near offsets
+\cite[]{Dix55}:
+\begin{equation}
+  \label{eq:nmo}
+  t(x) = \sqrt{t_0^2 + \frac{x^2}{v^2(t_0)}}\;,
+\end{equation}
+where $t_0$ is the zero-offset traveltime, $t(x)$ is the corresponding
+primary traveltime recorded at offset $x$, and $v(t_0)$ is the
+stacking, or root mean square (RMS) velocity, which comes from a
+standard velocity scan. As follows from equation~\ref{eq:nmo}, the
+traveltime slopes $\sigma= dt/dx$ in CMP gathers are given by
+\begin{equation}
+  {\sigma(t,x)} = {\frac{x}{t(x)\,v^2(t_0,x)}}\;.
+  \label{eq:pnmo}
+\end{equation}
+This calculation is reverse to the one used in \old{velocity estimation} \new{NMO} by
+velocity-independent imaging \cite[]{Ottolini83b,Fomel07b}.  To
+calculate local slopes of primaries, we need to know $v(t_0, x)$ at
+each time-space location ($t_0,x$). This can be accomplished by
+simultaneously scanning both $t_0$ and $v(t_0,x)$ according to the
+hyperbolic NMO equation at each $x$-coordinate position or by
+\emph{time-warping}. In this paper, we use the time-warping \new{algorithm} to calculate
+$v(t_0, x)$. \old{the time-warping} \new{Time warping} performs mapping between different
+coordinates\old{,}\new{:} if one has sampled functions $f(x)$ and $y(x)$, the
+mapping operation finds sampled $f(y)$ \cite[]{Burnett09,Casasanta11}.
+
+After the VD-slope pattern of primaries is calculated, we can design
+pattern-based prediction and update operators $\mathbf{R}_k$ by using
+plane-wave construction for the VD-seislet transform to represent only
+primary reflections. When VD-seislet transform is applied to a CMP
+gather, random noise spreads over different scales while the
+predictable reflection information gets compressed to large
+coefficients at small scales. A simple thresholding \old{method} \new{operation} can easily
+remove small coefficients. Finally, applying the inverse
+VD-seislet transform reconstructs the signal while attenuating random
+noise.
+
+\subsection{VD-slope pattern for pegleg multiples}
+
+In a laterally homogeneous model, the NMO equation~\ref{eq:nmo}
+flattens primary events on a CMP gather with offset $x$ and time $t$
+to its zero-offset traveltime $t_0$. \cite{Brown05} use an analogous
+NMO equation for pegleg multiples under \new{locally} 1D earth assumption. For
+example, first-order pegleg can be kinematically approximated by
+pseudo-primary with the same offset but with an additional zero-offset
+traveltime $\tau$. The NMO equation for an $m$th-order pegleg multiple
+is generalized to
+\begin{equation}
+  \label{eq:mnmo}
+  t_m(x) = \sqrt{(t_0+m\tau)^2 + \frac{x^2}{v_m^2(t_0)}}\;,
+\end{equation}
+where $t_m(x)$ is the corresponding multiple traveltime recorded at
+offset $x$ and the effective RMS velocity $v_m$ is
+defined according to Dix's equation as:
+\begin{equation}
+  \label{eq:mveff}
+  v_m(t_0) = \sqrt{\frac{t_0v^2(t_0)+m\tau\,v^2(\tau)}{t_0+m\tau}}\;.
+\end{equation}
+In marine seismic data, $v(\tau)$ is constant water velocity, and
+it assumes that we are able to pick zero-offset traveltime
+$\tau$ of the water bottom. According to the definition of slopes for
+primaries (equation~\ref{eq:pnmo}), slopes for pegleg multiples can be
+calculated analogously by:
+\begin{equation}
+  \sigma_m(t,x) = {\frac{x}{t_m(x)\,v_m^2(t_0,x)}}\;.
+  \label{eq:mdip}
+\end{equation}
+Equation~\ref{eq:mdip} provides the estimation of multiple slopes,
+which we use to define VD-seislet frame for representing pegleg
+multiples of different orders.
+
+\subsection{Separation of primaries and pegleg multiples using VD-seislet frame}
+Once the VD-seislet transform is defined, it can be applied to analyze
+signals composed of multiple wavefields, e.g., primaries and multiples
+of different orders. If a range of slopes are chosen and a VD-seislet
+transform is constructed for each of them, then all the transforms
+together will constitute an overcomplete
+representation. Mathematically, if $\mathbf{F}_i$ is the VD-seislet
+transform for the $i$th slope pattern (corresponding to primaries or
+pegleg multiples of different orders), then, for any data vector
+$\mathbf{d}$,
+\begin{equation}
+\label{eq:frame}
+\sum\limits_{i=1}^N \|\mathbf{F}_i\,\mathbf{d}\|^2 = 
+\sum\limits_{i=1}^N \mathbf{d}^T\,\mathbf{F}_i^T\,\mathbf{F}_i\,\mathbf{d} =
+\sum\limits_{i=1}^N \|\mathbf{d}\|^2 = N\,\|\mathbf{d}\|^2\;,
+\end{equation}
+which means that all transforms taken together constitute a 
+\emph{tight frame} with constant $N$ \cite[]{mallat}.
+
+Because of its overcompleteness, a frame representation for a given
+signal is not unique. In order to assure that different wavefield
+components do not leak into other parts of the frame, it is
+advantageous to employ \old{sparseness}\new{sparsity}-promoting inversion
+\cite[]{Fomel10a}. We use a nonlinear shaping-regularization scheme
+\cite[]{Fomel08} and define sparse decomposition as an iterative
+thresholding process \cite[]{Daubechies04}
+\begin{eqnarray}
+  \label{eq:shape4}
+  \hat{\mathbf{f}}_{k+1} & = & \mathbf{S}[\mathbf{F}\,
+     \mathbf{d}+(\mathbf{I}-\mathbf{F}\,
+   \mathbf{B})\,\hat{\mathbf{f}}_{k}]\;, \\
+   \mathbf{f}_{k+1} & = & \mathbf{f}_k + \mathbf{F}\,
+   \mathbf{d}- \mathbf{F}\,\mathbf{B} \hat{\mathbf{f}}_{k+1}\;,
+   \label{eq:bregman} 
+\end{eqnarray}
+where $\mathbf{f}_k$ are coefficients of the seislet
+frame at $k$th iteration, $\hat{\mathbf{f}}_k$ is an auxiliary
+quantity, $\mathbf{S}$ is a soft thresholding operator, $\mathbf{F}$
+and $\mathbf{B}$ are frame construction and deconstruction operators
+\begin{eqnarray}
+  \label{eq:f}
+  \mathbf{F} & \equiv & 
+\left[\begin{array}{cccc}\mathbf{F}_1 &\mathbf{F}_2 & 
+    \cdots &\mathbf{F}_N\end{array}\right]^T\;, \\
+\mathbf{B} & \equiv &  
+\left[\begin{array}{cccc}\mathbf{F}_1^{-1} &\mathbf{F}_2^{-1} & 
+    \cdots &\mathbf{F}_N^{-1}\end{array}\right]\;.
+    \label{eq:b}
+\end{eqnarray}
+
+\old{Equation~\ref{eq:shape4} converges to the solution of a least-squares
+optimization problem regularized by a sparsity constraint
+\begin{equation}
+\label{eq:lsproblem}
+\min_{\mathbf{f}}\|\mathbf{B}\mathbf{f}-\mathbf{d}\|_2^2+\epsilon \|\mathbf{f}\|_1\;,
+\end{equation}
+where the first term is the $L_2$ norm of the data misfit and the
+second term is the $L_1$ norm of the model, which promotes sparsity.
+
+Assuming that equation~\ref{eq:shape4} converges, one can express 
+its convergence point as
+\begin{equation}
+\label{eq:lsolution}
+\hat{\mathbf{f}}=[\mathbf{I}+\mathbf{S}(\mathbf{F}\mathbf{B}-
+\mathbf{I})]^{-1}\mathbf{S}\mathbf{F}\mathbf{d}\;,
+\end{equation}
+which is precisely the shaping regularization equation proposed by
+\cite{Fomel07a}.} The iteration\old{s} \new{in equations} \ref{eq:shape4} and \ref{eq:bregman}
+start\new{s} with $\mathbf{f}_0=\mathbf{0}$ and
+$\hat{\mathbf{f}_0}=\mathbf{F}\mathbf{d}$ and \old{are} \new{is} related to the
+linearized Bregman iteration \cite[]{Cai09}, which converges to the
+solution of the constrained minimization problem:
+\begin{equation}
+  \label{eq:convex}
+  \min_{\mathbf{f}}\|\mathbf{f}\|_1 \; s.t.\; \mathbf{Bf} = \mathbf{d}\;.
+\end{equation}
+
+Separated wavefield can be calculated by
+$\mathbf{d}_i=\mathbf{B}\mathbf{M}_i\mathbf{f}_\eta$, where $\eta$ is
+iteration number, masking operator $\mathbf{M}_i$ is a diagonal matrix
+as
+\begin{equation}
+  \label{eq:M}
+  \mathbf{M}_i =
+  \left[\begin{array}{ccccccc}
+      \mathbf{0} & \cdots & \cdots & \cdots & \cdots & \cdots & \mathbf{0}\\
+      \cdots & \cdots & \cdots & \cdots & \cdots & \cdots & \cdots \\
+      \mathbf{0} & \cdots & \mathbf{0} & \mathbf{0} & \mathbf{0} & \cdots & \mathbf{0} \\
+       \mathbf{0} & \cdots & \mathbf{0} & \mathbf{I}_{i,i} & \mathbf{0} & \cdots & \mathbf{0}\\
+      \mathbf{0} & \cdots & \mathbf{0} & \mathbf{0} & \mathbf{0} & \cdots & \mathbf{0} \\
+      \cdots & \cdots & \cdots & \cdots & \cdots & \cdots & \cdots \\
+      \mathbf{0} & \cdots & \cdots & \cdots & \cdots & \cdots & \mathbf{0}\\
+    \end{array}\right]_{N\times N}\;,
+\end{equation}
+and $\mathbf{d}_i$ corresponds to
+the signal of interest (e.g., primaries or multiples of selected
+order). \old{One needs to} \new{We} calculate all patterns for primaries and
+multiples, and then \new{apply} sparse decomposition (equation\new{s}~\ref{eq:shape4} and
+\ref{eq:bregman}) \old{will} \new{to} separate primaries from multiples. In practice,
+a small number of iterations is usually sufficient for convergence and
+for achieving both model sparseness and data recovery. \old{However,
+similar to Radon transform, the proposed method need an assumption
+that primaries and multiples correspond to different velocity models.}
+
+ \section{Synthetic Data Examples}
+
+\subsection{Validation of slope estimation and random noise elimination}
+\inputdir{nmo}
+A simple synthetic example is shown in Figure~\ref{fig:synt,sdip}a.
+The synthetic data were generated by applying inverse NMO with
+time-varying velocities and represent perfectly
+hyperbolic events.  Figure~\ref{fig:synt,sdip}b shows local event
+slopes measured from the data using PWD algorithm
+\cite[]{Fomel02}. PWD provides an accurate slope field for noise-free
+data.  Figure~\ref{fig:noise,pdip}a and
+\ref{fig:noise,pdip}b show the data after adding normally distributed
+random noise and local slopes from PWD, respectively. Compared with
+Figure~\ref{fig:synt,sdip}b, PWD fails in finding exact slope field
+because of strong random noise. Next, we calculate slopes using NMO
+velocities from velocity scan. Picked NMO velocities
+(Figure~\ref{fig:svsc2,vdip}a) are close to the exact velocity because
+velocity scan is less sensitive to strong random noise. As a
+consequence, VD slopes calculated from equation~\ref{eq:pnmo} provide
+a more accurate result (Figure~\ref{fig:svsc2,vdip}b).
+
+  \multiplot{2}{synt,sdip}{width=0.4\columnwidth}{Synthetic
+         data (a) and slopes calculated by PWD (b).}
+
+  \multiplot{2}{noise,pdip}{width=0.4\columnwidth}{Synthetic
+         noisy data (a) and slopes calculated by PWD (b).}
+
+  \multiplot{2}{svsc2,vdip}{width=0.4\columnwidth}{Velocity
+         scanning (dash line: exact velocity, solid line: picked
+         velocity) (a) and VD slopes (b).}
+
+A direct application of the seislet transform is denoising. We apply
+both PWD-seislet and VD-seislet transforms on the noisy data
+(Figure~\ref{fig:noise,pdip}a). Figure~\ref{fig:pseis,vseis,ccomp}a and
+\ref{fig:pseis,vseis,ccomp}b show the transform coefficients of PWD-seislet
+and VD-seislet, respectively. The hyperbolic events are compressed in
+both transform domains. Notice that PWD-seislet coefficients get more
+concentrated at small scale than those of VD-seislet because part\new{s} of
+the random noise \old{is} \new{are} also compressed along inaccurate PWD
+slopes. Meanwhile, random noise gets spread over different scales in
+the VD-seislet domain, while the predictable reflection information
+gets compressed to large coefficients at small scales, which makes
+signal and noise display different amplitude
+characteristics. Figure~\ref{fig:pseis,vseis,ccomp}c shows a
+comparison between the decay of coefficients sorted from large to
+small in the PWD-seislet transform and the VD-seislet
+transform. Seislet transform can compress the seismic events with
+coincident wavelets, if the slopes of the reflections are correct, the
+sparse large coefficients only correspond to the stacked reflection
+events. However, when the slopes of the reflections are not accurate,
+the stacked amplitude values for inconsistent wavelets will create
+more coefficients with smaller values. VD slopes are less affected by
+strong random noise than PWD slopes, \old{therefore,
+they show} \new{which results in} a faster decay of the VD-seislet
+coefficients. A simple thresholding method can easily remove the small
+coefficients of random noise. Figure~\ref{fig:pclean,vclean}a and
+\ref{fig:pclean,vclean}b display the denoising results by using
+PWD-seislet transform and VD-seislet transform, respectively. The
+events after PWD-seislet transform denoising show serious distortion
+while VD-seislet transform produces a reasonable denoising result. For
+numerically comparison, we use the signal-to-noise ratio (SNR) defined
+as $SNR=10\log_{10}\frac{||\mathbf{s}||_2^2}
+{||\mathbf{s}-\hat{\mathbf{s}}||_2^2}$, where $\mathbf{s}$ is the
+noise-free signal and $\hat{\mathbf{s}}$ is the denoised signal. The
+original SNR of the noisy data (Figure~\ref{fig:noise,pdip}a) is
+-12.53 dB. The SNR of the denoised results using the PWD-seislet
+transform (Figure~\ref{fig:pclean,vclean}a) and the VD-seislet
+transform (Figure~\ref{fig:pclean,vclean}b) are 0.53 dB and 1.94 dB,
+respectively.
+
+   \multiplot{3}{pseis,vseis,ccomp}{width=0.4\columnwidth}{PWD-seislet
+         coefficients (a), VD-seislet coefficients (b), and transform
+         coefficients sorted from large to small, normalized, and
+         plotted on a decibel scale (Solid line - VD-seislet
+         transform. Dashed line - PWD-seislet transform) (c).}
+
+   \multiplot{2}{pclean,vclean}{width=0.4\columnwidth}{Denoising
+         result using different transforms. PWD-seislet transform (a)
+         and VD-seislet transform (b).}
+
+\subsection{Separation of primaries and pegleg multiples}
+\inputdir{haskell}
+Next, we use a synthetic CMP gather (Figure~\ref{fig:hask,vscan}a) to
+test separation of primaries and pegleg multiples by VD-seislet
+frame. This gather was generated by \cite{Lumley94} using
+Haskell-Thompson elastic modeling and a well log from the Mobil AVO
+dataset \cite[]{key}. The gather contains primaries and water-bottom
+multiples of different orders.
+
+To separate pegleg multiples from primaries, we transform the
+data using VD-seislet frame by involving different VD slope fields
+(Figure~\ref{fig:dips,frame}a) according to equations~\ref{eq:pnmo}
+and
+\ref{eq:mdip}. The primary velocities and calculated velocities of
+different-order pegleg multiples are shown in
+Figure~\ref{fig:hask,vscan}b. The estimated curves of multiple
+velocities indicate accurate trends in velocity spectra. \old{The proposed
+method utilizes} \new{We use} a nonlinear shaping-regularization scheme
+(equations~\ref{eq:shape4}-\ref{eq:bregman}) to separate different
+wavefield components, which are shaped to be sparse in the
+corresponding VD-seislet frame domain
+(Figure~\ref{fig:dips,frame}b). In this example, the pattern number \new{in equation~\ref{eq:frame}}
+$N$ is selected to \new{be} 4\old{ in equation~\ref{eq:frame}}. The
+separated wavefields are shown in
+Figure~\ref{fig:comp0,comp1,comp2,comp3} and display \old{reasonable} \new{reasonably accurate}
+separation results.
+
+ \multiplot{2}{hask,vscan}{width=0.4\textwidth}{Synthetic model (a)
+               and velocity trends of primaries and multiples (b).}
+ \multiplot{2}{dips,frame}{width=0.4\textwidth}{VD slopes (a) and
+                           VD-seislet coefficients (b).}
+\multiplot{4}{comp0,comp1,comp2,comp3}{width=0.4\textwidth}{Separated
+              wavefields. Primaries (a), first-order multiples (b),
+              second-order multiples (c), and third-order multiples
+              (d).}
+
+ \section{Field Data Examples}
+
+We test VD-seislet denoising by employing a field land data provided
+by Geofizyka Torun Sp. Z.o.o, Poland from FreeUSP
+website\footnote{http://www.freeusp.org/RaceCarWebsite/TechTransfer/Tutorials/Processing\_2D}. Figure~\ref{fig:cmps,vdip,vdseis,vddenoise}a
+show the CMP gathers after removing most of ground roll. The strong
+random noise makes reflection events hardly visible. However, velocity
+analysis from equation~\ref{eq:nmo} can still produce a reasonable
+velocity field. Equation~\ref{eq:pnmo} converts RMS velocity to
+seismic pattern (Figure~\ref{fig:cmps,vdip,vdseis,vddenoise}b), which
+displays the hyperbolic slopes from negative to positive in CMP
+gathers and varying slopes in common-offset
+section. VD-seislet transform utilizes the slopes to compress
+reflections along offset
+axis. Figure~\ref{fig:cmps,vdip,vdseis,vddenoise}c shows the
+VD-seislet coefficients, in which the small dynamic range of seislet
+coefficients implies a good compression ratio.  If we choose the
+significant coefficients at the coarse scale, e.g., scale $<$ 8, and
+zero out difference coefficients at the finer scales, the inverse
+transform effectively removes incoherent noise from the gathers
+(Figure~\ref{fig:cmps,vdip,vdseis,vddenoise}d).
+
+\inputdir{usp}
+   \multiplot{4}{cmps,vdip,vdseis,vddenoise}{width=0.47\columnwidth}{Field CMP
+         gathers (a), VD slopes (b), VD-seislet coefficients (c), and
+         denoising result using VD-seislet transform (b).}
+
+Next, we test the proposed algorithm to separate multi-wavefields on a
+single CMP gather from the Viking Graben (Mobil AVO) dataset
+\cite[]{key}. The field data are shown in
+Figure~\ref{fig:cmp,rvscan}a. We pick the primary velocities by muting
+spectra energy of multiples. Multiple RMS velocities with different
+orders (equation~\ref{eq:mveff}) follow the pseudo-primary NMO
+equation~\ref{eq:mnmo}. The velocity spectra of primaries and
+multiples are shown in
+Figure~\ref{fig:cmp,rvscan}b. Equations~\ref{eq:pnmo} and
+\ref{eq:mdip} convert velocities to slopes, which help the VD-seislet frame
+separate primaries from different-order pegleg multiples (we only
+display three orders). Figure~\ref{fig:rcomp0,rcomp1,rcomp2,rcomp3}
+displays the separated primaries and different-order multiples. The
+corresponding velocity spectra are shown in
+Figure~\ref{fig:rvscan0,rvscan1,rvscan2,rvscan3}. After separating
+different wavefields, the velocity spectra confirm that the signals
+get concentrated around their respective trends.
+
+\inputdir{demultiple}
+  \multiplot{2}{cmp,rvscan}{width=0.4\columnwidth}{Field CMP gather
+               (a) and velocity trends of primaries and multiples (b).}
+  \multiplot{4}{rcomp0,rcomp1,rcomp2,rcomp3}{width=0.4\columnwidth}{Separated
+                 wavefields. Primaries (a), first-order multiples (b),
+                 second-order multiples (c), and third-order multiples
+                 (d).}
+\multiplot{4}{rvscan0,rvscan1,rvscan2,rvscan3}{width=0.4\columnwidth}{Velocity
+                 spectra of different wavefields. Primaries (a),
+                 first-order multiples (b), second-order multiples
+                 (c), and third-order multiples (d).}
+
+\section{Discussion}
+What are the limitations of the proposed algorithms? First,
+VD-seislet transform \old{cannot properly deal} \new{may have difficulties in dealing} with nonhyperbolic \old{travel
+times, however,} \new{moveouts. However, it is possible to extend it to} nonhyperbolic moveout equation \cite[]{Casasanta11}, which would provide the
+possibility to handle large offsets and anisotropy
+\cite[]{Fomel01b}. \old{Next, the velocity scan occasionally arises
+additional errors, it is possible to pre-denoise followed by
+PWD-seislet transform, but the results depend on careful parameter
+selection for preprocessing methods.} Compared with PWD-seislet
+transform, VD-seislet transform provides more accurate
+representation for seismic events with class II AVO anomalies
+\cite[]{Rutherford89} that cause seismic amplitudes to go through a
+polarity reversal \old{PWD-seislet transform may fail since PWD slopes
+depend on amplitude value of seismic data, however, VD slopes are more
+accurate} by using advanced velocity analysis, e.g., AB
+semblance \cite[]{Sarkar01,Sarkar02,Fomel09b}. Finally, the proposed
+method works \old{for the velocity models} \new{best for the
+relatively deep water situations} where primaries and multiples are
+well \old{disjoint, for instance, it may fail in the case of shallow
+water multiples.} \new{separated}. \old{Therefore, the current
+VD-seislet transform provide an alternative tool for analyzing CMP
+gathers with strong random noise in structurally simple areas or
+disjoint pegleg multiples.}
+
+\section{Conclusions}
+
+We have introduced the VD-seislet transform, a new domain for
+analyzing prestack reflection data in CMP domain. The new transform is
+able to compress reflection data away from strong random
+noise. \old{The} \new{In this formulation, the} normal moveout
+equation serves as a bridge between local slopes and scanned
+velocities that are not sensitive to strong random noise and
+aliasing. We also used the explicit relationship between slopes and
+velocities of primary and multiple events to extend VD-seislet
+transform to a VD-seislet frame. We have shown example applications of
+VD-seislet transform to signal and noise separation. Other traditional
+processing tasks such as data interpolation can be
+also \old{simply} \new{easily} defined in the VD-seislet domain.
+
+\section{Acknowledgments}
+We thank Valentina Socco, Adriana Citlali Ramirez, and three anonymous
+reviewers for helpful suggestions, which improved the quality of the
+paper. This work is partly supported by National Natural Science
+Foundation of China (Grant No. 41430322 and 41274119) and 863
+Programme of China (Grant No. 2012AA09A2010). All results are
+reproducible in the Madagascar open-source software environment
+\cite[]{m8r}.
+
+\appendix
+\section{Appendix: The lifting scheme for DWT}
+
+The lifting scheme \cite[]{Sweldens95} provides a convenient approach
+for defining wavelet transforms by breaking them down into the
+following steps:
+\begin{enumerate}
+\item Divide data into even and odd components, $\mathbf{e}$ and
+  $\mathbf{o}$.
+\item Find a residual difference, $\mathbf{r}$, between the odd
+  component and its prediction from the even component:
+  \begin{equation}
+    \label{eq:c}
+    \mathbf{r}  = \mathbf{o} - \mathbf{P[e]}\;,
+  \end{equation}
+  where $\mathbf{P}$ is a \emph{prediction} operator.
+\item Find a coarse approximation, $\mathbf{c}$, of the data by
+  updating the even component:
+  \begin{equation}
+    \label{eq:r}
+    \mathbf{c}  = \mathbf{e} + \mathbf{U[r]}\;,
+  \end{equation}
+  where $\mathbf{U}$ is an \emph{update} operator.
+\item The coarse approximation, $\mathbf{c}$, becomes the new
+  data, and the sequence of steps is repeated at the next scale.
+\end{enumerate}
+
+The Cohen-Daubechies-Feauveau (CDF) 5/3 biorthogonal wavelets
+\cite[]{Cohen92} are constructed by making the prediction operator a
+linear interpolation between two neighboring samples,
+\begin{equation}
+  \label{eq:p}
+  \mathbf{P[e]}_k = \left(\mathbf{e}_{k-1} + \mathbf{e}_{k}\right)/2\;,
+\end{equation}
+and by constructing the update operator to preserve the running
+average of the signal \cite[]{athome}, as follows:
+\begin{equation}
+  \label{eq:u}
+  \mathbf{U[r]}_k = \left(\mathbf{r}_{k-1} + \mathbf{r}_{k}\right)/4\;.
+\end{equation}
+
+Furthermore, one can create a high-order CDF 9/7 biorthogonal wavelet
+transform by using CDF 5/3 biorthogonal wavelets twice with different
+lifting operator coefficients \cite[]{Lian01}. The transform is
+easily inverted according to reversing the steps above:       
+\begin{enumerate}
+\item Start with the coarsest scale data representation $\mathbf{c}$
+      and the coarsest scale residual $\mathbf{r}$.
+\item Reconstruct the even component $\mathbf{e}$ by reversing the 
+      operation in equation~\ref{eq:r}, as follows:
+\begin{equation}
+    \label{eq:e}
+    \mathbf{e} = \mathbf{c} - \mathbf{U[r]}\;,
+  \end{equation}
+\item Reconstruct the odd component 
+  $\mathbf{o}$ by reversing the operation in equation~\ref{eq:c}, as follows:
+  \begin{equation}
+    \label{eq:o}
+    \mathbf{o} = \mathbf{r}  + \mathbf{P[e]}\;,
+  \end{equation} 
+\item Combine the odd and even components to generate the data at 
+      the previous scale level and repeat the sequence of steps.
+\end{enumerate}
+
+
+
+\bibliographystyle{seg}
+\bibliography{SEG,SEP2,geo2014}
+

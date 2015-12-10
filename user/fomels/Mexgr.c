@@ -98,7 +98,7 @@ int main(int argc, char* argv[])
 	     (A - A*a2 + B + a2*C + sqrtf(powf(A*(-1 + a2) + B + a2*(-2*B + C),2) -
 					  4*(-1 + a2)*a2*powf(B + D,2))));
 	
-	plot[ia] = sf_cmplx(sqrtf(vel)*sqrtf(fabsf(1.-theta))*SF_SIG(b),
+	plot[ia] = sf_cmplx(sqrtf(vel)*sqrtf(fabsf(1.0f-theta))*SF_SIG(b),
 			    sqrtf(vel)*sqrtf(fabsf(theta))*SF_SIG(a));
     }
 

@@ -1,0 +1,313 @@
+from rsf.proj import *
+
+Fetch('hask_mult.HH','haskell')
+
+Flow('hask','hask_mult.HH',
+     '''
+     dd form=native | 
+     put label1=Time unit1=s label2=Offset unit2=km
+     ''')
+
+Result('hask',
+       '''
+       mutter half=n v0=1.58 |
+       grey title="Synthetic data" clip=0.00004 screenratio=1.45 screenht=10
+       font=2 labelsz=6 labelfat=4 titlesz=8 titlefat=4
+       ''')
+
+Fetch('picks.hask.txt','haskell')
+
+Flow('picks.txt','picks.hask.txt',"awk '{print $2, $3}'") 
+Flow('picks','picks.txt',
+     '''
+     echo in=$SOURCE n1=2 n2=13 data_format=ascii_float |
+     dd form=native 
+     ''',stdin=0)
+
+vw=1.5    # water velocity
+nw=115
+tw=0.4568 # water depth
+dt=0.004
+
+Flow('mask','hask','window n2=1 | spike k1=%d | causint' % nw)
+Flow('m-vnmo','hask','window n2=1 | math output=1')
+Flow('m-mult','hask','window n2=1 | spike k1=%d | causint' % (nw*2))
+Flow('m-mult2','hask','window n2=1 | spike k1=%d | causint' % (nw*3))
+Flow('m-mult3','hask','window n2=1 | spike k1=%d | causint' % (nw*4))
+Flow('m-mult4','hask','window n2=1 | spike k1=%d | causint' % (nw*5))
+
+Flow('vnmo','picks mask',
+     '''
+     transp |
+     linear o1=0.0 d1=0.004 n1=1024 rect=5 niter=100 verb=y |
+     math m=${SOURCES[1]} output="%g*(1-m)+m*input" |
+     put label1=Time unit1=s 
+     ''' % vw)
+Result('vnmo','graph title="NMO Velocity" label2=Velocity unit2=km/s')
+
+Flow('nmo','hask vnmo','nmo velocity=${SOURCES[1]} half=n')
+Plot('nmo','grey title="NMO" clip=0.00004')
+
+#Result('nmo','hask nmo','SideBySideAniso')
+
+Flow('vscan','hask',
+     '''
+     mutter half=n v0=1.5 |
+     vscan half=n semblance=y v0=1.4 nv=181 dv=0.01
+     ''')
+
+Plot('vscan',
+     '''
+     grey color=I allpos=y title="Velocity spectra"
+     screenratio=1.45 screenht=10 
+     font=2 labelsz=6 labelfat=4 titlesz=8 titlefat=4
+     ''')
+
+plotvel ='graph wanttitle=n wantaxis=n plotcol=7 plotfat=5 transp=y \
+          yreverse=y pad=n min2=1.4 max2=3.2 screenratio=1.45 \
+          screenht=10'
+
+Plot('vnmo',plotvel)
+
+# Predict multiple velocities
+
+pegleg = '''
+pad beg1=%d | window n1=1024 | put o1=0 |
+math output="input*input" | 
+math m=${SOURCES[1]} output="(1-m)*%g+m*sqrt((input*(x1-%g)+%g)/(x1+%g))" 
+''' % (nw,vw,tw,vw*vw*tw,dt)
+
+Flow('mult','vnmo mask',pegleg)
+Flow('mult2','mult mask',pegleg)
+Flow('mult3','mult2 mask',pegleg)
+Flow('mult4','mult3 mask',pegleg)
+
+# Mask multiples
+Flow('dmask','hask',
+     'pad n2=64 | spray axis=3 n=4 d=1 o=1 | math output="x1^2-(%g*x3)^2-%g*x2^2" | mask min=0 | dd type=float | math output=1' % (tw-0.1,1/(vw*vw)))
+
+Flow('mask1','hask','window n2=1 | spike k1=%d | causint' % (2*nw))
+Flow('mult22','vnmo mask1',
+     '''
+     pad beg1=%d | window n1=1024 | put o1=0 |
+     math output="input*input" | 
+     math m=${SOURCES[1]} output="(1-m)*%g+m*sqrt((input*(x1-%g)+%g)/(x1+%g))" 
+     ''' % (2*nw,vw,2*tw,vw*vw*tw*2,dt) )
+Plot('mult22',plotvel)
+     
+Result('vscan','vscan vnmo mult mult2 mult3','Overlay')
+
+# Apply vd-seislet transform frame
+
+dips = []
+for v in Split('vnmo mult mult2 mult3'):
+     Plot(v,plotvel)
+
+     # t as a function of t0 and x
+     t = 't-'+v
+     Flow(t,[v,'m-'+v],
+          '''
+          mul ${SOURCES[1]} |
+          spray axis=2 n=64 d=0.05 o=0.25 label=Offset unit=km |
+          math output="sqrt(x1*x1+x2*x2/(input*input))"
+          ''')
+
+     # dip as a function of t0 and x
+     p0 = 'p0-'+v
+     Flow(p0,[v,t],
+          '''
+          spray axis=2 n=64 d=0.05 o=0.25 label=Offset unit=km |
+          math t=${SOURCES[1]} output="%g*x2/(t*input*input+1e-6)"
+          ''' % (0.05/0.004))
+
+     # mask for dip and data
+     maskd = 'md-'+v
+     Flow(maskd,['m-'+v,t],
+          '''
+          spray axis=2 n=64 d=0.05 o=0.25 label=Offset unit=km |
+          iwarp warp=${SOURCES[1]} eps=0.1
+          ''')
+
+     # dip as a function of t
+     p = 'p-'+v
+     Flow(p,[p0,t,maskd],
+          'iwarp warp=${SOURCES[1]} eps=0.1 | mul ${SOURCES[2]}')
+
+     dips.append(p)
+
+nc = len(dips)
+
+Flow('dips',dips,'cat axis=3 ${SOURCES[1:%d]}' % nc)
+
+Result('dips',
+       '''
+       put d3=1 o3=1 |
+       byte gainpanel=a allpos=y bar=bar.rsf |
+       grey3 frame1=500 frame2=2 frame3=2 point1=0.9 point2=0.8
+       flat=n title="VD-slope field" color=I scalebar=y bar=bar.rsf
+       barwidth=0.1 barlabel=Slope barunit=samples
+       font=2 labelsz=6 labelfat=4 titlesz=8 titlefat=4
+       screenratio=1.55 screenht=10 label3=Component unit3=
+       ''')
+
+Flow('vels','vnmo mult mult2 mult3','cat axis=2 ${SOURCES[1:4]}')
+
+Flow('vdip','vels',
+     '''
+     v2d n=64 d=0.05 o=0.25 mute=y half=n v0=2.
+     ''')
+
+
+Flow('frame','hask dips dmask',
+     '''
+     pad n2=64 |
+     diplet dips=${SOURCES[1]} type=b niter=20 ncycle=5 perc=99
+     ''')
+Result('frame',
+       '''
+       put d2=1 o2=1 label2=Scale unit2= |
+       byte gainpanel=a |
+       grey3 frame1=500 frame2=0 frame3=2 point1=0.9 point2=0.8
+       flat=n title="VD-seislet coefficients"
+       font=2 labelsz=6 labelfat=4 titlesz=8 titlefat=4
+       screenratio=1.55 screenht=10
+       ''')
+
+Flow('inver','frame dips',
+     '''
+     diplet dips=${SOURCES[1]} type=b inv=y |
+     window n2=60 | mutter half=n v0=1.58
+     ''')
+Result('inver',
+       'grey title="inverse Data" clip=0.00004 screenratio=1.45 screenht=10')
+
+Flow('diff','hask inver','add scale=1,-1 ${SOURCES[1]}')
+Result('diff',
+       'grey title="difference" clip=0.00004 screenratio=1.45 screenht=10')
+
+Flow('vscandiff','diff',
+     '''
+     mutter half=n v0=1.5 |
+     vscan half=n semblance=y v0=1.4 nv=181 dv=0.01
+     ''')
+
+Result('vscandiff',
+       'grey color=j allpos=y title=Residual screenratio=1.45 screenht=10')
+
+comps = []
+for c in range(nc):
+     comp = 'comp%d' % c
+     vscan = 'vscan%d' % c
+     if c==0:
+          Flow(comp,'frame dips',
+          '''
+          cut f3=1 |
+          diplet dips=${SOURCES[1]} type=b inv=y | window n2=60 |
+          mutter half=n v0=1.54
+          ''')
+          Result(comp,
+                 '''
+                 grey title="Primaries" clip=0.00004
+                 screenratio=1.45 screenht=10
+                 font=2 labelsz=6 labelfat=4 titlesz=8 titlefat=4
+                 ''')
+
+          Flow(vscan,comp,
+               '''
+               mutter half=n v0=1.5 |
+               vscan half=n semblance=y v0=1.4 nv=181 dv=0.01
+               ''')
+          
+          Result(vscan,
+                 '''
+                 grey color=I allpos=y title="Primaries"
+                 screenratio=1.45 screenht=10
+                 font=2 labelsz=6 labelfat=4 titlesz=8 titlefat=4
+                 ''')
+
+     if c==1:
+          Flow(comp,'frame dips md-mult',
+          '''
+          cut n3=%d | cut f3=%d |
+          diplet dips=${SOURCES[1]} type=b inv=y | 
+          mutter half=n v0=1.54 | mul ${SOURCES[2]} | window n2=60
+          ''' % (c,c+1))
+          Result(comp,
+               '''
+               grey title="Multiples of Order %d" clip=0.00004
+               screenratio=1.45 screenht=10
+               font=2 labelsz=6 labelfat=4 titlesz=8 titlefat=4
+               ''' % c)
+          
+          Flow(vscan,comp,
+               '''
+               mutter half=n v0=1.5 |
+               vscan half=n semblance=y v0=1.4 nv=181 dv=0.01
+               ''')
+          
+          Result(vscan,
+                 '''
+                 grey color=I allpos=y title="Multiples of Order %d"
+                 screenratio=1.45 screenht=10
+                 font=2 labelsz=6 labelfat=4 titlesz=8 titlefat=4
+                 ''' % c)
+
+     if c==2:
+          Flow(comp,'frame dips md-mult2',
+          '''
+          cut n3=%d | cut f3=%d |
+          diplet dips=${SOURCES[1]} type=b inv=y | 
+          mutter half=n v0=1.54 | mul ${SOURCES[2]} | window n2=60
+          ''' % (c,c+1))
+          Result(comp,
+               '''
+               grey title="Multiples of Order %d" clip=0.00004
+               screenratio=1.45 screenht=10
+               font=2 labelsz=6 labelfat=4 titlesz=8 titlefat=4
+               ''' % c)
+          Flow(vscan,comp,
+               '''
+               mutter half=n v0=1.5 |
+               vscan half=n semblance=y v0=1.4 nv=181 dv=0.01
+               ''')
+          
+          Result(vscan,
+                 '''
+                 grey color=I allpos=y title="Multiples of Order %d"
+                 screenratio=1.45 screenht=10
+                 font=2 labelsz=6 labelfat=4 titlesz=8 titlefat=4
+                 ''' % c)
+
+     if c==3:
+          Flow(comp,'frame dips md-mult3',
+          '''
+          cut n3=%d |
+          diplet dips=${SOURCES[1]} type=b inv=y | 
+          mutter half=n v0=1.54 | mul ${SOURCES[2]} | window n2=60
+          
+          ''' % c)
+          Result(comp,
+               '''
+               grey title="Multiples of Order %d" clip=0.00004
+               screenratio=1.45 screenht=10
+               font=2 labelsz=6 labelfat=4 titlesz=8 titlefat=4
+               ''' % c)
+          
+          Flow(vscan,comp,
+               '''
+               mutter half=n v0=1.5 |
+               vscan half=n semblance=y v0=1.4 nv=181 dv=0.01
+               ''')
+          
+          Result(vscan,
+                 '''
+                 grey color=I allpos=y title="Multiples of Order %d"
+                 screenratio=1.45 screenht=10
+                 font=2 labelsz=6 labelfat=4 titlesz=8 titlefat=4
+                 ''' % c)
+
+     comps.append(comp)
+
+#Result('demultiple',comps,'SideBySideAniso')
+
+End()

@@ -112,9 +112,11 @@ void sf_upgrad_set(sf_upgrad upg, const float *r0 /* reference */)
 	    b = jt+ss[i];
 	    if ((ii[i] == 0) || 
 		(ii[i] != nn[i]-1 && 1==fermat(&a,&b))) {
+		if (b < 0 || b >= nt) continue;
 		up[1] |= m;
 		t2 = t0[b];
 	    } else {
+		if (a < 0 || a >= nt) continue;
 		t2 = t0[a];
 	    }
 
@@ -243,14 +245,13 @@ void sf_upgrad_grad(sf_upgrad upg,
 {
     int it, jt, i, m, j;
     unsigned char *up;
-    float num, x2;
+    float x2;
    
     for (it = 0; it < nt; it++) {
 	jt = upg->order[it];
 
 	x2 = x[jt];
 	up = upg->update[it];
-	num = 0.;
 
 	for (i=0, m=1; i < ndim; i++, m <<= 1) {
 	    if (up[0] & m) {

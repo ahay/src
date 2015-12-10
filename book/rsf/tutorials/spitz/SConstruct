@@ -29,7 +29,7 @@ Flow('npef nlag','noise','hpef a=1,2 lag=${TARGETS[1]}')
 # Separate signal and noise
 
 Flow('signoi','data dpef npef',
-     'signoi epsilon=0.75 sfilt=${SOURCES[1]} nfilt=${SOURCES[2]} spitz=y prec=y verb=y niter=200')
+     'signoi epsilon=1 sfilt=${SOURCES[1]} nfilt=${SOURCES[2]} spitz=y prec=y verb=y niter=200')
 
 Flow('signal2','signoi','window n3=1')
 Flow('noise2', 'signoi','window f3=1')
@@ -41,7 +41,5 @@ for case in Split('signal2 noise2'):
 
 Result('signoi','data signal2 noise2','SideBySideAniso')
 Result('gsignoi','gdata gsignal2 gnoise2','SideBySideAniso')
-
-# Extend to avoid edge effects??
 
 End()

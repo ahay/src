@@ -21,17 +21,17 @@
 
 #include "icai1.h"
 
-static int nb, lg;
+static int nb, lag;
 static float* bb;
 
 void icai1_init (int na    /* filter length */, 
 		 float* aa /* filter [na] */, 
-		 int lag   /* filter lag (lag=1 is causal) */) 
+		 int lag1  /* filter lag (lag=1 is causal) */) 
 /*< initialize >*/
 {
     nb = na;
     bb = aa;
-    lg = lag;
+    lag = lag1;
 }
 
 void icai1_lop (bool adj, bool add, int nx, int ny, float* xx, float* yy) 
@@ -43,12 +43,12 @@ void icai1_lop (bool adj, bool add, int nx, int ny, float* xx, float* yy)
     sf_adjnull (adj, add, nx, ny, xx, yy);
     
     for( b=0; b < nb; b++) {
-	for( y = nb - lg; y <= ny - lg; y++) {
-	    x = y - b + lg - 1;
+	for( y = nb - lag; y <= ny - lag; y++) {
+	    x = y - b + lag - 1;
 	    if( adj) xx[x] += yy[y] * bb[b];
 	    else     yy[y] += xx[x] * bb[b];
 	}
     }
 }
 
-/* 	$Id$	 */
+

@@ -1,0 +1,4 @@
+from rsf.tex import *
+
+End(use='amsmath',color='vel q visacu comacu comacu-n cross',
+    hires='snap-0 snap-1 snap-3 snap-4 vel q visacu comacu comacu-n cross acudata visdata visdata-n')

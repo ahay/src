@@ -41,43 +41,51 @@
 
 int   ny,nx,nz,nt;
 float dx,dy,dz,dt,dxm,dym;
+bool snapshot;
 
 int main(int  argc,char **argv)
 {
     int   isx,isy,isz,bd;
 
-    int   i,j,k,im,jm,it;
+    int   i,j,k,im,jm,it,it1,it2,its,depth;
 	int   nth, rank;
-    float t;
+    float t,f0;
     float fx,fy,fz,dt2;
 
     float ***c11, ***c22, ***c33, ***c12, ***c13, ***c23, ***c44, ***c55, ***c66;
     float ***phaix, ***phaiy, ***phaiz;
-
+    const char *source;
+    bool mig;
+    
     sf_init(argc,argv);
-
+    
+    // Output files
     sf_file Fo1, Fo2, Fo3;
+    sf_file snapx, snapy, snapz;
 
-    float f0=40;         // main frequency of the wavelet(usually 30Hz)
-    float t0=0.04;       // time delay of the wavelet(if f0=30Hz, t0=0.04s)*/
+    float t0=0.01;       // time delay of the wavelet(if f0=30Hz, t0=0.04s)*/
     float A=1.0;           // the amplitude of wavelet 
+    if (!sf_getfloat("freq",&f0)) f0=40.0;    // main frequency of the wavelet(usually 30Hz)
+    source = sf_getstring("source"); // source location
+    if (NULL == (source = sf_getstring("source"))) source="m";
 
     clock_t t1, t2, t3;
     float   timespent;
 
     t1=clock();
-
+    
     /* time samping paramter */
     if (!sf_getint("nt",&nt))   nt=301;
     if (!sf_getfloat("dt",&dt)) dt=0.001;
     if (!sf_getint("bd",&bd)) bd=20;
-
+    if (!sf_getbool("mig",&mig)) mig=false;
     sf_warning("nt=%d dt=%f",nt,dt);
-
+    
     /* setup I/O files */
     sf_file Fc11, Fc22, Fc33, Fc12, Fc13, Fc23, Fc44, Fc55, Fc66;
     sf_file Fphiz, Fphiy, Fphix;
-
+    sf_file Fdatax, Fdatay, Fdataz;
+    
     Fc11 = sf_input ("c11");  /* c11 using standard input */
     Fc22 = sf_input ("c22");  /* c22 */
     Fc33 = sf_input ("c33");  /* c33 */
@@ -108,7 +116,30 @@ int main(int  argc,char **argv)
 
     sf_warning("nxpad=%d nypad=%d nzpad=%d ",nxpad,nypad,nzpad);
     sf_warning("dx=%f dy=%f dz=%f ",dx,dy,dz);
-
+    
+    float ***dataz, ***datax, ***datay;
+    /* migration flag */
+    if (mig) {
+    Fdatax = sf_input ("datax");
+    Fdatay = sf_input ("datay");
+    Fdataz = sf_input ("dataz");
+    if (!sf_getint("depth",&depth)) depth=0;
+    int tmp;
+    if (!sf_histint(Fdatax,"n1",&tmp) || nt!=tmp) sf_error("No n1=nt in datax");
+    if (!sf_histint(Fdatax,"n2",&tmp) || nx!=tmp) sf_error("No n2=nx in datax");
+    if (!sf_histint(Fdatax,"n3",&tmp) || ny!=tmp) sf_error("No n3=ny in datax");
+    dataz = sf_floatalloc3(nt,nx,ny);
+    datax = sf_floatalloc3(nt,nx,ny);
+    datay = sf_floatalloc3(nt,nx,ny);
+    sf_floatread(dataz[0][0],nt*nx*ny,Fdataz);
+    sf_floatread(datax[0][0],nt*nx*ny,Fdatax);
+    sf_floatread(datay[0][0],nt*nx*ny,Fdatay);
+    } else {
+    dataz = NULL;
+    datax = NULL;
+    datay = NULL;
+    }
+    
     c11=sf_floatalloc3(nzpad,nxpad,nypad);	
     c22=sf_floatalloc3(nzpad,nxpad,nypad);
     c33=sf_floatalloc3(nzpad,nxpad,nypad);	
@@ -218,10 +249,42 @@ int main(int  argc,char **argv)
     puthead3x(Fo2, nz, nx, ny, dz/1000.0, dx/1000.0, dy/1000.0, 0.0, 0.0, 0.0);
     puthead3x(Fo3, nz, nx, ny, dz/1000.0, dx/1000.0, dy/1000.0, 0.0, 0.0, 0.0);
 
+    /* Export wavefield snapshots */
+    if (!sf_getbool("snapshot",&snapshot)) snapshot=false;
+    int snapstep;
+    if (snapshot) {
+        if (!sf_getint("snapstep",&snapstep)) snapstep=1;
+        
+        int nsnap = (int) floor(nt/snapstep);
+        
+        /* setup I/O files */
+        snapx = sf_output("snapx"); /* snapshots of original elasticwave iLine x-component */
+        snapy = sf_output("snapy"); /* snapshots of original elasticwave iLine y-component */
+        snapz = sf_output("snapz"); /* snapshots of original elasticwave xLine z-component */
+        puthead4x(snapx, nz, nx, ny, nsnap, dz/1000.0, dx/1000.0, dy/1000.0, dt, 0.0, 0.0, 0.0, 0.0);
+        puthead4x(snapy, nz, nx, ny, nsnap, dz/1000.0, dx/1000.0, dy/1000.0, dt, 0.0, 0.0, 0.0, 0.0);
+        puthead4x(snapz, nz, nx, ny, nsnap, dz/1000.0, dx/1000.0, dy/1000.0, dt, 0.0, 0.0, 0.0, 0.0);
+       
+    }
+
     /* source definition */
-    isy=nypad/2;
-    isx=nxpad/2;
-    isz=nzpad/2;
+     switch(source[0])  {
+        case 'm':
+            isy=nypad/2;
+            isx=nxpad/2;
+            isz=nzpad/2;
+            break;
+        case 'f':
+            isy=nypad/2;
+            isx=nxpad/2;
+            isz=bd+(nzpad-2*bd)/4;
+            break;
+        case 's':
+            isy=nypad/2;
+            isx=nxpad/2;
+            isz=bd;
+            break;
+     }
 
     dt2=dt*dt;
 
@@ -241,15 +304,33 @@ int main(int  argc,char **argv)
     float*** rx_tmp=sf_floatalloc3(nzpad,nxpad,nypad);
     float*** rz_tmp=sf_floatalloc3(nzpad,nxpad,nypad);
 
+    if (mig) {
+        it1 = nt -1;
+        it2 = -1;
+        its = -1;
+    } else {
+        it1 = 0;
+        it2 = nt;
+        its = 1;
+    }
 	/*********the kernel calculation ************/
-	for(it=0;it<nt;it++)
+	for(it=it1;it!=it2;it+=its)
 	{
 	     t=it*dt;
              
+         if (mig) { // inject data
+             for(i=0;i<ny;i++)
+             for(j=0;j<nx;j++)
+             {
+                    p2[i+bd][j+bd][depth]=datax[i][j][it];
+                    q2[i+bd][j+bd][depth]=datay[i][j][it];
+                    r2[i+bd][j+bd][depth]=dataz[i][j][it];
+             }
+         } else { // inject source
          /* source Type 0: oriented 45 degree to vertical and 45 degree azimuth: Yan & Sava (2012) */
-         p2[isy][isx][isz]+=Ricker(t, f0, t0, A);  // x-component
-         q2[isy][isx][isz]+=Ricker(t, f0, t0, A);  // y-component
-         r2[isy][isx][isz]+=Ricker(t, f0, t0, A);  // z-component
+             p2[isy][isx][isz]+=Ricker(t, f0, t0, A);  // x-component
+             q2[isy][isx][isz]+=Ricker(t, f0, t0, A);  // y-component
+             r2[isy][isx][isz]+=Ricker(t, f0, t0, A);  // z-component
 
              // 3D exploding force source (e.g., Wu's PhD
 
@@ -264,7 +345,24 @@ int main(int  argc,char **argv)
 /*                     r2[isy+k][isx+i][isz+j]+=j*Ricker(t, f0, t0, A);  // z-component*/
 /*                }*/
 /*               }*/
-               
+         }
+         
+         if (!mig) { // Modelling
+             if (snapshot && it%snapstep == 0) { // output snapshots for all time steps
+                for(i=0;i<ny;i++) {
+                    im=i+bd;
+        	        for(j=0;j<nx;j++) {
+                        jm=j+bd;
+                        sf_floatwrite(&p3[im][jm][bd],nz,snapx);
+                        sf_floatwrite(&q3[im][jm][bd],nz,snapy);
+                        sf_floatwrite(&r3[im][jm][bd],nz,snapz);
+                        }
+                }
+             }
+         }
+         
+         
+         
   	     fwportelastic3d(dt2,p1,p2,p3,q1,q2,q3,r1,r2,r3,
 				         px_tmp,pz_tmp,
 				         qx_tmp,qz_tmp,
@@ -274,21 +372,36 @@ int main(int  argc,char **argv)
                          dx,dy,dz,nxpad,nypad,nzpad,
 			 c11,c22,c33,c12,c13,c23,c44,c55,c66,phaix,phaiy,phaiz);
 
-         if(it==nt-1) // output snapshot
-         {
-            // output iLine 
-	     	for(i=0;i<ny;i++)
-                {
+         if (mig) { // Migration
+             if (snapshot && it%snapstep == 0) { // output snapshots for all time steps
+                for(i=0;i<ny;i++) {
                     im=i+bd;
-		            for(j=0;j<nx;j++)
-                    {
+        	        for(j=0;j<nx;j++) {
+                        jm=j+bd;
+                        sf_floatwrite(&p3[im][jm][bd],nz,snapx);
+                        sf_floatwrite(&q3[im][jm][bd],nz,snapy);
+                        sf_floatwrite(&r3[im][jm][bd],nz,snapz);
+                        }
+                }
+             }
+         }
+         
+         
+         
+            if(it==nt-1) { // output snapshot at nt-1
+                // output iLine 
+    	     	for(i=0;i<ny;i++) {
+                    im=i+bd;
+    		        for(j=0;j<nx;j++) {
                         jm=j+bd;
                         sf_floatwrite(&p3[im][jm][bd],nz,Fo1);
                         sf_floatwrite(&q3[im][jm][bd],nz,Fo2);
                         sf_floatwrite(&r3[im][jm][bd],nz,Fo3);
-                    }
+                        }
                 }
-             }
+            }
+          
+          // Forward to the next time step
             for(i=0;i<nypad;i++)
             for(j=0;j<nxpad;j++)
             for(k=0;k<nzpad;k++)
@@ -302,8 +415,11 @@ int main(int  argc,char **argv)
                     r1[i][j][k]=r2[i][j][k];
                     r2[i][j][k]=r3[i][j][k];
            }
-
-           sf_warning("forward propagation...  it= %d   t=%f",it,t);
+           if(mig) {
+               sf_warning("Backward propagation...  it= %d   t=%f",it,t);
+           } else {
+               sf_warning("Forward propagation...  it= %d   t=%f",it,t);
+           }
      }
 
     printf("ok3\n");

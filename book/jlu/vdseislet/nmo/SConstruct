@@ -1,0 +1,351 @@
+import string
+import math
+from rsf.proj import *
+
+# setup model
+
+Flow('vrms',None,'math d1=0.004 n1=1001 o1=0 output="x1*125+2000" ')
+Flow('vint','vrms','math output="125*sqrt((16+x1)*(16+3*x1))" ')
+
+for vel in ('vrms','vint'):
+    Plot(vel,
+         '''
+         graph transp=y yreverse=y min2=1995 max2=3005
+         pad=n wantaxis=n wanttitle=n plotcol=5
+         ''')
+for vel in ('vrms','vint'):
+    Plot(vel+'1',vel,
+         '''
+         graph transp=y yreverse=y min2=1995 max2=3005
+         pad=n wantaxis=n wanttitle=n plotcol=5
+         screenratio=1.55 screenht=8 labelsz=6 plotfat=4 plotcol=7 dash=3
+         ''')
+    
+Flow('synt','vrms',
+     '''
+     spike d1=0.004 n1=1001 o1=0 nsp=17 n2=128 d2=20 o2=0
+     label2=Offset unit2=m
+     k1=%s
+     mag=1,1,1,1,-1,1,1,-1,1,1,1,-1,1,1,-1,1,1 |
+     bandpass flo=4 fhi=20 |
+     inmo velocity=$SOURCE half=n
+     ''' % string.join(map(str,range (100,916,48)),','), stdin=0)
+Plot('synt','grey title="(a) Clean data"  font=2 labelfat=4')
+Result('synt',
+       '''
+       grey title="Model" font=2 labelsz=6 titlefat=4
+       labelfat=4 wanttitle=n screenratio=1.45 screenht=8
+       ''')
+
+Flow('noise','synt','noise type=n seed=20120717 var=0.03')
+Plot('noise','grey title="Noise model" font=2 labelfat=4 wanttitle=n')
+Result('noise',
+       '''
+       grey title="Noise model" font=2 labelsz=6
+       labelfat=4 wanttitle=n screenratio=1.45 screenht=8
+       ''')
+
+Flow('sig0','synt','math output="input*input" | stack | stack axis=1')
+Flow('noi0','synt noise',
+     '''
+     math A=${SOURCES[0]} B=${SOURCES[1]} output="(A-B)*(A-B)" |
+     stack | stack axis=1
+     ''')
+Flow('snr0','sig0 noi0',
+     'math A=${SOURCES[0]} B=${SOURCES[1]} output="10*log(A/B)/log(10)"')
+# command line $sfdisfil < snr0.rsf
+
+# ideal dips
+
+Flow('idip','synt',
+     '''
+     math output="(0.00125*(x2+10)/x1)" |
+     mutter half=n v0=10000 t0=0.004 tp=0.1
+     ''')
+Plot('idip',
+     '''
+     grey title="(b)Approx Ideal slope" font=2  labelfat=4
+     allpos=y scalebar=y clip=2 maxval=2 color=j
+     ''')
+
+
+# Riesz transform dips
+Flow('riesz','noise','riesz order=10')
+
+Flow('rx','riesz','window n3=1')
+Flow('ry','riesz','window f3=1 | scale dscale=-1')
+Plot('rx','grey title=Rx')
+Plot('ry','grey title=Ry')
+Result('riesz','rx ry','SideBySideIso')
+
+Flow('rdip','ry rx','divn den=${SOURCES[1]} rect1=5 rect2=5')
+Result('rdip',
+       'grey color=j scalebar=y title="Dip from Riesz Transform"')
+
+
+# PWD dips
+Flow('sdip','synt idip',
+     '''
+     dip order=3 liter=100 pmin=0
+     idip=${SOURCES[1]} niter=10 rect1=40 rect2=5
+     ''')
+Plot('sdip',
+     '''
+     grey color=j scalebar=y title="Ideal dip"
+     font=2 titlefat=4 labelfat=4
+     allpos=y scalebar=y clip=2 maxval=2 color=j
+     ''')
+Result('sdip',
+       '''
+       grey title="PWD slope" font=2 titlefat=4 labelfat=4 barwidth=0.1
+       allpos=y scalebar=y clip=2 maxval=2 color=I wanttitle=n
+       barlabel=Slope barunit=samples
+       wanttitle=n screenratio=1.7 screenht=8 labelsz=6
+       ''')
+
+Flow('pdip','noise idip',
+     '''
+     dip order=3 liter=100 pmin=0
+     idip=${SOURCES[1]} niter=10 rect1=50 rect2=20
+     ''')
+Plot('pdip',
+     '''
+     grey title="PWD slope" font=2 titlefat=4 labelfat=4
+     allpos=y scalebar=y clip=2 maxval=2 color=j wanttitle=n
+     ''')
+Result('pdip',
+       '''
+       grey title="PWD slope" font=2 titlefat=4 labelfat=4 barwidth=0.1
+       allpos=y scalebar=y clip=2 maxval=2 color=I wanttitle=n
+       barlabel=Slope barunit=samples
+       wanttitle=n screenratio=1.7 screenht=8 labelsz=6       
+       ''')
+# velocity dependent (VD) dips
+
+Flow('svsc','noise','vscan semblance=y v0=2000 dv=10 nv=101 half=n')
+
+Plot('svsc',
+     '''
+     envelope |
+     grey allpos=y label2=Velocity unit2=m/s labelfat=4
+     title="Velocity Scan" font=2 titlefat=4 wanttitle=n
+     ''')
+Plot('svsc1','svsc',
+     '''
+     envelope |
+     grey allpos=y label2=Velocity unit2=m/s labelfat=4
+     title="Velocity Scan" font=2 titlefat=4 wanttitle=n
+     screenratio=1.55 screenht=8 labelsz=6 color=I
+     ''')
+
+Flow('vpick','svsc','scale axis=2 | pick rect1=40 | window')
+
+Plot('vpick',
+     '''
+     graph transp=y yreverse=y min2=1995 max2=3005
+     pad=n wantaxis=n wanttitle=n plotcol=3
+     ''')
+Plot('vpick1','vpick',
+     '''
+     graph transp=y yreverse=y min2=1995 max2=3005
+     pad=n wantaxis=n wanttitle=n plotcol=3
+     screenratio=1.55 screenht=8 labelsz=6 plotfat=4 plotcol=7 dash=0
+     ''')
+
+Plot('svsc2','svsc vrms vpick','Overlay')
+Result('svsc2','svsc1 vrms1 vpick1','Overlay')
+
+### Test Wrong convert equation (should be v(t0) but not v(t))###
+Flow('vdip1','vpick',
+     '''
+     spray axis=2 n=128 d=20 o=0 |
+     math output="x2*20./(x1*input*input*0.004+0.00001)" |
+     mutter half=n v0=10000 t0=0.004 tp=0.1
+     ''')
+#################################################################
+
+Flow('vdip','vpick',
+     '''
+     v2d n=128 d=20 o=0 mute=y half=n v0=10000 t0=0.004 tp=0.1
+     ''')
+
+Plot('vdip',
+     '''
+     grey title="VD slope" font=2 titlefat=4 labelfat=4
+     label2=Offset unit2=m barlabel=Slope barunit=samples
+     allpos=y scalebar=y clip=2 maxval=2 color=j wanttitle=n
+     ''')
+Result('vdip',
+       '''
+       grey title="VD slope" font=2 titlefat=4 labelfat=4 barwidth=0.1
+       label2=Offset unit2=m barlabel=Slope barunit=samples
+       allpos=y scalebar=y clip=2 maxval=2 color=I wanttitle=n
+       screenratio=1.7 screenht=8 labelsz=6
+       ''')
+
+Result('dips','noise pdip svsc2 vdip',
+       'SideBySideIso',vppen='txscale=1.2')
+
+
+# seislet with ideal dips
+
+Flow('iseis','noise idip',
+     'seislet dip=${SOURCES[1]} type=b eps=0.01 adj=y inv=y unit=y')
+Plot('iseis',
+     '''
+     put o2=0 d2=1 | 
+     grey unit1=s title="Seislet Transform"
+     label2=Scale unit2= font=2 labelfat=4
+     ''')
+
+Flow('iclean','iseis idip',
+     '''
+     threshold pclip=5 |
+     seislet dip=${SOURCES[1]} type=b eps=0.01 adj=n inv=y unit=y  |
+     mutter v0=4500 x0=0 abs=n
+     ''')
+Plot('iclean','grey title="Denoising result" font=2 labelfat=4')
+
+
+# seislet with PWD dips
+
+Flow('pseis','noise pdip',
+     'seislet dip=${SOURCES[1]} type=b eps=0.01 adj=y inv=y unit=y')
+Plot('pseis',
+     '''
+     put o2=0 d2=1 | 
+     grey unit1=s title="PWD-seislet coefficients" label2=Scale unit2=
+     font=2 titlefat=4 wanttitle=n labelfat=4
+     ''')
+Result('pseis',
+       '''
+       put o2=0 d2=1 | 
+       grey unit1=s title="PWD-seislet coefficients" label2=Scale unit2=
+       font=2 titlefat=4 wanttitle=n labelfat=4
+       screenratio=1.45 screenht=8 labelsz=6
+       ''')
+
+Flow('pclean','pseis pdip',
+     '''
+     threshold pclip=5 |
+     seislet dip=${SOURCES[1]} type=b eps=0.01 adj=n inv=y unit=y  |
+     mutter v0=4500 x0=0 abs=n
+     ''')
+Plot('pclean',
+     '''
+     grey title="PWD-seislet denoising result"
+     wanttitle=n font=2 titlefat=4 labelfat=4
+     ''')
+Result('pclean',
+       '''
+       grey title="PWD-seislet denoising result"
+       wanttitle=n font=2 titlefat=4 labelfat=4
+       screenratio=1.45 screenht=8 labelsz=6
+       ''')
+
+Flow('noi1','synt pclean',
+     '''
+     math A=${SOURCES[0]} B=${SOURCES[1]} output="(A-B)*(A-B)" |
+     stack | stack axis=1
+     ''')
+Flow('snr1','sig0 noi1',
+     'math A=${SOURCES[0]} B=${SOURCES[1]} output="10*log(A/B)/log(10)"')
+# command line $sfdisfil < snr1.rsf
+
+
+# seislet with VD dips
+
+Flow('vseis','noise vdip',
+     'seislet dip=${SOURCES[1]} type=b eps=0.01 adj=y inv=y unit=y')
+Plot('vseis',
+     '''
+     put o2=0 d2=1 | 
+     grey unit1=s title="VD-seislet coefficients" label2=Scale unit2=
+     font=2 titlefat=4 wanttitle=n labelfat=4
+     ''')
+Result('vseis',
+       '''
+       put o2=0 d2=1 | 
+       grey unit1=s title="VD-seislet coefficients" label2=Scale unit2=
+       font=2 titlefat=4 wanttitle=n labelfat=4
+       screenratio=1.45 screenht=8 labelsz=6
+       ''')
+
+Flow('vclean','vseis vdip',
+     '''
+     threshold pclip=5 |
+     seislet dip=${SOURCES[1]} type=b eps=0.01 adj=n inv=y unit=y  |
+     mutter v0=4500 x0=0 abs=n
+     ''')
+Plot('vclean',
+     '''
+     grey title="VD-seislet denoising result"
+     wanttitle=n font=2 titlefat=4 labelfat=4
+     ''')
+Result('vclean',
+       '''
+       grey title="VD-seislet denoising result"
+       wanttitle=n font=2 titlefat=4 labelfat=4
+       screenratio=1.45 screenht=8 labelsz=6
+       ''')
+
+Flow('noi2','synt vclean',
+     '''
+     math A=${SOURCES[0]} B=${SOURCES[1]} output="(A-B)*(A-B)" |
+     stack | stack axis=1
+     ''')
+Flow('snr2','sig0 noi2',
+     'math A=${SOURCES[0]} B=${SOURCES[1]} output="10*log(A/B)/log(10)"')
+# command line $sfdisfil < snr2.rsf
+
+Result('clean','pseis pclean vseis vclean',
+       'SideBySideIso',vppen='txscale=1.2')
+
+Result('result','noise svsc2 vdip iseis vclean',
+       'SideBySideAniso',vppen='txscale=1.5')
+
+
+Flow('spnmo vvel','synt vdip',
+     'pnmo half=n dip=${SOURCES[1]} vel=${TARGETS[1]}')
+Plot('spnmo','grey title=PNMO')
+
+Flow('spnmo1 vvel1','synt vdip1',
+     'pnmo half=n dip=${SOURCES[1]} vel=${TARGETS[1]}')
+Plot('spnmo1','grey title=PNMO1')
+
+Flow('spnmo2 vvel2','synt idip',
+     'pnmo half=n dip=${SOURCES[1]} vel=${TARGETS[1]}')
+Plot('spnmo2','grey title=PNMO2')
+
+Flow('nmo','synt vrms',
+     'nmo half=n velocity=${SOURCES[1]} str=0.')
+Plot('nmo','grey title=NMO')
+Result('comp','spnmo spnmo1 spnmo2 nmo','SideBySideAniso',vppen='txscale=1.5')
+
+n = 1001*128
+p = 50.0
+Flow('cpseis','pseis',
+     '''
+     put n1=%d d1=1 label1=Scale unit1= n2=1 |
+     scale axis=1 | sort |
+     math output="%g*log(input)"
+     ''' % (n,10.0/math.log(10.0)))
+Flow('cvseis','vseis',
+     '''
+     put n1=%d d1=1 label1=Scale unit1= n2=1 |
+     scale axis=1 | sort |
+     math output="%g*log(input)"
+     ''' % (n,10.0/math.log(10.0)))
+
+compare = '''
+       cat axis=2 ${SOURCES[1:2]} |
+       window n1=%d | 
+       graph wanttitle=n dash=1,0
+       label2="a\_\s75 n\^\s100 (dB)"  
+       unit2=
+       label1="n" wheretitle=b plotfat=5
+       grid=n pad=n font=2 titlefat=4 wanttitle=n labelfat=4
+       ''' % (n*p/100)
+Result('ccomp','cpseis cvseis',compare)
+
+End()

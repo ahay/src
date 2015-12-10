@@ -1,0 +1,112 @@
+from rsf.proj import*
+from rsf.prog import RSFROOT
+from rsf.recipes.beg import server as private
+
+def Wig(data,other): 
+	Result(data,'put d1=0.002 d2=1 o1=0 o2=0 | grey color=g grid=n poly=y transp=y yreverse=y clip=0.55  label2=Trace  unit2="" label1=Time unit1="s" title="" wherexlabel=t scalebar=n wheretitle=b   %s'%other)
+
+def Wigzoom(data,other): 
+	Result(data,'put d1=0.002 d2=1 o1=1.5 o2=0 | window j2=2 | wiggle grid=n poly=y transp=y yreverse=y clip=0.55 label2=Trace unit2="" label1=Time unit1="s" title="" wherexlabel=t scalebar=n  wheretitle=b  %s'%other)
+
+def Grey(data,other):
+	Result(data,'put d1=0.002 d2=1 o1=0 o2=0 |Wig transp=y yreverse=y grid=n clip=0.9  label2=Trace  unit2="" label1=Time unit1="s" title="" wherexlabel=t scalebar=n wheretitle=b   %s'%other)
+########################################################################
+# INITIALIZATION
+########################################################################
+matlab         = WhereIs('matlab')
+matROOT = '../Matfun'
+matfun = 'hyperoil'
+matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
+
+if not matlab:
+    sys.stderr.write('\nCannot find Matlab.\n')
+    sys.exit(1)
+
+#Flow('zo1',None,
+#     '''
+#     spike n1=400 nsp=5 k1=100,150,200,250,300 |
+#     bandpass flo=5 fhi=20
+#     ''')
+Flow('zo1',None,
+     '''
+     spike n1=400 nsp=5 k1=100,150,200,250,300 |
+     ricker1 frequency=15 
+     ''')
+     
+
+
+
+Flow('hyper-clean hyper hyper-fxmssa0 hyper-fxemd0 hyper-fxemdmssa0',[os.path.join(matROOT,matfun+'.m')],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${TARGETS[0]}','${TARGETS[1]}','${TARGETS[2]}','${TARGETS[3]}','${TARGETS[4]}');quit"
+     '''%vars(),stdin=0,stdout=-1)
+
+
+Flow('hyper-fxemd-noise0','hyper hyper-fxemd0',' add scale=1,-1 ${SOURCES[1]}')
+Flow('hyper-fxmssa-noise0','hyper hyper-fxmssa0',' add scale=1,-1 ${SOURCES[1]}')
+Flow('hyper-fxemdmssa-noise0','hyper hyper-fxemdmssa0',' add scale=1,-1 ${SOURCES[1]}')
+
+Wig('hyper-clean','Clean')
+Wig('hyper','Noisy')
+Wig('hyper-fxmssa0','title="SSA"')
+Wig('hyper-fxemd0','title="EMD"')
+Wig('hyper-fxemdmssa0','title="EMD & SSA"')
+
+Wig('hyper-fxmssa-noise0','title="SSA"')
+Flow('hyper-fxemd-noise','hyper-fxemd-noise0','cp')
+Wig('hyper-fxemd-noise','title="EMD"')
+Wig('hyper-fxemdmssa-noise0','title="EMD & SSA"')
+
+## Creating framebox1
+x=0
+y=0.2
+w=150
+w1=0.6
+
+Flow('frame1.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	string.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame1','frame1.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=0 max1=471 min2=0 max2=2.048 pad=n plotfat=15 plotcol=2 
+	wantaxis=n wanttitle=n yreverse=y 
+	''')
+## Creating framebox2
+x=165
+y=0.2
+w=300
+w1=1.2
+
+Flow('frame2.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	string.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame2','frame2.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=0 max1=471 min2=0 max2=2.048 pad=n plotfat=15 plotcol=2 
+	wantaxis=n wanttitle=n yreverse=y 
+	''')
+Result('hyper-fxemd-noise0','Fig/hyper-fxemd-noise.vpl frame1 frame2','Overlay')
+
+Flow('trace1','hyper-clean','window n2=1 f2=15')
+Flow('trace2','hyper','window n2=1 f2=15')
+Flow('trace3','hyper-fxemd0','window n2=1 f2=15')
+Flow('trace4','hyper-fxmssa0','window n2=1 f2=15')
+Flow('trace5','hyper-fxemdmssa0','window n2=1 f2=15')
+Flow('hyper-traces','trace1 trace2 trace3 trace4 trace5','cat axis=2 ${SOURCES[1:5]} | reverse which=2')
+Result('hyper-traces','dots title="Amplitude comparison" labels=EMD\&SSA:SSA:EMD:Noisy:Clean')
+
+# compute SNR
+Flow('hyper-diff','hyper-clean hyper','add scale=1,-1 ${SOURCES[1]} ')
+Flow('hyper-snr','hyper-clean hyper-diff','snr2 noise=${SOURCES[1]}')
+
+Flow('hyper-diff-emd','hyper-clean hyper-fxemd0','add scale=1,-1 ${SOURCES[1]} ')
+Flow('hyper-snr-emd','hyper-clean hyper-diff-emd','snr2 noise=${SOURCES[1]}')
+
+Flow('hyper-diff-mssa','hyper-clean hyper-fxmssa0','add scale=1,-1 ${SOURCES[1]} ')
+Flow('hyper-snr-mssa','hyper-clean hyper-diff-mssa','snr2 noise=${SOURCES[1]}')
+
+Flow('hyper-diff-emdmssa','hyper-clean hyper-fxemdmssa0','add scale=1,-1 ${SOURCES[1]} ')
+Flow('hyper-snr-emdmssa','hyper-clean hyper-diff-emdmssa','snr2 noise=${SOURCES[1]}')
+
+
+End()

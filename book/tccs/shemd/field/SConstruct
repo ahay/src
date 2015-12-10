@@ -1,0 +1,132 @@
+from rsf.proj import*
+from rsf.prog import RSFROOT
+from rsf.recipes.beg import server as private
+
+def Grey(data,other): 
+	Result(data,'put d1=0.002 d2=1 o1=0 o2=0 | grey minval=-0.3 maxval=0.3 clip=0.3 label2=CMP color=g unit2="" label1=Time unit1="s" title="" wherexlabel=t scalebar=n   %s'%other)
+
+def Grey1(data,other): 
+	Result(data,'put d1=0.002 d2=1 | grey minval=-0.3 maxval=0.3 clip=0.3 label2=CMP color=g unit2="" label1=Time unit1="s" title="" wherexlabel=t scalebar=n   %s'%other)
+
+def Greyzoom(data,other): 
+	Result(data,'put d1=0.002 d2=1 o1=1.5 o2=0 | grey minval=-0.3 maxval=0.3 clip=0.3 label2=CMP color=g unit2="" label1=Time unit1="s" title="" wherexlabel=t scalebar=n  %s'%other)
+
+########################################################################
+# INITIALIZATION
+########################################################################
+matlab         = WhereIs('matlab')
+matROOT = '../Matfun'
+matfun = 'field'
+matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
+
+if not matlab:
+    sys.stderr.write('\nCannot find Matlab.\n')
+    sys.exit(1)
+
+############################################################
+## import south sea 
+############################################################
+Fetch('bend_l1_pmig_enhanc.sgy','vecta',private)
+
+Flow('pp','bend_l1_pmig_enhanc.sgy',
+         'segyread tape=$SOURCE read=data | window n2=471 | scale axis=2 | put label2=CMP',
+         stdin=0)
+
+############################################################
+## generate and process synthetic data
+############################################################
+Flow('pp-fxmssa0 pp-fxemd0 pp-fxemdmssa0',['pp',os.path.join(matROOT,matfun+'.m')],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[0]}','${TARGETS[0]}','${TARGETS[1]}','${TARGETS[2]}');quit"
+     '''%vars(),stdin=0,stdout=-1)
+
+
+Flow('pp-fxemd-noise0','pp pp-fxemd0',' add scale=1,-1 ${SOURCES[1]}')
+Flow('pp-fxmssa-noise0','pp pp-fxmssa0',' add scale=1,-1 ${SOURCES[1]}')
+Flow('pp-fxemdmssa-noise0','pp pp-fxemdmssa0',' add scale=1,-1 ${SOURCES[1]}')
+
+Grey('pp','')
+Grey('pp-fxmssa0','title="SSA"')
+Grey('pp-fxemd0','title="EMD"')
+Grey('pp-fxemdmssa0','title="EMD & SSA"')
+
+Grey('pp-fxmssa-noise0','title="SSA"')
+Flow('pp-fxemd-noise','pp-fxemd-noise0','cp')
+Grey('pp-fxemd-noise','title="EMD"')
+Grey('pp-fxemdmssa-noise0','title="EMD & SSA"')
+
+## Creating framebox
+x=300
+y=0.68
+w=100
+w1=0.2
+
+Flow('frame.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	string.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame','frame.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=0 max1=471 min2=0 max2=2.048 pad=n plotfat=15 plotcol=6 
+	wantaxis=n wanttitle=n yreverse=y 
+	''')
+Result('pp-fxemd-noise0','Fig/pp-fxemd-noise.vpl frame','Overlay')
+
+## Zoomed section comparison between f-x SSA and SSA&EMD
+Flow('pp-mssa-zoom','pp-fxmssa0','window f1=100 n1=100 f2=50 n2=100 | put o2=50 o1=0.2')
+Flow('pp-emdmssa-zoom','pp-fxemdmssa0','window f1=100 n1=100 f2=50 n2=100 | put o2=50 o1=0.2' )
+Grey1('pp-mssa-zoom','title="SSA (Zoomed)" ')
+Grey1('pp-emdmssa-zoom','title="EMD & SSA (Zoomed)"')
+
+## Zoomed section comparison between f-x EMD and SSA&EMD
+Flow('pp-emd-zoom','pp-fxemd0','window f1=340 n1=100 f2=300 n2=100 | put o2=300 o1=0.68')
+Flow('pp-emdmssa-zoom1','pp-fxemdmssa0','window f1=340 n1=100 f2=300 n2=100  | put o2=300 o1=0.68')
+Grey1('pp-emd-zoom','title="EMD (Zoomed)"')
+Grey1('pp-emdmssa-zoom1','title="EMD & SSA (Zoomed)"')
+
+## Creating framebox1
+x=50
+y=0.2
+w=100
+w1=0.2
+
+Flow('frame1.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	string.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame1','frame1.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=0 max1=471 min2=0 max2=2.048 pad=n plotfat=15 plotcol=4 
+	wantaxis=n wanttitle=n yreverse=y 
+	''')
+
+## Creating framebox2
+x=300
+y=0.68
+w=100
+w1=0.2
+
+Flow('frame2.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	string.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame2','frame2.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=0 max1=471 min2=0 max2=2.048 pad=n plotfat=15 plotcol=2 
+	wantaxis=n wanttitle=n yreverse=y 
+	''')
+
+## Create label A
+Plot('labela',None,
+	'''
+	box x0=4.5 y0=7.55 label="A" xt=0.5 yt=-0.5 length=0.75 
+	''')
+
+## Create label B
+Plot('labelb',None,
+	'''
+	box x0=10 y0=6.45 label="B" xt=-0.5 yt=0.5 length=0.75
+	''')
+
+Result('pp-fxemd','Fig/pp-fxemd0.vpl frame2 labelb','Overlay')
+Result('pp-fxmssa','Fig/pp-fxmssa0.vpl frame1 labela','Overlay')
+Result('pp-fxemdmssa','Fig/pp-fxemdmssa0.vpl frame1 frame2 labela labelb','Overlay')
+
+End()

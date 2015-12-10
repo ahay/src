@@ -95,7 +95,7 @@ float sf_zero (float (*func)(float) /* function f(x) */,
 		p = -p;
 	    }
 	    /* Is interpolated point acceptable */
-	    if ((2.0*p < 3.0*m*q - fabsf(toler*q)) && (p < fabsf(0.5*e*q))) {
+	    if ((2.0*p < 3.0*m*q - fabsf(toler*q)) && (p < fabsf(0.5f*e*q))) {
 		e = d;  d = p/q;
 	    } else {
 		if (verb) strcpy(method,"interpolation not accepted");

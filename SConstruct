@@ -139,6 +139,7 @@ if type(api) is str:
     api = [api]
 api.insert(0,'c')
 api.insert(1,'python')
+api.insert(2,'julia')
 
 Default('build/include')
 Default('build/lib')

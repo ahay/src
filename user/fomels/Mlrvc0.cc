@@ -29,7 +29,7 @@ static std::valarray<sf_complex>  d;
 static float w, k, v0;
 static int nt,nx;
 static int nw,nk;
-static float w0,k0,wmin;
+static float w0,k0,wmin,tmax;
 static float dw,dk;
 
 static int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
@@ -37,7 +37,6 @@ static int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
     int nr = rs.size();
     int nc = cs.size();
     res.resize(nr,nc);  
-    setvalue(res,cpx(0.0f,0.0f));
     for(int a=0; a<nr; a++) { /* space index */
 	int i = rs[a];
 	float v2 = v[i]; 
@@ -47,11 +46,14 @@ static int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
 	    int j = cs[b];
 
 	    int iw = j%nw; j /= nw; w = w0+iw*dw; 	    
-	    int ik = j%nk;          k = k0+ik*dk; 
+	    int ik = j%nk;          k = k0+ik*dk;
 	    
-	    float phi = k * k * v2 * SF_PI * 0.125 / SF_MAX(w,wmin);
-
-	    res(a,b) = cpx(cos(phi),-sin(phi)) * cpx(crealf(d[j]),cimagf(d[j]));
+	    float p = SF_MIN (SF_ABS(k) / SF_MAX(w,wmin), tmax/v0); 
+	    p *= p;
+	    
+	    float phi = v2 * SF_PI * 0.125 * w * p;
+	    
+	    res(a,b) = cpx(cos(phi),-sin(phi)); /* * cpx(crealf(d[j]),cimagf(d[j])); */
 	}
     }
     return 0;
@@ -76,6 +78,10 @@ int main(int argc, char** argv)
     iRSF vel("vel");
     vel.get("n1",nt);
     vel.get("n2",nx);
+
+    float t0, dt;
+    vel.get("o1",t0);
+    vel.get("d1",dt);
 
     int m = nt*nx;
 
@@ -104,7 +110,8 @@ int main(int argc, char** argv)
     fft.get("o1",w0); 
     fft.get("o2",k0);
 
-    par.get("fmin",wmin,dw); // minimum frequency
+    par.get("fmin",wmin,dw);           // minimum frequency
+    par.get("tmax",tmax,t0+(nt-1)*dt); // maximum time
 
     vector<int> lidx, ridx;
     CpxNumMat mid;
@@ -149,5 +156,5 @@ int main(int argc, char** argv)
     right.put("n2",n);
     right << rdata;
     
-    return 0;
+    exit(0);
 }

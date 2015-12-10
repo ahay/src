@@ -117,6 +117,104 @@ void allpass1 (bool left        /* left or right prediction */,
     }
 }
 
+void left1 (bool left        /* left or right prediction */,
+	       bool der         /* derivative flag */, 
+	       const allpass ap /* PWD object */, 
+	       float* xx        /* input */, 
+	       float* yy        /* output */)
+/*< left part of in-line plane-wave destruction >*/
+{
+    int ix, iy, iz, iw, is, i, nx, ny, nz, i1, i2, ip;
+
+    nx = ap->nx;
+    ny = ap->ny;
+    nz = ap->nz;
+
+    if (left) {
+	i1=1; i2=ny;   ip=-nx;
+    } else {
+	i1=0; i2=ny-1; ip=nx;
+    }
+
+    for (iz=0; iz < nz; iz++) {
+	for (iy=0; iy < ny; iy++) {
+	    for (ix=0; ix < nx; ix++) {
+		i = ix + nx * (iy + ny * iz);
+		yy[i] = 0.;
+	    }
+	}
+    }
+  
+    for (iz=0; iz < nz; iz++) {
+	for (iy=i1; iy < i2; iy++) {
+	    for (ix = ap->nw*ap->nj; ix < nx-ap->nw*ap->nj; ix++) {
+		i = ix + nx * (iy + ny * iz);
+
+		if (der) {
+		    aderfilter(ap->pp[i], ap->flt);
+		} else {
+		    passfilter(ap->pp[i], ap->flt);
+		}
+	      
+		for (iw = 0; iw <= 2*ap->nw; iw++) {
+		    is = (iw-ap->nw)*ap->nj;
+		  
+		    yy[i] += xx[i+is+ip] * ap->flt[iw];
+		}
+	    }
+	}
+    }
+}
+
+void right1 (bool left        /* left or right prediction */,
+	       bool der         /* derivative flag */, 
+	       const allpass ap /* PWD object */, 
+	       float* xx        /* input */, 
+	       float* yy        /* output */)
+/*< right part of in-line plane-wave destruction >*/
+{
+    int ix, iy, iz, iw, is, i, nx, ny, nz, i1, i2, ip;
+
+    nx = ap->nx;
+    ny = ap->ny;
+    nz = ap->nz;
+
+    if (left) {
+	i1=1; i2=ny;   ip=-nx;
+    } else {
+	i1=0; i2=ny-1; ip=nx;
+    }
+
+    for (iz=0; iz < nz; iz++) {
+	for (iy=0; iy < ny; iy++) {
+	    for (ix=0; ix < nx; ix++) {
+		i = ix + nx * (iy + ny * iz);
+		yy[i] = 0.;
+	    }
+	}
+    }
+  
+    for (iz=0; iz < nz; iz++) {
+	for (iy=i1; iy < i2; iy++) {
+	    for (ix = ap->nw*ap->nj; ix < nx-ap->nw*ap->nj; ix++) {
+		i = ix + nx * (iy + ny * iz);
+
+		if (der) {
+		    aderfilter(ap->pp[i], ap->flt);
+		} else {
+		    passfilter(ap->pp[i], ap->flt);
+		}
+	      
+		for (iw = 0; iw <= 2*ap->nw; iw++) {
+		    is = (iw-ap->nw)*ap->nj;
+		  
+		    yy[i] += xx[i-is] * ap->flt[iw];
+		}
+	    }
+	}
+    }
+}
+
 void allpass2 (bool left        /* left or right prediction */,
 	       bool der         /* derivative flag */, 
 	       const allpass ap /* PWD object */, 

@@ -1,0 +1,49 @@
+from rsf.proj import*
+from rsf.prog import RSFROOT
+from rsf.recipes.beg import server as private
+
+def Grey(data,other): 
+	Result(data,'put d1=0.004 d2=1 o1=0 o2=0  	| grey grid=n poly=y transp=y yreverse=y  label2=Trace  unit2="" label1=Time unit1="s" title="" wherexlabel=t scalebar=n wheretitle=b screenht=9 screenratio=1 screenwd=9  %s'%other)
+
+def Greyplot(data,other): 
+	Plot(data,'put d1=0.004 d2=1 o1=0 o2=0  	| grey grid=n poly=y transp=y yreverse=y  label2=Trace  unit2="" label1=Time unit1="s" title="" wherexlabel=t wantaxis2=n label2= scalebar=n wheretitle=b screenht=11.5 screenratio=1 screenwd=9  %s'%other)
+
+def Graph(data,other): 
+	Result(data,'transp | put d1=1 o1=0	| graph grid=n yreverse=n label2=Value  unit2="" min2=-3 max2=3 label1=Trace title="" wherexlabel=t scalebar=n wheretitle=b screenht=3 screenratio=0.25 screenwd=9  %s'%other)
+
+def Graphplot(data,other): 
+	Plot(data,'transp | put d1=1 o1=0	| graph grid=n yreverse=n label2=Value  unit2="" min2=-3 max2=3 label1=Trace title="" wherexlabel=t scalebar=n wheretitle=b screenht=3 screenratio=0.25 screenwd=9  %s'%other)
+
+
+########################################################################
+# INITIALIZATION
+########################################################################
+matlab         = WhereIs('matlab')
+matROOT = '../Matfun'
+matfun = ''
+matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
+
+if not matlab:
+    sys.stderr.write('\nCannot find Matlab.\n')
+    sys.exit(1)
+
+############################################################
+## generate and process synthetic data
+############################################################
+matfun = 'fxmssademodip'
+Flow('dip-mssa-denoised dip-mssa-noise dip-mssa-fdenoised dip-mssa-fnoise',[os.path.join(matROOT,matfun+'.m')],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${TARGETS[0]}','${TARGETS[1]}','${TARGETS[2]}','${TARGETS[3]}');quit"
+     '''%vars(),stdin=0,stdout=-1)
+
+
+Greyplot('dip-mssa-denoised','color=g clip=0.45')
+Greyplot('dip-mssa-noise','color=g clip=0.45')
+
+Graphplot('dip-mssa-fdenoised','')
+Graphplot('dip-mssa-fnoise','')
+
+Result('dip-mssa-denoised','dip-mssa-fdenoised dip-mssa-denoised ','OverUnderIso')
+Result('dip-mssa-noise','dip-mssa-fnoise dip-mssa-noise ','OverUnderIso')
+
+End()

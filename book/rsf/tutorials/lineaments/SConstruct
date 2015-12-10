@@ -19,4 +19,10 @@ Flow('continued','continued.txt',
 
 Result('continued','grey title="Bouguer anomaly" screenratio=1 scalebar=y')
 
+for case in ('xc','yc'):
+    txt = case + '.txt'
+    Fetch(txt,'1508_Mapping_and_validating_lineaments',
+          server='https://raw.githubusercontent.com',
+          top='seg/tutorials/master')
+
 End()

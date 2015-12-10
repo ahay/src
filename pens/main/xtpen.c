@@ -429,26 +429,26 @@ static const char trans[] =
     "<Expose>:		PenRepaint() \n\
          <ConfigureNotify>:	PenRepaint() \n\
          <Btn1Down>:            xt_print_coord() \n\
-         None<KeyPress>n:       xt_stop() xt_reset_number() xt_next() \n\
-         None<KeyPress>m:       xt_stop() xt_reset_number() xt_prev() \n\
-         None<KeyPress>r:       xt_run()  \n\
-         None<KeyPress>q:       xt_quit()  \n\
-         None<KeyPress>.:       xt_stop()  \n\
-         None<KeyPress>f:       xt_faster()  \n\
-         None<KeyPress>s:       xt_slower()  \n\
-         None<KeyPress>t:       xt_stretchy()  \n\
-	 None<KeyPress>Escape: 	xt_reset_number()\n\
-         None<KeyPress>0: 	xt_number(0)\n\
-         None<KeyPress>1: 	xt_number(1)\n\
-         None<KeyPress>2: 	xt_number(2)\n\
-         None<KeyPress>3: 	xt_number(3)\n\
-         None<KeyPress>4: 	xt_number(4)\n\
-         None<KeyPress>5: 	xt_number(5)\n\
-         None<KeyPress>6: 	xt_number(6)\n\
-         None<KeyPress>7: 	xt_number(7)\n\
-         None<KeyPress>8: 	xt_number(8)\n\
-         None<KeyPress>9: 	xt_number(9)\n\
-	 None<KeyPress>Return:	xt_goto_frame() xt_reset_number()";
+         <KeyPress>n:       xt_stop() xt_reset_number() xt_next() \n\
+         <KeyPress>m:       xt_stop() xt_reset_number() xt_prev() \n\
+         <KeyPress>r:       xt_run()  \n\
+         <KeyPress>q:       xt_quit()  \n\
+         <KeyPress>.:       xt_stop()  \n\
+         <KeyPress>f:       xt_faster()  \n\
+         <KeyPress>s:       xt_slower()  \n\
+         <KeyPress>t:       xt_stretchy()  \n\
+	 <KeyPress>Escape: 	xt_reset_number()\n\
+         <KeyPress>0: 	xt_number(0)\n\
+         <KeyPress>1: 	xt_number(1)\n\
+         <KeyPress>2: 	xt_number(2)\n\
+         <KeyPress>3: 	xt_number(3)\n\
+         <KeyPress>4: 	xt_number(4)\n\
+         <KeyPress>5: 	xt_number(5)\n\
+         <KeyPress>6: 	xt_number(6)\n\
+         <KeyPress>7: 	xt_number(7)\n\
+         <KeyPress>8: 	xt_number(8)\n\
+         <KeyPress>9: 	xt_number(9)\n\
+	 <KeyPress>Return:	xt_goto_frame() xt_reset_number()";
 
 
 static XtActionsRec window_actions[] = {

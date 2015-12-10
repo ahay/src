@@ -28,6 +28,18 @@ void cr_init(int nr1 /* number of rows */,
     nc = nc1;
 }
 
+void cr_prec(int nx, const float *x, float *y)
+/*< apply preconditioning >*/
+{
+    int i;
+    for (i=0; i < nr; i++) {
+	y[i] = x[i]/nc;
+    }
+    for (i=nr; i < nr+nc; i++) {
+	y[i] = x[i]/nr;
+    }
+}
+
 void cr_apply(int nx, const float *x, float *y)
 /*< apply normal operator >*/
 {

@@ -3,13 +3,17 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-expand  sglr2 sglr1 sglfd2  sglfd2_tfd sglfd2pml sglfd1pml sgfd1 weas1 weas2 mmssrc mmssrc1 mms1dexp sglfdrtm2 stackimg matrix 
+expand  sglr2 sglr1 sglfd2  sglfd2_tfd sglfd2pml sglfd1pml sgfd1 weas1 weas2 mmssrc mmssrc1 mms1dexp sglfdrtm2 stackimg matrix lfdsgm2
 '''
 
 # anisglfd2pml
 
-ccprogs = '''isolrsg1 isolrsg2  sglfdcx2_7 sglfdcz2_7 
- sglfdcx1 sglfdc1 sglfdcx1a sglfdc1a wlslfdc1 wlslfdc1tw2 wlslfdc1ww lslfdc1 sglfdcp1'''
+ccprogs = '''
+isolrsg1 isolrsg2  sglfdcx2_7 sglfdcz2_7 
+sglfdcx1 sglfdc1 sglfdcx1a sglfdc1a wlslfdc1 wlslfdc1tw2 wlslfdc1ww lslfdc1 sglfdcp1
+oneapp lfdcsgm2 lfdcsgm2s lfdcsgm2c lfdcsgm2_5 lfdcsgm2_all twoapp
+sglfdcsgm2x sglfdcsgm2z sgtwoapp
+'''
 # anisglfdcx2_7 anisglfdcz2_7 wlslfdcx2tw2 wlslfdcz2tw2
 
 #pyprogs = 'fft'

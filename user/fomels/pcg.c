@@ -28,6 +28,7 @@ typedef void (*normal_operator)(int,const float*,float*);
 #endif
 
 void conjgrad(normal_operator oper /* operator to invert */,
+	      normal_operator prec /* preconditioning */,
 	      int nd /* data size */, 
 	      const float *d /* data (right-hand side) */, 
 	      const float *x0 /* starting model */, 
@@ -37,12 +38,13 @@ void conjgrad(normal_operator oper /* operator to invert */,
 /*< Conjugate-gradient algorithm for solving B x = d >*/
 {
     int ix, iter;
-    float *g, *cg, *s, *cs;
+    float *g, *z, *cz, *s, *cs;
     double gn, gnp=0.0, beta;
 
-    g = sf_floatalloc(nd);
-    cg = sf_floatalloc(nd);
-    s = sf_floatalloc(nd);
+    g  = sf_floatalloc(nd);
+    z  = sf_floatalloc(nd);
+    cz = sf_floatalloc(nd);
+    s  = sf_floatalloc(nd);
     cs = sf_floatalloc(nd);
 
     for (ix=0; ix < nd; ix++) {
@@ -54,33 +56,40 @@ void conjgrad(normal_operator oper /* operator to invert */,
     }
 
     for (iter=0; iter < niter; iter++) {
-	oper(nd,g,cg);
-	gn = cblas_dsdot(nd,g,1,g,1);
+	if (NULL != prec) {
+	    prec(nd,g,z);
+	} else {
+	    for (ix=0; ix < nd; ix++) {
+		z[ix] = g[ix];
+	    }
+	}
+
+	gn = cblas_dsdot(nd,g,1,z,1);
 	
-	if (gn < tol) {
+	if (fabs(gn) < tol) {
 	    sf_warning("Converged after %d iterations",iter);
 	    return;
 	}
 	
 	sf_warning("iteration %d: %g",iter+1,gn);
+
+	oper(nd,z,cz);
 	
         if (0==iter) {
 	    for (ix=0; ix < nd; ix++) {
-		s[ix] = g[ix];
-		cs[ix] = cg[ix];
+		s[ix] = z[ix];
+		cs[ix] = cz[ix];
 	    }
         } else {
             beta = gn/gnp;
 
-            /* cs = cg + cs*beta */
-	    cblas_saxpy(nd,beta,cs,1,cg,1); 
-	    cblas_sswap(nd,cs,1,cg,1);
+	    /* s = z + s*beta */
+	    cblas_saxpy(nd,beta,s,1,z,1); 
+	    cblas_sswap(nd,s,1,z,1);
 
-	    memcpy(cg,g,nd*sizeof(float));
-
-	    cblas_saxpy(nd,beta,s,1,cg,1); /* s = g + s*beta */
-	    cblas_sswap(nd,s,1,cg,1);
-
+            /* cs = cz + cs*beta */
+	    cblas_saxpy(nd,beta,cs,1,cz,1); 
+	    cblas_sswap(nd,cs,1,cz,1);
 	}
         gnp = gn;
 
@@ -90,7 +99,8 @@ void conjgrad(normal_operator oper /* operator to invert */,
 	cblas_saxpy(nd,beta,cs,1,g,1);
     }
 
-    free(g); free(cg);
+    free(g); 
+    free(z); free(cz);
     free(s); free(cs);
 }
 

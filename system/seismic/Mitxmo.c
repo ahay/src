@@ -69,7 +69,7 @@ int main (int argc, char* argv[])
 	/* slope samples */
 	if (!sf_getfloat("dp",&dp)) sf_error("Need dp=");
 	/* slope sampling */
-	if (!sf_getfloat("p0",&p0)) x0=0.;
+	if (!sf_getfloat("p0",&p0)) p0=0.;
 	/* first slope */
 	
 	sf_putint(out,"n2",np);
@@ -110,7 +110,7 @@ int main (int argc, char* argv[])
 		ft = 1.-p2*v;
 
 		if (ft < 0.) {
-		    for (; it < nt; it++) {
+		    for (it=0; it < nt; it++) {
 			t[ip][it]=t0-10.*dt;
 			x[ip][it]=x0-10.*dx;
 		    }
@@ -139,7 +139,7 @@ int main (int argc, char* argv[])
 	} else {
 	    sf_floatread (tx[0],nt*nx,inp);
 	    fwarp2(tx,t,x,tp);
-	    sf_floatwrite (tp[0],nt*np,inp);
+	    sf_floatwrite (tp[0],nt*np,out);
 	}
     }
 

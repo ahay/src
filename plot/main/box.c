@@ -1,6 +1,10 @@
 /* Draw a balloon-style label.
 
-Takes: > out.vpl*/
+Takes: > out.vpl
+
+May 2015 program of the month:
+http://ahay.org/blog/2015/05/01/program-of-the-month-sfbox/
+*/
 /*
   Copyright (C) 1987 The Board of Trustees of Stanford University
   

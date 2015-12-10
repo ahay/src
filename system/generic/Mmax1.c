@@ -77,7 +77,7 @@ int main(int argc, char* argv[])
 	ip = 0;
 	for (i1=2; i1 < n1; i1++) {
 	    t2 = trace[i1];
-
+	    
 	    if (ip < np && t1 > t0 && t1 > t2) {
 		/* parabolic approximation */
 		t = 0.5*(t2-t0)/(2*t1-t0-t2);
@@ -94,8 +94,8 @@ int main(int argc, char* argv[])
 		x = o1+(i1-1+t)*d1;
 
 		if (x >= min && x <= max) {
-			pick[ip] = sf_cmplx(x,a);	
-			ip++;
+		    pick[ip] = sf_cmplx(x,a);	
+		    ip++;
 		}
 	    }
 

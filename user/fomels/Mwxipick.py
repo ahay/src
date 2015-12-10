@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-'Show data with zoom'
+'Simple interactive picking'
 
 ##   Copyright (C) 2010 University of Texas at Austin
 ##  
@@ -99,6 +99,9 @@ class Canvas(wx.Window):
         self.black = wx.Brush('black')
         self.Bind(wx.EVT_PAINT,self.OnPaint)
         self.Bind(wx.EVT_LEFT_DOWN,self.OnClick)
+        self.Bind(wx.EVT_RIGHT_DOWN,self.Delete)
+        self.Bind(wx.EVT_MIDDLE_DOWN,self.SelectPick)
+        self.Bind(wx.EVT_MIDDLE_UP,self.Drop)
         
         self.SetFrame()
 
@@ -107,6 +110,8 @@ class Canvas(wx.Window):
 
         self.label2 = hist(str,'label2','X')
         self.unit2  = hist(str,'unit2','')
+
+        self.selected = None
     def rsf2image(self,i3):
         global byte
         ppm = '%s%d.ppm' % (name,i3)
@@ -175,15 +180,32 @@ class Canvas(wx.Window):
             npick += 1
             tag = 'pick%d' % npick
             self.dc.DrawCircle(x,y,r)
-            #pick.Bind(wx.EVT_LEFT_DOWN,self.SelectPick)
-            #canvas.tag_bind(tag,'<ButtonPress-2>',selectpick)
-            #canvas.tag_bind(tag,'<B2-Motion>',movepick)
-            #canvas.tag_bind(tag,'<ButtonRelease-2>',movedpick)
-            #canvas.tag_bind(tag,'<Button-3>',deletepick)
             picks[i3][tag]=[self.ScalePick(x,y),self.brush]
         event.Skip()
     def SelectPick(self,event):
-        print event.GetPositionTuple()
+        x,y = event.GetPositionTuple()
+        for p in picks[i3].keys():
+            xp,yp = self.UnscalePick(picks[i3][p][0])
+            if (x-xp)*(x-xp)+(y-yp)*(y-yp) < 9:
+                self.selected = p
+                break
+        event.Skip()
+    def Drop(self,event):
+        x,y = event.GetPositionTuple()
+        p = self.selected
+        if p:
+            picks[i3][p][0] = self.ScalePick(x,y)
+            self.Redraw(i3)
+        self.selected = None
+        event.Skip()
+    def Delete(self,event):
+        x,y = event.GetPositionTuple()
+        for p in picks[i3].keys():
+            xp,yp = self.UnscalePick(picks[i3][p][0])
+            if (x-xp)*(x-xp)+(y-yp)*(y-yp) < 9:
+                del picks[i3][p]
+                self.Redraw(i3)
+                break
         event.Skip()
         
 class MainFrame(wx.Frame):

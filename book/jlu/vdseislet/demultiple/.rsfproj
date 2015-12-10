@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfpow', 'sfmutter', 'sfput', 'sfgrey', 'sfvscan', 'sfwindow', 'sfspike', 'sfcausint', 'sfmath', 'sfcut', 'sfscale', 'sfpick', 'sfgraph', 'sfnmo', 'sfpad', 'sfmul', 'sfspray', 'sfiwarp', 'sfcat', 'sfbyte', 'sfgrey3', 'sfdiplet', 'sfadd']
+data=['PRIVATE']
+size=   14629320

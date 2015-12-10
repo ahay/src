@@ -1,0 +1,146 @@
+from rsf.proj import*
+import math 
+Fetch('sean.HH','bp')
+
+def grey(title):
+    return 'grey title="%s" label2=Channel label1="Time (s)" ' % title
+mute='mutter hyper=y half=y t0=1.8 x0=0 slope0=0.005 | mutter hyper=n half=y t0=2.1 x0=0 slope0=0.002'
+
+Flow('sean','sean.HH',
+     'dd form=native | window n3=1 f3=3 n1=500 ')
+
+## module definition
+def Grey(data,other): 
+	Result(data,'grey label2=Trace unit2="" label1=Time unit1="s" title="" wherexlabel=b wheretitle=t screenratio=1.4 color=g %s'%other)
+
+def Greyplot(data,other): 
+	Plot(data,'grey label2=Trace unit2="" label1=Time unit1="s" title="" wherexlabel=b wheretitle=t screenratio=1.4 color=g %s'%other)
+
+def Graph(data,other):
+	Result(data,'graph label1="" label2="" unit1="" unit2=""  title="" wherexlabel=b wheretitle=t %s' %other)
+
+def Graphplot(data,other):
+	Plot(data,'graph label1="" label2="" unit1="" unit2=""  title="" wherexlabel=b wheretitle=t %s' %other)
+
+## parameters definition
+zeroperc=30
+thr=20
+
+## zero trace (remove certain percent of traces)
+Flow('sean-mask','sean','window n1=1 | noise type=y range=0.5 mean=0.5 rep=y seed=201414 | threshold1 ifperc=1 type=hard thr=%d | mask min=0.000000001 | spray axis=1 n=500 |dd type=float'%(100-zeroperc))
+Flow('sean-mask2','sean-mask','math output="1-input"')
+Flow('sean-zero','sean sean-mask','add mode=p ${SOURCES[1]}')
+
+## define forward and backward transform strings
+forw = 'rtoc | fft3 axis=1 pad=2 |fft3 axis=2 pad=2'
+back = 'fft3 axis=2 pad=2 inv=y | fft3 axis=1 pad=2 inv=y |real'
+
+## compute the initial snr (SNR=10log(sum(s^2)/sum(n^2))
+Flow('diff0','sean sean-zero','add scale=1,-1 ${SOURCES[1]}')
+Flow('snr0',['sean','diff0'],'snr2 noise=${SOURCES[1]}')
+
+##1 POCS-form shaping (N=2)  d_{n+1} = d_{obs} + (I-M)T[d_{n}], where T=A^{-1}T_{\lambda}A and T_{\lambda} is soft thresholding
+sig="sean-zero"
+Greyplot(sig,'title="Iteration 0"')
+niter=30 # 
+data = sig
+datas = [sig]
+snrs1=['snr0']
+for iter in range(niter):
+    old = data
+    data = 'data-shape%d' % (iter+1)
+    snr  ='snr-shape%d'%(iter+1)
+    diff ='diff-shape%d'%(iter+1)
+    # 1. Forward FFT
+    # 2. Threshold in FK domain
+    # 3. Inverse FFT
+    # 4. Multiply by space mask 2
+    # 5. Add data outside of hole
+    Flow(data,[old,'sean-mask2',sig],
+         '''
+         %s | threshold1 type=s thr=%g | 
+         %s | mul ${SOURCES[1]} | 
+         add ${SOURCES[2]} | %s
+         ''' % (forw,thr,back,mute))
+    Flow(diff,['sean',data],'add scale=1,-1 ${SOURCES[1]}')
+    Flow(snr,['sean',diff],'snr2 noise=${SOURCES[1]}')
+    Greyplot(data,'title="Iteration %d"' % (iter+1))
+    datas.append(data)
+    snrs1.append(snr)
+Plot('shape',datas,'Movie')
+
+## 2 faster-shaping
+sig="sean-zero"
+Greyplot(sig,'title="Iteration 0"')
+data = sig
+datas = [sig]
+snrs2=['snr0']
+old1 = sig
+t1=1
+for iter in range(niter): 
+    #frac=1.0/2+(iter/(niter-1))/2.0
+    frac = 1.0/2
+    #frac=0
+    #print frac
+    old1 = data
+    data = 'data-fshape%d' % (iter+1)
+    snr  ='snr-fshape%d'%(iter+1)
+    diff ='diff-fshape%d'%(iter+1)
+    # 1. multiply by space mask 1
+    # 2. add data from last iteration and observed data with scale (-1,1,1)
+    # 3. Inverse FFT
+    # 4. thresholding in FK domain
+    # 5. Forward FFT
+    Flow(data,[old1,'sean-mask2',sig],
+         ''' 
+	 %s | threshold1 ifperc=1 type=s thr=%g | %s |
+	 mul ${SOURCES[1]} | 
+         add scale=1,1 ${SOURCES[2]} |
+	 add scale=%g,%g ${SOURCES[0]} |%s
+         ''' % (forw,thr,back,1+frac,-frac,mute))
+    Flow(diff,['sean',data],'add scale=1,-1 ${SOURCES[1]}')
+    Flow(snr,['sean',diff],'snr2 noise=${SOURCES[1]}')
+    Greyplot(data,'title="Iteration %d"' % (iter+1))
+    datas.append(data)
+    snrs2.append(snr)
+Plot('fshape',datas,'Movie')
+
+## creating data for ploting
+Flow('sean-recon-o','data-shape%d'%(20),'cp')
+Flow('sean-recon','data-fshape%d'%(10),'cp')
+Flow('sean-error-o','sean-recon-o sean','add scale=1,-1 ${SOURCES[1]}')
+Flow('sean-error','sean-recon sean','add scale=1,-1 ${SOURCES[1]}')
+Flow('sean-fk','sean','rtoc | fft3 axis=1 pad=2 | fft3 axis=2 pad=2 |cabs|math output="input"')
+Flow('sean-zerofk','sean-zero','rtoc | fft3 axis=1 pad=2 | fft3 axis=2 pad=2 |cabs|math output="input"')
+Flow('sean-reconfk-o','sean-recon-o','rtoc | fft3 axis=1 pad=2 | fft3 axis=2 pad=2 |cabs |math output="input" ')
+Flow('sean-reconfk','sean-recon','rtoc | fft3 axis=1 pad=2 | fft3 axis=2 pad=2 |cabs |math output="input" ')
+Flow('sean-errorfk','sean-error','rtoc | fft3 axis=1 pad=2 | fft3 axis=2 pad=2 |cabs |math output="input"')
+Flow('sean-errorfk-o','sean-error-o','rtoc | fft3 axis=1 pad=2 | fft3 axis=2 pad=2 |cabs |math output="input"')
+
+## ploting figure for writing a paper
+Grey('sean','clip=1200')
+Grey('sean-zero','clip=1200')
+Grey('sean-recon','clip=1200')
+Grey('sean-recon-o','clip=1200')
+Grey('sean-error','clip=1200')
+Grey('sean-error-o','clip=1200')
+Grey('sean-fk','color=j label1=Frequency unit1=Hz label2=Wavenumber clip=237497 allpos=y')
+Grey('sean-zerofk','color=j label1=Frequency unit1=Hz label2=Wavenumber clip=237497 allpos=y')
+Grey('sean-reconfk','color=j label1=Frequency unit1=Hz label2=Wavenumber clip=237497 allpos=y')
+Grey('sean-reconfk-o','color=j label1=Frequency unit1=Hz label2=Wavenumber clip=237497 allpos=y')
+Grey('sean-errorfk','color=j label1=Frequency unit1=Hz label2=Wavenumber clip=237497 allpos=y')
+Grey('sean-errorfk-o','color=j label1=Frequency unit1=Hz label2=Wavenumber clip=237497 allpos=y')
+
+Grey('sean-mask','color=j')
+Grey('sean-mask2','color=j')
+
+## ploting convergence diagram (dashed -> pocs,solid -> pocs)
+Flow('SNR1',snrs1,'cat axis=1 ${SOURCES[1:%d]}'%len(snrs1))
+Flow('SNR2',snrs2,'cat axis=1 ${SOURCES[1:%d]}'%len(snrs2))
+
+Flow('SNRs-sean','SNR1 SNR2','cat axis=2 ${SOURCES[1]}')
+Graph('SNRs-sean','label1="Iteration no. #" label2=SNR unit2=dB dash=0,1')
+
+Flow('SNR2-sean','SNR2','cp')
+Graph('SNR2-sean','label1="Iteration no. #" symbol="*" symbolsz=10 label2=SNR unit2=dB dash=1')
+End()

@@ -1,0 +1,229 @@
+from rsf.proj import *
+
+def Grey3(gulf,other):
+	Result(gulf,
+       '''
+       byte clip=3.9796e+06 |
+       transp plane=23 |window min2=7.8 max2=15.6 |
+       grey3 flat=y  frame1=500 frame2=125 frame3=5
+       title=gulf point1=0.8 point2=0.8  %s title=
+       '''%other)
+#clip=0.0001 
+
+def Greycmg(gulf,other):
+	Result(gulf,
+       '''
+       byte clip=3.9796e+06 |
+       transp plane=23 |window min2=7.8 max2=15.6 |
+       grey3 flat=y  frame1=500 frame2=50 frame3=10
+       title=gulf point1=0.8 point2=0.8  %s title=
+       '''%other)
+#clip=0.0001 
+
+def Greycmg1(gulf,other):
+	Result(gulf,
+       '''
+       byte clip=3.9796e+06 |      
+       grey3 flat=n frame1=750 frame2=25 frame3=100 
+       title=gulf point1=0.8 point2=0.8 %s title=
+       '''%other)
+
+def Vel(gulf,other):
+	Result(gulf,
+     '''
+     grey color=j allpos=y bias=1.5 clip=0.7
+     scalebar=y barreverse=y barunit=km/s
+     label2=Midpoint unit2=km label1=Time unit1=s
+     title="NMO Velocity"  %s
+     '''%other )
+
+def Pick(gulf,other):
+	 Result(gulf,
+       '''
+       byte allpos=y gainpanel=all |
+       transp plane=23 |
+       grey3 flat=n frame1=500 frame2=125 frame3=25 
+       label1=Time unit1=s color=j framelabelcol=VP_BLACK
+       label3=Velocity unit3=km/s 
+       label2=Midpoint unit2=km
+       title="Velocity Scan" point1=0.8 point2=0.8 %s
+       '''%other)
+
+def Greyzoom(data,other):
+	Result(data,
+		''' 
+		grey wanttitle=n clip=3.9796e+06 min2=11.725 max2=13.735 min1=2.0 max1=3.0 wherexlabel=b %s
+		'''%other)
+
+# Create labels
+labels=[]
+Plot('label1',None,
+	'''
+	box x0=3 y0=8 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+labels.append('label1')
+
+Plot('label2',None,
+	'''
+	box x0=4 y0=8 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+labels.append('label2')
+
+Plot('label3',None,
+	'''
+	box x0=5 y0=8 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+labels.append('label3')
+
+Plot('label4',None,
+	'''
+	box x0=6 y0=8 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+labels.append('label4')
+
+Plot('label5',None,
+	'''
+	box x0=7 y0=8 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+labels.append('label5')
+
+Plot('label6',None,
+	'''
+	box x0=8 y0=8 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+labels.append('label6')
+
+Plot('label7',None,
+	'''
+	box x0=9 y0=8 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+labels.append('label7')
+
+Plot('label8',None,
+	'''
+	box x0=10 y0=8 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+labels.append('label8')
+
+Plot('label9',None,
+	'''
+	box x0=11 y0=8 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+labels.append('label9')
+
+Plot('label10',None,
+	'''
+	box x0=12 y0=8 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+labels.append('label10')
+
+# Download gulf
+Fetch('beinew.HH','midpts')
+
+# Set dimensions
+Flow('gulf','beinew.HH',
+     '''
+     dd form=native |
+     put
+     label1=Time unit1=s
+     label2=Half-Offset unit2=km
+     label3=Midpoint unit3=km
+     ''')
+
+# Display
+Grey3('gulf','title="gulf (Original)"')
+
+
+Flow('gulf-csg','gulf','cmp2shot positive=y')
+Grey3('gulf-csg','title="gulf (CSG)" frame1=750 frame2=50 frame3=10')
+
+Flow('gulf-cmg','gulf-csg','shot2cmp positive=y | window n3=250 f3=47 | put 03=7.705')
+Grey3('gulf-cmg','title="gulf (CMG)"')
+
+## Suppose source2 has nearly the same feature as source1
+
+#for i in range(151):
+Flow('gulf-r','gulf-csg','reverse which=2')
+Grey3('gulf-r','title=source2')
+
+Flow('dithert',None,'math output=1 n1=297 n2=1 | noise rep=y seed=201313 var=2 | spray axis=2 n=48 | transp ')
+Flow('ditherx',None,'math output=1 n1=297 n2=1 | noise rep=y seed=201313 var=0 | spray axis=2 n=1000 | transp ')
+
+Flow('datt','gulf-r dithert','datstretch inv=y datum=${SOURCES[1]}')
+Flow('datx','datt ditherx','transp plane=12 | datstretch inv=y datum=${SOURCES[1]} |transp plane=12')
+
+## Blending
+Flow('gulfs-csg','gulf-csg datx','add scale=1,1 ${SOURCES[1]}')
+Grey3('gulfs-csg','title="Blended(CSG)" frame1=750 frame2=50 frame3=10')
+
+Flow('gulf-b','gulfs-csg','shot2cmp positive=y | window n3=250 f3=47 | put 03=7.705')
+Greycmg('gulf-b','title="Blended gulf (CMG)"')
+
+Flow('gulf-b-cmg','gulf-b','cp')
+Greycmg('gulf-b-cmg','title="gulf (Blended) CMG"')
+
+nfw=5
+##########################################
+## SVMF in Common midpoint gather
+##########################################
+Flow('gulf-b-svmf-cmg','gulf-b','nmostretch inv=n v0=1.8 half=y | mutter | transp plane=12 | tsmf nfw=%d | transp plane=12 | nmostretch inv=y v0=1.8 half=y '%nfw)
+Greycmg('gulf-b-svmf-cmg','title="gulf (Deblended - SVMF - CMG)"')
+Flow('gulf-b-nmo','gulf-b','nmostretch inv=n v0=2.5 half=y | mutter ')
+Greycmg('gulf-b-nmo','title="NMO CMG"')
+
+
+nfw=5
+##########################################
+## SVMF in common offset gather
+##########################################
+Flow('gulf-b-svmf-cog','gulf-b','transp plane=23 | transp plane=12| tsmf nfw=%d | transp plane=12 | transp plane=23 |nmostretch inv=n v0=1.8 half=y | mutter | nmostretch inv=y v0=1.8 half=y '%nfw)
+Greycmg('gulf-b-svmf-cog','title="gulf (Deblended - SVMF - COG)"')
+
+Flow('gulf-b-svmf-csg','gulf-b-svmf-cmg','cmp2shot positive=y')
+Grey3('gulf-b-svmf-csg','title="gulf (CSG)" frame1=750 frame2=50 frame3=10')
+
+
+
+##########################################
+## MF in Common midpoint gather
+##########################################
+Flow('gulf-b-mf-cmg','gulf-b','nmostretch inv=n v0=2.5 half=y | transp plane=12 | mf nfw=%d | transp plane=12 | nmostretch inv=y v0=2.5 half=y'%nfw)
+Greycmg('gulf-b-mf-cmg','title="gulf (Deblended - MF - CMG)"')
+
+nfw=7
+##########################################
+## MF in common offset gather
+##########################################
+Flow('gulf-b-mf-cog','gulf-b','transp plane=23 | transp plane=12| mf nfw=%d | transp plane=12 | transp plane=23'%nfw)
+Grey3('gulf-b-mf-cog','title="gulf (Deblended - MF - COG)"')
+
+Flow('gulf-b-svmf-cmg-zoom','gulf-b-svmf-cmg','window n2=1 f2=15 f1=500 n1=250 n3=120 f3=60')
+Flow('gulf-b-svmf-cog-zoom','gulf-b-svmf-cog','window n2=1 f2=15 f1=500 n1=250 n3=120 f3=60')
+Greyzoom('gulf-b-svmf-cmg-zoom','')
+Greyzoom('gulf-b-svmf-cog-zoom','')
+
+### Stacking test
+Flow('gulf-vscan-b','gulf-b',
+     'vscan v0=1.5 dv=0.02 nv=51 semblance=y',
+     split=[3,201], reduce='cat')
+Flow('gulf-vnmo-b','gulf-vscan-b','pick rect1=100 rect2=10')
+Flow('gulf-nmo-b','gulf-b gulf-vnmo-b','nmo velocity=${SOURCES[1]}')
+Flow('gulf-stack-b','gulf-nmo-b','stack')
+
+Flow('gulf-vscan-db','gulf-b-svmf-cmg',
+     'vscan v0=1.5 dv=0.02 nv=51 semblance=y',
+     split=[3,201], reduce='cat')
+Flow('gulf-vnmo-db','gulf-vscan-db','pick rect1=100 rect2=10')
+Flow('gulf-nmo-db','gulf-b-svmf-cmg gulf-vnmo-db','nmo velocity=${SOURCES[1]}')
+Flow('gulf-stack-db','gulf-nmo-db','stack')
+
+Result('gulf-stack-b',
+		'''
+		grey wanttitle=n clip=0.9796e+06 min2=7.8 max2=15.6 wherexlabel=b %s
+		''')
+Result('gulf-stack-db',
+		'''
+		grey wanttitle=n clip=0.9796e+06 min2=7.8 max2=15.6 wherexlabel=b %s
+		''')
+
+End()

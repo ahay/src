@@ -159,7 +159,7 @@ main(int argc, char** argv)
 
   if (snap)  file_wfl = sf_output("wfl"); /* wavefield */
   if (!cden) {
-    if (sf_getstring("cden")) {
+    if (sf_getstring("den")) {
       file_den = sf_input ("den"); /* density */
     } else {
       cden = true;

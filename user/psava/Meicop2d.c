@@ -91,7 +91,7 @@ int main(int argc, char* argv[])
     float   ***opr=NULL,***wfl=NULL,****img=NULL; 
     int     itO,itW;
     
-    sf_axis az,ax,at,ac,aa; /* wfld axes */
+    sf_axis az,ax,at,ac,aa,az2,ax2,at2; /* wfld axes */
     int     nz,nx,nt,nc;
     int     iz,ix,it,ic;
 
@@ -136,6 +136,8 @@ int main(int argc, char* argv[])
     ax=sf_iaxa(Fopr,2); if(verb) sf_raxa(ax); nx = sf_n(ax);
     at=sf_iaxa(Fopr,3); if(verb) sf_raxa(at); nt = sf_n(at);
 
+
+    
     scale = 1./nt;                /* time summation scaling */
     nslice = nz*nx*sizeof(float); /* wavefield slice */
 
@@ -163,6 +165,25 @@ int main(int argc, char* argv[])
     } else {
   Fwfl = sf_input ( "in"); /*  read wfl */
   
+    /* Check that wavefields have the same dimensions: */
+    az2 = sf_iaxa(Fwfl,1); 
+    ax2 = sf_iaxa(Fwfl,2);
+    at2 = sf_iaxa(Fwfl,3);
+
+    if(sf_n(az2) != sf_n(az) && sf_d(az2) != sf_d(az) && sf_o(az) != sf_o(az2) ){
+      sf_error("z axis is not the same for operator and wavefield!");
+    }
+
+    if(sf_n(ax2) != sf_n(ax) && sf_d(ax2) != sf_d(ax) && sf_o(ax) != sf_o(ax2) ){
+      sf_error("x axis is not the same for operator and wavefield!");
+    }
+
+    if(sf_n(at2) != sf_n(at) && sf_d(at2) != sf_d(at) && sf_o(at) != sf_o(at2) ){
+      sf_error("t axis is not the same for operator and wavefield!");
+    }
+
+
+
   if(! sf_getint("nhz",&nhz)) nhz=0; /* z lags */
   dhz=2*sf_d(az);
   ahz=sf_maxa(2*nhz+1,-nhz*dhz,dhz); sf_setlabel(ahz,"hz"); sf_setunit(ahz,""); 

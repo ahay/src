@@ -6,7 +6,10 @@ nt = len(trace)
 Flow('trace.asc',None,'echo %s n1=%d o1=0 d1=1 data_format=ascii_int in=$TARGET' % (' '.join(map(str,trace)),nt))
 Flow('trace','trace.asc','dd type=float form=native')
 
-graph = 'graph wanttitle=n min2=-6 max2=6 min1=-0.5 max1=%g screenht=7 screenwd=28 ' % (nt-0.5)
+graph = '''
+graph wanttitle=n min2=-6 max2=6 min1=-0.5 max1=%g screenht=8 screenwd=32 
+label2=Amplitude label1="Time Samples"
+''' % (nt-0.5)
 
 Flow('ctrace','trace','math output=x1 | cmplx $SOURCE')
 
@@ -20,8 +23,32 @@ d1 = (nt-1.0)/20000
 Flow('linear','trace','remap1 order=2 n1=20000 d1=%g o1=0' % d1)
 Flow('spline','trace linear','spline pattern=${SOURCES[1]}')
 
-Plot('spline','linear spline','cat axis=2 ${SOURCES[1]} | %s plotcol=6,5' % graph)
+Plot('spline','linear spline','cat axis=2 ${SOURCES[1]} | %s plotcol=1,2' % graph)
 
-Result('trace','trace spline','Overlay')
+Plot('trace2','trace spline','Overlay')
+
+Result('trace2','Overlay')
+
+Flow('envelope','spline','window j1=100 | envelope')
+
+Plot('envelope','scale dscale=-1 | cat $SOURCE axis=2 | %s plotcol=4 dash=1,0' % graph)
+
+# different kinds of averages
+
+def attr(par):
+    'extract parameter from sfattr and put it in mag=par form'
+    return '''
+    attr want=%s | sed s/%s/mag/ | sed "s/[ \\t]*//g" 
+    ''' % (par,par)
+
+Flow('rms.par','spline',attr('rms'))
+Flow('absmean.par','spline','math output="abs(input)" | ' + attr('mean'))
+Flow('envmean.par','envelope',attr('mean'))
+
+for par in ('rms','absmean','envmean'):
+    Plot(par,['spline',par+'.par'],
+         'spike par=${SOURCES[1]} label1= unit1= | %s plotcol=5' % graph)
+
+Result('envelope','trace2 envelope rms absmean envmean','Overlay')
 
 End()

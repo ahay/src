@@ -1,0 +1,130 @@
+\chapter{Introduction}
+
+Welcome to the world of Madagascar, the open-source package for
+multidimensional data analysis! This book...
+
+\section{What is Madagascar?}
+
+The Madagascar software package is designed for analysis of
+large-scale multidimensional data, such as those occurring in
+exploration geophysics. Madagascar provides a framework for
+reproducible research. By âreproducible researchâ we
+refer to the discipline of attaching software codes and data to
+computational results reported in publications. The package contains a
+collection of (a) computational modules, (b) data-processing scripts,
+and (c) research papers. Madagascar is distributed on SourceForge
+under a GPL v2 license https://sourceforge.net/projects/rsf/. By
+October 2013, more than 70 people from different organizations around
+the world have contributed to the project, with increasing
+year-to-year activity. The Madagascar website is http://www.ahay.org/.
+
+Reproducible research, as defined by Jon Claerbout [1], refers to the
+discipline of attaching software code and data to scientific
+publications, in order to enable independent verification and
+replication of computational experiments. The so-called
+``Claerbout's principle'' [2,3] states that
+``An article about computational science in a scientific
+publication is not the scholarship itself, it is merely advertising of
+the scholarship. The actual scholarship is the complete software
+development environment and the complete set of instructions which
+generated the figures.'' The Madagascar software package
+implements a computational environment that is designed both for
+conducting computational experiments in the area of large-scale
+geophysical data analysis and for attaching links to software code and
+data in scientific publications in order to enable reproducible
+research. As of October 2013, Madagascar includes more than 120
+scientific papers and book chapters complete with software codes
+necessary for independent verification and replication of
+computational results (see
+$http://www.ahay.org/wiki/Reproducible_Documents$).  The work on the
+Madagascar project started in 2003, and the beta version of the
+package was publicly released in June 2006. Since then, many people
+have joined the project and contributed to the code. The 1.0 version
+was released in 2010 and tested by an open community. The community
+stays in touch using mailing lists, social networks, and annual
+meetings.  Although the main applications have focused so far on
+applied geophysics and exploration seismology in particular, the core
+package is suitable for other scientific fields that require
+reproducible analysis of large-scale multidimensional data.
+
+\section{Madagascar design principles}
+
+The design of Madagascar follows the Unix principle: ``Write
+programs that do one thing and do it well. Write programs to work
+together. Write programs to handle text streams, because that is a
+universal interface.'' [4] Analysis of complex multidimensional
+data, such as those occurring in exploration seismology requires
+multiple steps. In addition, the data size can be too large for
+storing data objects in memory (a typical modern seismic survey
+generates terabytes of data). We break the data analysis chain into
+multiple steps by writing short programs that implement individual
+steps (``do one thing and do it well'') with control
+parameters specified on the Unix command line. The programs act as
+filters (``work together'') by taking input from a file
+on disk or from a Unix pipe and writing either to disk or to another
+pipe. We adopt a universal data format, called RSF (regularly sampled
+file). The RSF format is based on a text description (``because
+that is a universal interface'') that points to the raw binary
+data stored in a separate file. Conceptually, an RSF file represents a
+regularly sampled multi-dimensional hypercube, while the corresponding
+binary data are stored (or passed through a Unix pipe) in simple
+contiguous arrays for optimally efficient input/output operations [5].
+To assemble data analysis workflows from individual programs, we have
+adopted SCons, a Python-based makelike utility [6]. SCons
+configuration files (SConstruct scripts) are written in Python and
+specify the database of dependencies between input files, programs,
+and target files. SCons supports other useful features, such as
+multithreaded execution. In our extension of SCons, we define four
+specific commands for establishing data-processing dependencies [7]:
+
+``Fetch'' escribes a rule for downloading data
+files from a remote data server or a local data directory. 
+ 
+``Flow'' describes a rule (command or Unix pipeline) for
+generating one or more target files from one or more (or none) source
+files.
+ 
+``Plot'' is similar to ``Flow'' but the target file is a figure.  
+
+``Result'' is similar to ``Plot'' but the
+target file is a final ``result'' figure for inclusion
+in a publication.  
+
+One can think of the Madagascar environment as existing on three
+different levels that correspond to three different stages of research
+activities of a computational scientist:
+
+One can think of the Madagascar environment as existing on three
+different levels that correspond to three different stages of research
+activities of a computational scientist:
+
+1. Implementing a new computational algorithm for data analysis. This
+level involves writing low-level programs (command-line modules).
+
+2. Testing a new algorithm or a new workflow by applying them to
+data. This level involves assembling workflows from existing
+command-line modules and tuning their parameters through repeated
+computational experiments to achieve the desired result.
+
+3. Publishing new results. Results from computational experiments
+(figures in our case) get referenced in papers and included in
+publications.
+
+We adopt SCons for the third level as well, to simplify creation of
+documents that include results from the second level. Customized SCons
+commands create documents from LaTeX sources with output either in PDF
+or HTML format. The HTML format is produced using LaTeX-2HTML [8]. In
+the HTML version, reproducible figures are followed by links to
+SConstruct scripts from level 2 and low-level programs from level 1 in
+order to let the reader verify the details of the computational
+experiment and reproduce it.
+
+\inputdir{figures}
+   \plot{architecture}{width=0.9\textwidth}{Madagascar Software Architecture.}
+
+\section{History of the project}
+
+\section{Book conventions}
+
+\subsection{Note on reproducibility}
+

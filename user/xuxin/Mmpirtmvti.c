@@ -541,8 +541,8 @@ void update(int back)
     DZ = (sf_complex *)calloc(Ncz,sizeof(sf_complex));
     DX = (sf_complex *)calloc(Ncx,sizeof(sf_complex));
 	
-    for (tt = I * 2./Nz * M_PI/dz, iz=0; iz < Ncz; iz++) DZ[iz] = kz[iz] * tt;
-    for (tt = I * 2./Nx * M_PI/dx, ix=0; ix < Ncx; ix++) DX[ix] = kx[ix] * tt;
+    for (tt = I * 2./Nz * SF_PI/dz, iz=0; iz < Ncz; iz++) DZ[iz] = kz[iz] * tt;
+    for (tt = I * 2./Nx * SF_PI/dx, ix=0; ix < Ncx; ix++) DX[ix] = kx[ix] * tt;
 
     if (back) {
 	if (NULL == (Fuus = fopen(fname_uus,"r")))
@@ -855,8 +855,8 @@ void update_tau(int back)
     DZ = (sf_complex *)calloc(Ncz,sizeof(sf_complex));
     DX = (sf_complex *)calloc(Ncx,sizeof(sf_complex));
 	
-    for (tt = I * 2./Nz * M_PI/dz, iz=0; iz < Ncz; iz++) DZ[iz] = kz[iz] * tt;
-    for (tt = I * 2./Nx * M_PI/dx, ix=0; ix < Ncx; ix++) DX[ix] = kx[ix] * tt;
+    for (tt = I * 2./Nz * SF_PI/dz, iz=0; iz < Ncz; iz++) DZ[iz] = kz[iz] * tt;
+    for (tt = I * 2./Nx * SF_PI/dx, ix=0; ix < Ncx; ix++) DX[ix] = kx[ix] * tt;
 
     if (back) {
 	if (NULL == (Fuus = fopen(fname_uus,"r")))

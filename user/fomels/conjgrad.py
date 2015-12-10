@@ -20,7 +20,7 @@
 import rsf.api as rsf
 
 def conjgrad(oper,dat,x0,niter):
-    'Conjugate-gradient algorithm for minimizing |A x - dat|^2'
+    'Conjugate-gradients for minimizing |oper x - dat|^2'
     x = x0
     R = oper(adj=0)[x]-dat      
     for iter in range(niter):

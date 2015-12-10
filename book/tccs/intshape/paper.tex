@@ -1,0 +1,208 @@
+\published{Journal of Seismic Exploration, 24, no. 5, 327-342, (2015)}
+\title{Seismic data interpolation using nonlinear shaping regularization}
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+\author{Yangkang Chen\footnotemark[1], Lele Zhang \footnotemark[2] and Le-wei Mo \footnotemark[3]}
+
+\address{
+\footnotemark[1]Bureau of Economic Geology \\
+John A. and Katherine G. Jackson School of Geosciences \\
+The University of Texas at Austin \\
+University Station, Box X \\
+Austin, TX 78713-8924 \\
+
+\footnotemark[2]
+Institute of Geology and Geophysics, \\
+Chinese Academy of Sciences,\\
+Beijing, China, 102200 \\
+
+\footnotemark[3]Research and Development Technology Group,
+Fairfield Nodal, \\
+1111 Gillingham Lane, \\
+Sugar Land, TX 77478 \\
+}
+
+\lefthead{Chen et al.}
+\righthead{Interpolation using shaping regularization}
+
+\maketitle
+
+\begin{abstract}
+Seismic data interpolation plays an indispensable role in common seismic data processing workflows. Iterative shrinkage thresholding (IST) and projection onto convex sets (POCS) can both be considered as a specific form of nonlinear shaping regularization. Compared with linear form of shaping regularization, the nonlinear version can be more adaptive because the shaping operator is not limited to be linear. With a linear combination operator, we introduce a faster version of nonlinear shaping regularization. The new shaping operator utilizes the information of previous model to better constrain the current model. Both synthetic and field data examples demonstrate that the nonlinear shaping regularization can be effectively used to interpolate irregular seismic data and the proposed faster version of shaping regularization can indeed get obvious faster convergence.
+\end{abstract}
+
+\section{Keywords}
+Seismic data interpolation, nonlinear shaping regularization, faster shaping regularization, iterative shrinkage thresholding, projection onto convex sets
+
+\section{INTRODUCTION}
+Seismic data interpolation plays a fundamental role in seismic data processing, which provides the regularly sampled seismic data for the following jobs like high-resolution processing, wave-equation migration, multiple suppression, amplitude-versus-offset (AVO) or amplitude-versus-azimuth (AVAZ) analysis, and time-lapse studies. There has been a number of effective methods to recover missing seismic traces, these methods can be generally divided into three types. The first type of approach is based on prediction, which utilizes a convolutional prediction filter computed from the low-frequency parts to predict the high-frequency components \cite[]{spitz1991,porsani1999,wang2002}. However, the predictive filtering method can only be applied to regularly sampled seismic data. The second type is a transformed domain method \cite[]{candes20061,abma2006,yangkang20142}, which is based on compressive sensing theory \cite[]{candes20062,donoho2006} to achieve a successful recovery using highly incomplete available data \cite[]{sacchi1998,wang2003,yangkang2014halfthr}. \cite{mostafa2007} proposed a multistep autoregressive strategy which combines the first two types of methods to reconstruct irregular seismic data. The third type is based on the wave equation. This type of method utilize the inherent constraint of the seismic data from wave equation to interpolate seismic data, thus it depends on the known velocity model, which also becomes its limitation \cite[]{canning1996,fomel2003}. Recently, more and more researchers have developed algorithms connecting the interpolation and deblending \cite[]{yangkang2014svmf,yangkang2014nmo} problems for the irregular sampled simultaneous-source data \cite[]{chengbo2013}, which provide new recipes for conventional seismic interpolation problem.
+
+Linear shaping regularization was proposed by \cite{fomel2} for regularizing under-determined geophysical inverse problems. Compared with the commonly used Tikhonov regularization \cite[]{tikhonov1963}, shaping regularization enjoys a number of advantages, including easier control on properties of the estimated model or in some cases significantly faster convergence. In the past five years, the linear form of shaping regularization has been utilized broadly. \cite{fomel2007localattr} used it to define the local correlation, which was then utilized by \cite{guochang2009,guochang20111} for optimal stacking and by \cite{guochang20113,liuyang2012} for local time-frequency analysis. \cite{guochang2010} proposed to use shaping regularized inversion to estimate the Q factor of seismic attenuation by 
+treating a spectral division as a non-stationary inversion problem. \cite{guochang2012} applied shaping regularization to random noise attenuation, and achieved a better result than $f-x$ predictive filter in the case of non-stationary seismic signal. \cite{zengbao2012} found an application of smooth shaping in Gabor deconvolution. All these methods use a linear operator to constrain the model when iteratively solving the inverse problem.
+
+\cite{fomel2} extended linear shaping regularization to its nonlinear form. In the nonlinear form, the shaping operator is not limited to be linear, and thus produce more convenience in implementing the iterative framework. However, the properties and applications of nonlinear form of shaping regularization have been barely mentioned since that. In this abstract, we build a bridge among the well known iterative shrinkage thresholding (IST), projection onto convex sets (POCS) algorithms and shaping regularization. We derive the two well-known inversion formulations (IST and POCS) in the basis of shaping regularization. We also propose a faster version of shaping regularization, where a linear combination operator is used. The faster version utilizes the information of both the current and previous shaping regularized model to form a new model, which demonstrates an obviously faster convergence.
+
+\section{Theory}
+\subsection{Review of nonlinear shaping regularization}
+Supposing $\mathbf{m}$ is a model vector and $\mathbf{d}$ is the data after applying a forward operator $\mathbf{F}$. Nonlinear shaping regularization is used for solving the following equation:
+\begin{equation}
+\label{eq:shape1}
+\mathbf{F}[\mathbf{m}]=\mathbf{d},
+\end{equation}
+using an iterative framework:
+\begin{equation}
+\label{eq:shape2}
+\mathbf{m}_{n+1} = \mathbf{S}[\mathbf{m}_n+\mathbf{B}[\mathbf{d}-\mathbf{F}[\mathbf{m}_n]]],
+\end{equation}
+where $[\cdot]$ means the forward operator $\mathbf{F}$ is not limited to linear case. $\mathbf{S}$ is the shaping operator which shapes the model to an admissible model iteratively and $\mathbf{B}$ is the backward operator which provides an approximate mapping from data space to model space \cite[]{fomel3}. Specially, when $\mathbf{B}$ is taken as the adjoint of the $\mathbf{F}$ (in the linear case) or the adjoint of the Frechet derivative of $\mathbf{F}$ (in the nonlinear case), and take $\mathbf{S}$ as an identity operator, iteration \ref{eq:shape2} becomes a famous \emph{Landweber} iteration \cite[]{landweber}. Iteration \ref{eq:shape2} can get converged if the spectral radius of the operator on the right hand side is less than one \cite[]{collatz1966}.
+
+\subsection{Interpolation using shaping regularization}
+The basic target of seismic interpolation is to solve the following equation:
+\begin{equation}
+\label{eq:int1}
+\mathbf{d}_{obs}=\mathbf{Md},
+\end{equation}
+where $\mathbf{d}_{obs}$ is the observed data which is regularly or irregularly sampled, $\mathbf{d}$ is the unknown data we want to reconstruct and $\mathbf{M}$ is the sampling matrix \cite[]{liubin2004} or so-called mask operator \cite[]{liu,mostafa2010}. The mask operator has a diagonal structure, which is composed by zero and identity matrix:
+\begin{equation}
+\label{eq:mask}
+\mathbf{M} = \left[\begin{array}{cccccccc} 
+\mathbf{I} & 	       & 	  & 	     &		 &	\\
+	   &\mathbf{O} & 	  &	     &		 &	\\
+	   &           &\mathbf{I}&	     &		 &	\\
+	   &  	       &          &\mathbf{I}&	         & 	\\
+	   &	       &	  &	     &\mathbf{\ddots} & \\
+	   &	       &	  &	     &		 & \mathbf{I} 
+\end{array}\right].
+\end{equation}
+Each $\mathbf{I}$ in equation \ref{eq:mask} corresponds to sampling a trace, and each $\mathbf{O}$ corresponds to missing a trace.
+As equation \ref{eq:int1} is under-determined, addition constraint is required in order to solve the equation. By applying a regularization term, we get a least-squares minimization solution for solving equation \ref{eq:int1}:
+\begin{equation}
+\label{eq:int2}
+\hat{\mathbf{d}}=\arg\min_{\mathbf{d}}\Arrowvert \mathbf{d}_{obs}-\mathbf{Md}\Arrowvert_2^2+\mathbf{R}(\mathbf{d}),
+\end{equation}
+where $\mathbf{R}$ is a regularization operator and $\Arrowvert\cdot\Arrowvert_2^2$ denotes the square of $L_2$ norm.
+Alternatively, we can use the shaping regularization framework \ref{eq:shape2}, and substitute $\mathbf{m}$ with $\mathbf{d}$, then, $\hat{\mathbf{d}}$ is obtained through the following iteration equation:
+\begin{equation}
+\label{eq:int3}
+\mathbf{d}_{n+1}=\mathbf{S}\left[\mathbf{d}_n+\mathbf{B}[\mathbf{d}_{obs}-\mathbf{Md}_n]\right].
+\end{equation}
+In equation \ref{eq:int3}, $\mathbf{S}$ can be selected as any linear or nonlinear operator for reasonable constraint, as long as the equation converges. Thus it offers us much freedom to control the model behavior. The shaping regularization framework is a very general iterative framework, which can be generalized into different commonly known interpolation techniques. Because the shaping operator can be chosen as a constraining operators such as soft thresholding in a sparsity promoting transformed domain, or as rank reduction in the Fourier transform domain \cite[]{mssa}.
+
+\subsection{Connection with iterative shrinkage thresholding}
+The well-known iterative shrinkage-thresholding (IST) algorithm is used for solving equation \ref{eq:int1} with a sparsity-promoting constraint:
+\begin{equation}
+\label{eq:ist1}
+\mathbf{x}_{n+1} = \mathbf{T}[\mathbf{x}_n+\mathbf{K}^H(\mathbf{d}_{obs}-\mathbf{K}\mathbf{x}_n)]
+\end{equation}
+where $\mathbf{x}$ is the transformed domain data such that $\mathbf{d}=\mathbf{A}\mathbf{x}$, $\mathbf{A}$ is a tight frame such that $\mathbf{x}=\mathbf{A}^H\mathbf{d}$ and $\mathbf{A}^{-1}=\mathbf{A}^{H}$ (e.g. Fourier transform), $\mathbf{T}$ is a nonlinear thresholding operator, $\mathbf{K}=\mathbf{MA}$ and $[\cdot]^H$ denotes adjoint. Considering that $\mathbf{d_{n+1}}=\mathbf{A}\mathbf{x}_{n+1}$, $\mathbf{M}^H=\mathbf{M}$ and $\mathbf{MM}=\mathbf{M}$ , combined with equation \ref{eq:ist1}, we get:
+\begin{equation}
+\label{eq:prove1}
+\begin{split}
+\mathbf{d}_{n+1} &= \mathbf{A} \mathbf{x}_{n+1} \\
+	&= \mathbf{A} \mathbf{T} [\mathbf{x}_n+\mathbf{K}^H(\mathbf{d}_{obs}-\mathbf{K}\mathbf{x}_n)] \\
+	&= \mathbf{A} \mathbf{T} [\mathbf{A}^H\mathbf{d}_n+(\mathbf{MA})^H (\mathbf{d}_{obs} - \mathbf{MAA}^H\mathbf{d}_n)] \\
+	&= \mathbf{A} \mathbf{T} [\mathbf{A}^H\mathbf{d}_n+\mathbf{A}^H\mathbf{M}^H\mathbf{d}_{obs}-\mathbf{A}^H\mathbf{M}^H\mathbf{M}\mathbf{d}_n] \\
+	&= \mathbf{A} \mathbf{T} [\mathbf{A}^H (\mathbf{d}_n+\mathbf{Md}_{obs}-\mathbf{M}\mathbf{d}_n)] \\
+	&= \mathbf{A} \mathbf{T} \mathbf{A}^H [\mathbf{d}_n+\mathbf{d}_{obs}-\mathbf{M}\mathbf{d}_n],
+\end{split}
+\end{equation}
+which is equal to equation \ref{eq:int3} with $\mathbf{S}$ chosen as $\mathbf{ATA}^H$ and $\mathbf{B}$ taken as an identity operator.
+Thus, we prove that the IST and shaping regularization are actually mathematically equivalent.
+
+\subsection{Connection with projection onto convex sets}
+If we define: 
+\begin{align}
+\label{eq:pocs1}
+\mathbf{d}'_n &=\mathbf{d}_n+\mathbf{B}[\mathbf{d}_{obs}-\mathbf{Md}_n] \\
+\label{eq:pocs2}
+\mathbf{S} &= \mathbf{d}_{obs} + (\mathbf{I}-\mathbf{M})\mathbf{ATA}^H[\mathbf{d}'_n]
+\end{align}
+and takes $\mathbf{B}=\mathbf{I}-\mathbf{M}$, then equation \ref{eq:int3} turns to:
+\begin{equation}
+\label{eq:pocs3}
+\begin{split}
+\mathbf{d}_{n+1} &= \mathbf{d}_{obs} + (\mathbf{I}-\mathbf{M})\mathbf{ATA}^H[\mathbf{d}'_n] \\
+    		 &= \mathbf{d}_{obs} + (\mathbf{I}-\mathbf{M})\mathbf{ATA}^H[\mathbf{d}_n+(\mathbf{I}-\mathbf{M})(\mathbf{d}_{obs}-\mathbf{Md}_n)] \\
+	  	 &= \mathbf{d}_{obs} + (\mathbf{I}-\mathbf{M})\mathbf{ATA}^H[\mathbf{d}_n+(\mathbf{I}-\mathbf{M})\mathbf{d}_{obs}-(\mathbf{I}-\mathbf{M})\mathbf{Md}_n] \\
+		 &= \mathbf{d}_{obs} + (\mathbf{I}-\mathbf{M})\mathbf{ATA}^H[\mathbf{d}_n-\mathbf{I}\mathbf{Md}_n+\mathbf{M}\mathbf{Md}_n] \\
+		 &= \mathbf{d}_{obs} + (\mathbf{I}-\mathbf{M})\mathbf{ATA}^H[\mathbf{d}_n].
+\end{split}
+\end{equation}
+The last line of equation \ref{eq:pocs3} is the formulation of what we call POCS. We derive POCS from the framework of nonlinear shaping regularization and thus prove that POCS is no more than a special nonlinear shaping regularization iteration.
+
+
+\subsection{Faster nonlinear shaping regularization}
+Using the definition of equation \ref{eq:pocs1}, we define a new shaping operator as:
+\begin{equation}
+\label{eq:fshape1}
+\mathbf{S}'=\mathbf{L}(\mathbf{S}[\mathbf{d}'_n],\mathbf{S}[\mathbf{d}'_{n-1}]),
+\end{equation}
+where $\mathbf{S}'$ is a new version of the commonly defined $\mathbf{S}$ shown in equation \ref{eq:int3} and $\mathbf{L}(\cdot,\cdot)$ denotes a linear combination operator. This new shaping operation apply a biased combination between the current model and the previous model, thus is thought to be faster.
+
+Substituting $\mathbf{S}$ in equation \ref{eq:int3} with $\mathbf{S}'$ in equation \ref{eq:fshape1}, and combined with equation \ref{eq:pocs2}, we get a faster version of shaping regularization:
+\begin{equation}
+\label{eq:fshape2}
+\mathbf{d}_{n+1} = \mathbf{L}(\mathbf{S}[\mathbf{d}'_n],\mathbf{S}[\mathbf{d}'_{n-1}]).
+\end{equation}
+
+The linear combination operator $\mathbf{L}(\mathbf{a},\mathbf{b})$ can be defined as 
+\begin{equation}
+\label{eq:fshape3}
+\mathbf{L}(\mathbf{a},\mathbf{b})=\alpha\mathbf{a}+\beta\mathbf{b},
+\end{equation}
+where $\alpha+\beta=1$.
+
+\subsection{Comparison with the traditional methods and limitation discussion}
+\new{The shaping regularization can be viewed as a general framework for any inversion problem, including the seismic data recovery problem. The normal shaping regularization can be viewed as POCS or IST, which are two most commonly used approaches for interpolating irregularly sampled seismic data in the literature. The faster version shaping regularization can be viewed a breakthrough in accelerating the convergence for the conventional approach. Thus, the comparison between faster and normal shaping regularization corresponds to the a comparison between the proposed approach with other approaches cited in the introduction, such as the POCS approach \cite[]{abma2006}.}
+
+\new{The traces should be randomly sampled spatially and binned to regular spatial grids. The limitation of the interpolation approaches is that the largest gap between two neighbor traces should not be very large. There also exist a lot of researches in the literature trying to solve this limitation by raising different kinds of sampling approaches, such as \cite{hennenfent2008} and \cite{herrmann2010}.}
+ 
+ 
+\section{Example}
+\subsection{Synthetic example}
+We first use a simple synthetic example (see Figure \ref{fig:complex}) to demonstrate the interpolation effect of the faster version of shaping regularization. The synthetic data is composed of four different dipping events. We randomly removed 30\% traces to form the irregularly sampled section (see Figure \ref{fig:complex-zero}). After applying the iterative interpolation formulation \ref{eq:int3}, and substituting $\mathbf{S}$ with $\mathbf{S}'$ defined in equation \ref{eq:fshape1} and \ref{eq:pocs2}, we get the interpolated section (see Figure \ref{fig:complex-recon}). The reconstructed result using the faster shaping regularization after only 20 iterations, as shown in Figure \ref{fig:complex-recon}, is nearly the same as the reconstructed result using the normal shaping regularization after 40 iterations, as shown in Figure \ref{fig:complex-recon-o}. This confirms that the normal and faster shaping regularizations can obtain the same converged results, but the faster shaping regularization can save the iteration cost greatly.%The difference section between Figures \ref{fig:complex} and \ref{fig:complex-recon} is shown in Figure \ref{fig:complex-error}. 
+%The reason we use faster POCS based shaping regularization instead of IST based version is that POCS has been demonstrated to be faster.
+The FK domain spectrum corresponding to each figure in Figure \ref{fig:complex,complex-zero,complex-recon-o,complex-recon} are shown in Figure \ref{fig:complex-fk,complex-zerofk,complex-reconfk-o,complex-reconfk}. Note that in this synthetic case $\alpha=1.5$ and $\beta=-0.5$.
+From Figures \ref{fig:complex-recon-o} and \ref{fig:complex-recon} , we find pleasant interpolation results because those missing traces are all filled up with coherent reflection components. Figure \ref{fig:complex-fk,complex-zerofk,complex-reconfk-o,complex-reconfk} further demonstrate the successful reconstruction, because the FK spectrum after interpolation is nearly the same as that of the original profile. Figure \ref{fig:complex-error-o} shows the error section using shaping regularization after 40 iterations and Figure \ref{fig:complex-error} shows the error section using faster shaping regularization after 20 iterations. The error sections shown in Figures \ref{fig:complex-error-o} and \ref{fig:complex-error} are nearly the same, which also confirms the faster convergence rate of the faster shaping regularization.
+
+In order to test the convergence rate, we first define the measure to estimate the interpolation effect as 
+$SNR$ \cite[]{yangkang2015}:
+\begin{equation}
+\label{eq:snr}
+SNR=10\log_{10}\left(\frac{\Arrowvert \mathbf{d} \Arrowvert_2^2}{\Arrowvert\mathbf{d}-\hat{\mathbf{d}}\Arrowvert_2^2}\right),
+\end{equation}
+where $\hat{\mathbf{d}}$ denotes the estimated model, and the unit of $SNR$ is $dB$. Figure \ref{fig:SNRs} shows the convergence diagrams of normal shaping regularization and faster shaping regularization. It's obvious that the proposed faster version can get a faster convergence. 
+
+\inputdir{fsyn}
+\multiplot{4}{complex,complex-zero,complex-recon-o,complex-recon}{width=0.43\textwidth}{Synthetic example demonstration for seismic interpolation using shaping regularization. (a) Original synthetic data. (b) Irregularly sampled section by randomly removing 30\% traces. (c) Reconstructed section using shaping regularization after 40 iterations. (d) Reconstructed section using faster shaping regularization with 20 iterations.}
+\multiplot{4}{complex-fk,complex-zerofk,complex-reconfk-o,complex-reconfk}{width=0.43\textwidth}{FK domain demonstration corresponding to Figure \ref{fig:complex,complex-zero,complex-recon-o,complex-recon}. (a) FK domain for original synthetic data. (b) FK domain for irregularly sampled section. (c) FK domain for reconstructed section using shaping regularization after 40 iterations. (d) FK domain for reconstructed section using faster shaping regularization after 20 iterations.}
+
+\multiplot{4}{complex-error-o,complex-error,complex-errorfk,complex-errorfk-o}{width=0.43\textwidth}{Error sections demonstration for synthetic example. (a) Error section using shaping regularization after 40 iterations. (b) Error section using faster shaping regularization after 20 iterations. (c) FK domain of (a). (d) FK domain of (b). }
+
+\plot{SNRs}{width=0.8\textwidth}{The SNR curves with normal and faster shaping regularization in the case of synthetic data. The solid line is for normal shaping regularization and the dashed line is for faster shaping regularization.}
+
+\subsection{Field example}
+The field data is from a marine 2-D common shot gather from a deep water Gulf of Mexico survey. The data is same as that used by \cite{fomel2002pwd}. In the example, we randomly remove 30\% of the total traces and apply the same iterative framework as that of the previous synthetic example. The interpolation effect and FK domain spectrum are shown in Figures \ref{fig:sean,sean-zero,sean-recon-o,sean-recon} and \ref{fig:sean-fk,sean-zerofk,sean-reconfk-o,sean-reconfk}, respectively. Figures \ref{fig:sean-recon-o} and \ref{fig:sean-recon}, \ref{fig:sean-reconfk-o} and \ref{fig:sean-reconfk} both demonstrate pleasant reconstructions of the normal and faster shaping regularization,  but in time-space and frequency-wavenumber domain respectively. \new{Figures \ref{fig:sean-error-o} and \ref{fig:sean-error} show the error sections using the traditional shaping regularization after 20 iterations and the faster shaping regularization after 10 iterations, respectively. The two error sections are generally the same, indicating an equivalent interapolation performance and a faster convergence of the faster shaping regularization. Figures \ref{fig:sean-errorfk} and\ref{fig:sean-errorfk-o} show the corresponding FK spectrum of the two error sections that are shown in Figures \ref{fig:sean-error-o} and \ref{fig:sean-error}. } The convergence diagrams are shown in Figure \ref{fig:SNRs-sean}, which demonstrate a faster convergence of the proposed faster version of shaping regularization. In this field data case, $\alpha$ and $\beta$  are chosen the same values as those of the previous synthetic example. 
+
+\inputdir{sean}
+\multiplot{4}{sean,sean-zero,sean-recon-o,sean-recon}{width=0.43\textwidth}{Field data demonstration for seismic interpolation using shaping regularization. (a) Original synthetic data. (b) Irregularly sampled section by randomly removing 30\% traces. (c) Reconstructed section using shaping regularization after 20 iterations. (d) Reconstructed section using faster shaping regularization with 10 iterations.}
+
+\multiplot{4}{sean-fk,sean-zerofk,sean-reconfk-o,sean-reconfk}{width=0.43\textwidth}{FK domain demonstration corresponding to Figure \ref{fig:sean,sean-zero,sean-recon-o,sean-recon}. (a) FK domain for original synthetic data. (b) FK domain for irregularly sampled section. (c) FK domain for reconstructed section using shaping regularization after 20 iterations. (d) FK domain for reconstructed section using faster shaping regularization after 20 iterations.}
+
+\multiplot{4}{sean-error-o,sean-error,sean-errorfk,sean-errorfk-o}{width=0.43\textwidth}{Error sections demonstration for field data example. (a) Error section using shaping regularization after 20 iterations. (b) Error section using faster shaping regularization after 10 iterations. (c) FK domain of (a). (d) FK domain of (b). }
+
+\plot{SNRs-sean}{width=0.8\textwidth}{The SNR curves with normal and faster shaping regularization in the case of real data. The solid line is for normal shaping regularization and the dashed line is for faster shaping regularization.}
+
+\section{Conclusion}
+We have proposed a new algorithm for interpolating irregularly sampled seismic data using shaping regularization. The shaping regularization framework is a very general iterative framework, which can be generalized into different commonly known interpolation techniques, such as the iterative thresholding algorithm, iterative rank reduction, and so on. We derive the IST and POCS in the framework of shaping regularization, which indicates that IST and POCS both can be considered as a special type of shaping regularization with corresponding shaping operation. We also propose a faster version of shaping regularization which uses a linear combination of the current and previous shaping regularized model as the new shaping operator. Both synthetic and field data show pleasant interpolation results using nonlinear shaping regularization and also suggest that the faster version of shaping regularization can improve the convergence rate greatly. 
+
+\section{Acknowledgement}
+Yangkang would like to thank Sergey Fomel for teaching him the theory about shaping regularization and FairfieldNodal for providing him an opportunity for a summer internship. We are also grateful to developers of the Madagascar software package \cite[]{mada2013} for providing corresponding codes for testing the algorithms and preparing the figures. All the examples are reproducible in the Madagascar platform.
+
+
+\onecolumn
+\bibliographystyle{seg}
+\bibliography{shape}
+
+
+

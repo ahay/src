@@ -23,11 +23,24 @@ To the reproducible documents collection:
   and orthorhombic media (Sripanich and Fomel)
 * tccs/dbortho: Iterative deblending with multiple constraints based
   on shaping regularization (Chen)
+* lju/vdseislet: Signal and noise separation in prestack seismic data
+  using velocity-dependent seislet transform (Liu, Fomel, and Liu)
+* tccs/fraclapl: Viscoacoustic modeling and imaging using low-rank
+  approximation (Sun, Zhu, and Fomel)
+* tccs/svmf: Deblending using a space-varying median filter (Chen)
+* tccs/shemd: Random noise attenuation by a selective hybrid approach
+  using f-x empirical mode decomposition (Chen, Gan, Liu, Yuan,
+  Zhang, and JIn) 
+* tccs/orthogroll: Ground-roll noise attenuation using a simple and
+  effective approach based on local bandlimited orthogonalization
+  (Chen, Jiao, Ma, Chen, Zhou, and Gan)
+* tccs/intshape: Seismic data interpolation using nonlinear shaping
+  regularization (Chen, Zhang, and Mo)
 
 To SCons:
 
 * splitting auxiliary inputs when split= involves 'omp' or 'mpi'
-* Upgraded to scons-2.3.6
+* Upgraded to scons-2.4.1
 
 To documentation:
 

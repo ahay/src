@@ -31,6 +31,7 @@ An addition operation can be performed by sfadd.
 
 #include <string.h>
 #include <rsf.h>
+
 #include "segy.h"
 
 int main(int argc, char* argv[])
@@ -40,7 +41,7 @@ int main(int argc, char* argv[])
     sf_file in, out;
     int mem; /* for avoiding int to off_t typecast warning */
     off_t memsize;
-    char *eq=NULL, *output=NULL, *key=NULL, *arg=NULL;
+    char *eq, *output, *key, *arg;
     float **ftra=NULL, **fbuf=NULL, **fst=NULL, d2, o2;
     int **itra=NULL, **ibuf=NULL, **ist=NULL;
     sf_datatype type;

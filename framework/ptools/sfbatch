@@ -19,7 +19,7 @@
 import os, sys, time
 
 required_pars=dict(
-    batch= 'pbs or slurm', 
+    batch= 'pbs, sge, or slurm', 
     job=   'script name',
     path=  'directory path',
     queue= 'type of the queue',
@@ -150,6 +150,24 @@ elif batch == 'slurm':
     f.write('cd '+path+'\n')
     f.write(exe + '\n')
     f.write('echo $SLURM_JOBID > ' + jobid + '\n')
+    f.close()
+elif batch == 'sge':
+    submit = '/usr/bin/qsub'
+    jobfile = job + '.sge'
+    f = open(jobfile,'w')
+    f.write('#$ -N ' + job + '\n')
+    f.write('#$ -A ' + acct + '\n')
+    f.write('#$ -V\n')
+    f.write('#$ -l h_rt=' + wall + '\n')
+    f.write('#$ -pe %dway %d\n' % (ppn,nodes))
+    f.write('#$ -q '+queue + '\n')
+    f.write('#$ -m abe\n')
+    f.write('#$ -M '+ mail + '\n')
+    f.write('#$ -o '+job+'.%j.out\n')
+    f.write('#$ -e '+job+'.%j.err\n')
+    f.write('cd '+ path +'\n')
+    f.write(exe + '\n')
+    f.write('echo $JOB_ID > ' + jobid + '\n')
     f.close()
 else:
     print '''

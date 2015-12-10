@@ -73,8 +73,8 @@ int main(int argc, char* argv[])
 
     for (i2=0; i2 < n2; i2++) {
 	for (i1=0; i1 < n1; i1++) {
-	    vr[i2][i1] *= vr[i2][i1]*(i1+1.); /* vrms^2*t - data */
-	    wt[i2][i1] *= wti/(i1+1.); /* decrease weight with time */	 
+	    vr[i2][i1] *= vr[i2][i1]*(i1+1.0f); /* vrms^2*t - data */
+	    wt[i2][i1] *= wti/(i1+1.0f); /* decrease weight with time */	 
 	    v0[i2][i1] = -vr[i2][0];
 	}
 	sf_causint_lop(false,true,n1,n1,v0[i2],vr[i2]);
@@ -92,7 +92,7 @@ int main(int argc, char* argv[])
 
     for (i2=0; i2 < n2; i2++) {
 	for (i1=0; i1 < n1; i1++) {
-	    vr[i2][i1] = sqrtf(fabsf(vr[i2][i1]/(i1+1.)));
+	    vr[i2][i1] = sqrtf(fabsf(vr[i2][i1]/(i1+1.0f)));
 	    vi[i2][i1] = sqrtf(fabsf(vi[i2][i1]));
 	}
     }

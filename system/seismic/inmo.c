@@ -22,6 +22,7 @@
 #include <rsf.h>
 
 #include "stretch4.h"
+#include "bandpass.h"
 
 static int nh, nt, ns, jump;
 static float *stretch, **dense2, **sparse2; 
@@ -172,9 +173,22 @@ void interpolate(float **sparse, float **dense)
 void inmo_oper(int nx, const float *trace, float *trace2, void* user_data)
 /*< operator to invert by GMRES >*/
 {
+    int it;
+    
+    /* forward operator */
     inmo(trace,dense2);
     subsample(dense2,sparse2);
+    /* backward operator */
     interpolate(sparse2,dense2);
     nmostack(dense2,trace2);
+
+    /* I + S (BF - I) */
+    for (it=0; it < nt; it++) {
+	trace2[it] -= trace[it];
+    }
+    bandpass(trace2);
+    for (it=0; it < nt; it++) {
+	trace2[it] += trace[it];
+    }
 }
 	      

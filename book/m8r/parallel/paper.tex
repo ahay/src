@@ -1,0 +1,23 @@
+\chapter{Parallel processing in Madagascar}
+
+Modern computers provide parallel computing facilities in the form of
+either multiple processing units on one node or multiple distributed
+nodes in a cluster. By taking advantage of parallel architectures,
+many computational tasks can be significantly accelerated.
+
+A particularly simple yet practically important case is \emph{data
+  parallel} algorithms, where the input data can be split into
+parallel chunks, processed in parallel by serial algorithms and then
+accumulated back into one data stream. Madagascar provides a number of
+convenient tools for running serial code into a data parallel fashion
+without the need to resolve to low-level programming.
+
+\section{OpenMP programming and sfomp}
+
+\section{MPI programming and sfmpi}
+
+\section{GPU programming}
+
+\section{Parallel processing in SCons: pscons}
+
+\section{Parallel processing on shared clusters: sfbatch} 
