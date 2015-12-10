@@ -7,7 +7,7 @@
 
 import fcntl, os, string, sys
 
-hosts_file=sys.argv[1]
+hosts_file='hosts.txt'  #sys.argv[1] attempt to make this a parm makes pscons rerun
 hosts_fd=open(hosts_file,'r+')
 
 #hosts.txt file contains:
@@ -49,7 +49,8 @@ fcntl.lockf(hosts_fd,fcntl.LOCK_UN)
 #print "hosts_fd.txt unlocked"
 
 # make a string that contains all the args that appear after runonnode.py
-command=string.join(sys.argv[2:])
+# attempt to make hosts.txt a parameter makes pscons do unnessary reruns 
+command=string.join(sys.argv[1:])     # was command=string.join(sys.argv[2:])
 
 task="ssh "+host+' \"'+command+' \"'
 
@@ -68,7 +69,7 @@ hosts_txt[2+idle_node]=string.ljust(host,40)+string.ljust("notrunning",10)+"\n"
 hosts_fd.seek(0)   
 for line in hosts_txt:
     hosts_fd.write(line)
-hosts_fd.flush()   # this will actually mode buffer to output file
+hosts_fd.flush()   # this will actually move buffer to output file
 fcntl.lockf(hosts_fd,fcntl.LOCK_UN)
 
 
