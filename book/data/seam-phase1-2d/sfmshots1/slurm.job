@@ -6,7 +6,7 @@
 #SBATCH -N 10           #Number nodes to run on 
 #SBATCH -n 150           # total number of MPI tasks.  I guess each node gets n/N
 #SBATCH -t 2:00:00    #maximum time
-#SBATCH -A Madagascar-workshop  #account to charge
+#SBATCH -A TCCS #account to charge
 
 echo SLURM_NNODES=$SLURM_NNODES
 echo SLURM_TASKS_PER_NODE=$SLURM_TASKS_PER_NODE
