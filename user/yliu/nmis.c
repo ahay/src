@@ -49,5 +49,4 @@ void nmis(int niter         /* number of iterations */,
 
 }
 
-/* 	$Id$	 */
 

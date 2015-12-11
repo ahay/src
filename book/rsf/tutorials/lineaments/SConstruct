@@ -1,10 +1,5 @@
 from rsf.proj import *
-
-color='cube1_0-1.csv'
-
-Fetch(color,'1508_Mapping_and_validating_lineaments',
-      server='https://raw.githubusercontent.com',
-      top='seg/tutorials/master')
+from math import pi
 
 # import Bouguer gravity residual map
 Fetch('continued.txt','1508_Mapping_and_validating_lineaments',
@@ -13,16 +8,125 @@ Fetch('continued.txt','1508_Mapping_and_validating_lineaments',
 
 Flow('continued','continued.txt',
      '''
-     echo n1=81 n2=81 data_format=ascii_float in=$SOURCE |
+     echo n1=81 n2=81 data_format=ascii_float in=$SOURCE 
+     o1=8 d1=-0.1 label1=Y o2=0 d2=0.1 label2=X |
      dd form=native
      ''')
 
-Result('continued','grey title="Bouguer anomaly" screenratio=1 scalebar=y')
+Result('continued','grey title="Bouguer anomaly" screenratio=1 scalebar=y transp=n')
 
 for case in ('xc','yc'):
-    txt = case + '.txt'
+    txt = case+'.txt'
     Fetch(txt,'1508_Mapping_and_validating_lineaments',
           server='https://raw.githubusercontent.com',
           top='seg/tutorials/master')
+    Flow(case,case+'.txt',
+         '''
+         echo n1=81 n2=81 data_format=ascii_float in=$SOURCE |
+         dd form=native
+         ''')
+
+Flow('dx','continued','transp | smooth rect1=3 | deriv scale=1 | transp')
+Flow('dy','continued','smooth rect1=3 | deriv scale=1')
+
+Flow('left','continued','window n2=1 | spray axis=2 n=81')
+Flow('right','continued','window n2=1 f2=-1 | spray axis=2 n=81')
+Flow('pad2','left continued right','cat axis=2 ${SOURCES[1:3]}')
+
+Flow('top','pad2','window n1=1 | spray axis=1 n=81')
+Flow('bottom','pad2','window n1=1 f1=-1 | spray axis=1 n=81')
+Flow('pad','top pad2 bottom','cat axis=1 ${SOURCES[1:3]}')
+
+Flow('dz','pad',
+     '''
+     fft1 | fft3 axis=2 | 
+     sfmath output="input*%g*sqrt(x1*x1+x2*x2)" |
+     fft3 axis=2 inv=y | fft1 inv=y |
+     smooth rect1=3 rect2=3 |
+     window n1=81 n2=81 f1=81 f2=81
+     ''' % (2*pi))
+
+for case in ('dx','dy','dz'):
+    Result(case,'grey title="%s" screenratio=1 scalebar=y transp=n' % case)
+
+Flow('tdx','dx dy','math dx=${SOURCES[0]} dy=${SOURCES[1]} output="sqrt(dx*dx+dy*dy)" ')
+
+def bplot(title):
+    return '''
+    grey title="%s" 
+    screenratio=1 scalebar=y mean=y color=B transp=n 
+    ''' % title
+
+Result('tdx',bplot('Total Horizontal Derivative'))
+
+Flow('tilt','dz tdx','math tdx=${SOURCES[1]} output="input&tdx" ')
+Flow('dxt','tilt','transp | smooth rect1=3 | deriv scale=1 | transp')
+Flow('dyt','tilt','smooth rect1=3 | deriv scale=1')
+
+Flow('thdr','dxt dyt','math dx=${SOURCES[0]} dy=${SOURCES[1]} output="sqrt(dx*dx+dy*dy)" ')
+
+Result('thdr',bplot('THDR'))
+
+Flow('theta','tdx dx dy dz',
+     '''
+     math dx=${SOURCES[1]} dy=${SOURCES[2]} dz=${SOURCES[3]} 
+     output="input/sqrt(dx*dx + dy*dy +dz*dz)"
+     ''')
+
+Result('theta',bplot('Theta'))
+
+# import NSTD, normalized standard deviation of data
+Fetch('nstd.txt','1508_Mapping_and_validating_lineaments',
+      server='https://raw.githubusercontent.com',
+      top='seg/tutorials/master')
+
+Flow('nstd','nstd.txt',
+     '''
+     echo n1=73 n2=73 data_format=ascii_float in=$SOURCE |
+     dd form=native
+     ''')
+
+Result('nstd',bplot('NSTD'))
+
+Result('dzcont','dz','contour screenratio=1 transp=n allpos=n nc=1 c0=0 title="dz contour" ')
+
+Flow('tdxn','tdx dz','math dz=${SOURCES[1]} output="input&abs(dz)" ')
+
+Result('tdxn',bplot('TDXN'))
+
+color='cube1_0-1.csv'
+
+Fetch(color,'1508_Mapping_and_validating_lineaments',
+      server='https://raw.githubusercontent.com',
+      top='seg/tutorials/master')
+
+Result('color',['continued',color],'grey title="Bouguer anomaly" screenratio=1 scalebar=y transp=n color=${SOURCES[1]}')
+
+# Mac to Unix text conversion
+Flow('color',color,"awk '{ gsub(\"\\r\", \"\\n\"); print $0;}' | csv2rsf")
+
+Flow('byte','continued','byte | sfdd type=float | put n2=1 n1=%d' % (81*81))
+
+Flow('rgb','color byte','transp | inttest1 coord=${SOURCES[1]} interp=lag nw=1')
+
+Flow('r','rgb','window n2=1 f2=0')
+Flow('g','rgb','window n2=1 f2=1')
+Flow('b','rgb','window n2=1 f2=2')
+
+Flow('cmax','rgb','max axis=2')
+Flow('cmin','rgb','min axis=2')
+Flow('cdif','cmax cmin','add scale=1,-1 ${SOURCES[1]}')
+
+for case in 'rgb':
+    Flow(case+'max',[case,'cmax'],
+         'add scale=1,-1 ${SOURCES[1]} | mask min=0 max=0 | dd type=float')
+
+Flow('rh','rmax g b cdif',
+     'math g=${SOURCES[1]} b=${SOURCES[2]} d=${SOURCES[3]} output="input*(g-b)/d" ')
+Flow('gh','gmax b r cdif',
+     'math b=${SOURCES[1]} r=${SOURCES[2]} d=${SOURCES[3]} output="input*(2+(b-r)/d)" ')
+Flow('bh','bmax r g cdif',
+     'math r=${SOURCES[1]} g=${SOURCES[2]} d=${SOURCES[3]} output="input*(4+(r-g)/d)" ')
+Flow('h','rh gh bh','add ${SOURCES[1:3]} | math output="input/6" ')
 
 End()
