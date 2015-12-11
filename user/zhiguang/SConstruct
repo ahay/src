@@ -35,11 +35,9 @@ env.Prepend(CPPPATH=['../../include'],
             LIBS=[env.get('DYNLIB','')+'rsfpwd',
 				  env.get('DYNLIB','')+'rsf'])
 
-fftw = env.get('FFTW')
+fftw = env.get('FFTWOMP')
 if fftw:
     env.Prepend(CPPDEFINES=['SF_HAS_FFTW'])
-    if not isinstance(fftw,bool):
-        env.Append(LIBS=['fftw3_threads','fftw3'])
 
 if sparsepath and sparselibs:
     env.Prepend(CPPPATH=sparsepath,
@@ -116,7 +114,9 @@ if root: # no compilation, just rename
     pymains = Split(pyprogs)
     exe = env.get('PROGSUFFIX','')
     for prog in pymains:
-        env.InstallAs(os.path.join(bindir,'sf'+prog+exe),'M'+prog+'.py')
+        binary = os.path.join(bindir,'sf'+prog+exe)
+        env.InstallAs(binary,'M'+prog+'.py')
+        env.AddPostAction(binary,Chmod(str(binary),0755))
 
 ######################################################################
 # SELF-DOCUMENTATION

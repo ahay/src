@@ -43,11 +43,9 @@ objs = []
 # ADD FFTW3 LIB
 ##############################################################################
 
-fftw = env.get('FFTW')
+fftw = env.get('FFTWOMP')
 if fftw:
     env.Prepend(CPPDEFINES=['SF_HAS_FFTW'])
-    if not isinstance(fftw,bool):
-        env.Append(LIBS=['fftw3_threads','fftw3'])
 
 ########################################################################
 # C progs and MPI
