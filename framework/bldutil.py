@@ -225,7 +225,7 @@ def depends90(env,list,file):
     fd = open(filename,'r')
     for line in fd.readlines():
         for inc in include90.findall(line):
-            if inc not in list and inc != 'rsf':
+            if inc not in list+['rsf','iso_c_binding']:
                 list.append(inc)
                 depends90(env,list,inc)
     fd.close()

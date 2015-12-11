@@ -1,0 +1,11 @@
+from rsf.proj import *
+from math import pi
+
+Flow('signal',None,
+     '''
+     math n1=501 d1=0.001 label1=Time unit1=s 
+     output="50*sin(%g*x1+%g)+100*sin(%g*x1+%g)" 
+     ''' % (20*pi,pi/5,80*pi,pi/9))
+Plot('signal','graph label2=Amplitude')
+
+End()
