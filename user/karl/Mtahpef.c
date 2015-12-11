@@ -152,7 +152,7 @@ main(int argc, char **argv)
     out = sf_output("out");
 
     if (!sf_histint(inp,"n1_traces",&nt))   
-      sf_error("input data does not defin n1_traces");
+      sf_error("input data does not define n1_traces");
         
     if(!sf_histint(inp,"n1_headers",&n1_headers)) 
       sf_error("input data does not define n1_headers");
