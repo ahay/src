@@ -78,11 +78,11 @@ env.Prepend(CPPPATH=['../../include'],
                   env.get('DYNLIB','')+'rsf'])
 
 # fftw settings
-fftw = env.get('FFTW') 		#fftw = env.get('FFTWOMP')
+fftw = env.get('DFFTW') 		
 if fftw:
     env.Prepend(CPPDEFINES=['SF_HAS_FFTW'])
     if not isinstance(fftw,bool):
-        env.Append(LIBS=['fftw3'])
+        env.Append(LIBS=fftw)
 
 # suitesparse settings
 sparsepath = env.get('SPARSEPATH')

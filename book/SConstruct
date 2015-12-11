@@ -46,6 +46,7 @@ tccs/emdpf/linear
 trip/hug/marm1s_shallow
 tccs/synwav/gch1
 tccs/shemd/hyperoil
+tccs/shemd/synth1
 '''
 
 all =  ARGUMENTS.get('all', 'n')

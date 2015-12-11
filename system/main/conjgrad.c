@@ -57,6 +57,7 @@
 
 int main(int argc, char* argv[])
 {
+    bool stdio;
     int i, iter, niter, p[6][2], status;
     float *buf, *buf2, *wht;
     double rn, rnp, alpha, beta;
@@ -72,7 +73,9 @@ int main(int argc, char* argv[])
     extern off_t ftello (FILE *stream);
 
     sf_init(argc,argv);
-    dat = sf_input("in");
+    stdio = !sf_getstring("--input") && !sf_getstring("--output");
+
+    dat = sf_input(stdio?"in":"--input");
     mod = sf_input("mod");
 
     if (SF_FLOAT != sf_gettype(mod) ||
@@ -408,7 +411,7 @@ int main(int argc, char* argv[])
     }
 	
     /* write x to out */  
-    out = sf_output("out");
+    out = sf_output(stdio? "out":"--output");
     sf_fileflush(out,mod);
 
     xfile = fopen(x,"rb");

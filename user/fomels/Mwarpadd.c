@@ -1,5 +1,4 @@
-/* Add a perturbation to the warping function.
-*/
+/* Add a perturbation to the warping function. */
 /*
 Copyright (C) 2004 University of Texas at Austin
 
@@ -84,4 +83,3 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id$	 */

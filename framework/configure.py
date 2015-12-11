@@ -560,7 +560,7 @@ def ppm(context):
     oldpath = path_get(context,'CPPPATH')
     
     if plat['OS'] == 'darwin':
-	ppmpath = context.env.get('PPMPATH','/opt/local/include/netpbm')
+        ppmpath = context.env.get('PPMPATH','/opt/local/include/netpbm')
     else:
     	ppmpath = context.env.get('PPMPATH','/usr/include/netpbm')
     if os.path.isfile(os.path.join(ppmpath,'ppm.h')):
@@ -1268,6 +1268,30 @@ def fftw(context):
             LIBS.pop()
             need_pkg('fftw', fatal=False)
             return
+    
+    text = '''
+    #include <fftw3.h>
+    int main(int argc,char* argv[]) {
+    fftw_complex *in;
+    fftw_plan p;
+    in = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * 10);
+    p = fftw_plan_dft_1d(10, in, in, FFTW_FORWARD, FFTW_ESTIMATE);
+    fftw_destroy_plan(p);
+    fftw_free(in); 
+    return 0;
+    }\n'''
+    res = context.TryLink(text,'.c')
+    if res:
+        context.env['DFFTW'] = True
+    else:
+        fftw = context.env.get('DFFTW','fftw3')
+        LIBS.append(fftw)
+        res = context.TryLink(text,'.c')
+        if res:
+            context.env['DFFTW'] = fftw
+        else:
+            context.env['DFFTW'] = None
+        LIBS.pop()
 
     context.Message("checking if FFTW supports threads ... ")
     
@@ -2247,6 +2271,7 @@ def options(file):
     opts.Add('SPARSEPATH','SuiteSparse - path to headers')
     opts.Add('SPARSELIBS','SuiteSparse - libraries')
     opts.Add('FFTW','The FFTW library')
+    opts.Add('DFFTW','The double-precision FFTW library')
     opts.Add('FFTWOMP','The FFTW library with openMP support')
     opts.Add('OMP','OpenMP support')
     opts.Add('PTHREADS','Posix threads support')
