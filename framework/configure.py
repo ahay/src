@@ -560,7 +560,7 @@ def ppm(context):
     oldpath = path_get(context,'CPPPATH')
     
     if plat['OS'] == 'darwin':
-	ppmpath = context.env.get('PPMPATH','/opt/local/include/netpbm')
+        ppmpath = context.env.get('PPMPATH','/opt/local/include/netpbm')
     else:
     	ppmpath = context.env.get('PPMPATH','/usr/include/netpbm')
     if os.path.isfile(os.path.join(ppmpath,'ppm.h')):
