@@ -52,13 +52,18 @@ if fftw:
 objects = []
 includes = []
 for source in src:
-    inc = env.RSF_Include(source,prefix='')
-    obj = env.StaticObject(source)
-    env.Depends(obj,inc)
-
-    if os.path.splitext(str(source))[0] in libsrc:
-        objects.append(obj)
-        includes.append(inc)
+        inc = env.RSF_Include(source,prefix='')
+        # clang chokes trying to optimize the compilation of orthovelo
+        if str(source) == 'orthovelo.c' and env['PLATFORM'] == 'darwin':
+                obj = env.StaticObject(source,CFLAGS=env['CFLAGS']+' -O0')
+                orthovelo = obj
+        else:
+                obj = env.StaticObject(source)
+        env.Depends(obj,inc)
+    
+        if os.path.splitext(str(source))[0] in libsrc:
+            objects.append(obj)
+            includes.append(inc)
 
 mains = Split(progs)
 
@@ -79,7 +84,11 @@ docalias = {}
 for prog in mains:
     sources = ['M' + prog]
     bldutil.depends(env,sources,'M'+prog)
-    main = env.Program(prog,map(lambda x: x + '.c',sources))
+    if prog == 'itxmo3' and env['PLATFORM'] == 'darwin':
+        sources.remove('orthovelo')
+        main = env.Program(prog,map(lambda x: x + '.c',sources)+orthovelo)
+    else:
+        main = env.Program(prog,map(lambda x: x + '.c',sources))
     if root:
         install = env.Install(bindir,main[0])
 
