@@ -68,7 +68,6 @@ void dip3(bool left               /* left or right prediction */,
 	  int niter               /* number of nonlinear iterations */, 
 	  int nw                  /* filter size */, 
 	  int nj                  /* filter stretch for aliasing */, 
-	  bool verb               /* verbosity */, 
 	  float *u                /* input data */, 
 	  float* p                /* output dip */, 
 	  bool* mask              /* input mask for known data */,
@@ -134,7 +133,6 @@ void dip3(bool left               /* left or right prediction */,
 	}
     } /* iter */
 
+    allpass_close(ap);
     free(ap);
 }
-
-/* 	$Id$	 */

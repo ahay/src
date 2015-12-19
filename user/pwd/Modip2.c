@@ -1,4 +1,4 @@
-/* 2-D dip estimation by plane wave destruction. */
+/* 2-D dip estimation by omnidirectional plane wave destruction. */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -18,16 +18,15 @@
 */
 #include <rsf.h>
 
-#include "dip3.h"
-#include "mask6.h"
+#include "odip2.h"
 
 int main (int argc, char *argv[])
 {
-    int n123, niter, order, nj1,nj2, i,j, liter, dim;
-    int n[SF_MAX_DIM], rect[3], nr, ir; 
-    float p0, *u, *p, pmin, pmax, eps;
-    bool verb, **mm;
-    sf_file in, out, mask, idip0;
+    int n123, niter, order, i,j, liter, dim;
+    int n[SF_MAX_DIM], rect[2], nr, ir; 
+    float a0, *u, *a, eps;
+    bool verb;
+    sf_file in, out, angle;
 
     sf_init(argc,argv);
     in = sf_input ("in");
@@ -42,10 +41,6 @@ int main (int argc, char *argv[])
     for (j=2; j < dim; j++) {
 	nr *= n[j];
     }
-
-    n[2]= 1;
-    rect[2]=1;
-    nj2=1;
     
     if (!sf_getint("niter",&niter)) niter=5;
     /* number of iterations */
@@ -57,74 +52,53 @@ int main (int argc, char *argv[])
     if (!sf_getint("rect2",&rect[1])) rect[1]=1;
     /* dip smoothness on 2nd axis */
 
-    if (!sf_getfloat("p0",&p0)) p0=0.;
+    if (!sf_getfloat("a0",&a0)) a0=0.;
     /* initial dip */
 
     if (!sf_getint("order",&order)) order=1;
     /* accuracy order */
-    if (!sf_getint("nj1",&nj1)) nj1=1;
-    /* antialiasing */
 
-    if (!sf_getbool("verb",&verb)) verb = false;
+    if (!sf_getbool("verb",&verb)) verb = true;
     /* verbosity flag */
-    if (!sf_getfloat("pmin",&pmin)) pmin = -FLT_MAX;
-    /* minimum dip */
-    if (!sf_getfloat("pmax",&pmax)) pmax = +FLT_MAX;
-    /* maximum dip */
 
-    if (!sf_getfloat("eps",&eps)) eps=0.0f;
+    if (!sf_getfloat("eps",&eps)) eps=1.0f;
     /* regularization */
 
     /* initialize dip estimation */
-    dip3_init(n[0], n[1], n[2], rect, liter, eps, false);
+    odip2_init(n[0], n[1], rect, liter, verb);
 
     u = sf_floatalloc(n123);
-    p = sf_floatalloc(n123);
+    a = sf_floatalloc(n123);
 
-    if (NULL != sf_getstring("mask")) {
-	mm = sf_boolalloc2(n123,2);
-	mask = sf_input("mask");
-    } else {
-	mm = (bool**) sf_alloc(2,sizeof(bool*));
-	mm[0] = mm[1] = NULL;
-	mask = NULL;
-    }
-
-    if (NULL != sf_getstring("idip")) {
+    if (NULL != sf_getstring("angle")) {
 	/* initial in-line dip */
-	idip0 = sf_input("idip");
+	angle = sf_input("angle");
     } else {
-	idip0 = NULL;
+	angle = NULL;
     }
 
     for (ir=0; ir < nr; ir++) {
-	if (verb) sf_warning("slice %d of %d;", ir+1, nr);
-    	if (NULL != mask) {
-	    sf_floatread(u,n123,mask);
-	    mask32 (false, order, nj1, nj2, n[0], n[1], n[2], u, mm);
-	}
 
 	/* read data */
 	sf_floatread(u,n123,in);
 	
 
 	/* initialize t-x dip */
-	if (NULL != idip0) {
-	    sf_floatread(p,n123,idip0);
+	if (NULL != angle) {
+	    sf_floatread(a,n123,angle);
 	} else {
 	    for(i=0; i < n123; i++) {
-		p[i] = p0;
+		a[i] = a0;
 	    }
 	}
 	
-	/* estimate t-x dip */
-	dip3(false, 1, niter, order, nj1, u, p, mm[0], pmin, pmax);
+	/* estimate dip */
+	odip2(niter, order, u, a, eps);
 	
-	/* write t-x dip */
-	sf_floatwrite(p,n123,out);
-	
+	/* write dip */
+	sf_floatwrite(a,n123,out);
     }
-    if (verb) sf_warning(".");
     
     exit (0);
 }
+

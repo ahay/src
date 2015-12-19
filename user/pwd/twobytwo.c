@@ -1,4 +1,4 @@
-/* Weighting with multiple components */
+/* 2 x 2 matrix multiplications */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -16,60 +16,38 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+#include <rsf.h>
 
-#include "_bool.h"
-/*^*/
+#include "twobytwo.h"
 
-#include "weight2.h"
-#include "alloc.h"
-#include "error.h"
-#include "adjnull.h"
-
-static int nw;
 static float **w;
 
-void sf_weight2_init(int nw1   /* number of components */, 
-		     int n     /* model size */, 
-		     float *ww /* weight [nw*n] */)
+void twobytwo_init(float **ww)
 /*< initialize >*/
 {
-    int iw;
-
-    nw = nw1;
-    w = (float**) sf_alloc(nw,sizeof(float*));
-
-    for (iw=0; iw < nw; iw++) {
-	w[iw] = ww+iw*n;
-    }
+    w = ww;
 }
 
-void sf_weight2_close(void)
-/*< free allocated storage >*/
-{
-    free(w);
-}
-
-void sf_weight2_lop (bool adj, bool add, int nx, int ny, float* xx, float* yy)
+void twobytwo_lop (bool adj, bool add, int nx, int ny, float* xx, float* yy)
 /*< linear operator >*/
 {
-    int i, iw;
+    int i, n;
 
-    if (nw*ny != nx) sf_error("%s: size mismatch: %d*%d != %d",
-			      __FILE__,nw,ny,nx);
+    if (ny != nx) sf_error("%s: size mismatch: %d != %d",__FILE__,ny,nx);
 
+    n = nx/2;
+    
     sf_adjnull (adj, add, nx, ny, xx, yy);
   
     if (adj) {
-        for (iw=0; iw < nw; iw++) {
-	    for (i=0; i < ny; i++) {
-	        xx[i+iw*ny] += yy[i] * w[iw][i];
-	    }
+	for (i=0; i < n; i++) {
+	    xx[i]   += yy[i] * w[0][i] + yy[i+n] * w[2][i];
+	    xx[i+n] += yy[i] * w[1][i] + yy[i+n] * w[3][i];
 	}
     } else {
-        for (iw=0; iw < nw; iw++) {
-	    for (i=0; i < ny; i++) {
-	        yy[i] += xx[i+iw*ny] * w[iw][i];
-	    }
+	for (i=0; i < n; i++) {
+	    yy[i]   += xx[i] * w[0][i] + xx[i+n] * w[1][i];
+	    yy[i+n] += xx[i] * w[2][i] + xx[i+n] * w[3][i];
 	}
     }
 }

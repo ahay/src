@@ -1,5 +1,8 @@
 /* Plot Debugger - convert vplot to ascii. 
 
+November 2015 program of the month:
+http://ahay.org/blog/2015/11/16/
+
 See also vplotdiff. */
 /*
   Copyright (C) 1987 The Board of Trustees of Stanford University

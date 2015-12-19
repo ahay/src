@@ -154,7 +154,7 @@ int main (int argc, char *argv[])
 
 	    /* Either scale the order or scale nj1 */
 
-	    dip3(false, 1, niter, is*order, nj1, verb, u2, p2, m2, is*pmin, is*pmax);
+	    dip3(false, 1, niter, is*order, nj1, u2, p2, m2, is*pmin, is*pmax);
 	    dip3_close();
 
 	    /* scale dip */

@@ -173,7 +173,7 @@ int main (int argc, char *argv[])
 	    }
 	    
 	    /* estimate t-x dip */
-	    dip3(false, 1, niter, order, nj1, verb, u, p, mm[0], pmin, pmax);
+	    dip3(false, 1, niter, order, nj1, u, p, mm[0], pmin, pmax);
 	    
 	    /* write t-x dip */
 	    sf_floatwrite(p,n123,out);
@@ -197,7 +197,7 @@ int main (int argc, char *argv[])
 	    }	
 	    
 	    /* estimate t-y dip */
-	    dip3(false, 2, niter, order, nj2, verb, u, p, mm[1], qmin, qmax);
+	    dip3(false, 2, niter, order, nj2, u, p, mm[1], qmin, qmax);
 	    
 	    /* write t-y dip */
 	    sf_floatwrite(p,n123,out);
@@ -218,7 +218,7 @@ int main (int argc, char *argv[])
 	    }
 	    
 	    /* estimate t-x dip */
-	    dip3(true, 1, niter, order, nj1, verb, u, p, mm[2], -pmax, -pmin);
+	    dip3(true, 1, niter, order, nj1, u, p, mm[2], -pmax, -pmin);
 	    
 	    /* write t-x dip */
 	    sf_floatwrite(p,n123,out);
@@ -237,7 +237,7 @@ int main (int argc, char *argv[])
 	    }	
 	    
 	    /* estimate t-y dip */
-	    dip3(true, 2, niter, order, nj2, verb, u, p, mm[3], -qmax, -qmin);
+	    dip3(true, 2, niter, order, nj2, u, p, mm[3], -qmax, -qmin);
 	    
 	    /* write t-y dip */
 	    sf_floatwrite(p,n123,out);

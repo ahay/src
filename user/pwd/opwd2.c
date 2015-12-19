@@ -76,7 +76,7 @@ void opwd22_init (omni2 ap1)
     ap2 = ap1;
 }
 
-void opwd21 (bool der       /* derivative flag */, 
+void opwd21 (bool der1, bool der2 /* derivative flags */, 
 	     const omni2 ap /* OPWD object */, 
 	     float* xx     /* input */, 
  	     float* yy     /* output */)
@@ -96,7 +96,7 @@ void opwd21 (bool der       /* derivative flag */,
     for (iy=0; iy < ap->ny-1; iy++) {
 	for (ix = ap->nw; ix < ap->nx-ap->nw; ix++) {
 	    i = ix + ap->nx * iy;
-	    if (der) {
+	    if (der1) {
 		aderfilter(ap->p1[i], ap->flt);
 	    } else {
 		passfilter(ap->p1[i], ap->flt);
@@ -114,7 +114,7 @@ void opwd21 (bool der       /* derivative flag */,
     for (iy = ap->nw; iy < ap->ny-ap->nw; iy++) {
 	for (ix=0; ix < ap->nx-1; ix++) {
 	    i = ix + ap->nx * iy;
-	    if (der) {
+	    if (der2) {
 		aderfilter(ap->p2[i], ap->flt);
 	    } else {
 		passfilter(ap->p2[i], ap->flt);

@@ -68,7 +68,7 @@ int main (int argc, char *argv[])
 	ap = opwd2_init (nw,n1,n2,p1,p2);
 		
 	/* apply */
-	opwd21(false, ap, u1, u2);
+	opwd21(false, false, ap, u1, u2);
 		
 	/* write out */
 	sf_floatwrite(u2,n12,out);
