@@ -74,4 +74,13 @@ void sf_multidivn (float* num  /* numerator */,
 		sf_weight2_lop,sf_repeat_lop,p,rat,num,niter);
 }
 
+void sf_multidivn_adj (bool adj /* adjoint flag */,
+		       float* num  /* numerator */, 
+		       float* rat  /* ratio */, 
+		       int niter   /* number of iterations */)
+/*< smoothly divide num/rat >*/
+{
+    sf_conjgrad_adj(adj,sf_weight2_lop,sf_repeat_lop,p,rat,num,niter);
+}
+
 /* 	$Id: multidivn.c 1136 2005-04-20 20:43:14Z fomels $	 */
