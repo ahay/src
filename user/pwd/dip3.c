@@ -134,5 +134,4 @@ void dip3(bool left               /* left or right prediction */,
     } /* iter */
 
     allpass_close(ap);
-    free(ap);
 }
