@@ -160,7 +160,9 @@ if root: # no compilation, just rename
     pymains = Split(pyprogs)
     exe = env.get('PROGSUFFIX','')
     for prog in pymains:
-        env.InstallAs(os.path.join(bindir,'sf'+prog+exe),'M'+prog+'.py')
+        binary = os.path.join(bindir,'sf'+prog+exe)
+        env.InstallAs(binary,'M'+prog+'.py')
+        env.AddPostAction(binary,Chmod(str(binary),0755))
     for mod in Split(pymods):
         env.Install(pkgdir,mod+'.py')
 
