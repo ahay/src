@@ -3,9 +3,14 @@ from math import pi
 
 Flow('signal',None,
      '''
-     math n1=501 d1=0.001 label1=Time unit1=s 
+     math n1=2001 d1=0.001 label1=Time unit1=s 
      output="50*sin(%g*x1+%g)+100*sin(%g*x1+%g)" 
      ''' % (20*pi,pi/5,80*pi,pi/9))
-Plot('signal','graph label2=Amplitude')
+Plot('signal','window max1=0.5 | graph label2=Amplitude wanttitle=n')
+
+Flow('spectrum','signal','spectra')
+Plot('spectrum','window max1=100 | graph plotcol=5 label2=Amplitude wanttitle=n')
+
+Result('signal','signal spectrum','OverUnderAniso')
 
 End()
