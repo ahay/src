@@ -1,0 +1,19 @@
+from rsf.proj import *
+
+Fetch('velan.HH','dix')
+Flow('velan','velan.HH','dd form=native')
+
+Flow('pick','velan',
+     '''
+     mutter half=n x0=1500 v0=800 inner=y |
+     cut max1=0.2 | scale axis=2 |
+     pick rect1=20 rect2=20 vel0=1500
+     ''')
+
+Result('pick',
+       '''
+       grey color=j mean=y scalebar=y title="Picked Velocity"
+       unit1=s unit2=m barunit=m/s barreverse=y
+       ''')
+
+End()
