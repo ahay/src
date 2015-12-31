@@ -147,6 +147,9 @@ int main(int argc, char* argv[])
 
         misfitold = 100000000.0;
         iter = 0;
+
+	pwsmooth_init(radius, n1, n2, 5, 0.01);
+	
         while (iter < niter) { 
 			sf_warning("Calculating %d out of %d iteration", iter+1, niter);
 
@@ -166,7 +169,7 @@ int main(int argc, char* argv[])
                     k=k+1;
                 }
                 }
-                pwsmooth_init(radius, n1, n2, 5, 0.01, slope);
+                pwsmooth_set(slope);
                 pwsmooth_lop(true,false,n1*n2,n1*n2,cur_grad_smooth,cur_grad_input);  /* adjoint of pwspray */
                 pwsmooth_lop(false,false,n1*n2,n1*n2,cur_grad_smooth,cur_grad_smooth2);  /* forward of pwspray */
                 /* reset cur_grad to smooth version */

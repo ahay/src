@@ -6,8 +6,7 @@
 
 int main(void) {
     double dot1[2], dot2[2];
-    static int n1=100, n2=100, nw=1, rect1=10, rect2=5; 
-/*    static int n1=7, n2=7, rect1=3, rect2=3; */
+    int n1=10, n2=10, nw=1, rect1=3, rect2=3; 
     int i1, i2;
     float **p;
 
@@ -19,7 +18,7 @@ int main(void) {
 	}
     }
 
-    pwdsl_init(n1, n2, nw, rect1, rect2, 0.0001);
+    pwdsl_init(n1, n2, nw, rect1, rect2, 0.1);
     pwdsl_set(p);
     sf_dot_test(pwdsl_lop, n1*n2, n1*n2, dot1, dot2);
     pwdsl_close();

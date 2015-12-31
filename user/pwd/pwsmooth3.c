@@ -116,11 +116,12 @@ void pwsmooth3_lop(bool adj, bool add,
 	}
 
 	/* crossline */
+	pwsmooth_init(ns2,n1,n3,order2,eps);
 	for (i2=0; i2 < n2; i2++) {
-	    pwsmooth_init(ns2,n1,n3,order2,eps,xdip[i2]);
+	    pwsmooth_set(xdip[i2]);
 	    pwsmooth_lop(true,false,n13,n13,itmp2[i2][0],xtmp[i2][0]);
-	    pwsmooth_close();
 	}
+	pwsmooth_close();
 	/* transpose */
 	for (i3=0; i3 < n3; i3++) {
 	    for (i2=0; i2 < n2; i2++) {
@@ -130,18 +131,20 @@ void pwsmooth3_lop(bool adj, bool add,
 	    }
 	}
 	/* inline */
+	pwsmooth_init(ns1,n1,n2,order1,eps);
 	for (i3=0; i3 < n3; i3++) {
-	    pwsmooth_init(ns1,n1,n2,order1,eps,idip[i3]);
+	    pwsmooth_set(idip[i3]);
 	    pwsmooth_lop(true,true,n12,n12,trace+i3*n12,itmp[i3][0]);
-	    pwsmooth_close();
 	}
+	pwsmooth_close();
     } else {
 	/* inline */
+	pwsmooth_init(ns1,n1,n2,order1,eps);
 	for (i3=0; i3 < n3; i3++) {
-	    pwsmooth_init(ns1,n1,n2,order1,eps,idip[i3]);
+	    pwsmooth_set(idip[i3]);
 	    pwsmooth_lop(false,false,n12,n12,trace+i3*n12,itmp[i3][0]);
-	    pwsmooth_close();
 	}
+	pwsmooth_close();
 	/* transpose */
 	for (i3=0; i3 < n3; i3++) {
 	    for (i2=0; i2 < n2; i2++) {
@@ -151,11 +154,12 @@ void pwsmooth3_lop(bool adj, bool add,
 	    }
 	}
 	/* crossline */
+	pwsmooth_init(ns2,n1,n3,order2,eps);
 	for (i2=0; i2 < n2; i2++) {
-	    pwsmooth_init(ns2,n1,n3,order2,eps,xdip[i2]);
+	    pwsmooth_set(xdip[i2]);
 	    pwsmooth_lop(false,false,n13,n13,itmp2[i2][0],xtmp[i2][0]);
-	    pwsmooth_close();
 	}
+	pwsmooth_close();
 	for (i3=0; i3 < n3; i3++) {
 	    for (i2=0; i2 < n2; i2++) {
 		for (i1=0; i1 < n1; i1++) {

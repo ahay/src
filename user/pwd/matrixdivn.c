@@ -41,7 +41,7 @@ void matrixdivn_init(int ndim     /* number of dimensions */,
     sf_trianglen_init(ndim, nbox, ndat);
     sf_repeat_init(n,2,sf_trianglen_lop);
 
-    sf_conjgrad_init(n2, n2, n, n, 1., 1.e-6, verb, false);
+    sf_conjgrad_init(n2, n2, n2, n2, 1., 1.e-6, verb, false);
     p = sf_floatalloc (n2);
     twobytwo_init(mat);
 }

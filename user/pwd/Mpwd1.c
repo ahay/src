@@ -24,10 +24,9 @@
 int main (int argc, char *argv[])
 {
     bool left;
-    int ir, nr, n1,n2,n3, m1, m2, m3, n12, n123, nw, nj1, nj2, i3;
+    int ir, nr, n1,n2,n3, m1, m2, m3, n12, nw, nj1, nj2, i3;
     float *u1, *u2, *p;
     sf_file in, out, dip;
-    off_t pos=0;
     allpass ap;
 
     sf_init(argc,argv);
@@ -42,7 +41,6 @@ int main (int argc, char *argv[])
     if (!sf_histint(in,"n2",&n2)) n2=1;
     if (!sf_histint(in,"n3",&n3)) n3=1;
     n12 = n1*n2;
-    n123 = n12*n3;
     nr = sf_leftsize(in,3);
 
     if (!sf_getbool("left",&left)) left=true;

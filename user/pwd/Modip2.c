@@ -24,9 +24,9 @@ int main (int argc, char *argv[])
 {
     int n123, niter, order, i,j, liter, dim;
     int n[SF_MAX_DIM], rect[2], nr, ir; 
-    float a0, *u, *a, eps;
-    bool verb;
-    sf_file in, out, angle;
+    float a0, *u, *p, eps;
+    bool angle, verb;
+    sf_file in, out, ang;
 
     sf_init(argc,argv);
     in = sf_input ("in");
@@ -44,7 +44,7 @@ int main (int argc, char *argv[])
     
     if (!sf_getint("niter",&niter)) niter=5;
     /* number of iterations */
-    if (!sf_getint("liter",&liter)) liter=20;
+    if (!sf_getint("liter",&liter)) liter=50;
     /* number of linear iterations */
 
     if (!sf_getint("rect1",&rect[0])) rect[0]=1;
@@ -61,42 +61,65 @@ int main (int argc, char *argv[])
     if (!sf_getbool("verb",&verb)) verb = true;
     /* verbosity flag */
 
-    if (!sf_getfloat("eps",&eps)) eps=1.0f;
+    if (!sf_getfloat("eps",&eps)) eps=0.01f;
     /* regularization */
 
+    if (!sf_getbool("angle",&angle)) angle=true;
+    /* if y, use angle; if n, two dips */
+
+    if (!angle) {
+	sf_shiftdim(in, out, 3);
+	sf_putint(out,"n3",2);
+    }
+    
     /* initialize dip estimation */
     odip2_init(n[0], n[1], rect, liter, verb);
 
     u = sf_floatalloc(n123);
-    a = sf_floatalloc(n123);
+    p = sf_floatalloc(2*n123);
 
-    if (NULL != sf_getstring("angle")) {
+    if (NULL != sf_getstring("dip0")) {
 	/* initial in-line dip */
-	angle = sf_input("angle");
+	ang = sf_input("dip0");
     } else {
-	angle = NULL;
+	ang = NULL;
     }
 
-    for (ir=0; ir < nr; ir++) {
+    for (ir=0; ir < nr; ir++) {	
+
+	/* initialize t-x dip */
+	if (NULL != ang) {
+	    if (angle) {
+		sf_floatread(u,n123,ang);
+		for(i=0; i < n123; i++) {
+		    p[i]      = sinf(u[i]);
+		    p[n123+i] = cosf(u[i]);
+		}
+	    } else {
+		sf_floatread(p,2*n123,ang);
+	    }
+	} else {
+	    for(i=0; i < n123; i++) {
+		p[i]      = sinf(a0);
+		p[n123+i] = cosf(a0);
+	    }
+	}
 
 	/* read data */
 	sf_floatread(u,n123,in);
 	
-
-	/* initialize t-x dip */
-	if (NULL != angle) {
-	    sf_floatread(a,n123,angle);
-	} else {
-	    for(i=0; i < n123; i++) {
-		a[i] = a0;
-	    }
-	}
-	
 	/* estimate dip */
-	odip2(niter, order, u, a, eps);
-	
+	odip2(niter, order, u, p, eps);
+		
 	/* write dip */
-	sf_floatwrite(a,n123,out);
+	if (angle) {
+	    for (i=0; i < n123; i++) {
+		u[i] = atan2(p[i],p[n123+i]);
+	    }
+	    sf_floatwrite(u,n123,out);
+	} else {
+	    sf_floatwrite(p,2*n123,out);
+	}
     }
     
     exit (0);

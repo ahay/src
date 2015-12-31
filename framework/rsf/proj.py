@@ -374,26 +374,27 @@ class Project(Environment):
         # the command wil be different and scons wilL think it needs to be 
         # rerun.
 
-        self.hosts = self.cwd + '/hosts.txt'
-        print "using %s to keep track of nodes in use by pscons."%self.hosts
-        print "Only one pscons using remote hosts can be run in directory"
-        # I would like to delete hosts.txt file at end of scons.  Cannot just
-        # delete in def End(self).  Need to do after all the scons command
-        # complete. kls
-        if (os.path.isfile(self.hosts)):
-            # would like to delete at end and make error message here it exists.
-            os.unlink(self.hosts)
-        hosts_fd=open(self.hosts,'w')
-        hosts_fd.write("numnodes %4d\n"%len(self.nodes))
-        hosts_fd.write("host                                    state\n") 
-        for host in self.nodes:
-            hosts_fd.write(string.ljust(host,40)+string.ljust("notrunning",10)+"\n")
-        hosts_fd.close()
-
+        if len(self.nodes) > 1:
+            self.hosts = self.cwd + '/hosts.txt'
+            print "using %s to keep track of nodes in use by pscons."%self.hosts
+            print "Only one pscons using remote hosts can be run in directory"
+            # I would like to delete hosts.txt file at end of scons.  Cannot just
+            # delete in def End(self).  Need to do after all the scons command
+            # complete. kls
+            if (os.path.isfile(self.hosts)):
+                # would like to delete at end and make error message here it exists.
+                os.unlink(self.hosts)
+            hosts_fd=open(self.hosts,'w')
+            hosts_fd.write("numnodes %4d\n"%len(self.nodes))
+            hosts_fd.write("host                                    state\n") 
+            for host in self.nodes:
+                hosts_fd.write(string.ljust(host,40)+string.ljust("notrunning",10)+"\n")
+            hosts_fd.close()
+           
         for key in self['ENV'].keys():
             # quote the env values because stampede has env variable 
             # SLURM_NODE_ALIASES=(null)  This makes problems in the ssh to nodes.
-            # on stampeed there are many env keys starting with SLURM_ or
+            # on stampede there are many env keys starting with SLURM_ or
             # TACC_ that include list of nodes or queue_job_number.  There
             # will make pscons rerun the tasks.  Some are harmless but 
             # clutter the printed job output.  They can be safely removed

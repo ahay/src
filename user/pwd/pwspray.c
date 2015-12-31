@@ -27,8 +27,7 @@ int pwspray_init(int nr      /* spray radius */,
 		 int nt      /* trace length */, 
 		 int n       /* number of traces */,
 		 int order   /* PWD order */,
-		 float eps   /* regularization */,
-		 float **dip /* local slope */)
+		 float eps   /* regularization */)		 
 /*< initialize >*/
 {
     n1=nt;
@@ -39,10 +38,16 @@ int pwspray_init(int nr      /* spray radius */,
 
     predict_init (n1, n2, eps*eps, order, 1, false);
     trace = sf_floatalloc(n1);
-    p = dip;
 
     return ns2;
 }
+
+void pwspray_set(float **dip /* local slope */)
+/*< set local slope >*/
+{
+    p = dip;
+}
+
 
 void pwspray_close(void)
 /*< free allocated storage >*/

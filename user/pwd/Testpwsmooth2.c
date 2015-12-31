@@ -20,7 +20,8 @@ int main(void) {
 	}
     }
 
-    pwsmooth2_init(ns,n1,n2,1,0.1,p1,p2);
+    pwsmooth2_init(ns,n1,n2,1,0.1);
+    pwsmooth2_set(p1,p2);
     sf_dot_test(pwsmooth2_lop, n1*n2, n1*n2, dot1, dot2);
 
     printf ("%12.8f ? %12.8f\n",dot1[0],dot1[1]);

@@ -27,7 +27,7 @@
 #include "opwd2.h"
 #include "matrixdivn.h"
 
-static float *dat, *dp, *p, *p0, **mat;
+static float *dat, *dp, *p0, **mat;
 static int n, n1, n2;
 
 void odip2_init(int m1, int m2 /* dimensions */, 
@@ -44,7 +44,6 @@ void odip2_init(int m1, int m2 /* dimensions */,
 
     dat = sf_floatalloc(2*n);
     dp  = sf_floatalloc(2*n);
-    p   = sf_floatalloc(2*n);
     p0  = sf_floatalloc(2*n);
     mat = sf_floatalloc2(n,4);
 
@@ -59,7 +58,6 @@ void odip2_close(void)
 {
     free (dat);
     free (dp);
-    free (p);
     free (p0);
     free (*mat);
     free (mat);
@@ -69,27 +67,20 @@ void odip2_close(void)
 void odip2(int niter   /* number of nonlinear iterations */, 
 	   int nw      /* filter size */, 
 	   float *u    /* input data */, 
-	   float* a    /* output angle */,
+	   float* p    /* output dips */,
 	   float eps   /* regularization */)
 /*< estimate local dip >*/
 {
     int i, iter, k;
-    float usum, usum2, lam, mean;
+    float usum, usum2, lam, mean, one;
     omni2 ap;
  
     ap = opwd2_init (nw,n1,n2,p,p+n);
-
-    for (i=0; i < n; i++) {
-	p[i]   = sinf(a[i]);
-	p[n+i] = cosf(a[i]);
-    }
-
     opwd21(false,false,ap,u,dat);
 
     for (i=0; i < n; i++) {
 	dat[n+i] = eps*(1.0f-p[i]*p[i]-p[n+i]*p[n+i]);
     }
-
 
     for (iter =0; iter < niter; iter++) {
 	opwd21(true,false,ap,u,mat[0]);
@@ -125,13 +116,18 @@ void odip2(int niter   /* number of nonlinear iterations */,
 	    for(i=0; i < 2*n; i++) {
 		p[i] = p0[i]+lam*dp[i];
 	    }
+	    for(i=0; i < n; i++) {
+		one = hypotf(p[i],p[n+i]);
+		p[i]   /= one;
+		p[n+i] /= one;
+	    }
 
 	    opwd21(false,false,ap,u,dat);
 	    for (i=0; i < n; i++) {
 		dat[n+i] = eps*(1.0f-p[i]*p[i]-p[n+i]*p[n+i]);
 	    }
 
-	    usum2 = 0.0;
+	    usum2 = 0.0f;
 	    for(i=0; i < 2*n; i++) {
 		usum2 += dat[i]*dat[i];
 	    }
@@ -141,10 +137,5 @@ void odip2(int niter   /* number of nonlinear iterations */,
 	}
     } /* iter */
 
-    for (i=0; i < n; i++) {
-	a[i] = atan2(p[i],p[n+i]);
-    }
-
     opwd2_close(ap);
-    free(ap);
 }

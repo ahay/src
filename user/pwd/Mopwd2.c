@@ -23,14 +23,15 @@
 
 int main (int argc, char *argv[])
 {
-    int ir, nr, n1,n2, m1, m2, n12, nw, i3;
+    bool angle;
+    int ir, nr, n1,n2, m1, m2, n12, nw, i3, n3;
     float *u1, *u2, *p1, *p2;
     sf_file in, out, ang;
     omni2 ap;
 
     sf_init(argc,argv);
     in = sf_input ("in");
-    ang = sf_input ("angle");
+    ang = sf_input ("dip");
     out = sf_output ("out");
 
     if (SF_FLOAT != sf_gettype(in) ||
@@ -41,10 +42,15 @@ int main (int argc, char *argv[])
     n12 = n1*n2;
     nr = sf_leftsize(in,2);
 
+    if (!sf_getbool("angle",&angle)) angle=true;
+    /* if y, use angle; if n, two dips */
+    
     if (!sf_histint(ang,"n1",&m1) || m1 != n1) 
-	sf_error("Need n1=%d in angle",n1);
+	sf_error("Need n1=%d in dip",n1);
     if (1 != n2 && (!sf_histint(ang,"n2",&m2) || m2 != n2)) 
-	sf_error("Need n2=%d in angle",n2);
+	sf_error("Need n2=%d in dip",n2);
+    if (!angle && (!sf_histint(ang,"n3",&n3) || 2 != n3))
+	sf_error("Need n3=2 in dip");
     
     if (!sf_getint("order",&nw)) nw=1;
     /* accuracy */
@@ -56,10 +62,16 @@ int main (int argc, char *argv[])
 
     for (ir=0; ir < nr; ir++) {
 	/* read dip */
-	sf_floatread(u1,n12,ang);
-	for (i3=0; i3 < n12; i3++) {
-	    p1[i3] = sinf(u1[i3]);
-	    p2[i3] = cosf(u1[i3]);
+
+	if (angle) {
+	    sf_floatread(u1,n12,ang);
+	    for (i3=0; i3 < n12; i3++) {
+		p1[i3] = sinf(u1[i3]);
+		p2[i3] = cosf(u1[i3]);
+	    }
+	} else {
+	    sf_floatread(p1,n12,ang);
+	    sf_floatread(p2,n12,ang);
 	}
 	
 	/* read data */

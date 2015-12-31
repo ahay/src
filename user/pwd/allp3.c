@@ -173,16 +173,16 @@ void right1 (bool left        /* left or right prediction */,
 	       float* yy        /* output */)
 /*< right part of in-line plane-wave destruction >*/
 {
-    int ix, iy, iz, iw, is, i, nx, ny, nz, i1, i2, ip;
+    int ix, iy, iz, iw, is, i, nx, ny, nz, i1, i2;
 
     nx = ap->nx;
     ny = ap->ny;
     nz = ap->nz;
 
     if (left) {
-	i1=1; i2=ny;   ip=-nx;
+	i1=1; i2=ny;   
     } else {
-	i1=0; i2=ny-1; ip=nx;
+	i1=0; i2=ny-1;
     }
 
     for (iz=0; iz < nz; iz++) {
