@@ -101,7 +101,7 @@ static sf_complex myreal(sf_complex c)
 
 static sf_complex myimag(sf_complex c)
 {
-    c = sf_cmplx(0.,cimagf(c));
+    c = sf_cmplx(cimagf(c),0.);
     return c;
 }
 

@@ -176,8 +176,8 @@ int main (int argc, char* argv[])
 	        sf_floatread (vel,nt,velocity);
        }
        
-//  #pragma omp parallel for default(shared) \
-//     private(ipy,py,ipx,px,st,sx,sy,it,c11,c22,c33,c44,c55,c66,c12,c13,c23,vx,vy,vz,vgp,v,py2,px2,ft)
+/*  #pragma omp parallel for default(shared)				\
+    private(ipy,py,ipx,px,st,sx,sy,it,c11,c22,c33,c44,c55,c66,c12,c13,c23,vx,vy,vz,vgp,v,py2,px2,ft) */
     for (ipy = 0; ipy < npy; ipy++) {
 	    py = py0 + ipy*dpy;
 	    py2 = py*py;
