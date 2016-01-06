@@ -23,7 +23,7 @@
 int main(int argc, char* argv[])
 {
     map4 mo;
-    bool inv;
+    bool inv, adj;
     int n1, i2, n2, i3, n3;
     float o1, d1, o2, d2, eps, t;
     float *trace, *t2, *trace2;
@@ -36,7 +36,10 @@ int main(int argc, char* argv[])
     if (!sf_getbool("inv",&inv)) inv=false;
     /* inversion flag */
 
-    if (inv) {
+    if (!sf_getbool("adj",&adj)) adj=false;
+    /* adjoint flag */
+
+    if ((inv && !adj) || (!inv && adj)) {
 	if (!sf_histint(in,"n1",&n2)) sf_error("No n1= in input");
 	if (!sf_histfloat(in,"d1",&d2)) d2=1.;
 	if (!sf_histfloat(in,"o1",&o2)) o2=0.;
@@ -88,13 +91,25 @@ int main(int argc, char* argv[])
     
     for (i3=0; i3 < n3; i3++) {
 	if (inv) {
-	    sf_floatread(trace,n2,in);
-	    stretch4_apply (mo,trace,trace2);
-	    sf_floatwrite (trace2,n1,out);
+	    if (adj) {
+		sf_floatread(trace2,n1,in);
+		stretch4_apply_adj (mo,trace,trace2);
+		sf_floatwrite (trace,n2,out); 
+	    } else {
+		sf_floatread(trace,n2,in);
+		stretch4_apply (mo,trace,trace2);
+		sf_floatwrite (trace2,n1,out);
+	    } 
 	} else {
-	    sf_floatread(trace2,n1,in);
-	    stretch4_invert (mo,trace,trace2);
-	    sf_floatwrite (trace,n2,out);
+	    if (adj) {
+		sf_floatread(trace,n2,in);
+		stretch4_invert_adj (mo,trace,trace2);
+		sf_floatwrite (trace2,n1,out);
+	    } else {
+		sf_floatread(trace2,n1,in);
+		stretch4_invert (mo,trace,trace2);
+		sf_floatwrite (trace,n2,out);
+	    }
 	}
     }
 

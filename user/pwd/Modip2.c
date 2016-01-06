@@ -24,7 +24,7 @@ int main (int argc, char *argv[])
 {
     int n123, niter, order, i,j, liter, dim;
     int n[SF_MAX_DIM], rect[2], nr, ir; 
-    float a0, *u, *p, eps;
+    float a0, *u, *p;
     bool angle, verb;
     sf_file in, out, ang;
 
@@ -60,9 +60,6 @@ int main (int argc, char *argv[])
 
     if (!sf_getbool("verb",&verb)) verb = true;
     /* verbosity flag */
-
-    if (!sf_getfloat("eps",&eps)) eps=0.01f;
-    /* regularization */
 
     if (!sf_getbool("angle",&angle)) angle=true;
     /* if y, use angle; if n, two dips */
@@ -109,7 +106,7 @@ int main (int argc, char *argv[])
 	sf_floatread(u,n123,in);
 	
 	/* estimate dip */
-	odip2(niter, order, u, p, eps);
+	odip2(niter, order, u, p);
 		
 	/* write dip */
 	if (angle) {
