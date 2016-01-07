@@ -12,7 +12,23 @@ accumulated back into one data stream. Madagascar provides a number of
 convenient tools for running serial code into a data parallel fashion
 without the need to resolve to low-level programming.
 
+\section{Posix threads}
+
 \section{OpenMP programming and sfomp}
+
+OpenMP (from \emph{Open Multi-Processing}) is an application
+programming interface (API) that simplifies parallel tasks on
+shared-memory architectures (multiple processing units). OpenMP
+appeared in 1997 (with specifications for Fortran) and is currently
+supported by most modern C/C++ and Fortran compilers. GCC has provided
+support to OpenMP since version 4.2, which appeared in 2007.
+
+[Add references]
+
+To use OpenMP in your program, you can use...
+
+To simplify OpenMP-based processing for data-parallel tasks,
+Madagascar provides \texttt{sfomp} utility. Suppose, for example, ...
 
 \section{MPI programming and sfmpi}
 
@@ -21,3 +37,4 @@ without the need to resolve to low-level programming.
 \section{Parallel processing in SCons: pscons}
 
 \section{Parallel processing on shared clusters: sfbatch} 
+
