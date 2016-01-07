@@ -100,8 +100,8 @@ int main(int argc, char* argv[])
 		itrace2[i] = cimagf(ctrace2[i]);
 	    }
 
-	    stretch4_invert (mo,rtrace,rtrace2);
-	    stretch4_invert (mo,itrace,itrace2);
+	    stretch4_invert (false,mo,rtrace,rtrace2);
+	    stretch4_invert (false,mo,itrace,itrace2);
 
 	    for (i=0; i < nx; i++) {
 		ctrace[i] = sf_cmplx(rtrace[i],itrace[i]);
@@ -116,8 +116,8 @@ int main(int argc, char* argv[])
 		itrace[i] = cimagf(ctrace[i]);
 	    }
 
-	    stretch4_apply (mo,rtrace,rtrace2);
-	    stretch4_apply (mo,itrace,itrace2);
+	    stretch4_apply (false,mo,rtrace,rtrace2);
+	    stretch4_apply (false,mo,itrace,itrace2);
 
 	    for (i=0; i < nu; i++) {
 		ctrace2[i] = sf_cmplx(rtrace2[i],itrace2[i]);

@@ -76,7 +76,7 @@ int main(int argc, char* argv[])
 	}
 
 	stretch4_define (mo,str);
-	stretch4_apply (mo,amp,trace);
+	stretch4_apply (false,mo,amp,trace);
 	sf_floatwrite (trace,n1,out);
     }
 

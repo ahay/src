@@ -108,14 +108,14 @@ void inmo_close(void)
     free(sparse2);
 }
 
-void inmo(const float *trace /* input trace [nt] */,
-	  float **gather     /* output CMP gather [nt][nh] */)
+void inmo(const float *trace   /* input trace [nt] */,
+	  float **gather /* output CMP gather [nt][nh] */)
 /*< apply inverse nmo >*/
 {
     int ih;
 
     for (ih = 0; ih < nh; ih++) {
-	stretch4_apply (nmo[ih],trace,gather[ih]);
+	stretch4_apply (false,nmo[ih],(float*)trace,gather[ih]);
     }
 }
 
@@ -131,7 +131,7 @@ void nmostack(float **gather /* input CMP gather */,
     }
 
     for (ih = 0; ih < nh; ih++) {
-	stretch4_invert (nmo[ih],stretch,gather[ih]);
+	stretch4_invert (false,nmo[ih],stretch,gather[ih]);
 	for (it=0; it < nt; it++) {
 	    trace[it] += stretch[it];
 	}

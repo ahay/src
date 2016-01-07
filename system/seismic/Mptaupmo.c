@@ -109,10 +109,10 @@ int main (int argc, char* argv[])
 
 	    stretch4_define (nmo,str);
 
-	    stretch4_apply (nmo,trace,trace);
+	    stretch4_apply (false,nmo,trace,trace);
 	    sf_floatwrite (trace,nt,nmod);
 
-	    stretch4_apply (nmo,vel,vel);
+	    stretch4_apply (false,nmo,vel,vel);
 	    sf_floatwrite (vel,nt,vel2);
 	}
     }

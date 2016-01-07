@@ -127,7 +127,7 @@ int main(int argc, char* argv[])
 	} else {
 	    sf_floatread (trace,nt,in);
 	    stretch4_define (stolt, str[ix]);
-	    stretch4_apply (stolt, trace, out);
+	    stretch4_apply (false,stolt, trace, out);
 	    sf_floatwrite (out,ns,st);
 	}
     }

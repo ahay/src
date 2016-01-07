@@ -134,9 +134,9 @@ int main(int argc, char* argv[])
 		stretch4_define (mo,r);
 
 		if (inv) {
-		    stretch4_apply (mo,modl,data);
+		    stretch4_apply (false,mo,modl,data);
 		} else {
-		    stretch4_invert (mo,modl,data);
+		    stretch4_invert (false,mo,modl,data);
 		}
 	    } else {
 		if (inv) {

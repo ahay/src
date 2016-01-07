@@ -93,21 +93,21 @@ int main(int argc, char* argv[])
 	if (inv) {
 	    if (adj) {
 		sf_floatread(trace2,n1,in);
-		stretch4_apply_adj (mo,trace,trace2);
+		stretch4_apply_adj (false,mo,trace,trace2);
 		sf_floatwrite (trace,n2,out); 
 	    } else {
 		sf_floatread(trace,n2,in);
-		stretch4_apply (mo,trace,trace2);
+		stretch4_apply (false,mo,trace,trace2);
 		sf_floatwrite (trace2,n1,out);
 	    } 
 	} else {
 	    if (adj) {
 		sf_floatread(trace,n2,in);
-		stretch4_invert_adj (mo,trace,trace2);
+		stretch4_invert_adj (false,mo,trace,trace2);
 		sf_floatwrite (trace2,n1,out);
 	    } else {
 		sf_floatread(trace2,n1,in);
-		stretch4_invert (mo,trace,trace2);
+		stretch4_invert (false,mo,trace,trace2);
 		sf_floatwrite (trace,n2,out);
 	    }
 	}

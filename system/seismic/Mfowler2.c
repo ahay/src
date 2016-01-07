@@ -82,7 +82,7 @@ int main(int argc, char* argv[])
 	    stretch4_define (mo,wstr);
 	    
 	    sf_floatread(stak,nw,inp);
-	    stretch4_apply (mo,stak,migr);
+	    stretch4_apply (false,mo,stak,migr);
 	    sf_floatwrite(migr,nw,out);
 	}
     }

@@ -154,10 +154,10 @@ int main(int argc, char* argv[])
 	    }
 
 	    stretch4_define (map,tpp);
-	    stretch4_apply (map,app,pp[ip]);
+	    stretch4_apply (false,map,app,pp[ip]);
 
 	    stretch4_define (map,tps);
-	    stretch4_apply (map,aps,ps[ip]);
+	    stretch4_apply (false,map,aps,ps[ip]);
 	}
 
 	sf_floatwrite(pp[0],nt*np,out);

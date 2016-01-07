@@ -90,17 +90,17 @@ void warp3(float ***slice  /* [nx][ny][nt] input */,
 	for (i2=0; i2 < ny; i2++) {
 	    stretch4_define (map1,coord1[i3][i2]);	    
 	
-	    stretch4_apply  (map1,slice[i3][i2],trace1);	
+	    stretch4_apply  (false,map1,slice[i3][i2],trace1);	
 	    for (i1=0; i1 < n1; i1++) {
 		slice1[i1][i3][i2] = trace1[i1];
 	    }
 	
-	    stretch4_apply  (map1,coord2[i3][i2],trace1);
+	    stretch4_apply  (false,map1,coord2[i3][i2],trace1);
 	    for (i1=0; i1 < n1; i1++) {
 		str2[i1][i3][i2] = trace1[i1];
 	    }
 
-	    stretch4_apply  (map1,coord3[i3][i2],trace1);
+	    stretch4_apply  (false,map1,coord3[i3][i2],trace1);
 	    for (i1=0; i1 < n1; i1++) {
 		str3[i1][i3][i2] = trace1[i1];
 	    }
@@ -131,12 +131,12 @@ void fwarp3(float ***slice2 /* [n3][n2][n1] input */,
 	for (i2=0; i2 < ny; i2++) {
 	    stretch4_define (map1,coord1[i3][i2]);	    
 	
-	    stretch4_apply  (map1,coord2[i3][i2],trace1);
+	    stretch4_apply  (false,map1,coord2[i3][i2],trace1);
 	    for (i1=0; i1 < n1; i1++) {
 		str2[i1][i3][i2] = trace1[i1];
 	    }
 
-	    stretch4_apply  (map1,coord3[i3][i2],trace1);
+	    stretch4_apply  (false,map1,coord3[i3][i2],trace1);
 	    for (i1=0; i1 < n1; i1++) {
 		str3[i1][i3][i2] = trace1[i1];
 	    }
@@ -160,7 +160,7 @@ void fwarp3(float ***slice2 /* [n3][n2][n1] input */,
 	    }
 	    
 	    stretch4_define (map1,coord1[i3][i2]);	    	
-	    stretch4_invert  (map1,slice[i3][i2],trace1);
+	    stretch4_invert  (false,map1,slice[i3][i2],trace1);
 	}
     }
 }
