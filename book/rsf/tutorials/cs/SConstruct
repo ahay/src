@@ -3,31 +3,77 @@ from math import pi
 
 Flow('signal',None,
      '''
-     math n1=10001 o1=0 d1=0.001 label1=Time unit1=s 
+     math n1=10000 o1=0 d1=0.001 label1=Time unit1=s 
      output="50*sin(%g*x1+%g)+100*sin(%g*x1+%g)" 
-     ''' % (20*pi,pi/5,80*pi,pi/9))
-Plot('signal','window max1=0.5 | graph label2=Amplitude wanttitle=n min1=-0.01 max1=0.51 min2=-170 max2=170 plotcol=4')
+     ''' % (20*pi,pi*pi/5,80*pi,pi*pi/9))
+Plot('signal',
+     '''
+     window max1=0.5 | 
+     graph label2=Amplitude wanttitle=n min1=-0.01 max1=0.51 min2=-170 max2=170 plotcol=4
+     ''')
 
 Flow('spectrum','signal','spectra')
 Plot('spectrum','window max1=50 | graph plotcol=5 label2=Amplitude wanttitle=n plotcol=1')
 
 Result('signal','signal spectrum','OverUnderAniso')
 
-Flow('subsample','signal','window j1=60')
-
-Plot('subsample','rtoc | math output="x1+I*input" | graph symbol=o min1=-0.01 max1=0.51 min2=-170 max2=170 plotcol=1 symbolsz=10 wanttitle=n wantaxis=n')
+Flow('subsample','signal','window j1=50 | pad n2=5 | transp | put n1=1000 o1=0 d1=0.01 n2=1')
 
 Flow('interp','subsample',
-     'fft1 | pad n1=1025 | put fft_o1=0 fft_n1=2001 | fft1 inv=y | scale dscale=60')
+     'fft1 | pad n1=5001 | put fft_o1=0 fft_n1=10000 | fft1 inv=y | scale dscale=10')
 
-Plot('interp','window max1=0.5 | graph label2=Amplitude wanttitle=n min1=-0.01 max1=0.51 min2=-170 max2=170 plotcol=5')
+Plot('interp',
+     '''
+     window max1=0.5 | 
+     graph label2=Amplitude unit2= wanttitle=n min1=-0.01 max1=0.51 min2=-170 max2=170 plotcol=5 dash=1
+     ''')
+
+Plot('subsample','interp',
+     '''
+     window j1=50 | rtoc | math output="x1+I*input" | 
+     graph symbol=o min1=-0.01 max1=0.51 min2=-170 max2=170 plotcol=1 symbolsz=10 wanttitle=n wantaxis=n
+     ''')
 
 Plot('signal2','signal interp subsample','Overlay')
 
 Flow('spectrum2','interp','spectra')
-Plot('spectrum2','window max1=50 | graph plotcol=5 label2=Amplitude wanttitle=n plotcol=1')
+Plot('spectrum2','window max1=50 | graph plotcol=5 label2=Amplitude unit2= wanttitle=n plotcol=1')
 
 Result('signal2','signal2 spectrum2','OverUnderAniso')
 
+
+Flow('sig1',None,'math n1=200 o1=0 d1=0.0005 output="sin(%g*x1)" ' % (20*pi))
+Flow('sig2','sig1','math output="sin(%g*x1)" ' % (270*pi))
+Flow('xsig','sig1','window j1=16 | rtoc | math output=x1')
+Flow('sig3','sig1','window j1=16 | rtoc | math output="x1+I*input" ')
+Flow('sig4','sig2','window j1=16 | rtoc | math output="x1+I*input" ')
+
+Plot('sigs','sig1 sig2',
+     'cat axis=2 ${SOURCES[1]} | graph wanttitle=n dash=0,1 plotcol=4,1 min1=-0.002 max1=0.102 min2=-1.1 max2=1.1')
+Plot('sig3','graph wanttitle=n symbol=o min1=-0.002 max1=0.102 min2=-1.1 max2=1.1 plotcol=5 symbolsz=10 ')
+
+Plot('sig1','sigs sig3','Overlay')
+
+Plot('xsig3','xsig sig3',
+     '''
+     cat axis=2 ${SOURCES[1]} | transp | 
+     graph wanttitle=n min1=-0.002 max1=0.102 min2=-1.1 max2=1.1 plotcol=4 symbolsz=10 
+     ''')
+Plot('ysig3','sig3',
+     'graph wanttitle=n symbol=o min1=-0.002 max1=0.102 min2=-1.1 max2=1.1 plotcol=4 symbolsz=10 ')
+Plot('zero','sig1',
+     'math output=0 | graph wanttitle=n wantaxis=n min1=-0.002 max1=0.102 min2=-1.1 max2=1.1')
+Plot('asig3','xsig3 ysig3 zero','Overlay')
+
+Plot('xsig4','xsig sig4',
+     '''
+     cat axis=2 ${SOURCES[1]} | transp | 
+     graph wanttitle=n min1=-0.002 max1=0.102 min2=-1.1 max2=1.1 plotcol=1 symbolsz=10 
+     ''')
+Plot('ysig4','sig4',
+     'graph wanttitle=n symbol=o min1=-0.002 max1=0.102 min2=-1.1 max2=1.1 plotcol=1 symbolsz=10 ')
+Plot('asig4','xsig4 ysig4 zero','Overlay')
+
+Result('aliasing','sig1 asig3 asig4','OverUnderAniso')
 
 End()
