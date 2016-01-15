@@ -25,8 +25,8 @@ int main (int argc, char *argv[])
     int n123, niter, order, i,j, liter, dim;
     int n[SF_MAX_DIM], rect[2], nr, ir; 
     float a0, *u, *p;
-    bool angle, verb;
-    sf_file in, out, ang;
+    bool verb;
+    sf_file in, out, sn, cs;
 
     sf_init(argc,argv);
     in = sf_input ("in");
@@ -61,13 +61,8 @@ int main (int argc, char *argv[])
     if (!sf_getbool("verb",&verb)) verb = true;
     /* verbosity flag */
 
-    if (!sf_getbool("angle",&angle)) angle=true;
-    /* if y, use angle; if n, two dips */
-
-    if (!angle) {
-	sf_shiftdim(in, out, 3);
-	sf_putint(out,"n3",2);
-    }
+    sf_shiftdim(in, out, 3);
+    sf_putint(out,"n3",2);
     
     /* initialize dip estimation */
     odip2_init(n[0], n[1], rect, liter, verb);
@@ -75,30 +70,35 @@ int main (int argc, char *argv[])
     u = sf_floatalloc(n123);
     p = sf_floatalloc(2*n123);
 
-    if (NULL != sf_getstring("dip0")) {
-	/* initial in-line dip */
-	ang = sf_input("dip0");
+    if (NULL != sf_getstring("sin")) {
+	/* initial dip (sine) */
+	sn = sf_input("sin");
     } else {
-	ang = NULL;
+	sn = NULL;
+    }
+
+    if (NULL != sf_getstring("cos")) {
+	/* initial dip (cosine) */
+	cs = sf_input("cos");
+    } else {
+	cs = NULL;
     }
 
     for (ir=0; ir < nr; ir++) {	
 
 	/* initialize t-x dip */
-	if (NULL != ang) {
-	    if (angle) {
-		sf_floatread(u,n123,ang);
-		for(i=0; i < n123; i++) {
-		    p[i]      = sinf(u[i]);
-		    p[n123+i] = cosf(u[i]);
-		}
-	    } else {
-		sf_floatread(p,2*n123,ang);
-	    }
+	if (NULL != sn) {
+	    sf_floatread(p,n123,sn);
 	} else {
 	    for(i=0; i < n123; i++) {
-		p[i]      = sinf(a0);
-		p[n123+i] = cosf(a0);
+		p[i] = 0.0f;
+	    }
+	}
+	if (NULL != cs) {
+	    sf_floatread(p+n123,n123,cs);
+	} else {
+	    for(i=0; i < n123; i++) {
+		p[n123+i] = 1.0f;
 	    }
 	}
 
@@ -109,14 +109,7 @@ int main (int argc, char *argv[])
 	odip2(niter, order, u, p);
 		
 	/* write dip */
-	if (angle) {
-	    for (i=0; i < n123; i++) {
-		u[i] = atan2(p[i],p[n123+i]);
-	    }
-	    sf_floatwrite(u,n123,out);
-	} else {
-	    sf_floatwrite(p,2*n123,out);
-	}
+	sf_floatwrite(p,2*n123,out);
     }
     
     exit (0);

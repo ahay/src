@@ -76,4 +76,35 @@ Plot('asig4','xsig4 ysig4 zero','Overlay')
 
 Result('aliasing','sig1 asig3 asig4','OverUnderAniso')
 
+Flow('rand1','xsig','real | noise rep=y type=n seed=2015 mean=0.05 range=0.05')
+Flow('rand2','xsig','real | noise rep=y type=n seed=2016 mean=0.05 range=0.05')
+
+Flow('csig1','rand1','rtoc')
+Flow('rsig1','sig1 rand1',
+     'inttest1 coord=${SOURCES[1]} interp=lag nw=2 | cat axis=2 ${SOURCES[1]} order=2,1 | transp | dd type=complex | window')
+Plot('rsig1','graph wanttitle=n symbol=o min1=-0.002 max1=0.102 min2=-1.1 max2=1.1 plotcol=4 symbolsz=10 ')
+
+Flow('csig2','rand2','rtoc')
+Flow('rsig2','sig2 rand2',
+     'inttest1 coord=${SOURCES[1]} interp=lag nw=2 | cat axis=2 ${SOURCES[1]} order=2,1 | transp | dd type=complex | window')
+Plot('rsig2','graph wanttitle=n symbol=o min1=-0.002 max1=0.102 min2=-1.1 max2=1.1 plotcol=1 symbolsz=10 ')
+
+Plot('rsig','sigs rsig1 rsig2','Overlay')
+
+Plot('xsig1','csig1 rsig1',
+     '''
+     cat axis=2 ${SOURCES[1]} | transp | 
+     graph wanttitle=n min1=-0.002 max1=0.102 min2=-1.1 max2=1.1 plotcol=4 symbolsz=10 
+     ''')
+Plot('asig1','xsig1 rsig1 zero','Overlay')
+
+Plot('xsig2','csig2 rsig2',
+     '''
+     cat axis=2 ${SOURCES[1]} | transp | 
+     graph wanttitle=n min1=-0.002 max1=0.102 min2=-1.1 max2=1.1 plotcol=1 symbolsz=10 
+     ''')
+Plot('asig2','xsig2 rsig2 zero','Overlay')
+
+Result('randomized','rsig asig1 asig2','OverUnderAniso')
+
 End()
