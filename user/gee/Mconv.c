@@ -25,7 +25,7 @@
 int main(int argc, char* argv[])
 {
     int nx, nf, ny, i2, n2, lag;
-    bool each, trans;
+    bool each, trans, adj;
     float *xx, *yy, *ff;
     sf_file in, out, filt;
 
@@ -48,10 +48,20 @@ int main(int argc, char* argv[])
     /* if y, transient convolution; if n, internal */
     if (!sf_getbool("each",&each)) each=false;
     /* if y, new filter for each trace */
+    if (!sf_getbool("adj",&adj)) adj=false;
+    /* adjoint flag */
     if (!sf_getint("lag",&lag)) lag=1;
     /* lag for internal convolution */
 
-    ny = trans? nx+nf-1: nx;
+    if (trans) {
+	if (adj) {
+	    ny = nx-nf+1;
+	} else {
+	    ny = nx+nf-1;
+	}
+    } else {
+	ny = nx;
+    }
     yy = sf_floatalloc(ny);
     if (trans) sf_putint(out,"n1",ny);
 
@@ -62,10 +72,18 @@ int main(int argc, char* argv[])
         sf_floatread (xx,nx,in);
         if (trans) {
 	    tcai1_init(nf,ff);
-	    tcai1_lop (false, false,nx,ny,xx,yy);
+	    if (adj) {
+		tcai1_lop (true, false,ny,nx,yy,xx);
+	    } else {
+		tcai1_lop (false, false,nx,ny,xx,yy);
+	    } 
 	} else {
 	    icai1_init(nf,ff,lag);
-	    icai1_lop (false, false,nx,ny,xx,yy);
+	    if (adj) {
+		icai1_lop (true, false,ny,nx,yy,xx);
+	    } else {
+		icai1_lop (false, false,nx,ny,xx,yy);
+	    }
 	}
 	sf_floatwrite (yy,ny,out);
     }
@@ -73,4 +91,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id$	 */
+
