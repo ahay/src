@@ -1,0 +1,243 @@
+from rsf.proj import *
+from rsf.prog import RSFROOT
+
+
+def Grey(data,other): 
+	Result(data,'grey label2=Trace unit2="" label1="Time sampling number" title="" labelsz=10 labelfat=4 font=2 titlesz=10 titlefat=4 screenht=10.24 screenratio=0.75 screenwd=13.65 wherexlabel=b wheretitle=t bartype=v  clip=0.4 color=d %s'%other)
+
+def Greyzoom(data,other): 
+	Result(data,'grey label2=Trace unit2="" label1="Time sampling number" title="" labelsz=10 labelfat=4 font=2 titlesz=10 titlefat=4 screenht=10.24 screenratio=0.75 screenwd=13.65 wherexlabel=b wheretitle=t bartype=v  clip=0.4 color=d %s'%other)
+
+#############################################################################
+# Setting parameters
+########################################################################
+n1=512
+n2=512
+padn2=512
+lambda1=0.5
+niter=30
+lvl=2
+htype='spline'
+thr1=17 #(better than 10,12,15,16,18,19,20,22)
+thr2=7 # (better than 2,3,4,5,6,8,9,10)
+thr3=11 # (better than 2,8,9,10,12)
+lenf=6 # (better than 5,7,8,9, doesn't change too much)
+thrtype='g'
+put='n1=512 n2=512 d1=1 d2=1 o1=0 o2=0'
+
+#############################################################################
+# Field data (CHENYK2/Seismicdata/)
+########################################################################
+Flow('field2','fieldma2.bin','bin2rsf bfile=${SOURCES[0]} %s| scale axis=2 | math output="input-0.5"'%put)
+
+## Add noise
+Flow('field2n','field2','noise var=0.01 seed=201314')
+
+Grey('field2','title=Clean')
+Grey('field2n','title=Noisy')
+
+Flow('field2n-n','field2n','bandpass fhi=0.25')
+Grey('field2n-n','title=Noisy')
+
+Flow('dip','field2n','dip rect1=40 rect2=40 | pad n2=%d'%padn2)
+
+Flow('field2n-slet','field2n dip','pad n2=%d | seislet dip=${SOURCES[1]} adj=y inv=y eps=0.1 type=b'%padn2)
+Flow('field2n-sletthr','field2n-slet','threshold1 thr=%g'%thr1)
+Flow('field2n-re0','field2n-sletthr dip','seislet dip=${SOURCES[1]} adj=n inv=y eps=0.1 type=b | window n2=%d'%n2 )
+Flow('field2n-dif0','field2n field2n-re0','add scale=1,-1 ${SOURCES[1]}')
+Flow('field2n-dif field2n-re','field2n-dif0 field2n-re0','ortho rect1=2 rect2=2 niter=100 sig=${SOURCES[1]} sig2=${TARGETS[1]}')
+
+########################################################################
+# INITIALIZATION
+########################################################################
+matlab         = WhereIs('matlab')
+matROOT = '../matfun'
+matfun = 'Syn_ddtf'
+matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
+
+if not matlab:
+    sys.stderr.write('\nCannot find Matlab.\n')
+    sys.exit(1)
+
+############################################################
+## generate and process synthetic data
+############################################################
+Flow('field2n-sletddtfthr',[os.path.join(matROOT,matfun+'.m'),'field2n-slet'],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}','${TARGETS[0]}',%(n1)d,%(padn2)d,%(lambda1)g,%(niter)d,%(lvl)d,'%(htype)s',%(thr2)g,'%(thrtype)s');quit"
+     '''%vars(),stdin=0,stdout=-1)
+Flow('field2n-sletddtfthr0','field2n-sletddtfthr','put %s'%put)
+
+
+## Seislet + DDTF
+Flow('field2n-ddtf-re00','field2n-sletddtfthr dip','put %s | seislet dip=${SOURCES[1]} adj=n inv=y eps=0.1 type=b | window n2=%d'%(put,n2) )
+Flow('field2n-ddtf-dif00','field2n field2n-ddtf-re00','add scale=1,-1 ${SOURCES[1]}')
+Flow('field2n-ddtf-dif field2n-ddtf-re','field2n-ddtf-dif00 field2n-ddtf-re00','ortho rect1=2 rect2=2 niter=100 sig=${SOURCES[1]} sig2=${TARGETS[1]}')
+
+
+Grey('dip','color=j')
+Grey('field2n-slet','clip=0.5')
+Grey('field2n-sletthr','clip=0.5')
+Grey('field2n-sletddtfthr0','clip=0.5')
+
+# seislet alone
+Grey('field2n-re','title=Seislet')
+Grey('field2n-dif','title=Seislet')
+Grey('field2n-re0','title=Seislet')
+Grey('field2n-dif0','title=Seislet')
+
+# seislet + ddtf 
+Grey('field2n-ddtf-re','title=DSD')
+Grey('field2n-ddtf-dif','title=DSD')
+Grey('field2n-ddtf-re00','title=DSD')
+Grey('field2n-ddtf-dif00','title=DSD')
+
+
+## DDTF alone
+Flow('field2n-ddtf-t',[os.path.join(matROOT,matfun+'.m'),'field2n'],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}','${TARGETS[0]}',%(n1)d,%(n2)d,%(lambda1)g,%(niter)d,%(lvl)d,'%(htype)s',%(thr3)g,'%(thrtype)s');quit"
+     '''%vars(),stdin=0,stdout=-1)
+Flow('field2n-ddtf0','field2n-ddtf-t','put %s'%put)
+Flow('field2n-ddtf-dift','field2n field2n-ddtf0','add scale=1,-1 ${SOURCES[1]}')
+Flow('field2n-ddtf-dif0 field2n-ddtf','field2n-ddtf-dift field2n-ddtf0','ortho rect1=2 rect2=2 niter=100 sig=${SOURCES[1]} sig2=${TARGETS[1]}')
+
+
+Grey('field2n-ddtf0','title=DDTF')
+Grey('field2n-ddtf-dift','title=DDTF')
+Grey('field2n-ddtf','title=DDTF')
+Grey('field2n-ddtf-dif0','title=DDTF')
+
+## FX decon
+Flow('field2n-fx0','field2n','put d1=0.004 | fxdecon n2w=%d lenf=%d | put d1=1 '%(n2,lenf))
+Flow('field2n-fx-dif0','field2n field2n-fx0','add scale=1,-1 ${SOURCES[1]}')
+
+Flow('field2n-fx-dif field2n-fx','field2n-fx-dif0 field2n-fx0','ortho rect1=2 rect2=2 niter=100 sig=${SOURCES[1]} sig2=${TARGETS[1]}')
+
+Grey('field2n-fx-dif0','title=FX')
+Grey('field2n-fx0','title=FX')
+Grey('field2n-fx','title=FX')
+Grey('field2n-fx-dif','title=FX')
+
+
+Flow('field2n-dif0-n','field2n-dif0','bandpass fhi=0.25')
+Flow('field2n-ddtf-dif00-n','field2n-ddtf-dif00','bandpass fhi=0.25')
+Flow('field2n-ddtf-dift-n','field2n-ddtf-dift','bandpass fhi=0.25')
+Flow('field2n-fx-dif0-n','field2n-fx-dif0','bandpass fhi=0.25')
+
+Grey('field2n-fx-dif0-n','title=FX')
+Grey('field2n-dif0-n','title=Seislet')
+Grey('field2n-ddtf-dif00-n','title=DSD')
+Grey('field2n-ddtf-dift-n','title=DDTF')
+
+## compute SNR
+#Flow('field2-diff1','field2 field2n','add scale=1,-1 ${SOURCES[1]} ')
+#Flow('field2-snr1','field2 field2-diff1','snr2 noise=${SOURCES[1]}')
+
+#Flow('field2-diff2','field2 field2n-re','add scale=1,-1 ${SOURCES[1]} ')
+#Flow('field2-snr2','field2 field2-diff2','snr2 noise=${SOURCES[1]}')
+
+#Flow('field2-diff3','field2 field2n-ddtf-re','add scale=1,-1 ${SOURCES[1]} ')
+#Flow('field2-snr3','field2 field2-diff3','snr2 noise=${SOURCES[1]}')
+
+#Flow('field2-diff4','field2 field2n-fx','add scale=1,-1 ${SOURCES[1]} ')
+#Flow('field2-snr4','field2 field2-diff4','snr2 noise=${SOURCES[1]}')
+
+#Flow('field2-diff5','field2 field2n-ddtf','add scale=1,-1 ${SOURCES[1]} ')
+#Flow('field2-snr5','field2 field2-diff5','snr2 noise=${SOURCES[1]}')
+
+Flow('field2-diff1','field2 field2n','add scale=1,-1 ${SOURCES[1]} ')
+Flow('field2-snr1','field2 field2-diff1','snr2 noise=${SOURCES[1]}')
+
+Flow('field2-diff2','field2 field2n-re0','add scale=1,-1 ${SOURCES[1]} ')
+Flow('field2-snr2','field2 field2-diff2','snr2 noise=${SOURCES[1]}')
+
+Flow('field2-diff3','field2 field2n-ddtf-re00','add scale=1,-1 ${SOURCES[1]} ')
+Flow('field2-snr3','field2 field2-diff3','snr2 noise=${SOURCES[1]}')
+
+Flow('field2-diff4','field2 field2n-fx0','add scale=1,-1 ${SOURCES[1]} ')
+Flow('field2-snr4','field2 field2-diff4','snr2 noise=${SOURCES[1]}')
+
+Flow('field2-diff5','field2 field2n-ddtf0','add scale=1,-1 ${SOURCES[1]} ')
+Flow('field2-snr5','field2 field2-diff5','snr2 noise=${SOURCES[1]}')
+
+## Creating framebox
+x=100
+y=0.46
+w=100
+w1=0.6
+
+Flow('frame.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	string.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame','frame.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=0 max1=471 min2=0 max2=2.048 pad=n plotfat=15 plotcol=2 
+	wantaxis=n wanttitle=n yreverse=y 
+	''')
+
+#field2    -> field2-f   -> field2-f-zoom
+#field2n   -> field2n-f -> field2n-f-zoom
+#field2n-re0 -> field2n-re0-f -> field2n-f-zoom
+#field2n-ddtf-re00 -> field2n-ddtf-re00-f -> field2n-f-zoom
+#field2n-fx0 -> field2n-fx0-f -> field2n-f-zoom
+#field2n-ddtf0 -> field2n-ddtf0-f -> field2n-f-zoom
+
+## adding frame boxes
+Result('field2-f','Fig/field2.vpl frame','Overlay')
+Result('field2n-f','Fig/field2n.vpl frame','Overlay')
+Result('field2n-re0-f','Fig/field2n-re0.vpl frame','Overlay')
+Result('field2n-ddtf-re00-f','Fig/field2n-ddtf-re00.vpl frame','Overlay')
+Result('field2n-fx0-f','Fig/field2n-fx0.vpl frame','Overlay')
+Result('field2n-ddtf0-f','Fig/field2n-ddtf0.vpl frame','Overlay')
+
+## Ploting zoomed sections
+zoom='f1=120 n1=145 f2=110 n2=110'
+Flow('field2-f-zoom','field2','window %s'%zoom)
+Flow('field2n-f-zoom','field2n','window %s'%zoom)
+Flow('field2n-re0-f-zoom','field2n-re0','window %s'%zoom)
+Flow('field2n-ddtf-re00-f-zoom','field2n-ddtf-re00','window %s'%zoom)
+Flow('field2n-fx0-f-zoom','field2n-fx0','window %s'%zoom)
+Flow('field2n-ddtf0-f-zoom','field2n-ddtf0','window %s'%zoom)
+Greyzoom('field2-f-zoom','title=Clean')
+Greyzoom('field2n-f-zoom','title=Noisy')
+Flow('field2n-f-zoom-n','field2n-f-zoom','bandpass fhi=0.25')
+Greyzoom('field2n-f-zoom-n','title=Noisy')
+Greyzoom('field2n-re0-f-zoom','title=Seislet')
+Greyzoom('field2n-ddtf-re00-f-zoom','title=DSD')
+Greyzoom('field2n-fx0-f-zoom','title=FX')
+Greyzoom('field2n-ddtf0-f-zoom','title=DDTF')
+
+## Adding arrows
+Plot('arrow1',None,
+	'''
+	box x0=8.0 y0=8.2 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+
+Plot('arrow2',None,
+	'''
+	box x0=6.6 y0=6.2 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+
+Plot('arrow3',None,
+	'''
+	box x0=9.5 y0=4.45 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+
+
+Result('field2-f-zoom-a','Fig/field2-f-zoom.vpl arrow1 arrow2 arrow3','Overlay')
+Result('field2n-f-zoom-a','Fig/field2n-f-zoom.vpl arrow1 arrow2 arrow3','Overlay')
+Result('field2n-f-zoom-a-n','Fig/field2n-f-zoom-n.vpl arrow1 arrow2 arrow3','Overlay')
+Result('field2n-re0-f-zoom-a','Fig/field2n-re0-f-zoom.vpl arrow1 arrow2 arrow3','Overlay')
+Result('field2n-ddtf-re00-f-zoom-a','Fig/field2n-ddtf-re00-f-zoom.vpl arrow1 arrow2 arrow3','Overlay')
+Result('field2n-fx0-f-zoom-a','Fig/field2n-fx0-f-zoom.vpl arrow1 arrow2 arrow3','Overlay')
+Result('field2n-ddtf0-f-zoom-a','Fig/field2n-ddtf0-f-zoom.vpl arrow1 arrow2 arrow3','Overlay')
+
+
+
+
+
+
+
+
+End()

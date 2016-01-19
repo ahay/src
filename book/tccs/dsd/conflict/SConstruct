@@ -1,0 +1,281 @@
+from rsf.proj import *
+from rsf.prog import RSFROOT
+
+def Grey(data,other): 
+	Result(data,'window n1=490  | grey label2=Trace unit2="" label1=Time unit1="s" title="" labelsz=10  labelfat=4 font=2 titlesz=10 titlefat=4  wherexlabel=b wheretitle=t color=g bartype=v screenratio=1.3 clip=0.6 %s'%other)
+
+def Greyfk(data,other): 
+	Result(data,'grey label2=Trace unit2="" label1=Time unit1="s" title="" labelsz=10  labelfat=4 font=2 titlesz=10 titlefat=4  wherexlabel=b wheretitle=t color=g bartype=v screenratio=1.3 clip=83 %s'%other)
+
+
+#############################################################################
+# Setting parameters
+########################################################################
+n1=512
+n2=256
+lambda1=0.5
+niter=30
+lvl=2
+htype='spline'
+thr1=5	#slet alone
+thr2=2	#dsd  		
+thr3=4 #ddtf alone
+thrtype='g'
+
+###########################################################################
+## four complex events (one horizontal, three dipping with intersection)
+###########################################################################
+Flow('conflict-0',None,
+     '''
+     spike n1=512 n2=256 d2=1 o2=0 label2=Trace unit2=
+     nsp=4 k1=64,100,160,200 p2=1.5,-0.3,0,0.5 mag=1,1,1,1 |
+     ricker1 frequency=20 |
+     noise seed=2008 var=0 | scale axis=2
+     ''')
+# Add some static
+
+Flow('static','conflict-0','window n1=1 | noise seed=2015 var=0.005 | smooth rect1=10 repeat=2')
+
+Flow('conflict','conflict-0 static','datstretch datum=${SOURCES[1]}')
+
+Flow('conflictn','conflict','noise var=0.02 seed=201314')
+Grey('conflict','title=Clean')
+Grey('conflictn','title=Noisy')
+
+Flow('conflictn-n','conflictn','bandpass fhi=80')
+Grey('conflictn-n','title=Noisy')
+
+Flow('dip1','conflictn','threshold1 thr=10 | dip rect1=5 rect2=5 order=2')
+Flow('dip','conflictn','dip rect1=10 rect2=10 order=2')
+
+# seislet transform
+Flow('conflictn-slet','conflictn dip','seislet order=2 dip=${SOURCES[1]} adj=y inv=y eps=0.1 type=b')
+
+# threshold
+Flow('conflictn-sletthr','conflictn-slet','threshold1 thr=%g'%thr1)
+
+# transform back
+Flow('conflictn-re','conflictn-sletthr dip','seislet order=2 dip=${SOURCES[1]} adj=n iv=y eps=0.1 type=b' )
+
+import random
+random.seed(2015)
+
+nr = 0
+def rnd(x):
+    global nr
+    r = str(random.randint(1,nr))
+    return r
+
+nsp = 200 # number of basis functions
+n1 = 512
+n2 = 256
+
+nr = n1
+k1 = string.join(map(rnd,range(nsp)),',')
+nr = n2
+k2 = string.join(map(rnd,range(nsp)),',')
+
+Flow('seislets','conflictn-slet dip-c',
+     '''
+     spike nsp=%d k1=%s k2=%s | mul ${SOURCES[0]} |
+     seislet order=2 dip=${SOURCES[1]} adj=n iv=y eps=0.1 type=b
+     ''' % (nsp,k1,k2))
+     
+Flow('conflictn-dif','conflictn conflictn-re','add scale=1,-1 ${SOURCES[1]}')
+
+########################################################################
+# INITIALIZATION
+########################################################################
+matlab         = WhereIs('matlab')
+matROOT = '../matfun'
+matfun = 'Syn_ddtf'
+matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
+
+if not matlab:
+    sys.stderr.write('\nCannot find Matlab.\n')
+    sys.exit(1)
+
+############################################################
+## generate and process synthetic data
+############################################################
+Flow('conflictn-sletddtfthr',[os.path.join(matROOT,matfun+'.m'),'conflictn-slet'],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}','${TARGETS[0]}',%(n1)d,%(n2)d,%(lambda1)g,%(niter)d,%(lvl)d,'%(htype)s',%(thr2)g,'%(thrtype)s');quit"
+     '''%vars(),stdin=0,stdout=-1)
+Flow('conflictn-sletddtfthr0','conflictn-sletddtfthr','put d2=1 o2=0 d1=0.004 o1=0')
+
+
+
+## Seislet + DDTF
+Flow('conflictn-ddtf-re','conflictn-sletddtfthr dip','put d2=1 o2=0 d1=0.004 o1=0 | seislet order=2 dip=${SOURCES[1]} adj=n inv=y eps=0.1 type=b')
+Flow('conflictn-ddtf-dif','conflictn conflictn-ddtf-re','add scale=1,-1 ${SOURCES[1]}')
+
+
+## DDTF alone
+Flow('conflictn-ddtf0',[os.path.join(matROOT,matfun+'.m'),'conflictn'],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}','${TARGETS[0]}',%(n1)d,%(n2)d,%(lambda1)g,%(niter)d,%(lvl)d,'%(htype)s',%(thr3)g,'%(thrtype)s');quit"
+     '''%vars(),stdin=0,stdout=-1)
+Flow('conflictn-ddtf','conflictn-ddtf0','put d2=1 o2=0 d1=0.004 o1=0')
+Flow('conflictn-ddtf-dif0','conflictn conflictn-ddtf','add scale=1,-1 ${SOURCES[1]}')
+Grey('conflictn-ddtf','title="DDTF"')
+Grey('conflictn-ddtf-dif0','title="DDTF"')
+
+## Ploting
+Grey('dip','color=j')
+Grey('dip1','color=j')
+Grey('conflictn-slet','clip=0.5')
+Grey('conflictn-sletthr','clip=0.5')
+Grey('conflictn-sletddtfthr0','clip=0.5')
+Grey('conflictn-re','title="Seislet"')
+Grey('conflictn-dif','title="Seislet"')
+
+Grey('conflictn-ddtf-re','title="DSD"')
+Grey('conflictn-ddtf-dif','title="DSD"')
+
+
+
+
+## Error section
+
+Flow('conflictn-err','conflict conflictn-re','add scale=1,-1 ${SOURCES[1]}')
+Flow('conflictn-ddtf-err','conflict conflictn-ddtf','add scale=1,-1 ${SOURCES[1]}')
+Flow('conflictn-ddtf-re-err','conflict conflictn-ddtf-re','add scale=1,-1 ${SOURCES[1]}')
+
+Grey('conflictn-ddtf-re-err','title="DSD" clip=1.2')
+Grey('conflictn-ddtf-err','title="DDTF" clip=1.2')
+Grey('conflictn-err','title="Seislet" clip=1.2')
+## FX decon
+Flow('conflictn-fx','conflictn','fxdecon n2w=%d '%n2)
+Flow('conflictn-fx-dif','conflictn conflictn-fx','add scale=1,-1 ${SOURCES[1]}')
+Grey('conflictn-fx','title="FX"')
+Grey('conflictn-fx-dif','title="FX"')
+
+Flow('conflictn-ddtf-dif0-n','conflictn-ddtf-dif0','bandpass fhi=80')
+Flow('conflictn-ddtf-dif-n','conflictn-ddtf-dif','bandpass fhi=80')
+Flow('conflictn-dif-n','conflictn-dif','bandpass fhi=80')
+Flow('conflictn-fx-dif-n','conflictn-fx-dif','bandpass fhi=80')
+
+Grey('conflictn-ddtf-dif-n','title="DSD"')
+Grey('conflictn-ddtf-dif0-n','title="DDTF"')
+Grey('conflictn-dif-n','title="Seislet"')
+Grey('conflictn-fx-dif-n','title="FX"')
+
+## FK
+Flow('conflict-fk','conflict','fft1 | fft3 axis=2 | cabs')
+Flow('conflictn-fk','conflictn','fft1 | fft3 axis=2 | cabs')
+Flow('conflictn-re-fk','conflictn-re','fft1 | fft3 axis=2 | cabs')
+Flow('conflictn-ddtf-fk','conflictn-ddtf','fft1 | fft3 axis=2 | cabs')
+Flow('conflictn-ddtf-re-fk','conflictn-ddtf-re','fft1 | fft3 axis=2| cabs')
+
+Greyfk('conflict-fk','title="Clean" color=j allpos=y')
+Greyfk('conflictn-fk','title="Noisy" color=j allpos=y')
+Greyfk('conflictn-re-fk','title="Seislet" color=j allpos=y')
+Greyfk('conflictn-ddtf-fk','title="DDTF" color=j allpos=y')
+Greyfk('conflictn-ddtf-re-fk','title="DSD" color=j allpos=y')
+
+## compute SNR
+Flow('conflict-diff1','conflict conflictn','add scale=1,-1 ${SOURCES[1]} ')
+Flow('conflict-snr1','conflict conflict-diff1','snr2 noise=${SOURCES[1]}')
+
+Flow('conflict-diff2','conflict conflictn-re','add scale=1,-1 ${SOURCES[1]} ')
+Flow('conflict-snr2','conflict conflict-diff2','snr2 noise=${SOURCES[1]}')
+
+Flow('conflict-diff3','conflict conflictn-ddtf-re','add scale=1,-1 ${SOURCES[1]} ')
+Flow('conflict-snr3','conflict conflict-diff3','snr2 noise=${SOURCES[1]}')
+
+Flow('conflict-diff4','conflict conflictn-fx','add scale=1,-1 ${SOURCES[1]} ')
+Flow('conflict-snr4','conflict conflict-diff4','snr2 noise=${SOURCES[1]}')
+
+Flow('conflict-diff5','conflict conflictn-ddtf','add scale=1,-1 ${SOURCES[1]} ')
+Flow('conflict-snr5','conflict conflict-diff5','snr2 noise=${SOURCES[1]}')
+
+
+Flow('dip-c','conflict','dip rect1=20 rect2=20 order=2')
+Flow('conflict-slet','conflict dip-c','seislet order=2 dip=${SOURCES[1]} adj=y inv=y eps=0.1 type=b')
+
+
+
+lvl=1
+
+seiss=[]
+seisindexs=[]
+for i in range(10):
+	thr=(i+1)/1.0
+	num=int ((i+1)/1000.0*131072)
+	seis='seis-%d'%(i+1)
+	seisindex='seisindex-%d'%(i+1)
+	Flow(seis,'conflict-slet dip-c conflict',
+		'''
+		threshold1 type=h ifperc=1 thr=%g | seislet order=2 dip=${SOURCES[1]} adj=n inv=y eps=0.1 type=b | 
+		add scale=1,-1 ${SOURCES[2]} | math output="input*input" | stack axis=2 norm=n | stack axis=1 norm=n '''%thr)
+	Flow(seisindex,None,'math n1=1 output="%d"'%num)
+	seiss.append(seis)
+	seisindexs.append(seisindex)
+Flow('seiss',seiss,'cat axis=1 ${SOURCES[1:%d]}'%len(seiss))
+Flow('seisindexs',seisindexs,'cat axis=1 ${SOURCES[1:%d]}'%len(seisindexs))
+Flow('seis','seisindexs seiss','cmplx ${SOURCES[1]}')
+Result('seis','graph title= label1=N label2=E unit1=')
+
+ddtfs=[]
+ddtfindexs=[]
+for i in range(10):
+	thr=(i+1)/9.0
+	num=int ((i+1)/1000.0*131072)
+	ddtf='ddtf-%d'%(i+1)
+	ddtfindex='ddtfindex-%d'%(i+1)
+	Flow('ddtf0-%d'%i,[os.path.join(matROOT,matfun+'.m'),'conflict'],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}','${TARGETS[0]}',%(n1)d,%(n2)d,%(lambda1)g,%(niter)d,%(lvl)d,'%(htype)s',%(thr)g,'%(thrtype)s','h');quit"
+     '''%vars(),stdin=0,stdout=-1)
+	Flow(ddtf,['ddtf0-%d'%i,'conflict'],'add scale=1,-1 ${SOURCES[1]} | math output="input*input" | stack axis=2 norm=n | stack axis=1 norm=n')
+	Flow(ddtfindex,None,'math n1=1 output="%d"'%num)
+	ddtfs.append(ddtf)
+	ddtfindexs.append(ddtfindex)
+Flow('ddtfs',ddtfs,'cat axis=1 ${SOURCES[1:%d]}'%len(ddtfs))
+Flow('ddtfindexs',ddtfindexs,'cat axis=1 ${SOURCES[1:%d]}'%len(ddtfindexs))
+Flow('ddtf','ddtfindexs ddtfs','cmplx ${SOURCES[1]}')
+
+Result('ddtf','graph title= label1=N label2=E unit1=')
+
+dsds=[]
+dsdindexs=[]
+for i in range(10):
+	thr=(i+1)/9.0
+	num=int ((i+1)/1000.0*131072)
+	dsd='dsd-%d'%(i+1)
+	dsdindex='dsdindex-%d'%(i+1)
+	Flow('dsd0-%d'%i,[os.path.join(matROOT,matfun+'.m'),'conflict-slet'],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}','${TARGETS[0]}',%(n1)d,%(n2)d,%(lambda1)g,%(niter)d,%(lvl)d,'%(htype)s',%(thr)g,'%(thrtype)s','h');quit"
+     '''%vars(),stdin=0,stdout=-1)
+	Flow(dsd,['dsd0-%d'%i,'dip-c','conflict'],'seislet order=2 dip=${SOURCES[1]} adj=n inv=y eps=0.1 type=b | add scale=1,-1 ${SOURCES[2]} | math output="input*input" | stack axis=2 norm=n | stack axis=1 norm=n')
+	Flow(dsdindex,None,'math n1=1 output="%d"'%num)
+	dsds.append(dsd)
+	dsdindexs.append(dsdindex)
+Flow('dsds',dsds,'cat axis=1 ${SOURCES[1:%d]}'%len(dsds))
+Flow('dsdindexs',dsdindexs,'cat axis=1 ${SOURCES[1:%d]}'%len(dsdindexs))
+Flow('dsd','dsdindexs dsds','cmplx ${SOURCES[1]}')
+
+
+
+Result('dsd','graph title= label1=N label2=E unit1=')
+
+# Making frames
+Plot('label0',None,
+	'''
+	box x0=3.4 y0=6 label="DSD" xt=0.5 yt=0.5
+	''')
+Plot('label1',None,
+	'''
+	box x0=6.6 y0=3.5 label="DDTF" xt=0.5 yt=0.5 
+	''') # xt,yt relative position 0.5
+Plot('label2',None, 
+	'''
+	box x0=4.1 y0=2.3 label="Seislet" xt=0.5 yt=0.5
+	''')
+
+Flow('sparse','seis ddtf dsd','cat axis=2 ${SOURCES[1:3]}')
+Plot('sparse','graph title= label1="Nmber of Coefficients" label2="Reconstruction Error" unit1= dash=0,0,1')
+Result('sparse','sparse label0 label1 label2','Overlay')
+End()

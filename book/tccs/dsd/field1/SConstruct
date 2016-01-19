@@ -1,0 +1,162 @@
+from rsf.proj import *
+from rsf.prog import RSFROOT
+
+put0='n1=512 n2=512 d1=1 d2=1 o1=0 o2=0 '
+put='n1=350 n2=256 d1=1 d2=1 o1=0 o2=0 '
+
+def Grey(data,other): 
+	Result(data,'put %s | grey label2=Trace unit2="" label1="Time sampling number" title="" labelsz=10 labelfat=4 font=2 titlesz=10 titlefat=4 screenht=10.24 screenratio=0.75 screenwd=13.65 wherexlabel=b wheretitle=t bartype=v  clip=0.4 color=d %s'%(put,other))
+
+#############################################################################
+# Setting parameters
+########################################################################
+n1=350
+n2=256
+padn2=256
+lambda1=0.5
+niter=30
+lvl=2
+htype='spline'
+thr1=4 #(better than 3,5)
+thr2=3 #(better than 2,4)
+thr3=8 #(better than 4,5,6,7,8,9)
+thrtype='g'
+
+#############################################################################
+# Field data (CHENYK2/Seismicdata/)
+########################################################################
+Flow('field1','fieldma1.bin','bin2rsf bfile=${SOURCES[0]} %s| scale axis=2 | math output="input-0.5"| window f2=256 n1=350'%(put0) )
+
+## Add noise
+Flow('field1n','field1','noise var=0.01 seed=201314')
+
+Grey('field1','title=Clean')
+Grey('field1n','title=Noisy')
+
+Flow('field1n-n','field1n','bandpass fhi=0.25')
+Grey('field1n-n','title=Noisy')
+
+Flow('dip','field1n','dip rect1=40 rect2=40 | pad n2=%d'%padn2)
+
+Flow('field1n-slet','field1n dip','pad n2=%d | seislet dip=${SOURCES[1]} adj=y inv=y eps=0.1 type=b'%padn2)
+Flow('field1n-sletthr','field1n-slet','threshold1 thr=%g'%thr1)
+Flow('field1n-re0','field1n-sletthr dip','seislet dip=${SOURCES[1]} adj=n inv=y eps=0.1 type=b | window n2=%d'%n2 )
+Flow('field1n-dif0','field1n field1n-re0','add scale=1,-1 ${SOURCES[1]}')
+Flow('field1n-dif field1n-re','field1n-dif0 field1n-re0','ortho rect1=2 rect2=2 niter=100 sig=${SOURCES[1]} sig2=${TARGETS[1]}')
+
+########################################################################
+# INITIALIZATION
+########################################################################
+matlab         = WhereIs('matlab')
+matROOT = '../matfun'
+matfun = 'Syn_ddtf'
+matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
+
+if not matlab:
+    sys.stderr.write('\nCannot find Matlab.\n')
+    sys.exit(1)
+
+############################################################
+## generate and process synthetic data
+############################################################
+Flow('field1n-sletddtfthr',[os.path.join(matROOT,matfun+'.m'),'field1n-slet'],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}','${TARGETS[0]}',%(n1)d,%(padn2)d,%(lambda1)g,%(niter)d,%(lvl)d,'%(htype)s',%(thr2)g,'%(thrtype)s');quit"
+     '''%vars(),stdin=0,stdout=-1)
+Flow('field1n-sletddtfthr0','field1n-sletddtfthr','put %s'%put)
+
+
+## Seislet + DDTF
+Flow('field1n-ddtf-re00','field1n-sletddtfthr dip','put %s | seislet dip=${SOURCES[1]} adj=n inv=y eps=0.1 type=b | window n2=%d'%(put,n2) )
+Flow('field1n-ddtf-dif00','field1n field1n-ddtf-re00','add scale=1,-1 ${SOURCES[1]}')
+Flow('field1n-ddtf-dif field1n-ddtf-re','field1n-ddtf-dif00 field1n-ddtf-re00','ortho rect1=2 rect2=2 niter=100 sig=${SOURCES[1]} sig2=${TARGETS[1]}')
+
+
+Grey('dip','color=j')
+Grey('field1n-slet','clip=0.5')
+Grey('field1n-sletthr','clip=0.5')
+Grey('field1n-sletddtfthr0','clip=0.5')
+Grey('field1n-re','title=Seislet')
+Grey('field1n-dif','title=Seislet')
+Grey('field1n-re0','title=Seislet')
+Grey('field1n-dif0','title=Seislet')
+
+Grey('field1n-ddtf-re','title=DSD')
+Grey('field1n-ddtf-dif','title=DSD')
+Grey('field1n-ddtf-re00','title=DSD')
+Grey('field1n-ddtf-dif00','title=DSD')
+
+
+
+
+
+
+
+
+## DDTF alone
+Flow('field1n-ddtf-t',[os.path.join(matROOT,matfun+'.m'),'field1n'],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}','${TARGETS[0]}',%(n1)d,%(n2)d,%(lambda1)g,%(niter)d,%(lvl)d,'%(htype)s',%(thr3)g,'%(thrtype)s');quit"
+     '''%vars(),stdin=0,stdout=-1)
+Flow('field1n-ddtf0','field1n-ddtf-t','put %s'%put)
+Flow('field1n-ddtf-dift','field1n field1n-ddtf0','add scale=1,-1 ${SOURCES[1]}')
+Flow('field1n-ddtf-dif0 field1n-ddtf','field1n-ddtf-dift field1n-ddtf0','ortho rect1=2 rect2=2 niter=100 sig=${SOURCES[1]} sig2=${TARGETS[1]}')
+
+Grey('field1n-ddtf','title=DDTF')
+Grey('field1n-ddtf-dif0','title=DDTF')
+Grey('field1n-ddtf0','title=DDTF')
+Grey('field1n-ddtf-dift','title=DDTF')
+## FX decon
+Flow('field1n-fx0','field1n','put d1=0.004 | fxdecon n2w=%d | put d1=1 '%(n2))
+Flow('field1n-fx-dif0','field1n field1n-fx0','add scale=1,-1 ${SOURCES[1]}')
+
+Flow('field1n-fx-dif field1n-fx','field1n-fx-dif0 field1n-fx0','ortho rect1=2 rect2=2 niter=100 sig=${SOURCES[1]} sig2=${TARGETS[1]}')
+Grey('field1n-fx','title=FX')
+Grey('field1n-fx-dif','title=FX')
+Grey('field1n-fx0','title=FX')
+Grey('field1n-fx-dif0','title=FX')
+
+
+Flow('field1n-fx-dif0-n','field1n-fx-dif0','bandpass fhi=0.25')
+Flow('field1n-ddtf-dif00-n','field1n-ddtf-dif00','bandpass fhi=0.25')
+Flow('field1n-ddtf-dift-n','field1n-ddtf-dift','bandpass fhi=0.25')
+Flow('field1n-dif0-n','field1n-dif0','bandpass fhi=0.25')
+
+Grey('field1n-ddtf-dift-n','title=DDTF')
+Grey('field1n-dif0-n','title=Seislet')
+Grey('field1n-fx-dif0-n','title=FX')
+Grey('field1n-ddtf-dif00-n','title=DSD')
+
+
+## compute SNR
+#Flow('field1-diff1','field1 field1n','add scale=1,-1 ${SOURCES[1]} ')
+#Flow('field1-snr1','field1 field1-diff1','snr2 noise=${SOURCES[1]}')
+
+#Flow('field1-diff2','field1 field1n-re','add scale=1,-1 ${SOURCES[1]} ')
+#Flow('field1-snr2','field1 field1-diff2','snr2 noise=${SOURCES[1]}')
+
+#Flow('field1-diff3','field1 field1n-ddtf-re','add scale=1,-1 ${SOURCES[1]} ')
+#Flow('field1-snr3','field1 field1-diff3','snr2 noise=${SOURCES[1]}')
+
+#Flow('field1-diff4','field1 field1n-fx','add scale=1,-1 ${SOURCES[1]} ')
+#Flow('field1-snr4','field1 field1-diff4','snr2 noise=${SOURCES[1]}')
+
+#Flow('field1-diff5','field1 field1n-ddtf','add scale=1,-1 ${SOURCES[1]} ')
+#Flow('field1-snr5','field1 field1-diff5','snr2 noise=${SOURCES[1]}')
+
+Flow('field1-diff1','field1 field1n','add scale=1,-1 ${SOURCES[1]} ')
+Flow('field1-snr1','field1 field1-diff1','snr2 noise=${SOURCES[1]}')
+
+Flow('field1-diff2','field1 field1n-re0','add scale=1,-1 ${SOURCES[1]} ')
+Flow('field1-snr2','field1 field1-diff2','snr2 noise=${SOURCES[1]}')
+
+Flow('field1-diff3','field1 field1n-ddtf-re00','add scale=1,-1 ${SOURCES[1]} ')
+Flow('field1-snr3','field1 field1-diff3','snr2 noise=${SOURCES[1]}')
+
+Flow('field1-diff4','field1 field1n-fx0','add scale=1,-1 ${SOURCES[1]} ')
+Flow('field1-snr4','field1 field1-diff4','snr2 noise=${SOURCES[1]}')
+
+Flow('field1-diff5','field1 field1n-ddtf0','add scale=1,-1 ${SOURCES[1]} ')
+Flow('field1-snr5','field1 field1-diff5','snr2 noise=${SOURCES[1]}')
+
+End()
