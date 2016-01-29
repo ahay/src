@@ -25,29 +25,31 @@ int main(int argc, char* argv[])
     int ndim, mdim, nd, ns, n12, i, j, niter;
     float *d, *f, *g, mean, tmp;
     char key[6];
-    sf_file dat, flt, mat, ref;
+    sf_file dat, flt, mat;
 
     sf_init(argc,argv);
 
     dat = sf_input("basis");
 
-    if (!sf_getbool("adj",&adj)) adj=true;
+    if (!sf_getbool("adj",&adj)) adj=false;
     
-    if (adj) {
+    if (!adj) {
 	mat = sf_input("in");
 	flt = sf_output("out");
     } else {
 	flt = sf_input("in");
 	mat = sf_output("out");
-	ref = sf_input("dimref");
     }
 
     ndim = sf_filedims(dat,n);
-	if(adj){
-		mdim = sf_filedims(mat,m);
-	}else{
-		mdim = sf_filedims(ref,m);
-	}
+    if(!adj){
+	mdim = sf_filedims(mat,m);
+	sf_putint(flt,"ndim",mdim);
+	sf_putints(flt,"n",m,mdim);
+    }else{
+	if (!sf_histint(flt,"ndim",&mdim)) sf_error("No ndim= in input");
+	if (!sf_histints(flt,"n",m,mdim)) sf_error("No n= in input");
+    }
 
     if (mdim > ndim) 
 	sf_error("Wrong dimensions: %d > %d",mdim,ndim);
@@ -64,7 +66,7 @@ int main(int argc, char* argv[])
 
     for (ns = 1; j < ndim; j++) {
 	ns *= n[j];
-	if(adj){
+	if(!adj){
 		snprintf(key,6,"d%d",j+1);
 		sf_histfloat(dat,key,&tmp);
 		sf_putfloat(flt,key,tmp);
@@ -75,12 +77,12 @@ int main(int argc, char* argv[])
 	}
 	
 	snprintf(key,6,"n%d",j+1);
-	if(adj){
-		sf_putint(flt,key,n[j]);
+	if(!adj){
+	    sf_putint(flt,key,n[j]);
 	}else{
-		sf_putint(mat,key,1);
-    }
+	    sf_putint(mat,key,1);
 	}
+    }
     n12 = nd*ns;
 
     if (!sf_getint("niter",&niter)) niter=100;
@@ -112,7 +114,7 @@ int main(int argc, char* argv[])
 	d[i] /= mean;
     }
 
-    if (!adj) {
+    if (adj) {
 	sf_floatread(f,n12,flt);
     } else {
 	sf_floatread(g,nd,mat);
@@ -121,9 +123,9 @@ int main(int argc, char* argv[])
 	}
     }
     
-    sf_multidivn_adj(adj,g,f,niter);
+    sf_multidivn_adj(!adj,g,f,niter);
 
-    if (!adj) {
+    if (adj) {
 	for(i=0; i < nd; i++) {
 	    g[i] /= mean;
 	}
