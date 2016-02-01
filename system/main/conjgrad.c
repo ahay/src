@@ -29,35 +29,34 @@
 
 #include <rsf.h>
 
-#define DLOOP(a) for (dsiz=nd, dbuf=nbuf; dsiz > 0; dsiz -= dbuf) { \
-	         if (dsiz < dbuf) dbuf=dsiz; {a} }
+#define DLOOP(a) for (dsiz=nd, dbuf=nbuf; dsiz > 0; dsiz -= dbuf) {	\
+	if (dsiz < dbuf) dbuf=dsiz; {a} }
 
-#define MLOOP(a) for (msiz=nm, mbuf=nbuf; msiz > 0; msiz -= mbuf) { \
-	         if (msiz < mbuf) mbuf=msiz; {a} }
+#define MLOOP(a) for (msiz=nm, mbuf=nbuf; msiz > 0; msiz -= mbuf) {	\
+	if (msiz < mbuf) mbuf=msiz; {a} }
 
-#define DREAD(a) if (dbuf != fread(buf,sizeof(float),dbuf,a)) \
-                  sf_error("write error")
+#define DREAD(a) if (dbuf != fread(buf,sizeof(float),dbuf,a))	\
+	sf_error("write error")
 
-#define MREAD(a) if (mbuf != fread(buf,sizeof(float),mbuf,a)) \
-                  sf_error("write error")
+#define MREAD(a) if (mbuf != fread(buf,sizeof(float),mbuf,a))	\
+	sf_error("write error")
 
 #define DREAD2(a) if (dbuf != fread(buf2,sizeof(float),dbuf,a)) \
-                  sf_error("write error")
+	sf_error("write error")
 
 #define MREAD2(a) if (mbuf != fread(buf2,sizeof(float),mbuf,a)) \
-                  sf_error("write error")
+	sf_error("write error")
 
 #define DWRITE(a) if (dbuf != fwrite(buf,sizeof(float),dbuf,a)) \
-                  sf_error("write error")
+	sf_error("write error")
 
 #define MWRITE(a) if (mbuf != fwrite(buf,sizeof(float),mbuf,a)) \
-                  sf_error("write error")
+	sf_error("write error")
 
 #define DUP(a) if (dup(a) < 0) sf_error("dup error:")
 
 int main(int argc, char* argv[])
 {
-    bool stdio;
     int i, iter, niter, p[6][2], status;
     float *buf, *buf2, *wht;
     double rn, rnp, alpha, beta;
@@ -67,15 +66,14 @@ int main(int argc, char* argv[])
     FILE *xfile, *Rfile, *gfile, *sfile, *Sfile;
     char *x, *R, *g, *s, *S, *prog;
     sf_file mod, dat, from, mwt, x0;  /* input */
-    sf_file out, to;                  /* output */
+    sf_file to, out; /* output */
 
     extern int fseeko(FILE *stream, off_t offset, int whence);
     extern off_t ftello (FILE *stream);
 
     sf_init(argc,argv);
-    stdio = !sf_getstring("--input") && !sf_getstring("--output");
 
-    dat = sf_input(stdio?"in":"--input");
+    dat = sf_input("in");
     mod = sf_input("mod");
 
     if (SF_FLOAT != sf_gettype(mod) ||
@@ -109,6 +107,7 @@ int main(int argc, char* argv[])
     Sfile = sf_tempfile(&S,"w+b");
 
     fclose(Rfile);
+    fclose(xfile);
     fclose(gfile);
     fclose(sfile);
     fclose(Sfile);
@@ -147,7 +146,6 @@ int main(int argc, char* argv[])
 	
 	if (0 == pid[0]) {	
 	    /* feeds rr to p[0] */
-
 	    close(p[0][0]);
 	    close(STDOUT_FILENO);
 	    DUP(p[0][1]);
@@ -162,7 +160,7 @@ int main(int argc, char* argv[])
 		}
 		
 		MLOOP( if (NULL != x0) sf_floatread(buf,mbuf,x0);
-		    MWRITE(xfile); );
+		       MWRITE(xfile); );
 		
 		fclose(xfile);
 
@@ -176,7 +174,7 @@ int main(int argc, char* argv[])
 		DLOOP( DREAD(Rfile); sf_floatwrite(buf,dbuf,to); );
 	    }
 	    fclose(Rfile);
-
+	    
 	    sf_warning("iter %d of %d",iter+1,niter);
 
 	    _exit(0);
@@ -195,6 +193,7 @@ int main(int argc, char* argv[])
 	    DUP(p[1][1]);
 
 	    argv[argc-1][4]='1';
+
 	    execvp(argv[0],argv);
 
 	    _exit(1);
@@ -375,7 +374,7 @@ int main(int argc, char* argv[])
 		   cblas_saxpy(mbuf,alpha,buf2,1,buf,1);
 
 		   if (0 > fseeko(xfile,pos,SEEK_SET))
-		   sf_error ("seek problem");
+		       sf_error ("seek problem");
 	    
 		   MWRITE(xfile); );
 
@@ -393,7 +392,7 @@ int main(int argc, char* argv[])
 		   cblas_saxpy(dbuf,alpha,buf2,1,buf,1);
 
 		   if (0 > fseeko(Rfile,pos,SEEK_SET))
-		   sf_error ("seek problem");
+		       sf_error ("seek problem");
 		   
 		   DWRITE(Rfile); );
 
@@ -411,7 +410,7 @@ int main(int argc, char* argv[])
     }
 	
     /* write x to out */  
-    out = sf_output(stdio? "out":"--output");
+    out = sf_output("out");
     sf_fileflush(out,mod);
 
     xfile = fopen(x,"rb");

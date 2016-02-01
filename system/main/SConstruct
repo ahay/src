@@ -3,10 +3,10 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-add attr cat cconjgrad cdottest cmplx conjgrad cp cut dd disfil
-dottest get headercut headersort headerwindow in interleave mask math
-pad put real reverse rm rotate rtoc scale spike spray stack transp
-window
+add attr cat cconjgrad cdottest cmplx conjgrad conjgradmpi cp cut dd
+disfil dottest get headercut headersort headerwindow in interleave
+mask math pad put real reverse rm rotate rtoc scale spike spray stack
+transp window
 '''
 
 try: # distributed version

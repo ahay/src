@@ -6,9 +6,36 @@ examples. In this chapter, we will take a closer look at an example paper.
 
 \section{Overview of \LaTeX and SEG\TeX}
 
+\LaTeX is a document markup language developed originally by Leslie
+Lamport in early 1980s \cite[]{latex} as an extension of Donuld
+Knuth's \TeX system \cite[]{tex}. \LaTeX is widely used in different
+fields of science and engineering.
+
+\LaTeX files are text files...
+
+SEG\TeX is a collection of \LaTeX macros developed for geophysical
+publications, such as \emph{Geophysics} articles, SEG (Society of
+Exploration Geophysicists) Annual Meeting abstracts, etc. SEG\TeX is
+an open-source project maintained by a group of volunteers. It
+integrates well with Madagascar to support the practice of
+\emph{reproducible research}, as formulated by Jon Claerbout: ...
+
+\LaTeX processing scripts included with Madagascar can turn a single
+document into multiple outputs: paper in a journal, chapter in a book,
+an expanded abstract for a conference, etc. It can also produce
+multiple output formats, namely PDF and HTML.
+
 \section{Example paper}
 
 \subsection{Multiple outputs}
 
 \section{Including papers into books and reports}
 
+\section{Acknowledgments}
+
+The \LaTeX-processing scripts in Madagascar follow a system developed
+earlier at SEP (Stanford Exploration Project) for implementing Jon
+Claerbout's vision of reproducible research \cite[]{sep}.
+
+\bibliographystyle{seg}
+\bibliography{latex}
