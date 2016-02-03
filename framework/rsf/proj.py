@@ -357,7 +357,8 @@ class Project(Environment):
             self.nodes.extend([hosts[i-1]]*nh)
         self.ip = 0
 
-        # self.nodes is a list of CPUs
+        # self.nodes is a list of CPUs (this repeats a host if you asked to 
+        #                               to run multiple tasks on the host)
         # self.jobs is the number of jobs
         # self.ip is the current CPU
 
@@ -370,7 +371,7 @@ class Project(Environment):
         # kls Karl Schleicher This can be trapped by making sure no hosts.txt
         # already exists and exiting with an error.  hosts.txt will need to be
         # deleted at the end.  That will be a project for another day!
-        # YOu cannot append pid to hosts.txt, or the next time you run, 
+        # You cannot append pid to hosts.txt, or the next time you run, 
         # the command wil be different and scons wilL think it needs to be 
         # rerun.
 
@@ -382,7 +383,7 @@ class Project(Environment):
         # complete. kls
         if (os.path.isfile(self.hosts)):
             # would like to delete at end and make error message here it exists.
-            os.unlink(self.hosts)
+            os.unlink(self.hosts)        # os.unlink() removes (deletes) a file
         hosts_fd=open(self.hosts,'w')
         hosts_fd.write("numnodes %4d\n"%len(self.nodes))
         hosts_fd.write("host                                    state\n") 
@@ -563,7 +564,7 @@ class Project(Environment):
         if remote:
             command = re.sub('"','\\"',command)
             if self.raddenv:
-                # runonnode cans to use hosts.txt to avoid pscond reruns
+                # runonnode always uses hosts.txt to avoid pscond reruns
                 #command = string.join([self.runonnode,self.hosts,'\"',self.raddenv,
                 #                      '; cd ',self.cwd,';',command,'\"'])
                 command = string.join([self.runonnode,'\"',self.raddenv,
