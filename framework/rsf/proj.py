@@ -357,8 +357,7 @@ class Project(Environment):
             self.nodes.extend([hosts[i-1]]*nh)
         self.ip = 0
 
-        # self.nodes is a list of CPUs (this repeats a host if you asked to 
-        #                               to run multiple tasks on the host)
+        # self.nodes is a list of CPUs
         # self.jobs is the number of jobs
         # self.ip is the current CPU
 
@@ -371,30 +370,27 @@ class Project(Environment):
         # kls Karl Schleicher This can be trapped by making sure no hosts.txt
         # already exists and exiting with an error.  hosts.txt will need to be
         # deleted at the end.  That will be a project for another day!
-        # You cannot append pid to hosts.txt, or the next time you run, 
+        # YOu cannot append pid to hosts.txt, or the next time you run, 
         # the command wil be different and scons wilL think it needs to be 
         # rerun.
 
-        # resolve conflict here
         if len(self.nodes) > 1:
             self.hosts = self.cwd + '/hosts.txt'
             print "using %s to keep track of nodes in use by pscons."%self.hosts
             print "Only one pscons using remote hosts can be run in directory"
-            # I would like to delete hosts.txt file at end of scons.  Cannot 
-            # just delete in def End(self).  Need to do after all the scons 
-            #command complete. kls
+            # I would like to delete hosts.txt file at end of scons.  Cannot just
+            # delete in def End(self).  Need to do after all the scons command
+            # complete. kls
             if (os.path.isfile(self.hosts)):
-                # would like to delete at end and make error message here it 
-                #exists.
-                os.unlink(self.hosts)   # os.unlink() removes (deletes) a file
+                # would like to delete at end and make error message here it exists.
+                os.unlink(self.hosts)
             hosts_fd=open(self.hosts,'w')
             hosts_fd.write("numnodes %4d\n"%len(self.nodes))
             hosts_fd.write("host                                    state\n") 
             for host in self.nodes:
-                hosts_fd.write(string.ljust(host,40)+
-                               string.ljust("notrunning",10)+"\n")
+                hosts_fd.write(string.ljust(host,40)+string.ljust("notrunning",10)+"\n")
             hosts_fd.close()
-
+           
         for key in self['ENV'].keys():
             # quote the env values because stampede has env variable 
             # SLURM_NODE_ALIASES=(null)  This makes problems in the ssh to nodes.
@@ -568,7 +564,7 @@ class Project(Environment):
         if remote:
             command = re.sub('"','\\"',command)
             if self.raddenv:
-                # runonnode always uses hosts.txt to avoid pscond reruns
+                # runonnode cans to use hosts.txt to avoid pscond reruns
                 #command = string.join([self.runonnode,self.hosts,'\"',self.raddenv,
                 #                      '; cd ',self.cwd,';',command,'\"'])
                 command = string.join([self.runonnode,'\"',self.raddenv,
