@@ -383,7 +383,7 @@ int main(int argc, char* argv[])
     /* write either mapped or sequential files */
     if(!mode_is_seq){
       /* mapped output file */
-      if(0)fprintf(stderr,"call tahwritemapped\n");
+      if(verbose>2)fprintf(stderr,"call tahwritemapped\n");
       tahwritemapped(verbose,intrace, fheader, 
          	      n1_traces, n1_headers,
 		      output, outheaders,
@@ -392,11 +392,11 @@ int main(int argc, char* argv[])
 		      n_output,n_outheaders);
     } else {
       /* seq output file */
-      if(0)fprintf(stderr,"call tahwriteseq\n");
+      if(verbose>2)fprintf(stderr,"call tahwriteseq\n");
       tahwriteseq(verbose,intrace, fheader, 
 		  n1_traces, n1_headers,
 		  output, outheaders,
-		  typehead);
+		  typehead, num_traces);
     }
     /**********************************************/
     /* write trace and headers to the output pipe */
