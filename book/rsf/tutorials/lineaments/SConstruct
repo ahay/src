@@ -164,8 +164,19 @@ Flow('b2',masks+Split('v p q t'),'math %s output="m0*p+m1*p+m2*t+m3*v+m4*v+m5*q"
 Flow('plot.jpg','r2 g2 b2',
      'cat axis=2 ${SOURCES[1:3]} | transp | put n2=81 n3=81 | byte allpos=y clip=1 | byte2jpg')
 
-#
-
 Result('colorcont','color dzcont','Overlay')
+
+# Part 2 - extrat lineaments from enhanced maps
+
+otsus = []
+for case in ('theta','tdxn0','nstd'):
+    otsu = case + '-otsu'
+    Flow(otsu+'.par',case,'histogram n1=101 o1=0 d1=0.01 | otsu | sed s/threshold/min/')
+    Flow(otsu,[case,otsu+'.par'],'mask par=${SOURCES[1]}')
+    Plot(otsu,'dd type=float | grey allpos=y clip=1 wanttitle=n screenratio=1 crowd=1 wantaxis=n transp=n')
+    otsus.append(otsu)
+
+Result('otsu',otsus,'SideBySideIso')
+
 
 End()
