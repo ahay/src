@@ -32,12 +32,12 @@ int main (int argc, char* argv[])
     sf_init (argc,argv);
     inp = sf_input("in");
     if (NULL != sf_getstring("dip1")) dip1 = sf_input("dip1"); /*slope field mesaure along dimension 2*/
-	else sf_error("Need dip1 input");
-	if (NULL != sf_getstring("dip2")) dip2 = sf_input("dip2"); /*slope field mesaure along dimension 3*/
-	else sf_error("Need dip2 input");
+    else sf_error("Need dip1 input");
+    if (NULL != sf_getstring("dip2")) dip2 = sf_input("dip2"); /*slope field mesaure along dimension 3*/
+    else sf_error("Need dip2 input");
     nmod = sf_output("out");
-	if (NULL != sf_getstring("tau0")) tau0 = sf_output("tau0"); /*tau0(tau,p) */
-	else tau0 = NULL ;
+    if (NULL != sf_getstring("tau0")) tau0 = sf_output("tau0"); /*tau0(tau,p) */
+    else tau0 = NULL ;
     
 
     if (SF_FLOAT != sf_gettype(inp)) sf_error("Need float input");
@@ -73,37 +73,37 @@ int main (int argc, char* argv[])
 
     for (ix = 0; ix < nx; ix++) { /* midpoints */
 
-		for (ip2 = 0; ip2 < np2; ip2++) { /* slope 2 (dimension 3)*/
-			p2 = p20+ip2;
+	for (ip2 = 0; ip2 < np2; ip2++) { /* slope 2 (dimension 3)*/
+	    p2 = p20+ip2;
 
-			for (ip1 = 0; ip1 < np1; ip1++) { /* slope 1 (dimension 2)*/
-				p1 = p10+ip1;
+	    for (ip1 = 0; ip1 < np1; ip1++) { /* slope 1 (dimension 2)*/
+		p1 = p10+ip1;
 
-    			sf_floatread (trace,nt,inp);
-    			sf_floatread (slope1,nt,dip1);
-    			sf_floatread (slope2,nt,dip2);
+		sf_floatread (trace,nt,inp);
+		sf_floatread (slope1,nt,dip1);
+		sf_floatread (slope2,nt,dip2);
 
-					for (it=0; it < nt; it++) { /* time */
-						t = t0 + it*dt;
+		for (it=0; it < nt; it++) { /* time */
+		    t = t0 + it*dt;
 		
-						f = t - p1*slope1[it]*dt - p2*slope2[it]*dt;
+		    f = t - p1*slope1[it]*dt - p2*slope2[it]*dt;
 
-						if (f < 0. || f < t) {
-							str[it] = t0-10.*dt;
-						} else {
-							str[it] = sqrtf(t*f); /* t -> tau */
-						}
+		    if (f < 0. || f < t) {
+			str[it] = t0-10.*dt;
+		    } else {
+			str[it] = sqrtf(t*f); /* t -> tau */
+		    }
 
-					}
-
-					stretch4_define (nmo,str);
-
-					stretch4_apply (nmo,trace,trace);
-					sf_floatwrite (trace,nt,nmod);
-					sf_floatwrite (str,nt,tau0);
-
-    		}
 		}
+
+		stretch4_define (nmo,str);
+
+		stretch4_apply (false,nmo,trace,trace);
+		sf_floatwrite (trace,nt,nmod);
+		sf_floatwrite (str,nt,tau0);
+
+	    }
+	}
     }
 
     exit (0);

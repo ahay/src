@@ -138,7 +138,7 @@ int main(int argc, char* argv[])
 	    for (i1=0; i1 < n1; i1++) {
 		trace[i1] /= n1;
 	    }
-	    stretch4_invert (str,strace,trace);
+	    stretch4_invert (false,str,strace,trace);
 	    for (i2=n2; i2 < n3; i2++) {
 		strace[i2] = 0.;
 	    }
@@ -173,7 +173,7 @@ int main(int argc, char* argv[])
 #else
 		kiss_fftri(invs,(const kiss_fft_cpx *) ctrace2, strace);
 #endif
-		stretch4_apply(str,strace,trace);
+		stretch4_apply(false,str,strace,trace);
 		sf_floatwrite (trace,n1,out);
 	    } /* v  */
 	} /* x */

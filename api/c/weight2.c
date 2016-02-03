@@ -74,4 +74,3 @@ void sf_weight2_lop (bool adj, bool add, int nx, int ny, float* xx, float* yy)
     }
 }
 
-/* 	$Id$	 */

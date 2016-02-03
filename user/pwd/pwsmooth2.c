@@ -21,30 +21,32 @@
 #include "pwsmooth.h"
 #include "pwsmooth2.h"
 
-static int n1, n2, n12, ns, order;
-static float eps, **p1, **p2, *smooth1, *smooth2, *smooth3;
+static int n1, n2, n12;
+static float **p1, **p2, *smooth1, *smooth2, *smooth3;
 
-void pwsmooth2_init(int ns1      /* spray radius */,  
+void pwsmooth2_init(int ns      /* spray radius */,  
 		    int m1      /* trace length */,
 		    int m2      /* number of traces */,
-		    int order1   /* PWD order */,
-		    float eps1   /* regularization */,
-		    float **dip1 /* local slope 1 */,
-		    float **dip2 /* local slope 2 */)
+		    int order   /* PWD order */,
+		    float eps   /* regularization */)
 /*< initialize >*/
 {
     n1=m1;
     n2=m2;
     n12=n1*n2;
-    ns = ns1;
-    order = order1;
-    eps = eps1;
-    p1 = dip1;
-    p2 = dip2;
 
     smooth1 = sf_floatalloc(n12);
     smooth2 = sf_floatalloc(n12);
     smooth3 = sf_floatalloc(n12);
+    pwsmooth_init(ns,n1,n2,order,eps);
+}
+
+void pwsmooth2_set(float **dip1 /* local slope 1 */,
+		   float **dip2 /* local slope 2 */)
+/*< set local slope >*/
+{
+    p1 = dip1;
+    p2 = dip2;
 }
 
 void pwsmooth2_close(void)
@@ -53,6 +55,8 @@ void pwsmooth2_close(void)
     free(smooth1);
     free(smooth2);
     free(smooth3);
+
+    pwsmooth_close();
 }
 
 void pwsmooth2_lop(bool adj, bool add, 
@@ -67,38 +71,32 @@ void pwsmooth2_lop(bool adj, bool add,
     sf_adjnull(adj,add,nin,nout,trace,smooth);
 
     if (adj) {
-	pwsmooth_init(ns,n1,n2,order,eps,p1);
+	pwsmooth_set(p1);
 	pwsmooth_lop(true,false,nin,nout,smooth2,smooth);
-	pwsmooth_close();
-	pwsmooth_init(ns,n1,n2,order,eps,p2);
+	pwsmooth_set(p2);
 	pwsmooth_lop(true,false,nin,nout,smooth1,smooth);
 	pwsmooth_lop(true,false,nin,nout,smooth3,smooth2);
 	for (i=0; i < n12; i++) {
 	    trace[i] += smooth2[i]-smooth3[i];
 	}
-	pwsmooth_close();
-	pwsmooth_init(ns,n1,n2,order,eps,p1);
+	pwsmooth_set(p1);
 	pwsmooth_lop(true,false,nin,nout,smooth3,smooth1);
 	for (i=0; i < n12; i++) {
 	    trace[i] += smooth1[i]-smooth3[i];
 	}
-	pwsmooth_close();
     } else {
-	pwsmooth_init(ns,n1,n2,order,eps,p1);
+	pwsmooth_set(p1);
 	pwsmooth_lop(false,false,nin,nout,trace,smooth1);
 	for (i=0; i < n12; i++) {
 	    smooth1[i] = trace[i]-smooth1[i];
 	}
-	pwsmooth_close();
-	pwsmooth_init(ns,n1,n2,order,eps,p2);
+	pwsmooth_set(p2);
 	pwsmooth_lop(false,false,nin,nout,trace,smooth2);
 	for (i=0; i < n12; i++) {
 	    smooth2[i] = trace[i]-smooth2[i];
 	}
 	pwsmooth_lop(false,true,nin,nout,smooth1,smooth);
-	pwsmooth_close();
-	pwsmooth_init(ns,n1,n2,order,eps,p1);
+	pwsmooth_set(p1);
 	pwsmooth_lop(false,true,nin,nout,smooth2,smooth);
-	pwsmooth_close();
     }
 }

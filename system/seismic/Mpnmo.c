@@ -151,14 +151,14 @@ int main (int argc, char* argv[])
 
 	    stretch4_define (nmo,str);
 
-	    stretch4_apply (nmo,trace,out);	    
+	    stretch4_apply (false,nmo,trace,out);	    
 	    sf_floatwrite (out,nt,nmod);
 
-	    stretch4_apply (nmo,vtr,vtr);	    
+	    stretch4_apply (false,nmo,vtr,vtr);	    
 	    sf_floatwrite (vtr,nt,vel);
 
 	    if (NULL != crv)  {
-		stretch4_apply (nmo,etr,etr);	    
+		stretch4_apply (false,nmo,etr,etr);	    
 		sf_floatwrite (etr,nt,eta);
 	    }
 	}

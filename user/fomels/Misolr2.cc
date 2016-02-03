@@ -1,4 +1,8 @@
-// Lowrank decomposition for 2-D isotropic wave propagation. 
+// Lowrank decomposition for 2-D isotropic wave propagation.
+//
+// October 2015 program of the month:
+// http://ahay.org/blog/2015/10/15/program-of-the-month-sfisolr2/
+//
 //   Copyright (C) 2010 University of Texas at Austin
 //  
 //   This program is free software; you can redistribute it and/or modify

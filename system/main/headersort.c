@@ -21,14 +21,23 @@
 #include <rsf.h>
 
 struct skey {
-    float key;
+    int ikey;
+    float fkey;
     off_t pos;
 };
 
-static int key_compare (const void *k1, const void *k2)
+static int int_key_compare (const void *k1, const void *k2)
 {
-    float f1 = ((struct skey*) k1)->key;
-    float f2 = ((struct skey*) k2)->key;
+    int f1 = ((struct skey*) k1)->ikey;
+    int f2 = ((struct skey*) k2)->ikey;
+    return (f1 < f2)? -1: (f1 > f2)? 1: 0;
+}
+
+
+static int float_key_compare (const void *k1, const void *k2)
+{
+    float f1 = ((struct skey*) k1)->fkey;
+    float f2 = ((struct skey*) k2)->fkey;
     return (f1 < f2)? -1: (f1 > f2)? 1: 0;
 }
 
@@ -36,8 +45,10 @@ int main(int argc, char* argv[])
 {
     int n1, n2, i2, esize;
     off_t pos;
+    sf_datatype type;
     struct skey *sorted;
-    float *unsorted;
+    int *input=NULL;
+    float *finput=NULL;
     char *trace, *header;
     sf_file in, head, out;
 
@@ -53,23 +64,39 @@ int main(int argc, char* argv[])
     }
 
     head = sf_input(header);
-    if (SF_FLOAT != sf_gettype(head))
-	sf_error("Need float header");
     n2 = sf_filesize(head);
- 
-    unsorted = sf_floatalloc(n2);
-    sorted = (struct skey*) sf_alloc(n2,sizeof(struct skey));
+    type = sf_gettype(head);
     
-    sf_floatread(unsorted,n2,head);
-    for (i2 = 0; i2 < n2; i2++) {
-	sorted[i2].key = unsorted[i2];
-	sorted[i2].pos = i2;
+    if (SF_FLOAT == type) {
+	finput = sf_floatalloc(n2);
+    } else if (SF_INT == type) {
+	input = sf_intalloc(n2);
+    } else {	
+	sf_error("Need int or float header");
     }
-    free (unsorted);
-    sf_fileclose(head);
 
-    qsort(sorted,n2,sizeof(struct skey),key_compare);
- 
+    sorted = (struct skey*) sf_alloc(n2,sizeof(struct skey));
+
+    if (SF_FLOAT == type) {
+	sf_floatread(finput,n2,head);
+	for (i2 = 0; i2 < n2; i2++) {
+	    sorted[i2].fkey = finput[i2];
+	    sorted[i2].pos = i2;
+	}
+	free (finput);
+    } else {
+	sf_intread(input,n2,head);
+	for (i2 = 0; i2 < n2; i2++) {
+	    sorted[i2].ikey = input[i2];
+	    sorted[i2].pos = i2;
+	}
+	free (input);
+    }
+    sf_fileclose(head);
+	
+    qsort(sorted,n2,sizeof(struct skey),
+	  (SF_FLOAT==type)? float_key_compare: int_key_compare);
+
     if (!sf_histint(in,"n1",&n1)) n1=1;
     esize = sf_esize(in);
     n1 *= esize;
@@ -91,5 +118,4 @@ int main(int argc, char* argv[])
 
     exit(0);
 }
-    
-/* 	$Id$	 */
+

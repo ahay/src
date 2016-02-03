@@ -95,11 +95,11 @@ int main(int argc, char* argv[])
     for (i3=0; i3 < n3; i3++) {
 	if (inv) {
 	    sf_floatread(trace,n2,in);
-	    stretch4_apply (mo,trace,trace2);
+	    stretch4_apply (false,mo,trace,trace2);
 	    sf_floatwrite (trace2,n1,out);
 	} else {
 	    sf_floatread(trace2,n1,in);
-	    stretch4_invert (mo,trace,trace2);
+	    stretch4_invert (false,mo,trace,trace2);
 	    sf_floatwrite (trace,n2,out);
 	}
     }

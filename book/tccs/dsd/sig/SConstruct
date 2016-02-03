@@ -1,0 +1,114 @@
+from rsf.proj import *
+from rsf.prog import RSFROOT
+
+#Create the well-known sigmoid model
+def Grey(data,other): 
+	Result(data,'grey label2=Trace unit2="" label1=Time unit1="s" title="" labelsz=10 labelfat=4 font=2 titlesz=10 titlefat=4 screenht=10.24 screenratio=0.75 screenwd=13.65 wherexlabel=b wheretitle=t color=g bartype=v clip=0.5 %s'%other)
+
+def Greydip(data,other): 
+	Result(data,'grey label2=Trace unit2="" label1=Time unit1="s" title="" labelsz=10 labelfat=4 font=2 titlesz=10 titlefat=4 screenht=10.24 screenratio=0.75 screenwd=13.65 wherexlabel=b wheretitle=t color=g bartype=v  %s'%other)
+#############################################################################
+# Setting parameters
+########################################################################
+n1=200
+n2=256
+lambda1=0.5
+niter=30
+lvl=2
+htype='spline'
+thr1=20
+thr2=10
+thr3=16
+thrtype='g'
+#############################################################################
+Flow('sig',None,
+     '''
+     sigmoid d1=.004 n1=200 d2=1 n2=256 |
+     smooth rect1=3 diff1=1 | smooth rect1=3 |
+     put label2=Distance | scale axis=2
+     ''')
+Flow('sign-t','sig','noise var=0.01 seed=201314')
+Flow('n','sig sign-t','add scale=-1,1 ${SOURCES[1]} | bandpass fhi=60 flo=5')
+Flow('sign','sig n','add scale=1,-1 ${SOURCES[1]}')
+
+Grey('sig','title="Clean"')
+Grey('sign','title="Noisy"')
+
+Flow('dip','sign','dip rect1=10 rect2=10')
+
+Flow('sign-slet','sign dip','seislet dip=${SOURCES[1]} adj=y inv=y eps=0.1 type=b')
+Flow('sign-sletthr','sign-slet','threshold1 thr=%g'%thr1)
+Flow('sign-re','sign-sletthr dip','seislet dip=${SOURCES[1]} adj=n inv=y eps=0.1 type=b' )
+Flow('sign-dif','sign sign-re','add scale=1,-1 ${SOURCES[1]}')
+
+
+########################################################################
+# INITIALIZATION
+########################################################################
+matlab         = WhereIs('matlab')
+matROOT = '../matfun'
+matfun = 'Syn_ddtf'
+matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
+
+if not matlab:
+    sys.stderr.write('\nCannot find Matlab.\n')
+    sys.exit(1)
+
+############################################################
+## generate and process synthetic data
+############################################################
+Flow('sign-sletddtfthr',[os.path.join(matROOT,matfun+'.m'),'sign-slet'],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}','${TARGETS[0]}',%(n1)d,%(n2)d,%(lambda1)g,%(niter)d,%(lvl)d,'%(htype)s',%(thr2)g,'%(thrtype)s');quit"
+     '''%vars(),stdin=0,stdout=-1)
+Flow('sign-sletddtfthr0','sign-sletddtfthr','put d2=1 o2=0 d1=0.004 o1=0')
+
+
+## Seislet + DDTF
+Flow('sign-ddtf-re','sign-sletddtfthr dip','put d2=1 o2=0 d1=0.004 o1=0 | seislet dip=${SOURCES[1]} adj=n inv=y eps=0.1 type=b')
+Flow('sign-ddtf-dif','sign sign-ddtf-re','add scale=1,-1 ${SOURCES[1]}')
+
+Greydip('dip','color=j')
+Grey('sign-slet','clip=0.5')
+Grey('sign-sletthr','clip=0.5')
+Grey('sign-sletddtfthr0','clip=0.5')
+Grey('sign-re','title="Seislet"')
+Grey('sign-dif','title="Seislet"')
+
+Grey('sign-ddtf-re','title="DSD"')
+Grey('sign-ddtf-dif','title="DSD"')
+
+## DDTF alone
+Flow('sign-ddtf0',[os.path.join(matROOT,matfun+'.m'),'sign'],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}','${TARGETS[0]}',%(n1)d,%(n2)d,%(lambda1)g,%(niter)d,%(lvl)d,'%(htype)s',%(thr3)g,'%(thrtype)s');quit"
+     '''%vars(),stdin=0,stdout=-1)
+Flow('sign-ddtf','sign-ddtf0','put d2=1 o2=0 d1=0.004 o1=0')
+Flow('sign-ddtf-dif0','sign sign-ddtf','add scale=1,-1 ${SOURCES[1]}')
+Grey('sign-ddtf','title=DDTF')
+Grey('sign-ddtf-dif0','title=DDTF')
+
+## FX decon
+Flow('sign-fx','sign','fxdecon n2w=%d '%n2)
+Flow('sign-fx-dif','sign sign-fx','add scale=1,-1 ${SOURCES[1]}')
+Grey('sign-fx','title=FX')
+Grey('sign-fx-dif','title=FX')
+
+
+## compute SNR
+Flow('sig-diff1','sig sign','add scale=1,-1 ${SOURCES[1]} ')
+Flow('sig-snr1','sig sig-diff1','snr2 noise=${SOURCES[1]}')
+
+Flow('sig-diff2','sig sign-re','add scale=1,-1 ${SOURCES[1]} ')
+Flow('sig-snr2','sig sig-diff2','snr2 noise=${SOURCES[1]}')
+
+Flow('sig-diff3','sig sign-ddtf-re','add scale=1,-1 ${SOURCES[1]} ')
+Flow('sig-snr3','sig sig-diff3','snr2 noise=${SOURCES[1]}')
+
+Flow('sig-diff4','sig sign-fx','add scale=1,-1 ${SOURCES[1]} ')
+Flow('sig-snr4','sig sig-diff4','snr2 noise=${SOURCES[1]}')
+
+Flow('sig-diff5','sig sign-ddtf','add scale=1,-1 ${SOURCES[1]} ')
+Flow('sig-snr5','sig sig-diff5','snr2 noise=${SOURCES[1]}')
+
+End()

@@ -22,6 +22,7 @@
 
 struct kd_Node {
     float *x;
+    int i;
     struct kd_Node *prev, *next;
 };
 
@@ -47,10 +48,14 @@ static float dist(const float *a, const float *b, int dim)
 
 static void swap(kd_node x, kd_node y, int size) 
 {
+    int i;
     float tmp[SF_MAX_DIM];
     memcpy(tmp,  x->x, size);
     memcpy(x->x, y->x, size);
     memcpy(y->x, tmp,  size);
+    i = x->i;
+    x->i = y->i;
+    y->i = i;
 }
 
  
@@ -119,6 +124,7 @@ kd_node kd_tree(float **data /* [len][dim] */, int len, int dim)
     n = (kd_node) sf_alloc(len,sizeof(*n));
     
     for (i=0; i < len; i++) {
+	n[i].i = i;
 	n[i].x = sf_floatalloc(dim);
 	for (j=0; j < dim; j++) {
 	    n[i].x[j] = data[i][j];
@@ -165,3 +171,19 @@ void kd_nearest(kd_node root, float* x, int i, int dim,
     if (dx2 >= *best_dist) return;
     kd_nearest(dx > 0 ? root->next : root->prev, x, i, dim, best, best_dist);
 }
+
+int kd_order(kd_node node, int* arr, int i)
+/*< put node indeces in an array >*/
+{
+    if (NULL != node) {
+	arr[i] = node->i;
+	i++;
+	
+	i = kd_order(node->prev,arr,i);
+	i = kd_order(node->next,arr,i);
+    }
+
+    return i;
+}
+
+

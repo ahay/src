@@ -1,4 +1,8 @@
-/* Local similarity measure between two datasets. */
+/* Local similarity measure between two datasets. 
+
+September 2015 program of the month:
+http://ahay.org/blog/2015/09/14/program-of-the-month-sfsimilarity/
+*/
 /*
   Copyright (C) 2004 University of Texas at Austin
   

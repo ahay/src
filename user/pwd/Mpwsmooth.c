@@ -57,13 +57,15 @@ int main(int argc, char* argv[])
     smooth = sf_floatalloc(n12);
     slope = sf_floatalloc2(n1,n2);
 
-    pwsmooth_init(ns, n1, n2, order, eps, slope);
+    pwsmooth_init(ns, n1, n2, order, eps);
 
     for (i3=0; i3 < n3; i3++) {
 	if (verb) sf_warning("slice %d of %d;",i3+1,n3);
 
 	sf_floatread(input,n12,in);
 	sf_floatread(slope[0],n12,dip);
+
+	pwsmooth_set(slope);
 
 	if (adj) {
 	    pwsmooth_lop(true,false,n12,n12,smooth,input);

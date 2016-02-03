@@ -73,6 +73,12 @@ int main(int argc, char* argv[])
     /* regularization */
 
     sf_mask_init(known);
+
+    if (NULL != qq) {
+	pwsmooth2_init(ns, n1, n2, order, eps);
+    } else {
+	pwsmooth_init(ns, n1, n2, order, eps);
+    }
     
     for (i3=0; i3 < n3; i3++) {
 	sf_warning("slice %d of %d",i3+1,n3);
@@ -106,13 +112,11 @@ int main(int argc, char* argv[])
 
 	if (NULL != qq) {
 	    sf_floatread(qq[0],n12,dip);
-	    pwsmooth2_init(ns, n1, n2, order, eps, pp, qq);
+	    pwsmooth2_set(pp, qq);
 	    sf_conjgrad(NULL,sf_mask_lop,pwsmooth2_lop,xx,mm,mm,niter);
-	    pwsmooth2_close();
 	} else {
-	    pwsmooth_init(ns, n1, n2, order, eps, pp);
+	    pwsmooth_set(pp);
 	    sf_conjgrad(NULL,sf_mask_lop,pwsmooth_lop,xx,mm,mm,niter);
-	    pwsmooth_close();
 	}
 	sf_conjgrad_close();
 

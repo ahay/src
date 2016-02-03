@@ -18,7 +18,8 @@ int main(void) {
 	}
     }
 
-    ns2 = pwspray_init(ns,n1,n2,1,0.1,p);
+    ns2 = pwspray_init(ns,n1,n2,1,0.1);
+    pwspray_set(p);
     sf_dot_test(pwspray_lop, n1*n2, n1*n2*ns2, dot1, dot2);
 
     printf ("%12.8f ? %12.8f\n",dot1[0],dot1[1]);

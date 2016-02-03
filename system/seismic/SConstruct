@@ -105,7 +105,7 @@ for prog in mains:
                 doc = os.path.splitext(other)[0]
                 docalias[doc] = 'sf'+prog
 
-for prog in Split('cbanded ctridiagonal veltran'):
+for prog in Split('cbanded ctridiagonal t2warp veltran'):
     sources = ['Test' + prog,prog]
     bldutil.depends(env,sources,prog)
     sources = map(lambda x: x + '.o',sources)

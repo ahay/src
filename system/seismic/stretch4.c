@@ -155,13 +155,13 @@ void cstretch4_apply (map4 str,
 	ford[id] = crealf(ord[id]);
     }
 
-    stretch4_apply (str,ford,real);
+    stretch4_apply (false,str,ford,real);
 
     for (id=0; id < str->nd; id++) {
 	ford[id] = cimagf(ord[id]);
     }
 
-    stretch4_apply (str,ford,imag);
+    stretch4_apply (false,str,ford,imag);
 
     for (it=0; it < str->nt; it++) {
 	mod[it] = sf_cmplx(real[it],imag[it]);
@@ -172,20 +172,79 @@ void cstretch4_apply (map4 str,
     free(ford);
 }
 
-
-void stretch4_apply (map4 str, 
-		     const float* ord /* [nd] */, 
-		     float* mod       /* [n1] */)
-/*< transform ordinates to model >*/
+void stretch4_apply_adj (bool add,  /* add flag */
+			 map4 str, 
+			 float* ord /* [nd] */, 
+			 float* mod /* [n1] */)
+/*< transform model to ordinates by adjoint operation >*/
 {
     int id, it, i, nt, i1, i2;
-    float *w, *mm;
+    float *w, *mm, *mod2;
+
+    sf_adjnull(true,add,str->nd,str->nt,ord,mod);
     
     mm = str->diag;
     nt = str->nt;
 
+    mod2 = sf_floatalloc(nt);
+
+    for (it = 0; it <= nt; it++) {
+	mod2[it] = mod[it];
+    }
+    
+    for (it = 0; it <= str->ib; it++) {
+	mod2[it] = 0.0f;
+    }
+    
+    for (it = str->ie; it < nt; it++) {
+	mod2[it] = 0.0f;
+    }
+
+    sf_spline4_post(nt,0,nt,mod2,mm);
+
+    for (it = 0; it <= str->ib; it++) {
+	mm[it] = 0.0f;
+    }
+    
+    for (it = str->ie; it < nt; it++) {
+	mm[it] = 0.0f;
+    }
+
+    sf_banded_solve (str->slv, mm);
+
+    for (id = 0; id < str->nd; id++) {
+	if (str->m[id]) continue;
+	
+	it = str->x[id]; 
+	w = str->w[id]; 
+	
+	i1 = SF_MAX(0,-it);
+	i2 = SF_MIN(4,nt-it);
+
+	for (i=i1; i < i2; i++) {
+	    ord[id] += w[i]*mm[it+i];
+	}
+    } 
+}
+
+void stretch4_apply (bool add /* add flag */,
+		     map4 str, 
+		     float* ord /* [nd] */, 
+		     float* mod /* [n1] */)
+/*< transform ordinates to model >*/
+{
+    int id, it, i, nt, i1, i2;
+    float *w, *mm, *mod2;
+
+    sf_adjnull(false,add,str->nd,str->nt,ord,mod);
+        
+    mm = str->diag;
+    nt = str->nt;
+
+    mod2 = sf_floatalloc(nt);
+
     for (it = 0; it < nt; it++) {
-	mm[it] = 0.;
+	mm[it] = 0.0f;
     }
     
     for (id = 0; id < str->nd; id++) {
@@ -205,22 +264,22 @@ void stretch4_apply (map4 str,
     sf_banded_solve (str->slv, mm);
 
     for (it = 0; it <= str->ib; it++) {
-	mm[it] = 0.;
+	mm[it] = 0.0f;
     }
     
     for (it = str->ie; it < nt; it++) {
-	mm[it] = 0.;
+	mm[it] = 0.0f;
     }
 
-    sf_spline4_post(nt,0,nt,mm,mod);
+    sf_spline4_post(nt,0,nt,mm,mod2);
 
-    for (it = 0; it <= str->ib; it++) {
-	mod[it] = 0.;
+    for (it=0; it < nt; it++) {
+	if (it > str->ib && it < str->ie) {
+	    mod[it] += mod2[it];
+	}
     }
-    
-    for (it = str->ie; it < nt; it++) {
-	mod[it] = 0.;
-    }
+
+    free(mod2);
 }
 
 void cstretch4_invert (map4 str, 
@@ -239,13 +298,13 @@ void cstretch4_invert (map4 str,
 	fmod[it] = crealf(mod[it]);
     }
 
-    stretch4_invert (str,real,fmod);
+    stretch4_invert (false,str,real,fmod);
 
     for (it=0; it < str->nt; it++) {
 	fmod[it] = cimagf(mod[it]);
     }
 
-    stretch4_invert (str,imag,fmod);
+    stretch4_invert (false,str,imag,fmod);
 
     for (id=0; id < str->nd; id++) {
 	ord[id] = sf_cmplx(real[id],imag[id]);
@@ -256,13 +315,16 @@ void cstretch4_invert (map4 str,
     free(fmod);
 }
 
-void stretch4_invert (map4 str, 
-		      float* ord       /* [nd] */, 
-		      const float* mod /* [n1] */)
+void stretch4_invert (bool add /* add flag */,
+		      map4 str, 
+		      float* ord /* [nd] */, 
+		      float* mod /* [n1] */)
 /*< convert model to ordinates by spline interpolation >*/
 {
     int id, it, i, nt, i1, i2;
     float *w, *mm;
+
+    sf_adjnull(false,add,str->nt,str->nd,mod,ord);
 
     mm = str->diag;
     nt = str->nt;
@@ -274,7 +336,6 @@ void stretch4_invert (map4 str,
     sf_tridiagonal_solve(str->tslv, mm);
 
     for (id = 0; id < str->nd; id++) {
-	ord[id] = 0.;
 	if (str->m[id]) continue;
 	
 	it = str->x[id]; 
@@ -287,6 +348,45 @@ void stretch4_invert (map4 str,
 	    ord[id] += w[i]*mm[it+i];
 	}
     } 
+}
+
+void stretch4_invert_adj (bool add /* add flag */,
+			  map4 str, 
+			  float* ord /* [nd] */, 
+			  float* mod       /* [n1] */)
+/*< convert ordinates to model by adjoint spline interpolation >*/
+{
+    int id, it, i, nt, i1, i2;
+    float *w, *mm;
+    
+    mm = str->diag;
+    nt = str->nt;
+
+    sf_adjnull(true,add,str->nt,str->nd,mod,ord);
+
+    for (it = 0; it < nt; it++) {
+	mm[it] = 0.0f;
+    }
+    
+    for (id = 0; id < str->nd; id++) {
+	if (str->m[id]) continue;
+	
+	it = str->x[id]; 
+	w = str->w[id]; 
+	
+	i1 = SF_MAX(0,-it);
+	i2 = SF_MIN(4,nt-it);
+
+	for (i=i1; i < i2; i++) {
+	    mm[it+i] += w[i]*ord[id];
+	}
+    } 
+    
+    sf_tridiagonal_solve(str->tslv, mm);
+
+    for (it = 0; it < nt; it++) {
+	mod[it] += mm[it];
+    }
 }
 
 void stretch4_close (map4 str)
@@ -308,4 +408,3 @@ void stretch4_close (map4 str)
     free (str);
 }
 
-/* 	$Id$	 */

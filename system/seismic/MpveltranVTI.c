@@ -355,9 +355,9 @@ int main (int argc, char* argv[])
 	    if (map) {
 		stretch4_define (nmo,TAU0);
 	    
-		stretch4_apply (nmo,v1,v1); sf_floatwrite (v1,nt,velN);	    
-		stretch4_apply (nmo,v2,v2); sf_floatwrite (v2,nt,velH);
-		stretch4_apply (nmo,v3,v3); sf_floatwrite (v3,nt,eta);
+		stretch4_apply (false,nmo,v1,v1); sf_floatwrite (v1,nt,velN);	    
+		stretch4_apply (false,nmo,v2,v2); sf_floatwrite (v2,nt,velH);
+		stretch4_apply (false,nmo,v3,v3); sf_floatwrite (v3,nt,eta);
 	    } else {
 		sf_int2_init (coord1, t0,v0, dt,dv, nt,nv, sf_spline_int, nw, nt);
 		sf_int2_lop (true,true,ntv,nt,vN,ord);

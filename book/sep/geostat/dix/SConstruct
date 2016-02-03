@@ -1,0 +1,46 @@
+from rsf.proj import *
+
+Fetch('velan.HH','dix')
+Flow('velan','velan.HH','dd form=native')
+
+Flow('pick','velan',
+     '''
+     mutter half=n x0=1500 v0=800 inner=y |
+     cut max1=0.2 | scale axis=2 |
+     pick rect1=20 rect2=20 vel0=1500
+     ''')
+
+Result('pick',
+       '''
+       grey color=j mean=y scalebar=y title="Picked Velocity"
+       unit1=s unit2=m barunit=m/s barreverse=y
+       ''')
+
+layers = []
+spline = []
+for lay in range(1,7):
+    layer = 'layer%d' % lay
+    Fetch(layer+'.txt','dix')
+    Flow(layer,layer+'.txt',
+         '''
+         echo in=$SOURCE n1=6 n2=%d data_format=ascii_float |
+         dd form=native |
+         window n1=2 | reverse which=1          
+         ''' % (19,19,15,16,18,7)[lay-1],stdin=0)
+    Plot(layer,
+         '''
+         dd type=complex | window | 
+         graph min2=0 max2=2.556 min1=13593 max1=20553 yreverse=y title=Horizons
+         ''')
+    layers.append(layer)
+    Flow(layer+'s',layer,'transp | linear n1=175 d1=40 o1=13593 rect=3')
+    spline.append(layer+'s')
+
+Result('layers',layers,'Overlay')
+    
+Flow('spline',spline,'cat axis=2 ${SOURCES[1:%d]}' % len(spline))
+Result('spline','graph min2=0 max2=2.556 yreverse=y pad=n title=Horizons')
+
+
+
+End()

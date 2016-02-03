@@ -1,4 +1,8 @@
-/* Plot Assembler - convert ascii to vplot. */
+/* Plot Assembler - convert ascii to vplot. 
+
+November 2015 program of the month:
+http://ahay.org/blog/2015/11/16/
+*/
 /*
   Copyright (C) 1987 The Board of Trustees of Stanford University
   

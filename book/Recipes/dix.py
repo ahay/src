@@ -123,7 +123,7 @@ def dix(data,        # data name
          dixshape dip=${SOURCES[2]}
          weight=${SOURCES[1]} vrmsout=${TARGETS[1]}
          niter=50 verb=y rect1=%d rect2=5 lam=0.1
-         ''' % (2*rect1))
+         ''' % rect1)
     Plot(shp,
          '''
          window f2=10 n2=%d |

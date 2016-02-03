@@ -56,7 +56,6 @@ Eduardo Filpo Silva <effsilva@mines.edu>
 Xiaolei Song <songxl1984@gmail.com>
 Yanadet Sripanich <sripanichy@utexas.edu>
 Junzhe Sun <sunjzhe@gmail.com>
-Layamrudhaa Venkatesan <layamrudhaarv@utexas.edu>
 Ioan Vlad <i.vlad@yahoo.com>
 Hui Wang <hui.wang@kaust.edu.sa>
 Robin Weiss <robin.weiss@uwa.edu.au>

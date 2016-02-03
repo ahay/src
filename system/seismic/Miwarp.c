@@ -104,14 +104,14 @@ int main(int argc, char* argv[])
 		for (i=0; i < nt; i++) {
 		    trace[i] = crealf(ctrace[i]);
 		}
-		stretch4_apply (mo,trace,trace2);
+		stretch4_apply (false,mo,trace,trace2);
 		for (i=0; i < n1; i++) {
 		    ctrace2[i] = sf_cmplx(trace2[i],0.0f);
 		}
 		for (i=0; i < nt; i++) {
 		    trace[i] = cimagf(ctrace[i]);
 		}
-		stretch4_apply (mo,trace,trace2);
+		stretch4_apply (false,mo,trace,trace2);
 		for (i=0; i < n1; i++) {
 #ifdef SF_HAS_COMPLEX_H
 		    ctrace2[i] += sf_cmplx(0.0f,trace2[i]);
@@ -122,7 +122,7 @@ int main(int argc, char* argv[])
 		sf_complexwrite (ctrace2,n1,out);
 	    } else {
 		sf_floatread(trace,nt,in);
-		stretch4_apply (mo,trace,trace2);
+		stretch4_apply (false,mo,trace,trace2);
 		sf_floatwrite (trace2,n1,out);
 	    }
 	} else {
@@ -131,14 +131,14 @@ int main(int argc, char* argv[])
 		for (i=0; i < n1; i++) {
 		    trace2[i] = crealf(ctrace2[i]);
 		}
-		stretch4_invert (mo,trace,trace2);
+		stretch4_invert (false,mo,trace,trace2);
 		for (i=0; i < nt; i++) {
 		    ctrace[i] = sf_cmplx(trace[i],0.0f);
 		}
 		for (i=0; i < n1; i++) {
 		    trace2[i] = cimagf(ctrace2[i]);
 		}
-		stretch4_invert (mo,trace,trace2);
+		stretch4_invert (false,mo,trace,trace2);
 		for (i=0; i < nt; i++) {
 #ifdef SF_HAS_COMPLEX_H
 		    ctrace[i] += sf_cmplx(0.0f,trace[i]);
@@ -149,7 +149,7 @@ int main(int argc, char* argv[])
 		sf_complexwrite(ctrace,nt,in);
 	    } else {
 		sf_floatread(trace2,n1,in);
-		stretch4_invert (mo,trace,trace2);
+		stretch4_invert (false,mo,trace,trace2);
 		sf_floatwrite (trace,nt,out);
 	    }
 	}

@@ -21,25 +21,23 @@
 #include "pwspray.h"
 #include "pwsmooth.h"
 
-static int n1, n2, ns2;
-static float ***u, *w, **w1;
+static int n1, n2, ns2, n12;
+static float ***u, *w, **w1, *t;
 
 void pwsmooth_init(int ns      /* spray radius */,
 		   int m1      /* trace length */,
 		   int m2      /* number of traces */,
 		   int order   /* PWD order */,
-		   float eps   /* regularization */,
-		   float **dip /* local slope */)
+		   float eps   /* regularization */)
 /*< initialize >*/
 {
-    int is, i1, n12;
-    float *t;
+    int is;
 
     n1 = m1;
     n2 = m2;
     n12 = n1*n2;
 
-    ns2 = pwspray_init(ns,n1,n2,order,eps,dip);
+    ns2 = pwspray_init(ns,n1,n2,order,eps);
 
     u = sf_floatalloc3(n1,ns2,n2);
     w = sf_floatalloc(ns2);
@@ -51,6 +49,14 @@ void pwsmooth_init(int ns      /* spray radius */,
 
     /* Normalization */
     t = sf_floatalloc(n12);
+}
+
+void pwsmooth_set(float **dip /* local slope */)
+/*< set local slope >*/
+{
+    int i1;
+    
+    pwspray_set(dip);
 
     for (i1=0; i1 < n12; i1++) {
 	w1[0][i1]=1.0f;
@@ -65,8 +71,6 @@ void pwsmooth_init(int ns      /* spray radius */,
 	    w1[0][i1]=0.0f;
 	}
     }
-
-    free(t);    
 }
 
 void pwsmooth_close(void)
@@ -78,6 +82,7 @@ void pwsmooth_close(void)
     free(w);
     free(*w1);
     free(w1);
+    free(t);
     pwspray_close();
 }
 

@@ -98,7 +98,7 @@ int main (int argc, char *argv[])
     }
 
     for (ir=0; ir < nr; ir++) {
-	if (verb) sf_warning("slice %d of %d", ir+1, nr);
+	if (verb) sf_warning("slice %d of %d;", ir+1, nr);
     	if (NULL != mask) {
 	    sf_floatread(u,n123,mask);
 	    mask32 (false, order, nj1, nj2, n[0], n[1], n[2], u, mm);
@@ -118,14 +118,13 @@ int main (int argc, char *argv[])
 	}
 	
 	/* estimate t-x dip */
-	dip3(false, 1, niter, order, nj1, verb, u, p, mm[0], pmin, pmax);
+	dip3(false, 1, niter, order, nj1, u, p, mm[0], pmin, pmax);
 	
 	/* write t-x dip */
 	sf_floatwrite(p,n123,out);
 	
     }
+    if (verb) sf_warning(".");
     
     exit (0);
 }
-
-/* 	$Id$	 */

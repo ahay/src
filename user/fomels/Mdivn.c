@@ -1,4 +1,8 @@
-/* Smooth division. */
+/* Smooth division. 
+
+December 2015 program of the month:
+http://ahay.org/blog/2015/12/22/program-of-the-month-sfdivn/
+*/
 /*
   Copyright (C) 2006 University of Texas at Austin
    

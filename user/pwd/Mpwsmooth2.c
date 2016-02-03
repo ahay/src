@@ -58,7 +58,8 @@ int main(int argc, char* argv[])
     slope1 = sf_floatalloc2(n1,n2);
     slope2 = sf_floatalloc2(n1,n2);
 
-    pwsmooth2_init(ns, n1, n2, order, eps, slope1, slope2);
+    pwsmooth2_init(ns, n1, n2, order, eps);
+    pwsmooth2_set(slope1,slope2);
 
     for (i3=0; i3 < n3; i3++) {
 	if (verb) sf_warning("slice %d of %d;",i3+1,n3);
