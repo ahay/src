@@ -375,6 +375,7 @@ class Project(Environment):
         # the command wil be different and scons wilL think it needs to be 
         # rerun.
 
+        # resolve conflict here
         if len(self.nodes) > 1:
             self.hosts = self.cwd + '/hosts.txt'
             print "using %s to keep track of nodes in use by pscons."%self.hosts
@@ -393,6 +394,7 @@ class Project(Environment):
                 hosts_fd.write(string.ljust(host,40)+
                                string.ljust("notrunning",10)+"\n")
             hosts_fd.close()
+
         for key in self['ENV'].keys():
             # quote the env values because stampede has env variable 
             # SLURM_NODE_ALIASES=(null)  This makes problems in the ssh to nodes.
