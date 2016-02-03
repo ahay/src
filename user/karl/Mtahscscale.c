@@ -478,7 +478,11 @@ int main(int argc, char* argv[])
     sf_error("user input starttime > endtime\n");
 
   /* end time to compute average trace amplitude */
-
+  /* num_traces is a count of the number of traces with non zero headers
+     it is zero when entering this loop and incremented each traces read 
+     with a non zero header. function is_header_allzero is used to test
+     and skip processing and counting the zero header traces.
+  */
   for (i_trace=0; i_trace<n_traces; i_trace++){
     if(verbose>2 ||(verbose>0 && i_trace<5)){
       fprintf(stderr,"read trace and header i_trace=%d\n",i_trace);
