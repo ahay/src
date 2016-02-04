@@ -28,7 +28,7 @@ sftahsort \\
    tmute=0.0,3.0 \\
    xmute=0,18000  \\
 | sftahscdecon \\
-   key="scaon sx,sy" \\
+   key="sx,sy" \\
    length=140 \\
    pmoise=.001 \\
    verbose=0  \\
@@ -40,6 +40,7 @@ sftahsort \\
    input=shotdecon.rsf \\
    sort="gx,gy"
 | sftahscdecon \\
+   key="gx,gy" \\
    length=140 \\
    pmoise=.001 \\
    verbose=0  \\
@@ -55,11 +56,6 @@ a pre decon mute (sftahmute) and shot consistant decon.  Data is written
 to the output file shotdecon.rsf and headers to shotdecon_hdr.rsf.  In
 the next sequence the data is sorted in to common receiver domain so 
 receiver consistent decon can be applied.
-
-PARAMETERS
-   length=140 
-   pmoise=.001 
-   verbose=0  
 
 */
 
@@ -84,6 +80,7 @@ PARAMETERS
    Program change history:
    date       Who             What
    09/22/2014 Karl Schleicher Original program based on sftah5dinterp
+   02/04/2016 Karl Schleicher improved selfdoc
 */
 #include <string.h>
 #include <rsf.h>
@@ -206,6 +203,15 @@ int main(int argc, char* argv[])
 
   if(verbose>0)fprintf(stderr,"call list of keys\n");
  
+  /* this will add parameter to the selfdoc */
+  sf_getstring("key");
+  /* \n
+     list of keys to watch to determine traces in a gather that 
+     will have a single decon operator applies.  Typically data
+     is sorted by gx,gy then sftahscdecon run with key="gx,gy".
+     Then a second pass of scdecon is first sorting by sx,sy and 
+     running sftahscdecon with key="sx,sy".
+   */
   list_of_keys=sf_getnstring("key",&numkeys);
   if(list_of_keys==NULL)
     sf_error("The required parameter \"key\" was not found.");
@@ -251,12 +257,12 @@ int main(int argc, char* argv[])
   
   /* .. mincorr and maxcorr */
   if (sf_getfloat("mincorr", &mincorr)) imincorr = SF_NINT(mincorr/dt);
-  /*(mincorr start of autocorrelation window in sec )*/
+  /*(mincorr start of autocorrelation window (sec) )*/
   else				  imincorr = 0;
   if (imincorr < 0) sf_error("mincorr=%g too small", mincorr);
   
   if (sf_getfloat("maxcorr", &maxcorr)) imaxcorr = SF_NINT(maxcorr/dt);
-  /*(maxcorr end of autocorrelation window in sec )*/
+  /*(maxcorr end of autocorrelation window (sec) )*/
   else				  imaxcorr = n1_traces;
   if (imaxcorr > n1_traces) sf_error("maxcorr=%g too large", maxcorr);
   
@@ -281,7 +287,7 @@ int main(int argc, char* argv[])
   crosscorr = autocorr + iminlag;
 
   if (NULL != sf_getstring("wiener")) {
-    /* file to output Wiener filter */
+    /* file to output Wiener filter.  never tested!!! */
     wien = sf_output("wiener");
     sf_putint(wien,"n1",nlag);
   } else {
@@ -434,7 +440,7 @@ int main(int argc, char* argv[])
 
       /*****************************************************************/
       /* Design the filter for this gather.  First compute the average */
-      /* autocorrelation then compute the filter using weiner-levinson */
+      /* autocorrelation then compute the filter using wiener-levinson */
       /* recusion (the stoepf function). Apply filter and write trace  */
       /* in a seperate loop                                            */
       /*****************************************************************/
