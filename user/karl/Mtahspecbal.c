@@ -1,6 +1,10 @@
-/* Read Trace And Header (tah) from standard input, SPECtral BALance  */
+/* Read Trace And Header (tah) from standard input, SPECtral BALance
 
-/* tah is the abbreviation of Trace And Header.  Madagascar programs 
+   THIS PROGRAM WAS WRITEN, BUT NEVER SUCESSFULLY TESTED.  RESULTS LOOK 
+   POOR, BUT UNABLE TO SPEND TIME ON THE ALGORITHM, I ADDED IT TO THE 
+   REPOSOTORY AND HOPE TO RETURN TO WORK ON IT AGAIN... SOMEDAY!
+
+   tah is the abbreviation of Trace And Header.  Madagascar programs 
    that begin with sftah are a designed to:
    1- read trace and headers from separate rsf files and write them to 
    standard output (ie sftahread)
@@ -29,14 +33,13 @@
 
    EXAMPLE:
 
-   sftahsort input=shots-receivers-23900_headfix.rsf  \\
-   sort="xline:600,601 offset"                        \\
-   | sftahspecbal                                     \\
-   kls //
-   | sftahwrite                                       \\
-   verbose=1                                          \\
-   mode=seq                                           \\
-   output=specbalcmps.rsf                             \\
+   sftahsort input=shots-receivers-23900_headfix.rsf        \\
+   sort="xline:600,601 offset"                              \\
+   | sftahspecbal fmin=5 fmax=95 finc=5 wagc=.250 noise=.05 \\
+   | sftahwrite                                             \\
+   verbose=1                                                \\
+   mode=seq                                                 \\
+   output=specbalcmps.rsf                                   \\
    >/dev/null
 
    sfimage <specbalcmps.rsf | sfpen
@@ -48,7 +51,9 @@
    The headers are merged with the trace amplitudes and the tah data sent 
    down the pipe for spectral balancing.  
 
-   kls
+   sftahspecbal, spectral balance, was run by dividing the data into 5 Hz
+   frequency bands, applying .25 second agc, summing the scaled bands,
+   and dividing by the sum of the scalars.
 
    Sftahwrite writes the the trace data to specbalcmp.rsf and the headers 
    are written to the file specbalcmp_hdr.rsf.  The output traces are just
@@ -370,12 +375,12 @@ int main(int argc, char* argv[])
       sf_error("input data does not define o1");
 
     /* check wagc for reasonableness.  I input 250 (not .25 and ,250) */  
-    if(!sf_getfloat("wagc",&wagc)){
-      sf_error("wagc is a required parameter in sftahagc");
-    }
+    if(!sf_getfloat("wagc",&wagc))wagc=-1;
     /* \n
        length of the agc window in seconds
     */
+    if(wagc<0)sf_error("wagc is a required parameter in sftahagc");
+
     lenagc=wagc/d1+1.5; /* length of the agc window in samples */
  
     if (!sf_getfloat("pnoise",  &pnoise)) pnoise = 0.01;
