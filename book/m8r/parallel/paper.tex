@@ -18,23 +18,38 @@ without the need to resolve to low-level programming.
 
 OpenMP (from \emph{Open Multi-Processing}) is an application
 programming interface (API) that simplifies parallel tasks on
-shared-memory architectures (multiple processing units). OpenMP
-appeared in 1997 (with specifications for Fortran) and is currently
-supported by most modern C/C++ and Fortran compilers. GCC has provided
-support to OpenMP since version 4.2, which appeared in 2007.
+shared-memory architectures \cite[]{chandra,chapman}. OpenMP appeared
+in 1997 (with specifications for Fortran) and is currently supported
+by most modern C/C++ and Fortran compilers. The GCC compiler has been
+providing support to OpenMP since version 4.2, which appeared in
+2007. Madagascar detects the existence of OpenMP at the installation
+configuration stage and uses sets the compiler flags appropriately. [FLAGS]
 
-[Add references]
-
-To use OpenMP in your program, you can use...
+To use OpenMP in your C or Fortran program, you can use special
+compiler directives. For example...
 
 To simplify OpenMP-based processing for data-parallel tasks,
 Madagascar provides \texttt{sfomp} utility. Suppose, for example, ...
 
 \section{MPI programming and sfmpi}
 
+MPI (from \emph{Message Passing Interface}) is a popular
+system/protocol for parallel application on both shared-memory and
+distributed-memory architectures \cite[]{pacheco,gropp}. There are several alternative
+implementations of MPI, the popular open-source implementations
+include MPICH\footnote{\url{https://www.mpich.org/}} and Open
+MPI\footnote{\url{https://www.open-mpi.org/}}. Madagascar detects the
+existence of MPI at the installation configuration stage. [FLAGS]
+
+To simplify MPI-based processing for data-parallel tasks,
+Madagascar provides \texttt{sfmpi} utility...
+
 \section{GPU programming}
 
 \section{Parallel processing in SCons: pscons}
 
-\section{Parallel processing on shared clusters: sfbatch} 
+\section{Parallel processing on shared clusters: sfbatch}
+
+\bibliographystyle{seg}
+\bibliography{parallel}
 
