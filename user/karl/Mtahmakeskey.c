@@ -20,10 +20,11 @@ need a secondary key to number the traces in a gather.  For example
 after sorting the data in iline,xline,offset you usually cannot
 store the data using the offset key because the offset sampling is 
 irregular.  sftahmakeskey can be used to build the cdpt header from 
-the iline and xline keys.  The secondary key, skey, will start with 
-1 when a new iline,xline is encounterred.  As long as iline,xline
-does not change, he skey will increase by 1 on each successive trace
-until the iline,xline changes.  The output data can be stored in a 
+the iline and xline keys.  Input pkey=iline,xline.  The secondary 
+key (defined by skey) will start with 1 when a new iline,xline is 
+encounterred.  As long as iline,xline does not change, the skey will 
+increase by 1 on each successive trace.  When iline or xline changes,
+skey will start agina with 1.  The output data can be stored in a 
 file indexed by cdpt,xline,iline.
 
 EXAMPLE:
@@ -49,19 +50,13 @@ amplitudes and the tah data sent down the pipe for sftahmakeskey.
 sftahmakeskey creates the cdpt header and sftahwrite creates a 4 
 dimensional file.
 
-PARAMETERS
-   strings pkey= no default
-
-        list of header keys to monitor to determine when to break 
-	between gathers.  A gather is a sequence of traces with the 
-	same value for all the headers in pkey.  sftahmakeskey counts the 
-        traces and put the trace counter in the skey header word.
 */
 
 /*
    Program change history:
    date       Who             What
    11/15/2012 Karl Schleicher Original program.  Derived from Mtahgethw.c
+   2/4/2016   Karl Schleicher Improve documentation.
 */
 #include <string.h>
 #include <rsf.h>
@@ -135,6 +130,14 @@ int main(int argc, char* argv[])
 
   if(verbose>0)fprintf(stderr,"call list of keys\n");
  
+  /* this sf_getstring will create parameter descrpiton in the self doc */
+  sf_getstring("pkey"); 
+  /* \n
+     A comma seperated list of primary header keys to monitor to determine 
+     gathers.  The trace number in the gather is counted and put in the
+     skey header location.
+     \n
+  */
   list_of_keys=sf_getnstring("pkey",&numkeys);
   /* List of the primary keys monitored to determine gathers. */
 
