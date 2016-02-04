@@ -1,84 +1,71 @@
-/* Wiener predictive error filtering */
-/* Copyright (c) Colorado School of Mines, 2011.
-   All rights reserved.
+/* Trace And Header Prediction Error Filtering 
+
+tah is the abbreviation of Trace And Header.  Madagascar programs 
+that begin with sftah are a designed to:
+1- read trace and headers from separate rsf files and write them to 
+   standard output (ie sftahread)
+2- filter programs that read and write standard input/output and 
+   process the tah data (eg sftahnmo, sftahstack)
+3- read tah data from standard input and write separate rsf files for 
+   the trace and headers data (ie sftahwrite)
+
+These programs allow Seismic Unix (su) like processing in Madagascar.  
+Some programs have su like names.
+
+Some programs in this suite are sftahread, sftahgethw, ftahhdrmath, 
+and sftahwrite.
+
+The sftahpef applies prediction error filtering (often called decon)
+
+EXAMPLE:
+
+sftahsort                                                            //
+verbose=0 input=npr3_field.rsf sort='fldr:214,254,10 tracf'          //
+| sftahwindow ns=2047                                                //
+| sftahgain   tpow=2                                                 //
+| sftahmute  tmute=-.200,-.050,.200,3.00  xmute=0,880,1760,18000     //
+ntaper=80                                                            //
+| sftahpef                                                           //
+verbose=1 minlag=.002 maxlag=.1  pnoise=.01 mincorr=0 maxcorr=3      //
+| sftahagc  wagc=1.000 verbose=1                                     //
+| sftahwrite verbose=1 mode=seq  output=pefshots.rsf                 //
+>/dev/null
+
+sfgrey <pefshots.rsf | sfpen
+
+In this example unprocessed field traces are read by sftahsort from 
+the npr3_field.rsf file.  sftahsort was used select just a 5 shotpoints 
+(fldr 214 to 254 incrementing by 10) from a large dataset.  The headers
+are in the file npr3_filed_hdr.rsf, the headers parameter default.  
+The headers are merged with the trace amplitudes and the tah data sent 
+down the pipe for further processing.
+
+sftahwindow selects the first 2047 trace amplitudes.  The last two 
+samples on this data were bad, and are elliminated from further
+processing.
   
-   Redistribution and use in source and binary forms, with or 
-   without modification, are permitted provided that the following 
-   conditions are met:
-  
-   *  Redistributions of source code must retain the above copyright 
-   notice, this list of conditions and the following disclaimer.
-   *  Redistributions in binary form must reproduce the above 
-   copyright notice, this list of conditions and the following 
-   disclaimer in the documentation and/or other materials provided 
-   with the distribution.
-   *  Neither the name of the Colorado School of Mines nor the names of
-   its contributors may be used to endorse or promote products 
-   derived from this software without specific prior written permission.
-  
-   Warranty Disclaimer:
-   THIS SOFTWARE IS PROVIDED BY THE COLORADO SCHOOL OF MINES AND CONTRIBUTORS 
-   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
-   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
-   FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
-   COLORADO SCHOOL OF MINES OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-   INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
-   BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
-   LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
-   CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
-   STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING 
-   IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
-   POSSIBILITY OF SUCH DAMAGE.
-  
-  
-   Export Restriction Disclaimer:
-   We believe that CWP/SU: Seismic Un*x is a low technology product that does
-   not appear on the Department of Commerce CCL list of restricted exports.
-   Accordingly, we believe that our product meets the qualifications of
-   an ECCN (export control classification number) of EAR99 and we believe
-   it fits the qualifications of NRR (no restrictions required), and
-   is thus not subject to export restrictions of any variety.
-  
-   Approved Reference Format:
-   In publications, please refer to SU as per the following example:
-   Cohen, J. K. and Stockwell, Jr. J. W., (200_), CWP/SU: Seismic Un*x 
-   Release No. __: an open source software  package for seismic 
-   research and processing, 
-   Center for Wave Phenomena, Colorado School of Mines.
-  
-   Articles about SU in peer-reviewed journals:
-   Saeki, T., (1999), A guide to Seismic Un*x (SU)(2)---examples of data processing (part 1), data input and preparation of headers, Butsuri-Tansa (Geophysical Exploration), vol. 52, no. 5, 465-477.
-   Stockwell, Jr. J. W. (1999), The CWP/SU: Seismic Un*x Package, Computers and Geosciences, May 1999.
-   Stockwell, Jr. J. W. (1997), Free Software in Education: A case study of CWP/SU: Seismic Un*x, The Leading Edge, July 1997.
-   Templeton, M. E., Gough, C.A., (1998), Web Seismic Un*x: Making seismic reflection processing more accessible, Computers and Geosciences.
-  
-   Acknowledgements:
-   SU stands for CWP/SU:Seismic Un*x, a processing line developed at Colorado 
-   School of Mines, partially based on Stanford Exploration Project (SEP) 
-   software.
+sftahgain multiplies the traces by time squared (t**2).  This 
+approximately compensates for spreading loss that makes amplitude at
+large time smaller than amplitude at small time.
+
+sftahmute is applied to elliminate the data at small time/offset.  
+
+sftahpef applies prediction error filtering (or decon).  A prediction 
+gap or .002 seconds, or one sample) makes this decon "spiking" decon.
+A three seconds window si selected to compute the autocorrelation and 
+a .1 second filter is computed and applied.
+
+After decon a 1 second agc was applies using the sftahagc.
+
+Data is written to the output file, pefshots.rsf, using sftahwrite.  
+Traces headers are written to pefshots_hdr.rsf.  The output file data 
+order is sequential, or just in the order sftahwrite reads them from 
+standard input.
+
+ 
 */
-/* SUPEF: $Revision: 1.45 $ ; $Date: 2011/11/16 17:47:47 $		*/
 
-/* Modified for inclusion with Madagascar. */
-
-/* Credits:
- *	CWP: Shuki Ronen, Jack K. Cohen, Ken Larner
- *      CWP: John Stockwell, added mixing feature (April 1998)
- *      CSM: Tanya Slota (September 2005) added cdp feature
- *
- *      Technical Reference:
- *	A. Ziolkowski, "Deconvolution", for value of maxlag default:
- *		page 91: imaxlag < nt/10.  I took nt/20.
- *
- * Notes:
- *	The prediction error filter is 1,0,0...,0,-wiener[0], ...,
- *	so no point in explicitly forming it.
- *
- *	If imaxlag < 2*iminlag - 1, then we don't need to compute the
- *	autocorrelation for lags:
- *		imaxlag-iminlag+1, ..., iminlag-1
- *	It doesn't seem worth the duplicated code to implement this.
- */
+/* derived from Seismic Unix supef  */
 
 #include <rsf.h>
 #include <rsf_su.h>
