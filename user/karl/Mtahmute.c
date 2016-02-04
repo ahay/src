@@ -1,6 +1,6 @@
-/* Read Trace And Header (tah) from standard input, MUTE */
+/* Read Trace And Header (tah) from standard input, MUTE.
 
-/* tah is the abbreviation of Trace And Header.  Madagascar programs 
+   tah is the abbreviation of Trace And Header.  Madagascar programs 
    that begin with sftah are a designed to:
    1- read trace and headers from separate rsf files and write them to 
    standard output (ie sftahread)
@@ -24,20 +24,20 @@
    EXAMPLE:
 
    sftahsort input=shots-receivers-23900_headfix.rsf           \\
-   sort="xline:600,601 offset"                              \\
+   sort="xline:600,601 offset"                                 \\
    | sftahnmo tnmo=0,2,6,10.5,16 vnmo=1500,1500,2250,3250,3700 \\
    | sftahmute                                                 \\
-   xmute=0,20000 tmute=0,20 ntaper=25                        \\
+   xmute=0,20000 tmute=0,20 ntaper=25                          \\
    | sftahnmo                                                  \\
-   tnmo=0,2,6,10.5,16                                        \\
-   vnmo=1500,1500,2250,3250,3700                             \\
-   inv=y                                                     \\
+   tnmo=0,2,6,10.5,16                                          \\
+   vnmo=1500,1500,2250,3250,3700                               \\
+   inv=y                                                       \\
    | sftahmakeskey pkey=xline skey=cdpt                        \\
    | sftahwrite                                                \\
-   verbose=1                                                 \\
-   label2=cdpt  o2=1 n2=100 d2=1                             \\
-   label3=xline o3=600 n3=1 d3=1                             \\
-   output=mutecmps.rsf                                       \\
+   verbose=1                                                   \\
+   label2=cdpt  o2=1 n2=100 d2=1                               \\
+   label3=xline o3=600 n3=1 d3=1                               \\
+   output=mutecmps.rsf                                         \\
    >/dev/null
 
    sfgrey <mutecmps.rsf | sfpen
@@ -76,31 +76,6 @@
    is (time,cmpt,xline).  Finally, the output volume is displayed using
    sfgrey.
 
-   PARAMETERS
-   strings key= no default
-
-   list of header keys to monitor to determine when to break 
-   between gathers.  A gather is a sequence of traces with the 
-   same value for all the header keys.  Stack summs traces in 
-   the gather, divides by the fold, and outputs the stack trace.
-
-   floats xmute= NULL
-
-   List of floats the same length as list of floats in the tmute
-   parameter.  The (xmute,tmute) pairs are interpolated using the
-   trace headers offset to determine trace start time.  The mute is
-   NOT moved based on the first live sample.
-
-   floats tmute= NULL
-
-   List of floats the same length as list of floats in the xmute
-   parameter.  The (xmute,tmute) pairs are interpolated using the
-   trace headers offset to determine trace start time. The mute is
-   NOT moved based on the first live sample.
-
-   float ntaper=12
-   the length of the taper to use at the start of the trace.
-	
 */
 
 /*
@@ -208,19 +183,33 @@ int main(int argc, char* argv[])
 	sf_error("xmute is a required parameter in sftahmute");
     } else {
 	xmute=sf_floatalloc(numxmute);
-	if(!sf_getfloats("xmute",xmute,numxmute))sf_error("unable to read xmute");
+	if(!sf_getfloats("xmute",xmute,numxmute))
+	  sf_error("unable to read xmute");
+	/* \n
+	   List of floats the same length as list of floats in the tmute
+	   parameter.  The (xmute,tmute) pairs are interpolated using the
+	   trace headers offset to determine trace start time.  The mute is
+	   NOT moved based on the first live sample.
+	   \n */
     }
     if(NULL==(list_of_floats=sf_getnstring("tmute",&numtmute))){
 	tmute=NULL;
 	sf_error("xmute is a required parameter in sftahmute");
     } else {
 	tmute=sf_floatalloc(numtmute);
-	if(!sf_getfloats("tmute",tmute,numtmute))sf_error("unable to read tmute");
+	if(!sf_getfloats("tmute",tmute,numtmute))
+	  sf_error("unable to read tmute");
+	/* \n
+	   List of floats the same length as list of floats in the xmute
+	   parameter.  The (xmute,tmute) pairs are interpolated using the
+	   trace headers offset to determine trace start time. The mute is
+	   NOT moved based on the first live sample.
+	   \n */
     }
     if(numxmute!=numtmute)sf_error("bad mute parameters: numxmute!=numtmute");
     if(!sf_getint("ntaper",&ntaper))ntaper=12;
     /* \n
-       length of the taper on the stack mute
+       number of samples in the taper of the mute.
     */
     taper=sf_floatalloc(ntaper);
     for(indx_time=0; indx_time<ntaper; indx_time++){
