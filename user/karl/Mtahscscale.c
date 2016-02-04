@@ -30,17 +30,22 @@ EXAMPLE:
 
 sfgrey <scscale.rsf | sfpen
 
+sftahscscale reads data from the file, applies scaling, and writes data
+to STDOUT.  DO NOT USE WITH sftahread!
+
 In this example the input data ../fetch/npr_field.rsf is read.  Trace
-order does not matter.  Seems like shot oriented data is likely, but
-the program will process cdp of receiver gathers. the source x,y 
-coorfinates are written to sxy.rsaf and the group x,y coordinates are 
-written to gxy.rsf. The shot consistant amplitude and the shot x,y is 
-written to sxyamp.rsf.  The group consistant amplitude and the group 
-x,y is written to gxyamp.rsf.  Surface consistant scaling is applied 
-to the data and the resulting trace and header is written to the pipe.
-The sftahwrite writes the trace data to scscale.rsf and the headers 
-are written to the file scscale_hdr.rsf.  Finally, the output volume 
-is displayed using sfgrey.
+headers are read from ../fetch/npr_field_hdr.rsf (the dafault for the
+headers parameter).  Trace order does not matter.  Shot data is
+likely, but the program will process any trace order (eg cdp or
+receiver). the source x,y coordinates are written to sxy.rsf and the
+group x,y coordinates are written to gxy.rsf. The shot consistant
+amplitude and the shot x,y is written to sxyamp.rsf.  The group
+consistant amplitude and the group x,y is written to gxyamp.rsf.
+Surface consistant scaling is applied to the data and the resulting
+trace and header is written to the pipe.  The sftahwrite writes the
+trace data to scscale.rsf and the headers are written to the file
+scscale_hdr.rsf.  Finally, the output volume is displayed using
+sfgrey.
 */
 /*
    Program change history:
