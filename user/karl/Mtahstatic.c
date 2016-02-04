@@ -1,4 +1,4 @@
-/*  Trace And Header Normal MoveOut
+/*  Trace And Header STATIC
 
 tah is the abbreviation of Trace And Header.  Madagascar programs 
 that begin with sftah are a designed to:
@@ -15,23 +15,23 @@ Some programs have su like names.
 Some programs in this suite are sftahread, sftahgethw, ftahhdrmath, 
 and sftahwrite.
 
-The sftahnmo uses offset in the trace headers to apply moveout using 
-the velocity function defined in the tnmo= vnmo= parameters. Largely
-based on the seismic unix program sunmo.
+The sftahstatic applies a static computed using the sstat and gstat trace
+headers. These headers are the source and receiver static in milliseconds.
+The program also uses the input parameter sign. The static applied:
 
-NMO interpolation error is less than 1% for frequencies less than 60% of
+tin=tout+sign*(sstat+gstat)
+
+This means positive sstat+gstat and sign=1 will shift a trace "up".
+
+Interpolation error is less than 1% for frequencies less than 60% of
 the Nyquist frequency. 
                                                                              
-Exact inverse NMO is impossible, particularly for early times at large
-offsets and for frequencies near Nyquist with large interpolation 
-errors.  
- 
-
 EXAMPLE:
 
 sftahread \\
    verbose=1 \\
    input=npr3_gathers.rsf \\
+| sftahstatic sign=-1 \\
 | sftahnmo \\
    verbose=1  \\
    tnmo=0,.373,.619,.826,.909,1.017,1.132,1.222,1.716,3.010 \\
@@ -49,16 +49,16 @@ sfgrey <mappedstack.rsf | sfpen
 In this example the cmp sorted prestack data, npr3_gathers.rsf,  are 
 read by sftahread.  The headers are in the file npr3_gathers_hdr.rsf, 
 the headers parameter default.  The headers are merged with the trace 
-amplitudes and the tah data sent down the pipe for nmo and stack.  The
-sftahstack program uses both the iline and xline keys to determine
-which traces blong to a gather.  Using both keys avoids a problem on 
-edges of a survey when uising xline along may merge gathers across 
-ilines (a special case that does sometimes happen). sftahwrite writes
-the trace data to mappedstack.rsf and the headers are written to the
-file mappedstack_hdr.rsf.  The order of the data in the output file
-is defined by the iline and xline trace headers, so the  data order
-is (time,xline,iline).  Finally, the output volume is displayed using
-sfgrey.
+amplitudes and the tah data sent down the pipe for statics, nmo, and 
+stack.  The sftahstack program uses both the iline and xline keys to 
+determine which traces blong to a gather.  Using both keys avoids a 
+problem on edges of a survey when uising xline along may merge gathers 
+across ilines (a special case that does sometimes happen). sftahwrite 
+writes the trace data to mappedstack.rsf and the headers are written 
+to the file mappedstack_hdr.rsf.  The order of the data in the output 
+file is defined by the iline and xline trace headers, so the  data 
+order is (time,xline,iline).  Finally, the output volume is displayed 
+using sfgrey.
 */
 
 /*
@@ -82,6 +82,7 @@ sfgrey.
    Program change history:
    date       Who             What
    08/26/2015 Karl Schleicher Original program based on Mtahnmo.c
+   02/04/2016 Karl Schleicher Write selfdoc
 */
 #include <string.h>
 #include <rsf.h>
