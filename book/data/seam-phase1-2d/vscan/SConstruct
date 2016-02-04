@@ -6,10 +6,8 @@ Flow(['cmps.rsf' , 'xlines_hdr.rsf'],
       '../ntg/shots-receivers-23900_headfix_hdr.rsf'],
      '''
      sftahsort input=$SOURCE sort="xline:600,601 offset"
-     | sftahnmo tnmo=0,2,6,10.5,16 vnmo=1500,1500,2250,3250,3700 \
      | sftahmute \
        xmute=0,20000 tmute=0,20 ntaper=25 \
-     | sftahnmo tnmo=0,2,6,10.5,16 vnmo=1500,1500,2250,3250,3700 inv=y \
      | sftahmakeskey pkey=xline skey=cdpt
      | sftahwrite \
        verbose=1 \
