@@ -15,12 +15,12 @@ Some programs have su like names.
 Some programs in this suite are sftahread, sftahgethw, ftahhdrmath, 
 and sftahwrite.
 
-The sftahmakeslockey program will make a sloc keywhic is  useful for 
+The sftahmakeslockey program will make a sloc keywhic is useful for 
 surface consistant scaling, decon, and residal statics.  An sloc is a 
 surface location, ie a shot or a receiver location.  Programs could 
 be written to drive off the group location (gx,gy), but it is better 
 to just have an integer group surface location counts the group 
-location from 1 to number group locations.  THat allows you to make 
+location from 1 to number group locations.  That allows you to make 
 shot record displays where the horizontal coordinate the group 
 location index (a handy display to look for consistant receiver statics 
 on shots).  You specify input surface coodinate, slocxy=gx,gy and output 
@@ -142,9 +142,13 @@ int main(int argc, char* argv[])
 
   if(verbose>0)fprintf(stderr,"call list of keys\n");
  
+  /* the next line will create a parameter description in the selfdoc */
+  sf_getstring("slocxy");
+  /* \n
+     two keys that are the trace headers names of the x,y coordinate 
+     to use to identify surface locations and compute the trace header
+     value for slockey \n */
   list_of_keys=sf_getnstring("slocxy",&numkeys);
-  /* two keys that are the surface x,y location to use to compute the trace
-     slockey */
 
   if(list_of_keys==NULL)
     sf_error("The required parameter \"slocxy\" was not found.");
