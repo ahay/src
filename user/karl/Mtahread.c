@@ -12,7 +12,7 @@ that begin with sftah are designed to:
 These programs allow Seismic Unix (su) like processing in Madagascar.  
 Some programs have su like names.
 
-Some programs in this suite are sftahread, sftahgethw, ftahhdrmath, 
+Some programs in this suite are sftahread, sftahgethw, sftahhdrmath, 
 and sftahwrite.
 
 EXAMPLE:
@@ -48,7 +48,7 @@ displayed using sfgrey.
    Program change history:
    date       Who             What
    04/26/2013 Karl Schleicher Original program
-   01/10/2014 Karl Schleicher Provide headers default, documentation
+   01/10/2014 Karl Schleicher Provide headers default, improve documentation
    06/05/2015 Karl Schleicher add makeheader=y to load axis coords to hdrs
 */
 

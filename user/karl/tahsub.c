@@ -204,6 +204,7 @@ void tahwritemapped(int verbose, float* trace, void* iheader,
 		    int* indx_of_keys, int dim_output,
 		    off_t* n_output, off_t* n_outheaders)
 /*< tah write mapped >*/
+
 {
 
   int iaxis;
@@ -299,12 +300,20 @@ void tahwritemapped(int verbose, float* trace, void* iheader,
 void tahwriteseq(int verbose, float* trace, void* iheader, 
 		 int n1_traces, int n1_headers,
 		 sf_file output,sf_file outheaders,
-		 sf_datatype typehead)
+		 sf_datatype typehead, int num_traces)
 /*< tah write seq >*/
 {
+  off_t file_offset;
 
   /* write trace and header to the output files.  LIke tahwritemapped, but  
      no seeks;  just write to the next location */
+  /* for some reason it looks like files are alligned at end of first trace
+     so without seq there is a zero trace and header in the output files.
+     I just added seq to make sure it traces are correct. */
+  file_offset=(num_traces-1)*n1_traces*sizeof(float);
+  sf_seek(output,file_offset,SEEK_SET);
+  file_offset=(num_traces-1)*n1_headers*sizeof(float);
+  sf_seek(outheaders,file_offset,SEEK_SET);
 
   sf_floatwrite(trace,n1_traces,output);
   
@@ -313,5 +322,82 @@ void tahwriteseq(int verbose, float* trace, void* iheader,
   if(verbose>2){
       fprintf(stderr,"trace and header written to output file\n");
   }
+}
+
+bool tahbinarysearchxy(double this_x, double this_y, 
+		       double* x_array, double* y_array,
+		       int num_xy, int* location )
+/*< tahbinarysearchxy  >*/
+/* binary search.  Return true/false was point found.  Location found 
+   will be in the location argument. */
+{   
+  int first=0, last=num_xy-1, middle=0;
+ 
+   /* handle zero length list as special case */
+   if(num_xy<1){
+     *location=0;
+     return false;
+   }
+   while( first <= last ){
+     middle = (first+last)/2;
+     if (  y_array[middle] <  this_y ||
+	   (y_array[middle] == this_y && x_array[middle] < this_x)){
+       first = middle + 1;    
+     } else if (y_array[middle] == this_y && x_array[middle] == this_x ){
+       *location=middle;
+       return true;
+     } else {
+       last = middle - 1;
+     }
+   }
+   /*    first > last.  value is not in list.  What is insertion point?
+	 middle is a valid index */
+   if (  y_array[middle] <  this_y ||
+	 (y_array[middle] == this_y && x_array[middle] < this_x)){
+     *location=middle+1;
+   } else {
+     *location=middle;
+   }
+   return false;   
+}
+
+int tahinsert_unique_xy(double **xarray, double **yarray, int **countarray,
+		         int *num_xy, int* size_xy_array, 
+		         double this_x, double this_y)
+/*< tah write seq >*/
+{
+  /* binary search for sx,sy.  Insert if not found */
+  int insert_indx=0;
+  int indx;
+
+  /* when 0==num_sxy, insert at location 0.  Otherwise binarysearch to find
+     the insertion point. */
+  if(0==*num_xy ||
+     !tahbinarysearchxy(this_x,this_y,
+			*xarray,*yarray,
+			*num_xy,&insert_indx)){
+    /* insert into sx,sy arrays */
+    /* fprintf(stderr,"before increment *num_xy=%d\n",*num_xy); */
+    (*num_xy)++;
+    /* fprintf(stderr,"before increment *num_xy=%d\n",*num_xy); */
+    if(*num_xy> *size_xy_array){
+      *size_xy_array +=1; /* make sure the array always get a little bigger */
+      *size_xy_array *= 1.2; /* grow array size by 20 % */
+      *xarray    =realloc(*    xarray,*size_xy_array*sizeof(double));
+      *yarray    =realloc(*    yarray,*size_xy_array*sizeof(double));
+      *countarray=realloc(*countarray,*size_xy_array*sizeof(int));
+    }
+    /* move array entries from insert_indx to the end one right
+       so this_x and this_y can be inserted */
+    for(indx=*num_xy-1; indx>insert_indx; indx--){
+      (*    xarray)[indx]=(*    xarray)[indx-1];
+      (*    yarray)[indx]=(*    yarray)[indx-1];
+      (*countarray)[indx]=(*countarray)[indx-1];
+    }	
+    (*    xarray)[insert_indx]=this_x;
+    (*    yarray)[insert_indx]=this_y;
+    (*countarray)[insert_indx]=*num_xy;
+  }
+  return insert_indx;
 }
 

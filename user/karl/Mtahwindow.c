@@ -32,13 +32,13 @@ sftahread \\
   mode=seq \\
 >/dev/null
 
-The headers are in the file npr3_field_hdr.rsf, 
-the headers parameter default.  The headers are merged with the trace 
-amplitudes and the tah data sent down the pipe for sftahwindow.  The 
-trace is shottended to 2047 samples to remove the two bad amplitudes
-observed at the end of most of the traces on this file.  The traces are
-sent to STDOUT to sftahwrite, which write the data sequentially to the
-output file (ie the output files is just a bunch of traces.
+The headers are in the file npr3_field_hdr.rsf, the headers parameter 
+default.  The headers are merged with the trace amplitudes and the tah 
+data sent down the pipe for sftahwindow.  The trace is shortened to 
+2047 samples to remove the two bad amplitudes observed at the end of 
+most of the traces on this file.  The traces are sent to STDOUT to 
+sftahwrite, which write the data sequentially to the output file (ie 
+the output files is just a bunch of traces.
 
 PARAMETERS
    int ns= n1 in the input trace amplitude file.

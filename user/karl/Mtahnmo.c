@@ -191,6 +191,7 @@ int main(int argc, char* argv[])
   segy_init(n1_headers,in);
   /* get index to keys I will be using */
   if(NULL==(offsetname=sf_getstring("offset")))offsetname="offset";
+  /* name of the header key to use for offset (usually just offset) */
   indx_offset=segykey(offsetname);
   /* kls what other header keys do I use?  inline? xline? cdp? */
 

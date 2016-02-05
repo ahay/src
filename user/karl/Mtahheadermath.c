@@ -1,14 +1,4 @@
-/* read Trace and Header (tah), compute header values
-
-   Known functions for float data: 
-   cos,  sin,  tan,  acos,  asin,  atan, 
-   cosh, sinh, tanh, acosh, asinh, atanh,
-   exp,  log,  sqrt, abs, erf, erfc, sign
-
-   Known functions for int data: sign, abs
-
-   modeled on sfheademath.  This program outputs the whole header.  It was
-   a building block for sftahheadermath.
+/* Trace And Header MEADER MATH
 
    tah is the abbreviation of Trace And Header.  Madagascar programs 
    that begin with sftah are a designed to:
@@ -26,26 +16,48 @@
    and sftahwrite.
 
    The sftahheadermath updates a trace header with a new value computed from
-   input trace headers.  
+   input trace headers. The program is modeled on sfheadermath.  A formula
+   input to the parameter output is used to compute a value saves in the 
+   outputkey header location.  The forma can contain the binary operators
+   +, -, *, and /.  Parenthesis, i.e. ( and ), can be used to specify 
+   order of operation.  
 
+   Known functions for float data: 
+   cos,  sin,  tan,  acos,  asin,  atan, 
+   cosh, sinh, tanh, acosh, asinh, atanh,
+   exp,  log,  sqrt, abs, erf, erfc, sign
+
+   Known functions for int data: sign, abs
+
+   A simple example is 2D offset can be computed from sx and gx:
+   sftahheadermath outputkey=offset output=abs(sx-gx)
+   
    See also sftahmakeskey.
 
    EXAMPLE:
 
-   sftahread \\
-   verbose=1 \\
-   input=npr3_gathers.rsf \\
-   | sftahgethw \\
-   verbose=0  \\
-   key=sx,sy,gx,gy,offset  \\
+   sftahread input=timodel_shot_data_II.rsf \\
+   | sftahheadermath outputkey=cdpy output='(sy+gy)/2' \\
+   | sftahheadermath outputkey=cdp output='cdpy/20+1' \\
+   | sftahheadermath outputkey=cdpt output='offset/200+1' \\
+   | sftahgain tpow=1 \\
+   | sftahwrite output=timodel_ntg_II.rsf \\
+       label2=cdp o2=1 n2=3606 d2=1 \\
+       label3=cdpt o3=1 n3=1 d3=1 \\
    >/dev/null
 
-   The headers are in the file npr3_gathers_hdr.rsf, 
-   the headers parameter default.  The headers are merged with the trace 
-   amplitudes and the tah data sent down the pipe for sftahgethw.  The 
-   source and group coordinates and offset (sx,sy,gx,gy,offset) are 
-   printed to STDERR.  Traces are sent to STDOUT, which is directed to
-   /dev/null (the bit bucket).
+   In this example input traces in timodel_shot_data_II.rsf are merged
+   with headers in timodel_shot_data_II_hdr.rsf and written to the pipe.  
+   Three seperate executions of sftahheadermath are used to compute 
+   headers.  The first sftahheadermath averages sy and gy to compute cdpy.
+   The second sftahheadermath computes the cdp number by dividing cdpy by 
+   the cdp interval, 20 meters.  The third sftahheadermath compute the 
+   cdpt by dividing the offset by 200.  Sftahgain is used to multiply
+   trace amplitudes by time (a simple spreading correction.   The traces 
+   are passed to sftahwrite that outputs cdpt 1, the near trace,  to the 
+   file timodel_ntg_II.rsf.  The trace headers are saved in 
+   timodel_ntg_II_hdr.rsf.  Sftahwrite also writes the traces to STDOUT, 
+   which is directed to /dev/null (the bit bucket).
 
    PARAMETERS
    string output= no default

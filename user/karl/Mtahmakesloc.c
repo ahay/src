@@ -1,4 +1,4 @@
-/* Trace And Header MAKE Secondary KEY.
+/* Trace And Header MAKE SLOC KEY.
 
 tah is the abbreviation of Trace And Header.  Madagascar programs 
 that begin with sftah are a designed to:
@@ -15,33 +15,28 @@ Some programs have su like names.
 Some programs in this suite are sftahread, sftahgethw, ftahhdrmath, 
 and sftahwrite.
 
-The sftahmakeskey program will make a secondary key.  You sometimes
-need a secondary key to number the traces in a gather.  For example 
-after sorting the data in iline,xline,offset you usually cannot
-store the data using the offset key because the offset sampling is 
-irregular.  sftahmakeskey can be used to build the cdpt header from 
-the iline and xline keys.  Input pkey=iline,xline.  The secondary 
-key (defined by skey) will start with 1 when a new iline,xline is 
-encounterred.  As long as iline,xline does not change, the skey will 
-increase by 1 on each successive trace.  When iline or xline changes,
-skey will start agina with 1.  The output data can be stored in a 
-file indexed by cdpt,xline,iline.
+The sftahmakeslockey program will make a sloc keywhic is useful for 
+surface consistant scaling, decon, and residal statics.  An sloc is a 
+surface location, ie a shot or a receiver location.  Programs could 
+be written to drive off the group location (gx,gy), but it is better 
+to just have an integer group surface location counts the group 
+location from 1 to number group locations.  That allows you to make 
+shot record displays where the horizontal coordinate the group 
+location index (a handy display to look for consistant receiver statics 
+on shots).  You specify input surface coodinate, slocxy=gx,gy and output 
+header key, slockey=tracf.
 
 EXAMPLE:
 
 sftahread \\
    verbose=1 \\
    input=npr3_gathers.rsf \\
-| sftahmakeskey pkey=iline,xline skey=cdpt verbose=1 \\
+| sftahmakeslockey slocxy=gx,gy slockey=tracf verbose=1 \\
 | sftahwrite \\
    verbose=1                         \\
-   label2="cdpt"  o2=1 n2=24  n2=1   \\
-   label3="xline" o3=1 n3=188 d3=1   \\
-   label4="iline" o4=1 n4=10 d4=1   \\
-   output=mappedgather.rsf \\
+   mode=seq \\
+   output=npr3_tracf.rsf \\
 >/dev/null
-
-sfgrey <mappedgather.rsf | sfpen
 
 In this example the cmp sorted prestack data, npr3_gathers.rsf,  are 
 read by sftahread.  The headers are in the file npr3_gathers_hdr.rsf, 
@@ -50,13 +45,21 @@ amplitudes and the tah data sent down the pipe for sftahmakeskey.
 sftahmakeskey creates the cdpt header and sftahwrite creates a 4 
 dimensional file.
 
+PARAMETERS
+   strings slocxy=
+
+        list of 2 header keys that are the input surface location key
+        so use to compute the slockey.
+
+   string slockey
+
+        the name of the output sloc header.
 */
 
 /*
    Program change history:
    date       Who             What
-   11/15/2012 Karl Schleicher Original program.  Derived from Mtahgethw.c
-   2/4/2016   Karl Schleicher Improve documentation.
+   09/21/2015 Karl Schleicher Original program.  Derived from Mtahmakeskey.c
 */
 #include <string.h>
 #include <rsf.h>
@@ -80,11 +83,21 @@ int main(int argc, char* argv[])
   int numkeys;
   int ikey;
   char** list_of_keys;
-  int *indx_of_keys;
-  char* skey;
-  int indx_of_skey;
-  int skeyvalue;
-  bool pkeychanged;
+  char* slockey;
+  int indx_tracex;
+  int indx_tracey;
+  int indx_sloc;
+  double this_x;
+  double this_y;
+  double *tracex;
+  double *tracey;
+  int *slocarray;
+  int slocarray_indx;
+
+  int size_tracexy_array;
+  int num_tracexy;
+
+  int sloc;
   int itrace=0;
 
   /*****************************/
@@ -123,46 +136,41 @@ int main(int argc, char* argv[])
 
   if(verbose>0)fprintf(stderr,"allocate headers.  n1_headers=%d\n",n1_headers);
   fheader = sf_floatalloc(n1_headers);
-  fprevheader = sf_floatalloc(n1_headers);
  
   if(verbose>0)fprintf(stderr,"allocate intrace.  n1_traces=%d\n",n1_traces);
   intrace= sf_floatalloc(n1_traces);
 
   if(verbose>0)fprintf(stderr,"call list of keys\n");
  
-  /* this sf_getstring will create parameter descrpiton in the self doc */
-  sf_getstring("pkey"); 
+  /* the next line will create a parameter description in the selfdoc */
+  sf_getstring("slocxy");
   /* \n
-     A comma seperated list of primary header keys to monitor to determine 
-     gathers.  The trace number in the gather is counted and put in the
-     skey header location.
-     \n
-  */
-  list_of_keys=sf_getnstring("pkey",&numkeys);
-  /* List of the primary keys monitored to determine gathers. */
+     two keys that are the trace headers names of the x,y coordinate 
+     to use to identify surface locations and compute the trace header
+     value for slockey \n */
+  list_of_keys=sf_getnstring("slocxy",&numkeys);
 
   if(list_of_keys==NULL)
-    sf_error("The required parameter \"pkey\" was not found.");
+    sf_error("The required parameter \"slocxy\" was not found.");
   /* I wanted to use sf_getstrings, but it seems to want a colon seperated
      list of keys (eg key=offset:ep:fldr:cdp) and I wanted a comma seperated
      list of keys (eg key=offset:ep:fldr:cdp).
-  numkeys=sf_getnumpars("pkey");
-  if(numkeys==0)
-    sf_error("The required parameter \"pkey\" was not found.");
-  fprintf(stderr,"alloc list_of_keys numkeys=%d\n",numkeys);
-  list_of_keys=(char**)sf_alloc(numkeys,sizeof(char*)); 
-  sf_getstrings("pkey",list_of_keys,numkeys);
   */
+  if(numkeys!=2) sf_error("There must be exactly two header names in slocxy");
+
   /* print the list of keys */
-  if(verbose>1){
+  if(verbose>=1){
     fprintf(stderr,"numkeys=%d\n",numkeys);
+    fprintf(stderr,"input trace xcoord=%s\n",list_of_keys[0]);
+    fprintf(stderr,"input trace ycoord=%s\n",list_of_keys[1]);
+
     for(ikey=0; ikey<numkeys; ikey++){
       fprintf(stderr,"list_of_keys[%d]=%s\n",ikey,list_of_keys[ikey]);
     }
   }
-  if(NULL==(skey=sf_getstring("skey")))
-    sf_error("the required parameter \"skey\" was not found");
-  /* The name of the secondary key created by the program. */
+  if(NULL==(slockey=sf_getstring("slockey")))
+    sf_error("the required parameter \"slockey\" was not found");
+  /* The name of the sloc key created by the program. */
   
   /* maybe I should add some validation that n1== n1_traces+n1_headers+2
      and the record length read in the second word is consistent with 
@@ -183,20 +191,21 @@ int main(int argc, char* argv[])
 
   /* segy_init gets the list header keys required by segykey function  */
   segy_init(n1_headers,in);
-  indx_of_keys=sf_intalloc(numkeys);
-  for (ikey=0; ikey<numkeys; ikey++){
-    /* kls need to check each of these key names are in the segy header and
-       make error message for invalid keys.  Of does segykey do this? NO, just
-       segmentation fault. */
-    indx_of_keys[ikey]=segykey(list_of_keys[ikey]);
-  }
-  indx_of_skey=segykey(skey);
+  indx_tracex=segykey(list_of_keys[0]);
+  indx_tracey=segykey(list_of_keys[1]);
+  indx_sloc=segykey(slockey);
+
+  size_tracexy_array=100;
+  num_tracexy=0;
+
+  tracex=malloc(size_tracexy_array*sizeof(double));
+  tracey=malloc(size_tracexy_array*sizeof(double));
+  slocarray=malloc(size_tracexy_array*sizeof(int));
 
   /***************************/
   /* start trace loop        */
   /***************************/
   if(verbose>0)fprintf(stderr,"start trace loop\n");
-  skeyvalue=0;
  
   itrace=0;
   while (0==get_tah(intrace, fheader, n1_traces, n1_headers, in)){
@@ -207,32 +216,21 @@ int main(int argc, char* argv[])
     /* this program computes a secondary key.  If one of the headers in 
        pkey changes, skey is set to 1.  Otherwise skey is the previous skey+1
     */
-    pkeychanged=false;
-    if(itrace>0){
-      for(ikey=0; ikey<numkeys; ikey++){
-	if(typehead == SF_INT){
-	  if(((int*)fheader    )[indx_of_keys[ikey]]!=
-	     ((int*)fprevheader)[indx_of_keys[ikey]]){
-	    pkeychanged=true;
-	    break;
-	  }
-	} else {
-	  if(fheader[indx_of_keys[ikey]]!=fprevheader[indx_of_keys[ikey]]){
-	    pkeychanged=true;
-	    break;
-	  }
-	}
-      }
+
+    if(typehead == SF_INT){
+      this_x=((int*)fheader    )[indx_tracex];
+      this_y=((int*)fheader    )[indx_tracey];
+    } else {
+      this_x=       fheader     [indx_tracex];
+      this_y=       fheader     [indx_tracey];
     }
-    if(pkeychanged) skeyvalue=1;
-    else skeyvalue++;
-    if(typehead == SF_INT) ((int*)fheader)[indx_of_skey]=skeyvalue;
-    else                          fheader [indx_of_skey]=skeyvalue;
+    slocarray_indx=tahinsert_unique_xy(&tracex,&tracey,&slocarray,
+		                       &num_tracexy,&size_tracexy_array,
+		                       this_x, this_y);
+    sloc=slocarray[slocarray_indx];
     
-    if(skeyvalue==1){
-      /* this is a new pkey, save the header so you know when it changes */
-      memcpy(fprevheader,fheader,n1_headers*sizeof(int));
-    }
+    if(typehead == SF_INT) ((int*)fheader)[indx_sloc]=sloc;
+    else                          fheader [indx_sloc]=sloc;
     
     /***************************/
     /* write trace and headers */

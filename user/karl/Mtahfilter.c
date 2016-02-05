@@ -29,7 +29,7 @@ EXAMPLE:
 
 sftahsort input=shots-receivers-23900_headfix.rsf           \\
    sort="xline:600,601 offset"                              \\
-| sftahfilter filt=dephase.rsf                              \\
+| sftahfilter filterfile=dephase.rsf                        \\
 | sftahmakeskey pkey=xline skey=cdpt                        \\
 | sftahwrite                                                \\
   verbose=1                                                 \\
@@ -43,14 +43,15 @@ sfgrey <mutecmps.rsf | sfpen
 In this example a deterministic dephase filter is applied to a prestack
 datafile.
 
-The shot organized prestack cmp data, shots-receivers-23900_headfix.rsf 
+The shot organized prestack data, shots-receivers-23900_headfix.rsf 
 are read in xline offset order by sftahsort program.  The headers are 
 in the file shots-receivers-23900_headfix_hdr.rsf, the headers 
 parameter default.  The headers are merged with the trace amplitudes 
 and the tah data sent down the pipe to apply a filter.
 
 The sftahfilter program applies a filter contained in the dephase.rsf
-file.
+file.  
+
 The program sftahmakeskey is used to create a secondary key used 
 in the following sftahwrite to define the location to wrte the trace 
 in the output file. Sftahmakeskey makes a secondary key (skey=cdpt) 
@@ -59,32 +60,12 @@ The input traces gathered by xline by sftahsort. Sftahmakeskey sets
 cdpt to 1 when the trace has a new xline.  If the trace has the same 
 xline as the previous trace cdpt is incremented
 
-Sftahwrite writes the the trace data to dephasecmp.rsf and the headers
-are written to the file mutecmp_hdr.rsf.  The order of the data in the 
+sftahwrite writes the trace data to dephasecmp.rsf and the headers
+are written to the file dephasecmp_hdr.rsf.  The order of the data in the 
 file is defined by the cdpt and xline trace headers, so the  data order
 is (time,cmpt,xline).  Finally, the output volume is displayed using
 sfgrey.
 
-PARAMETERS
-
-   floats filter=NULL
-
-        A list of floats that is the filter to convolve on the input 
-	traces.
-
-   string filter_file=NULL
-
-       Name of an rsf file that contains the filter(s)
-
-   int filter_index_t0
-
-        Index of time=0 on the filter
-
-   int  verbose=1       
-        
-        flag to control amount of print
-        0 terse, 1 informative, 2 chatty, 3 debug
-	
 */
 
 /*
@@ -177,6 +158,10 @@ int main(int argc, char* argv[])
     filter=sf_floatalloc(numfilter);
     if(!sf_getfloats("filter",filter,numfilter))
       sf_error("unable to read tmute");
+    /* \n
+      A list of floats that is the filter to convolve on the input 
+      traces.
+    */
   }
 
   filter_file_name = sf_getstring("filter_file");

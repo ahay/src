@@ -5,7 +5,7 @@
    1- read trace and headers from separate rsf files and write them to 
    standard output (ie sftahread)
    2- filter programs that read and write standard input/output and 
-   process the tah data (eg sftahnmo, sftahstack)
+   process the tahxstart data (eg sftahnmo, sftahstack)
    3- read tah data from standard input and write separate rsf files for 
    the trace and headers data (ie sftahwrite)
 
@@ -60,23 +60,6 @@
    file is defined by the cdpt and xline trace headers, so the  data order
    is (time,cmpt,xline).  Finally, the output volume is displayed using
    sfgrey.
-
-   PARAMETERS
-   int verbose=1
-   flag to control amount of print
-   0 terse, 1 informative, 2 chatty, 3 debug
-
-   float scale=1.0
-   multiply data by this float
-
-   float tpow=0.0
-   multiply data by t^tpow
-
-   float epow=0.0
-   multiply data by exp(epow*t)
-
-   float agc=0.0
-   Length of agc window in seconds.  0.0 means no agc
 
    Operation order:
 
@@ -162,8 +145,10 @@ int main(int argc, char* argv[])
 	   list of offsets that correspont to tstart and define the offset 
 	   dependent start time for the agc scaling */
 	xstart=sf_floatalloc(numxstart);
-	if(!sf_getfloats("xxstart",xstart,numxstart))
+	if(!sf_getfloats("xstart",xstart,numxstart))
 	    sf_error("unable to read xstart");
+	/* list of offsets that correspond to tstart and define the offset
+           dependent start time for the agc scaling */
     } else {
 	xstart=NULL;
     }
@@ -173,6 +158,8 @@ int main(int argc, char* argv[])
 	   dependent start time for the agc scaling */
 	tstart=sf_floatalloc(numtstart);
 	if(!sf_getfloats("tstart",tstart,numtstart))sf_error("unable to read tstart");
+        /* list of times that correspont to xstart and define the offset 
+	   dependent start time for the agc scaling */
     } else {
 	tstart=NULL;
     }
