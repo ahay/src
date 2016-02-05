@@ -1,4 +1,22 @@
-/* Match filtering */
+/* Simple matching filtering */
+/*
+  Copyright (C) 2015 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <rsf.h>
 
 int main(int argc, char* argv[])
@@ -39,8 +57,8 @@ int main(int argc, char* argv[])
     noiz = sf_floatalloc(n1);
 
     if (adj) {
-	for (i=0; i < nf; i++) /* !!! COMPLETE LINE !!! */
-	filt[i]=0;
+	for (i=0; i < nf; i++) 
+	    filt[i]=0;
     } else {
 	sf_floatread(filt,nf,inp);
     }
@@ -49,9 +67,10 @@ int main(int argc, char* argv[])
 	sf_floatread(noiz,n1,oth);
 
 	if (adj) {
-	    sf_floatread(data,n1,inp); /* !!! COMPLETE LINE !!! */
+	    sf_floatread(data,n1,inp); 
 	} else {
-	    for (i1=0; i1 < n1; i1++) data[i1] = 0.;
+	    for (i1=0; i1 < n1; i1++)
+		data[i1] = 0.;
 	}
 
 	for (i=0; i < nf; i++) {
@@ -62,7 +81,7 @@ int main(int argc, char* argv[])
 		if (j < 0 || j >= n1) continue; 
 		    
 		if (adj) {
-		    filt[i] += noiz[j]*data[i1]; /* !!! COMPLETE LINE !!! */
+		    filt[i] += noiz[j]*data[i1]; 
 		} else {
 		    data[i1] += noiz[j]*filt[i];
 		}
@@ -72,7 +91,7 @@ int main(int argc, char* argv[])
 	if (!adj) sf_floatwrite(data,n1,out);
     }
 
-    if (adj) sf_floatwrite(filt,nf,out);  /* !!! COMPLETE LINE !!! */
+    if (adj) sf_floatwrite(filt,nf,out); 
 		 
     exit(0);
 }
