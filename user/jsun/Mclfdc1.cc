@@ -42,18 +42,24 @@ int sample(vector<int>& rs, vector<int>& cs, ZpxNumMat& res)
     res.resize(nr,nc);  
     setvalue(res,zpx(0.,0.));
     for(int a=0; a<nr; a++) {
-	for(int b=0; b<nc; b++) {
-        double phase = 2*SF_PI*vs[rs[a]]*fabs(ks[cs[b]])*dt;
-        if (mode == 0)
-            res(a,b) = zpx(cos(phase),sin(phase));
-        else if (mode == 1)
-            res(a,b) = zpx(0,2*sin(phase));
-            //res(a,b) = zpx(0,2*sin(2*SF_PI*vs[rs[a]]*ks[cs[b]]*dt));
-            //res(a,b) = zpx(2*sin(phase),0);
-            //res(a,b) = zpx(2.0*SF_PI*ks[cs[b]]*sinc(SF_PI*vs[rs[a]]*fabs(ks[cs[b]])*dt),0);
-        else
-            res(a,b) = zpx(2*cos(phase),0);
-	}
+        for(int b=0; b<nc; b++) {
+            double phase = 2*SF_PI*vs[rs[a]]*fabs(ks[cs[b]])*dt;
+            //double phase = 2*SF_PI*vs[rs[a]]*(ks[cs[b]])*dt;
+            if (mode == 0) {
+                res(a,b) = zpx(cos(phase),sin(phase));
+            } else if (mode == 1) {
+                res(a,b) = zpx(0,2*sin(phase));
+                //res(a,b) = zpx(0,2*sin(2*SF_PI*vs[rs[a]]*(ks[cs[b]])*dt));
+                //res(a,b) = zpx(0,2*sin(2*SF_PI*vs[rs[a]]*ks[cs[b]]*dt));
+                //res(a,b) = zpx(2*sin(phase),0);
+                //res(a,b) = zpx(2.0*SF_PI*ks[cs[b]]*sinc(SF_PI*vs[rs[a]]*fabs(ks[cs[b]])*dt),0);
+            } else {
+                //double tmp = abs(cos(phase)); 
+                //tmp = (tmp>=0.999) ? 1.999-tmp : 1;
+                double tmp = 1;
+                res(a,b) = zpx(2*cos(phase)*tmp,0);
+            }
+        }
     }
     return 0;
 }
@@ -135,7 +141,8 @@ int main(int argc, char** argv)
     int nk=0;
     for (int k=0; k < N/2; k++) {
 	//ks[k] = k*dk;
-	ks[k] = k0+k*dk;
+	//ks[k] = k0+k*dk;
+	ks[k] = fabs(k0+k*dk);
         if (fabs(ks[k]) < CUT) {
            ksc[nk] = k;
            nk++;
@@ -143,7 +150,8 @@ int main(int argc, char** argv)
     }
     for (int k=N/2; k < N; k++) {
 	//ks[k] = (-N+k)*dk;
-	ks[k] = k0+k*dk;
+	//ks[k] = k0+k*dk;
+	ks[k] = fabs(k0+k*dk);
         if (fabs(ks[k]) < CUT) { 
            ksc[nk] = k;
            nk++;
@@ -262,8 +270,8 @@ int main(int argc, char** argv)
             tmpB._data[x]=zpx(1.0,0);
             //tmpB._data[x]= (den>=2.0) ? zpx(2.0/den,0) : zpx(1.0,0);
         else
-            //tmpB._data[x]=zpx(1.0,0);
-            tmpB._data[x]= (den>=2.0) ? zpx(2.0/den,0) : zpx(1.0,0);
+            tmpB._data[x]=zpx(1.0,0);
+            //tmpB._data[x]= (den>=2.0) ? zpx(2.0/den,0) : zpx(1.0,0);
         cerr<<tmpB._data[x]<<" ";
         cerr<<endl;
     }

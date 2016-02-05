@@ -94,21 +94,22 @@ int main(int argc, char* argv[])
 
         sf_complexwrite(cur,nz,out);
 
-        for (iz=LEN2-1; iz < nz-(LEN2-1); iz++) {  
+        //for (iz=LEN2-1; iz < nz-(LEN2-1); iz++) {  
+        for (iz=0; iz < nz; iz++) {  
 
             // apply lowrank FD coefficients
             plap = sf_cmplx(0,0);
             for (ik=0; ik < LEN; ik++) {
 #ifdef SF_HAS_COMPLEX_H
                 if (cpxexp)
-                    plap += coef[ik][iz]*cur[iz+s1[ik]];
+                    plap += coef[ik][iz]*cur[(iz+s1[ik]+nz)%nz];
                 else
-                    plap += coef[ik][iz]*(cur[iz+s1[ik]]+cur[iz-s1[ik]]);
+                    plap += coef[ik][iz]*(cur[(iz+s1[ik]+nz)%nz]+cur[(iz-s1[ik]+nz)%nz]);
 #else
                 if (cpxexp)
-                    plap = sf_cadd(plap,sf_cmul(coef[ik][iz],cur[iz+s1[ik]]));
+                    plap = sf_cadd(plap,sf_cmul(coef[ik][iz],cur[(iz+s1[ik]+nz)%nz]));
                 else
-                    plap = sf_cadd(plap,sf_cmul(coef[ik][iz],sf_cadd(cur[iz+s1[ik]],cur[iz-s1[ik])));
+                    plap = sf_cadd(plap,sf_cmul(coef[ik][iz],sf_cadd(cur[(iz+s1[ik]+nz)%nz],cur[(iz-s1[ik]+nz)%nz])));
 #endif
             }
 
@@ -130,7 +131,8 @@ int main(int argc, char* argv[])
 
         }
 
-        for (iz=LEN2-1; iz < nz-(LEN2-1); iz++) {  
+        //for (iz=LEN2-1; iz < nz-(LEN2-1); iz++) {  
+        for (iz=0; iz < nz; iz++) {  
             old[iz] = cur[iz];
             cur[iz] = nxt[iz];
         }
