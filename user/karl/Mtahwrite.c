@@ -18,10 +18,15 @@ and sftahwrite.
 The sftahwrite program reads the trace and header data (tah) from 
 standard input (usually a pipe), separates the trace data from the
 header data.  The trace data is written to output and the header is
-written to outheaders.  The trace headers are used to select the 
-location in the file to write the data.  The iline and xline headers 
-are used in the following example to put stacked data in 
-(time, xline, iline) order so it can be viewed using sfgrey.
+written to outheaders.  The output files can be mapped or sequential.
+Mapped files use to trace header to determine the location in the 
+file to write the trace.  The iline and xline headers are used in the 
+following example to put stacked data in (time, xline, iline) order 
+so it can be viewed using sfgrey. Sequential files order the traces in 
+the file in the order they are read from standard output.  Sequential 
+files are a good way to save traces when the order is not important.
+Sequential files are especially useful to save prestack seismic data.
+The following example also saves the data in sequential mode.    
 
 EXAMPLE:
 
@@ -38,6 +43,10 @@ sftahread \\
    label2="xline" o2=1 n2=188 d2=1   \\
    label3="iline" o3=1 n3=345 d3=1   \\
    output=mappedstack.rsf \\
+| sftahwrite \\
+   verbose=1                           \\
+   mode=seq \\
+   output=seqstack.rsf \\
 >/dev/null
 
 sfgrey <mappedstack.rsf | sfpen
@@ -198,7 +207,14 @@ int main(int argc, char* argv[])
   sf_putstring(outheaders,"label1","none"    );
   sf_putstring(outheaders,"unit1" ,"none"    );
   
-  if((modestring=sf_getstring("mode"))==NULL)modestring="mapped";
+  if(modestring=sf_getstring("mode"))modestring="mapped";
+  /* \n
+     mapped - order traces in the output file by traces headers 
+              use label2, label3... n2, n3, ..., o2, o3, .. and d2, d3,..
+     seq - just write the traces to the output files in the order
+           read from STDIN
+     \n
+  */
   if(strcmp(modestring,"mapped")!=0 && strcmp(modestring,"seq")!=0){
     fprintf(stderr,"parameter mode in sftahwrite must be mapped of seg\n");
     fprintf(stderr,"mode=%s\n",modestring);
