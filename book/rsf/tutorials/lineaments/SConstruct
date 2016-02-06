@@ -166,7 +166,7 @@ Flow('plot.jpg','r2 g2 b2',
 
 Result('colorcont','color dzcont','Overlay')
 
-# Part 2 - extrat lineaments from enhanced maps
+# Part 2 - extract lineaments from enhanced maps
 
 otsus = []
 for case in ('theta','tdxn0','nstd'):
@@ -178,5 +178,15 @@ for case in ('theta','tdxn0','nstd'):
 
 Result('otsu',otsus,'SideBySideIso')
 
+threshold = dict(theta=0.9,tdxn0=0.75,nstd=0.45)
+
+bins = []
+for case in ('theta','tdxn0','nstd'):
+    bin = case + '-bin'
+    Flow(bin,case,'mask min=%g' % threshold[case])
+    Plot(bin,'dd type=float | grey allpos=y clip=1 wanttitle=n screenratio=1 crowd=1 wantaxis=n transp=n')
+    bins.append(bin)
+
+Result('bin',bins,'SideBySideIso')
 
 End()

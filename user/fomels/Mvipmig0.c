@@ -22,7 +22,7 @@
 int main(int argc, char* argv[])
 {
     int nt, nx, np, it, ix, ip, ixin, ix1, ix2, n12;
-    float t0, dt, dx, p0, dp, t, x, p, px;
+    float t0, dt, dx, p0, dp, t, x, p, px, vmin, vmax;
     float **img, *amp, *tx, *str, *add, **cinp, **cout;
     sf_file inp, mig;
 
@@ -40,6 +40,13 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(inp,"o3",&p0)) sf_error("No o3= in input");
     if (!sf_histfloat(inp,"d3",&dp)) sf_error("No d3= in input");
 
+    if (!sf_getfloat("vmin",&vmin)) sf_error("Need vmin=");
+    if (!sf_getfloat("vmax",&vmax)) sf_error("Need vmax=");
+
+    /* convert to slowness */
+    vmin = 1.0f/vmin;
+    vmax = 1.0f/vmax;
+
     img = sf_floatalloc2(nt,nx);
     amp = sf_floatalloc(nt);
     tx = sf_floatalloc(nt);
@@ -55,43 +62,55 @@ int main(int argc, char* argv[])
 
     for (ip=0; ip < np; ip++) {
 	sf_warning("slope %d of %d;",ip+1,np);
-	
-	p = p0+ip*dp;
-	
-	sf_floatread (cinp[0],n12,inp);
 
+	p = p0+ip*dp;
+	sf_floatread (cinp[0],n12,inp);
+	
 	for (it=0; it<n12; it++) {
 	    cout[0][it] = 0.0f;
 	}
+
+	if (fabsf(p) < vmax) {
 	
-	/* loop over shifts */
-	for (ix = 1-nx; ix <= nx-1; ix++) {
-	    x = ix*dx;
-	    px = p*x;
+	    /* loop over shifts */
+	    for (ix = 1-nx; ix <= nx-1; ix++) {
+		x = ix*dx;
 
-	    if (ix > 0) {
-		ix1 = 0;
-		ix2 = nx-ix;
-	    } else {
-		ix1 = -ix;
-		ix2 = nx;
-	    }
-	    
-	    for (it=0; it < nt; it++) {
-		t = t0+it*dt;
-		str[it] = (px+hypotf(2*t,px))/2;
-		/* antialiasing */
-		tx[it]=fabsf(p*dx*(1+px/hypotf(2*t,px))/2);
-		amp[it] = 1.;
-	    }
+		px = p*x;
 
-	    sf_aastretch_define (str, tx, amp);
-
-	    for (ixin=ix1; ixin < ix2; ixin++) {
-		sf_aastretch_lop (false,false,nt,nt, cinp[ixin], add);
-		for (it=0; it < nt; it++) {
-		    cout[ixin+ix][it] += add[it];
+		if (ix > 0) {
+		    ix1 = 0;
+		    ix2 = nx-ix;
+		} else {
+		    ix1 = -ix;
+		    ix2 = nx;
 		}
+		
+		for (it=0; it < nt; it++) {
+		    t = t0+it*dt;
+
+		    str[it] = (px+hypotf(2*t,px))/2;
+
+		    /* antialiasing */
+		    tx[it]=fabsf(p*dx*(1+px/hypotf(2*t,px))/2);
+		    
+		    if ((p > vmin*vmin*x/hypotf(t,vmin*x) && p < vmax*vmax*x/hypotf(t,vmax*x)) ||
+			(p < vmin*vmin*x/hypotf(t,vmin*x) && p > vmax*vmax*x/hypotf(t,vmax*x))) {
+			amp[it] = 1.0f;
+		    } else {
+			amp[it] = 0.0f;
+		    }
+		}
+		
+		sf_aastretch_define (str, tx, amp);
+		
+		for (ixin=ix1; ixin < ix2; ixin++) {
+		    sf_aastretch_lop (false,false,nt,nt, cinp[ixin], add);
+		    for (it=0; it < nt; it++) {
+			cout[ixin+ix][it] += add[it];
+		    }
+		}
+
 	    }
 	}
 
