@@ -19,7 +19,7 @@ ccprogs = 'tilr2 ortholr3 cortholr3 cisolr2 cisolr2rev cisolr3 ctilr2 cisolr2gra
 # cisolr2hyb icisolr2
 
 mpi_progs = 'mpilsrtm mpiewertm mpirtmop mpilsrtmgmres mpircvrtm mpiqrtm'
-#mpiwave2 mpiwave3 mpifftexp1 mpiwave2kiss mpiwave3kiss mpifftexp1kiss
+#mpiwave2 mpiwave3 mpifftexp1 mpiwave2kiss mpiwave3kiss mpifftexp1kiss'
 
 pyprogs = 'fft'
 pymods = ''
@@ -47,6 +47,13 @@ for source in src:
     obj = env.StaticObject(source)
     env.Depends(obj,inc)
 
+mpicc = env.get('MPICC')
+mpi_src = Glob('N[a-z]*.c')
+for source in mpi_src:
+    inc = env.RSF_Include(source,prefix='')
+    obj = env.StaticObject(source,CC=mpicc)
+    env.Depends(obj,inc)
+
 mains = Split(progs)
 for prog in mains:
     sources = ['M' + prog]
@@ -55,7 +62,6 @@ for prog in mains:
     if root:
         env.Install(bindir,prog)
 
-mpicc = env.get('MPICC')
 mpi_mains = Split(mpi_progs)
 #env.Append(LIBS=['fftw3f_mpi'])
 for prog in mpi_mains:
