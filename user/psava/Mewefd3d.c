@@ -227,18 +227,6 @@ int main(int argc, char* argv[])
     }
     /*------------------------------------------------------------*/
 
-    /*------------------------------------------------------------*/
-    /* expand domain for FD operators and ABC */
-    if( !sf_getint("nb",&nb) || nb<NOP) nb=NOP;
-
-    fdm=fdutil3d_init(verb,fsrf,az,ax,ay,nb,1);
-    fdbell3d_init(nbell);
-
-    sf_setn(az,fdm->nzpad); sf_seto(az,fdm->ozpad); if(verb) sf_raxa(az);
-    sf_setn(ax,fdm->nxpad); sf_seto(ax,fdm->oxpad); if(verb) sf_raxa(ax);
-    sf_setn(ay,fdm->nypad); sf_seto(ay,fdm->oypad); if(verb) sf_raxa(ay);
-    /*------------------------------------------------------------*/
-
     /* 3D vector components */
     nc=3;
     if(opot) {
@@ -291,6 +279,18 @@ int main(int argc, char* argv[])
 	sf_oaxa(Fwfl,ac, 4);
 	sf_oaxa(Fwfl,at, 5);
     }
+
+    /*------------------------------------------------------------*/
+    /* expand domain for FD operators and ABC */
+    if( !sf_getint("nb",&nb) || nb<NOP) nb=NOP;
+
+    fdm=fdutil3d_init(verb,fsrf,az,ax,ay,nb,1);
+    fdbell3d_init(nbell);
+
+    sf_setn(az,fdm->nzpad); sf_seto(az,fdm->ozpad); if(verb) sf_raxa(az);
+    sf_setn(ax,fdm->nxpad); sf_seto(ax,fdm->oxpad); if(verb) sf_raxa(ax);
+    sf_setn(ay,fdm->nypad); sf_seto(ay,fdm->oypad); if(verb) sf_raxa(ay);
+    /*------------------------------------------------------------*/
 
     /*------------------------------------------------------------*/
     /* source array */

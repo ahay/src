@@ -3,6 +3,9 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = 'fftwave1dd cfftwave1dd cfftwave1in fftwave2p fftwave3p cfftwave2 cfftwave3 cfftexpmig2 fftexp0test fd2d cfftexp2 cfftexp2test fdtacc wcfftexp2 wcfftexp2adj cfftwave2nsps cfftwave2mix2 wavemixop lrosrtm2 lroslsrtm2 stack2d cstack2d fftexp0test lrlsrtm2mpi imagsrc zolsrtm2 initwave2 correctwave2 lrwave2 cmatrix cfftwave1d zortmgmres claplac psp pspmig premig cfftwave2omp cfftwave3p lrtti2de clfd1 clfd2 ofd2_test swnorm'
+
+# pspp
+
 # cfftwave2taper fftwave2taper 
 # cfftwave2taper
 # pawave2 cpawave2 cpswave2
@@ -13,13 +16,16 @@ progs = 'fftwave1dd cfftwave1dd cfftwave1in fftwave2p fftwave3p cfftwave2 cfftwa
 # cfftwave2tt lasthope cfftwave2one waveadjtest cfftwave2abc fftwave2abc
 # pawave2 cpawave2 cpswave2 icfftwave2 cfftwave1dtest
 
-ccprogs = 'tilr2 ortholr3 cortholr3 cisolr2 cisolr2rev cisolr3 ctilr2 cisolr2grad cisolr2abc cisolr2abc1 cisolr1 canisolr2 canisolr2abc fraclr2 fraclr2test tilrzone ortholrzone zortholr3 zanisolr2 zanisolr2abc clfdc1 clfdc2 clfdc1-bak '
+ccprogs = 'tilr2 ortholr3 cortholr3 cisolr2 cisolr2rev cisolr3 ctilr2 cisolr2grad cisolr2abc cisolr2abc1 cisolr1 canisolr2 canisolr2abc fraclr2 fraclr2test tilrzone ortholrzone zortholr3 zanisolr2 zanisolr2abc clfdc1 clfdc2 clfdc1-bak zisolr2abc'
+
+# clfdc1frac
+
 # abclr2 isolr2sta isolr2abc  cfraclr2
 # eiktest eiktest2 cisolr1eik eiksol cfraclr2 rfraclr2 cisolr2twostep
 # cisolr2hyb icisolr2
 
 mpi_progs = 'mpilsrtm mpiewertm mpirtmop mpilsrtmgmres mpircvrtm mpiqrtm'
-#mpiwave2 mpiwave3 mpifftexp1 mpiwave2kiss mpiwave3kiss mpifftexp1kiss
+#mpiwave2 mpiwave3 mpifftexp1 mpiwave2kiss mpiwave3kiss mpifftexp1kiss'
 
 pyprogs = 'fft'
 pymods = ''
@@ -47,6 +53,13 @@ for source in src:
     obj = env.StaticObject(source)
     env.Depends(obj,inc)
 
+mpicc = env.get('MPICC')
+mpi_src = Glob('N[a-z]*.c')
+for source in mpi_src:
+    inc = env.RSF_Include(source,prefix='')
+    obj = env.StaticObject(source,CC=mpicc)
+    env.Depends(obj,inc)
+
 mains = Split(progs)
 for prog in mains:
     sources = ['M' + prog]
@@ -55,7 +68,6 @@ for prog in mains:
     if root:
         env.Install(bindir,prog)
 
-mpicc = env.get('MPICC')
 mpi_mains = Split(mpi_progs)
 #env.Append(LIBS=['fftw3f_mpi'])
 for prog in mpi_mains:

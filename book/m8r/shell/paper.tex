@@ -1,13 +1,27 @@
 \chapter{Running Madagascar programs on the command line}
 
-This guide introduces some of the most used \texttt{madagascar} programs and illustrates their
-usage with examples.
+A simple way of using the collection of \texttt{Madagascar} programs
+is running them on the command line using the Unix shell. According to
+the Unix philosophy, each program tries to accomplish one task
+only. It acts as a filter between standard input and standard output,
+which take the form of data streams in RSF format. This allows
+different programs to be combined in Unix pipes.
+
+For example, the following pipe of commands, when run on the command
+line, generates a synthetic sequence, stacks it, and prints out the output value:
+\begin{verbatim}
+sfmath n1=1000 output="8/(4*x1+1)/(4*x1+3)" | sfstack norm=n axis=1 | sfdisfil
+\end{verbatim}
+
+This chapter reviews some of the most commonly used
+\texttt{Madagascar} programs and illustrates their usage with simple
+examples. In the example below, \verb+bash$+ indicates the Unix shell prompt.
 
 \section{Main programs}
 
 The source files for these programs can be found under
-\href{http://sourceforge.net/p/rsf/code/HEAD/tree/trunk/system/main/}{system/main}
-in the Madagascar distribution.
+\href{http://sourceforge.net/p/rsf/code/HEAD/tree/trunk/system/main/}{\$RSFSRC/system/main}
+directory in the Madagascar distribution.
 
 \noindent\doublebox{\parbox{\textwidth}{
 \input{sfadd}

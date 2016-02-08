@@ -172,7 +172,7 @@ int psp(float **wvfld, float **dat, float **dat_v, float *img, float *vel, pspar
     } else rick = NULL;
 
     for (iz=0; iz < nzx; iz++) {
-        vv[iz] = vel[iz]*dt;
+        vv[iz] = vel[iz]*vel[iz]*dt*dt;
     }
     vref *= dt;
     vref2 = vref*vref;
@@ -209,40 +209,6 @@ int psp(float **wvfld, float **dat, float **dat_v, float *img, float *vel, pspar
       
         if(verb) sf_warning("it=%d/%d;",it,nt);
 
-	if (mig) {
-	  /* inject data */
-	  if (NULL!=dat) {
-#ifdef _OPENMP
-#pragma omp parallel for default(shared) private(ix)
-#endif
-	    for (ix = 0; ix < gpl; ix++) {
-	      curr[gpz+(ix+gpx)*nz2] += dat[ix][it];
-	    }
-	  }
-	  if (NULL!=dat_v) {
-#ifdef _OPENMP
-#pragma omp parallel for default(shared) private(iz)
-#endif
-	    for (iz = 0; iz < gpl_v; iz++) {
-	      curr[gpz_v+iz+(gpx_v)*nz2] += dat_v[iz][it];
-	    }
-	  }
-	} else {
-	  t = it*dt;
-	  for (i=0; i<n_srcs; i++) {
-	    for(ix=-1;ix<=1;ix++) {
-	      for(iz=-1;iz<=1;iz++) {
-		j = spz[i]+iz+nz2*(spx[i]+ix);
-		if (src==0) {
-		  curr[j] += rick[i][it]/(abs(ix)+abs(iz)+1);
-		} else {
-		  curr[j] += Ricker(t, f0[i], t0[i], A[i])/(abs(ix)+abs(iz)+1);
-		}
-	      }
-	    }
-	  }
-	}
-	
 	/* matrix multiplication */
 	fft2(curr,cwave);
 
@@ -267,11 +233,46 @@ int psp(float **wvfld, float **dat, float **dat_v, float *img, float *vel, pspar
 		old = c = curr[j];
 		c += c - prev[j];
 		prev[j] = old;
-		c += wave[j]*vv[i]*vv[i];
+		c += wave[j]*vv[i];
 		curr[j] = c;
 	    }
 	}
 
+	if (mig) {
+	  /* inject data */
+	  if (NULL!=dat) {
+#ifdef _OPENMP
+#pragma omp parallel for default(shared) private(ix)
+#endif
+	    for (ix = 0; ix < gpl; ix++) {
+	      curr[gpz+(ix+gpx)*nz2] += vv[gpz+(ix+gpx)*nz]*dat[ix][it];
+	    }
+	  }
+	  if (NULL!=dat_v) {
+#ifdef _OPENMP
+#pragma omp parallel for default(shared) private(iz)
+#endif
+	    for (iz = 0; iz < gpl_v; iz++) {
+	      curr[gpz_v+iz+(gpx_v)*nz2] += vv[gpz_v+iz+(gpx_v)*nz]*dat_v[iz][it];
+	    }
+	  }
+	} else {
+	  t = it*dt;
+	  for (i=0; i<n_srcs; i++) {
+	    for(ix=-1;ix<=1;ix++) {
+	      for(iz=-1;iz<=1;iz++) {
+		ik = spz[i]+iz+nz*(spx[i]+ix);
+		j = spz[i]+iz+nz2*(spx[i]+ix);
+		if (src==0) {
+		  curr[j] += vv[ik]*rick[i][it]/(abs(ix)+abs(iz)+1);
+		} else {
+		  curr[j] += vv[ik]*Ricker(t, f0[i], t0[i], A[i])/(abs(ix)+abs(iz)+1);
+		}
+	      }
+	    }
+	  }
+	}
+	
 	/*apply abc*/
 	if (abc) {
 	  abc_apply(curr);
@@ -451,7 +452,7 @@ int psp2(float **wvfld1, float **wvfld, float **dat, float **dat_v, float *img, 
     cwavem = sf_complexalloc(nk);
 
     for (iz=0; iz < nzx; iz++) {
-        vv[iz] = vel[iz]*dt;
+        vv[iz] = vel[iz]*vel[iz]*dt*dt;
     }
     vref *= dt;
     vref2 = vref*vref;
@@ -493,45 +494,6 @@ int psp2(float **wvfld1, float **wvfld, float **dat, float **dat_v, float *img, 
       
         if(verb) sf_warning("it=%d/%d;",it,nt);
 
-	if (adj) {
-	  /* inject data */
-	  if (NULL!=dat) {
-#ifdef _OPENMP
-#pragma omp parallel for default(shared) private(ix)
-#endif
-	    for (ix = 0; ix < gpl; ix++) {
-	      curr[gpz+(ix+gpx)*nz2] += dat[ix][it];
-	    }
-	  }
-	  if (NULL!=dat_v) {
-#ifdef _OPENMP
-#pragma omp parallel for default(shared) private(iz)
-#endif
-	    for (iz = 0; iz < gpl_v; iz++) {
-	      curr[gpz_v+iz+(gpx_v)*nz2] += dat_v[iz][it];
-	    }
-	  }
-	} else {
-	  /*adj of cross-correlation*/
-	  if (snap > 0 && it%snap==0) {
-#ifdef _OPENMP
-#pragma omp parallel for default(shared) private(ix,iz,i,j)
-#endif
-	    for (ix = 0; ix < nx1; ix++) {
-	      for (iz = 0; iz < nz1; iz++) {
-		i = iz + nz1*ix;
-		j = iz+nbt + (ix+nbl)*nz2; /* padded grid */
-		curr[j] += wvfld1[it/snap][i]*img[i];
-	      }
-	    }
-	  }
-	}
-
-//	if (adj && abc) {
-//	  abc_apply(curr);
-//	  abc_apply(prev);
-//	}
-	
 	/* matrix multiplication */
 	fft2(curr,cwave);
 
@@ -556,9 +518,44 @@ int psp2(float **wvfld1, float **wvfld, float **dat, float **dat_v, float *img, 
 		old = c = curr[j];
 		c += c - prev[j];
 		prev[j] = old;
-		c += wave[j]*vv[i]*vv[i];
+		c += wave[j]*vv[i];
 		curr[j] = c;
 	    }
+	}
+
+	if (adj) {
+	  /* inject data */
+	  if (NULL!=dat) {
+#ifdef _OPENMP
+#pragma omp parallel for default(shared) private(ix)
+#endif
+	    for (ix = 0; ix < gpl; ix++) {
+	      curr[gpz+(ix+gpx)*nz2] += vv[gpz+(ix+gpx)*nz]*dat[ix][it];
+	    }
+	  }
+	  if (NULL!=dat_v) {
+#ifdef _OPENMP
+#pragma omp parallel for default(shared) private(iz)
+#endif
+	    for (iz = 0; iz < gpl_v; iz++) {
+	      curr[gpz_v+iz+(gpx_v)*nz2] += vv[gpz_v+iz+(gpx_v)*nz]*dat_v[iz][it];
+	    }
+	  }
+	} else {
+	  /*adj of cross-correlation*/
+	  if (snap > 0 && it%snap==0) {
+#ifdef _OPENMP
+#pragma omp parallel for default(shared) private(ix,iz,i,j,ik)
+#endif
+	    for (ix = 0; ix < nx1; ix++) {
+	      for (iz = 0; iz < nz1; iz++) {
+		i = iz + nz1*ix;
+		j = iz+nbt + (ix+nbl)*nz2; /* padded grid */
+		ik = iz+nbt + (ix+nbl)*nz; /* padded grid */
+		curr[j] += wvfld1[it/snap][i]*img[i]; // !!!IMPORTANT!!! vv[ik]*
+	      }
+	    }
+	  }
 	}
 
 	/*apply abc*/
@@ -567,22 +564,18 @@ int psp2(float **wvfld1, float **wvfld, float **dat, float **dat_v, float *img, 
 	  abc_apply(prev);
 	}
 	
-//	if (!adj && abc) {
-//	  abc_apply(curr);
-//	  abc_apply(prev);
-//	}
-
 	if (adj) {
 	  /* cross-correlation imaging condition */
 	  if (snap > 0 && it%snap==0) {
 #ifdef _OPENMP
-#pragma omp parallel for default(shared) private(ix,iz,i,j)
+#pragma omp parallel for default(shared) private(ix,iz,i,j,ik)
 #endif
 	    for (ix = 0; ix < nx1; ix++) {
 	      for (iz = 0; iz < nz1; iz++) {
 		i = iz + nz1*ix;
 		j = iz+nbt + (ix+nbl)*nz2; /* padded grid */
-		img[i] += wvfld1[it/snap][i]*curr[j];
+		ik = iz+nbt + (ix+nbl)*nz; /* padded grid */
+		img[i] += wvfld1[it/snap][i]*curr[j]; // !!!IMPORTANT!!! vv[ik]*
 	      }
 	    }
 	  }
@@ -637,7 +630,7 @@ int psp2(float **wvfld1, float **wvfld, float **dat, float **dat_v, float *img, 
 }
 
 int psp3(float **wvfld, float **wvfld1, float **dat, float **dat1, float *img, float *vel, pspar par)
-/*< pseudo-spectral de-migration/migration >*/
+/*< pseudo-spectral back propagation of two receiver wavefields >*/
 {
     /*survey parameters*/
     int   nx, nz;
@@ -750,7 +743,7 @@ int psp3(float **wvfld, float **wvfld1, float **dat, float **dat1, float *img, f
     cwavem = sf_complexalloc(nk);
 
     for (iz=0; iz < nzx; iz++) {
-        vv[iz] = vel[iz]*dt;
+        vv[iz] = vel[iz]*vel[iz]*dt*dt;
     }
     vref *= dt;
     vref2 = vref*vref;
@@ -784,24 +777,6 @@ int psp3(float **wvfld, float **wvfld1, float **dat, float **dat1, float *img, f
     for (it=it1; it!=it2; it+=its) {
       
         if(verb) sf_warning("it=%d/%d;",it,nt);
-
-	/* inject data */
-	if (NULL!=dat) {
-#ifdef _OPENMP
-#pragma omp parallel for default(shared) private(ix)
-#endif
-	    for (ix = 0; ix < gpl; ix++) {
-	        curr[gpz+(ix+gpx)*nz2] += dat[ix][it];
-	    }
-	}
-	if (NULL!=dat1) {
-#ifdef _OPENMP
-#pragma omp parallel for default(shared) private(ix)
-#endif
-	    for (ix = 0; ix < gpl; ix++) {
-	        curr1[gpz+(ix+gpx)*nz2] += dat1[ix][it];
-	    }
-	}
 	
         /* first receiver wavefield */
 	/* matrix multiplication */
@@ -828,8 +803,18 @@ int psp3(float **wvfld, float **wvfld1, float **dat, float **dat1, float *img, f
 		old = c = curr[j];
 		c += c - prev[j];
 		prev[j] = old;
-		c += wave[j]*vv[i]*vv[i];
+		c += wave[j]*vv[i];
 		curr[j] = c;
+	    }
+	}
+
+	/* inject data */
+	if (NULL!=dat) {
+#ifdef _OPENMP
+#pragma omp parallel for default(shared) private(ix)
+#endif
+	    for (ix = 0; ix < gpl; ix++) {
+	        curr[gpz+(ix+gpx)*nz2] += vv[gpz+(ix+gpx)*nz]*dat[ix][it];
 	    }
 	}
 
@@ -864,8 +849,18 @@ int psp3(float **wvfld, float **wvfld1, float **dat, float **dat1, float *img, f
 		old = c = curr1[j];
 		c += c - prev1[j];
 		prev1[j] = old;
-		c += wave[j]*vv[i]*vv[i];
+		c += wave[j]*vv[i];
 		curr1[j] = c;
+	    }
+	}
+
+	/* inject data */
+	if (NULL!=dat1) {
+#ifdef _OPENMP
+#pragma omp parallel for default(shared) private(ix)
+#endif
+	    for (ix = 0; ix < gpl; ix++) {
+	        curr1[gpz+(ix+gpx)*nz2] += vv[gpz+(ix+gpx)*nz]*dat1[ix][it];
 	    }
 	}
 
@@ -884,7 +879,7 @@ int psp3(float **wvfld, float **wvfld1, float **dat, float **dat1, float *img, f
 	        for (iz = 0; iz < nz1; iz++) {
 		    i = iz + nz1*ix;
 		    j = iz+nbt + (ix+nbl)*nz2; /* padded grid */
-		    img[i] += curr[j]*curr1[j];
+		    img[i] += curr[j]*curr1[j]; //!!!IMPORTANT!!!
 		}
 	    }
 	}
@@ -984,3 +979,280 @@ int dt2v2(float **wvfld, float *vel, pspar par)
 
   return 0;
 }
+
+int psp4(float **wvfld, float **wvfld0, float **dat, float **dat_v, float *vel, pspar par)
+/*< pseudo-spectral wave extrapolation using wavefield injection >*/
+{
+    /*survey parameters*/
+    int   nx, nz;
+    float dx, dz;
+    int   n_srcs;
+    int   *spx, *spz;
+    int   gpz, gpx, gpl;
+    int   gpz_v, gpx_v, gpl_v;
+    int   snap;
+    /*fft related*/
+    bool  cmplx;
+    int   pad1;
+    /*absorbing boundary*/
+    bool abc;
+    int nbt, nbb, nbl, nbr;
+    float ct,cb,cl,cr;
+    /*source parameters*/
+    int src; /*source type*/
+    int nt;
+    float dt,*f0,*t0,*A;
+    /*misc*/
+    bool verb, ps;
+    float vref;
+    
+    int nx1, nz1; /*domain of interest*/
+    int it,iz,ik,ix,i,j;     /* index variables */
+    int nk,nzx,nz2,nx2,nzx2,nkz,nth;
+    int it1, it2, its;
+    float dkx,dkz,kx0,kz0,vref2,kx,kz,k,t;
+    float c, old;
+
+    /*wave prop arrays*/
+    float *vv;
+    sf_complex *cwave,*cwavem;
+    float *wave,*curr,*prev,*lapl;
+
+    /*source*/
+    float **rick;
+    float freq;
+    int fft_size;
+
+    /*passing the parameters*/
+    nx    = par->nx;
+    nz    = par->nz;
+    dx    = par->dx;
+    dz    = par->dz;
+    n_srcs= par->n_srcs;
+    spx   = par->spx;
+    spz   = par->spz;
+    gpz   = par->gpz;
+    gpx   = par->gpx;
+    gpl   = par->gpl;
+    gpz_v = par->gpz_v;
+    gpx_v = par->gpx_v;
+    gpl_v = par->gpl_v;
+    snap  = par->snap;
+    cmplx = par->cmplx;
+    pad1  = par->pad1;
+    abc   = par->abc;
+    nbt   = par->nbt;
+    nbb   = par->nbb;
+    nbl   = par->nbl;
+    nbr   = par->nbr;
+    ct    = par->ct;
+    cb    = par->cb;
+    cl    = par->cl;
+    cr    = par->cr;
+    src   = par->src;
+    nt    = par->nt;
+    dt    = par->dt;
+    f0    = par->f0;
+    t0    = par->t0;
+    A     = par->A;
+    verb  = par->verb;
+    ps    = par->ps;
+    vref  = par->vref;
+    
+
+#ifdef _OPENMP
+#pragma omp parallel
+    {
+      nth = omp_get_num_threads();
+    }
+#else
+    nth = 1;
+#endif
+    if (verb) sf_warning(">>>> Using %d threads <<<<<", nth);
+
+    nz1 = nz-nbt-nbb;
+    nx1 = nx-nbl-nbr;
+
+    nk = fft2_init(cmplx,pad1,nz,nx,&nz2,&nx2);
+    nzx = nz*nx;
+    nzx2 = nz2*nx2;
+    
+    dkz = 1./(nz2*dz); kz0 = (cmplx)? -0.5/dz:0.;
+    dkx = 1./(nx2*dx); kx0 = -0.5/dx;
+    nkz = (cmplx)? nz2:(nz2/2+1);
+    if(nk!=nx2*nkz) sf_error("wavenumber dimension mismatch!");
+    sf_warning("dkz=%f,dkx=%f,kz0=%f,kx0=%f",dkz,dkx,kz0,kx0);
+    sf_warning("nk=%d,nkz=%d,nz2=%d,nx2=%d",nk,nkz,nz2,nx2);
+
+    if(abc)
+      abc_init(nz,nx,nz2,nx2,nbt,nbb,nbl,nbr,ct,cb,cl,cr);
+
+    /* allocate and read/initialize arrays */
+    vv     = sf_floatalloc(nzx); 
+    lapl   = sf_floatalloc(nk);
+    wave   = sf_floatalloc(nzx2);
+    curr   = sf_floatalloc(nzx2);
+    prev   = sf_floatalloc(nzx2);
+    cwave  = sf_complexalloc(nk);
+    cwavem = sf_complexalloc(nk);
+    if (src==0) {
+      rick = sf_floatalloc2(nt,n_srcs);
+      for (i=0; i<n_srcs; i++) {
+	for (it=0; it<nt; it++) {
+	  rick[i][it] = 0.f;
+	}
+	rick[i][(int)(t0[i]/dt)] = A[i]; /*time delay*/
+	freq = f0[i]*dt;           /*peak frequency*/
+	fft_size = 2*kiss_fft_next_fast_size((nt+1)/2);
+	ricker_init(fft_size, freq, 0);
+	sf_freqfilt(nt,rick[i]);
+	ricker_close();
+      }
+    } else rick = NULL;
+
+    for (iz=0; iz < nzx; iz++) {
+        vv[iz] = vel[iz]*vel[iz]*dt*dt;
+    }
+    vref *= dt;
+    vref2 = vref*vref;
+    for (iz=0; iz < nzx2; iz++) {
+	curr[iz] = 0.;
+	prev[iz] = 0.;
+    }
+
+    /* constructing the pseudo-analytical op */
+    for (ix=0; ix < nx2; ix++) {
+	kx = kx0+ix*dkx;
+	for (iz=0; iz < nkz; iz++) {
+	    kz = kz0+iz*dkz;
+	    k = 2*SF_PI*hypot(kx,kz);
+	    if (ps) lapl[iz+ix*nkz] = -k*k;
+	    else lapl[iz+ix*nkz] = 2.*(cos(vref*k)-1.)/vref2;
+	}
+    }
+
+    /* modeling */
+    /* step forward in time */
+    it1 = 0;
+    it2 = nt;
+    its = +1;
+
+    /* MAIN LOOP */
+    for (it=it1; it!=it2; it+=its) {
+      
+        if(verb) sf_warning("it=%d/%d;",it,nt);
+	
+	/* matrix multiplication */
+	fft2(curr,cwave);
+
+	for (ik = 0; ik < nk; ik++) {
+#ifdef SF_HAS_COMPLEX_H
+	  cwavem[ik] = cwave[ik]*lapl[ik];
+#else
+	  cwavem[ik] = sf_cmul(cwave[ik],lapl[ik]);
+#endif
+	}
+	
+	ifft2(wave,cwavem);
+
+#ifdef _OPENMP
+#pragma omp parallel for default(shared) private(ix,iz,i,j,old,c)
+#endif
+	for (ix = 0; ix < nx; ix++) {
+	    for (iz=0; iz < nz; iz++) {
+		i = iz+ix*nz;  /* original grid */
+		j = iz+ix*nz2; /* padded grid */
+
+		old = c = curr[j];
+		c += c - prev[j];
+		prev[j] = old;
+		c += wave[j]*vv[i];
+		curr[j] = c;
+	    }
+	}
+
+        if (NULL!=wvfld0) { /* wavefield injection */
+          if (snap > 0 && it%snap==0) {
+#ifdef _OPENMP
+#pragma omp parallel for default(shared) private(ix,iz,i,j,ik)
+#endif
+            for (ix=0; ix<nx1; ix++) {
+              for (iz=0; iz<nz1; iz++) {
+                i = iz + nz1*ix;
+                j = iz+nbt + (ix+nbl)*nz2; /* padded grid */
+                ik = iz+nbt + (ix+nbl)*nz; /* padded grid */
+                curr[j] += vv[ik]*wvfld0[it/snap][i];
+              }
+            }
+          }
+        } else { /* source injection */
+          t = it*dt;
+          for (i=0; i<n_srcs; i++) {
+            for(ix=-1;ix<=1;ix++) {
+              for(iz=-1;iz<=1;iz++) {
+                ik = spz[i]+iz+nz*(spx[i]+ix);
+                j = spz[i]+iz+nz2*(spx[i]+ix);
+                if (src==0) {
+                  curr[j] += vv[ik]*rick[i][it]/(abs(ix)+abs(iz)+1);
+                } else {
+                  curr[j] += vv[ik]*Ricker(t, f0[i], t0[i], A[i])/(abs(ix)+abs(iz)+1);
+                }
+              }
+            }
+          }
+        }
+
+	/*apply abc*/
+	if (abc) {
+	  abc_apply(curr);
+	  abc_apply(prev);
+	}
+
+        /* record data */
+        if (NULL!=dat) {
+#ifdef _OPENMP
+#pragma omp parallel for default(shared) private(ix)
+#endif
+            for (ix = 0; ix < gpl; ix++) {
+                dat[ix][it] = curr[gpz+(ix+gpx)*nz2];
+            }
+        }
+        if (NULL!=dat_v) {
+#ifdef _OPENMP
+#pragma omp parallel for default(shared) private(iz)
+#endif
+            for (iz = 0; iz < gpl_v; iz++) {
+                dat_v[iz][it] = curr[gpz_v+iz+(gpx_v)*nz2];
+            }
+        }
+
+	/* save wavefield */
+	if (snap > 0 && it%snap==0) {
+#ifdef _OPENMP
+#pragma omp parallel for default(shared) private(ix,iz,i,j)
+#endif
+	  for (ix=0; ix<nx1; ix++) {
+	    for (iz=0; iz<nz1; iz++) {
+	      i = iz + nz1*ix;
+	      j = iz+nbt + (ix+nbl)*nz2; /* padded grid */
+	      wvfld[it/snap][i] = curr[j];
+	    }
+	  }
+	}
+    }
+    if(verb) sf_warning(".");
+
+    /*free up memory*/
+    fft2_finalize();
+    if (abc) abc_close();
+    free(vv);
+    free(lapl);   
+    free(wave);
+    free(curr);
+    free(prev);
+    free(cwave);
+    free(cwavem);
+    
+    return 0;
+}
+

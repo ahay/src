@@ -112,8 +112,10 @@ int main(int argc, char** argv)
                 smallk[SMK] = i;
                 SMK++;
             }
-            kx[i] = kx1;
-            kz[i] = kz1;
+            //kx[i] = kx1;
+            //kz[i] = kz1;
+            kx[i] = fabs(kx1);
+            kz[i] = fabs(kz1);
         }
     }
     // vectors can be resized while keeping the original content

@@ -1,33 +1,10 @@
 from rsf.tex import *
 
-import os
-import rsf.doc
-import rsf.prog
-
-root = rsf.prog.RSFROOT
-libdir = os.path.join(root,'lib')
-bindir = os.path.join(root,'bin')
-sfdoc  = os.path.join(bindir,'sfdoc')
-run = 'PYTHONPATH=%s LD_LIBRARY_PATH=%s $SOURCE' % \
-      (os.environ.get('PYTHONPATH'),os.environ.get('LD_LIBRARY_PATH'))
-
-output = {'.tex':'l',
-          '.wiki':'m'}
-
-for prog in rsf.doc.progs.keys():
-    for out in output.keys():
-        Command2(prog+out, sfdoc,'%s -%s . %s' % (run,output[out],prog))
-    Depends('prog.ltx',prog+'.tex')
-    Depends('prog.wiki',prog+'.wiki')
-
 Paper('tour',use='listings,color,hyperref')
 Paper('format',use='hyperref')
 Paper('api', use='hyperref,listings',include='\\newcommand{\\RSF}{../../..}')
 Paper('demo',use='hyperref,listings',include='\\newcommand{\\RSF}{../../..}')
 #Paper('adding',options='short',use='hyperref')
-
-Paper('prog',use='hyperref,amsmath,fancybox,listings,jfc',
-      include='\\newcommand{\\RSF}{../../..}',color='rose const rand')
 
 Paper('abstract',lclass='eage',
       include=r'''
@@ -49,7 +26,7 @@ Paper('abstract',lclass='eage',
 #Paper('dummy')
 
 Depends2('install',map(lambda x: x+'.install',
-                       Split('api format install prog tour demo')))
+                       Split('api format install tour demo')))
 
 #Paper('vienna',lclass='beamer',use='helvet,hyperref',
 #     include=r'''
