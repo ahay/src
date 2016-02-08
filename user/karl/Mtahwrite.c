@@ -207,7 +207,8 @@ int main(int argc, char* argv[])
   sf_putstring(outheaders,"label1","none"    );
   sf_putstring(outheaders,"unit1" ,"none"    );
   
-  if(modestring=sf_getstring("mode"))modestring="mapped";
+  if(verbose>2)fprintf(stderr,"after putint unit1\n");
+  modestring=sf_getstring("mode");
   /* \n
      mapped - order traces in the output file by traces headers 
               use label2, label3... n2, n3, ..., o2, o3, .. and d2, d3,..
@@ -215,6 +216,8 @@ int main(int argc, char* argv[])
            read from STDIN
      \n
   */
+  if(modestring==NULL)modestring="mapped";
+  if(verbose>2)fprintf(stderr,"modestring=%s\n",modestring);
   if(strcmp(modestring,"mapped")!=0 && strcmp(modestring,"seq")!=0){
     fprintf(stderr,"parameter mode in sftahwrite must be mapped of seg\n");
     fprintf(stderr,"mode=%s\n",modestring);
@@ -231,6 +234,7 @@ int main(int argc, char* argv[])
     sf_putint(outheaders,"o2",1);
     sf_putint(output    ,"d2",1);
     sf_putint(outheaders,"d2",1);
+    if(verbose>2)fprintf(stderr,"seq path after putint d2\n");
   } else {
     dim_output=1;
     for (iaxis=1; iaxis<SF_MAX_DIM; iaxis++){
@@ -419,7 +423,7 @@ int main(int argc, char* argv[])
     /**********************************************/
     put_tah(intrace, fheader, n1_traces, n1_headers, out);
   }
-  fprintf(stderr,"test mode_is_seq\n");
+  if(verbose>2)fprintf(stderr,"test mode_is_seq\n");
   if(mode_is_seq){
     FILE *myoutputfile;
     fprintf(stderr,"write n2=%d\n",num_traces);
