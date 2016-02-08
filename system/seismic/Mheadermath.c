@@ -81,15 +81,21 @@ int main(int argc, char* argv[])
     }	
     if (row > n1) sf_error("nkey=%d is too large, need nkey <= %d",row,n1);
     
-    if (n1 > 1) {
+    if(1){
+      /* When n2=1 procgram did not work.  I'm removing special case. karl */
+      if (n1 > 1) {
+	if(row<0)  sf_putint(out,"n1",1);
+      } 
+    } else { /* here is the old code I do not fully understand. Karl */
+      if (n1 > 1) {
 	if (n2 > 1) { /* input: many keys */
-	    if (row < 0) sf_putint(out,"n1",1);
+	  if (row < 0) sf_putint(out,"n1",1);
 	} else { /* input: one key, arranged in n1 */
-	    n2 = n1;
-	    n1 = 1;
+	  n2 = n1;
+	  n1 = 1;
 	}
+      }
     }
-
 
     for (i=0; i < n1; i++) {
 	sf_putint(out,segykeyword(i),i+3);
