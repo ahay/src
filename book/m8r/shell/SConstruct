@@ -1,5 +1,27 @@
 from rsf.tex import *
 
-End(lclass='georeport',options='book',use='hyperref')
+import os
+import rsf.doc
+import rsf.prog
+
+root = rsf.prog.RSFROOT
+libdir = os.path.join(root,'lib')
+bindir = os.path.join(root,'bin')
+sfdoc  = os.path.join(bindir,'sfdoc')
+run = 'PYTHONPATH=%s LD_LIBRARY_PATH=%s $SOURCE' % \
+      (os.environ.get('PYTHONPATH'),os.environ.get('LD_LIBRARY_PATH'))
+
+output = {'.tex':'l',
+          '.wiki':'m'}
+
+for prog in rsf.doc.progs.keys():
+    for out in output.keys():
+        Command2(prog+out, sfdoc,'%s -%s . %s' % (run,output[out],prog))
+    Depends('paper.ltx',prog+'.tex')
+    Depends('paper.wiki',prog+'.wiki')
+
+End(lclass='georeport',options='book',
+    use='hyperref,amsmath,fancybox,listings,jfc',
+    include='\\newcommand{\\RSF}{../../..}',color='rose const rand')
 
 

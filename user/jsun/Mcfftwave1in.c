@@ -99,9 +99,9 @@ int main(int argc, char* argv[])
 	for (im = 0; im < m; im++) {
 	    for (ik = 0; ik < nk; ik++) {
 #ifdef SF_HAS_COMPLEX_H
-		cwavem[ik] = cwave[ik]*rht[ik][im]/nx2;
+		cwavem[ik] = cwave[ik]*rht[ik][im];
 #else
-		cwavem[ik] = sf_crmul( sf_cmul(cwave[ik],rht[ik][im]), 1./nx2);
+		cwavem[ik] = sf_cmul(cwave[ik],rht[ik][im]);
 #endif
 
 	    }
@@ -119,7 +119,7 @@ int main(int argc, char* argv[])
 #ifdef SF_HAS_COMPLEX_H
 		c += lft[im][ix]*wave[im][ix];
 #else
-		c += sf_cmul(lft[im][ix], wave[im][ix]);
+                c = sf_cadd(c,sf_cmul(lft[im][ix], wave[im][ix]));
 #endif
 	    }
 	    curr[ix] = c;

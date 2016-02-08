@@ -24,7 +24,7 @@
 
 using namespace std;
 
-static std::valarray<float> vs;
+static std::valarray<float> vs,qs;
 static std::valarray<double> ks;
 static float dt,dx;
 static int mode;
@@ -45,10 +45,12 @@ int sample(vector<int>& rs, vector<int>& cs, ZpxNumMat& res)
         for(int b=0; b<nc; b++) {
             double phase = 2*SF_PI*vs[rs[a]]*fabs(ks[cs[b]])*dt;
             //double phase = 2*SF_PI*vs[rs[a]]*(ks[cs[b]])*dt;
+	    double gamma = atan(1./qs[rs[a]])/SF_PI;
             if (mode == 0) {
                 res(a,b) = zpx(cos(phase),sin(phase));
             } else if (mode == 1) {
-                res(a,b) = zpx(0,2*sin(phase));
+                res(a,b) = zpx(vs[rs[a]]*pow(fabs(ks[cs[b]]),2.*gamma+2)*dt,0.);
+                //res(a,b) = zpx(0,2*sin(phase));
                 //res(a,b) = zpx(0,2*sin(2*SF_PI*vs[rs[a]]*(ks[cs[b]])*dt));
                 //res(a,b) = zpx(0,2*sin(2*SF_PI*vs[rs[a]]*ks[cs[b]]*dt));
                 //res(a,b) = zpx(2*sin(phase),0);
@@ -93,7 +95,7 @@ int main(int argc, char** argv)
     bool cpxexp;
     par.get("cpxexp",cpxexp,true); // complex exponential 
 
-    iRSF velf;
+    iRSF velf, qf("q");
     oRSF outm, Mexactfile("Mexact"), Mlrfile("Mlr"), Mappfile("Mapp");
 
     int N;
@@ -103,8 +105,10 @@ int main(int argc, char** argv)
     dk = 1.0/(dx*N);
 
     vs.resize(N);
+    qs.resize(N);
     ks.resize(N);
     velf >> vs;
+    qf >> qs;
     
     outm.put("n1",N);
     outm.put("n2",SIZE);

@@ -19,6 +19,9 @@
 */
 #include <math.h>
 #include <rsf.h>
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 float maxval(int n1, int n2, float *dat);
 int scaling(float scale, int n1, int n2, float *dat);
@@ -28,10 +31,11 @@ int main(int argc, char * argv[])
 {
     
     int dim,nz,nx,nt,nzx,nzxt,ndims[SF_MAX_DIM];
-    int size,i;
-    bool logsc;
+    int size,i,nth;
+    bool sw,logsc;
     sf_file in, out;
-    float *dat,den,scale;
+    float *dat0,*dat,den,scale,rescale;
+    float max_all,perc,thres;
     sf_axis az, ax, at;
 
     /* init RSF */
@@ -39,8 +43,19 @@ int main(int argc, char * argv[])
     in = sf_input("in");
     out= sf_output("out");
 
-    if (!sf_getint("size",&size)) size=1; /* sliding window size */
-    if (!sf_getbool("log",&logsc)) logsc=true; /* log scaling */
+#ifdef _OPENMP
+#pragma omp parallel
+    {
+      nth = omp_get_num_threads();
+    }
+    sf_warning(">>>> Using %d threads <<<<<", nth);
+#endif
+
+    if (!sf_getint("size",&size)) size=0; /* sliding window radius */
+    if (!sf_getbool("sw",&sw)) sw=true; /* sliding window */
+    if (!sf_getbool("log",&logsc)) logsc=false; /* log scaling */
+    if (!sf_getfloat("perc",&perc)) perc=5; /* threshold percentage of the maximum value */
+    perc /= 100.;
 
     dim = sf_filedims(in,ndims);
 
@@ -55,36 +70,73 @@ int main(int argc, char * argv[])
     sf_oaxa(out, ax, 2);
     sf_oaxa(out, at, 3);
 
-    dat = sf_floatalloc(nzxt);
-    sf_floatread(dat, nzxt, in);
+    dat0 = sf_floatalloc(nzxt);
+    dat  = sf_floatalloc(nzxt);
+    sf_floatread(dat0, nzxt, in);
 
-    for (i=0; i<size/2; i++) {
-        den = maxval(nzx,size,dat);
-        if (den <= SF_EPS) den = SF_EPS;
-        if (logsc) scale = log10(den+1)/den;
-        else scale = 1/den;
-        scaling(scale,nzx,1,dat+i*nzx);
-        sf_warning("i = %d;",i);
+    max_all = maxval(nzx,nt,dat0);
+    thres = max_all*perc;
+    
+    /* for log scaling (set maximum to 1 for better mapping) */
+    if (logsc) {
+        scaling(1./thres,nzx,nt,dat0);
+        max_all *= 1./thres;
+        thres = 1;
+        rescale = log10(max_all+1);
     }
 
-    for (i=size/2; i<nt-size/2; i++) {
-        den = maxval(nzx,size,dat+(i-size/2)*nzx);
-        if (den <= SF_EPS) den = SF_EPS;
-        if (logsc) scale = log10(den+1)/den;
-        else scale = 1/den;
+#ifdef _OPENMP
+#pragma omp parallel for default(shared) private(i)
+#endif
+    for (i=0; i<nzxt; i++) dat[i] = dat0[i];
+
+    if (!sw) {
+
+        scaling(1./max_all,nzx,nt,dat);
+
+    } else {
+
+#ifdef _OPENMP
+#pragma omp parallel for default(shared) private(i,den,scale)
+#endif
+    for (i=0; i<size; i++) {
+        sf_warning("i = %d/%d;",i,nt);
+        den = maxval(nzx,i+1+size,dat0);
+        if (logsc) scale = log10(den+1.)/rescale;
+        else scale = 1.;
+        if (den <= thres) den = thres;
+        scale /= den;
         scaling(scale,nzx,1,dat+i*nzx);
-        sf_warning("i = %d;",i);
     }
 
-    for (i=nt-size/2; i<nt; i++) {
-        den = maxval(nzx,size,dat+(nt-size-1)*nzx);
-        if (den <= SF_EPS) den = SF_EPS;
-        if (logsc) scale = log10(den+1)/den;
-        else scale = 1/den;
+#ifdef _OPENMP
+#pragma omp parallel for default(shared) private(i,den,scale)
+#endif
+    for (i=size; i<nt-size; i++) {
+        sf_warning("i = %d/%d;",i,nt);
+        den = maxval(nzx,2*size+1,dat0+(i-size)*nzx);
+        if (logsc) scale = log10(den+1.)/rescale;
+        else scale = 1.;
+        if (den <= thres) den = thres;
+        scale /= den;
         scaling(scale,nzx,1,dat+i*nzx);
-        sf_warning("i = %d;",i);
+    }
+
+#ifdef _OPENMP
+#pragma omp parallel for default(shared) private(i,den,scale)
+#endif
+    for (i=nt-size; i<nt; i++) {
+        sf_warning("i = %d/%d;",i,nt);
+        den = maxval(nzx,size+1+(nt-1-i),dat0+(i-size)*nzx);
+        if (logsc) scale = log10(den+1.)/rescale;
+        else scale = 1.;
+        if (den <= thres) den = thres;
+        scale /= den;
+        scaling(scale,nzx,1,dat+i*nzx);
     }
     sf_warning(".");
+
+    }
 
     sf_floatwrite(dat, nzxt, out);
 
@@ -92,6 +144,7 @@ int main(int argc, char * argv[])
     
 }
 
+/* maximum absolute value */
 float maxval(int n1, int n2, float *dat)
 {
     float max = 0;
@@ -99,7 +152,10 @@ float maxval(int n1, int n2, float *dat)
 
     for (i=0; i<n2; i++)
         for (j=0; j<n1; j++)
-            if (max<dat[i*n1+j]) max = dat[i*n1+j];
+        { 
+            if (max<fabs(dat[i*n1+j])) max = fabs(dat[i*n1+j]);
+            //sf_warning("dat[%d]=%g,max=%g",i*n1+j,dat[i*n1+j],max); 
+        }
 
     return max;
 }

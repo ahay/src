@@ -106,27 +106,25 @@ Result('comp2','field field-2 dif-2','SideBySideAniso')
 # Adaptive matching filtering
 #######################################################################
 # Matching filter program
-match = Program('match.c')[0]
 nf  = 5 # filter length
 # Dot product test 
 Flow('filt0',None,'spike n1=%d' % nf)
-Flow('dot.test','%s field dif-2 filt0' % match,
+Flow('dot.test','field dif-2 filt0',
      '''
-     dottest ./${SOURCES[0]} nf=%d
-     dat=${SOURCES[1]} other=${SOURCES[2]} 
-     mod=${SOURCES[3]}
+     dottest match nf=%d
+     dat=${SOURCES[0]} other=${SOURCES[1]} 
+     mod=${SOURCES[2]}
      ''' % nf,stdin=0,stdout=-1)
 
 # Conjugate-gradient optimization
-Flow('filt','field %s dif-2 filt0' % match,
+Flow('filt','field dif-2 filt0',
      '''
-     conjgrad ./${SOURCES[1]} nf=%d niter=%d
-     other=${SOURCES[2]} mod=${SOURCES[3]} 
+     conjgrad match nf=%d niter=%d
+     other=${SOURCES[1]} mod=${SOURCES[2]} 
      ''' % (nf,100))
 
 # Extract new noise and signal
-Flow('dif-3','filt %s dif-2' % match,
-     './${SOURCES[1]} other=${SOURCES[2]}')
+Flow('dif-3','filt dif-2','match other=${SOURCES[1]}')
 Flow('field-3','field dif-3','add scale=1,-1 ${SOURCES[1]}')
 #######################################################################
 #######################################################################
