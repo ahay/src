@@ -82,7 +82,7 @@ int main (int argc, char* argv[])
     sort = sf_intalloc(nin);
     if (sf_getints("order",sort,nin)) {
 	/* concatenation order */
-	qsort(order,nin,sizeof(int),sort_order);
+	qsort(order,nin,sizeof(int),sort_order);	
     }
     free(sort);
 
@@ -187,8 +187,8 @@ int main (int argc, char* argv[])
 	sf_putfloat(out,key,f);
     }
 
-    sf_setformat(out,sf_histstring(ins[0],"data_format"));
-    sf_fileflush(out,ins[0]);
+    sf_setformat(out,sf_histstring(ins[order[0]],"data_format"));
+    sf_fileflush(out,ins[order[0]]);
     sf_setform(out,SF_NATIVE);
 
     for (i=0; i < nopen; i++) {
