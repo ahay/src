@@ -49,7 +49,7 @@ int main(int argc, char* argv[])
     sf_putint(pef,"n2",n1);
     sf_putint(pef,"n3",n2);
 
-    for (i2=0; i2 < 0; i2++) {
+    for (i2=0; i2 < n2; i2++) {
 	sf_floatread(d,n1,data);
 
 	dd = 0.0f;

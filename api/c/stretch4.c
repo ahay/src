@@ -19,19 +19,30 @@
 
 #include <math.h>
 
-#include <rsf.h>
-
 #include "stretch4.h"
 
-#ifndef _stretch4_h
+#include "banded.h"
+#include "tridiagonal.h"
+#include "komplex.h"
+#include "alloc.h"
+#include "spline.h"
+#include "interp_spline.h"
+#include "_defs.h"
+#include "adjnull.h"
 
-typedef struct Map4 *map4;
+#include "_bool.h"
+#include "c99.h"
+/*^*/
+
+#ifndef _sf_stretch4_h
+
+typedef struct sf_Map4 *sf_map4;
 /* abstract data type */
 /*^*/
 
 #endif
 
-struct Map4 {
+struct sf_Map4 {
     int nt, nd, ib, ie;
     float t0,dt, eps;
     int *x; 
@@ -41,15 +52,15 @@ struct Map4 {
     sf_tris tslv;
 };
 
-map4 stretch4_init (int n1, float o1, float d1 /* regular axis */, 
+sf_map4 sf_stretch4_init (int n1, float o1, float d1 /* regular axis */, 
 		    int nd                     /* data samples */, 
 		    float eps                  /* regularization */)
 /*< initialize >*/
 {
     int i;
-    map4 str;
+    sf_map4 str;
     
-    str = (map4) sf_alloc (1, sizeof(*str));
+    str = (sf_map4) sf_alloc (1, sizeof(*str));
 
     str->nt = n1; 
     str->t0 = o1; 
@@ -72,7 +83,7 @@ map4 stretch4_init (int n1, float o1, float d1 /* regular axis */,
     return str;
 }
 
-void stretch4_define (map4 str, const float* coord /* [nd] */)
+void sf_stretch4_define (sf_map4 str, const float* coord /* [nd] */)
 /*< set coordinates >*/
 {
     int id, ix, i1, n1, i, j, i2;
@@ -139,7 +150,7 @@ void stretch4_define (map4 str, const float* coord /* [nd] */)
     }
 }
 
-void cstretch4_apply (map4 str, 
+void sf_cstretch4_apply (sf_map4 str, 
 		      const sf_complex* ord /* [nd] */, 
 		      sf_complex* mod       /* [n1] */)
 /*< complex transform ordinates to model >*/
@@ -155,13 +166,13 @@ void cstretch4_apply (map4 str,
 	ford[id] = crealf(ord[id]);
     }
 
-    stretch4_apply (false,str,ford,real);
+    sf_stretch4_apply (false,str,ford,real);
 
     for (id=0; id < str->nd; id++) {
 	ford[id] = cimagf(ord[id]);
     }
 
-    stretch4_apply (false,str,ford,imag);
+    sf_stretch4_apply (false,str,ford,imag);
 
     for (it=0; it < str->nt; it++) {
 	mod[it] = sf_cmplx(real[it],imag[it]);
@@ -172,10 +183,10 @@ void cstretch4_apply (map4 str,
     free(ford);
 }
 
-void stretch4_apply_adj (bool add,  /* add flag */
-			 map4 str, 
-			 float* ord /* [nd] */, 
-			 float* mod /* [n1] */)
+void sf_stretch4_apply_adj (bool add,  /* add flag */
+			    sf_map4 str, 
+			    float* ord /* [nd] */, 
+			    float* mod /* [n1] */)
 /*< transform model to ordinates by adjoint operation >*/
 {
     int id, it, i, nt, i1, i2;
@@ -227,8 +238,8 @@ void stretch4_apply_adj (bool add,  /* add flag */
     } 
 }
 
-void stretch4_apply (bool add /* add flag */,
-		     map4 str, 
+void sf_stretch4_apply (bool add /* add flag */,
+		     sf_map4 str, 
 		     float* ord /* [nd] */, 
 		     float* mod /* [n1] */)
 /*< transform ordinates to model >*/
@@ -282,7 +293,7 @@ void stretch4_apply (bool add /* add flag */,
     free(mod2);
 }
 
-void cstretch4_invert (map4 str, 
+void sf_cstretch4_invert (sf_map4 str, 
 		       sf_complex* ord       /* [nd] */, 
 		       const sf_complex* mod /* [n1] */)
 /*< convert model to ordinates by spline interpolation >*/
@@ -298,13 +309,13 @@ void cstretch4_invert (map4 str,
 	fmod[it] = crealf(mod[it]);
     }
 
-    stretch4_invert (false,str,real,fmod);
+    sf_stretch4_invert (false,str,real,fmod);
 
     for (it=0; it < str->nt; it++) {
 	fmod[it] = cimagf(mod[it]);
     }
 
-    stretch4_invert (false,str,imag,fmod);
+    sf_stretch4_invert (false,str,imag,fmod);
 
     for (id=0; id < str->nd; id++) {
 	ord[id] = sf_cmplx(real[id],imag[id]);
@@ -315,8 +326,8 @@ void cstretch4_invert (map4 str,
     free(fmod);
 }
 
-void stretch4_invert (bool add /* add flag */,
-		      map4 str, 
+void sf_stretch4_invert (bool add /* add flag */,
+		      sf_map4 str, 
 		      float* ord /* [nd] */, 
 		      float* mod /* [n1] */)
 /*< convert model to ordinates by spline interpolation >*/
@@ -350,8 +361,8 @@ void stretch4_invert (bool add /* add flag */,
     } 
 }
 
-void stretch4_invert_adj (bool add /* add flag */,
-			  map4 str, 
+void sf_stretch4_invert_adj (bool add /* add flag */,
+			  sf_map4 str, 
 			  float* ord /* [nd] */, 
 			  float* mod       /* [n1] */)
 /*< convert ordinates to model by adjoint spline interpolation >*/
@@ -389,7 +400,7 @@ void stretch4_invert_adj (bool add /* add flag */,
     }
 }
 
-void stretch4_close (map4 str)
+void sf_stretch4_close (sf_map4 str)
 /*< free allocated storage >*/
 {
     int i;

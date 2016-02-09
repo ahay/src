@@ -21,11 +21,9 @@
 
 #include <rsf.h>
 
-#include "stretch4.h"
-
 int main (int argc, char* argv[])
 {
-    map4 nmo; /* using cubic spline interpolation */
+    sf_map4 nmo; /* using cubic spline interpolation */
     bool half, slow;
     int it,ix,ih, nt,nx, nh, CDPtype;
     float dt, t0, h, h0, f, dh, eps, dy;
@@ -90,7 +88,7 @@ int main (int argc, char* argv[])
     str = sf_floatalloc(nt);
     out = sf_floatalloc(nt);
 
-    nmo = stretch4_init (nt, t0, dt, nt, eps);
+    nmo = sf_stretch4_init (nt, t0, dt, nt, eps);
     
     for (ix = 0; ix < nx; ix++) {
 	sf_floatread (vel,nt,velocity);	
@@ -116,8 +114,8 @@ int main (int argc, char* argv[])
 		}
 	    }
 
-	    stretch4_define (nmo,str);
-	    stretch4_apply (false,nmo,trace,out);
+	    sf_stretch4_define (nmo,str);
+	    sf_stretch4_apply (false,nmo,trace,out);
 	    
 	    sf_floatwrite (out,nt,nmod);
 	}

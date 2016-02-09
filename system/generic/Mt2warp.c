@@ -1,4 +1,4 @@
-/* Log warping. */
+/* Time-squared warping. */
 /*
   Copyright (C) 2004 University of Texas at Austin
 
@@ -18,14 +18,13 @@
 */
 
 #include <rsf.h>
-#include "stretch4.h"
 
 int main(int argc, char* argv[])
 {
-    map4 mo;
-    bool inv;
+    sf_map4 mo;
+    bool inv, adj;
     int n1, i2, n2, i3, n3;
-    float o1, d1, o2, d2, eps, t, t0;
+    float o1, d1, o2, d2, eps, t;
     float *trace, *t2, *trace2;
     sf_file in, out;
 
@@ -36,19 +35,19 @@ int main(int argc, char* argv[])
     if (!sf_getbool("inv",&inv)) inv=false;
     /* inversion flag */
 
-    if (inv) {
+    if (!sf_getbool("adj",&adj)) adj=false;
+    /* adjoint flag */
+
+    if ((inv && !adj) || (!inv && adj)) {
 	if (!sf_histint(in,"n1",&n2)) sf_error("No n1= in input");
 	if (!sf_histfloat(in,"d1",&d2)) d2=1.;
 	if (!sf_histfloat(in,"o1",&o2)) o2=0.;
 
-	if (!sf_histint(in,"n1_logwarp",&n1)) n1=n2;
+	if (!sf_histint(in,"n1_t2warp",&n1)) n1=n2;
 
-	if (!sf_getfloat("t0",&t0) && 
-	    !sf_histfloat(in,"t0_logwarp",&t0)) sf_error("Need t0=");
-
-	o1 = t0*expf(o2);
+	o1 = sqrtf(o2);
 	d1 = o2+(n2-1)*d2;
-	d1 = (t0*expf(d1)-o1)/(n1-1);
+	d1 = (sqrtf(d1)-o1)/(n1-1);
 	
 	sf_putint(out,"n1",n1);
 	sf_putfloat(out,"d1",d1);
@@ -60,12 +59,9 @@ int main(int argc, char* argv[])
 	if (!sf_histfloat(in,"d1",&d1)) d1=1.;
 	if (!sf_histfloat(in,"o1",&o1)) o1=0.;
 
-	if (!sf_getfloat("t0",&t0)) t0=o1;
-	sf_putfloat(out,"t0_logwarp",t0);
-
-	o2 = logf(o1/t0);
+	o2 = o1*o1;
 	d2 = o1+(n1-1)*d1;
-	d2 = (logf(d2/t0) - o2)/(n2-1);
+	d2 = (d2*d2 - o2)/(n2-1);
 
 	sf_putint(out,"n1",n2);
 	sf_putfloat(out,"d1",d2);
@@ -83,24 +79,36 @@ int main(int argc, char* argv[])
     t2 = sf_floatalloc(n2);
     trace2 = sf_floatalloc(n1);
 
-    mo = stretch4_init (n1, o1, d1, n2, eps);
+    mo = sf_stretch4_init (n1, o1, d1, n2, eps);
 
     for (i2=0; i2 < n2; i2++) {
 	t = o2+i2*d2;
-	t2[i2] = t0*expf(t);
+	t2[i2] = sqrtf(t);
     }    
 
-    stretch4_define (mo,t2);
+    sf_stretch4_define (mo,t2);
     
     for (i3=0; i3 < n3; i3++) {
 	if (inv) {
-	    sf_floatread(trace,n2,in);
-	    stretch4_apply (false,mo,trace,trace2);
-	    sf_floatwrite (trace2,n1,out);
+	    if (adj) {
+		sf_floatread(trace2,n1,in);
+		sf_stretch4_apply_adj (false,mo,trace,trace2);
+		sf_floatwrite (trace,n2,out); 
+	    } else {
+		sf_floatread(trace,n2,in);
+		sf_stretch4_apply (false,mo,trace,trace2);
+		sf_floatwrite (trace2,n1,out);
+	    } 
 	} else {
-	    sf_floatread(trace2,n1,in);
-	    stretch4_invert (false,mo,trace,trace2);
-	    sf_floatwrite (trace,n2,out);
+	    if (adj) {
+		sf_floatread(trace,n2,in);
+		sf_stretch4_invert_adj (false,mo,trace,trace2);
+		sf_floatwrite (trace2,n1,out);
+	    } else {
+		sf_floatread(trace2,n1,in);
+		sf_stretch4_invert (false,mo,trace,trace2);
+		sf_floatwrite (trace,n2,out);
+	    }
 	}
     }
 

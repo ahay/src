@@ -22,11 +22,10 @@ velocity file contains velocity squared with n2=3 (vx,vy,vxy)
 
 #include <math.h>
 #include <rsf.h>
-#include "stretch4.h"
 
 int main (int argc, char* argv[])
 {
-    map4 nmo; /* using cubic spline interpolation */
+    sf_map4 nmo; /* using cubic spline interpolation */
     bool slow,interval;
     int it,ix,iy, nt, nx, ny, nw, i4, n4, n;
     float dt, t0, x, y, x0, y0, f=0., ft, dx, dy, eps, den;
@@ -77,7 +76,7 @@ int main (int argc, char* argv[])
     if (!sf_getint("extend",&nw)) nw=8;
     /* trace extension */
 
-    nmo = stretch4_init (nt, t0, dt, nt, eps);
+    nmo = sf_stretch4_init (nt, t0, dt, nt, eps);
 
     for (i4=0; i4 < n4; i4++) { /* loop over cmps */
       sf_floatread (vx,nt,vel);
@@ -120,8 +119,8 @@ int main (int argc, char* argv[])
 
 	  }
 
-	  stretch4_define (nmo,str);
-	  stretch4_apply (false,nmo,trace,out);
+	  sf_stretch4_define (nmo,str);
+	  sf_stretch4_apply (false,nmo,trace,out);
 
 	  sf_floatwrite (out,nt,nmod);
 	} /* ix */

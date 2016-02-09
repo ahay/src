@@ -20,13 +20,12 @@
 #include <math.h>
 #include <float.h>
 #include <rsf.h>
-#include "stretch4.h"
 
 
 int main (int argc, char* argv[])
 {
     bool map;
-    map4 nmo;
+    sf_map4 nmo;
     char *method;
     int it,ix,ip,iv, nt,nx, np, nv, ntv, nw, nvh, ntvh, ne, ie, nte;
     float dt, t0, p, p0, t, dp, v0, dv, vh0, dvh , e0 , de;
@@ -69,7 +68,7 @@ int main (int argc, char* argv[])
     v3  = sf_floatalloc(nt);
     
     if (map) {    
-	nmo = stretch4_init (nt, t0, dt, nt, 0.01);
+	nmo = sf_stretch4_init (nt, t0, dt, nt, 0.01);
 
 	ord = NULL;
 	coord1 = NULL;
@@ -353,11 +352,11 @@ int main (int argc, char* argv[])
             } /* END tau t loop */
 
 	    if (map) {
-		stretch4_define (nmo,TAU0);
+		sf_stretch4_define (nmo,TAU0);
 	    
-		stretch4_apply (false,nmo,v1,v1); sf_floatwrite (v1,nt,velN);	    
-		stretch4_apply (false,nmo,v2,v2); sf_floatwrite (v2,nt,velH);
-		stretch4_apply (false,nmo,v3,v3); sf_floatwrite (v3,nt,eta);
+		sf_stretch4_apply (false,nmo,v1,v1); sf_floatwrite (v1,nt,velN);	    
+		sf_stretch4_apply (false,nmo,v2,v2); sf_floatwrite (v2,nt,velH);
+		sf_stretch4_apply (false,nmo,v3,v3); sf_floatwrite (v3,nt,eta);
 	    } else {
 		sf_int2_init (coord1, t0,v0, dt,dv, nt,nv, sf_spline_int, nw, nt);
 		sf_int2_lop (true,true,ntv,nt,vN,ord);

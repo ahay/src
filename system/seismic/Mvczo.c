@@ -18,15 +18,13 @@
 */
 #include <rsf.h>
 
-#include "stretch4.h"
-
 #ifdef SF_HAS_FFTW
 #include <fftw3.h>
 #endif
 
 int main(int argc, char* argv[])
 {
-    map4 str;
+    sf_map4 str;
     bool verb;
     int i1,i2, n1,n2,n3, nw, nx,nv, ix,iv, iy,ny;
     float d1,o1,d2,o2, eps, w,x, v0,v2,v,dv, dx, t, x0, dw;
@@ -107,14 +105,14 @@ int main(int argc, char* argv[])
     trace = sf_floatalloc(n1);
     t2 = sf_floatalloc(n2);
 
-    str = stretch4_init (n1, o1, d1, n2, eps);
+    str = sf_stretch4_init (n1, o1, d1, n2, eps);
 
     for (i2=0; i2 < n2; i2++) {
 	t = o2+i2*d2;
 	t2[i2] = sqrtf(t);
     }    
 
-    stretch4_define (str,t2);
+    sf_stretch4_define (str,t2);
 
     for (iy=0; iy < ny; iy++) {
 	for (ix=0; ix < nx; ix++) {
@@ -128,7 +126,7 @@ int main(int argc, char* argv[])
 	    for (i1=0; i1 < n1; i1++) {
 		trace[i1] /= n1;
 	    }
-	    stretch4_invert (false,str,strace,trace);
+	    sf_stretch4_invert (false,str,strace,trace);
 	    for (i2=n2; i2 < n3; i2++) {
 		strace[i2] = 0.;
 	    }
@@ -163,7 +161,7 @@ int main(int argc, char* argv[])
 #else
 		kiss_fftri(invs,(const kiss_fft_cpx *) ctrace2, strace);
 #endif
-		stretch4_apply(false,str,strace,trace);
+		sf_stretch4_apply(false,str,strace,trace);
 		sf_floatwrite (trace,n1,out);
 	    } /* v  */
 	} /* x */

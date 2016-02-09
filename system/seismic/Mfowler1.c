@@ -21,11 +21,10 @@ Input: 2-D cosft of constant-velocity stacks (v,w,k).
 */
 
 #include <rsf.h>
-#include "stretch4.h"
 
 int main(int argc, char* argv[])
 {
-    map4 mo;
+    sf_map4 mo;
     int nk, nw, nv, ik, iw, iv;
     float dk, dw, dv, k0, w0, v0, k, w, v, p, eps;
     float *stack, *stack2, *vstr;
@@ -56,7 +55,7 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("eps",&eps)) eps=0.01;
     /* stretch regularization */
 
-    mo = stretch4_init (nv, v0, dv, nv, eps);
+    mo = sf_stretch4_init (nv, v0, dv, nv, eps);
 
     for (ik=0; ik < nk; ik++) {
 	k = k0+ik*dk;
@@ -75,8 +74,8 @@ int main(int argc, char* argv[])
 		vstr[iv] = v/hypotf(1.0f,v*p);
 	    }	
 
-	    stretch4_define (mo,vstr);
-	    stretch4_apply (false,mo,stack,stack2);
+	    sf_stretch4_define (mo,vstr);
+	    sf_stretch4_apply (false,mo,stack,stack2);
 
 	    sf_floatwrite(stack2,nv,out);
 	}

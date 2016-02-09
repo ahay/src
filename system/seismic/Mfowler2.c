@@ -21,11 +21,10 @@
 */
 
 #include <rsf.h>
-#include "stretch4.h"
 
 int main(int argc, char* argv[])
 {
-    map4 mo;
+    sf_map4 mo;
     int nk, nw, nv, ik, iw, iv;
     float dk, dw, dv, k0, w0, v0, k, w, v, p, wm, s, eps;
     float *stak, *wstr, *migr;
@@ -56,7 +55,7 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("eps",&eps)) eps=0.01;
     /* stretch regularization */
 
-    mo = stretch4_init (nw, w0, dw, nw, eps);
+    mo = sf_stretch4_init (nw, w0, dw, nw, eps);
 
     for (ik=0; ik < nk; ik++) {
 	k = k0+ik*dk;
@@ -79,10 +78,10 @@ int main(int argc, char* argv[])
 		}
 	    }
 
-	    stretch4_define (mo,wstr);
+	    sf_stretch4_define (mo,wstr);
 	    
 	    sf_floatread(stak,nw,inp);
-	    stretch4_apply (false,mo,stak,migr);
+	    sf_stretch4_apply (false,mo,stak,migr);
 	    sf_floatwrite(migr,nw,out);
 	}
     }

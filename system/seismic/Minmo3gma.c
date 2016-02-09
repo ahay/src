@@ -1,6 +1,6 @@
 /* 3-D Inverse generalized normal moveout.
-V elocity file contains slowness squared with n2=16 (wx,wy,wxy,A1,A2,A3,A4,A5,B1,B2,B3,C1,C2,C3,C4,C5)
-following Sripanich and Fomel (2015).
+   V elocity file contains slowness squared with n2=16 (wx,wy,wxy,A1,A2,A3,A4,A5,B1,B2,B3,C1,C2,C3,C4,C5)
+   following Sripanich and Fomel (2015).
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
@@ -22,11 +22,10 @@ following Sripanich and Fomel (2015).
 
 #include <math.h>
 #include <rsf.h>
-#include "stretch4.h"
 
 int main (int argc, char* argv[])
 {
-    map4 nmo; /* using cubic spline interpolation */
+    sf_map4 nmo; /* using cubic spline interpolation */
     bool half;
     int it,ix,iy, nt, nx, ny, nw, n;
     float dt, t0, x, y, x0, y0, f, dx, dy, eps, A, B, C;
@@ -61,13 +60,13 @@ int main (int argc, char* argv[])
     /* if x,y , the second and third axes are half-offset instead of full offset */
 
     if (half) { /* get full offset - multiply by 2 */
-      dx *= 2.;
-      dy *= 2.;
-      x0 *= 2.;
-      y0 *= 2.;
-      sf_warning("Since half=y, offsets were doubled.");
+	dx *= 2.;
+	dy *= 2.;
+	x0 *= 2.;
+	y0 *= 2.;
+	sf_warning("Since half=y, offsets were doubled.");
     }else{
-      sf_warning("Since half=n, offsets not doubled.");
+	sf_warning("Since half=n, offsets not doubled.");
     }
 
     if (!sf_getfloat("eps",&eps)) eps=0.01;
@@ -98,53 +97,53 @@ int main (int argc, char* argv[])
     if (!sf_getint("extend",&nw)) nw=8;
     /* trace extension */
 
-    nmo = stretch4_init (nt, t0, dt, nt, eps);
+    nmo = sf_stretch4_init (nt, t0, dt, nt, eps);
 
-      sf_floatread (wx,nt,vel);
-      sf_floatread (wxy,nt,vel);
-      sf_floatread (wy,nt,vel);
-      sf_floatread (a1,nt,vel);
-      sf_floatread (a2,nt,vel);
-      sf_floatread (a3,nt,vel);
-      sf_floatread (a4,nt,vel);
-      sf_floatread (a5,nt,vel);
-      sf_floatread (b1,nt,vel);
-      sf_floatread (b2,nt,vel);
-      sf_floatread (b3,nt,vel);
-      sf_floatread (c1,nt,vel);
-      sf_floatread (c2,nt,vel);
-      sf_floatread (c3,nt,vel);
-      sf_floatread (c4,nt,vel);
-      sf_floatread (c5,nt,vel);
+    sf_floatread (wx,nt,vel);
+    sf_floatread (wxy,nt,vel);
+    sf_floatread (wy,nt,vel);
+    sf_floatread (a1,nt,vel);
+    sf_floatread (a2,nt,vel);
+    sf_floatread (a3,nt,vel);
+    sf_floatread (a4,nt,vel);
+    sf_floatread (a5,nt,vel);
+    sf_floatread (b1,nt,vel);
+    sf_floatread (b2,nt,vel);
+    sf_floatread (b3,nt,vel);
+    sf_floatread (c1,nt,vel);
+    sf_floatread (c2,nt,vel);
+    sf_floatread (c3,nt,vel);
+    sf_floatread (c4,nt,vel);
+    sf_floatread (c5,nt,vel);
 
     for (iy = 0; iy < ny; iy++) {
 	y = y0+iy*dy;
 
 	for (ix = 0; ix < nx; ix++) {
-	  x = x0 + ix*dx;
+	    x = x0 + ix*dx;
 
-	  sf_floatread (trace,nt,cmp);
+	    sf_floatread (trace,nt,cmp);
 
-	  for (it=0; it < nt; it++) {
-	    f = t0 + it*dt;
-	    A = a1[it]*pow(x,4) + a2[it]*pow(x,3)*y +a3[it]*x*x*y*y +a4[it]*pow(y,3)*x+a5[it]*pow(y,4);
-	    B = b1[it]*x*x + b2[it]*x*y + b3[it]*y*y;
-	    C = c1[it]*pow(x,4) + c2[it]*pow(x,3)*y +c3[it]*x*x*y*y +c4[it]*pow(y,3)*x+c5[it]*pow(y,4);
-	    f = f*f + x*x*wx[it]+y*y*wy[it]+ x*y*wxy[it] + A/(f*f + B + sqrt(pow(f,4) + 2*f*f*B + C) );
+	    for (it=0; it < nt; it++) {
+		f = t0 + it*dt;
+		A = a1[it]*pow(x,4) + a2[it]*pow(x,3)*y +a3[it]*x*x*y*y +a4[it]*pow(y,3)*x+a5[it]*pow(y,4);
+		B = b1[it]*x*x + b2[it]*x*y + b3[it]*y*y;
+		C = c1[it]*pow(x,4) + c2[it]*pow(x,3)*y +c3[it]*x*x*y*y +c4[it]*pow(y,3)*x+c5[it]*pow(y,4);
+		f = f*f + x*x*wx[it]+y*y*wy[it]+ x*y*wxy[it] + A/(f*f + B + sqrt(pow(f,4) + 2*f*f*B + C) );
 
-	    if (f < 0.) {
-	      str[it]=t0-10.*dt;
-	    } else {
-	      str[it] = sqrtf(f);
+		if (f < 0.) {
+		    str[it]=t0-10.*dt;
+		} else {
+		    str[it] = sqrtf(f);
+		}
 	    }
-	  }
 
-	  stretch4_define (nmo,str);
-	  stretch4_apply (false,nmo,trace,out);
+	    sf_stretch4_define (nmo,str);
+	    sf_stretch4_apply (false,nmo,trace,out);
 
-	  sf_floatwrite (out,nt,nmod);
+	    sf_floatwrite (out,nt,nmod);
 	} /* ix */
-      } /* iy */
+    } /* iy */
 
     exit (0);
 }

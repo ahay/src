@@ -22,12 +22,10 @@
 
 #include <rsf.h>
 
-#include "stretch4.h"
-
 int main(int argc, char* argv[])
 {
     bool inv, shot;
-    map4 *map;
+    sf_map4 *map;
     int iw, nw, ih, nh, ik, nk, ib, nb, *fold;
     float dw, dh, dk, w0, h0, k0, w, h, k, eps, db, b, sinb, cosb, xi;
     sf_complex *slice, *slice2, *sum, sample, tshift, xshift; 
@@ -79,7 +77,7 @@ int main(int argc, char* argv[])
 
     if (!sf_getfloat("xi",&xi)) xi=1;   /* continuation paremeter */
 
-    map = (map4*) sf_alloc(nb,sizeof(map4));
+    map = (sf_map4*) sf_alloc(nb,sizeof(sf_map4));
     dt = sf_floatalloc(nb);
     dx = sf_floatalloc(nb);
     ds = shot? sf_floatalloc(nb):NULL;
@@ -116,8 +114,8 @@ int main(int argc, char* argv[])
 	    }
 	}
 
-	map[ib] = stretch4_init (nh, h0, dh, nh, eps);
-	stretch4_define (map[ib],hstr);
+	map[ib] = sf_stretch4_init (nh, h0, dh, nh, eps);
+	sf_stretch4_define (map[ib],hstr);
     }	
 	
     for (ik=0; ik < nk; ik++) {
@@ -142,9 +140,9 @@ int main(int argc, char* argv[])
 		tshift = sf_cmplx(cosb,-sinb);
 
 		if (inv) {
-		    cstretch4_apply  (map[ib],slice,slice2);
+		    sf_cstretch4_apply  (map[ib],slice,slice2);
 		} else {
-		    cstretch4_invert (map[ib],slice2,slice);
+		    sf_cstretch4_invert (map[ib],slice2,slice);
 		}
 
 		for (ih=0; ih < nh; ih++) {

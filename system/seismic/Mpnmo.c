@@ -22,11 +22,10 @@
 
 #include <rsf.h>
 
-#include "stretch4.h"
 
 int main (int argc, char* argv[])
 {
-    map4 nmo;
+    sf_map4 nmo;
     bool half;
     int it,ix,ih, nt,nx, nh, CDPtype;
     float dt, t0, h, h0, t, f, g, dh, eps, dy;
@@ -100,7 +99,7 @@ int main (int argc, char* argv[])
 	etr = NULL;
     }
 
-    nmo = stretch4_init (nt, t0, dt, nt, eps);
+    nmo = sf_stretch4_init (nt, t0, dt, nt, eps);
 
     eps = 100.*FLT_EPSILON;
     
@@ -149,16 +148,16 @@ int main (int argc, char* argv[])
 		}
 	    }		
 
-	    stretch4_define (nmo,str);
+	    sf_stretch4_define (nmo,str);
 
-	    stretch4_apply (false,nmo,trace,out);	    
+	    sf_stretch4_apply (false,nmo,trace,out);	    
 	    sf_floatwrite (out,nt,nmod);
 
-	    stretch4_apply (false,nmo,vtr,vtr);	    
+	    sf_stretch4_apply (false,nmo,vtr,vtr);	    
 	    sf_floatwrite (vtr,nt,vel);
 
 	    if (NULL != crv)  {
-		stretch4_apply (false,nmo,etr,etr);	    
+		sf_stretch4_apply (false,nmo,etr,etr);	    
 		sf_floatwrite (etr,nt,eta);
 	    }
 	}

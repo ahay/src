@@ -20,11 +20,10 @@
 #include <math.h>
 #include <float.h>
 #include <rsf.h>
-#include "stretch4.h"
 
 int main (int argc, char* argv[])
 {
-    map4 nmo;
+    sf_map4 nmo;
     bool half;
     int it,ix,ihx,ihy,ih, nt,nx, nhx,nhy, nw;
     float dt, t0, hx,hy, h0x, h0y, t, f, dhx, dhy, eps;
@@ -90,7 +89,7 @@ int main (int argc, char* argv[])
     if (!sf_getint("extend",&nw)) nw=8;
     /* trace extension */
 
-    nmo = stretch4_init (nt, t0, dt, nt, eps);
+    nmo = sf_stretch4_init (nt, t0, dt, nt, eps);
 
     eps = 100.*FLT_EPSILON;
 
@@ -127,12 +126,12 @@ int main (int argc, char* argv[])
 	  }
 	
 	
-	  stretch4_define (nmo,str);
+	  sf_stretch4_define (nmo,str);
 
-	  stretch4_apply (false,nmo,trace,out);
+	  sf_stretch4_apply (false,nmo,trace,out);
 	  sf_floatwrite (out,nt,nmod);
 
-	  stretch4_apply (false,nmo,vtr,vtr);
+	  sf_stretch4_apply (false,nmo,vtr,vtr);
 	  sf_floatwrite (vtr,nt,vel);
 	}
       }

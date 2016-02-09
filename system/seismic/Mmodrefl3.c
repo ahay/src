@@ -24,7 +24,7 @@ The output contains PP and PS tau-p seismograms.
 
 #include <math.h>
 #include <rsf.h>
-#include "stretch4.h"
+
 #include "zoeppritz.h"
 
 int main(int argc, char* argv[])
@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
     float *a=NULL, *b=NULL, *r=NULL, *tpp=NULL, *tps=NULL, *app=NULL, *aps=NULL, **pp=NULL, **ps=NULL;
     float dt, tp,ts, a1,a2, b1,b2, r1,r2, eps, rc[4], ang[4];
     float d1, p0, dp, p, as, bs, ad1, bd1; 
-    map4 map;
+    sf_map4 map;
     sf_file in, out;
 
     sf_init(argc,argv);
@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
     pp = sf_floatalloc2(nt,np);
     ps = sf_floatalloc2(nt,np);
 
-    map = stretch4_init (nt, 0., dt, n1s, eps);
+    map = sf_stretch4_init (nt, 0., dt, n1s, eps);
 
     for (i2=0; i2 < n2; i2++) {
 	sf_warning("CMP %d of %d",i2+1,n2);
@@ -153,11 +153,11 @@ int main(int argc, char* argv[])
 		aps[i1-1] = rc[1];
 	    }
 
-	    stretch4_define (map,tpp);
-	    stretch4_apply (false,map,app,pp[ip]);
+	    sf_stretch4_define (map,tpp);
+	    sf_stretch4_apply (false,map,app,pp[ip]);
 
-	    stretch4_define (map,tps);
-	    stretch4_apply (false,map,aps,ps[ip]);
+	    sf_stretch4_define (map,tps);
+	    sf_stretch4_apply (false,map,aps,ps[ip]);
 	}
 
 	sf_floatwrite(pp[0],nt*np,out);

@@ -21,12 +21,11 @@
 
 #include <rsf.h>
 
-#include "stretch4.h"
 #include "bandpass.h"
 
 static int nh, nt, ns, jump;
 static float *stretch, **dense2, **sparse2; 
-static map4* nmo;
+static sf_map4* nmo;
 static sf_bands spl;
 
 void inmo_init(const float* vel /* velocity */,
@@ -48,11 +47,11 @@ void inmo_init(const float* vel /* velocity */,
     nt = (ns-1)*jump+1;
     dt = dt/jump;
 
-    nmo = (map4*) sf_alloc(nh,sizeof(map4));
+    nmo = (sf_map4*) sf_alloc(nh,sizeof(sf_map4));
     stretch = sf_floatalloc(nt);
 
     for (ih=0; ih < nh; ih++) {
-	nmo[ih] = stretch4_init (nt, t0, dt, nt, eps);
+	nmo[ih] = sf_stretch4_init (nt, t0, dt, nt, eps);
 	
 	h = off[ih] + (dh/CDPtype)*(ix%CDPtype); 
 	if (half) h *= 2;
@@ -72,7 +71,7 @@ void inmo_init(const float* vel /* velocity */,
 	    }
 	}
 
-	stretch4_define (nmo[ih],stretch);
+	sf_stretch4_define (nmo[ih],stretch);
     }
 
     coord = sf_floatalloc(nt);
@@ -94,7 +93,7 @@ void inmo_close(void)
     int ih;
 
     for (ih=0; ih < nh; ih++) {
-	stretch4_close(nmo[ih]);
+	sf_stretch4_close(nmo[ih]);
     }
     free(nmo);
     free(stretch);
@@ -115,7 +114,7 @@ void inmo(const float *trace   /* input trace [nt] */,
     int ih;
 
     for (ih = 0; ih < nh; ih++) {
-	stretch4_apply (false,nmo[ih],(float*)trace,gather[ih]);
+	sf_stretch4_apply (false,nmo[ih],(float*)trace,gather[ih]);
     }
 }
 
@@ -131,7 +130,7 @@ void nmostack(float **gather /* input CMP gather */,
     }
 
     for (ih = 0; ih < nh; ih++) {
-	stretch4_invert (false,nmo[ih],stretch,gather[ih]);
+	sf_stretch4_invert (false,nmo[ih],stretch,gather[ih]);
 	for (it=0; it < nt; it++) {
 	    trace[it] += stretch[it];
 	}

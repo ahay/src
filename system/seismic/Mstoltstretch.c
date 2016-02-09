@@ -18,7 +18,7 @@
 */
 
 #include <rsf.h>
-#include "stretch4.h"
+
 #include "fint1.h"
 #include "vt2w.h"
 
@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
     int nt, ns, nx, n2, it, nstr, ifix;
     float dt, t0, eps, v0, *v=NULL, *trace=NULL, *out=NULL, *ww=NULL, wsum;
     char buffer[20];
-    map4 stolt;
+    sf_map4 stolt;
     fint1 istolt;
     bool inv;
     sf_file in=NULL, st=NULL, vel=NULL;
@@ -80,7 +80,7 @@ int main(int argc, char* argv[])
 	stolt = NULL;
 	istolt = fint1_init(4,ns,0);
     } else {
-	stolt =  stretch4_init (ns,t0,dt,nt,eps);
+	stolt =  sf_stretch4_init (ns,t0,dt,nt,eps);
 	istolt = NULL;
     }
 
@@ -126,8 +126,8 @@ int main(int argc, char* argv[])
 	    sf_floatwrite (trace,nt,st);
 	} else {
 	    sf_floatread (trace,nt,in);
-	    stretch4_define (stolt, str[ix]);
-	    stretch4_apply (false,stolt, trace, out);
+	    sf_stretch4_define (stolt, str[ix]);
+	    sf_stretch4_apply (false,stolt, trace, out);
 	    sf_floatwrite (out,ns,st);
 	}
     }

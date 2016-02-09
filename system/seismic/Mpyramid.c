@@ -18,11 +18,10 @@
 */
 
 #include <rsf.h>
-#include "stretch4.h"
 
 int main(int argc, char* argv[])
 {
-    map4 mo;
+    sf_map4 mo;
     bool inv;
     int i, nx, nu, iw, nw;
     float u0, du, x0, dx, eps;
@@ -84,13 +83,13 @@ int main(int argc, char* argv[])
     itrace2 = sf_floatalloc(nu);
     ctrace2 = sf_complexalloc(nu);
 
-    mo = stretch4_init (nu, u0, du, nx, eps);
+    mo = sf_stretch4_init (nu, u0, du, nx, eps);
 
     for (iw=0; iw < nw; iw++) {
 	for (i=0; i < nx; i++) {
 	    str[i] = iw*(x0+i*dx);
 	}
-	stretch4_define (mo,str);
+	sf_stretch4_define (mo,str);
 
 	if (inv) {
 	    sf_complexread(ctrace2,nu,in);
@@ -100,8 +99,8 @@ int main(int argc, char* argv[])
 		itrace2[i] = cimagf(ctrace2[i]);
 	    }
 
-	    stretch4_invert (false,mo,rtrace,rtrace2);
-	    stretch4_invert (false,mo,itrace,itrace2);
+	    sf_stretch4_invert (false,mo,rtrace,rtrace2);
+	    sf_stretch4_invert (false,mo,itrace,itrace2);
 
 	    for (i=0; i < nx; i++) {
 		ctrace[i] = sf_cmplx(rtrace[i],itrace[i]);
@@ -116,8 +115,8 @@ int main(int argc, char* argv[])
 		itrace[i] = cimagf(ctrace[i]);
 	    }
 
-	    stretch4_apply (false,mo,rtrace,rtrace2);
-	    stretch4_apply (false,mo,itrace,itrace2);
+	    sf_stretch4_apply (false,mo,rtrace,rtrace2);
+	    sf_stretch4_apply (false,mo,itrace,itrace2);
 
 	    for (i=0; i < nu; i++) {
 		ctrace2[i] = sf_cmplx(rtrace2[i],itrace2[i]);

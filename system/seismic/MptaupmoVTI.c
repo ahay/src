@@ -19,11 +19,10 @@
 
 #include <math.h>
 #include <rsf.h>
-#include "stretch4.h"
 
 int main (int argc, char* argv[])
 {
-    map4 nmo;
+    sf_map4 nmo;
     int it,ix,ip, nt,nx, np;
     float dt, t0, p, p0, t, dp, eps, f; 
     float N,D;
@@ -63,7 +62,7 @@ int main (int argc, char* argv[])
     str = sf_floatalloc(nt);
     /*cos = sf_floatalloc(nt);*/
 
-    nmo = stretch4_init (nt, t0, dt, nt, eps);
+    nmo = sf_stretch4_init (nt, t0, dt, nt, eps);
 
     eps = SF_EPS;
 
@@ -92,12 +91,12 @@ int main (int argc, char* argv[])
 		} 
 	    }
 
-	    stretch4_define (nmo,str);
+	    sf_stretch4_define (nmo,str);
 
-	    stretch4_apply (false,nmo,trace,trace);
+	    sf_stretch4_apply (false,nmo,trace,trace);
 	    sf_floatwrite (trace,nt,nmod);
 	    sf_floatwrite (str,nt,tau0);	
-	    /*stretch4_apply (nmo,cos,cos);
+	    /*sf_stretch4_apply (nmo,cos,cos);
 	    sf_floatwrite (cos,nt,cos2);*/
 	}
     }

@@ -18,11 +18,10 @@
 */
 
 #include <rsf.h>
-#include "stretch4.h"
 
 int main(int argc, char* argv[])
 {
-    map4 mo;
+    sf_map4 mo;
     int n1, i2, n2, iw, nw, ns;
     float o1, d1, t, eps;
     float *trace, *move, *str, *amp;
@@ -60,7 +59,7 @@ int main(int argc, char* argv[])
     str = sf_floatalloc(ns);
     amp = sf_floatalloc(ns);
 
-    mo = stretch4_init (n1, o1, d1, ns, eps);
+    mo = sf_stretch4_init (n1, o1, d1, ns, eps);
 
     for (i2=0; i2 < n2; i2++) {
 	t = move[i2];
@@ -75,8 +74,8 @@ int main(int argc, char* argv[])
 	    amp[nw+iw+1] = 0.0;
 	}
 
-	stretch4_define (mo,str);
-	stretch4_apply (false,mo,amp,trace);
+	sf_stretch4_define (mo,str);
+	sf_stretch4_apply (false,mo,amp,trace);
 	sf_floatwrite (trace,n1,out);
     }
 
