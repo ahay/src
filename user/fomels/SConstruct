@@ -14,9 +14,9 @@ miss3 nconv nnint nnshape nsmooth nsmooth1 ocparcel octentwt ofilp
 ofsemb ortho patch phaserot pick pick3 plane poly polyfit regr rdiv
 rect1 reshape riesz rsin seislet1 semblance shape shapeagc shapefill
 shearer shift1 similarity similarity2 simenv smoothderw smoothreg
-smspray taupfit thin timecont timefreq tomo tree trace2 tristack
-tristack2 twofreq2 upgrad var2 velcon velinv vidattr vipmig0 vofzperm
-warp1 warpadd warpscan zero zmarch ztrace
+smspray stream taupfit thin timecont timefreq tomo tree trace2
+tristack tristack2 twofreq2 upgrad var2 velcon velinv vidattr vipmig0
+vofzperm warp1 warpadd warpscan zero zmarch ztrace
 '''
 
 ccprogs = 'anisolr2 isolr2 isolr3 lrvc0 permlr1 permlr2 permlr3'
