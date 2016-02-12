@@ -138,14 +138,9 @@ int main (int argc, char* argv[])
     /* number of poles for high cutoff */
     if (nphi < 1)  nphi = 1;
     if (nphi > 1)  nphi /= 2;
-    
-    if(nt % 2 == 0) {
-	nd = nt*jump;
-    }
-    else {
-	nd = (nt-1)*jump+1;
-    }
-
+  
+    nd = (nt-1)*jump+1;
+  
     bandpass_init(nd,flo,fhi,nplo,nphi);
     
     sf_putint(stack,"n1",nd);
