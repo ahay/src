@@ -1023,6 +1023,9 @@ def blas(context):
                 context.env['BLAS'] = None
                 need_pkg('blas', fatal=False)
 
+pkg['lapack'] = {'fedora':'blas + blas-devel + atlas + atlas-devel',
+                 'rhel':'blas-devel + atlas-devel'}
+
 def lapack(context):
     context.Message("checking for LAPACK ... ")
     text = '''

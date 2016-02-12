@@ -96,14 +96,14 @@ def Flow(sources,flow,bindir,rsfflow=1,
     #<- assemble the pipeline
     command = string.join(steps," && ")
     if stdout==1:
-        if rsfprog[:len(prefix)+3] == prefix+'mpi':
+        if rsfprog and rsfprog[:len(prefix)+3] == prefix+'mpi':
             command = command + " --output=$TARGET"
         else:
             command = command + " > $TARGET"
     elif stdout==0:
         command = command + " >/dev/null"
     if stdin:
-        if rsfprog[:len(prefix)+3] == prefix+'mpi':
+        if rsfprog and rsfprog[:len(prefix)+3] == prefix+'mpi':
             command = command + " --input=$SOURCE"
         else:
             command = "< $SOURCE " + command
