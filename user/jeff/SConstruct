@@ -43,4 +43,9 @@ rec2ps
 backus 
 '''
 
+if env.get('OMP'):
+    env.Append(F90FLAGS=' -cpp -DOPENMP')
+else:
+    env.Append(F90FLAGS=' -cpp')
+
 targets.build_all(env, glob_build, srcroot, bindir, libdir, pkgdir)

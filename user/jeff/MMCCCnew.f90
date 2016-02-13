@@ -63,9 +63,11 @@ program MCCCnew
   call from_par("nlen",nlen) ! Window length of shift vector (in samples)
   call from_par("vel",vel,1500.) ! Rupture speed for linear shift
 
+#ifdef _OPENMP
   !$OMP PARALLEL
   nth = omp_get_num_threads()
   !$OMP END PARALLEL
+#endif 
 
 !!! . . Padding Factors
   ntpad=pad2(2*nt)
@@ -114,7 +116,11 @@ allocate( cdata(ntpad,nth) , cmodl(ntpad,nth) , trace1(2*nshift+nlen+1,nth),trac
      !! . . Perform XCorr
      !$OMP PARALLEL DO SCHEDULE(DYNAMIC) PRIVATE(mm,ix,it,ith,iy,yyy,kk) SHARED(nr,data,dt,nshift)
      do ix=1,nr
+#ifdef _OPENMP
         ith = omp_get_thread_num()+1
+#else
+        ith = 1
+#endif
         if (ith .eq. 1) write(0,100,ADVANCE='NO') 100.*real(ix)/real(nr), "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b"
         trace1 (nshift+1:nshift+nlen,ith) = data(ntmin:ntmax,ix)
 
@@ -158,7 +164,11 @@ allocate( cdata(ntpad,nth) , cmodl(ntpad,nth) , trace1(2*nshift+nlen+1,nth),trac
      !! . . fft the Receiver wavefields and apply the estimated time shifts
     !$OMP PARALLEL DO SCHEDULE(DYNAMIC) PRIVATE(ix,id,iw) SHARED(cdata,ntpad,w0,dw,test,nr)
      do ix=1,nr
+#ifdef _OPENMP
         id = omp_get_thread_num()+1
+#else
+        id = 1
+#endif
         cdata(:,id) =0.
         cdata(1:nt,id) = cmplx(data(:,ix),0.)
 

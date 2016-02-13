@@ -45,10 +45,14 @@ contains
   	 	ntaper=ntaper_in
   	 	forward=forward_in
   	 	eps=eps_in
-  	 	
-  	 	!$OMP PARALLEL
-    		nth = omp_get_num_threads()
-    	!$OMP END PARALLEL
+
+#ifdef _OPENMP
+     !$OMP PARALLEL
+     nth = omp_get_num_threads()
+     !$OMP END PARALLEL
+#else
+     nth = 1
+#endif
 
     	!! Velocity and fields
     	allocate( tap(nx),sax(nx,nth),rax(nx,nth),ww(nth))
@@ -95,9 +99,13 @@ contains
     	integer  :: nth,ith
     	logical :: dofilt
 
+#ifdef _OPENMP
     	!$OMP PARALLEL
     		nth = omp_get_num_threads()
-    	!$OMP END PARALLEL
+      !$OMP END PARALLEL
+#else
+      nth = 1
+#endif
 
 		!! . . Source directivity
     	sarg =-1.;    
@@ -113,9 +121,12 @@ contains
     	!$OMP PARALLEL DO SCHEDULE(DYNAMIC) PRIVATE(iw,id,ix,ih,iz) 
     	Frequency_loop: do iw=1,nw  !! FREQUENCY LOOP       
     
-    		!! . . Thread ID number
+        !! . . Thread ID number
+#ifdef _OPENMP
        		id = omp_get_thread_num()+1
-
+#else
+         id = 1
+#endif
 			!! . . Local thread Frequency 
        		ww(id) = real(iw-1.)*dw+ow
 
