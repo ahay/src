@@ -1,34 +1,32 @@
-import os, sys, re, string
+import os, sys, re, string, glob
 sys.path.append('../../framework')
 import bldutil
 
 progs = 'gpi3dzo'
 
+mpi_progs = ''
+
+ccprogs = ''
+
+subs = 'Faddeeva3'
+
 try:  # distributed version
-    Import('env root pkgdir bindir libdir incdir')
+    Import('env root pkgdir bindir')
     env = env.Clone()
 except: # local version
     env = bldutil.Debug()
     root = None
-    SConscript('../../api/c/SConstruct')
+    SConscript('../../api/c++/SConstruct')
+
+env.Prepend(CPPPATH=['../../include'],
+            LIBPATH=['../../lib'],
+            LIBS=[env.get('DYNLIB','')+'rsf'])
+
+if 'c++' in env.get('API',[]):
+    env.Prepend(LIBS=[env.get('DYNLIB','')+'rsf++'])
 
 src = Glob('[a-z]*.c')
 
-env.Prepend(CPPPATH=['../../include'],
-            LIBPATH=['../../lib'])
-
-fftw = env.get('FFTW')
-if fftw:
-    env.Prepend(CPPDEFINES=['SF_HAS_FFTW'])
-
-dynpre = env.get('DYNLIB','')
-
-libs = [dynpre+'rsf']+env.get('LIBS',[])
-dlibs = ['drsf']+env.get('LIBS',[])
-
-objects = []
-dobjects = []
-includes = []
 for source in src:
     inc = env.RSF_Include(source,prefix='')
     obj = env.StaticObject(source)
@@ -37,28 +35,25 @@ for source in src:
 mains = Split(progs)
 for prog in mains:
     sources = ['M' + prog]
-    bldutil.depends(env,sources,'M'+prog)
-    env.StaticObject('M'+prog+'.c')
-    prog = env.Program(prog,map(lambda x: x + '.o',sources),LIBS=libs)
+    bldutil.depends (env, sources, 'M'+prog)
+    prog = env.Program (prog, map (lambda x: x + '.c',sources))
     if root:
-        install = env.Install(bindir,prog)
+        env.Install (bindir, prog)
 
-        if dynpre and env['PLATFORM'] == 'darwin':
-            env.AddPostAction(install,
-            '%s -change build/api/c/libdrsf.dylib '
-            '%s/libdrsf.dylib %s' % \
-                (WhereIs('install_name_tool'),libdir,install[0]))
+ccmains = Split(ccprogs)
+subs = Split(subs)
 
 if 'c++' in env.get('API',[]):
-    lapack = env.get('LAPACK')
-else:
-    lapack = None
+    objs = map(lambda x:  env.StaticObject(x+'.cc'), subs)
 
-if lapack:
-    libsxx = [dynpre+'rsf++','vecmatop']
-    if not isinstance(lapack,bool):
-        libsxx.extend(lapack)
-    libsxx.extend(libs)
+for prog in ccmains:
+    if 'c++' in env.get('API',[]):
+        prog = env.Program (prog, ['M'+prog+'.cc'] + objs)
+        env.Depends(prog,map (lambda x: x + '.hh', subs))
+    else:
+        prog = env.RSF_Place ('sf' + prog, None, var='API', package='c++')
+    if root:
+        env.Install(bindir,prog)
 
 
 ######################################################################
@@ -68,8 +63,8 @@ if root:
     user = os.path.basename(os.getcwd())
     main = 'sf%s.py' % user
 
-    docs = map(lambda prog: env.Doc(prog,'M' + prog),mains)
+    docs = map(lambda prog: env.Doc(prog,'M' + prog),mains) + \
+           map(lambda prog: env.Doc(prog,'M%s.cc' % prog, lang='c'),ccmains)
     env.Depends(docs,'#/framework/rsf/doc.py')
-
     doc = env.RSF_Docmerge(main,docs)
     env.Install(pkgdir,doc)
