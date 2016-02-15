@@ -6,7 +6,7 @@ progs = 'gpi3dzo'
 
 mpi_progs = ''
 
-ccprogs = ''
+ccprogs = 'cerf'
 
 subs = 'Faddeeva3'
 
