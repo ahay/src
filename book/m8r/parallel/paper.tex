@@ -26,7 +26,13 @@ providing support to OpenMP since version 4.2, which appeared in
 configuration stage and uses sets the compiler flags appropriately. [FLAGS]
 
 To use OpenMP in your C or Fortran program, you can use special
-compiler directives. For example...
+compiler directives. For example, the following piece of code from
+\texttt{\$RSFSRC/user/psava/fdutil.c} uses the \texttt{pragma omp}
+directive to instruct the OpenMP-enabled compiler to execute the loop
+in parallel.
+
+\lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[firstline=574,lastline=585,frame=single]{\RSF/user/psava/fdutil.c}
 
 To simplify OpenMP-based processing for data-parallel tasks,
 Madagascar provides \texttt{sfomp} utility. Suppose, for example, ...

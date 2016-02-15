@@ -360,7 +360,7 @@ The python script does not require compilation. Simply make sure to set
 \texttt{PYTHONPATH} and \texttt{LD\_LIBRARY\_PATH} according to \\
 \texttt{\$RSFROOT/etc/madagascar/env.sh} or \texttt{\$RSFROOT/etc/madagascar/env.csh}.
 
-\section{MATLAB interface} % a meaningless comment
+\section{MATLAB interface} 
 
 \lstset{language=matlab}
 \renewcommand{\rsfclip}{\RSF/api/matlab/test/clip.m}
@@ -390,15 +390,24 @@ clipping, and writing out each trace.
 The MATLAB script does not require compilation. Simply make sure that
 \texttt{\$RSFROOT/lib} is in \texttt{MATLABPATH} and \texttt{LD\_LIBRARY\_PATH}.
 
+\section{Julia interface}
+
+\lstset{language=julia}
+\renewcommand{\rsfclip}{\RSF/api/julia/test/clip.jl}
+
+The Julia clip function is listed below.
+
+\lstinputlisting[frame=single]{\rsfclip}
+
 \section{Installation} 
 
 To install the interface to a particular language, use \texttt{API=}
-parameter in the RSF configuration. For example, to to install C++ and
-Fortran-90 API bindings in addition to the basic package, run
+parameter in the RSF configuration. For example, to to install the
+Fortran-77 and Fortran-90 API bindings in addition to the basic package, run
 \begin{verbatim}
-scons API=c++,f90 config
+scons API=f77,f90 config
 \end{verbatim}
-Only the C interface is configured by default. The configuration
+Only the C, C++, and Python interfaces are configured by default. The configuration
 parameters are stored in \\ \texttt{\$RSFROOT/share/madagascar/etc/config.py}.
 
 \bibliographystyle{seg} 
