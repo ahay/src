@@ -17,6 +17,8 @@ Plot('spectrum','window max1=50 | graph plotcol=5 label2=Amplitude wanttitle=n p
 
 Result('signal','signal spectrum','OverUnderAniso')
 
+#############################################################################
+
 Flow('subsample','signal','window j1=50 | pad n2=5 | transp | put n1=1000 o1=0 d1=0.01 n2=1')
 
 Flow('interp','subsample',
@@ -41,6 +43,7 @@ Plot('spectrum2','window max1=50 | graph plotcol=5 label2=Amplitude unit2= wantt
 
 Result('signal2','signal2 spectrum2','OverUnderAniso')
 
+#############################################################################
 
 Flow('sig1',None,'math n1=200 o1=0 d1=0.0005 output="sin(%g*x1)" ' % (20*pi))
 Flow('sig2','sig1','math output="sin(%g*x1)" ' % (270*pi))
@@ -76,6 +79,8 @@ Plot('asig4','xsig4 ysig4 zero','Overlay')
 
 Result('aliasing','sig1 asig3 asig4','OverUnderAniso')
 
+###############################################################################
+
 Flow('rand1','xsig','real | noise rep=y type=n seed=2015 mean=0.05 range=0.05')
 Flow('rand2','xsig','real | noise rep=y type=n seed=2016 mean=0.05 range=0.05')
 
@@ -106,5 +111,94 @@ Plot('xsig2','csig2 rsig2',
 Plot('asig2','xsig2 rsig2 zero','Overlay')
 
 Result('randomized','rsig asig1 asig2','OverUnderAniso')
+
+###############################################################################
+
+Flow('signal10','signal','window j1=10')
+Flow('mask','signal10','noise rep=y type=n seed=2016 mean=0.5 | mask min=0.75 | transp')
+Flow('rsignal10','mask signal10','dd type=float | window | mul ${SOURCES[1]}')
+
+Flow('rspectrum','rsignal10','spectra')
+Plot('rspectrum','window max1=50 | graph plotcol=5 label2=Amplitude wanttitle=n plotcol=1')
+
+Flow('rinterp','rsignal10',
+     'fft1 | pad n1=5001 | put fft_o1=0 fft_n1=10000 | fft1 inv=y | scale dscale=10')
+
+Plot('rinterp',
+     '''
+     window max1=0.5 | 
+     graph label2=Amplitude unit2= wanttitle=n min1=-0.01 max1=0.51 min2=-170 max2=170 plotcol=5 dash=1
+     ''')
+
+Flow('rx','mask','dd type=float | math output=x2 | headerwindow mask=$SOURCE | window') 
+Flow('ry','rinterp rx','inttest1 coord=${SOURCES[1]} interp=lag nw=2')
+
+Plot('rsubsample','rx ry',
+     '''
+     cmplx ${SOURCES[1]} | 
+     graph symbol=o min1=-0.01 max1=0.51 min2=-170 max2=170 plotcol=1 symbolsz=10 wanttitle=n wantaxis=n
+     ''')
+
+Plot('rsignal','signal rinterp rsubsample','Overlay')
+
+Flow('rspectrum2','rinterp','spectra')
+Plot('rspectrum2','window max1=50 | graph plotcol=5 label2=Amplitude unit2= wanttitle=n plotcol=1')
+
+Result('rsignal','rsignal rspectrum2','OverUnderAniso')
+
+# Hard thresholding
+
+Flow('tinterp','rsignal10',
+     '''
+     fft1 | thr mode=hard thr=3000 |
+     pad n1=5001 | put fft_o1=0 fft_n1=10000 | fft1 inv=y | scale dscale=50
+     ''')
+
+Plot('tinterp',
+     '''
+     window max1=0.5 | 
+     graph label2=Amplitude unit2= wanttitle=n min1=-0.01 max1=0.51 min2=-170 max2=170 plotcol=5 dash=1
+     ''')
+
+Flow('tspectrum','tinterp','spectra')
+Plot('tspectrum','window max1=50 | graph plotcol=5 label2=Amplitude unit2= wanttitle=n plotcol=1')
+
+Plot('tsignal','signal tinterp rsubsample','Overlay')
+Result('tsignal','tsignal tspectrum','OverUnderAniso')
+
+# Keep two largest coefficients
+
+ncoeff = 2
+
+Flow('xmax','rsignal10',
+     '''
+     fft1 | math output="abs(input)" | real |
+     max1 | window n1=%d | real
+     ''' % ncoeff)
+Flow('xmask','xmax rspectrum',
+     '''
+     math output=1 | 
+     bin1 head=${SOURCES[0]} pattern=${SOURCES[1]} |
+     rtoc
+     ''')
+
+Flow('cinterp','rsignal10 xmask',
+     '''
+     fft1 | mul ${SOURCES[1]} |
+     pad n1=5001 | put fft_o1=0 fft_n1=10000 | fft1 inv=y | scale dscale=50
+     ''')
+
+Plot('cinterp',
+     '''
+     window max1=0.5 | 
+     graph label2=Amplitude unit2= wanttitle=n min1=-0.01 max1=0.51 min2=-170 max2=170 plotcol=5 dash=1
+     ''')
+
+Flow('cspectrum','cinterp','spectra')
+Plot('cspectrum','window max1=50 | graph plotcol=5 label2=Amplitude unit2= wanttitle=n plotcol=1')
+
+Plot('csignal','signal cinterp rsubsample','Overlay')
+Result('csignal','csignal cspectrum','OverUnderAniso')
+
 
 End()
