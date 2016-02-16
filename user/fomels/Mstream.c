@@ -20,18 +20,22 @@
 
 int main(int argc, char* argv[])
 {
+    bool inv;
     int n1, n2, na, i1, i2, ia;
     float *d, *a, *r, dd, da, dn, rn, eps;
-    sf_file data, pef, res;
+    sf_file inp, pef, out;
 
     sf_init(argc,argv);
-    data = sf_input("in");
-    res = sf_output("out");
+    inp = sf_input("in");
+    out = sf_output("out");
     pef = sf_output("pef");
 
-    if (SF_FLOAT != sf_gettype(data)) sf_error("Need float input");
-    if (!sf_histint(data,"n1",&n1)) sf_error("No n1= in input");
-    n2 = sf_leftsize(data,1);
+    if (!sf_getbool("inv",&inv)) inv=false;
+    /* inversion flag */
+
+    if (SF_FLOAT != sf_gettype(inp)) sf_error("Need float input");
+    if (!sf_histint(inp,"n1",&n1)) sf_error("No n1= in input");
+    n2 = sf_leftsize(inp,1);
 
     if (!sf_getint("na",&na)) sf_error("Need na=");
     /* PEF filter size (not including leading one) */
@@ -50,37 +54,58 @@ int main(int argc, char* argv[])
     sf_putint(pef,"n3",n2);
 
     for (i2=0; i2 < n2; i2++) {
-	sf_floatread(d,n1,data);
+
+	if (inv) {
+	    sf_floatread(r,n1,inp);
+	} else {
+	    sf_floatread(d,n1,inp);
+	}
 
 	dd = 0.0f;
-	for (ia=0; ia < na; ia++) {
-	    a[ia]=0.0f;
-	    dd += d[ia]*d[ia];
-	}
 	da = 0.0f;
 	for (ia=0; ia < na; ia++) {
-	    r[ia] = d[ia];
+	    a[ia]=0.0f;
+	    if (inv) {
+		d[ia] = r[ia];
+	    } else {
+		r[ia] = d[ia];
+	    }
+	    dd += d[ia]*d[ia];
+	}
+
+	for (ia=0; ia < na; ia++) {
 	    sf_floatwrite(a,na,pef);
 	}
 	
 	for (i1=na; i1 < n1; i1++) {
-	    rn = dn = d[i1];
-	    for (ia=0; ia < na; ia++) {
-		a[ia] -= (dn+da)/(eps+dd)*d[i1-1-ia];
-		rn += a[ia]*d[i1-1-ia];
+	    if (inv) {
+		rn = r[i1]/eps;
+		dn = rn*(eps+dd)-da;
+		d[i1] = dn;
+	    } else {
+		dn = d[i1];
+		rn = (dn+da)/(eps+dd);
+		r[i1] = eps*rn;
 	    }
-	    r[i1] = rn;
+
+	    for (ia=0; ia < na; ia++) {
+		a[ia] -= rn*d[i1-1-ia];
+	    }
+
 	    sf_floatwrite(a,na,pef);
 
-	    dd += dn*dn - d[i1-na]*d[i1-na];
-	    
+	    dd += dn*dn - d[i1-na]*d[i1-na];	    
 	    da = dn*a[0];
 	    for (ia=1; ia < na; ia++) {
 		da += a[ia]*d[i1-ia];
 	    }
 	}
 
-	sf_floatwrite(r,n1,res);
+	if (inv) {
+	    sf_floatwrite(d,n1,out);
+	} else {
+	    sf_floatwrite(r,n1,out);
+	}
     }
 
     exit(0);
