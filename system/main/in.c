@@ -42,7 +42,7 @@ int main (int argc, char* argv[])
     char buf[BUFSIZ], zero[BUFSIZ];
     sf_file file;
     bool info, trail;
-    const char *type[] = {"uchar","char","int","float","complex","short"};
+    const char *type[] = {"uchar","char","int","float","complex","short","double","long"};
     const char *form[] = {"ascii","xdr","native"};
     char pad[] = "              ", out[25];
 

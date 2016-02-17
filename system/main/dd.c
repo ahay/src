@@ -33,6 +33,7 @@ int main(int argc, char *argv[])
     sf_datatype itype, otype;
     float *fbuf;
     short *sbuf;
+    off_t *lbuf;
     sf_complex *cbuf;
     unsigned char *ubuf;
     bool ibm = false;
@@ -48,7 +49,7 @@ int main(int argc, char *argv[])
     form = sf_getstring("form");
     /* ascii, native, xdr */
     type = sf_getstring("type");
-    /* int, float, complex, short */
+    /* int, float, complex, short, long */
     if (NULL == form && NULL == type) sf_error("Specify form= or type=");
 	
     if (NULL != form) {
@@ -89,6 +90,8 @@ int main(int argc, char *argv[])
             case 's':
                 otype = SF_SHORT;
 		break;
+	    case 'l':
+		otype = SF_LONG;
 	    default:
 		sf_error("Unsupported type=\"%s\"",type);
 		break;
@@ -116,6 +119,39 @@ int main(int argc, char *argv[])
 	nin = (bufsiz < size)? bufsiz:size;
 	nout = nin*ein/eout;
 	switch (itype) {
+	    case SF_LONG:
+		nin = bufsiz*ein/eout;
+		if (nin > size) nin=size;
+
+		lbuf = (off_t*) bufin;
+		sf_longread(lbuf,nin,in);
+		switch (otype) {
+                    case SF_SHORT:
+			sbuf = (short*) bufout;
+			for (i=0; i < (int) nin; i++) {
+			    sbuf[i] = lbuf[i]; 
+			}
+                        sf_shortwrite(sbuf,nin,out);
+			break;
+		    case SF_INT:
+                        ibuf = (int*) bufout;
+                        for (i=0; i < (int) nin; i++) {
+			    ibuf[i] = lbuf[i]; 
+			}
+                        sf_intwrite(ibuf, nin, out);
+			break;
+		    case SF_FLOAT:
+			fbuf = (float*) bufout;
+			for (i=0; i < (int) nin; i++) {
+			    fbuf[i] = lbuf[i]; 
+			}
+			sf_floatwrite(fbuf,nin,out);
+			break;
+		    default:
+			ddbreak (itype,otype);
+			break;
+		}
+		break;
             case SF_SHORT:
 		nin = bufsiz*ein/eout;
 		if (nin > size) nin=size;

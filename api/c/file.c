@@ -84,7 +84,7 @@
 typedef struct sf_File *sf_file;
 /*^*/
 
-typedef enum {SF_UCHAR, SF_CHAR, SF_INT, SF_FLOAT, SF_COMPLEX, SF_SHORT, SF_DOUBLE} sf_datatype;
+typedef enum {SF_UCHAR, SF_CHAR, SF_INT, SF_FLOAT, SF_COMPLEX, SF_SHORT, SF_DOUBLE, SF_LONG} sf_datatype;
 typedef enum {SF_ASCII, SF_XDR, SF_NATIVE} sf_dataform;
 /*^*/
 
@@ -384,6 +384,9 @@ size_t sf_esize(sf_file file)
         case SF_SHORT:
             return sizeof(short);
             break;
+	case SF_LONG:
+	    return sizeof(off_t);
+	    break;
         case SF_DOUBLE:
             return sizeof(double);
             break;
@@ -488,6 +491,8 @@ void sf_setformat (sf_file file, const char* format)
 	sf_settype(file,SF_UCHAR);
     } else if (NULL != strstr(format,"short")) {
 	sf_settype(file,SF_SHORT);
+    } else if (NULL != strstr(format,"long")) {
+	sf_settype(file,SF_LONG);
     } else if (NULL != strstr(format,"double")) {
 	sf_settype(file,SF_DOUBLE);
     } else {
@@ -813,6 +818,19 @@ void sf_fileflush (sf_file file, sf_file src)
 		    break;
 		default:
 		    sf_putstring(file,"data_format","native_short");
+		    break;
+	    }
+	    break;
+	case SF_LONG:
+	    switch (file->form) {
+		case SF_ASCII:
+		    sf_putstring(file,"data_format","ascii_long");
+		    break;
+		case SF_XDR:
+		    sf_putstring(file,"data_format","xdr_long");
+		    break;
+		default:
+		    sf_putstring(file,"data_format","native_long");
 		    break;
 	    }
 	    break;
@@ -1348,6 +1366,43 @@ void sf_shortread (/*@out@*/ short* arr, size_t size, sf_file file)
 	    break;
     }
 }
+
+void sf_longread (/*@out@*/ off_t* arr, size_t size, sf_file file)
+/*< read a long array arr[size] from file >*/
+{
+    char* buf;
+    size_t i, left, nbuf, got, bufsiz;
+	
+    switch (file->form) {
+	case SF_ASCII:
+	    for (i = 0; i < size; i++) {
+		if (EOF==fscanf(file->stream,"%lld",arr+i))
+		    sf_error ("%s: trouble reading ascii:",__FILE__);
+	    }
+	    break;
+	case SF_XDR:
+	    size *= sizeof(int);
+	    buf = (char*)arr+size;
+	    bufsiz = sf_bufsiz(file);
+	    for (left = size; left > 0; left -= nbuf) {
+		nbuf = (bufsiz < left)? bufsiz : left;
+		(void) xdr_setpos(&(file->xdr),0);
+		if (nbuf != fread(file->buf,1,nbuf,file->stream))
+		    sf_error ("%s: trouble reading:",__FILE__);
+		if (!xdr_vector(&(file->xdr),buf-left,
+				nbuf/sizeof(off_t),sizeof(off_t),
+				(xdrproc_t) xdr_int))
+		    sf_error ("%s: trouble reading xdr",__FILE__);
+	    }
+	    break;
+	default:
+	    got = fread(arr,sizeof(off_t),size,file->stream);
+	    if (got != size) 
+		sf_error ("%s: trouble reading: %lu of %lu",__FILE__,got,size);
+	    break;
+    }
+}
+
 
 void sf_shortwrite (short* arr, size_t size, sf_file file)
 /*< write a short array arr[size] to file >*/
