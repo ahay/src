@@ -5,6 +5,11 @@ machine:
     RSFROOT: ${HOME}/RSFROOT
     RSFFIGS: ${HOME}/RSFROOT/figs
 
+## Checking out additional repos
+checkout:
+  pre:
+    - git clone https://github.com/ahay/figs.git $RSFFIGS
+
 ## Customize dependencies
 dependencies:
   pre:
