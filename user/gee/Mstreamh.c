@@ -167,7 +167,7 @@ int main(int argc, char* argv[])
 	    aa->flt[ia] -= rn*d[i1-aa->lag[ia]];
 	}
 
-	dd += dn*dn - d[i1-aa->lag[na-1]]*d[i1-aa->lag[na-1]];
+	dd += dn*dn - d[i1-maxlag]*d[i1-maxlag];
 	
 	da = dn*aa->flt[0];
 	for (ia=1; ia < na; ia++) {
