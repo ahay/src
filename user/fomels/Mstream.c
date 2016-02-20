@@ -21,7 +21,7 @@
 int main(int argc, char* argv[])
 {
     bool inv, adj, linear;
-    int n1, n2, na, i1, i2, ia;
+    int n1, n2, na, i, i1, i2, ia, dim, dim0, n[SF_MAX_DIM];
     float dd, da, dn, rn, eps;
     float *d, *a, *r, *d2=NULL, *r2=NULL;
     sf_file inp, pef, out, pat;
@@ -37,8 +37,19 @@ int main(int argc, char* argv[])
     /* adjoint flag (for linear operator) */
 
     if (SF_FLOAT != sf_gettype(inp)) sf_error("Need float input");
-    if (!sf_histint(inp,"n1",&n1)) sf_error("No n1= in input");
-    n2 = sf_leftsize(inp,1);
+    dim0 = sf_filedims(inp,n);
+    if (!sf_getint("dim",&dim)) dim=dim0;
+    /* dimensionality */
+
+    n1=1;
+    n2=1;
+    for (i=0; i < dim0; i++) {
+	if (i < dim) {
+	    n1 *= n[i];
+	} else {
+	    n2 *= n[i];
+	}
+    }
 
     if (!sf_getint("na",&na)) sf_error("Need na=");
     /* PEF filter size (not including leading one) */
