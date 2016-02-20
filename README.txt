@@ -77,7 +77,7 @@ developers' mailing list ("RSF-devel"):
 	https://lists.sourceforge.net/lists/listinfo/rsf-devel
 
 development blog:
-	http://www.ahay.org/rsflog/
+	http://ahay.org/blog/
 
 Compiling, Building, Installing and Testing
 ===========================================
