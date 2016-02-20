@@ -12,7 +12,7 @@ checkout:
 
 ## Customize dependencies
 dependencies:
-  pre:
+  override:
     - ./configure && make install && source env.sh 
 
 ## Customize test commands
