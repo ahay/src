@@ -1,0 +1,18 @@
+## Customize the test machine
+machine:
+  # Add some environment variables
+  environment:
+    RSFROOT: ${HOME}/RSFROOT
+    RSFFIGS: ${HOME}/RSFROOT/figs
+
+## Customize dependencies
+dependencies:
+  pre:
+    - ./configure && make install && source env.sh 
+
+## Customize test commands
+test:
+  override:
+    - source env.sh && cd book && scons test
+
+    
