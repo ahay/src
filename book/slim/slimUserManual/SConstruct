@@ -7,8 +7,6 @@ sfdoc  = os.path.join(bindir,'sfdoc')
 run = 'PYTHONPATH=%s LD_LIBRARY_PATH=%s $SOURCE' % \
       (os.environ.get('PYTHONPATH'),os.environ.get('LD_LIBRARY_PATH'))
 
-os.environ['PSTEXPENOPTS'] = 'color=y fat=7 fatmult=7 invras=y'
-
 output = {'.tex':'l',
           '.wiki':'m'}
 
@@ -17,4 +15,4 @@ for prog in ('sfthr','sfsort','sffdct'):
         Command2(prog+out, sfdoc,'%s -%s . %s' % (run,output[out],prog))
         Depends('paper.ltx',prog+out)
 
-End(use='hyperref,amsmath,amsfonts,fancybox',options='10pt')
+End(use='hyperref,amsmath,amsfonts,fancybox',options='10pt',color='ALL')

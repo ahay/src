@@ -157,7 +157,7 @@
 
 #ifdef __cplusplus
 
-#  include "faddeeva.hh"
+#  include "Faddeeva3.hh"
 
 #  include <cfloat>
 #  include <cmath>

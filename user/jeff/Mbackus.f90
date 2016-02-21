@@ -89,9 +89,13 @@ program backus
      allocate( out(nz,nx,3) )
   end if
 
+#ifdef _OPENMP
   !$OMP PARALLEL
-      nth = omp_get_num_threads()
+  nth = omp_get_num_threads()
   !$OMP END PARALLEL
+#else
+  nth = 1
+#endif
   !nth=32 
   write(0,*) 'USING NUM THREADS: ',nth
 
@@ -114,8 +118,11 @@ program backus
   !! Loop over all traces
   !$OMP PARALLEL DO SCHEDULE(DYNAMIC) PRIVATE(ith,ix,ii,pi,sina,cosa,sina2,cosa2,sina4) SHARED(nz,all)
   TRACES: do ix=1,nx
-     
+#ifdef _OPENMP     
      ith = omp_get_thread_num()+1
+#else
+     ith = 1
+#endif
      !! Assign Vp, Vs and Rho
      do ii=1,nz
         vp (ii,ith)= in(ii,ix,1)

@@ -53,30 +53,29 @@ sf_filter createhelix(int ndim    /* number of dimensions */,
     nh=0;
     /* loop over linear index. */
     for (ia = 1+lag0a; ia < na123; ia++) { 
-		sf_line2cart(ndim, na, ia, ii);
+	sf_line2cart(ndim, na, ia, ii);
 	
-		skip = false;
-		for (i=0; i < ndim; i++) {
-			if (ii[i] < gap[i]) {
-				skip = true;
-				break;
-			}
-		}
-		if (skip) continue;
+	skip = false;
+	for (i=0; i < ndim; i++) {
+	    if (ii[i] < gap[i]) {
+		skip = true;
+		break;
+	    }
+	}
+	if (skip) continue;
 	
-		lag[nh] = sf_cart2line(ndim, nd, ii);
-		nh++;                        /* got another live one */
+	lag[nh] = sf_cart2line(ndim, nd, ii);
+	nh++;                        /* got another live one */
     }
     /* center shift for nd cube */
     lag0d = sf_cart2line(ndim,  nd, center); 
     aa = sf_allocatehelix(nh); /* nh becomes size of filter */
 
     for (ia=0; ia < nh; ia++) {
-		aa->lag[ia] = lag[ia] - lag0d; 
-		aa->flt[ia] = 0.;
+	aa->lag[ia] = lag[ia] - lag0d; 
+	aa->flt[ia] = 0.;
     }
 
     return aa;
 }
 
-/* 	$Id$	 */

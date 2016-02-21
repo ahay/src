@@ -23,7 +23,7 @@ int main(int argc, char* argv[])
 {
     int nt, nx, np, it, ix, ip, ixin, ix1, ix2, n12;
     float t0, dt, dx, p0, dp, t, x, p, px, vmin, vmax;
-    float **img, *amp, *tx, *str, *add, **cinp, **cout;
+    float *amp, *tx, *str, *add, **cinp, **cout;
     sf_file inp, mig;
 
     sf_init (argc,argv);
@@ -47,7 +47,6 @@ int main(int argc, char* argv[])
     vmin = 1.0f/vmin;
     vmax = 1.0f/vmax;
 
-    img = sf_floatalloc2(nt,nx);
     amp = sf_floatalloc(nt);
     tx = sf_floatalloc(nt);
     str = sf_floatalloc(nt);

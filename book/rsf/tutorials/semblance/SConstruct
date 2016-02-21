@@ -1,0 +1,36 @@
+from rsf.proj import *
+
+#C-ordered 3D array, little-endian signed 16-bit int
+#NX: 250
+#NY: 200
+#NZ: 55
+#Inline min: 1207.0
+#Inline max: 1456.0
+#Crossline min: 1253.0
+#Crossline max: 1452.0
+#Time min: 116.0 ms
+#Time max: 2092.0 ms
+#Sample rate: 4.0 milliseconds
+
+Fetch('penobscot_subset.bin','data',
+      server='https://github.com',
+      top='seg/tutorials/raw/master/1512_Semblance_coherence_and_discontinuity')
+
+Flow('penobscot','penobscot_subset.bin',
+     '''
+     echo in=$SOURCE n1=55 n2=200 n3=250
+     o1=0.116 d1=0.004 unit1=s label1=Time
+     o2=1253 d2=1 label2=Crossline
+     o3=1207 d3=1 label3=Inline
+     data_format=native_short |
+     dd type=float
+     ''',stdin=0)
+
+Result('penobscot',
+       '''
+       byte gainpanel=all |
+       grey3 title="Seismic data" frame1=25 frame2=100 frame3=100
+       flat=n point1=0.25 point2=0.75
+       ''')
+
+End()

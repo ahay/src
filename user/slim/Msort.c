@@ -2,6 +2,9 @@
 
 Written by: Gilles Hennenfent & Henryk Modzelewski, UBC
 Created: February 2006
+
+January 2016 program of the month:
+http://ahay.org/blog/2016/01/16/program-of-the-month-sfsort/
 */
 
 /*

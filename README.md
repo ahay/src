@@ -10,8 +10,8 @@ Madagascar is an open-source software package for multidimensional data
 analysis and reproducible computational experiments. Its mission is to
 provide
 
-    * a convenient and powerful environment
-    * a convenient technology transfer tool 
+* a convenient and powerful environment
+* a convenient technology transfer tool 
 
 for researchers working with digital image and data processing in
 geophysics and related fields. Technology developed using the
@@ -66,18 +66,21 @@ Where to get more information about Madagascar
 ==============================================
 The primary source of information is the web site:
 
-	http://www.ahay.org/
+http://www.ahay.org/
 
 Additional information:
 
 users' mailing list ("RSF-user"):
-	https://lists.sourceforge.net/lists/listinfo/rsf-user
+
+https://lists.sourceforge.net/lists/listinfo/rsf-user
 
 developers' mailing list ("RSF-devel"):
-	https://lists.sourceforge.net/lists/listinfo/rsf-devel
+
+https://lists.sourceforge.net/lists/listinfo/rsf-devel
 
 development blog:
-	http://www.ahay.org/rsflog/
+
+http://ahay.org/blog/
 
 Compiling, Building, Installing and Testing
 ===========================================

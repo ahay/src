@@ -283,8 +283,9 @@ if os.path.isdir('trip'):
 ##########################################################################
 
 docdir = os.path.join(shrdir, 'doc', 'madagascar') 	 
-for docfile in Split('AUTHORS COPYING NEWS README'): 	 
+for docfile in Split('AUTHORS COPYING NEWS'): 	 
     env.Install(docdir,docfile+'.txt')
+env.Install(docdir,'README.md')
 
 env.Alias('install',[incdir, bindir, pkgdir, libdir, shrdir, etcdir])
 
