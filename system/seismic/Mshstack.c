@@ -25,7 +25,7 @@ int main (int argc, char* argv[])
 {
     bool half, slow;
     int ih,ix,it,nt,nx,nd,nh, CDPtype, jump, niter, restart, nplo, nphi, ni, axis,lim,j;
-    off_t n, n3;
+    off_t n;
     float dt, t0, h0, dh, eps, dy, tol, flo, fhi;
     float *trace, *trace2, *vel, *off, **gather, **dense;
     char key1[7];
@@ -46,7 +46,7 @@ int main (int argc, char* argv[])
 	    n *= ni;
     }
   
-    n3 = sf_unshiftdim(cmp,stack,axis);
+    (void) sf_unshiftdim(cmp,stack,axis);
  
     if (SF_FLOAT != sf_gettype(cmp)) sf_error("Need float input");
     if (!sf_histint(cmp,"n1",&nt)) sf_error("No n1= in input");

@@ -1,4 +1,4 @@
-/* Streaming PEF */
+/* Streaming PEF with missing data */
 /*
   Copyright (C) 2016 University of Texas at Austin
   
@@ -21,15 +21,19 @@
 int main(int argc, char* argv[])
 {
     bool inv, adj, linear;
-    int n1, n2, na, i1, i2, ia;
-    float dd, da, dn, rn, eps;
-    float *d, *a, *r, *d2=NULL, *r2=NULL;
-    sf_file inp, pef, out, pat;
+    int n1, n2, na, i1, i2, ia, neq, *m1, *m2;
+    float dd, da, dn, rn, eps, *d2=NULL, *r2=NULL;
+    float *d, *a, *r;
+    sf_file inp, pef, out, minp, mout, pat;
 
     sf_init(argc,argv);
     inp = sf_input("in");
     out = sf_output("out");
 
+    minp = sf_input("maskin");
+    mout = sf_output("maskout");
+    sf_settype(mout,SF_INT);
+    
     if (!sf_getbool("inv",&inv)) inv=false;
     /* inversion flag */
 
@@ -52,6 +56,19 @@ int main(int argc, char* argv[])
     r = sf_floatalloc(n1);
     a = sf_floatalloc(na);
 
+    m1 = sf_intalloc(n1);
+    m2 = sf_intalloc(n1);
+    
+    if (NULL != sf_getstring("pef")) {
+	/* output PEF (optional) */
+	pef = sf_output("pef");
+	sf_putint(pef,"n1",na);
+	sf_putint(pef,"n2",n1);
+	sf_putint(pef,"n3",n2);
+    } else {
+	pef = NULL;
+    }
+
     linear = (NULL != sf_getstring("pattern"));
     /* pattern data (for linear operator) */
 
@@ -63,18 +80,9 @@ int main(int argc, char* argv[])
 	pat = inp;
     }
 
-    if (NULL != sf_getstring("pef")) {
-	/* output PEF (optional) */
-	pef = sf_output("pef");
-	sf_putint(pef,"n1",na);
-	sf_putint(pef,"n2",n1);
-	sf_putint(pef,"n3",n2);
-    } else {
-	pef = NULL;
-    }
-
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(inv? r: d,n1,pat);
+	sf_intread(m1,n1,minp);
 
 	if (linear)  {
 	    if (adj) {
@@ -86,7 +94,7 @@ int main(int argc, char* argv[])
 		sf_floatread(d2,n1,inp);
 	    }
 	}
-
+	
 	dd = 0.0f;
 	da = 0.0f;
 	for (ia=0; ia < na; ia++) {
@@ -97,6 +105,7 @@ int main(int argc, char* argv[])
 		r[ia] = d[ia];
 	    }
 	    dd += d[ia]*d[ia];
+	    m2[ia]=1;
 	}
 
 	if (linear) {
@@ -108,12 +117,14 @@ int main(int argc, char* argv[])
 		}
 	    }
 	}
-
+	
 	if (NULL != pef) {
 	    for (ia=0; ia < na; ia++) {
 		sf_floatwrite(a,na,pef);
 	    }
 	}
+
+	neq = na;
 	
 	for (i1=na; i1 < n1; i1++) {
 	    if (inv) {
@@ -126,13 +137,22 @@ int main(int argc, char* argv[])
 		r[i1] = eps*rn;
 	    }
 
-	    for (ia=0; ia < na; ia++) {
-		a[ia] -= rn*d[i1-1-ia];
+	    neq += m1[i1] - m1[i1-na];
+	    
+	    if (neq == na) {
+		/* update PEF if enough equations */
+		for (ia=0; ia < na; ia++) {
+		    a[ia] -= rn*d[i1-1-ia];
+		}
+		m2[i1]=1;
+	    } else {
+		m2[i1]=0;
 	    }
 
 	    if (NULL != pef) sf_floatwrite(a,na,pef);
 
-	    dd += dn*dn - d[i1-na]*d[i1-na];	    
+	    dd += dn*dn - d[i1-na]*d[i1-na];
+	    
 	    da = dn*a[0];
 	    for (ia=1; ia < na; ia++) {
 		da += a[ia]*d[i1-ia];
@@ -151,6 +171,7 @@ int main(int argc, char* argv[])
 		    }
 		}
 	    }
+	    
 	}
 
 	if (linear) {
@@ -158,6 +179,8 @@ int main(int argc, char* argv[])
 	} else {	
 	    sf_floatwrite(inv? d: r,n1,out);
 	}
+
+	sf_intwrite(m2,n1,mout);
     }
 
     exit(0);

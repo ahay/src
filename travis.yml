@@ -1,7 +1,0 @@
-language: c
-
-before_install:
-  - ./configure --prefix=$TRAVIS_BUILD_DIR && make install
-
-script:
-  - source env.sh && cd book && scons test
