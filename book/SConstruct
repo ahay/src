@@ -1,4 +1,4 @@
-import os, string
+import os, string, glob, shutil
 import rsf.sftour
 import rsf.doc
 import rsf.prog
@@ -93,11 +93,16 @@ def publicproj(project):
 
 def progtest(target=None,source=None,env=None):
     cwd = os.getcwd()
+    testdir = os.path.join(cwd,'test')
+    if not os.path.isdir(testdir):
+        os.mkdir(testdir)
     for project in env.get('projects'):
         if publicproj(project):
             print 'Testing in %s' % project
             print '-----------' + '-'*len(project)
             if os.system('scons test'):
+                for vpl in glob.glob('Fig/*.vpl'):
+                    shutil.copy2(vpl,testdir)
                 return 1
         os.chdir(cwd)            
     return 0

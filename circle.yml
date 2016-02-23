@@ -20,4 +20,9 @@ test:
   override:
     - source env.sh && cd book && scons test
 
+## Customize artifacts
+general:
+  artifacts:
+    - "src/book/test"
+
     
