@@ -93,16 +93,16 @@ def publicproj(project):
 
 def progtest(target=None,source=None,env=None):
     cwd = os.getcwd()
-    testdir = os.path.join(cwd,'test')
-    if not os.path.isdir(testdir):
-        os.mkdir(testdir)
+    testdir = os.environ.get('CIRCLE_ARTIFACTS')
     for project in env.get('projects'):
         if publicproj(project):
             print 'Testing in %s' % project
             print '-----------' + '-'*len(project)
+            ye
             if os.system('scons test'):
-                for vpl in glob.glob('Fig/*.vpl'):
-                    shutil.copy2(vpl,testdir)
+                if testdir and os.path.isdir(testdir):
+                    for vpl in glob.glob('Fig/*.vpl'):
+                        shutil.copy2(vpl,testdir)
                 return 1
         os.chdir(cwd)            
     return 0
