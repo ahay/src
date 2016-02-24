@@ -20,11 +20,11 @@
 
 int main(int argc, char* argv[])
 {
-    bool inv, adj, linear;
-    int n1, n2, na, i1, i2, ia;
+    bool inv, adj, linear, kn;
+    int n1, n2, na, i1, i2, ia, *mask;
     float dd, da, dn, rn, eps;
-    float *d, *a, *r, *d2=NULL, *r2=NULL;
-    sf_file inp, pef, out, pat;
+    float *d, *a, *r, *d2, *r2;
+    sf_file inp, pef, out, pat, known;
 
     sf_init(argc,argv);
     inp = sf_input("in");
@@ -61,6 +61,8 @@ int main(int argc, char* argv[])
 	r2  = sf_floatalloc(n1);
     } else {
 	pat = inp;
+	d2 = NULL;
+	r2 = NULL;
     }
 
     if (NULL != sf_getstring("pef")) {
@@ -73,8 +75,18 @@ int main(int argc, char* argv[])
 	pef = NULL;
     }
 
+    if (NULL != sf_getstring("known")) {
+	/* known data locations (optional) */
+	known = sf_input("known");
+	if (SF_INT != sf_gettype(known)) sf_error("Need int type in known");
+	mask = sf_intalloc(n1);
+    } else {
+	known = NULL;
+    }
+
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(inv? r: d,n1,pat);
+	if (NULL != known) sf_intread(mask,n1,known);
 
 	if (linear)  {
 	    if (adj) {
@@ -116,12 +128,14 @@ int main(int argc, char* argv[])
 	}
 	
 	for (i1=na; i1 < n1; i1++) {
+	    kn = (NULL == known) || (1==mask[i1]);
+
 	    if (inv) {
-		rn = r[i1]/eps;
+		rn = kn? r[i1]/eps: 0.0f;
 		dn = rn*(eps+dd)-da;
 		d[i1] = dn;
 	    } else {
-		dn = d[i1];
+		dn = kn? d[i1]: -da;
 		rn = (dn+da)/(eps+dd);
 		r[i1] = eps*rn;
 	    }
