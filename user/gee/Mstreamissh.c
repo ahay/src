@@ -1,4 +1,4 @@
-/* Streaming PEF on a helix */
+/* Missing data interpolating using streaming PEF on a helix */
 /*
   Copyright (C) 2016 University of Texas at Austin
   
