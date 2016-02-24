@@ -44,7 +44,7 @@ int main(int argc, char* argv[])
     float ct,cb,cl,cr;
     /*source parameters*/
     int src; /*source type*/
-    int nt;
+    int nt,ntsnap;
     float dt,*f0,*t0,*A;
     /*misc*/
     bool verb, ps, mig;
@@ -52,6 +52,7 @@ int main(int argc, char* argv[])
 
     pspar par;
     int nx1, nz1; /*domain of interest*/
+    int it;
     float *vel,**dat,**dat_v,**wvfld,*img; /*velocity profile*/
     sf_file Fi,Fo,Fd,Fd_v,snaps; /* I/O files */
     sf_axis az,ax; /* cube axes */
@@ -144,6 +145,10 @@ int main(int argc, char* argv[])
     if (gpx_v==-1) gpx_v = nbl;
     if (gpz_v==-1) gpz_v = nbt;
     if (gpl_v==-1) gpl_v = nz1;
+    ntsnap=0;
+    if (snap)
+        for (it=0;it<nt;it++)
+            if (it%snap==0) ntsnap++;
 
     if (mig) { /*output final wavefield*/
       sf_setn(az,nz1);
@@ -182,7 +187,7 @@ int main(int argc, char* argv[])
 	sf_setn(ax,nx1);
 	sf_oaxa(snaps,az,1);
 	sf_oaxa(snaps,ax,2);
-	sf_putint(snaps,"n3",nt/snap);
+	sf_putint(snaps,"n3",ntsnap);
 	sf_putfloat(snaps,"d3",dt*snap);
 	sf_putfloat(snaps,"o3",0.);
 	sf_putstring(snaps,"label3","Time");
@@ -197,7 +202,7 @@ int main(int argc, char* argv[])
     else dat_v = NULL;
     if (mig) img = sf_floatalloc(nz1*nx1);
     else img = NULL;
-    if (snap>0) wvfld = sf_floatalloc2(nx1*nz1,nt/snap);
+    if (snap>0) wvfld = sf_floatalloc2(nx1*nz1,ntsnap);
     else wvfld = NULL;
 
     sf_floatread(vel,nz*nx,Fi);
@@ -254,7 +259,7 @@ int main(int argc, char* argv[])
     }
 
     if (snap>0)
-      sf_floatwrite(wvfld[0],nz1*nx1*nt/snap,snaps);
+      sf_floatwrite(wvfld[0],nz1*nx1*ntsnap,snaps);
     
     exit (0);
 }
