@@ -98,7 +98,6 @@ def progtest(target=None,source=None,env=None):
         if publicproj(project):
             print 'Testing in %s' % project
             print '-----------' + '-'*len(project)
-            ye
             if os.system('scons test'):
                 if testdir and os.path.isdir(testdir):
                     for vpl in glob.glob('Fig/*.vpl'):
