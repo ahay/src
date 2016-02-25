@@ -48,7 +48,7 @@ Flow('field1n-dif field1n-re','field1n-dif0 field1n-re0','ortho rect1=2 rect2=2 
 # INITIALIZATION
 ########################################################################
 matlab         = WhereIs('matlab')
-matROOT = '../matfun'
+matROOT = '../Matfun'
 matfun = 'Syn_ddtf'
 matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
 
