@@ -36,6 +36,8 @@ To the reproducible documents collection:
   (Chen, Jiao, Ma, Chen, Zhou, and Gan)
 * tccs/intshape: Seismic data interpolation using nonlinear shaping
   regularization (Chen, Zhang, and Mo)
+* tccs/dsd: Double sparsity dictionary for seismic noise attenuation
+  (Chen, Ma, and Fomel)
 
 To SCons:
 
