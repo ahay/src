@@ -1,0 +1,3 @@
+uses=['sfgrey', 'sfdip', 'sfpad', 'sfseislet', 'sfthreshold1', 'sfwindow', 'sfadd', 'sfput', 'sffxdecon', 'sfmath']
+data=['PRIVATE']
+size=   16777216
