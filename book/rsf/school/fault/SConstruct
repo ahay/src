@@ -30,7 +30,7 @@ Flow(scn,name,
     ''')
 # determine semblance scalebar
 Flow(scn+'-bar',scn,'bar gainpanel=a allpos=y')
-Result(scn,[scn,scn+'-bar'],
+Plot(scn,[scn,scn+'-bar'],
    '''
    byte gainpanel=a  allpos=y| 
    grey3 frame1=500 frame2=25 frame3=0
@@ -38,7 +38,7 @@ Result(scn,[scn,scn+'-bar'],
    movie=3 dframe=15
    point1=.6 point2=.7
    scalebar=${SOURCES[1]} barlabel=Semblance
-   ''')
+   ''',view=1)
 
 # pick velocity corresponding to maximum semblance
 vel = name+'-vel'

@@ -47,7 +47,7 @@ Flow('exp','refl left right',
 
 Flow('sigexp0','exp','transp | window f2=1000 n2=3201 | costaper nw2=25')
 
-Result('sigexp','sigexp0','grey title="Exploding Reflector Data" ')
+Result('sigexp','sigexp0','window j1=2 j2=2 | grey title="Exploding Reflector Data" ')
 
 sigsbee.getshots('shots')
 Result('shots','byte | grey3 frame1=750 frame2=150 frame3=250 flat=n title=Shots point1=0.8')
