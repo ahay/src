@@ -72,6 +72,13 @@ int main(int argc, char* argv[])
     inp = sf_input("in");
     vel = sf_input("vel");  
     out = sf_output("out");
+       
+    if (!sf_getbool("adj",&adj)) adj=true;
+    /* adjoint flag (y for migration, n for modeling) */
+
+    if (!sf_getbool("normalize",&normalize)) normalize=true;
+    /* normalize for the fold */
+ 
 
     if (!sf_histint(inp,"n1",&nt)) sf_error("No n1=");
     if (!sf_histint(inp,"n2",&nx)) sf_error("No n2=");
@@ -90,13 +97,7 @@ int main(int argc, char* argv[])
 	
 	sf_putint(out,"n3",nh);
     }	
-    
-    if (!sf_getbool("adj",&adj)) adj=true;
-    /* adjoint flag (y for migration, n for modeling) */
 
-    if (!sf_getbool("normalize",&normalize)) normalize=true;
-    /* normalize for the fold */
- 
     if (NULL != sf_getstring("gather")) {
 	gather = sf_output("gather");
     } else {
