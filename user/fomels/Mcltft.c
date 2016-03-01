@@ -24,7 +24,7 @@
 
 int main(int argc, char* argv[])
 {
-    bool inv, dip, verb, decomp;
+    bool inv, dip, verb, time, decomp;
     int i, i1, n1, iw, nw, i2, n2, rect, niter, n12, nt, ip, np;
     char *label;
     float t, d1, w, w0, dw, p0, dp, p;
@@ -49,6 +49,9 @@ int main(int argc, char* argv[])
 	
     if (!sf_getbool("dip",&dip)) dip = false;
     /* if y, do dip decomposition */
+
+    if (!sf_getbool("time",&time)) time = false;
+    /* if y, decompose in time */
 
     if (!sf_getbool("decompose",&decomp)) decomp = false;
     /* if y, output decomposition */
@@ -88,22 +91,46 @@ int main(int argc, char* argv[])
 	    if (!sf_histfloat(in,"d2",&dw)) dw=1.;
 	    if (!sf_histfloat(in,"o2",&w0)) w0=0.;
 	} else {
-	    if (!sf_getint("nw",&nw)) nw = kiss_fft_next_fast_size(n1);
-	    /* number of frequencies */
+	    if (time) {
+		if (!sf_histint  (in,"n1",&nw)) sf_error("No n1= in input");
+		if (!sf_histfloat(in,"d1",&dw)) sf_error("No d1= in input");
+
+		nw = 2*(nw-1);
+		dw = 1./(nw*dw);
+
+		if (!sf_histint  (in,"fft_n1",&nw)) sf_error("No fft_n1= in input");
+		if (!sf_histfloat(in,"fft_o1",&w0)) sf_error("No fft_o1= in input");
+
+		/* fix label */
+		if (NULL != (label = sf_histstring(in,"fft_label1"))) {
+		    sf_putstring(out,"label1",label);
+		} else if (NULL != (label = sf_histstring(in,"label1"))) {
+		    (void) sf_fft_label(1,label,out);
+		}
+	    } else {
+		if (!sf_getint("nw",&nw)) nw = kiss_fft_next_fast_size(n1);
+		/* number of frequencies */
+		
+		if (!sf_getfloat("dw",&dw)) dw = 1./(nw*d1);
+		/* frequency step */
+		
+		if (!sf_getfloat("w0",&w0)) w0=-0.5/d1;
+		/* first frequency */
 			
-	    if (!sf_getfloat("dw",&dw)) dw = 1./(nw*d1);
-	    /* frequency step */
-			
-	    if (!sf_getfloat("w0",&w0)) w0=-0.5/d1;
-	    /* first frequency */
-			
+		if (NULL != label && !sf_fft_label(2,label,out)) 
+		    sf_putstring(out,"label2","Wavenumber");
+	    }
+
+	    sf_fft_unit(2,sf_histstring(in,"unit1"),out);
+
 	    sf_putint(out,"n2",nw);
 	    sf_putfloat(out,"d2",dw);
 	    sf_putfloat(out,"o2",w0);
-			
-	    if (NULL != label && !sf_fft_label(2,label,out)) 
-		sf_putstring(out,"label2","Wavenumber");
-	    sf_fft_unit(2,sf_histstring(in,"unit1"),out);
+
+	    if (time) {
+		dw = -dw;
+		w0 = -w0;
+	    }
 	}
     } else {
 	n2 = sf_leftsize(in,2);
