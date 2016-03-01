@@ -81,13 +81,11 @@ int main(int argc, char* argv[])
 
     mfile = sf_tempfile(&m,"w+b"); 
     fclose(mfile); 
-    mrsf = sf_output(m);
-    sf_fileflush(mrsf,mod);
-
     dfile = sf_tempfile(&d,"w+"); 
     fclose(dfile); 
-    drsf = sf_output(d);
-    sf_fileflush(drsf,dat);
+    
+    mrsf = sf_output(m);
+    sf_fileflush(mrsf,mod);
 
     init_genrand(mseed);
     for (msiz=nm, mbuf=nbuf; msiz > 0; msiz -= mbuf) {
@@ -97,6 +95,8 @@ int main(int argc, char* argv[])
 
 	sf_floatwrite(buf,mbuf,mrsf);
     }
+    sf_fileclose(mrsf);
+
 
     cmdline[cmdlen-2]='0';
     snprintf(iostring,SF_CMDLEN,"--input=%s --output=%s",m,d);
@@ -107,6 +107,7 @@ int main(int argc, char* argv[])
     sf_warning(cmdline);
     sf_system(cmdline);
 
+    drsf = sf_input(d);
     init_genrand(dseed);
     dp = 0.;
     for (dsiz=nd, dbuf=nbuf; dsiz > 0; dsiz -= dbuf) {
@@ -117,9 +118,13 @@ int main(int argc, char* argv[])
 	    dp += buf[id]*genrand_real1 ();
 	}	
     }
+    sf_fileclose(drsf);
+
     sf_warning(" L[m]*d=%g",dp);
 
-    sf_seek(drsf,0,SEEK_SET);
+    drsf = sf_output(d);
+    sf_fileflush(drsf,dat);
+    
     init_genrand(dseed);
     for (dsiz=nd, dbuf=nbuf; dsiz > 0; dsiz -= dbuf) {
 	if (dsiz < dbuf) dbuf=dsiz;
@@ -128,6 +133,7 @@ int main(int argc, char* argv[])
 
 	sf_floatwrite(buf,dbuf,drsf);
     }
+    sf_fileclose(drsf);
  
     cmdline[cmdlen-2]='1';
     snprintf(iostring,SF_CMDLEN,"--input=%s --output=%s",d,m);
@@ -138,19 +144,20 @@ int main(int argc, char* argv[])
     sf_warning(cmdline);
     sf_system(cmdline);
 
-    sf_seek(mrsf,0,SEEK_SET);
+    mrsf = sf_input(m);
     init_genrand(mseed);
     dp = 0.;
     for (msiz=nm, mbuf=nbuf; msiz > 0; msiz -= mbuf) {
 	if (msiz < mbuf) mbuf=msiz;
 	
 	sf_floatread(buf,mbuf,mrsf);
-
 	
 	for (im=0; im < mbuf; im++) {
 	    dp += buf[im]*genrand_real1 ();
 	}	
     }
+    sf_fileclose(mrsf);
+
     sf_warning("L'[d]*m=%g",dp);
 	
     exit(0);
