@@ -120,7 +120,9 @@ void fft(void *inp /* [n1*n2*n3] */,
 
         if (pio) {
             /* FFT centering */
+#ifdef _OPENMP
 #pragma omp parallel for private(i3,i2,i1) default(shared)
+#endif
             for (i3=0; i3<n3; i3++) {
                 for (i2=0; i2<n2; i2++) {
                     for (i1=0; i1<n1; i1++) {
@@ -138,7 +140,9 @@ void fft(void *inp /* [n1*n2*n3] */,
             }
         } else {
             /* FFT centering */
+#ifdef _OPENMP
 #pragma omp parallel for private(i3,i2,i1) default(shared)
+#endif
             for (i3=0; i3<n3; i3++) {
                 for (i2=0; i2<n2; i2++) {
                     for (i1=0; i1<n1; i1++) {
@@ -213,7 +217,9 @@ void fft(void *inp /* [n1*n2*n3] */,
 
         if (pio) {
         /* FFT centering */
+#ifdef _OPENMP
 #pragma omp parallel for private(i2,i1) default(shared)
+#endif
             for (i2=0; i2<n2; i2++) {
                 for (i1=0; i1<n1; i1++) {
                     if (r2c) {
@@ -228,7 +234,9 @@ void fft(void *inp /* [n1*n2*n3] */,
                 }
             }
         } else {
+#ifdef _OPENMP
 #pragma omp parallel for private(i2,i1) default(shared)
+#endif
             for (i2=0; i2<n2; i2++) {
                 for (i1=0; i1<n1; i1++) {
                     if (r2c) {
@@ -346,7 +354,9 @@ void ifft(void *out /* [n1*n2*n3] */,
 
         if (pio) {
             /* FFT centering and normalization*/
+#ifdef _OPENMP
 #pragma omp parallel for private(i3,i2,i1) default(shared)
+#endif
             for (i3=0; i3<n3; i3++) {
                 for (i2=0; i2<n2; i2++) {
                     for (i1=0; i1<n1; i1++) {
@@ -364,7 +374,9 @@ void ifft(void *out /* [n1*n2*n3] */,
             }
         } else {
             /* FFT centering and normalization*/
+#ifdef _OPENMP
 #pragma omp parallel for private(i3,i2,i1) default(shared)
+#endif
             for (i3=0; i3<ny; i3++) {
                 for (i2=0; i2<nx; i2++) {
                     for (i1=0; i1<nz; i1++) {
@@ -411,7 +423,9 @@ void ifft(void *out /* [n1*n2*n3] */,
 
         if (pio) {
             /* FFT centering and normalization*/
+#ifdef _OPENMP
 #pragma omp parallel for private(i2,i1) default(shared)
+#endif
             for (i2=0; i2<n2; i2++) {
                 for (i1=0; i1<n1; i1++) {
                     if (r2c) {
@@ -427,7 +441,9 @@ void ifft(void *out /* [n1*n2*n3] */,
             }
         } else {
             /* FFT centering and normalization*/
+#ifdef _OPENMP
 #pragma omp parallel for private(i2,i1) default(shared)
+#endif
             for (i2=0; i2<nx; i2++) {
                 for (i1=0; i1<nz; i1++) {
                     if (r2c) {
