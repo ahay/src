@@ -14,7 +14,29 @@ replacement for the Unix \texttt{make} utility \cite[]{make}. The
 SCons configuration files (\texttt{SConstruct} scripts) are written in
 the Python programming language.
 
+SCons is a tool traditionally used for compiling programs. An \texttt{SConstruct} file for compilation may look like the following
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\begin{lstlisting}
+env = Environment()
+env.Append(CPPFLAGS=['-Wall','-g'])
+env.Program('hello',['hello.c', 'main.c'])
+\end{lstlisting}
+and produce something like
+\begin{verbatim}
+bash$ scons -Q
+gcc -o hello.o -c -Wall -g hello.c
+gcc -o main.o -c -Wall -g main.c
+gcc -o hello hello.o main.o
+\end{verbatim}
+to compile the \texttt{hello} program from the source files \texttt{hello.c} and \texttt{main.c}.
+
+Madagascar uses SCons to compile its programs from the source. The
+more frequent usage, however, comes from adopting SCons to manage data
+processing flows.
+
 \subsection{Useful SCons options}
+
+The \texttt{scons} program takes a number of options. Some of the commonly used options are:
 
 \section{Why use SCons?}
 

@@ -1,5 +1,6 @@
 from rsf.proj import *
 from rsf.prog import RSFROOT
+from rsf.recipes.beg import server
 
 put0='n1=512 n2=512 d1=1 d2=1 o1=0 o2=0 '
 put='n1=350 n2=256 d1=1 d2=1 o1=0 o2=0 '
@@ -25,6 +26,7 @@ thrtype='g'
 #############################################################################
 # Field data (CHENYK2/Seismicdata/)
 ########################################################################
+Fetch('fieldma1.bin','dsd',server)
 Flow('field1','fieldma1.bin','bin2rsf bfile=${SOURCES[0]} %s| scale axis=2 | math output="input-0.5"| window f2=256 n1=350'%(put0) )
 
 ## Add noise
@@ -48,7 +50,7 @@ Flow('field1n-dif field1n-re','field1n-dif0 field1n-re0','ortho rect1=2 rect2=2 
 # INITIALIZATION
 ########################################################################
 matlab         = WhereIs('matlab')
-matROOT = '../matfun'
+matROOT = '../Matfun'
 matfun = 'Syn_ddtf'
 matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
 

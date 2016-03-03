@@ -1,0 +1,3 @@
+uses=['sfsigmoid', 'sfsmooth', 'sfput', 'sfscale', 'sfnoise', 'sfadd', 'sfbandpass', 'sfgrey', 'sfdip', 'sfseislet', 'sfthreshold1', 'sffxdecon', 'sfsnr2']
+data=[]
+size=    3686400

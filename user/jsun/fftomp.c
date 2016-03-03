@@ -6,7 +6,10 @@
    */
 
 #include <rsf.h>
+
+#ifdef _OPENMP
 #include <omp.h>
+#endif
 
 static bool r2c;
 static bool pio;

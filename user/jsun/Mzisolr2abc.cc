@@ -33,7 +33,7 @@ int sample(vector<int>& rs, vector<int>& cs, ZpxNumMat& res)
     int nr = rs.size();
     int nc = cs.size();
     res.resize(nr,nc);  
-    setvalue(res,zpx(0.0f,0.0f));
+    setvalue(res,zpx(0.0,0.0));
     for(int a=0; a<nr; a++) {
 	for(int b=0; b<nc; b++) {
 	    int ikz = cs[b] % nkzs;
