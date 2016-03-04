@@ -62,7 +62,7 @@ for cdp in [200,700,1300,2000]:
          vscan semblance=y half=n offset=${SOURCES[1]} nv=50 v0=1400 dv=50 
          ''')
     Result('velan%d'%cdp, 
-           'sfgrey color=j min1=1 max2=3000 title="cdp=%d"'%cdp)
+           'sfgrey color=j min1=1 max2=3000 title="Cdp %d" allpos=y' % cdp)
 
     Flow('nmo%d.rsf nmo%d_hdr.rsf'%(cdp,cdp), 
          'cdp%d.rsf cdp%d_hdr.rsf'%(cdp,cdp),

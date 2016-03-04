@@ -1,5 +1,7 @@
 from rsf.proj import *
 
+#SConscript('../firstlook/SConstruct')
+
 Flow('ntg',['../fetch/seismic.rsf','../fetch/seismic_hdr.rsf'],
      '''
      sftahsort input=${SOURCES[0]} sort='cdp -offset' \

@@ -98,7 +98,7 @@ Flow('parapspi.su', ['parastack.su','vtransp.bin'], sumigpspi + ' vfile=${SOURCE
 
 # Jie's filtered version
 Flow('parapspif.su', ['parastackf.su','vtransp.bin'], sumigpspi + ' vfile=${SOURCES[1]} nz=401 dz=10 dx=12.5 tmpdir=/var/tmp | ' + sugain + ' agc=1')
-Flow('parapspif','parapspif.su','suread suxdr=y  read=data | put d1=10 label1="Depth (m)" d2=12.5 o2=14100 label2="Midpoint (m)" unit1=m unit2=m | window max1=3000')
+Flow('parapspif','parapspif.su','suread suxdr=y endian=0  read=data | put d1=10 label1="Depth (m)" d2=12.5 o2=14100 label2="Midpoint (m)" unit1=m unit2=m | window max1=3000')
 
 # create RSF files for grid data
 for file in ['paravrmst', 'paravintt']:
@@ -125,43 +125,43 @@ for file in ['paravintz']:
       stdin=0, stdout=-1)
 
 # plot analysis CDPs
-Result('cdp200','cdp200.su', 'suread suxdr=y  read=data | put label1=Time label2=Trace unit1=s | grey min1=1 xinch=5 yinch=7')
-Result('cdp700','cdp700.su', 'suread suxdr=y  read=data | put label1=Time label2=Trace unit1=s | grey min1=1 xinch=5 yinch=7')
-Result('cdp1300','cdp1300.su', 'suread suxdr=y  read=data | put label1=Time label2=Trace unit1=s | grey min1=1 xinch=5 yinch=7')
-Result('cdp2000','cdp2000.su', 'suread suxdr=y  read=data | put label1=Time label2=Trace unit1=s | grey min1=1 xinch=5 yinch=7')
+Result('cdp200','cdp200.su', 'suread suxdr=y endian=0 read=data | put label1=Time label2=Trace unit1=s | grey min1=1 xinch=5 yinch=7 title="CDP 200" ')
+Result('cdp700','cdp700.su', 'suread suxdr=y endian=0 read=data | put label1=Time label2=Trace unit1=s | grey min1=1 xinch=5 yinch=7 title="CDP 700"')
+Result('cdp1300','cdp1300.su', 'suread suxdr=y endian=0 read=data | put label1=Time label2=Trace unit1=s | grey min1=1 xinch=5 yinch=7 title="CDP 1300"')
+Result('cdp2000','cdp2000.su', 'suread suxdr=y endian=0 read=data | put label1=Time label2=Trace unit1=s | grey min1=1 xinch=5 yinch=7 title="CDP 2000" ')
 
 # plot velan panels
-Result('velan200','velan200.su', 'suread suxdr=y  read=data | put label1=Time label2=VRMS unit1=s o2=1500 d2=50 | grey color=j min1=1 max2=3000 xinch=5 yinch=7')
-Result('velan700','velan700.su', 'suread suxdr=y  read=data | put label1=Time label2=VRMS unit1=s o2=1500 d2=50 | grey color=j min1=1 max2=3000 xinch=5 yinch=7')
-Result('velan1300','velan1300.su', 'suread suxdr=y  read=data | put label1=Time label2=VRMS unit1=s o2=1500 d2=50 | grey color=j min1=1 max2=3000 xinch=5 yinch=7')
+Result('velan200','velan200.su', 'suread suxdr=y endian=0 read=data | put label1=Time label2=VRMS unit1=s o2=1500 d2=50 | grey color=j min1=1 max2=3000 xinch=5 yinch=7 allpos=y title="CDP 200" ')
+Result('velan700','velan700.su', 'suread suxdr=y endian=0 read=data | put label1=Time label2=VRMS unit1=s o2=1500 d2=50 | grey color=j min1=1 max2=3000 xinch=5 yinch=7  allpos=y title="CDP 700" ')
+Result('velan1300','velan1300.su', 'suread suxdr=y endian=0 read=data | put label1=Time label2=VRMS unit1=s o2=1500 d2=50 | grey color=j min1=1 max2=3000 xinch=5 yinch=7  allpos=y title="CDP 1300"  ')
 
-Plot('velan1300','velan1300.su', 'suread suxdr=y  read=data | put label1=Time label2=VRMS unit1=s o2=1500 d2=50 | grey color=j min1=1 max2=3000')
+Plot('velan1300','velan1300.su', 'suread suxdr=y endian=0 read=data | put label1=Time label2=VRMS unit1=s o2=1500 d2=50 | grey color=j min1=1 max2=3000  allpos=y title="CDP 1300" ')
 
-Result('velan2000','velan2000.su', 'suread suxdr=y  read=data | put label1=Time label2=VRMS unit1=s o2=1500 d2=50 | grey color=j min1=1 max2=3000 xinch=5 yinch=7')
+Result('velan2000','velan2000.su', 'suread suxdr=y endian=0 read=data | put label1=Time label2=VRMS unit1=s o2=1500 d2=50 | grey color=j min1=1 max2=3000 xinch=5 yinch=7  allpos=y title="CDP 2000" ')
 
 # plot nmo corrected cdps
-Result('nmo200','nmo200.su', 'suread suxdr=y  read=data | put label1=Time label2=Trace unit1=s | grey min1=1 xinch=5 yinch=7 pclip=95')
-Result('nmo700','nmo700.su', 'suread suxdr=y  read=data | put label1=Time label2=Trace unit1=s | grey min1=1 xinch=5 yinch=7 pclip=95')
-Result('nmo1300','nmo1300.su', 'suread suxdr=y  read=data | put label1=Time label2=Trace unit1=s | grey min1=1 xinch=5 yinch=7 pclip=95')
+Result('nmo200','nmo200.su', 'suread suxdr=y endian=0 read=data | put label1=Time label2=Trace unit1=s | grey min1=1 xinch=5 yinch=7 pclip=95 title="CDP 200" ')
+Result('nmo700','nmo700.su', 'suread suxdr=y endian=0 read=data | put label1=Time label2=Trace unit1=s | grey min1=1 xinch=5 yinch=7 pclip=95 title="CDP 700" ')
+Result('nmo1300','nmo1300.su', 'suread suxdr=y endian=0 read=data | put label1=Time label2=Trace unit1=s | grey min1=1 xinch=5 yinch=7 pclip=95 title="CDP 1300" ')
 
-Plot('nmo1300','nmo1300.su', 'suread suxdr=y  read=data | put label1=Time label2=Trace unit1=s | grey min1=1 pclip=95')
-Plot('zoomnmo1300','nmo1300.su', 'suread suxdr=y  read=data | put label1=Time label2=Trace unit1=s | grey max1=1 pclip=95')
+Plot('nmo1300','nmo1300.su', 'suread suxdr=y endian=0 read=data | put label1=Time label2=Trace unit1=s | grey min1=1 pclip=95 title="CDP 1300" ')
+Plot('zoomnmo1300','nmo1300.su', 'suread suxdr=y endian=0 read=data | put label1=Time label2=Trace unit1=s | grey max1=1 pclip=95 title="CDP 1300" ')
 
-Result('nmo2000lo','nmo2000lo.su', 'suread suxdr=y  read=data | put label1=Time label2=Trace unit1=s | grey min1=1 xinch=5 yinch=7 pclip=95')
-Result('nmo2000','nmo2000.su', 'suread suxdr=y  read=data | put label1=Time label2=Trace unit1=s | grey min1=1 xinch=5 yinch=7 pclip=95')
+Result('nmo2000lo','nmo2000lo.su', 'suread suxdr=y endian=0 read=data | put label1=Time label2=Trace unit1=s | grey min1=1 xinch=5 yinch=7 pclip=95 title="CDP 2000"')
+Result('nmo2000','nmo2000.su', 'suread suxdr=y endian=0 read=data | put label1=Time label2=Trace unit1=s | grey min1=1 xinch=5 yinch=7 pclip=95 title="CDP 2000" ')
 
 #plot stacks, pre- and post-migration - best with agc
-Result('parastack','parastack.su','suread suxdr=y  read=data | put label1="Time" label2="Midpoint" o2=1617.5 d2=12.5 unit1=s unit2=m | grey clip=1.e+7 xinch=10 yinch=5')
-Result('parastackagc','parastackagc.su','suread suxdr=y  read=data | put label1=Time label2=Midpoint o2=1617.5 d2=12.5 unit1=s unit2=m | grey xinch=10 yinch=5')
-Result('parastackagcf','parastackagcf.su', 'suread suxdr=y  read=data | put label1=Time label2=Midpoint o2=1617.5 d2=12.5 unit1=s unit2=m | grey xinch=10 yinch=5')
-Plot('parastackagcf','parastackagcf.su', 'suread suxdr=y  read=data | put label1=Time label2=Midpoint o2=1617.5 d2=12.5 unit1=s unit2=m | grey title="su filter stack"')
-Result('paragazmig','paragazmig.su','suread suxdr=y  read=data | put label1=Time label2=Midpoint unit1=s unit2=m o2=1617.5 d2=12.5 | grey xinch=10 yinch=5')
-Result('parapspi', 'parapspi.su','suread suxdr=y  read=data | put d1=10 label1="Depth" d2=12.5 o2=1617.5 label2="Midpoint" unit1=m unit2=m | grey xinch=10 yinch=5')
-Result('parapspif', 'parapspif.su','suread suxdr=y  read=data | put d1=10 label1="Depth" d2=12.5 o2=1617.5 label2="Midpoint" unit1=m unit2=m | grey xinch=10 yinch=5')
-Result('parapspiwind', 'parapspi.su','suread suxdr=y  read=data | put d1=10 label1="Depth" d2=12.5 o2=1617.5 label2="Midpoint" unit1=m unit2=m | window max1=3000 min2=14000 max2=18000 | grey xinch=5 yinch=5')
-Result('parapspiwindf', 'parapspif.su','suread suxdr=y  read=data | put d1=10 label1="Depth" d2=12.5 o2=1617.5 label2="Midpoint" unit1=m unit2=m | window max1=3000 min2=14000 max2=18000 | grey xinch=5 yinch=5')
+Result('parastack','parastack.su','suread suxdr=y endian=0  read=data | put label1="Time" label2="Midpoint" o2=1617.5 d2=12.5 unit1=s unit2=m | grey clip=1.e+7 xinch=10 yinch=5 title=Stack')
+Result('parastackagc','parastackagc.su','suread suxdr=y endian=0 read=data | put label1=Time label2=Midpoint o2=1617.5 d2=12.5 unit1=s unit2=m | grey xinch=10 yinch=5 title="AGC Stack" ')
+Result('parastackagcf','parastackagcf.su', 'suread suxdr=y endian=0 read=data | put label1=Time label2=Midpoint o2=1617.5 d2=12.5 unit1=s unit2=m | grey xinch=10 yinch=5 title="AGC Stack" ')
+Plot('parastackagcf','parastackagcf.su', 'suread suxdr=y endian=0 read=data | put label1=Time label2=Midpoint o2=1617.5 d2=12.5 unit1=s unit2=m | grey title="su filter stack" ')
+Result('paragazmig','paragazmig.su','suread suxdr=y endian=0 read=data | put label1=Time label2=Midpoint unit1=s unit2=m o2=1617.5 d2=12.5 | grey xinch=10 yinch=5 title="Gazdag Migration" ')
+Result('parapspi', 'parapspi.su','suread suxdr=y endian=0 read=data | put d1=10 label1="Depth" d2=12.5 o2=1617.5 label2="Midpoint" unit1=m unit2=m | grey xinch=10 yinch=5 title="PSPI Migration" ')
+Result('parapspif', 'parapspif.su','suread suxdr=y endian=0 read=data | put d1=10 label1="Depth" d2=12.5 o2=1617.5 label2="Midpoint" unit1=m unit2=m | grey xinch=10 yinch=5 title="PSPI Migration" ')
+Result('parapspiwind', 'parapspi.su','suread suxdr=y endian=0 read=data | put d1=10 label1="Depth" d2=12.5 o2=1617.5 label2="Midpoint" unit1=m unit2=m | window max1=3000 min2=14000 max2=18000 | grey xinch=5 yinch=5 title="PSPI Migration" ')
+Result('parapspiwindf', 'parapspif.su','suread suxdr=y endian=0 read=data | put d1=10 label1="Depth" d2=12.5 o2=1617.5 label2="Midpoint" unit1=m unit2=m | window max1=3000 min2=14000 max2=18000 | grey xinch=5 yinch=5 title="PSPI Migration" ')
 
-Result('paravintz','put d1=10 label1="Depth" unit1=m d2=12.5 label2="Midpoint" unit2=m | grey xinch=10 yinch=5 color=j scalebar=y barreverse=y')
-Result('paravintt','put d1=0.004 label1="Time" unit1=s d2=12.5 label2="Midpoint" unit2=m | grey xinch=10 yinch=5 color=j scalebar=y barreverse=y')
+Result('paravintz','put d1=10 label1="Depth" unit1=m d2=12.5 label2="Midpoint" unit2=m | grey xinch=10 yinch=5 color=j scalebar=y barreverse=y titlr="Interval Velocity" mean=y')
+Result('paravintt','put d1=0.004 label1="Time" unit1=s d2=12.5 label2="Midpoint" unit2=m | grey xinch=10 yinch=5 color=j scalebar=y barreverse=y title="Interval Velocity" mean=y')
 
 End()

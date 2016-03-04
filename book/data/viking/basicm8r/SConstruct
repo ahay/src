@@ -97,19 +97,19 @@ Flow('nmo2000lo.rsf nmo2000lo_hdr.rsf', 'cdp2000.rsf cdp2000_hdr.rsf',
 
 # plot analysis CDPs without nmo
 for cdp in [200,700,1300,2000]:
-    Result('cdp%d'%cdp  , 'sfgrey min1=1 xinch=5 yinch=7')
+    Result('cdp%d'%cdp  , 'sfgrey min1=1 xinch=5 yinch=7 title="CDP %d" ' % cdp)
 
 
 # plot velan panels
 # kls maybe run sfipick
 for cdp in [200,700,1300,2000]:
-    Result('velan%d'%cdp, 'sfgrey color=j min1=1 max2=3000 xinch=5 yinch=7')
-    Plot('velan%d'%cdp, 'sfgrey color=j min1=1 max2=3000')
+    Result('velan%d'%cdp, 'sfgrey color=j min1=1 max2=3000 xinch=5 yinch=7 allpos=y title="CDP %d" ' % cdp)
+    Plot('velan%d'%cdp, 'sfgrey color=j min1=1 max2=3000 allpos=y title="CDP %d" ' % cdp)
 
 # plot nmo corrected cdps
 for cdp in [200,700,1300,2000]:
-    Result('nmo%d'%cdp  , 'sfgrey min1=1 xinch=5 yinch=7 pclip=95')
-    Plot('nmo%d'%cdp  , 'sfgrey min1=1 pclip=95')
+    Result('nmo%d'%cdp  , 'sfgrey min1=1 xinch=5 yinch=7 pclip=95 title="CDP %d" ' % cdp)
+    Plot('nmo%d'%cdp  , 'sfgrey min1=1 pclip=95 title="CDP %d" ' % cdp)
 Result('zoomnmo1300','nmo1300', 
            'sfgrey max1=1 xinch=5 yinch=7 title="cdp 1300 with nmo"')
 Plot('zoomnmo1300','nmo1300', 
