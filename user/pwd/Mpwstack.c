@@ -68,6 +68,11 @@ int main (int argc, char *argv[])
 	    }
 	}
 
+	/* normalize */
+	for (i1=0; i1 < n1; i1++) {
+	    trace[i1] /= n2;
+	}
+
 	sf_floatwrite(trace,n1,out);
     }
     if (verb) sf_warning(".");
