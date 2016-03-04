@@ -3,18 +3,22 @@ from rsf.proj import *
 # files can be retrived whth something like :
 # wget http://s3.amazonaws.com/open.source.geoscience/open_data/Mobil_Avo_Viking_Graben_Line_12/seismic.segy
 
-acroread='open'
-
 # fetch the text and jpg files
 for filename in ['Mobil_migration_well_logs.pdf','Farfield.jpg','FarField.txt']:
     Fetch(filename,dir='Mobil_Avo_Viking_Graben_Line_12',
       server='https://s3.amazonaws.com',top='open.source.geoscience/open_data',
       usedatapath=1)
 
+pdfread = WhereIs('acroread') or WhereIs('kpdf') or WhereIs('evince') or \
+    WhereIs('xpdf') or WhereIs('gv') or WhereIs('open')
+
 Flow('Mobil_migration_well_logs.display','Mobil_migration_well_logs.pdf',
-	'open ${SOURCES[0]}',stdin=0,stdout=-1)
+     pdfread + ' ${SOURCES[0]}',stdin=0,stdout=-1)
+
+jpgread = WhereIs('oodraw') or WhereIs('open')
+
 Flow('Farfield.display','Farfield.jpg',
-        'open ${SOURCES[0]}',stdin=0,stdout=-1)
+     jpgread + ' ${SOURCES[0]}',stdin=0,stdout=-1)
 
 Flow('Farfield1.display','FarField.txt','/bin/cat ${SOURCES[0]}',
      stdin=0,stdout=-1)
@@ -36,12 +40,12 @@ Flow([filename+'.rsf' ,filename+'_hdr.rsf',
       	hfile=${TARGETS[2]}  bfile=${TARGETS[3]} 
      ''')
 
-Result('shots',filename,
+Plot('shots',filename,
 	'''
 	sfput n2=120 n3=1001 
 	| sfwindow j3=50 
 	| sfgrey title=%s
-	'''%filename)
+	'''%filename,view=1)
 Plot('shot1',filename,
 	'''
 	sfput n2=120 n3=1001 
