@@ -1,0 +1,116 @@
+from rsf.proj import *
+
+Flow('ntg',['../fetch/seismic.rsf','../fetch/seismic_hdr.rsf'],
+     '''
+     sftahsort input=${SOURCES[0]} sort='cdp -offset' \
+     | sftahpef                                       
+        verbose=1 minlag=.004 maxlag=.2  pnoise=.01 mincorr=0 maxcorr=3    
+     | sftahwindow ns=751 \
+     | sftahgain tpow=2 \
+     | sftahnmo \
+         tnmo=0.0,1.25,1.4,1.8,2.0,2.5,3.0 \
+	 vnmo=1500,1750,1900,2050,2200,2450,2700 \
+     | sftahmakeskey pkey=cdp skey=cdpt 
+     | sftahwrite 
+       output=${TARGETS[0]} 
+       label2=cdp o2=1 n2=2142 d2=1
+       label3=cdpt o3=1 n3=1 d3=1
+     ''',stdout=0,stdin=0)
+
+Result('ntg',
+	'''
+	sfgrey title='ntg with decon'
+	''')
+Plot('ntg',
+	'''
+	sfgrey title='ntg with decon'
+	''')
+Result('ntgcomp','../firstlook/Fig/ntg.vpl ntg.vpl',
+       'SideBySideAniso') 
+
+for cdp in [200,700,1300,2000]:
+    # extract CDPs for VA
+    cdpfile='cdp%d'%cdp
+    Flow([cdpfile+".rsf",cdpfile+"_hdr.rsf"],'../fetch/seismic.rsf',
+         '''
+	 sftahsort sort="cdp:%d,%d,1 -offset" input=$SOURCE \
+         | sftahpef                                       
+            verbose=1 minlag=.004 maxlag=.2  pnoise=.01 mincorr=0 maxcorr=3    
+         | sftahwindow ns=751 \
+	 | sftahwrite verbose=1 output=$TARGET mode=seq
+	 '''%(cdp,cdp),stdin=0,stdout=0)
+    Result('cdp%d'%cdp  , 
+           '''
+	   sfpow pow1=2 
+	   | sfgrey min1=.5 xinch=5 yinch=7 title="cdp %d w decon"
+	   '''%cdp)
+    Flow('nmo%d.rsf nmo%d_hdr.rsf'%(cdp,cdp), 
+         'cdp%d.rsf cdp%d_hdr.rsf'%(cdp,cdp),
+         '''
+         sftahread input=${SOURCES[0]} \
+         | sftahnmo \
+            tnmo=0.0,.5,1.0,1.25,1.7,2.1,2.4,2.75 \
+	    vnmo=1450,1450,1800,1900,2000,2200,2400,2600 \
+         | sftahwrite output=$TARGET mode=seq
+         ''',stdin=0,stdout=0)
+    Result('nmo%d'%cdp  , 
+           'sfgrey min1=1 title="cdp %d w nmo & decon"'%cdp)
+
+Plot('zoomnmo1300','nmo1300', 
+           'sfgrey max1=1 title="cdp 1300 w nmo & decon"')
+
+Result('nmocomp','../firstlook/Fig/zoomnmo1300.vpl zoomnmo1300.vpl',
+       'SideBySideAniso') 
+
+Result('zoomnmo1300','nmo1300', 
+           'sfgrey max1=1 xinch=5 yinch=7 title="cdp 1300 w nmo & decon"')
+Result('zoomcdp1300','cdp1300', 
+           'sfgrey max1=1 xinch=5 yinch=7 title="cdp 1300 w decon"')
+
+
+Flow('rawstack',['../fetch/seismic.rsf','../fetch/seismic_hdr.rsf'],
+     '''
+     sftahsort input=${SOURCES[0]} sort="cdp -offset" \
+     | sftahpef                                       
+        verbose=1 minlag=.004 maxlag=.2  pnoise=.01 mincorr=0 maxcorr=3    
+     | sftahgain tpow=2 \
+     | sftahwindow ns=751 \
+     | sftahnmo \
+            tnmo=0.0,.5,1.0,1.25,1.7,2.1,2.4,2.75 \
+	    vnmo=1450,1450,1800,1900,2000,2200,2400,2600 \
+     | sftahstack key=cdp xmute=0,10000 tmute=0,10 ntaper=25 \
+     | sftahwrite output=$TARGET \
+       label2=cdp o2=1 n2=2142 d2=1 
+     ''',stdin=0,stdout=0)
+
+Result('rawstack','rawstack',
+       'sfgrey title=decon stack')
+Plot('rawstack',
+	'''
+	sfgrey title='stack with decon'
+	''')
+Result('stackcomp','../firstlook/Fig/rawstack.vpl rawstack.vpl',
+       'SideBySideAniso') 
+Flow('agcstack',['../fetch/seismic.rsf','../fetch/seismic_hdr.rsf'],
+     '''
+     sftahsort input=${SOURCES[0]} sort="cdp -offset" \
+     | sftahpef                                       
+        verbose=1 minlag=.004 maxlag=.2  pnoise=.01 mincorr=0 maxcorr=3    
+     | sftahgain tpow=2 \
+     | sftahwindow ns=751 \
+     | sftahnmo \
+            tnmo=0.0,.5,1.0,1.25,1.7,2.1,2.4,2.75 \
+	    vnmo=1450,1450,1800,1900,2000,2200,2400,2600 \
+     | sftahstack key=cdp xmute=0,10000 tmute=0,10 ntaper=25 \
+     | sftahagc wagc=.5 \
+     | sftahwrite output=$TARGET \
+       label2=cdp o2=1 n2=2142 d2=1 
+     ''',stdin=0,stdout=0)
+
+Result('agcstack','agcstack',
+       'sfgrey title="decon stack agc"')
+Plot('agcstack',
+	'''
+	sfgrey title='decon stack agc'
+	''')
+End()
