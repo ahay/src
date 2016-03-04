@@ -15,15 +15,18 @@ geo384w
 geo391
 hansung
 icp
+jlu
 milano
 rsf
 sep
 slim
 swag
 tccs
+tongji
 trip
 tutorial
 uwa
+xjtu
 '''
 
 nonreproducible = '''
@@ -31,6 +34,7 @@ geo391/hw2/sorting
 rsf/bash/plot
 rsf/rsf/plplot
 rsf/programming/cube
+rsf/school2012/plot
 rsf/school2015/matlab
 rsf/tutorials/colormaps
 slim/geo2008NewInsightsPareto/geop
