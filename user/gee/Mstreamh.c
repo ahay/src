@@ -25,8 +25,8 @@
 int main(int argc, char* argv[])
 {
     bool inv, adj, linear;
-    int n1, na, i1, ia, i, maxlag;
-    int dim, n[SF_MAX_DIM], n0[SF_MAX_DIM], center[SF_MAX_DIM], a[SF_MAX_DIM], gap[SF_MAX_DIM];
+    int n1, na, i1, ia, i, maxlag, jump, dim, lag0, ii[SF_MAX_DIM];
+    int n[SF_MAX_DIM], n0[SF_MAX_DIM], center[SF_MAX_DIM], a[SF_MAX_DIM], gap[SF_MAX_DIM];
     float dd, da, dn, rn, eps;
     float *d, *r, *d2=NULL, *r2=NULL;
     sf_filter aa;
@@ -41,6 +41,9 @@ int main(int argc, char* argv[])
 
     if (!sf_getbool("adj",&adj)) adj=false;
     /* adjoint flag (for linear operator) */
+
+    if (!sf_getint("jump",&jump)) jump=1;
+    /* jump > 1 is used for trace interpolation */
 
     if (SF_FLOAT != sf_gettype(inp)) sf_error("Need float input");
 
@@ -78,16 +81,29 @@ int main(int argc, char* argv[])
 		gap[i] = 0;
 	    }
 	    aa = createhelix(dim, n0, center, gap, a); /* allocate PEF */
-	    print(dim, n0, center, a, aa);             /* print filter */
 	    na = aa->nh;
+
+	    lag0 = sf_cart2line(dim, a, center);
+	    if (jump > 1) {
+		for (ia=0; ia < na; ia++) {	/* sweep through the filter */
+		    sf_line2cart(dim, a, ia+lag0+1, ii);
+		    for (i=0; i < dim; i++) {
+			ii[i] -= center[i];
+		    }
+		    ii[0] *= jump;  /* interlace on 1-axis */
+		    aa->lag[ia] = sf_cart2line(dim, n0, ii);
+		}
+	    }
 	} else {	  
 	    aa =  sf_allocatehelix (na);
 	    if (!sf_getints ("lags", aa->lag, na)) sf_error("Need lags=");	    	    
 	}
     }
-	
+
+    a[0] *= jump;
     bound (dim, n0, n, a, aa); 
-	
+    a[0] /= jump;
+    
     maxlag = 0;
     for (ia=0; ia < na; ia++) {
 	if (aa->lag[ia] > maxlag) maxlag=aa->lag[ia];
