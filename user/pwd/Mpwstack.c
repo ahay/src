@@ -23,8 +23,8 @@
 int main (int argc, char *argv[])
 {
     bool verb;
-    int n1,n2,n3, i1,i2,i3, order;
-    float eps, **u, **p, *trace;
+    int n1,n2,n3, i1,i2,i3,order,mode;
+    float eps, **u, **p, *trace, *trace1, *trace2;
     sf_file inp, out, dip;
 
     sf_init(argc,argv);
@@ -45,11 +45,16 @@ int main (int argc, char *argv[])
     if (!sf_getint("order",&order)) order=1;
     /* accuracy order */
 
+    if (!sf_getint("mode",&mode)) mode=1;
+    /* 1: predict backward, 2: predict forward then backward */
+
     predict_init (n1, n2, eps*eps, order, 1, false);
 
     u = sf_floatalloc2(n1,n2);
     p = sf_floatalloc2(n1,n2);
     trace = sf_floatalloc(n1);
+    trace1 = sf_floatalloc(n1);
+    trace2 = sf_floatalloc(n1);
 
     for (i3=0; i3 < n3; i3++) {
 	if (verb) sf_warning("cmp %d of %d;",i3+1,n3);
@@ -57,22 +62,47 @@ int main (int argc, char *argv[])
 	sf_floatread(u[0],n1*n2,inp);
 	sf_floatread(p[0],n1*n2,dip);
 
-	/* load the last trace */
-	for (i1=0; i1 < n1; i1++) {
-	    trace[i1] = u[n2-1][i1];
+	if (mode == 2) { 
+		/* Predict forward and backward */
+		for (i2=n2-2; i2 >= 0; i2--) {
+			for (i1=0; i1 < n1; i1++) {
+				trace1[i1] = u[i2][i1];     
+			}
+	    		predict_step(false,true,trace1,p[i2]);
+			for (i1=0; i1 < n1; i1++) {
+				u[i2+1][i1] -= trace1[i1];     
+				/* d = o - P[e] */
+			} 
+			for (i1=0; i1 < n1; i1++) {
+				trace2[i1] = u[i2+1][i1];     
+			}
+	    		predict_step(false,false,trace2,p[i2]);
+	    		for (i1=0; i1 < n1; i1++) {
+				u[i2][i1] += trace2[i1]/2;
+				/* s = e + U[d] */
+	    		}
+		} 
+		for (i1=0; i1 < n1; i1++) {
+			trace[i1] = u[0][i1];     
+		}
 	}
-	for (i2=n2-2; i2 >= 0; i2--) {
-	    predict_step(false,false,trace,p[i2]);
-	    for (i1=0; i1 < n1; i1++) {
-		trace[i1] += u[i2][i1];
-	    }
+	else if (mode == 1) {
+		/* load the last trace */
+		for (i1=0; i1 < n1; i1++) {
+	   	 	trace[i1] = u[n2-1][i1];
+		} 
+		/* Predict backward */
+		for (i2=n2-2; i2 >= 0; i2--) {
+	    		predict_step(false,false,trace,p[i2]);
+	    		for (i1=0; i1 < n1; i1++) {
+				trace[i1] += u[i2][i1];
+	    		}
+		}
+		/* normalize */
+		for (i1=0; i1 < n1; i1++) {
+	    		trace[i1] /= n2;
+		}
 	}
-
-	/* normalize */
-	for (i1=0; i1 < n1; i1++) {
-	    trace[i1] /= n2;
-	}
-
 	sf_floatwrite(trace,n1,out);
     }
     if (verb) sf_warning(".");
