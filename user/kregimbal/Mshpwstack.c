@@ -18,8 +18,9 @@
 */
 
 #include <rsf.h>
-#include "predict.h"
-#include "inmo.h"
+#include <rsfpwd.h>
+
+#include "pwinmo.h"
 #include "bandpass.h"
 
 int main (int argc, char *argv[])

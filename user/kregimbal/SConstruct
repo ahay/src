@@ -2,7 +2,7 @@ import os, sys, re, string
 sys.path.append('../../framework')
 import bldutil
 
-progs = 'shpwstack'
+progs = 'shpwstack shstack'
 
 try:  # distributed version
     Import('env root pkgdir bindir libdir incdir')
@@ -10,13 +10,14 @@ try:  # distributed version
 except: # local version
     env = bldutil.Debug()
     root = None
-    SConscript('../lexing/SConstruct')
+    SConscript('../pwd/SConstruct')
 
 src = Glob('[a-z]*.c')
 
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
-            LIBS=[env.get('DYNLIB','')+'rsf'])
+            LIBS=[env.get('DYNLIB','')+'rsfpwd',
+                  env.get('DYNLIB','')+'rsf'])
 
 for source in src:
     inc = env.RSF_Include(source,prefix='')
