@@ -33,14 +33,14 @@ int main (int argc, char *argv[])
     bool half, slow, verb, nmo;
     int ih,ix,it,nt,nx,nd,nh, CDPtype, jump, niter, restart, nplo, nphi, ni, axis, lim, j, mode, order;
     off_t n;
-    float dt, t0, h0, dh, eps1, eps, dy, tol, flo, fhi;
-    float *trace, *trace2, *vel, *off, **gather, **dense, **p;
+    float dt, t0, h0, dh, eps1, eps, dy, tol, flo, fhi, velocity;
+    float *trace, *trace2, *off, **gather, **dense, **dense2, **p;
     char key1[7];
-    sf_file cmp, stack, velocity, offset, dip;
+    sf_file cmp, stack, offset, dip;
 
     sf_init (argc,argv);
     cmp = sf_input("in");
-    velocity = sf_input("velocity");
+    //velocity = sf_input("velocity");
     stack = sf_output("out");
     dip = sf_input("dip");
 
@@ -101,6 +101,9 @@ int main (int argc, char *argv[])
     if (!sf_getfloat("eps",&eps)) eps=0.01;
     /* regularization */
      
+    if (!sf_getfloat("velocity",&velocity)) velocity=0.0f;
+    /* constant velocity */ 
+
     if (!sf_getbool("nmo",&nmo)) nmo=false;
     /* if y, apply constant velocity NMO */
 
@@ -171,37 +174,40 @@ int main (int argc, char *argv[])
     trace2 = sf_floatalloc(nd);
     gather = sf_floatalloc2(nt,nh);
     dense = sf_floatalloc2(nd,nh);
+    dense2 = sf_floatalloc2(nd,nh);
     p = sf_floatalloc2(nd,nh);
 
-    vel = sf_floatalloc(nd);
+    //vel = sf_floatalloc(nd);
 
     predict_init (nd, nh, eps*eps, order, 1, false);
 
     for (ix=0; ix < nx; ix++) {
 	if (verb) sf_warning("cmp %d of %d;",ix+1,nx);
 
-	sf_floatread (vel,nd,velocity);	
+	//sf_floatread (vel,nd,velocity);	
 	sf_floatread(p[0],nd*nh,dip);
 
-	inmo_init(vel, off, nh, 
+	inmo_init(velocity, off, nh, 
 		  h0, dh, CDPtype, ix,
 		  nt, slow,
-		  t0, dt, eps1, half,
+		  t0, dt, half, eps1, eps, order,
 		  jump, mode, nmo);
 
-	sf_floatread (gather[0],nt*nh,cmp);
+        seislet_set(p);
+	
+        sf_floatread (gather[0],nt*nh,cmp);
 	if (nmo == false) {
 		/* apply backward operator */
 		interpolate(gather, dense);
-		pwstack(dense,trace);
+		pwstack(dense,trace,mode);
 		/* apply shaping */
 		bandpass(trace);
 	}
 	else {
 		/* apply backward operator */
 		interpolate(gather, dense);
-		cnmo(dense,dense);
-		pwstack(dense,trace);
+		cnmo(dense,dense2);
+		pwstack(dense2,trace,mode);
 		/* apply shaping */
 		bandpass(trace);
 	}

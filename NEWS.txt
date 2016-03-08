@@ -58,6 +58,8 @@ To programs:
 * splitting auxiliary inputs in sfomp and sfmpi
 * set delrt in trace headers in sfsegywrite
 * header= parameter in sfcsv2rsf
+* user/kregimbal: New contributor (Kelly Regimbal)
+* user/dmerzlikin: New contributor (Dmitrii Merzlikin)
 
 ===Bug fixes===
 

@@ -83,8 +83,8 @@ int main(int argc, char* argv[])
 	    aa = createhelix(dim, n0, center, gap, a); /* allocate PEF */
 	    na = aa->nh;
 
-	    lag0 = sf_cart2line(dim, a, center);
 	    if (jump > 1) {
+		lag0 = sf_cart2line(dim, a, center);
 		for (ia=0; ia < na; ia++) {	/* sweep through the filter */
 		    sf_line2cart(dim, a, ia+lag0+1, ii);
 		    for (i=0; i < dim; i++) {

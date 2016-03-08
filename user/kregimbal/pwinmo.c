@@ -21,26 +21,30 @@
 
 #include <rsf.h>
 #include <rsfpwd.h>
+#include "bandpass.h"
 
 static int nh, nt, ns, jump, mode;
-static float *stretch, **dense2, **sparse2, **dip; 
+static float *stretch, **dense2, **sparse2, **dense3, **d; 
 static sf_map4* nmo;
 static sf_bands spl;
 static bool nmod;
 
-void inmo_init(const float* vel /* velocity */,
+void inmo_init(const float velocity /* velocity */,
 	       const float* off /* offset */,
 	       int nh1 /* number of offsets */,
 	       float h0, float dh, int CDPtype, int ix,
 	       int nt1 /* time samples */, bool slow,
-	       float t0, float dt, float eps, bool half,
+	       float t0, float dt, bool half, 
+               float eps /* stretch */, 
+	       float eps1 /* regularization */, 
+	       int order   /* accuracy order */, 
 	       int jump1 /* subsampling */, 
 	       int mode1 /* mode of pwstack */, 
 	       bool nmo1 /* constant vel nmo */)
 /*< initialization >*/
 {
     int it, ih, mode;
-    float f, h, *coord;
+    float f, h, *coord, *vel;
     const int nw=4;
 
     nh = nh1;
@@ -50,6 +54,11 @@ void inmo_init(const float* vel /* velocity */,
     dt = dt/jump;
     mode = mode1;
     nmod = nmo1;
+   
+    vel = sf_floatalloc(nt);
+    for (it=0; it < nt; it++) {
+	vel[it] = velocity;
+    }    
 
     nmo = (sf_map4*) sf_alloc(nh,sizeof(sf_map4));
     stretch = sf_floatalloc(nt);
@@ -86,10 +95,20 @@ void inmo_init(const float* vel /* velocity */,
     spl = sf_spline_init(nw,ns);
     sf_int1_init (coord, 0.0, jump, ns, sf_spline_int, nw, nt, 0.0);
     free(coord);
+    free(vel);
+    
+    predict_init (nt, nh, eps1*eps1, order, 1, false);
     
     dense2  = sf_floatalloc2(nt,nh);
-    dip  = sf_floatalloc2(nt,nh);
+    dense3  = sf_floatalloc2(nt,nh);
+    //dip  = sf_floatalloc2(nt,nh);
     sparse2 = sf_floatalloc2(ns,nh);
+}
+
+void seislet_set(float **dip /* local slope */)
+/*< set local slope >*/
+{
+    d = dip;
 }
 
 void inmo_close(void)
@@ -106,12 +125,14 @@ void inmo_close(void)
     sf_int1_close();
     sf_banded_close(spl);
 
+    predict_close();
+
     free(*dense2);
     free(dense2);
+    free(*dense3);
+    free(dense3);
     free(*sparse2);
     free(sparse2);
-    free(*dip);
-    free(dip);
 }
 
 void inmo(const float *trace   /* input trace [nt] */,
@@ -125,30 +146,49 @@ void inmo(const float *trace   /* input trace [nt] */,
     }
 }
 
-void pwpaint(float *trace   /* input trace [nt] */,
+void inmo2(float **ngath   /* input trace [nt][nh] */,
+	  float **gather /* output CMP gather [nt][nh] */)
+/*< apply inverse nmo >*/
+{
+    int ih, it;
+    for (ih = 0; ih < nh; ih++) {
+        for (it=0; it < nt; it++) {
+	    gather[ih][it] = 0.0f;
+        }
+    }
+    for (ih = 0; ih < nh; ih++) {
+	sf_stretch4_apply (false,nmo[ih],ngath[ih],gather[ih]);
+    }
+}
+
+void pwpaint(const float *trace   /* input trace [nt] */,
 	  float **gather /* output CMP gather [nt][nh] */)
 /*< apply predictive painting >*/
 {
     int ih, it;
+    float *trace1;
+    trace1 = sf_floatalloc(nt);
 
     for (it=0; it < nt; it++) {
 	    gather[0][it] = trace[it];
-	}
+	    trace1[it] = trace[it];
+    }
 	for (ih=-1; ih >= 0; ih--) {
-	    predict_step(false,false,trace,dip[ih]);
+	    predict_step(false,false,trace1,d[ih]);
 	    for (it=0; it < nt; it++) {
-		gather[ih][it] = trace[it];
+		gather[ih][it] = trace1[it];
 	    }
 	}
 	for (it=0; it < nt; it++) {
-	    trace[it] = gather[0][it];
+	    trace1[it] = gather[0][it];
 	}
 	for (ih=1; ih < nh; ih++) {
-	    predict_step(false,true,trace,dip[ih-1]);
+	    predict_step(false,true,trace1,d[ih-1]);
 	    for (it=0; it < nt; it++) {
-		gather[ih][it] = trace[it];
+		gather[ih][it] = trace1[it];
 	    }
 	}
+      free(trace1);
 }
 
 void nmostack(float **gather /* input CMP gather */,
@@ -179,7 +219,11 @@ void cnmo(float **gather /* input CMP gather */,
 /*< apply NMO and stack >*/
 {
     int ih, it;
-
+    for (ih = 0; ih < nh; ih++) {
+        for (it=0; it < nt; it++) {
+	    ngath[ih][it] = 0.0f;
+        }
+    }
     for (ih = 0; ih < nh; ih++) {
 	sf_stretch4_invert (false,nmo[ih],stretch,gather[ih]);	
 	for (it=0; it < nt; it++) {
@@ -190,25 +234,26 @@ void cnmo(float **gather /* input CMP gather */,
 }
 
 void pwstack(float **gather /* input CMP gather */,
-	      float *trace /* output trace */)
+	      float *trace /* output trace */,
+	     int mode1)
 /*< apply pwstack >*/
 {
     int ih, it;
-    float *trace1, *trace2;
+    float *t1, *t2;
+    t1 = sf_floatalloc(nt);
+    t2 = sf_floatalloc(nt);
     
     for (it=0; it < nt; it++) {
 	trace[it] = 0.0f;
-	trace1[it] = 0.0f;
-	trace2[it] = 0.0f;
     }
-    if (mode == 1) {
+    if (mode1 == 1) {
     	/* load the last trace */
     	for (it=0; it < nt; it++) {
 		trace[it] = gather[nh-1][it];
    	} 
     	/* Predict backward */
     	for (ih=nh-2; ih >= 0; ih--) {
-		predict_step(false,false,trace,dip[ih]);
+		predict_step(false,false,trace,d[ih]);
 		for (it=0; it < nt; it++) {
 	    	trace[it] += gather[ih][it];
 		}
@@ -218,22 +263,22 @@ void pwstack(float **gather /* input CMP gather */,
 		trace[it] /= nh;
     	}
     }
-    if (mode == 2) {	
+    else {	
 	for (ih=nh-2; ih >= 0; ih--) {
 		for (it=0; it < nt; it++){
-			trace1[it] = gather[ih][it];     
+			t1[it] = gather[ih][it];     
 		}
-		predict_step(false,true,trace1,dip[ih]);
+		predict_step(false,true,t1,d[ih]);
 		for (it=0; it < nt; it++) {
-			gather[ih+1][it] -= trace1[it];     
+			gather[ih+1][it] -= t1[it];     
 			/* d = o - P[e] */
 		} 
 		for (it=0; it < nt; it++) {
-			trace2[it] = gather[ih+1][it];     
+			t2[it] = gather[ih+1][it];     
 		}
-		predict_step(false,false,trace2,dip[ih]);
+		predict_step(false,false,t2,d[ih]);
 		for (it=0; it < nt; it++) {
-			gather[ih][it] += trace2[it]/2;
+			gather[ih][it] += t2[it]/2;
 			/* s = e + U[d] */
 		}
    	} 
@@ -241,6 +286,8 @@ void pwstack(float **gather /* input CMP gather */,
 		trace[it] = gather[0][it];     
     	}
     }
+    free(t1);   
+    free(t2);
 }
 
 void subsample(float **dense, float **sparse) 
@@ -291,18 +338,18 @@ void inmo_oper(int nx, const float *trace, float *trace2, void* user_data)
 }
 	    
 
-void pwstack_oper(int nx, float *trace, float *trace2, void* user_data)
+void pwstack_oper(int nx, const float *trace, float *trace2, void* user_data)
 /*< operator to invert by GMRES >*/
 {
     int it;
     
     if (nmod == false) {
     	/* forward operator */
-    	pwpaint(trace,dense2); //inmo
+    	pwpaint(trace,dense2); 
     	subsample(dense2,sparse2);
     	/* backward operator */
     	interpolate(sparse2,dense2);
-    	pwstack(dense2,trace2); //nmostack
+    	pwstack(dense2,trace2,mode);
 
     	/* I + S (BF - I) */
     	for (it=0; it < nt; it++) {
@@ -315,13 +362,13 @@ void pwstack_oper(int nx, float *trace, float *trace2, void* user_data)
     }
     else {
       	/* forward operator */
-    	pwpaint(trace,dense2); //inmo
-	cnmo(dense2,dense2);
-    	subsample(dense2,sparse2);
+    	pwpaint(trace,dense2); 
+	inmo2(dense2,dense3);
+    	subsample(dense3,sparse2);
     	/* backward operator */
     	interpolate(sparse2,dense2);
-        cnmo(dense2,dense2);
-    	pwstack(dense2,trace2); //nmostack
+        cnmo(dense2,dense3);
+    	pwstack(dense3,trace2,mode); 
 
     	/* I + S (BF - I) */
     	for (it=0; it < nt; it++) {
