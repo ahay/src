@@ -899,6 +899,18 @@ void sf_fileflush (sf_file file, sf_file src)
     if (file->dryrun) exit(0);
 }
 
+void sf_readwrite(sf_file file, bool flag)
+/*< set the readwrite flag >*/
+{
+    file->rw = flag;
+}
+
+void sf_fflush(sf_file file)
+/*< flush file stream >*/
+{
+    if (NULL != file->stream) fflush(file->stream);
+}
+
 void sf_putint (sf_file file, const char* key, int par)
 /*< put an int parameter to a file >*/
 {
