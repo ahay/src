@@ -74,18 +74,22 @@ unsigned char get_update(int i, bool *up1, bool *up2, int *j)
     i2 = *j/n1;
     
     update = 0;
-    
-    a1 = *j-1;
-    b1 = *j+1;
-    *up1 = (bool) (i1 && (i1 == n1-1 || 1 != fermat(&a1,&b1)));
-    c1 = *up1? a1:b1;
-    if (t1 > t0[c1]) update |= 1;
-    
-    a2 = *j-n1;
-    b2 = *j+n1;
-    *up2 = (bool) (i2 && (i2 == n2-1 || 1 != fermat(&a2,&b2)));
-    c2 = *up2? a2:b2;
-    if (t1 > t0[c2]) update |= 2;
 
+    if (n1 > 1) {
+	a1 = *j-1;
+	b1 = *j+1;
+	*up1 = (bool) (i1 && (i1 == n1-1 || 1 != fermat(&a1,&b1)));
+	c1 = *up1? a1:b1;
+	if (t1 > t0[c1]) update |= 1;
+    }
+
+    if (n2 > 1) {
+	a2 = *j-n1;
+	b2 = *j+n1;
+	*up2 = (bool) (i2 && (i2 == n2-1 || 1 != fermat(&a2,&b2)));
+	c2 = *up2? a2:b2;
+	if (t1 > t0[c2]) update |= 2;
+    }
+    
     return update;
 }

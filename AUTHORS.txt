@@ -37,6 +37,7 @@ Yang Liu <yangliu1979@gmail.com>
 Yujin Liu <seisinv@gmail.com>
 Xuxin Ma <xuxin.ma@kaust.edu.sa>
 Douglas McCowan <dwmccowan@windstream.net>
+Dmitrii Merzlikin <dmitrii.merzlikin@utexas.edu>
 Henryk Modzelewski <henryk_modzelewski@mac.com>
 Jorge Monsegny <jmonsegny@hotmail.com>
 Francesco Perrone <perfrancesco@gmail.com>
@@ -51,6 +52,7 @@ Christos Saragiotis <christos.saragiotis@gmail.com>
 Paul Sava <psava@mines.edu>
 Karl Schleicher <k_schleicher@hotmail.com>
 Reza Shahidi <rshahidi@gmail.com>
+Yunzhi Shi <yzshi08@utexas.edu>
 Jeffrey Shragge <jshragge@gmail.com>
 Eduardo Filpo Silva <effsilva@mines.edu>
 Xiaolei Song <songxl1984@gmail.com>
