@@ -53,9 +53,9 @@ static void pick(bool adj, float ti, float deltat,
     } else {
 	trace[it] += 2.*(1-ft)*imp*out[i];
 	trace[it+1] += 2.*ft*imp*out[i];
-	trace[itm] += (1.-ftm)*imp*out[i];
+	trace[itm] -= (1.-ftm)*imp*out[i];
 	trace[itm+1] -= ftm*imp*out[i];
-	trace[itp] += (1.-ftp)*imp*out[i];
+	trace[itp] -= (1.-ftp)*imp*out[i];
 	trace[itp+1] -= ftp*imp*out[i];
     }
 }
@@ -298,4 +298,3 @@ int main(int argc, char* argv[])
 
     exit(0);
 }
-
