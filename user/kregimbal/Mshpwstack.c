@@ -179,7 +179,7 @@ int main (int argc, char *argv[])
 
     //vel = sf_floatalloc(nd);
 
-    predict_init (nd, nh, eps*eps, order, 1, false);
+    //predict_init (nd, nh, eps*eps, order, 1, false);
 
     for (ix=0; ix < nx; ix++) {
 	if (verb) sf_warning("cmp %d of %d;",ix+1,nx);
