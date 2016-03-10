@@ -23,14 +23,24 @@ Flow('penobscot','penobscot_subset.bin',
      o2=1253 d2=1 label2=Crossline
      o3=1207 d3=1 label3=Inline
      data_format=native_short |
-     dd type=float
+     dd type=float | transp plane=23
      ''',stdin=0)
 
 Result('penobscot',
        '''
        byte gainpanel=all |
-       grey3 title="Seismic data" frame1=25 frame2=100 frame3=100
-       flat=n point1=0.25 point2=0.75
+       grey3 title="Seismic data" frame1=27 frame2=125 frame3=100
+       flat=y point1=0.25 
        ''')
+
+for case in range(3):
+    coh = 'coh%d' % case
+    Flow(coh,'penobscot','coherence mode=c%d twod=n' % (case+1))
+    Result(coh,
+           '''
+           byte gainpanel=all allpos=y |
+           grey3 title="%s" frame1=27 frame2=125 frame3=100
+           flat=y point1=0.25 
+           ''' % ('Bahorich and Farmer (1995)','Marfurt et al. (1998)','Gersztenkorn and Marfurt (1999)')[case])
 
 End()
