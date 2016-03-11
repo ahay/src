@@ -21,6 +21,7 @@
 static int nm, **indx, *size;
 
 void sc_init(int nm1, int **indx1, int *size1)
+/*< initialize >*/
 {
     nm = nm1;
     indx = indx1;
@@ -28,6 +29,7 @@ void sc_init(int nm1, int **indx1, int *size1)
 }
 
 void sc_lop(bool adj, bool add, int nx, int nd, float* x, float* d)
+/*< linear operator >*/
 {
     int id, im, ix, sx;
     
@@ -36,7 +38,7 @@ void sc_lop(bool adj, bool add, int nx, int nd, float* x, float* d)
     for (id=0; id < nd; id++) {
 	sx=0;
 	for (im=0; im < nm; im++) {
-	    ix = indx[im][id]+sx;
+	    ix = indx[id][im]+sx;
 	    
 	    if (adj) {
 		x[ix] += d[id];
