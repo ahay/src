@@ -680,7 +680,7 @@ static void make_baraxis (float min, float max)
 
     if (!sf_getint ("nbartic",&(baraxis->ntic))) 
 	baraxis->ntic = 0.5 + (vertbar? inch2: inch1)/(aspect*labelsz);
-    /* nbartic number of scalebar ticmarks */
+    /*( nbartic number of scalebar ticmarks )*/
 
     if (NULL == (baraxis->format = sf_getstring("formatbar"))) {
 	/* format for ticmark labels in the scalebar */
