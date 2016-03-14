@@ -319,6 +319,21 @@ def waveplot(custom,par):
            par['lt'],par['ut'],
         par['labelattr']+' '+custom)
 
+# plot wavefield section
+def wflzplot(custom,par):
+    return '''
+    graph title=""
+    min1=%g max1=%g
+    min2=-1 max2=+1
+    plotfat=8 plotcol=5
+    label1=%s unit1=%s
+    label2="" unit2=""
+    screenratio=0.3 screenht=4
+    %s
+    ''' % (par['zmin'],par['zmax'],
+           par['lz'],par['uz'],
+        par['labelattr']+' '+custom)
+
 # plot spectrum
 def specplot(custom,par):
     return '''
