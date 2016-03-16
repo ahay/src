@@ -85,6 +85,7 @@ int main(int argc, char* argv[])
     fclose(dfile); 
     
     mrsf = sf_output(m);
+    sf_settype(mrsf,SF_COMPLEX);
     sf_fileflush(mrsf,mod);
 
     init_genrand(mseed);
@@ -127,11 +128,12 @@ int main(int argc, char* argv[])
     }
     sf_fileclose(drsf);
 
-    sf_warning(" L[m]*d=%g",dp);
+    sf_warning(" L[m]*d=(%g,%g)",creal(dp),cimag(dp));
 
     drsf = sf_output(d);
+    sf_settype(drsf,SF_COMPLEX);
     sf_fileflush(drsf,dat);
-    
+
     init_genrand(dseed);
     for (dsiz=nd, dbuf=nbuf; dsiz > 0; dsiz -= dbuf) {
 	if (dsiz < dbuf) dbuf=dsiz;
@@ -172,7 +174,7 @@ int main(int argc, char* argv[])
     }
     sf_fileclose(mrsf);
 
-    sf_warning("L'[d]*m=%g",dp);
+    sf_warning("L'[d]*m=(%g,%g)",creal(dp),-cimag(dp));
 	
     exit(0);
 }
