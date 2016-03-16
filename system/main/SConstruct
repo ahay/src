@@ -3,8 +3,8 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-add attr cat cconjgrad cconjgradmpi cdottest cmplx conjgrad
-conjgradmpi cp cut dd disfil dottest dottestmpi get headercut
+add attr cat cconjgrad cconjgradmpi cdottest cdottestmpi cmplx
+conjgrad conjgradmpi cp cut dd disfil dottest dottestmpi get headercut
 headersort headerwindow in interleave mask math pad put real reverse
 rm rotate rtoc scale spike spray stack transp window
 '''
