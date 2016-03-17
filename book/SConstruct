@@ -47,6 +47,7 @@ tccs/opwd/wrap
 tccs/emdpf/fxdecon
 tccs/emdpf/hyper
 tccs/emdpf/linear
+tccs/fpwd/sigmoid
 trip/hug/marm1s_shallow
 tccs/synwav/gch1
 tccs/shemd/hyperoil
