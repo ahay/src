@@ -8,19 +8,19 @@ matrix $\mathbf{J}$,
 which is `1' at locations where we have data and `0' at unknown locations.
 As an  example, let's  try to interpolate 
 a day's worth of  data
-collected by SeaBeam (Figure~\ref{fig:sea.init}), which measures
-water depth under and to the side of a  ship \cite{gee}. 
+collected by SeaBeam (Figure~\ref{fig:init}), which measures
+water depth under and to the side of a  ship \cite[]{gee}. 
 
 \sideplot{init}{width=3.0in,height=3.0in}{Depth of the ocean under ship tracks.}
 
-Figure~\ref{fig:sea.pef} shows the result of estimating a PEF from the
+Figure~\ref{fig:pef} shows the result of estimating a PEF from the
 known data locations and then using it to interpolate the entire mesh.
 Note how the solution has a lower spatial frequency as we move away from
 the recorded data. In addition, the original tracks of the ship are still
 clearly visible.  
 
 \sideplot{pef}{width=3.0in,height=3.0in}{Result of using a PEF to
-interpolate Figure~\ref{fig:sea.init}, taken from GEE \cite{gee}.}
+interpolate Figure~\ref{fig:init}, taken from GEE.}
 
 \par
 If we look at a histograms of the known data and our estimated data we
@@ -29,9 +29,11 @@ nice Gaussian shape.  The predicted
 data is much less Gaussian with a much lower variance.  We want estimated 
 data to have the same statistical properties as the known data (for
 a Gaussian distribution this means matching the mean and variance).
+
 \sideplot{histo}{width=3.0in,height=3.0in}{Histogram for the known data 
 (solid lines) and the estimated data (`*').  Note the dissimilar
 shapes.}
+
 \par
 Geostatisticians are confronted with the same problem. They can produce
 smooth, low frequency models through kriging, but must add a little
@@ -111,7 +113,7 @@ to be poor representations of earth properties.
 A classic example is fluid flow where kriged models  tend to give inaccurate
 predictions. The geostatistical solution
 is to perform Gaussian stochastic simulation, rather than kriging, to
-estimate the field \cite{geostat2}.
+estimate the field \cite[]{geostat2}.
 There are two major  differences between kriging and simulation. 
 The primary difference
 is that a random component is introduced into the estimation process.   

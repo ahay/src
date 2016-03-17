@@ -38,6 +38,8 @@ To the reproducible documents collection:
   regularization (Chen, Zhang, and Mo)
 * tccs/dsd: Double sparsity dictionary for seismic noise attenuation
   (Chen, Ma, and Fomel)
+* sep/geostat: Multiple realizations using standard inversion
+  techniques (Clapp)
 
 To SCons:
 

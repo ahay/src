@@ -1,6 +1,6 @@
 from rsf.book import *
 
-report = (('Optimization','balance cdstep stack forwd spitz oc2 pwd bspl'),
+report = (('Optimization','geostat balance cdstep stack forwd spitz oc2 pwd bspl'),
           ('Helix Transform','sparse2 pefmult precon findif burg specfac plane steer lines texture helft'),
           ('Imaging','passive aal fat stoltst antial angle'),
           ('Traveltimes','waverays lineiko huygens fmeiko fmsec'),

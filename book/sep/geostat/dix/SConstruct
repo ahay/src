@@ -55,13 +55,13 @@ Result('dips','grey color=j scalebar=y title="Reflector Dip" ')
 
 Flow('refl','spline','unif2 v00=1,2,3,4,5,6,7 n1=640 d1=0.004 o1=0 | ai2refl | ricker1 frequency=10')
 
-Flow('dip','refl','dip rect1=50 rect2=5 order=2')
+Flow('dip','refl','dip rect1=50 rect2=5 order=3')
 
 Result('dip','grey color=j scalebar=y title="Reflector Dip" ')
 
 Flow('vint','pick slice dip',
      '''
-     dixshape dip=${SOURCES[2]} order=2
+     dixshape dip=${SOURCES[2]} order=3
      weight=${SOURCES[1]} 
      niter=100 verb=y rect1=20 rect2=5 
      ''')
@@ -83,7 +83,7 @@ for var in (0,2,4,8):
     Flow(prior,'dip vint',
          '''
          noise seed=2016 rep=y var=%g | 
-         pwsmooth dip=${SOURCES[0]} ns=5 order=2 | smooth rect1=5 | 
+         pwsmooth dip=${SOURCES[0]} ns=5 order=3 | smooth rect1=5 | 
          add ${SOURCES[1]}
          ''' % (var*1e4))
 
@@ -91,7 +91,7 @@ for var in (0,2,4,8):
 
     Flow(vint,['pick','slice','dip',prior],
          '''
-         dixshape dip=${SOURCES[2]} order=2
+         dixshape dip=${SOURCES[2]} order=3
          weight=${SOURCES[1]} prior=${SOURCES[3]}
          niter=100 verb=y rect1=20 rect2=5 
          ''')
@@ -99,12 +99,44 @@ for var in (0,2,4,8):
     Plot(vint,
          '''
          window max1=1.75 |
-         grey color=j mean=y scalebar=y wanttitle=n
-         unit1=s unit2=m barunit=m/s barreverse=y
+         grey color=j mean=y wanttitle=n
+         unit1=s unit2=m 
          ''')
     
     vints.append(vint)
 
 Result('scale',vints,'TwoRows')
+
+vints = []
+
+for seed in range(2016,2020):
+    prior = 'dprior%d' % var
+
+    Flow(prior,'dip vint',
+         '''
+         noise seed=%d rep=y var=2e4 | 
+         pwsmooth dip=${SOURCES[0]} ns=5 order=3 | smooth rect1=5 | 
+         add ${SOURCES[1]}
+         ''' % (seed))
+
+    vint = 'dvint%d' % var
+
+    Flow(vint,['pick','slice','dip',prior],
+         '''
+         dixshape dip=${SOURCES[2]} order=3
+         weight=${SOURCES[1]} prior=${SOURCES[3]}
+         niter=100 verb=y rect1=20 rect2=5 
+         ''')
+
+    Plot(vint,
+         '''
+         window max1=1.75 |
+         grey color=j mean=y wanttitle=n
+         unit1=s unit2=m 
+         ''')
+    
+    vints.append(vint)
+
+Result('dix-real',vints,'TwoRows')
 
 End()
