@@ -31,6 +31,7 @@ xjtu
 
 nonreproducible = '''
 geo391/hw2/sorting
+rsf/bash/mpi
 rsf/bash/plot
 rsf/rsf/plplot
 rsf/programming/cube
@@ -53,6 +54,7 @@ tccs/synwav/gch1
 tccs/shemd/hyperoil
 tccs/shemd/synth1
 tccs/shemd/fxemddemo
+xjtu/primer/testelastic2d
 '''
 
 all =  ARGUMENTS.get('all', 'n')
