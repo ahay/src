@@ -54,6 +54,7 @@ tccs/synwav/gch1
 tccs/shemd/hyperoil
 tccs/shemd/synth1
 tccs/shemd/fxemddemo
+xjtu/primer/testelastic2d
 '''
 
 all =  ARGUMENTS.get('all', 'n')

@@ -1,7 +1,5 @@
 from rsf.proj import *
-
-#sys.path.append('..')
-import model94
+from rsf.gallery import model94
 
 model94.get_vel('velocity')
 Result('velocity','grey color=j allpos=y bias=3.6 scalebar=y title=Model barreverse=y')
@@ -28,7 +26,7 @@ Flow('source',None,
      ricker1 frequency=30
      '''%(nt,dt))
 for s in range(0,278):
-    shot= 'DATA/shot_'+str(s*6)
+    shot= 'shot_'+str(s*6)
     Flow(shot,'shots',
          '''
          window n3=1 f3=%d |
@@ -36,7 +34,7 @@ for s in range(0,278):
          bandpass fhi=100 
          '''%(s,nt-35,dt))
 for s in range(0,278):
-    elev= 'ELEV/elev_'+str(s*6)
+    elev= 'elev_'+str(s*6)
     Flow(elev,'relev',
          '''
          window n2=1 f2=%d 
@@ -45,9 +43,9 @@ par='velocity'
 Flow(par+'l',par,'window n2=1 | spray axis=2 n=600')
 Flow(par+'r',par,'window n2=1 f2=-1 | spray axis=2 n=599')
 Flow(par+'abc',[par+'l',par,par+'r'],'cat ${SOURCES[1:3]} axis=2 | transp')
-Flow('geom',None,
+Flow('geom','geo.asc',
      '''
-     echo n1=4 n2=278 data_format=ascii_int esize=4 in=geo
+     echo n1=4 n2=278 data_format=ascii_int esize=4 in=$SOURCE
      | dd form=native
      ''')
 Flow('geo','geom sdepth','cat ${SOURCES[1]} axis=1') 
