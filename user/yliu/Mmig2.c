@@ -1,8 +1,11 @@
-/* 2-D Prestack Kirchhoff time migration with antialiasing. 
+/* 2-D prestack Kirchhoff time migration with antialiasing. 
 The axes in the input are {time,midpoint,offset}
 The axes in the offset are {1,midpoint,offset}
 The axes in the output are {time,midpoint}
 The axes in the "image gather" are {time,midpoint,offset}
+
+February 2016 program of the month:
+http://ahay.org/blog/2016/02/18/program-of-the-month-sfmig2/
 */
 /*
   Copyright (C) 2010 University of Texas at Austin
