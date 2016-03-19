@@ -78,13 +78,11 @@ int main(int argc, char* argv[])
     if (!sf_getint("join",&axis2)) axis2=axis;
     /* axis to join (0 means add) */
     
-    sf_out(out,axis2,iname);
+    sf_out(out,jobs,axis2,iname);
     sf_rm(iname,true,false,false);
 
     if (axis2 > 0) {
-	for (node=0; node < jobs; node++) {
-	    sf_join(out,node);
-	}
+	sf_join(out,axis2,jobs);
     } else {
 	sf_add(out,jobs);
     }

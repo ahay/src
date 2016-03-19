@@ -37,6 +37,7 @@ static char command[SF_CMDLEN], splitcommand[SF_CMDLEN], **inames=NULL, **onames
 static char ***inpnames=NULL, buffer[BUFSIZ], nkey[5];
 static off_t size1, size2;
 static int inpargc, outargc;
+static sf_file *ins;
 
 static void sizes(sf_file file, int axis, int ndim, 
 		  const off_t *n, off_t *size1, off_t *size2)
@@ -262,13 +263,14 @@ char** sf_split(sf_file inp          /* input file */,
     return commands;
 }
 
-void sf_out(sf_file out        /* output file */, 
+void sf_out(sf_file out        /* output file */,
+	    int jobs           /* number of jobs */,
 	    int axis           /* join axis */,
 	    const char *iname  /* name of the input file */)
 /*< prepare output >*/
 {
     char *oname, cmdline[SF_CMDLEN];
-    int ndim;
+    int ndim, job;
     off_t n[SF_MAX_DIM];
     sf_file inp;
     FILE *ofile=NULL;
@@ -294,46 +296,91 @@ void sf_out(sf_file out        /* output file */,
     
     sf_setform(out,SF_NATIVE);
     sf_rm(oname,true,false,false);
+
+    ins = (sf_file*) sf_alloc(jobs,sizeof(sf_file));
+
+    for (job=0; job < jobs; job++) {
+	oname = onames[job];
+	ins[job] = sf_input(oname);
+    }
 }
 
-void sf_join(sf_file out /* output file */, 
-	     int job     /* job number */)
-/*< join outputs >*/
+static void cleanup(int jobs)
+/* remove temporary files */
 {
-    int i, chunk;
-    off_t i2, left, nbuf;
-    char *iname, *oname;
-    sf_file in;
+    int i, job;
+    char *oname;
 
-    iname = inames[job];
-    oname = onames[job];
-
-    in = sf_input(oname);
-    sf_histint(in,nkey,&chunk);
-    sf_setform(in,SF_NATIVE);
-	    
-    for (i2=0; i2 < size2; i2++) {
-	nbuf=BUFSIZ;
-	for (left=chunk*size1; left > 0; left -= nbuf) {
-	    if (nbuf > left) nbuf=left;
-		    
-	    sf_charread(buffer,nbuf,in);
-	    sf_charwrite(buffer,nbuf,out);
+    for (job=0; job < jobs; job++) {
+	sf_fileclose(ins[job]);
+	sf_rm(inames[job],true,false,false);
+	sf_rm(onames[job],true,false,false);
+	for (i=0; i < inpargc; i++) {
+	    oname = inpnames[job][i];
+	    sf_rm(oname,true,false,false);
 	}
     }
 
-    sf_fileclose(in);
-
-    sf_rm(iname,true,false,false);
-    sf_rm(oname,true,false,false);
-
-    for (i=0; i < inpargc; i++) {
-	iname = inpnames[job][i];
-	sf_rm(iname,true,false,false);
-    }
+    free(ins);
 }
 
-void sf_add(sf_file out, int jobs)
+void sf_join(sf_file out /* output file */,
+	     int axis    /* axis to join */,
+	     int jobs    /* number of jobs */)
+/*< join outputs >*/
+{
+    int i, job, dim, esize, *naxis, ni;    
+    off_t i2, left, nbuf, n[SF_MAX_DIM], n1, n2;
+    char key[3], buf[BUFSIZ];
+    sf_file in;
+
+    dim = sf_largefiledims(ins[0],n);
+    esize = sf_esize(ins[0]);
+    naxis = sf_intalloc(jobs);
+    
+    n1=1;
+    n2=1;
+    for (i=1; i <= dim; i++) {
+	if      (i < axis) n1 *= n[i-1];
+	else if (i > axis) n2 *= n[i-1];
+    }
+
+    naxis[0] = n[axis-1];
+    for (job=1; job < jobs; job++) {
+	in = ins[job];
+	
+	for (i=1; i <= dim; i++) {
+	    (void) snprintf(key,3,"n%d",i);
+	    if (!sf_histint(in,key,&ni) || (i != axis && ni != n[i-1]))
+		sf_error("%s mismatch: need %d",key,(int) n[i-1]);
+	    if (i == axis) naxis[job] = ni;
+	}
+	if (axis > dim) {
+	    (void) snprintf(key,3,"n%d",axis);
+	    if (!sf_histint(in,key,naxis+job)) naxis[job]=1;
+	}
+    } 
+    
+    for (i2=0; i2 < n2; i2++) {
+	for (job=0; job < jobs; job++) {
+	    
+	    in = ins[job];
+	    sf_setform(in,SF_NATIVE);
+	    
+	    for (left = n1*naxis[job]*esize; left > 0; left -= nbuf) {
+		nbuf = (BUFSIZ < left)? BUFSIZ: left;
+		sf_charread (buf,nbuf,in);
+		sf_charwrite (buf,nbuf,out);
+	    }
+	}
+    }
+
+    free(naxis);
+    cleanup(jobs);
+}
+
+void sf_add(sf_file out /* output file */,
+	    int jobs    /* number of jobs */)
 /*< add outputs >*/
 {
     int *ibuf=NULL, job, i;
@@ -343,8 +390,6 @@ void sf_add(sf_file out, int jobs)
     sf_datatype type;
     size_t nbuf=BUFSIZ;
     off_t nsiz;
-    char *oname;
-    sf_file *ins;
 
     type = sf_gettype(out);
 
@@ -359,13 +404,6 @@ void sf_add(sf_file out, int jobs)
 	default:
 	    sf_error("wrong type");
 	    break;
-    }
-
-    ins = (sf_file*) sf_alloc(jobs,sizeof(sf_file));
-
-    for (job=0; job < jobs; job++) {
-	oname = onames[job];
-	ins[job] = sf_input(oname);
     }
 
     for (nsiz = size2; nsiz > 0; nsiz -= nbuf) {
@@ -405,15 +443,6 @@ void sf_add(sf_file out, int jobs)
 	}
     }
 
-    for (job=0; job < jobs; job++) {
-	sf_fileclose(ins[job]);
-	sf_rm(inames[job],true,false,false);
-	sf_rm(onames[job],true,false,false);
-	for (i=0; i < inpargc; i++) {
-	    oname = inpnames[job][i];
-	    sf_rm(oname,true,false,false);
-	}
-    }
-
-    free(ins);
+    cleanup(jobs);
 }
+

@@ -35,7 +35,31 @@ in parallel.
 \lstinputlisting[firstline=574,lastline=585,frame=single]{\RSF/user/psava/fdutil.c}
 
 To simplify OpenMP-based processing for data-parallel tasks,
-Madagascar provides \texttt{sfomp} utility. Suppose, for example, ...
+Madagascar provides \texttt{sfomp} utility. Suppose, for example, that
+the input file \texttt{input.rsf} contains a number of traces, which
+we want to process in parallel with a bandpass filter. The serial execution
+\begin{verbatim}
+< input.rsf sfbandpass fhi=50 > output.rsf
+\end{verbatim}
+becomes parallel by inserting \texttt{sfomp} before the command, as follows:
+\begin{verbatim}
+< input.rsf sfomp sfbandpass fhi=50 > output.rsf
+\end{verbatim}
+
+By default, \texttt{sfomp} uses the number of threads equivalent to
+the number of available cores. To use a different number, you can set
+\texttt{OMP\_NUM\_THREADS} environmental variable.
+
+By default, \texttt{sfomp} splits the input over the last dimension,
+processes different parts of the data, and concatenates the outputs
+along the same dimension. To change this behavior, you can use
+\texttt{split=} and \texttt{join=} parameters. For example, to
+transpose a 2-D dataset in parallel, we can split it over one
+dimension and join over the other dimension:
+\begin{verbatim}
+< input.rsf sfomp sftransp split=1 join=2 > output.rsf
+\end{verbatim}
+
 
 \section{MPI programming and sfmpi}
 
