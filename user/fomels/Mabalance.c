@@ -25,12 +25,18 @@ int main (int argc, char* argv[])
     int nh, n1,n2, i1,i2, i, n12, niter, dim, n[SF_MAX_DIM], rect[SF_MAX_DIM];
     float *trace, *hilb, *trace2, *hilb2, *num, *den, *rat, *org, c, mean;
     char key[6];
-    sf_file in, out, ref;
+    sf_file in, out, ref, weight;
 
     sf_init (argc,argv);
     in = sf_input("in");
     ref = sf_input("other");
     out = sf_output("out");
+
+    if (NULL != sf_getstring("weight")) { /* optional weight output */
+	weight = sf_output("weight");
+    } else {
+	weight = NULL;
+    }
 
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
     
@@ -104,6 +110,7 @@ int main (int argc, char* argv[])
     }
     
     sf_floatwrite(org,n12,out);
+    if (NULL != weight) sf_floatwrite(rat,n12,weight);
 
     exit(0);
 }
