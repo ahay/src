@@ -1,4 +1,4 @@
-/* Non-stationary debluring by inversion */
+/* Merging legacy and hires datasets */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -23,15 +23,16 @@
 
 int main(int argc, char* argv[])
 {
-    int i1, i2, n1, n2, n12, niter, iter, nliter;
-    float *data, *modl, *wght, eps, **nr;
-    bool verb;
-    sf_file in, out, rect;
+    bool adj;
+    int n1, n2, n12;
+    float *legacy, *hires, *merge, *wght, **nr;
+    sf_file in, out, weight, rect;
 
     sf_init(argc,argv);
     in = sf_input("in");
     out = sf_output("out");
     rect = sf_input("rect");
+    weight = sf_input("weight");
     
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
     if (SF_FLOAT != sf_gettype(rect)) sf_error("Need float rect");
@@ -40,49 +41,40 @@ int main(int argc, char* argv[])
     n2 = sf_leftsize(in,1);
     n12 = n1*n2;
 
-    data = sf_floatalloc(n12);
-    modl = sf_floatalloc(n12);
+    legacy = sf_floatalloc(n12);
+    hires = sf_floatalloc(n12);
+    merge = sf_floatalloc(n12);
     wght = sf_floatalloc(n12);
     nr = sf_floatalloc2(n1,n2);
 
-    sf_floatread(data,n12,in);
+    if (!sf_getbool("adj",&adj)) adj=false;
+    /* adjoint flag */
+
     sf_floatread(nr[0],n12,rect);
-
-    for (i1=0; i1 < n12; i1++) {
-	wght[i1] = 1.;
-    }
-
-    if (!sf_getint("niter",&niter)) niter=100;
-    /* number of iterations */
-
-    if (!sf_getint("nliter",&nliter)) nliter=1;
-    /* number of nonlinear iterations */
-
-    if (!sf_getbool("verb",&verb)) verb=false;
-    /* verbosity flag */
-
-    if (!sf_getfloat("eps",&eps)) eps=0.;
-    /* regularization parameter */
-
+    sf_floatread(wght,n12,weight);
+    
     nsmooth1_init(n1,n2,nr);
     sf_weight_init(wght);
-    sf_hilbert_init(n1, 10, 1.);
 
-    for (iter=0; iter < nliter; iter++) {
-	sf_solver_prec(nsmooth1_lop,sf_cgstep,sf_weight_lop,
-		       n12,n12,n12,modl,data,niter,eps,
-		       "verb",verb,"end");
-	sf_cgstep_close();
+    if (adj) {
+	sf_floatread(hires,n12,in);
+	sf_floatread(legacy,n12,in);
 
-	for (i2=0; i2 < n2; i2++) {
-	    sf_hilbert(modl+i2*n1,wght+i2*n1);
-	    for (i1=0; i1 < n1; i1++) {
-		wght[i1+i2*n1] = hypotf(modl[i1+i2*n1],wght[i1+i2*n1]);
-	    }
-	}
+	sf_weight_lop(true,false,n12,n12,merge,hires);
+	nsmooth1_lop(true,true,n12,n12,merge,legacy);
+
+	sf_floatwrite(merge,n12,out);
+    } else {
+	sf_floatread(merge,n12,in);
+
+	sf_weight_lop(false,false,n12,n12,merge,hires);
+	nsmooth1_lop(false,false,n12,n12,merge,legacy);
+
+	sf_floatwrite(hires,n12,out);
+	sf_floatwrite(legacy,n12,out);
     }
-
-    sf_floatwrite(modl,n12,out);
 
     exit(0);
 }
+	
+	
