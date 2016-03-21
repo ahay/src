@@ -57,9 +57,50 @@ along the same dimension. To change this behavior, you can use
 transpose a 2-D dataset in parallel, we can split it over one
 dimension and join over the other dimension:
 \begin{verbatim}
-< input.rsf sfomp sftransp split=1 join=2 > output.rsf
+< original.rsf sfomp sftransp split=1 join=2 > transp.rsf
 \end{verbatim}
+The result should be equivalent to that of running
+\begin{verbatim}
+< original.rsf sfomp sftransp split=2 join=1 > transp.rsf
+\end{verbatim}
+If, instead of concatenating, the results should be added together,
+use \texttt{join=0}.
 
+Certain programs have multiple input or output files. If some of the
+input files need to be split similarly to the file coming from the
+standard input, use an underscore in front of the parameter name. For
+example, the \texttt{sfnmo} program takes the NMO velocity as an extra
+input. If the serial execution is
+\begin{verbatim}
+< cmp.rsf sfnmo velocity=vel.rsf > nmo.rsf
+\end{verbatim}
+the corresponding parallel run will be
+\begin{verbatim}
+< cmp.rsf sfomp sfnmo _velocity=vel.rsf > nmo.rsf
+\end{verbatim}
+provided that \texttt{vel.rsf} can be split along the last axis
+similarly to \texttt{cmp.rsf}.
+
+SCons processing makes it easier to handle different cases by
+modifying the \texttt{Flow} command. The three examples above may
+appear as follows in an \texttt{SConstruct} file:
+
+\lstset{language=python,showstringspaces=false,frame=single}
+\begin{lstlisting}
+Flow('output','input','bandpass fhi=50',
+     split=[2,'omp'])
+Flow('transp','original','transp',
+     split=[2,'omp'],join='cat axis=1')
+Flow('nmo','cmp velocity','nmo velocity=${SOURCES[1]}',
+     split=[3,'omp',[0,1]])
+\end{lstlisting}
+
+The first parameter in the \texttt{split=} list indicates the axis to
+split, the second parameter tells SCons to user \texttt{sfomp} for the
+splitting, and the third (optional parameter) lists the numbers of the
+source files that need splitting (starting from zero). Splitting all
+of the source files is the default behavior, therefore the
+\texttt{[0,1]} list in the last example is actually not needed.
 
 \section{MPI programming and sfmpi}
 

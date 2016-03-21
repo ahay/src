@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # Original idea and some code from Maxime Biais. Significant contributions by
-# Marc Poulhiès. Additions and changes by Mike Meylan, Malte, Anthony Miller and
+# Marc Poulhies. Additions and changes by Mike Meylan, Malte, Anthony Miller and
 # Sergey Fomel.
 #
 #    This program is free software; you can redistribute it and/or modify

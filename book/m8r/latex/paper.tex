@@ -11,7 +11,15 @@ Lamport in early 1980s \cite[]{latex} as an extension of Donuld
 Knuth's \TeX system \cite[]{tex}. \LaTeX is widely used in different
 fields of science and engineering.
 
-\LaTeX files are text files...
+\LaTeX files are text files that can be edited in regular text
+editors. Similarly to HTML and Markdown, \LaTeX is a descriptive
+language: one can learn it by example following other \LaTeX
+documents. As of 2016, the Madagascar package contains more than 200
+papers and book chapters written in \LaTeX. You can find the source of
+this chapter in
+\href{https://github.com/ahay/src/blob/master/book/m8r/latex/paper.tex}
+     {\$RSFSRC/book/m8r/latex/paper.tex}
+and attached in the appendix.
 
 SEG\TeX is a collection of \LaTeX macros developed for geophysical
 publications, such as \emph{Geophysics} articles, SEG (Society of
@@ -25,9 +33,15 @@ document into multiple outputs: paper in a journal, chapter in a book,
 an expanded abstract for a conference, etc. It can also produce
 multiple output formats, namely PDF and HTML.
 
-\section{Example paper}
+\section{SCons processing}
+
+\subsection{Including reproducible results}
 
 \subsection{Multiple outputs}
+
+\subsubsection{Multiple styles}
+
+\subsubsection{Multiple formats}
 
 \section{Including papers into books and reports}
 
@@ -39,3 +53,9 @@ Claerbout's vision of reproducible research \cite[]{sep}.
 
 \bibliographystyle{seg}
 \bibliography{latex}
+
+\appendix
+\section{Appendix: The source of this document}
+
+\verbatiminput{paper.tex}
+
