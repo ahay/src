@@ -110,10 +110,22 @@ distributed-memory architectures \cite[]{pacheco,gropp}. There are several alter
 implementations of MPI, the popular open-source implementations
 include MPICH\footnote{\url{https://www.mpich.org/}} and Open
 MPI\footnote{\url{https://www.open-mpi.org/}}. Madagascar detects the
-existence of MPI at the installation configuration stage. [FLAGS]
+existence of MPI at the installation configuration stage. 
 
-To simplify MPI-based processing for data-parallel tasks,
-Madagascar provides \texttt{sfmpi} utility...
+To simplify MPI-based processing for data-parallel tasks, Madagascar
+provides \texttt{sfmpi} utility. The functionality of \texttt{sfmpi}
+is largely similar to that of \texttt{sfomp} but the computation can
+be distributed across multiple nodes. For example, running a bandpass
+filter in parallel by splitting the input data over the slowest
+dimension and using 16 nodes can be done with
+\begin{verbatim}
+mpirun -np 16 sfmpi sfbandpass fhi=50 --input=input.rsf --output=output.rsf
+\end{verbatim}
+On different systems, \texttt{mpirun} might be replaced with another
+command launching an MPI process. In Madagascar's configuration
+(\texttt{\$RSFROOT/share/madagascar/etc/config.py}), this command is
+specified by \texttt{MPIRUN=} configuration variable.
+
 
 \section{GPU programming}
 
