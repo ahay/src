@@ -52,7 +52,7 @@ int main(int argc, char * argv[])
 #endif
 
     if (!sf_getint("size",&size)) size=0; /* sliding window radius */
-    if (!sf_getbool("sw",&sw)) sw=true; /* sliding window */
+    if (!sf_getbool("sw",&sw)) sw=false; /* sliding window */
     if (!sf_getbool("log",&logsc)) logsc=false; /* log scaling */
     if (!sf_getfloat("var_thres",&var_thres)) var_thres=0.; /* variance threshold (normalized) */
     if (!sf_getfloat("perc",&perc)) perc=5; /* threshold percentage of the maximum value */
@@ -87,7 +87,7 @@ int main(int argc, char * argv[])
         rescale = log10(max_all+1); /* so that global maximum becomes one */
     }
     sf_warning("max_all=%g,var_all=%g",max_all,var_all);
-    var_all = 1.;
+    var_all /= powf(max_all,2);
 
 #ifdef _OPENMP
 #pragma omp parallel for default(shared) private(i)
@@ -128,7 +128,6 @@ int main(int argc, char * argv[])
             den = maxvar(nzx,2*size+1,dat0+(i-size)*nzx,&var);
         } else {
             den = maxvar(nzx,2*size+1,dat0+(i-size)*nzx,NULL);
-            var = 0;
         }
         if (logsc) scale = log10(den+1.)/rescale;
         else scale = 1.;
