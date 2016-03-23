@@ -80,6 +80,14 @@
 			  C1*(a[iy][ix][iz+1] - a[iy][ix][iz-1])  )*s
 /*^*/
 
+#define XX 0
+#define YY 1
+#define ZZ 2
+#define XY 3
+#define XZ 4
+#define YZ 5
+/*^*/
+
 typedef struct fdm2 *fdm2d;
 /*^*/
 
@@ -114,6 +122,9 @@ typedef struct ksp3 *ksp3d;
 /*^*/
 
 typedef struct vksp3 *vksp3d;
+/*^*/
+
+typedef struct clr3 *clr3d;
 /*^*/
 
 typedef struct dat3 *dat3d;
@@ -240,6 +251,15 @@ struct vksp3{
     float***ksa;
     float***kpb;
     float***ksb;
+};
+/*^*/
+
+struct clr3{
+    int *n2_start;
+    int *n2_local;
+    int **map;
+    int n2_sum;
+    int n2_max;
 };
 /*^*/
 
@@ -568,6 +588,45 @@ void cut3d(float*** a,
 }
 
 /*------------------------------------------------------------*/
+void cut3d_complex(sf_complex*** a,
+	           sf_complex*** b,
+                   fdm3d  fdm,
+                   sf_axis cz, 
+                   sf_axis cx,
+                   sf_axis cy)
+/*< cut a rectangular wavefield subset and convert to float >*/
+{
+    int iz,ix,iy, nz,nx,ny, jz,jx,jy;
+    int fz,fx,fy;
+
+    fz = (floor)((sf_o(cz)-fdm->ozpad)/fdm->dz +0.0001f);
+    fx = (floor)((sf_o(cx)-fdm->oxpad)/fdm->dx +0.0001f);
+    fy = (floor)((sf_o(cy)-fdm->oypad)/fdm->dy +0.0001f);
+
+    nz = sf_n(cz);
+    nx = sf_n(cx);
+    ny = sf_n(cy);
+
+    jz = floor(sf_d(cz)/fdm->dz);
+    jx = floor(sf_d(cx)/fdm->dx);
+    jy = floor(sf_d(cy)/fdm->dy);
+    
+#ifdef _OPENMP
+#pragma omp parallel for			\
+    schedule(dynamic,fdm->ompchunk)		\
+    private(ix,iy,iz)				\
+    shared(a,b,nx,ny,nz,fx,fy,fz,jx,jy,jz)
+#endif
+    for         (iy=0;iy<ny;iy++) {
+	for     (ix=0;ix<nx;ix++) {
+	    for (iz=0;iz<nz;iz++) {
+		b[iy][ix][iz] = a[fy+iy*jy][fx+ix*jx][fz+iz*jz];
+	    }
+	}
+    }
+}
+
+/*------------------------------------------------------------*/
 void cut3d_slice(float** a,
                  float** b,
                  fdm3d  fdm,
@@ -835,6 +894,99 @@ void lint3d_extract(float***uu,
 }  
 
 /*------------------------------------------------------------*/
+void lint3d_inject_complex(sf_complex***uu,
+                           sf_complex  *dd,
+                           lint3d  ca)
+/*< inject into wavefield >*/
+{
+    int ia;
+    for (ia=0;ia<ca->n;ia++) {	
+#ifdef SF_HAS_COMPLEX_H
+	uu[ ca->jy[ia]   ][ ca->jx[ia]   ][ ca->jz[ia]   ] += dd[ia] * ca->w000[ia];
+	uu[ ca->jy[ia]   ][ ca->jx[ia]   ][ ca->jz[ia]+1 ] += dd[ia] * ca->w001[ia];
+	uu[ ca->jy[ia]   ][ ca->jx[ia]+1 ][ ca->jz[ia]   ] += dd[ia] * ca->w010[ia];
+	uu[ ca->jy[ia]   ][ ca->jx[ia]+1 ][ ca->jz[ia]+1 ] += dd[ia] * ca->w011[ia];
+	uu[ ca->jy[ia]+1 ][ ca->jx[ia]   ][ ca->jz[ia]   ] += dd[ia] * ca->w100[ia];
+	uu[ ca->jy[ia]+1 ][ ca->jx[ia]   ][ ca->jz[ia]+1 ] += dd[ia] * ca->w101[ia];
+	uu[ ca->jy[ia]+1 ][ ca->jx[ia]+1 ][ ca->jz[ia]   ] += dd[ia] * ca->w110[ia];
+	uu[ ca->jy[ia]+1 ][ ca->jx[ia]+1 ][ ca->jz[ia]+1 ] += dd[ia] * ca->w111[ia];
+#else
+	uu[ ca->jy[ia]   ][ ca->jx[ia]   ][ ca->jz[ia]   ] = sf_cadd(uu[ ca->jy[ia]   ][ ca->jx[ia]   ][ ca->jz[ia]   ] , sf_crmul(dd[ia],ca->w000[ia]));
+	uu[ ca->jy[ia]   ][ ca->jx[ia]   ][ ca->jz[ia]+1 ] = sf_cadd(uu[ ca->jy[ia]   ][ ca->jx[ia]   ][ ca->jz[ia]+1 ] , sf_crmul(dd[ia],ca->w001[ia]));
+	uu[ ca->jy[ia]   ][ ca->jx[ia]+1 ][ ca->jz[ia]   ] = sf_cadd(uu[ ca->jy[ia]   ][ ca->jx[ia]+1 ][ ca->jz[ia]   ] , sf_crmul(dd[ia],ca->w010[ia]));
+	uu[ ca->jy[ia]   ][ ca->jx[ia]+1 ][ ca->jz[ia]+1 ] = sf_cadd(uu[ ca->jy[ia]   ][ ca->jx[ia]+1 ][ ca->jz[ia]+1 ] , sf_crmul(dd[ia],ca->w011[ia]));
+	uu[ ca->jy[ia]+1 ][ ca->jx[ia]   ][ ca->jz[ia]   ] = sf_cadd(uu[ ca->jy[ia]+1 ][ ca->jx[ia]   ][ ca->jz[ia]   ] , sf_crmul(dd[ia],ca->w100[ia]));
+	uu[ ca->jy[ia]+1 ][ ca->jx[ia]   ][ ca->jz[ia]+1 ] = sf_cadd(uu[ ca->jy[ia]+1 ][ ca->jx[ia]   ][ ca->jz[ia]+1 ] , sf_crmul(dd[ia],ca->w101[ia]));
+	uu[ ca->jy[ia]+1 ][ ca->jx[ia]+1 ][ ca->jz[ia]   ] = sf_cadd(uu[ ca->jy[ia]+1 ][ ca->jx[ia]+1 ][ ca->jz[ia]   ] , sf_crmul(dd[ia],ca->w110[ia]));
+	uu[ ca->jy[ia]+1 ][ ca->jx[ia]+1 ][ ca->jz[ia]+1 ] = sf_cadd(uu[ ca->jy[ia]+1 ][ ca->jx[ia]+1 ][ ca->jz[ia]+1 ] , sf_crmul(dd[ia],ca->w111[ia]));
+#endif
+    }
+}
+
+void lint3d_extract_complex(sf_complex***uu,
+                            sf_complex  *dd,
+                            lint3d  ca)
+/*< extract from wavefield >*/
+{
+    int ia;
+    for (ia=0;ia<ca->n;ia++) {
+#ifdef SF_HAS_COMPLEX_H
+	dd[ia] =
+	    uu[ ca->jy[ia]  ][ ca->jx[ia]  ][ ca->jz[ia]  ] * ca->w000[ia] +
+	    uu[ ca->jy[ia]  ][ ca->jx[ia]  ][ ca->jz[ia]+1] * ca->w001[ia] +
+	    uu[ ca->jy[ia]  ][ ca->jx[ia]+1][ ca->jz[ia]  ] * ca->w010[ia] +
+	    uu[ ca->jy[ia]  ][ ca->jx[ia]+1][ ca->jz[ia]+1] * ca->w011[ia] +
+	    uu[ ca->jy[ia]+1][ ca->jx[ia]  ][ ca->jz[ia]  ] * ca->w100[ia] +
+	    uu[ ca->jy[ia]+1][ ca->jx[ia]  ][ ca->jz[ia]+1] * ca->w101[ia] +
+	    uu[ ca->jy[ia]+1][ ca->jx[ia]+1][ ca->jz[ia]  ] * ca->w110[ia] +
+	    uu[ ca->jy[ia]+1][ ca->jx[ia]+1][ ca->jz[ia]+1] * ca->w111[ia];
+#else
+	dd[ia] =
+	    sf_cadd( sf_crmul(uu[ ca->jy[ia]  ][ ca->jx[ia]  ][ ca->jz[ia]  ] , ca->w000[ia]) ,
+	    sf_cadd( sf_crmul(uu[ ca->jy[ia]  ][ ca->jx[ia]  ][ ca->jz[ia]+1] , ca->w001[ia]) ,
+	    sf_cadd( sf_crmul(uu[ ca->jy[ia]  ][ ca->jx[ia]+1][ ca->jz[ia]  ] , ca->w010[ia]) ,
+	    sf_cadd( sf_crmul(uu[ ca->jy[ia]  ][ ca->jx[ia]+1][ ca->jz[ia]+1] , ca->w011[ia]) ,
+	    sf_cadd( sf_crmul(uu[ ca->jy[ia]+1][ ca->jx[ia]  ][ ca->jz[ia]  ] , ca->w100[ia]) ,
+	    sf_cadd( sf_crmul(uu[ ca->jy[ia]+1][ ca->jx[ia]  ][ ca->jz[ia]+1] , ca->w101[ia]) ,
+	    sf_cadd( sf_crmul(uu[ ca->jy[ia]+1][ ca->jx[ia]+1][ ca->jz[ia]  ] , ca->w110[ia]) ,
+	    sf_cadd( sf_crmul(uu[ ca->jy[ia]+1][ ca->jx[ia]+1][ ca->jz[ia]+1] , ca->w111[ia])))))))));
+#endif
+    }
+}
+
+/*------------------------------------------------------------*/
+void lint3d_expl_complex(sf_complex***uz,
+                         sf_complex***ux,
+                         sf_complex***uy,
+                         sf_complex **dd,
+                         lint3d  ca)
+/*< inject into wavefield >*/
+{
+    int ia,i,j,k;
+    for (ia=0;ia<ca->n;ia++) {	
+            for(k=-1;k<=1;k++)
+                for(j=-1;j<=1;j++)
+                    for(i=-1;i<=1;i++)
+                    {
+                        if(fabs(i)+fabs(j)+fabs(k)==3)
+                        {
+#ifdef SF_HAS_COMPLEX_H
+                            uz[ca->jy[ia]+k][ca->jx[ia]+j][ca->jz[ia]+i] += dd[0][ia] * i;
+                            ux[ca->jy[ia]+k][ca->jx[ia]+j][ca->jz[ia]+i] += dd[1][ia] * j;
+                            uy[ca->jy[ia]+k][ca->jx[ia]+j][ca->jz[ia]+i] += dd[2][ia] * k;
+#else
+                            uz[ca->jy[ia]+k][ca->jx[ia]+j][ca->jz[ia]+i] = sf_cadd(uz[ca->jy[ia]+k][ca->jx[ia]+j][ca->jz[ia]+i] , sf_crmul(dd[0][ia] * i));
+                            ux[ca->jy[ia]+k][ca->jx[ia]+j][ca->jz[ia]+i] = sf_cadd(ux[ca->jy[ia]+k][ca->jx[ia]+j][ca->jz[ia]+i] , sf_crmul(dd[1][ia] * j));
+                            uy[ca->jy[ia]+k][ca->jx[ia]+j][ca->jz[ia]+i] = sf_cadd(uy[ca->jy[ia]+k][ca->jx[ia]+j][ca->jz[ia]+i] , sf_crmul(dd[2][ia] * k));
+
+
+#endif
+                        }
+                    }
+    }
+}
+
+/*------------------------------------------------------------*/
 void lint2d_inject1(float**uu,
 		    float  dd,
 		    lint2d ca)
@@ -961,6 +1113,50 @@ void lint3d_bell(float***uu,
 		
 	    }
 	}
+    }
+}
+
+/*------------------------------------------------------------*/
+void lint3d_bell_complex(sf_complex***uu,
+                         sf_complex  *ww,
+                         lint3d  ca)
+/*< apply bell taper >*/
+{
+    int   ia,iz,ix,iy;
+    sf_complex wa;
+
+    for        (iy=-nbell;iy<=nbell;iy++) {
+	for    (ix=-nbell;ix<=nbell;ix++) {
+	    for(iz=-nbell;iz<=nbell;iz++) {
+		
+		for (ia=0;ia<ca->n;ia++) {
+#ifdef SF_HAS_COMPLEX_H
+		    wa = ww[ia] * bell3d[nbell+iy][nbell+ix][nbell+iz];
+		    
+		    uu[ iy+ca->jy[ia]   ][ ix+ca->jx[ia]   ][ iz+ca->jz[ia]   ] += wa * ca->w000[ia];
+		    uu[ iy+ca->jy[ia]   ][ ix+ca->jx[ia]   ][ iz+ca->jz[ia]+1 ] += wa * ca->w001[ia];
+		    uu[ iy+ca->jy[ia]   ][ ix+ca->jx[ia]+1 ][ iz+ca->jz[ia]   ] += wa * ca->w010[ia];
+		    uu[ iy+ca->jy[ia]   ][ ix+ca->jx[ia]+1 ][ iz+ca->jz[ia]+1 ] += wa * ca->w011[ia];
+		    uu[ iy+ca->jy[ia]+1 ][ ix+ca->jx[ia]   ][ iz+ca->jz[ia]   ] += wa * ca->w100[ia];
+		    uu[ iy+ca->jy[ia]+1 ][ ix+ca->jx[ia]   ][ iz+ca->jz[ia]+1 ] += wa * ca->w101[ia];
+		    uu[ iy+ca->jy[ia]+1 ][ ix+ca->jx[ia]+1 ][ iz+ca->jz[ia]   ] += wa * ca->w110[ia];
+		    uu[ iy+ca->jy[ia]+1 ][ ix+ca->jx[ia]+1 ][ iz+ca->jz[ia]+1 ] += wa * ca->w111[ia];
+#else
+		    wa = sf_crmul(ww[ia] , bell3d[nbell+iy][nbell+ix][nbell+iz]);
+		    
+		    uu[ iy+ca->jy[ia]   ][ ix+ca->jx[ia]   ][ iz+ca->jz[ia]   ] = sf_cadd(uu[ iy+ca->jy[ia]   ][ ix+ca->jx[ia]   ][ iz+ca->jz[ia]   ],sf_crmul(wa , ca->w000[ia]));
+		    uu[ iy+ca->jy[ia]   ][ ix+ca->jx[ia]   ][ iz+ca->jz[ia]+1 ] = sf_cadd(uu[ iy+ca->jy[ia]   ][ ix+ca->jx[ia]   ][ iz+ca->jz[ia]+1 ],sf_crmul(wa , ca->w001[ia]));
+		    uu[ iy+ca->jy[ia]   ][ ix+ca->jx[ia]+1 ][ iz+ca->jz[ia]   ] = sf_cadd(uu[ iy+ca->jy[ia]   ][ ix+ca->jx[ia]+1 ][ iz+ca->jz[ia]   ],sf_crmul(wa , ca->w010[ia]));
+		    uu[ iy+ca->jy[ia]   ][ ix+ca->jx[ia]+1 ][ iz+ca->jz[ia]+1 ] = sf_cadd(uu[ iy+ca->jy[ia]   ][ ix+ca->jx[ia]+1 ][ iz+ca->jz[ia]+1 ],sf_crmul(wa , ca->w011[ia]));
+		    uu[ iy+ca->jy[ia]+1 ][ ix+ca->jx[ia]   ][ iz+ca->jz[ia]   ] = sf_cadd(uu[ iy+ca->jy[ia]+1 ][ ix+ca->jx[ia]   ][ iz+ca->jz[ia]   ],sf_crmul(wa , ca->w100[ia]));
+		    uu[ iy+ca->jy[ia]+1 ][ ix+ca->jx[ia]   ][ iz+ca->jz[ia]+1 ] = sf_cadd(uu[ iy+ca->jy[ia]+1 ][ ix+ca->jx[ia]   ][ iz+ca->jz[ia]+1 ],sf_crmul(wa , ca->w101[ia]));
+		    uu[ iy+ca->jy[ia]+1 ][ ix+ca->jx[ia]+1 ][ iz+ca->jz[ia]   ] = sf_cadd(uu[ iy+ca->jy[ia]+1 ][ ix+ca->jx[ia]+1 ][ iz+ca->jz[ia]   ],sf_crmul(wa , ca->w110[ia]));
+		    uu[ iy+ca->jy[ia]+1 ][ ix+ca->jx[ia]+1 ][ iz+ca->jz[ia]+1 ] = sf_cadd(uu[ iy+ca->jy[ia]+1 ][ ix+ca->jx[ia]+1 ][ iz+ca->jz[ia]+1 ],sf_crmul(wa , ca->w111[ia]));
+#endif
+                }
+
+            }
+        }
     }
 }
 
@@ -1843,6 +2039,246 @@ void vksp3d_finalize()
 {
     free(waveka);
     free(wavekb);
+}
+
+/*------------------------------------------------------------*/
+static sf_complex *cwave   =NULL;
+static sf_complex **cwaven2=NULL;
+static sf_complex **waven2 =NULL;
+static sf_complex ***waves =NULL;
+
+clr3d clr3d_make(int *n2s,
+                 fdm3d fdm,
+                 dft3d dft)
+/*< init lowrank arrays for rite method >*/
+{
+    int nxyz,nk,ik,i,j,n2_sum,n2_max;
+    clr3d clr;
+
+    clr = (clr3d) sf_alloc(1,sizeof(*clr));
+
+    clr->n2_start = sf_intalloc(6);
+    clr->n2_local = sf_intalloc(6);
+    clr->map = sf_intalloc2(3,3);
+
+    n2_sum = 0;
+    n2_max = 0;
+    for (i=0; i<6; i++) {
+        clr->n2_start[i] = n2_sum; 
+        clr->n2_local[i] = n2s[i]; 
+        n2_sum += n2s[i];
+        if(n2_max<n2s[i]) n2_max = n2s[i];
+    }
+    clr->n2_sum=n2_sum;
+    clr->n2_max=n2_max;
+
+    if(fdm->verb) {
+        sf_warning("n2_start=%d,%d,%d,%d,%d,%d",clr->n2_start[0],clr->n2_start[1],clr->n2_start[2],clr->n2_start[3],clr->n2_start[4],clr->n2_start[5]);
+        sf_warning("n2_local=%d,%d,%d,%d,%d,%d",clr->n2_local[0],clr->n2_local[1],clr->n2_local[2],clr->n2_local[3],clr->n2_local[4],clr->n2_local[5]);
+        sf_warning("n2_sum=%d, n2_max=%d",clr->n2_sum,clr->n2_max);
+    }
+
+    clr->map[0][0] = 0; clr->map[0][1] = 3; clr->map[0][2] = 4;
+    clr->map[1][0] = 3; clr->map[1][1] = 1; clr->map[1][2] = 5;
+    clr->map[2][0] = 4; clr->map[2][1] = 5; clr->map[2][2] = 2;
+
+    nxyz = fdm->ny *fdm->nx *fdm->nz ;
+    nk   = dft->nky*dft->nkx*dft->nkz;
+    cwave  = sf_complexalloc(nk);
+    cwaven2= sf_complexalloc2(nk,  clr->n2_max);
+    waven2 = sf_complexalloc2(nxyz,clr->n2_max);
+    waves  = sf_complexalloc3(nxyz,3,3);
+
+    for (i=0; i<3; i++)     {
+        for (j=0; j<3; j++) {
+#ifdef _OPENMP
+#pragma omp parallel for			\
+    schedule(dynamic,1)				\
+    private(ik)                                 \
+    shared(nxyz,i,j,waves)
+#endif
+            for (ik=0; ik<nxyz; ik++)
+                waves[i][j][ik] = sf_cmplx(0.,0.);
+        }
+    }
+
+    return clr;
+}
+
+/*------------------------------------------------------------*/
+void clr3d_apply(sf_complex **uo,
+                 sf_complex **ui,
+                 sf_complex **lt,
+                 sf_complex **rt,
+                 fdm3d fdm,
+                 dft3d dft,
+                 clr3d clr)
+/*< apply lowrank matrices for time stepping (can be in-place) >*/
+{
+    int nxyz,nk,ik,ir,ic,im,in,iz,ix,iy,i;
+    sf_complex c;
+
+    nxyz = fdm->ny *fdm->nx *fdm->nz ;
+    nk   = dft->nky*dft->nkx*dft->nkz;
+
+    for (ic=0; ic<3; ic++) {
+
+        fft(ui[ic],cwave);
+
+        for (ir=0; ir<3; ir++) {
+
+#ifdef _OPENMP
+#pragma omp parallel for              \
+    schedule(dynamic,1)               \
+    private(im,in,ik)                 \
+    shared(clr,cwaven2,cwave,rt,nk)
+#endif
+            for (im=0; im<clr->n2_local[clr->map[ir][ic]]; im++) {
+                in = clr->n2_start[clr->map[ir][ic]]+im;
+                for (ik=0; ik<nk; ik++) {
+#ifdef SF_HAS_COMPLEX_H
+                    cwaven2[im][ik] = cwave[ik]*rt[in][ik];
+#else
+                    cwaven2[im][ik] = sf_cmul(cwave[ik],rt[in][ik]);
+#endif
+                }
+            }
+            for (im=0; im<clr->n2_local[clr->map[ir][ic]]; im++)
+                ifft(waven2[im],cwaven2[im]);
+
+#ifdef _OPENMP
+#pragma omp parallel for			\
+    schedule(dynamic,1)				\
+    private(iy,ix,iz,i,c,im,in)                 \
+    shared(fdm,clr,lt,waven2,waves,ir,ic)
+#endif
+            for (iy=0; iy<fdm->nypad; iy++)         {
+                for (ix=0; ix<fdm->nxpad; ix++)     {
+                    for (iz=0; iz<fdm->nzpad; iz++) {
+                        i = (iy*fdm->nxpad + ix)*fdm->nzpad + iz; /* flattened coordinate */
+                        c = sf_cmplx(0.,0.);
+                        for (im=0; im<clr->n2_local[clr->map[ir][ic]]; im++) {
+                            in = clr->n2_start[clr->map[ir][ic]]+im;
+#ifdef SF_HAS_COMPLEX_H
+                            c += lt[in][i]*waven2[im][i];
+#else
+                            c += sf_cmul(lt[in][i],waven2[im][i]);
+#endif
+                        }
+                        waves[ir][ic][i] = c;
+                    }
+                }
+            }
+
+        } /* ir loop */
+
+    } /* ic loop */
+
+    /* linear combination forms the output vector */
+#ifdef _OPENMP
+#pragma omp parallel for			\
+    schedule(dynamic,1)				\
+    private(ik)                                 \
+    shared(nxyz,waves,uo)
+#endif
+    for (ik=0; ik<nxyz; ik++) {
+#ifdef SF_HAS_COMPLEX_H
+        uo[0][ik] = waves[0][0][ik] + waves[0][1][ik] + waves[0][2][ik];
+        uo[1][ik] = waves[1][0][ik] + waves[1][1][ik] + waves[1][2][ik];
+        uo[2][ik] = waves[2][0][ik] + waves[2][1][ik] + waves[2][2][ik];
+#else
+        uo[0][ik] = sf_cadd(waves[0][0][ik],sf_cadd(waves[0][1][ik],waves[0][2][ik]));
+        uo[1][ik] = sf_cadd(waves[1][0][ik],sf_cadd(waves[1][1][ik],waves[1][2][ik]));
+        uo[2][ik] = sf_cadd(waves[2][0][ik],sf_cadd(waves[2][1][ik],waves[2][2][ik]));
+#endif
+    }
+
+}
+
+/*------------------------------------------------------------*/
+void clr3d_apply_dbg(sf_complex **uo,
+                     sf_complex **ui,
+                     sf_complex **lt,
+                     sf_complex **rt,
+                     fdm3d fdm,
+                     dft3d dft,
+                     clr3d clr)
+/*< apply lowrank matrices for time stepping (can be in-place) >*/
+{
+    int nxyz,nk,ik,ir,ic,im,in,iz,ix,iy,i;
+    sf_complex c;
+
+    nxyz = fdm->ny *fdm->nx *fdm->nz ;
+    nk   = dft->nky*dft->nkx*dft->nkz;
+
+    for (ic=0; ic<1; ic++) {
+
+        fft(ui[ic],cwave);
+
+        for (ir=0; ir<1; ir++) {
+
+            for (im=0; im<clr->n2_local[clr->map[0][0]]; im++) {
+                in = clr->n2_start[clr->map[0][0]]+im;
+                for (ik=0; ik<nk; ik++) {
+#ifdef SF_HAS_COMPLEX_H
+                    cwaven2[im][ik] = cwave[ik]*rt[in][ik];
+#else
+                    cwaven2[im][ik] = sf_cmul(cwave[ik],rt[in][ik]);
+#endif
+                }
+            }
+            for (im=0; im<clr->n2_local[clr->map[0][0]]; im++)
+                ifft(waven2[im],cwaven2[im]);
+
+            for (iy=0; iy<fdm->nypad; iy++)         {
+                for (ix=0; ix<fdm->nxpad; ix++)     {
+                    for (iz=0; iz<fdm->nzpad; iz++) {
+                        i = (iy*fdm->nxpad + ix)*fdm->nzpad + iz; /* flattened coordinate */
+                        c = sf_cmplx(0.,0.);
+                        for (im=0; im<clr->n2_local[clr->map[0][0]]; im++) {
+                            in = clr->n2_start[clr->map[0][0]]+im;
+#ifdef SF_HAS_COMPLEX_H
+                            c += lt[in][i]*waven2[im][i];
+#else
+                            c += sf_cmul(lt[in][i],waven2[im][i]);
+#endif
+                        }
+                        waves[ir][ic][i] = c;
+                    }
+                }
+            }
+
+        } /* ir loop */
+
+    } /* ic loop */
+
+    /* linear combination forms the output vector */
+    for (ic=0; ic<1; ic++) {
+#ifdef _OPENMP
+#pragma omp parallel for			\
+    schedule(dynamic,1)				\
+    private(ik)                                 \
+    shared(nk,ir,waves,uo)
+#endif
+        for (ik=0; ik<nxyz; ik++) {
+#ifdef SF_HAS_COMPLEX_H
+            uo[ic][ik] = waves[0][ic][ik];
+#else
+            uo[ic][ik] = waves[0][ic][ik];
+#endif
+        }
+    }
+
+}
+
+/*------------------------------------------------------------*/
+void clr3d_finalize()
+/*< free static memory allocated for clr >*/
+{
+    free(cwave);
+    free(*cwaven2); free(cwaven2);
+    free(*waven2); free(waven2);
+    free(**waves); free(*waves); free(waves);
 }
 
 /*------------------------------------------------------------*/
