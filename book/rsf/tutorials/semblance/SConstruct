@@ -38,9 +38,9 @@ for case in range(3):
     Flow(coh,'penobscot','coherence mode=c%d twod=n' % (case+1))
     Result(coh,
            '''
-           byte gainpanel=all allpos=y |
+           byte gainpanel=all allpos=y pclip=95 |
            grey3 title="%s" frame1=27 frame2=125 frame3=100
-           flat=y point1=0.25 
+           flat=y point1=0.25 color=b
            ''' % ('Bahorich and Farmer (1995)','Marfurt et al. (1998)','Gersztenkorn and Marfurt (1999)')[case])
 
 
@@ -69,9 +69,9 @@ Flow('coh','eig1 eig2','math l1=${SOURCES[0]} l2=${SOURCES[1]} output="(l1-l2)/(
 
 Result('coh',
        '''
-       byte gainpanel=all allpos=y |
+       byte gainpanel=all allpos=y pclip=95 |
        grey3 title="Randen et al. (2000)" frame1=27 frame2=125 frame3=100
-       flat=y point1=0.25 unit2= unit3=
+       flat=y point1=0.25 unit2= unit3= color=b
        ''')
 
 # Dip estimation
@@ -118,9 +118,9 @@ Flow('pcoh','pwdiff',
 
 Result('pcoh',
        '''
-       byte gainpanel=all allpos=y |
+       byte gainpanel=all allpos=y pclip=95 |
        grey3 title="Karimi et al. (2015)" frame1=27 frame2=125 frame3=100
-       flat=y point1=0.25 unit2= unit3=
+       flat=y point1=0.25 unit2= unit3= color=B
        ''')
 
 End()
