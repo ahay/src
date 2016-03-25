@@ -196,6 +196,18 @@ static void triple (int o, int d, int nx, int nb, float* x, const float* tmp, bo
     }
 }
 
+static void dtriple (int o, int d, int nx, int nb, float* x, const float* tmp, float wt)
+{
+    int i;
+    const float *tmp2;
+
+    tmp2 = tmp + 2*nb;
+    
+    for (i=0; i < nx; i++) {
+	x[o+i*d] = (tmp2[i] - tmp[i])*wt;
+    }
+}
+
 static void triple2 (int o, int d, int nx, int nb, const float* x, float* tmp, bool box, float wt)
 {
     int i;
@@ -214,6 +226,18 @@ static void triple2 (int o, int d, int nx, int nb, const float* x, float* tmp, b
     }
 }
 
+static void dtriple2 (int o, int d, int nx, int nb, const float* x, float* tmp, float wt)
+{
+    int i;
+
+    for (i=0; i < nx + 2*nb; i++) {
+	tmp[i] = 0;
+    }
+
+    cblas_saxpy(nx, -wt,x+o,d,tmp     ,1);
+    cblas_saxpy(nx,  wt,x+o,d,tmp+2*nb,1);
+}
+
 void sf_smooth (sf_triangle tr  /* smoothing object */, 
 		int o, int d    /* trace sampling */, 
 		bool der        /* if derivative */, 
@@ -223,6 +247,17 @@ void sf_smooth (sf_triangle tr  /* smoothing object */,
     fold (o,d,tr->nx,tr->nb,tr->np,x,tr->tmp);
     doubint (tr->np,tr->tmp,(bool) (tr->box || der));
     triple (o,d,tr->nx,tr->nb,x,tr->tmp, tr->box, tr->wt);
+}
+
+void sf_dsmooth (sf_triangle tr  /* smoothing object */, 
+		int o, int d    /* trace sampling */, 
+		bool der        /* if derivative */, 
+		float *x        /* data (smoothed in place) */)
+/*< apply triangle smoothing >*/
+{
+    fold (o,d,tr->nx,tr->nb,tr->np,x,tr->tmp);
+    doubint (tr->np,tr->tmp,(bool) (tr->box || der));
+    dtriple (o,d,tr->nx,tr->nb,x,tr->tmp, tr->wt);
 }
 
 void sf_smooth2 (sf_triangle tr  /* smoothing object */, 
@@ -236,6 +271,17 @@ void sf_smooth2 (sf_triangle tr  /* smoothing object */,
     fold2 (o,d,tr->nx,tr->nb,tr->np,x,tr->tmp);
 }
 
+void sf_dsmooth2 (sf_triangle tr  /* smoothing object */, 
+		 int o, int d    /* trace sampling */, 
+		 bool der        /* if derivative */,
+		 float *x        /* data (smoothed in place) */)
+/*< apply adjoint triangle smoothing >*/
+{
+    dtriple2 (o,d,tr->nx,tr->nb,x,tr->tmp, tr->wt);
+    doubint2 (tr->np,tr->tmp,(bool) (tr->box || der));
+    fold2 (o,d,tr->nx,tr->nb,tr->np,x,tr->tmp);
+}
+
 void  sf_triangle_close(sf_triangle tr)
 /*< free allocated storage >*/
 {
@@ -243,4 +289,3 @@ void  sf_triangle_close(sf_triangle tr)
     free (tr);
 }
 
-/* 	$Id$	 */

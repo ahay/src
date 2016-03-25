@@ -31,8 +31,8 @@ static float c, c2, *h;
 static int n, nt;
 
 void sf_deriv_init(int nt1  /* transform length */, 
-		int n1   /* trace length */, 
-		float c1 /* filter parameter */)
+		   int n1   /* trace length */, 
+		   float c1 /* filter parameter */)
 /*< initialize >*/
 {
     n = n1;
@@ -42,7 +42,7 @@ void sf_deriv_init(int nt1  /* transform length */,
     h = sf_floatalloc(nt);
 }
 
-void sf_deriv_free(void)
+void sf_deriv_close(void)
 /*< free allocated storage >*/
 {
     free(h);
@@ -75,3 +75,4 @@ void sf_deriv (const float* trace, float* trace2)
     }
     trace2[nt-1] = h[nt-1]-h[nt-2];
 }
+
