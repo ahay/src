@@ -21,7 +21,6 @@
 #include "Qfwi_commons.h"
 #include "Qfwi_lbfgs.h"
 #include "Qfwi_gradient.h"
-#include "triutil.h"
 /*^*/
 
 void fwi(sf_file Fdat, sf_file Finv, sf_file Fgrad, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpar, sf_vec array, sf_fwi fwipar, sf_optim optpar, bool verb, int media)
@@ -117,79 +116,25 @@ void fwi(sf_file Fdat, sf_file Finv, sf_file Fgrad, sf_mpi *mpipar, sf_sou soupa
 	if(mpipar->cpuid==0) fclose(fp);
 }
 
-void lstri_op(float **dd, float **dwt, float ***ww, float ***mwt, sf_acqui acpar, sf_vec array, sf_pas paspar, bool verb)
-/*< ls TRI operator >*/
-{
-    float **vv;
-    int ix,iz,it;
-
-    if (paspar->inv) {
-#ifdef _OPENMP
-#pragma omp parallel for default(shared) private(it,ix,iz)
-#endif
-        for         (it=0; it<acpar->nt; it++)
-            for     (ix=0; ix<acpar->nx; ix++)
-                for (iz=0; iz<acpar->nz; iz++)
-                    ww[it][ix][iz] = 0.0f;
-        if (NULL!=mwt) {
-#ifdef _OPENMP
-#pragma omp parallel for default(shared) private(it,ix,iz)
-#endif
-            for         (it=0; it<acpar->nt; it++)
-                for     (ix=0; ix<acpar->nx; ix++)
-                    for (iz=0; iz<acpar->nz; iz++)
-                        mwt[it][ix][iz] = 1.0f;
-        }
-    } else {
-#ifdef _OPENMP
-#pragma omp parallel for default(shared) private(ix,it)
-#endif
-        for     (ix=0; ix<acpar->nx; ix++)
-            for (it=0; it<acpar->nt; it++)
-                dd[ix][it] = 0.0f;
-    }
-
-    /* map 1d to 2d */
-    vv = (float**) sf_alloc (acpar->nx,sizeof(float*)); 
-    vv[0] = array->vv;
-    for (ix=1; ix<acpar->nx; ix++) vv[ix] = vv[0]+ix*acpar->nz;
-
-    timerev_init(verb, true, acpar->nt, acpar->nx, acpar->nz, acpar->nb, acpar->rz-acpar->nb, acpar->dt, acpar->dx, acpar->dz, acpar->coef, vv);
-
-    /* calculate model weighting using correlative imaging condition */
-    if (paspar->inv && paspar->prec) { 
-        if (paspar->ctr) {
-            ctimerev(paspar->ngrp,mwt,dd);
-            absval(acpar->nz*acpar->nx*acpar->nt,mwt[0][0]);
-        } else {
-            timerev_lop(true, false, acpar->nz*acpar->nx*acpar->nt, acpar->nt*acpar->nx, mwt[0][0], dd[0]);
-            autopow(acpar->nz*acpar->nx*acpar->nt,(float)paspar->ngrp,mwt[0][0]);
-        }
-        /* smoothing */
-        smooth(acpar->nz, acpar->nx, acpar->nt, paspar->rectz, paspar->rectx, paspar->rectt, paspar->repeat, mwt[0][0]);
-        /* local normalizaiton */
-        swnorm(verb, paspar->sw, acpar->nz, acpar->nx, acpar->nt, paspar->size, paspar->perc, mwt[0][0]);
-        /* hard thresholding */
-        if (paspar->hard>0) threshold(false, acpar->nz*acpar->nx*acpar->nt, paspar->hard, mwt[0][0]);
-    }
-
-    /* apply time-reversal imaging linear operator */
-    if (paspar->inv) {
-        if (NULL!=dwt) sf_solver(timerev_lop,sf_cgstep,acpar->nz*acpar->nx*acpar->nt,acpar->nt*acpar->nx,ww[0][0],dd[0],paspar->niter,"mwt",mwt[0][0],"wt",dwt[0],"verb",verb,"end");
-        else sf_solver(timerev_lop,sf_cgstep,acpar->nz*acpar->nx*acpar->nt,acpar->nt*acpar->nx,ww[0][0],dd[0],paspar->niter,"mwt",mwt[0][0],"verb",verb,"end");
-    } else {
-        timerev_lop(false, false, acpar->nz*acpar->nx*acpar->nt, acpar->nt*acpar->nx, ww[0][0], dd[0]);
-    }
-    
-    /* close */
-    timerev_close();
-
-}
-
 void lstri(sf_file Fdat, sf_file Fmwt, sf_file Fsrc, sf_mpi *mpipar, sf_acqui acpar, sf_vec array, sf_pas paspar, bool verb)
 /*< passive source inversion >*/
 {
     float **dd, ***ww, ***mwt;
+    int nturn, iturn, is, rdn;
+    char filename[20]="tempbin",srdn[10];
+    FILE *temp;
+    MPI_Comm comm=MPI_COMM_WORLD;
+
+    if (mpipar->cpuid==0) {
+        srand(time(NULL));
+        rdn = rand()%1000000000;
+        sprintf(srdn,"%d",rdn);
+        strcat(filename,srdn);
+    }
+    MPI_Bcast(filename, 20, MPI_CHAR, 0, comm);
+    if(verb && mpipar->cpuid==0) sf_warning("filename=%s",filename);
+
+    temp=fopen(filename, "wb+");
 
     /*
 #ifdef _OPENMP
@@ -202,21 +147,61 @@ void lstri(sf_file Fdat, sf_file Fmwt, sf_file Fsrc, sf_mpi *mpipar, sf_acqui ac
     ww = sf_floatalloc3(acpar->nz, acpar->nx, acpar->nt);
     if (paspar->inv) mwt = sf_floatalloc3(acpar->nz, acpar->nx, acpar->nt);
     else mwt = NULL;
-   
-    /* read model */
-    if (paspar->inv) sf_floatread(dd[0], acpar->nt*acpar->nx, Fdat);
-    else sf_floatread(ww[0][0], acpar->nz*acpar->nx*acpar->nt, Fsrc);
 
-    lstri_op(dd, NULL, ww, mwt, acpar, array, paspar, verb);
+    if(acpar->ns%mpipar->numprocs==0) nturn=acpar->ns/mpipar->numprocs;
+    else nturn=acpar->ns/mpipar->numprocs+1;
+
+    for(iturn=0; iturn<nturn; iturn++){
+        is=iturn*mpipar->numprocs+mpipar->cpuid;
+        if(is<acpar->ns){
+            if (paspar->inv) {
+                /* read data */
+                sf_seek(Fdat, is*acpar->nt*acpar->nx*sizeof(float), SEEK_SET);
+                sf_floatread(dd[0], acpar->nt*acpar->nx, Fdat);
+            } else {
+                /* read source */
+                sf_seek(Fsrc, is*acpar->nz*acpar->nx*acpar->nt*sizeof(float), SEEK_SET);
+                sf_floatread(ww[0][0], acpar->nz*acpar->nx*acpar->nt, Fsrc);
+            }
+
+            /* do the computation */
+            lstri_op(dd, NULL, ww, mwt, acpar, array, paspar, verb);
+
+            if (paspar->inv) {
+                /* write source */
+                fseeko(temp, is*acpar->nz*acpar->nx*acpar->nt*sizeof(float), SEEK_SET);
+                fwrite(ww[0][0], sizeof(float), acpar->nz*acpar->nx*acpar->nt, temp);
+                if (NULL!=Fmwt && is==0) sf_floatwrite(mwt[0][0], acpar->nz*acpar->nx*acpar->nt, Fmwt);
+            } else {
+                /* write data */
+                fseeko(temp, is*acpar->nt*acpar->nx*sizeof(float), SEEK_SET);
+                fwrite(dd[0], sizeof(float), acpar->nt*acpar->nx, temp);
+            }
+
+        } /* if is<ns */
+    }
+    fclose(temp);
+    MPI_Barrier(comm);
     
     if(mpipar->cpuid==0) {
+        temp=fopen(filename, "rb");
         if (paspar->inv) {
-            if (NULL!=Fsrc) sf_floatwrite(ww[0][0], acpar->nz*acpar->nx*acpar->nt, Fsrc);
-            if (NULL!=Fmwt) sf_floatwrite(mwt[0][0], acpar->nz*acpar->nx*acpar->nt, Fmwt);
+            for(is=0; is<acpar->ns; is++){
+                fseeko(temp, is*acpar->nz*acpar->nx*acpar->nt*sizeof(float), SEEK_SET);
+                fread(ww[0][0], sizeof(float), acpar->nz*acpar->nx*acpar->nt, temp);
+                sf_floatwrite(ww[0][0], acpar->nz*acpar->nx*acpar->nt, Fsrc);
+            }
         } else {
-            if (NULL!=Fdat) sf_floatwrite(dd[0], acpar->nt*acpar->nx, Fdat);
+            for(is=0; is<acpar->ns; is++){
+                fseeko(temp, is*acpar->nt*acpar->nx*sizeof(float), SEEK_SET);
+                fread(dd[0], sizeof(float), acpar->nt*acpar->nx, temp);
+                sf_floatwrite(dd[0], acpar->nt*acpar->nx, Fdat);
+            }
         }
+        fclose(temp);
+        remove(filename);
     }
+    MPI_Barrier(comm);
 
     /* close */
     free(*dd); free(dd); 
@@ -234,89 +219,18 @@ void pfwi(sf_file Fdat, sf_file Finv, sf_file Fgrad, sf_file Fmwt, sf_file Fsrc,
 	float *x, *direction, *grad;
 	sf_gradient gradient;
 	FILE *fp;
-        float **dd,**dwt=NULL,***ww,***mwt,***gwt;
-        int it,ix,iz;
-        /*int wtn1, wtn2, woffn1, woffn2;*/
 
 	nz=acpar->nz;
 	nx=acpar->nx;
 	nzx=nz*nx;
 
 	/* gradient type */
-        // JS
-        //gradient=gradient_av;
         gradient=gradient_pas_av;
         nm=nzx;
         x=array->vv;
 
-        /* allocate data/source/weight */
-        dd = sf_floatalloc2(acpar->nt, acpar->nx);
-        ww = sf_floatalloc3(acpar->nz, acpar->nx, acpar->nt);
-        gwt= sf_floatalloc3(acpar->nz, acpar->nx, acpar->nt);
-        if (!paspar->onlyvel) {
-            mwt = sf_floatalloc3(acpar->nz, acpar->nx, acpar->nt);
-            /*
-            dwt = sf_floatalloc2(acpar->nt, acpar->nx);
-
-            wtn1=(fwipar->wt1-acpar->t0)/acpar->dt+0.5;
-            wtn2=(fwipar->wt2-acpar->t0)/acpar->dt+0.5;
-            woffn1=(fwipar->woff1-acpar->r0)/acpar->dr+0.5;
-            woffn2=(fwipar->woff2-acpar->r0)/acpar->dr+0.5;
-	    residual_weighting(dwt, acpar->nt, acpar->nx, wtn1, wtn2, woffn1, woffn2, !fwipar->oreo);
-
-            sf_file Fdwt;
-            Fdwt=sf_output("Fdwt");
-            sf_putint(Fdwt,"n1",acpar->nt);
-            sf_putint(Fdwt,"n2",acpar->nx);
-            sf_floatwrite(dwt[0],acpar->nt*acpar->nx,Fdwt);
-            sf_fileclose(Fdwt);
-            */
-        } else {
-            mwt=NULL;
-            dwt=NULL;
-        }
-
-        /* read data/source */
-        // JS
-        sf_floatread(dd[0], acpar->nt*acpar->nx, Fdat);
-        if (paspar->onlyvel) {
-            sf_floatread(ww[0][0], acpar->nz*acpar->nx*acpar->nt, Fsrc);
-        } else {
-            /* linear inversion of source */
-            lstri_op(dd, dwt, ww, mwt, acpar, array, paspar, verb);
-        }
-
-        /* calculate gradient mask */
-        if (!paspar->onlyvel && paspar->prec && paspar->hidesrc) {
-#ifdef _OPENMP
-#pragma omp parallel for default(shared) private(it,ix,iz)
-#endif
-        for         (it=0; it<acpar->nt; it++)
-            for     (ix=0; ix<acpar->nx; ix++)
-                for (iz=0; iz<acpar->nz; iz++)
-                    gwt[it][ix][iz] = mwt[it][ix][iz];
-        threshold(true, acpar->nz*acpar->nx*acpar->nt, 0.2, gwt[0][0]);
-#ifdef _OPENMP
-#pragma omp parallel for default(shared) private(it,ix,iz)
-#endif
-        for         (it=0; it<acpar->nt; it++)
-            for     (ix=0; ix<acpar->nx; ix++)
-                for (iz=0; iz<acpar->nz; iz++)
-                    gwt[it][ix][iz] = 1.-gwt[it][ix][iz];
-        } else {
-#ifdef _OPENMP
-#pragma omp parallel for default(shared) private(it,ix,iz)
-#endif
-        for         (it=0; it<acpar->nt; it++)
-            for     (ix=0; ix<acpar->nx; ix++)
-                for (iz=0; iz<acpar->nz; iz++)
-                    gwt[it][ix][iz] = 1.;
-        }
-
 	/* initialize */
-        // JS
-	//gradient_init(Fdat, mpipar, soupar, acpar, array, fwipar, verb);
-	gradient_pas_init(dd, ww, gwt, mpipar, acpar, array, fwipar, verb);
+	gradient_pas_init(Fdat, Fsrc, Fmwt, mpipar, acpar, array, fwipar, paspar, verb);
 
 	/* calculate first gradient */
 	grad=sf_floatalloc(nm);
@@ -325,9 +239,7 @@ void pfwi(sf_file Fdat, sf_file Finv, sf_file Fgrad, sf_file Fmwt, sf_file Fsrc,
 	/* output first gradient */
 	if(mpipar->cpuid==0) sf_floatwrite(grad, nm, Fgrad);
 
-	/*if(fwipar->onlygrad) return; // program terminates */
-
-        if (!fwipar->onlygrad) {
+	if(fwipar->onlygrad) return; /* program terminates */
 
 	if(mpipar->cpuid==0) fp=fopen("iterate.txt","a");
 	direction=sf_floatalloc(nm);
@@ -388,14 +300,4 @@ void pfwi(sf_file Fdat, sf_file Finv, sf_file Fgrad, sf_file Fmwt, sf_file Fsrc,
 
 	if(mpipar->cpuid==0) fclose(fp);
 
-        } /* if !onlygrad */
-
-        if (mpipar->cpuid==0 && !paspar->onlyvel) {
-            sf_floatwrite(ww[0][0], acpar->nz*acpar->nx*acpar->nt, Fsrc);
-            sf_floatwrite(mwt[0][0],acpar->nz*acpar->nx*acpar->nt, Fmwt);
-        }
-
-        free(*dd); free(dd); 
-        free(**ww); free(*ww); free(ww);
-        if(!paspar->onlyvel) { free(**mwt); free(*mwt); free(mwt); }
 }

@@ -28,7 +28,7 @@
 
 int main(int argc, char* argv[])
 {
-	int function, media;
+	int function, media, ntmp;
 	bool verb;
 
 	sf_mpi mpipar;
@@ -228,6 +228,7 @@ int main(int argc, char* argv[])
                 if (paspar->inv) {
 
                     Fdat=sf_input("Fdat");
+                    sf_histint(Fdat, "n3", &acpar->ns);
 
                     if (!paspar->onlysrc) {
                         fwipar=(sf_fwi)sf_alloc(1, sizeof(*fwipar));
@@ -304,6 +305,10 @@ int main(int argc, char* argv[])
                         sf_putfloat (Fsrc, "d3", acpar->dt);
                         sf_putstring(Fsrc, "label3", "Time");
                         sf_putstring(Fsrc, "unit3" , "s");
+                        sf_putint   (Fsrc, "n4", acpar->ns);
+                        sf_putfloat (Fsrc, "d4", 1.0f);
+                        sf_putfloat (Fsrc, "o4", 0.0f);
+                        sf_putstring(Fsrc, "label4", "Stage");
 
                         Fmwt=sf_output("Fmwt"); /* output data */
                         sf_putint   (Fmwt, "n1", acpar->nz);
@@ -323,10 +328,13 @@ int main(int argc, char* argv[])
                         sf_putstring(Fmwt, "unit3" , "s");
                     } else {
                         Fsrc=sf_input("Fsrc");
+                        sf_histint(Fsrc, "n4", &ntmp);
+                        if (ntmp!=acpar->ns) sf_error("Shot dimension mismatch!");
                     }
 
                 } else { /* modeling */
                     Fsrc=sf_input("Fsrc");
+                    sf_histint(Fsrc, "n4", &acpar->ns);
 
                     Fdat=sf_output("output"); /* output data */
                     sf_putint   (Fdat, "n1", acpar->nt);
@@ -339,7 +347,10 @@ int main(int argc, char* argv[])
                     sf_putfloat (Fdat, "d2", acpar->dx);
                     sf_putstring(Fdat, "label2", "Distance");
                     sf_putstring(Fdat, "unit2" , "km");
-                    sf_putint   (Fdat, "n3", 1);
+                    sf_putint   (Fdat, "n3", acpar->ns);
+                    sf_putfloat (Fdat, "d3", 1.0f);
+                    sf_putfloat (Fdat, "o3", 0.0f);
+                    sf_putstring(Fdat, "label3", "Stage");
                 }
 
                 if (paspar->inv) {
