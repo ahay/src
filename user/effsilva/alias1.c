@@ -79,7 +79,7 @@ int indexMap(
 	}
     }
     
-    sf_deriv_free();
+    sf_deriv_close();
     free(x); free(z); free(dxdg); free(dzdg);
     flag = 1;
     
@@ -118,7 +118,7 @@ int angleMap(
 	}
     }
     
-    sf_deriv_free();
+    sf_deriv_close();
     free(x); free(z); free(dxdg); free(dzdg);
     flag = 1;
     
@@ -233,7 +233,7 @@ int indexMap2(
 	}
     }
     
-    sf_deriv_free();
+    sf_deriv_close();
     free(x); free(z); free(dxdt); free(dzdt);
     flag = 1;
     

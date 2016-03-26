@@ -27,6 +27,7 @@
 #include "error.h"
 #include "adjnull.h"
 #include "decart.h"
+#include "deriv.h"
 
 static int *n, s[SF_MAX_DIM], nd, dim;
 static sf_triangle *tr;
@@ -94,6 +95,44 @@ void sf_trianglen_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 	    y[i] += tmp[i];
 	}
     }    
+}
+
+void sf_dtrianglen (int i, int nderiv, float* x, float* y)
+/*< linear operator (derivative with respect to radius) >*/
+{
+    float *t1, *t2;
+    int id, j, i0, i1, n1, s1;
+
+    for (id=0; id < nd; id++) {
+	tmp[id] = x[id];
+    }
+  
+    n1 = n[i];
+    s1 = s[i];
+
+    for (j=0; j < nd/n1; j++) {
+	i0 = sf_first_index (i,j,dim,n,s);
+	sf_dsmooth2 (tr[i], i0, s1, false, tmp);
+    }
+
+    t1 = sf_floatalloc(n1);
+    t2 = sf_floatalloc(n1);
+
+    sf_deriv_init(n[i],nderiv,0.);
+    for (j=0; j < nd/n[i]; j++) {
+	i0 = sf_first_index (i,j,dim,n,s);
+	for (i1=0; i1 < n1; i1++) {
+	    t1[i1] = tmp[i0+i1*s1];
+	}
+	sf_deriv(t1,t2);
+	for (i1=0; i1 < n1; i1++) {
+	    y[i0+i1*s1] = t2[i1];
+	}
+    }
+    sf_deriv_close();
+
+    free(t1);
+    free(t2);
 }
 
 void sf_trianglen_close(void)

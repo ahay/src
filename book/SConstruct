@@ -35,6 +35,7 @@ rsf/bash/mpi
 rsf/bash/plot
 rsf/rsf/plplot
 rsf/programming/cube
+rsf/programming/svd
 rsf/school2012/plot
 rsf/school2015/matlab
 rsf/tutorials/colormaps
@@ -54,6 +55,7 @@ tccs/synwav/gch1
 tccs/shemd/hyperoil
 tccs/shemd/synth1
 tccs/shemd/fxemddemo
+tccs/shemd/fxmssademo
 xjtu/primer/testelastic2d
 '''
 
