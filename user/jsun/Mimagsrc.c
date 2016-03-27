@@ -18,7 +18,7 @@
 */
 
 #include <rsf.h>
-#include "ricker.h"
+#include "mricker.h"
 
 int main(int argc, char* argv[])
 {
@@ -41,7 +41,7 @@ int main(int argc, char* argv[])
       /* peak frequency for Ricker wavelet (as fraction of Nyquist) */
     } else {
       if (!sf_histfloat(in,"d1",&d1)) d1=1.;
-      freq *= 2.*d1;
+      freq *= 2.*d1; /* division by Nyquist=1/(2.*dt) */
     }
 
     if (!sf_getbool("deriv",&deriv)) deriv=false;
@@ -50,7 +50,7 @@ int main(int argc, char* argv[])
 
     trace = sf_floatalloc(n1);
     fft_size = 2*kiss_fft_next_fast_size((n1+1)/2);
-    ricker_init(fft_size, 0.5*freq, order);
+    ricker_init(fft_size, 0.5*freq, d1);
 
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(trace,n1,in);

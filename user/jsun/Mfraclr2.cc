@@ -171,6 +171,7 @@ int main(int argc, char** argv)
 
     par.get("dt",dt); // time step
     par.get("w0",w0); // reference frequency
+    w0 *= 2*SF_PI;
     
     par.get("rev",rev,false); // reverse propagation
     par.get("mode",mode,0); // mode of propagation: 0 is viscoacoustic (default); 1 is loss-dominated; 2 is dispersion dominated; 3 is acoustic

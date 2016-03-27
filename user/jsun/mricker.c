@@ -21,43 +21,36 @@
 
 #include <rsf.h>
 
-#include "ricker.h"
+#include "mricker.h"
 
 static kiss_fft_cpx *shape;
 
 void ricker_init(int nfft   /* time samples */, 
-		 float freq /* frequency */,
-		 int order  /* derivative order */)
+		 float freq /* frequency percentage w.r.t 1/dt */,
+                 float dt   /* temporal sampling rate */)
 /*< initialize >*/
 {
     int iw, nw;
-    float dw, w;
-    kiss_fft_cpx cw;
+    float dw, w, w0;
 
     /* determine frequency sampling (for real to complex FFT) */
     nw = nfft/2+1;
-    dw = 1./(nfft*freq);
+    /* dw = 1./(nfft*freq); */
+    dw = 1./(nfft*dt);
+    w0 = freq/dt;
+    w0 *= w0;
  
     shape = (kiss_fft_cpx*) sf_complexalloc(nw);
 
     for (iw=0; iw < nw; iw++) {
 	w = iw*dw;
-	w *= w;
+	/* w *= w;
+        shape[iw].r = w*expf(1-w)/nfft;
+        shape[iw].i = 0.; */
 
-	switch (order) {
-	    case 2: /* half-order derivative */
-		cw.r = 2*SF_PI/nfft;
-		cw.i = iw*2*SF_PI/nfft;
-		cw = sf_csqrtf(cw);
-		shape[iw].r = cw.r*w*expf(1-w)/nfft;
-		shape[iw].i = cw.i*w*expf(1-w)/nfft;
-		break;
-	    case 0:
-	    default:
-		shape[iw].r = w*expf(1-w)/nfft;
-		shape[iw].i = 0.;
-		break;
-	}
+        shape[iw].r = 0.;
+        shape[iw].i = -w/w0*expf(1-w*w/w0)/nfft/2;
+        /* shape[iw].i = -w*w/w0*expf(1-w*w/w0)/nfft; */
     }
 
     sf_freqfilt_init(nfft,nw);
@@ -71,4 +64,4 @@ void ricker_close(void)
     sf_freqfilt_close();
 }
 
-/* 	$Id$	 */
+/* 	$Id: ricker.c 5023 2009-11-23 01:19:26Z sfomel $	 */
