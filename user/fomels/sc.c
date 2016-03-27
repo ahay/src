@@ -35,10 +35,10 @@ void sc_lop(bool adj, bool add, int nx, int nd, float* x, float* d)
     
     sf_adjnull(adj,add,nx,nd,x,d);
 
-    for (id=0; id < nd; id++) {
-	sx=0;
-	for (im=0; im < nm; im++) {
-	    ix = indx[id][im]+sx;
+    sx=0;
+    for (im=0; im < nm; im++) {
+	for (id=0; id < nd; id++) {
+	    ix = indx[im][id]+sx;
 	    
 	    if (adj) {
 		x[ix] += d[id];

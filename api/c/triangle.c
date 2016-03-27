@@ -204,7 +204,7 @@ static void dtriple (int o, int d, int nx, int nb, float* x, const float* tmp, f
     tmp2 = tmp + 2*nb;
     
     for (i=0; i < nx; i++) {
-	x[o+i*d] = (tmp2[i] - tmp[i])*wt;
+	x[o+i*d] = (tmp[i] - tmp2[i])*wt;
     }
 }
 
@@ -234,8 +234,8 @@ static void dtriple2 (int o, int d, int nx, int nb, const float* x, float* tmp, 
 	tmp[i] = 0;
     }
 
-    cblas_saxpy(nx, -wt,x+o,d,tmp     ,1);
-    cblas_saxpy(nx,  wt,x+o,d,tmp+2*nb,1);
+    cblas_saxpy(nx,  wt,x+o,d,tmp     ,1);
+    cblas_saxpy(nx, -wt,x+o,d,tmp+2*nb,1);
 }
 
 void sf_smooth (sf_triangle tr  /* smoothing object */, 
