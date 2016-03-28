@@ -228,7 +228,7 @@ int main(int argc, char* argv[])
                 if (paspar->inv) {
 
                     Fdat=sf_input("Fdat");
-                    sf_histint(Fdat, "n3", &acpar->ns);
+                    if(!sf_histint(Fdat, "n3", &acpar->ns)) acpar->ns=1;
 
                     if (!paspar->onlysrc) {
                         fwipar=(sf_fwi)sf_alloc(1, sizeof(*fwipar));
@@ -328,13 +328,13 @@ int main(int argc, char* argv[])
                         sf_putstring(Fmwt, "unit3" , "s");
                     } else {
                         Fsrc=sf_input("Fsrc");
-                        sf_histint(Fsrc, "n4", &ntmp);
+                        if(!sf_histint(Fsrc, "n4", &ntmp)) ntmp=1;
                         if (ntmp!=acpar->ns) sf_error("Shot dimension mismatch!");
                     }
 
                 } else { /* modeling */
                     Fsrc=sf_input("Fsrc");
-                    sf_histint(Fsrc, "n4", &acpar->ns);
+                    if(!sf_histint(Fsrc, "n4", &acpar->ns)) acpar->ns=1;
 
                     Fdat=sf_output("output"); /* output data */
                     sf_putint   (Fdat, "n1", acpar->nt);

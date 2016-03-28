@@ -655,6 +655,7 @@ void lstri_op(float **dd, float **dwt, float ***ww, float ***mwt, sf_acqui acpar
     
     /* close */
     timerev_close();
+    free(vv1);
 
 }
 
