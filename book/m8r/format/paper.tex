@@ -238,10 +238,12 @@ also the current mechanism used to push RSF files through Unix pipes.
 \subsection{Type}
 
 The data stored with RSF can have different types: character, unsigned
-character, integer, floating point, or complex. By default, single precision
-is used for numbers (\texttt{int} and \texttt{float} data types in the C
-programming language). The number of bytes required for represent these
-numbers may depend on the platform.
+character, integer, floating point, complex. By default, single
+precision is used for numbers (\texttt{int} and \texttt{float} data
+types in the C programming language) but double precision and other
+integer types (\texttt{short} and \texttt{long}) are also
+supported. The number of bytes required for represent these numbers
+may depend on the platform.
 
 \subsection{Form}
 

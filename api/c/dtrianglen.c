@@ -1,4 +1,4 @@
-/* N-D triangle smoothing as a linear operator */
+/* N-D triangle smoothing derivative */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -17,24 +17,19 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include "_bool.h"
-/*^*/
-
-#include "trianglen.h"
+#include "dtrianglen.h"
 #include "file.h"
 #include "triangle.h"
-#include "alloc.h"
-#include "error.h"
-#include "adjnull.h"
 #include "decart.h"
+#include "alloc.h"
+#include "deriv.h"
 
-static int *n, s[SF_MAX_DIM], nd, dim;
+static int *n, s[SF_MAX_DIM], *rect, nd, dim;
 static sf_triangle *tr;
-static float *tmp;
 
-void sf_trianglen_init (int ndim  /* number of dimensions */, 
-			int *nbox /* triangle radius [ndim] */, 
-			int *ndat /* data dimensions [ndim] */)
+void sf_dtrianglen_init (int ndim  /* number of dimensions */, 
+			 int *nbox /* triangle radius [ndim] */, 
+			 int *ndat /* data dimensions [ndim] */)
 /*< initialize >*/
 {
     int i;
@@ -43,6 +38,7 @@ void sf_trianglen_init (int ndim  /* number of dimensions */,
     n = sf_intalloc(dim);
 
     tr = (sf_triangle*) sf_alloc(dim,sizeof(sf_triangle));
+    rect = nbox;
 
     nd = 1;
     for (i=0; i < dim; i++) {
@@ -51,57 +47,68 @@ void sf_trianglen_init (int ndim  /* number of dimensions */,
 	n[i] = ndat[i];
 	nd *= ndat[i];
     }
-    tmp = sf_floatalloc (nd);
 }
 
-void sf_trianglen_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
-/*< linear operator >*/
+void sf_dtrianglen (int ider   /* direction of the derivative */,
+		    int nrep   /* how many times to repeat smoothing */,
+		    int nderiv /* derivative filter accuracy */,
+		    float* data   /* input/output */)
+/*< linear operator (derivative with respect to radius) >*/
 {
-    int i, j, i0;
+    float *t1, *t2;
+    int i, irep, j, i0, i1, n1, s1;
 
-    if (nx != ny || nx != nd) 
-	sf_error("%s: Wrong data dimensions: nx=%d, ny=%d, nd=%d",
-		 __FILE__,nx,ny,nd);
+    ider--;
 
-    sf_adjnull (adj,add,nx,ny,x,y);
-  
-    if (adj) {
-	for (i=0; i < nd; i++) {
-	    tmp[i] = y[i];
-	}
-    } else {
-	for (i=0; i < nd; i++) {
-	    tmp[i] = x[i];
-	}
+    if (ider >= 0) {
+	n1 = n[ider];
+	s1 = s[ider];
+
+	t1 = sf_floatalloc(n1);
+	t2 = sf_floatalloc(n1);
+
+	sf_deriv_init(n1,nderiv,0.);
     }
 
-  
     for (i=0; i < dim; i++) {
 	if (NULL != tr[i]) {
 	    for (j=0; j < nd/n[i]; j++) {
 		i0 = sf_first_index (i,j,dim,n,s);
-		sf_smooth2 (tr[i], i0, s[i], false, tmp);
+		if (i==ider) {
+		    for (i1=0; i1 < n1; i1++) {
+			t1[i1] = data[i0+i1*s1];
+		    }
+		    for (irep=0; irep < nrep-1; irep++) {
+			sf_smooth2 (tr[i], 0, 1, false, t1);
+		    }
+		    sf_dsmooth (tr[i],0,1,false,t1);
+		    sf_deriv(t1,t2);
+		}
+		
+		for (irep=0; irep < nrep; irep++) {
+		    sf_smooth2 (tr[i], i0, s[i], false, data);
+		}
+		
+		if (i==ider) {
+		    for (i1=0; i1 < n1; i1++) {
+			data[i0+i1*s1] = nrep*(t2[i1] - 2*data[i0+i1*s1]/rect[i]);
+		    }
+		}
 	    }
 	}
     }
-	
-    if (adj) {
-	for (i=0; i < nd; i++) {
-	    x[i] += tmp[i];
-	}
-    } else {
-	for (i=0; i < nd; i++) {
-	    y[i] += tmp[i];
-	}
-    }    
+
+    if (ider >= 0) {
+	free(t1);
+	free(t2);
+	sf_deriv_close();
+    }
 }
 
-void sf_trianglen_close(void)
+void sf_dtrianglen_close(void)
 /*< free allocated storage >*/
 {
     int i;
-
-    free (tmp);
 
     for (i=0; i < dim; i++) {
 	if (NULL != tr[i]) sf_triangle_close (tr[i]);

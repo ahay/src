@@ -37,8 +37,19 @@ processing flows.
 \subsection{Useful SCons options}
 
 The \texttt{scons} program takes a number of options. Some of the commonly used options are:
+\begin{description}
+  \item[scons -h] (help) displays a help message.
+  \item[scons -Q] (quiet) suppresses progress messages.
+  \item[scons -n] (no exec) outputs the commands required for building the specified target (or the default targets if no target is specified) without actually executing them. It can be used to generate a shell script out of SConstruct script, as follows:
+\begin{verbatim}
+scons -nQ > script.sh
+\end{verbatim}
+\end{description}
 
 \section{Why use SCons?}
+
+In the compilation task, the output (an executible program) may
+require multiple sources...
 
 \section{Managing data processing flows using \texttt{rsf.proj}}
 
