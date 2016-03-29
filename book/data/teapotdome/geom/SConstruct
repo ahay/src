@@ -1,6 +1,6 @@
 from rsf.proj import *
 
-#SConscript('../fetch/SConstruct')
+SConscript('../fetch/SConstruct')
 
 Flow('foldplot','../fetch/npr3_field_hdr.rsf',
     '''
@@ -42,7 +42,7 @@ Result('ixilcoord','graph symbol="+" title="cdp (x,y)" plotcol=4')
 
 # Shot coordinates
 Flow('sxsycoord','sx sy','cmplx ${SOURCES[1]}')
-Result('sxsycoord','graph symbol="+" title="Shot (x,y)" plotcol=5')
+Result('sxsycoord','window j2=2 | graph symbol="+" title="Shot (x,y)" plotcol=5')
 
 # Receiver coordinates
 Flow('gxgycoord','gx gy','cmplx ${SOURCES[1]}')
