@@ -661,9 +661,10 @@ void lstri_op(float **dd, float **dwt, float ***ww, float ***mwt, sf_acqui acpar
 
 static float ****ww3;
 static float ****gwt;
+static sf_butter blo=NULL, bhi=NULL;
 
 /* for passive source and fwi */
-void gradient_pas_init(sf_file Fdat, sf_file Fsrc, sf_file Fmwt, sf_mpi *mpipar, sf_acqui acpar, sf_vec array, sf_fwi fwipar, sf_pas paspar, bool verb1)
+void gradient_pas_init(sf_file Fdat, sf_file Fsrc, sf_file Fmwt, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpar, sf_vec array, sf_fwi fwipar, sf_pas paspar, bool verb1)
 /*< initialize >*/
 {
         float **dwt=NULL,***mwt,***wwt;
@@ -828,6 +829,10 @@ void gradient_pas_init(sf_file Fdat, sf_file Fsrc, sf_file Fmwt, sf_mpi *mpipar,
 	pad2d(array->tau, tau, nz, nx, nb);
 	pad2d(array->taus, taus, nz, nx, nb);
 
+        /* multiscale gradient */
+	if(soupar->flo > 0.0001) blo=sf_butter_init(false, soupar->flo, 3);
+	if(soupar->fhi < 0.5-0.0001) bhi=sf_butter_init(true, soupar->fhi, 3);
+
         free(**wwt); free(*wwt); free(wwt);
         if (NULL!=mwt) { free(**mwt); free(*mwt); free(mwt); }
 	return;
@@ -966,6 +971,19 @@ void gradient_pas_av(float *x, float *fcost, float *grad)
 
             /* window the data residual */
             for(ir=0; ir<nr; ir++){
+                /* multiscale */
+                if(NULL != blo){
+                    sf_butter_apply(blo, nt, pp[ir]);
+                    sf_reverse(nt, pp[ir]);
+                    sf_butter_apply(blo, nt, pp[ir]);
+                    sf_reverse(nt, pp[ir]);
+                }
+                if(NULL != bhi){
+                    sf_butter_apply(bhi, nt, pp[ir]);
+                    sf_reverse(nt, pp[ir]);
+                    sf_butter_apply(bhi, nt, pp[ir]);
+                    sf_reverse(nt, pp[ir]);
+                }
                 for(it=0; it<nt; it++){
                     pp[ir][it] *= weight[ir][it];
                 }

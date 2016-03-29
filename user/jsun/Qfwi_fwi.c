@@ -230,7 +230,7 @@ void pfwi(sf_file Fdat, sf_file Finv, sf_file Fgrad, sf_file Fmwt, sf_file Fsrc,
         x=array->vv;
 
 	/* initialize */
-	gradient_pas_init(Fdat, Fsrc, Fmwt, mpipar, acpar, array, fwipar, paspar, verb);
+	gradient_pas_init(Fdat, Fsrc, Fmwt, mpipar, soupar, acpar, array, fwipar, paspar, verb);
 
 	/* calculate first gradient */
 	grad=sf_floatalloc(nm);
