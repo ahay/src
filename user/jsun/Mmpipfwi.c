@@ -95,8 +95,8 @@ int main(int argc, char* argv[])
 	if(!sf_getfloat("f0", &acpar->f0)) sf_error("reference frequency required"); /* reference frequency */
 	if(!sf_getint("interval", &acpar->interval)) acpar->interval=1; /* wavefield storing interval */
 
-	soupar->fhi=0.5/acpar->dt; 
-	soupar->flo=0.; 
+	if(!sf_getfloat("fhi", &soupar->fhi)) soupar->fhi=0.5/acpar->dt; 
+	if(!sf_getfloat("flo", &soupar->flo)) soupar->flo=0.; 
 	soupar->rectx=2; 
 	soupar->rectz=2; 
 

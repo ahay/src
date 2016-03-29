@@ -2048,11 +2048,10 @@ static sf_complex **waven2 =NULL;
 static sf_complex ***waves =NULL;
 
 clr3d clr3d_make(int *n2s,
-                 fdm3d fdm,
-                 dft3d dft)
+                 fdm3d fdm)
 /*< init lowrank arrays for rite method >*/
 {
-    int nxyz,nk,ik,i,j,n2_sum,n2_max;
+    int i,n2_sum,n2_max;
     clr3d clr;
 
     clr = (clr3d) sf_alloc(1,sizeof(*clr));
@@ -2082,6 +2081,16 @@ clr3d clr3d_make(int *n2s,
     clr->map[1][0] = 3; clr->map[1][1] = 1; clr->map[1][2] = 5;
     clr->map[2][0] = 4; clr->map[2][1] = 5; clr->map[2][2] = 2;
 
+    return clr;
+}
+
+void clr3d_init(fdm3d fdm,
+                dft3d dft,
+                clr3d clr)
+/*< initialize computation array >*/
+{
+    int nxyz,nk,ik,i,j;
+
     nxyz = fdm->ny *fdm->nx *fdm->nz ;
     nk   = dft->nky*dft->nkx*dft->nkz;
     cwave  = sf_complexalloc(nk);
@@ -2101,8 +2110,6 @@ clr3d clr3d_make(int *n2s,
                 waves[i][j][ik] = sf_cmplx(0.,0.);
         }
     }
-
-    return clr;
 }
 
 /*------------------------------------------------------------*/
