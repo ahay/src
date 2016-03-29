@@ -23,7 +23,7 @@
 int main(int argc, char* argv[])
 {
     bool prec;
-    int nd, nm, ns, nx, n2, im, min, max, id, i, niter;
+    int nd, nm, ns, nx, n1, im, min, max, id, i, niter;
     int **indx, *size;
     float *model, *data;
     char name[6];
@@ -38,11 +38,11 @@ int main(int argc, char* argv[])
     index = sf_input("index");
     if (SF_INT != sf_gettype(index)) sf_error("Need integet index");
 
-    if (!sf_histint(index,"n1",&nm)) sf_error("No n1= in index");
-    if (!sf_histint(index,"n2",&n2) || n2 != nd) sf_error("Need n2=%d in index",nd);
+    if (!sf_histint(index,"n1",&n1) || n1 != nd) sf_error("Need n1=%d in index",nd);
+    if (!sf_histint(index,"n2",&nm)) sf_error("No n2= in index");
 
     data = sf_floatalloc(nd);
-    indx = sf_intalloc2(nm,nd);
+    indx = sf_intalloc2(nd,nm);
     size = sf_intalloc(nm);
 
     if (!sf_getint("niter",&niter)) niter=0; /* number of iterations */
@@ -50,18 +50,24 @@ int main(int argc, char* argv[])
 
     sf_intread(indx[0],nd*nm,index);
 
-    nx = 0;
+     nx = 0;
     for (im=0; im < nm; im++) {
-	min = max = indx[0][im];
+	min = max = indx[im][0];
 	for (id=1; id < nd; id++) {
-	    i = indx[id][im];
+	    i = indx[im][id];
 	    if (i < min) min=i;
 	    if (i > max) max=i;
 	}
-	size[im]=min-max;
+	if (min) {
+	    for (id=0; id < nd; id++) {
+		indx[im][id] -= min;
+	    }
+	}
+	size[im]=max-min+1;
 	nx += size[im];
     }
-    model = sf_floatalloc(nx);
+
+    model = sf_floatalloc(nx);    
 
     sc_init(nm, indx, size);
     
@@ -71,9 +77,13 @@ int main(int argc, char* argv[])
 
     nx = 0;
     for (im=0; im < nm; im++) {
-	snprintf(name,6,"out%d",im+1);
-	out = sf_output(name);
 	ns = size[im];
+	if (im > 0) {
+	    snprintf(name,6,"out%d",im+1);
+	    out = sf_output(name);
+	} else {
+	    out = sf_output("out");
+	}
 	sf_putint(out,"n1",ns);
 	sf_floatwrite(model+nx,ns,out);
 	sf_fileclose(out);
