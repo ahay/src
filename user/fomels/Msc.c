@@ -23,17 +23,23 @@
 int main(int argc, char* argv[])
 {
     bool prec;
-    int nd, nm, ns, nx, n1, im, min, max, id, i, niter;
+    int nd, nm, ns, nx, n1, im, min, max, id, i, ix, sx, n, niter;
     int **indx, *size;
-    float *model, *data;
+    float *model, *data, *weight;
     char name[6];
-    sf_file inp, index, out;
+    sf_file inp, index, out, pred;
 
     sf_init(argc,argv);
     
     inp = sf_input("in");
     if (SF_FLOAT != sf_gettype(inp)) sf_error("Need float input");
     if (!sf_histint(inp,"n1",&nd)) sf_error("No n1= in input");
+
+    if (NULL != sf_getstring("pred")) { /* prediction */
+	pred = sf_output("pred");
+    } else {
+	pred = NULL;
+    }
 
     index = sf_input("index");
     if (SF_INT != sf_gettype(index)) sf_error("Need integet index");
@@ -46,11 +52,11 @@ int main(int argc, char* argv[])
     size = sf_intalloc(nm);
 
     if (!sf_getint("niter",&niter)) niter=0; /* number of iterations */
-    if (!sf_getbool("prec",&prec)) prec=true; /* if apply preconditioning */    
+    if (!sf_getbool("prec",&prec)) prec=true; /* if apply preconditioning */   
 
     sf_intread(indx[0],nd*nm,index);
 
-     nx = 0;
+    nx = 0;
     for (im=0; im < nm; im++) {
 	min = max = indx[im][0];
 	for (id=1; id < nd; id++) {
@@ -68,12 +74,28 @@ int main(int argc, char* argv[])
     }
 
     model = sf_floatalloc(nx);    
+    
+    if (prec) {
+	weight = sf_floatalloc(nx);    
+
+	sx = 0;
+	for (im=0; im < nm; im++) {
+	    n = size[im];
+	    for (ix=0; ix < n; ix++) {
+		weight[sx+ix] = sqrtf(1.0f/n);
+	    }
+	    sx += n;
+	}
+	
+    } else {
+	weight = NULL;
+    }
 
     sc_init(nm, indx, size);
     
     sf_floatread(data,nd,inp);
 
-    sf_solver(sc_lop,sf_cgstep,nx,nd,model,data,niter,"verb",true,"end");
+    sf_solver(sc_lop,sf_cgstep,nx,nd,model,data,niter,"mwt",weight,"verb",true,"end");
 
     nx = 0;
     for (im=0; im < nm; im++) {
@@ -90,6 +112,11 @@ int main(int argc, char* argv[])
 	nx += size[im];
     }
     
+    if (NULL != pred) { 
+	sc_lop(false,false,nx,nd,model,data);
+	sf_floatwrite(data,nd,pred);
+    }
+ 
     exit(0);
 }
     
