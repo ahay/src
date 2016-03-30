@@ -69,7 +69,7 @@ int main(int argc, char* argv[])
 	    legacy[i] *= lwght[i];
 	}
 
-	nsmooth1_lop(false,true,n12,n12,merge,legacy);
+	nsmooth1_lop(true,false,n12,n12,merge,legacy);
 
 	for (i=0; i < n12; i++) {
 	    merge[i] += hires[i]*hwght[i];
