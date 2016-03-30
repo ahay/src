@@ -106,7 +106,10 @@ int main (int argc, char* argv[])
     sf_divn (num, den, rat);
 
     for (i=0; i < n12; i++) {
-	if (rat[i] != 0.) org[i] /= rat[i];
+	if (rat[i] != 0.) {
+	    rat[i] = 1.0f/rat[i];
+	    org[i] *= rat[i];
+	}
     }
     
     sf_floatwrite(org,n12,out);
