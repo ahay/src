@@ -23,11 +23,11 @@
 int main(int argc, char* argv[])
 {
     bool prec;
-    int nd, nm, ns, nx, n1, im, min, max, id, i, ix, sx, n, niter;
+    int nd, nm, ns, nx, n1, im, min, max, id, i, ix, niter;
     int **indx, *size;
-    float *model, *data, *weight;
+    float *model, *data, *weight, *err;
     char name[6];
-    sf_file inp, index, out, pred;
+    sf_file inp, index, out, pred, error;
 
     sf_init(argc,argv);
     
@@ -39,6 +39,12 @@ int main(int argc, char* argv[])
 	pred = sf_output("pred");
     } else {
 	pred = NULL;
+    }
+
+    if (NULL != sf_getstring("error")) { /* prediction */
+	error = sf_output("error");
+    } else {
+	error = NULL;
     }
 
     index = sf_input("index");
@@ -78,24 +84,30 @@ int main(int argc, char* argv[])
     if (prec) {
 	weight = sf_floatalloc(nx);    
 
-	sx = 0;
+	nx = 0;
 	for (im=0; im < nm; im++) {
-	    n = size[im];
-	    for (ix=0; ix < n; ix++) {
-		weight[sx+ix] = sqrtf(1.0f/n);
+	    ns = size[im];
+	    for (ix=0; ix < ns; ix++) {
+		weight[nx+ix] = sqrtf(1.0f/ns);
 	    }
-	    sx += n;
+	    nx += ns;
 	}
 	
     } else {
 	weight = NULL;
     }
 
+    if (NULL != error) {
+	err = sf_floatalloc(niter);
+    } else {
+	err = NULL;
+    }
+
     sc_init(nm, indx, size);
     
     sf_floatread(data,nd,inp);
 
-    sf_solver(sc_lop,sf_cgstep,nx,nd,model,data,niter,"mwt",weight,"verb",true,"end");
+    sf_solver(sc_lop,sf_cgstep,nx,nd,model,data,niter,"mwt",weight,"err",err,"verb",true,"end");
 
     nx = 0;
     for (im=0; im < nm; im++) {
@@ -109,12 +121,19 @@ int main(int argc, char* argv[])
 	sf_putint(out,"n1",ns);
 	sf_floatwrite(model+nx,ns,out);
 	sf_fileclose(out);
-	nx += size[im];
+	nx += ns;
     }
     
     if (NULL != pred) { 
 	sc_lop(false,false,nx,nd,model,data);
 	sf_floatwrite(data,nd,pred);
+    }
+
+    if (NULL != error) {
+	sf_putint(error,"n1",niter);
+	sf_putfloat(error,"o1",1.0f);
+	sf_putfloat(error,"d1",1.0f);
+	sf_floatwrite(err,niter,error);
     }
  
     exit(0);
