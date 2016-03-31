@@ -84,8 +84,8 @@ int main (int argc, char* argv[])
 	    org[i] = trace[i1];
 	}
 	for (i1=nh; i1 < n1-nh; i1++, i++) {
-	    num[i] = hypotf(trace2[i1],hilb2[i1]);
-	    den[i] = hypotf(trace[i1],hilb[i1]);
+	    num[i] = hypotf(trace[i1],hilb[i1]);
+	    den[i] = hypotf(trace2[i1],hilb2[i1]);
 	    org[i] = trace[i1];
 	    mean += den[i];
 	}
@@ -106,7 +106,10 @@ int main (int argc, char* argv[])
     sf_divn (num, den, rat);
 
     for (i=0; i < n12; i++) {
-	org[i] *= rat[i];
+	if (rat[i] != 0.0f) {
+	    rat[i] = 1.0f/rat[i];
+	    org[i] *= rat[i];
+	}
     }
     
     sf_floatwrite(org,n12,out);
