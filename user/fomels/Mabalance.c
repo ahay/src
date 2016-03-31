@@ -84,8 +84,8 @@ int main (int argc, char* argv[])
 	    org[i] = trace[i1];
 	}
 	for (i1=nh; i1 < n1-nh; i1++, i++) {
-	    num[i] = hypotf(trace[i1],hilb[i1]);
-	    den[i] = hypotf(trace2[i1],hilb2[i1]);
+	    num[i] = hypotf(trace2[i1],hilb2[i1]);
+	    den[i] = hypotf(trace[i1],hilb[i1]);
 	    org[i] = trace[i1];
 	    mean += den[i];
 	}
@@ -106,10 +106,7 @@ int main (int argc, char* argv[])
     sf_divn (num, den, rat);
 
     for (i=0; i < n12; i++) {
-	if (rat[i] != 0.) {
-	    rat[i] = 1.0f/rat[i];
-	    org[i] *= rat[i];
-	}
+	org[i] *= rat[i];
     }
     
     sf_floatwrite(org,n12,out);
@@ -118,4 +115,3 @@ int main (int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Menvelope.c 696 2004-07-06 23:17:31Z fomels $	 */
