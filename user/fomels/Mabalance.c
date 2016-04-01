@@ -22,6 +22,7 @@
 
 int main (int argc, char* argv[])
 {
+    bool reverse;
     int nh, n1,n2, i1,i2, i, n12, niter, dim, n[SF_MAX_DIM], rect[SF_MAX_DIM];
     float *trace, *hilb, *trace2, *hilb2, *num, *den, *rat, *org, c, mean;
     char key[6];
@@ -37,6 +38,9 @@ int main (int argc, char* argv[])
     } else {
 	weight = NULL;
     }
+
+    if (!sf_getbool("reverse",&reverse)) reverse=true;
+    /* reverse weight */
 
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
     
@@ -84,8 +88,13 @@ int main (int argc, char* argv[])
 	    org[i] = trace[i1];
 	}
 	for (i1=nh; i1 < n1-nh; i1++, i++) {
-	    num[i] = hypotf(trace[i1],hilb[i1]);
-	    den[i] = hypotf(trace2[i1],hilb2[i1]);
+	    if (reverse) {
+		num[i] = hypotf(trace[i1],hilb[i1]);
+		den[i] = hypotf(trace2[i1],hilb2[i1]);
+	    } else {
+		num[i] = hypotf(trace2[i1],hilb2[i1]);
+		den[i] = hypotf(trace[i1],hilb[i1]);
+	    }
 	    org[i] = trace[i1];
 	    mean += den[i];
 	}
@@ -106,8 +115,12 @@ int main (int argc, char* argv[])
     sf_divn (num, den, rat);
 
     for (i=0; i < n12; i++) {
-	if (rat[i] != 0.0f) {
-	    rat[i] = 1.0f/rat[i];
+	if (reverse) {
+	    if (rat[i] != 0.0f) {
+		rat[i] = 1.0f/rat[i];
+		org[i] *= rat[i];
+	    }
+	} else {
 	    org[i] *= rat[i];
 	}
     }
