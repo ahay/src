@@ -68,8 +68,7 @@ for prog in mains:
     sources = ['M' + prog]
     bldutil.depends(env,sources,'M'+prog)
     env.StaticObject('M'+prog+'.c')
-    prog = env.Program(prog,map(lambda x: x + '.o',sources))
-	
+
     if sparsepath and sparselibs:
         prog = env.Program(prog,map(lambda x: x + '.o',sources))
     else:
@@ -110,9 +109,9 @@ if root: # no compilation, just rename
 if root:
     user = os.path.basename(os.getcwd())
     main = 'sf%s.py' % user
-    
+
     docs = map(lambda prog: env.Doc(prog,'M' + prog),mains+mpi_mains) + \
            map(lambda prog: env.Doc(prog,'M'+prog+'.py',lang='python'),pymains)
-    env.Depends(docs,'#/framework/rsf/doc.py')	
+    env.Depends(docs,'#/framework/rsf/doc.py')
     doc = env.RSF_Docmerge(main,docs)
     env.Install(pkgdir,doc)
