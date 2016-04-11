@@ -18,10 +18,9 @@
 */
 
 #include <rsf.h>
-#include "stretch4.h"
 
 static int n1, n2, n3;
-static map4 mo;
+static sf_map4 mo;
 
 void t2warp_init(int m1 /* input trace length */, 
 		 int m2 /* output trace length */,
@@ -38,7 +37,7 @@ void t2warp_init(int m1 /* input trace length */,
     n2 = m2;
     n3 = m3;
 
-    mo = stretch4_init (n1, o1, d1, n2, eps);
+    mo = sf_stretch4_init (n1, o1, d1, n2, eps);
 
     t2 = sf_floatalloc(n2);
 
@@ -47,7 +46,7 @@ void t2warp_init(int m1 /* input trace length */,
 	t2[i2] = sqrtf(t);
     } 
 
-    stretch4_define (mo,t2);
+    sf_stretch4_define (mo,t2);
 
     free(t2);
 }
@@ -55,7 +54,7 @@ void t2warp_init(int m1 /* input trace length */,
 void t2warp_close(void)
 /*< free allocated storage >*/
 {
-    stretch4_close(mo);
+    sf_stretch4_close(mo);
 }
 
 void t2warp(bool adj, bool add, int nx, int ny, float *x, float *y)
@@ -67,9 +66,9 @@ void t2warp(bool adj, bool add, int nx, int ny, float *x, float *y)
 
     for (i3=0; i3 < n3; i3++) {
 	if (adj) {
-	    stretch4_invert_adj (add,mo,y+i3*n2,x+i3*n1);
+	    sf_stretch4_invert_adj (add,mo,y+i3*n2,x+i3*n1);
 	} else {
-	    stretch4_invert (add,mo,y+i3*n2,x+i3*n1);
+	    sf_stretch4_invert (add,mo,y+i3*n2,x+i3*n1);
 	}
     }
 }
@@ -83,9 +82,9 @@ void t2warp_inv(bool adj, bool add, int nx, int ny, float *x, float *y)
 
     for (i3=0; i3 < n3; i3++) {
 	if (adj) {
-	    stretch4_apply_adj (add,mo,x+i3*n2,y+i3*n1);
+	    sf_stretch4_apply_adj (add,mo,x+i3*n2,y+i3*n1);
 	} else {
-	    stretch4_apply (add,mo,x+i3*n2,y+i3*n1);
+	    sf_stretch4_apply (add,mo,x+i3*n2,y+i3*n1);
 	}
     } 
 }
