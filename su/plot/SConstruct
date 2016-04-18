@@ -27,8 +27,8 @@ if xinc and xlib:
     
     for source in src:
         inc = env.RSF_Include(source,prefix='')
-        env.Ignore(source+'.h',source+'.h')
         obj = env.StaticObject(source)
+        env.Ignore(inc,inc)
         env.Depends(obj,inc)
 
 mains = Split(progs)
