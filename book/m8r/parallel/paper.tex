@@ -119,13 +119,34 @@ be distributed across multiple nodes. For example, running a bandpass
 filter in parallel by splitting the input data over the slowest
 dimension and using 16 nodes can be done with
 \begin{verbatim}
-mpirun -np 16 sfmpi sfbandpass fhi=50 --input=input.rsf --output=output.rsf
+mpirun -np 10 sfmpi sfbandpass fhi=50 --input=input.rsf --output=output.rsf
 \end{verbatim}
 On different systems, \texttt{mpirun} might be replaced with another
 command launching an MPI process. In Madagascar's configuration
 (\texttt{\$RSFROOT/share/madagascar/etc/config.py}), this command is
 specified by \texttt{MPIRUN=} configuration variable.
 
+Similarly to \texttt{sfomp}, \texttt{sfmpi} splits the input over the last dimension,
+processes different parts of the data, and concatenates the outputs
+along the same dimension. To change this behavior, you can use
+\texttt{split=} and \texttt{join=} parameters. For example, to
+transpose a 2-D dataset in parallel, we can split it over one
+dimension and join over the other dimension:
+\begin{verbatim}
+mpirun -np 10 sfmpi sftransp --input=original.rsf split=1 join=2 --output=transp.rsf
+\end{verbatim}
+If, instead of concatenating, the results should be added together, use \texttt{join=0}.
+
+While \texttt{sfomp} is restricted to shared memory, \texttt{sfmpi}
+can be used more flexibly on both shared-memory and distributed-memory
+systems. Another difference is that the threads specified by
+\texttt{-np} parameters are treated differently: one of the nodes is
+reserved as the ``head node'' for handling input and output, and the
+computation is performed on the remaining nodes. In the example above
+(\texttt{mpirun -np 10}), 9 nodes are used for the computation while
+one node is used for input/output.
+
+SCons...
 
 \section{GPU programming}
 
