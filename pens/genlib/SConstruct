@@ -28,6 +28,7 @@ for source in Split(src):
     env.RSF_Include(source,prefix='pen_')
     obj = env.StaticObject(source+'.c')
     env.Depends(obj,source+'.h')
+    env.Ignore(source+'.h',source+'.h')
     objects.append(obj)
 
 inc = env.Command('genpen.h',includes,Action(bldutil.__merge))

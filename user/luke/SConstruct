@@ -32,6 +32,7 @@ src = Glob('[a-z]*.c')
 for source in src:
     inc = env.RSF_Include(source,prefix='')
     obj = env.StaticObject(source)
+    env.Ignore(inc,inc)
     env.Depends(obj,inc)
 
 mains = Split(progs)

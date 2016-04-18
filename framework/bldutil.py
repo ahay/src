@@ -295,6 +295,7 @@ def build_install_c(env, progs_c, srcroot, bindir, libdir, glob_build, bldroot):
     for source in src:
         inc = env.RSF_Include(source,prefix='')
         obj = env.StaticObject(source)
+        env.Ignore(inc,inc)
         env.Depends(obj,inc)
 
     mains_c = Split(progs_c)

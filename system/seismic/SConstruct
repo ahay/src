@@ -59,6 +59,7 @@ for source in src:
                 orthovelo = obj
         else:
                 obj = env.StaticObject(source)
+        env.Ignore(inc,inc)
         env.Depends(obj,inc)
     
         if os.path.splitext(str(source))[0] in libsrc:

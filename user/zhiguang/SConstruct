@@ -49,6 +49,7 @@ if not sparsepath or not sparselibs:
         '''):
         source = File(filec+'.c')
         env.RSF_Include(source,prefix='')
+        env.Ignore(source+'.h',source+'.h')
         src.remove(source)
 
 mpicc = env.get('MPICC')
@@ -56,11 +57,13 @@ mpi_src = Glob('Q[a-z]*.c')
 for source in mpi_src:
     inc = env.RSF_Include(source,prefix='')
     obj = env.StaticObject(source,CC=mpicc)
+    env.Ignore(inc,inc)
     env.Depends(obj,inc)
 
 for source in src:
     inc = env.RSF_Include(source,prefix='')
     obj = env.StaticObject(source)
+    env.Ignore(inc,inc)
     env.Depends(obj,inc)
 
 mains = Split(progs)
