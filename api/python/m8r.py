@@ -439,9 +439,11 @@ if _swig_:
             if isinstance(tag,File):
                 # copy file
                 self.__init__(tag.tag)
+                self.copy = true
             else:
                 self.file = c_rsf.sf_input(tag)
                 _File.__init__(self,tag)
+                self.copy = false
         def read(self,data):
             if self.type == 'float':
                 c_rsf.sf_floatread(numpy.reshape(data,(data.size,)),self.file)
@@ -449,6 +451,10 @@ if _swig_:
                 c_rsf.sf_complexread(numpy.reshape(data,(data.size)),self.file)
             else:
                 raise TypeError, 'Unsupported file type %s' % self.type
+        def close(self):
+            if not self.copy:
+                c_rsf.sf_fileclose(self.file)
+            _File.close(self)
 
     class Output(_File):
         def __init__(self,tag='out',src=None):
@@ -477,7 +483,7 @@ if _swig_:
                                       self.file)
             else:
                 raise TypeError, 'Unsupported file type %s' % self.type
-        def close():
+        def close(self):
             c_rsf.sf_fileclose(self.file)
             _File.close(self)
             
