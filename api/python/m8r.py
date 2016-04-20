@@ -240,7 +240,7 @@ class File(object):
             mul = Filter('scale')(dscale=float(other))
             return mul[self]
         except:
-            mul = Filter('add')(mode='product')
+            mul = Filter('mul')(mode='product')
             return mul[self,other]
     def __div__(self,other):
         'Overload division'
@@ -256,13 +256,16 @@ class File(object):
     def dot(self,other):
         'Dot product'
         # incorrect for complex numbers
-        prod = self.__mul__(other).reshape()
-        stack = Filter('stack')(norm=False,axis=1)[prod]
+        prod = self.__mul__(other)
+        stack = Filter('stack')(norm=False,axis=0)[prod]
         return stack[0]
-    def dot2(self):
+    def cdot2(self):
         'Dot product with itself'
         abs2 = Filter('math')(output="abs(input)").real[self]
         return abs2.dot(abs2)
+    def dot2(self):
+        'Dot product with itself'
+        return self.dot(self)
     def __array__(self,context=None):
         'numpy array'
         if _swig_:
@@ -474,7 +477,10 @@ if _swig_:
                                       self.file)
             else:
                 raise TypeError, 'Unsupported file type %s' % self.type
-
+        def close():
+            c_rsf.sf_fileclose(self.file)
+            _File.close(self)
+            
 else:
 
     class Input(object):
