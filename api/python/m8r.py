@@ -439,11 +439,11 @@ if _swig_:
             if isinstance(tag,File):
                 # copy file
                 self.__init__(tag.tag)
-                self.copy = true
+                self.copy = True
             else:
                 self.file = c_rsf.sf_input(tag)
                 _File.__init__(self,tag)
-                self.copy = false
+                self.copy = False
         def read(self,data):
             if self.type == 'float':
                 c_rsf.sf_floatread(numpy.reshape(data,(data.size,)),self.file)
