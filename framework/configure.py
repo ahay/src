@@ -2213,8 +2213,9 @@ def intel(context):
         license = os.environ.get(key)
         if license:
             context.env.Append(ENV={key:license})
+    iccpath = os.path.dirname(context.env.get('CC'))
+    context.env['ENV']['PATH'] = ':'.join(context.env['ENV']['PATH'],path)
     
-
 def set_options(env,my_opts=None):
     'get options from config file'
     from rsf.prog import RSFROOT
