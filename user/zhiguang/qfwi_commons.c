@@ -187,7 +187,7 @@ void preparation(sf_file Fv, sf_file Fq, sf_file Ftau, sf_file Fw, sf_acqui acpa
 
 	/* acquisition parameters */
 	acpar->ds_v=acpar->ds/acpar->dx+0.5;
-	acpar->s0_v=acpar->s0/acpar->dx+0.5+nb;
+	acpar->s0_v=(acpar->s0-acpar->x0)/acpar->dx+0.5+nb;
 	acpar->sz += nb;
 
 	acpar->dr_v=acpar->dr/acpar->dx+0.5;
@@ -208,7 +208,7 @@ void preparation(sf_file Fv, sf_file Fq, sf_file Ftau, sf_file Fw, sf_acqui acpa
 			rbegin=(sx+acpar->r0 <acpar->x0)? acpar->x0 : sx+acpar->r0;
 			rend=sx+acpar->r0 +(acpar->nr-1)*acpar->dr;
 			rend=(rend < xend)? rend : xend;
-			acpar->r0_v[i]=rbegin/acpar->dx+0.5+nb;
+			acpar->r0_v[i]=(rbegin-acpar->x0)/acpar->dx+0.5+nb;
 			acpar->r02[i]=(rbegin-sx-acpar->r0)/acpar->dx+0.5;
 			acpar->nr2[i]=(rend-rbegin)/acpar->dx+1.5;
 		}
