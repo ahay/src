@@ -202,6 +202,10 @@ def identify_platform(context):
         elif plat_nm == 'i686':
             plat['arch'] = '32bit'
     context.Result('%(OS)s [%(distro)s]' % plat)
+    # keep TACC-specific environment
+    for env in os.environ.keys():
+        if 'TACC_' == env[:5]:
+            context.env.Append(ENV={env:os.environ[env]})
 
 pkg['gcc'] = {'fedora':'gcc'}
 pkg['libc'] = {'fedora':'glibc',
