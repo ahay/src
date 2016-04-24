@@ -2214,7 +2214,7 @@ def intel(context):
         if license:
             context.env.Append(ENV={key:license})
     iccpath = os.path.dirname(context.env.get('CC'))
-    context.env['ENV']['PATH'] = ':'.join(context.env['ENV']['PATH'],iccpath)
+    context.env['ENV']['PATH'] = ':'.join([context.env['ENV']['PATH'],iccpath])
     
 def set_options(env,my_opts=None):
     'get options from config file'
