@@ -816,6 +816,7 @@ cmplx FADDEEVA(w)(cmplx z, double relerr)
   else if (x < 10) {
     double prod2ax = 1, prodm2ax = 1;
     double expx2;
+    int n;
 
     if (isnan(y))
       return C(y,y);
@@ -834,7 +835,7 @@ cmplx FADDEEVA(w)(cmplx z, double relerr)
           1 + ax2 * (1 + ax2 * (0.5 + 0.166666666666666666667*ax2));
         const double expm2ax =
           1 - ax2 * (1 - ax2 * (0.5 - 0.166666666666666666667*ax2));
-        for (int n = 1; 1; ++n) {
+        for (n = 1; 1; ++n) {
           const double coef = expa2n2[n-1] * expx2 / (a2*(n*n) + y*y);
           prod2ax *= exp2ax;
           prodm2ax *= expm2ax;
@@ -852,7 +853,7 @@ cmplx FADDEEVA(w)(cmplx z, double relerr)
       else { // x > 5e-4, compute sum4 and sum5 separately
         expx2 = exp(-x*x);
         const double exp2ax = exp((2*a)*x), expm2ax = 1 / exp2ax;
-        for (int n = 1; 1; ++n) {
+        for (n = 1; 1; ++n) {
           const double coef = expa2n2[n-1] * expx2 / (a2*(n*n) + y*y);
           prod2ax *= exp2ax;
           prodm2ax *= expm2ax;
@@ -871,7 +872,7 @@ cmplx FADDEEVA(w)(cmplx z, double relerr)
       if (x < 5e-4) { // compute sum4 and sum5 together as sum5-sum4
         const double x2 = x*x;
         expx2 = 1 - x2 * (1 - 0.5*x2); // exp(-x*x) via Taylor
-        for (int n = 1; 1; ++n) {
+        for (n = 1; 1; ++n) {
           const double coef = exp(-a2*(n*n)) * expx2 / (a2*(n*n) + y*y);
           prod2ax *= exp2ax;
           prodm2ax *= expm2ax;
@@ -888,7 +889,7 @@ cmplx FADDEEVA(w)(cmplx z, double relerr)
       }
       else { // x > 5e-4, compute sum4 and sum5 separately
         expx2 = exp(-x*x);
-        for (int n = 1; 1; ++n) {
+        for (n = 1; 1; ++n) {
           const double coef = exp(-a2*(n*n)) * expx2 / (a2*(n*n) + y*y);
           prod2ax *= exp2ax;
           prodm2ax *= expm2ax;
