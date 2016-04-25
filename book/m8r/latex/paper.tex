@@ -35,6 +35,28 @@ multiple output formats, namely PDF and HTML.
 
 \section{SCons processing}
 
+Handling \LaTeX documents in Madagascar is made easier with customized
+SCons rules provided in \texttt{rsf.tex} package (for handling
+individual papers) and \texttt{rsf.book} package (for handling books
+and reports).
+
+If a \LaTeX paper file has the name
+\texttt{article.tex}, the \texttt{SConstruct} script for processing it
+may look like
+\lstset{language=python,showstringspaces=false,frame=single}
+\begin{lstlisting}
+  from rsf.tex import *
+
+  Paper('article',use='amsmath',options='10pt')
+\end{lstlisting}
+After running
+\begin{verbatim}
+scons article.pdf
+\end{verbatim}
+the paper will be processed to generate a PDF document.
+
+No preamble... different options...
+
 \subsection{Including reproducible results}
 
 \subsection{Multiple outputs}
