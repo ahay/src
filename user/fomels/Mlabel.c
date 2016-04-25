@@ -22,21 +22,23 @@
 
 int main (int argc, char* argv[])
 {
-    int i1, i2, n1, n2, maxl, a,c,d, **img, **lbl;
+    unsigned char **img;
+    int i1, i2, n1, n2, maxl, a,c,d, **lbl;
     sf_file inp, out;
 
     sf_init (argc,argv);
     inp = sf_input("in");
     out = sf_output("out");
 
-    if (SF_INT != sf_gettype(inp)) sf_error("Need int type in input");
+    if (SF_UCHAR != sf_gettype(inp)) sf_error("Need int type in input");
     if (!sf_histint(inp,"n1",&n1)) sf_error("No n1= in input");
     if (!sf_histint(inp,"n2",&n2)) sf_error("No n2= in input");
+    sf_settype(out,SF_INT);
 
-    img = sf_intalloc2(n1,n2);
+    img = sf_ucharalloc2(n1,n2);
     lbl = sf_intalloc2(n1,n2);
     
-    sf_intread(img[0],n1*n2,inp);
+    sf_ucharread(img[0],n1*n2,inp);
 
     maxl = 0;
     for (i2=0; i2 < n2; i2++) {
@@ -90,11 +92,11 @@ int main (int argc, char* argv[])
 
     for (i2=0; i2 < n2; i2++) {
 	for (i1=0; i1 < n1; i1++) {
-	    img[i2][i1] = label_find(lbl[i2][i1]);
+	    lbl[i2][i1] = label_find(lbl[i2][i1]);
 	}
     }
 
-    sf_intwrite(img[0],n1*n2,out);
+    sf_intwrite(lbl[0],n1*n2,out);
 		        
     exit(0);
 }

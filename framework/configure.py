@@ -2039,7 +2039,7 @@ def f90(context):
 
 def matlab(context):
     context.Message("checking for Matlab ... ")
-    matlab = WhereIs('matlab')
+    matlab = context.env.get('MATLAB',WhereIs('matlab'))
     if matlab:
         context.Result(matlab)
         RSFROOT_lib = os.path.join(context.env.get('RSFROOT'),'lib')
@@ -2058,7 +2058,10 @@ def matlab(context):
         sys.exit(unix_failure)
 
     context.Message("checking for mex ... ")
-    mex = os.path.join(os.path.dirname(matlab),'mex')
+    mex = context.env.get('MEX',
+                          os.path.join(
+                              os.path.dirname(
+                                  os.path.realpath(matlab)),'mex'))
     if os.path.isfile(mex):
         context.Result(mex)
         context.env['MEX'] = mex
