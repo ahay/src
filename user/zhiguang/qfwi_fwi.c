@@ -98,6 +98,7 @@ void fwi(sf_file Fdat, sf_file Finv, sf_file Ferr, sf_file Fgrad, sf_mpi *mpipar
 	optpar->err[0]=swap;
 
 	if(mpipar->cpuid==0){
+		iter=0;
 		l2norm(nm, grad, &optpar->gk_norm);
 		print_iteration(fp, iter, optpar);
 	}

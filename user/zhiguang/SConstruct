@@ -48,8 +48,8 @@ if not sparsepath or not sparselibs:
         fdprep fdprep25 fdprep5 fdprep9 fdprep9o fwisparse2d sparsesolver
         '''):
         source = File(filec+'.c')
-        env.RSF_Include(source,prefix='')
-        env.Ignore(filec+'.h',filec+'.h')
+        inc = env.RSF_Include(source,prefix='')
+        env.Ignore(inc,inc)
         src.remove(source)
 
 mpicc = env.get('MPICC')

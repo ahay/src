@@ -48,8 +48,20 @@ scons -nQ > script.sh
 
 \section{Why use SCons?}
 
-In the compilation task, the output (an executible program) may
-require multiple sources...
+In the compilation task, the target (an executible program) may
+require multiple sources. The sources may have multiple dependencies
+among them. When one of the sources changes, the target should be
+recompiled. However, it would be wasteful to compile sources that are
+affected by the change. The famous Unix \texttt{make} utility was
+developed to keep track of the dependencies and to make the
+compilation task more efficient. A free, open-source version of
+\texttt{make}, \emph{GNU make}, was developed by Richard Stallman
+\cite[]{make}.
+
+Creating data analysis workflows has a lot in common with compiling
+programs... SEP...
+
+Better design of SCons...
 
 \section{Managing data processing flows using \texttt{rsf.proj}}
 
