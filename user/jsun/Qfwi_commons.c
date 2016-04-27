@@ -126,6 +126,9 @@ typedef struct sf_optimization {
 	float fk;
 	float gk_norm;
 	float **sk, **yk;
+        /* bound constraints */
+        float v1;
+        float v2;
 } *sf_optim;
 /*^*/
 

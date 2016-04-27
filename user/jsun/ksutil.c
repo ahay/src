@@ -1903,6 +1903,80 @@ void ksp3d_apply1(float *wavedx,
 }
 
 /*------------------------------------------------------------*/
+void ksp3d_apply2(float *wavedxx,
+                  float *wavedyy,
+                  float *wavedzz,
+                  float *wavedxy,
+                  float *wavedyz,
+                  float *wavedzx,
+                  float *wave,
+                  dft3d dft,
+                  ksp3d ksp)
+/*< apply k-space to calculate spatial derivatives (can be in-place) >*/
+{
+    int ikz,ikx,iky,ik;
+
+    fft(wave,wavek);
+
+    /* apply pseudo-spectral op */
+#ifdef _OPENMP
+#pragma omp parallel for			\
+    schedule(dynamic,1)				\
+    private(ikz,ikx,iky,ik)                     \
+    shared(dft,ksp,wavek,wavekz,wavekx,waveky)
+#endif
+    for (iky=0; iky<dft->nky; iky++) {
+        for (ikx=0; ikx<dft->nkx; ikx++) {
+            for (ikz=0; ikz<dft->nkz; ikz++) {
+                ik = (iky*dft->nkx+ikx)*dft->nkz+ikz; 
+#ifdef SF_HAS_COMPLEX_H
+                wavekz[ik] = -wavek[ik]*ksp->kz[iky][ikx][ikz]*ksp->kz[iky][ikx][ikz]; 
+                wavekx[ik] = -wavek[ik]*ksp->kx[iky][ikx][ikz]*ksp->kx[iky][ikx][ikz]; 
+                waveky[ik] = -wavek[ik]*ksp->ky[iky][ikx][ikz]*ksp->ky[iky][ikx][ikz]; 
+#else
+                wavekz[ik] = sf_crmul(wavek[ik],-ksp->kz[iky][ikx][ikz]*ksp->kz[iky][ikx][ikz]); 
+                wavekx[ik] = sf_crmul(wavek[ik],-ksp->kx[iky][ikx][ikz]*ksp->kx[iky][ikx][ikz]); 
+                waveky[ik] = sf_crmul(wavek[ik],-ksp->ky[iky][ikx][ikz]*ksp->ky[iky][ikx][ikz]); 
+#endif
+            }
+        }
+    }
+
+    ifft(wavedzz,wavekz);
+    ifft(wavedxx,wavekx);
+    ifft(wavedyy,waveky);
+
+    /* apply pseudo-spectral op */
+#ifdef _OPENMP
+#pragma omp parallel for			\
+    schedule(dynamic,1)				\
+    private(ikz,ikx,iky,ik)                     \
+    shared(dft,ksp,wavek,wavekz,wavekx,waveky)
+#endif
+    for (iky=0; iky<dft->nky; iky++) {
+        for (ikx=0; ikx<dft->nkx; ikx++) {
+            for (ikz=0; ikz<dft->nkz; ikz++) {
+                ik = (iky*dft->nkx+ikx)*dft->nkz+ikz; 
+#ifdef SF_HAS_COMPLEX_H
+                wavekz[ik] = -wavek[ik]*ksp->kx[iky][ikx][ikz]*ksp->ky[iky][ikx][ikz]; 
+                wavekx[ik] = -wavek[ik]*ksp->ky[iky][ikx][ikz]*ksp->kz[iky][ikx][ikz]; 
+                waveky[ik] = -wavek[ik]*ksp->kz[iky][ikx][ikz]*ksp->kx[iky][ikx][ikz]; 
+#else
+                wavekz[ik] = sf_crmul(wavek[ik],-ksp->kx[iky][ikx][ikz]*ksp->ky[iky][ikx][ikz]); 
+                wavekx[ik] = sf_crmul(wavek[ik],-ksp->ky[iky][ikx][ikz]*ksp->kz[iky][ikx][ikz]); 
+                waveky[ik] = sf_crmul(wavek[ik],-ksp->kz[iky][ikx][ikz]*ksp->kx[iky][ikx][ikz]); 
+#endif
+            }
+        }
+    }
+
+    ifft(wavedxy,wavekz);
+    ifft(wavedyz,wavekx);
+    ifft(wavedzx,waveky);
+
+}
+
+/*------------------------------------------------------------*/
 void ksp3d_finalize()
 /*< free static memory allocated for ksp >*/
 {
@@ -2197,6 +2271,97 @@ void clr3d_apply(sf_complex **uo,
         uo[0][ik] = sf_cadd(waves[0][0][ik],sf_cadd(waves[0][1][ik],waves[0][2][ik]));
         uo[1][ik] = sf_cadd(waves[1][0][ik],sf_cadd(waves[1][1][ik],waves[1][2][ik]));
         uo[2][ik] = sf_cadd(waves[2][0][ik],sf_cadd(waves[2][1][ik],waves[2][2][ik]));
+#endif
+    }
+
+}
+
+/*------------------------------------------------------------*/
+void clr3d_apply2(sf_complex **u2,
+                  sf_complex **u1,
+                  sf_complex **u0,
+                  sf_complex **lt,
+                  sf_complex **rt,
+                  fdm3d fdm,
+                  dft3d dft,
+                  clr3d clr)
+/*< apply lowrank matrices for time stepping (can be in-place) -- two-step version >*/
+{
+    int nxyz,nk,ik,ir,ic,im,in,iz,ix,iy,i;
+    sf_complex c;
+
+    nxyz = fdm->ny *fdm->nx *fdm->nz ;
+    nk   = dft->nky*dft->nkx*dft->nkz;
+
+    for (ic=0; ic<3; ic++) {
+
+        fft(u1[ic],cwave);
+
+        for (ir=0; ir<3; ir++) {
+
+#ifdef _OPENMP
+#pragma omp parallel for              \
+    schedule(dynamic,1)               \
+    private(im,in,ik)                 \
+    shared(clr,cwaven2,cwave,rt,nk)
+#endif
+            for (im=0; im<clr->n2_local[clr->map[ir][ic]]; im++) {
+                in = clr->n2_start[clr->map[ir][ic]]+im;
+                for (ik=0; ik<nk; ik++) {
+#ifdef SF_HAS_COMPLEX_H
+                    cwaven2[im][ik] = cwave[ik]*rt[in][ik];
+#else
+                    cwaven2[im][ik] = sf_cmul(cwave[ik],rt[in][ik]);
+#endif
+                }
+            }
+            for (im=0; im<clr->n2_local[clr->map[ir][ic]]; im++)
+                ifft(waven2[im],cwaven2[im]);
+
+#ifdef _OPENMP
+#pragma omp parallel for			\
+    schedule(dynamic,1)				\
+    private(iy,ix,iz,i,c,im,in)                 \
+    shared(fdm,clr,lt,waven2,waves,ir,ic)
+#endif
+            for (iy=0; iy<fdm->nypad; iy++)         {
+                for (ix=0; ix<fdm->nxpad; ix++)     {
+                    for (iz=0; iz<fdm->nzpad; iz++) {
+                        i = (iy*fdm->nxpad + ix)*fdm->nzpad + iz; /* flattened coordinate */
+                        c = sf_cmplx(0.,0.);
+                        for (im=0; im<clr->n2_local[clr->map[ir][ic]]; im++) {
+                            in = clr->n2_start[clr->map[ir][ic]]+im;
+#ifdef SF_HAS_COMPLEX_H
+                            c += lt[in][i]*waven2[im][i];
+#else
+                            c += sf_cmul(lt[in][i],waven2[im][i]);
+#endif
+                        }
+                        waves[ir][ic][i] = c;
+                    }
+                }
+            }
+
+        } /* ir loop */
+
+    } /* ic loop */
+
+    /* linear combination forms the output vector */
+#ifdef _OPENMP
+#pragma omp parallel for			\
+    schedule(dynamic,1)				\
+    private(ik)                                 \
+    shared(nxyz,waves,u2,u1,u0)
+#endif
+    for (ik=0; ik<nxyz; ik++) {
+#ifdef SF_HAS_COMPLEX_H
+        u2[0][ik] = 2.*u1[0][ik] - u0[0][ik] + waves[0][0][ik] + waves[0][1][ik] + waves[0][2][ik];
+        u2[1][ik] = 2.*u1[1][ik] - u0[1][ik] + waves[1][0][ik] + waves[1][1][ik] + waves[1][2][ik];
+        u2[2][ik] = 2.*u1[2][ik] - u0[2][ik] + waves[2][0][ik] + waves[2][1][ik] + waves[2][2][ik];
+#else
+        u2[0][ik] = sf_cadd(sf_csub(sf_crmul(u1[0][ik],2.),u0[0][ik]),sf_cadd(waves[0][0][ik],sf_cadd(waves[0][1][ik],waves[0][2][ik])));
+        u2[1][ik] = sf_cadd(sf_csub(sf_crmul(u1[1][ik],2.),u0[1][ik]),sf_cadd(waves[1][0][ik],sf_cadd(waves[1][1][ik],waves[1][2][ik])));
+        u2[2][ik] = sf_cadd(sf_csub(sf_crmul(u1[2][ik],2.),u0[2][ik]),sf_cadd(waves[2][0][ik],sf_cadd(waves[2][1][ik],waves[2][2][ik])));
 #endif
     }
 

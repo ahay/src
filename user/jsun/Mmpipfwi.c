@@ -188,6 +188,8 @@ int main(int argc, char* argv[])
 			if(!sf_getfloat("c1", &optpar->c1)) optpar->c1=1e-4;
 			if(!sf_getfloat("c2", &optpar->c2)) optpar->c2=0.9;
 			optpar->factor=10;
+                        if(!sf_getfloat("v1", &optpar->v1)) optpar->v1=0.;
+                        if(!sf_getfloat("v2", &optpar->v2)) optpar->v2=10.;
 		}
 
 		fwi(Fdat, Finv, Fgrad, &mpipar, soupar, acpar, array, fwipar, optpar, verb, media);
@@ -285,6 +287,8 @@ int main(int argc, char* argv[])
                             if(!sf_getfloat("c1", &optpar->c1)) optpar->c1=1e-4;
                             if(!sf_getfloat("c2", &optpar->c2)) optpar->c2=0.9;
                             optpar->factor=10;
+                            if(!sf_getfloat("v1", &optpar->v1)) optpar->v1=0.;
+                            if(!sf_getfloat("v2", &optpar->v2)) optpar->v2=10.;
                         }
                     } /* if !onlysrc */
 

@@ -177,7 +177,8 @@ int main(int argc, char* argv[])
         if (prec) sf_solver(timerev_lop,sf_cgstep,nz*nx*nt,nt*nx,ww[0][0],dd[0],niter,"mwt",mwt[0][0],"verb",verb,"end");
         else sf_solver(timerev_lop,sf_cgstep,nz*nx*nt,nt*nx,ww[0][0],dd[0],niter,"verb",verb,"end");
     } else {
-        timerev_lop(adj, false, nz*nx*nt, nt*nx, ww[0][0], dd[0]);
+        if (adj && ctr) ctimerev(ngrp,ww,dd);
+        else timerev_lop(adj, false, nz*nx*nt, nt*nx, ww[0][0], dd[0]);
     }
 
     if (adj) sf_floatwrite(ww[0][0], nz*nx*nt, out);

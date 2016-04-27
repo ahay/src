@@ -109,6 +109,17 @@ void lbfgs_direction(int n, float *grad, float *r, float **sk, float **yk, sf_op
 	free(rho);
 }
 
+void clip(float *x, int n, float min, float max)
+/*< clip data >*/
+{
+    int i;
+
+    for(i=0; i<n; i++){
+        if(x[i]<min) x[i]=min;
+        if(x[i]>max) x[i]=max;
+    }
+}
+
 void line_search(int n, float *x, float *grad, float *direction, sf_gradient gradient, sf_optim opt, int *flag, int cpuid)
 /*< line search (Wolfe condition) >*/
 {
@@ -127,6 +138,9 @@ void line_search(int n, float *x, float *grad, float *direction, sf_gradient gra
 		opt->ils += 1;
 		for(j=0; j<n; j++)
 			x[j] =xk[j] + opt->alpha*direction[j];
+
+                clip(x, n, opt->v1, opt->v2);
+
 		gradient(x, &fcost, grad);
 		opt->igrad += 1;
 		dot_product(n, grad, direction, &m3);

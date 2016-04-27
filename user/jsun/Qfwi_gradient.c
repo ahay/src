@@ -779,7 +779,7 @@ void gradient_pas_init(sf_file Fdat, sf_file Fsrc, sf_file Fmwt, sf_mpi *mpipar,
                         for     (ix=0; ix<nx; ix++)
                             for (iz=0; iz<nz; iz++)
                                 gwt[iturn][it][ix][iz] = mwt[it][ix][iz];
-                    threshold(true, nz*nx*nt, 0.2, gwt[iturn][0][0]);
+                    threshold(true, nz*nx*nt, paspar->hard, gwt[iturn][0][0]);
 #ifdef _OPENMP
 #pragma omp parallel for default(shared) private(it,ix,iz)
 #endif
