@@ -1314,7 +1314,7 @@ void sf_solver (sf_operator oper   /* linear operator */,
     float* err = NULL;
     float* res = NULL;
     float* wht = NULL;
-    float *g, *rr, *gg, *td = NULL;
+    float *g, *rr, *gg, *td = NULL, *g2 = NULL;
     float dpr, dpg, dpr0, dpg0;
     int i, iter; 
     bool forget = false;
@@ -1368,6 +1368,10 @@ void sf_solver (sf_operator oper   /* linear operator */,
 		wht[i] = 1.0;
 	    }
 	} 
+    }
+
+    if (mwt != NULL) {
+	g2 = sf_floatalloc (nx);
     }
 
     for (i=0; i < ny; i++) {
@@ -1428,11 +1432,12 @@ void sf_solver (sf_operator oper   /* linear operator */,
 
 	if (mwt != NULL) {
 	    for (i=0; i < nx; i++) {
-		g[i] *= mwt[i];
+		g2[i] = g[i]*mwt[i];
 	    }
+	    oper (false, false, nx, ny, g2, gg);
+	} else {
+	    oper (false, false, nx, ny, g, gg);
 	}
-	
-	oper (false, false, nx, ny, g, gg);
 
 	if (wht != NULL) {
 	    for (i=0; i < ny; i++) {
@@ -1532,6 +1537,10 @@ void sf_solver (sf_operator oper   /* linear operator */,
 	if (wt == NULL) {
 	    free (wht);
 	}
+    }
+
+    if (mwt != NULL) {
+	free (g2);
     }
 }
 

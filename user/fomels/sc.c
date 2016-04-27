@@ -45,7 +45,7 @@ void sc_lop(bool adj, bool add, int nx, int nd, float* x, float* d)
 	    } else {
 		d[id] += x[ix];
 	    }
-	    sx += size[im];
 	}
+	sx += size[im];
     }
 }

@@ -58,6 +58,7 @@ for source in src:
     else:
         inc = env.RSF_Include(source,prefix='')
         obj = env.StaticObject(source)
+        env.Ignore(inc,inc)
         env.Depends(obj,inc)
 
 # Regular progams

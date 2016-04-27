@@ -2,7 +2,7 @@ import os, sys, re, string, glob
 sys.path.append('../../framework')
 import bldutil
 
-progs = 'gpi3dzo'
+progs = 'gpi3dzo psovc psovcp flatlinpiwrapper flatlinpiwrapper2d'
 
 mpi_progs = ''
 
@@ -30,6 +30,7 @@ src = Glob('[a-z]*.c')
 for source in src:
     inc = env.RSF_Include(source,prefix='')
     obj = env.StaticObject(source)
+    env.Ignore(inc,inc)
     env.Depends(obj,inc)
 
 mains = Split(progs)
@@ -55,6 +56,13 @@ for prog in ccmains:
     if root:
         env.Install(bindir,prog)
 
+
+for prog in Split('t2warp'):
+    sources = ['Test' + prog,prog]
+    bldutil.depends(env,sources,prog)
+    sources = map(lambda x: x + '.o',sources)
+    env.Object('Test' + prog + '.c')
+    env.Program(sources,PROGPREFIX='',PROGSUFFIX='.x')     
 
 ######################################################################
 # SELF-DOCUMENTATION

@@ -133,6 +133,7 @@ lapack = env.get('LAPACK')
 
 for source in src:
     inc = env.RSF_Include(source,prefix='')
+    env.Ignore(inc,inc)
     if fftw or not source in fftws:
         obj = env.StaticObject(source)
         env.Depends(obj,inc)

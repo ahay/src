@@ -44,7 +44,6 @@ int main(int argc, char* argv[])
     out = sf_output("out");
     
     dim = sf_filedims(in,ndims);
-    
 
     if (!sf_getint("axis",&axis)) axis=2;
     /* which axis to stack. If axis=0, stack over all dimensions */
@@ -53,7 +52,7 @@ int main(int argc, char* argv[])
       axis=dim+1;
       all=true;
       lim = axis;
-      sf_warning("stacking all axes up to axis=%d",dim);
+      /* sf_warning("stacking all axes up to axis=%d",dim); */
     }else{
       lim = axis-1;
     }

@@ -34,11 +34,11 @@ for key in Split('xline iline cdpx cdpy sx sy gx gy'):
 
 # Xline/Inline numbers
 Flow('ixil','xline iline','cmplx ${SOURCES[1]}')
-Result('ixil','graph symbol="+" title="Xline/Inline number" plotcol=2')
+Result('ixil','window j2=2 | graph symbol="+" title="Xline/Inline number" plotcol=2')
 
 # Xline/Inline coordinates
 Flow('ixilcoord','cdpx cdpy','cmplx ${SOURCES[1]}')
-Result('ixilcoord','graph symbol="+" title="cdp (x,y)" plotcol=4')
+Result('ixilcoord','window j2=2 | graph symbol="+" title="cdp (x,y)" plotcol=4')
 
 # Shot coordinates
 Flow('sxsycoord','sx sy','cmplx ${SOURCES[1]}')
@@ -46,7 +46,7 @@ Result('sxsycoord','window j2=2 | graph symbol="+" title="Shot (x,y)" plotcol=5'
 
 # Receiver coordinates
 Flow('gxgycoord','gx gy','cmplx ${SOURCES[1]}')
-Result('gxgycoord','graph symbol="+" title="Group (x,y)" plotcol=3')
+Result('gxgycoord','window j2=2 | graph symbol="+" title="Group (x,y)" plotcol=3')
 
 End()
 

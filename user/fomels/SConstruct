@@ -8,7 +8,7 @@ cfftwave1 cdivn cflow chebvc clpf cltft constperm constpermh
 constpermh1 cosftwave1 cpef cr deblur distance divn dix dpeiko eikonal
 eikonalvti eno2 erf exgr fft2 fftexp0 fftexp1 fftexp3 fftone ffttest
 fftwave1 fftwave2 fftwave3 findmin2 focus fpow freqest gaussmooth
-gbeamform imray interf interp2 interpt iphase kdsort kdtree kron legacy
+gbeamform imray interf interp2 interpt iphase kdsort kdtree kron label legacy
 lfftexp0 llpf localskew locov lpf lrmig0 lsfit max2 median mffit mig3
 miss3 nconv nnint nnshape nsmooth nsmooth1 ocparcel octentwt ofilp
 ofsemb ortho patch phaserot pick pick3 plane poly polyfit regr rdiv
@@ -52,6 +52,7 @@ includes = []
 for source in src:
     inc = env.RSF_Include(source,prefix='')
     obj = env.StaticObject(source)
+    env.Ignore(inc,inc)
     env.Depends(obj,inc)
         
 mains = Split(progs)

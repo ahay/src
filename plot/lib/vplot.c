@@ -384,7 +384,7 @@ void vp_ugtext (float x, float y,
     xup *= xscl;
     yup *= yscl;
 
-    vp_ugtext (x, y, xpath, ypath, xup, yup, string);
+    vp_gtext (x, y, xpath, ypath, xup, yup, string);
 }
 
 

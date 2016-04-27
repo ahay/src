@@ -210,6 +210,7 @@ int main(int argc, char* argv[])
 
     for (is=0; is < ns; is++) { /* shot */
 	s = s0+is*ds;
+	sf_warning("shot %d of %d;",is+1,ns);
 
 	/* cubic Hermite spline interpolation */
 	ist = (s-sy0)/sdy;
@@ -326,6 +327,7 @@ int main(int argc, char* argv[])
 	    }
 	} /* ih */
     }
+    sf_warning(".");
     
     if (adj) sf_floatwrite(out[0],nzx*ng,mig);
 

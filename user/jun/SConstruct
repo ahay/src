@@ -52,7 +52,7 @@ if root:
     user = os.path.basename(os.getcwd())
     main = 'sf%s.py' % user
     
-    docs = map(lambda prog: env.Doc(prog,'M'+prog+'.f90',lang='f90'),mains)
+    docs = map(lambda prog: env.Doc(prog,'M'+prog+'.f90',lang='f90',SCANNERS=[]),mains)
     env.Depends(docs,'#/framework/rsf/doc.py')
     doc = env.RSF_Docmerge(main,docs)
     env.Install(pkgdir,doc)

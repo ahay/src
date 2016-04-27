@@ -137,6 +137,23 @@ def dipline(mod,s1,s2,e1,e2,vi,vt,n1,o1,d1,n2,o2,d2):
          ''' % (vels,n1,d1,o1) )
 
 # ------------------------------------------------------------
+def refline(mod,xsou,zsou,dd,aa,vi,vt,n1,o1,d1,n2,o2,d2):
+
+    zmin=o1
+    zmax=o1+(n1-1)*d1
+    xmin=o2
+    xmax=o2+(n2-1)*d2
+    
+    aa = aa/180.*pi;
+
+    s1=zsou + dd*cos(aa) + (xsou-xmin+dd*sin(aa)) * tan(aa)
+    s2=xmin
+    e1=zsou + dd*cos(aa) - (xmax-xsou-dd*sin(aa)) * tan(aa)
+    e2=xmax
+
+    dipline(mod,s1,s2,e1,e2,vi,vt,n1,o1,d1,n2,o2,d2)
+    
+# ------------------------------------------------------------
 def angline(mod,s1,s2,aa,vi,vt,n1,o1,d1,n2,o2,d2):
 
     min1=o1

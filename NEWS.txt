@@ -44,7 +44,7 @@ To the reproducible documents collection:
 To SCons:
 
 * splitting auxiliary inputs when split= involves 'omp' or 'mpi'
-* Upgraded to scons-2.4.1
+* Upgraded to scons-2.5.0
 
 To documentation:
 

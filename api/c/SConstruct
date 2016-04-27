@@ -55,6 +55,7 @@ for source in Split(src2):
     env.RSF_Include(source,prefix='sf_')
 
     obj = env.StaticObject(source+'.c')
+    env.Ignore(source+'.h',source+'.h')
     env.Depends(obj,source+'.h')
     sobjs.append(obj)
     

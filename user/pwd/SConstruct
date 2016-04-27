@@ -38,6 +38,7 @@ for source in src:
     inc = env.RSF_Include(source,prefix='')
     obj = env.StaticObject(source)
     env.Depends(obj,inc)
+    env.Ignore(inc,inc)
 
     objects.append(obj)
     includes.append(inc)

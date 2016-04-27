@@ -240,7 +240,7 @@ class File(object):
             mul = Filter('scale')(dscale=float(other))
             return mul[self]
         except:
-            mul = Filter('add')(mode='product')
+            mul = Filter('mul')(mode='product')
             return mul[self,other]
     def __div__(self,other):
         'Overload division'
@@ -256,13 +256,16 @@ class File(object):
     def dot(self,other):
         'Dot product'
         # incorrect for complex numbers
-        prod = self.__mul__(other).reshape()
-        stack = Filter('stack')(norm=False,axis=1)[prod]
+        prod = self.__mul__(other)
+        stack = Filter('stack')(norm=False,axis=0)[prod]
         return stack[0]
-    def dot2(self):
+    def cdot2(self):
         'Dot product with itself'
         abs2 = Filter('math')(output="abs(input)").real[self]
         return abs2.dot(abs2)
+    def dot2(self):
+        'Dot product with itself'
+        return self.dot(self)
     def __array__(self,context=None):
         'numpy array'
         if _swig_:
@@ -436,9 +439,11 @@ if _swig_:
             if isinstance(tag,File):
                 # copy file
                 self.__init__(tag.tag)
+                self.copy = True
             else:
                 self.file = c_rsf.sf_input(tag)
                 _File.__init__(self,tag)
+                self.copy = False
         def read(self,data):
             if self.type == 'float':
                 c_rsf.sf_floatread(numpy.reshape(data,(data.size,)),self.file)
@@ -446,6 +451,10 @@ if _swig_:
                 c_rsf.sf_complexread(numpy.reshape(data,(data.size)),self.file)
             else:
                 raise TypeError, 'Unsupported file type %s' % self.type
+        def close(self):
+            if not self.copy:
+                c_rsf.sf_fileclose(self.file)
+            _File.close(self)
 
     class Output(_File):
         def __init__(self,tag='out',src=None):
@@ -474,7 +483,10 @@ if _swig_:
                                       self.file)
             else:
                 raise TypeError, 'Unsupported file type %s' % self.type
-
+        def close(self):
+            c_rsf.sf_fileclose(self.file)
+            _File.close(self)
+            
 else:
 
     class Input(object):

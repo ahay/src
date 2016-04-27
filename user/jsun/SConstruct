@@ -51,12 +51,14 @@ if fftw:
 for source in src:
     inc = env.RSF_Include(source,prefix='')
     obj = env.StaticObject(source)
+    env.Ignore(inc,inc)
     env.Depends(obj,inc)
 
 mpicc = env.get('MPICC')
 mpi_src = Glob('Q[a-z]*.c')
 for source in mpi_src:
     inc = env.RSF_Include(source,prefix='')
+    env.Ignore(inc,inc)
     obj = env.StaticObject(source,CC=mpicc)
     env.Depends(obj,inc)
 

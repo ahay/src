@@ -202,6 +202,10 @@ def identify_platform(context):
         elif plat_nm == 'i686':
             plat['arch'] = '32bit'
     context.Result('%(OS)s [%(distro)s]' % plat)
+    # keep TACC-specific environment
+    for env in os.environ.keys():
+        if 'TACC_' == env[:5]:
+            context.env.Append(ENV={env:os.environ[env]})
 
 pkg['gcc'] = {'fedora':'gcc'}
 pkg['libc'] = {'fedora':'glibc',
@@ -2035,7 +2039,7 @@ def f90(context):
 
 def matlab(context):
     context.Message("checking for Matlab ... ")
-    matlab = WhereIs('matlab')
+    matlab = context.env.get('MATLAB',WhereIs('matlab'))
     if matlab:
         context.Result(matlab)
         RSFROOT_lib = os.path.join(context.env.get('RSFROOT'),'lib')
@@ -2054,7 +2058,10 @@ def matlab(context):
         sys.exit(unix_failure)
 
     context.Message("checking for mex ... ")
-    mex = os.path.join(os.path.dirname(matlab),'mex')
+    mex = context.env.get('MEX',
+                          os.path.join(
+                              os.path.dirname(
+                                  os.path.realpath(matlab)),'mex'))
     if os.path.isfile(mex):
         context.Result(mex)
         context.env['MEX'] = mex
@@ -2213,8 +2220,9 @@ def intel(context):
         license = os.environ.get(key)
         if license:
             context.env.Append(ENV={key:license})
+    iccpath = os.path.dirname(context.env.get('CC'))
+    context.env['ENV']['PATH'] = ':'.join([context.env['ENV']['PATH'],iccpath])
     
-
 def set_options(env,my_opts=None):
     'get options from config file'
     from rsf.prog import RSFROOT
