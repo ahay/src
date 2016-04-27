@@ -1,15 +1,6 @@
 #ifndef _sf_lapack_h_
 #define _sf_lapack_h_
 
-#ifdef __APPLE__
-
-#include <Accelerate/Accelerate.h>
-
-#define MKL_Complex8 __CLPK_complex 
-#define MKL_Complex16 __CLPK_doublecomplex 
-
-#else
-
 #ifdef HAVE_MKL
 
 #include <mkl.h>
@@ -826,4 +817,3 @@ void zgeqpf_(int *m, int *n, cpx16 *a, int *lda, int *jpvt, cpx16 *tau, cpx16 *w
 
 #endif
 
-#endif
