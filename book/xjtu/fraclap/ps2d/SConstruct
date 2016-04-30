@@ -1,0 +1,19 @@
+from rsf.proj import *
+
+
+Flow('vel',None,
+     	'''
+     	math output=1500 n1=301 n2=301 d1=4 d2=4
+     	label1=x1 unit1=m label2=x2 unit2=m 
+     	''')
+Flow('Qp',None,
+     	'''
+     	math output=100 n1=301 n2=301 d1=4 d2=4
+     	label1=x1 unit1=m label2=x2 unit2=m 
+     	''')
+Result('vel','grey')
+
+Flow('wav','vel Qp','sfps2d Qp=${SOURCES[1]} nb=30 nt=600 dt=0.001')
+Result('wav','wav','grey gainpanel=a color=j scalebar=y')
+
+End()
