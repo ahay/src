@@ -194,11 +194,11 @@ int main(int argc, char* argv[])
   /* time sampling interval */
   if (!sf_getfloat("fm",&fm)) fm=20.0;
   /*dominant freq of Ricker wavelet */
-  if (!sf_getint("kt",&kt)) kt=250;
+  if (!sf_getint("kt",&kt)) kt=nt;
     
   sf_putint(Fw,"n1",nz);	
   sf_putint(Fw,"n2",nx);
-  sf_putint(Fw,"n3",nt);
+
 
   nzpad=nz+2*nb;
   nxpad=nx+2*nb;
@@ -295,10 +295,10 @@ int main(int argc, char* argv[])
     apply_sponge(p0,bndr,nzpad,nxpad,nb);
     apply_sponge(p1,bndr,nzpad,nxpad,nb);
 
-
-    window2d(v0,p1,nz,nx,nb);
-    sf_floatwrite(v0[0],nz*nx,Fw);
-
+	if(it==kt){
+      window2d(v0,p1,nz,nx,nb);
+      sf_floatwrite(v0[0],nz*nx,Fw);
+	}
   }
 
 	
