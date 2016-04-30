@@ -147,26 +147,26 @@ visco-acoustic and visco-elastic wave equation due to the dissipation.
 The solution of computation without disk I/O is the use of checkpointing 
 technique.
 
-16) Forward modeling based upon Mexwell attenuation model
-Main:		Mmaxwell_cpml1.c, 
-		Mmaxwell_cpml24_fb.f90, Mmaxwell_cpml28_fb.f90
-		Mmaxwell_sponge1.c, Mmaxwell_sponge2_fb.f90
-		Mmaxwell_direct_fb.f90, Mmaxwell_cpml3d_fb.f90
-		Mmaxwell_dftinterp.f90 New wavefield reconstruction scheme!
-Test file:	/book/xjtu/test/maxwell/SConstruct
-Note: 1. We are using Maxwell body to incorporate attenuation.
-      2. We designed a snapshot strategy do reverse reconstruction of 
-	viscoacoustic wavefield in a stable way.
-      3. We propsed a DFT interpolation algorithm to do wavefield 
-	reconstruction from the significantly downsampled boundaries. 
-To use these techniques, please cite the following:
-[1] Pengliang Yang, Romain Brossier, Ludovic Metivier and  Jean Virieux,
-    Reverse propagation of viscoacoustic forward wavefield with Maxwell 
-    attenuation using snapshots and saved boundaries, Technical report 
-     No 83 - SEISCOPE project, University Joseph Fourier
-[2] Pengliang Yang, Romain Brossier, Jean Virieux, Boundary reconstruction 
-    after significant downsampling, Technical report No 84 - SEISCOPE project
-    University Joseph Fourier
+Reminder: This is just a demonstration example, which can not reach the 
+optimal recomputation ratio of binomial checkpointing strategy. I have 
+coded a fortran code supplying the optimal binomial checkpointing performance.
+However, as I already developed CARFS algorithm (checkpointing-assisted
+reverse-forward simulation) to significantly improve the performance of standard 
+checkpointing, I am relunctant to modify this demo any more.
+The interested user can email me to obtain CARFS paper, which has been under
+revision for Geophysics publication.
+
+[16] Fourier pseudo-spectral method for fractional laplacian computation
+ to achieve the attenuation
+Main: 	    Mps2d.c
+Test file:  /book/xjtu/test/ps2d/SConstruct
+
+People who are interested in wave propagation with attenuation are encouraged
+to modify this code for their own study. The only condition is the acknowledgement
+of the initial code.
+
+A new set of code on my research in attenuating media is under construction.
+
 
 
 ===================================================================

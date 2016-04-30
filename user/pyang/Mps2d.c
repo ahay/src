@@ -1,4 +1,5 @@
-/* 2-D wavefield simulation using Pseudo Spectral method
+/* 2-D attenuating wavefield simulation using Fourier Pseudo Spectral method 
+for computing fractional laplacian instead of fractional time derivative
  */
 /*
   Copyright (C) 2016 Univ. Grenoble Alpes, Pengliang Yang
@@ -17,10 +18,17 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-  Reference: H. Igel, Pseudo Spectral tutorial, ppt
+  Reference: 
+  [1] Chen, W., and S. Holm, 2004, Fractional Laplacian time-space models for
+      linear and nonlinear lossy media exhibiting arbitrary frequency power-law
+      dependency: The Journal of the Acoustical Society of America, 115, no. 4
+  [2] J.M. Carcione, 2010, A generalization of the Fourier pseudospectral method,
+      GEOPHYSICS, VOL. 75, NO. 6
+  [3] H. Igel, Pseudo Spectral tutorial
 */
 #include <rsf.h>
 #include <math.h>
+#include <complex.h>
 
 #ifdef SF_HAS_FFTW
 #include <fftw3.h>
@@ -156,8 +164,8 @@ int main(int argc, char* argv[])
   int ns,*sxz;
   int iz,ix,it, kt;
   float fm,dt,dz,dx,tmp,vmax,dkz,dkx;
-  float *bndr,*wlt,**v0, **vv, **p0, **p1, **ptr;
-  sf_file Fv, Fw; 
+  float *bndr,*wlt,**v0, **vv, **p0, **p1, **beta, **ptr;
+  sf_file Fv,FQp, Fw; 
   float *kx, *kz;
   fftwf_plan plan_forw,plan_inv;
   fftwf_complex *fttmp;
@@ -167,6 +175,7 @@ int main(int argc, char* argv[])
 
   /* setup I/O files */
   Fv=sf_input("in");	/* read the data to be interpolated */
+  FQp=sf_input("Qp");	/* quality factor */
   Fw=sf_output("out"); 	/* output the reconstructed data */
  
   if (!sf_histint(Fv,"n1",&nz)) sf_error("No n1= in input");
@@ -196,6 +205,7 @@ int main(int argc, char* argv[])
   ns=1;
 
   v0=sf_floatalloc2(nz, nx);
+  beta=sf_floatalloc2(nzpad, nxpad);
   vv=sf_floatalloc2(nzpad, nxpad);
   p0=sf_floatalloc2(nzpad, nxpad);
   p1=sf_floatalloc2(nzpad, nxpad);
@@ -209,14 +219,21 @@ int main(int argc, char* argv[])
 
   sf_floatread(v0[0],nz*nx,Fv);
   expand2d(vv, v0, nz, nx, nb);
+  sf_floatread(v0[0],nz*nx,FQp);
+  expand2d(beta, v0, nz, nx, nb); //store Q in beta
   vmax=vv[0][0];
   for(ix=0;ix<nxpad;ix++){
     for(iz=0;iz<nzpad;iz++){
       if(vmax<vv[ix][iz]) vmax=vv[ix][iz];
       tmp=vv[ix][iz]*dt;
       vv[ix][iz]=tmp*tmp;// vv=vv^2*dt^2
+
+      //J.M. Carcione, 2010, equations 9 and 12
+      tmp=atanf(1./beta[ix][iz])/SF_PI; //gamma
+      beta[ix][iz]=1./(1.-tmp);//gamma-->beta
     }
   }
+
   sponge_coeff(bndr, nb,dt, dx, dz, vmax);
   memset(p0[0],0,nzpad*nxpad*sizeof(float));
   memset(p1[0],0,nzpad*nxpad*sizeof(float));
@@ -229,6 +246,7 @@ int main(int argc, char* argv[])
   sxz=(int*)malloc(ns*sizeof(int));
   sxz[0]=nz/2+nz*(nx/2);
 
+  //pre-compute the discrete wavenumbers: kx and kz
   dkx=2.*SF_PI/(dx*nxpad);
   kx[0]=0;
   for(ix=1; ix<(nxpad+1)/2; ix++) {
@@ -236,7 +254,6 @@ int main(int argc, char* argv[])
     kx[nxpad-ix]=-ix*dkx;
   }
   if(nxpad%2==0) kx[nxpad/2]=(nxpad/2)*dkx;//Nyquist freq
-
   dkz=2.*SF_PI/(dz*nzpad);
   kz[0]=0;
   for(iz=1; iz<(nzpad+1)/2; iz++) {
@@ -260,7 +277,9 @@ int main(int argc, char* argv[])
     fftwf_execute(plan_forw);// fft
     for(ix=0; ix<nxpad; ix++){
       for(iz=0; iz<nzpad; iz++){
-	fttmp[iz+nzpad*ix]= -(kx[ix]*kx[ix]+kz[iz]*kz[iz])*fttmp[iz+nzpad*ix];
+	//fractional laplacian
+	tmp=-(kx[ix]*kx[ix]+kz[iz]*kz[iz]);
+	fttmp[iz+nzpad*ix]*= cpowf(tmp,beta[ix][iz]);
       }
     }
     fftwf_execute(plan_inv);//ifft
@@ -291,6 +310,7 @@ int main(int argc, char* argv[])
   free(sxz);
   free(wlt);
   free(*v0); free(v0);
+  free(*beta); free(beta);
   free(*vv); free(vv);
   free(*p0); free(p0);
   free(*p1); free(p1);
