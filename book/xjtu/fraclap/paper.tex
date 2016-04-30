@@ -43,8 +43,8 @@ where we use the notation $p(n\Delta t):=p^n$. Thus, we have the following evolu
 where the space derivatives will be calculated using the Fourier transform.
 
 \section{Computing derivatives using Fourier transform}
-\inputdir{ps2d}
 
+\inputdir{.}
 The Fourier transform of a function $f(x)$ and the inverse are define respectively
 \begin{equation}
  \tilde{f}(\omega)=F[f]=\int f(x)e^{-i\omega x}\mathrm{d}x
@@ -88,17 +88,10 @@ Thus, we have the following time evolution
 \begin{equation}
 p^{n+1}=2p^n-p^{n-1}+\Delta t^2 v^2F^{-1}[-(k_x^2+k_z^2)F p^n]
 \end{equation}
-% A snapshot using the code provided in the appendix is shown in Figure~\ref{snapshot}, in which we use the sponge boundary condition.
-% \begin{figure}
-% \centering
-% \includegraphics[width=0.8\textwidth]{snapshot}\\
-% \caption{A snapshot of 2-D acoustic propagation using PSM method}\label{snapshot}
-% \end{figure}
 
-\plot{snapshot}{width=0.8\textwidth}{A snapshot of 2-D acoustic propagation using PSM method}
+
 
 \section{Absorbing boundary condition}
-\inputdir{.}
 
 One of the easiest absorbing boundary condtion (ABC) is sponge (or referred to as Gaussian taper) boundary condition proposed by \cite{Cerjan_1985_NBC}. The principle is very simple: Attenuating the refections exponentially in the extended artificial boundary (Figure~\ref{fig:extbndr}) area by multiplying a factor less $d(u)$ than 1, i.e., $ d(u)=\mathrm{exp}(-[\alpha(nb-i)]^2), u=x,z (i\Delta x \; \mathrm{or} \; i\Delta z)$
 where $nb$ is the thickness of the artificial boundary on each side of the model. A  usual choice is $\alpha=0.015$ for $nb=20\sim30$ absorbing layers. The sponge ABC can be easily applied to a wide range of wave propagation problems, including some  governing wave equations for complicated medium. 
@@ -112,6 +105,29 @@ where $nb$ is the thickness of the artificial boundary on each side of the model
 \plot{extbndr}{width=0.6\textwidth}{A schematic diagram of extended artificial boundary area. $A_1A_2A_3A_4$ is the original model zone, which is extended to be $B_1B_2B_3B_4$  with artificial boundary. In the extended bounary area, the attenuation coeffcient $d(u)\neq 0$; In the model zone $A_1A_2A_3A_4$, $d(u)= 0$, $u=x,z$.}
 
 
+\section{Fractional Laplacian}
+\inputdir{ps2d}
+
+According to \cite{Carcione_2010_GFP}, one choice to perform attenation in wave simulation is
+\begin{equation}
+ \rho (\partial_x^\beta \rho^{-1}\partial_x^\beta +\partial_z^\beta\rho^{-1}\partial_z^\beta )
+\end{equation}
+The other choise is
+\begin{equation}
+ -(-\partial_x^2-\partial_z^2)^\beta
+\end{equation}
+which corresponds to
+\begin{equation}
+  (-k_x^2-k_z^2)^\beta
+\end{equation}
+A snapshot using the code provided in the appendix is shown in Figure~\ref{fig:snapshot}, in which we use the sponge boundary condition.
+% \begin{figure}
+% \centering
+% \includegraphics[width=0.8\textwidth]{snapshot}\\
+% \caption{A snapshot of 2-D acoustic propagation using PSM method}\label{snapshot}
+% \end{figure}
+
+\plot{snapshot}{width=0.7\textwidth}{A snapshot of 2-D acoustic propagation using PSM method}
 
 
 \section{Conclusion}
