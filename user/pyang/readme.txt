@@ -159,7 +159,7 @@ revision for Geophysics publication.
 [16] Fourier pseudo-spectral method for fractional laplacian computation
  to achieve the attenuation
 Main: 	    Mps2d.c
-Test file:  /book/xjtu/test/ps2d/SConstruct
+Test file:  /book/xjtu/fraclap/ps2d/SConstruct
 
 People who are interested in wave propagation with attenuation are encouraged
 to modify this code for their own study. The only condition is the acknowledgement
