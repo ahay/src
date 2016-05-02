@@ -102,7 +102,7 @@ void step_forward(float **p0, float **p1, float **p2, float **vv, float dtz, flo
 }
 
 
-void step_backward(float **illum, float **lap, float **p0, float **p1, float **p2, float **vv, float dtz, float dtx, int nz, int nx)
+void step_backward(float **p0, float **p1, float **p2, float **vv, float dtz, float dtx, int nz, int nx)
 /*< step backward >*/
 {
     int ix,iz;
@@ -121,8 +121,6 @@ void step_backward(float **illum, float **lap, float **p0, float **p1, float **p
 	    diff1*=v1;
 	    diff2*=v2;
 	    p2[ix][iz]=2.0*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
-	    illum[ix][iz]+=p1[ix][iz]*p1[ix][iz];
-	    lap[ix][iz]=diff1+diff2;
     }
 }
 void add_source(float **p, float *source, int *sxz, int ns, int nz, bool add)
@@ -194,13 +192,13 @@ void rw_bndr(float *bndr, float **p, int nz, int nx, bool write)
 
 int main(int argc, char* argv[])
 {
-	bool csdgather, chk;
+	bool csdgather;
 	int nz, nx, nt, ns, ng, is, it, kt, distx, distz, sxbeg,szbeg,gxbeg,gzbeg,jsx,jsz,jgx,jgz;
 	int *sxz, *gxz;
-  	float dx, dz, fm, dt, dtx, dtz, amp, tmp, totaltime=0	;
-	float *trans, *wlt, *dobs, *bndr, **vv, **p0, **p1, **p2, **lap, **illum, **ptr=NULL;
+  	float dx, dz, fm, dt, dtx, dtz, amp, tmp;
+	float *trans, *wlt, *dobs, *bndr, **vv, **p0, **p1, **p2, **ptr=NULL;
 	clock_t start, end;
-	sf_file vinit, shots, check=NULL, time=NULL;
+	sf_file vinit, shots, check1, check2;
 
     	/* initialize Madagascar */
     	sf_init(argc,argv);
@@ -208,8 +206,8 @@ int main(int argc, char* argv[])
     	/*< set up I/O files >*/
     	vinit=sf_input ("in");   /* initial velocity model, unit=m/s */
     	shots=sf_output("out");  /* output image with correlation imaging condition */ 
-		check=sf_output("check");/* output shotsnap for correctness checking*/
-	time=sf_output("time"); /* output total time */ 
+		check1=sf_output("check1");/* output snapshot for correctness checking*/ 
+		check2=sf_output("check2");/* output snapshot for correctness checking*/
 
     	/* get parameters for forward modeling */
     	if (!sf_histint(vinit,"n1",&nz)) sf_error("no n1");
@@ -217,12 +215,8 @@ int main(int argc, char* argv[])
     	if (!sf_histfloat(vinit,"d1",&dz)) sf_error("no d1");
    	if (!sf_histfloat(vinit,"d2",&dx)) sf_error("no d2");
 
-    	if(!sf_getbool("chk",&chk)) chk=false;
-    	/*check whether GPU-CPU implementation coincide with each other or not */
-	if(chk){
-    		if (!sf_getint("kt",&kt))  kt=100;/* check it at it=100 */
-	}
-	if (!sf_getfloat("amp",&amp)) amp=1000;
+    if (!sf_getint("kt",&kt))  kt=100;/* check it at it=100 */
+	if (!sf_getfloat("amp",&amp)) amp=1.;
 	/* maximum amplitude of ricker */
     	if (!sf_getfloat("fm",&fm)) fm=10;	
 	/* dominant freq of ricker */
@@ -276,11 +270,10 @@ int main(int argc, char* argv[])
 	sf_putint(shots,"jgx",jgx);
 	sf_putint(shots,"jgz",jgz);
 	sf_putint(shots,"csdgather",csdgather?1:0);
-	sf_putint(time,"n1",1);
-	sf_putint(time,"n2",1);
-
-	sf_putint(check,"n1",nz);	
-	sf_putint(check,"n2",nx);
+	sf_putint(check1,"n1",nz);	
+	sf_putint(check1,"n2",nx);
+	sf_putint(check2,"n1",nz);	
+	sf_putint(check2,"n2",nx);
 
 	dtx=dt/dx; 
 	dtz=dt/dz; 
@@ -293,8 +286,6 @@ int main(int argc, char* argv[])
 	p0=sf_floatalloc2(nz, nx);
 	p1=sf_floatalloc2(nz, nx);
 	p2=sf_floatalloc2(nz, nx);
-	lap=sf_floatalloc2(nz, nx);
-	illum=sf_floatalloc2(nz, nx);
 	sxz=(int*)malloc(ns*sizeof(int));
 	gxz=(int*)malloc(ng*sizeof(int));
 
@@ -342,6 +333,10 @@ int main(int argc, char* argv[])
 			ptr=p0; p0=p1; p1=p2; p2=ptr;
 			rw_bndr(&bndr[it*(2*nz+nx)], p0, nz, nx, true);
 			record_seis(&dobs[it*ng], gxz, p0, ng, nz);
+
+			if(it==kt){
+				sf_floatwrite(p0[0],nz*nx, check1);
+			}
 		}
 		matrix_transpose(dobs, trans, ng, nt);
 		sf_floatwrite(trans,ng*nt,shots);
@@ -349,20 +344,19 @@ int main(int argc, char* argv[])
 		ptr=p0; p0=p1; p1=ptr;
 		for(it=nt-1; it>-1; it--){
 			rw_bndr(&bndr[it*(2*nz+nx)], p1, nz, nx, false);
-			step_backward(illum, lap, p0, p1, p2, vv, dtz, dtx, nz, nx);
+
+			if(it==kt){
+				sf_floatwrite(p1[0],nz*nx, check2);
+			}
+
+			step_backward(p0, p1, p2, vv, dtz, dtx, nz, nx);
 			add_source(p1, &wlt[it], &sxz[is], 1, nz, false);
 			ptr=p0; p0=p1; p1=p2; p2=ptr;
-			if(it==kt){
-				sf_floatwrite(p0[0],nz*nx, check);
-			}
 		}
 		
  		end = clock();
  		sf_warning("shot %d finished: %f (s)", is+1,((float)(end-start))/CLOCKS_PER_SEC); 
-		totaltime+=((float)(end-start))/CLOCKS_PER_SEC;
 	}
-	totaltime/=ns;
-	sf_floatwrite(&totaltime,1,time);
 
 	free(sxz);
 	free(gxz);
@@ -374,8 +368,6 @@ int main(int argc, char* argv[])
 	free(*p0); free(p0);
 	free(*p1); free(p1);
 	free(*p2); free(p2);
-	free(*illum); free(illum);
-	free(*lap); free(lap);
 
 
     	exit(0);
