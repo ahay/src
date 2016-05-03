@@ -30,9 +30,11 @@ int main(int argc, char* argv[])
     int nt, nx, nz, depth, nb, n2;      /* dimensions */
     int niter, ngrp, size;              /* # of iters, groups, sw size */
     int rectz, rectx, rectt,repeat;     /* smoothing pars */
+    int stack,is,it,ix,iz,tsize;        /* local stacking length */
     float ox, oz, dx, dz, dt, cb;       /* intervals */
     float perc, hard;                   /* hard thresholding and division padding */
     float **dd, **vv, ***ww, ***mwt;    /* arrays */
+    float ***ww2=NULL;
     sf_file in, out, vel, weight;       /* I/O files */
 
     /* initialize Madagascar */
@@ -58,6 +60,7 @@ int main(int argc, char* argv[])
     if(!sf_getint("rectx", &rectx)) rectx=1;    /* smoothing radius in x */
     if(!sf_getint("rectt", &rectt)) rectt=1;    /* smoothing radius in t */
     if(!sf_getint("repeat", &repeat)) repeat=1; /* smoothing repeatation */
+    if(!sf_getint("stack", &stack)) stack=1;    /* local stacking length */
     if(!sf_getfloat("perc", &perc)) perc=SF_EPS;/* stable division padding percentage (of max) */
     if(!sf_getfloat("hard", &hard)) hard=0.0f;  /* hard thresholding */
 
@@ -91,7 +94,7 @@ int main(int argc, char* argv[])
         sf_putfloat (out, "d2", dx);
         sf_putstring(out, "label2", "Distance");
         sf_putstring(out, "unit2" , "km");
-        sf_putint   (out, "n3", nt);
+        sf_putint   (out, "n3", nt/stack);
         sf_putfloat (out, "d3", dt);
         sf_putfloat (out, "o3", 0.0f);
         sf_putstring(out, "label3", "Time");
@@ -145,6 +148,7 @@ int main(int argc, char* argv[])
     dd = sf_floatalloc2(nt, nx);
     ww = sf_floatalloc3(nz, nx, nt);
     if (inv && prec) mwt = sf_floatalloc3(nz, nx, nt);
+    if (stack > 1) ww2= sf_floatalloc3(nz, nx, nt/stack);
    
     /* read velocity */
     sf_floatread(vv[0], nz*nx, vel);
@@ -181,8 +185,22 @@ int main(int argc, char* argv[])
         else timerev_lop(adj, false, nz*nx*nt, nt*nx, ww[0][0], dd[0]);
     }
 
-    if (adj) sf_floatwrite(ww[0][0], nz*nx*nt, out);
-    else sf_floatwrite(dd[0], nt*nx, out);
+    if (stack > 1) {
+        tsize = stack;
+        for (is=0; is<nt/stack; is++) {
+            ww2[is][ix][iz] = 0.;
+            if (is == nt/stack-1) tsize=stack+(nt-(nt/stack)*stack);
+            for (it=0; it<tsize; it++)
+                for (ix=0; ix<nx; ix++)
+                    for (iz=0; iz<nz; iz++)
+                        ww2[is][ix][iz] += ww[is*stack+it][ix][iz];
+        }
+    }
+
+    if (adj) {
+        if (stack > 1) sf_floatwrite(ww2[0][0], nz*nx*nt/stack, out);
+        else sf_floatwrite(ww[0][0], nz*nx*nt, out);
+    } else sf_floatwrite(dd[0], nt*nx, out);
 
     if (NULL!=weight) sf_floatwrite(mwt[0][0], nz*nx*nt, weight);
 
@@ -190,6 +208,7 @@ int main(int argc, char* argv[])
     timerev_close();
     free(*dd); free(dd); 
     free(**ww); free(*ww); free(ww);
+    if (NULL!=ww2) { free(**ww2); free(*ww2); free(ww2); }
     if (inv && prec) { free(**mwt); free(*mwt); free(mwt); }
 
     exit (0);
