@@ -164,6 +164,7 @@ class File(object):
         if isinstance(tag,File):
             # copy file (name is ignored)
             self.__init__(tag.tag)
+            tag.close()
         elif _swig_ and isinstance(tag,numpy.ndarray):
             # numpy array
             if not name:
@@ -269,11 +270,14 @@ class File(object):
     def __array__(self,context=None):
         'numpy array'
         if _swig_:
-            # danger: dangling open file descriptor
             if None == self.narray:
                 if not hasattr(self,'file'):
-                    self.file = c_rsf.sf_input(self.tag)
-                self.narray = c_rsf.rsf_array(self.file)
+                    f = c_rsf.sf_input(self.tag)
+                else:
+                    f = self.file
+                self.narray = c_rsf.rsf_array(f)
+                if not hasattr(self,'file'):
+                    c_rsf.sf_fileclose(f)
             return self.narray
         else:
             # gets only the real part of complex arrays
@@ -371,6 +375,7 @@ class File(object):
         if self.temp:
             Filter('rm',run=True)(0,self)
     def __del__(self):
+        print 'Closing File'
         self.close()
 
 if _swig_:
@@ -388,6 +393,7 @@ if _swig_:
         def close(self):
             c_rsf.sf_fileclose(self.file)
         def __del__(self):
+            print 'Closing ', self.file
             self.close()
             File.close(self)
         def settype(self,type):
@@ -474,6 +480,8 @@ if _swig_:
                    srctype = c_rsf.sf_gettype(srcfile)
                 c_rsf.sf_settype(self.file,_File.type.index(srctype))
                 c_rsf.sf_fileflush(self.file,srcfile)
+                if not hasattr(src,'file'):
+                    c_rsf.sf_fileclose(srcfile)
             _File.__init__(self,self.tag)
         def write(self,data):
             if self.type == 'float':
