@@ -190,8 +190,11 @@ int main(int argc, char* argv[])
         if (prec) sf_solver(timerev_lop,sf_cgstep,nz*nx*nt,nt*nx,ww[0][0],dd[0],niter,"mwt",mwt[0][0],"verb",verb,"end");
         else sf_solver(timerev_lop,sf_cgstep,nz*nx*nt,nt*nx,ww[0][0],dd[0],niter,"verb",verb,"end");
     } else {
-        if (adj && ctr) ctimerev(ngrp,ww,dd);
-        else timerev_lop(adj, false, nz*nx*nt, nt*nx, ww[0][0], dd[0]);
+        if (adj && ctr) {
+            ctimerev(ngrp,ww,dd);
+            absval(nz*nx*nt,ww[0][0]);
+            swnorm(verb, sw, nz, nx, nt, size, perc, ww[0][0]);
+        } else timerev_lop(adj, false, nz*nx*nt, nt*nx, ww[0][0], dd[0]);
     }
 
     if (stack > 1) {
