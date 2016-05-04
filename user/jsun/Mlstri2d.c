@@ -192,8 +192,6 @@ int main(int argc, char* argv[])
     } else {
         if (adj && ctr) {
             ctimerev(ngrp,ww,dd);
-            absval(nz*nx*nt,ww[0][0]);
-            swnorm(verb, sw, nz, nx, nt, size, perc, ww[0][0]);
         } else timerev_lop(adj, false, nz*nx*nt, nt*nx, ww[0][0], dd[0]);
     }
 
@@ -211,6 +209,8 @@ int main(int argc, char* argv[])
                     for (iz=0; iz<nz; iz++)
                         ww2[is][ix][iz] += ww[is*stack+it][ix][iz];
         }
+        absval(nz*nx*nt2,ww2[0][0]);
+        swnorm(verb, sw, nz, nx, nt2, size, perc, ww2[0][0]);
     }
 
     if (adj) {
