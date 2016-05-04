@@ -43,8 +43,11 @@ int main (int argc, char* argv[])
     maxl = 0;
     for (i2=0; i2 < n2; i2++) {
 	for (i1=0; i1 < n1; i1++) {
-	    if (img[i2][i1]) maxl++;
-	    lbl[i2][i1]=0;
+	    if (img[i2][i1]) {
+		maxl++;
+	    } else {
+		lbl[i2][i1]=-1;
+	    }
 	}
     }
     
@@ -85,14 +88,23 @@ int main (int argc, char* argv[])
 	    } else {
 		lbl[i2][i1] = label_new();
 	    }
+
+	    sf_warning("%d,%d -> %d",i1,i2,lbl[i2][i1]);
 	}
+
     }
 
     label_flatten();
 
     for (i2=0; i2 < n2; i2++) {
 	for (i1=0; i1 < n1; i1++) {
-	    lbl[i2][i1] = label_find(lbl[i2][i1]);
+	    if (img[i2][i1]) sf_warning("%d,%d -> %d",i1,i2,lbl[i2][i1]);
+	}
+    }
+
+    for (i2=0; i2 < n2; i2++) {
+	for (i1=0; i1 < n1; i1++) {
+	    lbl[i2][i1] = label_find(lbl[i2][i1])+1;
 	}
     }
 
