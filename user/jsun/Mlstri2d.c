@@ -27,7 +27,7 @@
 int main(int argc, char* argv[])
 {
     bool verb,adj,abc,inv,prec,sw,ctr;  /* execution flags */
-    int nt, nx, nz, depth, nb, n2;      /* dimensions */
+    int nt, nx, nz, depth, nb, n2, nt2; /* dimensions */
     int niter, ngrp, size;              /* # of iters, groups, sw size */
     int rectz, rectx, rectt,repeat;     /* smoothing pars */
     int stack,is,it,ix,iz,tsize;        /* local stacking length */
@@ -94,7 +94,7 @@ int main(int argc, char* argv[])
         sf_putfloat (out, "d2", dx);
         sf_putstring(out, "label2", "Distance");
         sf_putstring(out, "unit2" , "km");
-        sf_putint   (out, "n3", nt/stack);
+        sf_putint   (out, "n3", (int)(nt/stack));
         sf_putfloat (out, "d3", dt);
         sf_putfloat (out, "o3", 0.0f);
         sf_putstring(out, "label3", "Time");
@@ -115,6 +115,7 @@ int main(int argc, char* argv[])
         sf_putstring(out, "unit2" , "km");
         sf_putint   (out, "n3", 1);
     }
+    nt2 = nt/stack;
 
     if (inv && prec) {
         if (NULL!=sf_getstring("weight")) {
@@ -149,11 +150,11 @@ int main(int argc, char* argv[])
     ww = sf_floatalloc3(nz, nx, nt);
     if (inv && prec) mwt = sf_floatalloc3(nz, nx, nt);
     if (stack > 1) {
-        ww2= sf_floatalloc3(nz, nx, (int)(nt/stack));
+        ww2= sf_floatalloc3(nz, nx, nt2);
 #ifdef _OPENMP
 #pragma omp parallel for default(shared) private(is,ix,iz)
 #endif
-        for (is=0; is<nt/stack; is++)
+        for (is=0; is<nt2; is++)
             for (ix=0; ix<nx; ix++)
                 for (iz=0; iz<nz; iz++)
                     ww2[is][ix][iz] = 0.;
@@ -195,12 +196,12 @@ int main(int argc, char* argv[])
 
     if (stack > 1) {
         tsize = stack;
-        sf_warning("nt/stack=%d",nt/stack);
+        sf_warning("nt/stack=%d",nt2);
 #ifdef _OPENMP
 #pragma omp parallel for default(shared) private(is,it,ix,iz)
 #endif
-        for (is=0; is<nt/stack; is++) {
-            if (is == nt/stack-1) tsize=stack+(nt-(nt/stack)*stack);
+        for (is=0; is<nt2; is++) {
+            if (is == nt2-1) tsize=stack+(nt-nt2*stack);
             //sf_warning("is=%d,tsize=%d",is,tsize);
             for (it=0; it<tsize; it++)
                 for (ix=0; ix<nx; ix++)
@@ -210,7 +211,7 @@ int main(int argc, char* argv[])
     }
 
     if (adj) {
-        if (stack > 1) sf_floatwrite(ww2[0][0], nz*nx*nt/stack, out);
+        if (stack > 1) sf_floatwrite(ww2[0][0], nz*nx*nt2, out);
         else sf_floatwrite(ww[0][0], nz*nx*nt, out);
     } else sf_floatwrite(dd[0], nt*nx, out);
 
