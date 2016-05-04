@@ -148,8 +148,16 @@ int main(int argc, char* argv[])
     dd = sf_floatalloc2(nt, nx);
     ww = sf_floatalloc3(nz, nx, nt);
     if (inv && prec) mwt = sf_floatalloc3(nz, nx, nt);
-    if (stack > 1) ww2= sf_floatalloc3(nz, nx, nt/stack);
-   
+    if (stack > 1) {
+        ww2= sf_floatalloc3(nz, nx, (int)(nt/stack));
+#ifdef _OPENMP
+#pragma omp parallel for default(shared) private(is,ix,iz)
+#endif
+        for (is=0; is<nt/stack; is++)
+            for (ix=0; ix<nx; ix++)
+                for (iz=0; iz<nz; iz++)
+                    ww2[is][ix][iz] = 0.;
+    }
     /* read velocity */
     sf_floatread(vv[0], nz*nx, vel);
     if (adj) sf_floatread(dd[0], nt*nx, in);
@@ -187,9 +195,13 @@ int main(int argc, char* argv[])
 
     if (stack > 1) {
         tsize = stack;
+        sf_warning("nt/stack=%d",nt/stack);
+#ifdef _OPENMP
+#pragma omp parallel for default(shared) private(is,it,ix,iz)
+#endif
         for (is=0; is<nt/stack; is++) {
-            ww2[is][ix][iz] = 0.;
             if (is == nt/stack-1) tsize=stack+(nt-(nt/stack)*stack);
+            //sf_warning("is=%d,tsize=%d",is,tsize);
             for (it=0; it<tsize; it++)
                 for (ix=0; ix<nx; ix++)
                     for (iz=0; iz<nz; iz++)
