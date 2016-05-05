@@ -1,6 +1,6 @@
-/* Multi-dimensional PEF (prediction error filter) estimation on a helix. */
+/* Adaptive multidimensional nonstationary PEF. */
 /*
-  Copyright (C) 2004 University of Texas at Austin
+  Copyright (C) 2016 University of Texas at Austin
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -21,22 +21,21 @@
 
 #include "bound.h"
 #include "misinput.h"
-#include "pef.h"
-#include "compress.h"
-#include "printfilter.h"
 #include "createhelix.h" 
 
 int main(int argc, char* argv[])
 {
-    int n[SF_MAX_DIM], n0[SF_MAX_DIM];
+    bool verb;
+    int n[SF_MAX_DIM], n0[SF_MAX_DIM], rect[SF_MAX_DIM];
     int a[SF_MAX_DIM], center[SF_MAX_DIM], gap[SF_MAX_DIM];
-    int dim, n123, i, niter, na, *kk;
-    float *dd, tol;
-    sf_filter aa;   
-    char varname[6], *lagfile;
-    sf_file in, filt, lag, mask;
+    int ndim, dim, n123, n123s, i, niter, na, i4, n4, *kk;
+    float *d, *f, *dd, mean;
+    char *lagfile, key[6];
+    sf_filter aa;
+    sf_file in, filt, lag;
+ 
+    sf_init(argc,argv);
 
-    sf_init (argc, argv);
     in = sf_input("in");
     filt = sf_output("out");
 
@@ -48,7 +47,12 @@ int main(int argc, char* argv[])
 
     sf_putstring(filt,"lag",lagfile);
 
-    dim = sf_filedims(in,n);
+    ndim = sf_filedims(in,n);
+
+    if (!sf_getint("dim",&dim)) dim=ndim; /* number of dimensions */
+
+    n4 = sf_leftsize(in,dim);
+    
     sf_putints (lag,"n",n,dim);
 
     if (!sf_getints("a",a,dim)) sf_error("Need a=");
@@ -62,18 +66,15 @@ int main(int argc, char* argv[])
     if (!sf_getint("na",&na)) na=0;
     /* filter size */
 
-    if (!sf_getfloat("tol",&tol)) tol=1.e-6;
-    /* tolerance for filter compression */
-
     if (0 == na) {
 	if (!sf_getints("gap",gap,dim)) {
 	    for (i=0; i < dim; i++) {
 		gap[i] = 0;
 	    }
 	}
-
+	
 	aa = createhelix(dim, n, center, gap, a); /* allocate PEF */
-
+	
 	for (i=0; i < dim; i++) {	    
 	    n0[i] = n[i];
 	}
@@ -90,76 +91,69 @@ int main(int argc, char* argv[])
     n123 = 1;
     for (i=0; i < dim; i++) {
 	n123 *= n[i];
+	
+	snprintf(key,6,"rect%d",i+1);
+	if (!sf_getint(key,rect+i)) rect[i]=1;
     }
 
     dd = sf_floatalloc(n123);
     kk = sf_intalloc(n123);
 
-    if (NULL != sf_getstring("maskin")) {
-	/* optional input mask file */
-	mask = sf_input("maskin");
-
-	switch (sf_gettype(mask)) {
-	    case SF_INT:
-		sf_intread (kk,n123,mask);
-		break;
-	    case SF_FLOAT:
-		sf_floatread (dd,n123,mask);
-		for (i=0; i < n123; i++) {
-		    kk[i] = (dd[i] != 0.);
-		}
-		break;
-	    default:
-		sf_error ("Wrong data type in maskin");
-		break;
-	}
-
-	sf_fileclose (mask);
-    } else {
-	for (i=0; i < n123; i++) {
-	    kk[i] = 1;
-	}
+    for (i=0; i < n123; i++) {
+	kk[i] = 1;
     }
 
-    sf_floatread (dd,n123,in);
+    bound (dim, n0, n, a, aa);
+    find_mask(n123, kk, aa);
 
-    bound (dim, n0, n, a, aa); 
- 	
-    find_mask(n123, kk, aa);   /* account for missing data */
+    na = aa->nh;
+
+    snprintf(key,3,"n%d",dim+1);
+    sf_putint(filt,key,na);
+    sf_shiftdim(in, filt, dim+1);    
     
-    if (NULL != sf_getstring("maskout")) {
-	/* optional output mask file */
-	mask = sf_output("maskout");
-
-	for (i=0; i < n123; i++) {
-	    kk[i] = aa->mis[i]? 0.: 1.;
-	}
-	
-	sf_settype(mask,SF_INT);
-	sf_intwrite (kk,n123,mask);
-    }
-
-    if(!sf_getint("niter",&niter)) niter=2*(aa->nh);
+    if (!sf_getint("niter",&niter)) niter=100;
     /* number of iterations */
 
-    find_pef (n123, dd, aa, niter);         /* estimate aa */
-    aa = compress( aa, tol);              /* eliminate zeroes */
-    print(dim, n, center, a, aa);           /* print filter */
+    if (!sf_getbool("verb",&verb)) verb = true;
+    /* verbosity flag */
 
-    sf_putint(filt,"n1",aa->nh);
-    sf_putint(lag,"n1",aa->nh);
+    n123s = n123*na;
+    
+    d = sf_floatalloc(n123s);
+    f = sf_floatalloc(n123s);
+    
+    sf_multidivn_init(na, dim, n123, n, rect, d, NULL, verb); 
 
-    for (i=1; i < dim; i++) {
-	sprintf(varname,"n%d",i+1);
-	sf_putint(filt,varname,1);
-	sf_putint(lag,varname,1);
+    for (i4=0; i4 < n4; i4++) {
+
+	sf_floatread(dd,n123,in);
+
+	/* apply shifts: dd -> d */
+	/* apply mask */
+	
+	mean = 0.;
+	for(i=0; i < n123s; i++) {
+	    mean += d[i]*d[i];
+	}
+	if (mean == 0.) {
+	    sf_floatwrite(d,n123s,filt);
+	    continue;
+	}
+	
+	mean = sqrtf (mean/n123s);
+	
+	for(i=0; i < n123s; i++) {
+	    d[i] /= mean;
+	}
+	for(i=0; i < n123; i++) {
+	    dd[i] /= mean;
+	}
+
+	sf_multidivn (dd,f,niter);
+	sf_floatwrite(f,n123s,filt);
+	
     }
-
-    sf_intwrite(aa->lag,aa->nh,lag);
-    sf_floatwrite(aa->flt,aa->nh,filt);
-
-
-    exit (0);
+    
+    exit(0);
 }
-
-/* 	$Id$	 */

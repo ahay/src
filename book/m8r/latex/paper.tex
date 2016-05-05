@@ -55,7 +55,20 @@ scons article.pdf
 \end{verbatim}
 the paper will be processed to generate a PDF document.
 
-No preamble... different options...
+According to
+the Madagascar convention, the source LaTeX file
+(\texttt{article.tex}) does not contain the usual preamble
+\texttt{\\documentclass} information, as well as
+\texttt{\\begin{document}} and \texttt{\\end{document}} commands. This
+  is done so that the same paper could be easily integrated into a
+  collection of papers in a report or as a chapter in a book. Running \texttt{scons article.pdf} generates an intermediate file \texttt{article.ltx}, which contains the following preamble:
+\lstset{language=tex,showstringspaces=false,frame=single}
+\begin{lstlisting}
+  \documentclass[10pt]{geophysics}
+  \usepackage{amsmath}
+\end{lstlisting}
+  
+Different options... End...
 
 \subsection{Including reproducible results}
 
