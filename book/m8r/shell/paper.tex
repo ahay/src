@@ -28,8 +28,10 @@ variables...
 \section{Main programs}
 
 The source files for these programs can be found under
-\href{http://sourceforge.net/p/rsf/code/HEAD/tree/trunk/system/main/}{\$RSFSRC/system/main}
-directory in the Madagascar distribution.
+\href{https://github.com/ahay/src/blob/master/system/main}{\$RSFSRC/system/main}
+directory in the Madagascar distribution. The "main" programs perform
+general-purpose operations on RSF hypercubes regardless of the data
+dimensionality or physical dimensions.
 
 \noindent\doublebox{\parbox{\textwidth}{
 \input{sfadd}
@@ -65,7 +67,7 @@ message is printed out if the the axis sampling parameters (such as
 
 \texttt{sfattr} is a useful diagnostic program. It reports certain
 statistical values for an RSF dataset: RMS (root-mean-square)
-amplitude, mean value, norm value, variance, standard deviation,
+amplitude, mean value, vector norm value, variance, standard deviation,
 maximum and minimum values, number of nonzero samples, and the total
 number of samples.
 
@@ -240,6 +242,8 @@ norm value = 5.73563
 In 10 iterations, the misfit decreased by an order of magnitude. The
 result can be improved by running the program for more iterations.
 
+An equivalent implementation for complex-valued inputs is \texttt{sfcconjgrad}. 
+
 \noindent\doublebox{\parbox{\textwidth}{
 \input{sfcp}
 }}
@@ -329,8 +333,7 @@ bash$ sfdisfil < test2.rsf
    0:          1,         2i         3,         4i         5,         6i
 \end{verbatim}
 
-To learn more about the RSF data format, consult the
-\href{http://www.reproducibility.org/RSF/book/rsf/rsf/format_html/}{guide to RSF format}.
+To learn more about the RSF data format, consult Chapter 3.
 
 \noindent\doublebox{\parbox{\textwidth}{
 \input{sfdisfil}
@@ -766,7 +769,7 @@ Here we refer to input files by names (\texttt{r} and \texttt{a}) and combine th
     \input{sfpad}
   }}
 
-\texttt{pad} increases the dimensions of the input dataset by padding
+\texttt{sfpad} increases the dimensions of the input dataset by padding
 the data with zeroes. Here are some simple examples.
 
 \begin{verbatim}
@@ -1291,8 +1294,8 @@ orig123.rsf:
     in="/var/tmp/orig123.rsf@"
     esize=4 type=float form=native 
     n1=10          d1=0.004       o1=0          label1="Time" unit1="s" 
-    n2=20          d2=0.1         o2=0          label2="Distance2" unit2="km" 
-    n3=30          d3=0.1         o3=0          label3="Distance3" unit3="km" 
+    n2=20          d2=0.1         o2=0          label2="Distance" unit2="km" 
+    n3=30          d3=0.1         o3=0          label3="Distance" unit3="km" 
         6000 elements 24000 bytes
 bash$ <orig123.rsf sftransp plane=23 >out132.rsf
 bash$ sfin out132.rsf 
@@ -1300,8 +1303,8 @@ out132.rsf:
     in="/var/tmp/out132.rsf@"
     esize=4 type=float form=native 
     n1=10          d1=0.004       o1=0          label1="Time" unit1="s" 
-    n2=30          d2=0.1         o2=0          label2="Distance3" unit2="km" 
-    n3=20          d3=0.1         o3=0          label3="Distance2" unit3="km" 
+    n2=30          d2=0.1         o2=0          label2="Distance" unit2="km" 
+    n3=20          d3=0.1         o3=0          label3="Distance" unit3="km" 
         6000 elements 24000 bytes
 bash$ <orig123.rsf sftransp plane=13 >out321.rsf
 bash$ sfin out321.rsf 
@@ -1384,7 +1387,8 @@ spike.rsf:
     n2=10          d2=0.1         o2=0          label2="Distance" unit2="km" 
         10000 elements 40000 bytes
 bash$ < spike.rsf sfwindow min1=1 max1=2 d1=0.008 > window.rsf
-bash$ sfin window.rsfwindow.rsf:
+bash$ sfin window.rsf
+window.rsf:
     in="/var/tmp/window.rsf@"
     esize=4 type=float form=native 
     n1=126         d1=0.008       o1=1          label1="Time" unit1="s" 
@@ -1408,7 +1412,8 @@ slice.rsf:
 You can change this behavior by specifying \texttt{squeeze=n}.
 \begin{verbatim}
 bash$ < spike.rsf sfwindow n1=1 min1=1 squeeze=n > slice.rsf
-bash$ sfin slice.rsf slice.rsf:
+bash$ sfin slice.rsf 
+slice.rsf:
     in="/var/tmp/slice.rsf@"
     esize=4 type=float form=native 
     n1=1           d1=0.004       o1=1          label1="Time" unit1="s" 
