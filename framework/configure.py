@@ -152,7 +152,7 @@ def identify_platform(context):
         del architecture
 
         name = uname()[2].split('.')[-2]
-        if plat['OS'] in ('linux', 'posix', 'linux2'):            
+        if plat['OS'] in ('linux', 'posix', 'linux2'):
             if dist()[0].lower() == 'fedora':
                 plat['OS'] = 'linux'
                 plat['distro'] = 'fedora'
@@ -169,10 +169,10 @@ def identify_platform(context):
             elif dist()[0].lower() == 'debian':
                 plat['OS'] = 'linux'
                 plat['distro'] = 'debian'
-                plat['version'] = dist()[1]   
+                plat['version'] = dist()[1]
             elif dist()[0].lower() == 'suse':
                 plat['OS'] = 'linux'
-                plat['distro'] = 'suse'       
+                plat['distro'] = 'suse'
             elif dist()[0].lower() == 'linuxmint':
                 plat['OS'] = 'linux'
                 plat['distro'] = 'ubuntu'
@@ -232,14 +232,14 @@ def cc(context):
         intel(context)
     elif string.rfind(CC,'gcc') >= 0:
         gcc(context)
-    
+
     context.Message("checking if %s works ... " % CC)
     res = context.TryLink(text,'.c')
     context.Result(res)
     if not res:
         need_pkg('libc')
     if string.rfind(CC,'gcc') >= 0 and \
-           string.rfind(CC,'pgcc') < 0:        
+           string.rfind(CC,'pgcc') < 0:
         oldflag = context.env.get('CFLAGS')
         for flag in ('-x c -std=gnu99 -Wall -pedantic',
                      '-std=gnu99 -Wall -pedantic',
@@ -250,7 +250,7 @@ def cc(context):
             res = context.TryCompile(text,'.c')
             context.Result(res)
             if res:
-                break        
+                break
         if not res:
             context.env['CFLAGS'] = oldflag
         # large file support
@@ -310,7 +310,7 @@ def libs(context):
         context.env['DYNLIB'] = ''
     else:
         context.env['DYNLIB'] = 'd'
-        
+
     if plat['OS'] in ('sunos', 'hpux'):
         LIBS.append('nsl')
         LIBS.append('socket')
@@ -466,7 +466,7 @@ def x11(context):
     }\n'''
 
     context.Message("checking for X11 headers ... ")
-    
+
     INC = path_get(context,'XINC')
     oldpath = path_get(context,'CPPPATH')
 
@@ -474,7 +474,7 @@ def x11(context):
     for path in filter(lambda x:
                        os.path.isfile(os.path.join(x,'X11/Xaw/Label.h')),
                        INC+xinc):
-        context.env['CPPPATH'] = oldpath + [path,] 
+        context.env['CPPPATH'] = oldpath + [path,]
         res = context.TryCompile(text,'.c')
 
         if res:
@@ -489,9 +489,9 @@ def x11(context):
         return
 
     context.Message("checking for X11 libraries ... ")
-    
+
     LIB = path_get(context,'XLIBPATH')
-    oldlibpath = path_get(context,'LIBPATH')    
+    oldlibpath = path_get(context,'LIBPATH')
     oldlibs = path_get(context,'LIBS')
     XLIBS = path_get(context,'XLIBS')
     if not XLIBS:
@@ -505,7 +505,7 @@ def x11(context):
 
     res = None
     for path in filter(os.path.isdir,LIB+xlib):
-        context.env['LIBPATH'] = oldlibpath + [path,] 
+        context.env['LIBPATH'] = oldlibpath + [path,]
         res = context.TryLink(text,'.c')
 
         if res:
@@ -531,7 +531,7 @@ def check_pen(env,pen):
 def sfpen(context):
     context.Message("checking for sfpen ... ")
     sfpen = context.env.get('SFPEN')
-    
+
     if not sfpen:
         if plat['OS'] == 'cygwin' or plat['OS'] == 'darwin':
             pens = ('oglpen','xtpen')
@@ -564,7 +564,7 @@ def ppm(context):
     context.Message("checking for ppm ... ")
 
     oldpath = path_get(context,'CPPPATH')
-    
+
     if plat['OS'] == 'darwin':
         ppmpath = context.env.get('PPMPATH','/opt/local/include/netpbm')
     else:
@@ -575,7 +575,7 @@ def ppm(context):
         ppmpath = None
 
     LIBS = path_get(context,'LIBS')
- 
+
     text = '''
     #include <ppm.h>
     int main(int argc,char* argv[]) {
@@ -589,7 +589,7 @@ def ppm(context):
         if res:
             context.Result(res)
             context.env['PPM'] = ppm
-            context.env['PPMPATH'] = ppmpath    
+            context.env['PPMPATH'] = ppmpath
             break
         else:
             LIBS.pop()
@@ -602,7 +602,7 @@ def ppm(context):
         context.env['PPM'] = None
     context.env['CPPPATH'] = oldpath
 
-pkg['libtiff'] = {'suse':'libtiff-devel', 
+pkg['libtiff'] = {'suse':'libtiff-devel',
                   'ubuntu': 'libtiff5-dev',
                   'fedora':'libtiff-devel',
                   'rhel':'libtiff-devel'}
@@ -611,7 +611,7 @@ def tiff(context):
     context.Message("checking for tiff ... ")
 
     LIBS = path_get(context,'LIBS')
- 
+
     text = '''
     #include <tiffio.h>
     int main(int argc,char* argv[]) {
@@ -625,7 +625,7 @@ def tiff(context):
 
     if res:
         context.Result(res)
-        context.env['TIFF'] = tiff   
+        context.env['TIFF'] = tiff
     else:
         context.Result(context_failure)
         context.env['TIFF'] = None
@@ -669,7 +669,7 @@ def gd(context):
         image = gdImageCreate(10,10);
         gdImageGifAnimBegin(image, stdout, 1, 0);
         return 0;
-        }\n'''        
+        }\n'''
         res2 = context.TryLink(text,'.c')
 
         if res2:
@@ -694,7 +694,7 @@ pkg['plplot'] = {'fedora':'plplot-devel',
 def plplot(context):
     context.Message("checking for plplot ... ")
 
-    oldpath = path_get(context,'CPPPATH')    
+    oldpath = path_get(context,'CPPPATH')
     plplotpath = context.env.get('PLPLOTPATH')
     oldlibpath = path_get(context,'LIBPATH')
     plplotlibpath = context.env.get('PLPLOTLIBPATH')
@@ -711,7 +711,7 @@ def plplot(context):
         context.env['LIBPATH'] = oldlibpath + [plplotlibpath]
 
     LIBS = path_get(context,'LIBS')
- 
+
     text = '''
     #include <plplot.h>
     #include <plplotP.h>
@@ -736,7 +736,7 @@ def plplot(context):
         need_pkg('plplot', fatal=False)
         context.env['PLPLOT'] = None
     context.env['CPPPATH'] = oldpath
-    context.env['LIBPATH'] = oldlibpath    
+    context.env['LIBPATH'] = oldlibpath
     LIBS.pop()
     LIBS.pop()
 
@@ -773,7 +773,7 @@ def ffmpeg(context):
                 break
 
     LIBS = path_get(context,'LIBS')
- 
+
     text = '''
     #include <avcodec.h>
     int main (int argc, char *argv[]) {
@@ -805,7 +805,7 @@ def ffmpeg(context):
             need_pkg('ffmpeg', fatal=False)
             context.env['FFMPEG'] = None
         LIBS.pop()
-    context.env['CPPPATH'] = oldpath    
+    context.env['CPPPATH'] = oldpath
 
 pkg['cairo'] = {'suse':'cairo-devel',
                 'ubuntu':'libcairo2-dev'}
@@ -841,7 +841,7 @@ def cairo(context):
     if res:
         context.Result(res)
         context.env['CAIROPNG'] = cairo
-        context.env['CAIROPATH'] = cairopath   
+        context.env['CAIROPATH'] = cairopath
     else:
         context.Result(context_failure)
         need_pkg('cairo', fatal=False)
@@ -868,7 +868,7 @@ def cairo(context):
                 context.Result(context_failure)
                 context.env['CAIRO' + cap] = None
 
-    context.env['CPPPATH'] = oldpath    
+    context.env['CPPPATH'] = oldpath
     LIBS.pop()
 
 pkg['jpeg'] = {'fedora':'libjpeg-devel',
@@ -949,12 +949,12 @@ def opengl(context):
 
     res = context.TryLink(text,'.c')
     if res:
-        context.Result(res)    
-        context.env['OPENGL'] = ogl 
+        context.Result(res)
+        context.env['OPENGL'] = ogl
         context.env['OPENGLFLAGS'] = oglflags
         context.env['OPENGLPATH'] = oglpath
     else:
-        context.env['OPENGL'] = None 
+        context.env['OPENGL'] = None
         context.env['OPENGLFLAGS'] = None
         context.env['OPENGLPATH'] = None
         context.Result(context_failure)
@@ -976,7 +976,7 @@ def blas(context):
     #else
     #ifdef HAVE_MKL
     #include <mkl.h>
-    #else 
+    #else
     #include <cblas.h>
     #endif
     #endif
@@ -989,7 +989,7 @@ def blas(context):
     if plat['OS'] == 'cygwin':
         context.env['ENV']['PATH'] = context.env['ENV']['PATH'] + \
                                          ':/lib/lapack'
-        
+
     res = context.TryLink(text,'.c')
     if res:
         context.Result(res)
@@ -1004,7 +1004,7 @@ def blas(context):
             context.Result(res)
             context.env['LIBS'] = LIBS
             context.env['BLAS'] = blas
-        else:       
+        else:
             # some systems require cblas and atlas
             for atlas_dir in filter(os.path.isdir,
                                     ['/usr/lib64/atlas/',
@@ -1149,7 +1149,7 @@ def mpi(context):
         context.env['MPICXX'] = None
 
     context.Message("checking for MPIRUN ... ")
-    mpirun = context.env.get('MPIRUN',WhereIs('ibrun') or WhereIs('mpirun'))
+    mpirun = context.env.get('MPIRUN',WhereIs('ibrun',path) or WhereIs('mpirun',path))
     if mpirun:
         context.Result(mpirun)
         context.env['MPIRUN'] = mpirun
@@ -1247,7 +1247,7 @@ def fftw(context):
     context.Message("checking for FFTW ... ")
 
     LIBS = path_get(context,'LIBS')
-    
+
     text = '''
     #include <fftw3.h>
     int main(int argc,char* argv[]) {
@@ -1256,7 +1256,7 @@ def fftw(context):
     in = (fftwf_complex*) fftwf_malloc(sizeof(fftwf_complex) * 10);
     p = fftwf_plan_dft_1d(10, in, in, FFTW_FORWARD, FFTW_ESTIMATE);
     fftwf_destroy_plan(p);
-    fftwf_free(in); 
+    fftwf_free(in);
     return 0;
     }\n'''
     res = context.TryLink(text,'.c')
@@ -1277,7 +1277,7 @@ def fftw(context):
             LIBS.pop()
             need_pkg('fftw', fatal=False)
             return
-    
+
     text = '''
     #include <fftw3.h>
     int main(int argc,char* argv[]) {
@@ -1286,7 +1286,7 @@ def fftw(context):
     in = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * 10);
     p = fftw_plan_dft_1d(10, in, in, FFTW_FORWARD, FFTW_ESTIMATE);
     fftw_destroy_plan(p);
-    fftw_free(in); 
+    fftw_free(in);
     return 0;
     }\n'''
     res = context.TryLink(text,'.c')
@@ -1303,7 +1303,7 @@ def fftw(context):
         LIBS.pop()
 
     context.Message("checking if FFTW supports threads ... ")
-    
+
     text = '''
     #include <fftw3.h>
     int main(int argc,char* argv[]) {
@@ -1340,10 +1340,10 @@ def petsc(context):
     if not petscdir:
         return
     testdir = os.path.join(os.getcwd(),'user/petsc')
-    
+
     # Run make in order to catch PETSc compilation options
     if have_subprocess: # use subprocess.Popen() if possible, for Py 2.4 and up
-        popen = subprocess.Popen('make PETSC_DIR=%s options' % petscdir, 
+        popen = subprocess.Popen('make PETSC_DIR=%s options' % petscdir,
                                  shell=True,
                                  stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE,
@@ -1352,9 +1352,9 @@ def petsc(context):
             return
         makeout = popen.stdout.read()
     else: # otherwise use os.popen2(), deprecated in Py 2.6
-        makeout = os.popen2('make PETSC_DIR=%s -C %s options' % 
+        makeout = os.popen2('make PETSC_DIR=%s -C %s options' %
                             (petscdir,testdir))[1].read()
-        
+
     context.Message("checking for PETSc ... ")
 
     # Compiler name
@@ -1377,7 +1377,7 @@ def petsc(context):
     oldlibs = path_get(context,'LIBS')
 
     context.env['CC'] = petsccc
-    context.env['CPPPATH'] = oldpath + [petscpath,] 
+    context.env['CPPPATH'] = oldpath + [petscpath,]
     context.env['LIBPATH'] = oldlibpath + [petsclibpath,]
     context.env['LIBS'] = oldlibs + [petsclibs,]
 
@@ -1413,10 +1413,10 @@ def petsc(context):
 def psp(context):
     pspdir = context.env.get('PSPDIR',os.environ.get('PSP_DIR','/usr/local'))
     testdir = os.path.join(os.getcwd(),'user/poulsonj')
-    
+
     # Run make in order to catch PSP compilation options
     if have_subprocess: # use subprocess.Popen() if possible, for Py 2.4 and up
-        popen = subprocess.Popen('make PSP_DIR=%s options' % pspdir, 
+        popen = subprocess.Popen('make PSP_DIR=%s options' % pspdir,
                                  shell=True,
                                  stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE,
@@ -1433,11 +1433,11 @@ def psp(context):
             return
         makelibsout = popen.stdout.read()
     else: # otherwise use os.popen2(), deprecated in Py 2.6
-        makeoptionsout = os.popen2('make PSP_DIR=%s -C %s options' % 
+        makeoptionsout = os.popen2('make PSP_DIR=%s -C %s options' %
                             (pspdir,testdir))[1].read()
         makelibsout = os.popen2('make PSP_DIR=%s -C %s libs' %
                             (pspdir,testdir))[1].read()
-        
+
     context.Message("checking for PSP ... ")
 
     # Compiler name
@@ -1461,7 +1461,7 @@ def psp(context):
     oldlibs = path_get(context,'LIBS')
 
     context.env['CXX'] = pspcxx
-    context.env['CPPPATH'] = oldpath + [psppath,] 
+    context.env['CPPPATH'] = oldpath + [psppath,]
     context.env['LIBPATH'] = oldlibpath + [psplibpath,]
 
     normallib = re.compile(r'-l(\S*)')
@@ -1545,13 +1545,13 @@ def sparse(context):
     if res:
         context.Result(res)
         context.env['SPARSEPATH'] = sparsepath
-        context.env['SPARSELIBS'] = sparselibs        
+        context.env['SPARSELIBS'] = sparselibs
     else:
         sparselibs.append('SuiteSparse')
         context.env['LIBS'] = oldlibs+sparselibs
-        
+
         res = context.TryLink(text,'.c')
-        if res:            
+        if res:
             context.Result(res)
             context.env['SPARSEPATH'] = sparsepath
             context.env['SPARSELIBS'] = sparselibs
@@ -1586,14 +1586,14 @@ def pfft(context):
     if res_fftw:
         if 'fftw3f' in oldlibs:
             fftw_is_double_precision = False
-    
+
     # Check MPI
     path = os.environ['PATH']
     if plat['OS'] == 'linux':
         if plat['distro'] == 'fedora' or plat['distro'] == 'rhel':
             path += ':/usr/lib64/openmpi/bin/'
     mpicc = context.env.get('MPICC',WhereIs('mpicc', path))
-    
+
     if res_fftw and mpicc : # check pfft if fftw & mpi available
         context.Message("checking for pfft ... ")
         text_double = '''
@@ -1608,11 +1608,11 @@ def pfft(context):
         cc = context.env.get('CC')
         context.env['CC'] = mpicc
         context.env.Append(ENV={'MPICH_CC':cc,'MPICH_CLINKER':cc})
-        
+
         oldpath = path_get(context,'CPPPATH')
         pfftpath = ['/usr/local/include']
         context.env['CPPPATH'] = oldpath+pfftpath
-        
+
         if fftw_is_double_precision:
             pfftlibs = ['pfft','fftw3_mpi','fftw3']
             context.env['LIBS'] = oldlibs_no_fftw+pfftlibs
@@ -1621,7 +1621,7 @@ def pfft(context):
             pfftlibs = ['pfftf','fftw3f_mpi','fftw3f']
             context.env['LIBS'] = oldlibs_no_fftw+pfftlibs
             res = context.TryLink(text_float,'.c')
-        
+
         context.env['CC'] = cc
 
         if res:
@@ -1675,16 +1675,16 @@ def omp(context):
     elif gcc:
         LIBS.append('gomp')
         CFLAGS = flags + ' -fopenmp'
-        CXXFLAGS = ccflags  + ' -fopenmp'      
+        CXXFLAGS = ccflags  + ' -fopenmp'
         LINKFLAGS = lflags + ' -fopenmp'
     elif clang:
         CFLAGS = flags + ' -fopenmp'
-        CXXFLAGS = ccflags  + ' -fopenmp'      
+        CXXFLAGS = ccflags  + ' -fopenmp'
         LINKFLAGS = lflags + ' -fopenmp'
     elif icc:
         CFLAGS = flags + ' -openmp -D_OPENMP'
         CXXFLAGS = ccflags + ' -openmp -D_OPENMP'
-        LINKFLAGS = lflags + ' -openmp' 
+        LINKFLAGS = lflags + ' -openmp'
     else:
         CFLAGS = flags
         CXXFLAGS = ccflags
@@ -1734,7 +1734,7 @@ def omp(context):
         F90FLAGS = f90flags + ' -openmp -D_OPENMP'
     else:
         F90FLAGS = f90flags
-    
+
     text = '''
 program main
   use omp_lib
@@ -1936,7 +1936,7 @@ def f77(context):
         intel(context)
         context.env.Append(F77FLAGS=' -Vaxlib')
         context.env['FORTRAN'] = F77
-    
+
     text = '''      program Test
       stop
       end
@@ -1955,7 +1955,7 @@ def f77(context):
         cfortran = 'sunFortran'
     else:
         cfortran = fortran.get(F77base,'NAGf90Fortran')
-    context.env['CFORTRAN'] = cfortran 
+    context.env['CFORTRAN'] = cfortran
     context.Message("checking %s type ... " % F77)
     context.Result(cfortran)
 
@@ -2068,7 +2068,7 @@ def matlab(context):
         context.Result(mex)
         context.env['MEX'] = mex
         if plat['OS'] == 'darwin':
-            maci64 = os.environ.get('MACI64',0)                    
+            maci64 = os.environ.get('MACI64',0)
             context.env.Append(ENV={'MACI64':maci64})
     else:
         context.Result(context_failure)
@@ -2166,7 +2166,7 @@ def java(context):
     else:
         context.Result(context_failure)
         need_pkg('java-devel')
-    
+
     context.Message("checking for JAVA_HOME ... ")
 
     JAVA_HOME = context.env.get('JAVA_SDK',os.environ.get('JAVA_SDK', None))
@@ -2194,7 +2194,7 @@ def java(context):
         if os.path.isdir(MINESJTK):
             MINESJTK = os.path.join(MINESJTK, 'edu_mines_jtk.jar')
         if os.path.isfile(MINESJTK) and \
-                os.path.basename(MINESJTK) == 'edu_mines_jtk.jar':            
+                os.path.basename(MINESJTK) == 'edu_mines_jtk.jar':
             context.env['MINESJTK'] = MINESJTK
         else:
             stderr_write('Please set MINESJTK to the '
@@ -2224,7 +2224,7 @@ def intel(context):
             context.env.Append(ENV={key:license})
     iccpath = os.path.dirname(context.env.get('CC'))
     context.env['ENV']['PATH'] = ':'.join([context.env['ENV']['PATH'],iccpath])
-    
+
 def set_options(env,my_opts=None):
     'get options from config file'
     from rsf.prog import RSFROOT
@@ -2240,7 +2240,7 @@ def set_options(env,my_opts=None):
             config = os.path.join(RSFROOT, 'share','madagascar','etc','config.py')
             if not os.path.isfile(config):
                 return
-            
+
     opts = options(config)
 
     if my_opts:
@@ -2352,6 +2352,6 @@ def options(file):
     opts.Add('NUMPY','Existence of numpy package')
     opts.Add('SWIG','Location of SWIG')
     opts.Add('PFFT','The PFFT library')
-    
+
     return opts
 
