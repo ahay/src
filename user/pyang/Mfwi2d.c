@@ -191,7 +191,6 @@ void sg_init(int *sxz, int szbeg, int sxbeg, int jsz, int jsx, int ns, int nz)
 }
 
 
-
 void rw_bndr(float *bndr, float **p, int nz, int nx, bool write)
 /*< if write==true, write/save boundaries out of variables;
  else  read boundaries into variables (for 2nd order FD) >*/
@@ -420,25 +419,25 @@ int main(int argc, char *argv[])
 	clock_t start, stop;/* timer */
 	sf_file vinit, shots, vupdates, grads, objs, illums;/* I/O files */
 
-    	/* initialize Madagascar */
-    	sf_init(argc,argv);
+    /* initialize Madagascar */
+    sf_init(argc,argv);
 
-    	/* set up I/O files */
-    	vinit=sf_input ("in");   /* initial velocity model, unit=m/s */
+    /* set up I/O files */
+    vinit=sf_input ("in");   /* initial velocity model, unit=m/s */
 	shots=sf_input("shots"); /* recorded shots from exact velocity model */
-    	vupdates=sf_output("out"); /* updated velocity in iterations */ 
-    	grads=sf_output("grads");  /* gradient in iterations */ 
+    vupdates=sf_output("out"); /* updated velocity in iterations */ 
+    grads=sf_output("grads");  /* gradient in iterations */ 
 	illums=sf_output("illums");/* source illumination in iterations */
 	objs=sf_output("objs");/* values of objective function in iterations */
 
-    	/* get parameters from velocity model and recorded shots */
+    /* get parameters from velocity model and recorded shots */
 	if (!sf_getbool("verb",&verb)) verb=true;/* vebosity */
-    	if (!sf_histint(vinit,"n1",&nz)) sf_error("no n1");/* nz */
-    	if (!sf_histint(vinit,"n2",&nx)) sf_error("no n2");/* nx */
-    	if (!sf_histfloat(vinit,"d1",&dz)) sf_error("no d1");/* dz */
+    if (!sf_histint(vinit,"n1",&nz)) sf_error("no n1");/* nz */
+    if (!sf_histint(vinit,"n2",&nx)) sf_error("no n2");/* nx */
+    if (!sf_histfloat(vinit,"d1",&dz)) sf_error("no d1");/* dz */
    	if (!sf_histfloat(vinit,"d2",&dx)) sf_error("no d2");/* dx */
 	if (!sf_getbool("precon",&precon)) precon=false;/* precondition or not */
-    	if (!sf_getint("niter",&niter))   niter=100;	/* number of iterations */
+    if (!sf_getint("niter",&niter))   niter=100;	/* number of iterations */
 	if (!sf_getint("rbell",&rbell))	  rbell=2;	/* radius of bell smooth */
 
    	if (!sf_histint(shots,"n1",&nt)) sf_error("no nt");
@@ -577,7 +576,10 @@ int main(int argc, char *argv[])
 
 	for(iter=0; iter<niter; iter++)
 	{
-		if(verb) start=clock();// record starting time
+		if(verb) {
+			start=clock();// record starting time
+			sf_warning("iter=%d",iter);
+		}
 		sf_seek(shots, 0L, SEEK_SET);
 		memcpy(g0[0], g1[0], nz*nx*sizeof(float));
 		memset(g1[0], 0, nz*nx*sizeof(float));
