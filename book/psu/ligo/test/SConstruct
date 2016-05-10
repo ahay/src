@@ -1,5 +1,5 @@
 from rsf.proj import *
-import rsf.suproj as su
+#import rsf.suproj as su
 
 # process LIGO H1 & L1 data using Madagascar
 # Feb 12 2016
@@ -111,12 +111,14 @@ Result('bp',
 ########################################
 # read processed data from LIGO
 ########################################
-Flow('strain_H1_whitenbp',None,
+Fetch('strain_H1_whitenbp.out','ligo')
+
+Flow('strain_H1_whitenbp','strain_H1_whitenbp.out',
      '''
-     echo in=strain_H1_whitenbp.out n2=1 n1=131072 data_format=ascii_float |
+     echo in=$SOURCE n2=1 n1=131072 data_format=ascii_float |
      dd form=native |
      put d1=0.000244140625 o1=-16.4219999313
-     ''')
+     ''',stdin=0)
 
 Flow('final','bp strain_H1_whitenbp','cat axis=2 ${SOURCES[1:2]} | window f1=66854 n1=660')
 Plot('final','graph plotfat=2 label1=Time unit1=s label2=Strain title="Compare to LIGO processed data"')
@@ -156,9 +158,9 @@ Result('final4','final2 tf','TwoRows')
 
 
 # SU processing flow (not right yet)
-Flow('theader','H1s','segyheader')
-Flow('H1s.su','H1s','suwrite tfile=theader.rsf endian=1 suxdr=y')
-su.Flow('whtest.su','H1s.su','suwfft | suifft | sufilter f=20,30,300,320 ')
-Flow('H1su','whtest.su','suread tfile=tfile.rsf endian=1 suxdr=y')
+#Flow('theader','H1s','segyheader')
+#Flow('H1s.su','H1s','suwrite tfile=theader.rsf endian=1 suxdr=y')
+#su.Flow('whtest.su','H1s.su','suwfft | suifft | sufilter f=20,30,300,320 ')
+#Flow('H1su','whtest.su','suread tfile=tfile.rsf endian=1 suxdr=y')
 
 End()
