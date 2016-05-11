@@ -28,8 +28,9 @@ int main(int argc, char* argv[])
     bool verb;
     int n[SF_MAX_DIM], n0[SF_MAX_DIM], rect[SF_MAX_DIM];
     int a[SF_MAX_DIM], center[SF_MAX_DIM], gap[SF_MAX_DIM];
-    int ndim, dim, n123, n123s, i, niter, na, i4, n4, *kk;
-    float *d, *f, *dd, mean;
+    int ndim, dim, n123, n123s, i, ia, ns, i1, niter, na, i4, n4, *kk;
+    float *d, *f, *dd;
+    double mean;
     char *lagfile, key[6];
     sf_filter aa;
     sf_file in, filt, lag;
@@ -99,8 +100,8 @@ int main(int argc, char* argv[])
     dd = sf_floatalloc(n123);
     kk = sf_intalloc(n123);
 
-    for (i=0; i < n123; i++) {
-	kk[i] = 1;
+    for (i1=0; i1 < n123; i1++) {
+	kk[i1] = 1;
     }
 
     bound (dim, n0, n, a, aa);
@@ -128,26 +129,36 @@ int main(int argc, char* argv[])
     for (i4=0; i4 < n4; i4++) {
 
 	sf_floatread(dd,n123,in);
-
-	/* apply shifts: dd -> d */
-	/* apply mask */
 	
+	/* apply shifts: dd -> d */
+
 	mean = 0.;
-	for(i=0; i < n123s; i++) {
-	    mean += d[i]*d[i];
+	for (i=ia=0; ia < na; ia++) {
+	    ns = aa->lag[ia];
+	    for (i1=0; i1 < n123; i1++,i++) {
+		if (i1 < ns) {
+		    d[i] = 0.0f;
+		} else {
+		    d[i] = dd[i1-ns];
+		    mean += d[i]*d[i];
+		}
+	    }
 	}
+
 	if (mean == 0.) {
 	    sf_floatwrite(d,n123s,filt);
 	    continue;
 	}
 	
-	mean = sqrtf (mean/n123s);
+	mean = sqrt (n123s/mean);
+
+	/* -> apply mask */
 	
 	for(i=0; i < n123s; i++) {
-	    d[i] /= mean;
+	    d[i] *= mean;
 	}
-	for(i=0; i < n123; i++) {
-	    dd[i] /= mean;
+	for(i1=0; i1 < n123; i1++) {
+	    dd[i1] *= mean;
 	}
 
 	sf_multidivn (dd,f,niter);
