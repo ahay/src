@@ -1,4 +1,4 @@
-/* Post-stack 2-D v(z) time modeling/migration with Gazdag phase-shift. */
+/* Post-stack 2-D/3-D v(z) time modeling/migration with Gazdag phase-shift. */
 /*
   Copyright (C) 2004 University of Texas at Austin
   

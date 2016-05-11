@@ -19,6 +19,7 @@ Gang Fang <fanggang723@gmail.com>
 Mehdi Far <mehdi.far@beg.utexas.edu>
 Sergey Fomel <sergey.fomel@gmail.com>
 Jeff Godwin <godwin.jeffrey@gmail.com> 
+Bill Harlan <bill.harlan@gmail.com>
 Gilles Hennenfent <ghennenfent@eos.ubc.ca>
 Jie Hou <jasonhupc@gmail.com>
 Jingwei Hu <hu@ices.utexas.edu>
