@@ -30,7 +30,7 @@ int main (int argc, char* argv[])
     inp = sf_input("in");
     out = sf_output("out");
 
-    if (SF_UCHAR != sf_gettype(inp)) sf_error("Need int type in input");
+    if (SF_UCHAR != sf_gettype(inp)) sf_error("Need uchar type in input");
     if (!sf_histint(inp,"n1",&n1)) sf_error("No n1= in input");
     if (!sf_histint(inp,"n2",&n2)) sf_error("No n2= in input");
     sf_settype(out,SF_INT);

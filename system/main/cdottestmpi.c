@@ -111,18 +111,18 @@ int main(int argc, char* argv[])
 
     drsf = sf_input(d);
     init_genrand(dseed);
-    dp = 0.;
+    dp = sf_dcmplx(0.,0.);
     for (dsiz=nd, dbuf=nbuf; dsiz > 0; dsiz -= dbuf) {
 	if (dsiz < dbuf) dbuf=dsiz;
 	
 	sf_complexread(buf,dbuf,drsf);
 
 	for (id=0; id < (int) dbuf; id++) {
-		rd = sf_dcmplx(genrand_real1 (),-genrand_real1 ());
+	    rd = sf_dcmplx(genrand_real1 (),-genrand_real1 ());
 #ifdef SF_HAS_COMPLEX_H
-		dp += buf[id]*rd;
+	    dp += buf[id]*rd;
 #else
-		dp = sf_dcadd(dp,sf_dcdmul(rd,buf[id]));
+	    dp = sf_dcadd(dp,sf_dcdmul(rd,buf[id]));
 #endif
 	}
     }
@@ -139,7 +139,7 @@ int main(int argc, char* argv[])
 	if (dsiz < dbuf) dbuf=dsiz;
 
 	for (id=0; id < (int) dbuf; id++) {
-	    rd = sf_dcmplx(genrand_real1 (),-genrand_real1 ());
+	    buf[id] = sf_dcmplx(genrand_real1 (),genrand_real1 ());
 	}
 
 	sf_complexwrite(buf,dbuf,drsf);
@@ -157,7 +157,7 @@ int main(int argc, char* argv[])
 
     mrsf = sf_input(m);
     init_genrand(mseed);
-    dp = 0.;
+    dp = sf_dcmplx(0.,0.);
     for (msiz=nm, mbuf=nbuf; msiz > 0; msiz -= mbuf) {
 	if (msiz < mbuf) mbuf=msiz;
 	

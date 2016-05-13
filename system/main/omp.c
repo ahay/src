@@ -26,7 +26,7 @@
 
 int main(int argc, char* argv[])
 {
-    int axis, axis2, rank, nodes, node, ndim, jobs;
+    int axis, axis2, rank, nodes, ndim, jobs;
     off_t n[SF_MAX_DIM];
     char *iname=NULL, **cmdline;
     FILE *tmp;
