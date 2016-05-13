@@ -42,7 +42,8 @@ def las2rsf(lasf,rsff):
         rsf.put(name,desc)
     for name in las.well.names:
         item = las.well.items[name]
-        rsf.put(name,item.data)
+        desc = item.data.translate(None,'"')
+        rsf.put(name,desc)
     rsf.write(data)
     rsf.close()
 
