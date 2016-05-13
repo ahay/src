@@ -210,7 +210,7 @@ void preparation(sf_file Fv, sf_file Fq, sf_file Ftau, sf_file Fw, sf_acqui acpa
 			rend=(rend < xend)? rend : xend;
 			acpar->r0_v[i]=(rbegin-acpar->x0)/acpar->dx+0.5+nb;
 			acpar->r02[i]=(rbegin-sx-acpar->r0)/acpar->dx+0.5;
-			acpar->nr2[i]=(rend-rbegin)/acpar->dx+1.5;
+			acpar->nr2[i]=(rend-rbegin)/acpar->dr+1.5;
 		}
 	}
 
