@@ -41,7 +41,10 @@ if fftw:
     if fftwomp:
         env.Prepend(CPPDEFINES=['SF_HAS_FFTW_OMP'])
 
- 
+lapack = env.get('LAPACK')
+if lapack:
+    env.Prepend(CPPDEFINES=['SF_HAS_LAPACK'])
+
 for source in src:
     inc = env.RSF_Include(source,prefix='')
     obj = env.StaticObject(source)
