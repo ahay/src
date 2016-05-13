@@ -20,6 +20,9 @@
 #include <rsf.h>
 #include <mpi.h>
 #include "qfwi_commons.h"
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 /*^*/
 
 void rtm_a(sf_file Fdat, sf_file Fimg, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpar, sf_vec array, bool verb)
@@ -91,6 +94,11 @@ void rtm_a(sf_file Fdat, sf_file Fimg, sf_mpi *mpipar, sf_sou soupar, sf_acqui a
 
 			/* save wavefield */
 			if(it%acpar->interval==0){
+#ifdef _OPENMP 
+#pragma omp parallel for \
+			private(ix,iz) \
+			shared(wave,p1,wit,nb,nx,nz)
+#endif
 				for(ix=0; ix<nx; ix++)
 					for(iz=0; iz<nz; iz++)
 						wave[wit][ix][iz]=p1[ix+nb][iz+nb];
@@ -101,6 +109,11 @@ void rtm_a(sf_file Fdat, sf_file Fimg, sf_mpi *mpipar, sf_sou soupar, sf_acqui a
 			laplace(p1, term, padnx, padnz, dx2, dz2);
 			
 			/* load source */
+#ifdef _OPENMP 
+#pragma omp parallel for \
+			private(ix,iz) \
+			shared(term,rr,padnx,padnz,it)
+#endif
 			for(ix=0; ix<padnx; ix++){
 				for(iz=0; iz<padnz; iz++){
 					term[ix][iz] += rr[ix*padnz+iz]*array->ww[it];
@@ -108,8 +121,13 @@ void rtm_a(sf_file Fdat, sf_file Fimg, sf_mpi *mpipar, sf_sou soupar, sf_acqui a
 			}
 
 			/* update */
-			for(ix=0; ix<padnx; ix++){
-				for(iz=0; iz<padnz; iz++){
+#ifdef _OPENMP 
+#pragma omp parallel for \
+			private(ix,iz) \
+			shared(p0,p1,p2,vv,term,padnx,padnz,dt2)
+#endif
+			for(ix=4; ix<padnx-4; ix++){
+				for(iz=4; iz<padnz-4; iz++){
 					p2[ix][iz]=2*p1[ix][iz]-p0[ix][iz]+vv[ix][iz]*vv[ix][iz]*dt2*term[ix][iz];
 				}
 			}
@@ -124,13 +142,17 @@ void rtm_a(sf_file Fdat, sf_file Fimg, sf_mpi *mpipar, sf_sou soupar, sf_acqui a
 
 		/* check */
 		if(wit != wnt) sf_error("Incorrect number of wavefield snapshots");
+		wit--;
+
 		/* read data */
 		sf_seek(Fdat, is*nr*nt*sizeof(float), SEEK_SET);
 		sf_floatread(dd[0], nr*nt, Fdat);
+
 		/* initialization */
 		memset(p0[0], 0., padnzx*sizeof(float));
 		memset(p1[0], 0., padnzx*sizeof(float));
 		memset(p2[0], 0., padnzx*sizeof(float));
+		memset(term[0], 0., padnzx*sizeof(float));
 		
 		/* backward propagation */
 		for(it=nt-1; it>=0; it--){
@@ -146,17 +168,27 @@ void rtm_a(sf_file Fdat, sf_file Fimg, sf_mpi *mpipar, sf_sou soupar, sf_acqui a
 			}
 
 			/* update */
-			for(ix=0; ix<padnx; ix++){
-				for(iz=0; iz<padnz; iz++){
+#ifdef _OPENMP 
+#pragma omp parallel for \
+			private(ix,iz) \
+			shared(p0,p1,p2,vv,term,padnx,padnz,dt2)
+#endif
+			for(ix=4; ix<padnx-4; ix++){
+				for(iz=4; iz<padnz-4; iz++){
 					p2[ix][iz]=2*p1[ix][iz]-p0[ix][iz]+vv[ix][iz]*vv[ix][iz]*dt2*term[ix][iz];
 				}
 			}
 
 			/* calculate image */
 			if(it%acpar->interval==0){
+#ifdef _OPENMP 
+#pragma omp parallel for \
+			private(ix,iz) \
+			shared(p1,wave,nx,nz,wit,mm,nb)
+#endif
 				for(ix=0; ix<nx; ix++)
 					for(iz=0; iz<nz; iz++)
-						mm[ix][iz] += wave[wit-1][ix][iz]*p1[ix+nb][iz+nb];
+						mm[ix][iz] += wave[wit][ix][iz]*p1[ix+nb][iz+nb];
 				wit--;
 			}
 			

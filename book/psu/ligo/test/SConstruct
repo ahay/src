@@ -156,11 +156,4 @@ Plot('tf',
 
 Result('final4','final2 tf','TwoRows')
 
-
-# SU processing flow (not right yet)
-#Flow('theader','H1s','segyheader')
-#Flow('H1s.su','H1s','suwrite tfile=theader.rsf endian=1 suxdr=y')
-#su.Flow('whtest.su','H1s.su','suwfft | suifft | sufilter f=20,30,300,320 ')
-#Flow('H1su','whtest.su','suread tfile=tfile.rsf endian=1 suxdr=y')
-
 End()

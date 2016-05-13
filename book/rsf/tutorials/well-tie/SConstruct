@@ -54,7 +54,7 @@ for case in ('DT','RHOB','DEPTH'):
 
 # Compute time-to-depth relationship
 
-log_start_time = 0.410553230106 # (s)
+log_start_time = 0.410498125651  # (s)
 
 # windowed samples - 3837
 
