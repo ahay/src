@@ -1,5 +1,5 @@
 from rsf.tex import *
 
-End(use='framed,listings,amsmath,amssymb,graphicx,xcolor,natbib,hyperref',color='ALL')
+End('paper',lclass='cwparticle',options='11pt',use='framed,listings,amsmath,amssymb,graphicx,xcolor,natbib,hyperref',color='ALL')
 
 
