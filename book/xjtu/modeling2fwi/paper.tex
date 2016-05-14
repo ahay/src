@@ -1,0 +1,658 @@
+\title{From modeling to full waveform inversion: A hands-on tour using Madagascar}
+\author{Pengliang Yang\\
+ISTerre - Univ. Grenoble Alpes\\
+E-mail: ypl.2100@gmail.com}
+
+
+\maketitle
+
+\begin{abstract}
+This tutorial is devoted to Madagascar school 2016 Zurich. In this tutorial, there are two aspects we would like to explore: 
+\begin{itemize}
+ \item Madagascar functionality, which is the tool. We may consider Madagascar to facilitate our research, from the numerical test to publication.
+ \item Scientific aspects, which are the key things we care. Even though we are playing a game with simple exercise, we have to think about the scientific enhancement/improvement to polish the techniques used in modeling and inversion applications.
+\end{itemize}
+\end{abstract}
+
+\section{Introduction}
+As a brief introduction, I want to emphasize several points from my own understanding:
+\begin{itemize}
+ \item Do you really need Madagascar? Yes because you will benefit a lot from it. Of course no if you are able to manage things in your own way, even better than Madagascar.
+ \item Assuming we need Madagascar hereafter. In what aspects we can benefit from it? 
+ \item Is it a responsibility to contribute your papers, in particular your codes? Definitely no, especially when your research is sponsored by others while a permission public release is not accessible. You may want to be selfish: ``I only want to use the codes from others instead of sharing mine with the community''. No objection: Some people are doing things like that.
+ \item Keep in mind Madagascar is not the goal, it is just a tool to share your research progress with others. If you are ready to be open, why not a contributor?
+\end{itemize}
+
+
+\section{Preliminary}
+
+In this section, I provide some fundamental gadgets to help the beginners run Madagascar with ease.
+
+\subsection{Installation}
+
+\begin{itemize}
+ \item Setting Environmental variables:
+ \begin{description}
+  \item[RSFROOT] 	location of the main Madagascar installation
+  \item[RSFSRC] 	location of the source for Madagascar
+  \item[DATAPATH] 	location where to put the binary RSF files 
+  \item[RSFFIGS]	location to store generated figures
+ \end{description}
+ \item RSFSRC installation: 
+ \begin{itemize}
+  \item Download via git/svn:  \textcolor{blue}{svn co https://github.com/ahay/src/trunk RSFSRC}
+  \item install dependent softwares: \textcolor{blue}{sudo apt-get install libxaw7-dev freeglut3-dev libnetpbm10-dev libgd-dev libplplot-dev \
+	  libavcodec-dev libcairo2-dev libjpeg-dev swig python-dev python-numpy g++ gfortran \
+	  libopenmpi-dev libfftw3-dev libsuitesparse-dev python-epydoc}
+  \item \textcolor{red}{./configure --prefix=\$RSFROOT API=C,f90; make; make install}
+ \end{itemize}
+ \item Latex templates \textcolor{blue}{texmf}:
+ \begin{itemize}
+  \item \textcolor{blue}{svn co https://github.com/SEGTeX/texmf/trunk texmf}
+  \item cd texmf; sudo \textcolor{red}{texhash}
+  \end{itemize}
+\end{itemize}
+
+
+\subsection{Reproduce numerical examples and papers using SConstruct}
+
+  Processing workflow:
+  \begin{itemize}
+    \item \textcolor{red}{Fetch}(data\_file,dir,ftp\_server\_info): download data\_file from a specific directory dir of an FTP server
+    \item \textcolor{red}{Flow}(targets,sources,commands): generate target[s]  from source[s] using command[s]
+    \item \textcolor{red}{Plot}(intermediate\_plot[,source],plot\_command): generate intermediate\_plot in the working directory
+    \item \textcolor{red}{Result}(plot,intermediate\_plots,combination) generate a final plot  in Fig folder of the working directory
+    \item \textcolor{red}{End}(): collect default targets 
+  \end{itemize}
+  \vspace{1em}
+  Run scons for your computation
+  \begin{description}
+    \item[scons] 	run an SConstruct to generate data
+    \item[scons view] 	view the results from an SConstruct
+    \item[scons -c] 	clean the local directory, delete all target files
+    \item[pscons] 	parallel execution of an SConstruct 
+  \end{description}
+
+
+Paper Sconstruct imports Python packages for processing TeX files:
+\begin{verbatim}
+from rsf.tex import * 
+End(name,lclass,options,use)
+\end{verbatim}
+  \begin{itemize}
+    \item name - name of the root tex file to build, paper.tex.
+    \item lclass - name of the LaTeX class file to use.
+    \item options - document options for LaTeX class file.
+    \item use - names of LaTeX packages to import during compilation.
+  \end{itemize}
+To generate your paper including numerical examples:
+ \begin{itemize}
+  \item \textcolor{red}{sftour scons lock}: lock the results from an SConstruct
+  \item \textcolor{red}{scons read/paper.read}:	look at the generated paper in pdf
+  \item \textcolor{red}{scons -c} 	remove all intermediate files
+ \end{itemize}
+ 
+\subsection{Some of the most useful commands}
+
+Plotting the figures
+    \begin{description}
+      \item[sfgraph]		create line plots, or scatter plots
+      \item[sfgrey] 		create raster plots or 2D image plots
+      \item[sfgrey3] 	create 3D image plots of panels (or slices) of a 3D cube
+      \item[sfwiggle] 	plot data with wiggly traces 
+    \end{description}
+
+  Image format: Vplot
+  \begin{itemize}
+  \item suffix '.vpl', vectorized image$\rightarrow$scaling without loss of quality
+  \item convert to be \textcolor{blue}{pdf/eps/png/jpeg/tiff/mpeg/...}
+  \item how: \textcolor{red}{vpconvert format=pdf fig.vpl}
+  \end{itemize}
+
+
+\section{Forward modeling}
+The wave equation we consider in this course material
+\begin{equation}\label{stateeq}
+(\frac{1}{v^2}\partial_t^2 - \nabla^2 ) p=f
+\end{equation}
+Omitting the source, extrapolate your wavefield:
+\begin{equation}\label{forwardupdate}
+ p^{k+1}=2p^{k}-p^{k-1}+\Delta t^2 v^2 \nabla^2 p^k 
+\end{equation}
+where
+\begin{equation}
+ \nabla^2 p= \frac{p[ix][iz+1]-2p[ix][iz]+p[ix][iz-1]}{\Delta z^2} +\frac{p[ix-1][iz]-2p[ix][iz]+p[ix-1][iz]}{\Delta x^2}
+\end{equation}
+
+
+The Clayton-Enquist absorbing boundary condition (ABC) \citep{Clayton_1977_ABC}
+\begin{equation}
+ \mbox{left boundary}:\frac{\partial^2 p}{\partial x\partial t}-\frac{1}{v}\frac{\partial^2 p}{\partial t^2}=\frac{v}{2}\frac{\partial^2 p}{\partial z^2}
+\end{equation}
+The codes in every time step looks like
+\begin{lstlisting}
+//dtz=dt/dz; dtx=dt/dx
+ void step_forward(float **p0, float **p1, float **p2, 
+      float **vv, float dtz, float dtx, int nz, int nx)
+/*< forward modeling step, Clayton-Enquist ABC incorporated >*/
+{
+    int ix,iz;
+    float v1,v2,diff1,diff2;
+
+    for (ix=0; ix < nx; ix++) 
+    for (iz=0; iz < nz; iz++) 
+    {
+	    v1=vv[ix][iz]*dtz; v1=v1*v1;
+	    v2=vv[ix][iz]*dtx; v2=v2*v2;
+	    diff1=diff2=-2.0*p1[ix][iz];
+	    diff1+=(iz-1>=0)?p1[ix][iz-1]:0.0;
+	    diff1+=(iz+1<nz)?p1[ix][iz+1]:0.0;
+	    diff2+=(ix-1>=0)?p1[ix-1][iz]:0.0;
+	    diff2+=(ix+1<nx)?p1[ix+1][iz]:0.0;
+	    diff1*=v1;
+	    diff2*=v2;
+	    p2[ix][iz]=2.0*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
+    }
+
+/*
+    // top boundary 
+    iz=0;
+    for (ix=1; ix < nx-1; ix++) { 
+	  v1=vv[ix][iz]*dtz; 
+	  v2=vv[ix][iz]*dtx;
+	  diff1=	(p1[ix][iz+1]-p1[ix][iz])-
+		  (p0[ix][iz+1]-p0[ix][iz]);
+	  diff2=	p1[ix-1][iz]-2.0*p1[ix][iz]+p1[ix+1][iz];
+	  diff1*=v1;
+	  diff2*=0.5*v2*v2;
+	  p2[ix][iz]=2.0*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
+    }
+*/
+    /* bottom boundary */
+    iz=nz-1;
+    for (ix=1; ix < nx-1; ix++) { 
+	  v1=vv[ix][iz]*dtz; 
+	  v2=vv[ix][iz]*dtx;
+	  diff1=-(p1[ix][iz]-p1[ix][iz-1])+(p0[ix][iz]-p0[ix][iz-1]);
+	  diff2=p1[ix-1][iz]-2.0*p1[ix][iz]+p1[ix+1][iz];
+	  diff1*=v1;
+	  diff2*=0.5*v2*v2;
+	  p2[ix][iz]=2.0*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
+    }
+
+    /* left boundary */
+    ix=0;
+    for (iz=1; iz <nz-1; iz++){ 
+	  v1=vv[ix][iz]*dtz; 
+	  v2=vv[ix][iz]*dtx;
+	  diff1=p1[ix][iz-1]-2.0*p1[ix][iz]+p1[ix][iz+1];
+	  diff2=(p1[ix+1][iz]-p1[ix][iz])-(p0[ix+1][iz]-p0[ix][iz]);
+	  diff1*=0.5*v1*v1;
+	  diff2*=v2;
+	  p2[ix][iz]=2.0*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
+    }
+
+    /* right boundary */
+    ix=nx-1;
+    for (iz=1; iz <nz-1; iz++){ 
+	  v1=vv[ix][iz]*dtz; 
+	  v2=vv[ix][iz]*dtx;
+	  diff1=p1[ix][iz-1]-2.0*p1[ix][iz]+p1[ix][iz+1];
+	  diff2=-(p1[ix][iz]-p1[ix-1][iz])+(p0[ix][iz]-p0[ix-1][iz]);
+	  diff1*=0.5*v1*v1;
+	  diff2*=v2;
+	  p2[ix][iz]=2.0*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
+    }  
+}
+\end{lstlisting}
+
+
+
+\subsection{Write your own code and run it as a test}
+You have to
+\begin{enumerate}
+ \item create a user directory in /RSFSRC/user/dirname, where dirname is the directory name, for example, 'pyang'.
+ \item copy a SConstruct from other existing users, and use it as a template to create your own things. For example, take /RSFSRC/user/psava/SConstruct. Assume you are going to do C programming to generate a target executable \texttt{sfmodeling2d}. You need to empty all other code list while add a name in C code list:
+ \begin{verbatim}
+  import os, sys
+
+  try:
+      import bldutil
+      glob_build = True # scons command launched in RSFSRC
+      srcroot = '../..' # cwd is RSFSRC/build/user/psava
+      Import('env bindir libdir pkgdir')
+      env = env.Clone()
+  except:
+      glob_build = False # scons command launched in the local directory
+      srcroot = os.environ.get('RSFSRC', '../..')
+      sys.path.append(os.path.join(srcroot,'framework'))
+      import bldutil
+      env = bldutil.Debug() # Debugging flags for compilers
+      bindir = libdir = pkgdir = None
+      SConscript(os.path.join(srcroot,'su/lib/SConstruct'))
+
+  targets = bldutil.UserSconsTargets()
+
+  # C mains
+  targets.c = '''
+  modeling2d
+  '''
+
+  # Python targets
+  targets.py = '''
+  '''
+
+  dynlib = env.get('DYNLIB','')
+
+  env.Prepend(LIBS=[dynlib+'su'])
+
+  targets.build_all(env, glob_build, srcroot, bindir, libdir, pkgdir)
+ \end{verbatim}
+
+ \item Use text editor (emacs, gedit, ...) to create a file Mmodeling2d.c (which will generate the target \texttt{sfmodeling2d}, \texttt{M} will be automatically replaced by \texttt{sf}). In Mmodeling2d.c, start your codes by  including the RSF header file: \texttt{\#include <rsf.h>}, which defines many useful interfaces/subroutines for the convenience of data I/O (including parameters and files)
+ \begin{verbatim}
+  sf_input()/sf_output()
+  sf_histint()/sf_histfloat()
+  sf_getint()/sf_getfloat()
+ \end{verbatim}
+ and memory allocation for the variables
+ \begin{verbatim}  
+  sf_intalloc()/sf_floatalloc()
+  sf_intalloc2()/sf_floatalloc2()
+  ...
+ \end{verbatim}
+ which will be used frequently when coding with Madagascar.
+
+ 
+ \item specify your input and output files, and initialize Madagascar: \\
+ \begin{verbatim}
+    	sf_file vinit, shots; /* input and output file*/    
+    	sf_init(argc,argv);    	/* initialize Madagascar */
+    	vinit=sf_input ("in");   /* initial velocity model, unit=m/s */
+    	shots=sf_output("out");  /* output image with correlation imaging condition */ 
+ \end{verbatim}
+Here the input file \texttt{vinit} is the velocity model, while the output \texttt{shots} is a shot gather (or many shots) collected at many receivers for different sources.
+ \item read the parameters from the input file  using the interfaces Madagascar prepared: \texttt{sf\_hist*(),sf\_get*()}
+ \begin{verbatim}  
+    	/* get parameters for forward modeling */
+    	if (!sf_histint(vinit,"n1",&nz)) sf_error("no n1");
+    	if (!sf_histint(vinit,"n2",&nx)) sf_error("no n2");
+    	if (!sf_histfloat(vinit,"d1",&dz)) sf_error("no d1");
+    	if (!sf_histfloat(vinit,"d2",&dx)) sf_error("no d2");
+    	
+    	if (!sf_getfloat("fm",&fm)) fm=10;	
+	/* dominant freq of ricker */
+    	if (!sf_getfloat("dt",&dt)) sf_error("no dt");	
+	/* time interval */
+    	if (!sf_getint("nt",&nt))   sf_error("no nt");	
+	/* total modeling time steps */
+    	if (!sf_getint("ns",&ns))   sf_error("no ns");	
+	/* total shots */
+    	if (!sf_getint("ng",&ng))   sf_error("no ng");	
+	/* total receivers in each shot */	
+    	if (!sf_getint("jsx",&jsx))   sf_error("no jsx");
+	/* source x-axis  jump interval  */
+    	if (!sf_getint("jsz",&jsz))   jsz=0;
+	/* source z-axis jump interval  */
+    	if (!sf_getint("jgx",&jgx))   jgx=1;
+	/* receiver x-axis jump interval */
+    	if (!sf_getint("jgz",&jgz))   jgz=0;
+	/* receiver z-axis jump interval */
+    	if (!sf_getint("sxbeg",&sxbeg))   sf_error("no sxbeg");
+	/* x-begining index of sources, starting from 0 */
+    	if (!sf_getint("szbeg",&szbeg))   sf_error("no szbeg");
+	/* z-begining index of sources, starting from 0 */
+    	if (!sf_getint("gxbeg",&gxbeg))   sf_error("no gxbeg");
+	/* x-begining index of receivers, starting from 0 */
+    	if (!sf_getint("gzbeg",&gzbeg))   sf_error("no gzbeg");
+	/* z-begining index of receivers, starting from 0 */
+	if (!sf_getbool("csdgather",&csdgather)) csdgather=false;
+	/* default, common shot-gather; if n, record at every point*/
+ \end{verbatim}
+ 
+ 
+ \item specify the parameters for the output file using the interfaces Madagascar prepared: \texttt{sf\_put*()}
+ \begin{verbatim}
+  	/* put the labels, legends and parameters in output */
+	sf_putint(shots,"n1",nt);	
+	sf_putint(shots,"n2",ng);
+	sf_putint(shots,"n3",ns);
+	sf_putfloat(shots,"d1",dt);
+	sf_putfloat(shots,"d2",jgx*dx);
+	sf_putfloat(shots,"o1",0);
+	sf_putstring(shots,"label1","Time");
+	sf_putstring(shots,"label2","Lateral");
+	sf_putstring(shots,"label3","Shot");
+	sf_putstring(shots,"unit1","sec");
+	sf_putstring(shots,"unit2","m");
+	sf_putfloat(shots,"amp",amp);
+	sf_putfloat(shots,"fm",fm);
+	sf_putint(shots,"ng",ng);
+	sf_putint(shots,"szbeg",szbeg);
+	sf_putint(shots,"sxbeg",sxbeg);
+	sf_putint(shots,"gzbeg",gzbeg);
+	sf_putint(shots,"gxbeg",gxbeg);
+	sf_putint(shots,"jsx",jsx);
+	sf_putint(shots,"jsz",jsz);
+	sf_putint(shots,"jgx",jgx);
+	sf_putint(shots,"jgz",jgz);
+	sf_putint(shots,"csdgather",csdgather?1:0);
+ \end{verbatim}
+
+
+ \item allocate memory for the arries, format: \texttt{sf\_floatalloc2(n1,n2)}
+ \begin{verbatim}  
+	/* allocate the variables */
+	wlt=(float*)malloc(nt*sizeof(float));
+	bndr=(float*)malloc(nt*(2*nz+nx)*sizeof(float));
+	dobs=(float*)malloc(ng*nt*sizeof(float));
+	trans=(float*)malloc(ng*nt*sizeof(float));
+	vv=sf_floatalloc2(nz, nx);
+	p0=sf_floatalloc2(nz, nx);
+	p1=sf_floatalloc2(nz, nx);
+	p2=sf_floatalloc2(nz, nx);
+	sxz=(int*)malloc(ns*sizeof(int));
+	gxz=(int*)malloc(ng*sizeof(int));
+ \end{verbatim}
+
+ \item do your own computation (forward simulation) as usual. The whole time stepping looks like
+  \begin{verbatim}
+	  memset(p0[0],0,nz*nx*sizeof(float));
+	  memset(p1[0],0,nz*nx*sizeof(float));
+	  memset(p2[0],0,nz*nx*sizeof(float));
+	  /* forward modeling */
+	  for(it=0; it<nt; it++)
+	  {
+		    add_source(p1, &wlt[it], &sxz[is], 1, nz, true);			
+		    step_forward(p0, p1, p2, vv, dtz, dtx, nz, nx);
+		    ptr=p0; p0=p1; p1=p2; p2=ptr;
+		    record_seis(&dobs[it*ng], gxz, p0, ng, nz);
+	  }  
+  \end{verbatim}
+  
+ \item free the variables
+ \begin{verbatim}  
+	/* free the variables */
+	free(sxz);
+	free(gxz);
+	free(bndr);
+	free(dobs);
+	free(trans);
+	free(wlt);
+	free(*vv); free(vv);
+	free(*p0); free(p0);
+	free(*p1); free(p1);
+	free(*p2); free(p2);
+
+ \end{verbatim}
+  
+  \item Finally, you end up with a complete code /RSFSRC/user/pyang/Mmodeling2d.c. You can go into directory RSFSRC, compile and install the target executable \texttt{sfmodeling2d}:
+  \begin{verbatim}
+   cd $RSFSRC
+   scons install
+  \end{verbatim}
+  If there exists any error in your code, you will get the reporting message in the terminal.   
+\end{enumerate}
+
+
+\subsection{A 2-D Modeling experiment using SConstruct}
+
+\begin{enumerate}
+ \item Invoke RSF module to create a experiment environment. 
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+ \begin{lstlisting}
+  from rsf.proj import *
+
+  End()
+ \end{lstlisting}
+ Almost every SConstruct for numerical test has to start with \texttt{from rsf.proj import *} and ends with \texttt{End()}.
+
+ \item In between, add several lines to create a very simple velocity model including 3 layers using \texttt{Flow(target,source,command)}. The command here is \texttt{sfmath}. One may type the command name '\texttt{sfmath}' to look up the manual in the terminal.
+ \item Performing 2-D forward simulation with 1 point source (a Ricker wavelet) by specifying the parameters for the command \texttt{sfmodeling2d}. Again, one may type the command name to look up the manual in the terminal if you cannot keep everything in mind.
+
+ \item Polish your resulting figures. Help yourself by self-documentation of the command, type the command name \texttt{sfgrey}  or \texttt{man sfgrey} \footnote{Keep in mind the initial '\texttt{sf}' has to be included when looking for the functionality of the command, although it can be omitted in SConstruct.} in the terminal. For example, try color style: \texttt{color=g bartype=h}
+\end{enumerate}
+The final SConstruct looks like
+\lstinputlisting[frame=single]{modeling2d/SConstruct}
+
+We obtain the velocity model in Figure \ref{fig:vel} and the shot gathers in Figure \ref{fig:shots}. To have a look at the movie by looping over each shot gather, run \texttt{scons}.
+% \begin{figure}
+%  \centering
+%  \includegraphics[width=0.5\textwidth]{vel}
+%  \caption{A 3-layer velocity model}\label{fig:vel}
+% \end{figure}
+
+\inputdir{modeling2d}
+
+\plot{vel}{width=0.5\textwidth}{A 3-layer velocity model}
+
+%\begin{figure}
+% \centering
+% \includegraphics[width=0.5\textwidth]{shots}
+% \caption{Shot gathers}\label{fig:shots}
+%\end{figure}
+
+\plot{shots}{width=0.5\textwidth}{Shot gather}
+
+
+\subsection{Further exercises}
+How to:
+\begin{enumerate}
+ \item higher accuracy in space  $\rightarrow$ higher order FD stencil $\rightarrow$ Fourier pseudospectral method \citep{Carcione_2010_GFP}, see the code /RSFSRC/user/pyang/Mps2d.c? 
+ \item implement sponge/Gaussian taper boundary condition \citep{Cerjan_1985_NBC}, PML \citep{Komatitsch_2007_GEO}? \citep{Yang_2014_NTW}
+ \item increase temporal discretization accuracy: leap-frog $\rightarrow$ Runge-Kutta scheme?
+ \item locate your source and receiver position at arbitrary position: Kaiser windowed sinc interpolation \citep{Hicks_2002_ASR}
+\end{enumerate}
+
+
+\section{Full waveform inversion}
+
+
+FWI is a nonlinear iterative minimization process by matching the waveform between the synthetic data and the observed seismograms \citep{Tarantola_1984_ISR,Virieux_2009_OFW}. In least-squares sense, the misfit functional of FWI reads
+\begin{equation}\label{misfit}
+ C(m)=\frac{1}{2}\| R_r p -d\|^2,
+\end{equation}
+where $m$ is the model parameter (i.e. the velocity) in model space; $R_r$ is a restriction operator mapping the wavefield onto the receiver locations; $d:=d(x_r,t)$ is the observed seismogram  at receiver location $x_r$ while $p:=p(x,t)$ is the synthetic wavefield whose adjoint wavefield $\bar{p}$ is given by
+\begin{equation}\label{adjeq}
+(\frac{1}{v^2}\partial_t^2 - \nabla) \bar{p}=-\frac{\partial C}{\partial p}=-R_r^\dagger (R_r p-d)
+\end{equation}
+which indicates that the adjoint wave equation is exactly the same as the forward wave equation except that the adjoint source is data residual backprojected into the wavefield.
+In each iteration the model has to be updated following a Newton descent direction $\Delta m^k$
+\begin{equation}
+ m^{k+1}=m^k+\gamma_k \Delta m^k,
+\end{equation}
+with a stepsize $\gamma_k$. Away from the sources ($f=0$), the gradient can be computed by
+\begin{equation} \label{gradient}
+ \nabla C=-\frac{2}{v^3}\int_T\mathrm{d}t\bar{p} \partial_t^2 p=-\frac{2}{v}\int_T\mathrm{d}t\bar{p} \nabla^2 p
+\end{equation}
+
+
+\subsection{Reconstruct your source/incident wavefield backwards in time}
+
+As one can see from above, the computation of FWI gradient requires simultaneously accessing the source/incident wavefield and the adjoint wavefield at each time step. To achieve this goal, we may store the absorbing boundary at each time step when doing forward simulation, and then reconstruct the incident wavefield backwards in time using the stored boundary. According to equation \eqref{forwardupdate}, the reconstruction is easy 
+\begin{equation}
+ p^{k-1}=2p^{k}-p^{k+1}+\Delta t^2 v^2 \nabla^2 p^k  
+\end{equation}
+Therefore, we may employ the same subroutine by switching the role of wavefield $p^{k+1}$ and $p^{k-1}$. The elements in the boundary does not follow the above equation but we can store it in forward simulation and re-inject them for backward reconstruction. 
+\begin{enumerate}
+ \item Redo forward modeling using the same model while storing the boundary at each time step
+ \begin{verbatim}  
+		for(it=0; it<nt; it++)		{
+			  add_source(p1, &wlt[it], &sxz[is], 1, nz, true); //true=add source	
+			  step_forward(p0, p1, p2, vv, dtz, dtx, nz, nx);
+			  ptr=p0; p0=p1; p1=p2; p2=ptr;
+			  rw_bndr(&bndr[it*(2*nz+nx)], p0, nz, nx, true); 
+			  record_seis(&dobs[it*ng], gxz, p0, ng, nz);
+			  
+			  if(it==kt){
+				    sf_floatwrite(p0[0],nz*nx, check1);
+			  }
+		}
+ \end{verbatim}
+
+ 
+ \item reverse propagate the incident wavefield backwards from final snapshot and stored boundary: at each time step, inject the corresponding boundary
+ \begin{verbatim}  
+		ptr=p0; p0=p1; p1=ptr;
+		for(it=nt-1; it>-1; it--){
+			  rw_bndr(&bndr[it*(2*nz+nx)], p1, nz, nx, false);
+
+			  if(it==kt){
+				    sf_floatwrite(p1[0],nz*nx, check2);
+			  }
+			  step_backward(p0, p1, p2, vv, dtz, dtx, nz, nx);
+			  add_source(p1, &wlt[it], &sxz[is], 1, nz, false);//false=subtract source
+			  ptr=p0; p0=p1; p1=p2; p2=ptr;
+		}
+ \end{verbatim}
+ 
+ \item check whether you perfectly reconstruct your incident wavefield at any time step \texttt{kt}, as shown in Figure \ref{fig:check}.
+ 
+\end{enumerate}
+
+%\begin{figure}
+% \centering
+% \includegraphics[width=0.8\textwidth]{check}
+% \caption{The backward reconstructed wavefield is the same as the incident wavefield}\label{fig:check}
+%\end{figure}
+
+\inputdir{fbrec2d}
+\plot{check}{width=0.8\textwidth}{The backward reconstructed wavefield is the same as the incident wavefield}
+
+The final SConstruct looks like
+\lstinputlisting[frame=single]{fbrec2d/SConstruct}
+
+\subsection{Do a synthetic FWI test using Marmousi model}
+
+It is convenient to perform adjoint simulation when reconstructing the incident wavefield backwards. The computation of FWI gradient can be done on the fly by adding several lines:
+\begin{verbatim} 
+			memset(sp0[0], 0, nz*nx*sizeof(float));
+			memset(sp1[0], 0, nz*nx*sizeof(float));
+			for(it=0; it<nt; it++)
+			{
+				  add_source(sp1, &wlt[it], &sxz[is], 1, nz, true);			
+				  step_forward(sp0, sp1, sp2, vv, dtz, dtx, nz, nx);
+				  ptr=sp0; sp0=sp1; sp1=sp2; sp2=ptr;
+				  rw_bndr(&bndr[it*(2*nz+nx)], sp0, nz, nx, true);
+
+				  record_seis(dcal, gxz, sp0, ng, nz);
+				  cal_residuals(dcal, &dobs[it*ng], &derr[is*ng*nt+it*ng], ng);
+			}
+
+			ptr=sp0; sp0=sp1; sp1=ptr;
+			memset(gp0[0], 0, nz*nx*sizeof(float));
+			memset(gp1[0], 0, nz*nx*sizeof(float));
+			for(it=nt-1; it>-1; it--)
+			{
+				  rw_bndr(&bndr[it*(2*nz+nx)], sp1, nz, nx, false);
+				  step_backward(illum, lap, sp0, sp1, sp2, vv, dtz, dtx, nz, nx);
+				  add_source(sp1, &wlt[it], &sxz[is], 1, nz, false);
+
+				  add_source(gp1, &derr[is*ng*nt+it*ng], gxz, ng, nz, true);
+				  step_forward(gp0, gp1, gp2, vv, dtz, dtx, nz, nx);
+
+				  cal_gradient(g1, lap, gp1, nz, nx);
+				  ptr=sp0; sp0=sp1; sp1=sp2; sp2=ptr;
+				  ptr=gp0; gp0=gp1; gp1=gp2; gp2=ptr;
+			}
+\end{verbatim}
+Of course, to apply the steepest descent method for minimization of the misfit function for waveform inversion, a step length has to be determined at each iteration. You may use the estimation proposed by \citet[in the appendix]{Pica_1990_NIS} in your FWI code as \texttt{RSFSRC/user/pyang/Mfwi2d.c}. 
+
+
+The workflow for synthetic FWI test based on Marmousi model follows the several steps:
+\begin{enumerate}
+ \item Obtain the Marmousi velocity model, which can be downloaded by  \texttt{Fetch('marmvel.hh','marm')} in SConstruct, as shown in the top panel of Figure \ref{fig:marm}.
+ 
+ \item We may start to generate the observed seismograms/shots using resampled Marmousi, as shown in Figure \ref{fig:shotsnap}.
+ 
+ \item By smoothing the true model using triangular window many times, an initial model plotted in the bottom panel of Figure \ref{fig:marm} is generated to do the FWI test.
+ 
+ \item Using the observed seismograms/shots from true model, we start the inversion with the rough initial model.
+ 
+ \item  You may appreciate your the inverted velocity during the iterations in Figure \ref{fig:vsnap}, as well as the variations of the misfit function in Figure \ref{fig:objs}.
+\end{enumerate}
+A complete SConstruct for the above workflow appears in the following:
+\lstinputlisting[frame=single]{marmtest/SConstruct}
+
+\inputdir{marmtest}
+\plot{marm}{width=0.5\textwidth}{Top: True Marmousi model; bottom: Initial model for FWI}
+
+%\begin{figure}
+% \centering
+% \includegraphics[width=0.5\textwidth]{marm}
+% \caption{Top: True Marmousi model; bottom: Initial model for FWI}\label{fig:marm}
+%\end{figure}
+
+%\begin{figure}
+% \centering
+% \includegraphics[width=\textwidth]{shotsnap}
+% \caption{Shots from true Marmousi model}\label{fig:shotsnap}
+%\end{figure}
+
+\plot{shotsnap}{width=\textwidth}{Shots from true Marmousi model}
+
+%\begin{figure}
+% \centering
+% \includegraphics[width=\textwidth]{vsnap}
+% \caption{Inverted velocity during iterations}\label{fig:vsnap}
+%\end{figure}
+ 
+
+\plot{vsnap}{width=\textwidth}{Inverted velocity during iterations}
+
+%\begin{figure}
+% \centering
+% \includegraphics[width=0.5\textwidth]{objs}
+% \caption{The misfit function decreases during iterations}\label{fig:objs}
+%\end{figure}
+ 
+\plot{objs}{width=0.5\textwidth}{The misfit function decreases during iterations}
+ 
+\subsection{Your exercise}
+
+\begin{itemize}
+  \item It works so slow! How to speeed up? $\rightarrow$ CUDA \citep[Mgpufwi.cu]{Yang_2015_GPU} + MPI high performance computing (Jeff)?
+  
+  \item How to improve the poor resulting velocity model in Figure \ref{fig:vsnap}? A better initial model by less smoothing? Increase the number of iterations?  Estimate a good step length to satisfy the Wolf condition?  
+  Estimate Hessian $\rightarrow$ Truncated newton \citep{Metivier_2014_FWI}+ Source encoding+ Good preconditioning?
+
+
+ \item Derive the adjoint equation  for first order wave equation system
+ \begin{equation}
+  \begin{cases}
+   \partial_t p=\kappa \nabla\cdot \mathbf{v}+ f_p   \\
+   \rho \partial_t \mathbf{v}= \nabla p
+  \end{cases}
+ \end{equation}
+ where $\kappa=\rho v^2$.
+ \item Write a forward simulation code based on sponge boundary condition using the above system
+ 
+ \item Derive your gradient expressions for velocity and density 
+ 
+ \item code your multiparameter FWI for inverting $v$ and $\rho$ 
+
+\end{itemize}
+
+\section{Further thinking}
+\begin{itemize}
+ \item The storage complexity using regular grid FD and staggered grid FD stencil?
+ \item How to reduce the storage requirement for a 3-D volume? CFL $\rightarrow$ Nyquist: decimation+ interpolation \citep{Yang_2016_DPI,Yang_2016_WRB}
+ \item How to derive the adjoint state equation? $\rightarrow$ Lagrange multiplier+cost function \citep{Plessix_2006_RAS}? What is the adjoint state equation for 1st order acoustic wave equation, viscoacoustic system, viscoelastic system \citep{Yang_2016_SFM}?
+ \item Is it possible to do reverse propagation in attenuating medium? How to handle instability? Binomial checkpointing$\rightarrow$ CARFS (checkpointing-assisted reverse-forward simulation) \citep{Yang_2016_CAR}?
+ \item What if FWI using other norms/misfit function $C$? Only change the adjoint source $\frac{\partial C}{\partial p}$?
+\end{itemize}
+
+\section{Conclusion}
+\begin{enumerate}
+ \item No answer sheet for your exercises!
+ 
+ \item Too many open questions in FWI: good initial model and misfit function immune to cycle-skipping issue? Better preconditioning? Inverting attenuating?
+ 
+ \item FWI is a research field waiting for your addition! 
+
+\end{enumerate}
+
+
+\bibliographystyle{apalike}
+\bibliography{/home/yangpe/SEISCOPE_ARTICLES/BIBLIO/biblioseiscope,/home/yangpe/SEISCOPE_ARTICLES/BIBLIO/bibliotmp}
+

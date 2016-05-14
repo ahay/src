@@ -1,0 +1,36 @@
+from rsf.proj import *
+
+Flow('vel0',None,
+     	'''
+     	math output=1.6 n1=50 n2=200 d1=0.005 d2=0.005
+     	label1=x1 unit1=km label2=x2 unit2=km 
+     	''')
+
+Flow('vel1',None,
+     	'''
+     	math output=1.8 n1=50 n2=200 d1=0.005 d2=0.005
+     	label1=x1 unit1=km label2=x2 unit2=km 
+     	''')
+Flow('vel2',None,
+     	'''
+     	math output=2.0 n1=100 n2=200 d1=0.005 d2=0.005
+     	label1=x1 unit1=km label2=x2 unit2=km 
+     	''')
+Flow('vel',['vel0','vel1','vel2'], 'cat axis=1 ${SOURCES[1:3]}')
+
+
+Flow('shot check1 check2','vel',
+	'''	
+	sffbrec2d check1=${TARGETS[1]} check2=${TARGETS[2]} 
+	csdgather=n fm=15 dt=0.001 ns=1 ng=200 nt=1100 ng=200 kt=550	
+	sxbeg=100 szbeg=2 jsx=37 jsz=0 
+	gxbeg=0 gzbeg=1 jgx=1 jgz=0
+	''')
+
+Result('shot','grey gainpanel=all title=shot')
+
+Plot('check1','grey title="snapshot forward" ')
+Plot('check2','grey title="snapshot backward" ')
+Result('check','check1 check2','SideBySideIso')
+
+End()
