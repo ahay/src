@@ -19,7 +19,7 @@ ccprogs = 'diffcxx'
 mpiprogs='petsctest'
 
 cprogs = '''
-crtm 
+
 '''
 
 tprogs='''
