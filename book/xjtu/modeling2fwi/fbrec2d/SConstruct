@@ -29,8 +29,14 @@ Flow('shot check1 check2','vel',
 
 Result('shot','grey gainpanel=all title=shot')
 
-Plot('check1','grey title="snapshot forward" ')
-Plot('check2','grey title="snapshot backward" ')
-Result('check','check1 check2','SideBySideIso')
+
+Flow('diff','check1 check2','sfadd ${SOURCES[1]} scale=1,-1')
+
+
+Plot('check1','grey title="snapshot forward" scalebar=y')
+Plot('check2','grey title="snapshot backward" scalebar=y')
+Plot('diff','grey title="difference" scalebar=y')
+
+Result('check','check1 check2 diff','SideBySideIso')
 
 End()
