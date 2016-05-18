@@ -24,11 +24,16 @@ Flow('shots','vel',
 Plot('shots','grey color=g title=shot label2= unit2=',view=1)
 
 
-Plot('shot1','shots','window n3=1 f3=0| grey title=shot1 label2=Lateral unit2=m')
-Plot('shot3','shots','window n3=1 f3=2| grey title=shot3 label2=Lateral unit2=m')
-Plot('shot5','shots','window n3=1 f3=4| grey title=shot5 label2=Lateral unit2=m')
-Plot('shot7','shots','window n3=1 f3=6| grey title=shot7 label2=Lateral unit2=m')
-Result('shotsnap','shot1 shot3 shot5 shot7','SideBySideAniso',vppen='txscale=2.')
+Plot('shot1','shots',
+     'window n3=1 f3=0| grey title=shot1 label2=Lateral unit2=m')
+Plot('shot3','shots',
+     'window n3=1 f3=2| grey title=shot3 label2=Lateral unit2=m')
+Plot('shot5','shots',
+     'window n3=1 f3=4| grey title=shot5 label2=Lateral unit2=m')
+Plot('shot7','shots',
+     'window n3=1 f3=6| grey title=shot7 label2=Lateral unit2=m')
+Result('shotsnap','shot1 shot3 shot5 shot7',
+       'SideBySideAniso',vppen='txscale=2.')
 
 # smoothed velocity model   
 Flow('smvel','vel','smooth repeat=6  rect1=8 rect2=10')
@@ -44,7 +49,8 @@ Result('marm','vel smvel','TwoRows')
 # use the over-smoothed model as initial model for FWI
 Flow('vsnaps grads objs illums','smvel shots',
 	'''
-	sffwi2d shots=${SOURCES[1]} grads=${TARGETS[1]} objs=${TARGETS[2]}
+	sffwi2d shots=${SOURCES[1]} 
+        grads=${TARGETS[1]} objs=${TARGETS[2]}
 	illums=${TARGETS[3]} niter=10 precon=y rbell=1
 	''')
 Result('vsnaps',
@@ -55,46 +61,48 @@ Result('vsnaps',
 Plot('vsnap1','vsnaps', 
 	'''
 	window n3=1|grey title="Updated velocity, iter=1" 
-	allpos=y color=j pclip=100 
-	scalebar=y bartype=v barlabel="V" barunit="m/s" labelsz=10 titlesz=12
+	allpos=y color=j pclip=100 labelsz=10 titlesz=12
+	scalebar=y bartype=v barlabel="V" barunit="m/s" 
 	''')
 Plot('vsnap2','vsnaps', 
 	'''
 	window n3=1 f3=1|grey title="Updated velocity, iter=2" 
-	allpos=y color=j pclip=100 
-	scalebar=y bartype=v barlabel="V" barunit="m/s" labelsz=10 titlesz=12
+	allpos=y color=j pclip=100 labelsz=10 titlesz=12
+	scalebar=y bartype=v barlabel="V" barunit="m/s" 
 	''')
 Plot('vsnap4','vsnaps', 
 	'''
 	window n3=1 f3=3|grey title="Updated velocity, iter=4" 
-	allpos=y color=j pclip=100 
-	scalebar=y bartype=v barlabel="V" barunit="m/s" labelsz=10 titlesz=12
+	allpos=y color=j pclip=100 labelsz=10 titlesz=12
+	scalebar=y bartype=v barlabel="V" barunit="m/s" 
 	''')
 
 Plot('vsnap6','vsnaps', 
 	'''
 	window n3=1 f3=5|grey title="Updated velocity, iter=6"
-	 allpos=y color=j pclip=100 
-	scalebar=y bartype=v barlabel="V" barunit="m/s" labelsz=10 titlesz=12
+	 allpos=y color=j pclip=100 labelsz=10 titlesz=12
+	scalebar=y bartype=v barlabel="V" barunit="m/s" 
 	''')
 Plot('vsnap8','vsnaps', 
 	'''
 	window n3=1 f3=7|grey title="Updated velocity, iter=8"
-	allpos=y color=j pclip=100 
-	scalebar=y bartype=v barlabel="V" barunit="m/s" labelsz=10 titlesz=12
+	allpos=y color=j pclip=100 labelsz=10 titlesz=12
+	scalebar=y bartype=v barlabel="V" barunit="m/s" 
 	''')
 Plot('vsnap10','vsnaps', 
 	'''
 	window n3=1 f3=9|grey title="Updated velocity, iter=10" 
-	allpos=y color=j pclip=100 
-	scalebar=y bartype=v barlabel="V" barunit="m/s" labelsz=10 titlesz=12
+	allpos=y color=j pclip=100 labelsz=10 titlesz=12
+	scalebar=y bartype=v barlabel="V" barunit="m/s" 
 	''')
 
-Result('vsnap','vsnap1 vsnap2 vsnap4 vsnap6 vsnap8 vsnap10','TwoRows')
+Result('vsnap','vsnap1 vsnap2 vsnap4 vsnap6 vsnap8 vsnap10',
+       'TwoRows')
 
 Result('objs',
 	'''
 	sfput n2=1 label1=Iteration unit1= unit2= label2= |
-	graph title="Misfit function" dash=0 plotfat=5  grid=y yreverse=n
+	graph title="Misfit function" dash=0 plotfat=5 
+        grid=y yreverse=n
 	''')
 End()

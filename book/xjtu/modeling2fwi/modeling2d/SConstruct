@@ -18,7 +18,11 @@ Flow('vel2',None,
      	''')
 Flow('vel',['vel0','vel1','vel2'], 'cat axis=1 ${SOURCES[1:3]}')
 
-Result('vel','grey title="velocity model: 3 layers" color=j scalebar=y bartype=v')
+Result('vel',
+       '''
+       grey title="velocity model: 3 layers" 
+       color=j scalebar=y bartype=v
+       ''')
 
 Flow('shots','vel',
 	'''
