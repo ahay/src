@@ -35,7 +35,7 @@ int main (int argc, char *argv[]) {
     MPI_Comm_size (MPI_COMM_WORLD, &ncpu);
 
     sf_init (argc, argv);
-    ain = sf_input ("input"); /* Input vector a */
+    ain = sf_input ("--input"); /* Input vector a */
     bin = sf_input ("b"); /* Input vector b */
     if (SF_FLOAT != sf_gettype (ain) ||
         SF_FLOAT != sf_gettype (bin))
@@ -49,7 +49,7 @@ int main (int argc, char *argv[]) {
     n2 = sf_leftsize (ain, 1);
     /* Only the first CPU will do output */
     if (0 == cpuid) {
-        cout = sf_output ("out");
+        cout = sf_output ("--output");
         sf_putint (cout, "n1", n1);
         sf_putint (cout, "n2", n2);
         sf_warning ("Running on %d CPUs", ncpu);

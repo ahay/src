@@ -1,7 +1,9 @@
 from rsf.proj import *
 import sys
 
-# Download from http://www.freeusp.org/2007_BP_Ani_Vel_Benchmark/
+# Fetch will not work unless you do the following:
+# 1. Download ModelParams.tar.gz from http://www.freeusp.org/2007_BP_Ani_Vel_Benchmark/
+# 2. Put in under $DATAPATH/BP
 tgz = 'ModelParams.tar.gz'
 
 Fetch(tgz,'BP',top=os.environ.get('DATAPATH'),server='local')
