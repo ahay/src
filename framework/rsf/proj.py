@@ -497,7 +497,7 @@ class Project(Environment):
         else:
             sfiles = []
 
-        if self.hostname[:15] == 'tacc.utexas.edu'
+        if self.hostname[:15] == 'tacc.utexas.edu':
             mpirun = '%s tacc_affinity' 
         else:
             mpirun = '%s -np %s' % (self.mpirun,np)
