@@ -2123,7 +2123,7 @@ static sf_complex ***waves =NULL;
 
 clr3d clr3d_make(int *n2s,
                  fdm3d fdm)
-/*< init lowrank arrays for rite method >*/
+/*< prepare lowrank arrays for rite method >*/
 {
     int i,n2_sum,n2_max;
     clr3d clr;
@@ -2154,6 +2154,43 @@ clr3d clr3d_make(int *n2s,
     clr->map[0][0] = 0; clr->map[0][1] = 3; clr->map[0][2] = 4;
     clr->map[1][0] = 3; clr->map[1][1] = 1; clr->map[1][2] = 5;
     clr->map[2][0] = 4; clr->map[2][1] = 5; clr->map[2][2] = 2;
+
+    return clr;
+}
+
+clr3d clr3d_make2(int *n2s,
+                  fdm3d fdm)
+/*< prepare lowrank arrays for rite method >*/
+{
+    int i,n2_sum,n2_max;
+    clr3d clr;
+
+    clr = (clr3d) sf_alloc(1,sizeof(*clr));
+
+    clr->n2_start = sf_intalloc(9);
+    clr->n2_local = sf_intalloc(9);
+    clr->map = sf_intalloc2(3,3);
+
+    n2_sum = 0;
+    n2_max = 0;
+    for (i=0; i<9; i++) {
+        clr->n2_start[i] = n2_sum; 
+        clr->n2_local[i] = n2s[i]; 
+        n2_sum += n2s[i];
+        if(n2_max<n2s[i]) n2_max = n2s[i];
+    }
+    clr->n2_sum=n2_sum;
+    clr->n2_max=n2_max;
+
+    if(fdm->verb) {
+        sf_warning("n2_start=%d,%d,%d,%d,%d,%d,%d,%d,%d",clr->n2_start[0],clr->n2_start[1],clr->n2_start[2],clr->n2_start[3],clr->n2_start[4],clr->n2_start[5],clr->n2_start[6],clr->n2_start[7],clr->n2_start[8]);
+        sf_warning("n2_local=%d,%d,%d,%d,%d,%d,%d,%d,%d",clr->n2_local[0],clr->n2_local[1],clr->n2_local[2],clr->n2_local[3],clr->n2_local[4],clr->n2_local[5],clr->n2_local[6],clr->n2_local[7],clr->n2_local[8]);
+        sf_warning("n2_sum=%d, n2_max=%d",clr->n2_sum,clr->n2_max);
+    }
+
+    clr->map[0][0] = 0; clr->map[0][1] = 1; clr->map[0][2] = 2;
+    clr->map[1][0] = 3; clr->map[1][1] = 4; clr->map[1][2] = 5;
+    clr->map[2][0] = 6; clr->map[2][1] = 7; clr->map[2][2] = 8;
 
     return clr;
 }
