@@ -26,7 +26,7 @@
 
 int main(int argc, char* argv[])
 {
-    bool mig, cmplx;
+    bool mig, cmplx, trm;
     int it, nt, ix, nx, iz, nz, nx2, nz2, nzx, nzx2, pad1;
     int im, i, j, m2, it1, it2, its, ik, n2, nk, snap;
     float dt, dx, dz, c, old, x0;
@@ -41,6 +41,9 @@ int main(int argc, char* argv[])
 
     if (!sf_getbool("cmplx",&cmplx)) cmplx=false; /* use complex FFT */
     if (!sf_getint("pad1",&pad1)) pad1=1; /* padding factor on the first axis */
+
+    if (!sf_getbool("trm",&trm)) trm=false;
+    /* time-reversal imaging */
 
     if (mig) { /* migration */
 	data = sf_input("in");
@@ -166,6 +169,14 @@ int main(int argc, char* argv[])
 	it1 = nt-1;
 	it2 = -1;
 	its = -1;	
+
+	if (trm) {
+	    for (ix=0; ix < nx; ix++) {
+		for (iz=0; iz < nz; iz++) {
+		    img[ix][iz] = 0.0f;
+		}
+	    }
+	}
     } else { /* modeling */
 	sf_floatread(img[0],nzx,image);
 
@@ -235,6 +246,8 @@ int main(int argc, char* argv[])
 		}
 
 		curr[j] = c;
+
+		if (trm) img[ix][iz] += curr[ix+iz*nx2];
 	    }
 	}
 	
@@ -243,22 +256,26 @@ int main(int argc, char* argv[])
 	}
 
 	if (NULL != snaps && 0 == it%snap) {
-	    for (ix=0; ix < nx; ix++) {
-		for (iz=0; iz < nz; iz++) {
-		    img[ix][iz] = curr[ix+iz*nx2];
+	    if (!trm) {
+		for (ix=0; ix < nx; ix++) {
+		    for (iz=0; iz < nz; iz++) {
+			img[ix][iz] = curr[ix+iz*nx2];
+		    }
 		}
 	    }
 
 	    sf_floatwrite(img[0],nzx,snaps);
-	}	
+	}
     }
     sf_warning(".");
 
     if (mig) {
-	/* transpose */
-	for (ix=0; ix < nx; ix++) {
-	    for (iz=0; iz < nz; iz++) {
-		img[ix][iz] = curr[ix+iz*nx2];
+	if (!trm) {
+	    /* transpose */
+	    for (ix=0; ix < nx; ix++) {
+		for (iz=0; iz < nz; iz++) {
+		    img[ix][iz] = curr[ix+iz*nx2];
+		}
 	    }
 	}
 

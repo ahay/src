@@ -15,7 +15,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import os, stat, sys, types, copy, re, string, urllib, ftplib
+import os, stat, sys, types, copy, re, string, urllib, ftplib, socket
 import rsf.conf, rsf.path, rsf.flow, rsf.prog, rsf.node
 import SCons
 
@@ -377,7 +377,6 @@ class Project(Environment):
         if len(self.nodes) > 1:
             self.hosts = self.cwd + '/hosts.txt'
             print "using %s to keep track of nodes in use by pscons."%self.hosts
-            print "Only one pscons using remote hosts can be run in directory"
             # I would like to delete hosts.txt file at end of scons.  Cannot just
             # delete in def End(self).  Need to do after all the scons command
             # complete. kls
@@ -496,7 +495,11 @@ class Project(Environment):
         else:
             sfiles = []
 
-        mpirun = '%s -np %s' % (self.mpirun,np)
+        hostname = socket.gethostname()
+        if hostname[:15] == 'tacc.utexas.edu'
+            mpirun = '%s tacc_affinity' 
+        else:
+            mpirun = '%s -np %s' % (self.mpirun,np)
 
         if split:
             if len(split) < 2:
