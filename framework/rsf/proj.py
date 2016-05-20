@@ -257,6 +257,8 @@ class Project(Environment):
             if getenv:
                 self.Append(ENV={env:getenv})
 
+        self.hostname = socket.gethostname()
+
         # Keep environmental variables needed for SLURM
         for env in os.environ.keys():
             if 'SLURM_' == env[:6] or 'TACC_' == env[:5] or '_ModuleTable' == env[:12]:
@@ -495,8 +497,7 @@ class Project(Environment):
         else:
             sfiles = []
 
-        hostname = socket.gethostname()
-        if hostname[:15] == 'tacc.utexas.edu'
+        if self.hostname[:15] == 'tacc.utexas.edu'
             mpirun = '%s tacc_affinity' 
         else:
             mpirun = '%s -np %s' % (self.mpirun,np)
