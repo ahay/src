@@ -31,22 +31,27 @@ int main(int argc, char* argv[])
     int ndim, dim, n123, n123s, i, ia, ns, i1, niter, na, i4, n4, *kk;
     float *d, *f, *dd;
     double mean;
-    char *lagfile, key[6];
+    char *filename, key[6];
     sf_filter aa;
-    sf_file in, filt, lag;
+    sf_file in, filt, lag, res;
  
     sf_init(argc,argv);
 
     in = sf_input("in");
     filt = sf_output("out");
 
-    if (NULL == (lagfile = sf_getstring("lag"))) sf_error("Need lag=");
+    if (NULL == (filename = sf_getstring("lag"))) sf_error("Need lag=");
     /* output file for filter lags */
 
-    lag = sf_output(lagfile);
-    sf_settype(lag,SF_INT);
+    lag = sf_output(filename);
+    sf_putstring(filt,"lag",filename);
 
-    sf_putstring(filt,"lag",lagfile);
+    if (NULL != (filename = sf_getstring("res"))) {
+	/* output residual (optional) */
+	res = sf_output(filename);
+    } else {
+	res = NULL;
+    }
 
     ndim = sf_filedims(in,n);
 
@@ -109,6 +114,15 @@ int main(int argc, char* argv[])
 
     na = aa->nh;
 
+    sf_settype(lag,SF_INT);
+    sf_putint(lag,"n1",na);
+    for (i=1; i < dim; i++) {
+	sprintf(key,"n%d",i+1);
+	sf_putint(lag,key,1);
+    }
+    sf_intwrite(aa->lag,na,lag);
+    sf_fileclose(lag);
+
     snprintf(key,3,"n%d",dim+1);
     sf_putint(filt,key,na);
     sf_shiftdim(in, filt, dim+1);    
@@ -163,7 +177,19 @@ int main(int argc, char* argv[])
 
 	sf_multidivn (dd,f,niter);
 	sf_floatwrite(f,n123s,filt);
-	
+
+	if (NULL != res) {
+	    for (i=ia=0; ia < na; ia++) {
+		for (i1=0; i1 < n123; i1++,i++) {
+		    dd[i1] -= d[i]*f[i];
+		}
+	    }
+	    for (i1=0; i1 < n123; i1++) {
+		dd[i1] /= mean;
+	    }
+	    
+	    sf_floatwrite(dd,n123,res);
+	}	
     }
     
     exit(0);
