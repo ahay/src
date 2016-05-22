@@ -439,7 +439,7 @@ int main(int argc, char* argv[])
 	expand(vel, v0, npml, nnz, nnx, nz1, nx1);
 	check_grid_sanity(NJ, vel, fm, dz, dx, dt, N);
 
-    	cudaSetDevice(0);
+    cudaSetDevice(0);
 	sf_check_gpu_error("Failed to initialize device");
 	device_alloc(); 
 
@@ -463,7 +463,7 @@ int main(int argc, char* argv[])
 	}
 	cuda_set_sg<<<(ng+255)/256, 256>>>(d_Gxz, gxbeg, gzbeg, jgx, jgz, ng, npml, nnz);
 
-    	cudaMemcpy(d_vel, vel, N*sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_vel, vel, N*sizeof(float), cudaMemcpyHostToDevice);
 	cudaMemset(d_Iss, 0,  	N*sizeof(float));
 	cudaMemset(d_Isg, 0,  	N*sizeof(float));
 	cudaMemset(d_I1, 0,  	N*sizeof(float));

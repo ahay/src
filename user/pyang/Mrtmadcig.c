@@ -462,7 +462,7 @@ int main(int argc, char* argv[])
 	_dz=1./dz;
 	nzpad=nz+2*nb;
 	nxpad=nx+2*nb;
-	da=SF_PI/(float)na;/* angle unit, rad; */
+	da=SF_PI/(float)na;/* angle unit, rad */
 	var=da/3.;
 	var=2.0*var*var;
 
