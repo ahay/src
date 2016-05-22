@@ -1,0 +1,42 @@
+from rsf.proj import *
+
+Flow('vel1',None,
+     	'''
+     	math output=1.5 n1=40 n2=200 d1=0.005 d2=0.005
+     	label1=x1 unit1=km label2=x2 unit2=km 
+     	''')
+Flow('vel2',None,
+     	'''
+     	math output=1.6 n1=40 n2=200 d1=0.005 d2=0.005
+     	label1=x1 unit1=km label2=x2 unit2=km 
+     	''')
+Flow('vel3',None,
+     	'''
+     	math output=1.7 n1=40 n2=200 d1=0.005 d2=0.005
+     	label1=x1 unit1=km label2=x2 unit2=km 
+     	''')
+Flow('vel4',None,
+     	'''
+     	math output=1.8 n1=40 n2=200 d1=0.005 d2=0.005
+     	label1=x1 unit1=km label2=x2 unit2=km 
+     	''')
+Flow('vel5',None,
+     	'''
+     	math output=1.9 n1=40 n2=200 d1=0.005 d2=0.005
+     	label1=x1 unit1=km label2=x2 unit2=km 
+     	''')
+Flow('vel',['vel1','vel2', 'vel3','vel4','vel5'], 'cat axis=1 ${SOURCES[1:5]}')
+Result('vel','grey title="velocity model:2 layers" color=j scalebar=y')
+
+Flow('img','vel',
+	'''
+	sfexcitationic nb=20 nt=1500 kt=450 fm=25 dt=0.001 
+	ns=1 ng=200 csdgather=n
+	sxbeg=100 szbeg=1 jsx=40 jsz=0 
+	gxbeg=0 gzbeg=1 jgx=1 jgz=0 
+	''')
+Result('img','sflaplac |grey title="excitation image" ')
+
+
+
+End()
