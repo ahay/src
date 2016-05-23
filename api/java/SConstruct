@@ -72,7 +72,7 @@ if 'java' in env.get('API',[]) and jdk:
 
     if minesjtk:
         env.Java('.',map(lambda x: os.path.join('old',x)+'.java',oldfiles),
-                 JAVACLASSPATH=[pwd,minesjtk],JAVACFLAGS='-source 1.7')
+                 JAVACLASSPATH=[pwd,minesjtk],JAVACFLAGS='')
     
     # This is really ugly, but its the only command that works...  The
     # Java builder does not work because it scans for the existence of
@@ -80,7 +80,7 @@ if 'java' in env.get('API',[]) and jdk:
     sources = ' '.join(map(lambda x: os.path.join(pwd,x)+ '.java',files+gen))
     classfiles = env.Command(map(lambda x: 'rsf/'+x+'.class',files), 
                              javafiles+wrap,
-                             '${JAVAC} -source 1.7 -cp %s -d %s %s' % (pwd,pwd,sources))
+                             '${JAVAC}  -cp %s -d %s %s' % (pwd,pwd,sources))
     env.Jar('rsf.jar','rsf',JARCHDIR=pwd)
 
     env.Install('../../lib','rsf.jar')

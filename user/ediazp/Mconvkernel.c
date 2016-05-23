@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
   float *input1, *output1, *filter;
   float **input2, **output2;
   float ***input3, ***output3;
-  int *lag1,*lag2,*lag3;
+  int *lag1,*lag2,*lag3,nd;
   int n1,n2,n3,nl,ndim,  n[SF_MAX_DIM];
   sf_axis axlag; 
 
@@ -56,6 +56,7 @@ int main(int argc, char* argv[])
   sf_init(argc,argv);
 
   if(! sf_getbool("adj",&adj)) adj=false;
+  if(! sf_getint("n",&nd)) nd=1;
   
   /*------------------------------------------------------------*/
 
@@ -66,14 +67,13 @@ int main(int argc, char* argv[])
   Ffilter = sf_input ("filter"); /* filter lags */
   Fout = sf_output ("out"); /* velocity  */
   
-  ndim = sf_filedims (Fin,n);
+  ndim =sf_filedims (Fin,n);
 
-  if(ndim==1){
+  if(ndim==1 || nd==1){
     sf_warning("1d conv,%d",ndim);
     n1 = n[0];
     input1 = sf_floatalloc(n1);
     output1 = sf_floatalloc(n1);
-    sf_floatread(input1,n1,Fin);
     Flag1 = sf_input ("lag"); /* filter lags */
 
     axlag = sf_iaxa(Flag1,1); 
@@ -82,13 +82,22 @@ int main(int argc, char* argv[])
     lag1 = sf_intalloc(nl);
     sf_floatread(filter,nl,Ffilter);
     sf_intread(lag1,nl,Flag1);
+
+    int ntraces = sf_leftsize(Fin,1);
+
+    sf_warning("read n1=%d tr=%d",n1,ntraces);
     convkernel1_init(n1,nl,lag1,filter);
-    if (adj){
-      convkernel1_apply(output1,input1,adj);
-    }else{
-      convkernel1_apply(input1,output1,adj);
+    for (int itr=0; itr<ntraces; ++itr){
+      sf_floatread(input1,n1,Fin);
+      if (adj){
+        convkernel1_apply(output1,input1,adj);
+      }else{
+        convkernel1_apply(input1,output1,adj);
+      }
+      sf_floatwrite(output1,n1,Fout);
     }
-    sf_floatwrite(output1,n1,Fout);
+
+
     free(input1);
     free(output1);
     free(lag1);

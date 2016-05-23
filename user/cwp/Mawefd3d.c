@@ -166,6 +166,8 @@ main(int argc, char** argv)
   az = sf_iaxa(file_vel,1); sf_setlabel(az,"z"); if(verb) sf_raxa(az); /* depth */
   ax = sf_iaxa(file_vel,2); sf_setlabel(ax,"x"); if(verb) sf_raxa(ax); /* space */
   ay = sf_iaxa(file_vel,3); sf_setlabel(ay,"y"); if(verb) sf_raxa(ay); /* space */
+  
+    if(verb && fsrf) sf_warning("free surface condition");
 
   as = sf_iaxa(file_src,2); sf_setlabel(as,"s"); if(verb) sf_raxa(as); /* sources */
   ar = sf_iaxa(file_rec,2); sf_setlabel(ar,"r"); if(verb) sf_raxa(ar); /* receivers */

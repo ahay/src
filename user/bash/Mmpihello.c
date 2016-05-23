@@ -54,6 +54,7 @@ int main (int argc, char *argv[]) {
         sf_putint (cout, "n2", n2);
         sf_warning ("Running on %d CPUs", ncpu);
     }
+    sf_warning("hello from cpu %d",cpuid);
     /* Input vectors in memory */
     a = sf_floatalloc (n1);
     b = sf_floatalloc (n1);
