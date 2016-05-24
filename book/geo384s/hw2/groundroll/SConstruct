@@ -1,0 +1,290 @@
+from rsf.proj import *
+
+# Download data files
+
+rawsegy=['L23535','L23536','L23537']
+
+for file in rawsegy  :
+    Fetch(file+'.SGY',
+          server='http://certmapper.cr.usgs.gov',
+          top='nersl/NPRA/SEISMIC/1981/31_81',
+      	  dir='DMUX')
+    
+    # Convert from SEGY to RSF
+    Flow([file, file+'.bin',  file+'.asc', 't'+file],
+         file+'.SGY',
+         '''
+         segyread bfile=${TARGETS[1]} hfile=${TARGETS[2]} 
+         tfile=${TARGETS[3]}
+         ''')
+
+# concatinate the input files
+
+Flow('line',rawsegy,'cat axis=2 ${SOURCES[1:3]}')
+Flow('tline',map(lambda x: 't'+x,rawsegy),
+     'cat axis=2 ${SOURCES[1:3]}')
+
+# Convert to shots, remove misfired shot
+Flow('shotmask','tline',
+     '''
+     headermath output=fldr | mask min=157 max=157 |
+     add add=-1 | add scale=-1
+     ''')
+
+Flow('shots','line shotmask',
+     '''
+     headerwindow mask=${SOURCES[1]} |
+     put n2=101 n3=67   |
+     window n2=96 f3=10 n3=56 |
+     put 
+     o3=44     d3=0.44 label3=Shot   unit3=kft
+     o2=-5.225 d2=0.11 label2=Offset unit2=kft
+     ''')
+
+Plot('shots','grey title=Shots gainpanel=all pclip=90',view=0)
+
+def plotshots(title):
+    return '''
+    byte gainpanel=all pclip=90 |
+    grey3 frame1=1000 frame2=55 frame3=30 title="%s"
+    flat=n point1=0.7 point2=0.7
+    ''' % title
+
+Result('shots',plotshots('Shots'))
+
+#############################################################
+
+# Apply elevation statics
+Flow('spelev.asc',None,
+     '''
+     echo
+88	80.5
+89	80.7
+90	80.5
+91	81.2
+92	81.6
+93	82.4
+94	84.2
+95	83.7
+96	84
+97	84.1
+98	87.8
+99	92.6
+100	99.8
+106	100.6
+113	103.6
+118	95.5
+124	98.4
+130	96.5
+136	111.1
+142	109
+149	120.5
+155	115.1
+156	112.8
+157	115.3
+158	113.4
+159	113.5
+160	113.3
+161	106.7
+163	108.2
+164	108.2
+165	108.2
+166	108.1
+167	80.1
+     n1=2 in=$TARGET data_format=ascii_float n1=2 n2=33 
+     ''')
+Flow('spelev','spelev.asc','dd form=native')
+Plot('spelev',
+     '''
+     dd type=complex |
+     window |
+     graph wanttitle=n wantaxis=n symbol=o plotcol=5
+     min2=75 max2=125 min1=85 max1=172
+     ''')
+
+Flow('elev','spelev',
+     'transp | linear o1=85 d1=1 n1=88 rect=2 niter=100')
+Plot('elev',
+     '''
+     graph title=Elevation 
+     label1=Shot label2=Elevation unit2=ft
+     min2=75 max2=125 min1=85 max1=172
+     ''')
+Result('elev','elev spelev','Overlay')
+
+# Shot elevation 
+Flow('spoint','shots',
+     '''
+     window n1=1 | 
+     math output="(x2-44)/0.44+111" | put n1=5376 n2=1
+     ''') 
+Flow('selev','elev spoint',
+     'inttest1 coord=${SOURCES[1]} interp=lag nw=2')
+Result('selev',
+       '''
+       window n1=56 j1=96 | 
+       put o1=44 d1=0.44 label1=Shot unit1=kft | 
+       graph title="Shot Elevation" label2=Elevation unit2=ft
+       ''')
+
+# Observer log says shot holes 82.5 ft before spn 123, 
+# then changes to 67.5 ft.
+Flow('sdepth','spoint',
+     '''
+     mask max=123 | dd type=float |
+     math output="82.5*input+67.5*(1-input)" 
+     ''')
+
+# Receiver elevation
+Flow('gpoint','shots spoint',
+     '''
+     window n1=1 | 
+     math output="(x1+x2-44)/0.44+111" | put n1=5376 n2=1
+     ''') 
+Flow('gelev','elev gpoint',
+     'inttest1 coord=${SOURCES[1]} interp=lag nw=2')
+
+vnear = 10000 # replacement velocity (ft/s)
+
+# Elevation statics
+Flow('estat','selev sdepth gelev',
+     '''
+     add scale=1,-1,1 ${SOURCES[1:3]} | scale dscale=%g | 
+     put n1=96 n2=56 o2=44 d2=0.44 
+     label2=Shot unit2=kft label1=Offset unit1=kft
+     ''' % (1.0/vnear))
+Result('estat',
+       '''
+       grey color=j mean=y scalebar=y barlabel=Time barunit=s 
+       title="Elevation Statics" 
+       ''')
+
+Flow('eshots','shots estat','datstretch datum=${SOURCES[1]}')
+
+Result('eshots',plotshots('Shots After Elevation Statics'))
+
+#############################################################
+
+# Gain and mute
+
+Flow('gshots gain','eshots',
+     '''
+     pow pow1=1 | put d3= |
+     mutter half=n v0=10 tp=0 | put d3=0.44 |
+     shapeagc rect1=250 gain=${TARGETS[1]}
+     ''')
+
+Result('gshots',plotshots('Shots After Gain and Mute'))
+
+# Dip filter
+
+# Select one shot
+
+Flow('shot','gshots','window n3=1 f3=23')
+Plot('shot','grey title="Selected Shot" clip=2')
+
+# Fourier transform
+Flow('fft','shot','fft1 | fft3')
+Plot('fft',
+       '''
+       window max1=100 | math output="abs(input)" | real | 
+       grey allpos=y title="Fourier Transform" 
+       ''')
+       
+       
+###################
+# Loop through cases
+###################
+for c in range(2):
+    if c==0:
+        v1=8    
+        v2=10
+    elif c==1:
+        v1=9
+        v2=11
+    case = str(c)
+
+    Flow('line1-'+case+'.asc',None,
+        '''echo %f %f %f %f n1=2 n2=2 data_format=ascii_float 
+        in=$TARGET'''% (0.0,0.0,4.5454,4.5454*v1))  
+    Flow('line1n-'+case+'.asc',None,
+        '''echo %f %f %f %f n1=2 n2=2 data_format=ascii_float 
+        in=$TARGET'''% (0.0,0.0,-4.5454,4.5454*v1))    
+    Flow('line2-'+case+'.asc',None,
+        '''echo %f %f %f %f n1=2 n2=2 data_format=ascii_float 
+        in=$TARGET'''% (0.0,0.0,4.5454,4.5454*v2))  
+    Flow('line2n-'+case+'.asc',None,
+        '''echo %f %f %f %f n1=2 n2=2 data_format=ascii_float 
+        in=$TARGET'''% (0.0,0.0,-4.5454,4.5454*v2))  
+
+    count=0
+    for l in ['line1-'+case,'line1n-'+case,'line2-'+case,'line2n-'+case]:
+        count=count+1
+        if count<3:
+            dash=1
+        else:
+            dash=0
+        Flow(l,l+'.asc','dd form=native type=complex | window j2=1')
+        Plot(l,'''graph plotfat=3 wanttitle=n wantaxis=n yreverse=y dash=%d 
+        plotcol=1 max2=100 min2=0 max1=4.54545 min1=-4.54545''' % dash) 
+
+    Result('fftline-'+case,['fft','line1-'+case,'line1n-'+case,'line2-'+case,'line2n-'+case],'Overlay')
+
+    prog = Program('filter.c')
+    
+    for c2 in range(2):
+        case2 = str(c2)
+        Flow('filter-'+case+'-'+case2,'fft %s' % prog[0],
+             './${SOURCES[1]} logis=30 v1=%g v2=%g type=%d' % (v1,v2,c2))
+
+        Result('filter-'+case+'-'+case2,
+               '''
+               window max1=100 | math output="abs(input)" | 
+               real | grey allpos=y title="Filtered" 
+               ''')
+
+        Flow('mute-'+case+'-'+case2,'fft %s' % prog[0],
+             '''
+             math output=1 | ./${SOURCES[1]} v1=%g v2=%g | real
+             ''' % (v1,v2))
+
+        Result('mute-'+case+'-'+case2,'window max1=100 | grey allpos=y tile="Mute"')
+
+        Flow('signal-'+case+'-'+case2,'filter-'+case+'-'+case2,'fft3 inv=y | fft1 inv=y')
+        Plot('signal-'+case+'-'+case2,'grey title=Signal clip=2')
+
+        Flow('noise-'+case+'-'+case2,['shot','signal-'+case+'-'+case2],'add scale=1,-1 ${SOURCES[1]}')
+        Plot('noise-'+case+'-'+case2,'grey title=Noise clip=2')
+
+        Result('signal-'+case+'-'+case2,
+            ['shot','signal-'+case+'-'+case2,'noise-'+case+'-'+case2],'SideBySideAniso')
+
+Flow('similarity','signal-1-1 noise-1-1','similarity rect1=100 rect2=10 other=${SOURCES[1]}')
+Result('similarity','grey allpos=y color=j title="Local Similarity" ')
+
+
+# Apply to all shots with the new choice of v1 and v2
+Flow('ffts','gshots','fft1 | fft3')
+Flow('fshots','ffts %s' % prog[0],
+     '''
+     ./${SOURCES[1]} v1=%g v2=%g  logis=30 type=1| fft3 inv=y | fft1 inv=y
+     ''' % (v1,v2),split=[3,'omp'])
+
+Result('fshots',
+       plotshots('Shots After Ground-Roll Atenuation'))
+
+Flow('fnshots','gshots fshots','add scale=1,-1 ${SOURCES[1]}')
+Flow('similarity3','fnshots fshots','similarity rect1=100 rect2=10 rect3=10 other=${SOURCES[1]}')
+
+# 0.06749
+
+# Reverse gain
+Flow('rshots','fshots gain',
+     '''
+     div ${SOURCES[1]} | pow pow1=-1 | put d3= |
+     mutter half=n v0=10 tp=0 | put d3=0.44 
+     ''')
+
+Result('rshots',plotshots('Shots After Reversed Gain'))
+
+End()

@@ -1,0 +1,77 @@
+from rsf.proj import *
+
+# Pre-processed CMP gathers from the rtm directory
+Fetch(['paracdp.rsf','tparacdp.rsf'],
+      'rtm',top='..',server='local')
+
+# Convert to shot gathers, time-power gain and high-pass filter
+Flow('shot',  'tparacdp','headermath output="(sx-3237)/25" ')
+Flow('offset','tparacdp','headermath output="(offset+3237)/25" ')
+Flow('head','offset shot','cat axis=1 ${SOURCES[1]}')
+
+Flow('shots','paracdp head',
+     '''
+     intbin head=${SOURCES[1]} xkey=0 ykey=1 | 
+     window max1=4 | pow pow1=1 | bandpass flo=5 |
+     put 
+     label2=Offset unit2=km o2=-3.237 d2=0.025
+     label3=Shot   unit3=km o3=3.237  d3=0.025
+     ''')
+
+Result('shots',
+       '''
+       byte gainpanel=500 | 
+       transp plane=23 memsize=5000 |
+       grey3 frame1=750 frame2=500 frame3=90 
+       point1=0.8 point2=0.8 flat=n
+       title="Shot Gathers" 
+       ''')
+
+# Source and receiver coordinates
+Flow('ys','shots','window n1=1 n2=1 | math output=x1')
+Flow('xs','ys','math output=0')
+Flow('zs','ys','math output=0.01')
+Flow('scoord','zs ys xs','cat axis=2 ${SOURCES[1:3]} | transp')
+
+Flow('yr',None,'math n1=1131 o1=0 d1=0.025 output=x1')
+Flow('xr','yr','math output=0')
+Flow('zr','yr','math output=0.006')
+Flow('rcoord','zr yr xr','cat axis=2 ${SOURCES[1:3]} | transp')
+
+# Velocity model from the rtm directory
+Fetch('vofz.rsf','rtm',top='..',server='local')
+Flow('velocity','vofz','remap1 n1=251 o1=0 d1=0.0125 | put o3=0')
+
+# First-arrival traveltime tables
+Flow('times tdls tdss','velocity scoord',
+     '''
+     eikods shotfile=${SOURCES[1]} 
+     tdl1=${TARGETS[1]} tds1=${TARGETS[2]} b1=2 b2=2 |
+     put o4=3.237 d4=0.025 | window
+     ''')
+Flow('timer tdlr tdsr','velocity rcoord',
+     '''
+     eikods shotfile=${SOURCES[1]} 
+     tdl1=${TARGETS[1]} tds1=${TARGETS[2]} b1=2 b2=2 |
+     put o4=0 d4=0.025 | window
+     ''')
+
+Plot('times',
+     '''
+     window j3=10 | grey color=j title="Traveltime Table" 
+     scalebar=y barlabel=Time barunit=s allpos=y 
+     minval=0 maxval=10
+     ''',view=1)
+
+# Kirchhoff PSDM
+
+Flow('psdm','shots times tdss timer tdsr',
+     '''
+     kirmigsr cig=n type=l
+     stable=${SOURCES[1]} sderiv=${SOURCES[2]}
+     rtable=${SOURCES[3]} rderiv=${SOURCES[4]}
+     ''',split=[3,'omp',[0]],reduce='add')
+
+Result('psdm','grey title="Kirchhoff PSDM" ')
+
+End()

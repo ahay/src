@@ -1,0 +1,98 @@
+from rsf.proj import *
+
+# Download one shot gather
+Fetch('shot.HH','alaska')
+
+Flow('shot','shot.HH','dd form=native')
+Plot('shot','grey title="Selected Shot" clip=2')
+
+# Previous method: Fourier transform
+####################################
+
+Flow('fft','shot','fft1 | fft3')
+Plot('fft',
+       '''
+       window max1=100 | math output="abs(input)" | real | 
+       grey allpos=y title="Fourier Transform" 
+       ''')
+              
+v1=9
+v2=11
+
+# Program from Emc-Hammer 
+
+prog = Program('filter.c')
+    
+Flow('filter','fft %s' % prog[0],
+     './${SOURCES[1]} logis=30 v1=%g v2=%g type=1' % (v1,v2))
+
+Result('filter',
+       '''
+       window max1=100 | math output="abs(input)" | 
+       real | grey allpos=y title="Filtered" 
+       ''')
+
+Flow('mute','fft %s' % prog[0],
+     '''
+     math output=1 | ./${SOURCES[1]} v1=%g v2=%g | real
+     ''' % (v1,v2))
+
+Result('mute','window max1=100 | grey allpos=y tile="Mute"')
+
+Flow('signal','filter','fft3 inv=y | fft1 inv=y')
+Plot('signal','grey title=Signal clip=2')
+
+Flow('noise','shot signal','add scale=1,-1 ${SOURCES[1]}')
+Plot('noise','grey title=Noise clip=2')
+
+Result('signal','shot signal noise','SideBySideAniso')
+
+# New method: Radon transform
+#############################
+
+# slope sampling
+pmax=0.4
+np=401
+dp=2*pmax/(np-1)
+
+Flow('radon','shot',
+     'radon adj=y spk=n p0=%g dp=%g np=%d' % (-pmax,dp,np))
+Plot('radon',
+     '''
+     grey title="Radon Transform" 
+     label2=Slope unit2=s/kft clip=0.1
+     ''')
+
+Flow('inv','radon','radon adj=n nx=96 dx=0.11 ox=-5.225')
+Plot('inv','grey title="Inverse Radon Transform" clip=2')
+
+Result('radon','shot radon inv','SideBySideAniso')
+
+# minimum and maximum slope for the noise
+p1=0.15
+p2=0.3
+
+Flow('cut','radon',
+     '''
+     math output=1 |
+     cut min2=%g max2=%g | 
+     cut max2=%g | cut min2=%g 
+     ''' % (-p1,p1,-p2,p2))
+Flow('radon-cut','radon cut','mul ${SOURCES[1]}')
+Plot('radon-cut',
+     '''
+     grey title="Noise Radon Transform" 
+     label2=Slope unit2=s/kft clip=0.1
+     ''')
+
+Flow('noise2','radon-cut','radon adj=n nx=96 dx=0.11 ox=-5.225')
+Plot('noise2','grey title=Noise clip=2')
+
+Result('radon-cut','radon radon-cut noise2','SideBySideAniso')
+
+Flow('signal2','shot noise2','add scale=1,-1 ${SOURCES[1]}')
+Plot('signal2','grey title=Signal clip=2')
+
+Result('signal2','shot signal2 noise2','SideBySideAniso')
+
+End()
