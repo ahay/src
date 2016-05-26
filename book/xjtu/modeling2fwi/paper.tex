@@ -95,13 +95,26 @@ To generate your paper including numerical examples:
  
 \subsection{Some of the most useful commands}
 
-Plotting the figures
+  Plotting the figures
     \begin{description}
       \item[sfgraph]	create line plots, or scatter plots
       \item[sfgrey] 	create raster plots or 2D image plots
       \item[sfgrey3] 	create 3D image plots of panels (or slices) of a 3D cube
       \item[sfwiggle] 	plot data with wiggly traces 
     \end{description}
+    
+  Look up data attributes and data processing:
+  \begin{description}
+   \item[sfin] check the layout of the data, number of points in each dimension, sampling intervals in each axis, labels, units, ...
+   \item[sfattr] check statistical properties: covariable, rms, mean, minimum and maximum etc
+   \item[sfwindow] window or select part of data
+   \item[sfadd] add two dataset with scaling factors
+   \item[sfmath] mathematical operations for the data: log, sin, tan, exp, ...
+   \item[sfsmooth] smoothing the data using triangular window (repeating many time to approximate Gaussian)
+  \end{description}
+
+  
+  
 
   Image format: Vplot
   \begin{itemize}
@@ -109,9 +122,12 @@ Plotting the figures
   \item convert to be \textcolor{blue}{pdf/eps/png/jpeg/tiff/mpeg/...}
   \item how: \textcolor{red}{vpconvert format=pdf fig.vpl}
   \end{itemize}
+  
+
 
 
 \section{Forward modeling}
+
 The wave equation we consider in this course material
 \begin{equation}\label{stateeq}
 (\frac{1}{v^2}\partial_t^2 - \nabla^2 ) p=f
@@ -648,7 +664,7 @@ A complete SConstruct for the above workflow appears in the following:
 \begin{enumerate}
  \item No answer sheet for your exercises!
  
- \item Too many open questions in FWI: good initial model and misfit function immune to cycle-skipping issue? Better preconditioning? Inverting attenuating?
+ \item Too many open questions in FWI: good initial model? Misfit function immune to cycle-skipping issue? Better preconditioning? Inverting attenuating?
  
  \item FWI is a research field waiting for your addition! 
 

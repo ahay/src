@@ -41,7 +41,7 @@ Plot('smvel',
      '''
      grey title="Initial model" wantitle=y allpos=y color=j
      pclip=100 scalebar=y bartype=v barlabel="V" barunit="m/s"
-	screenratio=0.45 color=j labelsz=10 titlesz=12
+	 screenratio=0.45 color=j labelsz=10 titlesz=12
      ''' )
 
 Result('marm','vel smvel','TwoRows')
@@ -105,4 +105,5 @@ Result('objs',
 	graph title="Misfit function" dash=0 plotfat=5 
         grid=y yreverse=n
 	''')
+
 End()

@@ -42,5 +42,7 @@ Result('shots',
 
 Plot('shots','grey title=Shots',view=1)
 
+#use sfwindow to select 5-th shot and display it using sfgrey
+
 
 End()
