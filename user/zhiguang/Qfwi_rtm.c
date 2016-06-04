@@ -37,6 +37,10 @@ void rtm_a(sf_file Fdat, sf_file Fimg, sf_mpi *mpipar, sf_sou soupar, sf_acqui a
 	float **p0, **p1, **p2, **term, **tmparray, *rr, ***wave;
 	float *sendbuf, *recvbuf;
 
+	//sf_file Fwfl1, Fwfl2;
+	//Fwfl1=sf_output("Fwfl1");
+	//Fwfl2=sf_output("Fwfl2");
+
 	MPI_Comm comm=MPI_COMM_WORLD;
 
 	nz=acpar->nz;
@@ -59,6 +63,13 @@ void rtm_a(sf_file Fdat, sf_file Fimg, sf_mpi *mpipar, sf_sou soupar, sf_acqui a
 	dz2=acpar->dz*acpar->dz;
 	dt2=acpar->dt*acpar->dt;
 	dt=acpar->dt;
+
+	//sf_putint(Fwfl1, "n1", padnz);
+	//sf_putint(Fwfl1, "n2",padnx);
+	//sf_putint(Fwfl1, "n3",(nt-1)/50+1);
+	//sf_putint(Fwfl2, "n1", padnz);
+	//sf_putint(Fwfl2, "n2",padnx);
+	//sf_putint(Fwfl2, "n3",(nt-1)/50+1);
 
 	/* memory allocation */
 	vv = sf_floatalloc2(padnz, padnx);
@@ -104,6 +115,8 @@ void rtm_a(sf_file Fdat, sf_file Fimg, sf_mpi *mpipar, sf_sou soupar, sf_acqui a
 						wave[wit][ix][iz]=p1[ix+nb][iz+nb];
 				wit++;
 			}
+
+			//if(is==acpar->ns/2 && it%50==0) sf_floatwrite(p1[0],padnzx, Fwfl1);
 
 			/* laplacian operator */
 			laplace(p1, term, padnx, padnz, dx2, dz2);
@@ -179,6 +192,8 @@ void rtm_a(sf_file Fdat, sf_file Fimg, sf_mpi *mpipar, sf_sou soupar, sf_acqui a
 				}
 			}
 
+			//if(is==acpar->ns/2 && it%50==0) sf_floatwrite(p1[0],padnzx, Fwfl2);
+
 			/* calculate image */
 			if(it%acpar->interval==0){
 #ifdef _OPENMP 
@@ -201,6 +216,9 @@ void rtm_a(sf_file Fdat, sf_file Fimg, sf_mpi *mpipar, sf_sou soupar, sf_acqui a
 		} // end of time loop
 	}// end of shot loop
 	MPI_Barrier(comm);
+
+	//sf_fileclose(Fwfl1);
+	//sf_fileclose(Fwfl2);
 
 	if(mpipar->cpuid==0){
 		sendbuf=MPI_IN_PLACE;
