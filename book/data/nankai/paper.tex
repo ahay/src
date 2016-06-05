@@ -1,4 +1,10 @@
-\author{Enter Name Here}
+\documentclass[10pt]{article}
+\usepackage[usenames]{color} %used for font color
+\usepackage{amssymb} %maths
+\usepackage{amsmath} %maths
+\usepackage[utf8]{inputenc} %useful to type directly diacritic characters
+\begin{document}
+\[\author{Enter Name Here}
 %%%%%%%%%%%%%%%%%%%%%%%%
 \title{2-D Seismic Data Processing Tutorial}
 
@@ -38,7 +44,7 @@ regenerate this document and display it on your screen.
 \begin{enumerate}          
 \item Change directory to \texttt{nankai}:
 \begin{verbatim}
-cd nankai
+cd $RSFSRC/book/data/nankai
 \end{verbatim}
 \item Run
 \begin{verbatim}
@@ -52,7 +58,7 @@ editor and edit the first line to enter your name. Then
 run \texttt{scons read} again.
 
 \section{Reading data}
-\inputdir{nankai}
+\inputdir{data}
 
 In this part of the tutorial, you will experiment with reading a
 seismic dataset in SU format, converting it to RSF format, examining
@@ -339,3 +345,5 @@ system every time you make a revision.
 \bibliography{SEG}
 
 
+\]
+\end{document}
