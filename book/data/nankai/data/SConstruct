@@ -44,7 +44,8 @@ Result('smask',
        dd type=float |
        stack axis=1 norm=n |
        graph symbol=x title="Nankai Trough"
-       label2="Traces per Shot Gather" 
+       label2="Traces per Shot Gather"
+       label1="Shot Number" unit1=
        ''')
 
 Flow('offsets','tshots',
@@ -135,11 +136,21 @@ Result('spectra1','signal',
 # Apply to all shots
 
 Flow('ffts','shots2','put d2=0.034 | fft1 | fft3')
-Flow('fshots','ffts %s' % prog[0],
-     '''
-     ./${SOURCES[1]} v1=%g v2=%g | fft3 inv=y | fft1 inv=y |
-      put d2=1
-     ''' % (v1,v2),split=[3,'omp'])
+
+OpenMP = project.get('OMP')
+
+if OpenMP:
+    Flow('fshots','ffts %s' % prog[0],
+         '''
+         ./${SOURCES[1]} v1=%g v2=%g | fft3 inv=y | fft1 inv=y |
+         put d2=1
+         ''' % (v1,v2),split=[3,'omp'])
+else:
+    Flow('fshots','ffts %s' % prog[0],
+         '''
+         ./${SOURCES[1]} v1=%g v2=%g | fft3 inv=y | fft1 inv=y |
+         put d2=1
+         ''' % (v1,v2))
 
 Result('fshots',
 	'''
@@ -176,7 +187,8 @@ Result('cmask',
        dd type=float |
        stack axis=1 norm=n |
        graph symbol=x title="Nankai Trough"
-       label2="Traces per CMP Gather" 
+       label2="Traces per CMP Gather"
+       label1="CMP Gather Number" unit1=
        ''')
 
 Flow('offs','tshots',
@@ -313,9 +325,12 @@ Result('map2',
        title="Stolt Map" barlabel=Frequency barunit=Hz
        ''')
 
-Flow('cosft2','cosft map2','iwarp warp=${SOURCES[1]} inv=n',
-     split=[2,'omp'])
-
+if OpenMP:
+    Flow('cosft2','cosft map2','iwarp warp=${SOURCES[1]} inv=n',
+        split=[2,'omp'])
+else:
+    Flow('cosft2','cosft map2','iwarp warp=${SOURCES[1]} inv=n')
+    
 Result('cosft2','grey title="Cosine Transform Warped" pclip=95')
 
 Flow('mig2','cosft2','pad n1=2672 | cosft sign1=-1 sign2=-1 | put d2=1 o2=900 unit2='' | window min1=5')
