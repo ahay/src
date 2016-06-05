@@ -1,0 +1,347 @@
+from rsf.proj import *
+
+# Download data
+
+Fetch('Nshots.su','nankai')
+
+# Convert from SU to RSF
+
+Flow('shots tshots','Nshots.su',
+     	'''
+	suread suxdr=y tfile=${TARGETS[1]} | window min1=5
+	''')
+
+Result('spectra','shots',
+       'spectra all=y |  scale axis=1 | graph title="Average Spectra"')
+
+# Subsample to 4 ms
+
+Flow('subsamples','shots',
+     '''
+     bandpass fhi=125 | window j1=2
+     ''')
+
+# Extract shots
+
+Flow('shots2','subsamples',
+     'intbin xk=tracf yk=fldr')
+
+Result('shots2',
+       '''
+       window min1=5.8 max1=8.5 |
+       byte gainpanel=all | transp plane=23 memsize=5000 |
+       grey3  frame1=400 frame2=50 frame3=200 
+       point1=0.8 point2=0.8 flat=n
+       title="Raw Shots" label2="Shot Number" 
+       ''')
+
+# Create a mask to remove misfired shots
+
+Flow('smask','shots2','mul $SOURCE | stack axis=1 | mask min=1e-20')
+
+Result('smask',
+       '''
+       dd type=float |
+       stack axis=1 norm=n |
+       graph symbol=x title="Nankai Trough"
+       label2="Traces per Shot Gather" 
+       ''')
+
+Flow('offsets','tshots',
+     '''
+     window n1=1 f1=11 squeeze=n | dd type=float |
+     intbin head=$SOURCE xk=tracf yk=fldr
+     ''')
+
+
+# Select one shot (fldr)
+
+###################
+# !!! MODIFY ME !!!
+###################
+
+shot=1707
+
+Flow('mask','smask','window n2=1 min2=%g' % shot)
+
+Flow('shot','shots2 mask',
+     '''
+     window n3=1 min3=%g squeeze=n |
+     headerwindow mask=${SOURCES[1]}
+     ''' % shot)
+
+Flow('offset','offsets mask',
+     '''
+     window n3=1 min3=%g squeeze=n |
+     headerwindow mask=${SOURCES[1]}
+     ''' % shot)
+
+Result('shot','shot offset',
+       '''
+       window min1=5.8 max1=8.5 |
+       wiggle xpos=${SOURCES[1]} yreverse=y transp=y poly=y
+       title="Shot 1707" label2=Offset
+       ''')
+
+Plot('shot',' window min1=5.8 max1=8.5 | grey title="Selected Shot" clip=2')
+
+# Frequency filtering
+
+###################
+# !!! MODIFY ME !!!
+###################
+
+v1=1.5
+v2=2.2
+
+Flow('fft','shot','put d2=0.034 | fft1 | fft3')
+Result('fft',
+       '''
+       window max1=100 | math output="abs(input)" | 
+       real | grey allpos=y title="FFT" 
+       ''')
+
+prog = Program('filter.c')
+
+Flow('filter','fft %s' % prog[0],
+     './${SOURCES[1]} v1=%g v2=%g' % (v1,v2))
+
+Result('filter',
+       '''
+       window max1=100 | math output="abs(input)" | 
+       real | grey allpos=y title="Filtered" 
+       ''')
+Flow('mute','fft %s' % prog[0],
+     '''
+     math output=1 | ./${SOURCES[1]} v1=%g v2=%g | real
+     ''' % (v1,v2))
+
+Result('mute','window max1=100 | grey title=Mute allpos=y')
+
+Flow('signal','filter','fft3 inv=y | fft1 inv=y | put d2=1')
+Plot('signal',' window min1=5.8 max1=8.5 | grey title=Signal clip=2')
+
+Flow('noise','shot signal','add scale=1,-1 ${SOURCES[1]}')
+Plot('noise',' window min1=5.8 max1=8.5 | grey title=Noise clip=0.1')
+
+Result('signal','shot signal noise','SideBySideAniso')
+
+Result('spectra2','shot',
+       'spectra all=y |  scale axis=1 | graph title="Average Spectra"')
+
+Result('spectra1','signal',
+       'spectra all=y |  scale axis=1 | graph title="Average Spectra"')
+
+# Apply to all shots
+
+Flow('ffts','shots2','put d2=0.034 | fft1 | fft3')
+Flow('fshots','ffts %s' % prog[0],
+     '''
+     ./${SOURCES[1]} v1=%g v2=%g | fft3 inv=y | fft1 inv=y |
+      put d2=1
+     ''' % (v1,v2),split=[3,'omp'])
+
+Result('fshots',
+	'''
+	window min1=5.8 max1=8.5 |
+	byte gainpanel=all | transp plane=23 memsize=5000 |
+        grey3 frame1=400 frame2=50 frame3=200 
+	title="Shots After Frequency Filtering"
+        flat=n point1=0.8 point2=0.8
+        ''')
+
+# Extract CMPs and apply t^2 gain
+
+Flow('cmps','fshots tshots',
+     '''
+      intbin head=${SOURCES[1]} inv=y 
+      xk=tracf yk=fldr 		      | 
+      intbin xk=tracf yk=cdp 	      |
+      pow pow1=2 	
+      ''')
+
+Result('cmps',
+        '''
+        window min1=5.8 max1=8.5 |
+	byte gainpanel=all | transp plane=23 memsize=5000 |
+        grey3 frame1=400 frame2=50 frame3=200 
+	title="CMPs" label2="CMP Number"
+        flat=n point1=0.8 point2=0.8
+	''')
+
+Flow('cmask','cmps','mul $SOURCE | stack axis=1 | mask min=1e-20')
+
+Result('cmask',
+       '''
+       dd type=float |
+       stack axis=1 norm=n |
+       graph symbol=x title="Nankai Trough"
+       label2="Traces per CMP Gather" 
+       ''')
+
+Flow('offs','tshots',
+     '''
+     window n1=1 f1=11 squeeze=n | dd type=float |
+     intbin xk=tracf yk=cdp head=$SOURCE
+     ''')
+
+# Examine one CMP gather
+
+Flow('mask1','cmask','window n2=1 min2=1280')
+
+Flow('cmp1','cmps mask1',
+     '''
+     window n3=1 min3=1280 | headerwindow mask=${SOURCES[1]}
+     ''')
+
+Flow('off','offs mask1',
+     '''
+     window n3=1 min3=1280 squeeze=n | headerwindow mask=${SOURCES[1]}
+     ''')
+
+Result('cmp1','cmp1 off',
+     '''
+     window min1=5.8 max1=8.5 |
+     wiggle xpos=${SOURCES[1]} title="CMP 1280"
+     yreverse=y transp=y poly=y label2=Offset unit2=m
+     wherexlabel=t wheretitle=b
+     ''')
+
+Plot('cmp1','cmp1 off',
+     '''
+     window min1=5.8 max1=8.5 |
+     wiggle xpos=${SOURCES[1]} title="CMP 1280"
+     yreverse=y transp=y poly=y label2=Offset unit2=m
+     wherexlabel=t wheretitle=b
+     ''')
+
+# Velocity analysis and NMO
+
+Flow('vscan','cmp1 off mask1',
+     '''
+     vscan half=n offset=${SOURCES[1]} 
+     v0=1400 nv=101 dv=10 semblance=y 
+     ''')
+
+Plot('vscan','window min1=5.8 max1=8.5 | grey color=j allpos=y title="Velocity Scan" unit2=m/s')
+
+Flow('pick','vscan',
+     'mutter inner=y half=n t0=5 x0=1400 v0=75 | pick v0=1500 rect1=25')
+
+Plot('pick',
+     '''
+     window min1=5.8 max1=8.5 |
+     graph transp=y yreverse=y plotcol=7 plotfat=3
+     pad=n min2=1400 max2=2400 wanttitle=n wantaxis=n
+     ''')
+
+Plot('vscanp','vscan pick','Overlay')
+
+Flow('nmo','cmp1 off mask1 pick',
+     '''
+     nmo half=n offset=${SOURCES[1]} 
+     velocity=${SOURCES[3]}
+     ''')
+
+Result('nmo','window min1=5.8 max1=8.5 | grey title="Normal Moveout"')
+
+Plot('cmpg','cmp1','window min1=5.8 max1=8.5 | grey title="CMP 1280" labelsz=12 titlesz=18')
+
+Plot('nmog','nmo','window min1=5.8 max1=8.5 | grey title="Normal Moveout" labelsz=12 titlesz=18')
+
+Result('nmo1','cmpg nmog','SideBySideAniso')
+
+Result('vscan','cmp1 vscanp','SideBySideAniso')
+
+# Apply to all CMPs
+
+Flow('vscans','cmps offs cmask',
+     '''
+     vscan half=n offset=${SOURCES[1]} mask=${SOURCES[2]}
+     v0=1400 nv=101 dv=10 semblance=y nb=5
+     ''')
+
+Flow('picks','vscans',
+     '''
+     mutter inner=y half=n t0=5 x0=1400 v0=75 |
+     pick v0=1500 rect1=25 rect2=10
+     ''')
+
+Result('picks',
+       '''
+       window | grey color=j mean=y scalebar=y title="NMO Velocity"
+       label2=CMP barreverse=y barlabel=Velocity barunit=m/s
+       ''')
+
+Flow('nmos','cmps offs cmask picks',
+     '''
+     nmo half=n offset=${SOURCES[1]} mask=${SOURCES[2]}
+     velocity=${SOURCES[3]}
+     ''')
+
+Result('nmos',
+        '''
+        window min1=5.8 max1=8.5 |
+	byte gainpanel=all | transp plane=23 memsize=5000 |
+        grey3 frame1=400 frame2=50 frame3=200 
+	title="NMO" label2="CMP Number"
+        flat=n point1=0.8 point2=0.8
+	''')
+
+Flow('stack','nmos','stack')
+
+Result('stack','window min1=5.5 max1=8.5 | grey title="NMO Stack" label2="CMP Number" ')
+
+#Stolt Migration 
+
+# 2D cosine transform
+
+Flow('cosft','stack',
+     '''
+     put d2=16.667 o2=0 label2=Distance unit2=m | pad beg1=1250 | cosft sign1=1 sign2=1 | window max1=90 | 
+     mutter v0=0.0005 half=n | put label2=Wavenumber
+     ''')
+Result('cosft','grey title="Cosine Transform" pclip=95')
+
+# Stolt migration with constant velocity
+
+Flow('map2','cosft','math output="sqrt(x1*x1+%g*x2*x2)" ' % (562500))
+
+Result('map2',
+       '''
+       grey color=x allpos=y scalebar=y 
+       title="Stolt Map" barlabel=Frequency barunit=Hz
+       ''')
+
+Flow('cosft2','cosft map2','iwarp warp=${SOURCES[1]} inv=n',
+     split=[2,'omp'])
+
+Result('cosft2','grey title="Cosine Transform Warped" pclip=95')
+
+Flow('mig2','cosft2','pad n1=2672 | cosft sign1=-1 sign2=-1 | put d2=1 o2=900 unit2='' | window min1=5')
+
+Result('mig2',
+       '''
+	window min1=5.5 max1=8.5 | 
+	grey title="Stolt Migration with 1500 m/s" 
+	label2="CMP Number" 
+	''')
+
+##############################################
+# Zoom an interesting area (!!! MODIFY ME !!!)
+##############################################
+min1,max1=6.0,6.8 
+min2,max2=1070,1200
+    
+for i in range (2):
+    case=('stack','mig2')[i]
+    zoom = case + '-zoom'
+    Flow(zoom,case,
+         '''
+         window min1=%g max1=%g min2=%g max2=%g
+         ''' % (min1,max1,min2,max2))
+    Plot(zoom,'grey title=%s grid=y gridcol=5' % ('ab'[i]))
+Result('zoom','stack-zoom mig2-zoom','SideBySideIso')
+
+
+End()

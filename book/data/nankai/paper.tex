@@ -1,0 +1,341 @@
+\author{Enter Name Here}
+%%%%%%%%%%%%%%%%%%%%%%%%
+\title{2-D Seismic Data Processing Tutorial}
+
+\begin{abstract}
+  In this tutorial, we will process the 2-D Nankai dataset using the following seismic processing workflow:
+  \begin{enumerate}
+  \item Reading data in SU format and converting it to RSF format. 
+  \item Frequency filtering to remove noise.
+  \item Velocity analysis, NMO and stack.
+  \item Post-stack Stolt migration.
+  \end{enumerate}
+\end{abstract}
+
+\section{Prerequisites}
+
+Completing the computational part of this tutorial requires
+\begin{itemize}
+\item \texttt{Madagascar} software environment available from \\
+\url{http://www.ahay.org/}
+\item \LaTeX\ environment with \texttt{SEG}\TeX\ available from \\ 
+\url{http://www.ahay.org/wiki/SEGTeX}
+\end{itemize}
+To do the assignment on your personal computer, you need to install
+the required environments. 
+
+The tutorial code is available from the repository
+by running
+\begin{verbatim}
+svn co https://github.com/
+\end{verbatim}
+
+\section{Generating this document}
+
+At any point of doing this computational tutorial, you can
+regenerate this document and display it on your screen.
+
+\begin{enumerate}          
+\item Change directory to \texttt{nankai}:
+\begin{verbatim}
+cd nankai
+\end{verbatim}
+\item Run
+\begin{verbatim}
+sftour scons lock
+scons read &
+\end{verbatim}
+\end{enumerate}
+
+As the first step, open \texttt{nankai/paper.tex} file in your favorite
+editor and edit the first line to enter your name. Then
+run \texttt{scons read} again.
+
+\section{Reading data}
+\inputdir{nankai}
+
+In this part of the tutorial, you will experiment with reading a
+seismic dataset in SU format, converting it to RSF format, examining
+its values, and displaying it on the screen. You are asked to answer a
+series of simple questions. Insert your answers by editing
+the \texttt{nankai/paper.tex} file.
+
+\begin{enumerate}          
+\item Change directory to \texttt{nankai/data}.
+\item Run
+\begin{verbatim}
+scons -c
+\end{verbatim}
+to remove (clean) previously generated files.
+\item Run
+\begin{verbatim}
+scons shots.rsf
+\end{verbatim}
+This command will find the SU file for the Nankai data and convert to two files: trace header data (\texttt{tshots.rsf}) and trace data (\texttt{shots.rsf}).
+\item Examine the trace data file \texttt{shots.rsf} by running
+\begin{verbatim}
+more shots.rsf
+\end{verbatim}
+What is the data format used in this file? How many traces does this file have (\texttt{n2=} parameter)? How many time samples per trace (\texttt{n1=} parameter)?
+
+\answer{
+% Insert your answer here
+}       
+
+Note that a more convenient way to check parameters is running a Madagascar program \texttt{sfin}:
+\begin{verbatim}
+sfin shots.rsf
+\end{verbatim}
+\item Examine the range of values in the trace data file by running
+\begin{verbatim}
+sfattr < shots.rsf
+\end{verbatim}
+What is the maximum value? How many zero samples are in this file?
+
+\answer{
+% Insert your answer here
+}
+
+\item Run
+\begin{verbatim}
+scons shots2.view 
+\end{verbatim}
+to display all shot gathers in the Nankai dataset. Some traces are missing. 
+To view the mask of the missing traces shots, run 
+\begin{verbatim}
+scons smask.view 
+\end{verbatim}
+and observe where missing traces are located.      
+
+\item Examine the content of the trace header file \texttt{tshots.rsf} by running
+\begin{verbatim}
+sfheaderattr < tshots.rsf
+\end{verbatim}
+To get a short description of different keys, you can also run
+\begin{verbatim}
+sfheaderattr < tshots.rsf desc=y
+\end{verbatim}      
+
+\item Run
+\begin{verbatim}
+scons shot.view
+\end{verbatim}
+to window and display traces corresponding to the 1707th shot record (Figure~\ref{fig:shot}).
+\item Run
+\begin{verbatim}
+scons offset.rsf
+\end{verbatim}
+to window values of offset (receiver-shot distance) for the 1707th shot record. Examine the values by running
+\begin{verbatim}
+sfdisfil < offset.rsf
+\end{verbatim}
+What is the offset for the receiver closest to the source? What is the distance between receivers? 
+
+\answer{
+% Insert your answer here
+}       
+
+\plot{shot}{width=0.8\textwidth}{Wiggle plot of the 1707th shot record from the Nankai data.}
+
+\item Open the \texttt{SConstruct} file in your favorite editor and find the command which windowed the 1707th shot record. Change it 
+to window different shot records. Run
+\begin{verbatim}
+scons shot.view 
+\end{verbatim}
+again to see the effect of the change. Edit the plot title to reflect the change.
+
+\end{enumerate}
+
+
+\section{Frequency filtering}
+
+In this part of the tutorial, we will start processing the Nankai dataset by 
+attenuating noise using frequency filtering. 
+
+\begin{enumerate}     
+\item We will design the noise attenuation filter as a muting function in the Fourier domain. 
+Let us design the filter by focusing on one selected shot gather. The
+2-D Fourier spectrum of the gather before and after filtering is shown
+in Figure~\ref{fig:fft,filter}. The corresponding separation of the gather into signal and noise is shown in Figure~\ref{fig:signal}. Ideally, we would like to see no noise remaining in the estimated signal and no signal leaking into the estimated noise.
+
+To reproduce the denoising result, run
+\begin{verbatim}
+scons signal.view
+\end{verbatim}
+To display the Fourier-domain functions, run
+\begin{verbatim}
+scons fft.view
+scons mute.view
+scons filter.view
+\end{verbatim}
+
+The mute function is implemented in the attached \texttt{filter.c}
+program and is designed as a triangular wedge controlled by two
+command-line parameters: velocities \texttt{v1} and \texttt{v2}. The
+filter passes seismic events with velocities higher than \texttt{v2},
+attenuates those with velocities smaller than \texttt{v1}, and makes a
+smooth transition in between using a sine taper. 
+
+\multiplot{2}{fft,filter}{width=0.45\textwidth}{fft,filter}{The 2-D Fourier spectrum of the Nankai shot before (a) and after (b) noise attenuation.} 
+
+\plot{signal}{width=0.8\textwidth}{Shot gather separated into signal and noise. The noise section is gained to demonstrate
+		that it contains no useful signal.}
+
+To run the noise attenuation filter on all shot gathers, run
+\begin{verbatim}
+scons fshots.view
+\end{verbatim}
+
+\item Your task is to try improving the quality of the noise attenuation. You can do it by selecting better parameters or by modifying the \texttt{filter.c} program. Test your change not only on the selected shot gather but also on other gathers to make sure you achieve an improvement. Document your processing choices and create new figures if necessary.
+
+\end{enumerate}
+
+
+\section{Normal moveout}
+
+The next step is to apply NMO-based velocity
+analysis to the Nankai dataset \cite[]{CSI00-00-00010213}.
+
+\begin{enumerate}          
+\item Run
+\begin{verbatim}
+scons cmps.view 
+\end{verbatim}
+to display the input data (Figure~\ref{fig:cmps}.)
+
+\item What does ``\texttt{pow pow1=2}'' command do? 
+
+Hint: read the documentation for \texttt{sfpow} by running
+\begin{verbatim}
+sfpow
+\end{verbatim}
+without arguments or by checking the ``program of the month'' blog
+post\footnote{\url{http://www.ahay.org/blog/2013/03/10/program-of-the-month-sfpow/}}. Modify
+the \texttt{pow1=} parameter and rerun \texttt{scons} command to
+observe the change.
+
+\plot{cmps}{width=0.8\textwidth}{Nankai dataset after preprocessing and sorting into CMP gathers.}
+
+\item We will test our velocity analysis first on one selected CMP gather. Run
+\begin{verbatim}
+scons cmp1.view
+\end{verbatim}
+to display the selected gather (Figure~\ref{fig:cmp1}.)
+
+\plot{cmp1}{width=0.8\textwidth}{CMP gather selected for velocity analysis.}
+
+\item The process of NMO-based velocity analysis consists of three steps:
+\begin{enumerate}
+\item Semblance scan.
+\item Picking velocities.
+\item Applying NMO correction.
+\end{enumerate}
+The second step is typically done manually and consumes a significant
+portion of the processor's effort. To speed up the process, we will do
+it using an automatic picking algorithm.
+
+Run
+\begin{verbatim}
+scons vscan.view
+scons nmo.view
+\end{verbatim}
+to observe the result of velocity analysis on the selected CMP gather
+using automatic picking (Figure~\ref{fig:vscan,nmo1}.)
+
+\multiplot{2}{vscan,nmo1}{width=0.8\textwidth}{NMO velocity analysis with automatic picking applied to the selected CMP gather.}
+
+\item Once we are happy with our picking parameters, we can apply the procedure to the entire 2D line. 
+
+Run
+\begin{verbatim}
+scons picks.view
+\end{verbatim}
+to run the semblance analysis with automatic picking on every CMP
+gather. The result is shown in Figure~\ref{fig:picks}.
+
+\plot{picks}{width=0.8\textwidth}{NMO stacking velocity picked automatically from the entire line.}
+
+\item Finally, the picked velocity can be applied to NMO and stacking.         
+
+Run
+\begin{verbatim}
+scons nmos.view
+scons stack.view
+\end{verbatim}
+to display the result (Figures~\ref{fig:nmos} and~\ref{fig:stack}.) 
+
+\plot{nmos}{width=0.8\textwidth}{Nankai dataset after normal-moveout correction.}
+
+\plot{stack}{width=0.8\textwidth}{NMO stack of the Nankai dataset.}
+
+\item Your task is to try improving the quality of the stack (Figure~\ref{fig:stack}) by improving the results of automatic picking. To achieve this goal, you can try changing parameters of the picking program \texttt{sfpick}: See \url{http://ahay.org/blog/2012/08/01/program-of-the-month-sfpick/} for more explanation.
+
+\end{enumerate}
+
+\section{Post-stack migration}
+
+In this part of the workflow, we will experiment with seismic migration applied to the previously generated stack of the Nankai dataset. The particular migration algorithm that we will use is Stolt migration based on the Fourier transform \cite[]{GEO50-11-22192244}.
+
+\begin{enumerate}          
+\item The input to migration is the stacked section (Figure~\ref{fig:stack}.)
+\item Stolt migration amounts to a 2D Fourier transform from the time-space $\{t,y\}$ coordinates of the stack to the frequency-wavenumber coordinates $\{\omega,k\}$ followed by mapping from $\omega$ to $\omega_0$ according to
+\begin{equation}
+\label{eq:stolt}
+\omega = \sqrt{\omega_0^2 + \frac{v^2}{4}\,k^2}\;,
+\end{equation}
+where $v$ is the migration velocity, and the inverse Fourier transform
+from $\{\omega_0,k\}$ to $\{t_0,x_0\}$ coordinates of the
+time-migrated image.
+
+To compute and display the map from equation~\ref{eq:stolt}, run
+\begin{verbatim}
+scons map2.view
+\end{verbatim}
+
+To display the 2-D Fourier transform (actually 2-D cosine transform)
+of the Nankai data before and after Stolt mapping with
+$v=2$~km/s (Figure~\ref{fig:cosft,cosft2}), run
+\begin{verbatim}
+scons cosft.view
+scons cosft2.view
+\end{verbatim}
+
+\multiplot{2}{cosft,cosft2}{width=0.8\textwidth}{Nankai stack in the Cosine transform domain before (a) and after (b) Stolt migration with velocity 1500 m/s.}
+\plot{mig2}{width=0.8\textwidth}{Nankai stack migrated with velocity of 1500 m/s.}
+
+\item Run
+\begin{verbatim}
+scons mig2.view
+\end{verbatim}
+to display a seismic image migrated with the velocity of 1500~m/s. To look at the change brought by migration (Figure~\ref{fig:mig2}), run
+\begin{verbatim}
+sfpen Fig/stack.vpl Fig/mig2.vpl
+\end{verbatim}
+What changes do you notice?
+
+\answer{%Put your answer here
+}
+
+
+\item Let us select a small region of the image where a particularly interesting change occurs. One of such regions is shown in Figure~\ref{fig:zoom}. To display it on your screen, run
+\begin{verbatim}
+scons zoom.view
+\end{verbatim}
+
+\plot{zoom}{width=\textwidth}{Zoomed comparison: (a) unmigrated stack and (b) migrated with 1500 m/s.}
+
+Edit and modify the \texttt{SConstruct} file to select a different region that you find interesting and modify the figure.
+
+\end{enumerate}
+
+
+\section{Saving your work}
+
+It is important to save all files that you edit by hand (such
+as \texttt{paper.tex} and \texttt{SConstruct}) in a version-control
+system every time you make a revision.
+
+\bibliographystyle{seg}
+\bibliography{SEG}
+
+
