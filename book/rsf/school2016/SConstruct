@@ -1,0 +1,86 @@
+from rsf.proj import *
+
+# Use cmp2 data from the previous project
+Fetch('cmp2.rsf','synth',top='..',server='local')
+Plot('cmp2','grey title="Input Data" clip=6')
+
+# Compile hyperbolic Radon program
+prog = Program('hradon.c')
+hradon = str(prog[0])
+
+# Hyperbolic Radon using adjoint
+################################
+Flow('radon',['cmp2',hradon],
+     '${SOURCES[1].abspath} adj=y ov=1.5 dv=0.02 nv=101')
+Plot('radon',
+     'grey title="Hyperbolic Radon Transform" ')
+
+Result('radon','cmp2 radon','SideBySideAniso')
+
+Flow('adj',['radon',hradon],
+     '${SOURCES[1].abspath} ox=0.05 dx=0.025 nx=100')
+Plot('adj',
+     'grey title="Adjoint Hyperbolic Radon Transform" ')
+
+Flow('adiff','cmp2 adj','add scale=1,-1 ${SOURCES[1]}')
+Plot('adiff','grey title=Difference clip=6')
+
+Result('adj','adj adiff','SideBySideAniso')
+
+# Hyperbolic Radon using least-squares inversion
+################################################
+Flow('radon2',['cmp2',hradon,'radon'],
+     '''
+     conjgrad ${SOURCES[1].abspath} mod=${SOURCES[2]} 
+     ov=1.5 dv=0.02 nv=101 ox=0.05 dx=0.025 nx=100 niter=10
+     ''')
+Plot('radon2',
+     'grey title="Hyperbolic Radon Transform" ')
+
+Flow('inv',['radon2',hradon],
+     '${SOURCES[1].abspath} ox=0.05 dx=0.025 nx=100')
+Plot('inv',
+     'grey title="Inverse Hyperbolic Radon Transform" clip=6')
+
+Flow('idiff','cmp2 inv','add scale=1,-1 ${SOURCES[1]}')
+Plot('idiff','grey title=Difference clip=6')
+
+Result('inv','inv idiff','SideBySideAniso')
+
+# Separating primaries and multiples
+####################################
+Flow('mute','radon2',
+     'mutter half=n t0=0.48 x0=1.5 v0=1 inner=y')
+Plot('mute','grey title="Muted Multiples" ')
+
+Result('mute','radon2 mute','SideBySideAniso')
+
+Flow('prim',['mute',hradon],
+     '${SOURCES[1].abspath} ox=0.05 dx=0.025 nx=100')
+Plot('prim',
+     'grey title="Estimated Primaries" clip=6')
+
+Flow('mult','cmp2 prim','add scale=1,-1 ${SOURCES[1]}')
+Plot('mult','grey title="Estimated Multiples" clip=6')
+
+Result('mult','prim mult','SideBySideAniso')
+
+# Velocity analysis
+###################
+Flow('pvscan','prim',
+     'vscan half=n v0=1.5 nv=101 dv=0.02 semblance=y')
+Plot('pvscan',
+     '''
+     grey color=j allpos=y title="Primaries Semblance Scan"
+     ''')
+
+Flow('mvscan','mult',
+     'vscan half=n v0=1.5 nv=101 dv=0.02 semblance=y')
+Plot('mvscan',
+     '''
+     grey color=j allpos=y title="Multiples Semblance Scan"
+     ''')
+
+Result('vscan','pvscan mvscan','SideBySideAniso')
+
+End()
