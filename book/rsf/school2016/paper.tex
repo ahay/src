@@ -194,7 +194,7 @@ bash$ scons radon.view
 To test if the adjoint operator is implemented correctly in this program, you can run the dot-product test
 \begin{verbatim}
 bash$ sfdottest ./hradon.exe mod=radon.rsf dat=cmp2.rsf \
-ov=1.5 dv=0.02 nv=101 ox=0.05 dx=0.025 nx=100
+ov=1.3 dv=0.02 nv=111 ox=0.05 dx=0.025 nx=100
 \end{verbatim}
 The output should display a pair of numbers equal to six digits of accuracy. You can run the test multiple times.
 
@@ -217,7 +217,7 @@ Notice that only 10 conjugate-gradient iterations are sufficient to achieve a re
 Open the \texttt{hradon.c} program in an editor and uncomment the lines containing calls to \texttt{halfint\_lop} (the half-order derivative filter for correcting the wavelet shape). Replace \texttt{XXXX} with \texttt{true} or \texttt{false} as appropriate and comment out extra calls to \texttt{sf\_floatread} and \texttt{sf\_floatwrite}. To check if you did it correctly, run the dot-product test
 \begin{verbatim}
 bash$ sfdottest ./hradon.exe mod=radon.rsf dat=cmp2.rsf \
-ov=1.5 dv=0.02 nv=101 ox=0.05 dx=0.025 nx=100
+ov=1.3 dv=0.02 nv=111 ox=0.05 dx=0.025 nx=100
 \end{verbatim}
 Did including the half-order derivative filter improve the convergence of conjugate gradients? 
 
