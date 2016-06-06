@@ -69,7 +69,6 @@ src = Glob('[a-z]*.c')
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
             LIBS=[env.get('DYNLIB','')+'rsfpwd',
-		  env.get('DYNLIB','')+'rsf++',
                   env.get('DYNLIB','')+'rsf'])
 
 # fftw settings
