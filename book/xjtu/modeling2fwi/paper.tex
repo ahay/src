@@ -28,41 +28,15 @@ As a brief introduction, I want to emphasize several points from my own understa
 
 In this section, I provide some fundamental gadgets to help the beginners run Madagascar with ease.
 
-\subsection{Installation}
-
-\begin{itemize}
- \item Setting Environmental variables:
- \begin{description}
-  \item[RSFROOT] location of the main Madagascar installation
-  \item[RSFSRC] location of the source for Madagascar
-  \item[DATAPATH] location where to put the binary RSF files 
-  \item[RSFFIGS]location to store generated figures
- \end{description}
- \item RSFSRC installation: 
- \begin{itemize}
-  \item Download via git/svn:  \textcolor{blue}{svn co https://github.com/ahay/src/trunk RSFSRC}
-  \item install dependent softwares: \textcolor{blue}{sudo apt-get install libxaw7-dev freeglut3-dev libnetpbm10-dev libgd-dev libplplot-dev \
-  libavcodec-dev libcairo2-dev libjpeg-dev swig python-dev python-numpy g++ gfortran \
-  libopenmpi-dev libfftw3-dev libsuitesparse-dev python-epydoc}
-  \item \textcolor{red}{./configure --prefix=\$RSFROOT API=C,f90; make; make install}
- \end{itemize}
- \item Latex templates \textcolor{blue}{texmf}:
- \begin{itemize}
-  \item \textcolor{blue}{svn co https://github.com/SEGTeX/texmf/trunk texmf}
-  \item cd texmf; sudo \textcolor{red}{texhash}
-  \end{itemize}
-\end{itemize}
-
-
 \subsection{Reproduce numerical examples and papers using SConstruct}
 
   Processing workflow:
   \begin{itemize}
-    \item \textcolor{red}{Fetch}(data\_file,dir,ftp\_server\_info): download data\_file from a specific directory dir of an FTP server
-    \item \textcolor{red}{Flow}(targets,sources,commands): generate target[s]  from source[s] using command[s]
-    \item \textcolor{red}{Plot}(intermediate\_plot[,source],plot\_command): generate intermediate\_plot in the working directory
-    \item \textcolor{red}{Result}(plot,intermediate\_plots,combination) generate a final plot  in Fig folder of the working directory
-    \item \textcolor{red}{End}(): collect default targets 
+    \item \texttt{Fetch}(data\_file,dir,ftp\_server\_info): download data\_file from a specific directory dir of an FTP server
+    \item \texttt{Flow}(targets,sources,commands): generate target[s]  from source[s] using command[s]
+    \item \texttt{Plot}(intermediate\_plot[,source],plot\_command): generate intermediate\_plot in the working directory
+    \item \texttt{Result}(plot,intermediate\_plots,combination) generate a final plot  in Fig folder of the working directory
+    \item \texttt{End}(): collect default targets 
   \end{itemize}
   \vspace{1em}
   Run scons for your computation
@@ -88,9 +62,9 @@ End(name,lclass,options,use)
   \end{itemize}
 To generate your paper including numerical examples:
  \begin{itemize}
-  \item \textcolor{red}{sftour scons lock}: lock the results from an SConstruct
-  \item \textcolor{red}{scons read/paper.read}:	look at the generated paper in pdf
-  \item \textcolor{red}{scons -c} remove all intermediate files
+  \item \texttt{sftour scons lock}: lock the results from an SConstruct
+  \item \texttt{scons read/paper.read}:	look at the generated paper in pdf
+  \item \texttt{scons -c} remove all intermediate files
  \end{itemize}
  
 \subsection{Some of the most useful commands}
@@ -114,13 +88,11 @@ To generate your paper including numerical examples:
   \end{description}
 
   
-  
-
   Image format: Vplot
   \begin{itemize}
   \item suffix '.vpl', vectorized image$\rightarrow$scaling without loss of quality
-  \item convert to be \textcolor{blue}{pdf/eps/png/jpeg/tiff/mpeg/...}
-  \item how: \textcolor{red}{vpconvert format=pdf fig.vpl}
+  \item convert to be \texttt{pdf/eps/png/jpeg/tiff/mpeg/...}
+  \item how: \texttt{vpconvert format=pdf fig.vpl}
   \end{itemize}
   
 
