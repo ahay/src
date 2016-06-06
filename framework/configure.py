@@ -2037,6 +2037,14 @@ def f90(context):
             break
     context.env['F90MODSUFFIX'] = suffix
     context.Result(suffix)
+    if base[:8] == 'gfortran' or base[:3] == 'gfc':
+        context.env.Append(F90FLAGS=' -J${SOURCE.dir}')
+    elif base[:5] == 'ifort':
+        context.env.Append(F90FLAGS=' -module ${SOURCE.dir}/../../include')
+    elif base[:5] == 'pgf90':
+        context.env.Append(F90FLAGS=' -module ${SOURCE.dir} -I${SOURCE.dir}')
+    elif base[:3] == 'f90' and context.env['PLATFORM'] == 'sunos':
+        context.env.Append(F90FLAGS=' -M${SOURCE.dir}')
     f90_write_ptr_sz()
 
 def matlab(context):
