@@ -249,7 +249,7 @@ void sgelss_(int *m, int *n, int *nrhs, float *a, int *lda, float *b, int *ldb, 
 void sgelsx_(int *m, int *n, int *nrhs, float *a, int *lda, float *b, int *ldb, int *jpvt, float *rcond, int *rank, float *work, int *info);
 void sgeql2_(int *m, int *n, float *a, int *lda, float *tau, float *work, int *info);
 void sgeqlf_(int *m, int *n, float *a, int *lda, float *tau, float *work, int *lwork, int *info);
-void sgeqp3_(int *m, int *n, float *a, int *lda, int *jpvt, float *tau, float *work, int *info);
+void sgeqp3_(int *m, int *n, float *a, int *lda, int *jpvt, float *tau, float *work, int *lwork, int *info);
 void sgeqr2_(int *m, int *n, float *a, int *lda, float *tau, float *work, int *info);
 void sgeqrf_(int *m, int *n, float *a, int *lda, float *tau, float *work, int *lwork, int *info);
 void sgerfs_(char *trans, int *n, int *nrhs, float *a, int *lda, float *af, int *ldaf, int *ipiv, float *b, int *ldb, float *x, int *ldx, float *ferr, float *berr, float *work, int *iwork, int *info);
@@ -452,7 +452,7 @@ void dgelss_(int *m, int *n, int *nrhs, double *a, int *lda, double *b, int *ldb
 void dgelsx_(int *m, int *n, int *nrhs, double *a, int *lda, double *b, int *ldb, int *jpvt, double *rcond, int *rank, double *work, int *info);
 void dgeql2_(int *m, int *n, double *a, int *lda, double *tau, double *work, int *info);
 void dgeqlf_(int *m, int *n, double *a, int *lda, double *tau, double *work, int *lwork, int *info);
-void dgeqp3_(int *m, int *n, double *a, int *lda, int *jpvt, double *tau, double *work, int *info);
+void dgeqp3_(int *m, int *n, double *a, int *lda, int *jpvt, double *tau, double *work, int *lwork, int *info);
 void dgeqr2_(int *m, int *n, double *a, int *lda, double *tau, double *work, int *info);
 void dgeqrf_(int *m, int *n, double *a, int *lda, double *tau, double *work, int *lwork, int *info);
 void dgerfs_(char *trans, int *n, int *nrhs, double *a, int *lda, double *af, int *ldaf, int *ipiv, double *b, int *ldb, double *x, int *ldx, double *ferr, double *berr, double *work, int *iwork, int *info);
@@ -819,8 +819,8 @@ void zunmtr_(char *side, char *uplo, char *trans, int *m, int *n, cpx16 *a, int 
 void zupgtr_(char *uplo, int *n, cpx16 *ap, cpx16 *tau, cpx16 *q, int *ldq, cpx16 *work, int *info);
 void zupmtr_(char *side, char *uplo, char *trans, int *m, int *n, cpx16 *ap, cpx16 *tau, cpx16 *c, int *ldc, cpx16 *work, int *info);
 
-void cgeqp3_(int *m, int *n, cpx8 *a, int *lda, int *jpvt, cpx8 *tau, cpx8 *work, float* rwork, int *info);
-void zgeqp3_(int *m, int *n, cpx16 *a, int *lda, int *jpvt, cpx16 *tau, cpx16 *work, double* rwork, int *info);
+void cgeqp3_(int *m, int *n, cpx8 *a, int *lda, int *jpvt, cpx8 *tau, cpx8 *work, int *lwork, float* rwork, int *info);
+void zgeqp3_(int *m, int *n, cpx16 *a, int *lda, int *jpvt, cpx16 *tau, cpx16 *work, int *lwork, double* rwork, int *info);
 
 #endif
 

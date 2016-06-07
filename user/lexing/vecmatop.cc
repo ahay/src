@@ -454,8 +454,9 @@ int lowrank(int m, int n, int (*sample)(vector<int>&, vector<int>&, FltNumMat&),
     NumVec<int> jpvt(n);    setvalue(jpvt, int(0));
     FltNumVec tau(max(m,n));
     FltNumVec work(3*n);
+    int lwork = 3*n;
     int info;
-    sgeqp3_(&m, &n, M2.data(), &lda, jpvt.data(), tau.data(), work.data(), &info);    iA(info==0);
+    sgeqp3_(&m, &n, M2.data(), &lda, jpvt.data(), tau.data(), work.data(), &lwork, &info);    iA(info==0);
     float cutoff = eps*abs(M2(0,0));
     int cnt=0;
     for(int k=0; k<min(m,n); k++)      if(abs(M2(k,k))>cutoff)	cnt++;
@@ -486,8 +487,9 @@ int lowrank(int m, int n, int (*sample)(vector<int>&, vector<int>&, FltNumMat&),
     NumVec<int> jpvt(n);      setvalue(jpvt, int(0));
     FltNumVec tau(max(m,n));
     FltNumVec work(3*n);
+    int lwork = 3*n;
     int info;
-    sgeqp3_(&m, &n, M1.data(), &lda, jpvt.data(), tau.data(), work.data(), &info);    iA(info==0);
+    sgeqp3_(&m, &n, M1.data(), &lda, jpvt.data(), tau.data(), work.data(), &lwork, &info);    iA(info==0);
     float cutoff = eps*abs(M1(0,0)); //the diagonal element
     int cnt=0;
     for(int k=0; k<min(m,n); k++)	if(abs(M1(k,k))>cutoff)	  cnt++;
@@ -583,11 +585,12 @@ int lowrank(int m, int n, int (*sample)(vector<int>&, vector<int>&, CpxNumMat&),
     CpxNumVec tau(max(m,n));
     CpxNumVec work(3*n);
     FltNumVec rwork(6*n);
+    int lwork = 3*n;
     int info;
     cgeqp3_(&m, &n, 
 	    (MKL_Complex8*) M2.data(), &lda, jpvt.data(), 
 	    (MKL_Complex8*) tau.data(), 
-	    (MKL_Complex8*) work.data(), rwork.data(), &info);    
+	    (MKL_Complex8*) work.data(), &lwork, rwork.data(), &info);    
     iA(info==0);
     float cutoff = eps*abs(M2(0,0));
     int cnt=0;
@@ -620,11 +623,12 @@ int lowrank(int m, int n, int (*sample)(vector<int>&, vector<int>&, CpxNumMat&),
     CpxNumVec tau(max(m,n));
     CpxNumVec work(3*n);
     FltNumVec rwork(6*n);
+    int lwork = 3*n;
     int info;
     cgeqp3_(&m, &n, 
 	    (MKL_Complex8*) M1.data(), &lda, jpvt.data(), 
 	    (MKL_Complex8*) tau.data(), 
-	    (MKL_Complex8*) work.data(), rwork.data(), &info);    
+	    (MKL_Complex8*) work.data(), &lwork, rwork.data(), &info);    
     iA(info==0);
     float cutoff = eps*abs(M1(0,0)); //the diagonal element
     int cnt=0;
@@ -1052,8 +1056,9 @@ int ddlowrank(int m, int n, int (*sample)(vector<int>&, vector<int>&, DblNumMat&
     NumVec<int> jpvt(n);    setvalue(jpvt, int(0));
     DblNumVec tau(max(m,n));
     DblNumVec work(3*n);
+    int lwork = 6*n;
     int info;
-    dgeqp3_(&m, &n, M2.data(), &lda, jpvt.data(), tau.data(), work.data(), &info);    iA(info==0);
+    dgeqp3_(&m, &n, M2.data(), &lda, jpvt.data(), tau.data(), work.data(), &lwork, &info);    iA(info==0);
     double cutoff = eps*abs(M2(0,0));
     int cnt=0;
     for(int k=0; k<min(m,n); k++)      if(abs(M2(k,k))>cutoff)  cnt++;
@@ -1080,8 +1085,9 @@ int ddlowrank(int m, int n, int (*sample)(vector<int>&, vector<int>&, DblNumMat&
     NumVec<int> jpvt(n);      setvalue(jpvt, int(0));
     DblNumVec tau(max(m,n));
     DblNumVec work(3*n);
+    int lwork = 6*n;
     int info;
-    dgeqp3_(&m, &n, M1.data(), &lda, jpvt.data(), tau.data(), work.data(), &info);    iA(info==0);
+    dgeqp3_(&m, &n, M1.data(), &lda, jpvt.data(), tau.data(), work.data(), &lwork, &info);    iA(info==0);
     double cutoff = eps*abs(M1(0,0));    int cnt=0;
     for(int k=0; k<min(m,n); k++)       if(abs(M1(k,k))>cutoff)   cnt++;
     cidx.resize(cnt);
@@ -1169,11 +1175,12 @@ int ddlowrank(int m, int n, int (*sample)(vector<int>&, vector<int>&, ZpxNumMat&
     ZpxNumVec tau(max(m,n));
     ZpxNumVec work(3*n);
     DblNumVec rwork(6*n);
+    int lwork = 6*n;
     int info;
     zgeqp3_(&m, &n, 
 	    (MKL_Complex16*) M2.data(), &lda, jpvt.data(), 
 	    (MKL_Complex16*) tau.data(), 
-	    (MKL_Complex16*) work.data(), rwork.data(), &info);    
+	    (MKL_Complex16*) work.data(), &lwork, rwork.data(), &info);    
     iA(info==0);
     double cutoff = eps*abs(M2(0,0));
     int cnt=0;
@@ -1205,12 +1212,13 @@ int ddlowrank(int m, int n, int (*sample)(vector<int>&, vector<int>&, ZpxNumMat&
     NumVec<int> jpvt(n);      setvalue(jpvt, int(0));
     ZpxNumVec tau(max(m,n));
     ZpxNumVec work(3*n);
+    int lwork = 6*n;
     DblNumVec rwork(6*n);
     int info;
     zgeqp3_(&m, &n, 
 	    (MKL_Complex16*) M1.data(), &lda, jpvt.data(), 
 	    (MKL_Complex16*) tau.data(), 
-	    (MKL_Complex16*) work.data(), rwork.data(), &info);    
+	    (MKL_Complex16*) work.data(), &lwork, rwork.data(), &info);    
     iA(info==0);
     double cutoff = eps*abs(M1(0,0)); //the diagonal element
     int cnt=0;
