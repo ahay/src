@@ -137,20 +137,11 @@ Result('spectra1','signal',
 
 Flow('ffts','shots2','put d2=0.034 | fft1 | fft3')
 
-OpenMP = project.get('OMP')
-
-if OpenMP:
-    Flow('fshots','ffts %s' % prog[0],
-         '''
-         ./${SOURCES[1]} v1=%g v2=%g | fft3 inv=y | fft1 inv=y |
-         put d2=1
-         ''' % (v1,v2),split=[3,'omp'])
-else:
-    Flow('fshots','ffts %s' % prog[0],
-         '''
-         ./${SOURCES[1]} v1=%g v2=%g | fft3 inv=y | fft1 inv=y |
-         put d2=1
-         ''' % (v1,v2))
+Flow('fshots','ffts %s' % prog[0],
+    '''
+    ./${SOURCES[1]} v1=%g v2=%g | fft3 inv=y | fft1 inv=y |
+    put d2=1
+    ''' % (v1,v2))
 
 Result('fshots',
 	'''
@@ -293,24 +284,144 @@ Flow('nmos','cmps offs cmask picks',
 
 Result('nmos',
         '''
-        window min1=5.8 max1=8.5 |
-	byte gainpanel=all | transp plane=23 memsize=5000 |
+        window min1=5.5 max1=8.5 |
+	    byte gainpanel=all | transp plane=23 memsize=5000 |
         grey3 frame1=400 frame2=50 frame3=200 
-	title="NMO" label2="CMP Number"
+	    title="NMO" label2="CMP Number"
         flat=n point1=0.8 point2=0.8
-	''')
+	    ''')
 
 Flow('stack','nmos','stack')
 
 Result('stack','window min1=5.5 max1=8.5 | grey title="NMO Stack" label2="CMP Number" ')
 
-#Stolt Migration 
+Plot('stack','window min1=5.5 max1=8.5 | grey title="NMO Stack" label2="CMP Number" ')
+
+# Try DMO
+
+nv=60
+
+Flow('stacks','cmps offs cmask',
+     '''
+     stacks half=n v0=1400 nv=%g dv=20 
+     offset=${SOURCES[1]} mask=${SOURCES[2]}
+     '''%nv)
+     
+Flow('stackst','stacks','costaper nw3=20')
+
+Result('stacks','stackst',
+       '''
+       byte gainpanel=all | transp plane=23 memsize=5000 |
+       grey3 frame1=400 frame2=50 frame3=200 point1=0.8 point2=0.8
+       title="Constant-Velocity Stacks" label3=Velocity unit3=m/s
+       label2="CMP Number"
+       ''')
+
+# Apply double Fourier transform (cosine transform)
+
+Flow('cosft3','stackst',
+	'''
+	put d3=16.667 o3=0 label2=Distance unit2=m | 
+	 cosft sign1=1 sign3=1
+	''')
+
+# Transpose f-v-k to v-f-k
+
+Flow('transp','cosft3','transp')
+
+# Fowler DMO: mapping velocities
+
+Flow('map','transp',
+     '''
+     math output="x1/sqrt(1+0.25*x3*x3*x1*x1/(x2*x2))" | 
+     cut n2=1
+     ''')
+        
+Flow('fowler','transp map','iwarp warp=${SOURCES[1]} | transp')
+
+# Inverse Fourier transform
+
+Flow('dmo','fowler','cosft sign1=-1 sign3=-1')
+ 
+Result('dmo',
+       '''
+       put d3=1 o3=900 unit2='' label2=Trace | 
+       byte gainpanel=all | transp plane=23 memsize=5000 |
+       grey3 frame1=400 frame2=50 frame3=200 point1=0.8 point2=0.8
+       title="Constant-Velocity DMO Stacks" 
+       label3=Velocity unit3=m/s 
+       ''')
+       
+# Compute envelope for picking
+
+Flow('envelope','dmo','envelope | scale axis=2')
+
+# Mute and Pick velocity
+
+Flow('vpick','envelope',
+    '''
+	mutter v0=130 x0=1300 t0=4.0 half=n inner=n |
+	mutter x0=1400 v0=20 t0=5.0 half=n inner=y | 
+	mutter v0=2500 x0=1400 t0=5.8 half=n inner=n |
+	mutter v0=500 x0=1400 t0=7.0 half=n inner=y  |
+	pick rect1=80 rect2=20 vel0=1400
+	''')
+	
+Result('vpick',
+       '''
+       put d2=1 o2=900 unit2= label2="CMP Number" |
+       grey mean=y color=j scalebar=y barreverse=y barunit=m/s
+       title="Picked Migration Velocity" label2="CMP Number" unit2= 
+       ''')
+
+# Take a slice
+
+Flow('slice','dmo vpick','slice pick=${SOURCES[1]} | put d2=1 o2=900 unit2= label2="CMP Number"')
+
+Result('slice','window min1=5.5 max1=8.5 | grey title="DMO Stack" ')
+
+Plot('slice','window min1=5.5 max1=8.5 | grey title="DMO Stack" label2="CMP Number" ')
+
+# Check one CMP location
+
+###################
+# !!! MODIFY ME !!!
+###################
+
+p = 380 
+
+min1=5.5
+max1=8.0 
+
+Flow('before','stackst','window n3=1 f3=%d min1=%g max1=%g | envelope' % (p,min1,max1))
+Flow('after','envelope','window n3=1 f3=%d min1=%g max1=%g' % (p,min1,max1))
+
+for case in ('before','after'):
+    Plot(case,
+         '''
+         grey color=j allpos=y title="%s DMO" 
+         label2=Velocity unit2=m/s
+         ''' % case.capitalize())
+         
+Flow('vpick1','vpick','window n2=1 f2=%d min1=%g max1=%g' % (p,min1,max1))
+
+Plot('vpick1',
+     '''
+      graph yreverse=y transp=y plotcol=7 plotfat=7 
+      pad=n min2=%g max2=%g wantaxis=n wanttitle=n
+     ''' % (1400,2600))
+
+Plot('before2','before pick','Overlay')
+Plot('after2','after vpick1','Overlay')
+Result('envelope','before2 after2','SideBySideAniso')
+
+# Stolt Migration 
 
 # 2D cosine transform
 
-Flow('cosft','stack',
+Flow('cosft','slice',
      '''
-     put d2=16.667 o2=0 label2=Distance unit2=m | pad beg1=1250 | cosft sign1=1 sign2=1 | window max1=90 | 
+     put d2=16.667 label2=Distance unit2=m | pad beg1=1250 | cosft sign1=1 sign2=1 |  
      mutter v0=0.0005 half=n | put label2=Wavenumber
      ''')
 Result('cosft','grey title="Cosine Transform" pclip=95')
@@ -325,15 +436,11 @@ Result('map2',
        title="Stolt Map" barlabel=Frequency barunit=Hz
        ''')
 
-if OpenMP:
-    Flow('cosft2','cosft map2','iwarp warp=${SOURCES[1]} inv=n',
-        split=[2,'omp'])
-else:
-    Flow('cosft2','cosft map2','iwarp warp=${SOURCES[1]} inv=n')
+Flow('cosft2','cosft map2','iwarp warp=${SOURCES[1]} inv=n')
     
 Result('cosft2','grey title="Cosine Transform Warped" pclip=95')
 
-Flow('mig2','cosft2','pad n1=2672 | cosft sign1=-1 sign2=-1 | put d2=1 o2=900 unit2='' | window min1=5')
+Flow('mig2','cosft2','cosft sign1=-1 sign2=-1 | window f1=1250 | put d2=1 unit2='' ')
 
 Result('mig2',
        '''
@@ -341,22 +448,73 @@ Result('mig2',
 	grey title="Stolt Migration with 1500 m/s" 
 	label2="CMP Number" 
 	''')
+	
+# Ensemble of Stolt migrations with different velocities
+
+Flow('spray','cosft',
+     'spray axis=3 n=120 o=1500 d=8 label=Velocity unit=m/s')
+         
+Flow('map1','spray','math output="sqrt(x1*x1+0.25*x3*x3*x2*x2)" ')
+
+Result('map1',
+       '''
+       byte gainpanel=all allpos=y | 
+       grey3 title="Stolt Ensemble Map" 
+       frame1=400 frame2=50 frame3=50 color=x
+       ''')
+
+Flow('mig','spray map1',
+     '''
+     iwarp warp=${SOURCES[1]} inv=n | 
+     cosft sign1=-1 sign2=-1 
+     ''')
+     
+Flow('migt','mig','transp plane=23 memsize=5000')
+
+Plot('mig','window min1=5.5 max1=8.5 | grey title="Ensemble of Stolt Migrations" ',view=1)
+
+# Migration velocity increasing with time 
+
+###################
+# !!! MODIFY ME !!!
+###################
+
+Flow('vmig1','stack','pad beg1=1250 | math output="1500" | window n1=1250 | put o1=0')
+
+Flow('vmig2','stack','put o1=0 | math output="1500+20*x1*x1" | put o1=5 ')
+
+Flow('vmig','vmig1 vmig2','cat ${SOURCES[1:2]} axis=1')
+
+Result('vmig',
+       '''
+       window min1=5.5 max1=8.5 | 
+       grey color=j mean=y barreverse=y title="Migration Velocity" 
+       scalebar=y barlabel=Velocity barunit=m/s label2="CMP Number" unit2=
+       ''')
+
+# Slice through the ensemble of migrations
+
+Flow('slice1','migt vmig','slice pick=${SOURCES[1]} | window f1=1250 | put d2=1 o2=900')
+
+Result('mig','slice1',
+       'window min1=5.5 max1=8.5 | grey label2="CMP Number" unit2= title="Stolt Migration with Variable Velocity" ')
+
 
 ##############################################
 # Zoom an interesting area (!!! MODIFY ME !!!)
 ##############################################
 min1,max1=6.0,6.8 
-min2,max2=1070,1200
+min2,max2=950,1050
     
-for i in range (2):
-    case=('stack','mig2')[i]
+for i in range (3):
+    case=('slice','mig2','slice1')[i]
     zoom = case + '-zoom'
     Flow(zoom,case,
          '''
          window min1=%g max1=%g min2=%g max2=%g
          ''' % (min1,max1,min2,max2))
-    Plot(zoom,'grey title=%s grid=y gridcol=5' % ('ab'[i]))
-Result('zoom','stack-zoom mig2-zoom','SideBySideIso')
+    Plot(zoom,'grey title=%s grid=y gridcol=5' % ('abc'[i]))
+Result('zoom','slice-zoom mig2-zoom slice1-zoom','SideBySideIso')
 
 
 End()
