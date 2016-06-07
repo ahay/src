@@ -24,7 +24,7 @@ tridiagonal upgrad vector wavelet weight weight2
 '''
 
 try: # distribution version
-    Import('env root libdir incdir')
+    Import('env root libdir incdir bindir')
     env = env.Clone()
 except: # local version
     env = bldutil.Debug()
@@ -87,6 +87,8 @@ if root:
     env.Install(libdir,slib)
     if dynlib:
         env.Install(libdir,dlib)
+        if env['PLATFORM'] == 'cygwin':
+            env.Install(bindir,dlib)
     env.Install(incdir,inc)
 
 ############################################################################
