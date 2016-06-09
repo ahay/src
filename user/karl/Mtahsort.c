@@ -175,6 +175,8 @@ int main(int argc, char* argv[])
 		       headers_filename);
 
   inheaders = sf_input(headers_filename);
+  /* get offset to start of data.  This is needed for seek when .rsf@ data
+     is appended to end of .rsf file. */
   inheaders_start=sf_tell(inheaders);
   if(verbose>1)
     fprintf(stderr,"sf_tell(inheaders)=%lld\n",inheaders_start);
