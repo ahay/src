@@ -195,6 +195,61 @@ bool get_tah(float* trace, float* header,
   return false;
 }
 
+void read3dfile(int verbose, float* trace, sf_file auxfile,
+		sf_axis* auxfile_axa_array,double dxline, double diline)
+/*< read trace from 3D mapped volume >*/
+
+{
+  off_t indx_xline;
+  off_t indx_iline;
+  double double_indx;
+  off_t num_times;
+  off_t num_xlines;
+  off_t file_offset;
+  int indx_time;
+
+  double_indx=(dxline-sf_o(auxfile_axa_array[1]))/
+                sf_d(auxfile_axa_array[1]);
+  indx_xline=llround(double_indx);
+  /* dxline must be within 1% of an xline location and
+     must be in the xline range */
+  if(0.01<fabs(double_indx-indx_xline) ||
+       indx_xline<0 ||
+       indx_xline>=sf_n(auxfile_axa_array[1]) ){
+    fprintf(stderr,"cannot read xline=%f from auxfile\n",dxline);
+	sf_error("auxfile must contain all xlines on survey");
+  }
+
+  double_indx=(diline-sf_o(auxfile_axa_array[2]))/
+                sf_d(auxfile_axa_array[2]);
+  indx_iline=llround(double_indx);
+  /* diline must be within 1% of an iline location and
+     must be in the iline range */
+  if(0.01<fabs(double_indx-indx_iline) ||
+       indx_iline<0 ||
+       indx_iline>=sf_n(auxfile_axa_array[2]) ){
+    fprintf(stderr,"cannot read iline=%f from auxfile\n",dxline);
+	sf_error("auxfile must xontain all ilines survey");
+    }
+  num_times=sf_n(auxfile_axa_array[0]);
+  num_xlines=sf_n(auxfile_axa_array[1]);
+  file_offset=(indx_iline*num_xlines+indx_xline)*num_times*sizeof(float);
+  if(verbose>2){
+    fprintf(stderr,"dxline=%f,diline=%f,indx_xline=%lld, indx_iline=%lld\n",
+	            dxline   ,diline   ,indx_xline   , indx_iline);
+    fprintf(stderr,"file_offset=%lld\n",file_offset);
+  }
+  sf_seek(auxfile,file_offset,SEEK_SET);
+  if(verbose>2){
+    fprintf(stderr,"returned from seek\n");
+  }
+  sf_floatread(trace,num_times,auxfile);
+  if(verbose>3){
+    for(indx_time=0; indx_time<num_times; indx_time++){
+      fprintf(stderr,"trace[%d]=%f\n",indx_time,trace[indx_time]);
+    }
+  }
+}
 
 void tahwritemapped(int verbose, float* trace, void* iheader, 
 		    int n1_traces, int n1_headers,
