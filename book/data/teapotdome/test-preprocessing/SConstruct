@@ -155,9 +155,9 @@ Flow(['tpowstack141.rsf','tpowstack141_hdr.rsf'],
        xmute=0,18000  
        ntaper=40 
      | sftahnmo 
-       verbose=1  
-       tnmo=0.00,.479,.637,.792,.877,1.009,1.104,1.19458,1.615,3.010 
-       vnmo=9132.86,10553.29,10921.60,10791.97,11074.19,11649.54,11807.96,12325.03,14410.47,17216.64 
+       verbose=1
+       tnmo=0,.617,.769,.913,1.027,1.196,1.767,3.010.00
+       vnmo=9132.86,10764.47,10941.73,11235.75,11902.71,12580.03,14513.85,16982.86
      | sftahstack key=iline,xline verbose=1 ntaper=40
      | sftahwrite 
         verbose=1                           
@@ -188,9 +188,9 @@ Flow(['mutepefagcstack141.rsf','mutepefagcstack141_hdr.rsf'],
      | sftahagc 
        wagc=1.000 verbose=1 
      | sftahnmo 
-       verbose=1  
-       tnmo=0.00,.479,.637,.792,.877,1.009,1.104,1.19458,1.615,3.010 
-       vnmo=9132.86,10553.29,10921.60,10791.97,11074.19,11649.54,11807.96,12325.03,14410.47,17216.64 
+       verbose=1
+       tnmo=0,.617,.769,.913,1.027,1.196,1.767,3.010.00
+       vnmo=9132.86,10764.47,10941.73,11235.75,11902.71,12580.03,14513.85,16982.86
      | sftahstack key=iline,xline verbose=1 ntaper=40
      | sftahwrite 
         verbose=1                           
@@ -226,9 +226,9 @@ Flow(['mutepefagcstaticstack141.rsf','mutepefagcstaticstack141_hdr.rsf'],
        ntaper=75 
      | sftahstatic sign=-1   
      | sftahnmo 
-       verbose=1  
-       tnmo=0.00,.479,.637,.792,.877,1.009,1.104,1.19458,1.615,3.010 
-       vnmo=9132.86,10553.29,10921.60,10791.97,11074.19,11649.54,11807.96,12325.03,14410.47,17216.64 
+       verbose=1
+       tnmo=0,.617,.769,.913,1.027,1.196,1.767,3.010.00
+       vnmo=9132.86,10764.47,10941.73,11235.75,11902.71,12580.03,14513.85,16982.86
      | sftahstack key=iline,xline verbose=1 ntaper=75
      | sftahwrite 
         verbose=1                           
@@ -258,9 +258,9 @@ Flow(['muteagcstaticstack141.rsf','muteagcstaticstack141_hdr.rsf'],
        wagc=1.000 verbose=1 
      | sftahstatic sign=-1   
      | sftahnmo 
-       verbose=1  
-       tnmo=0.00,.479,.637,.792,.877,1.009,1.104,1.19458,1.615,3.010 
-       vnmo=9132.86,10553.29,10921.60,10791.97,11074.19,11649.54,11807.96,12325.03,14410.47,17216.64 
+       verbose=1
+       tnmo=0,.617,.769,.913,1.027,1.196,1.767,3.010.00
+       vnmo=9132.86,10764.47,10941.73,11235.75,11902.71,12580.03,14513.85,16982.86
      | sftahstack key=iline,xline verbose=1 ntaper=40
      | sftahwrite 
         verbose=1                           
@@ -301,8 +301,8 @@ Flow(	['mutepefagcstaticcdps.rsf','muteagcpefcdps_hdr.rsf'],
      | sftahstatic sign=-1   
      | sftahnmo 
        verbose=1  
-       tnmo=0.00,.479,.637,.792,.877,1.009,1.104,1.19458,1.615,3.010 
-       vnmo=9132.86,10553.29,10921.60,10791.97,11074.19,11649.54,11807.96,12325.03,14410.47,17216.64 
+       tnmo=0,.617,.769,.913,1.027,1.196,1.767,3.010.00
+       vnmo=9132.86,10764.47,10941.73,11235.75,11902.71,12580.03,14513.85,16982.86
      | sftahwrite 
         verbose=1                           
         label2="tracl" o2=1 n2=1063 d2=1   
