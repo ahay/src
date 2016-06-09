@@ -15,46 +15,23 @@ from rsf.proj import *
 #Flow('npr3_field_hdr.rsf','../fetch/npr3_field_hdr.rsf','sfcp')
 #Flow('npr3_field.rsf','../fetch/npr3_field.rsf','sfwindow n1=2047')
 
-Flow(['shotdecon1pcnt.rsf','shotdecon1pcnt_hdr.rsf'],
-     ['../fetch/npr3_field.rsf','../fetch/npr3_field_hdr.rsf'],
-     '''
-     sftahsort verbose=1 input=${SOURCES[0]} 
-       sort='sx sy' none='iline:129,153'
-     | sftahwindow ns=2047
-     | sftahgain 
-       tpow=2
-     | sftahmute
-       tmute=-.300,3.000
-       xmute=0,18000
-       ntaper=75
-     | sftahagc
-       wagc=1.000 verbose=1
-     | sftahscdecon
-       key="sx,sy"
-       minlag=.002 maxlag=.1  pnoise=.01 mincorr=0 maxcorr=3 
-       verbose=1
-     | sftahwrite    
-        verbose=1
-	mode=seq                        
-        output=${TARGETS[0]}
-     ''',stdout=0,stdin=0)
 Flow(['shotdecon.rsf','shotdecon_hdr.rsf'],
      ['../fetch/npr3_field.rsf','../fetch/npr3_field_hdr.rsf'],
      '''
      sftahsort verbose=1 input=${SOURCES[0]} 
-       sort='sx sy' none='iline:129,153'
+       sort='sx sy'
      | sftahwindow ns=2047
      | sftahgain 
        tpow=2
      | sftahmute
-       tmute=-.300,3.000
-       xmute=0,18000
-       ntaper=75
+       tmute=-.050,-.050,.275,2.0 
+       xmute=0,880,1760,18000 
+       ntaper=80 
      | sftahagc
        wagc=1.000 verbose=1
      | sftahscdecon
        key="sx,sy"
-       minlag=.002 maxlag=.1  pnoise=.1 mincorr=0 maxcorr=3 
+       minlag=.002 maxlag=.140  pnoise=.1 mincorr=0 maxcorr=3 
        verbose=1
      | sftahwrite    
         verbose=1
@@ -69,55 +46,13 @@ Flow(['s-g-decon.rsf','s-g-decon_hdr.rsf'],
        sort='gx gy'
      | sftahscdecon
        key="gx,gy"
-       minlag=.002 maxlag=.1  pnoise=.1 mincorr=0 maxcorr=3 
+       minlag=.002 maxlag=.140  pnoise=.1 mincorr=0 maxcorr=3 
        verbose=1
      | sftahwrite 
         verbose=1    
 	mode=seq                        
         output=${TARGETS[0]}
      ''',stdout=0,stdin=0)
-
-Result('s-g-decon',
-       '''
-       sfwindow n2=500 
-       | grey title='shot with tpow' 
-       ''')
-
-Flow(['muteagcpefstaticstack141.rsf','muteagcpefstaticstack141_hdr.rsf'],
-     ['../fetch/npr3_field.rsf','../fetch/npr3_field_hdr.rsf'],
-     '''
-     sftahsort verbose=1 input=${SOURCES[0]} sort='iline:141,141 xline offset'
-     | sftahwindow ns=2047
-     | sftahgain 
-       tpow=2
-     | sftahmute 
-       tmute=-0.300,3.000 
-       xmute=0,18000 
-       ntaper=75 
-     | sftahagc 
-       wagc=1.000 verbose=1 
-     | sftahpef 
-       verbose=1 minlag=.002 maxlag=.1  pnoise=.01 mincorr=0 maxcorr=3 
-     | sftahagc 
-       wagc=1.000 verbose=1 
-     | sftahstatic sign=-1   
-     | sftahnmo 
-       verbose=1  
-       tnmo=0.00,.479,.637,.792,.877,1.009,1.104,1.19458,1.615,3.010 
-       vnmo=9132.86,10553.29,10921.60,10791.97,11074.19,11649.54,11807.96,12325.03,14410.47,17216.64 
-     | sftahstack key=iline,xline verbose=1 ntaper=40
-     | sftahwrite 
-        verbose=1                           
-        label2="xline" o2=1 n2=188 d2=1   
-        label3="iline" o3=141 n3=1 d3=1   
-        output=${TARGETS[0]}
-        outheaders=${TARGETS[1]} 
-     ''',stdout=0,stdin=0)
-Result('muteagcpefstaticstack141',
-       '''
-       window n1=1000 
-       | grey title='il 141 with tpow, agc, pef, static' clip=.94 polarity=y
-       ''')
 
 Flow(['scdeconstack141.rsf','scdeconstack141_hdr.rsf'],
      ['s-g-decon.rsf','s-g-decon_hdr.rsf'],
@@ -127,116 +62,28 @@ Flow(['scdeconstack141.rsf','scdeconstack141_hdr.rsf'],
        wagc=1.000 verbose=1 
      | sftahstatic sign=-1   
      | sftahnmo 
-       verbose=1  
-       tnmo=0.00,.479,.637,.792,.877,1.009,1.104,1.19458,1.615,3.010 
-       vnmo=9132.86,10553.29,10921.60,10791.97,11074.19,11649.54,11807.96,12325.03,14410.47,17216.64 
+       verbose=1
+       tnmo=0,.617,.769,.913,1.027,1.196,1.767,3.010.00
+       vnmo=9132.86,10764.47,10941.73,11235.75,11902.71,12580.03,14513.85,16982.86
      | sftahstack key=iline,xline verbose=1 ntaper=40
+       tmute=0,1.20,1.82 
+       xmute=0,7358,18000 
+       ntaper=80 
      | sftahwrite 
         verbose=1                           
         label2="xline" o2=1 n2=188 d2=1   
+
         label3="iline" o3=141 n3=1 d3=1   
         output=${TARGETS[0]}
         outheaders=${TARGETS[1]} 
      ''',stdout=0,stdin=0)
 
-Flow(['scdeconspecbalstack141.rsf','scdeconspecbalstack141_hdr.rsf'],
-     ['s-g-decon.rsf','s-g-decon_hdr.rsf'],
-     '''
-     sftahsort verbose=1 input=${SOURCES[0]} sort='iline:141,141 xline offset'
-     | sftahspecbal fmin=5 fmax=95 finc=5 wagc=.500 pnoise=.1\
-     | sftahagc 
-       wagc=1.000 verbose=1 
-     | sftahstatic sign=-1   
-     | sftahnmo 
-       verbose=1  
-       tnmo=0.00,.479,.637,.792,.877,1.009,1.104,1.19458,1.615,3.010 
-       vnmo=9132.86,10553.29,10921.60,10791.97,11074.19,11649.54,11807.96,12325.03,14410.47,17216.64 
-     | sftahstack key=iline,xline verbose=1 ntaper=40
-     | sftahwrite 
-        verbose=1                           
-        label2="xline" o2=1 n2=188 d2=1   
-        label3="iline" o3=141 n3=1 d3=1   
-        output=${TARGETS[0]}
-        outheaders=${TARGETS[1]} 
-     ''',stdout=0,stdin=0)
-
-#Result('scdeconstack141',
-#       '''
-#       window n1=1000 
-#       | sfgrey title='scdecon il 141 with tpow, agc, pef, static' clip=.94 polarity=y
-#       ''')
-Flow('decon_scdecon.rsf','scdeconstack141.rsf muteagcpefstaticstack141.rsf',
-     '''
-     sfcat scdeconstack141.rsf muteagcpefstaticstack141.rsf
-     ''',stdin=0)
-Result('decon_scdecon',
+Result('scdeconstack141',
        '''
        window n1=1000 
-       | sfgrey title='scdecon, decon'
+       | sfgrey title='scdecon il 141 with tpow, agc, pef, static' 
+         clip=.94 polarity=y
        ''')
-Plot('scdeconstack141',"sfwindow n1=1000 | sfgrey title='scdecon'")
-Plot('muteagcpefstaticstack141',
-     "sfwindow n1=1000 | sfgrey title='single channel decon'")
-Plot('scdeconspecbalstack141',"sfwindow n1=1000 | sfgrey title='scdeconspecbal'")
-Result('scdeconstack141','scdeconstack141',
-	"sfwindow n1=1000 | sfgrey title='scdecon'")
-Result('compare',
-	'scdeconstack141 muteagcpefstaticstack141 scdeconspecbalstack141',
-	'Movie')
-Result('compare_sidebyside',
-	'muteagcpefstaticstack141 scdeconstack141 scdeconspecbalstack141',
-	'SideBySideAniso')
-
-Flow(['shotdeconstack141.rsf','shotdeconstack141_hdr.rsf'],
-     ['shotdecon.rsf','shotdecon_hdr.rsf'],
-     '''
-     sftahsort verbose=1 input=${SOURCES[0]} sort='iline:141,141 xline offset'
-     | sftahagc 
-       wagc=1.000 verbose=1 
-     | sftahstatic sign=-1   
-     | sftahnmo 
-       verbose=1  
-       tnmo=0.00,.479,.637,.792,.877,1.009,1.104,1.19458,1.615,3.010 
-       vnmo=9132.86,10553.29,10921.60,10791.97,11074.19,11649.54,11807.96,12325.03,14410.47,17216.64 
-     | sftahstack key=iline,xline verbose=1 ntaper=40
-     | sftahwrite 
-        verbose=1                           
-        label2="xline" o2=1 n2=188 d2=1   
-        label3="iline" o3=141 n3=1 d3=1   
-        output=${TARGETS[0]}
-        outheaders=${TARGETS[1]} 
-     ''',stdout=0,stdin=0)
-Result('shotdeconstack141',
-       '''
-       window n1=1000 
-       | sfgrey title='shotdecon il 141 with tpow, agc, pef, static' 
-       ''')
-
-Flow(['shotdecon1pcntstack141.rsf','shotdecon1pcntstack141_hdr.rsf'],
-     ['shotdecon1pcnt.rsf','shotdecon1pcnt_hdr.rsf'],
-     '''
-     sftahsort verbose=1 input=${SOURCES[0]} sort='iline:141,141 xline offset'
-     | sftahagc 
-       wagc=1.000 verbose=1 
-     | sftahstatic sign=-1   
-     | sftahnmo 
-       verbose=1  
-       tnmo=0.00,.479,.637,.792,.877,1.009,1.104,1.19458,1.615,3.010 
-       vnmo=9132.86,10553.29,10921.60,10791.97,11074.19,11649.54,11807.96,12325.03,14410.47,17216.64 
-     | sftahstack key=iline,xline verbose=1 ntaper=40
-     | sftahwrite 
-        verbose=1                           
-        label2="xline" o2=1 n2=188 d2=1   
-        label3="iline" o3=141 n3=1 d3=1   
-        output=${TARGETS[0]}
-        outheaders=${TARGETS[1]} 
-     ''',stdout=0,stdin=0)
-Result('shotdecon1pcntstack141',
-       '''
-       window n1=1000 
-       | sfgrey title='shotdecon1pcnt il 141 with tpow, agc, pef, static' 
-       ''')
-# kls removed from sfgrey clip=.94 polarity=y
 
 Flow(['scdeconcdps.rsf','scdeconcdps_hdr.rsf'],
      ['s-g-decon.rsf','s-g-decon_hdr.rsf'],
@@ -246,52 +93,63 @@ Flow(['scdeconcdps.rsf','scdeconcdps_hdr.rsf'],
        wagc=1.000 verbose=1 
      | sftahstatic sign=-1   
      | sftahnmo 
-       verbose=1  
-       tnmo=0.00,.479,.637,.792,.877,1.009,1.104,1.19458,1.615,3.010 
-       vnmo=9132.86,10553.29,10921.60,10791.97,11074.19,11649.54,11807.96,12325.03,14410.47,17216.64 
+       verbose=1
+       tnmo=0,.617,.769,.913,1.027,1.196,1.767,3.010.00
+       vnmo=9132.86,10764.47,10941.73,11235.75,11902.71,12580.03,14513.85,16982.86
+     | sftahmute 
+       tmute=0,1.20,1.82 
+       xmute=0,7358,18000 
+       ntaper=80 
      | sftahwrite 
         verbose=1                           
         mode=seq 
         output=${TARGETS[0]}
         outheaders=${TARGETS[1]} 
      ''',stdout=0,stdin=0)
-#sfwindow n1=1000  < scdeconcdps.rsf | sfwigb perc=99 &
-Flow(['mutenmocdps.rsf','mutenmocdps_hdr.rsf'],
-     ['s-g-decon.rsf','s-g-decon_hdr.rsf'],
-     '''
-     sftahsort verbose=1 input=${SOURCES[0]} sort='iline:141,141 xline:10,180,10 offset'
-     | sftahagc 
-       wagc=1.000 verbose=1 
-     | sftahstatic sign=-1 
-     | sftahmute xmute=0,1225,6000,9000,18000 tmute=0,.4,1,1.3,4  
-     | sftahnmo 
-       verbose=1  
-       tnmo=0.00,.479,.637,.792,.877,1.009,1.104,1.19458,1.615,3.010 
-       vnmo=9132.86,10553.29,10921.60,10791.97,11074.19,11649.54,11807.96,12325.03,14410.47,17216.64 
-     | sftahwrite 
-        verbose=1                           
-        mode=seq 
-        output=${TARGETS[0]}
-        outheaders=${TARGETS[1]} 
-     ''',stdout=0,stdin=0)
-Flow(['nmomutecdps.rsf','nmomutecdps_hdr.rsf'],
-     ['s-g-decon.rsf','s-g-decon_hdr.rsf'],
-     '''
-     sftahsort verbose=1 input=${SOURCES[0]} sort='iline:141,141 xline:10,180,10 offset'
-     | sftahagc 
-       wagc=1.000 verbose=1 
-     | sftahstatic sign=-1 
-     | sftahnmo 
-       verbose=1  
-       tnmo=0.00,.479,.637,.792,.877,1.009,1.104,1.19458,1.615,3.010 
-       vnmo=9132.86,10553.29,10921.60,10791.97,11074.19,11649.54,11807.96,12325.03,14410.47,17216.64 
-     | sftahmute xmute=0,1225,6000,9000,18000 tmute=0,.385,.83,1.04,4  
-     | sftahwrite 
-        verbose=1                           
-        mode=seq 
-        output=${TARGETS[0]}
-        outheaders=${TARGETS[1]} 
-     ''',stdout=0,stdin=0)
-#sfwindow n1=1000  < nmomutecdps.rsf | sfwigb perc=99 &
-#sfwindow n1=1000  < mutenmocdps.rsf | sfwigb perc=99 &
+
+Result('scdeconcdps',
+       '''
+       window n1=1000 
+       | sfgrey title='scdecon il 141 cdps'
+         clip=.94 polarity=y
+       ''')
+
+temp= \
+'''
+sftahsort verbose=1 input=shotdecon.rsf scdeconcdps.rsf sort='cdp:45241,45241 offset' \
+| sftahgethw key=iline,xline,cdp,offset \
+| sftahagc \
+       wagc=1.000 verbose=1 \
+| sftahstatic sign=-1  \
+| sftahmute \
+       tmute=0,1.20,1.82 \
+       xmute=0,7358,18000 \
+       ntaper=80 \
+| sftahwrite output=cdp45241.rsf mode=seq \
+| sftahnmo \
+   verbose=1  \
+   tnmo=0,.617,.769,.913,1.027,1.196,1.767,3.010.00
+   vnmo=9132.86,10764.47,10941.73,11235.75,11902.71,12580.03,14513.85,16982.86
+
+| sftahwrite output=nmo45241.rsf mode=seq \
+>/dev/null
+<cdp45241.rsf sfwindow max1=2.000 | sfgrey   | sfpen &
+<cdp45241.rsf sfwindow max1=2.000 | sfwiggle  | sfpen &
+<nmo45241.rsf sfwindow max1=2.000 | sfgrey   | sfpen &
+
+< cdp45241_hdr.rsf sfdd type=float | sfheadermath output=offset > cdp45241f_hdr.rsf
+<cdp45241.rsf sfwindow max1=2 | sfvscan offset=cdp45241f_hdr.rsf v0=9000 nv=101 dv=100 semblance=y half=n nb=10 >vscan45241.rsf
+# nb=10 or 20looked good to me
+
+< vscan45241.rsf \
+sfgrey \
+   color=j allpos=y title="Semblance Scan" unit2=ft/s \
+| sfpen 
+
+#nearby velocity
+
+       tnmo=0,.617,.769,.913,1.027,1.196,1.767,3.010.00
+       vnmo=9132.86,10764.47,10941.73,11235.75,11902.71,12580.03,14513.85,16982.86
+'''
+
 End()
