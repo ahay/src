@@ -2,21 +2,9 @@ from rsf.proj import *
 
 # get the stack created using seismic unix
 Fetch('final_stack.rsf','teapot',server='http://s3.amazonaws.com',top='')
-Plot('sustack','final_stack','grey title="SU stack"',view=1)
-
-Result('sustack','final_stack',
-       '''
-       byte gainpanel=all |
-       grey3 frame1=500 frame2=100 frame3=150 
-       title="SU stack" point2=0.35272
-       label2=Inline label3=Crossline
-       ''')
 
 Fetch('npr3_gathers.sgy','teapot',server='http://s3.amazonaws.com',top='')
 
-# ohh my!  Coordinates all need to be divided by 1000 to be in ft.
-# this apply to sx, sy ,cdpx, cdpy
- 
 Flow(['npr3_gathers.rsf','npr3_gathers_hdr.rsf', 
       'npr3_gathers.thdr','npr3_gathers.bhdr'],
      'npr3_gathers.sgy',
@@ -28,6 +16,10 @@ Flow(['npr3_gathers.rsf','npr3_gathers_hdr.rsf',
 Flow('gathersheaderattr.txt',
      'npr3_gathers_hdr.rsf',
      'sfheaderattr > $TARGET && /bin/cat $TARGET',stdout=-1)
+
+# ohh my!  Coordinates all need to be divided by 1000 to be in ft.
+# this apply to sx, sy ,cdpx, cdpy
+ 
 
 Fetch('npr3_field.sgy','teapot',server='http://s3.amazonaws.com',top='')
 
@@ -56,4 +48,8 @@ if pdfread:
     Flow('processing','teapot_processing.pdf',
            pdfread + ' $SOURCE',stdin=0,stdout=-1)
     
+# download the 3D dmo velocity text file:
+Fetch('npr3_dmo.vel','teapot',server='http://s3.amazonaws.com',top='')
+Flow('npr3_dmo_vel','npr3_dmo.vel','/bin/cat' + ' $SOURCE',stdin=0,stdout=-1)
+
 End()
