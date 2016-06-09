@@ -41,9 +41,8 @@ sftahwrite, which write the data sequentially to the output file (ie
 the output files is just a bunch of traces.
 
 PARAMETERS
-   int ns= n1 in the input trace amplitude file.
-
-        The number of samples in the input traces.
+   Float tmax= maximum time in the input trace amplitude file.
+        Maximum time in seconds to limit the output trace 
 
 */
 
@@ -82,14 +81,18 @@ int main(int argc, char* argv[])
   int n1_traces;
   int n1_headers;
 
+  float d1;
+  float o1;
+  float tmax;
+
   char* header_format=NULL;
   sf_datatype typehead;
   /* kls do I need to add this?  sf_datatype typein; */
   float* fheader=NULL;
   int* iheader=NULL;
   float* intrace=NULL;
-  int ns;
-  int indx_ns;
+  int ns_out;
+  int indx_ns; /*trace header index of ns key */
   
   /*****************************/
   /* initialize verbose switch */
@@ -118,6 +121,11 @@ int main(int argc, char* argv[])
   if (!sf_histint(in,"n1_headers",&n1_headers)) 
     sf_error("input data does not define n1_headers");
 
+  if (!sf_histfloat(in,"d1",&d1))
+    sf_error("input data not define d1");
+  if (!sf_histfloat(in,"o1",&o1))
+    sf_error("input data not define o1");
+
   header_format=sf_histstring(in,"header_format");
   if(strcmp (header_format,"native_int")==0) typehead=SF_INT;
   else                                       typehead=SF_FLOAT;
@@ -129,13 +137,20 @@ int main(int argc, char* argv[])
   if(verbose>0)fprintf(stderr,"allocate intrace.  n1_traces=%d\n",n1_traces);
   intrace= sf_floatalloc(n1_traces);
 
-  if(verbose>0)fprintf(stderr,"get the parameter nt\n");
-  if(!sf_getint("ns",&ns))ns=n1_traces;
-  
-  if(ns>n1_traces){
-    fprintf(stderr,"input trace length is shorter than input paramter nt\n");
-    fprintf(stderr,"n1_traces=%d, ns=%d\n",n1_traces,ns);
-    sf_error("input trace length is shorter than input paramter nt");
+  if(verbose>0)fprintf(stderr,"get the parameter tmax\n");
+  if(!sf_getfloat("tmax",&tmax))tmax=(n1_traces-1)*d1+o1;
+  /* maximum time in seconds to limit the output trace */
+
+  ns_out=(tmax-o1)/d1+1.5;
+  if(verbose>1){
+    fprintf(stderr,"ns_out=%d, tmax=%f, o1=%f, d1=%f\n",ns_out, tmax, o1, d1);
+  }
+
+  if(ns_out>n1_traces){
+    fprintf(stderr,
+	    "input trace is shorter than computed from input paramater tmax\n");
+    fprintf(stderr,"n1_traces=%d, ns_out=%d\n",n1_traces,ns_out);
+    sf_error("input trace length is shorter than ns_out");
   }
   
   /**********************************************************/
@@ -144,7 +159,7 @@ int main(int argc, char* argv[])
   /* add to the history file                                */
   /**********************************************************/
 
-  sf_putint(out,"n1_traces",ns);
+  sf_putint(out,"n1_traces",ns_out);
 
   /* put the history from the input file to the output */
   sf_fileflush(out,in);
@@ -155,6 +170,23 @@ int main(int argc, char* argv[])
 
   /* segy_init gets the list header keys required by segykey function  */
   segy_init(n1_headers,in);
+  /* kls upgrade this code to select based on trace header.
+     loop for (i=0; i < n1_headers; i++) {
+       look for segykeyword(i) in the input user parameters.  Count 
+       numwindowheadernames
+     }
+     allocate array windowheadernames[numwindowheadernames], windowmin,windowmax
+     loop and populate windowheadernames, windowmin, and windowmax.
+     windowmin and windowmax should be double so large integers and
+     floats in headers can be handled without rounding.  user input will
+     look like tracf=1,1 or offset=0,600.
+
+     as each trace is read, test header to determine if the traces should 
+     be output or thrown away.
+
+     update program to use tmax=3.500 instead of ns to apply time window.
+     Karl Schleicher 05/22/2016
+  */ 
   indx_ns=segykey("ns");
 
 
@@ -169,16 +201,16 @@ int main(int argc, char* argv[])
     /********************/
     /* this program prints selected header keys */
     
-    if(verbose>2)fprintf(stderr,"ns=%d,indx_ns=%d\n",ns,indx_ns);
+    if(verbose>2)fprintf(stderr,"ns_out=%d,indx_ns=%d\n",ns_out,indx_ns);
     if(typehead == SF_INT){
-      iheader[indx_ns]=ns;
+      iheader[indx_ns]=ns_out;
     } else {
-      fheader[indx_ns]=(float)ns;
+      fheader[indx_ns]=(float)ns_out;
     }
     /***************************/
     /* write trace and headers */
     /***************************/
-    put_tah(intrace, fheader, ns, n1_headers, out);
+    put_tah(intrace, fheader, ns_out, n1_headers, out);
   }
 
   exit(0);
