@@ -34,11 +34,18 @@ Result('Vint',
 #       	label2=xline    unit2=count
 #       ''')
 
-Result('mappedstack_filter', '../tahnmostack/mappedstack.rsf',
+Result('stack_filter', '../vels/vtxystack.rsf',
 	'''
-	window j3=20 |
+	window min3=141 max3=141 |
 	bandpass fhi=20 |
 	grey title=filterred_stack
+       	label1=Time    unit2=sec 
+       	label2=xline   unit1=count
+        ''')
+Result('stack', '../vels/vtxystack.rsf',
+	'''
+	window min3=141 max3=141 |
+	grey title=stack
        	label1=Time    unit2=sec 
        	label2=xline   unit1=count
         ''')
@@ -84,7 +91,7 @@ Result('slo',
 
 
 
-Flow('fft','../tahnmostack/mappedstack.rsf',
+Flow('fft','../vels/vtxystack.rsf',
      'put d2=110 d3=110 | fft1 | window max1=20 | transp plane=12 | transp plane=23')
 
 
@@ -134,16 +141,16 @@ Flow('mig_t','mig_z','depth2time dt=.002 nt=2049 velocity=Vint3Dz.rsf')
 
 Plot('mig_t',
 	'''
-	window j3=20 |
 	put d2=1 d3=1 |	
+	window j3=20 |
 	grey title=migration_data_in_time
        	label2=Time    unit2=s  
        	label1=Trace unit1=num.
        ''',view=1)
 Result('mig_t',
-	'''	
-	window f3=141 n3=1 n1=1501 |
-	put d2=1 d3=20 |
+	'''
+        put d2=1 d3=1 |	
+	window min3=141 max3=141 n1=1501 |
 	grey title=migration_data_in_time
        	label1=Time    unit1=s  
        	label2=Trace unit2=num. gainpanel=a
