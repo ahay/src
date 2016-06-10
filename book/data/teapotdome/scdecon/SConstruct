@@ -20,7 +20,7 @@ Flow(['shotdecon.rsf','shotdecon_hdr.rsf'],
      '''
      sftahsort verbose=1 input=${SOURCES[0]} 
        sort='sx sy'
-     | sftahwindow ns=2047
+     | sftahwindow tmax=4.092
      | sftahgain 
        tpow=2
      | sftahmute

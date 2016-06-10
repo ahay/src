@@ -19,7 +19,7 @@ Flow(['rawshot.rsf','rawshot_hdr.rsf'],
      ['../fetch/npr3_field.rsf','../fetch/npr3_field_hdr.rsf'],
      '''
      sftahsort verbose=1 input=${SOURCES[0]} sort='fldr:214,254,10 tracf'
-     | sftahwindow tmax=4.192
+     | sftahwindow tmax=4.092
      | sftahgain 
        tpow=2
      | sftahwrite 
@@ -147,7 +147,7 @@ Flow(['tpowstack141.rsf','tpowstack141_hdr.rsf'],
      ['../fetch/npr3_field.rsf','../fetch/npr3_field_hdr.rsf'],
      '''
      sftahsort verbose=1 input=${SOURCES[0]} sort='iline:141,141 xline offset'
-     | sftahwindow tmax=4.192
+     | sftahwindow tmax=4.092
      | sftahgain 
        tpow=2
      | sftahmute 
@@ -176,7 +176,7 @@ Flow(['mutepefagcstack141.rsf','mutepefagcstack141_hdr.rsf'],
      ['../fetch/npr3_field.rsf','../fetch/npr3_field_hdr.rsf'],
      '''
      sftahsort verbose=1 input=${SOURCES[0]} sort='iline:141,141 xline offset'
-     | sftahwindow tmax=4.192
+     | sftahwindow tmax=4.092
      | sftahgain 
        tpow=2
      | sftahmute 
@@ -209,7 +209,7 @@ Flow(['mutepefagcstaticstack141.rsf','mutepefagcstaticstack141_hdr.rsf'],
      ['../fetch/npr3_field.rsf','../fetch/npr3_field_hdr.rsf'],
      '''
      sftahsort verbose=1 input=${SOURCES[0]} sort='iline:141,141 xline offset'
-     | sftahwindow tmax=4.192
+     | sftahwindow tmax=4.092
      | sftahgain 
        tpow=2
      | sftahmute 
@@ -247,7 +247,7 @@ Flow(['muteagcstaticstack141.rsf','muteagcstaticstack141_hdr.rsf'],
      ['../fetch/npr3_field.rsf','../fetch/npr3_field_hdr.rsf'],
      '''
      sftahsort verbose=1 input=${SOURCES[0]} sort='iline:141,141 xline offset'
-     | sftahwindow tmax=4.192
+     | sftahwindow tmax=4.092
      | sftahgain 
        tpow=2
      | sftahmute 
@@ -284,7 +284,7 @@ Flow(	['mutepefagcstaticcdps.rsf','muteagcpefcdps_hdr.rsf'],
         ['../fetch/npr3_field.rsf','../fetch/npr3_field_hdr.rsf'],
      '''
      sftahsort verbose=0 input=${SOURCES[0]} sort='iline:141,141 xline:170,180 offset'
-     | sftahwindow tmax=4.192
+     | sftahwindow tmax=4.092
      | sftahmakeskey pkey=dt skey=tracl
      | sftahgain 
        tpow=2
