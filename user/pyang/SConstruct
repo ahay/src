@@ -6,14 +6,18 @@ import bldutil
 ######################################################################
 # 1. C main programs
 progs = '''
-cohn checkptdemo dlct fpocs2d fpocs3d fwi2d fbrec2d 
-istinterp istpad istseislet lsrtm2d lsprtm2d lsinterp2d 
-mwni2d myradon2 mythresh mshots mcaseislet modeling2d mysnr
-pocs3d pocs pocsseislet rtm2d rtmadcig rtmva2d
+cohn checkptdemo fwi2d fbrec2d istseislet lsrtm2d lsprtm2d 
+mythresh mshots mcaseislet modeling2d mysnr
+pocsseislet rtm2d rtmadcig rtmva2d
 Testfd2d Testfd3d Testeb Testelastic2d Testaniso Testspml
-viscoa2d viscoe2d ps2d excitationic
+viscoa2d viscoe2d excitationic
 '''
 
+progs_fftw='''
+dlct fpocs2d fpocs3d istinterp lsinterp2d istpad 
+pocs3d pocs ps2d mwni2d  myradon2
+'''
+#
 
 ######################################################################
 # 2. C++ main programs
@@ -40,9 +44,10 @@ mpigpufwi
 
 ######################################################################
 # 6. Fortran 90 main programs
-f90_progs = '''
-demofftw3
+f90_progs = ''' 
 '''
+#demofftw3
+
 
 
 ######################################################################
@@ -101,16 +106,18 @@ for source in src:
 ######################################################################
 # 1. compiling C programs
 cmains = Split(progs)
-for prog in cmains:
+cmains_fftw = Split(progs_fftw)
+for prog in cmains+cmains_fftw:
     sources = ['M' + prog]
     bldutil.depends(env,sources,'M'+prog)
-    if fftw:
+    if fftw or prog in cmains:
         env.StaticObject('M'+prog+'.c')
         prog = env.Program(prog,map(lambda x: x + '.o',sources))
     else:
         prog = env.RSF_Place('sf'+prog,None,var='FFTW',package='fftw')
     if root:
         env.Install(bindir,prog)
+
 
 ######################################################################
 # 2. compiling C++ programs
@@ -250,7 +257,7 @@ if root:
     user = os.path.basename(os.getcwd())
     main = 'sf%s.py' % user
     
-    docs = map(lambda prog: env.Doc(prog,'M' + prog),cmains+mpi_cmains) + \
+    docs = map(lambda prog: env.Doc(prog,'M' + prog),cmains+cmains_fftw+mpi_cmains) + \
            map(lambda prog: env.Doc(prog,'M%s.cc' % prog,lang='c++'),ccmains) +\
 	   map(lambda prog: env.Doc(prog,'M' + prog+'.cu'),cuda_mains + cuda_mpi_mains)+ \
 	   map(lambda prog: env.Doc(prog,'M'+prog+'.f90',lang='f90'),f90_mains)+\
