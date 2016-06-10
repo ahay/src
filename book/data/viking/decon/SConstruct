@@ -7,7 +7,7 @@ Flow('ntg',['../fetch/seismic.rsf','../fetch/seismic_hdr.rsf'],
      sftahsort input=${SOURCES[0]} sort='cdp -offset' \
      | sftahpef                                       
         verbose=1 minlag=.004 maxlag=.2  pnoise=.01 mincorr=0 maxcorr=3    
-     | sftahwindow ns=751 \
+     | sftahwindow tmax=3.0 \
      | sftahgain tpow=2 \
      | sftahnmo \
          tnmo=0.0,1.25,1.4,1.8,2.0,2.5,3.0 \
@@ -38,7 +38,7 @@ for cdp in [200,700,1300,2000]:
 	 sftahsort sort="cdp:%d,%d,1 -offset" input=$SOURCE \
          | sftahpef                                       
             verbose=1 minlag=.004 maxlag=.2  pnoise=.01 mincorr=0 maxcorr=3    
-         | sftahwindow ns=751 \
+         | sftahwindow tmax=3.0 \
 	 | sftahwrite verbose=1 output=$TARGET mode=seq
 	 '''%(cdp,cdp),stdin=0,stdout=0)
     Result('cdp%d'%cdp  , 
@@ -76,7 +76,7 @@ Flow('rawstack',['../fetch/seismic.rsf','../fetch/seismic_hdr.rsf'],
      | sftahpef                                       
         verbose=1 minlag=.004 maxlag=.2  pnoise=.01 mincorr=0 maxcorr=3    
      | sftahgain tpow=2 \
-     | sftahwindow ns=751 \
+     | sftahwindow tmax=3.0 \
      | sftahnmo \
             tnmo=0.0,.5,1.0,1.25,1.7,2.1,2.4,2.75 \
 	    vnmo=1450,1450,1800,1900,2000,2200,2400,2600 \
@@ -99,7 +99,7 @@ Flow('agcstack',['../fetch/seismic.rsf','../fetch/seismic_hdr.rsf'],
      | sftahpef                                       
         verbose=1 minlag=.004 maxlag=.2  pnoise=.01 mincorr=0 maxcorr=3    
      | sftahgain tpow=2 \
-     | sftahwindow ns=751 \
+     | sftahwindow tmax=3.0 \
      | sftahnmo \
             tnmo=0.0,.5,1.0,1.25,1.7,2.1,2.4,2.75 \
 	    vnmo=1450,1450,1800,1900,2000,2200,2400,2600 \

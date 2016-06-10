@@ -25,7 +25,7 @@ Result('zoomfold2','fold',
 Flow('ntg',['../fetch/seismic.rsf','../fetch/seismic_hdr.rsf'],
      '''
      sftahsort input=${SOURCES[0]} sort='cdp -offset' \
-     | sftahwindow ns=751 \
+     | sftahwindow tmax=3.0 \
      | sftahgain tpow=2 \
      | sftahnmo \
             tnmo=0.0,.5,1.0,1.25,1.7,2.1,2.4,2.75 \
@@ -48,7 +48,7 @@ for cdp in [200,700,1300,2000]:
     Flow([cdpfile+".rsf",cdpfile+"_hdr.rsf"],'../fetch/seismic.rsf',
          '''
 	 sftahsort sort="cdp:%d,%d,1 -offset" input=$SOURCE \
-         | sftahwindow ns=751 \
+         | sftahwindow tmax=3.0 \
 	 | sftahwrite verbose=1 output=$TARGET mode=seq
 	 '''%(cdp,cdp),stdin=0,stdout=0)
     Result('cdp%d'%cdp  , 
@@ -86,7 +86,7 @@ Flow('rawstack',['../fetch/seismic.rsf','../fetch/seismic_hdr.rsf'],
      '''
      sftahsort input=${SOURCES[0]} sort="cdp -offset" \
      | sftahgain tpow=2 \
-     | sftahwindow ns=751 \
+     | sftahwindow tmax=3.0 \
      | sftahnmo \
             tnmo=0.0,.5,1.0,1.25,1.7,2.1,2.4,2.75 \
 	    vnmo=1450,1450,1800,1900,2000,2200,2400,2600 \

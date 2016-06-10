@@ -36,7 +36,7 @@ for cdp in [200,700,1300,2000]:
     Flow([cdpfile+".rsf",cdpfile+"_hdr.rsf"],'paracdp.rsf',
          '''
 	 sftahsort sort="cdp:%d,%d,1 -offset" input=$SOURCE \
-         | sftahwindow ns=751 \
+         | sftahwindow tmax=3.0 \
 	 | sftahwrite verbose=1 output=$TARGET mode=seq
 	 '''%(cdp,cdp),stdin=0,stdout=0)
     Flow('offset%d.rsf'%cdp,'cdp%d_hdr.rsf'%cdp,
@@ -134,7 +134,7 @@ Flow('parastack','paracdp.rsf paracdp_hdr.rsf',
      '''
      sftahsort input=${SOURCES[0]} sort=cdp \
      | sftahgain tpow=2 \
-     | sftahwindow ns=751 \
+     | sftahwindow tmax=3.0 \
      | sftahnmo \
          tnmo=0.0,1.25,1.4,1.8,2.0,2.5,3.0 \
 	 vnmo=1500,1750,1900,2050,2200,2450,2700 \
