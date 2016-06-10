@@ -4,7 +4,7 @@ from rsf.proj import *
 # wget http://s3.amazonaws.com/open.source.geoscience/open_data/Mobil_Avo_Viking_Graben_Line_12/seismic.segy
 
 # fetch the text and jpg files
-for filename in ['Mobil_migration_well_logs.pdf','Farfield.jpg','FarField.txt']:
+for filename in ['Mobil_migration_well_logs.pdf','FarField.jpg','FarField.txt']:
     Fetch(filename,dir='Mobil_Avo_Viking_Graben_Line_12',
       server='https://s3.amazonaws.com',top='open.source.geoscience/open_data',
       usedatapath=1)
