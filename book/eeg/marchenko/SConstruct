@@ -1,0 +1,612 @@
+# ------------------------------------------------------------
+# Tutorial:
+# This SConstruct explains how to use sfmarchenko
+# the retrieve the wave field originating from a VS
+# inside the medium.
+# ------------------------------------------------------------
+#
+# Filippo Broggini
+# Previously
+# Center for Wave Phenomena
+# Colorado School of Mines
+# 1500 Illinois St., 80401 Golden CO
+#
+# Currently
+# Exploration and Environmental Geophysics
+# Institue of Geophysics
+# ETH Zuerich
+# Sonneggstrasse 5, 8092, Zuerich
+#
+# Contact: filippo.broggini@gmail.com
+#
+# Started on 08-07-2013
+# Updated on 21-06-2016
+#
+# Look for the tag PARAM to find user defined parameters
+
+from rsf.proj import *
+from rsf.recipes import fdmod
+from math import *
+ 
+# ------------------------------------------------------------
+# Parameters
+# ------------------------------------------------------------
+par = {
+    'nt':5301, 'dt':0.001,'ot':0.0,		'lt':'t', 'ut':'s',     
+    'nx':601,  'dx':10.0, 'ox':-3000,	'lx':'x', 'ux':'km',
+    'nz':433,  'dz':10.0, 'oz':-500,	'lz':'z', 'uz':'km',
+    'nb':150,
+    'jsnap':200,
+    'jdata':1
+    }
+
+# Number of cores for OpenMP
+# This number has to be <= the number of cores on your laptop
+par['ompnth']=14 #PARAM
+
+# Initialize par
+fdmod.param(par)
+
+# Figure parameters
+par['height']=8.0 #PARAM
+par['ratio']=0.5 #PARAM
+
+# ------------------------------------------------------------
+# Receivers and shot positions for R(x_r,x_s)
+# ------------------------------------------------------------         
+
+# Number of sources and receivers at z=0
+par['nshots'] = 501 #PARAM
+# Receivers on the surface at z=0, starting from x_left
+par['x_left'] = -2500.0 #PARAM
+Flow('rrs_',None,'math n1=%d d1=%g o1=%g output=0' % (par['nshots'],par['dx'],par['x_left']))
+Flow('rrs_z','rrs_','math output="%g" ' % 0.0)
+Flow('rrs_x','rrs_','math output="x1" ')
+Flow('rrs',['rrs_x','rrs_z'],
+	'''
+	cat axis=2 space=n
+	${SOURCES[1]} | transp |
+	put label1="" unit1="" label2="" unit2=""
+	''')
+
+Plot('rrs',fdmod.rrplot('',par))
+	
+# ------------------------------------------------------------
+# Ricker wavlet
+# ------------------------------------------------------------
+
+# tf allows to set the peak of the wavelet at a specific time
+# Make sure that it is a multiple of par['dt']
+par['tf']=0.3 #PARAM
+
+par['kt']=par['tf']/par['dt']
+
+par['nt2']=par['nt']-par['kt']
+
+# Central frequency
+par['fc']=20.0 #PARAM
+
+par['pi']=pi
+fdmod.wavelet('wav1__',par['fc'],par)
+Flow(  'wav1', 'wav1__','math output="input*1.0" | transp' % par)
+Result('wav1','window |' + fdmod.waveplot('',par))
+
+# Amplitude of the spectrum
+Flow(  'wav1fft', 'wav1','transp | fft1' % par)
+Result('wav1fft',
+	'''
+	window max1=100 | math output="abs(input)" | real |
+	graph n1tic=50 grid1=y labelsz=5 title="Ricker wavlet"
+	''')
+
+# ------------------------------------------------------------
+# Flat spectrum wavlet
+# I build this wavelet so that its spectrum is flat in the frequency range
+# where the amplitude spectrum of the Ricker wavelet is not zero
+# I do this so that I don't need to deconvolve the reflection response for its source wavelet
+# ------------------------------------------------------------
+
+# Sampling in frequency
+par['df']=0.01 #PARAM
+
+# Nyquist frequency
+par['fn']=1.0/(2.0*par['dt'])
+
+# Frequencies
+par['nf']=int(par['fn']/par['df']+1)
+
+# Flat spectrum from 5Hz to 50Hz
+# from 0 to 5 and 50 to 60 it is a raised cosine
+par['f2'] = int(2*round(5/par['df'])) #PARAM
+par['f3'] = int(2*round(10/par['df'])) #PARAM
+par['f4'] = int(1*round(45/par['df'])) #PARAM
+
+print par['f2']
+print par['f3']
+print par['f4']
+
+par['fn'] = par['f2']/2
+Flow('wl1',None,
+	'''
+	math n1=%(f2)d d1=1 o1=0 output="0.5*(1.0-cos(2.0*%(pi)g*(x1)/(%(f2)d-1)))" |
+	window n1=%(fn)d
+	''' % par);
+
+par['fn'] = par['f3']/2
+Flow('wr1',None,
+	'''
+	math n1=%(f3)d d1=1 o1=0 output="0.5*(1.0-cos(2.0*%(pi)g*(x1)/(%(f3)d-1)))" |
+	window f1=%(fn)d
+	''' % par);
+
+Flow('wc1',None, 'math n1=%(f4)d d1=1 o1=0 output="1"' % par);
+
+# 5000 is the length in samples of wl1+wc1+wr1
+#par['f5']=par['nf']-(par['f2']+par['f3']+par['f4'])
+
+# Zero padding
+#Flow('wz1',None, 'math n1=%(f5)d d1=1 o1=0 output="0"' % par);
+
+# Amplitude only
+#Flow('ww1',['wl1','wc1','wr1','wz1'],'cat axis=1 ${SOURCES[1]} ${SOURCES[2]} ${SOURCES[3]} | rtoc' % par)
+Flow('ww1',['wl1','wc1','wr1'],'cat axis=1 ${SOURCES[1:3]} | pad n1=%(nf)d | rtoc' % par)
+
+# Amplitude and Phase
+Flow('wavfs1fft','ww1',
+	'''
+	math n1=%(nf)d d1=%(df)g o1=0.0 output="input*exp(I*2*%(pi)g*x1*(-%(tf)g*%(df)g))" |
+	put d1=%(df)g
+	''' % par)
+
+# Amplitude spectrum
+Result('wavfs1fft',
+	'''
+	window max1=100 | math output="abs(input)" | real |
+	graph n1tic=50 grid1=y labelsz=5 title="Flat spectrum wavlet"
+	''')
+
+# Time wavelet
+Flow('wavfs1','wavfs1fft',
+	'''
+	fft1 inv=y opt=y sym=n |
+	put d1=%(dt)g o1=%(ot)g label1="t" unit1="s" |
+	scale axis=2 |
+	window n1=%(nt)d | transp
+	''' % par)
+Result('wavfs1',
+	'''
+	transp | window n1=2000 |
+	graph n1tic=50 grid1=y labelsz=5 title="Flat spectrum wavlet"
+	''')
+
+# ------------------------------------------------------------
+# Scaling factor
+# I need to compute this scaling factor only becuase I am using
+# a flat spectrum wavelet (so I don't have to perform deconvolution)
+# ------------------------------------------------------------
+
+# Wavelet convolution
+Flow('wav1fft_con','wav1','transp | fft1')
+Flow('wavfs1fft_con','wavfs1','transp | fft1')
+Flow('convwaves1',['wav1fft_con','wavfs1fft_con'],
+	'''
+	math y=${SOURCES[1]} type=complex output="input*y" | fft1 inv=y
+	''')
+Result('convwaves1','window n1=500 f1=500 | graph')
+
+# < convwaves1.rsf sfattr (tells us the maximum amplitude of the convolution)
+# < convwaves1.rsf sfdisfil col=1 format=%20.18g > convwaves1.txt (to have additional digits)
+# The maximum amplitude of convwaves1 is 11.6972064971923828
+# -2: see explanation on CWP-719 pag. 185
+# dx: scaling of the integral over sources position
+#par['scale']=-(-2*par['dx']/11.6972064971923828)
+
+Flow('max_conv','convwaves1','max axis=1 max=y')
+Flow('scale','max_conv','math output="2.0*%(dx)g/input"' % par)
+Flow('scalemat','scale','spray axis=1 n=%(nshots)d | spray axis=2 n=%(nt2)d | spray axis=3 n=%(nshots)d' % par)
+
+# ------------------------------------------------------------
+# Define VS --------------------------------------------------
+# ------------------------------------------------------------
+
+# VS - Virtual Source locations (or Imaging points)
+par['nxvs'] = 3 #PARAM
+par['dxvs'] = 50*par['dx'] #PARAM
+par['oxvs'] = -500.0 #PARAM
+par['nzvs'] = 2 #PARAM
+par['dzvs'] = 10*par['dz'] #PARAM
+par['ozvs'] = 1200.0 #PARAM
+
+# Array with x coordinates for the VS locations
+# This is constant for all depths
+Flow('vs_x',None,'math n1=%d d1=%g o1=%g output="x1"' % (par['nxvs'],par['dxvs'],par['oxvs']))
+
+# Array with (x,z) coordinates for the VS locations
+for idepth in range(par['nzvs']):
+	par['zdepth'] = par['ozvs'] + idepth*par['dzvs']
+	tag = "_%04d" % par['zdepth']
+	Flow('vs'+tag,['vs_x'],
+		'''
+		math output="%(zdepth)g" |
+		cat axis=2 space=n ${SOURCES[0]} |
+		transp | rotate rot1=1 |
+		put label1="" unit1="" label2="" unit2="" o2="%(zdepth)g"
+		''' % par)
+
+	Plot('vs'+tag,fdmod.rrplot('plotcol=8',par))
+
+limits = int(par['ozvs']), int(par['ozvs'] + par['nzvs']*par['dzvs']), int(par['dzvs'])
+vs_all = map(lambda x: 'vs'+'_%04d'  % x,range(*limits))
+
+# ------------------------------------------------------------
+# Define velocity and density --------------------------------
+# ------------------------------------------------------------
+
+# First reflector
+par['z1']=900
+#par['dip']=1.0/12.0
+par['dip']=0.0
+par['kd1']=int((par['z1']-par['oz']-par['dip']*par['ox'])/par['dx'])+1+5
+par['ld1']=par['kd1']-1
+	
+# Second reflector
+par['z2']=1400
+par['kd2']=int((par['z2']-par['oz']-par['dip']*par['ox'])/par['dx'])+1+5
+par['ld2']=par['kd2']-1
+
+# Third reflector
+par['z3']=2400
+par['kd3']=int((par['z3']-par['oz']-par['dip']*par['ox'])/par['dx'])+1+5
+par['ld3']=par['kd3']-1
+
+# Velocity
+Flow('vel_',None,
+	'''
+	spike mag=2000,2600,2200,2400 nsp=4
+	k1=1,%(kd1)d,%(kd2)d,%(kd3)d l1=%(ld1)d,%(ld2)d,%(ld3)d,4000
+	p2="-%(dip)g"
+	n1=4000 n2=%(nx)d 
+	d1=%(dz)g d2=%(dx)g
+	o1=%(oz)g o2=%(ox)g 
+	unit1="km" unit2="km"
+	label1="z" label2="x" 
+	''' % par)
+Flow('vel','vel_',
+	'''
+	window n1=%(nz)d f1=5 | put o1=%(oz)g
+	''' % par) 
+Plot('vel',fdmod.cgrey('allpos=y bias=2000 pclip=100 color=j wantscalebar=n',par))
+Result('vel',['vel','rrs']+vs_all,'Overlay')
+
+
+# Density
+Flow('den_',None,
+	'''
+	spike mag=1200,3500,1400,1900 nsp=4
+	k1=1,%(kd1)d,%(kd2)d,%(kd3)d l1=%(ld1)d,%(ld2)d,%(ld3)d,4000
+	p2="-%(dip)g"
+	n1=4000 n2=%(nx)d 
+	d1=%(dz)g d2=%(dx)g
+	o1=%(oz)g o2=%(ox)g 
+	unit1="km" unit2="km"
+	label1="z" label2="x" 
+	''' % par)
+Flow('den','den_',
+	'''
+	window n1=%(nz)d f1=5 | put o1=%(oz)g
+	''' % par) 
+
+Plot('den',fdmod.cgrey('allpos=y bias=0.0 pclip=100 color=j wantscalebar=n',par))
+Result('den',['den','rrs']+vs_all,'Overlay')
+
+# ------------------------------------------------------------
+# ------------------------------------------------------------
+# ------------------------------------------------------------
+# R(x_r,x_s) - Compute the impulse response at z=0 -----------
+# ------------------------------------------------------------
+# ------------------------------------------------------------
+# ------------------------------------------------------------
+# LOOP OVER SOURCE POSITIONS
+for ishot in range(par['nshots']):
+	#tag = "_%03d" % ishot
+	
+	par['xshot'] = par['x_left'] + ishot*par['dx']
+	par['zshot'] = 0.0 # Acquisition surface
+	
+	tag = "_%05d_%04d" % (par['xshot'],par['zshot'])
+	
+	Flow('shot_location'+tag,None,'spike nsp=2 mag=%(xshot)g,%(zshot)g n1=2 k1=1,2' % par)
+
+	Flow(['shot'+tag],['wavfs1','vel','den','shot_location'+tag,'rrs'],
+		'''
+		awefd2d_fo
+		ompchunk=%(ompchunk)d ompnth=%(ompnth)d 
+		verb=y free=n snap=n jsnap=%(jsnap)d jdata=%(jdata)d
+		dabc=y nb=%(nb)d expl=n srctype=2
+		vel=${SOURCES[1]}
+		den=${SOURCES[2]}
+		sou=${SOURCES[3]}
+		rec=${SOURCES[4]}
+		wfl=${TARGETS[1]} |
+		window min2=%(tf)g | put o2=0.0
+		''' % par)
+	
+Result('shot_00200_0000','transp | grey wantscalebar=n polarity=n pclip=98')
+
+limits = int(par['x_left']), int(par['x_left'] + par['nshots']*par['dx']), int(par['dx'])
+shot_all = map(lambda x: 'shot'+'_%05d_%04d'  % (x,0.0),range(*limits))
+Flow('shot_all',shot_all,'cat axis=3 ${SOURCES[1:%d]}' % par['nshots'])
+
+# ------------------------------------------------------------
+# Compute the direct wave and then remove it -----------------
+# ------------------------------------------------------------
+
+# The source is at x=0 and the receiver spread is twice
+# longer than the one for R(x_r,x_s)
+par['nxdir'] = par['nx']*2 - 1
+par['oxdir'] = par['ox']*2
+
+# HOMOGENEOUS
+# Velocity - velh
+Flow('velh',None,
+	'''
+	spike mag=2000 nsp=1
+	n1=%(nz)d n2=%(nxdir)d 
+	d1=%(dz)g d2=%(dx)g
+	o1=%(oz)g o2=%(oxdir)g 
+	unit1="km" unit2="km"
+	label1="z" label2="x" 
+	''' % par)
+ 	
+Plot('velh',fdmod.cgrey('allpos=y bias=0.0 pclip=100 color=j wantscalebar=n',par))
+#Result('velh',['velh','rrs']+vs_all,'Overlay')
+
+# HOMOGENEOUS
+# Density - denh
+Flow('denh',None,
+	'''
+	spike mag=1200 nsp=1
+	n1=%(nz)d n2=%(nxdir)d 
+	d1=%(dz)g d2=%(dx)g
+	o1=%(oz)g o2=%(oxdir)g 
+	unit1="km" unit2="km"
+	label1="z" label2="x" 
+	''' % par)
+
+Plot('denh',fdmod.cgrey('allpos=y bias=0.0 pclip=100 color=j wantscalebar=n',par))
+#Result('denh',['denh','rrs']+vs_all,'Overlay')
+
+# Receivers on the surface at z=0
+# The receivers spread for the direct wave is twice as long the spread for R
+par['nshots_direct'] = int((par['nshots']-1)*2+1)
+Flow('rrs_direct_x',None,'math n1=%d d1=%g o1=%g output=x1' % (par['nshots_direct'],par['dx'],par['x_left']*2))
+Flow('rrs_direct_z','rrs_direct_x','math output="%g" ' % 0.0)
+#Flow('rrs_direct_x','rrs_direct_','math output="x1" ')
+Flow('rrs_direct',['rrs_direct_x','rrs_direct_z'],
+	'''
+	cat axis=2 space=n
+	${SOURCES[1]} | transp |
+	put label1="" unit1="" label2="" unit2=""
+	''')
+
+Plot('rrs_direct',fdmod.rrplot('',par))
+
+par['xshot'] = 0.0
+par['zshot'] = 0.0
+fdmod.point('shot_location',par['xshot'],par['zshot'],par)
+
+Flow(['direct','wfl_direct'],['wavfs1','velh','denh','shot_location','rrs_direct'],
+	'''
+	awefd2d_fo
+	ompchunk=%(ompchunk)d ompnth=%(ompnth)d 
+	verb=y free=n snap=y jsnap=%(jsnap)d jdata=%(jdata)d
+	dabc=y nb=%(nb)d expl=n srctype=2
+	vel=${SOURCES[1]}
+	den=${SOURCES[2]}
+	sou=${SOURCES[3]}
+	rec=${SOURCES[4]}
+	wfl=${TARGETS[1]} |
+	window min2=%(tf)g | put o2=0.0
+	''' % par)
+
+Result('direct','transp | grey wantscalebar=n polarity=n pclip=98')
+#Result('wfl_direct', fdmod.wgrey('color=i wantscalebar=y pclip=99.7',par))
+
+# ------------------------------------------------------------
+# Shift and window the direct wave
+# ------------------------------------------------------------
+Flow('direct_all','direct','patch w=%(nshots)d,%(nt)d p=%(nshots)d,1 | reverse which=1' % par)
+
+# ------------------------------------------------------------
+# Remove the direct wave from all the shots and --------------
+# scale by the scaling factor par['scale'] -------------------
+# ------------------------------------------------------------
+Flow('refl_all',['direct_all','shot_all','scalemat'],
+		'''
+		add scale=-1,1 ${SOURCES[1]} | 
+		add ${SOURCES[2]} mode='p'
+		''')
+
+Flow('refl_100','refl_all','window n3=1 f3=100 | transp')
+Result('refl_100','grey wantscalebar=n polarity=n pclip=98')
+
+# ------------------------------------------------------------
+# FFT of the reflection response -----------------------------
+# ------------------------------------------------------------
+Flow('refl_fft_all','refl_all','window j2=4 n2=1250 | put d2=0.004 | transp | fft1 --out=stdout')
+
+# ------------------------------------------------------------
+# ------------------------------------------------------------
+# ------------------------------------------------------------
+# Compute the first arrival from VS --------------------------
+# ------------------------------------------------------------
+# ------------------------------------------------------------
+# ------------------------------------------------------------
+
+# Smooth background velocity
+Flow('vel_smooth','vel',
+	'''
+	math output="1/input" |
+	smooth rect1=50 rect2=50 repeat=3 | math output="1/input" | put o1=%(oz)g
+	''' % par)
+Plot('vel_smooth',fdmod.cgrey('allpos=y bias=0.0 pclip=100 color=j wantscalebar=n',par))
+Result('vel_smooth',['vel_smooth','rrs']+vs_all,'Overlay')
+
+# Smooth background density (NOT USED BY THE EIKONAL SOLVER)
+Flow('den_smooth','den',
+	'''
+	math output="1/input" |
+	smooth rect1=50 rect2=50 repeat=3 | math output="1/input" | put o1=%(oz)g
+	''' % par)
+Plot('den_smooth',fdmod.cgrey('allpos=y bias=0.0 pclip=100 color=j wantscalebar=n',par))
+Result('den_smooth',['den_smooth','rrs']+vs_all,'Overlay')
+
+par['nshots_nxvs'] = par['nshots']*par['nxvs']
+
+par['f1'] = - (par['ox'] - par['x_left'])/par['dx'] + 1
+par['f2'] = - (par['oz'] - 0.0)/par['dz']
+
+print par['f1']
+print par['f2']
+
+# Extended source wavelet
+Flow('wav1fft_ext','wav1fft','spray axis=2 n=%(nshots_nxvs)d' % par)
+#Flow('wavfs1fft_ext','wavfs1','transp | fft1 | spray axis=2 n=%(nshots_nxvs)d' % par)
+
+Flow('eik_x',None,'math n1=%(nxvs)d d1=%(dxvs)g o1=%(oxvs)g output="0"' % par)
+Flow('eik_y',None,'math n1=%(nxvs)d d1=%(dxvs)g o1=%(oxvs)g output="x1"' % par)
+
+# LOOP OVER VS DEPTHS
+for idepth in range(par['nzvs']):
+	#tag = "_%03d" % ishot
+	
+	par['zdepth'] = par['ozvs'] + idepth*par['dzvs']
+	
+	tag = "_%04d" % par['zdepth']
+	
+	Flow('eik_z'+tag,None,'math n1=%(nxvs)d d1=%(dxvs)g o1=%(oxvs)g output="%(zdepth)g"' % par)
+	
+	Flow('eik_shotfile'+tag,['eik_z'+tag,'eik_y','eik_x'],
+		'''
+		cat axis=2 space=n ${SOURCES[1:3]} |
+		transp |
+		put label1="" unit1="" label2="" unit2="" o2="%(zdepth)g"
+		''' % par)		
+	
+	Flow('p00plus_eik'+tag,['vel_smooth','wav1fft_ext','eik_shotfile'+tag],
+		'''
+		eikonal shotfile=${SOURCES[2]} |
+		transp plane=34 memsize=1024 |
+		window n1=1 f1=%(f1)d n2=%(nshots)d f2=%(f2)d j2=1 |
+		put n1=%(nshots_nxvs)d n2=1 |
+		rtoc |
+		spray axis=1 n=2701 |
+		put fft_n1=5301 d1=0.185185 o1=0.0 |
+		math n1=2701 o1=0.0 d1=0.185185 n2=%(nshots_nxvs)d wav1=${SOURCES[1]} output="wav1*exp(I*2*%(pi)g*x1*(-input)+I*%(pi)g/4)" |
+		fft1 inv=y opt=y sym=n |
+		window min1=%(tf)g d1=0.004 n1=1250 |
+		put o1=%(ot)g label1="t" unit1="s" d2=10 o2=%(x_left)g |
+		put n2=%(nshots)d n3=%(nxvs)d
+		''' % par)
+
+Result('p00plus_eik'+tag,'grey wantscalebar=n polarity=n pclip=98 title="First arrival"')
+
+# ------------------------------------------------------------
+# ------------------------------------------------------------
+# ------------------------------------------------------------
+# Data-drive wave field (auto)focusing with ------------------
+# eikonal first arrival --------------------------------------
+# ------------------------------------------------------------
+# ------------------------------------------------------------
+
+# 4.0 is due to the fact that I undersample the reflection response by a factor 4
+# (see line where REFL_xxx are computed)
+par['scale2']=4.0
+
+# ------------------------------------------------------------
+# Iterative scheme -------------------------------------------
+# ------------------------------------------------------------
+
+# Number of iterations
+par['niter'] = 21
+
+# Tapering width
+par['ntaper'] = 151
+
+# eps - needed to build the time window
+tag = "_%04d" % par['ozvs']
+Flow('max_p00plus','p00plus_eik'+tag,'max max=y axis=0')
+# I still don't know how to implement this automatically
+# eps should be max_p00plus * 1e-2
+par['eps'] = 0.95 * 1e-2 
+
+# Shift
+par['shift'] = -5
+
+## LOOP OVER VS DEPTHS
+for idepth in range(par['nzvs']):
+	
+	par['zdepth'] = par['ozvs'] + idepth*par['dzvs']
+	
+	tag = "_%04d" % par['zdepth']
+	
+	Flow(['Gp'+tag,'Gm'+tag,'G'+tag,'wdwi'+tag],['p00plus_eik'+tag,'refl_fft_all'],
+		'''
+		marchenko refl=${SOURCES[1]}
+		conj=y twin=y pandq=n Gtot=y Htot=n ompnth=%d niter=%d ntaper=%d scale=%g eps=%g shift=%d verb=n
+		Gm=${TARGETS[1]} G=${TARGETS[2]} window=${TARGETS[3]} 
+		''' % (par['ompnth'],par['niter'],par['ntaper'],par['scale2'],par['eps'],par['shift']))
+
+Result('G'+tag, 'grey wantscalebar=n polarity=n pclip=98')
+Result('Gp'+tag,'grey wantscalebar=n polarity=n pclip=98')
+Result('Gm'+tag,'grey wantscalebar=n polarity=n pclip=98')
+
+# ------------------------------------------------------------
+# ------------------------------------------------------------
+# ------------------------------------------------------------
+# Reference wave field ---------------------------------------
+# ------------------------------------------------------------
+# ------------------------------------------------------------
+# ------------------------------------------------------------
+
+par['jsnap'] = 100
+
+par['xvs'] = -500.0
+par['zvs'] = 1300.0
+
+par['xshot'] = par['xvs']
+par['zshot'] = par['zvs']
+
+tag = "_%05d_%04d" % (par['xshot'],par['zshot'])
+		
+Flow('shot_location'+tag,None,'spike nsp=2 mag=%(xshot)g,%(zshot)g n1=2 k1=1,2' % par)
+	
+Flow(['reference'+tag,'reference_wfl'+tag],['wav1','vel','den','shot_location'+tag,'rrs'],
+	'''
+	awefd2d_fo
+	ompchunk=%(ompchunk)d ompnth=%(ompnth)d 
+	verb=y free=n snap=y jsnap=%(jsnap)d jdata=%(jdata)d
+	dabc=y nb=%(nb)d expl=n srctype=1
+	vel=${SOURCES[1]}
+	den=${SOURCES[2]}
+	sou=${SOURCES[3]}
+	rec=${SOURCES[4]}
+	wfl=${TARGETS[1]} |
+	window min2=0.3 | put o2=0.0 | window j2=4 n2=1250 | put d2=0.004 
+	''' % par)
+
+Result('reference'+tag, 'transp | grey wantscalebar=n polarity=n pclip=98')
+#Result('reference_wfl'+tag, fdmod.wgrey('color=i wantscalebar=y pclip=99.7',par))
+
+# ------------------------------------------------------------
+# Comparison of reference solution with Marchenko (eikonal)
+# ------------------------------------------------------------
+
+Plot('reference_line'+tag,'reference'+tag,'window n1=1 min1=0 | graph plotcol=5')
+tagG = "_%04d" % (par['zshot'])
+Plot('G_line'+tagG,'G'+tagG,'window n2=1 min2=0 n3=1 f3=%d | graph' % (0))
+
+Result('ref_G_eik_comp',['reference_line'+tag,'G_line'+tagG],'Overlay')
+
+End()
+
