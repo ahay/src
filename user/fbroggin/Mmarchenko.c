@@ -384,11 +384,11 @@ int main(int argc, char* argv[]) {
 
 		for (ix = 0; ix <= 1; ix++) {
 			if (rect[ix] <= 1) continue;
-			tr = sf_triangle_init(rect[ix], n[ix]);
+			tr = sf_triangle_init(rect[ix], n[ix],false);
 			for (it = 0; it < (nt * ntr / n[ix]); it++) {
 				i0 = sf_first_index(ix, it, 1 + 1, n, s);
 				for (iter = 0; iter < 2; iter++) {
-					sf_smooth2(tr, i0, s[ix], false, false, window);
+					sf_smooth2(tr, i0, s[ix], false, window);
 				}
 			}
 			sf_triangle_close(tr);
