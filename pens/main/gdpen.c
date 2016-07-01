@@ -35,6 +35,13 @@
 
 #ifdef FFMPEG
 #include <avcodec.h>
+
+#ifdef FFMS_USE_FFMPEG_COMPAT
+#  define VERSION_CHECK(LIB, cmp, u1, u2, u3, major, minor, micro) ((LIB) cmp (AV_VERSION_INT(major, minor, micro)))
+#else
+#  define VERSION_CHECK(LIB, cmp, major, minor, micro, u1, u2, u3) ((LIB) cmp (AV_VERSION_INT(major, minor, micro)))
+#endif
+
 #endif
 
 #include "gdpen.h"
@@ -408,6 +415,10 @@ static void ffmpeg_init (void) {
 #define av_frame_alloc  avcodec_alloc_frame
 #endif
 
+#if LIBAVUTIL_VERSION_MAJOR < 52
+#define AV_PIX_FMT_YUV420P PIX_FMT_YUV420P
+#endif
+
     mpeg_frame = av_frame_alloc(); 
 
     codec_ctx->bit_rate = bitrate;
@@ -419,7 +430,7 @@ static void ffmpeg_init (void) {
     codec_ctx->gop_size = 10; /* number of frames in a group */
     codec_ctx->has_b_frames = 0;
     codec_ctx->max_b_frames = 0;
-    codec_ctx->pix_fmt = PIX_FMT_YUV420P;
+    codec_ctx->pix_fmt = AV_PIX_FMT_YUV420P;
 
     /* open it */
 #if LIBAVCODEC_VERSION_MAJOR < 54
@@ -509,6 +520,8 @@ static void ffmpeg_write (void) {
         lum += wrap;
     }
 
+   
+
     /* encode the image */
 #if LIBAVCODEC_VERSION_MAJOR < 54
     frame_out_size = avcodec_encode_video (codec_ctx, frame_outbuf,
@@ -522,7 +535,12 @@ static void ffmpeg_write (void) {
         ERR (FATAL, name, "MPEG encoding error\n");
     if (mpeg_gout) {
         fwrite (mpeg_pkt.data, 1, mpeg_pkt.size, pltout);
-        av_free_packet (&mpeg_pkt);
+
+#if VERSION_CHECK(LIBAVCODEC_VERSION_INT, <, 57, 8, 0, 57, 12, 100)
+	av_free_packet (&mpeg_pkt);
+#else
+	av_packet_unref (&mpeg_pkt);
+#endif
     }
 #endif
 }
@@ -545,7 +563,11 @@ static void ffmpeg_finish (void) {
             ERR (FATAL, name, "MPEG encoding error\n");
         if (mpeg_gout) {
             fwrite (mpeg_pkt.data, 1, mpeg_pkt.size, pltout);
-            av_free_packet (&mpeg_pkt);
+#if VERSION_CHECK(LIBAVCODEC_VERSION_INT, <, 57, 8, 0, 57, 12, 100)
+	av_free_packet (&mpeg_pkt);
+#else
+	av_packet_unref (&mpeg_pkt);
+#endif
         }
     }
 #endif
