@@ -1,22 +1,22 @@
 '''
 This python module overrides the standard Madagascar
-python SCons methods.  We do this, carefully so that 
-the SCons methods still work unless we set the Global 
-variable CSCONS.  If CSCONS is set, then SCons does 
+python SCons methods.  We do this, carefully so that
+the SCons methods still work unless we set the Global
+variable CSCONS.  If CSCONS is set, then SCons does
 not work, and rather we generate a series of PBS
 job wrappers for our commands.
 
 This file is customized in a number of areas.  To quickly
 find all changes, search for the tag:  CWPONLY
 
-The python executable cscons automatically turns on 
+The python executable cscons automatically turns on
 the PBS capabilities of this module.  See the documentation
-online for Mio (on the iTeam website) to learn how to 
+online for Mio (on the iTeam website) to learn how to
 configure your SConstructs to use this module.
 
 author:  Jeff Godwin, Jan 12 2011, CWP
 
-Some new functions are added to make cscons working in an 
+Some new functions are added to make cscons working in an
 iterative inversion scheme. These functions include reading
 user input from command line, setup different pbs directory
 name at each iteration, executing an command line input, etc.
@@ -26,6 +26,10 @@ author: Tonging Yang, Jun 16 2011, CWP
 Adapted for the FORNAX cluster @ IVEC
 
 author: Jeffrey Shragge, 16 AUG 2011, UWA
+
+Adapted for the EULER cluster at ETH Zuerich
+
+author: Filippo Broggini, 23 JUN 2016, ETHZ
 
 '''
 import rsf.proj, os, string, subprocess, sys
@@ -52,8 +56,8 @@ CSCONS  = False
 CLUSTER_CONFIGURED = False
 SCONSIGNS = []
 
-QDEFAULT= None 
-QCOMMAND = {'slurm':'sbatch ','pbs':'qsub '}
+QDEFAULT= None
+QCOMMAND = {'slurm':'sbatch ','pbs':'qsub ','lsf':'bsub'}
 
 NAMED = False
 
@@ -124,8 +128,8 @@ def createSlurmfile(name,email,nodes,ppn,time,last,next,tasks,relaunch,run,conte
     lines.append('#SBATCH -o %s/%s.log' % (pbs_dirt,name))
     lines.append('#SBATCH -e %s/%s.log' % (pbs_dirt,name))
     lines.append('#SBATCH --export=ALL')
-    lines.append('#SBATCH --ntasks-per-node=1') # 1 task per node, then it gives all cpus to task (OMP) 
-    lines.append('#SBATCH --exclusive ') 
+    lines.append('#SBATCH --ntasks-per-node=1') # 1 task per node, then it gives all cpus to task (OMP)
+    lines.append('#SBATCH --exclusive ')
     if nodetype:
       lines.append('#SBATCH --partition=%s'%nodetype)
     if email:
@@ -152,7 +156,7 @@ def createSlurmfile(name,email,nodes,ppn,time,last,next,tasks,relaunch,run,conte
         #lines.append(tasks+'\n')
 
 #    lines.append('echo "JOB: %s done" >> pbs/jobs.txt' % name)
-    lines.append('srun --ntasks-per-node=1 rm -rf  /localscratch/$USER') 
+    lines.append('srun --ntasks-per-node=1 rm -rf  /localscratch/$USER')
     if next == None:
         global SCONSIGNS
         lines.append('sfdbmerge outdb=%s %s ' % (project.path+'.sconsign.dbhash', ' '.join(SCONSIGNS)))
@@ -219,7 +223,61 @@ def createPBSfile(name,email,nodes,ppn,time,last,next,tasks,relaunch,run,content
     file.write(text)
     file.close()
 
-QSYS = {'slurm':createSlurmfile,'pbs':createPBSfile}
+def createLSFfile(name,email,nodes,ppn,time,last,next,tasks,relaunch,run,content,nodetype=None,parallel=False):
+    '''
+    Where we actually create our LSF job files. Modify this to change this to fit
+    your cluster, or changes to Mio and Ra.
+    '''
+
+    global pbs_dirt
+
+    lines = []
+    lines.append('#!/bin/bash')
+    print 'nodes: ',nodes
+#    if nodetype:
+#	    lines.append('#BSUB -l nodes=%d:ppn=%d:%s' % (nodes,ppn,nodetype))
+#    else:
+#        lines.append('#BSUB -l nodes=%d:ppn=%d' % (nodes,ppn))
+
+    lines.append('#BSUB -e %s/%s.err' % (pbs_dirt,name))
+    lines.append('#BSUB -o %s/%s.out' % (pbs_dirt,name))
+    lines.append('#BSUB -J %s' % name)
+    lines.append('#BSUB -n %d' % (ppn*nodes))
+    lines.append('#BSUB -W %d:00' % time)
+    lines.append('#BSUB -R ''span[ptile=%d]''' % ppn)
+    if email:
+        lines.append('#BSUB -B -N')
+    lines.append('#-----------')
+    lines.append('export SCONS_OVERRIDE=1')
+    lines.append('export OMP_NUM_THREADS=%d' % (ppn))
+    lines.append('cd %s' % os.getcwd())
+
+    if last:
+        depends = string.join(['%s' % item for item in last])
+
+    if parallel:
+        lines.append('sort -u $LSB_DJOB_HOSTFILE  > %s/%s-nodes' % (pbs_dirt,name))
+        lines.append('match %s/%s-nodes %s/%s-shell > %s/%s-app ' % (pbs_dirt,name,pbs_dirt,name,pbs_dirt,name))
+        lines.append('mpirun --app %s/%s-app' % (pbs_dirt,name))
+    else:
+        if relaunch or run:
+            lines.append('%s' % content)
+        else:
+            lines.append('scons -f %s/SConstruct-%s' % (pbs_dirt,name))
+
+    if next == None:
+        if not relaunch:
+            global SCONSIGNS
+            lines.append('sfdbmerge outdb=%s %s ' % (project.path+'.sconsign.dbhash', ' '.join(SCONSIGNS)))
+
+    file = open('%s/%s' % (pbs_dirt,name),'w')
+    text = string.join(lines,'\n')
+    if CLUSTER=='ra':
+        text.replace('qsub','msub')
+    file.write(text)
+    file.close()
+
+QSYS = {'slurm':createSlurmfile,'pbs':createPBSfile,'lsf':createLSFfile}
 
 class Job:
     def __init__(self,time=0,nodes=1,ppn=0,notes=''):
@@ -242,7 +300,7 @@ class Job:
         self.run = False
 
     def make(self):
-        qfunction = QSYS[QDEFAULT] 
+        qfunction = QSYS[QDEFAULT]
         qfunction(self.name,EMAIL,self.nodes,self.ppn,
             self.time,self.last,self.next,'\n'.join(self.tasks),self.relaunch,self.run,self.content,nodetype=NODETYPE)
 
@@ -267,9 +325,9 @@ class Job:
             file.write('from rsf.proj import *\n')
             file.write( \
 '''
-import dbhash  
+import dbhash
 proj = Project()
-proj.SConsignFile("%s",dbhash)	 
+proj.SConsignFile("%s",dbhash)
 ''' % (sconsign))
             file.write(string.join(self.tasks,'\n'))
             file.write('\n')
@@ -302,7 +360,7 @@ class Parallel(Job):
             if i == len(self.all)-1:
                 next = self.next
                 nodes = self.nnl
-            qfunction = QSYS[QDEFAULT] 
+            qfunction = QSYS[QDEFAULT]
             qfunction(self.all[i],EMAIL,nodes,self.ppn,
                 self.time,self.last,next,'',False,False,'',nodetype=NODETYPE,parallel=True)
 
@@ -313,7 +371,7 @@ class Parallel(Job):
             return False
 
     def flush(self):
-        if len(self.tasks) > 0: 
+        if len(self.tasks) > 0:
             text = '\n'.join(self.tasks)
             self.scripts.append(text)
             self.tasks = []
@@ -322,7 +380,7 @@ class Parallel(Job):
         global pbs_dirt
         if self.name:
             nscripts = len(self.scripts)
-           
+
             inode = 0
             ijob  = 0
             j = 1
@@ -343,7 +401,7 @@ class Parallel(Job):
 '''
 import dbhash
 proj = Project()
-proj.SConsignFile("%s",dbhash)	 
+proj.SConsignFile("%s",dbhash)
 ''' % (sconsign))
 
                     self.sconsign.append(sconsign)
@@ -351,14 +409,14 @@ proj.SConsignFile("%s",dbhash)
                     for tscript in nodescripts:
                         file.write(tscript)
                         file.write('\n')
-                    
+
                     file.write('End()\n')
                     file.close()
-                    
+
                     inode += 1
                     j = 1
                     nodescripts = []
-                else: 
+                else:
                     j += 1
 
                 if inode == self.nodes or i == len(self.scripts)-1:
@@ -373,7 +431,7 @@ proj.SConsignFile("%s",dbhash)
                     names = []
                     self.all.append(jobname)
 
-            
+
     def __str__(self):
         return 'Parallel: %d %d %d %d'  % (self.time,self.nodes,self.ppn,self.ipn)
 
@@ -385,8 +443,8 @@ def Cluster(name, email=None, cluster='mio', time=1,ppn=12,nodetype='psava',subm
     EMAIL = email
     CLUSTER = cluster
     NODETYPE = nodetype
-    AUTO_SUBMIT =submit 
-    QDEFAULT = scheduler 
+    AUTO_SUBMIT =submit
+    QDEFAULT = scheduler
     CLUSTER_CONFIGURED = True
 
 def Serial(time=None,ppn=None,tasks=None):
@@ -432,7 +490,7 @@ def __createstring(rsfcommand,target,source,command,kw):
 
     outsou = ''
     if type(source) == str:
-        outsou = '"%s"' % source 
+        outsou = '"%s"' % source
     else:
         outsou = str(source)
 
@@ -497,12 +555,12 @@ def Flow(target,source,flow,**kw):
         if mpi and nodes > 0:
             CURRENT_JOB = Job(nodes=nodes,time=time,ppn=ppn,notes='MPI')
             JOB_QUEUE.append(CURRENT_JOB)
-       
+
         command = __createstring('Flow',target,source,flow,kw)
         CURRENT_JOB.add(command)
 
     else:
-        if kw.has_key('time'): 
+        if kw.has_key('time'):
             kw.pop('time')
         if kw.has_key('np'):
             kw['np'] = -1 # We are running locally
@@ -561,7 +619,7 @@ def Run(content):
 
     CURRENT_JOB.add(content)
     CURRENT_JOB.store(content)
-    CURRENT_JOB.relaunch = False 
+    CURRENT_JOB.relaunch = False
     CURRENT_JOB.run = True
 
     CURRENT_JOB = None
@@ -610,7 +668,7 @@ def End(**kw):
                     raise Exception('Fig directory exists but is not suitable for vpl files?')
 
             print 'Preparing jobs...'
-            
+
             global SCONSIGNS
 
             i = 0; n = len(final_queue);
@@ -651,14 +709,21 @@ def End(**kw):
             for job in final_queue:
                 subjobs = []
                 for pbs in job.all:
-                    command = QCOMMAND[QDEFAULT] # 'qsub ' 
+                    command = QCOMMAND[QDEFAULT] # 'qsub '
                     if job.last != None:
                         if QDEFAULT=='slurm':
                           jobIdName=(':'.join(pbs_names[j-1])).replace("Submitted batch job ","")
                           command += '--dependency=afterok:%s '%jobIdName
+                        elif QDEFAULT=='lsf':
+                          pbs_ids = ''.join(pbs_names[j-1])
+                          jobIdName = pbs_ids[pbs_ids.find("<")+1:pbs_ids.find(">")]
+                          command +=' -w "done(%s)" ' % jobIdName
                         else:
                           command +=' -W depend=afterok:%s ' % (':'.join(pbs_names[j-1]))
-                    command += '%s/%s ' %(pbs_dirt, pbs)
+                    if QDEFAULT == 'lsf':
+                        command += '< %s/%s ' %(pbs_dirt, pbs)
+                    else:
+                        command += '%s/%s ' %(pbs_dirt, pbs)
                     print 'Executing...',command
                     process = subprocess.Popen(command,shell=True,stdout=subprocess.PIPE)
                     stdout,stderr  = process.communicate()
@@ -672,5 +737,5 @@ def End(**kw):
 
         else:
             raise Exception("Did not find any jobs?")
-            
+
     return apply(project.End,[],kw)

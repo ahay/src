@@ -507,24 +507,19 @@ int main(int argc, char* argv[]) {
 	/*fft1(Gp,,FRefl,1,0,0);
 	fft1(Gm,,FRefl,1,0,0);*/
 	
-	fprintf(stderr, "Break 1\n");
 	sf_floatwrite(Gp, nt*ntr*nvs, FGp);
-	fprintf(stderr, "Break 2\n");
 	sf_floatwrite(Gm, nt*ntr*nvs, FGm);
-	fprintf(stderr, "Break 3\n");
 	if (Gtot) {
 		sf_floatwrite(G, nt*ntr*nvs, FG);
 		sf_fileclose(FG);
 		free(G);
 	}
-	fprintf(stderr, "Break 4\n");
 
 	if (Htot) {
 		sf_floatwrite(H, nt*ntr*nvs, FH);
 		sf_fileclose(FH);
 		free(H);
 	}
-	fprintf(stderr, "Break 5\n");
 
 	if (pandq) {
 		sf_floatwrite(pplustemp, nt*ntr, Fp);
@@ -532,19 +527,16 @@ int main(int argc, char* argv[]) {
 		sf_fileclose(Fp);
 		sf_fileclose(Fq);
 	}
-	fprintf(stderr, "Break 6\n");
 
 	if (twin) {
 		sf_floatwrite(window_all, nt*ntr*nvs, Ftwin);
 		sf_fileclose(Ftwin);
 		free(window_all);
 	}
-	fprintf(stderr, "Break 7\n");
 	sf_fileclose(Fplus);
 	sf_fileclose(FRefl);
 	sf_fileclose(FGp);
 	sf_fileclose(FGm);
-	fprintf(stderr, "Break 8\n");
 
 	free(Gp);
 	free(Gm);
@@ -562,7 +554,6 @@ int main(int argc, char* argv[]) {
 	free(Refl);
 	free(window);
 	free(tw);
-	fprintf(stderr, "Break 9\n");
 
 	exit(0);
 }
