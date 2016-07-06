@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
     bool mig, cmplx, trm;
     int it, nt, ix, nx, iz, nz, nx2, nz2, nzx, nzx2, pad1;
     int im, i, j, m2, it1, it2, its, ik, n2, nk, snap;
-    float dt, dx, dz, c, old, x0;
+    float dt, dx, dz, c, old, x0, t0;
     float *curr, *prev, **img, *dat, **lft, **rht, **wave;
     sf_complex *cwave, *cwavem;
     sf_file data, image, left, right, snaps;
@@ -55,6 +55,7 @@ int main(int argc, char* argv[])
 
 	if (!sf_histint(data,"n2",&nt)) sf_error("No n2= in input");
 	if (!sf_histfloat(data,"d2",&dt)) sf_error("No d2= in input");
+	if (!sf_histfloat(data,"o2",&t0)) t0=0.; 
 
 	if (!sf_getint("nz",&nz)) sf_error("Need nz=");
 	/* time samples (if migration) */
@@ -85,6 +86,8 @@ int main(int argc, char* argv[])
 	/* time samples (if modeling) */
 	if (!sf_getfloat("dt",&dt)) sf_error("Need dt=");
 	/* time sampling (if modeling) */
+	if (!sf_getfloat("t0",&t0)) t0=0.0f;
+	/* time origin (if modeling) */
 
 	sf_putint(data,"n1",nx);
 	sf_putfloat(data,"d1",dx);
@@ -93,7 +96,7 @@ int main(int argc, char* argv[])
 
 	sf_putint(data,"n2",nt);
 	sf_putfloat(data,"d2",dt);
-	sf_putfloat(data,"o2",0.);
+	sf_putfloat(data,"o2",t0);
 	sf_putstring(data,"label2","Time");
 	sf_putstring(data,"unit2","s");
     }
@@ -117,7 +120,7 @@ int main(int argc, char* argv[])
 
 	sf_putint(snaps,"n3",nt/snap);
 	sf_putfloat(snaps,"d3",dt*snap);
-	sf_putfloat(snaps,"o3",0.);
+	sf_putfloat(snaps,"o3",t0);
     } else {
 	snaps = NULL;
     }
