@@ -1,5 +1,5 @@
-// Complex lowrank decomposition for 2-D isotropic wave propagation. 
-//   Copyright (C) 2010 University of Texas at Austin
+// Complex lowrank decomposition for 2-D viscoacoustic isotropic wave propagation. 
+//   Copyright (C) 2014 University of Texas at Austin
 //  
 //   This program is free software; you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -23,10 +23,12 @@
 using namespace std;
 
 static std::valarray<float> vs,qs;
-static std::valarray<float> ks;
-static float dt,c0,w0;
-static bool rev;
-static int mode,sign;
+static std::valarray<float> ksz,ksx;
+static float ct,cb,cl,cr;
+static int nkzs,nkxs,nz,nx,nbt,nbb,nbl,nbr;
+static float dt,w0,gama;
+static bool rev,compen,avg;
+static int mode,sign,abc;
 
 int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
 {
@@ -36,51 +38,116 @@ int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
     setvalue(res,cpx(0.0f,0.0f));
     for(int a=0; a<nr; a++) {
 	for(int b=0; b<nc; b++) {
+	    int ikz = cs[b] % nkzs;
+	    int ikx = (int) cs[b]/nkzs;
+	    int iz  = rs[a] % nz;
+	    int ix  = (int) rs[a]/nz;
+	    float hypk = hypot(ksz[ikz],ksx[ikx]);
+	    float gamma = atanf(1./qs[rs[a]])/SF_PI;
+	    float c0 = vs[rs[a]];
+	    float c = c0*cosf(SF_PI*gamma/2.);
+	    if (c<=0) sf_error("c negative!");
+	    cpx phf;
 	    if (mode == 0) { /*viscoacoustic*/
-		float gamma = atanf(1./qs[rs[a]])/SF_PI;
 		float eta = -powf(c0,2.*gamma)*powf(w0,-2.*gamma)*cosf(SF_PI*gamma);
 		float tao = -powf(c0,2.*gamma-1.)*powf(w0,-2.*gamma)*sinf(SF_PI*gamma);
-		float p1  = tao*powf(vs[rs[a]],2)*powf(ks[cs[b]],2.*gamma+1.);
-		float p2  = -powf(p1,2) - 4*eta*powf(vs[rs[a]],2)*powf(ks[cs[b]],2.*gamma+2.);
-		float phr,phi;
-		if (p2 >= 0) {
-		    phr = p1*dt/2.;
-		    phi = (sign==0)? sqrtf(p2)*dt/2. : (-1.*sqrtf(p2)*dt/2.);
-		} else {
-		    sf_error("square root imaginary!!!");
-                    sf_warning("v=%g,k=%g,c0=%g,w0=%g,gamma=%g",vs[rs[a]],ks[cs[b]],c0,w0,gamma);
-                    sf_warning("eta=%g,tao=%g,p1=%g,p2=%g,sin=%g,cos=%g",eta,tao,p1,p2,sinf(SF_PI*gamma),cosf(SF_PI*gamma));
-		}
-		if (rev) {phr*=-1.; phi*=-1.;}
-		res(a,b) = cpx(exp(phr)*cosf(phi),exp(phr)*sinf(phi));
+		if (avg) gamma = gama;
+		float p1  = tao*powf(c,2)*powf(hypk,2.*gamma+1.);
+		float p2  = -powf(p1,2) - 4*eta*powf(c,2)*powf(hypk,2.*gamma+2.);
+		if (p2 < 0) sf_warning("square root is imaginary!!!");
+		sf_complex phr = (compen) ? sf_cmplx(-p1*dt/2.,0) : sf_cmplx(p1*dt/2.,0);
+//		sf_complex phr = sf_cmplx(p1*dt/2.,0);
+		sf_complex phi = sf_cmplx(0,0);
+		sf_complex phase = sf_cmplx(0,0);
+#ifdef SF_HAS_COMPLEX_H
+		phi = (sign==0)? sf_cmplx(0,1)*csqrtf(sf_cmplx(p2,0))*dt/2. : sf_complex(0,1)*(-1*csqrtf(sf_complex(p2,0))*dt/2.);
+		phase = phr + phi;
+#else
+		if (sign==0)
+		    phi = sf_cmul(sf_cmplx(0,1),sf_crmul(csqrtf(sf_cmplx(p2,0)),dt/2.));
+		else
+		    phi = sf_cmul(sf_cmplx(0,1),sf_crmul(csqrtf(sf_cmplx(p2,0)),-1*dt/2.));
+		phase = sf_cadd(phr,phi);
+#endif
+		phf = cpx(crealf(cexpf(phase)),cimagf(cexpf(phase)));
 	    }
 	    else if (mode == 1) { /*loss dominated*/
-		float gamma = atanf(1./qs[rs[a]])/SF_PI;
 		float tao = -powf(c0,2.*gamma-1.)*powf(w0,-2.*gamma)*sinf(SF_PI*gamma);
-		float p1  = tao*powf(vs[rs[a]],2)*powf(ks[cs[b]],2.*gamma+1.);
-		float p2  = -powf(p1,2) + 4*powf(vs[rs[a]],2)*powf(ks[cs[b]],2);
-		float phr,phi;
-		if (p2 >= 0) {
-		    phr = p1*dt/2.;
-		    phi = (sign==0)? sqrtf(p2)*dt/2. : (-1.*sqrtf(p2)*dt/2.);
-		} else {
-		    sf_error("square root imaginary!!!");
-		}
-		if (rev) {phr*=-1.; phi*=-1.;}
-		res(a,b) = cpx(exp(phr)*cosf(phi),exp(phr)*sinf(phi));
+		if (avg) gamma = gama;
+		float p1  = tao*powf(c,2)*powf(hypk,2.*gamma+1.);
+		float p2  = -powf(p1,2) + 4*powf(c,2)*powf(hypk,2);
+		if (p2 < 0) sf_warning("square root is imaginary!!!");
+		sf_complex phr = (compen) ? sf_cmplx(-p1*dt/2.,0) : sf_cmplx(p1*dt/2.,0);
+//		sf_complex phr = sf_cmplx(p1*dt/2.,0);
+		sf_complex phi = sf_cmplx(0,0);
+		sf_complex phase = sf_cmplx(0,0);
+#ifdef SF_HAS_COMPLEX_H
+		phi = (sign==0)? sf_cmplx(0,1)*csqrtf(sf_cmplx(p2,0))*dt/2. : sf_complex(0,1)*(-1*csqrtf(sf_complex(p2,0))*dt/2.);
+		phase = phr + phi;
+#else
+		if (sign==0)
+		    phi = sf_cmul(sf_cmplx(0,1),sf_crmul(csqrtf(sf_cmplx(p2,0)),dt/2.));
+		else
+		    phi = sf_cmul(sf_cmplx(0,1),sf_crmul(csqrtf(sf_cmplx(p2,0)),-1*dt/2.));
+		phase = sf_cadd(phr,phi);
+#endif
+		phf = cpx(crealf(cexpf(phase)),cimagf(cexpf(phase)));
 	    }
 	    else if (mode == 2) { /*dispersion-dominated*/
-		float gamma = atanf(1./qs[rs[a]])/SF_PI;
 		float eta = -powf(c0,2.*gamma)*powf(w0,-2.*gamma)*cosf(SF_PI*gamma);
-		float phase = sqrtf(-eta*powf(vs[rs[a]],2)*powf(ks[cs[b]],2.*gamma+2.))*dt;
-		if (rev) phase*=-1;
-		res(a,b) = cpx(cosf(phase),sinf(phase));
+		if (avg) gamma = gama;
+		float phase = sqrtf(-eta*powf(c,2)*powf(hypk,2.*gamma+2.))*dt;
+		phf = cpx(cosf(phase),sinf(phase));
 	    }
 	    else { /*acoustic*/
-		float phase = vs[rs[a]]*ks[cs[b]]*dt; 
-		if (rev) phase*=-1;
-		res(a,b) = cpx(cosf(phase),sinf(phase)); 
+		float phase = c0*hypk*dt; 
+		phf = cpx(cosf(phase),sinf(phase)); 
 	    }
+	    /* absorbing boundary */
+            if (abc==0) {
+              if (iz < nbt)
+		phf *= exp(-powf(ct*(nbt-iz)*abs(ksz[ikz]/hypk),2));
+              else if (iz > nz-1-nbb)
+		phf *= exp(-powf(cb*(iz-nz+1+nbb)*abs(ksz[ikz]/hypk),2));
+              if (ix < nbl)
+		phf *= exp(-powf(cl*(nbl-ix)*abs(ksx[ikx]/hypk),2));
+              else if (ix > nx-1-nbr)
+		phf *= exp(-powf(cr*(ix-nx+1+nbr)*abs(ksx[ikx]/hypk),2));
+            } else {
+              if (iz < nbt)
+		phf *= exp(-powf(ct*(nbt-iz),2));
+              else if (iz > nz-1-nbb)
+		phf *= exp(-powf(cb*(iz-nz+1+nbb),2));
+              if (ix < nbl)
+		phf *= exp(-powf(cl*(nbl-ix),2));
+              else if (ix > nx-1-nbr)
+		phf *= exp(-powf(cr*(ix-nx+1+nbr),2));
+            }
+	    res(a,b) = (rev) ? conj(phf) : phf;
+	}
+    }
+    return 0;
+}
+
+int tukey(float a, float cutoff, float vm, vector<float>& tuk)
+{
+    float kmax = hypot(ksz[nkzs-1],ksx[nkxs-1]);
+    float kbond;
+    kbond = 2*SF_PI*cutoff/vm;
+    if (kbond > kmax) {
+        sf_warning("cutoff wavenumber %f larger than maximum wavenumber %f! Setting kbond = kmax...",kbond,kmax);
+	kbond = kmax;
+    }
+    for (int ikx=0; ikx<nkxs; ikx++) {
+	for (int ikz=0; ikz<nkzs; ikz++) {
+   	    float k = hypot(ksz[ikz],ksx[ikx]);
+	    int ik = ikz+ikx*nkzs;
+	    if (k > kbond)
+		tuk[ik] = 0.;
+	    else if (k >= kbond*(1.-0.5*a))
+		tuk[ik] = 0.5*(1.+cos(SF_PI*(2.*k/(a*kbond)-2./a+1.)));
+	    else
+		tuk[ik] = 1.;
 	}
     }
     return 0;
@@ -103,18 +170,41 @@ int main(int argc, char** argv)
     par.get("npk",npk,20); // maximum rank
 
     par.get("dt",dt); // time step
-    par.get("c0",c0); // reference velocity
     par.get("w0",w0); // reference frequency
     w0 *= 2*SF_PI;
     
     par.get("rev",rev,false); // reverse propagation
     par.get("mode",mode,0); // mode of propagation: 0 is viscoacoustic (default); 1 is loss-dominated; 2 is dispersion dominated; 3 is acoustic
+    float aa,cut,vmax;
+    par.get("compen",compen,false); // compensate attenuation, only works if mode=0,1 (viscoacoustic)
+    if (mode==0 || mode==1)
+	if (compen) {
+	    par.get("taper",aa,0.2); // taper ratio for tukey window
+	    par.get("cutoff",cut,250.); // cutoff frequency
+	    par.get("vmax",vmax,6000.); // maximum velocity
+	    sf_warning("Compensating for attenuation!");
+	}
     par.get("sign",sign,0); // sign of solution: 0 is positive, 1 is negative
+    par.get("avg",avg,false); // whether use average value of gamma
+    if (avg) {
+	par.get("gamma",gama);
+	sf_warning("Gamma_avg = %f",gama);
+    }
     
+    par.get("abc",abc,0); /*absorbing mode: 0-> direction dependent; 1-> direction independent.*/
+
+    par.get("nbt",nbt,0);
+    par.get("nbb",nbb,0);
+    par.get("nbl",nbl,0);
+    par.get("nbr",nbr,0);
+
+    par.get("ct",ct,0.0);
+    par.get("cb",cb,0.0);
+    par.get("cl",cl,0.0);
+    par.get("cr",cr,0.0);
 
     iRSF vel, q("q");
 
-    int nz,nx;
     vel.get("n1",nz);
     vel.get("n2",nx);
     int m = nx*nz;
@@ -130,6 +220,8 @@ int main(int argc, char** argv)
     int nkz,nkx;
     fft.get("n1",nkz);
     fft.get("n2",nkx);
+    nkzs = nkz;
+    nkxs = nkx;
 
     float dkz,dkx;
     fft.get("d1",dkz);
@@ -139,19 +231,18 @@ int main(int argc, char** argv)
     fft.get("o1",kz0);
     fft.get("o2",kx0);
 
-    float kx, kz;
-
     int n = nkx*nkz;
-    std::valarray<float> k(n);
-    for (int ix=0; ix < nkx; ix++) {
-	kx = kx0+ix*dkx;
-	for (int iz=0; iz < nkz; iz++) {
-	    kz = kz0+iz*dkz;
-	    k[iz+ix*nkz] = 2*SF_PI*hypot(kx,kz);
-	}
-    }
-    ks.resize(n);
-    ks = k;
+
+    std::valarray<float> kz(nkz),kx(nkx);
+    for (int iz=0; iz < nkz; iz++)
+	kz[iz] = 2*SF_PI*(kz0+iz*dkz);
+    for (int ix=0; ix < nkx; ix++)
+	kx[ix] = 2*SF_PI*(kx0+ix*dkx);
+
+    ksz.resize(nkz);
+    ksz = kz;
+    ksx.resize(nkx);
+    ksx = kx;
 
     vector<int> lidx, ridx;
     CpxNumMat mid;
@@ -177,7 +268,6 @@ int main(int argc, char** argv)
     std::valarray<sf_complex> ldata(m*n2);
     for (int k=0; k < m*n2; k++) {
 	ldata[k] = sf_cmplx(real(ldat[k]),imag(ldat[k]));
-//	sf_warning("real of ldat=%g, imag of ldat=%g", real(ldat[k]),imag(ldat[k]));
     }
 
     oRSF left("left");
@@ -191,10 +281,21 @@ int main(int argc, char** argv)
 
     cpx *rdat = rmat.data();
     std::valarray<sf_complex> rdata(n2*n);    
-    for (int k=0; k < n2*n; k++) {
-	rdata[k] = sf_cmplx(real(rdat[k]),imag(rdat[k]));
-//    	sf_warning("real of rdat=%g, imag of rdat=%g", real(rdat[k]),imag(rdat[k]));
+    if (!compen || mode==2 || mode==3) {
+	for (int k=0; k < n2*n; k++) {
+	    rdata[k] = sf_cmplx(real(rdat[k]),imag(rdat[k]));
+	} 
+    } else {
+	vector<float> lpass(n);
+	tukey(aa, cut, vmax, lpass);
+	for (int k1=0; k1 < n; k1++) {
+	    for (int k2=0; k2 < n2; k2++) {
+		int k = k2 + k1*n2;
+		rdata[k] = sf_cmplx(real(rdat[k])*lpass[k1],imag(rdat[k])*lpass[k1]);
+	    }
+	}
     }
+
     oRSF right;
     right.type(SF_COMPLEX);
     right.put("n1",n2);
