@@ -34,11 +34,12 @@ Result('Vint',
 #       	label2=xline    unit2=count
 #       ''')
 
-Result('stack_filter', '../vels/vtxystack.rsf',
+Result('stack-filter', '../vels/vtxystack.rsf',
 	'''
-	window min3=141 max3=141 |
+	window n1=1000 min3=141 max3=141 |
 	bandpass fhi=20 |
-	grey title=filterred_stack
+
+	grey title=stack-filter
        	label1=Time    unit2=sec 
        	label2=xline   unit1=count
         ''')
@@ -118,7 +119,7 @@ Flow('mig','fft slo',
 Plot('mig',
        '''
        window j3=20 | 
-       grey title=Migration_depth_slices
+       grey title=Migration-depth-slices
        label2=Depth    unit2=ft 
        label1=Distance unit1=ft
        ''',view=1)
@@ -129,7 +130,7 @@ Plot('mig',
 Flow('mig_z','mig',
      'transp plane=23 | transp plane=12')
 
-Plot('mig_z',
+Plot('mig-z','mig_z',
        '''
        window j3=20 | 
        grey title=Migration transp=y
@@ -139,19 +140,19 @@ Plot('mig_z',
 
 Flow('mig_t','mig_z','depth2time dt=.002 nt=2049 velocity=Vint3Dz.rsf')
 
-Plot('mig_t',
+Plot('mig_t','mig_t',
 	'''
 	put d2=1 d3=1 |	
-	window j3=20 |
+	window n1=1000 j3=20 |
 	grey title=migration_data_in_time
        	label2=Time    unit2=s  
        	label1=Trace unit1=num.
        ''',view=1)
-Result('mig_t',
+Result('mig-t','mig_t',
 	'''
         put d2=1 d3=1 |	
-	window min3=141 max3=141 n1=1501 |
-	grey title=migration_data_in_time
+	window min3=141 max3=141 n1=1000 |
+	grey title=migration-data-in-time
        	label1=Time    unit1=s  
        	label2=Trace unit2=num. gainpanel=a
        ''')
@@ -167,10 +168,10 @@ Flow('filt_mig','filt_mig.sgy',
      | sfput n2=188 o2=1 n3=345 o3=1
      ''',stdin=0)
 	
-Result('filt_mig',
+Result('filt-mig','filt_mig',
 	'''
-	window f3=141 n3=1 |
-	grey title=commercial_mig
+	window n1=1000 f3=141 n3=1 |
+	grey title=commercial-mig
        	label1=Time     unit1=sec 
        	label2=xline    unit2=count
        ''')
