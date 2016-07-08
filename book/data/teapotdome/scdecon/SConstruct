@@ -114,42 +114,4 @@ Result('scdeconcdps',
          clip=.94 polarity=y
        ''')
 
-temp= \
-'''
-sftahsort verbose=1 input=shotdecon.rsf scdeconcdps.rsf sort='cdp:45241,45241 offset' \
-| sftahgethw key=iline,xline,cdp,offset \
-| sftahagc \
-       wagc=1.000 verbose=1 \
-| sftahstatic sign=-1  \
-| sftahmute \
-       tmute=0,1.20,1.82 \
-       xmute=0,7358,18000 \
-       ntaper=80 \
-| sftahwrite output=cdp45241.rsf mode=seq \
-| sftahnmo \
-   verbose=1  \
-   tnmo=0,.617,.769,.913,1.027,1.196,1.767,3.010.00
-   vnmo=9132.86,10764.47,10941.73,11235.75,11902.71,12580.03,14513.85,16982.86
-
-| sftahwrite output=nmo45241.rsf mode=seq \
->/dev/null
-<cdp45241.rsf sfwindow max1=2.000 | sfgrey   | sfpen &
-<cdp45241.rsf sfwindow max1=2.000 | sfwiggle  | sfpen &
-<nmo45241.rsf sfwindow max1=2.000 | sfgrey   | sfpen &
-
-< cdp45241_hdr.rsf sfdd type=float | sfheadermath output=offset > cdp45241f_hdr.rsf
-<cdp45241.rsf sfwindow max1=2 | sfvscan offset=cdp45241f_hdr.rsf v0=9000 nv=101 dv=100 semblance=y half=n nb=10 >vscan45241.rsf
-# nb=10 or 20looked good to me
-
-< vscan45241.rsf \
-sfgrey \
-   color=j allpos=y title="Semblance Scan" unit2=ft/s \
-| sfpen 
-
-#nearby velocity
-
-       tnmo=0,.617,.769,.913,1.027,1.196,1.767,3.010.00
-       vnmo=9132.86,10764.47,10941.73,11235.75,11902.71,12580.03,14513.85,16982.86
-'''
-
 End()
