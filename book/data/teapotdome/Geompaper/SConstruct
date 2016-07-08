@@ -1,0 +1,72 @@
+from rsf.proj import *
+
+#SConscript('../fetch/SConstruct')
+
+Flow('foldplot','../fetch/npr3_field_hdr.rsf',
+    '''
+      sfdd type=float |
+      sffold
+          verbose=1
+          o1=0 n1=96  d1=200 label1=offset
+          o2=1 n2=188 d2=1   label2=xline
+          o3=1 n3=345 d3=1   label3=iline        
+    ''')
+
+Plot('foldplot','foldplot',
+     '''
+     sfwindow f3=1 j3=2 | sfgrey  title=foldplot pclip=98 gainpanel=a  
+     ''',view=1)
+Result('foldplot144','foldplot',
+     '''
+     sfwindow n3=1 f3=144 | sfgrey  title="foldplot iline=144" pclip=98
+     ''')
+
+Flow('foldplot_off','foldplot',
+     'sftransp plane=13')
+
+Plot('foldplot_off',
+     '''
+     sfwindow f3=2 j3=1 
+     | sfgrey title="foldplot map" pclip=98 gainpanel=a
+     ''',view=1)
+
+Plot('foldplot_off400','foldplot_off',
+     '''
+     sfwindow n3=1 f3=2 | sfgrey  title="foldplot offset=400" pclip=98
+     ''')
+Plot('foldplot_off5000','foldplot_off',
+     '''
+     sfwindow n3=1 f3=25 | sfgrey  title="foldplot offset=5000" pclip=98
+     ''')
+Result('foldmap-400-5000',
+        'foldplot_off400 foldplot_off5000',
+        'SideBySideAniso')
+
+# sftahwindow should be upgrades to allow trace selection by header values.
+# then you can get just one trace per receiver location with the flow (use 
+# tracf as a temporary header for trace within receiver gather) :
+# sftahsort input=npr3_field.rsf sort="gx gy offset" \ 
+# | sftahmakeskey pkey=gx,gy skey=tracf verbose=1 \
+# | sttahwindow tracf=1,1 tmax=6 \
+# | sftahwrite mode=seq output=nearest-trace-on-receiver.rsf
+# >/dev/null
+
+for key in Split('sx sy gx gy'):
+    Flow(key,'../fetch/npr3_field_hdr.rsf','dd type=float | headermath output=' + key)
+
+# Shot coordinates
+Flow('sxsycoord','sx sy','sfcmplx ${SOURCES[1]}')
+
+# Receiver coordinates
+Flow('gxgycoord','gx gy','sfcmplx ${SOURCES[1]}')
+
+# you can get a way with only plotting every 40 or 30 locations, but it is a 
+# Cludge to make the figure files smaller.
+Plot('sxsycoord','sfwindow j2=40 | sfgraph symbol="+" title="Shot (x,y)" plotcol=5')
+Plot('gxgycoord','sfwindow j2=30 | sfgraph symbol="+" title="Group (x,y)" plotcol=3')
+Result('shots-receivers',
+        'sxsycoord gxgycoord',
+        'SideBySideAniso')
+
+End()
+
