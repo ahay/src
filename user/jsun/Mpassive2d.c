@@ -236,7 +236,7 @@ int main(int argc, char* argv[])
 #endif
             for     (ix=NOP; ix<nxpad-NOP; ix++){
                 for (iz=NOP; iz<nzpad-NOP; iz++){
-                    u2[ix][iz] = Lap (u1,ix,iz,idx2,idz2,vvpad) + 2.0f*u1[ix][iz] - u0[ix][iz];
+                    u2[ix][iz] = LapT(u1,ix,iz,idx2,idz2,vvpad) + 2.0f*u1[ix][iz] - u0[ix][iz];
                 }
             }
             /* rotate pointers */
@@ -323,7 +323,7 @@ int main(int argc, char* argv[])
 #endif
             for     (ix=NOP; ix<nxpad-NOP; ix++){
                 for (iz=NOP; iz<nzpad-NOP; iz++){
-                    u2[ix][iz] = LapT(u1,ix,iz,idx2,idz2,vvpad) + 2.0f*u1[ix][iz] - u0[ix][iz];
+                    u2[ix][iz] = Lap (u1,ix,iz,idx2,idz2,vvpad) + 2.0f*u1[ix][iz] - u0[ix][iz];
                 }
             }
             /* rotate pointers */
