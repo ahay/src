@@ -1,0 +1,16 @@
+#!/bin/sh
+# This scripts runs all the dircories required for the teapot processing 
+# paper
+
+cd ../Fetchpaper
+scons
+cd ../Geompaper
+scons
+cd ../Firstlookpaper
+scons
+cd ../Scdeconpaper
+scons
+cd ../Velspaper
+scons
+cd ../Zomigpaper
+scons
