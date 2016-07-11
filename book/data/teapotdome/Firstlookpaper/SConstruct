@@ -1,0 +1,331 @@
+from rsf.proj import *
+
+# typical basic preprocessing is:
+#   gain - appoy spreading correction
+# surface consistant scaling
+#   predecon mute
+#   decon (surface consistant)
+#   spectral whitening (zero phase)
+#   relative static
+#   nmo
+#   mean static
+#   residual static (surface consistant)
+#   stack with mute
+
+Flow(['rawshot.rsf','rawshot_hdr.rsf'],
+     ['../Fetchpaper/npr3_field.rsf','../Fetchpaper/npr3_field_hdr.rsf'],
+     '''
+     sftahsort verbose=1 input=${SOURCES[0]} sort='fldr:214,254,10 tracf'
+     | sftahwindow tmax=4.092
+     | sftahwrite 
+        verbose=1                           
+        label2="tracf" o2=1 n2=1063 d2=1   
+        label3="fldr" o3=214 n3=5 d3=10   
+        output=${TARGETS[0]}
+        outheaders=${TARGETS[1]} 
+     ''',stdout=0,stdin=0)
+
+Plot('rawshot',
+       '''
+       sfgrey title='raw shots' pclip=98
+       ''',view=1)
+Result('rawshot1','rawshot',
+       '''
+       sfwindow min3=214 max3=214 \
+       | sfgrey color=i title='raw shot 214' \
+         pclip=98
+       ''')
+
+#Result('rawshotzoom1','rawshot',
+#       '''
+#       sfwindow min2=440 max2=650 min3=214 max3=214 \
+#       | sfgrey color=i title='raw shot' \
+#         pclip=98
+#       ''')
+
+Flow(['tpowshot.rsf','tpowshot_hdr.rsf'],
+     ['../Fetchpaper/npr3_field.rsf','../Fetchpaper/npr3_field_hdr.rsf'],
+     '''
+     sftahsort verbose=1 input=${SOURCES[0]} sort='fldr:214,254,10 tracf'
+     | sftahwindow tmax=4.092
+     | sftahgain 
+       tpow=2
+     | sftahwrite 
+        verbose=1                           
+        label2="tracf" o2=1 n2=1063 d2=1   
+        label3="fldr" o3=214 n3=5 d3=10   
+        output=${TARGETS[0]}
+        outheaders=${TARGETS[1]} 
+     ''',stdout=0,stdin=0)
+
+Plot('tpowshot',
+       '''
+       sfgrey title='shot with tpow' pclip=98
+       ''',view=1)
+
+Flow("tpowshot.ximage",'tpowshot',
+	'''
+	sfwindow min3=214 max3=214 
+        | sfimage perc=98 title="interactive sfimage-ffid 214 with tpow"
+	''',stdout=0)
+
+Result('tpowshotzoom','tpowshot',
+       '''
+       sfwindow min1=0 max1=2 min2=499 max2=572 min3=214 max3=214 \
+       | sfgrey color=i title='shot with tpow' \
+         pclip=89
+       ''')
+Result('tpowshotzoom1','tpowshot',
+       '''
+       sfwindow min2=499 max2=570 min3=214 max3=214 \
+       | sfgrey color=i title='shot with tpow' \
+         pclip=94
+       ''')
+
+
+Flow(['preshot.rsf','preshot_hdr.rsf'],
+     ['../Fetchpaper/npr3_gathers.rsf','../Fetchpaper/npr3_gathers_hdr.rsf'],
+     '''
+     sftahsort verbose=1 input=${SOURCES[0]} sort='fldr:214,254,10 tracf'
+     | sftahwrite 
+        verbose=1                           
+        label2="tracf" o2=1 n2=1063 d2=1   
+        label3="fldr" o3=214 n3=5 d3=10   
+        output=${TARGETS[0]}
+        outheaders=${TARGETS[1]} 
+     ''',stdout=0,stdin=0)
+
+Result('preshot',
+       '''
+       grey title='preprocessed shot'
+       ''')
+
+Result('preshotzoom','preshot',
+       '''
+       sfwindow  min2=499 max2=570 min3=214 max3=214
+       | sfwiggle title='preprocessed shot' pclip=99.5 transp=y yreverse=y
+       ''')
+
+Flow('preshot.txt',
+     ['../Fetchpaper/npr3_gathers.rsf','../Fetchpaper/npr3_gathers_hdr.rsf'],
+     '''
+     sftahsort verbose=0 input=${SOURCES[0]} sort='fldr:214,214,10 tracf'
+     | sftahgethw key=fldr,tracf,sx,sy,gx,gy
+     ''',stdin=0)
+
+Flow('preshot1.txt',
+     ['../Fetchpaper/npr3_gathers.rsf','../Fetchpaper/npr3_gathers_hdr.rsf'],
+     '''
+     sftahsort verbose=0 input=${SOURCES[0]} sort='tracf:500,500 fldr'
+     | sftahgethw key=fldr,sx,sy,selev
+     ''',stdin=0)
+Flow('preshot2.txt',
+     ['../Fetchpaper/npr3_gathers.rsf','../Fetchpaper/npr3_gathers_hdr.rsf'],
+     '''
+     sftahsort verbose=0 input=${SOURCES[0]} sort='tracf fldr:430,430'
+     | sftahgethw key=tracf,gx,gy,gelev
+     ''',stdin=0)
+
+# kls a 40 point predecon mute leave artifacts after decon, but 80 looks OK
+Flow(['tpowshot.rsf','tpowshot_hdr.rsf'],
+     ['../Fetchpaper/npr3_field.rsf','../Fetchpaper/npr3_field_hdr.rsf'],
+     '''
+     sftahsort verbose=1 input=${SOURCES[0]} sort='fldr:214,254,10 tracf'
+     | sftahwindow tmax=4.092
+     | sftahgain 
+       tpow=2
+     | sftahwrite 
+        verbose=1                           
+        label2="tracf" o2=1 n2=1063 d2=1   
+        label3="fldr" o3=214 n3=5 d3=10   
+        output=${TARGETS[0]}
+        outheaders=${TARGETS[1]} 
+     ''',stdout=0,stdin=0)
+
+Flow(['muteshot.rsf','muteshot_hdr.rsf',
+      'agcshot.rsf','agcshot_hdr.rsf',
+      'pefshot.rsf','pefshot_hdr.rsf',
+      'staticshot.rsf','staticshot_hdr.rsf'],
+     ['tpowshot.rsf','tpowshot_hdr.rsf'],
+     '''
+     sftahsort verbose=0 input=${SOURCES[0]} sort='fldr:214,254,10 tracf'
+     | sftahmute 
+       tmute=-.050,-.050,.275,2.0 
+       xmute=0,880,1760,18000 
+       ntaper=80 
+     | sftahwrite 
+        verbose=1                           
+        label2="tracf" o2=1 n2=1063 d2=1   
+        label3="fldr" o3=214 n3=5 d3=10   
+        output=${TARGETS[0]}
+        outheaders=${TARGETS[1]}  
+     | sftahagc
+       wagc=1.000 verbose=1
+     | sftahwrite 
+        verbose=1                           
+        label2="tracf" o2=1 n2=1063 d2=1   
+        label3="fldr" o3=214 n3=5 d3=10   
+        output=${TARGETS[2]}
+        outheaders=${TARGETS[3]}  
+     | sftahpef 
+       verbose=1 minlag=.002 maxlag=.140  pnoise=.01 mincorr=0 maxcorr=3
+     | sftahwrite 
+        verbose=1                           
+        label2="tracf" o2=1 n2=1063 d2=1   
+        label3="fldr" o3=214 n3=5 d3=10   
+        output=${TARGETS[4]}
+        outheaders=${TARGETS[5]} 
+     | sftahstatic sign=-1 
+     | sftahwrite 
+        verbose=1                           
+        label2="tracf" o2=1 n2=1063 d2=1   
+        label3="fldr" o3=214 n3=5 d3=10   
+        output=${TARGETS[6]}
+        outheaders=${TARGETS[7]} 
+     ''',stdout=0,stdin=0)
+
+Result('agcshot',
+       '''
+       grey title='shot with tpow and agc'
+       ''')
+
+Plot('muteshot',
+       '''
+       sfwindow min1=0 max1=2 min2=499 max2=572 min3=214 max3=214 \
+       | sfgrey color=i title='muteshot' \
+         pclip=89 transp=y yreverse=y
+       ''')
+Plot('agcshot',
+       '''
+       sfwindow min1=0 max1=2 min2=499 max2=572 min3=214 max3=214 \
+       | sfgrey color=i title='agcshot' \
+         pclip=99.5 transp=y yreverse=y
+       ''')
+Plot('pefshot',
+       '''
+       sfwindow min1=0 max1=2 min2=499 max2=572 min3=214 max3=214 \
+       | sfgrey color=i title='pefshot' \
+         pclip=99.5 transp=y yreverse=y
+       ''')
+Plot('staticshot',
+       '''
+       sfwindow min1=0 max1=2 min2=499 max2=572 min3=214 max3=214 \
+       | sfgrey color=i title='staticshot' \
+         pclip=99.5 transp=y yreverse=y
+       ''')
+Result('shots','muteshot agcshot pefshot staticshot','SideBySideAniso')
+
+
+Result('staticshot',
+       '''
+       grey title='shot with tpow, agc, tahpef and tahstatic'
+       ''')
+
+Result('staticshotzoom','staticshot',
+       '''
+       sfwindow min1=0 max1=2 min2=499 max2=572 min3=214 max3=214 \
+       | sfgrey color=i title='shot with tpow, agc, pef static' \
+         pclip=99.5 transp=y yreverse=y
+       ''')
+
+Plot('tpowshotzoom','tpowshot',
+       '''
+       sfwindow min1=0 max1=2 min2=499 max2=572 min3=214 max3=214 \
+       | sfgrey color=i title='shot with tpow' \
+         pclip=89
+       ''')
+
+Result('mutecheck','tpowshotzoom muteshot','SideBySideAniso')
+
+Flow(['nmoshot.rsf','nmoshot_hdr.rsf',
+      'nmomuteshot.rsf','nmomuteshot_hdr.rsf'],
+     ['staticshot.rsf','staticshot_hdr.rsf'],
+     '''
+     sftahsort verbose=0 input=${SOURCES[0]} sort='fldr:214,254,10 tracf'
+     | sftahstatic sign=-1 
+     | sftahnmo 
+       verbose=1
+       tnmo=0,.617,.769,.913,1.027,1.196,1.767,3.010.00
+       vnmo=9132.86,10764.47,10941.73,11235.75,11902.71,12580.03,14513.85,16982.86
+     | sftahwrite 
+        verbose=1                           
+        label2="tracf" o2=1 n2=1063 d2=1   
+        label3="fldr" o3=214 n3=5 d3=10   
+        output=${TARGETS[0]}
+        outheaders=${TARGETS[1]}
+     |  sftahmute 
+       tmute=0,1.20,1.82 
+       xmute=0,7358,18000 
+       ntaper=80 
+     | sftahwrite 
+        verbose=1                           
+        label2="tracf" o2=1 n2=1063 d2=1   
+        label3="fldr" o3=214 n3=5 d3=10   
+        output=${TARGETS[2]}
+        outheaders=${TARGETS[3]}
+      ''',stdout=0,stdin=0)
+
+Flow('nmo.ximage','nmoshot',
+      '''
+	sfwindow min3=214 max3=214 
+        | sfimage perc=98 title="interactive sfimage-ffid 214 with tpow"
+	''',stdout=0)
+Flow('nmomute.ximage','nmomuteshot',
+      '''
+	sfwindow min3=214 max3=214 
+        | sfimage perc=98 title="interactive sfimage-ffid 214 with tpow"
+	''',stdout=0)
+Plot('nmoshot','nmoshot',
+       '''
+       sfwindow min1=0 max1=2 min2=499 max2=572 min3=214 max3=214 \
+       | sfgrey color=i title='nmoshot' \
+         pclip=89
+       ''')
+Plot('nmomuteshot','nmomuteshot',
+       '''
+       sfwindow min1=0 max1=2 min2=499 max2=572 min3=214 max3=214 \
+       | sfgrey color=i title='nmomuteshot' \
+         pclip=89
+       ''')
+
+Result('nmomutecheck','nmoshot nmomuteshot','SideBySideAniso')
+
+Flow(['brutestack141.rsf','brutestack_hdr.rsf'],
+     ['../Fetchpaper/npr3_field.rsf','../Fetchpaper/npr3_field_hdr.rsf'],
+     '''
+     sftahsort verbose=1 input=${SOURCES[0]} sort='iline:141,141 xline offset'
+     | sftahwindow tmax=4.092
+     | sftahgain 
+       tpow=2
+     | sftahmute 
+       tmute=-.050,-.050,.275,2.0 
+       xmute=0,880,1760,18000 
+       ntaper=80 
+     | sftahagc
+       wagc=1.000 verbose=1
+     | sftahpef 
+       verbose=1 minlag=.002 maxlag=.140  pnoise=.01 mincorr=0 maxcorr=3
+     | sftahstatic sign=-1 
+     | sftahnmo 
+       verbose=1
+       tnmo=0,.617,.769,.913,1.027,1.196,1.767,3.010.00
+       vnmo=9132.86,10764.47,10941.73,11235.75,11902.71,12580.03,14513.85,16982.86
+     | sftahstack key=iline,xline verbose=1 ntaper=40 
+       tmute=0,1.20,1.82 
+       xmute=0,7358,18000 
+       ntaper=80 
+     | sftahwrite 
+        verbose=1                           
+        label2="xline" o2=1 n2=188 d2=1   
+
+        label3="iline" o3=141 n3=1 d3=1   
+        output=${TARGETS[0]}
+     ''',stdout=0,stdin=0)
+Result('brutestack141',
+       '''
+       sfwindow min1=0 max1=2  \
+       | sfgrey color=i title='brutestack line 141' \
+         pclip=98
+       ''')
+        
+End()
