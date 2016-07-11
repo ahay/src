@@ -59,11 +59,11 @@ The SConsruct file to download the Teapot Dome data from the Internet and conver
 To load the data starting from your Teapot Dome directory, (\$RSFSRC/book/data/teapotdome in the Madagascar download directory)
 
 \begin{verbatim}
-cd fetch
+cd Fetchpaper
 emacs SConstruct
 \end{verbatim}  
 
-Use an editor to look at the script.  Make and updates (eg comment the fetch
+Use an editor to look at the script.  Make and updates (eg comment the Fetch
 commands) and update the file.
 
 \begin{verbatim}
@@ -95,13 +95,13 @@ The dmo velocity field is downloaded and printed by SConstruct.  It is good stat
 The final piece of information created in this directory is the segy text headers.   The files are created by sfsegyread and can be listed to the screen with cat npr3\_field.thdr or cat npr3\_gathers.thdr.  
 
 \section{Geometry Display}
-A stacking diagram is a good way to become a familiar with the data you have downloaded.  Assuming you are in the \$RSFSRC/book/data/teapotdome/fetch directory, you can look at the SConstruct file to make a stacking diagram or fold plot with the commands:
+A stacking diagram is a good way to become a familiar with the data you have downloaded.  Assuming you are in the \$RSFSRC/book/data/teapotdome/Fetchpaper directory, you can look at the SConstruct file to make a stacking diagram or fold plot with the commands:
 \begin{verbatim}  
-cd ../geom
+cd ../Geompaper
 emacs SConstruct
 \end{verbatim}  
  
-The sffold command uses the trace header file created by sfsegyread to make a 3D histogram that shows the trace distribution in offset, xline, and iline.  Sffold required the trace headers to be in floating point format and sfsegyread outputs the data in integer format, so sfdd is used to convert the headers to float.  The program requires the header names and the first, number and increment for offset, xline and iline.  The sfheaderattr run in the fetch directory provides the minimum and maximum of these headers.  The increments (d1, d2, d3) are small enough to get good resolution on the plot, usually the group interval, xline interval and iline interval.  When you run:
+The sffold command uses the trace header file created by sfsegyread to make a 3D histogram that shows the trace distribution in offset, xline, and iline.  Sffold required the trace headers to be in floating point format and sfsegyread outputs the data in integer format, so sfdd is used to convert the headers to float.  The program requires the header names and the first, number and increment for offset, xline and iline.  The sfheaderattr run in the Fetchpaper directory provides the minimum and maximum of these headers.  The increments (d1, d2, d3) are small enough to get good resolution on the plot, usually the group interval, xline interval and iline interval.  When you run:
 \begin{verbatim}  
 scons
 \end{verbatim}  
@@ -126,7 +126,7 @@ to recreate some foldplots and Figure~\ref{fig:shots-receivers}, a map of the so
 
 The take away from this section is that traces in a 3D land surveys have a complex distribution of source and receiver coordinates.  There are books on the topic (eg 3D Seismic Survey Design, G. J. O. Vermeer)
 
-\inputdir{geom}
+\inputdir{Geompaper}
 \plot{foldplot144}{width=\textwidth}{Fold plot for iline 144 shows the trace (xline,offset) distribution.}
 
 \plot{foldmap-400-5000}{width=\textwidth}{Fold plots for offsets 400 and 5000 meter shows the trace (xline,iline) distribution}
@@ -142,11 +142,11 @@ It\'s important to make a few plots of seismic traces to get an idea of the sign
 -picks a stack mute
 -Brute stack a single line
 
-Starting from the \$RSFSRC/book/data/teapotdome/geom directory, you can look at the SConstruct file for the first look processing with the commands:
-cd ../firstlook
+Starting from the \$RSFSRC/book/data/teapotdome/Geompaper directory, you can look at the SConstruct file for the first look processing with the commands:
+cd ../Firstlookpaper
 emacs SConstruct
 
-The firstlook/SConstuct file makes use of the trace with header (tah) programs.  These program names all start with sftah, for example sftahnmo, sftahagc and sftahmute.  The tah programs are similar to Seismic Unix programs and are especially useful for handling irregularly sampled data and single channel processing.   It took some experiments with sfheaderattr and sftahgethw to determine good header keys and values to use to select and display a few shots.  Sftahsort was used to select a few shots and order them by (fldr,tracf) and sfwrite put the data to an output file ordered by (time,tracf, fldr).  After some experiments I learned the last two samples on most traces were unusually large and I omitted these time samples with sftahwindow.   There are a different number of traces on each shot, so I used sftahwrite to select a few shots and create a file organized by the (time,trace,shot) header keys. 
+The Firstlookpaper/SConstuct file makes use of the trace with header (tah) programs.  These program names all start with sftah, for example sftahnmo, sftahagc and sftahmute.  The tah programs are similar to Seismic Unix programs and are especially useful for handling irregularly sampled data and single channel processing.   It took some experiments with sfheaderattr and sftahgethw to determine good header keys and values to use to select and display a few shots.  Sftahsort was used to select a few shots and order them by (fldr,tracf) and sfwrite put the data to an output file ordered by (time,tracf, fldr).  After some experiments I learned the last two samples on most traces were unusually large and I omitted these time samples with sftahwindow.   There are a different number of traces on each shot, so I used sftahwrite to select a few shots and create a file organized by the (time,trace,shot) header keys. 
 
 After reading the SConstruct file, you can run it from the command line with:
 \begin{verbatim}   
@@ -160,7 +160,7 @@ totaloffset=sqrt(inlineoffset**2 + crosslineoffset**2)
 
 To get a better look at the data, amplitudes are scaled by t**2, a correction of the amplitude lost due to geometric wavefront spreading.  An interactive plot of ffid 214 is created using the sfimage command.  You can “rubber band” a zoom area and create a plot similar to Figure~\ref{fig:tpowshotzoom1}.   The plot look a little different because the plot in this paper is created using sfgrey while the interactive plot is created using sfimage.  One big difference is sfimage laterally interpolates trace amplitudes while sfgrey just uses the amplitude from the nearest trace.
 
-Figure~\ref{fig:tpowshotzoom1} shows linear first breaks, noise on near offsets, and a large linear event that passes 4 seconds near trace 520.  You can measure the velocity of this event using the sfimage plot by clicking the right mouse button (on a Mac trackpad place TWO fingers on the trackpad and while the two fingers are touching the trackpad, click the trackpad button).  The mouse coordinate will appear on the upper left of the display.  I picked the event time and used the group interval (220 feet from the pdf in the fetch directory) to estimate the event velocity:
+Figure~\ref{fig:tpowshotzoom1} shows linear first breaks, noise on near offsets, and a large linear event that passes 4 seconds near trace 520.  You can measure the velocity of this event using the sfimage plot by clicking the right mouse button (on a Mac trackpad place TWO fingers on the trackpad and while the two fingers are touching the trackpad, click the trackpad button).  The mouse coordinate will appear on the upper left of the display.  I picked the event time and used the group interval (220 feet from the pdf in the Fetchpaper directory) to estimate the event velocity:
 
 \begin{verbatim}  
 Time           trace  offset
@@ -178,7 +178,7 @@ I used the sfimage interactive plot to pick a pre decon mute.  I turned the mous
 
 Figure~\ref{fig:shots} shows the data at four processing stages with incremental improvement from each of the processes.  The processes are amplitude correction (sftahgain tpow=2), agc (sftahagc) , decon (sttahpef), and statics (sftahstatics).
 
-The stack mute is applied after NMO, so we need a velocity function.  I selected a velocity function from the center of the project from the file. \$RSFSRC/book/data/teapotdome/fetch/npr3\_dmo.vel . This file contains several velocity functions for several CDPs.  To identify a velocity from the center of the project I converted CDP to iline,xline.  The information in the file  \$RSFSRC/book/data/teapotdome/fetch/3dload\_Teapot\_Dome\_3D.pdf defined the relationship between (iline,xline) and CDP:
+The stack mute is applied after NMO, so we need a velocity function.  I selected a velocity function from the center of the project from the file. \$RSFSRC/book/data/teapotdome/Fetchpaper/npr3\_dmo.vel . This file contains several velocity functions for several CDPs.  To identify a velocity from the center of the project I converted CDP to iline,xline.  The information in the file  \$RSFSRC/book/data/teapotdome/Fetchpaper/3dload\_Teapot\_Dome\_3D.pdf defined the relationship between (iline,xline) and CDP:
 iline=(CDP-1)/188+1
 xline=CDP-(iline-1)*188
 I converted several velocity CDP’s and looked at the fold map in Figure~\ref{fig:foldmap-400-5000} to select the a velocity location near the center of the survey (CDP 31705, iline169, xline 121).
@@ -187,7 +187,7 @@ Figure~\ref{fig:nmomutecheck} shows part of a shotpoint after nmo with and witho
 
 Figure~\ref{fig:brutestack141} is a brute stack of line 141 from the 3D survey.  The “brute stack” is the name of the first stack on a land survey made usually using a single velocity function and no residual statics.
 
-\inputdir{firstlook}
+\inputdir{Firstlookpaper}
 \plot{rawshot1}{width=\textwidth}{Field traces for field file identifier (FFID) 214.  Shows 17 receiver cables recorded data on this shotpoint. }
 
 \plot{tpowshotzoom1}{width=\textwidth}{Zoom of the central cable in Figure~\ref{fig:rawshot1}.  This plot shows linear first breaks, noise on near offsets, and a large amplitude, linear event that passes 4 seconds near trace 520.  The large amplitude, linear event is an airwave.}
@@ -206,14 +206,14 @@ Figure~\ref{fig:brutestack141} is a brute stack of line 141 from the 3D survey. 
 The previous section, first look, created a few displays for the trace data, picked a predecon mute, a stack mute, and showed improvement from some basic processing.  The first look section used single trace deconvolution.  Surface consistent decon (Hutchinson and Link, 1984; Cary and Lorentz, 1993) is more stable on data with poor signal and is widely used for land processing.  Surface consistent decon computes a constant operator for each surface location.  
 
 Starting from the \$RSFSRC/book/data/teapotdome/firstlook directory, you can look at the SConstruct file for the surface consistent decon with the commands:
-cd ../scdecon
+cd ../Scdeconpaper
 emacs SConstruct
 
 The key program for this processing stage is sftahscdecon.  It was derived from sftahpef and is very similar.  The Madagascar program allows a shot decon or a receiver decon to be applied.  This is simpler than the multi component decomposition described in the references  (Hutchinson and Link, 1984; Cary and Lorentz, 1993) and is an algorithm widely used in industry.  The program computes a single operator for each ensemble of traces.  To apply shot consistent decon, to data must be sorted to shot order and key=’sx,sy' is input to sftahscdecon.  The program averages trace autocorrelations and uses the header keys sx and sy to identify the end of an ensemble.  At the end of the ensemble the averaged autocorrelation is used to design a prediction error filter (decon filter) and applies the filter to all traces in the gather.  After shot decon the data is written to a file so the data can be sorted into receiver gathers and sftahscdecon used to apply receiver consistent decon.  Other then the key parameter, the parameters in sftahscdecon are the same as the parameters in sftahpef.  This SConstruct file used the same parameter values for the length of the decon operator and the decon design gate (minlag, maxlag, minfor, and maxcorr.) as used in sftahpef in the firstlook directory.  Since decon will be applied twice in the surface consistent processing, pnoise was increased from .01 to .1 to prevent “over whitening”  the data.
 
 Figure~\ref{fig:scdeconcdps} shows a few CDP gathers with shot and receiver consistent decon applied.  Figure~\ref{fig:scdeconstack141} shows the stack for line 141 with surface consistent decon.
 
-\inputdir{scdecon}
+\inputdir{Scdeconpaper}
 \plot{scdeconcdps}{width=\textwidth}{A few CDP gathers with shot and receiver consistent decon applied. }
 
 \plot{scdeconstack141}{width=\textwidth}{The stack for line 141 with shot and receiver consistent decon applied.}
@@ -221,18 +221,18 @@ Figure~\ref{fig:scdeconcdps} shows a few CDP gathers with shot and receiver cons
 \section{Stack with V(t,x,y)}
 
 Previous sections ``first look'' and  ``surface consistant decon'', applied normal moveout  with a single velocity function from the file:
-\$RSFSRC/book/data/teapotdome/fetch/npr3\_dmo.vel.
+\$RSFSRC/book/data/teapotdome/Fetchpaper/npr3\_dmo.vel.
 This section the velocities are interpolated so NMO can be applied with a space variant velocity field, V(t,x,y), and the data can be stacked.
 
-Starting from the \$RSFSRC/book/data/teapotdome/scdecon directory, you can look at the SConstruct file for stack with V(t,x,y) with the commands:
+Starting from the \$RSFSRC/book/data/teapotdome/Scdeconpaper directory, you can look at the SConstruct file for stack with V(t,x,y) with the commands:
 \begin{verbatim}  
-cd ../vels
+cd ../Velspaper
 emacs SConstruct
 \end{verbatim}  
 
 There are two stages for this process.  First the velocity is interpolated with a python program, interpvel.py to every to every (t,xline,iline) location.  The interpolation is linear in time and uses radial basis functions in space.  The interpolated data is saved in an rsf file and displayed (Figure~\ref{fig:vel3}). The second stage is to apply NMO using this interpolated velocity using sftahnmo and create gathers with NMO and stacks.  As each trace is processed by sftahnmo, the (t,xline,iline) is read from the trace header and the velocity function for that location is read from file created by interpvel.py.  A few CDP gathers and a stack of iline 141 are created and shown in figures ~\ref{fig:vtxycdps} and ~\ref{fig:vtxystack141}.  These can be compared to processing with a single velocity function in figures ~\ref{fig:scdeconcdps} and ~\ref{fig:scdeconstack141}.
 
-\inputdir{vels}
+\inputdir{Velspaper}
 \plot{vel3}{width=\textwidth}{The downloaded velocity field velocity field, 	npr3\_dmo.vel, interpolated using radial basis functions.}
 
 \plot{vtxycdps}{width=\textwidth}{A few CDP gathers from iline 141 with NMO using V(t,x,y) applied.}
@@ -245,7 +245,7 @@ This section migrates the stacked volume using 3-D zero-offset extended split st
 
 A simple V(z) velocity field is used for the migration.  The SConstruct file takes about 8 hours to run migration on my MacBook Pro, even though migration has been limited to 20 Hz.   This algorithm allows the velocity field to vary laterally and it should be possible to produce equivalent results much more efficiently using phase shift migration.
  
-Starting from the \$RSFSRC/book/data/teapotdome/vels directory, you can look at the SConstruct file for migration with the commands:
+Starting from the \$RSFSRC/book/data/teapotdome/Velspaper directory, you can look at the SConstruct file for migration with the commands:
 \begin{verbatim}  
 cd ../Zomig
 emacs SConstruct
@@ -306,8 +306,10 @@ I thank all the developers of the Madagascar open-source software package (Fomel
 
 \section{References}
 
-Surface consistency: A solution to the problem of deconvolving noisy seismic data,  Dave Hutchinson and Brian Link, SEG Technical Program Expanded Abstracts 1984. January 1984, 515-518 
+Dave Hutchinson and Brian Link, 1984, Surface consistency: A solution to the problem of deconvolving noisy seismic data,  SEG Technical Program Expanded Abstracts 1984, 515-518 
 
-Four - component surface - consistent deconvolution, Peter W. Cary and Gary A. Lorentz, GEOPHYSICS 1993 58:3, 383-392 
+ Peter W. Cary and Gary A. Lorentz, 1993, Four - component surface - consistent deconvolution, GEOPHYSICS 1993 58, 383-392 
+
+Fomel, S., P. Sava, I. Vlad, Y. Liu, and V. Bashkardin, 2013, Madagascar open-source software project: Journal of Open Research Software, 1, e8. 
 
 
