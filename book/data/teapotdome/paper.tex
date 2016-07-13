@@ -247,7 +247,7 @@ A simple V(z) velocity field is used for the migration.  The SConstruct file tak
  
 Starting from the \$RSFSRC/book/data/teapotdome/Velspaper directory, you can look at the SConstruct file for migration with the commands:
 \begin{verbatim}  
-cd ../Zomig
+cd ../Zomigpaper
 emacs SConstruct
 \end{verbatim}  
 
@@ -268,7 +268,7 @@ Figure~\ref{fig:real} shows the real part of the stack data after Fourier transf
 
 Figure~\ref{fig:mig-t} is the migrated data converted back to time.  It can be compared to the commercial migration in Figure~\ref{fig:filt-mig}.  One large difference in these results is the commercial migration has zeroed the areas zero on the input stack, a common practice.  Another difference is 20 Hz high cut filter applied to limit compute time when creating Figure ~\ref{fig:mig-t}.  
 
-\inputdir{Zomig}
+\inputdir{Zomigpaper}
 \plot{stack-filter}{width=\textwidth}{Final stack with a 20 Hz high cut filter.}
 
 \plot{slo}{width=\textwidth}{The interval velocity slowness for input to sfzomig3.}
