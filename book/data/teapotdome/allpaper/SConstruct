@@ -1,5 +1,9 @@
 from rsf.proj import *
-Flow('run.job000','run.job',
-     './${SOURCES[0]}',stdin=0)
+SConscript('../Fetchpaper/SConstruct')
+SConscript('../Geompaper/SConstruct')
+SConscript('../Firstlookpaper/SConstruct')
+SConscript('../Scdeconpaper/SConstruct')
+SConscript('../Velspaper/SConstruct')
+SConscript('../Zomigpaper/SConstruct')
 
 End()
