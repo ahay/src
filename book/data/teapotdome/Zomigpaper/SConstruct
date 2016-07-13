@@ -26,15 +26,7 @@ Result('Vint',
      ''')
 	
 
-#Result('mappedstackstack','../tahnmostack/mappedstack.rsf',
-#	'''
-#	window j3=20 |
-#	grey title=stack
-#      	label1=Time     unit1=sec 
-#       	label2=xline    unit2=count
-#       ''')
-
-Result('stack-filter', '../vels/vtxystack.rsf',
+Result('stack-filter', '../Velspaper/vtxystack.rsf',
 	'''
 	window n1=1000 min3=141 max3=141 |
 	bandpass fhi=20 |
@@ -43,7 +35,7 @@ Result('stack-filter', '../vels/vtxystack.rsf',
        	label1=Time    unit2=sec 
        	label2=xline   unit1=count
         ''')
-Result('stack', '../vels/vtxystack.rsf',
+Result('stack', '../Velspaper/vtxystack.rsf',
 	'''
 	window min3=141 max3=141 |
 	grey title=stack
@@ -92,7 +84,7 @@ Result('slo',
 
 
 
-Flow('fft','../vels/vtxystack.rsf',
+Flow('fft','../Velspaper/vtxystack.rsf',
      'put d2=110 d3=110 | fft1 | window max1=20 | transp plane=12 | transp plane=23')
 
 

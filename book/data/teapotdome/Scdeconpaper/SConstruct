@@ -12,11 +12,11 @@ from rsf.proj import *
 #   residual static (surface consistant)
 #   stack with mute
 
-#Flow('npr3_field_hdr.rsf','../fetch/npr3_field_hdr.rsf','sfcp')
-#Flow('npr3_field.rsf','../fetch/npr3_field.rsf','sfwindow n1=2047')
+#Flow('npr3_field_hdr.rsf','../Fetchpaper/npr3_field_hdr.rsf','sfcp')
+#Flow('npr3_field.rsf','../Fetchpaper/npr3_field.rsf','sfwindow n1=2047')
 
 Flow(['shotdecon.rsf','shotdecon_hdr.rsf'],
-     ['../fetch/npr3_field.rsf','../fetch/npr3_field_hdr.rsf'],
+     ['../Fetchpaper/npr3_field.rsf','../Fetchpaper/npr3_field_hdr.rsf'],
      '''
      sftahsort verbose=1 input=${SOURCES[0]} 
        sort='sx sy'

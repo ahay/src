@@ -24,7 +24,7 @@ EXAMPLE:
 sftahread \\
    verbose=1 \\
    input=npr3_field.rsf \\
-| sftahwindow ns=2047 \\
+| sftahwindow tmax=4.092 \\
    verbose=0  \\
 | sftahwrite  \\
   verbose=1 \\
@@ -67,6 +67,7 @@ PARAMETERS
    Program change history:
    date       Who             What
    09/15/2014 Karl Schleicher Original program
+   06/10/2016 Karl Schleicher change time window parameter to tmax
 */
 #include <string.h>
 #include <rsf.h>
