@@ -132,7 +132,7 @@ int main(int argc, char* argv[])
 	mask = sf_output("maskout");
 
 	for (i=0; i < n123; i++) {
-	    kk[i] = aa->mis[i]? 0.: 1.;
+	    kk[i] = aa->mis[i]? 0: 1;
 	}
 	
 	sf_settype(mask,SF_INT);

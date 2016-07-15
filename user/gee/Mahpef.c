@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
     double mean;
     char *filename, key[6];
     sf_filter aa;
-    sf_file in, filt, lag, res;
+    sf_file in, filt, lag, res, mask;
  
     sf_init(argc,argv);
 
@@ -105,12 +105,46 @@ int main(int argc, char* argv[])
     dd = sf_floatalloc(n123);
     kk = sf_intalloc(n123);
 
-    for (i1=0; i1 < n123; i1++) {
-	kk[i1] = 1;
+    if (NULL != sf_getstring("maskin")) {
+	/* optional input mask file */
+	mask = sf_input("maskin");
+
+	switch (sf_gettype(mask)) {
+	    case SF_INT:
+		sf_intread (kk,n123,mask);
+		break;
+	    case SF_FLOAT:
+		sf_floatread (dd,n123,mask);
+		for (i=0; i < n123; i++) {
+		    kk[i] = (dd[i] != 0.0f);
+		}
+		break;
+	    default:
+		sf_error ("Wrong data type in maskin");
+		break;
+	}
+
+	sf_fileclose (mask);
+    } else {
+	for (i=0; i < n123; i++) {
+	    kk[i] = 1;
+	}
     }
 
     bound (dim, n0, n, a, aa);
     find_mask(n123, kk, aa);
+
+    if (NULL != sf_getstring("maskout")) {
+	/* optional output mask file */
+	mask = sf_output("maskout");
+
+	for (i=0; i < n123; i++) {
+	    kk[i] = aa->mis[i]? 0: 1;
+	}
+	
+	sf_settype(mask,SF_INT);
+	sf_intwrite (kk,n123,mask);
+    }
 
     na = aa->nh;
 
@@ -146,11 +180,11 @@ int main(int argc, char* argv[])
 	
 	/* apply shifts: dd -> d */
 
-	mean = 0.;
+	mean = 0.0f;
 	for (i=ia=0; ia < na; ia++) {
 	    ns = aa->lag[ia];
 	    for (i1=0; i1 < n123; i1++,i++) {
-		if (i1 < ns) {
+		if (i1 < ns || aa->mis[i1]) {
 		    d[i] = 0.0f;
 		} else {
 		    d[i] = dd[i1-ns];
@@ -159,7 +193,7 @@ int main(int argc, char* argv[])
 	    }
 	}
 
-	if (mean == 0.) {
+	if (mean == 0.0f) {
 	    sf_floatwrite(d,n123s,filt);
 	    continue;
 	}
@@ -172,7 +206,11 @@ int main(int argc, char* argv[])
 	    d[i] *= mean;
 	}
 	for(i1=0; i1 < n123; i1++) {
-	    dd[i1] *= mean;
+	    if (aa->mis[i1]) {
+		dd[i1] = 0.0f;
+	    } else {
+		dd[i1] *= mean;
+	    }
 	}
 
 	sf_multidivn (dd,f,niter);
