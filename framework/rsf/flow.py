@@ -64,7 +64,9 @@ def Flow(sources,flow,bindir,rsfflow=1,
             pars.insert(0,command)
             # special rule for metaprograms
             if rsfprog and rsfprog[len(prefix):] in \
-                    ('conjgrad','cconjgrad','conjgradmpi','cconjgradmpi','mpi','omp'):
+                    ('conjgrad','dottest','cconjgrad','cdottest',
+                     'conjgradmpi','dottestmpi','cconjgradmpi','cdottestmpi',
+                     'mpi','omp'):
                 # find the next program
                 n = 1
                 command2 = pars.pop(n)
