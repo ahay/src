@@ -159,11 +159,11 @@ int main(int argc, char* argv[])
 
     /*Set I/O file*/
     if (adj) { /* migration */
-      Frcd = sf_input("input");
-      Fimg  = sf_output("output");
+      Frcd = sf_input("--input");
+      Fimg  = sf_output("--output");
     } else { /* modeling */
-      if (!justrec) Fimg = sf_input("input");
-      Frcd = sf_output("output");
+      if (!justrec) Fimg = sf_input("--input");
+      Frcd = sf_output("--output");
     }
     Fsrc  = sf_input("src");   /*source wavelet*/      
     left  = sf_input("left");
