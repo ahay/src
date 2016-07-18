@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
 	sf_oaxa(snaps,ay,3);
 	sf_oaxa(snaps,at,4);
 	sf_settype(snaps,SF_FLOAT);
-	sf_putint(snaps,"n4",nt/snap);
+	sf_putint(snaps,"n4",(nt-1)/snap+1);
 	sf_putfloat(snaps,"d4",dt*snap);
 	sf_putfloat(snaps,"o4",0.);
     } else {
