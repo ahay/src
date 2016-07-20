@@ -365,9 +365,11 @@ void tahwriteseq(int verbose, float* trace, void* iheader,
   /* for some reason it looks like files are alligned at end of first trace
      so without seq there is a zero trace and header in the output files.
      I just added seq to make sure it traces are correct. */
-  file_offset=(num_traces-1)*n1_traces*sizeof(float);
+  file_offset=(num_traces-1);
+  file_offset*=n1_traces*sizeof(float);
   sf_seek(output,file_offset,SEEK_SET);
-  file_offset=(num_traces-1)*n1_headers*sizeof(float);
+  file_offset=(num_traces-1);
+  file_offset*=n1_headers*sizeof(float);
   sf_seek(outheaders,file_offset,SEEK_SET);
 
   sf_floatwrite(trace,n1_traces,output);
