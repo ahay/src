@@ -215,8 +215,8 @@ int main(int argc, char* argv[])
     /* (optional) snapshot file */
 
     if (mig) { /* migration */
-	data = sf_input("input");
-	image = sf_output("output");
+	data = sf_input("--input");
+	image = sf_output("--output");
 
 	if (!sf_histint(data,"n1",&nh)) sf_error("No n1=");
 	if (!sf_histfloat(data,"d1",&dh)) sf_error("No d1=");
@@ -244,8 +244,8 @@ int main(int argc, char* argv[])
 	sf_putint(image,"n3",1); /* stack for now */
         }
     } else { /* modeling */
-	image = sf_input("input");
-	data = sf_output("output");
+	image = sf_input("--input");
+	data = sf_output("--output");
 
 	if (!sf_histint(image,"n1",&nz)) sf_error("No n1=");
 	if (!sf_histfloat(image,"d1",&dz)) sf_error("No d1=");

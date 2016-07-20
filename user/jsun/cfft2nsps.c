@@ -86,6 +86,8 @@ int cfft2_init(int pad1           /* padding on the first axis */,
     cfg2  = kiss_fft_alloc(n2,0,NULL,NULL);
     icfg2 = kiss_fft_alloc(n2,1,NULL,NULL);
  	
+    /* temporary array */
+
     tmp =    (kiss_fft_cpx **) sf_alloc(n2,sizeof(*tmp));
     tmp[0] = (kiss_fft_cpx *)  sf_alloc(nk*n2,sizeof(kiss_fft_cpx));
 #ifdef _OPENMP
