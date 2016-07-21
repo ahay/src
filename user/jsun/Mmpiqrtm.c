@@ -79,6 +79,7 @@ int main(int argc, char* argv[])
     int wfnt;
     float wfdt;
     int stable;
+    bool sdiv; /*smooth division by least squares*/
     int shtid; /*output wavefield corresponding shot id*/
     float eps, perc, vmax, veps; /* for stable division */
 
@@ -86,6 +87,9 @@ int main(int argc, char* argv[])
     sf_complex ***record, **imgsum;
     sf_complex *img_visc, *img_disp;
     float *ratio;
+    float *img_visc_f, *img_disp_f;
+    int dims[2], rect[2], niter;
+    float reg;
 
     /*tmp*/
     int tmpint;
@@ -130,6 +134,15 @@ int main(int argc, char* argv[])
 	else sf_error("Please specify a correct stable parameter (0,1,2,3)!");
       }
       if (stable==1 || stable==2 || stable==3) {
+        if (stable==1) {
+	  if (!sf_getbool("sdiv", &sdiv)) sdiv=false; /*smooth division*/
+          if (sdiv) {
+	    if (!sf_getfloat("reg", &reg)) reg=0.0f; /*regularization*/
+            if (!sf_getint("rect1",rect)) rect[0]=2;
+            if (!sf_getint("rect2",rect+1)) rect[1]=2;
+            if (!sf_getint("niter",&niter)) niter=100; /*smooth division maximum iterations*/
+          }
+        }
         if (!sf_getbool("freq_scal", &freq_scal)) freq_scal=false; /*frequency amplitude spectrum scaling*/
         if (!sf_getfloat("eps", &eps)) eps=SF_EPS; /*padding*/
         if (!sf_getfloat("perc", &perc)) perc=0.1; /*percentage of maximum for padding*/
@@ -234,10 +247,19 @@ int main(int argc, char* argv[])
       img_visc = sf_complexalloc(nz*nx);
       img_disp = sf_complexalloc(nz*nx);
       ratio  = sf_floatalloc(nz*nx);
+      if (sdiv) {
+        img_visc_f = sf_floatalloc(nz*nx);
+        img_disp_f = sf_floatalloc(nz*nx);
+      } else {
+        img_visc_f = NULL;
+        img_disp_f = NULL;
+      }
     } else {
       img_visc = NULL;
       img_disp = NULL;
       ratio  = NULL;
+      img_visc_f = NULL;
+      img_disp_f = NULL;
     }
 
     /*read from files*/
@@ -433,10 +455,24 @@ int main(int argc, char* argv[])
         }
 
         /* stable division */
-        vmax = find_cmax(nz*nx, img_visc);
-        veps = (vmax==0) ? eps : vmax*vmax*perc;
-        if (verb) sf_warning("Space domain: vmax=%f, veps=%f",vmax,veps);
-        stable_cdiv_f(nz*nx, veps, img_disp, img_visc, ratio);
+        if (sdiv) {
+	  /*smooth division*/
+#ifdef _OPENMP
+#pragma omp parallel for private(iz)
+#endif
+          for (iz=0; iz<nz*nx; iz++) {
+	      img_visc_f[iz] = cabsf(img_visc[iz]);
+	      img_disp_f[iz] = cabsf(img_disp[iz]);
+          }
+	  dims[0] = nz; dims[1] = nx;
+	  sf_divn_init(2, nx*nz, dims, rect, niter, verb);
+	  sf_divne (img_disp_f, img_visc_f, ratio, reg);
+        } else {
+          vmax = find_cmax(nz*nx, img_visc);
+          veps = (vmax==0) ? eps : vmax*vmax*perc;
+          if (verb) sf_warning("Space domain: vmax=%f, veps=%f",vmax,veps);
+          stable_cdiv_f(nz*nx, veps, img_disp, img_visc, ratio);
+        }
 	  
 	/*apply stable imaging condition*/
 #ifdef _OPENMP
