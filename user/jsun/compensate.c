@@ -67,6 +67,27 @@ void stable_cdiv(int n, float eps, sf_complex *num, sf_complex *den, sf_complex 
     }
 }
 
+void stable_cdiv_f(int n, float eps, sf_complex *num, sf_complex *den, float *ratio)
+/*< stable division of complex numbers using envelope, therefore outputs real numbers >*/
+{
+    int i;
+    float r,vnum,vden;
+
+#ifdef _OPENMP
+#pragma omp parallel for default(shared) private(i,vnum,vden,r)
+#endif
+    for (i = 0; i < n; i++) {
+        vnum = cabsf(num[i]);
+        vden = cabsf(den[i]);
+
+        if (vden == 0.f || vden >= vnum)
+            r = 1.f;
+        else
+            r = vnum*vden/(vden*vden + eps);
+        ratio[i] = r;
+    }
+}
+
 float find_max(int n, float *vals)
 /*< find maximum abs val >*/
 {
