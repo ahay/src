@@ -1,8 +1,8 @@
 from rsf.proj import *
 
-#SConscript('../fetch/SConstruct')
+#SConscript('../Fetchpaper/SConstruct')
 
-Flow('foldplot','../fetch/npr3_field_hdr.rsf',
+Flow('foldplot','../Fetchpaper/npr3_field_hdr.rsf',
     '''
       sfdd type=float |
       sffold
@@ -52,7 +52,7 @@ Result('foldmap-400-5000',
 # >/dev/null
 
 for key in Split('sx sy gx gy'):
-    Flow(key,'../fetch/npr3_field_hdr.rsf','dd type=float | headermath output=' + key)
+    Flow(key,'../Fetchpaper/npr3_field_hdr.rsf','dd type=float | headermath output=' + key)
 
 # Shot coordinates
 Flow('sxsycoord','sx sy','sfcmplx ${SOURCES[1]}')
