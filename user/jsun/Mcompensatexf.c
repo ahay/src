@@ -20,13 +20,13 @@
 #ifdef _OPENMP
 #include <omp.h>
 #endif
-#include "cfft2nsps.h"
+#include "cfft2w.h"
 #include "compensate.h"
 
 int main(int argc, char* argv[])
 {
     bool verb,cmplx;
-    int it,i,j,ix,iz,iter,niter; /* index variables */
+    int i,j,ix,iz,iter,niter; /* index variables */
     int nt,nz,nx,nzx,nz2,nx2,nzx2,nk,pad1,nth;
     float perc,vmax,eps;
 

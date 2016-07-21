@@ -544,7 +544,8 @@ int main(int argc, char* argv[])
 
     tend = clock();
     duration=(double)(tend-tstart)/CLOCKS_PER_SEC;
-    sf_warning(">> The CPU time of single shot migration is: %f seconds << ", duration);
+    if (verb)
+        sf_warning(">> The CPU time of single shot migration is: %f seconds << ", duration);
 
     MPI_Finalize();
     exit(0);
