@@ -1,4 +1,4 @@
-/* Lowrank symbol approxiamtion for 3-D recursive integral time extrapolation of elastic waves */
+/* Lowrank symbol approxiamtion for 3-D recursive integral time extrapolation of visco-elastic waves (this program is deprecated) */
 /*
    Copyright (C) 2016 The University of Texas at Austin 
    This program is free software; you can redistribute it and/or modify
