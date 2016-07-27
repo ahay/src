@@ -1609,6 +1609,86 @@ void sponge3d_apply(float  ***uu,
     }
 }
 
+void sponge3d_apply_complex(sf_complex  ***uu,
+		            sponge   spo,
+		            fdm3d    fdm)
+/*< apply boundary sponge for complex-valued wavefield >*/
+{
+    int iz,ix,iy,ib,ibz,ibx,iby;
+    float w;
+
+#ifdef _OPENMP
+#pragma omp parallel for			\
+    schedule(dynamic)				\
+    private(ib,ix,iy,ibz,w)			\
+    shared(fdm,spo,uu)
+#endif
+    for(ib=0; ib<fdm->nb; ib++) {
+	w = spo->w[fdm->nb-ib-1];
+
+	ibz = fdm->nzpad-ib-1;
+	for    (iy=0; iy<fdm->nypad; iy++) {
+	    for(ix=0; ix<fdm->nxpad; ix++) {
+#ifdef SF_HAS_COMPLEX_H
+		uu[iy][ix][ib ] *= w; /* z min */
+		uu[iy][ix][ibz] *= w; /* z max */
+#else
+		uu[iy][ix][ib ] = sf_crmul(uu[iy][ix][ib ],w); /* z min */
+		uu[iy][ix][ibz] = sf_crmul(uu[iy][ix][ibz],w); /* z max */
+#endif
+	    }
+	}
+    }
+
+#ifdef _OPENMP
+#pragma omp parallel for			\
+    schedule(dynamic)				\
+    private(ib,iz,iy,ibx,w)			\
+    shared(fdm,spo,uu)
+#endif
+    for(ib=0; ib<fdm->nb; ib++) {
+	w = spo->w[fdm->nb-ib-1];
+
+	ibx = fdm->nxpad-ib-1;
+	for    (iy=0; iy<fdm->nypad; iy++) {
+	    for(iz=0; iz<fdm->nzpad; iz++) {
+#ifdef SF_HAS_COMPLEX_H
+		uu[iy][ib ][iz] *= w; /* x min */
+		uu[iy][ibx][iz] *= w; /* x max */
+#else
+		uu[iy][ib ][iz] = sf_crmul(uu[iy][ib ][iz],w); /* x min */
+		uu[iy][ibx][iz] = sf_crmul(uu[iy][ibx][iz],w); /* x max */
+#endif
+	    }
+	}
+    }
+
+#ifdef _OPENMP
+#pragma omp parallel for			\
+    schedule(dynamic)				\
+    private(ib,iz,ix,iby,w)			\
+    shared(fdm,spo,uu)
+#endif
+    for(ib=0; ib<fdm->nb; ib++) {
+	w = spo->w[fdm->nb-ib-1];
+	
+	iby = fdm->nypad-ib-1;
+	for    (ix=0; ix<fdm->nxpad; ix++) {
+	    for(iz=0; iz<fdm->nzpad; iz++) {
+#ifdef SF_HAS_COMPLEX_H
+		uu[ib ][ix][iz] *= w; /* y min */
+		uu[iby][ix][iz] *= w; /* y max */
+#else
+		uu[ib ][ix][iz] = sf_crmul(uu[ib ][ix][iz],w); /* y min */
+		uu[iby][ix][iz] = sf_crmul(uu[iby][ix][iz],w); /* y max */
+#endif
+	    }
+	}
+
+    }
+}
+
+
 bool cfl_generic(
     float vpmin, float vpmax,
     float dx, float dy, float dz,
