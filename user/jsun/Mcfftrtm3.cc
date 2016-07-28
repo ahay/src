@@ -194,11 +194,15 @@ int main(int argc, char** argv)
         img = sf_complexalloc3(nz,nx,ny);
     }
 
+    // source location
     int sou_x; par.get("sou_x",sou_x); // source position x
     int sou_y; par.get("sou_y",sou_y); // source position y
     int sou_z; par.get("sou_z",sou_z); // source position z
-    bool snap; par.get("snap",snap,false);
-    int jsnap; par.get("jsnap",jsnap,nt);
+    // now change to padded grid
+    sou_x += nb;
+    sou_y += nb;
+    sou_z += nb;
+    // mutting first arrival
     bool mute;
     float sou_t0, vel_w;
     if(!migr) {
@@ -208,12 +212,16 @@ int main(int argc, char** argv)
             par.get("vel_w",vel_w,1500.); // water velocity
         }
     }
-    // now change to padded grid
-    sou_x += nb;
-    sou_y += nb;
-    sou_z += nb;
 
-    rtm3d rtm = rtm3d_init(sou_x, sou_y, sou_z, nt, dt, sou_t0, vel_w, ww, roll, rec_dep, rec_ox, rec_oy, rec_jt, rec_jx, rec_jy, rec_nt, rec_nx, rec_ny, snap, jsnap);
+    // wavefield snapshot
+    bool snap; par.get("snap",snap,false);
+    int jsnap; par.get("jsnap",jsnap,nt);
+
+    rtm3d rtm = rtm3d_init(sou_x, sou_y, sou_z, nt, dt, sou_t0, vel_w, roll, rec_dep, rec_ox, rec_oy, rec_jt, rec_jx, rec_jy, rec_nt, rec_nx, rec_ny, snap, jsnap);
+
+    // Gaussian bell
+    int nbell; par.get("nbell",nbell,1); // source position z
+    if(nbell) bel3d_init(nbell,fdm,rtm);
 
     sf_complex ***u = sf_complexalloc3(fdm->nzpad,fdm->nxpad,fdm->nypad);
 #ifdef _OPENMP
@@ -250,7 +258,7 @@ int main(int argc, char** argv)
     sf_complex ***uc = NULL;
     sf_axis acz = NULL, acx = NULL, acy = NULL;
     sf_file Fwfl = NULL; /* wavefield */
-    if (snap) {
+    if(snap) {
         Fwfl = sf_output("wfl"); /* wavefield */
         int   nqz; par.get("nqz",nqz,nz);
         int   nqx; par.get("nqx",nqx,nx);
@@ -322,7 +330,7 @@ int main(int argc, char** argv)
                     if(info > 2) sf_warning(" advance to %7d (prop from %d to %d) ",capo,oldcapo,capo);
                     for(it=oldcapo; it<capo; it++) {
                         /* inject source */
-                        inject_src(u, ww, it, rtm);
+                        inject_bell_src(u, ww[it], rtm);
                         /* forward prop */
                         forward(u, fdm, dft, lrk, spo);
                     }
@@ -420,7 +428,7 @@ int main(int argc, char** argv)
             }
 
             /* inject source */
-            inject_src(u, ww, it, rtm);
+            inject_bell_src(u, ww[it], rtm);
 
             /* forward prop */
             forward(u, fdm, dft, lrk, spo);
@@ -434,6 +442,33 @@ int main(int argc, char** argv)
         /* output data */
         sf_complexwrite(dat[0][0],rec_nt*rec_nx*rec_ny,Fdat);
 
+    }
+
+    /*************************************************************/
+    /* clean up memory variables */
+
+    dft3d_finalize();
+    lrk3d_finalize();
+    if(nbell) bel3d_finalize();
+
+    free(fdm);
+    free(dft);
+    free(rtm);
+    free(lrk);
+
+    free(ww);
+    free(**tt); free(*tt); free(tt);
+    free(**vel); free(*vel); free(vel);
+    free(*lt); free(lt);
+    free(*rt); free(rt);
+    free(**dat); free(*dat); free(dat);
+    free(**u); free(*u); free(u);
+    if(migr) {
+        free(**img); free(*img); free(img);
+        free(**bu); free(*bu); free(bu);
+    }
+    if(snap) {
+        free(**uc); free(*uc); free(uc);
     }
 
     return 0;

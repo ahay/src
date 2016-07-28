@@ -37,7 +37,6 @@ struct rtm3{
     float sou_dt;
     float sou_t0;
     float vel_w;
-    sf_complex *ww;
     bool roll;
     int rec_dep;
     int rec_ox;
@@ -203,7 +202,7 @@ void lrk3d_apply(sf_complex *uo,
     }
 }
 
-void lrk3d_finalize(lrk3d lrk)
+void lrk3d_finalize()
 /*< prepare lowrank arrays for rite method >*/
 {
     free(cwave);
@@ -222,7 +221,6 @@ rtm3d rtm3d_init(int sou_x_,
                  float sou_dt_,
                  float sou_t0_,
                  float vel_w_,
-                 sf_complex *ww_,
                  bool roll_,
                  int rec_dep_,
                  int rec_ox_,
@@ -248,7 +246,6 @@ rtm3d rtm3d_init(int sou_x_,
     rtm->sou_dt = sou_dt_;
     rtm->sou_t0 = sou_t0_;
     rtm->vel_w = vel_w_;
-    rtm->ww = ww_;
     rtm->roll = roll_;
     rtm->rec_dep = rec_dep_;
     rtm->rec_ox = rec_ox_;
@@ -268,28 +265,77 @@ rtm3d rtm3d_init(int sou_x_,
     return rtm;
 }
 
-void inject_src(sf_complex ***u,
-                sf_complex *ww,
-                int tt,
+/*------------------------------------------------------------*/
+static float***bel3d=NULL;
+static int nbel;
+
+void bel3d_init(int n,
+                fdm3d fdm,
                 rtm3d rtm)
+/*< init bell taper >*/
+{
+    int   iz,ix,iy;
+    float s;
+
+    nbel = n;
+
+    if( rtm->sou_z<(fdm->nb+nbel) || rtm->sou_z>(fdm->nzpad-fdm->nb-nbel) ||
+        rtm->sou_x<(fdm->nb+nbel) || rtm->sou_x>(fdm->nxpad-fdm->nb-nbel) ||
+        rtm->sou_y<(fdm->nb+nbel) || rtm->sou_y>(fdm->nypad-fdm->nb-nbel) )
+        sf_error("Bell taper width too big!");
+
+    s = (nbel==0)? 1 : 2.0/(nbel*nbel);
+
+    bel3d=sf_floatalloc3(2*nbel+1,2*nbel+1,2*nbel+1);
+
+    for        (iy=-nbel;iy<=nbel;iy++) {
+	for    (ix=-nbel;ix<=nbel;ix++) {
+	    for(iz=-nbel;iz<=nbel;iz++) {
+		bel3d[nbel+iy][nbel+ix][nbel+iz] = exp(-(iz*iz+ix*ix+iy*iy)*s);
+	    }
+	}    
+    }
+}
+
+void inject_bell_src(sf_complex ***u,
+                     sf_complex ww,
+                     rtm3d rtm)
 /*< inject source wavelet into 3d cube >*/
 {
     int iy, ix, iz;
 
     /* inject source */
-    for(iy=-1;iy<=1;iy++) {
-        for(ix=-1;ix<=1;ix++) {
-            for(iz=-1;iz<=1;iz++) {
-                //i = ((rtm->sou_y+iy)*fdm->nxpad + rtm->sou_x+ix)*fdm->nzpad + rtm->sou_z+iz;
+    for        (iy=-nbel;iy<=nbel;iy++) {
+	for    (ix=-nbel;ix<=nbel;ix++) {
+	    for(iz=-nbel;iz<=nbel;iz++) {
 #ifdef SF_HAS_COMPLEX_H
-                u[rtm->sou_y+iy][rtm->sou_x+ix][rtm->sou_z+iz] += rtm->ww[tt]/(abs(iy)+abs(ix)+abs(iz)+1);
+                u[rtm->sou_y+iy][rtm->sou_x+ix][rtm->sou_z+iz] += ww*bel3d[nbel+iy][nbel+ix][nbel+iz];
 #else
-                u[rtm->sou_y+iy][rtm->sou_x+ix][rtm->sou_z+iz] = sf_cadd(u[rtm->sou_y+iy][rtm->sou_x+ix][rtm->sou_z+iz],sf_crmul(rtm->ww[tt],1./(abs(iy)+abs(ix)+abs(iz)+1)));
+                u[rtm->sou_y+iy][rtm->sou_x+ix][rtm->sou_z+iz] = sf_cadd(u[rtm->sou_y+iy][rtm->sou_x+ix][rtm->sou_z+iz],sf_crmul(ww,bel3d[nbel+iy][nbel+ix][nbel+iz]));
 #endif
             }
         }
     }
+
+//    for(iy=-1;iy<=1;iy++) {
+//        for(ix=-1;ix<=1;ix++) {
+//            for(iz=-1;iz<=1;iz++) {
+//#ifdef SF_HAS_COMPLEX_H
+//                u[rtm->sou_y+iy][rtm->sou_x+ix][rtm->sou_z+iz] += ww/(abs(iy)+abs(ix)+abs(iz)+1);
+//#else
+//                u[rtm->sou_y+iy][rtm->sou_x+ix][rtm->sou_z+iz] = sf_cadd(u[rtm->sou_y+iy][rtm->sou_x+ix][rtm->sou_z+iz],sf_crmul(ww,1./(abs(iy)+abs(ix)+abs(iz)+1)));
+//#endif
+//            }
+//        }
+//    }
 }
+
+void bel3d_finalize()
+/*< finalize bell taper >*/
+{
+   if(NULL!=bel3d) { free(**bel3d); free(*bel3d); free(bel3d); bel3d=NULL; }
+}
+
 
 void inject3d(sf_complex ***u,
               sf_complex ***d,
