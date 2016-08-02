@@ -58,7 +58,7 @@
 int main(int argc, char* argv[])
 {
     int i, iter, niter, p[6][2], status;
-    sf_complex *buf, *buf2;
+    sf_complex *buf, *buf2, *wht;
     double rn, rnp, alpha, beta;
     pid_t pid[6]={1,1,1,1,1,1};
     off_t nm, nd, msiz, dsiz, pos;
@@ -70,6 +70,7 @@ int main(int argc, char* argv[])
     sf_file out=NULL;
     sf_file from=NULL;
     sf_file to=NULL;
+    sf_file mwt=NULL;
     extern int fseeko(FILE *stream, off_t offset, int whence);
     extern off_t ftello (FILE *stream);
 
@@ -109,6 +110,13 @@ int main(int argc, char* argv[])
     buf  = sf_complexalloc(nbuf);
     buf2 = sf_complexalloc(nbuf);
 
+    if (NULL != sf_getstring("mwt")) {
+	mwt = sf_input("mwt"); /* model weight */
+	wht = sf_complexalloc(nbuf);
+    } else {
+	mwt = NULL;
+	wht = NULL;
+    }
 
     for (i=0; i < 6; i++) { /* make six pipes */
 	if (pipe(p[i]) < 0) sf_error("pipe error:");
@@ -200,13 +208,27 @@ int main(int argc, char* argv[])
 	    
 	    rn = 0.;
 
+	    if (NULL != mwt) sf_seek(mwt,0,SEEK_SET);
+
 #ifdef SF_HAS_COMPLEX_H
 	    MLOOP( sf_complexread(buf,mbuf,from);
+
+		   if (NULL != mwt) { 
+		       sf_complexread(wht,mbuf,mwt);
+		       for (i=0; i < mbuf; i++) { buf[i] *= conjf(wht[i]); }
+		   }
+
 		   for (i=0; i < mbuf; i++) { 
 		       rn += creal(conj(buf[i]) * buf[i]); }
 		   MWRITE(gfile); );
 #else
 	    MLOOP( sf_complexread(buf,mbuf,from);
+
+		   if (NULL != mwt) { 
+		       sf_complexread(wht,mbuf,mwt);
+		       for (i=0; i < mbuf; i++) { buf[i] = sf_cmul(buf[i],conjf(wht[i])); }
+		   }
+
 		   for (i=0; i < mbuf; i++) { 
 		       rn += 
 			   (double) buf[i].r * buf[i].r +
@@ -238,8 +260,15 @@ int main(int argc, char* argv[])
 
 	    /* s = g + alpha*s */
 
+	    if (NULL != mwt) sf_seek(mwt,0,SEEK_SET);
+
 #ifdef SF_HAS_COMPLEX_H	    
 	    MLOOP( MREAD(gfile); sf_complexwrite(buf,mbuf,to);
+
+		   if (NULL != mwt) { 
+		       sf_complexread(wht,mbuf,mwt);
+		       for (i=0; i < mbuf; i++) { buf[i] *= wht[i]; }
+		   }
 
 		   if (iter > 0) {
 		       pos = ftello(sfile);
@@ -257,6 +286,11 @@ int main(int argc, char* argv[])
 		   MWRITE(sfile); );
 #else
 	    MLOOP( MREAD(gfile); sf_complexwrite(buf,mbuf,to);
+
+		   if (NULL != mwt) { 
+		       sf_complexread(wht,mbuf,mwt);
+		       for (i=0; i < mbuf; i++) { buf[i] = sf_cmul(buf[i],wht[i]); }
+		   }
 
 		   if (iter > 0) {
 		       pos = ftello(sfile);

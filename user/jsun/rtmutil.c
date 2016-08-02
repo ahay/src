@@ -353,7 +353,11 @@ void inject3d(sf_complex ***u,
 #endif
     for    (iy=0; iy<rtm->rec_ny; iy++) {
         for(ix=0; ix<rtm->rec_nx; ix++) {
+#ifdef SF_HAS_COMPLEX_H
             u[iy*rtm->rec_jy+rtm->rec_oy][ix*rtm->rec_jx+rtm->rec_ox][rtm->rec_dep] += d[iy][ix][tt];
+#else
+            u[iy*rtm->rec_jy+rtm->rec_oy][ix*rtm->rec_jx+rtm->rec_ox][rtm->rec_dep] = sf_cadd(u[iy*rtm->rec_jy+rtm->rec_oy][ix*rtm->rec_jx+rtm->rec_ox][rtm->rec_dep],d[iy][ix][tt]);
+#endif
         }
     }
 }
@@ -471,4 +475,38 @@ void ccr(sf_complex ***img,
 void rtm_finalize()
 /*< finalize rtm >*/
 {
+}
+
+void itoa(int n, char *s)
+/*< convert integer to char >*/
+{
+    int i,j,sign;
+    char c;
+    sign = n;
+    if (n < 0) n=-n;
+    i = 0;
+    do {
+	s[i++] = n%10+'0';
+	n = (int) n/10;
+    } while(n > 0);
+    if (sign <0) s[i++] = '-';
+    s[i] = '\0';
+    for (i=0,j=strlen(s)-1;i<j;i++,j--){
+        c = s[i];
+        s[i]=s[j];
+        s[j]=c;
+    }
+}
+
+void setval_complex(sf_complex *u, int n, sf_complex val)
+/*< set value >*/
+{
+    int i;
+#ifdef _OPENMP
+#pragma omp parallel for                \
+    schedule(dynamic,1)                 \
+    private(i)                          \
+    shared(u)
+#endif
+    for (i=0; i<n; i++) u[i] = val;
 }

@@ -405,6 +405,9 @@ int main(int argc, char** argv)
                                  sf_warning(" increase constant 'repsup' and recompile ");       
                     }
                     sf_error(" exiting...");
+                    break;
+                default:
+                    break;
             }
         } while((whatodo != terminate) && (whatodo != error));
 
