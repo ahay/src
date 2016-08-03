@@ -226,7 +226,6 @@ int main(int argc, char** argv)
     sf_complex ***u = sf_complexalloc3(fdm->nzpad,fdm->nxpad,fdm->nypad);
 #ifdef _OPENMP
 #pragma omp parallel for			\
-            schedule(dynamic,1)			\
             private(iy,ix,iz)                   \
             shared(u,fdm)
 #endif
@@ -242,7 +241,6 @@ int main(int argc, char** argv)
         bu = sf_complexalloc3(fdm->nzpad,fdm->nxpad,fdm->nypad);
 #ifdef _OPENMP
 #pragma omp parallel for			\
-            schedule(dynamic,1)			\
             private(iy,ix,iz)                   \
             shared(bu,fdm)
 #endif
@@ -313,7 +311,6 @@ int main(int argc, char** argv)
                     if(info > 1) sf_warning(" takeshot at %6d ",capo);
 #ifdef _OPENMP
 #pragma omp parallel for			\
-            schedule(dynamic,1)			\
             private(iy,ix,iz,i)                 \
             shared(u,ustor,fdm,check)
 #endif
@@ -340,7 +337,6 @@ int main(int argc, char** argv)
                     /* initialize image */
 #ifdef _OPENMP
 #pragma omp parallel for			\
-            schedule(dynamic,1)			\
             private(iy,ix,iz)                   \
             shared(img,ny,nx,nz)
 #endif
@@ -371,7 +367,6 @@ int main(int argc, char** argv)
                     if(info > 2) sf_warning(" restore at %7d ",capo);
 #ifdef _OPENMP
 #pragma omp parallel for			\
-            schedule(dynamic,1)			\
             private(iy,ix,iz,i)                 \
             shared(u,ustor,fdm,check)
 #endif

@@ -116,7 +116,6 @@ void lrk3d_apply(sf_complex *uo,
         for (im = 0; im < lrk->nrank; im++) {
 #ifdef _OPENMP
 #pragma omp parallel for			\
-            schedule(dynamic,1)			\
             private(iy,ix,iz,i)                     \
             shared(fdm,lrk,wavem,ui)
 #endif
@@ -137,7 +136,6 @@ void lrk3d_apply(sf_complex *uo,
 
 #ifdef _OPENMP
 #pragma omp parallel for              \
-        schedule(dynamic,1)           \
         private(im,ik,c)                \
         shared(lrk,cwave,cwaves,nk)
 #endif
@@ -162,7 +160,6 @@ void lrk3d_apply(sf_complex *uo,
         for (im=0; im<lrk->nrank; im++) {
 #ifdef _OPENMP
 #pragma omp parallel for              \
-        schedule(dynamic,1)           \
         private(ik)                   \
         shared(lrk,cwavem,cwave,nk)
 #endif
@@ -178,7 +175,6 @@ void lrk3d_apply(sf_complex *uo,
 
 #ifdef _OPENMP
 #pragma omp parallel for			\
-        schedule(dynamic,1)                     \
         private(iy,ix,iz,i,c,im)                \
         shared(fdm,lrk,waves,uo)
 #endif
@@ -347,7 +343,6 @@ void inject3d(sf_complex ***u,
 
 #ifdef _OPENMP
 #pragma omp parallel for			\
-        schedule(dynamic,1)                     \
         private(iy,ix)                          \
         shared(rtm,u,d,tt)
 #endif
@@ -372,7 +367,6 @@ void extract3d(sf_complex ***u,
 
 #ifdef _OPENMP
 #pragma omp parallel for			\
-        schedule(dynamic,1)                     \
         private(iy,ix)                          \
         shared(rtm,u,d,tt)
 #endif
@@ -394,7 +388,6 @@ void mute3d(sf_complex ***d,
     dist_z = fdm->dz*(rtm->rec_dep - rtm->sou_z);
 #ifdef _OPENMP
 #pragma omp parallel for                              \
-        schedule(dynamic,1)                           \
         private(iy,ix,it,dist_y,dist_x,dist,t1,tt,wt) \
         shared(rtm,d,dist_z)
 #endif
@@ -455,7 +448,6 @@ void ccr(sf_complex ***img,
     int iy,ix,iz;
 #ifdef _OPENMP
 #pragma omp parallel for			\
-            schedule(dynamic,1)			\
             private(iy,ix,iz)                   \
             shared(img,u,bu,fdm)
 #endif
@@ -504,7 +496,6 @@ void setval_complex(sf_complex *u, int n, sf_complex val)
     int i;
 #ifdef _OPENMP
 #pragma omp parallel for                \
-    schedule(dynamic,1)                 \
     private(i)                          \
     shared(u)
 #endif

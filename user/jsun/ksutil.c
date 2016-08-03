@@ -1619,7 +1619,6 @@ void sponge3d_apply_complex(sf_complex  ***uu,
 
 #ifdef _OPENMP
 #pragma omp parallel for			\
-    schedule(dynamic)				\
     private(ib,ix,iy,ibz,w)			\
     shared(fdm,spo,uu)
 #endif
@@ -1642,7 +1641,6 @@ void sponge3d_apply_complex(sf_complex  ***uu,
 
 #ifdef _OPENMP
 #pragma omp parallel for			\
-    schedule(dynamic)				\
     private(ib,iz,iy,ibx,w)			\
     shared(fdm,spo,uu)
 #endif
@@ -1665,7 +1663,6 @@ void sponge3d_apply_complex(sf_complex  ***uu,
 
 #ifdef _OPENMP
 #pragma omp parallel for			\
-    schedule(dynamic)				\
     private(ib,iz,ix,iby,w)			\
     shared(fdm,spo,uu)
 #endif
@@ -1818,7 +1815,6 @@ lps3d lps3d_init(float pcut /* pcut/2 is the width of tapered region w.r.t. 1 */
     /* construct the pseudo-spectral op */
 #ifdef _OPENMP
 #pragma omp parallel for			\
-    schedule(dynamic,1)				\
     private(ikz,ikx,iky,kz,kx,ky,kk)		\
     shared(dft,lps,kmax,kbnd,pcut)
 #endif
@@ -1874,7 +1870,6 @@ ksp3d ksp3d_make(dft3d dft)
     /* construct the pseudo-spectral op */
 #ifdef _OPENMP
 #pragma omp parallel for			\
-    schedule(dynamic,1)				\
     private(ikz,ikx,iky,kz,kx,ky)		\
     shared(dft,ksp)
 #endif
@@ -1910,7 +1905,6 @@ void ksp3d_apply(float *wavedx,
     /* apply pseudo-spectral op */
 #ifdef _OPENMP
 #pragma omp parallel for			\
-    schedule(dynamic,1)				\
     private(ikz,ikx,iky,ik)                     \
     shared(dft,ksp,wavek,wavekz,wavekx,waveky)
 #endif
@@ -1956,7 +1950,6 @@ void ksp3d_apply1(float *wavedx,
     /* apply pseudo-spectral op */
 #ifdef _OPENMP
 #pragma omp parallel for			\
-    schedule(dynamic,1)				\
     private(ikz,ikx,iky,ik)                     \
     shared(dft,ksp,wavekz,wavekx,waveky)
 #endif
@@ -2001,7 +1994,6 @@ void ksp3d_apply2(float *wavedxx,
     /* apply pseudo-spectral op */
 #ifdef _OPENMP
 #pragma omp parallel for			\
-    schedule(dynamic,1)				\
     private(ikz,ikx,iky,ik)                     \
     shared(dft,ksp,wavek,wavekz,wavekx,waveky)
 #endif
@@ -2029,7 +2021,6 @@ void ksp3d_apply2(float *wavedxx,
     /* apply pseudo-spectral op */
 #ifdef _OPENMP
 #pragma omp parallel for			\
-    schedule(dynamic,1)				\
     private(ikz,ikx,iky,ik)                     \
     shared(dft,ksp,wavek,wavekz,wavekx,waveky)
 #endif
@@ -2095,7 +2086,6 @@ vksp3d vksp3d_make(float gpavg,
     /* construct the pseudo-spectral op */
 #ifdef _OPENMP
 #pragma omp parallel for			\
-    schedule(dynamic,1)				\
     private(ikz,ikx,iky,kz,kx,ky,k2)		\
     shared(dft,lps,vksp,gpavg,gsavg)
 #endif
@@ -2142,7 +2132,6 @@ void vksp3d_apply(float *wavea,
     if (mode == 1) { /* p mode */
 #ifdef _OPENMP
 #pragma omp parallel for			\
-    schedule(dynamic,1)				\
     private(ikz,ikx,iky,ik)                     \
     shared(dft,vksp,waveka,wavekb)
 #endif
@@ -2163,7 +2152,6 @@ void vksp3d_apply(float *wavea,
     } else { /* s mode */
 #ifdef _OPENMP
 #pragma omp parallel for			\
-    schedule(dynamic,1)				\
     private(ikz,ikx,iky,ik)                     \
     shared(dft,vksp,waveka,wavekb)
 #endif
@@ -2293,7 +2281,6 @@ void clr3d_init(fdm3d fdm,
         for (j=0; j<3; j++) {
 #ifdef _OPENMP
 #pragma omp parallel for			\
-    schedule(dynamic,1)				\
     private(ik)                                 \
     shared(nxyz,i,j,waves)
 #endif
@@ -2327,7 +2314,6 @@ void clr3d_apply(sf_complex **uo,
 
 #ifdef _OPENMP
 #pragma omp parallel for              \
-    schedule(dynamic,1)               \
     private(im,in,ik)                 \
     shared(clr,cwaven2,cwave,rt,nk)
 #endif
@@ -2346,7 +2332,6 @@ void clr3d_apply(sf_complex **uo,
 
 #ifdef _OPENMP
 #pragma omp parallel for			\
-    schedule(dynamic,1)				\
     private(iy,ix,iz,i,c,im,in)                 \
     shared(fdm,clr,lt,waven2,waves,ir,ic)
 #endif
@@ -2375,7 +2360,6 @@ void clr3d_apply(sf_complex **uo,
     /* linear combination forms the output vector */
 #ifdef _OPENMP
 #pragma omp parallel for			\
-    schedule(dynamic,1)				\
     private(ik)                                 \
     shared(nxyz,waves,uo)
 #endif
@@ -2418,7 +2402,6 @@ void clr3d_apply2(sf_complex **u2,
 
 #ifdef _OPENMP
 #pragma omp parallel for              \
-    schedule(dynamic,1)               \
     private(im,in,ik)                 \
     shared(clr,cwaven2,cwave,rt,nk)
 #endif
@@ -2437,7 +2420,6 @@ void clr3d_apply2(sf_complex **u2,
 
 #ifdef _OPENMP
 #pragma omp parallel for			\
-    schedule(dynamic,1)				\
     private(iy,ix,iz,i,c,im,in)                 \
     shared(fdm,clr,lt,waven2,waves,ir,ic)
 #endif
@@ -2466,7 +2448,6 @@ void clr3d_apply2(sf_complex **u2,
     /* linear combination forms the output vector */
 #ifdef _OPENMP
 #pragma omp parallel for			\
-    schedule(dynamic,1)				\
     private(ik)                                 \
     shared(nxyz,waves,u2,u1,u0)
 #endif
@@ -2545,7 +2526,6 @@ void clr3d_apply_dbg(sf_complex **uo,
     for (ic=0; ic<1; ic++) {
 #ifdef _OPENMP
 #pragma omp parallel for			\
-    schedule(dynamic,1)				\
     private(ik)                                 \
     shared(nk,ir,waves,uo)
 #endif
@@ -2643,7 +2623,6 @@ mut3d mut3d_make(float t0  /* source delay */,
 
 #ifdef _OPENMP
 #pragma omp parallel for			\
-    schedule(dynamic,1)				\
     private(ir,it,dist,t1,tt)                   \
     shared(t0,velw,eps,ss,rr,dat,mut)
 #endif
@@ -2674,7 +2653,6 @@ void mut3d_apply(float ***dd,
 
 #ifdef _OPENMP
 #pragma omp parallel for			\
-    schedule(dynamic,1)				\
     private(ir,ic,it)                           \
     shared(dd,mut,dat)
 #endif
