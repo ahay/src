@@ -3,7 +3,7 @@ from rsf.proj import *
 # download well-log data
 Fetch('L-30.las','1406_Make_a_synthetic',
       server='https://raw.githubusercontent.com',
-      top='seg/tutorials/master')
+      top='seg/tutorials-2014/master')
 
 # Convert to RSF
 Flow('L-30','L-30.las','las2rsf $SOURCE $TARGET',stdin=0,stdout=-1)
@@ -198,7 +198,7 @@ Result('synth','zw ztw rtw synthw','SideBySideAniso')
 
 Fetch('PenobXL_1155.txt','1406_Make_a_synthetic',
       server='https://raw.githubusercontent.com',
-      top='seg/tutorials/master')
+      top='seg/tutorials-2014/master')
 
 Flow('seismic','PenobXL_1155.txt',
      '''

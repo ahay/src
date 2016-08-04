@@ -4,7 +4,7 @@ from math import pi
 # import Bouguer gravity residual map
 Fetch('continued.txt','1508_Mapping_and_validating_lineaments',
       server='https://raw.githubusercontent.com',
-      top='seg/tutorials/master')
+      top='seg/tutorials-2015/master')
 
 Flow('continued','continued.txt',
      '''
@@ -19,7 +19,7 @@ for case in ('xc','yc'):
     txt = case+'.txt'
     Fetch(txt,'1508_Mapping_and_validating_lineaments',
           server='https://raw.githubusercontent.com',
-          top='seg/tutorials/master')
+          top='seg/tutorials-2015/master')
     Flow(case,case+'.txt',
          '''
          echo n1=81 n2=81 data_format=ascii_float in=$SOURCE |
@@ -78,7 +78,7 @@ Result('theta',bplot('Theta'))
 # import NSTD, normalized standard deviation of data
 Fetch('nstd.txt','1508_Mapping_and_validating_lineaments',
       server='https://raw.githubusercontent.com',
-      top='seg/tutorials/master')
+      top='seg/tutorials-2015/master')
 
 Flow('nstd','nstd.txt',
      '''
@@ -103,7 +103,7 @@ color='cube1_0-1.csv'
 
 Fetch(color,'1508_Mapping_and_validating_lineaments',
       server='https://raw.githubusercontent.com',
-      top='seg/tutorials/master')
+      top='seg/tutorials-2015/master')
 
 Plot('color',['continued',color],'grey title="Bouguer anomaly" screenratio=1 scalebar=y transp=n color=${SOURCES[1]} pclip=100')
 Result('color','Overlay')
