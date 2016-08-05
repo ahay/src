@@ -352,11 +352,13 @@ fdm3d fdutil3d_init(bool verb_,
 
     fdm->nzpad=sf_n(az_)+2*fdm->nb;
     fdm->nxpad=sf_n(ax_)+2*fdm->nb;
-    fdm->nypad=sf_n(ay_)+2*fdm->nb;
+    if(sf_n(ay_)>1) fdm->nypad=sf_n(ay_)+2*fdm->nb;
+    else fdm->nypad=1;
 	
     fdm->ozpad=sf_o(az_)-fdm->nb*fdm->dz;
     fdm->oxpad=sf_o(ax_)-fdm->nb*fdm->dx;
-    fdm->oypad=sf_o(ay_)-fdm->nb*fdm->dy;
+    if(sf_n(ay_)>1) fdm->oypad=sf_o(ay_)-fdm->nb*fdm->dy;
+    else fdm->oypad=sf_o(ay_);
 
     fdm->ompchunk=ompchunk_;
 
@@ -1800,7 +1802,11 @@ dft3d dft3d_init(int pad1,
 
     dft->dkz = 1./(dft->nkz*fdm->dz); dft->okz = -0.5/fdm->dz;
     dft->dkx = 1./(dft->nkx*fdm->dx); dft->okx = -0.5/fdm->dx;
-    dft->dky = 1./(dft->nky*fdm->dy); dft->oky = -0.5/fdm->dy;
+    if(dft->nky>1) {
+        dft->dky = 1./(dft->nky*fdm->dy); dft->oky = -0.5/fdm->dy;
+    } else {
+        dft->dky = 0.; dft->oky = 0.;
+    }
 
     return dft;
 }

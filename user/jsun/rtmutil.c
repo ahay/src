@@ -259,7 +259,7 @@ rtm3d rtm3d_init(int sou_x_,
 
 /*------------------------------------------------------------*/
 static float***bel3d=NULL;
-static int nbel;
+static int nbel,nbel_y;
 
 void bel3d_init(int n,
                 fdm3d fdm,
@@ -269,24 +269,33 @@ void bel3d_init(int n,
     int   iz,ix,iy;
     float s;
 
-    nbel = n;
-
-    if( rtm->sou_z<(fdm->nb+nbel) || rtm->sou_z>(fdm->nzpad-fdm->nb-nbel) ||
-        rtm->sou_x<(fdm->nb+nbel) || rtm->sou_x>(fdm->nxpad-fdm->nb-nbel) ||
-        rtm->sou_y<(fdm->nb+nbel) || rtm->sou_y>(fdm->nypad-fdm->nb-nbel) )
+    if(fdm->nypad>1) {
+        nbel = n;
+        nbel_y = n;
+        if( rtm->sou_z<(fdm->nb+nbel)   || rtm->sou_z>(fdm->nzpad-fdm->nb-nbel) ||
+            rtm->sou_x<(fdm->nb+nbel)   || rtm->sou_x>(fdm->nxpad-fdm->nb-nbel) ||
+            rtm->sou_y<(fdm->nb+nbel_y) || rtm->sou_y>(fdm->nypad-fdm->nb-nbel_y) )
         sf_error("Bell taper width too big!");
+    } else {
+        nbel = n;
+        nbel_y = 0;
+        if( rtm->sou_z<(fdm->nb+nbel) || rtm->sou_z>(fdm->nzpad-fdm->nb-nbel) ||
+            rtm->sou_x<(fdm->nb+nbel) || rtm->sou_x>(fdm->nxpad-fdm->nb-nbel) )
+        sf_error("Bell taper width too big!");
+    }
 
     s = (nbel==0)? 1 : 2.0/(nbel*nbel);
 
-    bel3d=sf_floatalloc3(2*nbel+1,2*nbel+1,2*nbel+1);
+    bel3d=sf_floatalloc3(2*nbel+1,2*nbel+1,2*nbel_y+1);
 
-    for        (iy=-nbel;iy<=nbel;iy++) {
-	for    (ix=-nbel;ix<=nbel;ix++) {
-	    for(iz=-nbel;iz<=nbel;iz++) {
-		bel3d[nbel+iy][nbel+ix][nbel+iz] = exp(-(iz*iz+ix*ix+iy*iy)*s);
-	    }
-	}    
+    for        (iy=-nbel_y;iy<=nbel_y;iy++) {
+        for    (ix=-nbel  ;ix<=nbel  ;ix++) {
+            for(iz=-nbel  ;iz<=nbel  ;iz++) {
+                bel3d[nbel_y+iy][nbel+ix][nbel+iz] = exp(-(iz*iz+ix*ix+iy*iy)*s);
+            }
+        }    
     }
+
 }
 
 void inject_bell_src(sf_complex ***u,
@@ -297,13 +306,13 @@ void inject_bell_src(sf_complex ***u,
     int iy, ix, iz;
 
     /* inject source */
-    for        (iy=-nbel;iy<=nbel;iy++) {
-	for    (ix=-nbel;ix<=nbel;ix++) {
-	    for(iz=-nbel;iz<=nbel;iz++) {
+    for        (iy=-nbel_y;iy<=nbel_y;iy++) {
+	for    (ix=-nbel  ;ix<=nbel  ;ix++) {
+	    for(iz=-nbel  ;iz<=nbel  ;iz++) {
 #ifdef SF_HAS_COMPLEX_H
-                u[rtm->sou_y+iy][rtm->sou_x+ix][rtm->sou_z+iz] += ww*bel3d[nbel+iy][nbel+ix][nbel+iz];
+                u[rtm->sou_y+iy][rtm->sou_x+ix][rtm->sou_z+iz] += ww*bel3d[nbel_y+iy][nbel+ix][nbel+iz];
 #else
-                u[rtm->sou_y+iy][rtm->sou_x+ix][rtm->sou_z+iz] = sf_cadd(u[rtm->sou_y+iy][rtm->sou_x+ix][rtm->sou_z+iz],sf_crmul(ww,bel3d[nbel+iy][nbel+ix][nbel+iz]));
+                u[rtm->sou_y+iy][rtm->sou_x+ix][rtm->sou_z+iz] = sf_cadd(u[rtm->sou_y+iy][rtm->sou_x+ix][rtm->sou_z+iz],sf_crmul(ww,bel3d[nbel_y+iy][nbel+ix][nbel+iz]));
 #endif
             }
         }
