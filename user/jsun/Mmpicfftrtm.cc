@@ -117,6 +117,11 @@ int main(int argc, char** argv)
     int ny_g = sf_n(ay_g); float dy_g = sf_d(ay_g); float oy_g = sf_o(ay_g);
     int nt_g = sf_n(at_g); float dt_g = sf_d(at_g); /*float ot_g = sf_o(at_g);*/
 
+    if(cpuid==0) {
+        if(ny_g>1) sf_warning("3D Modeling/Migration");
+        else sf_warning("2D Modeling/Migration");
+    }
+
     fdm3d fdm_g = fdutil3d_init(verb,false,az_g,ax_g,ay_g,0,1);
 
     /* source wavelet */
@@ -178,7 +183,14 @@ int main(int argc, char** argv)
             sf_intread(&rec_ny_g, 1,geo);
             rec_jt_g = 1; rec_jx_g = 1; rec_jy_g = 1; rec_nt_g = nt_g; // these pars can be read from input as well
 
-            if ( rec_ox_g<0 || rec_ox_g+rec_nx_g*rec_jx_g>nx_g || rec_oy_g<0 || rec_oy_g+rec_ny_g*rec_jy_g>ny_g ) sf_error("Data dimension out of bound!");
+            if(ny_g>1) {
+                if( rec_ox_g<0 || rec_ox_g+rec_nx_g*rec_jx_g>nx_g || rec_oy_g<0 || rec_oy_g+rec_ny_g*rec_jy_g>ny_g ) sf_error("Data dimension out of bound!");
+            } else {
+                if( rec_ox_g<0 || rec_ox_g+rec_nx_g*rec_jx_g>nx_g ) sf_error("Data dimension out of bound!");
+                if( sou_y_g!=0)  sf_error("Set sou_y_g to ZERO for 2D jobs!");
+                if( rec_oy_g!=0) sf_error("Set rec_oy_g to ZERO for 2D jobs!");
+                if( rec_ny_g!=1) sf_error("Set rec_ny_g to ONE for 2D jobs!");
+            }
 
             sf_file Fdat=NULL;
             sf_axis adt = NULL, adx = NULL, ady = NULL;
@@ -223,8 +235,8 @@ int main(int argc, char** argv)
             sf_axis ay = sf_maxa(ny,oy,dy); sf_setlabel(ay,"y"); if(verb) sf_raxa(ay);
 
             /* change to padded grid */
-            sou_z += nb; sou_x += nb; sou_y += nb;
-            rec_dep+= nb; rec_ox += nb; rec_oy += nb;
+            sou_z += nb; sou_x += nb; sou_y += (ny>1)?nb:0;
+            rec_dep+= nb; rec_ox += nb; rec_oy += (ny>1)?nb:0;
 
             /* space domain prep */
             fdm3d fdm = fdutil3d_init(verb,false,az,ax,ay,nb,1);
@@ -233,7 +245,8 @@ int main(int argc, char** argv)
             float ***velc = sf_floatalloc3(nz,nx,ny);
             cut3d(vel_g,velc,fdm_g,az,ax,ay);
             float ***vel = sf_floatalloc3(fdm->nzpad,fdm->nxpad,fdm->nypad);
-            expand3d(velc,vel,fdm);
+            if(ny>1) expand3d(velc,vel,fdm);
+            else expand2d(velc[0],vel[0],fdm);
 
             /* set up abc */
             sponge spo=NULL;

@@ -507,14 +507,43 @@ void expand3d(float ***a,
     }
 
     for         (iy=0; iy<fdm->nb;    iy++) {
-	for     (ix=0; ix<fdm->nxpad; ix++) {
-	    for (iz=0; iz<fdm->nzpad; iz++) {
-		b[           iy  ][ix][iz] = b[           fdm->nb  ][ix][iz];
-		b[fdm->nypad-iy-1][ix][iz] = b[fdm->nypad-fdm->nb-1][ix][iz];
-	    }
+        for     (ix=0; ix<fdm->nxpad; ix++) {
+            for (iz=0; iz<fdm->nzpad; iz++) {
+                b[           iy  ][ix][iz] = b[           fdm->nb  ][ix][iz];
+                b[fdm->nypad-iy-1][ix][iz] = b[fdm->nypad-fdm->nb-1][ix][iz];
+            }
+        }
+    }
+
+}
+
+/*------------------------------------------------------------*/
+void expand2d(float** a, 
+              float** b, 
+	      fdm3d fdm)
+/*< expand domain >*/
+{
+    int iz,ix;
+
+    for     (ix=0;ix<fdm->nx;ix++) {
+	for (iz=0;iz<fdm->nz;iz++) {
+	    b[fdm->nb+ix][fdm->nb+iz] = a[ix][iz];
 	}
     }
 
+    for     (ix=0; ix<fdm->nxpad; ix++) {
+	for (iz=0; iz<fdm->nb;    iz++) {
+	    b[ix][           iz  ] = b[ix][           fdm->nb  ];
+	    b[ix][fdm->nzpad-iz-1] = b[ix][fdm->nzpad-fdm->nb-1];
+	}
+    }
+
+    for     (ix=0; ix<fdm->nb;    ix++) {
+	for (iz=0; iz<fdm->nzpad; iz++) {
+	    b[           ix  ][iz] = b[           fdm->nb  ][iz];
+	    b[fdm->nxpad-ix-1][iz] = b[fdm->nxpad-fdm->nb-1][iz];
+	}
+    }
 }
 
 /*------------------------------------------------------------*/
@@ -1615,6 +1644,7 @@ void sponge3d_apply(float  ***uu,
 	}
     }
 
+    if (fdm->nypad>1) {
 #ifdef _OPENMP
 #pragma omp parallel for			\
     schedule(dynamic)				\
@@ -1632,6 +1662,7 @@ void sponge3d_apply(float  ***uu,
 	    }
 	}
 
+    }
     }
 }
 
@@ -1687,6 +1718,7 @@ void sponge3d_apply_complex(sf_complex  ***uu,
 	}
     }
 
+    if (fdm->nypad>1) {
 #ifdef _OPENMP
 #pragma omp parallel for			\
     private(ib,iz,ix,iby,w)			\
@@ -1708,6 +1740,7 @@ void sponge3d_apply_complex(sf_complex  ***uu,
 	    }
 	}
 
+    }
     }
 }
 
