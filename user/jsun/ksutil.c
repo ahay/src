@@ -1533,7 +1533,7 @@ sponge sponge_make(int nb)
     return spo;
 }
 
-sponge sponge_make2(int nb, float c)
+sponge sponge_make2(int nb, float cb)
 /*< init boundary sponge >*/
     
 /* Sponge boundary conditions multiply incoming wavefields
@@ -1551,7 +1551,7 @@ sponge sponge_make2(int nb, float c)
     spo->w = sf_floatalloc(nb);
     sb = 4.0*nb;               
     for(ib=0; ib<nb; ib++) {
-	fb = ib/(sqrt(2.0)*sb)*c;
+	fb = ib/(sqrt(2.0)*sb)*cb;
 	spo->w[ib] = exp(-fb*fb);
     }
     return spo;

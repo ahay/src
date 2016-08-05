@@ -451,18 +451,36 @@ void ccr(sf_complex ***img,
 /*< cross-correlation imaging condition >*/
 {
     int iy,ix,iz;
+
+    if(fdm->ny>1) {
 #ifdef _OPENMP
-#pragma omp parallel for			\
-            private(iy,ix,iz)                   \
-            shared(img,u,bu,fdm)
+#pragma omp parallel for    \
+        private(iy,ix,iz)   \
+        shared(img,u,bu,fdm)
 #endif
-    for (iy=0; iy<fdm->ny; iy++)         {
+        for (iy=0; iy<fdm->ny; iy++)         {
+            for (ix=0; ix<fdm->nx; ix++)     {
+                for (iz=0; iz<fdm->nz; iz++) {
+#ifdef SF_HAS_COMPLEX_H
+                    img[iy][ix][iz] += conjf(u[iy+fdm->nb][ix+fdm->nb][iz+fdm->nb])*bu[iy+fdm->nb][ix+fdm->nb][iz+fdm->nb];
+#else
+                    img[iy][ix][iz] = sf_cadd(img[iy][ix][iz],sf_cmul(conjf(u[iy+fdm->nb][ix+fdm->nb][iz+fdm->nb]),bu[iy+fdm->nb][ix+fdm->nb][iz+fdm->nb]));
+#endif
+                }
+            }
+        }
+    } else {
+#ifdef _OPENMP
+#pragma omp parallel for    \
+        private(ix,iz)      \
+        shared(img,u,bu,fdm)
+#endif
         for (ix=0; ix<fdm->nx; ix++)     {
             for (iz=0; iz<fdm->nz; iz++) {
 #ifdef SF_HAS_COMPLEX_H
-                img[iy][ix][iz] += conjf(u[iy+fdm->nb][ix+fdm->nb][iz+fdm->nb])*bu[iy+fdm->nb][ix+fdm->nb][iz+fdm->nb];
+                img[0][ix][iz] += conjf(u[0][ix+fdm->nb][iz+fdm->nb])*bu[0][ix+fdm->nb][iz+fdm->nb];
 #else
-                img[iy][ix][iz] = sf_cadd(img[iy][ix][iz],sf_cmul(conjf(u[iy+fdm->nb][ix+fdm->nb][iz+fdm->nb]),bu[iy+fdm->nb][ix+fdm->nb][iz+fdm->nb]));
+                img[0][ix][iz] = sf_cadd(img[0][ix][iz],sf_cmul(conjf(u[0][ix+fdm->nb][iz+fdm->nb]),bu[0][ix+fdm->nb][iz+fdm->nb]));
 #endif
             }
         }
