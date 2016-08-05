@@ -1502,6 +1502,30 @@ sponge sponge_make(int nb)
     return spo;
 }
 
+sponge sponge_make2(int nb, float c)
+/*< init boundary sponge >*/
+    
+/* Sponge boundary conditions multiply incoming wavefields
+   by smaller coefficients to attenuate the wavefield over time and space.
+
+   The sponge coefficients need to deviate from 1 very gradually to ensure
+   that there are no induced reflections caused by large impedance 
+   contrasts */
+{
+    sponge spo;
+    int   ib;
+    float sb,fb;
+    
+    spo = (sponge) sf_alloc(1,sizeof(*spo));    
+    spo->w = sf_floatalloc(nb);
+    sb = 4.0*nb;               
+    for(ib=0; ib<nb; ib++) {
+	fb = ib/(sqrt(2.0)*sb)*c;
+	spo->w[ib] = exp(-fb*fb);
+    }
+    return spo;
+}
+
 /*------------------------------------------------------------*/
 void sponge2d_apply(float**   uu,
 		    sponge   spo,

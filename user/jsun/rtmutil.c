@@ -62,8 +62,7 @@ struct rtm3{
 /*------------------------------------------------------------*/
 static sf_complex *cwave =NULL;
 static sf_complex *cwavem=NULL;
-static sf_complex **cwaves=NULL;
-static sf_complex  *wavem=NULL;
+static sf_complex *wavem =NULL;
 static sf_complex **waves=NULL;
 
 lrk3d lrk3d_init(int n2,
@@ -85,13 +84,11 @@ lrk3d lrk3d_init(int n2,
     nk   = dft->nky*dft->nkx*dft->nkz;
 
     cwave  = sf_complexalloc(nk);
-    //if (mig) {
     wavem  = sf_complexalloc(nxyz);
-    cwaves = sf_complexalloc2(nk,lrk->nrank);
-    //} else {
+    //cwaves = sf_complexalloc2(nk,lrk->nrank);
     cwavem = sf_complexalloc(nk);
-    waves  = sf_complexalloc2(nxyz,lrk->nrank);
-    //}
+    //waves  = sf_complexalloc2(nxyz,lrk->nrank);
+    waves  = sf_complexalloc2(nk,lrk->nrank); /* double usage :) */
 
     return lrk;
 }
@@ -131,21 +128,21 @@ void lrk3d_apply(sf_complex *uo,
                     }
                 }
             }
-            fft(wavem,cwaves[im]);
+            fft(wavem,waves[im]);
         }
 
 #ifdef _OPENMP
 #pragma omp parallel for              \
         private(im,ik,c)                \
-        shared(lrk,cwave,cwaves,nk)
+        shared(lrk,cwave,waves,nk)
 #endif
         for (ik=0; ik<nk; ik++) {
             c = sf_cmplx(0.,0.);
             for (im=0; im<lrk->nrank; im++) {
 #ifdef SF_HAS_COMPLEX_H
-                c += cwaves[im][ik]*conjf(lrk->rt[ik][im]);
+                c += waves[im][ik]*conjf(lrk->rt[ik][im]);
 #else
-                c = sf_cadd(c,sf_cmul(cwaves[im][ik],conjf(lrk->rt[ik][im])));
+                c = sf_cadd(c,sf_cmul(waves[im][ik],conjf(lrk->rt[ik][im])));
 #endif
             }
             cwave[ik] = c;
@@ -203,7 +200,6 @@ void lrk3d_finalize()
 {
     free(cwave);
     free(wavem);
-    free(*cwaves); free(cwaves);
     free(cwavem);
     free(*waves); free(waves);
 }
