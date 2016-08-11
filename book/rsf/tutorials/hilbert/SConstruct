@@ -166,7 +166,7 @@ Flow('epeaks bar','ipeaks2 ppeaks',
 
 Result('epeaks','dpeaks epeaks',
        '''
-       rtoc | math output="input+I*x2" |
+       rtoc | math output="input+I*x2" | 
        graph symbol='.' min1=2 max1=3 min2=0 max2=600 
        title="Absolute Phase Error at Envelope Peaks" 
        transp=y yreverse=y depth=${SOURCES[1]} 
