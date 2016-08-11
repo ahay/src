@@ -14,7 +14,7 @@ from rsf.proj import *
 
 Fetch('penobscot_subset.bin','data',
       server='https://github.com',
-      top='seg/tutorials/raw/master/1512_Semblance_coherence_and_discontinuity')
+      top='seg/tutorials-2015/raw/master/1512_Semblance_coherence_and_discontinuity')
 
 Flow('penobscot','penobscot_subset.bin',
      '''

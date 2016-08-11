@@ -24,7 +24,7 @@
 
 /*automatically generated headers*/
 #include "waveutils.h"
-#include "cfft2nsps.h"
+#include "cfft2w.h"
 
 /*******************************************************/
 /* wave propagation utils*/

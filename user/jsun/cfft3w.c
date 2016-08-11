@@ -28,7 +28,7 @@
 static int n1, n2, n3, nk;
 static float wt;
 
-static sf_complex ***cc=NULL;
+static sf_complex ***cc,***dd;
 
 #ifdef SF_HAS_FFTW
 static fftwf_plan cfg=NULL, icfg=NULL;
@@ -54,39 +54,46 @@ int cfft3_init(int pad1           /* padding on the first axis */,
     int i2, i3;
 #endif
 
-    /* axis 1 */
-
     nk = n1 = kiss_fft_next_fast_size(nx*pad1);
+    n2 = kiss_fft_next_fast_size(ny);
+    n3 = kiss_fft_next_fast_size(nz);
 
-#ifndef SF_HAS_FFTW
+    cc = sf_complexalloc3(n1,n2,n3);
+
+#ifdef SF_HAS_FFTW
+
+    dd = sf_complexalloc3(nk,n2,n3);
+
+    cfg = fftwf_plan_dft_3d(n3,n2,n1,
+            (fftwf_complex *) cc[0][0], 
+            (fftwf_complex *) dd[0][0],
+            FFTW_FORWARD, FFTW_MEASURE);
+
+    icfg = fftwf_plan_dft_3d(n3,n2,n1,
+		     (fftwf_complex *) dd[0][0], 
+		     (fftwf_complex *) cc[0][0],
+		     FFTW_BACKWARD, FFTW_MEASURE);
+
+    if (NULL == cfg || NULL == icfg) sf_error("FFTW failure.");
+
+#else
+
     cfg1  = kiss_fft_alloc(n1,0,NULL,NULL);
     icfg1 = kiss_fft_alloc(n1,1,NULL,NULL);
-#endif
 
-    /* axis 2 */
-
-    n2 = kiss_fft_next_fast_size(ny);
-
-#ifndef SF_HAS_FFTW
     cfg2  = kiss_fft_alloc(n2,0,NULL,NULL);
     icfg2 = kiss_fft_alloc(n2,1,NULL,NULL);
 
     trace2 = sf_complexalloc(n2);
     ctrace2 = (kiss_fft_cpx *) trace2;
-#endif
 
-    /* axis 3 */
-
-    n3 = kiss_fft_next_fast_size(nz);
-
-#ifndef SF_HAS_FFTW
     cfg3  = kiss_fft_alloc(n3,0,NULL,NULL);
     icfg3 = kiss_fft_alloc(n3,1,NULL,NULL);
 
     trace3 = sf_complexalloc(n3);
     ctrace3 = (kiss_fft_cpx *) trace3;
 
-    /* --- */
+    /* temporary array */
 
     tmp = (kiss_fft_cpx***) sf_alloc (n3,sizeof(kiss_fft_cpx**));
     tmp[0] = (kiss_fft_cpx**) sf_alloc (n2*n3,sizeof(kiss_fft_cpx*));
@@ -100,8 +107,6 @@ int cfft3_init(int pad1           /* padding on the first axis */,
 	tmp[i3] = tmp[0]+i3*n2;
     }
 #endif
-
-    cc = sf_complexalloc3(n1,n2,n3);
 
     *nx2 = n1;
     *ny2 = n2;
@@ -117,27 +122,20 @@ void cfft3(sf_complex *inp /* [n1*n2*n3] */,
 /*< 3-D FFT >*/
 {
     int i1, i2, i3;
-    sf_complex f;
+    sf_complex c;
 
-#ifdef SF_HAS_FFTW
-    if (NULL==cfg) {
-        cfg = fftwf_plan_dft_3d(n3,n2,n1,
-			  (fftwf_complex *) cc[0][0], 
-			  (fftwf_complex *) out,
-			  FFTW_FORWARD, FFTW_MEASURE);
-	if (NULL == cfg) sf_error("FFTW failure.");
-    }
-#endif  
-    
     /* FFT centering */    
+#ifdef _OPENMP
+#pragma omp parallel for private(i3,i2,i1,c) default(shared)
+#endif
     for (i3=0; i3<n3; i3++) {
 	for (i2=0; i2<n2; i2++) {
 	    for (i1=0; i1<n1; i1++) {
-		f = inp[(i3*n2+i2)*n1+i1];
+		c = inp[(i3*n2+i2)*n1+i1];
 #ifdef SF_HAS_COMPLEX_H
-		cc[i3][i2][i1] = (((i3%2==0)==(i2%2==0))==(i1%2==0))? f:-f;
+		cc[i3][i2][i1] = (((i3%2==0)==(i2%2==0))==(i1%2==0))? c:-c;
 #else
-		cc[i3][i2][i1] = (((i3%2==0)==(i2%2==0))==(i1%2==0))? f:sf_cneg(f);
+		cc[i3][i2][i1] = (((i3%2==0)==(i2%2==0))==(i1%2==0))? c:sf_cneg(c);
 #endif
 	    }
 	}
@@ -145,6 +143,17 @@ void cfft3(sf_complex *inp /* [n1*n2*n3] */,
 
 #ifdef SF_HAS_FFTW
     fftwf_execute(cfg);
+
+#ifdef _OPENMP
+#pragma omp parallel for private(i3,i2,i1) default(shared)
+#endif
+    for (i3=0; i3<n3; i3++) {
+        for (i2=0; i2<n2; i2++) {
+            for (i1=0; i1<nk; i1++) {
+                out[(i3*n2+i2)*nk+i1]=dd[i3][i2][i1];
+            }
+        }
+    }
 #else
 
     /* FFT over first axis */
@@ -181,13 +190,7 @@ void cfft3(sf_complex *inp /* [n1*n2*n3] */,
 void icfft3_allocate(sf_complex *inp /* [nk*n2*n3] */)
 /*< allocate inverse transform >*/
 {
-#ifdef SF_HAS_FFTW
-    icfg = fftwf_plan_dft_3d(n3,n2,n1,
-		     (fftwf_complex *) inp, 
-		     (fftwf_complex *) cc[0][0],
-		     FFTW_BACKWARD, FFTW_MEASURE);
-    if (NULL == icfg) sf_error("FFTW failure.");
-#endif
+    /*kept for backward compatibility*/
 }
 
 void icfft3(sf_complex *out /* [n1*n2*n3] */, 
@@ -197,7 +200,18 @@ void icfft3(sf_complex *out /* [n1*n2*n3] */,
     int i1, i2, i3;
 
 #ifdef SF_HAS_FFTW
+#ifdef _OPENMP
+#pragma omp parallel for private(i3,i2,i1) default(shared)
+#endif
+    for (i3=0; i3<n3; i3++) {
+        for (i2=0; i2<n2; i2++) {
+            for (i1=0; i1<nk; i1++) {
+                dd[i3][i2][i1]=inp[(i3*n2+i2)*nk+i1];
+            }
+        }
+    }
     fftwf_execute(icfg);
+
 #else
 
     /* IFFT over third axis */
@@ -255,6 +269,9 @@ void cfft3_finalize()
     fftwf_cleanup();
     cfg=NULL;
     icfg=NULL;
+    free(**dd);
+    free(*dd);
+    free(dd);
 #else
     free(cfg1); cfg1=NULL;
     free(icfg1); icfg1=NULL;

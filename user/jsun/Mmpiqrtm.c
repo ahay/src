@@ -79,12 +79,17 @@ int main(int argc, char* argv[])
     int wfnt;
     float wfdt;
     int stable;
+    bool sdiv; /*smooth division by least squares*/
     int shtid; /*output wavefield corresponding shot id*/
     float eps, perc, vmax, veps; /* for stable division */
 
     /*Data/Image*/
     sf_complex ***record, **imgsum;
-    sf_complex *img_visc, *img_disp, *ratio;
+    sf_complex *img_visc, *img_disp;
+    float *ratio;
+    float *img_visc_f, *img_disp_f;
+    int dims[2], rect[2], niter;
+    float reg;
 
     /*tmp*/
     int tmpint;
@@ -129,6 +134,15 @@ int main(int argc, char* argv[])
 	else sf_error("Please specify a correct stable parameter (0,1,2,3)!");
       }
       if (stable==1 || stable==2 || stable==3) {
+        if (stable==1) {
+	  if (!sf_getbool("sdiv", &sdiv)) sdiv=false; /*smooth division*/
+          if (sdiv) {
+	    if (!sf_getfloat("reg", &reg)) reg=0.0f; /*regularization*/
+            if (!sf_getint("rect1",rect)) rect[0]=2;
+            if (!sf_getint("rect2",rect+1)) rect[1]=2;
+            if (!sf_getint("niter",&niter)) niter=100; /*smooth division maximum iterations*/
+          }
+        }
         if (!sf_getbool("freq_scal", &freq_scal)) freq_scal=false; /*frequency amplitude spectrum scaling*/
         if (!sf_getfloat("eps", &eps)) eps=SF_EPS; /*padding*/
         if (!sf_getfloat("perc", &perc)) perc=0.1; /*percentage of maximum for padding*/
@@ -164,12 +178,12 @@ int main(int argc, char* argv[])
 
     /*Set I/O file*/
     if (adj) { /* migration */
-      Frcd = sf_input("input"); /*record from elsewhere*/
+      Frcd = sf_input("--input"); /*record from elsewhere*/
       Fsrc  = sf_input("src");   /*source wavelet*/      
-      Fimg  = sf_output("output");
+      Fimg  = sf_output("--output");
     } else { /* modeling */
-      Fimg = sf_input("input");
-      Frcd = sf_output("output");
+      Fimg = sf_input("--input");
+      Frcd = sf_output("--output");
       Fsrc  = sf_input("src");   /*source wavelet*/      
     }
     left  = sf_input("left");
@@ -232,11 +246,20 @@ int main(int argc, char* argv[])
     if (adj && stable==1) {
       img_visc = sf_complexalloc(nz*nx);
       img_disp = sf_complexalloc(nz*nx);
-      ratio    = sf_complexalloc(nz*nx);
+      ratio  = sf_floatalloc(nz*nx);
+      if (sdiv) {
+        img_visc_f = sf_floatalloc(nz*nx);
+        img_disp_f = sf_floatalloc(nz*nx);
+      } else {
+        img_visc_f = NULL;
+        img_disp_f = NULL;
+      }
     } else {
       img_visc = NULL;
       img_disp = NULL;
-      ratio    = NULL;
+      ratio  = NULL;
+      img_visc_f = NULL;
+      img_disp_f = NULL;
     }
 
     /*read from files*/
@@ -294,7 +317,7 @@ int main(int argc, char* argv[])
 	  Fnorm = sf_output("norm");
 	  sf_oaxa(Fnorm, az, 1);
 	  sf_oaxa(Fnorm, ax, 2);
-	  sf_settype(Fnorm,SF_COMPLEX);
+	  sf_settype(Fnorm,SF_FLOAT);
 	} else Fnorm = NULL;
       } else { /* modeling */
 	sf_setn(ax, gpl);
@@ -432,10 +455,24 @@ int main(int argc, char* argv[])
         }
 
         /* stable division */
-        vmax = find_cmax(nz*nx, img_visc);
-        veps = (vmax==0) ? eps : vmax*vmax*perc;
-        if (verb) sf_warning("Space domain: vmax=%f, veps=%f",vmax,veps);
-        stable_cdiv(nz*nx, veps, img_disp, img_visc, ratio);
+        if (sdiv) {
+	  /*smooth division*/
+#ifdef _OPENMP
+#pragma omp parallel for private(iz)
+#endif
+          for (iz=0; iz<nz*nx; iz++) {
+	      img_visc_f[iz] = cabsf(img_visc[iz]);
+	      img_disp_f[iz] = cabsf(img_disp[iz]);
+          }
+	  dims[0] = nz; dims[1] = nx;
+	  sf_divn_init(2, nx*nz, dims, rect, niter, verb);
+	  sf_divne (img_disp_f, img_visc_f, ratio, reg);
+        } else {
+          vmax = find_cmax(nz*nx, img_visc);
+          veps = (vmax==0) ? eps : vmax*vmax*perc;
+          if (verb) sf_warning("Space domain: vmax=%f, veps=%f",vmax,veps);
+          stable_cdiv_f(nz*nx, veps, img_disp, img_visc, ratio);
+        }
 	  
 	/*apply stable imaging condition*/
 #ifdef _OPENMP
@@ -446,7 +483,7 @@ int main(int argc, char* argv[])
 #ifdef SF_HAS_COMPLEX_H
             imgsum[ix][iz] = img_disp[iz+ix*nz]*ratio[iz+ix*nz];
 #else
-            imgsum[ix][iz] = sf_cmul(img_disp[iz+ix*nz],ratio[iz+ix*nz]);
+            imgsum[ix][iz] = sf_crmul(img_disp[iz+ix*nz],ratio[iz+ix*nz]);
 #endif
 	  }
 	}
@@ -479,7 +516,7 @@ int main(int argc, char* argv[])
     if (cpuid==0) {
       if (adj) {
 	sf_complexwrite(imgsum[0], nx*nz, Fimg);
-	if (NULL != Fnorm) sf_complexwrite(ratio, nx*nz, Fnorm);
+	if (NULL != Fnorm) sf_floatwrite(ratio, nx*nz, Fnorm);
       } else {
 	sf_complexwrite(record[0][0], shtnum0*gpl*nt, Frcd);
       }
@@ -733,7 +770,8 @@ int psqrtm_sbs(sf_complex*** record, sf_complex** imgsum, geopar geop, float per
     float **sill;
     
     /*normolization*/
-    sf_complex *img_visc, *img_disp, *ratio;
+    sf_complex *img_visc, *img_disp;
+    float *ratio;
 
     /*misc*/
     int ix, iz, is;
@@ -790,7 +828,7 @@ int psqrtm_sbs(sf_complex*** record, sf_complex** imgsum, geopar geop, float per
     rec = sf_complexalloc2(nt, gpl);
     img_visc = sf_complexalloc(nz*nx);
     img_disp = sf_complexalloc(nz*nx);
-    ratio    = sf_complexalloc(nz*nx);
+    ratio    = sf_floatalloc(nz*nx);
 #ifdef _OPENMP
 #pragma omp parallel for private(ix,iz)
 #endif
@@ -873,7 +911,7 @@ int psqrtm_sbs(sf_complex*** record, sf_complex** imgsum, geopar geop, float per
         vmax = find_cmax(nz*nx, img_visc);
         veps = (vmax==0) ? eps : vmax*vmax*perc;
         if (verb) sf_warning("Space domain: vmax=%f, veps=%f",vmax,veps);
-        stable_cdiv(nz*nx, veps, img_disp, img_visc, ratio);
+        stable_cdiv_f(nz*nx, veps, img_disp, img_visc, ratio);
 
 	/*apply stable imaging condition*/
 #ifdef _OPENMP
@@ -884,7 +922,7 @@ int psqrtm_sbs(sf_complex*** record, sf_complex** imgsum, geopar geop, float per
 #ifdef SF_HAS_COMPLEX_H
             img[ix][iz] = img_disp[iz+ix*nz]*ratio[iz+ix*nz];
 #else
-            img[ix][iz] = sf_cmul(img_disp[iz+ix*nz],ratio[iz+ix*nz]);
+            img[ix][iz] = sf_crmul(img_disp[iz+ix*nz],ratio[iz+ix*nz]);
 #endif
 	  }
 	}
@@ -964,7 +1002,8 @@ int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool freq
     float **sill;
     
     /*normolization*/
-    sf_complex *wvfld_visc, *wvfld_disp, *ratio;
+    sf_complex *wvfld_visc, *wvfld_disp;
+    float *ratio;
 
     /*frequency domain compensation*/
     kiss_fft_cpx **ctrace3=NULL;
@@ -1030,7 +1069,7 @@ int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool freq
     rec = sf_complexalloc2(nt, gpl);
     wvfld_visc = sf_complexalloc(nz*nx*wfnt);
     wvfld_disp = sf_complexalloc(nz*nx*wfnt);
-    ratio      = sf_complexalloc(nz*nx*wfnt);
+    ratio      = sf_floatalloc(nz*nx*wfnt);
 #ifdef _OPENMP
 #pragma omp parallel for private(ix,iz)
 #endif
@@ -1226,16 +1265,16 @@ int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool freq
             }
 
             /* Stable division of amplitude spectrum */
-            for (it=0; it<n3; it++) {
-                vmax = find_max(nz*nx, wvfld_visc_f+it*nz*nx);
-                veps = (vmax==0) ? eps : vmax*vmax*perc;
-                if (verb) sf_warning("Frequency domain: vmax=%f, veps=%f",vmax,veps);
-                stable_div(nz*nx, veps, wvfld_disp_f+it*nz*nx, wvfld_visc_f+it*nz*nx, ratio_f+it*nz*nx);
-            }
-            //vmax = find_max(n1*n2*n3, wvfld_visc_f);
-            //veps = (vmax==0) ? eps : vmax*vmax*perc;
-            //if (verb) sf_warning("Frequency domain: vmax=%f, veps=%f",vmax,veps);
-            //stable_div(n1*n2*n3, veps, wvfld_disp_f, wvfld_visc_f, ratio_f);
+            //for (it=0; it<n3; it++) {
+            //    vmax = find_max(nz*nx, wvfld_visc_f+it*nz*nx);
+            //    veps = (vmax==0) ? eps : vmax*vmax*perc;
+            //    if (verb) sf_warning("Frequency domain: vmax=%f, veps=%f",vmax,veps);
+            //    stable_div(nz*nx, veps, wvfld_disp_f+it*nz*nx, wvfld_visc_f+it*nz*nx, ratio_f+it*nz*nx);
+            //}
+            vmax = find_max(n1*n2*n3, wvfld_visc_f);
+            veps = (vmax==0) ? eps : vmax*vmax*perc;
+            if (verb) sf_warning("Frequency domain: vmax=%f, veps=%f",vmax,veps);
+            stable_div(n1*n2*n3, veps, wvfld_disp_f, wvfld_visc_f, ratio_f);
 
             /* Scaling the wavefield */
 #ifdef _OPENMP
@@ -1292,7 +1331,7 @@ int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool freq
                 vmax = find_cmax(nz*nx, wvfld_visc+it*nz*nx);
                 veps = (vmax==0) ? eps : vmax*vmax*perc;
                 if (verb) sf_warning("Space domain: vmax=%f, veps=%f",vmax,veps);
-                stable_cdiv(nz*nx, veps, wvfld_disp+it*nz*nx, wvfld_visc+it*nz*nx, ratio+it*nz*nx);
+                stable_cdiv_f(nz*nx, veps, wvfld_disp+it*nz*nx, wvfld_visc+it*nz*nx, ratio+it*nz*nx);
             }
 
             /*scaling the source wavefield*/
@@ -1305,7 +1344,7 @@ int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool freq
 #ifdef SF_HAS_COMPLEX_H
                         wvfld[it][ix][iz] = wvfld_disp[iz+ix*nz+it*nx*nz]*ratio[iz+ix*nz+it*nx*nz];
 #else
-                        wvfld[it][ix][iz] = sf_cmul(wvfld_disp[iz+ix*nz+it*nx*nz],ratio[iz+ix*nz+it*nx*nz]);
+                        wvfld[it][ix][iz] = sf_crmul(wvfld_disp[iz+ix*nz+it*nx*nz],ratio[iz+ix*nz+it*nx*nz]);
 #endif
                     }
                 }
@@ -1431,16 +1470,16 @@ int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool freq
             }
 
             /* Stable division of amplitude spectrum */
-            for (it=0; it<n3; it++) {
-                vmax = find_max(nz*nx, wvfld_visc_f+it*nz*nx);
-                veps = (vmax==0) ? eps : vmax*vmax*perc;
-                if (verb) sf_warning("Frequency domain: vmax=%f, veps=%f",vmax,veps);
-                stable_div(nz*nx, veps, wvfld_disp_f+it*nz*nx, wvfld_visc_f+it*nz*nx, ratio_f+it*nz*nx);
-            }
-            //vmax = find_max(n1*n2*n3, wvfld_visc_f);
-            //veps = (vmax==0) ? eps : vmax*vmax*perc;
-            //if (verb) sf_warning("Frequency domain: vmax=%f, veps=%f",vmax,veps);
-            //stable_div(n1*n2*n3, veps, wvfld_disp_f, wvfld_visc_f, ratio_f);
+            //for (it=0; it<n3; it++) {
+            //    vmax = find_max(nz*nx, wvfld_visc_f+it*nz*nx);
+            //    veps = (vmax==0) ? eps : vmax*vmax*perc;
+            //    if (verb) sf_warning("Frequency domain: vmax=%f, veps=%f",vmax,veps);
+            //    stable_div(nz*nx, veps, wvfld_disp_f+it*nz*nx, wvfld_visc_f+it*nz*nx, ratio_f+it*nz*nx);
+            //}
+            vmax = find_max(n1*n2*n3, wvfld_visc_f);
+            veps = (vmax==0) ? eps : vmax*vmax*perc;
+            if (verb) sf_warning("Frequency domain: vmax=%f, veps=%f",vmax,veps);
+            stable_div(n1*n2*n3, veps, wvfld_disp_f, wvfld_visc_f, ratio_f);
 
             /* Scaling the wavefield */
 #ifdef _OPENMP
@@ -1497,7 +1536,7 @@ int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool freq
                 vmax = find_cmax(nz*nx, wvfld_visc+it*nz*nx);
                 veps = (vmax==0) ? eps : vmax*vmax*perc;
                 if (verb) sf_warning("Space domain: vmax=%f, veps=%f",vmax,veps);
-                stable_cdiv(nz*nx, veps, wvfld_disp+it*nz*nx, wvfld_visc+it*nz*nx, ratio+it*nz*nx);
+                stable_cdiv_f(nz*nx, veps, wvfld_disp+it*nz*nx, wvfld_visc+it*nz*nx, ratio+it*nz*nx);
             }
 
             /*scaling the receiver wavefield*/
@@ -1510,7 +1549,7 @@ int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool freq
 #ifdef SF_HAS_COMPLEX_H
                         wvfld_b[it][ix][iz] = wvfld_disp[iz+ix*nz+it*nx*nz]*ratio[iz+ix*nz+it*nx*nz];
 #else
-                        wvfld_b[it][ix][iz] = sf_cmul(wvfld_disp[iz+ix*nz+it*nx*nz],ratio[iz+ix*nz+it*nx*nz]);
+                        wvfld_b[it][ix][iz] = sf_crmul(wvfld_disp[iz+ix*nz+it*nx*nz],ratio[iz+ix*nz+it*nx*nz]);
 #endif
                     }
                 }

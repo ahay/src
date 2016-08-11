@@ -6,7 +6,7 @@ trace = 'trace_il1190_xl1155.trace'
 
 Fetch(trace,'data',
       server='https://raw.githubusercontent.com',
-      top='seg/tutorials/master/1410_Phase')
+      top='seg/tutorials-2014/master/1410_Phase')
 
 # Convert format to RSF
 
@@ -49,7 +49,7 @@ sgy = 'penobscot_xl1155.sgy'
 
 Fetch(sgy,'data',
       server='https://raw.githubusercontent.com',
-      top='seg/tutorials/master/1410_Phase')
+      top='seg/tutorials-2014/master/1410_Phase')
 
 Flow('data tdata',sgy,'segyread tfile=${TARGETS[1]}')
 Flow('hdata','data','envelope hilb=y')

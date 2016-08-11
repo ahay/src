@@ -25,7 +25,7 @@ using namespace std;
 static std::valarray<float> vs;
 static std::valarray<double> ksz,ksx;
 static float dt,ct,cb,cl,cr;
-static int nkzs,nz,nx,nbt,nbb,nbl,nbr;
+static int nkzs,nz,nx,nbt,nbb,nbl,nbr,abc;
 static bool rev;
 
 int sample(vector<int>& rs, vector<int>& cs, ZpxNumMat& res)
@@ -44,14 +44,27 @@ int sample(vector<int>& rs, vector<int>& cs, ZpxNumMat& res)
 	    double phase = vs[rs[a]]*hypk*dt;
 	    if (rev) phase*=-1;
 	    double phf = 1.;
-	    if (iz < nbt)
-		phf *= exp(-powf(ct*(nbt-iz)*abs(ksz[ikz]/hypk),2));
-	    else if (iz > nz-1-nbb)
-		phf *= exp(-powf(cb*(iz-nz+1+nbb)*abs(ksz[ikz]/hypk),2));
-	    if (ix < nbl)
-		phf *= exp(-powf(cl*(nbl-ix)*abs(ksx[ikx]/hypk),2));
-	    else if (ix > nx-1-nbr)
-		phf *= exp(-powf(cr*(ix-nx+1+nbr)*abs(ksx[ikx]/hypk),2));
+
+            if (abc==0) {
+                if (iz < nbt)
+                    phf *= exp(-pow(ct*(nbt-iz)*abs(ksz[ikz]/hypk),2));
+                else if (iz > nz-1-nbb)
+                    phf *= exp(-pow(cb*(iz-nz+1+nbb)*abs(ksz[ikz]/hypk),2));
+                if (ix < nbl)
+                    phf *= exp(-pow(cl*(nbl-ix)*abs(ksx[ikx]/hypk),2));
+                else if (ix > nx-1-nbr)
+                    phf *= exp(-pow(cr*(ix-nx+1+nbr)*abs(ksx[ikx]/hypk),2));
+            } else {
+                if (iz < nbt)
+                    phf *= exp(-pow(ct*(nbt-iz),2));
+                else if (iz > nz-1-nbb)
+                    phf *= exp(-pow(cb*(iz-nz+1+nbb),2));
+                if (ix < nbl)
+                    phf *= exp(-pow(cl*(nbl-ix),2));
+                else if (ix > nx-1-nbr)
+                    phf *= exp(-pow(cr*(ix-nx+1+nbr),2));
+            }
+
 	    res(a,b) = zpx(cos(phase),sin(phase))*phf; 
 	}
     }
@@ -85,6 +98,8 @@ int main(int argc, char** argv)
     par.get("cb",cb,0.0);
     par.get("cl",cl,0.0);
     par.get("cr",cr,0.0);
+
+    par.get("abc",abc,0); /*absorbing mode: 0-> direction dependent; 1-> direction independent.*/
 
     par.get("rev",rev,false);
 

@@ -18,7 +18,7 @@
 */
 
 #include <rsf.h>
-#include "cfft2nsps.h"
+#include "cfft2w.h"
 #ifdef _OPENMP
 #include <omp.h>
 #endif

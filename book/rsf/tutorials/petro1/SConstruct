@@ -5,7 +5,7 @@ csv = 'qsiwell2.csv'
 
 Fetch(csv,'1504_Seismic_petrophysics_1',
       server='https://raw.githubusercontent.com',
-      top='seg/tutorials/master')
+      top='seg/tutorials-2015/master')
 
 Flow('well',csv,'csv2rsf header=y')
 

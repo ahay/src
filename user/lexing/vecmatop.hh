@@ -61,6 +61,8 @@ int lowrank(int m, int n, int (*sample)(vector<int>&, vector<int>&, CpxNumMat&),
 	    vector<int>& cidx, vector<int>& ridx, CpxNumMat& mid);
 int ddlowrank(int m, int n, int (*sample)(vector<int>&, vector<int>&, ZpxNumMat&), double eps, int npk,
             vector<int>& cidx, vector<int>& ridx, ZpxNumMat& mid);
+int lowrank(vector<int> ms, vector<int> ns, vector<int> js, int (*sample)(vector<int>&, vector<int>&, CpxNumMat&), float eps, int npk, 
+	    vector<int>& cidx, vector<int>& ridx, CpxNumMat& mid);
 
 int ztran(const CpxNumMat& A, CpxNumMat& B);
 

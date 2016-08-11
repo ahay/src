@@ -10,9 +10,6 @@
 #ifdef _OPENMP
 #include <omp.h>
 #endif
-#ifdef SF_HAS_FFTW
-#include <fftw3.h>
-#endif
 
 static bool r2c;
 static bool pio;
@@ -21,14 +18,9 @@ static int n1, n2, n3;
 static float wt;
 
 static sf_complex *cc=NULL;
-#ifdef SF_HAS_FFTW
-static sf_complex *dd=NULL;
-static fftwf_plan cfg=NULL, icfg=NULL;
-#else
 static kiss_fft_cfg *cfg1=NULL, *icfg1=NULL, *cfg2=NULL, *icfg2=NULL, *cfg3=NULL, *icfg3=NULL;
 static kiss_fft_cpx *tmp=NULL, **ctrace2=NULL, **ctrace3=NULL;
 static sf_complex **trace2=NULL, **trace3=NULL;
-#endif
 
 int fft_init(int pad1 /* padding on the first axis */,
         int nz_,   int nx_,   int ny_ /* input data size */, 
@@ -37,15 +29,7 @@ int fft_init(int pad1 /* padding on the first axis */,
         bool padio /* inp and out are padded*/)
     /*< initialize >*/
 {
-#ifdef SF_HAS_FFTW
-#ifdef _OPENMP
-    fftwf_init_threads();
-    sf_warning("Using threaded FFTW3! %d\n",omp_get_max_threads());
-    fftwf_plan_with_nthreads(omp_get_max_threads());
-#endif
-#else
     int i, nth=1;
-#endif
 
     /* real to complex fft flag */
     r2c = rtoc;
@@ -65,37 +49,6 @@ int fft_init(int pad1 /* padding on the first axis */,
     else n3 = 1;
 
     cc = sf_complexalloc(n1*n2*n3);
-
-#ifdef SF_HAS_FFTW
-
-    /* fftw3 initialization */
-    dd = sf_complexalloc(n1*n2*n3);
-
-    if (ny>1) {
-        cfg = fftwf_plan_dft_3d(n3,n2,n1,
-                (fftwf_complex *) cc, 
-                (fftwf_complex *) dd,
-                FFTW_FORWARD, FFTW_MEASURE);
-
-        icfg = fftwf_plan_dft_3d(n3,n2,n1,
-                (fftwf_complex *) dd, 
-                (fftwf_complex *) cc,
-                FFTW_BACKWARD, FFTW_MEASURE);
-    } else {
-        cfg = fftwf_plan_dft_2d(n2,n1,
-                (fftwf_complex *) cc, 
-                (fftwf_complex *) dd,
-                FFTW_FORWARD, FFTW_MEASURE);
-
-        icfg = fftwf_plan_dft_2d(n2,n1,
-                (fftwf_complex *) dd, 
-                (fftwf_complex *) cc,
-                FFTW_BACKWARD, FFTW_MEASURE);
-    }
-
-    if (NULL == cfg || NULL == icfg) sf_error("FFTW failure.");
-
-#else
 
     /* kiss-fft initialization */
 #ifdef _OPENMP
@@ -138,8 +91,6 @@ int fft_init(int pad1 /* padding on the first axis */,
 
     tmp = (kiss_fft_cpx *) sf_alloc(n3*n2*n1,sizeof(kiss_fft_cpx));
 
-#endif
-
     *nz2 = n1;
     *nx2 = n2;
     *ny2 = n3;
@@ -153,10 +104,7 @@ void fft(void *inp /* [n1*n2*n3] */,
         sf_complex *out /* [n1*n2*n3] */)
     /*< 3-D FFT >*/
 {
-#ifndef SF_HAS_FFTW
-    int ith=0;
-#endif
-    int i1, i2, i3;
+    int i1, i2, i3, ith=0;
     float *inpf;
     sf_complex *inpc;
 
@@ -220,19 +168,6 @@ void fft(void *inp /* [n1*n2*n3] */,
             }
         }
 
-#ifdef SF_HAS_FFTW
-
-    fftwf_execute(cfg);
-
-#ifdef _OPENMP
-#pragma omp parallel for private(i1) default(shared)
-#endif
-    for (i1=0; i1<n3*n2*n1; i1++) {
-        out[i1]=dd[i1];
-    }
-
-#else
-
         /* FFT over first axis */
 #ifdef _OPENMP
 #pragma omp parallel for private(i3,i2,i1,ith) default(shared)
@@ -277,8 +212,6 @@ void fft(void *inp /* [n1*n2*n3] */,
                 }
             }
         }
-
-#endif
 
     } else {
 
@@ -327,19 +260,6 @@ void fft(void *inp /* [n1*n2*n3] */,
             }
         }
 
-#ifdef SF_HAS_FFTW
-
-    fftwf_execute(cfg);
-
-#ifdef _OPENMP
-#pragma omp parallel for private(i1) default(shared)
-#endif
-    for (i1=0; i1<n3*n2*n1; i1++) {
-        out[i1]=dd[i1];
-    }
-
-#else
-
         /* FFT over first axis */
 #ifdef _OPENMP
 #pragma omp parallel for private(i2,i1,ith) default(shared)
@@ -365,8 +285,6 @@ void fft(void *inp /* [n1*n2*n3] */,
             }
         }
 
-#endif
-
     } /*if (n3>1)*/
 
 }
@@ -375,10 +293,7 @@ void ifft(void *out /* [n1*n2*n3] */,
         sf_complex *inp /* [n1*n2*n3] */)
     /*< 3-D inverse FFT >*/
 {
-#ifndef SF_HAS_FFTW
-    int ith=0;
-#endif
-    int i1, i2, i3;
+    int i1, i2, i3, ith=0;
     float *outf;
     sf_complex *outc;
 
@@ -391,19 +306,6 @@ void ifft(void *out /* [n1*n2*n3] */,
     }
 
     if (n3>1) {
-
-#ifdef SF_HAS_FFTW
-
-#ifdef _OPENMP
-#pragma omp parallel for private(i1) default(shared)
-#endif
-    for (i1=0; i1<n3*n2*n1; i1++) {
-        dd[i1]=inp[i1];
-    }
-
-    fftwf_execute(icfg);
-
-#else
 
         /* IFFT over third axis */
 #ifdef _OPENMP
@@ -450,8 +352,6 @@ void ifft(void *out /* [n1*n2*n3] */,
             }
         }
 
-#endif
-
         if (pio) {
             /* FFT centering and normalization*/
 #ifdef _OPENMP
@@ -496,19 +396,6 @@ void ifft(void *out /* [n1*n2*n3] */,
 
     } else {
 
-#ifdef SF_HAS_FFTW
-
-#ifdef _OPENMP
-#pragma omp parallel for private(i1) default(shared)
-#endif
-    for (i1=0; i1<n3*n2*n1; i1++) {
-        dd[i1]=inp[i1];
-    }
-
-    fftwf_execute(icfg);
-
-#else
-
         /* IFFT over second axis */
 #ifdef _OPENMP
 #pragma omp parallel for private(i2,i1,ith) default(shared)
@@ -533,8 +420,6 @@ void ifft(void *out /* [n1*n2*n3] */,
 #endif
             kiss_fft_stride(icfg1[ith],tmp+i2*n1,(kiss_fft_cpx *) (cc+i2*n1),1);
         }
-
-#endif
 
         if (pio) {
             /* FFT centering and normalization*/
@@ -582,21 +467,8 @@ void fft_finalize()
     /*< clean up fft >*/
 {
     /* make sure everything is back to its pristine state */
-#ifndef SF_HAS_FFTW
     int i, nth=1;
-#endif
 
-#ifdef SF_HAS_FFTW
-#ifdef _OPENMP
-    fftwf_cleanup_threads();
-#endif
-    fftwf_destroy_plan(cfg);
-    if (NULL!=cfg)   cfg=NULL;
-    fftwf_destroy_plan(icfg);
-    if (NULL!=icfg) icfg=NULL;
-    fftwf_cleanup();
-    if (NULL!=dd) { free(dd); dd=NULL; }
-#else
 #ifdef _OPENMP
 #pragma omp parallel
     {nth = omp_get_num_threads();}
@@ -609,11 +481,9 @@ void fft_finalize()
         if (NULL!=cfg3)  { free(cfg3[i]);   cfg3[i]=NULL; }
         if (NULL!=icfg3) { free(icfg3[i]); icfg3[i]=NULL; }
     }
+    if (NULL!=cc) { free(cc); cc=NULL; }
     if (NULL!=tmp) { free(tmp); tmp=NULL; }
     if (NULL!=trace2) { free(*trace2); free(trace2); trace2=NULL; }
     if (NULL!=trace3) { free(*trace3); free(trace3); trace3=NULL; }
-#endif
-
-    if (NULL!=cc) { free(cc); cc=NULL; }
 }
 
