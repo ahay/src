@@ -18,7 +18,7 @@
 */
 #include <rsf.h>
 
-static float n;
+static int n;
 static float m, h, *c;
 
 void chebyshev_init(int n1,                 /* data size */
@@ -39,8 +39,12 @@ void chebyshev_init(int n1,                 /* data size */
     sf_cosft_inv(c,0,1);
     sf_cosft_close();
 
+    for (i=1; i < n-1; i++) {
+	c[i] *= 2;
+    }
+
     m = (xmin+xmax)*0.5f;
-    h = 0.5f/(xmax-xmin);
+    h = 2.0f/(xmax-xmin);
 }
 
 float chebyshev(float x)
