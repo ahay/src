@@ -110,8 +110,9 @@ def save_numpy_array_as_rsf_file(numpy_array, target_file_name):
 
 
 def saveObject(obj, filename):
-    with open(filename, 'wb') as output:
-        pickle.dump(obj, output, pickle.HIGHEST_PROTOCOL)    
+    output = open(filename, 'wb')
+    pickle.dump(obj, output, pickle.HIGHEST_PROTOCOL)    
+    output.close()
     
 if __name__ == '__main__':
     
