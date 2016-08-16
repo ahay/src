@@ -270,14 +270,7 @@ int main(int argc, char* argv[])
 
 	    /* s = g + alpha*s */
 
-	    if (NULL != mwt) sf_seek(mwt,0,SEEK_SET);
-	    
-	    MLOOP( MREAD(gfile); sf_floatwrite(buf,mbuf,to);
-		   
-		   if (NULL != mwt) { 
-		       sf_floatread(wht,mbuf,mwt);
-		       for (i=0; i < mbuf; i++) { buf[i] *= wht[i]; }
-		   }
+	    MLOOP( MREAD(gfile); 		 
 
 		   if (iter > 0) {
 		       pos = ftello(sfile);
@@ -290,8 +283,22 @@ int main(int argc, char* argv[])
 		       cblas_saxpy(mbuf,alpha,buf2,1,buf,1);
 		   } 
 		   
-		   MWRITE(sfile); );
+		   MWRITE(sfile); ); 
 
+	    if (0 > fseeko(gfile,0,SEEK_SET))
+		sf_error ("seek problem");
+
+	    if (NULL != mwt) sf_seek(mwt,0,SEEK_SET);
+	    
+	    MLOOP( MREAD(gfile); 
+
+		   if (NULL != mwt) { 
+		       sf_floatread(wht,mbuf,mwt);
+		       for (i=0; i < mbuf; i++) { buf[i] *= wht[i]; }
+		   }
+		   
+		   sf_floatwrite(buf,mbuf,to); );
+	    
 	    fclose(gfile);
 	    fclose(sfile);
 
@@ -429,7 +436,18 @@ int main(int argc, char* argv[])
     sf_fileflush(out,mod);
 
     xfile = fopen(x,"rb");
-    MLOOP( MREAD(xfile); sf_floatwrite(buf,mbuf,out); );
+
+    if (NULL != mwt) sf_seek(mwt,0,SEEK_SET);
+
+    MLOOP( MREAD(xfile); 
+
+	   if (NULL != mwt) { 
+	       sf_floatread(wht,mbuf,mwt);
+	       for (i=0; i < mbuf; i++) { buf[i] *= wht[i]; }
+	   } 
+
+	   sf_floatwrite(buf,mbuf,out); );
+
     fclose(xfile);
 
     unlink(R);
