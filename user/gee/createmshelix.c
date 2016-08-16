@@ -71,7 +71,7 @@ msfilter createmshelix(int ndim    /* number of dimensions */,
 	onescale( is, msaa); /* extract a filter */  
 	aa->mis = NULL;
 	for (id=0; id < ndim; id++) nb[id] = na[id]*jump[is];
-	bound(ndim, nd, nd, nb, aa); /* set up its boundaries */
+	bound(ndim, false, nd, nd, nb, aa); /* set up its boundaries */
 	for (id=0; id < n123; id++) 
 	    msaa->mis[is][id] = aa->mis[id];  /* save them */
 	free (aa->mis);

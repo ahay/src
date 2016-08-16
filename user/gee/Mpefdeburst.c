@@ -59,7 +59,7 @@ int main(int argc, char* argv[])
 	    aa->lag[ia] = ia+1;
 	}
 	
-	bound (1, &n1, &n1, &na, aa);
+	bound (1, false, &n1, &n1, &na, aa);
 	pefest (na * 2, n1, data, aa);
 	
 	for (i1=0; i1 < n1; i1++) {

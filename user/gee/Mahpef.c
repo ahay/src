@@ -131,19 +131,11 @@ int main(int argc, char* argv[])
 	}
     }
 
-    bound (dim, n0, n, a, aa);
+    bound (dim, true, n0, n, a, aa);
     find_mask(n123, kk, aa);
 
-    if (NULL != sf_getstring("maskout")) {
-	/* optional output mask file */
-	mask = sf_output("maskout");
-
-	for (i=0; i < n123; i++) {
-	    kk[i] = aa->mis[i]? 0: 1;
-	}
-	
-	sf_settype(mask,SF_INT);
-	sf_intwrite (kk,n123,mask);
+    for(i=0; i < n123; i++) {
+	if (!kk[i]) aa->mis[i] = true;
     }
 
     na = aa->nh;
@@ -184,7 +176,7 @@ int main(int argc, char* argv[])
 	for (i=ia=0; ia < na; ia++) {
 	    ns = aa->lag[ia];
 	    for (i1=0; i1 < n123; i1++,i++) {
-		if (i1 < ns || aa->mis[i1]) {
+		if (aa->mis[i1]) {
 		    d[i] = 0.0f;
 		} else {
 		    d[i] = dd[i1-ns];

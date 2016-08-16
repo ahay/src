@@ -26,6 +26,7 @@
 #include "regrid.h"
 
 void bound (int dim         /* number of dimensions */, 
+	    bool both       /* if both input and output */,
 	    const int *nold /* old data coordinates [dim] */, 
 	    const int *nd   /* new data coordinates [dim] */, 
 	    const int *na   /* filter box size [dim] */, 
@@ -42,16 +43,18 @@ void bound (int dim         /* number of dimensions */,
 	my *= nd[i];
     }
 
-    xx = sf_floatalloc(mb); yy = sf_floatalloc(mb);
+    xx = sf_floatalloc(mb); 
+    yy = sf_floatalloc(mb);
 
     for (ib=0; ib < mb; ib++) { 
 	sf_line2cart(dim, nb, ib, ii);    
 	xx[ib] = 0.;  	
-	for (i=0; i < dim; i++) 
+	for (i=0; i < dim; i++) {
 	    if(ii[i]+1 <= na[i] ||  ii[i]+1 > nb[i]-na[i]) {
 		xx[ib] = 1.; 
 		break;
 	    }
+	}
     }
     sf_helicon_init( aa);		  
     regrid(dim, nold, nb, aa);  
@@ -66,10 +69,14 @@ void bound (int dim         /* number of dimensions */,
 	sf_line2cart(dim, nd, iy, ii);
 	for (i=0; i < dim; i++) ii[i] += na[i];
 	ib = sf_cart2line(dim, nb, ii);
-	aa->mis[iy] = (bool) (yy[ib] > 0.);  
+	if (both) {
+	    aa->mis[iy] = (bool) (yy[ib] > 0. || xx[ib] > 0.);
+	} else {
+	    aa->mis[iy] = (bool) (yy[ib] > 0.);
+	}
     }
     
-    free (xx); free (yy);
+    free (xx); 
+    free (yy);
 } 
 
-/* 	$Id$	 */
