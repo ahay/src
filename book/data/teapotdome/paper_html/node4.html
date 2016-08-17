@@ -1,0 +1,299 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>First Look</TITLE>
+<META NAME="description" CONTENT="First Look">
+<META NAME="keywords" CONTENT="paper">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="paper.css">
+
+<LINK REL="next" HREF="node5.html">
+<LINK REL="previous" HREF="node3.html">
+<LINK REL="up" HREF="paper.html">
+<LINK REL="next" HREF="node5.html">
+</HEAD>
+
+<BODY >
+<table align="center" width="100%" cellpadding="0" cellspacing="0">
+<tr>
+<td>
+<A NAME="tex2html57"
+  HREF="node5.html">
+<IMG WIDTH="32" HEIGHT="32" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="icons/next.png"></A></td>
+<td>
+<A NAME="tex2html55"
+  HREF="paper.html">
+<IMG WIDTH="32" HEIGHT="32" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="icons/up.png"></A></td>
+<td>
+<A NAME="tex2html49"
+  HREF="node3.html">
+<IMG WIDTH="32" HEIGHT="32" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="icons/previous.png"></A></td>
+<td><img src="icons/left.png" width="16" height="32" border="0"></td><td class="navigation" align="center" width="100%">Processing the Teapot Dome Land 3D Survey with Madagascar</td><td><img src="icons/right.png" width="16" height="32" border="0"></td>
+<td><a href="../paper.pdf"><img src="icons/pdf.png" alt="[pdf]" width="32" height="32" border="0"></a></td>
+</tr></table>
+<BR>
+<B> Next:</B> <A NAME="tex2html58"
+  HREF="node5.html">Surface Consistent Decon</A>
+<B>Up:</B> <A NAME="tex2html56"
+  HREF="paper.html">Schleicher: Teapot Dome</A>
+<B> Previous:</B> <A NAME="tex2html50"
+  HREF="node3.html">Geometry Display</A>
+<BR><HR>
+
+<!--End of Navigation Panel-->
+
+<H1><A NAME="SECTION00040000000000000000">
+First Look</A>
+</H1>
+It's important to make a few plots of seismic traces to get an idea of the signal quality and the problems that will need to be addressed during processing.   This section also applies:
+
+<OL>
+<LI>some basic single trace processing (tpow, mute, ags, decon)
+</LI>
+<LI>picks a predecon mute
+</LI>
+<LI>single velocity normal moveout
+</LI>
+<LI>picks a stack mute
+</LI>
+<LI>brute stack a single line
+</LI>
+</OL>
+
+<P>
+Starting from the <TT>$RSFSRC/book/data/teapotdome/geompaper</TT> directory, you can look at the SConstruct file for the 'first look' processing with the commands:
+<PRE>
+cd ../firstlook
+gedit SConstruct
+</PRE>
+
+<P>
+The <TT>firstlook/SConstuct</TT> file makes use of the 'trace with header' (tah) programs.  These program names all start with sftah, for example sftahnmo, sftahagc and sftahmute.  The tah programs are similar to Seismic Unix programs and are especially useful for handling irregularly sampled data and single channel processing.   It took some experiments with sfheaderattr and sftahgethw to determine good header keys and values to use to select and display a few shots.  Sftahsort was used to select a few shots and order them by (fldr,tracf) and sfwrite put the data to an output file ordered by (time,tracf, fldr).  After some experiments I learned the last two samples on most traces were unusually large and I omitted these time samples with sftahwindow.   There are a different number of traces on each shot, so I used sftahwrite to select a few shots and create a file organized by the (time,trace,shot) header keys. 
+
+<P>
+After reading the SConstruct file, you can run it from the command line with:
+<PRE>   
+scons
+</PRE>   
+
+<P>
+The first plot you will see is a few shotpoints from the input file.  One of the shotpoints looks like Figure&nbsp;<A HREF="#fig:rawshot1">4</A>.  This plot shows the shot 'ffid 214' was recorded by 17 receiver cables.  The shotpoint is located very near one of the cables and the first arrivals on that cable are approximately linear because the trace offsets are nearly regularly sampled.  First breaks on cables further from the shot are hyperbolic.   Inline offsets are approximately linearly sampled and there is a significant crossline offset.  This results in hyperbolic offset distribution, ie:
+<PRE>   
+totaloffset=sqrt(inlineoffset**2 + crosslineoffset**2)
+</PRE>   
+
+<P>
+To get a better look at the data, amplitudes are scaled by t**2, a correction of the amplitude lost due to geometric wavefront spreading.  An interactive plot of ffid 214 is created using the sfimage command.  You can “rubber band” a zoom area and create a plot similar to Figure&nbsp;<A HREF="#fig:tpowshotzoom1">5</A>.   The plot look a little different because the plot in this paper is created using sfgrey while the interactive plot is created using sfimage.  One big difference is sfimage laterally interpolates trace amplitudes while sfgrey just uses the amplitude from the nearest trace.
+
+<P>
+Figure&nbsp;<A HREF="#fig:tpowshotzoom1">5</A> shows linear first breaks, noise on near offsets, and a large linear event that passes 4 seconds near trace 520.  You can measure the velocity of this event using the sfimage plot by clicking the right mouse button (on a Mac trackpad place TWO fingers on the trackpad and while the two fingers are touching the trackpad, click the trackpad button).  The mouse coordinate will appear on the upper left of the display.  I picked the event time and used the group interval (220 feet from the pdf in the <TT>Fetchpaper</TT> directory) to estimate the event velocity:
+<PRE>  
+Time           trace  offset
+minimum  540    0
+4.066s        519    (540-519)*220 feet=4620 ft
+1.314s        534    (540-534)*220 feet=1320 ft
+v=delta-offset / delta-time = 3300/2.752=1199 ft/s.
+</PRE>  
+
+<P>
+This is close to the speed of sound in air, 1115 ft/s (I looked this up on the Internet using Google), confirming my suspicion that this is an airwave.   
+
+<P>
+You can identify ground roll on Figure&nbsp;<A HREF="#fig:tpowshotzoom1">5</A>.  It is the faint energy with time increasing linearly to about 2.1 s. on the trace 500.  It is very weak and it looks like the field arrays have successfully attenuated this noise.  The final events you can identify are the signal, the reflection events which have hyperbolic time with apexes from .8 to 1.1 s.  It is easier to see on the zoomed display in Figure&nbsp;<A HREF="#fig:tpowshotzoom">6</A>.
+
+<P>
+I used the sfimage interactive plot to pick a pre decon mute.  I turned the mouse coordinates “on” (see the instruction in the description of Figure&nbsp;<A HREF="#fig:tpowshotzoom1">5</A> above) and used it to list the mouse (trace number,time) pairs as I pointed at the location where I wanted the mute to start.  I converted the trace numbers to offsets (remembering the inline receiver interval is 220 feet).  I wanted to remove most of the first breaks on longer offsets.  On traces with offset less than 1760 feet, I selected a less severe mute.  This preserves some near offset, small offset data to image as shallow as possible.  There is an oppotunity later in the processing sequence for a more severe stack mute after NMO.  Figure&nbsp;<A HREF="#fig:mutecheck">7</A> shows the data before and after the mute.
+
+<P>
+Figure&nbsp;<A HREF="#fig:shots">8</A> shows the data at four processing stages with incremental improvement from each of the processes.  The processes are amplitude correction (sftahgain tpow=2), agc (sftahagc) , decon (sttahpef), and statics (sftahstatics).
+
+<P>
+The stack mute is applied after NMO, so we need a velocity function.  I selected a velocity function from the center of the project from the file $RSFSRC/book/data/teapotdome/Fetchpaper/npr3_dmo.vel. This file contains velocity functions for several locations.  To identify a velocity from the center of the project I converted CDP to iline,xline.  The information in the file  $RSFSRC/book/data/teapotdome/Fetchpaper/3dload_Teapot_Dome_3D.pdf defined the relationship between (iline,xline) and CDP:
+
+<P>
+<PRE>  
+iline=(CDP-1)/188+1
+xline=CDP-(iline-1)*188
+</PRE>  
+
+<P>
+I converted several velocity CDP’s and looked at the fold map in Figure&nbsp;<A HREF="node3.html#fig:foldmap-400-5000">2</A> to select the a velocity location near the center of the survey (CDP 31705, iline169, xline 121).
+
+<P>
+Figure&nbsp;<A HREF="#fig:nmomutecheck">9</A> shows part of a shotpoint after nmo with and without the stack mute applied.  This plot was created to check the stack mute.  I used an offset=depth mute estimated from one of the dmo velocity functions estimating depth = vdmo*t/2.   I checked the mute using sfimage (like I checked the pre decon mute) and using this display.
+
+<P>
+Figure&nbsp;<A HREF="#fig:brutestack141">10</A> is a brute stack of line 141 from the 3D survey.  The “brute stack” is the name of the first stack on a land survey made usually using a single velocity function and no residual statics.
+
+<P>
+
+<P><CENTER>
+<A NAME="fig:rawshot1"></A>
+<TABLE BORDER=0>
+<TR><TH>
+<IMG SRC = "../firstlook/Fig/rawshot1.png" border="0" width=675 ALT = "rawshot1">
+
+<TR><TH>
+<STRONG><A HREF = "../firstlook/Fig/rawshot1.png">rawshot1</A>
+<BR>
+Figure 4.</STRONG> Field traces for field file identifier (FFID) 214.  Shows 17 receiver cables recorded data on this shotpoint. 
+<TR><TH>
+ <a href="../firstlook/Fig/rawshot1.pdf"><img src="icons/pdf.png" border="0" alt="[pdf]" width="32" height="32"></a> <a href="../firstlook/Fig/rawshot1.png"><img src="icons/viewmag.png" border="0" alt="[png]" width="32" height="32"></a> <a href="../firstlook.html"><img src="icons/configure.png" border="0" alt="[scons]" width="32" height="32"></a>
+</TABLE>
+<BR></CENTER></P>
+
+<P>
+<P><CENTER>
+<A NAME="fig:tpowshotzoom1"></A>
+<TABLE BORDER=0>
+<TR><TH>
+<IMG SRC = "../firstlook/Fig/tpowshotzoom1.png" border="0" width=675 ALT = "tpowshotzoom1">
+
+<TR><TH>
+<STRONG><A HREF = "../firstlook/Fig/tpowshotzoom1.png">tpowshotzoom1</A>
+<BR>
+Figure 5.</STRONG> Zoom of the central cable in Figure&nbsp;<A HREF="#fig:rawshot1">4</A>.  This plot shows linear first breaks, noise on near offsets, and a large amplitude, linear event that passes 4 seconds near trace 520.  The large amplitude, linear event is an airwave.
+<TR><TH>
+ <a href="../firstlook/Fig/tpowshotzoom1.pdf"><img src="icons/pdf.png" border="0" alt="[pdf]" width="32" height="32"></a> <a href="../firstlook/Fig/tpowshotzoom1.png"><img src="icons/viewmag.png" border="0" alt="[png]" width="32" height="32"></a> <a href="../firstlook.html"><img src="icons/configure.png" border="0" alt="[scons]" width="32" height="32"></a>
+</TABLE>
+<BR></CENTER></P>
+
+<P>
+<P><CENTER>
+<A NAME="fig:tpowshotzoom"></A>
+<TABLE BORDER=0>
+<TR><TH>
+<IMG SRC = "../firstlook/Fig/tpowshotzoom.png" border="0" width=675 ALT = "tpowshotzoom">
+
+<TR><TH>
+<STRONG><A HREF = "../firstlook/Fig/tpowshotzoom.png">tpowshotzoom</A>
+<BR>
+Figure 6.</STRONG> Zoom of the first Figure&nbsp;<A HREF="#fig:tpowshotzoom1">5</A> that created to show the signal.  The reflections are the events with hyperbolic time with apexes from .8 to 1.1 s. 
+<TR><TH>
+ <a href="../firstlook/Fig/tpowshotzoom.pdf"><img src="icons/pdf.png" border="0" alt="[pdf]" width="32" height="32"></a> <a href="../firstlook/Fig/tpowshotzoom.png"><img src="icons/viewmag.png" border="0" alt="[png]" width="32" height="32"></a> <a href="../firstlook.html"><img src="icons/configure.png" border="0" alt="[scons]" width="32" height="32"></a>
+</TABLE>
+<BR></CENTER></P>
+
+<P>
+<P><CENTER>
+<A NAME="fig:mutecheck"></A>
+<TABLE BORDER=0>
+<TR><TH>
+<IMG SRC = "../firstlook/Fig/mutecheck.png" border="0" width=675 ALT = "mutecheck">
+
+<TR><TH>
+<STRONG><A HREF = "../firstlook/Fig/mutecheck.png">mutecheck</A>
+<BR>
+Figure 7.</STRONG> Data before and after the predecon mute.
+<TR><TH>
+ <a href="../firstlook/Fig/mutecheck.pdf"><img src="icons/pdf.png" border="0" alt="[pdf]" width="32" height="32"></a> <a href="../firstlook/Fig/mutecheck.png"><img src="icons/viewmag.png" border="0" alt="[png]" width="32" height="32"></a> <a href="../firstlook.html"><img src="icons/configure.png" border="0" alt="[scons]" width="32" height="32"></a>
+</TABLE>
+<BR></CENTER></P>
+
+<P>
+<P><CENTER>
+<A NAME="fig:shots"></A>
+<TABLE BORDER=0>
+<TR><TH>
+<IMG SRC = "../firstlook/Fig/shots.png" border="0" width=675 ALT = "shots">
+
+<TR><TH>
+<STRONG><A HREF = "../firstlook/Fig/shots.png">shots</A>
+<BR>
+Figure 8.</STRONG> Data at 4 processing stages showing incremental improvement for each process.  Displays are after amplitude correction (sftahgain tpow=2), after agc (sftahagc), after decon (sttahpef), and statics (sftahstatics). 
+<TR><TH>
+ <a href="../firstlook/Fig/shots.pdf"><img src="icons/pdf.png" border="0" alt="[pdf]" width="32" height="32"></a> <a href="../firstlook/Fig/shots.png"><img src="icons/viewmag.png" border="0" alt="[png]" width="32" height="32"></a> <a href="../firstlook.html"><img src="icons/configure.png" border="0" alt="[scons]" width="32" height="32"></a>
+</TABLE>
+<BR></CENTER></P>
+
+<P>
+<P><CENTER>
+<A NAME="fig:nmomutecheck"></A>
+<TABLE BORDER=0>
+<TR><TH>
+<IMG SRC = "../firstlook/Fig/nmomutecheck.png" border="0" width=675 ALT = "nmomutecheck">
+
+<TR><TH>
+<STRONG><A HREF = "../firstlook/Fig/nmomutecheck.png">nmomutecheck</A>
+<BR>
+Figure 9.</STRONG> Data after nmo with and without the stack mute applied.  This plot checks the stack mute.  I used an offset=depth mute estimated from one of the dmo velocity funcions estimating depth = vdmo*t/2. 
+<TR><TH>
+ <a href="../firstlook/Fig/nmomutecheck.pdf"><img src="icons/pdf.png" border="0" alt="[pdf]" width="32" height="32"></a> <a href="../firstlook/Fig/nmomutecheck.png"><img src="icons/viewmag.png" border="0" alt="[png]" width="32" height="32"></a> <a href="../firstlook.html"><img src="icons/configure.png" border="0" alt="[scons]" width="32" height="32"></a>
+</TABLE>
+<BR></CENTER></P>
+
+<P>
+<P><CENTER>
+<A NAME="fig:brutestack141"></A>
+<TABLE BORDER=0>
+<TR><TH>
+<IMG SRC = "../firstlook/Fig/brutestack141.png" border="0" width=675 ALT = "brutestack141">
+
+<TR><TH>
+<STRONG><A HREF = "../firstlook/Fig/brutestack141.png">brutestack141</A>
+<BR>
+Figure 10.</STRONG> A brute stack of line 141.
+<TR><TH>
+ <a href="../firstlook/Fig/brutestack141.pdf"><img src="icons/pdf.png" border="0" alt="[pdf]" width="32" height="32"></a> <a href="../firstlook/Fig/brutestack141.png"><img src="icons/viewmag.png" border="0" alt="[png]" width="32" height="32"></a> <a href="../firstlook.html"><img src="icons/configure.png" border="0" alt="[scons]" width="32" height="32"></a>
+</TABLE>
+<BR></CENTER></P>
+
+<P>
+<HR>
+<table align="center" width="100%" cellpadding="0" cellspacing="0">
+<tr>
+<td>
+<A NAME="tex2html57"
+  HREF="node5.html">
+<IMG WIDTH="32" HEIGHT="32" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="icons/next.png"></A></td>
+<td>
+<A NAME="tex2html55"
+  HREF="paper.html">
+<IMG WIDTH="32" HEIGHT="32" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="icons/up.png"></A></td>
+<td>
+<A NAME="tex2html49"
+  HREF="node3.html">
+<IMG WIDTH="32" HEIGHT="32" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="icons/previous.png"></A></td>
+<td><img src="icons/left.png" width="16" height="32" border="0"></td><td class="navigation" align="center" width="100%">Processing the Teapot Dome Land 3D Survey with Madagascar</td><td><img src="icons/right.png" width="16" height="32" border="0"></td>
+<td><a href="../paper.pdf"><img src="icons/pdf.png" alt="[pdf]" width="32" height="32" border="0"></a></td>
+</tr></table>
+<BR>
+<B> Next:</B> <A NAME="tex2html58"
+  HREF="node5.html">Surface Consistent Decon</A>
+<B>Up:</B> <A NAME="tex2html56"
+  HREF="paper.html">Schleicher: Teapot Dome</A>
+<B> Previous:</B> <A NAME="tex2html50"
+  HREF="node3.html">Geometry Display</A>
+
+<!--End of Navigation Panel-->
+<ADDRESS>
+<I> <BR>
+2016-08-17</I>
+</ADDRESS>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+var pageTracker = _gat._getTracker("UA-509367-3");
+pageTracker._trackPageview();
+</script>
+</BODY>
+</HTML>
