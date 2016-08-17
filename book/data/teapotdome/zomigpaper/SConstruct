@@ -1,6 +1,8 @@
 from rsf.proj import *
 import math
 
+SConscript('../velspaper/SConstruct')
+
 Flow('vel','tvpairs.txt',
      '''
      echo in=$SOURCE data_format=ascii_float n1=2 n2=10 |
@@ -26,7 +28,7 @@ Result('Vint',
      ''')
 	
 
-Result('stack-filter', '../Velspaper/vtxystack.rsf',
+Result('stack-filter', '../velspaper/vtxystack.rsf',
 	'''
 	window n1=1000 min3=141 max3=141 |
 	bandpass fhi=20 |
@@ -35,7 +37,7 @@ Result('stack-filter', '../Velspaper/vtxystack.rsf',
        	label1=Time    unit2=sec 
        	label2=xline   unit1=count
         ''')
-Result('stack', '../Velspaper/vtxystack.rsf',
+Result('stack', '../velspaper/vtxystack.rsf',
 	'''
 	window min3=141 max3=141 |
 	grey title=stack
@@ -84,7 +86,7 @@ Result('slo',
 
 
 
-Flow('fft','../Velspaper/vtxystack.rsf',
+Flow('fft','../velspaper/vtxystack.rsf',
      'put d2=110 d3=110 | fft1 | window max1=20 | transp plane=12 | transp plane=23')
 
 
@@ -106,7 +108,7 @@ Flow('mig','fft slo',
      '''
      zomig3 ompnth=1 mode=m --readwrite=y verb=y
             nrmax=1 slo=${SOURCES[1]} pmx=30 pmy=30
-     ''',split=[4,87],reduce='add')
+     ''',split=[3,'omp',[0]],reduce='add')
 
 Plot('mig',
        '''

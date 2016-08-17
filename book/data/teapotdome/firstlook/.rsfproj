@@ -1,0 +1,3 @@
+uses=['sftahsort', 'sftahwindow', 'sftahwrite', 'sfgrey', 'sfwindow', 'sftahgain', 'sfimage', 'sfwiggle', 'sftahgethw', 'sftahmute', 'sftahagc', 'sftahpef', 'sftahstatic', 'sftahnmo', 'sftahstack']
+data=[]
+size=  410735216

@@ -2,6 +2,7 @@ from rsf.proj import *
 import os, sys
 
 #SConscript('../Fetchpaper/SConstruct')
+SConscript('../scdeconpaper/SConstruct')
 
 mypython=(os.popen("which python")).read()
 print "mypython=",mypython
@@ -49,7 +50,7 @@ Result('vel3','vvol',
      '''% (minclip, maxclip, minclip, maxclip, minclip, maxclip))
 
 Flow(['vtxystack.rsf','vtxystack_hdr.rsf'],
-     ['../Scdeconpaper/s-g-decon.rsf','../Scdeconpaper/s-g-decon_hdr.rsf','vvol.rsf'],
+     ['../scdeconpaper/s-g-decon.rsf','../scdeconpaper/s-g-decon_hdr.rsf','vvol.rsf'],
      '''
      sftahsort verbose=1 input=${SOURCES[0]} sort='iline xline offset'
      | sftahagc 
@@ -58,7 +59,7 @@ Flow(['vtxystack.rsf','vtxystack_hdr.rsf'],
      | sftahstatic sign=-1   
      | sftahnmo 
        verbose=1
-       vfile=vvol.rsf
+       vfile=${SOURCES[2]}
      | sftahstack key=iline,xline verbose=1 ntaper=40
        tmute=0,1.20,1.82 
        xmute=0,7358,18000 
@@ -79,7 +80,7 @@ Result('vtxystack141','vtxystack',
        ''')
 
 Flow(['vtxycdps.rsf','vtxycdps_hdr.rsf'],
-     ['../Scdeconpaper/s-g-decon.rsf','../Scdeconpaper/s-g-decon_hdr.rsf','vvol.rsf'],
+     ['../scdeconpaper/s-g-decon.rsf','../scdeconpaper/s-g-decon_hdr.rsf','vvol.rsf'],
      '''
      sftahsort verbose=1 input=${SOURCES[0]} sort='iline:141,141 xline:100,180,10 offset' 
      | sftahagc 
@@ -88,7 +89,7 @@ Flow(['vtxycdps.rsf','vtxycdps_hdr.rsf'],
      | sftahstatic sign=-1   
      | sftahnmo
        verbose=1
-       vfile=vvol.rsf
+       vfile=${SOURCES[2]}
      | sftahmute 
        verbose=1 
        tmute=0,1.20,1.82 
