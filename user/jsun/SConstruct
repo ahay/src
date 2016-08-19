@@ -8,7 +8,8 @@ progs = 'fftwave1dd cfftwave1dd cfftwave1in fftwave2p fftwave3p cfftwave2 cfftwa
 
 libprop = 'fftwave2omp fftwave3omp eweks3d vweks3d xcor2 xcor3 xcor3d mutter3 ewelr3d ewedc3d ewdlr3d eweks3dsecd ewelr3dgrad ewedc3dgrad'
 
-ccprogs = 'tilr2 ortholr3 cortholr3 cisolr2 cisolr2rev cisolr3 ctilr2 cisolr2grad cisolr2abc cisolr2abc1 cisolr1 canisolr2 canisolr2abc fraclr2 zfraclr2 fraclr2test tilrzone ortholrzone zortholr3 zanisolr2 zanisolr2abc clfdc1 clfdc2 clfdc1-bak zisolr2abc clfdc1frac ewelr3 ewedc3p ewedc3s ewdlr3 ewelr3grad ewedc3pgrad ewedc3sgrad cfftrtm3'
+ccprogs = 'tilr2 ortholr3 cortholr3 cisolr2 cisolr2rev cisolr3 ctilr2 cisolr2grad cisolr2abc cisolr2abc1 cisolr1 canisolr2 canisolr2abc fraclr2 zfraclr2 fraclr2test tilrzone ortholrzone zortholr3 zanisolr2 zanisolr2abc clfdc1 clfdc2 clfdc1-bak zisolr2abc clfdc1frac ewelr3 ewedc3p ewedc3s ewdlr3 ewelr3grad'
+# ewedc3pgrad ewedc3sgrad cfftrtm3
 # vwelr3
 # eiktest eiktest2 cisolr1eik eiksol
 
@@ -87,31 +88,30 @@ if lapack:
         libsxx.extend(lapack)
     env.Prepend(LIBS=libsxx)
 
-ccsubs = 'lowrank.cc fftomp.c rtmutil.c ksutil.c revolve.c'
-
-ccmains = Split(ccprogs)
-for prog in ccmains:
-    sources = ['M' + prog + '.cc']
-    if prog == 'cfftrtm3':
-        sources += Split(ccsubs)
-    if lapack:
-        prog = env.Program(prog,sources)
-    else:
-        prog = env.RSF_Place('sf'+prog,None,var='LAPACK',package='lapack')
-    if root:
-        env.Install(bindir,prog)
-
-xxsubs = 'lowrank fftomp rtmutil ksutil revolve'
-mpicxx_mains = Split(mpicxx_progs)
-for prog in mpicxx_mains:
-    sources = ['M' + prog] + Split(xxsubs)
-    if mpicxx:
-        env.StaticObject('M'+prog+'.cc',CXX=mpicxx)
-        prog = env.Program(prog,map(lambda x: x + '.o',sources),CXX=mpicxx)
-    else:
-        prog = env.RSF_Place('sf'+prog,None,var='MPICXX',package='mpi')
-    if root:
-        env.Install(bindir,prog)
+#ccsubs = 'lowrank.cc fftomp.c rtmutil.c ksutil.c revolve.c'
+#ccmains = Split(ccprogs)
+#for prog in ccmains:
+#    sources = ['M' + prog + '.cc']
+#    if prog == 'cfftrtm3':
+#        sources += Split(ccsubs)
+#    if lapack:
+#        prog = env.Program(prog,sources)
+#    else:
+#        prog = env.RSF_Place('sf'+prog,None,var='LAPACK',package='lapack')
+#    if root:
+#        env.Install(bindir,prog)
+#
+#xxsubs = 'lowrank fftomp rtmutil ksutil revolve'
+#mpicxx_mains = Split(mpicxx_progs)
+#for prog in mpicxx_mains:
+#    sources = ['M' + prog] + Split(xxsubs)
+#    if mpicxx:
+#        env.StaticObject('M'+prog+'.cc',CXX=mpicxx)
+#        prog = env.Program(prog,map(lambda x: x + '.o',sources),CXX=mpicxx)
+#    else:
+#        prog = env.RSF_Place('sf'+prog,None,var='MPICXX',package='mpi')
+#    if root:
+#        env.Install(bindir,prog)
 
 for prog in Split('cmatmult2'):
     sources = ['Test' + prog,prog]
