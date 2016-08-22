@@ -215,9 +215,11 @@ free ((char*) $1);
 
 /* Apply the Numeric typemaps for 1D input arrays */
 %numpy_typemaps(float, NPY_FLOAT   , size_t)
+%numpy_typemaps(int, NPY_INT   , size_t)
 %numpy_typemaps(sf_complex, NPY_CFLOAT   , size_t)
 
 %apply (float*  IN_ARRAY1, size_t DIM1) {(float*  arr, size_t size)};
+%apply (int*  IN_ARRAY1, size_t DIM1) {(int*  arr, size_t size)};
 %apply (sf_complex*  IN_ARRAY1, size_t DIM1) {(sf_complex*  arr, size_t size)};
 
 #define SF_MAX_DIM 9

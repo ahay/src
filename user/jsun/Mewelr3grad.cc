@@ -66,7 +66,7 @@ static std::valarray<float>  C11,C12,C13,C22,C23,C33,C44,C55,C66,Q1,Q2;
 static std::valarray<float>  C11dx,C12dx,C12dy,C13dx,C13dz,C22dy,C23dy,C23dz,C33dz,C44dy,C44dz,C55dx,C55dz,C66dx,C66dy;
 static std::valarray<float>  C14,C15,C16,C24,C25,C26,C34,C35,C36,C45,C46,C56;
 static std::valarray<double> rkz, rkx, rky;
-static int component;
+static int component, mode;
 
 /* subroutines */
 static int sample(vector<int>& rs, vector<int>& cs, ZpxNumMat& res);
@@ -122,7 +122,10 @@ int main(int argc, char* argv[])
     par.get("pseu",pseu,false);      // pseudo-spectral propagator
     par.get("grad",grad,false);      // include gradient term
     par.get("seed",seed,time(NULL)); // seed for random number generator
-    srand48(seed);
+    //srand48(seed);
+    par.get("mode",mode,0);          // mode of decomposition: 0->mixed, 1->p, 2->s
+    int jump;
+    par.get("jump",jump,1);          // jump step for reduced lowrank decomposition
     float eps;
     par.get("eps",eps,1.e-6);        // tolerance
     int npk;
@@ -353,13 +356,21 @@ int main(int argc, char* argv[])
     sf_complex *ldataxx, *ldataxy, *ldataxz, *ldatayx, *ldatayy, *ldatayz, *ldatazx, *ldatazy, *ldatazz;
     sf_complex *rdataxx, *rdataxy, *rdataxz, *rdatayx, *rdatayy, *rdatayz, *rdatazx, *rdatazy, *rdatazz;
 
+    /* preparation for reduced lowrank */
+    vector<int> ms, ns, js;
+    ms.resize(3); ms[0] = nzpad; ms[1] = nxpad; ms[2] = nypad;
+    ns.resize(3); ns[0] = nkz;   ns[1] = nkx;   ns[2] = nky;
+    js.resize(3); js[0] = jump;  js[1] = jump;  js[2] = jump;
+
     /*------------------------------------------------------------*/
     /* lowrank decomposition and write to files                   */
     /*------------------------------------------------------------*/
     component = 0;
     /* xx component */
     {
-        iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        srand48(seed);
+        //iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        iC( ddlowrank(ms,ns,js,sample,(double)eps,npk,lidx,ridx,mid) );
 
         int m2=mid.m();
         int n2=mid.n();
@@ -395,7 +406,9 @@ int main(int argc, char* argv[])
     }
     /* xy component */
     {
-        iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        srand48(seed);
+        //iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        iC( ddlowrank(ms,ns,js,sample,(double)eps,npk,lidx,ridx,mid) );
 
         int m2=mid.m();
         int n2=mid.n();
@@ -431,7 +444,9 @@ int main(int argc, char* argv[])
     }
     /* xz component */
     {
-        iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        srand48(seed);
+        //iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        iC( ddlowrank(ms,ns,js,sample,(double)eps,npk,lidx,ridx,mid) );
 
         int m2=mid.m();
         int n2=mid.n();
@@ -467,7 +482,9 @@ int main(int argc, char* argv[])
     }
     /* yx component */
     {
-        iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        srand48(seed);
+        //iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        iC( ddlowrank(ms,ns,js,sample,(double)eps,npk,lidx,ridx,mid) );
 
         int m2=mid.m();
         int n2=mid.n();
@@ -503,7 +520,9 @@ int main(int argc, char* argv[])
     }
     /* yy component */
     {
-        iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        srand48(seed);
+        //iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        iC( ddlowrank(ms,ns,js,sample,(double)eps,npk,lidx,ridx,mid) );
 
         int m2=mid.m();
         int n2=mid.n();
@@ -539,7 +558,9 @@ int main(int argc, char* argv[])
     }
     /* yz component */
     {
-        iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        srand48(seed);
+        //iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        iC( ddlowrank(ms,ns,js,sample,(double)eps,npk,lidx,ridx,mid) );
 
         int m2=mid.m();
         int n2=mid.n();
@@ -575,7 +596,9 @@ int main(int argc, char* argv[])
     }
     /* zx component */
     {
-        iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        srand48(seed);
+        //iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        iC( ddlowrank(ms,ns,js,sample,(double)eps,npk,lidx,ridx,mid) );
 
         int m2=mid.m();
         int n2=mid.n();
@@ -611,7 +634,9 @@ int main(int argc, char* argv[])
     }
     /* zy component */
     {
-        iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        srand48(seed);
+        //iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        iC( ddlowrank(ms,ns,js,sample,(double)eps,npk,lidx,ridx,mid) );
 
         int m2=mid.m();
         int n2=mid.n();
@@ -647,7 +672,9 @@ int main(int argc, char* argv[])
     }
     /* zz component */
     {
-        iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        srand48(seed);
+        //iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        iC( ddlowrank(ms,ns,js,sample,(double)eps,npk,lidx,ridx,mid) );
 
         int m2=mid.m();
         int n2=mid.n();
@@ -890,31 +917,51 @@ static int sample(vector<int>& rs, vector<int>& cs, ZpxNumMat& res)
 
             switch (component) {
                 case 0: // xx
-                    res(a,b) = exp(v3t*zpx(0.,1.))*u3x*iu3x + exp(v2t*zpx(0.,1.))*u2x*iu2x + exp(v1t*zpx(0.,1.))*u1x*iu1x;
+                    if     (mode==0) res(a,b) = exp(v3t*zpx(0.,1.))*u3x*iu3x + exp(v2t*zpx(0.,1.))*u2x*iu2x + exp(v1t*zpx(0.,1.))*u1x*iu1x;
+                    else if(mode==1) res(a,b) = exp(v3t*zpx(0.,1.))*u3x*iu3x                                                              ;
+                    else if(mode==2) res(a,b) =                                exp(v2t*zpx(0.,1.))*u2x*iu2x + exp(v1t*zpx(0.,1.))*u1x*iu1x;
                     break;
                 case 1: // xy
-                    res(a,b) = exp(v3t*zpx(0.,1.))*u3x*iu3y + exp(v2t*zpx(0.,1.))*u2x*iu2y + exp(v1t*zpx(0.,1.))*u1x*iu1y;
+                    if     (mode==0) res(a,b) = exp(v3t*zpx(0.,1.))*u3x*iu3y + exp(v2t*zpx(0.,1.))*u2x*iu2y + exp(v1t*zpx(0.,1.))*u1x*iu1y;
+                    else if(mode==1) res(a,b) = exp(v3t*zpx(0.,1.))*u3x*iu3y                                                              ;
+                    else if(mode==2) res(a,b) =                                exp(v2t*zpx(0.,1.))*u2x*iu2y + exp(v1t*zpx(0.,1.))*u1x*iu1y;
                     break;
                 case 2: // xz
-                    res(a,b) = exp(v3t*zpx(0.,1.))*u3x*iu3z + exp(v2t*zpx(0.,1.))*u2x*iu2z + exp(v1t*zpx(0.,1.))*u1x*iu1z;
+                    if     (mode==0) res(a,b) = exp(v3t*zpx(0.,1.))*u3x*iu3z + exp(v2t*zpx(0.,1.))*u2x*iu2z + exp(v1t*zpx(0.,1.))*u1x*iu1z;
+                    else if(mode==1) res(a,b) = exp(v3t*zpx(0.,1.))*u3x*iu3z                                                              ;
+                    else if(mode==2) res(a,b) =                                exp(v2t*zpx(0.,1.))*u2x*iu2z + exp(v1t*zpx(0.,1.))*u1x*iu1z;
                     break;
                 case 3: // yx
-                    res(a,b) = exp(v3t*zpx(0.,1.))*u3y*iu3x + exp(v2t*zpx(0.,1.))*u2y*iu2x + exp(v1t*zpx(0.,1.))*u1y*iu1x;
+                    if     (mode==0) res(a,b) = exp(v3t*zpx(0.,1.))*u3y*iu3x + exp(v2t*zpx(0.,1.))*u2y*iu2x + exp(v1t*zpx(0.,1.))*u1y*iu1x;
+                    else if(mode==1) res(a,b) = exp(v3t*zpx(0.,1.))*u3y*iu3x                                                              ;
+                    else if(mode==2) res(a,b) =                                exp(v2t*zpx(0.,1.))*u2y*iu2x + exp(v1t*zpx(0.,1.))*u1y*iu1x;
                     break;
                 case 4: // yy
-                    res(a,b) = exp(v3t*zpx(0.,1.))*u3y*iu3y + exp(v2t*zpx(0.,1.))*u2y*iu2y + exp(v1t*zpx(0.,1.))*u1y*iu1y;
+                    if     (mode==0) res(a,b) = exp(v3t*zpx(0.,1.))*u3y*iu3y + exp(v2t*zpx(0.,1.))*u2y*iu2y + exp(v1t*zpx(0.,1.))*u1y*iu1y;
+                    else if(mode==1) res(a,b) = exp(v3t*zpx(0.,1.))*u3y*iu3y                                                              ;
+                    else if(mode==2) res(a,b) =                                exp(v2t*zpx(0.,1.))*u2y*iu2y + exp(v1t*zpx(0.,1.))*u1y*iu1y;
                     break;
                 case 5: // yz
-                    res(a,b) = exp(v3t*zpx(0.,1.))*u3y*iu3z + exp(v2t*zpx(0.,1.))*u2y*iu2z + exp(v1t*zpx(0.,1.))*u1y*iu1z;
+                    if     (mode==0) res(a,b) = exp(v3t*zpx(0.,1.))*u3y*iu3z + exp(v2t*zpx(0.,1.))*u2y*iu2z + exp(v1t*zpx(0.,1.))*u1y*iu1z;
+                    else if(mode==1) res(a,b) = exp(v3t*zpx(0.,1.))*u3y*iu3z                                                              ;
+                    else if(mode==2) res(a,b) =                                exp(v2t*zpx(0.,1.))*u2y*iu2z + exp(v1t*zpx(0.,1.))*u1y*iu1z;
                     break;
                 case 6: // zx
-                    res(a,b) = exp(v3t*zpx(0.,1.))*u3z*iu3x + exp(v2t*zpx(0.,1.))*u2z*iu2x + exp(v1t*zpx(0.,1.))*u1z*iu1x;
+                    if     (mode==0) res(a,b) = exp(v3t*zpx(0.,1.))*u3z*iu3x + exp(v2t*zpx(0.,1.))*u2z*iu2x + exp(v1t*zpx(0.,1.))*u1z*iu1x;
+                    else if(mode==1) res(a,b) = exp(v3t*zpx(0.,1.))*u3z*iu3x                                                              ;
+                    else if(mode==2) res(a,b) =                                exp(v2t*zpx(0.,1.))*u2z*iu2x + exp(v1t*zpx(0.,1.))*u1z*iu1x;
                     break;
                 case 7: // zy
-                    res(a,b) = exp(v3t*zpx(0.,1.))*u3z*iu3y + exp(v2t*zpx(0.,1.))*u2z*iu2y + exp(v1t*zpx(0.,1.))*u1z*iu1y;
+                    if     (mode==0) res(a,b) = exp(v3t*zpx(0.,1.))*u3z*iu3y + exp(v2t*zpx(0.,1.))*u2z*iu2y + exp(v1t*zpx(0.,1.))*u1z*iu1y;
+                    else if(mode==1) res(a,b) = exp(v3t*zpx(0.,1.))*u3z*iu3y                                                              ;
+                    else if(mode==2) res(a,b) =                                exp(v2t*zpx(0.,1.))*u2z*iu2y + exp(v1t*zpx(0.,1.))*u1z*iu1y;
                     break;
                 case 8: // zz
-                    res(a,b) = exp(v3t*zpx(0.,1.))*u3z*iu3z + exp(v2t*zpx(0.,1.))*u2z*iu2z + exp(v1t*zpx(0.,1.))*u1z*iu1z;
+                    if     (mode==0) res(a,b) = exp(v3t*zpx(0.,1.))*u3z*iu3z + exp(v2t*zpx(0.,1.))*u2z*iu2z + exp(v1t*zpx(0.,1.))*u1z*iu1z;
+                    else if(mode==1) res(a,b) = exp(v3t*zpx(0.,1.))*u3z*iu3z                                                              ;
+                    else if(mode==2) res(a,b) =                                exp(v2t*zpx(0.,1.))*u2z*iu2z + exp(v1t*zpx(0.,1.))*u1z*iu1z;
+                    break;
+                default:
                     break;
             }
 

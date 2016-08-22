@@ -16,13 +16,12 @@
 ##   You should have received a copy of the GNU General Public License
 ##   along with this program; if not, write to the Free Software
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import os, sys
+import os, sys, numpy
 import rsf.prog
+import rsf.api as rsf
 from subprocess import call
 
-def write2txt(filename,nz,nx,ny,sou_z,sou_nx,sou_n6,rec_z,rec_nx,rec_ny,nbell):
-    f = open(filename,'w')
-    
+def write2mat(mat,nz,nx,ny,sou_z,sou_nx,sou_n6,rec_z,rec_nx,rec_ny,nbell):
     if ny>1:
         jx = (nx-1-2*nbell)/(sou_nx-1)
         jy = (ny-1-2*nbell)/(sou_ny-1)
@@ -42,7 +41,7 @@ def write2txt(filename,nz,nx,ny,sou_z,sou_nx,sou_n6,rec_z,rec_nx,rec_ny,nbell):
                     rec_ox = nx-rec_nx 
                 else:
                     rec_ox = sou_x-rec_nx/2
-                f.write('%8d %8d %8d %8d %8d %8d %8d %8d\n' %(sou_z,sou_x,sou_y,rec_z,rec_ox,rec_oy,rec_nx,rec_ny))
+                mat.append([sou_z,sou_x,sou_y,rec_z,rec_ox,rec_oy,rec_nx,rec_ny]) 
     else:
         sou_y  = 0
         rec_oy = 0
@@ -56,18 +55,8 @@ def write2txt(filename,nz,nx,ny,sou_z,sou_nx,sou_n6,rec_z,rec_nx,rec_ny,nbell):
                 rec_ox = nx-rec_nx 
             else:
                 rec_ox = sou_x-rec_nx/2
-            f.write('%8d %8d %8d %8d %8d %8d %8d %8d\n' %(sou_z,sou_x,sou_y,rec_z,rec_ox,rec_oy,rec_nx,rec_ny))
+            mat.append([sou_z,sou_x,sou_y,rec_z,rec_ox,rec_oy,rec_nx,rec_ny]) 
     
-    f.close()
-
-def write2rsf(file_in,file_out,dim1,dim2):
-
-    dd = os.path.join(rsf.prog.RSFROOT,'bin','sfdd')
-    command="echo in=%s n1=%d n2=%d data_format=ascii_int | %s type=int form=native > %s" %(file_in,dim1,dim2,dd,file_out)
-    print command
-
-    call(command, shell=True)
-
 if __name__ == "__main__":
     try:
         nz     = int(sys.argv[1])  # dimension in z
@@ -88,7 +77,13 @@ if __name__ == "__main__":
     # do the work
     dim1=8
     dim2=sou_nx*sou_ny
-    write2txt('geo.txt',nz,nx,ny,sou_z,sou_nx,sou_ny,rec_z,rec_nx,rec_ny,nbell)
-    write2rsf('geo.txt','geo.rsf',dim1,dim2)
+    mat = []
+    write2mat(mat,nz,nx,ny,sou_z,sou_nx,sou_ny,rec_z,rec_nx,rec_ny,nbell)
+    mat2 = numpy.array(mat)
+    output = rsf.Output()
+    output.put("n1",dim1)
+    output.put("n2",dim2)
+    output.settype('int')
+    output.write(mat2)
 
     sys.exit(0)

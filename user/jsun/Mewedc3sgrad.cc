@@ -359,6 +359,7 @@ int main(int argc, char* argv[])
     component = 0;
     /* xx component */
     {
+        srand48(seed);
         iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
 
         int m2=mid.m();
@@ -395,6 +396,7 @@ int main(int argc, char* argv[])
     }
     /* xy component */
     {
+        srand48(seed);
         iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
 
         int m2=mid.m();
@@ -431,6 +433,7 @@ int main(int argc, char* argv[])
     }
     /* xz component */
     {
+        srand48(seed);
         iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
 
         int m2=mid.m();
@@ -467,6 +470,7 @@ int main(int argc, char* argv[])
     }
     /* yx component */
     {
+        srand48(seed);
         iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
 
         int m2=mid.m();
@@ -503,6 +507,7 @@ int main(int argc, char* argv[])
     }
     /* yy component */
     {
+        srand48(seed);
         iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
 
         int m2=mid.m();
@@ -539,6 +544,7 @@ int main(int argc, char* argv[])
     }
     /* yz component */
     {
+        srand48(seed);
         iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
 
         int m2=mid.m();
@@ -575,6 +581,7 @@ int main(int argc, char* argv[])
     }
     /* zx component */
     {
+        srand48(seed);
         iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
 
         int m2=mid.m();
@@ -611,6 +618,7 @@ int main(int argc, char* argv[])
     }
     /* zy component */
     {
+        srand48(seed);
         iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
 
         int m2=mid.m();
@@ -647,6 +655,7 @@ int main(int argc, char* argv[])
     }
     /* zz component */
     {
+        srand48(seed);
         iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
 
         int m2=mid.m();

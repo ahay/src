@@ -101,17 +101,21 @@ if lapack:
 #    if root:
 #        env.Install(bindir,prog)
 #
-#xxsubs = 'lowrank fftomp rtmutil ksutil revolve'
-#mpicxx_mains = Split(mpicxx_progs)
-#for prog in mpicxx_mains:
-#    sources = ['M' + prog] + Split(xxsubs)
-#    if mpicxx:
-#        env.StaticObject('M'+prog+'.cc',CXX=mpicxx)
-#        prog = env.Program(prog,map(lambda x: x + '.o',sources),CXX=mpicxx)
-#    else:
-#        prog = env.RSF_Place('sf'+prog,None,var='MPICXX',package='mpi')
-#    if root:
-#        env.Install(bindir,prog)
+
+##################################################################################################################
+# To use sfmpicfftrtm, one needs to obtain the source file revolve.c from http://dl.acm.org/citation.cfm?id=347846
+##################################################################################################################
+xxsubs = 'lowrank fftomp rtmutil ksutil revolve'
+mpicxx_mains = Split(mpicxx_progs)
+for prog in mpicxx_mains:
+    sources = ['M' + prog] + Split(xxsubs)
+    if FindFile('revolve.c','.') and mpicxx:
+        env.StaticObject('M'+prog+'.cc',CXX=mpicxx)
+        prog = env.Program(prog,map(lambda x: x + '.o',sources),CXX=mpicxx)
+    else:
+        prog = env.RSF_Place('sf'+prog,None,var='MPICXX',package='mpi')
+    if root:
+        env.Install(bindir,prog)
 
 for prog in Split('cmatmult2'):
     sources = ['Test' + prog,prog]
@@ -145,8 +149,8 @@ if root:
     main = 'sf%s.py' % user
     
     docs = map(lambda prog: env.Doc(prog,'M' + prog),mains+mpi_mains) +  \
-           map(lambda prog: env.Doc(prog,'M'+prog+'.py',lang='python'),pymains)
-#           map(lambda prog: env.Doc(prog,'M%s.cc' % prog,lang='c++'),ccmains+mpicxx_mains) + \
+           map(lambda prog: env.Doc(prog,'M'+prog+'.py',lang='python'),pymains) + \
+           map(lambda prog: env.Doc(prog,'M%s.cc' % prog,lang='c++'),mpicxx_mains) 
           
     env.Depends(docs,'#/framework/rsf/doc.py')	
     doc = env.RSF_Docmerge(main,docs)
