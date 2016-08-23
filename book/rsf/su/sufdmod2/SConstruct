@@ -1,0 +1,46 @@
+from rsf.suproj import *
+
+Flow('model.out',None,'unif2 tfile=$TARGET',stdout=-1)
+Flow('vel','model.out','unif2 n1=100 n2=100 method=spline')
+
+Result('vel',
+       '''
+       ximage wbox=450 hbox=450 xbox=500 title="Wavespeed Profile" 
+       n1=100 n2=100 legend=1 lheight=150 units="wave speed"
+       ''')
+
+Flow('fdmod hseis vseis sseis','vel',
+     '''
+     sufdmod2 nz=100 dz=5 nx=100 dx=5 verbose=1 
+     fpeak=35 fmax=40 xs=250 zs=50 hsz=50 vsx=250 
+     hsfile=${TARGETS[1]} vsfile=${TARGETS[2]} ssfile=${TARGETS[3]} 
+     verbose=2 tmax=0.4 abs=1,1,1,1 mt=5
+     ''')
+
+Result('vseis',
+       '''
+       suwind j=3 | suxwigb clip=0.5
+       title="Vertical line of seismograms" 
+       windowtitle="Vertical" 
+       label1="Time (s)" label2="Depth (km)" 
+       wbox=450 hbox=450 xbox=930 ybox=50
+       ''')
+
+Result('hseis',
+       '''
+       suwind j=3 | suxwigb clip=0.5
+       title="Horizontal line of seismograms" 
+       windowtitle="Horizontal" 
+       label1="Time (s)" label2="Distance (km)" 
+       wbox=450 hbox=450 xbox=20 ybox=530
+       ''')
+
+Result('sseis',
+       '''
+       suxwigb title="Source point seismogram" 
+       windowtitle="Source" 
+       label1="Time (s)" label2="Trace" 
+       wbox=450 hbox=450 xbox=510 ybox=530
+       ''')
+
+End()
