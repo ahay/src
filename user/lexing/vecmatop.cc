@@ -1467,15 +1467,182 @@ int ddlowrank(int m, int n, int (*sample)(vector<int>&, vector<int>&, ZpxNumMat&
   return 0;
 }
 
-
-
-
-
-
-
-
-
-
+//reduced lowrank -- complex version
+int ddlowrank(vector<int> ms, vector<int> ns, vector<int> js, int (*sample)(vector<int>&, vector<int>&, ZpxNumMat&), double eps, int npk, 
+	    vector<int>& cidx, vector<int>& ridx, ZpxNumMat& mid)
+{
+  int dim = int(ms.size());
+  assert( dim == int(ns.size()) && dim == int(js.size()) );
+  int m=1, n=1;
+  for (int k=0; k<dim; k++) { m*=ms[k]; n*=ns[k]; }
+  iA(m>0 && n>0);
+  {
+    int nc = min(npk,n);
+    vector<int> cs(nc);
+    for(int k=0; k<nc; k++)      cs[k] = int( floor(drand48()*(n-nc)) );
+    sort(cs.begin(), cs.end());
+    for(int k=0; k<nc; k++)      cs[k] += k;
+    //
+    //vector<int> rs(m);
+    //for(int k=0; k<m; k++)      rs[k] = k;
+    //
+    vector<int> rs(m);
+    int mm=0;
+    if(dim==3) { // three-d case 
+      for    (int iy=0; iy<ms[2]; iy++) {
+        for  (int ix=0; ix<ms[1]; ix++) {
+          for(int iz=0; iz<ms[0]; iz++) {
+            if(iy%js[2]==0 && ix%js[1]==0 && iz%js[0]==0) {
+              rs[mm] = (iy*ms[1]+ix)*ms[0]+iz;
+              mm++;
+            }
+          }
+        }
+      }
+    } else { // lower-d case not implemented
+      assert(dim!=3);
+    }
+    rs.resize(mm);
+    //
+    ZpxNumMat M2tmp;    iC( (*sample)(rs, cs, M2tmp) );
+    ZpxNumMat M2(M2tmp.n(), M2tmp.m());
+    for(int i=0; i<M2tmp.m(); i++)      for(int j=0; j<M2tmp.n(); j++)	M2(j,i) = conj(M2tmp(i,j));
+    //
+    int m = M2.m();
+    int n = M2.n();
+    int lda = m;
+    NumVec<int> jpvt(n);    setvalue(jpvt, int(0));
+    ZpxNumVec tau(max(m,n));
+    ZpxNumVec work(3*n);
+    DblNumVec rwork(6*n);
+    int lwork = 6*n;
+    int info;
+    zgeqp3_(&m, &n, 
+	    (MKL_Complex16*) M2.data(), &lda, jpvt.data(), 
+	    (MKL_Complex16*) tau.data(), 
+	    (MKL_Complex16*) work.data(), &lwork, rwork.data(), &info);    
+    iA(info==0);
+    double cutoff = eps*abs(M2(0,0));
+    int cnt=0;
+    for(int k=0; k<min(m,n); k++)      if(abs(M2(k,k))>cutoff)	cnt++;
+    ridx.resize(cnt);
+    //for(int k=0; k<cnt; k++)      ridx[k] = (jpvt(k)-1);
+    for(int k=0; k<cnt; k++)      ridx[k] = rs[jpvt(k)-1];
+    cerr<<"ROWS "; for(int k=0; k<cnt; k++)      cerr<<ridx[k]<<" ";    cerr<<endl;
+  }
+  {
+    int nr = min(npk,m);
+    vector<int> rs(nr);
+    for(int k=0; k<nr; k++)      rs[k] = int( floor(drand48()*(m-nr)) );
+    sort(rs.begin(), rs.end());
+    for(int k=0; k<nr; k++)      rs[k] += k;
+    //
+    for(unsigned int k=0; k<ridx.size(); k++)      rs.push_back(ridx[k]);
+    sort(rs.begin(), rs.end());
+    vector<int>::iterator newend = unique(rs.begin(), rs.end());
+    rs.resize(newend-rs.begin());
+    //
+    //vector<int> cs(n);
+    //for(int k=0; k<n; k++)      cs[k] = k;
+    //
+    vector<int> cs(n);
+    int nn=0;
+    if(dim==3) { // three-d case 
+      for    (int iy=0; iy<ns[2]; iy++) {
+        for  (int ix=0; ix<ns[1]; ix++) {
+          for(int iz=0; iz<ns[0]; iz++) {
+            if(iy%js[2]==0 && ix%js[1]==0 && iz%js[0]==0) {
+              cs[nn] = (iy*ns[1]+ix)*ns[0]+iz;
+              nn++;
+            }
+          }
+        }
+      }
+    } else { // lower-d case not implemented
+      assert(dim!=3);
+    }
+    cs.resize(nn);
+    //
+    ZpxNumMat M1;    iC( (*sample)(rs, cs, M1) );
+    //
+    int m = M1.m();
+    int n = M1.n();
+    int lda = m;
+    NumVec<int> jpvt(n);      setvalue(jpvt, int(0));
+    ZpxNumVec tau(max(m,n));
+    ZpxNumVec work(3*n);
+    int lwork = 6*n;
+    DblNumVec rwork(6*n);
+    int info;
+    zgeqp3_(&m, &n, 
+	    (MKL_Complex16*) M1.data(), &lda, jpvt.data(), 
+	    (MKL_Complex16*) tau.data(), 
+	    (MKL_Complex16*) work.data(), &lwork, rwork.data(), &info);    
+    iA(info==0);
+    double cutoff = eps*abs(M1(0,0)); //the diagonal element
+    int cnt=0;
+    for(int k=0; k<min(m,n); k++)	if(abs(M1(k,k))>cutoff)	  cnt++;
+    cidx.resize(cnt);
+    //for(int k=0; k<cnt; k++)	cidx[k] = (jpvt(k)-1);
+    for(int k=0; k<cnt; k++)	cidx[k] = cs[jpvt(k)-1];
+    cerr<<"COLS "; for(int k=0; k<cnt; k++)      cerr<<cidx[k]<<" ";    cerr<<endl;
+  }
+  {
+    int nc = min(npk,n);
+    vector<int> cs(nc);
+    for(int k=0; k<nc; k++)      cs[k] = int( floor(drand48()*(n-nc)) );
+    sort(cs.begin(), cs.end());
+    for(int k=0; k<nc; k++)      cs[k] += k;
+    for(unsigned int k=0; k<cidx.size(); k++)      cs.push_back(cidx[k]);
+    sort(cs.begin(), cs.end());
+    vector<int>::iterator csnewend = unique(cs.begin(), cs.end());
+    cs.resize(csnewend-cs.begin());
+    //
+    int nr = min(npk,m);
+    vector<int> rs(nr);
+    for(int k=0; k<nr; k++)      rs[k] = int( floor(drand48()*(m-nr)) );
+    sort(rs.begin(), rs.end());
+    for(int k=0; k<nr; k++)      rs[k] += k;
+    for(unsigned int k=0; k<ridx.size(); k++)      rs.push_back(ridx[k]);
+    sort(rs.begin(), rs.end());
+    vector<int>::iterator rsnewend = unique(rs.begin(), rs.end());
+    rs.resize(rsnewend-rs.begin());
+    //
+    ZpxNumMat M1;    iC( (*sample)(rs,cidx,M1) );
+    ZpxNumMat IM1;    iC( ddpinv(M1, 1e-16, IM1) );
+    ZpxNumMat M2;    iC( (*sample)(ridx,cs,M2) );
+    ZpxNumMat IM2;    iC( ddpinv(M2, 1e-16, IM2) );
+    ZpxNumMat M3;    iC( (*sample)(rs,cs,M3) );
+    ZpxNumMat tmp(M3.m(), IM2.n());
+    iC( zzgemm(1.0, M3, IM2, 0.0, tmp) );
+    mid.resize(IM1.m(), tmp.n());
+    iC( zzgemm(1.0, IM1, tmp, 0.0, mid) );
+  }
+  if(1) {
+    int nc = min(npk,n);
+    vector<int> cs(nc);
+    for(int k=0; k<nc; k++)      cs[k] = int( floor(drand48()*n) );
+    int nr = min(npk,m);
+    vector<int> rs(nr);
+    for(int k=0; k<nr; k++)      rs[k] = int( floor(drand48()*m) );
+    ZpxNumMat M1;
+    iC( (*sample)(rs,cidx,M1) );
+    ZpxNumMat M2;
+    iC( (*sample)(ridx,cs,M2) );
+    ZpxNumMat Mext;
+    iC( (*sample)(rs,cs,Mext) );
+    ZpxNumMat Mapp(rs.size(), cs.size());
+    ZpxNumMat tmp(mid.m(),M2.n());
+    iC( zzgemm(1.0, mid, M2, 0.0, tmp) );
+    iC( zzgemm(1.0, M1, tmp, 0.0, Mapp) );
+    ZpxNumMat Merr(Mext.m(), Mext.n());
+    for(int a=0; a<Mext.m(); a++)
+      for(int b=0; b<Mext.n(); b++)
+	Merr(a,b) = Mext(a,b) - Mapp(a,b);
+    cerr<<"lowrank rel err "<<sqrt(energy(Merr))/sqrt(energy(Mext))<<endl;
+  }
+  return 0;
+}
 
 
 

@@ -36,9 +36,14 @@
 
 int psrtm(sf_complex*** record, sf_complex** imgsum, geopar geop);
 int psrtm_mov(sf_complex*** record, sf_complex** imgsum, geopar geop, sf_file Ftmpwf, sf_file Ftmpwfb, int shtid);
-int psqrtm_sbs(sf_complex*** record, sf_complex** imgsum, geopar geop, float perc, float eps);
-int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool freq_scal, float perc, float eps, sf_file Ftmpwf, sf_file Ftmpwfb, int shtid);
+int psqrtm_sbs(sf_complex*** record, sf_complex** imgsum, geopar geop, bool sdiv);
+int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool freq_scal, sf_file Ftmpwf, sf_file Ftmpwfb, int shtid);
 int psqrtm_dec(sf_complex*** record, sf_complex** imgsum, geopar geop);
+
+/* for stable division */
+static float eps, perc;
+static int dims[2], rect[2], niter;
+static float reg;
 
 /*******************************************************/
 /* main function */
@@ -81,15 +86,13 @@ int main(int argc, char* argv[])
     int stable;
     bool sdiv; /*smooth division by least squares*/
     int shtid; /*output wavefield corresponding shot id*/
-    float eps, perc, vmax, veps; /* for stable division */
+    float vmax, veps; /* for stable division */
 
     /*Data/Image*/
     sf_complex ***record, **imgsum;
     sf_complex *img_visc, *img_disp;
     float *ratio;
     float *img_visc_f, *img_disp_f;
-    int dims[2], rect[2], niter;
-    float reg;
 
     /*tmp*/
     int tmpint;
@@ -133,16 +136,20 @@ int main(int argc, char* argv[])
 	else if (stable==4) sf_warning("deconvolution imaging condition, illum parameter is disabled!");
 	else sf_error("Please specify a correct stable parameter (0,1,2,3)!");
       }
-      if (stable==1 || stable==2 || stable==3) {
-        if (stable==1) {
-	  if (!sf_getbool("sdiv", &sdiv)) sdiv=false; /*smooth division*/
+      if (stable==1 || stable==2) {
+          if (!sf_getbool("sdiv", &sdiv)) sdiv=false; /*smooth division*/
           if (sdiv) {
-	    if (!sf_getfloat("reg", &reg)) reg=0.0f; /*regularization*/
-            if (!sf_getint("rect1",rect)) rect[0]=2;
-            if (!sf_getint("rect2",rect+1)) rect[1]=2;
-            if (!sf_getint("niter",&niter)) niter=100; /*smooth division maximum iterations*/
+              if (!sf_getfloat("reg", &reg)) reg=0.0f; /*regularization*/
+              if (!sf_getint("rect1",rect)) rect[0]=2;
+              if (!sf_getint("rect2",rect+1)) rect[1]=2;
+              if (!sf_getint("niter",&niter)) niter=100; /*smooth division maximum iterations*/
+          } else {
+              if (!sf_getfloat("eps", &eps)) eps=SF_EPS; /*padding*/
+              if (!sf_getfloat("perc", &perc)) perc=0.1; /*percentage of maximum for padding*/
+              perc /= 100;
           }
-        }
+      }
+      if (stable==3) {
         if (!sf_getbool("freq_scal", &freq_scal)) freq_scal=false; /*frequency amplitude spectrum scaling*/
         if (!sf_getfloat("eps", &eps)) eps=SF_EPS; /*padding*/
         if (!sf_getfloat("perc", &perc)) perc=0.1; /*percentage of maximum for padding*/
@@ -491,12 +498,12 @@ int main(int argc, char* argv[])
 	
       case 2: 
 	/*shot-by-shot q-rtm with normalization*/
-	psqrtm_sbs(record, imgsum, geop, perc, eps);
+	psqrtm_sbs(record, imgsum, geop, sdiv);
 	break;
 
       case 3:
 	/*snapshot-by-snapshot compensation*/
-	psqrtm_com(record, imgsum, geop, freq_scal, perc, eps, Ftmpwf, Ftmpwfb, shtid);
+	psqrtm_com(record, imgsum, geop, freq_scal, Ftmpwf, Ftmpwfb, shtid);
 	break;
 
       case 4:
@@ -739,7 +746,7 @@ int psrtm(sf_complex*** record, sf_complex** imgsum, geopar geop)
     return 0;
 }
 
-int psqrtm_sbs(sf_complex*** record, sf_complex** imgsum, geopar geop, float perc, float eps)
+int psqrtm_sbs(sf_complex*** record, sf_complex** imgsum, geopar geop, bool sdiv)
 /*< low-rank one-step pre-stack RTM linear operator >*/
 {
     /*geopar variables*/
@@ -772,6 +779,7 @@ int psqrtm_sbs(sf_complex*** record, sf_complex** imgsum, geopar geop, float per
     /*normolization*/
     sf_complex *img_visc, *img_disp;
     float *ratio;
+    float *img_visc_f, *img_disp_f;
 
     /*misc*/
     int ix, iz, is;
@@ -829,6 +837,14 @@ int psqrtm_sbs(sf_complex*** record, sf_complex** imgsum, geopar geop, float per
     img_visc = sf_complexalloc(nz*nx);
     img_disp = sf_complexalloc(nz*nx);
     ratio    = sf_floatalloc(nz*nx);
+    if (sdiv) {
+        img_visc_f = sf_floatalloc(nz*nx);
+        img_disp_f = sf_floatalloc(nz*nx);
+    } else {
+        img_visc_f = NULL;
+        img_disp_f = NULL;
+    }
+
 #ifdef _OPENMP
 #pragma omp parallel for private(ix,iz)
 #endif
@@ -908,10 +924,24 @@ int psqrtm_sbs(sf_complex*** record, sf_complex** imgsum, geopar geop, float per
         }
 
         /* stable division */
-        vmax = find_cmax(nz*nx, img_visc);
-        veps = (vmax==0) ? eps : vmax*vmax*perc;
-        if (verb) sf_warning("Space domain: vmax=%f, veps=%f",vmax,veps);
-        stable_cdiv_f(nz*nx, veps, img_disp, img_visc, ratio);
+        if (sdiv) {
+          /*smooth division*/
+#ifdef _OPENMP
+#pragma omp parallel for private(iz)
+#endif
+          for (iz=0; iz<nz*nx; iz++) {
+            img_visc_f[iz] = cabsf(img_visc[iz]);
+            img_disp_f[iz] = cabsf(img_disp[iz]);
+          }
+          dims[0] = nz; dims[1] = nx;
+          sf_divn_init(2, nx*nz, dims, rect, niter, verb);
+          sf_divne (img_disp_f, img_visc_f, ratio, reg);
+        } else {
+          vmax = find_cmax(nz*nx, img_visc);
+          veps = (vmax==0) ? eps : vmax*vmax*perc;
+          if (verb) sf_warning("Space domain: vmax=%f, veps=%f",vmax,veps);
+          stable_cdiv_f(nz*nx, veps, img_disp, img_visc, ratio);
+        }
 
 	/*apply stable imaging condition*/
 #ifdef _OPENMP
@@ -971,7 +1001,7 @@ int psqrtm_sbs(sf_complex*** record, sf_complex** imgsum, geopar geop, float per
     return 0;
 }
 
-int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool freq_scal, float perc, float eps, sf_file Ftmpwf, sf_file Ftmpwfb, int shtid)
+int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool freq_scal, sf_file Ftmpwf, sf_file Ftmpwfb, int shtid)
 /*< low-rank one-step pre-stack RTM linear operator >*/
 {
     /*geopar variables*/
