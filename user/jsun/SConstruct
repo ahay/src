@@ -89,18 +89,18 @@ if lapack:
     env.Prepend(LIBS=libsxx)
 
 #ccsubs = 'lowrank.cc fftomp.c rtmutil.c ksutil.c revolve.c'
-#ccmains = Split(ccprogs)
-#for prog in ccmains:
-#    sources = ['M' + prog + '.cc']
-#    if prog == 'cfftrtm3':
-#        sources += Split(ccsubs)
-#    if lapack:
-#        prog = env.Program(prog,sources)
-#    else:
-#        prog = env.RSF_Place('sf'+prog,None,var='LAPACK',package='lapack')
-#    if root:
-#        env.Install(bindir,prog)
-#
+ccmains = Split(ccprogs)
+for prog in ccmains:
+    sources = ['M' + prog + '.cc']
+#   if prog == 'cfftrtm3':
+#       sources += Split(ccsubs)
+    if lapack:
+        prog = env.Program(prog,sources)
+    else:
+        prog = env.RSF_Place('sf'+prog,None,var='LAPACK',package='lapack')
+    if root:
+        env.Install(bindir,prog)
+
 
 ##################################################################################################################
 # To use sfmpicfftrtm, one needs to obtain the source file revolve.c from http://dl.acm.org/citation.cfm?id=347846
