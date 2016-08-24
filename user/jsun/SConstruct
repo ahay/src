@@ -150,7 +150,7 @@ if root:
     
     docs = map(lambda prog: env.Doc(prog,'M' + prog),mains+mpi_mains) +  \
            map(lambda prog: env.Doc(prog,'M'+prog+'.py',lang='python'),pymains) + \
-           map(lambda prog: env.Doc(prog,'M%s.cc' % prog,lang='c++'),mpicxx_mains) 
+           map(lambda prog: env.Doc(prog,'M%s.cc' % prog,lang='c++'),ccmains+mpicxx_mains) 
           
     env.Depends(docs,'#/framework/rsf/doc.py')	
     doc = env.RSF_Docmerge(main,docs)
