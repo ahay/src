@@ -15,7 +15,7 @@ int main (void)
     init_genrand((unsigned long) seed);
 
     for (i=0; i < N; i++) {
-	x = cosf((2*i+1)*SF_PI/(2*N));
+	x = cosf(i*SF_PI/(N-1));
 	x = 0.5*x+1.5;
 
 	d[i] = (x*x*x-x*x+1.0);
