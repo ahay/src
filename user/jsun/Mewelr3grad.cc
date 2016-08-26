@@ -851,12 +851,12 @@ static int sample(vector<int>& rs, vector<int>& cs, ZpxNumMat& res)
                 */
 
                 // LAPACK's eigen-decom (complex version)
-                zgeev_(&JOBVL, &JOBVR, &M, Chr2, &LDA, ww2, vl, &LDVL, vr, &LDVR, work2, &LWORK, rwork, &INFO);
+                zgeev_(&JOBVL, &JOBVR, &M, (MKL_Complex16*) Chr2, &LDA, (MKL_Complex16*) ww2,  (MKL_Complex16*) vl, &LDVL,  (MKL_Complex16*) vr, &LDVR,  (MKL_Complex16*) work2, &LWORK, rwork, &INFO);
 
                 zpx ivr[9];
                 for (int id=0; id<9; id++) ivr[id]=vr[id];
-                zgetrf_(&M, &M, ivr, &LDA, ipiv, &INFO);
-                zgetri_(&M, ivr, &LDA, ipiv, work2, &LWORK, &INFO);
+                zgetrf_(&M, &M,  (MKL_Complex16*) ivr, &LDA, ipiv, &INFO);
+                zgetri_(&M,  (MKL_Complex16*) ivr, &LDA, ipiv,  (MKL_Complex16*) work2, &LWORK, &INFO);
 
                 /* slow S wave */
                 v1t = sqrt(ww2[0])*zpx(dt,0); // v_{s2}*k*dt
