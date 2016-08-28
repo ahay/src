@@ -101,4 +101,4 @@ void aderfilter (float p  /* slope */,
     }
 }
 
-/* 	$Id: apfilt.c 10160 2013-04-10 20:11:15Z sfomel $	 */
+/* 	$Id$	 */
