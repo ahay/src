@@ -33,11 +33,11 @@ signal.signal(signal.SIGINT,handler) # handle interrupt
 
 cpu = rsf.node.cpus()
 
-cluster = os.environ.get('RSF_CLUSTER','none')
-if cluster == 'none':
-    if os.environ.get('SLURM_NODELIST','none') != "none":
+cluster = os.environ.get('RSF_CLUSTER')
+if not cluster:
+    if os.environ.get('SLURM_NODELIST'):
         cluster=os.popen("slurm_nodelist2rsf_cluster").read()
-if cluster == 'none':
+if not cluster:
     cluster='localhost %d' % cpu
 
 # We need one pscons thread for each remote task.  The number of

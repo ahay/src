@@ -520,7 +520,7 @@ class Project(Environment):
         # May need to do it remotely
         if remote:
             command = re.sub('"','\\"',command)
-            command = string.join(['$( ssh',node,'$ \"cd ',self.cwd,';',command,'\"'])
+            command = string.join(['$( ssh',node,'$) \"cd ',self.cwd,';',command,'\"'])
         
         targets = []
         for file in tfiles:
