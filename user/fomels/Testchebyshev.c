@@ -14,6 +14,8 @@ int main (void)
     seed = time(NULL);
     init_genrand((unsigned long) seed);
 
+    chebyshev_init(N,x1,x2);
+
     for (i=0; i < N; i++) {
 	x = cosf(i*SF_PI/(N-1));
 	x = 0.5*x+1.5;
@@ -21,12 +23,16 @@ int main (void)
 	d[i] = (x*x*x-x*x+1.0);
     }
 
-    chebyshev_init(N,d,x1,x2);
+    chebyshev_set(d);
 
     x = 1.0+genrand_real1();
     y = (x*x*x-x*x+1.0);
 
     printf("Compare %g and %g\n",y,chebyshev(x));
+
+    chebyshev_close();
+
+    return 0;
 }
 
     
