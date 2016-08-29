@@ -18,9 +18,9 @@
 */
 
 #include <rsf.h>
-#include <mpi.h>
+#include <rsfpwd.h>
 
-#include "predict.h"
+#include <mpi.h>
 
 int main (int argc, char *argv[])
 {
