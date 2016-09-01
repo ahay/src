@@ -4,7 +4,7 @@ int main(int argc, char* argv[])
 {
     int it, nt, ix, nx, ia, na;
     float *trace, *ofunc;
-    float a, a0, da, t, t0, dt, s;
+    float alpha, a0, da, t, t0, dt, s;
     sf_file in, out;
 
     /* initialization */
@@ -49,14 +49,14 @@ int main(int argc, char* argv[])
 
 	/* loop over alpha */
 	for (ia=0; ia < na; ia++) {
-	    a = a0+ia*da;
+	    alpha = a0+ia*da;
 
 	    /* loop over time samples */
 	    for (it=0; it < nt; it++) {
 		t = t0+it*dt;
 
 		/* apply gain t^alpha */
-		s = trace[it]*powf(t,a);
+		s = trace[it]*powf(t,alpha);
 		
                 /* !!! MODIFY THE NEXT LINE !!! */
 		ofunc[ia] += s*s; 

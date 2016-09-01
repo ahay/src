@@ -11,7 +11,7 @@ int main(void)
 	eps /= 2;
 	one = 1.0+eps;
 
-	/* !!! ADD SOMETHING HERE !!! */
+	/* !!! INSERT SOMETHING HERE !!! */
     }
 
     assert(DBL_EPSILON==eps);

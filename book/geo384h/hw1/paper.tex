@@ -29,7 +29,7 @@ to start.
 The homework code is available from the \texttt{Madagascar} repository
 by running
 \begin{verbatim}
-svn co http://svn.code.sf.net/p/rsf/code/trunk/book/geo391/hw1 
+svn co https://github.com/ahay/src/trunk/book/geo384h/hw1 
 \end{verbatim}
 
 \newpage
@@ -42,10 +42,10 @@ mathematical derivations that you perform.
 
 \begin{enumerate}
 
-\item UT's ``burnt orange'' color is expressed by code
-  \texttt{\#CC5500}, where each pair of symbols (\texttt{CC},
-  \texttt{55}, and \texttt{00}) refers to a hexadecimal (base 16)
-  representation of the red, green, and blue components. Convert these
+\item UT's official ``burnt orange'' color is expressed by code
+  \texttt{\#BF5700}, where each pair of symbols (\texttt{BF},
+  \texttt{57}, and \texttt{00}) refers to a hexadecimal (base 16)
+  representation of the RGB (red, green, and blue) components. Convert these
   numbers to an octal (base 8) and a decimal (base 10) representations.
 
 \item The C program listed below, when compiled and
@@ -125,7 +125,7 @@ image can have a low contrast. One way of improving the contrast is
 \emph{histogram equalization}.
 
 \sideplot{hist}{width=\textwidth}{Normalized histogram (solid line)
-  and cumulative histogram (dashed line) of the digital elevation
+  and cumulative histogram (dash line) of the digital elevation
   data.}
 
 Let $f(x,y)$ be the original image. The equalized image will be
@@ -143,7 +143,7 @@ to be uniform,
 \frac{d F}{d f} = C\,h(f)\,
 \end{equation}
 where C is a constant. 
-Solving equation~\ref{eq:dif}, we obtain the mapping
+Solving equation~\ref{eq:dif}, we obtain the following mapping:
 \begin{equation}
 \label{eq:int}
 F(f) = f_0 + C\,\int\limits_{f_0}^f h(\phi)\,d\phi\;,
@@ -155,7 +155,7 @@ three steps:
 \begin{enumerate}
 \item Taking an input image $f(x,y)$, compute its histogram $h(f)$.
 \item Compute the cumulative histogram $F(f)$ according to 
-equation~(\ref{eq:int}). Choose an appropriate $C$ so that the range
+equation~(\ref{eq:int}). Choose an appropriate normalization $C$ so that the range
 of $F$ is the same as the range of $f$.
 \item Map every pixel $f(x,y)$ to the corresponding $F(x,y)$.
 \end{enumerate}
@@ -172,9 +172,9 @@ in Figure~\ref{fig:hist} with equalized data. Run
 \begin{verbatim}
 scons hist.view
 \end{verbatim}
-to display the figure on your screen.`
+to display the figure on your screen.
 \item \textbf{EXTRA CREDIT} for implementing the histogram
-equalization algorithm in a different computer language.
+equalization algorithm in a different programming language.
 \end{enumerate}	
 
 \newpage
@@ -198,7 +198,7 @@ S_\alpha(x,t) = t^{\alpha}\,S(x,t)\;.
 \end{equation}
 The advantage of the time-power gain is its simplicity and the ability
 to reverse it by multiplying the data by $t^{-\alpha}$. What value of
-$\alpha$ should one use? \cite{iei} argues in favor of $\alpha=2$:
+$\alpha$ should we use? \cite{iei} argues in favor of $\alpha=2$:
 one factor of $t$ comes from geometrical spreading and the other from
 scattering attenuation. Your task is to develop an algorithm for finding
 a better value of $\alpha$ for a given dataset.
