@@ -32,4 +32,25 @@ Result('vel',
        title="Velocity Model" 
        ''')
 
+# Wavelet
+Flow('wav',None,
+     '''
+     spike n1=2200 d1=0.001 k1=200 | 
+     ricker1 frequency=20 
+     ''')
+
+# Density
+Flow('den','vel','math output=1')
+
+# Finite-difference modeling
+Flow('hseis seis','wav syncline sou rec den',
+     '''
+     transp | 
+     awefd2d verb=y free=n snap=y dabc=y jdata=2 jsnap=10 
+     vel=${SOURCES[1]} sou=${SOURCES[2]} rec=${SOURCES[3]} den=${SOURCES[4]} 
+     wfl=${TARGETS[1]} |
+     window f2=100 | put o2=0 | transp |
+     put label1=Time label2=Distance unit1=s unit2=m
+     ''')
+
 End()
