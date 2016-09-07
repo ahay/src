@@ -1,4 +1,4 @@
-/* Acoustic/Visco-acoustic forward modeling */
+/* Forward modeling */
 /*
  Copyright (C) 2016 The University of Texas at Austin
  
@@ -19,14 +19,14 @@
 
 #include <rsf.h>
 #include <mpi.h>
-#include "qfwi_commons.h"
+#include "fwi_commons.h"
 /*^*/
 
-void forward_modeling_a(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpar, sf_vec array, bool verb)
+void forward_modeling(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpar, sf_vec_s array, bool verb)
 /*< acoustic forward modeling >*/
 {
 	int ix, iz, is, ir, it;
-	int sx, rx, sz, rz, rectx, rectz;
+	int sx, rx, sz, rz, frectx, frectz;
 	int nz, nx, padnz, padnx, padnzx, nt, nr, nb;
 
 	float dx2, dz2, dt2, dt;
@@ -49,8 +49,8 @@ void forward_modeling_a(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui ac
 	nb=acpar->nb;
 	sz=acpar->sz;
 	rz=acpar->rz;
-	rectx=soupar->rectx;
-	rectz=soupar->rectz;
+	frectx=soupar->frectx;
+	frectz=soupar->frectz;
 
 	dx2=acpar->dx*acpar->dx;
 	dz2=acpar->dz*acpar->dz;
@@ -78,7 +78,7 @@ void forward_modeling_a(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui ac
 		memset(p2[0], 0., padnzx*sizeof(float));
 		
 		sx=acpar->s0_v+is*acpar->ds_v;
-		source_map(sx, sz, rectx, rectz, padnx, padnz, padnzx, rr);
+		source_map(sx, sz, frectx, frectz, padnx, padnz, padnzx, rr);
 
 		for(it=0; it<nt; it++){
 			if(verb) sf_warning("Modeling is=%d; it=%d;", is+1, it);
@@ -140,11 +140,11 @@ void forward_modeling_a(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui ac
 	free(rr); free(*term); free(term);
 }
 
-void forward_modeling(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpar, sf_vec array, bool verb)
+void forward_modeling_q(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpar, sf_vec_q array, bool verb)
 /*< visco-acoustic forward modeling >*/
 {
 	int ix, iz, is, ir, it;
-	int sx, rx, sz, rz, rectx, rectz;
+	int sx, rx, sz, rz, frectx, frectz;
 	int nz, nx, padnz, padnx, padnzx, nt, nr, nb;
 
 	float dx2, dz2, dt2, idt;
@@ -167,8 +167,8 @@ void forward_modeling(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpa
 	nb=acpar->nb;
 	sz=acpar->sz;
 	rz=acpar->rz;
-	rectx=soupar->rectx;
-	rectz=soupar->rectz;
+	frectx=soupar->frectx;
+	frectz=soupar->frectz;
 
 	dx2=acpar->dx*acpar->dx;
 	dz2=acpar->dz*acpar->dz;
@@ -204,7 +204,7 @@ void forward_modeling(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpa
 		memset(r2[0], 0., padnzx*sizeof(float));
 		
 		sx=acpar->s0_v+is*acpar->ds_v;
-		source_map(sx, sz, rectx, rectz, padnx, padnz, padnzx, rr);
+		source_map(sx, sz, frectx, frectz, padnx, padnz, padnzx, rr);
 
 		for(it=0; it<nt; it++){
 			if(verb) sf_warning("Modeling is=%d; it=%d;", is+1, it);

@@ -1,4 +1,4 @@
-/* Acoustic/Visco-acoustic RTM */
+/* Acoustic RTM */
 /*
  Copyright (C) 2016 The University of Texas at Austin
  
@@ -19,17 +19,17 @@
 
 #include <rsf.h>
 #include <mpi.h>
-#include "qfwi_commons.h"
+#include "fwi_commons.h"
 #ifdef _OPENMP
 #include <omp.h>
 #endif
 /*^*/
 
-void rtm_a(sf_file Fdat, sf_file Fimg, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpar, sf_vec array, bool verb)
+void rtm(sf_file Fdat, sf_file Fimg, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpar, sf_vec_s array, bool verb)
 /*< acoustic rtm >*/
 {
 	int ix, iz, is, ir, it, wit;
-	int sx, rx, sz, rz, rectx, rectz;
+	int sx, rx, sz, rz, frectx, frectz;
 	int nz, nx, nzx, padnz, padnx, padnzx, nt, nr, nb, wnt;
 
 	float dx2, dz2, dt2, dt;
@@ -53,8 +53,8 @@ void rtm_a(sf_file Fdat, sf_file Fimg, sf_mpi *mpipar, sf_sou soupar, sf_acqui a
 	nb=acpar->nb;
 	sz=acpar->sz;
 	rz=acpar->rz;
-	rectx=soupar->rectx;
-	rectz=soupar->rectz;
+	frectx=soupar->frectx;
+	frectz=soupar->frectz;
 
 	nt=acpar->nt;
 	wnt=(nt-1)/acpar->interval+1;
@@ -96,7 +96,7 @@ void rtm_a(sf_file Fdat, sf_file Fimg, sf_mpi *mpipar, sf_sou soupar, sf_acqui a
 		memset(p2[0], 0., padnzx*sizeof(float));
 		
 		sx=acpar->s0_v+is*acpar->ds_v;
-		source_map(sx, sz, rectx, rectz, padnx, padnz, padnzx, rr);
+		source_map(sx, sz, frectx, frectz, padnx, padnz, padnzx, rr);
 
 		wit=0;
 		/* forward propagation */
@@ -231,13 +231,20 @@ void rtm_a(sf_file Fdat, sf_file Fimg, sf_mpi *mpipar, sf_sou soupar, sf_acqui a
 
 	if(mpipar->cpuid==0) sf_floatwrite(mm[0], nzx, Fimg);
 	MPI_Barrier(comm);
+
+	/* release allocated memory */
+	free(*p0); free(p0); free(*p1); free(p1);
+	free(*p2); free(p2); free(*vv); free(vv);
+	free(*dd); free(dd); free(*mm); free(mm);
+	free(rr); free(*term); free(term);
+	free(**wave); free(*wave); free(wave);
 }
 
-void rtm(sf_file Fdat, sf_file Fimg, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpar, sf_vec array, bool verb)
+void rtm_q(sf_file Fdat, sf_file Fimg, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpar, sf_vec_q array, bool verb)
 /*< visco-acoustic rtm >*/
 {
 	int ix, iz, is, ir, it, wit;
-	int sx, rx, sz, rz, rectx, rectz;
+	int sx, rx, sz, rz, frectx, frectz;
 	int nz, nx, nzx, padnz, padnx, padnzx, nt, nr, nb, wnt;
 
 	float dx2, dz2, dt2, dt;
@@ -257,8 +264,8 @@ void rtm(sf_file Fdat, sf_file Fimg, sf_mpi *mpipar, sf_sou soupar, sf_acqui acp
 	nb=acpar->nb;
 	sz=acpar->sz;
 	rz=acpar->rz;
-	rectx=soupar->rectx;
-	rectz=soupar->rectz;
+	frectx=soupar->frectx;
+	frectz=soupar->frectz;
 
 	nt=acpar->nt;
 	wnt=(nt-1)/acpar->interval+1;
@@ -299,9 +306,10 @@ void rtm(sf_file Fdat, sf_file Fimg, sf_mpi *mpipar, sf_sou soupar, sf_acqui acp
 		memset(p2[0], 0., padnzx*sizeof(float));
 		memset(r1[0], 0., padnzx*sizeof(float));
 		memset(r2[0], 0., padnzx*sizeof(float));
+		memset(term[0], 0., padnzx*sizeof(float));
 		
 		sx=acpar->s0_v+is*acpar->ds_v;
-		source_map(sx, sz, rectx, rectz, padnx, padnz, padnzx, rr);
+		source_map(sx, sz, frectx, frectz, padnx, padnz, padnzx, rr);
 
 		wit=0;
 		/* forward propagation */
@@ -327,8 +335,8 @@ void rtm(sf_file Fdat, sf_file Fimg, sf_mpi *mpipar, sf_sou soupar, sf_acqui acp
 			laplace(p1, term, padnx, padnz, dx2, dz2);
 			
 			/* update */
-			for(ix=0; ix<padnx; ix++){
-				for(iz=0; iz<padnz; iz++){
+			for(ix=4; ix<padnx-4; ix++){
+				for(iz=4; iz<padnz-4; iz++){
 					r2[ix][iz]=
 						(-tau[ix][iz]/taus[ix][iz]*term[ix][iz]
 						 + (1./dt-0.5/taus[ix][iz])*r1[ix][iz])
@@ -359,6 +367,7 @@ void rtm(sf_file Fdat, sf_file Fimg, sf_mpi *mpipar, sf_sou soupar, sf_acqui acp
 		memset(p2[0], 0., padnzx*sizeof(float));
 		memset(r1[0], 0., padnzx*sizeof(float));
 		memset(r2[0], 0., padnzx*sizeof(float));
+		memset(term[0], 0., padnzx*sizeof(float));
 		
 		/* backward propagation */
 		for(it=nt-1; it>=0; it--){
@@ -374,8 +383,8 @@ void rtm(sf_file Fdat, sf_file Fimg, sf_mpi *mpipar, sf_sou soupar, sf_acqui acp
 			laplace(p1, term, padnx, padnz, dx2, dz2);
 			
 			/* update */
-			for(ix=0; ix<padnx; ix++){
-				for(iz=0; iz<padnz; iz++){
+			for(ix=4; ix<padnx-4; ix++){
+				for(iz=4; iz<padnz-4; iz++){
 					r2[ix][iz]=
 						(-tau[ix][iz]/taus[ix][iz]*term[ix][iz]
 						 + (1./dt-0.5/taus[ix][iz])*r1[ix][iz])
