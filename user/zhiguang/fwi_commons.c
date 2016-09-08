@@ -18,6 +18,7 @@
 */
 
 #include <rsf.h>
+#include <rsfpwd.h>
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -81,7 +82,7 @@ typedef struct sf_acquisition{
 } *sf_acqui;
 /*^*/
 
-typedef struct sf_optimization {
+typedef struct sf_optimization{
 	int niter;
 	float conv_error;
 	int npair;
@@ -165,9 +166,22 @@ typedef struct sf_1darray_q{
 } *sf_vec_q;
 /*^*/
 
+typedef struct sf_seislet{
+	int order;
+	float pclip;
+	float eps;
+	char *type;
+	float *dip;
+} *sf_seis;
+/*^*/
+
 const float c0=-205./72, c1=8./5, c2=-1./5, c3=8./315, c4=-1./560;
 
-void preparation_s(sf_file Fv, sf_file Fw, sf_acqui acpar, sf_sou soupar, sf_vec_s array)
+/* seislet regularization */
+bool seislet=false; /* turn on/off seislet */
+float pclip, *pp;
+
+void preparation_s(sf_file Fv, sf_file Fw, sf_acqui acpar, sf_sou soupar, sf_vec_s array, sf_seis seispar)
 /*< read data, initialize variables and prepare acquisition geometry >*/
 {
 	int i, nb, nzx;
@@ -248,6 +262,15 @@ void preparation_s(sf_file Fv, sf_file Fw, sf_acqui acpar, sf_sou soupar, sf_vec
 		sf_butter_apply(bhi, nt, array->ww);
 		sf_reverse(nt, array->ww);
 		sf_butter_close(bhi);
+	}
+
+	/* seislet regularization */
+	if(seispar!=NULL){
+		seislet=true;
+		seislet_init(acpar->nz, acpar->nx, true, true, seispar->eps, seispar->order, seispar->type[0]);
+		seislet_set(seispar->dip);
+		pclip=seispar->pclip;
+		pp=sf_floatalloc(nzx);
 	}
 }
 
@@ -629,6 +652,34 @@ void clip(float *x, int n, float min, float max)
 	}
 }
 
+void soft_thresholding(float *x, int n, float pclip)
+/*< soft thresholding >*/
+{
+	int i, m;
+	float *tmp, t, d;
+
+	m=0.5+n*(1-0.01*pclip);
+	if(m<0) m=0;
+	if(m>=n) m=n-1;
+
+	tmp=sf_floatalloc(n);
+	for(i=0; i<n; i++)
+		tmp[i]=fabsf(x[i]);
+
+	t=sf_quantile(m, n, tmp);
+
+	for (i=0; i<n; i++){
+		d=x[i];
+		if(d<-t){
+			x[i]=d+t;
+		}else if (d>t){
+			x[i]=d-t;
+		}else{
+			x[i]=0.;
+		}
+	}
+}
+
 void print_iteration(FILE *fp, int iter, sf_optim opt)
 /*< print out iteration information >*/
 {
@@ -751,6 +802,13 @@ void line_search(int n, float *x, float *grad, float *direction, sf_gradient gra
 		opt->ils += 1;
 		for(j=0; j<n; j++)
 			x[j] =xk[j] + opt->alpha*direction[j];
+
+		/* seislet regularization */
+		if(seislet){
+			seislet_lop(true, false, n, n, pp, x);
+			soft_thresholding(pp, n, pclip);
+			seislet_lop(false, false, n, n, pp, x);
+		}
 
 		/* model constraints */
 		if(type==1){

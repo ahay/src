@@ -34,10 +34,11 @@ int main(int argc, char* argv[])
 	sf_vec_s array;
 	sf_fwi_s fwipar;
 	sf_optim optpar=NULL;
+	sf_seis seispar=NULL;
 
 	MPI_Comm comm=MPI_COMM_WORLD;
 
-	sf_file Fv, Fw, Fdat, Fimg, Finv=NULL, Ferr=NULL, Fgrad;
+	sf_file Fv, Fw, Fdat, Fimg, Finv=NULL, Ferr=NULL, Fgrad, Fdip=NULL;
 
 	MPI_Init(&argc, &argv);
 	MPI_Comm_rank(comm, &mpipar.cpuid);
@@ -90,8 +91,20 @@ int main(int argc, char* argv[])
 	if(!sf_getint("frectx", &soupar->frectx)) soupar->frectx=2; /* source smoothing in x */
 	if(!sf_getint("frectz", &soupar->frectz)) soupar->frectz=2; /* source smoothing in z */
 
+	if(seislet==1){ // seislet regularization
+		seispar=(sf_seis)sf_alloc(1, sizeof(*seispar));
+		Fdip=sf_input("Fdip"); /* dip file when seislet=1 */
+		if(!sf_getfloat("pclip", &seispar->pclip)) seispar->pclip=15; /* soft thresholding parameter */
+		if(!sf_getint("order", &seispar->order)) seispar->order=1; /* accuracy order of seislet transform */
+		if(NULL == (seispar->type==sf_getstring("seislet_type"))) seispar->type="linear"; /* [haar, linear, biorthogonal] */
+		if(!sf_getfloat("eps", &seispar->eps)) seispar->eps=0.1; /* seislet regularization parameter */
+		seispar->dip=sf_floatalloc(acpar->nz*acpar->nx);
+		sf_floatread(seispar->dip, acpar->nz*acpar->nx, Fdip);
+		sf_fileclose(Fdip);
+	}
+
 	/* get prepared */
-	preparation_s(Fv, Fw, acpar, soupar, array);
+	preparation_s(Fv, Fw, acpar, soupar, array, seispar);
 
 	if(function == 1){ // forward modeling
 		Fdat=sf_output("output"); /* shot data */

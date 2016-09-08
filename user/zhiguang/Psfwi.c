@@ -374,11 +374,6 @@ void gradient_standard(float *x, float *fcost, float *grad)
 	free(rr); free(*term); free(term);
 }
 
-void gradient_seislet(float *x, float *fcost, float *grad)
-/*< standard velocity gradient >*/
-{
-}
-
 void fwi(sf_file Fdat, sf_file Finv, sf_file Ferr, sf_file Fgrad, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpar, sf_vec_s array, sf_fwi_s fwipar, sf_optim optpar, bool verb1, int seislet)
 /*< fwi >*/
 {
@@ -392,8 +387,7 @@ void fwi(sf_file Fdat, sf_file Finv, sf_file Ferr, sf_file Fgrad, sf_mpi *mpipar
 	gradient_init(Fdat, mpipar, soupar, acpar, array, fwipar, verb1);
 
 	/* gradient type */
-	if(seislet==0) gradient=gradient_standard;
-	else gradient=gradient_seislet;
+	gradient=gradient_standard;
 	x=array->vv;
 
 	/* calculate first gradient */
