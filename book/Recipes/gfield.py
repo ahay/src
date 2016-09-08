@@ -69,7 +69,7 @@ def execute(rr,seed,par):
     Flow(rr,rr+'-k','window min1=%(oz)g min2=%(ox)g | scale axis=123' % par)
 
 # ------------------------------------------------------------
-def run2d(R,par,seed=1.0,aa=0.0,ra=1.0,rb=1.0,alpha=1.0):
+def run2d(R,par,seed=1.0,aa=0.0,ra=1.0,rb=1.0,alpha=2.0):
 
     # IID noise
     Flow(R+'-n',None,
@@ -118,7 +118,7 @@ def run2d(R,par,seed=1.0,aa=0.0,ra=1.0,rb=1.0,alpha=1.0):
          ''')
 
 # ------------------------------------------------------------
-def run3d(R,par,seed=1.0,aa=0.0,bb=0.0,ra=1.0,rb=1.0,rc=1.0,alpha=1.0):
+def run3d(R,par,seed=1.0,aa=0.0,bb=0.0,ra=1.0,rb=1.0,rc=1.0,alpha=2.0):
 
     # IID noise
     Flow(R+'-n',None,
