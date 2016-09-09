@@ -98,8 +98,8 @@ int main(int argc, char* argv[])
 		if(!sf_getint("order", &seispar->order)) seispar->order=1; /* accuracy order of seislet transform */
 		if(NULL == (seispar->type==sf_getstring("seislet_type"))) seispar->type="linear"; /* [haar, linear, biorthogonal] */
 		if(!sf_getfloat("eps", &seispar->eps)) seispar->eps=0.1; /* seislet regularization parameter */
-		seispar->dip=sf_floatalloc(acpar->nz*acpar->nx);
-		sf_floatread(seispar->dip, acpar->nz*acpar->nx, Fdip);
+		seispar->dip=sf_floatalloc2(acpar->nz, acpar->nx);
+		sf_floatread(seispar->dip[0], acpar->nz*acpar->nx, Fdip);
 		sf_fileclose(Fdip);
 	}
 

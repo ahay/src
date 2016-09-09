@@ -171,7 +171,7 @@ typedef struct sf_seislet{
 	float pclip;
 	float eps;
 	char *type;
-	float *dip;
+	float **dip;
 } *sf_seis;
 /*^*/
 
