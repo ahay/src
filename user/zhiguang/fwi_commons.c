@@ -35,6 +35,8 @@ typedef struct sf_source{
 	float flo;
 	int frectx;
 	int frectz;
+	int nsource;
+	int dsource;
 } *sf_sou;
 /*^*/
 
@@ -179,7 +181,10 @@ const float c0=-205./72, c1=8./5, c2=-1./5, c3=8./315, c4=-1./560;
 
 /* seislet regularization */
 bool seislet=false; /* turn on/off seislet */
-float pclip, *pp;
+float pclip, *ss;
+
+/* simultaneous source */
+int nsource=1, dsource=0;
 
 void preparation_s(sf_file Fv, sf_file Fw, sf_acqui acpar, sf_sou soupar, sf_vec_s array, sf_seis seispar)
 /*< read data, initialize variables and prepare acquisition geometry >*/
@@ -264,13 +269,17 @@ void preparation_s(sf_file Fv, sf_file Fw, sf_acqui acpar, sf_sou soupar, sf_vec
 		sf_butter_close(bhi);
 	}
 
+	/* simultaneous source */
+	nsource=soupar->nsource;
+	dsource=soupar->dsource;
+
 	/* seislet regularization */
 	if(seispar!=NULL){
 		seislet=true;
 		seislet_init(acpar->nz, acpar->nx, true, true, seispar->eps, seispar->order, seispar->type[0]);
 		seislet_set(seispar->dip);
 		pclip=seispar->pclip;
-		pp=sf_floatalloc(nzx);
+		ss=sf_floatalloc(nzx);
 	}
 }
 
@@ -413,8 +422,10 @@ void source_map(int sx, int sz, int rectx, int rectz, int padnx, int padnz, int 
 
 	for (i=0; i<padnzx; i++)
 		rr[i]=0.;
-	j=sx*padnz+sz;
-	rr[j]=1.;
+	for (i=0; i<nsource; i++){
+		j=(sx+i*dsource)*padnz+sz;
+		rr[j]=1.;
+	}
 
 	for (i=0; i<2; i++){
 		if(rect[i] <=1) continue;
@@ -678,6 +689,8 @@ void soft_thresholding(float *x, int n, float pclip)
 			x[i]=0.;
 		}
 	}
+
+	free(tmp);
 }
 
 void print_iteration(FILE *fp, int iter, sf_optim opt)
@@ -691,9 +704,6 @@ void print_iteration(FILE *fp, int iter, sf_optim opt)
 		fprintf(fp,"Niter  Misfit  Rel_Misfit  Grad_Norm  Alpha   Num_Pair  Num_LS  Total_Grad\n");
 	}
 	fprintf(fp,"%3d   %3.2e  %3.2e   %3.2e  %3.2e  %3d       %3d      %4d\n", iter, opt->fk, opt->fk/opt->f0, opt->gk_norm, opt->alpha, opt->ipair, opt->ils, opt->igrad);
-	/* get written to disk right away */
-	fclose(fp);
-	fp=fopen("iterate.txt","a");
 }
 
 void lbfgs_save(int n, float *x, float *grad, float **sk, float **yk, sf_optim opt)
@@ -805,9 +815,9 @@ void line_search(int n, float *x, float *grad, float *direction, sf_gradient gra
 
 		/* seislet regularization */
 		if(seislet){
-			seislet_lop(true, false, n, n, pp, x);
-			soft_thresholding(pp, n, pclip);
-			seislet_lop(false, false, n, n, pp, x);
+			seislet_lop(true, false, n, n, ss, x);
+			soft_thresholding(ss, n, pclip);
+			seislet_lop(false, false, n, n, ss, x);
 		}
 
 		/* model constraints */

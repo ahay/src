@@ -90,6 +90,8 @@ int main(int argc, char* argv[])
 	if(!sf_getfloat("flo", &soupar->flo)) soupar->flo=0.; /* low frequency in band, default is zero */
 	if(!sf_getint("frectx", &soupar->frectx)) soupar->frectx=2; /* source smoothing in x */
 	if(!sf_getint("frectz", &soupar->frectz)) soupar->frectz=2; /* source smoothing in z */
+	if(!sf_getint("nsource", &soupar->nsource)) soupar->nsource=1; /* number of sources in a supershot */
+	if(!sf_getint("dsource", &soupar->dsource)) soupar->dsource=0; /* interval of sources in a supershot */
 
 	if(seislet==1){ // seislet regularization
 		seispar=(sf_seis)sf_alloc(1, sizeof(*seispar));

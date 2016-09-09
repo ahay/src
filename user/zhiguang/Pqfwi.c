@@ -996,6 +996,8 @@ void fwi(sf_file Fdat, sf_file Finv, sf_file Ferr, sf_file Fgrad, sf_mpi *mpipar
 		if(mpipar->cpuid==0){
 			l2norm(nm, grad, &optpar->gk_norm);
 			print_iteration(fp, iter+1, optpar);
+			fclose(fp); /* get written to disk right away */
+			fp=fopen("iterate.txt","a");
 		}
 
 		if(mpipar->cpuid==0 && flag==2){
