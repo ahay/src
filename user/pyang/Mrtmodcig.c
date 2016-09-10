@@ -1,6 +1,4 @@
-/* RTM output FODCIG 
-   SPML boundary condition combined with 4-th order finite difference,
-   effective boundary saving strategy used!
+/* RTM output ODCIG with extended images
 */
 /*
   Copyright (C) 2014  Xi'an Jiaotong University (Pengliang Yang)
