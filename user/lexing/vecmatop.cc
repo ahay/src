@@ -1354,12 +1354,12 @@ int ddlowrank(int m, int n, int (*sample)(vector<int>&, vector<int>&, ZpxNumMat&
     int m = M2.m();
     int n = M2.n();
     int lda = m;
-    NumVec<int> jpvt(n);    setvalue(jpvt, int(0));
-    ZpxNumVec tau(max(m,n));
-    ZpxNumVec work(3*n);
-    DblNumVec rwork(6*n);
     int lwork = 6*n;
     int info;
+    NumVec<int> jpvt(n);    setvalue(jpvt, int(0));
+    ZpxNumVec tau(max(m,n));
+    ZpxNumVec work(lwork);
+    DblNumVec rwork(6*n);
     zgeqp3_(&m, &n, 
 	    (MKL_Complex16*) M2.data(), &lda, jpvt.data(), 
 	    (MKL_Complex16*) tau.data(), 
@@ -1392,12 +1392,12 @@ int ddlowrank(int m, int n, int (*sample)(vector<int>&, vector<int>&, ZpxNumMat&
     int m = M1.m();
     int n = M1.n();
     int lda = m;
+    int lwork = 6*n;
+    int info;
     NumVec<int> jpvt(n);      setvalue(jpvt, int(0));
     ZpxNumVec tau(max(m,n));
-    ZpxNumVec work(3*n);
-    int lwork = 6*n;
+    ZpxNumVec work(lwork);
     DblNumVec rwork(6*n);
-    int info;
     zgeqp3_(&m, &n, 
 	    (MKL_Complex16*) M1.data(), &lda, jpvt.data(), 
 	    (MKL_Complex16*) tau.data(), 
