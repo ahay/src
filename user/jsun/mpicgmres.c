@@ -228,6 +228,8 @@ void cgmres (const sf_complex *f                                              /*
       /* 2. iterate: */
       for (j = 0; j < m; j ++) /* column */
 	{
+          if (verb && cpuid==0)
+	    sf_warning("inner iteration %d/%d;",j,m);
 	  /* tmp = A.vj : use v [(j + 1) * n] directly */
 	  myatimes (n, v + j * n, v + (j + 1) * n, user_data);
 
@@ -305,6 +307,9 @@ void cgmres (const sf_complex *f                                              /*
 	  g [j    ] =   c [j] * g0;  /* Given's rotation applied to b vector, and the other term is always zero */
 	  g [j + 1] = - s [j] * g0;  /* Given's rotation applied to b vector, and the other term is always zero */
 	}
+      if(verb && cpuid==0)
+        sf_warning("."); 
+
       /* 3. form the approximate solution */
       /* solve for y_k, j=m, h is Hessenberg rotated to upper triangular matrix, and g is 
          givens rotations applied to the RHS (||r0||e_1), and s is the solution (y) */
