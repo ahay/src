@@ -1238,8 +1238,8 @@ int ddlowrank(int m, int n, int (*sample)(vector<int>&, vector<int>&, DblNumMat&
     int lda = m;
     NumVec<int> jpvt(n);    setvalue(jpvt, int(0));
     DblNumVec tau(max(m,n));
-    DblNumVec work(3*n);
     int lwork = 6*n;
+    DblNumVec work(lwork);
     int info;
     dgeqp3_(&m, &n, M2.data(), &lda, jpvt.data(), tau.data(), work.data(), &lwork, &info);    iA(info==0);
     double cutoff = eps*abs(M2(0,0));
@@ -1267,8 +1267,8 @@ int ddlowrank(int m, int n, int (*sample)(vector<int>&, vector<int>&, DblNumMat&
     int lda = m;
     NumVec<int> jpvt(n);      setvalue(jpvt, int(0));
     DblNumVec tau(max(m,n));
-    DblNumVec work(3*n);
     int lwork = 6*n;
+    DblNumVec work(lwork);
     int info;
     dgeqp3_(&m, &n, M1.data(), &lda, jpvt.data(), tau.data(), work.data(), &lwork, &info);    iA(info==0);
     double cutoff = eps*abs(M1(0,0));    int cnt=0;
