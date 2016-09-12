@@ -13,7 +13,8 @@ ccprogs = ''
 
 mpi_progs = '''
 mpifdlsrtm mpilrrtm mpilrmodel mpilrrtm_ts mpiprertm2d
-mpisglrrtm2 mpifwigradlr mpisfwi mpiqfwi mpifd2d mpidip2 mpipaint2
+mpisglrrtm2 mpifwigradlr mpisfwi mpiqfwi mpifd2d mpidip2 
+mpipaint2 mpictshiftlr
 '''
 
 pyprogs = 'fdlsrtm lrrtm'
