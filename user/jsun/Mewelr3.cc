@@ -39,14 +39,10 @@ static bool tric,tstp,pseu;
 static std::valarray<float>  C11,C12,C13,C22,C23,C33,C44,C55,C66,Q1,Q2;
 static std::valarray<float>  C14,C15,C16,C24,C25,C26,C34,C35,C36,C45,C46,C56;
 static std::valarray<double> rkz, rkx, rky;
+static int component, mode;
 
 /* subroutines */
-static int samplexx3(vector<int>& rs, vector<int>& cs, ZpxNumMat& res);
-static int sampleyy3(vector<int>& rs, vector<int>& cs, ZpxNumMat& res);
-static int samplezz3(vector<int>& rs, vector<int>& cs, ZpxNumMat& res);
-static int samplexy3(vector<int>& rs, vector<int>& cs, ZpxNumMat& res);
-static int samplexz3(vector<int>& rs, vector<int>& cs, ZpxNumMat& res);
-static int sampleyz3(vector<int>& rs, vector<int>& cs, ZpxNumMat& res);
+static int sample(vector<int>& rs, vector<int>& cs, ZpxNumMat& res);
 
 void expand3d(std::valarray<float>  a, std::valarray<float>& b, int nb, int nz, int nx, int ny);
 
@@ -83,7 +79,10 @@ int main(int argc, char* argv[])
     par.get("tstp",tstp,false);      // twostep propagator
     par.get("pseu",pseu,false);      // pseudo-spectral propagator
     par.get("seed",seed,time(NULL)); // seed for random number generator
-    srand48(seed);
+    //srand48(seed);
+    par.get("mode",mode,0);          // mode of decomposition: 0->mixed, 1->p, 2->s
+    int jump;
+    par.get("jump",jump,1);          // jump step for reduced lowrank decomposition
     float eps;
     par.get("eps",eps,1.e-6);        // tolerance
     int npk;
@@ -292,12 +291,21 @@ int main(int argc, char* argv[])
     sf_complex *ldataxx, *ldatayy, *ldatazz, *ldataxy, *ldataxz, *ldatayz;
     sf_complex *rdataxx, *rdatayy, *rdatazz, *rdataxy, *rdataxz, *rdatayz;
 
+    /* preparation for reduced lowrank */
+    vector<int> ms, ns, js;
+    ms.resize(3); ms[0] = nzpad; ms[1] = nxpad; ms[2] = nypad;
+    ns.resize(3); ns[0] = nkz;   ns[1] = nkx;   ns[2] = nky;
+    js.resize(3); js[0] = jump;  js[1] = jump;  js[2] = jump;
+
     /*------------------------------------------------------------*/
     /* lowrank decomposition and write to files                   */
     /*------------------------------------------------------------*/
+    component = 0;
     /* xx component */
     {
-        iC( ddlowrank(m,n,samplexx3,(double)eps,npk,lidx,ridx,mid) );
+        srand48(seed);
+        //iC( ddlowrank(m,n,samplexx3,(double)eps,npk,lidx,ridx,mid) );
+        iC( ddlowrank(ms,ns,js,sample,(double)eps,npk,lidx,ridx,mid) );
 
         int m2=mid.m();
         int n2=mid.n();
@@ -305,7 +313,7 @@ int main(int argc, char* argv[])
 
         /* left */
         ZpxNumMat lmat(m,m2);
-        iC ( samplexx3(midx,lidx,lmat) );
+        iC ( sample(midx,lidx,lmat) );
 
         ZpxNumMat lmat2(m,n2);
         iC( zzgemm(1.0, lmat, mid, 0.0, lmat2) );
@@ -317,7 +325,7 @@ int main(int argc, char* argv[])
 
         /* right */
         ZpxNumMat rmat(n2,n);
-        iC ( samplexx3(ridx,nidx,rmat) );
+        iC ( sample(ridx,nidx,rmat) );
 
         zpx *rdat = rmat.data();
         rdataxx = sf_complexalloc(n*n2);
@@ -327,12 +335,15 @@ int main(int argc, char* argv[])
             }
         }
 
-        n2s[0] = n2;
+        n2s[component] = n2;
         n2_sum += n2;
+        component++;
     }
     /* yy component */
     {
-        iC( ddlowrank(m,n,sampleyy3,(double)eps,npk,lidx,ridx,mid) );
+        srand48(seed);
+        //iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        iC( ddlowrank(ms,ns,js,sample,(double)eps,npk,lidx,ridx,mid) );
 
         int m2=mid.m();
         int n2=mid.n();
@@ -340,7 +351,7 @@ int main(int argc, char* argv[])
 
         /* left */
         ZpxNumMat lmat(m,m2);
-        iC ( sampleyy3(midx,lidx,lmat) );
+        iC ( sample(midx,lidx,lmat) );
 
         ZpxNumMat lmat2(m,n2);
         iC( zzgemm(1.0, lmat, mid, 0.0, lmat2) );
@@ -352,7 +363,7 @@ int main(int argc, char* argv[])
 
         /* right */
         ZpxNumMat rmat(n2,n);
-        iC ( sampleyy3(ridx,nidx,rmat) );
+        iC ( sample(ridx,nidx,rmat) );
 
         zpx *rdat = rmat.data();
         rdatayy = sf_complexalloc(n*n2);
@@ -362,12 +373,15 @@ int main(int argc, char* argv[])
             }
         }
 
-        n2s[1] = n2;
+        n2s[component] = n2;
         n2_sum += n2;
+        component++;
     }
     /* zz component */
     {
-        iC( ddlowrank(m,n,samplezz3,(double)eps,npk,lidx,ridx,mid) );
+        srand48(seed);
+        //iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        iC( ddlowrank(ms,ns,js,sample,(double)eps,npk,lidx,ridx,mid) );
 
         int m2=mid.m();
         int n2=mid.n();
@@ -375,7 +389,7 @@ int main(int argc, char* argv[])
 
         /* left */
         ZpxNumMat lmat(m,m2);
-        iC ( samplezz3(midx,lidx,lmat) );
+        iC ( sample(midx,lidx,lmat) );
 
         ZpxNumMat lmat2(m,n2);
         iC( zzgemm(1.0, lmat, mid, 0.0, lmat2) );
@@ -387,7 +401,7 @@ int main(int argc, char* argv[])
 
         /* right */
         ZpxNumMat rmat(n2,n);
-        iC ( samplezz3(ridx,nidx,rmat) );
+        iC ( sample(ridx,nidx,rmat) );
 
         zpx *rdat = rmat.data();
         rdatazz = sf_complexalloc(n*n2);
@@ -397,12 +411,14 @@ int main(int argc, char* argv[])
             }
         }
 
-        n2s[2] = n2;
+        n2s[component] = n2;
         n2_sum += n2;
+        component++;
     }
     /* xy component */
     {
-        iC( ddlowrank(m,n,samplexy3,(double)eps,npk,lidx,ridx,mid) );
+        //iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        iC( ddlowrank(ms,ns,js,sample,(double)eps,npk,lidx,ridx,mid) );
 
         int m2=mid.m();
         int n2=mid.n();
@@ -410,7 +426,7 @@ int main(int argc, char* argv[])
 
         /* left */
         ZpxNumMat lmat(m,m2);
-        iC ( samplexy3(midx,lidx,lmat) );
+        iC ( sample(midx,lidx,lmat) );
 
         ZpxNumMat lmat2(m,n2);
         iC( zzgemm(1.0, lmat, mid, 0.0, lmat2) );
@@ -422,7 +438,7 @@ int main(int argc, char* argv[])
 
         /* right */
         ZpxNumMat rmat(n2,n);
-        iC ( samplexy3(ridx,nidx,rmat) );
+        iC ( sample(ridx,nidx,rmat) );
 
         zpx *rdat = rmat.data();
         rdataxy = sf_complexalloc(n*n2);
@@ -432,12 +448,14 @@ int main(int argc, char* argv[])
             }
         }
 
-        n2s[3] = n2;
+        n2s[component] = n2;
         n2_sum += n2;
+        component++;
     }
     /* xz component */
     {
-        iC( ddlowrank(m,n,samplexz3,(double)eps,npk,lidx,ridx,mid) );
+        //iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        iC( ddlowrank(ms,ns,js,sample,(double)eps,npk,lidx,ridx,mid) );
 
         int m2=mid.m();
         int n2=mid.n();
@@ -445,7 +463,7 @@ int main(int argc, char* argv[])
 
         /* left */
         ZpxNumMat lmat(m,m2);
-        iC ( samplexz3(midx,lidx,lmat) );
+        iC ( sample(midx,lidx,lmat) );
 
         ZpxNumMat lmat2(m,n2);
         iC( zzgemm(1.0, lmat, mid, 0.0, lmat2) );
@@ -457,7 +475,7 @@ int main(int argc, char* argv[])
 
         /* right */
         ZpxNumMat rmat(n2,n);
-        iC ( samplexz3(ridx,nidx,rmat) );
+        iC ( sample(ridx,nidx,rmat) );
 
         zpx *rdat = rmat.data();
         rdataxz = sf_complexalloc(n*n2);
@@ -467,12 +485,14 @@ int main(int argc, char* argv[])
             }
         }
 
-        n2s[4] = n2;
+        n2s[component] = n2;
         n2_sum += n2;
+        component++;
     }
     /* yz component */
     {
-        iC( ddlowrank(m,n,sampleyz3,(double)eps,npk,lidx,ridx,mid) );
+        //iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        iC( ddlowrank(ms,ns,js,sample,(double)eps,npk,lidx,ridx,mid) );
 
         int m2=mid.m();
         int n2=mid.n();
@@ -480,7 +500,7 @@ int main(int argc, char* argv[])
 
         /* left */
         ZpxNumMat lmat(m,m2);
-        iC ( sampleyz3(midx,lidx,lmat) );
+        iC ( sample(midx,lidx,lmat) );
 
         ZpxNumMat lmat2(m,n2);
         iC( zzgemm(1.0, lmat, mid, 0.0, lmat2) );
@@ -492,7 +512,7 @@ int main(int argc, char* argv[])
 
         /* right */
         ZpxNumMat rmat(n2,n);
-        iC ( sampleyz3(ridx,nidx,rmat) );
+        iC ( sample(ridx,nidx,rmat) );
 
         zpx *rdat = rmat.data();
         rdatayz = sf_complexalloc(n*n2);
@@ -502,8 +522,9 @@ int main(int argc, char* argv[])
             }
         }
 
-        n2s[5] = n2;
+        n2s[component] = n2;
         n2_sum += n2;
+        component++;
     }
 
     /*------------------------------------------------------------*/
@@ -558,8 +579,8 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-static int samplexx3(vector<int>& rs, vector<int>& cs, ZpxNumMat& res)
-/* x-to-x component 3d elastic wave extrapolation operator */
+static int sample(vector<int>& rs, vector<int>& cs, ZpxNumMat& res)
+/* component-wise 3d elastic wave extrapolation operator */
 {
     int nr = rs.size();
     int nc = cs.size();
@@ -626,549 +647,131 @@ static int samplexx3(vector<int>& rs, vector<int>& cs, ZpxNumMat& res)
             /* slow S wave */
             double v1t = sqrt(ww[0])*dt; // v_{s2}*k*dt
             double u1x = Chr[0];
-            //double u1y = Chr[1];
-            //double u1z = Chr[2];
+            double u1y = Chr[1];
+            double u1z = Chr[2];
             /* fast S wave */
             double v2t = sqrt(ww[1])*dt; // v_{s1}*k*dt
             double u2x = Chr[3];
-            //double u2y = Chr[4];
-            //double u2z = Chr[5];
+            double u2y = Chr[4];
+            double u2z = Chr[5];
             /* P wave */
             double v3t = sqrt(ww[2])*dt; // v_{p}*k*dt
             double u3x = Chr[6];
-            //double u3y = Chr[7];
-            //double u3z = Chr[8];
+            double u3y = Chr[7];
+            double u3z = Chr[8];
             //sf_warning("v1t=%f,u1x=%f,v2t=%f,u2x=%f,v3t=%f,u3x=%f",v1t,u1x,v2t,u2x,v3t,u3x);
 
-            if (tstp) {
-                if (pseu) {
-                res(a,b) = zpx(-v3t*v3t*u3x*u3x,0) + 
-                           zpx(-v2t*v2t*u2x*u2x,0) +
-                           zpx(-v1t*v1t*u1x*u1x,0) ;
-                } else {
-                res(a,b) = zpx(2*(cos(v3t)-1.)*u3x*u3x,0) + 
-                           zpx(2*(cos(v2t)-1.)*u2x*u2x,0) +
-                           zpx(2*(cos(v1t)-1.)*u1x*u1x,0) ;
-                }
-            } else {
-                res(a,b) = zpx(cos(v3t),sin(v3t))*u3x*u3x + 
-                           zpx(cos(v2t),sin(v2t))*u2x*u2x +
-                           zpx(cos(v1t),sin(v1t))*u1x*u1x ;
-            }
-
-        }// b loop
-    }// a loop
-
-    return 0;
-}
-
-static int sampleyy3(vector<int>& rs, vector<int>& cs, ZpxNumMat& res)
-/* y-to-y component 3d elastic wave extrapolation operator */
-{
-    int nr = rs.size();
-    int nc = cs.size();
-    res.resize(nr,nc);
-    setvalue(res,zpx(0.0,0.0));
-
-    for(int a=0; a<nr; a++) 
-    {
-        int i=rs[a];
-        double c11 = C11[i]; double c12 = C12[i]; double c13 = C13[i];
-        double c22 = C22[i]; double c23 = C23[i]; double c33 = C33[i];
-        double c44 = C44[i]; double c55 = C55[i]; double c66 = C66[i];
-        double ss1 = sin(Q1[i]); double cc1 = cos(Q1[i]);
-        double ss2 = sin(Q2[i]); double cc2 = cos(Q2[i]);
-        double c14,c15,c16,c24,c25,c26,c34,c35,c36,c45,c46,c56;
-        if (tric) {
-            c14 = C14[i]; c15 = C15[i]; c16 = C16[i];
-            c24 = C24[i]; c25 = C25[i]; c26 = C26[i];
-            c34 = C34[i]; c35 = C35[i]; c36 = C36[i];
-            c45 = C45[i]; c46 = C46[i]; c56 = C56[i];
-        }
-
-        for(int b=0; b<nc; b++)
-        {
-            double kx0 = rkx[cs[b]];
-            double ky0 = rky[cs[b]];
-            double kz0 = rkz[cs[b]];
-            double kx  = kx0*cc2+ky0*ss2;
-            double ky  =-kx0*ss2*cc1+ky0*cc2*cc1+kz0*ss1;
-            double kz  = kx0*ss2*ss1-ky0*cc2*ss1+kz0*cc1;
-            if(kx==0 && ky==0 && kz==0)
-            {
-                res(a,b) = zpx(0.0,0.0);
-                continue;
-            }
-
-            double kx2 = kx*kx;
-            double ky2 = ky*ky;
-            double kz2 = kz*kz;
-            double kxy = kx*ky;
-            double kxz = kx*kz;
-            double kyz = ky*kz;
-
-            /* Christoffel matrix */
-            if (tric) {
-                Chr[0] =          c11*kx2 + c66*ky2 + c55*kz2 +     2*c16*kxy +     2*c15*kxz +     2*c56*kyz;
-                Chr[4] =          c66*kx2 + c22*ky2 + c44*kz2 +     2*c26*kxy +     2*c46*kxz +     2*c24*kyz;
-                Chr[8] =          c55*kx2 + c44*ky2 + c33*kz2 +     2*c45*kxy +     2*c35*kxz +     2*c34*kyz;
-                Chr[1] = Chr[3] = c16*kx2 + c26*ky2 + c45*kz2 + (c12+c66)*kxy + (c14+c56)*kxz + (c25+c46)*kyz;
-                Chr[2] = Chr[6] = c15*kx2 + c46*ky2 + c35*kz2 + (c14+c56)*kxy + (c13+c55)*kxz + (c36+c45)*kyz;
-                Chr[5] = Chr[7] = c56*kx2 + c24*ky2 + c34*kz2 + (c25+c46)*kxy + (c36+c45)*kxz + (c23+c44)*kyz;
-            } else {
-                Chr[0] =          c11*kx2 + c66*ky2 + c55*kz2;
-                Chr[4] =          c66*kx2 + c22*ky2 + c44*kz2;
-                Chr[8] =          c55*kx2 + c44*ky2 + c33*kz2;
-                Chr[1] = Chr[3] =                               (c12+c66)*kxy;
-                Chr[2] = Chr[6] =                                               (c13+c55)*kxz;
-                Chr[5] = Chr[7] =                                                               (c23+c44)*kyz;
-            }
-
-            // LAPACK's ssyev routine (slow but accurate) 
-            dsyev_(&jobz, &uplo, &M, Chr, &LDA, ww, work, &LWORK, &INFO);
-
-            /* slow S wave */
-            double v1t = sqrt(ww[0])*dt; // v_{s2}*k*dt
-            //double u1x = Chr[0];
-            double u1y = Chr[1];
-            //double u1z = Chr[2];
-            /* fast S wave */
-            double v2t = sqrt(ww[1])*dt; // v_{s1}*k*dt
-            //double u2x = Chr[3];
-            double u2y = Chr[4];
-            //double u2z = Chr[5];
-            /* P wave */
-            double v3t = sqrt(ww[2])*dt; // v_{p}*k*dt
-            //double u3x = Chr[6];
-            double u3y = Chr[7];
-            //double u3z = Chr[8];
-
-            if (tstp) {
-                if (pseu) {
-                res(a,b) = zpx(-v3t*v3t*u3y*u3y,0) + 
-                           zpx(-v2t*v2t*u2y*u2y,0) +
-                           zpx(-v1t*v1t*u1y*u1y,0) ;
-                } else {
-                res(a,b) = zpx(2*(cos(v3t)-1.)*u3y*u3y,0) + 
-                           zpx(2*(cos(v2t)-1.)*u2y*u2y,0) +
-                           zpx(2*(cos(v1t)-1.)*u1y*u1y,0) ;
-                }
-            } else {
-                res(a,b) = zpx(cos(v3t),sin(v3t))*u3y*u3y + 
-                           zpx(cos(v2t),sin(v2t))*u2y*u2y +
-                           zpx(cos(v1t),sin(v1t))*u1y*u1y ;
-            }
-
-        }// b loop
-    }// a loop
-
-    return 0;
-}
-
-static int samplezz3(vector<int>& rs, vector<int>& cs, ZpxNumMat& res)
-/* z-to-z component 3d elastic wave extrapolation operator */
-{
-    int nr = rs.size();
-    int nc = cs.size();
-    res.resize(nr,nc);
-    setvalue(res,zpx(0.0,0.0));
-
-    for(int a=0; a<nr; a++) 
-    {
-        int i=rs[a];
-        double c11 = C11[i]; double c12 = C12[i]; double c13 = C13[i];
-        double c22 = C22[i]; double c23 = C23[i]; double c33 = C33[i];
-        double c44 = C44[i]; double c55 = C55[i]; double c66 = C66[i];
-        double ss1 = sin(Q1[i]); double cc1 = cos(Q1[i]);
-        double ss2 = sin(Q2[i]); double cc2 = cos(Q2[i]);
-        double c14,c15,c16,c24,c25,c26,c34,c35,c36,c45,c46,c56;
-        if (tric) {
-            c14 = C14[i]; c15 = C15[i]; c16 = C16[i];
-            c24 = C24[i]; c25 = C25[i]; c26 = C26[i];
-            c34 = C34[i]; c35 = C35[i]; c36 = C36[i];
-            c45 = C45[i]; c46 = C46[i]; c56 = C56[i];
-        }
-
-        for(int b=0; b<nc; b++)
-        {
-            double kx0 = rkx[cs[b]];
-            double ky0 = rky[cs[b]];
-            double kz0 = rkz[cs[b]];
-            double kx  = kx0*cc2+ky0*ss2;
-            double ky  =-kx0*ss2*cc1+ky0*cc2*cc1+kz0*ss1;
-            double kz  = kx0*ss2*ss1-ky0*cc2*ss1+kz0*cc1;
-            if(kx==0 && ky==0 && kz==0)
-            {
-                res(a,b) = zpx(0.0,0.0);
-                continue;
-            }
-
-            double kx2 = kx*kx;
-            double ky2 = ky*ky;
-            double kz2 = kz*kz;
-            double kxy = kx*ky;
-            double kxz = kx*kz;
-            double kyz = ky*kz;
-
-            /* Christoffel matrix */
-            if (tric) {
-                Chr[0] =          c11*kx2 + c66*ky2 + c55*kz2 +     2*c16*kxy +     2*c15*kxz +     2*c56*kyz;
-                Chr[4] =          c66*kx2 + c22*ky2 + c44*kz2 +     2*c26*kxy +     2*c46*kxz +     2*c24*kyz;
-                Chr[8] =          c55*kx2 + c44*ky2 + c33*kz2 +     2*c45*kxy +     2*c35*kxz +     2*c34*kyz;
-                Chr[1] = Chr[3] = c16*kx2 + c26*ky2 + c45*kz2 + (c12+c66)*kxy + (c14+c56)*kxz + (c25+c46)*kyz;
-                Chr[2] = Chr[6] = c15*kx2 + c46*ky2 + c35*kz2 + (c14+c56)*kxy + (c13+c55)*kxz + (c36+c45)*kyz;
-                Chr[5] = Chr[7] = c56*kx2 + c24*ky2 + c34*kz2 + (c25+c46)*kxy + (c36+c45)*kxz + (c23+c44)*kyz;
-            } else {
-                Chr[0] =          c11*kx2 + c66*ky2 + c55*kz2;
-                Chr[4] =          c66*kx2 + c22*ky2 + c44*kz2;
-                Chr[8] =          c55*kx2 + c44*ky2 + c33*kz2;
-                Chr[1] = Chr[3] =                               (c12+c66)*kxy;
-                Chr[2] = Chr[6] =                                               (c13+c55)*kxz;
-                Chr[5] = Chr[7] =                                                               (c23+c44)*kyz;
-            }
-
-            // LAPACK's ssyev routine (slow but accurate) 
-            dsyev_(&jobz, &uplo, &M, Chr, &LDA, ww, work, &LWORK, &INFO);
-
-            /* slow S wave */
-            double v1t = sqrt(ww[0])*dt; // v_{s2}*k*dt
-            //double u1x = Chr[0];
-            //double u1y = Chr[1];
-            double u1z = Chr[2];
-            /* fast S wave */
-            double v2t = sqrt(ww[1])*dt; // v_{s1}*k*dt
-            //double u2x = Chr[3];
-            //double u2y = Chr[4];
-            double u2z = Chr[5];
-            /* P wave */
-            double v3t = sqrt(ww[2])*dt; // v_{p}*k*dt
-            //double u3x = Chr[6];
-            //double u3y = Chr[7];
-            double u3z = Chr[8];
-
-            if (tstp) {
-                if (pseu) {
-                res(a,b) = zpx(-v3t*v3t*u3z*u3z,0) + 
-                           zpx(-v2t*v2t*u2z*u2z,0) +
-                           zpx(-v1t*v1t*u1z*u1z,0) ;
-                } else {
-                res(a,b) = zpx(2*(cos(v3t)-1.)*u3z*u3z,0) + 
-                           zpx(2*(cos(v2t)-1.)*u2z*u2z,0) +
-                           zpx(2*(cos(v1t)-1.)*u1z*u1z,0) ;
-                }
-            } else {
-                res(a,b) = zpx(cos(v3t),sin(v3t))*u3z*u3z + 
-                           zpx(cos(v2t),sin(v2t))*u2z*u2z +
-                           zpx(cos(v1t),sin(v1t))*u1z*u1z ;
-            }
-
-        }// b loop
-    }// a loop
-
-    return 0;
-}
-
-static int samplexy3(vector<int>& rs, vector<int>& cs, ZpxNumMat& res)
-/* x-to-y component 3d elastic wave extrapolation operator */
-{
-    int nr = rs.size();
-    int nc = cs.size();
-    res.resize(nr,nc);
-    setvalue(res,zpx(0.0,0.0));
-
-    for(int a=0; a<nr; a++) 
-    {
-        int i=rs[a];
-        double c11 = C11[i]; double c12 = C12[i]; double c13 = C13[i];
-        double c22 = C22[i]; double c23 = C23[i]; double c33 = C33[i];
-        double c44 = C44[i]; double c55 = C55[i]; double c66 = C66[i];
-        double ss1 = sin(Q1[i]); double cc1 = cos(Q1[i]);
-        double ss2 = sin(Q2[i]); double cc2 = cos(Q2[i]);
-        double c14,c15,c16,c24,c25,c26,c34,c35,c36,c45,c46,c56;
-        if (tric) {
-            c14 = C14[i]; c15 = C15[i]; c16 = C16[i];
-            c24 = C24[i]; c25 = C25[i]; c26 = C26[i];
-            c34 = C34[i]; c35 = C35[i]; c36 = C36[i];
-            c45 = C45[i]; c46 = C46[i]; c56 = C56[i];
-        }
-
-        for(int b=0; b<nc; b++)
-        {
-            double kx0 = rkx[cs[b]];
-            double ky0 = rky[cs[b]];
-            double kz0 = rkz[cs[b]];
-            double kx  = kx0*cc2+ky0*ss2;
-            double ky  =-kx0*ss2*cc1+ky0*cc2*cc1+kz0*ss1;
-            double kz  = kx0*ss2*ss1-ky0*cc2*ss1+kz0*cc1;
-            if(kx==0 && ky==0 && kz==0)
-            {
-                res(a,b) = zpx(0.0,0.0);
-                continue;
-            }
-
-            double kx2 = kx*kx;
-            double ky2 = ky*ky;
-            double kz2 = kz*kz;
-            double kxy = kx*ky;
-            double kxz = kx*kz;
-            double kyz = ky*kz;
-
-            /* Christoffel matrix */
-            if (tric) {
-                Chr[0] =          c11*kx2 + c66*ky2 + c55*kz2 +     2*c16*kxy +     2*c15*kxz +     2*c56*kyz;
-                Chr[4] =          c66*kx2 + c22*ky2 + c44*kz2 +     2*c26*kxy +     2*c46*kxz +     2*c24*kyz;
-                Chr[8] =          c55*kx2 + c44*ky2 + c33*kz2 +     2*c45*kxy +     2*c35*kxz +     2*c34*kyz;
-                Chr[1] = Chr[3] = c16*kx2 + c26*ky2 + c45*kz2 + (c12+c66)*kxy + (c14+c56)*kxz + (c25+c46)*kyz;
-                Chr[2] = Chr[6] = c15*kx2 + c46*ky2 + c35*kz2 + (c14+c56)*kxy + (c13+c55)*kxz + (c36+c45)*kyz;
-                Chr[5] = Chr[7] = c56*kx2 + c24*ky2 + c34*kz2 + (c25+c46)*kxy + (c36+c45)*kxz + (c23+c44)*kyz;
-            } else {
-                Chr[0] =          c11*kx2 + c66*ky2 + c55*kz2;
-                Chr[4] =          c66*kx2 + c22*ky2 + c44*kz2;
-                Chr[8] =          c55*kx2 + c44*ky2 + c33*kz2;
-                Chr[1] = Chr[3] =                               (c12+c66)*kxy;
-                Chr[2] = Chr[6] =                                               (c13+c55)*kxz;
-                Chr[5] = Chr[7] =                                                               (c23+c44)*kyz;
-            }
-
-            // LAPACK's ssyev routine (slow but accurate) 
-            dsyev_(&jobz, &uplo, &M, Chr, &LDA, ww, work, &LWORK, &INFO);
-
-            /* slow S wave */
-            double v1t = sqrt(ww[0])*dt; // v_{s2}*k*dt
-            double u1x = Chr[0];
-            double u1y = Chr[1];
-            //double u1z = Chr[2];
-            /* fast S wave */
-            double v2t = sqrt(ww[1])*dt; // v_{s1}*k*dt
-            double u2x = Chr[3];
-            double u2y = Chr[4];
-            //double u2z = Chr[5];
-            /* P wave */
-            double v3t = sqrt(ww[2])*dt; // v_{p}*k*dt
-            double u3x = Chr[6];
-            double u3y = Chr[7];
-            //double u3z = Chr[8];
-
-            if (tstp) {
-                if (pseu) {
-                res(a,b) = zpx(-v3t*v3t*u3x*u3y,0) + 
-                           zpx(-v2t*v2t*u2x*u2y,0) +
-                           zpx(-v1t*v1t*u1x*u1y,0) ;
-                } else {
-                res(a,b) = zpx(2*(cos(v3t)-1.)*u3x*u3y,0) + 
-                           zpx(2*(cos(v2t)-1.)*u2x*u2y,0) +
-                           zpx(2*(cos(v1t)-1.)*u1x*u1y,0) ;
-                }
-            } else {
-                res(a,b) = zpx(cos(v3t),sin(v3t))*u3x*u3y + 
-                           zpx(cos(v2t),sin(v2t))*u2x*u2y +
-                           zpx(cos(v1t),sin(v1t))*u1x*u1y ;
-            }
-
-        }// b loop
-    }// a loop
-
-    return 0;
-}
-
-static int samplexz3(vector<int>& rs, vector<int>& cs, ZpxNumMat& res)
-/* x-to-z component 3d elastic wave extrapolation operator */
-{
-    int nr = rs.size();
-    int nc = cs.size();
-    res.resize(nr,nc);
-    setvalue(res,zpx(0.0,0.0));
-
-    for(int a=0; a<nr; a++) 
-    {
-        int i=rs[a];
-        double c11 = C11[i]; double c12 = C12[i]; double c13 = C13[i];
-        double c22 = C22[i]; double c23 = C23[i]; double c33 = C33[i];
-        double c44 = C44[i]; double c55 = C55[i]; double c66 = C66[i];
-        double ss1 = sin(Q1[i]); double cc1 = cos(Q1[i]);
-        double ss2 = sin(Q2[i]); double cc2 = cos(Q2[i]);
-        double c14,c15,c16,c24,c25,c26,c34,c35,c36,c45,c46,c56;
-        if (tric) {
-            c14 = C14[i]; c15 = C15[i]; c16 = C16[i];
-            c24 = C24[i]; c25 = C25[i]; c26 = C26[i];
-            c34 = C34[i]; c35 = C35[i]; c36 = C36[i];
-            c45 = C45[i]; c46 = C46[i]; c56 = C56[i];
-        }
-
-        for(int b=0; b<nc; b++)
-        {
-            double kx0 = rkx[cs[b]];
-            double ky0 = rky[cs[b]];
-            double kz0 = rkz[cs[b]];
-            double kx  = kx0*cc2+ky0*ss2;
-            double ky  =-kx0*ss2*cc1+ky0*cc2*cc1+kz0*ss1;
-            double kz  = kx0*ss2*ss1-ky0*cc2*ss1+kz0*cc1;
-            if(kx==0 && ky==0 && kz==0)
-            {
-                res(a,b) = zpx(0.0,0.0);
-                continue;
-            }
-
-            double kx2 = kx*kx;
-            double ky2 = ky*ky;
-            double kz2 = kz*kz;
-            double kxy = kx*ky;
-            double kxz = kx*kz;
-            double kyz = ky*kz;
-
-            /* Christoffel matrix */
-            if (tric) {
-                Chr[0] =          c11*kx2 + c66*ky2 + c55*kz2 +     2*c16*kxy +     2*c15*kxz +     2*c56*kyz;
-                Chr[4] =          c66*kx2 + c22*ky2 + c44*kz2 +     2*c26*kxy +     2*c46*kxz +     2*c24*kyz;
-                Chr[8] =          c55*kx2 + c44*ky2 + c33*kz2 +     2*c45*kxy +     2*c35*kxz +     2*c34*kyz;
-                Chr[1] = Chr[3] = c16*kx2 + c26*ky2 + c45*kz2 + (c12+c66)*kxy + (c14+c56)*kxz + (c25+c46)*kyz;
-                Chr[2] = Chr[6] = c15*kx2 + c46*ky2 + c35*kz2 + (c14+c56)*kxy + (c13+c55)*kxz + (c36+c45)*kyz;
-                Chr[5] = Chr[7] = c56*kx2 + c24*ky2 + c34*kz2 + (c25+c46)*kxy + (c36+c45)*kxz + (c23+c44)*kyz;
-            } else {
-                Chr[0] =          c11*kx2 + c66*ky2 + c55*kz2;
-                Chr[4] =          c66*kx2 + c22*ky2 + c44*kz2;
-                Chr[8] =          c55*kx2 + c44*ky2 + c33*kz2;
-                Chr[1] = Chr[3] =                               (c12+c66)*kxy;
-                Chr[2] = Chr[6] =                                               (c13+c55)*kxz;
-                Chr[5] = Chr[7] =                                                               (c23+c44)*kyz;
-            }
-
-            // LAPACK's ssyev routine (slow but accurate) 
-            dsyev_(&jobz, &uplo, &M, Chr, &LDA, ww, work, &LWORK, &INFO);
-
-            /* slow S wave */
-            double v1t = sqrt(ww[0])*dt; // v_{s2}*k*dt
-            double u1x = Chr[0];
-            //double u1y = Chr[1];
-            double u1z = Chr[2];
-            /* fast S wave */
-            double v2t = sqrt(ww[1])*dt; // v_{s1}*k*dt
-            double u2x = Chr[3];
-            //double u2y = Chr[4];
-            double u2z = Chr[5];
-            /* P wave */
-            double v3t = sqrt(ww[2])*dt; // v_{p}*k*dt
-            double u3x = Chr[6];
-            //double u3y = Chr[7];
-            double u3z = Chr[8];
-
-            if (tstp) {
-                if (pseu) {
-                res(a,b) = zpx(-v3t*v3t*u3x*u3z,0) + 
-                           zpx(-v2t*v2t*u2x*u2z,0) +
-                           zpx(-v1t*v1t*u1x*u1z,0) ;
-                } else {
-                res(a,b) = zpx(2*(cos(v3t)-1.)*u3x*u3z,0) + 
-                           zpx(2*(cos(v2t)-1.)*u2x*u2z,0) +
-                           zpx(2*(cos(v1t)-1.)*u1x*u1z,0) ;
-                }
-            } else {
-                res(a,b) = zpx(cos(v3t),sin(v3t))*u3x*u3z + 
-                           zpx(cos(v2t),sin(v2t))*u2x*u2z +
-                           zpx(cos(v1t),sin(v1t))*u1x*u1z ;
-            }
-
-        }// b loop
-    }// a loop
-
-    return 0;
-}
-
-static int sampleyz3(vector<int>& rs, vector<int>& cs, ZpxNumMat& res)
-/* y-to-z component 3d elastic wave extrapolation operator */
-{
-    int nr = rs.size();
-    int nc = cs.size();
-    res.resize(nr,nc);
-    setvalue(res,zpx(0.0,0.0));
-
-    for(int a=0; a<nr; a++) 
-    {
-        int i=rs[a];
-        double c11 = C11[i]; double c12 = C12[i]; double c13 = C13[i];
-        double c22 = C22[i]; double c23 = C23[i]; double c33 = C33[i];
-        double c44 = C44[i]; double c55 = C55[i]; double c66 = C66[i];
-        double ss1 = sin(Q1[i]); double cc1 = cos(Q1[i]);
-        double ss2 = sin(Q2[i]); double cc2 = cos(Q2[i]);
-        double c14,c15,c16,c24,c25,c26,c34,c35,c36,c45,c46,c56;
-        if (tric) {
-            c14 = C14[i]; c15 = C15[i]; c16 = C16[i];
-            c24 = C24[i]; c25 = C25[i]; c26 = C26[i];
-            c34 = C34[i]; c35 = C35[i]; c36 = C36[i];
-            c45 = C45[i]; c46 = C46[i]; c56 = C56[i];
-        }
-
-        for(int b=0; b<nc; b++)
-        {
-            double kx0 = rkx[cs[b]];
-            double ky0 = rky[cs[b]];
-            double kz0 = rkz[cs[b]];
-            double kx  = kx0*cc2+ky0*ss2;
-            double ky  =-kx0*ss2*cc1+ky0*cc2*cc1+kz0*ss1;
-            double kz  = kx0*ss2*ss1-ky0*cc2*ss1+kz0*cc1;
-            if(kx==0 && ky==0 && kz==0)
-            {
-                res(a,b) = zpx(0.0,0.0);
-                continue;
-            }
-
-            double kx2 = kx*kx;
-            double ky2 = ky*ky;
-            double kz2 = kz*kz;
-            double kxy = kx*ky;
-            double kxz = kx*kz;
-            double kyz = ky*kz;
-
-            /* Christoffel matrix */
-            if (tric) {
-                Chr[0] =          c11*kx2 + c66*ky2 + c55*kz2 +     2*c16*kxy +     2*c15*kxz +     2*c56*kyz;
-                Chr[4] =          c66*kx2 + c22*ky2 + c44*kz2 +     2*c26*kxy +     2*c46*kxz +     2*c24*kyz;
-                Chr[8] =          c55*kx2 + c44*ky2 + c33*kz2 +     2*c45*kxy +     2*c35*kxz +     2*c34*kyz;
-                Chr[1] = Chr[3] = c16*kx2 + c26*ky2 + c45*kz2 + (c12+c66)*kxy + (c14+c56)*kxz + (c25+c46)*kyz;
-                Chr[2] = Chr[6] = c15*kx2 + c46*ky2 + c35*kz2 + (c14+c56)*kxy + (c13+c55)*kxz + (c36+c45)*kyz;
-                Chr[5] = Chr[7] = c56*kx2 + c24*ky2 + c34*kz2 + (c25+c46)*kxy + (c36+c45)*kxz + (c23+c44)*kyz;
-            } else {
-                Chr[0] =          c11*kx2 + c66*ky2 + c55*kz2;
-                Chr[4] =          c66*kx2 + c22*ky2 + c44*kz2;
-                Chr[8] =          c55*kx2 + c44*ky2 + c33*kz2;
-                Chr[1] = Chr[3] =                               (c12+c66)*kxy;
-                Chr[2] = Chr[6] =                                               (c13+c55)*kxz;
-                Chr[5] = Chr[7] =                                                               (c23+c44)*kyz;
-            }
-
-            // LAPACK's ssyev routine (slow but accurate) 
-            dsyev_(&jobz, &uplo, &M, Chr, &LDA, ww, work, &LWORK, &INFO);
-
-            /* slow S wave */
-            double v1t = sqrt(ww[0])*dt; // v_{s2}*k*dt
-            //double u1x = Chr[0];
-            double u1y = Chr[1];
-            double u1z = Chr[2];
-            /* fast S wave */
-            double v2t = sqrt(ww[1])*dt; // v_{s1}*k*dt
-            //double u2x = Chr[3];
-            double u2y = Chr[4];
-            double u2z = Chr[5];
-            /* P wave */
-            double v3t = sqrt(ww[2])*dt; // v_{p}*k*dt
-            //double u3x = Chr[6];
-            double u3y = Chr[7];
-            double u3z = Chr[8];
-
-            if (tstp) {
-                if (pseu) {
-                res(a,b) = zpx(-v3t*v3t*u3y*u3z,0) + 
-                           zpx(-v2t*v2t*u2y*u2z,0) +
-                           zpx(-v1t*v1t*u1y*u1z,0) ;
-                } else {
-                res(a,b) = zpx(2*(cos(v3t)-1.)*u3y*u3z,0) + 
-                           zpx(2*(cos(v2t)-1.)*u2y*u2z,0) +
-                           zpx(2*(cos(v1t)-1.)*u1y*u1z,0) ;
-                }
-            } else {
-                res(a,b) = zpx(cos(v3t),sin(v3t))*u3y*u3z + 
-                           zpx(cos(v2t),sin(v2t))*u2y*u2z +
-                           zpx(cos(v1t),sin(v1t))*u1y*u1z ;
+            switch (component) {
+                case 0: // xx
+                    if(mode==0) {
+                        if(tstp) {
+                            if(pseu) res(a,b) = zpx(-v3t*v3t*u3x*u3x,0) + zpx(-v2t*v2t*u2x*u2x,0) + zpx(-v1t*v1t*u1x*u1x,0) ;
+                            else res(a,b) = zpx(2*(cos(v3t)-1.)*u3x*u3x,0) + zpx(2*(cos(v2t)-1.)*u2x*u2x,0) + zpx(2*(cos(v1t)-1.)*u1x*u1x,0) ;
+                        } else res(a,b) = zpx(cos(v3t),sin(v3t))*u3x*u3x + zpx(cos(v2t),sin(v2t))*u2x*u2x + zpx(cos(v1t),sin(v1t))*u1x*u1x ;
+                    } else if(mode==1) {
+                        if(tstp) {
+                            if(pseu) res(a,b) = zpx(-v3t*v3t*u3x*u3x,0) ;
+                            else res(a,b) = zpx(2*(cos(v3t)-1.)*u3x*u3x,0) ;
+                        } else res(a,b) = zpx(cos(v3t),sin(v3t))*u3x*u3x ;
+                    } else if(mode==2) {
+                        if(tstp) {
+                            if(pseu) res(a,b) = zpx(-v2t*v2t*u2x*u2x,0) + zpx(-v1t*v1t*u1x*u1x,0) ;
+                            else res(a,b) = zpx(2*(cos(v2t)-1.)*u2x*u2x,0) + zpx(2*(cos(v1t)-1.)*u1x*u1x,0) ;
+                        } else res(a,b) = zpx(cos(v2t),sin(v2t))*u2x*u2x + zpx(cos(v1t),sin(v1t))*u1x*u1x ;
+                    }
+                    break;
+                case 1: // yy
+                    if(mode==0) {
+                        if (tstp) {
+                            if (pseu) res(a,b) = zpx(-v3t*v3t*u3y*u3y,0) + zpx(-v2t*v2t*u2y*u2y,0) + zpx(-v1t*v1t*u1y*u1y,0) ;
+                            else res(a,b) = zpx(2*(cos(v3t)-1.)*u3y*u3y,0) + zpx(2*(cos(v2t)-1.)*u2y*u2y,0) + zpx(2*(cos(v1t)-1.)*u1y*u1y,0) ;
+                        } else res(a,b) = zpx(cos(v3t),sin(v3t))*u3y*u3y + zpx(cos(v2t),sin(v2t))*u2y*u2y + zpx(cos(v1t),sin(v1t))*u1y*u1y ;
+                    } else if(mode==1) {
+                        if (tstp) {
+                            if (pseu) res(a,b) = zpx(-v3t*v3t*u3y*u3y,0) ;
+                            else res(a,b) = zpx(2*(cos(v3t)-1.)*u3y*u3y,0) ;
+                        } else res(a,b) = zpx(cos(v3t),sin(v3t))*u3y*u3y ;
+                    } else if(mode==2) {
+                        if (tstp) {
+                            if (pseu) res(a,b) = zpx(-v2t*v2t*u2y*u2y,0) + zpx(-v1t*v1t*u1y*u1y,0) ;
+                            else res(a,b) = zpx(2*(cos(v2t)-1.)*u2y*u2y,0) + zpx(2*(cos(v1t)-1.)*u1y*u1y,0) ;
+                        } else res(a,b) = zpx(cos(v2t),sin(v2t))*u2y*u2y + zpx(cos(v1t),sin(v1t))*u1y*u1y ;
+                    }
+                    break;
+                case 2: // zz
+                    if(mode==0) {
+                        if (tstp) {
+                            if (pseu) res(a,b) = zpx(-v3t*v3t*u3z*u3z,0) + zpx(-v2t*v2t*u2z*u2z,0) + zpx(-v1t*v1t*u1z*u1z,0) ;
+                            else res(a,b) = zpx(2*(cos(v3t)-1.)*u3z*u3z,0) + zpx(2*(cos(v2t)-1.)*u2z*u2z,0) + zpx(2*(cos(v1t)-1.)*u1z*u1z,0) ;
+                        } else res(a,b) = zpx(cos(v3t),sin(v3t))*u3z*u3z + zpx(cos(v2t),sin(v2t))*u2z*u2z + zpx(cos(v1t),sin(v1t))*u1z*u1z ;
+                    } else if(mode==1) {
+                        if (tstp) {
+                            if (pseu) res(a,b) = zpx(-v3t*v3t*u3z*u3z,0) ;
+                            else res(a,b) = zpx(2*(cos(v3t)-1.)*u3z*u3z,0) ;
+                        } else res(a,b) = zpx(cos(v3t),sin(v3t))*u3z*u3z ;
+                    } else if(mode==2) {
+                        if (tstp) {
+                            if (pseu) res(a,b) = zpx(-v2t*v2t*u2z*u2z,0) + zpx(-v1t*v1t*u1z*u1z,0) ;
+                            else res(a,b) = zpx(2*(cos(v2t)-1.)*u2z*u2z,0) + zpx(2*(cos(v1t)-1.)*u1z*u1z,0) ;
+                        } else res(a,b) = zpx(cos(v2t),sin(v2t))*u2z*u2z + zpx(cos(v1t),sin(v1t))*u1z*u1z ;
+                    }
+                    break;
+                case 3: //xy
+                    if(mode==0) {
+                        if (tstp) {
+                            if (pseu) res(a,b) = zpx(-v3t*v3t*u3x*u3y,0) + zpx(-v2t*v2t*u2x*u2y,0) + zpx(-v1t*v1t*u1x*u1y,0) ;
+                            else res(a,b) = zpx(2*(cos(v3t)-1.)*u3x*u3y,0) + zpx(2*(cos(v2t)-1.)*u2x*u2y,0) + zpx(2*(cos(v1t)-1.)*u1x*u1y,0) ;
+                        } else res(a,b) = zpx(cos(v3t),sin(v3t))*u3x*u3y + zpx(cos(v2t),sin(v2t))*u2x*u2y + zpx(cos(v1t),sin(v1t))*u1x*u1y ;
+                    } else if(mode==1) {
+                        if (tstp) {
+                            if (pseu) res(a,b) = zpx(-v3t*v3t*u3x*u3y,0) ;
+                            else res(a,b) = zpx(2*(cos(v3t)-1.)*u3x*u3y,0) ;
+                        } else res(a,b) = zpx(cos(v3t),sin(v3t))*u3x*u3y ;
+                    } else if(mode==2) {
+                        if (tstp) {
+                            if (pseu) res(a,b) = zpx(-v2t*v2t*u2x*u2y,0) + zpx(-v1t*v1t*u1x*u1y,0) ;
+                            else res(a,b) = zpx(2*(cos(v2t)-1.)*u2x*u2y,0) + zpx(2*(cos(v1t)-1.)*u1x*u1y,0) ;
+                        } else res(a,b) = zpx(cos(v2t),sin(v2t))*u2x*u2y + zpx(cos(v1t),sin(v1t))*u1x*u1y ;
+                    }
+                    break;
+                case 4: // xz
+                    if(mode==0) {
+                        if (tstp) {
+                            if (pseu) res(a,b) = zpx(-v3t*v3t*u3x*u3z,0) + zpx(-v2t*v2t*u2x*u2z,0) + zpx(-v1t*v1t*u1x*u1z,0) ;
+                            else res(a,b) = zpx(2*(cos(v3t)-1.)*u3x*u3z,0) + zpx(2*(cos(v2t)-1.)*u2x*u2z,0) + zpx(2*(cos(v1t)-1.)*u1x*u1z,0) ;
+                        } else res(a,b) = zpx(cos(v3t),sin(v3t))*u3x*u3z + zpx(cos(v2t),sin(v2t))*u2x*u2z + zpx(cos(v1t),sin(v1t))*u1x*u1z ;
+                    } else if(mode==1) {
+                        if (tstp) {
+                            if (pseu) res(a,b) = zpx(-v3t*v3t*u3x*u3z,0) ;
+                            else res(a,b) = zpx(2*(cos(v3t)-1.)*u3x*u3z,0) ;
+                        } else res(a,b) = zpx(cos(v3t),sin(v3t))*u3x*u3z ;
+                    } else if(mode==2) {
+                        if (tstp) {
+                            if (pseu) res(a,b) = zpx(-v2t*v2t*u2x*u2z,0) + zpx(-v1t*v1t*u1x*u1z,0) ;
+                            else res(a,b) = zpx(2*(cos(v2t)-1.)*u2x*u2z,0) + zpx(2*(cos(v1t)-1.)*u1x*u1z,0) ;
+                        } else res(a,b) = zpx(cos(v2t),sin(v2t))*u2x*u2z + zpx(cos(v1t),sin(v1t))*u1x*u1z ;
+                    }
+                    break;
+                case 5: // yz
+                    if(mode==0) {
+                        if (tstp) {
+                            if (pseu) res(a,b) = zpx(-v3t*v3t*u3y*u3z,0) + zpx(-v2t*v2t*u2y*u2z,0) + zpx(-v1t*v1t*u1y*u1z,0) ;
+                            else res(a,b) = zpx(2*(cos(v3t)-1.)*u3y*u3z,0) + zpx(2*(cos(v2t)-1.)*u2y*u2z,0) + zpx(2*(cos(v1t)-1.)*u1y*u1z,0) ;
+                        } else res(a,b) = zpx(cos(v3t),sin(v3t))*u3y*u3z + zpx(cos(v2t),sin(v2t))*u2y*u2z + zpx(cos(v1t),sin(v1t))*u1y*u1z ;
+                    } else if(mode==1) {
+                        if (tstp) {
+                            if (pseu) res(a,b) = zpx(-v3t*v3t*u3y*u3z,0) ;
+                            else res(a,b) = zpx(2*(cos(v3t)-1.)*u3y*u3z,0) ;
+                        } else res(a,b) = zpx(cos(v3t),sin(v3t))*u3y*u3z ;
+                    } else if(mode==2) {
+                        if (tstp) {
+                            if (pseu) res(a,b) = zpx(-v2t*v2t*u2y*u2z,0) + zpx(-v1t*v1t*u1y*u1z,0) ;
+                            else res(a,b) = zpx(2*(cos(v2t)-1.)*u2y*u2z,0) + zpx(2*(cos(v1t)-1.)*u1y*u1z,0) ;
+                        } else res(a,b) = zpx(cos(v2t),sin(v2t))*u2y*u2z + zpx(cos(v1t),sin(v1t))*u1y*u1z ;
+                    }
+                    break;
+                default:
+                    break;
             }
 
         }// b loop

@@ -451,11 +451,11 @@ int lowrank(int m, int n, int (*sample)(vector<int>&, vector<int>&, FltNumMat&),
     int m = M2.m();
     int n = M2.n();
     int lda = m;
-    NumVec<int> jpvt(n);    setvalue(jpvt, int(0));
-    FltNumVec tau(max(m,n));
-    FltNumVec work(3*n);
     int lwork = 6*n;
     int info;
+    NumVec<int> jpvt(n);    setvalue(jpvt, int(0));
+    FltNumVec tau(max(m,n));
+    FltNumVec work(lwork);
     sgeqp3_(&m, &n, M2.data(), &lda, jpvt.data(), tau.data(), work.data(), &lwork, &info);    iA(info==0);
     float cutoff = eps*abs(M2(0,0));
     int cnt=0;
@@ -484,11 +484,11 @@ int lowrank(int m, int n, int (*sample)(vector<int>&, vector<int>&, FltNumMat&),
     int m = M1.m();
     int n = M1.n();
     int lda = m;
-    NumVec<int> jpvt(n);      setvalue(jpvt, int(0));
-    FltNumVec tau(max(m,n));
-    FltNumVec work(3*n);
     int lwork = 6*n;
     int info;
+    NumVec<int> jpvt(n);      setvalue(jpvt, int(0));
+    FltNumVec tau(max(m,n));
+    FltNumVec work(lwork);
     sgeqp3_(&m, &n, M1.data(), &lda, jpvt.data(), tau.data(), work.data(), &lwork, &info);    iA(info==0);
     float cutoff = eps*abs(M1(0,0)); //the diagonal element
     int cnt=0;
@@ -581,12 +581,12 @@ int lowrank(int m, int n, int (*sample)(vector<int>&, vector<int>&, CpxNumMat&),
     int m = M2.m();
     int n = M2.n();
     int lda = m;
+    int lwork = 6*n;
+    int info;
     NumVec<int> jpvt(n);    setvalue(jpvt, int(0));
     CpxNumVec tau(max(m,n));
-    CpxNumVec work(3*n);
+    CpxNumVec work(lwork);
     FltNumVec rwork(6*n);
-    int lwork = 3*n;
-    int info;
     cgeqp3_(&m, &n, 
 	    (MKL_Complex8*) M2.data(), &lda, jpvt.data(), 
 	    (MKL_Complex8*) tau.data(), 
@@ -619,12 +619,12 @@ int lowrank(int m, int n, int (*sample)(vector<int>&, vector<int>&, CpxNumMat&),
     int m = M1.m();
     int n = M1.n();
     int lda = m;
-    NumVec<int> jpvt(n);      setvalue(jpvt, int(0));
-    CpxNumVec tau(max(m,n));
-    CpxNumVec work(3*n);
-    FltNumVec rwork(6*n);
     int lwork = 6*n;
     int info;
+    NumVec<int> jpvt(n);      setvalue(jpvt, int(0));
+    CpxNumVec tau(max(m,n));
+    CpxNumVec work(lwork);
+    FltNumVec rwork(6*n);
     cgeqp3_(&m, &n, 
 	    (MKL_Complex8*) M1.data(), &lda, jpvt.data(), 
 	    (MKL_Complex8*) tau.data(), 
@@ -743,12 +743,12 @@ int lowrank(vector<int> ms, vector<int> ns, vector<int> js, int (*sample)(vector
     int m = M2.m();
     int n = M2.n();
     int lda = m;
+    int lwork = 6*n;
+    int info;
     NumVec<int> jpvt(n);    setvalue(jpvt, int(0));
     CpxNumVec tau(max(m,n));
-    CpxNumVec work(3*n);
+    CpxNumVec work(lwork);
     FltNumVec rwork(6*n);
-    int lwork = 3*n;
-    int info;
     cgeqp3_(&m, &n, 
 	    (MKL_Complex8*) M2.data(), &lda, jpvt.data(), 
 	    (MKL_Complex8*) tau.data(), 
@@ -800,12 +800,12 @@ int lowrank(vector<int> ms, vector<int> ns, vector<int> js, int (*sample)(vector
     int m = M1.m();
     int n = M1.n();
     int lda = m;
-    NumVec<int> jpvt(n);      setvalue(jpvt, int(0));
-    CpxNumVec tau(max(m,n));
-    CpxNumVec work(3*n);
-    FltNumVec rwork(6*n);
     int lwork = 6*n;
     int info;
+    NumVec<int> jpvt(n);      setvalue(jpvt, int(0));
+    CpxNumVec tau(max(m,n));
+    CpxNumVec work(lwork);
+    FltNumVec rwork(6*n);
     cgeqp3_(&m, &n, 
 	    (MKL_Complex8*) M1.data(), &lda, jpvt.data(), 
 	    (MKL_Complex8*) tau.data(), 
@@ -1236,11 +1236,11 @@ int ddlowrank(int m, int n, int (*sample)(vector<int>&, vector<int>&, DblNumMat&
     int m = M2.m();
     int n = M2.n();
     int lda = m;
+    int lwork = 6*n;
+    int info;
     NumVec<int> jpvt(n);    setvalue(jpvt, int(0));
     DblNumVec tau(max(m,n));
-    int lwork = 6*n;
     DblNumVec work(lwork);
-    int info;
     dgeqp3_(&m, &n, M2.data(), &lda, jpvt.data(), tau.data(), work.data(), &lwork, &info);    iA(info==0);
     double cutoff = eps*abs(M2(0,0));
     int cnt=0;
@@ -1265,11 +1265,11 @@ int ddlowrank(int m, int n, int (*sample)(vector<int>&, vector<int>&, DblNumMat&
     int m = M1.m();
     int n = M1.n();
     int lda = m;
+    int lwork = 6*n;
+    int info;
     NumVec<int> jpvt(n);      setvalue(jpvt, int(0));
     DblNumVec tau(max(m,n));
-    int lwork = 6*n;
     DblNumVec work(lwork);
-    int info;
     dgeqp3_(&m, &n, M1.data(), &lda, jpvt.data(), tau.data(), work.data(), &lwork, &info);    iA(info==0);
     double cutoff = eps*abs(M1(0,0));    int cnt=0;
     for(int k=0; k<min(m,n); k++)       if(abs(M1(k,k))>cutoff)   cnt++;
@@ -1511,12 +1511,12 @@ int ddlowrank(vector<int> ms, vector<int> ns, vector<int> js, int (*sample)(vect
     int m = M2.m();
     int n = M2.n();
     int lda = m;
-    NumVec<int> jpvt(n);    setvalue(jpvt, int(0));
-    ZpxNumVec tau(max(m,n));
-    ZpxNumVec work(3*n);
-    DblNumVec rwork(6*n);
     int lwork = 6*n;
     int info;
+    NumVec<int> jpvt(n);    setvalue(jpvt, int(0));
+    ZpxNumVec tau(max(m,n));
+    ZpxNumVec work(lwork);
+    DblNumVec rwork(6*n);
     zgeqp3_(&m, &n, 
 	    (MKL_Complex16*) M2.data(), &lda, jpvt.data(), 
 	    (MKL_Complex16*) tau.data(), 
@@ -1568,12 +1568,12 @@ int ddlowrank(vector<int> ms, vector<int> ns, vector<int> js, int (*sample)(vect
     int m = M1.m();
     int n = M1.n();
     int lda = m;
+    int lwork = 6*n;
+    int info;
     NumVec<int> jpvt(n);      setvalue(jpvt, int(0));
     ZpxNumVec tau(max(m,n));
-    ZpxNumVec work(3*n);
-    int lwork = 6*n;
+    ZpxNumVec work(lwork);
     DblNumVec rwork(6*n);
-    int info;
     zgeqp3_(&m, &n, 
 	    (MKL_Complex16*) M1.data(), &lda, jpvt.data(), 
 	    (MKL_Complex16*) tau.data(), 
