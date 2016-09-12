@@ -86,8 +86,8 @@ int main(int argc, char *argv[])
   sf_warning(">>> Using %d threads <<<", nth);
 #endif
     
-  tgather=sf_input("input");
-  cgather=sf_output("output");
+  tgather=sf_input("--input");
+  cgather=sf_output("--output");
   left=sf_input("left");
   right=sf_input("right");
     
