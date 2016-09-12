@@ -1,4 +1,4 @@
-/* Acoustic/Visco-acoustic gradient */
+/* Visco-acoustic FWI */
 /*
  Copyright (C) 2016 The University of Texas at Austin
  
@@ -19,34 +19,32 @@
 
 #include <rsf.h>
 #include <mpi.h>
-#include "qfwi_commons.h"
+#include "fwi_commons.h"
 #ifdef _OPENMP
 #include <omp.h>
 #endif
+/*^*/
 
+bool verb, first;
+int cpuid, numprocs, nturn; // mpi-related
+int nz, nx, nzx, padnz, padnx, padnzx, nb, nt; // dimension
+int ns, ds_v, s0_v, sz, nr, dr_v, rz, *nr2, *r02, *r0_v; // acquisition
+int frectx, frectz, interval, wnt; // wavefield
+int waterz, wtn1, wtn2, woffn1, woffn2, grectx, grectz; // gradient
 
-bool verb, first, match_opt;
-int cpuid, numprocs, nturn;
-int nz, nx, nzx, padnz, padnx, padnzx, nb, nt;
-int ns, ds_v, s0_v, sz, nr, dr_v, rz;
-int *nr2, *r02, *r0_v;
-int rectx, rectz, grectx, grectz, interval, wnt;
-int waterz, wtn1, wtn2, woffn1, woffn2;
-int misfit_type, match, fniter, frectx, frectz, nw, dw, prec, drectx, drectz, ider;
-
-float dt, idt, dt2, dx2, dz2, wdt, wdt2, scaling, scaling2, w0, swap;
-float wt1, wt2, woff1, woff2, gain;
-float ***dd, **vv, **tau, **taus, *ww, *bc, **weight;
+float dt, idt, dt2, dx2, dz2, wdt, wdt2; // wavefield
+float wt1, wt2, woff1, woff2, gain, scaling, scaling2; // gradient
+float ***dd, **vv, **tau, **taus, *ww, *bc, **weight, threshold[4]; // arrays
 
 MPI_Comm comm=MPI_COMM_WORLD;
 
-void gradient_init(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpar, sf_vec array, sf_fwi fwipar, bool verb1)
+void gradient_init(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpar, sf_vec_q array, sf_fwi_q fwipar, bool verb1)
 /*< initialize >*/
 {
 	int iturn, is;
 
 	verb=verb1;
-	first=true; // only at the first iteration, need to calculate the gradient scaling parameter
+	first=true; // only at the first iteration (for calculating the gradient scaling parameter)
 
 	cpuid=mpipar->cpuid;
 	numprocs=mpipar->numprocs;
@@ -66,23 +64,16 @@ void gradient_init(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpar, 
 	sz=acpar->sz;
 	nr=acpar->nr;
 	dr_v=acpar->dr_v;
+	rz=acpar->rz;
 	nr2=acpar->nr2;
 	r02=acpar->r02;
 	r0_v=acpar->r0_v;
-	rz=acpar->rz;
 
-	rectx=soupar->rectx;
-	rectz=soupar->rectz;
-	grectx=fwipar->rectx;
-	grectz=fwipar->rectz;
+	frectx=soupar->frectx;
+	frectz=soupar->frectz;
 	interval=acpar->interval;
 	wnt=(nt-1)/interval+1;
-	prec=fwipar->prec;
-
-	drectx=fwipar->drectx;
-	drectz=fwipar->drectz;
-	ider=0;
-
+	
 	dt=acpar->dt;
 	idt=1./dt;
 	dt2=dt*dt;
@@ -91,22 +82,23 @@ void gradient_init(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpar, 
 	dx2=acpar->dx*acpar->dx;
 	dz2=acpar->dz*acpar->dz;
 
-	misfit_type=fwipar->misfit_type;
-	match=fwipar->match;
-	match_opt=fwipar->match_opt;
-	fniter=fwipar->fniter;
-	frectx=fwipar->frectx;
-	frectz=fwipar->frectz;
-	nw=fwipar->nw;
-	dw=fwipar->dw;
-	w0=-(nw-1)/2*dw*dt+match;
-
+	/* gradient preconditioning */
+	waterz=fwipar->waterz;
+	grectx=fwipar->grectx;
+	grectz=fwipar->grectz;
+	
+	/* data residual weighting */
+	gain=fwipar->gain;
 	wt1=fwipar->wt1;
 	wt2=fwipar->wt2;
 	woff1=fwipar->woff1;
 	woff2=fwipar->woff2;
-	gain=fwipar->gain;
-	waterz=fwipar->waterz;
+	wtn1=(wt1-acpar->t0)/dt+0.5;
+	wtn2=(wt2-acpar->t0)/dt+0.5;
+	woffn1=(woff1-acpar->r0)/acpar->dr+0.5;
+	woffn2=(woff2-acpar->r0)/acpar->dr+0.5;
+	weight=sf_floatalloc2(nt, nr);
+	residual_weighting(weight, nt, nr, wtn1, wtn2, woffn1, woffn2, gain);
 
 	ww=array->ww;
 	bc=acpar->bc;
@@ -124,14 +116,6 @@ void gradient_init(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpar, 
 		}
 	}
 	
-	/* data residual weights */
-	wtn1=(wt1-acpar->t0)/dt+0.5;
-	wtn2=(wt2-acpar->t0)/dt+0.5;
-	woffn1=(woff1-acpar->r0)/acpar->dr+0.5;
-	woffn2=(woff2-acpar->r0)/acpar->dr+0.5;
-	weight=sf_floatalloc2(nt, nr);
-	residual_weighting(weight, nt, nr, wtn1, wtn2, woffn1, woffn2, gain);
-
 	/* padding and convert vector to 2-d array */
 	vv = sf_floatalloc2(padnz, padnx);
 	tau= sf_floatalloc2(padnz, padnx);
@@ -140,314 +124,13 @@ void gradient_init(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpar, 
 	pad2d(array->tau, tau, nz, nx, nb);
 	pad2d(array->taus, taus, nz, nx, nb);
 
+	/* hard thresholding */
+	threshold[0]=fwipar->v1;
+	threshold[1]=fwipar->v2;
+	threshold[2]=fwipar->tau1;
+	threshold[3]=fwipar->tau2;
+
 	return;
-}
-
-void turnon(int option)
-/*< flag for the derivative of smoothing >*/
-{
-	ider=option;
-}
-
-void take_swap(float *swap1)
-/*< flag for the derivative of smoothing >*/
-{
-	*swap1=swap;
-}
-
-void gradient_av(float *x, float *fcost, float *grad)
-/*< acoustic velocity gradient >*/
-{
-	int ix, iz, is, ir, it, wit, iturn;
-	int sx, rx;
-
-	float temp, dmax;
-	float **p0, **p1, **p2, **term, **tmparray, *rr, ***wave, **pp, **comp;
-	float *sendbuf, *recvbuf;
-	sf_file Fres;
-	Fres=sf_output("Fres");
-
-	sf_putint(Fres,"n1",nt);
-	sf_putint(Fres,"n2",nr);
-
-	/* initialize fcost */
-	*fcost=0.;
-	/* update velocity */
-	pad2d(x, vv, nz, nx, nb);
-	/* initialize gradient */
-	memset(grad, 0., nzx*sizeof(float));
-	/* initial data misfit */
-	swap=0.;
-
-	/* memory allocation */
-	p0=sf_floatalloc2(padnz, padnx);
-	p1=sf_floatalloc2(padnz, padnx);
-	p2=sf_floatalloc2(padnz, padnx);
-	term=sf_floatalloc2(padnz, padnx);
-	rr=sf_floatalloc(padnzx);
-	wave=sf_floatalloc3(nz, nx, wnt);
-	pp=sf_floatalloc2(nt, nr);
-	if(prec){/* incident wavefield */
-		comp=sf_floatalloc2(nz, nx);
-		memset(comp[0], 0., nzx*sizeof(float));
-	}
-
-	iturn=0;
-	for(is=cpuid; is<ns; is+=numprocs){
-		if(cpuid==0) sf_warning("###### is=%d ######", is+1);
-
-		memset(p0[0], 0., padnzx*sizeof(float));
-		memset(p1[0], 0., padnzx*sizeof(float));
-		memset(p2[0], 0., padnzx*sizeof(float));
-		memset(pp[0], 0., nr*nt*sizeof(float));
-		
-		sx=s0_v+is*ds_v;
-		source_map(sx, sz, rectx, rectz, padnx, padnz, padnzx, rr);
-
-		wit=0;
-		/* forward propagation */
-		for(it=0; it<nt; it++){
-			if(verb) sf_warning("Forward propagation is=%d; it=%d;", is+1, it);
-
-			/* output predicted data */
-			for(ir=0; ir<nr2[is]; ir++){
-				rx=r0_v[is]+ir*dr_v;
-				pp[r02[is]+ir][it]=p1[rx][rz];
-			}
-
-			/* save wavefield */
-			if(it%interval==0){
-#ifdef _OPENMP 
-#pragma omp parallel for \
-			private(ix,iz) \
-			shared(wave,p1,wit,nb,nx,nz)
-#endif
-				for(ix=0; ix<nx; ix++)
-					for(iz=0; iz<nz; iz++)
-						wave[wit][ix][iz]=p1[ix+nb][iz+nb];
-				wit++;
-			}
-
-			/* laplacian operator */
-			laplace(p1, term, padnx, padnz, dx2, dz2);
-			
-			/* load source */
-#ifdef _OPENMP 
-#pragma omp parallel for \
-			private(ix,iz) \
-			shared(term,rr,padnx,padnz,ww,it)
-#endif
-			for(ix=0; ix<padnx; ix++){
-				for(iz=0; iz<padnz; iz++){
-					term[ix][iz] += rr[ix*padnz+iz]*ww[it];
-				}
-			}
-
-			/* update */
-#ifdef _OPENMP 
-#pragma omp parallel for \
-			private(ix,iz) \
-			shared(p0,p1,p2,vv,term,padnx,padnz,dt2)
-#endif
-			for(ix=4; ix<padnx-4; ix++){
-				for(iz=4; iz<padnz-4; iz++){
-					p2[ix][iz]=2*p1[ix][iz]-p0[ix][iz]+vv[ix][iz]*vv[ix][iz]*dt2*term[ix][iz];
-				}
-			}
-			
-			/* swap wavefield pointer of different time steps */
-			tmparray=p0; p0=p1; p1=p2; p2=tmparray;
-
-			/* boundary condition */
-			apply_sponge(p0, bc, padnx, padnz, nb);
-			apply_sponge(p1, bc, padnx, padnz, nb);
-		} // end of time loop
-
-		/* check */
-		if(wit != wnt) sf_error("Incorrect number of wavefield snapshots");
-		wit--;
-		
-		/* calculate data residual and data misfit */
-		if(misfit_type==1){ // Minimize the L2 norm of data residual
-			for(ir=0; ir<nr; ir++){
-				for(it=0; it<nt; it++){
-					pp[ir][it]=dd[iturn][ir][it]-pp[ir][it];
-					pp[ir][it] *= weight[ir][it];
-					*fcost += 0.5*pp[ir][it]*pp[ir][it];
-				}
-			}
-		}else if(misfit_type==2){ // Minimize wiener filter misfit
-			adjsou_wiener(dd[iturn], pp, fcost, nr2[is], r02[is], nt, dt, fniter);
-			/* window the data residual */
-			for(ir=0; ir<nr; ir++){
-				for(it=0; it<nt; it++){
-					pp[ir][it] *= weight[ir][it];
-				}
-			}
-		}else if(misfit_type==3){
-			adjsou_match(dd[iturn], pp, fcost, nw, dw, w0, nr, nt, dt, fniter, frectx, frectz, match, match_opt);
-			/* window the data residual */
-			for(ir=0; ir<nr; ir++){
-				for(it=0; it<nt; it++){
-					pp[ir][it] *= weight[ir][it];
-				}
-			}
-		}else if(misfit_type==4){
-			for(ir=0; ir<nr; ir++){
-				for(it=0; it<nt; it++){
-					pp[ir][it]=dd[iturn][ir][it]-pp[ir][it];
-					pp[ir][it] *= weight[ir][it];
-					swap += 0.5*pp[ir][it]*pp[ir][it];
-				}
-			}
-			smooth_misfit(pp, fcost, nr, nt, drectx, drectz, ider);
-			//smooth_misfit(dd[iturn], pp, fcost, nr, nt, drectx, drectz);
-		}else{
-			sf_error("Misfit type needs to be defined!");
-		}
-		
-		iturn++;
-
-		/* check the data residual */
-		if(is==ns/2) sf_floatwrite(pp[0], nr*nt, Fres);
-		sf_fileclose(Fres);
-
-		/* initialization */
-		memset(p0[0], 0., padnzx*sizeof(float));
-		memset(p1[0], 0., padnzx*sizeof(float));
-		memset(p2[0], 0., padnzx*sizeof(float));
-		memset(term[0], 0., padnzx*sizeof(float));
-		
-		/* backward propagation */
-		for(it=nt-1; it>=0; it--){
-			if(verb) sf_warning("Backward propagation is=%d; it=%d;", is+1, it);
-			
-			/* laplacian operator */
-			laplace(p1, term, padnx, padnz, dx2, dz2);
-			
-			/* load data residual*/
-			for(ir=0; ir<nr2[is]; ir++){
-				rx=r0_v[is]+ir*dr_v;
-				term[rx][rz] += pp[r02[is]+ir][it];
-			}
-
-			/* update */
-#ifdef _OPENMP 
-#pragma omp parallel for \
-			private(ix,iz) \
-			shared(p0,p1,p2,vv,term,padnx,padnz,dt2)
-#endif
-			for(ix=4; ix<padnx-4; ix++){
-				for(iz=4; iz<padnz-4; iz++){
-					p2[ix][iz]=2*p1[ix][iz]-p0[ix][iz]+vv[ix][iz]*vv[ix][iz]*dt2*term[ix][iz];
-				}
-			}
-			
-			/* calculate gradient  */
-			if(it%interval==0){
-				if(wit != wnt-1 && wit != 0){ // avoid the first and last time step
-#ifdef _OPENMP 
-#pragma omp parallel for \
-			private(ix,iz,temp) \
-			shared(nx,nz,vv,wave,p1,wit,wdt2,grad)
-#endif
-					for(ix=0; ix<nx; ix++){
-						for(iz=0; iz<nz; iz++){
-							temp=vv[ix+nb][iz+nb];
-							temp=temp*temp*temp;
-							temp=-2./temp;
-							grad[ix*nz+iz] += (wave[wit+1][ix][iz]-2.*wave[wit][ix][iz]+wave[wit-1][ix][iz])/wdt2*p1[ix+nb][iz+nb]*temp;
-							if(prec) comp[ix][iz] += wave[wit][ix][iz]*wave[wit][ix][iz];
-						}
-					}
-				}
-				wit--;
-			}
-			
-			/* swap wavefield pointer of different time steps */
-			tmparray=p0; p0=p1; p1=p2; p2=tmparray;
-
-			/* boundary condition */
-			apply_sponge(p0, bc, padnx, padnz, nb);
-			apply_sponge(p1, bc, padnx, padnz, nb);
-		} // end of time loop
-	}// end of shot loop
-	MPI_Barrier(comm);
-	
-	/* misfit reduction */
-	//MPI_ALLreduce(sendbuf, recvbuf, 1, MPI_FLOAT, MPI_SUM, comm);
-	
-	if(cpuid==0){
-		sendbuf=MPI_IN_PLACE;
-		recvbuf=fcost;
-	}else{
-		sendbuf=fcost;
-		recvbuf=NULL;
-	}
-	MPI_Reduce(sendbuf, recvbuf, 1, MPI_FLOAT, MPI_SUM, 0, comm);
-	MPI_Bcast(fcost, 1, MPI_FLOAT, 0, comm);
-	
-	if(cpuid==0){
-		sendbuf=MPI_IN_PLACE;
-		recvbuf=&swap;
-	}else{
-		sendbuf=&swap;
-		recvbuf=NULL;
-	}
-	MPI_Reduce(sendbuf, recvbuf, 1, MPI_FLOAT, MPI_SUM, 0, comm);
-	MPI_Bcast(&swap, 1, MPI_FLOAT, 0, comm);
-
-	/* gradient reduction */
-	//MPI_ALLreduce(sendbuf, recvbuf, nzx, MPI_FLOAT, MPI_SUM, comm);
-	if(cpuid==0){
-		sendbuf=MPI_IN_PLACE;
-		recvbuf=grad;
-	}else{
-		sendbuf=grad;
-		recvbuf=NULL;
-	}
-	MPI_Reduce(sendbuf, recvbuf, nzx, MPI_FLOAT, MPI_SUM, 0, comm);
-	MPI_Bcast(grad, nzx, MPI_FLOAT, 0, comm);
-
-	if(prec){
-	/* incident wavefield reduction */
-	if(cpuid==0){
-		sendbuf=MPI_IN_PLACE;
-		recvbuf=comp[0];
-	}else{
-		sendbuf=comp[0];
-		recvbuf=NULL;
-	}
-	MPI_Reduce(sendbuf, recvbuf, nzx, MPI_FLOAT, MPI_SUM, 0, comm);
-	MPI_Bcast(comp[0], nzx, MPI_FLOAT, 0, comm);
-
-	/* spatially precondition the gradient by dividing it with incident wavefield */
-	for(ix=0; ix<nx; ix++){
-		for(iz=0; iz<nz; iz++){
-			grad[ix*nz+iz] /= (sqrtf(comp[ix][iz])+FLT_EPSILON);
-		}
-	}
-	}
-
-	/* scaling gradient */
-	if(first){
-		dmax=0.;
-		for(ix=0; ix<nzx; ix++)
-			if(fabsf(grad[ix])>dmax)
-				dmax=fabsf(grad[ix]);
-		scaling=0.1/dmax;
-		first=false;
-	}
-
-	/* smooth gradient */
-	gradient_smooth2(grectx, grectz, nx, nz, waterz, scaling, grad);
-
-	/* free allocated memory */
-	free(*p0); free(p0); free(*p1); free(p1);
-	free(*p2); free(p2); free(*pp); free(pp);
-	free(**wave); free(*wave); free(wave);
-	free(rr); free(*term); free(term);
-	if(prec) {free(*comp); free(comp);}
 }
 
 void gradient_v(float *x, float *fcost, float *grad)
@@ -501,7 +184,6 @@ void gradient_v(float *x, float *fcost, float *grad)
 	wave=sf_floatalloc3(nz, nx, wnt);
 	pp=sf_floatalloc2(nt, nr);
 
-	
 	iturn=0;
 	for(is=cpuid; is<ns; is+=numprocs){
 		if(cpuid==0) sf_warning("###### is=%d ######", is+1);
@@ -513,10 +195,9 @@ void gradient_v(float *x, float *fcost, float *grad)
 		memset(r2[0], 0., padnzx*sizeof(float));
 		memset(pp[0], 0., nr*nt*sizeof(float));
 		memset(term[0], 0., padnzx*sizeof(float));
-		memset(tmp[0], 0., padnzx*sizeof(float));
 		
 		sx=s0_v+is*ds_v;
-		source_map(sx, sz, rectx, rectz, padnx, padnz, padnzx, rr);
+		source_map(sx, sz, frectx, frectz, padnx, padnz, padnzx, rr);
 
 		wit=0;
 		/* forward propagation */
@@ -582,8 +263,8 @@ void gradient_v(float *x, float *fcost, float *grad)
 		for(ir=0; ir<nr; ir++){
 			for(it=0; it<nt; it++){
 				pp[ir][it]=dd[iturn][ir][it]-pp[ir][it];
-				*fcost += 0.5*pp[ir][it]*pp[ir][it];
 				pp[ir][it] *= weight[ir][it];
+				*fcost += 0.5*pp[ir][it]*pp[ir][it];
 			}
 		}
 		iturn++;
@@ -688,9 +369,6 @@ void gradient_v(float *x, float *fcost, float *grad)
 
 	/* misfit reduction */
 	//MPI_ALLreduce(sendbuf, recvbuf, 1, MPI_FLOAT, MPI_SUM, comm);
-	/*if(counter==2){
-		sf_warning("---cpuid=%d fcost=%3.3e---",cpuid, *fcost);
-	} */
 	if(cpuid==0){
 		sendbuf=MPI_IN_PLACE;
 		recvbuf=fcost;
@@ -778,7 +456,7 @@ void gradient_q(float *x, float *fcost, float *grad)
 		memset(tmp[0], 0., padnzx*sizeof(float));
 		
 		sx=s0_v+is*ds_v;
-		source_map(sx, sz, rectx, rectz, padnx, padnz, padnzx, rr);
+		source_map(sx, sz, frectx, frectz, padnx, padnz, padnzx, rr);
 
 		wit=0;
 		/* forward propagation */
@@ -842,8 +520,8 @@ void gradient_q(float *x, float *fcost, float *grad)
 		for(ir=0; ir<nr; ir++){
 			for(it=0; it<nt; it++){
 				pp[ir][it]=dd[iturn][ir][it]-pp[ir][it];
-				*fcost += 0.5*pp[ir][it]*pp[ir][it];
 				pp[ir][it] *= weight[ir][it];
+				*fcost += 0.5*pp[ir][it]*pp[ir][it];
 			}
 		}
 		iturn++;
@@ -971,16 +649,6 @@ void gradient_q(float *x, float *fcost, float *grad)
 	free(*tmp); free(tmp);
 }
 
-void update(float *x)
-/*< update velocity and tau >*/
-{
-	float *x1, *x2;
-	x1=x;
-	x2=x+nzx;
-	pad2d(x1, vv, nz, nx, nb);
-	pad2d(x2, tau, nz, nx, nb);
-}
-
 void gradient_vq(float *x, float *fcost, float *grad)
 /*< velocity and tau gradient >*/
 {
@@ -998,10 +666,10 @@ void gradient_vq(float *x, float *fcost, float *grad)
 	x2=x+nzx;
 	pad2d(x1, vv, nz, nx, nb);
 	pad2d(x2, tau, nz, nx, nb);
-	/* initialize gradient */
-	memset(grad, 0., nzx*sizeof(float));
 	/* model dimension */
 	nm=2*nzx;
+	/* initialize gradient */
+	memset(grad, 0., nm*sizeof(float));
 
 	/* memory allocation */
 	p0=sf_floatalloc2(padnz, padnx);
@@ -1030,7 +698,7 @@ void gradient_vq(float *x, float *fcost, float *grad)
 		memset(tmp[0], 0., padnzx*sizeof(float));
 		
 		sx=s0_v+is*ds_v;
-		source_map(sx, sz, rectx, rectz, padnx, padnz, padnzx, rr);
+		source_map(sx, sz, frectx, frectz, padnx, padnz, padnzx, rr);
 
 		wit=0;
 		/* forward propagation */
@@ -1096,8 +764,8 @@ void gradient_vq(float *x, float *fcost, float *grad)
 		for(ir=0; ir<nr; ir++){
 			for(it=0; it<nt; it++){
 				pp[ir][it]=dd[iturn][ir][it]-pp[ir][it];
-				*fcost += 0.5*pp[ir][it]*pp[ir][it];
 				pp[ir][it] *= weight[ir][it];
+				*fcost += 0.5*pp[ir][it]*pp[ir][it];
 			}
 		}
 		iturn++;
@@ -1237,4 +905,120 @@ void gradient_vq(float *x, float *fcost, float *grad)
 	free(**wave2); free(*wave2); free(wave2);
 	free(rr); free(*term); free(term);
 	free(*tmp); free(tmp);
+}
+
+void fwi(sf_file Fdat, sf_file Finv, sf_file Ferr, sf_file Fgrad, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpar, sf_vec_q array, sf_fwi_q fwipar, sf_optim optpar, bool verb1)
+/*< fwi >*/
+{
+	int i, iter=0, flag, nm;
+	float fcost;
+	float *x, *direction, *grad;
+	sf_gradient gradient;
+	FILE *fp;
+
+	/* initialize */
+	gradient_init(Fdat, mpipar, soupar, acpar, array, fwipar, verb1);
+
+	/* gradient type */
+	if(fwipar->grad_type==1){
+		gradient=gradient_v;
+		nm=nzx;
+		x=array->vv;
+	}else if(fwipar->grad_type==2){
+		gradient=gradient_q;
+		nm=nzx;
+		x=array->tau;
+	}else if(fwipar->grad_type==3){
+		gradient=gradient_vq;
+		nm=2*nzx;
+		x=sf_floatalloc(nm);;
+		for(i=0; i<nzx; i++){
+			x[i]=array->vv[i];
+			x[nzx+i]=array->tau[i];
+		}
+	}
+
+
+	/* calculate first gradient */
+	grad=sf_floatalloc(nm);
+	gradient(x, &fcost, grad);
+
+	/* output first gradient */
+	if(mpipar->cpuid==0) sf_floatwrite(grad, nm, Fgrad);
+
+	/* if onlygrad=y, program terminates */
+	if(fwipar->onlygrad) return; 
+
+	if(mpipar->cpuid==0) fp=fopen("iterate.txt","a");
+
+	direction=sf_floatalloc(nm);
+	optpar->sk=sf_floatalloc2(nm, optpar->npair);
+	optpar->yk=sf_floatalloc2(nm, optpar->npair);
+
+	optpar->igrad=1;
+	optpar->ipair=0;
+	optpar->ils=0;
+	optpar->fk=fcost;
+	optpar->f0=fcost;
+	optpar->alpha=1.;
+	/* initialize data error vector */
+	for(iter=0; iter<optpar->niter+1; iter++){
+		optpar->err[iter]=0.;
+	}
+	optpar->err[0]=fcost;
+
+	iter=0;
+	if(mpipar->cpuid==0){
+		l2norm(nm, grad, &optpar->gk_norm);
+		print_iteration(fp, iter, optpar);
+	}
+
+	/* optimization loop */
+	for(iter=0; iter<optpar->niter; iter++){
+		if(mpipar->cpuid==0) sf_warning("-------------------iter=%d----------------------", iter+1);
+		
+		optpar->ils=0;
+		if(iter%optpar->repeat==0) optpar->alpha=1.;
+
+		/* search direction */
+		if(iter==0){
+			reverse(nm, grad, direction);
+		}else{
+			lbfgs_update(nm, x, grad, optpar->sk, optpar->yk, optpar);
+			lbfgs_direction(nm, grad, direction, optpar->sk, optpar->yk, optpar);
+		}
+
+		/* line search */
+		lbfgs_save(nm, x, grad, optpar->sk, optpar->yk, optpar);
+		line_search(nm, x, grad, direction, gradient, optpar, threshold, &flag, mpipar->cpuid, 1);
+		optpar->err[iter+1]=optpar->fk;
+		
+		if(mpipar->cpuid==0){
+			l2norm(nm, grad, &optpar->gk_norm);
+			print_iteration(fp, iter+1, optpar);
+			fclose(fp); /* get written to disk right away */
+			fp=fopen("iterate.txt","a");
+		}
+
+		if(mpipar->cpuid==0 && flag==2){
+			fprintf(fp, "Line Search Failed\n");
+			break;
+		}
+
+		if(mpipar->cpuid==0 && optpar->fk/optpar->f0 < optpar->conv_error){
+			fprintf(fp, "Convergence Criterion Reached\n");
+			break;
+		}
+	} // end of iter
+
+	if(mpipar->cpuid==0 && iter==optpar->niter){
+		fprintf(fp, "Maximum Iteration Number Reached\n");
+	}
+
+	/* output vel & misfit */
+	if(mpipar->cpuid==0) sf_floatwrite(x, nm, Finv);
+	if(mpipar->cpuid==0) sf_floatwrite(optpar->err, optpar->niter+1, Ferr);
+	if(mpipar->cpuid==0) fclose(fp);
+
+	return;
 }

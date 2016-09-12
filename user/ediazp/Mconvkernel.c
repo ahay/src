@@ -41,6 +41,7 @@ int main(int argc, char* argv[])
   float ***input3, ***output3;
   int *lag1,*lag2,*lag3,nd;
   int n1,n2,n3,nl,ndim,  n[SF_MAX_DIM];
+  int ntraces, itr;
   sf_axis axlag; 
 
   sf_file Fin=NULL; /* velocity  */
@@ -83,11 +84,11 @@ int main(int argc, char* argv[])
     sf_floatread(filter,nl,Ffilter);
     sf_intread(lag1,nl,Flag1);
 
-    int ntraces = sf_leftsize(Fin,1);
+    ntraces = sf_leftsize(Fin,1);
 
     sf_warning("read n1=%d tr=%d",n1,ntraces);
     convkernel1_init(n1,nl,lag1,filter);
-    for (int itr=0; itr<ntraces; ++itr){
+    for (itr=0; itr<ntraces; ++itr){
       sf_floatread(input1,n1,Fin);
       if (adj){
         convkernel1_apply(output1,input1,adj);
