@@ -289,8 +289,8 @@ int main(int argc, char *argv[])
     if(!sf_getfloat("tau0", &tau0)) sf_error("Need tau0=");
 
 	/* input/output files */
-	Fdat=sf_input("in");
-	Fimg1=sf_output("out");
+	Fdat=sf_input("--input");
+	Fimg1=sf_output("--output");
     Fimg2=sf_output("Fimg2");
     Fsrc=sf_input("Fsrc");
     Fvel=sf_input("Fpadvel");
