@@ -413,10 +413,11 @@ void fwi(sf_file Fdat, sf_file Finv, sf_file Ferr, sf_file Fgrad, sf_mpi *mpipar
 	optpar->f0=fcost;
 	optpar->alpha=1.;
 	/* initialize data error vector */
-	for(iter=0; iter<optpar->niter+1; iter++){
+	for(iter=0; iter<optpar->nerr; iter++){
 		optpar->err[iter]=0.;
 	}
-	optpar->err[0]=swap;
+	if (optpar->err_type==0) optpar->err[0]=fcost;
+	else optpar->err[optpar->nerr/2]=swap;
 
 	iter=0;
 	if(mpipar->cpuid==0){
@@ -442,7 +443,8 @@ void fwi(sf_file Fdat, sf_file Finv, sf_file Ferr, sf_file Fgrad, sf_mpi *mpipar
 		/* line search */
 		lbfgs_save(nzx, x, grad, optpar->sk, optpar->yk, optpar);
 		line_search(nzx, x, grad, direction, gradient, optpar, threshold, &flag, mpipar->cpuid, 1);
-		optpar->err[iter+1]=swap;
+		if (optpar->err_type==0) optpar->err[iter+1]=fcost;
+		else optpar->err[optpar->nerr/2+iter+1]=swap;
 		
 		if(mpipar->cpuid==0){
 			l2norm(nzx, grad, &optpar->gk_norm);
@@ -468,7 +470,7 @@ void fwi(sf_file Fdat, sf_file Finv, sf_file Ferr, sf_file Fgrad, sf_mpi *mpipar
 
 	/* output vel & misfit */
 	if(mpipar->cpuid==0) sf_floatwrite(x, nzx, Finv);
-	if(mpipar->cpuid==0) sf_floatwrite(optpar->err, optpar->niter+1, Ferr);
+	if(mpipar->cpuid==0) sf_floatwrite(optpar->err, optpar->nerr, Ferr);
 	if(mpipar->cpuid==0) fclose(fp);
 
 	return;
