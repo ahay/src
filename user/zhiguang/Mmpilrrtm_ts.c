@@ -56,9 +56,9 @@ int cfft2_init(int pad1           /* padding on the first axis */,
 
 #ifdef SF_HAS_FFTW
 #ifdef _OPENMP
-    fftw_init_threads();
+    fftwf_init_threads();
     sf_warning("Using threaded FFTW3! \n");
-    fftw_plan_with_nthreads(omp_get_max_threads());
+    fftwf_plan_with_nthreads(omp_get_max_threads());
 #endif
 #endif
 
@@ -193,7 +193,7 @@ void cfft2_finalize()
 /* make sure everything is back to its pristine state */
 #ifdef SF_HAS_FFTW
 #ifdef _OPENMP
-    fftw_cleanup_threads();
+    fftwf_cleanup_threads();
 #endif
     fftwf_destroy_plan(cfg);
     fftwf_destroy_plan(icfg);
@@ -308,8 +308,8 @@ int main(int argc, char *argv[])
 	if(!sf_getint("nr0", &nr0)) nr0=0;
 
 	/* input/output files */
-	Fdat=sf_input("input");
-	Fimg1=sf_output("output");
+	Fdat=sf_input("--input");
+	Fimg1=sf_output("--output");
     Fimg2=sf_output("Fimg2");
     Fsrc=sf_input("Fsrc");
     Fvel=sf_input("Fpadvel");
@@ -849,11 +849,11 @@ void reflgen(int nzb, int nxb, int spz, int spx,
     /* 2-d triangle smoothing */
     for (i=0;i<2;i++) {
       if (rect[i] <= 1) continue;
-      tr = sf_triangle_init (rect[i],n[i]);
+      tr = sf_triangle_init (rect[i],n[i],box[i]);
       for (j=0; j < nzx/n[i]; j++) {
 	i0 = sf_first_index (i,j,2,n,s);
 	for (irep=0; irep < nrep; irep++) {
-	  sf_smooth2 (tr,i0,s[i],diff[i],box[i],refl);
+	  sf_smooth2 (tr,i0,s[i],diff[i],refl);
 	}
       }
       sf_triangle_close(tr);
