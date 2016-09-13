@@ -38,8 +38,8 @@ int main (int argc, char *argv[])
     MPI_Comm_size(comm, &numprocs);
 
     sf_init(argc,argv);
-    in = sf_input ("input");
-    out = sf_output ("output");
+    in = sf_input ("--input");
+    out = sf_output ("--output");
 
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float type");
     if (cpuid==0) sf_warning("numprocs=%d", numprocs);

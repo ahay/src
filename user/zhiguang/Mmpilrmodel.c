@@ -284,8 +284,8 @@ int main(int argc, char *argv[])
 	if(!sf_getint("spz", &spz)) sf_error("Need spz=");
 
 	/* input/output files */
-	Fsrc=sf_input("in");
-	Fdat=sf_output("out");
+	Fsrc=sf_input("--input");
+	Fdat=sf_output("--output");
 
 	if(wantwf){
 		Fwfld=sf_output("Fwfld");
