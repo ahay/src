@@ -56,9 +56,9 @@ int cfft2_init(int pad1           /* padding on the first axis */,
 
 #ifdef SF_HAS_FFTW
 #ifdef _OPENMP
-    fftwf_init_threads();
+    fftw_init_threads();
     sf_warning("Using threaded FFTW3! \n");
-    fftwf_plan_with_nthreads(omp_get_max_threads());
+    fftw_plan_with_nthreads(omp_get_max_threads());
 #endif
 #endif
 
@@ -193,7 +193,7 @@ void cfft2_finalize()
 /* make sure everything is back to its pristine state */
 #ifdef SF_HAS_FFTW
 #ifdef _OPENMP
-    fftwf_cleanup_threads();
+    fftw_cleanup_threads();
 #endif
     fftwf_destroy_plan(cfg);
     fftwf_destroy_plan(icfg);
@@ -218,16 +218,26 @@ int main(int argc, char *argv[])
 	int ix, iz, is, it, wfit, im, ik, i, j, itau;
     int ns, nx, nz, nt, wfnt, rnx, rnz, nzx, rnzx, vnx, ntau, htau, nds;
 	int scalet, snap, snapshot, fnx, fnz, fnzx, nk, nb;
-	int rectx, rectz, gpz, n, m, pad1, trunc, spx, spz;
+	int rectx, rectz, repeat, gpz, n, m, pad1, trunc, spx, spz;
 
 	float dt, t0, z0, dz, x0, dx, s0, ds, wfdt, srctrunc;
     float dtau, tau0, tau;
+
+	int nr, ndr, nr0;
 
 	char *path1, *path2, number[5], *left, *right;
 
 	double tstart, tend;
 	struct timeval tim;
-	
+
+	/*wavenumber domain tapering*/
+	int taper;
+	float *ktp;
+	float ktmp,kx_trs,kz_trs,thresh;
+	float dkx,dkz,kx0,kz0;
+	float kx,kz;
+	int nkz;
+
 	sf_complex c, **lt, **rt;
 	sf_complex *ww, **dd;
 	float ***img1, **img2, ***mig1, **mig2;
@@ -261,6 +271,9 @@ int main(int argc, char *argv[])
 	gettimeofday(&tim, NULL);
 	tstart=tim.tv_sec+(tim.tv_usec/1000000.0);
 
+	if (!sf_getint("taper",&taper)) taper=0; /* tapering in the frequency domain */
+	if (!sf_getfloat("thresh",&thresh)) thresh=0.92; /* tapering threshold */
+
 	if(!sf_getbool("wantwf", &wantwf)) wantwf=false;
     if(!sf_getbool("verb", &verb)) verb=false;
 	if(!sf_getint("pad1", &pad1)) pad1=1;
@@ -270,6 +283,7 @@ int main(int argc, char *argv[])
 	if(!sf_getfloat("srctrunc", &srctrunc)) srctrunc=0.4;
 	if(!sf_getint("rectx", &rectx)) rectx=2;
 	if(!sf_getint("rectz", &rectz)) rectz=2;
+	if(!sf_getint("repeat", &repeat)) repeat=2;
 
 	if(!sf_getint("scalet", &scalet)) scalet=1;
 	if(!sf_getint("snap", &snap)) snap=100;
@@ -288,9 +302,14 @@ int main(int argc, char *argv[])
     if(!sf_getfloat("dtau", &dtau)) sf_error("Need dtau=");
     if(!sf_getfloat("tau0", &tau0)) sf_error("Need tau0=");
 
+	/* geometry parameters */
+	if(!sf_getint("rnx", &rnx)) sf_error("Need rnx=");
+	if(!sf_getint("ndr", &ndr)) ndr=1;
+	if(!sf_getint("nr0", &nr0)) nr0=0;
+
 	/* input/output files */
-	Fdat=sf_input("--input");
-	Fimg1=sf_output("--output");
+	Fdat=sf_input("input");
+	Fimg1=sf_output("output");
     Fimg2=sf_output("Fimg2");
     Fsrc=sf_input("Fsrc");
     Fvel=sf_input("Fpadvel");
@@ -301,10 +320,9 @@ int main(int argc, char *argv[])
 	}
 
 	at=sf_iaxa(Fsrc, 1); nt=sf_n(at); dt=sf_d(at); t0=sf_o(at);
-    ax=sf_iaxa(Fvel, 2); vnx=sf_n(ax); x0=sf_o(ax);
+    ax=sf_iaxa(Fvel, 2); vnx=sf_n(ax); dx=sf_d(ax); x0=sf_o(ax);
 	az=sf_iaxa(Fvel, 1); rnz=sf_n(az); dz=sf_d(az); z0=sf_o(az);
-    if(!sf_histint(Fdat, "n2", &rnx)) sf_error("Need n2= in input!");
-    if(!sf_histfloat(Fdat, "d2", &dx)) sf_error("Need d2= in input!");
+    if(!sf_histint(Fdat, "n2", &nr)) sf_error("Need n2= in input!");
     if(!sf_histint(Fdat, "n3", &ns)) sf_error("Need n3= in input!");
     if(!sf_histfloat(Fdat, "d3", &ds)) sf_error("Need d3= in input!");
     if(!sf_histfloat(Fdat, "o3", &s0)) sf_error("Need o3= in input!");
@@ -314,7 +332,7 @@ int main(int argc, char *argv[])
     
     /* double check the geometry parameters */
     if(nds != (int)(ds/dx)) sf_error("Need ds/dx= %d", nds);
-	sf_warning("s0=%g, x0+(rnx-1)*dx/2=%g", s0, x0+(rnx-1)*dx/2);
+	//sf_warning("s0=%g, x0+(rnx-1)*dx/2=%g", s0, x0+(rnx-1)*dx/2);
     //if(s0 != x0+(rnx-1)*dx/2) sf_error("Wrong origin information!");
     if(vnx != nds*(ns-1)+rnx) sf_error("Wrong dimension in x axis!");
 
@@ -366,6 +384,7 @@ int main(int argc, char *argv[])
     sf_warning("cpuid=%d, numprocs=%d", cpuid, numprocs);
 	sf_warning("nt=%d, dt=%g, scalet=%d, wfnt=%d, wfdt=%g",nt, dt, scalet, wfnt, wfdt);
 	sf_warning("vnx=%d, nx=%d, dx=%g, nb=%d, rnx=%d", vnx, nx, dx, nb, rnx);
+	sf_warning("nr=%d, ndr=%d, nr0=%g", nr, ndr, nr0);
 	sf_warning("nz=%d, rnz=%d, dz=%g, z0=%g", nz, rnz, dz, z0);
 	sf_warning("spx=%d, spz=%d, gpz=%d", spx, spz, gpz);
 	sf_warning("ns=%d, ds=%g, s0=%g", ns, ds, s0);
@@ -380,11 +399,12 @@ int main(int argc, char *argv[])
     gpz=gpz+nb;
     spz=spz+nb;
     spx=spx+nb;
+	nr0=nr0+nb;
     trunc=srctrunc/dt+0.5;
     
-	dd=sf_complexalloc2(nt, rnx);
+	dd=sf_complexalloc2(nt, nr);
 	rr=sf_floatalloc(nzx);
-	reflgen(nz, nx, spz, spx, rectz, rectx, 0, rr);
+	reflgen(nz, nx, spz, spx, rectz, rectx, repeat, rr);
     
     fwf=sf_floatalloc3(rnz, rnx, wfnt);
     bwf=sf_floatalloc3(rnz, rnx, wfnt);
@@ -401,6 +421,34 @@ int main(int argc, char *argv[])
 	cwavem=sf_complexalloc(nk);
     icfft2_allocate(cwavem);
     
+	if (taper!=0) {
+	  dkz = 1./(fnz*dz); kz0 = -0.5/dz;
+	  dkx = 1./(fnx*dx); kx0 = -0.5/dx;
+	  nkz = fnz;
+
+	  sf_warning("dkz=%f,dkx=%f,kz0=%f,kx0=%f",dkz,dkx,kz0,kx0);
+	  sf_warning("nk=%d,nkz=%d,nkx=%d",nk,nkz,fnx);
+
+	  kx_trs = thresh*fabs(0.5/dx);
+	  kz_trs = thresh*fabs(0.5/dz);
+	  sf_warning("Applying kz tapering below %f",kz_trs);
+	  sf_warning("Applying kx tapering below %f",kx_trs);
+	  ktp = sf_floatalloc(nk);
+	  /* constructing the tapering op */
+	  for (ix=0; ix < fnx; ix++) {
+	    kx = kx0+ix*dkx;
+	    for (iz=0; iz < nkz; iz++) {
+	      kz = kz0+iz*dkz;
+	      ktmp = 1.;
+	      if (fabs(kx) > kx_trs)
+		ktmp *= powf((2*kx_trs - fabs(kx))/(kx_trs),2);
+	      if (fabs(kz) > kz_trs)
+		ktmp *= powf((2*kz_trs - fabs(kz))/(kz_trs),2);
+	      ktp[iz+ix*nkz] = ktmp;
+	    }
+	  }
+	}
+
 #ifdef _OPENMP
 #pragma omp parallel for private(ix, iz, itau)
 #endif
@@ -445,8 +493,8 @@ int main(int argc, char *argv[])
 		sf_fileclose(Fright);
         
         /* read data */
-        sf_seek(Fdat, is*rnx*nt*sizeof(float complex), SEEK_SET);
-        sf_complexread(dd[0], rnx*nt, Fdat);
+        sf_seek(Fdat, ((off_t) is)*((off_t) nr)*((off_t) nt)*sizeof(float complex), SEEK_SET);
+        sf_complexread(dd[0], nr*nt, Fdat);
         
         /* initialize curr and imaging variables */
 #ifdef _OPENMP
@@ -526,6 +574,20 @@ int main(int argc, char *argv[])
 				}
 			}
 			
+			if (taper!=0) {
+			  if (it%taper == 0) {
+			    cfft2(curr,cwave);
+			    for (ik = 0; ik < nk; ik++) {
+#ifdef SF_HAS_COMPLEX_H
+			      cwavem[ik] = cwave[ik]*ktp[ik];
+#else
+			      cwavem[ik] = sf_crmul(cwave[ik],ktp[ik]);
+#endif
+			    }
+			    icfft2(curr,cwavem);
+			  }
+			}
+
 			if(it%scalet==0){
 #ifdef _OPENMP
 #pragma omp parallel for private(ix, iz)
@@ -557,8 +619,8 @@ int main(int argc, char *argv[])
 #ifdef _OPENMP
 #pragma omp parallel for private(ix)
 #endif
-            for(ix=0; ix<rnx; ix++){
-                curr[(ix+nb)*fnz+gpz]+=dd[ix][it];
+            for(ix=0; ix<nr; ix++){
+                curr[(nr0+ix*ndr)*fnz+gpz]+=dd[ix][it];
             }
             
             cfft2(curr, cwave);
@@ -599,6 +661,20 @@ int main(int argc, char *argv[])
 				}
 			}
 			
+			if (taper!=0) {
+			  if (it%taper == 0) {
+			    cfft2(curr,cwave);
+			    for (ik = 0; ik < nk; ik++) {
+#ifdef SF_HAS_COMPLEX_H
+			      cwavem[ik] = cwave[ik]*ktp[ik];
+#else
+			      cwavem[ik] = sf_crmul(cwave[ik],ktp[ik]);
+#endif
+			    }
+			    icfft2(curr,cwavem);
+			  }
+			}
+
 			if(it%scalet==0){
 #ifdef _OPENMP
 #pragma omp parallel for private(ix, iz)
@@ -650,16 +726,16 @@ int main(int argc, char *argv[])
                 } // end of ix
             } // end of it
 			
-/*
-#ifdef _OPENMP
-#pragma omp parallel for private(ix, iz)
-#endif */
-			/* source illumination
-			for(ix=0; ix<rnx; ix++){
-				for(iz=0; iz<rnz; iz++){
-					mig1[itau][ix][iz] = mig1[itau][ix][iz]/(sill[ix][iz]+SF_EPS);
-				}
-			} */
+
+//#ifdef _OPENMP
+//#pragma omp parallel for private(ix, iz)
+//#endif 
+			/* source illumination */
+		//	for(ix=0; ix<rnx; ix++){
+		//		for(iz=0; iz<rnz; iz++){
+		//			mig1[itau][ix][iz] = mig1[itau][ix][iz]/(sill[ix][iz]+SF_EPS);
+		//		}
+		//	} 
         } //end of itau
         
         /* output wavefield snapshot */
@@ -773,11 +849,11 @@ void reflgen(int nzb, int nxb, int spz, int spx,
     /* 2-d triangle smoothing */
     for (i=0;i<2;i++) {
       if (rect[i] <= 1) continue;
-      tr = sf_triangle_init (rect[i],n[i],box[i]);
+      tr = sf_triangle_init (rect[i],n[i]);
       for (j=0; j < nzx/n[i]; j++) {
 	i0 = sf_first_index (i,j,2,n,s);
 	for (irep=0; irep < nrep; irep++) {
-	  sf_smooth2 (tr,i0,s[i],diff[i],refl);
+	  sf_smooth2 (tr,i0,s[i],diff[i],box[i],refl);
 	}
       }
       sf_triangle_close(tr);
