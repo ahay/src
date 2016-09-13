@@ -66,12 +66,12 @@ int main(int argc, char* argv[])
 	omp_init();
 #endif
 
-	Fv = sf_input("input"); /* veloctiy model */
+	Fv = sf_input("--input"); /* veloctiy model */
 	Frho = sf_input("rho"); /* density */
 	Fw = sf_input("wavelet"); /* source wavelet */
-        Fdat = sf_output("out"); /* shot data */
+	Fdat = sf_output("--output"); /* shot data */
 
-        swap=fopen("temswap.bin","wb+");
+	swap=fopen("temswap.bin","wb+");
 
 	if (!sf_histint(Fv, "n1", &nz)) sf_error("No n1= in input"); 
 	if (!sf_histint(Fv, "n2", &nx)) sf_error("No n2= in input");
