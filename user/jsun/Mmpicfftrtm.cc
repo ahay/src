@@ -69,6 +69,9 @@ int main(int argc, char** argv)
     int npk;   par.get("npk",npk,20);           // maximum rank
     float eps; par.get("eps",eps,1.e-4);        // tolerance/accuracy
 
+    /* media */
+    int media; par.get("media",media,0); // media: 0-> iso, 1-> tti
+
     /* mutting parameters */
     float sou_t0; par.get("sou_t0",sou_t0,0.);  // source delay
     float vel_w;  par.get("vel_w",vel_w,1500.); // water velocity
@@ -103,8 +106,19 @@ int main(int argc, char** argv)
     int sht_num; par.get("sht_num",sht_num,sht_num_total);// shot number to process
 
     /* global spatial and time axis */
-    sf_file Fvel = sf_input("vel"); // velocity
     sf_file Fwav = sf_input("wav"); // source wavelet
+    sf_file Fvel=NULL, Fvelz=NULL, Feta=NULL, Ftheta=NULL; 
+    switch(media) {
+        case 1:
+            Fvel   = sf_input("velx");  // horizontal velocity
+            Fvelz  = sf_input("velz");  // vertical velocity
+            Feta   = sf_input("eta");   // anelliptic parameter
+            Ftheta = sf_input("theta"); // tilt angle (in degrees)
+            break;
+        default:
+            Fvel = sf_input("vel"); // velocity
+            break;
+    }
 
     if(verb) sf_warning("Global model dimensions...");
     sf_axis az_g = sf_iaxa(Fvel,1); sf_setlabel(az_g,"z"); if(verb) sf_raxa(az_g); /* depth z */
@@ -129,8 +143,26 @@ int main(int argc, char** argv)
     sf_complexread(ww,nt_g,Fwav);
 
     /* model parameter */
-    float ***vel_g = sf_floatalloc3(nz_g,nx_g,ny_g); 
-    sf_floatread(vel_g[0][0],nz_g*nx_g*ny_g,Fvel);
+    float ***vel_g=NULL, ***velx_g=NULL, ***velz_g=NULL, ***eta_g=NULL, ***theta_g=NULL;
+    switch(media) {
+        case 1:
+            velx_g  = sf_floatalloc3(nz_g,nx_g,ny_g); 
+            sf_floatread( velx_g[0][0],nz_g*nx_g*ny_g,Fvel  );
+
+            velz_g  = sf_floatalloc3(nz_g,nx_g,ny_g); 
+            sf_floatread( velz_g[0][0],nz_g*nx_g*ny_g,Fvelz );
+
+            eta_g   = sf_floatalloc3(nz_g,nx_g,ny_g); 
+            sf_floatread(  eta_g[0][0],nz_g*nx_g*ny_g,Feta  );
+
+            theta_g = sf_floatalloc3(nz_g,nx_g,ny_g); 
+            sf_floatread(theta_g[0][0],nz_g*nx_g*ny_g,Ftheta);
+            break;
+        default:
+            vel_g = sf_floatalloc3(nz_g,nx_g,ny_g); 
+            sf_floatread(vel_g[0][0],nz_g*nx_g*ny_g,Fvel);
+            break;
+    }
 
     /* loop index */
     int is,it,iy,ix,iz,i;
@@ -251,11 +283,38 @@ int main(int argc, char** argv)
             fdm3d fdm = fdutil3d_init(verb,false,az,ax,ay,nb,1);
             int nm = fdm->nzpad*fdm->nxpad*fdm->nypad;
 
-            float ***velc = sf_floatalloc3(nz,nx,ny);
-            cut3d(vel_g,velc,fdm_g,az,ax,ay);
-            float ***vel = sf_floatalloc3(fdm->nzpad,fdm->nxpad,fdm->nypad);
-            if(ny>1) expand3d(velc,vel,fdm);
-            else expand2d(velc[0],vel[0],fdm);
+            float ***vel=NULL, ***velx=NULL, ***velz=NULL, ***eta=NULL, ***theta=NULL;
+            float ***tmp = sf_floatalloc3(nz,nx,ny);
+            switch(media) {
+                case 1:
+                    velx = sf_floatalloc3(fdm->nzpad,fdm->nxpad,fdm->nypad);
+                    cut3d(velx_g,tmp,fdm_g,az,ax,ay);
+                    if(ny>1) expand3d(tmp,velx,fdm);
+                    else expand2d(tmp[0],velx[0],fdm);
+
+                    velz = sf_floatalloc3(fdm->nzpad,fdm->nxpad,fdm->nypad);
+                    cut3d(velz_g,tmp,fdm_g,az,ax,ay);
+                    if(ny>1) expand3d(tmp,velz,fdm);
+                    else expand2d(tmp[0],velz[0],fdm);
+
+
+                    eta = sf_floatalloc3(fdm->nzpad,fdm->nxpad,fdm->nypad);
+                    cut3d(eta_g,tmp,fdm_g,az,ax,ay);
+                    if(ny>1) expand3d(tmp,eta,fdm);
+                    else expand2d(tmp[0],eta[0],fdm);
+
+                    theta = sf_floatalloc3(fdm->nzpad,fdm->nxpad,fdm->nypad);
+                    cut3d(theta_g,tmp,fdm_g,az,ax,ay);
+                    if(ny>1) expand3d(tmp,theta,fdm);
+                    else expand2d(tmp[0],theta[0],fdm);
+                    break;
+                default:
+                    vel = sf_floatalloc3(fdm->nzpad,fdm->nxpad,fdm->nypad);
+                    cut3d(vel_g,tmp,fdm_g,az,ax,ay);
+                    if(ny>1) expand3d(tmp,vel,fdm);
+                    else expand2d(tmp[0],vel[0],fdm);
+                    break;
+            }
 
             /* set up abc */
             sponge spo=NULL;
@@ -270,7 +329,15 @@ int main(int argc, char** argv)
             /*************************************************************/
             /* perform lowrank decomposition on-the-fly */
             sf_warning("Lowrank decomposition...");
-            lowrank_init(jump, seed, npk, eps, dt, vel[0][0], fdm, dft);
+            lowrank_init(jump, seed, npk, eps, dt, media, fdm, dft);
+            switch(media) {
+                case 1:
+                    lowrank_tti(velx[0][0],velz[0][0],eta[0][0],theta[0][0]);
+                    break;
+                default:
+                    lowrank_iso(vel[0][0]);
+                    break;
+            }
             int nr = lowrank_rank();
             sf_complex **lt = sf_complexalloc2(nm,nr);
             sf_complex **rt = sf_complexalloc2(nr,nn);
@@ -391,6 +458,8 @@ int main(int argc, char** argv)
                             if(info > 2) sf_warning("node#%3d firsturn at %6d ",cpuid,capo);
                             /* read data */
                             sf_complexread(dat[0][0],rec_nt*rec_nx*rec_ny,Fdat);
+                            /* mute first arrival */
+                            if(mute) mute3d(dat, fdm, rtm);
                             /* initialize image */
                             img = sf_complexalloc3(nz,nx,ny);
                             setval_complex(img[0][0],nz*nx*ny,sf_cmplx(0,0));
@@ -536,8 +605,12 @@ int main(int argc, char** argv)
             free(lrk);
             free(spo);
 
-            free(**velc); free(*velc); free(velc);
-            free(**vel); free(*vel); free(vel);
+            free(**tmp); free(*tmp); free(tmp);
+            if(NULL!=vel  ) { free(**vel  ); free(*vel  ); free(vel  ); }
+            if(NULL!=velx ) { free(**velx ); free(*velx ); free(velx ); }
+            if(NULL!=velz ) { free(**velz ); free(*velz ); free(velz ); }
+            if(NULL!=eta  ) { free(**eta  ); free(*eta  ); free(eta  ); }
+            if(NULL!=theta) { free(**theta); free(*theta); free(theta); }
             free(*lt); free(lt);
             free(*rt); free(rt);
             free(**dat); free(*dat); free(dat);
@@ -578,7 +651,11 @@ int main(int argc, char** argv)
     }
 
     free(ww);
-    free(**vel_g); free(*vel_g); free(vel_g);
+    if(NULL!=vel_g  ) { free(**vel_g  ); free(*vel_g  ); free(vel_g  ); }
+    if(NULL!=velx_g ) { free(**velx_g ); free(*velx_g ); free(velx_g ); }
+    if(NULL!=velz_g ) { free(**velz_g ); free(*velz_g ); free(velz_g ); }
+    if(NULL!=eta_g  ) { free(**eta_g  ); free(*eta_g  ); free(eta_g  ); }
+    if(NULL!=theta_g) { free(**theta_g); free(*theta_g); free(theta_g); }
     if(migr) { free(**img_g); free(*img_g); free(img_g); }
 
     MPI_Finalize();

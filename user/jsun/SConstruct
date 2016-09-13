@@ -45,6 +45,13 @@ for source in src:
     env.Ignore(inc,inc)
     env.Depends(obj,inc)
 
+csrc = Glob('[a-z]*.cc')
+for source in csrc:
+    inc = env.RSF_Include(source,prefix='')
+    obj = env.StaticObject(source)
+    env.Ignore(inc,inc)
+    env.Depends(obj,inc)
+
 mpicc = env.get('MPICC')
 mpicxx = env.get('MPICXX')
 mpi_src = Glob('Q[a-z]*.c')
