@@ -7,6 +7,7 @@ ctscigadj ctscigder ctshift fftfwi_sparse_2d
 pad2 padzero postrtm2d sgfdewe2d
 upsamp1 fwiupdate fwidir
 dzest2d pickmaxima pickprint
+addimag
 '''
 
 ccprogs = ''
