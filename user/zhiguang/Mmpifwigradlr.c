@@ -98,11 +98,11 @@ int main(int argc, char* argv[])
 
   /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 	
+	sf_init(argc, argv);
+
 	MPI_Init(&argc, &argv);
 	MPI_Comm_rank(comm, &cpuid);
 	MPI_Comm_size(comm, &numprocs);
-
-	sf_init(argc, argv);
 
 	if(!sf_getint("function", &function)) function=3;
 	/* if 1, forward modeling; if 2, only calculate misfit; if 3, calculate gradient */

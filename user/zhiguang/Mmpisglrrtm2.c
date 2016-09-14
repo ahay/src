@@ -85,11 +85,12 @@ int main(int argc, char *argv[])
 	float ***img1, **img2, ***mig1, **mig2;
 	float *tmpsxx, *tmpsxz, *tmpszx, *tmpszz;
 
+	sf_init(argc, argv);
+
 	MPI_Init(&argc, &argv);
 	MPI_Comm_size(Comm, &numprocs);
 	MPI_Comm_rank(Comm, &rank);
 
-	sf_init(argc, argv);
 	tstart=clock();
 	if(rank==0) sf_warning("numprocs=%d", numprocs);
 

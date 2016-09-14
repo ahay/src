@@ -747,11 +747,11 @@ int main(int argc, char* argv[])
     int rank, nodes;
     sf_complex *sendbuf, *recvbuf;
 
+    sf_init(argc, argv);
+
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nodes);
-
-    sf_init(argc, argv);
 
     if(rank==0) sf_warning("nodes=%d",nodes);
 

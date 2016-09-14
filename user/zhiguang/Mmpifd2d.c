@@ -50,17 +50,17 @@ int main(int argc, char* argv[])
 	float **vv, *ww, **dd, **irho;
 	float **read, **p0, **p1, **p2, *rr, **term, **tmparray;
 
-        FILE *swap;
+	FILE *swap;
 
 	MPI_Comm comm=MPI_COMM_WORLD;
 
 	sf_file Fv, Frho, Fw, Fdat;
 
+	sf_init(argc,argv);
+
 	MPI_Init(&argc, &argv);
 	MPI_Comm_rank(comm, &cpuid);
 	MPI_Comm_size(comm, &numprocs);
-
-	sf_init(argc,argv);
 
 #ifdef _OPENMP
 	omp_init();

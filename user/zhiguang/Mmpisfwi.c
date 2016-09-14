@@ -40,11 +40,11 @@ int main(int argc, char* argv[])
 
 	sf_file Fv, Fw, Fdat, Fimg, Finv=NULL, Ferr=NULL, Fgrad, Fdip=NULL;
 
+	sf_init(argc, argv);
+
 	MPI_Init(&argc, &argv);
 	MPI_Comm_rank(comm, &mpipar.cpuid);
 	MPI_Comm_size(comm, &mpipar.numprocs);
-
-	sf_init(argc, argv);
 
 	Fv=sf_input("Fvel"); /* velocity model */
 	Fw=sf_input("Fwavelet"); /* wavelet */
