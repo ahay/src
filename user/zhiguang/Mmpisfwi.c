@@ -185,7 +185,7 @@ int main(int argc, char* argv[])
 			/* if 0, true misfit function; if 1, both smoothing kernel and original L2 norm misfits */
 			optpar->c1=1e-4;
 			optpar->c2=0.9;
-			if(optpar->err_type=0) optpar->nerr=optpar->niter+1;
+			if(optpar->err_type==0) optpar->nerr=optpar->niter+1;
 			else optpar->nerr=2*(optpar->niter+1);
 			optpar->err=sf_floatalloc(optpar->nerr);
 		}
