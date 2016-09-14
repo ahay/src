@@ -258,6 +258,71 @@ rtm3d rtm3d_init(int sou_x_,
 }
 
 /*------------------------------------------------------------*/
+static float *ktp=NULL;
+static int nktp;
+
+void tap3d_init(float thres,
+                dft3d dft)
+/*< init tapering array for tti wave propagation >*/
+{
+    int iy,ix,iz,nktp,ik;
+    float ky,kx,kz,ky_trs,kx_trs,kz_trs,ktmp;
+
+    nktp = dft->nky*dft->nkx*dft->nkz;
+    ktp = sf_floatalloc(nktp);
+
+    ky_trs = thres*fabs(dft->oky);
+    kx_trs = thres*fabs(dft->okx);
+    kz_trs = thres*fabs(dft->okz);
+#ifdef _OPENMP
+#pragma omp parallel for			\
+    private(iy,ix,iz,ik,ktmp,ky,kx,kz)          \
+    shared(ktp,ky_trs,kx_trs,kz_trs,dft)
+#endif
+    for (iy=0; iy<dft->nky; iy++)         {
+        ky = dft->oky+iy*dft->dky;
+        for (ix=0; ix<dft->nkx; ix++)     {
+            kx = dft->okx+ix*dft->dkx;
+            for (iz=0; iz<dft->nkz; iz++) {
+                kz = dft->okz+iz*dft->dkz;
+                ik = (iy*dft->nkx + ix)*dft->nkz + iz; /* flattened coordinate */
+                ktmp = 1.;
+                ktmp *= (fabs(ky)>ky_trs)? powf((fabs(dft->oky)-fabs(ky)+ky_trs)/dft->oky,2) : 1.;
+                ktmp *= (fabs(kx)>kx_trs)? powf((fabs(dft->okx)-fabs(kx)+kx_trs)/dft->okx,2) : 1.;
+                ktmp *= (fabs(kz)>kz_trs)? powf((fabs(dft->okz)-fabs(kz)+kz_trs)/dft->okz,2) : 1.;
+                ktp[ik] = ktmp;
+            }
+        }
+    }
+}
+
+void tap3d_apply(sf_complex *u)
+/*< apply tapering to wavefield for tti wave propagation >*/
+{
+    int ik;
+
+#ifdef _OPENMP
+#pragma omp parallel for              \
+        private(ik)                   \
+        shared(u,ktp,nktp)
+#endif
+    for (ik=0; ik<nktp; ik++) {
+#ifdef SF_HAS_COMPLEX_H
+        u[ik] = u[ik]*ktp[ik];
+#else
+        u[ik] = sf_crmul(u[ik],ktp[ik]);
+#endif
+    }
+}
+
+void tap3d_finalize()
+/*< destroy tapering array >*/
+{
+    free(ktp);
+    ktp = NULL;
+}
+
+/*------------------------------------------------------------*/
 static float***bel3d=NULL;
 static int nbel,nbel_y;
 
@@ -275,13 +340,13 @@ void bel3d_init(int n,
         if( rtm->sou_z<(fdm->nb+nbel)   || rtm->sou_z>(fdm->nzpad-fdm->nb-nbel) ||
             rtm->sou_x<(fdm->nb+nbel)   || rtm->sou_x>(fdm->nxpad-fdm->nb-nbel) ||
             rtm->sou_y<(fdm->nb+nbel_y) || rtm->sou_y>(fdm->nypad-fdm->nb-nbel_y) )
-        sf_error("Bell taper width too big!");
+        sf_error("Bell taper width too big! sou_z=%d, sou_x=%d, sou_y=%d, nb=%d, nbel=%d",rtm->sou_z,rtm->sou_x,rtm->sou_y,fdm->nb,nbel);
     } else {
         nbel = n;
         nbel_y = 0;
         if( rtm->sou_z<(fdm->nb+nbel) || rtm->sou_z>(fdm->nzpad-fdm->nb-nbel) ||
             rtm->sou_x<(fdm->nb+nbel) || rtm->sou_x>(fdm->nxpad-fdm->nb-nbel) )
-        sf_error("Bell taper width too big!");
+        sf_error("Bell taper width too big! sou_z=%d, sou_x=%d, nb=%d, nbel=%d",rtm->sou_z,rtm->sou_x,fdm->nb,nbel);
     }
 
     s = (nbel==0)? 1 : 2.0/(nbel*nbel);
