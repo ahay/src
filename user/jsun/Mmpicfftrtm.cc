@@ -70,7 +70,13 @@ int main(int argc, char** argv)
     float eps; par.get("eps",eps,1.e-4);        // tolerance/accuracy
 
     /* media */
-    int media; par.get("media",media,0); // media: 0-> iso, 1-> tti
+    int   media; par.get("media",media,0); // media: 0-> iso, 1-> tti
+    int   taper; par.get("taper",taper,0); // tapering interval for tti
+    float thres; par.get("thres",thres,1); // tapering threshold for tti
+    if (media==1) {
+        if (taper==0) taper=4;
+        if (thres==1) thres=0.92;
+    }
 
     /* mutting parameters */
     float sou_t0; par.get("sou_t0",sou_t0,0.);  // source delay
@@ -326,6 +332,9 @@ int main(int argc, char** argv)
             dft3d dft = dft3d_init(1,false,false,fdm);
             int nn = dft->nkz*dft->nkx*dft->nky;
 
+            /* set up tapering */
+            if (taper) tap3d_init(thres,dft);
+
             /*************************************************************/
             /* perform lowrank decomposition on-the-fly */
             sf_warning("Lowrank decomposition...");
@@ -452,6 +461,8 @@ int main(int argc, char** argv)
                                 inject_bell_src(u, ww[it], rtm);
                                 /* forward prop */
                                 forward(u, fdm, dft, lrk, spo);
+                                /* tapering wavefield */
+                                if (taper && it%taper == 0) tap3d_apply(u[0][0]);
                             }
                             break;
                         case firsturn:
@@ -459,7 +470,7 @@ int main(int argc, char** argv)
                             /* read data */
                             sf_complexread(dat[0][0],rec_nt*rec_nx*rec_ny,Fdat);
                             /* mute first arrival */
-                            if(mute) mute3d(dat, fdm, rtm);
+                            //if(mute) mute3d(dat, fdm, rtm);
                             /* initialize image */
                             img = sf_complexalloc3(nz,nx,ny);
                             setval_complex(img[0][0],nz*nx*ny,sf_cmplx(0,0));
@@ -469,6 +480,8 @@ int main(int argc, char** argv)
 
                             /* 4 - backward prop */
                             reverse(bu, fdm, dft, lrk, spo);
+                            /* tapering wavefield */
+                            if (taper && capo%taper == 0) tap3d_apply(u[0][0]);
                             /* 3 - inject data */
                             if(capo%rec_jt==0) {
                                 inject3d(bu, dat, capo, rtm);
@@ -485,6 +498,8 @@ int main(int argc, char** argv)
                             if(info > 2) sf_warning("node#%3d youturn at %7d ",cpuid,capo);
                             /* 4 - backward prop */
                             reverse(bu, fdm, dft, lrk, spo);
+                            /* tapering wavefield */
+                            if (taper && capo%taper == 0) tap3d_apply(u[0][0]);
                             /* 3 - inject data */
                             if(capo%rec_jt==0) {
                                 inject3d(bu, dat, capo, rtm);
@@ -581,6 +596,8 @@ int main(int argc, char** argv)
                     }
                     /* 4 - forward prop */
                     forward(u, fdm, dft, lrk, spo);
+                    /* tapering wavefield */
+                    if (taper && it%taper == 0) tap3d_apply(u[0][0]);
 
                 }
                 if(verb) sf_warning(".");
@@ -596,6 +613,7 @@ int main(int argc, char** argv)
             /*************************************************************/
             /* clean up memory variables */
             dft3d_finalize();
+            tap3d_finalize();
             lrk3d_finalize();
             if(nbell) bel3d_finalize();
 
