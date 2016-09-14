@@ -416,8 +416,8 @@ void fwi(sf_file Fdat, sf_file Finv, sf_file Ferr, sf_file Fgrad, sf_mpi *mpipar
 	for(iter=0; iter<optpar->nerr; iter++){
 		optpar->err[iter]=0.;
 	}
-	if (optpar->err_type==0) optpar->err[0]=fcost;
-	else optpar->err[optpar->nerr/2]=swap;
+	optpar->err[0]=optpar->fk;
+	if (optpar->err_type==1) optpar->err[optpar->nerr/2]=swap;
 
 	iter=0;
 	if(mpipar->cpuid==0){
@@ -443,8 +443,8 @@ void fwi(sf_file Fdat, sf_file Finv, sf_file Ferr, sf_file Fgrad, sf_mpi *mpipar
 		/* line search */
 		lbfgs_save(nzx, x, grad, optpar->sk, optpar->yk, optpar);
 		line_search(nzx, x, grad, direction, gradient, optpar, threshold, &flag, mpipar->cpuid, 1);
-		if (optpar->err_type==0) optpar->err[iter+1]=fcost;
-		else optpar->err[optpar->nerr/2+iter+1]=swap;
+		optpar->err[iter+1]=optpar->fk;
+		if (optpar->err_type==1) optpar->err[optpar->nerr/2+iter+1]=swap;
 		
 		if(mpipar->cpuid==0){
 			l2norm(nzx, grad, &optpar->gk_norm);
