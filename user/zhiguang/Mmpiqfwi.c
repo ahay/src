@@ -121,7 +121,7 @@ int main(int argc, char* argv[])
 	}
 	else if(function == 2){ // FWI
 
-		fwipar=(sf_fwi_s)sf_alloc(1, sizeof(*fwipar));
+		fwipar=(sf_fwi_q)sf_alloc(1, sizeof(*fwipar));
 		if(!sf_getbool("onlygrad", &fwipar->onlygrad)) fwipar->onlygrad=false; 
 		/* only calculate gradident or not */
 		if(!sf_getint("grad_type",&fwipar->grad_type)) fwipar->grad_type=1;
