@@ -274,6 +274,7 @@ void tap3d_init(float thres,
     ky_trs = thres*fabs(dft->oky);
     kx_trs = thres*fabs(dft->okx);
     kz_trs = thres*fabs(dft->okz);
+    sf_warning("Wavefield tapering: kz %g -> %g, kx %g -> %g, ky %g -> %g",fabs(dft->okz),kz_trs,fabs(dft->okx),kx_trs,fabs(dft->oky),ky_trs); 
 #ifdef _OPENMP
 #pragma omp parallel for			\
     private(iy,ix,iz,ik,ktmp,ky,kx,kz)          \
