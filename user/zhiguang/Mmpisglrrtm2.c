@@ -98,8 +98,8 @@ int main(int argc, char *argv[])
 	if(!sf_getbool("wantwf", &wantwf)) wantwf=false;
 	if(!sf_getbool("onlyrecord", &onlyrecord)) onlyrecord=false;
 
-	Fsrc=sf_input("input");
-	Fimg1=sf_output("output");
+	Fsrc=sf_input("-input");
+	Fimg1=sf_output("-output");
 	Fimg2=sf_output("img2");
 	Ffvel=sf_input("fvel");
 	Ffden=sf_input("fden");

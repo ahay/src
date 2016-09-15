@@ -98,7 +98,7 @@ int main(int argc, char* argv[])
 		Fdip=sf_input("Fdip"); /* dip file when seislet=1 */
 		if(!sf_getfloat("pclip", &seispar->pclip)) seispar->pclip=15; /* soft thresholding parameter */
 		if(!sf_getint("order", &seispar->order)) seispar->order=1; /* accuracy order of seislet transform */
-		if(NULL == (seispar->type==sf_getstring("seislet_type"))) seispar->type="linear"; /* [haar, linear, biorthogonal] */
+		if(NULL == (seispar->type=sf_getstring("seislet_type"))) seispar->type="linear"; /* [haar, linear, biorthogonal] */
 		if(!sf_getfloat("eps", &seispar->eps)) seispar->eps=0.1; /* seislet regularization parameter */
 		seispar->dip=sf_floatalloc2(acpar->nz, acpar->nx);
 		sf_floatread(seispar->dip[0], acpar->nz*acpar->nx, Fdip);
@@ -181,9 +181,13 @@ int main(int argc, char* argv[])
 			if(!sf_getint("nls", &optpar->nls)) optpar->nls=20; /* line search number */
 			if(!sf_getfloat("factor", &optpar->factor)) optpar->factor=10; /* step length increase factor */
 			if(!sf_getint("repeat", &optpar->repeat)) optpar->repeat=5; /* after how many iterations the step length goes back to 1 */
+			if(!sf_getint("err_type", &optpar->err_type)) optpar->err_type=0; 
+			/* if 0, true misfit function; if 1, both smoothing kernel and original L2 norm misfits */
 			optpar->c1=1e-4;
 			optpar->c2=0.9;
-			optpar->err=sf_floatalloc(optpar->niter+1);
+			if(optpar->err_type=0) optpar->nerr=optpar->niter+1;
+			else optpar->nerr=2*(optpar->niter+1);
+			optpar->err=sf_floatalloc(optpar->nerr);
 		}
 		/* dimension set up */
 		if(Finv != NULL){
@@ -198,7 +202,7 @@ int main(int argc, char* argv[])
 			sf_putstring(Finv, "label2", "Distance");
 			sf_putstring(Finv, "unit2", "km");
 			
-			sf_putint(Ferr, "n1", optpar->niter+1);
+			sf_putint(Ferr, "n1", optpar->nerr);
 			sf_putfloat(Ferr, "d1", 1);
 			sf_putfloat(Ferr, "o1", 0);
 			sf_putstring(Ferr, "label1", "Iterations");

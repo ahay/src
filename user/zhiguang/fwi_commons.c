@@ -102,6 +102,8 @@ typedef struct sf_optimization{
 	float gk_norm;
 	float **sk, **yk;
 	float *err;
+	int err_type;
+	int nerr;
 } *sf_optim;
 /*^*/
 

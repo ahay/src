@@ -38,8 +38,8 @@ int main (int argc, char *argv[])
     MPI_Comm_size(comm, &numprocs);
 
     sf_init(argc,argv);
-    dip = sf_input("input");
-    out = sf_output("output");
+    dip = sf_input("--input");
+    out = sf_output("--output");
 
     if (!sf_histint(dip,"n1",&n1)) sf_error("No n1= in input");
     if (!sf_histint(dip,"n2",&n2)) sf_error("No n2= in input");

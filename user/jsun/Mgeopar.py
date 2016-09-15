@@ -21,48 +21,46 @@ import rsf.prog
 import rsf.api as rsf
 from subprocess import call
 
-def write2mat(mat,nz,nx,ny,sou_z,sou_nx,sou_n6,rec_z,rec_nx,rec_ny,nbell,npad,fixed):
-    if fixed: # fixed-spread acquisitiohn
-        if ny>1:
+def write2mat(mat,nz,nx,ny,sou_z,sou_ox,sou_oy,sou_jx,sou_jy,sou_nx,sou_ny,rec_z,rec_nx,rec_ny,npad,noff,roll):
+    if roll==0: # fixed-spread acquisitiohn
+        if ny > 1:
             mod_oz = 0
             mod_nz = nz
             rec_ny_new = rec_ny
             rec_nx_new = rec_nx
-            jx = (nx-1-2*nbell)/(sou_nx-1)
-            jy = (ny-1-2*nbell)/(sou_ny-1)
             for iy in range(0,sou_ny):
-                sou_y = nbell + iy*jy
-                if sou_y<rec_ny/2:
+                sou_y = sou_oy + iy*sou_jy
+                if sou_y < rec_ny/2:
                     rec_oy = 0
-                elif sou_y>ny-rec_ny/2:
+                elif sou_y > ny-rec_ny/2:
                     rec_oy = ny-rec_ny 
                 else:
                     rec_oy = sou_y-rec_ny/2
                 #mod_oy = rec_oy
                 #mod_ny = rec_ny_new
-                if rec_oy<npad:
+                if rec_oy < npad:
                     mod_oy = 0
                 else:
                     mod_oy = rec_oy-npad
-                if rec_oy+rec_ny_new>ny-npad:
+                if rec_oy+rec_ny_new > ny-npad:
                     mod_ny = ny-mod_oy;
                 else:
                     mod_ny = rec_oy+rec_ny_new+npad-mod_oy;
                 for ix in range(0,sou_nx):
-                    sou_x = nbell + ix*jx
-                    if sou_x<rec_nx/2:
+                    sou_x = sou_ox + ix*sou_jx
+                    if sou_x < rec_nx/2:
                         rec_ox = 0
-                    elif sou_x>nx-rec_nx/2:
+                    elif sou_x > nx-rec_nx/2:
                         rec_ox = nx-rec_nx 
                     else:
                         rec_ox = sou_x-rec_nx/2
                     #mod_ox = rec_ox
                     #mod_nx = rec_nx_new
-                    if rec_ox<npad:
+                    if rec_ox < npad:
                         mod_ox = 0
                     else:
                         mod_ox = rec_ox-npad
-                    if rec_ox+rec_nx_new>nx-npad:
+                    if rec_ox+rec_nx_new > nx-npad:
                         mod_nx = nx-mod_ox;
                     else:
                         mod_nx = rec_ox+rec_nx_new+npad-mod_ox;
@@ -76,63 +74,63 @@ def write2mat(mat,nz,nx,ny,sou_z,sou_nx,sou_n6,rec_z,rec_nx,rec_ny,nbell,npad,fi
             rec_oy = 0
             rec_nx_new = rec_nx
             rec_ny_new = 1
-            jx = (nx-1-2*nbell)/(sou_nx-1)
             for ix in range(0,sou_nx):
-                sou_x = nbell + ix*jx
-                if sou_x<rec_nx/2:
+                sou_x = sou_ox + ix*sou_jx
+                if sou_x < rec_nx/2:
                     rec_ox = 0
-                elif sou_x>nx-rec_nx/2:
+                elif sou_x > nx-rec_nx/2:
                     rec_ox = nx-rec_nx 
                 else:
                     rec_ox = sou_x-rec_nx/2
                 #mod_ox = rec_ox
                 #mod_nx = rec_nx_new
-                if rec_ox<npad:
+                if rec_ox < npad:
                     mod_ox = 0
                 else:
                     mod_ox = rec_ox-npad
-                if rec_ox+rec_nx_new>nx-npad:
+                if rec_ox+rec_nx_new > nx-npad:
                     mod_nx = nx-mod_ox;
                 else:
                     mod_nx = rec_ox+rec_nx_new+npad-mod_ox;
                 mat.append([mod_oz,mod_ox,mod_oy,mod_nz,mod_nx,mod_ny,sou_z,sou_x,sou_y,rec_z,rec_ox,rec_oy,rec_nx_new,rec_ny_new]) 
-    else: # towed marine streamer
-        if ny>1:
+
+    elif roll==1: # towed marine streamer to negative
+        if ny > 1:
             mod_oz = 0
             mod_nz = nz
-            jx = (nx-1-2*nbell)/(sou_nx-1)
-            jy = (ny-1-2*nbell)/(sou_ny-1)
             for iy in range(0,sou_ny):
-                sou_y = nbell + iy*jy
-                rec_oy = sou_y
-                if sou_y>ny-rec_ny:
-                    rec_ny_new = ny-sou_y 
+                sou_y = sou_oy + iy*sou_jy
+                if sou_y < rec_ny/2:
+                    rec_oy = 0
+                elif sou_y > ny-rec_ny/2:
+                    rec_oy = ny-rec_ny 
                 else:
-                    rec_ny_new = rec_ny
+                    rec_oy = sou_y-rec_ny/2
                 #mod_oy = rec_oy
                 #mod_ny = rec_ny_new
-                if rec_oy<npad:
+                if rec_oy < npad:
                     mod_oy = 0
                 else:
                     mod_oy = rec_oy-npad
-                if rec_oy+rec_ny_new>ny-npad:
+                if rec_oy+rec_ny_new > ny-npad:
                     mod_ny = ny-mod_oy;
                 else:
                     mod_ny = rec_oy+rec_ny_new+npad-mod_oy;
                 for ix in range(0,sou_nx):
-                    sou_x = nbell + ix*jx
-                    rec_ox = sou_x
-                    if sou_x>nx-rec_nx:
-                        rec_nx_new = nx-sou_x 
+                    sou_x = sou_ox + ix*sou_jx
+                    if sou_x < rec_nx+noff:
+                        rec_ox = 0
+                        rec_nx_new = sou_x - noff
                     else:
-                        rec_nx_new = rec_nx 
+                        rec_ox = sou_x - rec_nx - noff
+                        rec_nx_new = rec_nx
                     #mod_ox = rec_ox
                     #mod_nx = rec_nx_new
-                    if rec_ox<npad:
+                    if rec_ox < npad:
                         mod_ox = 0
                     else:
                         mod_ox = rec_ox-npad
-                    if rec_ox+rec_nx_new>nx-npad:
+                    if rec_ox+rec_nx_new > nx-npad:
                         mod_nx = nx-mod_ox;
                     else:
                         mod_nx = rec_ox+rec_nx_new+npad-mod_ox;
@@ -145,21 +143,88 @@ def write2mat(mat,nz,nx,ny,sou_z,sou_nx,sou_n6,rec_z,rec_nx,rec_ny,nbell,npad,fi
             sou_y  = 0
             rec_oy = 0
             rec_ny_new = 1
-            jx = (nx-1-2*nbell)/(sou_nx-1)
             for ix in range(0,sou_nx):
-                sou_x = nbell + ix*jx
-                rec_ox = sou_x
-                if sou_x>nx-rec_nx:
-                    rec_nx_new = nx-sou_x 
+                sou_x = sou_ox + ix*sou_jx
+                if sou_x < rec_nx+noff:
+                    rec_ox = 0
+                    rec_nx_new = sou_x - noff
+                else:
+                    rec_ox = sou_x - rec_nx - noff
+                    rec_nx_new = rec_nx
+                #mod_ox = rec_ox
+                #mod_nx = rec_nx_new
+                if rec_ox < npad:
+                    mod_ox = 0
+                else:
+                    mod_ox = rec_ox-npad
+                if rec_ox+rec_nx_new > nx-npad:
+                    mod_nx = nx-mod_ox;
+                else:
+                    mod_nx = rec_ox+rec_nx_new+npad-mod_ox;
+                mat.append([mod_oz,mod_ox,mod_oy,mod_nz,mod_nx,mod_ny,sou_z,sou_x,sou_y,rec_z,rec_ox,rec_oy,rec_nx_new,rec_ny_new]) 
+
+    else: # towed marine streamer to positive
+        if ny > 1:
+            mod_oz = 0
+            mod_nz = nz
+            for iy in range(0,sou_ny):
+                sou_y = sou_oy + iy*sou_jy
+                if sou_y < rec_ny/2:
+                    rec_oy = 0
+                elif sou_y > ny-rec_ny/2:
+                    rec_oy = ny-rec_ny 
+                else:
+                    rec_oy = sou_y-rec_ny/2
+                #mod_oy = rec_oy
+                #mod_ny = rec_ny_new
+                if rec_oy < npad:
+                    mod_oy = 0
+                else:
+                    mod_oy = rec_oy-npad
+                if rec_oy+rec_ny_new > ny-npad:
+                    mod_ny = ny-mod_oy;
+                else:
+                    mod_ny = rec_oy+rec_ny_new+npad-mod_oy;
+                for ix in range(0,sou_nx):
+                    sou_x = sou_ox + ix*sou_jx
+                    rec_ox = sou_x + noff
+                    if sou_x > nx-rec_nx-noff:
+                        rec_nx_new = nx-sou_x-noff 
+                    else:
+                        rec_nx_new = rec_nx 
+                    #mod_ox = rec_ox
+                    #mod_nx = rec_nx_new
+                    if rec_ox < npad:
+                        mod_ox = 0
+                    else:
+                        mod_ox = rec_ox-npad
+                    if rec_ox+rec_nx_new > nx-npad:
+                        mod_nx = nx-mod_ox;
+                    else:
+                        mod_nx = rec_ox+rec_nx_new+npad-mod_ox;
+                    mat.append([mod_oz,mod_ox,mod_oy,mod_nz,mod_nx,mod_ny,sou_z,sou_x,sou_y,rec_z,rec_ox,rec_oy,rec_nx_new,rec_ny_new]) 
+        else:
+            mod_oz = 0
+            mod_nz = nz
+            mod_oy = 0
+            mod_ny = 1
+            sou_y  = 0
+            rec_oy = 0
+            rec_ny_new = 1
+            for ix in range(0,sou_nx):
+                sou_x = sou_ox + ix*sou_jx
+                rec_ox = sou_x + noff
+                if sou_x > nx-rec_nx-noff:
+                    rec_nx_new = nx-sou_x-noff
                 else:
                     rec_nx_new = rec_nx 
                 #mod_ox = rec_ox
                 #mod_nx = rec_nx_new
-                if rec_ox<npad:
+                if rec_ox < npad:
                     mod_ox = 0
                 else:
                     mod_ox = rec_ox-npad
-                if rec_ox+rec_nx_new>nx-npad:
+                if rec_ox+rec_nx_new > nx-npad:
                     mod_nx = nx-mod_ox;
                 else:
                     mod_nx = rec_ox+rec_nx_new+npad-mod_ox;
@@ -171,24 +236,35 @@ if __name__ == "__main__":
         nx     = int(sys.argv[2])  # dimension in x
         ny     = int(sys.argv[3])  # dimension in y
         sou_z  = int(sys.argv[4])  # source position in depth
-        sou_nx = int(sys.argv[5])  # number of sources in x
-        sou_ny = int(sys.argv[6])  # number of source in y
-        rec_z  = int(sys.argv[7])  # receiver position in depth
-        rec_nx = int(sys.argv[8])  # number of receivers in x
-        rec_ny = int(sys.argv[9])  # number of receivers in y
-        nbell  = int(sys.argv[10]) # bell width
-        npad   = int(sys.argv[11]) # computational domain padding
-        fixed  = int(sys.argv[12]) # acquisition pattern: 1-> fixed-spread, 0-> towed-streamer
-        print "nz=",nz,", nx=",nx,", ny=",ny,", sou_z=",sou_z,", sou_nx=",sou_nx,", sou_ny=",sou_ny,", rec_z=",rec_z,", rec_nx=",rec_nx,", rec_ny=",rec_ny,", nbell=",nbell,", npad=",npad,", fixed=",fixed
+        sou_ox = int(sys.argv[5])  # source starting location in x
+        sou_oy = int(sys.argv[6])  # source starting location in y
+        sou_jx = int(sys.argv[7])  # source interval in x
+        sou_jy = int(sys.argv[8])  # source interval in y
+        sou_nx = int(sys.argv[9])  # number of sources in x
+        sou_ny = int(sys.argv[10]) # number of sources in y
+        rec_z  = int(sys.argv[11]) # receiver position in depth
+        rec_nx = int(sys.argv[12]) # number of receivers in x
+        rec_ny = int(sys.argv[13]) # number of receivers in y
+        npad   = int(sys.argv[15]) # computational domain padding
+        noff   = int(sys.argv[16]) # near offset
+        roll   = int(sys.argv[17]) # acquisition pattern: 0-> fixed-spread, 1-> towed-streamer to left, 2-> twoed streamer to right
+        print "nz=",nz,", nx=",nx,", ny=",ny,", sou_z=",sou_z,", sou_ox=",sou_ox,", sou_oy=",sou_oy,", sou_jx=",sou_jx,", sou_jy=",sou_jy,", sou_nx=",sou_nx,", sou_ny=",sou_ny,", rec_z=",rec_z,", rec_nx=",rec_nx,", rec_ny=",rec_ny,", npad=",npad,", noff=",noff,", roll=",roll
     except:
-        print 'Usage:',sys.argv[0],'nz nx ny sou_z sou_nx sou_ny rec_z rec_nx rec_ny nbell npad fixed'
+        print 'Usage:',sys.argv[0],'nz nx ny sou_z sou_ox sou_oy sou_jx sou_jy sou_nx sou_ny rec_z rec_nx rec_ny npad noff(if roll>0) roll'
+        print 'Output format:','mod_oz mod_ox mod_oy mod_nz mod_nx mod_ny sou_z sou_x sou_y rec_z rec_ox rec_oy rec_nx rec_ny'
         sys.exit("Execution failed.")
+
+    # double check dimension
+    if sou_nx > (nx-sou_ox)/sou_jx:
+        sou_nx = (nx-sou_ox)/sou_jx
+    if sou_ny > 1 & sou_ny > (ny-sou_oy)/sou_jy:
+        sou_ny = (ny-sou_oy)/sou_jy
 
     # do the work
     dim1=14
     dim2=sou_nx*sou_ny
     mat = []
-    write2mat(mat,nz,nx,ny,sou_z,sou_nx,sou_ny,rec_z,rec_nx,rec_ny,nbell,npad,fixed)
+    write2mat(mat,nz,nx,ny,sou_z,sou_ox,sou_oy,sou_jx,sou_jy,sou_nx,sou_ny,rec_z,rec_nx,rec_ny,npad,noff,roll)
     mat2 = numpy.array(mat)
     output = rsf.Output()
     output.put("n1",dim1)

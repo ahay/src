@@ -24,35 +24,74 @@ extern "C"{
 
 using namespace std;
 
-static std::valarray<float> vs;
-static std::valarray<float> ks;
+static std::valarray<float> vs, vx, vz, q, t;
+static std::valarray<float> ks, kzs, kxs, kys;
 static float dt,eps;
 static int m, n, npk, seed;
 static vector<int> lidx, ridx;
-static CpxNumMat mid;
+static ZpxNumMat mid;
 static vector<int> ms, ns, js;
 
-int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
+static int (*sample)(vector<int>& rs, vector<int>& cs, ZpxNumMat& res);
+
+static int sample_iso(vector<int>& rs, vector<int>& cs, ZpxNumMat& res)
 {
     int nr = rs.size();
     int nc = cs.size();
     res.resize(nr,nc);  
-    setvalue(res,cpx(0.0f,0.0f));
+    setvalue(res,zpx(0.0,0.0));
     for(int a=0; a<nr; a++) {
 	for(int b=0; b<nc; b++) {
-	    float phase = vs[rs[a]]*ks[cs[b]]*dt;
-	    res(a,b) = cpx(cos(phase),sin(phase));
+	    double phase = vs[rs[a]]*ks[cs[b]]*dt;
+	    res(a,b) = zpx(cos(phase),sin(phase));
 	}
     }
     return 0;
 }
+
+static int sample_tti(vector<int>& rs, vector<int>& cs, ZpxNumMat& res)
+{
+    int nr = rs.size();
+    int nc = cs.size();
+    res.resize(nr,nc);  
+    setvalue(res,zpx(0.0,0.0));
+    for(int a=0; a<nr; a++) {
+	int i=rs[a];
+	double wx = vx[i]*vx[i];
+	double wz = vz[i]*vz[i];
+	double qq = q[i];
+	double tt = t[i];
+	double c = cos(tt);
+	double s = sin(tt);
+	
+	for(int b=0; b<nc; b++) {
+	    int j = cs[b];
+	    double r;
+	    double x0 = kxs[j];
+	    double z0 = kzs[j];
+	    // rotation of coordinates
+	    double x = x0*c+z0*s;
+	    double z = z0*c-x0*s;
+
+            z = wz*z*z;
+            x = wx*x*x;
+            r = x+z;
+            r = r+sqrt(r*r-qq*x*z);
+            r = sqrt(0.5*r);
+
+            res(a,b) = zpx(cos(r*dt),sin(r*dt));
+	}
+    }
+    return 0;
+}
+
 
 void lowrank_init(int jump,
                   int seed_,
                   int npk_,
                   float eps_,
                   float dt_,
-                  float *vel,
+                  int media,
                   fdm3d fdm,
                   dft3d dft)
 /*< initialize lowrank >*/
@@ -67,19 +106,60 @@ void lowrank_init(int jump,
     ns.resize(3); ns[0] = dft->nkz;   ns[1] = dft->nkx;   ns[2] = dft->nky;
     js.resize(3); js[0] = jump;       js[1] = jump;       js[2] = jump;
 
+    // media
+    switch(media) {
+        case 1:
+            sample = &sample_tti;
+            kzs.resize(n); kxs.resize(n); kys.resize(n);
+            for (int iy=0; iy < dft->nky; iy++) {
+                float ky = dft->oky+iy*dft->dky;
+                for (int ix=0; ix < dft->nkx; ix++) {
+                    float kx = dft->okx+ix*dft->dkx;
+                    for (int iz=0; iz < dft->nkz; iz++) {
+                        float kz = dft->okz+iz*dft->dkz;
+                        kzs[iz+dft->nkz*(ix+dft->nkx*iy)] = 2*SF_PI*kz;
+                        kxs[iz+dft->nkz*(ix+dft->nkx*iy)] = 2*SF_PI*kx;
+                        kys[iz+dft->nkz*(ix+dft->nkx*iy)] = 2*SF_PI*ky;
+                    }
+                }
+            }
+            break;
+        default:
+            sample = &sample_iso;
+            ks.resize(n);
+            for (int iy=0; iy < dft->nky; iy++) {
+                float ky = dft->oky+iy*dft->dky;
+                for (int ix=0; ix < dft->nkx; ix++) {
+                    float kx = dft->okx+ix*dft->dkx;
+                    for (int iz=0; iz < dft->nkz; iz++) {
+                        float kz = dft->okz+iz*dft->dkz;
+                        ks[iz+dft->nkz*(ix+dft->nkx*iy)] = 2*SF_PI*sqrt(kx*kx+kz*kz+ky*ky);
+                    }
+                }
+            }
+            break;
+    }
+}
+
+void lowrank_iso(float *vel)
+/*< iso model setup >*/
+{
     vs.resize(m);
     for (int i=0; i<m; i++) vs[i] = vel[i];
-    
-    ks.resize(n);
-    for (int iy=0; iy < dft->nky; iy++) {
-	float ky = dft->oky+iy*dft->dky;
-	for (int ix=0; ix < dft->nkx; ix++) {
-	    float kx = dft->okx+ix*dft->dkx;
-	    for (int iz=0; iz < dft->nkz; iz++) {
-		float kz = dft->okz+iz*dft->dkz;
-		ks[iz+dft->nkz*(ix+dft->nkx*iy)] = 2*SF_PI*sqrt(kx*kx+kz*kz+ky*ky);
-	    }
-	}
+}
+
+void lowrank_tti(float *velx, float *velz, float *eta, float *theta)
+/*< iso model setup >*/
+{
+    vx.resize(m);
+    vz.resize(m);
+    q.resize(m);
+    t.resize(m);
+    for (int i=0; i<m; i++) {
+        vx[i] = velx[i];
+        vz[i] = velz[i];
+        q[i]  = eta[i];
+        t[i]  = theta[i]*SF_PI/180.; /* from degrees to radians */
     }
 }
 
@@ -90,8 +170,8 @@ int lowrank_rank()
 
     srand48(seed);
 
-    //iC( lowrank(m,n,sample,eps,npk,lidx,ridx,mid) );
-    iC( lowrank(ms,ns,js,sample,eps,npk,lidx,ridx,mid) );
+    //iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+    iC( ddlowrank(ms,ns,js,sample,(double)eps,npk,lidx,ridx,mid) );
 
     nrank = mid.n();
     return nrank;
@@ -109,21 +189,21 @@ void lowrank_mat(sf_complex **lt, sf_complex **rt)
     for (int k=0; k < n; k++) 
 	nidx[k] = k;    
 
-    CpxNumMat lmat(m,m2);
+    ZpxNumMat lmat(m,m2);
     iC ( sample(midx,lidx,lmat) );
 
-    CpxNumMat lmat2(m,n2);
-    iC( zgemm(1.0, lmat, mid, 0.0, lmat2) );
+    ZpxNumMat lmat2(m,n2);
+    iC( zzgemm(1.0, lmat, mid, 0.0, lmat2) );
 
-    cpx *ldat = lmat2.data();
+    zpx *ldat = lmat2.data();
 
     for (int i=0; i < n2; i++)
         for (int k=0; k < m; k++)
             lt[i][k] = sf_cmplx(real(ldat[i*m+k]),imag(ldat[i*m+k]));
 
-    CpxNumMat rmat(n2,n);
+    ZpxNumMat rmat(n2,n);
     iC ( sample(ridx,nidx,rmat) );
-    cpx *rdat = rmat.data();
+    zpx *rdat = rmat.data();
 
     for (int k=0; k < n; k++)
         for (int i=0; i < n2; i++)
