@@ -25,12 +25,6 @@ effective boundary saving strategy used!
 	102-107.
     [2] Costa, J. C., et al. "Obliquity-correction imaging condition 
 	for reverse time migration." Geophysics 74.3 (2009): S57-S66.
-    [3] Xu, Sheng, et al. "Common-angle migration: A strategy for 
-	imaging complex media." Geophysics 66.6 (2001): 1877-1894.
-    [4] Xu, Sheng, Yu Zhang, and Bing Tang. "3D angle gathers from 
-	reverse time migration." Geophysics 76.2 (2011): S77-S92.
-    [5] Zhang, Yu, et al. "Angle gathers from reverse time migration."
-	The Leading Edge 29.11 (2010): 1364-1371.
 */
 #include <rsf.h>
 
@@ -40,7 +34,7 @@ effective boundary saving strategy used!
 
 static bool 	csdgather;/* common shot gather (CSD) or not */
 static int 	nb, nz, nx, nzpad, nxpad, nt, ns, ng, na;
-static float 	fm, dt, dz, dx, _dz, _dx, vmute, da, var;
+static float 	fm, dt, dz, dx, _dz, _dx, da, var;
 
 void expand2d(float** b, float** a)
 /*< expand domain of 'a' to 'b': source(a)-->destination(b) >*/
@@ -338,34 +332,11 @@ void matrix_transpose(float **mat, int n1, int n2)
 	free(*tmp);free(tmp);
 }
 
-void muting(float *seis_kt, int gzbeg, int szbeg, int gxbeg, int sxc, int jgx, int it, int tdmute)
-/*< muting the direct arrivals >*/
-{
-	int id, kt;
-	float a,b,t0;
-
-#ifdef _OPENMP
-#pragma omp parallel for default(none)	\
-	private(id,a,b,t0,kt)		\
-	shared(seis_kt,vmute,ng,it,dt,dx,dz,tdmute,gzbeg,szbeg,gxbeg,sxc,jgx)
-#endif
-	for(id=0;id<ng;id++)
-	{
-		a=dx*abs(gxbeg+id*jgx-sxc);
-		b=dz*(gzbeg-szbeg);
-		t0=sqrtf(a*a+b*b)/vmute;
-		kt=t0/dt+tdmute;// tdmute manually added to obtain the best muting effect.
-    		if (it<kt) seis_kt[id]=0.;
-	}
-}
-
-
-
 void cross_correlation(float ***num, float **den, float **sp, float **gp, float **svz, float **svx, float **gvz, float **gvx)
 /*< cross correlation and poynting vector computing >*/
 {
 	int i1, i2, ia;
-	float Ssz,Ssx,Sgz,Sgx,b1, b2, a;
+	float Ssz,Ssx,Sgz,Sgx,b1, b2, a,tmp;
 
 	for(i2=0; i2<nx; i2++)
 	for(i1=0; i1<nz; i1++)
@@ -377,12 +348,15 @@ void cross_correlation(float ***num, float **den, float **sp, float **gp, float 
 		b1=Ssz*Ssz+Ssx*Ssx;//|Ss|^2
 		b2=Sgz*Sgz+Sgx*Sgx;//|Sg|^2
 		a=Ssx*Sgx+Ssz*Sgz; //<Ss,Sg>
-		a=a/sqrtf(b1*b2+SF_EPS);	
+		a=a/sqrtf(b1*b2);//+SF_EPS);	
 	
 		a=0.5*acosf(a);
 		ia=(int)(a/da);
+		if(ia<0) ia=0;
 		if(ia==na) ia=ia-1;
-		num[ia][i2][i1]+=sp[i2+nb][i1+nb]*gp[i2+nb][i1+nb]*expf(-(a-ia*da)*(a-ia*da)/var); //numerator
+		tmp=sp[i2+nb][i1+nb]*gp[i2+nb][i1+nb];//numerator 
+		//tmp=tmp*expf(-(a-ia*da)*(a-ia*da)/var); Gaussian smoothing in Fresnel zone
+		num[ia][i2][i1]+=tmp;
 		den[i2][i1]+=sp[i2+nb][i1+nb]*sp[i2+nb][i1+nb];//denominator
 	}
 }
@@ -391,14 +365,14 @@ void cross_correlation(float ***num, float **den, float **sp, float **gp, float 
 
 int main(int argc, char* argv[])
 {
-	int it,kt,ia,is,i1,i2,tdmute,jsx,jsz,jgx,jgz,sxbeg,szbeg,gxbeg,gzbeg, distx, distz;
+  int it,kt,ia,is,ig,i1,i2,jsx,jsz,jgx,jgz,sxbeg,szbeg,gxbeg,gzbeg, distx, distz;
 	int *sxz, *gxz;
 	float tmp, amp, vmax;
-	float *wlt, *d2x, *d1z, *bndr;
-	float **v0, **vv, **dcal, **den;
+	float *wlt, *d2x, *d1z, *bndr, *adjsource;
+	float **v0, **vv, **vvs, **dcal, **dobs, **den;
 	float **sp, **spz, **spx, **svz, **svx, **gp, **gpz, **gpx, **gvz, **gvx;
 	float ***num, ***adcig;
-    	sf_file vmodl, rtmadcig, vecx, vecz; /* I/O files */
+    	sf_file vmodl,vmods, rtmadcig, vecx, vecz; /* I/O files */
 
     	sf_init(argc,argv);
 #ifdef _OPENMP
@@ -407,6 +381,7 @@ int main(int argc, char* argv[])
 
     	/*< set up I/O files >*/
     	vmodl = sf_input ("in");   /* velocity model, unit=m/s */
+	vmods = sf_input("velsmooth");/* smooth background velocity model for muting direct arrival*/
     	rtmadcig = sf_output("out");  /* ADCIG obtained by Poynting vector */
 	vecx=sf_output("vecx");
 	vecz=sf_output("vecz");
@@ -453,16 +428,12 @@ int main(int argc, char* argv[])
 	/* z-begining index of receivers, starting from 0 */
 	if (!sf_getbool("csdgather",&csdgather)) csdgather=true;
 	/* default, common shot-gather; if n, record at every point*/
-	if (!sf_getfloat("vmute",&vmute))   vmute=1500;
-	/* muting velocity to remove the low-freq noise, unit=m/s*/
-	if (!sf_getint("tdmute",&tdmute))   tdmute=2./(fm*dt);
-	/* number of deleyed time samples to mute */
 
 	_dx=1./dx;
 	_dz=1./dz;
 	nzpad=nz+2*nb;
 	nxpad=nx+2*nb;
-	da=SF_PI/(float)na;/* angle unit, rad */
+	da=SF_PI/(2.*na);/* angle unit, rad */
 	var=da/3.;
 	var=2.0*var*var;
 
@@ -477,6 +448,7 @@ int main(int argc, char* argv[])
 	wlt=sf_floatalloc(nt);
 	v0=sf_floatalloc2(nz,nx); 	
 	vv=sf_floatalloc2(nzpad, nxpad);
+	vvs=sf_floatalloc2(nzpad, nxpad);
 	sp =sf_floatalloc2(nzpad, nxpad);
 	spz=sf_floatalloc2(nzpad, nxpad);
 	spx=sf_floatalloc2(nzpad, nxpad);
@@ -491,7 +463,9 @@ int main(int argc, char* argv[])
 	d2x=sf_floatalloc(nxpad);
 	sxz=sf_intalloc(ns);
 	gxz=sf_intalloc(ng);
+	dobs=sf_floatalloc2(ng,nt);
 	dcal=sf_floatalloc2(ng,nt);
+	adjsource=sf_floatalloc(ng);
 	bndr=(float*)malloc(nt*8*(nx+nz)*sizeof(float));
 	den=sf_floatalloc2(nz,nx);
 	num=sf_floatalloc3(nz,nx,na);
@@ -504,6 +478,8 @@ int main(int argc, char* argv[])
 	}
 	sf_floatread(v0[0],nz*nx,vmodl);
 	expand2d(vv, v0);
+	sf_floatread(v0[0],nz*nx,vmods);
+	expand2d(vvs, v0);
 	memset(sp [0],0,nzpad*nxpad*sizeof(float));
 	memset(spx[0],0,nzpad*nxpad*sizeof(float));
 	memset(spz[0],0,nzpad*nxpad*sizeof(float));
@@ -537,7 +513,13 @@ int main(int argc, char* argv[])
 
 	for(is=0; is<ns; is++)
 	{
+	        sf_warning("source:%d",is+1);
+
+       	        memset(dobs[0], 0, ng*nt*sizeof(float));
+		memset(dcal[0], 0, ng*nt*sizeof(float));
+		memset(adjsource, 0, ng*sizeof(float));
 		wavefield_init(sp, spz, spx, svz, svx);
+		wavefield_init(gp, gpz, gpx, gvz, gvx);
 		if (csdgather)	{
 			gxbeg=sxbeg+is*jsx-distx;
 			sg_init(gxz, gzbeg, gxbeg, jgz, jgx, ng);
@@ -546,18 +528,25 @@ int main(int argc, char* argv[])
 		{
 			add_source(&sxz[is], sp, 1, &wlt[it], true);
 			step_forward(sp, spz, spx, svz, svx, vv, d1z, d2x);
-			bndr_rw(false, svz, svx, &bndr[it*8*(nx+nz)]);
-		
-			record_seis(dcal[it], gxz, sp, ng);
-			muting(dcal[it], gzbeg, szbeg, gxbeg, sxbeg+is*jsx, jgx, it, tdmute);
+			bndr_rw(false, svz, svx, &bndr[it*8*(nx+nz)]);		
+			record_seis(dobs[it], gxz, sp, ng);
+
+			//remodeling with a smooth background velocity model
+			add_source(&sxz[is], gp, 1, &wlt[it], true);
+			step_forward(gp, gpz, gpx, gvz, gvx, vvs, d1z, d2x);
+			record_seis(dcal[it], gxz, gp, ng);
 		}
+		sf_warning("forward done!");
 
 		wavefield_init(gp, gpz, gpx, gvz, gvx);
 		memset(num[0][0], 0, na*nz*nx*sizeof(float));
 		memset(den[0], 0, nz*nx*sizeof(float));
 		for(it=nt-1; it>-1; it--)
 		{	
-			add_source(gxz, gp, ng, dcal[it], true);
+                        //muting direct arrival
+                        for(ig=0; ig<ng; ig++) adjsource[ig]=dobs[it][ig]-dcal[it][ig];
+
+			add_source(gxz, gp, ng, adjsource, true);
 			step_forward(gp, gpz, gpx, gvz, gvx, vv, d1z, d2x);	
 
 			if(it==kt)
@@ -574,6 +563,7 @@ int main(int argc, char* argv[])
 			step_backward(sp, svz, svx, vv);
 			add_source(&sxz[is], sp, 1, &wlt[it], false);
 		}	
+		sf_warning("backward done!");
 
 		for(ia=0; ia<na; ia++)
 		for(i2=0; i2<nx; i2++)
@@ -583,8 +573,11 @@ int main(int argc, char* argv[])
 	sf_floatwrite(adcig[0][0], na*nz*nx,rtmadcig);
 
 	free(wlt);
+	free(*dobs); free(dobs);
+	free(*dcal); free(dcal);
 	free(*v0); free(v0);
 	free(*vv); free(vv);
+	free(*vvs); free(vvs);
 	free(*sp); free(sp);
 	free(*spx); free(spx);
 	free(*spz); free(spz);
@@ -600,6 +593,7 @@ int main(int argc, char* argv[])
 	free(sxz);
 	free(gxz);
 	free(bndr);
+	free(adjsource);
 	free(*den); free(den);
 	free(**num); free(*num); free(num);
 	free(**adcig); free(*adcig); free(adcig);
