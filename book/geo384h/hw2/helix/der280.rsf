@@ -1,0 +1,30 @@
+in=data.asc data_format=ascii_float label=Elevation unit=m n1=979 o1=557.805 d1=0.010030675 label1=X n2=1400 o2=5107.965 d2=0.010035740 label2=Y
+1.8-svn	sfdd	geo384h/hw2/helix:	sergey@begws88.beg.utexas.edu	Thu Sep 15 13:19:23 2016
+
+	data_format="native_float"
+	esize=4
+	in="stdout"
+	in="stdin"
+
+1.8-svn	sfclip2	geo384h/hw2/helix:	sergey@begws88.beg.utexas.edu	Thu Sep 15 13:19:23 2016
+
+	data_format="native_float"
+	esize=4
+	in="stdout"
+	in="stdin"
+
+1.8-svn	sflapfill	geo384h/hw2/helix:	sergey@begws88.beg.utexas.edu	Thu Sep 15 13:19:32 2016
+
+	data_format="native_float"
+	esize=4
+	in="/home/sergey/DATA/geo384h/hw2/helix/data.rsf@"
+1.8-svn	sfigrad	geo384h/hw2/helix:	sergey@begws88.beg.utexas.edu	Thu Sep 15 13:19:32 2016
+
+	data_format="native_float"
+	esize=4
+	in="/home/sergey/DATA/geo384h/hw2/helix/der1.rsf@"
+1.8-svn	sfadd	geo384h/hw2/helix:	sergey@begws88.beg.utexas.edu	Thu Sep 15 13:19:33 2016
+
+	data_format="native_float"
+	esize=4
+	in="/home/sergey/DATA/geo384h/hw2/helix/der280.rsf@"

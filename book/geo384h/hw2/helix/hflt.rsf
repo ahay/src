@@ -1,0 +1,14 @@
+-1 -1 a0=2 n1=2 lag=slag.rsf in=ss0.asc data_format=ascii_float
+1.8-svn	sfdd	geo384h/hw2/helix:	sergey@begws88.beg.utexas.edu	Thu Sep 15 13:19:36 2016
+
+	data_format="native_float"
+	esize=4
+	in="/home/sergey/DATA/geo384h/hw2/helix/ss.rsf@"
+1.8-svn	sfwilson	geo384h/hw2/helix:	sergey@begws88.beg.utexas.edu	Thu Sep 15 13:19:37 2016
+
+	data_format="native_float"
+	esize=4
+	a0=1.79165
+	in="/home/sergey/DATA/geo384h/hw2/helix/hflt.rsf@"
+	lag="hlag.rsf"
+	n1=99

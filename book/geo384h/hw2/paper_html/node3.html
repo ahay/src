@@ -1,0 +1,378 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Sorting algorithms</TITLE>
+<META NAME="description" CONTENT="Sorting algorithms">
+<META NAME="keywords" CONTENT="paper">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="paper.css">
+
+<LINK REL="next" HREF="node4.html">
+<LINK REL="previous" HREF="node2.html">
+<LINK REL="up" HREF="paper.html">
+<LINK REL="next" HREF="node4.html">
+</HEAD>
+
+<BODY >
+<table align="center" width="100%" cellpadding="0" cellspacing="0">
+<tr>
+<td>
+<A NAME="tex2html42"
+  HREF="node4.html">
+<IMG WIDTH="32" HEIGHT="32" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="icons/next.png"></A></td>
+<td>
+<A NAME="tex2html40"
+  HREF="paper.html">
+<IMG WIDTH="32" HEIGHT="32" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="icons/up.png"></A></td>
+<td>
+<A NAME="tex2html34"
+  HREF="node2.html">
+<IMG WIDTH="32" HEIGHT="32" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="icons/previous.png"></A></td>
+<td><img src="icons/left.png" width="16" height="32" border="0"></td><td class="navigation" align="center" width="100%">Homework 2</td><td><img src="icons/right.png" width="16" height="32" border="0"></td>
+<td><a href="../paper.pdf"><img src="icons/pdf.png" alt="[pdf]" width="32" height="32" border="0"></a></td>
+</tr></table>
+<BR>
+<B> Next:</B> <A NAME="tex2html43"
+  HREF="node4.html">Running median and running</A>
+<B>Up:</B> <A NAME="tex2html41"
+  HREF="paper.html">Homework 2</A>
+<B> Previous:</B> <A NAME="tex2html35"
+  HREF="node2.html">Data attributes</A>
+<BR><HR>
+
+<!--End of Navigation Panel-->
+
+<H1><A NAME="SECTION00030000000000000000">
+Sorting algorithms</A>
+</H1>
+
+<P>
+
+<OL>
+<LI>Change directory to <TT>hw2/sorting</TT>.
+</LI>
+<LI>Run
+<PRE>
+scons movie.vpl
+</PRE>
+and observe a movie illustrating a slow sorting algorithm. The
+algorithm is implemented in the <TT>slow_sort</TT> function in the
+file <TT>sorting.c</TT>.
+
+<P>
+</LI>
+<LI>Run
+<PRE>
+scons view
+</PRE>
+to compute the cost of slow sorting experimentally. The output is
+shown in Figure&nbsp;<A HREF="#fig:cost">1</A>.
+
+<P>
+<P><CENTER>
+<A NAME="fig:cost"></A>
+<TABLE BORDER=0>
+<TR>
+<TH WIDTH="40%">
+<STRONG><A HREF = "../sorting/Fig/cost.png">cost</A>
+<BR>
+Figure 1.</STRONG> Experimental cost of slow sorting. 
+The logarithm of the cost is shown against the logarithm of the data size.
+<TH rowspan=2>
+<IMG SRC = "../sorting/Fig/cost.png" border="0" width=337 ALT = "cost">
+
+<TR><TH WIDTH="40%">
+ <a href="../sorting/Fig/cost.pdf"><img src="icons/pdf.png" border="0" alt="[pdf]" width="32" height="32"></a> <a href="../sorting/Fig/cost.png"><img src="icons/viewmag.png" border="0" alt="[png]" width="32" height="32"></a> <a href="../sorting.html"><img src="icons/configure.png" border="0" alt="[scons]" width="32" height="32"></a>
+</TABLE></CENTER></P>
+
+<P>
+If we approximate the cost as <!-- MATH
+ $P(N)=C\,N^\epsilon$
+ -->
+<IMG
+ WIDTH="117" HEIGHT="39" ALIGN="MIDDLE" BORDER="0"
+ SRC="img18.png"
+ ALT="$P(N)=C\,N^\epsilon$">, what is the
+experimental value of <IMG
+ WIDTH="12" HEIGHT="19" ALIGN="BOTTOM" BORDER="0"
+ SRC="img19.png"
+ ALT="$\epsilon$"> observed in the picture?
+
+<P>
+</LI>
+<LI>Open the file <TT>sorting.c</TT> in a text editor and edit it to 
+fix the specified line in the <TT>quick_sort</TT> function.
+
+<P>
+</LI>
+<LI>Open the file <TT>SConstruct</TT> in a text editor and uncomment 
+      the specified line.
+
+<P>
+</LI>
+<LI>Rerun
+<PRE>
+scons movie.vpl
+</PRE>
+to observe a change in the sorting movie. Debug your changes to the
+program if necessary.
+
+<P>
+</LI>
+<LI>Run
+<PRE>
+scons view
+</PRE>
+to observe the change in the algorithm cost. What is the new
+experimental value of <IMG
+ WIDTH="12" HEIGHT="19" ALIGN="BOTTOM" BORDER="0"
+ SRC="img19.png"
+ ALT="$\epsilon$">?
+
+<P>
+</LI>
+<LI><B>EXTRA CREDIT</B> for improving the speed of the 
+<TT>quick_sort</TT> algorithm further.
+</LI>
+</OL>
+
+<P>
+
+<div><table><tr><td><pre class="code">
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;time.h&gt;</FONT></B>
+#<B><FONT COLOR="#5F9EA0">include</FONT></B> <B><FONT COLOR="#BC8F8F">&lt;rsf.h&gt;</FONT></B>
+
+<B><FONT COLOR="#228B22">static</FONT></B> <B><FONT COLOR="#228B22">int</FONT></B> na, nmovie=0;
+<B><FONT COLOR="#228B22">static</FONT></B> <B><FONT COLOR="#228B22">float</FONT></B> *arr;
+<B><FONT COLOR="#228B22">static</FONT></B> sf_file movie;
+
+<B><FONT COLOR="#228B22">static</FONT></B> <B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">write_movie</FONT></B>(<B><FONT COLOR="#228B22">void</FONT></B>) 
+{
+    <B><FONT COLOR="#A020F0">if</FONT></B> (NULL != movie) 
+	sf_floatwrite(arr,na,movie);
+    nmovie++;
+}
+
+<B><FONT COLOR="#228B22">static</FONT></B> <B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">slow_sort</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> n, <B><FONT COLOR="#228B22">float</FONT></B>* list)
+{
+    <B><FONT COLOR="#228B22">int</FONT></B> k, k2;
+    <B><FONT COLOR="#228B22">float</FONT></B> item1, item2;
+
+    <B><FONT COLOR="#A020F0">for</FONT></B> (k=0; k &lt; n; k++) {
+	write_movie();
+		
+	item1 = list[k];
+	<I><FONT COLOR="#B22222">/* assume everything up to k is sorted */</FONT></I>
+        <B><FONT COLOR="#A020F0">for</FONT></B> (k2=k; k2 &gt; 0; k2-) {
+            item2 = list[k2-1];
+            <B><FONT COLOR="#A020F0">if</FONT></B> (item1 &gt;= item2) <B><FONT COLOR="#A020F0">break</FONT></B>;
+	    list[k2]   = item2;
+	}
+	list[k2] = item1;
+    }
+}
+
+<B><FONT COLOR="#228B22">static</FONT></B> <B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">quick_sort</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> n, <B><FONT COLOR="#228B22">float</FONT></B>* list)
+{
+    <B><FONT COLOR="#228B22">int</FONT></B> l, r;
+    <B><FONT COLOR="#228B22">float</FONT></B> ll, pivot;
+
+    <B><FONT COLOR="#A020F0">if</FONT></B> (n &lt;= 1) <B><FONT COLOR="#A020F0">return</FONT></B>;
+
+    write_movie();
+    
+    l = 1; <I><FONT COLOR="#B22222">/* left side */</FONT></I>
+    r = n; <I><FONT COLOR="#B22222">/* right side */</FONT></I>
+    pivot = list[0];
+
+    <I><FONT COLOR="#B22222">/* separate into two lists:
+       the left list for values &lt;= pivot 
+       and the right list for &gt; pivot */</FONT></I>
+    <B><FONT COLOR="#A020F0">while</FONT></B> (l &lt; r) {
+	ll = list[l];
+	<B><FONT COLOR="#A020F0">if</FONT></B> (ll &lt;= pivot) {
+	    l++;
+	} <B><FONT COLOR="#A020F0">else</FONT></B> {
+	    r-;
+	    list[l] = list[r]; 
+	    list[r] = ll;
+	}
+    }
+    list[0] = list[l-1];
+    list[l-1] = pivot;
+
+    quick_sort(l-1,list);
+
+    <I><FONT COLOR="#B22222">/* !!! UNCOMMENT AND EDIT THE NEXT LINE !!! */</FONT></I>
+    <I><FONT COLOR="#B22222">/* quick_sort(?,?); */</FONT></I>
+}
+
+<B><FONT COLOR="#228B22">int</FONT></B> <B><FONT COLOR="#0000FF">main</FONT></B>(<B><FONT COLOR="#228B22">int</FONT></B> argc, <B><FONT COLOR="#228B22">char</FONT></B>* argv[])
+{
+    <B><FONT COLOR="#228B22">char</FONT></B>* type;
+    clock_t start, end;
+    <B><FONT COLOR="#228B22">float</FONT></B> cycles;
+    sf_file in, cost;
+
+    <I><FONT COLOR="#B22222">/* initialize */</FONT></I>
+    sf_init(argc,argv);
+
+    <I><FONT COLOR="#B22222">/* input file */</FONT></I>
+    in = sf_input(<B><FONT COLOR="#BC8F8F">"in"</FONT></B>);
+    <B><FONT COLOR="#A020F0">if</FONT></B> (SF_FLOAT != sf_gettype(in))
+	sf_error(<B><FONT COLOR="#BC8F8F">"Need float input"</FONT></B>);
+    na = sf_filesize(in); <I><FONT COLOR="#B22222">/* data size */</FONT></I>
+
+    <I><FONT COLOR="#B22222">/* cost file */</FONT></I>
+    cost = sf_output(<B><FONT COLOR="#BC8F8F">"out"</FONT></B>);
+    sf_putint(cost,<B><FONT COLOR="#BC8F8F">"n1"</FONT></B>,1);
+
+    <I><FONT COLOR="#B22222">/* movie file */</FONT></I>
+    <B><FONT COLOR="#A020F0">if</FONT></B> (NULL != sf_getstring(<B><FONT COLOR="#BC8F8F">"movie"</FONT></B>)) {
+	movie = sf_output(<B><FONT COLOR="#BC8F8F">"movie"</FONT></B>);
+	sf_putint(movie,<B><FONT COLOR="#BC8F8F">"n2"</FONT></B>,1);
+	sf_putint(movie,<B><FONT COLOR="#BC8F8F">"n3"</FONT></B>,na+1);
+    } <B><FONT COLOR="#A020F0">else</FONT></B> {
+	movie = NULL;
+    }
+   
+    <B><FONT COLOR="#A020F0">if</FONT></B> (NULL == (type = sf_getstring(<B><FONT COLOR="#BC8F8F">"type"</FONT></B>)))
+	type = <B><FONT COLOR="#BC8F8F">"quick"</FONT></B>; <I><FONT COLOR="#B22222">/* sort type */</FONT></I>
+
+    <I><FONT COLOR="#B22222">/* get data */</FONT></I>
+    arr = sf_floatalloc(na);
+    sf_floatread(arr,na,in);
+ 
+    <I><FONT COLOR="#B22222">/* sort */</FONT></I>
+    start = clock();
+    <B><FONT COLOR="#A020F0">if</FONT></B> (<B><FONT COLOR="#BC8F8F">'q'</FONT></B>==type[0]) {
+	quick_sort(na, arr);
+    } <B><FONT COLOR="#A020F0">else</FONT></B> {
+	slow_sort(na, arr);
+    }
+    end = clock();
+    
+    <I><FONT COLOR="#B22222">/* CPU cycles */</FONT></I>
+    cycles = end - start;
+    sf_floatwrite(&amp;cycles,1,cost);
+
+    <B><FONT COLOR="#A020F0">while</FONT></B> (nmovie &lt; na+1) write_movie();
+    
+    exit(0);
+}
+</pre></table></div>
+
+<P>
+
+<div><table><tr><td><pre class="code">
+<B><FONT COLOR="#A020F0">from</FONT></B> rsf.proj <B><FONT COLOR="#A020F0">import</FONT></B> *
+
+<I><FONT COLOR="#B22222"># Generate random data
+</FONT></I><I><FONT COLOR="#B22222">######################
+</FONT></I>Flow(<B><FONT COLOR="#BC8F8F">'rand'</FONT></B>,None,
+     <B><FONT COLOR="#BC8F8F">'spike n1=524288 | noise rep=y type=n seed=2012'</FONT></B>)
+
+prog = Program(<B><FONT COLOR="#BC8F8F">'sorting.c'</FONT></B>)
+
+sort = <B><FONT COLOR="#BC8F8F">'slow'</FONT></B>
+
+<I><FONT COLOR="#B22222"># !!! UNCOMMENT THE NEXT LINE !!!
+</FONT></I><I><FONT COLOR="#B22222"># sort = 'quick' 
+</FONT></I>
+<I><FONT COLOR="#B22222"># Sorting movie
+</FONT></I><I><FONT COLOR="#B22222">###############
+</FONT></I>Flow(<B><FONT COLOR="#BC8F8F">'movie'</FONT></B>,<B><FONT COLOR="#BC8F8F">'rand %s'</FONT></B> % prog[0],
+     <B><FONT COLOR="#BC8F8F">'''
+     window n1=200 | 
+     ./${SOURCES[1]} movie=$TARGET type=%s
+     '''</FONT></B> % sort,stdout=0)
+Plot(<B><FONT COLOR="#BC8F8F">'movie'</FONT></B>,
+     <B><FONT COLOR="#BC8F8F">'''
+     graph symbol=o title="%s Sort" wantaxis=n symbolsz=5
+     '''</FONT></B> % sort.capitalize(),view=1)
+
+<I><FONT COLOR="#B22222"># Sorting cost
+</FONT></I><I><FONT COLOR="#B22222">##############
+</FONT></I>na = 8192
+costs = []
+<B><FONT COLOR="#A020F0">for</FONT></B> n <B><FONT COLOR="#A020F0">in</FONT></B> range(5):
+    na *= 2
+    cost = <B><FONT COLOR="#BC8F8F">'cost%d'</FONT></B> % n
+    Flow(cost,<B><FONT COLOR="#BC8F8F">'rand  %s'</FONT></B> % prog[0],
+         <B><FONT COLOR="#BC8F8F">'''
+         window n1=%d | 
+         ./${SOURCES[1]} type=%s
+         '''</FONT></B> % (na,sort))
+    costs.append(cost)
+Flow(<B><FONT COLOR="#BC8F8F">'cost'</FONT></B>,costs,
+     <B><FONT COLOR="#BC8F8F">'cat axis=1 ${SOURCES[1:5]} | put o1=14 d1=1 unit1='</FONT></B>)
+    
+Result(<B><FONT COLOR="#BC8F8F">'cost'</FONT></B>,
+       <B><FONT COLOR="#BC8F8F">'''
+       math output="log(input)/log(2)" |
+       graph title=Cost 
+       label1="log(N)" label2="log(CPU Cycles)" 
+       '''</FONT></B>)
+
+End()
+</pre></table></div>
+
+<P>
+<HR>
+<table align="center" width="100%" cellpadding="0" cellspacing="0">
+<tr>
+<td>
+<A NAME="tex2html42"
+  HREF="node4.html">
+<IMG WIDTH="32" HEIGHT="32" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="icons/next.png"></A></td>
+<td>
+<A NAME="tex2html40"
+  HREF="paper.html">
+<IMG WIDTH="32" HEIGHT="32" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="icons/up.png"></A></td>
+<td>
+<A NAME="tex2html34"
+  HREF="node2.html">
+<IMG WIDTH="32" HEIGHT="32" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="icons/previous.png"></A></td>
+<td><img src="icons/left.png" width="16" height="32" border="0"></td><td class="navigation" align="center" width="100%">Homework 2</td><td><img src="icons/right.png" width="16" height="32" border="0"></td>
+<td><a href="../paper.pdf"><img src="icons/pdf.png" alt="[pdf]" width="32" height="32" border="0"></a></td>
+</tr></table>
+<BR>
+<B> Next:</B> <A NAME="tex2html43"
+  HREF="node4.html">Running median and running</A>
+<B>Up:</B> <A NAME="tex2html41"
+  HREF="paper.html">Homework 2</A>
+<B> Previous:</B> <A NAME="tex2html35"
+  HREF="node2.html">Data attributes</A>
+
+<!--End of Navigation Panel-->
+<ADDRESS>
+<I> <BR>
+2016-09-15</I>
+</ADDRESS>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+var pageTracker = _gat._getTracker("UA-509367-3");
+pageTracker._trackPageview();
+</script>
+</BODY>
+</HTML>

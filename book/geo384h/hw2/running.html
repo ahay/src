@@ -1,0 +1,161 @@
+
+     <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+     <html>
+     <head>
+     <title>running/SConstruct</title>
+     <style type="text/css">
+     div.progs {
+     background-color: #DCE3C4;
+     border: thin solid black;
+     padding: 1em;
+     margin-left: 2em;
+     margin-right: 2em; }
+     div.dsets {
+     background-color: #E3C4DC;
+     border: thin solid black;
+     padding: 1em;
+     margin-left: 2em;
+     margin-right: 2em; }
+     div.scons {
+     background-color: #FFF8ED;
+     border: thin solid black;
+     padding: 1em;
+     margin-left: 2em;
+     margin-right: 2em; }
+     .name { color: #000000; }
+.number { color: #0080C0; }
+.string { color: #004080; }
+.keyword { color: #C00000; }
+.flow { color: #0000C0; }
+.text { color: #000000; }
+.fetch { color: #0000C0; }
+.op { color: #0000C0; }
+.error { color: #FF8080; }
+.comment { color: #008000; }
+.plot { color: #0000C0; }
+.result { color: #C00000; }
+</style>
+     </head>
+     <body>
+     <div>
+     <a href="paper_html/paper.html"><img width="32" height="32"
+     align="bottom" border="0" alt="up" src="paper_html/icons/up.png"></a>
+     <a href="paper.pdf"><img src="paper_html/icons/pdf.png" alt="[pdf]"
+     width="32" height="32" border="0"></a>
+     </div>
+     <div class="scons">
+     <table><tr><td>
+     <pre><font face="Lucida,Courier New"><span class="keyword">from</span> <span class="name">rsf</span><span class="op">.</span><span class="name">proj</span> <span class="keyword">import</span> <span class="op">*</span>
+
+<span class="comment"># Download data</span>
+<span class="fetch">Fetch</span><span class="op">(</span><span class="string">'austin-w.HH'</span><span class="op">,</span><span class="string">'bay'</span><span class="op">)</span>
+
+<span class="comment"># Convert format</span>
+<span class="flow">Flow</span><span class="op">(</span><span class="string">'dem'</span><span class="op">,</span><span class="string">'austin-w.HH'</span><span class="op">,</span><span class="string">'dd form=native'</span><span class="op">)</span>
+
+<span class="comment"># Display</span>
+<span class="keyword">def</span> <span class="name">plot</span><span class="op">(</span><span class="name">title</span><span class="op">)</span><span class="op">:</span>
+    <span class="keyword">return</span> <span class="string">'''
+    grey clip=250 allpos=y title="%s" 
+    screenratio=1
+    '''</span> <span class="op">%</span> <span class="name">title</span>
+
+<span class="result">Result</span><span class="op">(</span><span class="string">'dem'</span><span class="op">,</span><span class="name">plot</span><span class="op">(</span><span class="string">'Digital Elevation Map'</span><span class="op">)</span><span class="op">)</span>
+
+<span class="comment"># Program for running average</span>
+<span class="name">run</span> <span class="op">=</span> <span class="name">Program</span><span class="op">(</span><span class="string">'running.c'</span><span class="op">)</span>
+
+<span class="name">w</span> <span class="op">=</span> <span class="number">30</span>
+
+<span class="comment"># !!! CHANGE BELOW !!!</span>
+<span class="flow">Flow</span><span class="op">(</span><span class="string">'ave'</span><span class="op">,</span><span class="string">'dem %s'</span> <span class="op">%</span> <span class="name">run</span><span class="op">[</span><span class="number">0</span><span class="op">]</span><span class="op">,</span>
+     <span class="string">'./${SOURCES[1]} w1=%d w2=%d how=fast'</span> <span class="op">%</span> <span class="op">(</span><span class="name">w</span><span class="op">,</span><span class="name">w</span><span class="op">)</span><span class="op">)</span>
+<span class="result">Result</span><span class="op">(</span><span class="string">'ave'</span><span class="op">,</span><span class="name">plot</span><span class="op">(</span><span class="string">'Signal'</span><span class="op">)</span><span class="op">)</span>
+
+<span class="comment"># Difference</span>
+<span class="flow">Flow</span><span class="op">(</span><span class="string">'res'</span><span class="op">,</span><span class="string">'dem ave'</span><span class="op">,</span><span class="string">'add scale=1,-1 ${SOURCES[1]}'</span><span class="op">)</span>
+<span class="result">Result</span><span class="op">(</span><span class="string">'res'</span><span class="op">,</span><span class="name">plot</span><span class="op">(</span><span class="string">'Noise'</span><span class="op">)</span> <span class="op">+</span> <span class="string">' allpos=n'</span><span class="op">)</span>
+
+<span class="comment">#############################################################</span>
+
+<span class="keyword">import</span> <span class="name">sys</span>
+
+<span class="keyword">if</span> <span class="name">sys</span><span class="op">.</span><span class="name">platform</span><span class="op">==</span><span class="string">'darwin'</span><span class="op">:</span>
+     <span class="name">gtime</span> <span class="op">=</span> <span class="name">WhereIs</span><span class="op">(</span><span class="string">'gtime'</span><span class="op">)</span>
+     <span class="keyword">if</span> <span class="keyword">not</span> <span class="name">gtime</span><span class="op">:</span>
+          <span class="keyword">print</span> <span class="string">"For computing CPU time, please install gtime."</span>
+<span class="keyword">else</span><span class="op">:</span>
+     <span class="name">gtime</span> <span class="op">=</span> <span class="name">WhereIs</span><span class="op">(</span><span class="string">'gtime'</span><span class="op">)</span> <span class="keyword">or</span> <span class="name">WhereIs</span><span class="op">(</span><span class="string">'time'</span><span class="op">)</span>
+
+<span class="comment"># slow or fast</span>
+<span class="keyword">for</span> <span class="name">case</span> <span class="keyword">in</span> <span class="op">(</span><span class="string">'fast'</span><span class="op">,</span><span class="string">'slow'</span><span class="op">)</span><span class="op">:</span>
+
+    <span class="name">ts</span> <span class="op">=</span> <span class="op">[</span><span class="op">]</span>
+    <span class="name">ws</span> <span class="op">=</span> <span class="op">[</span><span class="op">]</span>
+
+    <span class="name">time</span> <span class="op">=</span> <span class="string">'time-'</span> <span class="op">+</span> <span class="name">case</span>
+    <span class="name">wind</span> <span class="op">=</span> <span class="string">'wind-'</span> <span class="op">+</span> <span class="name">case</span>
+
+
+
+    <span class="comment"># loop over window size</span>
+    <span class="keyword">for</span> <span class="name">w</span> <span class="keyword">in</span> <span class="name">range</span><span class="op">(</span><span class="number">3</span><span class="op">,</span><span class="number">16</span><span class="op">,</span><span class="number">2</span><span class="op">)</span><span class="op">:</span>
+        <span class="name">itime</span> <span class="op">=</span> <span class="string">'%s-%d'</span> <span class="op">%</span> <span class="op">(</span><span class="name">time</span><span class="op">,</span><span class="name">w</span><span class="op">)</span>
+        <span class="name">ts</span><span class="op">.</span><span class="name">append</span><span class="op">(</span><span class="name">itime</span><span class="op">)</span>
+
+        <span class="name">iwind</span> <span class="op">=</span> <span class="string">'%s-%d'</span> <span class="op">%</span> <span class="op">(</span><span class="name">wind</span><span class="op">,</span><span class="name">w</span><span class="op">)</span>
+        <span class="name">ws</span><span class="op">.</span><span class="name">append</span><span class="op">(</span><span class="name">iwind</span><span class="op">)</span>
+
+        <span class="comment"># measure CPU time</span>
+
+
+
+        <span class="flow">Flow</span><span class="op">(</span><span class="name">iwind</span><span class="op">,</span><span class="name">None</span><span class="op">,</span><span class="string">'spike n1=1 mag=%d'</span> <span class="op">%</span> <span class="op">(</span><span class="name">w</span><span class="op">*</span><span class="name">w</span><span class="op">)</span><span class="op">)</span>
+        <span class="flow">Flow</span><span class="op">(</span><span class="name">itime</span><span class="op">,</span><span class="string">'dem %s'</span> <span class="op">%</span> <span class="name">run</span><span class="op">[</span><span class="number">0</span><span class="op">]</span><span class="op">,</span>
+             <span class="string">'''
+             ( (%s -f "%%S %%U"
+             ./${SOURCES[1]} &lt; ${SOURCES[0]} 
+              w1=%d w2=%d what=%s &gt; /dev/null ) 2&gt;&amp;1 )
+              &gt; time.out &amp;&amp;
+             (tail -1 time.out; 
+              echo in=time0.asc n1=2 data_format=ascii_float)
+              &gt; time0.asc &amp;&amp;
+             dd form=native &lt; time0.asc | stack axis=1 norm=n
+             &gt; $TARGET &amp;&amp;
+             /bin/rm time0.asc time.out
+             '''</span> <span class="op">%</span> <span class="op">(</span><span class="name">gtime</span><span class="op">,</span><span class="name">w</span><span class="op">,</span><span class="name">w</span><span class="op">,</span><span class="name">case</span><span class="op">)</span><span class="op">,</span><span class="name">stdin</span><span class="op">=</span><span class="number">0</span><span class="op">,</span><span class="name">stdout</span><span class="op">=</span><span class="op">-</span><span class="number">1</span><span class="op">)</span>
+
+    <span class="flow">Flow</span><span class="op">(</span><span class="name">time</span><span class="op">,</span><span class="name">ts</span><span class="op">,</span><span class="string">'cat axis=1 ${SOURCES[1:%d]}'</span> <span class="op">%</span> <span class="name">len</span><span class="op">(</span><span class="name">ts</span><span class="op">)</span><span class="op">)</span>
+    <span class="flow">Flow</span><span class="op">(</span><span class="name">wind</span><span class="op">,</span><span class="name">ws</span><span class="op">,</span><span class="string">'cat axis=1 ${SOURCES[1:%d]}'</span> <span class="op">%</span> <span class="name">len</span><span class="op">(</span><span class="name">ws</span><span class="op">)</span><span class="op">)</span>
+
+    <span class="comment"># complex numbers for plotting</span>
+    <span class="flow">Flow</span><span class="op">(</span><span class="string">'c'</span><span class="op">+</span><span class="name">time</span><span class="op">,</span><span class="op">[</span><span class="name">wind</span><span class="op">,</span><span class="name">time</span><span class="op">]</span><span class="op">,</span>
+         <span class="string">'''
+         cat axis=2 ${SOURCES[1]} |
+         transp |
+         dd type=complex
+         '''</span><span class="op">)</span>
+
+<span class="comment"># Display CPU time</span>
+<span class="plot">Plot</span>  <span class="op">(</span><span class="string">'time'</span><span class="op">,</span><span class="string">'ctime-fast ctime-slow'</span><span class="op">,</span>
+       <span class="string">'''
+       cat axis=1 ${SOURCES[1]} | transp |
+       graph dash=0,1 wanttitle=n
+       label2="CPU Time" unit2=s
+       label1="Window Size" unit1=
+       '''</span><span class="op">,</span><span class="name">view</span><span class="op">=</span><span class="number">1</span><span class="op">)</span>
+
+<span class="name">End</span><span class="op">(</span><span class="op">)</span><span class="text"></span></font></pre></table></div><p><div class="progs"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="http://www.ahay.org/RSF/sfdd.html">sfdd</a><br>
+<a href="http://www.ahay.org/RSF/sfgrey.html">sfgrey</a><br>
+</td><td width="25%" valign=top><a href="http://www.ahay.org/RSF/sfadd.html">sfadd</a><br>
+<a href="http://www.ahay.org/RSF/sfspike.html">sfspike</a><br>
+</td><td width="25%" valign=top><a href="http://www.ahay.org/RSF/sfstack.html">sfstack</a><br>
+<a href="http://www.ahay.org/RSF/sfcat.html">sfcat</a><br>
+</td><td width="25%" valign=top><a href="http://www.ahay.org/RSF/sftransp.html">sftransp</a><br>
+<a href="http://www.ahay.org/RSF/sfgraph.html">sfgraph</a><br>
+</td></tr></table></div><p><div class="dsets"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="http://www.ahay.org/data/bay/austin-w.HH">data/bay/austin-w.HH</a><br>
+</td><td width="25%" valign=top></td><td width="25%" valign=top></td><td width="25%" valign=top></td></tr></table>
+     </div>
+     </body>
+     </html>
+     

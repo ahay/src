@@ -1,0 +1,1 @@
+/home/sergey/DATA/geo384h/hw2/helix/st-helens_after.txt

@@ -26,7 +26,7 @@ static float slow_median(int n, float* list)
 int main(int argc, char* argv[]) 
 {
     int w1, w2, nw, s1,s2, j1,j2, i1,i2,i3, n1,n2,n3;
-    char *what;
+    char *how;
     float **data, **signal, **win;
     sf_file in, out;
 
@@ -50,10 +50,10 @@ int main(int argc, char* argv[])
     nw = w1*w2;
     win = sf_floatalloc2(w1,w2);
 
-    what = sf_getstring("what"); 
+    how = sf_getstring("how"); 
     /* what to compute 
        (fast median, slow median, mean) */
-    if (NULL == what) what="fast";
+    if (NULL == how) how="fast";
 
     for (i3=0; i3 < n3; i3++) {
 
@@ -71,7 +71,7 @@ int main(int argc, char* argv[])
 			win[j2][j1] = data[s2+j2][s1+j1];
 		    }}
 
-		switch (what[0]) {
+		switch (how[0]) {
 		    case 'f': /* fast median */
 			signal[i2][i1] = 
 			    sf_quantile(nw/2,nw,win[0]);

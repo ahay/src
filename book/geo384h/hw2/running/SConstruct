@@ -15,14 +15,14 @@ def plot(title):
 
 Result('dem',plot('Digital Elevation Map'))
 
-# Running median program
+# Program for running average
 run = Program('running.c')
 
 w = 30
 
 # !!! CHANGE BELOW !!!
 Flow('ave','dem %s' % run[0],
-     './${SOURCES[1]} w1=%d w2=%d what=fast' % (w,w))
+     './${SOURCES[1]} w1=%d w2=%d how=fast' % (w,w))
 Result('ave',plot('Signal'))
 
 # Difference

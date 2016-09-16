@@ -1,0 +1,108 @@
+
+     <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+     <html>
+     <head>
+     <title>sorting/SConstruct</title>
+     <style type="text/css">
+     div.progs {
+     background-color: #DCE3C4;
+     border: thin solid black;
+     padding: 1em;
+     margin-left: 2em;
+     margin-right: 2em; }
+     div.dsets {
+     background-color: #E3C4DC;
+     border: thin solid black;
+     padding: 1em;
+     margin-left: 2em;
+     margin-right: 2em; }
+     div.scons {
+     background-color: #FFF8ED;
+     border: thin solid black;
+     padding: 1em;
+     margin-left: 2em;
+     margin-right: 2em; }
+     .name { color: #000000; }
+.number { color: #0080C0; }
+.string { color: #004080; }
+.keyword { color: #C00000; }
+.flow { color: #0000C0; }
+.text { color: #000000; }
+.fetch { color: #0000C0; }
+.op { color: #0000C0; }
+.error { color: #FF8080; }
+.comment { color: #008000; }
+.plot { color: #0000C0; }
+.result { color: #C00000; }
+</style>
+     </head>
+     <body>
+     <div>
+     <a href="paper_html/paper.html"><img width="32" height="32"
+     align="bottom" border="0" alt="up" src="paper_html/icons/up.png"></a>
+     <a href="paper.pdf"><img src="paper_html/icons/pdf.png" alt="[pdf]"
+     width="32" height="32" border="0"></a>
+     </div>
+     <div class="scons">
+     <table><tr><td>
+     <pre><font face="Lucida,Courier New"><span class="keyword">from</span> <span class="name">rsf</span><span class="op">.</span><span class="name">proj</span> <span class="keyword">import</span> <span class="op">*</span>
+
+<span class="comment"># Generate random data</span>
+<span class="comment">######################</span>
+<span class="flow">Flow</span><span class="op">(</span><span class="string">'rand'</span><span class="op">,</span><span class="name">None</span><span class="op">,</span>
+     <span class="string">'spike n1=524288 | noise rep=y type=n seed=2012'</span><span class="op">)</span>
+
+<span class="name">prog</span> <span class="op">=</span> <span class="name">Program</span><span class="op">(</span><span class="string">'sorting.c'</span><span class="op">)</span>
+
+<span class="name">sort</span> <span class="op">=</span> <span class="string">'slow'</span>
+
+<span class="comment"># !!! UNCOMMENT THE NEXT LINE !!!</span>
+<span class="comment"># sort = 'quick' </span>
+
+<span class="comment"># Sorting movie</span>
+<span class="comment">###############</span>
+<span class="flow">Flow</span><span class="op">(</span><span class="string">'movie'</span><span class="op">,</span><span class="string">'rand %s'</span> <span class="op">%</span> <span class="name">prog</span><span class="op">[</span><span class="number">0</span><span class="op">]</span><span class="op">,</span>
+     <span class="string">'''
+     window n1=200 | 
+     ./${SOURCES[1]} movie=$TARGET type=%s
+     '''</span> <span class="op">%</span> <span class="name">sort</span><span class="op">,</span><span class="name">stdout</span><span class="op">=</span><span class="number">0</span><span class="op">)</span>
+<span class="plot">Plot</span><span class="op">(</span><span class="string">'movie'</span><span class="op">,</span>
+     <span class="string">'''
+     graph symbol=o title="%s Sort" wantaxis=n symbolsz=5
+     '''</span> <span class="op">%</span> <span class="name">sort</span><span class="op">.</span><span class="name">capitalize</span><span class="op">(</span><span class="op">)</span><span class="op">,</span><span class="name">view</span><span class="op">=</span><span class="number">1</span><span class="op">)</span>
+
+<span class="comment"># Sorting cost</span>
+<span class="comment">##############</span>
+<span class="name">na</span> <span class="op">=</span> <span class="number">8192</span>
+<span class="name">costs</span> <span class="op">=</span> <span class="op">[</span><span class="op">]</span>
+<span class="keyword">for</span> <span class="name">n</span> <span class="keyword">in</span> <span class="name">range</span><span class="op">(</span><span class="number">5</span><span class="op">)</span><span class="op">:</span>
+    <span class="name">na</span> <span class="op">*=</span> <span class="number">2</span>
+    <span class="name">cost</span> <span class="op">=</span> <span class="string">'cost%d'</span> <span class="op">%</span> <span class="name">n</span>
+    <span class="flow">Flow</span><span class="op">(</span><span class="name">cost</span><span class="op">,</span><span class="string">'rand  %s'</span> <span class="op">%</span> <span class="name">prog</span><span class="op">[</span><span class="number">0</span><span class="op">]</span><span class="op">,</span>
+         <span class="string">'''
+         window n1=%d | 
+         ./${SOURCES[1]} type=%s
+         '''</span> <span class="op">%</span> <span class="op">(</span><span class="name">na</span><span class="op">,</span><span class="name">sort</span><span class="op">)</span><span class="op">)</span>
+    <span class="name">costs</span><span class="op">.</span><span class="name">append</span><span class="op">(</span><span class="name">cost</span><span class="op">)</span>
+<span class="flow">Flow</span><span class="op">(</span><span class="string">'cost'</span><span class="op">,</span><span class="name">costs</span><span class="op">,</span>
+     <span class="string">'cat axis=1 ${SOURCES[1:5]} | put o1=14 d1=1 unit1='</span><span class="op">)</span>
+
+<span class="result">Result</span><span class="op">(</span><span class="string">'cost'</span><span class="op">,</span>
+       <span class="string">'''
+       math output="log(input)/log(2)" |
+       graph title=Cost 
+       label1="log(N)" label2="log(CPU Cycles)" 
+       '''</span><span class="op">)</span>
+
+<span class="name">End</span><span class="op">(</span><span class="op">)</span><span class="text"></span></font></pre></table></div><p><div class="progs"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="http://www.ahay.org/RSF/sfspike.html">sfspike</a><br>
+<a href="http://www.ahay.org/RSF/sfnoise.html">sfnoise</a><br>
+</td><td width="25%" valign=top><a href="http://www.ahay.org/RSF/sfwindow.html">sfwindow</a><br>
+<a href="http://www.ahay.org/RSF/sfgraph.html">sfgraph</a><br>
+</td><td width="25%" valign=top><a href="http://www.ahay.org/RSF/sfcat.html">sfcat</a><br>
+<a href="http://www.ahay.org/RSF/sfput.html">sfput</a><br>
+</td><td width="25%" valign=top><a href="http://www.ahay.org/RSF/sfmath.html">sfmath</a><br>
+</td></tr></table>
+     </div>
+     </body>
+     </html>
+     

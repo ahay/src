@@ -1,0 +1,354 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2008 (1.71)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Data attributes</TITLE>
+<META NAME="description" CONTENT="Data attributes">
+<META NAME="keywords" CONTENT="paper">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2008">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="paper.css">
+
+<LINK REL="next" HREF="node3.html">
+<LINK REL="previous" HREF="node1.html">
+<LINK REL="up" HREF="paper.html">
+<LINK REL="next" HREF="node3.html">
+</HEAD>
+
+<BODY >
+<table align="center" width="100%" cellpadding="0" cellspacing="0">
+<tr>
+<td>
+<A NAME="tex2html32"
+  HREF="node3.html">
+<IMG WIDTH="32" HEIGHT="32" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="icons/next.png"></A></td>
+<td>
+<A NAME="tex2html30"
+  HREF="paper.html">
+<IMG WIDTH="32" HEIGHT="32" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="icons/up.png"></A></td>
+<td>
+<A NAME="tex2html24"
+  HREF="node1.html">
+<IMG WIDTH="32" HEIGHT="32" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="icons/previous.png"></A></td>
+<td><img src="icons/left.png" width="16" height="32" border="0"></td><td class="navigation" align="center" width="100%">Homework 2</td><td><img src="icons/right.png" width="16" height="32" border="0"></td>
+<td><a href="../paper.pdf"><img src="icons/pdf.png" alt="[pdf]" width="32" height="32" border="0"></a></td>
+</tr></table>
+<BR>
+<B> Next:</B> <A NAME="tex2html33"
+  HREF="node3.html">Sorting algorithms</A>
+<B>Up:</B> <A NAME="tex2html31"
+  HREF="paper.html">Homework 2</A>
+<B> Previous:</B> <A NAME="tex2html25"
+  HREF="node1.html">Prerequisites</A>
+<BR><HR>
+
+<!--End of Navigation Panel-->
+
+<H1><A NAME="SECTION00020000000000000000">
+Data attributes</A>
+</H1>
+
+<P>
+You can either write your answers to theoretical questions on paper or
+edit them in the file <TT>hw2/paper.tex</TT>. Please show all the
+mathematical derivations that you perform.
+
+<P>
+
+<OL>
+<LI>The varimax attribute is defined as
+<BR>
+<DIV ALIGN="RIGHT">
+
+<!-- MATH
+ \begin{equation}
+\phi[\mathbf{a}] = \frac{\displaystyle N\,\sum\limits_{n=1}^N
+  a_n^4}{\displaystyle \left(\sum\limits_{n=1}^{N} a_n^2\right)^2}
+\end{equation}
+ -->
+<TABLE WIDTH="100%" ALIGN="CENTER">
+<TR VALIGN="MIDDLE"><TD ALIGN="CENTER" NOWRAP><A NAME="eq:varimax"></A><IMG
+ WIDTH="140" HEIGHT="152" BORDER="0"
+ SRC="img1.png"
+ ALT="\begin{displaymath}
+\phi[\mathbf{a}] = \frac{\displaystyle N\,\sum\limits_{n=1...
+...n^4}{\displaystyle \left(\sum\limits_{n=1}^{N} a_n^2\right)^2}
+\end{displaymath}"></TD>
+<TD WIDTH=10 ALIGN="RIGHT">
+(1)</TD></TR>
+</TABLE>
+<BR CLEAR="ALL"></DIV><P></P>
+
+<P>
+Suppose that the data vector <IMG
+ WIDTH="15" HEIGHT="19" ALIGN="BOTTOM" BORDER="0"
+ SRC="img2.png"
+ ALT="$\mathbf{a}$"> contains random noise:
+the data values <IMG
+ WIDTH="23" HEIGHT="35" ALIGN="MIDDLE" BORDER="0"
+ SRC="img3.png"
+ ALT="$a_n$"> are independent and identically distributed with
+a zero-mean Gaussian distribution: <IMG
+ WIDTH="83" HEIGHT="39" ALIGN="MIDDLE" BORDER="0"
+ SRC="img4.png"
+ ALT="$E[a_n]=0$">, <!-- MATH
+ $E[a_n^2]=\sigma^2$
+ -->
+<IMG
+ WIDTH="93" HEIGHT="39" ALIGN="MIDDLE" BORDER="0"
+ SRC="img5.png"
+ ALT="$E[a_n^2]=\sigma^2$">,
+<!-- MATH
+ $E[a_n^4]=3\,\sigma^4$
+ -->
+<IMG
+ WIDTH="105" HEIGHT="39" ALIGN="MIDDLE" BORDER="0"
+ SRC="img6.png"
+ ALT="$E[a_n^4]=3\,\sigma^4$">. Find the mathematical expectation of
+<!-- MATH
+ $\phi[\mathbf{a}]$
+ -->
+<IMG
+ WIDTH="36" HEIGHT="39" ALIGN="MIDDLE" BORDER="0"
+ SRC="img7.png"
+ ALT="$\phi[\mathbf{a}]$">.
+
+<P>
+</LI>
+<LI>You are given a table of numbers <!-- MATH
+ $x_1, x_2, \ldots, x_N$
+ -->
+<IMG
+ WIDTH="115" HEIGHT="35" ALIGN="MIDDLE" BORDER="0"
+ SRC="img8.png"
+ ALT="$x_1, x_2, \ldots, x_N$"> and <!-- MATH
+ $y_1, y_2, \ldots, y_N$
+ -->
+<IMG
+ WIDTH="110" HEIGHT="35" ALIGN="MIDDLE" BORDER="0"
+ SRC="img9.png"
+ ALT="$y_1, y_2, \ldots, y_N$"> and 
+want to fit a parabolic model <!-- MATH
+ $y(x) = a + b\,x + c\,x^2$
+ -->
+<IMG
+ WIDTH="172" HEIGHT="39" ALIGN="MIDDLE" BORDER="0"
+ SRC="img10.png"
+ ALT="$y(x) = a + b\,x + c\,x^2$"> to them.
+
+<P>
+
+<OL>
+<LI>Using the method of least squares, find a set of liner equations
+  for coefficients <IMG
+ WIDTH="14" HEIGHT="19" ALIGN="BOTTOM" BORDER="0"
+ SRC="img11.png"
+ ALT="$a$">, <IMG
+ WIDTH="12" HEIGHT="20" ALIGN="BOTTOM" BORDER="0"
+ SRC="img12.png"
+ ALT="$b$">, and <IMG
+ WIDTH="13" HEIGHT="19" ALIGN="BOTTOM" BORDER="0"
+ SRC="img13.png"
+ ALT="$c$"> for the case <IMG
+ WIDTH="56" HEIGHT="35" ALIGN="MIDDLE" BORDER="0"
+ SRC="img14.png"
+ ALT="$N &gt; 3$">.
+</LI>
+<LI>Using the method of least squares, find <IMG
+ WIDTH="14" HEIGHT="19" ALIGN="BOTTOM" BORDER="0"
+ SRC="img11.png"
+ ALT="$a$">, <IMG
+ WIDTH="12" HEIGHT="20" ALIGN="BOTTOM" BORDER="0"
+ SRC="img12.png"
+ ALT="$b$">, and <IMG
+ WIDTH="13" HEIGHT="19" ALIGN="BOTTOM" BORDER="0"
+ SRC="img13.png"
+ ALT="$c$"> for the case of <IMG
+ WIDTH="56" HEIGHT="16" ALIGN="BOTTOM" BORDER="0"
+ SRC="img15.png"
+ ALT="$N=2$">.
+</LI>
+</OL>
+
+<P>
+</LI>
+<LI>The matrix in equation&nbsp;(<A HREF="#eq:conv">2</A>) represents a convolution operator with zero boundary conditions.
+<BR>
+<DIV ALIGN="RIGHT">
+
+<!-- MATH
+ \begin{equation}
+\mathbf{F} = \left[\begin{array}{llllll}
+f_1 & f_0 & 0   & 0   & 0   & 0   \\
+f_2 & f_1 & f_0 & 0   & 0   & 0   \\
+f_3 & f_2 & f_1 & f_0 & 0   & 0   \\
+0   & f_3 & f_2 & f_1 & f_0 & 0   \\
+0   & 0   & f_3 & f_2 & f_1 & f_0 \\
+0   & 0   & 0   & f_3 & f_2 & f_1 \\
+\end{array}\right]\;.
+\end{equation}
+ -->
+<TABLE WIDTH="100%" ALIGN="CENTER">
+<TR VALIGN="MIDDLE"><TD ALIGN="CENTER" NOWRAP><A NAME="eq:conv"></A><IMG
+ WIDTH="268" HEIGHT="145" BORDER="0"
+ SRC="img16.png"
+ ALT="\begin{displaymath}
+\mathbf{F} = \left[\begin{array}{llllll}
+f_1 &amp; f_0 &amp; 0 &amp; 0 &amp;...
+... f_0 \\
+0 &amp; 0 &amp; 0 &amp; f_3 &amp; f_2 &amp; f_1 \\
+\end{array}\right]\;.
+\end{displaymath}"></TD>
+<TD WIDTH=10 ALIGN="RIGHT">
+(2)</TD></TR>
+</TABLE>
+<BR CLEAR="ALL"></DIV><P></P>
+
+<P>
+The operator is implemented in the C code below.
+
+<P>
+
+<div><table><tr><td><pre class="code">
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">conv_lop</FONT></B> (bool adj, bool add, 
+	       <B><FONT COLOR="#228B22">int</FONT></B> nx, <B><FONT COLOR="#228B22">int</FONT></B> ny, <B><FONT COLOR="#228B22">float</FONT></B>* xx, <B><FONT COLOR="#228B22">float</FONT></B>* yy) 
+<I><FONT COLOR="#B22222">/*&lt; linear operator &gt;*/</FONT></I>
+{
+    <B><FONT COLOR="#228B22">int</FONT></B> f, x, y, x0, x1;
+    
+    assert (ny == nx);
+    sf_adjnull (adj, add, nx, ny, xx, yy);
+    
+    <B><FONT COLOR="#A020F0">for</FONT></B> (f=0; f &lt; nf; f++) {
+	<B><FONT COLOR="#A020F0">for</FONT></B> (y = 0; y &lt; ny; y++) {
+	    x = y-f+1;
+	    
+	    <I><FONT COLOR="#B22222">/* !!! CHANGE BELOW !!! */</FONT></I>
+	    <B><FONT COLOR="#A020F0">if</FONT></B> (x &lt; 0  ) <B><FONT COLOR="#A020F0">continue</FONT></B>;
+	    <B><FONT COLOR="#A020F0">if</FONT></B> (x &gt;= nx) <B><FONT COLOR="#A020F0">break</FONT></B>;
+
+	    <B><FONT COLOR="#A020F0">if</FONT></B>( adj) {
+		<I><FONT COLOR="#B22222">/* !!! INSERT CODE !!! */</FONT></I>
+	    } <B><FONT COLOR="#A020F0">else</FONT></B> {
+		yy[y] += xx[x] * ff[f];
+	    }
+	}
+    }
+}
+</pre></table></div>
+
+<P>
+
+<OL>
+<LI>Modify the matrix and the program to implement periodic boundary conditions.
+</LI>
+<LI>Add the code for the adjoint (matrix transpose) operator.
+</LI>
+</OL>
+
+<P>
+</LI>
+<LI>The following C code (included in <TT>filter.c</TT> file in
+  directory <TT>geo391/hw3</TT>) implements a recursive filtering
+  operator.
+
+<P>
+
+<div><table><tr><td><pre class="code">
+<B><FONT COLOR="#228B22">void</FONT></B> <B><FONT COLOR="#0000FF">filter_lop</FONT></B> (bool adj, bool add, 
+		<B><FONT COLOR="#228B22">int</FONT></B> nx, <B><FONT COLOR="#228B22">int</FONT></B> ny, <B><FONT COLOR="#228B22">float</FONT></B>* xx, <B><FONT COLOR="#228B22">float</FONT></B>* yy) 
+<I><FONT COLOR="#B22222">/*&lt; linear operator &gt;*/</FONT></I>
+{
+    <B><FONT COLOR="#228B22">int</FONT></B> i;
+    <B><FONT COLOR="#228B22">float</FONT></B> t;
+
+    assert (ny == nx);
+    sf_adjnull (adj, add, nx, ny, xx, yy);
+    
+    <B><FONT COLOR="#A020F0">if</FONT></B> (adj) {
+	<I><FONT COLOR="#B22222">/* !!! INSERT CODE !!! */</FONT></I>
+    } <B><FONT COLOR="#A020F0">else</FONT></B> {
+	t = a*xx[0];
+	yy[0] += t;
+	<B><FONT COLOR="#A020F0">for</FONT></B> (i = 1; i &lt; nx; i++) {
+	    t = a*xx[i] + b*xx[i-1] + c*t;
+	    yy[i] += t;
+	}
+    }
+}
+</pre></table></div>
+
+<P>
+
+<OL>
+<LI>Express this filter in the <IMG
+ WIDTH="19" HEIGHT="16" ALIGN="BOTTOM" BORDER="0"
+ SRC="img17.png"
+ ALT="$Z$">-transform notation as a ratio
+  of two polynomials.
+</LI>
+<LI>Add code for the adjoint operator.
+</LI>
+</OL>
+
+<P>
+</LI>
+</OL>
+
+<P>
+<HR>
+<table align="center" width="100%" cellpadding="0" cellspacing="0">
+<tr>
+<td>
+<A NAME="tex2html32"
+  HREF="node3.html">
+<IMG WIDTH="32" HEIGHT="32" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="icons/next.png"></A></td>
+<td>
+<A NAME="tex2html30"
+  HREF="paper.html">
+<IMG WIDTH="32" HEIGHT="32" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="icons/up.png"></A></td>
+<td>
+<A NAME="tex2html24"
+  HREF="node1.html">
+<IMG WIDTH="32" HEIGHT="32" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="icons/previous.png"></A></td>
+<td><img src="icons/left.png" width="16" height="32" border="0"></td><td class="navigation" align="center" width="100%">Homework 2</td><td><img src="icons/right.png" width="16" height="32" border="0"></td>
+<td><a href="../paper.pdf"><img src="icons/pdf.png" alt="[pdf]" width="32" height="32" border="0"></a></td>
+</tr></table>
+<BR>
+<B> Next:</B> <A NAME="tex2html33"
+  HREF="node3.html">Sorting algorithms</A>
+<B>Up:</B> <A NAME="tex2html31"
+  HREF="paper.html">Homework 2</A>
+<B> Previous:</B> <A NAME="tex2html25"
+  HREF="node1.html">Prerequisites</A>
+
+<!--End of Navigation Panel-->
+<ADDRESS>
+<I> <BR>
+2016-09-15</I>
+</ADDRESS>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+var pageTracker = _gat._getTracker("UA-509367-3");
+pageTracker._trackPageview();
+</script>
+</BODY>
+</HTML>
