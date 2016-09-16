@@ -1,1 +1,0 @@
-/home/sergey/DATA/geo384h/hw2/running/austin-w.HH

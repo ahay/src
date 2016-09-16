@@ -1,6 +1,0 @@
-1 1000 n1=2 n=1000,1000 data_format=ascii_int in=slag0.asc
-1.8-svn	sfdd	geo384h/hw2/helix:	sergey@begws88.beg.utexas.edu	Thu Sep 15 13:19:36 2016
-
-	data_format="native_int"
-	esize=4
-	in="/home/sergey/DATA/geo384h/hw2/helix/slag.rsf@"
