@@ -460,9 +460,7 @@ int main(int argc, char** argv)
                                 /* inject source */
                                 inject_bell_src(u, ww[it], rtm);
                                 /* forward prop */
-                                forward(u, fdm, dft, lrk, spo);
-                                /* tapering wavefield */
-                                if (taper && it%taper == 0) tap3d_apply(u[0][0]);
+                                forward(u, taper!=0 && it%taper==0, fdm, dft, lrk, spo);
                             }
                             break;
                         case firsturn:
@@ -479,9 +477,7 @@ int main(int argc, char** argv)
                             setval_complex(bu[0][0],fdm->nzpad*fdm->nxpad*fdm->nypad,sf_cmplx(0,0));
 
                             /* 4 - backward prop */
-                            reverse(bu, fdm, dft, lrk, spo);
-                            /* tapering wavefield */
-                            if (taper && capo%taper == 0) tap3d_apply(u[0][0]);
+                            reverse(bu, taper!=0 && capo%taper==0, fdm, dft, lrk, spo);
                             /* 3 - inject data */
                             if(capo%rec_jt==0) {
                                 inject3d(bu, dat, capo, rtm);
@@ -497,9 +493,7 @@ int main(int argc, char** argv)
                         case youturn:
                             if(info > 2) sf_warning("node#%3d youturn at %7d ",cpuid,capo);
                             /* 4 - backward prop */
-                            reverse(bu, fdm, dft, lrk, spo);
-                            /* tapering wavefield */
-                            if (taper && capo%taper == 0) tap3d_apply(u[0][0]);
+                            reverse(bu, taper!=0 && capo%taper==0, fdm, dft, lrk, spo);
                             /* 3 - inject data */
                             if(capo%rec_jt==0) {
                                 inject3d(bu, dat, capo, rtm);
@@ -595,9 +589,7 @@ int main(int argc, char** argv)
                         extract3d(u, dat, it, rtm);
                     }
                     /* 4 - forward prop */
-                    forward(u, fdm, dft, lrk, spo);
-                    /* tapering wavefield */
-                    if (taper && it%taper == 0) tap3d_apply(u[0][0]);
+                    forward(u, taper!=0 && it%taper==0, fdm, dft, lrk, spo);
 
                 }
                 if(verb) sf_warning(".");
