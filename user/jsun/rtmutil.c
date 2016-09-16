@@ -270,7 +270,7 @@ void tap3d_init(float thres,
                 dft3d dft)
 /*< init tapering array for tti wave propagation >*/
 {
-    int iy,ix,iz,nktp,ik;
+    int iy,ix,iz,ik;
     float ky,kx,kz,ky_trs,kx_trs,kz_trs,ktmp;
 
     nktp = dft->nky*dft->nkx*dft->nkz;
