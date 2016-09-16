@@ -97,6 +97,7 @@ lrk3d lrk3d_init(int n2,
 void lrk3d_apply(sf_complex *uo,
                  sf_complex *ui,
                  bool adj,
+                 bool tap,
                  fdm3d fdm,
                  dft3d dft,
                  lrk3d lrk)
@@ -148,11 +149,15 @@ void lrk3d_apply(sf_complex *uo,
             cwave[ik] = c;
         }
 
+        if(tap) tap3d_apply(cwave); /* taper for stability */
+
         ifft(uo,cwave);
 
     } else { /* forward propagation - PSPI */
 
         fft(ui,cwave);
+
+        if(tap) tap3d_apply(cwave); /* taper for stability */
 
         for (im=0; im<lrk->nrank; im++) {
 #ifdef _OPENMP
@@ -265,7 +270,7 @@ void tap3d_init(float thres,
                 dft3d dft)
 /*< init tapering array for tti wave propagation >*/
 {
-    int iy,ix,iz,nktp,ik;
+    int iy,ix,iz,ik;
     float ky,kx,kz,ky_trs,kx_trs,kz_trs,ktmp;
 
     nktp = dft->nky*dft->nkx*dft->nkz;
@@ -274,6 +279,7 @@ void tap3d_init(float thres,
     ky_trs = thres*fabs(dft->oky);
     kx_trs = thres*fabs(dft->okx);
     kz_trs = thres*fabs(dft->okz);
+    sf_warning("Wavefield tapering: kz %g -> %g, kx %g -> %g, ky %g -> %g",fabs(dft->okz),kz_trs,fabs(dft->okx),kx_trs,fabs(dft->oky),ky_trs); 
 #ifdef _OPENMP
 #pragma omp parallel for			\
     private(iy,ix,iz,ik,ktmp,ky,kx,kz)          \
@@ -483,6 +489,7 @@ void mute3d(sf_complex ***d,
 }
 
 void forward(sf_complex ***u,
+             bool tap,
              fdm3d fdm,
              dft3d dft,
              lrk3d lrk,
@@ -490,20 +497,21 @@ void forward(sf_complex ***u,
 /*< forward propagate >*/
 {
     /* apply lowrank matrices */
-    lrk3d_apply(u[0][0], u[0][0], false, fdm, dft, lrk);
+    lrk3d_apply(u[0][0], u[0][0], false, tap, fdm, dft, lrk);
 
     /* apply abc */
     if (NULL!=spo) sponge3d_apply_complex(u, spo, fdm);
 }
 
 void reverse(sf_complex ***bu,
+             bool tap,
              fdm3d fdm,
              dft3d dft,
              lrk3d lrk,
              sponge spo)
 /*< reverse and apply imaging >*/
 {
-    lrk3d_apply(bu[0][0], bu[0][0], true, fdm, dft, lrk);
+    lrk3d_apply(bu[0][0], bu[0][0], true, tap, fdm, dft, lrk);
 
     /* apply abc */
     if (NULL!=spo) sponge3d_apply_complex(bu, spo, fdm);

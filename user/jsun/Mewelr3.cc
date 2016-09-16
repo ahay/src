@@ -253,7 +253,9 @@ int main(int argc, char* argv[])
     timespent=(float)(t2-t1)/CLOCKS_PER_SEC;
     if(verb) { 
         sf_warning("*******************************************");
-        sf_warning("****** Elastic lowrank decomposition ******");
+        if(mode==0)      sf_warning("*** Elastic lowrank decomposition (P+S) ***");
+        else if(mode==1) sf_warning("*** Elastic lowrank decomposition for P ***");
+        else if(mode==2) sf_warning("*** Elastic lowrank decomposition for S ***");
         sf_warning("*******************************************");
         sf_warning("npk=%d,eps=%f",npk,eps);
         sf_warning("Reading velocity model parameters...");
