@@ -272,48 +272,42 @@ int main(int argc, char *argv[])
 	gettimeofday(&tim, NULL);
 	tstart=tim.tv_sec+(tim.tv_usec/1000000.0);
 
-	if (!sf_getint("taper",&taper)) taper=0; /* tapering in the frequency domain */
+	if (!sf_getint("taper",&taper)) taper=0; /* if not 0, tapering in the frequency domain */
 	if (!sf_getfloat("thresh",&thresh)) thresh=0.92; /* tapering threshold */
 
-	if(!sf_getbool("wantwf", &wantwf)) wantwf=false;
-    if(!sf_getbool("verb", &verb)) verb=false;
-	if(!sf_getint("pad1", &pad1)) pad1=1;
-	/* padding factor on the first axis */
+	if(!sf_getbool("wantwf", &wantwf)) wantwf=false; /* if true, output wavefield of a certain (snapshot=) shot */
+    if(!sf_getbool("verb", &verb)) verb=false; /* verbosity flag */
+	if(!sf_getint("pad1", &pad1)) pad1=1; /* padding factor on the first axis */
 
-	if(!sf_getint("nb", &nb)) sf_error("Need nb= ");
-	if(!sf_getfloat("srctrunc", &srctrunc)) srctrunc=0.4;
-	if(!sf_getint("rectx", &rectx)) rectx=2;
-	if(!sf_getint("rectz", &rectz)) rectz=2;
-	if(!sf_getint("repeat", &repeat)) repeat=2;
+	if(!sf_getint("nb", &nb)) sf_error("Need nb= "); /* padded boundary width */
+	if(!sf_getfloat("srctrunc", &srctrunc)) srctrunc=0.4; /* source truncation */
+	if(!sf_getint("rectx", &rectx)) rectx=2; /* source smoothing in x-direction */
+	if(!sf_getint("rectz", &rectz)) rectz=2; /* source smoothing in z-direction */
+	if(!sf_getint("repeat", &repeat)) repeat=2; /* repeat numbers of source smoothing */
 
-	if(!sf_getint("scalet", &scalet)) scalet=1;
-	if(!sf_getint("snap", &snap)) snap=100;
-	/* interval of the output wavefield */
-	if(!sf_getint("snapshot", &snapshot)) snapshot=0;
-	/* print out the wavefield snapshots of this shot */
-    if(!sf_getint("nds", &nds)) sf_error("Need nds=!");
+	if(!sf_getint("scalet", &scalet)) scalet=1; /* wavefield storage interval */
+	if(!sf_getint("snap", &snap)) snap=100; /* wavefield output interval when wantwf=y */ 
+	if(!sf_getint("snapshot", &snapshot)) snapshot=0; /* print out the wavefield snapshots of this shot */
+    if(!sf_getint("nds", &nds)) sf_error("Need nds=!"); /* source interval in number of dx */
     
-    /* source and receiver positions */
-	if(!sf_getint("gpz", &gpz)) sf_error("Need gpz=");
-	if(!sf_getint("spx", &spx)) sf_error("Need spx=");
-	if(!sf_getint("spz", &spz)) sf_error("Need spz=");
-    
-    /* tau parameters */
-    if(!sf_getint("ntau", &ntau)) sf_error("Need ntau=");
-    if(!sf_getfloat("dtau", &dtau)) sf_error("Need dtau=");
-    if(!sf_getfloat("tau0", &tau0)) sf_error("Need tau0=");
+	if(!sf_getint("gpz", &gpz)) sf_error("Need gpz="); /* depth of geophone */
+	if(!sf_getint("spx", &spx)) sf_error("Need spx="); /* horizontal location of source */
+	if(!sf_getint("spz", &spz)) sf_error("Need spz="); /* depth of source */
 
-	/* geometry parameters */
-	if(!sf_getint("rnx", &rnx)) sf_error("Need rnx=");
-	if(!sf_getint("ndr", &ndr)) ndr=1;
-	if(!sf_getint("nr0", &nr0)) nr0=0;
+	if(!sf_getint("rnx", &rnx)) sf_error("Need rnx="); /* coverage area of one shot */
+	if(!sf_getint("ndr", &ndr)) ndr=1; /* receiver interval */
+	if(!sf_getint("nr0", &nr0)) nr0=0; /* receiver starting point in rnx */
+    
+    if(!sf_getint("ntau", &ntau)) sf_error("Need ntau="); /* number of time-shift */
+    if(!sf_getfloat("dtau", &dtau)) sf_error("Need dtau="); /* interval of time-shift */
+    if(!sf_getfloat("tau0", &tau0)) sf_error("Need tau0="); /* origin of time-shift */
 
 	/* input/output files */
 	Fdat=sf_input("--input");
 	Fimg1=sf_output("--output");
-    Fimg2=sf_output("Fimg2");
-    Fsrc=sf_input("Fsrc");
-    Fvel=sf_input("Fpadvel");
+    Fimg2=sf_output("Fimg2"); /* standard RTM output */
+    Fsrc=sf_input("Fsrc"); /* source */
+    Fvel=sf_input("Fpadvel"); /* velocity */
 
 	if(wantwf){
 		Ffwf=sf_output("Ffwf");
