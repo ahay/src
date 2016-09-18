@@ -8,7 +8,7 @@ import bldutil
 progs = '''
 cohn checkptdemo fwi2d fbrec2d istseislet lsrtm2d lsprtm2d 
 mythresh mshots mcaseislet modeling2d mysnr
-pocsseislet rtm2d rtmadcig rtmva2d
+pocsseislet rtm2d rtmadcig rtmodcig rtmva2d
 Testfd2d Testfd3d Testeb Testelastic2d Testaniso Testspml
 viscoa2d viscoe2d excitationic
 '''
