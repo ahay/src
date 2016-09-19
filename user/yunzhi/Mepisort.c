@@ -1,4 +1,4 @@
-/* Sort microseismic surface array recording traces by their distances to a given epicenter. */
+/* Sort microseismic surface array recording traces by their distances or azimuths to a given epicenter. */
 /*
   Copyright (C) 2013 University of Texas at Austin
 
@@ -38,6 +38,8 @@ static int float_key_compare (const void *k1, const void *k2) {
 int main(int argc, char *argv[])
 {
     int n1,n2,n3,n12; // n1 is trace time length, n2 is trace number
+    char *which_sort; // sort distance or angle
+    bool sortdist; // true: sort distance; false: sort angle
     float **origin_data; // n1*n2 origin dataset
     float **sorted_data; // n1*n2 sorted dataset
     float *abs_x,*abs_y,epi_x,epi_y; // absolute and center coordinates
@@ -52,19 +54,23 @@ int main(int argc, char *argv[])
     in = sf_input("in"); // input unsorted traces
     /* DEFAULT: input */
     x_file = sf_input("x");
-    /* input: x coordinates extraced from seg-y header */
+    /* (in) x coordinates extraced from seg-y header */
     y_file = sf_input("y");
-    /* input: y coordinates extraced from seg-y header */
+    /* (in) y coordinates extraced from seg-y header */
     out = sf_output("out"); // output sorted traces
     /* DEFAULT: output */
     dist_file = sf_output("dist");
-    /* output: distances of traces after sorting */
+    /* (out) distances of traces after sorting */
     theta_file = sf_output("theta");
-    /* output: angles of traces after sorting */
+    /* (out) angles of traces after sorting */
     if (!sf_getfloat("epi_x",&epi_x)) sf_error("Need epicenter x.");
-    /* parameter: referenced center point x. */
+    /* referenced epicenter coordinate x. */
     if (!sf_getfloat("epi_y",&epi_y)) sf_error("Need epicenter y.");
-    /* parameter: referenced center point y. */
+    /* referenced epicenter coordinate y. */
+    sortdist = true;
+    if (NULL != (which_sort = sf_getstring("sort")))
+        sortdist = (which_sort[0] == 'a')?false : true;
+    /* sort distance[d] (default) or angle[a] */
 
     // Check input traces dimensions
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input.");
@@ -138,7 +144,7 @@ int main(int argc, char *argv[])
                 // hypotf: distance with x and y
             origin_a[i2] = RAD2DEG*atan2f(y,x);
                 // atan2f: arctan(y/x) with correct quadrant
-            sorted[i2].value = origin_d[i2];
+            sorted[i2].value = (sortdist)?origin_d[i2] : origin_a[i2];
             sorted[i2].ikey = i2;
         }
 
