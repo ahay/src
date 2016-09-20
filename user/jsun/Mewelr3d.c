@@ -36,7 +36,7 @@ int main(int argc, char* argv[])
     /*------------------------------------------------------------*/
     /* Execution control, I/O files and geometry                  */
     /*------------------------------------------------------------*/
-    bool verb,fsrf,snap,back,esou,tstp; /* execution flags */
+    bool verb,fsrf,snap,back,esou,tstp,dabc; /* execution flags */
     int  jsnap,ntsnap,jdata; /* jump along axes */
     int  shft; /* time shift for wavefield matching in RTM */
 
@@ -60,6 +60,7 @@ int main(int argc, char* argv[])
     int     it,iz,ix,iy;
     float   dt,dz,dx,dy;
     int     nxyz, nk;
+    float   cb;              /* abc strength */
 
     /* FDM and KSP structure */ //!!!JS
     fdm3d    fdm=NULL;
@@ -124,6 +125,7 @@ int main(int argc, char* argv[])
     if(! sf_getbool("back",&back)) back=false; /* backward extrapolation flag (for rtm) */
     if(! sf_getbool("esou",&esou)) esou=false; /* explosive force source */
     if(! sf_getbool("tstp",&tstp)) tstp=false; /* two-step propagator */
+    if(! sf_getbool("dabc",&dabc)) dabc=false; /* absorbing BC */
 
     /*------------------------------------------------------------*/
     /* I/O files                                                  */
@@ -162,7 +164,7 @@ int main(int argc, char* argv[])
     /*------------------------------------------------------------*/
     /* other execution parameters                                 */
     /*------------------------------------------------------------*/
-    if(! sf_getint("nbell",&nbell)) nbell=NOP;  /* bell size */
+    if(! sf_getint("nbell",&nbell)) nbell=5;  /* bell size */
     if(verb) sf_warning("nbell=%d",nbell);
     if(! sf_getint("jdata",&jdata)) jdata=1;
     if(snap) {  /* save wavefield every *jsnap* time steps */
@@ -177,6 +179,8 @@ int main(int argc, char* argv[])
     /* expand domain for FD operators and ABC                     */
     /*------------------------------------------------------------*/
     if( !sf_getint("nb",&nb)) nb=NOP;
+    if(nb==0) dabc=false;
+    if( !sf_getfloat("cb",&cb)) cb=1.f;
 
     fdm=fdutil3d_init(verb,fsrf,az,ax,ay,nb,1);
     if(nbell) fdbell3d_init(nbell);
@@ -294,6 +298,12 @@ int main(int argc, char* argv[])
         um[0] = umx[0][0]; um[1] = umy[0][0]; um[2] = umz[0][0];
     }
 
+    /* set up abc */
+    sponge spo=NULL;
+    if (dabc) {
+        spo = sponge_make2(fdm->nb,cb);
+    }
+
     /* initialize fft and lrk */
     dft = dft3d_init(1,false,false,fdm);
     nxyz= fdm->nypad*fdm->nxpad*fdm->nzpad;
@@ -373,6 +383,20 @@ int main(int argc, char* argv[])
 	/*------------------------------------------------------------*/
 	if(fsrf) { /* need to do something here */ }
 
+	/*------------------------------------------------------------*/
+	/* absorbing boundary condition                               */
+	/*------------------------------------------------------------*/
+	if(dabc) {
+            sponge3d_apply_complex(uoz, spo, fdm);
+            sponge3d_apply_complex(uox, spo, fdm);
+            sponge3d_apply_complex(uoy, spo, fdm);
+            if(tstp) {
+                sponge3d_apply_complex(umz, spo, fdm);
+                sponge3d_apply_complex(umx, spo, fdm);
+                sponge3d_apply_complex(umy, spo, fdm);
+            }
+        }
+
         /*------------------------------------------------------------*/
 	/* inject displacement source                                 */
 	/*------------------------------------------------------------*/
@@ -421,6 +445,7 @@ int main(int argc, char* argv[])
     dft3d_finalize();
     free(clr);
     clr3d_finalize();
+    if(dabc) free(spo);
 
     free(**ww); free(*ww); free(ww);
     free(ss);

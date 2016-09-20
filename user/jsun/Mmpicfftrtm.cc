@@ -639,7 +639,7 @@ int main(int argc, char** argv)
             free(dft);
             free(rtm);
             free(lrk);
-            free(spo);
+            if(dabc) free(spo);
 
             free(**tmp); free(*tmp); free(tmp);
             if(NULL!=vel  ) { free(**vel  ); free(*vel  ); free(vel  ); }
