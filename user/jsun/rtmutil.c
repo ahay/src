@@ -109,6 +109,66 @@ void lrk3d_apply(sf_complex *uo,
     nxyz = fdm->nypad*fdm->nxpad*fdm->nzpad;
     nk   = dft->nky*dft->nkx*dft->nkz;
 
+    fft(ui,cwave);
+
+    if(tap) tap3d_apply(cwave); /* taper for stability */
+
+    for (im=0; im<lrk->nrank; im++) {
+#ifdef _OPENMP
+#pragma omp parallel for              \
+        private(ik)                   \
+        shared(lrk,cwavem,cwave,nk)
+#endif
+        for (ik=0; ik<nk; ik++) {
+#ifdef SF_HAS_COMPLEX_H
+            cwavem[ik] = cwave[ik]*(adj? conjf(lrk->rt[ik][im]):lrk->rt[ik][im]);
+#else
+            cwavem[ik] = sf_cmul(cwave[ik],(adj? conjf(lrk->rt[ik][im]):lrk->rt[ik][im]));
+#endif
+        }
+        ifft(waves[im],cwavem);
+    }
+
+#ifdef _OPENMP
+#pragma omp parallel for			\
+    private(iy,ix,iz,i,c,im)                \
+    shared(fdm,lrk,waves,uo)
+#endif
+    for (iy=0; iy<fdm->nypad; iy++)         {
+        for (ix=0; ix<fdm->nxpad; ix++)     {
+            for (iz=0; iz<fdm->nzpad; iz++) {
+                i = (iy*fdm->nxpad + ix)*fdm->nzpad + iz; /* flattened coordinate */
+                c = sf_cmplx(0.,0.);
+                for (im = 0; im < lrk->nrank; im++) {
+#ifdef SF_HAS_COMPLEX_H
+                    c += (adj? conjf(lrk->lt[im][i]):lrk->lt[im][i])*waves[im][i];
+#else
+                    c += sf_cmul((adj? conjf(lrk->lt[im][i]):lrk->lt[im][i]),waves[im][i]);
+#endif
+                }
+                uo[i] = c;
+            }
+        }
+    }
+
+}
+
+/*------------------------------------------------------------*/
+void lrk3d_apply2(sf_complex *uo,
+                 sf_complex *ui,
+                 bool adj,
+                 bool tap,
+                 fdm3d fdm,
+                 dft3d dft,
+                 lrk3d lrk)
+/*< apply lowrank matrices for time stepping (can be in-place) >*/
+{
+    int nxyz,nk,ik,im,iz,ix,iy,i;
+    sf_complex c;
+
+    nxyz = fdm->nypad*fdm->nxpad*fdm->nzpad;
+    nk   = dft->nky*dft->nkx*dft->nkz;
+
     if (adj) { /* backward propagation - NSPS */
 
         for (im = 0; im < lrk->nrank; im++) {
@@ -584,6 +644,18 @@ void itoa(int n, char *s)
         s[i]=s[j];
         s[j]=c;
     }
+}
+
+void setval(float *u, int n, float val)
+/*< set value >*/
+{
+    int i;
+#ifdef _OPENMP
+#pragma omp parallel for                \
+    private(i)                          \
+    shared(u)
+#endif
+    for (i=0; i<n; i++) u[i] = val;
 }
 
 void setval_complex(sf_complex *u, int n, sf_complex val)

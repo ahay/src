@@ -55,6 +55,7 @@ int main(int argc, char** argv)
     bool dabc; par.get("dabc",dabc,false); // absorbing boundary
     bool snap; par.get("snap",snap,false);
     bool mute; par.get("mute",mute,false);
+    bool sill; par.get("sill",sill,false); // source illumination for rtm
 
     /* dimension related */
     int nb;    par.get("nb",nb,0);          // abc width
@@ -354,7 +355,7 @@ int main(int argc, char** argv)
 
             /* create data (and image) array */
             sf_complex ***dat = sf_complexalloc3(rec_nt,rec_nx,rec_ny);
-            sf_complex ***img = NULL;
+            sf_complex ***img = NULL, ***sil = NULL;
 
             rtm3d rtm = rtm3d_init(sou_x, sou_y, sou_z, nt, dt, sou_t0, vel_w, roll, rec_dep, rec_ox, rec_oy, rec_jt, rec_jx, rec_jy, rec_nt, rec_nx, rec_ny, snap, jsnap);
 
@@ -472,6 +473,10 @@ int main(int argc, char** argv)
                             /* initialize image */
                             img = sf_complexalloc3(nz,nx,ny);
                             setval_complex(img[0][0],nz*nx*ny,sf_cmplx(0,0));
+                            if(sill) {
+                                sil = sf_complexalloc3(nz,nx,ny);
+                                setval_complex(sil[0][0],nz*nx*ny,sf_cmplx(0,0));
+                            }
                             /* initialize adjoint wavefield */
                             bu = sf_complexalloc3(fdm->nzpad,fdm->nxpad,fdm->nypad);
                             setval_complex(bu[0][0],fdm->nzpad*fdm->nxpad*fdm->nypad,sf_cmplx(0,0));
@@ -489,6 +494,7 @@ int main(int argc, char** argv)
                             }
                             /* 1 - cross-correlation imaging condition */
                             ccr(img, u, bu, fdm);
+                            if(sill) ccr(sil, u,  u, fdm);
                             break;
                         case youturn:
                             if(info > 2) sf_warning("node#%3d youturn at %7d ",cpuid,capo);
@@ -505,6 +511,7 @@ int main(int argc, char** argv)
                             }
                             /* 1 - cross-correlation imaging condition */
                             ccr(img, u, bu, fdm);
+                            if(sill) ccr(sil, u,  u, fdm);
                             break;
                         case restore:
                             if(info > 2) sf_warning("node#%3d restore at %7d ",cpuid,capo);
@@ -548,6 +555,25 @@ int main(int argc, char** argv)
                             break;
                     }
                 } while((whatodo != terminate) && (whatodo != error));
+
+                if(sill) {
+#ifdef _OPENMP
+#pragma omp parallel for                    \
+                    private(iy,ix,iz)       \
+                    shared(img,sil)
+#endif
+                    for        (iy=0; iy<ny; iy++) {
+                        for    (ix=0; ix<nx; ix++) {
+                            for(iz=0; iz<nz; iz++) {
+#ifdef SF_HAS_COMPLEX_H
+                                img[iy][ix][iz] = img[iy][ix][iz]/sil[iy][ix][iz];
+#else
+                                img[iy][ix][iz] = sf_cdiv(img[iy][ix][iz],sil[iy][ix][iz]);
+#endif
+                            }
+                        }
+                    }
+                }
 
                 /* output image */
                 sf_complexwrite(img[0][0],sf_n(acz)*sf_n(acx)*sf_n(acy),Fimg);
@@ -627,6 +653,7 @@ int main(int argc, char** argv)
             free(**u); free(*u); free(u);
             if(migr) {
                 free(**img); free(*img); free(img);
+                if(sill) { free(**sil); free(*sil); free(sil); }
                 free(**bu); free(*bu); free(bu);
             }
             if(snap) {
