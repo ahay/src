@@ -37,7 +37,7 @@
 int psrtm(sf_complex*** record, sf_complex** imgsum, geopar geop);
 int psrtm_mov(sf_complex*** record, sf_complex** imgsum, geopar geop, sf_file Ftmpwf, sf_file Ftmpwfb, int shtid);
 int psqrtm_sbs(sf_complex*** record, sf_complex** imgsum, geopar geop, bool sdiv);
-int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool freq_scal, sf_file Ftmpwf, sf_file Ftmpwfb, int shtid);
+int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool freq_scal, bool sdiv, sf_file Ftmpwf, sf_file Ftmpwfb, int shtid);
 int psqrtm_dec(sf_complex*** record, sf_complex** imgsum, geopar geop);
 
 /* for stable division */
@@ -102,7 +102,7 @@ int main(int argc, char* argv[])
     sf_file left, right, leftb, rightb;
     sf_file Fsrc, Frcd/*source and record*/;
     sf_file Fimg;
-    sf_file Fnorm;
+    sf_file Fnorm=NULL;
     sf_file Ftmpwf, Ftmpwfb;
 
     /*axis*/
@@ -136,7 +136,7 @@ int main(int argc, char* argv[])
 	else if (stable==4) sf_warning("deconvolution imaging condition, illum parameter is disabled!");
 	else sf_error("Please specify a correct stable parameter (0,1,2,3)!");
       }
-      if (stable==1 || stable==2) {
+      if (stable==1 || stable==2 || stable==3) {
           if (!sf_getbool("sdiv", &sdiv)) sdiv=false; /*smooth division*/
           if (sdiv) {
               if (!sf_getfloat("reg", &reg)) reg=0.0f; /*regularization*/
@@ -476,7 +476,7 @@ int main(int argc, char* argv[])
 	  sf_divne (img_disp_f, img_visc_f, ratio, reg);
         } else {
           vmax = find_cmax(nz*nx, img_visc);
-          veps = (vmax==0) ? eps : vmax*vmax*perc;
+          veps = (vmax<eps) ? eps : vmax*vmax*perc;
           if (verb) sf_warning("Space domain: vmax=%f, veps=%f",vmax,veps);
           stable_cdiv_f(nz*nx, veps, img_disp, img_visc, ratio);
         }
@@ -502,8 +502,8 @@ int main(int argc, char* argv[])
 	break;
 
       case 3:
-	/*snapshot-by-snapshot compensation*/
-	psqrtm_com(record, imgsum, geop, freq_scal, Ftmpwf, Ftmpwfb, shtid);
+	/*amplitude spectrum compensation*/
+	psqrtm_com(record, imgsum, geop, freq_scal, sdiv, Ftmpwf, Ftmpwfb, shtid);
 	break;
 
       case 4:
@@ -938,7 +938,7 @@ int psqrtm_sbs(sf_complex*** record, sf_complex** imgsum, geopar geop, bool sdiv
           sf_divne (img_disp_f, img_visc_f, ratio, reg);
         } else {
           vmax = find_cmax(nz*nx, img_visc);
-          veps = (vmax==0) ? eps : vmax*vmax*perc;
+          veps = (vmax<eps) ? eps : vmax*vmax*perc;
           if (verb) sf_warning("Space domain: vmax=%f, veps=%f",vmax,veps);
           stable_cdiv_f(nz*nx, veps, img_disp, img_visc, ratio);
         }
@@ -1001,7 +1001,7 @@ int psqrtm_sbs(sf_complex*** record, sf_complex** imgsum, geopar geop, bool sdiv
     return 0;
 }
 
-int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool freq_scal, sf_file Ftmpwf, sf_file Ftmpwfb, int shtid)
+int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool freq_scal, bool sdiv, sf_file Ftmpwf, sf_file Ftmpwfb, int shtid)
 /*< low-rank one-step pre-stack RTM linear operator >*/
 {
     /*geopar variables*/
@@ -1036,10 +1036,10 @@ int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool freq
     float *ratio;
 
     /*frequency domain compensation*/
-    kiss_fft_cpx **ctrace3=NULL;
-    sf_complex **trace3=NULL, *cc=NULL, *tmp_inp=NULL;
+    kiss_fft_cpx *tmp=NULL, **ctrace2=NULL,**ctrace3=NULL;
+    sf_complex **trace2=NULL, **trace3=NULL, *cc=NULL, *tmp_inp=NULL;
     float *wvfld_visc_f=NULL, *wvfld_disp_f=NULL, *ratio_f=NULL, *tmp_out=NULL;
-    kiss_fft_cfg *cfg3=NULL, *icfg3=NULL;
+    kiss_fft_cfg *cfg1=NULL, *icfg1=NULL, *cfg2=NULL, *icfg2=NULL, *cfg3=NULL, *icfg3=NULL;
     int n3,n2,n1,i3,i2,i1,nth;
     float wt;
 
@@ -1128,6 +1128,36 @@ int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool freq
         trace3 = sf_complexalloc2(n3,nth);
         ctrace3= (kiss_fft_cpx **) trace3;
         wt =  1.0/n3;
+    } else {
+        wvfld_visc_f = sf_floatalloc(nz*nx);
+        wvfld_disp_f = sf_floatalloc(nz*nx);
+//        n1 = kiss_fft_next_fast_size(nz);
+//        n2 = kiss_fft_next_fast_size(nx);
+//        wvfld_visc_f = sf_floatalloc(n1*n2);
+//        wvfld_disp_f = sf_floatalloc(n1*n2);
+//        ratio_f      = sf_floatalloc(n1*n2);
+//        cc = sf_complexalloc(n1*n2);
+//#ifdef _OPENMP
+//#pragma omp parallel
+//        {nth = omp_get_num_threads();}
+//#endif
+//        cfg1  = (kiss_fft_cfg *) sf_alloc(nth,sizeof(kiss_fft_cfg));
+//        icfg1 = (kiss_fft_cfg *) sf_alloc(nth,sizeof(kiss_fft_cfg));
+//        cfg2  = (kiss_fft_cfg *) sf_alloc(nth,sizeof(kiss_fft_cfg));
+//        icfg2 = (kiss_fft_cfg *) sf_alloc(nth,sizeof(kiss_fft_cfg));
+//
+//        for (ith=0; ith<nth; ith++) {
+//            cfg1[ith] = kiss_fft_alloc(n1,0,NULL,NULL);
+//            icfg1[ith]= kiss_fft_alloc(n1,1,NULL,NULL);
+//            cfg2[ith] = kiss_fft_alloc(n2,0,NULL,NULL);
+//            icfg2[ith]= kiss_fft_alloc(n2,1,NULL,NULL);
+//        }
+//
+//        trace2 = sf_complexalloc2(n2,nth);
+//        ctrace2= (kiss_fft_cpx **) trace2;
+//
+//        tmp = (kiss_fft_cpx *) sf_alloc(n2*n1,sizeof(kiss_fft_cpx));
+//        wt =  1.0/(n2*n1);
     }
 
     /* start the work */
@@ -1302,7 +1332,7 @@ int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool freq
             //    stable_div(nz*nx, veps, wvfld_disp_f+it*nz*nx, wvfld_visc_f+it*nz*nx, ratio_f+it*nz*nx);
             //}
             vmax = find_max(n1*n2*n3, wvfld_visc_f);
-            veps = (vmax==0) ? eps : vmax*vmax*perc;
+            veps = (vmax<eps) ? eps : vmax*vmax*perc;
             if (verb) sf_warning("Frequency domain: vmax=%f, veps=%f",vmax,veps);
             stable_div(n1*n2*n3, veps, wvfld_disp_f, wvfld_visc_f, ratio_f);
 
@@ -1314,9 +1344,9 @@ int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool freq
                 for (i2=0; i2<n2; i2++) {
                     for (i1=0; i1<n1; i1++) {
 #ifdef SF_HAS_COMPLEX_H
-                        cc[(i3*n2+i2)*n1+i1] = cc[(i3*n2+i2)*n1+i1]*ratio_f[(i3*n2+i2)*n1+i1];
+                        cc[(i3*n2+i2)*n1+i1] = cc[(i3*n2+i2)*n1+i1]*(ratio_f[(i3*n2+i2)*n1+i1]>1? ratio_f[(i3*n2+i2)*n1+i1]:1);
 #else
-                        cc[(i3*n2+i2)*n1+i1] = sf_crmul(cc[(i3*n2+i2)*n1+i1],ratio_f[(i3*n2+i2)*n1+i1]);
+                        cc[(i3*n2+i2)*n1+i1] = sf_crmul(cc[(i3*n2+i2)*n1+i1],(ratio_f[(i3*n2+i2)*n1+i1]>1? ratio_f[(i3*n2+i2)*n1+i1]:1));
 #endif
                     }
                 }
@@ -1358,11 +1388,29 @@ int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool freq
 
         } else {
             for (it=0; it<wfnt; it++) {
-                vmax = find_cmax(nz*nx, wvfld_visc+it*nz*nx);
-                veps = (vmax==0) ? eps : vmax*vmax*perc;
-                if (verb) sf_warning("Space domain: vmax=%f, veps=%f",vmax,veps);
-                stable_cdiv_f(nz*nx, veps, wvfld_disp+it*nz*nx, wvfld_visc+it*nz*nx, ratio+it*nz*nx);
+                sf_warning("CPU#%d: source compen it=%d/%d;",cpuid,it,wfnt);
+                if (sdiv) {
+                    for (iz=0; iz<nz*nx; iz++) {
+#ifdef SF_HAS_COMPLEX_H
+                        wvfld_visc_f[iz] = cabsf(wvfld_visc[it*nz*nx+iz]);
+                        wvfld_disp_f[iz] = cabsf(wvfld_disp[it*nz*nx+iz]);
+#else
+                        wvfld_visc_f[iz] = sf_cabsf(wvfld_visc[it*nz*nx+iz]);
+                        wvfld_disp_f[iz] = sf_cabsf(wvfld_disp[it*nz*nx+iz]);
+#endif
+                    }
+                    /*smooth division*/
+                    dims[0] = nz; dims[1] = nx;
+                    sf_divn_init(2, nz*nx, dims, rect, niter, false);
+                    sf_divne (wvfld_disp_f, wvfld_visc_f, ratio+it*nz*nx, reg);
+                } else {
+                    vmax = find_cmax(nz*nx, wvfld_visc+it*nz*nx);
+                    veps = (vmax==0) ? eps : vmax*vmax*perc;
+                    if (verb) sf_warning("Space domain: vmax=%f, veps=%f",vmax,veps);
+                    stable_cdiv_f(nz*nx, veps, wvfld_disp+it*nz*nx, wvfld_visc+it*nz*nx, ratio+it*nz*nx);
+                }
             }
+            sf_warning(".");
 
             /*scaling the source wavefield*/
 #ifdef _OPENMP
@@ -1378,6 +1426,181 @@ int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool freq
 #endif
                     }
                 }
+            }
+
+            // amplitude spectrum scaling in wavenumber domain
+            if (0) {
+            for (it=0; it<wfnt; it++) {
+                sf_warning("CPU#%d: source compen it=%d/%d;",cpuid,it,wfnt);
+                /***************************************/
+                /* visc -> visc_f */
+                tmp_inp = wvfld_visc + it*nx*nz;
+                tmp_out = wvfld_visc_f;
+
+                /********* Forward FFT **********/
+
+#ifdef _OPENMP
+#pragma omp parallel for private(i2,i1) default(shared)
+#endif
+                for (i2=0; i2<n2; i2++) {
+                    for (i1=0; i1<n1; i1++) {
+                        if (i1<nz && i2<nx) {
+                            cc[i2*n1+i1] = tmp_inp[i2*nz+i1];
+                        } else {
+                            cc[i2*n1+i1] = sf_cmplx(0.,0.); 
+                        }
+                    }
+                }
+
+                /* FFT over first axis */
+#ifdef _OPENMP
+#pragma omp parallel for private(i2,i1,ith) default(shared)
+#endif
+                for (i2=0; i2<n2; i2++) {
+#ifdef _OPENMP
+                    ith = omp_get_thread_num();
+#endif
+                    kiss_fft_stride(cfg1[ith],(kiss_fft_cpx *) (cc+i2*n1),tmp+i2*n1,1);
+                }
+
+                /* FFT over second axis */
+#ifdef _OPENMP
+#pragma omp parallel for private(i2,i1,ith) default(shared)
+#endif
+                for (i1=0; i1<n1; i1++) {
+#ifdef _OPENMP
+                    ith = omp_get_thread_num();
+#endif
+                    kiss_fft_stride(cfg2[ith],tmp+i1,ctrace2[ith],n1);
+                    for (i2=0; i2<n2; i2++) {
+#ifdef SF_HAS_COMPLEX_H
+                        tmp_out[i2*n1+i1] = cabsf(trace2[ith][i2]);
+#else
+                        tmp_out[i2*n1+i1] = sf_cabsf(trace2[ith][i2]);
+#endif
+                    }
+                }
+
+                /***************************************/
+                /* disp -> disp_f */
+                tmp_inp = wvfld_disp + it*nx*nz;
+                tmp_out = wvfld_disp_f;
+
+                /********* Forward FFT **********/
+
+#ifdef _OPENMP
+#pragma omp parallel for private(i2,i1) default(shared)
+#endif
+                for (i2=0; i2<n2; i2++) {
+                    for (i1=0; i1<n1; i1++) {
+                        if (i1<nz && i2<nx) {
+                            cc[i2*n1+i1] = tmp_inp[i2*nz+i1];
+                        } else {
+                            cc[i2*n1+i1] = sf_cmplx(0.,0.); 
+                        }
+                    }
+                }
+
+                /* FFT over first axis */
+#ifdef _OPENMP
+#pragma omp parallel for private(i2,i1,ith) default(shared)
+#endif
+                for (i2=0; i2<n2; i2++) {
+#ifdef _OPENMP
+                    ith = omp_get_thread_num();
+#endif
+                    kiss_fft_stride(cfg1[ith],(kiss_fft_cpx *) (cc+i2*n1),tmp+i2*n1,1);
+                }
+
+                /* FFT over second axis */
+#ifdef _OPENMP
+#pragma omp parallel for private(i2,i1,ith) default(shared)
+#endif
+                for (i1=0; i1<n1; i1++) {
+#ifdef _OPENMP
+                    ith = omp_get_thread_num();
+#endif
+                    kiss_fft_stride(cfg2[ith],tmp+i1,ctrace2[ith],n1);
+                    for (i2=0; i2<n2; i2++) {
+                        cc[i2*n1+i1] = trace2[ith][i2];
+#ifdef SF_HAS_COMPLEX_H
+                        tmp_out[i2*n1+i1] = cabsf(trace2[ith][i2]);
+#else
+                        tmp_out[i2*n1+i1] = sf_cabsf(trace2[ith][i2]);
+#endif
+                    }
+                }
+
+
+                /* Stable division of amplitude spectrum */
+                if (sdiv) {
+                    /*smooth division*/
+                    dims[0] = n1; dims[1] = n2;
+                    sf_divn_init(2, n2*n1, dims, rect, niter, false);
+                    sf_divne (wvfld_disp_f, wvfld_visc_f, ratio_f, reg);
+                } else {
+                    vmax = find_max(n1*n2, wvfld_visc_f);
+                    veps = (vmax<eps) ? eps : vmax*vmax*perc;
+                    if (0) sf_warning("Wavenumber domain: vmax=%f, veps=%f",vmax,veps);
+                    stable_div(n1*n2, veps, wvfld_disp_f, wvfld_visc_f, ratio_f);
+                }
+
+                /* Scaling the wavefield */
+#ifdef _OPENMP
+#pragma omp parallel for private(i2,i1)
+#endif
+                for (i2=0; i2<n2; i2++) {
+                    for (i1=0; i1<n1; i1++) {
+#ifdef SF_HAS_COMPLEX_H
+                        cc[i2*n1+i1] = cc[i2*n1+i1]*(ratio_f[i2*n1+i1]>1? ratio_f[i2*n1+i1]:1);
+#else
+                        cc[i2*n1+i1] = sf_crmul(cc[i2*n1+i1],(ratio_f[i2*n1+i1]>1? ratio_f[i2*n1+i1]:1));
+#endif
+                    }
+                }
+
+                /********* Inverse FFT **********/
+                /* IFFT over second axis */
+#ifdef _OPENMP
+#pragma omp parallel for private(i2,i1,ith) default(shared)
+#endif
+                for (i1=0; i1<n1; i1++) {
+#ifdef _OPENMP
+                    ith = omp_get_thread_num();
+#endif
+                    kiss_fft_stride(icfg2[ith],(kiss_fft_cpx *) (cc+i1),ctrace2[ith],n1);
+                    for (i2=0; i2<n2; i2++) {
+                        tmp[i2*n1+i1]=ctrace2[ith][i2];
+                    }
+                }
+
+                /* IFFT over first axis */
+#ifdef _OPENMP
+#pragma omp parallel for private(i2,i1,ith) default(shared)
+#endif
+                for (i2=0; i2<n2; i2++) {
+#ifdef _OPENMP
+                    ith = omp_get_thread_num();
+#endif
+                    kiss_fft_stride(icfg1[ith],tmp+i2*n1,(kiss_fft_cpx *) (cc+i2*n1),1);
+                }
+
+                /* FFT normalization */
+#ifdef _OPENMP
+#pragma omp parallel for private(i2,i1) default(shared)
+#endif
+                for (i2=0; i2<nx; i2++) {
+                    for (i1=0; i1<nz; i1++) {
+#ifdef SF_HAS_COMPLEX_H
+                        wvfld[it][i2][i1] = wt*cc[i2*n1+i1];
+#else
+                        wvfld[it][i2][i1] = sf_crmul(cc[i2*n1+i1],wt);
+#endif
+                    }
+                }
+
+            }
+            sf_warning(".");
             }
 
         }
@@ -1507,7 +1730,7 @@ int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool freq
             //    stable_div(nz*nx, veps, wvfld_disp_f+it*nz*nx, wvfld_visc_f+it*nz*nx, ratio_f+it*nz*nx);
             //}
             vmax = find_max(n1*n2*n3, wvfld_visc_f);
-            veps = (vmax==0) ? eps : vmax*vmax*perc;
+            veps = (vmax<eps) ? eps : vmax*vmax*perc;
             if (verb) sf_warning("Frequency domain: vmax=%f, veps=%f",vmax,veps);
             stable_div(n1*n2*n3, veps, wvfld_disp_f, wvfld_visc_f, ratio_f);
 
@@ -1519,9 +1742,9 @@ int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool freq
                 for (i2=0; i2<n2; i2++) {
                     for (i1=0; i1<n1; i1++) {
 #ifdef SF_HAS_COMPLEX_H
-                        cc[(i3*n2+i2)*n1+i1] = cc[(i3*n2+i2)*n1+i1]*ratio_f[(i3*n2+i2)*n1+i1];
+                        cc[(i3*n2+i2)*n1+i1] = cc[(i3*n2+i2)*n1+i1]*(ratio_f[(i3*n2+i2)*n1+i1]>1? ratio_f[(i3*n2+i2)*n1+i1]:1);
 #else
-                        cc[(i3*n2+i2)*n1+i1] = sf_crmul(cc[(i3*n2+i2)*n1+i1],ratio_f[(i3*n2+i2)*n1+i1]);
+                        cc[(i3*n2+i2)*n1+i1] = sf_crmul(cc[(i3*n2+i2)*n1+i1],(ratio_f[(i3*n2+i2)*n1+i1]>1? ratio_f[(i3*n2+i2)*n1+i1]:1));
 #endif
                     }
                 }
@@ -1563,11 +1786,29 @@ int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool freq
 
         } else {
             for (it=0; it<wfnt; it++) {
-                vmax = find_cmax(nz*nx, wvfld_visc+it*nz*nx);
-                veps = (vmax==0) ? eps : vmax*vmax*perc;
-                if (verb) sf_warning("Space domain: vmax=%f, veps=%f",vmax,veps);
-                stable_cdiv_f(nz*nx, veps, wvfld_disp+it*nz*nx, wvfld_visc+it*nz*nx, ratio+it*nz*nx);
+                sf_warning("CPU#%d: receiver compen it=%d/%d;",cpuid,it,wfnt);
+                if (sdiv) {
+                    for (iz=0; iz<nz*nx; iz++) {
+#ifdef SF_HAS_COMPLEX_H
+                        wvfld_visc_f[iz] = cabsf(wvfld_visc[it*nz*nx+iz]);
+                        wvfld_disp_f[iz] = cabsf(wvfld_disp[it*nz*nx+iz]);
+#else
+                        wvfld_visc_f[iz] = sf_cabsf(wvfld_visc[it*nz*nx+iz]);
+                        wvfld_disp_f[iz] = sf_cabsf(wvfld_disp[it*nz*nx+iz]);
+#endif
+                    }
+                    /*smooth division*/
+                    dims[0] = nz; dims[1] = nx;
+                    sf_divn_init(2, nz*nx, dims, rect, niter, false);
+                    sf_divne (wvfld_disp_f, wvfld_visc_f, ratio+it*nz*nx, reg);
+                } else {
+                    vmax = find_cmax(nz*nx, wvfld_visc+it*nz*nx);
+                    veps = (vmax==0) ? eps : vmax*vmax*perc;
+                    if (verb) sf_warning("Space domain: vmax=%f, veps=%f",vmax,veps);
+                    stable_cdiv_f(nz*nx, veps, wvfld_disp+it*nz*nx, wvfld_visc+it*nz*nx, ratio+it*nz*nx);
+                }
             }
+            sf_warning(".");
 
             /*scaling the receiver wavefield*/
 #ifdef _OPENMP
@@ -1584,6 +1825,182 @@ int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool freq
                     }
                 }
             }
+
+            // amplitude spectrum scaling in wavenumber domain
+            if (0) {
+            for (it=0; it<wfnt; it++) {
+                sf_warning("CPU#%d: receiver compen it=%d/%d;",cpuid,it,wfnt);
+                /***************************************/
+                /* visc -> visc_f */
+                tmp_inp = wvfld_visc + it*nx*nz;
+                tmp_out = wvfld_visc_f;
+
+                /********* Forward FFT **********/
+
+#ifdef _OPENMP
+#pragma omp parallel for private(i2,i1) default(shared)
+#endif
+                for (i2=0; i2<n2; i2++) {
+                    for (i1=0; i1<n1; i1++) {
+                        if (i1<nz && i2<nx) {
+                            cc[i2*n1+i1] = tmp_inp[i2*nz+i1];
+                        } else {
+                            cc[i2*n1+i1] = sf_cmplx(0.,0.); 
+                        }
+                    }
+                }
+
+                /* FFT over first axis */
+#ifdef _OPENMP
+#pragma omp parallel for private(i2,i1,ith) default(shared)
+#endif
+                for (i2=0; i2<n2; i2++) {
+#ifdef _OPENMP
+                    ith = omp_get_thread_num();
+#endif
+                    kiss_fft_stride(cfg1[ith],(kiss_fft_cpx *) (cc+i2*n1),tmp+i2*n1,1);
+                }
+
+                /* FFT over second axis */
+#ifdef _OPENMP
+#pragma omp parallel for private(i2,i1,ith) default(shared)
+#endif
+                for (i1=0; i1<n1; i1++) {
+#ifdef _OPENMP
+                    ith = omp_get_thread_num();
+#endif
+                    kiss_fft_stride(cfg2[ith],tmp+i1,ctrace2[ith],n1);
+                    for (i2=0; i2<n2; i2++) {
+#ifdef SF_HAS_COMPLEX_H
+                        tmp_out[i2*n1+i1] = cabsf(trace2[ith][i2]);
+#else
+                        tmp_out[i2*n1+i1] = sf_cabsf(trace2[ith][i2]);
+#endif
+                    }
+                }
+
+                /***************************************/
+                /* disp -> disp_f */
+                tmp_inp = wvfld_disp + it*nx*nz;
+                tmp_out = wvfld_disp_f;
+
+                /********* Forward FFT **********/
+
+#ifdef _OPENMP
+#pragma omp parallel for private(i2,i1) default(shared)
+#endif
+                for (i2=0; i2<n2; i2++) {
+                    for (i1=0; i1<n1; i1++) {
+                        if (i1<nz && i2<nx) {
+                            cc[i2*n1+i1] = tmp_inp[i2*nz+i1];
+                        } else {
+                            cc[i2*n1+i1] = sf_cmplx(0.,0.); 
+                        }
+                    }
+                }
+
+                /* FFT over first axis */
+#ifdef _OPENMP
+#pragma omp parallel for private(i2,i1,ith) default(shared)
+#endif
+                for (i2=0; i2<n2; i2++) {
+#ifdef _OPENMP
+                    ith = omp_get_thread_num();
+#endif
+                    kiss_fft_stride(cfg1[ith],(kiss_fft_cpx *) (cc+i2*n1),tmp+i2*n1,1);
+                }
+
+                /* FFT over second axis */
+#ifdef _OPENMP
+#pragma omp parallel for private(i2,i1,ith) default(shared)
+#endif
+                for (i1=0; i1<n1; i1++) {
+#ifdef _OPENMP
+                    ith = omp_get_thread_num();
+#endif
+                    kiss_fft_stride(cfg2[ith],tmp+i1,ctrace2[ith],n1);
+                    for (i2=0; i2<n2; i2++) {
+                        cc[i2*n1+i1] = trace2[ith][i2];
+#ifdef SF_HAS_COMPLEX_H
+                        tmp_out[i2*n1+i1] = cabsf(trace2[ith][i2]);
+#else
+                        tmp_out[i2*n1+i1] = sf_cabsf(trace2[ith][i2]);
+#endif
+                    }
+                }
+
+
+                /* Stable division of amplitude spectrum */
+                if (sdiv) {
+                    /*smooth division*/
+                    dims[0] = n1; dims[1] = n2;
+                    sf_divn_init(2, n2*n1, dims, rect, niter, false);
+                    sf_divne (wvfld_disp_f, wvfld_visc_f, ratio_f, reg);
+                } else {
+                    vmax = find_max(n1*n2, wvfld_visc_f);
+                    veps = (vmax<eps) ? eps : vmax*vmax*perc;
+                    if (0) sf_warning("Wavenumber domain: vmax=%f, veps=%f",vmax,veps);
+                    stable_div(n1*n2, veps, wvfld_disp_f, wvfld_visc_f, ratio_f);
+                }
+
+                /* Scaling the wavefield */
+#ifdef _OPENMP
+#pragma omp parallel for private(i2,i1)
+#endif
+                for (i2=0; i2<n2; i2++) {
+                    for (i1=0; i1<n1; i1++) {
+#ifdef SF_HAS_COMPLEX_H
+                        cc[i2*n1+i1] = cc[i2*n1+i1]*(ratio_f[i2*n1+i1]>1? ratio_f[i2*n1+i1]:1);
+#else
+                        cc[i2*n1+i1] = sf_crmul(cc[i2*n1+i1],(ratio_f[i2*n1+i1]>1? ratio_f[i2*n1+i1]:1));
+#endif
+                    }
+                }
+
+                /********* Inverse FFT **********/
+                /* IFFT over second axis */
+#ifdef _OPENMP
+#pragma omp parallel for private(i2,i1,ith) default(shared)
+#endif
+                for (i1=0; i1<n1; i1++) {
+#ifdef _OPENMP
+                    ith = omp_get_thread_num();
+#endif
+                    kiss_fft_stride(icfg2[ith],(kiss_fft_cpx *) (cc+i1),ctrace2[ith],n1);
+                    for (i2=0; i2<n2; i2++) {
+                        tmp[i2*n1+i1]=ctrace2[ith][i2];
+                    }
+                }
+
+                /* IFFT over first axis */
+#ifdef _OPENMP
+#pragma omp parallel for private(i2,i1,ith) default(shared)
+#endif
+                for (i2=0; i2<n2; i2++) {
+#ifdef _OPENMP
+                    ith = omp_get_thread_num();
+#endif
+                    kiss_fft_stride(icfg1[ith],tmp+i2*n1,(kiss_fft_cpx *) (cc+i2*n1),1);
+                }
+
+                /* FFT normalization */
+#ifdef _OPENMP
+#pragma omp parallel for private(i2,i1) default(shared)
+#endif
+                for (i2=0; i2<nx; i2++) {
+                    for (i1=0; i1<nz; i1++) {
+#ifdef SF_HAS_COMPLEX_H
+                        wvfld_b[it][i2][i1] = wt*cc[i2*n1+i1];
+#else
+                        wvfld_b[it][i2][i1] = sf_crmul(cc[i2*n1+i1],wt);
+#endif
+                    }
+                }
+
+            }
+            sf_warning(".");
+            }
+
         }
 
 	/*cross-correlation imaging condition*/
@@ -1644,9 +2061,18 @@ int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool freq
             if (NULL!=cfg3)  { free(cfg3[ith]);   cfg3[ith]=NULL; }
             if (NULL!=icfg3) { free(icfg3[ith]); icfg3[ith]=NULL; }
         }
-        if (NULL!=cc) { free(cc); cc=NULL; }
         if (NULL!=trace3) { free(*trace3); free(trace3); trace3=NULL; }
+    } else {
+        for (ith=0; ith<nth; ith++) {
+            if (NULL!=cfg1)  { free(cfg1[ith]);   cfg1[ith]=NULL; }
+            if (NULL!=icfg1) { free(icfg1[ith]); icfg1[ith]=NULL; }
+            if (NULL!=cfg2)  { free(cfg2[ith]);   cfg2[ith]=NULL; }
+            if (NULL!=icfg2) { free(icfg2[ith]); icfg2[ith]=NULL; }
+        }
+        if (NULL!=tmp) { free(tmp); tmp=NULL; }
+        if (NULL!=trace2) { free(*trace2); free(trace2); trace2=NULL; }
     }
+    if (NULL!=cc) { free(cc); cc=NULL; }
 
     return 0;
 }
