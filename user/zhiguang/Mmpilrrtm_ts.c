@@ -382,7 +382,7 @@ int main(int argc, char *argv[])
     sf_warning("cpuid=%d, numprocs=%d, nspad=%d", cpuid, numprocs, nspad);
 	sf_warning("nt=%d, dt=%g, scalet=%d, wfnt=%d, wfdt=%g",nt, dt, scalet, wfnt, wfdt);
 	sf_warning("vnx=%d, nx=%d, dx=%g, nb=%d, rnx=%d", vnx, nx, dx, nb, rnx);
-	sf_warning("nr=%d, ndr=%d, nr0=%g", nr, ndr, nr0);
+	sf_warning("nr=%d, ndr=%d, nr0=%d", nr, ndr, nr0);
 	sf_warning("nz=%d, rnz=%d, dz=%g, z0=%g", nz, rnz, dz, z0);
 	sf_warning("spx=%d, spz=%d, gpz=%d", spx, spz, gpz);
 	sf_warning("ns=%d, ds=%g, s0=%g", ns, ds, s0);
@@ -405,6 +405,8 @@ int main(int argc, char *argv[])
 	rr=sf_floatalloc(nzx);
 	reflgen(nz, nx, spz, spx, rectz, rectx, repeat, rr);
     
+	if(cpuid==0) sf_warning("check1");
+	if(cpuid==1) sf_warning("check11");
     fwf=sf_floatalloc3(rnz, rnx, wfnt);
     bwf=sf_floatalloc3(rnz, rnx, wfnt);
     img1=sf_floatalloc3(rnz, vnx, ntau);
@@ -412,6 +414,8 @@ int main(int argc, char *argv[])
     mig1=sf_floatalloc3(rnz, rnx, ntau);
     mig2=sf_floatalloc2(rnz, rnx);
     
+	if(cpuid==0) sf_warning("check2");
+	if(cpuid==1) sf_warning("check21");
     ccr=sf_floatalloc2(rnz, rnx);
     sill=sf_floatalloc2(rnz, rnx);
     
@@ -420,6 +424,8 @@ int main(int argc, char *argv[])
 	cwavem=sf_complexalloc(nk);
 	icfft2_allocate(cwavem);
 
+	if(cpuid==0) sf_warning("check3");
+	if(cpuid==1) sf_warning("check31");
 	if (taper!=0) {
 		dkz = 1./(fnz*dz); kz0 = -0.5/dz;
 		dkx = 1./(fnx*dx); kx0 = -0.5/dx;
@@ -461,14 +467,17 @@ int main(int argc, char *argv[])
         }
     }
 
-	path1=sf_getstring("path1");
-	path2=sf_getstring("path2");
+	path1=sf_getstring("path1"); /* path of left matrices './mat/left' */
+	path2=sf_getstring("path2"); /* path of right matrices './mat/left' */
 	if(path1==NULL) path1="./mat/left";
 	if(path2==NULL) path2="./mat/right";
 
+	if(cpuid==0) sf_warning("check4");
+	if(cpuid==1) sf_warning("check41");
 	/* shot loop */
 	for (iturn=0; iturn*numprocs<nspad; iturn++){
 		is=iturn*numprocs+cpuid;
+		sf_warning("is/ns=%d/%d", is, ns);
         
         /* read data */
 		if(cpuid==0){
