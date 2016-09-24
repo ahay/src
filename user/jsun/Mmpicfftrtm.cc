@@ -582,15 +582,15 @@ int main(int argc, char** argv)
 #ifdef _OPENMP
 #pragma omp parallel for       \
                 private(iy,ix,iz)                  \
-                shared(img_g,img,ny,nx,nz,mod_oy_g,mod_ox_g)
+                shared(img_g,img,ny,nx,nz,mod_oy_g,mod_ox_g,mod_oz_g)
 #endif
                 for        (iy=0; iy<ny; iy++) {
                     for    (ix=0; ix<nx; ix++) {
                         for(iz=0; iz<nz; iz++) {
 #ifdef SF_HAS_COMPLEX_H
-                            img_g[iy+mod_oy_g][ix+mod_ox_g][iz] += img[iy][ix][iz];
+                            img_g[iy+mod_oy_g][ix+mod_ox_g][iz+mod_oz_g] += img[iy][ix][iz];
 #else
-                            img_g[iy+mod_oy_g][ix+mod_ox_g][iz] = sf_cadd(img_g[iy+mod_oy_g][ix+mod_ox_g][iz],img[iy][ix][iz]);
+                            img_g[iy+mod_oy_g][ix+mod_ox_g][iz+mod_oz_g] = sf_cadd(img_g[iy+mod_oy_g][ix+mod_ox_g][iz+mod_oz_g],img[iy][ix][iz]);
 #endif
                         }
                     }
