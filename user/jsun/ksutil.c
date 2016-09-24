@@ -2333,7 +2333,7 @@ void clr3d_init(fdm3d fdm,
 {
     int nxyz,nk,ik,i,j;
 
-    nxyz = fdm->ny *fdm->nx *fdm->nz ;
+    nxyz = fdm->nypad *fdm->nxpad *fdm->nzpad ;
     nk   = dft->nky*dft->nkx*dft->nkz;
     cwave  = sf_complexalloc(nk);
     cwaven2= sf_complexalloc2(nk,  clr->n2_max);
@@ -2366,7 +2366,7 @@ void clr3d_apply(sf_complex **uo,
     int nxyz,nk,ik,ir,ic,im,in,iz,ix,iy,i;
     sf_complex c;
 
-    nxyz = fdm->ny *fdm->nx *fdm->nz ;
+    nxyz = fdm->nypad *fdm->nxpad *fdm->nzpad ;
     nk   = dft->nky*dft->nkx*dft->nkz;
 
     for (ic=0; ic<3; ic++) {
@@ -2454,7 +2454,7 @@ void clr3d_apply2(sf_complex **u2,
     int nxyz,nk,ik,ir,ic,im,in,iz,ix,iy,i;
     sf_complex c;
 
-    nxyz = fdm->ny *fdm->nx *fdm->nz ;
+    nxyz = fdm->nypad *fdm->nxpad *fdm->nzpad ;
     nk   = dft->nky*dft->nkx*dft->nkz;
 
     for (ic=0; ic<3; ic++) {
@@ -2541,7 +2541,7 @@ void clr3d_apply_dbg(sf_complex **uo,
     int nxyz,nk,ik,ir,ic,im,in,iz,ix,iy,i;
     sf_complex c;
 
-    nxyz = fdm->ny *fdm->nx *fdm->nz ;
+    nxyz = fdm->nypad *fdm->nxpad *fdm->nzpad ;
     nk   = dft->nky*dft->nkx*dft->nkz;
 
     for (ic=0; ic<1; ic++) {

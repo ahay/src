@@ -799,7 +799,7 @@ void expand3d(std::valarray<float>  a,
 	for     (ix=0;ix<nx;ix++) {
 	    for (iz=0;iz<nz;iz++) {
 		//b[nb+iy][nb+ix][nb+iz] = a[iy][ix][iz];
-                b[((nb+iy)*nxpad+nb+ix)*nzpad+nb+iz] = a[(iy*nx+ix)*nz+nz];
+                b[((nb+iy)*nxpad+nb+ix)*nzpad+nb+iz] = a[(iy*nx+ix)*nz+iz];
 	    }
 	}
     }
