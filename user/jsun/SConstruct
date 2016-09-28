@@ -56,11 +56,12 @@ for source in csrc:
 mpicc = env.get('MPICC')
 mpicxx = env.get('MPICXX')
 mpi_src = Glob('Q[a-z]*.c')
-for source in mpi_src:
-    inc = env.RSF_Include(source,prefix='')
-    env.Ignore(inc,inc)
-    obj = env.StaticObject(source,CC=mpicc)
-    env.Depends(obj,inc)
+if mpicc:
+    for source in mpi_src:
+        inc = env.RSF_Include(source,prefix='')
+        env.Ignore(inc,inc)
+        obj = env.StaticObject(source,CC=mpicc)
+        env.Depends(obj,inc)
 
 mains = Split(progs+' '+libprop)
 for prog in mains:
