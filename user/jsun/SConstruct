@@ -2,7 +2,7 @@ import os, sys, re, string
 sys.path.append('../../framework')
 import bldutil
 
-progs = 'fftwave1dd cfftwave1dd cfftwave1in fftwave2p fftwave3p cfftwave2 cfftwave3 cfftexpmig2 fftexp0test fd2d cfftexp2 cfftexp2test fdtacc wcfftexp2 wcfftexp2adj cfftwave2nsps cfftwave2mix2 wavemixop lrosrtm2 lroslsrtm2 stack2d cstack2d fftexp0test lrlsrtm2mpi imagsrc zolsrtm2 initwave2 correctwave2 lrwave2 cmatrix cfftwave1d zortmgmres claplac psp pspmig premig cfftwave2omp lrtti2de clfd1 clfd2 ofd2_test swnorm pspp passive2d swvarimax ccrsym timerev2d lstri2d cubesrc cfftwave2taper fftwave2taper compensate compensatexf'
+progs = 'fftwave1dd cfftwave1dd cfftwave1in fftwave2p fftwave3p cfftwave2 cfftwave3 cfftexpmig2 fftexp0test fd2d cfftexp2 cfftexp2test fdtacc wcfftexp2 wcfftexp2adj cfftwave2nsps cfftwave2mix2 wavemixop lrosrtm2 lroslsrtm2 stack2d cstack2d fftexp0test lrlsrtm2mpi imagsrc zolsrtm2 initwave2 correctwave2 lrwave2 cmatrix cfftwave1d zortmgmres claplac psp pspmig premig cfftwave2omp lrtti2de clfd1 clfd2 ofd2_test swnorm pspp passive2d swvarimax ccrsym timerev2d lstri2d cubesrc cfftwave2taper fftwave2taper compensate compensatexf acqgeo'
 # vweks3d2
 # revolve_driver
 # waveadjtest
