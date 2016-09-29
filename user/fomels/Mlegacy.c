@@ -24,7 +24,8 @@
 int main(int argc, char* argv[])
 {
     bool adj;
-    int n1, n2, i, n12;
+    char key[3];
+    int n1, n2, i, n12, dim, n[SF_MAX_DIM];
     float *legacy, *hires, *merge, *hwght, *lwght, **nr;
     sf_file in, out, hweight, lweight, rect;
 
@@ -38,8 +39,24 @@ int main(int argc, char* argv[])
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
     if (SF_FLOAT != sf_gettype(rect)) sf_error("Need float rect");
 
+    if (!sf_getbool("adj",&adj)) adj=false;
+    /* adjoint flag */
+
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
-    n2 = sf_leftsize(in,1); /* number of traces */
+
+    dim = sf_filedims(in,n);
+
+    /* number of traces */
+    n2 = sf_leftsize(in,1);    
+    if (adj) {
+	n2 /= 2;
+	snprintf(key,3,"n%d",dim);
+	sf_putint(out,key,1);
+    } else {
+	snprintf(key,3,"n%d",dim+1);
+	sf_putint(out,key,2);
+    }
+	
     n12 = n1*n2;
 
     legacy = sf_floatalloc(n12);
@@ -50,9 +67,6 @@ int main(int argc, char* argv[])
     hwght = sf_floatalloc(n12);
     
     nr = sf_floatalloc2(n1,n2);
-
-    if (!sf_getbool("adj",&adj)) adj=false;
-    /* adjoint flag */
 
     sf_floatread(nr[0],n12,rect);
     
