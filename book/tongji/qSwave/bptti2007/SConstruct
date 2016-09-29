@@ -1,0 +1,175 @@
+from rsf.proj import *
+
+#==============================================================
+# job running parameters
+par = dict(
+    ns=2801,
+    dt=0.0005,
+
+    isep1=0,
+    isep2=1,
+    ihomo=0,
+    tapertype="TTI",
+    nstep=2,
+
+    seed=2012,
+    npk=50,
+    eps=1.0e-6,
+
+	n2w=1,
+	o2w=50.5,
+
+    )
+# =============================================================
+# download Hess VTI models from 'ftp://software.seg.org'
+# Depth grid: 1501 
+# Horizontal grid: 3617
+# Vertical and horizontal spacing are both 20ft.
+
+import bptti2007 
+
+bptti2007.get_model('Vp Vs Epsilon Delta Theta')
+
+# =============================================================
+# produce vp0 & vs0 model by scaling vp model 
+Flow('vp0','Vp',
+     '''
+     smooth rect1=8 rect2=8
+     ''')
+
+Flow('vs0','Vs',
+     '''
+     smooth rect1=8 rect2=8
+     ''')
+
+Flow('epsi','Epsilon',
+     '''
+     smooth rect1=8 rect2=8
+     ''')
+
+Flow('del','Delta',
+     '''
+     smooth rect1=8 rect2=8
+     ''')
+
+Flow('the','Theta',
+     '''
+     smooth rect1=8 rect2=8
+     ''')
+
+name0='''
+vp0 vs0
+'''
+
+name00='''
+epsi del the
+'''
+
+for ff in Split(name0):
+        Result(ff,
+	'''
+	grey color=j scalebar=y bias=1.5 allpos=n barreverse=y wanttitle=n}
+	''')
+
+for gg in Split(name00):
+        Result(gg,
+	'''
+	grey color=j scalebar=y allpos=n barreverse=y wanttitle=n}
+	''')
+
+# =================================================================================
+# Forward modeling using original elastic wave eq.
+# =================================================================================
+name1='''
+Elasticx Elasticz ElasticSepP ElasticSepSV
+'''
+
+Flow(['Elasticx', 'Elasticz', 'ElasticSepP', 'ElasticSepSV'],
+         'vp0  vs0  epsi del the', 
+         '''
+         tti2delrsep
+         vp0=${SOURCES[0]}
+         vs0=${SOURCES[1]}
+         epsi=${SOURCES[2]} 
+         del=${SOURCES[3]}
+         the=${SOURCES[4]}
+         Elasticz=${TARGETS[1]}
+         ElasticSepP=${TARGETS[2]}
+         ElasticSepSV=${TARGETS[3]}
+         ns=%d 
+         dt=%g
+		 eps=%g
+		 seed=%d
+		 npk=%d
+         ''' % (par['ns'],par['dt'],par['eps'],par['seed'],par['npk'])
+    )
+
+for qq in Split(name1):
+        Result(qq,
+	'''
+	grey polarity=n scalebar=n screenratio=1 wanttitle=n }
+	''')
+
+Flow('ElasticSepSVwave','ElasticSepSV',
+        '''
+        window n2=%d min2=%g
+        ''' % (par['n2w'],par['o2w']))
+
+Result('ElasticSepSVwave',
+        '''
+        graph label1=Z title='Scalar qSV-wave from elastic field' label2=Amplitude screenratio=0.4
+        ''')
+
+name2='''
+PseudoPureSVx PseudoPureSVz
+PseudoPureSV PseudoPureSepSV
+PseudoPureSepSVx PseudoPureSepSVz
+'''
+
+Flow(['PseudoPureSVx',  'PseudoPureSVz',  'PseudoPureSV', 'PseudoPureSepSV', 'PseudoPureSepSVx', 'PseudoPureSepSVz'],
+         'vp0  vs0  epsi del the',
+         '''
+         tti2dpseudosvlrsep
+         vp0=${SOURCES[0]}
+         vs0=${SOURCES[1]}
+         epsi=${SOURCES[2]}
+         del=${SOURCES[3]}
+         the=${SOURCES[4]}
+         PseudoPureSVz=${TARGETS[1]}
+         PseudoPureSV=${TARGETS[2]}
+         PseudoPureSepSV=${TARGETS[3]}
+         PseudoPureSepSVx=${TARGETS[4]}
+         PseudoPureSepSVz=${TARGETS[5]}
+         ns=%d
+         dt=%g
+         npk=%d
+         eps=%g
+         ''' % (par['ns'],par['dt'],par['npk'],par['eps'])
+		 )
+
+for qq in Split(name2):
+        Result(qq,
+	'''
+	grey polarity=n scalebar=n screenratio=1 wanttitle=n }
+	''')
+
+Flow('PseudoPureSVwave','PseudoPureSV',
+        '''
+        window n2=%d min2=%g
+        ''' % (par['n2w'],par['o2w']))
+
+Result('PseudoPureSVwave',
+        '''
+        graph label1=Z title='Scalar pseudo-pure-mode qSV-wave' label2=Amplitude screenratio=0.4
+        ''')
+
+Flow('PseudoPureSepSVwave','PseudoPureSepSV',
+        '''
+        window n2=%d min2=%g
+        ''' % (par['n2w'],par['o2w']))
+
+Result('PseudoPureSepSVwave',
+        '''
+        graph label1=Z title='Scalar qSV-wave from pseudo-pure-mode fields' label2=Amplitude screenratio=0.4
+        ''')
+End()

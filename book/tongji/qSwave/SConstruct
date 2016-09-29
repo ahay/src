@@ -1,0 +1,10 @@
+from rsf.tex import *
+
+#    options='manuscript,revised',
+End(lclass='geophysics',
+#    options='manuscript',
+	use='amsmath,amssymb,listings,multirow,array',
+    color='P_last,SV_last,SH_last')
+#End(lclass='geophysics',
+#	use='amsmath,amssymb,listings,multirow,array',
+#    color='hessvp0 hessepsilon hessdelta')

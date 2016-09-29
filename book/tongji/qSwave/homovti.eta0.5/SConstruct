@@ -1,0 +1,259 @@
+from rsf.proj import *
+
+par = dict(
+    nx=401,
+    nz=401,
+    dx=0.005,
+    dz=0.005,
+    x0=0.0,
+    z0=0.0,
+
+    ns=601,
+    dt=0.0005,
+    da=0.01,
+    time=0.3,
+    f0=30.0,
+    t0=0.04,
+
+    vp0=3000,
+    vs0=1500,
+    ep=0.25,
+    de=-0.25,
+    the=0.0,
+
+    isep1=0,
+    isep2=1,
+    itaper1=0,
+    itaper2=1,
+    ihomo=1,
+    tapertype="T",
+    nstep=2
+    )
+
+# =================================================================================
+Flow('vp0', None,
+     '''
+       math n1=%d n2=%d d1=%g d2=%g o1=%g o2=%g
+            label1=x1 unit1=km label2=x2 unit2=km 
+            output=%g
+      ''' % (par['nz'],par['nx'],par['dz'],par['dx'],par['z0'],par['x0'],par['vp0'])
+     )
+
+Flow('vs0','vp0',
+	'''
+         math output=%g
+        ''' % (par['vs0'])
+ )
+
+Flow('epsi','vp0',
+	'''
+         math output=%g
+        ''' % (par['ep'])
+ )
+
+Flow('del','vp0',
+	'''
+         math output=%g
+        ''' % (par['de'])
+ )
+
+# =================================================================================
+# Forward modeling using original elastic wave eq.
+# =================================================================================
+
+name1='''
+Elasticx Elasticz
+'''
+
+Flow(['Elasticx',      'Elasticz'],
+         'vp0  vs0  epsi del',
+         '''
+         vti2desep
+         vp0=${SOURCES[0]}
+         vs0=${SOURCES[1]}
+         epsi=${SOURCES[2]}
+         del=${SOURCES[3]}
+         Elasticz=${TARGETS[1]}
+         ns=%d
+         dt=%g
+         isep=%d
+         ihomo=%d
+         tapertype=%s
+         nstep=%d
+         ''' % (par['ns'],par['dt'],par['isep1'],par['ihomo'],par['tapertype'],par['nstep'])
+    )
+
+for qq in Split(name1):
+        Result(qq,
+		'''
+		grey color=j polarity=n scalebar=n screenratio=1 wanttitle=n
+			axisfat=5 axiscol=7 labelsz=10
+		''')
+
+# =================================================================================
+# No taper for plot operators in wavenumber domain
+# =================================================================================
+name2='''
+acxNT aczNT asxNT aszNT asvxNT asvzNT
+'''
+
+Flow(['PseudoPureSVxNT',  'PseudoPureSVzNT',    'PseudoPureSVNT',
+         'acxNT',           'aczNT',
+         'acxxNT',          'aczzNT',
+         'asxNT',           'aszNT',
+         'asxxNT',          'aszzNT',
+         'asvxNT',          'asvzNT',
+         'asvxxNT',         'asvzzNT',
+         'PseudoPureSepSVNT'],
+         'vp0  vs0  epsi del',
+         '''
+		 vti2dpseudosv
+         vp0=${SOURCES[0]}
+         vs0=${SOURCES[1]}
+         epsi=${SOURCES[2]}
+         del=${SOURCES[3]}
+         PseudoPureSVz=${TARGETS[1]}
+         PseudoPureSV=${TARGETS[2]}
+         acx=${TARGETS[3]}
+         acz=${TARGETS[4]}
+         acxx=${TARGETS[5]}
+         aczz=${TARGETS[6]}
+         asx=${TARGETS[7]}
+         asz=${TARGETS[8]}
+         asxx=${TARGETS[9]}
+         aszz=${TARGETS[10]}
+         asvx=${TARGETS[11]}
+         asvz=${TARGETS[12]}
+         asvxx=${TARGETS[13]}
+         asvzz=${TARGETS[14]}
+         PseudoPureSepSV=${TARGETS[15]}
+         ns=%d
+         dt=%g
+         isep=%d
+         ihomo=%d
+         itaper=%d
+         tapertype=%s
+         ''' % (par['ns'],par['dt'],par['isep2'],par['ihomo'],par['itaper1'],par['tapertype'])
+    )
+
+for qq in Split(name2):
+        Result(qq,
+        '''
+        grey color=e polarity=n scalebar=y screenratio=0.87 wanttitle=n pclip=100
+        ''')
+
+# =================================================================================
+# Having Taper for operators in spatial domain
+# =================================================================================
+name22='''
+acxx aczz asxx aszz asvxx asvzz
+'''
+name3='''
+PseudoPureSVx PseudoPureSVz
+'''
+
+name4='''
+PseudoPureSV PseudoPureSepSV
+'''
+
+Flow(['PseudoPureSVx',  'PseudoPureSVz',    'PseudoPureSV',
+         'acx',           'acz',
+         'acxx',          'aczz',
+         'asx',           'asz',
+         'asxx',          'aszz',
+         'asvx',          'asvz',
+         'asvxx',         'asvzz',
+         'PseudoPureSepSV'],
+         'vp0  vs0  epsi del',
+         '''
+		 vti2dpseudosv
+          vp0=${SOURCES[0]}
+         vs0=${SOURCES[1]}
+         epsi=${SOURCES[2]}
+         del=${SOURCES[3]}
+         PseudoPureSVz=${TARGETS[1]}
+         PseudoPureSV=${TARGETS[2]}
+         acx=${TARGETS[3]}
+         acz=${TARGETS[4]}
+         acxx=${TARGETS[5]}
+         aczz=${TARGETS[6]}
+         asx=${TARGETS[7]}
+         asz=${TARGETS[8]}
+         asxx=${TARGETS[9]}
+         aszz=${TARGETS[10]}
+         asvx=${TARGETS[11]}
+         asvz=${TARGETS[12]}
+         asvxx=${TARGETS[13]}
+         asvzz=${TARGETS[14]}
+         PseudoPureSepSV=${TARGETS[15]}
+         ns=%d
+         dt=%g
+         isep=%d
+         ihomo=%d
+         itaper=%d
+         tapertype=%s
+         ''' % (par['ns'],par['dt'],par['isep2'],par['ihomo'],par['itaper2'],par['tapertype'])
+    )
+
+for qq in Split(name22):
+        Result(qq,
+        '''
+        grey color=j polarity=n scalebar=y screenratio=0.87 wanttitle=n pclip=99.9
+        ''')
+
+for qq in Split(name3):
+        Result(qq,
+        '''
+        grey color=j polarity=n scalebar=n screenratio=1 wanttitle=n
+        axisfat=5 axiscol=7 labelsz=10
+        ''')
+
+for qq in Split(name4):
+        Result(qq,
+        '''
+        grey color=j polarity=n scalebar=n screenratio=1 wanttitle=n
+        axisfat=5 axiscol=7 labelsz=10
+        ''')
+
+# =================================================================================
+# calculate geometric wavefront of qP and qSV waves
+# =================================================================================
+Flow(['WF',  'WFp',   'WFs'], None,
+    '''
+         kine2dvti
+         WFp=${TARGETS[1]}
+         WFs=${TARGETS[2]}
+         nx=%d
+         nz=%d
+         dx=%g
+         dz=%g
+         da=%g
+         time=%g
+         vp0=%g
+         vs0=%g
+         eps=%g
+         del=%g
+         the=%g
+         f0=%g
+         t0=%g
+         ''' % (par['nx'],par['nz'],par['dx'],par['dz'],par['da'],par['time'],
+                par['vp0'],par['vs0'],par['ep'],par['de'],par['the'],
+                par['f0'],par['t0'])
+    )
+
+Result('WF',
+        '''
+        grey color=j polarity=y backcol=0 scalebar=n screenratio=1 wanttitle=n
+        ''')
+
+Result('WFp',
+        '''
+        grey color=j polarity=y backcol=7 scalebar=n screenratio=1 wanttitle=n
+        ''')
+
+Result('WFs',
+        '''
+        grey color=j polarity=y backcol=0 scalebar=n screenratio=1 wanttitle=n
+        ''')
+
+End()
