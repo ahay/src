@@ -109,6 +109,66 @@ void lrk3d_apply(sf_complex *uo,
     nxyz = fdm->nypad*fdm->nxpad*fdm->nzpad;
     nk   = dft->nky*dft->nkx*dft->nkz;
 
+    fft(ui,cwave);
+
+    if(tap) tap3d_apply(cwave); /* taper for stability */
+
+    for (im=0; im<lrk->nrank; im++) {
+#ifdef _OPENMP
+#pragma omp parallel for              \
+        private(ik)                   \
+        shared(lrk,cwavem,cwave,nk)
+#endif
+        for (ik=0; ik<nk; ik++) {
+#ifdef SF_HAS_COMPLEX_H
+            cwavem[ik] = cwave[ik]*(adj? conjf(lrk->rt[ik][im]):lrk->rt[ik][im]);
+#else
+            cwavem[ik] = sf_cmul(cwave[ik],(adj? conjf(lrk->rt[ik][im]):lrk->rt[ik][im]));
+#endif
+        }
+        ifft(waves[im],cwavem);
+    }
+
+#ifdef _OPENMP
+#pragma omp parallel for			\
+    private(iy,ix,iz,i,c,im)                \
+    shared(fdm,lrk,waves,uo)
+#endif
+    for (iy=0; iy<fdm->nypad; iy++)         {
+        for (ix=0; ix<fdm->nxpad; ix++)     {
+            for (iz=0; iz<fdm->nzpad; iz++) {
+                i = (iy*fdm->nxpad + ix)*fdm->nzpad + iz; /* flattened coordinate */
+                c = sf_cmplx(0.,0.);
+                for (im = 0; im < lrk->nrank; im++) {
+#ifdef SF_HAS_COMPLEX_H
+                    c += (adj? conjf(lrk->lt[im][i]):lrk->lt[im][i])*waves[im][i];
+#else
+                    c += sf_cmul((adj? conjf(lrk->lt[im][i]):lrk->lt[im][i]),waves[im][i]);
+#endif
+                }
+                uo[i] = c;
+            }
+        }
+    }
+
+}
+
+/*------------------------------------------------------------*/
+void lrk3d_apply2(sf_complex *uo,
+                 sf_complex *ui,
+                 bool adj,
+                 bool tap,
+                 fdm3d fdm,
+                 dft3d dft,
+                 lrk3d lrk)
+/*< apply lowrank matrices for time stepping (can be in-place) >*/
+{
+    int nxyz,nk,ik,im,iz,ix,iy,i;
+    sf_complex c;
+
+    nxyz = fdm->nypad*fdm->nxpad*fdm->nzpad;
+    nk   = dft->nky*dft->nkx*dft->nkz;
+
     if (adj) { /* backward propagation - NSPS */
 
         for (im = 0; im < lrk->nrank; im++) {
@@ -408,11 +468,34 @@ void bel3d_finalize()
    if(NULL!=bel3d) { free(**bel3d); free(*bel3d); free(bel3d); bel3d=NULL; }
 }
 
-
 void inject3d(sf_complex ***u,
-              sf_complex ***d,
+              float      ***d,
               int tt,
               rtm3d rtm)
+/*< inject data into 3d cube >*/
+{
+    int iy,ix;
+
+#ifdef _OPENMP
+#pragma omp parallel for			\
+        private(iy,ix)                          \
+        shared(rtm,u,d,tt)
+#endif
+    for    (iy=0; iy<rtm->rec_ny; iy++) {
+        for(ix=0; ix<rtm->rec_nx; ix++) {
+#ifdef SF_HAS_COMPLEX_H
+            u[iy*rtm->rec_jy+rtm->rec_oy][ix*rtm->rec_jx+rtm->rec_ox][rtm->rec_dep] += d[iy][ix][tt];
+#else
+            u[iy*rtm->rec_jy+rtm->rec_oy][ix*rtm->rec_jx+rtm->rec_ox][rtm->rec_dep] = sf_cadd(u[iy*rtm->rec_jy+rtm->rec_oy][ix*rtm->rec_jx+rtm->rec_ox][rtm->rec_dep],sf_cmplx(d[iy][ix][tt],0));
+#endif
+        }
+    }
+}
+
+void inject3d_complex(sf_complex ***u,
+                      sf_complex ***d,
+                      int tt,
+                      rtm3d rtm)
 /*< inject data into 3d cube >*/
 {
     int iy,ix;
@@ -434,9 +517,29 @@ void inject3d(sf_complex ***u,
 }
 
 void extract3d(sf_complex ***u,
-               sf_complex ***d,
+               float      ***d,
                int tt,
                rtm3d rtm)
+/*< extract data from 3d cube >*/
+{
+    int iy,ix;
+
+#ifdef _OPENMP
+#pragma omp parallel for			\
+        private(iy,ix)                          \
+        shared(rtm,u,d,tt)
+#endif
+    for    (iy=0; iy<rtm->rec_ny; iy++) {
+        for(ix=0; ix<rtm->rec_nx; ix++) {
+            d[iy][ix][tt] = crealf(u[iy*rtm->rec_jy+rtm->rec_oy][ix*rtm->rec_jx+rtm->rec_ox][rtm->rec_dep]);
+        }
+    }
+}
+
+void extract3d_complex(sf_complex ***u,
+                       sf_complex ***d,
+                       int tt,
+                       rtm3d rtm)
 /*< extract data from 3d cube >*/
 {
     int iy,ix;
@@ -453,9 +556,40 @@ void extract3d(sf_complex ***u,
     }
 }
 
-void mute3d(sf_complex ***d,
+void mute3d(float ***d,
             fdm3d fdm,
             rtm3d rtm)
+/*< mute direct arrivals for 3d shot record >*/
+{
+    int iy,ix,it;
+    float dist,dist_z,dist_x,dist_y,wt,t1,tt;
+
+    dist_z = fdm->dz*(rtm->rec_dep - rtm->sou_z);
+#ifdef _OPENMP
+#pragma omp parallel for                              \
+        private(iy,ix,it,dist_y,dist_x,dist,t1,tt,wt) \
+        shared(rtm,d,dist_z)
+#endif
+    for(iy=0; iy<rtm->rec_ny; iy++) {
+        dist_y = fdm->dy*(iy*rtm->rec_jy+rtm->rec_oy - rtm->sou_y);
+        for(ix=0; ix<rtm->rec_nx; ix++) {
+            dist_x = fdm->dx*(ix*rtm->rec_jx+rtm->rec_ox - rtm->sou_x);
+            dist = sqrtf( powf(dist_z,2.) + powf(dist_x,2.) + powf(dist_y,2.) );
+            t1 = rtm->sou_t0 + dist/rtm->vel_w; // first arrival
+            for(it=0; it<rtm->rec_nt; it++) {
+                tt = it*rtm->rec_jt*rtm->sou_dt;
+                if (tt < t1) {
+                    wt = expf(1000*(tt-t1));
+                    d[iy][ix][it] *= wt;
+                }
+            }
+        }
+    }
+}
+
+void mute3d_complex(sf_complex ***d,
+                    fdm3d fdm,
+                    rtm3d rtm)
 /*< mute direct arrivals for 3d shot record >*/
 {
     int iy,ix,it;
@@ -517,10 +651,45 @@ void reverse(sf_complex ***bu,
     if (NULL!=spo) sponge3d_apply_complex(bu, spo, fdm);
 }
 
-void ccr(sf_complex ***img,
-         sf_complex ***u,
-         sf_complex ***bu,
-         fdm3d fdm)
+void ccrf(float ***img,
+          sf_complex ***u,
+          sf_complex ***bu,
+          fdm3d fdm)
+/*< cross-correlation imaging condition >*/
+{
+    int iy,ix,iz;
+
+    if(fdm->ny>1) {
+#ifdef _OPENMP
+#pragma omp parallel for    \
+        private(iy,ix,iz)   \
+        shared(img,u,bu,fdm)
+#endif
+        for (iy=0; iy<fdm->ny; iy++)         {
+            for (ix=0; ix<fdm->nx; ix++)     {
+                for (iz=0; iz<fdm->nz; iz++) {
+                    img[iy][ix][iz] += crealf(u[iy+fdm->nb][ix+fdm->nb][iz+fdm->nb])*crealf(bu[iy+fdm->nb][ix+fdm->nb][iz+fdm->nb]);
+                }
+            }
+        }
+    } else {
+#ifdef _OPENMP
+#pragma omp parallel for    \
+        private(ix,iz)      \
+        shared(img,u,bu,fdm)
+#endif
+        for (ix=0; ix<fdm->nx; ix++)     {
+            for (iz=0; iz<fdm->nz; iz++) {
+                img[0][ix][iz] += crealf(u[0][ix+fdm->nb][iz+fdm->nb])*crealf(bu[0][ix+fdm->nb][iz+fdm->nb]);
+            }
+        }
+    }
+}
+
+void ccrc(sf_complex ***img,
+          sf_complex ***u,
+          sf_complex ***bu,
+          fdm3d fdm)
 /*< cross-correlation imaging condition >*/
 {
     int iy,ix,iz;
@@ -584,6 +753,18 @@ void itoa(int n, char *s)
         s[i]=s[j];
         s[j]=c;
     }
+}
+
+void setval(float *u, int n, float val)
+/*< set value >*/
+{
+    int i;
+#ifdef _OPENMP
+#pragma omp parallel for                \
+    private(i)                          \
+    shared(u)
+#endif
+    for (i=0; i<n; i++) u[i] = val;
 }
 
 void setval_complex(sf_complex *u, int n, sf_complex val)

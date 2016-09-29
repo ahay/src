@@ -31,7 +31,8 @@ int main(int argc, char** argv)
 {   
     /*MPI*/
     int cpuid, numprocs, provided;
-    sf_complex *sendbuf, *recvbuf;
+    //sf_complex *sendbuf, *recvbuf;
+    float *sendbuf, *recvbuf;
 
     //MPI_Init(&argc, &argv);
     MPI_Init_thread(&argc, &argv, MPI_THREAD_FUNNELED, &provided);
@@ -53,8 +54,9 @@ int main(int argc, char** argv)
     bool migr; par.get("migr",migr,false); // adjoint(migration) flag
     bool roll; par.get("roll",roll,false); // rolling v.s. fixed-spread acquisition geometry
     bool dabc; par.get("dabc",dabc,false); // absorbing boundary
-    bool snap; par.get("snap",snap,false);
-    bool mute; par.get("mute",mute,false);
+    bool snap; par.get("snap",snap,false); // output wavefield snapshots
+    bool mute; par.get("mute",mute,false); // mute first arrival (modeling or imaging)
+    bool sill; par.get("sill",sill,false); // source illumination for rtm
 
     /* dimension related */
     int nb;    par.get("nb",nb,0);          // abc width
@@ -175,13 +177,17 @@ int main(int argc, char** argv)
 
     /* output image */
     sf_file Fimage = NULL;
-    sf_complex ***img_g = NULL;
+    //sf_complex ***img_g = NULL;
+    float ***img_g = NULL;
     if(migr) {
-        img_g = sf_complexalloc3(nz_g,nx_g,ny_g);
-        setval_complex(img_g[0][0],nz_g*nx_g*ny_g,sf_cmplx(0,0));
+        //img_g = sf_complexalloc3(nz_g,nx_g,ny_g);
+        //setval_complex(img_g[0][0],nz_g*nx_g*ny_g,sf_cmplx(0,0));
+        img_g = sf_floatalloc3(nz_g,nx_g,ny_g);
+        setval(img_g[0][0],nz_g*nx_g*ny_g,0.f);
         if(cpuid==0) {
             Fimage = sf_output("image");
-            sf_settype(Fimage,SF_COMPLEX);
+            //sf_settype(Fimage,SF_COMPLEX);
+            sf_settype(Fimage,SF_FLOAT);
             sf_oaxa(Fimage,az_g,1);
             sf_oaxa(Fimage,ax_g,2);
             sf_oaxa(Fimage,ay_g,3);
@@ -259,7 +265,8 @@ int main(int argc, char** argv)
                 adt = sf_maxa(rec_nt_g,0.,rec_jt_g*dt_g);                 sf_setlabel(adt,"t"); if(verb) sf_raxa(adt);
                 adx = sf_maxa(rec_nx_g,ox_g+rec_ox_g*dx_g,rec_jx_g*dx_g); sf_setlabel(adx,"x"); if(verb) sf_raxa(adx);
                 ady = sf_maxa(rec_ny_g,oy_g+rec_oy_g*dy_g,rec_jy_g*dy_g); sf_setlabel(ady,"y"); if(verb) sf_raxa(ady);
-                sf_settype(Fdat,SF_COMPLEX);
+                //sf_settype(Fdat,SF_COMPLEX);
+                sf_settype(Fdat,SF_FLOAT);
                 sf_oaxa(Fdat,adt,1);
                 sf_oaxa(Fdat,adx,2);
                 sf_oaxa(Fdat,ady,3);
@@ -353,8 +360,10 @@ int main(int argc, char** argv)
             lowrank_mat(lt,rt);
 
             /* create data (and image) array */
-            sf_complex ***dat = sf_complexalloc3(rec_nt,rec_nx,rec_ny);
-            sf_complex ***img = NULL;
+            //sf_complex ***dat = sf_complexalloc3(rec_nt,rec_nx,rec_ny);
+            //sf_complex ***img = NULL, ***sil = NULL;
+            float ***dat = sf_floatalloc3(rec_nt,rec_nx,rec_ny);
+            float ***img = NULL, ***sil = NULL;
 
             rtm3d rtm = rtm3d_init(sou_x, sou_y, sou_z, nt, dt, sou_t0, vel_w, roll, rec_dep, rec_ox, rec_oy, rec_jt, rec_jx, rec_jy, rec_nt, rec_nx, rec_ny, snap, jsnap);
 
@@ -385,7 +394,8 @@ int main(int argc, char** argv)
                 if(verb) sf_warning("cpuid=%d, single shot image file=%s",cpuid,img_file);
 
                 Fimg = sf_output(img_file);
-                sf_settype(Fimg,SF_COMPLEX);
+                //sf_settype(Fimg,SF_COMPLEX);
+                sf_settype(Fimg,SF_FLOAT);
                 sf_oaxa(Fimg,acz,1);
                 sf_oaxa(Fimg,acx,2);
                 sf_oaxa(Fimg,acy,3);
@@ -466,12 +476,21 @@ int main(int argc, char** argv)
                         case firsturn:
                             if(info > 2) sf_warning("node#%3d firsturn at %6d ",cpuid,capo);
                             /* read data */
-                            sf_complexread(dat[0][0],rec_nt*rec_nx*rec_ny,Fdat);
+                            //sf_complexread(dat[0][0],rec_nt*rec_nx*rec_ny,Fdat);
+                            sf_floatread(dat[0][0],rec_nt*rec_nx*rec_ny,Fdat);
                             /* mute first arrival */
-                            //if(mute) mute3d(dat, fdm, rtm);
+                            if(mute) mute3d(dat, fdm, rtm);
                             /* initialize image */
-                            img = sf_complexalloc3(nz,nx,ny);
-                            setval_complex(img[0][0],nz*nx*ny,sf_cmplx(0,0));
+                            //img = sf_complexalloc3(nz,nx,ny);
+                            //setval_complex(img[0][0],nz*nx*ny,sf_cmplx(0,0));
+                            img = sf_floatalloc3(nz,nx,ny);
+                            setval(img[0][0],nz*nx*ny,0.f);
+                            if(sill) {
+                                //sil = sf_complexalloc3(nz,nx,ny);
+                                //setval_complex(sil[0][0],nz*nx*ny,sf_cmplx(0,0));
+                                sil = sf_floatalloc3(nz,nx,ny);
+                                setval(sil[0][0],nz*nx*ny,0.f);
+                            }
                             /* initialize adjoint wavefield */
                             bu = sf_complexalloc3(fdm->nzpad,fdm->nxpad,fdm->nypad);
                             setval_complex(bu[0][0],fdm->nzpad*fdm->nxpad*fdm->nypad,sf_cmplx(0,0));
@@ -488,7 +507,8 @@ int main(int argc, char** argv)
                                 sf_complexwrite(uc[0][0],sf_n(acz)*sf_n(acx)*sf_n(acy),Fwfl);
                             }
                             /* 1 - cross-correlation imaging condition */
-                            ccr(img, u, bu, fdm);
+                            ccrf(img, u, bu, fdm);
+                            if(sill) ccrf(sil, u,  u, fdm);
                             break;
                         case youturn:
                             if(info > 2) sf_warning("node#%3d youturn at %7d ",cpuid,capo);
@@ -504,7 +524,8 @@ int main(int argc, char** argv)
                                 sf_complexwrite(uc[0][0],sf_n(acz)*sf_n(acx)*sf_n(acy),Fwfl);
                             }
                             /* 1 - cross-correlation imaging condition */
-                            ccr(img, u, bu, fdm);
+                            ccrf(img, u, bu, fdm);
+                            if(sill) ccrf(sil, u,  u, fdm);
                             break;
                         case restore:
                             if(info > 2) sf_warning("node#%3d restore at %7d ",cpuid,capo);
@@ -549,23 +570,45 @@ int main(int argc, char** argv)
                     }
                 } while((whatodo != terminate) && (whatodo != error));
 
+                if(sill) {
+#ifdef _OPENMP
+#pragma omp parallel for                    \
+                    private(iy,ix,iz)       \
+                    shared(img,sil)
+#endif
+                    for        (iy=0; iy<ny; iy++) {
+                        for    (ix=0; ix<nx; ix++) {
+                            for(iz=0; iz<nz; iz++) {
+                                img[iy][ix][iz] = img[iy][ix][iz]/(sil[iy][ix][iz]+SF_EPS);
+//#ifdef SF_HAS_COMPLEX_H
+//                                img[iy][ix][iz] = img[iy][ix][iz]/(sil[iy][ix][iz]+SF_EPS);
+//#else
+//                                img[iy][ix][iz] = sf_cdiv(img[iy][ix][iz],sf_cadd(sil[iy][ix][iz],sf_cmplx(SF_EPS,0)));
+//#endif
+                            }
+                        }
+                    }
+                }
+
                 /* output image */
-                sf_complexwrite(img[0][0],sf_n(acz)*sf_n(acx)*sf_n(acy),Fimg);
+                //sf_complexwrite(img[0][0],sf_n(acz)*sf_n(acx)*sf_n(acy),Fimg);
+                sf_floatwrite(img[0][0],sf_n(acz)*sf_n(acx)*sf_n(acy),Fimg);
 
                 /* stack image */
 #ifdef _OPENMP
 #pragma omp parallel for       \
                 private(iy,ix,iz)                  \
-                shared(img_g,img,ny,nx,nz,mod_oy_g,mod_ox_g)
+                shared(img_g,img,ny,nx,nz,mod_oy_g,mod_ox_g,mod_oz_g)
 #endif
                 for        (iy=0; iy<ny; iy++) {
                     for    (ix=0; ix<nx; ix++) {
                         for(iz=0; iz<nz; iz++) {
-#ifdef SF_HAS_COMPLEX_H
-                            img_g[iy+mod_oy_g][ix+mod_ox_g][iz] += img[iy][ix][iz];
-#else
-                            img_g[iy+mod_oy_g][ix+mod_ox_g][iz] = sf_cadd(img_g[iy+mod_oy_g][ix+mod_ox_g][iz],img[iy][ix][iz]);
-#endif
+                            img_g[iy+mod_oy_g][ix+mod_ox_g][iz+mod_oz_g] += img[iy][ix][iz];
+//#ifdef SF_HAS_COMPLEX_H
+//                            img_g[iy+mod_oy_g][ix+mod_ox_g][iz+mod_oz_g] += img[iy][ix][iz];
+//#else
+//                            img_g[iy+mod_oy_g][ix+mod_ox_g][iz+mod_oz_g] = sf_cadd(img_g[iy+mod_oy_g][ix+mod_ox_g][iz+mod_oz_g],img[iy][ix][iz]);
+//#endif
                         }
                     }
                 }
@@ -598,7 +641,8 @@ int main(int argc, char** argv)
                 if(mute) mute3d(dat, fdm, rtm);
 
                 /* output data */
-                sf_complexwrite(dat[0][0],rec_nt*rec_nx*rec_ny,Fdat);
+                //sf_complexwrite(dat[0][0],rec_nt*rec_nx*rec_ny,Fdat);
+                sf_floatwrite(dat[0][0],rec_nt*rec_nx*rec_ny,Fdat);
 
             }
 
@@ -613,7 +657,7 @@ int main(int argc, char** argv)
             free(dft);
             free(rtm);
             free(lrk);
-            free(spo);
+            if(dabc) free(spo);
 
             free(**tmp); free(*tmp); free(tmp);
             if(NULL!=vel  ) { free(**vel  ); free(*vel  ); free(vel  ); }
@@ -627,6 +671,7 @@ int main(int argc, char** argv)
             free(**u); free(*u); free(u);
             if(migr) {
                 free(**img); free(*img); free(img);
+                if(sill) { free(**sil); free(*sil); free(sil); }
                 free(**bu); free(*bu); free(bu);
             }
             if(snap) {
@@ -645,7 +690,8 @@ int main(int argc, char** argv)
     if (migr) {
       if (cpuid==0) {
 #if MPI_VERSION >= 2
-	sendbuf = (sf_complex *) MPI_IN_PLACE;
+	//sendbuf = (sf_complex *) MPI_IN_PLACE;
+	sendbuf = (float *) MPI_IN_PLACE;
 #else /* will fail */
 	sendbuf = NULL;
 #endif 
@@ -654,10 +700,12 @@ int main(int argc, char** argv)
 	sendbuf = img_g[0][0];
       	recvbuf = NULL;
       }
-      MPI_Reduce(sendbuf, recvbuf, nz_g*nx_g*ny_g, MPI_COMPLEX, MPI_SUM, 0, MPI_COMM_WORLD); 
+      //MPI_Reduce(sendbuf, recvbuf, nz_g*nx_g*ny_g, MPI_COMPLEX, MPI_SUM, 0, MPI_COMM_WORLD); 
+      MPI_Reduce(sendbuf, recvbuf, nz_g*nx_g*ny_g, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD); 
 
       /* output image */
-      if (cpuid==0) sf_complexwrite(img_g[0][0],nz_g*nx_g*ny_g,Fimage);
+      //if (cpuid==0) sf_complexwrite(img_g[0][0],nz_g*nx_g*ny_g,Fimage);
+      if (cpuid==0) sf_floatwrite(img_g[0][0],nz_g*nx_g*ny_g,Fimage);
     }
 
     free(ww);

@@ -367,7 +367,7 @@ int main(int argc, char* argv[])
   int *sxz, *gxz;
   float tmp, amp, vmax;
   float *wlt, *d2x, *d1z, *bndr, *adjsource;
-  float **v0, **vv, **vvs,**dcal,**dobs,***odcig;
+  float **v0, **vv, **vv1st,**dcal,**dobs,***odcig;
   float **sp, **spz, **spx, **svz, **svx;//source wavefield
   float **gp, **gpz, **gpx, **gvz, **gvx;//receiver wavefield
 
@@ -380,7 +380,7 @@ int main(int argc, char* argv[])
 
   /*< set up I/O files >*/
   vmodl = sf_input("in");   /* velocity model, unit=m/s */
-  vmods = sf_input("vsmooth"); /* smooth background velocity model*/
+  vmods = sf_input("vel1stlayer"); /* velocity model at 1st layer*/
   Fodcig = sf_output("out");  /* ODCIG by subsurface offset*/
 
   /* get parameters for RTM */
@@ -447,7 +447,7 @@ int main(int argc, char* argv[])
   wlt=sf_floatalloc(nt);
   v0=sf_floatalloc2(nz,nx); 	
   vv=sf_floatalloc2(nzpad, nxpad);
-  vvs=sf_floatalloc2(nzpad, nxpad);
+  vv1st=sf_floatalloc2(nzpad, nxpad);
   sp =sf_floatalloc2(nzpad, nxpad);
   spz=sf_floatalloc2(nzpad, nxpad);
   spx=sf_floatalloc2(nzpad, nxpad);
@@ -476,7 +476,7 @@ int main(int argc, char* argv[])
   sf_floatread(v0[0],nz*nx,vmodl);
   expand2d(vv, v0);//true input velocity
   sf_floatread(v0[0],nz*nx,vmods);
-  expand2d(vvs, v0);//smooth background velocity
+  expand2d(vv1st, v0);//velocity at source location/ 1st layer
   wavefield_init(sp, spz, spx, svz, svx);
   wavefield_init(gp, gpz, gpx, gvz, gvx);
   vmax=v0[0][0];
@@ -505,6 +505,8 @@ int main(int argc, char* argv[])
   memset(odcig[0][0], 0, (2*nh+1)*nz*nx*sizeof(float));
 
   for(is=0; is<ns; is++)    {
+      sf_warning("shot %d",is);
+
       wavefield_init(sp, spz, spx, svz, svx);
       wavefield_init(gp, gpz, gpx, gvz, gvx);
       if (csdgather)	{
@@ -518,15 +520,15 @@ int main(int argc, char* argv[])
 	bndr_rw(false, svz, svx, &bndr[it*8*(nx+nz)]);
 	record_seis(dobs[it], gxz, sp, ng);
 
-	//source wavefield simulation with smooth background velocity: vvs
+	//source wavefield simulation with velocity at 1st layer: vv1st
 	add_source(&sxz[is], gp, 1, &wlt[it], true);
-	step_forward(gp, gpz, gpx, gvz, gvx, vvs, d1z, d2x);		
+	step_forward(gp, gpz, gpx, gvz, gvx, vv1st, d1z, d2x);		
 	record_seis(dcal[it], gxz, gp, ng);
       }
 
       //re-initialize the wavefield on receiver/geophone side
       wavefield_init(gp, gpz, gpx, gvz, gvx);
-    for(it=nt-1; it>-1; it--)	{	
+      for(it=nt-1; it>-1; it--)	{	
 	//mute the direct arrival by subtracting the above two recorded seismograms
 	for(ig=0; ig<ng; ig++) adjsource[ig]=dobs[it][ig]-dcal[it][ig];
 

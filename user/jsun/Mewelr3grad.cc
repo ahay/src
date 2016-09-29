@@ -72,7 +72,7 @@ static int component, mode;
 static int sample(vector<int>& rs, vector<int>& cs, ZpxNumMat& res);
 
 void expand3d(std::valarray<float>  a, std::valarray<float>& b, int nb, int nz, int nx, int ny);
-void dr3d(std::valarray<float>  u, std::valarray<float>& du, int nz, int nx, int ny, float dz, float dx, float dy, int which);
+void dr3d(std::valarray<float>  u, std::valarray<float>& du, int nz, int nx, int ny, int nb, float dz, float dx, float dy, int which);
 
 
 /* global variables needed by lapack SVD routines */
@@ -245,21 +245,21 @@ int main(int argc, char* argv[])
     }
     /* calculate Cij gradient */
     if (grad) {
-        C11dx.resize(nxyz); dr3d(C11, C11dx, nzpad, nxpad, nypad, dz, dx, dy, 2);
-        C12dx.resize(nxyz); dr3d(C12, C12dx, nzpad, nxpad, nypad, dz, dx, dy, 2);
-        C12dy.resize(nxyz); dr3d(C12, C12dy, nzpad, nxpad, nypad, dz, dx, dy, 3);
-        C13dx.resize(nxyz); dr3d(C13, C13dx, nzpad, nxpad, nypad, dz, dx, dy, 2);
-        C13dz.resize(nxyz); dr3d(C13, C13dz, nzpad, nxpad, nypad, dz, dx, dy, 1);
-        C22dy.resize(nxyz); dr3d(C22, C22dy, nzpad, nxpad, nypad, dz, dx, dy, 3);
-        C23dy.resize(nxyz); dr3d(C23, C23dy, nzpad, nxpad, nypad, dz, dx, dy, 3);
-        C23dz.resize(nxyz); dr3d(C23, C23dz, nzpad, nxpad, nypad, dz, dx, dy, 1);
-        C33dz.resize(nxyz); dr3d(C33, C33dz, nzpad, nxpad, nypad, dz, dx, dy, 1);
-        C44dy.resize(nxyz); dr3d(C44, C44dy, nzpad, nxpad, nypad, dz, dx, dy, 3);
-        C44dz.resize(nxyz); dr3d(C44, C44dz, nzpad, nxpad, nypad, dz, dx, dy, 1);
-        C55dx.resize(nxyz); dr3d(C55, C55dx, nzpad, nxpad, nypad, dz, dx, dy, 2);
-        C55dz.resize(nxyz); dr3d(C55, C55dz, nzpad, nxpad, nypad, dz, dx, dy, 1);
-        C66dx.resize(nxyz); dr3d(C66, C66dx, nzpad, nxpad, nypad, dz, dx, dy, 2);
-        C66dy.resize(nxyz); dr3d(C66, C66dy, nzpad, nxpad, nypad, dz, dx, dy, 3);
+        C11dx.resize(nxyz); dr3d(C11, C11dx, nzpad, nxpad, nypad, nb, dz, dx, dy, 2);
+        C12dx.resize(nxyz); dr3d(C12, C12dx, nzpad, nxpad, nypad, nb, dz, dx, dy, 2);
+        C12dy.resize(nxyz); dr3d(C12, C12dy, nzpad, nxpad, nypad, nb, dz, dx, dy, 3);
+        C13dx.resize(nxyz); dr3d(C13, C13dx, nzpad, nxpad, nypad, nb, dz, dx, dy, 2);
+        C13dz.resize(nxyz); dr3d(C13, C13dz, nzpad, nxpad, nypad, nb, dz, dx, dy, 1);
+        C22dy.resize(nxyz); dr3d(C22, C22dy, nzpad, nxpad, nypad, nb, dz, dx, dy, 3);
+        C23dy.resize(nxyz); dr3d(C23, C23dy, nzpad, nxpad, nypad, nb, dz, dx, dy, 3);
+        C23dz.resize(nxyz); dr3d(C23, C23dz, nzpad, nxpad, nypad, nb, dz, dx, dy, 1);
+        C33dz.resize(nxyz); dr3d(C33, C33dz, nzpad, nxpad, nypad, nb, dz, dx, dy, 1);
+        C44dy.resize(nxyz); dr3d(C44, C44dy, nzpad, nxpad, nypad, nb, dz, dx, dy, 3);
+        C44dz.resize(nxyz); dr3d(C44, C44dz, nzpad, nxpad, nypad, nb, dz, dx, dy, 1);
+        C55dx.resize(nxyz); dr3d(C55, C55dx, nzpad, nxpad, nypad, nb, dz, dx, dy, 2);
+        C55dz.resize(nxyz); dr3d(C55, C55dz, nzpad, nxpad, nypad, nb, dz, dx, dy, 1);
+        C66dx.resize(nxyz); dr3d(C66, C66dx, nzpad, nxpad, nypad, nb, dz, dx, dy, 2);
+        C66dy.resize(nxyz); dr3d(C66, C66dy, nzpad, nxpad, nypad, nb, dz, dx, dy, 3);
         //oRSF fC11dx("C11dx"); fC11dx.put("n1",nzpad); fC11dx.put("n2",nxpad); fC11dx.put("n3",nypad); fC11dx<<C11dx;
         //oRSF fC12dy("C12dy"); fC12dy.put("n1",nzpad); fC12dy.put("n2",nxpad); fC12dy.put("n3",nypad); fC12dy<<C12dy;
         //oRSF fC13dz("C13dz"); fC13dz.put("n1",nzpad); fC13dz.put("n2",nxpad); fC13dz.put("n3",nypad); fC13dz<<C13dz;
@@ -989,7 +989,7 @@ void expand3d(std::valarray<float>  a,
 	for     (ix=0;ix<nx;ix++) {
 	    for (iz=0;iz<nz;iz++) {
 		//b[nb+iy][nb+ix][nb+iz] = a[iy][ix][iz];
-                b[((nb+iy)*nxpad+nb+ix)*nzpad+nb+iz] = a[(iy*nx+ix)*nz+nz];
+                b[((nb+iy)*nxpad+nb+ix)*nzpad+nb+iz] = a[(iy*nx+ix)*nz+iz];
 	    }
 	}
     }
@@ -1035,6 +1035,7 @@ void dr3d(std::valarray<float>  u,
           int nz,
           int nx,
           int ny,
+          int nb,
           float dz,
           float dx,
           float dy,
@@ -1050,7 +1051,10 @@ void dr3d(std::valarray<float>  u,
             for         (iy=NOP;iy<ny-NOP;iy++) {
                 for     (ix=NOP;ix<nx-NOP;ix++) {
                     for (iz=NOP;iz<nz-NOP;iz++) {
-                        du[(iy*nx+ix)*nz+iz] = Dx(u,iy,ix,iz,nx,nz,idd);
+                        if(iy>nb && iy<ny-nb && ix>nb && ix<nx-nb && iz>nb && iz<nz-nb)
+                            du[(iy*nx+ix)*nz+iz] = Dx(u,iy,ix,iz,nx,nz,idd);
+                        else
+                            du[(iy*nx+ix)*nz+iz] = 0.f;
                     }
                 }
             }
@@ -1060,7 +1064,10 @@ void dr3d(std::valarray<float>  u,
             for         (iy=NOP;iy<ny-NOP;iy++) {
                 for     (ix=NOP;ix<nx-NOP;ix++) {
                     for (iz=NOP;iz<nz-NOP;iz++) {
-                        du[(iy*nx+ix)*nz+iz] = Dy(u,iy,ix,iz,nx,nz,idd);
+                        if(iy>nb && iy<ny-nb && ix>nb && ix<nx-nb && iz>nb && iz<nz-nb)
+                            du[(iy*nx+ix)*nz+iz] = Dy(u,iy,ix,iz,nx,nz,idd);
+                        else
+                            du[(iy*nx+ix)*nz+iz] = 0.f;
                     }
                 }
             }
@@ -1070,7 +1077,10 @@ void dr3d(std::valarray<float>  u,
             for         (iy=NOP;iy<ny-NOP;iy++) {
                 for     (ix=NOP;ix<nx-NOP;ix++) {
                     for (iz=NOP;iz<nz-NOP;iz++) {
-                        du[(iy*nx+ix)*nz+iz] = Dz(u,iy,ix,iz,nx,nz,idd);
+                        if(iy>nb && iy<ny-nb && ix>nb && ix<nx-nb && iz>nb && iz<nz-nb)
+                            du[(iy*nx+ix)*nz+iz] = Dz(u,iy,ix,iz,nx,nz,idd);
+                        else
+                            du[(iy*nx+ix)*nz+iz] = 0.f;
                     }
                 }
             }
