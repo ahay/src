@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
     if (SF_FLOAT != sf_gettype(rect)) sf_error("Need float rect");
 
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
-    if (!sf_histint(in,"n2",&n2)) sf_error("No n2= in input");
+    n2 = sf_leftsize(in,1); /* number of traces */
     n12 = n1*n2;
 
     legacy = sf_floatalloc(n12);
