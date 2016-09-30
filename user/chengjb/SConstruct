@@ -3,86 +3,20 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-vti2desep vti2delrseparation
-vti2dpseudop vti2dpseudop1 vti2dpseudopfvs0 vti2dpseudohomops
-
-tti2desep tti2delrseparation
-tti2dpseudop tti2dpseudop1 tti2dpseudop2
-
-datasucjb2rsf2d
-
-twolayer2dti kine2dvti
-twolayer3dti
-
-vti2de
-tti2de
-
-vti3de vti3dehomo
-
-tti3de tti3dehomo
-
-ort3dhomodevK ort3dhomodevcK ort3dhomodevcTemp ort3dpseudophomo
-
-datasucjb2rsf3d datasucjb2rsf3dnh su2rsf3dladcig
-homo3dtti
-
-wavefrontamp wavefrontamp360 wavefrontampTransmit wavefrontampReflect
+datasucjb2rsf2d kine2dvti ort3dhomodevcK ort3dhomodevK
+ort3dpseudophomo tti2desep tti2dpseudop tti3de twolayer2dti
+twolayer3dti vti2desep vti2dpseudop vti2dpseudop1 vti2dpseudopfvs0
+vti2dpseudosv
+vti3de
+vti3dpseudosh vti3dpseudosv
 '''
-
-#ort3dpseudop
-#ort3dhomodevX ort3dhomodevcX
-#ort3dhomodevK 
 
 ccprogs = '''
-vti2delrsep 
-vti2delrsep2p 
-vti2delrsep2ps vti2delrseparators
-vti2dpseudoplrsep vti2dpseudoplrsep1
-
-vti2delrsepTrueAmp tti2delrsep2pTrueAmp
-
-vti2dpseudosvlrsep 
-
-vti2dpseudoplrseprtm
-
-tti2delrsep tti2delrsep1p tti2delrsep2p tti2delrsep2ps tti2delrseparators
-tti2dedivcurl
-
-tti2delrdecomp tti2delrdecomp1p tti2delrdecomp2p
-
-tti2dpseudoplrsep
-
+tti2delrdecomp tti2delrdecomp2p tti2delrsep tti2delrsep2p
+tti2dpseudoplrsep tti3delrsepP tti3delrsepSH tti3delrsepSV
+vti3delrsepP vti3delrsepSH vti3delrsepSV
 tti2dpseudosvlrsep
-
-vti3delrsep
-vti3delrsepP
-vti3delrsepSV
-vti3delrsepSH
-
-vti3delrsephomo
-vti3delrsephomoP
-vti3dedivcurl
-
-tti3delrsep
-tti3delrsepP
-tti3delrsepSV
-tti3delrsepSH
-
-tti3delrsephomo
-
-tti3delrdecompP
-tti3delrdecompSV
-
-vti3delrdecompP
-
-ort3delrsep
-
 '''
-#tti3delrdecomp
-#tti3delrdecompS
-#tti3delrdecompSH
-
-#isoonewaypsdmlr
 
 pyprogs ='''
 '''
@@ -96,7 +30,6 @@ fftw
 
 subs = '''
 '''
-#lowrankcjb
 
 try:  # distributed version
     Import('env root pkgdir bindir libdir incdir')
@@ -133,7 +66,6 @@ lapack = env.get('LAPACK')
 
 for source in src:
     inc = env.RSF_Include(source,prefix='')
-    env.Ignore(inc,inc)
     if fftw or not source in fftws:
         obj = env.StaticObject(source)
         env.Depends(obj,inc)
