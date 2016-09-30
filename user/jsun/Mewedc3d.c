@@ -1,4 +1,4 @@
-/* 3D elastic recursive integral time extrapolation of decomposed wave modes using KISS-FFT
+/* 3D elastic recursive integral time extrapolation of decomposed wave modes using shared-memory parallel FFT (decoupled formulation)
    sou wavelet  (nx,ny,nc,nt)
    rec data     (nx,ny,nc,nt)
    sou geometry (nc,nx,ny)
@@ -36,7 +36,7 @@ int main(int argc, char* argv[])
     /*------------------------------------------------------------*/
     /* Execution control, I/O files and geometry                  */
     /*------------------------------------------------------------*/
-    bool verb,fsrf,snap,back,esou; /* execution flags */
+    bool verb,fsrf,snap,back,esou,dabc; /* execution flags */
     int  jsnap,ntsnap,jdata; /* jump along axes */
     int  shft; /* time shift for wavefield matching in RTM */
 
@@ -64,6 +64,7 @@ int main(int argc, char* argv[])
     int     it,iz,ix,iy;
     float   dt,dz,dx,dy;
     int     nxyz, nk;
+    float   cb;              /* abc strength */
 
     /* FDM and KSP structure */ //!!!JS
     fdm3d    fdm=NULL;
@@ -127,6 +128,7 @@ int main(int argc, char* argv[])
     if(! sf_getbool("free",&fsrf)) fsrf=false; /* free surface flag */
     if(! sf_getbool("back",&back)) back=false; /* backward extrapolation flag (for rtm) */
     if(! sf_getbool("esou",&esou)) esou=false; /* explosive force source */
+    if(! sf_getbool("dabc",&dabc)) dabc=false; /* absorbing BC */
 
     /*------------------------------------------------------------*/
     /* I/O files                                                  */
@@ -184,6 +186,8 @@ int main(int argc, char* argv[])
     /* expand domain for FD operators and ABC                     */
     /*------------------------------------------------------------*/
     if( !sf_getint("nb",&nb)) nb=NOP;
+    if(nb==0) dabc=false;
+    if( !sf_getfloat("cb",&cb)) cb=1.f;
 
     fdm=fdutil3d_init(verb,fsrf,az,ax,ay,nb,1);
     if(nbell) fdbell3d_init(nbell);
@@ -305,6 +309,12 @@ int main(int argc, char* argv[])
     /*up = (sf_complex**) sf_alloc(3,sizeof(sf_complex*));*/
     /*up[0] = upx[0][0]; up[1] = upy[0][0]; up[2] = upz[0][0];*/
 
+    /* set up abc */
+    sponge spo=NULL;
+    if (dabc) {
+        spo = sponge_make2(fdm->nb,cb);
+    }
+
     /* initialize fft and lrk */
     dft = dft3d_init(1,false,false,fdm);
     nxyz= fdm->nypad*fdm->nxpad*fdm->nzpad;
@@ -401,6 +411,15 @@ int main(int argc, char* argv[])
 	/*------------------------------------------------------------*/
 	if(fsrf) { /* need to do something here */ }
 
+	/*------------------------------------------------------------*/
+	/* absorbing boundary condition                               */
+	/*------------------------------------------------------------*/
+	if(dabc) {
+            sponge3d_apply_complex(uoz, spo, fdm);
+            sponge3d_apply_complex(uox, spo, fdm);
+            sponge3d_apply_complex(uoy, spo, fdm);
+        }
+
         /*------------------------------------------------------------*/
 	/* inject displacement source                                 */
 	/*------------------------------------------------------------*/
@@ -460,6 +479,7 @@ int main(int argc, char* argv[])
     dft3d_finalize();
     free(clr_p); free(clr_s);
     clr3d_finalize();
+    if(dabc) free(spo);
 
     free(**ww); free(*ww); free(ww);
     free(ss);
