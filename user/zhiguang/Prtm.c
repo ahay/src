@@ -25,16 +25,16 @@
 #endif
 /*^*/
 
-void rtm(sf_file Fdat, sf_file Fimg, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpar, sf_vec_s array, bool verb)
+void rtm(sf_file Fdat, sf_file Fimg, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpar, sf_vec_s array, sf_encode encodepar, bool verb)
 /*< acoustic rtm >*/
 {
-	int ix, iz, is, ir, it, wit;
+	int ix, iz, is, ir, it, wit, isou;
 	int sx, rx, sz, rz, frectx, frectz;
 	int nz, nx, nzx, padnz, padnx, padnzx, nt, nr, nb, wnt;
 
 	float dx2, dz2, dt2, dt;
 	float **vv, **dd, **mm;
-	float **p0, **p1, **p2, **term, **tmparray, *rr, ***wave;
+	float **p0, **p1, **p2, **term, **tmparray, **rr, ***wave;
 	float *sendbuf, *recvbuf;
 
 	//sf_file Fwfl1, Fwfl2;
@@ -80,7 +80,7 @@ void rtm(sf_file Fdat, sf_file Fimg, sf_mpi *mpipar, sf_sou soupar, sf_acqui acp
 	p1=sf_floatalloc2(padnz, padnx);
 	p2=sf_floatalloc2(padnz, padnx);
 	term=sf_floatalloc2(padnz, padnx);
-	rr=sf_floatalloc(padnzx);
+	rr=sf_floatalloc2(padnzx, soupar->nsource);
 	wave=sf_floatalloc3(nz, nx, wnt);
 
 	/* padding and convert vector to 2-d array */
@@ -96,7 +96,7 @@ void rtm(sf_file Fdat, sf_file Fimg, sf_mpi *mpipar, sf_sou soupar, sf_acqui acp
 		memset(p2[0], 0., padnzx*sizeof(float));
 		
 		sx=acpar->s0_v+is*acpar->ds_v;
-		source_map(sx, sz, frectx, frectz, padnx, padnz, padnzx, rr);
+		source_map2(sx, sz, frectx, frectz, padnx, padnz, padnzx, rr);
 
 		wit=0;
 		/* forward propagation */
@@ -122,16 +122,33 @@ void rtm(sf_file Fdat, sf_file Fimg, sf_mpi *mpipar, sf_sou soupar, sf_acqui acp
 			laplace(p1, term, padnx, padnz, dx2, dz2);
 			
 			/* load source */
+			for (isou=0; isou<soupar->nsource; isou++){
+				if(encodepar==NULL){
 #ifdef _OPENMP 
 #pragma omp parallel for \
 			private(ix,iz) \
 			shared(term,rr,padnx,padnz,it)
 #endif
-			for(ix=0; ix<padnx; ix++){
-				for(iz=0; iz<padnz; iz++){
-					term[ix][iz] += rr[ix*padnz+iz]*array->ww[it];
-				}
-			}
+				for(ix=0; ix<padnx; ix++){
+						for(iz=0; iz<padnz; iz++){
+							term[ix][iz] += rr[isou][ix*padnz+iz]*array->ww[it];
+						}
+					}
+				}else{
+					if(it>encodepar->shift[is][isou]){
+#ifdef _OPENMP 
+#pragma omp parallel for \
+			private(ix,iz) \
+			shared(term,rr,padnx,padnz,it)
+#endif
+						for(ix=0; ix<padnx; ix++){
+							for(iz=0; iz<padnz; iz++){
+								term[ix][iz] += rr[isou][ix*padnz+iz]*array->ww[it-encodepar->shift[is][isou]]*encodepar->sign[is][isou];
+							} // iz
+						} // ix
+					} // it >shift
+				} // encodepar==NULL
+			} // end of isou
 
 			/* update */
 #ifdef _OPENMP 
@@ -236,7 +253,7 @@ void rtm(sf_file Fdat, sf_file Fimg, sf_mpi *mpipar, sf_sou soupar, sf_acqui acp
 	free(*p0); free(p0); free(*p1); free(p1);
 	free(*p2); free(p2); free(*vv); free(vv);
 	free(*dd); free(dd); free(*mm); free(mm);
-	free(rr); free(*term); free(term);
+	free(*rr); free(rr); free(*term); free(term);
 	free(**wave); free(*wave); free(wave);
 }
 
