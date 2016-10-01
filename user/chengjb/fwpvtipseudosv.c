@@ -72,3 +72,134 @@ void fwpvtipseudosv(float dt2,float** p1,float** p2,float** p3,float** q1,float*
 
            }/* i llop */
 }
+
+/******************************for the 3D VTI media****************************/
+void fwpvti3dpseudosv(float dt,float***p1,float***p2,float***p3, 
+		float***r1,float***r2,float***r3, 
+		float*coeff_2dx,float*coeff_2dy,float*coeff_2dz,float*coeff_1dx,float*coeff_1dy,float*coeff_1dz,
+		float ***vp0, float ***vs0,float ***epsi,float ***del, 
+		int nx, int ny, int nz, float dx, float dy, float dz)
+/*< fwpvti3dpseudosv: forward-propagating in VTI media with pseudo-pure SV-wave equation>*/
+{
+
+	int i,j,k,l, m=_m;
+#pragma omp parallel for private(i,j,k,l) \
+	schedule(dynamic) \
+	shared(p1,p2,p3, \
+	r1,r2,r3,\
+	coeff_1dx,coeff_1dy,coeff_1dz,coeff_2dx,coeff_2dy,coeff_2dz, \
+	vp0,vs0,epsi,del)
+
+	for(i=0;i<nx;i++)
+        for(j=0;j<ny;j++)
+            for(k=0;k<nz;k++)
+            {
+				float px,py,pz,rx,ry,rz;
+				float vp2,vs2,dt2;
+				float vpx,vpn;
+				float ep,de;
+				float C23_44;
+
+				dt2=dt*dt;
+				vp2=vp0[i][j][k]*vp0[i][j][k];
+				vs2=vs0[i][j][k]*vs0[i][j][k];
+				ep=1+2*epsi[i][j][k];
+				de=1+2*del[i][j][k];
+				vpx=vp2*ep;
+				vpn=vp2*de;
+				C23_44=sqrt(vp2-vs2)*sqrt(vpn-vs2);
+				
+				//deri calculation
+				px=0;py=0;pz=0;
+				rx=0;ry=0;rz=0;
+				/* Note the 3-D qSV-wave's pseudo-pure-mode wave equation has summed
+				 * x- and y- component */
+				for(l=-m;l<=m;l++)
+				{
+					if(i+l>=0&&i+l<nx)
+					{
+						px+=coeff_2dx[l+m]*p2[i+l][j][k];
+						rx+=coeff_2dx[l+m]*r2[i+l][j][k];
+					}
+					if(j+l>=0&&j+l<ny)
+					{
+
+						py+=coeff_2dy[l+m]*p2[i][j+l][k];
+						ry+=coeff_2dy[l+m]*r2[i][j+l][k];
+					}
+                    if(k+l>=0&&k+l<nz)
+					{
+						pz+=coeff_2dz[l+m]*p2[i][j][k+l];
+						rz+=coeff_2dz[l+m]*r2[i][j][k+l];
+					}
+				}
+				p3[i][j][k]=2*p2[i][j][k] - p1[i][j][k] + dt2*(vpx*(px+py) + vs2*pz - C23_44*rz);
+				r3[i][j][k]=2*r2[i][j][k] - r1[i][j][k] + dt2*(-C23_44*(px+py) + vs2*(rx+ry) + vp2*rz);
+			}
+}
+
+/******************************for the 3D VTI media****************************/
+void fwpvti3dpseudosvhomo(float dt,float***p1,float***p2,float***p3, 
+		float***r1,float***r2,float***r3, 
+		float*coeff_2dx,float*coeff_2dy,float*coeff_2dz,float*coeff_1dx,float*coeff_1dy,float*coeff_1dz,
+		float vp0, float vs0,float epsi,float del, 
+		int nx, int ny, int nz, float dx, float dy, float dz)
+/*< fwpvtipseudosvhomo: forward-propagating in VTI media with pseudo-pure SV-wave equation>*/
+{
+
+	int i,j,k,l, m=_m;
+#pragma omp parallel for private(i,j,k,l) \
+	schedule(dynamic) \
+	shared(p1,p2,p3, \
+	r1,r2,r3,\
+	coeff_1dx,coeff_1dy,coeff_1dz,coeff_2dx,coeff_2dy,coeff_2dz, \
+	vp0,vs0,epsi,del)
+
+	for(i=0;i<nx;i++)
+        for(j=0;j<ny;j++)
+            for(k=0;k<nz;k++)
+            {
+				float px,py,pz,rx,ry,rz;
+				float vp2,vs2,dt2;
+				float vpx,vpn;
+				float ep,de;
+				float C23_44;
+
+				dt2=dt*dt;
+				vp2=vp0*vp0;
+				vs2=vs0*vs0;
+				ep=1+2*epsi;
+				de=1+2*del;
+				vpx=vp2*ep;
+				vpn=vp2*de;
+				C23_44=sqrt(vp2-vs2)*sqrt(vpn-vs2);
+				//C12_66=sqrt(vpx-vs2)*sqrt(vpn-vs2);
+				
+				//deri calculation
+				px=0;py=0;pz=0;
+				rx=0;ry=0;rz=0;
+				/* Note the 3-D qSV-wave's pseudo-pure-mode wave equation has summed
+				 * x- and y- component */
+				for(l=-m;l<=m;l++)
+				{
+					if(i+l>=0&&i+l<nx)
+					{
+						px+=coeff_2dx[l+m]*p2[i+l][j][k];
+						rx+=coeff_2dx[l+m]*r2[i+l][j][k];
+					}
+					if(j+l>=0&&j+l<ny)
+					{
+
+						py+=coeff_2dy[l+m]*p2[i][j+l][k];
+						ry+=coeff_2dy[l+m]*r2[i][j+l][k];
+					}
+                    if(k+l>=0&&k+l<nz)
+					{
+						pz+=coeff_2dz[l+m]*p2[i][j][k+l];
+						rz+=coeff_2dz[l+m]*r2[i][j][k+l];
+					}
+				}
+				p3[i][j][k]=2*p2[i][j][k] - p1[i][j][k] + dt2*(vpx*(px+py) + vs2*pz - C23_44*rz);
+				r3[i][j][k]=2*r2[i][j][k] - r1[i][j][k] + dt2*(-C23_44*(px+py) + vs2*(rx+ry) + vp2*rz);
+			}
+}

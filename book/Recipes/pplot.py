@@ -23,7 +23,7 @@ def multip(plot,allplots,ny,nx,ys,xs,yc,xc):
             alljnk.append(jnk)
 
     Plot(plot,alljnk,'Overlay')
-    #Result(plot,alljnk,'Overlay')
+    Result(plot,alljnk,'Overlay')
 
 def animate(plot,allplots,ny,nx,ys,xs,yc,xc):
     Result(plot,allplots,'Movie')

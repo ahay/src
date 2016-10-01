@@ -1,0 +1,803 @@
+\title{Simulating propagation of separated wave modes in general anisotropic media,
+Part II: qS-wave propagators}
+
+\author{Jiubing Cheng\footnotemark[1] and Wei Kang\footnotemark[2]}
+
+\address{
+\footnotemark[1] State Key Laboratory of Marine Geology,\\
+Tongji University, Shanghai, China. E-mail: cjb1206@tongji.edu.cn\\
+\footnotemark[2] Formerly Tongji University, Shanghai, China;\\
+presently Schlumberger, Houston, Texas, USA. E-mail: wkang@slb.com\\
+}
+
+\lefthead{Cheng \& Kang}
+\righthead{Propagate separated qS-wave modes}
+
+\maketitle
+
+\newpage
+%\input{abstract}
+\begin{abstract}
+Shear waves, especially converted modes in multicomponent seismic data, 
+provide significant information that allows better delineation of
+geological structures and characterization of petroleum reservoirs.
+Seismic imaging and inversion based upon the elastic wave equation involve high computational
+cost and many challenges in decoupling the wave modes and estimating so many model parameters.
+For transversely isotropic media, shear waves can be designated as pure SH and quasi-SV modes.
+Through two different similarity transformations to the Christoffel equation aiming to project the
+vector displacement wavefields onto the isotropic references of the polarization directions,
+we derive simplified second-order systems (i.e., pseudo-pure-mode wave equations)
+for SH- and qSV-waves, respectively.
+The first system propagates a vector wavefield with two horizontal components, of which the summation
+produces pure-mode scalar SH-wave data,
+while the second propagates a vector wavefield with a summed horizontal component and a vertical component,
+of which the final summation produces a scalar field dominated by qSV-waves in energy.
+The simulated SH- or qSV-wave has the same kinematics as its counterpart in the elastic wavefield.
+As explained in our previous paper (part I), we can obtain completely separated 
+scalar qSV-wave fields after spatial filtering the pseudo-pure-mode qSV-wave fields.
+Synthetic examples demonstrate that these wave propagators provide efficient and flexible tools 
+for qS-wave extrapolation in general transversely isotropic media.
+\end{abstract}
+
+%\input{introduction}
+\section{Introduction}
+Ultrasonic laboratory studies as well as seismic field investigations have shown that many geological materials
+and subsurface structures are elastically anisotropic.
+It is well known that a shear wave passing through an anisotropic material splits into two mutually
+ orthogonal waves, which propagate at different velocities.
+Therefore, seismic waves propagate through the earth as a superposition of three body wave modes, one P-wave and two S-waves.
+Generally they are polarized neither parallel to nor perpendicular to the direction of wave travel, 
+thus are called quasi-P (qP) and quasi-S (qS) waves, with quasi- means similar to but not exactly.
+P- and S-waves were originally named for their arrival times,
+with P for the first (primary) and S for the second. Today, the indicators P and S are often connected with polarization,
+ i.e., P with compressional (or longitudinal) and S with shear (or transverse), with the specification SH and SV for waves
+ with transverse displacements in the horizontal and vertical planes, respectively \cite[]{winterstein:1990}.
+For vertical transversely isotropic (VTI) media, one often uses this terminology with qP, qSV, and SH, since the first two of
+these waves are generally not purely longitudinal and transverse, respectively.
+
+Because seismic anisotropy by nature is an elastic phenomenon, the full elastic wave equation 
+is usually more accurate for wavefield extrapolation than the acoustic equation.
+However, seismic imaging
+using the elastic wave equation involve high computational cost and many
+challenges in decoupling wave modes to get
+ physically interpretable images of the subsurface \cite[]{dellinger.etgen:1990,zhang.mcmechan:2010,yan.sava:2011,cheng.fomel:2014}.
+For real-sized applications of seismic imaging and 
+inversion, it is necessary to resort to a simplified description of wave
+propagation in anisotropic media.
+
+Pseudoacoustic wave equations are the most common approximations made
+to mono-component (mainly pressure) seismic data. They are derived by setting the
+qS-wave phase velocity along the symmetry axis to zero  
+for VTI or orthorhombic media \cite[]{alkhalifah:2000,
+alkhalifah:2003,duveneck:2011}.
+Pseudoacoustic wave equations describe the kinematic signatures of qP-waves
+   with sufficient accuracy and are simpler than their elastic
+   counterparts, which leads to computational savings in practice
+   \cite[]{zhou:2006eage,fletcher:2009,zhang.zhang:2011}.
+They also have fewer parameters, which is important for inversion.
+However, we note several limitations of the acoustic anisotropic wave equation.
+First, acoustic approximation does not prevent the propagation of qS-waves in directions other than
+   the symmetry axis \cite[]{grechka:2004,zhang:2005}; the residual qS-waves are
+   regarded as artifacts in the framework of acoustic modeling, reverse-time migration
+   (RTM) and full waveform inversion (FWI)
+   \cite[]{alkhalifah:2000,zhang:2009,operto:2009}.
+Second, stability analysis based on requiring the stiffness tensor to remain positive definite
+\cite[]{helbig:1994} shows that wavefield extrapolation in a pseudo-acoustic TI or orthorhombic medium
+can become unstable \cite[]{alkhalifah:2000,grechka:2004,fowler.king:2011}.
+Alternatively, qP- and qS-wave propagation can be formally decoupled in the wavenumber domain
+to yield pure-mode pseudodifferential equations \cite[]{liu:2009,du:2014}.
+Unfortunately, these equations in time-space domain cannot be solved with traditional numerical schemes.
+Through factorizing and approximating the qP-qSV dispersion relations or phase velocities,
+many authors proposed to simulate propagation of scalar pure-mode waves
+using mixed-domain recursive integral operators
+\cite[]{etgen:2009,liu:2009,zhang.zhang:2009,crawley:2010,
+fowler:2010,chu:2011,pestana:2011,zhan:2012,fomel:2013}
+or novel finite-difference operators \cite[]{song:2013}.
+To avoid solving the pseudodifferential equation, \cite{xu.zhou:2014}
+proposed a nonlinear wave equation for a pseudo-acoustic qP-wave with an auxiliary
+scalar operator depending on the material parameters and the phase direction of the
+propagation at each spatial location.
+
+ Multicomponent seismic data are increasingly acquired on land and at the ocean
+ bottom to better delineate geological structures and to characterize oil and gas
+ reservoirs \cite[]{li:1997,thomsen:1999,cary:2001,stewart:2002,hardage:2011}. 
+ The development of unconventional reservoirs and the microseismic monitoring of hydraulic fracturing
+ has led to more interest in shear waves because microseismic sources emit strong shear energy that is routinely 
+ recorded by three-component geophones \cite[]{maxwell} and is widely recognized as
+ being useful for locating microseismic events and estimating their focal mechanisms
+\cite[]{baig.urbancic:2010,grechka.yaskevich:2014}.
+ In fact, anisotropic phenomena are especially noticeable in shear and mode-converted wavefields.
+ Therefore, modeling of anisotropic shear waves
+may be important both theoretically and practically.
+As we know, the pseudoacoustic approximation is not appropriate for qS-waves.
+In addition to amplitude errors, the kinematic accuracy of qS-waves is reduced if we use the
+existing numerical schemes based on factorizing and approximating the dispersion relations or phase velocities.
+
+In kinematics, there are various forms equivalent to the original elastic wave equations.
+In our previous paper (part I), we derived the pseudo-pure-mode wave equation for qP-waves
+by applying a particular similarity transformation to the Christoffel equation and demonstrated its features in
+describing wave propagation for TI and orthorhombic media.
+Except for its application to scalar qP-wave RTM \cite[]{cheng.kang:2014}, the pseudo-pure-mode wave equation
+provides new insight into developing approaches for multicomponent qP-wave inversion
+\cite[]{djebbi.alkhalifah:2014}.
+The same theoretical framework described in part I is applied to qS-waves in this paper.
+First we derive the pseudo-pure-mode wave equations for qS-waves in TI media through
+new similarity transformations to the original Christoffel equation.
+Numerical examples demonstrate the features of the proposed qS-wave propagators in
+ 2D and 3D TI media.
+Then we discuss the dynamic features of the pseudo-pure-mode qS-wave equations and the challenges to
+extending them to anisotropic media with lower symmetry.
+
+%\input{theory}
+\section{Phase velocity and polarization characteristics}
+
+Following \cite{carcione:2007},
+we denote the spatial variables $x$, $y$ and $z$ of a Cartesian system by
+the indices $i, j,$ \ldots $=1$, $2$ and $3$, respectively, the position vector by
+$\mathbf{x}$, a partial derivative with respect to a variable $x_i$ with $\partial_i$,
+and the first and second time derivatives with $\partial_t$ and $\partial_{tt}$.
+Matrix transposition is denoted by the superscript $"\top"$. We also denote
+the scalar and matrix products by the symbol $"\cdot"$, and the gradient operator by $\bigtriangledown$.
+%The Einstein convention of repeated indices is
+%assumed unless otherwise specified.
+
+The wave equation in a general heterogeneous anisotropic medium can be expressed as
+\begin{equation}
+\label{eq:elastic}
+\rho{\partial_{tt}\mathbf{u}} = [{\bigtriangledown}{\mathbf{C}{\bigtriangledown}^{\top}}]\mathbf{u} + \mathbf{f},
+\end{equation}
+where $\mathbf{u}=(u_x,u_y,u_z)^{\top}$ is the particle displacement vector,
+$\mathbf{f}=(f_x,f_y,f_z)^{\top}$ represents
+ the force term, $\rho$ the density, $\mathbf{C}$ the matrix representing the stiffness tensor in a
+ two-index notation called the “Voigt recipe”. The gradient operator has
+ the following matrix representation:
+\begin{equation}
+\label{eq:grad}
+\tensor{\bigtriangledown} =
+\begin{pmatrix}{\partial}_x &0 &0 &0& {\partial}_z & {\partial}_y \cr
+0& {\partial}_y &0 & {\partial}_z  &0 & {\partial}_x \cr
+0& 0& {\partial}_z & {\partial}_y & {\partial}_x &0 \end{pmatrix}.
+\end{equation} 
+Neglecting the source term, a plane-wave analysis of the elastic wave equation yields the 
+Christoffel equation,
+\begin{equation}
+\label{eq:chris1}
+\widetilde{\mathbf{\Gamma}}\widetilde{\mathbf{u}} = \rho{\omega}^2\widetilde{\mathbf{u}},
+\end{equation}
+where $\omega$ is the angular frequency and
+$\widetilde{\mathbf{u}}=(\widetilde{u}_x,\widetilde{u}_y,\widetilde{u}_z)^{\top}$
+is the wavefield in Fourier domain; the wavenumber-domain counterpart of the gradient
+operator is written as
+\begin{equation}
+\label{eq:wavenumber}
+\widetilde{\mathbf{L}}=
+\begin{pmatrix}k_x & 0 &0 &0 & k_z & k_y \cr
+         0 & k_y & 0 & k_z &0 & k_x \cr
+         0 & 0 & k_z & k_y & k_x &0\end{pmatrix},
+\end{equation}
+in which the propagation direction is specified by the wave vector
+$\mathbf{k}=(k_x,k_y,k_z)^{\top}$, 
+and the symmetric Christoffel matrix $\widetilde{\Gamma} =
+\widetilde{\mathbf{L}}\mathbf{C}\widetilde{\mathbf{L}}^{\top}$ satisfies:
+\begin{equation}
+\label{eq:gamma}
+\widetilde{\Gamma} = 
+ \begin{pmatrix} C_{11}{k_x}^2 + C_{66}{k_y}^2 + C_{55}{k_z}^2  &
+ (C_{12}+C_{66}){k_x}{k_y}    &(C_{13}+C_{55}){k_x}{k_z} \cr
+ (C_{12}+C_{66}){k_x}{k_y} & C_{66}{k_x}^2+C_{22}{k_y}^2+C_{44}{k_z}^2
+ &(C_{23}+       C_{44}){k_y}{k_z} \cr
+ (C_{13}+C_{55}){k_x}{k_z} & (C_{23}+C_{44}){k_y}{k_z} &
+ C_{55}{k_x}^2+C_{44}{k_y}^2+  C_{33}{k_z}^2\end{pmatrix}.
+\end{equation}
+The squared phase (or normal) velocities ${V^2}_q (q=1,2,3)$ are eigenvalues of the 
+Christoffel matrix. The inequalitities
+\begin{equation}
+\label{eq:v1v2v3}
+{V_1(\mathbf{k})}\geq{V_2(\mathbf{k})}\geq{V_2(\mathbf{k})}
+\end{equation}
+establish the types of waves.
+Except for anomalous cases of elastic anisotropy, which are of little interest in geophysics,
+the qP-wave ($q=1$) usually is faster than qS-waves ($q=2,3$)
+and the equation
+\begin{equation}
+\label{eq:v1v2}
+{V_1(\mathbf{k})}={V_2(\mathbf{k})}
+\end{equation}
+is a great rarity \cite[]{yu:1993}. However, the equation
+\begin{equation}
+\label{eq:v2v3}
+{V_2(\mathbf{k})}={V_3(\mathbf{k})}
+\end{equation}
+is a common event because the phase velocity surfaces (corresponding to qS1 and qS2 waves) can touch or intersect each other \cite[]{musgrave}.
+Directions of wave normals along which the two phase velocities are equal to each other are called acoustic axes or singularity directions. 
+For the shear singularities, the Christoffel matrix is degenerate.
+\cite{crampin:1991} distinguished three kinds of singularity: point, kiss and line.
+In point and kiss singularities, the phase velocity surfaces touch at a single point, while in line singularities                      
+they intersect.
+Generally, inserting a nondegenerate eigenvalue back into the Christoffel equation gives ratios of
+the components of $\mathbf{u}$, 
+which specify polarization along a given phase direction for a given wave mode.
+The polarization consists of the geometrical properties of the particle motion, including trajectory shape and spatial orientation,
+but excludes magnitudes of the motion.
+Polarization of an isolated body wave in a noise-free perfectly elastic medium is linear \mbox{\cite[]{winterstein:1990}}.
+In isotropic media, polarizations of such body waves are either parallel to the direction of wave travel, for P-waves,
+or perpendicular to it, for S-waves. The polarization vectors of the S-wave may take an arbitrary orientation in the 
+plane orthogonal to the P-wave polarization vector.
+In anisotropic media, however, the polarizations are often neither parallel nor
+perpendicular to the direction of wave propagation.
+Whether the medium is anisotropic or not, the polarizations of the three wave modes are always mutually orthogonal for a given propagation direction.
+So we may separate the elastic wavefield into single-mode scalar fields using the polarization-based projection:
+\begin{equation}
+\label{eq:sep}
+\widetilde{w}=i\mathbf{a}_w\cdot\widetilde{\mathbf{u}},
+\end{equation}
+with $\mathbf{a}_w$ representing the normalized polarization vector of the given mode
+$w=\{qP, qS_1, qS_2\}$ \cite[]{dellinger.thesis}.
+
+In practice, horizontally polarized (or SH) and vertically polarized (or SV) are
+likely to be the most useful S-wave modes when consideration is restricted to isotropic or TI media,
+in which all rays lie in symmetry planes.
+For isotropic media, the above polarization-based projection is material-independent,
+because the following vectors related to the wave vector $\mathbf{k}$, i.e.,
+\begin{equation}
+\label{eq:e123}
+\mathbf{e}_1=(k_x,k_y,k_z)^{\top},\qquad\mathbf{e}_2=(-k_y,k_x,0)^{\top}\qquad\mbox{and}\qquad\mathbf{e}_3 =(k_xk_z,k_yk_z,-(k^2_x+k^2_y))^{\top},
+\end{equation}
+indicate the polarization direction of pure P-, SH- and SV-wave, respectively. 
+On the contrary, for anisotropic media, the polarization-based projection depends on local material parameters,
+because the polarizations are generally specified by the eigenvectors of the original Christoffel equation.
+For a VTI medium, the stiffness coefficients satisfy: $C_{12}=C_{11}-2C_{66}$, $C_{22}=C_{11}$, $C_{23}=C_{13}$ and $C_{55}=C_{44}$.
+In this case, people still prefer to designate the qS-waves as SH-like and SV-like modes due to the following fact:
+The use of qS1 and qS2 distinguished by phase velocities does not always give continuous polarization surfaces,
+while the use of SV and SH distinguished by polarization does, except at the kiss singularity at $k_x=k_y=0$
+\cite[]{crampin.yedlin:1981,zhang.mcmechan:2010}.
+In this case, the SH-waves polarize perpendicular to the symmetry plane and are pure,
+and the SV-waves polarize in symmetry planes and are usually quasi-shear.
+As shown in Figure~\ref{fig:P_last,SV_last,SH_last}, for both qP and qSV modes, the polarization directions in a VTI material
+deviate from those in the corresponding isotropic (reference) medium in most propagation directions,
+but no deviation exists for the SH mode in any direction for either medium.
+To our interest, the polarization deviations of qP- or qSV-waves between an ordinary VTI
+medium and its isotropic reference are usually very small, although exceptions are possible \cite[]{thomsen:1986,tsvankin.chesnokov:1990}.
+In addition, taking vectors $\mathbf{e}_1$, $\mathbf{e}_2$ and $\mathbf{e}_3$ as the three mutually perpendicular polarization vectors
+in the unperturbed isotropic medium, approximate formulas for the qP- and qS-wave polarizations 
+in an arbitrary anisotropic medium can be developed using perturbation theory \cite[]{cerveny.jech:1982,psencik:1998,farra:2001}.
+
+\inputdir{Polar3D}
+\multiplot{3}{P_last,SV_last,SH_last}{width=0.72\textwidth}
+{
+Polarization vectors in a 3D VTI material with $v_{p0}=3.0$ km/s,
+$v_{s0}=1.5$ km/s, $\epsilon=0.25$, and $\delta=-0.29$. Its isotropic reference
+medium is determined by setting $\epsilon=0$ and $\delta=0$.
+One can observe polarization deviations between VTI (red) and its isotropic reference (blue) media for (a) P- and (b) S-waves in
+most propagation directions, but no deviation for (c) SH-waves in any direction.}
+
+To provide for more possibilities and flexibility in describing single-mode wave propagation in anisotropic media, \mbox{\cite{cheng.kang:2014}} suggest splitting
+the one-step polarization-based projection into two steps, of which the first step implicitly implements partial wave-mode separation
+during wavefield extrapolation with a transformed wave equation, while the second step is designed to correct the
+projection deviation due to the approximation of polarization directions.
+The transformed wave equation (that they called a pseudo-pure-mode qP-wave equation) was derived from the original Christoffel equation through
+a similarity transformation aiming to project the displacement wavefield onto the isotropic (reference) polarization direction indicated by $\mathbf{e}_1$.  
+In this paper, taking another two orthogonal vectors in equation~\ref{eq:e123}, namely $\mathbf{e}_2$ and $\mathbf{e}_3$,
+as the reference polarization directions for SH- and qSV-waves,
+we apply the same strategy to derive simplified wave equations for these qS-wave modes in general TI media.
+
+%\input{pseudopure.ti.sh}
+\section{Pure-mode SH-wave equation}
+Pure SH-waves horizontally polarize in the planes perpendicular to the symmetry axis of VTI media with
+$u_z\equiv0$, so we introduce a similarity transformation to the Christoffel matrix 
+ignoring the vertical component, i.e.,
+\begin{equation}
+\label{eq:tansChrisMsh}
+\widetilde{\overline{\mathbf{\Gamma}}}_\mathbf{m} =
+\mathbf{M}\widetilde{\mathbf{\Gamma}}_2\mathbf{M}^{-1},
+\end{equation}
+with a generally invertible $2\times2$ matrix $\mathbf{M}$ related to the reference polarization direction $\mathbf{e}_2$:
+\begin{equation}
+\label{eq:tansMsh}
+\mathbf{M}=
+\begin{pmatrix}-{k_y} & 0 \cr
+	0 & {k_x} \end{pmatrix},
+\end{equation}
+and
+\begin{equation}
+\label{eq:gamma2}
+\widetilde{\Gamma}_2=\begin{pmatrix}C_{11}{k_x}^2+C_{66}{k_y}^2+C_{44}{k_z}^2&
+ (C_{12}+C_{66}){k_x}{k_y} \cr
+ (C_{12}+C_{66}){k_x}{k_y} & C_{66}{k_x}^2+C_{22}{k_y}^2+C_{44}{k_z}^2\end{pmatrix}.
+\end{equation}
+Accordingly, we derive a transformed Christoffel equation,
+\begin{equation}
+\label{eq:tansChrissh}
+\widetilde{\overline{\mathbf{\Gamma}}}_\mathbf{m}\widetilde{\overline{\mathbf{u}}}=
+\rho{\omega}^2\widetilde{\overline{\mathbf{u}}},
+\end{equation}
+for the SH-wave mode:
+\begin{equation}
+\label{eq:similarTsh}
+\widetilde{\overline{\mathbf{u}}}=\mathbf{M}\widetilde{\mathbf{u}}_2,
+\end{equation}
+in which
+$\widetilde{\mathbf{u}}_2=(\widetilde{u}_x,\widetilde{u}_y)^{\top}$ represents the horizontal
+components of the original elastic wavefields, and
+$\widetilde{\overline{\mathbf{u}}}=(\widetilde{\overline{u}}_x,\widetilde{\overline{u}}_y)^{\top}$
+represents the horizontal components of the transformed wavefields.
+Note that the matrix $\mathbf{M}$ will be not invertible when $k_x=0$ or/and $k_y=0$.
+These special directions don't affect the derivation of the pseudo-pure-mode wave equation for the following reasons:
+First, we don't directly project the elastic wavefield into the wavenumber-domain, but instead apply the similarity transformation to the Christoffel equation
+and eventually inverse the transformed Christoffell equation back into the time-space-domain.
+Second, the original Christofell matrix $\widetilde{\Gamma}_2$ automatically becomes a diagonal matrix in these directions,
+so the similarity transformation is not actually needed for the corresponding wavenumber components.
+
+Note the similarity transformation does not change the eigenvalue of the Christoffel
+matrix corresponding to the SH-wave and, thus, introduces no kinematic error for this wave mode.
+We also can obtain a kinematically equivalent Christoffel equation if $\mathbf{M}$ is constructed using 
+the normalized form of $\mathbf{e}_2$ to ensure all spatial frequencies are uniformly scaled.
+For a locally smooth medium, applying an inverse Fourier transform to
+equation~\ref{eq:tansChrissh}, we obtain a linear second-order system in the time-space domain:
+\begin{equation}
+\label{eq:tansElasticsh}
+\rho\partial_{tt}\overline{\mathbf{u}} =
+\overline{\mathbf{\Gamma}}_\mathbf{m}\overline{\mathbf{u}},
+\end{equation}
+or in its extended form:
+\begin{equation}
+\label{eq:pseudosh}
+\begin{split}
+	\rho\partial_{tt}\overline{u}_x &= C_{11}\partial_{xx}{\overline{u}_x}
+	+ C_{66}\partial_{yy}{\overline{u}_x}+
+	C_{44}\partial_{zz}{\overline{u}_x}
+	-(C_{11}-C_{66})\partial_{yy}{\overline{u}_y}, \\
+	\rho\partial_{tt}\overline{u}_y &= C_{66}\partial_{xx}{\overline{u}_y}
+	+ C_{11}\partial_{yy}{\overline{u}_y} +
+	C_{44}\partial_{zz}{\overline{u}_y}
+	- (C_{11}-C_{66})\partial_{xx}{\overline{u}_x},
+\end{split}
+\end{equation}
+where $\overline{\mathbf{u}}=(\overline{u}_x, \overline{u}_y)^{\top}$
+represents the horizontal components of SH-wave in time-space domain, and
+$\overline{\mathbf{\Gamma}}_\mathbf{m}$
+ represents the Christoffel differential-operator matrix after the similarity transformation.
+
+Due to the cylindrical symmetry of a TI material, the two equations in equation~\ref{eq:pseudosh} may be summed to 
+	produce a scalar wave equation in terms of $\overline{u}$:
+\begin{equation}
+\label{eq:pseudosh1}
+\rho\partial_{tt}\overline{u} =
+C_{66}(\partial_{xx}+\partial_{yy}){\overline{u}}+C_{44}\partial_{zz}{\overline{u}},
+\end{equation}
+with $\overline{u}=\overline{u}_{x}+\overline{u}_{y}$ representing the total horizontal components of the transformed SH-wave fields.
+This is consistent with the fact that only $C_{44}$ and $C_{66}$ affect the kinematic signatures of the
+SH-wave in VTI media \cite[]{tsvankin:2001}. In addition,  the derived equation naturally reduces to the acoustic wave equation if we apply the isotropic assumption by setting $C_{44}=C_{66}=\rho{V_s}^2$ with $V_s$ representing the velocity of the isotropic shear wave.
+
+%\input{pseudopure.ti.sv}
+\section{Pseudo-pure-mode qSV-wave equation}
+
+\subsection{Derivation of pseudo-pure-mode qSV-wave equation}
+For the qSV-wave, we should essentially build a projection from the elastic wavefields
+$\widetilde{\mathbf{u}}=(\widetilde{u}_x,\widetilde{u}_y, \widetilde{u}_z)^{\top}$ to a pseudo-pure-mode wavefield
+$\widetilde{\overline{\mathbf{u}}}=(\widetilde{\overline{u}}_x,\widetilde{\overline{u}}_y,
+\widetilde{\overline{u}}_z)^{\top}$.
+Naturally, we may introduce the following similarity transformation to the Christoffel
+matrix, i.e.,
+\begin{equation}
+\label{eq:tansChrisMsv}
+\widetilde{\overline{\mathbf{\Gamma}}}_\mathbf{n}=\mathbf{N}\widetilde{\mathbf{\Gamma}}\mathbf{N}^{-1},
+\end{equation}
+with the intuitive projection matrix $\mathbf{N}$ defined by the reference polarization direction $\mathbf{e}_3$:
+\begin{equation}
+\label{eq:tansMsv0}
+\mathbf{N}=
+\begin{pmatrix}{k_xk_z} & 0 &0 \cr
+         0 & {k_yk_z} &0 \cr
+         0 & 0 & {-(k^2_x+k^2_y)}\end{pmatrix},
+\end{equation}
+or its normalized form.
+However, the resulting pseudo-pure-mode wave equation is very complicated and contains mixed
+derivatives of time and space. To keep them simple, an intermediate
+wavefield
+${\widetilde{\overline{\mathbf{u}}}}'=(\widetilde{u}_x,\widetilde{u}_y,{\widetilde{u}}'_z)^{\top}$
+is defined by
+\begin{equation}
+\label{eq:zcomp}
+\qquad \widetilde{\overline{u}}_z=(k^2_x+k^2_y){\widetilde{\overline{u}}}'_z.
+\end{equation}
+So we project the vector displacement wavefields using:
+\begin{equation}
+\label{eq:similarTsv}
+{\widetilde{\overline{\mathbf{u}}}}' =
+{\mathbf{N}}'\widetilde{\mathbf{u}},
+\end{equation}
+with an intermediate projection matrix:
+\begin{equation}
+\label{eq:tansMsv}
+{\mathbf{N}}'=
+\begin{pmatrix}{k_xk_z} & 0 &0 \cr
+         0 & {k_yk_z} &0 \cr
+         0 & 0 & -1\end{pmatrix}.
+\end{equation}
+Accordingly, we apply the similarity transformation using ${\mathbf{N}}'$ to
+equation \ref{eq:chris1} and finally get an equivalent Christoffel equation:
+\begin{equation}
+\label{eq:tansChrissv}
+{\widetilde{\overline{\mathbf{\Gamma}}}}'_\mathbf{n}{\widetilde{\overline{\mathbf{u}}}}' =
+\rho{\omega}^2{\widetilde{\overline{\mathbf{u}}}}'.
+\end{equation}
+with
+${\widetilde{\overline{\mathbf{\Gamma}}}}'_\mathbf{n}={\mathbf{N}}'\widetilde{\mathbf{\Gamma}}(\mathbf{N}')^{-1}$.
+
+For a locally smooth medium, applying an inverse Fourier transformation to
+equation~\ref{eq:tansChrissv}, we obtain another coupled
+forth-order linear system:
+\begin{equation}
+\label{eq:tansElasticsv}
+\rho\partial_{tt}{\overline{\mathbf{u}}}'={\overline{\mathbf{\Gamma}}}'_\mathbf{n}{\overline{\mathbf{u}}}',
+\end{equation}
+or in its extended form:
+\begin{equation}
+\label{eq:pseudosv}
+\begin{split}
+	\rho\partial_{tt}\overline{u}_x&=(C_{11}\partial_{xx}+C_{66}\partial_{yy}+ C_{44}\partial_{zz}){\overline{u}_x}
+	+(C_{11}-C_{66})\partial_{xx}{\overline{u}_y} 
+	+(C_{13}+C_{44})\partial_{xx}\partial_{zz}{{\overline{u}}'_z}, \\
+	\rho\partial_{tt}\overline{u}_y&=(C_{11}-C_{66})\partial_{yy}{\overline{u}_x}
+	+ (C_{66}\partial_{xx}+C_{11}\partial_{yy}+C_{44}\partial_{zz}){\overline{u}_y}
+	+(C_{13}+C_{44})\partial_{yy}\partial_{zz}{{\overline{u}}'_z}, \\
+	\rho\partial_{tt}{\overline{u}}'_z&=(C_{13}+C_{44})\overline{u}_x
+	+(C_{13}+C_{44})\overline{u}_y
+	+C_{44}(\partial_{xx}+\partial_{yy})\overline{u}'_z+C_{33}\partial_{zz}{\overline{u}}'_z.
+\end{split}
+\end{equation}
+where
+${\overline{\mathbf{u}}}'=(\overline{u}_x,\overline{u}_y,{\overline{u}}'_z)^{\top}$
+is an intermediate wavefield in the time-space domain, and
+${\overline{\mathbf{\Gamma}}}'_\mathbf{n}$
+ represents the corresponding Christoffel differential-operator matrix after the similarity
+ transformation.
+ The intermediate wavefield has the same horizontal components but a different vertical
+ component of the pseudo-pure-mode wavefield $\overline{\mathbf{u}}=(u_x, u_y,
+ u_z)^{\top}$.
+ Equation \ref{eq:zcomp} indicates that the vertical component satisfies:
+\begin{equation}
+\label{eq:zcomp1}
+\overline{u}_z=-(\partial_{xx}+\partial_{yy}){\overline{u}}'_z.
+\end{equation}
+
+Due to the symmetry property of a VTI material, we may sum the horizontal components and replace the vertical component
+with the relation given in equation~\ref{eq:zcomp1}, and finally obtain a simpler second-order system that honors the kinematics of both qP- and qSV-waves:
+\begin{equation}
+\label{eq:pseudosvxy}
+\begin{split}
+\rho\partial_{tt}\overline{u}_{xy}&=C_{11}(\partial_{xx}+\partial_{yy})\overline{u}_{xy}+C_{44}\partial_{zz}{\overline{u}}_{xy}-(C_{13}+C_{44})\partial_{zz}{\overline{u}_z},\\
+\rho\partial_{tt}\overline{u}_z&=-(C_{13}+C_{44})(\partial_{xx}+\partial_{yy})\overline{u}_{xy}+C_{44}(\partial_{xx}+\partial_{yy})\overline{u}_z+C_{33}\partial_{zz}\overline{u}_z,
+\end{split}
+\end{equation}
+with $\overline{u}_{xy}=\overline{u}_x+\overline{u}_y$.
+Note that pure SH-waves always polarize in the planes perpendicular to the symmetry axis with the polarization direction indicated by $\mathbf{e}_2$,
+which implies $(k_xk_z)\widetilde{u}_{x}+(k_yk_z)\widetilde{u}_{y}\equiv0$, i.e., $\overline{u}_{xy}\equiv0$, for the SH-wave.
+Therefore, the partial summation (after the similarity transformation) automatically removes the SH component from the transformed wavefields.
+As a result, there are no terms related to $C_{66}$ any more in equation~\ref{eq:pseudosvxy}.
+In order to produce a pseudo-pure-mode scalar qSV-wave field, we sum all components of the transformed wavefields, namely
+\begin{equation}
+\label{eq:scalalr}
+\overline{u}=\overline{u}_{xy}+\overline{u}_{z}.
+\end{equation}
+
+For a 2-D VTI medium, equation ~\ref{eq:pseudosvxy} reduces to the following form:
+\begin{equation}
+\label{eq:pseudosvx}
+\begin{split}
+\rho\partial_{tt}\overline{u}_x&=C_{11}\partial_{xx}\overline{u}_x+C_{44}\partial_{zz}{\overline{u}}_x
+-(C_{13}+C_{44})\partial_{zz}{\overline{u}_z},\\
+\rho\partial_{tt}\overline{u}_z&=-(C_{13}+C_{44})\partial_{xx}\overline{u}_x
++C_{44}\partial_{xx}\overline{u}_z+C_{33}\partial_{zz}\overline{u}_z.
+\end{split}
+\end{equation}
+In fact, we can derive the same pseudo-pure-mode wave equation for a 2-D qSV-wave by
+projecting the 2-D Christoffel matrix onto a reference vector
+$\mathbf{e}'_3=(k_z, -k_x)^{\top}$.
+Similarly, a 2D pseudo-pure-mode scalar qSV-wave field is given by the summation: $\overline{u}=\overline{u}_{x}+\overline{u}_{z}$.
+
+If we apply the isotropic assumption by setting $C_{11}=C_{33}$ and $C_{13}+C_{44}=C_{33}-C_{44}$,
+and sum the two equations in equation~\ref{eq:pseudosvxy}, we get the scalar wave equation:
+\begin{equation}
+\rho{\partial_{tt}\overline{u}} = 
+C_{44}(\partial_{xx}+\partial_{yy}+\partial_{zz}){\overline{u}},
+\end{equation}
+with $\overline{u}=\overline{u}_{xy}+\overline{u}_{z}$ representing a shear wave field, and $C_{44}=\rho{V_s}^2$ with $V_s$
+representing the propagation velocity of the isotropic shear wave.
+
+The derived pseudo-pure-mode qSV-wave equations have some interesting and valuable features.
+First, the projection using matrix $\mathbf{N}$ yields wave-mode separation to some
+extent, because the chosen projection direction, $\mathbf{e}_3$, represents the polarization direction of
+the SV-wave in an isotropic medium.
+As investigated by \mbox{\cite{tsvankin.chesnokov:1990}} and \mbox{\cite{psencik:1998}}, and also demonstrated in Figure 1b,
+the difference in polarization directions between isotropic and VTI media is
+generally quite small in most propagation directions for SV-waves.
+Therefore, considering the mode separator (namely equation~\ref{eq:sep}) and the small projection deviation,
+summing all the pseudo-pure-mode wavefield components in equation \ref{eq:pseudosvxy} or \ref{eq:pseudosvx}
+partially achieves wave-mode separation and produces a scalar wavefield dominated by
+the energy of qSV-waves. This will be demonstrated in the numerical examples.
+Second, the pseudo-pure-mode wave equations are easier to calculate
+than the original elastic wave equation because they have no terms of mixed partial
+derivatives. More importantly, the summation of the horizontal components further simplifies the
+wave equations and reduces the number of parameters needed for scalar qSV-wave extrapolation. 
+These features are undoubtedly useful for performing multicomponent seismic imaging and
+inversion that mainly use wavefield kinematics when it is necessary to include anisotropy.
+
+\subsection{Removing of the residual qP-waves}
+
+The pseudo-pure-mode qSV-wave equations are derived by using a similarity transformation
+that projects the vector displacement wavefield onto the isotropic reference of
+the qSV-wave's polarization direction. 
+As demonstrated in Figure 1b, even for a very strong VTI medium, the difference bewteen the two directions
+is generally quite small in most propagation directions.
+However, this difference does result in some qP-wave energy remaining in the pseudo-pure-mode
+scalar qSV-wave fields. To remove the residual qP-waves, we have to correct the projection deviations before summing the pseudo-pure-mode wavefield components.
+ For heterogeneous VTI media, this can be implemented through nonstationary spatial
+ filtering defined by the projection deviations \cite[]{cheng.kang:2014}.
+
+The filters can be constructed once the qSV-wave polarization directions
+are determined by solving the Christoffel equation based on local medium properties for every grid point.
+However, this operation is computationally expensive, especially in 3D heterogeneous TI media.
+We may further reduce the computational cost using a mixed-domain integral algorithm
+using a low-rank approximation \cite[]{cheng.fomel:2014}.
+We shall observe in the examples that the residual qP-waves in the pseudo-pure-mode qSV-wave fields
+ are quite weak, even if the anisotropy becomes strong.
+As explained in \cite{cheng.kang:2014}, it is not necessary to apply the filtering
+ at every time step for many applications, such as RTM.
+
+In the case of transverse isotropy with a tilted symmetry axis (TTI), the elastic tensor loses its simple form
+and the terminology ``in-plane polarization" and ``cross-plane polarization" is to be preferred for qSV- and qSH-waves.
+The generalization of pseudo-pure-mode wave equation to a TTI medium
+involves no additional physics but greatly complicates the algebra. One strategy for deriving the wave
+ equations is to locally rotate the coordinate system so that its third axis coincides with
+ the symmetry axis; and to make use of the simple form of the wave equation in VTI media (see
+ \mbox{\cite{cheng.kang:2014}}).
+ Alternatively, we may use some new strategies to derive more numerically stable pseudo-pure-mode wave
+ equations for TTI media with strong variations of parameters
+ \mbox{\cite[]{zhang:2011,bube:2012}}. Moreover, the filter to correct the projection deviation can
+also be constructed with the coordinate rotation. 
+
+%\input{examples}
+\section{EXAMPLES}
+
+The first example compares the synthetic elastic displacement and pseudo-pure-mode qSV-wave field
+in 2D homogeneous VTI media with different degrees of anisotropy.
+Then we demonstrate the computation of 3D synthetic pseudo-pure-mode qSV-wave and pure-mode SH-wave fields for a two-layer VTI model.
+Finally, we investigate the performance of the pseudo-pure-mode qSV-wave propagator on the 2D BP TTI model.
+We sue a tenth-order explicit finite-difference scheme on regular grids to solve the involved wave equations.
+Point sources are located at the centers of the models.
+
+\subsection{2D homogeneous VTI models}
+
+For comparison, we first apply the original elastic wave equation
+to synthesize wavefields in a homogeneous VTI medium with weak anisotropy, in which
+$v_{p0}=3000 m/s$, $v_{s0}=1500 m/s$, $\epsilon=0.1$, and $\delta=0.05$. 
+Figures 2a and 2b display the horizontal and vertical components of the displacement
+wavefields at 0.3 s.
+Then we try to simulate the propagation of a single-mode qSV-wave using the pseudo-pure-mode qSV-wave equation
+(namely equation \ref{eq:pseudosvx}).
+ Figure 2c and 2d display the two components of the pseudo-pure-mode qSV-wave fields,
+ and Figure 2e displays their summation, i.e., the pseudo-pure-mode scalar qSV-wave
+ fields with weak residual qP-wave energy.
+We observe that, in most propagation directions, the polarities are almost reversed for the wavefronts of qP-waves
+in the two components of the pseudo-pure-mode qSV-wave fields.
+This contributes to suppressing the qP-wave energy through summation of the two components. 
+Compared with the theoretical wavefront curves (see Figure 2f) calculated
+using group velocities
+ and angles, pseudo-pure-mode scalar qSV-wave fields have correct kinematics for
+  both qP- and qSV-waves.
+ We finally remove residual qP-waves by applying the filtering to correct the projection deviation
+ and get completely separated scalar qSV-wave fields (Figure 2g).
+
+\inputdir{homovti.eta0.05}
+\multiplot{7}{Elasticx,Elasticz,PseudoPureSVx,PseudoPureSVz,PseudoPureSV,WF,PseudoPureSepSV}{width=0.2\textwidth}
+{
+Synthesized wavefields in a VTI medium with weak anisotropy: (a) x- and
+(b) z-components synthesized by original elastic wave equation; (c) x- and
+(d) z-components synthesized by pseudo-pure-mode qSV-wave equation; (e) pseudo-pure-mode scalar qSV-wave fields; 
+(f) kinematics of qV- and qSV-waves and (g) separated scalar qSV-wave fields.
+}
+
+\inputdir{homovti.eta0.5}
+
+Next, we consider wavefield modeling in a homogeneous VTI medium with strong
+anisotropy,
+in which $v_{p0}=3000 m/s$, $v_{s0}=1500 m/s$, $\epsilon=0.25$, and $\delta=-0.25$.
+Figure 3 displays the wavefield snapshots at 0.3 s synthesized both by using the original
+elastic wave equation
+and the pseudo-pure-mode qSV-wave equation. Note that the pseudo-pure-mode
+  qSV-wave equation still accurately
+  represents the qP- and qSV-waves' kinematics. Although the residual qP-wave energy
+  becomes stronger when
+  the degree of anisotropy increases, the filtering step still removes them effectively.
+It takes CPU times of 0.15 and 0.06 seconds to extrapolate the elastic and pseudo-pure-mode qSV-wave fields for one time-step, respectively.
+But it takes about 8.2 seconds to remove the residual qP-wave from the pseudo-pure-mode qSV-wave fields using wavenumber-domain filtering.
+In fact, separating the pure-mode wavefield from the elastic and pseudo-pure-mode wavefields has almost the same computational cost for TI media \cite[]{cheng.kang:2014}.
+
+  \multiplot{7}{Elasticx,Elasticz,PseudoPureSVx,PseudoPureSVz,PseudoPureSV,WF,PseudoPureSepSV}{width=0.2\textwidth}
+  {
+  The same plots as Figure 2 but for a VTI medium with stronger anisotropy.
+   }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{3D two-layer VTI model}
+
+\inputdir{twolayer3dvti}
+
+Figure 4 shows an example of simulating the propagation of pseudo-pure-mode qSV-wave fields in a 3D two-layer
+ VTI  model (see Figure 4a), with
+$v_{p0}=2500 m/s$, $v_{s0}=1200 m/s$, $\epsilon=0.25$, $\delta=-0.25$ and $\gamma=0.3$ in the first layer, and
+$v_{p0}=3600 m/s$, $v_{s0}=1800 m/s$, $\epsilon=0.2$, $\delta=0.1$ and $\gamma=0.05$ in the second layer.
+We propagate the 3D pseudo-pure-mode qSV-wave fields using equation~\ref{eq:pseudosvxy}.
+Figure 4d displays the pseudo-pure-mode scalar qSV-wave fields resulting from the summation of 
+the horizontal (Figure 4b) and vertical (Figure 4c) components, namely $\overline{u}_{xy}$ and $\overline{u}_z$.
+We see that the qS-waves dominate the scalar wavefields in energy. 
+As shown in Figure 5, we also obtain pure-mode scalar SH-wave fields either using the summation of the horizontal components
+synthesized by using the pseudo-pure-mode wave equation~\ref{eq:pseudosh} or directly using the scalar wave equation, i.e., equation~\ref{eq:pseudosh1}. 
+
+\multiplot{4}{vp0Interf,PseudoPureSVxyInterf,PseudoPureSVzInterf,PseudoPureSVInterf}{width=0.45\textwidth}
+{
+Synthesized wavefield snapshots in a 3D two-layer VTI model using equation~\ref{eq:pseudosvxy} : (a) vertical velocity of qSV-wave,
+(b) horizontal component $\overline{u}_{xy}$ and (c) vertical component $\overline{u}_z$ of the pseudo-pure-mode qSV-wave fields,
+(d) pseudo-pure-mode scalar qSV-wave fields. The dash line indicates the interface.
+}
+
+\multiplot{3}{SHxInterf,SHyInterf,SHInterf}{width=0.45\textwidth}
+%\plot{SH}{width=0.45\textwidth}
+{
+Synthesized wavefield snapshots in a 3D two-layer VTI model using equation~\ref{eq:pseudosh}: (a) x- and (b) y-components
+of the pseudo-pure-mode wavefields, (c) pure-mode scalar SH-wave fields calculated as the summation of the two horizontal 
+components of the pseudo-pure-mode wavefields. Note that the same scalar wavefields are obtained if we directly
+use the scalar wave equation for SH-waves, namely equation~\ref{eq:pseudosh1}.
+}
+
+\subsection{BP 2007 TTI model}
+
+Finally, we demonstrate pseudo-pure-mode qSV-wave propagation in the 2D BP TTI model (see Figure 6).
+The space grid size is 12.5 m and the time step is 1 ms for
+high-order finite-difference operators. Here the vertical velocities for the qSV-wave are set to
+ half of the qP-wave velocities.
+Figure 7 displays snapshots of wavefield components at the time of 1.4s
+synthesized by using the original elastic wave equation and the pseudo-pure-mode qSV-wave equation.
+In the elastic wavefields, we observe strong scattered and mode-converted energy in the region with a rapidly varying 
+anisotropic symmetry axis direction.
+For comparison, in Figures 7c and 7d, we also show the separated qP- and qSV-wave scalar fields
+	obtained using the approach proposed by \cite{cheng.fomel:2014}.
+Not that in the pseudo-pure-mode qSV-wave fields (see Figure 7g), the incident qP-waves as well as
+scattered and converted qP-waves are effectively suppressed.
+The spatial filtering appears to remove residual qP-waves and accurately separates qSV-wave data
+(including the converted qP-qSV waves) from the pseudo-pure-mode wavefields in this complex model (Figure 7h).
+Vertical slices through the scalar fields (Figure 8) provide further proof to evaluate the performance
+of the proposed qS-wave propagators.
+As we observed, in heterogeneous rough zones with strong variations in tilt angle,
+there are differences between the elastic and pseudo-pure-mode qSV-wave fields.
+Fortunately, the pseudo-pure-mode qSV-wave equation still captures the shear wave kinematics to a great extent.
+For a single time-step, it respectively takes CPU times of 2.71 and 1.22 seconds to extrapolate the elastic
+and pseudo-pure-mode qSV-wave fields,
+and about 7.50 seconds to separate the qSV-wave fields from both wavefields using low-rank approximate
+mixed-domain integral operations based on the qSV-wave's polarization directions \cite[]{cheng.fomel:2014}.
+
+\inputdir{bptti2007}
+\multiplot{4}{vp0,epsi,del,the}{width=0.3\textwidth}
+{
+Partial region of the 2D BP TTI model: (a) vertical qP-wave velocity, Thomsen coefficients
+(b) $\epsilon$ and (c) $\delta$, and (d) the tilt angle $\theta$. 
+}
+
+\multiplot{8}{Elasticx,Elasticz,ElasticSepP,ElasticSepSV,PseudoPureSVx,PseudoPureSVz,PseudoPureSV,PseudoPureSepSV}{width=0.25\textwidth}
+{
+Synthesized wavefield snapshots on BP 2007 TTI model using original elastic wave equation and pseudo-pure-mode 
+qSV-wave equation respectively: 
+(a) x- and (b) z-components synthesized by elastic wave equation; 
+(c) scalar qP- and (d) scalar qSV-wave fields separated from the elastic wavefield; 
+(e) x- and (f) z-components synthesized by pseudo-pure-mode qSV-wave equation; 
+(g) pseudo-pure-mode scalar qSV-wave field and (h) pure-mode scalar qSV-wave field separated from the pseudo-pure-mode qSV-wave field.
+}
+\multiplot*{3}{ElasticSepSVwave,PseudoPureSVwave,PseudoPureSepSVwave}{width=0.45\textwidth}
+{
+Vertical slices through the scalar wavefields at $x=50.5$ km in Figure 7: (a) qSV-wave separated from the elastic wavefield;
+ (b) pseudo-pure-mode qSV-wave; (c) pure qSV-wave separated from the pseudo-pure-mode wavefield.
+}
+
+
+%\input{discussion}
+\section{Discussion}
+
+\subsection{Kinematic and dynamic accuracy}
+The similarity transformation to the Christoffel equation preserves the kinematics of the qS-waves,
+but inevitably change the phases and amplitudes in their wavefields.
+Accordingly, the pseudo-pure-mode wave equations may change the radiation from a point source 
+(as demonstrated in the examples),
+and even distort the amplitude variation with offset (AVO).
+In other word, they do not honor the dynamic elasticity of the waves in real media.
+In fact, other simplified forms of the elastic wave equation, such as acoustic or pseudo-acoustic wave equations 
+and the pure-mode approximate wave equations, have similar limitations
+\cite[]{barnes:2009,operto:2009,cheng.kang:2014,shang:2015}.
+For heterogeneous rough media, i.e., when scales for variations in the elastic parameters are small compared with the wavelengths
+	of the wavefield, the acoustic approximation is no longer reliable \cite[]{cance:2015}.
+The pseudo-pure-mode wave equations have similar limitations for shear-wave modeling in high-contrast TI media. 
+However, these limitations are not doomed to be catastrophic, because velocity models 
+containing high-wavenumber components are rarely involved at most stages of seismic imaging and inversion for real data.
+
+\subsection{Challenge for anisotropy with lower symmetry}
+Unlike the well-behaved qP-wave mode, the qS-wave modes do not consistently polarize as a function of propagation direction,
+and thus cannot be designated as SV- and SH-waves, except in isotropic and TI media \cite[]{winterstein:1990}.
+To demonstrate the difficulties of extending the methodology in this paper to anisotropic media with symmetry lower than TI,
+we first compare the polarization features of qS-waves in typical TI and orthorhombic anisotropic rocks.
+Figure 9 shows polarizations of qS1- and qS2-waves in a VTI material - Mesaverde shale \cite[]{thomsen:1986},
+which has the parameters $v_{p0}=3.749$ km/s, $v_{s0}=2.621$ km/s, $\epsilon=0.225$, $\delta=0.078$, and $\gamma=0.100$.
+The polarization directions are either horizontal or vertical (in the symmetry plane), 
+so that we can definitely designate qS-waves as qSV- and SH-wave modes, except at the kiss singularity.
+Figure 10 shows polarizations of qS1- and qS2-waves in a ``standard" orthorhombic anisotropic material - vertically fractured shale 
+\cite[]{Schoenberg:1997}, which has the parameters $v_{p0}=2.437$, $v_{s0}=1.265$ km/s, $\epsilon_1=0.329$,
+$\epsilon_2=0.258$, $\delta_1=0.083$, $\delta_2=-0.078$, $\delta_3=-0.106$, $\gamma_1=0.182$ and $\gamma_2=0.0455$.
+The qS-waves polarize in a very complicated way and have point singularities in many propagation directions.
+
+Shear-wave modeling is complicated by the presence of the shear-wave singularities.
+As investigated by \cite{crampin.yedlin:1981},
+a TI material only has line and kiss singularities, while other anisotropic materials excluding those with triclinic symmetry
+(e.g., orthorhombic and monoclinic anisotropic materials) have point singularities in many propagation directions.
+Line singularities occur only at a fixed angle from the symmetry axis and cause
+no distortion of phase velocity surfaces or polarization phenomena.
+For kiss singularities (along the direction of symmetry axis), 
+qS-wave polarizations vary rapidly in their vicinity but are well-behaved because there is no distortion in phase-velocity surfaces.
+These features facilitate the derivations of pseudo-pure-mode qSV-wave and pure-mode SH-wave equations for TI media.
+For directions near point singularities, however, the polarization of plane qS-waves changes very rapidly,
+and amplitudes and polarizations of qS-waves with curved wavefronts behave quite anomalously.
+Therefore, although pseudo-pure-mode qP-wave equations exist for general anisotropic media, 
+it may be more confusing than helpful to extend the proposed pseudo-pure-mode qS-wave equations
+to symmetry systems lower than TI.
+
+\inputdir{PolarizationMatlab}
+\multiplot{2}{polar3dvtiS1,polar3dvtiS2}{width=0.5\textwidth}
+{
+Polarization vectors of 3D qS-waves in a VTI material (Mesaverde shale): (a) qS1-wave; (b) qS2-wave.
+}
+
+\multiplot{2}{polar3dortS1,polar3dortS2}{width=0.5\textwidth}
+{
+Polarization vectors of 3D qS-waves in an orthorhombic anisotropic material: (a) qS1-wave; (b) qS2-wave.
+}
+
+%\input{conclusions}
+\section{Conclusions}
+By applying two different similarity transformations to the original Christoffel equation, which aim to project the vector displacement
+wavefields onto the isotropic SV- and SH-waves' polarization directions, we have derived the pseudo-pure-mode qSV-wave equation
+and the pure-mode SH-wave equation for 2D and 3D heterogeneous TI media, respectively.
+These equations are simpler than the original elastic wave equation and involve less material parameters, which reduces computational
+cost at least by half if the finite-difference scheme is used in practice.
+The theoretical analysis and numerical examples have demonstrated that, the pseudo-pure-mode
+qS-wave propagators for TI media have the following features:
+First, the qSV-wave equations honor the kinematics for both qP and qSV modes, while the pure-mode SH-wave equation guarantees
+the kinematics for the scalar SH-wave.
+Second, although qP-waves still remain in the pseudo-pure-mode qSV-wave fields, their horizontal and vertical components have almost
+opposite polarities in most propagation directions. As a result, the summation of all components
+produces a pseudo-pure-mode scalar qSV-wave field with very weak qP-wave energy. 
+Third, the non-SH parts in the pseudo-pure-mode vector SH-wave field have completely opposite polarities,
+and thus are thoroughly removed from the scalar SH-wave field once all components are summed.
+In addition, 
+a filtering step taking into account the polarization deviation can be used to thoroughly remove the residual qP-waves
+for pseudo-pure-mode scalar qSV-wave extrapolation.
+These features indicate the potential of the proposed qS-wave propagators for developing promising seismic imaging and
+inversion algorithms in heterogeneous TI media.
+Like the pseudo-acoustic or pseudo-pure-mode qP-wave equations,
+the proposed pseudo-pure-mode qS-wave equations take into account ``scalar anisotropy" and may distort the dynamic elasticity
+of the real anisotropic media.
+
+%\input{acknowledge}
+\section{ACKNOWLEDGMENTS}
+Thanks to the support of the National Natural Science Foundation of China (No.41474099)
+and Shanghai Natural Science Foundation (No.14ZR1442900). 
+We appreciate Sergey Fomel, Paul Fowler, Chenlong Wang and Tengfei Wang
+for helpful discussions in the later period of this study.
+Constructive comments by Richard Bale, Alexey Stovas, Joe Dellinger and an anonymous reviewer
+are much appreciated.
+We thank SEG and BP for making the 2D TTI model available,
+and the authors and developers of \emph{Madagascar} for providing resources
+for reproducible computational experiments.
+
+%\newpage
+%\twocolumn
+\bibliographystyle{seg}
+\bibliography{reference}
