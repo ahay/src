@@ -255,11 +255,11 @@ int main(int argc, char *argv[])
 	sf_complex *sendbufc, *recvbufc;
 	MPI_Comm comm=MPI_COMM_WORLD;
 
+	sf_init(argc, argv);
+
 	MPI_Init(&argc, &argv);
 	MPI_Comm_rank(comm, &cpuid);
 	MPI_Comm_size(comm, &numprocs);
-
-	sf_init(argc, argv);
 
 #ifdef _OPENMP
 #pragma omp parallel
@@ -272,48 +272,42 @@ int main(int argc, char *argv[])
 	gettimeofday(&tim, NULL);
 	tstart=tim.tv_sec+(tim.tv_usec/1000000.0);
 
-	if (!sf_getint("taper",&taper)) taper=0; /* tapering in the frequency domain */
+	if (!sf_getint("taper",&taper)) taper=0; /* if not 0, tapering in the frequency domain */
 	if (!sf_getfloat("thresh",&thresh)) thresh=0.92; /* tapering threshold */
 
-	if(!sf_getbool("wantwf", &wantwf)) wantwf=false;
-    if(!sf_getbool("verb", &verb)) verb=false;
-	if(!sf_getint("pad1", &pad1)) pad1=1;
-	/* padding factor on the first axis */
+	if(!sf_getbool("wantwf", &wantwf)) wantwf=false; /* if true, output wavefield of a certain (snapshot=) shot */
+    if(!sf_getbool("verb", &verb)) verb=false; /* verbosity flag */
+	if(!sf_getint("pad1", &pad1)) pad1=1; /* padding factor on the first axis */
 
-	if(!sf_getint("nb", &nb)) sf_error("Need nb= ");
-	if(!sf_getfloat("srctrunc", &srctrunc)) srctrunc=0.4;
-	if(!sf_getint("rectx", &rectx)) rectx=2;
-	if(!sf_getint("rectz", &rectz)) rectz=2;
-	if(!sf_getint("repeat", &repeat)) repeat=2;
+	if(!sf_getint("nb", &nb)) sf_error("Need nb= "); /* padded boundary width */
+	if(!sf_getfloat("srctrunc", &srctrunc)) srctrunc=0.4; /* source truncation */
+	if(!sf_getint("rectx", &rectx)) rectx=2; /* source smoothing in x-direction */
+	if(!sf_getint("rectz", &rectz)) rectz=2; /* source smoothing in z-direction */
+	if(!sf_getint("repeat", &repeat)) repeat=2; /* repeat numbers of source smoothing */
 
-	if(!sf_getint("scalet", &scalet)) scalet=1;
-	if(!sf_getint("snap", &snap)) snap=100;
-	/* interval of the output wavefield */
-	if(!sf_getint("snapshot", &snapshot)) snapshot=0;
-	/* print out the wavefield snapshots of this shot */
-    if(!sf_getint("nds", &nds)) sf_error("Need nds=!");
+	if(!sf_getint("scalet", &scalet)) scalet=1; /* wavefield storage interval */
+	if(!sf_getint("snap", &snap)) snap=100; /* wavefield output interval when wantwf=y */ 
+	if(!sf_getint("snapshot", &snapshot)) snapshot=0; /* print out the wavefield snapshots of this shot */
+    if(!sf_getint("nds", &nds)) sf_error("Need nds=!"); /* source interval in number of dx */
     
-    /* source and receiver positions */
-	if(!sf_getint("gpz", &gpz)) sf_error("Need gpz=");
-	if(!sf_getint("spx", &spx)) sf_error("Need spx=");
-	if(!sf_getint("spz", &spz)) sf_error("Need spz=");
-    
-    /* tau parameters */
-    if(!sf_getint("ntau", &ntau)) sf_error("Need ntau=");
-    if(!sf_getfloat("dtau", &dtau)) sf_error("Need dtau=");
-    if(!sf_getfloat("tau0", &tau0)) sf_error("Need tau0=");
+	if(!sf_getint("gpz", &gpz)) sf_error("Need gpz="); /* depth of geophone */
+	if(!sf_getint("spx", &spx)) sf_error("Need spx="); /* horizontal location of source */
+	if(!sf_getint("spz", &spz)) sf_error("Need spz="); /* depth of source */
 
-	/* geometry parameters */
-	if(!sf_getint("rnx", &rnx)) sf_error("Need rnx=");
-	if(!sf_getint("ndr", &ndr)) ndr=1;
-	if(!sf_getint("nr0", &nr0)) nr0=0;
+	if(!sf_getint("rnx", &rnx)) sf_error("Need rnx="); /* coverage area of one shot */
+	if(!sf_getint("ndr", &ndr)) ndr=1; /* receiver interval */
+	if(!sf_getint("nr0", &nr0)) nr0=0; /* receiver starting point in rnx */
+    
+    if(!sf_getint("ntau", &ntau)) sf_error("Need ntau="); /* number of time-shift */
+    if(!sf_getfloat("dtau", &dtau)) sf_error("Need dtau="); /* interval of time-shift */
+    if(!sf_getfloat("tau0", &tau0)) sf_error("Need tau0="); /* origin of time-shift */
 
 	/* input/output files */
 	Fdat=sf_input("--input");
 	Fimg1=sf_output("--output");
-    Fimg2=sf_output("Fimg2");
-    Fsrc=sf_input("Fsrc");
-    Fvel=sf_input("Fpadvel");
+    Fimg2=sf_output("Fimg2"); /* standard RTM output */
+    Fsrc=sf_input("Fsrc"); /* source */
+    Fvel=sf_input("Fpadvel"); /* velocity */
 
 	if(wantwf){
 		Ffwf=sf_output("Ffwf");
@@ -388,7 +382,7 @@ int main(int argc, char *argv[])
     sf_warning("cpuid=%d, numprocs=%d, nspad=%d", cpuid, numprocs, nspad);
 	sf_warning("nt=%d, dt=%g, scalet=%d, wfnt=%d, wfdt=%g",nt, dt, scalet, wfnt, wfdt);
 	sf_warning("vnx=%d, nx=%d, dx=%g, nb=%d, rnx=%d", vnx, nx, dx, nb, rnx);
-	sf_warning("nr=%d, ndr=%d, nr0=%g", nr, ndr, nr0);
+	sf_warning("nr=%d, ndr=%d, nr0=%d", nr, ndr, nr0);
 	sf_warning("nz=%d, rnz=%d, dz=%g, z0=%g", nz, rnz, dz, z0);
 	sf_warning("spx=%d, spz=%d, gpz=%d", spx, spz, gpz);
 	sf_warning("ns=%d, ds=%g, s0=%g", ns, ds, s0);
@@ -411,6 +405,8 @@ int main(int argc, char *argv[])
 	rr=sf_floatalloc(nzx);
 	reflgen(nz, nx, spz, spx, rectz, rectx, repeat, rr);
     
+	if(cpuid==0) sf_warning("check1");
+	if(cpuid==1) sf_warning("check11");
     fwf=sf_floatalloc3(rnz, rnx, wfnt);
     bwf=sf_floatalloc3(rnz, rnx, wfnt);
     img1=sf_floatalloc3(rnz, vnx, ntau);
@@ -418,6 +414,8 @@ int main(int argc, char *argv[])
     mig1=sf_floatalloc3(rnz, rnx, ntau);
     mig2=sf_floatalloc2(rnz, rnx);
     
+	if(cpuid==0) sf_warning("check2");
+	if(cpuid==1) sf_warning("check21");
     ccr=sf_floatalloc2(rnz, rnx);
     sill=sf_floatalloc2(rnz, rnx);
     
@@ -426,6 +424,8 @@ int main(int argc, char *argv[])
 	cwavem=sf_complexalloc(nk);
 	icfft2_allocate(cwavem);
 
+	if(cpuid==0) sf_warning("check3");
+	if(cpuid==1) sf_warning("check31");
 	if (taper!=0) {
 		dkz = 1./(fnz*dz); kz0 = -0.5/dz;
 		dkx = 1./(fnx*dx); kx0 = -0.5/dx;
@@ -467,14 +467,17 @@ int main(int argc, char *argv[])
         }
     }
 
-	path1=sf_getstring("path1");
-	path2=sf_getstring("path2");
+	path1=sf_getstring("path1"); /* path of left matrices './mat/left' */
+	path2=sf_getstring("path2"); /* path of right matrices './mat/left' */
 	if(path1==NULL) path1="./mat/left";
 	if(path2==NULL) path2="./mat/right";
 
+	if(cpuid==0) sf_warning("check4");
+	if(cpuid==1) sf_warning("check41");
 	/* shot loop */
 	for (iturn=0; iturn*numprocs<nspad; iturn++){
 		is=iturn*numprocs+cpuid;
+		sf_warning("is/ns=%d/%d", is, ns);
         
         /* read data */
 		if(cpuid==0){

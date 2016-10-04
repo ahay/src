@@ -40,11 +40,11 @@ int main(int argc, char* argv[])
 
 	sf_file Fv, Fq, Ftau, Fw, Fdat, Fimg, Finv=NULL, Ferr=NULL, Fgrad;
 
+	sf_init(argc, argv);
+
 	MPI_Init(&argc, &argv);
 	MPI_Comm_rank(comm, &mpipar.cpuid);
 	MPI_Comm_size(comm, &mpipar.numprocs);
-
-	sf_init(argc, argv);
 
 	Fv=sf_input("Fvel"); /* velocity model */
 	Fq=sf_input("Fq"); /* quality factor */

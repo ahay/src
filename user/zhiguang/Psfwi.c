@@ -29,7 +29,7 @@ bool verb, first;
 int cpuid, numprocs, nturn; // mpi-related
 int nz, nx, nzx, padnz, padnx, padnzx, nb, nt; // dimension
 int ns, ds_v, s0_v, sz, nr, dr_v, rz, *nr2, *r02, *r0_v; // acquisition
-int frectx, frectz, interval, wnt; // wavefield
+int frectx, frectz, interval, wnt, nsource; // wavefield
 int waterz, wtn1, wtn2, woffn1, woffn2, grectx, grectz; // gradient
 int drectx, drectz, nrepeat, ider; // smoothing kernel
 
@@ -37,9 +37,11 @@ float dt, dt2, dx2, dz2, wdt, wdt2; // wavefield
 float wt1, wt2, woff1, woff2, gain, scaling, swap; // gradient
 float ***dd, **vv, *ww, *bc, **weight, threshold[2]; // arrays
 
+int **shift, **sign, encode=0; // phase encoding
+
 MPI_Comm comm=MPI_COMM_WORLD;
 
-void gradient_init(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpar, sf_vec_s array, sf_fwi_s fwipar, bool verb1)
+void gradient_init(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpar, sf_vec_s array, sf_fwi_s fwipar, sf_encode encodepar, bool verb1)
 /*< initialize >*/
 {
 	int iturn, is;
@@ -74,6 +76,7 @@ void gradient_init(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpar, 
 	frectz=soupar->frectz;
 	interval=acpar->interval;
 	wnt=(nt-1)/interval+1;
+	nsource=soupar->nsource;
 	
 	dt=acpar->dt;
 	dt2=dt*dt;
@@ -130,17 +133,24 @@ void gradient_init(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpar, 
 	threshold[0]=fwipar->v1;
 	threshold[1]=fwipar->v2;
 
+	/* phase encoding codes */
+	if(encodepar!=NULL){
+		encode=1;
+		shift=encodepar->shift;
+		sign=encodepar->sign;
+	}
+
 	return;
 }
 
 void gradient_standard(float *x, float *fcost, float *grad)
 /*< standard velocity gradient >*/
 {
-	int ix, iz, is, ir, it, wit, iturn;
+	int ix, iz, is, ir, it, wit, iturn, isou;
 	int sx, rx;
 
 	float temp, dmax;
-	float **p0, **p1, **p2, **term, **tmparray, *rr, ***wave, **pp;
+	float **p0, **p1, **p2, **term, **tmparray, **rr, ***wave, **pp;
 	float *sendbuf, *recvbuf;
 
 	/* residual file */
@@ -163,7 +173,7 @@ void gradient_standard(float *x, float *fcost, float *grad)
 	p1=sf_floatalloc2(padnz, padnx);
 	p2=sf_floatalloc2(padnz, padnx);
 	term=sf_floatalloc2(padnz, padnx);
-	rr=sf_floatalloc(padnzx);
+	rr=sf_floatalloc2(padnzx, nsource);
 	wave=sf_floatalloc3(nz, nx, wnt);
 	pp=sf_floatalloc2(nt, nr);
 
@@ -177,7 +187,7 @@ void gradient_standard(float *x, float *fcost, float *grad)
 		memset(pp[0], 0., nr*nt*sizeof(float));
 		
 		sx=s0_v+is*ds_v;
-		source_map(sx, sz, frectx, frectz, padnx, padnz, padnzx, rr);
+		source_map2(sx, sz, frectx, frectz, padnx, padnz, padnzx, rr);
 
 		wit=0;
 		/* forward propagation */
@@ -205,18 +215,35 @@ void gradient_standard(float *x, float *fcost, float *grad)
 
 			/* laplacian operator */
 			laplace(p1, term, padnx, padnz, dx2, dz2);
-			
+				
 			/* load source */
+			for(isou=0; isou<nsource; isou++){
+				if(encode==0){
 #ifdef _OPENMP 
 #pragma omp parallel for \
 			private(ix,iz) \
 			shared(term,rr,padnx,padnz,ww,it)
 #endif
-			for(ix=0; ix<padnx; ix++){
-				for(iz=0; iz<padnz; iz++){
-					term[ix][iz] += rr[ix*padnz+iz]*ww[it];
-				}
-			}
+					for(ix=0; ix<padnx; ix++){
+						for(iz=0; iz<padnz; iz++){
+							term[ix][iz] += rr[isou][ix*padnz+iz]*ww[it];
+						}
+					}
+				}else{
+					if(it>shift[is][isou]){
+#ifdef _OPENMP 
+#pragma omp parallel for \
+			private(ix,iz) \
+			shared(term,rr,padnx,padnz,ww,it,shift,sign)
+#endif
+						for(ix=0; ix<padnx; ix++){
+							for(iz=0; iz<padnz; iz++){
+								term[ix][iz] += rr[isou][ix*padnz+iz]*ww[it-shift[is][isou]]*sign[is][isou];
+							} // iz
+						} // ix
+					} // it >shift
+				} // encodepar==NULL
+			} // end of isou
 
 			/* update */
 #ifdef _OPENMP 
@@ -371,10 +398,10 @@ void gradient_standard(float *x, float *fcost, float *grad)
 	free(*p0); free(p0); free(*p1); free(p1);
 	free(*p2); free(p2); free(*pp); free(pp);
 	free(**wave); free(*wave); free(wave);
-	free(rr); free(*term); free(term);
+	free(*rr); free(rr); free(*term); free(term);
 }
 
-void fwi(sf_file Fdat, sf_file Finv, sf_file Ferr, sf_file Fgrad, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpar, sf_vec_s array, sf_fwi_s fwipar, sf_optim optpar, bool verb1, int seislet)
+void fwi(sf_file Fdat, sf_file Finv, sf_file Ferr, sf_file Fmod, sf_file Fgrad, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpar, sf_vec_s array, sf_fwi_s fwipar, sf_optim optpar, sf_encode encodepar, bool verb1)
 /*< fwi >*/
 {
 	int iter=0, flag;
@@ -384,7 +411,7 @@ void fwi(sf_file Fdat, sf_file Finv, sf_file Ferr, sf_file Fgrad, sf_mpi *mpipar
 	FILE *fp;
 
 	/* initialize */
-	gradient_init(Fdat, mpipar, soupar, acpar, array, fwipar, verb1);
+	gradient_init(Fdat, mpipar, soupar, acpar, array, fwipar, encodepar, verb1);
 
 	/* gradient type */
 	gradient=gradient_standard;
@@ -418,6 +445,7 @@ void fwi(sf_file Fdat, sf_file Finv, sf_file Ferr, sf_file Fgrad, sf_mpi *mpipar
 	}
 	optpar->err[0]=optpar->fk;
 	if (optpar->err_type==1) optpar->err[optpar->nerr/2]=swap;
+	if(mpipar->cpuid==0) sf_floatwrite(x, nzx, Fmod);
 
 	iter=0;
 	if(mpipar->cpuid==0){
@@ -444,7 +472,8 @@ void fwi(sf_file Fdat, sf_file Finv, sf_file Ferr, sf_file Fgrad, sf_mpi *mpipar
 		lbfgs_save(nzx, x, grad, optpar->sk, optpar->yk, optpar);
 		line_search(nzx, x, grad, direction, gradient, optpar, threshold, &flag, mpipar->cpuid, 1);
 		optpar->err[iter+1]=optpar->fk;
-		if (optpar->err_type==1) optpar->err[optpar->nerr/2+iter+1]=swap;
+		if(optpar->err_type==1) optpar->err[optpar->nerr/2+iter+1]=swap;
+		if(mpipar->cpuid==0) sf_floatwrite(x, nzx, Fmod);
 		
 		if(mpipar->cpuid==0){
 			l2norm(nzx, grad, &optpar->gk_norm);
@@ -475,5 +504,3 @@ void fwi(sf_file Fdat, sf_file Finv, sf_file Ferr, sf_file Fgrad, sf_mpi *mpipar
 
 	return;
 }
-
-

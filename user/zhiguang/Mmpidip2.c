@@ -33,11 +33,12 @@ int main (int argc, char *argv[])
     int cpuid, numprocs, nrpad, iturn;
     MPI_Comm comm=MPI_COMM_WORLD;
 
+    sf_init(argc,argv);
+
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(comm, &cpuid);
     MPI_Comm_size(comm, &numprocs);
 
-    sf_init(argc,argv);
     in = sf_input ("--input");
     out = sf_output ("--output");
 

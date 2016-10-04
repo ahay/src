@@ -22,16 +22,16 @@
 #include "fwi_commons.h"
 /*^*/
 
-void forward_modeling(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpar, sf_vec_s array, bool verb)
+void forward_modeling(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpar, sf_vec_s array, sf_encode encodepar, bool verb)
 /*< acoustic forward modeling >*/
 {
-	int ix, iz, is, ir, it;
+	int ix, iz, is, ir, it, isou;
 	int sx, rx, sz, rz, frectx, frectz;
 	int nz, nx, padnz, padnx, padnzx, nt, nr, nb;
 
 	float dx2, dz2, dt2, dt;
 	float **vv, **dd;
-	float **p0, **p1, **p2, **term, **tmparray, *rr;
+	float **p0, **p1, **p2, **term, **tmparray, **rr;
 
 	FILE *swap;
 
@@ -64,7 +64,7 @@ void forward_modeling(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpa
 	p1=sf_floatalloc2(padnz, padnx);
 	p2=sf_floatalloc2(padnz, padnx);
 	term=sf_floatalloc2(padnz, padnx);
-	rr=sf_floatalloc(padnzx);
+	rr=sf_floatalloc2(padnzx, soupar->nsource);
 
 	/* padding and convert vector to 2-d array */
 	pad2d(array->vv, vv, nz, nx, nb);
@@ -78,7 +78,7 @@ void forward_modeling(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpa
 		memset(p2[0], 0., padnzx*sizeof(float));
 		
 		sx=acpar->s0_v+is*acpar->ds_v;
-		source_map(sx, sz, frectx, frectz, padnx, padnz, padnzx, rr);
+		source_map2(sx, sz, frectx, frectz, padnx, padnz, padnzx, rr);
 
 		for(it=0; it<nt; it++){
 			if(verb) sf_warning("Modeling is=%d; it=%d;", is+1, it);
@@ -93,11 +93,23 @@ void forward_modeling(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpa
 			laplace(p1, term, padnx, padnz, dx2, dz2);
 			
 			/* load source */
-			for(ix=0; ix<padnx; ix++){
-				for(iz=0; iz<padnz; iz++){
-					term[ix][iz] += rr[ix*padnz+iz]*array->ww[it];
-				}
-			}
+			for (isou=0; isou<soupar->nsource; isou++){
+				if(encodepar==NULL){
+					for(ix=0; ix<padnx; ix++){
+						for(iz=0; iz<padnz; iz++){
+							term[ix][iz] += rr[isou][ix*padnz+iz]*array->ww[it];
+						}
+					}
+				}else{
+					if(it>encodepar->shift[is][isou]){
+						for(ix=0; ix<padnx; ix++){
+							for(iz=0; iz<padnz; iz++){
+								term[ix][iz] += rr[isou][ix*padnz+iz]*array->ww[it-encodepar->shift[is][isou]]*encodepar->sign[is][isou];
+							} // iz
+						} // ix
+					} // it >shift
+				} // encodepar==NULL
+			} // end of isou
 
 			/* update */
 			for(ix=0; ix<padnx; ix++){
@@ -137,7 +149,7 @@ void forward_modeling(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpa
 	free(*p0); free(p0); free(*p1); free(p1);
 	free(*p2); free(p2); free(*vv); free(vv);
 	free(*dd); free(dd);
-	free(rr); free(*term); free(term);
+	free(*rr); free(rr); free(*term); free(term);
 }
 
 void forward_modeling_q(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpar, sf_vec_q array, bool verb)

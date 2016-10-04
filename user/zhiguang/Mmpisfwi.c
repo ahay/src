@@ -1,4 +1,4 @@
-/* Acoustic Forward Modeling, FWI, and RTM (FWI has the options of seislet regularization and smoothing kernels) */
+/* Acoustic Forward Modeling, FWI, and RTM (FWI has the options of seislet regularization, smoothing kernels, simultaneous source, and static phase encoding) */
 /*
  Copyright (C) 2016 University of Texas at Austin
  
@@ -25,7 +25,7 @@
 
 int main(int argc, char* argv[])
 {
-	int function, seislet;
+	int function, seislet, encode;
 	bool verb;
 
 	sf_mpi mpipar;
@@ -35,16 +35,17 @@ int main(int argc, char* argv[])
 	sf_fwi_s fwipar;
 	sf_optim optpar=NULL;
 	sf_seis seispar=NULL;
+	sf_encode encodepar=NULL;
 
 	MPI_Comm comm=MPI_COMM_WORLD;
 
-	sf_file Fv, Fw, Fdat, Fimg, Finv=NULL, Ferr=NULL, Fgrad, Fdip=NULL;
+	sf_file Fv, Fw, Fdat, Fimg, Finv=NULL, Ferr=NULL, Fmod=NULL, Fgrad, Fdip=NULL, Fcode=NULL;
+
+	sf_init(argc, argv);
 
 	MPI_Init(&argc, &argv);
 	MPI_Comm_rank(comm, &mpipar.cpuid);
 	MPI_Comm_size(comm, &mpipar.numprocs);
-
-	sf_init(argc, argv);
 
 	Fv=sf_input("Fvel"); /* velocity model */
 	Fw=sf_input("Fwavelet"); /* wavelet */
@@ -58,6 +59,8 @@ int main(int argc, char* argv[])
 	/* if 1, forward modeling; if 2, FWI; if 3, RTM */
 	if(!sf_getint("seislet", &seislet)) seislet=0;
 	/* if 0, no seislet regularization; if 1, seislet regularization */
+	if(!sf_getint("encode", &encode)) encode=0;
+	/* if 0, no phase encoding; if 1, phase encoding */
 
 	if(!sf_histint(Fv, "n1", &acpar->nz)) sf_error("No n1= in Fv");
 	if(!sf_histint(Fv, "n2", &acpar->nx)) sf_error("No n2= in Fv");
@@ -104,6 +107,17 @@ int main(int argc, char* argv[])
 		sf_floatread(seispar->dip[0], acpar->nz*acpar->nx, Fdip);
 		sf_fileclose(Fdip);
 	}
+	
+	if(encode==1){ // phase encoding
+		encodepar=(sf_encode)sf_alloc(1, sizeof(*encodepar));
+		Fcode=sf_input("Fcode"); /* polarity and time shift codes */
+		encodepar->code=sf_floatalloc2(soupar->nsource, acpar->ns);
+		encodepar->shift=sf_intalloc2(soupar->nsource, acpar->ns);
+		encodepar->sign=sf_intalloc2(soupar->nsource, acpar->ns);
+		sf_floatread(encodepar->code[0], soupar->nsource*acpar->ns, Fcode);
+		encoding_extract(encodepar->code, encodepar->shift, encodepar->sign, soupar->nsource, acpar->ns, acpar->dt);
+		sf_fileclose(Fcode);
+	}
 
 	/* get prepared */
 	preparation_s(Fv, Fw, acpar, soupar, array, seispar);
@@ -128,7 +142,7 @@ int main(int argc, char* argv[])
 		sf_putstring(Fdat, "label3", "Shot");
 		sf_putstring(Fdat, "unit3", "km");
 
-		forward_modeling(Fdat, &mpipar, soupar, acpar, array, verb);
+		forward_modeling(Fdat, &mpipar, soupar, acpar, array, encodepar, verb);
 
 		sf_fileclose(Fdat);
 	}
@@ -159,6 +173,7 @@ int main(int argc, char* argv[])
 		if(!fwipar->onlygrad){
 			Finv=sf_output("output"); /* FWI result */
 			Ferr=sf_output("Ferr"); /* data misfit convergence curve */
+			Fmod=sf_output("Fmod"); /* all iteration models */
 		}
 		Fgrad=sf_output("Fgrad"); /* FWI gradient at first iteration */
 
@@ -185,7 +200,7 @@ int main(int argc, char* argv[])
 			/* if 0, true misfit function; if 1, both smoothing kernel and original L2 norm misfits */
 			optpar->c1=1e-4;
 			optpar->c2=0.9;
-			if(optpar->err_type=0) optpar->nerr=optpar->niter+1;
+			if(optpar->err_type==0) optpar->nerr=optpar->niter+1;
 			else optpar->nerr=2*(optpar->niter+1);
 			optpar->err=sf_floatalloc(optpar->nerr);
 		}
@@ -210,13 +225,29 @@ int main(int argc, char* argv[])
 			sf_putint(Ferr, "n2", 1);
 			sf_putfloat(Ferr, "d2", 1);
 			sf_putfloat(Ferr, "o2", 0);
+
+			sf_putint(Fmod, "n1", acpar->nz);
+			sf_putfloat(Fmod, "d1", acpar->dz);
+			sf_putfloat(Fmod, "o1", acpar->z0);
+			sf_putstring(Fmod, "label1", "Depth");
+			sf_putstring(Fmod, "unit1", "km");
+			sf_putint(Fmod, "n2", acpar->nx);
+			sf_putfloat(Fmod, "d2", acpar->dx);
+			sf_putfloat(Fmod, "o2", acpar->x0);
+			sf_putstring(Fmod, "label2", "Distance");
+			sf_putstring(Fmod, "unit2", "km");
+			sf_putint(Fmod, "n3", optpar->niter+1);
+			sf_putfloat(Fmod, "d3", 1);
+			sf_putfloat(Fmod, "o3", 0);
+			sf_putstring(Fmod, "label3", "Iteration");
 		}
 
-		fwi(Fdat, Finv, Ferr, Fgrad, &mpipar, soupar, acpar, array, fwipar, optpar, verb, seislet);
+		fwi(Fdat, Finv, Ferr, Fmod, Fgrad, &mpipar, soupar, acpar, array, fwipar, optpar, encodepar, verb);
 
 		if(!fwipar->onlygrad){
 			sf_fileclose(Finv);
 			sf_fileclose(Ferr);
+			sf_fileclose(Fmod);
 		}
 		sf_fileclose(Fgrad);
 	}
@@ -236,7 +267,7 @@ int main(int argc, char* argv[])
 		sf_putstring(Fimg, "label2", "Distance");
 		sf_putstring(Fimg, "unit2", "km");
 
-		rtm(Fdat, Fimg, &mpipar, soupar, acpar, array, verb);
+		rtm(Fdat, Fimg, &mpipar, soupar, acpar, array, encodepar, verb);
 
 		sf_fileclose(Fimg);
 	}

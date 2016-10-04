@@ -179,6 +179,13 @@ typedef struct sf_seislet{
 } *sf_seis;
 /*^*/
 
+typedef struct sf_encoding{
+	float **code;
+	int **shift;
+	int **sign;
+} *sf_encode;
+/*^*/
+
 const float c0=-205./72, c1=8./5, c2=-1./5, c3=8./315, c4=-1./560;
 
 /* seislet regularization */
@@ -382,6 +389,19 @@ void preparation_q(sf_file Fv, sf_file Fq, sf_file Ftau, sf_file Fw, sf_acqui ac
 	free(qq);
 }
 
+void encoding_extract(float **code, int **shift, int **sign, int nsource, int ns, float dt)
+/*< extract time shift and sign >*/
+{
+	int is, isou;
+
+	for(is=0; is<ns; is++){
+		for(isou=0; isou<nsource; isou++){
+			shift[is][isou]=fabs(code[is][isou])/dt;
+			sign[is][isou]=(code[is][isou]>0)?1:-1;
+		}
+	}
+}
+
 void pad2d(float *vec, float **array, int nz, int nx, int nb)
 /*< convert a vector to an array >*/
 {
@@ -422,12 +442,10 @@ void source_map(int sx, int sz, int rectx, int rectz, int padnx, int padnz, int 
 	diff[0]=false; diff[1]=false;
 	box[0]=false; box[1]=false;
 
-	for (i=0; i<padnzx; i++)
+	for(i=0; i<padnzx; i++)
 		rr[i]=0.;
-	for (i=0; i<nsource; i++){
-		j=(sx+i*dsource)*padnz+sz;
-		rr[j]=1.;
-	}
+	j=sx*padnz+sz;
+	rr[j]=1.;
 
 	for (i=0; i<2; i++){
 		if(rect[i] <=1) continue;
@@ -437,6 +455,40 @@ void source_map(int sx, int sz, int rectx, int rectz, int padnx, int padnz, int 
 			sf_smooth2(tr,i0,s[i],diff[i],rr);
 		}
 		sf_triangle_close(tr);
+	}
+}
+
+void source_map2(int sx, int sz, int rectx, int rectz, int padnx, int padnz, int padnzx, float **rr)
+/*< generate multiple source map >*/
+{
+	int i, j, i0, is;
+	int n[2], s[2], rect[2];
+	bool diff[2], box[2];
+	sf_triangle tr;
+
+	n[0]=padnz; n[1]=padnx;
+	s[0]=1; s[1]=padnz;
+	rect[0]=rectz; rect[1]=rectx;
+	diff[0]=false; diff[1]=false;
+	box[0]=false; box[1]=false;
+
+	for(i=0; i<nsource; i++){
+		for(j=0; j<padnzx; j++)
+			rr[i][j]=0.;
+		j=(sx+i*dsource)*padnz+sz;
+		rr[i][j]=1.;
+	}
+
+	for (is=0; is<nsource; is++){
+		for (i=0; i<2; i++){
+			if(rect[i] <=1) continue;
+			tr=sf_triangle_init(rect[i], n[i], box[i]);
+			for(j=0; j<padnzx/n[i]; j++){
+				i0=sf_first_index(i,j,2,n,s);
+				sf_smooth2(tr,i0,s[i],diff[i],rr[is]);
+			}
+			sf_triangle_close(tr);
+		}
 	}
 }
 

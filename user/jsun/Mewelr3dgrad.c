@@ -1,4 +1,4 @@
-/* 3D elastic recursive integral time extrapolation using KISS-FFT
+/* 3D elastic recursive integral time extrapolation using shared-memory parallel FFT (with gradient term)
    sou wavelet  (nx,ny,nc,nt)
    rec data     (nx,ny,nc,nt)
    sou geometry (nc,nx,ny)

@@ -6,12 +6,12 @@
              Cheng et al. (15th IWSA, 2012);
              Cheng and Kang (SEG Abstract, 2012);
              Kang and Cheng (SEG Abstract, 2012)
-             Wang et al.(SEG Abstract, 2012)      
+             Wang et al.(SEG Abstract, 2012)
 
-   Copyright (C) 2012 Tongji University, Shanghai, China 
+   Copyright (C) 2012 Tongji University, Shanghai, China
 
    Authors: Jiubing Cheng, Tengfei Wang and Wei Kang
-     
+
    This code is first written by Tengfei Wang at Tongji University,
    and then optimzied by Jiubing Cheng for Madagascar version at BEG,
    University of Texas at Austin.
@@ -20,19 +20,21 @@
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-             
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
-                   
+
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <rsf.h>
+#ifdef _OPENMP
 #include <omp.h>
+#endif
 
 /* prepared head files by myself */
 #include "_fd.h"
@@ -68,7 +70,7 @@ int main(int  argc,char **argv)
 
     float f0=40;         // main frequency of the wavelet(usually 30Hz)
     float t0=0.04;       // time delay of the wavelet(if f0=30Hz, t0=0.04s)*/
-    float A=1.0;           // the amplitude of wavelet 
+    float A=1.0;           // the amplitude of wavelet
 
     clock_t t1, t2, t3;
     float   timespent;
@@ -159,7 +161,7 @@ int main(int  argc,char **argv)
         zero3float(p1,nzpad,nxpad,nypad);
         zero3float(p2,nzpad,nxpad,nypad);
         zero3float(p3,nzpad,nxpad,nypad);
-    
+
         float*** r1=sf_floatalloc3(nzpad,nxpad,nypad);
         float*** r2=sf_floatalloc3(nzpad,nxpad,nypad);
         float*** r3=sf_floatalloc3(nzpad,nxpad,nypad);
@@ -203,7 +205,7 @@ int main(int  argc,char **argv)
 
         if(it==ns-1) // output snapshot
         {
-        // output iLine 
+        // output iLine
 		for(i=0;i<ny;i++)
         {
             im=i+bd;
