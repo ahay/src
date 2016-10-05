@@ -48,12 +48,12 @@ int main(int argc, char* argv[])
     if (!sf_getint("roll",&roll)) sf_error("Need roll="); /* acquisition pattern: 0-> fixed-spread, 1-> towed-streamer to the negative */
 
     /* double check dimension */
-    if (sou_nx > (nx-sou_ox)/sou_jx) {
-        sou_nx = (nx-sou_ox)/sou_jx;
+    if (sou_nx > (nx-sou_ox)/sou_jx+1) {
+        sou_nx = (nx-sou_ox)/sou_jx+1;
         sf_warning("Setting sou_nx to %d",sou_nx);
     }
-    if (sou_ny > 1 && sou_ny > (ny-sou_oy)/sou_jy) {
-        sou_ny = (ny-sou_oy)/sou_jy;
+    if (sou_ny > 1 && sou_ny > (ny-sou_oy)/sou_jy+1) {
+        sou_ny = (ny-sou_oy)/sou_jy+1;
         sf_warning("Setting sou_ny to %d",sou_nx);
     }
 
