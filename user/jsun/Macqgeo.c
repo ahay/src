@@ -36,10 +36,10 @@ int main(int argc, char* argv[])
     if (!sf_getint("sou_z", &sou_z )) sf_error("Need sou_z=" ); /* source position in depth      */
     if (!sf_getint("sou_ox",&sou_ox)) sf_error("Need sou_ox="); /* source starting location in x */
     if (!sf_getint("sou_oy",&sou_oy)) sf_error("Need sou_oy="); /* source starting location in y */
-    if (!sf_getint("sou_jx",&sou_jx)) sf_error("Need sou_jx="); /* source interval in x          */
-    if (!sf_getint("sou_jy",&sou_jy)) sf_error("Need sou_jy="); /* source interval in y          */
     if (!sf_getint("sou_nx",&sou_nx)) sf_error("Need sou_nx="); /* number of sources in x        */
     if (!sf_getint("sou_ny",&sou_ny)) sf_error("Need sou_ny="); /* number of sources in y        */
+    if (!sf_getint("sou_jx",&sou_jx)) sou_jx = (nx-sou_ox)/(sou_nx-1); /* source interval in x          */
+    if (!sf_getint("sou_jy",&sou_jy)) sou_jy = (ny-sou_oy)/(sou_ny-1); /* source interval in y          */
     if (!sf_getint("rec_z", &rec_z )) sf_error("Need rec_z=" ); /* receiver position in depth */
     if (!sf_getint("rec_nx",&rec_nx)) sf_error("Need rec_nx="); /* number of receivers in x   */
     if (!sf_getint("rec_ny",&rec_ny)) sf_error("Need rec_ny="); /* number of receivers in y   */
@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
     }
     if (sou_ny > 1 && sou_ny > (ny-sou_oy)/sou_jy+1) {
         sou_ny = (ny-sou_oy)/sou_jy+1;
-        sf_warning("Setting sou_ny to %d",sou_nx);
+        sf_warning("Setting sou_ny to %d",sou_ny);
     }
 
     /* do the work */
