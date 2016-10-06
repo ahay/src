@@ -145,6 +145,9 @@ To the reproducible documents collection:
   (Sun)
 * xjtu/gpufwi: A graphics processing unit implementation of
   time-domain full-waveform inversion (Yang, Gao, and Wang)
+* tongji/qswave: Simulating propagation of separated wave modes in
+  general anisotropic media, Part II: qS-wave propagators (Cheng and
+  Kang)
 
 To SCons:
 

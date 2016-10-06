@@ -1110,7 +1110,7 @@ int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool freq
     if (freq_scal) {
         n1 = nz;
         n2 = nx;
-        n3 = kiss_fft_next_fast_size(nt);
+        n3 = kiss_fft_next_fast_size(wfnt);
         wvfld_visc_f = sf_floatalloc(n1*n2*n3);
         wvfld_disp_f = sf_floatalloc(n1*n2*n3);
         ratio_f      = sf_floatalloc(n1*n2*n3);
@@ -1131,33 +1131,35 @@ int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool freq
     } else {
         wvfld_visc_f = sf_floatalloc(nz*nx);
         wvfld_disp_f = sf_floatalloc(nz*nx);
-//        n1 = kiss_fft_next_fast_size(nz);
-//        n2 = kiss_fft_next_fast_size(nx);
-//        wvfld_visc_f = sf_floatalloc(n1*n2);
-//        wvfld_disp_f = sf_floatalloc(n1*n2);
-//        ratio_f      = sf_floatalloc(n1*n2);
-//        cc = sf_complexalloc(n1*n2);
-//#ifdef _OPENMP
-//#pragma omp parallel
-//        {nth = omp_get_num_threads();}
-//#endif
-//        cfg1  = (kiss_fft_cfg *) sf_alloc(nth,sizeof(kiss_fft_cfg));
-//        icfg1 = (kiss_fft_cfg *) sf_alloc(nth,sizeof(kiss_fft_cfg));
-//        cfg2  = (kiss_fft_cfg *) sf_alloc(nth,sizeof(kiss_fft_cfg));
-//        icfg2 = (kiss_fft_cfg *) sf_alloc(nth,sizeof(kiss_fft_cfg));
-//
-//        for (ith=0; ith<nth; ith++) {
-//            cfg1[ith] = kiss_fft_alloc(n1,0,NULL,NULL);
-//            icfg1[ith]= kiss_fft_alloc(n1,1,NULL,NULL);
-//            cfg2[ith] = kiss_fft_alloc(n2,0,NULL,NULL);
-//            icfg2[ith]= kiss_fft_alloc(n2,1,NULL,NULL);
-//        }
-//
-//        trace2 = sf_complexalloc2(n2,nth);
-//        ctrace2= (kiss_fft_cpx **) trace2;
-//
-//        tmp = (kiss_fft_cpx *) sf_alloc(n2*n1,sizeof(kiss_fft_cpx));
-//        wt =  1.0/(n2*n1);
+        if(0){
+        n1 = kiss_fft_next_fast_size(nz);
+        n2 = kiss_fft_next_fast_size(nx);
+        wvfld_visc_f = sf_floatalloc(n1*n2);
+        wvfld_disp_f = sf_floatalloc(n1*n2);
+        ratio_f      = sf_floatalloc(n1*n2);
+        cc = sf_complexalloc(n1*n2);
+#ifdef _OPENMP
+#pragma omp parallel
+        {nth = omp_get_num_threads();}
+#endif
+        cfg1  = (kiss_fft_cfg *) sf_alloc(nth,sizeof(kiss_fft_cfg));
+        icfg1 = (kiss_fft_cfg *) sf_alloc(nth,sizeof(kiss_fft_cfg));
+        cfg2  = (kiss_fft_cfg *) sf_alloc(nth,sizeof(kiss_fft_cfg));
+        icfg2 = (kiss_fft_cfg *) sf_alloc(nth,sizeof(kiss_fft_cfg));
+
+        for (ith=0; ith<nth; ith++) {
+            cfg1[ith] = kiss_fft_alloc(n1,0,NULL,NULL);
+            icfg1[ith]= kiss_fft_alloc(n1,1,NULL,NULL);
+            cfg2[ith] = kiss_fft_alloc(n2,0,NULL,NULL);
+            icfg2[ith]= kiss_fft_alloc(n2,1,NULL,NULL);
+        }
+
+        trace2 = sf_complexalloc2(n2,nth);
+        ctrace2= (kiss_fft_cpx **) trace2;
+
+        tmp = (kiss_fft_cpx *) sf_alloc(n2*n1,sizeof(kiss_fft_cpx));
+        wt =  1.0/(n2*n1);
+        }
     }
 
     /* start the work */
@@ -1252,7 +1254,7 @@ int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool freq
             for (i3=0; i3<n3; i3++) {
                 for (i2=0; i2<n2; i2++) {
                     for (i1=0; i1<n1; i1++) {
-                        if (i3<nt) {
+                        if (i3<wfnt) {
                             cc[(i3*n2+i2)*n1+i1] = tmp_inp[(i3*nx+i2)*nz+i1];
                         } else {
                             cc[(i3*n2+i2)*n1+i1] = sf_cmplx(0.,0.); 
@@ -1294,7 +1296,7 @@ int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool freq
             for (i3=0; i3<n3; i3++) {
                 for (i2=0; i2<n2; i2++) {
                     for (i1=0; i1<n1; i1++) {
-                        if (i3<nt) {
+                        if (i3<wfnt) {
                             cc[(i3*n2+i2)*n1+i1] = tmp_inp[(i3*nx+i2)*nz+i1];
                         } else {
                             cc[(i3*n2+i2)*n1+i1] = sf_cmplx(0.,0.); 
@@ -1374,7 +1376,7 @@ int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool freq
 #ifdef _OPENMP
 #pragma omp parallel for private(i3,i2,i1) default(shared)
 #endif
-            for (i3=0; i3<nt; i3++) {
+            for (i3=0; i3<wfnt; i3++) {
                 for (i2=0; i2<nx; i2++) {
                     for (i1=0; i1<nz; i1++) {
 #ifdef SF_HAS_COMPLEX_H
@@ -1650,7 +1652,7 @@ int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool freq
             for (i3=0; i3<n3; i3++) {
                 for (i2=0; i2<n2; i2++) {
                     for (i1=0; i1<n1; i1++) {
-                        if (i3<nt) {
+                        if (i3<wfnt) {
                             cc[(i3*n2+i2)*n1+i1] = tmp_inp[(i3*nx+i2)*nz+i1];
                         } else {
                             cc[(i3*n2+i2)*n1+i1] = sf_cmplx(0.,0.); 
@@ -1692,7 +1694,7 @@ int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool freq
             for (i3=0; i3<n3; i3++) {
                 for (i2=0; i2<n2; i2++) {
                     for (i1=0; i1<n1; i1++) {
-                        if (i3<nt) {
+                        if (i3<wfnt) {
                             cc[(i3*n2+i2)*n1+i1] = tmp_inp[(i3*nx+i2)*nz+i1];
                         } else {
                             cc[(i3*n2+i2)*n1+i1] = sf_cmplx(0.,0.); 
@@ -1772,7 +1774,7 @@ int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool freq
 #ifdef _OPENMP
 #pragma omp parallel for private(i3,i2,i1) default(shared)
 #endif
-            for (i3=0; i3<nt; i3++) {
+            for (i3=0; i3<wfnt; i3++) {
                 for (i2=0; i2<nx; i2++) {
                     for (i1=0; i1<nz; i1++) {
 #ifdef SF_HAS_COMPLEX_H
