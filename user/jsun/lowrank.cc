@@ -170,8 +170,8 @@ int lowrank_rank()
 
     srand48(seed);
 
-    //iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
-    iC( ddlowrank(ms,ns,js,sample,(double)eps,npk,lidx,ridx,mid) );
+    if(ms[2]>1) iC( ddlowrank(ms,ns,js,sample,(double)eps,npk,lidx,ridx,mid) );
+    else iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
 
     nrank = mid.n();
     return nrank;
