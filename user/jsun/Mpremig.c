@@ -130,9 +130,11 @@ int main(int argc, char* argv[])
     A   = sf_floatalloc(n_srcs);
     //if (!sf_getints("spx",spx,n_srcs)) sf_error("Need spx!"); /* shot position x */
     if (!sf_getints("spz",spz,n_srcs)) sf_error("Need spz!"); /* shot position z */
-    if (!sf_getfloats("f0",f0,n_srcs)) sf_error("Need f0! (e.g. 30Hz)");   /*  wavelet peak freq */
-    if (!sf_getfloats("t0",t0,n_srcs)) sf_error("Need t0! (e.g. 0.04s)");  /*  wavelet time lag */
-    if (!sf_getfloats("A",A,n_srcs)) sf_error("Need A! (e.g. 1)");     /*  wavelet amplitude */
+    if (!diff) {
+        if (!sf_getfloats("f0",f0,n_srcs)) sf_error("Need f0! (e.g. 30Hz)");   /*  wavelet peak freq */
+        if (!sf_getfloats("t0",t0,n_srcs)) sf_error("Need t0! (e.g. 0.04s)");  /*  wavelet time lag */
+        if (!sf_getfloats("A",A,n_srcs)) sf_error("Need A! (e.g. 1)");     /*  wavelet amplitude */
+    }
     if (!sf_getint("shtbgn", &shtbgn)) sf_error("Need shot starting location on grid!");
     if (!sf_getint("shtend", &shtend)) sf_error("Need shot ending location on grid!");
     if (!sf_getint("shtint", &shtint)) sf_error("Need shot interval on grid!");
@@ -242,7 +244,7 @@ int main(int argc, char* argv[])
     if (adj) {
         sf_floatread(dat[0][0],gpl*nt*shtnum,Fi);
         if (NULL!=Fd_v) sf_floatread(dat_v[0][0],gpl_v*nt*shtnum,Fd_v);
-        if (diff) sf_floatread(dat1[0][0],gpl_v*nt*shtnum,Fi1);
+        if (diff) sf_floatread(dat1[0][0],gpl*nt*shtnum,Fi1);
     } else {
         sf_floatread(img,nz1*nx1,Fi);
     }
