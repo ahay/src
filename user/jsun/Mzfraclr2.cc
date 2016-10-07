@@ -84,13 +84,13 @@ int sample(vector<int>& rs, vector<int>& cs, ZpxNumMat& res)
 	    /* absorbing boundary */
             if (abc==0) {
               if (iz < nbt)
-		phf *= exp(-pow(ct*(nbt-iz)*abs(kz[j]/k),2));
+		phf *= exp(-pow(ct*(nbt-iz)*abs((kz[j]==0)?0:kz[j]/k),2));
               else if (iz > nz-1-nbb)
-		phf *= exp(-pow(cb*(iz-nz+1+nbb)*abs(kz[j]/k),2));
+		phf *= exp(-pow(cb*(iz-nz+1+nbb)*abs((kz[j]==0)?0:kz[j]/k),2));
               if (ix < nbl)
-		phf *= exp(-pow(cl*(nbl-ix)*abs(kx[j]/k),2));
+		phf *= exp(-pow(cl*(nbl-ix)*abs((kx[j]==0)?0:kx[j]/k),2));
               else if (ix > nx-1-nbr)
-		phf *= exp(-pow(cr*(ix-nx+1+nbr)*abs(kx[j]/k),2));
+		phf *= exp(-pow(cr*(ix-nx+1+nbr)*abs((kx[j]==0)?0:kx[j]/k),2));
             } else {
               if (iz < nbt)
 		phf *= exp(-pow(ct*(nbt-iz),2));

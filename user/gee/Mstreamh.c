@@ -101,7 +101,7 @@ int main(int argc, char* argv[])
     }
 
     a[0] *= jump;
-    bound (dim, n0, n, a, aa); 
+    bound (dim, false, n0, n, a, aa); 
     a[0] /= jump;
     
     maxlag = 0;

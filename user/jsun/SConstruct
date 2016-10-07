@@ -2,30 +2,25 @@ import os, sys, re, string
 sys.path.append('../../framework')
 import bldutil
 
-progs = 'fftwave1dd cfftwave1dd cfftwave1in fftwave2p fftwave3p cfftwave2 cfftwave3 cfftexpmig2 fftexp0test fd2d cfftexp2 cfftexp2test fdtacc wcfftexp2 wcfftexp2adj cfftwave2nsps cfftwave2mix2 wavemixop lrosrtm2 lroslsrtm2 stack2d cstack2d fftexp0test lrlsrtm2mpi imagsrc zolsrtm2 initwave2 correctwave2 lrwave2 cmatrix cfftwave1d zortmgmres claplac psp pspmig premig cfftwave2omp lrtti2de clfd1 clfd2 ofd2_test swnorm pspp passive2d swvarimax ccrsym timerev2d lstri2d cubesrc cfftwave2taper fftwave2taper compensate compensatexf '
-#revolve_driver
-
-# pawave2 cpawave2 cpswave2
-# cfftwave2dhalfft
-# icfftwave2 cfftwave1dtest cfftwave2test
-# cfftwave1dinit cfftwave2nspstest
-# lriso2de lrelasiso
-# cfftwave2tt lasthope cfftwave2one waveadjtest cfftwave2abc fftwave2abc
-# pawave2 cpawave2 cpswave2 icfftwave2 cfftwave1dtest
+progs = 'fftwave1dd cfftwave1dd cfftwave1in fftwave2p fftwave3p cfftwave2 cfftwave3 cfftexpmig2 fftexp0test fd2d cfftexp2 cfftexp2test fdtacc wcfftexp2 wcfftexp2adj cfftwave2nsps cfftwave2mix2 wavemixop lrosrtm2 lroslsrtm2 stack2d cstack2d fftexp0test lrlsrtm2mpi imagsrc zolsrtm2 initwave2 correctwave2 lrwave2 cmatrix cfftwave1d zortmgmres claplac psp pspmig premig cfftwave2omp lrtti2de clfd1 clfd2 ofd2_test swnorm pspp passive2d swvarimax ccrsym timerev2d lstri2d cubesrc cfftwave2taper fftwave2taper compensate compensatexf acqgeo'
+# vweks3d2
+# revolve_driver
+# waveadjtest
 
 libprop = 'fftwave2omp fftwave3omp eweks3d vweks3d xcor2 xcor3 xcor3d mutter3 ewelr3d ewedc3d ewdlr3d eweks3dsecd ewelr3dgrad ewedc3dgrad'
 
-ccprogs = 'tilr2 ortholr3 cortholr3 cisolr2 cisolr2rev cisolr3 ctilr2 cisolr2grad cisolr2abc cisolr2abc1 cisolr1 canisolr2 canisolr2abc fraclr2 zfraclr2 fraclr2test tilrzone ortholrzone zortholr3 zanisolr2 zanisolr2abc clfdc1 clfdc2 clfdc1-bak zisolr2abc clfdc1frac'
-# ewelr3 ewedc3p ewedc3s ewdlr3 ewelr3grad ewedc3pgrad ewedc3sgrad vwelr3
-
-# abclr2 isolr2sta isolr2abc  cfraclr2
-# eiktest eiktest2 cisolr1eik eiksol cfraclr2 rfraclr2 cisolr2twostep
-# cisolr2hyb icisolr2
+ccprogs = 'tilr2 ortholr3 cortholr3 cisolr2 cisolr2rev cisolr3 ctilr2 cisolr2grad cisolr2abc cisolr2abc1 cisolr1 canisolr2 canisolr2abc fraclr2 zfraclr2 fraclr2test tilrzone ortholrzone zortholr3 zanisolr2 zanisolr2abc clfdc1 clfdc2 clfdc1-bak zisolr2abc clfdc1frac ewelr3 ewedc3p ewedc3s ewdlr3 ewelr3grad'
+# ewedc3pgrad ewedc3sgrad cfftrtm3
+# vwelr3
+# eiktest eiktest2 cisolr1eik eiksol
 
 mpi_progs = 'mpilsrtm mpiewertm mpirtmop mpilsrtmgmres mpilsrtmcg mpircvrtm mpiqrtm mpipfwi'
-# mpiwave2 mpiwave3 mpifftexp1 mpiwave2kiss mpiwave3kiss mpifftexp1kiss
+#for distributed FFTW3
+#mpiwave2 mpiwave3 mpifftexp1 mpiwave2kiss mpiwave3kiss mpifftexp1kiss
 
-pyprogs = 'fft'
+mpicxx_progs = 'mpicfftrtm'
+
+pyprogs = 'geopar'
 pymods = ''
 
 try:  # distributed version
@@ -36,8 +31,6 @@ except: # local version
     root = None
     SConscript('../lexing/SConstruct')
 
-src = Glob('[a-z]*.c')
-
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
             LIBS=[env.get('DYNLIB','')+'rsf'])
@@ -46,19 +39,29 @@ fftw = env.get('FFTW')
 if fftw:
     env.Prepend(CPPDEFINES=['SF_HAS_FFTW'])
 
+src = Glob('[a-z]*.c')
 for source in src:
     inc = env.RSF_Include(source,prefix='')
     obj = env.StaticObject(source)
     env.Ignore(inc,inc)
     env.Depends(obj,inc)
 
-mpicc = env.get('MPICC')
-mpi_src = Glob('Q[a-z]*.c')
-for source in mpi_src:
+csrc = Glob('[a-z]*.cc')
+for source in csrc:
     inc = env.RSF_Include(source,prefix='')
+    obj = env.StaticObject(source)
     env.Ignore(inc,inc)
-    obj = env.StaticObject(source,CC=mpicc)
     env.Depends(obj,inc)
+
+mpicc = env.get('MPICC')
+mpicxx = env.get('MPICXX')
+mpi_src = Glob('Q[a-z]*.c')
+if mpicc:
+    for source in mpi_src:
+        inc = env.RSF_Include(source,prefix='')
+        env.Ignore(inc,inc)
+        obj = env.StaticObject(source,CC=mpicc)
+        env.Depends(obj,inc)
 
 mains = Split(progs+' '+libprop)
 for prog in mains:
@@ -69,12 +72,12 @@ for prog in mains:
         env.Install(bindir,prog)
 
 mpi_mains = Split(mpi_progs)
-#env.Prepend(LIBS=['fftw3f_mpi'])
 for prog in mpi_mains:
     sources = ['M' + prog]
     bldutil.depends(env,sources,'M'+prog)
     if mpicc:
         env.StaticObject('M'+prog+'.c',CC=mpicc)
+        #for distributed FFTW3
         #prog = env.Program(prog,map(lambda x: x + '.o',sources),CC=mpicc,LIBS=env.get('LIBS')+['fftw3f_mpi'])
         prog = env.Program(prog,map(lambda x: x + '.o',sources),CC=mpicc)
     else:
@@ -94,13 +97,32 @@ if lapack:
         libsxx.extend(lapack)
     env.Prepend(LIBS=libsxx)
 
+#ccsubs = 'lowrank.cc fftomp.c rtmutil.c ksutil.c revolve.c'
 ccmains = Split(ccprogs)
 for prog in ccmains:
-    sources = ['M' + prog]
+    sources = ['M' + prog + '.cc']
+#   if prog == 'cfftrtm3':
+#       sources += Split(ccsubs)
     if lapack:
-        prog = env.Program(prog,map(lambda x: x + '.cc',sources))
+        prog = env.Program(prog,sources)
     else:
         prog = env.RSF_Place('sf'+prog,None,var='LAPACK',package='lapack')
+    if root:
+        env.Install(bindir,prog)
+
+
+##################################################################################################################
+# To use sfmpicfftrtm, one needs to obtain the source file revolve.c from http://dl.acm.org/citation.cfm?id=347846
+##################################################################################################################
+xxsubs = 'lowrank fftomp rtmutil ksutil revolve'
+mpicxx_mains = Split(mpicxx_progs)
+for prog in mpicxx_mains:
+    sources = ['M' + prog] + Split(xxsubs)
+    if FindFile('revolve.c','.') and mpicxx:
+        env.StaticObject('M'+prog+'.cc',CXX=mpicxx)
+        prog = env.Program(prog,map(lambda x: x + '.o',sources),CXX=mpicxx)
+    else:
+        prog = env.RSF_Place('sf'+prog,None,var='MPICXX',package='mpi')
     if root:
         env.Install(bindir,prog)
 
@@ -114,6 +136,20 @@ for prog in Split('cmatmult2'):
     env.Program(sources,PROGPREFIX='',PROGSUFFIX='.x')
 
 ######################################################################
+# PYTHON METAPROGRAMS (python API not needed)
+######################################################################
+
+if root: # no compilation, just rename
+    pymains = Split(pyprogs)
+    exe = env.get('PROGSUFFIX','')
+    for prog in pymains:
+        binary = os.path.join(bindir,'sf'+prog+exe)
+        env.InstallAs(binary,'M'+prog+'.py')
+        env.AddPostAction(binary,Chmod(str(binary),0755))
+    for mod in Split(pymods):
+        env.Install(pkgdir,mod+'.py')
+
+######################################################################
 # SELF-DOCUMENTATION
 ######################################################################
 
@@ -122,7 +158,9 @@ if root:
     main = 'sf%s.py' % user
     
     docs = map(lambda prog: env.Doc(prog,'M' + prog),mains+mpi_mains) +  \
-           map(lambda prog: env.Doc(prog,'M%s.cc' % prog,lang='c++'),ccmains) 
+           map(lambda prog: env.Doc(prog,'M'+prog+'.py',lang='python'),pymains) + \
+           map(lambda prog: env.Doc(prog,'M%s.cc' % prog,lang='c++'),ccmains+mpicxx_mains) 
+          
     env.Depends(docs,'#/framework/rsf/doc.py')	
     doc = env.RSF_Docmerge(main,docs)
     env.Install(pkgdir,doc)

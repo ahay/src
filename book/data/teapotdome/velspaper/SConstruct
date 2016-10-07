@@ -1,0 +1,114 @@
+from rsf.proj import *
+import os, sys
+
+#SConscript('../Fetchpaper/SConstruct')
+SConscript('../scdeconpaper/SConstruct')
+
+mypython=(os.popen("which python")).read()
+print "mypython=",mypython
+
+Flow(['vvol','vvol.dat'],['../Fetchpaper/npr3_dmo.vel','interpvel.py'],
+     '''
+     %s ${SOURCES[1]} 
+        nxline=188  fxline=1 
+	ninline=345 finline=1
+	maxt=3001 dt=2
+     '''%mypython)
+
+xline=120
+minclip=8800
+maxclip=20000
+
+Result('vel_xline%d' % xline,'vvol','''
+       window min2=%d max2=%d | clip2 lower=%d upper=%d |
+       grey color=j scalebar=y allpos=y pclip=100 bias=%d
+            title="Velocity at xline %d" label1=Time unit1=ms label2=Inline unit2=
+       ''' % (xline, xline, minclip, maxclip, minclip, xline))
+
+inline=141
+Result('vel_inline%d' % inline,'vvol','''
+       window min3=%d max3=%d | clip2 lower=%d upper=%d |
+       grey color=j scalebar=y allpos=y pclip=100 bias=%d
+            title="Velocity at inline %d" label1=Time unit1=ms label2=Xline unit2=
+       ''' % (inline, inline, minclip, maxclip, minclip, inline))
+
+time=300
+
+Result('vel_time%d' % time,'vvol','''
+       window min1=%d max1=%d | clip2 lower=%d upper=%d |
+       grey color=j scalebar=y allpos=y pclip=100 bias=%d
+            title="Velocity at time %d" label1=xline unit1= label2=xline unit2=
+       ''' % (time, time, minclip, maxclip, minclip, time))
+
+Result('vel3','vvol',
+     '''
+     clip2 lower=%d upper=%d |
+     byte minval=%d maxval=%d mean=y bar=bar.rsf gainpanel=all |
+     grey3  color=j allpos=y pclip=100 minval=%d maxval=%d 
+            title="stacking velocity" scalebar=y
+	    frame1=150 frame2=119 frame3=140
+     '''% (minclip, maxclip, minclip, maxclip, minclip, maxclip))
+
+Flow(['vtxystack.rsf','vtxystack_hdr.rsf'],
+     ['../scdeconpaper/s-g-decon.rsf','../scdeconpaper/s-g-decon_hdr.rsf','vvol.rsf'],
+     '''
+     sftahsort verbose=1 input=${SOURCES[0]} sort='iline xline offset'
+     | sftahagc 
+       wagc=1.000 verbose=1 
+     | sftahwindow tmax=3.000  
+     | sftahstatic sign=-1   
+     | sftahnmo 
+       verbose=1
+       vfile=${SOURCES[2]}
+     | sftahstack key=iline,xline verbose=1 ntaper=40
+       tmute=0,1.20,1.82 
+       xmute=0,7358,18000 
+       ntaper=80 
+     | sftahwrite 
+        verbose=1                           
+        label2="xline" o2=1 n2=188 d2=1   
+        label3="iline" o3=1 n3=345 d3=1   
+        output=${TARGETS[0]}
+        outheaders=${TARGETS[1]} 
+     ''',stdout=0,stdin=0)
+
+Result('vtxystack141','vtxystack',
+       '''
+       window n1=1000 min3=141 max3=141
+       | sfgrey title='scdecon il 141 with tpow, agc, pef, static' 
+         clip=.94 polarity=y
+       ''')
+
+Flow(['vtxycdps.rsf','vtxycdps_hdr.rsf'],
+     ['../scdeconpaper/s-g-decon.rsf','../scdeconpaper/s-g-decon_hdr.rsf','vvol.rsf'],
+     '''
+     sftahsort verbose=1 input=${SOURCES[0]} sort='iline:141,141 xline:100,180,10 offset' 
+     | sftahagc 
+       wagc=1.000 verbose=1 
+     | sftahwindow tmax=3.000
+     | sftahstatic sign=-1   
+     | sftahnmo
+       verbose=1
+       vfile=${SOURCES[2]}
+     | sftahmute 
+       verbose=1 
+       tmute=0,1.20,1.82 
+       xmute=0,7358,18000 
+       ntaper=80 
+     | sftahwrite 
+        verbose=1                           
+        mode=seq 
+        output=${TARGETS[0]}
+        outheaders=${TARGETS[1]} 
+     ''',stdout=0,stdin=0)
+
+Result('vtxycdps',
+       '''
+       window n1=1000 
+       | sfgrey title='scdecon il 141 cdps'
+         clip=.94 polarity=y
+       ''')
+
+
+End()
+

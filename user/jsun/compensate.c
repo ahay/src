@@ -38,6 +38,7 @@ void stable_div(int n, float eps, float *num, float *den, float *ratio)
             r = 1.f;
         else
             r = vnum*vden/(vden*vden + eps);
+
         ratio[i] = r;
     }
 }
@@ -57,12 +58,14 @@ void stable_cdiv(int n, float eps, sf_complex *num, sf_complex *den, sf_complex 
 
         if (cabsf(vden) == 0.f || cabsf(vden) >= cabsf(vnum))
             r = sf_cmplx(1.f,0.f);
-        else
+        else {
 #ifdef SF_HAS_COMPLEX_H
             r = vnum*conjf(vden)/(vden*conjf(vden) + eps);
 #else
             r = sf_cdiv(sf_cmul(vnum,sf_conjf(vden)),sf_cadd(sf_cmul(vden,sf_conjf(vden)) + sf_cmplx(eps,0.f)));
 #endif
+        }
+
         ratio[i] = r;
     }
 }
@@ -84,6 +87,7 @@ void stable_cdiv_f(int n, float eps, sf_complex *num, sf_complex *den, float *ra
             r = 1.f;
         else
             r = vnum*vden/(vden*vden + eps);
+
         ratio[i] = r;
     }
 }

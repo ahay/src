@@ -485,10 +485,12 @@ if _swig_:
             _File.__init__(self,self.tag)
         def write(self,data):
             if self.type == 'float':
-                c_rsf.sf_floatwrite(numpy.reshape(data.astype('f'),(data.size,)),self.file)
+                c_rsf.sf_floatwrite(numpy.reshape(data.astype(numpy.float32),(data.size,)),self.file)
             elif self.type == 'complex':
                 c_rsf.sf_complexwrite(numpy.reshape(data,(data.size,)),
                                       self.file)
+            elif self.type == 'int':
+                c_rsf.sf_intwrite(numpy.reshape(data.astype(numpy.int32),(data.size,)),self.file)
             else:
                 raise TypeError, 'Unsupported file type %s' % self.type
         def close(self):

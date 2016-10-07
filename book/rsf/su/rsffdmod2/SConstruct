@@ -1,0 +1,56 @@
+from rsf.proj import *
+import string
+
+Flow('h0',None,'math o1=0 d1=10 n1=100 output=200 label1=Distance unit1=m')
+
+horizon = (
+    [(0,400),(100,400),(400,560),(550,560),(1000,360)],
+    [(0,800),(100,800),(400,750),(500,780),(550,780),(1000,500)],
+    [(0,950),(100,950),(400,900),(500,800),(750,920),(1000,930)]
+    )
+
+horizons = ['h0']
+for k in range(1,4):
+    h = 'h%d' % k
+    Flow(h+'.asc',None,
+         '''
+         echo %s n1=2 n2=%d data_format=ascii_float in=$TARGET
+         ''' % (string.join(map(lambda x: string.join(map(str,x)), horizon[k-1])),
+                len(horizon[k-1])))
+    Flow(h,[h+'.asc','h0'],'dd form=native | spline pattern=${SOURCES[1]}')
+    horizons.append(h)
+
+Flow('vel',horizons,
+     '''
+     cat axis=2 ${SOURCES[1:4]} | 
+     unif2 o1=0 d1=10 n1=100 v00=1500,2000,2500,3000,3500 
+     ''')
+
+Result('vel',
+       '''
+       grey color=j mean=y scalebar=y barreverse=y barlabel=Velocity barunit=m/s
+       title="Velocity Model" 
+       ''')
+
+# Wavelet
+Flow('wav',None,
+     '''
+     spike n1=2200 d1=0.001 k1=200 | 
+     ricker1 frequency=20 
+     ''')
+
+# Density
+Flow('den','vel','math output=1')
+
+# Finite-difference modeling
+Flow('hseis seis','wav syncline sou rec den',
+     '''
+     transp | 
+     awefd2d verb=y free=n snap=y dabc=y jdata=2 jsnap=10 
+     vel=${SOURCES[1]} sou=${SOURCES[2]} rec=${SOURCES[3]} den=${SOURCES[4]} 
+     wfl=${TARGETS[1]} |
+     window f2=100 | put o2=0 | transp |
+     put label1=Time label2=Distance unit1=s unit2=m
+     ''')
+
+End()

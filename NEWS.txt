@@ -85,6 +85,7 @@ In programs:
 * Fixed segmentation fault for sffft1 with no FFTW and no OMP
 * Fixed case n1 > n2 in sfsvd
 * Fixed join over a different axis in sfomp and sfmpi
+* Fixed mwt= parameter in sfconjgrad
 
 In the build system:
 
@@ -144,6 +145,9 @@ To the reproducible documents collection:
   (Sun)
 * xjtu/gpufwi: A graphics processing unit implementation of
   time-domain full-waveform inversion (Yang, Gao, and Wang)
+* tongji/qswave: Simulating propagation of separated wave modes in
+  general anisotropic media, Part II: qS-wave propagators (Cheng and
+  Kang)
 
 To SCons:
 

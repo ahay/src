@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sfput', 'sfmath', 'sfgrey', 'sfwindow', 'sfsmooth', 'sftti2delrsep', 'sfgraph', 'sftti2dpseudosvlrsep']
+data=['LOCAL']
+size=  633725920

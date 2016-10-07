@@ -83,7 +83,7 @@ int main(int argc, char* argv[])
 	}
     }
 	
-    bound (dim, n0, n, a, aa); 
+    bound (dim, false, n0, n, a, aa); 
 	
     maxlag = 0;
     for (ia=0; ia < na; ia++) {

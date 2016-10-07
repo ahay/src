@@ -18,29 +18,40 @@
 */
 #include <rsf.h>
 
-static float n;
+static int n;
 static float m, h, *c;
 
 void chebyshev_init(int n1,                 /* data size */
-		    const float *d,        /* [n] data at Chebyshev points */
 		    float xmin, float xmax /* axis range */)
 /*< initialize >*/
 {
-    int i;
-
     n = n1;
 
     c = sf_floatalloc(n);
+
+    sf_cosft_init(n);
+
+    m = (xmin+xmax)*0.5f;
+    h = 2.0f/(xmax-xmin);
+}
+
+
+void chebyshev_close(void)
+/*< free allocated storage >*/
+{
+    free(c);
+    sf_cosft_close();
+}
+
+void chebyshev_set(const float *d /* [n] data at Chebyshev points */)
+/*< compute Chebyshev coefficients >*/
+{
+    int i;
+
     for (i=0; i < n; i++) {
 	c[i] = d[i];
     }
-
-    sf_cosft_init(n);
     sf_cosft_inv(c,0,1);
-    sf_cosft_close();
-
-    m = (xmin+xmax)*0.5f;
-    h = 0.5f/(xmax-xmin);
 }
 
 float chebyshev(float x)
@@ -48,19 +59,20 @@ float chebyshev(float x)
 {
     int i;
 
-    float w0, w1, w2;
+    float c0, c1, c2;
 
     x = (x-m)*h;
-
-    w1=w2=0.0f;
-    
-    for (i=n-1; i >=0; i--) {
-	w0 = c[i] + 2*x*w1 - w2;
-	w2 = w1;
-	w1 = w0;
+    c1 = 0.0f;
+    c0 = c[n-1];
+    for (i=n-2; i > 0; i--) {
+	c2 = c1;
+	c1 = c0;
+	c0 = 2*(c[i] + x*c0) - c2;
     }
-    return (w1-x*w2);
+    c0 = c[0] + x*c0 - c1;
+    return c0;
 }
+
 
 
 

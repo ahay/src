@@ -352,11 +352,13 @@ fdm3d fdutil3d_init(bool verb_,
 
     fdm->nzpad=sf_n(az_)+2*fdm->nb;
     fdm->nxpad=sf_n(ax_)+2*fdm->nb;
-    fdm->nypad=sf_n(ay_)+2*fdm->nb;
+    if(sf_n(ay_)>1) fdm->nypad=sf_n(ay_)+2*fdm->nb;
+    else fdm->nypad=1;
 	
     fdm->ozpad=sf_o(az_)-fdm->nb*fdm->dz;
     fdm->oxpad=sf_o(ax_)-fdm->nb*fdm->dx;
-    fdm->oypad=sf_o(ay_)-fdm->nb*fdm->dy;
+    if(sf_n(ay_)>1) fdm->oypad=sf_o(ay_)-fdm->nb*fdm->dy;
+    else fdm->oypad=sf_o(ay_);
 
     fdm->ompchunk=ompchunk_;
 
@@ -505,14 +507,43 @@ void expand3d(float ***a,
     }
 
     for         (iy=0; iy<fdm->nb;    iy++) {
-	for     (ix=0; ix<fdm->nxpad; ix++) {
-	    for (iz=0; iz<fdm->nzpad; iz++) {
-		b[           iy  ][ix][iz] = b[           fdm->nb  ][ix][iz];
-		b[fdm->nypad-iy-1][ix][iz] = b[fdm->nypad-fdm->nb-1][ix][iz];
-	    }
+        for     (ix=0; ix<fdm->nxpad; ix++) {
+            for (iz=0; iz<fdm->nzpad; iz++) {
+                b[           iy  ][ix][iz] = b[           fdm->nb  ][ix][iz];
+                b[fdm->nypad-iy-1][ix][iz] = b[fdm->nypad-fdm->nb-1][ix][iz];
+            }
+        }
+    }
+
+}
+
+/*------------------------------------------------------------*/
+void expand2d(float** a, 
+              float** b, 
+	      fdm3d fdm)
+/*< expand domain >*/
+{
+    int iz,ix;
+
+    for     (ix=0;ix<fdm->nx;ix++) {
+	for (iz=0;iz<fdm->nz;iz++) {
+	    b[fdm->nb+ix][fdm->nb+iz] = a[ix][iz];
 	}
     }
 
+    for     (ix=0; ix<fdm->nxpad; ix++) {
+	for (iz=0; iz<fdm->nb;    iz++) {
+	    b[ix][           iz  ] = b[ix][           fdm->nb  ];
+	    b[ix][fdm->nzpad-iz-1] = b[ix][fdm->nzpad-fdm->nb-1];
+	}
+    }
+
+    for     (ix=0; ix<fdm->nb;    ix++) {
+	for (iz=0; iz<fdm->nzpad; iz++) {
+	    b[           ix  ][iz] = b[           fdm->nb  ][iz];
+	    b[fdm->nxpad-ix-1][iz] = b[fdm->nxpad-fdm->nb-1][iz];
+	}
+    }
 }
 
 /*------------------------------------------------------------*/
@@ -1502,6 +1533,30 @@ sponge sponge_make(int nb)
     return spo;
 }
 
+sponge sponge_make2(int nb, float cb)
+/*< init boundary sponge >*/
+    
+/* Sponge boundary conditions multiply incoming wavefields
+   by smaller coefficients to attenuate the wavefield over time and space.
+
+   The sponge coefficients need to deviate from 1 very gradually to ensure
+   that there are no induced reflections caused by large impedance 
+   contrasts */
+{
+    sponge spo;
+    int   ib;
+    float sb,fb;
+    
+    spo = (sponge) sf_alloc(1,sizeof(*spo));    
+    spo->w = sf_floatalloc(nb);
+    sb = 4.0*nb;               
+    for(ib=0; ib<nb; ib++) {
+	fb = ib/(sqrt(2.0)*sb)*cb;
+	spo->w[ib] = exp(-fb*fb);
+    }
+    return spo;
+}
+
 /*------------------------------------------------------------*/
 void sponge2d_apply(float**   uu,
 		    sponge   spo,
@@ -1589,6 +1644,7 @@ void sponge3d_apply(float  ***uu,
 	}
     }
 
+    if (fdm->nypad>1) {
 #ifdef _OPENMP
 #pragma omp parallel for			\
     schedule(dynamic)				\
@@ -1607,7 +1663,87 @@ void sponge3d_apply(float  ***uu,
 	}
 
     }
+    }
 }
+
+void sponge3d_apply_complex(sf_complex  ***uu,
+		            sponge   spo,
+		            fdm3d    fdm)
+/*< apply boundary sponge for complex-valued wavefield >*/
+{
+    int iz,ix,iy,ib,ibz,ibx,iby;
+    float w;
+
+#ifdef _OPENMP
+#pragma omp parallel for			\
+    private(ib,ix,iy,ibz,w)			\
+    shared(fdm,spo,uu)
+#endif
+    for(ib=0; ib<fdm->nb; ib++) {
+	w = spo->w[fdm->nb-ib-1];
+
+	ibz = fdm->nzpad-ib-1;
+	for    (iy=0; iy<fdm->nypad; iy++) {
+	    for(ix=0; ix<fdm->nxpad; ix++) {
+#ifdef SF_HAS_COMPLEX_H
+		uu[iy][ix][ib ] *= w; /* z min */
+		uu[iy][ix][ibz] *= w; /* z max */
+#else
+		uu[iy][ix][ib ] = sf_crmul(uu[iy][ix][ib ],w); /* z min */
+		uu[iy][ix][ibz] = sf_crmul(uu[iy][ix][ibz],w); /* z max */
+#endif
+	    }
+	}
+    }
+
+#ifdef _OPENMP
+#pragma omp parallel for			\
+    private(ib,iz,iy,ibx,w)			\
+    shared(fdm,spo,uu)
+#endif
+    for(ib=0; ib<fdm->nb; ib++) {
+	w = spo->w[fdm->nb-ib-1];
+
+	ibx = fdm->nxpad-ib-1;
+	for    (iy=0; iy<fdm->nypad; iy++) {
+	    for(iz=0; iz<fdm->nzpad; iz++) {
+#ifdef SF_HAS_COMPLEX_H
+		uu[iy][ib ][iz] *= w; /* x min */
+		uu[iy][ibx][iz] *= w; /* x max */
+#else
+		uu[iy][ib ][iz] = sf_crmul(uu[iy][ib ][iz],w); /* x min */
+		uu[iy][ibx][iz] = sf_crmul(uu[iy][ibx][iz],w); /* x max */
+#endif
+	    }
+	}
+    }
+
+    if (fdm->nypad>1) {
+#ifdef _OPENMP
+#pragma omp parallel for			\
+    private(ib,iz,ix,iby,w)			\
+    shared(fdm,spo,uu)
+#endif
+    for(ib=0; ib<fdm->nb; ib++) {
+	w = spo->w[fdm->nb-ib-1];
+	
+	iby = fdm->nypad-ib-1;
+	for    (ix=0; ix<fdm->nxpad; ix++) {
+	    for(iz=0; iz<fdm->nzpad; iz++) {
+#ifdef SF_HAS_COMPLEX_H
+		uu[ib ][ix][iz] *= w; /* y min */
+		uu[iby][ix][iz] *= w; /* y max */
+#else
+		uu[ib ][ix][iz] = sf_crmul(uu[ib ][ix][iz],w); /* y min */
+		uu[iby][ix][iz] = sf_crmul(uu[iby][ix][iz],w); /* y max */
+#endif
+	    }
+	}
+
+    }
+    }
+}
+
 
 bool cfl_generic(
     float vpmin, float vpmax,
@@ -1699,7 +1835,12 @@ dft3d dft3d_init(int pad1,
 
     dft->dkz = 1./(dft->nkz*fdm->dz); dft->okz = -0.5/fdm->dz;
     dft->dkx = 1./(dft->nkx*fdm->dx); dft->okx = -0.5/fdm->dx;
-    dft->dky = 1./(dft->nky*fdm->dy); dft->oky = -0.5/fdm->dy;
+    if(dft->nky>1) {
+        dft->dky = 1./(dft->nky*fdm->dy); dft->oky = -0.5/fdm->dy;
+    } else {
+        dft->dky = 0.; dft->oky = 0.;
+    }
+    if(fdm->verb) sf_warning("DFT: nkz=%d, dkz=%g, okz=%g, nkx=%d, dkx=%g, okx=%g, nky=%d, dky=%g, oky=%g",dft->nkz,dft->dkz,dft->okz,dft->nkx,dft->dkx,dft->okx,dft->nky,dft->dky,dft->oky);
 
     return dft;
 }
@@ -1738,7 +1879,6 @@ lps3d lps3d_init(float pcut /* pcut/2 is the width of tapered region w.r.t. 1 */
     /* construct the pseudo-spectral op */
 #ifdef _OPENMP
 #pragma omp parallel for			\
-    schedule(dynamic,1)				\
     private(ikz,ikx,iky,kz,kx,ky,kk)		\
     shared(dft,lps,kmax,kbnd,pcut)
 #endif
@@ -1794,7 +1934,6 @@ ksp3d ksp3d_make(dft3d dft)
     /* construct the pseudo-spectral op */
 #ifdef _OPENMP
 #pragma omp parallel for			\
-    schedule(dynamic,1)				\
     private(ikz,ikx,iky,kz,kx,ky)		\
     shared(dft,ksp)
 #endif
@@ -1830,7 +1969,6 @@ void ksp3d_apply(float *wavedx,
     /* apply pseudo-spectral op */
 #ifdef _OPENMP
 #pragma omp parallel for			\
-    schedule(dynamic,1)				\
     private(ikz,ikx,iky,ik)                     \
     shared(dft,ksp,wavek,wavekz,wavekx,waveky)
 #endif
@@ -1876,7 +2014,6 @@ void ksp3d_apply1(float *wavedx,
     /* apply pseudo-spectral op */
 #ifdef _OPENMP
 #pragma omp parallel for			\
-    schedule(dynamic,1)				\
     private(ikz,ikx,iky,ik)                     \
     shared(dft,ksp,wavekz,wavekx,waveky)
 #endif
@@ -1921,7 +2058,6 @@ void ksp3d_apply2(float *wavedxx,
     /* apply pseudo-spectral op */
 #ifdef _OPENMP
 #pragma omp parallel for			\
-    schedule(dynamic,1)				\
     private(ikz,ikx,iky,ik)                     \
     shared(dft,ksp,wavek,wavekz,wavekx,waveky)
 #endif
@@ -1949,7 +2085,6 @@ void ksp3d_apply2(float *wavedxx,
     /* apply pseudo-spectral op */
 #ifdef _OPENMP
 #pragma omp parallel for			\
-    schedule(dynamic,1)				\
     private(ikz,ikx,iky,ik)                     \
     shared(dft,ksp,wavek,wavekz,wavekx,waveky)
 #endif
@@ -2015,7 +2150,6 @@ vksp3d vksp3d_make(float gpavg,
     /* construct the pseudo-spectral op */
 #ifdef _OPENMP
 #pragma omp parallel for			\
-    schedule(dynamic,1)				\
     private(ikz,ikx,iky,kz,kx,ky,k2)		\
     shared(dft,lps,vksp,gpavg,gsavg)
 #endif
@@ -2062,7 +2196,6 @@ void vksp3d_apply(float *wavea,
     if (mode == 1) { /* p mode */
 #ifdef _OPENMP
 #pragma omp parallel for			\
-    schedule(dynamic,1)				\
     private(ikz,ikx,iky,ik)                     \
     shared(dft,vksp,waveka,wavekb)
 #endif
@@ -2083,7 +2216,6 @@ void vksp3d_apply(float *wavea,
     } else { /* s mode */
 #ifdef _OPENMP
 #pragma omp parallel for			\
-    schedule(dynamic,1)				\
     private(ikz,ikx,iky,ik)                     \
     shared(dft,vksp,waveka,wavekb)
 #endif
@@ -2202,7 +2334,7 @@ void clr3d_init(fdm3d fdm,
 {
     int nxyz,nk,ik,i,j;
 
-    nxyz = fdm->ny *fdm->nx *fdm->nz ;
+    nxyz = fdm->nypad *fdm->nxpad *fdm->nzpad ;
     nk   = dft->nky*dft->nkx*dft->nkz;
     cwave  = sf_complexalloc(nk);
     cwaven2= sf_complexalloc2(nk,  clr->n2_max);
@@ -2213,7 +2345,6 @@ void clr3d_init(fdm3d fdm,
         for (j=0; j<3; j++) {
 #ifdef _OPENMP
 #pragma omp parallel for			\
-    schedule(dynamic,1)				\
     private(ik)                                 \
     shared(nxyz,i,j,waves)
 #endif
@@ -2236,7 +2367,7 @@ void clr3d_apply(sf_complex **uo,
     int nxyz,nk,ik,ir,ic,im,in,iz,ix,iy,i;
     sf_complex c;
 
-    nxyz = fdm->ny *fdm->nx *fdm->nz ;
+    nxyz = fdm->nypad *fdm->nxpad *fdm->nzpad ;
     nk   = dft->nky*dft->nkx*dft->nkz;
 
     for (ic=0; ic<3; ic++) {
@@ -2247,7 +2378,6 @@ void clr3d_apply(sf_complex **uo,
 
 #ifdef _OPENMP
 #pragma omp parallel for              \
-    schedule(dynamic,1)               \
     private(im,in,ik)                 \
     shared(clr,cwaven2,cwave,rt,nk)
 #endif
@@ -2266,7 +2396,6 @@ void clr3d_apply(sf_complex **uo,
 
 #ifdef _OPENMP
 #pragma omp parallel for			\
-    schedule(dynamic,1)				\
     private(iy,ix,iz,i,c,im,in)                 \
     shared(fdm,clr,lt,waven2,waves,ir,ic)
 #endif
@@ -2295,7 +2424,6 @@ void clr3d_apply(sf_complex **uo,
     /* linear combination forms the output vector */
 #ifdef _OPENMP
 #pragma omp parallel for			\
-    schedule(dynamic,1)				\
     private(ik)                                 \
     shared(nxyz,waves,uo)
 #endif
@@ -2327,7 +2455,7 @@ void clr3d_apply2(sf_complex **u2,
     int nxyz,nk,ik,ir,ic,im,in,iz,ix,iy,i;
     sf_complex c;
 
-    nxyz = fdm->ny *fdm->nx *fdm->nz ;
+    nxyz = fdm->nypad *fdm->nxpad *fdm->nzpad ;
     nk   = dft->nky*dft->nkx*dft->nkz;
 
     for (ic=0; ic<3; ic++) {
@@ -2338,7 +2466,6 @@ void clr3d_apply2(sf_complex **u2,
 
 #ifdef _OPENMP
 #pragma omp parallel for              \
-    schedule(dynamic,1)               \
     private(im,in,ik)                 \
     shared(clr,cwaven2,cwave,rt,nk)
 #endif
@@ -2357,7 +2484,6 @@ void clr3d_apply2(sf_complex **u2,
 
 #ifdef _OPENMP
 #pragma omp parallel for			\
-    schedule(dynamic,1)				\
     private(iy,ix,iz,i,c,im,in)                 \
     shared(fdm,clr,lt,waven2,waves,ir,ic)
 #endif
@@ -2386,7 +2512,6 @@ void clr3d_apply2(sf_complex **u2,
     /* linear combination forms the output vector */
 #ifdef _OPENMP
 #pragma omp parallel for			\
-    schedule(dynamic,1)				\
     private(ik)                                 \
     shared(nxyz,waves,u2,u1,u0)
 #endif
@@ -2417,7 +2542,7 @@ void clr3d_apply_dbg(sf_complex **uo,
     int nxyz,nk,ik,ir,ic,im,in,iz,ix,iy,i;
     sf_complex c;
 
-    nxyz = fdm->ny *fdm->nx *fdm->nz ;
+    nxyz = fdm->nypad *fdm->nxpad *fdm->nzpad ;
     nk   = dft->nky*dft->nkx*dft->nkz;
 
     for (ic=0; ic<1; ic++) {
@@ -2465,7 +2590,6 @@ void clr3d_apply_dbg(sf_complex **uo,
     for (ic=0; ic<1; ic++) {
 #ifdef _OPENMP
 #pragma omp parallel for			\
-    schedule(dynamic,1)				\
     private(ik)                                 \
     shared(nk,ir,waves,uo)
 #endif
@@ -2563,7 +2687,6 @@ mut3d mut3d_make(float t0  /* source delay */,
 
 #ifdef _OPENMP
 #pragma omp parallel for			\
-    schedule(dynamic,1)				\
     private(ir,it,dist,t1,tt)                   \
     shared(t0,velw,eps,ss,rr,dat,mut)
 #endif
@@ -2594,7 +2717,6 @@ void mut3d_apply(float ***dd,
 
 #ifdef _OPENMP
 #pragma omp parallel for			\
-    schedule(dynamic,1)				\
     private(ir,ic,it)                           \
     shared(dd,mut,dat)
 #endif

@@ -6,13 +6,16 @@ progs = '''
 ctscigadj ctscigder ctshift fftfwi_sparse_2d
 pad2 padzero postrtm2d sgfdewe2d
 upsamp1 fwiupdate fwidir
+dzest2d pickmaxima pickprint
+addimag
 '''
 
 ccprogs = ''
 
 mpi_progs = '''
 mpifdlsrtm mpilrrtm mpilrmodel mpilrrtm_ts mpiprertm2d
-mpisglrrtm2 mpifwigradlr mpiqfwi
+mpisglrrtm2 mpifwigradlr mpisfwi mpiqfwi mpifd2d mpidip2 
+mpipaint2 mpictshiftlr
 '''
 
 pyprogs = 'fdlsrtm lrrtm'
@@ -53,7 +56,7 @@ if not sparsepath or not sparselibs:
         src.remove(source)
 
 mpicc = env.get('MPICC')
-mpi_src = Glob('Q[a-z]*.c')
+mpi_src = Glob('P[a-z]*.c')
 for source in mpi_src:
     inc = env.RSF_Include(source,prefix='')
     obj = env.StaticObject(source,CC=mpicc)

@@ -149,7 +149,7 @@ int main (int argc, char* argv[])
 	    aa[0] = 1.;
 	    bb->lag[0] = 1;
 	    bb->lag[1] = 2;
-	    bound(1, &nx, &nx, &three, bb); 
+	    bound(1, false, &nx, &nx, &three, bb); 
 	    for (i=0; i < 3; i++) {
 		find_pef (nx, mm, bb, 3);
 		aa[1] = bb->flt[0];

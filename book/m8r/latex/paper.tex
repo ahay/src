@@ -66,9 +66,26 @@ the Madagascar convention, the source LaTeX file
 \begin{lstlisting}
   \documentclass[10pt]{geophysics}
   \usepackage{amsmath}
+  \begin{document}
+\end{lstlisting}
+  and ends with
+\begin{lstlisting}
+  \end{document}
 \end{lstlisting}
   
-Different options... End...
+Several optional arguments can be supplied to the \texttt{Paper()} command:
+\begin{description}
+\item[source=] specifies
+\item[lclass=] specifies
+\item[scons=] specifies
+\item[use=] specifies
+\item[include=] specifies
+\item[options=] specifies
+\end{description}
+Some additional arguments control the placement of reproducible
+figures and are described in the next section.
+
+End()...
 
 \subsection{Including reproducible results}
 

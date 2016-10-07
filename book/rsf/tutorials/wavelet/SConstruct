@@ -1,0 +1,32 @@
+from rsf.proj import *
+
+def numpy_load(target=None,source=None,env=None):
+    'convert from numpy to RSF format'
+    import numpy, m8r
+    data = numpy.load(str(source[0]))
+    rsf = m8r.Output(str(target[0]))
+    rsf.put("n1",len(data))
+    rsf.put("o1",0)
+    rsf.put("d1",0.002)
+    rsf.put("label1","Time")
+    rsf.put("unit1","s")
+    rsf.write(data)
+    return 0
+
+for case in ('rpp','seismic'):
+    npy = case+'.npy'
+    Fetch(npy,'1606_Wavelet_estimation',
+          server='https://raw.githubusercontent.com',
+          top='seg/tutorials-2016/master')
+
+    Command(case+'.rsf',npy,action=Action(numpy_load))
+    Plot(case,
+         '''
+         window max1=1.5 | 
+         graph title="%s"
+         ''' % ('Well-Log Reflectivity','Seismic')[case=='seismic'])
+
+Result('data','rpp seismic','OverUnderAniso')
+
+
+End()

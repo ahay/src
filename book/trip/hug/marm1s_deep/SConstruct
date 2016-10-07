@@ -2,7 +2,7 @@
 ###################### COMMON DEFINITIONS - DO NOT ALTER ####################
 #############################################################################
 from rsf.proj import *
-from batch import getFlowSignature
+#from batch import getFlowSignature
 import os
 thispath        = os.getcwd()
 #############################################################################

@@ -221,11 +221,12 @@ int main(int argc, char* argv[])
     float ***dd, **localdd, **mm, **localmm, **vv;
     sf_file in, out, vel, wavelet;
     
+    sf_init(argc, argv);
+
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &cpuid);
     MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
     
-    sf_init(argc, argv);
     tstart=MPI_Wtime();
     
     if(cpuid==0) sf_warning("numprocs=%d", numprocs);

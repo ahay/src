@@ -61,18 +61,18 @@ extern "C"{
 
 /* static variables */
 static float dt;
-static bool tric,tstp,pseu,grad;
+static bool tric,grad;
 static std::valarray<float>  C11,C12,C13,C22,C23,C33,C44,C55,C66,Q1,Q2;
 static std::valarray<float>  C11dx,C12dx,C12dy,C13dx,C13dz,C22dy,C23dy,C23dz,C33dz,C44dy,C44dz,C55dx,C55dz,C66dx,C66dy;
 static std::valarray<float>  C14,C15,C16,C24,C25,C26,C34,C35,C36,C45,C46,C56;
 static std::valarray<double> rkz, rkx, rky;
-static int component;
+static int component, mode;
 
 /* subroutines */
 static int sample(vector<int>& rs, vector<int>& cs, ZpxNumMat& res);
 
 void expand3d(std::valarray<float>  a, std::valarray<float>& b, int nb, int nz, int nx, int ny);
-void dr3d(std::valarray<float>  u, std::valarray<float>& du, int nz, int nx, int ny, float dz, float dx, float dy, int which);
+void dr3d(std::valarray<float>  u, std::valarray<float>& du, int nz, int nx, int ny, int nb, float dz, float dx, float dy, int which);
 
 
 /* global variables needed by lapack SVD routines */
@@ -118,11 +118,12 @@ int main(int argc, char* argv[])
     par.get("tilt",tilt,false);      // tilting of TTI
     int seed;
     par.get("tric",tric,false);      // triclinic anisotropy
-    par.get("tstp",tstp,false);      // twostep propagator
-    par.get("pseu",pseu,false);      // pseudo-spectral propagator
     par.get("grad",grad,false);      // include gradient term
     par.get("seed",seed,time(NULL)); // seed for random number generator
-    srand48(seed);
+    //srand48(seed);
+    par.get("mode",mode,0);          // mode of decomposition: 0->mixed, 1->p, 2->s
+    int jump;
+    par.get("jump",jump,1);          // jump step for reduced lowrank decomposition
     float eps;
     par.get("eps",eps,1.e-6);        // tolerance
     int npk;
@@ -243,25 +244,27 @@ int main(int argc, char* argv[])
         Q2[i] *= SF_PI/180.;
     }
     /* calculate Cij gradient */
-    C11dx.resize(nxyz); dr3d(C11, C11dx, nzpad, nxpad, nypad, dz, dx, dy, 2);
-    C12dx.resize(nxyz); dr3d(C12, C12dx, nzpad, nxpad, nypad, dz, dx, dy, 2);
-    C12dy.resize(nxyz); dr3d(C12, C12dy, nzpad, nxpad, nypad, dz, dx, dy, 3);
-    C13dx.resize(nxyz); dr3d(C13, C13dx, nzpad, nxpad, nypad, dz, dx, dy, 2);
-    C13dz.resize(nxyz); dr3d(C13, C13dz, nzpad, nxpad, nypad, dz, dx, dy, 1);
-    C22dy.resize(nxyz); dr3d(C22, C22dy, nzpad, nxpad, nypad, dz, dx, dy, 3);
-    C23dy.resize(nxyz); dr3d(C23, C23dy, nzpad, nxpad, nypad, dz, dx, dy, 3);
-    C23dz.resize(nxyz); dr3d(C23, C23dz, nzpad, nxpad, nypad, dz, dx, dy, 1);
-    C33dz.resize(nxyz); dr3d(C33, C33dz, nzpad, nxpad, nypad, dz, dx, dy, 1);
-    C44dy.resize(nxyz); dr3d(C44, C44dy, nzpad, nxpad, nypad, dz, dx, dy, 3);
-    C44dz.resize(nxyz); dr3d(C44, C44dz, nzpad, nxpad, nypad, dz, dx, dy, 1);
-    C55dx.resize(nxyz); dr3d(C55, C55dx, nzpad, nxpad, nypad, dz, dx, dy, 2);
-    C55dz.resize(nxyz); dr3d(C55, C55dz, nzpad, nxpad, nypad, dz, dx, dy, 1);
-    C66dx.resize(nxyz); dr3d(C66, C66dx, nzpad, nxpad, nypad, dz, dx, dy, 2);
-    C66dy.resize(nxyz); dr3d(C66, C66dy, nzpad, nxpad, nypad, dz, dx, dy, 3);
-    //oRSF fC11dx("C11dx"); fC11dx.put("n1",nzpad); fC11dx.put("n2",nxpad); fC11dx.put("n3",nypad); fC11dx<<C11dx;
-    //oRSF fC12dy("C12dy"); fC12dy.put("n1",nzpad); fC12dy.put("n2",nxpad); fC12dy.put("n3",nypad); fC12dy<<C12dy;
-    //oRSF fC13dz("C13dz"); fC13dz.put("n1",nzpad); fC13dz.put("n2",nxpad); fC13dz.put("n3",nypad); fC13dz<<C13dz;
-    //exit(0);
+    if (grad) {
+        C11dx.resize(nxyz); dr3d(C11, C11dx, nzpad, nxpad, nypad, nb, dz, dx, dy, 2);
+        C12dx.resize(nxyz); dr3d(C12, C12dx, nzpad, nxpad, nypad, nb, dz, dx, dy, 2);
+        C12dy.resize(nxyz); dr3d(C12, C12dy, nzpad, nxpad, nypad, nb, dz, dx, dy, 3);
+        C13dx.resize(nxyz); dr3d(C13, C13dx, nzpad, nxpad, nypad, nb, dz, dx, dy, 2);
+        C13dz.resize(nxyz); dr3d(C13, C13dz, nzpad, nxpad, nypad, nb, dz, dx, dy, 1);
+        C22dy.resize(nxyz); dr3d(C22, C22dy, nzpad, nxpad, nypad, nb, dz, dx, dy, 3);
+        C23dy.resize(nxyz); dr3d(C23, C23dy, nzpad, nxpad, nypad, nb, dz, dx, dy, 3);
+        C23dz.resize(nxyz); dr3d(C23, C23dz, nzpad, nxpad, nypad, nb, dz, dx, dy, 1);
+        C33dz.resize(nxyz); dr3d(C33, C33dz, nzpad, nxpad, nypad, nb, dz, dx, dy, 1);
+        C44dy.resize(nxyz); dr3d(C44, C44dy, nzpad, nxpad, nypad, nb, dz, dx, dy, 3);
+        C44dz.resize(nxyz); dr3d(C44, C44dz, nzpad, nxpad, nypad, nb, dz, dx, dy, 1);
+        C55dx.resize(nxyz); dr3d(C55, C55dx, nzpad, nxpad, nypad, nb, dz, dx, dy, 2);
+        C55dz.resize(nxyz); dr3d(C55, C55dz, nzpad, nxpad, nypad, nb, dz, dx, dy, 1);
+        C66dx.resize(nxyz); dr3d(C66, C66dx, nzpad, nxpad, nypad, nb, dz, dx, dy, 2);
+        C66dy.resize(nxyz); dr3d(C66, C66dy, nzpad, nxpad, nypad, nb, dz, dx, dy, 3);
+        //oRSF fC11dx("C11dx"); fC11dx.put("n1",nzpad); fC11dx.put("n2",nxpad); fC11dx.put("n3",nypad); fC11dx<<C11dx;
+        //oRSF fC12dy("C12dy"); fC12dy.put("n1",nzpad); fC12dy.put("n2",nxpad); fC12dy.put("n3",nypad); fC12dy<<C12dy;
+        //oRSF fC13dz("C13dz"); fC13dz.put("n1",nzpad); fC13dz.put("n2",nxpad); fC13dz.put("n3",nypad); fC13dz<<C13dz;
+        //exit(0);
+    }
  
     /*------------------------------------------------------------*/
     /* Fourier domain parameters                                  */
@@ -353,13 +356,21 @@ int main(int argc, char* argv[])
     sf_complex *ldataxx, *ldataxy, *ldataxz, *ldatayx, *ldatayy, *ldatayz, *ldatazx, *ldatazy, *ldatazz;
     sf_complex *rdataxx, *rdataxy, *rdataxz, *rdatayx, *rdatayy, *rdatayz, *rdatazx, *rdatazy, *rdatazz;
 
+    /* preparation for reduced lowrank */
+    vector<int> ms, ns, js;
+    ms.resize(3); ms[0] = nzpad; ms[1] = nxpad; ms[2] = nypad;
+    ns.resize(3); ns[0] = nkz;   ns[1] = nkx;   ns[2] = nky;
+    js.resize(3); js[0] = jump;  js[1] = jump;  js[2] = jump;
+
     /*------------------------------------------------------------*/
     /* lowrank decomposition and write to files                   */
     /*------------------------------------------------------------*/
     component = 0;
     /* xx component */
     {
-        iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        srand48(seed);
+        //iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        iC( ddlowrank(ms,ns,js,sample,(double)eps,npk,lidx,ridx,mid) );
 
         int m2=mid.m();
         int n2=mid.n();
@@ -395,7 +406,9 @@ int main(int argc, char* argv[])
     }
     /* xy component */
     {
-        iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        srand48(seed);
+        //iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        iC( ddlowrank(ms,ns,js,sample,(double)eps,npk,lidx,ridx,mid) );
 
         int m2=mid.m();
         int n2=mid.n();
@@ -431,7 +444,9 @@ int main(int argc, char* argv[])
     }
     /* xz component */
     {
-        iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        srand48(seed);
+        //iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        iC( ddlowrank(ms,ns,js,sample,(double)eps,npk,lidx,ridx,mid) );
 
         int m2=mid.m();
         int n2=mid.n();
@@ -467,7 +482,9 @@ int main(int argc, char* argv[])
     }
     /* yx component */
     {
-        iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        srand48(seed);
+        //iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        iC( ddlowrank(ms,ns,js,sample,(double)eps,npk,lidx,ridx,mid) );
 
         int m2=mid.m();
         int n2=mid.n();
@@ -503,7 +520,9 @@ int main(int argc, char* argv[])
     }
     /* yy component */
     {
-        iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        srand48(seed);
+        //iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        iC( ddlowrank(ms,ns,js,sample,(double)eps,npk,lidx,ridx,mid) );
 
         int m2=mid.m();
         int n2=mid.n();
@@ -539,7 +558,9 @@ int main(int argc, char* argv[])
     }
     /* yz component */
     {
-        iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        srand48(seed);
+        //iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        iC( ddlowrank(ms,ns,js,sample,(double)eps,npk,lidx,ridx,mid) );
 
         int m2=mid.m();
         int n2=mid.n();
@@ -575,7 +596,9 @@ int main(int argc, char* argv[])
     }
     /* zx component */
     {
-        iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        srand48(seed);
+        //iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        iC( ddlowrank(ms,ns,js,sample,(double)eps,npk,lidx,ridx,mid) );
 
         int m2=mid.m();
         int n2=mid.n();
@@ -611,7 +634,9 @@ int main(int argc, char* argv[])
     }
     /* zy component */
     {
-        iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        srand48(seed);
+        //iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        iC( ddlowrank(ms,ns,js,sample,(double)eps,npk,lidx,ridx,mid) );
 
         int m2=mid.m();
         int n2=mid.n();
@@ -647,7 +672,9 @@ int main(int argc, char* argv[])
     }
     /* zz component */
     {
-        iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        srand48(seed);
+        //iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        iC( ddlowrank(ms,ns,js,sample,(double)eps,npk,lidx,ridx,mid) );
 
         int m2=mid.m();
         int n2=mid.n();
@@ -763,13 +790,14 @@ static int sample(vector<int>& rs, vector<int>& cs, ZpxNumMat& res)
             c34 = C34[i]; c35 = C35[i]; c36 = C36[i];
             c45 = C45[i]; c46 = C46[i]; c56 = C56[i];
         }
-        double c11dx = C11dx[i]; double c12dx = C12dx[i]; double c12dy = C12dy[i]; 
-        double c13dx = C13dx[i]; double c13dz = C13dz[i]; double c22dy = C22dy[i]; 
-        double c23dy = C23dy[i]; double c23dz = C23dz[i]; double c33dz = C33dz[i]; 
-        double c44dy = C44dy[i]; double c44dz = C44dz[i]; double c55dx = C55dx[i]; 
-        double c55dz = C55dz[i]; double c66dx = C66dx[i]; double c66dy = C66dy[i];
-
-        //c11dx=c12dx=c12dy=c13dx=c13dz=c22dy=c23dy=c23dz=c33dz=c44dy=c44dz=c55dx=c55dz=c66dx=c66dy=20;
+        double c11dx,c12dx,c12dy,c13dx,c13dz,c22dy,c23dy,c23dz,c33dz,c44dy,c44dz,c55dx,c55dz,c66dx,c66dy;
+        if(grad) {
+            c11dx = C11dx[i]; c12dx = C12dx[i]; c12dy = C12dy[i]; 
+            c13dx = C13dx[i]; c13dz = C13dz[i]; c22dy = C22dy[i]; 
+            c23dy = C23dy[i]; c23dz = C23dz[i]; c33dz = C33dz[i]; 
+            c44dy = C44dy[i]; c44dz = C44dz[i]; c55dx = C55dx[i]; 
+            c55dz = C55dz[i]; c66dx = C66dx[i]; c66dy = C66dy[i];
+        }
 
         for(int b=0; b<nc; b++)
         {
@@ -824,12 +852,12 @@ static int sample(vector<int>& rs, vector<int>& cs, ZpxNumMat& res)
                 */
 
                 // LAPACK's eigen-decom (complex version)
-                zgeev_(&JOBVL, &JOBVR, &M, Chr2, &LDA, ww2, vl, &LDVL, vr, &LDVR, work2, &LWORK, rwork, &INFO);
+                zgeev_(&JOBVL, &JOBVR, &M, (MKL_Complex16*) Chr2, &LDA, (MKL_Complex16*) ww2,  (MKL_Complex16*) vl, &LDVL,  (MKL_Complex16*) vr, &LDVR,  (MKL_Complex16*) work2, &LWORK, rwork, &INFO);
 
                 zpx ivr[9];
                 for (int id=0; id<9; id++) ivr[id]=vr[id];
-                zgetrf_(&M, &M, ivr, &LDA, ipiv, &INFO);
-                zgetri_(&M, ivr, &LDA, ipiv, work2, &LWORK, &INFO);
+                zgetrf_(&M, &M,  (MKL_Complex16*) ivr, &LDA, ipiv, &INFO);
+                zgetri_(&M,  (MKL_Complex16*) ivr, &LDA, ipiv,  (MKL_Complex16*) work2, &LWORK, &INFO);
 
                 /* slow S wave */
                 v1t = sqrt(ww2[0])*zpx(dt,0); // v_{s2}*k*dt
@@ -890,31 +918,51 @@ static int sample(vector<int>& rs, vector<int>& cs, ZpxNumMat& res)
 
             switch (component) {
                 case 0: // xx
-                    res(a,b) = exp(v3t*zpx(0.,1.))*u3x*iu3x + exp(v2t*zpx(0.,1.))*u2x*iu2x + exp(v1t*zpx(0.,1.))*u1x*iu1x;
+                    if     (mode==0) res(a,b) = exp(v3t*zpx(0.,1.))*u3x*iu3x + exp(v2t*zpx(0.,1.))*u2x*iu2x + exp(v1t*zpx(0.,1.))*u1x*iu1x;
+                    else if(mode==1) res(a,b) = exp(v3t*zpx(0.,1.))*u3x*iu3x                                                              ;
+                    else if(mode==2) res(a,b) =                                exp(v2t*zpx(0.,1.))*u2x*iu2x + exp(v1t*zpx(0.,1.))*u1x*iu1x;
                     break;
                 case 1: // xy
-                    res(a,b) = exp(v3t*zpx(0.,1.))*u3x*iu3y + exp(v2t*zpx(0.,1.))*u2x*iu2y + exp(v1t*zpx(0.,1.))*u1x*iu1y;
+                    if     (mode==0) res(a,b) = exp(v3t*zpx(0.,1.))*u3x*iu3y + exp(v2t*zpx(0.,1.))*u2x*iu2y + exp(v1t*zpx(0.,1.))*u1x*iu1y;
+                    else if(mode==1) res(a,b) = exp(v3t*zpx(0.,1.))*u3x*iu3y                                                              ;
+                    else if(mode==2) res(a,b) =                                exp(v2t*zpx(0.,1.))*u2x*iu2y + exp(v1t*zpx(0.,1.))*u1x*iu1y;
                     break;
                 case 2: // xz
-                    res(a,b) = exp(v3t*zpx(0.,1.))*u3x*iu3z + exp(v2t*zpx(0.,1.))*u2x*iu2z + exp(v1t*zpx(0.,1.))*u1x*iu1z;
+                    if     (mode==0) res(a,b) = exp(v3t*zpx(0.,1.))*u3x*iu3z + exp(v2t*zpx(0.,1.))*u2x*iu2z + exp(v1t*zpx(0.,1.))*u1x*iu1z;
+                    else if(mode==1) res(a,b) = exp(v3t*zpx(0.,1.))*u3x*iu3z                                                              ;
+                    else if(mode==2) res(a,b) =                                exp(v2t*zpx(0.,1.))*u2x*iu2z + exp(v1t*zpx(0.,1.))*u1x*iu1z;
                     break;
                 case 3: // yx
-                    res(a,b) = exp(v3t*zpx(0.,1.))*u3y*iu3x + exp(v2t*zpx(0.,1.))*u2y*iu2x + exp(v1t*zpx(0.,1.))*u1y*iu1x;
+                    if     (mode==0) res(a,b) = exp(v3t*zpx(0.,1.))*u3y*iu3x + exp(v2t*zpx(0.,1.))*u2y*iu2x + exp(v1t*zpx(0.,1.))*u1y*iu1x;
+                    else if(mode==1) res(a,b) = exp(v3t*zpx(0.,1.))*u3y*iu3x                                                              ;
+                    else if(mode==2) res(a,b) =                                exp(v2t*zpx(0.,1.))*u2y*iu2x + exp(v1t*zpx(0.,1.))*u1y*iu1x;
                     break;
                 case 4: // yy
-                    res(a,b) = exp(v3t*zpx(0.,1.))*u3y*iu3y + exp(v2t*zpx(0.,1.))*u2y*iu2y + exp(v1t*zpx(0.,1.))*u1y*iu1y;
+                    if     (mode==0) res(a,b) = exp(v3t*zpx(0.,1.))*u3y*iu3y + exp(v2t*zpx(0.,1.))*u2y*iu2y + exp(v1t*zpx(0.,1.))*u1y*iu1y;
+                    else if(mode==1) res(a,b) = exp(v3t*zpx(0.,1.))*u3y*iu3y                                                              ;
+                    else if(mode==2) res(a,b) =                                exp(v2t*zpx(0.,1.))*u2y*iu2y + exp(v1t*zpx(0.,1.))*u1y*iu1y;
                     break;
                 case 5: // yz
-                    res(a,b) = exp(v3t*zpx(0.,1.))*u3y*iu3z + exp(v2t*zpx(0.,1.))*u2y*iu2z + exp(v1t*zpx(0.,1.))*u1y*iu1z;
+                    if     (mode==0) res(a,b) = exp(v3t*zpx(0.,1.))*u3y*iu3z + exp(v2t*zpx(0.,1.))*u2y*iu2z + exp(v1t*zpx(0.,1.))*u1y*iu1z;
+                    else if(mode==1) res(a,b) = exp(v3t*zpx(0.,1.))*u3y*iu3z                                                              ;
+                    else if(mode==2) res(a,b) =                                exp(v2t*zpx(0.,1.))*u2y*iu2z + exp(v1t*zpx(0.,1.))*u1y*iu1z;
                     break;
                 case 6: // zx
-                    res(a,b) = exp(v3t*zpx(0.,1.))*u3z*iu3x + exp(v2t*zpx(0.,1.))*u2z*iu2x + exp(v1t*zpx(0.,1.))*u1z*iu1x;
+                    if     (mode==0) res(a,b) = exp(v3t*zpx(0.,1.))*u3z*iu3x + exp(v2t*zpx(0.,1.))*u2z*iu2x + exp(v1t*zpx(0.,1.))*u1z*iu1x;
+                    else if(mode==1) res(a,b) = exp(v3t*zpx(0.,1.))*u3z*iu3x                                                              ;
+                    else if(mode==2) res(a,b) =                                exp(v2t*zpx(0.,1.))*u2z*iu2x + exp(v1t*zpx(0.,1.))*u1z*iu1x;
                     break;
                 case 7: // zy
-                    res(a,b) = exp(v3t*zpx(0.,1.))*u3z*iu3y + exp(v2t*zpx(0.,1.))*u2z*iu2y + exp(v1t*zpx(0.,1.))*u1z*iu1y;
+                    if     (mode==0) res(a,b) = exp(v3t*zpx(0.,1.))*u3z*iu3y + exp(v2t*zpx(0.,1.))*u2z*iu2y + exp(v1t*zpx(0.,1.))*u1z*iu1y;
+                    else if(mode==1) res(a,b) = exp(v3t*zpx(0.,1.))*u3z*iu3y                                                              ;
+                    else if(mode==2) res(a,b) =                                exp(v2t*zpx(0.,1.))*u2z*iu2y + exp(v1t*zpx(0.,1.))*u1z*iu1y;
                     break;
                 case 8: // zz
-                    res(a,b) = exp(v3t*zpx(0.,1.))*u3z*iu3z + exp(v2t*zpx(0.,1.))*u2z*iu2z + exp(v1t*zpx(0.,1.))*u1z*iu1z;
+                    if     (mode==0) res(a,b) = exp(v3t*zpx(0.,1.))*u3z*iu3z + exp(v2t*zpx(0.,1.))*u2z*iu2z + exp(v1t*zpx(0.,1.))*u1z*iu1z;
+                    else if(mode==1) res(a,b) = exp(v3t*zpx(0.,1.))*u3z*iu3z                                                              ;
+                    else if(mode==2) res(a,b) =                                exp(v2t*zpx(0.,1.))*u2z*iu2z + exp(v1t*zpx(0.,1.))*u1z*iu1z;
+                    break;
+                default:
                     break;
             }
 
@@ -941,7 +989,7 @@ void expand3d(std::valarray<float>  a,
 	for     (ix=0;ix<nx;ix++) {
 	    for (iz=0;iz<nz;iz++) {
 		//b[nb+iy][nb+ix][nb+iz] = a[iy][ix][iz];
-                b[((nb+iy)*nxpad+nb+ix)*nzpad+nb+iz] = a[(iy*nx+ix)*nz+nz];
+                b[((nb+iy)*nxpad+nb+ix)*nzpad+nb+iz] = a[(iy*nx+ix)*nz+iz];
 	    }
 	}
     }
@@ -987,6 +1035,7 @@ void dr3d(std::valarray<float>  u,
           int nz,
           int nx,
           int ny,
+          int nb,
           float dz,
           float dx,
           float dy,
@@ -1002,7 +1051,10 @@ void dr3d(std::valarray<float>  u,
             for         (iy=NOP;iy<ny-NOP;iy++) {
                 for     (ix=NOP;ix<nx-NOP;ix++) {
                     for (iz=NOP;iz<nz-NOP;iz++) {
-                        du[(iy*nx+ix)*nz+iz] = Dx(u,iy,ix,iz,nx,nz,idd);
+                        if(iy>nb && iy<ny-nb && ix>nb && ix<nx-nb && iz>nb && iz<nz-nb)
+                            du[(iy*nx+ix)*nz+iz] = Dx(u,iy,ix,iz,nx,nz,idd);
+                        else
+                            du[(iy*nx+ix)*nz+iz] = 0.f;
                     }
                 }
             }
@@ -1012,7 +1064,10 @@ void dr3d(std::valarray<float>  u,
             for         (iy=NOP;iy<ny-NOP;iy++) {
                 for     (ix=NOP;ix<nx-NOP;ix++) {
                     for (iz=NOP;iz<nz-NOP;iz++) {
-                        du[(iy*nx+ix)*nz+iz] = Dy(u,iy,ix,iz,nx,nz,idd);
+                        if(iy>nb && iy<ny-nb && ix>nb && ix<nx-nb && iz>nb && iz<nz-nb)
+                            du[(iy*nx+ix)*nz+iz] = Dy(u,iy,ix,iz,nx,nz,idd);
+                        else
+                            du[(iy*nx+ix)*nz+iz] = 0.f;
                     }
                 }
             }
@@ -1022,7 +1077,10 @@ void dr3d(std::valarray<float>  u,
             for         (iy=NOP;iy<ny-NOP;iy++) {
                 for     (ix=NOP;ix<nx-NOP;ix++) {
                     for (iz=NOP;iz<nz-NOP;iz++) {
-                        du[(iy*nx+ix)*nz+iz] = Dz(u,iy,ix,iz,nx,nz,idd);
+                        if(iy>nb && iy<ny-nb && ix>nb && ix<nx-nb && iz>nb && iz<nz-nb)
+                            du[(iy*nx+ix)*nz+iz] = Dz(u,iy,ix,iz,nx,nz,idd);
+                        else
+                            du[(iy*nx+ix)*nz+iz] = 0.f;
                     }
                 }
             }

@@ -75,7 +75,7 @@ int main(int argc, char* argv[])
 	int cpuid, numprocs;
 
 	float dt, t0, dr, r0, ds, s0, z0, dz, x0, dx, wfdt;
-	float w0, fcost=0.,gamma;
+	float w0, fcost=0., gamma;
 	float kx,kz,k2,*kk1, *kk2;
 	float kz0, kx0, dkz, dkx;
 	float *rr, *vv, *qq, *grad;
@@ -98,11 +98,11 @@ int main(int argc, char* argv[])
 
   /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 	
+	sf_init(argc, argv);
+
 	MPI_Init(&argc, &argv);
 	MPI_Comm_rank(comm, &cpuid);
 	MPI_Comm_size(comm, &numprocs);
-
-	sf_init(argc, argv);
 
 	if(!sf_getint("function", &function)) function=3;
 	/* if 1, forward modeling; if 2, only calculate misfit; if 3, calculate gradient */
@@ -171,6 +171,8 @@ int main(int argc, char* argv[])
 	dr_v=dr/dx+0.5;
 	r0_v=r0/dx+0.5+nb;
 	rz += nb;
+
+	w0=2.*SF_PI*w0;
 
 	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
@@ -630,7 +632,7 @@ int main(int argc, char* argv[])
 						adjt = sf_cadd(adjt, sf_cmul(conjf(wfl[it][i][rz-nb]), pp[ir][it]));
 #endif
 					}
-				}
+				} // end of adjoint test
 
 
 				/* calculate gradient */

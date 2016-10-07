@@ -1,4 +1,4 @@
-/* 3D visco-elastic time-domain pseudo-spectral (k-space) modeling using KISS-FFT
+/* 3D visco-elastic time-domain pseudo-spectral (k-space) modeling using shared-memory parallel FFT
    sou wavelet  (nx,ny,nc,nt)
    rec data     (nx,ny,nc,nt)
    sou geometry (nc,nx,ny)

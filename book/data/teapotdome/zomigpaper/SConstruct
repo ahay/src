@@ -1,0 +1,175 @@
+from rsf.proj import *
+import math
+
+SConscript('../velspaper/SConstruct')
+
+Flow('vel','tvpairs.txt',
+     '''
+     echo in=$SOURCE data_format=ascii_float n1=2 n2=10 |
+     dd form=native
+     ''',stdin=0)
+
+Flow('Vrms_interp','vel',
+    '''
+      transp | linear
+          n1=2049 o1=0 d1=0.002 
+    ''')
+
+Result('Vrms_interp',
+     '''
+     graph  title=Interpolated Velocity 
+     ''')
+
+Flow ('Vint','Vrms_interp','dix niter=100 rect1=15')
+
+Result('Vint',
+     '''
+     graph  title=Interval Velocity 
+     ''')
+	
+
+Result('stack-filter', '../velspaper/vtxystack.rsf',
+	'''
+	window n1=1000 min3=141 max3=141 |
+	bandpass fhi=20 |
+
+	grey title=stack-filter
+       	label1=Time    unit2=sec 
+       	label2=xline   unit1=count
+        ''')
+Result('stack', '../velspaper/vtxystack.rsf',
+	'''
+	window min3=141 max3=141 |
+	grey title=stack
+       	label1=Time    unit2=sec 
+       	label2=xline   unit1=count
+        ''')
+
+
+Flow ('spray2','Vint','spray axis=2 n=188 d=1 o=1')
+
+Result('spray2',
+     	'''
+     	window j3=20 |
+     	sfgrey color=j  title=Interval Velocity interpolated
+     	''')
+
+Flow ('Vint3D','spray2','spray axis=3 n=345 d=1 o=1')
+
+Result('Vint3D',
+     '''
+     sfbyte | sfgrey3 color=j flat=n 
+     ''')
+
+
+Flow('Vint3Dz','Vint3D','time2depth dz=30 intime=y nz=1200 velocity=Vint3D.rsf')
+
+Result('Vint3Dz',
+     '''
+     byte | sfgrey3 color=j  flat=n title=Interval Velocity interpolated
+     ''')
+########    Change velocity to slowness  ##########################
+
+Flow('slo','Vint3Dz','put d2=110 d3=110 | transp | transp plane=23 | math output=1/input')
+
+Result('slo',
+     '''
+     byte | sfgrey3 color=j  flat=n title=Interval Velocity interpolated
+     ''')
+
+
+
+
+########    FFT  ##########################
+
+
+
+
+
+Flow('fft','../velspaper/vtxystack.rsf',
+     'put d2=110 d3=110 | fft1 | window max1=20 | transp plane=12 | transp plane=23')
+
+
+
+Flow('real','fft','real')
+
+
+
+Result('real',
+     '''
+     byte | sfgrey3 color=j  flat=n title=FFT
+     ''')
+
+
+
+
+# Extended split-step migration
+Flow('mig','fft slo',
+     '''
+     zomig3 ompnth=1 mode=m --readwrite=y verb=y
+            nrmax=1 slo=${SOURCES[1]} pmx=30 pmy=30
+     ''',split=[3,'omp',[0]],reduce='add')
+
+Plot('mig',
+       '''
+       window j3=20 | 
+       grey title=Migration-depth-slices
+       label2=Depth    unit2=ft 
+       label1=Distance unit1=ft
+       ''',view=1)
+
+# ouput of migration is depth slizes.  transpose back to y,x,z 
+# (or z,x,y if you prefer fortran terminology)
+
+Flow('mig_z','mig',
+     'transp plane=23 | transp plane=12')
+
+Plot('mig-z','mig_z',
+       '''
+       window j3=20 | 
+       grey title=Migration transp=y
+       label2=Depth    unit2=ft 
+       label1=Distance unit1=ft
+       ''',view=1)
+
+Flow('mig_t','mig_z','depth2time dt=.002 nt=2049 velocity=Vint3Dz.rsf')
+
+Plot('mig_t','mig_t',
+	'''
+	put d2=1 d3=1 |	
+	window n1=1000 j3=20 |
+	grey title=migration_data_in_time
+       	label2=Time    unit2=s  
+       	label1=Trace unit1=num.
+       ''',view=1)
+Result('mig-t','mig_t',
+	'''
+        put d2=1 d3=1 |	
+	window min3=141 max3=141 n1=1000 |
+	grey title=migration-data-in-time
+       	label1=Time    unit1=s  
+       	label2=Trace unit2=num. gainpanel=a
+       ''')
+
+Fetch('filt_mig.sgy','teapot',server='http://s3.amazonaws.com',top='')
+Flow('filt_mig','filt_mig.sgy',
+     '''
+     sfsegyread 
+         tfile=filt_mig_hdr 
+	 tape=${SOURCES[0]} 
+	 hfile=filt_mig.asc 
+	 bfile=filt_mig.bin
+     | sfput n2=188 o2=1 n3=345 o3=1
+     ''',stdin=0)
+	
+Result('filt-mig','filt_mig',
+	'''
+	window n1=1000 f3=141 n3=1 |
+	grey title=commercial-mig
+       	label1=Time     unit1=sec 
+       	label2=xline    unit2=count
+       ''')
+
+End()
+
+

@@ -87,6 +87,8 @@ int main(int argc, char* argv[])
     par.get("dt",dt,1.e-3);          // time step size
     par.get("tau",tol,1.e-1);        // smoothing radius
     par.get("mode",mode,0);          // wavefield decomposition mode (0->slow S, 1->fast S, 2->P)
+    int jump;
+    par.get("jump",jump,1);          // jump step for reduced lowrank decomposition
 
     /*------------------------------------------------------------*/
     /* setup I/O files                                            */
@@ -288,6 +290,12 @@ int main(int argc, char* argv[])
     sf_complex *ldataxx, *ldatayy, *ldatazz, *ldataxy, *ldataxz, *ldatayz;
     sf_complex *rdataxx, *rdatayy, *rdatazz, *rdataxy, *rdataxz, *rdatayz;
 
+    /* preparation for reduced lowrank */
+    vector<int> ms, ns, js;
+    ms.resize(3); ms[0] = nzpad; ms[1] = nxpad; ms[2] = nypad;
+    ns.resize(3); ns[0] = nkz;   ns[1] = nkx;   ns[2] = nky;
+    js.resize(3); js[0] = jump;  js[1] = jump;  js[2] = jump;
+
     /*------------------------------------------------------------*/
     /* lowrank decomposition and write to files                   */
     /*------------------------------------------------------------*/
@@ -295,7 +303,8 @@ int main(int argc, char* argv[])
     {
         compa = 0;
         compb = 0;
-        iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        //iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        iC( ddlowrank(ms,ns,js,sample,(double)eps,npk,lidx,ridx,mid) );
 
         int m2=mid.m();
         int n2=mid.n();
@@ -332,7 +341,8 @@ int main(int argc, char* argv[])
     {
         compa = 1;
         compb = 1;
-        iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        //iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        iC( ddlowrank(ms,ns,js,sample,(double)eps,npk,lidx,ridx,mid) );
 
         int m2=mid.m();
         int n2=mid.n();
@@ -369,7 +379,8 @@ int main(int argc, char* argv[])
     {
         compa = 2;
         compb = 2;
-        iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        //iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        iC( ddlowrank(ms,ns,js,sample,(double)eps,npk,lidx,ridx,mid) );
 
         int m2=mid.m();
         int n2=mid.n();
@@ -406,7 +417,8 @@ int main(int argc, char* argv[])
     {
         compa = 0;
         compb = 1;
-        iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        //iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        iC( ddlowrank(ms,ns,js,sample,(double)eps,npk,lidx,ridx,mid) );
 
         int m2=mid.m();
         int n2=mid.n();
@@ -443,7 +455,8 @@ int main(int argc, char* argv[])
     {
         compa = 0;
         compb = 2;
-        iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        //iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        iC( ddlowrank(ms,ns,js,sample,(double)eps,npk,lidx,ridx,mid) );
 
         int m2=mid.m();
         int n2=mid.n();
@@ -480,7 +493,8 @@ int main(int argc, char* argv[])
     {
         compa = 1;
         compb = 2;
-        iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        //iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+        iC( ddlowrank(ms,ns,js,sample,(double)eps,npk,lidx,ridx,mid) );
 
         int m2=mid.m();
         int n2=mid.n();

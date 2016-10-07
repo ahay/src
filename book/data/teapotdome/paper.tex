@@ -49,18 +49,18 @@ The workflow is divided into stages that correspond to a typical processing sequ
 
 Following sections describe SConstruct files in separate directories that apply each processing stage.  These sections describe the processing stage and include some of the displays and the conclusions drawn for the processing.  I encourage you to recreate this processing sequence and to refer to the SConstruct files for the details of the commands to use.  You may recreate the processing or build on this paper by selecting your own parameters, using different programs, updating programs, or writing new programs.  
 
-To reproduce these results you must first install Madagascar.  I processed this data on a Linux laptop purchased in 2010 and a MacBook Pro purchased in 2013.  It required about 40 Gbytes for free disk space.  I recomment you avoid Virtual machine or Cygwin, because these systems usually encounter runtime and incompatibility problems.  
+To reproduce these results you must first install Madagascar.  I processed this data on a Linux laptop purchased in 2010 and a MacBook Pro purchased in 2013.  It required about 40 Gbytes for free disk space.  I recomment you avoid Virtual machine or Cygwin, because these systems may encounter runtime and incompatibility problems.  
 
-The processing follows the basic sequence applied by Excell adapted to the Madagascar software.  The Scripts build on the accomplishments of the “SEG 3D Seismic Processing Working Workshop in Houston 2015 – Land 3D”.  See http://www.ahay.org/wiki/ SEG\_3D\_Seismic\_Processing\_Working\_Workshop\_Houston\_2015-\_Land\_3D for more information.
+The processing follows the basic sequence applied by Excell adapted to the Madagascar software.  The Scripts build on the accomplishments of the ``SEG 3D Seismic Processing Working Workshop in Houston 2015 – Land 3D''.  See \url{http://www.ahay.org/wiki/Houston_2015} for more information.
 
 \section{Data Loading}
 The SConsruct file to download the Teapot Dome data from the Internet and convert to Madagascar format is in a separate directory to avoid unnecessary reruns.  If you are working in a group it is best to get a copy of the data on a thumb drive to limit internet traffic.  After getting a copy of the data on your computer you can comment the Internet download commands in the SConstruct file by adding a hashtag to the front of the lines stating with Fetch (do not miss commenting the continuation lines on the pdf files).
 
-To view the data loading SConstruct script starting from your Teapot Dome directory, (\$RSFSRC/book/data/teapotdome in the Madagascar download directory) type into a terminal window:
+To view the data loading SConstruct script starting from your Teapot Dome directory, (\texttt{\$RSFSRC/book/data/teapotdome} in the Madagascar download directory) type into a terminal window:
 
 \begin{verbatim}
 cd Fetchpaper
-emacs SConstruct
+gedit SConstruct
 \end{verbatim}  
 
 Use an editor to look at the script.  Make and updates (eg comment the Fetch
@@ -102,13 +102,13 @@ cat npr3\_gathers.thdr.
 \end{verbatim}
 
 \section{Geometry Display}
-A stacking diagram is a good way to become a familiar with the data you have downloaded.  Assuming you are in the \$RSFSRC/book/data/teapotdome/Fetchpaper directory, you can look at the SConstruct file to make a stacking diagram or fold plot with the commands:
+A stacking diagram is a good way to become a familiar with the data you have downloaded.  Assuming you are in the \texttt{\$RSFSRC/book/data/teapotdome/Fetchpaper} directory, you can look at the SConstruct file to make a stacking diagram or fold plot with the commands:
 \begin{verbatim}  
-cd ../Geompaper
-emacs SConstruct
+cd ../geompaper
+gedit SConstruct
 \end{verbatim}  
  
-The sffold command uses the trace header file created by sfsegyread to make a 3D histogram that shows the trace distribution in offset, xline, and iline.  Sffold required the trace headers to be in floating point format and sfsegyread outputs the data in integer format, so sfdd is used to convert the headers to float.  The program requires the header names and the first, number, and increment for offset, xline, and iline.  The sfheaderattr run in the Fetchpaper directory provides the minimum and maximum of these headers.  The increments (d1, d2, d3) are small enough to get good resolution on the plot, usually the group interval, xline interval, and iline interval.  When you run:
+The sffold command uses the trace header file created by sfsegyread to make a 3D histogram that shows the trace distribution in offset, xline, and iline.  Sffold required the trace headers to be in floating point format and sfsegyread outputs the data in integer format, so sfdd is used to convert the headers to float.  The program requires the header names and the first, number, and increment for offset, xline, and iline.  The sfheaderattr run in the \texttt{Fetchpaper} directory provides the minimum and maximum of these headers.  The increments (d1, d2, d3) are small enough to get good resolution on the plot, usually the group interval, xline interval, and iline interval.  When you run:
 \begin{verbatim}  
 scons
 \end{verbatim}  
@@ -133,7 +133,7 @@ to recreate some foldplots and Figure~\ref{fig:shots-receivers}, a map of the so
 
 The take away from this section is that traces in a 3D land surveys have a complex distribution of source and receiver coordinates.  There are books on the topic (eg 3D Seismic Survey Design, G. J. O. Vermeer)
 
-\inputdir{Geompaper}
+\inputdir{geompaper}
 \plot{foldplot144}{width=\textwidth}{Fold plot for iline 144 shows the trace (xline,offset) distribution.}
 
 \plot{foldmap-400-5000}{width=\textwidth}{Fold plots for offsets 400 and 5000 meter shows the trace (xline,iline) distribution}
@@ -151,13 +151,13 @@ It's important to make a few plots of seismic traces to get an idea of the signa
 \item brute stack a single line
 \end{enumerate}
 
-Starting from the \$RSFSRC/book/data/teapotdome/Geompaper directory, you can look at the SConstruct file for the 'first look' processing with the commands:
+Starting from the \texttt{\$RSFSRC/book/data/teapotdome/geompaper} directory, you can look at the SConstruct file for the 'first look' processing with the commands:
 \begin{verbatim}
-cd ../Firstlookpaper
-emacs SConstruct
+cd ../firstlook
+gedit SConstruct
 \end{verbatim}
 
-The Firstlookpaper/SConstuct file makes use of the 'trace with header' (tah) programs.  These program names all start with sftah, for example sftahnmo, sftahagc and sftahmute.  The tah programs are similar to Seismic Unix programs and are especially useful for handling irregularly sampled data and single channel processing.   It took some experiments with sfheaderattr and sftahgethw to determine good header keys and values to use to select and display a few shots.  Sftahsort was used to select a few shots and order them by (fldr,tracf) and sfwrite put the data to an output file ordered by (time,tracf, fldr).  After some experiments I learned the last two samples on most traces were unusually large and I omitted these time samples with sftahwindow.   There are a different number of traces on each shot, so I used sftahwrite to select a few shots and create a file organized by the (time,trace,shot) header keys. 
+The \texttt{firstlook/SConstuct} file makes use of the 'trace with header' (tah) programs.  These program names all start with sftah, for example sftahnmo, sftahagc and sftahmute.  The tah programs are similar to Seismic Unix programs and are especially useful for handling irregularly sampled data and single channel processing.   It took some experiments with sfheaderattr and sftahgethw to determine good header keys and values to use to select and display a few shots.  Sftahsort was used to select a few shots and order them by (fldr,tracf) and sfwrite put the data to an output file ordered by (time,tracf, fldr).  After some experiments I learned the last two samples on most traces were unusually large and I omitted these time samples with sftahwindow.   There are a different number of traces on each shot, so I used sftahwrite to select a few shots and create a file organized by the (time,trace,shot) header keys. 
 
 After reading the SConstruct file, you can run it from the command line with:
 \begin{verbatim}   
@@ -171,8 +171,7 @@ totaloffset=sqrt(inlineoffset**2 + crosslineoffset**2)
 
 To get a better look at the data, amplitudes are scaled by t**2, a correction of the amplitude lost due to geometric wavefront spreading.  An interactive plot of ffid 214 is created using the sfimage command.  You can “rubber band” a zoom area and create a plot similar to Figure~\ref{fig:tpowshotzoom1}.   The plot look a little different because the plot in this paper is created using sfgrey while the interactive plot is created using sfimage.  One big difference is sfimage laterally interpolates trace amplitudes while sfgrey just uses the amplitude from the nearest trace.
 
-Figure~\ref{fig:tpowshotzoom1} shows linear first breaks, noise on near offsets, and a large linear event that passes 4 seconds near trace 520.  You can measure the velocity of this event using the sfimage plot by clicking the right mouse button (on a Mac trackpad place TWO fingers on the trackpad and while the two fingers are touching the trackpad, click the trackpad button).  The mouse coordinate will appear on the upper left of the display.  I picked the event time and used the group interval (220 feet from the pdf in the Fetchpaper directory) to estimate the event velocity:
-
+Figure~\ref{fig:tpowshotzoom1} shows linear first breaks, noise on near offsets, and a large linear event that passes 4 seconds near trace 520.  You can measure the velocity of this event using the sfimage plot by clicking the right mouse button (on a Mac trackpad place TWO fingers on the trackpad and while the two fingers are touching the trackpad, click the trackpad button).  The mouse coordinate will appear on the upper left of the display.  I picked the event time and used the group interval (220 feet from the pdf in the \texttt{Fetchpaper} directory) to estimate the event velocity:
 \begin{verbatim}  
 Time           trace  offset
 minimum  540    0
@@ -202,7 +201,7 @@ Figure~\ref{fig:nmomutecheck} shows part of a shotpoint after nmo with and witho
 
 Figure~\ref{fig:brutestack141} is a brute stack of line 141 from the 3D survey.  The “brute stack” is the name of the first stack on a land survey made usually using a single velocity function and no residual statics.
 
-\inputdir{Firstlookpaper}
+\inputdir{firstlook}
 \plot{rawshot1}{width=\textwidth}{Field traces for field file identifier (FFID) 214.  Shows 17 receiver cables recorded data on this shotpoint. }
 
 \plot{tpowshotzoom1}{width=\textwidth}{Zoom of the central cable in Figure~\ref{fig:rawshot1}.  This plot shows linear first breaks, noise on near offsets, and a large amplitude, linear event that passes 4 seconds near trace 520.  The large amplitude, linear event is an airwave.}
@@ -220,15 +219,17 @@ Figure~\ref{fig:brutestack141} is a brute stack of line 141 from the 3D survey. 
 \section{Surface Consistent Decon}
 The previous section, first look, created a few displays for the trace data, picked a predecon mute, a stack mute, and showed improvement from some basic processing.  The 'first look' section used single trace deconvolution.  Surface consistent decon (Hutchinson and Link, 1984; Cary and Lorentz, 1993) is more stable on data with poor signal and is widely used for land processing.  Surface consistent decon computes a constant operator for each surface location.  
 
-Starting from the \$RSFSRC/book/data/teapotdome/firstlook directory, you can look at the SConstruct file for the surface consistent decon with the commands:
-cd ../Scdeconpaper
-emacs SConstruct
+Starting from the \texttt{\$RSFSRC/book/data/teapotdome/firstlook} directory, you can look at the SConstruct file for the surface consistent decon with the commands:
+\begin{verbatim}
+cd ../scdeconpaper
+gedit SConstruct
+\end{verbatim}
 
-The key program for this processing stage is sftahscdecon.  It was derived from sftahpef and is very similar.  The Madagascar program allows a shot decon or a receiver decon to be applied.  This is simpler than the multi component decomposition described in the references  (Hutchinson and Link, 1984; Cary and Lorentz, 1993) and is an algorithm widely used in industry.  The program computes a single operator for each ensemble of traces.  To apply shot consistent decon, to data must be sorted to shot order and key='sx,sy' is input to sftahscdecon.  The program averages trace autocorrelations and uses the header keys sx and sy to identify the end of an ensemble.  At the end of the ensemble the averaged autocorrelation is used to design a prediction error filter (decon filter) and applies the filter to all traces in the gather.  After shot decon the data is written to a file so the data can be sorted into receiver gathers and sftahscdecon used to apply receiver consistent decon.  Other than the key parameter, the parameters in sftahscdecon are the same as the parameters in sftahpef.  This SConstruct file used the same parameter values for the length of the decon operator and the decon design gate (minlag, maxlag, minfor, and maxcorr.) as used in sftahpef in the firstlook directory.  Since decon will be applied twice in the surface consistent processing, pnoise was increased from .01 to .1 to prevent “over whitening”  the data.
+The key program for this processing stage is sftahscdecon.  It was derived from sftahpef and is very similar.  The Madagascar program allows a shot decon or a receiver decon to be applied.  This is simpler than the multi component decomposition described in the references  (Hutchinson and Link, 1984; Cary and Lorentz, 1993) and is an algorithm widely used in industry.  The program computes a single operator for each ensemble of traces.  To apply shot consistent decon, to data must be sorted to shot order and key='sx,sy' is input to sftahscdecon.  The program averages trace autocorrelations and uses the header keys sx and sy to identify the end of an ensemble.  At the end of the ensemble the averaged autocorrelation is used to design a prediction error filter (decon filter) and applies the filter to all traces in the gather.  After shot decon the data is written to a file so the data can be sorted into receiver gathers and sftahscdecon used to apply receiver consistent decon.  Other than the key parameter, the parameters in sftahscdecon are the same as the parameters in sftahpef.  This SConstruct file used the same parameter values for the length of the decon operator and the decon design gate (minlag, maxlag, minfor, and maxcorr.) as used in sftahpef in the \texttt{firstlook} directory.  Since decon will be applied twice in the surface consistent processing, pnoise was increased from .01 to .1 to prevent “over whitening”  the data.
 
 Figure~\ref{fig:scdeconcdps} shows a few CDP gathers with shot and receiver consistent decon applied.  Figure~\ref{fig:scdeconstack141} shows the stack for line 141 with surface consistent decon.
 
-\inputdir{Scdeconpaper}
+\inputdir{scdeconpaper}
 \plot{scdeconcdps}{width=\textwidth}{A few CDP gathers with shot and receiver consistent decon applied. }
 
 \plot{scdeconstack141}{width=\textwidth}{The stack for line 141 with shot and receiver consistent decon applied.}
@@ -236,20 +237,19 @@ Figure~\ref{fig:scdeconcdps} shows a few CDP gathers with shot and receiver cons
 \section{Stack with V(t,x,y)}
 
 Previous sections ``first look'' and  ``surface consistant decon'', applied normal moveout  with a single velocity function from the file:
-
-\$RSFSRC/book/data/teapotdome/Fetchpaper/npr3\_dmo.vel
+\texttt{\$RSFSRC/book/data/teapotdome/Fetchpaper/npr3\_dmo.vel}.
 
 This section interpolates the velocities so NMO can be applied with a space variant velocity field, V(t,x,y), and the stackes the data.
 
-Starting from the \$RSFSRC/book/data/teapotdome/Scdeconpaper directory, you can look at the SConstruct file for stack with V(t,x,y) with the commands:
+Starting from the \texttt{\$RSFSRC/book/data/teapotdome/scdeconpaper} directory, you can look at the SConstruct file for stack with V(t,x,y) with the commands:
 \begin{verbatim}  
-cd ../Velspaper
-emacs SConstruct
+cd ../velspaper
+gedit SConstruct
 \end{verbatim}  
 
 There are two stages for this process.  First the velocity is interpolated with a python program, interpvel.py to every to every (t,xline,iline) location.  The interpolation is linear in time and uses radial basis functions in space.  The interpolated velocity is saved in an rsf file and displayed (Figure~\ref{fig:vel3}). The second stage is to apply NMO using this velocity field using sftahnmo and create gathers with NMO and stacks.  As each trace is processed by sftahnmo, the (t,xline,iline) is read from the trace header and the velocity function for that location is read from file created by interpvel.py.  A few CDP gathers and a stack of iline 141 are created and shown in figures ~\ref{fig:vtxycdps} and ~\ref{fig:vtxystack141}.  These can be compared to processing with a single velocity function in figures ~\ref{fig:scdeconcdps} and ~\ref{fig:scdeconstack141}.
 
-\inputdir{Velspaper}
+\inputdir{velspaper}
 \plot{vel3}{width=\textwidth}{The downloaded velocity field velocity field, 	npr3\_dmo.vel, interpolated using radial basis functions.}
 
 \plot{vtxycdps}{width=\textwidth}{A few CDP gathers from iline 141 with NMO using V(t,x,y) applied.}
@@ -262,10 +262,10 @@ This section migrates the stacked volume using 3-D zero-offset extended split st
 
 A simple V(z) velocity field is used for the migration.  The SConstruct file takes about 8 hours to run migration on my MacBook Pro, even though migration has been limited to 20 Hz.   This algorithm allows the velocity field to vary laterally and it should be possible to produce equivalent results much more efficiently using phase shift migration.
  
-Starting from the \$RSFSRC/book/data/teapotdome/Velspaper directory, you can look at the SConstruct file for migration with the commands:
+Starting from the \texttt{\$RSFSRC/book/data/teapotdome/velspaper} directory, you can look at the SConstruct file for migration with the commands:
 \begin{verbatim}  
-cd ../Zomigpaper
-emacs SConstruct
+cd ../zomigpaper
+gedit SConstruct
 \end{verbatim}  
 
 This migration algorithm downward continues each frequency through each depth step.  The program requires the velocity to be converted from Vrms(t) to interval slowness (1/Vint) in depth and spread into a 3D volume with depth as the slowest axis.  The resulting file is slo(xline,iline,depth).  The stack data must be converted the frequency and transposed to make frequency the slowest axis.  The resulting data in fft(xline,iline,frequency).  
@@ -285,7 +285,7 @@ Figure~\ref{fig:real} shows the real part of the stack data after Fourier transf
 
 Figure~\ref{fig:mig-t} is the migrated data converted back to time.  It can be compared to the commercial migration in Figure~\ref{fig:filt-mig}.  One large difference in these results is the commercial migration has zeroed the areas zero on the input stack, a common practice.  Another difference is 20 Hz high cut filter applied to limit compute time when creating Figure ~\ref{fig:mig-t}.  
 
-\inputdir{Zomigpaper}
+\inputdir{zomigpaper}
 \plot{stack-filter}{width=\textwidth}{Final stack with a 20 Hz high cut filter.}
 
 \plot{slo}{width=\textwidth}{The interval velocity slowness for input to sfzomig3.}
@@ -317,9 +317,8 @@ The Teapot Dome 3D survey is a land 3D dataset from Wyoming provided by the U.S.
 
 Excell provided the original commercial processing.  Excell's processing sequence and results are important references.
 
-The scripts build on the accomplishments of the “SEG 3D Seismic Processing Working Workshop in Houston 2015 – Land 3D”.  See 
-
-http://www.ahay.org/wiki/SEG\_3D\_Seismic\_Processing\_Working\_Workshop\_Houston\_2015-\_Land\_3D for more information.  I thank the participants for their contributions.
+The scripts build on the accomplishments of the ``SEG 3D Seismic Processing Working Workshop in Houston 2015 – Land 3D''.  See 
+\url{http://www.ahay.org/wiki/Houston_2015} for more information.  I thank the participants for their contributions.
 
 I thank the developers of the Madagascar open-source software package (Fomel et al., 2013).
 

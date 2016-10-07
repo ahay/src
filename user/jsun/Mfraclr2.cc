@@ -1,4 +1,5 @@
 // Complex lowrank decomposition for 2-D viscoacoustic isotropic wave propagation. 
+// deprecated -- please use sfzfraclr2
 //   Copyright (C) 2014 University of Texas at Austin
 //  
 //   This program is free software; you can redistribute it and/or modify

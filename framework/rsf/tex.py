@@ -268,8 +268,7 @@ def latify(target=None,source=None,env=None):
 
 def sage_emit(target=None, source=None, env=None):
     sage = str(source[0])    
-    stem = suffix.sub('',sage)
-    target.append(stem+'.py')
+    target.append(sage+'.py')
     return target, source
 
 def latex_emit(target=None, source=None, env=None):

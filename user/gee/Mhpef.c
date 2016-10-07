@@ -123,7 +123,7 @@ int main(int argc, char* argv[])
 
     sf_floatread (dd,n123,in);
 
-    bound (dim, n0, n, a, aa); 
+    bound (dim, false, n0, n, a, aa); 
  	
     find_mask(n123, kk, aa);   /* account for missing data */
     
