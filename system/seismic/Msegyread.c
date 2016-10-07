@@ -323,7 +323,10 @@ int main(int argc, char *argv[])
 
     if (su) {
 	if (!sf_getbool("suxdr",&suxdr)) suxdr=false;
-	/* y, SU has XDR support */
+	/* y, SU has XDR support.  
+           SU with xdr on (as downloaded), use endian=y suxdr=y
+           SU with xdr off in the makefiles, use endian=n suxdr=n   
+        */
     } else {
 	suxdr = true;
     }
