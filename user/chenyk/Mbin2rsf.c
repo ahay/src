@@ -1,4 +1,15 @@
-/* Binary file to RSF file */
+/* Binary file to RSF file 
+Convert a file containing a two dimensional array of binary floats to 
+.rsf format.  n1*n2*sizeof(float) bytes are read from the input file
+and the rsf file is written to standard output.  If you have a higher
+dimension file (3d, 4d, ..) you can change n2, n3, etc using sfput.  
+
+Example that converts and plots a binary velocity grid:
+
+<Vp sfbin2rsf n1=400 d1=1 n2=1600 d2=1 o2=101 \\
+| sfgrey color=jet scalebar=y allpos=y | sfpen
+ 
+*/
 /*
   Copyright (C) 2013 University of Texas at Austin
    
@@ -71,6 +82,8 @@ int main(int argc, char *argv[])
 	{
 	sf_error("Cannot open \"%s\" for reading:",bfilename);
 	}
+    /* if bfile is not input, data will be read from stdin */
+
     fread(u,1,n1*n2*sizeof(float),bfile);
     fclose(bfile);
 
