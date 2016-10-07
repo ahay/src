@@ -75,7 +75,7 @@ int main(int argc, char* argv[])
 	int cpuid, numprocs;
 
 	float dt, t0, dr, r0, ds, s0, z0, dz, x0, dx, wfdt;
-	float w0, fcost=0.,gamma;
+	float w0, fcost=0., gamma;
 	float kx,kz,k2,*kk1, *kk2;
 	float kz0, kx0, dkz, dkx;
 	float *rr, *vv, *qq, *grad;
@@ -171,6 +171,8 @@ int main(int argc, char* argv[])
 	dr_v=dr/dx+0.5;
 	r0_v=r0/dx+0.5+nb;
 	rz += nb;
+
+	w0=2.*SF_PI*w0;
 
 	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
@@ -630,7 +632,7 @@ int main(int argc, char* argv[])
 						adjt = sf_cadd(adjt, sf_cmul(conjf(wfl[it][i][rz-nb]), pp[ir][it]));
 #endif
 					}
-				}
+				} // end of adjoint test
 
 
 				/* calculate gradient */
