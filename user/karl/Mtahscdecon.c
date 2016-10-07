@@ -30,7 +30,7 @@ sftahsort \\
 | sftahscdecon \\
    key="sx,sy" \\
    length=140 \\
-   pmoise=.001 \\
+   pnoise=.001 \\
    verbose=0  \\
 |  sftahwrite output=shotdecon.rsf \\
    mode=seq \\
