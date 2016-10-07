@@ -1,4 +1,4 @@
-/* Pseudo-spectral wave extrapolation for second-order two-way wave equation */
+/* Pseudo-spectral migration/de-migration adjoint operators using second-order two-way wave equation */
 /*
   Copyright (C) 2009 University of Texas at Austin
   
