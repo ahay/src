@@ -384,6 +384,46 @@ int main(int argc, char** argv)
             sf_axis acx = sf_maxa(nqx,oqx,dx); sf_setlabel(acx,"x"); if(verb) sf_raxa(acx);
             sf_axis acy = sf_maxa(nqy,oqy,dy); sf_setlabel(acy,"y"); if(verb) sf_raxa(acy);
 
+            // DEBUG!
+            //if (media==1) {
+            //    cut3d(velx_g,tmp,fdm_g,az,ax,ay);
+            //    sf_file Ftmp1 = sf_output("tmpfile-vx");
+            //    sf_settype(Ftmp1,SF_FLOAT);
+            //    sf_oaxa(Ftmp1,acz,1);
+            //    sf_oaxa(Ftmp1,acx,2);
+            //    sf_oaxa(Ftmp1,acy,3);
+            //    sf_floatwrite(tmp[0][0],sf_n(acz)*sf_n(acx)*sf_n(acy),Ftmp1);
+            //    cut3d(velz_g,tmp,fdm_g,az,ax,ay);
+            //    sf_file Ftmp2 = sf_output("tmpfile-vp");
+            //    sf_settype(Ftmp2,SF_FLOAT);
+            //    sf_oaxa(Ftmp2,acz,1);
+            //    sf_oaxa(Ftmp2,acx,2);
+            //    sf_oaxa(Ftmp2,acy,3);
+            //    sf_floatwrite(tmp[0][0],sf_n(acz)*sf_n(acx)*sf_n(acy),Ftmp2);
+            //    cut3d(eta_g,tmp,fdm_g,az,ax,ay);
+            //    sf_file Ftmp3 = sf_output("tmpfile-eta");
+            //    sf_settype(Ftmp3,SF_FLOAT);
+            //    sf_oaxa(Ftmp3,acz,1);
+            //    sf_oaxa(Ftmp3,acx,2);
+            //    sf_oaxa(Ftmp3,acy,3);
+            //    sf_floatwrite(tmp[0][0],sf_n(acz)*sf_n(acx)*sf_n(acy),Ftmp3);
+            //    cut3d(theta_g,tmp,fdm_g,az,ax,ay);
+            //    sf_file Ftmp4 = sf_output("tmpfile-theta");
+            //    sf_settype(Ftmp4,SF_FLOAT);
+            //    sf_oaxa(Ftmp4,acz,1);
+            //    sf_oaxa(Ftmp4,acx,2);
+            //    sf_oaxa(Ftmp4,acy,3);
+            //    sf_floatwrite(tmp[0][0],sf_n(acz)*sf_n(acx)*sf_n(acy),Ftmp4);
+            //} else {
+            //    cut3d(vel_g,tmp,fdm_g,az,ax,ay);
+            //    sf_file Ftmp = sf_output("tmpfile-v");
+            //    sf_settype(Ftmp,SF_FLOAT);
+            //    sf_oaxa(Ftmp,acz,1);
+            //    sf_oaxa(Ftmp,acx,2);
+            //    sf_oaxa(Ftmp,acy,3);
+            //    sf_floatwrite(tmp[0][0],sf_n(acz)*sf_n(acx)*sf_n(acy),Ftmp);
+            //}
+ 
             sf_file Fimg = NULL; /* single shot image */
             if(migr) {
                 char img_file[100];

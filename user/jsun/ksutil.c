@@ -1840,6 +1840,7 @@ dft3d dft3d_init(int pad1,
     } else {
         dft->dky = 0.; dft->oky = 0.;
     }
+    if(fdm->verb) sf_warning("DFT: nkz=%d, dkz=%g, okz=%g, nkx=%d, dkx=%g, okx=%g, nky=%d, dky=%g, oky=%g",dft->nkz,dft->dkz,dft->okz,dft->nkx,dft->dkx,dft->okx,dft->nky,dft->dky,dft->oky);
 
     return dft;
 }

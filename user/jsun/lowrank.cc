@@ -158,7 +158,7 @@ void lowrank_tti(float *velx, float *velz, float *eta, float *theta)
     for (int i=0; i<m; i++) {
         vx[i] = velx[i];
         vz[i] = velz[i];
-        q[i]  = eta[i];
+        q[i] = 8*eta[i]/(1.0+2*eta[i]); /* from eta to q */
         t[i]  = theta[i]*SF_PI/180.; /* from degrees to radians */
     }
 }
@@ -170,11 +170,8 @@ int lowrank_rank()
 
     srand48(seed);
 
-    if(ms[2]>1) {
-        iC( ddlowrank(ms,ns,js,sample,(double)eps,npk,lidx,ridx,mid) );
-    } else {
-        iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
-    }
+    //iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
+    iC( ddlowrank(ms,ns,js,sample,(double)eps,npk,lidx,ridx,mid) );
 
     nrank = mid.n();
     return nrank;
