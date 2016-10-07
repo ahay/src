@@ -18,8 +18,7 @@ EXAMPLES:
            tape=npr3_field.sgy > teapot.rsf
 
    # read the tfile, which contains the segy trace headers
-   < tteapot.rsf sfdd type=float             \\
-   | sffold verbose=1                        \\
+   < teapot_hdr.rsf sffold verbose=1        \\
             o1=0 n1=96  d1=200 label1=offset \\
             o2=1 n2=188 d2=1   label2=xline  \\
             o3=1 n3=345 d3=1   label3=iline  \\
@@ -63,6 +62,12 @@ int main(int argc, char* argv[])
     int verbose;
     float o1, o2, o3, d1, d2, d3;
     int n1, n2, n3, n1_input, n_input, i_input;
+    int dim_in;
+    int iaxis;
+    char parameter[13];
+    off_t n_in[SF_MAX_DIM];
+    char* data_format=NULL;
+    sf_datatype typehead;
     int idx_offset,idx_xline,idx_iline;
     char* label1;
     char* label2;
@@ -118,8 +123,6 @@ int main(int argc, char* argv[])
     if(NULL == (label3 = sf_getstring("label3")))label3="iline";
     /* header for axis3 - usually iline  */
 
-    if (SF_FLOAT != sf_gettype (in)) sf_error("Need float input");
-
     /* Find out the length of headers (vectors) in the input file and the 
        number of locations to loop over 
     */
@@ -127,7 +130,12 @@ int main(int argc, char* argv[])
     if (!sf_histint(in,"n1",&n1_input)) 
 	sf_error("input file does not define n1");
 
-    n_input = sf_leftsize(in,1); /* left dimensions after the first two */
+    n_input = sf_leftsize(in,1); /* left dimensions after the first one */
+
+    data_format=sf_histstring(in,"data_format");
+    fprintf(stderr,"data_format=%s\n",data_format);
+    if(strcmp (data_format,"native_int")==0) typehead=SF_INT;
+    else                                       typehead=SF_FLOAT;
 
     /* allocate space for the one location from the input file */ 
     hdrin = sf_floatalloc(n1_input);
@@ -148,10 +156,20 @@ int main(int argc, char* argv[])
     sf_putfloat(out,"d1",d1);
     sf_putfloat(out,"d2",d2);
     sf_putfloat(out,"d3",d3);
-
+    /* if input file is more than 3 dimension, force dimensions lengths
+       after 3 to be one (i.e. add n4=1 n5=1 upto iput dimension) */
+    dim_in=sf_largefiledims(in,n_in);
+    for (iaxis=3; iaxis<dim_in; iaxis++){
+      sprintf(parameter,"n%d",iaxis+1);
+      sf_putint(out,parameter,1);
+    }
+ 
     sf_putstring(out,"label1",label1);
     sf_putstring(out,"label2",label2);
     sf_putstring(out,"label3",label3);
+
+    /* make output file float, even it input headers are integer */
+    sf_setformat(out,"native_float");
 
     /* get the location of the three labels in the header */
     idx_offset=segykey (label1);
@@ -169,9 +187,19 @@ int main(int argc, char* argv[])
     for (i_input=0 ; i_input<n_input; i_input++) {
 	int iiline,ixline,ioffset;
 	sf_floatread(hdrin,n1_input,in);
-	ioffset=roundf((hdrin[idx_offset]-o1)/d1);
-	ixline =roundf((hdrin[idx_xline ]-o2)/d2);
-	iiline =roundf((hdrin[idx_iline ]-o3)/d3);
+	/* if input are integers, make hdrin integer to read correctly */ 
+	if(SF_INT == typehead){ 
+	  if(verbose>2)fprintf(stderr,"typehead=SF_INT\n");
+	  ioffset=roundf((((int*)hdrin)[idx_offset]-o1)/d1);
+	  ixline =roundf((((int*)hdrin)[idx_xline ]-o2)/d2);
+	  iiline =roundf((((int*)hdrin)[idx_iline ]-o3)/d3);
+	}else{
+	  if(verbose>2)fprintf(stderr,"typehead=SF_FLOAT\n");
+	  ioffset=roundf((         hdrin [idx_offset]-o1)/d1);
+	  ixline =roundf((         hdrin [idx_xline ]-o2)/d2);
+	  iiline =roundf((         hdrin [idx_iline ]-o3)/d3);
+	}
+
 	if(verbose>2){
 	    fprintf(stderr,"offset=%f,xline=%f,iline=%f\n",
 		    hdrin[idx_offset],
