@@ -403,16 +403,16 @@ void bel3d_init(int n,
     if(fdm->nypad>1) {
         nbel = n;
         nbel_y = n;
-        if( rtm->sou_z<(fdm->nb+nbel)   || rtm->sou_z>(fdm->nzpad-fdm->nb-nbel) ||
-            rtm->sou_x<(fdm->nb+nbel)   || rtm->sou_x>(fdm->nxpad-fdm->nb-nbel) ||
-            rtm->sou_y<(fdm->nb+nbel_y) || rtm->sou_y>(fdm->nypad-fdm->nb-nbel_y) )
-        sf_error("Bell taper width too big! sou_z=%d, sou_x=%d, sou_y=%d, nb=%d, nbel=%d",rtm->sou_z,rtm->sou_x,rtm->sou_y,fdm->nb,nbel);
+        if( rtm->sou_z<(nbel)   || rtm->sou_z>(fdm->nzpad-nbel) ||
+            rtm->sou_x<(nbel)   || rtm->sou_x>(fdm->nxpad-nbel) ||
+            rtm->sou_y<(nbel_y) || rtm->sou_y>(fdm->nypad-nbel_y) )
+        sf_error("Bell taper width too big! sou_z=%d, sou_x=%d, sou_y=%d, nbel=%d",rtm->sou_z,rtm->sou_x,rtm->sou_y,nbel);
     } else {
         nbel = n;
         nbel_y = 0;
-        if( rtm->sou_z<(fdm->nb+nbel) || rtm->sou_z>(fdm->nzpad-fdm->nb-nbel) ||
-            rtm->sou_x<(fdm->nb+nbel) || rtm->sou_x>(fdm->nxpad-fdm->nb-nbel) )
-        sf_error("Bell taper width too big! sou_z=%d, sou_x=%d, nb=%d, nbel=%d",rtm->sou_z,rtm->sou_x,fdm->nb,nbel);
+        if( rtm->sou_z<(nbel) || rtm->sou_z>(fdm->nzpad-nbel) ||
+            rtm->sou_x<(nbel) || rtm->sou_x>(fdm->nxpad-nbel) )
+        sf_error("Bell taper width too big! sou_z=%d, sou_x=%d, nbel=%d",rtm->sou_z,rtm->sou_x,nbel);
     }
 
     s = (nbel==0)? 1 : 2.0/(nbel*nbel);
