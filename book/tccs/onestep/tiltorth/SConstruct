@@ -1,0 +1,149 @@
+from rsf.proj import *
+
+q=1.6
+
+"""
+# Greenhorn shale TTI
+c11=14.470000
+c13=4.510000
+c33=9.570000
+c55=2.280000
+c66=3.000000
+c12=c11-2*c66
+c22=c11
+c23=c13
+c44=c55
+"""
+
+# Shoenberg and Hilbig
+c11=9.0
+c12=3.6
+c13=2.25
+c22=9.84
+c23=2.4
+c33=5.9375
+c44=2.0
+c55=1.6
+c66=2.182
+
+dim=256
+
+dtt=0.0005
+nt=501
+dt=0.002
+factor=dt/dtt
+
+Flow('source1',None,
+     '''
+     spike n1=%d d1=%g k1=200 | 
+     ricker1 frequency=15 
+     '''%(nt*factor,dtt))
+Flow('real','source1','math "output=0"')
+Flow('imag','source1','envelope hilb=y | halfint | halfint | math output="input/2" ')
+
+Flow('csource1','real imag','cmplx ${SOURCES[1]}')
+Flow('csource','csource1','window j1=%d'% factor)
+Flow('source','source1','window j1=%d'% factor)
+Result('source','graph  title="Source Wavelet" ')
+
+# (x2-1.5)*(x2-1.5)+(x3-1)*(x3-1)+(x1)*(x1)
+Flow('c11',None,
+     '''
+     spike n1=%d n2=%d n3=%d d1=0.025 d2=0.025 d3=0.025 o1=0 o2=0 o3=0 unit1=km unit2=km unit3=km |
+     math output="%g + 0.06*( (x2-3.2)*(x2-3.2)+(x3-3.2)*(x3-3.2)+(x1-2.0)*(x1-2.0) )*%g"
+     '''%(dim,dim,dim,c11,q) )
+Result('c11',
+       '''
+       byte bias=%g bar=bar1.rsf barreverse=y |
+       grey3 transp=y pclip=100 color=j allpos=y
+       label1="Z" label2="X" label3="Y" scalebar=y poly=n
+       frame1=%d frame2=%d frame3=%d flat=y screenratio=1
+       unit1=km unit2=km unit3=km title="C11" 
+       point1=0.5 point2=0.5
+       '''%(c11+1.5,dim/2,dim/2,dim/2) )
+Flow('c12','c11',
+     '''
+     math output="%g + 0.02*( (x2-3.2)*(x2-3.2)+(x3-3.2)*(x3-3.2)+(x1-2.0)*(x1-2.0) )*%g"
+     '''%(c12,q))
+Flow('c13','c11',
+     '''
+     math output="%g + 0.015*( (x2-3.2)*(x2-3.2)+(x3-3.2)*(x3-3.2)+(x1-2.0)*(x1-2.0) )*%g"
+     '''%(c13,q) )
+Flow('c22','c11',
+     '''
+     math output="%g + 0.06*( (x2-3.2)*(x2-3.2)+(x3-3.2)*(x3-3.2)+(x1-2.0)*(x1-2.0) )*%g"
+     '''%(c22,q) )
+Flow('c23','c11',
+     '''
+     math output="%g + 0.017*( (x2-3.2)*(x2-3.2)+(x3-3.2)*(x3-3.2)+(x1-2.0)*(x1-2.0) )*%g"
+     '''%(c23,q) )
+Flow('c33','c11',
+     '''
+     math output="%g + 0.04*( (x2-3.2)*(x2-3.2)+(x3-3.2)*(x3-3.2)+(x1-2.0)*(x1-2.0) )*%g"
+     '''%(c33,q) )
+Flow('vc1','c33',
+     '''
+     math output="sqrt(input)"
+     ''')
+Flow('c44','c11',
+     '''
+     math output="%g + 0.012*( (x2-3.2)*(x2-3.2)+(x3-3.2)*(x3-3.2)+(x1-2.0)*(x1-2.0) )*%g"
+     '''%(c44,q) )
+Flow('c55','c11',
+     '''
+     math output="%g + 0.01*( (x2-3.2)*(x2-3.2)+(x3-3.2)*(x3-3.2)+(x1-2.0)*(x1-2.0) )*%g"
+     '''%(c55,q) )
+Flow('c66','c11',
+     '''
+     math output="%g + 0.018*( (x2-3.2)*(x2-3.2)+(x3-3.2)*(x3-3.2)+(x1-2.0)*(x1-2.0) )*%g"
+     '''%(c66,q) )
+Flow('refl','c11',
+     '''
+     spike k1=%d k2=%d k3=%d |
+     smooth rect1=2 rect2=2 rect3=3 repeat=3
+     ''' %(dim/2,dim/2,dim/2) )
+Flow('seta1','c11','math output=45')
+Flow('seta2','c11','math output=45')
+
+# Lowrank decomposition
+Flow('fftc','vc1','rtoc | fft3 axis=1 pad=1 | fft3 axis=2 pad=1 | fft3 axis=3 pad=1')
+
+for m in [0,1,2]:
+
+    right = 'right-%d'  % m
+    left = 'left-%d'  % m
+    wavec = 'wavec-%d' % m
+    snapsc = 'snapsc-%d' % m
+
+    Flow([right,left],'c11 fftc c12 c13 c22 c23 c33 c44 c55 c66 seta1 seta2',
+         '''
+         zortholr3 seed=2010 npk=30 eps=0.0001 dt=%g mode=%d tilt=y
+         fft=${SOURCES[1]} c12=${SOURCES[2]} c13=${SOURCES[3]} 
+         c22=${SOURCES[4]} c23=${SOURCES[5]} c33=${SOURCES[6]} 
+         c44=${SOURCES[7]} c55=${SOURCES[8]} c66=${SOURCES[9]}
+         seta1=${SOURCES[10]} seta2=${SOURCES[11]}
+         left=${TARGETS[1]}
+         ''' % (dt,m))
+    
+    Flow([wavec,snapsc],['csource','refl',left,right],
+         '''
+         cfftwave3p ref=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]} verb=y
+         snap=5 snaps=${TARGETS[1]}
+         ''')
+    
+    Result(wavec,
+           '''
+           byte gainpanel=all |
+           grey3 frame1=%d frame2=%d frame3=%d point1=0.5 point2=0.5
+           wanttitle=n label1=Z label2=X label3=Y flat=y screenratio=1
+           ''' %(dim/2,dim/2,dim/2) )
+
+Flow('wavecs','wavec-1 wavec-2','sfadd ${SOURCES[1]}')
+Result('wavecs',
+       '''
+       byte gainpanel=all |
+       grey3 frame1=%d frame2=%d frame3=%d point1=0.5 point2=0.5
+       wanttitle=n label1=Z label2=X label3=Y flat=y screenratio=1
+       ''' %(dim/2,dim/2,dim/2) )
+
+End()

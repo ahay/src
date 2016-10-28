@@ -1,0 +1,342 @@
+from rsf.proj import *
+
+def igrey(custom):
+    return '''
+    grey color=j labelsz=5 titlesz=6 %s
+    ''' %(custom)
+
+def grey(custom):
+    return '''
+    grey labelsz=5 titlesz=6 %s
+    ''' %(custom)
+
+def srcgen(par):
+    dtt=0.0001
+    fac=par['dt']/dtt
+    ntt=(par['nt']-1)*fac+1
+    ktt=(par['srcbgn']-1)*fac+1
+
+    #i/(2*phi)=i/(2|omega|)=i/2 * (hilb) [(int)source] 
+
+    Flow('source1',None,
+         '''
+         spike n1=%d d1=%g k1=%d |
+         ricker1 frequency=%g
+         '''%(ntt,dtt,ktt,par['frq']))
+    Flow('realsrc','source1','math "output=0"')
+    Flow('imagsrc','source1','envelope hilb=y order=500 | halfint | halfint | math output="input/2" ')
+    
+    Flow('csource1','realsrc imagsrc','cmplx ${SOURCES[1]}')
+    Flow('csource','csource1','window j1=%d'% fac)
+    return 'csource'
+
+def zolsrtm(Mod,Dat,Adj,par):
+    if (Adj):
+        Flow(Mod,[Dat,Ffleft,Ffright],
+            '''
+            zolsrtm2 adj=y verb=y nt=%(nt)d dt=%(dt)g
+            gpz=%(gpz)d nz=%(nz)d dz=%(dz)g left=${SOURCES[1]} right=${SOURCES[2]} 
+            ''' % par)
+    else:
+        Flow(Dat,[Mod,Ffleft,Ffright],
+            '''
+            zolsrtm2 adj=n verb=y nt=%(nt)d dt=%(dt)g
+            gpz=%(gpz)d nz=%(nz)d dz=%(dz)g left=${SOURCES[1]} right=${SOURCES[2]} 
+            ''' % par)
+
+Flow('vel','vel.asc','echo in=$SOURCE n1=398 n2=161 data_format=ascii_float | dd form=native | put d1=12.5 d2=12.5 o1=0 o2=0 | transp plane=12 ')
+
+Flow('q','q.asc','echo in=$SOURCE n1=398 n2=161 data_format=ascii_float | dd form=native | put d1=12.5 d2=12.5 o1=0 o2=0 | transp plane=12 ')
+
+Result('vel','grey allpos=y color=j title="BP velocity model" unit1=m unit2=m label1=Depth label2=Distance bias=1500 scalebar=y barreverse=y')
+Result('q','grey allpos=y color=j title="BP Q model" unit1=m unit2=m label1=Depth label2=Distance scalebar=y barreverse=y')
+
+par = {
+    # constant-Q
+    'w0' : 1500,
+    # model pars
+    'nx' :  398,    # velocity model length 
+    'nz' :  161+60,    # velocity model depth
+    'nt' :  601,   # record time length
+    'dx' :  12.5,   # sampling in x
+    'dz' :  12.5,   # sampling in z
+    'dt' :  0.004,  # sampling in time
+    'labelx': "Distance",
+    'labelz': "Depth",
+    'unitx' : "m",
+    'unitz' : "m",
+    'shtbgn': 1, # 1 imaged shot starting location on mesh
+    'shtend': 398, # 398 shot ending location on mesh 
+    'sintv' : 26,    # shot interval on mesh, 26
+    'spz'   : 5,    # shot depth on mesh
+    'gpz'   : 5+20,    # receiver depth on mesh
+    'gpl'   : 150,  # receiver length of single shot
+    'snpint': 1,    # snapshot interval
+    'pad1'  : 1,    # fft pading on the first axis
+    # abc parameters 
+    'top'   : 40,  # padding length
+    'bot'   : 20,
+    'lft'   : 20,
+    'rht'   : 20,
+    'dcz'   : 0.01, # decay coefficient
+    'dcx'   : 0.01,
+    #source
+    'srcbgn'  : 50, # source begin time
+    'frq'     : 22.5  # peak frequency of ricker wavelet (in Hz)
+}
+
+Fsrc  = srcgen(par)
+
+#--------------------------------------------
+# propagator matrices
+#--------------------------------------------
+
+Ffvel = 'vel'
+Fbvel= 'bvel'
+Fq = 'q'
+Fbq = 'bq'
+Fimg = 'img'
+Ffvelabc = Ffvel+'x'
+Fbvelabc = Fbvel+'x'
+Fqabc = Fq+'x'
+Fbqabc = Fbq+'x'
+Ffft = 'fft'
+Fref = 'cref'
+Fleft = 'left'
+Fright = 'right'
+Ffleft = 'fleft'
+Ffright = 'fright'
+Fbleft = 'bleft'
+Fbright = 'bright'
+Ffleftc = 'fleftc'
+Ffrightc = 'frightc'
+Fbleftc = 'bleftc'
+Fbrightc = 'brightc'
+Ftmpwf =  'tmpwf'
+Ftmpbwf = 'tmpbwf'
+Frcd = 'shots'
+
+Flow(Fbvel, Ffvel, 'smooth rect1=3 rect2=3 repeat=2')
+Flow(Fbq, Fq, 'smooth rect1=3 rect2=3 repeat=2')
+
+for m in [Ffvel,Fbvel,Fq,Fbq]:
+    ext  = m+'x'
+    Flow(ext,m,
+         '''
+         expand left=%(lft)d right=%(rht)d 
+                top=%(top)d  bottom=%(bot)d
+         '''%par)
+# Lowrank decomposition
+Flow(Ffft,Ffvelabc,'rtoc | fft3 axis=1 pad=1 | fft3 axis=2 pad=1')
+
+# acoustic propagator
+Flow([Ffright,Ffleft],[Fbvelabc,Ffft,Fbqabc],
+     '''
+      scale dscale=0.5 |
+      zfraclr2 seed=2010 npk=50 eps=1.e-4
+      fft=${SOURCES[1]} q=${SOURCES[2]} left=${TARGETS[1]}
+      mode=3 rev=n sign=0
+      dt=%(dt)g w0=%(w0)g
+      nbt=%(top)d nbb=%(bot)d nbl=%(lft)d nbr=%(rht)d 
+      ct=%(dcz)g cb=%(dcz)g cl=%(dcx)g cr=%(dcx)g
+      compen=n
+     '''%par)
+
+# dispersion-dominated propagator
+Flow([Fbright,Fbleft],[Fbvelabc,Ffft,Fbqabc],
+     '''
+      scale dscale=0.5 |
+      zfraclr2 seed=2010 npk=50 eps=1.e-4
+      fft=${SOURCES[1]} q=${SOURCES[2]} left=${TARGETS[1]}
+      mode=2 rev=n sign=0
+      dt=%(dt)g w0=%(w0)g
+      nbt=%(top)d nbb=%(bot)d nbl=%(lft)d nbr=%(rht)d 
+      ct=%(dcz)g cb=%(dcz)g cl=%(dcx)g cr=%(dcx)g
+      compen=n
+     '''%par)
+
+# visco-acoustic propagator
+Flow([Ffrightc,Ffleftc],[Fbvelabc,Ffft,Fbqabc],
+     '''
+      scale dscale=0.5 |
+      zfraclr2 seed=2010 npk=50 eps=1.e-4
+      fft=${SOURCES[1]} q=${SOURCES[2]} left=${TARGETS[1]}
+      mode=0 rev=n sign=0
+      dt=%(dt)g w0=%(w0)g
+      nbt=%(top)d nbb=%(bot)d nbl=%(lft)d nbr=%(rht)d 
+      ct=%(dcz)g cb=%(dcz)g cl=%(dcx)g cr=%(dcx)g
+      compen=n
+     '''%par)
+
+# Q-compensated visco-acoustic propagator
+Flow([Fbrightc,Fbleftc],[Fbvelabc,Ffft,Fbqabc],
+     '''
+      scale dscale=0.5 |
+      zfraclr2 seed=2010 npk=50 eps=1.e-4
+      fft=${SOURCES[1]} q=${SOURCES[2]} left=${TARGETS[1]}
+      mode=0 rev=n sign=0
+      dt=%(dt)g w0=%(w0)g
+      nbt=%(top)d nbb=%(bot)d nbl=%(lft)d nbr=%(rht)d 
+      ct=%(dcz)g cb=%(dcz)g cl=%(dcx)g cr=%(dcx)g
+      compen=y cutoff=120 vmax=2250 taper=0.265
+     '''%par)
+
+#--------------------------------------------
+# generate reflectivity
+#--------------------------------------------
+Flow('ref',Fbvelabc,
+     '''depth2time velocity=$SOURCE nt=4000 dt=0.001 |
+     ai2refl | ricker1 frequency=20 |
+     time2depth velocity=$SOURCE
+     ''')
+Flow('iref',Fbvelabc,
+     '''depth2time velocity=$SOURCE nt=4000 dt=0.001 |
+     ai2refl | ricker1 frequency=20 | envelope hilb=y order=500 |
+     time2depth velocity=$SOURCE
+     ''')
+Flow('cref','ref iref','cmplx ${SOURCES[1]}')
+
+#-------------------------------------------------------------
+# Forward exploding reflector modeling to get zero-offset data
+#-------------------------------------------------------------
+#--------------------
+# acoustic case
+#--------------------
+Flow('czodataac wavea',['cref',Ffleft,Ffright],
+     '''
+     zolsrtm2 adj=n snap=10 snaps=${TARGETS[1]} verb=y
+     gpz=%(gpz)d nt=%(nt)d dt=%(dt)g left=${SOURCES[1]} right=${SOURCES[2]}
+     ''' %par )
+
+Result('czodataac','real | window f2=%(lft)d n2=398 | put o1=0 o2=0 | grey unit1=s unit2=m label1=Time label2=Distance title="Acoustic Data" clip=0.000396048' % par)
+
+#--------------------
+# visco-acoustic case
+#--------------------
+Flow('czodata wave',['cref',Ffleftc,Ffrightc],
+     '''
+     zolsrtm2 adj=n snap=10 snaps=${TARGETS[1]} verb=y
+     gpz=%(gpz)d nt=%(nt)d dt=%(dt)g left=${SOURCES[1]} right=${SOURCES[2]}
+     ''' %par )
+
+Result('czodata','real | window f2=%(lft)d n2=398 | put o1=0 o2=0 | grey unit1=s unit2=m label1=Time label2=Distance title="Visco-acoustic Data" clip=0.000396048' % par)
+
+Plot('wavem','wave','window j3=1 | real |grey gainpanel=all title=Forward')
+
+#-------------------------------------------------------------
+# zero-offset migration with exploding reflector concept
+#-------------------------------------------------------------
+VisDat = 'czodata'
+AcuDat = 'czodataac'
+
+#--------------------------------------
+# reference acoustic zero-offset migration
+#--------------------------------------
+Flow('zomiga wave2a',[AcuDat,Ffleft,Ffright],
+     '''
+     zolsrtm2 adj=y snap=10 snaps=${TARGETS[1]} verb=y
+     gpz=%(gpz)d nz=%(nz)d dz=%(dz)g left=${SOURCES[1]} right=${SOURCES[2]} 
+     ''' %par )
+
+Result('zomiga','real | window f1=%(top)d n1=161 f2=%(lft)d n2=398 | put o1=0 o2=0 | grey title="Acoustic Image" unit1=m unit2=m label1=Depth label2=Distance scalebar=y clip=0.000577621 maxval=0.001 minval=-0.001' %par )
+
+#--------------------------------------
+# Q-compensated zero-offset migration
+#--------------------------------------
+Flow('zomigc wave2',[VisDat,Fbleftc,Fbrightc],
+     '''
+     zolsrtm2 adj=y snap=10 snaps=${TARGETS[1]} verb=y
+     gpz=%(gpz)d nz=%(nz)d dz=%(dz)g left=${SOURCES[1]} right=${SOURCES[2]} 
+     ''' %par )
+
+Result('zomigc','real | window f1=%(top)d n1=161 f2=%(lft)d n2=398 | put o1=0 o2=0 | grey title="Q-compensated Image" unit1=m unit2=m label1=Depth label2=Distance scalebar=y clip=0.000577621 maxval=0.001 minval=-0.001' %par )
+
+Plot('wave2m','wave2','window j3=1 | real |grey gainpanel=all title=adjoint')
+
+#--------------------------------------
+# non-compensated zero-offset migration
+# (using acoustic propagator)
+#--------------------------------------
+Flow('zomign wave2n',[VisDat,Ffleft,Ffright],
+     '''
+     zolsrtm2 adj=y snap=10 snaps=${TARGETS[1]} verb=y
+     gpz=%(gpz)d nz=%(nz)d dz=%(dz)g left=${SOURCES[1]} right=${SOURCES[2]} 
+     ''' %par )
+
+Result('zomign','real | window f1=%(top)d n1=161 f2=%(lft)d n2=398 | put o1=0 o2=0 | grey title="Non-compensated Image" unit1=m unit2=m label1=Depth label2=Distance scalebar=y clip=0.000577621 maxval=0.001 minval=-0.001' %par )
+
+#--------------------------------------
+# Dispersion-compensated zero-offset migration
+# (using dispersion dominated propagator)
+#--------------------------------------
+Flow('zomigd wave2d',[VisDat,Fbleft,Fbright],
+     '''
+     zolsrtm2 adj=y snap=10 snaps=${TARGETS[1]} verb=y
+     gpz=%(gpz)d nz=%(nz)d dz=%(dz)g left=${SOURCES[1]} right=${SOURCES[2]} 
+     ''' %par )
+
+Result('zomigd','real | window f1=%(top)d n1=161 f2=%(lft)d n2=398 | put o1=0 o2=0 | grey title="Dispersion-compensated Image" unit1=m unit2=m label1=Depth label2=Distance scalebar=y clip=0.000577621 maxval=0.001 minval=-0.001' %par )
+
+#--------------------------------------
+# Attenuated zero-offset migration
+# (adjointing the attenuation propagator)
+#--------------------------------------
+Flow('zomigv wave2v',[VisDat,Ffleftc,Ffrightc],
+     '''
+     zolsrtm2 adj=y snap=10 snaps=${TARGETS[1]} verb=y
+     gpz=%(gpz)d nz=%(nz)d dz=%(dz)g left=${SOURCES[1]} right=${SOURCES[2]} 
+     ''' %par )
+
+Result('zomigv','real | window f1=%(top)d n1=161 f2=%(lft)d n2=398 | put o1=0 o2=0 | grey title="Twice-attenuated Image" unit1=m unit2=m label1=Depth label2=Distance scalebar=y clip=0.000577621 maxval=0.001 minval=-0.001' %par )
+
+#--------------------------------------
+# LSRTM using GMRES(m)
+#--------------------------------------
+Flow('inv wave3',[VisDat,Ffleftc,Ffrightc,Fbleftc,Fbrightc],
+     '''
+     zortmgmres snap=10 snaps=${TARGETS[1]} verb=n
+     gpz=%(gpz)d nz=%(nz)d dz=%(dz)g nt=%(nt)d dt=%(dt)g 
+     gmres=y niter=5 mem=5
+     leftf=${SOURCES[1]} rightf=${SOURCES[2]} 
+     leftb=${SOURCES[3]} rightb=${SOURCES[4]}
+     ''' % par )
+# niter=5 mem=4
+
+Result('inv','real | window f1=%(top)d n1=161 f2=%(lft)d n2=398 | put o1=0 o2=0 | grey title="GMRES(m) Inverted Image" unit1=m unit2=m label1=Depth label2=Distance scalebar=y clip=0.000577621 maxval=0.001 minval=-0.001' %par )
+
+#Result('cginv','real | window f1=%(top)d n1=161 f2=%(lft)d n2=398 | put o1=0 o2=0 | grey title="CG Inverted Image" unit1=m unit2=m label1=Depth label2=Distance scalebar=y clip=0.000577621 maxval=0.001 minval=-0.001' %par )
+#--------------------------------------
+# Reflectivity
+#--------------------------------------
+Result('cref','real | window f1=%(top)d n1=161 f2=%(lft)d n2=398 | put o1=0 o2=0 | grey title="Reflectivity" unit1=m unit2=m label1=Depth label2=Distance scalebar=y clip=0.000577621 maxval=0.001 minval=-0.001' %par )
+
+"""
+#--------------------------------------
+# Landweber iteration
+#--------------------------------------
+dat = 'czodataac'
+m_0 = 'zomig-0'
+zolsrtm(m_0,dat,1,par)
+r_list = []
+
+for i in range(5):
+    m_cur = 'zomig-%d' % i
+    d_cur = 'zodat-%d' % i
+    r_cur = 'misft-%d' % i
+    m_nxt = 'zomig-%d' % (i+1)
+    m_tmp = 'tmp-%d' % (i)
+    zolsrtm(m_cur,d_cur,0,par)
+    zolsrtm(m_tmp,d_cur,1,par)
+    Flow(m_nxt,[m_0,m_cur,m_tmp],
+    '''
+    math cur=${SOURCES[1]} tmp=${SOURCES[2]} output="input+cur-tmp"
+    ''')
+    Flow(r_cur,[dat,d_cur],'math cur=${SOURCES[1]} output="abs(input-cur)" | real | math output="input*input" | stack axis=0')
+    r_list = r_list + [r_cur]
+
+Flow('misfit', r_list, 'cat ${SOURCES[1:%d]} axis=1 ' % len(r_list) )
+"""
+
+End()
+# python cconjgrad.py data=czodata.rsf init=zomigv.rsf niter=20 result=cginv.rsf
+# <shots.rsf sfcconjgrad ./lsrtm2.sh mod=img.rsf src=csource.rsf vel=velx.rsf left=fleft.rsf right=fright.rsf leftb=bleft.rsf rightb=bright.rsf verb=n pad1=1 roll=n shtbgn=1 shtend=398 shtint=5 spz=5 gpz=5 gpl=0 snapinter=1 top=30 bot=30 lft=30 rht=30 rectz=2 rectx=2 repeat=1 srctrunc=0.4 wantwf=n wantrecord=y illum=n roll=n > kinv10.rsf niter=10

@@ -51,6 +51,7 @@ typedef struct Geopar {
     int nzx2;
     int nk;
     int m2;
+    int m2b;
     /*fft parameters*/
     int nkz;
     int nkx;
@@ -105,7 +106,8 @@ void lrexp(sf_complex *img, sf_complex *dat, bool adj, sf_complex **lt, sf_compl
     dt  = geop->dt;
     snap= geop->snap;
     nzx2= geop->nzx2;
-    m2  = geop->m2;
+    if(adj) m2 = geop->m2b;
+    else m2 = geop->m2;
     wfnt= geop->wfnt;
     pad1= geop->pad1;
     verb= geop->verb;

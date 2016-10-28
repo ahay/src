@@ -3,6 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = 'fftwave1dd cfftwave1dd cfftwave1in fftwave2p fftwave3p cfftwave2 cfftwave3 cfftexpmig2 fftexp0test fd2d cfftexp2 cfftexp2test fdtacc wcfftexp2 wcfftexp2adj cfftwave2nsps cfftwave2mix2 wavemixop lrosrtm2 lroslsrtm2 stack2d cstack2d fftexp0test lrlsrtm2mpi imagsrc zolsrtm2 initwave2 correctwave2 lrwave2 cmatrix cfftwave1d zortmgmres claplac psp pspmig premig cfftwave2omp lrtti2de clfd1 clfd2 ofd2_test swnorm pspp passive2d swvarimax ccrsym timerev2d lstri2d cubesrc cfftwave2taper fftwave2taper compensate compensatexf acqgeo'
+# appimage
 # vweks3d2
 # revolve_driver
 # waveadjtest
@@ -10,6 +11,7 @@ progs = 'fftwave1dd cfftwave1dd cfftwave1in fftwave2p fftwave3p cfftwave2 cfftwa
 libprop = 'fftwave2omp fftwave3omp eweks3d vweks3d xcor2 xcor3 xcor3d mutter3 ewelr3d ewedc3d ewdlr3d eweks3dsecd ewelr3dgrad ewedc3dgrad'
 
 ccprogs = 'tilr2 ortholr3 cortholr3 cisolr2 cisolr2rev cisolr3 ctilr2 cisolr2grad cisolr2abc cisolr2abc1 cisolr1 canisolr2 canisolr2abc fraclr2 zfraclr2 fraclr2test tilrzone ortholrzone zortholr3 zanisolr2 zanisolr2abc clfdc1 clfdc2 clfdc1-bak zisolr2abc clfdc1frac ewelr3 ewedc3p ewedc3s ewdlr3 ewelr3grad'
+# nsimage
 # ewedc3pgrad ewedc3sgrad cfftrtm3
 # vwelr3
 # eiktest eiktest2 cisolr1eik eiksol

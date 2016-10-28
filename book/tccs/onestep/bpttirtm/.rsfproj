@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sfput', 'sfwindow', 'sfpad2', 'sfgrey', 'sfscale', 'sfmath', 'sfsmooth', 'sfspike', 'sfimagsrc', 'sfrtoc', 'sfreal', 'sfgraph', 'sfacqgeo', 'sflaplac', 'sfpow']
+data=[]
+size= 13283612352

@@ -1,0 +1,355 @@
+from rsf.proj import *
+
+def igrey(custom):
+    return '''
+    grey color=j labelsz=5 titlesz=6 %s
+    ''' %(custom)
+
+def grey(custom):
+    return '''
+    grey labelsz=10 labelfat=2 titlesz=12 titlefat=2 label1=Z unit1=m label2=X unit2=m screenratio=0.5 %s
+    ''' %(custom)
+
+def graph(custom):
+    return '''
+    graph wanttitle=n labelsz=10 labelfat=2 titlesz=12 titlefat=2 plotfat=6 %s
+    ''' %(custom)
+
+Flow('vel','vel.asc','echo in=$SOURCE n1=398 n2=161 data_format=ascii_float | dd form=native | put d1=12.5 d2=12.5 o1=0 o2=0 | transp plane=12 | expand top=10 left=0 right=0 bottom=0 | put o1=-125')
+Flow('q','q.asc','echo in=$SOURCE n1=398 n2=161 data_format=ascii_float | dd form=native | put d1=12.5 d2=12.5 o1=0 o2=0 | transp plane=12 | expand top=10 left=0 right=0 bottom=0 | put o1=-125')
+
+Result('vel','window f1=10 |'+grey('allpos=y color=j title="BP velocity model" bias=1500 scalebar=y barreverse=y barlabel=velocity barunit=m/s'))
+Result('q','window f1=10 |'+ grey('allpos=y color=j title="BP Q model" bias=20 scalebar=y barreverse=y barlabel=Q'))
+
+Flow('ref','vel',
+     '''depth2time velocity=$SOURCE nt=4000 dt=0.001 |
+     ai2refl | ricker1 frequency=20 |
+     time2depth velocity=$SOURCE
+     ''')
+Flow('iref','vel',
+     '''depth2time velocity=$SOURCE nt=4000 dt=0.001 |
+     ai2refl | ricker1 frequency=20 | envelope hilb=y order=500 |
+     time2depth velocity=$SOURCE
+     ''')
+Flow('cref','ref iref','cmplx ${SOURCES[1]}')
+#Flow('cref','ref','rtoc')
+Flow('zero','cref','math output=0')
+
+par = {
+    # constant-Q
+    'w0' : 1500,
+    # model pars
+    'nx' :  398,    # velocity model length 
+    'nz' :  171,    # velocity model depth
+    'nt' :  1001,   # record time length
+    'dx' :  12.5,   # sampling in x
+    'dz' :  12.5,   # sampling in z
+    'dt' :  0.003,  # sampling in time
+    'labelx': "Distance",
+    'labelz': "Depth",
+    'unitx' : "m",
+    'unitz' : "m",
+    'shtbgn': 0, # 1 imaged shot starting location on mesh
+    'shtend': 397, # 398 shot ending location on mesh 
+    'sintv' : 13,    # shot interval on mesh
+    'spz'   : 5,    # shot depth on mesh
+    'gpz'   : 5,    # receiver depth on mesh
+    'gpl'   : 150,  # receiver length of single shot
+    'snpint': 1,    # snapshot interval
+    'pad1'  : 1,    # fft pading on the first axis
+    # abc parameters 
+    'top'   : 30,  # padding length
+    'bot'   : 30,
+    'lft'   : 30,
+    'rht'   : 30,
+    'dcz'   : 0.01, # decay coefficient
+    'dcx'   : 0.01,
+    #source
+    'srcbgn'  : 50, # source begin time
+    'frq'     : 22.5,  # peak frequency of ricker wavelet (in Hz)
+    'mem'     : 5 # gmres memory
+}
+
+Fsrc='csource'
+Ffvel = 'vel'
+Fbvel= 'bvel'
+Fq = 'q'
+Fbq = 'bq'
+Fimg = 'img'
+Ffvelabc = Ffvel+'x'
+Fbvelabc = Fbvel+'x'
+Fqabc = Fq+'x'
+Fbqabc = Fbq+'x'
+Ffft = 'fft'
+Fref = 'cref'
+Fleft = 'left'
+Fright = 'right'
+Ffleft = 'fleft'
+Ffright = 'fright'
+Fbleft = 'bleft'
+Fbright = 'bright'
+Fdleft = 'dleft'
+Fdright = 'dright'
+Ftmpwf =  'tmpwf'
+Ftmpbwf = 'tmpbwf'
+Frcd = 'shots'
+
+Flow(Fsrc,None,'spike n1=%(nt)d d1=%(dt)g k1=%(srcbgn)d | imagsrc frequency=%(frq)g | rtoc' %par)
+Flow(Fbvel, Ffvel, 'smooth rect1=4 rect2=4 repeat=4')
+Flow(Fbq, Fq, 'smooth rect1=3 rect2=3 repeat=2')
+
+for m in [Ffvel,Fbvel,Fq,Fbq]:
+    ext  = m+'x'
+    Flow(ext,m,
+         '''
+         expand left=%(lft)d right=%(rht)d 
+                top=%(top)d  bottom=%(bot)d
+         '''%par)
+# Lowrank decomposition
+Flow(Ffft,Ffvelabc,'rtoc | fft3 axis=1 pad=1 | fft3 axis=2 pad=1')
+
+Flow('right0 left0',[Ffvelabc,Ffft,Fbqabc],
+     '''
+      zfraclr2 seed=2010 npk=50 eps=1.e-4
+      fft=${SOURCES[1]} q=${SOURCES[2]} left=${TARGETS[1]}
+      mode=0 rev=n sign=0
+      dt=%(dt)g w0=%(w0)g
+      nbt=%(top)d nbb=%(bot)d nbl=%(lft)d nbr=%(rht)d 
+      ct=%(dcz)g cb=%(dcz)g cl=%(dcx)g cr=%(dcx)g
+      compen=n
+      abc=1
+     '''%par)
+
+# acoustic
+Flow([Fright,Fleft],[Fbvelabc,Ffft,Fbqabc],
+     '''
+      zfraclr2 seed=2010 npk=50 eps=1.e-4
+      fft=${SOURCES[1]} q=${SOURCES[2]} left=${TARGETS[1]}
+      mode=3 rev=n sign=0
+      dt=%(dt)g w0=%(w0)g
+      nbt=%(top)d nbb=%(bot)d nbl=%(lft)d nbr=%(rht)d 
+      ct=%(dcz)g cb=%(dcz)g cl=%(dcx)g cr=%(dcx)g
+      compen=n
+      abc=1
+     '''%par)
+
+# visco-acoustic
+Flow([Ffright,Ffleft],[Fbvelabc,Ffft,Fbqabc],
+     '''
+      zfraclr2 seed=2010 npk=50 eps=1.e-4
+      fft=${SOURCES[1]} q=${SOURCES[2]} left=${TARGETS[1]}
+      mode=0 rev=n sign=0
+      dt=%(dt)g w0=%(w0)g
+      nbt=%(top)d nbb=%(bot)d nbl=%(lft)d nbr=%(rht)d 
+      ct=%(dcz)g cb=%(dcz)g cl=%(dcx)g cr=%(dcx)g
+      compen=n
+      abc=1
+     '''%par)
+
+# dispersion-only
+Flow([Fdright,Fdleft],[Fbvelabc,Ffft,Fbqabc],
+     '''
+      zfraclr2 seed=2010 npk=50 eps=1.e-4
+      fft=${SOURCES[1]} q=${SOURCES[2]} left=${TARGETS[1]}
+      mode=2 rev=n sign=0
+      dt=%(dt)g w0=%(w0)g
+      nbt=%(top)d nbb=%(bot)d nbl=%(lft)d nbr=%(rht)d 
+      ct=%(dcz)g cb=%(dcz)g cl=%(dcx)g cr=%(dcx)g
+      compen=n cutoff=120 vmax=4500 taper=0.265
+      abc=1
+     '''%par)
+
+# Q-compensated
+Flow([Fbright,Fbleft],[Fbvelabc,Ffft,Fbqabc],
+     '''
+      zfraclr2 seed=2010 npk=50 eps=1.e-4
+      fft=${SOURCES[1]} q=${SOURCES[2]} left=${TARGETS[1]}
+      mode=0 rev=n sign=0
+      dt=%(dt)g w0=%(w0)g
+      nbt=%(top)d nbb=%(bot)d nbl=%(lft)d nbr=%(rht)d 
+      ct=%(dcz)g cb=%(dcz)g cl=%(dcx)g cr=%(dcx)g
+      compen=y cutoff=120 vmax=4500 taper=0.265
+      abc=1
+     '''%par)
+
+# acoustic case (reference)
+Flow('shotsr',[Fref,Ffvelabc,Fleft,Fright,Fleft,Fright,Fsrc],
+     '''
+      mpilsrtmgmres tmpwf=${TARGETS[1]}
+      vel=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]}
+      leftb=${SOURCES[4]} rightb=${SOURCES[5]} src=${SOURCES[6]} 
+      verb=y pad1=1 adj=n roll=n
+      shtbgn=%(shtbgn)d shtend=%(shtend)d shtint=%(sintv)d
+      spz=%(spz)g gpz=%(gpz)g gpl=%(gpl)g snapinter=%(snpint)d
+      top=%(top)d bot=%(bot)d lft=%(lft)d  rht=%(rht)d
+      rectz=2 rectx=2 repeat=1 srctrunc=0.4 illum=n
+      mode=0
+     '''%par,np=16)
+
+Flow('imgr',['shotsr',Ffvelabc,Fleft,Fright,Fleft,Fright,Fsrc],
+     '''
+      mpilsrtmgmres tmpwf=${TARGETS[1]}
+      vel=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]}
+      leftb=${SOURCES[4]} rightb=${SOURCES[5]} src=${SOURCES[6]} 
+      verb=y pad1=1 adj=y roll=n
+      shtbgn=%(shtbgn)d shtend=%(shtend)d shtint=%(sintv)d
+      spz=%(spz)g gpz=%(gpz)g gpl=%(gpl)g snapinter=%(snpint)d
+      top=%(top)d bot=%(bot)d lft=%(lft)d  rht=%(rht)d
+      rectz=2 rectx=2 repeat=1 srctrunc=0.4 illum=n
+      mode=1
+     '''%par,np=16)
+
+# viscoacoustic data
+Flow([Frcd],[Fref,Ffvelabc,Ffleft,Ffright,Fbleft,Fbright,Fsrc],
+     '''
+      mpilsrtmgmres tmpwf=${TARGETS[1]}
+      vel=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]}
+      leftb=${SOURCES[4]} rightb=${SOURCES[5]} src=${SOURCES[6]} 
+      verb=y pad1=1 adj=n roll=n
+      shtbgn=%(shtbgn)d shtend=%(shtend)d shtint=%(sintv)d
+      spz=%(spz)g gpz=%(gpz)g gpl=%(gpl)g snapinter=%(snpint)d
+      top=%(top)d bot=%(bot)d lft=%(lft)d  rht=%(rht)d
+      rectz=2 rectx=2 repeat=1 srctrunc=0.4 illum=n
+      mode=0
+     '''%par,np=16)
+
+# acoustic rtm
+Flow('imga',[Frcd,Ffvelabc,Ffleft,Ffright,Fleft,Fright,Fsrc],
+     '''
+      mpilsrtmgmres tmpwf=${TARGETS[1]}
+      vel=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]}
+      leftb=${SOURCES[4]} rightb=${SOURCES[5]} src=${SOURCES[6]} 
+      verb=y pad1=1 adj=y roll=n
+      shtbgn=%(shtbgn)d shtend=%(shtend)d shtint=%(sintv)d
+      spz=%(spz)g gpz=%(gpz)g gpl=%(gpl)g snapinter=%(snpint)d
+      top=%(top)d bot=%(bot)d lft=%(lft)d  rht=%(rht)d
+      rectz=2 rectx=2 repeat=1 srctrunc=0.4 illum=n
+      mode=1
+     '''%par,np=16)
+
+# dispersion-only rtm
+Flow('imgd',[Frcd,Ffvelabc,Ffleft,Ffright,Fdleft,Fdright,Fsrc],
+     '''
+      mpilsrtmgmres tmpwf=${TARGETS[1]}
+      vel=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]}
+      leftb=${SOURCES[4]} rightb=${SOURCES[5]} src=${SOURCES[6]} 
+      verb=y pad1=1 adj=y roll=n
+      shtbgn=%(shtbgn)d shtend=%(shtend)d shtint=%(sintv)d
+      spz=%(spz)g gpz=%(gpz)g gpl=%(gpl)g snapinter=%(snpint)d
+      top=%(top)d bot=%(bot)d lft=%(lft)d  rht=%(rht)d
+      rectz=2 rectx=2 repeat=1 srctrunc=0.4 illum=n
+      mode=1
+     '''%par,np=16)
+
+# compensated rtm
+Flow('imgc',[Frcd,Ffvelabc,Ffleft,Ffright,Fbleft,Fbright,Fsrc],
+     '''
+      mpilsrtmgmres tmpwf=${TARGETS[1]}
+      vel=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]}
+      leftb=${SOURCES[4]} rightb=${SOURCES[5]} src=${SOURCES[6]} 
+      verb=y pad1=1 adj=y roll=n
+      shtbgn=%(shtbgn)d shtend=%(shtend)d shtint=%(sintv)d
+      spz=%(spz)g gpz=%(gpz)g gpl=%(gpl)g snapinter=%(snpint)d
+      top=%(top)d bot=%(bot)d lft=%(lft)d  rht=%(rht)d
+      rectz=2 rectx=2 repeat=1 srctrunc=0.4 illum=n
+      mode=1
+     '''%par,np=16)
+
+# GMRES
+clist=[]
+vlist=[]
+nlist=[]
+
+iters = [5,15,30,50,100]
+for i in iters:
+    par['mem'] = i
+    resc = 'img-c-%d' %i
+    resv='img-v-%d' %i
+    resn='img-n-%d' %i
+    difc='dif-c-%d' %i
+    difv='dif-v-%d' %i
+    difn='dif-n-%d' %i
+
+    Flow(resc,[Frcd,Ffvelabc,Ffleft,Ffright,Fbleft,Fbright,Fsrc,'zero'],
+     '''
+      mpilsrtmgmres tmpwf=${TARGETS[1]}
+      vel=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]}
+      leftb=${SOURCES[4]} rightb=${SOURCES[5]} src=${SOURCES[6]} 
+      verb=n pad1=1 adj=y roll=n
+      shtbgn=%(shtbgn)d shtend=%(shtend)d shtint=%(sintv)d
+      spz=%(spz)g gpz=%(gpz)g gpl=%(gpl)g snapinter=%(snpint)d
+      top=%(top)d bot=%(bot)d lft=%(lft)d  rht=%(rht)d
+      rectz=2 rectx=2 repeat=1 srctrunc=0.4 illum=n
+      gmres=y mem=%(mem)d niter=0
+      mode=1
+      start=${SOURCES[7]} laplac=y
+     '''%par,np=16)
+
+    Flow(resv,[Frcd,Ffvelabc,Ffleft,Ffright,Ffleft,Ffright,Fsrc,'zero'],
+     '''
+      mpilsrtmgmres tmpwf=${TARGETS[1]}
+      vel=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]}
+      leftb=${SOURCES[4]} rightb=${SOURCES[5]} src=${SOURCES[6]} 
+      verb=n pad1=1 adj=y roll=n
+      shtbgn=%(shtbgn)d shtend=%(shtend)d shtint=%(sintv)d
+      spz=%(spz)g gpz=%(gpz)g gpl=%(gpl)g snapinter=%(snpint)d
+      top=%(top)d bot=%(bot)d lft=%(lft)d  rht=%(rht)d
+      rectz=2 rectx=2 repeat=1 srctrunc=0.4 illum=n
+      gmres=y mem=%(mem)d niter=0
+      mode=1
+      start=${SOURCES[7]} laplac=y
+     '''%par,np=16)
+
+    Flow(resn,[Frcd,Ffvelabc,Ffleft,Ffright,Ffleft,Ffright,Fsrc,'zero'],
+     '''
+      mpilsrtmgmres tmpwf=${TARGETS[1]}
+      vel=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]}
+      leftb=${SOURCES[4]} rightb=${SOURCES[5]} src=${SOURCES[6]} 
+      verb=n pad1=1 adj=y roll=n
+      shtbgn=%(shtbgn)d shtend=%(shtend)d shtint=%(sintv)d
+      spz=%(spz)g gpz=%(gpz)g gpl=%(gpl)g snapinter=%(snpint)d
+      top=%(top)d bot=%(bot)d lft=%(lft)d  rht=%(rht)d
+      rectz=2 rectx=2 repeat=1 srctrunc=0.4 illum=n
+      gmres=y mem=%(mem)d niter=0
+      mode=1
+      start=${SOURCES[7]} laplac=n
+     '''%par,np=16)
+
+    Result(resc,'real | window f1=10 |'+grey('clip=0.002 scalebar=y maxval=0.002 minval=-0.002 wanttitle=y title="%dth iteration"' %i))
+    Result(resv,'real | window f1=10 |'+grey('clip=0.002 scalebar=y maxval=0.002 minval=-0.002 wanttitle=y title="%dth iteration"' %i))
+    Result(resn,'real | window f1=10 |'+grey('clip=0.002 scalebar=y maxval=0.002 minval=-0.002 wanttitle=y title="%dth iteration"' %i))
+
+    Flow(difc,[resc,'cref'],'math ref=${SOURCES[1]} output="abs(input-ref)^2/0.0803" | real | sfwindow f1=10 | stack axis=0 norm=n')
+    Flow(difv,[resv,'cref'],'math ref=${SOURCES[1]} output="abs(input-ref)^2/0.0803" | real | sfwindow f1=10 | stack axis=0 norm=n')
+    Flow(difn,[resn,'cref'],'math ref=${SOURCES[1]} output="abs(input-ref)^2/0.0803" | real | sfwindow f1=10 | stack axis=0 norm=n')
+
+    clist += [difc]
+    vlist += [difv]
+    nlist += [difn]
+
+Flow('result-c',clist,'cat ${SOURCES[1:%d]} axis=1' %len(iters))
+Flow('result-v',vlist,'cat ${SOURCES[1:%d]} axis=1' %len(iters))
+Flow('result-n',nlist,'cat ${SOURCES[1:%d]} axis=1' %len(iters))
+
+Result('result','result-c result-v result-n','cat axis=2 ${SOURCES[1:3]} | put o1=0 d1=5 | graph title= unit1= label1="Number of Iterations" label2="Normalized Model Misfit" unit2= wherexlabel=b n1tic=30 n2tic=40 dash=0,4,5')
+
+Flow('trace-c','img-c-30','real | window min1=200 max1=1700 f2=200 n2=1')
+Flow('trace-v','img-v-30','real | window min1=200 max1=1700 f2=200 n2=1')
+Flow('trace-n','img-n-30','real | window min1=200 max1=1700 f2=200 n2=1')
+Flow('trace-r','cref','real | window min1=200 max1=1700 f2=200 n2=1')
+Result('compare-c','trace-r trace-c','cat ${SOURCES[1:2]} axis=2|'+graph('title="Q-LSRTM" transp=y label2="Amplitude" label1="Depth" unit1=m wherexlabel=b dash=0,4 screenht=12 screenwd=7.5 yreverse=y plotcol=5,6'))
+Result('compare-v','trace-r trace-v','cat ${SOURCES[1:2]} axis=2|'+graph('title="LSRTM" transp=y label2="Amplitude" label1="Depth" unit1=m wherexlabel=b dash=0,4 screenht=12 screenwd=7.5 yreverse=y plotcol=5,6'))
+Result('compare-n','trace-r trace-n','cat ${SOURCES[1:2]} axis=2|'+graph('title="LSRTM" transp=y label2="Amplitude" label1="Depth" unit1=m wherexlabel=b dash=0,4 screenht=12 screenwd=7.5 yreverse=y plotcol=5,6'))
+
+Result('cref','real | window f1=10 |'+grey('clip=0.002 scalebar=y maxval=0.002 minval=-0.002 wanttitle=y title="True Model"'))
+Result('imgr','real | window f1=10 |'+grey('scalebar=y wanttitle=y maxval=2e-6 minval=-2e-6 title="RTM image" clip=clip=9.81083e-07'))
+Result('imgd','real | window f1=10 |'+grey('scalebar=y wanttitle=y maxval=2e-6 minval=-2e-6 title="RTM image" clip=clip=9.81083e-07'))
+Result('imgc','real | window f1=10 |'+grey('scalebar=y wanttitle=y maxval=2e-6 minval=-2e-6 title="Q-RTM image" clip=clip=9.81083e-07'))
+
+Result('shotsr','real | byte clip=1.98815e-06 | grey3 flat=n point1=0.8 point2=0.7 label1=T label2=X label3=Shot unit1=s unit2=m unit3=m frame1=500 frame2=199 frame3=15 title="Data with attenuation" wanttitle=n screenratio=0.5')
+Result('shots','real | byte clip=1.98815e-06 | grey3 flat=n point1=0.8 point2=0.7 label1=T label2=X label3=Shot unit1=s unit2=m unit3=m frame1=500 frame2=199 frame3=15 title="Data with attenuation" wanttitle=n screenratio=0.5')
+
+
+End()
+
+# <shots.rsf sfcconjgrad ./lsrtm2.sh mod=img.rsf src=csource.rsf vel=velx.rsf left=fleft.rsf right=fright.rsf leftb=bleft.rsf rightb=bright.rsf verb=n pad1=1 roll=n shtbgn=1 shtend=398 shtint=5 spz=5 gpz=5 gpl=0 snapinter=1 top=30 bot=30 lft=30 rht=30 rectz=2 rectx=2 repeat=1 srctrunc=0.4 wantwf=n wantrecord=y illum=n roll=n > kinv10.rsf niter=10
