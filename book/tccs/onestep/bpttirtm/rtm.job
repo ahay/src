@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH -J rtm_bptti
 #SBATCH -A TCCS
-#SBATCH -t 06:00:00
+#SBATCH -t 9:00:00
 #SBATCH -N 50
 #SBATCH -n 100
 #SBATCH -p normal

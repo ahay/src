@@ -113,36 +113,41 @@ Result('csource','real |graph max1=1. label2=Amplitude label1=Time title=')
 Flow('geo',None,'acqgeo nz=606 nx=7861 ny=1 sou_z=5 sou_ox=802 sou_oy=0 sou_jx=4 sou_jy=1 sou_nx=1641 sou_ny=1 rec_z=5 rec_nx=800 rec_ny=1 npad=501 noff=3 roll=1')
 
 # Data
-#Flow('data','shot.hh',
-#        '''
-#        remap1 d1=0.004 n1=2301 |
-#        mutter v0=1.5 t0=0.15 half=n
-#        ''')
+"""
+Flow('data','shot.hh',
+        '''
+        remap1 d1=0.004 n1=2301 |
+        mutter v0=1.5 t0=0.15 half=n
+        ''')
 
 datdir = './shotdir/'
-#for i in range(1641):
-#    dat = datdir+'shot-%d.rsf' %i
-#    Flow(dat,'data',
-#            '''
-#            window n3=1 f3=%d |
-#            put o2=%g o3=0 d3=1
-#            ''' %(i,i*0.05-10.025))
+for i in range(1641):
+    dat = datdir+'shot-%d.rsf' %i
+    Flow(dat,'data',
+            '''
+            window n3=1 f3=%d |
+            put o2=%g o3=0 d3=1
+            ''' %(i,i*0.05-10.025))
+"""
+# Forward modeling (not needed)
+#Flow('test','csource geo vx vp eta theta0',
+#     '''
+#     mpicfftrtm
+#     wav=$SOURCE geo=${SOURCES[1]}
+#     velx=${SOURCES[2]} velz=${SOURCES[3]} eta=${SOURCES[4]} theta=${SOURCES[5]} 
+#     media=1
+#     seed=2013 npk=50 eps=1e-4 jump=2
+#     verb=y 
+#     dabc=y nb=%(nb)d cb=%(cb)g
+#     nbell=2
+#     dat_dir=shotdir2 wfl_dir=wfldir2
+#     snap=y jsnap=10
+#     sht_set=1000 sht_num=1
+#     ''' %par,stdin=0,stdout=0,np=8)
 
-Flow('test','csource geo vx vp eta theta0',
-     '''
-     mpicfftrtm
-     wav=$SOURCE geo=${SOURCES[1]}
-     velx=${SOURCES[2]} velz=${SOURCES[3]} eta=${SOURCES[4]} theta=${SOURCES[5]} 
-     media=1
-     seed=2013 npk=50 eps=1e-4 jump=2
-     verb=y 
-     dabc=y nb=%(nb)d cb=%(cb)g
-     nbell=2
-     dat_dir=shotdir2 wfl_dir=wfldir2
-     snap=y jsnap=10
-     sht_set=1000 sht_num=1
-     ''' %par,stdin=0,stdout=0,np=8)
-
+"""
+# Reverse-time migration
+# before running the script, please create the following folders in the current directory: shotdir, imgdir, wfldir
 Flow('bptti-img','csource geo vx vp eta theta0',
      '''
      mpicfftrtm migr=y
@@ -157,18 +162,19 @@ Flow('bptti-img','csource geo vx vp eta theta0',
      dat_dir=shotdir wfl_dir=wfldir
      img_dir=imgdir
      snap=y jsnap=500
-     sht_set=1000 sht_num=1
-     revolve_snaps=500 info=0
+     revolve_snaps=500 info=1
      ''' %par,stdin=0,stdout=0,np=8)
+     # sht_set=1000 sht_num=1
+"""
 
-Result('bptti-img','img1.hh',
+Result('bptti-img',
        '''
-       window f2=802 n2=6298 | put o1=0 |
+       window f1=5 f2=802 n2=6298 | put o1=0 |
        sflaplac | pow pow1=1.5 |
        grey labelsz=4 titlesz=5 wanttitle=n screenht=4 screenratio=0.3
        ''')
 
-Result('zoom1','img1.hh',
+Result('zoom1','bptti-img',
        '''
        window f2=802 n2=6298 | put o1=0 |
        sflaplac | pow pow1=1.5 |
@@ -176,7 +182,7 @@ Result('zoom1','img1.hh',
        grey labelsz=4 titlesz=5 wanttitle=n screenht=4 screenratio=0.22
        ''')
 
-Result('zoom2','img1.hh',
+Result('zoom2','bptti-img',
        '''
        window f2=802 n2=6298 | put o1=0 |
        sflaplac | pow pow1=1.5 |
