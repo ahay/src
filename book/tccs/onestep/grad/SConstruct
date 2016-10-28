@@ -1,0 +1,228 @@
+from rsf.proj import *
+
+
+Flow('vel',None,
+     '''                                                                       
+     math n1=512 d1=5 n2=512 d2=5                                              
+     output="500+0.002*(x1-1000)*(x1-1000)+0.003*(x2-1200)*(x2-1200)"         
+     unit1=m unit2=m label1=X label2=Z                 
+     ''')
+
+"""
+Flow('vel',None,
+     '''
+     math n1=512 d1=5 n2=512 d2=5
+     output="3000+0.000002*(x1-400)*(x1-1000)*(x1-1800)+0.000002*(x2-300)*(x2-1200)*(x2-2000)"
+     label=Velocity unit1=m unit2=m unit=m/s label1=X label2=Z 
+     ''')
+
+
+Flow('vel',None,
+     '''
+     math n1=512 d1=5 n2=512 d2=5
+     output="1000+0.0003*(x1)*(x1)+0.0000002*(x2)*(x2)*x2"
+     label=Velocity unit1=m unit2=m unit=m/s label1=X label2=Z 
+     ''')
+
+"""
+Result('vel',
+       '''
+       grey transp=n screenratio=0.89 color=j
+       bias=3500 scalebar=y title=Model barlabel=Velocity barunit=m/s
+       labelfat=6 titlefat=6 labelsz=9 titlesz=10
+       ''')
+
+Flow('grad1','vel','igrad square=n adj=n | math output="input/5" ')
+Flow('grad2','vel','transp| igrad square=n adj=n | transp | math output="input/5" ')
+Result('grad1','grey transp=n scalebar=y color=j title="Velocity gradient in X direction" ')
+Result('grad2','grey transp=n scalebar=y color=j title="Velocity gradient in Z direction" ')
+
+time=0.8855
+
+dtt=0.0005
+nt=301
+dt=0.0035
+factor=dt/dtt
+ntt=(nt-1)*factor+1
+ktt=(ntt-1)/10+1
+
+Flow('source1',None,
+     '''
+     spike n1=%d d1=%g k1=%d |
+     ricker1 frequency=15
+     '''%(ntt,dtt,ktt))
+Flow('real','source1','math "output=0"')
+Flow('imag','source1','envelope hilb=y | halfint | halfint | math output="input/2" ')
+
+Flow('csource1','real imag','cmplx ${SOURCES[1]}')
+Flow('csource','csource1','window j1=%d'% factor)
+Flow('source','source1','window j1=%d'% factor)
+Result('source','graph  title="Source Wavelet" ')
+
+Flow('fft','vel','rtoc | fft3 axis=1 pad=1 | fft3 axis=2 pad=1')
+
+Flow('refl',None,'spike n1=512 d1=5 n2=512 d2=5 k1=245 k2=250') 
+
+### traveltime
+Flow('ray','vel','spray axis=3 n=1 d=5 o=0 | eikonal zshot=1220 yshot=1250 xshot=0')
+Plot('ray','contour nc=1 c0=0.78 transp=n wantaxis=n wanttitle=n screenratio=1 dash=1 plotfat=5 plotcol=3')
+
+### gradient
+Flow('right left','vel grad1 grad2 fft',
+     '''
+     cisolr2grad seed=2010 dt=%g grad1=${SOURCES[1]} grad2=${SOURCES[2]} fft=${SOURCES[3]} left=${TARGETS[1]} npk=100 eps=1e-4
+     ''' % dt)
+
+Flow('wave','csource refl left right',
+     '''
+     cfftwave2omp ref=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]} verb=y cmplx=n
+     ''')
+
+Result('wave','grey title="Lowrank Wave" transp=n label1=Distance unit1=m')
+
+Plot('wave',
+     '''
+     window j3=25  |
+     grey label2="Z" label1="X" title="Isotropic"
+     yreverse=y transp=n gainpanel=all screenratio=1
+     ''')
+
+Result('wavesnap','wave',
+     '''
+     window n3=1 min3=%g |
+     grey title="With Gradient"
+     yreverse=y transp=n gainpanel=all screenratio=1
+     label1=X unit1=m label2=Z unit2=m
+     ''' % time)
+
+#Result('comp','wavesnap ray','Overlay')
+
+Plot('wavecross','wave',
+     '''
+     window j3=5 | window n2=1 f2=256 squeeze=n |
+     graph label2="Z" label1="X" title="Isotropic" min2=-0.005 max2=0.01
+     ''')
+
+Flow('snapshot','wave','window j3=50 max3=0.5 | stack axis=3')
+
+Result('snapshot',
+       '''
+       grey label2="Z" label1="X" title="Isotropic" screenratio=1
+       yreverse=y transp=n gainpanel=all unit1=m unit2=m
+       ''')
+
+
+### without gradient
+Flow('right1 left1','vel fft',
+     '''
+     cisolr2 seed=2010 dt=%g fft=${SOURCES[1]} left=${TARGETS[1]} 
+     ''' % dt)
+
+Flow('wave1','csource refl left1 right1',
+     '''
+     cfftwave2omp ref=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]} verb=y cmplx=n
+     ''')
+
+Result('wave1','grey title="Lowrank Wave" transp=n clip=0.1 label1=Distance unit1=m')
+
+Plot('wave1',
+     '''
+     window j3=25  |
+     grey label2="Z" label1="X" title="Isotropic"
+     yreverse=y transp=n gainpanel=all screenratio=1
+     ''')
+
+Result('wave1snap','wave1',
+     '''
+     window n3=1 min3=%g |
+     grey title="Without Gradient"
+     yreverse=y transp=n gainpanel=all screenratio=1
+     label1=X unit1=m label2=Z unit2=m
+     ''' % time)
+
+#Result('comp1','wave1snap ray','Overlay')
+
+Plot('wavecross1','wave1',
+     '''
+     window j3=5 | window n2=1 f2=256 squeeze=n |
+     graph label2="Z" label1="X" title="Isotropic" min2=-0.005 max2=0.01
+     ''')
+
+Flow('snapshot1','wave1','window j3=50 max3=0.5 | stack axis=3')
+
+Result('snapshot1',
+       '''
+       grey label2="Z" label1="X" title="Isotropic" screenratio=1
+       yreverse=y transp=n gainpanel=all unit1=m unit2=m
+       ''')
+
+### ground truth ###
+
+dttt=dt/20
+nttt=(nt-1)*20+1
+kttt=(nttt-1)/10+1
+Flow('source2',None,
+     '''
+     spike n1=%d d1=%g k1=%d |
+     ricker1 frequency=15
+     '''%(nttt,dttt,kttt))
+Flow('real2','source2','math "output=0"')
+Flow('imag2','source2','envelope hilb=y | halfint | halfint | math output="input/2" ')
+
+Flow('csource2','real2 imag2','cmplx ${SOURCES[1]}')
+Result('source2','graph  title="Source Wavelet" ')
+
+
+Flow('right2 left2','vel fft',
+     '''
+     cisolr2 seed=2010 dt=%g fft=${SOURCES[1]} left=${TARGETS[1]} 
+     ''' % dttt)
+
+Flow('wave2','csource2 refl left2 right2',
+     '''
+     cfftwave2omp ref=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]} verb=y cmplx=n | window j3=20
+     ''')
+
+
+Result('wave2snap','wave2',
+     '''
+     window n3=1 min3=%g |
+     scale axis=3 |
+     grey title="Reference"
+     yreverse=y transp=n gainpanel=all screenratio=0.89
+     scalebar=y maxval=1 minval=-1
+     label1=X unit1=m label2=Z unit2=m barlabel=Normalized\ Amplitude
+     labelfat=6 titlefat=6 labelsz=9 titlesz=10
+     ''' % time)
+
+#Result('comp2','wave2snap ray','Overlay')
+
+
+Flow('last','wave','window n3=1 min3=%g | scale axis=3 ' % time)
+Flow('last1','wave1','window n3=1 min3=%g | scale axis=3 '% time)
+Flow('last2','wave2','window n3=1 min3=%g | scale axis=3 '% time)
+Flow('diff','last last2','math truth=last2.rsf output="abs(input-truth)" ')
+Flow('diff1','last1 last2','math truth=last2.rsf output="abs(input-truth)" ')
+Flow('test','last last1','math truth=last1.rsf output="abs(input-truth)" ')
+#Result('diff','mask min=0.00 | dd type=float | add mode=p $SOURCE | grey maxval=0.18 minval=0 clip=0.18 screenratio=0.89 scalebar=y label1=X unit1=m label2=Z unit2=m title="With Gradient" transp=n ')
+#Result('diff1','mask min=0.00 | dd type=float | add mode=p $SOURCE | grey maxval=0.18 minval=0 clip=0.18 screenratio=0.89 scalebar=y label1=X unit1=m label2=Z unit2=m title="Without Gradient" transp=n ')
+#Result('diffcontrast','diff diff1','SideBySideIso')
+#Result('snapcontrast','wavesnap wave1snap','SideBySideIso')
+Result('diff','grey maxval=0.15 minval=0 clip=0.15 screenratio=0.89 scalebar=y label1=X unit1=m label2=Z unit2=m title="Error (with gradient)" transp=n labelfat=6 titlefat=6 labelsz=9 titlesz=10 barlabel=Normalized\ Amplitude')
+Result('diff1','grey maxval=0.15 minval=0 clip=0.15 screenratio=0.89 scalebar=y label1=X unit1=m label2=Z unit2=m title="Error (without gradient)" transp=n labelfat=6 titlefat=6 labelsz=9 titlesz=10 barlabel=Normalized\ Amplitude ')
+
+# test
+pos=410
+
+Flow('trace','wave','window f1=%d n1=1 squeeze=n | window min3=%g n3=1' % (pos,time))
+Flow('trace1','wave1','window f1=%d n1=1 squeeze=n | window min3=%g n3=1' % (pos,time))
+Flow('trace2','wave2','window f1=%d n1=1 squeeze=n | window min3=%g n3=1' % (pos,time))
+
+Flow('compp','trace trace2','cat axis=2 ${SOURCES[1]} | scale axis=1')
+Flow('compp1','trace1 trace2','cat axis=2 ${SOURCES[1]} | scale axis=1')
+Result('compp','graph dash=0,1 plotcol=6,7 plotfat=3 label1=Z unit1=m label2="Normalized Amplitude" unit2= wanttitle=y title="With gradient" screenwd=14.5 screenht=5.5 labelfat=4 labelsz=5.5')
+Result('compp1','graph dash=4,1 plotcol=5,7 plotfat=3 label1=Z unit1=m label2="Normalized Amplitude" unit2= wanttitle=y title="Without gradient" screenwd=14.5 screenht=5.5 labelfat=4 labelsz=5.5')
+
+#Result('compp1','comp','graph dash=0,4,1 plotcol=6,5,7 plotfat=3 label1=Distance unit1=m label2="Normalized Amplitude" unit2= wanttitle=n labelfat=4 labelsz=9')
+
+End()

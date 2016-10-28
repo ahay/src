@@ -68,7 +68,7 @@ for m in range (1,4):
     snap = 'snap-%d' %m
     Flow([right,left],[vel,'fft',dbq],
          '''
-         fraclr2 seed=2010 npk=10 eps=0.00001 dt=%(dt)g mode=0 rev=n sign=0
+         zfraclr2 seed=2010 npk=10 eps=0.00001 dt=%(dt)g mode=0 rev=n sign=0
          fft=${SOURCES[1]} q=${SOURCES[2]}
          left=${TARGETS[1]} w0=%(w0)g
          ''' % par)
@@ -95,7 +95,7 @@ for m in range (1,4):
 
 Flow(['right-0','left-0'],['vel3','fft','dbq3'],
      '''
-     fraclr2 seed=2010 npk=10 eps=0.00001 dt=%(dt)g mode=3 rev=n sign=0
+     zfraclr2 seed=2010 npk=10 eps=0.00001 dt=%(dt)g mode=3 rev=n sign=0
      fft=${SOURCES[1]} q=${SOURCES[2]}
      left=${TARGETS[1]} w0=%(w0)g
      ''' % par)
@@ -123,7 +123,7 @@ Flow('gamma','dbq3','math output="atan(1/input)/3.14159" ')
 
 Flow(['right-4','left-4'],['vel3','fft','dbq3'],
      '''
-     fraclr2 seed=2010 npk=10 eps=0.00001 dt=%(dt)g mode=0 rev=n sign=0
+     zfraclr2 seed=2010 npk=10 eps=0.00001 dt=%(dt)g mode=0 rev=n sign=0
      fft=${SOURCES[1]} q=${SOURCES[2]}
      left=${TARGETS[1]} w0=%(w0)g
      avg=y gamma=0.00799336

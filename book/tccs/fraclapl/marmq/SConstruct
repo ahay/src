@@ -10,31 +10,11 @@ def grey(custom):
     grey labelsz=5 titlesz=6 %s
     ''' %(custom)
 
-def srcgen(par):
-    dtt=0.0001
-    fac=par['dt']/dtt
-    ntt=(par['nt']-1)*fac+1
-    ktt=(par['srcbgn']-1)*fac+1
-
-    #i/(2*phi)=i/(2|omega|)=i/2 * (hilb) [(int)source] 
-
-    Flow('source1',None,
-         '''
-         spike n1=%d d1=%g k1=%d |
-         ricker1 frequency=%g
-         '''%(ntt,dtt,ktt,par['frq']))
-    Flow('realsrc','source1','math "output=0"')
-    Flow('imagsrc','source1','envelope hilb=y order=500 | halfint | halfint | math output="input/2" ')
-    
-    Flow('csource1','realsrc imagsrc','cmplx ${SOURCES[1]}')
-    Flow('csource','csource1','window j1=%d'% fac)
-    return 'csource'
-
 #Flow('vel','vp.asc','echo in=$SOURCE n1=961 n2=241 data_format=ascii_float | dd form=native | put d1=12.5 d2=12.5 o1=0 o2=0 | transp plane=12 | expand top=10 left=0 right=0 bottom=0')
 #Flow('q','qp.asc','echo in=$SOURCE n1=961 n2=241 data_format=ascii_float | dd form=native | put d1=12.5 d2=12.5 o1=0 o2=0 | transp plane=12 | expand top=10 left=0 right=0 bottom=0')
 
-Flow('vel','IMAGES_Revise/vel.hh','expand top=10 left=0 right=0 bottom=0 | put d1=12.5 d2=12.5')
-Flow('q','IMAGES_Revise/q.hh','expand top=10 left=0 right=0 bottom=0 | put d1=12.5 d2=12.5')
+Flow('vel','vp.asc',' csv2rsf | put d1=12.5 d2=12.5 o1=0 o2=0 | transp plane=12 | expand top=40 left=0 right=0 bottom=0')
+Flow('q','qp.asc',' csv2rsf | put d1=12.5 d2=12.5 o1=0 o2=0 | transp plane=12 | expand top=40 left=0 right=0 bottom=0')
 
 Result('vel','grey allpos=y color=j bias=1500 title="Marmousi Velocity Model" scalebar=y barreverse=y wanttitle=y label1=Depth label2=Distance unit1=m unit2=m barlabel=Velocity barunit="m/s" labelfat=3 titlefat=3')
 Result('q','grey allpos=y color=j bias=0 title="Marmousi Attenuation (Q) Model" scalebar=y barreverse=y wanttitle=y label1=Depth label2=Distance unit1=m unit2=m barlabel=Q barunit="" labelfat=3 titlefat=3')
@@ -51,6 +31,7 @@ Flow('iref','vel',
      ''')
 Flow('cref','ref iref','cmplx ${SOURCES[1]}')
 
+# set up parameters
 par = {
     # constant-Q
     'w0' : 1500,    # reference frequency for constant-Q model
@@ -67,31 +48,33 @@ par = {
     'unitz' : "m",
     'shtbgn': 2,    # 1 imaged shot starting location on mesh
     'shtend': 961,  # 961 shot ending location on mesh 
-    'sintv' : 15,   # shot interval on mesh, 26
+    'sintv' : 15,  # shot interval on mesh, 15
     'spz'   : 5,    # shot depth on mesh
     'gpz'   : 5,    # receiver depth on mesh
     'gpl'   : 150,  # receiver length of single shot
     'snpint': 1,    # snapshot interval
     'pad1'  : 1,    # fft pading on the first axis
     # abc parameters 
-    'top'   : 30,  # padding length
-    'bot'   : 30,
-    'lft'   : 30,
-    'rht'   : 30,
-    'dcz'   : 0.01, # decay coefficient
-    'dcx'   : 0.01,
+    'top'   : 50,  # padding length
+    'bot'   : 50,
+    'lft'   : 50,
+    'rht'   : 50,
+    'dcz'   : 0.005, # decay coefficient
+    'dcx'   : 0.005,
     #source
     'srcbgn'  : 60, # source begin time
     'frq'     : 17.5  # peak frequency of ricker wavelet (in Hz)
 }
 
-Fsrc  = srcgen(par)
-
+Fsrc='csource'
 Ffvel = 'vel'
 Fbvel= 'bvel'
 Fq = 'q'
 Fbq = 'bq'
-Fimg = 'img'
+Fimga = 'imga'
+Fimgv = 'imgv'
+Fimgc = 'imgc'
+Fimgn = 'imgn'
 Ffvelabc = Ffvel+'x'
 Fbvelabc = Fbvel+'x'
 Fqabc = Fq+'x'
@@ -102,79 +85,191 @@ Fleft = 'left'
 Fright = 'right'
 Ffleft = 'fleft'
 Ffright = 'fright'
-Fbleft = 'bleft'
-Fbright = 'bright'
+Faleft = 'aleft'
+Faright = 'aright'
+Fcleft = 'cleft'
+Fcright = 'cright'
 Ftmpwf =  'tmpwf'
 Ftmpbwf = 'tmpbwf'
 Frcd = 'shots'
+Frcdv = 'shotsv'
+Frcdvn = 'shotsvn'
 
-Flow(Fbvel, Ffvel, 'smooth rect1=3 rect2=3 repeat=2')
-Flow(Fbq, Fq, 'smooth rect1=3 rect2=3 repeat=2')
+Flow(Fsrc,None,'spike n1=%(nt)d d1=%(dt)g k1=%(srcbgn)d | imagsrc frequency=%(frq)g | rtoc' %par)
+Flow(Fbvel, Ffvel, 'smooth rect1=8 rect2=8 repeat=2')
+Flow(Fbq, Fq, 'smooth rect1=8 rect2=8 repeat=2')
 
+# Pad the boundary
 for m in [Ffvel,Fbvel,Fq,Fbq]:
     ext  = m+'x'
-    Flow(ext,m,
-         '''
+    Flow(ext,m, '''
          expand left=%(lft)d right=%(rht)d 
                 top=%(top)d  bottom=%(bot)d
          '''%par)
+
 # Lowrank decomposition
 Flow(Ffft,Ffvelabc,'rtoc | fft3 axis=1 pad=1 | fft3 axis=2 pad=1')
 
-Flow([Ffright,Ffleft],[Fbvelabc,Ffft,Fbqabc],
+## Acoustic forward modelling with muting 
+#  Lowrank decomposition for stratigraphic velocity
+Flow([Fright,Fleft],[Ffvelabc,Ffft,Fqabc],
      '''
-      fraclr2 seed=2010 npk=50 eps=1.e-4
+      zfraclr2 seed=2010 npk=50 eps=1.e-4
       fft=${SOURCES[1]} q=${SOURCES[2]} left=${TARGETS[1]}
       mode=3 rev=n sign=0
       dt=%(dt)g w0=%(w0)g
       nbt=%(top)d nbb=%(bot)d nbl=%(lft)d nbr=%(rht)d 
       ct=%(dcz)g cb=%(dcz)g cl=%(dcx)g cr=%(dcx)g
       compen=n cutoff=100 vmax=4700 taper=0.4
+      abc=1
      '''%par)
 
-Flow([Fbright,Fbleft],[Fbvelabc,Ffft,Fbqabc],
+Flow([Frcd, Ftmpwf],[Fref,Ffvelabc,Fleft,Fright,Fleft,Fright,Fsrc],
      '''
-      fraclr2 seed=2010 npk=50 eps=1.e-4
+      mpirtmop tmpwf=${TARGETS[1]}
+      vel=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]}
+      leftb=${SOURCES[4]} rightb=${SOURCES[5]} src=${SOURCES[6]} 
+      verb=y pad1=1 justrec=y adj=n roll=n
+      shtbgn=%(shtbgn)d shtend=%(shtend)d shtint=%(sintv)d
+      spz=%(spz)g gpz=%(gpz)g gpl=%(gpl)g snapinter=%(snpint)d
+      top=%(top)d bot=%(bot)d lft=%(lft)d  rht=%(rht)d
+      rectz=2 rectx=2 repeat=1 srctrunc=0.4
+      wantwf=y illum=n
+      vref=1500 wd=120
+     '''%par)
+
+## Acoustic RTM
+#  Lowrank decomposition for migration velocity (smooth)
+Flow([Faright,Faleft],[Fbvelabc,Ffft,Fbqabc],
+     '''
+      zfraclr2 seed=2010 npk=50 eps=1.e-4
       fft=${SOURCES[1]} q=${SOURCES[2]} left=${TARGETS[1]}
-      mode=3 rev=y sign=0
+      mode=3 rev=n sign=0
       dt=%(dt)g w0=%(w0)g
       nbt=%(top)d nbb=%(bot)d nbl=%(lft)d nbr=%(rht)d 
       ct=%(dcz)g cb=%(dcz)g cl=%(dcx)g cr=%(dcx)g
       compen=n cutoff=100 vmax=4700 taper=0.4
+      abc=1
      '''%par)
 
-#cutoff=70 vmax=4700 taper=0.3
+Flow([Fimga, Ftmpbwf],[Frcd,Ffvelabc,Faleft,Faright,Faleft,Faright,Fsrc],
+     '''
+      mpirtmop tmpwf=${TARGETS[1]}
+      vel=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]}
+      leftb=${SOURCES[4]} rightb=${SOURCES[5]} src=${SOURCES[6]} 
+      verb=y pad1=1 justrec=n adj=y roll=n
+      shtbgn=%(shtbgn)d shtend=%(shtend)d shtint=%(sintv)d
+      spz=%(spz)g gpz=%(gpz)g gpl=%(gpl)g snapinter=%(snpint)d
+      top=%(top)d bot=%(bot)d lft=%(lft)d  rht=%(rht)d
+      rectz=2 rectx=2 repeat=1 srctrunc=0.4
+      wantwf=y illum=n
+     '''%par)
 
-#Flow([Frcd, Ftmpwf],[Fref,Ffvelabc,Ffleft,Ffright,Fbleft,Fbright,Fsrc],
-#     '''
-#      sfmpilsrtm input=$SOURCE output=$TARGET  tmpwf=${TARGETS[1]}
-#      vel=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]}
-#      leftb=${SOURCES[4]} rightb=${SOURCES[5]} src=${SOURCES[6]} 
-#      verb=y pad1=1 adj=n roll=n
-#      shtbgn=%(shtbgn)d shtend=%(shtend)d shtint=%(sintv)d
-#      spz=%(spz)g gpz=%(gpz)g gpl=%(gpl)g snapinter=%(snpint)d
-#      top=%(top)d bot=%(bot)d lft=%(lft)d  rht=%(rht)d
-#      rectz=2 rectx=2 repeat=1 srctrunc=0.4
-#      wantwf=n wantrecord=y illum=n
-#     '''%par,stdin=0,stdout=0,np=1)
+## Visco-acoustic forward modelling with muting 
+#  Lowrank decomposition for stratigraphic velocity
+Flow([Ffright,Ffleft],[Ffvelabc,Ffft,Fqabc],
+     '''
+      zfraclr2 seed=2010 npk=50 eps=1.e-4
+      fft=${SOURCES[1]} q=${SOURCES[2]} left=${TARGETS[1]}
+      mode=0 rev=n sign=0
+      dt=%(dt)g w0=%(w0)g
+      nbt=%(top)d nbb=%(bot)d nbl=%(lft)d nbr=%(rht)d 
+      ct=%(dcz)g cb=%(dcz)g cl=%(dcx)g cr=%(dcx)g
+      compen=n cutoff=100 vmax=4700 taper=0.4
+      abc=1
+     '''%par)
 
-Result('acuimg','IMAGES_Revise/acuimg.hh','real | laplac | window f1=10 | put o1=0 | grey clip=0.00224311 scalebar=y title="Acoustic RTM Image" color=G')
-Result('visimg','IMAGES_Revise/visimg.hh','real | laplac | window f1=10 | put o1=0 | grey clip=0.00224311 scalebar=y title="Conventional RTM Image" color=G')
-Result('comimg','IMAGES_Revise/comimg.hh','real | laplac | window f1=10 | put o1=0 | grey clip=0.00224311 scalebar=y title="Q-compensated RTM Image" color=G')
-Result('comimg-n','IMAGES_Revise/comimg-noise-var-1e-9.hh','real | laplac | window f1=10 | put o1=0 | grey clip=0.00224311 scalebar=y title="Conventional RTM Image" color=G')
+Flow([Frcdv],[Fref,Ffvelabc,Ffleft,Ffright,Ffleft,Ffright,Fsrc],
+     '''
+      mpirtmop
+      vel=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]}
+      leftb=${SOURCES[4]} rightb=${SOURCES[5]} src=${SOURCES[6]} 
+      verb=y pad1=1 justrec=y adj=n roll=n
+      shtbgn=%(shtbgn)d shtend=%(shtend)d shtint=%(sintv)d
+      spz=%(spz)g gpz=%(gpz)g gpl=%(gpl)g snapinter=%(snpint)d
+      top=%(top)d bot=%(bot)d lft=%(lft)d  rht=%(rht)d
+      rectz=2 rectx=2 repeat=1 srctrunc=0.4
+      wantwf=n illum=n
+      vref=1500 wd=120
+     '''%par)
 
-Flow('acutrace1','IMAGES_Revise/acuimg.hh','real | laplac | window f1=10 f2=550 n2=1 | put o1=0 ')
-Flow('vistrace1','IMAGES_Revise/visimg.hh','real | laplac | window f1=10 f2=550 n2=1 | put o1=0 ')
-Flow('comtrace1','IMAGES_Revise/comimg.hh','real | laplac | window f1=10 f2=550 n2=1 | put o1=0 ')
-Flow('comtrace1-n','IMAGES_Revise/comimg-noise-var-1e-9.hh','real | laplac | window f1=10 f2=550 n2=1 | put o1=0 ')
+## Acoustic RTM (of visco-acoustic data)
+Flow([Fimgv],[Frcdv,Ffvelabc,Faleft,Faright,Faleft,Faright,Fsrc],
+     '''
+      mpirtmop
+      vel=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]}
+      leftb=${SOURCES[4]} rightb=${SOURCES[5]} src=${SOURCES[6]} 
+      verb=y pad1=1 justrec=n adj=y roll=n
+      shtbgn=%(shtbgn)d shtend=%(shtend)d shtint=%(sintv)d
+      spz=%(spz)g gpz=%(gpz)g gpl=%(gpl)g snapinter=%(snpint)d
+      top=%(top)d bot=%(bot)d lft=%(lft)d  rht=%(rht)d
+      rectz=2 rectx=2 repeat=1 srctrunc=0.4
+      wantwf=n illum=n
+     '''%par)
+
+## Q-compensated RTM
+#  Lowrank decomposition for migration velocity with Q-compensation
+Flow([Fcright,Fcleft],[Fbvelabc,Ffft,Fbqabc],
+     '''
+      zfraclr2 seed=2010 npk=50 eps=1.e-4
+      fft=${SOURCES[1]} q=${SOURCES[2]} left=${TARGETS[1]}
+      mode=0 rev=n sign=0
+      dt=%(dt)g w0=%(w0)g
+      nbt=%(top)d nbb=%(bot)d nbl=%(lft)d nbr=%(rht)d 
+      ct=%(dcz)g cb=%(dcz)g cl=%(dcx)g cr=%(dcx)g
+      compen=y cutoff=100 vmax=4700 taper=0.4
+      abc=1
+     '''%par)
+Flow([Fimgc],[Frcdv,Ffvelabc,Fcleft,Fcright,Fcleft,Fcright,Fsrc],
+     '''
+      mpirtmop
+      vel=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]}
+      leftb=${SOURCES[4]} rightb=${SOURCES[5]} src=${SOURCES[6]} 
+      verb=y pad1=1 justrec=n adj=y roll=n
+      shtbgn=%(shtbgn)d shtend=%(shtend)d shtint=%(sintv)d
+      spz=%(spz)g gpz=%(gpz)g gpl=%(gpl)g snapinter=%(snpint)d
+      top=%(top)d bot=%(bot)d lft=%(lft)d  rht=%(rht)d
+      rectz=2 rectx=2 repeat=1 srctrunc=0.4
+      wantwf=n illum=n
+     '''%par)
+
+## Add noise to data (snr = 1.2/1.5 = 0.8)
+Flow('noiser',Frcdv, 'real | noise rep=y var=1.5e-12 seed=2010')
+Flow('noisei',Frcdv, 'imag | noise rep=y var=1.5e-12 seed=2010')
+Flow('noise','noiser noisei','cmplx ${SOURCES[1]}')
+Flow(Frcdvn,[Frcdv,'noise'],'add ${SOURCES[1]}')
+
+# Q-RTM of noisy data
+Flow([Fimgn],[Frcdvn,Ffvelabc,Fcleft,Fcright,Fcleft,Fcright,Fsrc],
+     '''
+      mpirtmop
+      vel=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]}
+      leftb=${SOURCES[4]} rightb=${SOURCES[5]} src=${SOURCES[6]} 
+      verb=y pad1=1 justrec=n adj=y roll=n
+      shtbgn=%(shtbgn)d shtend=%(shtend)d shtint=%(sintv)d
+      spz=%(spz)g gpz=%(gpz)g gpl=%(gpl)g snapinter=%(snpint)d
+      top=%(top)d bot=%(bot)d lft=%(lft)d  rht=%(rht)d
+      rectz=2 rectx=2 repeat=1 srctrunc=0.4
+      wantwf=n illum=n
+     '''%par)
+
+Result('acuimg','imga','real | laplac | window f1=40 | put o1=0 | grey clip=3.29048e-06 scalebar=n wanttitle=y label1=Depth label2=Distance unit1=m unit2=m title="Acoustic RTM Image" color=G')
+Result('visimg','imgv','real | laplac | window f1=40 | put o1=0 | grey clip=3.29048e-06 scalebar=n wanttitle=y label1=Depth label2=Distance unit1=m unit2=m title="Conventional RTM Image" color=G')
+Result('comimg','imgc','real | laplac | window f1=40 | put o1=0 | grey clip=3.29048e-06 scalebar=n wanttitle=y label1=Depth label2=Distance unit1=m unit2=m title="Q-compensated RTM Image" color=G')
+Result('comimg-n','imgn','real | laplac | window f1=40 | put o1=0 | grey clip=3.29048e-06 scalebar=n wanttitle=y label1=Depth label2=Distance unit1=m unit2=m title="Conventional RTM Image" color=G')
+
+Flow('acutrace1','imga','real | laplac | window f1=40 f2=550 n2=1 | put o1=0 ')
+Flow('vistrace1','imgv','real | laplac | window f1=40 f2=550 n2=1 | put o1=0 ')
+Flow('comtrace1','imgc','real | laplac | window f1=40 f2=550 n2=1 | put o1=0 ')
+Flow('comtrace1-n','imgn','real | laplac | window f1=40 f2=550 n2=1 | put o1=0 ')
 
 Flow('compare1','acutrace1 vistrace1 comtrace1 comtrace1-n','cat axis=2 ${SOURCES[1:4]} | scale axis=2')
 Plot('compare1','graph transp=y yreverse=y dash=0,4,1,3 plotcol=6,5,7,4 plotfat=3 label1=Depth unit1=m label2="Normalized Amplitude" unit2= wanttitle=n labelfat=4 labelsz=5.5 screenwd=4 screenht=11.5')
 
-Plot('acuzoom','IMAGES_Revise/acuimg.hh','real | laplac | window min1=510 max1=3000 min2=6000 max2=8000 | put o1=510 o2=6000 | grey clip=0.0018 scalebar=n title="Reference RTM Image" wanttitle=y screenht=11 screenwd=14.3 label1=Depth unit1=m label2=Distance unit2=m labelfat=3 titlefat=3 color=G')
-Plot('viszoom','IMAGES_Revise/visimg.hh','real | laplac | window min1=510 max1=3000 min2=6000 max2=8000 | put o1=510 o2=6000 | grey clip=0.0018 scalebar=n title="Conventional RTM Image" wanttitle=y screenht=11 screenwd=14.3 label1=Depth unit1=m label2=Distance unit2=m labelfat=3 titlefat=3 color=G')
-Plot('comzoom','IMAGES_Revise/comimg.hh','real | laplac | window min1=510 max1=3000 min2=6000 max2=8000 | put o1=510 o2=6000 | grey clip=0.0018 scalebar=n title="Q-RTM Image" wanttitle=y screenht=11 screenwd=14.3 label1=Depth unit1=m label2=Distance unit2=m labelfat=3 titlefat=3 color=G')
-Plot('comzoom-n','IMAGES_Revise/comimg-noise-var-1e-9.hh','real | laplac | window min1=510 max1=3000 min2=6000 max2=8000 | put o1=510 o2=6000 | grey clip=0.0018 scalebar=n title="Q-RTM Image with Noise" wanttitle=y screenht=11 screenwd=14.3 label1=Depth unit1=m label2=Distance unit2=m labelfat=3 titlefat=3 color=G')
+Plot('acuzoom','imga','real | laplac | window min1=1000 max1=3500 min2=6000 max2=8000 | put o1=500 o2=6000 | grey clip=2.21363e-06 scalebar=n title="Reference RTM Image" wanttitle=y screenht=11 screenwd=14.3 label1=Depth unit1=m label2=Distance unit2=m labelfat=3 titlefat=3 color=G')
+Plot('viszoom','imgv','real | laplac | window min1=1000 max1=3500 min2=6000 max2=8000 | put o1=500 o2=6000 | grey clip=2.21363e-06 scalebar=n title="Conventional RTM Image" wanttitle=y screenht=11 screenwd=14.3 label1=Depth unit1=m label2=Distance unit2=m labelfat=3 titlefat=3 color=G')
+Plot('comzoom','imgc','real | laplac | window min1=1000 max1=3500 min2=6000 max2=8000 | put o1=500 o2=6000 | grey clip=2.21363e-06 scalebar=n title="Q-RTM Image" wanttitle=y screenht=11 screenwd=14.3 label1=Depth unit1=m label2=Distance unit2=m labelfat=3 titlefat=3 color=G')
+Plot('comzoom-n','imgn','real | laplac | window min1=1000 max1=3500 min2=6000 max2=8000 | put o1=500 o2=6000 | grey clip=2.21363e-06 scalebar=n title="Q-RTM Image with Noise" wanttitle=y screenht=11 screenwd=14.3 label1=Depth unit1=m label2=Distance unit2=m labelfat=3 titlefat=3 color=G')
 
 Flow('compare3','acutrace1 comtrace1','cat axis=2 ${SOURCES[1:2]} | window min1=510 max1=3000 | scale axis=2')
 Plot('compare3','graph transp=y yreverse=y dash=0,4 plotcol=6,5 plotfat=3 label1= unit1= label2="Normalized Amplitude" unit2= wanttitle=n labelsz=5.5 screenwd=3 screenht=11 wantaxis=n labelfat=3 titlefat=3')
@@ -194,21 +289,17 @@ Flow('normacu','acutrace1','scale axis=1')
 Flow('comnorm','normacu normvis','cat axis=2 ${SOURCES[1:2]} | scale axis=2 | window f1=51')
 Result('comnorm','graph transp=y yreverse=y dash=0,0 plotcol=6,7 plotfat=3 label1=Depth unit1=m label2="Normalized Amplitude" unit2= wanttitle=n labelfat=4 labelsz=5.5 screenwd=4 screenht=11.5')
 
-Plot('acushots','IMAGES_Revise/acushots.hh','window max1=5 n3=1 f3=32 | real | grey clip=0.0002 scalebar=n title="Acoustic Data" wanttitle=y label1=Time unit1=s label2=Distance unit2=m labelfat=3 titlefat=3 color=i screenht=11 screenwd=14.2')
-Plot('visshots','IMAGES_Revise/visshots.hh','window max1=5 n3=1 f3=32 | real | grey clip=0.0002 scalebar=n title="Viscoacoustic Data" wanttitle=y label1=Time unit1=s label2=Distance unit2=m labelfat=3 titlefat=3 color=i screenht=11 screenwd=14.2')
-Plot('visshots-n','IMAGES_Revise/visshots-var-1e-9.hh','window max1=5 n3=1 f3=32 | real | grey clip=0.0002 scalebar=n title="Viscoacoustic Data with Noise" wanttitle=y label1=Time unit1=s label2=Distance unit2=m labelfat=3 titlefat=3 color=i screenht=11 screenwd=14.2')
+Plot('acushots','shots','window max1=5 n3=1 f3=32 | real | grey clip=1.18437e-05 scalebar=n title="Acoustic Data" wanttitle=y label1=Time unit1=s label2=Distance unit2=m labelfat=3 titlefat=3 color=i screenht=11 screenwd=14.2')
+Plot('visshots','shotsv','window max1=5 n3=1 f3=32 | real | grey clip=1.18437e-05 scalebar=n title="Viscoacoustic Data" wanttitle=y label1=Time unit1=s label2=Distance unit2=m labelfat=3 titlefat=3 color=i screenht=11 screenwd=14.2')
+Plot('visshots-n','shotsvn','window max1=5 n3=1 f3=32 | real | grey clip=1.18437e-05 scalebar=n title="Viscoacoustic Data with Noise" wanttitle=y label1=Time unit1=s label2=Distance unit2=m labelfat=3 titlefat=3 color=i screenht=11 screenwd=14.2')
 
-Plot('acushot-trace','IMAGES_Revise/acushots.hh','window max1=5 n3=1 f3=32 n2=1 f2=350 | real | graph plotfat=1 max2=0.0005 min2=-0.0005 transp=y yreverse=y wanttitle=n labelsz=5.5 screenwd=3 screenht=11 wantaxis=n labelfat=3 label2=Amplitude')
-Plot('visshot-trace','IMAGES_Revise/visshots.hh','window max1=5 n3=1 f3=32 n2=1 f2=350 | real | graph plotfat=1 max2=0.0005 min2=-0.0005 transp=y yreverse=y wanttitle=n labelsz=5.5 screenwd=3 screenht=11 wantaxis=n labelfat=3 label2=Amplitude')
-Plot('visshot-trace-n','IMAGES_Revise/visshots-var-1e-9.hh','window max1=5 n3=1 f3=32 n2=1 f2=350 | real | graph plotfat=1 max2=0.0005 min2=-0.0005 transp=y yreverse=y wanttitle=n labelsz=5.5 screenwd=3 screenht=11 wantaxis=n labelfat=3 label2=Amplitude')
+Plot('acushot-trace','shots','window max1=5 n3=1 f3=32 n2=1 f2=350 | real | graph plotfat=1 max2=2e-5 min2=-3e-5 transp=y yreverse=y wanttitle=n labelsz=5.5 screenwd=3 screenht=11 wantaxis=n labelfat=3 label2=Amplitude')
+Plot('visshot-trace','shotsv','window max1=5 n3=1 f3=32 n2=1 f2=350 | real | graph plotfat=1 max2=2e-5 min2=-3e-5 transp=y yreverse=y wanttitle=n labelsz=5.5 screenwd=3 screenht=11 wantaxis=n labelfat=3 label2=Amplitude')
+Plot('visshot-trace-n','shotsvn','window max1=5 n3=1 f3=32 n2=1 f2=350 | real | graph plotfat=1 max2=2e-5 min2=-3e-5 transp=y yreverse=y wanttitle=n labelsz=5.5 screenwd=3 screenht=11 wantaxis=n labelfat=3 label2=Amplitude')
 
 Result('acudata','acushots acushot-trace','SideBySideIso')
 Result('visdata','visshots visshot-trace','SideBySideIso')
 Result('visdata-n','visshots-n visshot-trace-n','SideBySideIso')
-
-#Result('acushots','IMAGES_Revise/acushots.hh','real | byte clip=0.0002 | grey3 flat=n point1=0.8 point2=0.7 label1=T label2=X label3=Shot unit1=s unit2=m unit3=m frame1=2001 frame2=481 frame3=32 title="Data without attenuation" wanttitle=y')
-#Result('visshots','IMAGES_Revise/visshots.hh','real | byte clip=0.0002 | grey3 flat=n point1=0.8 point2=0.7 label1=T label2=X label3=Shot unit1=s unit2=m unit3=m frame1=2001 frame2=481 frame3=32 title="Viscoacoustic data" wanttitle=y')
-#Result('visshots-n','IMAGES_Revise/visshots-var-1e-9.hh','real | byte clip=0.0002 | grey3 flat=n point1=0.8 point2=0.7 label1=T label2=X label3=Shot unit1=s unit2=m unit3=m frame1=2001 frame2=481 frame3=32 title="Viscoacoustic data with added noise" wanttitle=y')
 
 #Flow('line1',None,'math n1=161 d1=12.5 o1=1000 output="6875" ')
 #Plot('line1',
