@@ -1,22 +1,12 @@
 from rsf.proj import *
-import os
 
-# Prepare data
-# Download Anisotropic_FD_Model_Shots_part*.sgy.gz from http://www.freeusp.org/2007_BP_Ani_Vel_Benchmark/
-dat={}
-for i in range(4):
-    dat[i] = 'Anisotropic_FD_Model_Shots_part%d'%(i+1)
-    Flow(dat[i]+'.sgy',dat[i]+'.sgy.gz','gunzip -c $SOURCE ',stdin=0)
-    Flow(dat[i],dat[i]+'.sgy','segyread endian=y')
+# Download from http://www.freeusp.org/2007_BP_Ani_Vel_Benchmark/
 
-Flow('shot',dat.values(),'cat axis=2 ${SOURCES[1:4]} | put n2=800 d2=0.0125 o2=-10.025 n3=1641 d3=0.05 o3=0 label2="Offset" unit2="km" label3="Shot" unit3="km"')
-
-# Prepare model
-# Download ModelParams.tar.gz from http://www.freeusp.org/2007_BP_Ani_Vel_Benchmark/
-tgz = 'ModelParams.tar.gz'
+tgz = '../ModelParams.tar.gz'
 #Fetch(tgz,'BP',top=os.environ.get('DATAPATH'),server='local')
 
 pars = Split('epsilon delta vp theta')
+
 sgy = {}
 for par in pars:
     sgy[par] = os.path.join('ModelParams',par.capitalize() + '_Model.sgy')
@@ -61,9 +51,9 @@ Flow('vx','vp epsilon',
 #     '''
 #     math e=${SOURCES[0]} d=${SOURCES[1]} output="(e-d)/(1+2*d)"
 #     ''')
-Flow('eta','epsilon delta',
-        '''
-        math d=${SOURCES[1]} output="((1.+2.*input)/(1.+2.*d)-1.)/2."
+Flow('eta','epsilon delta','''
+        math d=${SOURCES[1]}
+        output="((1.+2.*input)/(1.+2.*d)-1.)/2."
         ''')
 for par in ('vx','eta'):
     Result(par,
@@ -117,16 +107,14 @@ Flow('csource',None,
 		''' %par)
 Result('csource','real |graph max1=1. label2=Amplitude label1=Time title=')
 
-# Acquisition geometry
+# sfgeopar input args:  nz  nx   ny sou_z sou_ox sou_oy sou_jx sou_jy sou_nx sou_ny rec_z rec_nx rec_ny npad noff roll
+#Flow('geo',None,'geopar 606 7861 1  5     802    0      160    1      16     1      5     800    1      300  3    1')
+#Flow('geo',None,'geopar 606 7861 1  5     802    0      4      1      1641   1      5     800    1      501  3    1')
 Flow('geo',None,'acqgeo nz=606 nx=7861 ny=1 sou_z=5 sou_ox=802 sou_oy=0 sou_jx=4 sou_jy=1 sou_nx=1641 sou_ny=1 rec_z=5 rec_nx=800 rec_ny=1 npad=501 noff=3 roll=1')
 
-# Create folders to tempory files
-os.system('[ -e ./shotdir ] && echo "shotdir exists" || mkdir shotdir')
-os.system('[ -e ./wfldir  ] && echo "wfldir exists"  || mkdir wfldir ')
-os.system('[ -e ./imgdir  ] && echo "imgdir exists"  || mkdir imgdir ')
-
 # Data
-Flow('data','shot',
+"""
+Flow('data','shot.hh',
         '''
         remap1 d1=0.004 n1=2301 |
         mutter v0=1.5 t0=0.15 half=n
@@ -140,7 +128,7 @@ for i in range(1641):
             window n3=1 f3=%d |
             put o2=%g o3=0 d3=1
             ''' %(i,i*0.05-10.025))
-
+"""
 # Forward modeling (not needed)
 #Flow('test','csource geo vx vp eta theta0',
 #     '''
@@ -157,8 +145,9 @@ for i in range(1641):
 #     sht_set=1000 sht_num=1
 #     ''' %par,stdin=0,stdout=0,np=8)
 
-# Reverse-time migration (please uncomment the following command)
 """
+# Reverse-time migration
+# before running the script, please create the following folders in the current directory: shotdir, imgdir, wfldir
 Flow('bptti-img','csource geo vx vp eta theta0',
      '''
      mpicfftrtm migr=y

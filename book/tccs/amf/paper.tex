@@ -1,0 +1,633 @@
+\title{Building good starting models for full waveform inversion 
+using adaptive matching filtering misfit}
+\author{Hejun Zhu\footnotemark[1] and Sergey Fomel\footnotemark[2]}
+
+\address{
+\footnotemark[1] Department of Geosciences,
+The University of Texas at Dallas, 
+Richardson, TX, 75080.
+\footnotemark[2] Bureau of Economic Geology,
+Jackson School of Geosciences,
+The University of Texas at Austin,
+Austin, TX 78713.}
+
+\lefthead{Zhu \& Fomel}
+\righthead{AMF for FWI}
+\footer{TCCS-11}
+
+\maketitle
+
+\begin{abstract}  
+We propose a misfit function based on adaptive matching filtering to tackle
+challenges associated with cycle skipping and local minima in full waveform inversion (FWI).  
+This adaptive matching filter is designed to measure time varying phase 
+differences between observations and predications. Compared to classical 
+least-squares waveform differences, this misfit function behaves as a smooth, quadratic 
+function with a broad basin of attraction. These characters are very important 
+because local gradient-based optimization approaches used in most FWI can not 
+guarantee convergence towards true models if misfit functions include 
+local minima and starting model is far away from the global minimum. 
+1D and 2D synthetic experiments illustrate the advantages of the proposed misfit function 
+compared to the classical least-squares waveform misfit. Furthermore, we derive 
+adjoint sources associated with the proposed misfit function and apply them 
+in several 2D time-domain acoustic FWI experiments. 
+Numerical results show that the proposed misfit function helps us to build 
+good starting models for FWI, particularly when low frequency signals are absent in recorded data. 
+\end{abstract} 
+
+\section{Introduction} 
+Full waveform inversion (FWI) has became an important model building technique in both exploration and global seismology 
+over the past ten years~\citep{fwi2009, Fichtner2009, Tape2009, Zhuetal2012, Zhuetal2013_att,
+Zhuetal2013_aniso}. Although its basic theory was proposed in the 1980s~\citep{Lailly1983, 
+Tarantola1984, Gauthier_Tarantola1986}, it has not been widely applied 
+until late 1990s~\citep{Pratt1998} because of limitations on computing power, 
+numerical techniques and data quality. Compared to classical ray-based traveltime tomography, 
+FWI enables us to obtain higher-resolution subsurface images~\citep{Sirgue2010}. 
+2D and 3D results have shown its capabilities to image structures in 
+complicated subsurface environments~\citep{Virieux2009, fwi3D}. 
+Meanwhile, multi-parameter FWI has been developed to constrain different 
+seismic parameters, including velocity, density, anisotropy 
+and attenuation~\citep{attenfwi, multifwi, Warner2013}. 
+
+Although recently FWI has been successfully applied in many synthetic and field data 
+experiments, there are still a number of theoretical and practical 
+challenges. Among these difficulties, cycle skipping and local minima are 
+significant challenges because they directly determine whether FWI can converge 
+towards a true solution. One way to tackle these challenges is to design 
+well-behaved misfit functions. The following criteria should be taken into account 
+when we design new misfit functions. First, they should behave as quadratic functions
+around the global minimum. Second, they should be smooth functions, 
+avoiding abrupt jumps or discontinuities so that local gradient-based optimization 
+approaches can converge robustly. Third, they should involve broad basins of attraction 
+so that we are able to obtain robust inversion results. 
+
+Over the past several decades, a variety of misfit functions have been proposed for FWI. 
+The most commonly used misfit is a least-squares (L2) waveform difference between 
+observations and predictions. These waveform differences can be quantified in the time domain
+\citep{Tarantola1984}, frequency domain~\citep{Pratt1999} or Laplace domain~\citep{Shin2008}. 
+The second type of misfit function separates traveltimes and amplitudes. 
+The amplitudes are always difficult to work with because they are subject to a variety 
+of effects besides the variations of subsurface model parameters, 
+such as source magnitudes, radiation patterns, local site effects, etc. 
+This type of misfit function ignores amplitude discrepancies 
+and focuses on traveltime or phase differences between observations and predictions 
+~\citep{Luo1991, Leeuwen2010}. These phase differences can be measured by cross correlation or
+multitaper techniques~\citep{ZhouY2004, Zhuetal2015_gji}. It has been successfully 
+applied in transmission-type tomography. Instead of designing misfits in either time 
+or frequency domains, some studies proposed misfit functions in time-frequency 
+domains, using instantaneous phases~\citep{Fichtner2008} or envelope differences~\citep{Wu2014}.  
+Recently, several approaches used in signal processing were applied 
+in FWI, such as dynamic warping~\citep{dynamicwarping}, registration-guided 
+waveform differences~\citep{Baek2013} and wavelet analysis~\citep{Yuan2014}. They have shown advantages by comparing with 
+L2 waveform misfits. Adaptive waveform inversion~\citep{Warner2014} used matching filters, 
+such as the Wiener filter, to quantify discrepancies between observations and predictions. 
+By minimizing the filter coefficients, they were able to iteratively update 
+velocity structure. Significant improvements have been shown to avoid cycle skipping and 
+local minima, even in the cases without good starting models and low frequency signals. 
+Wasserstein metric has been proposed to measure transports between two 
+time series~\citep{Engquist2014}. 
+It is a very promising approach to tackle cycle skipping problem in FWI. In addition, 
+instead of quantifying misfit functions with L2 norms, some L1 and L1/L2 mixed norms, 
+such as the Huber norm~\citep{huber2009}, were proposed in the waveform inversion. 
+ 
+In this paper, we propose a misfit function based on adaptive matching filtering (AMF). 
+We first introduce the definition of AMF, which allows us to measure 
+time varying phase differences between two geophysical signals. 
+Next, we propose a misfit function based on AMF. Then, we derive expressions for adjoint sources 
+associated with the proposed misfit function. Several 1D and 2D synthetic experiments are used 
+to illustrate the advantages of the proposed misfit function compared to L2 waveform misfits. 
+Finally, we use some 2D numerical examples to show the potential of 
+the proposed misfit function for building good starting models for FWI when low frequency signals 
+are absent in recorded data.
+
+\section{Theory} 
+\subsection{Adaptive Matching Filtering} \label{sec:amf}
+AMF is a method to measure nonstationary phase differences between two geophysical signals, 
+which has been successfully used for adaptive subtraction of multiple reflections~\citep{nonstationary2009}. 
+Given two time series: prediction ${\bf p}(t)$ 
+and observation ${\bf d}(t)$,
+a stationary matching filter ${\bf f}(\gamma)$ may be defined as the solution to
+the following least-squares inverse problem: 
+
+\begin{equation}
+\label{eqn:statmf}
+{\rm min} ||\sum_{\gamma} {\bf d}(\gamma t) {\bf f}(\gamma)-{\bf p}(t)||^2 
+\quad ,
+\end{equation}
+
+For the whole traces, it only gives us a single measurement ${\bf f}(\gamma)$ for different 
+stretching variable $\gamma$. However, most geophysical signals are nonstationary. 
+Our goal here is to extract a time varying matching filter for different values of the stretching variable $\gamma$. 
+We can modify the stationary matching filter defined in Equation~\ref{eqn:statmf} to 
+a nonstationary AMF, denoted by ${\bf f}(\gamma,t)$. It is defined as the solution to the following 
+modified least-squares inverse problem
+
+\begin{equation}
+\label{eqn:nonstatmf}
+{\rm min} ||\sum_{\gamma} {\bf d}(\gamma t) {\bf f}(\gamma,t)-{\bf p}(t)||^2
+\quad ,
+\end{equation}
+
+Equation~\ref{eqn:nonstatmf} is an underdetermined inverse problem. 
+We have to add additional constraints, i.e., regularization, to solve this problem. 
+Shaping regularization~\citep{shaping2007} is one type of regularization approches for solving ill-posed 
+inversion problems. In this study, we use it to solve Equation~\ref{eqn:nonstatmf}:
+
+\begin{equation}
+\label{eqn:amfsolution}
+{\bf f}=[{\bf S}({\bf D}^T{\bf D}-\lambda^2{\bf I})+\lambda^2{\bf I}]^{-1}{\bf S}{\bf D}^T{\bf p}
+\quad ,
+\end{equation}
+where ${\bf D}$ is the data matrix composed of ${\bf d}(\gamma t)$.
+$\bf S$ denotes the shaping operator. We choose a smoothing operator in this case to impose 
+the smoothness of filter coefficients. \new{For all examples in this paper, we use a triangle smoothing operator as the shaping regularization operator. In addition, the AMF coefficients are solved trace by trace.} $\lambda$ is chosen based on the L2 norm 
+of observations, i.e., $\lambda=||{\bf d}||^2$. 
+Following \cite{shaping2007}, we can rewrite Equation~\ref{eqn:amfsolution} as 
+
+\begin{equation}
+\label{eqn:amfsolution1}
+{\bf f}={\bf H}[{\bf H}^T({\bf D}^T{\bf D}-\lambda^2{\bf I}){\bf H}+\lambda^2{\bf I}]^{-1}{\bf H}^T{\bf D}^T{\bf p}
+\quad ,
+\end{equation}
+where the smoothing operator ${\bf S}={\bf H}{\bf H}^T$.
+Conjugate gradient method~\citep{Fletcher1964} 
+is used to iteratively solve Equation~\ref{eqn:amfsolution1}.
+The method converges in practice in a small number of iterations.
+\new{Comparing to forward and adjoint calculations for solving wave equations, computational costs 
+for calculating AMF are relatively cheap and they can be easily parallelized.}
+
+\subsection{Misfit function based on AMF} 
+Given two seismograms, AMF gives us an image, 
+which is a function of time $t$ and stretching variable $\gamma$. 
+For instance, in Figure~\ref{fig:misfit_data_syn}, we have two synthetic seismograms and each of them involves 
+three events. These two seismograms have identical phases for the first event. However, 
+for the second and third events, they have phase delays and advances, respectively.  
+By solving the least-squares inverse problem in Equation~\ref{eqn:nonstatmf}, we are able to calculate 
+AMF as shown in Figure~\ref{fig:misfit_filt}. There are three energy patches in the AMF image. 
+Energies concentrating around the stretching variable of $\gamma=1$ correspond to the first events 
+with identical phases in the seismograms. While energies deviating away from $\gamma=1$ correspond 
+to the second and third events with nonstationary phases differences, i.e., phase advances and delays. 
+
+\inputdir{misfitexample}
+\plot{data-syn}{width=0.9\columnwidth}
+{\label{fig:misfit_data_syn} 
+Comparisons of two seismograms with three events. 
+For the first event, these two seismograms have identical phase.
+There are phase delay and advance for the second and third events. 
+}
+
+\inputdir{misfitexample}
+\plot{filt}{width=0.9\columnwidth}
+{\label{fig:misfit_filt} 
+Magnitude of AMF for seismograms in 
+Figure~\ref{fig:misfit_data_syn}. The first energy patch concentrating around $\gamma$=1 
+corresponds to the first event where these two seismograms have identical phase. 
+The second and third energy spots spreading around $\gamma$=1 correspond to the 
+second and third events where these two sesimograms have phase advance and delay.}
+
+With these properties, we propose a misfit function based on AMF. Our approach is inspired by 
+the differential semblance optimization principle~\citep{Symes1991, PShen2008} and adaptive 
+waveform inversion~\citep{Warner2014}. In the proposed misfit function, we use a penalty 
+function $\gamma-1$ to emphasize semblance energies deviating away from $\gamma=1$ 
+
+\begin{equation}
+\label{eqn:misfit}
+J=\frac{1}{2} \frac{\int \int [{\bf f}(\gamma,t)(\gamma-1)]^2 {\rm d}\gamma {\rm d} t}{\int \int [{\bf f}(\gamma,t)]^2 {\rm d}\gamma {\rm d}t }
+\quad , 
+\end{equation}
+
+By minimizing the misfit function in Equation~\ref{eqn:misfit}, 
+we are able to reduce semblance energies 
+deviating away from $\gamma=1$, which then aligns phases between the two seismograms. 
+
+Equation~\ref{eqn:misfit} can be rewritten in a discretized form as 
+
+\begin{equation}
+\label{eqn:misfit_disc}
+J=\frac{1}{2} \frac{||{\bf w f}||^2}{||{\bf f}||^2}
+\quad ,
+\end{equation}
+where ${\bf f}$ contains the coefficients of AMF and ${\bf w}$ represents the 
+weight function $\gamma-1$.
+
+Compared to cross-correlation technique for quantifying phase discrepancies, 
+this method allows us to measure phase differences without breaking the data into local windows. 
+Therefore, we are able to avoid several non-intuitive 
+input parameters, such as window sizes, overlaps between windows, taper functions, etc. 
+In addition, the stretching and squeezing 
+alignments employed in AMF (Equation~\ref{eqn:nonstatmf}) can better represent phase advances
+or delays due to velocity changes. This misfit function resembles the Wiener filter technique proposed 
+by~\cite{Warner2014}. However, AMF allows us to measure nonstationary phase differences between 
+two seismograms, while the Wiener filter used by~\cite{Warner2014} is a long time invariant filter with 
+lengths greater than the input seismograms. In addition, we use the stretch parameter $\gamma$ instead of 
+time shifts that are used as penalty functions in the misfit function based on the Wiener filter.
+
+\subsection{Adjoint sources for the proposed misfit function}
+A key step in FWI is the derivations of adjoint sources.
+In the adjoint methods,  the adjoint sources can be calculated based on the partial derivative 
+of misfit functions with respect to predictions~\citep{Plessix2006}, 
+i.e., $\frac{\partial J}{\partial {\bf p}}$. For the misfit function $J$ 
+defined in Equation~\ref{eqn:misfit}
+and Equation~\ref{eqn:misfit_disc}, the adjoint sources can be calculated as
+
+\begin{equation}
+\label{eqn:adjsrc}
+\frac{\partial J}{\partial {\bf p}}=(\frac{\partial {\bf f}}{\partial \bf p})^T\frac{{\bf w}^T{\bf w}{\bf f}-2 J {\bf f}}{{\bf f}^T{\bf f}} 
+\quad ,
+\end{equation}
+where $(\frac{\partial {\bf f}}{\partial {\bf p}})^T$ can be computed based on Equation~\ref{eqn:amfsolution1}
+
+\begin{equation}
+\label{eqn:deriw}
+(\frac{\partial {\bf f}}{\partial {\bf p}})^T={\bf D}{\bf H}[{\bf H}^T({\bf D}^T{\bf D}-\lambda^2{\bf I}){\bf H}+\lambda^2{\bf I}]^{-1}{\bf H}^T 
+\quad ,
+\end{equation}
+
+We use the conjugate gradient method to iteratively solve Equation~\ref{eqn:adjsrc}.
+\new{The derivations of Equation~\ref{eqn:adjsrc} and \ref{eqn:deriw} are similar to \cite{Warner2014}
+except shaping regularization is used to calculate nonstationary filter coefficients and adjoint sources.}
+Once we have expressions for the adjoint sources of the proposed misfit function, we can use them to 
+drive adjoint wavefields. The correlations of forward and adjoint wavefields generates misfit gradients, 
+which can be used to iteratively update model parameters by local gradient-based optimization approaches,
+such as the nonlinear conjugate gradient method~\citep{Fletcher1964} or L-BFGS method~\citep{Nocedal1980}.
+
+\section{Numerical examples}
+\subsection{Behavior of misfit functions}
+In this section, we use 1D and 2D numerical examples to compare the behavior of misfit functions 
+based on L2 waveform differences and AMF. 
+First, we use a simple 1D analytical signal as an example 
+
+\begin{equation}
+\label{eqn:analytical_signal}
+S(t)=(1.0+dA) {\rm exp}[-2(t-3.5+dt)^2]{\rm cos}[2\pi f_0(t-3.5+dt)]
+\quad ,
+\end{equation}
+
+Equation~\ref{eqn:analytical_signal} describes a cosine function modulated by a Gaussian envolope (Figure~\ref{fig:data-analy}).
+Its amplitude and phase are controlled by two parameters $dA$ and $dt$. 
+True model is set with $dA=0$ and $dt=0$. Central frequency is chosen as $f_0$=3~Hz. 
+
+\inputdir{onedanalysignal}
+\plot{data-analy}{width=0.9\columnwidth}
+{\label{fig:1d_data-analy}
+1D analytical signal used for comparing the behaviors of misfit functions. 
+Blue solid line is original signal (Equation~\ref{eqn:analytical_signal}).
+Red dashed line is a modified signal with $dt$=0.2 s and $dA$=0.2. 
+In this case, time shift is greater than half period of the original signal.}
+
+We change both amplitude and phase parameters and compute misfit functions based on
+L2 waveform differences and AMF. In Figure~\ref{fig:ZMISFIT-analy}, 
+we observe that the L2 waveform misfit involves numerous local minima due to cycle 
+skipping. This behavior would cause convergency troubles with local optimization approches if 
+starting model is far away from the global minimum. However, the proposed misfit function
+based on AMF behaves 
+as a smooth, quadratic function with a broad basin of attraction. Therefore it would be much easier for local 
+gradient-based optmization methods to work with the proposed misfit function.
+
+\inputdir{onedanalysignal}
+\plot{ZMISFIT-analy}{width=0.9\columnwidth}
+{\label{fig:1d_misfit-analy}
+Behaviors of misfit functions for the analytical signal in Figure~\ref{fig:data-analy}. 
+From top to bottom are misfit functions based on L2 waveform differences and AMF.}
+
+A simple 2D three-layer model (Figure~\ref{fig:model}) is used in the second example. 
+One source and 151 receivers are used in this experiment. Velocities in each layer 
+are 2, 3 and 4~km/s in the true model. The depths of each layer are 1.3 and 2.6~km. 
+Two cases are demonstrated in this example. In case 1, two model parameters are velocity 
+for the second layer and depth for the first layer. In case 2, the model parameters are 
+the depths for the first and second layers. 
+\new{In all numerical examples in the following sections, we use a constant density, acoustic wave equation to 
+propagate wavefields, which is numerically solved by finite difference methods.}
+\old{By changing these two model parameters 
+and computing the misfits}\new{By changing these two model parameters and computing the 
+misfits based on the comparisons of seismic data generated from the base line velocity 
+in Figure~\ref{fig:model} and perturbed models}, we are able to compare the behavior of the misfit functions 
+based on L2 waveform differences and AMF. 
+
+\inputdir{threelayers-velocity}
+\plot{model}{width=\columnwidth}
+{\label{fig:3layers_model}
+Three-layer model used for the comparisons of misfit functions. Shot 
+is located at (4, 0) and receivers are equally distributed 
+at Earth surface.}
+ 
+In case 1, we observe that the L2 waveform misfit involves a narrow and long valley.
+Away from the valley, there are ``mountains'' and ``plateaus'', which 
+lead to local minima (Figure~\ref{fig:3layers_misfit_vel}a). 
+If the starting model is far away from the global minimum, 
+local gradient-based optimization approaches may converge towards local minima 
+instead of the global minimum. In contrast, the proposed misfit function
+behaves as a smooth, quadratic function with 
+one global minimum. We expect that the local gradient-based 
+optimization approaches should work efficiently on the proposed misfit function. 
+
+\inputdir{threelayers-velocity}
+\multiplot{3}{ZMISFIT-2D,ZMISFIT-dep,ZMISFIT-vel}{width=0.3\columnwidth}
+{\label{fig:3layers_misfit_vel}
+Comparisons of misfits functions for the three-layer model in Figure~\ref{fig:3layers_model}. 
+Model parameters are the depth of the first layer $d$ and the velocity of 
+the second layer $v$. From top to bottom are misfit functions based on L2 
+waveform differences and AMF. (a) shows 2D misfit functions. 
+(b) shows a cross sections of misfits with $v$=3~km/s. 
+(c) shows a cross sections of misfits with $d$=1.3~km. 
+}
+
+In case 2, two model parameters are the depths of the first two layers (Figure~\ref{fig:3layers_misfit_depth}). 
+We can draw a similar conclusion as in case 1. L2 waveform misfit involves local minima  
+while the proposed misfit function exhibits a much better behavior. 
+
+\inputdir{threelayers-depth}
+\multiplot{3}{ZMISFIT-2D-depth,ZMISFIT-dep2-depth,ZMISFIT-dep1-depth}{width=0.3\columnwidth}
+{\label{fig:3layers_misfit_depth}
+The same setting as Figure~\ref{fig:3layers_misfit_vel} except here model parameters are the depths of 
+the first and second layers. 
+}
+
+\subsection{Behavior of adjoint sources and misfit gradients}
+In this section, we compare the behavior of adjoint sources and gradients based on different misfit 
+functions. The true velocity model is shown 
+in Figure~\ref{fig:grad_comp_model}. The starting model is homogeneous with velocity equal 
+to 4~km/s. We perform two experiments with different true models.
+The true model for the first case involves a Gaussian anomaly with a small amplitude 
+perturbation (maximum 2.5\%) in the middle of the model. For the second case, 
+we put a Gaussian anomaly with a large amplitude perturbation (maximum 40\%) in the middle 
+of the model. Only one shot and one receiver are used in both cases. 
+A Ricker wavelet with central frequency of 15~Hz is used.
+
+Comparisons between data and synthetics are shown in Figure~\ref{fig:grad_comp_adj}. 
+For the first case with small velocity perturbations, differences between data and prediction are 
+relatively small (within half period of signal). The adjoint sources for both misfit functions only 
+involve a single event (Figure~\ref{fig:grad_comp_adj}a). However, 
+for the experiment with large velocity perturbations, the delay of data with respect to prediction 
+is noticeably greater than half period (Figure~\ref{fig:grad_comp_adj}b). 
+In this case, the adjoint source based on L2 waveform difference contains two events (one from data 
+and one from prediction), while the adjoint source based on AMF has still only one event,
+which shows behavior similar to that in the first experiment with small velocity perturbations. 
+
+\inputdir{gradcomp}
+\plot{true-model-small}{width=0.8\columnwidth}
+{\label{fig:grad_comp_model}
+Velocity model used to compare misfit gradients based on different misfit functions. 
+This is the case with small Gaussian perturbation (maximum 2.5\%). Shot is located at 
+(2, 0.5) and receiver is located at (1, 3.5).}
+
+We can back propagate these adjoint sources to generate adjoint wavefields which are then 
+correlated with forward wavefields to construct misfit gradients. 
+Figure \ref{fig:grad_comp_grad} compares misfit gradients based on 
+different misfit functions for different cases. For the case with small velocity 
+perturbations (Figure~\ref{fig:grad_comp_grad}a), both misfit gradients 
+exhibit a similar behavior. The first Fresnel zone involves correct sensitivity, needed to 
+reduce velocity. However, for the case with large velocity perturbations, 
+the first Fresnel zone of the misfit gradient based on L2 waveform differences 
+has a wrong sensitivity (Figure~\ref{fig:grad_comp_grad}b), which does not carry any useful velocity information. 
+On the other hand, the 
+misfit function based on AMF still contains correct velocity update 
+information. These comparisons confirm the robustness of the proposed misfit function 
+compared to L2 waveform differences.
+
+\inputdir{gradcomp}
+\multiplot{2}{compadj-small,compadj-large}{width=0.45\columnwidth}
+{\label{fig:grad_comp_adj}
+Comparisons of data and predictions as well as adjoint sources for different misfit functions. 
+Left panel (a) for the case with small Gaussian perturbation and right panel (b) for the case with 
+large Gaussian perturbation. From top to bottom are comparisons between data (blue) and predictions (red), 
+adjoint sources based on L2 waveform differences and AMF, respectively.}
+
+\inputdir{gradcomp}
+\multiplot{2}{compgrad-small,compgrad-large}{width=0.45\columnwidth}
+{\label{fig:grad_comp_grad}
+Comparisons of misfit gradients based on different misfit functions.
+Left panel (a) for the case with small Gaussian perturbation and right panel (b) for the 
+case with large Gaussian perturbation. From top to bottom are misfit gradients based 
+on L2 waveform differences and AMF, respectively.}
+
+\subsection{Transimission waveform tomography experiments}
+Once we have misfit gradients, we can integrate them with gradient-based optimization 
+approaches to build velocity models. In this section, we consider two transimission 
+tomography experiments.
+
+The first experiment involves four Gaussian anomalies with alternative signs in 
+the middle of the model. The starting model is homogeneous with velocity equal to 4~km/s. 
+The true model involves Gaussian anomalies with maximum velocity perturbations equal 
+to 12.5\% (Figure~\ref{fig:gauss_l2_comp}a). This is a case with large velocity perturbations that cause data and 
+predictions to be out of phase. We use a Ricker wavelet with central frequency of 15 Hz. 
+11 shots are equally distributed 
+at z=0.5~km and 151 receivers are distributed at z=3.5~km. No multiscale 
+strategy~\citep{Bunks1995, SirguePratt2004} is used in this experiment. 
+We performed 10 conjugate gradient iterations for misfit functions based on 
+L2 waveform differences and AMF. 
+
+For the case with L2 waveform differences, we observe that the inversion converges towards 
+a wrong velocity model. Maximum velocity perturbation in the final model reach up to 65\% (Figure~\ref{fig:gauss_l2_comp}b). 
+Evidently, in this case, the inversion suffers from cycle skipping and local minima problems. 
+In contrast, for the misfit function based on AMF, the inversion converges towards the global 
+minimum. We are able to recover both the shapes and amplitudes of these four Gaussian 
+anomalies (Figure~\ref{fig:gauss_l2_comp1}). The elongation of the recovered velocity perturbations along vertical direction is due to 
+the limited illumination of survey. 
+
+\inputdir{gauss-l2-diverge}
+\multiplot{2}{true-model,model-15-10}{width=0.6\columnwidth}
+{\label{fig:gauss_l2_comp}
+Inversion results based on L2 misfit function for Gaussian model. (a) true velocity model 
+with four Gaussian anomalies. Maximum velocity perturbation is 12.5\%. 
+(b) is recovered model based on L2 waveform differences.} 
+
+\inputdir{gauss-lpf-diverge}
+\plot{model-15-5}{width=\columnwidth}
+{\label{fig:gauss_l2_comp1}
+Inversion result based on AMF misfit function for Gaussian model.}
+
+For the second experiment, we test the proposed misfit function for a crosswell 
+tomography problem. The starting velocity model is laterally homogeneous. A sequence of true 
+models are generated by adding a relatively complicated velocity perturbations to the 
+starting model (Figure~\ref{fig:crosswell_model}). 
+We tried two cases in this experiment. For the first case, scaled small 
+perturbations (maximum 0.2~km/s) are added to the V(z) 
+starting model. For the second case, relatively large perturbations (maximum 0.4~km/s) 
+are added to the starting model. For this crosswell experiment, we use a Ricker wavelet 
+with the central frequency of 10~Hz. 10 shots are equally distributed along the left side of 
+the model and 31 receivers are equally distributed along the right side of the model. 
+Only 10 conjugate-gradient iterations are performed in both cases. 
+
+\inputdir{crosswell-l2-diverge}
+\multiplot{3}{model-m00,true-model,pert}{width=0.3\columnwidth}
+{\label{fig:crosswell_model}
+True and starting models for crosswell tomography. (a) is starting V(z) model. 
+(b) is true velocity model and (c) is perturbation between the true and starting models.
+For the experiment with small veloicty perturbations, we add 50\% maximum perturbations of (c) on the starting 
+model (a) to generate the true model (see Figure~\ref{fig:crosswell_l2_converge}).}
+
+\inputdir{crosswell-l2-converge}
+\multiplot{2}{pertinv,misfit}{width=0.8\columnwidth}
+{\label{fig:crosswell_l2_converge}
+Inversion result for small velocity perturbations with L2 waveform differences. (a) is 
+the recovered model after 10 iterations. (b) shows the evolution of data (left) and model (right) misfits.}
+
+\inputdir{crosswell-l2-diverge}
+\multiplot{2}{pertinv,misfit}{width=0.8\columnwidth}
+{\label{fig:crosswell_l2_diverge}
+The same setting as Figure~\ref{fig:crosswell_l2_converge}, except here large velocity perturbations 
+are used. The inversion diverges 
+towards local minima.}
+
+\inputdir{crosswell-lpf-diverge}
+\multiplot{2}{pertinv,misfit}{width=0.8\columnwidth}
+{\label{fig:crosswell-lpf-diverge}
+The same setting as Figure~\ref{fig:crosswell_l2_diverge}, except here we use 
+AMF misfit function. The inversion 
+converges towards correct velocity model (see Figure~\ref{fig:crosswell_l2_converge}).}
+
+For the first case with small velocity perturbations, the inversion based on L2 waveform 
+differences converges towards the true model. We are able to recover true velocity 
+perturbations. Both data and model misfits are smoothly reduced (Figure~\ref{fig:crosswell_l2_converge}). 
+However, for the case 
+with large velocity perturbations, the inversion based on L2 waveform differences does not converge to the right answer. 
+Although data misfits are reduced to less than 0.2, model 
+misfits diverge (Figure~\ref{fig:crosswell_l2_diverge}). 
+In contrast, for the misfit function based on AMF, the 
+inversion still converges towards the true model even with large velocity perturbations. 
+Both data and model misfits are gradually reduced (Figure~\ref{fig:crosswell-lpf-diverge}). 
+Thus, in these transmission waveform tomography experiments, 
+the proposed AMF misfit function appears more robust for cases with poor starting models 
+and high frequency signals. 
+
+\subsection{Modified Marmousi model}
+In this section, we use a modified Marmousi model as our final experiment. 
+Figure~\ref{fig:marmousi_true} shows the starting V(z) model and true model used in this 
+experiment. 12 shots and 181 
+receivers are used here and each shot is recorded by all recievers. 
+\new{Both shots and receivers are located at the depth of 5~m. The spacing between shots and receivers are 0.64~km and 0.048~km, respectively.}
+Maximum velocity perturbation
+in this experiment is greater than 30\%. A Ricker wavelet with 10~Hz central frequency is used.
+
+First, we run 10 iterations based on  L2 waveform misfit function. 
+Figure~\ref{fig:marmousi_l2}a shows the recovered velocity
+perturbations. Obviously, the inversion diverges away from the global minimum and reaches a local minimum. Both data and
+model misfits increase significantly, indicating cycle skipping and local minima issues.
+
+\inputdir{reflection-marmousi-l2-diverge}
+\multiplot{3}{model-m00,true-model,pert}{width=0.8\columnwidth}
+{\label{fig:marmousi_true} 
+Starting model (a), true model (b) and perturbations between 
+the starting and true models (c) for the modified Marmousi experiment.}
+
+\inputdir{reflection-marmousi-l2-diverge}
+\multiplot{2}{pertinv,misfit}{width=0.8\columnwidth}
+{\label{fig:marmousi_l2} 
+Recovered perturbation (a) and the evolutions of data (left) and model (right) misfits (b) 
+based on L2 waveform misfit function for the modified Marmousi experiment.}
+
+For the second case, we first perform 6 iterations with AMF misfit function. 
+\new{For the calculations of AMF, the stretching variable $\gamma$ is allowed to vary from 0.9 to 1.1.
+We use a triangle operator as the shaping operator and smoothing lengths are 5 grid points in both directions.}
+The recovered 
+perturbation and model are shown in Figure~\ref{fig:marmousi_lpf}a and b. We observe that 
+the AMF misfit function allows us to recover long-wavelength velocity structures even 
+without low frequency signals. We then use this updated model as the starting model 
+and perform additional 10 iterations with L2 waveform misfit. The final recovered 
+perturbations and model are displayed in Figure~\ref{fig:marmousi_lpf}c and d. 
+The inversion appears to converge towards the true model (compared with Figure~\ref{fig:marmousi_true}
+and \ref{fig:marmousi_l2}). 
+
+\inputdir{reflection-marmousi-lpf-diverge}
+\multiplot{4}{pert-10-6,model-10-6,pertinv,model-10-15}{width=0.45\columnwidth}
+{\label{fig:marmousi_lpf} 
+Recoverd perturbation (a) and model (b) after 6 iterations based on 
+AMF misifit. This recovered model is used as starting model for FWI based on L2 waveform differences.
+Recovered perturbation (c) and model (d) after additional 10 iterations based on L2 waveform differences.}
+
+Figure~\ref{fig:marmousi_misfit} shows that both data and model misfits are steadily reduced 
+for this inversion strategy. Because of the broad basins of the AMF misfit function, the reduction 
+of data misfit is relatively slow for the first 6 iterations. For the final 10 iterations, due to 
+the high resolution of L2 waveform misfit, the reductions of both data and model misfits are significant. 
+
+\inputdir{reflection-marmousi-lpf-diverge}
+\plot{misfit}{width=0.9\columnwidth}
+{\label{fig:marmousi_misfit} Evolution of data (left) and model (right) misfits
+for the modified Marmousi experiment. The first 6 iterations use AMF misfit and the final 10 
+iterations use L2 waveform misfit.}
+
+Finally, we compare predictions and data for two different shots in Figure~\ref{fig:marmousi_data} and 
+\ref{fig:marmousi_data1}. 
+Because of a poor starting 
+model, the predictions and data are obviously out of phase at the begining. 
+After 6 iterations with AMF misfits, 
+we observe that the refraction and diving waves are corrected to fit the input data. 
+After 10 additional iterations with L2 waveform misfit, we are able to fit both diving waves and 
+reflected energies. These comparisons again confirm the robustness of the proposed inversion strategy. 
+
+\inputdir{reflection-marmousi-lpf-diverge}
+\plot{compdata1}{width=1\columnwidth}
+{\label{fig:marmousi_data} Comparisons between predictions and data for the modified Marmousi experiment. 
+(a)-(d) are common shot gathers for a shot at 2~km. (a) predictions 
+for the starting model, (b) predictions after 6 iterations with AMF misfit function, 
+(c) predictions based on final recovered model, (d) original data.}
+
+\inputdir{reflection-marmousi-lpf-diverge}
+\plot{compdata2}{width=1\columnwidth}
+{\label{fig:marmousi_data1} 
+The same setting as Figure~\ref{fig:marmousi_data} except for a shot at 4~km.} 
+
+\section{Discussion}
+Choosing a well-behaved misfit function is crucial in FWI because of the following reasons.
+FWI is an ill-posed inverse problem due to inaccurate, insufficient 
+and inconsistent waveform observations~\citep{JacksonDD1972}. It is also 
+a highly nonlinear inverse problem because of strong nonlinear relations between 
+waveform observations and seismic parameters. Additionally, seismograms are oscillatory 
+time series, which are subject to cycle skipping when phase differences 
+between observations and predictions are greater than half period of signals~\citep{fwi2009}. 
+This cycle skipping problem usually leads to local minima in the misfit functions. 
+Furthermore, most current FWI studies depend on local 
+gradient-based optimization approaches, such as conjugate gradients~\citep{Fletcher1964} 
+or L-BFGS~\citep{Nocedal1980}. If a misfit function involves numerous 
+local minima, and the starting model is far away from the true model, 
+these local gradient based optimization approaches are doomed to fail. Because of these issues, 
+FWI based on L2 waveform differences can not always guarantee 
+convergency towards the global minimum.
+
+This problem becomes more serious when velocity perturbations are large, 
+for instance exceeding 10\%, which are ubiquitous at exploration scales. These 
+difficulties might be mitigated by a multi-scale inversion strategy~\citep{Bunks1995, SirguePratt2004}, 
+which starts with low frequency signals to constrain long-wavelength structure and gradually incorporates high 
+frequency signals to constrain short-wavelength features. However, field data 
+usually do not have enough low frequency signals, making this multi-scale strategy 
+infeasible in practice. 
+
+In this paper, we propose a misfit function to tackle cycle skipping and 
+local minima problems. This misfit function is based on AMF, which 
+measures time varying phase differences between observations and predictions. 
+Since no amplitude information is considered in this measurements, it is more 
+robust than direct waveform differences. Based on numerical comparisons 
+with L2 waveform misfit, we observe that the proposed misfit function behaves 
+as a smooth, quadratic function. Since the proposed misfit function involves broad basins 
+of attraction, it can work nicely when the starting model is far away from the true model. 
+However, it may have slower convergency rates compared to more high-resolution L2 waveform misfit. 
+Our stategy therefore is to use AMF misfit function to build a good starting model in cases 
+we have relatively poor knowledge about the model. Once the iterations with AMF help us reach 
+vallys near the global minimum, L2 waveform misfit can be employed to speed up the inversion 
+towards the global minimum. In this stategy, our initial model can be far away from 
+the true model and we do not need low frequency signals in the data to constrain 
+long-wavelength structures. \new{At current stage, velocity updates in our inversion mainly rely on 
+diving/transmitted waves. However, the AMF misfit function can be extended for reflection FWI.} 
+
+\section{Conclusions}
+The goal of this study is to design well behaved misfit functions for FWI in order to tackle 
+challenges associated with cycle skipping and local minima. We propose a misfit function based on 
+adaptive matching filtering, which measures time varying phase differences between observations 
+and predictions. Based on numerical experiements, the proposed misfit function behaves as 
+a smooth, quadratic function with a broad basin of attraction. It can increase probabilities 
+for local gradient-based optimization approaches to reach the global minimum. 
+We have applied the proposed misfit function in several 2D acoustic time-domain FWI experiments. 
+Numerical results have indicated that the proposed misfit function can help us build good 
+starting models for FWI when low-frequency signals are absent in the recorded data.
+
+\section{Acknowledgments}
+This work was supported by the Jackson School Distinguished Postdoctoral Fellowship and the 
+Texas Consortium for Computational Seismology. 
+We appreciate discussions with Hyoungsu Baek, Bj\"{o}rn Engquist, Brittany Froese, Michael Warner and Sven Treitel. 
+We thank the associate editor Kris Innanen and three anonymous reviewers for comments and suggestions, which helped 
+to improve the manuscript.
+
+\bibliographystyle{seg}
+\bibliography{misfit}
+

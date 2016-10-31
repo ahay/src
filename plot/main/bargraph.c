@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
 {
     bool transp, framenum;
     int n1, n2, n3, i1, i2, i3;
-    float min1, max1, min2, max2, o3, d3, o1, d1, xi, yi, tt;
+    float min1, max1, min2, max2, o3, d3, o1, d1, xi, yi, tt, wd, dx;
     float **x, **y, **tmp, xp[4], yp[4];    
     float ***data=NULL;
     sf_datatype type;
@@ -66,6 +66,9 @@ int main(int argc, char* argv[])
     
     if (!sf_getfloat("pclip",&pclip)) pclip=100.; /* clip percentile */
 
+    if (!sf_getfloat("width",&wd)) wd=0.8; /* bar width */
+    wd *= 0.5;
+
     type = sf_gettype(in);
     switch (type) {
 	case SF_FLOAT:
@@ -77,6 +80,7 @@ int main(int argc, char* argv[])
 		    x[i2][i1] = o1 + i1*d1;
 		}
 	    }
+	    dx = wd*d1;
 	    break;
 	case SF_COMPLEX:
 	    data = sf_floatalloc3(2,n1,n2);
@@ -100,6 +104,7 @@ int main(int argc, char* argv[])
 		}
 	    }
 	    getminmax(x[0],&min1,&max1);
+	    dx = wd*(max1-min1)/(n1-1);
 	} else {
 	    sf_floatread(y[0],n,in);
 	    min1=o1;
@@ -132,10 +137,10 @@ int main(int argc, char* argv[])
 		if (isfinite(xi) && 
 		    isfinite(yi)) {
 
-		    xp[0]=xi-0.1;  yp[0]=0.0;
-		    xp[1]=xi-0.1;  yp[1]=yi;
-		    xp[2]=xi+0.1;  yp[2]=yi;
-		    xp[3]=xi+0.1;  yp[3]=0.0;
+		    xp[0]=xi-dx;  yp[0]=0.0;
+		    xp[1]=xi-dx;  yp[1]=yi;
+		    xp[2]=xi+dx;  yp[2]=yi;
+		    xp[3]=xi+dx;  yp[3]=0.0;
 
 		    vp_ufill(xp,yp,4);
 		} 
