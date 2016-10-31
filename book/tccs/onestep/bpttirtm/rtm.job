@@ -12,4 +12,3 @@
 #SBATCH -o rtm_bptti.%j.out
 #SBATCH -e rtm_bptti.%j.err
 export OMP_NUM_THREADS=8;scons
-echo $SLURM_JOBID > /work/02185/jsun/geo/bptti/jobid
