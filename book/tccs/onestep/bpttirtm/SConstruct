@@ -6,6 +6,7 @@ import os
 dat={}
 for i in range(4):
     dat[i] = 'Anisotropic_FD_Model_Shots_part%d'%(i+1)
+    Fetch(dat[i]+'.sgy.gz','BP',top=os.environ.get('DATAPATH'),server='local')
     Flow(dat[i]+'.sgy',dat[i]+'.sgy.gz','gunzip -c $SOURCE ',stdin=0)
     Flow(dat[i],dat[i]+'.sgy','segyread endian=y')
 
