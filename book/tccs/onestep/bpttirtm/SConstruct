@@ -159,7 +159,7 @@ for i in range(1641):
 #     ''' %par,stdin=0,stdout=0,np=8)
 
 # Reverse-time migration (please uncomment the following command)
-"""
+
 Flow('bptti-img','csource geo vx vp eta theta0',
      '''
      mpicfftrtm migr=y
@@ -176,8 +176,6 @@ Flow('bptti-img','csource geo vx vp eta theta0',
      snap=y jsnap=500
      revolve_snaps=500 info=1
      ''' %par,stdin=0,stdout=0,np=8)
-     # sht_set=1000 sht_num=1
-"""
 
 Result('bptti-img',
        '''
