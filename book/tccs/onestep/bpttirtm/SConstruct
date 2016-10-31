@@ -14,7 +14,7 @@ Flow('shot',dat.values(),'cat axis=2 ${SOURCES[1:4]} | put n2=800 d2=0.0125 o2=-
 # Prepare model
 # Download ModelParams.tar.gz from http://www.freeusp.org/2007_BP_Ani_Vel_Benchmark/
 tgz = 'ModelParams.tar.gz'
-#Fetch(tgz,'BP',top=os.environ.get('DATAPATH'),server='local')
+Fetch(tgz,'BP',top=os.environ.get('DATAPATH'),server='local')
 
 pars = Split('epsilon delta vp theta')
 sgy = {}
