@@ -668,7 +668,12 @@ void ccrf(float ***img,
         for (iy=0; iy<fdm->ny; iy++)         {
             for (ix=0; ix<fdm->nx; ix++)     {
                 for (iz=0; iz<fdm->nz; iz++) {
-                    img[iy][ix][iz] += crealf(u[iy+fdm->nb][ix+fdm->nb][iz+fdm->nb])*crealf(bu[iy+fdm->nb][ix+fdm->nb][iz+fdm->nb]);
+                    /*img[iy][ix][iz] += crealf(u[iy+fdm->nb][ix+fdm->nb][iz+fdm->nb])*crealf(bu[iy+fdm->nb][ix+fdm->nb][iz+fdm->nb]);*/
+#ifdef SF_HAS_COMPLEX_H
+                    img[iy][ix][iz] += crealf(conjf(u[iy+fdm->nb][ix+fdm->nb][iz+fdm->nb])*bu[iy+fdm->nb][ix+fdm->nb][iz+fdm->nb]);
+#else
+                    img[iy][ix][iz] += crealf(sf_cmul(conjf(u[iy+fdm->nb][ix+fdm->nb][iz+fdm->nb]),bu[iy+fdm->nb][ix+fdm->nb][iz+fdm->nb]));
+#endif
                 }
             }
         }
@@ -680,7 +685,12 @@ void ccrf(float ***img,
 #endif
         for (ix=0; ix<fdm->nx; ix++)     {
             for (iz=0; iz<fdm->nz; iz++) {
-                img[0][ix][iz] += crealf(u[0][ix+fdm->nb][iz+fdm->nb])*crealf(bu[0][ix+fdm->nb][iz+fdm->nb]);
+                /*img[0][ix][iz] += crealf(u[0][ix+fdm->nb][iz+fdm->nb])*crealf(bu[0][ix+fdm->nb][iz+fdm->nb]);*/
+#ifdef SF_HAS_COMPLEX_H
+                img[0][ix][iz] += crealf(conjf(u[0][ix+fdm->nb][iz+fdm->nb])*bu[0][ix+fdm->nb][iz+fdm->nb]);
+#else
+                img[0][ix][iz] += crealf(sf_cmul(conjf(u[0][ix+fdm->nb][iz+fdm->nb]),bu[0][ix+fdm->nb][iz+fdm->nb]));
+#endif
             }
         }
     }

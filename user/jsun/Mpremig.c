@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
     float vref;
 
     bool roll; /* survey strategy */
-    int offset;
+    int offset,split;
     bool born;
     pspar par;
     int nx1, nz1; /*domain of interest*/
@@ -146,6 +146,7 @@ int main(int argc, char* argv[])
     if (!sf_getint("gpx_v",&gpx_v)) gpx_v = -1; /* geophone position x */
     if (!sf_getint("gpz_v",&gpz_v)) gpz_v = -1; /* geophone position z */
     if (!sf_getint("offset",&offset)) offset = 0; /* nearest offset */
+    if (!sf_getint("split",&split)) split = 1; /* receiver split */
 
     if (SF_FLOAT != sf_gettype(Fv)) sf_error("Need float input");
 
@@ -318,10 +319,14 @@ int main(int argc, char* argv[])
                 psp(wvfld1, NULL, NULL, NULL, vel, par, false);
                 if (born) dt2v2(wvfld1, vel, par);
                 sf_warning("Computing receiver wavefield ...");
-                if (NULL == dat_v)
-                    psp2(wvfld1, wvfld, dat[is], NULL, img, vel, par, adj);
-                else
-                    psp2(wvfld1, wvfld, dat[is], dat_v[is], img, vel, par, adj);
+                if (split>1) {
+                    psp5(split, wvfld1, wvfld, dat[is], img, vel, par);
+                } else {
+                    if (NULL == dat_v)
+                        psp2(wvfld1, wvfld, dat[is], NULL, img, vel, par, adj);
+                    else
+                        psp2(wvfld1, wvfld, dat[is], dat_v[is], img, vel, par, adj);
+                }
 
                 if (adj) {
                     for (ix=0; ix<nx1; ix++)
