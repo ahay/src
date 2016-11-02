@@ -455,6 +455,35 @@ def wom2d(wom,wfld,velo,vmean,nfrm,weight,par):
         stdin=0,
         stdout=0)
 
+def wom3d(wom,wfld,velo,vmean,nfrm,weight,par):
+    M8R='$RSFROOT/bin/sf'
+    DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
+
+    wtmp = wfld + 'tmp'+myid(16)
+    vtmp = wfld + 'vel'+myid(16)
+
+    Flow(wom,[velo,wfld],
+        '''
+        %sscale < ${SOURCES[1]} axis=123 >%s datapath=%s/;
+        '''%(M8R,wtmp,DPT) 
+        +
+        '''
+        %sadd < ${SOURCES[0]} add=-%g |
+        scale axis=123 |
+        spray axis=4 n=%d o=%g d=%g
+        >%s datapath=%s/;
+        '''%(M8R,vmean,nfrm,0,1,vtmp,DPT) 
+        +
+        '''
+        %sadd scale=1,%g <%s %s >${TARGETS[0]};
+        '''%(M8R,weight,vtmp,wtmp) 
+        +
+        '''
+        %srm %s %s
+        '''%(M8R,wtmp,vtmp),
+        stdin=0,
+        stdout=0)
+
 
 def ovl2d(wom,wfld,velo,vmean,nfrm,weight,par):
     M8R='$RSFROOT/bin/sf'
