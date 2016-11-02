@@ -69,6 +69,7 @@ void warpscan_init(int m1     /* input trace length */,
 }
 
 void warpscan(bool cheb   /* use Chebyshev scan */,
+	      bool sign   /* use signed similarity */,
 	      float** inp /* input data [ntr][n1] */, 
 	      float** oth /* target data [ntr][n2] */,
 	      float* rat1)
@@ -132,7 +133,11 @@ void warpscan(bool cheb   /* use Chebyshev scan */,
     }
     sf_divn(num,den,rat2);
     
-    sf_divn_combine(rat1,rat2,rat1);
+    if (sign) {
+	sf_divn_combine_sign(rat1,rat2,rat1);
+    } else {
+	sf_divn_combine(rat1,rat2,rat1);
+    }
 }
 
 /* 	$Id: Mwarpscan.c 744 2004-08-17 18:46:07Z fomels $	 */

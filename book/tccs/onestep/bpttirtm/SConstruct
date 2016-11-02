@@ -1,3 +1,5 @@
+# sfbatch exe="OMP_NUM_THREADS=8 scons lock" wall="9:00:00" np=100 nodes=50 ppn=2 queue=normal 
+
 from rsf.proj import *
 import os
 
@@ -159,6 +161,11 @@ for i in range(1641):
 #     ''' %par,stdin=0,stdout=0,np=8)
 
 # Reverse-time migration (please uncomment the following command)
+
+# sfmpicfftrtm requires revolve.c (not provided with Madagascar because of licensing concerns)
+# When installing revolve.c in user/jsun, modify checkup and repsup
+# #define checkup 1024
+# #define repsup 1024
 
 Flow('bptti-img','csource geo vx vp eta theta0',
      '''

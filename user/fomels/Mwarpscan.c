@@ -27,7 +27,7 @@
 
 int main(int argc, char* argv[])
 { 
-    bool shift, verb, cheb;
+    bool shift, verb, cheb, sign;
     int n1, m[4], ntr, n2, order, ng, rect[4], niter, n2g, dim;
     float **inp, **oth, o1, d1, o2, d2, g0, dg, g1, o, d, *rat1;
     sf_file in, warped, other;
@@ -57,6 +57,8 @@ int main(int argc, char* argv[])
     /* verbosity flag */
     if (!sf_getbool("cheb",&cheb)) cheb=false;
     /* use Chebyshev scan */
+    if (!sf_getbool("sign",&sign)) sign=false;
+    /* use signed similarity */
     if (!sf_getint("ng",&ng)) ng=1;
     /* number of gamma values */
     if (!sf_getfloat("g0",&g0)) sf_error("Need g0=");
@@ -65,8 +67,8 @@ int main(int argc, char* argv[])
     /* gamma sampling */
     g1=g0+(ng-1)*dg;
     if (cheb) {
-	sf_putfloat(warped,"gmin",g0);
-	sf_putfloat(warped,"gmax",g1);
+	sf_putfloat(warped,"cmin",g0);
+	sf_putfloat(warped,"cmax",g1);
     }
 
     if (!sf_getint("rect1",&rect[0])) rect[0]=1;
@@ -140,7 +142,7 @@ int main(int argc, char* argv[])
     sf_floatread(inp[0],n1*ntr,in);
     sf_floatread(oth[0],n2*ntr,other);
 
-    warpscan(cheb,inp,oth,rat1);
+    warpscan(cheb,sign,inp,oth,rat1);
 
     sf_floatwrite(rat1,n2g,warped);
 
