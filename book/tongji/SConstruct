@@ -4,7 +4,9 @@ Papers(copyr='Tongji University',
        group='State Key Laboratory of Marine Geology',
        authors = {'qpwave':'Jiubing Cheng and Wei Kang',
                   'qSwave':'Jiubing Cheng and Wei Kang',
-                  'lrmode':'Jiubing Cheng and Sergey Fomel'},
+                  'lrmode':'Jiubing Cheng and Sergey Fomel'
+                  'decoupledpropagation':'Jiubing Cheng et.al.'
+                  },
        )
        
 End(use='amsmath,amsfonts')

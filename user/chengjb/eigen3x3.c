@@ -24,14 +24,12 @@
 #include <rsf.h>
 #include "_cjb.h"
 
-/* Constants */
-#ifndef M_SQRT3
-#define M_SQRT3    1.73205080756887729352744634151   /* sqrt(3) */
-#endif
+// Constants
+#define M_SQRT3    1.73205080756887729352744634151   // sqrt(3)
 
-/* Macros */
-#define SQR(x)      ((x)*(x))                        /* x^2 */ 
-#define SQR_ABS(x)  (SQR(creal(x)) + SQR(cimag(x)))  /* |x|^2 */
+// Macros
+#define SQR(x)      ((x)*(x))                        // x^2 
+#define SQR_ABS(x)  (SQR(creal(x)) + SQR(cimag(x)))  // |x|^2
 
 
 void dsyev2(double A, double B, double C, double *rt1, double *rt2,
@@ -64,13 +62,13 @@ void dsyev2(double A, double B, double C, double *rt1, double *rt2,
     t = 1.0/(*rt2);
     *rt1 = (A*t)*C - (B*t)*B;
   }
-  else       /* This case needs to be treated separately to avoid div by 0 */
+  else       // This case needs to be treated separately to avoid div by 0
   {
     *rt1 = 0.5 * rt;
     *rt2 = -0.5 * rt;
   }
 
-  /* Calculate eigenvectors */
+  // Calculate eigenvectors
   if (df > 0.0)
     *cs = df + rt;
   else
@@ -115,21 +113,20 @@ void slvsec3(double d[3], double z[3], double w[3],
 // results.
 // ---------------------------------------------------------------------------->*/
 {
-  int i, j, nIter;
-  double a[4];            /* Bounds of the intervals bracketing the roots */
-  double delta;           /* Shift of the d_i which ensures better accuracy */
-  double dd[3];           /* Shifted coefficients dd_i = d_i - delta */
-  double xl, xh;          /* Interval which straddles the current root. f(xl) < 0, f(xh) > 0 */
-  double x;               /* Current estimates for the root */
-  double x0[3];           /* Analytically calculated roots, used as starting values */
-  double F, dF;           /* Function value f(x) and derivative f'(x) */
-  double dx, dxold;       /* Current and last stepsizes */
-  double error;           /* Numerical error estimate, used for termination condition */
-  double t[3];            /* Temporary storage used for evaluating f */
-  double alpha, beta, gamma;       /* Coefficients of polynomial f(x) * Product [ d_i - x ] */
-  double p, sqrt_p, q, c, s, phi;  /* Intermediate results of analytical calculation */
+  double a[4];            // Bounds of the intervals bracketing the roots
+  double delta;           // Shift of the d_i which ensures better accuracy
+  double dd[3];           // Shifted coefficients dd_i = d_i - delta
+  double xl, xh;          // Interval which straddles the current root. f(xl) < 0, f(xh) > 0
+  double x;               // Current estimates for the root
+  double x0[3];           // Analytically calculated roots, used as starting values
+  double F, dF;           // Function value f(x) and derivative f'(x)
+  double dx, dxold;       // Current and last stepsizes
+  double error;           // Numerical error estimate, used for termination condition
+  double t[3];            // Temporary storage used for evaluating f
+  double alpha, beta, gamma;       // Coefficients of polynomial f(x) * Product [ d_i - x ]
+  double p, sqrt_p, q, c, s, phi;  // Intermediate results of analytical calculation
   
-  /* Determine intervals which must contain the roots */
+  // Determine intervals which must contain the roots
   if (z[0] > 0)
   {
     a[0] = d[i0];
@@ -145,16 +142,16 @@ void slvsec3(double d[3], double z[3], double w[3],
     a[3] = d[i2];
   }
 
-  /* Calculate roots of f(x) = 0 analytically (analogous to ZHEEVC3) */
+  // Calculate roots of f(x) = 0 analytically (analogous to ZHEEVC3)
   t[0]  = d[1]*d[2];
   t[1]  = d[0]*d[2];
   t[2]  = d[0]*d[1];
-  gamma = t[0]*d[0] + (z[0]*t[0] + z[1]*t[1] + z[2]*t[2]);    /* Coefficients */
+  gamma = t[0]*d[0] + (z[0]*t[0] + z[1]*t[1] + z[2]*t[2]);    // Coefficients
   beta  = (z[0]*(d[1]+d[2]) + z[1]*(d[0]+d[2]) + z[2]*(d[0]+d[1]))
            + (t[0] + t[1] + t[2]);
   alpha = (z[0] + z[1] + z[2]) + (d[0] + d[1] + d[2]);
   
-  p = SQR(alpha) - 3.0*beta;    /* Transformation that removes the x^2 term */
+  p = SQR(alpha) - 3.0*beta;    // Transformation that removes the x^2 term
   q = alpha*(p - (3.0/2.0)*beta) + (27.0/2.0)*gamma;
   sqrt_p = sqrt(fabs(p));
 
@@ -164,7 +161,7 @@ void slvsec3(double d[3], double z[3], double w[3],
   s = (1.0/M_SQRT3)*sqrt_p*fabs(sin(phi));
 
   x0[0] = x0[1] = x0[2] = (1.0/3.0)*(alpha - c);
-  if (c > s)             /* Make sure the roots are in ascending order */
+  if (c > s)             // Make sure the roots are in ascending order
   {
     x0[0] -= s;
     x0[1] += s;
@@ -183,28 +180,28 @@ void slvsec3(double d[3], double z[3], double w[3],
     x0[2] += s;
   }
 
-  /* Refine roots with a combined Bisection/Newton-Raphson method */
-  for (i=0; i < 3; i++)
+  // Refine roots with a combined Bisection/Newton-Raphson method
+  for (int i=0; i < 3; i++)
   {
-      xl = a[i];               /* Lower bound of bracketing interval */
-      xh = a[i+1];             /* Upper bound of bracketing interval */
+    xl = a[i];               // Lower bound of bracketing interval
+    xh = a[i+1];             // Upper bound of bracketing interval
     dx = dxold = 0.5 * (xh - xl);
 
-    /* Make sure that xl != xh */
+    // Make sure that xl != xh
     if (dx == 0.0)
     {
       w[i] = xl;
-      for (j=0; j < 3; j++)
+      for (int j=0; j < 3; j++)
         R[j][i] = d[j] - xl;
       continue;
     }
     
-    /* Shift the root close to zero to achieve better accuracy */
+    // Shift the root close to zero to achieve better accuracy
     if (x0[i] >= xh)
     {
       delta = xh;
       x     = -dx;
-      for (j=0; j < 3; j++)
+      for (int j=0; j < 3; j++)
       {
         dd[j]   = d[j] - delta;
         R[j][i] = dd[j] - x;
@@ -214,7 +211,7 @@ void slvsec3(double d[3], double z[3], double w[3],
     {
       delta = xl;
       x     = dx;
-      for (j=0; j < 3; j++)
+      for (int j=0; j < 3; j++)
       {
         dd[j]   = d[j] - delta;
         R[j][i] = dd[j] - x;
@@ -224,13 +221,13 @@ void slvsec3(double d[3], double z[3], double w[3],
     {
       delta = x0[i];
       x     = 0.0;
-      for (j=0; j < 3; j++)
+      for (int j=0; j < 3; j++)
         R[j][i] = dd[j] = d[j] - delta;
     }
     xl -= delta;
     xh -= delta;
    
-    /* Make sure that f(xl) < 0 and f(xh) > 0 */
+    // Make sure that f(xl) < 0 and f(xh) > 0 
     if (z[0] < 0.0)
     {
       double t = xh;
@@ -238,14 +235,14 @@ void slvsec3(double d[3], double z[3], double w[3],
       xl = t;
     }
 
-    /* Main iteration loop */
-    for (nIter=0; nIter < 500; nIter++)
+    // Main iteration loop
+    for (int nIter=0; nIter < 500; nIter++)
     {
-	/* Evaluate f and f', and calculate an error estimate */
+      // Evaluate f and f', and calculate an error estimate
       F     = 1.0;
       dF    = 0.0;
       error = 1.0;
-      for (j=0; j < 3; j++)
+      for (int j=0; j < 3; j++)
       {
         t[0]   = 1.0 / R[j][i];
         t[1]   = z[j] * t[0];
@@ -255,18 +252,18 @@ void slvsec3(double d[3], double z[3], double w[3],
         dF    += t[2];
       }
 
-      /* Check for convergence */ 
+      // Check for convergence 
       if (fabs(F) <= DBL_EPSILON * (8.0 * error + fabs(x*dF)))
         break;
 
-      /* Adjust interval boundaries */
+      // Adjust interval boundaries
       if (F < 0.0)
         xl   = x;
       else
         xh   = x;
 
-      /* Check, whether Newton-Raphson would converge fast enough. If so,
-	 give it a try. If not, or if it would run out of bounds, use bisection */
+      // Check, whether Newton-Raphson would converge fast enough. If so,
+      // give it a try. If not, or if it would run out of bounds, use bisection
       if (fabs(2.0 * F) < fabs(dxold * dF))
       {
         dxold = dx;
@@ -284,12 +281,12 @@ void slvsec3(double d[3], double z[3], double w[3],
         x  = xl + dx;
       }
 
-      /* Prepare next iteration */
-      for (j=0; j < 3; j++)
+      // Prepare next iteration
+      for (int j=0; j < 3; j++)
         R[j][i] = dd[j] - x;
     }
      
-    /* Un-shift result */
+    // Un-shift result
     w[i] = x + delta;
   }
 }
@@ -305,23 +302,22 @@ void dsytrd3(double A[3][3], double Q[3][3], double d[3], double e[2])
 // A. The access is read-only.
 // --------------------------------------------------------------------------->*/
 {
-  int i, j;
-#define n 3
+  const int n = 3;
   double u[n], q[n];
   double omega, f;
   double K, h, g;
   
-  /* Initialize Q to the identitity matrix */
+  // Initialize Q to the identitity matrix
 #ifndef EVALS_ONLY
-  for (i=0; i < n; i++)
+  for (int i=0; i < n; i++)
   {
     Q[i][i] = 1.0;
-    for (j=0; j < i; j++)
+    for (int j=0; j < i; j++)
       Q[i][j] = Q[j][i] = 0.0;
   }
 #endif
 
-  /* Bring first row and column to the desired form */
+  // Bring first row and column to the desired form 
   h = SQR(A[0][1]) + SQR(A[0][2]);
   if (A[0][1] > 0)
     g = -sqrt(h);
@@ -337,37 +333,37 @@ void dsytrd3(double A[3][3], double Q[3][3], double d[3], double e[2])
   {
     omega = 1.0 / omega;
     K     = 0.0;
-    for (i=1; i < n; i++)
+    for (int i=1; i < n; i++)
     {
       f    = A[1][i] * u[1] + A[i][2] * u[2];
-      q[i] = omega * f;                  /* p */
-      K   += u[i] * f;                   /* u* A u */
+      q[i] = omega * f;                  // p
+      K   += u[i] * f;                   // u* A u
     }
     K *= 0.5 * SQR(omega);
 
-    for (i=1; i < n; i++)
+    for (int i=1; i < n; i++)
       q[i] = q[i] - K * u[i];
     
     d[0] = A[0][0];
     d[1] = A[1][1] - 2.0*q[1]*u[1];
     d[2] = A[2][2] - 2.0*q[2]*u[2];
     
-    /* Store inverse Householder transformation in Q */
+    // Store inverse Householder transformation in Q
 #ifndef EVALS_ONLY
-    for (j=1; j < n; j++)
+    for (int j=1; j < n; j++)
     {
       f = omega * u[j];
-      for (i=1; i < n; i++)
+      for (int i=1; i < n; i++)
         Q[i][j] = Q[i][j] - f*u[i];
     }
 #endif
 
-    /* Calculate updated A[1][2] and store it in e[1] */
+    // Calculate updated A[1][2] and store it in e[1]
     e[1] = A[1][2] - q[1]*u[2] - u[1]*q[2];
   }
   else
   {
-    for (i=0; i < n; i++)
+    for (int i=0; i < n; i++)
       d[i] = A[i][i];
     e[1] = A[1][2];
   }
@@ -391,22 +387,21 @@ int dsyevc3(double A[3][3], double w[3])
 {
   double m, c1, c0;
   
-  /* Determine coefficients of characteristic poynomial. We write
+  // Determine coefficients of characteristic poynomial. We write
   //       | a   d   f  |
   //  A =  | d*  b   e  |
-  //       | f*  e*  c  | */
-  double de = A[0][1] * A[1][2];                                    /* d * e */
-  double dd = SQR(A[0][1]);                                         /* d^2 */
-  double ee = SQR(A[1][2]);                                         /* e^2 */
-  double ff = SQR(A[0][2]);                                         /* f^2 */
-  double p, sqrt_p, q, c, s, phi;
-
+  //       | f*  e*  c  |
+  double de = A[0][1] * A[1][2];                                    // d * e
+  double dd = SQR(A[0][1]);                                         // d^2
+  double ee = SQR(A[1][2]);                                         // e^2
+  double ff = SQR(A[0][2]);                                         // f^2
   m  = A[0][0] + A[1][1] + A[2][2];
-  c1 = (A[0][0]*A[1][1] + A[0][0]*A[2][2] + A[1][1]*A[2][2])        /* a*b + a*c + b*c - d^2 - e^2 - f^2 */
+  c1 = (A[0][0]*A[1][1] + A[0][0]*A[2][2] + A[1][1]*A[2][2])        // a*b + a*c + b*c - d^2 - e^2 - f^2
           - (dd + ee + ff);
   c0 = A[2][2]*dd + A[0][0]*ee + A[1][1]*ff - A[0][0]*A[1][1]*A[2][2]
-      - 2.0 * A[0][2]*de;                                     /* c*d^2 + a*e^2 + b*f^2 - a*b*c - 2*f*d*e) */
+            - 2.0 * A[0][2]*de;                                     // c*d^2 + a*e^2 + b*f^2 - a*b*c - 2*f*d*e)
 
+  double p, sqrt_p, q, c, s, phi;
   p = SQR(m) - 3.0*c1;
   q = m*(p - (3.0/2.0)*c1) - (27.0/2.0)*c0;
   sqrt_p = sqrt(fabs(p));
@@ -454,17 +449,17 @@ int dsyevv3(double A[3][3], double Q[3][3], double w[3])
 // ---------------------------------------------------------------------------->*/
 {
 #ifndef EVALS_ONLY
-    double norm;          /* Squared norm or inverse norm of current eigenvector */
-  double n0, n1;        /* Norm of first and second columns of A */
-  double n0tmp, n1tmp;  /* "Templates" for the calculation of n0/n1 - saves a few FLOPS */
-  double thresh;        /* Small number used as threshold for floating point comparisons */
-  double error;         /* Estimated maximum roundoff error in some steps */
-  double wmax;          /* The eigenvalue of maximum modulus */
-  double f, t;          /* Intermediate storage */
-  int i, j;             /* Loop counters */
+  double norm;          // Squared norm or inverse norm of current eigenvector
+  double n0, n1;        // Norm of first and second columns of A
+  double n0tmp, n1tmp;  // "Templates" for the calculation of n0/n1 - saves a few FLOPS
+  double thresh;        // Small number used as threshold for floating point comparisons
+  double error;         // Estimated maximum roundoff error in some steps
+  double wmax;          // The eigenvalue of maximum modulus
+  double f, t;          // Intermediate storage
+  int i, j;             // Loop counters
 #endif
 
-  /* Calculate eigenvalues */
+  // Calculate eigenvalues
   dsyevc3(A, w);
 
 #ifndef EVALS_ONLY
@@ -475,15 +470,15 @@ int dsyevv3(double A[3][3], double Q[3][3], double w[3])
     wmax = t;
   thresh = SQR(8.0 * DBL_EPSILON * wmax);
 
-  /* Prepare calculation of eigenvectors */
+  // Prepare calculation of eigenvectors
   n0tmp   = SQR(A[0][1]) + SQR(A[0][2]);
   n1tmp   = SQR(A[0][1]) + SQR(A[1][2]);
   Q[0][1] = A[0][1]*A[1][2] - A[0][2]*A[1][1];
   Q[1][1] = A[0][2]*A[0][1] - A[1][2]*A[0][0];
   Q[2][1] = SQR(A[0][1]);
 
-  /* Calculate first eigenvector by the formula
-  //   v[0] = (A - w[0]).e1 x (A - w[0]).e2 */
+  // Calculate first eigenvector by the formula
+  //   v[0] = (A - w[0]).e1 x (A - w[0]).e2
   A[0][0] -= w[0];
   A[1][1] -= w[0];
   Q[0][0] = Q[0][1] + A[0][2]*w[0];
@@ -494,21 +489,21 @@ int dsyevv3(double A[3][3], double Q[3][3], double w[3])
   n1      = n1tmp + SQR(A[1][1]);
   error   = n0 * n1;
   
-  if (n0 <= thresh)         /* If the first column is zero, then (1,0,0) is an eigenvector */
+  if (n0 <= thresh)         // If the first column is zero, then (1,0,0) is an eigenvector
   {
     Q[0][0] = 1.0;
     Q[1][0] = 0.0;
     Q[2][0] = 0.0;
   }
-  else if (n1 <= thresh)    /* If the second column is zero, then (0,1,0) is an eigenvector */
+  else if (n1 <= thresh)    // If the second column is zero, then (0,1,0) is an eigenvector
   {
     Q[0][0] = 0.0;
     Q[1][0] = 1.0;
     Q[2][0] = 0.0;
   }
   else if (norm < SQR(64.0 * DBL_EPSILON) * error)
-  {                         /* If angle between A[0] and A[1] is too small, don't use */
-      t = SQR(A[0][1]);       /* cross product, but calculate v ~ (1, -A0/A1, 0) */
+  {                         // If angle between A[0] and A[1] is too small, don't use
+    t = SQR(A[0][1]);       // cross product, but calculate v ~ (1, -A0/A1, 0)
     f = -A[0][0] / A[0][1];
     if (SQR(A[1][1]) > t)
     {
@@ -522,7 +517,7 @@ int dsyevv3(double A[3][3], double Q[3][3], double w[3])
     Q[1][0] = f * norm;
     Q[2][0] = 0.0;
   }
-  else                      /* This is the standard branch */
+  else                      // This is the standard branch
   {
     norm = sqrt(1.0 / norm);
     for (j=0; j < 3; j++)
@@ -530,12 +525,12 @@ int dsyevv3(double A[3][3], double Q[3][3], double w[3])
   }
 
   
-  /* Prepare calculation of second eigenvector */
+  // Prepare calculation of second eigenvector
   t = w[0] - w[1];
   if (fabs(t) > 8.0 * DBL_EPSILON * wmax)
   {
-      /* For non-degenerate eigenvalue, calculate second eigenvector by the formula
-      //   v[1] = (A - w[1]).e1 x (A - w[1]).e2 */
+    // For non-degenerate eigenvalue, calculate second eigenvector by the formula
+    //   v[1] = (A - w[1]).e1 x (A - w[1]).e2
     A[0][0] += t;
     A[1][1] += t;
     Q[0][1]  = Q[0][1] + A[0][2]*w[1];
@@ -546,21 +541,21 @@ int dsyevv3(double A[3][3], double Q[3][3], double w[3])
     n1       = n1tmp + SQR(A[1][1]);
     error    = n0 * n1;
  
-    if (n0 <= thresh)       /* If the first column is zero, then (1,0,0) is an eigenvector */
+    if (n0 <= thresh)       // If the first column is zero, then (1,0,0) is an eigenvector
     {
       Q[0][1] = 1.0;
       Q[1][1] = 0.0;
       Q[2][1] = 0.0;
     }
-    else if (n1 <= thresh)  /* If the second column is zero, then (0,1,0) is an eigenvector */
+    else if (n1 <= thresh)  // If the second column is zero, then (0,1,0) is an eigenvector
     {
       Q[0][1] = 0.0;
       Q[1][1] = 1.0;
       Q[2][1] = 0.0;
     }
     else if (norm < SQR(64.0 * DBL_EPSILON) * error)
-    {                       /* If angle between A[0] and A[1] is too small, don't use */
-	t = SQR(A[0][1]);     /* cross product, but calculate v ~ (1, -A0/A1, 0) */
+    {                       // If angle between A[0] and A[1] is too small, don't use
+      t = SQR(A[0][1]);     // cross product, but calculate v ~ (1, -A0/A1, 0)
       f = -A[0][0] / A[0][1];
       if (SQR(A[1][1]) > t)
       {
@@ -583,11 +578,11 @@ int dsyevv3(double A[3][3], double Q[3][3], double w[3])
   }
   else
   {
-      /* For degenerate eigenvalue, calculate second eigenvector according to
+    // For degenerate eigenvalue, calculate second eigenvector according to
     //   v[1] = v[0] x (A - w[1]).e[i]
     //   
     // This would really get to complicated if we could not assume all of A to
-    // contain meaningful values. */
+    // contain meaningful values.
     A[1][0]  = A[0][1];
     A[2][0]  = A[0][2];
     A[2][1]  = A[1][2];
@@ -603,8 +598,8 @@ int dsyevv3(double A[3][3], double Q[3][3], double w[3])
         Q[1][1]  = Q[2][0]*A[0][i] - Q[0][0]*A[2][i];
         Q[2][1]  = Q[0][0]*A[1][i] - Q[1][0]*A[0][i];
         norm     = SQR(Q[0][1]) + SQR(Q[1][1]) + SQR(Q[2][1]);
-        if (norm > SQR(256.0 * DBL_EPSILON) * n0) /* Accept cross product only if the angle between */
-        {                                         /* the two vectors was not too small */
+        if (norm > SQR(256.0 * DBL_EPSILON) * n0) // Accept cross product only if the angle between
+        {                                         // the two vectors was not too small
           norm = sqrt(1.0 / norm);
           for (j=0; j < 3; j++)
             Q[j][1] = Q[j][1] * norm;
@@ -613,11 +608,11 @@ int dsyevv3(double A[3][3], double Q[3][3], double w[3])
       }
     }
     
-    if (i == 3)    /* This means that any vector orthogonal to v[0] is an EV. */
+    if (i == 3)    // This means that any vector orthogonal to v[0] is an EV.
     {
       for (j=0; j < 3; j++)
-	  if (Q[j][0] != 0.0)                                   /* Find nonzero element of v[0] ... */
-	  {                                                     /* ... and swap it with the next one */
+        if (Q[j][0] != 0.0)                                   // Find nonzero element of v[0] ...
+        {                                                     // ... and swap it with the next one
           norm          = 1.0 / sqrt(SQR(Q[j][0]) + SQR(Q[(j+1)%3][0]));
           Q[j][1]       = Q[(j+1)%3][0] * norm;
           Q[(j+1)%3][1] = -Q[j][0] * norm;
@@ -628,8 +623,8 @@ int dsyevv3(double A[3][3], double Q[3][3], double w[3])
   }
       
   
-  /* Calculate third eigenvector according to */
-  /*   v[2] = v[0] x v[1] */
+  // Calculate third eigenvector according to
+  //   v[2] = v[0] x v[1]
   Q[0][2] = Q[1][0]*Q[2][1] - Q[2][0]*Q[1][1];
   Q[1][2] = Q[2][0]*Q[0][1] - Q[0][0]*Q[2][1];
   Q[2][2] = Q[0][0]*Q[1][1] - Q[1][0]*Q[0][1];
@@ -658,30 +653,29 @@ int dsyevd3(double A[3][3], double Q[3][3], double w[3])
 //   dsyev2(), slvsec3(), dsytrd3()
 // ---------------------------------------------------------------------------->*/
 {
-  int i, j, k;
-#define n 3
-  double R[3][3];                /* Householder transformation matrix */
-  double P[3][3];                /* Unitary transformation matrix which diagonalizes D + w w^T */
-  double e[2];                   /* Off-diagonal elements after Householder transformation */
-  double d[3];                   /* Eigenvalues of split matrix in the "divide" step) */
-  double c, s;                   /* Eigenvector of 2x2 block in the "divide" step */
-  double z[3];                   /* Numerators of secular equation / Updating vector */
-  double t;                      /* Miscellaenous temporary stuff */
+  const int n = 3;
+  double R[3][3];                // Householder transformation matrix
+  double P[3][3];                // Unitary transformation matrix which diagonalizes D + w w^T
+  double e[2];                   // Off-diagonal elements after Householder transformation
+  double d[3];                   // Eigenvalues of split matrix in the "divide" step)
+  double c, s;                   // Eigenvector of 2x2 block in the "divide" step
+  double z[3];                   // Numerators of secular equation / Updating vector
+  double t;                      // Miscellaenous temporary stuff
 
-  /* Initialize Q */
+  // Initialize Q
 #ifndef EVALS_ONLY
   memset(Q, 0.0, 9*sizeof(double));
 #endif
   
-  /* Transform A to real tridiagonal form by the Householder method */
+  // Transform A to real tridiagonal form by the Householder method
   dsytrd3(A, R, w, e);
  
   
-  /* "Divide"
+  // "Divide"
   // --------
   
-  // Detect matrices that factorize to avoid multiple eigenvalues in the Divide/Conquer algorithm */
-  for (i=0; i < n-1; i++)
+  // Detect matrices that factorize to avoid multiple eigenvalues in the Divide/Conquer algorithm
+  for (int i=0; i < n-1; i++)
   {
     t = fabs(w[i]) + fabs(w[i+1]);
     if (fabs(e[i]) <= 8.0*DBL_EPSILON*t)
@@ -693,7 +687,7 @@ int dsyevd3(double A[3][3], double Q[3][3], double w[3])
         w[2] = d[2];
 #ifndef EVALS_ONLY
         Q[0][0] = 1.0;
-        for (j=1; j < n; j++)
+        for (int j=1; j < n; j++)
         {
           Q[j][1] = s*R[j][2] + c*R[j][1];
           Q[j][2] = c*R[j][2] - s*R[j][1];
@@ -717,25 +711,45 @@ int dsyevd3(double A[3][3], double Q[3][3], double w[3])
 #endif
       }
 
+  //modified by Zp: adjust the order of eigenvalues and eigenvectors.
+  int imax;
+  double max,temp[3];
+  imax=0;
+  max=w[0];
+  for(int i=0;i<3;i++)
+	  if(max<w[i])
+	  {
+		  max=w[i];
+		  imax=i;
+	  }
+  w[imax] = w[0];
+  w[0] = max;
+  for(int i=0;i<3;i++)
+  {
+	  temp[i] = Q[i][imax];
+	  Q[i][imax] = Q[i][0];
+	  Q[i][0] = temp[i];
+  }
+
       return 0;
     }
   }
   
-  /* Calculate eigenvalues and eigenvectors of 2x2 block */
+  // Calculate eigenvalues and eigenvectors of 2x2 block
   dsyev2(w[1]-e[0], e[1], w[2], &d[1], &d[2], &c, &s);
   d[0] = w[0] - e[0];
 
   
-  /* "Conquer"
+  // "Conquer"
   // ---------
 
-  // Determine coefficients of secular equation */
+  // Determine coefficients of secular equation
   z[0] = e[0];
   z[1] = e[0] * SQR(c);
   z[2] = e[0] * SQR(s);
 
-  /* Call slvsec3 with d sorted in ascending order. We make
-  // use of the fact that dsyev2 guarantees d[1] >= d[2]. */
+  // Call slvsec3 with d sorted in ascending order. We make
+  // use of the fact that dsyev2 guarantees d[1] >= d[2].
   if (d[0] < d[2])
     slvsec3(d, z, w, P, 0, 2, 1);
   else if (d[0] < d[1])
@@ -744,17 +758,17 @@ int dsyevd3(double A[3][3], double Q[3][3], double w[3])
     slvsec3(d, z, w, P, 2, 1, 0);
 
 #ifndef EVALS_ONLY
-  /* Calculate eigenvectors of matrix D + beta * z * z^t and store them in the
-  // columns of P */
+  // Calculate eigenvectors of matrix D + beta * z * z^t and store them in the
+  // columns of P
   z[0] = sqrt(fabs(e[0]));
   z[1] = c * z[0];
   z[2] = -s * z[0];
 
-  /* Detect duplicate elements in d to avoid division by zero */
+  // Detect duplicate elements in d to avoid division by zero
   t = 8.0*DBL_EPSILON*(fabs(d[0]) + fabs(d[1]) + fabs(d[2]));
   if (fabs(d[1] - d[0]) <= t)
   {
-    for (j=0; j < n; j++)
+    for (int j=0; j < n; j++)
     {
       if (P[0][j] * P[1][j] <= 0.0)
       {
@@ -763,13 +777,13 @@ int dsyevd3(double A[3][3], double Q[3][3], double w[3])
         P[2][j] = 0.0;
       }
       else
-        for (i=0; i < n; i++)
+        for (int i=0; i < n; i++)
           P[i][j] = z[i]/P[i][j];
     }
   }
   else if (fabs(d[2] - d[0]) <= t)
   {
-    for (j=0; j < n; j++)
+    for (int j=0; j < n; j++)
     {
       if (P[0][j] * P[2][j] <= 0.0)
       {
@@ -778,14 +792,14 @@ int dsyevd3(double A[3][3], double Q[3][3], double w[3])
         P[2][j] = -z[0];
       }
       else
-        for (i=0; i < n; i++)
+        for (int i=0; i < n; i++)
           P[i][j] = z[i]/P[i][j];
     }
   }
   else
   {
-    for (j=0; j < n; j++)
-      for (i=0; i < n; i++)
+    for (int j=0; j < n; j++)
+      for (int i=0; i < n; i++)
       {
         if (P[i][j] == 0.0)
         {
@@ -799,32 +813,52 @@ int dsyevd3(double A[3][3], double Q[3][3], double w[3])
       }
   }
 
-  /* Normalize eigenvectors of D + beta * z * z^t */
-  for (j=0; j < n; j++)
+  // Normalize eigenvectors of D + beta * z * z^t
+  for (int j=0; j < n; j++)
   {
     t = SQR(P[0][j]) + SQR(P[1][j]) + SQR(P[2][j]);
     t = 1.0 / sqrt(t);
-    for (i=0; i < n; i++)
+    for (int i=0; i < n; i++)
       P[i][j] *= t;
   }
   
-  /* Undo diagonalization of 2x2 block */
-  for (j=0; j < n; j++)
+  // Undo diagonalization of 2x2 block
+  for (int j=0; j < n; j++)
   {
     t       = P[1][j];
     P[1][j] = c*t - s*P[2][j];
     P[2][j] = s*t + c*P[2][j];
   }
 
-  /* Undo Householder transformation */
-  for (j=0; j < n; j++)
-    for (k=0; k < n; k++)
+  // Undo Householder transformation
+  for (int j=0; j < n; j++)
+    for (int k=0; k < n; k++)
     {
       t = P[k][j];
-      for (i=0; i < n; i++)
+      for (int i=0; i < n; i++)
         Q[i][j] += t * R[i][k];
     }
 #endif
+  
+  //modified by Zp: adjust the order of eigenvalues and eigenvectors.
+  int imax;
+  double max,temp[3];
+  imax=0;
+  max=w[0];
+  for(int i=0;i<3;i++)
+	  if(max<w[i])
+	  {
+		  max=w[i];
+		  imax=i;
+	  }
+  w[imax] = w[0];
+  w[0] = max;
+  for(int i=0;i<3;i++)
+  {
+	  temp[i] = Q[i][imax];
+	  Q[i][imax] = Q[i][0];
+	  Q[i][0] = temp[i];
+  }
 
   return 0;
 }
@@ -850,27 +884,26 @@ int dsyevq3(double A[3][3], double Q[3][3], double w[3])
 //   dsytrd3()
 // ---------------------------------------------------------------------------->*/
 {
-  int i, k, l;
-#define n 3
-  double e[3];                   /* The third element is used only as temporary workspace */
-  double g, r, p, f, b, s, c, t; /* Intermediate storage */
+  const int n = 3;
+  double e[3];                   // The third element is used only as temporary workspace
+  double g, r, p, f, b, s, c, t; // Intermediate storage
   int nIter;
   int m;
 
-  /* Transform A to real tridiagonal form by the Householder method */
+  // Transform A to real tridiagonal form by the Householder method
   dsytrd3(A, Q, w, e);
   
-  /* Calculate eigensystem of the remaining real symmetric tridiagonal matrix
+  // Calculate eigensystem of the remaining real symmetric tridiagonal matrix
   // with the QL method
   //
-  // Loop over all off-diagonal elements */
-  for (l=0; l < n-1; l++)
+  // Loop over all off-diagonal elements
+  for (int l=0; l < n-1; l++)
   {
     nIter = 0;
     while (1)
     {
-	/* Check for convergence and exit iteration loop if off-diagonal
-	// element e(l) is zero */
+      // Check for convergence and exit iteration loop if off-diagonal
+      // element e(l) is zero
       for (m=l; m <= n-2; m++)
       {
         g = fabs(w[m])+fabs(w[m+1]);
@@ -883,7 +916,7 @@ int dsyevq3(double A[3][3], double Q[3][3], double w[3])
       if (nIter++ >= 30)
         return -1;
 
-      /* Calculate g = d_m - k */
+      // Calculate g = d_m - k
       g = (w[l+1] - w[l]) / (e[l] + e[l]);
       r = sqrt(SQR(g) + 1.0);
       if (g > 0)
@@ -893,7 +926,7 @@ int dsyevq3(double A[3][3], double Q[3][3], double w[3])
 
       s = c = 1.0;
       p = 0.0;
-      for (i=m-1; i >= l; i--)
+      for (int i=m-1; i >= l; i--)
       {
         f = s * e[i];
         b = c * e[i];
@@ -918,9 +951,9 @@ int dsyevq3(double A[3][3], double Q[3][3], double w[3])
         w[i+1] = g + p;
         g = c*r - b;
 
-        /* Form eigenvectors */
+        // Form eigenvectors
 #ifndef EVALS_ONLY
-        for (k=0; k < n; k++)
+        for (int k=0; k < n; k++)
         {
           t = Q[k][i+1];
           Q[k][i+1] = s*Q[k][i] + c*t;
@@ -966,19 +999,19 @@ int dsyevh3(double A[3][3], double Q[3][3], double w[3])
 // ---------------------------------------------------------------------------->*/
 {
 #ifndef EVALS_ONLY
-    double norm;          /* Squared norm or inverse norm of current eigenvector */
-/*  double n0, n1;        // Norm of first and second columns of A */
-    double error;         /* Estimated maximum roundoff error */
-    double t, u;          /* Intermediate storage */
-    int j;                /* Loop counter */
+  double norm;          // Squared norm or inverse norm of current eigenvector
+//  double n0, n1;        // Norm of first and second columns of A
+  double error;         // Estimated maximum roundoff error
+  double t, u;          // Intermediate storage
+  int j;                // Loop counter
 #endif
 
-    /* Calculate eigenvalues */
+  // Calculate eigenvalues
   dsyevc3(A, w);
 
 #ifndef EVALS_ONLY
-/*  n0 = SQR(A[0][0]) + SQR(A[0][1]) + SQR(A[0][2]); */
-/*  n1 = SQR(A[0][1]) + SQR(A[1][1]) + SQR(A[1][2]); */
+//  n0 = SQR(A[0][0]) + SQR(A[0][1]) + SQR(A[0][2]);
+//  n1 = SQR(A[0][1]) + SQR(A[1][1]) + SQR(A[1][2]);
   
   t = fabs(w[0]);
   if ((u=fabs(w[1])) > t)
@@ -991,36 +1024,39 @@ int dsyevh3(double A[3][3], double Q[3][3], double w[3])
     u = SQR(t);
   error = 256.0 * DBL_EPSILON * SQR(u);
 
-/*  error = 256.0 * DBL_EPSILON * (n0 + u) * (n1 + u); */
+  //cjb check
+  //sf_warning("DBL_EPSILON=%20.18f",DBL_EPSILON);
+
+//  error = 256.0 * DBL_EPSILON * (n0 + u) * (n1 + u);
 
   Q[0][1] = A[0][1]*A[1][2] - A[0][2]*A[1][1];
   Q[1][1] = A[0][2]*A[0][1] - A[1][2]*A[0][0];
   Q[2][1] = SQR(A[0][1]);
 
-  /* Calculate first eigenvector by the formula
-  //   v[0] = (A - w[0]).e1 x (A - w[0]).e2 */
+  // Calculate first eigenvector by the formula
+  //   v[0] = (A - w[0]).e1 x (A - w[0]).e2
   Q[0][0] = Q[0][1] + A[0][2]*w[0];
   Q[1][0] = Q[1][1] + A[1][2]*w[0];
   Q[2][0] = (A[0][0] - w[0]) * (A[1][1] - w[0]) - Q[2][1];
   norm    = SQR(Q[0][0]) + SQR(Q[1][0]) + SQR(Q[2][0]);
 
-  /* If vectors are nearly linearly dependent, or if there might have
+  // If vectors are nearly linearly dependent, or if there might have
   // been large cancellations in the calculation of A[i][i] - w[0], fall
   // back to QL algorithm
   // Note that this simultaneously ensures that multiple eigenvalues do
   // not cause problems: If w[0] = w[1], then A - w[0] * I has rank 1,
-  // i.e. all columns of A - w[0] * I are linearly dependent. */
+  // i.e. all columns of A - w[0] * I are linearly dependent.
   if (norm <= error)
     return dsyevq3(A, Q, w);
-  else                      /* This is the standard branch */
+  else                      // This is the standard branch
   {
     norm = sqrt(1.0 / norm);
     for (j=0; j < 3; j++)
       Q[j][0] = Q[j][0] * norm;
   }
   
-  /* Calculate second eigenvector by the formula
-  //   v[1] = (A - w[1]).e1 x (A - w[1]).e2 */
+  // Calculate second eigenvector by the formula
+  //   v[1] = (A - w[1]).e1 x (A - w[1]).e2
   Q[0][1]  = Q[0][1] + A[0][2]*w[1];
   Q[1][1]  = Q[1][1] + A[1][2]*w[1];
   Q[2][1]  = (A[0][0] - w[1]) * (A[1][1] - w[1]) - Q[2][1];
@@ -1034,8 +1070,8 @@ int dsyevh3(double A[3][3], double Q[3][3], double w[3])
       Q[j][1] = Q[j][1] * norm;
   }
   
-  /* Calculate third eigenvector according to
-  //   v[2] = v[0] x v[1] */
+  // Calculate third eigenvector according to
+  //   v[2] = v[0] x v[1]
   Q[0][2] = Q[1][0]*Q[2][1] - Q[2][0]*Q[1][1];
   Q[1][2] = Q[2][0]*Q[0][1] - Q[0][0]*Q[2][1];
   Q[2][2] = Q[0][0]*Q[1][1] - Q[1][0]*Q[0][1];

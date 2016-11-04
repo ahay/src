@@ -1,0 +1,235 @@
+from rsf.proj import *
+
+par = dict(
+    ns=1101,
+    dt=0.001,
+    dx=40*0.0003048,
+    dz=40*0.0003048,
+
+    seed=2011,
+    eps=1.e-6,
+    npk=50,
+    )
+
+# =============================================================
+# download Hess VTI models from 'ftp://software.seg.org'
+# Depth grid: 1501 
+# Horizontal grid: 3617
+# Vertical and horizontal spacing are both 20ft.
+
+import hessvti
+
+hessvti.get_model('vp vs epsilon delta')
+
+# =============================================================
+# produce vp0 & vs0 model by scaling vp model 
+Flow('vp0','vp',
+     '''
+     math output="input*1000" | resamp d1=%g d2=%g
+     '''
+	 % (par['dx'],par['dz'])
+	 )
+
+Flow('vs0','vs',
+     '''
+     math output="input*1000" | resamp d1=%g d2=%g
+     '''
+	 % (par['dx'],par['dz'])
+	 )
+
+Flow('epsi','epsilon',
+     '''
+     math output=input | resamp d1=%g d2=%g
+     '''
+	 % (par['dx'],par['dz'])
+	 )
+
+Flow('del','delta',
+     '''
+     math output=input | resamp d1=%g d2=%g
+     '''
+	 % (par['dx'],par['dz'])
+	 )
+
+Flow('the','delta',
+     '''
+     math output=0.0 | resamp d1=%g d2=%g
+     '''
+	 % (par['dx'],par['dz'])
+	 )
+
+name0='''
+vp0
+'''
+
+name00='''
+epsi del
+'''
+
+for ff in Split(name0):
+        Result(ff,
+	'''
+	grey color=j scalebar=y bias=1.5 allpos=n barreverse=y wanttitle=n screenht=4 screenwd=6
+	''')
+
+for gg in Split(name00):
+        Result(gg,
+	'''
+	grey color=j scalebar=y allpos=n barreverse=y wanttitle=n screenht=4 screenwd=6
+	''')
+
+########################################################################################################
+name1='''
+ElasticxPSLR ElasticzPSLR ElasticPxPSLR ElasticPzPSLR ElasticSxPSLR ElasticSzPSLR
+'''
+
+Flow(['ElasticxPSLR',  'ElasticzPSLR',  'ElasticPxPSLR',  'ElasticPzPSLR',  'ElasticSxPSLR',  'ElasticSzPSLR'],
+      'vp0 vs0 epsi del the',
+         '''
+         tti2devectorlrsvd_double
+         vp0=${SOURCES[0]}
+         vs0=${SOURCES[1]}
+         epsi=${SOURCES[2]} 
+         del=${SOURCES[3]}
+         the=${SOURCES[4]}
+         Elasticz=${TARGETS[1]}
+         ElasticPx=${TARGETS[2]}
+         ElasticPz=${TARGETS[3]}
+         ElasticSx=${TARGETS[4]}
+         ElasticSz=${TARGETS[5]}
+         ns=%d 
+         dt=%g 
+         eps=%g
+         seed=%d
+         npk=%d
+         ''' % (par['ns'],par['dt'],par['eps'],par['seed'],par['npk'])
+    )
+
+for qq in Split(name1):
+        Result(qq,
+        '''
+        grey color= polarity=n scalebar=n screenratio=1. wanttitle=n pclip=100
+        axisfat=5 axiscol=7 labelsz=10
+        ''')
+
+
+########################################################################################################
+name2='''
+ElasticxKS ElasticzKS ElasticPxKS ElasticPzKS ElasticSxKS ElasticSzKS
+'''
+
+Flow(['ElasticxKS',  'ElasticzKS',  'ElasticPxKS',  'ElasticPzKS', 'ElasticSxKS',  'ElasticSzKS'],
+      'vp0 vs0 epsi del the',
+         '''
+         tti2devectorlrsvdkspace_double
+         vp0=${SOURCES[0]}
+         vs0=${SOURCES[1]}
+         epsi=${SOURCES[2]}
+         del=${SOURCES[3]}
+         the=${SOURCES[4]}
+         Elasticz=${TARGETS[1]}
+         ElasticPx=${TARGETS[2]}
+         ElasticPz=${TARGETS[3]}
+         ElasticSx=${TARGETS[4]}
+         ElasticSz=${TARGETS[5]}
+         ns=%d
+         dt=%g
+         eps=%g
+         seed=%d
+         npk=%d
+         ''' % (par['ns'],par['dt'],par['eps'],par['seed'],par['npk'])
+    )
+
+for qq in Split(name2):
+        Result(qq,
+        '''
+        grey color=j polarity=n scalebar=n screenratio=1. wanttitle=n pclip=99.5
+        axisfat=5 axiscol=7 labelsz=10
+        ''')
+
+########################################################################################################
+#name3='''
+#ElasticxKSS ElasticzKSS ElasticPxKSS ElasticPzKSS ElasticSxKSS ElasticSzKSS
+#'''
+
+#Flow(['ElasticxKSS',  'ElasticzKSS',  'ElasticPxKSS',  'ElasticPzKSS', 'ElasticSxKSS',  'ElasticSzKSS'],
+#      'vp0 vs0 epsi del the',
+#         '''
+#		 tti2devectorlrsvdkspacesource_double
+#         vp0=${SOURCES[0]}
+#         vs0=${SOURCES[1]}
+#         epsi=${SOURCES[2]}
+#         del=${SOURCES[3]}
+#         the=${SOURCES[4]}
+#         Elasticz=${TARGETS[1]}
+#         ElasticPx=${TARGETS[2]}
+#         ElasticPz=${TARGETS[3]}
+#         ElasticSx=${TARGETS[4]}
+#         ElasticSz=${TARGETS[5]}
+#         ns=%d
+#         dt=%g
+#         eps=%g
+#         seed=%d
+#         npk=%d
+#         ''' % (par['ns'],par['dt'],par['eps'],par['seed'],par['npk'])
+#    )
+
+#for qq in Split(name3):
+#        Result(qq,
+#        '''
+#        grey color= polarity=n scalebar=n screenratio=1. wanttitle=n pclip=100
+#        axisfat=5 axiscol=7 labelsz=10
+#        ''')
+# =================================================================================
+# FD modeling + vector decomp 
+# =================================================================================
+Flow(['ElasticxFD',  'ElasticzFD'],
+      'vp0 vs0 epsi del the',
+         '''
+         tti2de
+         vp0=${SOURCES[0]}
+         vs0=${SOURCES[1]}
+         epsi=${SOURCES[2]} 
+         del=${SOURCES[3]}
+         the=${SOURCES[4]}
+         Elasticz=${TARGETS[1]}
+         ns=%d 
+         dt=%g 
+         eps=%g
+         seed=%d
+         npk=%d
+         ''' % (par['ns'],par['dt'],par['eps'],par['seed'],par['npk'])
+    )
+
+name4='''
+ElasticxFD ElasticzFD ElasticPxFD ElasticPzFD ElasticSxFD ElasticSzFD
+'''
+
+Flow(['ElasticPxFD', 'ElasticPzFD', 'ElasticSxFD', 'ElasticSzFD'], 
+      'vp0 vs0 epsi del the ElasticxFD ElasticzFD',
+         '''
+         tti2delrdec
+         vp0=${SOURCES[0]}
+         vs0=${SOURCES[1]}
+         epsi=${SOURCES[2]} 
+         del=${SOURCES[3]}
+         the=${SOURCES[4]}
+         Elasticx=${SOURCES[5]}
+         Elasticz=${SOURCES[6]}
+         ElasticPx=${TARGETS[0]}
+         ElasticPz=${TARGETS[1]}
+         ElasticSx=${TARGETS[2]}
+         ElasticSz=${TARGETS[3]}
+         eps=%g
+         seed=%d
+         npk=%d
+         ''' % (par['eps'],par['seed'],par['npk'])
+    )
+
+for qq in Split(name4):
+       Result(qq,
+        '''
+        grey color=j polarity=n scalebar=n screenratio=1 wanttitle=n pclip=99.5
+        axisfat=5 axiscol=7 labelsz=10
+        ''')
+End()

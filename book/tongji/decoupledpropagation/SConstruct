@@ -1,0 +1,10 @@
+from rsf.tex import *
+
+#for submission
+#End(lclass='geophysics',options='manuscript,revised',use='comment,times,natbib,amsmath,amsmath,amsfonts,amsbsy,graphicx,listings,tabularx,ulem,color,array,multirow,booktabs')
+#
+End(lclass='geophysics',use='amsmath,amssymb,listings,multirow,array')
+#End(lclass='geophysics',options='manuscript',use='amsmath,amssymb,listings,multirow,array')
+
+#for print at home
+#End(lclass='geophysics',use='comment,times,natbib,amsmath,amsmath,amsfonts,amsbsy,graphicx,listings,tabularx,ulem,color,array,multirow,booktabs')
