@@ -1,0 +1,193 @@
+from rsf.proj import *
+
+par = dict(
+    ny=301,
+    nx=301,
+    nz=301,
+    dy=0.01,
+    dx=0.01,
+    dz=0.01,
+
+    ns=500,
+    dt=0.001,
+
+    vp0_1=2500,
+    vs0_1=1400,
+    eps1_1=0.25,
+    eps2_1=0.25,
+    del1_1=0.05,
+    del2_1=0.05,
+    del3_1=0.,
+    gam1_1=0.15,
+    gam2_1=0.15,
+    the_1=0.0,
+	phi_1=0.0,
+    vp0_2=3000,
+    vs0_2=1600,
+    eps1_2=0.30,
+    eps2_2=0.15,
+    del1_2=0.08,
+    del2_2=-0.05,
+    del3_2=-0.10,
+    gam1_2=0.20,
+    gam2_2=0.05,
+    the_2=0.0,
+	phi_2=0.0,
+
+    seed=2012,
+    eps=1.e-6,
+    npk=30,
+
+    )
+
+# =================================================================================
+Flow(['vp0','vs0','epsi1','epsi2','del1','del2','del3','gam1','gam2','the','phi'], None,
+     '''
+         twolayer3dort
+         vs0=${TARGETS[1]}
+         eps1=${TARGETS[2]}
+         eps2=${TARGETS[3]}
+         del1=${TARGETS[4]}
+         del2=${TARGETS[5]}
+         del3=${TARGETS[6]}
+         gam1=${TARGETS[7]}
+         gam2=${TARGETS[8]}
+         the=${TARGETS[9]}
+         phi=${TARGETS[10]}
+         ny=%d
+         nx=%d
+         nz=%d
+         dy=%g
+         dx=%g
+         dz=%g
+         vp0_1=%g
+         vs0_1=%g
+         eps1_1=%g
+         eps2_1=%g
+         del1_1=%g
+         del2_1=%g
+         del3_1=%g
+         gam1_1=%g
+         gam2_1=%g
+         the_1=%g
+		 phi_1=%g
+         vp0_2=%g
+         vs0_2=%g
+         eps1_2=%g
+         eps2_2=%g
+         del1_2=%g
+         del2_2=%g
+         del3_2=%g
+         gam1_2=%g
+         gam2_2=%g
+         the_2=%g
+		 phi_2=%g
+         ''' % (par['ny'],par['nx'],par['nz'],par['dy'],par['dx'],par['dz'],
+                par['vp0_1'],par['vs0_1'],par['eps1_1'],par['eps2_1'],par['del1_1'],par['del2_1'],
+				par['del3_1'],par['gam1_1'],par['gam2_1'],par['the_1'],par['phi_1'],
+                par['vp0_2'],par['vs0_2'],par['eps1_2'],par['eps2_2'],par['del1_2'],par['del2_2'],
+				par['del3_2'],par['gam1_2'],par['gam2_2'],par['the_2'],par['phi_2'])
+    )
+
+Result('vp0','vp0',
+      '''
+      byte |
+      grey3 polarity=y scalebar=n frame1=%d frame2=%d frame3=%d wanttitle=n flat=n screenratio=1 axisfat=3 axiscol=7 labelsz=10 labelfat=3
+	  '''
+			%(par['nz']/2,par['nx']/2,par['ny']/2)
+      )
+
+Result('vs0','vs0',
+      '''
+      byte |
+      grey3 polarity=n scalebar=n frame1=%d frame2=%d frame3=%d wanttitle=n flat=n screenratio=1
+	  '''
+			%(par['nz']/2,par['nx']/2,par['ny']/2)
+      )
+
+name1='''
+Elasticx Elasticy Elasticz ElasticPx ElasticPy ElasticPz ElasticSx ElasticSy ElasticSz
+'''
+
+Flow(['Elasticx','Elasticy','Elasticz', 'ElasticPx','ElasticPy','ElasticPz', 'ElasticSx','ElasticSy','ElasticSz'],
+      'vp0 vs0 epsi1 epsi2 del1 del2 del3 gam1 gam2 the phi',
+         '''
+         ort3devectorlrkspace_double
+         vp0=${SOURCES[0]}
+         vs0=${SOURCES[1]}
+         epsi1=${SOURCES[2]}
+         epsi2=${SOURCES[3]}
+         del1=${SOURCES[4]}
+         del2=${SOURCES[5]}
+         del3=${SOURCES[6]}
+         gam1=${SOURCES[7]}
+         gam2=${SOURCES[8]}
+         the=${SOURCES[9]}
+         phi=${SOURCES[10]}
+         Elasticy=${TARGETS[1]}
+         Elasticz=${TARGETS[2]}
+         ElasticPx=${TARGETS[3]}
+         ElasticPy=${TARGETS[4]}
+         ElasticPz=${TARGETS[5]}
+         ElasticSx=${TARGETS[6]}
+         ElasticSy=${TARGETS[7]}
+         ElasticSz=${TARGETS[8]}
+         ns=%d
+         dt=%g
+         eps=%g
+         seed=%d
+         npk=%d
+         ''' % (par['ns'],par['dt'],par['eps'],par['seed'],par['npk'])
+    )
+
+for qq in Split(name1):
+	Result(qq,
+			'''
+			byte gainpanel=all |
+			grey3 polarity=n scalebar=n frame1=%d frame2=%d frame3=%d wanttitle=n flat=n screenratio=1 axisfat=3 axiscol=7 labelsz=11 labelfat=3
+			'''
+			%(par['nz']/2,par['nx']/2-40,par['ny']/2+40)
+			)
+
+########################################################################################################################
+#  10th-order FD modeling
+########################################################################################################################
+name2='''
+ElasticxFD ElasticyFD ElasticzFD 
+'''
+
+Flow(['ElasticxFD','ElasticyFD','ElasticzFD'],
+      'vp0 vs0 epsi1 epsi2 del1 del2 del3 gam1 gam2 the phi',
+         '''
+         ort3de
+         vp0=${SOURCES[0]}
+         vs0=${SOURCES[1]}
+         epsi1=${SOURCES[2]}
+         epsi2=${SOURCES[3]}
+         del1=${SOURCES[4]}
+         del2=${SOURCES[5]}
+         del3=${SOURCES[6]}
+         gam1=${SOURCES[7]}
+         gam2=${SOURCES[8]}
+         the=${SOURCES[9]}
+         phi=${SOURCES[10]}
+         FDElasticy=${TARGETS[1]}
+         FDElasticz=${TARGETS[2]}
+         ns=%d
+         dt=%g
+         eps=%g
+         seed=%d
+         npk=%d
+         ''' % (par['ns'],par['dt'],par['eps'],par['seed'],par['npk'])
+    )
+
+for qq in Split(name2):
+    Result(qq,
+            '''
+            byte gainpanel=all |
+            grey3 polarity=n scalebar=n frame1=%d frame2=%d frame3=%d wanttitle=n flat=n screenratio=1 axisfat=3 axiscol=7 labelsz=11          labelfat=3 pclip=98
+            '''
+            %(par['nz']/2,par['nx']/2-40,par['ny']/2+40)
+            )
+
+End()

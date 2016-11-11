@@ -9,6 +9,7 @@ twolayer3dti vti2desep vti2dpseudop vti2dpseudop1 vti2dpseudopfvs0
 vti2dpseudosv
 vti3de
 vti3dpseudosh vti3dpseudosv
+twolayer3dort resamp ort3de tti2de
 '''
 
 ccprogs = '''
@@ -16,6 +17,9 @@ tti2delrdecomp tti2delrdecomp2p tti2delrsep tti2delrsep2p
 tti2dpseudoplrsep tti3delrsepP tti3delrsepSH tti3delrsepSV
 vti3delrsepP vti3delrsepSH vti3delrsepSV
 tti2dpseudosvlrsep
+tti2delr tti2dekspacelr tti2dekspacelrsource tti2devectorlrsvd tti2delrdec
+tti2devectorlrsvd_double tti2devectorlrsvdkspace_double
+tti2devectorlrsvdkspace_double_stiffness ort3devectorlrkspace_double
 '''
 
 pyprogs ='''
@@ -90,7 +94,7 @@ for prog in mains:
 ##############################################################################
 
 dynpre = env.get('DYNLIB','') 
-libs = [dynpre+'rsf']+env.get('LIBS',[])
+libs = [dynpre+'rsf','fftw3','fftw3f','rsf++','lapack','vecmatop','fftw3f_omp','fftw3_omp']+env.get('LIBS',[])
 
 if not 'c++' in env.get('API',[]):
     lapack = None
