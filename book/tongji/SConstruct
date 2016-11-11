@@ -3,7 +3,7 @@ from rsf.book import *
 Papers(copyr='Tongji University',
        group='State Key Laboratory of Marine Geology',
        authors = {'qpwave':'Jiubing Cheng and Wei Kang',
-                  'qSwave':'Jiubing Cheng and Wei Kang',
+                  'qswave':'Jiubing Cheng and Wei Kang',
                   'lrmode':'Jiubing Cheng and Sergey Fomel'},
        )
        
