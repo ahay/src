@@ -80,7 +80,7 @@ mains = Split(progs)
 for prog in mains:
     sources = ['M' + prog]
     bldutil.depends (env, sources, 'M'+prog)
-    if (fftw or not prog in Split('tti2delrseparation vti2delrseparation')) \
+    if (fftw or not prog in Split('tti2delrseparation vti2delrseparation ort3devectorlrkspace_double')) \
         and (lapack or not prog in Split('ort3dhomodevK')):
         env.StaticObject('M'+prog+'.c')
         prog = env.Program (prog, map (lambda x: x + '.c',sources))
