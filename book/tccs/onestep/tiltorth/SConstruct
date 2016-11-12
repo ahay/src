@@ -127,7 +127,7 @@ for m in [0,1,2]:
     
     Flow([wavec,snapsc],['csource','refl',left,right],
          '''
-         cfftwave3p ref=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]} verb=y
+         cfftwave3 ref=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]} verb=y
          snap=5 snaps=${TARGETS[1]}
          ''')
     

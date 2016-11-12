@@ -247,6 +247,9 @@ ElasticxFD ElasticzFD
 
 fdx='../twolayer2dti.2nd.coupled.1.5ms.FD/ElasticxFD.rsf'
 fdz='../twolayer2dti.2nd.coupled.1.5ms.FD/ElasticzFD.rsf'
+
+SConscript('../twolayer2dti.2nd.coupled.1.5ms.FD/SConstruct')
+
 Flow('ElasticxFD',fdx,'''cp''')
 Flow('ElasticzFD',fdz,'''cp''')
 

@@ -528,24 +528,24 @@ Thanks to the larger spatial and temporal sampling, the same CPU time is used fo
 In addition, only the ranks for the low-rank decomposition of the matrix $w_{12}$ reduce to $1$ when we change the tilt angle of the second layer to $0$.
 
 \inputdir{twolayer2dti.2nd.coupled.0.5ms}
-\multiplot*{2}{ElasticxKSSInterf,ElasticzKSSInterf}{width=0.23\textwidth}
+\multiplot{2}{ElasticxKSSInterf,ElasticzKSSInterf}{width=0.23\textwidth}
 {
 Horizontal and vertical components of the elastic wavefields at the time of 0.3 s synthesized by solving the
 	2nd-order elastic wave equation with $\Delta{x}=\Delta{z}=5$ m and $\Delta{t}=0.5$ ms.
 }
-\multiplot*{3}{ElasticzFDwave,ElasticzPSLRwave,ElasticzKSwave}{width=0.4\textwidth}
+\multiplot{3}{ElasticzFDwave,ElasticzPSLRwave,ElasticzKSwave}{width=0.4\textwidth}
 {
 Vertical slices through the vertical components of the synthetic elastic wavefields at $x=0.75$ km: (a) 10th-order FD, (b) low-rank pseudo-spectral and (c) low-rank pseudo-spectral using the $k$-space adjustment.
 }
 
 \inputdir{twolayer2dti.2nd.coupled.compare}
-\multiplot*{3}{ElasticzFDInterf,ElasticzPSLRInterf,ElasticzKSSInterf}{width=0.23\textwidth}
+\multiplot{3}{ElasticzFDInterfC,ElasticzPSLRInterfC,ElasticzKSSInterfC}{width=0.23\textwidth}
 {
 Vertical components of the elastic wavefields at the time of 0.6 s synthesized using three schemes with the same spatial sampling
 $\Delta{x}=\Delta{z}=10$ m: (a) 10th-order FD and (b) low-rank pseudo-spectral with $\Delta{t}=1.5$ ms,
 and (c) low-rank pseudo-spectral solution using the $k$-space adjustment with $\Delta{t}=3.0$ ms.
 }
-\multiplot*{3}{ElasticzFDwave,ElasticzPSLRwave,ElasticzKSSwave}{width=0.4\textwidth}
+\multiplot{3}{ElasticzFDwave,ElasticzPSLRwave,ElasticzKSSwave}{width=0.4\textwidth}
 {
 Vertical slices through the vertical components at $x=1.5$ km in Figure 3: (a) 10th-order FD,
 (b) low-rank pseudo-spectral and (c) low-rank pseudo-spectral using the $k$-space adjustment.
@@ -573,7 +573,7 @@ provides more efficient solution than operating them in sequence
 for anisotropic media thanks to the reduced number of forward and inverse FFTs.
 
 \inputdir{twolayer2dti.2nd.decoupled.1ms}
-\multiplot*{6}{ElasticxPSLR1Interf,ElasticzPSLR1Interf,ElasticPxPSLR1Interf,ElasticPzPSLR1Interf,ElasticSxPSLR1Interf,ElasticSzPSLR1Interf}{width=0.21\textwidth}
+\multiplot{6}{ElasticxPSLR1Interf,ElasticzPSLR1Interf,ElasticPxPSLR1Interf,ElasticPzPSLR1Interf,ElasticSxPSLR1Interf,ElasticSzPSLR1Interf}{width=0.21\textwidth}
 {
 Elastic wavefields at the time of 0.6 s synthesized by using low-rank pseudo-spectral solution of the displacement
 wave equation followed with low-rank vector decomposition:
@@ -581,7 +581,7 @@ wave equation followed with low-rank vector decomposition:
 (c) x- and (d) z-components of the qP-wave fields;
 (e) x- and (f) z-components of the qSV-wave fields.
 }
-\multiplot*{6}{ElasticPxPSLRInterf,ElasticPzPSLRInterf,ElasticSxPSLRInterf,ElasticSzPSLRInterf,ElasticxPSLRInterf,ElasticzPSLRInterf}{width=0.21\textwidth}
+\multiplot{6}{ElasticPxPSLRInterf,ElasticPzPSLRInterf,ElasticSxPSLRInterf,ElasticSzPSLRInterf,ElasticxPSLRInterf,ElasticzPSLRInterf}{width=0.21\textwidth}
 {
 Elastic wavefields at the time of 0.6 s synthesized by using low-rank pseudo-spectral operators
 for extrapolating and decomposing the elastic waves simultaneously:
@@ -644,7 +644,7 @@ SEG/Hess VTI model with parameters of (a) vertical P-wave velocity, Thomsen coef
 (b) $\epsilon$ and (c) $\delta$.
 }
 
-\multiplot*{6}{ElasticPxKS,ElasticPzKS,ElasticSxKS,ElasticSzKS,ElasticxKS,ElasticzKS}{width=0.3\textwidth}
+\multiplot{6}{ElasticPxKS,ElasticPzKS,ElasticSxKS,ElasticSzKS,ElasticxKS,ElasticzKS}{width=0.3\textwidth}
 {
   Synthesized decoupled and total displacement fields using the low-rank pseudo-spectral
   solution with the $k$-space adjustment that simultaneously extrapolate and decouple qP- and qSV-wave fields in SEG/Hess VTI model:
@@ -653,7 +653,7 @@ SEG/Hess VTI model with parameters of (a) vertical P-wave velocity, Thomsen coef
   (e) x- and (f) z-components of the total displacement fields.
 }
 
-\multiplot*{6}{ElasticxFD,ElasticzFD,ElasticPxFD,ElasticPzFD,ElasticSxFD,ElasticSzFD}{width=0.3\textwidth}
+\multiplot{6}{ElasticxFD,ElasticzFD,ElasticPxFD,ElasticPzFD,ElasticSxFD,ElasticSzFD}{width=0.3\textwidth}
   {
  Elastic wavefield extrapolation using 10th-order FD scheme and low-rank vector decomposition
  in SEG/Hess VTI model:
@@ -684,7 +684,7 @@ Partial of BP 2007 TTI model with parameters of (a) vertical P-wave velocity, Th
 (b) $\epsilon$ and (c) $\delta$, and (d) tilt angle $\theta$.
 }
 
-\multiplot*{6}{ElasticPxKS,ElasticPzKS,ElasticSxKS,ElasticSzKS,ElasticxKS,ElasticzKS}{width=0.25\textwidth}
+\multiplot{6}{ElasticPxKS,ElasticPzKS,ElasticSxKS,ElasticSzKS,ElasticxKS,ElasticzKS}{width=0.25\textwidth}
 {
  Synthesized decoupled and total displacement fields at the time of 1.2 s using the low-rank pseudo-spectral
  solution with the $k$-space adjustment that simultaneously extrapolate and decouple qP- and qSV-wave fields in the BP 2007 TI model:
