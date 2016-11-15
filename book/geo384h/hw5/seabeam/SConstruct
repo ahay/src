@@ -35,7 +35,7 @@ Flow('msk','bin',
 Plot('bin',grey('Binned'))
 Plot('msk',grey('Mask') + ' allpos=y')
 
-Result('data','bin msk','SideBySideAniso')
+Result('seabeam0','bin msk','SideBySideAniso')
 
 # Laplacian factorization
 
