@@ -24,7 +24,6 @@
 */
 
 #include <rsf.h>
-#include <omp.h>
 
 /* prepared head files by myself */
 #include "_fd.h"

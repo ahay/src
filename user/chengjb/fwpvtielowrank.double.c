@@ -18,7 +18,6 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 #include <rsf.h>
-#include <omp.h>
 #include "_cjb.h"
 
 #include <complex.h>
@@ -60,10 +59,11 @@ void fwpvti2delowranksvd_double(double *ldata,double *rdata,double *fmid, double
        /* n2 IFFT from (kx, kz) to (x, z) domain*/
 	   int index,jn2n,ixnz,ii;
 
-//#pragma omp parallel for private(jn2,ikx,im,ikz,i,ixnz,ii,index,kx,kz,kxz) \
+/*
+#pragma omp parallel for private(jn2,ikx,im,ikz,i,ixnz,ii,index,kx,kz,kxz) \
        schedule(dynamic) \
        shared(akx, akz, rdata, wp, xin, xx, xout, ijkx, ijkz,  nx, nz )
-
+*/
        for(jn2=0;jn2<n2;jn2++)
        {
            jn2n=jn2*n;
@@ -103,10 +103,10 @@ void fwpvti2delowranksvd_double(double *ldata,double *rdata,double *fmid, double
        free(xin);
        free(xout);
 
-       // Matrix multiplication in space-domain 
-//#pragma omp parallel for private(im,im2,jn2,temp1,temp2,sum1,sum2) \
+       /* Matrix multiplication in space-domain */
+/* #pragma omp parallel for private(im,im2,jn2,temp1,temp2,sum1,sum2)	\
        schedule(dynamic) \
-       shared(wp, fmid, ldata, y, m, m2, n2)
+       shared(wp, fmid, ldata, y, m, m2, n2) */
        for(im=0;im<m;im++)
        {
          sum1=0.0;
@@ -163,9 +163,9 @@ void fwpvti2delowranksvdkspace_double(double *ldata,double *rdata,double *fmid, 
 
        int ixnz, index, jn2n, ii;
  
-//#pragma omp parallel for private(ikx,ixnz,ikz,index) \
+/* #pragma omp parallel for private(ikx,ixnz,ikz,index)	\
        schedule(dynamic) \
-       shared(ijkx,ijkz, source, xx, xout, nx, nz, amps)
+       shared(ijkx,ijkz, source, xx, xout, nx, nz, amps) */
        for(ikx=0;ikx<nx;ikx++)
        {
            ixnz=ijkx[ikx]*nz;
@@ -178,9 +178,9 @@ void fwpvti2delowranksvdkspace_double(double *ldata,double *rdata,double *fmid, 
        }
 
        /* n2 IFFT from (kx, kz) to (x, z) domain*/
-//#pragma omp parallel for private(jn2,jn2n,ikx,ikz,i,ixnz,ii,index,kx,kz,kxz) \
+/* #pragma omp parallel for private(jn2,jn2n,ikx,ikz,i,ixnz,ii,index,kx,kz,kxz) \
        schedule(dynamic) \
-       shared(akx, akz, rdata, wp, xin, xx, xout, ijkx, ijkz,  nx, nz, kxm, kzm, kxzm)
+       shared(akx, akz, rdata, wp, xin, xx, xout, ijkx, ijkz,  nx, nz, kxm, kzm, kxzm) */
        for(jn2=0;jn2<n2;jn2++)
        {
            i=0;
@@ -221,10 +221,10 @@ void fwpvti2delowranksvdkspace_double(double *ldata,double *rdata,double *fmid, 
        free(xin);
        free(xout);
 
-       // Matrix multiplication in space-domain 
-//#pragma omp parallel for private(im,im2,jn2,sum1,sum2) \
-//       schedule(dynamic) \
-//       shared(wp, fmid, ldata, y, m, m2, n2)
+       /* Matrix multiplication in space-domain */
+/* #pragma omp parallel for private(im,im2,jn2,sum1,sum2)	\
+      schedule(dynamic) \
+      shared(wp, fmid, ldata, y, m, m2, n2) */
        for(im=0;im<m;im++)
        {
          sum1=0.0;

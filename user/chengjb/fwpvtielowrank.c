@@ -21,7 +21,10 @@
 #include "_cjb.h"
 
 #include <fftw3.h>
+
+#ifdef _OPENMP
 #include <omp.h>
+#endif
 
 /*****************************************************************************************/
 void fwpvti2delowrank(float *ldata,float *rdata,float *fmid, float *y, float *x, int *ijkx, int *ijkz,
