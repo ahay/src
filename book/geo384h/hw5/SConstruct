@@ -1,4 +1,0 @@
-from rsf.tex import *
-
-End(use='hyperref,listings,amsmath',color='hole pocs dune inv',hires='fft-data fft-hole cos')
-

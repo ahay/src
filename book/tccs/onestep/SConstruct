@@ -1,7 +1,6 @@
 from rsf.tex import *
-import os
 
-End(lclass='geophysics',options='manuscript',use='slashbox,amsmath,amssymb,amsthm,algorithm,algorithmic',color='vel vpend2 vxend2 etaend2 thetaend2 nc11 nc13 nc33 vp vx eta theta bpvel c11 cost mvel',include=r'''
+End(use='slashbox,amsmath,amssymb,amsthm,algorithm,algorithmic',color='propr propi proderr1r proderr1i compp compp1 mcompp mcompp1 vel vpend2 vxend2 etaend2 thetaend2 nc11 nc13 nc33 vp vx eta theta bpvel c11 cost mvel',options='reproduce',include=r'''
 \newtheorem{theorem}{Theorem}                               
 \newtheorem{lemma}[theorem]{Lemma}                          
 ''')
