@@ -1,33 +1,143 @@
 \author{Thomas Bayes}
-%%%%%%%%%%%%%%%%%%%%
-\title{Homework 6}
+%%%%%%%%%%%%%%%%%%%%%
+\title{Homework 5}
 
 \begin{abstract}
-  This homework has two computational parts:
+  This homework has four parts. 
   \begin{enumerate}
-  \item Stochastic simulation of natural patterns.
-  \item Missing data interpolation for ocean floor topography.
+    \item A theoretical question related to covariance estimation.
+    \item Attenuation of surface-wave noise in 
+        seismic data collected over sand dunes using match filtering.
+    \item Stochastic simulation of natural patterns.
+    \item Missing data interpolation for ocean floor topography.
   \end{enumerate}
 \end{abstract}
 
 \section{Prerequisites}
 
-Completing the computational part of this homework assignment requires
-\begin{itemize}
-\item \texttt{Madagascar} software environment available from \\
-\url{http://www.ahay.org/}
-\item \LaTeX\ environment with \texttt{SEG}\TeX\ available from \\ 
-\url{http://www.ahay.org/wiki/SEGTeX}
-\end{itemize}
-To do the assignment on your personal computer, you need to install
-the required environments. Please ask for help if you don't know where
-to start.
-
 The homework code is available from the \texttt{Madagascar} repository
 by running
 \begin{verbatim}
-svn co http://svn.code.sf.net/p/rsf/code/trunk/book/geo391/hw6
+svn co https://github.com/ahay/src/trunk/book/geo384h/hw5
 \end{verbatim}
+
+\section{Theory}
+
+Suppose that we use the gradient operator for data interpolation:
+\begin{equation}
+\label{eq:grad}
+\min\,\left|\nabla \mathbf{m}\right|^2\;.
+\end{equation}  
+This approach roughly corresponds to minimizing the surface area and
+represents the behavior of a soap film or a thin rubber sheet.
+
+The corresponding inverse model covariance operator is the negative Laplacian
+$\mathbf{C}_m^{-1}=\nabla^T\,\nabla=-\nabla^2$. The corresponding
+covariance operator corresponds to the Green's function $G(\mathbf{x})$ that solves
+\begin{equation}
+\label{eq:green}
+-\nabla^2 G = \delta(\mathbf{x}-\mathbf{x}_0)\;.
+\end{equation}
+In 2-D, the Green's function has the form 
+\begin{equation}
+\label{eq:g2d}
+G(\mathbf{x}) = \displaystyle A - \frac{\ln |\mathbf{x}-\mathbf{x}_0|}{2\pi}
+\end{equation}
+with some constant $A$.
+
+To derive equation~(\ref{eq:g2d}), we can introduce polar coordinates
+around $\mathbf{x}_0$ with the radius $r= |\mathbf{x}-\mathbf{x}_0|$
+and note that the Laplacian operator for a radially-symmetric function
+$\phi(r)$ in polar coordinates takes the form
+\begin{equation}
+\label{eq:polar}
+\nabla^2 \phi = \displaystyle \frac{1}{r}\,\frac{d}{dr}\,\left(r\,\frac{d \phi}{dr}\right)
+\end{equation}  
+Away from the point $\mathbf{x}_0$, solving
+\begin{equation}
+\label{eq:away}
+\frac{1}{r}\,\frac{d}{dr}\,\left(r\,\frac{d G}{dr}\right) = 0
+\end{equation}
+leads to $G(r) = A + B\,\ln r$. To find the constant $B$, we can
+integrate $\nabla^2 G$ over a circle with some small radius $\epsilon$
+around the origin and apply the Green's theorem
+\begin{equation}
+\label{eq:integrate}
+-1 = \iint \nabla^2 G dx\,dy = \oint \nabla G \cdot \vec{ds} = 
+\int\limits_{0}^{2\pi} \left.\frac{\partial G}{\partial r}\right|_{r=\epsilon}\,\epsilon\,d\theta = 2\pi\,B\;.
+\end{equation}
+
+Derive the model covariance function $G(\mathbf{x})$ which corresponds
+to replacing equation~(\ref{eq:grad}) with equation
+\begin{equation}
+\label{eq:lap}
+\min\,\left|\nabla^2 \mathbf{m}\right|^2
+\end{equation} 
+and approximates the behavior of a thin elastic plate.
+
+
+\section{Match Filtering for Attenuation of Surface Seismic Waves}
+\inputdir{match}
+
+\sideplot{data}{width=\textwidth}{Seismic shot record from sand dunes in the Middle East. The data are contaminated by ground roll propagating in the sand.}
+
+Figure~\ref{fig:data} shows a section out of a seismic shot record
+collected over sand dunes in the Middle East. The data are
+contaminated by ground roll propagating in the sand. A major data
+analysis task is to separate the signal (reflection waves) from the
+noise (surface waves).
+
+\plot{spec0}{width=0.8\textwidth}{Data spectrum. Solid line -- original data. Dashed line -- initial noise model and signal model.}
+
+A quick look at the data spectrum (Figure~\ref{fig:spec0}) shows that the
+noise is mostly concentrated at low frequencies. We can use this fact
+to create a noise model by low-pass filtering.
+
+\plot{noise0}{width=\textwidth}{(a) Noise model created by low-pass filtering of the original data. (b) Result of subtraction of the noise model from the data.}
+
+Figure~\ref{fig:noise0} shows the noise model from low-pass filtering
+and inner muting and the result of subtracting this model from the
+data. Our next task is to match the model to the true noise by solving
+the least-squares optimization problem
+\begin{equation}
+\label{eq:ls}
+\min \|\mathbf{N}\,\mathbf{f} - \mathbf{d}\|^2\;,
+\end{equation}
+where $\mathbf{d}$ is the data, $\mathbf{f}$ is a \emph{matching filter}, and
+$\mathbf{N}$ represents convolution of the noise model
+$\mathbf{n}_0$ with the filter. After minimization, $\mathbf{n} =
+\mathbf{N}\,\mathbf{f}$ becomes the new noise model, and
+$\mathbf{d}-\mathbf{n}$ becomes the estimated signal. Match filtering
+is implemented in program \texttt{match.c}. Some parts of this program
+are left out for you to fill.
+
+\lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,title=match/match.c]{match/match.c}
+
+Your task:
+\begin{enumerate}
+\item Change directory to \texttt{hw6/match}
+\item Run 
+\begin{verbatim}
+scons view
+\end{verbatim}
+to reproduce the figures on your screen.
+\item Modify the \texttt{match.c} file to fill in missing parts.
+\item Test your modifications by running the dot product test.
+\begin{verbatim}
+scons dot.test
+\end{verbatim}
+Repeating this several times, make sure that the numbers in the test match.
+\item  Modify the \texttt{SConstruct} file to display the results of match filtering
+and include them in your assignment.
+\item \textbf{EXTRA CREDIT} for improving the results by finding either better parameters or a better algorithm. 
+\end{enumerate}
+
+%\newpage
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,title=match/SConstruct]{match/SConstruct}
+
 
 \section{Natural patterns}
 \inputdir{pattern}
@@ -163,10 +273,11 @@ either \texttt{SConstruct} or \texttt{interpolate.c}.
 \item \textbf{EXTRA CREDIT} for implementing missing data interpolation using the FFT method for model covariance.
 \end{enumerate}
 
+
 \section{Completing the assignment}
 
 \begin{enumerate}
-\item Change directory to \texttt{hw6}.
+\item Change directory to \texttt{hw5}.
 \item Edit the file \texttt{paper.tex} in your favorite editor and change the
   first line to have your name instead of Bayes's.
 \item Run
@@ -189,4 +300,4 @@ e-mail.
 \end{enumerate}
 
 \bibliographystyle{seg}
-\bibliography{hw6}
+\bibliography{hw5}
