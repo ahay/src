@@ -20,7 +20,9 @@
 #include <rsf.h>
 #include "_cjb.h"
 
+#ifdef SF_HAS_FFTW
 #include <fftw3.h>
+#endif
 
 #ifdef _OPENMP
 #include <omp.h>
