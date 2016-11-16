@@ -1326,10 +1326,35 @@ def fftw(context):
                 context.Result(res)
                 context.env['FFTWOMP'] = fftw_omp
                 context.env['LIBS'] = LIBS
+                break
+            LIBS.pop()
+        if not res:
+            context.Result(context_failure)
+            context.env['FFTWOMP'] = None
+
+    text = '''
+    #include <fftw3.h>
+    int main(int argc,char* argv[]) {
+    fftw_init_threads();
+    fftw_plan_with_nthreads(1);
+    fftw_cleanup_threads();
+    return 0;
+    }\n'''
+    res = context.TryLink(text,'.c')
+
+    if res:
+        context.env['DFFTWOMP'] = True
+    else:
+        for omplib in ('fftw3_threads','fftw3_omp'):
+            fftw_omp = context.env.get('DFFTWOMP',omplib)
+            LIBS.append(fftw_omp)
+            res = context.TryLink(text,'.c')
+            if res:
+                context.env['DFFTWOMP'] = fftw_omp
+                context.env['LIBS'] = LIBS
                 return
             LIBS.pop()
-        context.Result(context_failure)
-        context.env['FFTWOMP'] = None
+        context.env['DFFTWOMP'] = None
 
 pkg['petsc'] = {'ubuntu':'petsc-dev',
                 'fedora':'petsc-devel'}
@@ -2294,6 +2319,7 @@ def options(file):
     opts.Add('FFTW','The FFTW library')
     opts.Add('DFFTW','The double-precision FFTW library')
     opts.Add('FFTWOMP','The FFTW library with openMP support')
+    opts.Add('DFFTWOMP','The double-precision FFTW library with openMP support')
     opts.Add('OMP','OpenMP support')
     opts.Add('PTHREADS','Posix threads support')
     opts.Add('SSE','Streaming SIMD Extensions compilation flags')
