@@ -63,11 +63,11 @@ Plot('tpowshot',
        sfgrey title='shot with tpow' pclip=98
        ''',view=1)
 
-#Flow("tpowshot.ximage",'tpowshot',
-#	'''
-#	sfwindow min3=214 max3=214 
-#        | sfimage perc=98 title="interactive sfimage-ffid 214 with tpow"
-#	''',stdout=0)
+Flow("tpowshot.ximage",'tpowshot',
+	'''
+	sfwindow min3=214 max3=214 
+        | sfimage perc=98 title="interactive sfimage-ffid 214 with tpow"
+	''',stdout=0)
 
 Result('tpowshotzoom','tpowshot',
        '''
@@ -265,16 +265,16 @@ Flow(['nmoshot.rsf','nmoshot_hdr.rsf',
         outheaders=${TARGETS[3]}
       ''',stdout=0,stdin=0)
 
-#Flow('nmo.ximage','nmoshot',
-#      '''
-#	sfwindow min3=214 max3=214 
-#        | sfimage perc=98 title="interactive sfimage-ffid 214 with tpow"
-#	''',stdout=0)
-#Flow('nmomute.ximage','nmomuteshot',
-#      '''
-#	sfwindow min3=214 max3=214 
-#        | sfimage perc=98 title="interactive sfimage-ffid 214 with tpow"
-#	''',stdout=0)
+Flow('nmo.ximage','nmoshot',
+      '''
+	sfwindow min3=214 max3=214 
+        | sfimage perc=98 title="interactive sfimage-ffid 214 with tpow"
+	''',stdout=0)
+Flow('nmomute.ximage','nmomuteshot',
+      '''
+	sfwindow min3=214 max3=214 
+        | sfimage perc=98 title="interactive sfimage-ffid 214 with tpow"
+	''',stdout=0)
 Plot('nmoshot','nmoshot',
        '''
        sfwindow min1=0 max1=2 min2=499 max2=572 min3=214 max3=214 \
