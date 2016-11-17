@@ -1,3 +1,0 @@
-uses=['sftahsort', 'sftahwindow', 'sftahgain', 'sftahmute', 'sftahagc', 'sftahscdecon', 'sftahwrite', 'sftahstatic', 'sftahnmo', 'sftahstack', 'sfwindow', 'sfgrey']
-data=[]
-size= 12387093088
