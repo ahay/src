@@ -1,4 +1,5 @@
 from rsf.proj import *
+from rsf.gallery import hessvti
 
 par = dict(
     ns=1101,
@@ -17,9 +18,53 @@ par = dict(
 # Horizontal grid: 3617
 # Vertical and horizontal spacing are both 20ft.
 
-import hessvti
+#import hessvti
 
-hessvti.get_model('vp vs epsilon delta')
+#xv0=1200*dx
+xv0=9.0
+#xv0=0
+zv0=0
+
+ft2km = 0.0003048
+dx = 20*ft2km
+dz = 20*ft2km
+
+par2 = dict(
+    nxv=1400, ox=xv0, lx='x',  ux='km',
+    nzv=1320, oz=zv0, lz='z',  uz='km',
+    )
+#    nxv=1801, ox=xv0, lx='x',  ux='km',
+#    nxv=3600, ox=xv0, lx='x',  ux='km',
+
+for bb in Split('vp vs epsilon delta'):
+    Flow(bb,bb+'_hess',
+	 '''
+         put d1=%g d2=%g unit1=km label1=Depth unit2=km label2=Distance unit=km/s |
+         window n1=%d min1=%g n2=%d min2=%g
+         ''' % (dx, dz, 
+		par2['nzv'],par2['oz'],
+		par2['nxv'],par2['ox']))
+
+name0='''
+vp_hess
+'''
+
+name00='''
+epsilon_hess delta_hess
+'''
+
+for ff in Split(name0):
+        Result(ff,
+        '''
+        grey color=j scalebar=y bias=1.5 allpos=n barreverse=y wanttitle=n screenht=5 screenwd=14
+        ''')
+
+for gg in Split(name00):
+        Result(gg,
+        '''
+        grey color=j scalebar=y allpos=n barreverse=y wanttitle=n screenht=5 screenwd=14
+        ''')
+
 
 # =============================================================
 # produce vp0 & vs0 model by scaling vp model 

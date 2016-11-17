@@ -59,12 +59,15 @@ objs = []
 ##############################################################################
 # ADD FFTW3 LIB
 ##############################################################################
-fftw = env.get('FFTW')
+fftw = env.get('DFFTWOMP')
 if fftw:
     env.Prepend(CPPDEFINES=['SF_HAS_FFTW'])
+    if not isinstance(fftw,bool):
+        env.Append(LIBS=fftw)
 
 # files with FFTW dependence
-fftws = map(lambda x: File(x+'.c'),Split('seplowrank decomplowrank spectramultipy sepdivcurl'))
+fftwfiles = 'seplowrank decomplowrank spectramultipy sepdivcurl fwpvtielowrank fwpvtielowrank.double'
+fftws = map(lambda x: File(x+'.c'),Split(fftwfiles))
 
 lapack = env.get('LAPACK')
 
@@ -94,7 +97,7 @@ for prog in mains:
 ##############################################################################
 
 dynpre = env.get('DYNLIB','') 
-libs = [dynpre+'rsf','fftw3','fftw3f','rsf++','lapack','vecmatop','fftw3f_omp','fftw3_omp']+env.get('LIBS',[])
+libs = env.get('LIBS',[])
 
 if not 'c++' in env.get('API',[]):
     lapack = None
@@ -113,12 +116,15 @@ for prog in ccmains:
     tti2delrsep tti2delrsep1p tti2delrsep2p tti2delrsep2pTrueAmp
     tti2delrsep2ps tti2dpseudoplrsep tti2dpseudosvlrsep tti3delrsep
     tti3delrsephomo vti2delrsep vti2delrsep2ps vti2delrsepTrueAmp
-    tti3delrsepP tti3delrsepSH tti3delrsepSV tti3delrdecompP tti3delrdecompSV
-    vti2dpseudoplrsep vti2dpseudoplrsep1 vti2dpseudoplrseprtm
-    vti2dpseudosvlrsep vti3dedivcurl vti3delrdecompP vti3delrsep
-    vti3delrsephomo vti3delrsephomo vti3delrsephomoP
-    vti2delrsep2p vti3delrsepP vti3delrsepSV vti3delrsepSH
-    ort3delrsep ort3devectorlrkspace_double
+    tti3delrsepP tti3delrsepSH tti3delrsepSV tti3delrdecompP
+    tti3delrdecompSV vti2dpseudoplrsep vti2dpseudoplrsep1
+    vti2dpseudoplrseprtm tti2desep vti2dpseudosvlrsep vti3dedivcurl
+    vti3delrdecompP vti3delrsep tti2devectorlrsvd_double
+    vti3delrsephomo vti3delrsephomo vti3delrsephomoP tti2delrdec
+    tti2devectorlrsvd vti2delrsep2p vti3delrsepP vti3delrsepSV
+    vti3delrsepSH tti2delr tti2devectorlrsvdkspace_double ort3delrsep
+    ort3devectorlrkspace_double tti2dekspacelr tti2dekspacelrsource
+    tti2devectorlrsvdkspace_double_stiffness
     '''))
     if cancompile:
         prog = env.Program(prog, map(lambda x: x + '.cc',sources)+objs, 
