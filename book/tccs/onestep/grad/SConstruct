@@ -78,7 +78,7 @@ Flow('wave','csource refl left right',
      cfftwave2omp ref=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]} verb=y cmplx=n
      ''')
 
-Result('wave','grey title="Lowrank Wave" transp=n label1=Distance unit1=m')
+Plot('wave','grey title="Lowrank Wave" transp=n label1=Distance unit1=m',view=1)
 
 Plot('wave',
      '''
@@ -123,7 +123,7 @@ Flow('wave1','csource refl left1 right1',
      cfftwave2omp ref=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]} verb=y cmplx=n
      ''')
 
-Result('wave1','grey title="Lowrank Wave" transp=n clip=0.1 label1=Distance unit1=m')
+Plot('wave1','grey title="Lowrank Wave" transp=n clip=0.1 label1=Distance unit1=m',view=1)
 
 Plot('wave1',
      '''
