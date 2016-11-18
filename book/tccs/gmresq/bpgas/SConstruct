@@ -1,4 +1,5 @@
 from rsf.proj import *
+from rsf.recipes.beg import server
 
 def igrey(custom):
     return '''
@@ -14,6 +15,8 @@ def graph(custom):
     return '''
     graph wanttitle=n labelsz=10 labelfat=2 titlesz=12 titlefat=2 plotfat=6 %s
     ''' %(custom)
+
+Fetch(['vel.asc','q.asc'],'bp',server)
 
 Flow('vel','vel.asc','echo in=$SOURCE n1=398 n2=161 data_format=ascii_float | dd form=native | put d1=12.5 d2=12.5 o1=0 o2=0 | transp plane=12 | expand top=10 left=0 right=0 bottom=0 | put o1=-125')
 Flow('q','q.asc','echo in=$SOURCE n1=398 n2=161 data_format=ascii_float | dd form=native | put d1=12.5 d2=12.5 o1=0 o2=0 | transp plane=12 | expand top=10 left=0 right=0 bottom=0 | put o1=-125')

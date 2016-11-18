@@ -15,6 +15,8 @@ from rsf.proj import *
 #Flow('npr3_field_hdr.rsf','../fetch/npr3_field_hdr.rsf','sfcp')
 #Flow('npr3_field.rsf','../fetch/npr3_field.rsf','sfwindow n1=2047')
 
+SConscript('../fetch/SConstruct')
+
 Flow(['shotdecon.rsf','shotdecon_hdr.rsf'],
      ['../fetch/npr3_field.rsf','../fetch/npr3_field_hdr.rsf'],
      '''
