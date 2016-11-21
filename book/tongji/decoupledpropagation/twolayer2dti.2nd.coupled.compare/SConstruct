@@ -108,7 +108,7 @@ for qq in Split(name):
         ''')
 
 for qq in Split(name):
-    Result(qq+'Interf',[qq,'interface'],'Overlay')
+    Result(qq+'InterfC',[qq,'interface'],'Overlay')
 
 Flow('ElasticzPSLRwave','ElasticzPSLR',
 		'''
@@ -163,7 +163,7 @@ for qq in Split(name2):
         ''')
 
 for qq in Split(name2):
-    Result(qq+'Interf',[qq,'interface'],'Overlay')
+    Result(qq+'InterfC',[qq,'interface'],'Overlay')
 
 Flow('ElasticzKSwave','ElasticzKS',
 		'''
@@ -218,7 +218,7 @@ for qq in Split(name3):
         ''')
 
 for qq in Split(name3):
-    Result(qq+'Interf',[qq,'interface'],'Overlay')
+    Result(qq+'InterfC',[qq,'interface'],'Overlay')
 
 Flow('ElasticzKSSwave','ElasticzKSS',
 		'''
@@ -261,7 +261,7 @@ for qq in Split(name4):
         ''')
 
 for qq in Split(name4):
-    Result(qq+'Interf',[qq,'interface'],'Overlay')
+    Result(qq+'InterfC',[qq,'interface'],'Overlay')
 
 Flow('ElasticzFDwave','ElasticzFD',
 		'''

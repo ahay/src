@@ -150,6 +150,10 @@ To the reproducible documents collection:
   Kang)
 * tccs/onestep: Lowrank one-step wave extrapolation for reverse-time
   migration (Sun, Fomel, and Ying)
+* tongji/decoupledpropagation: Simulating propagation of decoupled
+  elastic waves using low-rank approximate mixed-domain integral
+  operators for anisotropic media (Cheng, Alkhalifah, Wu, Zou, and
+  Wang)
 
 To SCons:
 

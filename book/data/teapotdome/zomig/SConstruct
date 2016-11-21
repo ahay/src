@@ -1,7 +1,7 @@
 from rsf.proj import *
 import math
 
-#SConscript('../vels/SConstruct')
+SConscript('../vels/SConstruct')
 
 Flow('vel','tvpairs.txt',
      '''
