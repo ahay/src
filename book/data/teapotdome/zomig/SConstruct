@@ -2,6 +2,10 @@ from rsf.proj import *
 import math
 
 #SConscript('../vels/SConstruct')
+#SCsontript will always rerun oher directory, I think because env changes.
+# perhaps scons sees PWD or DATAPATH has changed.  This works:
+import os
+os.system('cd ../vels; scons')
 
 Flow('vel','tvpairs.txt',
      '''
@@ -108,7 +112,7 @@ Flow('mig','fft slo',
      '''
      zomig3 ompnth=1 mode=m --readwrite=y verb=y
             nrmax=1 slo=${SOURCES[1]} pmx=30 pmy=30
-     ''',split=[3,'omp',[0]],reduce='add')
+     ''')
 
 Plot('mig',
        '''
