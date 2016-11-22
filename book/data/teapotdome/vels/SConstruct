@@ -18,7 +18,7 @@ Flow(['vvol','vvol.dat'],['../fetch/npr3_dmo.vel','interpvel.py'],
         nxline=188  fxline=1 
 	ninline=345 finline=1
 	maxt=3001 dt=2
-     '''%mypython)
+     '''% sys.executable)
 
 xline=120
 minclip=8800

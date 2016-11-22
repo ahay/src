@@ -101,6 +101,9 @@ def param(par):
         
     if(par['dratio3d']>1): par['dheight3d']=12
     else:                  par['dheight3d']=12*par['dratio3d']
+
+    par['mapratio']=1.0*(par['ymax']-par['ymin'])/(par['xmax']-par['xmin'])
+    par['mapheight']=11*par['mapratio']
         
     if(not par.has_key('scalebar')): par['scalebar']='n'    
     if(not par.has_key('labelattr')): par['labelattr']=' parallel2=n labelsz=7 labelfat=4 titlesz=12 titlefat=3 xll=2.5 yll=1. ' + ' '
@@ -650,3 +653,19 @@ def array3d(cube,byte,custom,par,
              vppen='yscale=%f xscale=%f ycenter=%f xcenter=%f'
              %(scale,scale,-1+(-nv+1+int(ifrm/nh))*dy,-1-(ifrm%nh)*dx))        
     Result(cube,[cube+"%d_"%ifrm for ifrm in range(nfrm)],'Overlay')
+
+# ------------------------------------------------------------
+def mapXY(custom,par):
+    return '''
+    graph title=""
+    labelrot=n wantaxis=y yreverse=y 
+    min2=%g max2=%g label2=%s unit2=%s
+    min1=%g max1=%g label1=%s unit1=%s
+    screenratio=%g screenht=%g wantscalebar=%s
+    plotcol=2
+    %s
+    ''' % (par['ymin'],par['ymax'],par['ly'],par['uy'],
+           par['xmin'],par['xmax'],par['lx'],par['ux'],
+           par['mapratio'],par['mapheight'],par['scalebar'],
+           par['labelattr']+' '+custom)
+

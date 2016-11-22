@@ -49,7 +49,7 @@ else:
 
 if env['PLATFORM'] == 'darwin':
     # bug in Mac's gcc handling of OpenMP
-    env.Append(CPPDEFINES=['_FORTIFY_SOURCE=0'])
+    env.Append(CPPDEFINES=['_FORTIFY_SOURCE=0'],CCFLAGS='-O1')
 
 for source in src:
     if source.rstr() == 'einspline.c':

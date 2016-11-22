@@ -63,10 +63,11 @@ Flow('map','transp',
 
 Result('map',
        '''
+       window j3=4 |
        byte gainpanel=all allpos=y bar=bar.rsf | 
        grey3 title="Fowler Map" label1=Velocity 
        unit1=km/s label3=Wavenumber barlabel=Velocity barunit=km/s
-       frame1=50 frame2=500 frame3=1000 color=x scalebar=y 
+       frame1=50 frame2=500 frame3=250 color=x scalebar=y 
        ''')
 
 Flow('fowler','transp map','iwarp warp=${SOURCES[1]} | transp',

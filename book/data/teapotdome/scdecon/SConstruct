@@ -18,6 +18,8 @@ from rsf.proj import *
 import os
 os.system('cd ../fetch; scons')
 
+SConscript('../fetch/SConstruct')
+
 Flow(['shotdecon.rsf','shotdecon_hdr.rsf'],
      ['../fetch/npr3_field.rsf','../fetch/npr3_field_hdr.rsf'],
      '''

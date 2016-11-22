@@ -46,21 +46,21 @@ for bb in Split('vp vs epsilon delta'):
 		par2['nxv'],par2['ox']))
 
 name0='''
-vp_hess
+vp
 '''
 
 name00='''
-epsilon_hess delta_hess
+epsilon delta
 '''
 
 for ff in Split(name0):
-        Result(ff,
+        Result(ff+'-hess',ff+'_hess',
         '''
         grey color=j scalebar=y bias=1.5 allpos=n barreverse=y wanttitle=n screenht=5 screenwd=14
         ''')
 
 for gg in Split(name00):
-        Result(gg,
+        Result(gg+'-hess',gg+'_hess'
         '''
         grey color=j scalebar=y allpos=n barreverse=y wanttitle=n screenht=5 screenwd=14
         ''')

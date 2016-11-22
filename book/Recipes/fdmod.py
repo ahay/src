@@ -640,6 +640,45 @@ def circle(cc,xcenter,zcenter,radius,sampling,par):
          stdin=0,
          stdout=0
         )
+
+def sphere(cc,xcenter,ycenter,zcenter,radius,nlat,nlng,par):
+    M8R='$RSFROOT/bin/sf'
+    DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
+    
+    ccx=cc+'x'+myid(16)
+    ccx=cc+'y'+myid(16)
+    ccz=cc+'z'+myid(16)
+
+    Flow(cc,None,
+         '''
+         %smath n1=%d d1=%g o1=%g n2=%d d2=%g o2=%g output="%g+%g*cos(x2/180)*cos(%g*x1/180.)" >%s datapath=%s/;
+         '''%(M8R,
+              nlon,360./nlon,0.,
+              nlat,180./nlat,-90.,
+              xcenter,radius,math.pi,math.pi,ccx,DPT) +
+         '''
+         %smath n1=%d d1=%g o1=%g n2=%d d2=%g o2=%g output="%g+%g*cos(x2/180)*sin(%g*x1/180.)" >%s datapath=%s/;
+         '''%(M8R,
+              nlon,360./nlon,0.,
+              nlat,180./nlat,-90.,
+              xcenter,radius,math.pi,math.pi,ccy,DPT) +
+         '''
+         %smath n1=%d d1=%g o1=%g n2=%d d2=%g o2=%g output="%g+%g*sin(x2/180)" >%s datapath=%s/;
+         '''%(M8R,
+              nlon,360./nlon,0.,
+              nlat,180./nlat,-90.,
+              xcenter,radius,math.pi,ccy,DPT) +
+         '''
+         %scat axis=2 space=n %s %s %s|
+         transp |
+         put label1="" unit1="" label2="" unit2="" >${TARGETS[0]};
+         '''%(M8R,ccx,ccy,ccz) +
+         '''
+         %srm %s %s %s
+         '''%(M8R,ccx,ccy,ccz),
+         stdin=0,
+         stdout=0
+        )
     
 # ------------------------------------------------------------
 def ellipse(cc,xcenter,zcenter,semiA,semiB,sampling,par):

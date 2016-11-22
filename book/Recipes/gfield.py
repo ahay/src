@@ -96,7 +96,7 @@ def run2d(R,par,seed=1.0,aa=0.0,ra=1.0,rb=1.0,alpha=2.0):
     Flow(R+'-la',R+'-n','math output="( (x2*(%g) + x1*(%g) )/(%g) )^2"'% (ax,az,ra) )
     Flow(R+'-lb',R+'-n','math output="( (x2*(%g) + x1*(%g) )/(%g) )^2"'% (bx,bz,rb) )
     Flow(R+'-l',[R+'-la',R+'-lb'],'add ${SOURCES[1]} | math output="sqrt(input)"')
-
+    
     # ------------------------------------------------------------
     # covariance
     Flow(  R+'-c',R+'-l','math output="exp(-( input^(%g)) )"'%alpha)
