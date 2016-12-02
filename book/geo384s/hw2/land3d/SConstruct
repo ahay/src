@@ -27,6 +27,7 @@ for key in Split('sx sy gx gy'):
 Flow('scoord','sx sy','cmplx ${SOURCES[1]}')
 Result('scoord',
        '''
+       window j2=10 |
        graph symbol="+" title="Shots" 
        label1=x label2=y unit1=kft unit2=kft plotcol=5
        ''')
@@ -35,6 +36,7 @@ Result('scoord',
 Flow('gcoord','gx gy','cmplx ${SOURCES[1]}')
 Result('gcoord',
        '''
+       window j2=10 | 
        graph symbol="x" title="Receivers" 
        label1=x label2=y unit1=kft unit2=kft plotcol=3
        ''')
