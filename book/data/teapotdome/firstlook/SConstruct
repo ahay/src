@@ -12,6 +12,13 @@ from rsf.proj import *
 #   residual static (surface consistant)
 #   stack with mute
 
+#SConscript('../fetch/SConstruct')
+# SCsontript will always rerun oher directory, I think because env changes.
+# perhaps scons sees PWD or DATAPATH has changed.  This works:
+import os
+os.system('cd ../fetch; scons')
+
+
 Flow(['rawshot.rsf','rawshot_hdr.rsf'],
      ['../fetch/npr3_field.rsf','../fetch/npr3_field_hdr.rsf'],
      '''
@@ -110,8 +117,9 @@ Flow('preshot.txt',
      ['../fetch/npr3_gathers.rsf','../fetch/npr3_gathers_hdr.rsf'],
      '''
      sftahsort verbose=0 input=${SOURCES[0]} sort='fldr:214,214,10 tracf'
-     | sftahgethw key=fldr,tracf,sx,sy,gx,gy
      ''',stdin=0)
+# you can add print to previous Flow, but it is a lot of print:
+# | sftahgethw key=fldr,tracf,sx,sy,gx,gy
 
 Flow('preshot1.txt',
      ['../fetch/npr3_gathers.rsf','../fetch/npr3_gathers_hdr.rsf'],
