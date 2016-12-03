@@ -25,7 +25,7 @@
 int main (int argc, char* argv[])
 {
     int n1, n2, xn, i, j, k, m, nr;
-    float o1, d1, xd, xo, *vel, *dip, t, t1,tt, x2,*ani;
+    float o1, d1, xd, xo, *vel, *dip, t, t1, x2,*ani;
     float t0=0., tp=0., slope0=0., slopep=0., x=0., x1=0., v0=0., *data=NULL;
     bool abs, half, inner, hyper, mute;
     sf_file in, out,anisotropy;
@@ -102,6 +102,8 @@ int main (int argc, char* argv[])
 	}
 	
 	data = sf_floatalloc(n1);
+
+        /* initialize muting parameter */
 	mutter_init(n1,o1-t0,d1,abs,inner,hyper);
     }   
 
@@ -110,6 +112,8 @@ int main (int argc, char* argv[])
 	sf_floatread(vel,n1,in);
 
 	ani = sf_floatalloc(nr);
+
+	/* Read auxiliary homogeneity parameter S file */
 	sf_floatread(ani,nr,anisotropy);
 
 	for (j=0; j < xn; j++) {
@@ -119,18 +123,20 @@ int main (int argc, char* argv[])
 		
 		m = 0;
 		t1 = o1 + m*d1;
+		
+                /* Find t0 index[variable m] for each (t,x) coordinate */
 		while(t>(t1*(1-1/ani[m])+sqrt(t1*t1+ani[m]*x2*x2/(vel[m]*vel[m]+FLT_EPSILON))/ani[m])) {
 		    m++;
 		    t1 = o1 + m*d1;
 		}
 
-		tt = (o1+i*d1)*(1-1/ani[m])+sqrt((o1+i*d1)*(o1+i*d1)+ani[m]*x2*xd*xd*x2/(vel[m]*vel[m]+FLT_EPSILON))/ani[m];
-
+		/* Calculate sigma(t,x)[variable dip] in equ 6 */
 		dip[j*n1+i] = x2*xd/
-		    (FLT_EPSILON+d1*vel[m]*vel[m]*(ani[m]*tt-(o1+i*d1)*(ani[m]-1)));
+		    (FLT_EPSILON+d1*vel[m]*vel[m]*(ani[m]*(t-t1)+t1));
 	    }
 	}
 	
+        /* muting by using velocity, which is the same as sfmutter*/
 	if (mute) {
 	    for (j=0; j < xn; j++) { 
 		x = xo + j*xd;	    
