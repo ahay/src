@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
     int it0, it1, niter, n1, n2, i2, n3, i3, i1, gate1, gate2, k2, k3, i5, n5;
     float ***scan, ***weight, **pick, *ampl, **pick2;
     float o2, d2, o3, d3, an1, an2, asum, a, ct0, ct1, vel2, vel3;
-    bool smooth;
+    bool smooth, verb;
     sf_file scn, pik;
 
     sf_init(argc,argv);
@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
 
     if (SF_FLOAT != sf_gettype(scn)) sf_error("Need float input");
     dim = sf_filedims (scn,n);
-    if (dim != 3) sf_error("Need three dimensions");
+    /* if (dim != 3) sf_error("Need three dimensions"); */
 
     n1 = n[0];
     n2 = n[1];
@@ -82,6 +82,9 @@ int main(int argc, char* argv[])
     if (!sf_getbool("smooth",&smooth)) smooth=true;
     /* if apply smoothing */
 
+    if (!sf_getbool("verb",&verb)) verb=true;
+    /* verbosity */
+
     scan = sf_floatalloc3(n1,n2,n3);
     weight = sf_floatalloc3(n2,n3,n1);
 
@@ -92,7 +95,7 @@ int main(int argc, char* argv[])
 	pick2 = sf_floatalloc2(n1,2);	
 	ampl = sf_floatalloc(n1);
 
-	sf_divn_init(1,n1,&n1,&rect,niter,true);
+	sf_divn_init(1,n1,&n1,&rect,niter,verb);
     } else {
 	pick = NULL;
 	pick2 = sf_floatalloc2(n1,2);
@@ -100,6 +103,7 @@ int main(int argc, char* argv[])
     }
 
     for(i5=0; i5 < n5; i5++) {
+	sf_warning("slice %d of %d;",i5+1,n5);
 
 	sf_floatread(scan[0][0],n1*n2*n3,scn);
 	
@@ -179,6 +183,6 @@ int main(int argc, char* argv[])
 	
 	sf_floatwrite(pick2[0],n1*2,pik);
     }
-
+    sf_warning(".");
     exit(0);
 }
