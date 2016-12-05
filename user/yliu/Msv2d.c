@@ -1,4 +1,4 @@
-/* Velocity and homogeneity parameter convert to dip. */
+/* Velocity and heterogeneity parameter convert to dip. */
 /*
   Copyright (C) 2016 Jilin University
   
@@ -103,7 +103,7 @@ int main (int argc, char* argv[])
 	
 	data = sf_floatalloc(n1);
 
-        /* initialize muting parameter */
+        /* Initialize muting parameter */
 	mutter_init(n1,o1-t0,d1,abs,inner,hyper);
     }   
 
@@ -124,19 +124,19 @@ int main (int argc, char* argv[])
 		m = 0;
 		t1 = o1 + m*d1;
 		
-                /* Find t0 index[variable m] for each (t,x) coordinate */
+                /* Find t0 index[variable "m"] for each (t,x) coordinate */
 		while(t>(t1*(1-1/ani[m])+sqrt(t1*t1+ani[m]*x2*x2/(vel[m]*vel[m]+FLT_EPSILON))/ani[m])) {
 		    m++;
 		    t1 = o1 + m*d1;
 		}
 
-		/* Calculate sigma(t,x)[variable dip] in equ 6 */
+		/* Calculate sigma(t,x)[variable "dip"] in equ 6 */
 		dip[j*n1+i] = x2*xd/
 		    (FLT_EPSILON+d1*vel[m]*vel[m]*(ani[m]*(t-t1)+t1));
 	    }
 	}
 	
-        /* muting by using velocity, which is the same as sfmutter*/
+        /* Muting by using velocity, which is the same as "sfmutter" */
 	if (mute) {
 	    for (j=0; j < xn; j++) { 
 		x = xo + j*xd;	    
