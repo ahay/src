@@ -375,6 +375,7 @@ void fwpvti3delowrank(float *ldata,float *rdata,float *fmid, float *y, float *x,
 {
     int i, im, im2, jn2, ikx, iky, ikz, nxz;
     float sum1, sum2, *wp;
+    int nthreads;
 
     nxz = nx*nz;
 
@@ -393,11 +394,17 @@ void fwpvti3delowrank(float *ldata,float *rdata,float *fmid, float *y, float *x,
     xout=sf_complexalloc(n);
     xx=sf_complexalloc(n);
 
-    fftwf_plan_with_nthreads(omp_get_max_threads());
+#ifdef _OPENMP
+    nthreads = omp_get_max_threads();
+#else
+    nthreads = 1;
+#endif
+
+    fftwf_plan_with_nthreads(nthreads);
     xp=fftwf_plan_dft_3d(ny,nx,nz, (fftwf_complex *) xin, (fftwf_complex *) xout,
 			 FFTW_FORWARD,FFTW_ESTIMATE);
 
-    fftwf_plan_with_nthreads(omp_get_max_threads());
+    fftwf_plan_with_nthreads(nthreads);
     xpi=fftwf_plan_dft_3d(ny,nx,nz,(fftwf_complex *) xin, (fftwf_complex *) xout,
 			  FFTW_BACKWARD,FFTW_ESTIMATE);
 
@@ -464,7 +471,7 @@ void fwpvti3delowrank_double(double *ldata,double *rdata,double *fmid, double *y
 			     int nx,int ny, int nz,int m,int n,int m2,int n2)
 /*< fwpvti3delowrank: apply low-rank decomposed propagator to the wavefield component >*/
 {
-    int i, im, im2, jn2, ikx, iky, ikz, nxz;
+    int i, im, im2, jn2, ikx, iky, ikz, nxz, nthreads;
     long double sum1, sum2, *wp;
 
     nxz = nx*nz;
@@ -482,11 +489,17 @@ void fwpvti3delowrank_double(double *ldata,double *rdata,double *fmid, double *y
     xout=(fftw_complex*) fftw_malloc(sizeof(fftw_complex)*n);
     xx=(fftw_complex*) fftw_malloc(sizeof(fftw_complex)*n);
 
-    fftw_plan_with_nthreads(omp_get_max_threads());
+#ifdef _OPENMP
+    nthreads = omp_get_max_threads();
+#else
+    nthreads = 1;
+#endif
+
+    fftw_plan_with_nthreads(nthreads);
     xp=fftw_plan_dft_3d(ny,nx,nz, (fftw_complex *) xin, (fftw_complex *) xout,
 			FFTW_FORWARD,FFTW_ESTIMATE);
 
-    fftw_plan_with_nthreads(omp_get_max_threads());
+    fftw_plan_with_nthreads(nthreads);
     xpi=fftw_plan_dft_3d(ny,nx,nz,(fftw_complex *) xin, (fftw_complex *) xout,
 			 FFTW_BACKWARD,FFTW_ESTIMATE);
 

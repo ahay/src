@@ -33,7 +33,6 @@ using namespace std;
 /* prepared head files by myself */
 #include "_cjb.h"
 #include<fftw3.h>
-#include<omp.h>
 
 /* head files aumatically produced from C programs */
 extern "C"{
@@ -87,8 +86,8 @@ int main(int argc, char* argv[])
 {
    sf_init(argc,argv);
    fftwf_init_threads();
-   omp_set_num_threads(12);
-   
+   omp_init();
+  
    clock_t t1, t2, t3;
    float   timespent;
 

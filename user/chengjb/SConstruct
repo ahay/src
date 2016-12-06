@@ -64,7 +64,10 @@ if fftw:
     env.Prepend(CPPDEFINES=['SF_HAS_FFTW'])
     if not isinstance(fftw,bool):
         env.Append(LIBS=fftw)
-
+    fftw = env.get('DFFTW')
+    if not isinstance(fftw,bool):
+        env.Append(LIBS=fftw)
+    
 # files with FFTW dependence
 fftwfiles = 'seplowrank decomplowrank spectramultipy sepdivcurl fwpvtielowrank fwpvtielowrank.double'
 fftws = map(lambda x: File(x+'.c'),Split(fftwfiles))
