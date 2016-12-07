@@ -40,11 +40,20 @@ To the reproducible documents collection:
   (Chen, Ma, and Fomel)
 * sep/geostat: Multiple realizations using standard inversion
   techniques (Clapp)
+* tongji/qswave: Simulating propagation of separated wave modes in
+  general anisotropic media, Part II: qS-wave propagators (Cheng and
+  Kang)
+* tccs/onestep: Lowrank one-step wave extrapolation for reverse-time
+  migration (Sun, Fomel, and Ying)
+* tongji/decoupledpropagation: Simulating propagation of decoupled
+  elastic waves using low-rank approximate mixed-domain integral
+  operators for anisotropic media (Cheng, Alkhalifah, Wu, Zou, and
+  Wang)
 
 To SCons:
 
 * splitting auxiliary inputs when split= involves 'omp' or 'mpi'
-* Upgraded to scons-2.5.0
+* Upgraded to scons-2.5.1
 
 To documentation:
 
@@ -145,15 +154,6 @@ To the reproducible documents collection:
   (Sun)
 * xjtu/gpufwi: A graphics processing unit implementation of
   time-domain full-waveform inversion (Yang, Gao, and Wang)
-* tongji/qswave: Simulating propagation of separated wave modes in
-  general anisotropic media, Part II: qS-wave propagators (Cheng and
-  Kang)
-* tccs/onestep: Lowrank one-step wave extrapolation for reverse-time
-  migration (Sun, Fomel, and Ying)
-* tongji/decoupledpropagation: Simulating propagation of decoupled
-  elastic waves using low-rank approximate mixed-domain integral
-  operators for anisotropic media (Cheng, Alkhalifah, Wu, Zou, and
-  Wang)
 
 To SCons:
 

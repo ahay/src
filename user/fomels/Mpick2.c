@@ -24,7 +24,7 @@
 int main(int argc, char* argv[])
 {
     int it, niter, nm, n1, n2, n3, i3, i2, i1, i, gate, i0, rect1, rect2, n123, n[2], rect[2];
-    float ***scan, **iweight, **sweight, *ipick, *iampl, *spick, *sampl, *itraj, *straj;
+    float ***scan, **iweight, **sweight, *ipick, *iampl, *spick, *sampl, *itraj, *straj, *pick, *ampl, *pick2;
     float o2, d2, an, asum, a, ct, vel0;
     char *label;
     sf_file scn, pik;
@@ -157,17 +157,24 @@ int main(int argc, char* argv[])
 	}
     }
     sf_warning(".");  
+
+    pick = sf_floatalloc(nm);
+    ampl = sf_floatalloc(nm);
+    pick2 = sf_floatalloc(nm);
     
-    /* 
     asum = 0.;
     for (i = 0; i < nm; i++) {
-	a = ampl[i];
+	a = hypotf(iampl[i],sampl[i]);
+	ampl[i]=a;
 	asum += a*a;
     }
     asum = sqrtf (asum/nm);
     for(i=0; i < nm; i++) {
+	ampl[i] += SF_EPS*asum;
+	pick[i] = (iampl[i]*iampl[i]*(o2+ipick[i]*d2-vel0)+
+		   sampl[i]*sampl[i]*(o2+spick[i]*d2-vel0))/ampl[i];
 	ampl[i] /= asum;
-	pick[i] = (o2+pick[i]*d2-vel0)*ampl[i];
+	pick[i] /= asum;
     }
     
     sf_divn(pick,ampl,pick2);
@@ -177,7 +184,6 @@ int main(int argc, char* argv[])
     }
 
     sf_floatwrite(pick2,nm,pik);
-    */
 
     exit(0);
 }
