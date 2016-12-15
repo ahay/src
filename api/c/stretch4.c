@@ -199,7 +199,7 @@ void sf_stretch4_apply_adj (bool add,  /* add flag */
 
     mod2 = sf_floatalloc(nt);
 
-    for (it = 0; it <= nt; it++) {
+    for (it = 0; it < nt; it++) {
 	mod2[it] = mod[it];
     }
     
