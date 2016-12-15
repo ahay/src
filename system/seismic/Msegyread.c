@@ -414,51 +414,57 @@ int main(int argc, char *argv[])
 	    if (verbose) 
 	    sf_warning("Binary header written to \"%s\"",headname);
 	}
-
-	if (!sf_getint("format",&format)) format = segyformat (bhead);
+    } /* binary and ebcidit headers read */
+    
+    format=0;
+    fprintf(stderr,"get the format\n");
+    sf_getint("format",&format);
 	/* [1,2,3,5] Data format. The default is taken from binary header.
 	   1 is IBM floating point
 	   2 is 4-byte integer
 	   3 is 2-byte integer
 	   5 is IEEE floating point
-       6 is native_float (same as RSF binary default)
+           6 is native_float (same as RSF binary default)
 	*/
+    fprintf(stderr,"format=%d\n",format);
+    if(format==0){
+      fprintf(stderr,"test su\n");
+      if(su){
+	sf_error("format required for su input.  No binary header for default\n");
+      } else { /* segy input data. format not input, so get it from binary header */
+	fprintf(stderr,"get format from bhead\n");
+	format = segyformat (bhead);
+      }
+    }
 
-	switch (format) {
-	    case 1:
-		if (verbose) sf_warning("Assuming IBM floating point format");
-		break;
-	    case 2:
-		if (verbose) sf_warning("Assuming 4 byte integer format");
-		break;
-	    case 3:
-		if (verbose) sf_warning("Assuming 2 byte integer format");
-		break;
-	    case 5:
-		if (verbose) sf_warning("Assuming IEEE floating point format");
-		break;
-        case 6:
-        if (verbose) sf_warning("Assuming native_float format");
-        suxdr=false;
-        break;
-	    default:
-		sf_error("Nonstandard format: %d",format);
-		break;
-	}
+    fprintf(stderr,"switch format=%d\n",format);
+    switch (format) {
+    case 1:
+      if (verbose) sf_warning("Assuming IBM floating point format");
+      break;
+    case 2:
+      if (verbose) sf_warning("Assuming 4 byte integer format");
+      break;
+    case 3:
+      if (verbose) sf_warning("Assuming 2 byte integer format");
+      break;
+    case 5:
+      if (verbose) sf_warning("Assuming IEEE floating point format");
+      break;
+    case 6:
+      if (verbose) sf_warning("Assuming native_float format");
+      suxdr=false;
+      break;
+    default:
+      sf_error("Nonstandard format: %d",format);
+      break;
+    }
 
-	if (!sf_getint("ns",&ns)) ns = segyns (bhead);
-	/* Number of samples. The default is taken from binary header */
-	if (0>=ns) sf_error("Number of samples is not set in binary header");
-
-	if (verbose) sf_warning("Detected trace length of %d",ns);
-
-	dt = segydt (bhead);
-	nsegy = SF_HDRBYTES + ((3 == format)? ns*2: ns*4);    
-	if (0==ntr) ntr = (pos - SF_EBCBYTES - SF_BNYBYTES)/nsegy;
-
-        start = ftello(file);
+    /* set start of traces based on type input data */
+    if(!su){
+      start=SF_EBCBYTES + SF_BNYBYTES;
     } else {
-        start = 0;
+      start=0;
     }
 
     /* read first trace header */
@@ -470,17 +476,28 @@ int main(int argc, char *argv[])
     segy2head(trace, itrace, SF_NKEYS);
     t0 = itrace[ segykey("delrt")]/1000.;
 
-    if (su) { /* figure out ns, dt, and ntr */
-	if (!sf_getint("ns",&ns)) ns = itrace[ segykey("ns")];
+    if(!sf_getint("ns",&ns)) ns=0;
+    /* Number of samples. The default is taken from binary header */
+    if(!su){ 
+      if (ns==0){
+	/* Number of samples. The default ns from binary header */
+	ns = segyns (bhead);
+      }
+      if (0>=ns) sf_error("Number of samples is not set in binary header");
+
+      if (verbose) sf_warning("Detected trace length of %d",ns);
+
+      dt = segydt (bhead);
+    } else {
+      /* su input data.  get ns and dt from first trace header */
+	if (ns==0) ns = itrace[ segykey("ns")];
 	if (verbose) sf_warning("Detected trace length of %d",ns);
 	dt = itrace[ segykey("dt")]/1000000.;
-	free (trace);
+    }
 
-	nsegy = SF_HDRBYTES + ns*4;
-	if (0==ntr) ntr = pos/nsegy;	
-
-	if (suxdr) format=5;
-    } 
+    free (trace);
+    nsegy = SF_HDRBYTES + ((3 == format)? ns*2: ns*4); 
+    if (0==ntr) ntr = (pos - start)/nsegy;
 
     if (verbose) sf_warning("Expect %d traces",ntr);
 
