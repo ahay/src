@@ -419,7 +419,9 @@ int main(int argc, char *argv[])
     format=0;
     fprintf(stderr,"get the format\n");
     sf_getint("format",&format);
-	/* [1,2,3,5] Data format. The default is taken from binary header.
+	/* [1,2,3,5] Data format. 
+           The default is taken from binary header for segy input.
+	   Default is 5 for su input.
 	   1 is IBM floating point
 	   2 is 4-byte integer
 	   3 is 2-byte integer
@@ -430,6 +432,8 @@ int main(int argc, char *argv[])
     if(format==0){
       fprintf(stderr,"test su\n");
       if(su){
+	format=5;
+	sf_warning("su input.  Default format=5");
 	sf_error("format required for su input.  No binary header for default\n");
       } else { /* segy input data. format not input, so get it from binary header */
 	fprintf(stderr,"get format from bhead\n");
