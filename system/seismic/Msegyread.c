@@ -434,7 +434,6 @@ int main(int argc, char *argv[])
       if(su){
 	format=5;
 	sf_warning("su input.  Default format=5");
-	sf_error("format required for su input.  No binary header for default\n");
       } else { /* segy input data. format not input, so get it from binary header */
 	fprintf(stderr,"get format from bhead\n");
 	format = segyformat (bhead);
