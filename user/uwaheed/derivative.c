@@ -43,11 +43,6 @@
 #include <math.h>
 #include <rsf.h>
 
-#include "derivative.h"
-
-
-
-
 void sf_derivative_2D (float *t,float *dtdz, float *dtdx,
                        double d2, double d1,
                        int n2, int n1, int accuracy)

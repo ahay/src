@@ -23,7 +23,7 @@
 
 int main(int argc, char* argv[])
 {
-    int it, niter, nm, n1, n2, n3, i3, i2, i1, i, gate, i0, rect1, rect2, n123, n[2], rect[2];
+    int it, niter, nm, n1, n2, n3, i3, i2, i1, i, gate, i0, rect1, rect2, n123, n[2], rect[2], slice;
     float ***scan, **iweight, **sweight, *ipick, *iampl, *spick, *sampl, *itraj, *straj, *pick, *ampl, *pick2;
     float o2, d2, an, asum, a, ct, vel0;
     char *label;
@@ -45,6 +45,9 @@ int main(int argc, char* argv[])
 
     if (!sf_histfloat(scn,"o2",&o2)) o2=0.;
     if (!sf_histfloat(scn,"d2",&d2)) d2=1.;
+
+    if (!sf_getint("slice",&slice)) slice=0;
+    /* if only one kind of slicing (1: inline, 2: time) */
  
     if (!sf_getfloat("vel0",&vel0)) vel0=o2;
     /* surface velocity */
@@ -86,77 +89,91 @@ int main(int argc, char* argv[])
     
     sf_divn_init(2,nm,n,rect,niter,true);
     
-    iweight = sf_floatalloc2(n2,n1);
-    itraj = sf_floatalloc(n1);	
+    if (2 != slice) { 
+	iweight = sf_floatalloc2(n2,n1);
+	itraj = sf_floatalloc(n1);	
 
-    (void) dynprog_init(n1,n2,gate,an,false);
+	(void) dynprog_init(n1,n2,gate,an,false);
     
-    for (i3=0; i3 < n3; i3++) {
-	sf_warning("inline %d of %d;",i3+1,n3);
-	
-	/* transpose and reverse */
-	for (i2=0; i2 < n2; i2++) {
-	    for (i1=0; i1 < n1; i1++) {
-		iweight[i1][i2] = expf(-scan[i3][i2][i1]);
-	    }
-	}
-
-	dynprog(i0, iweight);
-	dynprog_traj(itraj);
-
-	for (i1=0; i1 < n1; i1++) {
-	    i = i1 + i3*n1;
-	    ct = itraj[i1];
-	    ipick[i] = ct;
-	    it = floorf(ct);
-	    ct -= it;
-	    if (it >= n2-1) {
-		iampl[i]=scan[i3][n2-1][i1];
-	    } else if (it < 0) {
-		iampl[i]=scan[i3][0][i1];
-	    } else {
-		iampl[i]=scan[i3][it][i1]*(1.-ct)+scan[i3][it+1][i1]*ct;
-	    }
-	}
-    }
-    sf_warning(".");
-
-    dynprog_close();
-
-    sweight = sf_floatalloc2(n2,n3);
-    straj = sf_floatalloc(n3);	
-
-    (void) dynprog_init(n3,n2,gate,an,false);
-    
-    for (i1=0; i1 < n1; i1++) {
-	sf_warning("slice %d of %d;",i1+1,n1);
-
-	/* transpose and reverse */
-	for (i2=0; i2 < n2; i2++) {
-	    for (i3=0; i3 < n3; i3++) {
-		sweight[i3][i2] = expf(-scan[i3][i2][i1]);
-	    }
-	}
-
-	dynprog(i0, iweight);
-	dynprog_traj(straj);
-
 	for (i3=0; i3 < n3; i3++) {
-	    i = i1 + i3*n1;
-	    ct = straj[i3];
-	    spick[i] = ct;
-	    it = floorf(ct);
-	    ct -= it;
-	    if (it >= n2-1) {
-		sampl[i]=scan[i3][n2-1][i1];
-	    } else if (it < 0) {
-		sampl[i]=scan[i3][0][i1];
-	    } else {
-		sampl[i]=scan[i3][it][i1]*(1.-ct)+scan[i3][it+1][i1]*ct;
+	    sf_warning("inline %d of %d;",i3+1,n3);
+	    
+	    /* transpose and reverse */
+	    for (i2=0; i2 < n2; i2++) {
+		for (i1=0; i1 < n1; i1++) {
+		    iweight[i1][i2] = expf(-scan[i3][i2][i1]);
+		}
+	    }
+	    
+	    dynprog(i0, iweight);
+	    dynprog_traj(itraj);
+	    
+	    for (i1=0; i1 < n1; i1++) {
+		i = i1 + i3*n1;
+		ct = itraj[i1];
+		ipick[i] = ct;
+		it = floorf(ct);
+		ct -= it;
+		if (it >= n2-1) {
+		    iampl[i]=scan[i3][n2-1][i1];
+		} else if (it < 0) {
+		    iampl[i]=scan[i3][0][i1];
+		} else {
+		    iampl[i]=scan[i3][it][i1]*(1.-ct)+scan[i3][it+1][i1]*ct;
+		}
 	    }
 	}
+	sf_warning(".");
+	dynprog_close();
+    } else {
+	for (i1=0; i1 < nm; i1++) {
+	    iampl[i1] = 0.0f;
+	    ipick[i1] = 0.0f;
+	}
     }
-    sf_warning(".");  
+
+    if (1 != slice) { 
+	sweight = sf_floatalloc2(n2,n3);
+	straj = sf_floatalloc(n3);	
+	
+	(void) dynprog_init(n3,n2,gate,an,false);
+	
+	for (i1=0; i1 < n1; i1++) {
+	    sf_warning("slice %d of %d;",i1+1,n1);
+	    
+	    /* transpose and reverse */
+	    for (i2=0; i2 < n2; i2++) {
+		for (i3=0; i3 < n3; i3++) {
+		    sweight[i3][i2] = expf(-scan[i3][i2][i1]);
+		}
+	    }
+	    
+	    dynprog(i0, sweight);
+	    dynprog_traj(straj);
+	    
+	    for (i3=0; i3 < n3; i3++) {
+		i = i1 + i3*n1;
+		ct = straj[i3];
+		spick[i] = ct;
+		it = floorf(ct);
+		ct -= it;
+		if (it >= n2-1) {
+		    sampl[i]=scan[i3][n2-1][i1];
+		} else if (it < 0) {
+		    sampl[i]=scan[i3][0][i1];
+		} else {
+		    sampl[i]=scan[i3][it][i1]*(1.-ct)+scan[i3][it+1][i1]*ct;
+		}
+	    }
+	}
+	sf_warning(".");  
+	dynprog_close();
+    } else {
+	for (i1=0; i1 < nm; i1++) {
+	    sampl[i1] = 0.0f;
+	    spick[i1] = 0.0f;
+	}
+    }
 
     pick = sf_floatalloc(nm);
     ampl = sf_floatalloc(nm);

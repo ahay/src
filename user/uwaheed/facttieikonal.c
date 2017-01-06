@@ -23,9 +23,6 @@
 #include <rsf.h>
 /*^*/
 
-#include "facttieikonal.h"
-
-
 bool sf_init_fast_sweep (float *tau,
                          int n2, int n1,
                          float o2, float o1,
