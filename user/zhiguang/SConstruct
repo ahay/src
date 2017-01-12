@@ -5,9 +5,9 @@ import bldutil
 progs = '''
 ctscigadj ctscigder ctshift fftfwi_sparse_2d
 pad2 padzero postrtm2d sgfdewe2d
-upsamp1 fwiupdate fwidir
+upsamp1 fwiupdate fwidir fwipe fwigrad fwiobj
 dzest2d pickmaxima pickprint
-addimag
+addimag lsLU
 '''
 
 ccprogs = ''
