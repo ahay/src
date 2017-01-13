@@ -1,8 +1,6 @@
 /* Calculate the misfit fuction  in Full Waveform Inversion */
 
 #include <rsf.h>
-#include <rsfpwd.h>
-#include <umfpack.h>
 
 #include "fdprep.h"
 #include "sparsesolver.h"

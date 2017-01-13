@@ -1,12 +1,7 @@
 /* 2D Gradient Calculation in Full Waveform Inversion */
 
 #include <rsf.h>
-#include <rsfpwd.h>
-#include <umfpack.h>
 
-#include "fdprep.h"
-#include "sparsesolver.h"
-#include "optimization.h"
 #include "waveoperator.h"
 
 int main(int argc, char *argv[])

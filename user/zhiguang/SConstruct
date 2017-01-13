@@ -48,7 +48,7 @@ if sparsepath and sparselibs:
 
 if not sparsepath or not sparselibs:
     for filec in Split('''
-        fdprep fdprep25 fdprep5 fdprep9 fdprep9o fwisparse2d sparsesolver
+        fdprep fdprep25 fdprep5 fdprep9 fdprep9o fwisparse2d sparsesolver 
         '''):
         source = File(filec+'.c')
         inc = env.RSF_Include(source,prefix='')
@@ -72,12 +72,12 @@ for source in src:
 mains = Split(progs)
 for prog in mains:
     sources = ['M' + prog]
-    bldutil.depends(env,sources,'M'+prog)
-    env.StaticObject('M'+prog+'.c')
     #prog = env.Program(prog,map(lambda x: x + '.c',sources))
 
-    if prog != 'fftfwi_sparse_2d' or (sparsepath and sparselibs):
-        prog = env.Program(prog,map(lambda x: x + '.o',sources))
+    if (prog != 'fftfwi_sparse_2d' and prog != 'fwigrad' and prog != 'fwiobj') or (sparsepath and sparselibs):
+        bldutil.depends(env,sources,'M'+prog) # Compile
+        env.StaticObject('M'+prog+'.c') # Compile
+        prog = env.Program(prog,map(lambda x: x + '.o',sources)) # Link
     else:
         prog = env.RSF_Place('sf'+prog,None,var='SPARSELIBS',
                              package='suitesparse')
