@@ -5,9 +5,9 @@ import bldutil
 progs = '''
 ctscigadj ctscigder ctshift fftfwi_sparse_2d
 pad2 padzero postrtm2d sgfdewe2d
-upsamp1 fwiupdate fwidir
+upsamp1 fwiupdate fwidir fwipe fwigrad fwiobj
 dzest2d pickmaxima pickprint
-addimag
+addimag lsLU
 '''
 
 ccprogs = ''
@@ -15,7 +15,7 @@ ccprogs = ''
 mpi_progs = '''
 mpifdlsrtm mpilrrtm mpilrmodel mpilrrtm_ts mpiprertm2d
 mpisglrrtm2 mpifwigradlr mpisfwi mpiqfwi mpifd2d mpidip2 
-mpipaint2 mpictshiftlr
+mpipaint2 mpictshiftlr mpifwigrad mpilsLU
 '''
 
 pyprogs = 'fdlsrtm lrrtm'
@@ -48,7 +48,7 @@ if sparsepath and sparselibs:
 
 if not sparsepath or not sparselibs:
     for filec in Split('''
-        fdprep fdprep25 fdprep5 fdprep9 fdprep9o fwisparse2d sparsesolver
+        fdprep fdprep25 fdprep5 fdprep9 fdprep9o fwisparse2d sparsesolver 
         '''):
         source = File(filec+'.c')
         inc = env.RSF_Include(source,prefix='')
@@ -72,12 +72,12 @@ for source in src:
 mains = Split(progs)
 for prog in mains:
     sources = ['M' + prog]
-    bldutil.depends(env,sources,'M'+prog)
-    env.StaticObject('M'+prog+'.c')
     #prog = env.Program(prog,map(lambda x: x + '.c',sources))
 
-    if prog != 'fftfwi_sparse_2d' or (sparsepath and sparselibs):
-        prog = env.Program(prog,map(lambda x: x + '.o',sources))
+    if (prog != 'fftfwi_sparse_2d' and prog != 'fwigrad' and prog != 'fwiobj') or (sparsepath and sparselibs):
+        bldutil.depends(env,sources,'M'+prog) # Compile
+        env.StaticObject('M'+prog+'.c') # Compile
+        prog = env.Program(prog,map(lambda x: x + '.o',sources)) # Link
     else:
         prog = env.RSF_Place('sf'+prog,None,var='SPARSELIBS',
                              package='suitesparse')

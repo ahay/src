@@ -867,13 +867,6 @@ void line_search(int n, float *x, float *grad, float *direction, sf_gradient gra
 		for(j=0; j<n; j++)
 			x[j] =xk[j] + opt->alpha*direction[j];
 
-		/* seislet regularization */
-		if(seislet){
-			seislet_lop(true, false, n, n, ss, x);
-			soft_thresholding(ss, n, pclip);
-			seislet_lop(false, false, n, n, ss, x);
-		}
-
 		/* model constraints */
 		if(type==1){
 			clip(x, n, threshold[0], threshold[1]);
@@ -898,6 +891,11 @@ void line_search(int n, float *x, float *grad, float *direction, sf_gradient gra
 		if(fcost <= opt->fk + opt->alpha*m1 && m3 >= m2){
 			opt->fk=fcost;
 			*flag=0;
+			if(seislet){ /* seislet regularization */
+				seislet_lop(true, false, n, n, ss, x);
+				soft_thresholding(ss, n, pclip);
+				seislet_lop(false, false, n, n, ss, x);
+			}
 			break;
 		}else if (fcost > opt->fk + opt->alpha*m1){
 			alpha2=opt->alpha;

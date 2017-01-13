@@ -279,8 +279,6 @@ int main(int argc, char* argv[])
     /*** Main loop ***/
     /* loop over sources */
     for (is=0; is < ns; is++) { 
-	if (verb && 0==is%(ns/10+1)) sf_warning("source %d of %d",is+1,ns);
-	
 	if (NULL == head) { /* regular */
 	    isy = is/nsx;
 	    isx = is - isy*nsx;
@@ -294,7 +292,7 @@ int main(int argc, char* argv[])
 
 	/* loop over offsets */
 	for (ih=0; ih < nh; ih++) { 
-            if (verb && 0==is%(ns/10+1)) sf_warning("source %d of %d, receiver %d of %d;",is+1,ns,ih+1,nh);
+            if (verb && 0==ih%(nh/10+1)) sf_warning("source %d of %d, receiver %d of %d;",is+1,ns,ih+1,nh);
 	    if (NULL == head) { /* regular */		
 		ihy = ih/nhx;
 		ihx = ih - ihy*nhx;
@@ -363,8 +361,8 @@ int main(int argc, char* argv[])
 	    sf_floatwrite(trace,nt,modl);
 	} /* ih */
 
-	if (verb) sf_warning(".");
     } /* is */
+    if (verb) sf_warning(".");
 
 
     exit(0);
