@@ -12,7 +12,7 @@ Fetch('SEG1998.tar.gz',dir='bp2.5d1997',
 Flow('SEG1998',
      'SEG1998.tar.gz',
         '''
-        tar -xv 
+        tar -xvz 
         ''',stdout=-1)
 
 for filename in ['1997_2.5D_shots']:
