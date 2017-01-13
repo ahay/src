@@ -18,23 +18,169 @@
 */
 
 #include <rsf.h>
-#include "optimization.h"
+
+float direction_cg_polak(float **g0,
+                         float **d0,
+                         float **g1,
+                         float **d1,
+                         const int n1, 
+                         const int n2)
+/*< Polak and Ribiere 1969 >*/ 
+{
+    int i,j; 
+    float diff, beta_top, beta_bot, beta;
+
+    beta_top=0.0;
+    beta_bot=0.0;
+
+    for ( j = 0; j < n2; j++ ) {
+    for ( i = 0; i < n1; i++ ) {
+        diff = g1[j][i] - g0[j][i];
+        beta_top += g1[j][i] * diff;
+        beta_bot += g0[j][i] * g0[j][i];
+    }
+    }
+
+    beta=beta_top / beta_bot;
+    
+    if (beta < 0.0 ) { 
+        beta =0.0; 
+    }
+
+    for ( j = 0; j < n2; j++ ){
+    for ( i = 0; i < n1; i++ ) { 
+        d1[j][i] = -g1[j][i] + beta * d0[j][i];
+    }
+    }
+    return beta; 
+}
+
+float direction_cg_fletcher(float **g0,
+                            float **d0,
+                            float **g1,
+                            float **d1,
+                            const int n1, 
+                            const int n2)
+/*< Fletcher and Reeves 1964 >*/ 
+{
+    int i,j; 
+    float beta_top, beta_bot, beta;
+
+    beta_top=0.0;
+    beta_bot=0.0;
+    for ( j = 0; j < n2; j++ ) {
+    for ( i = 0; i < n1; i++ ) {
+        beta_top += g1[j][i] * g1[j][i];
+        beta_bot += g0[j][i] * g0[j][i];
+    }
+    }
+
+    beta= beta_top / beta_bot;
+    
+    if (beta < 0.0 ) { 
+        beta =0.0; 
+    }
+
+    for ( j = 0; j< n2; j++ ){
+    for ( i = 0; i < n1; i++ ) { 
+        d1[j][i] = g1[j][i] + beta * d0[j][i];
+    }
+    }
+    return beta; 
+}
+
+float direction_cg_fletcher2(float **g0,
+                            float **d0,
+                            float **g1,
+                            float **d1,
+                            const int n1, 
+                            const int n2)
+/*< Fletcher 1987 >*/ 
+{
+    int i,j; 
+    float beta_top, beta_bot, beta;
+
+    beta_top=0.0;
+    beta_bot=0.0;
+    for ( j = 0; j < n2; j++ ) {
+    for ( i = 0; i < n1; i++ ) {
+        beta_top += g1[j][i] * g1[j][i];
+        beta_bot += d0[j][i] * g0[j][i];
+    }
+    }
+
+    beta= - beta_top / beta_bot;
+    
+    if (beta < 0.0 ) { 
+        beta =0.0; 
+    }
+
+    for ( j = 0; j< n2; j++ ){
+    for ( i = 0; i < n1; i++ ) { 
+        d1[j][i] = g1[j][i] + beta * d0[j][i];
+    }
+    }
+    return beta; 
+}
+
+float direction_cg_dai(float **g0,
+                         float **d0,
+                         float **g1,
+                         float **d1,
+                         const int n1, 
+                         const int n2)
+/*< Dai and Yuan 1999 >*/ 
+{
+    int i,j; 
+    float diff, beta_top, beta_bot, beta;
+
+    beta_top=0.0;
+    beta_bot=0.0;
+
+    for ( j = 0; j < n2; j++ ) {
+    for ( i = 0; i < n1; i++ ) {
+        diff = g1[j][i] - g0[j][i];
+        beta_top += g1[j][i] * g1[j][i];
+        beta_bot += d0[j][i] * diff;
+    }
+    }
+
+    beta=beta_top / beta_bot;
+    
+    if (beta < 0.0 ) { 
+        beta =0.0; 
+    }
+
+    for ( j = 0; j < n2; j++ ){
+    for ( i = 0; i < n1; i++ ) { 
+        d1[j][i] = -g1[j][i] + beta * d0[j][i];
+    }
+    }
+    return beta; 
+}
 
 int main(int argc, char* argv[])
 {
 	int n1, n2;
 	float beta0;
+	char *option;
 	float **g0, **g1, **d0, **d1;
 	sf_file in, out, grad0, grad1, beta;
 
 	sf_init(argc, argv);
 
 	in=sf_input("in");
+	/* old search direction */
 	out=sf_output("out");
+	/* new search direction */
 	grad0=sf_input("grad0");
-	/* Previous gradient */
+	/* old gradient */
 	grad1=sf_input("grad1");
-	/* Current gradient */
+	/* new gradient */
+
+	option=sf_getstring("option");
+	/* CG update parameter (Polak, Fletcher-Reeves, Fletcher, Dai-Yuan) */
+	if(NULL == option) sf_error("Need option=");
 
 	if(!sf_histint(in, "n1", &n1)) sf_error("No n1= in input.");
 	if(!sf_histint(in, "n2", &n2)) sf_error("No n2= in input.");
@@ -48,7 +194,20 @@ int main(int argc, char* argv[])
 	sf_floatread(g1[0], n1*n2, grad1);
 	sf_floatread(d0[0], n1*n2, in);
 
-	beta0=direction_cg_polak(g0, d0, g1, d1, n1, n2);
+	switch(option[0]){
+		case 'p':
+			beta0=direction_cg_polak(g0, d0, g1, d1, n1, n2);
+			break;
+		case 'r':
+			beta0=direction_cg_fletcher(g0, d0, g1, d1, n1, n2);
+			break;
+		case 'f':
+			beta0=direction_cg_fletcher2(g0, d0, g1, d1, n1, n2);
+			break;
+		case 'd':
+			beta0=direction_cg_dai(g0, d0, g1, d1, n1, n2);
+			break;
+	}
 
 	sf_floatwrite(d1[0], n1*n2, out);
 	if(NULL != sf_getstring("beta")) {
@@ -60,3 +219,4 @@ int main(int argc, char* argv[])
 
 	exit(0);
 }
+

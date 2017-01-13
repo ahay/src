@@ -22,7 +22,7 @@
 
 int main(int argc, char* argv[])
 {
-	int n1, n2;
+	int i, j, n1, n2;
 	float **m0, **m1, **d, alpha0, max;
 	sf_file in, out, dir, alpha;
 
@@ -31,9 +31,16 @@ int main(int argc, char* argv[])
 	in=sf_input("in");
 	out=sf_output("out");
 	dir=sf_input("direction");
-	alpha=sf_input("alpha");
+	if(NULL != sf_getstring("alpha")){ // file
+		alpha=sf_input("alpha");
+		sf_floatread(&alpha0, 1, alpha);
+	}else{ // command-line parameter
+		alpha=NULL;
+		if(!sf_getfloat("alpha0", &alpha0)) sf_error("No alpha");
+	}
 
-	if(!sf_getfloat("max", &max)) max=1.;
+	if(!sf_getfloat("max", &max)) max=0.;
+	/* if max=0, no normalization; if max!=0, normalization by alpha*max/dmax */
 	if(!sf_histint(in, "n1", &n1)) sf_error("No n1 in input.");
 	if(!sf_histint(in, "n2", &n2)) sf_error("No n2 in input.");
 
@@ -42,9 +49,16 @@ int main(int argc, char* argv[])
 	d=sf_floatalloc2(n1, n2);
 	sf_floatread(m0[0], n1*n2, in);
 	sf_floatread(d[0], n1*n2, dir);
-	sf_floatread(&alpha0, 1, alpha);
 
-	update_model_fwi(m0,m1,d,alpha0,max,n1,n2);
+	if(max==0){ // without normlization
+		for(i=0; i<n2; i++){
+			for(j=0; j<n1; j++){
+				m1[i][j]=m0[i][j]+alpha0*d[i][j];
+			}
+		}
+	}else{ // with normalization
+		update_model_fwi(m0,m1,d,alpha0,max,n1,n2);
+	}
 
 	sf_floatwrite(m1[0], n1*n2, out);
 
