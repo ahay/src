@@ -1,0 +1,319 @@
+\published{Journal of Geophysics and Engineering, 13, no. 152-163 (2016)}
+
+\title{Weighted stacking of seismic AVO data \\
+using hybrid AB semblance and local similarity}
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+
+%\ms{JGE-2015}
+
+\address{
+\footnotemark[1] Department of Earth and Atmospheric Sciences\\
+University of Houston\\
+Houston, TX 77004, USA \\
+\footnotemark[2] Bureau of Economic Geology,\\
+John A. and Katherine G. Jackson School of Geosciences \\
+The University of Texas at Austin \\
+University Station, Box X \\
+Austin, TX 78713-8924, USA \\
+Pan Deng: dengpan1988@hotmail.com, Yangkang Chen: chenyk1990@gmail.com \\
+Yu Zhang: yuz124@gmail.com, Hua-Wei Zhou: hzhou@uh.edu\\
+
+}
+
+\author{Pan Deng\footnotemark[1], Yangkang Chen\footnotemark[2], Yu Zhang\footnotemark[1], Hua-Wei Zhou\footnotemark[1]}
+
+%\footer{GEO-2015}
+\lefthead{Deng etc.}
+\righthead{AVO stacking}
+
+\maketitle
+
+\begin{abstract}
+Common-midpoint (CMP) stacking technique plays an important role in enhancing the signal-to-noise ratio (SNR) in seismic data processing and imaging. Weighted stacking is often used to improve the performance of conventional equal-weight stacking in further attenuating random noise and handling the amplitude variations in real seismic data. In this study, we propose to use a hybrid framework of combining AB semblance and local-similarity-weighted stacking scheme. The objective is to achieve an optimal stacking of the CMP gathers with class II amplitude-variation-with-offset (AVO) polarity-reversal anomaly. The selection of high-quality near-offset reference trace is another innovation of this work because of its better preservation of useful energy. Applications to synthetic and field seismic data demonstrate a great improvement using our method to capture the true locations of weak reflections, distinguish thin-bed tuning artifacts, and effectively attenuate random noise. 
+\end{abstract}
+
+\section{Introduction}
+ \subsection{Semblance spectrum}
+A velocity spectrum or semblance spectrum is often used to estimate normal-moveout (NMO) velocity. The concept of velocity spectrum or semblance was initially introduced as a measure of the correlation of multichannel seismic data \cite[]{Taner69,Neidell71}. Nowadays, semblance-based NMO velocity analysis is still popular and is the most practical and trustworthy method for velocity model building from seismic data. However, geophysicists are not satisfied with the performance of the conventional semblance because of the long-standing limitations of the semblance calculations; for example, the low resolution that causes erroneous picking, expensive computation cost for the semblance in anisotropic media, and poor adaptability to the seismic data with AVO. As a result, many improved methods of semblance have been proposed to address these problems \cite[]{Sarkar01,Sarkar02,Fomel09,Luo12,Hu15,Chen15}. 
+\cite{Sarkar01,Sarkar02} introduced a new semblance calculation that took into account AVO information. \cite{Fomel09} reformulated this AVO semblance as a squared correlation coefficient between the data and a trend function, and called it AB semblance. \cite{Luo12} proposed a resolution-improved semblance by weighting the data to honor large-offset data and dampen small-offset data.\old{to increase the resolution for the resulted velocity scanning map.} \cite{Hu15} used a fast butterfly algorithm that handles the large computational power required for 3D anisotropic velocity analysis. \cite{Chen15} utilized a different weighting strategy for improving the resolution of the semblance by weighting the data according to the local similarity of each trace with a reference trace. 
+
+ \subsection{CMP weighted stacking}
+CMP stacking simply means the summation of a collection of
+seismic traces from different records into a single trace. It can 
+be considered as the simplest way for improving the SNR in prestack seismic data processing. It can help quickly obtain a meaningful poststack seismic image without wavefield continuation. The three steps in the CMP stacking process are NMO velocity analysis, NMO correction, and trace summation. Since its introduction by \cite{Mayne62}, seismic CMP
+stacking technique has been drawing great interest and
+developed among the three mainstream seismic data
+processing methods (deconvolution, CMP stacking and
+migration).  Though the CMP stacking technique has helped people explore
+and exploit plenty of oil and gas reservoirs, the general
+assumptions for conventional equal-weight or mean
+stacking are strict: the amplitudes of all traces in the same event are equivalent, and all noises are random \cite[]{Rashed14}. These
+assumptions, however, are only perfectly valid in the
+seismic data where the change of amplitudes in the same event is negligible, and
+coherent noise have been removed. The concept of
+weighted stacking first introduced by \cite{Robinson70}
+continues to be a hot topic \cite[]{Anderson90,Schoenberger96,Rashed02,Tyapkin05,Neelamani06,Rashed08,Liu09}.\old{The original weighted stacking \cite[]{Robinson70} used an SNR-based weighted stacking strategy to minimum random noise.} \cite{Anderson90} introduced a weighted stack based on weighting traces using their signal amplitude decay and noise amplitudes. \cite{Schoenberger96} proposed a different weighted-stacking approach that can suppress the multiples effectively, by solving a set of optimization equations in order to determine the stacking weights. \cite{Rashed02} came up with a weighted stack in which an optimum trace in each CMP gather is selected based on SNR and the other traces are weighted based on their distance from the optimum trace. \cite{Tyapkin05} developed an optimum-weighted stacking by introducing a more realistic model that supposes a signal with an identical shape on each trace to be embedded in spatially uncorrelated irregular noise. \cite{Neelamani06} took the signal structures into consideration and proposed a simultaneous stacking and denoising approach. \old{\cite{Zhang06} made use of the wavelet transformation theory and the high-order statistics theory in proposing a high-order weighted stacking approach. Also based on the statistics theory, \cite{Trickett07} proposed to use a maximum-likelihood estimator for weighted stacking by estimating the probability distribution of random noise. \cite{Tang07} calculated the stacking weights as functions of angle and azimuth and proposed a selective stacking approach.}\cite{Rashed08} improved weighted-stacking approach by excluding harmful
+samples from the stack and applying more weight to the
+central part of the samples, called smart stacking. \old{The smart stacking can minimize the effect of noise bursts, enhance the amplitude of stacked reflections, remove
+frequency distortions caused by poor static correction, insufficient
+stretch muting, and imperfections in velocity analysis, and result in a stack with higher temporal resolution and more spatial coherency.}All of these alternative weighted-stacking methods use weighting functions that are calculated by
+SNR, offset, noise variance, or correlation with a reference trace. Alternatively, \cite{Liu09} proposed a local-similarity-weighted stacking approach that designs the weights of each trace by calculating the local similarity between each trace and a reference trace, and this method was demonstrated to be superior than the other contemporary weighted-stacking approaches.
+
+\subsection{AVO anomaly and the polarity reversal phenomenon}
+Gas sands cause seismic reflections to show a wide range of AVO characteristics \cite[]{Rutherford89}. There are three main AVO classes for the seismic reflections from the gas sands. Class I gas sands have higher impedance than the encasing shale with large positive values for the normal-incidence reflection coefficient. Class II gas sands have nearly the same impedance as the encasing shale and have near-zero normal-incidence reflection coefficient. Class III gas sands have lower impedance than the encasing shale with large negative values for the normal-incidence reflection coefficient. Each class has a distinct AVO characteristic.
+
+It is widely observed in the situation of class II gas sands, if the normal-incidence reflection coefficient is slightly positive, a phase change at near or moderate offsets will occur. This is often represented as a polarity reversal in the seismic reflections from class II gas sands, which is troublesome to NMO velocity analysis because the velocity spectrum using conventional equal weights appears to be zero at the polarity-reversal regions. This reversal will cause a failure in picking the true NMO velocity. A robust velocity analysis approach that can handle this type of AVO anomaly should be used to estimate the NMO velocity which will flatten the CMP gather for stacking. Because class II gas sands are challenging, a more robust weighted-stacking approach is also needed. In this study, we propose a hybrid framework for accurate velocity analysis and optimum-weighted stacking of AVO datasets with class II polarity-reversal anomalies.
+
+In seismic numerical modeling including ray-based and wave-equation-based approaches, combinations of elastic parameters can produce polarity-reversal seismic data. We constructed a synthetic example for investigating the velocity analysis and CMP-stacking performance of the class II AVO anomaly, that show polarity reversals. Table \ref{tab:parameter} shows the values of the elastic parameters used for modeling: compressional-wave velocity, shear-wave velocity, and density in this four flat-layered model. Figure~\ref{fig:shot} is a shot gather produced by a 20 Hz Ricker wavelet convolved with the reflectivity calculated from the Zoeppritz equations. The output data clearly show that the second and third events modeled are polarity-reversed. In seismic exploration and interpretation, reflection data from gas reservoirs could often exhibit this phenomenon; therefore, this simple synthetic modeling example further motivates our study in accurate velocity analysis and weighted stacking of seismic data with this class II AVO polarity-reversal anomaly.
+
+\begin{table}
+	\centering
+	\begin{center}
+		\begin{tabular}{| c | c | c | c |}
+			\hline
+			Depth (m) & Vp (m/s) & Vs (m/s) & Density (kg/m$^3$) \\ \hline
+			0    & 2400 & 1100 & 1.9 \\ \hline
+			0-200  & 2500 & 1200 & 1.95 \\    \hline
+			200-500  & 2600 & 1300 & 2 \\ \hline
+			500-700  & 2550 & 1200 & 1.98\\    \hline
+			700-1000 & 2700 & 1350 & 2.05 \\    \hline
+		\end{tabular}	
+	\end{center}
+	\caption{Elastic parameters used for producing a synthetic data.}\label{tab:parameter}
+\end{table}
+
+\inputdir{.}
+  \plot{shot}{width=0.95\textwidth}{A shot gather produced with the elastic parameters in Table \ref{tab:parameter}.}
+
+\section{Method}
+ \subsection{NMO velocity analysis using AB semblance}
+ We propose to use AB semblance by \cite{Fomel09} for NMO velocity analysis to handle the AVO anomalies, especially in the data that show class II polarity reversal. Conventional semblance can be interpreted as a squared correlation coefficient of seismic data with a constant while AB semblance can be considered a squared correlation coefficient with a trend \cite[]{Fomel09}.
+%In this case, A and
+%B, estimated with the least-squares fitting, can be
+%interpreted as the intercept and gradient in Shuey’s
+%approximation. It has been demonstrated that when AB
+%velocity semblance is applied onto the seismic data with
+%class II AVO polarity-reversal anomaly, NMO-corrected
+%CMP gather is better flattened than the gather corrected
+%with conventional velocity semblance \cite[]{Fomel09}.
+Equations~\ref{eq:s1} and~\ref{eq:s2} show the
+calculation of conventional semblance \cite[]{Neidell71}
+and weighted semblance \cite[]{Chen15}, respectively. 
+AB semblance is a special case of weighted semblance; that is, substituting the weighting function $w(i,j)$
+in equation~\ref{eq:s2} with a trend function $A(i,j)+B(i,j)\varphi(i,j)$, where $\varphi(i,j)$
+is a known function related to the subsurface reflection angle or the
+surface offset. Here I choose surface offset for easy calculation.
+      \begin{eqnarray}
+         \label{eq:s1}
+          s(k) & = & \frac{\displaystyle\sum_{i=k-M}^{k+M}\left(\displaystyle
+          \sum_{j=0}^{N-1}d(i,j)\right)^2}{N\displaystyle\sum_{i=k-M}^{k+M}\displaystyle
+          \sum_{j=0}^{N-1}d^2(i,j)} \;, \\
+          \label{eq:s2}
+          s_{w}(k) & = & \frac{\displaystyle\sum_{i=k-M}^{k+M}\left(\displaystyle
+          \sum_{j=0}^{N-1}w(i,j)d(i,j)\right)^2}{\displaystyle\sum_{i=k-M}^{k+M}
+          \left(\displaystyle\sum_{j=0}^{N-1}w^2(i,j)\displaystyle\sum_{j=0}^{N-1}d^2(i,j)\right)} \;,
+      \end{eqnarray}
+where $w(i,j)$ is the weighting function, $k$ is the center of the
+time window, $2M+1$ is the length of the time window, $N$ is
+the number of traces in one CMP gather, $d(i,j)$ is the $i$th
+sample amplitude of the $j$th trace in the NMO-corrected
+CMP gather. Appendix A gives a brief review of calculating $A(i,j)$ and $B(i,j)$ from the CMP gathers by least-squares fitting. 
+
+%In this study, we use the AB semblance velocity
+%analysis procedure to test the influence of this class II
+%AVO polarity-reversal anomaly adaptable semblance on
+%improving the final stacking, including enhancing SNR and
+%detecting reflection events.
+
+ \subsection{Stacking CMP gathers using local-similarity weights}
+%A quite useful seismic attribute which is used to measure
+%the local similarity of two signals is calculated by local
+%correlation proposed by \cite{Fomel07b}. After that, \cite{Liu09} 
+%used this local correlation of reference trace and the
+%other traces in the same CMP gather as the weighting
+%function to enhance the SNR of stacking. It should be noted
+%that the quality of this type of stacking depends on the
+%quality of reference trace. Several people made use of the
+%same weighting function criterion and proposed different
+%constraints for improving the quality of reference trace and
+%further enhancing the quality of final local similarity
+%weighted stacking~\cite[]{Sanchis11,Compton12}. 
+%Equations~\ref{eq:stk1} and~\ref{eq:stk2} show respectively the
+%calculation of conventional equal-weight or mean stacking \cite[]{Mayne62} 
+%and weighted stacking \cite[]{Robinson70}.
+
+After the optimal NMO velocity with high fidelity is obtained that addresses the AVO anomaly, we propose to use the following local-similarity-weighted scheme to stack the NMO-corrected gathers using the optimal NMO velocity. The local-similarity-weighted stacking was initially proposed by \cite{Liu09}. Equations~\ref{eq:stk1} and~\ref{eq:stk2} show the calculation of conventional stacking \cite[]{Mayne62}
+and weighted stacking with an arbitrary weighting function $v(i,j)$, respectively:
+      \begin{eqnarray}
+          \label{eq:stk1}
+          \textrm{stk}(i) & = & \frac{1}{N}\displaystyle\sum_{j=0}^{N-1}d(i,j)\;, \\
+          \label{eq:stk2}
+          \textrm{stk}_{v}(i) & = & \frac{1}{\displaystyle\sum_{j=0}^{N-1}v(i,j)}\displaystyle\sum_{j=0}^{N-1}v(i,j)d(i,j)\;,
+      \end{eqnarray}
+where $N$ is the number of
+traces in one CMP gather, $d(i,j)$ is the $i$th sample amplitude
+of the $j$th trace in the NMO-corrected CMP gather. The
+local-similarity-weighted stacking substitutes the weighting
+function $v(i,j)$ in equation~\ref{eq:stk2} with the local correlation of each trace and the reference trace in the same CMP gather, where the local correlation should be implemented after the
+soft thresholding \cite[]{Donoho95} and the final weighted
+stack is averaged by the total number of the non-zero
+weighted samples in this CMP gather. Appendix B gives a brief review of the calculation of local similarity. The algorithm of local similarity can be used for the calculation of signals in any dimension. For 1D signals, the meanings of equations \ref{eq:c1} and \ref{eq:c2} are intuitive. For 2D or higher-dimensional signals, each signal is first reshaped into a 1D signal and then follows equations \ref{eq:c1} and \ref{eq:c2} to calculate the local-similarity vector. The smoothing operator is applied to the 2D or multi-dimensional form of the original signal to enforce the smoothness in any dimension. 
+
+\subsection{The hybrid framework of AB semblance and local similarity for optimized stacking of AVO data}
+Although work has been done on weighted stacking with local similarity \cite[]{Sanchis11},
+strong amplitude variations in the reflection events were
+usually ignored in both NMO velocity analysis and CMP stacking. In the tests using the synthetic and field data
+with class II AVO polarity-reversal anomalies, we choose
+a near-offset trace as the reference trace, not the equal-weight 
+stacked trace in \cite{Liu09} because the near-offset trace in this type of seismic data preserves the useful energy and usually has the highest SNR among all traces in the same CMP gather. The near-offset trace can effectively suppress the negative-stacking contribution from polarity-reversal traces. But the equal-weight stacked trace does not have correct or meaningful 
+reflection signals due to the compromise of positive and negative polarities. It is worth mentioning that if the equal-weight stacked trace is chosen as the reference trace, positive and negative waveforms in the other traces would get the same weights, which makes weighted stacking deteriorate. Thus, the near-offset reference trace is capable of optimal weights regarding the amplitude variations and SNR. A workflow of weighted stacking using a hybrid framework of AB semblance and local similarity is shown in Figure~\ref{fig:workflow}. 
+
+\inputdir{.}
+  \plot{workflow}{width=0.95\textwidth}{Workflow of weighted stacking using hybrid AB semblance and local similarity.}
+
+\section{Examples}
+ \subsection{Synthetic examples}
+The proposed method of hybrid AB semblance 
+velocity analysis and local-similarity-weighted scheme,
+taking the near-offset trace as the reference trace, is applied to 
+two synthetic AVO CMP gathers from
+ray-based modeling, two field CMP gathers, and a 2D prestack dataset from the Gulf of
+Mexico. All data are equipped with AVO phenomena, especially synthetic data are added with an obvious polarity-reversal anomalies.
+
+In Figures \ref{fig:hcomb-1}a and \ref{fig:hcomb-1}b, one synthetic AVO CMP gather (noise-free and SNR=7.338) with four reflection events. Polarity reversals exist in the third and fourth events. 
+Figure~\ref{fig:hcomb-1}c and Figure~\ref{fig:hcomb-1}d show
+conventional semblance and AB semblance using the data in Figure \ref{fig:hcomb-1}b. The third and fourth reflection events 
+are energy smeared in the conventional semblance but focused in the AB semblance. The 
+appearance of AVO II anomaly in conventional semblance reduces the accuracy of velocity 
+analysis shown by the erroneous picking in Figure~\ref{fig:hcomb-1}c. 
+Figure~\ref{fig:hcomb-2} represents the NMO correction of the CMP gather in Figure~\ref{fig:hcomb-1}b
+using the picked velocities from the conventional semblance and the AB semblance. Because of good data quality 
+and small offset, the NMO-corrected CMP gathers look similar even though there is difference in the accuracy of the velocity analysis.
+Figure~\ref{fig:hcomb-3} compares the different processing methods: conventional semblance and conventional 
+equal-weight stacking in Figure~\ref{fig:hcomb-3}a, conventional semblance and SNR-weighted stacking by \cite{Neelamani06} in Figure~\ref{fig:hcomb-3}b, and 
+AB semblance and local-similarity-weighted stacking in Figure~\ref{fig:hcomb-3}c. It is found that both Figures \ref{fig:hcomb-3}a and \ref{fig:hcomb-3}b bear strong random noise in the stacked trace. The third and fourth events are stacked into the tuning artifacts 
+of the thin interbeds \cite[]{Hamlyn14}. The false deep interbeds arise from inaccurate 
+velocity analysis in the conventional semblance, and the use of inappropriate weighting functions in the conventional stacking method and the SNR-weighted stacking method. The proposed approach produces the best stacked trace regarding the highest SNR and correctly detecting all true locations of reflections. In this case, the lower-amplitude stacked result for the fourth event by our proposed method needs further investigation.
+
+\inputdir{synh}
+  \plot{hcomb-1}{width=0.95\textwidth}{(a) Synthetic AVO CMP gather (noise-free); (b) Synthetic AVO CMP gather (SNR=7.338); (c) Conventional semblance; (d) AB semblance.}
+  \plot{hcomb-2}{width=0.95\textwidth}{NMO correction of the CMP gather in Figure~\ref{fig:hcomb-1}b. (a) NMO-corrected gather using the picked velocity from the conventional semblance; (b) NMO-corrected gather using the picked velocity from the AB semblance.}
+  \plot{hcomb-3}{width=0.95\textwidth}{Stacked trace of the CMP gather in Figure~\ref{fig:hcomb-1}b. (a) Stack by conventional semblance and conventional stacking; (b) Stack by conventional semblance and SNR-weighted stacking; (c) Stack by AB semblance and local-similarity-weighted stacking.}
+
+Figures~\ref{fig:lcomb-1}a and \ref{fig:lcomb-1}b show another synthetic AVO CMP gather (noise-free and SNR=-3.449) with four reflection events. All reflection events are equipped with polarity reversals. 
+Figures~\ref{fig:lcomb-1}c and \ref{fig:lcomb-1}d show
+conventional semblance and AB semblance using the data in Figure \ref{fig:lcomb-1}b. All reflection events are energy smeared in the conventional semblance but focused in the AB semblance; however,
+there still exist small areas of energy focusing in the conventional semblance that indicates certain random noise contributes to the performance of semblance. The existence of AVO II anomaly reduces the accuracy of velocity analysis as shown by erroneous picking in Figure~\ref{fig:lcomb-1}c. 
+Figure~\ref{fig:lcomb-2} represents the NMO correction of the CMP gather in Figure~\ref{fig:lcomb-1}b
+using the picked velocities from the conventional semblance and the AB semblance. The NMO-corrected gather from the conventional semblance shows some NMO over-correction due to the lower picked velocity.
+Figure~\ref{fig:lcomb-3} compares the different stacking methods: conventional semblance and conventional 
+equal-weight stacking in Figure~\ref{fig:lcomb-3}a, conventional semblance and SNR-weighted stacking in Figure~\ref{fig:lcomb-3}b, and 
+AB semblance and local-similarity-weighted stacking in Figure~\ref{fig:lcomb-3}c. The SNR from low to high is Figure~\ref{fig:lcomb-3}a, Figure~\ref{fig:lcomb-3}b, and Figure~\ref{fig:lcomb-3}c. 
+In Figures~\ref{fig:lcomb-3}a and \ref{fig:lcomb-3}b, shallow (0-0.25 s) strong artifacts exist which are removed by our approach in Figure \ref{fig:lcomb-3}c, and false interbeds appear clearly in all four reflections. These artifacts are caused by inaccurate velocity analysis and low SNR in the prestack CMP gather. Our approach produces the best stacked trace with the highest SNR and correctly detects all the true reflection locations. From the two synthetic tests, it could also be concluded that my proposed approach is suitable for stacking on both high- and low-SNR data.
+
+\inputdir{synl}
+  \plot{lcomb-1}{width=0.95\textwidth}{(a) Synthetic AVO CMP gather (noise-free); (b) Synthetic AVO CMP gather (SNR=-3.449); (c) Conventional semblance; (d) AB semblance.}
+  \plot{lcomb-2}{width=0.95\textwidth}{NMO correction of the CMP gather in Figure~\ref{fig:lcomb-1}b. (a) NMO-corrected gather using the picked velocity from the conventional semblance; (b) NMO-corrected gather using the picked velocity from the AB semblance.}
+  \plot{lcomb-3}{width=0.95\textwidth}{Stacked trace of the CMP gather in Figure~\ref{fig:lcomb-1}b. (a) Stack by conventional semblance and conventional stacking; (b) Stack by AB semblance and SNR-weighted stacking; (c) Stack by AB semblance and local-similarity-weighted stacking.}
+  
+ \subsection{Field examples}
+Figure~\ref{fig:cmpstack1}a shows a good pre-processed marine CMP gather after demultiple procedure. The deep reflectors (3.6 and 4.2 s) of the stacked trace are detected in Figure~\ref{fig:cmpstack1}d by AB semblance and local-similarity-weighted stacking. But these deep reflectors are easily missed in Figure~\ref{fig:cmpstack1}b by conventional semblance and conventional equal-weight stacking, and Figure~\ref{fig:cmpstack1}c by conventional semblance and SNR-weighted stacking due to the low SNR after stacking.
+
+\inputdir{cmp1}
+  \plot{cmpstack1}{width=0.95\textwidth}{(a) Field CMP gather with high SNR; (b) Stacked trace by conventional semblance and conventional equal-weight stacking; 
+  (c) Stacked trace by conventional semblance and SNR-weighted stacking; (d) Stacked trace by AB semblance and local-similarity-weighted stacking.}
+
+Figure~\ref{fig:cmpstack2}a is another marine CMP gather that has lower SNR compared to the data in Figure~\ref{fig:cmpstack1}a. The stacked trace with the highest SNR is in Figure~\ref{fig:cmpstack1}d by conventional semblance and local-similarity-weighted stacking, especially in the shallow part (0.5-2 s). The SNR in Figure~\ref{fig:cmpstack2}c (SNR-weighted stacking) is higher than that in Figure~\ref{fig:cmpstack2}b (equal-weight stacking) because the equal weight or averaging process in Figure~\ref{fig:cmpstack2}b decreases the stacking amplitudes of the reflection signals and, in turn, emphasizes irregularity of random noise. The results in the deep part (after 2.5 s) of three stacked traces are similar because of the influence of multiple reflections. If a good demultiple technology is applied before NMO velocity analysis, it is predicted that our method still produce the best stacking. The two field examples above further demonstrate the proposed approach has the effectiveness in dealing with the stacking of AVO data independent of SNR.
+
+\inputdir{cmp2}
+  \plot{cmpstack2}{width=0.95\textwidth}{(a) Field CMP gather with low SNR; (b) Stacked trace by conventional semblance and conventional equal-weight stacking; 
+  (c) Stacked trace by conventional semblance and SNR-weighted stacking; (d) Stacked trace by AB semblance and local-similarity-weighted stacking.}
+
+At last we applied the proposed framework to a 2D field dataset from the Gulf of Mexico, showing the advantages of the new framework in artifact attenuation and seismic interpretation. Figure \ref{fig:stack1-gulf} shows stacked data by conventional semblance and conventional stacking, Figure \ref{fig:snrstack-gulf} shows stacked data by conventional semblance and SNR-weighted stacking, and Figure \ref{fig:simistack-gulf} shows stacked data by AB semblance and local-similarity-weighted stacking. It is observed that our proposed approach produced the best stacking result in the perspective of event continuity and the least artifacts. Zoomed sections, further, shown in Figures \ref{fig:stack1-A}, \ref{fig:snrstack-A} and \ref{fig:simistack-A} from the frame boxes in Figures \ref{fig:stack1-gulf}, \ref{fig:snrstack-gulf} and \ref{fig:simistack-gulf} demonstrate these advantages more clear.
+
+\inputdir{stack}
+  \multiplot{3}{stack1-gulf,snrstack-gulf,simistack-gulf}{width=0.47\textwidth}{(a) Stacked data by conventional semblance and conventional stacking; (b) Stacked data by conventional semblance and SNR-weighted stacking; 
+  (c) Stacked data by AB semblance and local-similarity-weighted stacking.}
+  \multiplot{3}{stack1-A,snrstack-A,simistack-A}{width=0.47\textwidth}{(a) Zoomed section from Figure \ref{fig:stack1-gulf}; (b) Zoomed section from Figure \ref{fig:snrstack-gulf}; 
+  (c) Zoomed section from Figure \ref{fig:simistack-gulf}.}
+
+\section{Discussion}
+
+Since AVO II polarity-reversal phenomena widely exist in real seismic data \cite[]{Castagna93}, accurate velocity analysis and weighted stacking for this type of seismic data is of the great significance for structural imaging and seismic interpretation. Our synthetic and field examples illustrate the successful applications of the proposed approach.
+
+It has been pointed by \cite{Fomel09} that resolution loss is the price paid in obtaining the accurate velocity analysis for AVO II polarity-reversal data. In the comparison of Figures \ref{fig:hcomb-1}c and \ref{fig:hcomb-1}d, however, the effect from lower resolution of AB semblance on the velocity analysis for the first and second events without polarity reversal could be neglected. Additionally, through the comparisons of NMO-corrected CMP gathers in Figures \ref{fig:hcomb-2}a and \ref{fig:hcomb-2}b, and Figures \ref{fig:lcomb-2}a and \ref{fig:lcomb-2}b, the traces in the shallow and far-offset area (around 0.4 s for traces 11 and 12) get noise better attenuated after AB semblance. Here the NMO-corrected CMP gathers after conventional semblance and AB semblance went through the same frequency-stretch mute. 
+
+This study innovatively combines two recent ideas into a complete workflow for the weighted stacking of AVO II polarity-reversal data and achieves encouraging results in both synthetic and field testing examples. But it should be noted that our new approach at the current stage may not completely replace the conventional stacking, even if only for the AVO data. From the synthetic stacking examples in Figure~\ref{fig:hcomb-3} and Figure~\ref{fig:lcomb-3}, the local-similarity-weighted stack does tell the locations of reflections and demonstrate high SNR, but may weaken the polarity-reversal information from prestack gathers. In the perspective of this point, the proper reference to conventional equal-weight stack and SNR-weighted stack may help us infer possible lithological changes from velocity and density changes. In the two examples using field CMP gathers, although the proposed method is suitable for both high- and low-SNR data, the stacking analysis largely depends on the SNR of prestack CMP gathers when the objective of stack is to detect deep reflectors. 
+
+It may be possible to apply the proposed framework to other types of seismic data, even in cases where the AVO phenomenon is not very obvious. Additionally, further research to verify this possibility could be accomplished with ease. It can be conveniently implemented based on the conventional semblance calculation and CMP stacking framework. The key elements in the framework are the AB semblance calculation and local-similarity-weighted stacking, which both can be found in an open-source software package, Madagascar ($www.ahay.org$); thus, it is worth developing routine processing modules for implementation of the proposed framework.
+
+\section{Conclusions}
+We demonstrated the effectiveness of weighted stacking for seismic AVO data containing class II polarity-reversal anomalies using a hybrid framework of AB semblance based NMO velocity analysis and local-similarity-weighted stacking with the near-offset trace as the reference trace. In the synthetic data examples, the SNR in the improved CMP stacked trace is greatly enhanced compared with the conventional velocity analysis and stacking methods. At the same time, the locations of reflectors for the polarity-reversal data in the improved CMP stacked traces are clearly visible that appear as thin-bed tuning in the conventional stacking methods. In the field CMP gather examples, deep reflectors of the good pre-processed CMP gather are captured in the proposed approach that has the highest SNR. For low-SNR prestack marine data, a demultiple technique is required before stacking. The ultimate advantages of the proposed method in event continuity and artifact attenuation are demonstrated in the comparison of field stacked sections. Both the synthetic and field examples illustrate the feasibility and advantages of my proposed approach with both high- and low-SNR data. A beneficial probe has been done for structural imaging by weighted stacking using AVO data. Future research would improve the AVO information for better lithology and fluid prediction, e.g., fluid-factor estimation and gas detection through weighted stacking.
+
+\section{Acknowledgments}
+We would like to thank Sergey Fomel and Guochang Liu for the introduction to the
+techniques of AB semblance and local-similarity-weighted stacking and for many useful discussions. Helpful comments and suggestions from three referees greatly improved the quality of the manuscript. Pan Deng appreciated August Lau for providing much advice in generalizing the application of the weighted stacking. This work is supported by the Research Assistantship at the University of Houston, the China Scholarship Council (grant No. 2011645012), and the SEG Foundation Scholarships.
+
+%\newpage
+\append{AB semblance: Least-squares fitting for the trend }
+Suppose that the weight $w(i,j)$ in equation \ref{eq:s2} has a trend of trace amplitude $d(i,j)$, 
+\begin{equation}
+\label{eq:trend}
+w(i,j)=A(i)+B(i)\phi(i,j),
+\end{equation}
+where $\phi(i,j)$ is a known function, and $A(i)$ and $B(i)$ are two coefficients from Shuey equation \cite[]{Shuey85}. In the simplest form, $\phi(i,j)$ can be chosen as the offset at trace $i$. In order to estimate $A(i)$ and $B(i)$, it can be turned to minimize the following objection function of misfit between the trend and trace amplitude:
+\begin{equation}
+\label{eq:obj}
+F_i=\sum_{j=0}^{N-1}\left(d(i,j)-A(i)-B(i)\phi(i,j)\right)^2.
+\end{equation}
+Taking derivatives with respect to $A(i)$ and $B(i)$ in equation \ref{eq:obj}, setting them to zero, and solving the two linear equations, the following two least-squares fitting coefficients are obtained:
+\begin{equation}
+\label{eq:A}
+A(i)=\frac{\displaystyle\sum_{j=0}^{N-1}\phi(i,j)\sum_{j=0}^{N-1}a(i,j)\phi(i,j) - \sum_{j=0}^{N-1}\phi^2(i,j)\sum_{j=0}^{N-1}a(i,j)}{\displaystyle\left(\sum_{j=0}^{N-1}\phi(i,j)\right)^2-N\sum_{j=0}^{N-1}\phi^2(i,j)},
+\end{equation}
+\begin{equation}
+\label{eq:B}
+B(i)=\frac{\displaystyle\sum_{j=0}^{N-1}\phi(i,j)\sum_{j=0}^{N-1}a(i,j) - N\sum_{j=0}^{N-1}a(i,j)\phi(i,j)}{\displaystyle\left(\sum_{j=0}^{N-1}\phi(i,j)\right)^2-N\sum_{j=0}^{N-1}\phi^2(i,j)}.
+\end{equation}
+Substituting $w(i,j)=A(i)+B(i)\phi(i,j)$ into equation \ref{eq:s2} leads to the AB semblance. 
+
+\append{Review of local similarity measured by local correlation}
+Equations~\ref{eq:g} to~\ref{eq:c2} review the derivation of the local
+correlation measure from \cite{Fomel07b}. In linear algebra
+notation, the correlation of two signals can be
+expressed as a product of two least-squares scalar inverses 
+$\gamma_1$ and $\gamma_2$ .
+\begin{eqnarray}
+  \label{eq:g}
+  \gamma^2 & = & \gamma_1\,\gamma_2\;, \\
+  \label{eq:g1}
+  \gamma_1 & = & \left(\mathbf{a}^T\,\mathbf{a}\right)^{-1}\,\left(\mathbf{a}^T\,\mathbf{b}\right)\;, \\
+  \label{eq:g2}
+  \gamma_2 & = & \left(\mathbf{b}^T\,\mathbf{b}\right)^{-1}\,\left(\mathbf{b}^T\,\mathbf{a}\right)\;, 
+\end{eqnarray}
+where $\mathbf{a}$ and $\mathbf{b}$ are vectors with the elements $a_{i}$ and $b_{i}$. 
+Let $\mathbf{A}$ be a diagonal operator composed of the elements $\mathbf{a}$ and $\mathbf{B}$
+be a diagonal operator composed of the elements $\mathbf{b}$.
+Localizing equations~\ref{eq:g1} and~\ref{eq:g2} is equivalent to
+adding regularization to inversion. Scalars $\gamma_{1}$ and $\gamma_{2}$ 
+then turn into vectors $\mathbf{c}_1$ and $\mathbf{c}_2$.
+\begin{eqnarray}
+  \label{eq:c1}
+  \mathbf{c}_1 & = & 
+  \left[\lambda^2\,\mathbf{I} + 
+  \mathbf{S}\,\left(\mathbf{A}^T\,\mathbf{A} - \lambda^2\,\mathbf{I}\right)\right]^{-1}\,
+  \mathbf{S}\,\mathbf{A}^T\,\mathbf{b}\;, \\
+  \label{eq:c2}
+  \mathbf{c}_2 & = & 
+  \left[\lambda^2\,\mathbf{I} + 
+  \mathbf{S}\,\left(\mathbf{B}^T\,\mathbf{B} - \lambda^2\,\mathbf{I}\right)\right]^{-1}\,
+  \mathbf{S}\,\mathbf{B}^T\,\mathbf{a}\;.
+\end{eqnarray}
+where $\mathbf{S}$ is a shaping regularization \cite[]{Fomel07a} and $\lambda$ is
+scaling factor that controls the relative scaling of $\mathbf{A}$ and $\mathbf{B}$.
+The square root of a component-wise product of vectors $\mathbf{c}_{1}$ and $\mathbf{c}_{2}$ defines a
+local-similarity measure.
+
+\bibliographystyle{seg}
+\bibliography{paper}
