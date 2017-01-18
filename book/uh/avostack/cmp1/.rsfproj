@@ -1,0 +1,3 @@
+uses=['sfwindow', 'sfvscan', 'sfgrey', 'sfpick', 'sfnmo', 'sfput', 'sfwiggle', 'sfstack', 'sfspray', 'sfsimilarity', 'sfthreshold', 'sfmath', 'sfsnrstack']
+data=['PRIVATE']
+size=    3960000
