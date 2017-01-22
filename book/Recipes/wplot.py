@@ -102,7 +102,10 @@ def param(par):
     if(par['dratio3d']>1): par['dheight3d']=12
     else:                  par['dheight3d']=12*par['dratio3d']
 
-    par['mapratio']=1.0*(par['ymax']-par['ymin'])/(par['xmax']-par['xmin'])
+    if(par['xmax'] > par['xmin']):
+    	par['mapratio']=1.0*(par['ymax']-par['ymin'])/(par['xmax']-par['xmin'])
+    else:
+	par['mapratio']=1.0
     par['mapheight']=11*par['mapratio']
         
     if(not par.has_key('scalebar')): par['scalebar']='n'    
