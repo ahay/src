@@ -66,8 +66,8 @@ Flow([rsf,rsf+'_hdr',rsf+'.asc',rsf+'.bin'],'../fetch/ModelParams/Vp_Model.sgy',
 	    tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]} \
 	 | sfput label1="Depth" unit1="m" 
          ''')
-Result('Vp_Model','sfgrey title=Vp_Model color=a mean=y scalebar=y')
+Result('Vp_Model','        sfgrey title=Vp_Model color=a mean=y scalebar=y  minval=1450 maxval=4500 clip=4500 allpos=y')
 Result('Vp_zoom','Vp_Model.rsf',
-	'sfwindow n1=700 | sfgrey title=Vp_Model color=a mean=y scalebar=y')
+	'sfwindow n1=700 | sfgrey title=Vp_Model color=a mean=y scalebar=y  minval=1450 maxval=4500 clip=4500 allpos=y')
 
 End()
