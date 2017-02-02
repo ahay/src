@@ -94,13 +94,40 @@ Plot('imagexl','image',
      | sfput label2='xline' 
      | sfgrey title='stratton 3d xline 100'
      ''')
-Result("imageilxl","imageil imagexl",'SideBySideAniso')
+Result('imageilxl','imageil imagexl','SideBySideAniso')
 
-Result("imageslice","image",
+Result('imageslice','image',
 	'''
 	sfwindow min1=2.0 max1=2.004 \
 	| sftransp plane=13 \
 	| sfgrey gainpanel=a title='stratton 3d'
 	''')
 
+# THese attemps to recreate figure 9 from BEG booklet "3-D Seismic and Well 
+# Log Data Set ... Stratton Field ..." shows this figure renumbered 
+# iline/xline and (x,y) making it hard to recreate.
+
+Result('seismicfigure9','image',
+       '''
+       sfwindow min1=1.2 max1=1.7 min2=89 max2=89 min3=59 max3=95 \
+       | sfwiggle transp=y poly=y yreverse=y title="stratton booklet figure 9 seismic"
+       ''')
+
+# use trace headers to create a 3d volume
+Flow(['xline89.rsf','xline89_hdr.rsf'],
+     ['image.rsf',
+      'image_hdr.rsf'],
+     '''
+     sftahsort \
+          input=${SOURCES[0]} \
+	  sort="iline:59,95 xline:89,89" \
+	  verbose=1 \
+     | sftahgethw key=xline,iline,sx,sy \
+     | sftahwrite \
+          output=${TARGETS[0]} \
+	  mode=seq 
+	  verbose=1
+     ''',stdout=0, stdin=0)
+
+#     	label2="iline"    o2=59  n2=37 d2=1
 End()
