@@ -1,3 +1,0 @@
-uses=['sfsegyread', 'sfcat', 'sfheadermath', 'sfmask', 'sfadd', 'sfheaderwindow', 'sfput', 'sfwindow', 'sfgrey', 'sfbyte', 'sfgrey3', 'sfdd', 'sfgraph', 'sftransp', 'sflinear', 'sfmath', 'sfinttest1', 'sfscale', 'sfdatstretch', 'sfpow', 'sfmutter', 'sfshapeagc', 'sffft1', 'sffft3', 'sfreal', 'sfsimilarity', 'sfomp', 'sfdiv']
-data=['http://certmapper.cr.usgs.gov/nersl/NPRA/SEISMIC/1981/31_81/DMUX/L23535.SGY', 'http://certmapper.cr.usgs.gov/nersl/NPRA/SEISMIC/1981/31_81/DMUX/L23536.SGY', 'http://certmapper.cr.usgs.gov/nersl/NPRA/SEISMIC/1981/31_81/DMUX/L23537.SGY']
-size=  713829912

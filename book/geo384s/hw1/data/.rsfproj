@@ -1,3 +1,0 @@
-uses=['sfsegyread', 'sfwindow', 'sfwiggle', 'sfgrey', 'sfheadermath', 'sfmask', 'sfheaderwindow', 'sfpow', 'sfdd']
-data=['data/viking/seismic.segy']
-size=  765945120

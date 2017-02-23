@@ -94,13 +94,18 @@ Plot('imagexl','image',
      | sfput label2='xline' 
      | sfgrey title='stratton 3d xline 100'
      ''')
-Result("imageilxl","imageil imagexl",'SideBySideAniso')
+Result('imageilxl','imageil imagexl','SideBySideAniso')
 
-Result("imageslice","image",
+Result('imageslice','image',
 	'''
 	sfwindow min1=2.0 max1=2.004 \
 	| sftransp plane=13 \
 	| sfgrey gainpanel=a title='stratton 3d'
 	''')
+
+# Proceed to ../fetchbooklet to recreate figure 9 from BEG booklet 
+# "3-D Seismic and Well Log Data Set ... Stratton Field ...".  That 
+# directory explores recreating figure 9 using data from the CD that
+# comes with booklet and figures out how (iline,xline) were renumberred
 
 End()
