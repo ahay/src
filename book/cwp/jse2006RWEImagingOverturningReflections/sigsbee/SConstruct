@@ -2,14 +2,14 @@ from rsf.proj import *
 from rsf.recipes import rwezo,zomig,fdmod
 
 par = {    
-    'nz':1201, 'dz':0.025,  'oz':0,     'lz':'z', 'uz':'km', 
-    'nx':2133, 'dx':0.0375, 'ox':10.925,'lx':'x', 'ux':'km',
+    'nz':1201, 'dz':0.025,  'oz':0,     'lz':'z',         'uz':'km', 
+    'nx':2133, 'dx':0.0375, 'ox':10.925,'lx':'x',         'ux':'km',
     'nt':30000,'dt':0.0005, 'ot':0,     'lt':'\F10 t\F3', 'ut':'s',
     'ng':800,  'dg':1,      'og':0,     'lg':'\F10 g\F3', 'ug': '.',
     'kt':100,    # wavelet delay 
     'nT':1600, 'dT':0.004,  'oT':0,
-    'ow':1, 'nw': 795,
-    'nbz':250,'nbx':250, 'j2': 5
+    'ow':1, 'nw':795,
+    'nbz':250,'nbx':250, 'j2':5
     }
 
 par['ox']*=0.3048
@@ -151,8 +151,6 @@ Result('wav','window n2=1000 |' + fdmod.waveplot('',par))
 # modeling
 fdmod.awefd1('do','wo','wav','velo','dens','ss','oo','free=n',par)
 
-# ------------------------------------------------------------
-
 Plot('wo',
      'window j3=20 min1=%(oz)g n1=%(nz)d min2=%(ox)g n2=%(nx)d |' % par
      + rwezo.cgrey('pclip=99 gainpanel=a',par),view=1)
@@ -169,7 +167,7 @@ for j in range(20,300,20):
          + rwezo.cgrey('pclip=99',par))
     Result('wo'+str(j//20),['wo'+str(j//20),'cos1','ss'],'Overlay')
 
-Flow('dd','do','window f2=%(kt)d | put o2=0 d2=0.001 | window j2=4' % par)
+Flow('dd','do','window f2=%(kt)d | put o2=0 d2=0.001 | window j2=4'%par)
 Plot('dd','transp |' + rwezo.dgrey('',par),view=1)
 
 # ------------------------------------------------------------
@@ -177,11 +175,11 @@ Plot('dd','transp |' + rwezo.dgrey('',par),view=1)
 # ------------------------------------------------------------
 Flow('vel1','velo','smooth rect1=351 rect2=351 repeat=3')
 
-Flow('s_',None,'spike nsp=1 n1=%(ng)d d1=%(dg)g o1=%(og)g' % par)
+Flow('s_',None,'spike nsp=1 n1=%(ng)d d1=%(dg)g o1=%(og)g'%par)
 
 # coordinate system: rays(g,t)
-Flow('mzs1','s_','math output="01.0+0.009*x1"' % par)
-Flow('mxs1','s_','math output="17.0+0.008*x1"' % par)
+Flow('mzs1','s_','math output="01.0+0.009*x1"'%par)
+Flow('mxs1','s_','math output="17.0+0.008*x1"'%par)
 Flow('sou1','mxs1 mzs1',
      'cat axis=2 space=n ${SOURCES[1]} | transp | dd type=complex | window')
 
@@ -222,7 +220,8 @@ Result('datCC','window j1=5 j2=5 | grey pclip=99 wanttitle=n label1=t unit1=s la
 
 # ------------------------------------------------------------
 # WEM image CC: (z,x)
-zomig.image3('imgCC','sloCC','frqCC',par)
+#zomig.image3('imgCC','sloCC','frqCC',par)
+zomig.image('imgCC','sloCC','frqCC',par)
 Plot  ('imgCC','window | transp |' + rwezo.cgrey('pclip=99',par))
 Result('imgCC',['imgCC','cos1'],'Overlay')
 
@@ -262,9 +261,7 @@ for i in ('1','2'):
 
 # ------------------------------------------------------------
 # PLOTS
-#plots(par)
 
-# ------------------------------------------------------------
 zoompar = {    
     'nz':7,    'dz':1,      'oz':2,     'lz':'z', 'uz':'km',  
     'nx':10,   'dx':1,      'ox':12,    'lx':'x', 'ux': 'km',
