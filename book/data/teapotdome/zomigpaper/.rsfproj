@@ -1,3 +1,0 @@
-uses=['sftahsort', 'sftahwindow', 'sftahgain', 'sftahmute', 'sftahagc', 'sftahscdecon', 'sftahwrite', 'sftahstatic', 'sftahnmo', 'sftahstack', 'sfwindow', 'sfgrey', 'sfclip2', 'sfbyte', 'sfgrey3', 'sfdd', 'sftransp', 'sflinear', 'sfgraph', 'sfdix', 'sfbandpass', 'sfspray', 'sftime2depth', 'sfput', 'sfmath', 'sffft1', 'sfreal', 'sfomp', 'sfzomig3', 'sfdepth2time', 'sfsegyread']
-data=['http://s3.amazonaws.com/teapot/filt_mig.sgy']
-size= 2747820800

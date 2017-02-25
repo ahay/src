@@ -1,0 +1,115 @@
+from rsf.proj import *
+
+
+Flow('vel',None,
+     '''
+     math n1=400 d1=15 n2=401 d2=15
+     output="2000"
+     label=Velocity unit1=m unit2=m unit=m/s label1=Z label2=X 
+     ''')
+
+Result('vel','grey screenratio=1 allpos=y bias=1500 title="Velocity Model" label1=Depth unit1=m label2=Distance unit2=m')
+
+dtt=0.0005
+nt=800
+dt=0.002
+factor=dt/dtt
+
+sponge=40
+par=0.015
+n1=400-2*sponge
+n2=401-2*sponge
+
+Flow('source1',None,
+     '''
+     spike n1=%d d1=%g k1=200 |
+     ricker1 frequency=15
+     '''%(nt*factor,dtt))
+Flow('real','source1','math "output=0"')
+Flow('imag','source1','envelope hilb=y | halfint | halfint | math output="input/2" ')
+
+Flow('csource1','real imag','cmplx ${SOURCES[1]}')
+Flow('csource','csource1','window j1=%d'% factor)
+Flow('source','source1','window j1=%d'% factor)
+Result('source','graph  title="Source Wavelet" ')
+
+Flow('refl',None,'spike n1=400 n2=401 d1=15 d2=15 k1=300 k2=130') 
+
+Flow('fft','vel','rtoc | fft3 axis=1 pad=1 | fft3 axis=2 pad=1')
+Flow('right left','vel fft',
+     '''
+     cisolr2abc seed=2010 dt=%g fft=${SOURCES[1]} left=${TARGETS[1]}
+     nbt=%d nbb=%d nbl=%d nbr=%d ct=%g cb=%g cl=%g cr=%g
+     ''' % (dt,sponge,sponge,sponge,sponge,par,par,par,par))
+
+Flow('cwave','csource refl left right',
+     '''
+     cfftwave2 ref=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]} verb=y cmplx=n
+     ''')
+
+Plot('cwavemovie','cwave',
+     '''
+     window j3=20  |
+     grey label2="X" unit2=m label1="Z" unit1=m title="Direction-dependent ABC"
+     yreverse=y gainpanel=all screenratio=1
+     ''')
+
+Plot('cwavexmovie','cwave',
+     '''
+     window j3=5 | window n2=1 f2=200 squeeze=n |
+     graph label2="Z" label1="X" title="Direction Dependent"
+     min2=-0.005 max2=0.01
+     ''')
+
+Flow('cwavesnap','cwave','window n1=%d f1=%d n2=%d f2=%d n3=1 min3=1.4 | put o1=0 o2=0' %(n1,sponge,n2,sponge))
+Result('cwavesnap',
+       '''
+       grey screenratio=1 title="Direction Dependent"
+       label1=Z unit1=m label2=X unit2=m gainpanel=all
+       labelfat=6 titlefat=6 labelsz=9 titlesz=10 
+       barlabel=Normalized\ Amplitude
+       ''' )
+
+Result('cwavesnapgain','cwavesnap','scale axis=3 | grey maxval=0.1 minval=-0.1 clip=0.1 screenratio=0.89 scalebar=y label1=Z unit1=m label2=X unit2=m title="Direction Dependent" labelfat=6 titlefat=6 labelsz=9 titlesz=10 barlabel=Normalized\ Amplitude')
+
+
+###################################################################
+### with direction independent ABC 
+###################################################################
+
+Flow('right2 left2','vel fft',
+     '''
+     cisolr2abc1 seed=2010 dt=%g fft=${SOURCES[1]} left=${TARGETS[1]}
+     nbt=%d nbb=%d nbl=%d nbr=%d ct=%g cb=%g cl=%g cr=%g
+     ''' % (dt,sponge,sponge,sponge,sponge,par,par,par,par))
+
+Flow('cwave2','csource refl left2 right2',
+     '''
+     cfftwave2 ref=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]} verb=y cmplx=n
+     ''')
+
+Plot('cwave2movie','cwave2',
+     '''
+     window j3=5  |
+     grey label2="X" label1="Z" title="Without K"
+     yreverse=y gainpanel=all screenratio=1
+     ''')
+
+Plot('cwavex2movie','cwave2',
+     '''
+     window j3=5 | window n2=1 f2=200 squeeze=n |
+     graph label2="Z" label1="X" title="Isotropic" min2=-0.005 max2=0.01
+     ''')
+
+Flow('cwave2snap','cwave2','window n1=%d f1=%d n2=%d f2=%d n3=1 min3=1.4 | put o1=0 o2=0' %(n1,sponge,n2,sponge))
+Result('cwave2snap',
+       '''
+       grey screenratio=1 title="Direction Independent"
+       label1=Z unit1=m label2=X unit2=m gainpanel=all
+       labelfat=6 titlefat=6 labelsz=9 titlesz=10 
+       barlabel=Normalized\ Amplitude
+       ''')
+
+Result('cwave2snapgain','cwave2snap','scale axis=3 | grey maxval=0.1 minval=-0.1 clip=0.1 screenratio=0.89 scalebar=y label1=Z unit1=m label2=X unit2=m title="Direction Independent" labelfat=6 titlefat=6 labelsz=9 titlesz=10 barlabel=Normalized\ Amplitude')
+
+End()

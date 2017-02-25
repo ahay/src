@@ -1,0 +1,257 @@
+from rsf.proj import *
+
+Flow('top',None,'spike n1=253 n2=401 d1=15 d2=15 mag=1500')
+Flow('bot',None,'spike n1=147 n2=401 d1=15 d2=15 mag=4500')
+
+Flow('vel','top bot','cat axis=1 ${SOURCES[1]} | smooth rect1=3')
+
+Result('twolayer','vel','grey screenratio=1 allpos=y bias=1500 title="Velocity Model" label1=Depth unit1=m label2=Distance unit2=m scalebar=y')
+Flow('fft1','vel','rtoc | fft3 axis=1 pad=1 | fft3 axis=2 pad=1')
+Flow('fft2','vel','fft1 | fft3 axis=2 pad=1')
+Flow('refl',None,'spike n1=400 n2=401 d1=15 d2=15 k1=200 k2=201 | smooth rect1=2 rect2=2 repeat=3') 
+
+time=1.08
+
+for timestep in [2,3,10,20,30]:
+
+    source1 = 'source1-%d'  % timestep
+    real    = 'real-%d'     % timestep
+    imag    = 'imag-%d'     % timestep
+    csource1= 'csource1-%d' % timestep
+    csource = 'cource-%d'   % timestep
+    left1   = 'left1-%d'    % timestep
+    right1  = 'right1-%d'   % timestep
+    wave1   = 'wave1-%d'    % timestep
+    wavem1  = 'wavem1-%d'   % timestep
+    wavex1  = 'wavex1-%d'   % timestep
+    wavexm1 = 'wavexm1-%d'  % timestep
+    snap1   = 'snap1-%d'    % timestep
+
+    source  = 'source-%d'   % timestep
+    left2   = 'left2-%d'    % timestep
+    right2  = 'right2-%d'   % timestep
+    wave2   = 'wave2-%d'    % timestep
+    wavem2  = 'wavem2-%d'   % timestep
+    wavex2  = 'wavex2-%d'   % timestep
+    wavexm2 = 'wavexm2-%d'  % timestep
+    snap2   = 'snap2-%d'    % timestep
+
+    dtt=0.001
+    dt=timestep/1000
+    nt=1.2/dt+1
+    kt=0.12/dt+1
+    factor=dt/dtt
+    ntt=(nt-1)*factor+1
+    ktt=0.12/dtt+1
+
+    #i/(2*phi)=i/(2|omega|)=i/2 * (hilb) [(int)source] 
+
+    Flow(source1,None,
+         '''
+         spike n1=%d d1=%g k1=%d |
+         ricker1 frequency=16
+         '''%(ntt,dtt,ktt))
+    Flow(real,source1,'math "output=0"')
+    Flow(imag,source1,'envelope hilb=y order=500 | halfint | halfint | math output="input/2" ')
+    
+    Flow(csource1,[real,imag],'cmplx ${SOURCES[1]}')
+    Flow(csource,csource1,'window j1=%d'% factor)
+    
+#########################################
+# one-step wave propagation
+#########################################
+    Flow([right1,left1],['vel','fft1'],
+         '''
+     cisolr2 seed=2010 dt=%g fft=${SOURCES[1]} left=${TARGETS[1]} 
+     ''' % dt)
+    
+    Flow(wave1,[csource,'refl',left1,right1],
+         '''
+         cfftwave2 ref=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]} verb=y cmplx=n
+         ''')
+    
+
+    Plot(wavem1,wave1,
+         '''
+         window j3=10  |
+         grey label2="Z" label1="X" title="Isotropic"
+         yreverse=y gainpanel=all screenratio=1
+         ''')
+    
+    Plot(wavexm1,wave1,
+         '''
+         window j3=5 | window n2=1 f2=200 squeeze=n |
+         graph label2="Z" label1="X" title="Isotropic" min2=-0.005 max2=0.01
+         ''')
+    
+    Plot(wave1,
+          '''
+          window n3=1 min3=%g |
+          grey screenratio=1 wanttitle=n
+          label1=Depth unit1=m label2=Distance unit2=m gainpanel=all
+          screenht=14
+          ''' % time)
+
+    Result(wave1,
+           '''
+           window n3=1 min3=%g |
+           grey screenratio=1 title="One-step Lowrank (dt=%dms)"
+           label1=Depth unit1=m label2=Distance unit2=m gainpanel=all
+           labelfat=6 titlefat=6 labelsz=9 titlesz=10
+           ''' % (time,timestep) )
+
+    Plot(wavex1,wave1,
+         '''
+         window n3=1  min3=%g  | window n2=1 f2=200 squeeze=n | scale axis=2 |
+         graph screenratio=4 screenht=14 transp=y yreverse=y title='Amplitude' wantaxis=n
+         ''' % time)
+
+    Result(snap1,[wave1,wavex1],'SideBySideIso')
+
+#########################################
+# two-step wave propagation
+#########################################
+
+    Flow(source,None,
+         '''
+         spike n1=%d d1=%g k1=%d |
+         ricker1 frequency=16
+         '''%(nt,dt,kt))
+    Result(source,'graph  title="Source Wavelet" ')
+    
+    Flow([right2,left2],['vel','fft2'],
+         'isolr2 seed=2010 dt=%g fft=${SOURCES[1]} left=${TARGETS[1]}' % dt)
+    
+    Flow(wave2,[source,'refl',left2,right2],
+         '''
+         fftwave2 ref=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]} verb=n snap=1 snaps=$TARGET
+         ''',stdout=0)
+
+    Plot(wavem2,wave2,
+         '''
+         window j3=10  |
+         grey label2="Z" label1="X" title="Isotropic"
+         yreverse=y gainpanel=all screenratio=1
+         ''')
+    
+    Plot(wavexm2,wave2,
+         '''
+         window j3=5 | window n2=1 f2=200 squeeze=n |
+         graph label2="Z" label1="X" title="Isotropic" min2=-0.005 max2=0.01
+         ''')
+    
+    Plot(wave2,
+          '''
+          window n3=1 min3=%g |
+          grey screenratio=1 wanttitle=n
+          label1=Depth unit1=m label2=Distance unit2=m gainpanel=all
+          screenht=14
+          ''' % time)
+
+    Result(wave2,
+           '''
+           window n3=1 min3=%g |
+           grey screenratio=1 title="Two-step Lowrank (dt=%dms)"
+           label1=Depth unit1=m label2=Distance unit2=m gainpanel=all
+           labelfat=6 titlefat=6 labelsz=9 titlesz=10
+           ''' % (time,timestep) )
+
+    Plot(wavex2,wave2,
+         '''
+         window n3=1  min3=%g  | window n2=1 f2=200 squeeze=n | scale axis=2 |
+         graph screenratio=4 screenht=14 transp=y yreverse=y title='Amplitude' wantaxis=n
+         ''' % time)
+
+    Result(snap2,[wave2,wavex2],'SideBySideIso')
+
+
+Result('clipwave1-3','wave1-3',
+     '''
+     window n3=1 min3=%g |
+     grey screenratio=1 title="One-step Lowrank (dt=%dms)"
+     clip=0.02
+     label1=Depth unit1=m label2=Distance unit2=m gainpanel=all
+     labelfat=6 titlefat=6 labelsz=9 titlesz=10
+     ''' % (time,3) )
+Result('clipwave2-3','wave2-3',
+     '''
+     window n3=1 min3=%g |
+     grey screenratio=1 title="Two-step Lowrank (dt=%dms)"
+     clip=0.02
+     label1=Depth unit1=m label2=Distance unit2=m gainpanel=all
+     labelfat=6 titlefat=6 labelsz=9 titlesz=10
+     ''' % (time,3) )
+Result('clipwave1-10','wave1-10',
+     '''
+     window n3=1 min3=%g |
+     grey screenratio=1 title="One-step Lowrank (dt=%dms)"
+     clip=0.006
+     label1=Depth unit1=m label2=Distance unit2=m gainpanel=all
+     labelfat=6 titlefat=6 labelsz=9 titlesz=10
+     ''' % (time,10) )
+Result('clipwave2-10','wave2-10',
+     '''
+     window n3=1 min3=%g |
+     grey screenratio=1 title="Two-step Lowrank (dt=%dms)"
+     clip=1e3
+     label1=Depth unit1=m label2=Distance unit2=m gainpanel=all
+     labelfat=6 titlefat=6 labelsz=9 titlesz=10
+     ''' % (time,10) )
+
+
+##########################
+# Finite Difference
+##########################
+    
+
+Flow('source2',None,
+     '''
+     spike n1=%d d1=%g k1=%d |
+     ricker1 frequency=16
+     '''%(601,0.002,61))
+Result('source2','graph  title="Source Wavelet" ')
+    
+Flow('fwavefd','source2 vel',
+     '''
+     fd2bs vel=${SOURCES[1]} dt=%g nt=%d isx=200 isz=201 nb=0 c=0.01 
+     '''%(0.002,601))
+    
+Plot('fwavefd',
+     '''
+     window n3=1 min3=%g |
+     grey screenratio=1 wanttitle=n
+     label1=Depth unit1=m label2=Distance unit2=m gainpanel=all
+     screenht=14
+     ''' % time)
+    
+Result('fwavefd',
+       '''
+       window n3=1 min3=%g |
+       grey screenratio=1 title="Finite Differences (dt=%dms)"
+       label1=Depth unit1=m label2=Distance unit2=m gainpanel=all
+       labelfat=6 titlefat=6 labelsz=9 titlesz=10
+       ''' % (time,2))
+    
+Plot('fwavecrossfd','fwavefd',
+     '''
+     window n3=1  min3=%g  | window n2=1 f2=200 squeeze=n | scale axis=2 |
+     graph screenratio=4 screenht=14 transp=y yreverse=y title='Amplitude' wantaxis=n
+     ''' % time)
+   
+Result('snapshot2','fwavefd fwavecrossfd','SideBySideIso')
+"""
+Flow('fwavefd-3','source2 vel',
+     '''
+     fd2bs vel=${SOURCES[1]} dt=%g nt=%d isx=200 isz=201 nb=0 c=0.01 
+     '''%(0.003,401))
+
+Result('clipwavefd-3','fwavefd-3',
+     '''
+     window n3=1 min3=%g |
+     grey screenratio=1 title="FD scheme (dt=%dms)"
+     clip=1e1
+     label1=Depth unit1=m label2=Distance unit2=m gainpanel=all
+     labelfat=6 titlefat=6 labelsz=9 titlesz=10
+     ''' % (time,3) )
+"""
+End()

@@ -1,6 +1,6 @@
-/* Missing data interpolation in 2D using seislet Bregaman iteration. */
+/* Missing data interpolation in 2D using seislet and Bregman shaping iteration. */
 /*
-  Copyright (C) 2011 Jilin University
+  Copyright (C) 2016 Jilin University
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by

@@ -1,0 +1,34 @@
+from rsf.proj import *
+
+# files have names like:
+#http://s3.amazonaws.com/open.source.geoscience/open_data/stratton/segy/VSP/NVSP1.SGY
+# file names can be 
+# cdpgathers_142-200.sgy
+files=['NVSP1','NVSP2']
+filesrsf=[]
+filesrsf_hdr=[]
+for file in files:
+    filesrsf.append('%s.rsf'%file)
+    filesrsf_hdr.append('%s_hdr.rsf'%file)
+    Fetch('%s.SGY'%file,
+          dir='stratton/segy/VSP',
+          server='http://s3.amazonaws.com',
+	  top='open.source.geoscience/open_data',
+	  usedatapath=1)
+    Flow(['%s.rsf'%file,
+          '%s_hdr.rsf'%file,
+          '%s.thdr'%file,
+          '%s.bhdr'%file],
+         '%s.SGY'%file,
+         '''
+         sfsegyread
+             tfile=${TARGETS[1]} 
+             hfile=${TARGETS[2]}  
+	     bfile=${TARGETS[3]} 
+         ''')
+    Flow('%s_hdr.txt'%file,'%s_hdr.rsf'%file,
+         'sfheaderattr > $TARGET && /bin/cat $TARGET',stdout=-1)
+
+    Result('%s'%file,'sfgrey ')
+
+End()

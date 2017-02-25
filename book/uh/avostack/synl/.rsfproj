@@ -1,0 +1,3 @@
+uses=['sfspike', 'sfkirmod', 'sfwindow', 'sfmath', 'sfmask', 'sfspray', 'sfheaderwindow', 'sfput', 'sfwiggle', 'sfnoise', 'sfricker1', 'sfadd', 'sfvscan', 'sfclip2', 'sfgrey', 'sfmutter', 'sfpick', 'sfgraph', 'sfnmo', 'sfsimivscan', 'sfstack', 'sfsnrstack', 'sfsimilarity', 'sfthreshold', 'sfdd', 'sfsegyheader', 'sfsuwrite', 'sfsegywrite']
+data=[]
+size=    2240104

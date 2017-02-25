@@ -1,0 +1,286 @@
+from rsf.proj import *
+
+par = dict(
+    nx=401,
+    nz=401,
+    dx=0.01,
+    dz=0.01,
+    x0=0.0,
+    z0=0.0,
+
+    ns=401,
+    dt=0.0015,
+
+    ns1=201,
+    dt1=0.003,
+
+    vp0_1=2500,
+    vs0_1=1200,
+    eps_1=0.2,
+    del_1=-0.2,
+    the_1=0.0,
+    vp0_2=3600,
+    vs0_2=1800,
+    eps_2=0.2,
+    del_2=0.1,
+    the_2=30.0,
+
+    seed=2012,
+    eps=1.e-6,
+    npk=30,
+
+	n2w=1,
+	o2w=1.5,
+    )
+
+# =================================================================================
+Flow(['vp0','vs0','epsi','del','the'], None,
+     '''
+         twolayer2dti
+         vs0=${TARGETS[1]}
+         epsi=${TARGETS[2]}
+         del=${TARGETS[3]}
+         the=${TARGETS[4]}
+         nx=%d
+         nz=%d
+         dx=%g
+         dz=%g
+         vp0_1=%g
+         vs0_1=%g
+         eps_1=%g
+         del_1=%g
+         the_1=%g
+         vp0_2=%g
+         vs0_2=%g
+         eps_2=%g
+         del_2=%g
+         the_2=%g
+         ''' % (par['nx'],par['nz'],par['dx'],par['dz'],
+                par['vp0_1'],par['vs0_1'],par['eps_1'],par['del_1'],par['the_1'],
+                par['vp0_2'],par['vs0_2'],par['eps_2'],par['del_2'],par['the_2'])
+    )
+
+# =================================================================================
+# extrapolation using Low-rank spectral approach
+# =================================================================================
+name='''
+ElasticxPSLR ElasticzPSLR
+'''
+
+Flow(['ElasticxPSLR',  'ElasticzPSLR'], 
+      'vp0 vs0 epsi del the',
+         '''
+         tti2delr
+         vp0=${SOURCES[0]}
+         vs0=${SOURCES[1]}
+         epsi=${SOURCES[2]} 
+         del=${SOURCES[3]}
+         the=${SOURCES[4]}
+         Elasticz=${TARGETS[1]}
+         ns=%d 
+         dt=%g 
+         eps=%g
+         seed=%d
+         npk=%d
+         ''' % (par['ns'],par['dt'],par['eps'],par['seed'],par['npk'])
+    )
+
+Flow('interface','ElasticxPSLR',
+     '''
+     math output="(%d-1)*%g*7/12"
+     ''' % (par['nz'],par['dz'])
+    )
+
+Plot('interface',
+     '''
+     graph yreverse=y color=c transp=n pad=n plotfat=1 scalebar=n
+     min1=0 max1=4 
+     min2=0 max2=4
+     wanttitle=n wantaxis=n screenratio=1
+     '''
+     )
+
+for qq in Split(name):
+        Plot(qq,
+        '''
+        grey color=j polarity=n scalebar=n screenratio=1. wanttitle=n pclip=99.8
+        axisfat=5 axiscol=7 labelsz=10
+        ''')
+
+for qq in Split(name):
+    Result(qq+'InterfC',[qq,'interface'],'Overlay')
+
+Flow('ElasticzPSLRwave','ElasticzPSLR',
+		'''
+	    window n2=%d min2=%g
+		''' % (par['n2w'],par['o2w']))
+
+Result('ElasticzPSLRwave',
+		'''
+		graph label1=Z title='Lowrank pseudo-spectral' label2=Amplitude screenratio=0.5
+		''')
+
+#Flow('ElasticxPSLRwave','ElasticxPSLR',
+#		'''
+#	    window n1=%d min1=%g
+#		''' % (par['n1w'],par['o1w']))
+#
+#Result('ElasticxPSLRwave',
+#		'''
+#		graph label1=X title='PSLR' label2=Amplitude
+#		''')
+#
+# =================================================================================
+# extrapolation using k-space Low-rank spectral approach
+# =================================================================================
+name2='''
+ElasticxKS ElasticzKS
+'''
+
+Flow(['ElasticxKS',  'ElasticzKS'], 
+      'vp0 vs0 epsi del the',
+         '''
+         tti2dekspacelr
+         vp0=${SOURCES[0]}
+         vs0=${SOURCES[1]}
+         epsi=${SOURCES[2]} 
+         del=${SOURCES[3]}
+         the=${SOURCES[4]}
+         Elasticz=${TARGETS[1]}
+         ns=%d 
+         dt=%g 
+         eps=%g
+         seed=%d
+         npk=%d
+         ''' % (par['ns1'],par['dt1'],par['eps'],par['seed'],par['npk'])
+    )
+
+for qq in Split(name2):
+        Plot(qq,
+        '''
+        grey color=j polarity=n scalebar=n screenratio=1. wanttitle=n pclip=99.8
+        axisfat=5 axiscol=7 labelsz=10
+        ''')
+
+for qq in Split(name2):
+    Result(qq+'InterfC',[qq,'interface'],'Overlay')
+
+Flow('ElasticzKSwave','ElasticzKS',
+		'''
+	    window n2=%d min2=%g
+		''' % (par['n2w'],par['o2w']))
+
+Result('ElasticzKSwave',
+		'''
+		graph label1=Z title='Lowrank pseudo-spectral (k-space)' label2=Amplitude screenratio=0.5
+		''')
+
+#Flow('ElasticxKSwave','ElasticxKS',
+#		'''
+#	    window n1=%d min1=%g
+#		''' % (par['n1w'],par['o1w']))
+
+#Result('ElasticxKSwave',
+#		'''
+#		graph label1=X title='KS' label2=Amplitude
+#		''')
+
+# =================================================================================
+# extrapolation using k-space Low-rank spectral approach with adjusted source term
+# =================================================================================
+name3='''
+ElasticxKSS ElasticzKSS
+'''
+
+Flow(['ElasticxKSS',  'ElasticzKSS'], 
+      'vp0 vs0 epsi del the',
+         '''
+         tti2dekspacelrsource
+         vp0=${SOURCES[0]}
+         vs0=${SOURCES[1]}
+         epsi=${SOURCES[2]} 
+         del=${SOURCES[3]}
+         the=${SOURCES[4]}
+         Elasticz=${TARGETS[1]}
+         ns=%d 
+         dt=%g 
+         eps=%g
+         seed=%d
+         npk=%d
+         ''' % (par['ns1'],par['dt1'],par['eps'],par['seed'],par['npk'])
+    )
+
+for qq in Split(name3):
+        Plot(qq,
+        '''
+        grey color=j polarity=n scalebar=n screenratio=1. wanttitle=n pclip=99.8
+        axisfat=5 axiscol=7 labelsz=10
+        ''')
+
+for qq in Split(name3):
+    Result(qq+'InterfC',[qq,'interface'],'Overlay')
+
+Flow('ElasticzKSSwave','ElasticzKSS',
+		'''
+	    window n2=%d min2=%g
+		''' % (par['n2w'],par['o2w']))
+
+Result('ElasticzKSSwave',
+		'''
+		graph label1=Z title='Lowrank pseudo-spectral (k-space)' label2=Amplitude screenratio=0.5
+		''')
+
+#Flow('ElasticxKSSwave','ElasticxKSS',
+#		'''
+#	    window n1=%d min1=%g
+#		''' % (par['n1w'],par['o1w']))
+
+#Result('ElasticxKSSwave',
+#		'''
+#		graph label1=X title='KS' label2=Amplitude
+#		''')
+
+#################################################################################################
+name4='''
+ElasticxFD ElasticzFD
+'''
+
+fdx='../twolayer2dti.2nd.coupled.1.5ms.FD/ElasticxFD.rsf'
+fdz='../twolayer2dti.2nd.coupled.1.5ms.FD/ElasticzFD.rsf'
+
+SConscript('../twolayer2dti.2nd.coupled.1.5ms.FD/SConstruct')
+
+Flow('ElasticxFD',fdx,'''cp''')
+Flow('ElasticzFD',fdz,'''cp''')
+
+for qq in Split(name4):
+        Plot(qq,
+        '''
+        grey color=j polarity=n scalebar=n screenratio=1. wanttitle=n pclip=99.8
+        axisfat=5 axiscol=7 labelsz=10
+        ''')
+
+for qq in Split(name4):
+    Result(qq+'InterfC',[qq,'interface'],'Overlay')
+
+Flow('ElasticzFDwave','ElasticzFD',
+		'''
+	    window n2=%d min2=%g
+		''' % (par['n2w'],par['o2w']))
+
+Result('ElasticzFDwave',
+		'''
+		graph label1=Z title='10th-order finite-difference' label2=Amplitude screenratio=0.5
+		''')
+
+#Flow('ElasticxFDwave','ElasticxFD',
+#		'''
+#	    window n1=%d min1=%g
+#		''' % (par['n1w'],par['o1w']))
+
+#Result('ElasticxFDwave',
+#		'''
+#		graph label1=X title='KS' label2=Amplitude
+#		''')
+
+End()

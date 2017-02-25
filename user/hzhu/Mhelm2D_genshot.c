@@ -21,34 +21,42 @@
 
 int main(int argc, char* argv[])
 {
-    sf_file in, out;
-    int n1,n2,ns,nw,i,j,k,iw;
-    int srcz, srcx0, srcdx;
+	sf_file in, out, fmag;
+	int n1,n2,ns,nw,i,j,k,iw;
+	int srcz, srcx0, srcdx;
 	int isource, nsource, dsource;
-    float d1,d2,ds,dw,ow;
-    float mag;
-    float ***f;
+	float d1,d2,ds,dw,ow;
+	float mag, *mags;
+	float ***f;
 
-    sf_init(argc, argv);
-    in = NULL; 
-    out = sf_output("out");
+	sf_init(argc, argv);
+	in = NULL; 
+	out = sf_output("out");
 
-    if (!sf_getint("n1",&n1)) n1=1;
-    if (!sf_getint("n2",&n2)) n2=1;
-    if (!sf_getint("ns",&ns)) ns=1;
-    if (!sf_getfloat("d1",&d1)) d1=0.1;
+	if (!sf_getint("n1",&n1)) n1=1;
+	if (!sf_getint("n2",&n2)) n2=1;
+	if (!sf_getint("ns",&ns)) ns=1;
+	if (!sf_getfloat("d1",&d1)) d1=0.1;
     if (!sf_getfloat("d2",&d2)) d2=0.1;
         
     if (!sf_getint("nw",&nw)) nw=1;
     if (!sf_getfloat("dw",&dw)) dw=1.0;
     if (!sf_getfloat("ow",&ow)) ow=1.0;
-    if (!sf_getfloat("mag",&mag)) mag=1.0;
     
     if (!sf_getint("nsource",&nsource)) nsource=1;
     if (!sf_getint("dsource", &dsource)) dsource=0;
     if (!sf_getint("srcz",&srcz)) sf_error("No srcz=.");
     if (!sf_getint("srcx0",&srcx0)) sf_error("No srcx0=.");
     if (!sf_getint("srcdx",&srcdx)) sf_error("No srcdx=.");
+
+	if(NULL != sf_getstring("fmag")){
+		fmag=sf_input("fmag");
+		mags=sf_floatalloc(nw);
+		sf_floatread(mags, nw, fmag);
+	}else{
+		fmag=NULL;
+		if (!sf_getfloat("mag",&mag)) mag=1.0;
+	}
 
     f=sf_floatalloc3(n1,n2,ns);
 	ds=d2*srcdx;
@@ -61,9 +69,10 @@ int main(int argc, char* argv[])
     sf_putfloat(out,"d2",d2);
     sf_putfloat(out,"d3",ds);
     sf_putfloat(out,"d4",dw);
-    sf_putfloat(out,"o4",ow);
+	sf_putfloat(out,"o4",ow);
 
-    for (iw=0; iw< nw; iw++ ) { 
+	for (iw=0; iw< nw; iw++ ) {
+		if(fmag!=NULL) mag=mags[iw];
 		for (k=0; k< ns; k++) { 
 			for (j=0; j<n2; j++) { 
 				for (i=0; i<n1; i++) {
@@ -82,10 +91,10 @@ int main(int argc, char* argv[])
 					}
 				} /* for i */
 			} /* for j */
-    } /* for k */
+		} /* for k */
 
-    sf_floatwrite(f[0][0],n1*n2*ns,out);
+		sf_floatwrite(f[0][0],n1*n2*ns,out);
 
-    } /* for iw */
-    exit(0);
+	} /* for iw */
+	exit(0);
 }

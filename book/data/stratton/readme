@@ -1,0 +1,23 @@
+Notes on the Stratton directories
+
+fetchfinal - fetch the final migrated volmues.  Make some sample plots
+fetchbooklet - Fetch the final migrated volumes used in the BEG booklet 
+     "3-D Seismic and Well Log Data Set ... Stratton Field".  These data used
+     modified iline and xline numbers.  Plots in this directory established 
+     original xline = 207 - booklet xline and
+     original iline = booklet iline + 121
+
+fetchvsp - fetched the flattend corridor data (ready to be stacked).  It is not 
+     clear what all the segy datasets are
+
+fetchgather - fetch the cdp gathers.  These data have nmo applied.  The idea 
+     is to get the gathers for the well locations and try avo analysis
+
+fetchnavmerged - THese are unprocessed data with (x,y) coordinates in headers.
+     These data are read for preprocessing.
+
+fetchslow - need ro 
+
+
+	   
+

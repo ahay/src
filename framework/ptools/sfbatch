@@ -137,7 +137,8 @@ if nodes > np/ppn:
 np = nodes*ppn
 
 for module in modules.split(','):
-    exe = 'module load %s\n' % module + exe
+    if module:
+        exe = 'module load %s\n' % module + exe
     
 if batch == 'pbs':
     submit = '/usr/bin/qsub'

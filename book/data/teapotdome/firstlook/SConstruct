@@ -12,8 +12,15 @@ from rsf.proj import *
 #   residual static (surface consistant)
 #   stack with mute
 
+#SConscript('../fetch/SConstruct')
+# SCsontript will always rerun oher directory, I think because env changes.
+# perhaps scons sees PWD or DATAPATH has changed.  This works:
+import os
+os.system('cd ../fetch; scons')
+
+
 Flow(['rawshot.rsf','rawshot_hdr.rsf'],
-     ['../Fetchpaper/npr3_field.rsf','../Fetchpaper/npr3_field_hdr.rsf'],
+     ['../fetch/npr3_field.rsf','../fetch/npr3_field_hdr.rsf'],
      '''
      sftahsort verbose=1 input=${SOURCES[0]} sort='fldr:214,254,10 tracf'
      | sftahwindow tmax=4.092
@@ -44,7 +51,7 @@ Result('rawshot1','rawshot',
 #       ''')
 
 Flow(['tpowshot.rsf','tpowshot_hdr.rsf'],
-     ['../Fetchpaper/npr3_field.rsf','../Fetchpaper/npr3_field_hdr.rsf'],
+     ['../fetch/npr3_field.rsf','../fetch/npr3_field_hdr.rsf'],
      '''
      sftahsort verbose=1 input=${SOURCES[0]} sort='fldr:214,254,10 tracf'
      | sftahwindow tmax=4.092
@@ -63,11 +70,11 @@ Plot('tpowshot',
        sfgrey title='shot with tpow' pclip=98
        ''',view=1)
 
-#Flow("tpowshot.ximage",'tpowshot',
-#	'''
-#	sfwindow min3=214 max3=214 
-#        | sfimage perc=98 title="interactive sfimage-ffid 214 with tpow"
-#	''',stdout=0)
+Flow("tpowshot.ximage",'tpowshot',
+	'''
+	sfwindow min3=214 max3=214 
+        | sfimage perc=98 title="interactive sfimage-ffid 214 with tpow"
+	''',stdout=0)
 
 Result('tpowshotzoom','tpowshot',
        '''
@@ -84,7 +91,7 @@ Result('tpowshotzoom1','tpowshot',
 
 
 Flow(['preshot.rsf','preshot_hdr.rsf'],
-     ['../Fetchpaper/npr3_gathers.rsf','../Fetchpaper/npr3_gathers_hdr.rsf'],
+     ['../fetch/npr3_gathers.rsf','../fetch/npr3_gathers_hdr.rsf'],
      '''
      sftahsort verbose=1 input=${SOURCES[0]} sort='fldr:214,254,10 tracf'
      | sftahwrite 
@@ -107,20 +114,21 @@ Result('preshotzoom','preshot',
        ''')
 
 Flow('preshot.txt',
-     ['../Fetchpaper/npr3_gathers.rsf','../Fetchpaper/npr3_gathers_hdr.rsf'],
+     ['../fetch/npr3_gathers.rsf','../fetch/npr3_gathers_hdr.rsf'],
      '''
      sftahsort verbose=0 input=${SOURCES[0]} sort='fldr:214,214,10 tracf'
-     | sftahgethw key=fldr,tracf,sx,sy,gx,gy
      ''',stdin=0)
+# you can add print to previous Flow, but it is a lot of print:
+# | sftahgethw key=fldr,tracf,sx,sy,gx,gy
 
 Flow('preshot1.txt',
-     ['../Fetchpaper/npr3_gathers.rsf','../Fetchpaper/npr3_gathers_hdr.rsf'],
+     ['../fetch/npr3_gathers.rsf','../fetch/npr3_gathers_hdr.rsf'],
      '''
      sftahsort verbose=0 input=${SOURCES[0]} sort='tracf:500,500 fldr'
      | sftahgethw key=fldr,sx,sy,selev
      ''',stdin=0)
 Flow('preshot2.txt',
-     ['../Fetchpaper/npr3_gathers.rsf','../Fetchpaper/npr3_gathers_hdr.rsf'],
+     ['../fetch/npr3_gathers.rsf','../fetch/npr3_gathers_hdr.rsf'],
      '''
      sftahsort verbose=0 input=${SOURCES[0]} sort='tracf fldr:430,430'
      | sftahgethw key=tracf,gx,gy,gelev
@@ -128,7 +136,7 @@ Flow('preshot2.txt',
 
 # kls a 40 point predecon mute leave artifacts after decon, but 80 looks OK
 Flow(['tpowshot.rsf','tpowshot_hdr.rsf'],
-     ['../Fetchpaper/npr3_field.rsf','../Fetchpaper/npr3_field_hdr.rsf'],
+     ['../fetch/npr3_field.rsf','../fetch/npr3_field_hdr.rsf'],
      '''
      sftahsort verbose=1 input=${SOURCES[0]} sort='fldr:214,254,10 tracf'
      | sftahwindow tmax=4.092
@@ -265,16 +273,16 @@ Flow(['nmoshot.rsf','nmoshot_hdr.rsf',
         outheaders=${TARGETS[3]}
       ''',stdout=0,stdin=0)
 
-#Flow('nmo.ximage','nmoshot',
-#      '''
-#	sfwindow min3=214 max3=214 
-#        | sfimage perc=98 title="interactive sfimage-ffid 214 with tpow"
-#	''',stdout=0)
-#Flow('nmomute.ximage','nmomuteshot',
-#      '''
-#	sfwindow min3=214 max3=214 
-#        | sfimage perc=98 title="interactive sfimage-ffid 214 with tpow"
-#	''',stdout=0)
+Flow('nmo.ximage','nmoshot',
+      '''
+	sfwindow min3=214 max3=214 
+        | sfimage perc=98 title="interactive sfimage-ffid 214 with tpow"
+	''',stdout=0)
+Flow('nmomute.ximage','nmomuteshot',
+      '''
+	sfwindow min3=214 max3=214 
+        | sfimage perc=98 title="interactive sfimage-ffid 214 with tpow"
+	''',stdout=0)
 Plot('nmoshot','nmoshot',
        '''
        sfwindow min1=0 max1=2 min2=499 max2=572 min3=214 max3=214 \
@@ -291,7 +299,7 @@ Plot('nmomuteshot','nmomuteshot',
 Result('nmomutecheck','nmoshot nmomuteshot','SideBySideAniso')
 
 Flow(['brutestack141.rsf','brutestack_hdr.rsf'],
-     ['../Fetchpaper/npr3_field.rsf','../Fetchpaper/npr3_field_hdr.rsf'],
+     ['../fetch/npr3_field.rsf','../fetch/npr3_field_hdr.rsf'],
      '''
      sftahsort verbose=1 input=${SOURCES[0]} sort='iline:141,141 xline offset'
      | sftahwindow tmax=4.092

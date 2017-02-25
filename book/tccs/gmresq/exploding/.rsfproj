@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfput', 'sftransp', 'sfgrey', 'sfspike', 'sfricker1', 'sfmath', 'sfenvelope', 'sfhalfint', 'sfcmplx', 'sfwindow', 'sfsmooth', 'sfexpand', 'sfrtoc', 'sffft3', 'sfscale', 'sffraclr2', 'sfdepth2time', 'sfai2refl', 'sftime2depth', 'sfzolsrtm2', 'sfreal', 'sfzortmgmres']
+data=[]
+size=  442003384

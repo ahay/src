@@ -372,6 +372,8 @@ void prtm2d_lop(bool adj, bool add, int nm, int nd, float *mod, float *dat)
     /* initialize is-th source wavefield Ps[] */
     memset(sp0[0], 0, nzpad*nxpad*sizeof(float));
     memset(sp1[0], 0, nzpad*nxpad*sizeof(float));
+    memset(gp0[0], 0, nzpad*nxpad*sizeof(float));
+    memset(gp1[0], 0, nzpad*nxpad*sizeof(float));
     if (csdgather){
       gxbeg=sxbeg+is*jsx-distx;
       sg_init(gxz, gzbeg, gxbeg, jgz, jgx, ng);
@@ -386,9 +388,7 @@ void prtm2d_lop(bool adj, bool add, int nm, int nd, float *mod, float *dat)
 	ptr=sp0; sp0=sp1; sp1=ptr;
 	boundary_rw(sp0, &rwbndr[it*4*(nx+nz)], false);
       }
-      
-      memset(gp0[0], 0, nzpad*nxpad*sizeof(float));
-      memset(gp1[0], 0, nzpad*nxpad*sizeof(float));
+
       for (it=nt-1; it >-1; it--) {
 	/* reverse time order, Img[]+=Ps[]* Pg[]; */
 	if(verb) sf_warning("%d;",it);
@@ -409,7 +409,8 @@ void prtm2d_lop(bool adj, bool add, int nm, int nd, float *mod, float *dat)
 	apply_sponge(gp0); 
 	apply_sponge(gp1); 
 	ptr=gp0; gp0=gp1; gp1=ptr;
-	
+
+	/* rtm imaging condition */
 	for(i2=0; i2<nx; i2++)
 	  for(i1=0; i1<nz; i1++)
 	    mod[i1+nz*i2]+=sp0[i2+nb][i1+nb]*gp1[i2+nb][i1+nb];

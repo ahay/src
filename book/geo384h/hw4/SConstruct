@@ -1,4 +1,3 @@
 from rsf.tex import *
 
-End(use='hyperref,listings,amsmath',color='dune inv spec0 elev trian inter0 inter1 shaping',hires='laplace')
-
+End(use='hyperref,listings,newalg',options='reproduce',color='elev trian inter0 inter1 shaping')

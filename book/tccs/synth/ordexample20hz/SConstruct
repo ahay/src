@@ -1,5 +1,5 @@
 from rsf.proj import *
-from rsf.recipes.beg import server
+#from rsf.recipes.beg import server
 import math
 
 
@@ -57,7 +57,7 @@ def grey3(byte,color,title,label,frame1,frame2,frame3,point2):
 
 
 #Get data
-Fetch('ordovician-vp.HH','xavier',server)
+Fetch('ordovician-vp.HH','xavier')
 Flow('vp','ordovician-vp.HH',
      '''
      dd form=native | 

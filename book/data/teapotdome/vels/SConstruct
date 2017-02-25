@@ -2,14 +2,23 @@ from rsf.proj import *
 import os, sys
 
 #SConscript('../fetch/SConstruct')
+#SConscript('../scdecon/SConstruct')
+#SCsontript will always rerun oher directory, I think because env changes.
+# perhaps scons sees PWD or DATAPATH has changed.  This works:
+import os
+os.system('cd ../fetch; scons')
+os.system('cd ../scdecon; scons')
+
+mypython=(os.popen("which python")).read()
+print "mypython=",mypython
 
 Flow(['vvol','vvol.dat'],['../fetch/npr3_dmo.vel','interpvel.py'],
      '''
-     python ${SOURCES[1]} 
+     %s ${SOURCES[1]} 
         nxline=188  fxline=1 
 	ninline=345 finline=1
 	maxt=3001 dt=2
-     ''')
+     '''% sys.executable)
 
 xline=120
 minclip=8800
@@ -55,7 +64,7 @@ Flow(['vtxystack.rsf','vtxystack_hdr.rsf'],
      | sftahstatic sign=-1   
      | sftahnmo 
        verbose=1
-       vfile=vvol.rsf
+       vfile=${SOURCES[2]}
      | sftahstack key=iline,xline verbose=1 ntaper=40
        tmute=0,1.20,1.82 
        xmute=0,7358,18000 
@@ -85,7 +94,7 @@ Flow(['vtxycdps.rsf','vtxycdps_hdr.rsf'],
      | sftahstatic sign=-1   
      | sftahnmo
        verbose=1
-       vfile=vvol.rsf
+       vfile=${SOURCES[2]}
      | sftahmute 
        verbose=1 
        tmute=0,1.20,1.82 
