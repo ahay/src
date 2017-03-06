@@ -279,3 +279,151 @@ void forward_modeling_q(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui ac
 	free(*dd); free(dd); free(rr); 
 	free(*term); free(term);
 }
+
+void forward_modeling_d(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpar, sf_vec_d array, bool verb)
+/*< Variable-density acoustic forward modeling >*/
+{
+	int ix, iz, is, ir, it;
+	int sx, rx, sz, rz, frectx, frectz;
+	int nz, nx, padnz, padnx, padnzx, nt, nr, nb;
+
+	float dx, dz, dt, idt;
+	float **vv, **den, **dd, *bcxp, *bczp, *bcxv, *bczv;
+	float **px, **pz, **p, **vx, **vz, **term, *rr;
+
+	FILE *swap;
+	sf_file Fwav;
+
+	MPI_Comm comm=MPI_COMM_WORLD;
+
+	swap=fopen("temswap.bin", "wb+");
+	Fwav=sf_output("Fwav");
+
+	padnz=acpar->padnz;
+	padnx=acpar->padnx;
+	padnzx=padnz*padnx;
+	nz=acpar->nz;
+	nx=acpar->nx;
+	nt=acpar->nt;
+	nr=acpar->nr;
+	nb=acpar->nb;
+	sz=acpar->sz;
+	rz=acpar->rz;
+	frectx=soupar->frectx;
+	frectz=soupar->frectz;
+
+	dx=acpar->dx;
+	dz=acpar->dz;
+	dt=acpar->dt;
+	idt=1./acpar->dt;
+
+	sf_putint(Fwav, "n1", padnz);
+	sf_putint(Fwav, "n2", padnx);
+	sf_putint(Fwav, "n3", (nt-1)/50+1);
+
+	vv = sf_floatalloc2(padnz, padnx);
+	den = sf_floatalloc2(padnz, padnx);
+	dd=sf_floatalloc2(nt, nr);
+
+	bcxp=acpar->bcxp;
+	bczp=acpar->bczp;
+	bcxv=acpar->bcxv;
+	bczv=acpar->bczv;
+
+	px=sf_floatalloc2(padnz, padnx);
+	pz=sf_floatalloc2(padnz, padnx);
+	p =sf_floatalloc2(padnz, padnx);
+	vx=sf_floatalloc2(padnz, padnx);
+	vz=sf_floatalloc2(padnz, padnx);
+	term=sf_floatalloc2(padnz, padnx);
+	rr=sf_floatalloc(padnzx);
+
+	/* padding and convert vector to 2-d array */
+	pad2d(array->vv, vv, nz, nx, nb);
+	pad2d(array->dd, den, nz, nx, nb);
+
+	for(is=mpipar->cpuid; is<acpar->ns; is+=mpipar->numprocs){
+		sf_warning("###### is=%d ######", is+1);
+
+		memset(dd[0], 0., nr*nt*sizeof(float));
+		memset(px[0], 0., padnzx*sizeof(float));
+		memset(pz[0], 0., padnzx*sizeof(float));
+		memset( p[0], 0., padnzx*sizeof(float));
+		memset(vx[0], 0., padnzx*sizeof(float));
+		memset(vz[0], 0., padnzx*sizeof(float));
+		
+		sx=acpar->s0_v+is*acpar->ds_v;
+		source_map(sx, sz, frectx, frectz, padnx, padnz, padnzx, rr);
+
+		for(it=0; it<nt; it++){
+			if(verb) sf_warning("Modeling is=%d; it=%d;", is+1, it);
+
+			/* update px */
+			derivpx(vx, term, padnx, padnz, dx/2);
+			for (ix=4; ix<padnx-4; ix++)
+				for (iz=4; iz<padnz-4; iz++)
+					px[ix][iz]=((idt-bcxp[ix])*px[ix][iz] + 
+							den[ix][iz]*vv[ix][iz]*vv[ix][iz]*term[ix][iz]) / (idt+bcxp[ix]);
+
+			/* update pz */
+			derivpz(vz, term, padnx, padnz, dz/2);
+			for (ix=4; ix<padnx-4; ix++)
+				for (iz=4; iz<padnz-4; iz++)
+					pz[ix][iz]=((idt-bczp[ix])*pz[ix][iz] + 
+							den[ix][iz]*vv[ix][iz]*vv[ix][iz]*term[ix][iz]) / (idt+bczp[ix]);
+
+			/* load source */
+			for (ix=4; ix<padnx-4; ix++)
+				for (iz=4; iz<padnz-4; iz++)
+					p[ix][iz]=px[ix][iz]+pz[ix][iz]+rr[ix*padnz+iz]*array->ww[it];
+
+			/* output data */
+			for(ir=0; ir<acpar->nr2[is]; ir++){
+				rx=acpar->r0_v[is]+ir*acpar->dr_v;
+				dd[acpar->r02[is]+ir][it]=p[rx][rz];
+			}
+
+			if(is==acpar->ns/2 && it%50==0) sf_floatwrite(p[0], padnzx, Fwav);
+
+			/* update vx */
+			derivvx(p, term, padnx, padnz, dx/2);
+			for (ix=4; ix<padnx-4; ix++)
+				for (iz=4; iz<padnz-4; iz++)
+					vx[ix][iz]=((idt-bcxv[ix])*vx[ix][iz] + 
+							term[ix][iz]/den[ix][iz]) / (idt+bcxv[ix]);
+
+			derivvz(p, term, padnx, padnz, dz/2);
+			for (ix=4; ix<padnx-4; ix++)
+				for (iz=4; iz<padnz-4; iz++)
+					vz[ix][iz]=((idt-bczv[ix])*vz[ix][iz] + 
+							term[ix][iz]/den[ix][iz]) / (idt+bczv[ix]);
+		} // end of time loop
+
+		fseeko(swap, is*nr*nt*sizeof(float), SEEK_SET);
+		fwrite(dd[0], sizeof(float), nr*nt, swap);
+	}// end of shot loop
+	fclose(swap);
+	MPI_Barrier(comm);
+
+	sf_fileclose(Fwav);
+
+	/* transfer data to Fdat */
+	if(mpipar->cpuid==0){
+		swap=fopen("temswap.bin", "rb");
+		for(is=0; is<acpar->ns; is++){
+			fseeko(swap, is*nr*nt*sizeof(float), SEEK_SET);
+			fread(dd[0], sizeof(float), nr*nt, swap);
+			sf_floatwrite(dd[0], nr*nt, Fdat);
+		}
+		fclose(swap);
+		remove("temswap.bin");
+	}
+	MPI_Barrier(comm);
+	
+	/* release allocated memory */
+	free(*px); free(px); free(*pz); free(pz);
+	free(*p); free(p); free(*vx); free(vx); 
+	free(*vz); free(vz); free(rr);
+	free(*vv); free(vv); free(*den); free(den);
+	free(*dd); free(dd); free(*term); free(term);
+}
