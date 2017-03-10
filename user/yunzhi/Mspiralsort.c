@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
     /* referenced epicenter coordinate x. */
     if (!sf_getfloat("epi_y",&epi_y)) sf_error("Need epicenter y.");
     /* referenced epicenter coordinate y. */
-    if (!sf_getfloat("radius0",&r0)) r0=0.0;
+    if (!sf_getfloat("radius0",&r0)) r0=1.0;
     /* Starting radius of spiral. */
     if (!sf_getfloat("angle0",&a0)) a0=0.0;
     /* Starting angle of spiral. */
