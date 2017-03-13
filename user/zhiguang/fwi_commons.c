@@ -52,10 +52,14 @@ typedef struct sf_acquisition{
 	int nt;
 	float dt;
 	float t0;
-	// absorbing boundary condition
+	// boundary condition
 	int nb;
 	float coef;
 	float *bc;
+	float *bcxp;
+	float *bczp;
+	float *bcxv;
+	float *bczv;
 	// padding
 	int padnx;
 	int padnz;
@@ -127,7 +131,9 @@ typedef struct sf_fwipar_s{
 	int drectx;
 	int drectz;
 	int nrepeat;
-	int ider;
+	int tangent;
+	float sigma1;
+	float sigma2;
 	// hard boundary constraints
 	float v1;
 	float v2;
@@ -156,6 +162,29 @@ typedef struct sf_fwipar_q{
 } *sf_fwi_q;
 /*^*/
 
+typedef struct sf_fwipar_d{
+	bool onlygrad;
+	int para_type;
+	int grad_type;
+	// data residual weighting
+	float wt1;
+	float wt2;
+	float woff1;
+	float woff2;
+	float gain;
+	// water layer depth
+	int waterz;
+	// gradient smoothing parameters
+	int grectx;
+	int grectz;
+	// hard boundary constraints
+	float v1;
+	float v2;
+	float den1;
+	float den2;
+} *sf_fwi_d;
+/*^*/
+
 typedef struct sf_1darray_s{
 	float *vv;
 	float *ww;
@@ -168,6 +197,13 @@ typedef struct sf_1darray_q{
 	float *taus;
 	float *ww;
 } *sf_vec_q;
+/*^*/
+
+typedef struct sf_1darray_d{
+	float *vv;
+	float *dd;
+	float *ww;
+} *sf_vec_d;
 /*^*/
 
 typedef struct sf_seislet{
@@ -187,6 +223,7 @@ typedef struct sf_encoding{
 /*^*/
 
 const float c0=-205./72, c1=8./5, c2=-1./5, c3=8./315, c4=-1./560;
+const float d1=4./5, d2=-1./5, d3=4./105, d4=-1./280;
 
 /* seislet regularization */
 bool seislet=false; /* turn on/off seislet */
@@ -389,6 +426,111 @@ void preparation_q(sf_file Fv, sf_file Fq, sf_file Ftau, sf_file Fw, sf_acqui ac
 	free(qq);
 }
 
+void preparation_d(sf_file Fv, sf_file Fd, sf_file Fw, sf_acqui acpar, sf_sou soupar, sf_vec_d array)
+/*< read data, initialize variables and prepare acquisition geometry >*/
+{
+	int i, nb, nzx, nt;
+	float sx, xend, rbegin, rend, tmp;
+
+	int nplo=3, nphi=3;
+	float eps=0.0001;
+	sf_butter blo=NULL, bhi=NULL;
+
+	/* padding variables */
+	nb=acpar->nb;
+	acpar->padnx=acpar->nx+2*nb;
+	acpar->padnz=acpar->nz+2*nb;
+	acpar->padx0=acpar->x0-nb*acpar->dx;
+	acpar->padz0=acpar->z0-nb*acpar->dz;
+
+	/* absorbing boundary coefficients */
+	acpar->bcxp=sf_floatalloc(acpar->padnx);
+	acpar->bczp=sf_floatalloc(acpar->padnz);
+	acpar->bcxv=sf_floatalloc(acpar->padnx);
+	acpar->bczv=sf_floatalloc(acpar->padnz);
+	memset(acpar->bcxp, 0., acpar->padnx*sizeof(float));
+	memset(acpar->bczp, 0., acpar->padnz*sizeof(float));
+	memset(acpar->bcxv, 0., acpar->padnx*sizeof(float));
+	memset(acpar->bczv, 0., acpar->padnz*sizeof(float));
+
+	for(i=0; i<nb; i++){
+		tmp=1.5*acpar->coef/nb*logf(10000.)/nb/nb;
+
+		acpar->bcxp[nb-i-1]=tmp/acpar->dx*(i+1)*(i+1)/2;
+		acpar->bcxp[nb+acpar->nx+i]=tmp/acpar->dx*(i+0.5)*(i+0.5)/2;
+
+		acpar->bczp[nb-i-1]=tmp/acpar->dz*(i+1)*(i+1)/2;
+		acpar->bczp[nb+acpar->nz+i]=tmp/acpar->dz*(i+0.5)*(i+0.5)/2;
+
+		acpar->bcxv[nb-i-1]=tmp/acpar->dx*(i+0.5)*(i+0.5)/2;
+		acpar->bcxv[nb+acpar->nx+i]=tmp/acpar->dx*(i+1)*(i+1)/2;
+
+		acpar->bczv[nb-i-1]=tmp/acpar->dz*(i+0.5)*(i+0.5)/2;
+		acpar->bczv[nb+acpar->nz+i]=tmp/acpar->dz*(i+1)*(i+1)/2;
+	}
+
+	/* acquisition parameters */
+	acpar->ds_v=acpar->ds/acpar->dx+0.5;
+	acpar->s0_v=(acpar->s0-acpar->x0)/acpar->dx+0.5+nb;
+	acpar->sz += nb;
+
+	acpar->dr_v=acpar->dr/acpar->dx+0.5;
+	acpar->r0_v=sf_intalloc(acpar->ns);
+	acpar->r02=sf_intalloc(acpar->ns);
+	acpar->nr2=sf_intalloc(acpar->ns);
+	acpar->rz += nb;
+	xend=acpar->x0+(acpar->nx-1)*acpar->dx;
+	if(acpar->acqui_type==1){
+		for(i=0; i<acpar->ns; i++){
+			acpar->r0_v[i]=acpar->r0/acpar->dx+0.5+nb;
+			acpar->r02[i]=0;
+			acpar->nr2[i]=acpar->nr;
+		}
+	}else{
+		for(i=0; i<acpar->ns; i++){
+			sx=acpar->s0+acpar->ds*i;
+			rbegin=(sx+acpar->r0 <acpar->x0)? acpar->x0 : sx+acpar->r0;
+			rend=sx+acpar->r0 +(acpar->nr-1)*acpar->dr;
+			rend=(rend < xend)? rend : xend;
+			acpar->r0_v[i]=(rbegin-acpar->x0)/acpar->dx+0.5+nb;
+			acpar->r02[i]=(rbegin-sx-acpar->r0)/acpar->dx+0.5;
+			acpar->nr2[i]=(rend-rbegin)/acpar->dr+1.5;
+		}
+	}
+
+	/* read model parameters */
+	nzx=acpar->nz*acpar->nx;
+	nt=acpar->nt;
+	array->vv=sf_floatalloc(nzx);
+	array->dd=sf_floatalloc(nzx);
+	array->ww=sf_floatalloc(nt);
+
+	sf_floatread(array->vv, nzx, Fv);
+	sf_floatread(array->dd, nzx, Fd);
+	sf_floatread(array->ww, nt, Fw);
+
+	/* bandpass the wavelet */
+	soupar->flo *= acpar->dt;
+	soupar->fhi *= acpar->dt;
+	if(soupar->flo > eps) blo=sf_butter_init(false, soupar->flo, nplo);
+	if(soupar->fhi < 0.5-eps) bhi=sf_butter_init(true, soupar->fhi, nphi);
+
+	if(NULL != blo){
+		sf_butter_apply(blo, nt, array->ww);
+		sf_reverse(nt, array->ww);
+		sf_butter_apply(blo, nt, array->ww);
+		sf_reverse(nt, array->ww);
+		sf_butter_close(blo);
+	}
+	if(NULL != bhi){
+		sf_butter_apply(bhi, nt, array->ww);
+		sf_reverse(nt, array->ww);
+		sf_butter_apply(bhi, nt, array->ww);
+		sf_reverse(nt, array->ww);
+		sf_butter_close(bhi);
+	}
+}
+
 void encoding_extract(float **code, int **shift, int **sign, int nsource, int ns, float dt)
 /*< extract time shift and sign >*/
 {
@@ -516,6 +658,94 @@ void laplace(float **p1, float **term, int padnx, int padnz, float dx2, float dz
 				+c2*(p1[ix][iz+2]+p1[ix][iz-2])
 				+c3*(p1[ix][iz+3]+p1[ix][iz-3])
 				+c4*(p1[ix][iz+4]+p1[ix][iz-4]))/dz2;
+		}
+	}
+}
+
+void derivpx(float **p, float **term, int padnx, int padnz, float dx)
+/*< derivative in x-direction >*/
+{
+	int ix, iz;
+
+#ifdef _OPENMP
+#pragma omp parallel for \
+	private(ix,iz) \
+	shared(padnx,padnz,p,term)
+#endif
+
+	for (ix=4; ix<padnx-4; ix++){
+		for (iz=4; iz<padnz-4; iz++){
+			term[ix][iz] = 
+				(d1*(p[ix][iz]-p[ix-1][iz])
+				+d2*(p[ix+1][iz]-p[ix-2][iz])
+				+d3*(p[ix+2][iz]-p[ix-3][iz])
+				+d4*(p[ix+3][iz]-p[ix-4][iz]))/dx; 
+		}
+	}
+}
+
+void derivpz(float **p, float **term, int padnx, int padnz, float dz)
+/*< derivative in z-direction >*/
+{
+	int ix, iz;
+
+#ifdef _OPENMP
+#pragma omp parallel for \
+	private(ix,iz) \
+	shared(padnx,padnz,p,term)
+#endif
+
+	for (ix=4; ix<padnx-4; ix++){
+		for (iz=4; iz<padnz-4; iz++){
+			term[ix][iz] = 
+				(d1*(p[ix][iz]-p[ix][iz-1])
+				+d2*(p[ix][iz+1]-p[ix][iz-2])
+				+d3*(p[ix][iz+2]-p[ix][iz-3])
+				+d4*(p[ix][iz+3]-p[ix][iz-4]))/dz; 
+		}
+	}
+}
+
+void derivvx(float **p, float **term, int padnx, int padnz, float dx)
+/*< derivative in x-direction >*/
+{
+	int ix, iz;
+
+#ifdef _OPENMP
+#pragma omp parallel for \
+	private(ix,iz) \
+	shared(padnx,padnz,p,term)
+#endif
+
+	for (ix=4; ix<padnx-4; ix++){
+		for (iz=4; iz<padnz-4; iz++){
+			term[ix][iz] = 
+				(d1*(p[ix+1][iz]-p[ix][iz])
+				+d2*(p[ix+2][iz]-p[ix-1][iz])
+				+d3*(p[ix+3][iz]-p[ix-2][iz])
+				+d4*(p[ix+4][iz]-p[ix-3][iz]))/dx; 
+		}
+	}
+}
+
+void derivvz(float **p, float **term, int padnx, int padnz, float dz)
+/*< derivative in z-direction >*/
+{
+	int ix, iz;
+
+#ifdef _OPENMP
+#pragma omp parallel for \
+	private(ix,iz) \
+	shared(padnx,padnz,p,term)
+#endif
+
+	for (ix=4; ix<padnx-4; ix++){
+		for (iz=4; iz<padnz-4; iz++){
+			term[ix][iz] = 
+				(d1*(p[ix][iz+1]-p[ix][iz])
+				+d2*(p[ix][iz+2]-p[ix][iz-1])
+				+d3*(p[ix][iz+3]-p[ix][iz-2])
+				+d4*(p[ix][iz+4]-p[ix][iz-3]))/dz; 
 		}
 	}
 }
