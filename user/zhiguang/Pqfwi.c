@@ -34,7 +34,7 @@ int waterz, wtn1, wtn2, woffn1, woffn2, grectx, grectz; // gradient
 
 float dt, idt, dt2, dx2, dz2, wdt, wdt2; // wavefield
 float wt1, wt2, woff1, woff2, gain, scaling, scaling2; // gradient
-float ***dd, **vv, **tau, **taus, *ww, *bc, **weight, threshold[4]; // arrays
+float ***dd, **vv, **tau, **taus, *ww, *bc, **weight; // arrays
 
 MPI_Comm comm=MPI_COMM_WORLD;
 
@@ -123,12 +123,6 @@ void gradient_init(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpar, 
 	pad2d(array->vv, vv, nz, nx, nb);
 	pad2d(array->tau, tau, nz, nx, nb);
 	pad2d(array->taus, taus, nz, nx, nb);
-
-	/* hard thresholding */
-	threshold[0]=fwipar->v1;
-	threshold[1]=fwipar->v2;
-	threshold[2]=fwipar->tau1;
-	threshold[3]=fwipar->tau2;
 
 	return;
 }
@@ -910,8 +904,8 @@ void gradient_vq(float *x, float *fcost, float *grad)
 void fwi(sf_file Fdat, sf_file Finv, sf_file Ferr, sf_file Fgrad, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpar, sf_vec_q array, sf_fwi_q fwipar, sf_optim optpar, bool verb1)
 /*< fwi >*/
 {
-	int i, iter=0, flag, nm;
-	float fcost;
+	int i, iter=0, flag, nm, type;
+	float fcost, threshold[4];
 	float *x, *direction, *grad;
 	sf_gradient gradient;
 	FILE *fp;
@@ -924,10 +918,16 @@ void fwi(sf_file Fdat, sf_file Finv, sf_file Ferr, sf_file Fgrad, sf_mpi *mpipar
 		gradient=gradient_v;
 		nm=nzx;
 		x=array->vv;
+		threshold[0]=fwipar->v1;
+		threshold[1]=fwipar->v2;
+		type=1;
 	}else if(fwipar->grad_type==2){
 		gradient=gradient_q;
 		nm=nzx;
 		x=array->tau;
+		threshold[0]=fwipar->tau1;
+		threshold[1]=fwipar->tau2;
+		type=1;
 	}else if(fwipar->grad_type==3){
 		gradient=gradient_vq;
 		nm=2*nzx;
@@ -936,6 +936,11 @@ void fwi(sf_file Fdat, sf_file Finv, sf_file Ferr, sf_file Fgrad, sf_mpi *mpipar
 			x[i]=array->vv[i];
 			x[nzx+i]=array->tau[i];
 		}
+		threshold[0]=fwipar->v1;
+		threshold[1]=fwipar->v2;
+		threshold[2]=fwipar->tau1;
+		threshold[3]=fwipar->tau2;
+		type=2;
 	}
 
 
@@ -990,7 +995,7 @@ void fwi(sf_file Fdat, sf_file Finv, sf_file Ferr, sf_file Fgrad, sf_mpi *mpipar
 
 		/* line search */
 		lbfgs_save(nm, x, grad, optpar->sk, optpar->yk, optpar);
-		line_search(nm, x, grad, direction, gradient, optpar, threshold, &flag, mpipar->cpuid, 1);
+		line_search(nm, x, grad, direction, gradient, optpar, threshold, &flag, mpipar->cpuid, type);
 		optpar->err[iter+1]=optpar->fk;
 		
 		if(mpipar->cpuid==0){
