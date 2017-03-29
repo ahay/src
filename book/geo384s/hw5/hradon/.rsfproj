@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfgrey', 'sfconjgrad', 'sfvscan', 'sfmutter', 'sfpick', 'sfgraph', 'sfnmo', 'sfcut', 'sfinmo', 'sfadd']
-data=['data/viking/cmp.HH']
-size=    6242236

@@ -28,5 +28,29 @@ for case in ('rpp','seismic'):
 
 Result('data','rpp seismic','OverUnderAniso')
 
+# Compute spectrum
+
+Flow('spec','seismic','spectra')
+
+Plot('spec',
+     '''
+     math output="20*log(input)/log(10)" | 
+     graph label2=power unit2=db title="Amplitude Spectrum" 
+     min1=0 max1=250 min2=-110 max2=-25
+     ''')
+
+Flow('line.asc',None,
+     '''
+     echo 5 -80 80 -35 130 -35 160 -80 n1=2 n2=4 data_format=ascii_int in=$TARGET
+     ''')
+Flow('line','line.asc','dd type=complex form=native | window')
+
+Plot('line',
+     '''
+     graph plotcol=5 plotfat=5 wantaxis=n wanttitle=n 
+     min1=0 max1=250 min2=-110 max2=-25
+     ''')
+
+Result('spec','spec line','Overlay')
 
 End()
