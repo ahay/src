@@ -176,12 +176,12 @@ int main(int argc, char* argv[])
 		}
 	}
 	
-	if (!sf_getfloat("min",&bmin)) bmin=xx[0];
-	/* The minimum boundary if not entered, set to xs*/
+	if (!sf_getfloat("min",&bmin)) bmin= (xx[0]<xx[nr2+1])? xx[0]:xx[nr2+1];
+	/* The minimum boundary if not entered, set to min(xs,xr)*/
 	
 	
-	if (!sf_getfloat("max",&bmax)) bmax=xx[nr2+1];
-	/* The maximum boundary if not entered, set to xr*/
+	if (!sf_getfloat("max",&bmax)) bmax= (xx[0]>xx[nr2+1])? xx[0]:xx[nr2+1];
+	/* The maximum boundary if not entered, set to max(xs,xr)*/
 	
 	if (!sf_getint("niter",&niter)) niter=100;
 	/* The number of iterations*/

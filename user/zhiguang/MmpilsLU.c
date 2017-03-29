@@ -1,4 +1,4 @@
-/* Local similarity filter (direct solving) */
+/* Local similarity filter (solving with band matrix LU decomposition and parallelization) */
 /*
   Copyright (C) 2016 University of Texas at Austin
    

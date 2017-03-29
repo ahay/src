@@ -1,6 +1,6 @@
-/* Acoustic Forward Modeling, FWI, and RTM (FWI has the options of seislet regularization, smoothing kernels, simultaneous source, and static phase encoding) */
+/* Variable-density acoustic Forward Modeling, FWI, and RTM */
 /*
- Copyright (C) 2016 University of Texas at Austin
+ Copyright (C) 2017 University of Texas at Austin
  
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -20,26 +20,24 @@
 #include <rsf.h>
 #include <mpi.h>
 #include "Pmodeling.h"
-#include "Psfwi.h"
+#include "Pdfwi.h"
 #include "Prtm.h"
 
 int main(int argc, char* argv[])
 {
-	int function, seislet, encode;
+	int function, para_type;
 	bool verb;
 
 	sf_mpi mpipar;
 	sf_sou soupar;
 	sf_acqui acpar;
-	sf_vec_s array;
-	sf_fwi_s fwipar;
+	sf_vec_d array;
+	sf_fwi_d fwipar;
 	sf_optim optpar=NULL;
-	sf_seis seispar=NULL;
-	sf_encode encodepar=NULL;
 
 	MPI_Comm comm=MPI_COMM_WORLD;
 
-	sf_file Fv, Fw, Fdat, Fimg, Finv=NULL, Ferr=NULL, Fmod=NULL, Fgrad, Fdip=NULL, Fcode=NULL;
+	sf_file Fv, Fd, Fw, Fdat, Fimg, Fgrad, Finv=NULL, Ferr=NULL, Fmod=NULL;
 
 	sf_init(argc, argv);
 
@@ -48,19 +46,18 @@ int main(int argc, char* argv[])
 	MPI_Comm_size(comm, &mpipar.numprocs);
 
 	Fv=sf_input("Fvel"); /* velocity model */
+	Fd=sf_input("Fd"); /* density model */
 	Fw=sf_input("Fwavelet"); /* wavelet */
 
 	soupar=(sf_sou)sf_alloc(1, sizeof(*soupar));
 	acpar=(sf_acqui)sf_alloc(1, sizeof(*acpar));
-	array=(sf_vec_s)sf_alloc(1, sizeof(*array));
+	array=(sf_vec_d)sf_alloc(1, sizeof(*array));
 
 	/* parameters I/O */
 	if(!sf_getint("function", &function)) function=2;
 	/* if 1, forward modeling; if 2, FWI; if 3, RTM */
-	if(!sf_getint("seislet", &seislet)) seislet=0;
-	/* if 0, no seislet regularization; if 1, seislet regularization */
-	if(!sf_getint("encode", &encode)) encode=0;
-	/* if 0, no phase encoding; if 1, phase encoding */
+	if(!sf_getint("para_type", &para_type)) para_type=1;
+	/* if 1, velocity and density; if 2, velocity and impedance */
 
 	if(!sf_histint(Fv, "n1", &acpar->nz)) sf_error("No n1= in Fv");
 	if(!sf_histint(Fv, "n2", &acpar->nx)) sf_error("No n2= in Fv");
@@ -73,19 +70,19 @@ int main(int argc, char* argv[])
 	if(!sf_histfloat(Fw, "o1", &acpar->t0)) sf_error("No o1= in Fw");
 
 	if(!sf_getbool("verb", &verb)) verb=false; /* verbosity flag */
-	if(!sf_getint("nb", &acpar->nb)) acpar->nb=100; /* boundary width */
-	if(!sf_getfloat("coef", &acpar->coef)) acpar->coef=0.002; /* absorbing boundary coefficient */
+	if(!sf_getint("nb", &acpar->nb)) acpar->nb=20; /* PML boundary width */
+	if(!sf_getfloat("coef", &acpar->coef)) acpar->coef=5.; /* maximum velocity of the medium */
 
 	if(!sf_getint("acqui_type", &acpar->acqui_type)) acpar->acqui_type=1;
 	/* if 1, fixed acquisition; if 2, marine acquisition; if 3, symmetric acquisition */
 	if(!sf_getint("ns", &acpar->ns)) sf_error("shot number required"); /* shot number */
 	if(!sf_getfloat("ds", &acpar->ds)) sf_error("shot interval required"); /* shot interval */
 	if(!sf_getfloat("s0", &acpar->s0)) sf_error("shot origin required"); /* shot origin */
-	if(!sf_getint("sz", &acpar->sz)) acpar->sz=5; /* source depth */
+	if(!sf_getint("sz", &acpar->sz)) acpar->sz=3; /* source depth */
 	if(!sf_getint("nr", &acpar->nr)) acpar->nr=acpar->nx; /* number of receiver */
 	if(!sf_getfloat("dr", &acpar->dr)) acpar->dr=acpar->dx; /* receiver interval */
 	if(!sf_getfloat("r0", &acpar->r0)) acpar->r0=acpar->x0; /* receiver origin */
-	if(!sf_getint("rz", &acpar->rz)) acpar->rz=5; /* receiver depth */
+	if(!sf_getint("rz", &acpar->rz)) acpar->rz=3; /* receiver depth */
 
 	if(!sf_getint("interval", &acpar->interval)) acpar->interval=1; /* wavefield storing interval */
 
@@ -93,34 +90,9 @@ int main(int argc, char* argv[])
 	if(!sf_getfloat("flo", &soupar->flo)) soupar->flo=0.; /* low frequency in band, default is zero */
 	if(!sf_getint("frectx", &soupar->frectx)) soupar->frectx=2; /* source smoothing in x */
 	if(!sf_getint("frectz", &soupar->frectz)) soupar->frectz=2; /* source smoothing in z */
-	if(!sf_getint("nsource", &soupar->nsource)) soupar->nsource=1; /* number of sources in a supershot */
-	if(!sf_getint("dsource", &soupar->dsource)) soupar->dsource=0; /* interval of sources in a supershot */
-
-	if(seislet==1){ // seislet regularization
-		seispar=(sf_seis)sf_alloc(1, sizeof(*seispar));
-		Fdip=sf_input("Fdip"); /* dip file when seislet=1 */
-		if(!sf_getfloat("pclip", &seispar->pclip)) seispar->pclip=15; /* soft thresholding parameter */
-		if(!sf_getint("order", &seispar->order)) seispar->order=1; /* accuracy order of seislet transform */
-		if(NULL == (seispar->type=sf_getstring("seislet_type"))) seispar->type="linear"; /* [haar, linear, biorthogonal] */
-		if(!sf_getfloat("eps", &seispar->eps)) seispar->eps=0.1; /* seislet regularization parameter */
-		seispar->dip=sf_floatalloc2(acpar->nz, acpar->nx);
-		sf_floatread(seispar->dip[0], acpar->nz*acpar->nx, Fdip);
-		sf_fileclose(Fdip);
-	}
-	
-	if(encode==1){ // phase encoding
-		encodepar=(sf_encode)sf_alloc(1, sizeof(*encodepar));
-		Fcode=sf_input("Fcode"); /* polarity and time shift codes */
-		encodepar->code=sf_floatalloc2(soupar->nsource, acpar->ns);
-		encodepar->shift=sf_intalloc2(soupar->nsource, acpar->ns);
-		encodepar->sign=sf_intalloc2(soupar->nsource, acpar->ns);
-		sf_floatread(encodepar->code[0], soupar->nsource*acpar->ns, Fcode);
-		encoding_extract(encodepar->code, encodepar->shift, encodepar->sign, soupar->nsource, acpar->ns, acpar->dt);
-		sf_fileclose(Fcode);
-	}
 
 	/* get prepared */
-	preparation_s(Fv, Fw, acpar, soupar, array, seispar);
+	preparation_d(Fv, Fd, Fw, acpar, soupar, array);
 
 	if(function == 1){ // forward modeling
 		Fdat=sf_output("output"); /* shot data */
@@ -142,15 +114,19 @@ int main(int argc, char* argv[])
 		sf_putstring(Fdat, "label3", "Shot");
 		sf_putstring(Fdat, "unit3", "km");
 
-		forward_modeling(Fdat, &mpipar, soupar, acpar, array, encodepar, verb);
+		forward_modeling_d(Fdat, &mpipar, soupar, acpar, array, para_type, verb);
 
 		sf_fileclose(Fdat);
 	}
 	else if(function == 2){ // FWI
 
-		fwipar=(sf_fwi_s)sf_alloc(1, sizeof(*fwipar));
+		fwipar=(sf_fwi_d)sf_alloc(1, sizeof(*fwipar));
 		if(!sf_getbool("onlygrad", &fwipar->onlygrad)) fwipar->onlygrad=false; 
 		/* only calculate gradident or not */
+		if(!sf_getint("grad_type",&fwipar->grad_type)) fwipar->grad_type=1;
+		/* if 1, velocity; if 2, impedance or density */
+		if(!sf_getint("rfwi",&fwipar->rfwi)) fwipar->rfwi=0;
+		/* if 0, fwi gradient; if 1, rfwi gradient with Vp-Ip scale separation */
 
 		if(!sf_getfloat("wt1", &fwipar->wt1)) fwipar->wt1=acpar->t0; /* window data residual: tmin */
 		if(!sf_getfloat("wt2", &fwipar->wt2)) fwipar->wt2=acpar->t0+(acpar->nt-1)*acpar->dt; /* window data residual: tmax */
@@ -161,15 +137,10 @@ int main(int argc, char* argv[])
 		if(!sf_getint("grectx", &fwipar->grectx)) fwipar->grectx=3; /* gradient smoothing radius in x */
 		if(!sf_getint("grectz", &fwipar->grectz)) fwipar->grectz=3; /* gradient smoothing radius in z */
 
-		if(!sf_getint("drectx", &fwipar->drectx)) fwipar->drectx=1; /* smoothing kernel radius in x */
-		if(!sf_getint("drectz", &fwipar->drectz)) fwipar->drectz=1; /* smoothing kernel radius in z */
-		if(!sf_getint("nrepeat", &fwipar->nrepeat)) fwipar->nrepeat=1; /* smoothing kernel repeat number */
-		if(!sf_getint("tangent", &fwipar->tangent)) fwipar->tangent=0; /* if 1, calculate prediction corrector */
-		if(!sf_getfloat("sigma1", &fwipar->sigma1)) fwipar->sigma1=-1; /* smoothing kernel radius moving step in z */
-		if(!sf_getfloat("sigma2", &fwipar->sigma2)) fwipar->sigma2=-1; /* smoothing kernel radius moving step in x */
-
 		if(!sf_getfloat("v1", &fwipar->v1)) fwipar->v1=0.; /* lower limit of estimated velocity */
 		if(!sf_getfloat("v2", &fwipar->v2)) fwipar->v2=10.; /* upper limit of estimated velocity */
+		if(!sf_getfloat("den1", &fwipar->den1)) fwipar->den1=0.; /* lower limit of estimated density or impedance */
+		if(!sf_getfloat("den2", &fwipar->den2)) fwipar->den2=10.; /* upper limit of estimated density or impedance */
 
 		Fdat=sf_input("Fdat"); /* input data */
 		if(!fwipar->onlygrad){
@@ -198,13 +169,9 @@ int main(int argc, char* argv[])
 			if(!sf_getint("nls", &optpar->nls)) optpar->nls=20; /* line search number */
 			if(!sf_getfloat("factor", &optpar->factor)) optpar->factor=10; /* step length increase factor */
 			if(!sf_getint("repeat", &optpar->repeat)) optpar->repeat=5; /* after how many iterations the step length goes back to 1 */
-			if(!sf_getint("err_type", &optpar->err_type)) optpar->err_type=0; 
-			/* if 0, true misfit function; if 1, both smoothing kernel and original L2 norm misfits */
 			optpar->c1=1e-4;
 			optpar->c2=0.9;
-			if(optpar->err_type==0) optpar->nerr=optpar->niter+1;
-			else optpar->nerr=2*(optpar->niter+1);
-			optpar->err=sf_floatalloc(optpar->nerr);
+			optpar->err=sf_floatalloc(optpar->niter+1);
 		}
 		/* dimension set up */
 		if(Finv != NULL){
@@ -219,7 +186,7 @@ int main(int argc, char* argv[])
 			sf_putstring(Finv, "label2", "Distance");
 			sf_putstring(Finv, "unit2", "km");
 			
-			sf_putint(Ferr, "n1", optpar->nerr);
+			sf_putint(Ferr, "n1", optpar->niter+1);
 			sf_putfloat(Ferr, "d1", 1);
 			sf_putfloat(Ferr, "o1", 0);
 			sf_putstring(Ferr, "label1", "Iterations");
@@ -244,7 +211,7 @@ int main(int argc, char* argv[])
 			sf_putstring(Fmod, "label3", "Iteration");
 		}
 
-		fwi(Fdat, Finv, Ferr, Fmod, Fgrad, &mpipar, soupar, acpar, array, fwipar, optpar, encodepar, verb);
+		fwi(Fdat, Finv, Ferr, Fmod, Fgrad, &mpipar, soupar, acpar, array, fwipar, optpar, para_type, verb);
 
 		if(!fwipar->onlygrad){
 			sf_fileclose(Finv);
@@ -254,24 +221,24 @@ int main(int argc, char* argv[])
 		sf_fileclose(Fgrad);
 	}
 	else if(function == 3){ // RTM
-		Fdat=sf_input("Fdat"); /* input data */
-		Fimg=sf_output("output"); /* rtm image */
-
-		/* dimension set up */
-		sf_putint(Fimg, "n1", acpar->nz);
-		sf_putfloat(Fimg, "d1", acpar->dz);
-		sf_putfloat(Fimg, "o1", acpar->z0);
-		sf_putstring(Fimg, "label1", "Depth");
-		sf_putstring(Fimg, "unit1", "km");
-		sf_putint(Fimg, "n2", acpar->nx);
-		sf_putfloat(Fimg, "d2", acpar->dx);
-		sf_putfloat(Fimg, "o2", acpar->x0);
-		sf_putstring(Fimg, "label2", "Distance");
-		sf_putstring(Fimg, "unit2", "km");
-
-		rtm(Fdat, Fimg, &mpipar, soupar, acpar, array, encodepar, verb);
-
-		sf_fileclose(Fimg);
+//		Fdat=sf_input("Fdat"); /* input data */
+//		Fimg=sf_output("output"); /* rtm image */
+//
+//		/* dimension set up */
+//		sf_putint(Fimg, "n1", acpar->nz);
+//		sf_putfloat(Fimg, "d1", acpar->dz);
+//		sf_putfloat(Fimg, "o1", acpar->z0);
+//		sf_putstring(Fimg, "label1", "Depth");
+//		sf_putstring(Fimg, "unit1", "km");
+//		sf_putint(Fimg, "n2", acpar->nx);
+//		sf_putfloat(Fimg, "d2", acpar->dx);
+//		sf_putfloat(Fimg, "o2", acpar->x0);
+//		sf_putstring(Fimg, "label2", "Distance");
+//		sf_putstring(Fimg, "unit2", "km");
+//
+//		rtm_q(Fdat, Fimg, &mpipar, soupar, acpar, array, verb);
+//
+//		sf_fileclose(Fimg);
 	}
 
 	MPI_Finalize();

@@ -2,7 +2,7 @@ import os, sys, re, string, glob
 sys.path.append('../../framework')
 import bldutil
 
-progs = 'episort spiralsort'
+progs = 'episort spiralsort faultrbf1d'
 
 ccprogs = ''
 
