@@ -21,7 +21,6 @@ Axis order: t, p, x
 */
 
 #include <rsf.h>
-//#include "warp3.h"
 
 int main(int argc, char* argv[])
 {
