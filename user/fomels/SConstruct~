@@ -12,7 +12,7 @@ gbeamform imray interf interp2 interpt iphase kdsort kdtree kron label
 legacy lfftexp0 llpf localskew locov lpf lrmig0 lsfit max2 median
 mffit mig3 miss3 nconv nnint nnshape nsmooth nsmooth1 ocparcel
 octentwt ofilp ofsemb ortho patch phaserot pick pick2 pick3 plane poly
-polyfit regr rdiv rect1 reshape riesz rsin sc seislet1 semblance semblancew shape
+polyfit regr rdiv rect1 reshape riesz rsin sc seislet1 semblance shape
 shapeagc shapefill shearer shift1 similarity similarity2 simenv
 smoothderw smoothreg smspray stream streamiss taupfit thin timecont
 timefreq tomo tree trace2 tristack tristack2 twofreq2 upgrad var2
