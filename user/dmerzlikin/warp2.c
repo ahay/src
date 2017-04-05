@@ -20,7 +20,7 @@
 #include <rsf.h>
 
 static int n1, n2, nx;
-static map4 map1, map2;
+static sf_map4 map1, map2;
 static float *trace1, *trace2, **xstr1, **slice1;
 
 void warp2_init(int n1_in, float o1, float d1,
@@ -33,8 +33,8 @@ void warp2_init(int n1_in, float o1, float d1,
     n2 = n2_in;
     nx = nx_in;
 
-    map1 = stretch4_init (n1, o1, d1, nt, eps);
-    map2 = stretch4_init (n2, o2, d2, nx, eps);
+    map1 = sf_stretch4_init (n1, o1, d1, nt, eps);
+    map2 = sf_stretch4_init (n2, o2, d2, nx, eps);
 
     trace1 = sf_floatalloc(n1);
     trace2 = sf_floatalloc(n2);
@@ -46,8 +46,8 @@ void warp2_init(int n1_in, float o1, float d1,
 void warp2_close(void)
 /*< free allocated storage >*/
 {
-    stretch4_close(map1);
-    stretch4_close(map2);
+    sf_stretch4_close(map1);
+    sf_stretch4_close(map2);
 
     free(trace1);
     free(trace2);
@@ -68,22 +68,22 @@ void warp2(float **slice  /* [nx][nt] input */,
     int i1, i2;
 
     for (i2=0; i2 < nx; i2++) {
-	stretch4_define (map1,coord1[i2]);	    
+	sf_stretch4_define (map1,coord1[i2]);	    
 	
-	stretch4_apply  (false,map1,slice[i2],trace1);	
+	sf_stretch4_apply  (false,map1,slice[i2],trace1);	
 	for (i1=0; i1 < n1; i1++) {
 	    slice1[i1][i2] = trace1[i1];
 	}
 	
-	stretch4_apply  (false,map1,coord2[i2],trace1);
+	sf_stretch4_apply  (false,map1,coord2[i2],trace1);
 	for (i1=0; i1 < n1; i1++) {
 	    xstr1[i1][i2] = trace1[i1];
 	}
     }
     
     for (i1=0; i1 < n1; i1++) {
-	stretch4_define (map2,xstr1[i1]);
-	stretch4_apply  (false,map2,slice1[i1],trace2);
+	sf_stretch4_define (map2,xstr1[i1]);
+	sf_stretch4_apply  (false,map2,slice1[i1],trace2);
 	
 	for (i2=0; i2 < n2; i2++) {
 	    slice2[i2][i1] = trace2[i2];
@@ -100,30 +100,30 @@ void fwarp2(float **slice2 /* [n2][n1] input */,
     int i1, i2;
 
    for (i2=0; i2 < nx; i2++) {
-	stretch4_define (map1,coord1[i2]);	    
-	stretch4_apply  (false,map1,coord2[i2],trace1);
+	sf_stretch4_define (map1,coord1[i2]);	    
+	sf_stretch4_apply  (false,map1,coord2[i2],trace1);
 	for (i1=0; i1 < n1; i1++) {
 	    xstr1[i1][i2] = trace1[i1];
 	}
     }
 
    for (i1=0; i1 < n1; i1++) {	
-	stretch4_define (map2,xstr1[i1]);
+	sf_stretch4_define (map2,xstr1[i1]);
 
 	for (i2=0; i2 < n2; i2++) {
 	    trace2[i2] = slice2[i2][i1];
 	}
 
-	stretch4_invert (false,map2,slice1[i1],trace2);
+	sf_stretch4_invert (false,map2,slice1[i1],trace2);
     }
 
     for (i2=0; i2 < nx; i2++) {
-	stretch4_define (map1,coord1[i2]);	    
+	sf_stretch4_define (map1,coord1[i2]);	    
 
 	for (i1=0; i1 < n1; i1++) {
 	    trace1[i1] = slice1[i1][i2];
 	}	
-	stretch4_invert (false,map1,slice[i2],trace1);	
+	sf_stretch4_invert (false,map1,slice[i2],trace1);	
     }
 }
 

@@ -22,7 +22,7 @@
 #include "warp2.h"
 
 static int n1, n2, n3, nx, ny;
-static map4 map1;
+static sf_map4 map1;
 static float *trace1, **trace2, ***str2, ***str3, ***slice1;
 
 void warp3_init(int n1_in, float o1, float d1,
@@ -39,7 +39,7 @@ void warp3_init(int n1_in, float o1, float d1,
     ny = ny_in;
     nx = nx_in;
 
-    map1 = stretch4_init (n1, o1, d1, nt, eps);
+    map1 = sf_stretch4_init (n1, o1, d1, nt, eps);
 
     trace1 = sf_floatalloc(n1);
     trace2 = sf_floatalloc2(n2,n3);
@@ -56,7 +56,7 @@ void warp3_init(int n1_in, float o1, float d1,
 void warp3_close(void)
 /*< free allocated storage >*/
 {
-    stretch4_close(map1);
+    sf_stretch4_close(map1);
 
     free(trace1);
 
@@ -87,19 +87,19 @@ void warp3(float ***slice  /* [nx][ny][nt] input */,
 
     for (i3=0; i3 < nx; i3++) {
 	for (i2=0; i2 < ny; i2++) {
-	    stretch4_define (map1,coord1[i3][i2]);	    
+	    sf_stretch4_define (map1,coord1[i3][i2]);	    
 	
-	    stretch4_apply  (false,map1,slice[i3][i2],trace1);	
+	    sf_stretch4_apply  (false,map1,slice[i3][i2],trace1);	
 	    for (i1=0; i1 < n1; i1++) {
 		slice1[i1][i3][i2] = trace1[i1];
 	    }
 	
-	    stretch4_apply  (false,map1,coord2[i3][i2],trace1);
+	    sf_stretch4_apply  (false,map1,coord2[i3][i2],trace1);
 	    for (i1=0; i1 < n1; i1++) {
 		str2[i1][i3][i2] = trace1[i1];
 	    }
 
-	    stretch4_apply  (false,map1,coord3[i3][i2],trace1);
+	    sf_stretch4_apply  (false,map1,coord3[i3][i2],trace1);
 	    for (i1=0; i1 < n1; i1++) {
 		str3[i1][i3][i2] = trace1[i1];
 	    }
@@ -128,14 +128,14 @@ void fwarp3(float ***slice2 /* [n3][n2][n1] input */,
 
     for (i3=0; i3 < nx; i3++) {
 	for (i2=0; i2 < ny; i2++) {
-	    stretch4_define (map1,coord1[i3][i2]);	    
+	    sf_stretch4_define (map1,coord1[i3][i2]);	    
 	
-	    stretch4_apply  (false,map1,coord2[i3][i2],trace1);
+	    sf_stretch4_apply  (false,map1,coord2[i3][i2],trace1);
 	    for (i1=0; i1 < n1; i1++) {
 		str2[i1][i3][i2] = trace1[i1];
 	    }
 
-	    stretch4_apply  (false,map1,coord3[i3][i2],trace1);
+	    sf_stretch4_apply  (false,map1,coord3[i3][i2],trace1);
 	    for (i1=0; i1 < n1; i1++) {
 		str3[i1][i3][i2] = trace1[i1];
 	    }
@@ -158,8 +158,8 @@ void fwarp3(float ***slice2 /* [n3][n2][n1] input */,
 		trace1[i1] = slice1[i1][i3][i2];
 	    }
 	    
-	    stretch4_define (map1,coord1[i3][i2]);	    	
-	    stretch4_invert  (false,map1,slice[i3][i2],trace1);
+	    sf_stretch4_define (map1,coord1[i3][i2]);	    	
+	    sf_stretch4_invert  (false,map1,slice[i3][i2],trace1);
 	}
     }
 }
