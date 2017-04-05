@@ -19,8 +19,6 @@
 */
 #include <rsf.h>
 
-#include "stretch4.h"
-
 static int n1, n2, nx;
 static map4 map1, map2;
 static float *trace1, *trace2, **xstr1, **slice1;

@@ -19,7 +19,6 @@
 */
 #include <rsf.h>
 
-#include "stretch4.h"
 #include "warp2.h"
 
 static int n1, n2, n3, nx, ny;
