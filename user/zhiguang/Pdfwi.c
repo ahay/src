@@ -33,7 +33,7 @@ int frectx, frectz, interval, wnt; // wavefield
 int waterz, wtn1, wtn2, woffn1, woffn2, grectx, grectz; // gradient
 
 float dt, idt, dx, dz, wdt; // wavefield
-float wt1, wt2, woff1, woff2, gain, scaling; // gradient
+float wt1, wt2, woff1, woff2, gain, v0, t0, scaling; // gradient
 float ***dd, **vv, **den, *ww, *bcxp, *bczp, *bcxv, *bczv, **weight; // arrays
 
 // reflection fwi gradient
@@ -46,7 +46,8 @@ MPI_Comm comm=MPI_COMM_WORLD;
 void gradient_init(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpar, sf_vec_d array, sf_fwi_d fwipar, bool verb1)
 /*< initialize >*/
 {
-	int iturn, is;
+	int iturn, is, ir, it, sx, rx;
+	float tdis;
 
 	verb=verb1;
 	first=true; // only at the first iteration (for calculating the gradient scaling parameter)
@@ -96,15 +97,17 @@ void gradient_init(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpar, 
 	wt2=fwipar->wt2;
 	woff1=fwipar->woff1;
 	woff2=fwipar->woff2;
+	v0=fwipar->v0;
+	t0=fwipar->t0;
 	wtn1=(wt1-acpar->t0)/dt+0.5;
 	wtn2=(wt2-acpar->t0)/dt+0.5;
 	woffn1=(woff1-acpar->r0)/acpar->dr+0.5;
 	woffn2=(woff2-acpar->r0)/acpar->dr+0.5;
 	weight=sf_floatalloc2(nt, nr);
 
-	for(iturn=0; iturn<nr; iturn++)
-		for(is=0; is<nt; is++)
-			weight[iturn][is]=1.;
+	for(ir=0; ir<nr; ir++)
+		for(it=0; it<nt; it++)
+			weight[ir][it]=1.;
 	if(nr>50) residual_weighting(weight, nt, nr, wtn1, wtn2, woffn1, woffn2, gain);
 
 	/* reflection fwi */
@@ -118,6 +121,15 @@ void gradient_init(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpar, 
 		free(den00);
 	}
 
+	sx=s0_v+cpuid*ds_v;
+	for(ir=0; ir<nr2[cpuid]; ir++){
+		rx=r0_v[cpuid]+ir*dr_v;
+		tdis=sqrtf(dx*dx*(rx-sx)*(rx-sx)+dz*dz*(rz-sz)*(rz-sz))/v0;
+		for(it=0; it<nt; it++){
+			if(it*dt<tdis+t0) weight[r02[cpuid]+ir][it]=0.;
+		}
+	}
+		
 	ww=array->ww;
 	bcxp=acpar->bcxp;
 	bczp=acpar->bczp;
@@ -983,12 +995,13 @@ void gradient_vhat0(float *x, float *fcost, float *grad)
 	float **px0, **pz0, **p0, **vx0, **vz0, ***wp0, ***wvx0, ***wvz0;
 	float *sendbuf, *recvbuf;
 
+	sf_file Fres;
 //	sf_file Fres, Fwav0, Fwav;
-//	Fres=sf_output("Fres");
+	Fres=sf_output("Fres");
 //	Fwav0=sf_output("Fwav0");
 //	Fwav=sf_output("Fwav");
-//	sf_putint(Fres,"n1",nt);
-//	sf_putint(Fres,"n2",nr);
+	sf_putint(Fres,"n1",nt);
+	sf_putint(Fres,"n2",nr);
 //	sf_putint(Fwav, "n1", padnz);
 //	sf_putint(Fwav, "n2", padnx);
 //	sf_putint(Fwav, "n3", (nt-1)/50+1);
@@ -1192,8 +1205,8 @@ void gradient_vhat0(float *x, float *fcost, float *grad)
 		iturn++;
 
 //		/* check the data residual */
-//		if(is==ns/2) sf_floatwrite(pp[0], nr*nt, Fres);
-//		sf_fileclose(Fres);
+		if(is==ns/2) sf_floatwrite(pp[0], nr*nt, Fres);
+		sf_fileclose(Fres);
 		
 		/* initialization */
 		memset(px[0], 0., padnzx*sizeof(float));
@@ -1376,7 +1389,7 @@ void gradient_vhat0(float *x, float *fcost, float *grad)
 		for(ix=0; ix<nzx; ix++)
 			if(fabsf(grad[ix])>dmax)
 				dmax=fabsf(grad[ix]);
-		scaling=0.1/dmax;
+		scaling=0.05/dmax;
 		first=false;
 	}
 
@@ -1414,6 +1427,11 @@ void gradient_i(float *x, float *fcost, float *grad)
 	float **pp, **px, **pz, **p, **vx, **vz, **term, *rr, ***wp, ***wvx, ***wvz;
 	float *sendbuf, *recvbuf;
 
+	sf_file Fres;
+	Fres=sf_output("Fres");
+	sf_putint(Fres,"n1",nt);
+	sf_putint(Fres,"n2",nr);
+	
 	/* initialize fcost */
 	*fcost=0.;
 	/* update velocity */
@@ -1544,6 +1562,10 @@ void gradient_i(float *x, float *fcost, float *grad)
 			}
 		}
 		iturn++;
+
+		/* check the data residual */
+		if(is==ns/2) sf_floatwrite(pp[0], nr*nt, Fres);
+		sf_fileclose(Fres);
 
 		/* initialization */
 		memset(px[0], 0., padnzx*sizeof(float));

@@ -95,6 +95,7 @@ int main(int argc, char* argv[])
 	preparation_d(Fv, Fd, Fw, acpar, soupar, array);
 
 	if(function == 1){ // forward modeling
+
 		Fdat=sf_output("output"); /* shot data */
 
 		/* dimension set up */
@@ -132,6 +133,8 @@ int main(int argc, char* argv[])
 		if(!sf_getfloat("wt2", &fwipar->wt2)) fwipar->wt2=acpar->t0+(acpar->nt-1)*acpar->dt; /* window data residual: tmax */
 		if(!sf_getfloat("woff1", &fwipar->woff1)) fwipar->woff1=acpar->r0; /* window data residual: rmin */
 		if(!sf_getfloat("woff2", &fwipar->woff2)) fwipar->woff2=acpar->r0+(acpar->nr-1)*acpar->dr; /* window data residual: rmax */
+		if(!sf_getfloat("v0", &fwipar->v0)) fwipar->v0=1.5; /* surface velocity for cutting direct wave */
+		if(!sf_getfloat("t0", &fwipar->t0)) fwipar->t0=-1.; /* starting time for cutting direct wave */
 		if(!sf_getfloat("gain", &fwipar->gain)) fwipar->gain=1; /* vertical gain power of data residual */
 		if(!sf_getint("waterz", &fwipar->waterz)) fwipar->waterz=51; /* water layer depth */
 		if(!sf_getint("grectx", &fwipar->grectx)) fwipar->grectx=3; /* gradient smoothing radius in x */

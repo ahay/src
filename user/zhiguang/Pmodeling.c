@@ -285,19 +285,17 @@ void forward_modeling_d(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui ac
 {
 	int ix, iz, is, ir, it;
 	int sx, rx, sz, rz, frectx, frectz;
-	int nz, nx, padnz, padnx, padnzx, nt, nr, nb;
+	int nz, nx, padnz, padnx, padnzx, nt, nr, ns, nb;
+	int numprocs, cpuid, iturn, nspad;
 
 	float dx, dz, dt, idt;
 	float **vv, **den, **v2d, **iden, **dd, *bcxp, *bczp, *bcxv, *bczv;
-	float **px, **pz, **p, **vx, **vz, **term, *rr;
+	float **px, **pz, **p, **vx, **vz, **term, *rr, *sendbuf, *recvbuf, ***ddall;
 
-	FILE *swap;
-	sf_file Fwav;
-
+	//sf_file Fwav;
 	MPI_Comm comm=MPI_COMM_WORLD;
 
-	swap=fopen("temswap.bin", "wb+");
-	Fwav=sf_output("Fwav");
+	//Fwav=sf_output("Fwav");
 
 	padnz=acpar->padnz;
 	padnx=acpar->padnx;
@@ -306,6 +304,7 @@ void forward_modeling_d(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui ac
 	nx=acpar->nx;
 	nt=acpar->nt;
 	nr=acpar->nr;
+	ns=acpar->ns;
 	nb=acpar->nb;
 	sz=acpar->sz;
 	rz=acpar->rz;
@@ -317,9 +316,15 @@ void forward_modeling_d(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui ac
 	dt=acpar->dt;
 	idt=1./acpar->dt;
 
-	sf_putint(Fwav, "n1", padnz);
-	sf_putint(Fwav, "n2", padnx);
-	sf_putint(Fwav, "n3", (nt-1)/50+1);
+	numprocs=mpipar->numprocs;
+	cpuid=mpipar->cpuid;
+	if(ns%numprocs==0) nspad=ns;
+	else nspad=(ns/numprocs+1)*numprocs;
+	if(cpuid==0) ddall=sf_floatalloc3(nt, nr, nspad);
+
+	//sf_putint(Fwav, "n1", padnz);
+	//sf_putint(Fwav, "n2", padnx);
+	//sf_putint(Fwav, "n3", (nt-1)/50+1);
 
 	vv = sf_floatalloc2(padnz, padnx);
 	den = sf_floatalloc2(padnz, padnx);
@@ -358,7 +363,10 @@ void forward_modeling_d(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui ac
 			}
 	}
 
-	for(is=mpipar->cpuid; is<acpar->ns; is+=mpipar->numprocs){
+	if(cpuid==0) sf_warning("nspad=%d, numprocs=%d, ns=%d", nspad, numprocs, ns);
+
+	for(iturn=0; iturn*numprocs<nspad; iturn++){
+		is=iturn*numprocs+cpuid;
 		sf_warning("###### is=%d ######", is+1);
 
 		memset(dd[0], 0., nr*nt*sizeof(float));
@@ -368,84 +376,81 @@ void forward_modeling_d(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui ac
 		memset(vz[0], 0., padnzx*sizeof(float));
 		memset( p[0], 0., padnzx*sizeof(float));
 		memset(term[0], 0., padnzx*sizeof(float));
-		
-		sx=acpar->s0_v+is*acpar->ds_v;
-		source_map(sx, sz, frectx, frectz, padnx, padnz, padnzx, rr);
 
-		for(it=0; it<nt; it++){
-			if(verb) sf_warning("Modeling is=%d; it=%d;", is+1, it);
+		if(is<ns){
+			sx=acpar->s0_v+is*acpar->ds_v;
+			source_map(sx, sz, frectx, frectz, padnx, padnz, padnzx, rr);
 
-			/* update px and load source */
-			derivpx(vx, term, padnx, padnz, dx);
+			for(it=0; it<nt; it++){
+				if(verb) sf_warning("Modeling is=%d; it=%d;", is+1, it);
+
+				/* update px and load source */
+				derivpx(vx, term, padnx, padnz, dx);
 #ifdef _OPENMP
 #pragma omp parallel for \
-	private(ix,iz) 
+				private(ix,iz) 
 #endif
-			for (ix=4; ix<padnx-4; ix++)
-				for (iz=4; iz<padnz-4; iz++)
-					px[ix][iz]=( (idt-bcxp[ix])*px[ix][iz] + v2d[ix][iz]*(term[ix][iz]+rr[ix*padnz+iz]*array->ww[it]) ) / (idt+bcxp[ix]);
+				for (ix=4; ix<padnx-4; ix++)
+					for (iz=4; iz<padnz-4; iz++)
+						px[ix][iz]=( (idt-bcxp[ix])*px[ix][iz] + v2d[ix][iz]*(term[ix][iz]+rr[ix*padnz+iz]*array->ww[it]) ) / (idt+bcxp[ix]);
 
-			/* update pz */
-			derivpz(vz, term, padnx, padnz, dz);
+				/* update pz */
+				derivpz(vz, term, padnx, padnz, dz);
 #ifdef _OPENMP
 #pragma omp parallel for \
-	private(ix,iz) 
+				private(ix,iz) 
 #endif
-			for (ix=4; ix<padnx-4; ix++)
-				for (iz=4; iz<padnz-4; iz++){
-					pz[ix][iz]=((idt-bczp[iz])*pz[ix][iz] + v2d[ix][iz]*term[ix][iz]) / (idt+bczp[iz]);
-					p[ix][iz]=px[ix][iz]+pz[ix][iz];
+				for (ix=4; ix<padnx-4; ix++)
+					for (iz=4; iz<padnz-4; iz++){
+						pz[ix][iz]=((idt-bczp[iz])*pz[ix][iz] + v2d[ix][iz]*term[ix][iz]) / (idt+bczp[iz]);
+						p[ix][iz]=px[ix][iz]+pz[ix][iz];
+					}
+
+				/* update vx */
+				derivvx(p, term, padnx, padnz, dx);
+#ifdef _OPENMP
+#pragma omp parallel for \
+				private(ix,iz) 
+#endif
+				for (ix=4; ix<padnx-4; ix++)
+					for (iz=4; iz<padnz-4; iz++)
+						vx[ix][iz]=((idt-bcxv[ix])*vx[ix][iz] + term[ix][iz]*iden[ix][iz]) / (idt+bcxv[ix]);
+
+				/* update vz */
+				derivvz(p, term, padnx, padnz, dz);
+#ifdef _OPENMP
+#pragma omp parallel for \
+				private(ix,iz) 
+#endif
+				for (ix=4; ix<padnx-4; ix++)
+					for (iz=4; iz<padnz-4; iz++)
+						vz[ix][iz]=((idt-bczv[iz])*vz[ix][iz] + term[ix][iz]*iden[ix][iz]) / (idt+bczv[iz]);
+
+				/* output data */
+				for(ir=0; ir<acpar->nr2[is]; ir++){
+					rx=acpar->r0_v[is]+ir*acpar->dr_v;
+					dd[acpar->r02[is]+ir][it]=p[rx][rz];
 				}
 
-			/* update vx */
-			derivvx(p, term, padnx, padnz, dx);
-#ifdef _OPENMP
-#pragma omp parallel for \
-	private(ix,iz) 
-#endif
-			for (ix=4; ix<padnx-4; ix++)
-				for (iz=4; iz<padnz-4; iz++)
-					vx[ix][iz]=((idt-bcxv[ix])*vx[ix][iz] + term[ix][iz]*iden[ix][iz]) / (idt+bcxv[ix]);
+				//	if(is==acpar->ns/2 && it%50==0) sf_floatwrite(p[0], padnzx, Fwav);
 
-			/* update vz */
-			derivvz(p, term, padnx, padnz, dz);
-#ifdef _OPENMP
-#pragma omp parallel for \
-	private(ix,iz) 
-#endif
-			for (ix=4; ix<padnx-4; ix++)
-				for (iz=4; iz<padnz-4; iz++)
-					vz[ix][iz]=((idt-bczv[iz])*vz[ix][iz] + term[ix][iz]*iden[ix][iz]) / (idt+bczv[iz]);
+			} // end of time loop
+		} // if is<ns
 
-			/* output data */
-			for(ir=0; ir<acpar->nr2[is]; ir++){
-				rx=acpar->r0_v[is]+ir*acpar->dr_v;
-				dd[acpar->r02[is]+ir][it]=p[rx][rz];
-			}
-
-			if(is==acpar->ns/2 && it%50==0) sf_floatwrite(p[0], padnzx, Fwav);
-
-		} // end of time loop
-
-		fseeko(swap, is*nr*nt*sizeof(float), SEEK_SET);
-		fwrite(dd[0], sizeof(float), nr*nt, swap);
+		if(cpuid==0){
+			sendbuf=dd[0];
+			recvbuf=ddall[iturn*numprocs][0];
+		}else{
+			sendbuf=dd[0];
+			recvbuf=NULL;
+		}
+		MPI_Gather(sendbuf, nt*nr, MPI_FLOAT, recvbuf, nt*nr, MPI_FLOAT, 0, comm);
 	}// end of shot loop
-	fclose(swap);
 	MPI_Barrier(comm);
-
-	sf_fileclose(Fwav);
+	//sf_fileclose(Fwav);
 
 	/* transfer data to Fdat */
-	if(mpipar->cpuid==0){
-		swap=fopen("temswap.bin", "rb");
-		for(is=0; is<acpar->ns; is++){
-			fseeko(swap, is*nr*nt*sizeof(float), SEEK_SET);
-			fread(dd[0], sizeof(float), nr*nt, swap);
-			sf_floatwrite(dd[0], nr*nt, Fdat);
-		}
-		fclose(swap);
-		remove("temswap.bin");
-	}
+	if(cpuid==0) sf_floatwrite(ddall[0][0], nr*nt*ns, Fdat);
 	MPI_Barrier(comm);
 	
 	/* release allocated memory */
@@ -455,6 +460,7 @@ void forward_modeling_d(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui ac
 	free(*vv); free(vv); free(*den); free(den);
 	free(*dd); free(dd); free(*term); free(term);
 	free(*v2d); free(v2d); free(*iden); free(iden);
+	if(cpuid==0) free(**ddall); free(*ddall); free(ddall);
 }
 
 void forward_modeling_dq(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpar, sf_vec_dq array, int para_type, bool verb)

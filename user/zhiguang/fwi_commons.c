@@ -172,6 +172,8 @@ typedef struct sf_fwipar_d{
 	float woff1;
 	float woff2;
 	float gain;
+	float v0;
+	float t0;
 	// water layer depth
 	int waterz;
 	// gradient smoothing parameters
