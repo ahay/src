@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
 	bool replace, mode;
 	int i1, i2, n1, n2, ig, ng, i, j;
 	int *np, width, ***sxy, order;
-	float **dd, **ss, **mm, ***dg, **bb, **ff, *trace1, *trace2;
+	float **dd, **ss, **mm, ***dg, **bb, **ff, *trace1, *trace2, ***dg2, d;
 	sf_file in, out, slip, mask=NULL, shift=NULL;
 
 	sf_init(argc, argv);
@@ -139,22 +139,31 @@ int main(int argc, char* argv[])
 	/* predictive painting */
 	trace1=sf_floatalloc(n1);
 	trace2=sf_floatalloc(n1);
+	dg2=sf_floatalloc3(n1, width, ng);
 	predict_init(n1, width, 0.0001, order, 1, false);
 	for (ig=0; ig<ng; ig++){
 		for (i1=0; i1<n1; i1++){
-			dg[ig][0][i1]/=2.;
-			dg[ig][width-1][i1]/=2.;
 			trace1[i1]=dg[ig][0][i1];
-			trace2[i1]=dg[ig][width-1][i1];
+			trace2[i1]=dg2[ig][width-1][i1]=dg[ig][width-1][i1];
 		}
 		for (i2=1; i2<width; i2++){
 			predict_step(false, true, trace1, ff[ig]); // right direction
-			for (i1=0; i1<n1; i1++) dg[ig][i2][i1]+=trace1[i1];
+			for (i1=0; i1<n1; i1++) dg[ig][i2][i1]=trace1[i1];
 			predict_step(false, true, ff[ig], ff[ig]);
 
 			predict_step(false, false, trace2, ff[ig+ng]); // left direction
-			for (i1=0; i1<n1; i1++) dg[ig][width-i2-1][i1]+=trace2[i1];
+			for (i1=0; i1<n1; i1++) dg2[ig][width-i2-1][i1]=trace2[i1];
 			predict_step(false, false, ff[ig+ng], ff[ig+ng]);
+		}
+	}
+
+	/* interpolation */
+	for (ig=0; ig<ng; ig++){
+		for (i2=0; i2<width; i2++){
+			d=1.*i2/(width-1);
+			for (i1=0; i1<n1; i1++){
+				dg[ig][i2][i1]=(1.-d)*dg[ig][i2][i1]+d*dg2[ig][i2][i1];
+			}
 		}
 	}
 
