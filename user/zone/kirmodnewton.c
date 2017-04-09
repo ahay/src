@@ -50,7 +50,7 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 			float xs /* Source */,
 			float xr /* Receiver */,
 			float bmin /* Min value in x-direction */,
-			float bmax /* Max value in z-direction */,
+			float bmax /* Max value in x-direction */,
 			int niter /* Number of iteration for Newton */,
 			double tol /* Tolerance level for Newton */,
 			int n /* Number of reflection */,
@@ -130,7 +130,7 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
     f.T_k_k_zk1 = 0;
     f.T_k_k1_zk = 0;
 	
-    setfunc(vstatus,&f); /* Set value of structure f*/
+    setfunc(vstatus,&f); /* Set value of structure f*/ 
 
     /* Step 1: Calculate F(y) to see if it is sufficiently close to zero----------------------------------*/
 	
@@ -378,31 +378,31 @@ mark: /* Mark point for goto*/
 			
 	    if (c==n) {
 		
-		if(vstatus != 2){
-		    v_r = v[c]+gx[c]*(xx[c+1]-xref[c])+gz[c]*(z(c+1,xx[c+1])-zref[n]);
-		    v_1r = v[c]+gx[c]*(xx[c]-xref[c])+gz[c]*(z(c,xx[c])-zref[n]);
-		}
-		else { /*anisotropy case*/
-		    S1 = (aniso[c][0]*(aniso[c][0]-aniso[c][1])*pow((aniso[c][2]-1),2)*(aniso[c][3]-1))/(2*(aniso[c][1]*aniso[c][1]*(aniso[c][3]-1)*(aniso[c][2]-aniso[c][3])+aniso[c][0]*aniso[c][0]*(aniso[c][2]-1)*(aniso[c][2]*aniso[c][2]*(aniso[c][2]-1)-aniso[c][3]+1) +aniso[c][0]*aniso[c][1]*(1-aniso[c][3]*(aniso[c][2]*pow((aniso[c][2]-1),2) -aniso[c][3] +2)) ));
-		    S3 = (aniso[c][1]*(aniso[c][1]-aniso[c][0])*pow((aniso[c][3]-1),2)*(aniso[c][2]-1))/(2*(aniso[c][0]*aniso[c][0]*(aniso[c][2]-1)*(aniso[c][3]-aniso[c][2])+aniso[c][1]*aniso[c][1]*(aniso[c][3]-1)*(aniso[c][3]*aniso[c][3]*(aniso[c][3]-1)-aniso[c][2]+1) +aniso[c][1]*aniso[c][0]*(1-aniso[c][2]*(aniso[c][3]*pow((aniso[c][3]-1),2) -aniso[c][2] +2)) ));
-		    v_r = 	1/sqrt(((pow(-xx[c] + xx[c+1],2)/aniso[c][0] + pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2)/aniso[c][1])*(1 - 
-																 (S1*pow(-xx[c] + xx[c+1],2) + S3*pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2))/(pow(-xx[c] + xx[c+1],2) + pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2))))/(pow(-xx[c] + xx[c+1],2) + pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2)) + 
-				       ((S1*pow(-xx[c] + xx[c+1],2) + S3*pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2))*sqrt(pow(pow(-xx[c] + xx[c+1],2)/aniso[c][0] + pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2)/aniso[c][1],2)/
-														   pow(pow(-xx[c] + xx[c+1],2) + pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2),2) + 
-														   (2*pow(-xx[c] + xx[c+1],2)*pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2)*(-1 + (aniso[c][2]*pow(-xx[c] + xx[c+1],2) + aniso[c][3]*pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2))/(pow(-xx[c] + xx[c+1],2) + pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2))))/
-														   (aniso[c][0]*aniso[c][1]*(pow(-xx[c] + xx[c+1],2) + pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2))*(S1*pow(-xx[c] + xx[c+1],2) + S3*pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2)))))/
-				       (pow(-xx[c] + xx[c+1],2) + pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2)));
-		    v_1r = v_r;
-		}
-		tx_r = T_hat_k_k1(f.T_k_k1,f.T_k_zk1); /* x-direction at the reflector*/
-		ty = 0; /* For 3D or 2.5D & at the reflector*/
-		tz_r = T_hat_k(f.T_k_zk1); /* z-direction  need to return T_k_zk >> use T_hat_k which return the function itself & at the reflector*/
-		tn = ((-1)*T_hat_k(f.T_k_k1)*zder(c+1,xx[c+1])+tz_r)/hypotf(1,zder(c+1,xx[c+1])); /* Normal-direction at the reflector*/
-		dip = atan(zder(c+1,xx[c+1])); /* The dipping angle of the reflector*/
-				
-		if (debug) {
-		    sf_warning("Traveltime is %g and the total number of iterations is %d where s=%g r=%g \n\n",tt,q,xx[0],xx[n+1]);
-		}
+			if(vstatus != 2){
+			    v_r = v[c]+gx[c]*(xx[c+1]-xref[c])+gz[c]*(z(c+1,xx[c+1])-zref[n]);
+			    v_1r = v[c]+gx[c]*(xx[c]-xref[c])+gz[c]*(z(c,xx[c])-zref[n]);
+			}
+			else { /*anisotropy case*/
+			    S1 = (aniso[c][0]*(aniso[c][0]-aniso[c][1])*pow((aniso[c][2]-1),2)*(aniso[c][3]-1))/(2*(aniso[c][1]*aniso[c][1]*(aniso[c][3]-1)*(aniso[c][2]-aniso[c][3])+aniso[c][0]*aniso[c][0]*(aniso[c][2]-1)*(aniso[c][2]*aniso[c][2]*(aniso[c][2]-1)-aniso[c][3]+1) +aniso[c][0]*aniso[c][1]*(1-aniso[c][3]*(aniso[c][2]*pow((aniso[c][2]-1),2) -aniso[c][3] +2)) ));
+			    S3 = (aniso[c][1]*(aniso[c][1]-aniso[c][0])*pow((aniso[c][3]-1),2)*(aniso[c][2]-1))/(2*(aniso[c][0]*aniso[c][0]*(aniso[c][2]-1)*(aniso[c][3]-aniso[c][2])+aniso[c][1]*aniso[c][1]*(aniso[c][3]-1)*(aniso[c][3]*aniso[c][3]*(aniso[c][3]-1)-aniso[c][2]+1) +aniso[c][1]*aniso[c][0]*(1-aniso[c][2]*(aniso[c][3]*pow((aniso[c][3]-1),2) -aniso[c][2] +2)) ));
+			    v_r = 	1/sqrt(((pow(-xx[c] + xx[c+1],2)/aniso[c][0] + pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2)/aniso[c][1])*(1 - 
+																	 (S1*pow(-xx[c] + xx[c+1],2) + S3*pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2))/(pow(-xx[c] + xx[c+1],2) + pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2))))/(pow(-xx[c] + xx[c+1],2) + pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2)) + 
+					       ((S1*pow(-xx[c] + xx[c+1],2) + S3*pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2))*sqrt(pow(pow(-xx[c] + xx[c+1],2)/aniso[c][0] + pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2)/aniso[c][1],2)/
+															   pow(pow(-xx[c] + xx[c+1],2) + pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2),2) + 
+															   (2*pow(-xx[c] + xx[c+1],2)*pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2)*(-1 + (aniso[c][2]*pow(-xx[c] + xx[c+1],2) + aniso[c][3]*pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2))/(pow(-xx[c] + xx[c+1],2) + pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2))))/
+															   (aniso[c][0]*aniso[c][1]*(pow(-xx[c] + xx[c+1],2) + pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2))*(S1*pow(-xx[c] + xx[c+1],2) + S3*pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2)))))/
+					       (pow(-xx[c] + xx[c+1],2) + pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2)));
+			    v_1r = v_r;
+			}
+			tx_r = T_hat_k_k1(f.T_k_k1,f.T_k_zk1); /* x-direction at the reflector*/
+			ty = 0; /* For 3D or 2.5D & at the reflector*/
+			tz_r = T_hat_k(f.T_k_zk1); /* z-direction  need to return T_k_zk >> use T_hat_k which return the function itself & at the reflector*/
+			tn = ((-1)*T_hat_k(f.T_k_k1)*zder(c+1,xx[c+1])+tz_r)/hypotf(1,zder(c+1,xx[c+1])); /* Normal-direction at the reflector*/
+			dip = atan(zder(c+1,xx[c+1])); /* The dipping angle of the reflector*/
+					
+			if (debug) {
+			    sf_warning("Traveltime is %g and the total number of iterations is %d where s=%g r=%g \n\n",tt,q,xx[0],xx[n+1]);
+			}
 	    }
 	}
 		
@@ -418,7 +418,7 @@ mark: /* Mark point for goto*/
 			
 	    at = at*fabsf(ck_in*T_hat_k_k_k1(f.T_k_k_k1,f.T_k_k1_zk,f.T_k_k_zk1, f.T_k_zk_zk1));
 	    ck_in_temp = ck_in;
-	}	
+	}
 		
 	table->t = tt; /* output the data to table */
 /*	sf_warning("Traveltime=%g s=%g r=%g refl=%d\n",tt,xx[0],xx[n+1],n+1);*/
