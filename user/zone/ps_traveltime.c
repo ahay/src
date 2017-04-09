@@ -18,7 +18,7 @@
 
 #include <stdio.h>
 #include <math.h>
-#include "ps_traveltime.h"
+
 #include "newton.h"
 #include <rsf.h>
 /*^*/
