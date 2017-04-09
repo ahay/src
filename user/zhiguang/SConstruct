@@ -7,15 +7,16 @@ ctscigadj ctscigder ctshift fftfwi_sparse_2d
 pad2 padzero postrtm2d sgfdewe2d
 upsamp1 fwiupdate fwidir fwipe fwigrad fwiobj
 dzest2d pickmaxima pickprint
-addimag lsLU brfault padfault
+addimag lsLU brfault padfault unfault
 '''
 
 ccprogs = ''
 
 mpi_progs = '''
 mpifdlsrtm mpilrrtm mpilrmodel mpilrrtm_ts mpiprertm2d
-mpisglrrtm2 mpifwigradlr mpisfwi mpiqfwi mpidfwi mpifd2d mpidip2 
-mpipaint2 mpictshiftlr mpifwigrad mpilsLU
+mpisglrrtm2 mpifwigradlr mpisfwi mpiqfwi mpidfwi 
+mpifd2d mpidip2 mpipaint2 mpictshiftlr mpilsLU
+mpifwigrad mpirfwigrad
 '''
 
 # mpifwigrad mpilsLU

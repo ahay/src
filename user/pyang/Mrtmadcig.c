@@ -355,9 +355,9 @@ void cross_correlation(float ***num, float **den, float **sp, float **gp, float 
 		if(ia<0) ia=0;
 		if(ia==na) ia=ia-1;
 		tmp=sp[i2+nb][i1+nb]*gp[i2+nb][i1+nb];//numerator 
-		//tmp=tmp*expf(-(a-ia*da)*(a-ia*da)/var); Gaussian smoothing in Fresnel zone
+		//tmp=tmp*expf(-(a-ia*da)*(a-ia*da)/var); //Gaussian smoothing in Fresnel zone
 		num[ia][i2][i1]+=tmp;
-		den[i2][i1]+=sp[i2+nb][i1+nb]*sp[i2+nb][i1+nb];//denominator
+		den[i2][i1]+=gp[i2+nb][i1+nb]*gp[i2+nb][i1+nb];//denominator
 	}
 }
 
@@ -476,6 +476,8 @@ int main(int argc, char* argv[])
 		tmp=SF_PI*fm*(it*dt-1.0/fm);tmp*=tmp;
 		wlt[it]=amp*(1.0-2.0*tmp)*expf(-tmp);
 	}
+	/* time integration for true amplitude RTM */
+	for(it=1;it<nt;it++) wlt[it]=wlt[it]+wlt[it-1];
 	sf_floatread(v0[0],nz*nx,vmodl);
 	expand2d(vv, v0);
 	sf_floatread(v0[0],nz*nx,vmods);
@@ -515,7 +517,7 @@ int main(int argc, char* argv[])
 	{
 	        sf_warning("source:%d",is+1);
 
-       	        memset(dobs[0], 0, ng*nt*sizeof(float));
+		memset(dobs[0], 0, ng*nt*sizeof(float));
 		memset(dcal[0], 0, ng*nt*sizeof(float));
 		memset(adjsource, 0, ng*sizeof(float));
 		wavefield_init(sp, spz, spx, svz, svx);

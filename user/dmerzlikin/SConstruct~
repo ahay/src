@@ -2,7 +2,7 @@ import os, sys, re, string, glob
 sys.path.append('../../framework')
 import bldutil
 
-progs = 'gpi3dzo psovc psovcp flatlinpiwrapper flatlinpiwrapper2d chaindr anovc anovcv mig2s mig2semb linpipwd2d'
+progs = 'gpi3dzo psovc psovcp flatlinpiwrapper flatlinpiwrapper2d chaindr anovc anovcv mig2s mig2semb'
 
 mpi_progs = ''
 
