@@ -20,7 +20,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "general_traveltime.h"
 
 #ifndef _general_traveltime_h
 

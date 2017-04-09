@@ -19,7 +19,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "ml_traveltime.h"
 
 #ifndef _ml_traveltime_h
 

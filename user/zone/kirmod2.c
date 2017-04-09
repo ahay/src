@@ -21,8 +21,6 @@
 
 #include <rsf.h>
 
-#include "kirmod2.h"
-
 #include "kirmod.h"
 /*^*/
 

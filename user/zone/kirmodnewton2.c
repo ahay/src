@@ -19,7 +19,6 @@
 #include <stdlib.h>
 #include <float.h>
 #include <rsf.h>
-#include "kirmodnewton2.h"
 
 #include "kirmod2.h"
 #include "kirmodnewton.h"

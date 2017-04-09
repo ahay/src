@@ -19,7 +19,6 @@
 #include <rsf.h>
 #include <math.h>
 
-#include "kirmodnewton.h"
 #include "vectorops.h"
 
 #include "kirmod.h"
@@ -27,23 +26,6 @@
 /*^*/
 
 #include "setvelocity.h"
-
-#ifndef _kirmodnewton_h
-
-typedef struct KTable {
-    float t  /* traveltime */;
-    float a  /* geometrical spreading */;
-    float tx /* traveltime slope (dt/dx) */;
-    float ty /* traveltime slope (dt/dy) */;
-    float tn /* obliguity (dt/dn) */;
-    float an /* angle from the normal */;
-    float ar /* 2.5-D factor (1/r dt/dr) */;
-} *ktable;
-
-
-
-#endif
-
 
 void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(1))*/,
 			bool debug /* Debug Newton */,

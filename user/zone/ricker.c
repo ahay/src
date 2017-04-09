@@ -21,8 +21,6 @@
 
 #include <rsf.h>
 
-#include "ricker.h"
-
 static kiss_fft_cpx *shape;
 
 void ricker_init(int nfft   /* time samples */, 

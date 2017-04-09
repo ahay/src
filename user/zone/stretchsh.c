@@ -21,8 +21,6 @@
 
 #include <rsf.h>
 
-#include "stretchsh.h"
-
 #ifndef _stretchsh_h
 
 typedef struct Map4 *map4;

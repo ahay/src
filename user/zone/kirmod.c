@@ -18,8 +18,6 @@
 */
 #include <rsf.h>
 
-#include "kirmod.h"
-
 #ifndef _kirmod_h
 
 typedef struct KTable {

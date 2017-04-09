@@ -16,49 +16,12 @@
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "ml_traveltime_vgradient_3D.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 
 #include "general_traveltime_3D.h"
 /*^*/
-
-#ifndef _ml_traveltime_vgradient_3D_h
-
-typedef struct threed {
-	float x; /* x-coordinate*/
-	float y; /* y-coordinate*/
-	float z; /* z-coordinate*/
-	float dx1; /* First derivative in x-direction*/
-	float dx2; /* Second derivative in x-direction*/
-	float dy1; /* First derivative in y-direction*/
-	float dy2; /* Second derivative in y-direction*/
-	float dxy2; /* Cross-derivative of x and y*/
-	float v1; /* Velocity at the reflector from above*/
-	float v2; /* Velocity at the reflector from below*/
-	float y_k.gx21;/* x-direction velocity gradient from above*/
-	float y_k.gx22;/* x-direction velocity gradient from below*/
-	float y_k.gy21;/* y-direction velocity gradient from above*/
-	float y_k.gy22;/* y-direction velocity gradient from below*/
-	float y_k.gz21;/* z-direction velocity gradient from above*/
-	float y_k.gz22;/* z-direction velocity gradient from below*/
-	float c111;/* c11 from above*/
-	float c112;/* c11 from below*/
-	float c331;/* c33 from above*/
-	float c332;/* c33 from below*/
-	float Q11; /* Q1 (horizontal anelliptic parameter) from above*/
-	float Q12; /* Q1 (horizontal anelliptic parameter) from below*/
-	float Q31; /* Q3 (vertical anelliptic parameter) from above*/
-	float Q32; /* Q3 (vertical anelliptic parameter) from below*/
-	float S11; /* S1 from above*/
-	float S12; /* S1 from below*/
-	float S31; /* S3 from above*/
-	float S32; /* S3 from below*/
-} threed;
-/* Structure pointer */
-
-#endif
 
 /* Traveltime functions for gradient velocity------------------------------------------------------------------------------*/
 double T1_k(threed y_k,threed y_k1)
