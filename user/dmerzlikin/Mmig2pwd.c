@@ -5,7 +5,6 @@
 #include "flatpifilt.h"
 #include "freqfilt4pi.h"
 #include "t2warp.h"
-#include "chain.h"
 #include "kirchnew.h"
 #include "testmig2.h"
 #include "allp3.h"
