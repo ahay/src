@@ -1,0 +1,544 @@
+\published{Geophysics, 81, C253-C263, (2016)}
+
+\title{Theory of interval traveltime parameter estimation in layered anisotropic media}
+\author{Yanadet Sripanich and Sergey Fomel, The University of Texas at Austin}
+
+\address{
+Bureau of Economic Geology \\
+John A. and Katherine G. Jackson School of Geosciences \\
+The University of Texas at Austin \\
+University Station, Box X \\
+Austin, TX 78713-8924 
+}
+\maketitle
+
+\righthead{Interval parameter estimation}
+\lefthead{Sripanich \& Fomel}
+
+\begin{abstract}
+Moveout approximations for reflection traveltimes are typically based on a truncated Taylor expansion of traveltime squared around zero offset. The fourth-order Taylor expansion involves NMO velocities and quartic coefficients. We derive general expressions for \old{averaging}\new{layer-stripping} both second- and fourth-order parameters in horizontally-layered anisotropic strata and specify them for two important cases: horizontally stacked aligned orthorhombic layers and azimuthally rotated orthorhombic layers. In the first of these cases, the formula involving the out-of-symmetry-plane quartic coefficients has a simple functional form and possesses some similarity to the previously known formulas corresponding to the \new{2D} in-symmetry-plane \old{2D}counterparts in VTI media. The error of approximating effective parameters by using approximate VTI formulas can be significant in comparison with the exact formulas derived in this paper. We propose a framework for deriving Dix-type inversion formulas for interval parameter estimation from traveltime expansion coefficients both in the general case and in the specific case of aligned orthorhombic layers. The averaging formulas for calculation of effective parameters and the layer-stripping formulas for interval parameter estimation are readily applicable \old{for}\new{to} 3D \old{reflection}seismic \new{reflection} processing in layered anisotropic media.
+\end{abstract}
+
+\section{Introduction}
+
+Moveout approximations play an important role in conventional seismic data processing \cite[]{yilmaz}. \cite{bolshix} and \cite{taner} laid the groundwork for studies on moveout approximations by proposing to employ the Taylor expansion of reflection traveltimes around zero offset. This approach has led to many developments in traveltime approximations for isotropic and anisotropic media \cite[]{malovichko,hake,sena,tsvankinthomsen1994,alkatsvankin,alhti,alkavti,alortho,nmoellipse,taner2005,ursin,blias2009,fomelstovas,aleixo,golikov,stovasortho}. Some of the early developments are summarized by \cite{castle}. In the small range of offsets, the reflection traveltime has the well-known hyperbolic form and its processing involves only one controlling parameter, namely the NMO (normal moveout) velocity. In the case of horizontally stacked isotropic layers, the effective NMO velocity can be related to the interval velocity through Dix inversion \cite[]{dix}. Its 3D counterpart was described as \textit{generalized Dix equation} \cite[]{nmoellipse,grechkatsvankinortho,tsvankin2011book}
+
+In the case of long-offset seismic data and more complex media, both the hyperbolic moveout approximation and the Dix inversion formula need to be modified due to the moveout \old{nonperbolicity}\new{nonhyperbolicity} \cite[]{fomelnonhyper}. \cite{hake} studied this problem in VTI (vertically transversely isotropic) media and proposed a 2D averaging formula for the quartic coefficient of the traveltime-squared expansion. \cite{tsvankinthomsen1994} introduced a different functional form for nonhyperbolic moveout approximation with correct asymptotic behavior at large offsets and propose a Dix-type formula for inversion of the quartic coefficient for interval anisotropic parameters. The moveout approximations by \cite{tsvankinthomsen1994} and its 3D extensions have led to \old{many}subsequent developments on this topic \cite[]{alkatsvankin,alhti,alortho,pech2003,pech2004,xu}. Various alternative nonhyperbolic moveout approximations have been investigated in the literature. Several of them can be related to the generalized moveout approximation \cite[]{fomelstovas,zonegma,zonegmapaper}.
+
+In the case of 3D orthorhombic media, several well-known moveout approximations make use of the rational approximation \cite[]{alortho} in combination with the weak anisotropy assumption \cite[]{pech2004,xu,vascon,grechkapech,fpj}. This kind of approximation is readily applicable for a single homogeneous orthorhombic layer. For a horizontally layered model, the rational approximation suggests averaging \old{interval}azimuthally dependent \new{interval} quartic coefficients using expressions for VTI media \cite[]{hake,tsvankinthomsen1994,tsvankinbook}. However, this is \old{strictly valid}\new{justifiable} only when the azimuthal anisotropy is mild \cite[]{alortho,vascon}. In this paper, we derive exact expressions for averaging interval quartic coefficients in a 3D horizontal stack of general anisotropic layers. Next, we specify these expressions explicitly for two particular settings: a horizontal stack of  aligned orthorhombic layers and a horizontal stack of azimuthally rotated orthorhombic layers. These expressions lead to exact Dix-like layer-stripping formulas for interval parameter estimation in layered anisotropic media.
+
+\section{Traveltime expansion}
+Assuming the \new{Einstein} repeated-indices summation convention, we can expand the one-way traveltime $t$ into a Taylor series of half offset $h_i$ ($i=1$ or 2 in 3D) around zero offset as follows:
+\begin{equation}
+\label{eq:halfplus}
+t(h_i) = t_0 + t_i h_i + \frac{1}{2}t_{ij} h_i h_j + \frac{1}{6} t_{ijk} h_ih_jh_k+ \frac{1}{24}t_{ijkl}h_ih_jh_kh_l + ...~,
+\end{equation}
+where $t_0$ is one-way vertical traveltime, $t_{ij}=\frac{\partial^2 t}{\partial h_i \partial h_j}$ and $t_{ijkl}=\frac{\partial^4 t}{\partial h_i \partial h_j \partial h_k \partial h_l}$ are second- and fourth-order derivative tensors\new{, respectively}. Both tensors are symmetric thanks to the \old{source-receiver reciprocity (Thomsen,2014)}\new{symmetry of mixed derivatives}. Analogously, we can also derive, for the negative half offset $-h_i$,
+\begin{equation}
+\label{eq:halfminus}
+t(-h_i) = t_0 - t_i h_i + \frac{1}{2}t_{ij} h_i h_j - \frac{1}{6} t_{ijk} h_ih_jh_k+ \frac{1}{24}t_{ijkl}h_ih_jh_kh_l + ...~.
+\end{equation}
+Assuming pure-mode reflections\new{ with source-receiver reciprocity}, we can sum the two expansions (equations~\ref{eq:halfplus} and~\ref{eq:halfminus}) for the two legs of rays to derive the expansion of the two-way traveltime as follows \cite[]{alhti}:
+\begin{equation}
+\label{eq:half}
+2t(h_i) = 2t_0 + t_{ij} h_i h_j + \frac{1}{12}t_{ijkl}h_ih_jh_kh_l + ...~.
+\end{equation}
+Equation~\ref{eq:half} can be additionally \old{related to}\new{transformed into} the series of the squared two-way traveltime in terms of the full offset $x_i = 2 h_i$ as follows:
+\begin{equation}
+\label{eq:full}
+4t^2(x_i) \approx 4t_0^2 + a_{ij} x_i x_j + a_{ijkl} x_i x_j x_k x_l + ...~,
+\end{equation}
+where 
+\begin{eqnarray}
+\label{eq:a2}
+a_{ij} & = & t_0 t_{ij}~,\\
+\label{eq:a4}
+a_{ijkl} & = & \frac{1}{16} \left( t_{ij} t_{kl} + \frac{t_0}{3}t_{ijkl} \right)~.
+\end{eqnarray}
+
+In consideration of the symmetry of the time derivative tensors, the quadratic and quartic terms in equation~\ref{eq:full} reduce to the following known expressions \cite[]{alortho}:
+\begin{eqnarray}
+\label{eq:coeffgeneralsymmetric}
+a_{ij}x_ix_j & = & t_0\left( t_{11}x^2_1 + 2t_{12}x_1 x_2 + t_{22} x^2_2 \right)~,\\
+a_{ijkl}x_ix_jx_kx_l & = & \left( \frac{t^2_{11}}{16} + \frac{t_0t_{1111}}{48}\right)x^4_1 + \left( \frac{t_{11}t_{12}}{4} + \frac{t_0t_{1112}}{12}\right)x^3_1 x_2 ~\\
+\nonumber
+    && + \left( \frac{t_{11}t_{22}}{8} + \frac{t^2_{12}}{4} + \frac{t_0t_{1122}}{8}\right)x^2_1 x^2_2\\
+\nonumber
+    && + \left( \frac{t_{22}t_{12}}{4} + \frac{t_0t_{1222}}{12}\right) x_1 x^3_2 + \left( \frac{t^2_{22}}{16} + \frac{t_0t_{2222}}{48}\right)x^4_2~.
+\end{eqnarray}
+
+
+In the derivation of the general formulas for moveout coefficients in the next section, we keep the \old{full} tensor notation, which simplifies the use of tensor operations. We \new{also} use the fact that, in the case of horizontally stacked layers, the half-offset $h_i$ and reflection traveltime $2t$ can be expressed in terms of \new{horizontal slownesses (}ray parameters\new{)} $p_1$ and $p_2$ in $h_1$ and $h_2$ directions as follows:
+\begin{eqnarray}
+\label{eq:xofp}
+h_i(p_1,p_2) & = &  -\sum\limits^N_{n=1} D_{(n)}  \frac{\partial Q_{(n)}(p_1,p_2)}{\partial p_i}~,\\
+%h_i(p_1,p_2) & = & \sum\limit+s^N_{n=1} \Delta d_{(n)} \frac{dh_i}{dz} = \sum\limits^N_{n=1} \Delta  d_{(n)} \frac{\partial F_{(n)} / p_i}{\partial F_{(n)} / q_{(n)}} = -\sum\limits^N_{n=1} \Delta  d_{(n)}  \frac{\partial q_{(n)}}{\partial p_i}~,\\
+\label{eq:tofp}
+2t(p_1,p_2)  & = & 2\left(p_1 h_1 +p_2 h_2 + \sum\limits^N_{n=1} D_{(n)}  Q_{(n)}(p_1,p_2)\right)~, 
+\end{eqnarray}
+where $D_{(n)} $ and $Q_{(n)}(p_1,p_2)$ denote the thickness and the vertical slowness of the $n$-th layer. The derivation of equations~\ref{eq:xofp} and~\ref{eq:tofp} is included in the appendix. The general dependence $Q_{(n)}(p_1,p_2)$ follows directly from the Christoffel equation. Throughout the text, we use the subscript index in parentheses to indicate the corresponding layer. The upper-case and lower-case letters denote interval and effective parameters respectively. 
+
+\section{General formulas for traveltime derivative tensors}
+
+Using equations~\ref{eq:xofp} and~\ref{eq:tofp} and applying the chain rule, we can differentiate the one-way traveltime $t$ with respect to half offset $h_i$ to derive the following equations:
+\begin{eqnarray}
+\label{eq:ti}
+t_i & = & g_{\hat{i}i}t_{,\hat{i}} = p_i~,\\
+\label{eq:tij}
+t_{ij} & = & g_{\hat{j}j} p_{i,\hat{j}} = g_{\hat{j}j} \delta_{i\hat{j}} = g_{ij}~,\\
+\label{eq:tijk}
+t_{ijk} & = & g_{\hat{k}k}t_{ij,\hat{k}} = g_{\hat{k}k} g_{ij,\hat{k}} ~,\\
+\label{eq:tijkl}
+t_{ijkl} & = & g_{\hat{l}l}t_{ijk,\hat{l}} = g_{\hat{l}l}g_{\hat{k}k,\hat{l}}g_{ij,\hat{k}} + g_{\hat{l}l}g_{\hat{k}k} g_{ij,\hat{k}\hat{l}}~,
+%\frac{\partial t}{\partial h_i}  & = &t_i = (h_{i,\hat{i}})^{-1}t_{,\hat{i}} = g_{i\hat{i}}t_{,\hat{i}} = p_i\\
+%\nonumber
+%\frac{\partial^2 t}{\partial h_i \partial h_j} & = & t_{ij} = (h_{j,\hat{j}})^{-1}t_{i,\hat{j}} = (h_{j,\hat{j}})^{-1}\delta_{i\hat{j}}=(h_{j,i})^{-1} = g_{ji}\\
+%\nonumber
+%\frac{\partial^3 t}{\partial h_i \partial h_j \partial h_k} & = & t_{ijk} = (h_{k,\hat{k}})^{-1}t_{ij,\hat{k}} = g_{k\hat{k}}t_{ij,\hat{k}}\\
+%\nonumber
+%\frac{\partial^4 t}{\partial h_i \partial h_j \partial h_k \partial h_l} & = & t_{ijkl} = (h_{l,\hat{l}})^{-1}t_{ijk,\hat{l}} = g_{l\hat{l}}t_{ijk,\hat{l}}
+\end{eqnarray}
+where the derivatives with respect to $p_1$ and $p_2$ are represented by comma (e.g, $\frac{\partial t}{\partial p_i}$ corresponds to $t_{,i}$), $\delta_{ij}$ denotes the Kronecker delta, $g_{ij}$ denotes $\frac{\partial p_i}{\partial h_j}$, and $\hat{i}$, $\hat{j}$, $\hat{k}$, $\hat{l}$ represent dummy indices. Equations~\ref{eq:ti}-\ref{eq:tijkl} can be used to compute $t_{ij}$ and $t_{ijkl}$ terms needed by equations~\ref{eq:a2} and~\ref{eq:a4} using explicit relationships for $h(p_1,p_2)$ and $t(p_1,p_2)$.
+
+According to the chain rule and the symmetry of the time derivative tensors, the second-derivative tensor $g_{ij}$ and its derivatives in equations~\ref{eq:tijk} and~\ref{eq:tijkl} can be related to the derivatives of half offset $h$ as follows:
+\begin{eqnarray}
+\label{eq:gijk}
+g_{ij,\hat{k}}  & = & - g_{im}h_{m \hat{m},\hat{k}}g_{\hat{m}j}~,\\
+\label{eq:gijkl}
+ g_{ij,\hat{k}\hat{l}} & = & 2g_{im}h_{m \hat{m},\hat{k}}g_{\hat{m} n} h_{n \hat{n},\hat{l}} g_{\hat{n} j} - g_{i m}h_{m \hat{m},\hat{k}\hat{l}}g_{\hat{m}j}~,
+\end{eqnarray}
+where $m$, $\hat{m}$, $n$, $\hat{n}$ are dummy indices. The matrix $h_{ji}=\frac{\partial h_j}{\partial p_i}$ is the inverse of the matrix $g_{ij}$ \new{\cite[]{nmoellipse}}. Substituting equations~\ref{eq:gijk} and~\ref{eq:gijkl} into equations~\ref{eq:tijk} and~\ref{eq:tijkl}, we subsequently arrive at expressions
+\begin{eqnarray}
+\label{eq:coeffgeneralexpandsub1}
+t_i  & = & p_i~,\\
+t_{ij} & = & g_{ij}~,\\
+t_{ijk} & = & -g_{\hat{k}k}g_{im}h_{m \hat{m},\hat{k}}g_{\hat{m}j} ~,\\
+\label{eq:coeffgeneralexpandsub4}
+t_{ijkl} & =  &3 g_{\hat{l}l}(g_{\hat{k} m}h_{m \hat{m},\hat{l}}g_{\hat{m}k}) (g_{in}h_{n \hat{n},\hat{k}}g_{\hat{n}j})-  g_{\hat{l}l}g_{\hat{k}k}g_{im}h_{m \hat{m},\hat{k}\hat{l}}g_{\hat{m}j}~,
+\end{eqnarray}
+which only involve derivatives of explicitly defined \old{quantities}\new{functions}. \old{Considering only pure-mode reflections where the source-receiver reciprocity is valid}\new{Subsequently}, we have at zero offset \new{($p_i$=0)}:
+\begin{eqnarray}
+\label{eq:ti0}
+t_i|_{h=0}  & = & 0 ~,\\
+\label{eq:tij0}
+t_{ij}|_{h=0} & = & g_{ij}~,\\
+\label{eq:tijk0}
+t_{ijk}|_{h=0} & = & 0 ~,\\
+\label{eq:tijkl0}
+t_{ijkl}|_{h=0} & =  & -  g_{\hat{l}l}g_{\hat{k}k}g_{im}h_{m \hat{m},\hat{k}\hat{l}}g_{\hat{m}j}~.
+\end{eqnarray}
+
+\subsection{Interval parameter estimation}
+We can now substitute expressions for time derivative tensors \old{in}\new{from} equations~\ref{eq:ti0}-\ref{eq:tijkl0} into equations~\ref{eq:a2} and \ref{eq:a4} and rewrite them as follows
+\begin{eqnarray}
+\label{eq:a2inh}
+a_{ij} & = & t_0 g_{ij}~,\\
+\label{eq:a4inh}
+a_{ijkl} & = & \frac{1}{16} \left( g_{ij} g_{kl} - \frac{t_0}{3}g_{\hat{l}l}g_{\hat{k}k}g_{im}h_{m \hat{m},\hat{k}\hat{l}}g_{\hat{m}j} \right)~.
+\end{eqnarray}
+For convenience in subsequent derivation, we let elements of the matrix inverse of $a_{ij}$ be denoted as
+\begin{equation}
+\label{eq:b2inh}
+b_{ji} = \frac{1}{t_0} h_{ji}~.
+\end{equation}
+Equations~\ref{eq:a2inh} and~\ref{eq:a4inh} represent the most general forms of the traveltime derivatives for pure-mode reflections in \new{arbitrary} anisotropic \new{layered} media.
+Throughout the rest of this text, \old{let us emphasize that} we \new{continue to} use the \textit{upper-case} letters ($A$, $B$, ...) to denote \textit{interval parameters}. The \textit{lower-case} letters ($a$, $b$, ...) are used to indicate effective values \old{of}\new{corresponding to} the same quantities. In the case of effective values, the subscript refers to the effective value from the surface down to the bottom of the corresponding layer. Therefore, in this notation, we can denote the interval expression in equation~\ref{eq:a2inh} for the $n$-th layer and the effective counterpart down to the $n$-th layer as $A_{ij(n)}$ and $a_{ij(n)}$ respectively.
+
+Let us first consider the second-order term in equation~\ref{eq:b2inh}. In the case of multiple layers, \old{because}there are \new{direct} accumulations of traveltime and offset as
+\begin{equation}
+t_{0(N)} = \sum\limits^N_{n=1} T_{0(n)} \quad\mbox{and}\quad h_{(N)} = \sum\limits^N_{n=1} H_{(n)}~.
+\end{equation}
+We can \old{thus write}\new{deduce}
+\begin{equation}
+h_{ji(N)} = \sum\limits^N_{n=1} \frac{\partial H_{j(n)}}{\partial p_i} = \sum\limits^N_{n=1} T_{0(n)} B_{ji(n)} = t_{0(N)}b_{ji(N)} ~,
+\end{equation}
+where $T_{0(n)}$ and $B_{ji(n)}$ denote the vertical one-way traveltime and the inverse of interval matrix $A_{ij(n)}$  in the $n$-th layer, and $t_{0(N)}$ and $b_{ji(N)}$ denote the effective values of the same two parameters at the bottom of the $N$-th layer. Therefore, we can find the interval $B_{ji(N)}$ of the $N$-th layer from
+\begin{equation}
+\label{eq:gendix}
+B_{ji(N)} = \frac{t_{0(N)} b_{ji(N)}-t_{0(N-1)} b_{ji(N-1)}}{t_{0(N)}-t_{0(N-1)}}~. 
+\end{equation}
+Equation~\ref{eq:gendix} is \old{commonly}referred to as the \textit{generalized Dix equation} \cite[]{tsvankin2011book}. Apply\new{ing} matrix inversion to its result produces the second-order interval coefficients ($A_{ij(N)}$), which are related to 3D NMO ellipse parameters. \new{In the isotropic case, equation~\ref{eq:gendix} reduces to classic Dix inversion \cite[]{dix}.}
+
+\old{Analogously,}We can now turn to equation~\ref{eq:a4inh} for the quartic coefficients and follow an analogous procedure. In this expression, only $h_{m \hat{m},\hat{k}\hat{l}}$ term needs to be considered because other terms can be simply related to $b_{ji}$. Equation~\ref{eq:a4inh} leads to
+\begin{equation}
+h_{m \hat{m},\hat{k}\hat{l}(N)} = h_{l\hat{l}(N)}h_{k\hat{k}(N)}h_{j \hat{m}(N)}h_{m i(N)}\left(\frac{3}{t_0} g_{ij(N)}g_{kl(N)}-\frac{48}{ t_{0(N)}}a_{ijkl(N)}\right)~.
+\end{equation}
+By substituting equations~\ref{eq:a2inh} and~\ref{eq:b2inh}, we arrive at
+\begin{equation}
+h_{m \hat{m},\hat{k}\hat{l}(N)} = b_{l\hat{l}(N)}b_{k\hat{k}(N)}b_{j \hat{m}(N)}b_{m i(N)}\left(3t_0 a_{ij(N)}a_{kl(N)}-48 t^3_{0(N)}a_{ijkl(N)}\right)~,
+\end{equation}
+which can be used to find the interval $H_{m \hat{m},\hat{k}\hat{l}(N)}$ in the $N$-th layer by a simple subtraction:
+\begin{equation}
+H_{m \hat{m},\hat{k}\hat{l}(N)} = h_{m \hat{m},\hat{k}\hat{l}(N)} - h_{m \hat{m},\hat{k}\hat{l}(N-1)}.
+\end{equation}
+We can then compute the interval \new{quartic coefficient} $A_{ijkl(N)}$ in the $N$-th layer from the interval form of equation~\ref{eq:a4inh} given the interval value of equation~\ref{eq:a2inh} obtained from the \textit{generalized Dix equation} (equation~\ref{eq:gendix}), as follows:
+\begin{eqnarray}
+\nonumber
+A_{ijkl(N)} & = & \frac{1}{16} \left( G_{ij} G_{kl} - \frac{T_{0(N)}}{3}G_{\hat{l}l}G_{\hat{k}k}G_{im}H_{m \hat{m},\hat{k}\hat{l}}G_{\hat{m}j} \right) \\
+\label{eq:genquartic}
+& = & \frac{1}{16} \left( \frac{1}{T^2_{0(N)}} A_{ij(N)} A_{kl(N)} - \frac{1}{3T^3_{0(N)}}A_{\hat{l}l(N)}A_{\hat{k}k(N)}A_{i m(N)}H_{m \hat{m},\hat{k}\hat{l}(N)}A_{\hat{m}j(N)} \right)~,
+\end{eqnarray}
+where $T_{0(N)} = t_{0(N)}-t_{0(N-1)}$ denotes the vertical one-way traveltime in the $N$-th layer. Thus, the second- and fourth-order interval coeffcients for the traveltime expansion can be found from equations~\ref{eq:gendix} and~\ref{eq:genquartic} respectively, The exact expressions for the traveltime expansion coefficients in two particular cases of a horizontal stack of aligned orthorhombic layers and a horizontal stack of azimuthally rotated orthorhombic layers are \old{discussed in more details}\new{detailed} in the subsequent sections. 
+
+\section{ Coefficients of traveltime expansion for a stack of horizontally aligned orthorhombic layers}
+
+In the special case of horizontally stacked homogeneous orthorhombic layers with aligned symmetry planes, we simplify the equations derived in the previous section and compare them with some known expansion coefficients.
+
+\subsection{General formulas for coefficients}
+
+Considering equations~\ref{eq:xofp}-\ref{eq:tijkl} \old{and}\new{in the case of} an orthorhombic medium, only certain derivatives of half-offset $h_i$ and $t$ with respect to ray parameters $p_1$ and $p_2$ are \textit{nonzero} at zero offset. The non-zero terms are listed in  Table~\ref{tbl:orthononzero}.
+
+\tabl{orthononzero}{Nonzero half-offset and one-way traveltime derivatives with respect to $p_1$ and $p_2$ in the case of aligned orthorhombic layers. }
+{
+\centering
+     	     \begin{tabular}{|c | c | c c |}
+     	     \hline Derivatives of $h_1$ & Derivatives of $h_2$  &\multicolumn{2}{|c|}{Derivatives of $t$} \\ 
+            \hline $h_{1,1} $ & $h_{2,2} $ & $t_{,11} $ & $t_{,1111} $ \\ 
+            $h_{1,111} $ & $h_{2,222} $ & $t_{,22} $ & $t_{,2222} $ \\ 
+            $h_{1,122} $ & $h_{2,112} $ & $t_{,1122} $ & \\ 
+            \hline
+    \end{tabular}
+}
+
+As a consequence, equation~\ref{eq:coeffgeneralsymmetric} reduces to the expressions given below and derived previously by \cite{alortho}. Considering the case where the [$x_1$,$x_3$] plane corresponds to one of the vertical symmetry planes of an orthorhombic medium, \cite{alortho} show that, for pure modes, 
+\begin{equation}
+\label{eq:nmo}
+a_{ij} x_i x_j = a_{11}x^2_1 + a_{22}x^2_2 = \frac{x^2_1}{v^2_2} + \frac{x^2_2}{v^2_1}~,
+\end{equation}
+where $v^2_2$ and $v^2_1$ denote NMO velocities squared associated with $x_1$ and $x_2$ directions, respectively. The quartic term can be expressed as 
+\begin{equation}
+\label{eq:quartic}
+a_{ijkl} x_i x_j x_k x_l = a_{1111} x^4_1 + a_{1122} x^2_1 x^2_2 + a_{2222} x^4_2~,
+\end{equation}
+where, in the notation of the previous section, the exact expressions of these coefficients are given by 
+\begin{eqnarray}
+\label{eq:exacta2}
+a_{11} & = & t_0 \frac{t_{,11}}{h^2_{1,1}}~,\\
+a_{22} & = & t_0 \frac{t_{,22}}{h^2_{2,2}}~,
+\end{eqnarray}
+and
+\begin{eqnarray}
+a_{1111} & = & \frac{t^2_{,11}}{16 h^4_{1,1}} + \frac{t_0(t_{,1111} h_{1,1}-4 t_{,11} h_{1,111})}{48 h^5_{1,1}}~,\\
+\nonumber
+a_{1122} & = &  \frac{t_{,11}t_{,22}}{8 h^2_{1,1} h^2_{2,2}} - \frac{t_0}{24 h^3_{1,1} h^3_{2,2}}\bigg[4(t_{,11}h_{2,112}h_{2,2} + t_{,22}h_{1,122}h_{1,1})\\ 
+         && 2(t_{,11}h_{1,122}h_{2,2}+t_{,22}h_{2,112}h_{1,1}) - 3t_{,1122}h_{1,1}h_{2,2} \bigg]\\
+\label{eq:exacta4}
+a_{2222} & = & \frac{t^2_{,22}}{16 h^4_{2,2}} + \frac{t_0(t_{,2222} h_{2,2}-4 t_{,22} h_{2,222})}{48 h^5_{2,2}}~.
+\end{eqnarray}
+Equations~\ref{eq:exacta2}-\ref{eq:exacta4} \old{are}\new{appear} somewhat cumbersome, we can simplify them further by relating the derivatives of $t$ to derivatives of $h_i$ according to equation~\ref{eq:tofp}. Therefore, we can conveniently express both derivatives in terms of the derivatives of vertical slowness $Q$ (equation~\ref{eq:xofp}) thanks to implicit differentiation. By using the notation
+\begin{equation}
+\label{eq:psi}
+\psi_{i,j} = \sum\limits^N_{n=1} D_{(n)} \frac{\partial^{(i+j)} Q_{(n)}}{(\partial p_1)^{i} (\partial p_2)^{j}}~,
+\end{equation}
+\new{we rewrite} equations~\ref{eq:exacta2}-\ref{eq:exacta4} \old{can then be rewritten}in a simpler form as follows:
+\begin{eqnarray}
+\label{eq:lytruea2}
+a_{11} & = & -\frac{t_0}{ \psi_{2,0}}~,\\
+\label{eq:lytruea22}
+a_{22} & = & -\frac{t_0}{\psi_{0,2}}~, \\
+\label{eq:lytruea41}
+a_{1111} & = & \frac{1}{16 \psi_{2,0}^2} + \frac{t_0 \psi_{4,0}}{48 \psi_{2,0}^4}~,\\
+\label{eq:lytruea4m}
+a_{1122} & = &  \frac{1}{8}\left(\frac{1}{\psi_{2,0}\psi_{0,2}} + \frac{t_0\psi_{2,2}}{\psi_{2,0}^2\psi_{0,2}^2}\right)~,\\
+\label{eq:lytruea42}
+a_{2222} & = & \frac{1}{16 \psi_{0,2}^2} + \frac{t_0 \psi_{0,4}}{48 \psi_{0,2}^4}~.
+\end{eqnarray}
+Alternatively, equations~\ref{eq:lytruea2}-\ref{eq:lytruea42} can also be derived directly from equations~\ref{eq:a2inh}-\ref{eq:a4inh}. They provide an easy way to adding layers by a simple \old{addition}\new{accumulation} in the $\psi_{i,j}$ parameter. 
+Note that equations~\ref{eq:lytruea41} and~\ref{eq:lytruea42} have a similar functional form because one is associated with [$x_1$,$x_3$] plane whereas the other with [$x_2$,$x_3$] plane and they are equivalent to the corresponding expressions of VTI media once the derivatives are evaluated. However, equation~\ref{eq:lytruea4m} has a different form from equations~\ref{eq:lytruea41} and~\ref{eq:lytruea42}. In light of this result, the previous approach of approximating the effective value of $a_{1122}$ by VTI averaging formula, or equivalently by averaging equations~\ref{eq:lytruea41} and~\ref{eq:lytruea42} \cite[]{alortho,vascon}, is no longer needed.
+
+\subsection{Formulas for interval NMO velocities}
+
+Equations~\ref{eq:gendix}, ~\ref{eq:lytruea2} and~\ref{eq:lytruea22} lead to the following Dix-type inversion formula
+\begin{equation}
+\label{eq:aijdixortho}
+A_{ii(N)} = \bigg(t_{0(N)}-t_{0(N-1)}\bigg)\left(\frac{t_{0(N)}}{a_{ii(N)}}-\frac{t_{0(N-1)}}{a_{ii(N-1)}}\right)^{-1}~,
+\end{equation}
+where $a_{ii(N)}$ and $a_{ii(N-1)}$ with $i=1,2$ denote the coefficients for the reflections from the top and bottom of the $N$-th layer respectively, and $A_{ij(N)}$ denotes the interval coefficient in the $N$-th layer. $t_0$ is vertical one-way traveltime with the similar notation rules. We can convert equation~\ref{eq:aijdixortho} to a familiar form \cite[]{dix} \new{by expressing it} in terms of interval moveout velocity $V^2_1 = 1/A_{22}$ and $V^2_2 = 1/A_{11}$ as follows:
+\begin{equation}
+\label{eq:vnmodixortho}
+V^2_{i(N)} =\frac{v^2_{i(N)}t_{0(N)}-v^2_{i(N-1)}t_{0(N-1)}}{t_{0(N)}-t_{0(N-1)}}~.
+\end{equation}
+Equation~\ref{eq:vnmodixortho} is a scalar form of the tensor equation~\ref{eq:gendix} for the \new{special} case of aligned orthorhombic layers.
+
+\subsection{Formulas for interval quartic coefficients}
+
+Similarly to the derivation for $A_{ii}$, we have first, 
+\begin{equation}
+\psi_{4,0(N)} = \frac{48t^3_{0(N)}a_{1111(N)}-3t_{0(N)}a^2_{11(N)}}{a^4_{11(N)}}~,
+\end{equation}
+which can be calculated for interval $\Psi_{4,0(N)}$ in the $N$-th layer using,
+\begin{equation}
+\Psi_{4,0(N)} = \psi_{4,0(N)}- \psi_{4,0(N-1)}~.
+\end{equation}
+Subsequently, interval $A_{1111(N)}$ in the $N$-th layer can be computed from,
+\begin{equation}
+\label{eq:intervala4}
+A_{1111(N)} = \frac{3T_{0(N)}A^2_{11(N)}+A^4_{11(N)}\Psi_{4,0(N)}}{48T_{0(N)}^3}~,
+\end{equation}
+where $T_{0(N)}=t_{0(N)}-t_{0(N-1)}$. Equation~\ref{eq:intervala4} is similar to the Dix-type formula proposed by \cite{tsvankinthomsen1994} for \new{the} VTI case. Similar expressions can be derived for $A_{2222}$ by considering $\Psi_{0,4}$ and $A_{22}$ instead \new{of $\Psi_{4,0}$ and $A_{11}$}. To derive \old{an analogous}\new{the corresponding} expression for $A_{1122}$, we follow \old{the similar}\new{an analogous} procedure \old{and derive,}\new{,which leads to}
+\begin{equation}
+\psi_{2,2(N)} = \frac{8t^3_{0(N)}a_{1122(N)}-t_{0(N)}a_{11(N)}a_{22(N)}}{a^2_{11(N)}a^2_{22(N)}}~.
+\end{equation}
+\old{which can be calculated for $\Psi_{1122(N)}$ in the $N$-th layer using,}\new{Using}
+\begin{equation}
+\Psi_{2,2(N)} = \psi_{2,2(N)} - \psi_{2,2(N-1)}~,
+\end{equation}
+\old{Therefore,}$A_{1122(N)}$ in the $N$-th layer can be computed as
+\begin{equation}
+A_{1122(N)} = \frac{T_{0(N)}A_{11(N)}A_{22(N)}+A^2_{11(N)}A^2_{22(N)}\Psi_{2,2(N)}}{8T_{0(N)}^3}~.
+\end{equation}
+
+\subsection{Comparison with known expressions for quartic Taylor series coefficients}
+
+\cite{alortho} derived \old{concise}\new{the following} expressions for $a_{1111}$ and $a_{2222}$\old{as follows}:
+%\begin{eqnarray}
+%\label{eq:a4exactortho}
+%a_{1111} & = & \frac{(\delta^{(2)}-\epsilon^{(2)})\left(1+ \frac{2\delta^{(2)}}{f^{(2)}}\right) }{2t^2_0 v^4_{P0} (1+2\delta^{(2)})^4 }~, \\
+%\nonumber
+%a_{2222} & = & \frac{(\delta^{(1)}-\epsilon^{(1)})\left(1+ \frac{2\delta^{(1)}}{f^{(1)}}\right) }{2t^2_0 v^4_{P0} (1+2\delta^{(1)})^4 }~,
+%\end{eqnarray}
+\new{\begin{eqnarray}
+\label{eq:a4exactortho}
+a_{1111} & = & \frac{(\delta_2-\epsilon_2)\left(1+ \frac{2\delta_2}{f_2}\right) }{2t^2_0 v^4_{P0} (1+2\delta_2)^4 }~, \\
+a_{2222} & = & \frac{(\delta_1-\epsilon_1)\left(1+ \frac{2\delta_1}{f_1}\right) }{2t^2_0 v^4_{P0} (1+2\delta_1)^4 }~,
+\end{eqnarray}}
+where \old{under the notation of Tsvankin (1997),} $f_1 =  1-v^2_{S1}/v^2_{P0}$ and $f_2 =  1-v^2_{S0}/v^2_{P0}$, $v_{P0}$ is the vertical qP-wave velocity, $v_{S0}$ is the qS-wave velocity polarized in ${[x_1,x_3]}$, and \old{$V_{S1}$} \new{$v_{S1}$} is the qS-wave velocity polarized in ${[x_2,x_3]}$. The subscript in anisotropic parameters denotes the index of the normal direction to the associated plane. Note that equation~\ref{eq:a4exactortho} is similar to the VTI expression with corresponding changes in the anisotropic parameters for different planes. This result\old{s} is due to the similarity of the Christoffel equations in the case\old{s} of VTI media and in-symmetry-plane orthothombic media \cite[]{tsvankinbook}. The expression for $a_{1122}$ is more complicated and \new{is} given in \cite{alortho}. These expressions are equivalent to the equations~\ref{eq:lytruea41}-\ref{eq:lytruea42}.
+
+If the pseudoacoustic assumption \cite[]{alkaortho} is applied or ,equivalently, \old{$f^{(1)}=f^{(2)}=1$} \new{$f_1=f_2=1$}, the expressions for the three coefficients simplify as follows:
+%\begin{eqnarray}
+%\label{eq:eta1}
+%a_{1111} & = & -\frac{\eta_1}{2t^2_0 v^4_1}~,\\
+%a_{1122} & = & -\frac{\eta_{xy}}{2t^2_0 v^2_1 v^2_2}~,\\
+%\label{eq:eta2}
+%a_{2222} & = & -\frac{\eta_2}{2t^2_0 v^4_2}~,
+%\end{eqnarray}
+\new{\begin{eqnarray}
+\label{eq:eta1}
+a_{1111} & = & -\frac{\eta_2}{2t^2_0 v^4_2}~,\\
+a_{1122} & = & -\frac{\eta_{xy}}{2t^2_0 v^2_1 v^2_2}~,\\
+\label{eq:eta2}
+a_{2222} & = & -\frac{\eta_1}{2t^2_0 v^4_1}~,
+\end{eqnarray}}
+where $\eta_1$, $\eta_2$, and $\eta_3$ are the time-processing parameters suggested by \cite{alkaortho}\new{, $v_i$ denote the NMO velocities in the plane defined by $x_i$-axis}, and
+\begin{equation}
+\eta_{xy} = \sqrt{\frac{(1+2\eta_1)(1+2\eta_2)}{1+2\eta_3}}-1~,
+\end{equation}
+denoting an anelliptic parameter responsible for the fourth-order cross term \old{recently}suggested by \cite{stovasortho}.
+To obtain effective values of the moveout coefficients from interval value, an averaging formula can be used. In the particular case of horizontally stacked VTI layers, the commonly used averaging formula can be expressed in this paper's notation as \cite[]{hake,tsvankinthomsen1994},
+\begin{equation}
+\label{eq:vtiav}
+a_{(N)} = \frac{(2\sum\limits^N_{n=1} V^2_{(n)} T_{0(n)})^2 - 2t_{0(N)} (2\sum\limits^N_{n=1} V^4_{(n)} T_{0(n)} - 32 \sum\limits^N_{n=1} A_{(n)} V^8_{(n)} T^3_{0(n)})}{64(\sum\limits^N_{n=1} V^2_{(n)} T_{0(n)})^4}~,
+\end{equation}
+where $V_{(n)}$, $A_{(n)}$, and $T_{0(n)}$ denote the \new{interval} NMO velocity, VTI quartic coefficient, and one-way vertical traveltime in the $n$-th layer specified in a given stack of VTI layers. Several schemes have been proposed to obtain \old{reasonably accurate}\new{estimates of} effective quartic coefficients from this averaging formula (equation~\ref{eq:vtiav}) in the setting of stacked orthorhombic layers. Because of their approximate nature, the application of this expression in orthorombic media is suggested to be valid only if the azimuthal anisotropy is not severe \cite[]{alortho,vascon}.
+
+To test the accuracy of the previously suggested approximations for computing effective coefficients based on equation~\ref{eq:vtiav} against the exact expressions given in equations~\ref{eq:lytruea41}-\ref{eq:lytruea42}, we consider two three-layered models with parameters given in Table~\ref{tbl:sample}. The respective layer thicknesses are 0.25, 0.45, and 0.3 $km$. We compute the quartic term (equation~\ref{eq:quartic}) at the offset radius of 1 $km$ and different azimuths.
+
+\tabl{sample}{\old{Normalized stiffness tensor coefficients (in $km^2$/$s^2$) from different orthorhombic samples}\new{Parameters of sample orthorhombic models under the notation of \cite{tsvankinortho} with the subscript denoting the normal direction to the corresponding plane}: Model 1 (Weak anisotropy) parameters are extracted and modified from a layered model by \cite[]{ursin,stovasfomel} and Model 2 (Moderate-Strong anisotropy) parameters are modified from \cite{helbig} and \cite{tsvankinortho}. }
+{
+\centering
+\resizebox{\textwidth}{!}{
+     	     \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|}
+     	     \hline Sample & $ V_{P0} $ & $ V_{S0} $ & $\epsilon_{1}$ & $ \epsilon_{2} $ & $ \delta_{1}$ & $ \delta_{2}$ & $ \delta_{3}$ & $\gamma_{1}$ & $\gamma_{2}$\\ 
+     	     \hline \multirow{3}{*}{Model 1 (Weak)} & 1.74 & 0.39 & 0.14 & 0.08 & 0.10 & 0.05 & 0.10 & 0.4 & 0.32 \\
+     	     \cline{2-10}                          & 1.94 & 0.78 & 0.14 & 0.10 & -0.02 & 0.03 & 0.10 & 0.3 & 0.25\\
+     	     \cline{2-10}                          & 2.75 & 1.53 & 0.14 & 0.08 & 0.10 & 0.04 & 0.01 & 0.2 & 0.6\\
+     	     \hline \multirow{3}{*}{Model 2 (Moderate-Strong)} & 2.437 & 1.265 & 0.329 & 0.258 & 0.082 & -0.077 & -0.106 & 0.182 & 0.046 \\
+     	     \cline{2-10}                          & 3.0 & 1.20 & 0.25 & 0.15 & 0.05 & -0.1 & 0.15 & 0.28 & 0.15\\
+     	     \cline{2-10}                          & 2.985 & 1.414 & 0.282 & 0.207 & -0.053 & -0.173 & -0.323 & 0.045 & -0.064\\
+      \hline
+    \end{tabular}
+    }
+}
+
+\subsubsection{Comparison with the method of \cite{alortho}}
+
+\cite{alortho} suggest to compute the effective quartic term using the VTI formula given by equation~\ref{eq:vtiav}. The independent parameters in each layer are substituted by their azimuthally variant counterparts as follows:
+\new{\begin{eqnarray}
+\label{eq:vnmoazi}
+V^2(\alpha)& = & \frac{V^2_1 V^2_2}{V^2_1 \cos^2 \alpha + V^2_2 \sin^2 \alpha}~, \\
+\label{eq:ala4azi} 
+A(\alpha) & = & A_{1111}\cos^4 \alpha + A_{1122}\cos^2\alpha \sin^2 \alpha + A_{2222} \sin^4 \alpha~,
+\end{eqnarray}}
+where $\alpha$ denotes the azimuth angle measured from [$x_1$,$x_3$] plane, $A_{1111}$, $A_{1122}$, and $A_{2222}$ are given in equations~\ref{eq:eta1}-\ref{eq:eta2}. The effective $a_{(N)}$ computed based on equation~\ref{eq:vtiav} is then multiplied by the source-receiver distance along the CMP line (offset in polar coordinates) and summed with lower-order terms for traveltime computation in polar coordinates. The relative error in the quartic term computation is shown in Figure~\ref{fig:errorweak}.
+
+\subsubsection{Comparison with the method of \cite{xu}}
+
+Under the weak anisotropy assumption, \cite{xu} show that the azimuthally dependent quartic coefficients in each layer can be approximated by
+\new{\begin{equation}
+\label{eq:weaka4azi}
+A(\alpha) =  -\frac{1}{2T^2_0 V^4(\alpha)}(\eta_2\cos^2 \alpha - \eta_3\cos^2 \alpha \sin^2 \alpha +\eta_1 \sin^2 \alpha)~,
+\end{equation}}
+where $V$ denotes the \new{interval} azimuthally varying NMO velocity (equation~\ref{eq:vnmoazi}) and $\eta_i$ denotes the interval $\eta$ value. \cite{vascon} suggest that in the case of a mild azimuthal anisotropy, one can also use equation~\ref{eq:vtiav} to approximate the effective value of $A$. Therefore, the independent parameters in each layer are substituted by their azimuthally variant counterparts (equations~\ref{eq:vnmoazi} and \ref{eq:weaka4azi}). Analogous to the case of equation~\ref{eq:ala4azi}, the effective $A$ is then multiplied by the source-receiver distance along the CMP line in order to evaluate traveltime in polar coordinates. 
+
+\new{Figure~\ref{fig:errorweak,error} shows }the resultant \new{azimuthal }error plots of the quartic term \old{$a_{ijkl}x_ix_jx_kx_l$ are shown in Figure~\ref{fig:error}}\new{$a_{ijkl}x_ix_jx_kx_l/r^4$ where $r=\sqrt{x^2_1+x^2_2}$ denotes the offset along the CMP line}. \new{Two models of three-layered aligned orthorhombic models with different degree of anisotropy are considered and the model parameters are given in Table~\ref{tbl:sample}. qP reflection traveltimes and errors from including traveltime approximation up to hyperbolic and quartic terms are shown in Figure~\ref{fig:exacttwtimeweak,nonhyperweak,nonhyperqweak} and \ref{fig:exacttwtime,nonhyper,nonhyperq}.} The VTI based approximation produces small errors when applied in weak anisotropic media. However, the errors increase noticeably with the strength of anisotropy of the media. Note that the observed errors \old{are}\new{result from the} cumulative effect\old{s from both} \new{of} the use of the pseudoacoustic approximation (equations~\ref{eq:eta1}-\ref{eq:eta2}) and of the VTI averaging formula (equation~\ref{eq:vtiav}). The separate effects from pseudoacoustic approximation alone are shown in the same figures and are denoted with large-dashed blue lines. It can be seen from the results that the error from pseudoacoustic approximation dominates the error from \new{the} VTI averaging formula in media with \new{a} higher degree of anisotropy. \new{The total error on the quartic term $a_{ijkl}x_ix_jx_kx_l$ can be computed from the azimuthal error amplified by $r^4$ and grows with larger distance $r$ along the CMP line.}
+
+\multiplot{2}{errorweak,error}{width=0.42\textwidth}{\new{Azimuthal }relative error of the quartic term \old{$a_{ijkl}x_ix_jx_kx_l$ at 1 $km$ radius}\new{$a_{ijkl}x_ix_jx_kx_l/r^4$ where $r^2=x^2_1+x^2_2$ denoting the source-receiver distance along the CMP line} in a) layered model 1 and b) layered model 2 based on methods by \cite{alortho} (small-dashed green) and \cite{xu} (Solid red). The large-dashed blue line denotes the errors solely from pseudoacoustic approximation with the correct averaging formulas (equations~\ref{eq:lytruea41}-\ref{eq:lytruea42}). \new{The azimuthal error shown remains constant for all offsets. The total error is equal to the multiplication of azimuthal error with $r^4$.}}
+
+\multiplot{2}{exacttwtimeweak,nonhyperweak,nonhyperqweak}{width=0.5\textwidth}{\new{a) The exact reflection traveltime ($4 t^2$) for Model 1 given in Table~\ref{tbl:sample}, b) the difference between the exact reflection traveltime and the hyperbolic moveout, and c) the difference between the exact reflection traveltime and the quartic moveout. Since the reflector depth at the bottom of the third layer is equal to 1 in this case, the nonhyperbolicity effects should have noticeable when $x_1$ and $x_2$ are greater than 1. Taking into account the quartic term improves the accuracy of traveltime approximation at large offsets.}}
+
+\multiplot{2}{exacttwtime,nonhyper,nonhyperq}{width=0.5\textwidth}{a) The exact reflection traveltime ($4 t^2$) for Model 2 given in Table~\ref{tbl:sample}, b) the difference between the exact reflection traveltime and the hyperbolic moveout, and c) the difference between the exact reflection traveltime and the quartic moveout. Since the reflector depth at the bottom of the third layer is equal to 1 in this case, the nonhyperbolicity effects should have noticeable when $x_1$ and $x_2$ are greater than 1. \new{Taking into account the quartic term improves the accuracy of traveltime approximation at large offsets.}}
+
+
+
+\subsection{Comparison of interval parameter estimation}
+
+Next, we test the \new{accuracy of the} proposed interval parameter estimation formulas (equations \ref{eq:gendix} and \ref{eq:genquartic}) in Model 2 (Table~\ref{tbl:sample}) representing a stack of aligned orthorhombic layers. The exact reflection traveltime computed by ray tracing is shown in Figure~\ref{fig:exacttwtime}\new{ and its nonhyperbolic part (Figure~\ref{fig:nonhyper}) is the difference between the exact value subtracted by the hyperbolic part controlled by NMO velocities}. The inverted interval parameters from known effective parameters are shown in Table~\ref{tbl:inverted} \old{that}\new{and} match the true results with the accuracy of floating-point precision.
+
+\tabl{inverted}{Inverted interval parameters (red and bold) for Model 2 given the exact effectve parameters (black) at the bottom of all layers based on equations \ref{eq:gendix} and \ref{eq:genquartic}. The resultant parameters are close to the true result within floating-point precision.}
+{
+\centering
+     	     \begin{tabular}{|c|c|c|c|c|c|c|}
+     	     \hline Sample & $ 2 t_{0}$ & $ a_{11}$ & $ a_{22}$ & $ a_{1111} $ & $ a_{1122}$ & $ a_{2222} $ \\ 
+     	     \hline \multirow{2}{*}{Layer 1} & 0.2052 & \textcolor{red}{\textbf{0.1993}} & \textcolor{red}{\textbf{0.1446}} & \textcolor{red}{\textbf{-0.6983}} & \textcolor{red}{\textbf{-0.4917}} & \textcolor{red}{\textbf{-0.2249}}\\
+     	     \cline{2-7} & 0.2052 & 0.1993 & 0.1446 & -0.6983 & -0.4917 & -0.2249\\
+    	     \hline \multirow{2}{*}{Layer 2} & 0.3 & \textcolor{red}{\textbf{0.1389}} & \textcolor{red}{\textbf{0.1010}} & \textcolor{red}{\textbf{-0.1276}} & \textcolor{red}{\textbf{-0.1788}} & \textcolor{red}{\textbf{-0.042}}\\
+     	     \cline{2-7} & 0.5052 & 0.1584 & 0.1151 & -0.0646 & -0.0774 & -0.0213\\
+     	     \hline \multirow{2}{*}{Layer 3} & 0.2010 & \textcolor{red}{\textbf{0.1713}} & \textcolor{red}{\textbf{0.1254}} & \textcolor{red}{\textbf{-0.7136}} & \textcolor{red}{\textbf{-0.0392}} & \textcolor{red}{\textbf{-0.2779}}\\
+     	     \cline{2-7} & 0.7062 & 0.1619 & 0.1179 & -0.0389 & -0.0318 & -0.0136\\
+
+      \hline
+    \end{tabular}
+}
+
+
+\section{Coefficients of traveltime expansion for a stack of azimuthally rotated orthorhombic layers}
+In this section,  we specify the exact expressions for the coefficients of the traveltime expansion in the case of a stack of azimuthally rotated orthorhombic layers. The following formulas are \old{simply}a specification of the general coefficient formulas for such coefficients given in equations \ref{eq:a2inh} and \ref{eq:a4inh}. The quadratic and quartic terms in the traveltime expansion become 
+\begin{equation}
+\label{eq:nmoazi}
+a_{ij} x_i x_j = a_{11}x^2_1 + a_{12}x_1 x_2 + a_{22}x^2_2 ~,
+\end{equation}
+and,
+\begin{equation}
+\label{eq:quarticazi}
+a_{ijkl} x_i x_j x_k x_l = a_{1111} x^4_1 + a_{1112} x^3_1 x_2 + a_{1122} x^2_1 x^2_2 + a_{1222} x_1 x^3_2 + a_{2222} x^4_2~.
+\end{equation}
+Here $a_{12}$, $a_{1112}$, $a_{1222}$ are additional coefficients that \old{are}\new{become} equal to zero in the previous case of aligned orthorhombic layers. We consider again equations~\ref{eq:xofp} and~\ref{eq:tofp} and an azimuthally rotated orthorhombic medium. Table~\ref{tbl:orthoazinonzero} lists the nonzero derivatives of half-offset \new{$h_1$ anf $h_2$} and \new{time} $t$ at \new{the} zero offset.
+
+\tabl{orthoazinonzero}{Nonzero half-offset and one-way traveltime derivatives with respect to $p_1$ and $p_2$ in the case of azimuthally rotated orthorhombic layers.}
+{
+\centering
+     	     \begin{tabular}{|c c | c c | c c c|}
+     	     \hline \multicolumn{2}{|c|}{Derivatives of $h_1$} & \multicolumn{2}{|c|}{Derivatives of $h_2$}  &\multicolumn{3}{|c|}{Derivatives of $t$} \\ 
+            \hline $h_{1,1} $ & $h_{1,2} $ & $h_{2,1} $ & $h_{2,2}  $ & $t_{,11} $  & $t_{,1111} $ & $t_{,1112} $\\ 
+            $h_{1,111} $ & $h_{1,222} $ & $h_{2,111} $ & $h_{2,222} $ & $t_{,22} $  & $t_{,2222} $ & $t_{,1222} $\\ 
+            $h_{1,122} $ & $h_{1,112} $ & $h_{2,122} $ & $h_{2,112} $ & $t_{,12} $  & $t_{,1122} $ &\\ 
+            \hline
+    \end{tabular}
+}
+
+We simplify the expressions for coefficients using the same arguments as before and rewrite them in terms of \old{the derivatives of $Q_{(n)}$}\new{$\psi_{i,j}$ coefficients} from equation~\ref{eq:psi} as follows:
+\begin{eqnarray}
+\label{eq:lytruea2azi}
+a_{11} & = & -\frac{t_0\psi_{0,2}}{\psi_{2,0}\psi_{0,2}-\psi^2_{1,1}}~,\\
+\label{eq:lytruea2mazi}
+a_{12} & = & \frac{2t_0\psi_{1,1}}{\psi_{2,0}\psi_{0,2}-\psi^2_{1,1}}~,\\
+\label{eq:lytruea22azi}
+a_{22} & = & -\frac{t_0\psi_{2,0}}{\psi_{2,0}\psi_{0,2}-\psi^2_{1,1}}~,
+\end{eqnarray}
+and
+\begin{eqnarray}
+\nonumber
+a_{1111} & = & \frac{1}{16}\left(\frac{\psi_{0,2}}{\psi^2_{1,1}-\psi_{2,0}\psi_{0,2}}\right)^2 + \\
+\label{eq:lytruea4m1azi}
+&&\frac{t_0}{48 (\psi^2_{1,1}-\psi_{2,0}\psi_{0,2})^4}\sum\limits_{i=0}^4 (-1)^{i} \binom{4}{i} \psi^i_{0,2} \psi^{4-i}_{1,1} \psi_{i,4-i}~,\\
+\label{eq:lytruea4m1azi}
+a_{1112} & = & -\frac{\psi_{0,2}\psi_{1,1}}{4(\psi^2_{1,1}-\psi_{2,0}\psi_{0,2})^2} +\frac{t_0}{12(\psi^2_{1,1}-\psi_{2,0}\psi_{0,2})^4} \\
+\nonumber
+&&\sum\limits_{i=0}^3 (-1)^{i} \binom{3}{i} \psi^{i}_{0,2}\psi^{3-i}_{1,1}(\psi_{1,1}\psi_{i+1,3-i}-\psi_{2,0}\psi_{i,4-i})~,\\
+\label{eq:lytruea4mazi}
+a_{1122} & = & \frac{2\psi_{1,1}^2+\psi_{2,0}\psi_{2,0}}{8(\psi^2_{1,1}-\psi_{2,0}\psi_{0,2})^2} +\frac{t_0}{8(\psi^2_{1,1}-\psi_{2,0}\psi_{0,2})^4}\\
+\nonumber
+&& \sum\limits_{i=0}^2 (-1)^{i} \binom{2}{i} \psi^{i}_{0,2}\psi^{2-i}_{1,1}(\psi^2_{1,1}\psi_{i+2,2-i}-2\psi_{1,1}\psi_{2,0}\psi_{i+1,3-i}+\psi^2_{2,0}\psi_{i,4-i})~,\\
+\label{eq:lytruea4m2azi} 
+a_{1222} & = &  -\frac{\psi_{2,0}\psi_{1,1}}{4(\psi^2_{1,1}-\psi_{2,0}\psi_{0,2})^2} + \frac{t_0}{12(\psi^2_{1,1}-\psi_{2,0}\psi_{0,2})^4} \\
+\nonumber
+&&\sum\limits_{i=0}^3 (-1)^{i} \binom{3}{i} \psi^{i}_{2,0}\psi^{3-i}_{1,1}(\psi_{1,1}\psi_{3-i,i+1}-\psi_{0,2}\psi_{4-i,i})~,\\
+\nonumber
+a_{2222} & = & \frac{1}{16}\left(\frac{\psi_{2,0}}{\psi^2_{1,1}-\psi_{2,0}\psi_{0,2}}\right)^2 + \\
+\label{eq:lytruea42azi}
+&& \frac{t_0}{48 (\psi^2_{1,1}-\psi_{2,0}\psi_{0,2})^4}\sum\limits_{i=0}^4 (-1)^{i} \binom{4}{i} \psi^i_{2,0} \psi^{4-i}_{1,1} \psi_{4-i,i}~.
+\end{eqnarray}
+\new{Their explicit expressions under the pseudoacoustic approximation are given by \cite{stovasortho}.}
+Note that, in the case of aligned orthorhombic layers, $\psi_{1,1}=\psi_{3,1}=\psi_{1,3}=0$, which reduces equations~\ref{eq:lytruea2azi}-\ref{eq:lytruea42azi} to equations~\ref{eq:lytruea2}-\ref{eq:lytruea42} with $a_{12}=a_{1112}=a_{1222}=0$. The exact componentwise expressions for interval parameters can be obtained as in the previous section but with added complexity. Therefore, we prefer \old{the use of}\new{instead to use} the \new{simpler} general interval expression derived in equation~\ref{eq:genquartic}. It is important to emphasize that the general formulas \new{(equations~\ref{eq:gendix}-\ref{eq:genquartic})}\old{proposed in this study} are applicable to any kind of anisotropy thanks to the use of the \old{generic}tensor notation.
+
+\new{\section{Discussion}}
+\new{In this study, we have focused only on pure-mode reflections where the source-receiver reciprocity holds and the moveout approximation around zero-offset is an even function (equations~\ref{eq:half} and \ref{eq:full}). This symmetry is generally absent in the case of converted waves.}
+
+\new{In addition, we assume that there is no relection dispersal, which is equivalent to assuming that the one-way traveltime can be expressed in terms of half-offset only $t(h)$. This assumption is appropriate when the two legs of the ray path are symmetric with respect to zero-offset and is related to the case of laterally homogeneous, horizontal anisotropic layers with a horizontal symmetry plane. When this assumption does not hold, for example, where tilted anisotropic media without horizontal symmetry planes or arbitrarily shaped interfaces are considered, one-way traveltime is no longer a function of merely half-offset $h$ but also a function of reflection point $y(h)$. \cite{nmoellipse} emphasized that the effect of reflection dispersal can be neglected in consideration of NMO velocity \cite[]{hubralkrey}. However, reflection dispersal becomes important when higher-order coefficients are considered. The general form for the quartic and higher-order coefficients that honor reflection dispersal effects was first studied by \cite{fomelnip} based on the extension of Normal-Incident-Point (NIP) theorem \cite[]{gritsenko} to the higher-order. Similar derivation for the quartic coefficientis given by \cite{pech2003}.}
+
+\new{In general, with the assumption of laterally homogeneous and horizontal layers, one can conveniently express one-way traveltime and half-offset in each sublayer as functions of horizontal slownesses ($p_i$) as shown in equations~\ref{eq:xofp} and \ref{eq:tofp}. Their derivatives in the most general form are given in equations~\ref{eq:coeffgeneralexpandsub1}-\ref{eq:coeffgeneralexpandsub4}. In consideration of pure modes, the zero-offset corresponds to $p_i=0$ and, which results in the simplified expressions in equations~\ref{eq:ti0}-\ref{eq:tijkl0}. In the case of converted waves or lateral variations or anisotropic media without horzontal symmetry plane, the location of $p_i=0$ no longer corresponds to the zero-offset but instead to the location of the minimum traveltime. The traveltime derivatives in equations~\ref{eq:coeffgeneralexpandsub1}-\ref{eq:coeffgeneralexpandsub4} can still be used with proper specifications of which position for the derivatives to be evaluated at. On the other hand, if the interfaces are arbitrarily shaped, the appropriate traveltime derivatives can be computing from ray tracing with the knowledge of approximate group velocity in each sublayer \cite[]{zonetwopoint,zoneortho}. The proposed framework has a straightforward extension from quartic to higher-order coefficients as long as all the mentioned assumptions are satisfied. } 
+
+\section{Conclusions}
+
+We have derived novel \new{exact} formulas for averaging and inverting the interval quartic coefficients of the reflection traveltime expansion in a general layered anisotropic medium. Expressions \old{in}\new{for} the specific case of a stack of aligned orthorhombic layers \old{are specified in details and}are compared with the previous approximations of using VTI averaging formulas. The \new{specific} expressions in the case of a stack of azimuthally rotated orthorhombic layers are also provided. The proposed formulas for both averaging interval coefficients and their direct inversion are readily applicable to 3D seismic processing in layered anisotropic media.
+
+\section{Acknowledgments}
+We are grateful to A. Stovas\new{, M. Vyas, and an anonymous reviewer} for helpful comments and suggestions. We thank the sponsors of the Texas Consortium for Computational Seismology (TCCS) for financial support. The first author was also supported by the Statoil Fellows Program at the University of Texas at Austin.
+
+
+\append{Traveltime and offset as functions of ray parameters}
+In this appendix, we show the derivation of the offset (equation~\ref{eq:xofp}) and traveltime (equation~\ref{eq:tofp}) functions in terms of two ray parameters ($p_1$ and $p_2$) in 3D.
+The total offset is constituted of offset \new{increments} from each individual layer and can be expressed as
+\begin{equation}
+\label{eq:startx}
+h_i = \sum\limits^N_{n=1} D_{(n)} \frac{dh_i}{dz}~,
+\end{equation}
+where the derivative $\frac{dh_i}{dz}$ represent the change in the offset $h_i$ direction with respect to the vertical direction $z$\new{, and $D_{(n)} $ denote the thickness of the $n$-th layer}. According to the \old{asymptotic}ray theory \cite[]{cerveny}, this derivative can be related to the derivative of the Christoffel equation with respect to the ray slownesses as follows
+\new{\begin{equation}
+\label{eq:dxdz}
+\frac{dh_i}{dz} = \frac{\partial F_{(n)} /\partial p_i}{\partial F_{(n)} /\partial Q_{(n)}}~,
+\end{equation}}
+where $F_{(n)}(p_1, p_2, Q_{(n)}) = 0 $ and $Q_{(n)}$ denote the Christoffel equation and the vertical ray slowness of the interested wave mode in the $n$-th layer. Equation~\ref{eq:dxdz} can be simplified further due to implicit differentiation in the Christofel equation as
+\new{\begin{equation}
+\frac{dh_i}{dz} = \frac{\partial F_{(n)} /\partial p_i}{\partial F_{(n)} /\partial Q_{(n)} } = -\frac{\partial Q_{(n)}}{\partial p_i}~,
+\end{equation}}
+which after substitution in equation~\ref{eq:startx} results in the function of $h(p_1,p_2)$ given in equation~\ref{eq:xofp}. Analogously, we can follow the same line of reasoning and derive an expression of traveltime. We start from the total traveltime expression given by
+\begin{equation}
+\label{eq:startt}
+t = \sum\limits^N_{n=1} D_{(n)} \left( \frac{\partial t}{\partial h_1}\frac{dh_1}{dz}+ \frac{\partial t}{\partial h_2}\frac{dh_2}{dz} + \frac{\partial t}{\partial z} \right)~,
+\end{equation}
+where the derivatives $\frac{\partial t}{\partial h_1} = p_1$ and $\frac{\partial t}{\partial h_2} = p_2$ represent the ray parameters in the two directions of the local coordinates. Since the ray parameters are conserved in the sequence of \old{horizontally layered media}\new{horizontal layers} due to Snell's law, we can \new{further} transform equation~\ref{eq:startt} into equation~\ref{eq:tofp} as follows:
+\begin{eqnarray}
+\nonumber
+t(p_1,p_2) & = & \sum\limits^N_{n=1} D_{(n)} \left( p_1 \frac{dh_1}{dz} + p_2\frac{dh_2}{dz} + \frac{dt}{dz} \right)\\
+\nonumber
+            & = & p_1 \sum\limits^N_{n=1} D_{(n)}\frac{dh_1}{dz} + p_2 \sum\limits^N_{n=1} D_{(n)}\frac{dh_2}{dz} + \sum\limits^N_{n=1} D_{(n)}\frac{dt}{dz}\\
+            & = & p_1 h_1 + p_2 h_2 + \sum\limits^N_{n=1} D_{(n)}Q_{(n)}~,
+\end{eqnarray}
+where $\frac{dt}{dz} = Q_{(n)}$ denotes the vertical slowness \old{of the interested wave mode}in the $n$-th layer\old{, which is not conserved through a stack of layers}.
+
+%\begin{eqnarray}
+%\nonumber
+%A_{4_1} & = & \frac{1}{16 \psi_{2,0}^2} + \frac{T_0}{96 (\psi^2_{1,1}-\psi_{2,0}\psi_{0,2})^4}[\psi^4_{1,1}\psi_{0,4}+\psi^4_{0,2}\psi_{4,0} \\
+%\label{eq:lytruea41azi}
+%&& - 4(\psi_{0,2}\psi^3_{1,1}\psi_{1,3}+\psi^3_{0,2}\psi_{1,1}\psi_{3,1}) +6\psi^2_{0,2}\psi^2_{1,1}\psi_{2,2}]~,\\
+%\nonumber
+%A_{4_{m1}} & = &  \frac{T_0}{24(\psi^2_{1,1}-\psi_{2,0}\psi_{0,2})^4}[\psi^4_{1,1}\psi_{1,3}-\psi^3_{1,1}(\psi_{2,0}\psi_{0,4} + 3 \psi_{0,2}\psi_{2,2})\\
+%\nonumber
+%& & + \psi^2_{1,1}\psi_{0,2}(\psi_{2,0}\psi_{1,3} + \psi_{0,2}\psi_{3,1}) + \psi^3_{0,2}(\psi_{2,0}\psi_{3,1}-\psi_{1,1}\psi_{4,0})\\
+%\label{eq:lytruea4m1azi}
+%& & + 3\psi_{1,1}\psi_{0,2}(\psi_{2,0}\psi_{1,1}\psi_{1,3} + \psi_{0,2}\psi_{1,1}\psi_{3,1}-\psi_{2,0}\psi_{0,2}\psi_{2,2})]~,\\
+%\nonumber
+%A_{4_m} & = & \frac{1}{8 \psi_{2,0}\psi_{0,2}} + \frac{T_0}{16 (\psi^2_{1,1}-\psi_{2,0}\psi_{0,2})^4}[\psi^2_{1,1}\psi^2_{2,0}\psi_{0,4} + \psi^4_{1,1}\psi_{2,2}+\psi^2_{2,0}\psi^2_{0,2}\psi_{2,2}\\
+%\nonumber
+%&& +\psi^2_{1,1}\psi^2_{0,2}\psi_{4,0}-2\psi_{1,1}(\psi^2_{1,1}\psi_{2,0}\psi_{1,3}+\psi^2_{1,1}\psi_{0,2}\psi_{3,1}+\psi^2_{2,0}\psi_{0,2}\psi_{1,3} \\
+%\label{eq:lytruea4mazi}
+%&& + \psi^2_{0,2}\psi_{2,0}\psi_{3,1}) + 4 \psi^2_{1,1}\psi_{2,0}\psi_{0,2}\psi_{2,2}]~,\\
+%\nonumber
+%A_{4_{m2}} & = &  \frac{T_0}{24(\psi^2_{1,1}-\psi_{2,0}\psi_{0,2})^4}[\psi^4_{1,1}\psi_{3,1}-\psi^3_{1,1}(\psi_{0,2}\psi_{4,0} + 3 \psi_{2,0}\psi_{2,2})\\
+%\nonumber
+%& & + \psi^2_{1,1}\psi_{2,0}(\psi_{2,0}\psi_{1,3} + \psi_{0,2}\psi_{3,1}) + \psi^3_{2,0}(\psi_{2,0}\psi_{3,1}-\psi_{1,1}\psi_{0,4})\\
+%\label{eq:lytruea4m2azi}
+%& & + 3\psi_{1,1}\psi_{2,0}(\psi_{0,2}\psi_{1,1}\psi_{3,1} + \psi_{2,0}\psi_{1,1}\psi_{1,3}-\psi_{2,0}\psi_{0,2}\psi_{2,2})]~,\\
+%\nonumber
+%A_{4_2} & = & \frac{1}{16 \psi_{0,2}^2} + \frac{T_0}{96 (\psi^2_{1,1}-\psi_{2,0}\psi_{0,2})^4}[\psi^4_{1,1}\psi_{4,0}+\psi^4_{2,0}\psi_{0,4} \\
+%\label{eq:lytruea42azi}
+%&& - 4(\psi_{2,0}\psi^3_{1,1}\psi_{3,1}+\psi^3_{2,0}\psi_{1,1}\psi_{1,3}) +6\psi^2_{2,0}\psi^2_{1,1}\psi_{2,2}]~,
+%\end{eqnarray}
+%where $\psi_{ij}$ and $\psi_{ijkl}$ are similar to before. Note that in the previous case of aligned orthorhombic layers, $\psi_{1,1}=\psi_{3,1}=\psi_{1,3}=0$, which reduces equations~\ref{eq:lytruea2azi}-\ref{eq:lytruea42azi} to equations~\ref{eq:lytruea2}-\ref{eq:lytruea42} with $A_{2_m}=A_{4_{m1}}=A_{4_{m2}}=0$.
+
+
+\newpage
+\onecolumn
+\bibliographystyle{seg}
+\bibliography{interval}
