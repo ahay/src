@@ -1,0 +1,8 @@
+from rsf.proj import *
+
+Fetch('synthetic_cmp.npz','1702_Step_by_step_NMO',
+      server='https://raw.githubusercontent.com',
+      top='seg/tutorials-2017/master')
+
+
+End()
