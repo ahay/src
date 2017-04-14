@@ -49,6 +49,8 @@ To the reproducible documents collection:
   elastic waves using low-rank approximate mixed-domain integral
   operators for anisotropic media (Cheng, Alkhalifah, Wu, Zou, and
   Wang)
+* tccs/interval: Theory of interval traveltime parameter estimation in
+  layered anisotropic media (Sripanich and Fomel)
 
 To SCons:
 
