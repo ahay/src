@@ -28,17 +28,17 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 <table align="center" width="100%" cellpadding="0" cellspacing="0">
 <tr>
 <td>
-<A NAME="tex2html77"
+<A NAME="tex2html75"
   HREF="node7.html">
 <IMG WIDTH="32" HEIGHT="32" ALIGN="BOTTOM" BORDER="0" ALT="next"
  SRC="icons/next.png"></A></td>
 <td>
-<A NAME="tex2html75"
+<A NAME="tex2html73"
   HREF="paper.html">
 <IMG WIDTH="32" HEIGHT="32" ALIGN="BOTTOM" BORDER="0" ALT="up"
  SRC="icons/up.png"></A></td>
 <td>
-<A NAME="tex2html69"
+<A NAME="tex2html67"
   HREF="node5.html">
 <IMG WIDTH="32" HEIGHT="32" ALIGN="BOTTOM" BORDER="0" ALT="previous"
  SRC="icons/previous.png"></A></td>
@@ -46,11 +46,11 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 <td><a href="../paper.pdf"><img src="icons/pdf.png" alt="[pdf]" width="32" height="32" border="0"></a></td>
 </tr></table>
 <BR>
-<B> Next:</B> <A NAME="tex2html78"
+<B> Next:</B> <A NAME="tex2html76"
   HREF="node7.html">Migration</A>
-<B>Up:</B> <A NAME="tex2html76"
+<B>Up:</B> <A NAME="tex2html74"
   HREF="paper.html">Schleicher: Teapot Dome</A>
-<B> Previous:</B> <A NAME="tex2html70"
+<B> Previous:</B> <A NAME="tex2html68"
   HREF="node5.html">Surface Consistent Decon</A>
 <BR><HR>
 
@@ -62,20 +62,22 @@ Stack with V(t,x,y)</A>
 
 <P>
 Previous sections ``first look'' and  ``surface consistant decon'', applied normal moveout  with a single velocity function from the file:
-<TT>$RSFSRC/book/data/teapotdome/Fetchpaper/npr3_dmo.vel</TT>.
 
 <P>
-This section interpolates the velocities so NMO can be applied with a space variant velocity field, V(t,x,y), and the stackes the data.
+$RSFSRC/book/data/teapotdome/fetch/npr3_dmo.vel
 
 <P>
-Starting from the <TT>$RSFSRC/book/data/teapotdome/scdeconpaper</TT> directory, you can look at the SConstruct file for stack with V(t,x,y) with the commands:
+This section interpolates the velocities so NMO can be applied with a space variant velocity field, V(t,x,y), and stacks the data.
+
+<P>
+Starting from the $RSFSRC/book/data/teapotdome/scdecon directory, you can look at the SConstruct file for stack with V(t,x,y) with the commands:
 <PRE>  
-cd ../velspaper
-gedit SConstruct
+cd ../vels
+emacs SConstruct
 </PRE>  
 
 <P>
-There are two stages for this process.  First the velocity is interpolated with a python program, interpvel.py to every to every (t,xline,iline) location.  The interpolation is linear in time and uses radial basis functions in space.  The interpolated velocity is saved in an rsf file and displayed (Figure&nbsp;<A HREF="#fig:vel3">13</A>). The second stage is to apply NMO using this velocity field using sftahnmo and create gathers with NMO and stacks.  As each trace is processed by sftahnmo, the (t,xline,iline) is read from the trace header and the velocity function for that location is read from file created by interpvel.py.  A few CDP gathers and a stack of iline 141 are created and shown in figures&nbsp;<A HREF="#fig:vtxycdps">14</A> and&nbsp;<A HREF="#fig:vtxystack141">15</A>.  These can be compared to processing with a single velocity function in figures&nbsp;<A HREF="node5.html#fig:scdeconcdps">11</A> and&nbsp;<A HREF="node5.html#fig:scdeconstack141">12</A>.
+There are two stages for this process.  First the velocity is interpolated with a python program, interpvel.py to every to every (t,xline,iline) location.  The interpolation is linear in time and uses radial basis functions in space.  The interpolated velocity is saved in an rsf file and displayed (Figure&nbsp;<A HREF="#fig:vel3">13</A>). The second stage is to apply NMO using this velocity field with sftahnmo and create gathers with NMO and stacks.  As each trace is processed by sftahnmo, the (t,xline,iline) is read from the trace header and the velocity function for that location is read from file created by interpvel.py.  A few CDP gathers and a stack of iline 141 are created and shown in figures&nbsp;<A HREF="#fig:vtxycdps">14</A> and&nbsp;<A HREF="#fig:vtxystack141">15</A>.  These can be compared to processing with a single velocity function in figures&nbsp;<A HREF="node5.html#fig:scdeconcdps">11</A> and&nbsp;<A HREF="node5.html#fig:scdeconstack141">12</A>.
 
 <P>
 
@@ -83,14 +85,14 @@ There are two stages for this process.  First the velocity is interpolated with 
 <A NAME="fig:vel3"></A>
 <TABLE BORDER=0>
 <TR><TH>
-<IMG SRC = "../velspaper/Fig/vel3.png" border="0" width=675 ALT = "vel3">
+<IMG SRC = "../vels/Fig/vel3.png" border="0" width=573 ALT = "vel3">
 
 <TR><TH>
-<STRONG><A HREF = "../velspaper/Fig/vel3.png">vel3</A>
+<STRONG><A HREF = "../vels/Fig/vel3.png">vel3</A>
 <BR>
 Figure 13.</STRONG> The downloaded velocity field velocity field, 	npr3_dmo.vel, interpolated using radial basis functions.
 <TR><TH>
- <a href="../velspaper/Fig/vel3.pdf"><img src="icons/pdf.png" border="0" alt="[pdf]" width="32" height="32"></a> <a href="../velspaper/Fig/vel3.png"><img src="icons/viewmag.png" border="0" alt="[png]" width="32" height="32"></a> <a href="../velspaper.html"><img src="icons/configure.png" border="0" alt="[scons]" width="32" height="32"></a>
+ <a href="../vels/Fig/vel3.pdf"><img src="icons/pdf.png" border="0" alt="[pdf]" width="32" height="32"></a> <a href="../vels/Fig/vel3.png"><img src="icons/viewmag.png" border="0" alt="[png]" width="32" height="32"></a> <a href="../vels.html"><img src="icons/configure.png" border="0" alt="[scons]" width="32" height="32"></a>
 </TABLE>
 <BR></CENTER></P>
 
@@ -99,14 +101,14 @@ Figure 13.</STRONG> The downloaded velocity field velocity field, 	npr3_dmo.vel,
 <A NAME="fig:vtxycdps"></A>
 <TABLE BORDER=0>
 <TR><TH>
-<IMG SRC = "../velspaper/Fig/vtxycdps.png" border="0" width=675 ALT = "vtxycdps">
+<IMG SRC = "../vels/Fig/vtxycdps.png" border="0" width=540 ALT = "vtxycdps">
 
 <TR><TH>
-<STRONG><A HREF = "../velspaper/Fig/vtxycdps.png">vtxycdps</A>
+<STRONG><A HREF = "../vels/Fig/vtxycdps.png">vtxycdps</A>
 <BR>
 Figure 14.</STRONG> A few CDP gathers from iline 141 with NMO using V(t,x,y) applied.
 <TR><TH>
- <a href="../velspaper/Fig/vtxycdps.pdf"><img src="icons/pdf.png" border="0" alt="[pdf]" width="32" height="32"></a> <a href="../velspaper/Fig/vtxycdps.png"><img src="icons/viewmag.png" border="0" alt="[png]" width="32" height="32"></a> <a href="../velspaper.html"><img src="icons/configure.png" border="0" alt="[scons]" width="32" height="32"></a>
+ <a href="../vels/Fig/vtxycdps.pdf"><img src="icons/pdf.png" border="0" alt="[pdf]" width="32" height="32"></a> <a href="../vels/Fig/vtxycdps.png"><img src="icons/viewmag.png" border="0" alt="[png]" width="32" height="32"></a> <a href="../vels.html"><img src="icons/configure.png" border="0" alt="[scons]" width="32" height="32"></a>
 </TABLE>
 <BR></CENTER></P>
 
@@ -115,14 +117,14 @@ Figure 14.</STRONG> A few CDP gathers from iline 141 with NMO using V(t,x,y) app
 <A NAME="fig:vtxystack141"></A>
 <TABLE BORDER=0>
 <TR><TH>
-<IMG SRC = "../velspaper/Fig/vtxystack141.png" border="0" width=675 ALT = "vtxystack141">
+<IMG SRC = "../vels/Fig/vtxystack141.png" border="0" width=573 ALT = "vtxystack141">
 
 <TR><TH>
-<STRONG><A HREF = "../velspaper/Fig/vtxystack141.png">vtxystack141</A>
+<STRONG><A HREF = "../vels/Fig/vtxystack141.png">vtxystack141</A>
 <BR>
 Figure 15.</STRONG> Stack of iline 141 with NMO using v(t,x,y).
 <TR><TH>
- <a href="../velspaper/Fig/vtxystack141.pdf"><img src="icons/pdf.png" border="0" alt="[pdf]" width="32" height="32"></a> <a href="../velspaper/Fig/vtxystack141.png"><img src="icons/viewmag.png" border="0" alt="[png]" width="32" height="32"></a> <a href="../velspaper.html"><img src="icons/configure.png" border="0" alt="[scons]" width="32" height="32"></a>
+ <a href="../vels/Fig/vtxystack141.pdf"><img src="icons/pdf.png" border="0" alt="[pdf]" width="32" height="32"></a> <a href="../vels/Fig/vtxystack141.png"><img src="icons/viewmag.png" border="0" alt="[png]" width="32" height="32"></a> <a href="../vels.html"><img src="icons/configure.png" border="0" alt="[scons]" width="32" height="32"></a>
 </TABLE>
 <BR></CENTER></P>
 
@@ -131,17 +133,17 @@ Figure 15.</STRONG> Stack of iline 141 with NMO using v(t,x,y).
 <table align="center" width="100%" cellpadding="0" cellspacing="0">
 <tr>
 <td>
-<A NAME="tex2html77"
+<A NAME="tex2html75"
   HREF="node7.html">
 <IMG WIDTH="32" HEIGHT="32" ALIGN="BOTTOM" BORDER="0" ALT="next"
  SRC="icons/next.png"></A></td>
 <td>
-<A NAME="tex2html75"
+<A NAME="tex2html73"
   HREF="paper.html">
 <IMG WIDTH="32" HEIGHT="32" ALIGN="BOTTOM" BORDER="0" ALT="up"
  SRC="icons/up.png"></A></td>
 <td>
-<A NAME="tex2html69"
+<A NAME="tex2html67"
   HREF="node5.html">
 <IMG WIDTH="32" HEIGHT="32" ALIGN="BOTTOM" BORDER="0" ALT="previous"
  SRC="icons/previous.png"></A></td>
@@ -149,17 +151,17 @@ Figure 15.</STRONG> Stack of iline 141 with NMO using v(t,x,y).
 <td><a href="../paper.pdf"><img src="icons/pdf.png" alt="[pdf]" width="32" height="32" border="0"></a></td>
 </tr></table>
 <BR>
-<B> Next:</B> <A NAME="tex2html78"
+<B> Next:</B> <A NAME="tex2html76"
   HREF="node7.html">Migration</A>
-<B>Up:</B> <A NAME="tex2html76"
+<B>Up:</B> <A NAME="tex2html74"
   HREF="paper.html">Schleicher: Teapot Dome</A>
-<B> Previous:</B> <A NAME="tex2html70"
+<B> Previous:</B> <A NAME="tex2html68"
   HREF="node5.html">Surface Consistent Decon</A>
 
 <!--End of Navigation Panel-->
 <ADDRESS>
 <I> <BR>
-2016-08-17</I>
+2016-11-21</I>
 </ADDRESS>
 <script type="text/javascript">
 var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");

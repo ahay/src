@@ -1,8 +1,32 @@
 from rsf.proj import *
 
-Fetch('synthetic_cmp.npz','1702_Step_by_step_NMO',
+Fetch('synthetic_cmp.npz','data',
       server='https://raw.githubusercontent.com',
-      top='seg/tutorials-2017/master')
+      top='seg/tutorials-2017/master/1702_Step_by_step_NMO')
 
+def npz2rsf(target=None,source=None,env=None):
+    import numpy, m8r
+    data = numpy.load(str(source[0]))
+    rsf = m8r.Output(str(target[0]))
+    dt = data['dt']
+    print dt, type(dt)
+    rsf.put("d2",float(dt))
+    rsf.put("o2",0.0)
+    rsf.put("label2","Time")
+    rsf.put("unit2","s")
+    rsf.put("d1",1)
+    rsf.put("o1",1)
+    cmp = data['CMP']
+    rsf.put("n2",cmp.shape[0])
+    rsf.put("n1",cmp.shape[1])
+    rsf.write(cmp)
+    rsf.close()
+    return 0
+
+Command('cmpt.rsf','synthetic_cmp.npz',action=Action(npz2rsf))
+
+Flow('cmp','cmpt','transp')
+
+Result('cmp','grey title="Synthetic CMP"  label2="trace number" unit2=')
 
 End()

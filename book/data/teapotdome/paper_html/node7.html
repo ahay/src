@@ -28,17 +28,17 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 <table align="center" width="100%" cellpadding="0" cellspacing="0">
 <tr>
 <td>
-<A NAME="tex2html87"
+<A NAME="tex2html85"
   HREF="node8.html">
 <IMG WIDTH="32" HEIGHT="32" ALIGN="BOTTOM" BORDER="0" ALT="next"
  SRC="icons/next.png"></A></td>
 <td>
-<A NAME="tex2html85"
+<A NAME="tex2html83"
   HREF="paper.html">
 <IMG WIDTH="32" HEIGHT="32" ALIGN="BOTTOM" BORDER="0" ALT="up"
  SRC="icons/up.png"></A></td>
 <td>
-<A NAME="tex2html79"
+<A NAME="tex2html77"
   HREF="node6.html">
 <IMG WIDTH="32" HEIGHT="32" ALIGN="BOTTOM" BORDER="0" ALT="previous"
  SRC="icons/previous.png"></A></td>
@@ -46,11 +46,11 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 <td><a href="../paper.pdf"><img src="icons/pdf.png" alt="[pdf]" width="32" height="32" border="0"></a></td>
 </tr></table>
 <BR>
-<B> Next:</B> <A NAME="tex2html88"
+<B> Next:</B> <A NAME="tex2html86"
   HREF="node8.html">Conclusions</A>
-<B>Up:</B> <A NAME="tex2html86"
+<B>Up:</B> <A NAME="tex2html84"
   HREF="paper.html">Schleicher: Teapot Dome</A>
-<B> Previous:</B> <A NAME="tex2html80"
+<B> Previous:</B> <A NAME="tex2html78"
   HREF="node6.html">Stack with V(t,x,y)</A>
 <BR><HR>
 
@@ -67,10 +67,10 @@ This section migrates the stacked volume using 3-D zero-offset extended split st
 A simple V(z) velocity field is used for the migration.  The SConstruct file takes about 8 hours to run migration on my MacBook Pro, even though migration has been limited to 20 Hz.   This algorithm allows the velocity field to vary laterally and it should be possible to produce equivalent results much more efficiently using phase shift migration.
 
 <P>
-Starting from the <TT>$RSFSRC/book/data/teapotdome/velspaper</TT> directory, you can look at the SConstruct file for migration with the commands:
+Starting from the $RSFSRC/book/data/teapotdome/vels directory, you can look at the SConstruct file for migration with the commands:
 <PRE>  
-cd ../zomigpaper
-gedit SConstruct
+cd ../zomig
+emacs SConstruct
 </PRE>  
 
 <P>
@@ -103,14 +103,14 @@ Figure&nbsp;<A HREF="#fig:mig-t">19</A> is the migrated data converted back to t
 <A NAME="fig:stack-filter"></A>
 <TABLE BORDER=0>
 <TR><TH>
-<IMG SRC = "../zomigpaper/Fig/stack-filter.png" border="0" width=675 ALT = "stack-filter">
+<IMG SRC = "../zomig/Fig/stack-filter.png" border="0" width=573 ALT = "stack-filter">
 
 <TR><TH>
-<STRONG><A HREF = "../zomigpaper/Fig/stack-filter.png">stack-filter</A>
+<STRONG><A HREF = "../zomig/Fig/stack-filter.png">stack-filter</A>
 <BR>
 Figure 16.</STRONG> Final stack with a 20 Hz high cut filter.
 <TR><TH>
- <a href="../zomigpaper/Fig/stack-filter.pdf"><img src="icons/pdf.png" border="0" alt="[pdf]" width="32" height="32"></a> <a href="../zomigpaper/Fig/stack-filter.png"><img src="icons/viewmag.png" border="0" alt="[png]" width="32" height="32"></a> <a href="../zomigpaper.html"><img src="icons/configure.png" border="0" alt="[scons]" width="32" height="32"></a>
+ <a href="../zomig/Fig/stack-filter.pdf"><img src="icons/pdf.png" border="0" alt="[pdf]" width="32" height="32"></a> <a href="../zomig/Fig/stack-filter.png"><img src="icons/viewmag.png" border="0" alt="[png]" width="32" height="32"></a> <a href="../zomig.html"><img src="icons/configure.png" border="0" alt="[scons]" width="32" height="32"></a>
 </TABLE>
 <BR></CENTER></P>
 
@@ -119,14 +119,14 @@ Figure 16.</STRONG> Final stack with a 20 Hz high cut filter.
 <A NAME="fig:slo"></A>
 <TABLE BORDER=0>
 <TR><TH>
-<IMG SRC = "../zomigpaper/Fig/slo.png" border="0" width=675 ALT = "slo">
+<IMG SRC = "../zomig/Fig/slo.png" border="0" width=540 ALT = "slo">
 
 <TR><TH>
-<STRONG><A HREF = "../zomigpaper/Fig/slo.png">slo</A>
+<STRONG><A HREF = "../zomig/Fig/slo.png">slo</A>
 <BR>
 Figure 17.</STRONG> The interval velocity slowness for input to sfzomig3.
 <TR><TH>
- <a href="../zomigpaper/Fig/slo.pdf"><img src="icons/pdf.png" border="0" alt="[pdf]" width="32" height="32"></a> <a href="../zomigpaper/Fig/slo.png"><img src="icons/viewmag.png" border="0" alt="[png]" width="32" height="32"></a> <a href="../zomigpaper.html"><img src="icons/configure.png" border="0" alt="[scons]" width="32" height="32"></a>
+ <a href="../zomig/Fig/slo.pdf"><img src="icons/pdf.png" border="0" alt="[pdf]" width="32" height="32"></a> <a href="../zomig/Fig/slo.png"><img src="icons/viewmag.png" border="0" alt="[png]" width="32" height="32"></a> <a href="../zomig.html"><img src="icons/configure.png" border="0" alt="[scons]" width="32" height="32"></a>
 </TABLE>
 <BR></CENTER></P>
 
@@ -135,14 +135,14 @@ Figure 17.</STRONG> The interval velocity slowness for input to sfzomig3.
 <A NAME="fig:real"></A>
 <TABLE BORDER=0>
 <TR><TH>
-<IMG SRC = "../zomigpaper/Fig/real.png" border="0" width=675 ALT = "real">
+<IMG SRC = "../zomig/Fig/real.png" border="0" width=540 ALT = "real">
 
 <TR><TH>
-<STRONG><A HREF = "../zomigpaper/Fig/real.png">real</A>
+<STRONG><A HREF = "../zomig/Fig/real.png">real</A>
 <BR>
 Figure 18.</STRONG> The real part of the frequency domain seismic data for input to sfzomig3.
 <TR><TH>
- <a href="../zomigpaper/Fig/real.pdf"><img src="icons/pdf.png" border="0" alt="[pdf]" width="32" height="32"></a> <a href="../zomigpaper/Fig/real.png"><img src="icons/viewmag.png" border="0" alt="[png]" width="32" height="32"></a> <a href="../zomigpaper.html"><img src="icons/configure.png" border="0" alt="[scons]" width="32" height="32"></a>
+ <a href="../zomig/Fig/real.pdf"><img src="icons/pdf.png" border="0" alt="[pdf]" width="32" height="32"></a> <a href="../zomig/Fig/real.png"><img src="icons/viewmag.png" border="0" alt="[png]" width="32" height="32"></a> <a href="../zomig.html"><img src="icons/configure.png" border="0" alt="[scons]" width="32" height="32"></a>
 </TABLE>
 <BR></CENTER></P>
 
@@ -151,14 +151,14 @@ Figure 18.</STRONG> The real part of the frequency domain seismic data for input
 <A NAME="fig:mig-t"></A>
 <TABLE BORDER=0>
 <TR><TH>
-<IMG SRC = "../zomigpaper/Fig/mig-t.png" border="0" width=675 ALT = "mig-t">
+<IMG SRC = "../zomig/Fig/mig-t.png" border="0" width=573 ALT = "mig-t">
 
 <TR><TH>
-<STRONG><A HREF = "../zomigpaper/Fig/mig-t.png">mig-t</A>
+<STRONG><A HREF = "../zomig/Fig/mig-t.png">mig-t</A>
 <BR>
 Figure 19.</STRONG> The migrated data.  Wavefronts have not been muted from the zero portions of the stack volume.  Migration was severely frequency limited to reduce computer time.
 <TR><TH>
- <a href="../zomigpaper/Fig/mig-t.pdf"><img src="icons/pdf.png" border="0" alt="[pdf]" width="32" height="32"></a> <a href="../zomigpaper/Fig/mig-t.png"><img src="icons/viewmag.png" border="0" alt="[png]" width="32" height="32"></a> <a href="../zomigpaper.html"><img src="icons/configure.png" border="0" alt="[scons]" width="32" height="32"></a>
+ <a href="../zomig/Fig/mig-t.pdf"><img src="icons/pdf.png" border="0" alt="[pdf]" width="32" height="32"></a> <a href="../zomig/Fig/mig-t.png"><img src="icons/viewmag.png" border="0" alt="[png]" width="32" height="32"></a> <a href="../zomig.html"><img src="icons/configure.png" border="0" alt="[scons]" width="32" height="32"></a>
 </TABLE>
 <BR></CENTER></P>
 
@@ -167,14 +167,14 @@ Figure 19.</STRONG> The migrated data.  Wavefronts have not been muted from the 
 <A NAME="fig:filt-mig"></A>
 <TABLE BORDER=0>
 <TR><TH>
-<IMG SRC = "../zomigpaper/Fig/filt-mig.png" border="0" width=675 ALT = "filt-mig">
+<IMG SRC = "../zomig/Fig/filt-mig.png" border="0" width=573 ALT = "filt-mig">
 
 <TR><TH>
-<STRONG><A HREF = "../zomigpaper/Fig/filt-mig.png">filt-mig</A>
+<STRONG><A HREF = "../zomig/Fig/filt-mig.png">filt-mig</A>
 <BR>
 Figure 20.</STRONG> Commercial migration.
 <TR><TH>
- <a href="../zomigpaper/Fig/filt-mig.pdf"><img src="icons/pdf.png" border="0" alt="[pdf]" width="32" height="32"></a> <a href="../zomigpaper/Fig/filt-mig.png"><img src="icons/viewmag.png" border="0" alt="[png]" width="32" height="32"></a> <a href="../zomigpaper.html"><img src="icons/configure.png" border="0" alt="[scons]" width="32" height="32"></a>
+ <a href="../zomig/Fig/filt-mig.pdf"><img src="icons/pdf.png" border="0" alt="[pdf]" width="32" height="32"></a> <a href="../zomig/Fig/filt-mig.png"><img src="icons/viewmag.png" border="0" alt="[png]" width="32" height="32"></a> <a href="../zomig.html"><img src="icons/configure.png" border="0" alt="[scons]" width="32" height="32"></a>
 </TABLE>
 <BR></CENTER></P>
 
@@ -183,17 +183,17 @@ Figure 20.</STRONG> Commercial migration.
 <table align="center" width="100%" cellpadding="0" cellspacing="0">
 <tr>
 <td>
-<A NAME="tex2html87"
+<A NAME="tex2html85"
   HREF="node8.html">
 <IMG WIDTH="32" HEIGHT="32" ALIGN="BOTTOM" BORDER="0" ALT="next"
  SRC="icons/next.png"></A></td>
 <td>
-<A NAME="tex2html85"
+<A NAME="tex2html83"
   HREF="paper.html">
 <IMG WIDTH="32" HEIGHT="32" ALIGN="BOTTOM" BORDER="0" ALT="up"
  SRC="icons/up.png"></A></td>
 <td>
-<A NAME="tex2html79"
+<A NAME="tex2html77"
   HREF="node6.html">
 <IMG WIDTH="32" HEIGHT="32" ALIGN="BOTTOM" BORDER="0" ALT="previous"
  SRC="icons/previous.png"></A></td>
@@ -201,17 +201,17 @@ Figure 20.</STRONG> Commercial migration.
 <td><a href="../paper.pdf"><img src="icons/pdf.png" alt="[pdf]" width="32" height="32" border="0"></a></td>
 </tr></table>
 <BR>
-<B> Next:</B> <A NAME="tex2html88"
+<B> Next:</B> <A NAME="tex2html86"
   HREF="node8.html">Conclusions</A>
-<B>Up:</B> <A NAME="tex2html86"
+<B>Up:</B> <A NAME="tex2html84"
   HREF="paper.html">Schleicher: Teapot Dome</A>
-<B> Previous:</B> <A NAME="tex2html80"
+<B> Previous:</B> <A NAME="tex2html78"
   HREF="node6.html">Stack with V(t,x,y)</A>
 
 <!--End of Navigation Panel-->
 <ADDRESS>
 <I> <BR>
-2016-08-17</I>
+2016-11-21</I>
 </ADDRESS>
 <script type="text/javascript">
 var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
