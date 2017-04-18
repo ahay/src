@@ -53,4 +53,21 @@ Plot('line',
 
 Result('spec','spec line','Overlay')
 
+freqs = [5, 80, 130, 160]
+
+Flow('ormsby',None,
+     '''
+     spike n1=129 d1=0.002 k1=65 o1=-0.128 | 
+     trapez frequency=5,80,130,160 
+     ''')
+Result('ormsby','graph title="Ormsby wavelet" label2=Amplitude')
+
+# Compare with autocorrelation
+
+Flow('auto','seismic','fft1 | math output="input*conj(input)" | fft1 inv=y')
+Flow('auto2','auto','window n1=65 | reverse which=1 | window n1=64 | cat $SOURCE axis=1 | window n1=129')
+
+Result('auto2','ormsby auto2',
+       'cat axis=2 ${SOURCES[1]} | scale axis=1 | graph title=Autocorrelation dash=1,0 label2=Amplitude')
+
 End()
