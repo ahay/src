@@ -1,3 +1,3 @@
 uses=['sfspike', 'sfmath', 'sfcat', 'sfricker1', 'sfimagsrc', 'sfrtoc', 'sfwindow', 'sftransp', 'sfewelr3', 'sfewelr3d', 'sfput', 'sfreal', 'sfbyte', 'sfgrey3', 'sfewdlr3', 'sfewdlr3d', 'sfadd', 'sfcdivn']
 data=[]
-size= 13815314636
+size= 13489272948
