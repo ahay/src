@@ -74,6 +74,7 @@ To programs:
 * header= parameter in sfcsv2rsf
 * user/kregimbal: New contributor (Kelly Regimbal)
 * user/dmerzlikin: New contributor (Dmitrii Merzlikin)
+* user/sbader: New contributor (Sean Bader)
 
 ===Bug fixes===
 
