@@ -1,5 +1,6 @@
 Salah Al-Hadab <salah.alhadab@gmail.com>
 Tariq Alkhalifah <tariq.alkhalifah@kaust.edu.sa>
+Sean Bader <sbader@utexas.edu>
 Vladimir Bashkardin <bash@mail.utexas.edu>
 Filippo Broggini <filippo.broggini@gmail.com>
 Jules Browaeys <jules.browaeys@total.com>
