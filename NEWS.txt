@@ -51,6 +51,8 @@ To the reproducible documents collection:
   Wang)
 * tccs/interval: Theory of interval traveltime parameter estimation in
   layered anisotropic media (Sripanich and Fomel)
+* tccs/decomp: Elastic wave-vector decomposition in heterogeneous
+  anisotropic media (Sripanich, Fomel, Sun, and Cheng)
 
 To SCons:
 
