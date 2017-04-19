@@ -1,7 +1,5 @@
 from rsf.proj import *
-
-sys.path.append('..')
-import hessvti
+from rsf.gallery import hessvti
 
 hessvti.get_model('vp vx eta crho')
 
