@@ -1,0 +1,14 @@
+from rsf.tex import*
+#import os, sys
+
+#Paper('gmaabs',lclass='segabs',use='amsmath,color,listings,hyperref,changepage,float,xfrac,multicol', color='ALL')
+#End()
+
+Paper('segcut',lclass='article',use='pdfpages')
+Command2('revised.tex','paper.tex','cp $SOURCE $TARGET')
+Paper('revised',options='manuscript,revised',use='amsmath,color,listings,float,multirow,multicol,enumitem,graphicx',color='ALL',hires='ALL')
+
+#End(lclass='geophysics',options='manuscript',use='amsmath,color,listings,float,multirow,multicol,enumitem',color='ALL',hires='error1,error2,error3,errortssum-1,errortssum-2')
+#End(lclass='segabs',use='amsmath,color,listings,hyperref,float,multirow,multicol,enumitem',color='ALL',hires='ALL')
+End(lclass='geophysics', use='amsmath,color,listings,float,multirow,multicol,enumitem',color='ALL',hires='error1,error2,error3,errortssum-1,errortssum-2')
+
