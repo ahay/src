@@ -1,0 +1,405 @@
+from rsf.proj import *
+from rsf.recipes.beg import server
+import math 
+
+grey = '''
+grey allpos=y scalebar=y color=j 
+screenratio=.327 screenht=4.7 pclip=100 labelsz=6 titlesz=7.5
+label1=z unit1=km label2=x unit2=km wanttitle=n labelfat=3 titlefat=3
+'''
+grey2 = '''
+grey scalebar=y color=j
+screenratio=0.75 screenht=6.7 pclip=100 labelsz=6 titlesz=7.5
+label1="p\_y" unit1=s/km label2="p\_x" unit2=s/km 
+labelfat=3 titlefat=3 wherexlabel=bottom wheretitle=top yreverse=n
+'''
+grey3 = '''
+grey scalebar=y color=j 
+screenratio=0.75 screenht=6.7 pclip=100 labelsz=6 titlesz=7.5
+label1=y unit1=km label2=x unit2=km  labelfat=3 titlefat=3 yreverse=n
+wherexlabel=bottom wheretitle=top
+'''
+
+# Setting up SEAM II model #########################################################
+
+for data in ('rho','delta','vp','vs','epsilon','gamma','phi','epsilonH','gammaH','deltaH'):
+    Fetch(data+'-single.hh','seam',server)
+    Flow(data+'-single',data+'-single.hh','dd form=native')
+
+Fetch('vpseam2.hh','seam',server)
+Flow('vpseam2','vpseam2.hh','dd form=native')
+
+
+# VTI part
+Flow('c33','rho-single vp-single','''math v=${SOURCES[1]} output="input*v*v"''')
+Flow('c55','rho-single vs-single','''math v=${SOURCES[1]} output="input*v*v"''')
+Flow('c11v','c33 epsilon-single','''math e=${SOURCES[1]} output="input*(1+2*e)"''')
+Flow('c66v','c55 gamma-single','''math g=${SOURCES[1]} output="input*(1+2*g)"''')
+Flow('c12v','c11v c66v','''math e=${SOURCES[1]} output="input-2*e"''')
+Flow('c13v','c33 c55 delta-single',
+	'''
+	math s=${SOURCES[1]} d=${SOURCES[2]} output="sqrt((input-s)*(2*input*d+input-s))-s"
+	''')
+
+# HTI part
+Flow('c11h','c33 epsilonH-single','''math e=${SOURCES[1]} output="input*(1+2*e)"''')
+Flow('c55h','c55 gammaH-single','''math g=${SOURCES[1]} output="input*(1+2*g)"''')
+Flow('c13h','c11h c55h','''math e=${SOURCES[1]} output="input-2*e"''')
+Flow('c12h','c33 c55 deltaH-single',
+	'''
+	math s=${SOURCES[1]} d=${SOURCES[2]} output="sqrt((input-s)*(2*input*d+input-s))-s"
+	''')
+
+# Azimuth measured CW (Map view) from y in deg
+Flow('phi','phi-single','math output="(90-input)*3.14159/180" ') # Covert to measured CCW from x in rad
+
+# VTI + HTI = Orthorhombic (output is in (m/s)^2)
+Flow('c11o c22o c33o c44o c55o c66o c12o c13o c23o','c33 c55 c11v c66v c12v c13v c11h c55h c12h c13h phi',
+	'''
+	vtihti2ort c55=${SOURCES[1]} c11v=${SOURCES[2]} c66v=${SOURCES[3]} c12v=${SOURCES[4]} c13v=${SOURCES[5]} 
+	c11h=${SOURCES[6]} c55h=${SOURCES[7]} c12h=${SOURCES[8]} c13h=${SOURCES[9]} phi=${SOURCES[10]}
+	c22o=${TARGETS[1]} c33o=${TARGETS[2]} c44o=${TARGETS[3]} c55o=${TARGETS[4]} c66o=${TARGETS[5]}
+	c12o=${TARGETS[6]} c13o=${TARGETS[7]} c23o=${TARGETS[8]}
+	''')
+
+#for i in Split('c11o c22o c33o c44o c55o c66o c12o c13o c23o'):
+#	Flow(i+'.txt',i+' rho-single','math rho=${SOURCES[1]} output="input/1e6*1/rho" | disfil number=n col=1')
+#Flow('grid.txt','c11o','math output="x1" | disfil number=n col=1')
+#Flow('phi.txt','phi',' disfil number=n col=1')
+
+# Convert to pseudoacoustic  parameters ##################################################
+for i in Split('c11o c22o c33o c44o c55o c66o c12o c13o c23o'):
+	Flow(i+'o',i+' rho-single','math rho=${SOURCES[1]} output="input*1/rho" ')
+Flow('vp','c33oo','math output="sqrt(input)*1e-3"')
+Flow('vs2','c55oo','math output="sqrt(input)*1e-3"')
+Flow('vs1','c44oo','math output="sqrt(input)*1e-3"')
+Flow('vs3','c66oo','math output="sqrt(input)"')
+Flow('vn2','c33oo c55oo c13oo','math c33=${SOURCES[0]} c55=${SOURCES[1]} c13=${SOURCES[2]} output="sqrt((c33*c55+c13*(c13+2*c55))/(c33-c55))*1e-3"')
+Flow('vn1','c33oo c44oo c23oo','math c33=${SOURCES[0]} c44=${SOURCES[1]} c23=${SOURCES[2]} output="sqrt((c33*c44+c23*(c23+2*c44))/(c33-c44))*1e-3"')
+Flow('eta2','c11oo c33oo c55oo c13oo','math c11=${SOURCES[0]} c33=${SOURCES[1]} c55=${SOURCES[2]} c13=${SOURCES[3]} output="c11*(c33-c55)/(2*c33*c55+2*c13*(c13+2*c55))-0.5"')
+Flow('eta1','c22oo c33oo c44oo c23oo','math c22=${SOURCES[0]} c33=${SOURCES[1]} c44=${SOURCES[2]} c23=${SOURCES[3]} output="c22*(c33-c44)/(2*c33*c44+2*c23*(c23+2*c44))-0.5"')
+Flow('eta3','c22oo c11oo c66oo c12oo','math c22=${SOURCES[0]} c11=${SOURCES[1]} c66=${SOURCES[2]} c12=${SOURCES[3]} output="c22*(c11-c66)/(2*c11*c66+2*c12*(c12+2*c66))-0.5"')
+Flow('etaxy','eta1 eta2 eta3','math e2=${SOURCES[1]} e3=${SOURCES[2]} output="sqrt((1+2*input)*(1+2*e2)/(1+2*e3))-1"')
+
+# Copy from all/zone/seam2/subsample
+Flow('vpseam2cut','vpseam2','window n3=1')
+Result('vpseam2cut','%s bias=2.2 barlabel="V\_P0" barunit="km/s"' %grey)
+
+# Ray tracing in layered media
+vxmax =  11 #km/s
+vymax =  10.6 #km/s 
+
+pxmax = 0.999/vxmax
+pymax = 0.999/vymax
+np = 202
+dpx = pxmax/(np-1)
+dpy = pymax/(np-1)
+
+
+for case in Split('vp vn2 vn1 eta1 eta2 etaxy'):
+    Flow(case+'o',case,'spray axis=2 n=%d d=%g o=%g | spray axis=3 n=%d d=%g o=%g' % (np,dpx,0,np,dpy,0))
+
+# Follow the expressions by Stovas (2015)
+Flow('f1','vn1o vn2o eta1o eta2o etaxyo',
+		'''	math vn1=${SOURCES[0]} vn2=${SOURCES[1]} eta1=${SOURCES[2]} eta2=${SOURCES[3]} etaxy=${SOURCES[4]} 
+		    output="1-(1+2*eta2)*x2^2*vn2^2-(1+2*eta1)*x3^2*vn1^2+((1+2*eta2)*(1+2*eta1)-(1+etaxy)^2)*x2^2*x3^2*vn1^2*vn2^2" 
+		''')
+Flow('f2','vn1o vn2o eta1o eta2o etaxyo',
+		'''	math vn1=${SOURCES[0]} vn2=${SOURCES[1]} eta1=${SOURCES[2]} eta2=${SOURCES[3]} etaxy=${SOURCES[4]} 
+		    output="1-2*eta2*x2^2*vn2^2-2*eta1*x3^2*vn1^2+(4*eta1*eta2-etaxy^2)*x2^2*x3^2*vn1^2*vn2^2" 
+		''')
+Flow('q','vpo f1 f2','math f1=${SOURCES[1]} f2=${SOURCES[2]} output="sqrt((1/input^2)*f1/f2)" ')
+#Flow('dqdpx','vpo vn1o vn2o eta1o eta2o etaxyo f1 f2','''math vp=${SOURCES[0]} vn1=${SOURCES[1]} vn2=${SOURCES[2]} eta1=${SOURCES[3]} eta2=${SOURCES[4]}
+#		etaxy=${SOURCES[5]} f1=${SOURCES[6]} f2=${SOURCES[7]}
+#		output="(-1+x3^2*vn1^2*(2*eta1-etaxy))^2*(-2*x3*vn1^2)/(2*vp*f2*sqrt(f2*f1))" ''')
+		
+# Incremental x, y and t in each pixel (This is ONE-WAY !!!!)
+Flow('dx','vpo vn1o vn2o eta1o eta2o etaxyo f1 f2',
+		'''
+		math vp=${SOURCES[0]} vn1=${SOURCES[1]} vn2=${SOURCES[2]} eta1=${SOURCES[3]} eta2=${SOURCES[4]}
+		etaxy=${SOURCES[5]} f1=${SOURCES[6]} f2=${SOURCES[7]}
+		output="(0.00625/vp)*x2*vn2^2/(f2*sqrt(f2*f1))*(-1+x3^2*vn1^2*(2*eta1-etaxy))^2"
+	 	''')
+Flow('dy','vpo vn1o vn2o eta1o eta2o etaxyo f1 f2',
+		'''
+		math vp=${SOURCES[0]} vn1=${SOURCES[1]} vn2=${SOURCES[2]} eta1=${SOURCES[3]} eta2=${SOURCES[4]}
+		etaxy=${SOURCES[5]} f1=${SOURCES[6]} f2=${SOURCES[7]}
+		output="(0.00625/vp)*x3*vn1^2/(f2*sqrt(f2*f1))*(-1+x2^2*vn2^2*(2*eta2-etaxy))^2"
+	 	''')
+Flow('dt','vpo vn1o vn2o eta1o eta2o etaxyo f1 f2',
+		'''
+		math vp=${SOURCES[0]} vn1=${SOURCES[1]} vn2=${SOURCES[2]} eta1=${SOURCES[3]} eta2=${SOURCES[4]}
+		etaxy=${SOURCES[5]} f1=${SOURCES[6]} f2=${SOURCES[7]}
+		output="(0.00625/vp)/(f2*sqrt(f2*f1))*(f1*f2 + x2^2*vn2^2*(-1+x3^2*vn1^2*(2*eta1-etaxy))^2 + x3^2*vn1^2*(-1+x2^2*vn2^2*(2*eta2-etaxy))^2) "
+	 	''')
+
+# Plot rays
+Plot('vp',
+     '''
+     spray axis=2 n=1600 d=0.00625 |
+     %s bias=2.2 scalebar=n
+     ''' % grey)
+     
+# from zero offset -> finite to finite->zero offset then sum over all accumulation
+Flow('rayx','dx',
+     'window n2=%d n3=1 f3=-1 | reverse which=1 opt=i | causint' %((np-1)))
+Flow('rayy','dy',
+     'window n3=%d n2=1 f2=-1| reverse which=1 opt=i | causint' %((np-1)))
+
+xmax = 10
+ymax = 10
+
+for case in '+-':
+    ray = 'rayx'+case
+    Flow(ray,'rayx','math output=%g%cinput' % (xmax/2,case))
+    Plot(ray,
+         '''
+         window j2=20 | 
+         graph wanttitle=n transp=y min2=0 max2=%g pad=n
+         wantaxis=n plotcol=7 screenratio=.327 screenht=4.7 
+         scalebar=n plotfat=5
+         ''' % xmax)
+for case in '+-':
+    ray = 'rayy'+case
+    Flow(ray,'rayy','math output=%g%cinput' % (ymax/2,case))
+    Plot(ray,
+         '''
+         window j2=20 | 
+         graph wanttitle=n transp=y min2=0 max2=%g pad=n
+         wantaxis=n plotcol=7 screenratio=.327 screenht=4.7 
+         scalebar=n plotfat=5
+         ''' % ymax)
+Result('rayx','vp rayx+ rayx-','Overlay')
+Result('rayy','vp rayy+ rayy-','Overlay')
+
+
+# Two-way full offset and reflection traveltime
+Flow('x','dx','stack axis=1 norm=n | scale dscale=%d | put label1=px label2=py unit1=s/km unit2=s/km' % (2))
+Flow('y','dy','stack axis=1 norm=n | scale dscale=%d | put label1=px label2=py unit1=s/km unit2=s/km' % (2))
+Flow('t','dt','stack axis=1 norm=n | scale dscale=%d | put label1=px label2=py unit1=s/km unit2=s/km' % (2))
+Flow('r','x y','math y=${SOURCES[1]} output="sqrt(input^2+y^2)"')
+Result('r','transp | %s  barlabel=distance barunit=km allpos=y bias=0 title="Offset magnitude"' %grey2)
+Result('t','transp | %s maxval=3.1 minval=1.9 barlabel=Traveltime barunit=s allpos=y bias=1.8 title="Traveltime" ' %grey2)
+
+###############################################################################
+# Computation of traveltime approximation #####################################
+###############################################################################
+
+##########################################################################
+# NMO ellipse ############################################################
+##########################################################################
+
+t0=0.967387 # one-way vertical traveltime
+
+# Extract at px=py=0 to find coefficients (Functions are defined similarly to Sripanich and Fomel (2016))
+# Interval values
+Flow('psi20','vpo vn2o',''' 
+	math vp=${SOURCES[0]} vn2=${SOURCES[1]}
+	output="-0.00625*vn2^2/vp" 
+	''' )
+Flow('psi02','vpo vn1o',''' 
+	math vp=${SOURCES[0]} vn1=${SOURCES[1]}
+	output="-0.00625*vn1^2/vp" 
+	''' )
+
+Flow('psi40','vpo vn2o eta2o',''' 
+	math vp=${SOURCES[0]} vn2=${SOURCES[1]} eta2=${SOURCES[2]}
+	output="-3*0.00625*vn2^4*(1+8*eta2)/vp" 
+	''' )
+	
+Flow('psi04','vpo vn1o eta1o',''' 
+	math vp=${SOURCES[0]} vn1=${SOURCES[1]} eta1=${SOURCES[2]}
+	output="-3*0.00625*vn1^4*(1+8*eta1)/vp" 
+	''' )
+
+Flow('psi22','vpo vn1o vn2o etaxyo',''' 
+	math vp=${SOURCES[0]} vn1=${SOURCES[1]} vn2=${SOURCES[2]} etaxy=${SOURCES[3]}
+	output="-0.00625*vn1^2*vn2^2*(1+4*etaxy)/vp" 
+	''' )
+	
+# Effective values
+Flow('psi20eff','vpo vn2o',''' 
+	math vp=${SOURCES[0]} vn2=${SOURCES[1]}
+	output="-0.00625*vn2^2/vp" | window n2=1 n3=1 | causint
+	''' )
+Flow('psi02eff','vpo vn1o',''' 
+	math vp=${SOURCES[0]} vn1=${SOURCES[1]}
+	output="-0.00625*vn1^2/vp"| window n2=1 n3=1 | causint
+	''' )
+
+Flow('psi40eff','vpo vn2o eta2o',''' 
+	math vp=${SOURCES[0]} vn2=${SOURCES[1]} eta2=${SOURCES[2]}
+	output="-3*0.00625*vn2^4*(1+8*eta2)/vp"| window n2=1 n3=1 | causint
+	''' )
+	
+Flow('psi04eff','vpo vn1o eta1o',''' 
+	math vp=${SOURCES[0]} vn1=${SOURCES[1]} eta1=${SOURCES[2]}
+	output="-3*0.00625*vn1^4*(1+8*eta1)/vp" | window n2=1 n3=1 | causint
+	''' )
+
+Flow('psi22eff','vpo vn1o vn2o etaxyo',''' 
+	math vp=${SOURCES[0]} vn1=${SOURCES[1]} vn2=${SOURCES[2]} etaxy=${SOURCES[3]}
+	output="-0.00625*vn1^2*vn2^2*(1+4*etaxy)/vp" | window n2=1 n3=1 | causint
+	''' )
+
+# Find effective value for the bottommost interface
+Flow('a11eff','psi20eff','math output="-%g/input"' %t0)
+Flow('a22eff','psi02eff','math output="-%g/input"' %t0)
+Flow('a1111eff','psi20eff psi40eff','math psi40=${SOURCES[1]} output="1/(16*input^2)+%g*psi40/(48*input^4)"' %t0)
+Flow('a1122eff','psi20eff psi02eff psi22eff','math psi02=${SOURCES[1]} psi22=${SOURCES[2]} output="(1/8)*(1/(input*psi02)+%g*psi22/(input*psi02)^2)"' %t0)
+Flow('a2222eff','psi02eff psi04eff','math psi04=${SOURCES[1]} output="1/(16*input^2)+%g*psi04/(48*input^4)"' %t0)
+
+
+a11=0.05361 # Extract from the bottom of eff files
+a22=0.06252
+a1111=-0.0002455
+a1122=-0.0005506
+a2222=-0.0003324
+
+
+Flow('nmo','x y',
+		'''
+		math x=${SOURCES[0]} y=${SOURCES[1]}
+		output="sqrt(%g^2 + %g*x^2 + %g*y^2)"
+		''' %(2*t0,a11,a22))
+Flow('nmoerr','nmo t','math t=${SOURCES[1]} output="abs(input-t)*1000"')
+Result('nmo','transp | %s maxval=1.9 minval=1.2 barlabel=time barunit=s bias=1.6' %grey2)
+Result('nmoerr','transp | %s minval=0 title="NMO ellipse error" barlabel="Traveltime error" barunit=ms clip=150 allpos=y bias=-25 ' %grey2)
+
+#################################################################################
+# Al-Dajani et al. (1998) #######################################################
+#################################################################################
+
+# Angle CMP line and [x,z] and interval parameters computations
+Flow('dt0','dt','window n2=1 n3=1 | spray axis=2 n=202 | spray axis=3 n=202')
+Flow('t0eff','dt0','causint')
+Flow('alpha','x y','math y=${SOURCES[1]} output="atan(y/(input+0.00001))" | spray axis=1 n=600 o=0 d=0.00625')
+Flow('a11','psi20 dt0','math t=${SOURCES[1]} output="-t/input"' )
+Flow('a22','psi02 dt0','math t=${SOURCES[1]} output="-t/input"' )
+Flow('a1111','psi20 psi40 dt0','math psi40=${SOURCES[1]} t=${SOURCES[2]} output="1/(16*input^2)+t*psi40/(48*input^4)"')
+Flow('a1122','psi20 psi02 psi22 dt0','math psi02=${SOURCES[1]} psi22=${SOURCES[2]} t=${SOURCES[3]} output="(1/8)*(1/(input*psi02)+t*psi22/(input*psi02)^2)"')
+Flow('a2222','psi02 psi04 dt0','math psi04=${SOURCES[1]} t=${SOURCES[2]} output="1/(16*input^2)+t*psi04/(48*input^4)"')
+
+Flow('vnmosq-azi','a11 a22 alpha',
+	'''
+	math a11=${SOURCES[0]} a22=${SOURCES[1]} a=${SOURCES[2]} output="1/(a11*cos(a)*cos(a) + a22*sin(a)*sin(a))"
+	''')
+Flow('a4-azi','a1111 a1122 a2222 alpha',
+	'''
+	math a1111=${SOURCES[0]} a1122=${SOURCES[1]} a2222=${SOURCES[2]} a=${SOURCES[3]} output="a1111*(cos(a))^4 + a1122*(cos(a))^2*(sin(a))^2+ a2222*(sin(a))^4"
+	''')
+# We have one-way time-> use averaging formula in two-way
+Flow('v2teff','vnmosq-azi dt0',
+	'''
+	math v=${SOURCES[0]} t=${SOURCES[1]} output="2*v*t" | causint
+	''')
+Flow('v4teff','vnmosq-azi dt0',
+	'''
+	math v=${SOURCES[0]} t=${SOURCES[1]} output="2*v*v*t" | causint
+	''')
+Flow('av8t3eff','vnmosq-azi dt0 a4-azi',
+	'''
+	math v=${SOURCES[0]} t=${SOURCES[1]} a=${SOURCES[2]}  output="8*a*v^4*t^3" | causint
+	''')
+
+# VTI averaging formula (Hake et al, 1984)
+Flow('a4-azieff','v2teff v4teff av8t3eff t0eff',
+	'''
+	math a=${SOURCES[0]} b=${SOURCES[1]} c=${SOURCES[2]} t=${SOURCES[3]}
+	output="(a^2-2*t*b)/(4*a^4) + 2*t*c/a^4"
+	''')
+
+# Horizontal velocity averaging
+for input in Split('c11o c22o c12o c66o'):
+	Flow(input+'azi',input,'spray axis=2 n=202 | spray axis=3 n=202')
+Flow('vhor','c11oazi c22oazi c66oazi c12oazi alpha',
+	'''
+	math c11=${SOURCES[0]} c22=${SOURCES[1]} c66=${SOURCES[2]} c12=${SOURCES[3]} a=${SOURCES[4]}
+	output="1e-6*((1/2)*((c11 + c66)*(cos(a))^2 + (c22 + c66)*(sin(a))^2) + (1/2)*sqrt(((c11 - c66)*(cos(a))^2 - (c22 - c66)*(sin(a))^2)^2 + 
+    4*(c12 + c66)^2 *(cos(a))^2*(sin(a))^2))"
+	''')
+Flow('vhoreff','vhor dt0','math v=${SOURCES[0]} t=${SOURCES[1]} output="2*v*t" | causint')
+
+
+# Extraction of the bottommost layer
+Flow('v2teff-bottom','v2teff','window n1=1 f1=-1 | math output="input/%g"' %(2*t0))
+Flow('a4-azieff-bottom','a4-azieff','window n1=1 f1=-1')
+Flow('vhoreff-bottom','vhoreff','window n1=1 f1=-1 | math output="input/%g"' %(2*t0))
+
+Flow('al','v2teff-bottom a4-azieff-bottom vhoreff-bottom r',
+	'''
+	math v=${SOURCES[0]} a4=${SOURCES[1]} vh=${SOURCES[2]} r=${SOURCES[3]} 
+	output="sqrt(%g^2 + r^2/v + a4*r^4/(1+(a4/(1/vh-1/v))*r^2))"
+	'''%(2*t0))
+
+Flow('alerr','al t','math t=${SOURCES[1]} output="abs(input-t)*1000"')
+Result('alerr','transp | %s minval=0 title="Al-Dajani error" barlabel="Traveltime error" barunit=ms clip=25 allpos=y bias=-5 ' %grey2)
+ 
+##########################################################################
+# Xu et al. (2005) #######################################################
+##########################################################################
+
+# Different quartic terms with eta
+for input in Split('eta1 eta2 eta3'):
+	Flow(input+'azi',input,'spray axis=2 n=202 | spray axis=3 n=202')
+Flow('eta-azi','eta1azi eta2azi eta3azi alpha dt0 vnmosq-azi',
+	'''
+	math eta1=${SOURCES[0]} eta2=${SOURCES[1]} eta3=${SOURCES[2]} a=${SOURCES[3]} t=${SOURCES[4]} v=${SOURCES[5]}
+	output="(-eta2*(cos(a))^2 + eta3*(cos(a))^2*(sin(a))^2 - eta1*(sin(a))^2)/(2*t^2*v^2)"
+	''')
+Flow('etav8t3eff','vnmosq-azi dt0 eta-azi',
+	'''
+	math v=${SOURCES[0]} t=${SOURCES[1]} a=${SOURCES[2]}  output="8*a*v^4*t^3" | causint
+	''')
+# VTI averaging formula (Hake et al, 1984)
+Flow('eta-azieff','v2teff v4teff etav8t3eff t0eff',
+	'''
+	math a=${SOURCES[0]} b=${SOURCES[1]} c=${SOURCES[2]} t=${SOURCES[3]}
+	output="(a^2-2*t*b)/(4*a^4) + 2*t*c/a^4"
+	''')
+	
+Flow('eta-azieff-bottom','eta-azieff','window n1=1 f1=-1')
+
+Flow('xu','v2teff-bottom eta-azieff-bottom r',
+	'''
+	math v=${SOURCES[0]} a4=${SOURCES[1]}
+	output="1/(v*%g^2) - a4*v"  |
+	math v=${SOURCES[0]} a4=${SOURCES[1]} r=${SOURCES[2]}
+	output="sqrt(%g^2 + r^2/v + a4*r^4/(1+input*r^2))"
+	'''%(2*t0,2*t0))
+
+Flow('xuerr','xu t','math t=${SOURCES[1]} output="abs(input-t)*1000"')
+Result('xuerr','transp | %s  minval=0 title="Xu error" barlabel="Traveltime error" barunit=ms clip=25 allpos=y bias=-5' %grey2)
+
+
+##########################################################################
+# GMA 3D #################################################################
+##########################################################################
+ 
+# Compute coefficients from Mathematica 
+# The multiplication of 2(2t0)^2 is from Taylor expansion of GMA
+
+A1=a1111*(8*t0*t0)
+A2=0.0
+A3=a1122*(8*t0*t0)
+A4=0.0
+A5=a2222*(8*t0*t0)
+B1=0.0478765 #0.56 p1r1=0.084 p1r2=0.085
+B2=0.00315881
+B3=0.0584681
+C1=-0.000505726
+C2=-0.00068279
+C3=-0.00258119
+C4=-0.000891544
+C5=-0.00108415
+ 
+Flow('gma','x y',
+		'''
+		math x=${SOURCES[0]} y=${SOURCES[1]}
+		output="sqrt(%g^2 + %g*x^2 + %g*y^2 + (%g*x^4 + %g*x^2*y^2 + %g*y^4)/(%g^2+ %g*x^2 + %g*x*y+ %g*y^2 + sqrt(%g^4 + 2*(%g)^2*(%g*x^2 + %g*x*y + %g*y^2) + %g*x^4 + %g*x^3*y + %g*x^2*y^2 + %g*x*y^3 + %g*y^4)) )"
+		''' %(2*t0,a11,a22,A1,A3,A5,2*t0,B1,B2,B3,2*t0,2*t0,B1,B2,B3,C1,C2,C3,C4,C5))
+
+Flow('gmaerr','gma t','math t=${SOURCES[1]} output="abs(input-t)*1000" ')
+Result('gmaerr','transp | %s  minval=0 title="GMA error" barlabel="Traveltime error" barunit=ms clip=25 allpos=y bias=-5' %grey2)
+
+End()
