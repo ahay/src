@@ -53,6 +53,10 @@ To the reproducible documents collection:
   layered anisotropic media (Sripanich and Fomel)
 * tccs/decomp: Elastic wave-vector decomposition in heterogeneous
   anisotropic media (Sripanich, Fomel, Sun, and Cheng)
+* tccs/hyper3: 3D generalized nonhyperboloidal moveout approximation
+  (Sripanich, Fomel, Stovas, and Hao)
+* tccs/pi: Analytical path-summation imaging of seismic diffractions
+  (Merzlikin and Fomel)
 
 To SCons:
 
