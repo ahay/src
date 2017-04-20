@@ -1,4 +1,4 @@
-==Release 1.8 (TBA)==
+==Release 2.0 (TBA)==
 
 ===Additions and enhancements===
 
@@ -57,6 +57,8 @@ To the reproducible documents collection:
   (Sripanich, Fomel, Stovas, and Hao)
 * tccs/pi: Analytical path-summation imaging of seismic diffractions
   (Merzlikin and Fomel)
+* tccs/ovc: Diffraction imaging and time-migration velocity analysis
+  using oriented velocity continuation (Decker, Merzlikin, and Fomel)
 
 To SCons:
 
