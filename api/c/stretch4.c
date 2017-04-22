@@ -47,7 +47,7 @@ struct sf_Map4 {
     float t0,dt, eps;
     int *x; 
     bool *m;
-    float **w, *diag, *offd[3];
+    float **w, *diag, *offd[3], *mod;
     sf_bands slv;
     sf_tris tslv;
 };
@@ -72,6 +72,7 @@ sf_map4 sf_stretch4_init (int n1, float o1, float d1 /* regular axis */,
     str->m = sf_boolalloc (nd);
     str->w = sf_floatalloc2 (4,nd);
     str->diag = sf_floatalloc (str->nt);
+    str->mod = sf_floatalloc (str->nt);
     
     for (i = 0; i < 3; i++) {
 	str->offd[i] = sf_floatalloc (str->nt-1-i);
@@ -190,34 +191,30 @@ void sf_stretch4_apply_adj (bool add,  /* add flag */
 /*< transform model to ordinates by adjoint operation >*/
 {
     int id, it, i, nt, i1, i2;
-    float *w, *mm, *mod2;
+    float *w, *mm;
 
     sf_adjnull(true,add,str->nd,str->nt,ord,mod);
     
     mm = str->diag;
     nt = str->nt;
 
-    mod2 = sf_floatalloc(nt);
-
     for (it = 0; it < nt; it++) {
-	mod2[it] = mod[it];
+	str->mod[it] = mod[it];
     }
 
     if (str->ib >= 0) {
 	for (it = 0; it <= str->ib; it++) {
-	    mod2[it] = 0.0f;
+	    str->mod[it] = 0.0f;
 	}
     }
 
     if (str->ie < nt) {
 	for (it = str->ie; it < nt; it++) {
-	    mod2[it] = 0.0f;
+	    str->mod[it] = 0.0f;
 	}
     }
 
-    sf_spline4_post(nt,0,nt,mod2,mm);
-
-    free(mod2);
+    sf_spline4_post(nt,0,nt,str->mod,mm);
 
     if (str->ib >= 0) {
 	for (it = 0; it <= str->ib; it++) {
@@ -255,14 +252,12 @@ void sf_stretch4_apply (bool add /* add flag */,
 /*< transform ordinates to model >*/
 {
     int id, it, i, nt, i1, i2;
-    float *w, *mm, *mod2;
+    float *w, *mm;
 
     sf_adjnull(false,add,str->nd,str->nt,ord,mod);
         
     mm = str->diag;
     nt = str->nt;
-
-    mod2 = sf_floatalloc(nt);
 
     for (it = 0; it < nt; it++) {
 	mm[it] = 0.0f;
@@ -296,15 +291,13 @@ void sf_stretch4_apply (bool add /* add flag */,
 	}
     }
 
-    sf_spline4_post(nt,0,nt,mm,mod2);
+    sf_spline4_post(nt,0,nt,mm,str->mod);
 
     for (it=0; it < nt; it++) {
 	if (it > str->ib && it < str->ie) {
-	    mod[it] += mod2[it];
+	    mod[it] += str->mod[it];
 	}
     }
-
-    free(mod2);
 }
 
 void sf_cstretch4_invert (sf_map4 str, 
@@ -424,6 +417,7 @@ void sf_stretch4_close (sf_map4 str)
     free (str->w[0]);
     free (str->w);
     free (str->diag);
+    free (str->mod);
 
     for (i = 0; i < 3; i++) {
 	free (str->offd[i]);
