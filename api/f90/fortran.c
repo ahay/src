@@ -16,7 +16,7 @@
 #ifdef  OFFSET64BIT
 #define OFFSETT LONGLONG
 #else
-#define RSFFILE LONG
+#define OFFSETT LONG
 #endif
 
 #include "cfortran.h"
@@ -172,5 +172,18 @@ FCALLSCSUB1(sf_cosft_init,SF_COSFT_INIT,sf_cosft_init,INT)
 FCALLSCSUB0(sf_cosft_close,SF_COSFT_CLOSE,sf_cosft_close)
 FCALLSCSUB3(sf_cosft_frw,SF_COSFT_FRW,sf_cosft_frw,PFLOAT,INT,INT)
 FCALLSCSUB3(sf_cosft_inv,SF_COSFT_INV,sf_cosft_inv,PFLOAT,INT,INT)
+
+/* Half-order differentiation */
+FCALLSCSUB3(sf_halfint_init,SF_HALFINT_INIT,sf_halfint_init,LOGICAL,INT,FLOAT)
+FCALLSCSUB6(sf_halfint_lop,SF_HALFINT_LOP,sf_halfint_lop,LOGICAL,LOGICAL,INT,INT,PFLOAT,PFLOAT)
+
+/* Stretch */
+FCALLSCFUN5(RSFFILE,sf_stretch4_init,SF_STRETCH4_INIT,sf_stretch4_init,INT,FLOAT,FLOAT,INT,FLOAT)
+FCALLSCSUB2(sf_stretch4_define,SF_STRETCH4_DEFINE,sf_stretch4_define,RSFFILE,PFLOAT)
+FCALLSCSUB4(sf_stretch4_apply,SF_STRETCH4_APPLY,sf_stretch4_apply,LOGICAL,RSFFILE,PFLOAT,PFLOAT)
+FCALLSCSUB4(sf_stretch4_apply_adj,SF_STRETCH4_APPLY_ADJ,sf_stretch4_apply_adj,LOGICAL,RSFFILE,PFLOAT,PFLOAT)
+
+/* Adjnull */
+FCALLSCSUB6(sf_adjnull,SF_ADJNULL,sf_adjnull,LOGICAL,LOGICAL,INT,INT,PFLOAT,PFLOAT)
 
 /* 	$Id: fortran.c 2069 2006-07-26 05:16:46Z sfomel $	 */

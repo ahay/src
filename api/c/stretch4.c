@@ -202,23 +202,33 @@ void sf_stretch4_apply_adj (bool add,  /* add flag */
     for (it = 0; it < nt; it++) {
 	mod2[it] = mod[it];
     }
-    
-    for (it = 0; it <= str->ib; it++) {
-	mod2[it] = 0.0f;
+
+    if (str->ib >= 0) {
+	for (it = 0; it <= str->ib; it++) {
+	    mod2[it] = 0.0f;
+	}
     }
-    
-    for (it = str->ie; it < nt; it++) {
-	mod2[it] = 0.0f;
+
+    if (str->ie < nt) {
+	for (it = str->ie; it < nt; it++) {
+	    mod2[it] = 0.0f;
+	}
     }
 
     sf_spline4_post(nt,0,nt,mod2,mm);
 
-    for (it = 0; it <= str->ib; it++) {
-	mm[it] = 0.0f;
+    free(mod2);
+
+    if (str->ib >= 0) {
+	for (it = 0; it <= str->ib; it++) {
+	    mm[it] = 0.0f;
+	}
     }
-    
-    for (it = str->ie; it < nt; it++) {
-	mm[it] = 0.0f;
+
+    if (str->ie < nt) {
+	for (it = str->ie; it < nt; it++) {
+	    mm[it] = 0.0f;
+	}
     }
 
     sf_banded_solve (str->slv, mm);
@@ -274,12 +284,16 @@ void sf_stretch4_apply (bool add /* add flag */,
 
     sf_banded_solve (str->slv, mm);
 
-    for (it = 0; it <= str->ib; it++) {
-	mm[it] = 0.0f;
+    if (str->ib >= 0) {
+	for (it = 0; it <= str->ib; it++) {
+	    mm[it] = 0.0f;
+	}
     }
-    
-    for (it = str->ie; it < nt; it++) {
-	mm[it] = 0.0f;
+
+    if (str->ie < nt) {
+	for (it = str->ie; it < nt; it++) {
+	    mm[it] = 0.0f;
+	}
     }
 
     sf_spline4_post(nt,0,nt,mm,mod2);

@@ -96,6 +96,8 @@ In documentation:
 
 In APIs:
 
+* Fixed memory bug in stretch.c
+
 In the Python package:
 
 * Fixed parsing of comments in Fortran-90 programs
