@@ -106,10 +106,10 @@ void slant_lop (bool adj,
 	    if (rho) {
 		if (adj) {
 		    sf_halfint_lop (false, false, nt, nt, data+ix*nt, tmp);
-		    sf_aastretch_lop (true, add, nt, nt, modl+is*nt, tmp);
+		    sf_aastretch_lop (true, true, nt, nt, modl+is*nt, tmp);
 		} else {
 		    sf_aastretch_lop (false, false, nt, nt, modl+is*nt, tmp);
-		    sf_halfint_lop (true, add, nt, nt, data+ix*nt, tmp);
+		    sf_halfint_lop (true, true, nt, nt, data+ix*nt, tmp);
 		}
 	    } else {
 		sf_aastretch_lop(adj,true,nt,nt,modl+is*nt,data+ix*nt);
