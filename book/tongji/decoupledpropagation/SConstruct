@@ -12,4 +12,11 @@ End(lclass='geophysics',use='amsmath,amssymb,listings,multirow,array',
     ElasticxKSInterfC   ElasticzKSInterfC 
     ElasticxKSSInterfC  ElasticzKSSInterfC
     ElasticxFDInterfC   ElasticzFDInterfC
+    ElasticxKSSInterf   ElasticzKSSInterf
+    ElasticxPSLR1Interf  ElasticzPSLR1Interf 
+    ElasticPxPSLR1Interf ElasticPzPSLR1Interf
+    ElasticSxPSLR1Interf ElasticSzPSLR1Interf
+    ElasticPxPSLRInterf  ElasticPzPSLRInterf
+    ElasticSxPSLRInterf  ElasticSzPSLRInterf
+    ElasticxPSLRInterf   ElasticzPSLRInterf
     ''')

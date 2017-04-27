@@ -89,14 +89,6 @@ $noresave{$key} = "$nosave";
 # labels from external_latex_labels array.
 
 
-$key = q/fig:velspaper-vtxystack141/;
-$external_latex_labels{$key} = q|15|; 
-$noresave{$key} = "$nosave";
-
-$key = q/fig:geompaper-shots-receivers/;
-$external_latex_labels{$key} = q|3|; 
-$noresave{$key} = "$nosave";
-
 $key = q/fig:mig-t/;
 $external_latex_labels{$key} = q|19|; 
 $noresave{$key} = "$nosave";
@@ -117,16 +109,20 @@ $key = q/fig:firstlook-rawshot1/;
 $external_latex_labels{$key} = q|4|; 
 $noresave{$key} = "$nosave";
 
+$key = q/fig:zomig-stack-filter/;
+$external_latex_labels{$key} = q|16|; 
+$noresave{$key} = "$nosave";
+
 $key = q/fig:slo/;
 $external_latex_labels{$key} = q|17|; 
 $noresave{$key} = "$nosave";
 
-$key = q/fig:rawshot1/;
-$external_latex_labels{$key} = q|4|; 
-$noresave{$key} = "$nosave";
-
 $key = q/fig:tpowshotzoom1/;
 $external_latex_labels{$key} = q|5|; 
+$noresave{$key} = "$nosave";
+
+$key = q/fig:rawshot1/;
+$external_latex_labels{$key} = q|4|; 
 $noresave{$key} = "$nosave";
 
 $key = q/fig:scdeconstack141/;
@@ -153,24 +149,36 @@ $key = q/fig:scdeconcdps/;
 $external_latex_labels{$key} = q|11|; 
 $noresave{$key} = "$nosave";
 
-$key = q/fig:zomigpaper-stack-filter/;
-$external_latex_labels{$key} = q|16|; 
+$key = q/fig:zomig-real/;
+$external_latex_labels{$key} = q|18|; 
 $noresave{$key} = "$nosave";
 
 $key = q/fig:foldmap-400-5000/;
 $external_latex_labels{$key} = q|2|; 
 $noresave{$key} = "$nosave";
 
+$key = q/fig:scdecon-scdeconstack141/;
+$external_latex_labels{$key} = q|12|; 
+$noresave{$key} = "$nosave";
+
 $key = q/fig:mutecheck/;
 $external_latex_labels{$key} = q|7|; 
+$noresave{$key} = "$nosave";
+
+$key = q/fig:zomig-mig-t/;
+$external_latex_labels{$key} = q|19|; 
+$noresave{$key} = "$nosave";
+
+$key = q/fig:geom-foldplot144/;
+$external_latex_labels{$key} = q|1|; 
 $noresave{$key} = "$nosave";
 
 $key = q/fig:firstlook-mutecheck/;
 $external_latex_labels{$key} = q|7|; 
 $noresave{$key} = "$nosave";
 
-$key = q/fig:velspaper-vel3/;
-$external_latex_labels{$key} = q|13|; 
+$key = q/fig:geom-shots-receivers/;
+$external_latex_labels{$key} = q|3|; 
 $noresave{$key} = "$nosave";
 
 $key = q/fig:firstlook-tpowshotzoom/;
@@ -181,20 +189,8 @@ $key = q/fig:tpowshotzoom/;
 $external_latex_labels{$key} = q|6|; 
 $noresave{$key} = "$nosave";
 
-$key = q/fig:zomigpaper-real/;
-$external_latex_labels{$key} = q|18|; 
-$noresave{$key} = "$nosave";
-
-$key = q/fig:zomigpaper-mig-t/;
-$external_latex_labels{$key} = q|19|; 
-$noresave{$key} = "$nosave";
-
-$key = q/fig:zomigpaper-filt-mig/;
-$external_latex_labels{$key} = q|20|; 
-$noresave{$key} = "$nosave";
-
-$key = q/fig:geompaper-foldplot144/;
-$external_latex_labels{$key} = q|1|; 
+$key = q/fig:zomig-slo/;
+$external_latex_labels{$key} = q|17|; 
 $noresave{$key} = "$nosave";
 
 $key = q/fig:firstlook-tpowshotzoom1/;
@@ -205,48 +201,52 @@ $key = q/fig:foldplot144/;
 $external_latex_labels{$key} = q|1|; 
 $noresave{$key} = "$nosave";
 
-$key = q/fig:velspaper-vtxycdps/;
-$external_latex_labels{$key} = q|14|; 
-$noresave{$key} = "$nosave";
-
-$key = q/fig:geompaper-foldmap-400-5000/;
-$external_latex_labels{$key} = q|2|; 
+$key = q/fig:vels-vtxystack141/;
+$external_latex_labels{$key} = q|15|; 
 $noresave{$key} = "$nosave";
 
 $key = q/fig:vel3/;
 $external_latex_labels{$key} = q|13|; 
 $noresave{$key} = "$nosave";
 
-$key = q/fig:scdeconpaper-scdeconstack141/;
-$external_latex_labels{$key} = q|12|; 
-$noresave{$key} = "$nosave";
-
-$key = q/fig:nmomutecheck/;
-$external_latex_labels{$key} = q|9|; 
+$key = q/fig:zomig-filt-mig/;
+$external_latex_labels{$key} = q|20|; 
 $noresave{$key} = "$nosave";
 
 $key = q/fig:shots/;
 $external_latex_labels{$key} = q|8|; 
 $noresave{$key} = "$nosave";
 
+$key = q/fig:nmomutecheck/;
+$external_latex_labels{$key} = q|9|; 
+$noresave{$key} = "$nosave";
+
 $key = q/fig:vtxycdps/;
 $external_latex_labels{$key} = q|14|; 
 $noresave{$key} = "$nosave";
 
-$key = q/fig:scdeconpaper-scdeconcdps/;
-$external_latex_labels{$key} = q|11|; 
+$key = q/fig:vels-vtxycdps/;
+$external_latex_labels{$key} = q|14|; 
+$noresave{$key} = "$nosave";
+
+$key = q/fig:vels-vel3/;
+$external_latex_labels{$key} = q|13|; 
 $noresave{$key} = "$nosave";
 
 $key = q/fig:filt-mig/;
 $external_latex_labels{$key} = q|20|; 
 $noresave{$key} = "$nosave";
 
-$key = q/fig:zomigpaper-slo/;
-$external_latex_labels{$key} = q|17|; 
+$key = q/fig:geom-foldmap-400-5000/;
+$external_latex_labels{$key} = q|2|; 
 $noresave{$key} = "$nosave";
 
 $key = q/fig:stack-filter/;
 $external_latex_labels{$key} = q|16|; 
+$noresave{$key} = "$nosave";
+
+$key = q/fig:scdecon-scdeconcdps/;
+$external_latex_labels{$key} = q|11|; 
 $noresave{$key} = "$nosave";
 
 1;

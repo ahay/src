@@ -68,6 +68,7 @@ int main(int  argc,char **argv)
     if (!sf_getfloat("freq",&f0)) f0=40.0;    // main frequency of the wavelet(usually 30Hz)
     source = sf_getstring("source"); // source location
     if (NULL == (source = sf_getstring("source"))) source="m";
+    /* m=middle t=top b=bottom o=origin at bottom*/
 
     clock_t t1, t2, t3;
     float   timespent;
@@ -274,15 +275,20 @@ int main(int  argc,char **argv)
             isx=nxpad/2;
             isz=nzpad/2;
             break;
-        case 'f':
+        case 'b':
             isy=nypad/2;
             isx=nxpad/2;
             isz=bd+(nzpad-2*bd)/4;
             break;
-        case 's':
+        case 't':
             isy=nypad/2;
             isx=nxpad/2;
             isz=bd;
+            break;
+        case 'o':
+            isy=bd/2;
+            isx=bd/2;
+            isz=bd+(nzpad-2*bd)/4;
             break;
      }
 

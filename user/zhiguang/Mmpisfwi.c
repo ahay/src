@@ -164,7 +164,9 @@ int main(int argc, char* argv[])
 		if(!sf_getint("drectx", &fwipar->drectx)) fwipar->drectx=1; /* smoothing kernel radius in x */
 		if(!sf_getint("drectz", &fwipar->drectz)) fwipar->drectz=1; /* smoothing kernel radius in z */
 		if(!sf_getint("nrepeat", &fwipar->nrepeat)) fwipar->nrepeat=1; /* smoothing kernel repeat number */
-		if(!sf_getint("ider", &fwipar->ider)) fwipar->ider=0; /* direction of the derivative */
+		if(!sf_getint("tangent", &fwipar->tangent)) fwipar->tangent=0; /* if 1, calculate prediction corrector */
+		if(!sf_getfloat("sigma1", &fwipar->sigma1)) fwipar->sigma1=-1; /* smoothing kernel radius moving step in z */
+		if(!sf_getfloat("sigma2", &fwipar->sigma2)) fwipar->sigma2=-1; /* smoothing kernel radius moving step in x */
 
 		if(!sf_getfloat("v1", &fwipar->v1)) fwipar->v1=0.; /* lower limit of estimated velocity */
 		if(!sf_getfloat("v2", &fwipar->v2)) fwipar->v2=10.; /* upper limit of estimated velocity */

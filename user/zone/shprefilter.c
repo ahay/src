@@ -18,8 +18,6 @@
 */
 #include <rsf.h>
 
-#include "shprefilter.h"
-
 static float *tmp1, *tmp2 /* temporary storage */;
 static float shifted[1] = {0.21/0.79};
 static float a0=1.26582278; /* normalization */

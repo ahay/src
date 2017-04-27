@@ -28,17 +28,17 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 <table align="center" width="100%" cellpadding="0" cellspacing="0">
 <tr>
 <td>
-<A NAME="tex2html27"
+<A NAME="tex2html25"
   HREF="node2.html">
 <IMG WIDTH="32" HEIGHT="32" ALIGN="BOTTOM" BORDER="0" ALT="next"
  SRC="icons/next.png"></A></td>
 <td>
-<A NAME="tex2html25"
+<A NAME="tex2html23"
   HREF="paper.html">
 <IMG WIDTH="32" HEIGHT="32" ALIGN="BOTTOM" BORDER="0" ALT="up"
  SRC="icons/up.png"></A></td>
 <td>
-<A NAME="tex2html19"
+<A NAME="tex2html17"
   HREF="paper.html">
 <IMG WIDTH="32" HEIGHT="32" ALIGN="BOTTOM" BORDER="0" ALT="previous"
  SRC="icons/previous.png"></A></td>
@@ -46,11 +46,11 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 <td><a href="../paper.pdf"><img src="icons/pdf.png" alt="[pdf]" width="32" height="32" border="0"></a></td>
 </tr></table>
 <BR>
-<B> Next:</B> <A NAME="tex2html28"
+<B> Next:</B> <A NAME="tex2html26"
   HREF="node2.html">Data Loading</A>
-<B>Up:</B> <A NAME="tex2html26"
+<B>Up:</B> <A NAME="tex2html24"
   HREF="paper.html">Schleicher: Teapot Dome</A>
-<B> Previous:</B> <A NAME="tex2html20"
+<B> Previous:</B> <A NAME="tex2html18"
   HREF="paper.html">Schleicher: Teapot Dome</A>
 <BR><HR>
 
@@ -62,7 +62,7 @@ Introduction</A>
 This paper explains scripts that process a small 3D land seismic survey with the open software system Madagascar.  The processing sequence includes data loading, geometry plotting, spreading correction, surface consistent decon, scaling, refraction statics application, stacking velocity analysis, and post stack migration.  The processing scripts are also illustrate how seismic processors display and select processing parameters.  The scripts mostly use the “trace and header” or “tah” programs recently added to Madagascar that are useful to handle data that is not regularly sampled. 
 
 <P>
-The Teapot Dome 3D survey is a land 3D dataset from Wyoming provided by the U.S. Department of Energy and the Rocky Mountain Oilfield Test Center (RMOTC).  Data (including unprocessed prestack seismic data, preprocessed seismic data, final migrated image, processing reports, well logs, production history, and GIS data) may be downloaded from the Internet.    The intended use of the data is for scientific research, testing and demonstrating software, training end users, and as and exploration/production analog.  If you use any of this data in a presentation or publication, acknowledge RMOTC and the U.S. Department of Energy as the data source.
+The Teapot Dome 3D survey is a land 3D dataset from Wyoming provided by the U.S. Department of Energy and the Rocky Mountain Oilfield Test Center (RMOTC).  Data (including unprocessed prestack seismic data, preprocessed seismic data, final migrated image, processing reports, well logs, production history, and GIS data) may be downloaded from the Internet (http://wiki.seg.org/wiki/Teapot_dome_3D_survey).  The intended use of the data is for scientific research, testing and demonstrating software, training end users, and as and exploration/production analog.  If you use any of this data in a presentation or publication, acknowledge RMOTC and the U.S. Department of Energy as the data source.
 
 <P>
 The workflow is divided into stages that correspond to a typical processing sequence.  A computer processing stage produces printed information and displays that are required to create the processing scripts for the next processing stage.  The seismic processor selects which data to process, parameters to use.  The displays are also used to verify data is correctly processed before moving to the next stage.
@@ -71,28 +71,27 @@ The workflow is divided into stages that correspond to a typical processing sequ
 Following sections describe SConstruct files in separate directories that apply each processing stage.  These sections describe the processing stage and include some of the displays and the conclusions drawn for the processing.  I encourage you to recreate this processing sequence and to refer to the SConstruct files for the details of the commands to use.  You may recreate the processing or build on this paper by selecting your own parameters, using different programs, updating programs, or writing new programs.  
 
 <P>
-To reproduce these results you must first install Madagascar.  I processed this data on a Linux laptop purchased in 2010 and a MacBook Pro purchased in 2013.  It required about 40 Gbytes for free disk space.  I recomment you avoid Virtual machine or Cygwin, because these systems may encounter runtime and incompatibility problems.  
+To reproduce these results you must first install Madagascar.  I processed this data on a Linux laptop purchased in 2010 and a MacBook Pro purchased in 2013.  It required about 40 Gbytes for free disk space.  I recomment you avoid Virtual machine or Cygwin, because you are likely to encounter runtime and incompatibility problems.  
 
 <P>
-The processing follows the basic sequence applied by Excell adapted to the Madagascar software.  The Scripts build on the accomplishments of the ``SEG 3D Seismic Processing Working Workshop in Houston 2015 – Land 3D''.  See <TT><A NAME="tex2html2"
-  HREF="http://www.ahay.org/wiki/Houston_2015">http://www.ahay.org/wiki/Houston_2015</A></TT> for more information.
+The processing follows the basic sequence applied by Excell adapted to the Madagascar software.  The Scripts build on the accomplishments of the “SEG 3D Seismic Processing Working Workshop in Houston 2015 – Land 3D”.  See http://www.ahay.org/wiki/ SEG_3D_Seismic_Processing_Working_Workshop_Houston_2015-_Land_3D for more information.
 
 <P>
 <HR>
 <table align="center" width="100%" cellpadding="0" cellspacing="0">
 <tr>
 <td>
-<A NAME="tex2html27"
+<A NAME="tex2html25"
   HREF="node2.html">
 <IMG WIDTH="32" HEIGHT="32" ALIGN="BOTTOM" BORDER="0" ALT="next"
  SRC="icons/next.png"></A></td>
 <td>
-<A NAME="tex2html25"
+<A NAME="tex2html23"
   HREF="paper.html">
 <IMG WIDTH="32" HEIGHT="32" ALIGN="BOTTOM" BORDER="0" ALT="up"
  SRC="icons/up.png"></A></td>
 <td>
-<A NAME="tex2html19"
+<A NAME="tex2html17"
   HREF="paper.html">
 <IMG WIDTH="32" HEIGHT="32" ALIGN="BOTTOM" BORDER="0" ALT="previous"
  SRC="icons/previous.png"></A></td>
@@ -100,17 +99,17 @@ The processing follows the basic sequence applied by Excell adapted to the Madag
 <td><a href="../paper.pdf"><img src="icons/pdf.png" alt="[pdf]" width="32" height="32" border="0"></a></td>
 </tr></table>
 <BR>
-<B> Next:</B> <A NAME="tex2html28"
+<B> Next:</B> <A NAME="tex2html26"
   HREF="node2.html">Data Loading</A>
-<B>Up:</B> <A NAME="tex2html26"
+<B>Up:</B> <A NAME="tex2html24"
   HREF="paper.html">Schleicher: Teapot Dome</A>
-<B> Previous:</B> <A NAME="tex2html20"
+<B> Previous:</B> <A NAME="tex2html18"
   HREF="paper.html">Schleicher: Teapot Dome</A>
 
 <!--End of Navigation Panel-->
 <ADDRESS>
 <I> <BR>
-2016-08-17</I>
+2016-11-21</I>
 </ADDRESS>
 <script type="text/javascript">
 var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");

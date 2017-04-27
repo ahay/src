@@ -1,5 +1,5 @@
 #ifndef _m
-#define _m 5   
+#define _m 5
 /* 10th-order finite-difference */
 #endif
 

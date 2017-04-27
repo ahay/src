@@ -116,7 +116,7 @@ int main (int argc, char *argv[])
     /* regularization */
 
     /* initialize dip estimation */
-    dip3_init(n[0], n[1], n[2], rect, liter, eps, true);
+    dip3_init(n[0], n[1], n[2], rect, liter, eps, verb);
 
     u = sf_floatalloc(n123);
     p = sf_floatalloc(n123);

@@ -1,4 +1,5 @@
 from rsf.proj import *
+from rsf.gallery import hessvti
 
 par = {
     'nz':1500, 'dz':0.006096, 'oz':0.0,  # Depth
@@ -26,39 +27,28 @@ par = {
 # Prepare model
 ###############
 
-mods=['timodel_vp','timodel_delta','timodel_epsilon']
-for m in mods:
-    sgy = m + '.segy'
-    md5 = m + '.md5'
-    Fetch(sgy,'hessvti')
-    Flow([m,'t' + m],[sgy,md5],'''
-         segyread tape=${SOURCES[0]} tfile=${TARGETS[1]} > ${TARGETS[0]} &&
-         md5sum --status -c ${SOURCES[1]}
-         ''',stdin=0,stdout=0)
+hessvti.get_model('vp delta epsilon')
 
-Flow('vz',mods[0],'''
-     put o1=%(oz)g d1=%(dz)g label1=Depth unit1=km label=Velocity unit=km/s
-         o2=%(ox)g d2=%(dx)g label2=Lateral unit2=km |
-     scale rscale=.0003048 |
+Flow('vz','vp','''
      math output="1.0/input" |
      smooth rect1=%(smz)d rect2=%(smx)d repeat=2 |
      math output="1.0/input"
      ''' % par)
-Flow('delta',mods[1],'''
+Flow('delta2','delta','''
      put o1=%(oz)g d1=%(dz)g label1=Depth unit1=km label=Delta unit=
          o2=%(ox)g d2=%(dx)g label2=Lateral unit2=km |
      smooth rect1=%(smz)d rect2=%(smx)d repeat=2
      ''' % par)
-Flow('epsilon',mods[2],'''
+Flow('epsilon2','epsilon','''
      put o1=%(oz)g d1=%(dz)g label1=Depth unit1=km label=Epsilon unit=
          o2=%(ox)g d2=%(dx)g label2=Lateral unit2=km |
      smooth rect1=%(smz)d rect2=%(smx)d repeat=2
      ''' % par)
 
-Flow('vx',['vz','epsilon'],'''
+Flow('vx',['vz','epsilon2'],'''
      math epsilon=${SOURCES[1]} output="input*sqrt(1.0 + 2.0*epsilon)"
      ''')
-Flow('eta',['epsilon','delta'],'''
+Flow('eta',['epsilon2','delta2'],'''
      math delta=${SOURCES[1]} output="(input - delta)/(1.0 + 2.0*delta)" |
      put label="Anellipticity"
      ''')
@@ -67,7 +57,6 @@ Result('hessvtivz','vz','''
        grey title= wantitle=n allpos=y color=j
             pclip=100 scalebar=y bartype=h
             barlabel="V\_z\^ " barunit="km/s"
-            dbarnum=1.0 obarnum=1.5
             bias=1.5 minval=1.5 maxval=4.5
             %(scrpar)s
        ''' % par)
@@ -75,23 +64,21 @@ Result('hessvtivx','vx','''
        grey title= wantitle=n allpos=y color=j
             pclip=100 scalebar=y bartype=h
             barlabel="V\_x\^ " barunit="km/s"
-            dbarnum=1.0 obarnum=1.5
             bias=1.5 minval=1.5 maxval=4.5
             %(scrpar)s
        ''' % par)
 Result('hessvtieta','eta','''
        grey title= wantitle=n allpos=y color=j
             pclip=100 scalebar=y bartype=h
-            barlabel="\s200 \^ \F10 h \_ \F-1 \s100 "
-            dbarnum=0.025 obarnum=0.0 barunit=""
+            barlabel="\s200 \^ \F10 h \_ \F-1 \s100 " barunit=
             bias=0.0 minval=0 maxval=0.1
             %(scrpar)s
        ''' % par)
 
 
-Flow('vspl',['vz','vx','eta'],'''
-     bspvel2 vx=${SOURCES[1]} eta=${SOURCES[2]}
-             verb=y
+Flow('vspl','vz vx eta',
+     '''
+     bspvel2 vx=${SOURCES[1]} eta=${SOURCES[2]} verb=y
      ''')
 
 # Escape tables with ray tracing in reduced phase space
@@ -105,27 +92,13 @@ Flow('hessvtinesc',['vz','vspl'],'''
 ###############
 
 # Shot data
-data1 = 'timodel_shot_data_II_shot001-320'
-data2 = 'timodel_shot_data_II_shot321-720'
-#Fetch(data1 ,'hessvti')
-#Fetch(data2 ,'hessvti')
-Flow(['data1','tdata1'],[data1 + '.segy',data1 + '.md5'],'''
-     segyread tape=${SOURCES[0]} tfile=${TARGETS[1]} > ${TARGETS[0]} &&
-     md5sum --status -c ${SOURCES[1]}
-     ''',stdin=0,stdout=0)
-Flow(['data2','tdata2'],[data2 + '.segy',data2 + '.md5'],'''
-     segyread tape=${SOURCES[0]} tfile=${TARGETS[1]} > ${TARGETS[0]} &&
-     md5sum --status -c ${SOURCES[1]}
-     ''',stdin=0,stdout=0)
-Flow('tdata',['tdata1','tdata2'],'''
-     cat axis=2 space=n ${SOURCES[1]}
-     ''')
+
 # Data binning
-Flow('si','tdata','''
+Flow('si','tshot','''
      dd type=float | headermath output="sy" |
      window | math output="input/100"
      ''')
-Flow('oi','tdata','''
+Flow('oi','tshot','''
      dd type=float | headermath output="offset" |
      window | math output="input/40"
      ''')
@@ -137,7 +110,7 @@ Flow('os',['oi','si'],'''
 # Compose data into common-shot gathers,
 # remove bad sample at shot 388, receiver 1053,
 # pad by 70ms to account for the shift in the source
-Flow('data',['data1','data2','os'],'''
+Flow('data',['shot0','shot1','os'],'''
      cat axis=2 space=n ${SOURCES[1]} |
      intbin head=${SOURCES[2]} xkey=0 ykey=1 |
      put label1=Time unit1=s o1=-0.07
@@ -146,6 +119,8 @@ Flow('data',['data1','data2','os'],'''
      cut n3=1 f3=172 n2=1 f2=387 n1=1 f1=1052 |
      pcrdata2 absoff=n KMAH=y filter=y verb=y
      ''')
+
+hessvti.get_shots('shots')
 
 # Migration
 Flow(['hessvtiocram','hessvtidcram','hessvtioill','hessvtidill','hessvtiosmb'],

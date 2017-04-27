@@ -1,4 +1,4 @@
-/* Calculate FWI gradient */
+/* Calculate acoustic FWI gradient with the prepared adjoint source */
 /*
  Copyright (C) 2016 University of Texas at Austin
  

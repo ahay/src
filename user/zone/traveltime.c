@@ -17,7 +17,6 @@
  */
 
 #include <rsf.h>
-#include "traveltime.h"
 
 #include "newton.h"
 /*^*/
