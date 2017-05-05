@@ -25,10 +25,10 @@ int main (int argc, char* argv[])
 {
     sf_map4 nmo; /* using cubic spline interpolation */
     bool half, slow;
-    int it,ix,ih, nt,nx, nh, CDPtype;
+    int it,ix,ih, nt,nx, nh, CDPtype, noff, nmask, *mask;
     float dt, t0, h, h0, f, dh, eps, dy;
     float *trace, *vel, *off, *str, *out;
-    sf_file cmp, nmod, velocity, offset;
+    sf_file cmp, nmod, velocity, offset, msk;
 
     sf_init (argc,argv);
     cmp = sf_input("in");
@@ -41,6 +41,7 @@ int main (int argc, char* argv[])
     if (!sf_histfloat(cmp,"o1",&t0)) sf_error("No o1= in input");
 
     if (!sf_histint(cmp,"n2",&nh)) sf_error("No n2= in input");
+    nx = sf_leftsize(cmp,2);
 
     off = sf_floatalloc(nh);
 
@@ -51,8 +52,13 @@ int main (int argc, char* argv[])
     CDPtype=1;
     if (NULL != sf_getstring("offset")) {
 	offset = sf_input("offset");
-	sf_floatread (off,nh,offset);
-	sf_fileclose(offset);
+	if (SF_FLOAT != sf_gettype(offset)) sf_error("Need float offset");
+	noff = sf_filesize(offset);
+	if (noff == nh) {
+	  sf_floatread (off,nh,offset);
+	} else if (noff != nh*nx) {
+	  sf_error("Wrong dimensions in offset");
+	}
     } else {
 	if (!sf_histfloat(cmp,"d2",&dh)) sf_error("No d2= in input");
 	if (!sf_histfloat(cmp,"o2",&h0)) sf_error("No o2= in input");
@@ -70,12 +76,33 @@ int main (int argc, char* argv[])
 	for (ih = 0; ih < nh; ih++) {
 	    off[ih] = h0 + ih*dh; 
 	}
+
+	noff = nh;
+	offset = NULL;
     }
+
+    if (NULL != sf_getstring("mask")) {
+	msk = sf_input("mask");
+
+	if (SF_INT != sf_gettype(msk)) sf_error("Need integer mask");
+	nmask = sf_filesize(msk);
+	mask = sf_intalloc(nh);
+
+	if (nmask == nh) {
+	    sf_intread (mask,nh,msk);
+	} else if (nmask != nh*nx) {
+	    sf_error("Wrong dimensions in mask");
+	}
+    } else {
+	nmask = nh;
+
+	msk = NULL;
+	mask = NULL;
+    }
+
 
     if (!sf_getbool("slowness",&slow)) slow=false;
     /* if y, use slowness instead of velocity */
-
-    nx = sf_leftsize(cmp,2);
 
     if (!sf_getfloat ("h0",&h0)) h0=0.;
     /* reference offset */
@@ -91,12 +118,23 @@ int main (int argc, char* argv[])
     nmo = sf_stretch4_init (nt, t0, dt, nt, eps);
     
     for (ix = 0; ix < nx; ix++) {
+      	sf_warning("CMP %d of %d;",ix+1,nx);
+
 	sf_floatread (vel,nt,velocity);	
+	if (NULL != offset && noff != nh) sf_floatread (off,nh,offset);
+	if (NULL != msk && nmask != nh) sf_intread (mask,nh,msk);
 
 	for (ih = 0; ih < nh; ih++) {
 	    sf_floatread (trace,nt,cmp);
 	    
-	    h = off[ih] + (dh/CDPtype)*(ix%CDPtype); 
+	    /* skip dead traces */
+	    if (NULL != msk && 0==mask[ih]) {
+		sf_floatwrite (trace,nt,nmod);
+		continue;
+	    }
+
+	    h = off[ih];
+	    if (NULL == offset) h += (dh/CDPtype)*(ix%CDPtype); 
 	    if (half) h *= 2;
 	    h = h*h - h0*h0;
 	    
@@ -120,6 +158,7 @@ int main (int argc, char* argv[])
 	    sf_floatwrite (out,nt,nmod);
 	}
     }
+    sf_warning(".");
 
 
     exit (0);
