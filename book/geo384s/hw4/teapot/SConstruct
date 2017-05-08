@@ -1,11 +1,11 @@
 from rsf.proj import *
 
 # Download Teapot Dome field data
-#Fetch('npr3_field.sgy','teapot',
-#      server='http://s3.amazonaws.com',top='')
-Fetch('npr3_field.sgy','TeapotDome3D',
-      top='/home/p1/seismic_datasets/public/SeismicProcessingClass',
-      server='local')
+Fetch('npr3_field.sgy','teapot',
+      server='http://s3.amazonaws.com',top='')
+#Fetch('npr3_field.sgy','TeapotDome3D',
+#      top='/home/p1/seismic_datasets/public/SeismicProcessingClass',
+#      server='local')
 
 # Convert to RSF
 Flow('traces header header.asc','npr3_field.sgy',

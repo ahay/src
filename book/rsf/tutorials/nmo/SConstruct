@@ -21,12 +21,62 @@ def npz2rsf(target=None,source=None,env=None):
     rsf.put("n1",cmp.shape[1])
     rsf.write(cmp)
     rsf.close()
+    rsf = m8r.Output(str(target[1]))
+    off = data['offsets']
+    rsf.put("n1",off.size)
+    rsf.write(off)
+    rsf.close()
     return 0
 
-Command('cmpt.rsf','synthetic_cmp.npz',action=Action(npz2rsf))
+Command(['cmpt.rsf','offset.rsf'],'synthetic_cmp.npz',action=Action(npz2rsf))
 
 Flow('cmp','cmpt','transp')
 
-Result('cmp','grey title="Synthetic CMP"  label2="trace number" unit2=')
+Plot('cmp','grey title="Synthetic CMP"  label2="Trace Number" unit2= grid2=y wherexlabel=b wheretitle=t')
+
+Result('cmp','Overlay')
+
+# Plot NMO curve
+
+t0=0.2
+v0=4000
+
+Flow('time','offset','math output="sqrt(%g+input*input/%g)" ' % (t0*t0,v0*v0))
+
+Plot('time','graph yreverse=y min2=0 max2=0.547684016 wantaxis=n wanttitle=n plotfat=3 plotcol=2 pad=n')
+
+Result('cmp-time','cmp time','Overlay')
+
+# Velocity profile
+
+v1, t1 = 3800, 0.22
+v2, t2 = 4500, 0.46
+
+Flow('vnmo','cmp','window n2=1 | math output="%g+(x1-%g)*%g" ' % (v1,t1,(v2-v1)/(t2-t1)))
+
+Plot('vnmo',
+     '''
+     graph plotcol=2 yreverse=y transp=y min2=3000 max2=5000 grid=y 
+     pad=n title="v\_\s75 NMO\s100 \^ Profile" 
+     label2=Velocity unit2=m/s
+     ''')
+
+Flow('vdots.asc',None,'echo %s in=$TARGET data_format=ascii_float n1=4' % ' '.join(map(str,(t1,v1,t2,v2))))
+Plot('vdots','vdots.asc',
+     '''
+     dd form=native type=complex | window | 
+     graph plotcol=2 symbol=o symbolsz=8 yreverse=y transp=y 
+     min2=3000 max2=5000 min1=0 max1=0.547684016 wanttitle=n
+     ''')
+
+Plot('vnmo2','vnmo vdots','Overlay')
+
+# Apply NMO
+
+Flow('nmo','cmp offset vnmo','nmo offset=${SOURCES[1]} velocity=${SOURCES[2]} half=n')
+
+Plot('nmo','grey title="NMO Corrected"  label2="Trace Number" unit2= grid2=y wherexlabel=b wheretitle=t')
+
+Result('nmo','vnmo2 cmp nmo','SideBySideAniso',vppen='txscale=1.5')
 
 End()
