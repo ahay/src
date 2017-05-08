@@ -4,12 +4,12 @@ import bldutil
 
 # C++ programs
 progs = '''
-radon2 radon3 radon32 apradon2 radon34 diradon2 diiradon2 adiradon2 diradon32 diradon3 diradon34 sum sum3 sthres rankonetest svdtest samplowmat
+radon2 radon32 radon34 diradon2 diiradon2 adiradon2 diradon32 sum
 '''
 
 # C++ programs calling subC programs
 sprogs = '''
-pseudo adjtest adjtest1 samptest sampmat invtest invtest1 pseudolrexp samptestlrexp
+
 '''
 
 # subC++ programs
@@ -75,7 +75,7 @@ for prog in mains:
 smains = Split(sprogs)
 for sprog in smains:
     if lapack:
-        sprog = env.Program(sprog,['M'+sprog+'.cc']+env.Object("prop1.c")+env.Object("prop2.c")+env.Object("prop3.c")+env.Object("prop4.c")+env.Object("prop1P.c")+env.Object("prop1Pa.c")+env.Object("prop2N.c")+env.Object("prop2Na.c")+env.Object("cfft2nsps.c")+env.Object("lrexp.c")+[lib])
+        sprog = env.Program(sprog,['M'+sprog+'.cc']+env.Object("cfft2nsps.c")+[lib])
         env.Depends(sprog,ccinc)
     else:
         sprog = env.RSF_Place('sf'+sprog,None,var='LAPACK',package='lapack')
