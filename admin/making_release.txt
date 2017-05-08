@@ -1,14 +1,14 @@
 1. Creating a branch
 
- svn copy  https://svn.code.sf.net/p/rsf/code/trunk  https://svn.code.sf.net/p/rsf/code/branches/madagascar-1.7 -m 'new release'
+ svn copy  https://github.com/ahay/src/trunk  https://github.com/ahay/src/branches/madagascar-2.0 -m 'new release'
 
 2. Check out the branch
 
-svn co https://svn.code.sf.net/p/rsf/code/branches/madagascar-1.7
+svn co https://github.com/ahay/src/branches/madagascar-2.0
 
-3. cd madagascar-1.7
+3. cd madagascar-2.0
 
-4. Edit VERSION.txt to remove -svn
+4. Edit VERSION.txt to remove -git
 
 5. Remove junk
 
