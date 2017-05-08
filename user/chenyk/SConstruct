@@ -7,18 +7,18 @@ bin2rsf blend cabs diff emd fxdecon
 low mutter3 prekirch simidenoise
 simidenoise1 snr2 svmf threshold1 tsmf
 '''
-ccprogs = 'diffcxx'
+ccprogs = ''
 
 # mutter3
 
-mpiprogs='petsctest'
+mpiprogs=''
 
 cprogs = '''
 
 '''
 
 tprogs='''
-clapack cblas csolver eno1 eno2 eno3 spline fft2
+clapack cblas eno1 eno2 eno3 spline fft2
 '''
 pyprogs='''
 pyran
@@ -167,6 +167,7 @@ for prog in cuda_mains:
 # Compiling testing programs
 ######################################################################
 
+"""
 tmains = Split(tprogs)
 for prog in tmains:
     if lapack:
@@ -177,7 +178,7 @@ for prog in tmains:
     	sources = map(lambda x: x + '.o',sources)
     	env.Object('Test' + prog + '.c')
     	prog=env.Program(sources,PROGPREFIX='',PROGSUFFIX='.x',LIBS=libs)
-
+"""
 ######################################################################
 # PYTHON METAPROGRAMS (python API not needed)
 ######################################################################

@@ -17,7 +17,7 @@ pcmf
 '''
 
 tprogs='''
-opwd fbdip pca fcoh2
+opwd pca 
 '''
 
 docs = []
