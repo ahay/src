@@ -19,35 +19,7 @@ targets = bldutil.UserSconsTargets()
 
 # C mains
 targets.c = '''
-off2abs off2abs3
-icor xcor2d tcor ucor 
-cicold2d eicold2d
-laps2d laps3d
-ic sic sic3d lstk
-wigner wdf
-srmig3 srmod3 zomig3 camig3 
-stack3
-hwt3d int3d rrt3d
-shift fft3d
-randcut
-encode shot2grid
-boxfilter
-lwefd2d
-ewefd2d ewefd3d
-hdefd
-emfdm2d
-hic2ang
-zowei wei weigwf weiajs weiajw
-ttifd2d ttifd3d
-srbin3d
-cicop2d cicop3d
-eicop2d eicop3d
-aweop2d aweop3d
-accumulate
-decibel
-itrack2d itrack3d
-injop2d injop3d
-transp12
+camig3 ewefd2d hic2ang ic laps2d lwefd2d sic3d srmig3 srmod3 wdf wei wigner xcor2d zomig3
 '''
 
 # awefd2d awefd3d
