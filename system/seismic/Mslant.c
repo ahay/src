@@ -90,7 +90,7 @@ int main(int argc, char* argv[])
     cmp   = sf_floatalloc(ntx);
     vscan = sf_floatalloc(ntp);
 
-    slant_init (true, rho, x0, dx, nx, p0, dp, np, o1, d1, nt, p1, anti);
+    slant_init (rho, x0, dx, nx, p0, dp, np, o1, d1, nt, p1, anti);
 
     for (i3=0; i3 < n3; i3++) { 
 	if(verb) sf_warning("i=%d of %d",i3+1,n3);

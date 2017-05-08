@@ -108,6 +108,8 @@ In programs:
 * Fixed case n1 > n2 in sfsvd
 * Fixed join over a different axis in sfomp and sfmpi
 * Fixed mwt= parameter in sfconjgrad
+* Fixed half-order differentiation in sfslant
+* Fixed offset handling in sfinmo
 
 In the build system:
 

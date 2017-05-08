@@ -78,7 +78,10 @@ for prog in mains:
         else:
             prog = env.RSF_Place('sf'+prog,None,var='MPICC',package='mpi')
     else:
-        prog = env.Program(prog,map(lambda x: x + '.c',sources))
+        if prog != 'vtihti2ort' or env.get('LAPACK'):
+            prog = env.Program(prog,map(lambda x: x + '.c',sources))
+        else:
+            prog = env.RSF_Place('sf'+prog,None,var='LAPACK',package='lapack')
     if root:
         env.Install(bindir,prog)
 
