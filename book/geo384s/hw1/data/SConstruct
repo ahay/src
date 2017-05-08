@@ -1,11 +1,11 @@
 from rsf.proj import *
 
 # Download Viking Graben data
-# Fetch('seismic.segy','viking')
+Fetch('seismic.segy','viking')
 
-Fetch('seismic.segy','VikingGrabbenLine12',
-      top='/home/p1/seismic_datasets/public/SeismicProcessingClass',
-      server='local')
+#Fetch('seismic.segy','VikingGrabbenLine12',
+#      top='/home/p1/seismic_datasets/public/SeismicProcessingClass',
+#      server='local')
 
 # Convert from SEGY to RSF
 Flow('viking tviking viking.asc viking.bin','seismic.segy',
