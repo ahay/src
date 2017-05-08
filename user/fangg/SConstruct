@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-expand  sglr2 sglr1 sglfd2  sglfd2_tfd sglfd2pml sglfd1pml sgfd1 weas1 weas2 mmssrc mmssrc1 mms1dexp sglfdrtm2 stackimg matrix 
+expand matrix mms1dexp sgfd1 sglfd1pml sglfd2pml sglr1 sglr2
 '''
 
 # anisglfd2pml lfdsgm2

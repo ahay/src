@@ -83,6 +83,7 @@ for prog in mains:
             '%s/libdrsf.dylib %s' % \
                 (WhereIs('install_name_tool'),libdir,install[0]))
 
+"""
 for prog in Split(
     '''
     allp3 gauss2 matmult predict predict2 pwdsl pwsmooth pwsmooth2 pwsmooth3 pwspray trisl
@@ -92,7 +93,7 @@ for prog in Split(
     sources = map(lambda x: x + '.o',sources)
     env.Object('Test' + prog + '.c')
     env.Program(sources,PROGPREFIX='',PROGSUFFIX='.x',LIBS=libs)
-
+"""
 ######################################################################
 # SELF-DOCUMENTATION
 ######################################################################
