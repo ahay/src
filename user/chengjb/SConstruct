@@ -3,13 +3,13 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-datasucjb2rsf2d kine2dvti ort3dhomodevcK ort3dhomodevK
-ort3dpseudophomo tti2desep tti2dpseudop tti3de twolayer2dti
-twolayer3dti vti2desep vti2dpseudop vti2dpseudop1 vti2dpseudopfvs0
-vti2dpseudosv
-vti3de
-vti3dpseudosh vti3dpseudosv
-twolayer3dort resamp ort3de tti2de
+datasucjb2rsf2d kine2dvti ort3de ort3dhomodevK
+ort3dhomodevcK ort3dpseudophomo
+resamp tti2de tti2desep tti2dpseudop
+tti3de twolayer2dti twolayer3dort
+twolayer3dti vti2desep vti2dpseudop
+vti2dpseudop1 vti2dpseudopfvs0 vti2dpseudosv
+vti3de vti3dpseudosh vti3dpseudosv
 '''
 
 ccprogs = '''

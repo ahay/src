@@ -3,16 +3,9 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-comp resample addevent mflt signal
-psss psefd mdfd4 wavmod
-pwdfreq lphcoef fbfreq lphfreq
-ldip odip dipflt fbank1 fbank2 fbdip fbpwd
-ss ssblend sscrg
-epfbe epfbil epfws epfad  
-frt pca fault fir fastpwd fbgabor apick orientation slopescan
-divn2d divnls curv2 horizon 
-coherence dipcoh fcoh1 fcoh2 horwrite
-psvp curv acurv
+addevent coherence comp ldip
+lphfreq mflt odip pca
+pwdfreq signal wavmod
 '''
 
 pyprogs='''

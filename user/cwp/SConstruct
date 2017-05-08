@@ -21,10 +21,6 @@ targets = bldutil.UserSconsTargets()
 
 # C mains
 targets.c = '''
-wexwfl weximg wexmig wexmva wexnmig wexzomva wexzoimg
-awesg
-cipcut
-ewefdm
 awefd2d awefd3d
 '''
 # ltftnew

@@ -3,13 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-bspvel2 bspvel3
-cram2 cram3 cramdd crazgathc3
-escbsc3 escdiff escfgrid2 escnband2
-escrt2 escrt3 escscd3 escst3
-esctbl2
-pcrdata2 pcrdata3 pcrsurv3
-rpslow2
+bspvel2 cram2 escrt2 pcrdata2
 '''
 
 try:  # distributed version
