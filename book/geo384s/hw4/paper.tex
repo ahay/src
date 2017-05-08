@@ -1,0 +1,380 @@
+\author{Team: Longhorns}
+%%%%%%%%%%%%%%%%%%%%%%%%
+\title{GEO 365N/384S Seismic Data Processing \\ Computational Assignment 4}
+
+\begin{abstract}
+  This assignment consists of four parts:
+  \begin{enumerate}
+  \item Processing Alaska data through surface-consistent amplitude correction, velocity analysis, and stack.
+  \item Processing Viking Graben data through deconvolution and surface-consistent amplitude correction.
+  \item Processing Teapot Dome data through surface-consistent amplitude correction.
+  \item Processing your own data.
+  \end{enumerate}
+\end{abstract}
+
+\section{Prerequisites}
+
+Completing the computational part of this homework assignment requires
+\begin{itemize}
+\item \texttt{Madagascar} software environment available from \\
+\url{http://www.ahay.org/}
+\item \LaTeX\ environment with \texttt{SEG}\TeX\ available from \\ 
+\url{http://www.ahay.org/wiki/SEGTeX}
+\end{itemize}
+To do the assignment on your personal computer, you need to install
+the required environments. 
+
+To setup the Madagascar environment in the JGB 3.216B computer lab, run the following commands:
+\begin{verbatim}
+module load madagascar-devel
+source $RSFROOT/share/madagascar/etc/env.csh
+setenv DATAPATH $HOME/data/
+setenv RSFBOOK $HOME/data/book
+setenv RSFFIGS $HOME/data/figs
+\end{verbatim}
+You can put these commands in your \verb+$HOME/.cshrc+ file to run them automatically at login time.
+
+To setup the \LaTeX\ environment, run the following commands:
+\begin{verbatim}
+cd
+git clone https://github.com/SEGTeX/texmf.git
+texhash
+\end{verbatim}
+You only need to do it once.
+
+The homework code is available from the class repository
+by running
+\begin{verbatim}
+svn co https://github.com/TCCS-BEG/geo384s/trunk/hw4
+\end{verbatim}
+You can also download it from your team's private repository.
+
+\section{Generating this document}
+
+At any point of doing this computational assignment, you can
+regenerate this document and display it on your screen.
+
+\begin{enumerate}          
+\item Change directory to \texttt{hw4}:
+\begin{verbatim}
+cd hw4
+\end{verbatim}
+\item Run
+\begin{verbatim}
+sftour scons lock
+scons read &
+\end{verbatim}
+\end{enumerate}
+
+As the first step, open \texttt{hw4/paper.tex} file in your favorite
+editor and edit the first line to enter the name of your team. Then
+run \texttt{scons read} again.
+
+\section{Alaska data}
+\inputdir{alaska}
+
+In the first part of the assignment, we will pick up processing of the
+Alaska line where he last left it, after the groundroll attenuation
+step. Figure~\ref{fig:rshots} shows the shot gathers after groundroll
+removal by the \emph{Emc-Hammer} team.
+
+\plot{rshots}{width=0.7\textwidth}{Alaska shot gathers after groundroll removal by \emph{Emc-Hammer}.}
+
+In this assignment, you will process the data further by applying
+surface-consistent amplitude balancing, velocity analysis, and stack.
+
+\begin{enumerate}
+
+\item Change directory to \texttt{hw4/alaska}.
+\item Run
+\begin{verbatim}
+scons -c
+\end{verbatim}
+to remove (clean) previously generated files.
+\item Run
+\begin{verbatim}
+scons arms.view
+\end{verbatim}
+to display trace amplitudes for Alaska shot gathers (Figure~\ref{fig:arms}). The amplitudes show a strong offset trend. To display them after removing the trend (Figure~\ref{fig:arms2}), run
+\begin{verbatim}
+scons arms2.view
+\end{verbatim}
+
+\multiplot{2}{arms,arms2}{width=0.45\textwidth}{Trace amplitudes before (a) and after (b) removing the long-period offset trend.}
+
+Do you notice stripes in the amplitude going in different directions?
+These stripes might be caused by near-surface conditions in deploying
+sources and receivers. The surface-consistent model \cite[]{GEO46-01-00170022} tries to explain
+the trace amplitude as a function of source and receiver locations
+$A(s,r)$ using a product of several factors (source, receiver, offset, and
+midpoint):
+\begin{equation}
+\label{eq:sc}
+A(s,r) \approx A_s(s)\,A_r(r)\,A_x(r-s)\,A_m\left(\frac{r+s}{2}\right)\;.
+\end{equation}
+By applying logarithm to the amplitude, we can turn the product in equation~(\ref{eq:sc}) into a sum
+\begin{equation}
+\label{eq:sclog}
+\log\left[A(s,r)\right] \approx L_s(s) + L_r(r) + L_x(r-s) + L_m\left(\frac{r+s}{2}\right)\;.
+\end{equation}
+\item In its discrete version, equation~(\ref{eq:sclog}) represents a system of linear equations with given $\log\left[A(s,r)\right]$ and unknown factors $L_s$, $L_r$, $L_x$, and $L_m$.
+
+Does this system have more equations than unknowns or more unknowns than equations?
+
+\answer{% Fill your answer here
+}
+
+Does this system have a unique solution?
+
+\answer{% Fill your answer here
+}
+
+We will attempt to solve the system represented by
+equation~(\ref{eq:sclog}) using the the least-squares method and the
+iterative conjugate-gradient algorithm \cite[]{hestenes,fletcher}. The
+algorithm requires implementing the linear operator and its
+adjoint. The implementation of the linear operator from
+equation~(\ref{eq:sclog}) is provided in
+the \texttt{surface-consistent.c} program.
+
+\lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,title=alaska/surface-consistent.c]{alaska/surface-consistent.c}
+
+To run the iterative inversion and to see the result of matching the
+data (logarithm of the amplitude), run
+\begin{verbatim}
+scons scarms.view
+\end{verbatim}
+Does it manage to predict the stripes seen in Figure~\ref{fig:arms2}?
+
+\multiplot{2}{scarms,adiff}{width=0.45\textwidth}{(a) Estimated surface-consistent trace amplitudes. (b) Difference with Figure~\ref{fig:arms2}.}
+
+The individual factors (composing the estimated model vector) are shown in Figure~\ref{fig:shot,receiver,offset,cmp}.
+
+\multiplot{4}{shot,receiver,offset,cmp}{width=0.45\textwidth}{Estimated surface-consistent factors.}
+
+To display the shot gathers after the surface-consistent amplitude correction (Figure~\ref{fig:ashots}), run
+\begin{verbatim}
+scons ashots.view
+\end{verbatim}
+To compare the output with the input, run
+\begin{verbatim}
+sfpen Fig/rshots.vpl Fig/ashots.vpl
+\end{verbatim}
+
+\plot{ashots}{width=0.7\textwidth}{Alaska shot gathers after surface-consistent amplitude balancing.}
+
+\item After the correction, we can proceed with the data processing sequence by doing the familiar steps of sorting into CMP gathers, velocity analysis, NMO, and stack. Run
+\begin{verbatim}
+scons stack0.view
+\end{verbatim}
+to go through these steps. The resultant stack (Figure~\ref{fig:stack0}) appears to contain spiky noise. We can try to remove it by median filtering (Figure~\ref{fig:stack1})
+\begin{verbatim}
+scons stack1.view
+\end{verbatim}
+
+\multiplot{2}{stack0,stack1}{width=0.8\textwidth}{(a) First attempt at NMO stack. (b) NMO stack after despiking by median filtering.}
+
+The NMO velocity extracted by the automatic picker is shown in
+Figure~\ref{fig:vpicks}, and the velocity analysis and NMO applied to
+an individual CMP gather are shown in Figure~\ref{fig:nmo2}, displayed with
+\begin{verbatim}
+scons nmo2.view
+\end{verbatim}
+
+\plot{vpicks}{width=0.8\textwidth}{NMO velocity estimated by the automatic picker.}
+\plot{nmo2}{width=0.8\textwidth}{Velocity analysis and NMO applied to a selected CMP gather.}
+
+\item Your task:
+\begin{enumerate}
+\item By modifying the \texttt{SConstruct} file, extract velocity analysis and NMO from several other CMP gathers and examine the results.
+\item Try to improve the quality of the stack. To achieve a better result, you are free to use any of the techniques that you learned previously.
+\end{enumerate}
+
+\end{enumerate}
+
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,title=alaska/SConstruct]{alaska/SConstruct}
+
+\section{Viking Graben data}
+\inputdir{viking}
+
+In the next part of the assignment, we will take a step back in
+processing the Viking Graben dataset and use the original unprocessed data. 
+
+\begin{enumerate}
+
+\item Change directory to \texttt{hw4/viking}.
+\item Run
+\begin{verbatim}
+scons -c
+\end{verbatim}
+to remove (clean) previously generated files.
+\item In addition to seismic data, Mobil Oil provided a far-field wavelet recorded in the water. To display this wavelet, run
+\begin{verbatim}
+scons wavelet.view
+\end{verbatim}
+As typical for marine data, the wavelet, instead of being a perfect
+impulse, contains additional components (bubble pulse, ghost
+reflection, etc.) The wavelet spectrum, displayed with
+\begin{verbatim}
+scons spectrum.view
+\end{verbatim}
+shows frequencies missing from the ideal flat response.
+
+\multiplot{2}{wavelet,spectrum}{width=0.45\textwidth}{Far-field wavelet (a) and its Fourier spectrum (b).}
+
+\item The task of \emph{deconvolution} is to collapse the wavelet to
+something closer to a pulse by convolving it with a
+filter \cite[]{DEC00-00-04820482,DED00-00-07260726}. The filter
+estimation is another classic application of the least-squares
+inversion approach. The \emph{prediction-error filter} (PEF) is
+defined by auto-regression: the filter coefficients represent weights,
+which combine with shifted version of the input signal to predict the
+signal itself:
+\begin{equation}
+\label{eq:pef}
+-d_t \approx \sum_{i=1}^{N}\,f_i\,d_{t-i}\;.        
+\end{equation}
+In equation~(\ref{eq:pef}), $d_t$ is the given data, and $f_i$ for
+$i=1,2,\ldots,N$ are free coefficients of the prediction-error filter. 
+
+As in the surface-consistent problem, the least-squares solution can
+be found using a generic conjugate-gradient program, which simply
+requires an implementation of the convolution operator in the
+right-hand side of equation~(\ref{eq:pef}) and its adjoint. An
+implementation is provided in the \texttt{convolve.c} program.
+
+\lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,title=viking/convolve.c]{viking/convolve.c}
+
+To test the program using the generic dot-product test, you can run
+\begin{verbatim}
+scons filter0.rsf wavelet4.rsf
+scons convolve.exe
+sfdottest ./convolve.exe nf=100 mod=filter0.rsf dat=wavelet4.rsf
+\end{verbatim}
+The test should show pairs of numbers matching to several significant digits.
+
+To run the least-squares inversion and to estimate the filter, run
+\begin{verbatim}
+scons filter.view
+\end{verbatim}
+
+\multiplot{2}{filter,wdecon}{width=0.45\textwidth}{Estimated prediction-error filter (a) and the result of wavelet deconvolution (b).}
+
+Although deconvolution applied to the wavelet
+(Figure~\ref{fig:wdecon}) does not produce a perfect spike, it
+improves the spikiness of the wavelet and its spectral content.
+
+\item Now we can apply the estimated filter to the data. Run
+\begin{verbatim}
+scons viking1000.view
+\end{verbatim}
+to extract and display the first 1,000 traces from the Viking Graben
+dataset (Figure~\ref{fig:viking1000}.) Run
+\begin{verbatim}
+scons decon1000.view
+\end{verbatim}
+to display the result of deconvolution (Figure~\ref{fig:decon1000}.)
+
+\plot{viking1000}{width=0.8\textwidth}{First 1,000 traces from the Viking Graben dataset.}
+
+\plot{decon1000}{width=0.8\textwidth}{Viking Graben traces after deconvolution.}
+
+To apply deconvolution to the whole dataset, run
+\begin{verbatim}
+scons decon.rsf
+\end{verbatim}
+
+\item (\textbf{EXTRA CREDIT}) For an extra credit, you can write a program or a script, which takes the data as the main input and the filter as an auxiliary input and applies deconvolution. With your new program, you can replace the lines
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\begin{lstlisting}
+# Process all traces
+Flow('decon',['filter','viking',convolve],
+     '''
+     ./\${SOURCES[2]} data=i\${SOURCES[1]} adj=n | 
+     add \${SOURCES[1]} scale=-1,1
+     ''')
+\end{lstlisting}
+with something like
+\begin{lstlisting}
+# Process all traces
+Flow('decon',['viking','filter',decon],
+     '''
+     ./\${SOURCES[2]} filter=\${SOURCES[1]}  
+     ''',split=[2,'omp',[0]])
+\end{lstlisting}
+and process the data quickly in parallel.
+
+\item After deconvolution, we can proceed to surface-consistent amplitude correction, similar to the processing applied previously to the Alaska data. The trace amplitudes are shown in Figure~\ref{fig:varms}. Their surface-consistent estimate, using only the shot term $L_s$ and the offset term $L_x$ is shown in Figure~\ref{fig:vscarms}. The difference is shown in Figure~\ref{fig:vadiff}. To display the latter figure, run
+To apply deconvolution to the whole dataset, run
+\begin{verbatim}
+scons vadiff.view
+\end{verbatim}
+Can you notice remaining stripes in the difference? Which of the four terms in equation~(\ref{eq:sclog}) are the stripes coming from?
+
+\answer{
+}
+
+\multiplot{3}{varms,vscarms,vadiff}{width=0.3\textwidth}{Trace amplitudes from the Viking Graben dataset. (a) Initial. (b) Estimated surface-consistent. (c) Difference.}
+
+\item Your task: modify the \texttt{SConstruct} file to improve the result
+by introducing additional terms to the fitting equation.
+
+\end{enumerate}
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,title=viking/SConstruct]{viking/SConstruct}
+
+\section{Teapot Dome data}
+\inputdir{teapot}
+
+Next, we return to processing the Teapot Dome data. Our task is to
+estimate the surface-consistent amplitude normalization, similar to
+how it was done with the two previous datasets.
+
+\begin{enumerate}
+
+\item Change directory to \texttt{hw4/teapot}.
+\item Run
+\begin{verbatim}
+scons -c
+\end{verbatim}
+to remove (clean) previously generated files.
+\item The process should look familiar by now. Figure~\ref{fig:tshot,treceiver} shows the two amplitude factors ($L_s$ and $L_r$) estimated by least-squares inversion.
+\item To visualize how the amplitude correction depends on the surface coordinates, we can display it by interpolating to a regular grid from the shot locations. To display the result (Figure~\ref{fig:sint}), run
+\begin{verbatim}
+scons sint.view
+\end{verbatim}
+\item Your task: modify the \texttt{SConstruct} file to interpolate in receiver coordinates (\texttt{gx} and \texttt{gy}) instead of shot coordinates (\texttt{sx} and \texttt{sy}). Do you notice any interesting differences?
+
+\end{enumerate}
+
+\multiplot{2}{tshot,treceiver}{width=0.45\textwidth}{Estimated shot and receiver surface-consistent amplitude terms for the Teapot Dome dataset.}
+
+\plot{sint}{width=0.8\textwidth}{Surface-consistent amplitude interpolated using the shot coordinates.}
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,title=teapot/SConstruct]{teapot/SConstruct}
+
+\section{Your own data}
+
+Finally, add results from analyzing the dataset you selected for your
+course project. You can include the first steps of analyzing the data
+acquisition geometry and/or any other processing steps that you have
+taken.
+
+\section{Saving your work}
+
+It is important to save all files that you edit by hand (such
+as \texttt{paper.tex} and \texttt{SConstruct}) in a version-control
+system every time you make a revision.  The completed assignment is
+due in three weeks and should be submitted through your team's private
+GitHub repository.
+
+\bibliographystyle{seg}
+\bibliography{SEG,sc}
+
+

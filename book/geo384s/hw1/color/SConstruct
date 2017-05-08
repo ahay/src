@@ -1,0 +1,60 @@
+from rsf.proj import *
+
+# Download Alaska data from USGS website
+#Fetch('31_81_PR.SGY',
+#      server='http://certmapper.cr.usgs.gov',
+#      top='nersl/NPRA/SEISMIC/1981/31_81',
+#      dir='PROCESSED')
+
+Fetch('31_81_PR.SGY','ALASKA2D_LAND_LINE_31-81',
+      top='/home/p1/seismic_datasets/public/SeismicProcessingClass',
+      server='local')
+
+# Convert from SEGY to RSF (read data values only)
+Flow('stack','31_81_PR.SGY','segyread read=data')
+
+# Display using "jet" color map
+Result('jet','stack',
+       '''
+       grey pclip=90 title="Jet colormap" 
+       scalebar=y color=jet
+       ''')
+
+# Display using "seismic" color map
+Result('seismic','stack seismic.csv',
+       '''
+       grey pclip=90 title="Seismic colormap" scalebar=y 
+       color=${SOURCES[1]} minval=-2000 maxval=2000
+       ''')
+
+# Analyzing "seismic" color map
+###############################
+
+# Convert from CSV (comma-separated text file) to RSF
+Flow('colormap','seismic.csv','csv2rsf')
+
+# Interpolate 16 numbers
+Flow('num16','colormap',
+     '''
+     transp | remap1 o1=0 n1=16 d1=%g | 
+     scale dscale=255
+     ''' % (255.0/15))
+
+# Compute intensity as combination of RGB values
+Flow('intensity','num16',
+     'stack scale=0.2989,0.5870,0.1140 norm=n')
+
+Plot('intensity',
+     '''
+     grey allpos=y pclip=100 title=Intensity wantaxis=n 
+     screenht=2 screenwd=14 transp=n wheretitle=t
+     ''')
+Plot('intensity2','intensity',
+     '''
+     graph symbol=o min2=0 max2=255 wanttitle=n
+     parallel2=n labelsz=5 symbolsz=5 plotcol=2
+     screenht=2 screenwd=14 wantaxis1=n label2= unit2= 
+     ''')
+Result('intensity','intensity intensity2','Overlay')
+
+End()

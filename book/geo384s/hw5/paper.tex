@@ -1,0 +1,336 @@
+\author{Team: Longhorns}
+%%%%%%%%%%%%%%%%%%%%%%%%
+\title{GEO 365N/384S Seismic Data Processing \\ Computational Assignment 5}
+
+\begin{abstract}
+In this assignment, you will experiment with noise removal using different kinds of the Radon transform:
+  \begin{enumerate}
+  \item Linear Radon transform for groundroll attenuation in the Alaska data.
+  \item Parabolic Radon transform for multiple attenuation in the Viking Graben data.
+  \item Hyperbolic Radon transform for multiple attenuation in the Viking Graben data.
+  \end{enumerate}
+Different aspects of the Radon transform are discussed in \cite[]{radon}. Different aspects of multiple attenuation are discussed in \cite[]{mult}.
+\end{abstract}
+
+\section{Prerequisites}
+
+Completing the computational part of this homework assignment requires
+\begin{itemize}
+\item \texttt{Madagascar} software environment available from \\
+\url{http://www.ahay.org/}
+\item \LaTeX\ environment with \texttt{SEG}\TeX\ available from \\ 
+\url{http://www.ahay.org/wiki/SEGTeX}
+\end{itemize}
+To do the assignment on your personal computer, you need to install
+the required environments. 
+
+To setup the Madagascar environment in the JGB 3.216B computer lab, run the following commands:
+\begin{verbatim}
+module load madagascar-devel
+source $RSFROOT/share/madagascar/etc/env.csh
+setenv DATAPATH $HOME/data/
+setenv RSFBOOK $HOME/data/book
+setenv RSFFIGS $HOME/data/figs
+\end{verbatim}
+You can put these commands in your \verb+$HOME/.cshrc+ file to run them automatically at login time.
+
+To setup the \LaTeX\ environment, run the following commands:
+\begin{verbatim}
+cd
+git clone https://github.com/SEGTeX/texmf.git
+texhash
+\end{verbatim}
+You only need to do it once.
+
+The homework code is available from the class repository
+by running
+\begin{verbatim}
+svn co https://github.com/GEO384S/geo384s/trunk/hw5
+\end{verbatim}
+You can also download it from your team's private repository.
+
+\section{Generating this document}
+
+At any point of doing this computational assignment, you can
+regenerate this document and display it on your screen.
+
+\begin{enumerate}          
+\item Change directory to \texttt{hw5}:
+\begin{verbatim}
+cd hw5
+\end{verbatim}
+\item Run
+\begin{verbatim}
+sftour scons lock
+scons read &
+\end{verbatim}
+\end{enumerate}
+
+As the first step, open \texttt{hw5/paper.tex} file in your favorite
+editor and edit the first line to enter the name of your team. Then
+run \texttt{scons read} again.
+
+\section{Linear Radon transform (slant stack)}
+\inputdir{radon}
+
+In the first part of the assignment, we will revisit the groundroll
+attenuation problem in the Alaska data and will try to solve it using
+the linear Radon transform (slant stack).
+
+\begin{enumerate}
+
+\item Change directory to \texttt{hw5/radon}.
+\item Run
+\begin{verbatim}
+scons -c
+\end{verbatim}
+to remove (clean) previously generated files.
+
+\multiplot{2}{signal,signal2}{width=\textwidth}{Signal and noise separation using (a) Fourier method from Assignment 2, (b) Radon method from this assignment.}
+
+\item To compare the Radon method with the previously used Fourier
+  method, we will extract one shot gather from the Alaska
+  dataset. Figure~\ref{fig:signal} shows the extracted shot gather and
+  the result of signal-and-noise separation using the Fourier method from \emph{Stegosaurus}. To reproduce it on your screen, run
+\begin{verbatim}
+scons signal.view
+\end{verbatim}
+
+\plot{radon}{width=0.8\textwidth}{From left to right: input shot gather, its Radon transform, data reconstructed by the inverse transform.}
+
+\item Figure~\ref{fig:radon} shows the input shot gather, its Radon transform (slant stack), and the gather reconstructed by the inverse transform. To make sure that the transform is invertible, this implementation uses the Toeplitz structure of the matrix coming from the normal equations in least-squares inversion \cite[]{SEG-1990-1618}.
+
+To reproduce the figure on your screen, run
+\begin{verbatim}
+scons radon.view
+\end{verbatim}
+
+\item The asymptotic theory of the generalized Radon transform predicts that a seismic event $T(x)$ will be transformed to an event $\tau(p)$ in the transform domain. The transformation follows from the tangent condition
+\begin{equation}
+\label{eq:tangent}
+\left\{\begin{array}{rcl} T(x) & = & \theta(x;\tau,p)\;, \\
+T'(x) & = & \displaystyle \frac{\partial}{\partial x} \theta(x;\tau,p)\;,
+\end{array}\right.
+\end{equation}
+where $\theta(x;\tau,p)$ describes a family of stacking curves. Prove that, when the stacking curve is a line,
+\begin{equation}
+\label{eq:radon}
+\theta(x;\tau,p) = \tau + p\,x\;,
+\end{equation}
+a hyperbolic seismic event
+\begin{equation}
+\label{eq:hyperbola}
+T(x) = \displaystyle \sqrt{t_0^2 + \frac{x^2}{v_0^2}}
+\end{equation}
+will be transformed into an ellipse.
+
+\answer{}
+
+Can you spot ellipses in the Radon transform domain in Figure~\ref{fig:radon}?
+
+\plot{radon-cut}{width=0.8\textwidth}{Separating noise from signal in the Radon domain. From left to right: the Radon transform, separated noise components, noise reconstructed by the inverse transform.}
+
+\item To isolate dipping noise events associated with the groundroll, we can carve them out from the Radon domain according to their slopes. The selected cut and its inverse Radon transform are shown in Figure~\ref{fig:radon-cut}. To reproduce this figure on your screen, run
+\begin{verbatim}
+scons radon-cut.view
+\end{verbatim}
+
+\item The final result of separating the signal and noise using the Radon transform is shown in Figure~\ref{fig:signal2}. You can reproduce it on your screen by running
+\begin{verbatim}
+scons signal2.view
+\end{verbatim}
+or compare it with the Fourier-domain result by running
+\begin{verbatim}
+sfpen Fig/signal.vpl Fig/signal2.vpl
+\end{verbatim}
+
+\item Name some theoretical advantages and disadvantages of using the Radon transform in comparison with the Fourier transform.
+
+\answer{}
+
+\item The separation of signal and noise in Figure~\ref{fig:signal2} is not optimal: there are remaining pieces of noise in the estimated signal and remaining signal in the estimated noise. Your creative task is to try improving this results by changing the parameters of the Radon transform or changing the way the noise is separated from the signal in the transformed domain.
+
+\end{enumerate}
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,title=radon/SConstruct]{radon/SConstruct}
+
+\lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,title=radon/filter.c]{radon/filter.c}
+
+\section{Parabolic Radon transform}
+\inputdir{pradon}
+
+In this part of the assignment, we will process the Viking Graben data
+to attenuate multiple reflections using the parabolic Radon transform.
+
+\begin{enumerate}
+
+\item Change directory to \texttt{hw5/pradon}.
+\item Run
+\begin{verbatim}
+scons -c
+\end{verbatim}
+to remove (clean) previously generated files.
+\item We start by picking from the previous processing steps: applying deconvolution and surface-consistent amplitude corrections to prepare data for further processing. To go through these steps and to display the resultant CMP gathers, run
+\begin{verbatim}
+scons cmps.view
+\end{verbatim}
+You can also improve the results using your work from Assignment 4.
+
+\plot{vscan1}{width=0.8\textwidth}{Initial velocity analysis. From left to right: selected CMP gather, gather after muting first arrivals, semblance scan with the picked primary velocity trend.}
+
+\item We will select one CMP gather to test our multiple-attenuation strategy. Figure~\ref{fig:vscan1} shows the selected CMP gather and the result of velocity analysis by semblance scanning. To reproduce it on your screen, run
+\begin{verbatim}
+scons vscan1.view
+\end{verbatim}
+As evident from the semblance scan, the gather is heavily contaminated
+by multiples, including water-layer multiples and surface-related
+peglegs. For further processing, we will attempt to pick the primary
+velocity trend, using muting and automatic picking.
+
+\plot{parab}{width=0.8\textwidth}{Applying the parabolic Radon transform. From left to right: NMO using the picked velocity trend, parabolic Radon transform, data reconstructed by the inverse transform.}
+
+\item Applying the normal moveout (NMO) with the picked primary trend makes primary reflections nearly flat and multiple reflections curved (parabolic). Now the data are ready for transformation by the parabolic Radon transform. The results are shown in Figure~\ref{fig:parab}. To reproduce it on your screen, run
+\begin{verbatim}
+scons parab.view
+\end{verbatim}
+As with the linear Radon, the transform is implemented in the temporal
+Fourier domain and makes use of the Toeplitz structure to accelerate
+least-squares inversion.
+
+\plot{cut}{width=0.8\textwidth}{Isolating signal in the parabolic Radon domain. From left to right: parabolic Radon transform, isolated nearly-flat events, signal reconstructed by the inverse transform.}
+
+\item Next, we isolate primary events by making a cut in the parabolic Radon domain to separate events with small curvature (Figure~\ref{fig:cut}). To display the result on your screen, run
+\begin{verbatim}
+scons cut.view
+\end{verbatim}
+
+\multiplot{2}{primary,pvscan1}{width=0.8\textwidth}{Separating signal (primary reflections) and noise (multiple reflections). (a) From left to right: input CMP gather, estimated primaries, estimated multiples. (b) Velocity analysis using semblance scan. From left to right: using all data, using estimated primaries, using estimated multiples.}
+
+\item To go back to the CMP domain requires applying the inverse NMO. The final result of separating primaries from multiples is shown in Figure~\ref{fig:primary}. We can verify the separation by running the semblance scan on the separated events (Figure~\ref{fig:pvscan1}.) To reproduce these figures on your screen, run
+\begin{verbatim}
+scons primary.view pvscan1.view
+\end{verbatim}
+
+\item Your task, as before, is to try improving the separation result. There are several possible steps to modify:
+\begin{itemize}
+\item picking the primary trend
+\item parameters of the parabolic Radon transform
+\item separating primary events in the parabolic Radon domain
+\end{itemize}
+
+\item (\textbf{EXTRA CREDIT}) For an extra credit, apply the procedure to all CMP gathers in the Viking Graben data and generate an improved stacked section.
+
+\end{enumerate}
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,title=pradon/SConstruct]{pradon/SConstruct}
+
+\section{Hyperbolic Radon transform}
+\inputdir{hradon}
+
+The parabolic Radon transform is a powerful tool but not perfectly
+suitable for separating hyperbolic events. An alternative tool is the
+time-domain hyperbolic Radon transform (also known as the velocity
+stack or the velocity transform). The idea of making the hyperbolic
+Radon transform invertible by iterative least-squares inversion was
+proposed by \cite{GEO50-12-27272741}.
+
+\begin{enumerate}
+
+\item Change directory to \texttt{hw5/hradon}.
+\item Run
+\begin{verbatim}
+scons -c
+\end{verbatim}
+to remove (clean) previously generated files.
+
+\plot{adj}{width=0.8\textwidth}{Applying the hyperbolic Radon transform. From left to right: selected CMP gather, its hyperbolic Radon transform, data reconstructed by the adjoint transform (filtered back projection).}
+
+\item 
+
+\item We will use the same CMP gather as in the previous part. Figure~\ref{fig:adj} shows the selected gather, its hyperbolic Radon transform, and data reconstructed by the adjoint transform (filtered back projection). To display it on your screen, run
+\begin{verbatim}
+scons adj.view
+\end{verbatim}
+
+\item Use equation~(\ref{eq:tangent}) to find the mapping of a straight line
+\begin{equation}
+\label{eq:line}
+T(x) = \displaystyle t_0 + \frac{x}{v_0}
+\end{equation}
+in the hyperbolic Radon domain defined by
+\begin{equation}
+\label{eq:hradon}
+\theta(x;\tau,p) = \displaystyle \sqrt{\tau^2 + p^2\,x^2}\;.
+\end{equation}
+
+\answer{}
+
+\item The program for implementing the hyperbolic Radon transform is \texttt{hradon.c}. This implementation includes the half-derivative filter but not any other corrections. To test if the adjoint operator is implemented correctly, you can run the dot-product test
+\begin{verbatim}
+sfdottest ./hradon.exe np=101 dp=0.01 op=0 nx=60 dx=0.05 ox=0.287 \
+mod=rad.rsf dat=cmp.rsf
+\end{verbatim}
+The output should display a pair of numbers equal to six digits of accurate. You can run the test multiple times.
+
+\plot{inv}{width=0.8\textwidth}{Applying the hyperbolic Radon transform. From left to right: selected CMP gather, its hyperbolic Radon transform (using iterative least-squares inversion), data reconstructed by the inverse transform.}
+
+\item The adjoint operation does not reconstruct the data exactly. To achieve a better reconstruction, we can run iterative least-squares inversion using the method of conjugate gradients. The result is shown in Figure~\ref{fig:inv}. To display it on your screen, run
+\begin{verbatim}
+scons inv.view
+\end{verbatim}
+
+\item (\textbf{EXTRA CREDIT}) The computational cost of the method is proportional to the number of conjugate-gradient iterations. For an extra credit, you can improve it by using preconditioning by diagonal weighting. Appropriate weights can be found by experimentation or by using the asymptotic theory \cite[]{GEO68-03-10321042}. 
+
+\plot{nmorad}{width=0.8\textwidth}{Applying the hyperbolic Radon transform after NMO with the primary velocity trend. From left to right: selected CMP gather after NMO, hyperbolic Radon transform (using iterative least-squares inversion), data reconstructed by the inverse transform.}
+
+\plot{nmocut}{width=0.8\textwidth}{Isolating signal in the hyperbolic Radon domain. From left to right: hyperbolic Radon transform, isolated nearly-flat events, signal reconstructed by the inverse transform.}
+
+\multiplot{2}{inmo,pvscan}{width=0.8\textwidth}{Separating signal (primary reflections) and noise (multiple reflections). (a) From left to right: input CMP gather, estimated primaries, estimated multiples. (b) Velocity analysis using semblance scan. From left to right: using all data, using estimated primaries, using estimated multiples.}
+
+\item To separate primaries from multiples, we can adopt the strategy similar to the one used with the parabolic Radon: 
+\begin{enumerate}
+\item Pick the primary velocity trend.
+\item Apply NMO.
+\item Isolate nearly-flat events in the transformed domain.
+\item Transform back.
+\item Apply inverse NMO.
+\end{enumerate}
+
+The hyperbolic Radon transform is shown in Figure~\ref{fig:nmorad} and the output of the procedure described above is shown in Figure~\ref{fig:inmo,pvscan}. To reproduce them on your screen, run
+\begin{verbatim}
+scons inmo.view pvscan.view
+\end{verbatim}
+
+\item Name some theoretical advantages and disadvantages of using the hyperbolic Radon transform in comparison with the parabolic Radon transform.
+
+\item As before, your creative task is to try improving the results by changing the parameters in the current strategy or by changing the strategy.
+
+\end{enumerate}
+
+\lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,title=hradon/hradon.c]{hradon/hradon.c}
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,title=hradon/SConstruct]{hradon/SConstruct}
+
+\section{Your own data}
+
+Finally, add results from analyzing the dataset you selected for your
+course project. You can include results from noise attenuation,
+velocity analysis, or any other processing steps that you have taken so far.
+
+\section{Saving your work}
+
+It is important to save all files that you edit by hand (such
+as \texttt{paper.tex} and \texttt{SConstruct}) in a version-control
+system every time you make a revision.  The completed assignment is
+due in two weeks and should be submitted through your team's private
+GitHub repository.
+
+\bibliographystyle{seg}
+\bibliography{SEG,hw5}
+
+

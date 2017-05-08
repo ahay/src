@@ -1,0 +1,63 @@
+from rsf.proj import *
+
+# Download Viking Graben data
+# Fetch('seismic.segy','viking')
+
+Fetch('seismic.segy','VikingGrabbenLine12',
+      top='/home/p1/seismic_datasets/public/SeismicProcessingClass',
+      server='local')
+
+# Convert from SEGY to RSF
+Flow('viking tviking viking.asc viking.bin','seismic.segy',
+     '''
+     segyread tfile=${TARGETS[1]} 
+     hfile=${TARGETS[2]} bfile=${TARGETS[3]}
+     ''')
+
+# Window first 50 traces
+Flow('first','viking','window n2=50')
+
+# Display with wiggles
+Result('firstw','first',
+       '''
+       wiggle title="First 50 Traces" 
+       transp=y poly=y yreverse=y
+       ''')
+
+# Display with greyscale
+Result('first',
+       '''
+       grey title="First 50 Traces" scalebar=y
+       wheretitle=t wherexlabel=b
+       ''')
+
+# Window 200th shot gather (fldr)
+Flow('mask','tviking',
+     'headermath output=fldr | mask min=200 max=200')
+Flow('shot','viking mask','headerwindow mask=${SOURCES[1]}')
+
+Result('shot',
+       '''
+       pow pow1=2 | 
+       grey title="Shot 200" wheretitle=t wherexlabel=b
+       ''')
+
+# Find offset for the shot gather
+Flow('offset','tviking mask',
+     '''
+     headermath output=offset | 
+     headerwindow mask=${SOURCES[1]}
+     ''')
+
+# Convert to floating-point type
+Flow('offsetf','offset','dd type=float')
+
+# Display with wiggles
+Result('shotw','shot offsetf',
+       '''
+       pow pow1=2 |
+       wiggle title="Shot 200" transp=y poly=y yreverse=y 
+       xpos=${SOURCES[1]} label2=Offset unit2=m pclip=99
+       ''')
+
+End()
