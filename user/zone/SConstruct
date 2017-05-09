@@ -3,9 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-fdort3delasticcij
-isaac0 isaac1 isaac2 isaac3 kirmod_newton mpikirmodnewton nmo3gmaprep nmo3gmafit
-rotater time2depthweak fermatrecursion vtihti2ort
+kirmod_newton vtihti2ort
 '''
 
 # gausssource rays3a quarticlayer quartic expand3 vtihti2ort cij2moveout

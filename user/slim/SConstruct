@@ -2,7 +2,7 @@ import os, sys, re, string, shutil
 sys.path.append('../../framework')
 import bldutil
 
-progs = 'boolcmp thr sort set2zero fileheader'
+progs = 'boolcmp fileheader set2zero sort thr'
 cpp_progs = ''
 py_progs = 'fdct killtraces jitter'
 py_mods = 'hegilles'

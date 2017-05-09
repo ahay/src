@@ -4,31 +4,20 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-wave1 wave4 wave124 sbd waveab wave2dss 
-wavefft1 pspig ffd1 
-                                 fdb1 fd2bs
-                                 pspifcos2bs
-                                 ffdcos2b 
-                                 ffdantti4b_smsr ffd2_ps
-laplace laplace2
-ffd2dehf sp 
-ofd1 fd1 ofd1_5 fd1_5 ofd2_5 ofd2_7 ofd2_13 ofd2_10 fd2_10 
-ofd2_25 lfd2_25b
-lffd1_10 lffd2_an_25
-nxtfftn orthowave
-ffd2_den_omp
-ffd0 
-lffd2an25
-phasescan
-orp
-ffdtti2
+fd2_10 fd2bs
+ffd0 ffd2_ps
+ffd2dehf ffdantti4b_smsr
+lfd2_25b lffd2an25
+ofd2_10 ofd2_25
+ofd2_7 orp orthowave
+pspifcos2bs sp
 '''
 # differenciate
 
-mpi_progs = 'tti4rtm ffdrtm ffdrtms mpiffdrtmto ttirtmsa'
+mpi_progs = ''#'ffdrtm ffdrtms mpiffdrtmto ttirtmsa'
 
 
-ccprogs = 'ortholr ortlr orthollr ortllr lfdc1 lfdc2_7 lfdc2_25 lfdanc2_25 lffdan lfdp1 lfdp2 ormatrix'
+ccprogs = 'ortholr ortlr orthollr ortllr lfdc1 lfdc2_7 lfdc2_25 lfdanc2_25 lffdan lfdp1 ormatrix'
 
 
 try:  # distributed version

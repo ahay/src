@@ -3,12 +3,11 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-integral1 swapbyte 
+integral1
 '''
 
 mpi_progs = '''
 mpirtmiso
-mpirtmvti
 '''
 
 place = ''
