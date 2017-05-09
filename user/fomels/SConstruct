@@ -16,7 +16,7 @@ shapeagc shapefill shearer
 shift1 simenv similarity
 smoothreg timefreq twofreq2 velcon warp1 warpadd warpscan
 '''
-ccprogs = 'anisolr2 isolr2 isolr3 permlr1 permlr2 permlr3'
+ccprogs = 'anisolr2 isolr2 isolr3'
 
 pyprogs = 'cgi fft ipick las2rsf results wxipick wxresults zoom wxzoom'
 pymods = 'conjdir conjgrad dottest steepd'

@@ -12,9 +12,6 @@ kirmod_newton vtihti2ort
 #fdtti3delasticcij nmo3gmaprep
 
 ccprogs = '''
-ort3dlrdecompcijP
-ort3dlrdecompcijS1
-ort3dlrdecompcijS2
 '''
 
 decomp = ['rickerjb.o','eigen3x3.o','decomplowrank.o','fdcoef.o','fwportelasticcij.o','fwpttielasticcij.o','kykxkztaper.o','puthead.o','vmodel.o','zero.o']
