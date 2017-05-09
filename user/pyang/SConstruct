@@ -8,18 +8,17 @@ import bldutil
 progs = '''
 Testaniso Testeb Testelastic2d
 Testfd2d Testfd3d Testspml
-checkptdemo dlct excitationic
-fbrec2d fpocs2d fpocs3d
-fwi2d istseislet lsinterp2d
+checkptdemo excitationic
+fbrec2d fwi2d istseislet
 lsprtm2d lsrtm2d mcaseislet
-modeling2d mshots mwni2d
-myradon2 mysnr pocs ps2d rtm2d rtmadcig
+modeling2d mshots
+mysnr rtm2d rtmadcig
 rtmva2d viscoa2d viscoe2d
 '''
 
 progs_fftw='''
-dlct fpocs2d fpocs3d istinterp lsinterp2d istpad 
-pocs3d pocs ps2d mwni2d  myradon2
+dlct fpocs2d fpocs3d lsinterp2d pocs
+ps2d mwni2d  myradon2
 '''
 #
 
@@ -30,9 +29,9 @@ ccprogs = '''
 
 ######################################################################
 # 3. MPI main programs
-mpi_cprogs = '''
-mpifwi
-'''
+mpi_cprogs = ''# '''
+#mpifwi
+#'''
 
 ######################################################################
 # 4. CUDA main programs
