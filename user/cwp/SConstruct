@@ -24,15 +24,9 @@ targets.c = '''
 awefd2d awefd3d
 '''
 # ltftnew
-"""
 targets.c_mpi = \
 '''
-mpiencode bigmpiencode
-mpistack  bigmpistack
 '''
-"""
-
-targets.c_mpi = ''
 
 targets.py = '''
 dbmerge
