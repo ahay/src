@@ -28,13 +28,8 @@ if not os.path.exists(MPI_INC + "/mpi.h"):
 
 
 cuda_progs = '''
-adjgradient2d_coupled_gpu
 ewefd2d_gpu
 ewefd3d_gpu_p2p
-wem2d_gpu
-wem3d_gpu
-adjgradient2d_gpu
-ewefd2d_gpu_dev
 '''
 
 cuda_mpi_progs = '''

@@ -9,9 +9,9 @@ pwdfreq signal wavmod
 '''
 
 pyprogs='''
-prefilt pygraph subplot shuffle asc2rsf
-sos fpca
+shuffle 
 '''
+
 pymods='''
 pcmf
 '''

@@ -13,7 +13,7 @@ mpi_progs = '''
 
 # mpifwigrad mpilsLU
 
-pyprogs = 'fdlsrtm lrrtm'
+pyprogs = ''
 
 try:  # distributed version
     Import('env root pkgdir bindir libdir incdir')

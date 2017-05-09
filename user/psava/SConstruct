@@ -26,10 +26,6 @@ camig3 ewefd2d hic2ang ic laps2d lwefd2d sic3d srmig3 srmod3 wdf wei wigner xcor
 
 # Python targets
 targets.py = '''
-corop
-pwave3d
-ocor3d
-findmax
 '''
 
 dynlib = env.get('DYNLIB','')

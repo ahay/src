@@ -29,7 +29,6 @@ targets.c_mpi = \
 '''
 
 targets.py = '''
-dbmerge
 '''
 
 if glob_build:

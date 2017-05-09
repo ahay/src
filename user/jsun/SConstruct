@@ -28,7 +28,7 @@ zanisolr2
 # vwelr3
 # eiktest eiktest2 cisolr1eik eiksol
 
-mpi_progs = 'mpilsrtm mpiewertm mpirtmop mpilsrtmgmres mpilsrtmcg mpircvrtm mpiqrtm mpipfwi'
+mpi_progs = ''
 #for distributed FFTW3
 #mpiwave2 mpiwave3 mpifftexp1 mpiwave2kiss mpiwave3kiss mpifftexp1kiss
 
@@ -36,7 +36,7 @@ mpi_progs = 'mpilsrtm mpiewertm mpirtmop mpilsrtmgmres mpilsrtmcg mpircvrtm mpiq
 
 mpicxx_progs = ''
 
-pyprogs = 'geopar'
+pyprogs = ''
 pymods = ''
 
 try:  # distributed version
@@ -87,7 +87,7 @@ for prog in mains:
     prog = env.Program(prog,map(lambda x: x + '.c',sources))
     if root:
         env.Install(bindir,prog)
-"""
+
 mpi_mains = Split(mpi_progs)
 for prog in mpi_mains:
     sources = ['M' + prog]
@@ -101,7 +101,7 @@ for prog in mpi_mains:
         prog = env.RSF_Place('sf'+prog,None,var='MPICC',package='mpi')
     if root:
         env.Install(bindir,prog)
-"""
+
 
 if 'c++' in env.get('API',[]):
     lapack = env.get('LAPACK')

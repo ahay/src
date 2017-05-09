@@ -36,7 +36,7 @@ mpi_cprogs = ''# '''
 ######################################################################
 # 4. CUDA main programs
 cuda_progs = '''
-fbrec gpurtm gpufwi genshots gpufd3d gpufbrec3d 
+fbrec genshots gpufd3d gpufwi gpurtm
 '''
 
 ######################################################################
@@ -190,7 +190,7 @@ for prog in cuda_mains:
 
 #######################################################################
 # 5. compiling CUDA+MPI programs
-"""
+
 # YOU MAY HAVE TO EDIT THIS SECTION!!!
 # MPI_LIB and MPI_INC must be defined for your specific system
 MPI_LIB = '/usr/lib/openmpi/lib'	# MPI lib directory (contains libmpi.so)
@@ -219,7 +219,7 @@ for prog in cuda_mpi_mains:
                              ''')
     if root:
         env.Install(bindir,prog)
-"""
+
 ######################################################################
 # 6. compiling fortran programs
 
