@@ -24,15 +24,6 @@ ewefd2d_omp ewefd3d_omp modelcreate wexmig wexmva wexwfl
 
 # F90 mains
 targets.f90 = '''
-stf2telewfld
-rfspecdiv
-tracealign
-rfccp
-MCCCnew
-rwe2d
-telemig2d
-rec2ps
-backus 
 '''
 
 if env.get('OMP'):

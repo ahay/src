@@ -33,7 +33,6 @@ ewefd3d_gpu_p2p
 '''
 
 cuda_mpi_progs = '''
-ewefd3d_gpu_mpi
 ewefd3d_multiNode
 '''
 

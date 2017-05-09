@@ -8,7 +8,7 @@ gpi3dzo psovc psovcp
 
 mpi_progs = ''
 
-ccprogs = ''
+ccprogs = 'cerf'
 
 subs = 'Faddeeva3'
 
@@ -24,10 +24,10 @@ env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
             LIBS=[env.get('DYNLIB','')+'rsf'])
 
-"""
+
 if 'c++' in env.get('API',[]):
     env.Prepend(LIBS=[env.get('DYNLIB','')+'rsf++'])
-"""
+
 src = Glob('[a-z]*.c')
 
 for source in src:
@@ -47,7 +47,7 @@ for prog in mains:
 ccmains = Split(ccprogs)
 subs = Split(subs)
 
-"""
+
 if 'c++' in env.get('API',[]):
     objs = map(lambda x:  env.StaticObject(x+'.cc'), subs)
 
@@ -59,7 +59,7 @@ for prog in ccmains:
         prog = env.RSF_Place ('sf' + prog, None, var='API', package='c++')
     if root:
         env.Install(bindir,prog)
-"""
+
 """
 for prog in Split('t2warp'):
     sources = ['Test' + prog,prog]
