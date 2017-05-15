@@ -27,11 +27,11 @@
 int main(int argc, char* argv[])
 {
 	bool verb;
-	int i, ix, iz, is, ir, it, wit;
+	int i, ix, iz, is, ir, it, wit, acqui_type;
 	int nz, nx, padnx, padnz, padnzx, nzx, nb; 
-	int ns, nr, sz, rz, sx, rx, ds_v, s0_v, dr_v, r0_v; 
+	int ns, nr, sz, rz, sx, rx, ds_v, s0_v, dr_v, *nr2, *r02, *r0_v; 
 	int nt, frectx, frectz, interval, wnt;
-	float dz, z0, dx, x0, dt, t0, ds, s0, dr, r0, idt, wdt, coef, temp;
+	float dz, z0, dx, x0, dt, t0, ds, s0, dr, r0, idt, wdt, coef, sxf, xend, rbegin, rend, temp;
 
 	float **vv, **den, **den0, *ww, *bcxp, *bczp, *bcxv, *bczv, **mm;
 	float **v2d, **iden, **v2d0, **iden0, **pp, **term, *rr; 
@@ -81,6 +81,7 @@ int main(int argc, char* argv[])
 	if(!sf_getint("nb", &nb)) nb=20; /* PML boundary width */
 	if(!sf_getfloat("coef", &coef)) coef=5.; /* maximum velocity of the medium */
 	if(!sf_getint("interval", &interval)) interval=1; /* wavefield storing interval */
+	if(!sf_getint("acqui_type", &acqui_type)) acqui_type=1; /* acquisition type */
 
 	/* padding variables */
 	padnx=nx+2*nb;
@@ -121,9 +122,31 @@ int main(int argc, char* argv[])
 	ds_v=ds/dx+0.5;
 	s0_v=(s0-x0)/dx+0.5+nb;
 	sz += nb;
+
 	dr_v=dr/dx+0.5;
-	r0_v=r0/dx+0.5+nb;
+	r0_v=sf_intalloc(ns);
+	r02=sf_intalloc(ns);
+	nr2=sf_intalloc(ns);
 	rz += nb;
+	xend=x0+(nx-1)*dx;
+
+	if(acqui_type==1){
+		for(i=0; i<ns; i++){
+			r0_v[i]=r0/dx+0.5+nb;
+			r02[i]=0;
+			nr2[i]=nr;
+		}
+	}else{
+		for(i=0; i<ns; i++){
+			sxf=s0+ds*i;
+			rbegin=(sxf+r0<x0)? x0 : sxf+r0;
+			rend=sxf+r0+(nr-1)*dr;
+			rend=(rend < xend)? rend : xend;
+			r0_v[i]=(rbegin-x0)/dx+0.5+nb;
+			r02[i]=(rbegin-sxf-r0)/dx+0.5;
+			nr2[i]=(rend-rbegin)/dr+1.5;
+		}
+	}
 
 	/* memory allocation */
 	//float **vv, **den, **den0, *ww, **mm, *bcxp, *bczp, *bcxv, *bczv;
@@ -355,9 +378,9 @@ int main(int argc, char* argv[])
 			derivpx(vx, term, padnx, padnz, dx);
 
 			/* load adjoint source */
-			for(ir=0; ir<nr; ir++){
-				rx=r0_v+ir*dr_v;
-				term[rx][rz] += pp[ir][it];
+			for(ir=0; ir<nr2[is]; ir++){
+				rx=r0_v[is]+ir*dr_v;
+				term[rx][rz] += pp[r02[is]+ir][it];
 			}
 
 #ifdef _OPENMP
@@ -405,9 +428,9 @@ int main(int argc, char* argv[])
 			derivpx(vx0, term, padnx, padnz, dx);
 
 			/* load adjoint source */
-			for(ir=0; ir<nr; ir++){
-				rx=r0_v+ir*dr_v;
-				term[rx][rz] += pp[ir][it];
+			for(ir=0; ir<nr2[is]; ir++){
+				rx=r0_v[is]+ir*dr_v;
+				term[rx][rz] += pp[r02[is]+ir][it];
 			}
 
 #ifdef _OPENMP
