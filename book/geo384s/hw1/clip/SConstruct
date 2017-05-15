@@ -1,0 +1,59 @@
+from rsf.proj import *
+
+# Download Alaska data from USGS website
+
+Fetch('31_81_PR.SGY',
+      server='http://certmapper.cr.usgs.gov',
+      top='nersl/NPRA/SEISMIC/1981/31_81',
+      dir='PROCESSED')
+
+#Fetch('31_81_PR.SGY','ALASKA2D_LAND_LINE_31-81',
+#      top='/home/p1/seismic_datasets/public/SeismicProcessingClass',
+#      server='local')
+
+# Convert from SEGY to RSF (read data values only)
+Flow('stack','31_81_PR.SGY','segyread read=data')
+
+# Display using different values of pclip parameter
+stacks = []
+for pclip in (80,90,95,100):
+    stack = 'stack%d' % pclip
+    Plot(stack,'stack',
+         '''
+         grey title="Alaska Stack, pclip=%d" pclip=%d
+         ''' % (pclip,pclip))
+    stacks.append(stack)
+
+Plot('stack',stacks,'Movie',view=1)
+Result('stack',stacks,'TwoRows')
+
+# Clip program
+prog = Program('clip.c')
+  
+# Examine histograms
+hists = []
+for pclip in (80,90,95,100):
+    stack = 'stack%d' % pclip
+    Flow(stack,'stack %s' % prog[0],
+         './${SOURCES[1]} pclip=%d' % pclip)
+    hist = 'hist%d' % pclip
+    Plot(hist,stack,
+         '''
+         histogram o1=-2000 d1=100 n1=41 | 
+         put label1=Amplitude unit1= | 
+         dd type=float | dots labels="pclip=%d" 
+         ''' % pclip)
+    hists.append(hist)
+
+Result('hist',hists,'TwoRows')
+
+# Download Viking Graben stack
+Fetch('stack.HH','viking')
+
+# Convert from XDR to native format
+Flow('viking','stack.HH','dd form=native')
+
+# Display (what is the best pclip= ?)
+Result('viking','grey title="Viking Graben Stack" pclip=99')
+  
+End()
