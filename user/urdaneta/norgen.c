@@ -40,6 +40,8 @@ struct heptagon {
 struct grid {
     float *ampl;
     float *time;
+    float *dirx;
+    float *dirz;
     int *flag;
 };
 /*^*/

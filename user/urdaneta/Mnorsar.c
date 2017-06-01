@@ -66,7 +66,7 @@ int main(int argc, char* argv[])
     struct point *pos;
     struct heptagon *cube;
     struct grid *out;
-    sf_file inp, ampl, time;
+    sf_file inp, ampl, time,dirx,dirz;
 
     sf_init(argc,argv);
     inp = sf_input("in");
@@ -145,6 +145,29 @@ int main(int argc, char* argv[])
     sf_putfloat(time,"o2",goox);
     sf_putfloat(time,"o3",os);
 
+    dirx = sf_output("dirx");
+    sf_putint(dirx,"n1",gnz);
+    sf_putint(dirx,"n2",gnx);
+    sf_putint(dirx,"n3",ns);
+    sf_putfloat(dirx,"d1",gdz);
+    sf_putfloat(dirx,"d2",gdx);
+    sf_putfloat(dirx,"d3",ds);
+    sf_putfloat(dirx,"o1",goz);
+    sf_putfloat(dirx,"o2",goox);
+    sf_putfloat(dirx,"o3",os);
+
+    dirz = sf_output("dirz");
+    sf_putint(dirz,"n1",gnz);
+    sf_putint(dirz,"n2",gnx);
+    sf_putint(dirz,"n3",ns);
+    sf_putfloat(dirz,"d1",gdz);
+    sf_putfloat(dirz,"d2",gdx);
+    sf_putfloat(dirz,"d3",ds);
+    sf_putfloat(dirz,"o1",goz);
+    sf_putfloat(dirz,"o2",goox);
+    sf_putfloat(dirz,"o3",os);
+
+
 /* READ VELOCITY MODEL */
     vel = sf_floatalloc(nx*nz+2);
     sf_floatread(vel,nx*nz,inp); 
@@ -154,6 +177,8 @@ int main(int argc, char* argv[])
 
     out->time = sf_floatalloc (gnx*gnz);
     out->ampl = sf_floatalloc (gnx*gnz);
+    out->dirx = sf_floatalloc (gnx*gnz);
+    out->dirz = sf_floatalloc (gnx*gnz);
     out->flag = sf_intalloc (gnx*gnz);
 
     T = 1. / freq;
@@ -284,14 +309,16 @@ int main(int argc, char* argv[])
 
 /*	Finally interpolate amplitude and traveltime values to
         receivers that has not being covered.			*/
+
 	TwoD_interp (out, gnx, gnz);
 
 	sf_floatwrite(out->time, gnx * gnz, time); 
 	sf_floatwrite(out->ampl, gnx * gnz, ampl);  
+	sf_floatwrite(out->dirx, gnx * gnz, dirx);
+	sf_floatwrite(out->dirz, gnx * gnz, dirz);
     }
 
-   if(pr||prcube)
-	fclose(outfile);
+    if(pr||prcube) fclose(outfile);
 
    exit(0);
 }

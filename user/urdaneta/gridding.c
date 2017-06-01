@@ -62,6 +62,9 @@ void gridding (struct heptagon *cube, int nr, struct grid *out, float DSmax, flo
 *
 * out->time	Contains travel-time table
 * out->ampl	Contains amplitude table
+* out->dirx X cosine of the ray direction
+* out->dirz Z cosine of the ray direction
+* out->ampl	Contains amplitude table
 * out->flag	Tells which receivers have or have not time and
 *		amplitude values. >*/
 {
@@ -324,17 +327,34 @@ static void interp_rec(int *rec, struct grid *out, int num_rec,
 	ampl =realinterp(c0.x0,pt0,pt1,c3.x0,c0.ampl,c1.ampl,c2.ampl,c3.ampl,s);
 	ampl *= sqrt(dist(pt0, pt1)/ (d1+d2));
 
+	// Added direction cosines - note there might be better ways to do this
+	float angle = realinterp(c0.x0,pt0,pt1,c3.x0,c0.angle,c1.angle,c2.angle,c3.angle,1.);
+	float dirx = sin(angle);
+	float dirz = cos(angle);
+
 	if(first) {
 	    if(out->flag[rec[ii]] > 1) {
-		out->time[rec[ii]] = SF_MIN(out->time[rec[ii]],                                                         2.* dist(ptr,wfront_ptr) / vmed + tim); 
-		out->ampl[rec[ii]] = SF_MIN(out->ampl[rec[ii]], ampl);
-	    } else {
-		out->time[rec[ii]] = 2.* dist(ptr,wfront_ptr) / vmed + tim;
-		out->ampl[rec[ii]] = ampl;
+	    	out->time[rec[ii]] = SF_MIN(out->time[rec[ii]],2.* dist(ptr,wfront_ptr) / vmed + tim);
+
+	    	// move this to inside the if statement - only replaces if time is updated
+	    	//out->ampl[rec[ii]] = SF_MIN(out->ampl[rec[ii]], ampl);
+
+	    	if(out->time[rec[ii]] != out->time[rec[ii]]){
+	    		out->ampl[rec[ii]] = ampl;
+	    		out->dirx[rec[ii]] = dirx;
+		    	out->dirz[rec[ii]] = dirz;
+	    	}
+		} else {
+	    	out->time[rec[ii]] = 2.* dist(ptr,wfront_ptr) / vmed + tim;
+	    	out->ampl[rec[ii]] = ampl;
+		    out->dirx[rec[ii]] = dirx;
+		    out->dirz[rec[ii]] = dirz;
 	    }
 	} else {
 	    out->time[rec[ii]] = 2. * dist(ptr, wfront_ptr) / vmed + tim;
 	    out->ampl[rec[ii]] = ampl;
+	    out->dirx[rec[ii]] = dirx;
+	    out->dirz[rec[ii]] = dirz;
 	}
     }
     return;
