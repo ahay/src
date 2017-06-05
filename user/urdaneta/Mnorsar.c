@@ -256,8 +256,13 @@ int main(int argc, char* argv[])
 		Note that the computational grid is a little bigger 
 		than the ouput grid. 				*/
 
-	    xmin = gox-nou*gdx;	xmax = 2*pos[ii].x-gox+nou*gdx;
-	    zmin = oz-nou*gdz;	zmax = length.z+oz+nou*gdz;
+        // Allowing for asymetric offset grid
+	    //xmin = gox-nou*gdx;	xmax = 2*pos[ii].x-gox+nou*gdx;
+        xmin = ox-nou*gdx;
+        xmax = ox+length.x+nou*gdx;
+        zmin = oz-nou*gdz;
+        zmax = length.z+oz+nou*gdz;
+
             mark_pts_outofbounds (cube, nr, xmin, xmax, zmin, zmax);
 	    if(prcube) {
                 fprintf(outfile, "\n\nboundaries");
