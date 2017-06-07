@@ -8,7 +8,7 @@ explanesignoi expsignoi fdip mdip odip2 ofpwd ofpwd2 opwd2 planemis2 planemis3
 planereg2 planereg3 planesignoi pmshape2 predict pwcoh pwd pwd1 pwdix
 pwdsigk pwsmooth pwsmooth2 pwpaint pwpaint2 pwspray2 pwspray3 pwdsmooth2
 pwpaint3 pwspray pwstack seisigk seislet shapesigk shplanemis2 shplanemis3
-timeshift trismooth2 twodip2
+timeshift trismooth2 twodip2 distpaint
 '''
 
 try:  # distributed version
@@ -21,7 +21,7 @@ except: # local version
 
 src = Glob('[a-z]*.c')
 
-dynpre = env.get('DYNLIB','') 
+dynpre = env.get('DYNLIB','')
 
 libs = [dynpre+'rsf']+env.get('LIBS',[])
 dlibs = ['drsf']+env.get('LIBS',[])
@@ -47,7 +47,7 @@ for source in src:
         obj = env.SharedObject(source)
         env.Depends(obj,inc)
         dobjects.append(obj)
-        
+
 lib = env.StaticLibrary('rsfpwd',objects)
 inc = env.Command('rsfpwd.h',includes,Action(bldutil.__merge))
 
@@ -78,7 +78,7 @@ for prog in mains:
     prog = env.Program(prog,map(lambda x: x + '.o',sources),LIBS=libs)
     if root:
         install = env.Install(bindir,prog)
-        
+
         if dynpre and env['PLATFORM'] == 'darwin':
             env.AddPostAction(install,
             '%s -change build/api/c/libdrsf.dylib '
@@ -101,9 +101,9 @@ for prog in Split(
 if root:
     user = os.path.basename(os.getcwd())
     main = 'sf%s.py' % user
-    
+
     docs = map(lambda prog: env.Doc(prog,'M' + prog),mains)
-    env.Depends(docs,'#/framework/rsf/doc.py')	
+    env.Depends(docs,'#/framework/rsf/doc.py')
 
     doc = env.RSF_Docmerge(main,docs)
     env.Install(pkgdir,doc)

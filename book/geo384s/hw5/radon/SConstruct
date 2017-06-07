@@ -16,15 +16,19 @@ Plot('fft',
        grey allpos=y title="Fourier Transform" 
        ''')
               
-v1=9
-v2=11
-
-# Program from Emc-Hammer 
-
+# Program from Stegosaurus
 prog = Program('filter.c')
     
+v1=8
+v2=10
+
+f1=60
+f2=70
+
 Flow('filter','fft %s' % prog[0],
-     './${SOURCES[1]} logis=30 v1=%g v2=%g type=1' % (v1,v2))
+     '''
+     ./${SOURCES[1]} v1=%g v2=%g f1=%g f2=%g
+     ''' % (v1,v2,f1,f2))
 
 Result('filter',
        '''

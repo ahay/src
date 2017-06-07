@@ -1,4 +1,4 @@
-/* Data structures and common functions used in Zhiguang's FWI */
+/* Data structures and common functions used in Zhiguang's FWI programs */
 /*
  Copyright (C) 2016 The University of Texas at Austin
  
@@ -52,10 +52,14 @@ typedef struct sf_acquisition{
 	int nt;
 	float dt;
 	float t0;
-	// absorbing boundary condition
+	// boundary condition
 	int nb;
 	float coef;
 	float *bc;
+	float *bcxp;
+	float *bczp;
+	float *bcxv;
+	float *bczv;
 	// padding
 	int padnx;
 	int padnz;
@@ -127,10 +131,14 @@ typedef struct sf_fwipar_s{
 	int drectx;
 	int drectz;
 	int nrepeat;
-	int ider;
+	int tangent;
+	float sigma1;
+	float sigma2;
 	// hard boundary constraints
 	float v1;
 	float v2;
+	// Gauss-Newton CG iteration number
+	int lniter;
 } *sf_fwi_s;
 /*^*/
 
@@ -156,6 +164,55 @@ typedef struct sf_fwipar_q{
 } *sf_fwi_q;
 /*^*/
 
+typedef struct sf_fwipar_d{
+	bool onlygrad;
+	int grad_type;
+	int rfwi;
+	// data residual weighting
+	float wt1;
+	float wt2;
+	float woff1;
+	float woff2;
+	float gain;
+	float v0;
+	float t0;
+	// water layer depth
+	int waterz;
+	// gradient smoothing parameters
+	int grectx;
+	int grectz;
+	// hard boundary constraints
+	float v1;
+	float v2;
+	float den1;
+	float den2;
+} *sf_fwi_d;
+/*^*/
+
+typedef struct sf_fwipar_dq{
+	bool onlygrad;
+	int grad_type;
+	// data residual weighting
+	float wt1;
+	float wt2;
+	float woff1;
+	float woff2;
+	float gain;
+	// water layer depth
+	int waterz;
+	// gradient smoothing parameters
+	int grectx;
+	int grectz;
+	// hard boundary constraints
+	float v1;
+	float v2;
+	float den1;
+	float den2;
+	float tau1;
+	float tau2;
+} *sf_fwi_dq;
+/*^*/
+
 typedef struct sf_1darray_s{
 	float *vv;
 	float *ww;
@@ -168,6 +225,22 @@ typedef struct sf_1darray_q{
 	float *taus;
 	float *ww;
 } *sf_vec_q;
+/*^*/
+
+typedef struct sf_1darray_d{
+	float *vv;
+	float *dd;
+	float *ww;
+} *sf_vec_d;
+/*^*/
+
+typedef struct sf_1darray_dq{
+	float *vv;
+	float *dd;
+	float *tau;
+	float *taus;
+	float *ww;
+} *sf_vec_dq;
 /*^*/
 
 typedef struct sf_seislet{
@@ -187,6 +260,7 @@ typedef struct sf_encoding{
 /*^*/
 
 const float c0=-205./72, c1=8./5, c2=-1./5, c3=8./315, c4=-1./560;
+const float d1=1.196289, d2=-.0797526, d3=.0095703, d4=-.0006975446;
 
 /* seislet regularization */
 bool seislet=false; /* turn on/off seislet */
@@ -389,6 +463,294 @@ void preparation_q(sf_file Fv, sf_file Fq, sf_file Ftau, sf_file Fw, sf_acqui ac
 	free(qq);
 }
 
+void preparation_d(sf_file Fv, sf_file Fd, sf_file Fw, sf_acqui acpar, sf_sou soupar, sf_vec_d array)
+/*< read data, initialize variables and prepare acquisition geometry >*/
+{
+	int i, nb, nzx, nt;
+	float sx, xend, rbegin, rend, tmp;
+
+	int nplo=3, nphi=3;
+	float eps=0.0001;
+	sf_butter blo=NULL, bhi=NULL;
+
+	/* padding variables */
+	nb=acpar->nb;
+	acpar->padnx=acpar->nx+2*nb;
+	acpar->padnz=acpar->nz+2*nb;
+	acpar->padx0=acpar->x0-nb*acpar->dx;
+	acpar->padz0=acpar->z0-nb*acpar->dz;
+
+	/* absorbing boundary coefficients */
+	acpar->bcxp=sf_floatalloc(acpar->padnx);
+	acpar->bczp=sf_floatalloc(acpar->padnz);
+	acpar->bcxv=sf_floatalloc(acpar->padnx);
+	acpar->bczv=sf_floatalloc(acpar->padnz);
+	memset(acpar->bcxp, 0., acpar->padnx*sizeof(float));
+	memset(acpar->bczp, 0., acpar->padnz*sizeof(float));
+	memset(acpar->bcxv, 0., acpar->padnx*sizeof(float));
+	memset(acpar->bczv, 0., acpar->padnz*sizeof(float));
+
+	for(i=0; i<nb; i++){
+		tmp=1.5*acpar->coef/nb*logf(10000.)/nb/nb;
+
+		acpar->bcxp[nb-i-1]=tmp/acpar->dx*(i+1)*(i+1)/2;
+		acpar->bcxp[nb+acpar->nx+i]=tmp/acpar->dx*(i+0.5)*(i+0.5)/2;
+
+		acpar->bczp[nb-i-1]=tmp/acpar->dz*(i+1)*(i+1)/2;
+		acpar->bczp[nb+acpar->nz+i]=tmp/acpar->dz*(i+0.5)*(i+0.5)/2;
+
+		acpar->bcxv[nb-i-1]=tmp/acpar->dx*(i+0.5)*(i+0.5)/2;
+		acpar->bcxv[nb+acpar->nx+i]=tmp/acpar->dx*(i+1)*(i+1)/2;
+
+		acpar->bczv[nb-i-1]=tmp/acpar->dz*(i+0.5)*(i+0.5)/2;
+		acpar->bczv[nb+acpar->nz+i]=tmp/acpar->dz*(i+1)*(i+1)/2;
+	}
+
+	/* acquisition parameters */
+	acpar->ds_v=acpar->ds/acpar->dx+0.5;
+	acpar->s0_v=(acpar->s0-acpar->x0)/acpar->dx+0.5+nb;
+	acpar->sz += nb;
+
+	acpar->dr_v=acpar->dr/acpar->dx+0.5;
+	acpar->r0_v=sf_intalloc(acpar->ns);
+	acpar->r02=sf_intalloc(acpar->ns);
+	acpar->nr2=sf_intalloc(acpar->ns);
+	acpar->rz += nb;
+	xend=acpar->x0+(acpar->nx-1)*acpar->dx;
+	if(acpar->acqui_type==1){
+		for(i=0; i<acpar->ns; i++){
+			acpar->r0_v[i]=acpar->r0/acpar->dx+0.5+nb;
+			acpar->r02[i]=0;
+			acpar->nr2[i]=acpar->nr;
+		}
+	}else{
+		for(i=0; i<acpar->ns; i++){
+			sx=acpar->s0+acpar->ds*i;
+			rbegin=(sx+acpar->r0 <acpar->x0)? acpar->x0 : sx+acpar->r0;
+			rend=sx+acpar->r0 +(acpar->nr-1)*acpar->dr;
+			rend=(rend < xend)? rend : xend;
+			acpar->r0_v[i]=(rbegin-acpar->x0)/acpar->dx+0.5+nb;
+			acpar->r02[i]=(rbegin-sx-acpar->r0)/acpar->dx+0.5;
+			acpar->nr2[i]=(rend-rbegin)/acpar->dr+1.5;
+		}
+	}
+
+	/* read model parameters */
+	nzx=acpar->nz*acpar->nx;
+	nt=acpar->nt;
+	array->vv=sf_floatalloc(nzx);
+	array->dd=sf_floatalloc(nzx);
+	array->ww=sf_floatalloc(nt);
+
+	sf_floatread(array->vv, nzx, Fv);
+	sf_floatread(array->dd, nzx, Fd);
+	sf_floatread(array->ww, nt, Fw);
+
+	/* bandpass the wavelet */
+	soupar->flo *= acpar->dt;
+	soupar->fhi *= acpar->dt;
+	if(soupar->flo > eps) blo=sf_butter_init(false, soupar->flo, nplo);
+	if(soupar->fhi < 0.5-eps) bhi=sf_butter_init(true, soupar->fhi, nphi);
+
+	if(NULL != blo){
+		sf_butter_apply(blo, nt, array->ww);
+		sf_reverse(nt, array->ww);
+		sf_butter_apply(blo, nt, array->ww);
+		sf_reverse(nt, array->ww);
+		sf_butter_close(blo);
+	}
+	if(NULL != bhi){
+		sf_butter_apply(bhi, nt, array->ww);
+		sf_reverse(nt, array->ww);
+		sf_butter_apply(bhi, nt, array->ww);
+		sf_reverse(nt, array->ww);
+		sf_butter_close(bhi);
+	}
+}
+
+void preparation_dq(sf_file Fv, sf_file Fd, sf_file Fq, sf_file Ftau, sf_file Fw, sf_acqui acpar, sf_sou soupar, sf_vec_dq array, float f0)
+/*< read data, initialize variables and prepare acquisition geometry >*/
+{
+	int i, nb, nzx, nt;
+	float sx, xend, rbegin, rend, tmp;
+	float *qq;
+
+	int nplo=3, nphi=3;
+	float eps=0.0001;
+	sf_butter blo=NULL, bhi=NULL;
+
+	/* padding variables */
+	nb=acpar->nb;
+	acpar->padnx=acpar->nx+2*nb;
+	acpar->padnz=acpar->nz+2*nb;
+	acpar->padx0=acpar->x0-nb*acpar->dx;
+	acpar->padz0=acpar->z0-nb*acpar->dz;
+
+	/* absorbing boundary coefficients */
+	acpar->bc=sf_floatalloc(nb);
+	for(i=0; i<nb; i++){
+		tmp=acpar->coef*(nb-i);
+		acpar->bc[i]=expf(-tmp*tmp);
+	}
+
+	/* acquisition parameters */
+	acpar->ds_v=acpar->ds/acpar->dx+0.5;
+	acpar->s0_v=(acpar->s0-acpar->x0)/acpar->dx+0.5+nb;
+	acpar->sz += nb;
+
+	acpar->dr_v=acpar->dr/acpar->dx+0.5;
+	acpar->r0_v=sf_intalloc(acpar->ns);
+	acpar->r02=sf_intalloc(acpar->ns);
+	acpar->nr2=sf_intalloc(acpar->ns);
+	acpar->rz += nb;
+	xend=acpar->x0+(acpar->nx-1)*acpar->dx;
+	if(acpar->acqui_type==1){
+		for(i=0; i<acpar->ns; i++){
+			acpar->r0_v[i]=acpar->r0/acpar->dx+0.5+nb;
+			acpar->r02[i]=0;
+			acpar->nr2[i]=acpar->nr;
+		}
+	}else{
+		for(i=0; i<acpar->ns; i++){
+			sx=acpar->s0+acpar->ds*i;
+			rbegin=(sx+acpar->r0 <acpar->x0)? acpar->x0 : sx+acpar->r0;
+			rend=sx+acpar->r0 +(acpar->nr-1)*acpar->dr;
+			rend=(rend < xend)? rend : xend;
+			acpar->r0_v[i]=(rbegin-acpar->x0)/acpar->dx+0.5+nb;
+			acpar->r02[i]=(rbegin-sx-acpar->r0)/acpar->dx+0.5;
+			acpar->nr2[i]=(rend-rbegin)/acpar->dr+1.5;
+		}
+	}
+
+	/* read model parameters */
+	nzx=acpar->nz*acpar->nx;
+	nt=acpar->nt;
+	array->vv=sf_floatalloc(nzx);
+	array->dd=sf_floatalloc(nzx);
+	qq=sf_floatalloc(nzx);
+	array->tau=sf_floatalloc(nzx);
+	array->taus=sf_floatalloc(nzx);
+	array->ww=sf_floatalloc(nt);
+
+	sf_floatread(array->vv, nzx, Fv);
+	sf_floatread(array->dd, nzx, Fd);
+	sf_floatread(qq, nzx, Fq);
+	sf_floatread(array->tau, nzx, Ftau);
+	sf_floatread(array->ww, nt, Fw);
+
+	/* calculate taus */
+	for(i=0; i<nzx; i++){
+		array->taus[i]=(sqrtf(qq[i]*qq[i]+1)-1.)/(2.*SF_PI*f0*qq[i]);
+	}
+
+	/* bandpass the wavelet */
+	soupar->flo *= acpar->dt;
+	soupar->fhi *= acpar->dt;
+	if(soupar->flo > eps) blo=sf_butter_init(false, soupar->flo, nplo);
+	if(soupar->fhi < 0.5-eps) bhi=sf_butter_init(true, soupar->fhi, nphi);
+
+	if(NULL != blo){
+		sf_butter_apply(blo, nt, array->ww);
+		sf_reverse(nt, array->ww);
+		sf_butter_apply(blo, nt, array->ww);
+		sf_reverse(nt, array->ww);
+		sf_butter_close(blo);
+	}
+	if(NULL != bhi){
+		sf_butter_apply(bhi, nt, array->ww);
+		sf_reverse(nt, array->ww);
+		sf_butter_apply(bhi, nt, array->ww);
+		sf_reverse(nt, array->ww);
+		sf_butter_close(bhi);
+	}
+
+	free(qq);
+}
+
+void preparation_gn(sf_file Fv, sf_file Fw, sf_acqui acpar, sf_sou soupar, sf_vec_s array)
+/*< read data, initialize variables and prepare acquisition geometry >*/
+{
+	int i, nb, nzx;
+	float sx, xend, rbegin, rend, tmp;
+
+	int nplo=3, nphi=3, nt;
+	float eps=0.0001;
+	sf_butter blo=NULL, bhi=NULL;
+
+	/* absorbing boundary coefficients */
+	nb=acpar->nb;
+	acpar->bc=sf_floatalloc(nb);
+	for(i=0; i<nb; i++){
+		tmp=acpar->coef*(nb-i);
+		acpar->bc[i]=expf(-tmp*tmp);
+	}
+
+	/* padding variables */
+	acpar->padnx=acpar->nx+2*nb;
+	acpar->padnz=acpar->nz+2*nb;
+	acpar->padx0=acpar->x0-nb*acpar->dx;
+	acpar->padz0=acpar->z0-nb*acpar->dz;
+
+	/* acquisition parameters */
+	acpar->ds_v=acpar->ds/acpar->dx+0.5;
+	acpar->s0_v=(acpar->s0-acpar->x0)/acpar->dx+0.5+nb;
+	acpar->sz += nb;
+
+	acpar->dr_v=acpar->dr/acpar->dx+0.5;
+	acpar->r0_v=sf_intalloc(acpar->ns);
+	acpar->r02=sf_intalloc(acpar->ns);
+	acpar->nr2=sf_intalloc(acpar->ns);
+	acpar->rz += nb;
+	xend=acpar->x0+(acpar->nx-1)*acpar->dx;
+	if(acpar->acqui_type==1){
+		for(i=0; i<acpar->ns; i++){
+			acpar->r0_v[i]=acpar->r0/acpar->dx+0.5+nb;
+			acpar->r02[i]=0;
+			acpar->nr2[i]=acpar->nr;
+		}
+	}else{
+		for(i=0; i<acpar->ns; i++){
+			sx=acpar->s0+acpar->ds*i;
+			rbegin=(sx+acpar->r0 <acpar->x0)? acpar->x0 : sx+acpar->r0;
+			rend=sx+acpar->r0 +(acpar->nr-1)*acpar->dr;
+			rend=(rend < xend)? rend : xend;
+			acpar->r0_v[i]=(rbegin-acpar->x0)/acpar->dx+0.5+nb;
+			acpar->r02[i]=(rbegin-sx-acpar->r0)/acpar->dx+0.5;
+			acpar->nr2[i]=(rend-rbegin)/acpar->dr+1.5;
+		}
+	}
+
+	/* read model parameters */
+	nzx=acpar->nz*acpar->nx;
+	nt=acpar->nt;
+	array->vv=sf_floatalloc(nzx);
+	array->ww=sf_floatalloc(nt);
+
+	sf_floatread(array->vv, nzx, Fv);
+	sf_floatread(array->ww, nt, Fw);
+
+	/* bandpass the wavelet */
+	soupar->flo *= acpar->dt;
+	soupar->fhi *= acpar->dt;
+	if(soupar->flo > eps) blo=sf_butter_init(false, soupar->flo, nplo);
+	if(soupar->fhi < 0.5-eps) bhi=sf_butter_init(true, soupar->fhi, nphi);
+
+	if(NULL != blo){
+		sf_butter_apply(blo, nt, array->ww);
+		sf_reverse(nt, array->ww);
+		sf_butter_apply(blo, nt, array->ww);
+		sf_reverse(nt, array->ww);
+		sf_butter_close(blo);
+	}
+	if(NULL != bhi){
+		sf_butter_apply(bhi, nt, array->ww);
+		sf_reverse(nt, array->ww);
+		sf_butter_apply(bhi, nt, array->ww);
+		sf_reverse(nt, array->ww);
+		sf_butter_close(bhi);
+	}
+}
+
 void encoding_extract(float **code, int **shift, int **sign, int nsource, int ns, float dt)
 /*< extract time shift and sign >*/
 {
@@ -519,6 +881,106 @@ void laplace(float **p1, float **term, int padnx, int padnz, float dx2, float dz
 		}
 	}
 }
+
+void derivpx(float **p, float **term, int padnx, int padnz, float dx)
+/*< derivative in x-direction >*/
+{
+	int ix, iz;
+
+#ifdef _OPENMP
+#pragma omp parallel for \
+	private(ix,iz) \
+	shared(padnx,padnz,p,term)
+#endif
+
+	for (ix=4; ix<padnx-4; ix++){
+		for (iz=4; iz<padnz-4; iz++){
+			term[ix][iz] = 
+				(d1*(p[ix][iz]-p[ix-1][iz])
+				+d2*(p[ix+1][iz]-p[ix-2][iz])
+				+d3*(p[ix+2][iz]-p[ix-3][iz])
+				+d4*(p[ix+3][iz]-p[ix-4][iz]))/dx; 
+		}
+	}
+}
+
+void derivpz(float **p, float **term, int padnx, int padnz, float dz)
+/*< derivative in z-direction >*/
+{
+	int ix, iz;
+
+#ifdef _OPENMP
+#pragma omp parallel for \
+	private(ix,iz) \
+	shared(padnx,padnz,p,term)
+#endif
+
+	for (ix=4; ix<padnx-4; ix++){
+		for (iz=4; iz<padnz-4; iz++){
+			term[ix][iz] = 
+				(d1*(p[ix][iz]-p[ix][iz-1])
+				+d2*(p[ix][iz+1]-p[ix][iz-2])
+				+d3*(p[ix][iz+2]-p[ix][iz-3])
+				+d4*(p[ix][iz+3]-p[ix][iz-4]))/dz; 
+		}
+	}
+}
+
+void derivvx(float **p, float **term, int padnx, int padnz, float dx)
+/*< derivative in x-direction >*/
+{
+	int ix, iz;
+
+#ifdef _OPENMP
+#pragma omp parallel for \
+	private(ix,iz) \
+	shared(padnx,padnz,p,term)
+#endif
+
+	for (ix=4; ix<padnx-4; ix++){
+		for (iz=4; iz<padnz-4; iz++){
+			term[ix][iz] = 
+				(d1*(p[ix+1][iz]-p[ix][iz])
+				+d2*(p[ix+2][iz]-p[ix-1][iz])
+				+d3*(p[ix+3][iz]-p[ix-2][iz])
+				+d4*(p[ix+4][iz]-p[ix-3][iz]))/dx; 
+		}
+	}
+}
+
+void derivvz(float **p, float **term, int padnx, int padnz, float dz)
+/*< derivative in z-direction >*/
+{
+	int ix, iz;
+
+#ifdef _OPENMP
+#pragma omp parallel for \
+	private(ix,iz) \
+	shared(padnx,padnz,p,term)
+#endif
+
+	for (ix=4; ix<padnx-4; ix++){
+		for (iz=4; iz<padnz-4; iz++){
+			term[ix][iz] = 
+				(d1*(p[ix][iz+1]-p[ix][iz])
+				+d2*(p[ix][iz+2]-p[ix][iz-1])
+				+d3*(p[ix][iz+3]-p[ix][iz-2])
+				+d4*(p[ix][iz+4]-p[ix][iz-3]))/dz; 
+		}
+	}
+}
+
+void vdi(bool forward, float *vv, float *dd, float *ii, float n)
+/*< convert velocity and density to velocity and impedance >*/
+{
+	int i;
+
+	if(forward)
+		for (i=0; i<n; i++) ii[i]=vv[i]*dd[i];
+	else
+		for (i=0; i<n; i++) dd[i]=ii[i]/vv[i];
+}
+
 
 void apply_sponge(float **p, float *bc, int padnx, int padnz, int nb)
 /*< apply absorbing boundary condition >*/
@@ -702,6 +1164,14 @@ void dot_product(int n, float *a, float *b, float *product)
 	*product=0.;
 	for (i=0; i<n; i++)
 		*product += a[i]*b[i];
+}
+
+void combine_vectors(int n, float *a, float *b, float scale1, float scale2, float *c)
+/*< c = scale1*a +scale2*b >*/
+{
+	int i;
+	for (i=0; i<n; i++)
+		c[i] = scale1*a[i] + scale2*b[i];
 }
 
 void clip(float *x, int n, float min, float max)

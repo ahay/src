@@ -91,7 +91,7 @@ to remove (clean) previously generated files.
 \item To compare the Radon method with the previously used Fourier
   method, we will extract one shot gather from the Alaska
   dataset. Figure~\ref{fig:signal} shows the extracted shot gather and
-  the result of signal-and-noise separation using the Fourier method from \emph{Emc-Hammer}. To reproduce it on your screen, run
+  the result of signal-and-noise separation using the Fourier method from \emph{Stegosaurus}. To reproduce it on your screen, run
 \begin{verbatim}
 scons signal.view
 \end{verbatim}
@@ -154,6 +154,9 @@ sfpen Fig/signal.vpl Fig/signal2.vpl
 
 \lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
 \lstinputlisting[frame=single,title=radon/SConstruct]{radon/SConstruct}
+
+\lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,title=radon/filter.c]{radon/filter.c}
 
 \section{Parabolic Radon transform}
 \inputdir{pradon}

@@ -27,11 +27,11 @@ To setup the Madagascar environment in the JGB 3.216B computer lab, run the foll
 \begin{verbatim}
 module load madagascar-devel
 source $RSFROOT/share/madagascar/etc/env.csh
-setenv DATAPATH $HOME/data/
-setenv RSFBOOK $HOME/data/book
-setenv RSFFIGS $HOME/data/figs
+setenv DATAPATH $RSFROOT/data/
+setenv RSFBOOK $RSFROOT/data/book
+setenv RSFFIGS $RSFROOT/data/figs
 \end{verbatim}
-You can put these commands in your \verb+$HOME/.cshrc+ file to run them automatically at login time.
+You can put these commands in your \verb+$RSFROOT/.cshrc+ file to run them automatically at login time.
 
 To setup the \LaTeX\ environment, run the following commands:
 \begin{verbatim}
@@ -41,8 +41,8 @@ texhash
 \end{verbatim}
 You only need to do it once.
 
-The homework code is available from the class repository
-by running
+The homework code is available in your team repository or in the class
+repository. You can obtain it by running
 \begin{verbatim}
 svn co https://github.com/UT-GEO384S/geo384s/trunk/hw1
 \end{verbatim}
@@ -261,7 +261,7 @@ scons stack.vpl
 \end{verbatim}
 Which value of \texttt{pclip=} generates the most balanced and visually appealing image?
 
-\plot{stack}{width=0.9\textwidth}{Alaska stack data displayed with different values of \texttt{pclip=} parameter.}
+\plot{stack}{width=0.85\textwidth}{Alaska stack data displayed with different values of \texttt{pclip=} parameter.}
 
 \item Edit the \texttt{SConstruct} file to experiment with different values of \texttt{pclip=} until you find an optimal one. What is your favorite value of \texttt{pclip=} for this image?
 
@@ -277,14 +277,14 @@ scons hist.view
 \end{verbatim}
 Does this plot give you an idea of how to define the clip value that would generate the most balanced histogram? 
 
-\plot{hist}{width=0.9\textwidth}{Histogram of data values after clipping data with different values of \texttt{pclip=} parameter.}
+\plot{hist}{width=0.85\textwidth}{Histogram of data values after clipping data with different values of \texttt{pclip=} parameter.}
 
 \item Test your automatic algorithm or your trial-and-error approach on the stack data from the Viking Graben dataset (Figure~\ref{fig:viking}).
 \begin{verbatim}
 scons viking.view
 \end{verbatim}
 
-\plot{viking}{width=0.9\textwidth}{Viking Graben stack.}
+\plot{viking}{width=0.85\textwidth}{Viking Graben stack.}
 
 \end{enumerate}
 
@@ -348,14 +348,13 @@ good colormap design, see \cite[]{matteo}.
 \lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
 \lstinputlisting[frame=single,title=color/SConstruct]{color/SConstruct}
 
-%\section{Saving your work}
+\section{Saving your work}
 
-%It is important to save all files that you edit by hand (such
-%as \texttt{paper.tex} and \texttt{SConstruct}) in a version-control
-%system every time you make a revision. A separate private GitHub
-%repository and separate instructions will be provided for your team to
-%do that. The completed assignment is due in two weeks and should be
-%submitted through GitHub.
+It is important to save all files that you edit by hand (such
+as \texttt{paper.tex} and \texttt{SConstruct}) in a version-control
+system every time you make a revision. The completed assignment is due
+in two weeks and should be submitted through GitHub in your team
+repository.
 
 \bibliographystyle{seg}
 \bibliography{color}

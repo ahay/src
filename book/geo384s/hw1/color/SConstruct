@@ -7,7 +7,7 @@ Fetch('31_81_PR.SGY',
       dir='PROCESSED')
 
 #Fetch('31_81_PR.SGY','ALASKA2D_LAND_LINE_31-81',
-#      top='/home/p1/seismic_datasets/SeismicProcessingClass',
+#      top='/home/p1/seismic_datasets/public/SeismicProcessingClass',
 #      server='local')
 
 # Convert from SEGY to RSF (read data values only)

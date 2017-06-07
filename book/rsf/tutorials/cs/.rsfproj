@@ -1,0 +1,3 @@
+uses=['sfmath', 'sfwindow', 'sfgraph', 'sfspectra', 'sfpad', 'sftransp', 'sfput', 'sffft1', 'sfscale', 'sfrtoc', 'sfcat', 'sfreal', 'sfnoise', 'sfinttest1', 'sfdd', 'sfmask', 'sfmul', 'sfheaderwindow', 'sfcmplx', 'sfthr', 'sfmax1', 'sfbin1']
+data=[]
+size=     394108

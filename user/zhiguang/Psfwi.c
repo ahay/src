@@ -31,7 +31,7 @@ int nz, nx, nzx, padnz, padnx, padnzx, nb, nt; // dimension
 int ns, ds_v, s0_v, sz, nr, dr_v, rz, *nr2, *r02, *r0_v; // acquisition
 int frectx, frectz, interval, wnt, nsource; // wavefield
 int waterz, wtn1, wtn2, woffn1, woffn2, grectx, grectz; // gradient
-int drectx, drectz, nrepeat, ider; // smoothing kernel
+int drectx, drectz, nrepeat, ider=0; // smoothing kernel
 
 float dt, dt2, dx2, dz2, wdt, wdt2; // wavefield
 float wt1, wt2, woff1, woff2, gain, scaling, swap; // gradient
@@ -89,7 +89,6 @@ void gradient_init(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpar, 
 	drectx=fwipar->drectx;
 	drectz=fwipar->drectz;
 	nrepeat=fwipar->nrepeat;
-	ider=fwipar->ider;
 
 	/* gradient preconditioning */
 	waterz=fwipar->waterz;
@@ -404,11 +403,12 @@ void gradient_standard(float *x, float *fcost, float *grad)
 void fwi(sf_file Fdat, sf_file Finv, sf_file Ferr, sf_file Fmod, sf_file Fgrad, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpar, sf_vec_s array, sf_fwi_s fwipar, sf_optim optpar, sf_encode encodepar, bool verb1)
 /*< fwi >*/
 {
-	int iter=0, flag;
+	int i, iter=0, flag;
 	float fcost;
-	float *x, *direction, *grad;
+	float *x, *direction, *grad, *direction2;
 	sf_gradient gradient;
 	FILE *fp;
+	sf_file Ftangent;
 
 	/* initialize */
 	gradient_init(Fdat, mpipar, soupar, acpar, array, fwipar, encodepar, verb1);
@@ -491,7 +491,7 @@ void fwi(sf_file Fdat, sf_file Finv, sf_file Ferr, sf_file Fmod, sf_file Fgrad, 
 			fprintf(fp, "Convergence Criterion Reached\n");
 			break;
 		}
-	} // end of iter
+	} // end of iteration
 
 	if(mpipar->cpuid==0 && iter==optpar->niter){
 		fprintf(fp, "Maximum Iteration Number Reached\n");
@@ -501,6 +501,31 @@ void fwi(sf_file Fdat, sf_file Finv, sf_file Ferr, sf_file Fmod, sf_file Fgrad, 
 	if(mpipar->cpuid==0) sf_floatwrite(x, nzx, Finv);
 	if(mpipar->cpuid==0) sf_floatwrite(optpar->err, optpar->nerr, Ferr);
 	if(mpipar->cpuid==0) fclose(fp);
+
+	/* calculate prediction-corrector */
+	if(fwipar->tangent==1){
+		Ftangent=sf_output("Ftangent");
+		sf_putint(Ftangent, "n1", nz);
+		sf_putint(Ftangent, "n2", nx);
+		sf_putint(Ftangent, "n3", 1);
+
+		direction2=sf_floatalloc(nzx);
+		lbfgs_update(nzx, x, grad, optpar->sk, optpar->yk, optpar);
+
+		/* update sigma 1 */
+		ider=1;
+		gradient(x, &fcost, grad);
+		lbfgs_direction(nzx, grad, direction, optpar->sk, optpar->yk, optpar);
+		for(i=0; i<nzx; i++) direction2[i] = direction[i]*fwipar->sigma1;
+
+		/* update sigma 2 */
+		ider=2;
+		gradient(x, &fcost, grad);
+		lbfgs_direction(nzx, grad, direction, optpar->sk, optpar->yk, optpar);
+		for(i=0; i<nzx; i++) direction2[i] = direction2[i]+direction[i]*fwipar->sigma2;
+
+		if(mpipar->cpuid==0) sf_floatwrite(direction2, nzx, Ftangent);
+	}
 
 	return;
 }

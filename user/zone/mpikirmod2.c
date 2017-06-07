@@ -21,8 +21,6 @@
 
 #include <rsf.h>
 
-#include "mpikirmod2.h"
-
 #include "mpikirmod.h"
 /*^*/
 

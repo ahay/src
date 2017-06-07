@@ -4,7 +4,7 @@ from rsf.proj import *
 Fetch('npr3_field.sgy','teapot',
       server='http://s3.amazonaws.com',top='')
 #Fetch('npr3_field.sgy','TeapotDome3D',
-#      top='/home/p1/seismic_datasets/SeismicProcessingClass',
+#      top='/home/p1/seismic_datasets/public/SeismicProcessingClass',
 #      server='local')
 
 # Extract trace headers only
@@ -27,7 +27,6 @@ for key in Split('sx sy gx gy'):
 Flow('scoord','sx sy','cmplx ${SOURCES[1]}')
 Result('scoord',
        '''
-       window j2=10 |
        graph symbol="+" title="Shots" 
        label1=x label2=y unit1=kft unit2=kft plotcol=5
        ''')
@@ -36,7 +35,6 @@ Result('scoord',
 Flow('gcoord','gx gy','cmplx ${SOURCES[1]}')
 Result('gcoord',
        '''
-       window j2=10 | 
        graph symbol="x" title="Receivers" 
        label1=x label2=y unit1=kft unit2=kft plotcol=3
        ''')
@@ -52,25 +50,6 @@ Flow('bin3 mask','headersort',
      intbin3 head=$SOURCE xkey=-1 yk=iline zk=xline 
      mask=${TARGETS[1]}
      ''')
-
-Flow('cdpx','bin3','headermath output=cdpx | window n2=1')
-Flow('cdpy','bin3','headermath output=cdpy | window n2=1')
-
-Result('cdpx',
-       '''
-       dd type=float | scale dscale=0.001 | 
-       grey color=j mean=y scalebar=y title=CDPX
-       minval=788.233 maxval=809.290 bias=800 clip=10
-       barlabel=Distance barunit=kft
-       ''')
-
-Result('cdpy',
-       '''
-       dd type=float | scale dscale=0.001 | 
-       grey color=j mean=y scalebar=y title=CDPY
-       minval=939.242 maxval=976.897 bias=960 clip=15
-       barlabel=Distance barunit=kft
-       ''')
 
 # Extract CMP fold
 Flow('fold','mask','dd type=float | stack axis=1 norm=n')
@@ -90,22 +69,28 @@ Result('hist',
        dots title="Offset Distribution" label1=Offset unit1=ft
        ''')
 
+########################################################
+# Select offsets greater than 10,000 (!!! MODIFY ME !!!)
+########################################################
 Flow('offsetmask','bin3',
-     'headermath output=offset | mask min=13500 | window')
+     'headermath output=offset | mask min=10000 | window')
 
 Flow('fold2','mask offsetmask',
      'mul ${SOURCES[1]} | dd type=float | stack axis=1 norm=n')
 Result('fold2',
        '''
        grey color=T pclip=100 scalebar=y allpos=y transp=n 
-       title="Fold Map for Offset > 13.5 kft" 
+       title="Fold Map for Offset > 10 kft" 
        barlabel=Fold label1=iline label2=xline yreverse=n 
        ''')
 
-Flow('cmpmask','mask','window n3=1 min3=76 n2=1 min2=270')
+#############################################################
+# Extract headers for xline=100 iline=200 (!!! MODIFY ME !!!)
+#############################################################
+Flow('cmpmask','mask','window n3=1 min3=100 n2=1 min2=200')
 Flow('cmp','bin3 cmpmask',
      '''
-     window n4=1 min4=76 n3=1 min3=270 | 
+     window n4=1 min4=100 n3=1 min3=200 | 
      headerwindow mask=${SOURCES[1]}
      ''')
 
@@ -123,7 +108,7 @@ Flow('cmp-sr','cmp-s cmp-r','cat axis=1 ${SOURCES[1]}')
 Result('cmp-sr',
        '''
        graph plotcol=6 label1=x label2=y unit1=kft unit2=kft
-       title="Source-Receiver pairs for CMP (270,76)" 
+       title="Source-Receiver pairs for CMP (100,200)" 
        ''')
 
 End()

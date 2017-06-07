@@ -30,6 +30,9 @@ xjtu
 '''
 
 nonreproducible = '''
+data/teapotdome/fetch
+data/teapotdome/scdecon
+data/teapotdome/vels
 geo391/hw2/sorting
 rsf/bash/mpi
 rsf/bash/plot

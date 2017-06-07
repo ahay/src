@@ -20,7 +20,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "mpigeneral_traveltime.h"
 
 #ifndef _mpigeneral_traveltime_h
 

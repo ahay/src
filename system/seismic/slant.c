@@ -25,11 +25,10 @@
 static int nt, nx, ns;
 static float x0, dx, s0, ds, s1, t0, dt, anti;
 static float *tmp, *amp, *str, *tx;
-static bool pull, rho;
+static bool rho;
 
 /*------------------------------------------------------------*/
-void slant_init (bool pull1                     /* pull or push mode */, 
-		 bool rho1                      /* use rho filter */,
+void slant_init (bool rho1                      /* use rho filter */,
 		 float x01, float dx1, int nx1  /* offset axis */, 
 		 float s01, float ds1, int ns1  /* slowness axis */, 
 		 float t01, float dt1, int nt1  /* time axis */, 
@@ -37,7 +36,6 @@ void slant_init (bool pull1                     /* pull or push mode */,
 		 float anti1                    /* antialiasing */) 
 /*< initialize >*/
 {
-    pull = pull1;
     rho = rho1;
 
     x0 = x01; dx = dx1; nx = nx1;
@@ -96,7 +94,7 @@ void slant_lop (bool adj,
 
 	    for (it=0; it < nt; it++) { /* time */		
 		z = t0 + it*dt;
-		t = pull? z + sxx: z - sxx;
+		t = z + sxx;
 
 		str[it] = t;
 		tx[it] = anti*fabsf(s-s1)*dx;
@@ -105,20 +103,16 @@ void slant_lop (bool adj,
 
 	    sf_aastretch_define (str, tx, amp);
 	    
-	    if (pull) {
-		if (rho) {
-		    sf_chain(sf_halfint_lop,sf_aastretch_lop,
-			     adj,true,nt,nt,nt,modl+is*nt,data+ix*nt,tmp);
+	    if (rho) {
+		if (adj) {
+		    sf_halfint_lop (false, false, nt, nt, data+ix*nt, tmp);
+		    sf_aastretch_lop (true, true, nt, nt, modl+is*nt, tmp);
 		} else {
-		    sf_aastretch_lop(adj,true,nt,nt,modl+is*nt,data+ix*nt);
+		    sf_aastretch_lop (false, false, nt, nt, modl+is*nt, tmp);
+		    sf_halfint_lop (true, true, nt, nt, data+ix*nt, tmp);
 		}
 	    } else {
-		if (rho) {
-		    sf_chain(sf_aastretch_lop,sf_halfint_lop,
-			     (bool) !adj,true,nt,nt,nt,data+ix*nt,modl+is*nt,tmp);
-		} else {
-		    sf_aastretch_lop((bool) !adj,true,nt,nt,data+ix*nt,modl+is*nt);
-		}
+		sf_aastretch_lop(adj,true,nt,nt,modl+is*nt,data+ix*nt);
 	    }
 	} /* ix */
     } /* is */

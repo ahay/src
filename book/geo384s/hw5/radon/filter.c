@@ -1,4 +1,5 @@
-/* Mute data in the Fourier domain based on velocity. */
+/* Mute data in the Fourier domain based on velocity and 
+ * frequency. */
 
 #include <rsf.h>
 
@@ -6,9 +7,7 @@ int main(int argc, char* argv[])
 {
     int nw, nx, iw, ix, i3, n3;
     float x0,dx,x, w0,dw,w, vel;
-    float v1, v2, factor, *ctrace;
-    int type;
-    float logis,vmid;
+    float v1, v2, f1, f2, factor, *ctrace;
     sf_file in, out;
 
     sf_init(argc,argv);
@@ -29,13 +28,19 @@ int main(int argc, char* argv[])
     n3 = sf_leftsize(in,2);
 
     ctrace = sf_floatalloc(2*nw);
-    if (!sf_getint("type",&type)) type=0;
-    if (!sf_getfloat("logis",&logis)) logis=10.;
+
     if (!sf_getfloat("v1",&v1)) v1=0.;
     if (!sf_getfloat("v2",&v2)) v2=0.1;
     /* Velocity gate */
 
     if (v1>=v2) sf_error("Need v1 < v2"); 
+
+    /* input frequencies */
+    if (!sf_getfloat("f1",&f1)) f1=999;
+    if (!sf_getfloat("f2",&f2)) f2=999.1;
+
+    if (f1>=f2) sf_error("Need f1 < f2"); 
+
 
     /* Loop over shots */
     for (i3=0; i3 < n3; i3++) { 
@@ -51,33 +56,27 @@ int main(int argc, char* argv[])
 		w = w0+iw*dw;	    
 		vel = w/x; 
 
-        switch (type){
-            case 0:
-        		if ((vel>=-v2) && (vel<=-v1)) {
-        		    factor=1.0f-
-        		      sinf(0.5*SF_PI*(vel+v2)/(v2-v1));
-        		} else if ((vel>=-v1) && (vel<=v1)) {
-        		    factor=0.0f; /* reject */
-        		} else if ((vel>=v1) && (vel<=v2)) {
-        		    factor=sinf(0.5*SF_PI*(vel-v1)/(v2-v1));
-        		} else {
-        		    factor=1.0f; /* pass */
-        		}
-        		break;
-        	case 1:
-        	    vmid = (v1+v2)/2;
-        	    if ((vel>=-v2) && (vel<=-v1)) {
-        		    factor=expf(logis*(-vel+vmid))/(1+expf(logis*(-vel+vmid)));
-        		} else if ((vel>=-v1) && (vel<=v1)) {
-        		    factor=0.0f; /* reject */
-        		} else if ((vel>=v1) && (vel<=v2)) {
-        		    factor= expf(logis*(vel-vmid))/(1+expf(logis*(vel-vmid)));
-        		} else {
-        		    factor=1.0f; /* pass */
-        		}
-        		break;
+		if ((vel>=-v2) && (vel<=-v1)) {
+		    factor=1.0f-
+		      sinf(0.5*SF_PI*(vel+v2)/(v2-v1));
+		} else if ((vel>=-v1) && (vel<=v1)) {
+		    factor=0.0f; /* reject */
+		} else if ((vel>=v1) && (vel<=v2)) {
+		    factor=sinf(0.5*SF_PI*(vel-v1)/(v2-v1));
+		} else {
+		    factor=1.0f; /* pass */
+		}
+
+        /* low pass filter */
+        if ((w >= f1) && (w <= f2)){
+            factor = 1.0f - (1/(f2-f1) * (w-f1));
+        } else if ((w <= -f1) && (w >= -f2)){
+            factor = 1/(f2-f1) * (w-f1);
+        } else if (w > f2){
+            factor=0.0f;
         }
-	
+        
+        
 		/* real and imaginary parts */
 		ctrace[2*iw]   *= factor;
 		ctrace[2*iw+1] *= factor;

@@ -41,7 +41,7 @@ Flow('shots','line shotmask',
      o2=-5.225 d2=0.11 label2=Offset unit2=kft
      ''')
 
-Plot('shots','grey title=Shots gainpanel=all pclip=90',view=0)
+Plot('shots','grey title=Shots gainpanel=all pclip=90',view=1)
 
 def plotshots(title):
     return '''
@@ -184,99 +184,55 @@ Flow('shot','gshots','window n3=1 f3=23')
 Plot('shot','grey title="Selected Shot" clip=2')
 
 # Fourier transform
+
+###################
+# !!! MODIFY ME !!!
+###################
+v1=8
+v2=20
+
 Flow('fft','shot','fft1 | fft3')
-Plot('fft',
+Result('fft',
        '''
        window max1=100 | math output="abs(input)" | real | 
        grey allpos=y title="Fourier Transform" 
        ''')
-       
-       
-###################
-# Loop through cases
-###################
-for c in range(2):
-    if c==0:
-        v1=8    
-        v2=10
-    elif c==1:
-        v1=9
-        v2=11
-    case = str(c)
 
-    Flow('line1-'+case+'.asc',None,
-        '''echo %f %f %f %f n1=2 n2=2 data_format=ascii_float 
-        in=$TARGET'''% (0.0,0.0,4.5454,4.5454*v1))  
-    Flow('line1n-'+case+'.asc',None,
-        '''echo %f %f %f %f n1=2 n2=2 data_format=ascii_float 
-        in=$TARGET'''% (0.0,0.0,-4.5454,4.5454*v1))    
-    Flow('line2-'+case+'.asc',None,
-        '''echo %f %f %f %f n1=2 n2=2 data_format=ascii_float 
-        in=$TARGET'''% (0.0,0.0,4.5454,4.5454*v2))  
-    Flow('line2n-'+case+'.asc',None,
-        '''echo %f %f %f %f n1=2 n2=2 data_format=ascii_float 
-        in=$TARGET'''% (0.0,0.0,-4.5454,4.5454*v2))  
+prog = Program('filter.c')
 
-    count=0
-    for l in ['line1-'+case,'line1n-'+case,'line2-'+case,'line2n-'+case]:
-        count=count+1
-        if count<3:
-            dash=1
-        else:
-            dash=0
-        Flow(l,l+'.asc','dd form=native type=complex | window j2=1')
-        Plot(l,'''graph plotfat=3 wanttitle=n wantaxis=n yreverse=y dash=%d 
-        plotcol=1 max2=100 min2=0 max1=4.54545 min1=-4.54545''' % dash) 
+Flow('filter','fft %s' % prog[0],
+     './${SOURCES[1]} v1=%g v2=%g' % (v1,v2))
 
-    Result('fftline-'+case,['fft','line1-'+case,'line1n-'+case,'line2-'+case,'line2n-'+case],'Overlay')
+Result('filter',
+       '''
+       window max1=100 | math output="abs(input)" | 
+       real | grey allpos=y title="Filtered" 
+       ''')
 
-    prog = Program('filter.c')
-    
-    for c2 in range(2):
-        case2 = str(c2)
-        Flow('filter-'+case+'-'+case2,'fft %s' % prog[0],
-             './${SOURCES[1]} logis=30 v1=%g v2=%g type=%d' % (v1,v2,c2))
+Flow('mute','fft %s' % prog[0],
+     '''
+     math output=1 | ./${SOURCES[1]} v1=%g v2=%g | real
+     ''' % (v1,v2))
 
-        Result('filter-'+case+'-'+case2,
-               '''
-               window max1=100 | math output="abs(input)" | 
-               real | grey allpos=y title="Filtered" 
-               ''')
+Result('mute','window max1=100 | grey allpos=y tile="Mute" ')
 
-        Flow('mute-'+case+'-'+case2,'fft %s' % prog[0],
-             '''
-             math output=1 | ./${SOURCES[1]} v1=%g v2=%g | real
-             ''' % (v1,v2))
+Flow('signal','filter','fft3 inv=y | fft1 inv=y')
+Plot('signal','grey title=Signal clip=2')
 
-        Result('mute-'+case+'-'+case2,'window max1=100 | grey allpos=y tile="Mute"')
+Flow('noise','shot signal','add scale=1,-1 ${SOURCES[1]}')
+Plot('noise','grey title=Noise clip=2')
 
-        Flow('signal-'+case+'-'+case2,'filter-'+case+'-'+case2,'fft3 inv=y | fft1 inv=y')
-        Plot('signal-'+case+'-'+case2,'grey title=Signal clip=2')
+Result('signal','shot signal noise','SideBySideAniso')
 
-        Flow('noise-'+case+'-'+case2,['shot','signal-'+case+'-'+case2],'add scale=1,-1 ${SOURCES[1]}')
-        Plot('noise-'+case+'-'+case2,'grey title=Noise clip=2')
-
-        Result('signal-'+case+'-'+case2,
-            ['shot','signal-'+case+'-'+case2,'noise-'+case+'-'+case2],'SideBySideAniso')
-
-Flow('similarity','signal-1-1 noise-1-1','similarity rect1=100 rect2=10 other=${SOURCES[1]}')
-Result('similarity','grey allpos=y color=j title="Local Similarity" ')
-
-
-# Apply to all shots with the new choice of v1 and v2
+# Apply to all shots
 Flow('ffts','gshots','fft1 | fft3')
 Flow('fshots','ffts %s' % prog[0],
      '''
-     ./${SOURCES[1]} v1=%g v2=%g  logis=30 type=1| fft3 inv=y | fft1 inv=y
+     ./${SOURCES[1]} v1=%g v2=%g  | fft3 inv=y | fft1 inv=y
      ''' % (v1,v2),split=[3,'omp'])
 
 Result('fshots',
        plotshots('Shots After Ground-Roll Atenuation'))
-
-Flow('fnshots','gshots fshots','add scale=1,-1 ${SOURCES[1]}')
-Flow('similarity3','fnshots fshots','similarity rect1=100 rect2=10 rect3=10 other=${SOURCES[1]}')
-
-# 0.06749
 
 # Reverse gain
 Flow('rshots','fshots gain',

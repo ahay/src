@@ -5,9 +5,11 @@ import bldutil
 progs = '''
 fdort3delasticcij
 isaac0 isaac1 isaac2 isaac3 kirmod_newton mpikirmodnewton nmo3gmaprep nmo3gmafit
-rotater
+rotater time2depthweak fermatrecursion vtihti2ort
 '''
-#quarticortho 
+
+# gausssource rays3a quarticlayer quartic expand3 vtihti2ort cij2moveout
+ 
 #iwarpsh stolthhlin radialhlin nmo3gmaprep 
 #fdtti3delasticcij nmo3gmaprep
 
@@ -25,7 +27,7 @@ try:  # distributed version
 except: # local version
     env = bldutil.Debug()
     root = None
-    SConscript('../../api/c/SConstruct')
+    SConscript('../lexing/SConstruct')
     
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
@@ -57,7 +59,6 @@ env.Prepend(CPPPATH=['../../include'],
 
 for source in src:
     inc = env.RSF_Include(source,prefix='')
-    env.Ignore(inc,inc)
     if not source in Glob('mpi*.c'):
         obj = env.StaticObject(source)
         env.Depends(obj,inc)
@@ -77,7 +78,10 @@ for prog in mains:
         else:
             prog = env.RSF_Place('sf'+prog,None,var='MPICC',package='mpi')
     else:
-        prog = env.Program(prog,map(lambda x: x + '.c',sources))
+        if prog != 'vtihti2ort' or env.get('LAPACK'):
+            prog = env.Program(prog,map(lambda x: x + '.c',sources))
+        else:
+            prog = env.RSF_Place('sf'+prog,None,var='LAPACK',package='lapack')
     if root:
         env.Install(bindir,prog)
 

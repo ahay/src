@@ -1,0 +1,3 @@
+uses=['sfmakevel', 'sfput', 'sfdd', 'sfwindow', 'sfspray', 'sfcat', 'sfsmooth', 'sfadd', 'sfpad', 'sftowed_array', 'sfacd', 'sfacdcgne', 'sfgrey', 'sfsuread', 'sfgraph']
+data=['http://www.trip.caam.rice.edu/data/marmousi/line100m.su', 'http://www.trip.caam.rice.edu/data/marmousi/wavelet_base.su', 'http://www.trip.caam.rice.edu/data/marmousi/velocity.HH', 'http://www.trip.caam.rice.edu/data/marmousi/hdr6km.su']
+size=    2701296

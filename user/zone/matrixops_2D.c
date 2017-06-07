@@ -20,7 +20,6 @@
 /*For use in kirmod_newton*/
 
 #include <stdio.h>
-#include "matrixops_2D.h"
 
 void mat_transp(float **m/* Input 2x2 matrix*/,float **output)
 /*<Find a 2x2 matrix transpose>*/

@@ -19,7 +19,6 @@
 
 
 #include <rsf.h>
-#include "newton.h"
 
 #ifndef _newton_h
 
