@@ -281,7 +281,7 @@ main(int argc, char **argv)
 
 	/* Leave trace alone if autocorr[0] vanishes */
 	if (autocorr[0] == 0.0) {
-	    sf_floatwrite(trace,nt,out);
+	    put_tah(trace, fheader, nt, n1_headers, out);
 	    if (NULL != wien) sf_floatwrite(wiener,nlag,wien);
 	    continue;
 	}
