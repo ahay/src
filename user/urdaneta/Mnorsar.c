@@ -217,7 +217,7 @@ int main(int argc, char* argv[])
     for(ii=0;ii<ns;ii++) {
 	ste = 0;
 	gox = goox + pos[ii].x;
-	sf_warning("\nSource #%d\n", ii);
+	//sf_warning("\nSource #%d\n", ii);
 
 /*	1.- Construct the inital wavefront 			*/
 	nr = nang;
