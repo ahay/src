@@ -7,8 +7,8 @@
 
 int main(int argc, char* argv[])
 {
-    int nt, nx, ny, i1, i2, i3, ch, n12, n122, fk;
-    bool adj, verb=true;
+    int nt, nx, ny, i1, i2, i3;
+    bool verb=true;
     float dt, dx, dy, ot, ox, oy, x, y, t;
     float v_a, v_b, v_0, beta, eps;
     sf_complex * intrace, * outtrace;

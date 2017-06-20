@@ -116,7 +116,6 @@ int main(int argc, char* argv[])
   int iitrace;
   bool eof_get_tah;
   bool end_of_gather;
-  float sx, sy, gx, gy, offx, offy;
   int fold;
   int maxfold=0;
   float* outtrace=NULL;

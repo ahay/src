@@ -112,11 +112,17 @@ int main (int argc, char* argv[])
     temp2 = sf_floatalloc(n1);
     /*set the data space*/
     
+    if(NULL!=sf_getstring("L")) {
+	length=sf_floatalloc(n1*n2);
+    } else {
+	length=NULL;
+    }
+
+
     for(ii=0;ii<n3;ii++){
 
-	if(NULL!=sf_getstring("L"))
+	if(NULL!=length)
 		{
-			length=sf_floatalloc(n1*n2);
 		for(i=0;i<n2;i++)
 			for(j=0;j<n1;j++)
 				length[i*n1+j]=0;
@@ -161,7 +167,7 @@ int main (int argc, char* argv[])
 		    		}
 			}
 		}
-		if(NULL!=sf_getstring("L")) length[n1*i+j]	= tempnfw;		
+		if(NULL!=length) length[n1*i+j]	= tempnfw;		
 		temp3 = sf_floatalloc(tempnfw);
 		bound2(temp2,temp3,n1,tempnfw,j,boundary);
 		result[n1*i+j]=medianfilter(temp3,tempnfw);

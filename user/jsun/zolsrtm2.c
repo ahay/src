@@ -292,7 +292,7 @@ void lrexp(sf_complex *img, sf_complex *dat, bool adj, sf_complex **lt, sf_compl
 //  lrexp(img, dat, adj, ltf, rtf, geop, wvfld);
 //}
 
-void lrexp_op(int nx, const sf_complex* x, sf_complex* y, void* mat)
+void lrexp_op(int nx, sf_complex* x, sf_complex* y, void* mat)
 /*< lowrank onestep exploding reflector linear operator (square matrix, img to img) >*/
 {
   geopar geop;

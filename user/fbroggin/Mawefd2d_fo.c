@@ -74,7 +74,9 @@ int main(int argc, char* argv[])
 
     /* FDM structure */
     fdm2d    fdm;
-    abcone2d abc;
+#ifdef _OPENMP
+    abcone2d abc; 
+#endif
     sponge   spo;
 
     /* I/O arrays */
@@ -100,7 +102,7 @@ int main(int argc, char* argv[])
     lint2d cs,cr;
 
     /* FD operator size */
-    float co,cax,cbx,ccx,cdx,caz,cbz,ccz,cdz;
+    float cax,cbx,caz,cbz;
 
     /* Wavefield cut params */
     sf_axis   acz,acx;
@@ -111,10 +113,10 @@ int main(int argc, char* argv[])
     
     float scal;
     
-    int ioXx, ioXz, ioZz, ioZx, ioPx, ioPz, ioTx, ioTz;
+    int ioXx, ioXz, ioZz, ioZx, ioPx, ioPz;
     
    	float vel2, lamda2mu;
-	float cpx, cpz, bx, bz;
+	float bx, bz;
     
     /*------------------------------------------------------------*/
     /* Initialize RSF parameters 								  */

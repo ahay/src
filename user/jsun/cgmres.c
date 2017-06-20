@@ -86,7 +86,7 @@ my_cdotc (int m,
 }
 
 /* computes ab (without conjugating the first vector)
-   m : dimension of vector x [] (m) */
+   m : dimension of vector x [] (m) 
 static sf_complex
 my_cdotu (int m,
 	  const sf_complex *a, const sf_complex *b)
@@ -99,7 +99,7 @@ my_cdotu (int m,
     res += a[i] * b[i];
   }
   return res;
-}
+} */
 
 /* double-precision L2 norm of a complex number */
 static float
@@ -148,7 +148,7 @@ back_sub (int m, int nn,
     }
 }
 
-static void
+/* static void
 showvec (int m, const sf_complex* v)
 {
   int i;
@@ -156,7 +156,7 @@ showvec (int m, const sf_complex* v)
     printf ("(%5.2f, %5.2f)",crealf(v[i]),cimagf(v[i]));
   }
   printf("\n");
-}
+  } */
 
 void cgmres_init(int nx      /* data size */, 
 		int restart /* memory */) 
@@ -184,13 +184,13 @@ void cgmres_close(void)
   free (s);
 }
 
-void cgmres (const sf_complex *f                                              /* data */, 
-	    sf_complex *x                                                    /* estimated model */,
-	    void (*myatimes) (int, const sf_complex *, sf_complex *, void *) /* operator */,
-	    void * user_data                                                 /* internal data */,
-	    int itmax                                                        /* number of iterations */, 
-	    float tol                                                        /* tolerance */, 
-	    bool verb                                                        /* verbosity */)
+void cgmres (const sf_complex *f                                       /* data */, 
+	    sf_complex *x                                              /* estimated model */,
+	    void (*myatimes) (int, sf_complex *, sf_complex *, void *) /* operator */,
+	    void * user_data                                           /* internal data */,
+	    int itmax                                                  /* number of iterations */, 
+	    float tol                                                  /* tolerance */, 
+	    bool verb                                                  /* verbosity */)
 /*< GMRES solver >*/
 {
   int iter;
