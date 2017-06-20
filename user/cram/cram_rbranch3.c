@@ -242,7 +242,7 @@ static bool sf_cram_rbranch3_check_exit (sf_cram_rbranch3 cram_rbranch,
     int i;
     int kmah = 0;
     float s, a, da, p, sn, vsurf;
-    float pxy[2], cp = 1.0, dp = 0.0;
+    float pxy[2] = {0.0f,0.0f}, cp = 1.0, dp = 0.0;
 
     /* Check if all three points exit on the surface */
     if (esc1[ESC3_Z] > cram_rbranch->z0 || esc2[ESC3_Z] > cram_rbranch->z0 ||

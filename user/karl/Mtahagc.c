@@ -218,12 +218,10 @@ int main(int argc, char* argv[])
     float* fheader=NULL;
     float* intrace=NULL;
     float* outtrace=NULL;
-    int indx_time;
     int itrace=0;
     int ntaper;
     int numxstart;
     int numtstart;
-    float* taper;
     char **list_of_floats;
     float* xstart;
     float* tstart;
@@ -231,10 +229,6 @@ int main(int argc, char* argv[])
     float offset;
     float d1;
     float o1;
-    float time_start;
-    int itime_start;
-    int itime_stop;
-    int indx_taper;
     AGC_STRUCT* agc_structure;
     float wagc;
     int lenagc;
@@ -330,9 +324,8 @@ int main(int argc, char* argv[])
     for(indx_time=0; indx_time<ntaper; indx_time++){
 	float val_sin=sin((indx_time+1)*SF_PI/(2*ntaper));
 	taper[indx_time]=val_sin*val_sin;
-    }
+	} */
     indx_of_offset=segykey("offset");
-    */
     
     if (!sf_histfloat(in,"d1",&d1))
 	sf_error("input data does not define d1");

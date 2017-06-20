@@ -106,7 +106,6 @@ void freqfilt4pi_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 {
     int iw, ik;
     kiss_fft_cpx temp;
-    int verb; // just outputting values to check when I get zeroes
 
     sf_adjnull(adj,add,nx,ny,x,y);
 

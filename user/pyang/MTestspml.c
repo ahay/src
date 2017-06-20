@@ -183,6 +183,9 @@ int main(int argc, char* argv[])
 		Fpz = sf_output("pz");/* wavefield component px */
 		Fpx = sf_output("px");/* wavefield component px */
     		if (!sf_getint("kt",&kt)) sf_error("kt required"); /* output px and pz component at kt */
+	} else {
+	    Fpz = NULL;
+	    Fpx = NULL;
 	}
 
 	sf_putint(Fw,"n1",nz);

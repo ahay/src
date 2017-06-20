@@ -83,6 +83,7 @@ To programs:
 * user/kregimbal: New contributor (Kelly Regimbal)
 * user/dmerzlikin: New contributor (Dmitrii Merzlikin)
 * user/sbader: New contributor (Sean Bader)
+* char to int conversion in sfdd
 
 ===Bug fixes===
 
