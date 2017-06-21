@@ -322,7 +322,10 @@ int main(int argc, char* argv[])
 {
     bool adj,timer,verb;
     int nt, nx, nz, nx2, nz2, nzx, nzx2, ntx, pad1, snap, gpz, wfnt;
-    int m2, n2, nk, nth=1, taper;
+    int m2, n2, nk, taper;
+#ifdef _OPENMP
+    int nth=1;
+#endif
     float dt, dx, dz, ox, oz, thresh;
     sf_complex **img, **dat, **lt, **rt, ***wvfld;
     sf_file data, image, left, right, snaps;

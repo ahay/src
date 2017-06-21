@@ -26,7 +26,10 @@ int main(int argc, char* argv[])
 {
     bool verb,complx,sub,os;
     int it,iz,im,ik,ix,i,j;     /* index variables */
-    int nt,nz,nx, m2, nk, nzx, nz2, nx2, nzx2, n2, pad1,nth;
+    int nt,nz,nx, m2, nk, nzx, nz2, nx2, nzx2, n2, pad1;
+#ifdef _OPENMP
+    int nth;
+#endif
     sf_complex c,old;
 
     /* I/O arrays*/

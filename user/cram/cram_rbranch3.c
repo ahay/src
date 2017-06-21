@@ -185,7 +185,7 @@ static float sf_cram_rbranch3_tridata (float *esc1, float *esc2, float *esc3,
 
     /* 2x2 matrix - normalized components of vectors 1 and 2 */
     det = (dx1*dy2 - dy1*dx2)/(l1*l2);
-    if (fabsf (det) < 1e-6)
+    if (fabs (det) < 1e-6)
         return -1.0;
 
     /* Restore p(slope) vector from directional
@@ -526,7 +526,7 @@ int sf_cram_rbranch3_find_exits (sf_cram_rbranch3 cram_rbranch, float x, float y
                         exits[ie].kmah == branch->kmah &&  /* and same caustic */
                         ((fabsf (exits[ie].ib - exits[iie].ib) < 1e-3 && /* + Same angles */
                           fabsf (exits[ie].ia - exits[iie].ia) < 1e-3) ||
-                         fabsf (branch->p[0] - exits[iie].p[0] < 1e-2) || /* or same data slope */
+                         fabsf (branch->p[0] - exits[iie].p[0]) < 1e-2 || /* or same data slope */
                          (exits[ie].ib < 0.5 && exits[iie].ib < 0.5))) {  /* or close to the pole */
                         same = true;
                         break;

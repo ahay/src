@@ -232,7 +232,7 @@ int main(int  argc,char **argv)
          for(i=-1;i<=1;i++)
          for(j=-1;j<=1;j++)
          {
-             if(fabs(k)+fabs(i)+fabs(j)==3)
+             if(SF_ABS(k)+SF_ABS(i)+SF_ABS(j)==3)
              { 
                  p2[isy+k][isx+i][isz+j]+=k*Ricker(t, f0, t0, A);
                  q2[isy+k][isx+i][isz+j]+=i*Ricker(t, f0, t0, A);

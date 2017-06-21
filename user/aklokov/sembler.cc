@@ -36,8 +36,8 @@ void Sembler::getSemblanceForTrace (int tracesNum, float* data, float* dataSq, i
 		semb[iz] = sumInput ? sumOutput / (tracesNum * k * sumInput) : 0.f;
     }
 
-    delete traceSumOutput;
-    delete traceSumInput;
+    delete[] traceSumOutput;
+    delete[] traceSumInput;
 
     return;
 }
