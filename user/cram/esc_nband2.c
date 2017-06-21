@@ -48,7 +48,7 @@ struct EscNBand2 {
     int              nz, nx, na; /* Dimensions of phase space */
     unsigned long    nc; /* Number of points in the band */
     int              iz; /* Current band position */
-    NBIter2        zdir; /* Direction of the band movement in z */
+    EscDirection2  zdir; /* Direction of the band movement in z */
     unsigned char ***nb; /* Values in the narrow band */
     unsigned char  **nb2; /* Pointer for the middle NB level */ 
 };

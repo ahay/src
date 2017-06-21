@@ -999,7 +999,7 @@ void lint3d_expl_complex(sf_complex***uz,
                 for(j=-1;j<=1;j++)
                     for(i=-1;i<=1;i++)
                     {
-                        if(fabs(i)+fabs(j)+fabs(k)==3)
+                        if(SF_ABS(i)+SF_ABS(j)+SF_ABS(k)==3)
                         {
 #ifdef SF_HAS_COMPLEX_H
                             uz[ca->jy[ia]+k][ca->jx[ia]+j][ca->jz[ia]+i] += dd[0][ia] * i;

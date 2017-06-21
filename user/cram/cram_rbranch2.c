@@ -146,7 +146,7 @@ void sf_cram_rbranch2_set_escapes (sf_cram_rbranch2 cram_rbranch, float **esc)
         cram_rbranch->surface_branches[ia0].x1 = x1;
         cram_rbranch->surface_branches[ia0].p = p;
         /* Geometric spreading */
-        cram_rbranch->surface_branches[ia0].j = fabsf ((x1 - x0)*sqrt (1.0 - sn*sn));
+        cram_rbranch->surface_branches[ia0].j = fabsf ((x1 - x0)*sqrtf (1.0f - sn*sn));
         cram_rbranch->surface_branches[ia0].kmah = (x0 - x1) < 0.0 ? 1 : 0;
         cram_rbranch->surface_branches[ia0].state = STATE_NORMAL;
         if (na == cram_rbranch->ib0)

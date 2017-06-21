@@ -407,8 +407,11 @@ void fwpttielastic3dhomo(float dt2,float***p1,float***p2,float***p3,float***q1,f
 
 		  pxy=0;
 		  pxz=0;
+		  pyz=0;
 		  qxy=0;
+		  qxz=0;
 		  qyz=0;
+		  rxy=0;
 		  rxz=0;
 		  ryz=0;
 		  for(l=-_mix;l<=_mix;l++)

@@ -249,8 +249,8 @@ int getMachineEndianness()
 
 void swapBytes(unsigned char *arr, int arrsize, int atomsize)
 {
-	register int i, j, k, atomsize1;
-	register unsigned char tmp;
+	int i, j, k, atomsize1;
+	unsigned char tmp;
 	
 	atomsize1 = atomsize - 1;
 	

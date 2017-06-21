@@ -29,7 +29,10 @@ int main(int argc, char * argv[])
 
     sf_file inA, outC, inB;
     int an1, an2, bn1, bn2;
-    int im, in, ik, m, n, k, nth;
+    int im, in, ik, m, n, k;
+#ifdef _OPENMP
+    int nth;
+#endif
     
     sf_complex **a, **b, **c;
     sf_axis aax1, aax2, bax1, bax2, cax1, cax2;

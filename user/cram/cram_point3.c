@@ -379,8 +379,8 @@ static float sf_cram_point3_gataper (sf_cram_point3 cram_point, float oa, float 
 static void sf_cram_point3_aaz_spread (float ac, float azc, float a, float az,
                                        float *da, float *dz) {
     float rot[3] = { fabsf (azc - az),
-                     fabsf (azc - (az + SF_PI)),
-                     fabsf (azc - (az - SF_PI)) };
+                     fabsf (azc - (az + (float) SF_PI)),
+                     fabsf (azc - (az - (float) SF_PI)) };
     /* Find smallest rotation between the two azimuths */
     if (rot[0] <= rot[1] && rot[0] <= rot[2]) {
         *dz += rot[0];

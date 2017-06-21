@@ -31,7 +31,10 @@ int main(int argc, char* argv[])
 {
     bool adj,timer,verb,gmres;
     int nt, nx, nz, nx2, nz2, nzx, nzx2, ntx, pad1, snap, gpz, wfnt, i;
-    int m2, m2b, n2, nk, nth=1;
+    int m2, m2b, n2, nk;
+#ifdef _OPENMP
+    int nth=1;
+#endif
     int niter, mem;
     float dt, dx, dz, ox;
     sf_complex *img, *imgout, *dat, **lt1, **rt1, **lt2, **rt2, ***wvfld;
