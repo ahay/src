@@ -187,6 +187,8 @@ int main(int argc, char* argv[])
      	  ktp[iz+ix*nz2] = ktmp;
 	}
       }
+    } else {
+	ktp = NULL;
     }
 
     /* MAIN LOOP */

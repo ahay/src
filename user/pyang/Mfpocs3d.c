@@ -81,6 +81,8 @@ int main(int argc, char* argv[])
     if (NULL != sf_getstring("mask")){
 	mask=sf_floatalloc(n2*n3);
 	sf_floatread(mask,n2*n3,Fmask);
+    } else {
+	mask=NULL;
     }
 
     dprev=sf_complexalloc(num);

@@ -262,6 +262,11 @@ int main(int argc, char* argv[])
     tempint=segykey("epx");
     fprintf(stderr,"epx tempint=%d\n",tempint);
   }
+
+  /* get indx_of_ns and indx_of_dt that will also be loaded */
+  indx_of_ns=segykey("ns");
+  indx_of_dt=segykey("dt");
+
   if(makeheader){
     for (iaxis=2; iaxis<SF_MAX_DIM+1; iaxis++){
       if(0==strcmp("none",label_in[iaxis])){
@@ -281,9 +286,6 @@ int main(int argc, char* argv[])
 	fprintf(stderr,"indx_of_keys[%d]=%d\n",iaxis,indx_of_keys[iaxis]);
       }
     }
-    /* get indx_of_ns and indx_of_dt that will also be loaded */
-    indx_of_ns=segykey("ns");
-    indx_of_dt=segykey("dt");
     if(verbose>1){
       fprintf(stderr,"indx_of_ns=%d\n",indx_of_ns);
       fprintf(stderr,"indx_of_dt=%d\n",indx_of_dt);

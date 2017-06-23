@@ -82,6 +82,8 @@ int main(int argc, char* argv[])
     	if (!sf_histfloat(in,"o1",&t0)) t0=0.;
 	/* origin of time axis */
 
+	if ( !(invmode=sf_getstring("invmode")) ) invmode="toeplitz";
+	/* inverse method: 'ls' if least-squares; 'toeplitz' if use FFT */			
 
     	if (adj||inv) { // m(tau,p)=sum_{i=0}^{nx} d(t=tau+p*x_i,x_i)
 		if (!sf_histint(in,"n2",&nx)) sf_error("No n2= in input");
@@ -95,13 +97,12 @@ int main(int argc, char* argv[])
 		if (!sf_getfloat("p0",&p0)) sf_error("Need p0=");
 		/* p origin (if adj=y) */
 		if(inv){			
-    			if ( !(invmode=sf_getstring("invmode")) ) invmode="toeplitz";
-			/* inverse method: 'ls' if least-squares; 'toeplitz' if use FFT */			
 			if (invmode[0]=='l' && !sf_getint("niter",&niter)) niter=100;
 			/* number of CGLS iterations */
 			if (!sf_getfloat("eps",&eps)) eps=0.01;
 			/* regularization parameter */
-		}
+		} 
+		    
 
 		sf_putint(  out,"n2",np);
 		sf_putfloat(out,"d2",dp);
