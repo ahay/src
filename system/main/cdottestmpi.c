@@ -139,7 +139,7 @@ int main(int argc, char* argv[])
 	if (dsiz < dbuf) dbuf=dsiz;
 
 	for (id=0; id < (int) dbuf; id++) {
-	    buf[id] = sf_dcmplx(genrand_real1 (),genrand_real1 ());
+	    buf[id] = sf_cmplx(genrand_real1 (),genrand_real1 ());
 	}
 
 	sf_complexwrite(buf,dbuf,drsf);
