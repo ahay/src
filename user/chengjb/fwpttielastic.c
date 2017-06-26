@@ -76,7 +76,7 @@ void fwpttielastic(float dt2, float** p1,float** p2,float** p3, float** q1,float
 	   {
                int jm=j-_m;
 
-               float vp2,vs2,ep,de,vpx2,vpn2,coef, the;
+               float vp2,vs2,ep,de,vpx2,vpn2,the;
                float sinthe,costhe,cos2,sin2,sin2a,cos_sin;
                float px,pxz,qxz,qx,px1, qxz1, qx1, pxz1,hpx,hqx,hpz,hqz;
 
@@ -95,7 +95,7 @@ void fwpttielastic(float dt2, float** p1,float** p2,float** p3, float** q1,float
 
 	       vpx2=vp2*ep;
 	       vpn2=vp2*de;
-               coef=sqrt((vp2-vs2)*(vpn2-vs2));
+               /* coef=sqrt((vp2-vs2)*(vpn2-vs2)); */
 
 		pxz=0;
 		qxz=0;
