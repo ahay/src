@@ -66,9 +66,8 @@ void nfconvf_lop (bool adj, bool add,
 		  int nx, int ny, sf_complex *xx, sf_complex *yy) 
 /*< linear operator nonstationary convolution >*/
 {    
-    int itau, it,lag;
-    
-    lag=na2;
+    int itau, it;
+
     sf_cadjnull (adj, add, nx, ny, xx, yy);
 
     /* nonstationary convolution*/
@@ -96,9 +95,8 @@ void nfconvb_lop (bool adj, bool add,
 		  int nx, int ny, sf_complex *xx, sf_complex *yy) 
 /*< linear operator nonstationary convolution >*/
 {    
-    int itau, it,lag;
-   
-    lag=na2;
+    int itau, it;
+
     sf_cadjnull (adj, add, nx, ny, xx, yy);
 
     /* nonstationary convolution*/

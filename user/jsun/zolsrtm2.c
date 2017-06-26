@@ -89,26 +89,20 @@ void lrexp_close(void)
 void lrexp(sf_complex *img, sf_complex *dat, bool adj, sf_complex **lt, sf_complex **rt, geopar geop, sf_complex ***wvfld)
 /*< zero-offset exploding reflector modeling/migration >*/
 {
-    int it, nt, ix, nx, nx2, iz, nz, nz2, nzx2, gpz, wfnt, wfit, snap;
+    int it, nt, ix, nx, nx2, iz, nz, nz2, nzx2, gpz, wfit, snap;
     int im, i, j, m2, ik, nk, pad1;
-    float dt, dx, dz, ox;
     sf_complex *curr, **wave, *cwave, *cwavem, c;
     sf_complex *currm;
     bool verb;
 
     nx  = geop->nx;
     nz  = geop->nz;
-    dx  = geop->dx;
-    dz  = geop->dz;
-    ox  = geop->ox;
     gpz = geop->gpz;
     nt  = geop->nt;
-    dt  = geop->dt;
     snap= geop->snap;
     nzx2= geop->nzx2;
     if(adj) m2 = geop->m2b;
     else m2 = geop->m2;
-    wfnt= geop->wfnt;
     pad1= geop->pad1;
     verb= geop->verb;
 

@@ -29,13 +29,13 @@ int main(int argc, char * argv[])
 
     sf_file inA, outC, inB;
     int an1, an2, bn1, bn2;
-    int im, in, ik, m, n, k;
+    int im, in, ik, m, k;
 #ifdef _OPENMP
     int nth;
 #endif
     
     sf_complex **a, **b, **c;
-    sf_axis aax1, aax2, bax1, bax2, cax1, cax2;
+    sf_axis aax1, bax2, cax1, cax2;
     
     /* init RSF */
     sf_init (argc, argv);
@@ -57,8 +57,6 @@ int main(int argc, char * argv[])
     if(an2 != bn1) sf_error("Input do not match!");
 
     aax1 = sf_iaxa(inA, 1);
-    aax2 = sf_iaxa(inA, 2);
-    bax1 = sf_iaxa(inB, 1);
     bax2 = sf_iaxa(inB, 2);
     
     cax1 = aax1;
@@ -71,7 +69,6 @@ int main(int argc, char * argv[])
     sf_complexread(b[0], bn1*bn2, inB);
 
     m = an1;
-    n = an2;
     k = bn2;
     
 #ifdef _OPENMP
