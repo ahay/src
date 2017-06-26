@@ -60,9 +60,9 @@ typedef struct Geopar {
 int lrexp(sf_complex **img, sf_complex **dat, bool adj, sf_complex **lt, sf_complex **rt, geopar geop, sf_complex ***wvfld)
 /*< zero-offset exploding reflector modeling/migration >*/
 {
-    int it, nt, ix, nx, nx2, iz, nz, nz2, nzx2, gpz, wfnt, wfit, snap;
+    int it, nt, ix, nx, nx2, iz, nz, nz2, nzx2, gpz, wfit, snap;
     int im, i, j, m2, ik, nk, pad1;
-    float dt, dx, dz;
+    float dx, dz;
     sf_complex *curr, **wave, *cwave, *cwavem, c;
     sf_complex *currm;
     bool verb;
@@ -78,9 +78,7 @@ int lrexp(sf_complex **img, sf_complex **dat, bool adj, sf_complex **lt, sf_comp
     dz  = geop->dz;
     gpz = geop->gpz;
     nt  = geop->nt;
-    dt  = geop->dt;
     snap= geop->snap;
-    wfnt= geop->wfnt;
     pad1= geop->pad1;
     verb= geop->verb;
     nzx2= geop->nzx2;
@@ -115,6 +113,8 @@ int lrexp(sf_complex **img, sf_complex **dat, bool adj, sf_complex **lt, sf_comp
                 ktp[iz+ix*nz2] = ktmp;
             }
         }
+    } else {
+	ktp = NULL;
     }
 
     curr = sf_complexalloc(nzx2);

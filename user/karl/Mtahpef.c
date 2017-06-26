@@ -111,14 +111,14 @@ main(int argc, char **argv)
     float **mixacorr=NULL;	/* mixing array				*/
     float *temp=NULL;	/* temporary array			*/
 
-    int itr, ntr;
+    int itr; /* ntr; */
     float *trace, *trace2;
     sf_file inp, out, wien;
         
 
     int n1_headers;
-    char* header_format=NULL;
-    sf_datatype typehead;
+/*    char* header_format=NULL; */
+/*    sf_datatype typehead; */
     float* fheader=NULL;
     int verbose;
 
@@ -144,15 +144,15 @@ main(int argc, char **argv)
     if(!sf_histint(inp,"n1_headers",&n1_headers)) 
       sf_error("input data does not define n1_headers");
 
-    header_format=sf_histstring(inp,"header_format");
-    if(strcmp (header_format,"native_int")==0) typehead=SF_INT;
-    else                                       typehead=SF_FLOAT;
+/*    header_format=sf_histstring(inp,"header_format");
+      if(strcmp (header_format,"native_int")==0) typehead=SF_INT;
+      else                                       typehead=SF_FLOAT; */
 
     if(verbose>0)fprintf(stderr,"allocate headers.  n1_headers=%d\n",n1_headers);
     fheader = sf_floatalloc(n1_headers);
 
     if (!sf_histfloat(inp,"d1",&dt)) sf_error("No d1= in input");
-    ntr = sf_leftsize(inp,1);
+    /*   ntr = sf_leftsize(inp,1); */
 
     if (!sf_getfloat("minlag",&minlag)) {
 	/* first lag of prediction filter (sec) */

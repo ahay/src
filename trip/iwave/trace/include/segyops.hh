@@ -144,7 +144,7 @@ namespace TSOpt {
         void set(float _s, float _tm, float _w, int _type = 0, 
                  float _taper_min =0.0f , float _taper_max = numeric_limits<float>::max(), 
                  float _width=0.0f, int _tapertype=0, float _tw=0.0f,
-                 float _sxmin=0.0f, int _sxmax=numeric_limits<float>::max(),
+                 float _sxmin=0.0f, float _sxmax=numeric_limits<float>::max(),
                  float _sxw=0.0f)
         {
             mute_type = _type;
