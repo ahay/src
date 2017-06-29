@@ -42,9 +42,11 @@ static int gnx, gnz;
 static float gdx, gdz, gox, goz;
 static FILE * outfile;
 
+struct point sourcePosition;
+
 void gridding_init(int gnx1, int gnz1,
 		   float gdx1, float gdz1, float gox1, float goz1,
-		   FILE * outfile1)
+		   FILE * outfile1, struct point  sourceOrigin)
 /*< initialize >*/
 {
     gnx = gnx1;
@@ -52,6 +54,7 @@ void gridding_init(int gnx1, int gnz1,
     gdx = gdx1; gdz = gdz1;
     gox = gox1; goz = goz1;
     outfile = outfile1;
+    sourcePosition =sourceOrigin;
 }
 
 void gridding (struct heptagon *cube, int nr, struct grid *out, float DSmax, float tim, float *vel, int first)
@@ -65,6 +68,10 @@ void gridding (struct heptagon *cube, int nr, struct grid *out, float DSmax, flo
 * out->dirx X cosine of the ray direction
 * out->dirz Z cosine of the ray direction
 * out->ampl	Contains amplitude table
+* out->srcx X cosine of the ray direction at source
+* out->srcz Z cosine of the ray direction at source
+* out->invgeo is the inverse geometrical spreading (i.e R in homogenous medium)
+*
 * out->flag	Tells which receivers have or have not time and
 *		amplitude values. >*/
 {
@@ -324,37 +331,90 @@ static void interp_rec(int *rec, struct grid *out, int num_rec,
 	wfront_ptr = ptinterp (c0.x0, pt0, pt1, c3.x0, s);
 	vmed =  velo (ptr.x, ptr.z, vel);
 	vmed += velo (wfront_ptr.x ,wfront_ptr.z , vel);
+
 	ampl =realinterp(c0.x0,pt0,pt1,c3.x0,c0.ampl,c1.ampl,c2.ampl,c3.ampl,s);
 	ampl *= sqrt(dist(pt0, pt1)/ (d1+d2));
 
 	// Added direction cosines - note there might be better ways to do this
-	float angle = realinterp(c0.x0,pt0,pt1,c3.x0,c0.angle,c1.angle,c2.angle,c3.angle,1.);
+	float angle = realinterp(c0.x0,pt0,pt1,c3.x0,c0.angle,c1.angle,c2.angle,c3.angle,s);
 	float dirx = sin(angle);
 	float dirz = cos(angle);
 
+	// Direction cosines at source
+	float srcAng = realinterp(c0.x0,pt0,pt1,c3.x0,c0.srcAng,c1.srcAng,c2.srcAng,c3.srcAng,s);
+	float srcx = sin(srcAng);
+	float srcz = cos(srcAng);
+
+
+	// The amplitude term is just computin ray path length
+	//
+	// Compute Proper geometrical spreading - dOmega/dA where Omega = angle at source, dA - arc length
+	//
+
+	// we have angles in range 0-2pi
+	float minth = SF_MIN(c1.srcAng,c2.srcAng);
+	float maxth = SF_MAX(c1.srcAng,c2.srcAng);
+	float dt1 =  maxth-minth; 							// standard angle difference
+	float dt2 =  2.*SF_PI-dt1;							// angle difference assuming wrap around
+	float dTheta = SF_MIN( dt1,  dt2 );					// Shortest angle difference between the two rays
+	float dArc = d1+d2;									// arc length at receiver
+
+	float offset = fabs(wfront_ptr.x-sourcePosition.x); // Offset from the source position
+
+	// Compute wavefront solid angle at source
+	float dOmega;
+	float dArea;
+	if((SF_PI >= minth && SF_PI <= maxth)  || dTheta==dt2){
+		// If vertical  - treat as cap
+		dOmega=2.*SF_PI*(1.-cos(dTheta/2.));
+		dArea=SF_PI*(dArc/2.)*(dArc/2.);
+	}else{
+		// treat as rectangle going around the sphere.
+		float c1 = minth;
+		if(minth>SF_PI) c1 = 2.*SF_PI - minth;
+		float c2 = maxth;
+		if(maxth>SF_PI) c2 = 2.*SF_PI - maxth;
+		float colatN = SF_MIN(c1,c2);
+		float colatS =  SF_MAX(c1,c2);
+		dOmega=(cos(colatN)-cos(colatS))*2*SF_PI;
+		dArea = dArc*2*SF_PI*offset;
+	}
+
+	// We now save (Note - in theory this is = R = ampl in a homogenous medium)
+	float invGeoSpread=sqrt(dArea/dOmega);
+	//float invGeoSpread=dArea/dOmega;
+
 	if(first) {
 	    if(out->flag[rec[ii]] > 1) {
+	    	float told=out->time[rec[ii]];
 	    	out->time[rec[ii]] = SF_MIN(out->time[rec[ii]],2.* dist(ptr,wfront_ptr) / vmed + tim);
+	    	out->ampl[rec[ii]] = SF_MIN(out->ampl[rec[ii]], ampl);
 
-	    	// move this to inside the if statement - only replaces if time is updated
-	    	//out->ampl[rec[ii]] = SF_MIN(out->ampl[rec[ii]], ampl);
-
-	    	if(out->time[rec[ii]] != out->time[rec[ii]]){
-	    		out->ampl[rec[ii]] = ampl;
+	    	if(out->time[rec[ii]] != told){
+	    		//out->ampl[rec[ii]] = ampl;
 	    		out->dirx[rec[ii]] = dirx;
 		    	out->dirz[rec[ii]] = dirz;
+	    		out->srcx[rec[ii]] = srcx;
+		    	out->srcz[rec[ii]] = srcz;
+		    	out->invgeo[rec[ii]] = invGeoSpread;
 	    	}
 		} else {
 	    	out->time[rec[ii]] = 2.* dist(ptr,wfront_ptr) / vmed + tim;
 	    	out->ampl[rec[ii]] = ampl;
 		    out->dirx[rec[ii]] = dirx;
 		    out->dirz[rec[ii]] = dirz;
-	    }
+		    out->srcx[rec[ii]] = srcx;
+		    out->srcz[rec[ii]] = srcz;
+	    	out->invgeo[rec[ii]] = invGeoSpread;
+		}
 	} else {
 	    out->time[rec[ii]] = 2. * dist(ptr, wfront_ptr) / vmed + tim;
 	    out->ampl[rec[ii]] = ampl;
 	    out->dirx[rec[ii]] = dirx;
 	    out->dirz[rec[ii]] = dirz;
+	    out->srcx[rec[ii]] = srcx;
+	    out->srcz[rec[ii]] = srcz;
+    	out->invgeo[rec[ii]] = invGeoSpread;
 	}
     }
     return;

@@ -34,6 +34,7 @@ struct heptagon {
     float ampl;
     struct point x1;
     char cf;
+    float srcAng;
 };
 /*^*/
 
@@ -42,6 +43,9 @@ struct grid {
     float *time;
     float *dirx;
     float *dirz;
+    float *srcx;
+    float *srcz;
+    float *invgeo;
     int *flag;
 };
 /*^*/

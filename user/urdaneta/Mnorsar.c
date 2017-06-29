@@ -66,7 +66,7 @@ int main(int argc, char* argv[])
     struct point *pos;
     struct heptagon *cube;
     struct grid *out;
-    sf_file inp, ampl, time,dirx,dirz;
+    sf_file inp, ampl, time,dirx,dirz,srcx,srcz,invgeo;
 
     sf_init(argc,argv);
     inp = sf_input("in");
@@ -167,6 +167,39 @@ int main(int argc, char* argv[])
     sf_putfloat(dirz,"o2",goox);
     sf_putfloat(dirz,"o3",os);
 
+    srcx = sf_output("srcx");
+    sf_putint(srcx,"n1",gnz);
+    sf_putint(srcx,"n2",gnx);
+    sf_putint(srcx,"n3",ns);
+    sf_putfloat(srcx,"d1",gdz);
+    sf_putfloat(srcx,"d2",gdx);
+    sf_putfloat(srcx,"d3",ds);
+    sf_putfloat(srcx,"o1",goz);
+    sf_putfloat(srcx,"o2",goox);
+    sf_putfloat(srcx,"o3",os);
+
+    srcz = sf_output("srcz");
+    sf_putint(srcz,"n1",gnz);
+    sf_putint(srcz,"n2",gnx);
+    sf_putint(srcz,"n3",ns);
+    sf_putfloat(srcz,"d1",gdz);
+    sf_putfloat(srcz,"d2",gdx);
+    sf_putfloat(srcz,"d3",ds);
+    sf_putfloat(srcz,"o1",goz);
+    sf_putfloat(srcz,"o2",goox);
+    sf_putfloat(srcz,"o3",os);
+
+    invgeo = sf_output("invgeo");
+    sf_putint(invgeo,"n1",gnz);
+    sf_putint(invgeo,"n2",gnx);
+    sf_putint(invgeo,"n3",ns);
+    sf_putfloat(invgeo,"d1",gdz);
+    sf_putfloat(invgeo,"d2",gdx);
+    sf_putfloat(invgeo,"d3",ds);
+    sf_putfloat(invgeo,"o1",goz);
+    sf_putfloat(invgeo,"o2",goox);
+    sf_putfloat(invgeo,"o3",os);
+
 
 /* READ VELOCITY MODEL */
     vel = sf_floatalloc(nx*nz+2);
@@ -179,6 +212,9 @@ int main(int argc, char* argv[])
     out->ampl = sf_floatalloc (gnx*gnz);
     out->dirx = sf_floatalloc (gnx*gnz);
     out->dirz = sf_floatalloc (gnx*gnz);
+    out->srcx = sf_floatalloc (gnx*gnz);
+    out->srcz = sf_floatalloc (gnx*gnz);
+    out->invgeo = sf_floatalloc (gnx*gnz);
     out->flag = sf_intalloc (gnx*gnz);
 
     T = 1. / freq;
@@ -225,7 +261,7 @@ int main(int argc, char* argv[])
 
 	gridding_init(gnx,gnz,
 		      gdx,gdz,gox,goz,
-		      outfile);
+		      outfile,pos[ii]);
 
 /*	run while the wavefront is not too small 		*/
 	while (nr > 4) {
@@ -321,6 +357,9 @@ int main(int argc, char* argv[])
 	sf_floatwrite(out->ampl, gnx * gnz, ampl);  
 	sf_floatwrite(out->dirx, gnx * gnz, dirx);
 	sf_floatwrite(out->dirz, gnx * gnz, dirz);
+	sf_floatwrite(out->srcx, gnx * gnz, srcx);
+	sf_floatwrite(out->srcz, gnx * gnz, srcz);
+	sf_floatwrite(out->invgeo, gnx * gnz, invgeo);
     }
 
     if(pr||prcube) fclose(outfile);
