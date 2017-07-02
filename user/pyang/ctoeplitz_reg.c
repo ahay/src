@@ -25,7 +25,6 @@
 */
 
 #include <rsf.h>
-#include <complex.h>
 
 #include "ctoeplitz_reg.h"
 
