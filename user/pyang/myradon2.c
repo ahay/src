@@ -34,7 +34,6 @@ Note: I borrowed a lot from /system/seismic/radon.c+Mradon.c.
 
 #include <rsf.h>
 #include <time.h>
-#include <complex.h>
 
 #ifdef _OPENMP
 #include <omp.h>

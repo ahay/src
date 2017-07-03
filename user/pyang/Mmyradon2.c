@@ -31,7 +31,6 @@ Note: I borrowed a lot from /system/seismic/radon+Mradon.c. The distinction:
 */
 #include <rsf.h>
 #include <time.h>
-#include <complex.h>
 #include <fftw3.h>
 
 #ifdef _OPENMP
