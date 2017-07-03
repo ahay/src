@@ -57,7 +57,10 @@ void ceig(int niter      /* number of iterations */,
 	  sf_complex *e  /* [n] eigenvalues */)
 /*< find eigenvalues >*/
 {
-    int iter, j, k, info;
+    int iter, j, k;
+#ifdef SF_HAS_LAPACK
+    int info;
+#endif    
     float s2,s0=1.;
 
     if (niter > 0) { /* Jacobi iterations */
