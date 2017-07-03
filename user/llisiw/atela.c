@@ -170,6 +170,7 @@ int atela_step (int dim      /* dimensionality */,
 	qz[1] = qy[0] = 0.5*(qz[1]+qy[0]);
 
 	/* factor 2 in front to compensate for vgrad */
+#ifdef SF_HAS_COMPLEX_H  	
 	M[0][0] += 2.*h*(qz[0]*N[0][0]+qz[1]*N[0][1]);
 	M[0][1] += 2.*h*(qy[0]*N[0][0]+qy[1]*N[0][1]);
 	M[1][0] += 2.*h*(qz[0]*N[1][0]+qz[1]*N[1][0]);
@@ -179,6 +180,17 @@ int atela_step (int dim      /* dimensionality */,
 	N[0][1] += h*M[0][1];
 	N[1][0] += h*M[1][0];
 	N[1][1] += h*M[1][1];
+#else
+	M[0][0] = sf_cadd(M[0][0],sf_crmul(sf_cadd(sf_crmul(N[0][0],qz[0]),sf_crmul(N[0][1],qz[1])),2.*h));
+	M[0][1] = sf_cadd(M[0][1],sf_crmul(sf_cadd(sf_crmul(N[0][0],qy[0]),sf_crmul(N[0][1],qy[1])),2.*h));
+	M[1][0] = sf_cadd(M[1][0],sf_crmul(sf_cadd(sf_crmul(N[1][0],qz[0]),sf_crmul(N[1][0],qz[1])),2.*h));
+	M[1][1] = sf_cadd(M[1][1],sf_crmul(sf_cadd(sf_crmul(N[1][0],qy[0]),sf_crmul(N[1][1],qy[1])),2.*h));
+
+	N[0][0] = sf_cadd(N[0][0],sf_crmul(M[0][0],h));
+	N[0][1] = sf_cadd(N[0][1],sf_crmul(M[0][1],h));
+	N[1][0] = sf_cadd(N[1][0],sf_crmul(M[1][0],h));
+	N[1][1] = sf_cadd(N[1][1],sf_crmul(M[1][1],h));
+#endif
 
 	if (dynaM != NULL) {
 	    dynaM[it+1][0][0] = M[0][0]; dynaM[it+1][0][1] = M[0][1]; dynaM[it+1][1][0] = M[1][0]; dynaM[it+1][1][1] = M[1][1];
