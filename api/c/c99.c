@@ -213,6 +213,10 @@ float atan2f(float x, float y)
 /*< float atan2 >*/
 { return (float) atan2(x,y);}
 
+float log2f(float x) 
+/*< float log2 >*/
+{ return (float) log2(x);}
+
 float coshf(float x) 
 /*< float cosh >*/
 { return (float) cosh(x);}
