@@ -318,7 +318,7 @@ int main(int argc, char* argv[])
 	}
 	if(indx_of_keys[iaxis]>=0){
 	  if(typehead==SF_FLOAT)fheader[indx_of_keys[iaxis]]=tracecoord[iaxis];
-	  else iheader[indx_of_keys[iaxis]]=round(tracecoord[iaxis]);
+	  else iheader[indx_of_keys[iaxis]]=SF_NINT(tracecoord[iaxis]);
 	}
       }
       /* load ns and dt headers */
@@ -340,7 +340,7 @@ int main(int argc, char* argv[])
 	  fheader[indx_of_dt]=d_in[1]*1000000.0; 
 	  /* fprintf(stderr,"fheader[indx_of_dt]=%e\n",fheader[indx_of_dt]); */
 	} else {
-	  iheader[indx_of_dt]=round(d_in[1]*1000000.0); 
+	  iheader[indx_of_dt]=SF_NINT(d_in[1]*1000000.0); 
 	  /* fprintf(stderr,"iheader[indx_of_dt]=%d\n",iheader[indx_of_dt]); */
 	}
       }
