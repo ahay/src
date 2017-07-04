@@ -1,7 +1,10 @@
 /*Gaussian weighting for ZO 3D case*/
 #include <rsf.h>
 #include <math.h>
+
+#ifdef SF_HAS_COMPLEX_H  
 #include "Faddeeva.h"
+#endif
 
 //int pi(float * data, int adj);
 
@@ -85,10 +88,13 @@ int main(int argc, char* argv[])
 			
 		//integral coefficient	
 		coeff = cexp(-beta*v_0*v_0)*cexp(-beta*beta*v_0*v_0/(root*root))/root;
-			
+#ifdef SF_HAS_COMPLEX_H  			
 		temp1 = coeff*Faddeeva_erfi(u_a,0);
 		temp2 = coeff*Faddeeva_erfi(u_b,0);
-			
+#else
+		temp1 = temp2 = 0;
+		sf_error("No C99 complex support");
+#endif			
 		z = temp2 - temp1;
 
 		z = ((double complex)intrace[i1])*z;
