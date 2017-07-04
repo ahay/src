@@ -221,9 +221,9 @@ void wexssr(
 #else
         LOOP(
               if(adj)
-                ssf->pk[ompith][iy][ix] = tmp[iy][ix];
+                ssr->pk[ompith][iy][ix] = tmp[iy][ix];
               else
-                ssf->pk[ompith][iy][ix] = sf_crmul(tmp[iy][ix],ssr->wt[jr][iz+flg][iy][ix]);
+                ssr->pk[ompith][iy][ix] = sf_crmul(tmp[iy][ix],ssr->wt[jr][iz+flg][iy][ix]);
             );
 #endif
 
