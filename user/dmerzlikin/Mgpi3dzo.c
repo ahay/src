@@ -2,9 +2,7 @@
 #include <rsf.h>
 #include <math.h>
 
-#ifdef SF_HAS_COMPLEX_H  
 #include "Faddeeva.h"
-#endif
 
 //int pi(float * data, int adj);
 
