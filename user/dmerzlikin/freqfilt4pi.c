@@ -23,7 +23,6 @@
 /*^*/
 
 #include "freqfilt4pi.h"
-#include "Faddeeva.h"
 
 static int nfft, nw, m1, m2;
 static kiss_fft_cpx *ctrace, *ctrace2, **fft;
