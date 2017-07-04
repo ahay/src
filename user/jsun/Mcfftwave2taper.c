@@ -215,10 +215,11 @@ int main(int argc, char* argv[])
 		j = iz+ix*nz2; /* padded grid */
 #ifdef SF_HAS_COMPLEX_H
 		c = ww[it] * rr[i]; // source term
+		if (sub) c += curr[j];
 #else
 		c = sf_crmul(ww[it], rr[i]); // source term
+		if (sub) c = sf_cadd(c,curr[j]);
 #endif
-		if (sub) c += curr[j];
 		if (!os) {
 		  old = curr[j];
 #ifdef SF_HAS_COMPLEX_H
@@ -232,7 +233,7 @@ int main(int argc, char* argv[])
 #ifdef SF_HAS_COMPLEX_H
 		    c += lt[im][i]*wave[im][j];
 #else
-		    c += sf_cmul(lt[im][i], wave[im][j]);
+		    c = sf_cadd(c,sf_cmul(lt[im][i], wave[im][j]));
 #endif
 		}
 
