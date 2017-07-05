@@ -300,17 +300,27 @@ void cgmres (const sf_complex *f                                       /* data *
 		} else {
 		    /* c [j] = rr / rho, s [j] = hh / rho, h [j * m + j] = rho */
 		    c [j] = tmpf / rho; /* new givens rotation matrix that zeros h_j+1,j */
+#ifdef SF_HAS_COMPLEX_H			    
 		    s [j] = hh*tau / rho;
+#else
+		    s [j] = sf_crmul(tau,hh/rho);
+#endif
 		}
 
 	    } else { /*Givens rotation*/
 
 		c [j] = tmpf/rho;
+#ifdef SF_HAS_COMPLEX_H			
 		s [j] = c [j] * (hh/rr);
-
+#else
+		s [j] = sf_cdiv(sf_cmplx(c [j] * hh,0.0f),rr);
+#endif
 	    }
-
+#ifdef SF_HAS_COMPLEX_H	
 	    h [j * m + j] = c[j]*rr + conjf(s[j]) * hh; /* resultant (after rotated) element */
+#else
+	    h [j * m + j] = sf_cadd(sf_cmul(c[j],rr),sf_crmul(conjf(s[j]),hh));
+#endif
 
 	    /* g is givens rotation iteratively applied to ||r_0||e_1 */
 	    g0 = g [j];
