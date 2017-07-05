@@ -42,11 +42,11 @@ my_cscal (int m, float a, sf_complex *x)
 
   for (i = 0; i < m; i ++)
     {
-      //#ifdef SF_HAS_COMPLEX_H
+#ifdef SF_HAS_COMPLEX_H
       x[i] = x[i] * a;
-      //#else
-      //      x[i] = sf_crmul(x[i], a);
-      //#end
+#else
+      x[i] = sf_crmul(x[i], a);
+#endif
     }
 
 }
@@ -60,11 +60,11 @@ my_caxpy (int m, float a, const sf_complex *x, sf_complex *y)
 
   for (i = 0; i < m; i ++)
     {
-      //#ifdef SF_HAS_COMPLEX_H
+#ifdef SF_HAS_COMPLEX_H
       y[i] += x[i] * a;
-      //#else
-      //      y[i] = sf_cadd(y[i], sf_crmul(x[i], a));
-      //#end
+#else
+      y[i] = sf_cadd(y[i], sf_crmul(x[i], a));
+#endif
     }
 
 }
@@ -80,7 +80,11 @@ my_cdotc (int m,
   
   res = sf_cmplx(0.0f, 0.0f);
   for (i = 0; i < m; i ++) {
+#ifdef SF_HAS_COMPLEX_H
     res += conjf(a[i]) * b[i];
+#else
+    res = sf_cadd(res,sf_cmul(sf_conjf(a[i]),b[i]));
+#endif
   }
   return res;
 }
@@ -134,17 +138,17 @@ back_sub (int m, int nn,
       y [j] = g [j];
       for (i = j + 1; i < m; i ++)
 	{
-	  //#ifdef SF_HAS_COMPLEX_H
+#ifdef SF_HAS_COMPLEX_H
 	  y [j] -= r [j * nn + i] * y [i];
-	  //#else
-	  //	  y [j] = sf_csub(y [j] , sf_cmul(r [j * nn + i] , y [i]));
-	  //#endif
+#else
+	  y [j] = sf_csub(y [j] , sf_cmul(r [j * nn + i] , y [i]));
+#endif
 	}
-      //#ifdef SF_HAS_COMPLEX_H
+#ifdef SF_HAS_COMPLEX_H
       y [j] /= r [j * nn + j]; /* what about division by zero? */
-      //#else
-      //      y [j] = sf_cdiv(y [j] , r [j * nn + j]);
-      //#endif
+#else
+      y [j] = sf_cdiv(y [j] , r [j * nn + j]);
+#endif
     }
 }
 
