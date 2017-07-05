@@ -309,7 +309,11 @@ void gradient_av(float *x, float *fcost, float *grad)
 	
 	/* misfit reduction */
 	if(cpuid==0){
-		sendbuf=MPI_IN_PLACE;
+#if MPI_VERSION >= 2
+	    sendbuf=MPI_IN_PLACE;
+#else /* will fail */
+	    sendbuf=NULL;
+#endif
 		recvbuf=fcost;
 	}else{
 		sendbuf=fcost;
@@ -320,7 +324,11 @@ void gradient_av(float *x, float *fcost, float *grad)
 
 	/* gradient reduction */
 	if(cpuid==0){
+#if MPI_VERSION >= 2	    
 		sendbuf=MPI_IN_PLACE;
+#else /* will fail */
+		sendbuf=NULL;
+#endif
 		recvbuf=grad;
 	}else{
 		sendbuf=grad;
@@ -547,7 +555,11 @@ void gradient_v(float *x, float *fcost, float *grad)
 	
 	/* misfit reduction */
 	if(cpuid==0){
+#if MPI_VERSION >= 2	    
 		sendbuf=MPI_IN_PLACE;
+#else /* will fail */
+		sendbuf=NULL;
+#endif
 		recvbuf=fcost;
 	}else{
 		sendbuf=fcost;
@@ -558,7 +570,11 @@ void gradient_v(float *x, float *fcost, float *grad)
 
 	/* gradient reduction */
 	if(cpuid==0){
+#if MPI_VERSION >= 2		    
 		sendbuf=MPI_IN_PLACE;
+#else /* will fail */
+		sendbuf=NULL;
+#endif		
 		recvbuf=grad;
 	}else{
 		sendbuf=grad;
@@ -1074,7 +1090,11 @@ void gradient_pas_av(float *x, float *fcost, float *grad)
 
 	/* misfit reduction */
 	if(cpuid==0){
+#if MPI_VERSION >= 2
 		sendbuf=MPI_IN_PLACE;
+#else /* will fail */
+		sendbuf=NULL;
+#endif		
 		recvbuf=fcost;
 	}else{
 		sendbuf=fcost;
@@ -1085,7 +1105,11 @@ void gradient_pas_av(float *x, float *fcost, float *grad)
 
 	/* gradient reduction */
 	if(cpuid==0){
+#if MPI_VERSION >= 2	    
 		sendbuf=MPI_IN_PLACE;
+#else /* will fail */
+		sendbuf=NULL;
+#endif
 		recvbuf=grad;
 	}else{
 		sendbuf=grad;
