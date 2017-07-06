@@ -121,6 +121,7 @@ static int sample(vector<int>& rs, vector<int>& cs, ZpxNumMat& res)
 		break;
 		}
 		case 2: // Acoustic approximation
+		default:
 		{
 			z = wz*z*z;
 			x = wx*x*x;
