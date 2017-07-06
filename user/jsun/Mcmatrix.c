@@ -91,7 +91,7 @@ int main(int argc, char * argv[])
 #ifdef SF_HAS_COMPLEX_H
 		c[ik][im]+=a[in][im]*b[ik][in];
 #else
-		c[ik][im]+=sf_cmul(a[in][im],b[ik][in]);
+		c[ik][im]=sf_cadd(c[ik][im],sf_cmul(a[in][im],b[ik][in]));
 #endif
 	    }
 	}
