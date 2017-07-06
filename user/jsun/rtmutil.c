@@ -142,7 +142,7 @@ void lrk3d_apply(sf_complex *uo,
 #ifdef SF_HAS_COMPLEX_H
                     c += (adj? conjf(lrk->lt[im][i]):lrk->lt[im][i])*waves[im][i];
 #else
-                    c += sf_cmul((adj? conjf(lrk->lt[im][i]):lrk->lt[im][i]),waves[im][i]);
+                    c = sf_cadd(c,sf_cmul((adj? conjf(lrk->lt[im][i]):lrk->lt[im][i]),waves[im][i]));
 #endif
                 }
                 uo[i] = c;
@@ -247,7 +247,7 @@ void lrk3d_apply2(sf_complex *uo,
 #ifdef SF_HAS_COMPLEX_H
                         c += lrk->lt[im][i]*waves[im][i];
 #else
-                        c += sf_cmul(lrk->lt[im][i],waves[im][i]);
+                        c = sf_cadd(c,sf_cmul(lrk->lt[im][i],waves[im][i]));
 #endif
                     }
                     uo[i] = c;

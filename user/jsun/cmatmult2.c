@@ -44,7 +44,7 @@ void cmatmult2_lop (bool adj, bool add,
     }
 }
 
-void cmatmult2 (int nx, const sf_complex* x, sf_complex* y, void* mat) 
+void cmatmult2 (int nx, sf_complex* x, sf_complex* y, void* mat) 
 /*< square linear operator, no adjoint >*/
 {
     sf_complex** A;

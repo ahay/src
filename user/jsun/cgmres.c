@@ -357,7 +357,11 @@ void cgmres (const sf_complex *f                                       /* data *
 	{
 	    for (k = 0; k < j/*m*/; k ++)
 	    {
+#ifdef SF_HAS_COMPLEX_H			
 		x [i] += v [k * n + i] * s [k];
+#else
+		x [i] = sf_cadd(x [i],sf_cmul(v [k * n + i],s [k]));
+#endif
 	    }
 	}
 
