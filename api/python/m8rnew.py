@@ -583,6 +583,11 @@ else:
 
             self.__create_variable_dictionary(self.header)
 
+            if end_of_file_reading_header:
+                self.f.close()  # close input file is not stdin 
+                self.filename=self.string("in")
+                self.f = open(self.filename,'r')
+
             # need to remember fileloc of beginning of data
             try:
                 self.datastart=self.f.tell()
@@ -592,11 +597,6 @@ else:
                 self.pipe=True
             sys.stderr.write('self.datastart=%d\n'%self.datastart)
                  
-            if end_of_file_reading_header:
-                self.f.close()  # close input file is not stdin 
-                self.filename=self.string("in")
-                self.f = open(self.filename,'r')
-
             # kls example:
             # f = open("temp", "rb")  
             # f.seek(256, os.SEEK_SET)  
