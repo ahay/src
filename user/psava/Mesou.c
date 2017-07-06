@@ -18,14 +18,10 @@
 */
 
 #include <rsf.h>
-#ifdef _OPENMP
-#include <omp.h>
-#endif
 
 int main(int argc, char* argv[])
 {
     bool verb,zbnd;
-    int ompnth=1;
 
     /* I/O files */
     sf_file Fpre=NULL; /* pressure */
@@ -49,8 +45,6 @@ int main(int argc, char* argv[])
     /* init RSF */
     sf_init(argc,argv);
 
-    /* init OMP */
-    ompnth=omp_init();
     /*------------------------------------------------------------*/
 
     if(! sf_getbool("verb",&verb)) verb=false; /* verbosity flag */

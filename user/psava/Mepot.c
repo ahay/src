@@ -57,7 +57,9 @@ int main(int argc, char* argv[])
     sf_init(argc,argv);
 
     /* init OMP */
+#ifdef _OPENMP
     ompnth=omp_init();
+#endif
     /*------------------------------------------------------------*/
 
     if(! sf_getbool("verb",&verb)) verb=false; /*      verbosity flag */
@@ -145,8 +147,10 @@ int main(int argc, char* argv[])
 #endif
     /* loop over sources */
     for(is=0;is<ns;is++) {
+#ifdef _OPENMP
 	ompith=omp_get_thread_num();
-
+#endif
+	
 	/* initialize arrays */
 	for    (ix=0; ix<nx; ix++) {
 	    for(iz=0; iz<nz; iz++) {
