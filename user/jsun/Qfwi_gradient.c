@@ -821,7 +821,8 @@ void gradient_pas_init(sf_file Fdat, sf_file Fsrc, sf_file Fmwt, sf_mpi *mpipar,
             temp=fopen(filename, "rb");
             for(is=0; is<ns; is++){
                 fseeko(temp, is*nz*nx*nt*sizeof(float), SEEK_SET);
-                fread(wwt[0][0], sizeof(float), nz*nx*nt, temp);
+                if (nz*nx*nt != fread(wwt[0][0], sizeof(float), nz*nx*nt, temp))
+		    sf_error ("%s: trouble reading:",__FILE__);
                 sf_floatwrite(wwt[0][0], nz*nx*nt, Fsrc);
             }
             fclose(temp);

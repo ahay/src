@@ -258,7 +258,7 @@ void cgmres (const sf_complex *f                                       /* data *
 #ifdef SF_HAS_COMPLEX_H		      
 		v [(j + 1) * n + k] -= hv;
 #else
-		v [(j + 1) * n + k] = sf_sub(v [(j + 1) * n + k],hv);
+		v [(j + 1) * n + k] = sf_csub(v [(j + 1) * n + k],hv);
 #endif
 	    }
 
@@ -277,8 +277,13 @@ void cgmres (const sf_complex *f                                       /* data *
 	    {
 		r1 = h [ i      * m + j];
 		r2 = h [(i + 1) * m + j];
+#ifdef SF_HAS_COMPLEX_H			
 		h [ i      * m + j] =   c [i] * r1 + conjf(s [i]) * r2; /* Given's rotation */
 		h [(i + 1) * m + j] = - s [i] * r1 + c [i] * r2; /* Given's rotation */
+#else
+		h [ i      * m + j] = sf_cadd(sf_crmul(r1,c [i]),sf_cmul(conjf(s [i]),r2)); /* Given's rotation */
+		h [(i + 1) * m + j] = sf_cadd(sf_cmul(sf_cneg(s [i]),r1),sf_crmul(r2,c [i])); /* Given's rotation */
+#endif
 	    }
 	    rr = h [j * m + j]; /*h_j,j (complex)*/
 	    tmpf = cabsf(rr);
@@ -287,11 +292,21 @@ void cgmres (const sf_complex *f                                       /* data *
 	    if (1) { /*Fancier Givens rotation*/
 
 		if (tmpf < hh) {
-		    mu = rr/hh;
+#ifdef SF_HAS_COMPLEX_H			    
+		    mu = rr/hh;		    
 		    tau = conjf(mu)/cabsf(mu);
+#else
+		    mu = sf_crmul(rr,1.0f/hh);		    
+		    tau = sf_crmul(conjf(mu),1.0f/cabsf(mu));
+#endif
 		} else {
+#ifdef SF_HAS_COMPLEX_H			    
 		    mu = hh/rr;
 		    tau = mu/cabsf(mu);
+#else
+		    mu = sf_cdiv(sf_cmplx(hh,1.0f),rr);
+		    tau = sf_crmul(mu,1.0f/cabsf(mu));
+#endif
 		}
 	  
 		if (tmpf < 1e-10) {
@@ -319,13 +334,18 @@ void cgmres (const sf_complex *f                                       /* data *
 #ifdef SF_HAS_COMPLEX_H	
 	    h [j * m + j] = c[j]*rr + conjf(s[j]) * hh; /* resultant (after rotated) element */
 #else
-	    h [j * m + j] = sf_cadd(sf_cmul(c[j],rr),sf_crmul(conjf(s[j]),hh));
+	    h [j * m + j] = sf_cadd(sf_crmul(rr,c[j]),sf_crmul(conjf(s[j]),hh));
 #endif
 
 	    /* g is givens rotation iteratively applied to ||r_0||e_1 */
 	    g0 = g [j];
+#ifdef SF_HAS_COMPLEX_H		    
 	    g [j    ] =   c [j] * g0;  /* Given's rotation applied to b vector, and the other term is always zero */
 	    g [j + 1] = - s [j] * g0;  /* Given's rotation applied to b vector, and the other term is always zero */
+#else
+	    g [j    ] =   sf_crmul(g0,c [j]);  /* Given's rotation applied to b vector, and the other term is always zero */
+	    g [j + 1] = sf_cmul(sf_cneg(s [j]),g0);  /* Given's rotation applied to b vector, and the other term is always zero */
+#endif
 	}
 	/* 3. form the approximate solution */
 	/* solve for y_k, j=m, h is Hessenberg rotated to upper triangular matrix, and g is 
