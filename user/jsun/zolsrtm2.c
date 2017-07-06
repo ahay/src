@@ -160,7 +160,7 @@ void lrexp(sf_complex *img, sf_complex *dat, bool adj, sf_complex **lt, sf_compl
 #ifdef SF_HAS_COMPLEX_H
 		    c += wave[im][ik]*conjf(rt[ik][im]);
 #else
-		    c = sf_cadd(sf_cmul(wave[im][ik],conjf(rt[ik][im]))); //complex multiplies complex
+		    c = sf_cadd(c,sf_cmul(wave[im][ik],conjf(rt[ik][im]))); //complex multiplies complex
 #endif
 		}
 		cwave[ik] = c;
