@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfpow', 'sfbyte', 'sfgrey3', 'sfmul', 'sfstack', 'sfmath', 'sfgrey', 'sfsmooth', 'sfadd', 'sfcat', 'sfput', 'sfconjgrad', 'sfwindow', 'sfgraph', 'sfspray', 'sfcut', 'sfshot2cmp', 'sfvscan', 'sfpick', 'sfnmo', 'sfomp', 'sfdespike2']
-data=['data/alaska/rshots.HH']
-size= 1357803712

@@ -1,3 +1,0 @@
-uses=['sfsegyread', 'sfwindow', 'sfheadermath', 'sfmask', 'sfheaderwindow', 'sfdd', 'sfscale', 'sfvscan', 'sfgrey', 'sfmutter', 'sfpick', 'sfgraph', 'sfslice', 'sfdix', 'sfcat', 'sfheadersort', 'sfintbin3', 'sfspray', 'sfomp', 'sfnmo', 'sfstack', 'sfbyte', 'sfgrey3', 'sfmath', 'sfput', 'sftransp', 'sfbin', 'sfcostaper', 'sfcosft', 'sfgazdag', 'sfiwarp', 'sfstoltstretch']
-data=['http://s3.amazonaws.com/teapot/npr3_gathers.sgy']
-size= 37506676172
