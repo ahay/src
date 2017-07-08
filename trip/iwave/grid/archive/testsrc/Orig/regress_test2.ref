@@ -1,9 +1,0 @@
-GRIDPP Unit Test 2
-test of parser template
-parse, key=remark val=hello_there ret=1
-should be key=remark val=hello_there ret=1
-parse, key=stuff val= ret=0
-should be key=stuff val= ret=0
-
-(note: the return values are really boolean, and answer the
-question: was the query on the key successful?)
