@@ -305,12 +305,16 @@ strtoull(const char *ptr, const char **endptr, int base)
 #endif
 /*^*/
 
+#ifndef _sf_c99_h
+
 #ifdef sun
 extern int finite(double x);
 #define isfinite(x) finite(x)
 int isinf(double x) { return !finite(x) && x==x; }
 #endif
 /*^*/
+
+#ifndef _sf_c99_h
 
 #endif
 /*^*/
