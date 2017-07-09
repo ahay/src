@@ -93,8 +93,10 @@ void lu_decomposition (int nrows, /* number of rows of matrix to invert */
 	/* loop over rows to get implicit scaling information */
 	for (i=0; i<nrows; i++) {
 		big = 0.0;
-		for (j=0; j<nrows; j++)
-			if((temp=SF_ABS(matrix[i][j]))>big) big=temp;
+		for (j=0; j<nrows; j++) {
+		    temp=SF_ABS(matrix[i][j]);
+		    if(temp>big) big=temp;
+		}
 		if (big == 0.0) 
 			fprintf(stderr,"error, singular matrix in LU decomposition\n");
 		
