@@ -34,7 +34,6 @@ Note: I borrowed a lot from /system/seismic/radon.c+Mradon.c.
 
 #include <rsf.h>
 #include <time.h>
-#include <complex.h>
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -76,16 +75,26 @@ void myradon2_lop(bool adj, bool add, int nm, int nd, sf_complex *mm, sf_complex
 		for(ip=0; ip<np; ip++) // loop over slopes
 		{
 			sumc=sf_cmplx(0,0);
-			for(ix=0; ix<nx; ix++) 
-				sumc+=cexpf(I*w*p[ip]*xx[ix])*dd[ix];
+			for(ix=0; ix<nx; ix++) {
+#ifdef SF_HAS_COMPLEX_H	    
+			    sumc+=cexpf(I*w*p[ip]*xx[ix])*dd[ix];
+#else
+			    sumc=sf_cadd(sumc,sf_cmul(cexpf(sf_cmplx(0.0f,w*p[ip]*xx[ix])),dd[ix]));
+#endif
+			}
 			mm[ip]=sumc;
 		}
 	}else{// dd(xx,w)=sum_{ip=0}^{np} mm(p[ip],w)*exp(-i*w*p[ip]*xx)
 		for(ix=0; ix<nx; ix++) 
 		{
 			sumc=sf_cmplx(0,0);
-			for(ip=0; ip<np; ip++)
-				sumc+=cexpf(-I*w*p[ip]*xx[ix])*mm[ip];
+			for(ip=0; ip<np; ip++) {
+#ifdef SF_HAS_COMPLEX_H	  
+			    sumc+=cexpf(-I*w*p[ip]*xx[ix])*mm[ip];
+#else
+			    sumc=sf_cadd(sumc,sf_cmul(cexpf(sf_cmplx(0.0f,-w*p[ip]*xx[ix])),mm[ip]));
+#endif
+			}
 			dd[ix]=sumc;
 		}
 	}
@@ -112,8 +121,13 @@ eps: regularization parameter
 	for(ip=0; ip<np; ip++) 
 	{
 		sumc=sf_cmplx(0,0);
-		for(ix=0; ix<nx; ix++)
+		for(ix=0; ix<nx; ix++) {
+#ifdef SF_HAS_COMPLEX_H		    
 			sumc+=cexpf(I*w*ip*dp*xx[ix]);
+#else
+			sumc=sf_cadd(sumc,cexpf(sf_cmplx(0.0f,w*ip*dp*xx[ix])));
+#endif
+		}
 		c[ip]=sumc;
 	}
 	

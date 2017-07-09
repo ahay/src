@@ -50,14 +50,14 @@ void fwpvti3dpseudosh(float dt,float***p1,float***p2,float***p3,
 				float px,py,pz,rx,ry,rz;
 				float vp2,vs2,dt2;
 				float vpx,vsx;
-				float ep,de,ga;
+				float ep,ga;
 				float C11_66;
 
 				dt2=dt*dt;
 				vp2=vp0[i][j][k]*vp0[i][j][k];
 				vs2=vs0[i][j][k]*vs0[i][j][k];
 				ep=1+2*epsi[i][j][k];
-				de=1+2*del[i][j][k];
+				/* de=1+2*del[i][j][k]; */
 				ga=1+2*gam[i][j][k];
 				vpx=vp2*ep;
 				vsx=vs2*ga;

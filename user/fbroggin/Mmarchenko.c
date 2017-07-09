@@ -53,11 +53,6 @@ int main(int argc, char* argv[]) {
 
     bool verb, conj, twin, pandq, Gtot, Htot;
 
-    /* OMP parameters */
-#ifdef _OPENMP
-    int ompnth;
-#endif 	
-
     float *pplus0, *pplus, *pplustemp, *Pplus, *Pplus_trace, *pminus, *Pminus, *Refl, *Gp, *Gm, *G, *H;
     float *qplus, *qplustemp, *Qplus, *Qplus_trace, *qminus, *Qminus;
     float *window, *window_all, *taper, pi;
@@ -80,7 +75,7 @@ int main(int argc, char* argv[]) {
     int nt, nf, ntr, nshots, nvs, mode, niter, ntaper;
     int i, it, ix, ishot, iter, ivs, i0;
     int twc, twa, shift, n[2], rect[2], s[2];
-    float scale, eps, dt, df, dx, ds, dvs, ot, of, a, b, c, d, e, f;
+    float scale, eps, a, b, c, d, e, f;
 
     sf_triangle tr;
 
@@ -93,7 +88,7 @@ int main(int argc, char* argv[]) {
     /* Initialize OMP parameters */
     /*------------------------------------------------------------*/
 #ifdef _OPENMP
-    ompnth = omp_init();
+    omp_init();
 #endif	
 
     /*------------------------------------------------------------*/
@@ -189,21 +184,21 @@ int main(int argc, char* argv[]) {
 	
     /* Number of time steps and time sampling */
     nt = sf_n(at);
-    dt = sf_d(at);
-    ot = sf_o(at);
+    /* dt = sf_d(at); */
+    /* ot = sf_o(at); */
     /* Number of frequencies and frequency sampling */
     nf = sf_n(af);
-    df = sf_d(af);
-    of = sf_o(af);
+    /* df = sf_d(af); */
+    /* of = sf_o(af); */
     /* Number of traces and spacing */
     ntr = sf_n(ax);
-    dx = sf_d(ax);
+    /* dx = sf_d(ax); */
     /* Number of shots and spacing */
     nshots = sf_n(as);
-    ds = sf_d(as);
+    /* ds = sf_d(as); */
     /* Number of virtual sources and spacing */
     nvs = sf_n(avs);
-    dvs = sf_d(avs);
+    /* dvs = sf_d(avs); */
 
     if (verb) fprintf(stderr, "nt: %d nf: %d ntr: %d nshots: %d nvs: %d\n", nt, nf, ntr, nshots, nvs);
 

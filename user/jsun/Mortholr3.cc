@@ -74,7 +74,7 @@ int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 	   double xy=x*y;
 	   double xz=x*z;
 	   double yz=y*z;
-	   double r;
+	   double r=0.0;
 	switch (approx) {
 		case 0: { // Exact velocity
 	   		double H11=c11*x2+c66*y2+c55*z2;

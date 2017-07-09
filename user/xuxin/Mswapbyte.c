@@ -41,12 +41,14 @@ void swap4(unsigned int *p)
 	*p = ((*p >> 16) & 0x0000ffff) | ((*p << 16) & 0xffff0000);
 }
 
-void swap8(unsigned long *p)
+/*
+void swap8(unsigned long long *p)
 {
 	*p = ((*p >> 8 ) & 0x00ff00ff00ff00ff) | ((*p << 8 ) & 0xff00ff00ff00ff00);
 	*p = ((*p >> 16) & 0x0000ffff0000ffff) | ((*p << 16) & 0xffff0000ffff0000);
 	*p = ((*p >> 32) & 0x00000000ffffffff) | ((*p << 32) & 0xffffffff00000000);
 }
+*/
 
 void swap4_int(int *p)
 {

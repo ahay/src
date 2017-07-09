@@ -24,7 +24,6 @@ env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
             LIBS=[env.get('DYNLIB','')+'rsf'])
 
-
 if 'c++' in env.get('API',[]):
     env.Prepend(LIBS=[env.get('DYNLIB','')+'rsf++'])
 
@@ -47,12 +46,13 @@ for prog in mains:
 ccmains = Split(ccprogs)
 subs = Split(subs)
 
+ccompile = 'c++' in env.get('API',[]) and not 'NO_COMPLEX' in env.get('CPPDEFINES',[])
 
-if 'c++' in env.get('API',[]):
+if ccompile:
     objs = map(lambda x:  env.StaticObject(x+'.cc'), subs)
 
 for prog in ccmains:
-    if 'c++' in env.get('API',[]):
+    if ccompile:
         prog = env.Program (prog, ['M'+prog+'.cc'] + objs)
         env.Depends(prog,map (lambda x: x + '.hh', subs))
     else:

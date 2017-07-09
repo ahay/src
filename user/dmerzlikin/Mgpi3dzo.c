@@ -1,7 +1,10 @@
 /*Gaussian weighting for ZO 3D case*/
 #include <rsf.h>
 #include <math.h>
+
+#ifdef SF_HAS_COMPLEX_H  
 #include "Faddeeva.h"
+#endif
 
 //int pi(float * data, int adj);
 
@@ -13,7 +16,9 @@ int main(int argc, char* argv[])
     float v_a, v_b, v_0, beta, eps;
     sf_complex * intrace, * outtrace;
     sf_file inp, out;
+#ifdef SF_HAS_COMPLEX_H  
     double complex alpha, root, u_b, u_a, temp1, temp2, coeff, z; // coefficients for erfi calculation
+#endif    
     
 
     //MADAGASCAR C API
@@ -73,7 +78,7 @@ int main(int argc, char* argv[])
             	t = ot+i1*dt; 	
 
 	    	//Path-Integral Analytical Evaluation
-	    
+#ifdef SF_HAS_COMPLEX_H  				    
 	    	//computing coefficients for erfi
 	    	alpha = (-1)*((x+eps) + (y+eps))/(16*(t+eps));
 			
@@ -85,19 +90,21 @@ int main(int argc, char* argv[])
 			
 		//integral coefficient	
 		coeff = cexp(-beta*v_0*v_0)*cexp(-beta*beta*v_0*v_0/(root*root))/root;
-			
+
 		temp1 = coeff*Faddeeva_erfi(u_a,0);
 		temp2 = coeff*Faddeeva_erfi(u_b,0);
-			
+
 		z = temp2 - temp1;
 
 		z = ((double complex)intrace[i1])*z;
 
 		outtrace[i1] = sf_cmplx(creal(z),cimag(z));
+#else
+		sf_error("No C99 complex support");
+#endif					
+	    }// t
 
-		}// t
-
-		sf_complexwrite (outtrace,nt,out);
+	    sf_complexwrite (outtrace,nt,out);
 	
 	}// x
 

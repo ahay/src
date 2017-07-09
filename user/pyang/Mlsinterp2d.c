@@ -19,7 +19,6 @@
 */
 #include <rsf.h>
 #include <math.h>
-#include <complex.h>
 
 #include "masklop.h"
 #include "fftn.h"

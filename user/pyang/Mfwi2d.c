@@ -412,11 +412,11 @@ int main(int argc, char *argv[])
 	int is, it, iter, niter, distx, distz, csd, rbell;
 	int nz, nx, nt, ns, ng;
 	int sxbeg, szbeg, gxbeg, gzbeg, jsx, jsz, jgx, jgz;/*  parameters of acquisition geometery */
-	float dx, dz, fm, dt, dtx, dtz, tmp, amp, obj1, obj, beta, epsil, alpha;
+	float dx, dz, fm, dt, dtx, dtz, tmp, amp, obj1=0.0f, obj, beta, epsil, alpha;
 	float *dobs, *dcal, *derr, *wlt, *bndr, *trans, *objval;
 	int *sxz, *gxz;		
 	float **vv, **illum, **lap, **vtmp, **sp0, **sp1, **sp2, **gp0, **gp1, **gp2, **g0, **g1, **cg, *alpha1, *alpha2, **ptr=NULL;	
-	clock_t start, stop;/* timer */
+	clock_t start=0, stop;/* timer */
 	sf_file vinit, shots, vupdates, grads, objs, illums;/* I/O files */
 
     /* initialize Madagascar */
