@@ -164,7 +164,7 @@ void sf_cram_survey3_close (sf_cram_survey3 cram_survey)
 /*< Destroy object >*/
 {
     if (cram_survey->mmaped)
-        munmap (cram_survey->mmaped, cram_survey->offs + cram_survey->sz);
+        munmap ((char*) cram_survey->mmaped, cram_survey->offs + cram_survey->sz);
     else {
         if (cram_survey->tri) {
             free (cram_survey->hh);

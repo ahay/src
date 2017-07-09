@@ -150,7 +150,7 @@ void sf_esc_slowness3_close (sf_esc_slowness3 esc_slow)
 /*< Destroy object >*/
 {
     if (esc_slow->mmaped)
-        munmap (esc_slow->mmaped, (size_t)esc_slow->offs +
+        munmap ((char*) esc_slow->mmaped, (size_t)esc_slow->offs +
                                   (size_t)esc_slow->velspline.nc);
     else
         free (esc_slow->velspline.coefs);
