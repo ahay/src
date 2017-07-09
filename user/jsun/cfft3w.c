@@ -28,9 +28,10 @@
 static int n1, n2, n3, nk;
 static float wt;
 
-static sf_complex ***cc,***dd;
+static sf_complex ***cc;
 
 #ifdef SF_HAS_FFTW
+static sf_complex ***dd;
 static fftwf_plan cfg=NULL, icfg=NULL;
 #else
 static kiss_fft_cfg cfg1, icfg1, cfg2, icfg2, cfg3, icfg3;
