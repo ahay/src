@@ -179,6 +179,9 @@ int main(int argc, char* argv[])
     {
 	pp  = sf_floatalloc (num);
 	psv = sf_floatalloc (num);
+    } else {
+	pp = NULL;
+	psv = NULL;
     }
 
     vp_init();
@@ -336,6 +339,7 @@ int main(int argc, char* argv[])
 		root = sqrtf (4. * zet * zet * (1 - ss) * ss + temp * temp);
 		if (root == 0.)
 		    sf_error ("Square root becomes Zero! (Exact)");
+		root2 = 0.0f;
 	    }
 	    else
 	    {
@@ -479,6 +483,9 @@ int main(int argc, char* argv[])
 		    normd = normc / scale;
 		}
 	    }
+	} else {
+	    normr = 0.0f;
+	    normd = 0.0f;
 	}
 	for (ii = 0; ii < num2; ii++)
 	{
