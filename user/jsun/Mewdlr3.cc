@@ -602,7 +602,9 @@ static int sample(vector<int>& rs, vector<int>& cs, ZpxNumMat& res)
             c24 = C24[i]; c25 = C25[i]; c26 = C26[i];
             c34 = C34[i]; c35 = C35[i]; c36 = C36[i];
             c45 = C45[i]; c46 = C46[i]; c56 = C56[i];
-        }
+        } else {
+	    c14=c15=c16=c24=c25=c26=c34=c35=c36=c45=c46=c56=0.0;
+	}
 
         for(int b=0; b<nc; b++)
         {
