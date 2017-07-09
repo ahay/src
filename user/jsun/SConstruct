@@ -17,7 +17,10 @@ ccprogs = '''
 ortholr3
 cisolr2
 cisolr2grad
+cisolr2abc
 cisolr2abc1
+ewelr3
+ewdlr3
 fraclr2
 zfraclr2
 zortholr3
@@ -32,9 +35,7 @@ mpi_progs = ''
 #for distributed FFTW3
 #mpiwave2 mpiwave3 mpifftexp1 mpiwave2kiss mpiwave3kiss mpifftexp1kiss
 
-#mpicxx_progs = 'mpicfftrtm'
-
-mpicxx_progs = ''
+mpicxx_progs = 'mpicfftrtm'
 
 pyprogs = ''
 pymods = ''
@@ -133,7 +134,6 @@ for prog in ccmains:
 ##################################################################################################################
 # To use sfmpicfftrtm, one needs to obtain the source file revolve.c from http://dl.acm.org/citation.cfm?id=347846
 ##################################################################################################################
-"""
 xxsubs = 'lowrank fftomp rtmutil ksutil revolve'
 mpicxx_mains = Split(mpicxx_progs)
 for prog in mpicxx_mains:
@@ -145,7 +145,7 @@ for prog in mpicxx_mains:
         prog = env.RSF_Place('sf'+prog,None,var='MPICXX',package='mpi')
     if root:
         env.Install(bindir,prog)
-"""
+
 """
 for prog in Split('cmatmult2'):
     sources = ['Test' + prog,prog]
@@ -180,7 +180,7 @@ if root:
     
     docs = map(lambda prog: env.Doc(prog,'M' + prog),mains+mpi_mains) +  \
            map(lambda prog: env.Doc(prog,'M'+prog+'.py',lang='python'),pymains) + \
-           map(lambda prog: env.Doc(prog,'M%s.cc' % prog,lang='c++'),ccmains)#+mpicxx_mains 
+           map(lambda prog: env.Doc(prog,'M%s.cc' % prog,lang='c++'),ccmains+mpicxx_mains)
           
     env.Depends(docs,'#/framework/rsf/doc.py')	
     doc = env.RSF_Docmerge(main,docs)

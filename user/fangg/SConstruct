@@ -10,6 +10,7 @@ expand matrix mms1dexp sgfd1 sglfd1pml sglfd2pml sglr1 sglr2
 ccprogs = '''
 isolrsg1 isolrsg2  sglfdcx2_7 sglfdcz2_7 
 sglfdcx1 sglfdcp1
+sglfdc1
 '''
 # anisglfdcx2_7 anisglfdcz2_7 wlslfdcx2tw2 wlslfdcz2tw2 lfdcsgm2 lfdcsgm2_5 fdcsgm2_all lfdcsgm2c lfdcsgm2s oneapp sglfdcsgm2x sglfdcsgm2z sgtwoapp  twoapp
 
