@@ -37,6 +37,7 @@ void fwportelastic(float dt2,float*** p1,float*** p2,float*** p3,float*** q1,flo
 {
     int   i,j,k,l;
 
+#ifdef _OPENMP
 #pragma omp parallel for private(i,j,k,l) \
 	schedule(dynamic) \
 	shared(p1,p2,p3, \
@@ -44,6 +45,7 @@ void fwportelastic(float dt2,float*** p1,float*** p2,float*** p3,float*** q1,flo
 	r1,r2,r3,\
 	coeff_1dx,coeff_1dy,coeff_1dz,coeff_2dx,coeff_2dy,coeff_2dz, \
 	vp0,vs0,epsi_1,del_1,gama_1,epsi_2,del_2,gama_2,del_3)
+#endif
     for(j=0;j<ny;j++)
     for(i=0;i<nx;i++)
     for(k=0;k<nz;k++){
