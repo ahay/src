@@ -314,7 +314,7 @@ int isinf(double x) { return !finite(x) && x==x; }
 #endif
 /*^*/
 
-#ifndef _sf_c99_h
+#endif
 
 #endif
 /*^*/
