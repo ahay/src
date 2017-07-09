@@ -201,7 +201,7 @@ class Online_r2 : public Online
 	bool get_output()      { return output; }
 	void set_fine(int) {}
 
-	~Online_r2();
+//	~Online_r2();
 
 	private:
 
