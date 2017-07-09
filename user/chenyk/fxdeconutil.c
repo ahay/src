@@ -145,7 +145,7 @@ void lu_decomposition (int nrows, /* number of rows of matrix to invert */
 		idx[j] = imax;
 
 		/* if matrix becomes singular don't use pivot=0 */
-		if (matrix[j][j] == 0.0) matrix[j][j]= SF_EPS;
+		if (matrix[j][j] == 0.0f) matrix[j][j]= SF_EPS;
 	
 		if (j !=nrows) {
 

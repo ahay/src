@@ -306,12 +306,12 @@ strtoull(const char *ptr, const char **endptr, int base)
 /*^*/
 
 #ifdef sun
-extern int finite(double);
+extern int finite(double x);
 #define isfinite(x) finite(x)
+int isinf(double x) { return !finite(x) && x==x; }
 #endif
 /*^*/
 
 #endif
 /*^*/
 
-/* 	$Id$	 */
