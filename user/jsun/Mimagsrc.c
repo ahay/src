@@ -22,8 +22,7 @@
 
 int main(int argc, char* argv[])
 {
-    bool deriv;
-    int n1, n2, i2, order;
+    int n1, n2, i2;
     int fft_size;
     float d1, freq, *trace=NULL;
     sf_file in=NULL, out=NULL;
@@ -44,10 +43,6 @@ int main(int argc, char* argv[])
     } else {
       freq *= 2.*d1; /* division by Nyquist=1/(2.*dt) */
     }
-
-    if (!sf_getbool("deriv",&deriv)) deriv=false;
-    /* apply a half-order derivative filter */
-    order = deriv? 2:0;
 
     trace = sf_floatalloc(n1);
     fft_size = 2*kiss_fft_next_fast_size((n1+1)/2);

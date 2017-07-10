@@ -790,7 +790,7 @@ int sampleopx1(vector<int>& rs, vector<int>& cs, DblNumMat& resx)
 
     double  aa[2][2],ve[2][2],va[2];  /*matrix, eigeinvector and eigeinvalues*/
     double   a11, a12, a22;
-    double  sx, cx, sx2, cx2, kxz, ax, axz, u1, u2, v1, v2, u1v1, u2v2,u1_2,u2_2;
+    double  sx, cx, ax, axz, u1, u2, v1, v2, u1v1, u2v2,u1_2,u2_2;
     double  lam1, lam2, sinclam1, sinclam2, sinclam1_2, sinclam2_2;
    
     for(int a=0; a<nr; a++)
@@ -840,9 +840,9 @@ int sampleopx1(vector<int>& rs, vector<int>& cs, DblNumMat& resx)
             u1v1= u1*v1;
             u2v2= u2*v2;
 
-            kxz = sx*cx*k2;
-            sx2=sx*sx*k2;
-            cx2=cx*cx*k2;
+            /* kxz = sx*cx*k2;
+	       sx2=sx*sx*k2;
+	       cx2=cx*cx*k2; */
 
             va[0] = va[0]*k2;
             va[1] = va[1]*k2;
@@ -877,7 +877,7 @@ int sampleopx2(vector<int>& rs, vector<int>& cs, DblNumMat& resx)
 
     double  aa[2][2],ve[2][2],va[2];  /*matrix, eigeinvector and eigeinvalues*/
     double   a11, a12, a22;
-    double  sx, cx, sx2, cx2, kxz, az, axz, u1, u2, v1, v2, u1v1, u2v2,v1_2,v2_2;
+    double  sx, cx, az, axz, u1, u2, v1, v2, u1v1, u2v2,v1_2,v2_2;
     double  lam1, lam2, sinclam1, sinclam2, sinclam1_2, sinclam2_2;
 
     for(int a=0; a<nr; a++)
@@ -927,9 +927,9 @@ int sampleopx2(vector<int>& rs, vector<int>& cs, DblNumMat& resx)
             v1_2 = v1*v1;
             v2_2 = v2*v2;
 
-            kxz = sx*cx*k2;
-            sx2=sx*sx*k2;
-            cx2=cx*cx*k2;
+            /* kxz = sx*cx*k2;
+	       sx2=sx*sx*k2;
+	       cx2=cx*cx*k2; */
 
             va[0] = va[0]*k2;
             va[1] = va[1]*k2;
@@ -965,7 +965,7 @@ int sampleopz1(vector<int>& rs, vector<int>& cs, DblNumMat& resx)
 
     double  aa[2][2],ve[2][2],va[2];  /*matrix, eigeinvector and eigeinvalues*/
     double   a11, a12, a22;
-    double  sx, cx, sx2, cx2, kxz, ax, axz, u1, u2, v1, v2, u1v1, u2v2,u1_2,u2_2;
+    double  sx, cx, ax, axz, u1, u2, v1, v2, u1v1, u2v2,u1_2,u2_2;
     double  lam1, lam2, sinclam1, sinclam2, sinclam1_2, sinclam2_2;
 
     for(int a=0; a<nr; a++)
@@ -1015,9 +1015,9 @@ int sampleopz1(vector<int>& rs, vector<int>& cs, DblNumMat& resx)
             u1v1= u1*v1;
             u2v2= u2*v2;
 
-            kxz = sx*cx*k2;
-            sx2=sx*sx*k2;
-            cx2=cx*cx*k2;
+            /* kxz = sx*cx*k2;
+	       sx2=sx*sx*k2;
+	       cx2=cx*cx*k2; */
 
             va[0] = va[0]*k2;
             va[1] = va[1]*k2;
@@ -1053,7 +1053,7 @@ int sampleopz2(vector<int>& rs, vector<int>& cs, DblNumMat& resx)
 
     double  aa[2][2],ve[2][2],va[2];  /*matrix, eigeinvector and eigeinvalues*/
     double   a11, a12, a22;
-    double  sx, cx, sx2, cx2, kxz, az, axz, u1, u2, v1, v2, u1v1, u2v2,v1_2,v2_2;
+    double  sx, cx, az, axz, u1, u2, v1, v2, u1v1, u2v2,v1_2,v2_2;
     double  lam1, lam2, sinclam1, sinclam2, sinclam1_2, sinclam2_2;
 
     for(int a=0; a<nr; a++)
@@ -1103,9 +1103,9 @@ int sampleopz2(vector<int>& rs, vector<int>& cs, DblNumMat& resx)
             v1_2 = v1*v1;
             v2_2 = v2*v2;
 
-            kxz = sx*cx*k2;
-            sx2=sx*sx*k2;
-            cx2=cx*cx*k2;
+            /* kxz = sx*cx*k2;
+	       sx2=sx*sx*k2;
+	       cx2=cx*cx*k2; */
 
             va[0] = va[0]*k2;
             va[1] = va[1]*k2;
@@ -1142,7 +1142,7 @@ int sampleosx1(vector<int>& rs, vector<int>& cs, DblNumMat& resx)
 
     double  aa[2][2],ve[2][2],va[2];  /*matrix, eigeinvector and eigeinvalues*/
     double   a11, a12, a22;
-    double  sx, cx, sx2, cx2, kxz, ax, axz, u1, u2, v1, v2, u1v1, u2v2,u1_2,u2_2;
+    double  sx, cx, ax, axz, u1, u2, v1, v2, u1v1, u2v2,u1_2,u2_2;
     double  lam1, lam2, sinclam1, sinclam2, sinclam1_2, sinclam2_2;
 
     for(int a=0; a<nr; a++)
@@ -1192,9 +1192,9 @@ int sampleosx1(vector<int>& rs, vector<int>& cs, DblNumMat& resx)
             u1v1= u1*v1;
             u2v2= u2*v2;
 
-            kxz = sx*cx*k2;
-            sx2=sx*sx*k2;
-            cx2=cx*cx*k2;
+            /* kxz = sx*cx*k2;
+	       sx2=sx*sx*k2;
+	       cx2=cx*cx*k2; */
 
             va[0] = va[0]*k2;
             va[1] = va[1]*k2;
@@ -1230,7 +1230,7 @@ int sampleosx2(vector<int>& rs, vector<int>& cs, DblNumMat& resx)
 
     double  aa[2][2],ve[2][2],va[2];  /*matrix, eigeinvector and eigeinvalues*/
     double   a11, a12, a22;
-    double  sx, cx, sx2, cx2, kxz, az, axz, u1, u2, v1, v2, u1v1, u2v2,v1_2,v2_2;
+    double  sx, cx, az, axz, u1, u2, v1, v2, u1v1, u2v2,v1_2,v2_2;
     double  lam1, lam2, sinclam1, sinclam2, sinclam1_2, sinclam2_2;
 
     for(int a=0; a<nr; a++)
@@ -1280,9 +1280,9 @@ int sampleosx2(vector<int>& rs, vector<int>& cs, DblNumMat& resx)
             v1_2 = v1*v1;
             v2_2 = v2*v2;
 
-            kxz = sx*cx*k2;
-            sx2=sx*sx*k2;
-            cx2=cx*cx*k2;
+            /* kxz = sx*cx*k2;
+	       sx2=sx*sx*k2;
+	       cx2=cx*cx*k2; */
 
             va[0] = va[0]*k2;
             va[1] = va[1]*k2;
@@ -1319,7 +1319,7 @@ int sampleosz1(vector<int>& rs, vector<int>& cs, DblNumMat& resx)
 
     double  aa[2][2],ve[2][2],va[2];  /*matrix, eigeinvector and eigeinvalues*/
     double   a11, a12, a22;
-    double  sx, cx, sx2, cx2, kxz, ax, axz, u1, u2, v1, v2, u1v1, u2v2,u1_2,u2_2;
+    double  sx, cx, ax, axz, u1, u2, v1, v2, u1v1, u2v2,u1_2,u2_2;
     double  lam1, lam2, sinclam1, sinclam2, sinclam1_2, sinclam2_2;
 
     for(int a=0; a<nr; a++)
@@ -1369,9 +1369,9 @@ int sampleosz1(vector<int>& rs, vector<int>& cs, DblNumMat& resx)
             u1v1= u1*v1;
             u2v2= u2*v2;
 
-            kxz = sx*cx*k2;
-            sx2=sx*sx*k2;
-            cx2=cx*cx*k2;
+            /* kxz = sx*cx*k2;
+	       sx2=sx*sx*k2;
+	       cx2=cx*cx*k2; */
 
             va[0] = va[0]*k2;
             va[1] = va[1]*k2;
@@ -1407,7 +1407,7 @@ int sampleosz2(vector<int>& rs, vector<int>& cs, DblNumMat& resx)
 
     double  aa[2][2],ve[2][2],va[2];  /*matrix, eigeinvector and eigeinvalues*/
     double   a11, a12, a22;
-    double  sx, cx, sx2, cx2, kxz, az, axz, u1, u2, v1, v2, u1v1, u2v2,v1_2,v2_2;
+    double  sx, cx, az, axz, u1, u2, v1, v2, u1v1, u2v2,v1_2,v2_2;
     double  lam1, lam2, sinclam1, sinclam2, sinclam1_2, sinclam2_2;
 
     for(int a=0; a<nr; a++)
@@ -1457,9 +1457,9 @@ int sampleosz2(vector<int>& rs, vector<int>& cs, DblNumMat& resx)
             v1_2 = v1*v1;
             v2_2 = v2*v2;
 
-            kxz = sx*cx*k2;
-            sx2=sx*sx*k2;
-            cx2=cx*cx*k2;
+            /* kxz = sx*cx*k2;
+	       sx2=sx*sx*k2;
+	       cx2=cx*cx*k2; */
 
             va[0] = va[0]*k2;
             va[1] = va[1]*k2;

@@ -747,7 +747,6 @@ void sourcekspace(sf_complex *sourcex, sf_complex *sourcez, int *ijkx, int *ijkz
   float   lam, sinclam, sinclam_2;
   float   rkxddx, rkzddz, srx, srz, crx, crz, ddx, ddz, ri, rj, re, im;
   int     ikx, ikz, k, m, ix, iz;
-  double  coss, sins;
 
   // 2D exploding force source
   for(int i=-1;i<=1;i++)
@@ -763,8 +762,8 @@ void sourcekspace(sf_complex *sourcex, sf_complex *sourcez, int *ijkx, int *ijkz
      ddx=ix*dx;
      ddz=iz*dz;
      m=ix*nz+iz;
-     coss=cos(th[m]);
-     sins=sin(th[m]);
+/*     coss=cos(th[m]);
+       sins=sin(th[m]); */
 	 //va = 0.5*(vp[m]+vs[m]);
 	 va = vs[m];
 

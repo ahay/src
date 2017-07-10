@@ -1,6 +1,6 @@
 1. Creating a branch
 
- svn copy  https://github.com/ahay/src/trunk  https://github.com/ahay/src/branches/madagascar-2.0 -m 'new release'
+svn copy  https://github.com/ahay/src/trunk  https://github.com/ahay/src/branches/madagascar-2.0 -m 'new release'
 
 2. Check out the branch
 
@@ -90,9 +90,9 @@ Try running sfdoc
 
 15. Create a branch of the core
 
-svn copy  https://svn.code.sf.net/p/rsf/code/branches/madagascar-1.7 https://svn.code.sf.net/p/rsf/code/branches/madagascar-core-1.7 -m 'new release'
+svn copy  https://github.com/ahay/src/branches/madagascar-2.0 https://github.com/ahay/src/branches/madagascar-core-2.0 -m 'new core release'
 
-svn co https://svn.code.sf.net/p/rsf/code/branches/madagascar-core-1.7
+svn co https://github.com/ahay/src/branches/madagascar-core-2.0
 
 cd madagascar-core-1.7
 

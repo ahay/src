@@ -42,7 +42,7 @@ int main(int argc, char **argv)
   float temp1[EXPAND*NPTS+2*KP1MAX], temp2[EXPAND*NPTS+2*KP1MAX];
   float *data1, *data2;
   float saper[NTIMES], xaper[NTIMES], vrms[NTIMES], scratch[11*NTIMES];
-  float image[NPTS], image_fold[NPTS/8+10], gathers[NPTS], aperture[NTIMES];
+  float image[NPTS], image_fold[NPTS/8+10], gathers[NPTS];
   float gathers_fold[NPTS/8+10];
 
   sf_init(argc,argv);
@@ -60,7 +60,6 @@ int main(int argc, char **argv)
   for(i=0; i<NTIMES; i++) {
       if(i<=10) aper = i*500;
       else      aper = 5000.0;
-      aperture[i] = aper;
       saper[i] = xaper[i] = aper*aper;
       vrms[i]  = 5000.0 + 38.7*i;
   }

@@ -44,13 +44,25 @@ void mask_lop(bool adj, bool add, int nm, int nd, sf_complex *mm, sf_complex *dd
   if(adj){
     for(i2=0; i2<n2; i2++){
       if(mask[i2]){
-	for(i1=0; i1<n1; i1++) mm[i1+n1*i2]+=dd[i1+n1*i2];
+	  for(i1=0; i1<n1; i1++) {
+#ifdef SF_HAS_COMPLEX_H	    
+	      mm[i1+n1*i2]+=dd[i1+n1*i2];
+#else
+	      mm[i1+n1*i2]=sf_cadd(mm[i1+n1*i2],dd[i1+n1*i2]);
+#endif
+	  }
       }
     }
   }else{
     for(i2=0; i2<n2; i2++){
       if(mask[i2]){
-	for(i1=0; i1<n1; i1++) dd[i1+n1*i2]+=mm[i1+n1*i2];
+	  for(i1=0; i1<n1; i1++) {
+#ifdef SF_HAS_COMPLEX_H	  
+	      dd[i1+n1*i2]+=mm[i1+n1*i2];
+#else
+	      dd[i1+n1*i2]=sf_cadd(dd[i1+n1*i2],mm[i1+n1*i2]);
+#endif
+	  }
       }
     }
   }

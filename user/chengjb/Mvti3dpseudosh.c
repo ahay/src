@@ -59,7 +59,7 @@ int main(int  argc,char **argv)
 
     int   i,j,k,im,jm,it,ns,bd;
     float t;
-    float fx,fy,fz,dx,dz,dy,dt;
+    float dx,dz,dy,dt;
 
     float ***vp0, ***vs0, ***epsi, ***del, ***gam;
 
@@ -71,10 +71,8 @@ int main(int  argc,char **argv)
     float t0=0.04;       // time delay of the wavelet(if f0=30Hz, t0=0.04s)*/
     float A=1.0;           // the amplitude of wavelet
 
-    clock_t t1, t2, t3;
+    clock_t t2, t3;
     float   timespent;
-
-    t1=clock();
 
     /* time samping paramter */
     if (!sf_getint("ns",&ns)) ns=301;
@@ -97,9 +95,6 @@ int main(int  argc,char **argv)
     az = sf_iaxa(Fvp0,1); nz = sf_n(az); dz = sf_d(az)*1000.0;
     ax = sf_iaxa(Fvp0,2); nx = sf_n(ax); dx = sf_d(ax)*1000.0;
     ay = sf_iaxa(Fvp0,3); ny = sf_n(ay); dy = sf_d(ay)*1000.0;
-    fy=sf_o(ay)*1000.0;
-    fx=sf_o(ax)*1000.0;
-    fz=sf_o(az)*1000.0;
 
     sf_warning("_m=%d _mix=%d",_m,_mix);
     sf_warning("nx=%d ny=%d nz=%d ",nx,ny,nz);

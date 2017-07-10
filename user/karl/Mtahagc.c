@@ -212,8 +212,8 @@ int main(int argc, char* argv[])
     int n1_traces;
     int n1_headers;
 
-    char* header_format=NULL;
-    sf_datatype typehead;
+/*    char* header_format=NULL;
+      sf_datatype typehead; */
     /* kls do I need to add this?  sf_datatype typein; */
     float* fheader=NULL;
     float* intrace=NULL;
@@ -225,8 +225,8 @@ int main(int argc, char* argv[])
     char **list_of_floats;
     float* xstart;
     float* tstart;
-    int indx_of_offset;
-    float offset;
+/*    int indx_of_offset;
+      float offset; */
     float d1;
     float o1;
     AGC_STRUCT* agc_structure;
@@ -260,9 +260,9 @@ int main(int argc, char* argv[])
     if (!sf_histint(in,"n1_headers",&n1_headers)) 
 	sf_error("input data does not define n1_headers");
 
-    header_format=sf_histstring(in,"header_format");
-    if(strcmp (header_format,"native_int")==0) typehead=SF_INT;
-    else                                       typehead=SF_FLOAT;
+/*    header_format=sf_histstring(in,"header_format");
+      if(strcmp (header_format,"native_int")==0) typehead=SF_INT;
+      else                                       typehead=SF_FLOAT; */
 
     if(verbose>0)fprintf(stderr,"allocate headers.  n1_headers=%d\n",n1_headers);
     fheader = sf_floatalloc(n1_headers);
@@ -325,7 +325,7 @@ int main(int argc, char* argv[])
 	float val_sin=sin((indx_time+1)*SF_PI/(2*ntaper));
 	taper[indx_time]=val_sin*val_sin;
 	} */
-    indx_of_offset=segykey("offset");
+/*    indx_of_offset=segykey("offset"); */
     
     if (!sf_histfloat(in,"d1",&d1))
 	sf_error("input data does not define d1");
@@ -356,8 +356,8 @@ int main(int argc, char* argv[])
 	/* process the tah. */
 	/********************/
 
-	if(typehead == SF_INT)offset=((int  *)fheader)[indx_of_offset];
-	else                  offset=((float*)fheader)[indx_of_offset];
+	/* if(typehead == SF_INT)offset=((int  *)fheader)[indx_of_offset];
+	   else                  offset=((float*)fheader)[indx_of_offset]; */
 	/* maybe latter add agc design start time
 	intlin(numxstart,xstart,tstart,
 	       tstart[0],tstart[numxstart-1],1,

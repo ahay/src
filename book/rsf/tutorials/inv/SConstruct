@@ -7,14 +7,22 @@ Flow('imp2',None,'spike n1=5  mag=%g ' % (2700 * 2750))
 Flow('imp3',None,'spike n1=12 mag=%g ' % (2400 * 2450))
 Flow('imp4',None,'spike n1=8  mag=%g ' % (2800 * 3000))
 Flow('imp5',None,'spike n1=16 mag=%g ' % (2550 * 2650))
-Flow('imp','imp1 imp2 imp3 imp4 imp5','cat axis=1 ${SOURCES[1:5]} | put d1=1 unit1=')
 
-Result('imp','graph label1=Sample label2=Impedance title=Model')
+Flow('imp','imp1 imp2 imp3 imp4 imp5',
+     'cat axis=1 ${SOURCES[1:5]} | put label1=Sample unit1=')
 
-# compute reflectivity
+Result('imp','put d1=1 | graph title=Impedance')
+
+# From impedance to reflectivity
 
 Flow('ref','imp','ai2refl')
+Result('ref','put d1=1 | graph title=Reflectivity')
 
-Result('ref','imp ref','scale dscale=1e-8 | cat axis=2 ${SOURCES[1]} | graph label1=Sample label2= title=Model')
+
+# Convolution with a Ricker wavelet
+Flow('ricker','ref','spike k1=11 | ricker1 freq=0.2')
+Result('ricker','put d1=1 | window n1=21 | graph title=Wavelet')
+
+Flow('data','ref','ricker1 freq=0.2')
 
 End()
