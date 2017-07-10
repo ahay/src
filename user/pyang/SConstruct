@@ -6,19 +6,10 @@ import bldutil
 ######################################################################
 # 1. C main programs
 progs = '''
-Testaniso Testeb Testelastic2d
-Testfd2d Testfd3d Testspml
-checkptdemo excitationic
-fbrec2d fwi2d istseislet
-lsprtm2d lsrtm2d mcaseislet
-modeling2d mshots
-mysnr rtm2d rtmadcig
-rtmva2d viscoa2d viscoe2d
+fbrec2d fwi2d modeling2d ps2d
 '''
 
 progs_fftw='''
-dlct fpocs2d fpocs3d lsinterp2d pocs
-ps2d mwni2d  myradon2
 '''
 #
 
@@ -36,7 +27,7 @@ mpi_cprogs = ''# '''
 ######################################################################
 # 4. CUDA main programs
 cuda_progs = '''
-fbrec genshots gpufd3d gpufwi gpurtm
+fbrec genshots gpufwi
 '''
 
 ######################################################################

@@ -3,10 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-dealias dijkstra dip dip2 diplet dixshape explanesignoi
-expsignoi fdip planemis2 planemis3 planesignoi
-pmshape2 predict pwcoh pwd pwdsigk pwdsmooth2 pwpaint
-pwpaint2 pwpaint3 pwsmooth pwspray pwspray2 pwspray3 seisigk seislet trismooth2 twodip2
+dip fdip planemis2 planemis3 pwd pwpaint2 pwsmooth pwspray pwspray2
 '''
 
 try:  # distributed version

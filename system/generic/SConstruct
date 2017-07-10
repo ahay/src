@@ -2,15 +2,8 @@ import os, sys, re, string, types
 sys.path.append('../../framework')
 import bldutil
 
-progs = ''' 
-agc aliasp bandpass bin bin1 boxsmooth canny causint clip clip2
-cmatmult cmatmult2 cosft costaper deriv dipfilter dwt enoint2 equal
-extract fern fft1 fft3 grad2 heat histogram igrad impl2 intshow
-inttest1 inttest2 iwarp jacobi lapfill laplac linear linefit lorenz
-lpad mandelbrot matmult max1 monof mutter noise postfilter2 pow
-reg2tri remap1 roots shapebin1 sharpen slice smooth smoothder
-smoothreg2 spectra spectra2 spline splinefilter t2warp threshold
-trapez tri2reg trirand unif2 unif3
+progs = '''
+agc aliasp bandpass bin bin1 boxsmooth canny causint clip clip2 cmatmult costaper deriv dwt extract fern fft1 fft3 grad2 histogram igrad impl2 inttest1 inttest2 iwarp lapfill lorenz lpad mandelbrot matmult max1 mutter noise pow reg2tri remap1 smooth spectra spectra2 spline threshold trapez tri2reg trirand unif3
 '''
 
 # hlinfilter

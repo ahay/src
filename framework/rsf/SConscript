@@ -8,7 +8,7 @@ Import('env bindir pkgdir system user trip dotproj')
 bldutil.py_install('__init__', env, pkgdir)
 bldutil.py_install('__init__', env, os.path.join(pkgdir,'user'))
 
-dirs = Split('plot libplot plplot pens sumain suplot') + system + user 
+dirs = Split('plot libplot plplot pens') + system + user 
 
 for usr in user:
     py = 'sf'+usr+'.py'

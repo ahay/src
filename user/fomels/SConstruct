@@ -3,22 +3,11 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-abalance angle angle2 bilat2 cdivn
-chebvc clpf cltft cpef deblur divn
-dix eikonal eikonalvti erf exgr
-fftexp0 fftexp3 fftwave1 fftwave2
-fftwave3 focus gaussmooth iphase
-localskew lpf lsfit median mffit
-mig3 nsmooth1 ocparcel octentwt
-ofilp ortho patch phaserot
-pick pick3 plane riesz
-shapeagc shapefill shearer
-shift1 simenv similarity
-smoothreg timefreq twofreq2 velcon warp1 warpadd warpscan
+divn eikonal gaussmooth lpf median ocparcel octentwt patch plane riesz shapeagc shapefill similarity
 '''
-ccprogs = 'anisolr2 isolr2 isolr3'
+ccprogs = ''
 
-pyprogs = 'cgi fft ipick las2rsf results wxipick wxresults zoom wxzoom'
+pyprogs = 'cgi fft ipick results wxipick wxresults zoom wxzoom'
 pymods = 'conjdir conjgrad dottest steepd'
 
 try:  # distributed version

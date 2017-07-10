@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-dmeig fastft kernel
+threads
 '''
 
 try:  # distributed version
@@ -42,10 +42,10 @@ else:
 if root:
     env.Install(bindir,prog[0])
 
-for cfile in Split('dmeig fastfft'):
-    test = env.StaticObject('Test' + cfile + '.o', cfile + '.c',
-                            CPPDEFINES=env.get('CPPDEFINES',[])+['TEST'])
-    prog = env.Program(test,PROGSUFFIX='.x',PROGPREFIX='')
+#for cfile in Split('dmeig fastfft'):
+#    test = env.StaticObject('Test' + cfile + '.o', cfile + '.c',
+#                            CPPDEFINES=env.get('CPPDEFINES',[])+['TEST'])
+#    prog = env.Program(test,PROGSUFFIX='.x',PROGPREFIX='')
 
 ######################################################################
 # SELF-DOCUMENTATION
