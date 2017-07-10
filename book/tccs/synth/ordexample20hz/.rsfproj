@@ -1,3 +1,0 @@
-uses=['sfdd', 'sftransp', 'sfput', 'sfbar', 'sfbyte', 'sfgrey3', 'sfmath', 'sfsmooth', 'sfai2refl', 'sfdepth2time', 'sffft1', 'sffft3', 'sfscale', 'sfisolr3', 'sfricker1', 'sftime2depth', 'sffftexp3', 'sfdip', 'sfwindow', 'sfpwspray2', 'sfstack', 'sfadd', 'sfreverse', 'sfspray', 'sfsimilarity', 'sfmul', 'sfboxsmooth', 'sfgrey']
-data=['PRIVATE']
-size= 34281303840

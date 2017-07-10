@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfput', 'sfmutter', 'sfvscan', 'sfpick', 'sfwindow', 'sfgrey', 'sfnmo', 'sfstack', 'sflogstretch', 'sffft1', 'sftransp', 'sffinstack', 'sfpad', 'sfbandpass', 'sfdip', 'sfnoise', 'sfpwdsmooth2', 'sfpwd', 'sfadd', 'sfcostaper', 'sfcosft', 'sfstolt', 'sfvczo', 'sfmath', 'sfclip2', 'sffocus', 'sfcut', 'sfmul', 'sfdivn', 'sfscale', 'sfslice', 'sfshapeagc', 'sfagc', 'sfcat', 'sflpf', 'sfdots', 'sft2warp', 'sffft3', 'sfcerf', 'sfreal', 'sfgpi3dzo']
-data=['data/midpts/midpts.hh']
-size= 1639648000

@@ -1,3 +1,0 @@
-uses=['sfsegyread', 'sfintbin', 'sfpow', 'sfwindow', 'sfput', 'sffdip', 'sfpwspray2', 'sfstack', 'sfadd', 'sftransp', 'sfgrey', 'sfmath', 'sfcostaper', 'sft2warp', 'sffft1', 'sffft3', 'sfspray', 'sfrcat', 'sfcerf', 'sfgpi3dzo', 'sfdivn', 'sfclip2', 'sfslice', 'sfdd', 'sfscale', 'sflapfill', 'sfinttest1', 'sfbyte', 'sfgrey3']
-data=['PRIVATE', 'PRIVATE']
-size= 273820566884

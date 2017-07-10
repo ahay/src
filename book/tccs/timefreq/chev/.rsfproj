@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfput', 'sfscale', 'sfpad', 'sfspectra', 'sfwindow', 'sftransp', 'sfgrey', 'sfbyte', 'sfgrey3', 'sfpatch', 'sfmath', 'sfdip', 'sfcat', 'sfadd', 'sfstack', 'sfpwpaint3', 'sfbandpass', 'sfiwarp', 'sfgraph', 'sftimefreq', 'sfdiv']
-data=['PRIVATE']
-size= 1629808968

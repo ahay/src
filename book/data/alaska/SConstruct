@@ -1,3 +1,0 @@
-from rsf.tex import *
-
-End(options='segabs',use='hyperref,listings')

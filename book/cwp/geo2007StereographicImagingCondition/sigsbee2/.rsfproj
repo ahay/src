@@ -1,3 +1,0 @@
-uses=['sfsegyread', 'sfput', 'sfwindow', 'sfscale', 'sfmath', 'sfcat', 'sftransp', 'sfdd', 'sfgraph', 'sfgrey', 'sfspike', 'sfpad', 'sfricker1', 'sffft1', 'sfsrmod3', 'sfadd', 'sfreal', 'sfsmooth', 'sfsrmig3', 'sfzomig3', 'sfsic3d', 'sfstack']
-data=['data/sigsbee/sigsbee2a_stratigraphy.sgy', 'data/sigsbee/sigsbee2a_reflection_coefficients.sgy']
-size= 1329555016

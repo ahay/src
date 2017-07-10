@@ -1,3 +1,0 @@
-uses=['sfsegyread', 'sfput', 'sftransp', 'sfwindow', 'sfgrey', 'sfscale', 'sfmath', 'sfspike', 'sfricker1', 'sfgraph', 'sfenvelope', 'sfhalfint', 'sfcmplx', 'sfsmooth', 'sfrtoc', 'sffft3', 'sfreal', 'sfmask', 'sfdd', 'sfanisolr2', 'sffftwave2', 'sfadd']
-data=['LOCAL']
-size= 97339121072

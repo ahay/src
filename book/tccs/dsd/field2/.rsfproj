@@ -1,3 +1,0 @@
-uses=['sfbin2rsf', 'sfscale', 'sfmath', 'sfnoise', 'sfgrey', 'sfbandpass', 'sfdip', 'sfpad', 'sfseislet', 'sfthreshold1', 'sfwindow', 'sfadd', 'sfortho', 'sfput', 'sffxdecon', 'sfsnr2', 'sfdd', 'sfgraph', 'sfbox']
-data=['PRIVATE']
-size=   30855304

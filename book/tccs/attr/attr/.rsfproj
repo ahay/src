@@ -1,3 +1,0 @@
-uses=['sfmath', 'sfgraph', 'sfiphase', 'sfwindow', 'sfdd', 'sfai2refl', 'sfspike', 'sfricker1', 'sfspectra', 'sfscale']
-data=['data/attr/ai1.rsf', 'data/attr/pptrace.rsf']
-size=      35804

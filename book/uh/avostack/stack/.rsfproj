@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfput', 'sfwindow', 'sfwiggle', 'sfmutter', 'sfvscan', 'sfpick', 'sfnmo', 'sfmath', 'sfcat', 'sfnoise', 'sflogstretch', 'sffft1', 'sftransp', 'sffindmo', 'sfpad', 'sfstack', 'sfagc', 'sfgrey', 'sfspray', 'sfsimilarity', 'sfthreshold', 'sfsnrstack', 'sfgraph']
-data=['data/midpts/midpts.hh']
-size=  272028272

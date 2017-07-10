@@ -1,3 +1,0 @@
-uses=['sfspline', 'sfunif2', 'sfdd', 'sfspike', 'sfscale', 'sfmath', 'sfcat', 'sftransp', 'sfwindow', 'sfgraph', 'sfgrey', 'sfpad', 'sfricker1', 'sfput', 'sfewefd2dtti', 'sfbyte', 'sfadd', 'sfspray', 'sfederiv2d', 'sfconvolve2', 'sfnoise']
-data=[]
-size= 41277249505

@@ -1,3 +1,0 @@
-uses=['sfmath', 'sfvti2desep', 'sfgrey', 'sfvti2dpseudosv', 'sfkine2dvti']
-data=[]
-size=    9605860

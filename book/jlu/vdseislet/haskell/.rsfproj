@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfput', 'sfmutter', 'sfgrey', 'sfwindow', 'sfspike', 'sfcausint', 'sfmath', 'sftransp', 'sflinear', 'sfgraph', 'sfnmo', 'sfvscan', 'sfpad', 'sfspray', 'sfmask', 'sfmul', 'sfiwarp', 'sfcat', 'sfbyte', 'sfgrey3', 'sfv2d', 'sfdiplet', 'sfadd', 'sfcut']
-data=['data/haskell/hask_mult.HH', 'data/haskell/picks.hask.txt']
-size=   13546632

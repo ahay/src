@@ -1,4 +1,0 @@
-from rsf.tex import *
-
-End(use='amsmath',color='rk rickers recomp sgr317 sgr330 sgr321 sgr3slice sgr316 tf show2')
-

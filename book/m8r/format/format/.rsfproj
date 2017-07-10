@@ -1,3 +1,0 @@
-uses=['sfmath', 'sfwiggle', 'sfsegyread']
-data=['data/plane/suplane_3_dips.dat']
-size=      12192

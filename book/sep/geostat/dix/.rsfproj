@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfmutter', 'sfcut', 'sfscale', 'sfpick', 'sfgrey', 'sfslice', 'sfwindow', 'sfreverse', 'sfgraph', 'sftransp', 'sflinear', 'sfcat', 'sfigrad', 'sfclip2', 'sfunif2', 'sfai2refl', 'sfricker1', 'sfdip', 'sfdixshape', 'sfnoise', 'sfpwsmooth', 'sfsmooth', 'sfadd']
-data=['data/dix/velan.HH', 'data/dix/layer1.txt', 'data/dix/layer2.txt', 'data/dix/layer3.txt', 'data/dix/layer4.txt', 'data/dix/layer5.txt', 'data/dix/layer6.txt']
-size=   38093160

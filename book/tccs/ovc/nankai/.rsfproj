@@ -1,3 +1,0 @@
-uses=['sfsuread', 'sfstack', 'sfspray', 'sfadd', 'sfbandpass', 'sfwindow', 'sfmul', 'sfmask', 'sfheaderwindow', 'sfmath', 'sfheadermath', 'sfdd', 'sfcat', 'sfintbin', 'sfgrey', 'sfconjgrad', 'sfput', 'sfpow', 'sfnmo', 'sfomp', 'sfstacks', 'sfenvelope', 'sfscale', 'sfmutter', 'sfpick', 'sfslice', 'sfcostaper', 'sfcosft', 'sftransp', 'sfcut', 'sfiwarp', 'sfvczo', 'sfdip', 'sfpwd', 'sft2warp', 'sffft1', 'sfreal', 'sfgraph', 'sfcltft', 'sffft3', 'sfovczo', 'sfdivn', 'sfclip2', 'sfbyte', 'sfgrey3']
-data=[]
-size= 200109423888

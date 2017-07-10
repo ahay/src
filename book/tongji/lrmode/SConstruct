@@ -1,6 +1,0 @@
-from rsf.tex import *
-
-End(use='amsmath,listings',
-    color='vp-hess epsilon-hess delta-hess Polxp Polzp Errpolxp Errpolzp Decompxp Decompzp Decompxzp Errdecxp Errdeczp Errdecxzp vp0 epsi del the Errpolxp1 Errpolzp1 Errpolxp2 Errpolzp2 Errdecxp1 Errdeczp1 Errdecxzp1 Errdecxp2 Errdeczp2 Errdecxzp2 Polxp1 Polzp1 Polxp2 Polzp2 Decompxp1 Decompzp1 Decompxzp1 Decompxp2 Decompzp2 Decompxzp2',
-    hires='Elasticx Elasticz ElasticSepP ElasticSepSV ElasticPx ElasticPz ElasticSVx ElasticSVz')
-

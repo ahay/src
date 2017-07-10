@@ -1,3 +1,0 @@
-uses=['sfspline', 'sfunif2', 'sfdd', 'sfgrey', 'sfcontour', 'sfspike', 'sfricker1', 'sftransp', 'sfawefd2d', 'sfwindow', 'sfwiggle']
-data=[]
-size=   97390142

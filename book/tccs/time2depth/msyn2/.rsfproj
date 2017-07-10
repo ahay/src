@@ -1,3 +1,0 @@
-uses=['sfspiral', 'sfput', 'sfwindow', 'sfgrey', 'sfve2d', 'sfcmplx', 'sftransp', 'sfgraph', 'sfcameron2d', 'sftime2depth']
-data=[]
-size=   14010000

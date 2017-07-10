@@ -1,3 +1,0 @@
-uses=['sfheaderattr', 'sftahread', 'sftahheadermath', 'sftahwrite', 'sfdd', 'sffold', 'sfgrey', 'sftahsort', 'sftahmakeskey', 'sftahgain', 'sfwindow', 'sftahnmo', 'sftahstack', 'sfpow', 'sfmask', 'sfheaderwindow', 'sfheadersort', 'sfintbin', 'sfmath', 'sfnmo', 'sfstack', 'sfcat', 'sfput', 'sftransp', 'sfwiggle']
-data=[]
-size= 4170401048

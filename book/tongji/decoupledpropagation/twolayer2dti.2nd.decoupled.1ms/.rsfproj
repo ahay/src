@@ -1,3 +1,0 @@
-uses=['sftwolayer2dti', 'sftti2devectorlrsvd', 'sfmath', 'sfgraph', 'sfgrey', 'sfwindow', 'sftti2delr', 'sftti2delrdec']
-data=[]
-size=   11587296

@@ -1,3 +1,0 @@
-uses=['sfspike', 'sfmath', 'sfcat', 'sfwindow', 'sfkirmod', 'sfput', 'sfadd', 'sfgrey', 'sfbyte', 'sftransp', 'sfgrey3']
-data=[]
-size= 5531076096

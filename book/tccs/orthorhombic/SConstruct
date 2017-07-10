@@ -1,3 +1,0 @@
-from rsf.tex import *
-
-End(color='wavexy wavexz waveyz wavexyl wavexzl waveyzl velxfig velyfig velzfig errfig1 errfig3')

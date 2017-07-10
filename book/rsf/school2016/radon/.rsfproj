@@ -1,3 +1,0 @@
-uses=['sfgrey', 'sfadd', 'sfconjgrad', 'sfmutter', 'sfvscan']
-data=['LOCAL']
-size=    2474940

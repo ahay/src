@@ -1,5 +1,0 @@
-from rsf.tex import *
-
-os.environ['PSTEXPENOPTS'] = 'color=y fat=1 fatmult=1.5'
-
-End(options='manuscript',use=['[bookmarks=true]hyperref','amsmath','color','listings'])

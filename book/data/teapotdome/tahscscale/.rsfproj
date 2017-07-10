@@ -1,3 +1,0 @@
-uses=['sfgrey', 'sfbyte', 'sfgrey3', 'sfsegyread', 'sfheaderattr', 'sftahscscale', 'sftahwrite', 'sfscale', 'sfgraph', 'sfwindow', 'sfcmplx', 'sftahsort']
-data=['teapot/final_stack.rsf', 'teapot/npr3_gathers.sgy', 'teapot/npr3_field.sgy', 'teapot/3dload_Teapot_Dome_3D.pdf', 'teapot/teapot_processing.pdf']
-size= 7727281400

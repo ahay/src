@@ -1,6 +1,0 @@
-from rsf.tex import *
-import os
-
-End(lclass='geophysics',options='manuscript',color='vel q err compare-n compare-v compare-c',use='enumitem')
-
-

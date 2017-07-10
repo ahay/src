@@ -1,3 +1,0 @@
-uses=['sfsegyread', 'sfwindow', 'sfmask', 'sfdd', 'sfmath', 'sfcat', 'sftransp', 'sfspike', 'sfgraph', 'sfscale', 'sfput', 'sfintbin', 'sfmutter', 'sfhalfint', 'sfsmooth', 'sfdmigda', 'sfgrey', 'sfstack', 'sfdip2', 'sfdagap', 'sfmul', 'sffdip', 'sfdiptaper', 'sfcrssemb']
-data=['data/sigsbee/sigsbee2a_nfs.sgy', 'data/sigsbee/sigexp.rsf', 'data/sigsbee/sigsbee2a_migvel.sgy']
-size= 7805287304

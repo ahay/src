@@ -1,3 +1,0 @@
-uses=['sfsuread', 'sfput', 'sfwindow', 'sfgrey']
-data=['http://www.trip.caam.rice.edu/data/mobil/paracdp.segy', 'http://www.trip.caam.rice.edu/data/mobil/logs_and_sources.tar']
-size=   18883872
