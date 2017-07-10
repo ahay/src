@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfscale', 'sfput', 'sfwindow', 'sfbyte', 'sftransp', 'sfgrey3', 'sfmpipsp', 'sfreal']
-data=['PRIVATE']
-size=  502703724

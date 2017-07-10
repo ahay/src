@@ -1,8 +1,0 @@
-from rsf.proj import *
-# Fetch Files from repository
-Fetch("bpaitshots.hh","bpait")
-# Convert Files to RSF
-Flow('bpaitshots','bpaitshots.hh', 'dd form=native')
-# Update Header
-
-End()

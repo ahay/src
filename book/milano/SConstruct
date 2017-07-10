@@ -1,8 +1,0 @@
-from rsf.book import *
-
-Papers(copyr='Politecnico di Milano',
-       group='Politecnico di Milano',
-       line='Selected papers',
-       fig=('taupvel/cmp','int-painting-mask','width=\\textwidth'))
-
-End(use='amsmath,color,pifont,multirow')

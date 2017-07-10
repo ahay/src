@@ -1,9 +1,0 @@
-from rsf.book import *
-
-Papers(copyr='University of Houston',
-       group='Department of Earth and Atmospheric Sciences',
-       authors = {'avostack':'Pan Deng, Yangkang Chen, Yu Zhang, and Hua-Wei Zhou'},
-       )
-       
-End(use='amsmath')
-

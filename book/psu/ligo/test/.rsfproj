@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfput', 'sfgraph', 'sfwindow', 'sfrtoc', 'sffft3', 'sfmath', 'sfreal', 'sfmul', 'sfscale', 'sfbandpass', 'sfcat', 'sfbox', 'sfltft', 'sftransp', 'sfbyte', 'sfgrey']
-data=['https://losc.ligo.org/s/events/GW150914/H-H1_LOSC_4_V1-1126259446-32.txt.gz', 'data/ligo/strain_H1_whitenbp.out']
-size=   14127760
