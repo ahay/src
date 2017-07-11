@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-difference domf lpfdenoise2 svd
+domf lpfdenoise2 svd
 '''
 
 try:  # distributed version

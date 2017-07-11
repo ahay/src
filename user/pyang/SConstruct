@@ -6,7 +6,7 @@ import bldutil
 ######################################################################
 # 1. C main programs
 progs = '''
-fbrec2d fwi2d modeling2d ps2d
+fbrec2d fwi2d modeling2d
 '''
 
 progs_fftw='''

@@ -1,3 +1,0 @@
-from rsf.tex import *
-
-End('paper',lclass='cwparticle',options='11pt',use='''amsmath,amsfonts,amssymb,graphicx''',color='snapshot')
