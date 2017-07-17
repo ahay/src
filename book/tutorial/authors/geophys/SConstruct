@@ -10,7 +10,7 @@ Paper('geophys',
 #Paper('geophys',
 #     lclass='geophysics',
 #     options='manuscript',
-#     use='times,natbib,amsmath,graphicx,color,amssymb,amsbsy,lineno,ulem,se#tspace,rotating',
+#     use='times,natbib,amsmath,graphicx,color,amssymb,amsbsy,lineno,ulem,setspace,rotating',
 #     include=r'''
 #     \linenumbers*[1]
 #     ''')
