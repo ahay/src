@@ -7,6 +7,7 @@ Flow('imp2',None,'spike n1=5  mag=%g ' % (2700 * 2750))
 Flow('imp3',None,'spike n1=12 mag=%g ' % (2400 * 2450))
 Flow('imp4',None,'spike n1=8  mag=%g ' % (2800 * 3000))
 Flow('imp5',None,'spike n1=16 mag=%g ' % (2550 * 2650))
+
 Flow('imp','imp1 imp2 imp3 imp4 imp5',
      'cat axis=1 ${SOURCES[1:5]} | put label1=Sample unit1=')
 
@@ -23,7 +24,5 @@ Flow('ricker','ref','spike k1=11 | ricker1 freq=0.2')
 Result('ricker','put d1=1 | window n1=21 | graph title=Wavelet')
 
 Flow('data','ref','ricker1 freq=0.2')
-
-# Check adj, plot matrix
 
 End()
