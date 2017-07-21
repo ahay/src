@@ -1,0 +1,27 @@
+from rsf.proj import *
+
+# First example: Data clipping
+##########################
+
+# Plot functin
+def plot(title):
+    return'''
+	graph title="%s" min2=-1. max2=1. plotfat=7 titlefat=6 labelfat=5
+	''' %title
+
+# Sine function
+Flow('sine',None,'math n1=201 d1=0.1 o1=0 output="sin(x1)"')
+Result('sine',plot('Sine Function'))
+
+
+exe_clip = 'clip_py.py'
+
+# Clip the sine data
+Flow('clip1','sine %s' %exe_clip, './${SOURCES[1]} upper=0.9 lower=-0.9')
+Result('clip1',plot('Sine Function Clipping with [-0.9,0.9]'))
+
+Flow('clip2','sine %s' %exe_clip, './${SOURCES[1]} upper=0.9')
+Result('clip2',plot('Sine Function Clipping with [0.9]'))
+
+
+End()
