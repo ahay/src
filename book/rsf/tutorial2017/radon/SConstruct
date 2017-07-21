@@ -1,5 +1,7 @@
 from rsf.proj import *
 
+SConscript('../synth/SConstruct')
+
 # Use cmp2 data from the previous project
 Fetch('cmp2.rsf','synth',top='..',server='local')
 Plot('cmp2','grey title="Input Data" clip=6')
