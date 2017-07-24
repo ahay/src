@@ -58,7 +58,7 @@ int main(int argc, char* argv[])
   /* totol number of least-squares iteration*/
   if (!sf_getint("nb",&nb)) nb=20;
   /* number (thickness) of ABC on each side */
-  if (!sf_getint("testadj",&fromBoundary)) fromBoundary=true;
+  if (!sf_getbool("fromBoundary",&fromBoundary)) fromBoundary=true;
   /* if fromBoundary=true, reconstruct source wavefield from stored boundary */
   if (!sf_getint("testadj",&testadj)) testadj=0;
   /* if testadj = 1 then program only testadj without calculating */
