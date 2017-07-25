@@ -321,6 +321,7 @@ void vc2dread1(sf_file F,
     }
 
     free(*w); free(w);
+}
     
 /*------------------------------------------------------------*/
 void vc3dread1(sf_file F,
