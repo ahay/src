@@ -305,6 +305,7 @@ vc3d rot3d(vc3d *nn,
 }
 
 /*------------------------------------------------------------*/
+
 void vc2dread1(sf_file F,
                vc2d   *v,
                size_t  n1)
@@ -322,8 +323,7 @@ void vc2dread1(sf_file F,
 
     free(*w); free(w);
 }
-    
-/*------------------------------------------------------------*/
+
 void vc3dread1(sf_file F,
                vc3d   *v,
                size_t  n1)
