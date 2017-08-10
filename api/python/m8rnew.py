@@ -20,8 +20,11 @@ import numpy as np
 try:
     import c_m8r as c_rsf
     _swig_ = True
+    sys.stderr.write('_swig_==True\n')
 except:
     _swig_ = False
+    sys.stderr.write('_swig_==False\n')
+_swig_ = False
 
 import rsf.doc
 import rsf.prog
@@ -116,36 +119,64 @@ else:
                                 argv2.append(argv[i])
             return argv2
 
-        def __get(self, key, default):
+        def __get(self, key, default=None):
             """Obtains value of argument from dictionary"""
+            # kls
+            print 'I think this function Par.__get function can be removed.'
+            print 'Do you see this print?'
             if self.__args.has_key(key):
                 return self.__args[key]
-            elif str(default):
-                return default
             else:
-                return None
-
-        def string(self, key, default=None):
-            """Returns string argument given to program"""
-            return self.__get(key, default)
-
+                return default
+    
+        # call without default then test if return is None is error
+        # on a required parameter.  cannot tell difference between illegal
+        # int value and value not input. 
         def int(self,key,default=None):
             """Returns integer argument given to program"""
             try:
-                return int( self.__get(key, default) )
+                val=self.__args[key] 
             except:
-                return None
+                return default
 
+            try:
+                return int(val)
+            except:
+                sys.stderr.write('program reading command line arg %s\n'%key)
+                sys.stderr.write('parsing %s=%s\n'%(key,val))
+                sys.stderr.write('right of = sign must be an int\n')
+                sys.stderr.write('error - exiting program\n')
+                quit()
+
+        def string(self, key, default=None):
+            """Returns string argument given to program"""
+            try:
+                return self.__args[key]
+            except:
+                return default
+                
         def float(self,key,default=None):
             """Returns float argument given to program"""
             try:
-                return float( self.__get(key, default) )
+                val=self.__args[key] 
             except:
-                return None
+                return default
+
+            try:
+                return float(val )
+            except:
+                sys.stderr.write('program reading command line arg %s\n'%key)
+                sys.stderr.write('parsing %s=%s\n'%(key,val))
+                sys.stderr.write('right of = sign must be a float\n')
+                sys.stderr.write('error - exiting program\n')
+                quit()
 
         def bool(self,key,default=None):
             """Returns bool argument given to program"""
-            val = self.__get(key, default)
+            try:
+                val = self.__args[key]
+            except:
+                return default
             val = str(val).lower()
             if val[0] == 'y' or val == 'true':
                 return True
@@ -603,25 +634,49 @@ else:
             # read the rest of the file into numpy array :
             # x = np.fromfile(f, dtype=np.int)  
 
-        def read(self):
-            self.f.seek(self.datastart, os.SEEK_SET)
+        def read(self,shape=None):
+            #self.f.seek(self.datastart, os.SEEK_SET)
             datatype="unknown"
-            if (self.string('data_format') == 'native_float' and 
-                self.int('esize') == 4):
+            
+            data_format=self.string('data_format')
+            esize=self.int('esize')
+
+            if (data_format == 'native_float' and 
+                esize == 4):
                 datatype=np.float32
 
-            if (self.string('data_format') == 'native_complex' and 
-                self.int('esize') == 8):
+            if (data_format == 'native_complex' and 
+                esize == 8):
                 datatype=np.complex64
 
-            if (self.string('data_format') == 'native_int' and 
-                self.int('esize') == 4):
+            if (data_format == 'native_int' and 
+                esize == 4):
                 datatype=np.int32
  
-            if type != "unknown":
-                data=np.fromfile(self.f,dtype=datatype)
-                data=data.reshape(self.shape())
+            if shape == None:
+                shape=self.shape()
+
+            size=1
+            #sys.stderr.write('shape='+repr(shape)+'\n')
+
+            for n in shape:
+                size*=n
+
+            if datatype != "unknown":
+                data=np.fromfile(self.f,dtype=datatype,count=size)
+                data=data.reshape(shape)
                 return data
+            else:
+                sys.stderr.write('error reading from input file.\n')
+                sys.stderr.write('datatype unknown\n')
+                sys.stderr.write('filename=%s.\n',self.filename)
+                sys.stderr,write('data_format='+repr(data_format)+'\n')
+                sys.stderr,write('esize='+repr(esize)+'\n')
+                sys.stderr.write('error - exiting program\n')
+                quit()
+
+            # kls update to allow reading part of input data
+            # add readshpe parameter. if not input use self.shape()
 
         def close(self):
             self.f.close() 
@@ -672,7 +727,7 @@ else:
             else:
                 self.filename=tag
                 self.f=open(self.filename,'w')
-                selp.pipe=False
+                self.pipe=False
             if not self.pipe:
                 if self.filename == '/dev/null':
                     self.filename = 'stdout'
@@ -715,7 +770,7 @@ else:
             return None 
  
         def put(self,key,value):
-            # repr make string represntation of an object
+            # repr make string representation of an object
             if isinstance(value,str):
                 #make sure string is inclosed in ".." in the .rsf file
                 self.vd[key]='"'+value+'"'
@@ -729,13 +784,13 @@ else:
             data.tofile(self.f)
 
         def flushheader(self):
+            # write the header (saved from the previous (input) file
             self.f.write(self.header)
-            # kls now write the command name and parameters
-            # kls now write the disctionary
             self.headerflushed = True
             #kls write command to output file 
             # kls check file.c sf_fileflush for examples
                 
+            # kls now write the command name and parameters
             self.f.write('\n# program executed: ')
             for arg in sys.argv:
                 self.f.write(arg+' ')
@@ -743,6 +798,7 @@ else:
             self.f.write('# time=%s\n'%datetime.datetime.now())
             self.f.write('\n')
 
+            # kls now write the dictionary
             for key in self.vd:
                 self.f.write("%s=%s\n"%(key,self.vd[key]))
 
