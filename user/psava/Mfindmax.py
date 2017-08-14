@@ -10,12 +10,12 @@ par = rsf.Par()
 
 verb = par.bool('verb',False) # verbosity flag
 
-Fin = rsf.Input()         # input
-n1 = Fin.int  ("n1")
-nn = Fin.size(1); # number of traces
+Fin = rsf.Input()             # input file 
+n1 = Fin.int("n1")
+nn = Fin.size(1);             # number of traces
 din = np.zeros(n1,'f') 
 
-Fou = rsf.Output()        # output 
+Fou = rsf.Output()            # output file
 Fou.put("n1",1)
 Fou.put("o1",0)
 Fou.put('d1',1)
@@ -36,7 +36,8 @@ for i in range(nn):
 dou[0]=mymax
 Fou.write(dou)
 
-print  >> sys.stderr,'max=',mymax
+if(verb):
+    print >>sys.stderr,'max=',mymax
 
 # ------------------------------------------------------------
 Fin.close()
