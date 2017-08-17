@@ -1,4 +1,4 @@
-/* Angle-gather constant-velocity time migration. */
+/* 2D Angle-gather variable-velocity time migration. */
 /*
   Copyright (C) 2017 University of Texas at Austin
 
