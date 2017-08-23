@@ -263,6 +263,7 @@ int main(int argc, char *argv[])
 		
 	if (!sf_getbool("adj",&adj)) adj=false;
 	/*if y modeling, if n, migration */
+	adj = !adj;
 	if ( NULL != sf_getstring("semb") ) {
 	/* output file containing Semblance */ 
 			semb  = sf_output ("semb"); sembool = true; 
@@ -477,7 +478,16 @@ int main(int argc, char *argv[])
 	if (sembool){
 		semblance(stk,sqstk,ntau,nxi);
 		sf_floatwrite(sqstk[0],nxi*ntau,semb); 
+                sf_fileclose (semb);
+                free (sqstk);
+                free (stk);
 	}
+	sf_fileclose (out);
+	sf_fileclose (in);
+	sf_fileclose (vin);
+        free (image);
+        free (data);
+        free (velFile);
 	exit(0);
 }
 
