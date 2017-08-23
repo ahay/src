@@ -216,17 +216,17 @@ void stack(float **image,int ntau,int nxi,float **stk, float **sqstk){
 	return;
 }
 
-void semblance(float **stk,float **sqstk,int ntau,int nxi){
+void semblance(float **stk,float **sqstk,int ntau,int nxi, float eps){
 	
 	int ixi, itau;
 	float sqst;
-	float eps = 0.00001;
-	
+	float sk;
+
 	for (ixi=0; ixi<nxi; ixi++){
 		for (itau=0; itau<ntau; itau++){
 			sqst = sqstk[ixi][itau];
-
-			sqstk[ixi][itau] = stk[ixi][itau]*sqst/(eps+sqst*sqst);
+			sk = stk[ixi][itau];
+			sqstk[ixi][itau] = sk*sk*sqst/(eps+sqst*sqst);
 		}
 	}
 	
@@ -242,7 +242,7 @@ int main(int argc, char *argv[])
 	float cosa, sina, sing, cosg;
 	float tpre, hpre, xpre, deno, wtpre;
 	int nvtau, nvxi;
-	float vtau0, vxi0, dvtau, dvxi;
+	float vtau0, vxi0, dvtau, dvxi, eps;
 
 	float **image=NULL;
 	float ***data=NULL;
@@ -407,6 +407,9 @@ int main(int argc, char *argv[])
 		sqstk = sf_floatalloc2(ntau,nxi);
 		zeroimage(stk,ntau,nxi);
 		zeroimage(sqstk,ntau,nxi);
+
+		if (!sf_getfloat("eps",&eps)) eps=0.00001;
+		/* epsilon for division in semblance calc*/
 		
 		sf_putint(semb,"n1",ntau);
 		sf_putfloat(semb,"d1",dtau);
@@ -476,7 +479,7 @@ int main(int argc, char *argv[])
 		sf_floatwrite(data[0][0],nh*nx*nt,out); //write data
 	}
 	if (sembool){
-		semblance(stk,sqstk,ntau,nxi);
+		semblance(stk,sqstk,ntau,nxi,eps);
 		sf_floatwrite(sqstk[0],nxi*ntau,semb); 
                 sf_fileclose (semb);
                 free (sqstk);
