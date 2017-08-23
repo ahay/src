@@ -199,7 +199,7 @@ void angle_engine(bool adj,
 		return;
 }
 
-void stack(float **image,int ntau,int nxi,float **stk, float **sqstk){
+void stack(float **image,int ntau,int nxi,float **stk, float **sqstk, bool l2){
 
 	float img;
 	int ixi, itau;
@@ -207,7 +207,11 @@ void stack(float **image,int ntau,int nxi,float **stk, float **sqstk){
 		for (itau=0; itau<ntau; itau++){
 			img = image[ixi][itau];
 			stk[ixi][itau] += img;
-			sqstk[ixi][itau] += img*img;
+			if (l2){
+				sqstk[ixi][itau] += img*img;
+			} else {
+				sqstk[ixi][itau] += fabs(img);
+			}
 			
 		}
 		
@@ -216,7 +220,7 @@ void stack(float **image,int ntau,int nxi,float **stk, float **sqstk){
 	return;
 }
 
-void semblance(float **stk,float **sqstk,int ntau,int nxi, float eps){
+void semblance(float **stk,float **sqstk,int ntau,int nxi, float eps, bool l2){
 	
 	int ixi, itau;
 	float sqst;
@@ -225,8 +229,14 @@ void semblance(float **stk,float **sqstk,int ntau,int nxi, float eps){
 	for (ixi=0; ixi<nxi; ixi++){
 		for (itau=0; itau<ntau; itau++){
 			sqst = sqstk[ixi][itau];
-			sk = stk[ixi][itau];
-			sqstk[ixi][itau] = sk*sk*sqst/(eps+sqst*sqst);
+			if (sqst < eps*10. ){sqstk[ixi][itau] = 0. ;} else{
+				sk = stk[ixi][itau];
+				if (l2){
+					sqstk[ixi][itau] = sk*sk*sqst/(eps+sqst*sqst);
+				}else{
+					sqstk[ixi][itau] = fabs(sk)*sqst/(eps+sqst*sqst);
+				}
+			}
 		}
 	}
 	
@@ -250,7 +260,7 @@ int main(int argc, char *argv[])
 	float **stk=NULL;
 	float **velFile=NULL;
 	
-	bool adj, sembool;
+	bool adj, sembool, l2;
 	
 	sf_file in=NULL, out=NULL;
 	sf_file	semb=NULL;
@@ -395,7 +405,7 @@ int main(int argc, char *argv[])
 
 	}
 	else{
-		sf_error("need vel=");
+		sf_error("need vin=");
 	}
 			
 	data = sf_floatalloc3(nt,nx,nh);
@@ -410,7 +420,7 @@ int main(int argc, char *argv[])
 
 		if (!sf_getfloat("eps",&eps)) eps=0.00001;
 		/* epsilon for division in semblance calc*/
-		
+
 		sf_putint(semb,"n1",ntau);
 		sf_putfloat(semb,"d1",dtau);
 		sf_putfloat(semb,"o1",tau0);
@@ -422,6 +432,9 @@ int main(int argc, char *argv[])
 		sf_putfloat(semb,"o3",0.);
 		
 	}
+	if (!sf_getbool("l2",&l2)) l2=true;
+	/*if y use l2 norm for semb, if n, use l1 norm */
+
 	if (adj){zerodata(data,nt,nx,nh);}
 	else{sf_floatread(data[0][0],nt*nx*nh,in);}
 
@@ -471,7 +484,7 @@ int main(int argc, char *argv[])
 			sf_floatwrite(image[0],ntau*nxi,out); //write gather				
 		}
 		if (sembool){
-			stack(image,ntau,nxi,stk,sqstk);
+			stack(image,ntau,nxi,stk,sqstk,l2);
 			
 		}
 	}
@@ -479,7 +492,7 @@ int main(int argc, char *argv[])
 		sf_floatwrite(data[0][0],nh*nx*nt,out); //write data
 	}
 	if (sembool){
-		semblance(stk,sqstk,ntau,nxi,eps);
+		semblance(stk,sqstk,ntau,nxi,eps,l2);
 		sf_floatwrite(sqstk[0],nxi*ntau,semb); 
                 sf_fileclose (semb);
                 free (sqstk);
