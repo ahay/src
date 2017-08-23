@@ -113,7 +113,7 @@ void angle_engine(bool adj,
 	float ***data,int nt,int nx,int nh,float dt,float dx,float dh,float t0,float x0,float h0,
 	float **image,int ntau,int nxi,float dtau,float dxi,float tau0,float xi0,
 	float **velFile,int nvtau,int nvxi,float dvtau,float dvxi,float vtau0,float vxi0,
-	float tpre,float hpre,float xpre, float wtpre){
+	float tpre,float hpre,float xpre, float wtpre, bool weighting){
 		
 		int itau, ixi;
 		float tau, xi;
@@ -147,7 +147,11 @@ void angle_engine(bool adj,
 				t1 = tau*tpre;
 				h1 = z*hpre;
 				x1 = z*xpre+xi;
-				wt = wtpre*z*z;
+				if (weighting){
+					wt = wtpre*z*z;
+				}else{
+					wt = 1.;
+				}
 				
 				//sf_warning("%g",wt);
 				
@@ -264,7 +268,7 @@ int main(int argc, char *argv[])
 	float **stk=NULL;
 	float **velFile=NULL;
 	
-	bool adj, sembool, l2;
+	bool adj, sembool, l2, weighting;
 	
 	sf_file in=NULL, out=NULL;
 	sf_file	semb=NULL;
@@ -278,6 +282,8 @@ int main(int argc, char *argv[])
 	if (!sf_getbool("adj",&adj)) adj=false;
 	/*if y modeling, if n, migration */
 	adj = !adj;
+	if (!sf_getbool("weighting",&weighting)) weighting=true;
+	/*kirchhoff weighting? */
 	if ( NULL != sf_getstring("semb") ) {
 	/* output file containing Semblance */ 
 			semb  = sf_output ("semb"); sembool = true; 
@@ -478,9 +484,13 @@ int main(int argc, char *argv[])
 			hpre = sing*cosg/deno;
 			xpre = sina*cosa/deno;
 			
-			wtpre = 1/(deno*deno)*dg; // jacobian weighting
+			if(weighting){
+				wtpre = 1/(deno*deno)*dg; // jacobian weighting
+			}else{ 
+				wtpre=1;
+			}
 			
-			angle_engine(adj,data,nt,nx,nh,dt,dx,dh,t0,x0,h0,image,ntau,nxi,dtau,dxi,tau0,xi0,velFile,nvtau,nvxi,dvtau,dvxi,vtau0,vxi0,tpre,hpre,xpre,wtpre);			
+			angle_engine(adj,data,nt,nx,nh,dt,dx,dh,t0,x0,h0,image,ntau,nxi,dtau,dxi,tau0,xi0,velFile,nvtau,nvxi,dvtau,dvxi,vtau0,vxi0,tpre,hpre,xpre,wtpre,weighting);			
 
 		}
 
