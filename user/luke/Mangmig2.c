@@ -229,12 +229,16 @@ void semblance(float **stk,float **sqstk,int ntau,int nxi, float eps, bool l2){
 	for (ixi=0; ixi<nxi; ixi++){
 		for (itau=0; itau<ntau; itau++){
 			sqst = sqstk[ixi][itau];
-			if (sqst < eps*10. ){sqstk[ixi][itau] = 0. ;} else{
-				sk = stk[ixi][itau];
-				if (l2){
-					sqstk[ixi][itau] = sk*sk*sqst/(eps+sqst*sqst);
-				}else{
-					sqstk[ixi][itau] = fabs(sk)*sqst/(eps+sqst*sqst);
+			sk = stk[ixi][itau];
+			if (sk < eps ){sqstk[ixi][itau] = 0. ;} 
+			else{ if (sqst < eps*eps ){sqstk[ixi][itau] = 0. ;}
+				else{
+				
+					if (l2){
+						sqstk[ixi][itau] = sk*sk*sqst/(eps/10.+sqst*sqst);
+					}else{
+						sqstk[ixi][itau] = fabs(sk)*sqst/(eps+sqst*sqst);
+					}
 				}
 			}
 		}
