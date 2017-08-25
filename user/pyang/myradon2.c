@@ -69,6 +69,7 @@ void myradon2_lop(bool adj, bool add, int nm, int nd, sf_complex *mm, sf_complex
 
     if (nm != np || nd != nx) sf_error("%s: mismatched data sizes",__FILE__);
 	
+<<<<<<< HEAD
     sf_cadjnull(adj, add, nm, nd, mm, dd);
 
     if(adj){/* mm(p,w)=sum_{ix=0}^{nx} dd(xx[ix],w)*exp(i*w*p*xx[ix]) */
@@ -83,6 +84,36 @@ void myradon2_lop(bool adj, bool add, int nm, int nd, sf_complex *mm, sf_complex
 #endif
 	    }
 	    mm[ip]=sumc;
+=======
+	sf_cadjnull(adj, add, nm, nd, mm, dd);
+
+	if(adj){// mm(p,w)=sum_{ix=0}^{nx} dd(xx[ix],w)*exp(i*w*p*xx[ix])
+		for(ip=0; ip<np; ip++) // loop over slopes
+		{
+			sumc=sf_cmplx(0,0);
+			for(ix=0; ix<nx; ix++) {
+#ifdef SF_HAS_COMPLEX_H	    
+			    sumc+=cexpf(I*w*p[ip]*xx[ix])*dd[ix];
+#else
+			    sumc=sf_cadd(sumc,sf_cmul(cexpf(sf_cmplx(0.0f,w*p[ip]*xx[ix])),dd[ix]));
+#endif
+			}
+			mm[ip]=sumc;
+		}
+	}else{// dd(xx,w)=sum_{ip=0}^{np} mm(p[ip],w)*exp(-i*w*p[ip]*xx)
+		for(ix=0; ix<nx; ix++) 
+		{
+			sumc=sf_cmplx(0,0);
+			for(ip=0; ip<np; ip++) {
+#ifdef SF_HAS_COMPLEX_H	  
+			    sumc+=cexpf(-I*w*p[ip]*xx[ix])*mm[ip];
+#else
+			    sumc=sf_cadd(sumc,sf_cmul(cexpf(sf_cmplx(0.0f,-w*p[ip]*xx[ix])),mm[ip]));
+#endif
+			}
+			dd[ix]=sumc;
+		}
+>>>>>>> c4e717e7e47569fdbc3f5cbb26843827c0091a5a
 	}
     }else{/* dd(xx,w)=sum_{ip=0}^{np} mm(p[ip],w)*exp(-i*w*p[ip]*xx) */
 	for(ix=0; ix<nx; ix++) 
@@ -118,6 +149,7 @@ void myradon2_inv(sf_complex *mm, sf_complex *adj_dd, float eps)
 	allocated=true;
     }
 	
+<<<<<<< HEAD
     for(ip=0; ip<np; ip++) 
     {
 	sumc=sf_cmplx(0,0);
@@ -127,6 +159,19 @@ void myradon2_inv(sf_complex *mm, sf_complex *adj_dd, float eps)
 #else
 	    sumc=sf_cadd(sumc,cexpf(sf_cmplx(0.0f,w*ip*dp*xx[ix])));
 #endif
+=======
+	for(ip=0; ip<np; ip++) 
+	{
+		sumc=sf_cmplx(0,0);
+		for(ix=0; ix<nx; ix++) {
+#ifdef SF_HAS_COMPLEX_H		    
+			sumc+=cexpf(I*w*ip*dp*xx[ix]);
+#else
+			sumc=sf_cadd(sumc,cexpf(sf_cmplx(0.0f,w*ip*dp*xx[ix])));
+#endif
+		}
+		c[ip]=sumc;
+>>>>>>> c4e717e7e47569fdbc3f5cbb26843827c0091a5a
 	}
 	c[ip]=sumc;
     }

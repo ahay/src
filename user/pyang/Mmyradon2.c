@@ -54,6 +54,7 @@ void matrix_transpose(sf_complex *matrix, int nx, int nz)
 
 int main(int argc, char* argv[])
 {
+<<<<<<< HEAD
     bool adj, inv, par;
     char *invmode;
     int iw, ip, ix, np, nt, nfft, nw, nx, niter;
@@ -115,6 +116,69 @@ int main(int argc, char* argv[])
 	/* p origin if input in radon domain */
 	if (!sf_getint("nx",&nx)) sf_error ("Need nx=");
 	/* number of offsets (if adj=n) */
+=======
+	bool adj, inv, par;
+    	char *invmode;
+	int iw, ip, ix, np, nt, nfft, nw, nx, niter;
+	float dp, p0, dt, t0, dx, ox, x0, w, eps;
+	float *p, *xx, **dd, **mm, *tmpr;
+	sf_complex *cdd, *cmm;
+	fftwf_complex *tmpc;
+	fftwf_plan fft1, ifft1;
+	sf_file in, out, offset=NULL;
+
+    	sf_init(argc,argv);
+	in = sf_input("in");	/* input data or radon  */
+	out =sf_output("out");	/* output radon or data */
+
+    	if (!sf_getbool("adj",&adj)) adj=true;
+	/* if y, perform adjoint operation */
+    	if (!sf_getbool("inv",&inv)) inv=false; 
+	/* if y, perform inverse operation */
+
+    	/* read input file parameters */
+    	if (!sf_histint(in,"n1",&nt)) sf_error("No n1= in input");
+	/* number of samples in time axis */
+    	if (!sf_histfloat(in,"d1",&dt)) sf_error("No d1= in input");
+	/* interval of time axis */
+    	if (!sf_histfloat(in,"o1",&t0)) t0=0.;
+	/* origin of time axis */
+
+	if ( !(invmode=sf_getstring("invmode")) ) invmode="toeplitz";
+	/* inverse method: 'ls' if least-squares; 'toeplitz' if use FFT */			
+
+    	if (adj||inv) { // m(tau,p)=sum_{i=0}^{nx} d(t=tau+p*x_i,x_i)
+		if (!sf_histint(in,"n2",&nx)) sf_error("No n2= in input");
+		/* number of offset if the input in the data domain */
+
+		/* specify slope axis */
+		if (!sf_getint  ("np",&np)) sf_error("Need np=");
+		/* number of p values (if adj=y) */
+		if (!sf_getfloat("dp",&dp)) sf_error("Need dp=");
+		/* p sampling (if adj=y) */
+		if (!sf_getfloat("p0",&p0)) sf_error("Need p0=");
+		/* p origin (if adj=y) */
+		if(inv){			
+			if (invmode[0]=='l' && !sf_getint("niter",&niter)) niter=100;
+			/* number of CGLS iterations */
+			if (!sf_getfloat("eps",&eps)) eps=0.01;
+			/* regularization parameter */
+		} 
+		    
+
+		sf_putint(  out,"n2",np);
+		sf_putfloat(out,"d2",dp);
+		sf_putfloat(out,"o2",p0);
+    	} else { // d(t,h)=sum_{i=0}^{np} m(tau=t-p_i*h,p_i)
+		if (!sf_histint  (in,"n2",&np)) sf_error("No n2= in input");
+		/* number of ray parameter if input in radon domain */
+		if (!sf_histfloat(in,"d2",&dp)) sf_error("No d2= in input");
+		/* p sampling interval if input in radon domain */
+		if (!sf_histfloat(in,"o2",&p0)) sf_error("No o2= in input");
+		/* p origin if input in radon domain */
+		if (!sf_getint("nx",&nx)) sf_error ("Need nx=");
+		/* number of offsets (if adj=n) */
+>>>>>>> c4e717e7e47569fdbc3f5cbb26843827c0091a5a
 	
 	sf_putint(out,"n2",nx);
     }

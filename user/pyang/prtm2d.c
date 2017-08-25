@@ -1,5 +1,5 @@
 /* 2-D prestack LSRTM linear operator using wavefield reconstruction method
-Note: Sponge ABC is applied!
+   Note: Sponge ABC is applied!
 */
 /*
   Copyright (C) 2014  Xi'an Jiaotong University, UT Austin (Pengliang Yang)
@@ -17,22 +17,63 @@ Note: Sponge ABC is applied!
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+  Comments: 
+  Operator modified to pass the adjoint. Added adjoint tests as well. 
+  Daniel Trad, Uinversity of Calgary, 2017
 */
 #include <rsf.h>
+#include <time.h>
+#include <sys/time.h>
 
 #ifdef _OPENMP
 #include <omp.h>
 #endif
 
 #include "prtm2d.h"
-
+static float ***sp0array;
+static bool fromBoundary;
 static bool csdgather, verb;
 static int nzpad, nxpad, nb, nz, nx, nt, ns, ng, sxbeg, szbeg, jsx, jsz, gxbeg, gzbeg, jgx, jgz, distx, distz;
 static int *sxz, *gxz;
 static float c0, c11, c21, c12, c22;
 static float *wlt, *bndr,*rwbndr, *mod, *dat;
 static float **sp0, **sp1, **gp0, **gp1, **vv, **ptr=NULL;
+int getTime(struct timeval t1, struct timeval  t2){
+  // return time in milliseconds;
+  return ((t2.tv_sec - t1.tv_sec)* 1000 + (t2.tv_usec - t1.tv_usec)/1000);
+}
+float compareWavefields(int it, float **u){
+  ///*< compare current wavefield with true wavefield saved in sp0array >*/
 
+  float sum =0;
+  for (int ix=nb;ix<nxpad-nb;ix++){
+    for (int iz=nb;iz<nzpad-nb;iz++){
+      if (gp1[ix][iz]) sum += fabs((u[ix][iz]-sp0array[it][ix][iz]));
+    }
+  }
+  return sum;
+}
+void rw_snapshot(float** p, int it, bool read){
+  // read/write snapshot completely 
+  // if read=true read, else write
+  
+  if (!read){
+    for (int ix=0;ix< nxpad;ix++){
+      for (int iz=0;iz< nzpad;iz++){
+	sp0array[it][ix][iz]=p[ix][iz];
+      }
+    }
+  }
+  else{
+    for (int ix=0;ix< nxpad;ix++){
+      for (int iz=0;iz< nzpad;iz++){
+	p[ix][iz]=sp0array[it][ix][iz];
+      }
+    }
+  }
+
+}
 
 void boundary_rw(float **p, float *spo, bool read)
 /* read/write using effective boundary saving strategy: 
@@ -49,8 +90,8 @@ void boundary_rw(float **p, float *spo, bool read)
     for(ix=0; ix<nx; ix++)
       for(iz=0; iz<2; iz++)
 	{
-	  p[ix+nb][iz-2+nb]=spo[iz+4*ix];
-	  p[ix+nb][iz+nz+nb]=spo[iz+2+4*ix];
+	  p[ix+nb][iz+nb]=spo[iz+4*ix];
+	  p[ix+nb][iz-2+nz+nb]=spo[iz+2+4*ix];
 	}
 #ifdef _OPENMP
 #pragma omp parallel for			\
@@ -60,8 +101,8 @@ void boundary_rw(float **p, float *spo, bool read)
     for(iz=0; iz<nz; iz++)
       for(ix=0; ix<2; ix++)
 	{
-	  p[ix-2+nb][iz+nb]=spo[4*nx+iz+nz*ix];
-	  p[ix+nx+nb][iz+nb]=spo[4*nx+iz+nz*(ix+2)];
+	  p[ix+nb][iz+nb]=spo[4*nx+iz+nz*ix];
+	  p[ix-2+nx+nb][iz+nb]=spo[4*nx+iz+nz*(ix+2)];
 	}
   }else{
 #ifdef _OPENMP
@@ -72,8 +113,8 @@ void boundary_rw(float **p, float *spo, bool read)
     for(ix=0; ix<nx; ix++)
       for(iz=0; iz<2; iz++)
 	{
-	  spo[iz+4*ix]=p[ix+nb][iz-2+nb];
-	  spo[iz+2+4*ix]=p[ix+nb][iz+nz+nb];
+	  spo[iz+4*ix]=p[ix+nb][iz+nb];
+	  spo[iz+2+4*ix]=p[ix+nb][iz-2+nz+nb];
 	}
 #ifdef _OPENMP
 #pragma omp parallel for			\
@@ -83,8 +124,8 @@ void boundary_rw(float **p, float *spo, bool read)
     for(iz=0; iz<nz; iz++)
       for(ix=0; ix<2; ix++)
 	{
-	  spo[4*nx+iz+nz*ix]=p[ix-2+nb][iz+nb];
-	  spo[4*nx+iz+nz*(ix+2)]=p[ix+nx+nb][iz+nb];
+	  spo[4*nx+iz+nz*ix]=p[ix+nb][iz+nb];
+	  spo[4*nx+iz+nz*(ix+2)]=p[ix-2+nx+nb][iz+nb];
 	}
   }
 }
@@ -119,11 +160,11 @@ void step_forward(float **u0, float **u1, float **vv, bool adj)
       for (i1=2; i1<nzpad-2; i1++) 
 	{
 	  u0[i2][i1]=2.*u1[i2][i1]-u0[i2][i1]+ 
-		vv[i2][i1]*(c0*u1[i2][i1]+
-			    c11*(u1[i2][i1-1]+u1[i2][i1+1])+
-			    c12*(u1[i2][i1-2]+u1[i2][i1+2])+
-			    c21*(u1[i2-1][i1]+u1[i2+1][i1])+
-			    c22*(u1[i2-2][i1]+u1[i2+2][i1]));
+	    vv[i2][i1]*(c0*u1[i2][i1]+
+			c11*(u1[i2][i1-1]+u1[i2][i1+1])+
+			c12*(u1[i2][i1-2]+u1[i2][i1+2])+
+			c21*(u1[i2-1][i1]+u1[i2+1][i1])+
+			c22*(u1[i2-2][i1]+u1[i2+2][i1]));
 	}
   }
 }
@@ -131,7 +172,7 @@ void step_forward(float **u0, float **u1, float **vv, bool adj)
 
 void apply_sponge(float **p0)
 /*< apply sponge (Gaussian taper) absorbing boundary condition
-L=Gaussian taper ABC; L=L*, L is self-adjoint operator. >*/
+  L=Gaussian taper ABC; L=L*, L is self-adjoint operator. >*/
 {
   int ix,iz,ib,ibx,ibz;
   float w;
@@ -247,7 +288,7 @@ void window2d(float **a, float **b)
   }
 }
 
-void prtm2d_init(bool verb_, bool csdgather_, float dz_, float dx_, float dt_, 
+void prtm2d_init(bool verb_, bool csdgather_, bool fromBoundary_, float dz_, float dx_, float dt_, 
 		 float amp, float fm, 
 		 int nz_, int nx_, int nb_, int nt_, int ns_, int ng_, 
 		 int sxbeg_, int szbeg_, int jsx_, int jsz_, 
@@ -269,6 +310,7 @@ void prtm2d_init(bool verb_, bool csdgather_, float dz_, float dx_, float dt_,
   c22= -t/12.0;
   c0=-2.0*(c11+c12+c21+c22);
 
+  fromBoundary=fromBoundary_; 
   verb=verb_;
   csdgather=csdgather_;
   ns=ns_;
@@ -300,6 +342,7 @@ void prtm2d_init(bool verb_, bool csdgather_, float dz_, float dx_, float dt_,
   sxz=sf_intalloc(ns);
   gxz=sf_intalloc(ng);
   rwbndr=sf_floatalloc(nt*4*(nx+nz));
+  if (!fromBoundary) sp0array=sf_floatalloc3(nzpad,nxpad,nt);
 
   /* initialized sponge ABC coefficients */
   for(ib=0;ib<nb;ib++){
@@ -350,6 +393,7 @@ void prtm2d_close()
 /*< free allocated variables >*/
 {
   free(bndr);
+  if (!fromBoundary){ free(**sp0array);free(*sp0array);free(sp0array);}
   free(*sp0); free(sp0);
   free(*sp1); free(sp1);
   free(*gp0); free(gp0);
@@ -360,88 +404,151 @@ void prtm2d_close()
   free(gxz);
 }
 
+void prtm2d_shotwav(int is)
+/*< prtm2d shot wavefield generated at front >*/
+{
+  int it;
+
+  /* initialize is-th source wavefield Ps[] */
+  memset(sp0[0], 0, nzpad*nxpad*sizeof(float));
+  memset(sp1[0], 0, nzpad*nxpad*sizeof(float));
+  memset(gp0[0], 0, nzpad*nxpad*sizeof(float));
+  memset(gp1[0], 0, nzpad*nxpad*sizeof(float));
+
+  for(it=0; it<nt; it++){			
+    add_source(&sxz[is], sp1, 1, &wlt[it], true);
+    step_forward(sp0, sp1, vv, false);
+    ptr=sp0; sp0=sp1; sp1=ptr;
+    apply_sponge(sp0);
+    apply_sponge(sp1);
+    rw_snapshot(sp0,it,false);
+  }
+}
+
+
 void prtm2d_lop(bool adj, bool add, int nm, int nd, float *mod, float *dat)
 /*< prtm2d linear operator >*/
 {
   int i1,i2,it,is,ig, gx, gz;
+
   if(nm!=nx*nz) sf_error("model size mismatch: %d!=%d",nm, nx*nz);
   if(nd!=nt*ng*ns) sf_error("data size mismatch: %d!=%d",nd,nt*ng*ns);
   sf_adjnull(adj, add, nm, nd, mod, dat); 
-  
+
   for(is=0; is<ns; is++) {/* it may be parallized using MPI */
     /* initialize is-th source wavefield Ps[] */
     memset(sp0[0], 0, nzpad*nxpad*sizeof(float));
     memset(sp1[0], 0, nzpad*nxpad*sizeof(float));
     memset(gp0[0], 0, nzpad*nxpad*sizeof(float));
     memset(gp1[0], 0, nzpad*nxpad*sizeof(float));
-    if (csdgather){
-      gxbeg=sxbeg+is*jsx-distx;
-      sg_init(gxz, gzbeg, gxbeg, jgz, jgx, ng);
-    }
-
+    
     if(adj){/* migration: mm=Lt dd */
+      //==========================================================
       for(it=0; it<nt; it++){			
 	add_source(&sxz[is], sp1, 1, &wlt[it], true);
 	step_forward(sp0, sp1, vv, false);
+	ptr=sp0; sp0=sp1; sp1=ptr;
 	apply_sponge(sp0);
 	apply_sponge(sp1);
-	ptr=sp0; sp0=sp1; sp1=ptr;
-	boundary_rw(sp0, &rwbndr[it*4*(nx+nz)], false);
+	if (fromBoundary){
+	  boundary_rw(sp0, &rwbndr[it*4*(nx+nz)], false);
+	  //rw_snapshot(sp0,it,false); // save for tests to compare
+	}else rw_snapshot(sp0,it,false);
       }
 
       for (it=nt-1; it >-1; it--) {
 	/* reverse time order, Img[]+=Ps[]* Pg[]; */
-	if(verb) sf_warning("%d;",it);
-	
-	/* reconstruct source wavefield Ps[] */	
-	boundary_rw(sp0, &rwbndr[it*4*(nx+nz)], true);
-	ptr=sp0; sp0=sp1; sp1=ptr;
-	step_forward(sp0, sp1, vv, false);
-	add_source(&sxz[is], sp1, 1, &wlt[it], false);
-	
+
 	/* backpropagate receiver wavefield */
 	for(ig=0;ig<ng; ig++){
 	  gx=gxz[ig]/nz;
 	  gz=gxz[ig]%nz;
 	  gp1[gx+nb][gz+nb]+=dat[it+ig*nt+is*nt*ng];
 	}
-	step_forward(gp0, gp1, vv, false);
-	apply_sponge(gp0); 
-	apply_sponge(gp1); 
-	ptr=gp0; gp0=gp1; gp1=ptr;
+	if (fromBoundary){ 
+	  boundary_rw(sp0, &rwbndr[(it)*4*(nx+nz)], true);
+	  //fprintf(stderr,"it=%d, error=%f \n",it,compareWavefields(it,sp0));
+	  for(i2=0; i2<nx; i2++)
+	    for(i1=0; i1<nz; i1++)
+	      mod[i1+nz*i2]+=sp0[i2+nb][i1+nb]*gp1[i2+nb][i1+nb];
 
-	/* rtm imaging condition */
-	for(i2=0; i2<nx; i2++)
-	  for(i1=0; i1<nz; i1++)
-	    mod[i1+nz*i2]+=sp0[i2+nb][i1+nb]*gp1[i2+nb][i1+nb];
+	  ptr=sp0; sp0=sp1; sp1=ptr;
+	  step_forward(sp0, sp1, vv, false);
+	  add_source(&sxz[is], sp1, 1, &wlt[it], false);
+	}else{ 
+	  rw_snapshot(sp0,it,true); // read
+	  for(i2=0; i2<nx; i2++)
+	    for(i1=0; i1<nz; i1++)
+	      mod[i1+nz*i2]+=sp0[i2+nb][i1+nb]*gp1[i2+nb][i1+nb];
+	}
+
+	step_forward(gp0, gp1, vv, false);
+	ptr=gp0; gp0=gp1; gp1=ptr;
+ 	apply_sponge(gp0); 
+	apply_sponge(gp1); 
+
       }
     }else{/* Born modeling/demigration: dd=L mm */	
-
+      //==========================================================
       for(it=0; it<nt; it++){	
 	/* forward time order, Pg[]+=Ps[]* Img[]; */	
-	if(verb) sf_warning("%d;",it);	
-
+	add_source(&sxz[is], sp1, 1, &wlt[it], true);
+	step_forward(sp0, sp1, vv, false);
+	ptr=sp0; sp0=sp1; sp1=ptr;
+	apply_sponge(sp0);
+	apply_sponge(sp1);
 	for(i2=0; i2<nx; i2++)
 	  for(i1=0; i1<nz; i1++)
 	    gp1[i2+nb][i1+nb]+=sp0[i2+nb][i1+nb]*mod[i1+nz*i2];
-	
-	ptr=gp0; gp0=gp1; gp1=ptr;
-	apply_sponge(gp0); 
-	apply_sponge(gp1); 
-	step_forward(gp0, gp1, vv, true);
-	
+
 	for(ig=0;ig<ng; ig++){
 	  gx=gxz[ig]/nz;
 	  gz=gxz[ig]%nz;
 	  dat[it+ig*nt+is*nt*ng]+=gp1[gx+nb][gz+nb];
 	}
 
-	add_source(&sxz[is], sp1, 1, &wlt[it], true);
-	step_forward(sp0, sp1, vv, false);
-	apply_sponge(sp0);
-	apply_sponge(sp1);
-	ptr=sp0; sp0=sp1; sp1=ptr;
+	step_forward(gp0, gp1, vv, true);	
+	ptr=gp0; gp0=gp1; gp1=ptr;
+	apply_sponge(gp0); 
+	apply_sponge(gp1); 
+	
       }	
     }
+
   }	 
+}
+
+void prtm2d_adjtest()
+/*< prtm2d adjoint test >*/	  
+{
+  unsigned int i;
+  float dotdata,dotmodel;
+
+  unsigned int datasize =ng*nt*ns;
+  unsigned int modelsize=nx*nz;
+  float* m1=sf_floatalloc(modelsize);
+  float* m2=sf_floatalloc(modelsize);
+  float* d1=sf_floatalloc(datasize);
+  float* d2=sf_floatalloc(datasize);
+  
+  for (i=0;i<datasize;i++)  d1[i]=(drand48()-0.5);
+  for (i=0;i<modelsize;i++) m1[i]=(drand48()-0.5);
+
+  memset(m2,0,modelsize*sizeof(float));
+  memset(d2,0,datasize*sizeof(float));
+
+  prtm2d_lop(true,false,nx*nz,nt*ng*ns,m2,d1);
+  prtm2d_lop(false,false,nx*nz,nt*ng*ns,m1,d2);
+
+  dotdata=0;
+  for (i=0;i<datasize;i++)  dotdata+=(d1[i]*d2[i]);
+  dotmodel=0;
+  for (i=0;i<modelsize;i++) dotmodel+=(m1[i]*m2[i]);
+  
+  fprintf(stderr,"dot=%g, dotdata=%g, dotmodel=%g\n",dotdata/dotmodel,dotdata,dotmodel);
+
+  free(m1);
+  free(m2);
+  free(d1);
+  free(d2);
 }
