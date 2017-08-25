@@ -66,9 +66,9 @@ int n2, int nt, float **vv, float *mod, float *dat, int niter)
 	res0=cblas_dsdot(nd, rr, 1, rr, 1);
 	for(iter=0;iter<niter;iter++)
 	{
-		rtm2d_lop(true,  false, nm, nd, gm, rr);// gm=Ft[rr]
-		rtm2d_lop(false, false, nm, nd, gm, gr);// gr=F [gm]		
-	    	forget = (bool) (0 == (iter+1)%10); // restart every 10 iterations
+	    rtm2d_lop(true,  false, nm, nd, gm, rr);/* gm=Ft[rr] */
+	    rtm2d_lop(false, false, nm, nd, gm, gr);/* gr=F [gm] */		
+	    forget = (bool) (0 == (iter+1)%10); /* restart every 10 iterations */
 		/* Claerbout's CG: (mm, rr)=cgstep(mm, rr, gm, gr); */	
 		sf_cgstep(forget, nm, nd, mm, gm, rr, gr); 	
 		res=cblas_dsdot(nd, rr, 1, rr, 1);
@@ -143,7 +143,7 @@ int main(int argc, char* argv[])
 	memset(mod,0,n1*n2*sizeof(float));
 	sf_floatread(dat,nt*n2,data);
 /*
-// method 1: use my own CG solver, no reweighting
+  method 1: use my own CG solver, no reweighting
 	lsrtm2d_init(n1*n2, nt*n2, tol, verb);
 	lsrtm2d(dz, dx, dt, n0, n1, n2, nt, vv, mod, dat, niter);
 	lsrtm2d_close();
@@ -159,15 +159,14 @@ int main(int argc, char* argv[])
 
 
 /*
-// method 3: IRLS with bigsolver reweighting for L0/L1 sparsity-promotion
+ method 3: IRLS with bigsolver reweighting for L0/L1 sparsity-promotion
     	float *w=sf_floatalloc(n1*n2);
     	for (int i=0; i<n1*n2; i++) w[i]=1.0f;
 	rtm2d_init(dz, dx, dt, n0, n1, n2, nt, vv, mod, dat);
     	for (int iter = 0; iter < niter; iter++) {
    		sf_solver(rtm2d_lop, sf_cgstep, n1*n2, nt*n2, mod, dat, 1, "x0", mod, "mwt", w, "end");
 
-    		for (int i=0; i<n1*n2; i++) w[i]=fabsf(mod[i]);//L0-constraint for the model
-		//for (int i=0; i<n1*n2; i++) w[i]=sqrtf(fabsf(mod[i]));//L1-constraint for the model
+    		for (int i=0; i<n1*n2; i++) w[i]=fabsf(mod[i]); 
 
 		if(verb) sf_warning("iteration %d;",iter+1);
     	}

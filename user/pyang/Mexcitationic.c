@@ -249,7 +249,7 @@ void record_seis(float *seis_it, int *gxz, float **p, int ng)
 	}
 }
 
-//update excitation time and amplitude
+/* update excitation time and amplitude */
 void update_excitation_time(int it, int **ext, float **umax, float **p, int nz, int nx, int nb)
 {
   int i1, i2;
@@ -281,7 +281,7 @@ int main(int argc, char* argv[])
   bool csdgather;
   int it, kt, ns, ng, iz, ix, ib, is;
   int jsx,jsz,sxbeg,szbeg,jgx,jgz,gxbeg,gzbeg,distx,distz;
-  int *sxz, *gxz, **ext; //excitation time index
+  int *sxz, *gxz, **ext; /* excitation time index */
   float tmp;
   float *wlt, **v0, **dcal, **umax, **img;
   sf_file Fv, Fout;
@@ -353,7 +353,7 @@ int main(int argc, char* argv[])
   p0=sf_floatalloc2(nzpad, nxpad);
   p1=sf_floatalloc2(nzpad, nxpad);
   dcal=sf_floatalloc2(ng,nt);
-  ext=sf_intalloc2(nz,nx);//excitation time index
+  ext=sf_intalloc2(nz,nx);/* excitation time index */
   umax=sf_floatalloc2(nz,nx);
   img=sf_floatalloc2(nz,nx);
 
@@ -366,7 +366,7 @@ int main(int argc, char* argv[])
   for(ix=0;ix<nxpad;ix++){
     for(iz=0;iz<nzpad;iz++){
       tmp=vv[ix][iz]*dt;
-      vv[ix][iz]=tmp*tmp;// vv=vv^2*dt^2
+      vv[ix][iz]=tmp*tmp;/* vv=vv^2*dt^2 */
     }
   }
   for(it=0;it<nt;it++){
@@ -390,12 +390,12 @@ int main(int argc, char* argv[])
   memset(img[0],0,nz*nx*sizeof(float));
 
   for(is=0; is<ns; is++){
-    // determine receiver locations 
+      /* determine receiver locations */
     if (csdgather)	{
       gxbeg=sxbeg+is*jsx-distx;
       sg_init(gxz, gzbeg, gxbeg, jgz, jgx, ng);
     }
-    //source wavefield simulation
+    /* source wavefield simulation */
     memset(p0[0],0,nzpad*nxpad*sizeof(float));
     memset(p1[0],0,nzpad*nxpad*sizeof(float));
     memset(dcal[0],0,nt*ng*sizeof(float));
@@ -410,11 +410,11 @@ int main(int argc, char* argv[])
       ptr=p0; p0=p1; p1=ptr;
       record_seis(dcal[it], gxz, p1, ng);
 
-      //update excitation time and amplitude
+      /* update excitation time and amplitude */
       update_excitation_time(it, ext, umax, p1, nz, nx,nb);
     }
 
-    //receiver wavefield simulation
+    /* receiver wavefield simulation */
     memset(p0[0],0,nzpad*nxpad*sizeof(float));
     memset(p1[0],0,nzpad*nxpad*sizeof(float));
     for(it=nt-1; it>-1; it--){
@@ -424,7 +424,7 @@ int main(int argc, char* argv[])
       apply_sponge(p1);
       ptr=p0; p0=p1; p1=ptr;
 
-      //apply excitation amplitude imaging condition
+      /* apply excitation amplitude imaging condition */
       imaging_condition(it, ext, umax, p1, img, nz, nx, nb);
     }
   }

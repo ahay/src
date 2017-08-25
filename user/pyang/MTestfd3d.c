@@ -229,7 +229,7 @@ int main(int argc, char* argv[])
 
 	wlt=sf_floatalloc(nt);
 	bndr=sf_floatalloc(nb);
-	Szxy=sf_intalloc2(3,ns);// source position
+	Szxy=sf_intalloc2(3,ns);/* source position */
 
     	v0=sf_floatalloc3(nz,nx,ny);
 	vv=sf_floatalloc3(nzpad, nxpad, nypad);
@@ -245,9 +245,9 @@ int main(int argc, char* argv[])
 	}
 	for(is=0; is<ns; is++)
 	{
-		Szxy[is][0]=nz/2;//iz, boundary excluded
-		Szxy[is][1]=nx/2;//ix, boundary excluded
-		Szxy[is][2]=ny/2;//iy, boundary excluded
+		Szxy[is][0]=nz/2;/* iz, boundary excluded */
+		Szxy[is][1]=nx/2;/* ix, boundary excluded */
+		Szxy[is][2]=ny/2;/* iy, boundary excluded */
 	}
 	sf_floatread(v0[0][0],nz*nx*ny,Fv);
 	expand3d(v0, vv);

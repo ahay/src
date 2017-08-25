@@ -117,7 +117,7 @@ void add_source(int *sxz, float **p, int ns, int nb, int nz, float *source, bool
     }
 }
 
-//PML-like Sponge ABC
+/* PML-like Sponge ABC */
 void sponge_coeff(float *bndr, int nb,float dt,float dx, float dz, float vmax)
 {
     int ib;
@@ -219,17 +219,17 @@ int main(int argc, char* argv[])
     sf_floatread(v0[0],nz*nx,Fv);
     expand2d(vv, v0, nz, nx, nb);
     sf_floatread(v0[0],nz*nx,FQp);
-    expand2d(beta, v0, nz, nx, nb); //store Q in beta
+    expand2d(beta, v0, nz, nx, nb); /* store Q in beta */
     vmax=vv[0][0];
     for(ix=0;ix<nxpad;ix++){
 	for(iz=0;iz<nzpad;iz++){
 	    if(vmax<vv[ix][iz]) vmax=vv[ix][iz];
 	    tmp=vv[ix][iz]*dt;
-	    vv[ix][iz]=tmp*tmp;// vv=vv^2*dt^2
+	    vv[ix][iz]=tmp*tmp;/* vv=vv^2*dt^2 */
 
-	    //J.M. Carcione, 2010, equations 9 and 12
-	    tmp=atanf(1./beta[ix][iz])/SF_PI; //gamma
-	    beta[ix][iz]=1./(1.-tmp);//gamma-->beta
+	    /* J.M. Carcione, 2010, equations 9 and 12 */
+	    tmp=atanf(1./beta[ix][iz])/SF_PI; /* gamma */
+	    beta[ix][iz]=1./(1.-tmp);/* gamma-->beta */
 	}
     }
 
@@ -245,21 +245,21 @@ int main(int argc, char* argv[])
     sxz=(int*)malloc(ns*sizeof(int));
     sxz[0]=nz/2+nz*(nx/2);
 
-    //pre-compute the discrete wavenumbers: kx and kz
+    /* pre-compute the discrete wavenumbers: kx and kz */
     dkx=2.*SF_PI/(dx*nxpad);
     kx[0]=0;
     for(ix=1; ix<(nxpad+1)/2; ix++) {
 	kx[ix]=ix*dkx;
 	kx[nxpad-ix]=-ix*dkx;
     }
-    if(nxpad%2==0) kx[nxpad/2]=(nxpad/2)*dkx;//Nyquist freq
+    if(nxpad%2==0) kx[nxpad/2]=(nxpad/2)*dkx;/* Nyquist freq */
     dkz=2.*SF_PI/(dz*nzpad);
     kz[0]=0;
     for(iz=1; iz<(nzpad+1)/2; iz++) {
 	kz[iz]=iz*dkz;
 	kz[nzpad-iz]=-iz*dkz;
     }
-    if(nzpad%2==0) kz[nzpad/2]=(nzpad/2)*dkz;//Nyquist freq
+    if(nzpad%2==0) kz[nzpad/2]=(nzpad/2)*dkz;/* Nyquist freq */
 
 
     for(it=0; it<nt; it++)    {
@@ -267,28 +267,28 @@ int main(int argc, char* argv[])
 
 	add_source(sxz, p1, 1, nb,nz, &wlt[it], true);
 
-	//step forward using Fourier pseudo spectral method
+	/* step forward using Fourier pseudo spectral method */
 	for(ix=0; ix<nxpad; ix++){
 	    for(iz=0; iz<nzpad; iz++){
 		fttmp[iz+nzpad*ix]=p1[ix][iz];
 	    }
 	}
-	fftwf_execute(plan_forw);// fft
+	fftwf_execute(plan_forw);/* fft */
 	for(ix=0; ix<nxpad; ix++){
 	    for(iz=0; iz<nzpad; iz++){
-		//fractional laplacian
+		/* fractional laplacian */
 		tmp=-(kx[ix]*kx[ix]+kz[iz]*kz[iz]);
 		fttmp[iz+nzpad*ix]*= cpowf(tmp,beta[ix][iz]);
 	    }
 	}
-	fftwf_execute(plan_inv);//ifft
+	fftwf_execute(plan_inv);/* ifft */
 	for(ix=0; ix<nxpad; ix++){
 	    for(iz=0; iz<nzpad; iz++){
 		p0[ix][iz]=2.*p1[ix][iz]-p0[ix][iz]+vv[ix][iz]*crealf(fttmp[iz+nzpad*ix])/(nzpad*nxpad);
 	    }
 	}
     
-	//step_forward(p0, p1, vv,dz, dx, nzpad, nxpad);
+	/* step_forward(p0, p1, vv,dz, dx, nzpad, nxpad); */
 	ptr=p0; p0=p1; p1=ptr;
 
 	apply_sponge(p0,bndr,nzpad,nxpad,nb);
