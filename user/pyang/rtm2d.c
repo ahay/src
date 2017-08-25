@@ -97,10 +97,10 @@ void rtm2d_init(float dz_, float dx_, float dt_, int n0_, int nz_,
   nz=nz_;
   nx=nx_;
   nt=nt_;
-  nbl=nx/2;//number of left boundary layers
-  nbr=nx-nbl;//number of right boundary layers
-  nbt=nz/2;//number of top boundary layers
-  nbb=nz-nbt;//number of bottom boundary layers
+  nbl=nx/2;/* number of left boundary layers */
+  nbr=nx-nbl;/* number of right boundary layers */
+  nbt=nz/2;/* number of top boundary layers */
+  nbb=nz-nbt;/* number of bottom boundary layers */
   nzpad=nbt+nz+nbb;
   nxpad=nbl+nx+nbr;
   nm=nzpad*nxpad;
@@ -120,16 +120,16 @@ void rtm2d_init(float dz_, float dx_, float dt_, int n0_, int nz_,
       }	
   for (i2=0; i2<nxpad; i2++)
     {
-      for(i1=0; i1<nbt; i1++)//top boundary
+      for(i1=0; i1<nbt; i1++)/* top boundary */
 	vv[i2][   i1  ] =vv[i2][   nbt  ];
-      for(i1=0; i1<nbb; i1++)//bottom boundary
+      for(i1=0; i1<nbb; i1++)/* bottom boundary */
 	vv[i2][nz+nbt+i1] =vv[i2][nz+nbt-1];
     }
   for(i1=0; i1<nzpad; i1++)
     {   
-      for(i2=0; i2<nbl; i2++)//left boundary
+      for(i2=0; i2<nbl; i2++)/* left boundary */
 	vv[   i2  ][i1] =vv[   nbl  ][i1];
-      for(i2=0; i2<nbr; i2++)//right boundary
+      for(i2=0; i2<nbr; i2++)/* right boundary */
 	vv[nx+nbl+i2][i1] =vv[nx+nbl-1][i1];
     }
 }
@@ -151,7 +151,7 @@ void rtm2d_lop(bool adj, bool add, int nm, int nd, float *mod, float *dat)
   memset(u0[0], 0, nzpad*nxpad*sizeof(float));
   memset(u1[0], 0, nzpad*nxpad*sizeof(float));
 
-  if(adj){// migration
+  if(adj){/* migration */
     for (it=nt-1; it >-1; it--) {
       sf_warning("%d;",it);
 
@@ -170,10 +170,10 @@ void rtm2d_lop(bool adj, bool add, int nm, int nd, float *mod, float *dat)
     for(i2=0; i2<nx; i2++)
       for(i1=0; i1<nz; i1++)
 	mod[i1+nz*i2]+=u1[i2+nbl][i1+nbt];
-  }else{ // modeling
+  }else{ /* modeling */
     for(i2=0; i2<nx; i2++)
       for(i1=0; i1<nz; i1++)
-	u1[i2+nbl][i1+nbt]+=mod[i1+nz*i2];// zero-paded u1
+	u1[i2+nbl][i1+nbt]+=mod[i1+nz*i2];/* zero-paded u1 */
 
     for (it=0; it <nt; it++) {
       sf_warning("%d;",it);	

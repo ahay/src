@@ -74,7 +74,7 @@ void dlct_lop(bool adj, bool add, int nm, int nd, sf_complex *mm, sf_complex *dd
   if(nm!=N*L || nd!=N) sf_error("datasize mismatch!");
   sf_cadjnull (adj, add,  nm, nd, mm, dd); 
 
-  if(adj){// forward transform: dd-->mm (data-->model)
+  if(adj){/* forward transform: dd-->mm (data-->model) */
     for(l=-L/2;l<L/2;l++){
 #ifdef _OPENMP
 #pragma omp parallel for default(none) private(n) shared(tmp,dd,C,N,l)
@@ -86,7 +86,7 @@ void dlct_lop(bool adj, bool add, int nm, int nd, sf_complex *mm, sf_complex *dd
 #endif	
       for(k=0;k<N;k++) mm[k+(l+L/2)*N]+=tmp[k]/sqrtf(N*L);
     }
-  }else{// inverse transform: mm-->dd (model-->data)
+  }else{/* inverse transform: mm-->dd (model-->data) */
     for(l=-L/2;l<L/2;l++){
 #ifdef _OPENMP
 #pragma omp parallel for default(none) private(k) shared(tmp,mm,N,L,l)

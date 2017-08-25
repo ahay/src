@@ -94,10 +94,10 @@ void apply_sponge(float **u, float *bndr)
 #endif
     for(ix=0; ix<nxpad; ix++)
     {
-	for(iz=0;iz<nb;iz++){	// top ABC			
+	for(iz=0;iz<nb;iz++){	/* top ABC */		
 	    u[ix][iz]=bndr[iz]*u[ix][iz];
 	}
-	for(iz=nz+nb;iz<nzpad;iz++){// bottom ABC			
+	for(iz=nz+nb;iz<nzpad;iz++){/* bottom ABC */			
 	    u[ix][iz]=bndr[nzpad-iz-1]*u[ix][iz];
 	}
     }
@@ -109,10 +109,10 @@ void apply_sponge(float **u, float *bndr)
 #endif
     for(iz=0; iz<nzpad; iz++)
     {
-	for(ix=0;ix<nb;ix++){	// left ABC			
+	for(ix=0;ix<nb;ix++){	/* left ABC */			
 	    u[ix][iz]=bndr[ix]*u[ix][iz];
 	}	
-	for(ix=nx+nb;ix<nxpad;ix++){// right ABC			
+	for(ix=nx+nb;ix<nxpad;ix++){/* right ABC */		
 	    u[ix][iz]=bndr[nxpad-ix-1]*u[ix][iz];
 	}	
     }
