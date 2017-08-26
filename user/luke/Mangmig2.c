@@ -255,24 +255,31 @@ void semblance(float **stk,float **sqstk,int ntau,int nxi, float eps, bool l2){
 int main(int argc, char *argv[])
 {
 	int ia, na, ig, ng, nx, nxi, ntau, nt, nh;
+	int nma, nmxi, nmtau;
+	float dma, dmxi, dmtau, mamin, mxi0, mtau0;
 	float a, amax, amin, da, g, dg, gmax;
 	float dtau, dt, dh, dxi, dx, tau0, t0, h0, xi0, x0;
 	float cosa, sina, sing, cosg;
 	float tpre, hpre, xpre, deno, wtpre;
-	int nvtau, nvxi;
+	int nvtau, nvxi, itau, ixi, ivxi, ivtau;
+	float xi, tau, vel, rvxi, rvtau;
 	float vtau0, vxi0, dvtau, dvxi, eps;
+	float z, t1, h1, x1, wt, rt,  rh, rx, inter;
+	int it, ix, ih;
 
 	float **image=NULL;
 	float ***data=NULL;
 	float **sqstk=NULL;
 	float **stk=NULL;
 	float **velFile=NULL;
+	float **maskFile=NULL;
 	
-	bool adj, sembool, l2, weighting;
+	bool adj, sembool, l2, weighting, maskbool;
 	
 	sf_file in=NULL, out=NULL;
 	sf_file	semb=NULL;
 	sf_file	vin=NULL;
+	sf_file mask=NULL;
 		
 	sf_init (argc,argv);
 	in = sf_input("in");
@@ -289,6 +296,12 @@ int main(int argc, char *argv[])
 			semb  = sf_output ("semb"); sembool = true; 
 
 	} else { sembool=false; }
+	
+	if ( NULL != sf_getstring("mask") ) {
+	/* input file contining image mask locations, 0 = skip */ 
+			mask  = sf_input ("mask"); maskbool = true; 
+
+	} else { maskbool=false; }
 	
 	if( adj){ sembool=false;} // no semblance if modelig
 	
@@ -442,17 +455,55 @@ int main(int argc, char *argv[])
 		sf_putfloat(semb,"o3",0.);
 		
 	}
+	
+	if ( maskbool ) {
+
+
+		if (!sf_histint(mask,"n1",&nmtau)) sf_error("No n1= in mask");	
+		if (nmtau != ntau){sf_error("mask parameters must match image parameters (n1)");}
+		if (!sf_histint(mask,"n2",&nmxi)) sf_error("No n2= in mask");
+		if (nmxi != nxi){sf_error("mask parameters must match image parameters (n2)");}
+		if (!sf_histint(mask,"n3",&nma)) sf_error("No n3= in mask");
+		if (nma != na){sf_error("mask parameters must match image parameters (n3)");}
+
+		if (!sf_histfloat(mask,"d1",&dmtau)) sf_error("No d1= in mask");
+		if (dmtau != dmtau){sf_error("mask parameters must match image parameters (d1)");}
+		if (!sf_histfloat(mask,"d2",&dmxi)) sf_error("No d2= in mask");
+		if (dmxi != dxi){sf_error("mask parameters must match image parameters (d2)");}
+		if (!sf_histfloat(mask,"d3",&dma)) sf_error("No d3= in mask");
+		if (dma != da){sf_error("mask parameters must match image parameters (d3)");}
+
+
+		if (!sf_histfloat(mask,"o1",&mtau0)) sf_error("No o1= in mask");
+		if (mtau0 != tau0){sf_error("mask parameters must match image parameters (o1)");}
+		if (!sf_histfloat(mask,"o2",&mxi0)) sf_error("No o2= in mask");
+		if (mxi0 != xi0){sf_error("mask parameters must match image parameters (o2)");}
+		if (!sf_histfloat(mask,"o3",&mamin)) sf_error("No o3= in mask");
+		if (mamin != amin){sf_error("mask parameters must match image parameters (o3)");}
+		
+		
+
+		maskFile = sf_floatalloc2(nmtau,nmxi);
+
+	}
+	
+	
 	if (!sf_getbool("l2",&l2)) l2=true;
 	/*if y use l2 norm for semb, if n, use l1 norm */
 
 	if (adj){zerodata(data,nt,nx,nh);}
 	else{sf_floatread(data[0][0],nt*nx*nh,in);}
 
+	int mkcount = 0;
+	int points = nxi*ntau*na;
+
 	for (ia=0; ia<na; ia++){
 		sf_warning("angle %d of %d;",ia+1,na);
 				
 		if (!adj){zeroimage(image,ntau,nxi);}
-		else{sf_floatread (image[0],nxi*ntau,in);} // read partial image		
+		else{sf_floatread (image[0],nxi*ntau,in);} // read partial image	
+		
+			
 		
 		a = amin + da*ia;
 		
@@ -466,34 +517,146 @@ int main(int argc, char *argv[])
 		if (gmax<=0){continue;}
 		
 		dg = gmax / (ng-1);
+		
+		if (!maskbool){
+		#ifdef _OPENMP 
+		#pragma omp parallel for
+		#endif	
+			for (ig=0; ig<ng; ig++){
+			
+				g = ig*dg;
+			
+				cosg = cosf(g);
+				sing = sinf(g);
+			
+				deno = (cosa*cosa-sing*sing);
+			
+				if (deno <= 0){continue;}
+			
+				tpre = cosa*cosg/deno;
+				hpre = sing*cosg/deno;
+				xpre = sina*cosa/deno;
+			
+				if(weighting){
+					wtpre = 1./(deno*deno)*dg; // jacobian weighting
+				}else{ 
+					wtpre=1.*dg;
+				}
+			
+				angle_engine(adj,data,nt,nx,nh,dt,dx,dh,t0,x0,h0,image,ntau,nxi,dtau,dxi,tau0,xi0,velFile,nvtau,nvxi,dvtau,dvxi,vtau0,vxi0,tpre,hpre,xpre,wtpre,weighting);			
+
+			}
+		}else{ /*masking for speed*/
+			sf_floatread (maskFile[0],nmxi*nmtau,mask); // read mask
+			
+			for (ixi=0; ixi<nxi ; ixi++){
+				xi = xi0 + dxi*ixi;
+				
+				ivxi=0; rvxi=0;
+				moduloso(xi,dvxi,vxi0,&ivxi,&rvxi);
+				if (ivxi<0){continue;}
+				if (ivxi>nvxi-2){continue;}		
+				
+				for (itau=0; itau<ntau ; itau++){
+					if(maskFile[ixi][itau]==0.){
+						mkcount +=1;
+						continue;
+					}
+					tau = tau0 + dtau*itau;
+					
+					ivtau=0; rvtau=0;
+					moduloso(tau,dvtau,vtau0,&ivtau,&rvtau);
+					if (ivtau<0){continue;}
+					if (ivtau>nvtau-2){continue;}
+				
+					interpolate2(velFile,ivtau, rvtau, ivxi, rvxi, &vel);
+				
+					
+					
 #ifdef _OPENMP 
 #pragma omp parallel for
-#endif	
-		for (ig=0; ig<ng; ig++){
+#endif
+					for (ig=0; ig<ng; ig++){
 			
-			g = ig*dg;
+						g = ig*dg;
 			
-			cosg = cosf(g);
-			sing = sinf(g);
+						cosg = cosf(g);
+						sing = sinf(g);
 			
-			deno = (cosa*cosa-sing*sing);
+						deno = (cosa*cosa-sing*sing);
 			
-			if (deno <= 0){continue;}
+						if (deno <= 0){continue;}
 			
-			tpre = cosa*cosg/deno;
-			hpre = sing*cosg/deno;
-			xpre = sina*cosa/deno;
+						tpre = cosa*cosg/deno;
+						hpre = sing*cosg/deno;
+						xpre = sina*cosa/deno;
 			
-			if(weighting){
-				wtpre = 1/(deno*deno)*dg; // jacobian weighting
-			}else{ 
-				wtpre=1;
+						if(weighting){
+							wtpre = 1./(deno*deno)*dg; // jacobian weighting
+						}else{ 
+							wtpre=1.*dg;
+						}
+						
+						z = tau*vel/2;				
+						t1 = tau*tpre;
+						h1 = z*hpre;
+						x1 = z*xpre+xi;
+						if (weighting){
+							wt = wtpre*z*z;
+						}else{
+							wt = 1.;
+						}
+				
+						it=0; rt=0;
+						moduloso(t1,dt,t0,&it,&rt);
+						if (it<0){continue;}
+						if (it>nt-2){continue;}
+								
+						ix=0; rx=0;
+						moduloso(x1,dx,x0,&ix,&rx);
+						if (ix<0){continue;}
+						if (ix>nx-2){continue;}	
+				
+						ih=0; rh=0;
+						moduloso(h1,dh,h0,&ih,&rh);
+						if (ih<0){continue;}
+						if (ih == nh-1){
+					
+								if (adj){
+
+									inter = image[ixi][itau]*wt;
+									datawriting2p5(data,it, rt, ix, rx, ih,inter);
+							
+								}else{											
+									inter = 0.;
+									interpolate2p5(data,it, rt, ix, rx, ih,&inter);
+
+									inter *= wt;				
+									image[ixi][itau] += inter;
+								}
+									
+						}else{
+							if (ih>nh-1){continue;}	
+				
+							if(adj){
+								inter = image[ixi][itau]*wt;					
+								datawriting(data,it, rt, ix, rx, ih, rh, inter);
+							}else{
+								inter = 0.;
+								interpolate3(data,it, rt, ix, rx, ih, rh, &inter);
+								inter *= wt;				
+								image[ixi][itau] += inter;
+							}
+						}
+					}
+						
+						
+					
+				}
+				
 			}
-			
-			angle_engine(adj,data,nt,nx,nh,dt,dx,dh,t0,x0,h0,image,ntau,nxi,dtau,dxi,tau0,xi0,velFile,nvtau,nvxi,dvtau,dvxi,vtau0,vxi0,tpre,hpre,xpre,wtpre,weighting);			
-
+		
 		}
-
 		if(!adj){
 			sf_floatwrite(image[0],ntau*nxi,out); //write gather				
 		}
@@ -511,6 +674,12 @@ int main(int argc, char *argv[])
                 sf_fileclose (semb);
                 free (sqstk);
                 free (stk);
+	}
+	if (maskbool){
+		sf_warning("\n skipped %i of %i locations with mask",mkcount,points);
+		sf_fileclose(mask);
+		free (maskFile);
+		
 	}
 	sf_fileclose (out);
 	sf_fileclose (in);
