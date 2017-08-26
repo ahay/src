@@ -547,11 +547,12 @@ int main(int argc, char *argv[])
 
 			}
 		}else{ /*masking for speed*/
+
 			sf_floatread (maskFile[0],nmxi*nmtau,mask); // read mask
-			
+
 			for (ixi=0; ixi<nxi ; ixi++){
 				xi = xi0 + dxi*ixi;
-				
+
 				ivxi=0; rvxi=0;
 				moduloso(xi,dvxi,vxi0,&ivxi,&rvxi);
 				if (ivxi<0){continue;}
@@ -570,13 +571,9 @@ int main(int argc, char *argv[])
 					if (ivtau>nvtau-2){continue;}
 				
 					interpolate2(velFile,ivtau, rvtau, ivxi, rvxi, &vel);
-				
-					
-					
-#ifdef _OPENMP 
-#pragma omp parallel for
-#endif
+			
 					for (ig=0; ig<ng; ig++){
+
 			
 						g = ig*dg;
 			
@@ -630,8 +627,7 @@ int main(int argc, char *argv[])
 								}else{											
 									inter = 0.;
 									interpolate2p5(data,it, rt, ix, rx, ih,&inter);
-
-									inter *= wt;				
+		
 									image[ixi][itau] += inter;
 								}
 									
@@ -639,25 +635,24 @@ int main(int argc, char *argv[])
 							if (ih>nh-1){continue;}	
 				
 							if(adj){
-								inter = image[ixi][itau]*wt;					
+								inter = image[ixi][itau]*wt;				
 								datawriting(data,it, rt, ix, rx, ih, rh, inter);
 							}else{
 								inter = 0.;
 								interpolate3(data,it, rt, ix, rx, ih, rh, &inter);
-								inter *= wt;				
+								inter *= wt;		
+	
 								image[ixi][itau] += inter;
 							}
 						}
-					}
-						
-						
+					} // end mask ig						
 					
-				}
+				}	//end mask itau							
 				
-			}
-		
-		}
-		if(!adj){
+			} // end mask ixi
+
+		} // end mask
+		if(!adj){				
 			sf_floatwrite(image[0],ntau*nxi,out); //write gather				
 		}
 		if (sembool){
