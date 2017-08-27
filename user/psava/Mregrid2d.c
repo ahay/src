@@ -60,7 +60,6 @@ int main(int argc, char* argv[])
     if (!sf_getint("order",&order)) order=3;
     order = SF_MIN(SF_MIN( order,n1),n2);
     map2d = sf_eno2_init(order, n1,n2);
-    sf_warning("A");
     /*------------------------------------------------------------*/
 
     din = sf_floatalloc2( n1, n2);
