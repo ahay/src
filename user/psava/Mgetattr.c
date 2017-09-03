@@ -35,6 +35,18 @@ int main(int argc, char* argv[])
     sf_putfloat(Fo,"d1",1.0);
     sf_putfloat(Fo,"o1",0.0);
     
+    sf_putint  (Fo,"n2",1);
+    sf_putfloat(Fo,"d2",1.0);
+    sf_putfloat(Fo,"o2",0.0);
+
+    sf_putint  (Fo,"n3",1);
+    sf_putfloat(Fo,"d3",1.0);
+    sf_putfloat(Fo,"o3",0.0);
+
+    sf_putint  (Fo,"n4",1);
+    sf_putfloat(Fo,"d4",1.0);
+    sf_putfloat(Fo,"o4",0.0);
+    
     /*------------------------------------------------------------*/
     
     /* get dimensions */
