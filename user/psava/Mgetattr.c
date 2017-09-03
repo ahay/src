@@ -16,7 +16,7 @@ int main(int argc, char* argv[])
     size_t i, nbuf, nleft, dim;
     size_t bufsiz;
 
-    float f, fmin, fmax;
+    float f, fmin, fmax, amax;
     double fsum, fsqr, frms, fmean, fvar, fstd;
 
     float dou[1];
@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
     sf_init (argc,argv);
 
     want = sf_getstring("want");
-    if( want==NULL ) want="max";
+    if( want==NULL ) want="amax";
     sf_warning("want=%s",want);
     
     Fi = sf_input ("in");
@@ -52,6 +52,7 @@ int main(int argc, char* argv[])
     fsum = fsqr = 0.0;
     fmin = +FLT_MAX;
     fmax = -FLT_MAX;
+    amax = 0.;
 
     for (nleft = nsiz; nleft > 0; nleft -= nbuf) {
 	nbuf = (bufsiz < nleft)? bufsiz: nleft;
@@ -60,7 +61,10 @@ int main(int argc, char* argv[])
 		
 	for (i=0; i < nbuf; i++) {
 	    f = ((float*)buf)[i];
-	    
+
+	    if( 0==strcmp(want, "amax") )
+		if (fabs(f) > fabs(amax)) amax = f;
+		    
 	    if( 0==strcmp(want, "max") )
 		if (f > fmax) fmax = f;
 
@@ -77,6 +81,7 @@ int main(int argc, char* argv[])
     }
 
     /*------------------------------------------------------------*/
+    if(0==strcmp(want,"amax")) dou[0] = amax;
     if(0==strcmp(want, "max")) dou[0] = fmax;
     if(0==strcmp(want, "min")) dou[0] = fmin;
 
