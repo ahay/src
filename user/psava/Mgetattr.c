@@ -26,7 +26,6 @@ int main(int argc, char* argv[])
 
     want = sf_getstring("want");
     if( want==NULL ) want="amax";
-    sf_warning("want=%s",want);
     
     Fi = sf_input ("in");
     
