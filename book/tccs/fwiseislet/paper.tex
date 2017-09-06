@@ -1,0 +1,267 @@
+\published{Geophysics, 82, no. 5, A43-A49, (2017)}
+
+\title{Full-waveform inversion using seislet regularization}
+\author{Zhiguang Xue\footnotemark[1], Hejun Zhu\footnotemark[2] and Sergey Fomel\footnotemark[1]}
+\maketitle
+
+\address{
+\footnotemark[1]Bureau of Economic Geology \\
+John A. and Katherine G. Jackson School of Geosciences \\
+The University of Texas at Austin \\
+University Station, Box X \\
+Austin, TX 78713-8924 \\
+\footnotemark[2]Department of Geosciences \\
+School of Natural Sciences and Mathematics \\
+The University of Texas at Dallas \\
+Richardson, Texas 75080-3021 
+}
+
+\footnote{Parts of this paper were presented at 2015 SEG Annual Meeting}
+
+\lefthead{Xue et al.}
+\righthead{FWI with seislet regularization}
+
+\begin{abstract}
+	Because of inaccurate, incomplete and inconsistent waveform records, full waveform inversion (FWI) in the framework of local optimization approach may not have a unique solution and thus remains an ill-posed inverse problem.
+	To improve the robustness of FWI, we present a new model regularization approach, which enforces the sparsity of solutions in the seislet domain.
+	The construction of seislet basis functions requires structural information, which can be estimated iteratively from migration images.
+	We implement FWI with seislet regularization using nonlinear shaping regularization, and impose sparseness by applying soft thresholding on the updated model in the seislet domain at each iteration of the data fitting process.
+	The main extra computational cost of the method relative to standard FWI is the cost of applying forward and inverse seislet transforms at each iteration.
+	This cost is almost negligible compared to the cost of solving wave equations.
+	Numerical tests using the synthetic Marmousi model demonstrate that seislet regularization can greatly improve the robustness of FWI by recovering
+	high-resolution velocity models, particularly in the presence of strong crosstalk artifacts from simultaneous sources or strong random noise in the data.
+\end{abstract}
+
+\section{Introduction}
+Full waveform inversion (FWI) is a data-fitting procedure used to construct high-resolution quantitative subsurface models
+by exploiting full information in observed data \cite[]{lailly83,tarantola84,virieux09}.
+However, the problem is inherently ill-posed, and suffers from artifacts that could be falsely interpreted as ``geological structures''.
+One way to mitigate this problem is by adding regularization or preconditioning to guide the inversion 
+toward a model consistent with a priori geological or geophysical constraints. 
+The choice among different regularization techniques depends on the specific problem, and can be governed
+by the need to preserve or emphasize particular desired features of the model \cite[]{loris07}.
+For example, if one is mostly interested in large-scale features, it is natural to introduce a regularizing constraint or penalty term
+involving spatial derivatives.
+On the other hand, if one seeks to find solutions that are sparse with respect to a given basis, 
+this can be achieved by imposing a sparsity constraint involving appropriate transforms such as Fourier, wavelet or curvelet transforms \cite[]{loris07}.
+This regularization procedure finds solutions that are faithfully represented 
+by a relatively small number of non-zero coefficients in the transformed domain.
+
+We propose to impose sparsity regularization on the model in the seislet domain \cite[]{fomel10} to improve the robustness of FWI.
+We refer to this regularization as seislet regularization.
+A model in the seislet domain is expressed using basis functions aligned along locally planar structures.
+Other researchers have previously used the sparsity of velocity model in other transform domains for velocity model building.
+For instance, \cite{loris07} applied $l_1$-norm regularization in a wavelet basis to solve global seismic tomography problems,
+allowing for the possibility of sharp discontinuities superimposed on a smoothly varying background model.
+\cite{li12} computed the model updates from random subsets of data and used curvelet domain sparsity promotion to suppress crosstalk between different sources.
+Curvelets are appropriate for seismic data because they provide a provably optimal decomposition of wave-propagation operators \cite[]{candes05}.
+In this paper, the sparsity regularization for velocity model is implemented by imposing a soft thresholding on the updated model in the seislet domain.
+Compared to other transform domains, seislets exhibit a superior data compression and sparsity 
+for events with dominant local slopes \cite[]{chen16}.
+The classic digital wavelet transform is equivalent to seislet transform with the erroneous zero slope \cite[]{fomel10}.
+
+Seislet regularization allows us to build a model that both fits the data and has a strong tendency to be sparse in the seislet basis. 
+Because seislet basis functions are aligned along locally planar structures,
+this helps to attenuate random noise and build geologically-consistent models.
+Different approaches to generating geologically sensible models for seismic inversion have been proposed before.
+\cite{guitton12} used directional Laplacian filter as model preconditioning operator in FWI to smooth gradients along geological dips.
+\cite{ma12} proposed to invert for a sparse velocity model in FWI, and connected the sparse and dense models through image-guided interpolation. 
+\cite{xue16} incorporated linear shaping regularization \cite[]{fomel07} into least-squares reverse-time migration (RTM) 
+and used structure-enhancing filtering to mitigate artifacts caused by simultaneous-source or incomplete data.
+Compared to these methods, the proposed method offers an alternative formulation with a highly efficient implementation.
+It is formulated as the sparsity constraint on the model in the seislet domain, and is implemented by imposing a soft thresholding
+on the updated model at each iteration.
+
+In this paper, we first introduce FWI with and without seislet regularization, and illustrate their implementation differences.
+Next, we use two numerical examples to verify the effectiveness of the proposed method in improving the robustness of FWI by suppressing artifacts
+caused by encoded data and random noise.  
+Both examples are based on the 2D Marmousi synthetic model \cite[]{bourgeois91}.
+
+\section{Theory}
+The objective function of standard FWI can be written as
+\begin{equation}
+J(\mathbf{m})=\frac{1}{2} ||\mathbf{d}_\text{obs}-\mathbf{F}(\mathbf{m})||_2^2 \; ,
+\label{eq:obj}
+\end{equation}
+where $\mathbf{m}$ is the velocity model, $\mathbf{d}_\text{obs}$ is the observed waveform data and $\mathbf{F}$ stands for the nonlinear forward modeling operator.
+
+A popular local optimization algorithm for minimizing this function is based on the nonlinear conjugate-gradient method \cite[]{mora87,tarantola87},
+where the model is updated at the iteration $n$ in the direction of $\mathbf{s}_n$, which is 
+a linear combination of the gradient at iteration $n$, $\nabla J(\mathbf{m}_n)$, and the previous conjugate direction $\mathbf{s}_{n-1}$.
+This optimization scheme can be formulated as follows:
+\begin{equation}
+\mathbf{m}_{n+1}=\mathbf{m}_n + \alpha_n \mathbf{s}_n \; , \quad
+\mathbf{s}_n=-\nabla J(\mathbf{m}_n)+ \beta_n \mathbf{s}_{n-1} \;,
+\label{eq:opt}
+\end{equation}
+where scalar $\alpha_n$ can be obtained by perfoming a line search and $\beta_n$ is
+designed to guarantee that $\mathbf{s}_n$ and $\mathbf{s}_{n-1}$ are conjugate.
+
+We propose to apply nonlinear shaping regularization \cite[]{fomel08} to impose sparseness of the velocity model in the seislet domain and modify the iteration process in equation~\ref{eq:opt} as follows:
+\begin{equation}
+\mathbf{m}_{n+1}=\mathbf{S}^{-1}\mathbf{T}\mathbf{S}(\mathbf{m}_n + \alpha_n \mathbf{s}_n) \; ,
+\label{eq:newopt}
+\end{equation}
+where $\mathbf{S}^{-1}$ and $\mathbf{S}$ stand for the inverse and forward seislet transforms, respectively. 
+$\mathbf{T}$ is the soft thresholding operator
+and has the following function expression:
+\begin{equation}
+	T(x)= \begin{cases}
+			x-t \;, & x>t \\
+			0 \;, & |x| \le t \\
+			x+t \;, & x<-t
+		\end{cases} 
+	\label{eq:softth}
+\end{equation}
+where $t$ is a positive threshold level.
+If seislet transform were an unitary operator, the iteration process in equation~\ref{eq:newopt} would be equivalent to using linearized Bregman iteration \cite[]{yin08,cai09} to minimize the following objective function:
+\begin{equation}
+	J(\mathbf{m})=\frac{1}{2} ||\mathbf{d}_\text{obs}-\mathbf{F}(\mathbf{m})||_2^2 + \lambda ||\mathbf{S}\mathbf{m}||_1 \; ,
+\label{eq:newobj}
+\end{equation}
+where $\lambda$ is a regularization parameter.
+
+The difference of equation~\ref{eq:newopt} to the iterative scheme described by equation~\ref{eq:opt} is that the new scheme involves a model shaping operator,
+which is the combination of inverse seislet transform, soft thresholding operator and forward seislet transform.
+The purpose of the shaping operator $\mathbf{S}^{-1}\mathbf{T}\mathbf{S}$ is to remove possible artifacts
+existing in the updated model and to gradually achieve a geologically meaningful model.
+In implementation of equation~\ref{eq:newopt}, step length $\alpha_n$ is estimated by line search without including the shaping operator, and we apply the shaping operator to the updated model after line search to get the new model $\mathbf{m}_{n+1}$.
+In this way, we just use the shaping operator once at each iteration.
+
+Seislet transform requires the input of local slope, because in the seislet domain, the model is represented by the basis functions that are aligned with local structures.
+Figure~\ref{fig:marm,wavelet,seislet,comparison,impw,imps} shows a simple test to check the properties of velocity model in the seislet domain.
+We compare seislet coefficients and basis functions with those of the digital wavelet transform, using the Marmousi model (Figure~\ref{fig:marm}). 
+The dip required by seislet transform is directly estimated from the Marmousi model in this test.
+Figure~\ref{fig:wavelet} and~\ref{fig:seislet} show the Marmousi model in the wavelet and seislet domain, respectively.
+We observe that the non-zero seislet coefficients focus at coarse scales but wavelet transform has small residual coefficients at fine scales.
+From this observation, we can conclude that the seislet transform has a better data compression and sparsity than the wavelet transform, 
+which is further verified by Figure~\ref{fig:comparison},
+where a significantly faster decay of the seislet coefficients is evident.
+Figure~\ref{fig:impw} and~\ref{fig:imps} show some randomly selected representative basis functions for wavelet and seislet transforms, respectively.
+We can observe that the direction of seislet basis functions follows structural direction,
+while the wavelet basis functions correspond to zero slope.
+
+\inputdir{wavelet}
+\multiplot{6}{marm,wavelet,seislet,comparison,impw,imps}{width=0.45\textwidth}
+{Coefficients and basis functions of wavelet and seislet transforms for the Marmousi model. 
+(a) The exact Marmousi model; (b) model in the wavelet domain; (c) model in the seislet domain;
+(d) transform coefficients sorted from large to small, normalized, and plotted on a decibel scale;
+(e) and (f) randomly selected representative basis functions for wavelet and seislet transforms, respectively.}
+
+\section{Examples}
+\subsection{Experiment setup}
+\inputdir{timedomain}
+\multiplot{2}{init,shot15}{width=0.45\textwidth}{(a) Initial model and (b) one shot record for true model with $x_s=4 km$.}
+
+We use the classic 2D Marmousi model \cite[]{bourgeois91} to test the effectiveness of the proposed method.
+The model was first subsampled from $2301\times751$ cells at 4 m cell size to $512 \times 188$ cells at 16 m cell size, as shown in Figure~\ref{fig:marm}.
+Figure~\ref{fig:init} shows the initial model for FWI, obtained by smoothing the target model.
+A fixed-spread surface acquisition is used, involving 32 sources located at every 240 m.
+A Ricker wavelet with center frequency of 13 Hz is used to generate the synthetic data. 
+Figure~\ref{fig:shot15} shows a shot record with source location at 4 km.
+We perform frequency-domain FWI using the fast Helmholtz solver \cite[]{li14}. 
+We used 8 frequencies ranging from 4 to 11 Hz and carried out 10 iterations for each frequency.
+We perform two tests: one with encoded data and the other one with noisy data.
+
+\subsection{Dip estimation}
+\inputdir{encoding-spar}
+\multiplot{4}{rtm12,dip1,rtm32,dip3}{width=0.45\textwidth}
+{Dip estimation from migration images. (a) RTM with initial velocity; (b) local dip map estimated from (a), which will be used for the first 30 iterations;
+(c) third RTM with updated velocity after 60 iterations (4-9 Hz data);
+(d) dip map estimated from (c) and used for the last 20 iterations (10-11 Hz data).}
+
+Before we conduct the FWI with seislet regularization, we need to provide local-dip information for the seislet transform.
+We estimate the local dip from the RTM image using plane-wave destruction \cite[]{fomel02}.
+The dip estimation is computationally inexpensive compared to RTM.
+With the initial velocity, we can get an initial RTM image as shown in Figure~\ref{fig:rtm12}.
+Though some structures of the image appear at wrong locations, we can get an acceptable local dip map (Figure~\ref{fig:dip1}).
+We use this initially estimated dip to perform the first 30 iterations (for the first 3 frequencies).
+After we finish the iterations at 6 Hz, a more accurate velocity is obtained, with which we can get a better RTM image.
+Then we can estimate the second dip for the next 30 iterations (for the frequencies 7-9 Hz).
+Similarly, we can perform the third RTM (Figure~\ref{fig:rtm32}) after the inversions with 9 Hz frequency, 
+and get a much better dip (Figure~\ref{fig:dip3}), which is used for the last 20 iterations (for the frequencies 10-11 Hz).
+Comparing Figure~\ref{fig:rtm12} and~\ref{fig:rtm32}, we can find that the previous position of structures in the central and deep parts has been corrected in the new RTM image.
+Note that we use un-encoded data to perform RTM in the encoded data test in order to avoid crosstalk artifacts in RTM images.
+In the noisy data test, the assumed noisy data is used to carry out RTM.
+
+\subsection{Encoded data test}
+\multiplot{4}{etrace1,etrace2,etrace3,etrace4}{width=0.7\textwidth}{Real part of 6 Hz frequency component data after first dynamic phase encoding. 
+(a) First supershot containing shots with index $i$ that satisfies: $i\%4=1$ and $1 \leq i \leq 32$; 
+(b) second supershot ($i\%4=2$); 
+(c) third supershot ($i\%4=3$); 
+(d) fourth supershot ($i\%4=0$).}
+\multiplot{4}{bvel7-9,evel7-9,sevel7-9,encoding-misfit}{width=0.45\textwidth}{FWI results of encoded data.
+(a) Standard FWI without phase encoding; 
+(b) standard FWI with dynamic phase encoding; 
+(c) FWI using seislet regularization with dynamic phase encoding;
+(d) normalized model error versus iteration for different inversions: (a) (fine dot), (b) (large dash) and (c) (solid line).}
+
+To reduce the computational burden, one well-known technique is to build supershots by assembling several sources, 
+which can reduce the computational cost by a factor roughly equal to the number of sources assembled together \cite[]{morton98,romero00}.
+However, the source-combination technique may introduce crosstalk noise arising from the interference of waves generated at spatially adjacent sources.
+To remove the unwanted crosstalk noise, the blended data is typically paired with phase encoding strategies;
+among them, \emph{dynamic} phase encoding \cite[]{krebs09,baumstein11,ben11} is a particularly effective approach.
+Dynamic phase encoding in frequency-domain FWI involves changing encoding code 
+and building a new encoded superset at each iteration of each frequency inversion \cite[]{ben11}.
+
+In this test, we combine every 8 equidistant shots in one supershot, creating 4 supershots in total.
+The first supershot contains shots with indices: 1, 5, 9, 13, 17, 21, 25 and 29.
+We perform three inversions.
+The first inversion is the standard FWI with the blended data without phase encoding, 
+which means that data are directly blended together without any designed codes.
+The second inversion is the standard FWI with the dynamic phase encoding technique, and at each iteration,
+a new encoding code is generated to build a new super dataset. 
+The encoding code used in this study is the simple phase function $e^{i\gamma}$, where $\gamma$ is a random number in $[0, 2\pi]$.
+Figure~\ref{fig:etrace1,etrace2,etrace3,etrace4} shows the real part of the 4 encoded supershots at the first iteration of the 6 Hz frequency data inversion.
+From each supershot, we can roughly observe 8 large peaks and troughs, and their locations correspond to that of the original sources.
+The third inversion inverts the dynamic phase encoded data by using FWI with seislet regularization.
+We set the soft thresholding parameter in the seislet regularization empirically to be 18\%, 
+meaning that 82\% smaller seislet coefficients get removed at each iteration.
+
+Figure~\ref{fig:bvel7-9,evel7-9,sevel7-9,encoding-misfit} shows the final results of the three inversions.
+All the results were obtained after 80 iterations.
+The result of standard FWI without phase encoding contains visible crosstalk artifacts,
+and the model is blurred by noise.
+Dynamic phase encoding can effectively suppress some of the artifacts, but there are some remaining artifacts.
+As shown by Figure~\ref{fig:sevel7-9}, seislet regularization leads to a noise-free and high-resolution model.
+Because this is a synthetic data inversion test, we can also display the evolution of model misfits.
+As shown in Figure~\ref{fig:encoding-misfit}, FWI with seislet regularization has a faster model convergence rate.
+
+\subsection{Noisy data test}
+\inputdir{noise-spar}
+\multiplot{4}{nvel7-9,snvel7-9,noise-misfit,sncurve}{width=0.45\textwidth}{FWI results of noisy data.
+(a) Standard FWI; 
+(b) FWI with seislet regularization;
+(c) normalized model error versus iteration for standard FWI (dot line) and FWI with seislet regularization (solid line);
+(d) data convergence of FWI using seislet regularization at each frequency.
+}
+
+To further test the robustness of the proposed method, we generate a noisy dataset 
+by simply adding strong random noise to the original time domain data.
+Then we transform the noisy data to frequency domain for inversion.
+We perform two inversions: standard FWI and FWI using seislet regularization,
+and compare their results in Figures~\ref{fig:nvel7-9} and~\ref{fig:snvel7-9}.
+In this comparison, we find that seislet regularization suppresses the noise caused by the ambient noise in the data,
+and helps to get a good inversion result.
+Figure~\ref{fig:noise-misfit} shows the model convergence curves, which also tell us that 
+FWI using seislet regularization has a faster model convergence rate.
+Finally, we show the data convergence of FWI using seislet regularization for each frequency inversion in Figure~\ref{fig:sncurve}.
+We can observe that at each separate frequency, the proposed method exhibits a fast data-fitting convergence.
+
+\section{Conclusions}
+With the observation that velocity models with planar structures appear sparse in the seislet domain,
+we introduce a sparsity regularization scheme with seislet transform to improve the robustness of FWI 
+and to recover a noise-free, geologically-consistent velocity model.
+We implement this seislet regularization by imposing soft thresholding on the updated model in the seislet domain at each iteration.
+We estimate the dip needed by the seislet transform from the migration image generated during the iterative inversion.
+Two numerical tests verify the effectiveness of FWI using seislet regularization.
+
+\section{Acknowledgments}
+We thank the associate editor J. Rickett and an anonymous reviewer for providing valuable suggestions.
+We thank the sponsors of the Texas Consortium for Computational Seismology (TCCS) for financial support.
+The first author was additionally supported by the Statoil Fellows Program at The University of Texas at Austin.
+All computations presented in this paper are reproducible using the Madagascar software package \cite[]{fomel13}.
+
+\onecolumn
+\bibliographystyle{seg}
+\bibliography{paper}

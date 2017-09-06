@@ -1,0 +1,234 @@
+from rsf.proj import *
+import math
+
+def plotmodel(title):
+	return '''
+	grey color=j scalebar=y bias=2.5
+	barlabel=Velocity barunit=km/s barreverse=y
+	labelsz=9 labelfat=3 titlesz=9 titlefat=3
+	screenratio=0.5 title="%s"
+	''' %title
+
+# Velocity
+marm='../timedomain/marm.rsf'
+Flow('marm',marm,'cp')
+Result('marm',plotmodel('Exact model'))
+
+# Initial model
+Flow('init','marm','smooth rect1=20 rect2=50 repeat=3')
+Result('init',plotmodel('Initial model'))
+
+# Copy data
+csource='../timedomain/csource.rsf'
+Flow('csource',csource,'cp')
+fdata='../timedomain/nfdata.rsf'
+Flow('nfdata',fdata,'cp')
+receiver='../timedomain/receiver.rsf'
+Flow('receiver',receiver,'cp')
+
+# First RTM and Dip
+data='../timedomain/ndata.rsf'
+Flow('ndata',data,'cp')
+wavelet='../timedomain/wavelet.rsf'
+Flow('wavelet',wavelet,'cp')
+Flow('rtm1','init wavelet ndata',
+		'''
+		mpisfwi Fvel=$SOURCE Fwavelet=${SOURCES[1]} Fdat=${SOURCES[2]} output=$TARGET function=3 verb=n
+		nb=100 coef=0.002  nr=512 dr=0.016 r0=0. rz=3 ns=32 ds=0.24 s0=0.4 sz=3 frectx=1 frectz=1
+		''',np=16)
+Flow('rtm12','rtm1','laplac |pow pow1=1.')
+Result('rtm12','grey title= screenratio=0.5')
+
+Flow('mask','rtm12','math output=1 |cut max1=0.5 |cut max2=0.4 |cut min2=7.8')
+Flow('dip1','rtm12 mask','fdip mask=${SOURCES[1]} rect1=10 rect2=10 order=1')
+Result('dip1','grey color=j title=Slope scalebar=y screenratio=0.5')
+
+# FWI example with noisy data and sparsity constraint
+nw=8
+ow=3.95062
+dw=0.987656
+niter=10
+
+model=[]
+curve=[]
+oldvel='init'
+dip='dip1'
+# loop over frequency
+for iw in range(nw):
+	omega=2*math.pi*(ow+dw*iw)
+	
+	src='src%d' %iw
+	rcd='rcd%d' %iw
+	Flow(src,'csource','window f4=%d n4=1' %iw)
+	Flow(rcd,'nfdata','window f4=%d n4=1' %iw)
+
+	# Calculate second dip
+	if iw==3:
+		Flow('rtm2',[oldvel,'wavelet','ndata'],
+				'''
+				mpisfwi Fvel=$SOURCE Fwavelet=${SOURCES[1]} Fdat=${SOURCES[2]} output=$TARGET function=3 verb=n
+				nb=100 coef=0.002  nr=512 dr=0.016 r0=0. rz=3 ns=32 ds=0.24 s0=0.4 sz=3 frectx=1 frectz=1
+				''',np=16)
+		Flow('rtm22','rtm2','laplac |pow pow1=1.')
+		Result('rtm22','grey title= screenratio=0.5')
+		Flow('dip2','rtm22 mask','fdip mask=${SOURCES[1]} rect1=10 rect2=10 order=1')
+		Result('dip2','grey color=j title=Slope scalebar=y screenratio=0.5')
+		dip='dip2'
+
+	if iw==6:
+		Flow('rtm3',[oldvel,'wavelet','ndata'],
+				'''
+				mpisfwi Fvel=$SOURCE Fwavelet=${SOURCES[1]} Fdat=${SOURCES[2]} output=$TARGET function=3 verb=n
+				nb=100 coef=0.002  nr=512 dr=0.016 r0=0. rz=3 ns=32 ds=0.24 s0=0.4 sz=3 frectx=1 frectz=1
+				''',np=16)
+		Flow('rtm32','rtm3','laplac |pow pow1=1.')
+		Result('rtm32','grey title= screenratio=0.5')
+		Flow('dip3','rtm32 mask','fdip mask=${SOURCES[1]} rect1=10 rect2=10 order=1')
+		Result('dip3','grey color=j title=Slope scalebar=y screenratio=0.5')
+		dip='dip3'
+
+	# inner loop at each frequency
+	for iter in range(niter):
+
+		source='src%d-%d' %(iw,iter)
+		record='rcd%d-%d' %(iw,iter)
+		Flow([source,record],[src,rcd],
+				'''
+				fwipe encoding=n nsim=32 nsource=1
+				oldrec=${SOURCES[1]} newrec=${TARGETS[1]}
+				''')
+
+		newvel='snvel%d-%d' %(iw,iter)
+		temvel='temvel%d-%d' %(iw,iter)
+		newgrad='grad%d-%d' %(iw,iter)
+		newdir='dir%d-%d' %(iw,iter)
+		misfit='misfit%d-%d' %(iw,iter)
+
+		# Calculate steepest gradient
+		Flow([newgrad,misfit],[oldvel,'receiver',source,record],
+				'''
+				fwigrad misfit=${TARGETS[1]} omega=%g
+				receiver=${SOURCES[1]} source=${SOURCES[2]} record=${SOURCES[3]}
+				''' %omega)
+
+		# Update the conjugate direction
+		if iter == 0:
+			Flow(newdir,newgrad,'math output="-input"')
+		else:
+			Flow(newdir,[olddir,oldgrad,newgrad],
+					'''
+					fwidir grad0=${SOURCES[1]} grad1=${SOURCES[2]} option=p
+					''')
+
+		# Perform a line search
+		alpha1='alpha1-%d-%d' %(iw,iter)
+		alpha2='alpha2-%d-%d' %(iw,iter)
+		alpha='alpha%d-%d' %(iw,iter)
+		update1='update1-%d-%d' %(iw,iter)
+		update2='update2-%d-%d' %(iw,iter)
+		misfit1='misfit1-%d-%d' %(iw,iter)
+		misfit2='misfit2-%d-%d' %(iw,iter)
+		
+		    # Test1
+		Flow(alpha1,None,'math output=0.1 n1=1')
+		Flow(update1,[oldvel,newdir,alpha1],
+				'''
+				fwiupdate direction=${SOURCES[1]} alpha=${SOURCES[2]} max=1
+				''')
+		Flow(misfit1,[update1,source,'receiver',record],
+				'''
+				fwiobj omega=%g source=${SOURCES[1]}
+				receiver=${SOURCES[2]} record=${SOURCES[3]}
+				''' %omega)
+
+		    # Test2
+		Flow(alpha2,None,'math output=0.2 n1=1')
+		Flow(update2,[oldvel,newdir,alpha2],
+				'''
+				fwiupdate direction=${SOURCES[1]} alpha=${SOURCES[2]} max=1
+				''')
+		Flow(misfit2,[update2,source,'receiver',record],
+				'''
+				fwiobj omega=%g source=${SOURCES[1]}
+				receiver=${SOURCES[2]} record=${SOURCES[3]}
+				''' %omega)
+
+		# Optimal Alpha
+		Flow(alpha,[misfit,misfit1,misfit2],
+				'''
+				math val0=$SOURCE val1=${SOURCES[1]} val2=${SOURCES[2]}
+				output="(val2-4.0*val1+3.0*val0)/(20.0*(val2-2.0*val1+val0))"
+				''')
+
+		# Update model
+		Flow(temvel,[oldvel,newdir,alpha],
+				'''
+				fwiupdate direction=${SOURCES[1]} alpha=${SOURCES[2]} max=1
+				''')
+		# Soft thresholding in seislet domain
+		Flow(newvel,[temvel,dip],
+				'''
+				seislet dip=${SOURCES[1]} eps=0.1 adj=y inv=y unit=y type=b |
+				threshold pclip=15 |
+				seislet dip=${SOURCES[1]} eps=0.1 inv=y unit=y type=b |
+				clip2 lower=1.5 upper=5.5
+				''')
+
+		# Pass down...
+		oldvel=newvel
+		oldgrad=newgrad
+		olddir=newdir
+		Plot(newvel,plotmodel("Model iw=%d iter=%d" %(iw,iter)))
+		model.append(newvel)
+		curve.append(misfit)
+
+Plot('models',model,'Movie',view=1)
+# Data misfit
+Result('sncurve',curve,
+		'''
+		cat ${SOURCES[1:%d]} axis=1|
+		put d1=1 o1=0 |
+		graph label2="Data Misfit" unit2= label1=Iterations unit1= title=
+		labelsz=9 labelfat=3 titlesz=9 titlefat=3 screenratio=0.5 plotfat=5 wherexlabel=top
+		''' %len(curve))
+
+# Model misfit
+misfit=[]
+for i in range(nw):
+	for j in range(niter):
+		mod='snvel%d-%d' %(i,j)
+		fit='fit%d-%d' %(i,j)
+		Flow(fit,[mod,'marm'],
+				'''
+				add scale=1,-1 ${SOURCES[1]} |
+				math output="input*input" |
+				stack axis=0 norm=n
+				''')
+		misfit.append(fit)
+Flow('snmmisfit',misfit,'cat ${SOURCES[1:%d]}' %len(misfit))
+Result('snmmisfit',
+		'''
+		window |
+		scale axis=1 |
+		put d1=1 o1=1 |
+		graph label2="Normalized Misfit" unit2= min2=0.7 label1=Iterations unit1= title="Model Misfit with Seislet Regularization"
+		''')
+
+# Model misfit comparison
+Flow('nmmisfit','../noise/nmmisfit.rsf','cp')
+Result('noise-misfit','nmmisfit snmmisfit',
+		'''
+		cat axis=4 ${SOURCES[1:2]}|
+		window |
+		scale axis=1 |
+		put d1=1 o1=1 |
+		graph label2="Normalized Model Misfit" unit2= min2=0.8 label1=Iterations unit1= wanttitle= dash=2,0 
+		labelsz=9 labelfat=3 titlesz=9 titlefat=3 screenratio=0.5 plotfat=5 wherexlabel=top
+		''')
+
+# Final model comparison
+Flow('nvel7-9','../noise/nvel7-9.rsf','cp')
+Result('nvel7-9',plotmodel(''))
+Result('snvel7-9',plotmodel(''))
+
+End()

@@ -1,0 +1,3 @@
+uses=['sfcp', 'sfgrey', 'sfsmooth', 'sfwindow', 'sffwipe', 'sffwigrad', 'sfmath', 'sffwiupdate', 'sffwiobj', 'sfclip2', 'sffwidir', 'sfcat', 'sfput', 'sfgraph', 'sfadd', 'sfstack', 'sfscale']
+data=[]
+size= 4886342144
