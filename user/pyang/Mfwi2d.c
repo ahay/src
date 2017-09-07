@@ -275,6 +275,7 @@ float cal_beta(float **g0, float **g1, float **cg, int nz, int nx)
 {
     int ix, iz;
     float a,b,c;
+    float beta_HS, beta_DY;
 
     a=b=c=0;
     for(ix=0; ix<nx; ix++){
@@ -285,8 +286,8 @@ float cal_beta(float **g0, float **g1, float **cg, int nz, int nx)
 	}
     }
 
-    float	beta_HS=(fabsf(b)>0)?(a/b):0.0; 
-    float beta_DY=(fabsf(b)>0)?(c/b):0.0;
+    beta_HS=(fabsf(b)>0)?(a/b):0.0; 
+    beta_DY=(fabsf(b)>0)?(c/b):0.0;
     return SF_MAX(0.0, SF_MIN(beta_HS, beta_DY));
 }
 

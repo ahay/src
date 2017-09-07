@@ -127,7 +127,7 @@ int main(int argc, char* argv[])
   prtm2d_init(verb, csd, fromBoundary, dz, dx, dt, amp, fm, nz, nx, nb, nt, ns, ng, 
 	      sxbeg, szbeg, jsx, jsz, gxbeg, gzbeg, jgx, jgz, v0, mod, dat);
 
-  // run adjoint test first.
+  /* run adjoint test first. */
   sf_warning("adjoint test \n");
   if (testadj){
     prtm2d_adjtest();
