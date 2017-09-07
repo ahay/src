@@ -43,31 +43,35 @@ int getTime(struct timeval t1, struct timeval  t2){
     /* return time in milliseconds; */
     return ((t2.tv_sec - t1.tv_sec)* 1000 + (t2.tv_usec - t1.tv_usec)/1000);
 }
-float compareWavefields(int it, float **u){
-    /*< compare current wavefield with true wavefield saved in sp0array >*/
 
+float compareWavefields(int it, float **u)
+    /*< compare current wavefield with true wavefield saved in sp0array >*/
+{
+    int ix, iz;
     float sum =0;
-    for (int ix=nb;ix<nxpad-nb;ix++){
-	for (int iz=nb;iz<nzpad-nb;iz++){
+
+    for (ix=nb;ix<nxpad-nb;ix++){
+	for (iz=nb;iz<nzpad-nb;iz++){
 	    if (gp1[ix][iz]) sum += fabs((u[ix][iz]-sp0array[it][ix][iz]));
 	}
     }
     return sum;
 }
+
 void rw_snapshot(float** p, int it, bool read){
     /* read/write snapshot completely */
     /* if read=true read, else write */
+    int ix, iz;
   
     if (!read){
-	for (int ix=0;ix< nxpad;ix++){
-	    for (int iz=0;iz< nzpad;iz++){
+	for (ix=0;ix< nxpad;ix++){
+	    for (iz=0;iz< nzpad;iz++){
 		sp0array[it][ix][iz]=p[ix][iz];
 	    }
 	}
-    }
-    else{
-	for (int ix=0;ix< nxpad;ix++){
-	    for (int iz=0;iz< nzpad;iz++){
+    } else{
+	for (ix=0;ix< nxpad;ix++){
+	    for (iz=0;iz< nzpad;iz++){
 		p[ix][iz]=sp0array[it][ix][iz];
 	    }
 	}
