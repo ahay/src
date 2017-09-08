@@ -1,8 +1,10 @@
-/* 2-D prestack least-squares RTM using wavefield reconstruction
-   NB: Sponge ABC is applied!
+/* least-squares prestack RTM in 2-D
 */
 /*
-  Copyright (C) 2014  Xi'an Jiaotong University (Pengliang Yang)
+  Copyright (C) 
+  - 2014  Xi'an Jiaotong University, UT Austin (Pengliang Yang)
+  - 2017, Uinversity of Calgary, Daniel Trad:
+    Operator modified to pass the adjoint. Added adjoint tests as well. 
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -30,15 +32,15 @@ int main(int argc, char* argv[])
   float **v0, *mod, *dat; 
   int testadj;
 
-  sf_file shots, imag, imgrtm, velo;/* I/O files */
+  sf_file shots, imglsm, imgrtm, velo;/* I/O files */
 
   /* initialize Madagascar */
   sf_init(argc,argv);
 
   shots = sf_input ("in"); /* shot records, data 	*/
   velo = sf_input ("vel"); /* velocity */
-  imag = sf_output("out"); /* output LSRTM image, model */
-  imgrtm = sf_output("imgrtm"); /* output RTM image */
+  imglsm = sf_output("out"); /* output LSRTM imglsme, model */
+  imgrtm = sf_output("imgrtm"); /* output RTM imglsme */
     
   if (!sf_histint(velo,"n1",&nz)) sf_error("n1");
   /* 1st dimension size */
@@ -94,15 +96,15 @@ int main(int argc, char* argv[])
   if (!sf_histint(shots,"csdgather",&csd)) sf_error("csdgather or not required");
   /* default, common shot-gather; if n, record at every point*/
 
-  sf_putint(imag,"n1",nz);
-  sf_putint(imag,"n2",nx);
-  sf_putint(imag,"n3",1);
-  sf_putfloat(imag,"d1",dz);
-  sf_putfloat(imag,"d2",dx);
-  sf_putfloat(imag,"o1",o1);
-  sf_putfloat(imag,"o2",o2);
-  sf_putstring(imag,"label1","Depth");
-  sf_putstring(imag,"label2","Distance");
+  sf_putint(imglsm,"n1",nz);
+  sf_putint(imglsm,"n2",nx);
+  sf_putint(imglsm,"n3",1);
+  sf_putfloat(imglsm,"d1",dz);
+  sf_putfloat(imglsm,"d2",dx);
+  sf_putfloat(imglsm,"o1",o1);
+  sf_putfloat(imglsm,"o2",o2);
+  sf_putstring(imglsm,"label1","Depth");
+  sf_putstring(imglsm,"label2","Distance");
 
   sf_putint(imgrtm,"n1",nz);
   sf_putint(imgrtm,"n2",nx);
@@ -115,7 +117,7 @@ int main(int argc, char* argv[])
   sf_putstring(imgrtm,"label2","Distance");
 
   /* In rtm, vv is the velocity model [modl], which is input parameter; 
-     mod is the image/reflectivity [imag]; dat is seismogram [data]! */
+     mod is the imglsme/reflectivity [imglsm]; dat is seismogram [data]! */
   v0=sf_floatalloc2(nz,nx);
   mod=sf_floatalloc(nz*nx);
   dat=sf_floatalloc(nt*ng*ns);
@@ -134,7 +136,7 @@ int main(int argc, char* argv[])
     sf_warning("exiting after testadj\n");
     mod=NULL;
     sf_floatwrite(mod,nz*nx,imgrtm);
-    sf_floatwrite(mod,nz*nx,imag);
+    sf_floatwrite(mod,nz*nx,imglsm);
     prtm2d_close();
     free(*v0); free(v0);
     free(mod);
@@ -149,10 +151,12 @@ int main(int argc, char* argv[])
   sf_warning("migration ends");
 
   if (niter>0){
+    memset(mod, 0, nz*nx*sizeof(float));
+
     sf_warning("inside LS loop niter= %d\n",niter);
     /* least squares migration */
     sf_solver(prtm2d_lop, sf_cgstep, nz*nx, nt*ng*ns, mod, dat, niter, "verb", verb, "end");
-    sf_floatwrite(mod, nz*nx, imag);  /* output inverted image */
+    sf_floatwrite(mod, nz*nx, imglsm);  /* output inverted image */
     sf_cgstep_close();
   }
 
