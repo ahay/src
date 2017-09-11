@@ -46,7 +46,7 @@ struct Eno {
 /* concrete data type */
 
 sf_eno sf_eno_init (int order /* interpolation order */, 
-	      int n     /* data size */)
+		    int n     /* data size */)
 /*< Initialize interpolation object. >*/
 {
     sf_eno ent;
