@@ -83,12 +83,12 @@ int main(int argc, char* argv[])
     float * vele;		/* velocity with expanded dimensions */
     float * roe;		/* density  with expanded dimensions */
     
-    float * restrict roz;		/* density for the FD scheme */
-    float * restrict rox;		/* density for the FD scheme */
+    float * roz;		/* density for the FD scheme */
+    float * rox;		/* density for the FD scheme */
 
-    float * restrict vel2ro;           /* vel^2*ro = 1/k (k is the compressibility) */
+    float * vel2ro;           /* vel^2*ro = 1/k (k is the compressibility) */
 
-    float * restrict vx,* restrict vz,* restrict p; /* x and y velocities and pressure fields */
+    float * vx,* vz,* p; /* x and y velocities and pressure fields */
 
     /* Linear interpolation weights/indices */
     lint2d cs,cr;
