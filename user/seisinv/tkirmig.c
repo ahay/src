@@ -176,7 +176,7 @@ void tkirmig_lop(bool adj, bool add, int nm, int nd,
                      wt*=wt;
 
                      if (amp) wt*=tau*(tr*tr+ts*ts)/ts/tr/sqrtf(ts)/sqrtf(tr)/vrms2;
-                     //amp = wt;
+                     /* amp = wt; */
 
                      if (itm>=0&&itp<nt-1) {
                         spotw(adj,-wt,nt,t0,dt,tm,&modl[im],img[ompith]);
@@ -206,7 +206,7 @@ void spotw(bool adj,float w,int nt,float t0,float dt,float t,float *val, float *
      int it;
      float tc,g;
 
-     //sf_adjnull(adj,false,nt,nt,val,vec);
+     /* sf_adjnull(adj,false,nt,nt,val,vec); */
 
      tc=(t-t0)/dt;
      it=floorf(tc);
