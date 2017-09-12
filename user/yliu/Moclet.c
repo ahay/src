@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
 
     for (i4=0; i4 < n4; i4++) {
 	for (iw=0; iw < nw; iw++) {
-	    if (verb) sf_warning("frequency %d of %d",iw+1,nw);
+	    if (verb) sf_warning("frequency %d of %d;",iw+1,nw);
 	    sf_complexread(pp,nxh,in);
 	    w = w0+iw*dw;
 	    if (adj) {
@@ -94,6 +94,7 @@ int main(int argc, char *argv[])
 	}
     }
 
+    sf_warning(".");
     exit(0);
 }
 /* 	$Id$	 */

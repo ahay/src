@@ -32,4 +32,28 @@ Plot('pifpi','pi fpi','cmplx ${SOURCES[1]} | %s symbol=o symbolsz=5 plotcol=2' %
 
 Result('linear','linear trace pi fpi pifpi','Overlay')
 
+graph += 'max1=20 '
+
+# Make a trace
+Flow('trace2',None,
+     '''
+     echo 0,1,3,0,-2,-5,-2,2,5,0,-1,1,0,3,3,-1,-3,-5,-1,0 | 
+     csv2rsf | put n2=1 o2=0 o1=0 d1=1 label1= unit1=
+     ''')
+Plot('trace2',graph + 'symbol=o symbolsz=5 plotcol=1')
+
+grid = 'n1=2000 o1=0 d1=%g' % (19.0/1999)
+
+Flow('spline','trace2','spline %s' % grid)
+Plot('spline',graph + ' plotcol=2')
+
+Flow('linear2','trace2','remap1 %s order=2' % grid)
+Plot('linear2',graph + ' plotcol=4')
+
+Flow('x','trace2','math output=x1 | transp | pad n1=2')
+Flow('nearest','trace2 x','nnint coord=${SOURCES[1]} %s voro=y n2=1 o2=0 d2=1' % grid)
+Plot('nearest',graph + ' plotcol=6 dash=2')
+
+Result('trace2','nearest linear2 spline trace2','Overlay')
+
 End()

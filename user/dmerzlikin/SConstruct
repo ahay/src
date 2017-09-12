@@ -44,11 +44,13 @@ for prog in mains:
 ccmains = Split(ccprogs)
 subs = Split(subs)
 
-if 'c++' in env.get('API',[]):
+ccompile = 'c++' in env.get('API',[]) and not 'NO_COMPLEX' in env.get('CPPDEFINES',[])
+
+if ccompile:
     objs = map(lambda x:  env.StaticObject(x+'.cc'), subs)
 
 for prog in ccmains:
-    if 'c++' in env.get('API',[]):
+    if ccompile:
         prog = env.Program (prog, ['M'+prog+'.cc'] + objs)
         env.Depends(prog,map (lambda x: x + '.hh', subs))
     else:

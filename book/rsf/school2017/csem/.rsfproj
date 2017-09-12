@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfgraph', 'sffft1', 'sfmath', 'sfreal', 'sfnoise', 'sfmvo', 'sfwindow', 'sfput']
+data=['data/csem/Ts.H']
+size=     453612

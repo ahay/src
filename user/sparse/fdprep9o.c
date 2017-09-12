@@ -68,8 +68,8 @@ void fdprep9o(const double omega,
 	}
     }
 
-    s1 = (double complex**) sf_alloc(pad2,sizeof(double complex));
-    s1[0] = (double complex**) sf_alloc(pad1*pad2,sizeof(double complex));
+    s1 = (double complex**) sf_alloc(pad2,sizeof(double complex*));
+    s1[0] = (double complex*) sf_alloc(pad1*pad2,sizeof(double complex));
     for (j=1; j < pad2; j++) {
 	s1[j] = s1[0]+j*pad1;
     }
@@ -85,8 +85,8 @@ void fdprep9o(const double omega,
 	}
     }
 
-    s2 = (double complex**) sf_alloc(pad2,sizeof(double complex));
-    s2[0] = (double complex**) sf_alloc(pad1*pad2,sizeof(double complex));
+    s2 = (double complex**) sf_alloc(pad2,sizeof(double complex*));
+    s2[0] = (double complex*) sf_alloc(pad1*pad2,sizeof(double complex));
     for (j=1; j < pad2; j++) {
 	s2[j] = s2[0]+j*pad1;
     }

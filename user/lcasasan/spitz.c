@@ -43,9 +43,9 @@ void spitz(float *in,float *out, int *n, int order, int ntraces, bool norm)
 {
     float EPS=100*FLT_EPSILON;
     bool verb=false, inv;    
-    int i1,i2, n1, n2, n12;       
+    int i1,i2, n1, n2;       
     /* fft */
-    int ny,nt,nyL,ntL,Ntot,Nint;
+    int ny,nt,nyL,ntL,Ntot;
     float  *p,*pL,*p_out;
     kiss_fft_cpx *temp_fftL, *temp_fft, *out_fft;
     sf_complex *fftL, **FFTL, *fft,**FFT,**outFFT;
@@ -55,12 +55,12 @@ void spitz(float *in,float *out, int *n, int order, int ntraces, bool norm)
     n1 = n[0];
     n2 = n[1];
 
-    n12 = n1*n2;
+    /* n12 = n1*n2; */
     //sf_warning("SONO DENTRO SPITZ.C n12 = %d",n12);
     
  	
     Ntot = (ntraces+1)*(n2-1)+1; /* total number of traces after interpolation */
-    Nint = Ntot-n2; 			/*   number of new traces */
+    /* Nint = Ntot-n2; 			number of new traces */
     //sf_warning("total number of traces %d",Ntot);
     //sf_warning("total number of interp traces %d",Nint);
  

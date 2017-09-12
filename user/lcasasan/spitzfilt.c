@@ -91,7 +91,6 @@ void spitzfilt_apply(sf_complex* fftL, sf_complex* fft,sf_complex* out)
 /*<spitz filtering>*/{
 	int lag;
 	int ih,ib,iN,i,j;
-	float eps;
 	lag=1;
 
 	/* now we compute the linear PEF from the low frequencies in fftL */
@@ -184,7 +183,7 @@ void spitzfilt_apply(sf_complex* fftL, sf_complex* fft,sf_complex* out)
 	}
 	// define regularization 
 	sf_cmatmult_init(eye);
-	eps=0.0001; /* dumping parameter */
+	/* eps=0.0001; dumping parameter */
 
 	//sf_warning("###LOP CG SOLVER for MCHF Ntot=%d",Ntot);
 	ih=0;
