@@ -1022,14 +1022,23 @@ def blas(context):
                 context.env['LIBS'] = LIBS
                 context.env['BLAS'] = 'cblas'
             else:
-                context.Result(context_failure)
-                context.env['CPPDEFINES'] = \
-                    path_get(context,'CPPDEFINES','NO_BLAS')
+                # try tatlas (threaded atlas + BLAS)
                 LIBS.pop()
                 LIBS.pop()
                 LIBS.pop()
-                context.env['BLAS'] = None
-                need_pkg('blas', fatal=False)
+                LIBS.append('tatlas')
+                res = context.TryLink(text,'.c')
+                if res:
+                   context.Result(res)
+                   context.env['LIBS'] = LIBS
+                   context.env['BLAS'] = 'tatlas'
+                else: 
+                   context.Result(context_failure)
+                   context.env['CPPDEFINES'] = \
+                      path_get(context,'CPPDEFINES','NO_BLAS')
+                   LIBS.pop()
+                   context.env['BLAS'] = None
+                   need_pkg('blas', fatal=False)
 
 pkg['lapack'] = {'fedora':'blas + blas-devel + atlas + atlas-devel',
                  'rhel':'blas-devel + atlas-devel'}
@@ -1072,12 +1081,20 @@ def lapack(context):
                 context.Result(res)
                 context.env['LAPACK'] = mylibs
             else:
-                context.Result(context_failure)
-                context.env['LAPACK'] = None
-                need_pkg('lapack', fatal=False)
+                # try tatlas (threaded atlas + BLAS)
                 LIBS.pop()
                 LIBS.pop()
                 LIBS.pop()
+                LIBS.append('tatlas')
+                res = context.TryLink(text,'.c')
+                if res:
+                   context.Result(res)
+                   context.env['LAPACK'] = ['tatlas']
+                else:
+                   context.Result(context_failure)
+                   context.env['LAPACK'] = None
+                   need_pkg('lapack', fatal=False)
+                   LIBS.pop()
 
 pkg['mpi'] = {'fedora':'openmpi + openmpi-devel + openmpi-libs',
               'ubuntu':'libopenmpi-dev',

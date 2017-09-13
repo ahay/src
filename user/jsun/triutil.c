@@ -43,7 +43,7 @@ typedef struct tri2 *tri2d;
 
 struct tri2{
     bool verb,abc;
-    int  nt, nx, nz, nb, depth, nxpad, nzpad, nzxpad;
+    int  nt, nx, nz, nb, depth, nxpad, nzpad, nzxpad, ngeo, ngrp, **geo;
     float dt2, idz2, idx2, cb;
 };
 /*^*/
@@ -52,11 +52,12 @@ struct tri2{
 
 /***************************************************************/
 tri2d tri2d_make(bool verb, bool abc,
-                int nt, int nx, int nz, int nb, int depth,
+                int nt, int nx, int nz, int nb, int depth, int ngeo, int ngrp, int **geo,
                 float dt, float dx, float dz, float cb)
 /*< initialize tri2d utilities >*/
 {   
     tri2d tri;
+    int ig;
 
     tri = (tri2d) sf_alloc(1,sizeof(*tri));
 
@@ -71,11 +72,20 @@ tri2d tri2d_make(bool verb, bool abc,
     tri->idx2  = 1.0f/(dx*dx);
     tri->idz2  = 1.0f/(dz*dz);
     tri->cb    = cb; 
+    tri->ngeo  = ngeo;
+    tri->ngrp  = ngrp;
+    tri->geo   = geo;
 
     tri->nxpad = nx+2*nb;
     tri->nzpad = nz+2*nb;
     tri->nzxpad= tri->nzpad*tri->nxpad;
     tri->depth = depth+nb;
+    if (NULL!=tri->geo) {
+        for (ig=0; ig<tri->ngeo; ig++) {
+            tri->geo[ig][2] += nb;
+            tri->geo[ig][1] += nb;
+        }
+    }
 
     return tri;
 }
@@ -85,14 +95,14 @@ static tri2d tr;
 static float **vvpad, **u0, **u1, **u2, **tmp;
 
 void timerev_init(bool verb, bool abc,
-                  int nt, int nx, int nz, int nb, int depth,
+                  int nt, int nx, int nz, int nb, int depth, int ngeo, int ngrp, int **geo,
                   float dt, float dx, float dz, float cb,
                   float **vv)
 /*< initialize >*/
 {
     int ix, iz;
 
-    tr = tri2d_make(verb, abc, nt, nx, nz, nb, depth, dt, dx, dz, cb);
+    tr = tri2d_make(verb, abc, nt, nx, nz, nb, depth, ngeo, ngrp, geo, dt, dx, dz, cb);
 
     /* set Laplacian coefficients */
     vvpad = sf_floatalloc2(tr->nzpad, tr->nxpad);
@@ -119,16 +129,43 @@ void timerev_init(bool verb, bool abc,
 
     /* absorbing boundary condition */
     abc_init(tr);
+}
 
+void inject(int igrp, int it, float **uu, float **dd)
+/*< inject data >*/
+{
+    int igeo;
+    /* loop over geophones */
+#ifdef _OPENMP
+#pragma omp parallel for default(shared) private(igeo)
+#endif
+    for (igeo=0; igeo<tr->ngeo; igeo++) {
+        if ( tr->geo[igeo][0] == igrp )
+            uu[tr->geo[igeo][2]][tr->geo[igeo][1]] += dd[igeo][it];
+    }
+}
+
+void extract(int igrp, int it, float **uu, float **dd)
+/*< extract data >*/
+{
+    int igeo;
+    /* loop over geophones */
+#ifdef _OPENMP
+#pragma omp parallel for default(shared) private(igeo)
+#endif
+    for (igeo=0; igeo<tr->ngeo; igeo++) {
+        if ( tr->geo[igeo][0] == igrp )
+            dd[igeo][it] = uu[tr->geo[igeo][2]][tr->geo[igeo][1]];
+    }
 }
 
 void timerev_lop(bool adj, bool add, int nm, int nd, float *mod, float *dat)
 /*< time reversal imaging linear operator >*/
 {
-    int ix, iz, it;
+    int ix, iz, it, ig;
     float **dd, ***ww;
 
-    if (nm!=tr->nz*tr->nx*tr->nt || nd!=tr->nt*tr->nx) sf_error("%s: wrong dimensions",__FILE__);
+    if (nm!=tr->nz*tr->nx*tr->nt || nd!=tr->nt*tr->ngeo) sf_error("%s: wrong dimensions",__FILE__);
     sf_adjnull(adj, add, nm, nd, mod, dat);
 
 #ifdef _OPENMP
@@ -183,11 +220,16 @@ void timerev_lop(bool adj, bool add, int nm, int nd, float *mod, float *dat)
             tmp=u0; u0=u1; u1=u2; u2=tmp;
 
             /* 1 - inject data */
+            if (NULL!=tr->geo) {
+                for (ig=0; ig<tr->ngrp; ig++)
+                    inject(ig, it, u1, dd);
+            } else {
 #ifdef _OPENMP
 #pragma omp parallel for default(shared) private(ix)
 #endif
-            for (ix=tr->nb; ix<tr->nb+tr->nx; ix++)
-                u1[ix][tr->depth] += dd[ix-tr->nb][it];
+                for (ix=tr->nb; ix<tr->nb+tr->nx; ix++)
+                    u1[ix][tr->depth] += dd[ix-tr->nb][it];
+            }
  
         } /* it loop */
 
@@ -196,11 +238,16 @@ void timerev_lop(bool adj, bool add, int nm, int nd, float *mod, float *dat)
     	for (it=0; it<tr->nt; it++){
 
              /* 1 - record data */
+            if (NULL!=tr->geo) {
+                for (ig=0; ig<tr->ngrp; ig++)
+                    extract(ig, it, u1, dd);
+            } else {
 #ifdef _OPENMP
 #pragma omp parallel for default(shared) private(ix)
 #endif
-            for (ix=tr->nb; ix<tr->nb+tr->nx; ix++)
-                dd[ix-tr->nb][it] += u1[ix][tr->depth];
+                for (ix=tr->nb; ix<tr->nb+tr->nx; ix++)
+                    dd[ix-tr->nb][it] += u1[ix][tr->depth];
+            }
            
             /* 2 - time stepping */
 #ifdef _OPENMP
@@ -259,20 +306,22 @@ void ctimerev(int ngrp, float ***ww, float **dd)
             for (iz=0; iz<tr->nz; iz++)
                 ww[it][ix][iz] = 1.0f;
 
-    /* set start and end index */
-    beg=sf_intalloc(ngrp);
-    end=sf_intalloc(ngrp);
-    counter = 0;
-    for (ig=0; ig<ngrp; ig++) {
-        beg[ig] = counter;
-        counter += tr->nx/ngrp;
-        end[ig] = counter;
-    }
-    end[ngrp-1] = tr->nx;
-    if (tr->verb) {
+    if (NULL==tr->geo) {
+        /* set start and end index */
+        beg=sf_intalloc(ngrp);
+        end=sf_intalloc(ngrp);
+        counter = 0;
         for (ig=0; ig<ngrp; ig++) {
-            sf_warning("beg[%d]=%d",ig,beg[ig]);
-            sf_warning("end[%d]=%d",ig,end[ig]);
+            beg[ig] = counter;
+            counter += tr->nx/ngrp;
+            end[ig] = counter;
+        }
+        end[ngrp-1] = tr->nx;
+        if (tr->verb) {
+            for (ig=0; ig<ngrp; ig++) {
+                sf_warning("beg[%d]=%d",ig,beg[ig]);
+                sf_warning("end[%d]=%d",ig,end[ig]);
+            }
         }
     }
 
@@ -307,11 +356,15 @@ void ctimerev(int ngrp, float ***ww, float **dd)
             if (tr->abc) abc_apply(u0[0],tr);
 
             /* inject data */
+            if (NULL!=tr->geo) {
+                inject(ig, it, u1, dd);
+            } else {
 #ifdef _OPENMP
 #pragma omp parallel for default(shared) private(ix)
 #endif
-            for (ix=tr->nb+beg[ig]; ix<tr->nb+end[ig]; ix++)
-                u1[ix][tr->depth] += dd[ix-tr->nb][it];
+                for (ix=tr->nb+beg[ig]; ix<tr->nb+end[ig]; ix++)
+                    u1[ix][tr->depth] += dd[ix-tr->nb][it];
+            }
 
             /* image source */
 #ifdef _OPENMP
