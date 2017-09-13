@@ -193,7 +193,7 @@ int main(int argc, char* argv[])
     /* initialize time-reversal imaging */
     timerev_init(verb, abc,
 		 nt, nx, nz, nb, depth,
-		 /* ngeo, ngrp, geo, */
+		 ngeo, ngrp, geo, 
 		 dt, dx, dz, cb, vv);
 
     /* calculate model weighting using correlative imaging condition */
