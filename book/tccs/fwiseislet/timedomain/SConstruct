@@ -1,0 +1,94 @@
+from rsf.proj import *
+import math
+
+def plotmodel(title):
+	return '''
+	grey color=j scalebar=y bias=2.5
+	barlabel=Velocity barunit=km/s barreverse=y
+	labelsz=9 labelfat=3 titlesz=9 titlefat=3
+	screenratio=0.5 title="%s"
+	''' %title
+
+# True velocity
+Fetch('marmvel.hh',"marm")
+Flow('marm','marmvel.hh',
+		'''
+		dd form=native |
+		scale rscale=0.001 |
+		put label1=Depth label2=Distance unit1=km unit2=km d1=0.004 d2=0.004|
+		window j1=4 j2=4 |
+		window f2=30 n2=512 |
+		put o2=0
+		''')
+Result('marm',plotmodel(''))
+
+# Initial velocity
+Flow('init','marm','smooth rect1=20 rect2=50 repeat=3')
+Result('init',plotmodel(''))
+
+# Generate wavelet and data
+Flow('wavelet',None,'spike n1=4001 d1=0.001 o1=0. k1=150 mag=1e5 |ricker1 frequency=13')
+Result('wavelet','window n1=400 |graph title= screenratio=0.5')
+Result('spectra','wavelet','spectra |graph min1=0 max1=40 title= screenratio=0.5')
+Flow('data','marm wavelet',
+		'''
+		mpisfwi Fvel=$SOURCE Fwavelet=${SOURCES[1]} output=$TARGET function=1 verb=n
+		nb=100 coef=0.002 nr=512 dr=0.016 r0=0. rz=3 ns=32 ds=0.24 s0=0.4 sz=3 frectx=1 frectz=1
+		''',np=16)
+Result('shot15','data','window n3=1 f3=15 |grey title= pclip=98 labelsz=9 labelfat=3 titlesz=9 titlefat=3 screenratio=0.5')
+
+# Transform wavelet and data to frequency domain
+Flow('cwavelet','wavelet','fft1')
+Flow('wreal','cwavelet','window min1=4 n1=8 j1=4 |real')
+Flow('wimag','cwavelet','window min1=4 n1=8 j1=4 |imag')
+Flow('creal','wreal',
+		'''
+		helm2D_genshot 
+		n1=188 d1=0.016 n2=512 d2=0.016 
+		ow=3.95062 dw=0.987656 nw=8
+		ns=32 srcz=3 srcx0=25 srcdx=15
+		fmag=$SOURCE
+		''')
+Flow('cimag','wimag',
+		'''
+		helm2D_genshot 
+		n1=188 d1=0.016 n2=512 d2=0.016 
+		ow=3.95062 dw=0.987656 nw=8
+		ns=32 srcz=3 srcx0=25 srcdx=15
+		fmag=$SOURCE
+		''')
+Flow('csource','creal cimag','cmplx ${SOURCES[1]}')
+
+Flow('cdata','data','fft1')
+Flow('dreal','cdata','window min1=4 n1=8 j1=4 |real |pad n4=1 d4=0.016 o4=0.048|transp plane=14 |pad beg1=3 end1=184 |math output="-input"')
+Flow('dimag','cdata','window min1=4 n1=8 j1=4 |imag |pad n4=1 d4=0.016 o4=0.048|transp plane=14 |pad beg1=3 end1=184 |math output="-input"')
+Flow('fdata','dreal dimag','cmplx ${SOURCES[1]}')
+
+# Plot data at 4 and 10 Hz
+Flow('data4','dreal','window n1=1 f1=3 n4=1 f4=0 |transp')
+Result('data4','grey title= screenratio=0.3 labelsz=9 labelfat=3 titlesz=9 titlefat=3')
+Flow('data10','dreal','window n1=1 f1=3 n4=1 f4=6 |transp')
+Result('data10','grey title= screenratio=0.3 labelsz=9 labelfat=3 titlesz=9 titlefat=3')
+
+# Receiver map
+Flow('receiver',None,'helm2D_genrec n1=188 d1=0.016 n2=512 d2=0.016 recz=3 recx0=0 recdx=1')
+
+# Comparison: confirm the consistency
+Flow('blend','marm csource','helm2D_forward source=${SOURCES[1]}')
+
+Flow('trace1','fdata','real |window n4=1 f4=2 n3=1 f3=15 n1=1 f1=3')
+Flow('trace2','blend','real |window n4=1 f4=2 n3=1 f3=15 n1=1 f1=3')
+Result('traces','trace1 trace2','cat axis=2 ${SOURCES[1]} |graph title= label2="Amplitude of Real Part" unit2= labelsz=9 labelfat=3 titlesz=9 titlefat=3 screenratio=0.3')
+
+# Generate noisy data
+Flow('noise','data','noise rep=y range=0.045 var=0.00015 seed=2013 |bandpass flo=2 nplo=1 fhi=20')
+Result('nspectra','noise','spectra all=y |graph title= label2=Amplitude unit2= wherexlabel=top min1=0 max1=20 labelsz=9 labelfat=3 titlesz=9 titlefat=3 screenratio=0.25 plotfat=4')
+Flow('ndata','data noise','add ${SOURCES[1]}')
+Result('ndata','grey title=')
+
+Flow('ncdata','ndata','fft1')
+Flow('ndreal','ncdata','window min1=4 n1=8 j1=4 |real |pad n4=1 d4=0.016 o4=0.048|transp plane=14 |pad beg1=3 end1=184 |math output="-input"')
+Flow('ndimag','ncdata','window min1=4 n1=8 j1=4 |imag |pad n4=1 d4=0.016 o4=0.048|transp plane=14 |pad beg1=3 end1=184 |math output="-input"')
+Flow('nfdata','ndreal ndimag','cmplx ${SOURCES[1]}')
+
+End()

@@ -191,7 +191,14 @@ int main(int argc, char* argv[])
     else sf_floatread(ww[0][0], nz*nx*nt, in);
 
     /* initialize time-reversal imaging */
+<<<<<<< HEAD
     timerev_init(verb, abc, nt, nx, nz, nb, depth, ngeo, ngrp, geo, dt, dx, dz, cb, vv);
+=======
+    timerev_init(verb, abc,
+		 nt, nx, nz, nb, depth,
+		 ngeo, ngrp, geo, 
+		 dt, dx, dz, cb, vv);
+>>>>>>> 60f9d5566d25bb3c36669614da0e8c048a983faf
 
     /* calculate model weighting using correlative imaging condition */
     if (inv && prec) { 

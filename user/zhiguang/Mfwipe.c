@@ -8,7 +8,7 @@ int main(int argc, char* argv[])
 {
 	bool encoding;
 	int i1, i2, i3, n1, n2;
-	int ns, nsim, nsource, belong;
+	int ns, nsim, nsource, belong, seed;
 	float *random;
 	sf_complex phase;
 	sf_complex ***newarray, **oldarray;
@@ -45,9 +45,10 @@ int main(int argc, char* argv[])
 	random=sf_floatalloc(ns);
 
 	/* generate random number */
-	srand(time(NULL));
+	if(!sf_getint("seed", &seed)) seed=time(NULL);
+	init_genrand((unsigned long) seed);
 	for(i1=0; i1<ns; i1++)
-		random[i1]=((double)(2.*3.1415926)/RAND_MAX)*rand();
+		random[i1]=2.*3.1415926*genrand_real1();
 
 	/* Initialization */
 	for(i3=0; i3<nsim; i3++)
