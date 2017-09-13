@@ -28,6 +28,7 @@ int main(int argc, char* argv[])
 {
     bool verb,adj,abc,inv,prec,sw,ctr;  /* execution flags */
     int nt, nx, nz, depth, nb, n2, nt2; /* dimensions */
+    int tmp, ngeo, **geo;               /* total number of geophones, and their locations */
     int niter, ngrp, size;              /* # of iters, groups, sw size */
     int rectz, rectx, rectt,repeat;     /* smoothing pars */
     int stack,is,it,ix,iz,tsize;        /* local stacking length */
@@ -35,7 +36,7 @@ int main(int argc, char* argv[])
     float perc, hard;                   /* hard thresholding and division padding */
     float **dd, **vv, ***ww, ***mwt;    /* arrays */
     float ***ww2=NULL;
-    sf_file in, out, vel, weight;       /* I/O files */
+    sf_file in, out, vel, weight, geop; /* I/O files */
 
     /* initialize Madagascar */
     sf_init(argc,argv);
@@ -79,10 +80,28 @@ int main(int argc, char* argv[])
     if(!sf_histfloat(vel, "d1", &dz)) sf_error("No d1= in velocity");
     if(!sf_histfloat(vel, "d2", &dx)) sf_error("No d2= in velocity");
 
+    /* geophones */
+    if (NULL!=sf_getstring("geop")) {
+        geop = sf_input("geop");
+        if(!sf_histint(geop, "n1", &tmp) && tmp != 3) sf_error("No n1=3 in geop");
+        if(!sf_histint(geop, "n2", &ngeo)) sf_error("No n2= in geop");
+
+        /* read locations: group index, vertical index, horizontal index */
+        geo = sf_intalloc2(3, ngeo);
+        sf_intread(geo[0], 3*ngeo, geop);
+
+        /* check for ngrp */
+        if (ngrp-1 != geo[ngeo-1][0]) sf_error("geop file not consistent with ngrp!");
+    } else {
+        ngeo = nx;
+        geo = NULL;
+    }
+    sf_warning("ngeo=%d",ngeo);
+
     if (adj){ /* migration */
         if(!sf_histint(in, "n1", &nt)) sf_error("No n1= in data");
         if(!sf_histfloat(in, "d1", &dt)) sf_error("No d1= in data");
-        if(!sf_histint(in, "n2", &n2) || n2!=nx) sf_error("Need n2=%d in data", nx);
+        if(!sf_histint(in, "n2", &n2) && n2!=ngeo) sf_error("Need n2=%d in data", ngeo);
 
         sf_putint   (out, "n1", nz);
         sf_putfloat (out, "o1", oz);
@@ -108,11 +127,18 @@ int main(int argc, char* argv[])
         sf_putfloat (out, "o1", 0.0);
         sf_putstring(out, "label1", "Time");
         sf_putstring(out, "unit1" , "s");
-        sf_putint   (out, "n2", nx);
-        sf_putfloat (out, "o2", ox);
-        sf_putfloat (out, "d2", dx);
-        sf_putstring(out, "label2", "Distance");
-        sf_putstring(out, "unit2" , "km");
+        if (NULL!=geo) {
+            sf_putint   (out, "n2", ngeo);
+            sf_putfloat (out, "o2", 0);
+            sf_putfloat (out, "d2", 1);
+            sf_putstring(out, "label2", "Receiver");
+        } else {
+            sf_putint   (out, "n2", nx);
+            sf_putfloat (out, "o2", ox);
+            sf_putfloat (out, "d2", dx);
+            sf_putstring(out, "label2", "Distance");
+            sf_putstring(out, "unit2" , "km");
+        }
         sf_putint   (out, "n3", 1);
     }
     nt2 = nt/stack;
@@ -146,7 +172,7 @@ int main(int argc, char* argv[])
    
     /* allocate arrays */
     vv = sf_floatalloc2(nz, nx);
-    dd = sf_floatalloc2(nt, nx);
+    dd = sf_floatalloc2(nt, ngeo);
     ww = sf_floatalloc3(nz, nx, nt);
     if (inv && prec) mwt = sf_floatalloc3(nz, nx, nt);
     if (stack > 1) {
@@ -161,11 +187,11 @@ int main(int argc, char* argv[])
     }
     /* read velocity */
     sf_floatread(vv[0], nz*nx, vel);
-    if (adj) sf_floatread(dd[0], nt*nx, in);
+    if (adj) sf_floatread(dd[0], nt*ngeo, in);
     else sf_floatread(ww[0][0], nz*nx*nt, in);
 
     /* initialize time-reversal imaging */
-    timerev_init(verb, abc, nt, nx, nz, nb, depth, dt, dx, dz, cb, vv);
+    timerev_init(verb, abc, nt, nx, nz, nb, depth, ngeo, ngrp, geo, dt, dx, dz, cb, vv);
 
     /* calculate model weighting using correlative imaging condition */
     if (inv && prec) { 
@@ -174,7 +200,7 @@ int main(int argc, char* argv[])
             ctimerev(ngrp,mwt,dd);
             absval(nz*nx*nt,mwt[0][0]);
         } else {
-            timerev_lop(adj, false, nz*nx*nt, nt*nx, mwt[0][0], dd[0]);
+            timerev_lop(adj, false, nz*nx*nt, nt*ngeo, mwt[0][0], dd[0]);
             autopow(nz*nx*nt,(float)ngrp,mwt[0][0]);
         }
         /* smoothing */
@@ -187,12 +213,12 @@ int main(int argc, char* argv[])
 
     /* apply time-reversal imaging linear operator */
     if (inv) {
-        if (prec) sf_solver(timerev_lop,sf_cgstep,nz*nx*nt,nt*nx,ww[0][0],dd[0],niter,"mwt",mwt[0][0],"verb",verb,"end");
-        else sf_solver(timerev_lop,sf_cgstep,nz*nx*nt,nt*nx,ww[0][0],dd[0],niter,"verb",verb,"end");
+        if (prec) sf_solver(timerev_lop,sf_cgstep,nz*nx*nt,nt*ngeo,ww[0][0],dd[0],niter,"mwt",mwt[0][0],"verb",verb,"end");
+        else sf_solver(timerev_lop,sf_cgstep,nz*nx*nt,nt*ngeo,ww[0][0],dd[0],niter,"verb",verb,"end");
     } else {
         if (adj && ctr) {
             ctimerev(ngrp,ww,dd);
-        } else timerev_lop(adj, false, nz*nx*nt, nt*nx, ww[0][0], dd[0]);
+        } else timerev_lop(adj, false, nz*nx*nt, nt*ngeo, ww[0][0], dd[0]);
     }
 
     if (stack > 1) {
@@ -216,7 +242,9 @@ int main(int argc, char* argv[])
     if (adj) {
         if (stack > 1) sf_floatwrite(ww2[0][0], nz*nx*nt2, out);
         else sf_floatwrite(ww[0][0], nz*nx*nt, out);
-    } else sf_floatwrite(dd[0], nt*nx, out);
+    } else {
+        sf_floatwrite(dd[0], nt*ngeo, out);
+    }
 
     if (NULL!=weight) sf_floatwrite(mwt[0][0], nz*nx*nt, weight);
 
@@ -229,4 +257,3 @@ int main(int argc, char* argv[])
 
     exit (0);
 }
-

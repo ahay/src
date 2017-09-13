@@ -150,7 +150,7 @@ int main (int argc, char* argv[])
 		if(simi[n1*i+j]<s2){
 		    if(simi[n1*i+j]<=s1){
 			tempnfw=nfw+l1;
-			//sf_warning("simi[%d*%d+%d]=%g,L=%d",n1,i,j,simi[n1*i+j],tempnfw);
+			/* sf_warning("simi[%d*%d+%d]=%g,L=%d",n1,i,j,simi[n1*i+j],tempnfw); */
 		    }
 		    else{
 			tempnfw=nfw+l2;

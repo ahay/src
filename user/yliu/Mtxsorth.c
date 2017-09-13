@@ -17,34 +17,45 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 #include <rsf.h>
-#include <math.h>
 
 int main(int argc, char* argv[])
 {
-    int m[SF_MAX_DIM],i,it,ix,n1,n2,mdim,nd;
-    float eps1, eps2, *w, *s, *n, remove,*sig2,*noi2;
-    sf_file in,noise,fnoi2,fsig2;
-    bool verb;
+    int m[SF_MAX_DIM], i, it, ix, n1, n2, mdim, nd;
+    /* Define variables */
+
+    float gamma1, gamma2, remove;
+    /* Define variables */
+
+    float *s, *n, *w;
+    /* Define arrays for s/s_0, n/n_0, w in equations 13 and 14 */
+
+    sf_file in, noise, fnoi2, fsig2;
+    /* Define file pointers of input and output  */
 
     sf_init(argc,argv);
+    /* Initialize parameters for input and output */
 
     in = sf_input("in");
     noise = sf_input("noise");
-
     fnoi2 = sf_output("out");
     fsig2 = sf_output("sig2"); 
+    /* Initialize file pointers of input and output */
 
-    if (!sf_getfloat("eps1",&eps1)) sf_error("Need eps1=");
-    /* regularization 1*/
-    eps1 *= eps1;
-    if (!sf_getfloat("eps2",&eps2)) sf_error("Need eps2=");
-    /* regularization 2*/
-    eps2 *= eps2;
+    if (!sf_getfloat("gamma1",&gamma1)) sf_error("Need gamma1=");
+    /* Regularization in t direction, gamma_t in equations 18 and 20 */
 
-    if (!sf_getbool("verb",&verb)) verb = false;
-    /* verbosity flag */
+    gamma1 *= gamma1;
+    /* Calculate square of gamma_t in equation 20 */
+
+    if (!sf_getfloat("gamma2",&gamma2)) sf_error("Need gamma2=");
+    /* Regularization in x direction, gamma_x in equations 18 and 20 */
+
+    gamma2 *= gamma2;
+    /* Calculate square of gamma_x in equation 20 */
 
     mdim = sf_filedims(in,m);
+    /* Get data size and dimensions from input */
+
     nd = 1;
     for (i=0; i < mdim; i++) {
 	nd *= m[i];
@@ -55,40 +66,40 @@ int main(int argc, char* argv[])
     s = sf_floatalloc(nd);
     n = sf_floatalloc(nd);
     w = sf_floatalloc(nd);
-    noi2 = sf_floatalloc(nd);
-    sig2 = sf_floatalloc(nd);
+    /* Open space of array variables for s, n, and w */
 
     sf_floatread(s,nd,in);
     sf_floatread(n,nd,noise);
-
-    for (i=0; i < nd; i++) {
-	noi2[i] = n[i];
-	sig2[i] = s[i];
-    }
+    /* Read data arrays s_0 and n_0 from input */
 
     w[0]=0.0f;
-    for(it=0;it < n1; it++){
-	for(ix=0;ix < n2; ix++){
+    for(ix=0; ix < n2; ix++) {
+	for(it=0; it < n1; it++) {
 	    if(ix-1<0 || it-1<0) {
 		w[ix*n1+it]=0.;
 	    } else {
 		w[ix*n1+it]=(s[ix*n1+it]*n[ix*n1+it]+
-			     eps1*w[(ix-1)*n1+it]+eps2*w[ix*n1+it-1])/
-		    (s[ix*n1+it]*s[ix*n1+it]+eps1+eps2);
+			     gamma1*w[ix*n1+it-1]+gamma2*w[(ix-1)*n1+it])/
+		    (s[ix*n1+it]*s[ix*n1+it]+gamma1+gamma2);
+		/* Implement equations 19 and 20 */
 	    }
 	}
     }
     
     for (i=0; i < nd; i++) {
-	remove = w[i]*sig2[i];
-	noi2[i] -= remove;
-	sig2[i] += remove;
+	remove = w[i]*s[i];
+	/* Implement w*s_0(t,x) in equations 13 and 14 */
+
+	s[i] += remove;
+        /* Implement equation 13 or 21 to calculate s(t,x) */
+
+	n[i] -= remove;
+        /* Implement equation 14 to calculate n(t,x) */
     }
     
-    sf_floatwrite(noi2,nd,fnoi2);
-    sf_floatwrite(sig2,nd,fsig2);
-
+    sf_floatwrite(n,nd,fnoi2);
+    sf_floatwrite(s,nd,fsig2);
+    /* Output s(t,x) and n(t,x) in equations 13 and 14 */
+    
     exit(0);
 }
-/* 	$Id$	 */
-
