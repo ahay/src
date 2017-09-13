@@ -27,6 +27,8 @@ def plotdip(title):
 	screenratio=0.5 title="%s"
 	''' %title
 
+SConscript('../timedomain/SConstruct')
+
 # Velocity
 marm='../timedomain/marm.rsf'
 Flow('marm',marm,'cp')

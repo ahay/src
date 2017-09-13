@@ -30,56 +30,56 @@ static int lag_dw;
 static sf_complex* xx_dw;
 
 void cicaf1_dw_init(int ny           /* data size */, 
-		         sf_complex* xx /* data [ny] */,
-			     int lag1  /* filter lag (lag=1 is causal) */) 
+		    sf_complex* xx /* data [ny] */,
+		    int lag1  /* filter lag (lag=1 is causal) */) 
 /*< initialize >*/
 {
     nx_dw  = ny;
     lag_dw = lag1;
-	xx_dw = xx;
+    xx_dw = xx;
 }
 
 void cicaf1_dw_lop(bool adj, bool add, int nb, int ny, sf_complex* bb, sf_complex* yy)
 /*< linear operator >*/
 {
 
-	int x, b, y;
+    int x, b, y;
 
     if(ny != nx_dw) sf_error("%s: size problem: %d != %d",__FILE__,ny,nx_dw);
 
     sf_cadjnull(adj, add, nb, ny, bb, yy);
-    //sf_warning("############cicaf############");
+    /* sf_warning("############cicaf############"); */
     for (b=0; b < nb; b++) {
-		for (y=nb; y <= ny; y++) { 
+	for (y=nb; y <= ny; y++) { 
 
-			x = y - b - 1;
-		#ifdef SF_HAS_COMPLEX_H
-			if( adj) {		/* CONJUGATE TRANSPOSE OPERATOR*/		
-				bb[b] = bb[b]+ (yy[y-lag_dw] * conjf(xx_dw[x]));
-				//sf_warning("bb[b]=y[%d]-x[%d]=",y-lag,x); cprint(bb[b]);
-			}
-	    	else     { 				
+	    x = y - b - 1;
+#ifdef SF_HAS_COMPLEX_H
+	    if( adj) {		/* CONJUGATE TRANSPOSE OPERATOR*/		
+		bb[b] = bb[b]+ (yy[y-lag_dw] * conjf(xx_dw[x]));
+		/* sf_warning("bb[b]=y[%d]-x[%d]=",y-lag,x); cprint(bb[b]); */
+	    }
+	    else     { 				
 
-		    	yy[y-lag_dw]  =yy[y-lag_dw]+( bb[b] * xx_dw[x]);
-				//sf_warning("y[%d]-x[%d]=",y-lag,x); cprint(yy[y]); cprint(xx[x]); cprint(bb[b]);
-        	}
-		#else
-	    	if( adj) {		/* CONJUGATE TRANSPOSE OPERATOR*/
-				bb[b] = sf_cadd(bb[b], sf_cmul(yy[y-lag_dw], sf_conjf(xx_dw[x])) ); 
-				//sf_warning("bb[b]=y[%d]-x[%d]=",y-lag,x); cprint(bb[b]);
-			}
-	    	else     { 				
+		yy[y-lag_dw]  =yy[y-lag_dw]+( bb[b] * xx_dw[x]);
+		/* sf_warning("y[%d]-x[%d]=",y-lag,x); cprint(yy[y]); cprint(xx[x]); cprint(bb[b]); */
+	    }
+#else
+	    if( adj) {		/* CONJUGATE TRANSPOSE OPERATOR*/
+		bb[b] = sf_cadd(bb[b], sf_cmul(yy[y-lag_dw], sf_conjf(xx_dw[x])) ); 
+		/* sf_warning("bb[b]=y[%d]-x[%d]=",y-lag,x); cprint(bb[b]); */
+	    }
+	    else     { 				
 
-		    	yy[y-lag_dw] = sf_cadd(yy[y-lag_dw], sf_cmul(bb[b], xx_dw[x]) ); 
-				//sf_warning("y[%d]-x[%d]=",y-lag,x); cprint(yy[y]);
-        	}
-		#endif
-		}
+		yy[y-lag_dw] = sf_cadd(yy[y-lag_dw], sf_cmul(bb[b], xx_dw[x]) ); 
+		/* sf_warning("y[%d]-x[%d]=",y-lag,x); cprint(yy[y]); */
+	    }
+#endif
+	}
     }
 }
 
 void cicaf1_dw_close(void)
 /*<close>*/
 {
-;
+    ;
 }
