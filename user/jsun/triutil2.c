@@ -1,6 +1,6 @@
 /* Time reversal imaging of passive seismic data linear operator */
 #include <rsf.h>
-#include "triutil.h"
+#include "triutil2.h"
 #include <stdio.h>
 
 #ifdef _OPENMP
@@ -8,7 +8,7 @@
 #include "omputil.h"
 #endif
 
-#ifndef _triutil_h
+#ifndef _triutil2_h
 
 #define NOP 4 /* derivative operator half-size */
 #define C0 -205.0f/72.0f
