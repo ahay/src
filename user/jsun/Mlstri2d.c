@@ -22,7 +22,7 @@
 #include <omp.h>
 #endif
 
-#include "triutil.h"
+#include "triutil2.h"
 
 int main(int argc, char* argv[])
 {
@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
     int tmp, ngeo, **geo;               /* total number of geophones, and their locations */
     int niter, ngrp, size;              /* # of iters, groups, sw size */
     int rectz, rectx, rectt,repeat;     /* smoothing pars */
-    int stack,is,it,ix,iz,tsize;        /* local stacking length */
+    int stack,is,it,ix,iz,ig,tsize;     /* local stacking length */
     float ox, oz, dx, dz, dt, cb;       /* intervals */
     float perc, hard;                   /* hard thresholding and division padding */
     float **dd, **vv, ***ww, ***mwt;    /* arrays */
@@ -91,7 +91,11 @@ int main(int argc, char* argv[])
         sf_intread(geo[0], 3*ngeo, geop);
 
         /* check for ngrp */
-        if (ngrp-1 != geo[ngeo-1][0]) sf_error("geop file not consistent with ngrp!");
+        tmp = 0;
+        for (ig=0; ig<ngeo; ig++) {
+            if (tmp < geo[ig][0]) tmp = geo[ig][0];
+        }
+        if (ngrp-1 != tmp) sf_error("geop file not consistent with ngrp!");
     } else {
         ngeo = nx;
         geo = NULL;
@@ -191,14 +195,7 @@ int main(int argc, char* argv[])
     else sf_floatread(ww[0][0], nz*nx*nt, in);
 
     /* initialize time-reversal imaging */
-<<<<<<< HEAD
     timerev_init(verb, abc, nt, nx, nz, nb, depth, ngeo, ngrp, geo, dt, dx, dz, cb, vv);
-=======
-    timerev_init(verb, abc,
-		 nt, nx, nz, nb, depth,
-		 ngeo, ngrp, geo, 
-		 dt, dx, dz, cb, vv);
->>>>>>> 60f9d5566d25bb3c36669614da0e8c048a983faf
 
     /* calculate model weighting using correlative imaging condition */
     if (inv && prec) { 
