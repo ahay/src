@@ -2,10 +2,13 @@ import os, sys, re, string, glob
 sys.path.append('../../framework')
 import bldutil
 
-progs = '''
-dagap3  dagap3e rms dagap3a dagapex
-'''
+#progs = '''
+#dagap3  dagap3e rms dagap3a dagapex angmig const2dangmig const2dangmigsemb angmig2d
+#'''
 
+progs = '''
+dagap3  dagap3e  dagap3a dagapex angmig2
+'''
 mpi_progs = ''
 
 ccprogs = ''

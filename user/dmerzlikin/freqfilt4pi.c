@@ -23,7 +23,6 @@
 /*^*/
 
 #include "freqfilt4pi.h"
-#include "Faddeeva.h"
 
 static int nfft, nw, m1, m2;
 static kiss_fft_cpx *ctrace, *ctrace2, **fft;
@@ -106,7 +105,6 @@ void freqfilt4pi_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 {
     int iw, ik;
     kiss_fft_cpx temp;
-    int verb; // just outputting values to check when I get zeroes
 
     sf_adjnull(adj,add,nx,ny,x,y);
 
@@ -142,12 +140,12 @@ void freqfilt4pi_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 	    //creal are double complex functions - what should we
 	    //do when double complex is not supported???  	
 		if (adj){
-			temp.r = creal(shape[iw][ik]);
-			temp.i = (-1.0)*cimag(shape[iw][ik]);
+		    temp.r = crealf(shape[iw][ik]);
+		    temp.i = (-1.0)*cimagf(shape[iw][ik]);
 		} else {
-			temp.r = creal(shape[iw][ik]);
-			temp.i = cimag(shape[iw][ik]);
-	    }
+		    temp.r = crealf(shape[iw][ik]);
+		    temp.i = cimagf(shape[iw][ik]);
+		}
 	    
 	    ctrace2[ik] = sf_cmul(ctrace2[ik],temp);
 	

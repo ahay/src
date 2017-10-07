@@ -63,13 +63,13 @@ static float eps;   /*stability flag */
 
 
 void lsm_dsr2_init(int nz1, float dz1             /* depth */,
-	       int nh1, float dh1, float h01  /* half-offset */,
-	       int nx1, float dx1, float x01  /* midpoint */,
-	       int nu1, float du,  float u0   /* slowness grid */,
-           int nw1, float dw1, float w01,
-	       int ntx, int nth               /* taper size */,
-	       int nr1                        /* number of references */,
-	       int npad                       /* padding on nh */,
+		   int nh1, float dh1, float h01  /* half-offset */,
+		   int nx1, float dx1, float x01  /* midpoint */,
+		   int nu1, float du,  float u0   /* slowness grid */,
+		   int nw1, float dw1, float w01,
+		   int ntx, int nth               /* taper size */,
+		   int nr1                        /* number of references */,
+		   int npad                       /* padding on nh */,
 		   bool verb1, float eps1,
 		   float **slow1,float dt1)
 /*< initialize >*/
@@ -81,10 +81,10 @@ void lsm_dsr2_init(int nz1, float dz1             /* depth */,
     float  dx, dh;
     float   x0, h0;
 
-	slow=slow1;
-	verb=verb1;
-	eps=eps1;
-	dt=dt1;
+    slow=slow1;
+    verb=verb1;
+    eps=eps1;
+    dt=dt1;
     
     nz = nz1;
     dz = dz1;
@@ -213,17 +213,17 @@ void lsm_dsr2_close(void)
 
 
 void lsm_dsr2_lop(bool adj            /* if y,do migration */, 
-			      bool add,
-	              int m,int n,
-	              sf_complex *img     /* model vector,number=[nz][nu][nh] */,
-	              sf_complex *dat     /* data vector,number=[nw][nx][nh] */)
+		  bool add,
+		  int m,int n,
+		  sf_complex *img     /* model vector,number=[nz][nu][nh] */,
+		  sf_complex *dat     /* data vector,number=[nw][nx][nh] */)
 /*< Apply migration/modeling >*/
 {
     int iz,iw,ix,ih,iu,j,k;
     float sy, *si;
     sf_complex cshift, w, w2, cs, cr, cref;
 
-	sf_cadjnull(adj,false,m,n,img,dat);
+    sf_cadjnull(adj,false,m,n,img,dat);
 
     /* compute reference slowness */
     for (iz=0; iz<nz; iz++) {
@@ -239,7 +239,7 @@ void lsm_dsr2_lop(bool adj            /* if y,do migration */,
 	for (j=0; j<nr[iz]; j++) {
             sz[iz][j] = sqrtf(sm[iz][j]);
         }
-    for (j=0; j<nr[iz]-1; j++) {
+	for (j=0; j<nr[iz]-1; j++) {
 	    sy = 0.5*(sz[iz][j]+sz[iz][j+1]);
 	    LOOPxh( if(si[ is[ix][ih] ] > sy) ms[ix][ih]++;
 		    if(si[ ir[ix][ih] ] > sy) mr[ix][ih]++; );
@@ -276,7 +276,7 @@ void lsm_dsr2_lop(bool adj            /* if y,do migration */,
 	    si = slow[nz-1];
 
 	    /* imaging condition */
-		LOOPuh(qq[iu][ih]=img[(nz-1)*nu*nh+iu*nh+ih];);
+	    LOOPuh(qq[iu][ih]=img[(nz-1)*nu*nh+iu*nh+ih];);
 		
 	    LOOPxh( wx[ix][ih] =qq[ ii[ix] ][ih];  );
 
@@ -366,7 +366,7 @@ void lsm_dsr2_lop(bool adj            /* if y,do migration */,
 				  si[ ir[ix][ih] ]);
 			cshift = cexpf(sf_crmul(w,-sy*dz));
 			wx   [ix] [ih] = sf_cadd(
-			    sf_cmplx(qq[ii[ix]][ih],0.), 
+			    qq[ii[ix]][ih], 
 			    sf_cmul(wx[ix] [ih],cshift)); );
 #endif
 	    } /* iz */
@@ -377,15 +377,20 @@ void lsm_dsr2_lop(bool adj            /* if y,do migration */,
 	} else { /* MIGRATION */
 	    si = slow[0];
 
-        LOOPxh(wx[ix][ih]=dat[iw*nx*nh+ix*nh+ih];);
+	    LOOPxh(wx[ix][ih]=dat[iw*nx*nh+ix*nh+ih];);
 	    taper2(wx);
 
 	    /* loop over migrated depths z */
 	    for (iz=0; iz<nz-1; iz++) {
 		/* imaging condition */
-			LOOPuh(qq[iu][ih]=img[iz*nu*nh+iu*nh+ih];);
+		LOOPuh(qq[iu][ih]=img[iz*nu*nh+iu*nh+ih];);
+#ifdef SF_HAS_COMPLEX_H		
 		LOOPxh(        qq[ii[ix]][ih] += 
-			wx[ix][ih] ; );
+			       wx[ix][ih] ; );
+#else
+		LOOPxh(        qq[ii[ix]][ih] = 
+			       sf_cadd(qq[ii[ix]][ih],wx[ix][ih]) ; );
+#endif
 		LOOPuh(img[iz*nu*nh+iu*nh+ih]=qq[iu][ih];);
 
 		/* w-x @ top */
@@ -476,10 +481,15 @@ void lsm_dsr2_lop(bool adj            /* if y,do migration */,
 	    } /* iz */
 	    
 	    /* imaging condition @ bottom */
-		LOOPuh(qq[iu][ih]=img[(nz-1)*nu*nh+iu*nh+ih];);
+	    LOOPuh(qq[iu][ih]=img[(nz-1)*nu*nh+iu*nh+ih];);
+#ifdef SF_HAS_COMPLEX_H  
 	    LOOPxh(        qq[ii[ix]][ih] += 
-		    wx[ix][ih]; );
-		LOOPuh(img[(nz-1)*nu*nh+iu*nh+ih]=qq[iu][ih];);
+			   wx[ix][ih]; );
+#else
+	    LOOPxh(        qq[ii[ix]][ih] = 
+			   sf_cadd(qq[ii[ix]][ih],wx[ix][ih]); );
+#endif
+	    LOOPuh(img[(nz-1)*nu*nh+iu*nh+ih]=qq[iu][ih];);
 
 	} /* else */
     } /* iw */

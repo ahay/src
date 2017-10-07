@@ -1,14 +1,14 @@
 1. Creating a branch
 
- svn copy  https://svn.code.sf.net/p/rsf/code/trunk  https://svn.code.sf.net/p/rsf/code/branches/madagascar-1.7 -m 'new release'
+svn copy  https://github.com/ahay/src/trunk  https://github.com/ahay/src/branches/madagascar-2.0 -m 'new release'
 
 2. Check out the branch
 
-svn co https://svn.code.sf.net/p/rsf/code/branches/madagascar-1.7
+svn co https://github.com/ahay/src/branches/madagascar-2.0
 
-3. cd madagascar-1.7
+3. cd madagascar-2.0
 
-4. Edit VERSION.txt to remove -svn
+4. Edit VERSION.txt to remove -git
 
 5. Remove junk
 
@@ -33,13 +33,14 @@ for dir in glob.glob('*/*/[a-z]*/'):
 
 8. Compile
 
-cd madagascar-1.7
-export RSFROOT=$HOME/mad17
+cd madagascar-2.0
+export RSFROOT=$HOME/mad20
 
 remove instances of previous RSFROOT from PATH and PYTHONPATH
 
 ./configure
 make install
+source env.sh
 
 9. Remove programs without examples 
 
@@ -56,9 +57,7 @@ cd system/generic
 python ../../admin/nomain.py > list.txt
 svn remove `cat list.txt`
 
-import glob
-for main in glob.glob('M*.c'):
-    print main[1:-2]
+python ../../admin/printmains.py
 
 edit SConstruct
 
@@ -91,9 +90,9 @@ Try running sfdoc
 
 15. Create a branch of the core
 
-svn copy  https://svn.code.sf.net/p/rsf/code/branches/madagascar-1.7 https://svn.code.sf.net/p/rsf/code/branches/madagascar-core-1.7 -m 'new release'
+svn copy  https://github.com/ahay/src/branches/madagascar-2.0 https://github.com/ahay/src/branches/madagascar-core-2.0 -m 'new core release'
 
-svn co https://svn.code.sf.net/p/rsf/code/branches/madagascar-core-1.7
+svn co https://github.com/ahay/src/branches/madagascar-core-2.0
 
 cd madagascar-core-1.7
 

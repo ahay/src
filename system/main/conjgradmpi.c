@@ -62,7 +62,7 @@ int main(int argc, char* argv[])
 {
     int i, iter, niter;
     float *buf, *buf2, *wht;
-    double rn, rnp, alpha, beta;
+    double rn, rnp=0.0, alpha, beta;
     off_t nm, nd, msiz, dsiz, pos;
     size_t nbuf, mbuf, dbuf, len, iolen, cmdlen;
     FILE *xfile, *Rfile, *gfile, *Gfile, *sfile, *Sfile;

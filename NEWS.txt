@@ -1,4 +1,36 @@
-==Release 1.8 (TBA)==
+==Release 2.1 (TBD)==
+
+===Additions and enhancements===
+
+To the reproducible documents collection:
+
+To SCons:
+
+To documentation:
+
+To APIs:
+
+To the Python package:
+
+To programs:
+
+===Bug fixes===
+
+In the reproducible documents collection:
+
+In documentation:
+
+In APIs:
+
+In the Python package:
+
+In programs:
+
+In the build system:
+
+===Changes in defaults and interfaces===
+
+==Release 2.0 (2017-07-08)==
 
 ===Additions and enhancements===
 
@@ -53,6 +85,12 @@ To the reproducible documents collection:
   layered anisotropic media (Sripanich and Fomel)
 * tccs/decomp: Elastic wave-vector decomposition in heterogeneous
   anisotropic media (Sripanich, Fomel, Sun, and Cheng)
+* tccs/hyper3: 3D generalized nonhyperboloidal moveout approximation
+  (Sripanich, Fomel, Stovas, and Hao)
+* tccs/pi: Analytical path-summation imaging of seismic diffractions
+  (Merzlikin and Fomel)
+* tccs/ovc: Diffraction imaging and time-migration velocity analysis
+  using oriented velocity continuation (Decker, Merzlikin, and Fomel)
 
 To SCons:
 
@@ -77,6 +115,7 @@ To programs:
 * user/kregimbal: New contributor (Kelly Regimbal)
 * user/dmerzlikin: New contributor (Dmitrii Merzlikin)
 * user/sbader: New contributor (Sean Bader)
+* char to int conversion in sfdd
 
 ===Bug fixes===
 
@@ -90,6 +129,8 @@ In documentation:
 
 In APIs:
 
+* Fixed memory bug in stretch.c
+
 In the Python package:
 
 * Fixed parsing of comments in Fortran-90 programs
@@ -100,6 +141,8 @@ In programs:
 * Fixed case n1 > n2 in sfsvd
 * Fixed join over a different axis in sfomp and sfmpi
 * Fixed mwt= parameter in sfconjgrad
+* Fixed half-order differentiation in sfslant
+* Fixed offset handling in sfinmo
 
 In the build system:
 

@@ -1,0 +1,51 @@
+from rsf.proj import *
+
+# compile the program ----------------------------------------------------------
+proj = Project()
+prog = proj.Program('awfmd.c')
+
+Fetch('marmvel.hh','marm')
+
+# Resample the model -----------------------------------------------------------
+Flow ( "vel", "marmvel.hh", 
+    '''
+    window j1=5 j2=5 | 
+    put label2=Distance label1=Depth unit1=m unit2=m
+    ''' )
+
+Plot ("vel", 'grey allpos=y color=e scalebar=y' )
+
+# Modeling ---------------------------------------------------------------------
+Flow ( "shotgather snapshot", "vel %s" % prog[0], 
+    './${SOURCES[1]} snapshot=${TARGETS[1]} tmax=4 dt=0.002')
+
+# Plot the results--------------------------------------------------------------
+Result ("shotgather", "grey color=e pclip=97 ")
+
+Result ("snapshot", 'window j3=2 | grey gainpanel=all color=i ' )
+
+#End()
+
+Result ("snapshot3d", 'snapshot', 
+    '''
+    byte gainpanel=a | 
+    grey3 flat=n point1=0.6 point2=0.7 frame1=70 frame2=200 frame3=200 color=i 
+    ''' )
+    
+Plot ("snapshotmov", 'snapshot', 
+    '''
+    byte gainpanel=a | 
+    grey3 flat=n point1=0.6 point2=0.7 
+        frame1=0 frame2=200 frame3=0 drame=5 movie=3 color=i 
+    ''',view=1)
+
+Result ("wave", 'snapshot',
+    '''
+    window f1=100 n1=1 f2=100 n2=1 | 
+    put title="vibration" |
+    graph
+    ''' )
+
+End()
+
+

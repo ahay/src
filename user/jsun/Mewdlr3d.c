@@ -49,8 +49,7 @@ int main(int argc, char* argv[])
     sf_axis ax,ay,az,ac; /* time, x, y, z */ 
 
     /* dimension, index and interval */
-    int     nz,nx,ny,nb,nc;
-    float   dz,dx,dy;
+    int     nb,nc;
     int     nxyz, nk;
 
     /* FDM and KSP structure */ //!!!JS
@@ -101,10 +100,6 @@ int main(int argc, char* argv[])
     az = sf_iaxa(Finp,1); sf_setlabel(az,"z"); if(verb) sf_raxa(az); /* depth */
     ax = sf_iaxa(Finp,2); sf_setlabel(ax,"x"); if(verb) sf_raxa(ax); /* space x */
     ay = sf_iaxa(Finp,3); sf_setlabel(ay,"y"); if(verb) sf_raxa(ay); /* space y */
-
-    nz = sf_n(az); dz = sf_d(az);
-    nx = sf_n(ax); dx = sf_d(ax);
-    ny = sf_n(ay); dy = sf_d(ay);
     nb = 0;
 
     /*------------------------------------------------------------*/

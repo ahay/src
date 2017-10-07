@@ -24,8 +24,6 @@ void fft1(float *field, float *Field, sf_file in, bool inv, bool sym, bool opt) 
 	int n1, nt, nw, i1, i2, n2;
 	float dw, *p, d1, o1, wt, shift;
 	kiss_fft_cpx *pp, ce;
-	char *label;
-	sf_file out = NULL;
 	kiss_fftr_cfg cfg;
 	bool verb;
 

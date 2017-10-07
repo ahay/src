@@ -77,17 +77,19 @@ def circle(cc,xcenter,zcenter,radius,sampling,custom,par):
     ccx=cc+'x'+myid(16)
     ccz=cc+'z'+myid(16)
 
+    deg2rad = math.pi/180
+    
     Flow(cc,None,
          '''
-         %smath n1=%d d1=%g o1=%g output="%g+%g*cos(%g*x1/180.)" >%s datapath=%s/;
-         '''%(M8R,sampling,360./sampling,0.,xcenter,radius,math.pi,ccx,DPT) +
+         %smath n1=%d d1=%g o1=%g output="%g+%g*cos(%g*x1)" >%s datapath=%s/;
+         '''%(M8R,sampling,360./sampling,0.,xcenter,radius,deg2rad,ccx,DPT) +
          '''
-         %smath n1=%d d1=%g o1=%g output="%g-%g*sin(%g*x1/180)" >%s datapath=%s/;
-         '''%(M8R,sampling,360./sampling,0.,zcenter,radius,math.pi,ccz,DPT) +
+         %smath n1=%d d1=%g o1=%g output="%g-%g*sin(%g*x1)" >%s datapath=%s/;
+         '''%(M8R,sampling,360./sampling,0.,zcenter,radius,deg2rad,ccz,DPT) +
          '''
          %scat axis=2 space=n %s %s |
          transp |
-         put label1="" unit1="" label2="" unit2="" >${TARGETS[0]};
+         put label1="" unit1="" label2="" unit2="" o1=0 d1=1 o2=0 d2=1 >${TARGETS[0]};
          '''%(M8R,ccx,ccz) +
          '''
          %srm %s %s
@@ -104,30 +106,32 @@ def sphere(cc,xcenter,ycenter,zcenter,radius,nlat,nlon,custom,par):
     ccy=cc+'y'+myid(16)
     ccz=cc+'z'+myid(16)
 
+    deg2rad = math.pi/180
+    
     Flow(cc,None,
          '''
-         %smath n1=%d d1=%g o1=%g n2=%d d2=%g o2=%g output="%g+%g*cos(%g*x2/180)*cos(%g*x1/180.)" >%s datapath=%s/;
+         %smath n1=%d d1=%g o1=%g n2=%d d2=%g o2=%g output="%g+%g*cos(%g*x2)*cos(%g*x1)" >%s datapath=%s/;
          '''%(M8R,
               nlon,360./nlon,0.,
               nlat,180./nlat,-90.,
-              xcenter,radius,math.pi,math.pi,ccx,DPT) +
+              xcenter,radius,deg2rad,deg2rad,ccx,DPT) +
          '''
-         %smath n1=%d d1=%g o1=%g n2=%d d2=%g o2=%g output="%g+%g*cos(%g*x2/180)*sin(%g*x1/180.)" >%s datapath=%s/;
+         %smath n1=%d d1=%g o1=%g n2=%d d2=%g o2=%g output="%g+%g*cos(%g*x2)*sin(%g*x1)" >%s datapath=%s/;
          '''%(M8R,
               nlon,360./nlon,0.,
               nlat,180./nlat,-90.,
-              ycenter,radius,math.pi,math.pi,ccy,DPT) +
+              ycenter,radius,deg2rad,deg2rad,ccy,DPT) +
          '''
-         %smath n1=%d d1=%g o1=%g n2=%d d2=%g o2=%g output="%g+%g*sin(%g*x2/180)" >%s datapath=%s/;
+         %smath n1=%d d1=%g o1=%g n2=%d d2=%g o2=%g output="%g+%g*sin(%g*x2)" >%s datapath=%s/;
          '''%(M8R,
               nlon,360./nlon,0.,
               nlat,180./nlat,-90.,
-              zcenter,radius,math.pi,ccz,DPT) +
+              zcenter,radius,deg2rad,ccz,DPT) +
          '''
-         %scat axis=3 space=n %s %s %s |
-         put n1=%d n2=1 n3=3 | window |
+         %scat axis=2 space=n %s %s %s |
+         put n1=%d n2=3 |
          transp |
-         put label1="" unit1="" label2="" unit2="" >${TARGETS[0]};
+         put label1="" unit1="" label2="" unit2="" o1=0 d1=1 o2=0 d2=1 o3=0 d3=1 >${TARGETS[0]};
          '''%(M8R,ccx,ccy,ccz,nlat*nlon) +
          '''
          %srm %s %s %s
@@ -203,19 +207,23 @@ def hsine2d(cc,base,ampl,peri,custom,par,jx=1):
               stdout=0)
 
 # ------------------------------------------------------------
-def horizontal2d(cc,zcoord,custom,par,jx=1):
+def horizontal2d(cc,zcoord,custom,par,jx=1,fx=0):
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
     
     cco=cc+'o'+myid(16)
     ccz=cc+'z'+myid(16)
     ccx=cc+'x'+myid(16)
-    
+
+    nx=(par['nx']-fx-1)/jx+1
+        
     Flow(cc,None,
          '''
          %smath output=0 n1=%d o1=%g d1=%g |
-         window j1=%d >%s datapath=%s/;
-         '''%(M8R,par['nx'],par['ox'],par['dx'],jx,cco,DPT) +
+         window f1=%d j1=%d n1=%d >%s datapath=%s/;
+         '''%(M8R,
+              par['nx'],par['ox'],par['dx'],
+              fx,jx,nx,cco,DPT) +
          '''
          %smath <%s output="%g" >%s datapath=%s/;
          '''%(M8R,cco,zcoord,ccz,DPT) +
@@ -457,3 +465,36 @@ def boxarray2d(cc,nz,oz,dz,nx,ox,dx,par):
               stdin=0,
               stdout=0)
 
+
+def boxarray3d(cc,nz,oz,dz,nx,ox,dx,ny,oy,dypar):
+    M8R='$RSFROOT/bin/sf'
+    DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
+
+    cco=cc+'o'+myid(16)
+    ccz=cc+'z'+myid(16)
+    ccx=cc+'x'+myid(16)
+    ccy=cc+'y'+myid(16)
+
+    Flow(cc,None,
+         '''
+         %smath output=1 n1=%d o1=%g d1=%g n2=%d o2=%g d2=%g n3=%d o3=%g d3=%g >%s datapath=%s/;
+         '''%(M8R,nz,oz,dz,nx,ox,dx,ny,oy,dy,cco,DPT) +
+         '''
+         %smath <%s output="x1" | put n1=%d n2=1 n3=1 >%s datapath=%s/;
+         '''%(M8R,cco,nz*nx*ny,ccz,DPT) +
+         '''
+         %smath <%s output="x2" | put n1=%d n2=1 n3=1 >%s datapath=%s/;
+         '''%(M8R,cco,nz*nx*ny,ccx,DPT) +
+         '''
+         %smath <%s output="x3" | put n1=%d n2=1 n3=1 >%s datapath=%s/;
+         '''%(M8R,cco,nz*nx*ny,ccy,DPT) +
+         '''
+         %scat axis=2 space=n %s %s %s | 
+         transp | 
+         put o1=0 d1=1 o2=0 d2=1 o3=0 d3=1 label1="" unit1="" label2="" unit2="" label3="" unit3="" >${TARGETS[0]};
+         '''%(M8R,ccx,ccz,ccy) +
+         '''     
+         %srm %s %s %s %s
+         '''%(M8R,cco,ccx,ccy,ccz),
+              stdin=0,
+              stdout=0)

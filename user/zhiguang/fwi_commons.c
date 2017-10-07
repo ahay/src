@@ -1,4 +1,4 @@
-/* Data structures and common functions used in Zhiguang's FWI */
+/* Data structures and common functions used in Zhiguang's FWI programs */
 /*
  Copyright (C) 2016 The University of Texas at Austin
  
@@ -137,6 +137,8 @@ typedef struct sf_fwipar_s{
 	// hard boundary constraints
 	float v1;
 	float v2;
+	// Gauss-Newton CG iteration number
+	int lniter;
 } *sf_fwi_s;
 /*^*/
 
@@ -665,6 +667,90 @@ void preparation_dq(sf_file Fv, sf_file Fd, sf_file Fq, sf_file Ftau, sf_file Fw
 	free(qq);
 }
 
+void preparation_gn(sf_file Fv, sf_file Fw, sf_acqui acpar, sf_sou soupar, sf_vec_s array)
+/*< read data, initialize variables and prepare acquisition geometry >*/
+{
+	int i, nb, nzx;
+	float sx, xend, rbegin, rend, tmp;
+
+	int nplo=3, nphi=3, nt;
+	float eps=0.0001;
+	sf_butter blo=NULL, bhi=NULL;
+
+	/* absorbing boundary coefficients */
+	nb=acpar->nb;
+	acpar->bc=sf_floatalloc(nb);
+	for(i=0; i<nb; i++){
+		tmp=acpar->coef*(nb-i);
+		acpar->bc[i]=expf(-tmp*tmp);
+	}
+
+	/* padding variables */
+	acpar->padnx=acpar->nx+2*nb;
+	acpar->padnz=acpar->nz+2*nb;
+	acpar->padx0=acpar->x0-nb*acpar->dx;
+	acpar->padz0=acpar->z0-nb*acpar->dz;
+
+	/* acquisition parameters */
+	acpar->ds_v=acpar->ds/acpar->dx+0.5;
+	acpar->s0_v=(acpar->s0-acpar->x0)/acpar->dx+0.5+nb;
+	acpar->sz += nb;
+
+	acpar->dr_v=acpar->dr/acpar->dx+0.5;
+	acpar->r0_v=sf_intalloc(acpar->ns);
+	acpar->r02=sf_intalloc(acpar->ns);
+	acpar->nr2=sf_intalloc(acpar->ns);
+	acpar->rz += nb;
+	xend=acpar->x0+(acpar->nx-1)*acpar->dx;
+	if(acpar->acqui_type==1){
+		for(i=0; i<acpar->ns; i++){
+			acpar->r0_v[i]=acpar->r0/acpar->dx+0.5+nb;
+			acpar->r02[i]=0;
+			acpar->nr2[i]=acpar->nr;
+		}
+	}else{
+		for(i=0; i<acpar->ns; i++){
+			sx=acpar->s0+acpar->ds*i;
+			rbegin=(sx+acpar->r0 <acpar->x0)? acpar->x0 : sx+acpar->r0;
+			rend=sx+acpar->r0 +(acpar->nr-1)*acpar->dr;
+			rend=(rend < xend)? rend : xend;
+			acpar->r0_v[i]=(rbegin-acpar->x0)/acpar->dx+0.5+nb;
+			acpar->r02[i]=(rbegin-sx-acpar->r0)/acpar->dx+0.5;
+			acpar->nr2[i]=(rend-rbegin)/acpar->dr+1.5;
+		}
+	}
+
+	/* read model parameters */
+	nzx=acpar->nz*acpar->nx;
+	nt=acpar->nt;
+	array->vv=sf_floatalloc(nzx);
+	array->ww=sf_floatalloc(nt);
+
+	sf_floatread(array->vv, nzx, Fv);
+	sf_floatread(array->ww, nt, Fw);
+
+	/* bandpass the wavelet */
+	soupar->flo *= acpar->dt;
+	soupar->fhi *= acpar->dt;
+	if(soupar->flo > eps) blo=sf_butter_init(false, soupar->flo, nplo);
+	if(soupar->fhi < 0.5-eps) bhi=sf_butter_init(true, soupar->fhi, nphi);
+
+	if(NULL != blo){
+		sf_butter_apply(blo, nt, array->ww);
+		sf_reverse(nt, array->ww);
+		sf_butter_apply(blo, nt, array->ww);
+		sf_reverse(nt, array->ww);
+		sf_butter_close(blo);
+	}
+	if(NULL != bhi){
+		sf_butter_apply(bhi, nt, array->ww);
+		sf_reverse(nt, array->ww);
+		sf_butter_apply(bhi, nt, array->ww);
+		sf_reverse(nt, array->ww);
+		sf_butter_close(bhi);
+	}
+}
+
 void encoding_extract(float **code, int **shift, int **sign, int nsource, int ns, float dt)
 /*< extract time shift and sign >*/
 {
@@ -1078,6 +1164,14 @@ void dot_product(int n, float *a, float *b, float *product)
 	*product=0.;
 	for (i=0; i<n; i++)
 		*product += a[i]*b[i];
+}
+
+void combine_vectors(int n, float *a, float *b, float scale1, float scale2, float *c)
+/*< c = scale1*a +scale2*b >*/
+{
+	int i;
+	for (i=0; i<n; i++)
+		c[i] = scale1*a[i] + scale2*b[i];
 }
 
 void clip(float *x, int n, float min, float max)

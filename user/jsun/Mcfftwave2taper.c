@@ -26,7 +26,10 @@ int main(int argc, char* argv[])
 {
     bool verb,complx,sub,os;
     int it,iz,im,ik,ix,i,j;     /* index variables */
-    int nt,nz,nx, m2, nk, nzx, nz2, nx2, nzx2, n2, pad1,nth;
+    int nt,nz,nx, m2, nk, nzx, nz2, nx2, nzx2, n2, pad1;
+#ifdef _OPENMP
+    int nth;
+#endif
     sf_complex c,old;
     int snap;
 
@@ -184,6 +187,8 @@ int main(int argc, char* argv[])
      	  ktp[iz+ix*nz2] = ktmp;
 	}
       }
+    } else {
+	ktp = NULL;
     }
 
     /* MAIN LOOP */
@@ -210,10 +215,11 @@ int main(int argc, char* argv[])
 		j = iz+ix*nz2; /* padded grid */
 #ifdef SF_HAS_COMPLEX_H
 		c = ww[it] * rr[i]; // source term
+		if (sub) c += curr[j];
 #else
 		c = sf_crmul(ww[it], rr[i]); // source term
+		if (sub) c = sf_cadd(c,curr[j]);
 #endif
-		if (sub) c += curr[j];
 		if (!os) {
 		  old = curr[j];
 #ifdef SF_HAS_COMPLEX_H
@@ -227,7 +233,7 @@ int main(int argc, char* argv[])
 #ifdef SF_HAS_COMPLEX_H
 		    c += lt[im][i]*wave[im][j];
 #else
-		    c += sf_cmul(lt[im][i], wave[im][j]);
+		    c = sf_cadd(c,sf_cmul(lt[im][i], wave[im][j]));
 #endif
 		}
 

@@ -35,11 +35,11 @@ void Thomson2stiffness_2d(float* vp0, float* vs0, float* ep,  float* de,  float*
 	nxz = nx*nz;
 	float c_11,c_13,c_33,c_44;
 
-	float C[6][6] = {0.0};
-	float M[6][6] = {0.0};
-	float M1[6][6] = {0.0};
-	float temp[6][6] = {0.0};
-	float temp1[6][6] = {0.0};
+	float C[6][6] = {{0.0}};
+	float M[6][6] = {{0.0}};
+	float M1[6][6] = {{0.0}};
+	float temp[6][6] = {{0.0}};
+	float temp1[6][6] = {{0.0}};
 	
 	for(ixz=0;ixz<nxz;ixz++)
 	{
@@ -111,11 +111,11 @@ void Thomson2stiffness_3d(float* vp0, float* vs0, float* ep,  float* de, float* 
 	float c_11,c_13,c_33,c_44,c_66;
 	float a11,a12,a13,a21,a22,a23,a31,a32,a33;
 
-	float C[6][6] = {0.0};
-	float M[6][6] = {0.0};
-	float M1[6][6] = {0.0};
-	float temp[6][6] = {0.0};
-	float temp1[6][6] = {0.0};
+	float C[6][6] = {{0.0}};
+	float M[6][6] = {{0.0}};
+	float M1[6][6] = {{0.0}};
+	float temp[6][6] = {{0.0}};
+	float temp1[6][6] = {{0.0}};
 	
 	for(ixyz=0;ixyz<nxyz;ixyz++)
 	{
@@ -244,11 +244,11 @@ void Thomson2stiffness_ort(float* vp0, float* vs0, float* ep1, float* ep2, float
 	float c_11,c_12,c_13,c_22,c_23,c_33,c_44,c_55,c_66;
 	float a11,a12,a13,a21,a22,a23,a31,a32,a33;
 
-	float C[6][6] = {0.0};
-	float M[6][6] = {0.0};
-	float M1[6][6] = {0.0};
-	float temp[6][6] = {0.0};
-	float temp1[6][6] = {0.0};
+	float C[6][6] = {{0.0}};
+	float M[6][6] = {{0.0}};
+	float M1[6][6] = {{0.0}};
+	float temp[6][6] = {{0.0}};
+	float temp1[6][6] = {{0.0}};
 	
 	for(ixyz=0;ixyz<nxyz;ixyz++)
 	{

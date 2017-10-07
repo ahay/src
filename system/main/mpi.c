@@ -60,12 +60,11 @@ int main(int argc, char* argv[])
 
 	if (!sf_getint("join",&axis2)) axis2=axis;
 	/* axis to join (0 means add) */
-
-	sf_out(out,jobs,axis2,iname);
 	
 	for (job=0; job < jobs; job++) {
 	    MPI_Recv(&rank,1, MPI_INT, job+1, 1, MPI_COMM_WORLD,&stat);
 	}
+	sf_out(out,jobs,axis2,iname);
 	
 	if (axis2 > 0) {
 	    sf_join(out,axis2,jobs);

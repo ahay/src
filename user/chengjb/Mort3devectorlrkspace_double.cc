@@ -927,7 +927,7 @@ int main(int argc, char* argv[])
         }
     }
 
-   int iii;
+   int iii=0;
    for(int it=0;it<ns;it++)
    {
         float t=it*dt;
