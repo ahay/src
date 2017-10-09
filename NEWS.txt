@@ -2,7 +2,10 @@
 
 ===Additions and enhancements===
 
-To the reproducible documents collection:
+To the reproducible documents collection: 
+
+* tccs/fwiseislet: Full-waveform inversion using seislet
+regularization (Xue, Zhu, and Fomel)
 
 To SCons:
 
