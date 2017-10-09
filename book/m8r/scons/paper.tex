@@ -52,16 +52,26 @@ In the compilation task, the target (an executible program) may
 require multiple sources. The sources may have multiple dependencies
 among them. When one of the sources changes, the target should be
 recompiled. However, it would be wasteful to compile sources that are
-affected by the change. The famous Unix \texttt{make} utility was
+not affected by the change. The famous Unix \texttt{make} utility was
 developed to keep track of the dependencies and to make the
 compilation task more efficient. A free, open-source version of
 \texttt{make}, \emph{GNU make}, was developed by Richard Stallman
 \cite[]{make}.
 
 Creating data analysis workflows has a lot in common with compiling
-programs... SEP...
+programs: input data files enter the workflow and are getting
+transformed into other files, generating intermediate outputs and,
+finally, the resulting figures or other outputs. When processing is
+done in stages and then certain parameters are ge
 
-Better design of SCons...
+When the concept of reproducible research was pioneered by Jon
+Claerbout at the Stanford Exploration Project (SEP), the tool of
+choice for handling processing flows was an old dialect of
+\texttt{make} called \texttt{cake}
+\cite[]{Nichols.sep.61.341,Claerbout.sep.67.145,Claerbout.sep.73.451,Claerbout.sep.77.427}. Later
+SEP converted to using \emph{GNU make} \cite{Schwab.sep.89.217}.
+
+SCons offers a comparable functionality but with a superior design...
 
 \section{Managing data processing flows using \texttt{rsf.proj}}
 
@@ -72,4 +82,4 @@ Better design of SCons...
 \section{Creating books and reports using \texttt{rsf.book}}
 
 \bibliographystyle{seg}
-\bibliography{scons}
+\bibliography{scons,SEP2}

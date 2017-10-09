@@ -24,5 +24,17 @@ Flow('ricker','ref','spike k1=11 | ricker1 freq=0.2')
 Result('ricker','put d1=1 | window n1=21 | graph title=Wavelet')
 
 Flow('data','ref','ricker1 freq=0.2')
+Result('data','put d1=1 | graph title=Data')
+
+Flow('spikes','ref','spray axis=2 n=41 d=1 unit= label=Sample | spike k1=6 p2=1')
+Flow('matrix','spikes','ricker1 freq=0.2')
+
+Result('matrix',
+       '''
+       put d1=1 | 
+       grey color=viridis title=Matrix transp=n screenratio=1
+       ''')
+
+# LS inversion by conjugate gradients
 
 End()
