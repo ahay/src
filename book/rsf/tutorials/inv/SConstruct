@@ -37,4 +37,15 @@ Result('matrix',
 
 # LS inversion by conjugate gradients
 
+Flow('inv','data','conjgrad ricker1 freq=0.2 mod=$SOURCE niter=10')
+Flow('pred','inv','ricker1 freq=0.2')
+
+Plot('mod','ref','put d1=1 | graph title=Model plotcol=5')
+Plot('inv','inv ref','cat axis=2 ${SOURCES[1]} | put d1=1 | graph title="Estimated Model" dash=0,1 plotcol=4,5')
+
+Plot('data','put d1=1 | window j1=2 | graph title=Data symbol=* symbolsz=6 plotcol=5')
+Plot('pred','put d1=1 | window j1=2 | graph title="Predicted Data" symbol=* symbolsz=6 plotcol=4')
+
+Result('inv','mod data inv pred','TwoRows')
+
 End()
