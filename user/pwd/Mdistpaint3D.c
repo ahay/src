@@ -108,7 +108,7 @@ int main (int argc, char *argv[])
 
 	    for (i1=0; i1 < n1; i1++) {
 	        trace[i1] += sqrt(ud*ud*d2*d2 + lr*lr*d3*d3)
-                       + fault[i3][i2][i1]
+                       + fault[i3][i2][i1];
 	    } 
     }
 	
@@ -118,7 +118,7 @@ int main (int argc, char *argv[])
 }
 
 
-void normalize(int n1, int n2, int n3, float **scan, float scaleFac) {
+void normalize(int n1, int n2, int n3, float ***scan, float scaleFac) {
     int i1,i2,i3;
     float min=FLT_MAX,max=0.0;
 
