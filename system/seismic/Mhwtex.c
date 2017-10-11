@@ -24,7 +24,7 @@
 
 int main (int argc, char *argv[])
 {
-    bool verb;
+    bool verb, wini;
 
     sf_axis az,ax,at,ag;
     int       it,ig;
@@ -44,8 +44,9 @@ int main (int argc, char *argv[])
 
     /*------------------------------------------------------------*/
     sf_init(argc,argv);
-    if(! sf_getbool("verb",&verb)) verb=false;
-
+    if(! sf_getbool("verb",&verb)) verb=false; /* verbosity flag */
+    if(! sf_getbool("wini",&wini)) wini=false; /* initialize two wavefronts */
+    
     /* velocity file */
     Fv = sf_input ("in");
     az = sf_iaxa(Fv,1); sf_setlabel(az,"z"); nz=sf_n(az); if(verb) sf_raxa(az);
@@ -101,31 +102,41 @@ int main (int argc, char *argv[])
     pt2dwrite1(Fw,wm,ng,2); /* write wavefront it=0 */
 
     /*------------------------------------------------------------*/
-    /* compute second wavefront (it=1) by orthogonal rays */
     it=1;
-
-    for( ig=1; ig<ng-1; ig++) {
-
-	Pm = wm[ig-1];
-	Po = wm[ig  ];
-	Pp = wm[ig+1];
+    if(wini) { /* read initial wavefront (it=1) */
 	
-	/* orthogonal rays */
-	Ro = hwt2d_orth(Pm,Po,Pp);
+	pt2dread1(Fs,wo,ng,2);
+	for( ig=0; ig<ng; ig++) {
+	    Po = wo[ig];
+	    Po.v=hwt2d_getv(Po);
+	    wo[ig] = Po;
+	}
 
-	wo[ig] = Ro;
+    } else { /* compute second wavefront (it=1) by orthogonal rays */
+
+	for( ig=1; ig<ng-1; ig++) {
+	    
+	    Pm = wm[ig-1];
+	    Po = wm[ig  ];
+	    Pp = wm[ig+1];
+	    
+	    /* orthogonal rays */
+	    Ro = hwt2d_orth(Pm,Po,Pp);
+	    
+	    wo[ig] = Ro;
+	}
+	
+	/* ig=0 */
+	wo[0].x = wm[0].x + (wo[1].x-wm[1].x);
+	wo[0].z = wm[0].z + (wo[1].z-wm[1].z);
+	wo[0].v = hwt2d_getv(wo[0]);
+	
+	/* ig=ng-1 */
+	wo[ng-1].x = wm[ng-1].x + (wo[ng-2].x-wm[ng-2].x);
+	wo[ng-1].z = wm[ng-1].z + (wo[ng-2].z-wm[ng-2].z);
+	wo[ng-1].v = hwt2d_getv(wo[ng-1]);	
+
     }
-
-    /* ig=0 */
-    wo[0].x = wm[0].x + (wo[1].x-wm[1].x);
-    wo[0].z = wm[0].z + (wo[1].z-wm[1].z);
-    wo[0].v = hwt2d_getv(wo[0]);
-    
-    /* ig=ng-1 */
-    wo[ng-1].x = wm[ng-1].x + (wo[ng-2].x-wm[ng-2].x);
-    wo[ng-1].z = wm[ng-1].z + (wo[ng-2].z-wm[ng-2].z);
-    wo[ng-1].v = hwt2d_getv(wo[ng-1]);
-    
     pt2dwrite1(Fw,wo,ng,2); /* write wavefront it=1 */
 
     /*------------------------------------------------------------*/

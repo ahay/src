@@ -1,0 +1,100 @@
+from rsf.proj import *
+import random, string, math
+
+random.seed(2005)
+
+def rnd1(x):
+	r=str(random.randint(1,188))
+	return r
+
+def rnd2(x):
+	r=str(random.randint(1,512))
+	return r
+
+def plotmodel(title):
+	return '''
+	grey color=j scalebar=y bias=2.5
+	barlabel=Velocity barunit=km/s barreverse=y
+	labelsz=9 labelfat=3 titlesz=9 titlefat=3
+	screenratio=0.5 title="%s"
+	''' %title
+
+def plotdip(title):
+	return '''
+	grey color=j scalebar=y
+	barlabel=Dip barunit= barreverse=n
+	labelsz=9 labelfat=3 titlesz=9 titlefat=3
+	screenratio=0.5 title="%s"
+	''' %title
+
+SConscript('../timedomain/SConstruct')
+
+# Velocity
+marm='../timedomain/marm.rsf'
+Flow('marm',marm,'cp')
+Result('marm',plotmodel(''))
+
+# Initial model
+Flow('init','marm','smooth rect1=20 rect2=50 repeat=3')
+Result('init',plotmodel(''))
+
+# Estimate dip
+Flow('dip','marm','dip rect1=10 rect2=10 order=1')
+Result('dip',plotdip(''))
+
+# Seislet and Wavelet comparison
+Flow('seislet','marm dip',
+		'''
+		seislet dip=${SOURCES[1]} eps=0.1 adj=y inv=y unit=y type=b 
+		''')
+Result('seislet','put o2=0 d2=1 unit2= unit1=km o1=0 d1=0.016|grey pclip=99.5 label1=Depth label2=Scale screenratio=0.5 title= color=j labelsz=9 labelfat=3 titlesz=9 titlefat=3')
+
+Flow('wavelet','marm',
+		'''
+		transp |dwt inv=y adj=n |transp 
+		''')
+Result('wavelet','put o2=0 d2=1 unit2= unit1=km o1=0 d1=0.016|grey pclip=99.5 label1=Depth label2=Scale screenratio=0.5 title= color=j labelsz=9 labelfat=3 titlesz=9 titlefat=3')
+
+Flow('seicoef','seislet','put n1=96256 o1=1 d1=1 n2=1 unit1= unit2= |sort')
+Flow('wavcoef','wavelet','put n1=96256 o1=1 d1=1 n2=1 unit1= unit2= |sort')
+Result('coefs','seicoef wavcoef',
+		'''
+		cat axis=2 ${SOURCES[1:2]} |
+		window n1=30000 |scale axis=1 |
+		math output="10*log(input)/log(10)" |
+		graph dash=0,1 label1="Number of Samples" label2=Magnitude
+		unit2="dB" title= screenratio=0.5 wherexlabel=t plotfat=4
+		labelsz=9 labelfat=3 titlesz=9 titlefat=3
+		''')
+Plot('labels',None,'box x0=5 y0=4.2 label="Seislet" xt=0.5 yt=0.5')
+Plot('labelw',None,'box x0=7.6 y0=7.1 label="Wavelet" xt=0.5 yt=0.5')
+Result('comparison','Fig/coefs labels labelw','Overlay')
+
+Flow('marmsei','marm dip',
+		'''
+		seislet dip=${SOURCES[1]} eps=0.1 adj=y inv=y unit=y type=b |
+		threshold pclip=5 |
+		seislet dip=${SOURCES[1]} eps=0.1 inv=y unit=y type=b
+		''')
+Result('marmsei',plotmodel(''))
+
+Flow('marmwav','marm',
+		'''
+		transp |dwt inv=y adj=n |transp |
+		threshold pclip=5 |
+		transp |dwt inv=y adj=y |transp
+		''')
+Result('marmwav',plotmodel(''))
+
+# Randomly selected representative basis functions for wavelet and seislet transforms
+nsp=500
+k1=string.join(map(rnd1,range(nsp)),',')
+k2=string.join(map(rnd2,range(nsp)),',')
+
+Flow('spikes',None,'spike nsp=%d k1=%s k2=%s n1=188 n2=512 o2=0 d2=0 d1=0.016 d2=0.016 label1=Depth unit1=km' %(nsp,k1,k2),stdin=0)
+Result('marm-spike','spikes','smooth rect1=2 rect2=2 |grey pclip=100 screenratio=0.5 title= labelsz=9 labelfat=3 titlesz=9 titlefat=3')
+
+Result('imps','spikes dip','seislet dip=${SOURCES[1]} eps=0.1 inv=y |grey screenratio=0.5 title= labelsz=9 labelfat=3 titlesz=9 titlefat=3 pclip=97')
+Result('impw','spikes dip','transp| dwt eps=0.2 adj=y inv=y unit=y type=b|transp|grey screenratio=0.5 title= labelsz=9 labelfat=3 titlesz=9 titlefat=3 pclip=97')
+
+End()

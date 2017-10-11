@@ -92,6 +92,10 @@ int main(int argc, char *argv[])
 		break;
 	    case 'l':
 		otype = SF_LONG;
+		break;
+	    case 'd':
+		otype = SF_DOUBLE;
+		break;
 	    default:
 		sf_error("Unsupported type=\"%s\"",type);
 		break;

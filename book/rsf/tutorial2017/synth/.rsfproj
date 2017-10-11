@@ -1,3 +1,3 @@
-uses=['sfmath', 'sfclip2', 'sfgraph', 'sfnoise', 'sfcut', 'sfricker1', 'sfspray', 'sfinmo', 'sfmutter', 'sfgrey', 'sfpad', 'sfwindow', 'sfscale', 'sfcat', 'sfadd', 'sfvscan', 'sfnmo', 'sfconjgrad']
-data=['LOCAL']
-size=    2515020
+uses=['sfmath', 'sfclip2', 'sfgraph', 'sfnoise', 'sfcut', 'sfricker1', 'sfspray', 'sfinmo', 'sfmutter', 'sfgrey', 'sfpad', 'sfwindow', 'sfscale', 'sfcat', 'sfadd', 'sfvscan', 'sfnmo']
+data=[]
+size=    1216428

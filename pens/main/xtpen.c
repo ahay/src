@@ -212,10 +212,8 @@
  */
 
 #include <string.h>
-#include <stdio.h>
 #include <strings.h>
-
-extern void bcopy (const void *src, void *dst, size_t len);
+#include <stdio.h>
 
 #include <sys/ioctl.h>
 

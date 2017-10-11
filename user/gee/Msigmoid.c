@@ -1,7 +1,7 @@
 /* 2-D synthetic model from J.F.Claerbout. 
 
-October 2014 program of the month:
-http://ahay.org/blog/2014/10/08/program-of-the-month-sfsigmoid/
+   October 2014 program of the month:
+   http://ahay.org/blog/2014/10/08/program-of-the-month-sfsigmoid/
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
@@ -152,41 +152,40 @@ int main (int argc, char* argv[])
 	}
     }
 
-  if(reflectivity){
-    for (i2= 0; i2 < n2; i2++) {
-	refl[i2][0] = 0.;
-	for (i1= 1; i1 < n1; i1++) {
-	    refl[i2][i1] = 
-		(earth[i2][i1-1] - earth[i2][i1])/
-		(earth[i2][i1-1] + earth[i2][i1]);
-	}
-    }
-
-    if (taper) {
-
-	for (i2= 0; i2 < 10; i2++) {
-	    for (i1= 0; i1 < n1; i1++) {
-		refl[i2][i1] *= (i2/10.);
-		refl[n2-i2-1][i1] *= (i2/10.);
+    if(reflectivity){
+	for (i2= 0; i2 < n2; i2++) {
+	    refl[i2][0] = 0.;
+	    for (i1= 1; i1 < n1; i1++) {
+		refl[i2][i1] = 
+		    (earth[i2][i1-1] - earth[i2][i1])/
+		    (earth[i2][i1-1] + earth[i2][i1]);
 	    }
 	}
 
-	for (i2= 0; i2 < 5; i2++) {
-	    for (i1= 0; i1 < n1; i1++) {
-		refl[i2][i1] *= (i2/5.);
-		refl[n2-i2-1][i1] *= (i2/5.);
+	if (taper) {
+
+	    for (i2= 0; i2 < 10; i2++) {
+		for (i1= 0; i1 < n1; i1++) {
+		    refl[i2][i1] *= (i2/10.);
+		    refl[n2-i2-1][i1] *= (i2/10.);
+		}
+	    }
+
+	    for (i2= 0; i2 < 5; i2++) {
+		for (i1= 0; i1 < n1; i1++) {
+		    refl[i2][i1] *= (i2/5.);
+		    refl[n2-i2-1][i1] *= (i2/5.);
+		}
 	    }
 	}
+
+	sf_floatwrite (refl[0],n1*n2,mod);
+
+    }else{
+	/* output the impedance model */
+	sf_floatwrite (earth[0],n1*n2,mod);
     }
-
-    sf_floatwrite (refl[0],n1*n2,mod);
-
-  }else{
-    // output the impedance model
-    sf_floatwrite (earth[0],n1*n2,mod);
-  }
 
     exit (0);
 }
 
-/* 	$Id$	 */
