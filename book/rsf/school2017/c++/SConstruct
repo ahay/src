@@ -1,0 +1,70 @@
+from rsf.proj import *
+
+# First example: Data clipping
+##########################
+
+# Program compilation
+proj = Project()
+exe_clip = proj.Program('clip_cc.cc',
+                    LIBS=['rsf++']+proj.get('LIBS'))
+
+# Plot function
+def plot(title):
+    return'''
+	graph title="%s" min2=-1. max2=1. plotfat=7 titlefat=6 labelfat=5
+	''' %title
+
+# Sine function
+Flow('sine',None,'math n1=201 d1=0.1 o1=0 output="sin(x1)"')
+Result('sine',plot('Sine Function'))
+
+# Clip the sine data
+Flow('clip1','sine %s' %exe_clip[0], './${SOURCES[1]} upper=0.9 lower=-0.9')
+Result('clip1',plot('Sine Function Clipping with [-0.9,0.9]'))
+
+Flow('clip2','sine %s' %exe_clip[0], './${SOURCES[1]} upper=0.9')
+Result('clip2',plot('Sine Function Clipping with [0.9]'))
+
+# Second example: Wave propagation
+##################################
+
+# Program compilation
+exe_wave = proj.Program('wave_cc.cc',
+                    LIBS=['rsf++']+proj.get('LIBS'))
+
+# Source wavelet
+Flow('wavelet',None,
+     '''
+     spike n1=1000 d1=0.001 k1=201 |
+     ricker1 frequency=10
+     ''')
+
+# Source location
+Flow('source',None,
+     '''
+     spike n1=201 n2=301 d1=0.01 d2=0.01
+     label1=x1 unit1=km label2=x2 unit2=km
+     k1=101 k2=151     
+     ''')
+
+# Velocity model ( Constant )
+Flow('vel','source','math output=1.')
+
+# Modeling
+Flow('wave','source %s wavelet vel' % exe_wave[0],
+     '''
+     ./${SOURCES[1]} wav=${SOURCES[2]}
+     v=${SOURCES[3]} ft=200 jt=5 
+     ''')
+
+# Wave propagation process (scons wave.vpl)
+Plot('wave','grey gainpanel=all title=Wave',view=1)
+
+# Wave snapshot of t=0.9s (scons wave.view)
+Result('wave',
+       '''
+       window n3=1 min3=0.9 |
+       grey title="Wave Snapshot" screenht=8 screenwd=12
+       ''')
+
+End()

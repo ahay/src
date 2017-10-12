@@ -78,8 +78,8 @@ Flow('dcsqext.rsf','dcsq24.rsf', 'sfcat dcsq24.rsf dcsq24.rsf d=1.0 o=0.0 | sfpu
 
 for foo in ['line100m', 'hdr6km']:
     Flow('wavelet_' + foo + '.su', ['wavelet_base.su', foo + '.su'],
-         towed_array + 
          '''
+         towed_array
          data=${SOURCES[1]} 
          src=${SOURCES[0]} 
          towed=${TARGETS[0]}
@@ -88,9 +88,9 @@ for foo in ['line100m', 'hdr6km']:
 
 # simulation - one shot
 Flow('shot6km.su',['wavelet_hdr6km.su','csq24.rsf','hdr6km.su'],
-     '/bin/cp ../hdr6km.su ../shot6km.su; ' + 
-     acd  + ' ' +  
+     '/bin/cp ../hdr6km.su ../shot6km.su && ' + 
      '''
+     acd
      deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 
      csq=../csq24.rsf source=../wavelet_hdr6km.su 
      data=../shot6km.su 
@@ -100,8 +100,8 @@ Flow('shot6km.su',['wavelet_hdr6km.su','csq24.rsf','hdr6km.su'],
 # rtm - one shot
 Flow('noahrtm',['wavelet_hdr6km.su','csq24noah.rsf','shot6km.su'],
      'add < ../csq24noah.rsf > ../noahrtm.rsf scale=0.0 && ' + 
-     acd  + ' ' +  
      '''
+     acd 
      deriv=1 adjoint=1 order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 
      csq=../csq24noah.rsf source=../wavelet_hdr6km.su 
      data=../shot6km.su csq_b1=../noahrtm.rsf nsnaps=20
@@ -110,9 +110,9 @@ Flow('noahrtm',['wavelet_hdr6km.su','csq24noah.rsf','shot6km.su'],
 
 # simulation - one shot, smoothed velo
 Flow('shot6kmsm2.su',['wavelet_hdr6km.su','csq24sm2.rsf'],
-        '/bin/cp ../hdr6km.su ../shot6kmsm2.su; ' +
-        acd  + ' ' +  
+        '/bin/cp ../hdr6km.su ../shot6kmsm2.su && ' +
 	'''
+        acd
 	deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 
 	csq=../csq24sm2.rsf source=../wavelet_hdr6km.su 
         data=../shot6kmsm2.su 
@@ -121,9 +121,9 @@ Flow('shot6kmsm2.su',['wavelet_hdr6km.su','csq24sm2.rsf'],
 
 # simulation - one shot, smoothed velo
 Flow('shot6kmsm4.su',['wavelet_hdr6km.su','csq24sm4.rsf'],
-        '/bin/cp ../hdr6km.su ../shot6kmsm4.su; ' +
-        acd  + ' ' +  
+        '/bin/cp ../hdr6km.su ../shot6kmsm4.su && ' +
 	'''
+        acd
 	deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 
 	csq=../csq24sm4.rsf source=../wavelet_hdr6km.su 
         data=../shot6kmsm4.su 
@@ -132,9 +132,9 @@ Flow('shot6kmsm4.su',['wavelet_hdr6km.su','csq24sm4.rsf'],
 
 # simulation - one shot, smoothed velo
 Flow('shot6kmsm.su',['wavelet_hdr6km.su','csq24sm.rsf'],
-        '/bin/cp ../hdr6km.su ../shot6kmsm.su; ' +
-        acd  + ' ' +  
-	'''
+        '/bin/cp ../hdr6km.su ../shot6kmsm.su && ' +
+ 	'''
+        acd
 	deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 
 	csq=../csq24sm.rsf source=../wavelet_hdr6km.su 
         data=../shot6kmsm.su 
@@ -143,9 +143,9 @@ Flow('shot6kmsm.su',['wavelet_hdr6km.su','csq24sm.rsf'],
 
 # simulation - one shot, smoothed velo
 Flow('shot6kmbig.su',['wavelet_hdr6km.su','csq24big.rsf'],
-        '/bin/cp ../hdr6km.su ../shot6kmbig.su; ' +
-        acd  + ' ' +  
+        '/bin/cp ../hdr6km.su ../shot6kmbig.su && ' +
 	'''
+        acd
 	deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 
 	csq=../csq24big.rsf source=../wavelet_hdr6km.su 
         data=../shot6kmbig.su 
@@ -154,9 +154,9 @@ Flow('shot6kmbig.su',['wavelet_hdr6km.su','csq24big.rsf'],
 
 # simulation - one shot, ocean
 Flow('shot6kmnoah.su',['wavelet_hdr6km.su','csq24noah.rsf'],
-        '/bin/cp ../hdr6km.su ../shot6kmnoah.su; ' +
-        acd  + ' ' +  
-	'''
+        '/bin/cp ../hdr6km.su ../shot6kmnoah.su && ' +
+ 	'''
+        acd
 	deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 
 	csq=../csq24noah.rsf source=../wavelet_hdr6km.su 
         data=../shot6kmnoah.su 
@@ -165,9 +165,9 @@ Flow('shot6kmnoah.su',['wavelet_hdr6km.su','csq24noah.rsf'],
 
 # Born simulation - one shot, big
 Flow('born6kmbig.su',['wavelet_hdr6km.su','csq24big.rsf','dcsq24.rsf'],
-        '/bin/cp ../hdr6km.su ../born6kmbig.su; ' + 
-        acd  + ' ' +  
+        '/bin/cp ../hdr6km.su ../born6kmbig.su && ' + 
 	'''
+        acd
 	deriv=1 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 
 	csq=../csq24big.rsf csq_d1=../dcsq24.rsf source=../wavelet_hdr6km.su 
         data=../born6kmbig.su
@@ -176,9 +176,9 @@ Flow('born6kmbig.su',['wavelet_hdr6km.su','csq24big.rsf','dcsq24.rsf'],
 
 # Born simulation - one shot
 Flow('born6km.su',['wavelet_hdr6km.su','csq24sm.rsf','dcsq24.rsf'],
-        '/bin/cp ../hdr6km.su ../born6km.su; ' + 
-        acd  + ' ' +  
+        '/bin/cp ../hdr6km.su ../born6km.su && ' + 
 	'''
+        acd
 	deriv=1 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 
 	csq=../csq24sm.rsf csq_d1=../dcsq24.rsf source=../wavelet_hdr6km.su 
         data=../born6km.su
@@ -188,8 +188,8 @@ Flow('born6km.su',['wavelet_hdr6km.su','csq24sm.rsf','dcsq24.rsf'],
 # Born inversion - one shot
 Flow(['icsq6km.rsf', 'icsq6km_mut.su', 'icsq6km_est.su', 'icsq6km_res.su'], ['born6km.su', 'wavelet_hdr6km.su', 'csq24sm.rsf'],
         'add < ../csq24.rsf > ../icsq6km.rsf scale=0.0 && ' +
-        acdcgne  + ' ' +  
 	'''
+        acdcgne
 	order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 nsnaps=20 
 	csq=../csq24.rsf rcsq=../csq24sm.rsf 
 	icsq=../icsq6km.rsf source=../wavelet_hdr6km.su 

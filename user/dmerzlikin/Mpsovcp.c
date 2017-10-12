@@ -130,10 +130,12 @@ for (ip=0; ip < np; ip++) {
 				    //shift = sf_cmplx(1.,0.);
 #ifdef SF_HAS_COMPLEX_H
 				    ctrace2[iw] = ctrace[iw] * shift;
+				    cstack[iv][iw] += ctrace2[iw];
 #else
 				    ctrace2[iw] = sf_cmul(ctrace[iw],shift);
+				    cstack[iv][iw] = sf_cadd(cstack[iv][iw],ctrace2[iw]);
 #endif
-				    cstack[iv][iw] += ctrace2[iw];
+
 				} /* w */
 			} /* v */
 		} /* h */

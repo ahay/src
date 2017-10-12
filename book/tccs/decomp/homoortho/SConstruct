@@ -1,0 +1,363 @@
+# . . Set up generic project files
+from rsf.proj import *
+import fdmod,encode,wemig,stiffness,os
+
+def srcgen(out,par):
+    dtt=0.0001
+    fac=par['dt']/dtt
+    ntt=par['nt']*fac
+    ktt=par['kt']*fac
+    dt=str(int(par['dt']*10000))
+
+    #i/(2*phi)=i/(2|omega|)=i/2 * (hilb) [(int)source] 
+    Flow('src',None,
+         '''
+         spike n1=%d d1=%f k1=%d |
+         ricker1 frequency=%f
+         '''%(ntt,dtt,ktt,par['frq']))
+    Flow('realsrc','src','math "output=0"')
+    Flow('imagsrc','src','envelope hilb=y order=500 | halfint | halfint | math output="input/2" ')
+    
+    Flow('csrc',['realsrc','imagsrc'],'cmplx ${SOURCES[1]}')
+    Flow(out,'csrc','window j1=%d'% fac)
+
+# . . Set parameter for the modelling.  Applies for all situations.
+par = {
+    # Space parameters
+    'nx':201,  'ox':0, 'dx':0.005,  'lx':'x', 'ux':'km',
+    'ny':201,  'oy':0, 'dy':0.005,  'ly':'y', 'uy':'km',
+    'nz':201,  'oz':0, 'dz':0.005,  'lz':'z', 'uz':'km',
+
+    # Time Parameters
+    'nt':201,'ot':0, 'dt':0.001,  'lt':'t', 'ut':'s',
+    'kt':50,'frq':60,
+
+    # Modelling parameters
+    'snap':'y','jsnap':8,'nb':0, 'verb':'y',
+    'nbell':2, 'jdata':1,'ssou':'2',
+
+    # Output
+    'height':5,
+    
+    # Decomposed mode
+    'mode':0    
+    }
+
+# . . Initialize parameters in fdm module   
+fdmod.param(par)
+par['nframe']=10
+par['iframe']=4
+par['dabc']='n'
+
+
+# --------------------------------------------------------------------
+# . . Coordinate Section
+# . . Locate source position
+xsou=par['ox']+(par['nx']-1)*par['dx']/2.
+ysou=par['oy']+(par['ny']-1)*par['dy']/2.
+zsou=par['oz']+(par['nz']-1)*par['dz']/2.
+
+# . . 3D Sources
+fdmod.point3d('ss-3d',xsou,ysou,zsou,par) # . . 3D  Sources
+
+# . . 3D receivers
+fdmod.horizontal3d('rr-3d',0.02,par) # . . 3D 
+
+# . . Create a 3D point location for plotting
+par['zlook'] = 0.2
+par['nzcut'] = par['nz']/2
+center=fdmod.center3d(xsou,ysou,par['zlook'],par)
+
+# --------------------------------------------------------------------
+# . . Create zero array size of 3D model
+m = 'ORT'
+
+Flow(m+'c-11',None,
+       '''
+     spike n1=%d n2=%d n3=%d d1=%f d2=%f d3=%f o1=%f o2=%f o3=%f unit1=km unit2=km unit3=km|
+     math output='9'
+     '''% (par['nz'],par['nx'],par['ny'],par['dz'],par['dx'],par['dy'],par['oz'],par['ox'],par['oy']))
+Flow(m+'c-12',None,
+       '''
+     spike n1=%d n2=%d n3=%d d1=%f d2=%f d3=%f o1=%f o2=%f o3=%f unit1=km unit2=km unit3=km|
+     math output='3.6'
+     '''% (par['nz'],par['nx'],par['ny'],par['dz'],par['dx'],par['dy'],par['oz'],par['ox'],par['oy']))
+Flow(m+'c-13',None,
+       '''
+     spike n1=%d n2=%d n3=%d d1=%f d2=%f d3=%f o1=%f o2=%f o3=%f unit1=km unit2=km unit3=km|
+     math output='2.25'
+     '''% (par['nz'],par['nx'],par['ny'],par['dz'],par['dx'],par['dy'],par['oz'],par['ox'],par['oy']))
+Flow(m+'c-22',None,
+       '''
+     spike n1=%d n2=%d n3=%d d1=%f d2=%f d3=%f o1=%f o2=%f o3=%f unit1=km unit2=km unit3=km|
+     math output='9.84'
+     '''% (par['nz'],par['nx'],par['ny'],par['dz'],par['dx'],par['dy'],par['oz'],par['ox'],par['oy']))
+Flow(m+'c-23',None,
+       '''
+     spike n1=%d n2=%d n3=%d d1=%f d2=%f d3=%f o1=%f o2=%f o3=%f unit1=km unit2=km unit3=km|
+     math output='2.4'
+     '''% (par['nz'],par['nx'],par['ny'],par['dz'],par['dx'],par['dy'],par['oz'],par['ox'],par['oy']))
+Flow(m+'c-33',None,
+       '''
+     spike n1=%d n2=%d n3=%d d1=%f d2=%f d3=%f o1=%f o2=%f o3=%f unit1=km unit2=km unit3=km|
+     math output='5.9375'
+     '''% (par['nz'],par['nx'],par['ny'],par['dz'],par['dx'],par['dy'],par['oz'],par['ox'],par['oy']))
+Flow(m+'c-44',None,
+       '''
+     spike n1=%d n2=%d n3=%d d1=%f d2=%f d3=%f o1=%f o2=%f o3=%f unit1=km unit2=km unit3=km|
+     math output='2'
+     '''% (par['nz'],par['nx'],par['ny'],par['dz'],par['dx'],par['dy'],par['oz'],par['ox'],par['oy']))
+Flow(m+'c-55',None,
+       '''
+     spike n1=%d n2=%d n3=%d d1=%f d2=%f d3=%f o1=%f o2=%f o3=%f unit1=km unit2=km unit3=km|
+     math output='1.6'
+     '''% (par['nz'],par['nx'],par['ny'],par['dz'],par['dx'],par['dy'],par['oz'],par['ox'],par['oy']))
+Flow(m+'c-66',None,
+       '''
+     spike n1=%d n2=%d n3=%d d1=%f d2=%f d3=%f o1=%f o2=%f o3=%f unit1=km unit2=km unit3=km|
+     math output='2.182'
+     '''% (par['nz'],par['nx'],par['ny'],par['dz'],par['dx'],par['dy'],par['oz'],par['ox'],par['oy']))
+
+Flow(m+'c-3d',[m+'c-11',m+'c-22',m+'c-33',m+'c-44',m+'c-55',m+'c-66',m+'c-12',m+'c-13',m+'c-23'],'cat axis=4 ${SOURCES[1:9]} | math output=input*1000')
+Flow('ro-3d',m+'c-11','math output="1000"')
+
+Flow(m+'-the',m+'c-11','math output=0')
+Flow(m+'-phi',m+'c-11','math output=0')
+
+Flow('wav',None,'spike n1=%(nt)d d1=%(dt)f k1=%(kt)d | ricker1 frequency=%(frq)f' %par)
+Flow('cwav',None,'spike n1=%(nt)d d1=%(dt)f k1=%(kt)d | imagsrc frequency=%(frq)f | rtoc' %par)
+
+nt0 = par['nt']
+dt0 = par['dt']
+kt0 = par['kt']
+jt0 = par['jsnap']
+
+par['dt']=dt0;
+par['nt']=nt0;
+par['kt']=kt0;
+par['jsnap']=jt0;
+
+# Source wavelet
+wav = 'wave'
+cwav = 'cwave'
+Flow(wav,'wav','window j1=1')
+Flow(cwav,'cwav','window j1=1')
+#srcgen(cwav,par)
+
+sou= 'sou'
+csou= 'csou'
+Flow(csou,[cwav,cwav,cwav],
+    '''
+    cat axis=2 space=n ${SOURCES[1:3]} |
+    transp plane=23 | 
+    transp plane=14
+    ''')
+
+Flow(sou,[wav,wav,wav],
+    '''
+    cat axis=2 space=n ${SOURCES[1:3]} |
+    transp plane=23 | 
+    transp plane=14
+    ''')
+
+# Wave propagation ------------------------------------------------------------
+# Lowrank Decomposition
+Flow(['rank','left','right'],[m+'c-11',m+'c-12',m+'c-13',m+'c-22',m+'c-23',m+'c-33',m+'c-44',m+'c-55',m+'c-66',m+'-the',m+'-phi'],
+    '''
+    ewelr3 dt=%(dt)f eps=1e-4 npk=5 verb=%(verb)s nb=0
+    c12=${SOURCES[1]} c13=${SOURCES[2]}
+    c22=${SOURCES[3]} c23=${SOURCES[4]} c33=${SOURCES[5]} 
+    c44=${SOURCES[6]} c55=${SOURCES[7]} c66=${SOURCES[8]} 
+    tilt=n
+    theta=${SOURCES[9]} phi=${SOURCES[10]}
+    left=${TARGETS[1]} right=${TARGETS[2]}
+    '''%par)
+
+# Lowrank Elastic Modeling
+Flow([m+'d-lr',m+'w-lr'], [csou,m+'c-11','rank','left','right','ss-3d','rr-3d'],
+    '''
+    ewelr3d 
+    back=n
+    ccc=${SOURCES[1]}
+    rnk=${SOURCES[2]}
+    lft=${SOURCES[3]}
+    rht=${SOURCES[4]}
+    sou=${SOURCES[5]}
+    rec=${SOURCES[6]}
+    wfl=${TARGETS[1]}
+    jdata=%(jdata)d verb=%(verb)s free=n
+    snap=%(snap)s jsnap=%(jsnap)d
+    nb=0 nbell=%(nbell)d
+    esou=n
+    oqz=%(oz)f oqx=%(ox)f oqy=%(oy)f
+    nqz=%(nz)f nqx=%(nx)f nqy=%(ny)f
+    '''%par)
+
+Result(m+'w-lr-x',m+'w-lr',
+    '''window f5=-1 n5=1 n4=1 f4=1 n1=%d n2=%d n3=%d | put label1=z label2=x label3=y | real | byte gainpanel=all clip=4.79366e-05 |
+	    grey3 color=i  frame1=101 frame2=101 frame3=101 
+	    wanttitle=n flat=y screenratio=1 polarity=n scalebar=n
+	    maxval=0.15 minval=-0.15 labelsz=10 titlesz=12 titlefat=3 labelfat=3
+	    '''%(par['nz']-1,par['nx']-1,par['ny']-1))
+Result(m+'w-lr-y',m+'w-lr',
+    '''window f5=-1 n5=1 n4=1 f4=2 n1=%d n2=%d n3=%d | put label1=z label2=x label3=y | real | byte gainpanel=all clip=4.79366e-05 |
+	    grey3 color=i  frame1=101 frame2=101 frame3=101 
+	    wanttitle=n flat=y screenratio=1 polarity=n scalebar=n
+	    maxval=0.15 minval=-0.15 labelsz=10 titlesz=12 titlefat=3 labelfat=3
+	    '''%(par['nz']-1,par['nx']-1,par['ny']-1))
+Result(m+'w-lr-z',m+'w-lr',
+    '''window f5=-1 n5=1 n4=1 f4=0 n1=%d n2=%d n3=%d | put label1=z label2=x label3=y | real | byte gainpanel=all clip=4.79366e-05 |
+	    grey3 color=i  frame1=101 frame2=101 frame3=101 
+	    wanttitle=n flat=y screenratio=1 polarity=n scalebar=n
+	    maxval=0.15 minval=-0.15 labelsz=10 titlesz=12 titlefat=3 labelfat=3
+	    '''%(par['nz']-1,par['nx']-1,par['ny']-1))
+
+#Result(m+'w-lr','window n4=1 f5=-1 n5=1 | real | byte gainpanel=a | grey3 frame1=40 frame2=50 frame3=50 point1=0.5 point2=0.5 screenratio=1 title="Lowrank RITE"')
+
+# Decomposition ------------------------------------------------------------
+# Window the wavefield
+Flow(m+'w-lr'+'-snap',m+'w-lr','window n5=1 f5=-1')
+clip=4.79366e-05
+# Lowrank Decomposition
+for wave in ['P','S1','S2']:
+    if wave == 'S1':
+        par['mode']=1
+        clip=5e-06
+    elif wave == 'S2':
+        par['mode']=2
+        clip=5e-06
+        
+    # Unfiltered ###############################################################
+    Flow(['norank'+'-'+wave,'noleft'+'-'+wave,'noright'+'-'+wave],[m+'c-11',m+'c-12',m+'c-13',m+'c-22',m+'c-23',m+'c-33',m+'c-44',m+'c-55',m+'c-66',m+'-the',m+'-phi'],
+    '''
+    ewdlr3 dt=%(dt)f eps=1e-4 npk=5 verb=%(verb)s nb=0 
+    mode=%(mode)d tau=0.
+    c12=${SOURCES[1]} c13=${SOURCES[2]}
+    c22=${SOURCES[3]} c23=${SOURCES[4]} c33=${SOURCES[5]} 
+    c44=${SOURCES[6]} c55=${SOURCES[7]} c66=${SOURCES[8]} 
+    tilt=n
+    theta=${SOURCES[9]} phi=${SOURCES[10]}
+    left=${TARGETS[1]} right=${TARGETS[2]}
+    '''%par)
+    
+    # Lowrank Elastic Decomposition
+    Flow('no'+m+'w-dlr'+'-'+wave, [m+'w-lr'+'-snap','norank'+'-'+wave,'noleft'+'-'+wave,'noright'+'-'+wave],
+    '''
+    ewdlr3d 
+    rnk=${SOURCES[1]}
+    lft=${SOURCES[2]}
+    rht=${SOURCES[3]}
+    verb=%(verb)s
+    ''' %par)
+    Result('no'+m+'w-dlr'+'-'+wave+'-x','no'+m+'w-dlr'+'-'+wave,
+        '''window n4=1 f4=1 n1=%d n2=%d n3=%d | real | byte gainpanel=all clip=%g|
+		    grey3 color=i  frame1=101 frame2=101 frame3=101 
+		    wanttitle=n flat=y screenratio=1 polarity=n scalebar=n
+		    maxval=0.15 minval=-0.15 labelsz=10 titlesz=12 titlefat=3 labelfat=3
+		    '''%(par['nz']-1,par['nx']-1,par['ny']-1,clip))
+    Result('no'+m+'w-dlr'+'-'+wave+'-y','no'+m+'w-dlr'+'-'+wave,
+        '''window n4=1 f4=2 n1=%d n2=%d n3=%d | real | byte gainpanel=all clip=%g|
+		    grey3 color=i  frame1=101 frame2=101 frame3=101 
+		    wanttitle=n flat=y screenratio=1 polarity=n scalebar=n
+		    maxval=0.15 minval=-0.15 labelsz=10 titlesz=12 titlefat=3 labelfat=3
+		    ''' %(par['nz']-1,par['nx']-1,par['ny']-1,clip))
+    Result('no'+m+'w-dlr'+'-'+wave+'-z','no'+m+'w-dlr'+'-'+wave,
+        '''window n4=1 f4=0 n1=%d n2=%d n3=%d | real | byte gainpanel=all clip=%g|
+		    grey3 color=i  frame1=101 frame2=101 frame3=101 
+		    wanttitle=n flat=y screenratio=1 polarity=n scalebar=n
+		    maxval=0.15 minval=-0.15 labelsz=10 titlesz=12 titlefat=3 labelfat=3
+		    ''' %(par['nz']-1,par['nx']-1,par['ny']-1,clip))
+		    
+    #Filtered ##################################################################
+    Flow(['rank'+'-'+wave,'left'+'-'+wave,'right'+'-'+wave],[m+'c-11',m+'c-12',m+'c-13',m+'c-22',m+'c-23',m+'c-33',m+'c-44',m+'c-55',m+'c-66',m+'-the',m+'-phi'],
+    '''
+    ewdlr3 dt=%(dt)f eps=1e-4 npk=5 verb=%(verb)s nb=0 
+    mode=%(mode)d tau=0.2
+    c12=${SOURCES[1]} c13=${SOURCES[2]}
+    c22=${SOURCES[3]} c23=${SOURCES[4]} c33=${SOURCES[5]} 
+    c44=${SOURCES[6]} c55=${SOURCES[7]} c66=${SOURCES[8]} 
+    tilt=n
+    theta=${SOURCES[9]} phi=${SOURCES[10]}
+    left=${TARGETS[1]} right=${TARGETS[2]}
+    '''%par)
+
+    # Lowrank Elastic Decomposition
+    Flow(m+'w-dlr'+'-'+wave, [m+'w-lr'+'-snap','rank'+'-'+wave,'left'+'-'+wave,'right'+'-'+wave],
+    '''
+    ewdlr3d 
+    rnk=${SOURCES[1]}
+    lft=${SOURCES[2]}
+    rht=${SOURCES[3]}
+    verb=%(verb)s
+    ''' %par)
+
+    Result(m+'w-dlr'+'-'+wave+'-x',m+'w-dlr'+'-'+wave,
+        '''window n4=1 f4=1 n1=%d n2=%d n3=%d | real | byte gainpanel=all clip=%g|
+		    grey3 color=i  frame1=101 frame2=101 frame3=101 
+		    wanttitle=n flat=y screenratio=1 polarity=n scalebar=n
+		    maxval=0.15 minval=-0.15 labelsz=10 titlesz=12 titlefat=3 labelfat=3
+		    ''' %(par['nz']-1,par['nx']-1,par['ny']-1,clip))
+    Result(m+'w-dlr'+'-'+wave+'-y',m+'w-dlr'+'-'+wave,
+        '''window n4=1 f4=2 n1=%d n2=%d n3=%d | real | byte gainpanel=all clip=%g|
+		    grey3 color=i  frame1=101 frame2=101 frame3=101 
+		    wanttitle=n flat=y screenratio=1 polarity=n scalebar=n
+		    maxval=0.15 minval=-0.15 labelsz=10 titlesz=12 titlefat=3 labelfat=3
+		    ''' %(par['nz']-1,par['nx']-1,par['ny']-1,clip))
+    Result(m+'w-dlr'+'-'+wave+'-z',m+'w-dlr'+'-'+wave,
+        '''window n4=1 f4=0 n1=%d n2=%d n3=%d | real | byte gainpanel=all clip=%g|
+		    grey3 color=i  frame1=101 frame2=101 frame3=101 
+		    wanttitle=n flat=y screenratio=1 polarity=n scalebar=n
+		    maxval=0.15 minval=-0.15 labelsz=10 titlesz=12 titlefat=3 labelfat=3
+		    ''' %(par['nz']-1,par['nx']-1,par['ny']-1,clip))
+		    
+# Local signal-noise orthogonalization for amplitude compensation ###################################
+    if wave=='S1' or wave=='S2':
+        Flow('com'+m+'w-dlr'+'-'+wave,['no'+m+'w-dlr'+'-'+wave,m+'w-dlr'+'-'+wave],
+            '''
+            add ${SOURCES[1]} scale=1,-1 | 
+            cdivn den=${SOURCES[1]} rect1=10 rect2=10 rect3=10 rect4=1 |
+            math d=${SOURCES[1]} output="(1+input)*d"
+            ''')
+        Result('com'+m+'w-dlr'+'-'+wave+'-x','com'+m+'w-dlr'+'-'+wave,
+            '''window n4=1 f4=1 n1=%d n2=%d n3=%d | real | byte gainpanel=all clip=%g|
+        	    grey3 color=i  frame1=101 frame2=101 frame3=101 
+        	    wanttitle=n flat=y screenratio=1 polarity=n scalebar=n
+        	    maxval=0.15 minval=-0.15 labelsz=10 titlesz=12 titlefat=3 labelfat=3
+        	    ''' %(par['nz']-1,par['nx']-1,par['ny']-1,clip))
+        Result('com'+m+'w-dlr'+'-'+wave+'-y','com'+m+'w-dlr'+'-'+wave,
+            '''window n4=1 f4=2 n1=%d n2=%d n3=%d | real | byte gainpanel=all clip=%g|
+        	    grey3 color=i  frame1=101 frame2=101 frame3=101 
+        	    wanttitle=n flat=y screenratio=1 polarity=n scalebar=n
+        	    maxval=0.15 minval=-0.15 labelsz=10 titlesz=12 titlefat=3 labelfat=3
+        	    ''' %(par['nz']-1,par['nx']-1,par['ny']-1,clip))
+        Result('com'+m+'w-dlr'+'-'+wave+'-z','com'+m+'w-dlr'+'-'+wave,
+            '''window n4=1 f4=0 n1=%d n2=%d n3=%d | real | byte gainpanel=all clip=%g|
+        	    grey3 color=i  frame1=101 frame2=101 frame3=101 
+        	    wanttitle=n flat=y screenratio=1 polarity=n scalebar=n
+        	    maxval=0.15 minval=-0.15 labelsz=10 titlesz=12 titlefat=3 labelfat=3
+        	    ''' %(par['nz']-1,par['nx']-1,par['ny']-1,clip))
+
+
+
+# ------------------------------------------------------------
+# Finite-difference/pseudo-spectral (kspace=y) Elastic Modeling
+#    Flow([m+'d-fd',m+'w-fd'], [sou,m+'c-3d','ro-3d','ss-3d','rr-3d'],
+#    '''
+#    eweks3d
+#    back=n
+#    kspace=n
+#    ccc=${SOURCES[1]}
+#    den=${SOURCES[2]}
+#    sou=${SOURCES[3]}
+#    rec=${SOURCES[4]}
+#    wfl=${TARGETS[1]}
+#    jdata=%(jdata)d verb=%(verb)s free=n ssou=%(ssou)s
+#    opot=n snap=%(snap)s jsnap=%(jsnap)d
+#    dabc=%(dabc)s nb=%(nb)d nbell=%(nbell)d
+#    oqz=%(oz)f oqx=%(ox)f oqy=%(oy)f
+#    nqz=%(nz)f nqx=%(nx)f nqy=%(ny)f
+#    ''' %par)
+
+#    Result(m+'w-fd','window n4=1 min5=%f n5=1 | byte gainpanel=a | grey3 frame1=81 frame2=81 frame3=81 point1=0.5 point2=0.5 screenratio=1 title=Finite-difference wanttitle=y' %(mint))
+
+End()

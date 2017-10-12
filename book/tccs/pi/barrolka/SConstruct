@@ -1,0 +1,647 @@
+from rsf.proj import *
+from rsf.recipes.beg import server
+from rsf.recipes.tpx import FPX
+import math
+import velcon3d
+
+dist = 4.3
+
+cube='stack.rsf'
+dcube='dif.rsf'
+#dcube2='dif2.rsf'
+rcube='ref.rsf'
+tdata='tdata.rsf'
+databin='data.bin'
+dataasc='data.asc'
+
+# downloading the data
+
+segy = 'snt_barrolka_raw_unmigrated_stk_21_11_2013.segy'
+
+Fetch(segy,'barrolka',server)
+
+Flow('data tdata data.asc data.bin',segy,
+     '''
+     segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]}
+     ''')
+
+# Inline data range 2000-2687.  Inlines traverse NW-->SE.                  
+# Xline data range 9997-10414.  Xlines  traverse SW-->NE.                   
+# Bin size 25 x 25 m
+# windowing out data between 1-2s, which is the most interesting region for diffractions
+# double checking the above information
+# binning the data into 3D array
+
+Flow('stack','data',
+     '''
+     intbin xk=iline yk=xline | pow pow1=2 |
+     window min1=1 max1=2|
+     put 
+     label2=Inline    o2=0 d2=0.025 unit2=km 
+     label3=Crossline o3=0 d3=0.025 unit3=km 
+     ''')
+
+#### footprint elimination test
+
+# Make amplitude map
+
+#n1=668
+#n2=398
+
+#Flow('ampl','stack',
+#     '''
+#     mul $SOURCE | sfstack axis=1 | sfmath output="sqrt(input)" | 
+#     window f1=10 n1=%d f2=10 n2=%d
+#     ''' % (n1,n2))
+
+#Result('ampl','grey mean=y title=Amplitude')
+
+# Use SVD to remove acquisition footprint
+
+# normalize by RMS
+#Flow('rms','ampl',
+#     '''
+#     mul $SOURCE | stack axis=2 norm=n | stack axis=1 norm=n |
+#     math output="sqrt(%d/input)" | spray axis=1 n=%d | spray axis=2 n=%d |
+#     put o1=0.25 o2=0.25
+#     ''' % (n1*n2,n1,n2))
+
+#Flow('rtrend','ampl rms','div ${SOURCES[1]}')
+
+#Result('rtrend','grey title=Amplitude bias=80 clip=73')
+
+#Flow('svd u v','rtrend','svd left=${TARGETS[1]} right=${TARGETS[2]}')
+
+#Result('svd','put o1=0 d1=1 label1= label2= unit1= unit2= | graph symbol=x title="Singular Values" ')
+
+#Flow('u1','u','window n1=1 squeeze=n')
+#Flow('l1','svd','window n1=1')
+#Flow('v1','v','window n2=1')
+
+#Flow('strend','v1 l1 u1','matrix B=${SOURCES[1]} | matrix B=${SOURCES[2]}')
+
+#Result('strend','grey mean=y title="Estimated Acquisition Footprint" ')
+
+#Flow('detrend','rtrend strend','div ${SOURCES[1]}')
+
+#Result('detrend','scale dscale=80 | grey title="Removed Footprint" bias=80 clip=73')
+
+# Apply to data
+
+#Flow('footprint','strend','spray axis=1 n=251 d=0.004 o=1')
+
+#Flow('stack2','stack footprint','window f2=10 n2=%d f3=10 n3=%d | div ${SOURCES[1]}' % (n1,n2))
+
+#Result('stack2','window n1=1 min1=1.72 | grey title="footprint elim"')
+#Result('stack_comp','stack','window n1=1 min1=1.72 f2=10 n2=%d f3=10 n3=%d | grey title="stack with footprints"'%(n1,n2))
+
+####
+
+Flow('dip','stack','fdip rect1=60 rect2=30 rect3=30 order=2 verb=y')
+
+Flow('ref','stack dip','pwspray2 ns2=3 ns3=3 dip=${SOURCES[1]} order=4 | stack axis=2')
+
+#print 'packed ref.rsf and dif.rsf files are available in the datapath dir'
+
+#Result('ref',
+#       '''
+#       byte gainpanel=all clip=82 |
+#       grey3 title=Reflections
+#       frame1=180 frame2=214 frame3=200  flat=n point1=.6 point2=.7
+#       ''')
+
+#########################################################################################################
+
+# uncomment to make reproducible
+Flow('dif','stack ref','add scale=1,-1 ${SOURCES[1]}')
+
+# use backups
+#Flow('dif','/data01/merzlikind/backup_rsf_files/barrolka.3d.iso/packed/dif_packed.rsf','math output="input"')
+
+#Flow('ref','/data01/merzlikind/backup_rsf_files/barrolka.3d.iso/packed/ref_packed.rsf','math output="input"')
+"""
+Result('dif',
+       '''
+       byte gainpanel=all clip=35 |
+       grey3 title=Diffractions flat=n
+       frame1=180 frame2=214 frame3=200 flat=n point1=.6 point2=.7
+       ''')
+"""
+#Result('dif1','dif','window n1=1 min1=1.72 f2=10 n2=%d f3=10 n3=%d | grey title="dif with footprints"'%(n1,n2))
+#Result('dif2','window n1=1 min1=1.72 | grey title="dif without footprints"')
+
+# the same but applied to stack2 - footprints are eliminated
+
+#Flow('dip2','stack2','fdip rect1=60 rect2=30 rect3=30 order=2 verb=y')
+
+#Flow('ref2','stack2 dip2','pwspray2 ns2=3 ns3=3 dip=${SOURCES[1]} order=4 | stack axis=2')
+
+#Flow('dif2','stack2 ref2','add scale=1,-1 ${SOURCES[1]}')
+ 
+
+# slices
+
+Result('dif_slice',dcube,
+                     '''
+                     window n1=1 min1=1.72 |
+                     transp plane=12 |
+                     grey yreverse=n gainpanel=each pclip=100 wanttitle=n
+                     ''')
+Result('ref_slice',cube,
+                     '''
+                     window n1=1 min1=1.72 |
+                     transp plane=12 |
+                     grey yreverse=n gainpanel=each pclip=100 wanttitle=n
+                     ''')
+
+# downloading velocity
+
+velsegy = 'snt_barrolka_rms_migration_vels_proc_datum_29_02_2012.segy'
+Fetch(velsegy,'barrolka',server)
+
+Flow('vdata vtdata vdata.asc vdata.bin',velsegy,
+     '''
+     segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]}
+     ''')
+
+# bin velocity file and convert from [m/s] to [km/s]
+
+Flow('vtravelt','vdata',
+     '''
+     intbin xk=iline yk=xline |
+     math output="input/1000" |
+     put 
+     label2=Inline    o2=0 d2=0.025 unit2=km 
+     label3=Crossline o3=0 d3=0.025 unit3=km 
+     ''')
+
+#<vtravelt.rsf sfwindow n3=1 min3=5.375 | sfgrey color=j scalebar=y mean=y allpos=y minval=2.5 maxval=3.5 min1=1.0 max1=2.0 | sfpen &
+#n2=1 min2=3.925
+# some plotting functions
+
+nt = 251
+units = 'km'
+def grey2(title):
+        return '''
+        grey title="%s" pclip=100 gainpanel=each
+        label1=Time unit1=s label2=Distance unit2="%s"
+        titlefat=3 labelfat=3 font=2
+        ''' % (title,units)
+
+def velgrey2(title):
+        return grey2(title) + '''
+        color=j scalebar=y bias=%g barlabel=Velocity barunit="%s/s"
+        barreverse=y minval=1.0 maxval=4.0
+        ''' % (1.5,units)
+
+# Velocity Continuation
+
+nv=100
+dv=0.004
+v0=2.9
+eps=0.0000000000001
+
+# padding and footprint elimination ffts
+#Flow('dcube_pad',dcube,'costaper nw1=50 nw2=25 nw3=25 | pad beg2=250 end2=250 beg3=250 end3=250')
+#Result('dcube_pad','window n1=1 min1=1.72 | grey')
+#Flow('fft3','dcube_pad','t2warp | fft1 | fft3 axis=2 | fft3 axis=3')
+#Flow('fft2',dcube2,'costaper nw1=50 nw2=15 nw3=15 | t2warp | fft1 | fft3 axis=2 | fft3 axis=3')
+
+Flow('fft',dcube,'costaper nw1=50 nw2=15 nw3=15 | t2warp | fft1 | fft3 axis=2 | fft3 axis=3')
+
+Flow('rfft',rcube,'costaper nw1=50 nw2=15 nw3=15 | t2warp | fft1 | fft3 axis=2 | fft3 axis=3')
+
+Flow('sfft',cube,'costaper nw1=50 nw2=15 nw3=15 | t2warp | fft1 | fft3 axis=2 | fft3 axis=3')
+
+# diffractions and noise
+
+difcubes=[]
+
+velcon3d.vc3d('fft','all','vc',difcubes,v0,nv,dv,eps)
+
+# full waveform
+
+scubes=[]
+
+velcon3d.vc3d('sfft','sall','svc',scubes,v0,nv,dv,eps)
+
+# reflection only data
+
+cubes_refl=[]
+
+velcon3d.vc3d('rfft','all-refl','vc-refl',cubes_refl,v0,nv,dv,eps)
+
+# wide velocity range
+
+cubes_wr=[]
+
+velcon3d.vc3d('fft','all_wr','vc_wr',cubes_wr,1.5,100,0.04,eps)
+
+# path integrals for wide range
+
+Flow('erfi_input','fft','math output="1.0 + I*0.0"')
+
+velcon3d.pi3d(eps,'erfi_input','fft','wrong',1.5,4.5)
+velcon3d.dpi3d(eps,'erfi_input','fft','wrong',1.5,4.5)
+
+# Gaussian weigthing scheme
+
+v_a=2.9 
+v_b=3.3
+
+weps=0.01
+wv_a= v_a
+wv_b= v_b
+wv0 = 3.1#2.0#3.1#2.0#2.0#v0+0.5
+beta = 10
+
+alpha = '(-1)*((x2+%g)*(x2+%g) + (x3+%g)*(x3+%g))*%g/(16*(x1+%g))'%(weps,weps,weps,weps,2*math.pi,weps)
+root = 'sqrt(abs(I*%s-%g))*exp(I*arg(I*%s-%g)/2)'%(alpha,beta,alpha,beta) 
+# stable but wrong
+#wconst = 'sqrt(%g)*(exp((-1)*%g*%g*%g)*exp(((-1)*%g*%g*%g)/(I*%s-%g)))/(2*%s)'%(math.pi,beta,wv0,wv0,beta,beta,wv0,alpha,beta,root)
+# unstable but correct?
+#wconst = 'sqrt(%g)*(exp((-1)*%g*%g*%g)*exp(((-1)*%g*%g*%g*%g)/(I*%s-%g)))/(2*%s)'%(math.pi,beta,wv0,wv0,beta,beta,wv0,wv0,alpha,beta,root)
+wconst = 'sqrt(%g)*(exp((-1)*%g*%g*%g))/(2*%s)'%(math.pi,beta,wv0,wv0,root)
+
+u = '%s*%g+(%g*%g)/(%s)'%(root,wv_b,beta,wv0,root)
+u_a = '%s*%g+(%g*%g)/(%s)'%(root,wv_a,beta,wv0,root)
+
+#werfi_b = '''
+#         sfmath output="input*I*%s" |
+#         cerf | sfmath output="input*I" | sfmath output="(-1)*input*%s"
+#         '''%(u,wconst)
+
+werfi_b = '''
+         sfmath output="input*I*%s" |
+         cerf | sfmath output="input*(-I)"
+         '''%(u)
+
+#werfi_a = '''
+#         sfmath output="input*I*%s" |
+#         cerf | sfmath output="input*I" | sfmath output="(-1)*input*%s"
+#         '''%(u_a,wconst)
+
+werfi_a = '''
+         sfmath output="input*I*%s" |
+         cerf | sfmath output="input*(-I)"
+         '''%(u_a)
+
+check = '''
+         sfmath output="input*I*%s" |
+         cerf | sfmath output="input*(-1)*I"
+         '''%(u)
+
+Flow('werfi_b','erfi_input',werfi_b)
+
+Flow('werfi_a','erfi_input',werfi_a)
+
+Flow('wconst','erfi_input','math output="input*%s"'%wconst)
+
+Flow('werfi_ba','werfi_b werfi_a','add scale=1,-1 ${SOURCES[1]}')
+
+Flow('wpi_fft_werfiba','fft werfi_ba wconst',
+	'''
+	math  K=${SOURCES[1]} output="input*K" |
+	math  K=${SOURCES[2]} output="input*K" |
+	math output="input*exp( ((-1)*%g*%g*%g*%g)/(I*%s-%g) )"
+	'''%(beta,beta,wv0,wv0,alpha,beta))
+
+Flow('pi_gaussian','wpi_fft_werfiba',
+                  '''
+                  fft3 axis=3 inv=y |
+                  fft3 axis=2 inv=y |
+                  fft1 inv=y |
+                  t2warp inv=y
+                  ''')
+
+# check gaussian through stacking of vc steps
+
+#Flow('gpi_check','all','math output="input*exp(-10*(x4-3.1)^2)" | stack axis=4')
+Flow('gpi_check_wr','all_wr','math output="input*exp(-10*(x2-3.1)^2)" | stack axis=2')
+
+Flow('gpi3dzo_check','fft','gpi3dzo v_a=2.9 v_b=3.3 v_0=3.1 beta=10')
+Flow('gpi3dzo','gpi3dzo_check',
+                  '''
+                  fft3 axis=3 inv=y |
+                  fft3 axis=2 inv=y |
+                  fft1 inv=y |
+                  t2warp inv=y
+                  ''')
+
+# 3D PI precompute
+
+eps_4pi=0.0001
+
+const = '((-1)*sqrt(2*(x1+%g))*exp(I*0.25*%g)/( sqrt((x2+%g)*(x2+%g) + (x3+%g)*(x3+%g)) ))'%(eps_4pi,math.pi,eps_4pi,eps_4pi,eps_4pi,eps_4pi)
+
+erfi_a = '''
+         sfmath output="input*I*exp(I*0.75*%g)*%g*sqrt( 2*%g*((x2+%g)*(x2+%g)  +  (x3+%g)*(x3+%g)) )/(4*(sqrt(x1+%g)))" |
+         cerf | sfmath output="input*(-1)*I" | sfmath output="input*%s"
+         '''%(math.pi,v_a,math.pi,eps_4pi,eps_4pi,eps_4pi,eps_4pi,eps_4pi,const)
+
+erfi_b = '''
+         sfmath output="input*I*exp(I*0.75*%g)*%g*sqrt( 2*%g*((x2+%g)*(x2+%g)  +  (x3+%g)*(x3+%g)) )/(4*(sqrt(x1+%g)))" |
+         cerf | sfmath output="input*(-1)*I" | sfmath output="input*%s"
+         '''%(math.pi,v_b,math.pi,eps_4pi,eps_4pi,eps_4pi,eps_4pi,eps_4pi,const)
+
+Flow('erfi_a','erfi_input',erfi_a)
+Flow('erfi_b','erfi_input',erfi_b)
+
+Flow('erfi_ba','erfi_b erfi_a','add scale=1,-1 ${SOURCES[1]}')
+
+Flow('pi_erfi_fft','fft erfi_ba','math  K=${SOURCES[1]} output="input*K"')
+
+Flow('pi_erfi','pi_erfi_fft',
+                  '''
+                  fft3 axis=3 inv=y |
+                  fft3 axis=2 inv=y |
+                  fft1 inv=y |
+                  t2warp inv=y
+                  ''')
+
+# Double path integral
+
+eps_d=eps_4pi
+
+k_sqr_sum = '((x2+%g)*(x2+%g) + (x3+%g)*(x3+%g))'%(eps_d,eps_d,eps_d,eps_d)
+
+shiftdpi_b='''
+           sfmath output="input*I*4*(x1+%g)*exp(-I*%g*%g*%s*%g/( 16*(x1+%g) ) )/(%s*%g)"
+           '''%(eps_d,v_b,v_b,k_sqr_sum,2*math.pi,eps_d,k_sqr_sum,math.pi)
+shiftdpi_a='''
+           sfmath output="input*I*4*(x1+%g)*exp(-I*%g*%g*%s*%g/( 16*(x1+%g) ) )/(%s*%g)"
+           '''%(eps_d,v_a,v_a,k_sqr_sum,2*math.pi,eps_d,k_sqr_sum,math.pi)
+
+Flow('dpi_a','erfi_input',shiftdpi_a)
+Flow('dpi_b','erfi_input',shiftdpi_b)
+Flow('dpi','dpi_b dpi_a','add scale=1,-1 ${SOURCES[1]}')
+Flow('dpi_fft_precomp','fft dpi','math  K=${SOURCES[1]} output="input*K"')#fft
+
+Flow('dpi_4o_precomp','dpi_fft_precomp',
+                  '''
+                  fft3 axis=3 inv=y |
+                  fft3 axis=2 inv=y |
+                  fft1 inv=y |
+                  t2warp inv=y
+                  ''')
+#Result('dpi_4o_precomp','grey gainpanel=each pclip=100 scalebar=y title="dpi_4o_precomp eps1=%g"'%(eps_d))
+
+# Velocity estimation
+
+drect1=15#15
+drect2=35#15
+drect3=35#15
+
+Flow('vel','dpi_4o_precomp pi_erfi','divn den=${SOURCES[1]} rect1=%d rect2=%d rect3=%d'%(drect1,drect2,drect3))
+Flow('vel_wr','dpi_4_wrong pi_4_wrong','divn den=${SOURCES[1]} rect1=%d rect2=%d rect3=%d'%(drect1,drect2,drect3))
+
+###################################################################################
+#Flow('vel_diff_sm1555','dpi_4o_precomp pi_erfi','divn den=${SOURCES[1]} rect1=%d rect2=%d rect3=%d'%(15,5,5))
+#Flow('vel_diff_sm152525','dpi_4o_precomp pi_erfi','divn den=${SOURCES[1]} rect1=%d rect2=%d rect3=%d'%(15,25,25))
+#Flow('vel_eps','dpi_4o_precomp pi_erfi','divn den=${SOURCES[1]} rect1=%d rect2=%d rect3=%d eps=0.1 | transp plane=23'%(drect1,drect2,drect3))
+###################################################################################
+
+memsize=10000
+
+### Velocity clipping
+
+Flow('vel_tr','vel','clip2 lower=1.54 value=1.54')
+Flow('vel_wr_tr','vel_wr','clip2 lower=1.54 value=1.54')
+
+Flow('dpi_vel_slice','all vel_tr',
+     'slice pick=${SOURCES[1]} | window')
+
+Flow('dpi_wr_vel_slice','all_wr vel_wr_tr',
+     'slice pick=${SOURCES[1]} | window')
+
+Flow('dpi-vel-slice-refl','all-refl vel_tr',
+     'slice pick=${SOURCES[1]} | window')
+
+###################################################################################
+#Flow('dpi_vel_slice3','all_tr3 vel',
+#     'slice pick=${SOURCES[1]} | window | transp plane=23')
+
+#Flow('dpi_vel_slice_eps','all_tr vel_eps',
+#     'slice pick=${SOURCES[1]} | window | transp plane=23')
+
+#Flow('dpi_vel_slice1555','all_tr vel_diff_sm1555',
+#     'slice pick=${SOURCES[1]} | window | transp plane=23')
+
+#Flow('dpi_vel_slice152525','all_tr vel_diff_sm152525',
+#     'slice pick=${SOURCES[1]} | window | transp plane=23')
+###################################################################################
+
+# make sure that dimensions in sfslice are similar
+Flow('vel_snt_cl','vtravelt','clip2 lower=2.91 value=2.91 | window min1=1.0 max1=2.0')
+
+Flow('snt_dpi_vel_slice','all vel_snt_cl',
+     'slice pick=${SOURCES[1]} | window')
+
+# Reflections and diffractions - Full Waveform Image
+
+Flow('sdpi_vel_slice','sall vel_tr',
+     'slice pick=${SOURCES[1]} | window')
+
+#Result('dpi_vel_tslice','dpi_vel_slice',
+#                  '''
+#                  window n1=1 min1=1.72 | transp plane=12 |
+#                  grey gainpanel=each yreverse=n pclip=100 wanttitle=n title="pi slice erfi"
+#                  ''')
+#Result('sdpi_vel_tslice','sdpi_vel_slice',
+#                  '''
+#                  window n1=1 min1=1.72 | transp plane=12 |
+#                  grey gainpanel=each yreverse=n pclip=100 wanttitle=n title="pi slice erfi"
+#                  ''')
+
+# sections
+
+
+#Result('dif_section','dif','window n3=1 min3=5.375 | grey gainpanel=each wanttitle=n')
+#Result('pi_erfi_section','pi_erfi','window n3=1 min3=5.375 | grey gainpanel=each wanttitle=n')
+#Result('conv_image_section','sdpi_vel_slice','window n3=1 min3=5.375 | grey gainpanel=each wanttitle=n')
+#Result('pi_gaussian_section','pi_gaussian','window n3=1 min3=5.375 | grey gainpanel=each wanttitle=n')
+
+# Target horizon slices
+
+Flow('horizon','PC35Sand_PhaseRot90.ilclt','echo n1=3 n2=283965 data_format=ascii_float in=$SOURCE | dd form=native',stdin=0)
+
+Flow('head','horizon','window n1=2 | dd type=int')
+Flow('horizon2 mask','horizon head',
+     '''
+     window n1=1 f1=2 squeeze=n | intbin head=${SOURCES[1]} mask=${TARGETS[1]} xkey=0 ykey=1 | window | scale dscale=0.001
+     ''')
+Flow('horizon-fill','horizon2 mask','lapfill mask=${SOURCES[1]} grad=y verb=y')
+
+Result('horizon-fill','grey color=j mean=y scalebar=y title=Horizon minval=1.6')
+
+# Horizon slice ts=target slice
+
+Flow('horizon-slice','horizon-fill','spray axis=1 n=1')
+
+# Sliced through VC volume - velocity from Double Path Integral
+
+Flow('dpi_ts','dpi_vel_slice horizon-slice','inttest1 coord=${SOURCES[1]} nw=4 interp=spline | window')
+
+Result('dpi-ts','dpi_ts','grey wanttitle=n transp=n yreverse=n screenratio=0.6')
+
+###################################################################################
+#Flow('dpi_ts1555','dpi_vel_slice1555 horizon-slice','inttest1 coord=${SOURCES[1]} nw=4 interp=spline | window')
+
+#Result('dpi_ts1555','grey title="DPI Horizon Slice 1555" transp=n yreverse=n')
+
+#Flow('dpi_ts152525','dpi_vel_slice152525 horizon-slice','inttest1 coord=${SOURCES[1]} nw=4 interp=spline | window')
+
+#Result('dpi_ts152525','grey title="DPI Horizon Slice 152525" transp=n yreverse=n')
+
+#Flow('dpi_ts_eps','dpi_vel_slice_eps horizon-slice','inttest1 coord=${SOURCES[1]} nw=4 interp=spline | window')
+
+#Result('dpi_ts_eps','grey title="DPI Horizon Slice eps" transp=n yreverse=n')
+
+#Flow('dpi_ts_3','dpi_vel_slice3 horizon-slice','inttest1 coord=${SOURCES[1]} nw=4 interp=spline | window')
+
+#Result('dpi_ts_3','grey title="DPI Horizon Slice eps" transp=n yreverse=n')
+###################################################################################
+
+# Raw Not Migrated Diffractions
+
+Flow('notmig_ts',[ dcube,'horizon-slice'],'inttest1 coord=${SOURCES[1]} nw=4 interp=spline | window')
+
+#Result('notmig_ts','grey title="Raw Diffr Horizon Slice" transp=n yreverse=n')
+
+# Regular Path Integral
+
+Flow('pathint_ts',[ 'pi_erfi','horizon-slice'],'inttest1 coord=${SOURCES[1]} nw=4 interp=spline | window')
+
+#Result('pathint_ts','grey title="Regular Path-Integal Slice" transp=n yreverse=n')
+
+Flow('pi_4_wrong_ts',[ 'pi_4_wrong','horizon-slice'],'inttest1 coord=${SOURCES[1]} nw=4 interp=spline | window')
+
+#Result('pi_4_wrong_ts','grey title="Regular Path-Integal Slice" transp=n yreverse=n')
+
+# Gaussian Path Integral
+
+Flow('gaussian_ts',[ 'pi_gaussian','horizon-slice'],'inttest1 coord=${SOURCES[1]} nw=4 interp=spline | window')
+
+#Result('gaussian_ts','grey title="Gaussian Slice" transp=n yreverse=n')
+
+# GPI check through VC steps
+
+#Flow('gpi_check_ts',[ 'gpi_check','horizon-slice'],'inttest1 coord=${SOURCES[1]} nw=4 interp=spline | window')
+
+#Result('gpi_check_ts','grey title="Gaussian Slice Check" transp=n yreverse=n')
+
+#Flow('gpi_check_wr_ts',[ 'gpi_check_wr','horizon-slice'],'inttest1 coord=${SOURCES[1]} nw=4 interp=spline | window')
+
+#Result('gpi_check_wr_ts','grey title="Gaussian Slice Check" transp=n yreverse=n')
+
+# GPI prog
+
+Flow('gpi3dzo_ts',[ 'gpi3dzo','horizon-slice'],'inttest1 coord=${SOURCES[1]} nw=4 interp=spline | window')
+
+#Result('gpi3dzo_ts','grey title="Gaussian Slice Check" transp=n yreverse=n')
+
+# Conventional Full Wavefrom Image - Sliced through VC volume - velocity from Double Path Integral
+
+Flow('conv_image_ts',[ 'sdpi_vel_slice','horizon-slice'],'inttest1 coord=${SOURCES[1]} nw=4 interp=spline | window')
+
+Result('conv-image-ts','conv_image_ts','grey wanttitle=n transp=n yreverse=n screenratio=0.6')
+
+# Reflection only slice
+
+Flow('refl-image-ts',[ 'dpi-vel-slice-refl','horizon-slice'],'inttest1 coord=${SOURCES[1]} nw=4 interp=spline | window')
+
+Result('refl-image-ts','refl-image-ts','grey wanttitle=n transp=n yreverse=n screenratio=0.6')
+
+# Stack
+
+Flow('stack_ts',[ cube,'horizon-slice'],'inttest1 coord=${SOURCES[1]} nw=4 interp=spline | window')
+
+Result('stack_ts','grey title="Stack Horizon Slice" transp=n yreverse=n')
+
+# Compare with dcube from barrolka_3d_iso directory - windowed portion of the dataset
+
+#Flow('dpi_ts_cut','dpi_ts','window n1=150 min1=6.025 n2=70 min2=4.625')
+#Result('dpi_ts_cut','grey title="DPI compare" transp=n yreverse=n')
+#Flow('gaussian_ts_cut','gaussian_ts','window n1=150 min1=6.025 n2=70 min2=4.625')
+#Result('gaussian_ts_cut','grey title="gaussian compare" transp=n yreverse=n')
+#Flow('conv_image_ts_cut','conv_image_ts','window n1=150 min1=6.025 n2=70 min2=4.625')
+#Result('conv_image_ts_cut','grey title="conv image" transp=n yreverse=n')
+#Flow('pathint_ts_cut','pathint_ts','window n1=150 min1=6.025 n2=70 min2=4.625')
+#Result('pathint_ts_cut','grey title="slice pi compare" transp=n yreverse=n')
+#Flow('stack_ts_cut','stack_ts','window n1=150 min1=6.025 n2=70 min2=4.625')
+#Result('stack_ts_cut','grey title="stack compare" transp=n yreverse=n')
+#Flow('notmig_ts_cut','notmig_ts','window n1=150 min1=6.025 n2=70 min2=4.625')
+#Result('notmig_ts_cut','grey title="slice not migrated" transp=n yreverse=n')
+
+# SEGY output
+
+#Flow('ipi_gaussian',['pi_gaussian',tdata],'put o2=2000 o3=9997 | intbin xk=iline yk=xline head=${SOURCES[1]} inv=y')
+#Flow('pi_gaussian.segy',['ipi_gaussian',tdata,dataasc,databin],'segywrite tfile=${SOURCES[1]} hfile=${SOURCES[2]} bin=${SOURCES[3]}')
+
+#Flow('ipi_erfi',['pi_erfi',tdata],'put o2=2000 o3=9997 | intbin xk=iline yk=xline head=${SOURCES[1]} inv=y')
+#Flow('pi.segy',['ipi_erfi',tdata,dataasc,databin],'segywrite tfile=${SOURCES[1]} hfile=${SOURCES[2]} bin=${SOURCES[3]}')
+
+#Flow('idpi',['dpi_vel_slice',tdata],'put o2=2000 o3=9997 | intbin xk=iline yk=xline head=${SOURCES[1]} inv=y')
+#Flow('dpi.segy',['idpi',tdata,dataasc,databin],'segywrite tfile=${SOURCES[1]} hfile=${SOURCES[2]} bin=${SOURCES[3]}')
+#Flow('isdpi',['sdpi_vel_slice',tdata],'put o2=2000 o3=9997 | intbin xk=iline yk=xline head=${SOURCES[1]} inv=y')
+#Flow('sdpi.segy',['isdpi',tdata,dataasc,databin],'segywrite tfile=${SOURCES[1]} hfile=${SOURCES[2]} bin=${SOURCES[3]}')
+#Flow('ivel',['vel',tdata],'put o2=2000 o3=9997 | intbin xk=iline yk=xline head=${SOURCES[1]} inv=y')
+#Flow('vel.segy',['ivel',tdata,dataasc,databin],'segywrite tfile=${SOURCES[1]} hfile=${SOURCES[2]} bin=${SOURCES[3]}')
+#Flow('ipi_gaussian2',['pi_gaussian2',tdata],'put o2=2000 o3=9997 | intbin xk=iline yk=xline head=${SOURCES[1]} inv=y')
+#Flow('pi_gaussian2.segy',['ipi_gaussian2',tdata,dataasc,databin],'segywrite tfile=${SOURCES[1]} hfile=${SOURCES[2]} bin=${SOURCES[3]}')
+
+#Flow('idif',['/data01/merzlikind/diffr/path_int_precompute/whole_barrolka_3d_iso/packed/dif_packed.rsf',tdata],'put o2=2000 o3=9997 | intbin xk=iline yk=xline head=${SOURCES[1]} inv=y')
+#Flow('dif.segy',['idif',tdata,dataasc,databin],'segywrite tfile=${SOURCES[1]} hfile=${SOURCES[2]} bin=${SOURCES[3]}')
+
+# Check segy
+
+#Flow('datach tdatach datach.asc datach.bin','dif.segy',
+#     '''
+#     segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]}
+#     ''')
+#Flow('stack_checkch','datach',
+#     '''
+#     intbin xk=iline yk=xline |
+#     put 
+#     label2=Inline    o2=0 d2=0.025 unit2=km 
+#     label3=Crossline o3=0 d3=0.025 unit3=km 
+#     ''')
+
+
+#Flow('dpi_old_ts',[ 'stack_checkch','horizon-slice'],'inttest1 coord=${SOURCES[1]} nw=4 interp=spline | window')
+#Result('dpi_old_ts','grey title="DPI old" transp=n yreverse=n')
+
+### Pictures
+
+Result('stack-cube','stack',
+       '''
+       byte gainpanel=all clip=82 |
+       grey3 title=Stack flat=n
+       frame1=180 frame2=214 frame3=200  flat=n point1=.6 point2=.7
+       ''')
+
+Result('dif-cube','dif',
+       '''
+       byte gainpanel=all clip=25 |
+       grey3 title=Diffractions flat=n
+       frame1=180 frame2=214 frame3=200  flat=n point1=.6 point2=.7
+       ''')
+
+Flow('snt_dpi_ts','snt_dpi_vel_slice horizon-slice','inttest1 coord=${SOURCES[1]} nw=4 interp=spline | window')
+
+Flow('dpi_4_wrong_ts',[ 'dpi_wr_vel_slice','horizon-slice'],'inttest1 coord=${SOURCES[1]} nw=4 interp=spline | window')
+
+Flow('gpi_4_wrong_ts',[ 'gpi_check_wr','horizon-slice'],'inttest1 coord=${SOURCES[1]} nw=4 interp=spline | window')
+
+Result('w-snt-dpi-ts','snt_dpi_ts','window min1=6.0 max1=12.0 min2=0.5 max2=4.5 | grey wanttitle=n transp=n yreverse=n screenratio=0.6')
+Result('w-pathint-ts','pathint_ts','window min1=6.0 max1=12.0 min2=0.5 max2=4.5 | grey wanttitle=n transp=n yreverse=n screenratio=0.6')
+Result('w-dpi-ts','dpi_ts','window min1=6.0 max1=12.0 min2=0.5 max2=4.5 | grey wanttitle=n transp=n yreverse=n screenratio=0.6')
+Result('w-dpi-wr-ts','dpi_4_wrong_ts','window min1=6.0 max1=12.0 min2=0.5 max2=4.5 | grey wanttitle=n transp=n yreverse=n screenratio=0.6')
+Result('w-pi-wr-ts','pi_4_wrong_ts','window min1=6.0 max1=12.0 min2=0.5 max2=4.5 | grey wanttitle=n transp=n yreverse=n screenratio=0.6')
+Result('w-gpi-wr-ts','gpi_4_wrong_ts','window min1=6.0 max1=12.0 min2=0.5 max2=4.5 | grey wanttitle=n transp=n yreverse=n screenratio=0.6')
+
+Flow('vel_hts','vel.rsf horizon-slice','inttest1 coord=${SOURCES[1]} nw=4 interp=spline | window')
+
+Result('vel-hts-sing','vel_hts','grey color=j barlabel=Velocity barunit=km/s allpos=n scalebar=y mean=n clip=0.02 bias=3.1 minval=3.08 maxval=3.11 bar=bar.rsf wanttitle=n transp=n yreverse=n screenratio=0.6')
+
+End()

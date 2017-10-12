@@ -92,6 +92,10 @@ int main(int argc, char *argv[])
 		break;
 	    case 'l':
 		otype = SF_LONG;
+		break;
+	    case 'd':
+		otype = SF_DOUBLE;
+		break;
 	    default:
 		sf_error("Unsupported type=\"%s\"",type);
 		break;
@@ -305,6 +309,13 @@ int main(int argc, char *argv[])
 		ubuf = (unsigned char*) bufin;
 		sf_charread(bufin,nin,in);
 		switch (otype) {
+		    case SF_INT:
+			ibuf = (int*) bufout;
+			for (i=0; i < (int) nin; i++) {
+			    ibuf[i] = (int) ubuf[i];
+			}
+			sf_intwrite(ibuf,nin,out);
+			break;
 		    case SF_FLOAT:
 			fbuf = (float *) bufout;
 			for (i=0; i < (int) nin; i++) {
@@ -322,6 +333,13 @@ int main(int argc, char *argv[])
 		if (nin > size) nin=size;
 		sf_charread(bufin,nin,in);
 		switch (otype) {
+		    case SF_INT:
+			ibuf = (int*) bufout;
+			for (i=0; i < (int) nin; i++) {
+			    ibuf[i] = (int) bufin[i];
+			}
+			sf_intwrite(ibuf,nin,out);
+			break;
 		    case SF_FLOAT:
 			fbuf = (float *) bufout;
 			for (i=0; i < (int) nin; i++) {

@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sfdd', 'sfwiggle', 'sfspectra', 'sfwindow', 'sfgraph', 'sfpad', 'sfspike', 'sfconjgrad', 'sfscale', 'sfadd', 'sfpow', 'sfgrey', 'sfmul', 'sfstack', 'sfmath', 'sftransp', 'sfspray', 'sfintbin', 'sfput']
+data=['data/viking/seismic.segy', 'http://s3.amazonaws.com/open.source.geoscience/open_data/Mobil_Avo_Viking_Graben_Line_12/FarField.dat']
+size= 1499584248

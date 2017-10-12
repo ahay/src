@@ -417,7 +417,6 @@ int main(int argc, char *argv[])
     } /* binary and ebcidit headers read */
     
     format=0;
-    fprintf(stderr,"get the format\n");
     sf_getint("format",&format);
 	/* [1,2,3,5] Data format. 
            The default is taken from binary header for segy input.
@@ -428,19 +427,15 @@ int main(int argc, char *argv[])
 	   5 is IEEE floating point
            6 is native_float (same as RSF binary default)
 	*/
-    fprintf(stderr,"format=%d\n",format);
     if(format==0){
-      fprintf(stderr,"test su\n");
       if(su){
 	format=5;
 	sf_warning("su input.  Default format=5");
       } else { /* segy input data. format not input, so get it from binary header */
-	fprintf(stderr,"get format from bhead\n");
 	format = segyformat (bhead);
       }
     }
 
-    fprintf(stderr,"switch format=%d\n",format);
     switch (format) {
     case 1:
       if (verbose) sf_warning("Assuming IBM floating point format");

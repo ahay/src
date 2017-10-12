@@ -522,7 +522,7 @@ void resit (int nx, float fx, float dx, int nz, int nr, float dr,
 
         for(ix=0; ix<nx; ++ix){
                 xi = fx+ix*dx-x0;
-                ar = abs(xi)/dr;
+                ar = fabsf(xi)/dr;
                 jr = (int)ar;
                 sr = ar-jr;
                 sr0 = 1.0-sr;

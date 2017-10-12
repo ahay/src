@@ -1,0 +1,8 @@
+from rsf.tex import *
+
+End(use='hyperref,listings,amsmath',hires='''
+	all''',
+	color='''
+	a-dpi-vel vel-hts-sing
+	''')
+

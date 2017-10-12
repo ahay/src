@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
 	int i1, i2, n1, n2, nn2, n22, ig, ng, i, j, flag, conf, order;
 	int *np, ***tips, *width, **sxy, *x2, *nl, label[20], id[20];
 	float d1, o1, **dd1, **ss, **mm, **dd2, **bb, **ff, *trace, **pp;
-	sf_file in, out, slip, mask=NULL, bound=NULL, dip=NULL, shift=NULL, newdip=NULL;
+	sf_file in, out, slip, mask=NULL, bound=NULL, dip=NULL, shift=NULL, newdip=NULL, ppbig=NULL;
 
 	sf_init(argc, argv);
 	
@@ -46,6 +46,7 @@ int main(int argc, char* argv[])
 		dip=sf_input("dip");
 		shift=sf_input("shift");
 		newdip=sf_output("newdip");
+		ppbig=sf_output("ppbig");
 	}
 
 	if(!sf_histint(in, "n1", &n1)) sf_error("No n1= in input");
@@ -250,6 +251,10 @@ int main(int argc, char* argv[])
 		predict_step(false, true, trace, dd2[i2-1]);
 		for (i1=0; i1<n1; i1++) pp[i2][i1]=trace[i1];
 	}
+
+	/* output expanded PP */
+	sf_putint(ppbig, "n2", nn2);
+	sf_floatwrite(pp[0], n1*nn2, ppbig);
 
 	/* reduce model size */
 	n22=0;

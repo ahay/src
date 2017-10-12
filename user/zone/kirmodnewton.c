@@ -187,7 +187,7 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 		zk[l+1] = T_hat_1k_k(f.T_k_k1,f.T_k_zk1) + T_hat_k_k(f.T_k_k,f.T_k_zk) - T_hat_1k_1k_k(f.T_k_k_k1,f.T_k_k1_zk,f.T_k_k_zk1,f.T_k_zk_zk1)*ck_inv[l]*zk[l];
 	    }
 			
-	    if (isnan(1/ck_inv[l+1]) != 0 || !isfinite(1/ck_inv[l+1]) != 0) {
+	    if (isnan(1/ck_inv[l+1]) != 0 || !isfinite(1/ck_inv[l+1])) {
 		sf_warning("ck_inv doesn't exist. The solutions do not converge.\n");
 		b3 = -1;
 		goto mark;
@@ -352,7 +352,7 @@ mark: /* Mark point for goto*/
 	    tt = tt + T_hat_k(f.T_k);
 			
 	    if (c==0) {
-		at = fabsf(T_hat_k_k_k1(f.T_k_k_k1,f.T_k_k1_zk,f.T_k_k_zk1, f.T_k_zk_zk1)); 
+		at = fabs(T_hat_k_k_k1(f.T_k_k_k1,f.T_k_k1_zk,f.T_k_k_zk1, f.T_k_zk_zk1)); 
 		/* tx_s = T_hat_k_k(f.T_k_k,f.T_k_zk); */ /* x-direction on the surface*/
 		tz_s = T_hat_k(f.T_k_zk);
 	    }
@@ -398,7 +398,7 @@ mark: /* Mark point for goto*/
 		ck_in= 1/(T_hat_1k_k_k(f.T_k_k1_k1,f.T_k_k1_zk1,f.T_k_zk1,f.T_k_zk1_zk1) + T_hat_k_k_k(f.T_k_k_k,f.T_k_k_zk,f.T_k_zk,f.T_k_zk_zk) - T_hat_1k_1k_k(f.T_k_k_k1,f.T_k_k1_zk,f.T_k_k_zk1,f.T_k_zk_zk1)*ck_in_temp*T_hat_1k_1k_k(f.T_k_k_k1,f.T_k_k1_zk,f.T_k_k_zk1,f.T_k_zk_zk1));
 	    }
 			
-	    at = at*fabsf(ck_in*T_hat_k_k_k1(f.T_k_k_k1,f.T_k_k1_zk,f.T_k_k_zk1, f.T_k_zk_zk1));
+	    at = at*fabs(ck_in*T_hat_k_k_k1(f.T_k_k_k1,f.T_k_k1_zk,f.T_k_k_zk1, f.T_k_zk_zk1));
 	    ck_in_temp = ck_in;
 	}
 		

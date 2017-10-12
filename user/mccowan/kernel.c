@@ -77,7 +77,7 @@ void kernel( float *datas           /* input data vector */,
     float ft2, t0, basis, tnext;
     float anynum, vsq, image_value;
     float test, dt, fsinv;
-    float shot_dist, rcvr_dist, shot_dist2, rcvr_dist2, aa, bb;
+    float shot_dist2, rcvr_dist2, aa, bb;
     float xlaper2, slaper2;
     float slineap, dslineap, xlineap, dxlineap, stime, dstime;
     float rtime, drtime, vrms, dvrms, scale, dscale, akp1, dakp1;
@@ -88,8 +88,6 @@ void kernel( float *datas           /* input data vector */,
     ahit        = 0;
     shot_dist2  = shot_xdist*shot_xdist + shot_ydist*shot_ydist;
     rcvr_dist2  = rcvr_xdist*rcvr_xdist + rcvr_ydist*rcvr_ydist;
-    shot_dist   = sqrtf(shot_dist2);
-    rcvr_dist   = sqrtf(rcvr_dist2);
     fsinv       = 1.0f/fsint;
     dt          = 0.001f*fsint;
     tmp2        = 4000.0f * trace_space/dt;

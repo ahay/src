@@ -1,0 +1,5 @@
+from rsf.tex import*
+
+End(lclass='geophysics', use='amsmath,color,listings,float,multirow',color='ALL',hires='ALL',include=r'\newcommand{\SortNoop}[1]{}')
+
+

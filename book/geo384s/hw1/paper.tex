@@ -1,0 +1,360 @@
+\author{Team: Longhorns}
+%%%%%%%%%%%%%%%%%%%%%%%%
+\title{GEO 365N/384S Seismic Data Processing \\ Computational Assignment 1}
+
+\begin{abstract}
+  This assignment has three parts:
+  \begin{enumerate}
+  \item Reading data in SEGY format and converting it to RSF format. 
+  \item Selecting a clip parameter for data display.
+  \item Designing a color map for data display.
+  \end{enumerate}
+\end{abstract}
+
+\section{Prerequisites}
+
+Completing the computational part of this homework assignment requires
+\begin{itemize}
+\item \texttt{Madagascar} software environment available from \\
+\url{http://www.ahay.org/}
+\item \LaTeX\ environment with \texttt{SEG}\TeX\ available from \\ 
+\url{http://www.ahay.org/wiki/SEGTeX}
+\end{itemize}
+To do the assignment on your personal computer, you need to install
+the required environments. 
+
+To setup the Madagascar environment in the JGB 3.216B computer lab, run the following commands:
+\begin{verbatim}
+module load madagascar-devel
+source $RSFROOT/share/madagascar/etc/env.csh
+setenv DATAPATH $RSFROOT/data/
+setenv RSFBOOK $RSFROOT/data/book
+setenv RSFFIGS $RSFROOT/data/figs
+\end{verbatim}
+You can put these commands in your \verb+$RSFROOT/.cshrc+ file to run them automatically at login time.
+
+To setup the \LaTeX\ environment, run the following commands:
+\begin{verbatim}
+cd
+git clone https://github.com/SEGTeX/texmf.git
+texhash
+\end{verbatim}
+You only need to do it once.
+
+The homework code is available in your team repository or in the class
+repository. You can obtain it by running
+\begin{verbatim}
+svn co https://github.com/UT-GEO384S/geo384s/trunk/hw1
+\end{verbatim}
+
+\section{Generating this document}
+
+At any point of doing this computational assignment, you can
+regenerate this document and display it on your screen.
+
+\begin{enumerate}          
+\item Change directory to \texttt{hw1}:
+\begin{verbatim}
+cd hw1
+\end{verbatim}
+\item Run
+\begin{verbatim}
+sftour scons lock
+scons read &
+\end{verbatim}
+\end{enumerate}
+
+As the first step, open \texttt{hw1/paper.tex} file in your favorite
+editor and edit the first line to enter the name of your team. Then
+run \texttt{scons read} again.
+
+\section{Reading data}
+\inputdir{data}
+
+In this part of the assignment, you will experiment with reading a
+seismic dataset in SEGY format, converting it to RSF format, examining
+its values, and displaying it on the screen. You are asked to answer a
+series of simple questions. Insert your answers by editing
+the \texttt{hw1/paper.tex} file.
+
+\begin{enumerate}          
+\item Change directory to \texttt{hw1/data}.
+\item Run
+\begin{verbatim}
+scons -c
+\end{verbatim}
+to remove (clean) previously generated files.
+\item Run
+\begin{verbatim}
+scons viking.rsf
+\end{verbatim}
+This command will find the SEGY file for the Viking Graben data and convert to four files: text header (\texttt{viking.asc}), binary header (\texttt{viking.bin}), trace header data (\texttt{tviking.rsf}), and trace data (\texttt{viking.rsf}).
+\item Examine the text (ASCII) header \texttt{viking.asc} by running
+\begin{verbatim}
+more viking.asc
+\end{verbatim}
+For better viewing, you may need to adjust the width of your terminal window to 80 characters. In this case, the text header does not actually contain any useful information.
+\item Examine the trace data file \texttt{viking.rsf} by running
+\begin{verbatim}
+more viking.rsf
+\end{verbatim}
+What is the data format used in this file? How many traces does this file have (\texttt{n2=} parameter)? How many time samples per trace (\texttt{n1=} parameter)?
+
+\answer{
+% Insert your answer here
+
+}       
+
+Note that a more convenient way to check parameters is running a Madagascar program \texttt{sfin}:
+\begin{verbatim}
+sfin viking.rsf
+\end{verbatim}
+\item Examine the range of values in the trace data file by running
+\begin{verbatim}
+sfattr < viking.rsf
+\end{verbatim}
+What is the maximum value? How many zero samples are in this file?
+
+\answer{
+
+}
+
+\item Display the first 50 traces from the trace data file by running
+\begin{verbatim}
+scons firstw.view &
+scons first.view 
+\end{verbatim}
+Compare the two displays (Figure~\ref{fig:firstw,first}). What are
+comparative advantages and disadvantages of using wiggle plots versus
+grayscale plots? Which one do you prefer in this case?
+
+\multiplot{2}{firstw,first}{height=0.45\textheight}{First 50 traces from the Viking Graben data. (a) Wiggle plot. (b) Grayscale plot.}
+
+\answer{
+
+}
+
+\item Open the \texttt{SConstruct} file in your favorite editor and find the command which windowed 50 first traces. Change it to window the first 100 traces. Run
+\begin{verbatim}
+scons first.view 
+\end{verbatim}
+again to see the effect of the change. Edit the plot title to reflect the change.
+\item Examine the size of the trace header file \texttt{tviking.rsf} by running
+\begin{verbatim}
+sfin tviking.rsf
+\end{verbatim}
+What is the data format used in this file? How many traces does this
+file have? How many header keys per trace?
+
+\answer{
+
+}       
+
+\item Examine the content of the trace header file by running
+\begin{verbatim}
+sfheaderattr < tviking.rsf
+\end{verbatim}
+To get a short description of different keys, you can also run
+\begin{verbatim}
+sfheaderattr < tviking.rsf desc=y
+\end{verbatim}
+What is the range of values for the CDP (common depth point) trace key in this file? What is the range of values for the source X coordinate?
+
+\answer{
+
+}       
+
+\item Run
+\begin{verbatim}
+scons shot.view
+\end{verbatim}
+to window and display traces corresponding to the 200th shot record (Figure~\ref{fig:shot}).
+\item Run
+\begin{verbatim}
+scons offset.rsf
+\end{verbatim}
+to window values of offset (receiver-shot distance) for the 200th shot record. Examine the values by running
+\begin{verbatim}
+sfdisfil < offset.rsf
+\end{verbatim}
+What is the offset for the receiver closest to the source? What is the distance between receivers? 
+
+\answer{
+
+}       
+
+
+\item Display the wiggle plot for the selected shot (Figure~\ref{fig:shotw}) by running
+\begin{verbatim}
+scons shotw.view
+\end{verbatim}
+
+\multiplot{2}{shot,shotw}{height=0.45\textheight}{200th shot record from the Viking Graben data. (a) Grayscale plot. (b) Wiggle plot.}
+
+\item Edit the \texttt{SConstruct} file to select and display 200th CDP gather rather than 200th shot. Modify the plot titles accordingly. 
+
+\item What does ``\texttt{pow pow1=2}'' command do? 
+
+\answer{
+
+}       
+
+Hint: read the documentation for \texttt{sfpow} by running
+\begin{verbatim}
+sfpow
+\end{verbatim}
+without arguments or by checking the ``program of the month'' blog
+post\footnote{\url{http://www.ahay.org/blog/2013/03/10/program-of-the-month-sfpow/}}. Modify
+the \texttt{pow1=} parameter and rerun \texttt{scons} command to
+observe the change.
+
+\end{enumerate}
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,title=data/SConstruct]{data/SConstruct}
+
+\section{Clip parameter for display}
+\inputdir{clip}
+
+A seismic data file may contain a range of different values. For
+displaying it on the screen, a common technique is to clip large
+values for improving the display visibility.
+
+Clipping amounts to the simple operation
+\begin{equation}
+d_c = \left\{\begin{array}{rl} c & \quad \mbox{if} \quad d > c\;, \\ -c & \quad \mbox{if} \quad d < -c\;, \\ d & \quad \mbox{otherwise}\end{array}\right.
+\end{equation}
+where $d$ is an input data sample, $c$ is the clip value, and $d_c$ is the output data sample.
+
+To find the appropriate clip value $c$, we can use a percentage quantile:
+if all data values are sorted by absolute value from small to large,
+the quantile selects the value from this list which corresponds to the
+specified percentage. 
+
+In this assignment, your task is to determine an appropriate
+percentage clip (\texttt{pclip=}) parameter for displaying a given image.       
+
+\begin{enumerate}          
+\item Change directory to \texttt{hw1/clip}.
+\item Run
+\begin{verbatim}
+scons -c
+\end{verbatim}
+to remove (clean) previously generated files.
+\item Run
+\begin{verbatim}
+scons stack.rsf
+\end{verbatim}
+to extract the stack data from the Alaska Line 31-81. Check the range of data values by running 
+\begin{verbatim}
+sfattr < stack.rsf
+\end{verbatim}
+\item Run
+\begin{verbatim}
+scons stack.view
+\end{verbatim}
+to display the stack using several different clip parameters
+(Figure~\ref{fig:stack}). To view a movie looping through these
+images, run
+\begin{verbatim}
+scons stack.vpl
+\end{verbatim}
+Which value of \texttt{pclip=} generates the most balanced and visually appealing image?
+
+\plot{stack}{width=0.85\textwidth}{Alaska stack data displayed with different values of \texttt{pclip=} parameter.}
+
+\item Edit the \texttt{SConstruct} file to experiment with different values of \texttt{pclip=} until you find an optimal one. What is your favorite value of \texttt{pclip=} for this image?
+
+\answer{
+
+}
+
+\item For bonus points, design and implement an algorithm to find the value of clip automatically by analyzing the distribution of values in the input data. You can edit the provided C program \texttt{clip.c} to insert your implementation.
+
+Hint: You may get an idea for your algorithm by observing the histogram of the data values after clipping (Figure~\ref{fig:hist}).
+\begin{verbatim}
+scons hist.view
+\end{verbatim}
+Does this plot give you an idea of how to define the clip value that would generate the most balanced histogram? 
+
+\plot{hist}{width=0.85\textwidth}{Histogram of data values after clipping data with different values of \texttt{pclip=} parameter.}
+
+\item Test your automatic algorithm or your trial-and-error approach on the stack data from the Viking Graben dataset (Figure~\ref{fig:viking}).
+\begin{verbatim}
+scons viking.view
+\end{verbatim}
+
+\plot{viking}{width=0.85\textwidth}{Viking Graben stack.}
+
+\end{enumerate}
+
+\lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,title=sorting/clip.c]{clip/clip.c}
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,title=clip/SConstruct]{clip/SConstruct}
+
+\section{Color map for display}
+\inputdir{color}
+
+Adding color can help visualization by highlighting significant
+features in the image. A ``pseudocolor'' image is derived from a
+grayscale image by mapping each intensity value (typically in the
+0-255 range) to a color (typically a triple of Red-Green-Blue values)
+according to a specified color map.
+
+Figure~\ref{fig:jet,seismic} shows the Alaska stack displayed with two
+different choices for the colormap: ``jet'' (the default in older
+versions of Matlab) and ``seismic'' (the default in some seismic
+interpretation software packages). 
+
+\begin{enumerate}          
+\item Change directory to \texttt{hw1/color}.
+\item Run
+\begin{verbatim}
+scons jet.view
+\end{verbatim}
+and
+\begin{verbatim}
+scons seismic.view
+\end{verbatim}
+to display the color images. Which one looks easier to interpret? Would you prefer either of them to the corresponding grayscale image? Why?
+
+\answer{
+
+}
+
+\multiplot{2}{jet,seismic}{height=0.45\textheight}{Alaska stack data displayed with (a) ``jet'' (blue-green-red) colormap and (b) ``seismic'' (red-yellow-white-blue-black) colormap.}
+
+\item Examine the colormap file \texttt{seismic.csv} by opening it in your favorite editor. Notice that this file has exactly 256 lines containing comma-separated lists of RGB (red-green-blue) triples. The list starts with a shade of red $(0.666667,0,0)$ and ends with black $(0,0,0)$. What kind of color is on line 64?
+
+\answer{
+
+}
+
+\item Your creative task is to design your own colormap. Your map should start with Rice Blue $(0,36,106)/255$\footnote{\url{https://staff.rice.edu/Template_RiceBrand.aspx?id=4718}} and end with UT Burnt Orange $(191,87,0)/255$\footnote{\url{https://www.utexas.edu/brand-guidelines/visual-style-guide/color}}. It is up to you what colors to put in between and how to distribute them. The output should be a text file in CSV format similar to \texttt{seismic.csv}. Bonus points for generating this file in \texttt{SConstruct} using Madagascar commands.
+
+In designing your colormap, it may help to analyze the distribution of
+intensity. Figure~\ref{fig:intensity} shows the distribution of
+intensity in the ``seismic'' colormap. For a discussion on
+good colormap design, see \cite[]{matteo}.
+
+\multiplot{2}{intensity}{width=0.9\textwidth}{Distribution of intensity in the ``seismic'' colormap.}
+
+\item Edit \texttt{SConstruct} file to display the data using your colormap. Edit \texttt{paper.tex} to add the new figure.
+
+\end{enumerate}
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,title=color/SConstruct]{color/SConstruct}
+
+\section{Saving your work}
+
+It is important to save all files that you edit by hand (such
+as \texttt{paper.tex} and \texttt{SConstruct}) in a version-control
+system every time you make a revision. The completed assignment is due
+in two weeks and should be submitted through GitHub in your team
+repository.
+
+\bibliographystyle{seg}
+\bibliography{color}

@@ -48,12 +48,18 @@ for source in src:
     env.Ignore(inc,inc)
     env.Depends(obj,inc)
 
+if 'c++' in env.get('API',[]):
+    lapack = env.get('LAPACK')
+else:
+    lapack = None
+
 csrc = Glob('[a-z]*.cc')
 for source in csrc:
     inc = env.RSF_Include(source,prefix='')
-    obj = env.StaticObject(source)
     env.Ignore(inc,inc)
-    env.Depends(obj,inc)
+    if lapack:
+        obj = env.StaticObject(source)
+        env.Depends(obj,inc)
 
 mpicc = env.get('MPICC')
 mpicxx = env.get('MPICXX')
@@ -87,11 +93,6 @@ for prog in mpi_mains:
     if root:
         env.Install(bindir,prog)
 
-
-if 'c++' in env.get('API',[]):
-    lapack = env.get('LAPACK')
-else:
-    lapack = None
 
 if lapack:
     libsxx = [env.get('DYNLIB','')+'rsf++','vecmatop']

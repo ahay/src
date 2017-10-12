@@ -115,7 +115,7 @@ void init_pml(int vnz,  int vnx, float vdt,/* Modle size*/
 	decdx[ix]=(-1)*pmlgamma*(ix-nx-marg-pmlout+1)*(ix-nx-marg-pmlout+1)/pmlout/pmlout+1;
     }
     
-    //for pml_dz and damping dec_dz
+    /* for pml_dz and damping dec_dz */
     for(iz=marg;iz<marg+pmlout;iz++)
     {
 	pmldz[iz]=pmld0*(marg+pmlout-iz)*(marg+pmlout-iz)/pmlout/pmlout;

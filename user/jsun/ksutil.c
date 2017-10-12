@@ -980,7 +980,7 @@ void lint3d_extract_complex(sf_complex***uu,
 	    sf_cadd( sf_crmul(uu[ ca->jy[ia]+1][ ca->jx[ia]  ][ ca->jz[ia]  ] , ca->w100[ia]) ,
 	    sf_cadd( sf_crmul(uu[ ca->jy[ia]+1][ ca->jx[ia]  ][ ca->jz[ia]+1] , ca->w101[ia]) ,
 	    sf_cadd( sf_crmul(uu[ ca->jy[ia]+1][ ca->jx[ia]+1][ ca->jz[ia]  ] , ca->w110[ia]) ,
-	    sf_cadd( sf_crmul(uu[ ca->jy[ia]+1][ ca->jx[ia]+1][ ca->jz[ia]+1] , ca->w111[ia])))))))));
+		     sf_crmul(uu[ ca->jy[ia]+1][ ca->jx[ia]+1][ ca->jz[ia]+1] , ca->w111[ia]))))))));
 #endif
     }
 }
@@ -999,16 +999,16 @@ void lint3d_expl_complex(sf_complex***uz,
                 for(j=-1;j<=1;j++)
                     for(i=-1;i<=1;i++)
                     {
-                        if(fabs(i)+fabs(j)+fabs(k)==3)
+                        if(SF_ABS(i)+SF_ABS(j)+SF_ABS(k)==3)
                         {
 #ifdef SF_HAS_COMPLEX_H
                             uz[ca->jy[ia]+k][ca->jx[ia]+j][ca->jz[ia]+i] += dd[0][ia] * i;
                             ux[ca->jy[ia]+k][ca->jx[ia]+j][ca->jz[ia]+i] += dd[1][ia] * j;
                             uy[ca->jy[ia]+k][ca->jx[ia]+j][ca->jz[ia]+i] += dd[2][ia] * k;
 #else
-                            uz[ca->jy[ia]+k][ca->jx[ia]+j][ca->jz[ia]+i] = sf_cadd(uz[ca->jy[ia]+k][ca->jx[ia]+j][ca->jz[ia]+i] , sf_crmul(dd[0][ia] * i));
-                            ux[ca->jy[ia]+k][ca->jx[ia]+j][ca->jz[ia]+i] = sf_cadd(ux[ca->jy[ia]+k][ca->jx[ia]+j][ca->jz[ia]+i] , sf_crmul(dd[1][ia] * j));
-                            uy[ca->jy[ia]+k][ca->jx[ia]+j][ca->jz[ia]+i] = sf_cadd(uy[ca->jy[ia]+k][ca->jx[ia]+j][ca->jz[ia]+i] , sf_crmul(dd[2][ia] * k));
+                            uz[ca->jy[ia]+k][ca->jx[ia]+j][ca->jz[ia]+i] = sf_cadd(uz[ca->jy[ia]+k][ca->jx[ia]+j][ca->jz[ia]+i] , sf_crmul(dd[0][ia],(float)i));
+                            ux[ca->jy[ia]+k][ca->jx[ia]+j][ca->jz[ia]+i] = sf_cadd(ux[ca->jy[ia]+k][ca->jx[ia]+j][ca->jz[ia]+i] , sf_crmul(dd[1][ia],(float)j));
+                            uy[ca->jy[ia]+k][ca->jx[ia]+j][ca->jz[ia]+i] = sf_cadd(uy[ca->jy[ia]+k][ca->jx[ia]+j][ca->jz[ia]+i] , sf_crmul(dd[2][ia],(float)k));
 
 
 #endif
@@ -2409,7 +2409,7 @@ void clr3d_apply(sf_complex **uo,
 #ifdef SF_HAS_COMPLEX_H
                             c += lt[in][i]*waven2[im][i];
 #else
-                            c += sf_cmul(lt[in][i],waven2[im][i]);
+                            c = sf_cadd(c,sf_cmul(lt[in][i],waven2[im][i]));
 #endif
                         }
                         waves[ir][ic][i] = c;
@@ -2497,7 +2497,7 @@ void clr3d_apply2(sf_complex **u2,
 #ifdef SF_HAS_COMPLEX_H
                             c += lt[in][i]*waven2[im][i];
 #else
-                            c += sf_cmul(lt[in][i],waven2[im][i]);
+                            c = sf_cadd(c,sf_cmul(lt[in][i],waven2[im][i]));
 #endif
                         }
                         waves[ir][ic][i] = c;
@@ -2574,7 +2574,7 @@ void clr3d_apply_dbg(sf_complex **uo,
 #ifdef SF_HAS_COMPLEX_H
                             c += lt[in][i]*waven2[im][i];
 #else
-                            c += sf_cmul(lt[in][i],waven2[im][i]);
+                            c = sf_cadd(c,sf_cmul(lt[in][i],waven2[im][i]));
 #endif
                         }
                         waves[ir][ic][i] = c;

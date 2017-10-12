@@ -1,0 +1,371 @@
+\published{Geophysics, 82, no. 2, C49-C59, (2017)}
+
+\title{3D generalized nonhyperboloidal moveout approximation}
+\author{Yanadet Sripanich\footnotemark[1], Sergey Fomel\footnotemark[1], Alexey Stovas\footnotemark[2], and Qi Hao\footnotemark[2] \\
+\footnotemark[1] The University of Texas at Austin \\ 
+\footnotemark[2] Norwegian University of Science and Technology (NTNU)
+}
+
+\address{
+Bureau of Economic Geology \\
+John A. and Katherine G. Jackson School of Geosciences \\
+The University of Texas at Austin \\
+University Station, Box X \\
+Austin, TX 78713-8924 
+}
+\maketitle
+
+\righthead{3D generalized nonhyperboloidal moveout}
+\lefthead{Sripanich et al.}
+
+\begin{abstract}
+Moveout approximations are commonly used in velocity analysis and time-domain seismic imaging. We revisit the previously proposed generalized nonhyperbolic moveout approximation and develop its extension to the 3D multi-azimuth case. The advantages of the generalized approximation are its high accuracy and its ability to reduce to several other known approximations with particular choices of parameters. The proposed 3D functional form involves seventeen independent parameters instead of five as in the 2D case. These parameters can be \old{found from}\new{defined by} zero-offset \old{computations}\new{traveltime attributes} and four additional far-offset rays. In \old{several}\new{our} tests, the proposed approximation achieves significantly higher accuracy than previously proposed 3D approximations. 
+\end{abstract}
+
+\section{Introduction}
+Reflection moveout approximation is an important ingredient for velocity analysis and other time-domain processing techniques \cite[]{yilmaz}. As a function of source-receiver offset, the two-way reflection traveltime has the well-known hyperbolic \old{appearance}\new{expression}, which is exact for plane reflectors in homogeneous isotropic or elliptically anisotropic overburden and approximately valid for small offsets in other cases. This behavior is generally valid for any pure-mode reflections \old{due}\new{thanks} to the source-receiver reciprocity \cite[]{thomsenbook}. \old{However,}At larger offsets, \old{traveltime curves}\new{moveout} may deviate \new{from hyperbola} and behave nonhyperbolically due to the effects of either anisotropy or heterogeneity \cite[]{fomelnonhyper}. 
+
+In 2D, many extended moveout approximations \new{have been proposed and} designed to work with large-offset seismic data\old{have been proposed}. They have led to better stacked sections and successful inversions for anisotropic parameters \cite[e.g.][]{hake, castle,tsvankinthomsen1994,alkatsvankin,alkavti,pech2003,fomel,taner2005,ursin,blias2009,aleixo,golikov,blias2013}. \cite{fomelstovas} proposed an approximation, which includes five independent parameters that can be defined from traveltime derivatives at the zero-offset ray and one far-offset ray. This approximation was named \textit{generalized moveout approximation} (GMA) because its functional form reduces to several other \new{known} approximation forms with particular choices of parameters and thus, provides a systematic view on the effect of various choices of parameters on the approximation accuracy. Its application to homogeneous TI media was studied by \cite{stovas2010} and \old{its}\new{the GMA} analog in $\tau$-$p$ domain was developed by \cite{stovasfomel}. The case of P-SV waves in horizontally layered VTI media was investigated by \cite{haolayered}.
+
+The most basic expression for a 3D moveout approximation that works in arbitrary anisotropic heterogeneous media with small offsets can be expressed as the \textit{NMO ellipse} \old{,which}\new{and} originates in \old{the truncation of the Taylor expansions}\new{the second-order Taylor polynomial} of traveltime squared around zero offset \cite[]{nmoellipse,tsvankin2011book}. Several large-offset 3D moveout approximations have also been proposed and applied to seismic velocity analysis in azimuthally anisotropic media \cite[]{alhti,alortho,pech2004,xu,vascon,grechkapech,fpj}.\new{The general expression for the quartic coefficients was studied by \cite{fomelnip} and \cite{pech2003} based on an extension of normal-incident-point theorem.} 
+
+In this paper, we revisit the 2D generalized nonhyperbolic moveout approximation and develop its natural extension to 3D. We subsequently show that the proposed approximation can be \old{related}\new{reduced} to other known forms \new{with different choices of parameters}. Using numerical tests, we \old{demonstrate}\new{show} that the 3D GMA can be several orders of magnitude more accurate than \old{other existing}\new{previously proposed} 3D moveout approximations, at the expense of increasing the number of adjustable parameters. \old{Its}\new{The} accuracy and \old{its}analytical properties \new{of the proposed approximation} make it an appropriate \old{alternative to other existing}\new{choice for} 3D moveout approximation \old{for}\new{in the case of} long-offset seismic data.
+
+\section{Nonhyperboloidal moveout approximation}
+
+Let $t(x,y)$ represent the two-way reflection traveltime as a function of the source-receiver offset \new{with components} $x$ and $y$ in a given acquisition coordinate frame. We propose the \new{following} general functional form of nonhyperboloidal moveout approximation\old{given below} \new{\cite[]{zonegma}}:
+\begin{equation}
+\label{eq:3dGMA}
+t^2(x,y) \approx t^2_0 + W(x,y) + \frac{A(x,y)}{t^2_0+B(x,y)+\sqrt{t^4_0+2t^2_0B(x,y)+C(x,y)}} ~,
+\end{equation} 
+where
+\begin{eqnarray}
+\nonumber
+W(x,y) & = & W_1x^2+ W_2xy+ W_3y^2~,\\
+\nonumber
+A(x,y) & = & A_1x^4+A_2x^3y+A_3x^2y^2+A_4xy^3+A_5y^4~,\\
+\nonumber
+B(x,y) & = & B_1x^2+B_2xy+B_3y^2~,\\
+\nonumber
+C(x,y) & = & C_1x^4+C_2x^3y+C_3x^2y^2+C_4xy^3+C_5y^4~,
+\end{eqnarray}
+\new{and $t_0$ denotes the two-way traveltime at zero offset.} The total number of independent parameters in equation~\ref{eq:3dGMA} is seventeen including $t_0$, $W_i$, $A_i$, $B_i$, and $C_i$. \old{In the case of $x=0$ or $y=0$, equation~\ref{eq:3dGMA} reduces to the generalized nonhyperbolic moveout approximation (GMA) of Fomel and Stovas(2010).} A simple algebraic transformation of equation~\ref{eq:3dGMA} leads to the following expression in polar coordinates:
+\begin{eqnarray}
+\label{eq:3dGMAr}
+t^2(r,\alpha) & \approx & t^2_0 + W_r(\alpha) r^2 + \\
+\nonumber
+                && \frac{A_r(\alpha) r^4}{t^2_0+B_r(\alpha) r^2+\sqrt{t^4_0+2t^2_0B_r(\alpha) r^2+C_r(\alpha) r^4}} ~,
+\end{eqnarray} 
+where
+\begin{eqnarray}
+\nonumber
+W_r(\alpha) & = & \frac{1}{V^2_{nmo}(\alpha)} = W_1\cos^2 \alpha+W_2\cos \alpha \sin \alpha + W_3\sin^2 \alpha~,\\
+\nonumber
+A_r(\alpha) & = & A_1\cos^4 \alpha+A_2\cos^3 \alpha \sin \alpha+A_3\cos^2 \alpha \sin^2 \alpha+ \\
+\nonumber
+            && A_4\cos \alpha \sin^3 \alpha+A_5\sin^4 \alpha~,\\
+\nonumber
+B_r(\alpha) & = & B_1\cos^2 \alpha+B_2\cos \alpha \sin \alpha+B_3\sin^2 \alpha~,\\
+\nonumber
+C_r(\alpha) & = & C_1\cos^4 \alpha+C_2\cos^3 \alpha \sin \alpha+C_3\cos^2 \alpha \sin^2 \alpha+ \\
+\nonumber
+            && C_4\cos \alpha \sin^3 \alpha+C_5\sin^4 \alpha~,
+\end{eqnarray}
+\old{where}\new{and} $r = \sqrt{x^2 + y^2}$ represents the absolute offset and $\alpha$ denotes the azimuthal angle from the $x$-axis. \new{Along a fixed azimuth $\alpha$, equation~\ref{eq:3dGMA} reduces to the generalized nonhyperbolic moveout approximation (GMA) of \cite{fomelstovas}.} \old{In the case of horizontal layers of any azimutally anisotropic medium with a horizontal symmetry plane (e.g. orthorhombic or monoclinic), Al--Dajani et al. (1998) demonstrated that the coefficients $W_2$, $A_2$, and $A_4$ become zero. This also results in $B_2$, $C_2$, and $C_4$ being zero.}
+%\tabl*{conversion}{Conversion rules between parameters in equations~\ref{eq:3dGMA} and~\ref{eq:13gma}.}
+%{
+%\centering
+%     	     \begin{tabular}{|l l c| l l |}
+%     	     \hline \multicolumn{3}{|c|}{Equation~\ref{eq:13gma} to equation~\ref{eq:3dGMA}} & \multicolumn{2}{|c|}{Equation~\ref{eq:3dGMA} to equation~\ref{eq:13gma}} \\ 
+%            \hline \rule{0pt}{4ex} $W_1 = a_1(1-\xi)+b_1\xi$ & $A_1 = \xi(-b_1^2+c_1)$ & $C_1=c_1$ & $\xi = \frac{A_1}{C_1-B_1^2}$ & $a_1 = \frac{W_1B_1^2+A_1B_1-W_1C_1}{B_1^2+A_1-C_1}$  \\ 
+%            \rule{0pt}{4ex} $W_2 = a_2(1-\xi)+b_2\xi$ & $A_2 = \xi(-2b_1b_2+c_2)$ & $C_2=c_2$ & $c_1=C_1$ & $a_2 = \frac{W_2B_1^2+A_1B_2-W_2C_1}{B_1^2+A_1-C_1}$ \\
+%            \rule{0pt}{4ex} $W_3 = a_3(1-\xi)+b_3\xi$ & $A_3 = \xi(-b_2^2-2b_1b_3+c_3)$ & $C_3=c_3$ & $ c_2 = 2B_1B_2+\frac{A_2}{A_1}(C_1-B_1^2)$ & $a_3 = \frac{W_3B_1^2+A_1B_3-W_3D_1}{B_1^2+A_1-D_1}$ \\
+%            \rule{0pt}{4ex} $B_1=b_1$ & $A_4=\xi(-2b_2b_3+c_4)$& $C_4=c_4$ & $c_3 =( B_2^2+ 2B_1B_3)+\frac{A_3}{A_1}(C_1-B_1^2)$ & $b_1 =B_1$ \\
+%            \rule{0pt}{4ex} $B_2=b_2$ & $A_5=\xi(-b_3^2+c_5)$& $C_5=c_5$ & $c_4 = 2B_2B_3+\frac{A_4}{A_1}(C_1-B_1^2)$ & $b_2 = B_2$ \\
+%            \rule{0pt}{4ex} $B_3=b_3$ & & & $c_5 = B_3^2+\frac{A_5}{A_1}(C_1-B_1^2)$ & $b_3 = B_3$ \\
+%            \hline
+%    \end{tabular}
+%}
+
+\subsection{Connections with other approximations}
+
+%\begin{enumerate}[leftmargin=*]
+\begin{enumerate}
+\item Setting $A_i = 0$, we can obtain the expression of NMO ellipse from equation~\ref{eq:3dGMA} \cite[]{nmoellipse}:
+\begin{equation}
+    t^2(x,y) \approx t^2_0 + W(x,y)~.
+\end{equation}
+\item Setting $C_1=B^2_1$, $C_2=2B_1B_2$, $C_3=2B_1B_3 + B^2_2$, $C_4=2B_2B_3$, and $C_5=B^2_3$, we can reduce equation~\ref{eq:3dGMA} to the following rational approximation, which is reminiscent of several previously proposed approximations \cite[]{tsvankinthomsen1994,ursin}:
+\begin{equation}
+\label{eq:rational}
+    t^2(x,y) \approx t^2_0 + W(x,y) + \frac{A(x,y)}{2\left(t^2_0+B(x,y)\right)} ~.
+\end{equation}
+ 
+%\item If we set $C_2 = 2B_1B_2+\frac{A_2}{A_1}(C_1-B_1^2)$, $C_3 =( B_2^2+ 2B_1B_3)+\frac{A_3}{A_1}(C_1-B_1^2)$, $C_4 = 2B_2B_3+\frac{A_4}{A_1}(C_1-B_1^2)$, and $C_5 = B_3^2+\frac{A_5}{A_1}(C_1-B_1^2)$, equation~\ref{eq:3dGMA} reduces to the thirteen-parameter moveout approximation suggested recently by \cite{haogma},
+%\begin{equation}
+%\label{eq:13gma}
+%t^2(x,y) \approx (1-\xi)(t^2_0+a(x,y)) + \xi \sqrt{t^4_0 + 2t^2_0 b(x,y)+c(x,y)}~,
+%\end{equation}
+%where
+%\begin{eqnarray}
+%\nonumber
+%a(x,y) & = & a_1x^2+a_2xy+a_3y^2~,\\
+%\nonumber
+%b(x,y) & = & b_1x^2+b_2xy+b_3y^2~,\\
+%\nonumber
+%c(x,y) & = & c_1x^4+c_2x^3y+c_3x^2y^2+c_4xy^3+c_5y^4~.
+%\end{eqnarray}
+%Other parameters can be related as shown in Table~\ref{tbl:conversion}.
+
+\item Consider\new{ing} equation~\ref{eq:3dGMAr} and a horizontal orthorhombic model with $A_1=-4\eta_2W^2_1$, $A_3 = -4 \eta_{xy}W_1 W_3$, $A_5 = -4 \eta_1W_3^2$, $A_2=A_4=0$, $B_i=0$, and $C_i=0$, where $\eta_{xy}$ is given by \cite[]{stovasortho}
+\begin{equation}
+    \eta_{xy} = \sqrt{\frac{(1+2\eta_1)(1+2\eta_2)}{1+2\eta_3}}-1~,
+\end{equation}
+equation~\ref{eq:3dGMAr} reduces to the quartic approximation under the acoustic approximation \cite[]{alkaortho} without the long-offset normalization:
+\begin{eqnarray}
+    t^2(r,\alpha)& \approx & t^2_0 + W_r(\alpha)r^2+A_r(\alpha)  r^4~. \\ \nonumber
+     & \approx & t^2_0 + W_r(\alpha)r^2-\frac{2}{t^2_0}\left(\eta_2W^2_1 \cos^4 \alpha+ \eta_{xy}W_1 W_3\cos^2\alpha \sin^2\alpha+\eta_1W_3^2 \sin^4 \alpha\right)r^4~.
+\end{eqnarray}
+Here, $\eta_1$, $\eta_2$, and $\eta_3$ represent the \old{time-processing}\new{anellipticity} parameters in the planes ${[y,z]}$, ${[x,z]}$, and ${[x,y]}$ respectively \cite[]{alkatsvankin,alkaortho,stovasortho} \new{and their definitions in terms of stiffness coefficients under Voigt notation can be given as follows:
+\begin{eqnarray}
+\eta_1 &= & \frac{c_{22}(c_{33}-c_{44})}{2c_{23}(c_{23}+2c_{44})+2c_{33}c_{44}}-\frac{1}{2}~,\\
+\eta_2 &= & \frac{c_{11}(c_{33}-c_{55})}{2c_{13}(c_{13}+2c_{55})+2c_{33}c_{55}}-\frac{1}{2}~,\\
+\eta_3 &= & \frac{c_{22}(c_{11}-c_{66})}{2c_{12}(c_{12}+2c_{66})+2c_{11}c_{66}}-\frac{1}{2}~.
+\end{eqnarray}
+}
+The approximation proposed by \new{\cite{alhti} and }\cite{alortho} has the following additional long-offset normalization factor on the quartic term:
+\new{\begin{equation}
+\label{eq:normalize}
+1+ A^*_r(\alpha) r^2~,
+\end{equation}} 
+where $A^*_r (\alpha) = A_r(\alpha)/\left(1/V^2_{hor}(\alpha) -1/V^2_{nmo}(\alpha)\right)$, $V_{hor}(\alpha)$ is the phase velocity of P waves in the [$x$,$y$] plane as opposed to group velocity. \new{This introduction of the normalization term leads to
+\begin{equation}
+    t^2(r,\alpha) \approx t^2_0 + W_r(\alpha)r^2+ \frac{A_r(\alpha)}{1+A^*_r(\alpha) r^2}  r^4~.
+\end{equation}
+In the limit of $V^2_{nmo} \rightarrow V^2_{hor}$, $A^*_r(\alpha)\rightarrow0$ and the normalization term becomes equal to one.
+}
+\item In an \old{different}\new{alternative} approach to parameterization in an orthorhombic model, we consider the rational approximation in equation~\ref{eq:rational} with $A_i$, and $B_i$ normalized by a factor of $1/V^2_{nmo}(\alpha)$. Under the choice of linearized coefficients $A_r(\alpha) = -4 \eta(\alpha)/V^4_{nmo}(\alpha)$, and $B_r(\alpha) = (1+2\eta(\alpha))/V^2_{nmo}(\alpha)$, \old{we obtain}\new{this leads to} the moveout approximation of the form proposed by \cite{xu} and \cite{vascon}:
+\begin{equation}
+\label{eq:xu}
+    t^2(r,\alpha) \approx t^2_0 + W_r(\alpha)r^2-\frac{2\eta(\alpha)}{V^2_{nmo}(\alpha) \left[t^2_0V^2_{nmo}(\alpha) + \left(1+2\eta(\alpha)\right)r^2\right]}r^4~,
+\end{equation} 
+where
+\begin{equation}
+\label{eq:etaazi}
+\eta(\alpha)=  \eta_2\cos^2 \alpha - \eta_3\cos^2 \alpha \sin^2 \alpha + \eta_1\sin^2 \alpha~.
+\end{equation}
+\new{As shown in Appendix A,} the moveout approximation in equation~\ref{eq:xu} can alternatively be derived from generalized quartic coefficients in weakly anisotropic media on the basis of the perturbation theory in combination with the normalization factor in equation~\ref{eq:normalize}\old{as shown in Appendix A}. 
+
+\end{enumerate}
+
+\old{Therefore, }Analogously to the 2D case, \new{we refer to} the proposed approximation (equations~\ref{eq:3dGMA} and \ref{eq:3dGMAr}) \old{can be referred to}as generalized \old{thanks to}\new{because of} its ability to relate to several other known forms.
+%\begin{eqnarray}
+%\nonumber
+%\tilde{\eta_1}(\alpha) & = & \eta^{(2)}\cos^2 \alpha - \eta^{(3)}\cos^2 \alpha \sin^2 \alpha + \eta^{(1)}\sin^2 \alpha,\\
+%\nonumber
+%\tilde{\eta_2}(\alpha) & = & r^4(A_1\cos^4 \alpha+A_3\cos^2 \alpha \sin^2 \alpha+A_5\sin^4 \alpha)~,\\
+%\end{eqnarray}
+
+\section{General method for parameter \old{selection}\new{definition}}
+
+To define parameters in equation~\ref{eq:3dGMA}, we propose to use information from the zero-offset ray and four far-offset rays along $x$-axis, $y$-axis, $x=y$, and $x=-y$. Following an analogy with the 2D scheme by \cite{fomelstovas}, we \old{can}derive some of the coefficient formulas as follows:
+
+\subsection{Zero-offset ray}
+
+The Taylor expansion of equation~\ref{eq:3dGMA} around the zero offset
+\begin{equation}
+\label{eq:zero}
+t^2(x,y) \approx t^2_0 + W(x,y) + \frac{A(x,y)}{2 t_0^2} + ...
+\end{equation}
+allows \new{for a} direct evaluation of nine coefficients: $t_0$, $W_i$, and $A_i$ by matching equation~\ref{eq:zero} with the expansion of the exact traveltime in vector offset. 
+
+\tabl{sample}{Normalized stiffness tensor coefficients (in $km^2$/$s^2$) from different anisotropic samples: HTI is from \cite{alhti}, layer 1 is from \cite{helbig}, layer 2 is from \cite{tsvankinortho}, and layer 3 is a modifed sample based on the same fracture model as layer 1.}
+{
+\centering
+     	     \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|}
+     	     \hline Sample & $ c_{11}$ & $ c_{22}$ & $ c_{33}$ & $ c_{44} $ & $ c_{55}$ & $ c_{66}$ & $ c_{12}$ & $ c_{23}$ & $ c_{13}$ \\ 
+     	     \hline HTI & 5.06 & 7.086 & 7.086 & 2 & 2.25 & 2.25 & 1.033 & 3.086 & 1.033\\
+     	     \hline Layer 1 & 9 & 9.84 & 5.938 & 2 & 1.6 & 2.182 & 3.6 & 2.4 & 2.25\\
+     	     \hline Layer 2 & 11.7 & 13.5 & 9 & 1.728 & 1.44 & 2.246 & 8.824 & 5.981 & 5.159 \\
+     	     \hline Layer 3 & 12.6 & 13.94 & 8.9125 & 2.5 & 2 & 2.182 & 2.7 & 3.425 & 3.15 \\
+      \hline
+    \end{tabular}
+}
+
+\subsection{Finite-offset rays}
+
+Suppose that each independent \new{$i$-th} ray corresponds to ray parameters $P_{xi}$ and $P_{yi}$ and arrives at offset $X_i$ and $Y_i$ with reflection traveltime $T_i$. The $i$ \old{subscript}\new{index} ranges from 1 to 4 and denotes the associated \new{ray} direction of $x$-axis, $y$-axis, $x=y$, and $x=-y$ respectively. \old{Therefore}\new{Substituting moveout approximation \ref{eq:3dGMA} into equations $t(X_1,0)=T_1$ and $dt/dX_1=P_{x1}$ and solving for $B_1 $ and $C_1$}, we have, from the ray along $x$-axis \new{($i=1$)} \cite[]{fomelstovas}:
+\begin{eqnarray}
+\label{eq:b1}
+B_1 & = & \frac{t_0^2(W_1X_1-P_{x1} T_1)}{X_1 (t_0^2-T_1^2+P_{x1} T_1X_1)} + \frac{W_1A_1 X_1^2}{T_1^2-t^2_0-W_1X_1^2}~,\\
+\label{eq:c1}
+C_1 & = & \frac{t_0^4(W_1X_1-P_{x1} T_1)^2}{X_1^2 (t_0^2-T_1^2+P_{x1} T_1X_1)^2} + \frac{2A_1 t^2_0}{t^2_0-T_1^2+W_1X_1^2}~.
+\end{eqnarray}
+Analogously, $B_3$ and $C_5$ can be found from \old{equations~\ref{eq:b1} and~\ref{eq:c1} by replacing $Y_2$, $P_{y2}$, and $W_3$ for $X_1$, $P_{x1}$, and $W_1$ }\new{solving equations $t(0,Y_2)=T_2$ and $dt/dY_2=P_{y2}$, which is equivalent to replacing $X_1$, $P_{x1}$, and $W_1$ with $Y_2$, $P_{y2}$, and $W_3$ respectively in equations~\ref{eq:b1} and~\ref{eq:c1}}. The remaining coefficients: $B_2$, $C_2$, $C_3$, and $C_4$ can be solved numerically from the four conditions given below:
+\begin{eqnarray}
+  \frac{\partial t}{\partial y}|_{y=0,~x=X_1} =  P_{y1} ~,\\
+  \frac{\partial t}{\partial x}|_{x=0,~y=Y_2} = P_{x2} ~,\\
+  t(X_3,X_3) = t(Y_3,Y_3) = T_3 ~,\\
+   \label{eq:restcoeff}
+  t(X_4,-X_4) = t(-Y_4,Y_4) = T_4 ~.
+\end{eqnarray}
+\new{They represents matchings of $P_{y1}$ and $P_{x2}$ along rays in $x$ and $y$ directions and traveltime $T_3$ and $T_4$ along rays in $x=y$ and $x=-y$ directions.}
+Provided the above information from the zero-offset ray and four finite-offset rays, we can define \new{the remaining} parameters appearing in the proposed moveout approximation (equation~\ref{eq:3dGMA}) in a systematic manner.
+
+%In the special case of equation~\ref{eq:13gma}, we can derive from the ray $x=y$: 
+%\begin{equation}
+%\label{eq:b2}
+%B_2 = \frac{(B^2_1-C_1)(T^2-\gamma_1)}{2 A_1 X^2} + \frac{\gamma_2 X^2}{2(T^2-\gamma_1)}-\frac{t^2_0}{X^2} - 2 (B_1+B_3)~,
+%\end{equation}
+%where
+%\begin{eqnarray}
+%\nonumber
+%\gamma_1 & = & t^2_0 + X^2 ( \frac{1}{v^2_x}+ \frac{1}{v^2_{xy}}+ \frac{1}{v^2_y})~, \\
+%\nonumber
+%\gamma_2 & = & A_1+A_2+A_3+A_4+A_5~.
+%\end{eqnarray}
+%With the conversion rule given in Table~\ref{tbl:conversion} and equations~\ref{eq:b1},~\ref{eq:c1}, and~\ref{eq:b2} , we can also use the information obtained from one zero-offset ray and three finite offset rays to specify parameters for the moveout approximation in equation~\ref{eq:13gma}.
+
+
+%In this section, we demonstrate the accuracy of the proposed approximations (equations~\ref{eq:3dgma} and~\ref{eq:3dGMA}) in several analytical and numerical examples. 
+
+%\subsection{Linear velocity gradient}
+
+%In this special case, it is possible to compute the exact analytical traveltime, which can be found in \cite[]{fomelstovas}. Therefore, this model allows a direct comparison between different approximation. Figures~\ref{fig:vgradnmo,vgradgma} show error plots of the NMO ellipse and the proposed approximation with a horizontal reflector and $H$ denoting its depth. The proposed approximation shows a significant improvement (x$10^5$).
+
+%\multiplot{2}{vgradnmo,vgradgma}{width=0.22\textwidth}{Error plot in linear velocity model of a) NMO ellipse b) the proposed approximation.}
+
+
+
+\section{Accuracy tests}
+\subsection{Homogeneous HTI layer}
+\inputdir{Math}
+To test the accuracy of the proposed approximation, we first consider a single horizontal layer of an HTI material \new{over flat reflector} with properties given in Table~\ref{tbl:sample} \new{and thickness of 1 $km$}. The accuracy comparison between different approximations is shown in Figure~\ref{fig:onelayerHTInmo,onelayerHTIal,onelayerHTIgma}\old{ shows the accuracy comparison between different approximations}\new{with true traveltime computed from ray tracing}. The reference rays for the generalized approximation (equation~\ref{eq:3dGMA}) \old{are}\new{were chosen in terms of different ray parameters $P_{xi}$ and $P_{yi}$, which then gives $X_i$, $Y_i$, and $T_i$ needed to solve for approximation coefficients according to equations~\ref{eq:b1}-\ref{eq:restcoeff}. In this example, the reference rays are} associated with $P_{x1} = 0.4$ and and $P_{y1}=0.0$ along $x$-axis, at and $P_{x2}=0.0$ and $P_{y2} = 0.338$ along $y$-axis, at $P_{x3}=0.23$ and $P_{y3}=0.153$ along $x=y$, and at $P_{x4}=0.23$ and $P_{y4}=-0.153$ along $x=-y$. The proposed approximation shows smaller error than previous approximations (Figure~\ref{fig:onelayerHTIgma}). 
+
+\multiplot{3}{onelayerHTInmo,onelayerHTIal,onelayerHTIgma}{width=0.45\textwidth}{Error plots in the homogeneous HTI layer of a) NMO ellipse b) approximation by \cite{alhti} \new{(simlar to \cite{alortho})}, and c) the proposed approximation. Note that b) and c) are plotted under the same color scale and $H$ denotes the reflector depth.}
+
+\subsection{Homogeneous orthorhombic layer}
+
+\multiplot{4}{onelayernmo,onelayeral,onelayerxu,onelayergma}{width=0.45\textwidth}{Error plots in the homogeneous orthorhombic layer (Layer 1) of a) NMO ellipse b) approximation by \cite{alortho} c) approximation by \cite{xu}, and d) the proposed approximation. Note that b), c), and d) are plotted under the same color scale and $H$ denotes the reflector depth.}
+
+For a more complex anisotropic medium, we consider a single horizontal layer of an orthorhombic material (Layer 1) with properties given in Table~\ref{tbl:sample} \new{with 1 $km$ thickness over flat reflector}. The accuracy comparison between different approximations is shown in Figure~\ref{fig:onelayernmo,onelayeral,onelayerxu,onelayergma}. The reference rays for the generalized approximation (equation~\ref{eq:3dGMA}) \old{are}\new{were} shot \old{arbitrarily}at $P_{x1} = 0.283$ and and $P_{y1}=0.0$ along $x$-axis, at and $P_{x2}=0.0$ and $P_{y2} = 0.271$ along $y$-axis, at $P_{x3}=0.2$ and $P_{y3}=0.169$ along $x=y$, and at $P_{x4}=0.2$ and $P_{y4}=-0.169$ along $x=-y$. Note that the approximation by \cite{xu} is a simplified version of that by \cite{alortho} and therefore, produces almost identical results with only a small difference (Figures~\ref{fig:onelayeral} and~\ref{fig:onelayerxu}). The proposed approximation shows \new{an error, which is} several orders of magnitude smaller \old{error}than \new{that of} previous approximations (Figure~\ref{fig:onelayergma}).
+
+\subsection{Homogeneous orthorhombic layer with azimuthal rotation}
+
+Figure~\ref{fig:onelayernmoazi,onelayeralazi,onelayerxuazi,onelayergmaazi} shows the relative error plots of several approximations in \old{Layer 1}\new{a similar homogeneous orthorhombic model as in the previous example but} with \new{additional} 30$\,^{\circ}$ azimuthal rotation with respect to the global coordinates. Assuming the rotation azimuth is known, the approximations by \cite{alortho} and \cite{xu} behave largely similar to the original case with the error plots rotated (Figures~\ref{fig:onelayeralazi} and~\ref{fig:onelayerxuazi}). The proposed approximation is implemented based on the global coordinate system regardless of the azimuthal orientation of the orthorhombic symmetry plane and leads to a significantly more accurate result (Figure~\ref{fig:onelayergmaazi}). The reference rays \old{are}\new{were} shot at $P_{x1} = 0.289$ and $P_{y1}=0.004$ along $x$-axis, at $P_{x2} = 0.032$ and $P_{y2}=0.282$ along $y$-axis, at $P_{x3}=0.2$ and $P_{y3}=0.206$ along $x=y$, and at $P_{x4}=0.2$ and $P_{y4}=-0.163$ along $x=-y$. 
+
+\subsection{Layered orthorhombic model}
+
+We also test the accuracy of the proposed approximation in a three-layer orthorhombic model \new{over flat reflector} with parameters (Layer 1-3) listed in Table~\ref{tbl:sample}. The thicknesses of the three layers are 0.25, 0.45, and 0.3 $km$ respectively. For previously proposed approximations, the effective coefficients are calculated, as the original authors suggested, by the VTI averaging relationship \cite[]{hake,tsvankinthomsen1994}. The reference rays for the proposed approximation (equation~\ref{eq:3dGMA}) \old{are}\new{were} shot at $P_{x1} = 0.254$ and $P_{y1}=0.0$ along $x$-axis, at $P_{x2} = 0$ and $P_{y2}=0.24$ along $y$-axis, at $P_{x3}=0.195$ and $P_{y3}=0.166$ along $x=y$, and at $P_{x4}=0.21$ and $P_{y4}=-0.182$ along $x=-y$. The proposed generalized approximation performs with the highest accuracy (Figure~\ref{fig:layerednmo,layeredal,layeredxu,layeredgma}).
+
+\subsection{Layered orthorhombic model with azimuthal rotation in sublayers}
+
+For a more complex model, we introduce azimuthal rotation of 50$\,^{\circ}$ and 30$\,^{\circ}$ in the middle layer (Layer 2) and the bottom layer (Layer 3) of the three-layer model \new{from the previous example} respectively. The angle measurement is done with respect to the top layer. Similarly to before, the effective coefficients for previously proposed approximations are calculated by the VTI averaging relationship. The reference rays for the proposed approximation (equation~\ref{eq:3dGMA}) are shot at $P_{x1} = 0.254$ and $P_{y1}=0.005$ along $x$-axis, at $P_{x2} = 0.029$ and $P_{y2}=0.24$ along $y$-axis, at $P_{x3}=0.18$ and $P_{y3}=0.198$ along $x=y$, and at $P_{x4}=0.2$ and $P_{y4}=-0.184$ along $x=-y$. The proposed generalized approximation shows again the highest accuracy (Figure~\ref{fig:layerednmoazi5030,layeredalazi5030,layeredxuazi5030,layeredgmaazi5030}).
+
+\multiplot{4}{onelayernmoazi,onelayeralazi,onelayerxuazi,onelayergmaazi}{width=0.45\textwidth}{Error plots in the 30$\,^{\circ}$ rotated homogeneous orthorhombic layer (Layer 1) of a) NMO ellipse b) approximation by \cite{alortho} c) approximation by \cite{xu} , and d) the proposed approximation. Note that b), c), and d) are plotted under the same color scale and $H$ denotes the reflector depth.}
+
+\multiplot{4}{layerednmo,layeredal,layeredxu,layeredgma}{width=0.45\textwidth}{Error plots in the aligned three-layer orthorhombic model of a) NMO ellipse  b) approximation by \cite{alortho} c) approximation by \cite{xu}, and d) the proposed approximation. Note that b), c), and d) are plotted under the same color scale and $H$ denotes the reflector depth.}
+
+\multiplot{4}{layerednmoazi5030,layeredalazi5030,layeredxuazi5030,layeredgmaazi5030}{width=0.45\textwidth}{Error plots in the three-layer orthorhombic model with azimuthal rotation of sublayers (50$\,^{\circ}$ in the middle layer and 30$\,^{\circ}$ in the bottom layer) of a) NMO ellipse  b) approximation by \cite{alortho} c) approximation by \cite{xu}, and d) the proposed approximation. Note that b), c), and d) are plotted under the same color scale and $H$ denotes the reflector depth.}
+
+\new{
+\subsection{Layered orthorhombic model from SEAM Phase II unconventional model}
+\inputdir{seam2}
+For a complex numerical test, we create a one-dimensional layered orthorhombic model (Figure~\ref{fig:vpseam2cut}) by extracting a depth column out of the SEAM Phase II unconventional model \cite[]{seam2}. We assume no azimuthal rotation in the sublayers. Therefore, this model represents an example of complex layered orthorhombic model with aligned symmetry planes. The reflection traveltimes and offsets can be computed from ray tracing and are shown in Figure~\ref{fig:rayx,t,r}. Note that since this is a layered orthorhombic medium with aligned symmetry planes, it is sufficient to show the results only in one quadrant defined by the two slowness components: $p_x$ and $p_y$ as they remain symmetric in all other possible quadrants. Following the similar process as in previous examples, Figure~\ref{fig:nmoerr,alerr,xuerr,gmaerr} shows a performance comparison of various moveout approximations. The reference rays for the proposed generalized moveout approximation (equation~\ref{eq:3dGMA}) are shot at $P_{x1} = 0.124$ and $P_{y1}=0.0$ along $x$-axis, at $P_{x2} = 0.0$ and $P_{y2}=0.133$ along $y$-axis, at $P_{x3}=0.084$ and $P_{y3}=0.0983$ along $x=y$, and at $P_{x4}=0.085$ and $P_{y4}=-0.0996$ along $x=-y$. The proposed generalized approximation shows again the highest accuracy with the maximum traveltime error of 6.66 $ms$ and RMS error of 0.083 $ms$. The maximum traveltime error and RMS error for other approximations are 309.75 $ms$ and 18.86 $ms$ for the NMO ellipse, 66.33 $ms$ and 2.975 $ms$ for the approximation by \cite{alortho}, and 110.87 $ms$ and 3.829 $ms$ for the approximation by \cite{xu}.
+}
+
+\plot{vpseam2cut}{width=0.75\textwidth}{Vertical P-wave velocity in $km/s$ of the SEAM Phase II unconventional model.}
+
+\multiplot{4}{rayx,t,r}{width=0.55\textwidth}{One-dimensional model construct from the first column of SEAM Phase II unconventional model and a) example reflection rays at constant $p_x = 0.0908$ and varying $p_y$ from 0 to 0.09425. The exact traveltime and the magnitude of offset $r=\sqrt{x^2+y^2}$ are shown in b) and c) for increasing values of slowness components $p_x$ and $p_y$.}
+
+\multiplot{4}{nmoerr,alerr,xuerr,gmaerr}{width=0.45\textwidth}{Error plots in the one-dimensional layered orthorhombic model from of SEAM Phase II unconventional model a) NMO ellipse  b) approximation by \cite{alortho} c) approximation by \cite{xu}, and d) the proposed approximation. Note that a) is plotted with 120 $ms$ clipping, whereas, b), c), and d) are plotted under the same color scale with 25 $ms$ clipping. The scale bars show the total range of errors for different approximations. The proposed approximation achieves the highest accuracy with the maximum traveltime error of 6.66 $ms$ and RMS error of 0.083 $ms$.}
+
+
+\section{Discussion}
+\inputdir{Math}
+%1) here we rely on the symmetry of orthorhombic media if monoclinic or triclinic is consider we prolly need another ray along x, y, x=y and x=-y to cover all the quadrants = 8 finite-offset rays in total (2 parameters for each ray) + 1 zero-offset.(9 parameters).
+
+%2) The proposed form is very accurate in the x and y directions regardless of the direction of orthorhombic plane --> functional form along x and y are very good --> because fitting 2 parameters along those axes however, the other four: B2,D2,D3,D4 are fitted as combinations.
+
+%To come up with an accurate approximation functional form is a mixture of art and science. 
+%The justification for suggesting the generalized approximation is that it can be related to other existing moveout approximations and that it provides a spectacular level of accuracy in various synthetic models similar to its 2D counterpart \cite[]{fomelstovas}.
+
+The choice of scheme for defining coefficient parameters \old{is important}\new{can have an effect on the approximationa ccuracy}. \old{In our proposition, we}\new{We chose to} fit nine parameters ($t_0$, $W_i$, and $A_i$) along the zero-offset ray. The remaining eight parameters are divided into six and two fitting equations. The former is from $T_1$, $P_{x1}$, and $P_{y1}$ along the $x$-axis and $T_2$, $P_{x2}$, and $P_{y2}$ along the $y$- axis, while the latter is from $T_3$ and $T_4$ along $x=y$ and $x=-y$. Another possible option is to consider $T_i$ and the radial ray parameter $P_{ri}(P_{xi},P_{yi})$, which would allow two fitting equations from all four directions and make the fitting scheme more symmetric. However, this approach degenerates even in the simple case of a homogeneous orthorhombic layer due to the similarity between $x=y$ and $x=-y$ directions caused by the orthorhombic symmetry. Therefore, we do not propose to use such scheme. 
+
+Moreover, the selection of \new{particular} rays shot according to the proposed scheme \new{also} influences the accuracy level\old{one should observe from the approximation}. This \old{question}\new{issue} was originally pointed out by \cite{fomelstovas} and has been addressed by \cite{haogma} in the case of 3D HTI media. \old{Nevertheless}\new{In our experiments}, we observe that given the four rays at sufficiently far offsets, one can expect the proposed approximation to perform with sufficiently high accuracy for practical purposes \new{with smaller errors closer to the chosen reference offsets}. 
+
+Analogously to the \old{original}2D GMA of \cite{fomelstovas}, the proposed approximation assumes that the traveltime at infinite offset behaves quadratically as 
+\begin{equation}
+    t^2(x,y) \approx T^2_\infty + P^2_{x_\infty} x^2 + P^2_{{xy}_\infty} xy + P^2_{y_\infty} y^2~,
+\end{equation}
+and there are no linear terms present. This might introduce some errors in a special case of having an anomalously high-velocity sublayer in a layered medium \cite[]{blias2013,ravvekoren}. In our approximation, \old{however,}we choose not to complicate the functional form by introducing more parameters \new{to deal wiht this issue}.
+
+% During the course of this study, we observe that introducing more parameters for the fitting of linear term at infinite offset would lead to a significant reduction in accuracy, which is one of the primary advantages of the GMA functional form. Therefore, we choose not to make this trade-off between accuracy and a proper treatment of a rather uncommon scenario. This decision also keeps the number of parameters minimal for practical purposes.
+%4) linear fitting for infinite offset detracts the high accuracy level at smaller offset. to take care of anomalous velocity case is a subset and we lose accuracy more. Emil's form has many more parameters. we'd like to keep them as small as possible.
+
+%7) error in the knowledge of azimuthal rotations Figure
+Even though the required number of parameters for the proposed approximation (seventeen) is high, this number is necessary for an accurate handling of anisotropy with complication from \new{possible} azimuthal rotation of the subsurface in 3D. Although other previously proposed approximations require fewer \old{number of}parameters, they may not produce equally accurate results\old{ when some small level of errors are introduced in the unknown parameters}. Figure~\ref{fig:onelayerxuazi20,layeredxuazi503020} shows the results approximation of \cite{xu} for the two models from last section, when 20\% error is introduced in known azimuthal rotation. We can observe a significant decrease in \old{performing}accuracy especially in the layered case. 
+
+\multiplot{2}{onelayerxuazi20,layeredxuazi503020}{width=0.45\textwidth}{Error plots of the approximation by \cite{xu} in a) the rotated homogeneous orthorhombic layer (Layer 1) and in b) the three-layer orthorhombic model with azimuthal rotation in sublayers plotted under similar color scales as the originals when 20\% error is introduced in known azimuthal angles. One can observe significantly higher errors compared with the original ones in Figures~\ref{fig:onelayerxuazi} and \ref{fig:layeredxuazi5030}.}
+
+\new{In the case of a single orthorhombic layer,} the moveout approximation \old{for a single orthorhombic layer}proposed in our earlier work \cite[]{zoneortho}, while requiring only six parameters, exhibits the same level of accuracy as the generalized approximation \old{in a horizontal homogenous orthorhombic layer without rotation}(Figure~\ref{fig:onelayerzone}). This \old{result}indicates that the additional nonzero parameters in equation~\ref{eq:3dGMA} can be captured by the relationship between anelliptic parameters in each symmetry plane \cite[]{zoneortho,zonemdshale}. However, this \old{approximation}\new{approach} may not be sufficiently accurate in a layered model (Figure~\ref{fig:layeredzone}).
+
+\multiplot{2}{onelayerzone,layeredzone}{width=0.45\textwidth}{Error plots of the approximation by \cite{zoneortho} in a) the homogeneous orthorhombic layer (Layer 1) and in b) the aligned three-layer orthorhombic model.}
+
+\new{Provided that a reflection event can be accurately defined in a gather}, the proposed 3D moveout approximation is suitable for anisotropic parameter estimation.  One possible method for this application to real seismic data is time-warping \cite[]{will,lorenzovti,lorenzo3d}, which uses overdetermined least-squares parameter inversion based on local slope estimation and non-physical flattening by predictive painting \cite[]{fomelpredict}. This method enables \new{in principles} an estimation of all seventeen effective parameters in equation~\ref{eq:3dGMA}, which can then be inverted for interval values in a layer-stripping fashion \cite[]{zoneinterval}. \new{In the presence of lateral heterogeneity, the results from such global inversion can be used as a initial model for more sophisticated inversion techniques.}
+
+%\new{Even though, the exact expressions of the Taylor coefficients of traveltime expansion can be prohibitively complex, under some assumptions including lateral homogeneity, and pseudoacoustic approximations, the exact formulas for those parameters can be expressed in terms of anisotropic parameters such as $\eta_i$ in a concise form. The proposed moveout approximation, therefore, serves as a basis for global traveltime inversion for anisotropic parameters in the subsurface.}
+\section{Conclusions}
+
+We have introduced an extension of the generalized moveout approximation to 3D. The proposed approximation, similarly to its 2D analog, \old{can be reduced}\new{reduces} to several known functional forms with particular choices of parameters. The approximation requires seventeen parameters, which \old{can be}\new{are uniquely} defined by zero-offset computations and four addtional finite-offset rays. Our numerical tests show that, in comparison with other known 3D moveout approximations, the proposed approximation produces results with superior accuracy, which is not surprising given the larger number of adjustable parameters. Its advantage becomes more obvious with more complex models. Moreover, the proposed approximation performs well even in the presence of \new{anisotropic axis} rotation and multiple layers suggesting that only seventeen parameters are sufficient to describe the reflection traveltime in a model with 3D anisotropic layers. In our experiments, the accuracy can be nearly exact for practical purposes \new{with less than 0.3\% in maximum error in both homogeneous and complex layered anisotropic models. The proposed moveout approximation can readily be used for forward reflection traveltime computation or as a basis for inversion for anisotropic parameters from seismic reflection data.}
+
+\section{Acknowledgments}
+We thank the Assistant Editor, J. Etgen, the Associate Editor and three anonymous reviewers for their constructive comments.
+We thank the sponsors of the Texas Consortium for Computational Seismology (TCCS) and the Rock Seismic Research Project (ROSE) for financial support. The first author is also grateful to the additional support by the Statoil Fellows Program at the University of Texas at Austin. \new{We are grateful to the Exploration Development Geophysics Education and Research (EDGER) and BP America for their permissions to use SEAM Phase II unconventional model in this study.}
+
+\appendix
+\section{Appendix A: Alternative derivation of the moveout approximation in equation~\ref{eq:xu}}
+On the basis of perturbation theory for a general horizontal homogeneous weakly anisotropic media, we consider the quartic coefficients in equations~\ref{eq:3dGMA} and \ref{eq:3dGMAr} $A_i$ to be \cite[]{grechkapech,fpj}
+\begin{align}
+\label{eq:grechkaquartic}
+A_1 & = -\frac{4\eta_2}{V^4_{\mbox{ref}}}\\ \nonumber
+A_2 & = \frac{8(\chi_{13}-\chi_{11})}{V^4_{\mbox{ref}}} \\ \nonumber
+A_3 & = -\frac{4(\eta_1+\eta_2-\eta_3)}{V^4_{\mbox{ref}}}\\ \nonumber
+A_4 & = \frac{8(\chi_{13}-\chi_{12})}{V^4_{\mbox{ref}}} \\ \nonumber
+A_5 & = -\frac{4\eta_1}{V^4_{\mbox{ref}}}~,
+\end{align}
+where 
+\begin{equation}
+\chi_{11} = \frac{c_{16}}{V_{\mbox{ref}}} \qquad, \quad\chi_{12} = \frac{c_{26}}{V_{\mbox{ref}}} \qquad, \quad\chi_{13} = \frac{c_{36}+2c_{45}}{V_{\mbox{ref}}}~,
+\end{equation}
+and $V_{\mbox{ref}}$ denotes the P-wave velocity in the chosen isotropic background. These expressions are appropriate for horizontal homogeneous weakly anisotropic media of any symmetry. \new{A more general form form dipping layer is also discussed by \cite{grechkapech}.} In the specific case of orthorhombic media, the general quartic coefficients (equation~\ref{eq:grechkaquartic}) can be simplified to
+\begin{equation}
+A_r(\alpha) = -\frac{4\eta(\alpha)}{V^4_{\mbox{ref}}}~,
+\end{equation}
+where $\eta(\alpha)$ is given in equation~\ref{eq:etaazi}. Therefore, the resulting moveout approximation takes the form of
+\begin{equation}
+    t^2(r,\alpha) \approx t^2_0 + W_r(\alpha)r^2-\frac{2\eta(\alpha)}{t^2_0 V^4_{\mbox{ref}}}r^4~.
+\end{equation} 
+Subsequently, by setting 
+\begin{equation}
+V^2_{\mbox{ref}} = V^2_{nmo} (\alpha) = (W_r(\alpha))^{-1}~,
+\end{equation}
+we obtain the moveout approximation of the form proposed by \cite{xu} and \cite{vascon}:
+\begin{equation}
+\label{eq:xunolong}
+    t^2(r,\alpha) \approx t^2_0 + W_r(\alpha)r^2-\frac{2\eta(\alpha)}{t^2_0 V^4_{nmo}(\alpha)}r^4~,
+\end{equation} 
+without the long-offset normalization, which corresponds to the choice of $A_r(\alpha) = -4 \eta(\alpha)/V^4_{nmo}(\alpha)$, $B_i=0$, and $C_i=0$ from equation~\ref{eq:3dGMAr}. The additional long-offset normalization factor can be included based on the same scheme as in equation~\ref{eq:normalize} with 
+\begin{equation}
+\label{eq:xunormalize}
+A^*_r(\alpha) = \frac{1+2\eta(\alpha)}{t_0^2V^2_{nmo}(\alpha)}~.
+\end{equation}
+As a result, we obtain the same expression of the moveout approximation in equation~\ref{eq:xu} by \cite{xu} in the main text.
+
+
+
+\newpage
+\onecolumn
+\bibliographystyle{seg}
+\bibliography{gma}
+

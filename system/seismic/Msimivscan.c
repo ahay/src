@@ -85,17 +85,21 @@ int main(int argc, char* argv[])
     size_t len;
     sf_file cmp, scan, offset, msk, grd,ref;
     mapfunc nmofunc;
-    sf_init (argc,argv);
 
-	/*added codes down */
-		float eps=0.01f,*traceref,thr;
-		float *rat1,*rat2,*rat,*one,*two;
-		ref=sf_input("ref");
-	/*added codes up */
+    float eps=0.01f,*traceref,thr;
+    float *rat1,*rat2,*rat,*one,*two;
 
+    int n[2]; 
+    bool verb=false;
+    int rect[2]; 
+    int niter=10; 
+
+    sf_init (argc,argv);    
 
     cmp = sf_input("in");
     scan = sf_output("out");
+
+    ref=sf_input("ref");
 
     if (!sf_histint(cmp,"n1",&nt)) sf_error("No n1= in input");
     if (!sf_histint(cmp,"n2",&nh)) sf_error("No n2= in input");
@@ -261,7 +265,7 @@ int main(int argc, char* argv[])
 
     trace = sf_floatalloc(nt);
 
-	/* added codes below */
+    /* added codes below */
     traceref = sf_floatalloc(nt);
     one = sf_floatalloc(nt);
     two = sf_floatalloc(nt);
@@ -269,16 +273,16 @@ int main(int argc, char* argv[])
     rat2 = sf_floatalloc(nt);
     rat = sf_floatalloc(nt);
 
-	int n[2]; n[0]=nt;n[1]=1;	
-	bool verb=false;	
-	int rect[2]; rect[0]=10;rect[1]=1;
-	int niter=10; 
-	if(!sf_getfloat("thr",&thr)) thr=0.3;
-	if(!sf_getfloat("eps",&eps)) eps=0.01;
-	if(!sf_getint("rect",rect)) rect[0]=5;
-	if(!sf_getint("niter",&niter)) niter=10;
+    n[0]=nt;n[1]=1;	
+		
+    rect[0]=10;rect[1]=1;
+	
+    if(!sf_getfloat("thr",&thr)) thr=0.3;
+    if(!sf_getfloat("eps",&eps)) eps=0.01;
+    if(!sf_getint("rect",rect)) rect[0]=5;
+    if(!sf_getint("niter",&niter)) niter=10;
     sf_divn_init(1, nt, n, rect, niter, verb);
-	/* added codes up */
+    /* added codes up */
 
     nmo = fint1_init(nw,nt,mute);
 
@@ -324,16 +328,17 @@ int main(int argc, char* argv[])
 
 		    stretch(nmo,nmofunc,nt,dt,t0,nt,dt,t0,trace,str);
 
-		/* Add codes here below */
-		for(it=0;it<nt;it++){one[it]=trace[it];two[it]=traceref[it];}
-		sf_divne(one,two,rat1,eps);
-        sf_divne(two,one,rat2,eps);
-		sf_divn_combine (rat1,rat2,rat);	
+		    /* Add codes here below */
+		    for(it=0;it<nt;it++){one[it]=trace[it];two[it]=traceref[it];}
+		    sf_divne(one,two,rat1,eps);
+		    sf_divne(two,one,rat2,eps);
+		    sf_divn_combine (rat1,rat2,rat);	
 		
-		for(it=0;it<nt;it++)
-			{if(rat[it]< thr) trace[it]=0; 	}	//else trace[it]=trace[it]*rat[it]; else sf_warning("trace[it]=%g",it,trace[it]);
+		    for(it=0;it<nt;it++)
+		    {if(rat[it]< thr) trace[it]=0; 	}	
+/* else trace[it]=trace[it]*rat[it]; else sf_warning("trace[it]=%g",it,trace[it]); */
 		
-		/* Add codes here up */
+		    /* Add codes here up */
 		    for (it=0; it < nt; it++) {
 			amp = weight? fabsf(v)*trace[it]: trace[it];
 			if (NULL != bb) amp *= (1.0-bb[iv][it]*h);
@@ -364,7 +369,7 @@ int main(int argc, char* argv[])
 			    case 'p':
 			    default:
 				stack[is][iv][it] += amp;
-				break;				
+			    break;				
 			} 
 		    } /* t */
 		} /* v */

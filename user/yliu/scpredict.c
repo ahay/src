@@ -151,16 +151,16 @@ static void filt2matrix(const sf_complex *filt,
 
 static void predefine (float w /* log-stretch frequency */)
 {
-    float den, h;
+/*    float den, h; */
     sf_complex *b;
     int ih;
 
     for (ih=1; ih < nh-1; ih++) {
 	/* loop over offsets, skip first and last */
-	h = h1 + ih;
+	/* h = h1 + ih; */
 	/* offset normalized by dh */
 
-	den = 12.*h*h + (s-1.)*(s+1.)*w*w;
+	/* den = 12.*h*h + (s-1.)*(s+1.)*w*w; */
 	
 	b = a[ih];
 

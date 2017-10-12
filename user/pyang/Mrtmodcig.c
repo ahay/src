@@ -360,7 +360,6 @@ void cross_correlation(float ***odcig, float **sp, float **gp, float **svz, floa
 }
 
 
-
 int main(int argc, char* argv[])
 {
   int it,kt,is,ig,i1,i2,tdmute,jsx,jsz,jgx,jgz,sxbeg,szbeg,gxbeg,gzbeg, distx, distz;

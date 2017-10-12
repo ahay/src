@@ -458,13 +458,13 @@ int acd_timegrid(PARARRAY *pars,
 int acd_step(RDOM* dom, int iv, void * tspars) {
 
     /* pointers for 2D case */
-    register ireal ** restrict uc2;
-    register ireal ** restrict up2;
-    register ireal ** restrict csq2;
+    ireal ** restrict uc2;
+    ireal ** restrict up2;
+    ireal ** restrict csq2;
     /* pointers for 3D case */
-    register ireal *** restrict uc3;
-    register ireal *** restrict up3;
-    register ireal *** restrict csq3;
+    ireal *** restrict uc3;
+    ireal *** restrict up3;
+    ireal *** restrict csq3;
     int ndim;                       /* problem dmn */
     IPNT s, s0;                     /* loop starts  */
     IPNT e, e0;                     /* loop ends */

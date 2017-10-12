@@ -1,0 +1,9 @@
+from rsf.tex import *
+    
+End(lclass='geophysics',
+    use='hyperref',
+    hires='''
+    bei-stk2 bei-pwd bei-pwd-txp bei-pwd-txp-vmin bei-pwd-txp-vmax 
+    bei-pwd-image-gather bei-image bei-pwd-image
+    ''',
+    color='bei-vpick vpick-semb g-picking a-semb-zo a-semb-fo',include=r'\renewcommand{\thesubfigure}{\alph{subfigure}}')

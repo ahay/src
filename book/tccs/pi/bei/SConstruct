@@ -1,0 +1,459 @@
+from rsf.proj import *
+import math
+import stack2 
+import tail_el
+#just created a subdirectory for adapt tails eleminination 
+Fetch('midpts.hh','midpts')
+Flow('bei','midpts.hh','dd form=native | put d2=0.067 o2=0.132')
+
+stack2.stack('bei',
+            v0=1.4,
+            nv=48,
+            dv=0.025,
+            x0=7.705,
+            dx=0.0335,
+            nx=250,
+            nt=751,
+            padx=521,
+            pad_af1=200,
+            pad_af2=200,
+            rect1=40,
+            rect2=10,
+            srect1=1,
+            srect2=5,
+            vslope=0.67,
+            vx0=1.5,
+            tmax=3.996,
+            f1=15,
+            an=2,
+            nout=2048)
+
+units='km'
+nv=48
+v0=1.4
+dv=0.025
+nt=751
+
+def grey2(title):
+        return '''
+        window n1=%d |
+        grey title="%s" 
+        label1=Time unit1=s label2=Distance unit2="%s"
+        titlefat=3 labelfat=3 font=2 max1=3.0
+        ''' % (nt,title,units)
+
+def velgrey2(title):
+        return grey2(title) + '''
+        color=j scalebar=y bias=%g barlabel=Velocity barunit="%s/s"
+        barreverse=y 
+        ''' % (v0+0.5*nv*dv,units)
+    
+
+# Path-Integral Diffraction Experiment
+
+#Einstein-Smoluchovsky Path-Integral (Landa et al, 2006)
+beta=0.7
+Flow('bei-espi','bei-vlf bei-foc',
+     '''
+     math K=${SOURCES[1]} output="input*exp(%g*K)" |
+     stack norm=n
+     '''%(beta))
+Plot('bei-espi',grey2('Einstein-Smoluchovsky Path-Integral weighted'))
+
+# Double path integral
+
+Flow('bei-espi2','bei-vlf bei-foc',
+     '''
+     math K=${SOURCES[1]} output="x2*input*exp(%g*K)" |
+     stack norm=n
+     '''%(beta))
+#Result('bei-espi2',grey2('double_path_integral'))
+Flow('dif','bei-espi bei-espi2','add scale=-1,1 ${SOURCES[1]}')
+#Result('dif',grey2('dif'))
+
+# Smooth division
+
+Flow('vel','bei-espi2 bei-espi','divn den=${SOURCES[1]} rect1=40 rect2=10')
+
+Plot('vel',velgrey2('Migration Velocity from DPI'))
+
+Flow('bei-simslice2','bei-vlf vel',
+     'slice pick=${SOURCES[1]} | window')
+Plot('bei-simslice2',grey2('Migrated Diffractions from DPI'))
+
+#Result('bei-simslice2',grey2('Migrated Diffractions'))
+
+#image
+
+##Result('dpi','bei-espi vel bei-simslice2','SideBySideAniso',local=1)
+
+#Path-integrals without weightning
+
+Flow('bei-pi_nowe','bei-vlf',
+     '''
+     stack norm=n
+     ''')
+Plot('bei-pi_nowe',grey2('Einstein-Smoluchovsky Path-Integral no weights'))
+Flow('bei-dpi_nowe','bei-vlf',
+     '''
+     math output="x2*input" |
+     stack norm=n
+     ''')
+Plot('bei-dpi_nowe',grey2('Einstein-Smoluchovsky dPath-Integral nw'))
+Flow('vel_nw','bei-dpi_nowe bei-pi_nowe','divn den=${SOURCES[1]} rect1=40 rect2=10')
+Plot('vel_nw',velgrey2('Migration Velocity from DPI no weightning'))
+Flow('bei-simslice2_nw','bei-vlf vel_nw',
+     'slice pick=${SOURCES[1]} | window')
+Plot('bei-simslice2_nw',grey2('Migrated Diffractions from DPI nw'))
+
+#Result('bei-simslice2_nw',grey2('Migrated Diffractions nw'))
+
+#Result('dpi_nw','bei-pi_nowe vel_nw bei-simslice2_nw','SideBySideAniso',local=1)
+
+Flow('path1','bei-vlf','window n2=1')
+Flow('path2','bei-vlf','window n2=1 f2=-1')
+#Result('path1','grey pclip=100 gainpanel=each title="path1 sad"')
+#Result('path2','grey pclip=100 gainpanel=each title="path2 happy"')
+
+
+#adaptive filtering
+#tail_el.tail_el('bei-pi_nowe','path2','path1',
+#              nt = 1000,
+#              nsh=31,
+#              lrect1=10,
+#              lrect2=5,
+#              lniter=400)
+#tail_el.tail_el('bei-pi_nowe','path2','path1',
+#              nt = 1000,
+#              nsh=51,
+#              lrect1=10,
+#              lrect2=5,
+#              lniter=400)
+#tail_el.tail_el('bei-pi_nowe','path2','path1',
+#              nt = 1000,
+#              nsh=41,
+#              lrect1=10,
+#              lrect2=5,
+#              lniter=400)
+#tail_el.tail_el('bei-pi_nowe','path2','path1',
+#              nt = 1000,
+#              nsh=21,
+#              lrect1=10,
+#              lrect2=5,
+#              lniter=400)
+#tail_el.tail_el('bei-pi_nowe','path2','path1',
+#              nt = 1000,
+#              nsh=11,
+#              lrect1=10,
+#              lrect2=5,
+#              lniter=400)
+#bei-pi_nowe
+##Result('comp',['bei-pi_nowe_te_nsh11','bei-pi_nowe_te_nsh21','bei-pi_nowe_te_nsh31','bei-pi_nowe_te_nsh41','bei-pi_nowe_te_nsh51'],'SideBySideAniso')
+#Plot('bei-pi_nowe_te_nsh31_gr2','bei-pi_nowe_te_nsh31',grey2('Path-Integral # of shifts=31'))
+##Result('comparison','bei-pi_nowe bei-espi bei-pi_nowe_te_nsh31_gr2','SideBySideAniso')
+
+#just some names for plotting
+#sad_p='sad_pre_nsh%d'%nsh
+#happy_p='happy_pre_nsh%d'%nsh
+#'path_int_te_nsh%d'
+
+#lets look at a certain fragment
+##Result('bei-vlf_w','bei-vlf',
+#                   '''
+#                   sftransp plane=23 | 
+#                   sfwindow min1=1.0 max1=2 min2=8 max2=10.5 |
+#                   grey title="velcon windowed"
+#                   ''')
+#Plot('path_int_w','bei-pi_nowe','sfwindow min1=1.0 max1=2 min2=8 max2=10.5 | grey title="path_int windowed"')
+#Plot('path1_w','path1','sfwindow min1=1.0 max1=2 min2=8 max2=10.5 | grey title="sad windowed"')
+#Plot('path2_w','path2','sfwindow min1=1.0 max1=2 min2=8 max2=10.5 | grey title="happy windowed"')
+##Result('paths','path_int_w path1_w path2_w','SideBySideAniso')
+#Plot('tails_w31','tails_nsh31','sfwindow min1=1.0 max1=2 min2=8 max2=10.5 | grey title="tails 31 10 5"')
+#Plot('tails_el_w31','path_int_te_nsh31','sfwindow min1=1.0 max1=2 min2=8 max2=10.5 | grey title="tails eliminated 31 10 5"')
+##Result('tails_w31','tails_w31 tails_el_w31 path_int_w','SideBySideAniso')
+
+#images for different params
+
+# Double path integral -> eliminated tails
+#v0=1.4
+#nv=48
+#dv=0.025
+#Flow('check','bei-vlf',
+#     '''
+#     math output="x2*input" | window n2=1
+#     ''')
+Flow('dpath1','bei-vlf','window n2=1 | math output="%g*input"'%(v0+dv))
+Flow('dpath2','bei-vlf','window n2=1 f2=-1 | math output="%g*input"'%(v0+nv*dv))
+
+###CHANGE PYTHON FILE TO ACCOUNT FOR DIFFERENT NAMES
+tail_el.tail_el('bei-dpi_nowe','dpath2','dpath1',
+              nt = 1000,
+              nsh=31,
+              lrect1=10,
+              lrect2=5,
+              lniter=400)
+Plot('bei-dpi_nowe_gr','bei-dpi_nowe','grey title="dpath"')
+Plot('bei-dpi_nowe_te_nsh31','grey title="dpath - tails shift=33"')
+#Result('dcomp','bei-dpi_nowe_gr bei-dpi_nowe_te_nsh31','SideBySideAniso')
+
+# Smooth division
+
+#Flow('vel_te','bei-dpi_nowe_te_nsh31 bei-pi_nowe_te_nsh31','divn den=${SOURCES[1]} rect1=40 rect2=10')
+
+#Plot('vel_te',velgrey2('Migration Velocity from DPI tails eliminated'))
+
+#Flow('bei-simslice2_te','bei-vlf vel_te',
+#     'slice pick=${SOURCES[1]} | window')
+#Plot('bei-simslice2_te',grey2('Migrated Diffractions from DPI tails eliminated'))
+
+##Result('bei-simslice2_te',grey2('Migrated Diffractions tails eliminated'))
+##Result('slices_comp','bei-simslice2_nw bei-simslice2 bei-simslice2_te','SideBySideAniso')
+
+#Flow('dpi-cat','bei-simslice2_nw bei-simslice2 bei-simslice2_te','cat ${SOURCES[1]} ${SOURCES[2]}')
+##Result('dpi-cat','grey')
+#Flow('dpi-cat_nw','bei-simslice2_nw bei-simslice2_te','cat ${SOURCES[1]}')
+##Result('dpi-cat_nw','grey')
+
+#PI and DPI precompute
+
+Flow('fft','bei-pwd','costaper nw1=50 nw2=50 | t2warp | fft1 | fft3 axis=2')
+
+eps=0.0001
+v_a=v0
+v_b=v_a+dv*(nv-1)
+
+const = '((-1)*sqrt(2*(x1+%g))*exp(I*0.25*%g)/(x2+%g))'%(eps,math.pi,eps)
+
+erfi_a = '''
+         sfmath output="input*I*exp(I*0.75*%g)*%g*(x2+%g)*sqrt(2*%g)/(4*(sqrt(x1+%g)))" |
+         cerf | sfmath output="input*(-1)*I" | sfmath output="input*%s"
+         '''%(math.pi,v_a,eps,math.pi,eps,const)
+
+erfi_b = '''
+         sfmath output="input*I*exp(I*0.75*%g)*%g*(x2+%g)*sqrt(2*%g)/(4*(sqrt(x1+%g)))" |
+         cerf | sfmath output="input*(-1)*I" | sfmath output="input*%s"
+         '''%(math.pi,v_b,eps,math.pi,eps,const)
+
+Flow('erfi_input','fft','math output="1.0 + I*0.0"')#fft
+Flow('erfi_a','erfi_input',erfi_a)
+Flow('erfi_b','erfi_input',erfi_b)
+Flow('erfi_ba','erfi_b erfi_a','add scale=1,-1 ${SOURCES[1]}')
+Flow('pi_fft_erfib','fft erfi_ba','math  K=${SOURCES[1]} output="input*K"')#fft
+#Result('pi_fft_erfib','math output="abs(input)" | real | grey gainpanel=each pclip=100 scalebar=y title="pi_fft_erfi_b"')
+Flow('pi_4o_erfi','pi_fft_erfib',
+                  '''
+                  fft3 axis=2 inv=y |
+                  fft1 inv=y |
+                  t2warp inv=y
+                  ''')
+
+Result('pi-erfi-mag','pi_fft_erfib',
+	'''
+	math output="abs(input)" |
+	real |
+	grey gainpanel=each pclip=100 scalebar=n title="pi_4_erfi eps1=%g"
+	'''%(eps))
+
+#Flow('path1','bei-vlf','window n2=1')
+#Flow('path2','bei-vlf','window n2=1 f2=-1')
+##Result('path1','grey pclip=100 gainpanel=each title="path1 sad"')
+##Result('path2','grey pclip=100 gainpanel=each title="path2 happy"')
+
+
+#adaptive filtering
+tail_el.tail_el('pi_4o_erfi','path2','path1',
+              nt = 1000,
+              nsh=31,
+              lrect1=10,
+              lrect2=5,
+              lniter=400)
+
+#Double Path Integral Precompute
+eps_d=0.0001
+shiftdpi_b='''
+           sfmath output="input*I*4*(x1+%g)*exp(-I*%g*%g*(x2+%g)*(x2+%g)*%g/( 16*(x1+%g) ) )/((x2+%g)*(x2+%g)*%g)"
+           '''%(eps_d,v_b,v_b,eps_d,eps_d,2*math.pi,eps_d,eps_d,eps_d,math.pi)
+shiftdpi_a='''
+           sfmath output="input*I*4*(x1+%g)*exp(-I*%g*%g*(x2+%g)*(x2+%g)*%g/( 16*(x1+%g) ) )/((x2+%g)*(x2+%g)*%g)"
+           '''%(eps_d,v_a,v_a,eps_d,eps_d,2*math.pi,eps_d,eps_d,eps_d,math.pi)
+
+
+Flow('const_fft','fft','math output="1.0 + I*0.0"')#fft
+Flow('dpi_a','const_fft',shiftdpi_a)
+Flow('dpi_b','const_fft',shiftdpi_b)
+Flow('dpi','dpi_b dpi_a','add scale=1,-1 ${SOURCES[1]}')
+
+#Result('dpi',
+#            '''
+#            
+#            math output="abs(input)" |
+#            real |
+#            grey gainpanel=each pclip=100 scalebar=y title="dpi precompute"
+#            ''')
+
+Flow('dpi_fft_precomp','fft dpi','math  K=${SOURCES[1]} output="input*K"')#fft
+
+#Result('dpi_fft_precomp',
+#            '''
+#            
+#            math output="abs(input)" |
+#            real |
+#            grey gainpanel=each pclip=100 scalebar=y title="dpi precompute"
+#            ''')
+
+Flow('dpi_4o_precomp','dpi_fft_precomp',
+                  '''
+                  fft3 axis=2 inv=y |
+                  fft1 inv=y |
+                  t2warp inv=y
+                  ''')
+#Result('dpi_4o_precomp','grey gainpanel=each pclip=100 scalebar=y title="dpi_4o_precomp eps1=%g"'%(eps_d))
+
+#velocity estimation
+Flow('vel_pre','dpi_4o_precomp pi_4o_erfi','divn den=${SOURCES[1]} rect1=40 rect2=10')
+Plot('vel_pre',velgrey2('Migration Velocity from DPI'))
+
+Flow('dpi_vel_slice','bei-vlf vel_pre',
+     'slice pick=${SOURCES[1]} | window')
+Plot('dpi_vel_slice',grey2('Migrated Diffractions from DPI'))
+
+#Result('dpi_vel_slice',grey2('Migrated Diffractions'))
+
+
+Flow('refl_image',['vlf2','vel_pre'],'slice pick=${SOURCES[1]}')
+#PI GAUSSIAN WEIGHTNING
+#weps=0.0001
+#wv_a=0.5#v_a
+#wv_b=v0+(nv-1)*dv#v_b
+#wv0 = (wv_a + wv_b)/2
+#beta = 7;
+weps=0.0001
+wv_a=0.5#v_a
+wv_b=5.0#v0+(nv-1)*dv#v_b
+wv0 = 1.6#(wv_a + wv_b)/2
+beta = 20;
+
+alpha = '(-1)*(x2+%g)*(x2+%g)*%g/(16*(x1+%g))'%(weps,weps,2*math.pi,weps)
+root = 'sqrt(abs(I*%s-%g))*exp(I*arg(I*%s-%g)/2)'%(alpha,beta,alpha,beta) 
+wconst = '(exp((-1)*%g*%g*%g)*exp(((-1)*%g*%g*%g)/(I*%s-%g)))/(%s)'%(beta,wv0,wv0,beta,beta,wv0,alpha,beta,root)
+u = '%s*%g+(%g*%g)/(%s)'%(root,wv_b,beta,wv0,root)
+u_a = '%s*%g+(%g*%g)/(%s)'%(root,wv_a,beta,wv0,root)
+
+werfi_b = '''
+         sfmath output="input*I*%s" |
+         cerf | sfmath output="input*I" | sfmath output="input*%s"
+         '''%(u,wconst)
+werfi_a = '''
+         sfmath output="input*I*%s" |
+         cerf | sfmath output="input*I" | sfmath output="input*%s"
+         '''%(u_a,wconst)
+
+Flow('erfi_input','fft','math output="1.0 + I*0.0"')
+Flow('werfi_b','erfi_input',werfi_b)
+#Result('werfi_b','math output="abs(input)" | real | grey gainpanel=each pclip=100 scalebar=y title="erfi_b"')
+Flow('werfi_a','erfi_input',werfi_a)
+#Result('werfi_a','math output="abs(input)" | real | grey gainpanel=each pclip=100 scalebar=y title="erfi_a"')
+
+Flow('werfi_ba','werfi_b werfi_a','add scale=1,-1 ${SOURCES[1]}')
+#Result('werfi_ba','math output="abs(input)" | real | grey gainpanel=each pclip=100 scalebar=y title="werfi_ba"')
+Flow('wpi_fft_werfiba','fft werfi_ba','math  K=${SOURCES[1]} output="input*K"')
+#Result('wpi_fft_werfiba','math output="abs(input)" | real | grey gainpanel=each pclip=100 scalebar=y title="pi_fft_erfi_b"')
+Flow('pi_gaussian','wpi_fft_werfiba',
+                  '''
+                  fft3 axis=2 inv=y |
+                  fft1 inv=y |
+                  t2warp inv=y
+                  ''')
+#Result('pi_gaussian','grey title="wpi_4_werfi eps1=%g"'%(weps))
+
+# program 
+Flow('gpi_fft','fft','put o3=0.0 d3=0.0 n3=1 | gpi3dzo v_a=1.4 v_b=2.6 v_0=2.0 beta=10')
+
+Flow('gpi','gpi_fft',
+                  '''
+                  fft3 axis=2 inv=y |
+                  fft1 inv=y |
+                  t2warp inv=y
+                  ''')
+
+Result('gpi-erfi-mag','gpi_fft',
+	'''
+	math output="abs(input)" |
+	real |
+	grey gainpanel=each pclip=100 scalebar=n title="pi_4_erfi eps1=%g"
+	'''%(eps))
+
+##Result('dpi_te','bei-espi vel bei-simslice2','SideBySideAniso',local=1)
+
+#Pictures for article
+def grey(title):
+        return '''
+        window min1=1.0 max1=3.0 min2=10.5 max2=13.0 |
+        grey title="%s" screenratio=0.6
+        label1=Time unit1="s" label2=Distance unit2="km"
+        titlefat=3 labelfat=3 font=2 titlesz=20. labelsz=8.
+        wanttitle=n 
+        ''' % (title)
+#screenwd=8 window min1=1.0 max1=3.0 min2=8.5 max2=11.
+def grey_nwi(title):
+        return '''
+        window max1=3.0 |
+        grey title="%s" screenratio=0.6
+        label1=Time unit1="s" label2=Distance unit2="km"
+        titlefat=3 labelfat=3 font=2 titlesz=20. labelsz=8.
+        wanttitle=n 
+        ''' % (title)
+#screenwd=8
+def grey_p(title):
+        return '''
+        window min1=1 max1=3.0 |
+        grey title="%s"
+        label1=Time unit1="s" label2=Distance unit2="km"
+        titlefat=3 labelfat=3 font=2 titlesz=20. labelsz=8.
+        wanttitle=n
+        ''' % (title)
+#min1=1.0 min2=8.5 max2=15.0 no max1
+#min1=1.0 max1=1.5 min2=8.5 max2=15.0
+#bei-pi_nowe_te_nsh31 bei-espi bei-pi_nowe
+#Result('p_bei_stk','bei-stk2',grey_p('Stacked Data'))
+#Result('p_bei_pwd','bei-pwd',grey_p('Diffractions'))
+#Result('p_pi_w','bei-espi',grey_p('PI with weights'))
+#Result('p_pi_nw','bei-pi_nowe',grey_p('PI with no weights'))
+#Result('p_pi_te','pi_4o_erfi_te_nsh31',grey_p('PI with eliminated tails'))
+#Result('p_path2','path2',grey_p('model'))
+#Result('p_pre_h','pi_4o_erfi-pre_h_nsh31',grey_p('model filtered'))
+#Result('p_tails','pi_4o_erfi-tails_nsh31',grey_p('tails'))
+#Result('p_sig_h','pi_4o_erfi-sig_h_nsh31',grey_p('-pre_h'))
+
+
+Result('a-bei-pwd','bei-pwd',grey_nwi('Diffractions'))
+Result('a-refl-image','refl_image',grey_nwi('Diffractions'))
+#Result('a_bei_slc2','bei-slc2',grey_nwi('Diffractions'))
+#Result('a_bei_stk','bei-stk2',grey_nwi('Stacked Data'))
+#Result('a_pi_w','bei-espi',grey('PI with weights'))
+#Result('a_pi_nw','pi_4o_erfi',grey('PI with no weights'))
+#Result('a_pi_te','pi_4o_erfi_te_nsh31',grey('PI with eliminated tails'))
+#Result('a_pi_gaussian','pi_gaussian',grey('PI Gaussian Weightning'))
+#Result('a_gpi','gpi',grey('PI Gaussian Weightning'))
+
+Result('a-pi-nw-nwi','pi_4o_erfi',grey_nwi('PI with no weights'))
+Result('a-pi-te-nwi','pi_4o_erfi_te_nsh31',grey_nwi('PI with eliminated tails'))
+Result('a-pi-gaussian-nwi','pi_gaussian',grey_nwi('PI Gaussian Weightning'))
+#Result('a_gpi_nwi','gpi',grey_nwi('PI Gaussian Weightning'))
+Result('a-tails-nwi','pi_4o_erfi-tails_nsh31',grey_nwi('tails')+' clip=5.4e+06')
+
+#Result('a_path2','path2',grey('model'))
+#Result('a_pre_h','pi_4o_erfi-pre_h_nsh31',grey('model filtered'))
+#Result('a_tails','pi_4o_erfi-tails_nsh31',grey('tails')+' clip=2.5e+08')
+#Result('a_sig_h','pi_4o_erfi-sig_h_nsh31',grey('-pre_h')+' clip=2.5e+08')
+##Result('a_comp','a_pi_nw a_pi_w a_pi_te','SideBySideAniso')
+Result('a-dpi-slice','dpi_vel_slice',grey_nwi('dpi_vel_slice'))
+Result('a-dpi-vel','vel_pre',
+        '''
+        window min1=0.0 max1=3.0 |
+        grey wanttitle=n screenratio=0.6
+        label1=Time unit1=s label2=Distance unit2="km"
+        color=j scalebar=y bias=%g barlabel=Velocity barunit="km/s"
+        barreverse=y titlefat=3 labelfat=3 font=2 min1=0.0 max1=3.0
+        ''' % (v0+0.5*nv*dv))
+End()

@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
 {
     bool sign, grad;
     int iw, nw, i1, n1, i2, n2, n1w, nd=0, wbeg=0, wend=0;
-    float lperc, hperc, emax;
+    float lperc, hperc, emax, freq;
     float d1, dw, w0, etotal, f1=0., f2=0., e1=0., e2=0., ecum, *fdg, *e;
 /*    float cum1, cum2, cum3, cum4, numer, denom; */
     float *sol=NULL, *dat=NULL, **func=NULL;
@@ -51,17 +51,20 @@ int main(int argc, char* argv[])
     /* If y, output attenuation gradient; if n, output absorption factor */
 
     if (!sf_getfloat("lperc",&lperc)) lperc=65.;
-    /* Low percentage of total energey */ 
+    /* Low percentage of total energy */ 
 
     if (!sf_getfloat("hperc",&hperc)) hperc=85.;
-    /* High percentage of total energey */ 
+    /* High percentage of total energy */ 
 
     if (lperc >= hperc || lperc < 0. || hperc > 100.) 
 	sf_error("Need 0 <= lperc <= hperc <= 100.");
 
     if (NULL == (type=sf_getstring("type"))) type="attenuation";
     /* [low,full,ratio,attenuation] attribute type, the default is attenuation  */
-
+    if(type[0]=='r') {
+	if (!sf_getfloat("freq",&freq)) sf_error("Need freq when type=ratio");
+        /* Frequency corresponding to energy ratio, valid when type=ratio */ 
+    }
     
     if (SF_COMPLEX == sf_gettype(in)) {
 	inp = sf_complexalloc(n1w);
@@ -221,12 +224,13 @@ int main(int argc, char* argv[])
 		    }
 		    ecum = 0.;
 		    for (iw=0; iw < nw; iw++) {
-			ecum += e[iw*n1+i1];
-			if (ecum >= lperc*etotal/100.) {
-			    e1 = e[iw*n1+i1];
+			if(w0+iw*dw<=freq) {
+			    ecum += e[iw*n1+i1];
+			} else {
+			    break;
 			}
 		    }
-		    fdg[i1] = e1/(etotal+FLT_EPSILON);
+		    fdg[i1] = ecum/(etotal+FLT_EPSILON);
 		    break;
 		default:
 		    sf_error("Unknown operator \"%s\"",type);
