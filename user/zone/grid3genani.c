@@ -20,7 +20,6 @@
 #include <math.h>
 #include <rsf.h>
 
-#include "grid3genani.h"
 #include "eno3.h"
 #include "bond.h"
 

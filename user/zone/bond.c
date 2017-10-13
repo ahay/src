@@ -19,7 +19,6 @@
 
 #include <math.h>
 #include <rsf.h>
-#include "bond.h"
 
 /*Follow Lapilli and Fowler (2013) of the first two rotations*/
 void bond ( float *phi  /* Rz around z (1st)*/, 

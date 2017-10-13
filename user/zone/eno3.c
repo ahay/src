@@ -20,8 +20,6 @@
 #include <rsf.h>
 /*^*/
 
-#include "eno3.h"
-
 #ifndef _eno3_h
 
 typedef struct Eno3 *eno3;

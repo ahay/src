@@ -19,7 +19,6 @@
 
 #include <rsf.h>
 
-#include "araytracegenani.h"
 #include "eno3.h"
 #include "grid3genani.h"
 #include "bond.h"
