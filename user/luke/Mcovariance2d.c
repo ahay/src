@@ -1,5 +1,5 @@
-/* determine covariance from 2d data*/
-/* input data must be mean zero*/
+/* determine covariance from 2d data of mean zero, output is n1xn1 array */
+
 /*
   Copyright (C) 2017 University of Texas at Austin
 
