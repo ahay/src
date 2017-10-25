@@ -4,10 +4,10 @@ from rsf.proj import *
 # wget http://s3.amazonaws.com/open.source.geoscience/open_data/Mobil_Avo_Viking_Graben_Line_12/seismic.segy
 
 # fetch the text and jpg files
-for filename in ['Mobil_migration_well_logs.pdf','FarField.jpg','FarField.txt']:
+for filename in ['Mobil_migration_well_logs.pdf','FarField.jpg','FarField.dat']:
     Fetch(filename,dir='Mobil_Avo_Viking_Graben_Line_12',
-      server='https://s3.amazonaws.com',top='open.source.geoscience/open_data',
-      usedatapath=1)
+          server='https://s3.amazonaws.com',
+ 	  top='open.source.geoscience/open_data')
 
 pdfread = WhereIs('acroread') or WhereIs('kpdf') or WhereIs('evince') or \
     WhereIs('xpdf') or WhereIs('gv') or WhereIs('open')
@@ -17,16 +17,16 @@ Flow('Mobil_migration_well_logs.display','Mobil_migration_well_logs.pdf',
 
 jpgread = WhereIs('oodraw') or WhereIs('open')
 
-Flow('Farfield.display','Farfield.jpg',
+Flow('Farfield.display','FarField.jpg',
      jpgread + ' ${SOURCES[0]}',stdin=0,stdout=-1)
 
-Flow('Farfield1.display','FarField.txt','/bin/cat ${SOURCES[0]}',
-     stdin=0,stdout=-1)
+Flow('Farfield1.display','FarField.dat','/bin/cat ',
+     stdout=-1)
 
 
 # fetch the segy data and sfsegyread
 # the parameter usedatapath=0 is required to elliminate the symbolic link
-# that make gunzip fail (on my MacBook) 
+# that makes gunzip fail (on my MacBook) 
 filename='seismic'
 Fetch(filename+'.segy',dir='Mobil_Avo_Viking_Graben_Line_12',
   server='https://s3.amazonaws.com',top='open.source.geoscience/open_data')
@@ -65,8 +65,8 @@ Flow('ntg',filename,
 Result('ntg',
 	'''
 	sfpow pow1=2
-	| sfgrey title=%s
-	'''%filename)
+	| sfgrey title="near trace gather"
+	''')
 
 
 #sfheaderattr <seismic_hdr.rsf
