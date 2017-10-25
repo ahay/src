@@ -3,11 +3,11 @@ sys.path.append('../../framework')
 import bldutil
 
 #progs = '''
-#dagap3  dagap3e rms dagap3a dagapex angmig const2dangmig const2dangmigsemb angmig2d
+#dagap3  dagap3e rms dagap3a dagapex angmig const2dangmig const2dangmigsemb angmig2d 
 #'''
 
 progs = '''
-dagap3  dagap3e  dagap3a dagapex angmig2
+dagap3  dagap3e  dagap3a dagapex angmig2 angmigM covariance2d
 '''
 mpi_progs = ''
 
