@@ -24,8 +24,8 @@
 #include "interp.h"
 #include "raytrace.h"
 
-#define NUMmaxCELLperQUAD       50
-#define NUM_MAX_REC		50
+#define NUMmaxCELLperQUAD       500
+#define NUM_MAX_REC		500
 
 static int cells_of_quad (struct point *pt, int *cll);
 static int common_receivers (int *cll, int num, int *rec);
