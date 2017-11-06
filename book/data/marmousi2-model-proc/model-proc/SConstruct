@@ -139,13 +139,13 @@ Flow('vrms2_m','vrms vrms',
      ''') 
 
 #Make an empty file for the segy headers.  SEGY standard contains 91 rows
-Flow('mute_arr_hdr.rsf',None,
+Flow('mutearr_hdr.rsf',None,
      '''
      math n1=91 n2=4000 output="0"
      ''')
 
 # build trace headers for the synthetic traces.  Will be used to sort traces.
-Flow('Mmute_arr.rsf Mmute_arr_hdr.rsf','mute_arr.rsf mute_arr_hdr.rsf',
+Flow('Mmutearr.rsf Mmutearr_hdr.rsf','mutearr.rsf mutearr_hdr.rsf',
      '''
 	 sftahread input=${SOURCES[0]} makeheader=y
          | sftahheadermath outputkey=gx output="gx"
@@ -162,7 +162,7 @@ Flow('Mmute_arr.rsf Mmute_arr_hdr.rsf','mute_arr.rsf mute_arr_hdr.rsf',
      ''',stdout=0,stdin=0)
 
 # make cdp gathers for displays. Not used in this script
-Flow('CDP CDP_hdr','Mmute_arr',
+Flow('CDP CDP_hdr','Mmutearr.rsf Mmutearr_hdr.rsf',
       '''
       sftahsort input=$SOURCE sort="cdp offset"
       | sftahwrite output=${TARGETS[0]}
@@ -172,7 +172,7 @@ Flow('CDP CDP_hdr','Mmute_arr',
 # Sort to cdp gathers, remove selay in ricker wavelet, 
 # gain for spreading correction, biuld headers used by sftahnmo to read
 # space variant velocity, and stack the data
-Flow('stack.rsf stack_hdr.rsf','Mmute_arr.rsf Mmute_arr_hdr.rsf vrms2_m.rsf',
+Flow('stack.rsf stack_hdr.rsf','Mmutearr.rsf Mmutearr_hdr.rsf vrms2_m.rsf',
      '''
       sftahsort input=$SOURCE sort="cdp offset"
       | sftahheadermath outputkey=sstat output=-250
