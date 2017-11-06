@@ -1,0 +1,144 @@
+\lefthead{Thongsang, et al}
+\righthead{Marmoisi2}
+\footer{Modeling and Processing with Madagascar}
+
+\title{2D Modeling and Basic Processing with Madagascar}   
+\author{Pongthep Thongsang, Lian Jiang, Hao Li, and Karl Schleicher}
+
+\email{k\_schleicher@hotmail.com}
+
+\address{
+k\_schleicher@hotmail.com \\
+John A. and Katherine G. Jackson School of Geosciences \\
+The University of Texas at Austin \\
+University Station, Box X \\
+Austin, TX 78713-8924}
+
+\maketitle
+
+\begin{abstract}
+This document demonstrates finite difference modeling and simple processing
+using the Madagascar software package.  The paper uses this simple processing 
+sequence to teach the basics of Madagascar. 
+
+The segy file of the Marmousi2 model is downloaded from the Internet and used
+to create a few synthetic shotpoints.  Geometry is computed and loaded in the
+traces headers.   Simple processing including amplitude correction, CMP
+sorting, velocity conversions, NMO correction, stack, Kirchhoff migration, and
+least squares Kirchhoff migration are applied.  Displays of each processing
+stage are created.  The full processing sequence takes less that 6 minutes on
+a 2013 MacBook Pro computer. 
+
+This processing sequence was developed at the 2017 Seismic Working Workshop - 
+Reproducible Tutorials in Houston.  Processing can be reproduced using an 
+SConstruct file.
+
+\end{abstract}
+
+\section{Introduction}
+There are several Madagascar tutorials.  This tutorial differs from the other 
+tutorials by focusing on the using existing Madagascar programs to create 
+a reflection seismic synthetic and processing it using basic, standard 
+techniques.  The computation runs quickly which makes it easy to 
+modify the SConstruct files and run new experiments.  Processing can be 
+reproduced using an SConstruct file listed in the appendix or by using the file:
+
+ \$RSFSRC/book/data/mourmousi2-model-proc/model-proc/SConstruct 
+
+in the Madagascar distribution.
+
+\section{Download, Reformat, Smooth, and Display the Marmousi2 Velocity Model}
+We use the p-wave velocity field from the Marmousi2 model described by Irons 
+\cite[]{irons}.  Figure \ref{fig:vp} shows the part of the model used in this 
+paper.  Figures \ref{fig:vpforward} and \ref{fig:vpmigration} show the model 
+smoothed for modeling and processing (NMO and migration). 
+
+These figures can be created with the command:
+
+scons vp.view vpforward.view vpmigration.view
+
+\inputdir{model-proc}
+\plot{vp}{width=\textwidth}{A portion of Marmousi2 velocity used in this paper.}
+\plot{vpforward}{width=\textwidth}{The velocity smoothed for modeling.}
+\plot{vpmigration}{width=\textwidth}{The interval velocity smoothed for NMO and migration. }
+
+\section{Finite Difference Model Shotpoints, Model and subtract the direct arrivals}
+
+The wave equation program sfmodeling2d \cite[]{Yang} is used to create 10 
+synthetic shot records using the slightly smoothed Marmousi model.   One 
+synthetic shotpoint is show in Figure \ref{fig:shot2500}. Sfmodeling2d was also
+is run with a constant velocity to model the direct arrivals.  The direct 
+arrivals were subtracted from the synthetic and shown in Figure 
+\ref{fig:mutearr2500} 
+
+These figures and some others can be created with the command:
+
+scons shots.view shot2500.view mutearr.view mutearr2500.view
+
+\plot{shot2500}{width=\textwidth}{Shotpoint at x=2500 computed with acoustic 
+finite difference.}
+\plot{mutearr2500}{width=\textwidth}{Shotpoint at x=2500 after subtracting the
+modelled direct arrivals.}
+
+\section{Compute RMS Velocities, NMO, T-shift, Amplitude Correction, Stack}
+
+The basic trace processing stages of sorting to CMP gathers, time shifting, 
+amplitude correction, normal move out, and stack are applied using the trace 
+and header (tah) programs.  These programs all start with ‘sftah’.  The 
+sftahheadermath program was used to load the geometry into the trace headers.  
+The sftahnmo program requires an RMS velocity in m/s at each input CMP and each 
+time sample.  This is computed from the original interval velocity model by 
+stretching to time, squaring the velocity, integrating, dividing by time, and 
+taking the square root using the programs sfdepth2time, sfmul, sfcausint, and 
+sfmath.  This creates an RMS velocity every 12.49 meters.  Intermediate traces 
+are created using sfinterleave.  The stack is computed by sorting to CMP order,
+removing the 250 ms delay in the modeling Ricker wavelet, NMO and stack, 
+(Figure \ref{fig:stack}).
+
+This processing can be run with the command:
+
+scons stack.view 
+
+\plot{stack}{width=\textwidth}{CDP stack of 10 shotpoints.}
+
+\section{Post stack Kirchhoff Migration and Least Squares Kirchhoff Migration}
+
+The stack and RMS velocity were input to sfkirchnew to apply Post stack
+Kirchhoff migration (Figure \ref{fig:ktmig}).  Least squares Kirchhoff 
+migration was computed using the sfkirchinvs program (Figure 
+\ref{fig:invsparse}).  
+
+These processing can be reproduced with the command:
+
+scons ktmig.view invsparse.view
+
+\plot{ktmig}{width=\textwidth}{Post stack Kirchhoff migration.}
+\plot{invsparse}{width=\textwidth}{Least squares Kirchhoff migration.}
+
+\section{Acknowledgements}
+This processing sequence was developed at the 2017 Seismic Working Workshop - 
+Reproducible Tutorials in Houston \cite[]{schleicher}.  This working workshop 
+was supported by Wavelets (The University of Houston student SEG chapter), 
+The Bureau of Economic Geology at the University of Texas, and SEG.
+
+We thank Allied Geophysical Laboratories (AGL) for creating and sharing the 
+Marmousi2 model and synthetic data.  http://www.agl.uh.edu/
+
+\newpage
+\section{Appendix}
+
+The file \emph{\$RSFSRC/book/data/marmousi2-model-proc/model-proc/SConstruct} 
+is an scons script that applies the processing described in this paper.  The 
+contents of the file is listed below.
+
+\tiny
+\lstinputlisting[frame=single]{model-proc/SConstruct}
+\normalsize
+
+\bibliographystyle{seg}
+\bibliography{refpaper,SEG}
+
+
+
+
+ 
