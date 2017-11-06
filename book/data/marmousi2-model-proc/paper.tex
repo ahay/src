@@ -23,7 +23,7 @@ sequence to teach the basics of Madagascar.
 
 The segy file of the Marmousi2 model is downloaded from the Internet and used
 to create a few synthetic shotpoints.  Geometry is computed and loaded in the
-traces headers.   Simple processing including amplitude correction, CMP
+trace headers.   Simple processing including amplitude correction, CMP
 sorting, velocity conversions, NMO correction, stack, Kirchhoff migration, and
 least squares Kirchhoff migration are applied.  Displays of each processing
 stage are created.  The full processing sequence takes less that 6 minutes on
@@ -67,8 +67,8 @@ scons vp.view vpforward.view vpmigration.view
 The wave equation program sfmodeling2d \cite[]{Yang} is used to create 10 
 synthetic shot records using the slightly smoothed Marmousi model.   One 
 synthetic shotpoint is show in Figure \ref{fig:shot2500}. Sfmodeling2d was also
-is run with a constant velocity to model the direct arrivals.  The direct 
-arrivals were subtracted from the synthetic and shown in Figure 
+run with a constant velocity to model the direct arrivals.  The direct arrivals
+were subtracted from the synthetic and shown in Figure 
 \ref{fig:mutearr2500} 
 
 These figures and some others can be created with the command:
