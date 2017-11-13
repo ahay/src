@@ -1726,9 +1726,9 @@ def omp(context):
         CXXFLAGS = ccflags  + ' -fopenmp'
         LINKFLAGS = lflags + ' -fopenmp'
     elif icc:
-        CFLAGS = flags + ' -openmp -D_OPENMP'
-        CXXFLAGS = ccflags + ' -openmp -D_OPENMP'
-        LINKFLAGS = lflags + ' -openmp'
+        CFLAGS = flags + ' -qopenmp -D_OPENMP'
+        CXXFLAGS = ccflags + ' -qopenmp -D_OPENMP'
+        LINKFLAGS = lflags + ' -qopenmp'
     else:
         CFLAGS = flags
         CXXFLAGS = ccflags
