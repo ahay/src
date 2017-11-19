@@ -1,5 +1,4 @@
-/* Converting Cij to moveout coefficients in 3D layered orthorhombic with possible phimuthal rotation (Sripanich and Fomel, 2016) 
-These are interval parameters not effective.
+/* Converting interval Cij to interval/effective moveout coefficients in 3D layered orthorhombic with possible phimuthal rotation (Sripanich and Fomel, 2016) 
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
@@ -112,6 +111,7 @@ int main(int argc, char* argv[])
 	tepsi04 = sf_floatalloc(n[0]);
 
 
+// Process one trace at a time
 for (i=0;i<nm;i++) {
 	
 	// Read parameters
