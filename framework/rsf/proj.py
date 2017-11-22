@@ -212,7 +212,8 @@ combine ={
 # Environmental variables to pass to SCons
 keepenv = ('DISPLAY','VPLOTFONTDIR','HOME','USER','WORK', 'SCRATCH',
            'LD_LIBRARY_PATH','DYLD_LIBRARY_PATH','MIC_LD_LIBRARY_PATH',
-           'RSFMEMSIZE','PYTHONPATH','SFPENOPTS','MPICH_HOME','MODULEPATH','OMPI_MCA_btl')
+           'RSFMEMSIZE','PYTHONPATH','SFPENOPTS','MPICH_HOME',
+           'MODULEPATH','OMPI_MCA_btl','I_MPI_ROOT')
 
 #############################################################################
 class Project(Environment):
