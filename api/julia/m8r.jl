@@ -29,6 +29,11 @@ function histint(file::File,name::String)
 	 return val[]
 end
 
+function histfloat(file::File,name::String)
+	 val = Cfloat[0]
+	 ccall((:sf_histfloat,"libdrsf"),Bool,(Ptr{UInt8},Ptr{UInt8},Ptr{Cfloat}),file.rsf,name,val)
+	 return val[]
+end
 function leftsize(file::File,dim::Int)
 	 ccall((:sf_leftsize,"libdrsf"),Culonglong,(Ptr{UInt8},Cint),file.rsf,dim)
 end
