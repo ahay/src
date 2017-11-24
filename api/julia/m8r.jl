@@ -70,4 +70,9 @@ function putfloat(file::File,name::String,val::Real)
     val = convert(Cfloat, val)
 	ccall((:sf_putfloat,"libdrsf"),Void,(Ptr{UInt8},Ptr{UInt8},Cfloat),file.rsf,name,val)
 end
+
+function putstring(file::File,name::String,val::String)
+    ccall((:sf_putstring,"libdrsf"),Void,(Ptr{UInt8},Ptr{UInt8},Ptr{UInt8}),file.rsf,name,val)
+end
+
 end
