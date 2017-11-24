@@ -3,7 +3,7 @@ module m8r
 export sf_init
 
 immutable File
-     tag::ASCIIString
+     tag::String
      rsf::Ptr{Uint8}
 end
 
@@ -13,17 +13,17 @@ function init()
 	 ccall((:sf_init,"libdrsf"),Void,(Int32,Ptr{Ptr{Uint8}}),length(argv),argv)
 end
 
-function input(tag::ASCIIString)
+function input(tag::String)
 	 rsf = ccall((:sf_input,"libdrsf"),Ptr{Uint8},(Ptr{Uint8},),tag)
 	 File(tag,rsf)
 end
 
-function output(tag::ASCIIString)
+function output(tag::String)
 	 rsf = ccall((:sf_output,"libdrsf"),Ptr{Uint8},(Ptr{Uint8},),tag)
 	 File(tag,rsf)
 end
 
-function histint(file::File,name::ASCIIString)
+function histint(file::File,name::String)
 	 val = Cint[0]
 	 ccall((:sf_histint,"libdrsf"),Bool,(Ptr{Uint8},Ptr{Uint8},Ptr{Cint}),file.rsf,name,val)
 	 return val[]
@@ -33,7 +33,7 @@ function leftsize(file::File,dim::Int)
 	 ccall((:sf_leftsize,"libdrsf"),Culonglong,(Ptr{Uint8},Cint),file.rsf,dim)
 end
 
-function getfloat(name::ASCIIString)
+function getfloat(name::String)
 	 val = Cfloat[0]
 	 ccall((:sf_getfloat,"libdrsf"),Bool,(Ptr{Uint8},Ptr{Cfloat}),name,val)
 	 return val[]
