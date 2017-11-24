@@ -15,7 +15,7 @@ trace = Array{Float32}(n1)
 
 for i2 in 1:n2
     m8r.floatread(trace,n1,inp)
-    trace = clamp(trace,-clip,clip)
+    trace = clamp.(trace,-clip,clip)
     m8r.floatwrite(trace,n1,out)
 end
 
