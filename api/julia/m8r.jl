@@ -65,3 +65,9 @@ function putint(file::File,name::String,val::Int)
     val = convert(Cint, val)
 	ccall((:sf_putint,"libdrsf"),Void,(Ptr{UInt8},Ptr{UInt8},Cint),file.rsf,name,val)
 end
+
+function putfloat(file::File,name::String,val::Real)
+    val = convert(Cfloat, val)
+	ccall((:sf_putfloat,"libdrsf"),Void,(Ptr{UInt8},Ptr{UInt8},Cfloat),file.rsf,name,val)
+end
+end
