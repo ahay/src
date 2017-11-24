@@ -34,6 +34,15 @@ function histfloat(file::File,name::String)
 	 ccall((:sf_histfloat,"libdrsf"),Bool,(Ptr{UInt8},Ptr{UInt8},Ptr{Cfloat}),file.rsf,name,val)
 	 return val[]
 end
+
+function histstring(file::File,name::String)
+    val = ccall((:sf_histstring,"libdrsf"),Ptr{Cchar},(Ptr{UInt8},Ptr{UInt8}),file.rsf,name)
+    if val == C_NULL
+        return ""
+    end
+    return unsafe_string(val)
+end
+
 function leftsize(file::File,dim::Int)
 	 ccall((:sf_leftsize,"libdrsf"),Culonglong,(Ptr{UInt8},Cint),file.rsf,dim)
 end
