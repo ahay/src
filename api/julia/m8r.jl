@@ -103,4 +103,18 @@ function putstring(file::File,name::String,val::String)
     ccall((:sf_putstring,"libdrsf"),Void,(Ptr{UInt8},Ptr{UInt8},Ptr{UInt8}),file.rsf,name,val)
 end
 
+function shape(file::File)
+    size = leftsize(file, 0)
+    dim = 1
+    s = Int32[]
+    while size > 1
+        n = histint(file, string("n", dim))
+        push!(s, n)
+        size /= n
+        dim += 1
+    end
+    return s
+end
+
+
 end
