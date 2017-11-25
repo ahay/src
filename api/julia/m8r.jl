@@ -43,9 +43,14 @@ function histstring(file::File,name::String)
     return unsafe_string(val)
 end
 
+function getint(name::String, val::Int)
+    val = Cint[val]
+    ccall((:sf_getint,"libdrsf"),Bool,(Ptr{UInt8},Ptr{Cint}),name,val)
+    return val[]
 function leftsize(file::File,dim::Int)
     ccall((:sf_leftsize,"libdrsf"),Culonglong,(Ptr{UInt8},Cint),file.rsf,dim)
 end
+getint(name; val::Int = 0) = getint(name, val)
 
 function getfloat(name::String)
     val = Cfloat[0]
