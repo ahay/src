@@ -59,6 +59,15 @@ function getfloat(name::String, val::Real)
 end
 getfloat(name::String; val::Real = 0) = getfloat(name, val)
 
+function getstring(name::String, val::String)
+    v = ccall((:sf_getstring,"libdrsf"),Ptr{Cchar},(Ptr{UInt8},),name)
+    if v == C_NULL
+        return val
+    end
+    return unsafe_string(v)
+end
+getstring(name::String; val::String = "") = getstring(name, val)
+
 function floatread(arr::Array{Float32,1},size::Int32,file::File)
     ccall((:sf_floatread,"libdrsf"),Void,(Ptr{Cfloat},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
 end
