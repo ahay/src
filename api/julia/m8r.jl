@@ -75,6 +75,9 @@ function getbool(name::String, val::Bool)
 end
 getbool(name::String; val::Bool = true) = getbool(name, val)
 
+function gettype(file::File)
+    return ccall((:sf_gettype,"libdrsf"),Cuint,(Ptr{UInt8},),file.rsf) + 1
+end
 function floatread(arr::Array{Float32,1},size::Int32,file::File)
     ccall((:sf_floatread,"libdrsf"),Void,(Ptr{Cfloat},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
 end
