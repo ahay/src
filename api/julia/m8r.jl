@@ -116,5 +116,18 @@ function shape(file::File)
     return s
 end
 
+function read(file::File)
+    t = [UInt8, UInt8, Int, Float32, Complex64, Int16, Float64, Int]
+    sh::Array{Int} = shape(file)
+    sz::Int32 = prod(sh)
+    t_idx = gettype(file)
+    data = zeros(t[t_idx], sz)
+    if t_idx == 4
+        floatread(data, sz, file)
+    else
+        throw("Can only read Float32 (not implemented)")
+    end
+    return reshape(data, sh...)
+end
 
 end
