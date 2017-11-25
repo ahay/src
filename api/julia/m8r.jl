@@ -1,6 +1,25 @@
 module m8r
 
-export sf_init
+export File,
+       init,
+       input,
+       output,
+       histint,
+       histfloat,
+       histstring,
+       getint,
+       getfloat,
+       getstring,
+       getbool,
+       gettype,
+       leftsize,
+       floatread,
+       floatwrite,
+       putint,
+       putfloat,
+       putstring,
+       shape,
+       read
 
 immutable File
     tag::String
