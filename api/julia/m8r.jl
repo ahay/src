@@ -52,11 +52,12 @@ function leftsize(file::File,dim::Int)
 end
 getint(name; val::Int = 0) = getint(name, val)
 
-function getfloat(name::String)
-    val = Cfloat[0]
+function getfloat(name::String, val::Real)
+    val = Cfloat[val]
     ccall((:sf_getfloat,"libdrsf"),Bool,(Ptr{UInt8},Ptr{Cfloat}),name,val)
     return val[]
 end
+getfloat(name::String; val::Real = 0) = getfloat(name, val)
 
 function floatread(arr::Array{Float32,1},size::Int32,file::File)
     ccall((:sf_floatread,"libdrsf"),Void,(Ptr{Cfloat},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
