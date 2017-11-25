@@ -27,7 +27,11 @@ immutable File
 end
 
 function init()
-    argv = [basename(Base.source_path())]
+    src = Base.source_path()
+    if src == nothing
+        src = ""
+    end
+    argv = [basename(src)]
     append!(argv,ARGS)
     ccall((:sf_init,"libdrsf"),Void,(Int32,Ptr{Ptr{UInt8}}),length(argv),argv)
 end
