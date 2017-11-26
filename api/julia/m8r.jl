@@ -154,7 +154,16 @@ function size(file::File)
 end
 
 function read(file::File)
-    t = [UInt8, UInt8, Int, Float32, Complex64, Int16, Float64, Int]
+    t = [
+         UInt8, # SF_UCHAR
+         UInt8, # SF_CHAR
+         Int, # SF_INT
+         Float32, # SF_FLOAT
+         Complex64, # SF_COMPLEX
+         Int16, # SF_SHORT
+         Float64, # SF_DOUBLE
+         Int, # SF_LONG
+        ]
     sh::Array{Int} = size(file)
     sz::Int32 = prod(sh)
     t_idx = gettype(file)
