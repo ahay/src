@@ -28,11 +28,12 @@ end
 
 function init()
     src = Base.source_path()
-    if src == nothing
-        src = ""
+    argv = src == nothing ? ["julia"] : [basename(src)]
+    if isempty(ARGS)
+        push!(argv, "-")
+    else
+        append!(argv,ARGS)
     end
-    argv = [basename(src)]
-    append!(argv,ARGS)
     ccall((:sf_init,"libdrsf"),Void,(Int32,Ptr{Ptr{UInt8}}),length(argv),argv)
 end
 
